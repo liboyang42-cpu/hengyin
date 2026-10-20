@@ -4,6 +4,7 @@ import com.aliyun.oss.ClientConfiguration;
 import com.aliyun.oss.ClientException;
 import com.aliyun.oss.OSSErrorCode;
 import com.aliyun.oss.OSSClient;
+import com.aliyun.oss.common.comm.Protocol;
 import com.aliyun.oss.ServiceException;
 import com.aliyun.oss.common.auth.DefaultCredentialProvider;
 import com.aliyun.oss.model.GeneratePresignedUrlRequest;
@@ -146,7 +147,8 @@ public class FileOssUploadUtils {
      */
     public static JSONObject uploadWithOwner(MultipartFile file, String ownerMemberId, String bizType)
             throws IOException {
-        OSSClient ossClient = createOssClient();
+        OSSClient ossClient = "COMMUNITY_POST".equals(bizType)
+                ? createCommunityOssClient() : createOssClient();
         try {
             return upload(file, false, ossClient, requiredEnv(OSS_BUCKET_NAME_ENV), ownerMemberId, bizType);
         } finally {
@@ -218,7 +220,13 @@ public class FileOssUploadUtils {
             if (aftercareEvidence) {
                 jsobj1.put("versionId", result.getVersionId());
             } else if (signPublic) {
-                jsobj1.put("url", generatePresignedUrl(ossClient, fileRelName, bucketName));
+                if ("COMMUNITY_POST".equals(ownerMetadata.getUserMetadata().get(UPLOAD_BIZ_TYPE_METADATA_KEY))) {
+                    GeneratePresignedUrlRequest preview = new GeneratePresignedUrlRequest(bucketName, fileRelName);
+                    preview.setExpiration(shortLivedExpiration(new Date(), 300));
+                    jsobj1.put("url", resolveGeneratedUrl(ossClient, preview));
+                } else {
+                    jsobj1.put("url", generatePresignedUrl(ossClient, fileRelName, bucketName));
+                }
             }
 //            jsobj1.put("orgName", orgName);
 //            jsobj1.put("urls", "/" + fileRelName);
@@ -645,6 +653,54 @@ public class FileOssUploadUtils {
         return generatePresignedUrl(objectName, expiration);
     }
 
+    /** 社区逐次授权读取只签 300 秒，裸 endpoint 也必须由 SDK 经 HTTPS 生成签名。 */
+    public static String generateCommunityMediaPresignedUrl(String objectName) {
+        String key = communityMediaObjectKey(objectName);
+        String bucket = requiredEnv(OSS_BUCKET_NAME_ENV);
+        OSSClient client = createCommunityOssClient();
+        try {
+            GeneratePresignedUrlRequest request = new GeneratePresignedUrlRequest(bucket, key);
+            request.setExpiration(shortLivedExpiration(new Date(), 300));
+            String signed = resolveGeneratedUrl(client, request);
+            if (!key.equals(communityMediaObjectKey(signed))) {
+                throw new IllegalStateException("OSS 社区预览来源不匹配");
+            }
+            return signed;
+        } finally {
+            client.shutdown();
+        }
+    }
+
+    /** Only persisted server-issued keys or HTTPS references to this configured storage are identities. */
+    public static String communityMediaObjectKey(String reference) {
+        if (reference != null && reference.matches("upload/[0-9a-f]{32}\\.[a-z0-9]{1,10}")) return reference;
+        return communityMediaObjectKey(reference, requiredEnv(OSS_BUCKET_NAME_ENV), requiredEnv(OSS_ENDPOINT_ENV));
+    }
+
+    static String communityMediaObjectKey(String reference, String bucket, String endpoint) {
+        if (reference == null || !reference.equals(reference.trim())) throw new IllegalArgumentException("社区媒体来源无效");
+        if (reference.matches("upload/[0-9a-f]{32}\\.[a-z0-9]{1,10}")) return reference;
+        try {
+            URI storage = new URI(endpoint.contains("://") ? endpoint : "https://" + endpoint);
+            URI uri = new URI(reference);
+            String key = uri.getRawPath() == null || !uri.getRawPath().startsWith("/")
+                    ? "" : uri.getRawPath().substring(1);
+            if (!"https".equalsIgnoreCase(storage.getScheme()) || storage.getHost() == null
+                    || storage.getUserInfo() != null || storage.getPort() != -1
+                    || storage.getRawQuery() != null || storage.getRawFragment() != null
+                    || !(storage.getRawPath().isEmpty() || "/".equals(storage.getRawPath()))
+                    || !"https".equalsIgnoreCase(uri.getScheme())
+                    || uri.getUserInfo() != null || uri.getPort() != -1 || uri.getRawFragment() != null
+                    || !(bucket + "." + storage.getHost()).equalsIgnoreCase(uri.getHost())
+                    || !key.matches("upload/[0-9a-f]{32}\\.[a-z0-9]{1,10}")) {
+                throw new IllegalArgumentException("社区媒体来源无效");
+            }
+            return key;
+        } catch (URISyntaxException | NullPointerException invalid) {
+            throw new IllegalArgumentException("社区媒体来源无效", invalid);
+        }
+    }
+
     static Date shortLivedExpiration(Date now, int expirationSeconds) {
         if (now == null) {
             throw new IllegalArgumentException("短期 OSS URL 起始时间不能为空");
@@ -694,6 +750,35 @@ public class FileOssUploadUtils {
         }
 
         return url;
+    }
+
+    private static OSSClient createCommunityOssClient() {
+        return createCommunityOssClient(requiredEnv(OSS_ENDPOINT_ENV),
+                new DefaultCredentialProvider(requiredEnv(OSS_ACCESS_KEY_ID_ENV), requiredEnv(OSS_ACCESS_KEY_SECRET_ENV)));
+    }
+
+    static OSSClient createCommunityOssClient(String endpoint, DefaultCredentialProvider credentials) {
+        ClientConfiguration configuration = new ClientConfiguration();
+        configuration.setProtocol(Protocol.HTTPS);
+        return new OSSClient(communityEndpoint(endpoint), credentials, configuration);
+    }
+
+    static String communityEndpoint(String endpoint) {
+        if (endpoint == null || !endpoint.equals(endpoint.trim())) {
+            throw new IllegalArgumentException("社区 OSS endpoint 无效");
+        }
+        try {
+            URI storage = new URI(endpoint.contains("://") ? endpoint : "https://" + endpoint);
+            if (!"https".equalsIgnoreCase(storage.getScheme()) || storage.getHost() == null
+                    || storage.getUserInfo() != null || storage.getPort() != -1
+                    || storage.getRawQuery() != null || storage.getRawFragment() != null
+                    || !(storage.getRawPath().isEmpty() || "/".equals(storage.getRawPath()))) {
+                throw new IllegalArgumentException("社区 OSS endpoint 无效");
+            }
+            return "https://" + storage.getHost();
+        } catch (URISyntaxException invalid) {
+            throw new IllegalArgumentException("社区 OSS endpoint 无效", invalid);
+        }
     }
 
     private static OSSClient createOssClient() {

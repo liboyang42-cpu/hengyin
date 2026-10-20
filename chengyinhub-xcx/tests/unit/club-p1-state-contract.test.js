@@ -40,6 +40,7 @@ function loadPage(relativePath, app, requireMap = {}) {
       if (request === '../utils/owner-action-guard.js') return require(path.join(ROOT, 'pages/club/utils/owner-action-guard.js'))
       // PR10 F-W1-12:页面新依赖登录引导判定(真模块,无副作用)
       if (request.endsWith('/utils/session/login-reload.js')) return require('../../utils/session/login-reload.js')
+      if (request === '../utils/club-pinned-notice.js') return require('../../pages/club/utils/club-pinned-notice.js')
       throw new Error(`unexpected require: ${request}`)
     },
     Set,
@@ -88,7 +89,7 @@ function createDetailHarness() {
     '../../../utils/motion-preference.js': require('../../utils/motion-preference.js'),
     '../../../utils/scene-registry.js': { getScene: () => ({}) },
     '../../../utils/datetime': { toTimestamp: () => 0 },
-    '../../../utils/mockData.js': { DEMO_NEARBY_CLUB_ID: -1 },
+    '../utils/mockData.js': { DEMO_NEARBY_CLUB_ID: -1 },
     '../utils/aiPlanToDraft.js': { aiPlanToDraft: () => ({}) },
     '../../../utils/group-code-session.js': {
       buildGroupCodeIssuePayload: () => ({}),

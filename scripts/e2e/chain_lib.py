@@ -10,8 +10,19 @@
 import json, os, urllib.request, urllib.parse, urllib.error
 import pymysql
 
-BASE = "http://127.0.0.1:8099"
 FORBIDDEN = {"47.103.124.64", "47.100.84.122"}
+
+
+def load_base(environ):
+    """后端地址默认本机 8099;CI 可经 CHENGYIN_E2E_BASE 覆盖，但同样拒连生产主机。"""
+    base = environ.get("CHENGYIN_E2E_BASE", "http://127.0.0.1:8099")
+    host = urllib.parse.urlsplit(base).hostname
+    if not host or host in FORBIDDEN:
+        raise SystemExit("拒绝连接生产主机")
+    return base.rstrip("/")
+
+
+BASE = load_base(os.environ)
 
 
 def load_db_config(environ):

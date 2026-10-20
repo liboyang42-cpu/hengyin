@@ -1,0 +1,9 @@
+<view wx:if="{{notices.length}}" class="cpn">
+  <view class="cpn__title">公告 · 新人先看</view>
+  <view wx:for="{{notices}}" wx:key="id" class="cpn__row" data-id="{{item.id}}" bindtap="onOpen"
+        aria-role="button" aria-label="{{item.unread ? '未读公告：' : '公告：'}}{{item.summary}}"
+        hover-class="cy-pressed" hover-stay-time="80">
+    <view class="cpn__dot {{item.unread ? 'is-unread' : ''}}" aria-hidden="true"></view>
+    <text class="cpn__text">{{item.summary || '（无文字内容）'}}</text>
+  </view>
+</view>

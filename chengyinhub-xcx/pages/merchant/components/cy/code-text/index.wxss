@@ -1,0 +1,6 @@
+.ct { display: flex; flex-direction: column; align-items: center; gap: var(--cy-space-2); padding: var(--cy-space-3); }
+.ct__code {
+  font-family: Menlo, Consolas, monospace; font-size: var(--cy-font-body); letter-spacing: 2rpx;
+  word-break: break-all; text-align: center; color: var(--cy-text-title);
+}
+.ct__hint { font-size: var(--cy-type-caption); color: var(--cy-color-text-secondary); text-align: center; }

@@ -304,6 +304,15 @@
         ) then 1 else 0 end
     </select>
 
+    <!-- 仅供新 OFFERED 准入；不收窄取消/过期释放共用的 policy 查询。 -->
+    <select id="selectPromotableActivityForUpdate" resultType="java.lang.Long">
+        select id from cms_activity
+        where id = #{activityId} and club_id = #{clubId}
+          and status = 1 and publish_status = 1 and del_flag = 0
+          and end_date &gt; #{now}
+        for update
+    </select>
+
     <!-- 所有可能触发晋级的路径先锁 club，统一正常报名的 club -> ticket 锁序。 -->
     <select id="selectClubOwnerForUpdate" resultType="java.lang.Long">
         select member_id from club

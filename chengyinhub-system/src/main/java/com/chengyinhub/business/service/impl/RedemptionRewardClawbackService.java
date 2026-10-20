@@ -267,10 +267,17 @@ public class RedemptionRewardClawbackService {
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("couponId", couponId);
         Long historyId = smsCouponHistoryMapper.selectCompletionRewardHistoryId(memberId, topicId);
-        SmsCouponHistory history = historyId == null ? null
-                : smsCouponHistoryMapper.selectSmsCouponHistoryByIdForUpdate(historyId);
-        if (history == null) {
-            out.put("result", "NOT_FOUND");
+        if (historyId == null || historyId <= 0) {
+            out.put("result", "UNKNOWN_IDENTITY_NOT_RECOVERED");
+            return out;
+        }
+        SmsCouponHistory history = smsCouponHistoryMapper.selectSmsCouponHistoryByIdForUpdate(historyId);
+        if (history == null || !historyId.equals(history.getId()) || !memberId.equals(history.getMemberId())
+                || !couponId.equals(history.getCouponId())
+                || (history.getDelFlag() != null && history.getDelFlag() != 0)) {
+            // 原身份缺失时仅审计，不猜其他券，不删除原日志或写券补发标记。
+            // 返回结果而非异常，让其他已授权积分/经验冲正沿原事务继续。
+            out.put("result", "UNKNOWN_IDENTITY_NOT_RECOVERED");
             return out;
         }
         out.put("historyId", history.getId());

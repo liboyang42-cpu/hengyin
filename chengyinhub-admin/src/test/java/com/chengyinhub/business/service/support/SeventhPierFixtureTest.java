@@ -261,7 +261,12 @@ class SeventhPierFixtureTest {
         state.getVariables().put("relation.qiao", Integer.valueOf(2));
         state.getVariables().put("relation.arong", Integer.valueOf(-1));
         TopicRouteSessionMapper sessionMapper = mock(TopicRouteSessionMapper.class);
-        when(sessionMapper.selectMemberTopicSessions(900L, TOPIC_ID)).thenReturn(java.util.Collections.singletonList(session(objectMapper.writeValueAsString(state))));
+        TopicRouteSession endingSession = session(objectMapper.writeValueAsString(state));
+        when(sessionMapper.selectMemberTopicSessions(900L, TOPIC_ID)).thenReturn(java.util.Collections.singletonList(endingSession));
+        when(sessionMapper.selectCurrentByOwner(0L, TOPIC_ID, 900L)).thenAnswer(inv ->
+                Long.valueOf(900L).equals(endingSession.getMemberId())
+                        && Long.valueOf(TOPIC_ID).equals(endingSession.getTopicId())
+                        && Long.valueOf(0L).equals(endingSession.getActivityId()) ? endingSession : null);
 
         CmsTopicNodeMapper nodeMapper = mock(CmsTopicNodeMapper.class);
         when(nodeMapper.selectCmsTopicNodeList(any(CmsTopicNode.class)))
@@ -324,6 +329,12 @@ class SeventhPierFixtureTest {
         TopicRouteSession[] stored = new TopicRouteSession[1];
         TopicRouteSessionMapper sessionMapper = mock(TopicRouteSessionMapper.class);
         when(sessionMapper.selectMemberTopicSessions(memberId, TOPIC_ID)).thenAnswer(inv -> java.util.Collections.singletonList(stored[0]));
+        when(sessionMapper.selectCurrentByOwner(0L, TOPIC_ID, memberId)).thenAnswer(inv -> {
+            TopicRouteSession current = stored[0];
+            return current != null && memberId.equals(current.getMemberId())
+                    && Long.valueOf(TOPIC_ID).equals(current.getTopicId())
+                    && Long.valueOf(0L).equals(current.getActivityId()) ? current : null;
+        });
         when(sessionMapper.insertAction(any())).thenReturn(1);
         when(sessionMapper.updateStateCas(any())).thenReturn(1);
         // CORE OWN-C06-25：动作回执总以最终结算值回写原动作。

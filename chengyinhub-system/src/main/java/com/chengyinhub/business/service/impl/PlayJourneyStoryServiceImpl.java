@@ -98,7 +98,7 @@ public class PlayJourneyStoryServiceImpl implements IPlayJourneyStoryService {
         }
         CmsTopic topic = requireTopic(topicId);
         // 剧情优先读本局建局冻结值(R11-A);老局快照没有冻结键时回退实时主题配置。
-        TopicRouteSession session = TopicRouteSessionScope.find(sessionMapper, memberId, topicId, activityId);
+        TopicRouteSession session = TopicRouteSessionScope.findCurrent(sessionMapper, memberId, topicId, activityId);
         JourneyStory story = requireStory(topic, session);
         if (story.getStages() == null || story.getStages().isEmpty()) {
             throw new ServiceException("本主题未配置剧情阶段");
@@ -119,7 +119,7 @@ public class PlayJourneyStoryServiceImpl implements IPlayJourneyStoryService {
         }
         requireSession(session, memberId);
         TopicRouteEngine.State state = readState(session);
-        assertChapterNodesCompleted(topicId, chapterId, state);
+        assertChapterNodesCompleted(topicId, chapterId, state, session);
 
         Map<String, Object> view = new LinkedHashMap<String, Object>();
         view.put("changed", passingTexts(stage.getEnd() == null ? null : stage.getEnd().getChanged(), state));
@@ -154,11 +154,17 @@ public class PlayJourneyStoryServiceImpl implements IPlayJourneyStoryService {
         }
         CmsTopic topic = requireTopic(topicId);
         // 剧情优先读本局建局冻结值(R11-A);老局快照没有冻结键时回退实时主题配置。
-        TopicRouteSession session = TopicRouteSessionScope.find(sessionMapper, memberId, topicId, activityId);
+        TopicRouteSession session = TopicRouteSessionScope.findCurrent(sessionMapper, memberId, topicId, activityId);
         if (session != null && session.getStatus() != null && session.getStatus() != TopicRouteSession.STATUS_RUNNING) {
             TopicRouteEngine.State frozenState = readState(session);
             if (frozenState.getThemeRuntime().has("result")) {
-                Map<String,Object> result = new ObjectMapper().convertValue(frozenState.getThemeRuntime().get("result"), new com.fasterxml.jackson.core.type.TypeReference<Map<String,Object>>(){});
+                JsonNode archived = frozenState.getThemeRuntime().get("result");
+                // 缺键旧局仍走下方兼容路径；显式损坏值不能冒充可用结局。
+                // endingId 在无候选的合法终态中可以缺省，不要求新版本字段齐全。
+                if (!archived.isObject() || archived.size() == 0) {
+                    throw new ServiceException("本局结局快照不可用");
+                }
+                Map<String,Object> result = JSON.convertValue(archived, new com.fasterxml.jackson.core.type.TypeReference<Map<String,Object>>(){});
                 result.put("code",result.get("endingId")); return result;
             }
         }
@@ -275,7 +281,12 @@ public class PlayJourneyStoryServiceImpl implements IPlayJourneyStoryService {
         List<com.chengyinhub.business.domain.GameRuntimeSession> rows =
                 gameSessionMapper.selectPlayerSessionsByTopic(activityId, topicId, memberId);
         if (rows == null) return out;
+        // 旧模型缺省实例沿用既有 null→default 兼容；空白不是默认实例，也不是通配。
+        String instance = session.getPlayInstanceId() == null ? "default" : session.getPlayInstanceId();
         for (com.chengyinhub.business.domain.GameRuntimeSession row : rows) {
+            if (row == null) continue;
+            String rowInstance = row.getPlayInstanceId() == null ? "default" : row.getPlayInstanceId();
+            if (!instance.equals(rowInstance)) continue;
             JsonNode config;
             JsonNode state;
             try {
@@ -376,8 +387,18 @@ public class PlayJourneyStoryServiceImpl implements IPlayJourneyStoryService {
         }
     }
 
-    /** 本章节启用节点全部完成才可取结算;章节下没有启用节点时视为无可阻挡。 */
-    private void assertChapterNodesCompleted(Long topicId, Long chapterId, TopicRouteEngine.State state) {
+    /** 有唯一且完整的非空冻结节点集合时按本局门槛；其余保留实时启用节点检查。 */
+    private void assertChapterNodesCompleted(Long topicId, Long chapterId, TopicRouteEngine.State state,
+                                             TopicRouteSession session) {
+        List<Long> frozenIds = frozenStageNodeIds(session.getConfigSnapshotJson(), chapterId);
+        if (frozenIds != null) {
+            for (Long nodeId : frozenIds) {
+                if (!state.getCompletedNodeIds().contains(nodeId)) {
+                    throw new ServiceException("本章节还有站点未完成");
+                }
+            }
+            return;
+        }
         CmsTopicNode probe = new CmsTopicNode();
         probe.setTopicId(topicId);
         probe.setChapterId(chapterId);
@@ -390,6 +411,35 @@ public class PlayJourneyStoryServiceImpl implements IPlayJourneyStoryService {
             if (node.getId() != null && !state.getCompletedNodeIds().contains(node.getId())) {
                 throw new ServiceException("本章节还有站点未完成");
             }
+        }
+    }
+
+    /** 不完整、空或不唯一的冻结证据不改变旧的实时完成检查。 */
+    private List<Long> frozenStageNodeIds(String snapshotJson, Long chapterId) {
+        if (snapshotJson == null) return null;
+        try {
+            JsonNode root = JSON.readTree(snapshotJson);
+            JsonNode chapters = root == null ? null : root.get("thoughtChapters");
+            if (chapters == null || !chapters.isArray()) return null;
+            JsonNode matched = null;
+            for (JsonNode chapter : chapters) {
+                JsonNode id = chapter.get("chapterId");
+                if (id == null || !id.isIntegralNumber() || !id.canConvertToLong() || id.asLong() <= 0L)
+                    return null;
+                if (id.asLong() != chapterId.longValue()) continue;
+                if (matched != null) return null;
+                matched = chapter;
+            }
+            JsonNode ids = matched == null ? null : matched.get("nodeIds");
+            if (ids == null || !ids.isArray() || ids.size() == 0) return null;
+            List<Long> result = new ArrayList<Long>();
+            for (JsonNode id : ids) {
+                if (!id.isIntegralNumber() || !id.canConvertToLong() || id.asLong() <= 0L) return null;
+                result.add(id.asLong());
+            }
+            return result;
+        } catch (Exception unusableSnapshot) {
+            return null;
         }
     }
 
@@ -462,7 +512,7 @@ public class PlayJourneyStoryServiceImpl implements IPlayJourneyStoryService {
         if (relationKey == null || state.getVariables() == null) {
             return "neutral";
         }
-        Number value = state.getVariables().get(relationKey);
+        Number value = state.getVariables().get(relationKey.trim());
         if (value == null) {
             return "neutral";
         }
@@ -530,7 +580,7 @@ public class PlayJourneyStoryServiceImpl implements IPlayJourneyStoryService {
         }
         int found = 0;
         for (String key : optionalClues) {
-            Number value = state.getVariables() == null ? null : state.getVariables().get(key);
+            Number value = state.getVariables() == null ? null : state.getVariables().get(key.trim());
             if (value != null && value.doubleValue() >= 1d) {
                 found++;
             }

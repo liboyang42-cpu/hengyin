@@ -47,7 +47,7 @@ class SmsCouponDisabledTest {
 
     @Test
     void manuallyDisabledCouponCannotBeRedeemedAndLeavesNoSideEffects() {
-        when(histories.selectSmsCouponHistoryById(301L)).thenReturn(history(0));
+        when(histories.selectSmsCouponHistoryByIdForUpdate(301L)).thenReturn(history(0));
         when(coupons.selectSmsCouponById(30L)).thenReturn(coupon(3));
 
         assertEquals(ISmsCouponHistoryService.RedemptionResult.DISABLED,
@@ -61,7 +61,7 @@ class SmsCouponDisabledTest {
 
     @Test
     void alreadyRedeemedCouponStaysAlreadyUsedAfterDisable() {
-        when(histories.selectSmsCouponHistoryById(301L)).thenReturn(history(1));
+        when(histories.selectSmsCouponHistoryByIdForUpdate(301L)).thenReturn(history(1));
         when(coupons.selectSmsCouponById(30L)).thenReturn(coupon(3));
 
         assertEquals(ISmsCouponHistoryService.RedemptionResult.ALREADY_USED,
@@ -74,7 +74,7 @@ class SmsCouponDisabledTest {
         // 不回「已停用」(商家扫码时那句理由必须是真的),且不放松 C-30 的零副作用要求。
         SmsCouponHistory expired = history(0);
         expired.setEndTime(new Date(System.currentTimeMillis() - 60_000));
-        when(histories.selectSmsCouponHistoryById(301L)).thenReturn(expired);
+        when(histories.selectSmsCouponHistoryByIdForUpdate(301L)).thenReturn(expired);
         when(coupons.selectSmsCouponById(30L)).thenReturn(coupon(3));
         when(histories.expireUnusedCoupon(any(), any())).thenReturn(1);
 
@@ -89,7 +89,7 @@ class SmsCouponDisabledTest {
 
     @Test
     void activeCouponStillRedeems() {
-        when(histories.selectSmsCouponHistoryById(301L)).thenReturn(history(0));
+        when(histories.selectSmsCouponHistoryByIdForUpdate(301L)).thenReturn(history(0));
         when(coupons.selectSmsCouponById(30L)).thenReturn(coupon(1));
         when(histories.claimUnusedCoupon(any(), any())).thenReturn(1);
         when(coupons.incrementUseCount(30L)).thenReturn(1);
@@ -222,7 +222,7 @@ class SmsCouponDisabledTest {
         verify(coupons, never()).tryIncrementIssuableReceiveCount(any());
         verify(histories, never()).insertSmsCouponHistory(any());
 
-        when(histories.selectSmsCouponHistoryById(301L)).thenReturn(history(0));
+        when(histories.selectSmsCouponHistoryByIdForUpdate(301L)).thenReturn(history(0));
         when(coupons.selectSmsCouponById(30L)).thenReturn(coupon(4));
         when(histories.claimUnusedCoupon(any(), any())).thenReturn(1);
         when(coupons.incrementUseCount(30L)).thenReturn(1);
