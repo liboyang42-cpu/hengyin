@@ -740,11 +740,12 @@ public class CmsActivityServiceImpl implements ICmsActivityService
      * @param request CmsActivityPublishRequest
      * @param memberId  发布用户ID
      * @param username 发布用户昵称
+     * @param preReview true=先审后发;false=先发后审
      * @return
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long publishActivity(CmsActivityPublishRequest request, Long memberId,String username) {
+    public Long publishActivity(CmsActivityPublishRequest request, Long memberId,String username, boolean preReview) {
         // 9-16 拍板第 2 条:欠款逾期未补足 ⇒ 限制交易(不能上架新活动)。
         settlementDebtLedger.requireNoOverdueDebt(memberId);
         if (request.getClubId() != null && request.getClubId() > 0) {
@@ -783,10 +784,12 @@ public class CmsActivityServiceImpl implements ICmsActivityService
 
         // M1-3 社群活动:俱乐部主理人发社群活动时挂 club_id(公域列表不出,仅成员可见)
         activity.setClubId(request.getClubId());
-        // M0-6 先审后发:活动发布 → 待审(status=0/publishStatus=0),公域列表(status=1)不出;
-        // 审核台通过后 applyModeration 置 1 上架。
-        activity.setStatus(0L);
-        activity.setPublishStatus(0L);
+        // 分级审核(2026-10-20 拍板,推翻 M0-6「活动一律先审后发」):活动按内容处理,默认先发后审,
+        // 直接上架(status=1/publishStatus=1),事后靠举报/抽检/图片回调下架;
+        // 高风险类目、未审核商家、总闸 pre_review_all 由 ActivityReviewPolicy 判成 preReview →
+        // 仍待审(status=0/publishStatus=0),公域列表不出,审核台通过后 applyModeration 置 1 上架。
+        activity.setStatus(preReview ? 0L : 1L);
+        activity.setPublishStatus(preReview ? 0L : 1L);
         activity.setDelFlag(0); // 0->未删除
 
         // 设置创建信息
@@ -803,13 +806,15 @@ public class CmsActivityServiceImpl implements ICmsActivityService
         }
         Long activityId = activity.getId();
 
-        // M0-6 先审后发:活动发布后自动建审核任务(best-effort,失败不阻断)
-        try {
-            String snap = "{\"bizType\":\"ACTIVITY\",\"bizId\":" + activityId
-                    + ",\"name\":\"" + (activity.getName() == null ? "" : activity.getName().replace("\"", "'")) + "\"}";
-            auditTaskService.submit(com.chengyinhub.business.domain.AuditTask.BIZ_ACTIVITY, activityId, memberId, "user_publish", snap);
-        } catch (Exception ignore) {
-            logger.error("活动发布审核任务提交失败 activityId={}", activityId, ignore);
+        // 先审后发的活动建审核任务(best-effort,失败不阻断);先发后审不建阻断单
+        if (preReview) {
+            try {
+                String snap = "{\"bizType\":\"ACTIVITY\",\"bizId\":" + activityId
+                        + ",\"name\":\"" + (activity.getName() == null ? "" : activity.getName().replace("\"", "'")) + "\"}";
+                auditTaskService.submit(com.chengyinhub.business.domain.AuditTask.BIZ_ACTIVITY, activityId, memberId, "user_publish", snap);
+            } catch (Exception ignore) {
+                logger.error("活动发布审核任务提交失败 activityId={}", activityId, ignore);
+            }
         }
 
         //3. 处理合作者
