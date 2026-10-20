@@ -1,4 +1,22 @@
-## 当前f8验收分层：HTTP／Funds通过，完整Backend失败，单槽定向修复
+## 当前下一最小修复：同一举报工具移至主包，旧分包路径转接
+
+f8 Mini最终失败已由验证者定位为组件／资源路径门禁：三处新caller同步依赖 `pages/square` 分包下工具不合法，17项单测PASS不足以证明包依赖正确。C00只读核到app.json确实将pages/square注册为subpackageSquare；旧工具实现没有require／import依赖。无资源门禁豁免，不把此问题称为单测已绿即完成。
+
+仅追加本地root同一组合分支／唯一修复槽的两条写权：`chengyinhub-xcx/utils/community-report-sheet.js` 承接6aa旧实现逐字不变；`chengyinhub-xcx/pages/square/utils/community-report-sheet.js` 仅留 `module.exports = require('../../../utils/community-report-sheet.js');` 转接。实现只有一份，保square原caller和测试路径；沿原三caller授权只将七处require改回各自主包utils相对路径。不改app.json／分包注册／组件配置／页面交互／权限／测试／门禁，不复制两套实现或增加新行为。该精确迁移取代先前禁止新主包模块的限制，仅为既有调用兼容，不扩域。
+
+6aa已交六文件仍冻结，既有自然CI继续不取消／重跑；下一包依赖修复尚无公开SHA，不继承旧PASS。root待这项固定后再接续必要HTTP／存储，Cloud不验证、不新增作者。精确路径及逐文件边界见 `LONGRUN_REMAINING.json.independent_backend_acceptance.shared_report_sheet_repair_authority`。
+
+## 当前固定源码：PR394的6aa8c2，六文件最小修复冻结待验
+
+[PR394](https://github.com/liboyang42-cpu/hengyin/pull/394) 最新固定源码 `6aa8c2c676c48ab1203c7156c85783ef4b57783a`，直接父提交 `f8fe6a5ba5d986b51a9dbbfacf26a263667433b1`。C00已只读核对公开diff：精确六文件，23行新增／5行删除；Controller仅两处blocked恢复400，C03_21／24接入既有真实安全夹具，24 rejected仅允许selectCmsTopicById(77L)一次再禁止其余交互，继续零写。Community图片改既有合法upload/32hex.jpg key，不要OSS凭据／不移除安全边界；SaleReview仅补同一既有身份保护链需要的chapter／node／activity成功insert ID。生产身份保护及其他合同不动。
+
+集成写者报告四类26个@Test方法体逐字不变、Journey原5测试未动；公开diff仅涉及setup／常量及已授权rejected helper，不推定26项已运行。provenance只改已授权CmsActivity单hash，6静态合同PASS、6条权限记录逐字一致由集成写者报告。未新增权限／SQL／依赖／门禁／CI配置。
+
+状态 **SOURCE_DELIVERED_FROZEN／WAIT_CI**；交付时新Java未手动执行，既有自然 [CI39435545650](https://github.com/liboyang42-cpu/hengyin/actions/runs/39435545650)、[Funds39435545671](https://github.com/liboyang42-cpu/hengyin/actions/runs/39435545671)、[selected backend39435545738](https://github.com/liboyang42-cpu/hengyin/actions/runs/39435545738) 已启动，当前无最终签收。6aa交付冻结，root同一槽仅按当前共享工具迁移授权续修，无新增作者；Cloud仅读证据和维护控制文档，未编译／测试／触发CI。
+
+旧f8的五HTTP／13读回、Funds、39-selected通过仅归f8；完整Backend失败与Mini最终失败亦保留原源，Mini根因为同步跨分包依赖，见当前最小迁移授权，不能预报通过。新6aa不继承任何旧成绩，整体／真微信／设备／出站stub／持久迁移／生产边界保留。后续新结果集中更新同一当前索引；不合master、不部署、不执行生产迁移、不新增入口。精确交付见 `LONGRUN_REMAINING.json.independent_backend_acceptance.latest_frozen_repair`。
+
+## 先前固定f8验收及修复授权历史：成绩不继承6aa
 
 固定 `f8fe6a5ba5d986b51a9dbbfacf26a263667433b1` 的完整Backend报告12696项，7失败／7错误／628跳过；包含关闭的IT，不能称真库skip0或12696项业务全执行。失败仅5类：JourneyNarrativeSecuritySaveTest(2F)、OWN_C03_21Test(4F)、OWN_C03_24Test(1F4E)、CommunityPostAuditLevelTest(1E)、TopicSaleReviewDecouplingTest(2E)。C00直接核到Backend检查FAIL；精确数量与诊断由集成验证者提供。
 

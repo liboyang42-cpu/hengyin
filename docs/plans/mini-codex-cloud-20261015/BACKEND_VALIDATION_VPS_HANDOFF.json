@@ -3091,7 +3091,7 @@
     "authorization": "User approved independent integration and existing CI acceptance.",
     "integration_writer": "local root coordinator only",
     "target_branch": "codex/final-backend-acceptance-20261020",
-    "state": "F8_HTTP_FUNDS_PASS_BACKEND_FAIL_EXACT_SINGLE_SLOT_REPAIR_AUTHORIZED",
+    "state": "6AA_SOURCE_FROZEN_MAIN_PACKAGE_DEPENDENCY_REPAIR_AUTHORIZED_WAIT_CI",
     "authorized_exact_conflict_paths": [
       "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java",
       "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java",
@@ -3100,11 +3100,11 @@
       "chengyinhub-xcx/tests/unit/get-auth-matrix-contract.test.js"
     ],
     "three_team_source_state": "FROZEN; original ownership retained; no new Cloud writer",
-    "combined_candidate": "f8fe6a5ba5d986b51a9dbbfacf26a263667433b1 / HTTP_FUNDS_PASS_BACKEND_FAIL_NOT_ACCEPTED",
+    "combined_candidate": "6aa8c2c676c48ab1203c7156c85783ef4b57783a / SOURCE_DELIVERED_FROZEN_WAIT_CI; f8 results source-bound only",
     "limits": "No master merge, deployment, production migration, new entry or 212/CI/network configuration changes by this integration task.",
     "conflict_scope": "Resolve only #385 production conflicts and #387 listed ledger/test conflicts. Preserve both sources contracts, validation, action ledger, assertions and GET-auth allowlist. No product UI, request strategy or permission-semantics changes; no deleted tests to obtain success.",
     "preview_record": "LONGRUN_REMAINING.json#independent_backend_acceptance.merge_preview",
-    "creation_or_candidate_sha": "f8fe6a5ba5d986b51a9dbbfacf26a263667433b1",
+    "creation_or_candidate_sha": "6aa8c2c676c48ab1203c7156c85783ef4b57783a",
     "combined_pr": {
       "number": 394,
       "url": "https://github.com/liboyang42-cpu/hengyin/pull/394",
@@ -3118,8 +3118,8 @@
     },
     "current_runs": {
       "record": "LONGRUN_REMAINING.json#independent_backend_acceptance.current_runs",
-      "source_sha": "f8fe6a5ba5d986b51a9dbbfacf26a263667433b1",
-      "state": "HTTP_FUNDS_SUCCESS_BACKEND_CHECK_FAILURE"
+      "source_sha": "6aa8c2c676c48ab1203c7156c85783ef4b57783a",
+      "state": "NATURAL_CI_STARTED_NO_FINAL_VERDICT"
     },
     "conflict_resolution": {
       "source_sha": "95f038ae57ac38d35d532a07fbd82375c74d887f",
@@ -3163,11 +3163,13 @@
       "writer": "local root coordinator only",
       "target_branch": "codex/final-backend-acceptance-20261020",
       "base_source_sha": "f8fe6a5ba5d986b51a9dbbfacf26a263667433b1",
-      "state": "AUTHORIZED_SINGLE_PROVENANCE_FILE_SOURCE_NOT_DELIVERED",
+      "state": "SOURCE_DELIVERED_FROZEN_WAIT_CI",
       "authorized_exact_paths": [
         "ci/prelaunch-seed-provenance.json"
       ],
-      "scope": "Only #388 CmsActivityController.java sourceFiles hash and necessary provenance explanation; other fingerprints/viewCoverage/menu/role/permission/SQL/tests/gates retained."
+      "scope": "Only #388 CmsActivityController.java sourceFiles hash and necessary provenance explanation; other fingerprints/viewCoverage/menu/role/permission/SQL/tests/gates retained.",
+      "new_source_sha": "6aa8c2c676c48ab1203c7156c85783ef4b57783a",
+      "writer_status": "STOPPED_PENDING_FEEDBACK; same sole root integration repair slot, no extra writer"
     },
     "f8_validation_progress": {
       "record": "LONGRUN_REMAINING.json#independent_backend_acceptance.f8_validation_progress",
@@ -3179,7 +3181,7 @@
       "writer": "local root coordinator only",
       "target_branch": "codex/final-backend-acceptance-20261020",
       "base_source_sha": "f8fe6a5ba5d986b51a9dbbfacf26a263667433b1",
-      "state": "AUTHORIZED_EXACT_FOUR_TEST_FIXTURES_AND_EXISTING_CONTROLLER_400_REPAIR",
+      "state": "SOURCE_DELIVERED_FROZEN_WAIT_CI",
       "additional_test_paths": [
         "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_21Test.java",
         "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_24Test.java",
@@ -3187,7 +3189,8 @@
         "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSaleReviewDecouplingTest.java"
       ],
       "existing_controller_scope": "Two explicit textVerdict blocked returns restore400 only; existing1e628 branch authority, no service edit",
-      "new_source_sha": "NOT_DELIVERED"
+      "new_source_sha": "6aa8c2c676c48ab1203c7156c85783ef4b57783a",
+      "writer_status": "STOPPED_PENDING_FEEDBACK; same sole root integration repair slot, no extra writer"
     },
     "f8_current_validation": {
       "record": "LONGRUN_REMAINING.json#independent_backend_acceptance.f8_current_validation",
@@ -3196,7 +3199,33 @@
       "backend": "12696 reported/7F7E628Skipped; no storage skipped0 claim",
       "http": "PASS_FIVE_CHAINS_AT_F8",
       "funds": "PASS_AT_F8",
-      "not_inherited_to_new_source": true
+      "not_inherited_to_new_source": true,
+      "historical_for_current_candidate": true
+    },
+    "latest_frozen_repair": {
+      "record": "LONGRUN_REMAINING.json#independent_backend_acceptance.latest_frozen_repair",
+      "source_sha": "6aa8c2c676c48ab1203c7156c85783ef4b57783a",
+      "parent_sha": "f8fe6a5ba5d986b51a9dbbfacf26a263667433b1",
+      "state": "SOURCE_DELIVERED_FROZEN_WAIT_CI",
+      "writer_status": "STOPPED_PENDING_FEEDBACK; same sole root integration repair slot, no extra writer",
+      "inherited_pass": false
+    },
+    "shared_report_sheet_repair_authority": {
+      "record": "LONGRUN_REMAINING.json#independent_backend_acceptance.shared_report_sheet_repair_authority",
+      "writer": "local root coordinator only",
+      "target_branch": "codex/final-backend-acceptance-20261020",
+      "base_source_sha": "6aa8c2c676c48ab1203c7156c85783ef4b57783a",
+      "state": "AUTHORIZED_EXACT_SHARED_TOOL_MOVE_SOURCE_NOT_DELIVERED",
+      "additional_exact_paths": [
+        "chengyinhub-xcx/utils/community-report-sheet.js",
+        "chengyinhub-xcx/pages/square/utils/community-report-sheet.js"
+      ],
+      "reactivated_existing_caller_paths": [
+        "chengyinhub-xcx/utils/content-report.js",
+        "chengyinhub-xcx/pages/topic/index/index.js",
+        "chengyinhub-xcx/pages/templatedetail/templatedetail.js"
+      ],
+      "scope": "Identical main-package implementation move, one old-path forwarding export, seven original main-utils references; no second implementation or UI/policy/test/gate/config edit."
     }
   }
 }
