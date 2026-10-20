@@ -323,7 +323,7 @@
   ],
   "permission": {
     "scope.userLocation": {
-      "desc": "用于附近活动推荐、到点打卡判定与漫游足迹记录"
+      "desc": "用于确定首页城市、到点打卡判定与漫游足迹记录"
     }
   },
   "darkmode": true,

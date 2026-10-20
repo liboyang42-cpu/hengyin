@@ -3317,7 +3317,7 @@ Page({
 
   sendData: function (data, url, action) {
     const current = currentEditor(this);
-    if (!current()) return;
+    if (!current() || !this._ownTemplateWritable()) return;
     const that = this;
     if (url === '/api/merchant/city-node/template/submit'
         && !that.data.merchantAccess.canManageProjects) {
@@ -3356,8 +3356,7 @@ Page({
              否则采用公开玩法后留在页里再存一次,还会拿公开库 id 走「采用」分支,再建一份重复草稿。 */
           // 发布页(from=fabu)进来时保存走的是 bind 分支,同样切到本人草稿(再存由 _boundDraftId 更新同一份)
           if (submittingAction === 'draft' || submittingAction === 'bind') {
-            that._templateId = createdId;
-            that.data.isMyScope = true;
+            that._switchToSavedTemplate(createdId);
           }
           if (that.data.from === 'citynode') {
             // 回传给据点页:它拿 templateId 去提交投放申请。
@@ -3495,14 +3494,14 @@ Page({
   },
 
   // ===== 回填 =====
-  getData: function () {
+  getData: function (preserveForm) {
     const current = currentEditor(this);
     if (!current()) return;
     if (this._adoptingTemplate || this._adoptionUnconfirmed) return;
     var that = this;
     const requestToken = (this._templateLoadToken || 0) + 1;
-    this._templateLoadToken = requestToken;
-    const isMyScope = this.data.isMyScope === true;
+    this._templateLoadToken = requestToken; this._templateCanEdit = false;
+    const isMyScope = this.data.isMyScope === true, requestedTemplateId = positiveId(this._templateId);
     this.setData({ editorLoading: true, loadErrorIsOperation: false, loadErrorIsAccess: false, loadError: '' });
     const recover = (res, status) => !that._disposed && requestToken === that._templateLoadToken && recoverReadSession(that, app, res,
       function (anonymous) { this._templateLoadToken++; this._loadedAuthorFields = null; this._editorMemberId = editorMemberId(); this.destroyPreviewAudio();
@@ -3516,8 +3515,9 @@ Page({
       method: "POST",
       success: function (res) {
         if (!current() || requestToken !== that._templateLoadToken) return;
-        const validRecord = isTemplateDetailPayload(res && res.data);
+        const validRecord = isTemplateDetailPayload(res && res.data) && that._templateRecordMatches(res.data, preserveForm, requestedTemplateId);
         if (res && res.code == "200" && validRecord) {
+          if (that._applyTemplateEditPermission(res.data, isMyScope, preserveForm)) return;
           if (!isMyScope && !that.data.previewMode) {
             that._adoptingTemplate = true;
             // 旧请求 complete 不能把创建/回读途中显示为已加载。
@@ -3600,7 +3600,7 @@ Page({
       wx.reLaunch({ url: '/subpackageMember/mytemplate/mytemplate' + (this.data.operationScope === 'MERCHANT' ? '?scope=MERCHANT' : '') });
       return;
     }
-    if (positiveId(this._templateId)) this.getData();
+    if (positiveId(this._templateId)) this.getData(this._confirmingNewDraft === true);
   },
 
   fillFormWithTemplateData: function (templateData) {
@@ -3851,5 +3851,47 @@ Page({
       if (idx !== -1) { patch.difficultyIndex = idx; patch.difficultyLabel = that.data.difficultyOptionsData[idx].dictLabel; }
     }
     if (Object.keys(patch).length) that.setData(patch);
+  },
+
+  // ===== 个人模板编辑权限 =====
+  // 写权限只认 /api/template/myinfo 按实际归属返回的 canEdit === true(服务端保存仍校验归属)。
+  // 以下方法集中放在文件尾,避免既有调用点迁行。
+  _ownTemplateWritable: function () {
+    if (!this.data.isMyScope || this._templateCanEdit === true) return true;
+    toast('请先确认该模板可由你编辑');
+    return false;
+  },
+
+  // 草稿 / 绑定首存成功后本页改编辑本人这份草稿;新 ID 或未确认归属时先回读 myinfo,确认前不再写。
+  _switchToSavedTemplate: function (createdId) {
+    const needsOwnerConfirmation = this._templateCanEdit !== true || positiveId(this._templateId) !== createdId;
+    this._templateId = createdId;
+    this.data.isMyScope = true;
+    if (needsOwnerConfirmation && this.data.from !== 'citynode') {
+      this._confirmingNewDraft = true;
+      this.getData(true);
+    }
+  },
+
+  // 仅确认归属的回读必须正是刚保存的那份草稿,且期间没有换成别的 ID。
+  _templateRecordMatches: function (record, preserveForm, requestedTemplateId) {
+    return preserveForm !== true || (positiveId(record.id) === requestedTemplateId
+      && positiveId(this._templateId) === requestedTemplateId);
+  },
+
+  // 返回 true 表示本次回读已处理完(非本人只读跳转,或首存后仅确认归属),调用方不再回填表单。
+  _applyTemplateEditPermission: function (record, isMyScope, preserveForm) {
+    if (isMyScope && record.canEdit !== true) {
+      this.setData({ editorLoading: false, loadError: '此个人模板仅供查看，请从模板广场选用玩法' });
+      wx.redirectTo({ url: '/pages/templatedetail/templatedetail?id=' + this._templateId + '&scope=my' +
+        (this.data.operationScope === 'MERCHANT' ? '&operationScope=MERCHANT' : '') });
+      return true;
+    }
+    this._templateCanEdit = isMyScope;
+    if (preserveForm !== true) return false;
+    // 首次保存后只确认归属，不能覆盖保存期间继续输入的内容。
+    this._confirmingNewDraft = false;
+    this.setData({ editorLoading: false, loadError: '' });
+    return true;
   },
 });

@@ -89,7 +89,8 @@ public class CmsInfomationController extends BaseController
         cmsInfomation.setCreateTime(null);
         cmsInfomation.setUpdateBy(null);
         cmsInfomation.setUpdateTime(null);
-        return toAjax(cmsInfomationService.insertCmsInfomation(cmsInfomation));
+        return toAjax(cmsInfomationService.insertCmsInfomation(cmsInfomation, request.getAuditReason(),
+                SecurityUtils.getUserId(), SecurityUtils.getUsername()));
     }
 
     /**
@@ -110,7 +111,8 @@ public class CmsInfomationController extends BaseController
         cmsInfomation.setCreateTime(null);
         cmsInfomation.setUpdateBy(SecurityUtils.getUsername());
         cmsInfomation.setUpdateTime(null);
-        return toAjax(cmsInfomationService.updateCmsInfomation(cmsInfomation));
+        return toAjax(cmsInfomationService.updateCmsInfomation(cmsInfomation, request.getAuditReason(),
+                SecurityUtils.getUserId(), SecurityUtils.getUsername()));
     }
 
     /**

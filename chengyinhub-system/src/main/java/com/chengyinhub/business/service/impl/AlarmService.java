@@ -110,6 +110,14 @@ public class AlarmService {
         if (event == null || !event.matches("[a-z][a-z0-9_.-]{0,79}")) {
             throw new IllegalArgumentException("Invalid alarm event key");
         }
+        if (event.startsWith("runtime.redis.")) {
+            if (claimLocally(event)) alarm(title, detail);
+            return;
+        }
+        Long localAttempt = localAttempts.get(event);
+        if (localAttempt != null && System.currentTimeMillis() - localAttempt < LOCAL_THROTTLE_MS) {
+            return;
+        }
         try {
             Boolean claimed = redisCache.setIfAbsent("alarm:attempt:" + event, "1", 600, TimeUnit.SECONDS);
             if (Boolean.FALSE.equals(claimed)) {

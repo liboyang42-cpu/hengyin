@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.WxFundFlowBillSnapshotMapper">
+  <insert id="insertSnapshot" useGeneratedKeys="true" keyProperty="id">
+    insert into wx_fund_flow_bill_snapshot
+      (bill_date, merchant_id, account_type, accounting_time, wx_business_no, flow_no, business_name, business_type, direction, amount, balance, initiator, remark, voucher_no)
+    values
+      (#{billDate,jdbcType=DATE}, #{merchantId,jdbcType=VARCHAR}, #{accountType,jdbcType=VARCHAR}, #{accountingTime,jdbcType=TIMESTAMP}, #{wxBusinessNo,jdbcType=VARCHAR}, #{flowNo,jdbcType=VARCHAR}, #{businessName,jdbcType=VARCHAR}, #{businessType,jdbcType=VARCHAR}, #{direction,jdbcType=VARCHAR}, #{amount,jdbcType=DECIMAL}, #{balance,jdbcType=DECIMAL}, #{initiator,jdbcType=VARCHAR}, #{remark,jdbcType=VARCHAR}, #{voucherNo,jdbcType=VARCHAR})
+  </insert>
+  <select id="countMatchingSnapshot" resultType="int">
+    select count(*) from wx_fund_flow_bill_snapshot
+    where (bill_date = #{billDate,jdbcType=DATE} or (bill_date is null and #{billDate,jdbcType=DATE} is null))
+      and (merchant_id = #{merchantId,jdbcType=VARCHAR} or (merchant_id is null and #{merchantId,jdbcType=VARCHAR} is null))
+      and (account_type = #{accountType,jdbcType=VARCHAR} or (account_type is null and #{accountType,jdbcType=VARCHAR} is null))
+      and (accounting_time = #{accountingTime,jdbcType=TIMESTAMP} or (accounting_time is null and #{accountingTime,jdbcType=TIMESTAMP} is null))
+      and (wx_business_no = #{wxBusinessNo,jdbcType=VARCHAR} or (wx_business_no is null and #{wxBusinessNo,jdbcType=VARCHAR} is null))
+      and (flow_no = #{flowNo,jdbcType=VARCHAR} or (flow_no is null and #{flowNo,jdbcType=VARCHAR} is null))
+      and (business_name = #{businessName,jdbcType=VARCHAR} or (business_name is null and #{businessName,jdbcType=VARCHAR} is null))
+      and (business_type = #{businessType,jdbcType=VARCHAR} or (business_type is null and #{businessType,jdbcType=VARCHAR} is null))
+      and (direction = #{direction,jdbcType=VARCHAR} or (direction is null and #{direction,jdbcType=VARCHAR} is null))
+      and (amount = #{amount,jdbcType=DECIMAL} or (amount is null and #{amount,jdbcType=DECIMAL} is null))
+      and (balance = #{balance,jdbcType=DECIMAL} or (balance is null and #{balance,jdbcType=DECIMAL} is null))
+      and (initiator = #{initiator,jdbcType=VARCHAR} or (initiator is null and #{initiator,jdbcType=VARCHAR} is null))
+      and (remark = #{remark,jdbcType=VARCHAR} or (remark is null and #{remark,jdbcType=VARCHAR} is null))
+      and (voucher_no = #{voucherNo,jdbcType=VARCHAR} or (voucher_no is null and #{voucherNo,jdbcType=VARCHAR} is null))
+  </select>
+</mapper>

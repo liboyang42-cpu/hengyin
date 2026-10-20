@@ -1,6 +1,8 @@
 package com.chengyinhub.business.mapper;
 
+import java.util.Date;
 import java.util.List;
+import org.apache.ibatis.annotations.Param;
 import com.chengyinhub.business.domain.CmsInfomation;
 
 /**
@@ -42,6 +44,12 @@ public interface CmsInfomationMapper
      * @return 结果
      */
     public int updateCmsInfomation(CmsInfomation cmsInfomation);
+
+    /** 与玩法说明写入同事务追加；不保存正文或会员身份。 */
+    int insertCmsInfomationChangeAudit(@Param("infomationId") Long infomationId,
+            @Param("action") String action, @Param("operatorUserId") Long operatorUserId,
+            @Param("operatorUsername") String operatorUsername, @Param("reason") String reason,
+            @Param("createTime") Date createTime);
 
     /**
      * 删除玩法说明

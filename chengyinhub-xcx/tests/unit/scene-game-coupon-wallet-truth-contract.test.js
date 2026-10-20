@@ -5,11 +5,11 @@ const path = require('node:path')
 const { flattenComponentToPage } = require('../helpers/component-as-page.js')
 
 const ROOT = path.resolve(__dirname, '../..')
-const MODULE = path.join(ROOT, 'components/cy/scene-game-coupon-wallet/index.js')
+const MODULE = path.join(ROOT, 'subpackageMember/components/cy/scene-game-coupon-wallet/index.js')
 
 function loadComponent() {
   const sandbox = { requests: [], events: [] }
-  global.getApp = () => ({ getUserID: () => 'member-A', sendRequest: (options) => sandbox.requests.push(options) })
+  global.getApp = () => ({ getAuthorization: () => 'current-session', getUserID: () => 'member-A', sendRequest: (options) => sandbox.requests.push(options) })
   global.Component = (config) => { sandbox.def = Object.assign(flattenComponentToPage(config), { _hide: config.pageLifetimes.hide }) }
   global.wx = {}
   delete require.cache[require.resolve(MODULE)]
@@ -75,8 +75,8 @@ test('状态筛选与打开核销码都使用严格投影，未知券没有动�
 })
 
 test('可操作性不靠原始字段，箭头使用项目图标资产', () => {
-  const wxml = fs.readFileSync(path.join(ROOT, 'components/cy/scene-game-coupon-wallet/index.wxml'), 'utf8')
-  const json = JSON.parse(fs.readFileSync(path.join(ROOT, 'components/cy/scene-game-coupon-wallet/index.json'), 'utf8'))
+  const wxml = fs.readFileSync(path.join(ROOT, 'subpackageMember/components/cy/scene-game-coupon-wallet/index.wxml'), 'utf8')
+  const json = JSON.parse(fs.readFileSync(path.join(ROOT, 'subpackageMember/components/cy/scene-game-coupon-wallet/index.json'), 'utf8'))
   assert.match(wxml, /item\._isUsable/)
   assert.doesNotMatch(wxml, /item\.useStatus\s*===/)
   assert.match(wxml, /<cy-icon[^>]*name="arrow-right"/)

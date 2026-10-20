@@ -94,7 +94,7 @@ function assertSharedPlayerCardRecipe(sources) {
 //     sheet: read('components/cy/scene-sheet/index.wxss'),
 //     reference: read('components/cy/scene-roam-history/index.wxss'),
 //     route: read('components/cy/scene-route-content/index.wxss'),
-//     coupon: read('components/cy/scene-game-coupon-wallet/index.wxss'),
+//     coupon: read('subpackageMember/components/cy/scene-game-coupon-wallet/index.wxss'),
 //     orderHistory: read('subpackageMember/components/cy/scene-member-order-history/index.wxss'),
 //     orderDetail: read('subpackageMember/components/cy/scene-member-order-detail/index.wxss'),
 //     profile: read('subpackageMember/components/cy/profile/index.wxss'),

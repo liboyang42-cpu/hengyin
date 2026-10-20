@@ -4,7 +4,7 @@ const path = require('node:path');
 function mount() {
   let owner='7', definition;
   const requests=[];
-  const app={getUserID:()=>owner,getRequestErrorMessage:(res,fallback)=>res&&res.msg||fallback,
+  const app={getUserID:()=>owner,getAuthorization:()=>owner?'Bearer unit-fixture':'',getRequestErrorMessage:(res,fallback)=>res&&res.msg||fallback,
     sendRequest:o=>{requests.push(o);return {aborted:false,abort(){this.aborted=true;}};}};
   global.getApp=()=>app;global.Page=d=>definition=d;global.wx={};
   const file=path.resolve(__dirname,'../../subpackageMember/complaint/index.js');delete require.cache[file];require(file);

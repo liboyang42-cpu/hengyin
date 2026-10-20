@@ -1,6 +1,8 @@
 package com.chengyinhub.business.service.impl;
 
 import com.chengyinhub.business.domain.RefundApplication;
+import com.chengyinhub.business.domain.CmsRegistration;
+import com.chengyinhub.business.mapper.CmsRegistrationMapper;
 import com.chengyinhub.business.mapper.RefundApplicationMapper;
 import com.chengyinhub.business.service.INotifyService;
 import com.chengyinhub.business.service.impl.AlarmService;
@@ -9,6 +11,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -45,6 +49,12 @@ class RefundManualPayoutTest {
         alarmService = mock(AlarmService.class);
         svc = new RefundServiceImpl();
         ReflectionTestUtils.setField(svc, "refundApplicationMapper", refundApplicationMapper);
+        CmsRegistration registration = new CmsRegistration();
+        registration.setRegistrationNo("REG88");
+        registration.setWechatPaymentAmount(new BigDecimal("30.00"));
+        CmsRegistrationMapper registrations = mock(CmsRegistrationMapper.class);
+        when(registrations.selectCmsRegistrationById(88L)).thenReturn(registration);
+        ReflectionTestUtils.setField(svc, "cmsRegistrationMapper", registrations);
         ReflectionTestUtils.setField(svc, "notifyService", notifyService);
         ReflectionTestUtils.setField(svc, "alarmService", alarmService);
         // 2026-09-16 补合 paycb:退款回调先落 inbox 去重(cc36b4552),返回值不参与状态推进;
@@ -167,36 +177,50 @@ class RefundManualPayoutTest {
         RefundApplication r = new RefundApplication();
         r.setId(id);
         r.setRefundNo("RF88");
+        r.setSourceType("registration");
+        r.setSourceId(88L);
+        r.setRefundAmount(new BigDecimal("12.50"));
         when(refundApplicationMapper.selectByRefundNo("RF88")).thenReturn(r);
         when(refundApplicationMapper.updatePayoutResult(eq(id), any(), any())).thenReturn(1);
         return r;
     }
 
+    private static Map<String, String> facts(String refundNo, String status) {
+        Map<String, String> facts = new HashMap<>();
+        facts.put("outRefundNo", refundNo);
+        facts.put("outTradeNo", "REG88");
+        facts.put("status", status);
+        facts.put("refund", "1250");
+        facts.put("total", "3000");
+        facts.put("currency", "CNY");
+        return facts;
+    }
+
     @Test
     void notify_success_marksPayoutSuccess() {
         byRefundNo(3L);
-        assertTrue(svc.handleRefundNotify("RF88", "SUCCESS"));
+        assertTrue(svc.handleRefundNotify(facts("RF88", "SUCCESS")));
         verify(refundApplicationMapper).updatePayoutResult(eq(3L), eq(RefundApplication.PAYOUT_SUCCESS), any());
     }
 
     @Test
     void notify_abnormal_marksPendingManual() {
         byRefundNo(3L);
-        assertTrue(svc.handleRefundNotify("RF88", "ABNORMAL"));
+        assertTrue(svc.handleRefundNotify(facts("RF88", "ABNORMAL")));
         verify(refundApplicationMapper).updatePayoutResult(eq(3L), eq(RefundApplication.PAYOUT_PENDING_MANUAL), any());
     }
 
     @Test
     void notify_closed_marksPendingManual() {
         byRefundNo(3L);
-        assertTrue(svc.handleRefundNotify("RF88", "CLOSED"));
+        assertTrue(svc.handleRefundNotify(facts("RF88", "CLOSED")));
         verify(refundApplicationMapper).updatePayoutResult(eq(3L), eq(RefundApplication.PAYOUT_PENDING_MANUAL), any());
     }
 
     @Test
     void notify_processing_noChange() {
         byRefundNo(3L);
-        assertTrue(svc.handleRefundNotify("RF88", "PROCESSING"));
+        assertTrue(svc.handleRefundNotify(facts("RF88", "PROCESSING")));
         verify(refundApplicationMapper, never()).updatePayoutResult(any(), any(), any());
     }
 
@@ -205,6 +229,9 @@ class RefundManualPayoutTest {
         RefundApplication initial = new RefundApplication();
         initial.setId(3L);
         initial.setRefundNo("RF88");
+        initial.setSourceType("registration");
+        initial.setSourceId(88L);
+        initial.setRefundAmount(new BigDecimal("12.50"));
         RefundApplication exact = new RefundApplication();
         exact.setId(3L);
         exact.setRefundNo("RF88");
@@ -213,7 +240,7 @@ class RefundManualPayoutTest {
         when(refundApplicationMapper.updatePayoutResult(eq(3L), eq(RefundApplication.PAYOUT_SUCCESS), any()))
                 .thenReturn(0);
 
-        assertTrue(svc.handleRefundNotify("RF88", "SUCCESS"));
+        assertTrue(svc.handleRefundNotify(facts("RF88", "SUCCESS")));
     }
 
     @Test
@@ -221,6 +248,9 @@ class RefundManualPayoutTest {
         RefundApplication initial = new RefundApplication();
         initial.setId(3L);
         initial.setRefundNo("RF88");
+        initial.setSourceType("registration");
+        initial.setSourceId(88L);
+        initial.setRefundAmount(new BigDecimal("12.50"));
         RefundApplication different = new RefundApplication();
         different.setId(3L);
         different.setRefundNo("RF88");
@@ -229,14 +259,14 @@ class RefundManualPayoutTest {
         when(refundApplicationMapper.updatePayoutResult(eq(3L), eq(RefundApplication.PAYOUT_SUCCESS), any()))
                 .thenReturn(0);
 
-        assertEquals(false, svc.handleRefundNotify("RF88", "SUCCESS"));
+        assertEquals(false, svc.handleRefundNotify(facts("RF88", "SUCCESS")));
     }
 
     @Test
     void notify_ownRefundNoNotFoundYet_returnsFalseForRetry() {
         // "RF"开头=本系统号但查不到(外层批量事务尚未提交)→回 false 让微信重试,防丢失败通知
         when(refundApplicationMapper.selectByRefundNo("RF99")).thenReturn(null);
-        assertEquals(false, svc.handleRefundNotify("RF99", "ABNORMAL"));
+        assertEquals(false, svc.handleRefundNotify(facts("RF99", "ABNORMAL")));
         verify(refundApplicationMapper, never()).updatePayoutResult(any(), any(), any());
     }
 
@@ -244,13 +274,13 @@ class RefundManualPayoutTest {
     void notify_foreignRefundNo_acks() {
         // 非"RF"号(coop 保证金等)→ ACK,不重试
         when(refundApplicationMapper.selectByRefundNo("DEP5")).thenReturn(null);
-        assertTrue(svc.handleRefundNotify("DEP5", "SUCCESS"));
+        assertTrue(svc.handleRefundNotify(facts("DEP5", "SUCCESS")));
         verify(refundApplicationMapper, never()).updatePayoutResult(any(), any(), any());
     }
 
     @Test
     void notify_nullRefundNo_acks() {
-        assertTrue(svc.handleRefundNotify(null, "SUCCESS"));
+        assertTrue(svc.handleRefundNotify(facts(null, "SUCCESS")));
         verify(refundApplicationMapper, never()).selectByRefundNo(any());
     }
 }

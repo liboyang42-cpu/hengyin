@@ -155,7 +155,15 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
         Map<String, Object> receipt = mapper.selectCommandReceipt(memberId, request.getClientRequestId());
         if (receipt != null) {
             validateCreateReplay(receipt, fingerprint);
-            return detail(memberId, number(value(receipt, "aggregate_id")));
+            Long aggregateId = number(value(receipt, "aggregate_id"));
+            CommunityPost replayed = mapper.selectByAuthorRequest(memberId, request.getClientRequestId());
+            if (positive(aggregateId) && replayed != null && memberId.equals(replayed.getAuthorId())
+                    && aggregateId.equals(replayed.getId())
+                    && CommunityPost.LIFECYCLE_DELETED.equals(replayed.getLifecycle())
+                    && mapper.countAuthorDeleteEvidence(memberId, aggregateId) == 1) {
+                return Collections.singletonMap("intentDiscarded", true);
+            }
+            return detail(memberId, aggregateId);
         }
         CommunityPost existing = mapper.selectByAuthorRequest(memberId, request.getClientRequestId());
         if (existing != null) {

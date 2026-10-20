@@ -1,9 +1,16 @@
 'use strict'
 
 const app = getApp()
-const credential = require('../../../utils/coupon-credential.js')
-const { isRecordList } = require('../../../utils/response-shape.js')
-const datetime = require('../../../utils/datetime.js')
+const credential = require('../../../../utils/coupon-credential.js')
+const { isRecordList } = require('../../../../utils/response-shape.js')
+const datetime = require('../../../../utils/datetime.js')
+const { isLoginRequired, failureStatus, retryLogin, waitForInitialSession, recoverReadSession } = require('../../../../utils/session/login-reload.js')
+
+function authorization() {
+  return typeof app.getAuthorization === 'function' ? app.getAuthorization()
+    : typeof app.getToken === 'function' ? app.getToken() : app.globalData && app.globalData.authorization
+}
+function hasSession() { return !!(currentOwnerId() && authorization()) }
 
 function ok(res) { return res && (res.code === 200 || res.code === '200') }
 
@@ -61,52 +68,84 @@ function decorate(item) {
 
 Component({
   data: { state: 'loading', tab: 0, tabs: ['全部', '待使用', '已使用', '已过期'], all: [], items: [], errorMsg: '' },
-  lifetimes: { attached() { this.load() }, detached() { this._loadSeq = (this._loadSeq || 0) + 1 } },
+  lifetimes: {
+    attached() { this._detached = false; this._hidden = false; this.load() },
+    detached() { this._detached = true; this._loadSeq = (this._loadSeq || 0) + 1 },
+  },
   pageLifetimes: {
     show() {
+      this._hidden = false
       const owner = currentOwnerId()
-      if (this._inFlightOwner === owner && this._inFlightSeq && !this._refreshOnShow) return
-      if (this._requestedOwner !== owner || this._refreshOnShow) {
+      const token = authorization()
+      if (this._inFlightOwner === owner && this._requestedAuthorization === token && this._inFlightSeq && !this._refreshOnShow) return
+      if (this._requestedOwner !== owner || this._requestedAuthorization !== token || this._refreshOnShow) {
         this._refreshOnShow = false
         this.load()
       }
     },
-    hide() { this._refreshOnShow = true },
+    hide() { this._hidden = true; this._refreshOnShow = true; this._loadSeq = (this._loadSeq || 0) + 1 },
   },
   methods: {
     load() {
+      if (this._detached || this._hidden) return
       // 账号切换/重进时的读取代际 + owner 快照:旧账号在途回包不得覆盖当前列表。
       const seq = (this._loadSeq = (this._loadSeq || 0) + 1)
       const owner = currentOwnerId()
+      const token = authorization()
+      if (this._requestedOwner !== owner || this._requestedAuthorization !== token) this._loginRequired = false
       this._requestedOwner = owner
+      this._requestedAuthorization = token
       this.setData({ state: 'loading', errorMsg: '', all: [], items: [] })
-      if (!owner) { this._listOwner = ''; this.setData({ state: 'error', errorMsg: '登录状态待确认，请登录后重试。' }); return }
+      if (!hasSession() || this._loginRequired) {
+        this._listOwner = ''
+        this._inFlightSeq = 0
+        this._inFlightOwner = ''
+        this.setData({ state: 'login' })
+        waitForInitialSession(this, app, function () {
+          if ((this._loadSeq || 0) === seq) this.load()
+        })
+        return
+      }
       this._inFlightOwner = owner
       this._inFlightSeq = seq
       const settle = () => {
         if (this._inFlightSeq === seq) { this._inFlightSeq = 0; this._inFlightOwner = '' }
       }
+      const failure = (res, statusCode, message) => {
+        settle()
+        if (this._detached || this._hidden || seq !== this._loadSeq) return
+        if (recoverReadSession(this, app, res, function () {
+          this._loadSeq++
+          this._listOwner = ''
+          this._inFlightSeq = 0
+          this._inFlightOwner = ''
+          this.setData({ all: [], items: [], state: hasSession() ? 'loading' : 'login', errorMsg: '' })
+        }, this.load, statusCode)) return
+        if (!hasSession()) {
+          this._listOwner = ''
+          this.setData({ all: [], items: [], state: 'login', errorMsg: '' })
+          return
+        }
+        if (owner !== currentOwnerId() || token !== authorization()) return
+        this._listOwner = ''
+        this._loginRequired = isLoginRequired(app, res, statusCode)
+        this.setData({ all: [], items: [], state: this._loginRequired ? 'login'
+          : failureStatus(res, statusCode) === 403 ? 'permission' : 'error', errorMsg: message })
+      }
       app.sendRequest({
         url: '/api/coupon/myrecvlist', method: 'POST', data: { keyword: '' }, hideLoading: true, silentError: true,
         success: (res) => {
           settle()
+          if (!ok(res) || !isRecordList(res.data)) { failure(res, undefined, '优惠券暂时没能打开，请稍后重试。'); return }
+          if (this._detached || this._hidden || token !== authorization()) return
           if (!owner || seq !== this._loadSeq || owner !== currentOwnerId()) return
-          if (!ok(res) || !isRecordList(res.data)) { this.setData({ state: 'error', errorMsg: '优惠券暂时没能打开，请稍后重试。' }); return }
           const all = res.data.map(decorate)
           this._listOwner = owner
           this.setData({ all, state: all.length ? 'ready' : 'empty' }, () => this.filter())
         },
-        successStatusAbnormal: () => {
-          settle()
-          if (!owner || seq !== this._loadSeq || owner !== currentOwnerId()) return
-          this.setData({ state: 'error', errorMsg: '服务暂时不可用，请稍后重试。' })
-        },
+        successStatusAbnormal: (res, statusCode) => failure(res, statusCode, '服务暂时不可用，请稍后重试。'),
         complete: settle,
-        fail: () => {
-          settle()
-          if (!owner || seq !== this._loadSeq || owner !== currentOwnerId()) return
-          this.setData({ state: 'error', errorMsg: '网络异常，请检查网络后重试。' })
-        },
+        fail: (res, statusCode) => failure(res, statusCode, '网络异常，请检查网络后重试。'),
       })
     },
     filter() {
@@ -125,6 +164,14 @@ Component({
       this.triggerEvent('open', { id: 'qr-coupon', params: { couponHistoryId: item._id, name: item._name } })
     },
     close() { this.triggerEvent('close') },
-    retry() { this.load() },
+    retry() {
+      if (this.data.state !== 'login') { this.load(); return }
+      const seq = this._loadSeq || 0
+      return retryLogin(this, app, function () {
+        if ((this._loadSeq || 0) !== seq) return
+        this._loginRequired = false
+        this.load()
+      })
+    },
   },
 })

@@ -129,7 +129,7 @@ class ObjectCardMintHookTest {
         org.springframework.test.util.ReflectionTestUtils.setField(visionService, "consentGuard", org.mockito.Mockito.mock(com.chengyinhub.business.service.ConsentGuard.class));
         com.chengyinhub.business.mapper.AppMediaAssetMapper reviewedImages = mock(com.chengyinhub.business.mapper.AppMediaAssetMapper.class);
         when(reviewedImages.selectByObjectKey("/profile/upload/2026/10/12/0123456789abcdef0123456789abcdef.jpg")).thenReturn(Map.of(
-                "id", 101L, "memberId", 1L, "ownerType", "SYSTEM", "reviewState", "APPROVED",
+                "id", 101L, "memberId", MEMBER_ID, "ownerType", "APP", "reviewState", "APPROVED",
                 "mediaType", "IMAGE", "storageType", "LOCAL", "objectKey", "/profile/upload/2026/10/12/0123456789abcdef0123456789abcdef.jpg"));
         com.chengyinhub.business.service.support.AppMediaReferenceGuard reviewedMedia = new com.chengyinhub.business.service.support.AppMediaReferenceGuard();
         ReflectionTestUtils.setField(reviewedMedia, "mapper", reviewedImages);

@@ -835,11 +835,9 @@ public class WechatPayServiceImpl implements IWechatPayService {
                     && coopInviteService.handleDepositRefundResult(facts) ? facts.get("status") : null;
         }
         // 主动查微信真实退款态并回写(P3 回调的拉取兜底;admin"刷新微信状态"也走它)
-        String status = queryRefundStatus(outRefundNo);
-        if (status != null) {
-            refundBizService.handleRefundNotify(outRefundNo, status);
-        }
-        return status;
+        Map<String, String> facts = queryRefundFacts(outRefundNo);
+        return facts != null && outRefundNo != null && outRefundNo.equals(facts.get("outRefundNo"))
+                && refundBizService.handleRefundNotify(facts) ? facts.get("status") : null;
     }
 
     @Override
@@ -863,7 +861,8 @@ public class WechatPayServiceImpl implements IWechatPayService {
             boolean ok = notif.getOutRefundNo() != null && notif.getOutRefundNo().startsWith("RDEP")
                     ? coopInviteService.handleDepositRefundResult(refundFacts(notif.getOutRefundNo(),
                         notif.getOutTradeNo(), st == null ? null : st.name(), notif.getAmount()))
-                    : refundBizService.handleRefundNotify(notif.getOutRefundNo(), st == null ? null : st.name());
+                    : refundBizService.handleRefundNotify(refundFacts(notif.getOutRefundNo(),
+                        notif.getOutTradeNo(), st == null ? null : st.name(), notif.getAmount()));
             if (!ok) {
                 logger.error("微信退款回调业务处理失败,回 FAIL 触发重试: out_refund_no={}", notif.getOutRefundNo());
                 alarmService.alarmThrottled("refund.callback.failed", "退款回调业务处理失败",

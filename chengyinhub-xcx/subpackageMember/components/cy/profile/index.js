@@ -7,6 +7,12 @@ const motion = require('../../../../utils/motion.js');
 const { readReducedMotion } = require('../../../../utils/motion-preference.js');
 const { toTimestamp } = require('../../../../utils/datetime');
 const app = getApp();
+const session = require('../../../../utils/session/login-reload.js');
+function profileAuthorization() {
+  const value = typeof app.getAuthorization === 'function' ? app.getAuthorization()
+    : typeof app.getToken === 'function' ? app.getToken() : app.globalData && app.globalData.authorization;
+  return typeof value === 'string' ? value.trim() : '';
+}
 const community = require('../../../../utils/community-post-api.js').createClient(app, wx);
 const roleGuard = require('../../../../utils/roleGuard.js');
 const policy = require('../../../../utils/identity/identity-policy.js');
@@ -364,6 +370,7 @@ Component({
     //                    绝不能当商家身份真源。
     hostSelf: true,
     isSelf: true,
+    selfReadAccess: '',
     merchantAccess: inactiveAccess(),
     merchantAccessState: 'idle',
     merchantTeamEntryValue: '',
@@ -480,12 +487,14 @@ Component({
   lifetimes: {
     attached: function () {
       this._profileAttached = true;
+      this._profileHidden = false;
       this._syncProfileReducedMotion();
       this.initializeProfile();
       this._syncCommunityProfile();
     },
     detached: function () {
       this._profileAttached = false;
+      this._profileReadEpoch = (this._profileReadEpoch || 0) + 1;
       this._coopAccessEpoch = (this._coopAccessEpoch || 0) + 1;
       this._following = false;
       this._followEpoch = (this._followEpoch || 0) + 1;
@@ -496,6 +505,15 @@ Component({
   pageLifetimes: {
     show: function () {
       if (!this._profileAttached) return;
+      this._profileHidden = false;
+      const identityChanged = this._syncProfileReadIdentity();
+      if (identityChanged || this._profileNeedsInitialize) {
+        this._profileNeedsInitialize = false;
+        this._profileKey = null;
+        this.initializeProfile();
+        this._syncCommunityProfile();
+        return;
+      }
       this._syncProfileReducedMotion();
       const firstShow = !this._profileShown;
       this._profileShown = true;
@@ -525,19 +543,88 @@ Component({
     // applyTheme 的那些)会顶着一条白导航栏 —— 旧 merchant/profile 页用
     // merchantPageRestore 处理的就是这件事,收编后这层责任跟着搬过来。
     hide: function () {
+      this._profileHidden = true;
+      this._profileReadEpoch = (this._profileReadEpoch || 0) + 1;
+      if (this.data.pointsSheet.loading) this.setData({ 'pointsSheet.loading': false });
       this._profileShown = true;
       if (!this.data.hostSelf && this.data.subjectIsMerchant) applyTheme('dark');
     }
   },
 
   methods: {
+    _clearSelfReadState: function (access) {
+      this.setData({ selfReadAccess: access, userInfo: {}, categoryList: [], casePicsList: [], joinInfo: { id: 0 },
+        merchantAccess: inactiveAccess(), merchantAccessState: 'idle', merchantTeamEntryValue: '', isMerchantView: false,
+        role: 'player', isClubLeader: false, clubOwnedCount: 0, benefits: buildBenefits({}), balanceText: null,
+        friendNum: 0, followNum: 0, fansNum: 0, growthLevel: 1, streakDays: 0, exploreValue: 0, profilePoint: null,
+        pointsStat: { weekPoints: 0, rankPercentage: 0 }, rankDisplay: { no: 0, delta: '' },
+        identityCard: { shops: 0, themes: 0, routes: 0, km: '0', medals: 0, cities: 1 },
+        exploreStat: { shops: 0, weekExp: 0 }, themeProgress: [], medals: [], medalCount: 0,
+        orderPreviewList: [], projectPreviewList: [], projectPendingCount: 0, orderLoaded: false,
+        orderErr: false, orderAuthError: false, projectErr: false, projectAuthError: false, medalErr: false, medalAuthError: false,
+        list: [], page_no: 1, hasMore: false, nodata: false, feedErr: false, feedAuthError: false,
+        pointsSheet: { show: false, loading: false, loaded: false, failed: false, tasks: [] },
+        sceneStack: [], sceneCurrent: null, sceneConfirm: { show: false, action: null, pending: null } });
+    },
+    _syncProfileReadIdentity: function () {
+      const owner = session.memberId(app), token = profileAuthorization();
+      const changed = this._readProfileOwner !== undefined
+        && (owner !== this._readProfileOwner || token !== this._readProfileToken);
+      this._readProfileOwner = owner;
+      this._readProfileToken = token;
+      if (changed) {
+        this._profileReadEpoch = (this._profileReadEpoch || 0) + 1;
+        this._profileKey = null;
+        if (this.data.isSelf) this._clearSelfReadState(owner && token ? '' : 'login');
+      }
+      return changed;
+    },
+    _captureProfileRead: function (privateOnly) {
+      if (this._profileAttached === false || this._profileHidden || privateOnly && !this.data.isSelf) return null;
+      this._syncProfileReadIdentity();
+      const owner = session.memberId(app), token = profileAuthorization();
+      if (this.data.isSelf && (!owner || !token)) { this._clearSelfReadState('login'); return null; }
+      if (this.data.isSelf && this.data.selfReadAccess === 'login') return null;
+      if (this._readProfileOwner === undefined) { this._readProfileOwner = owner; this._readProfileToken = token; }
+      return { epoch: this._profileReadEpoch || 0, owner, token, target: String(this.data.userId || ''), self: this.data.isSelf };
+    },
+    _currentProfileRead: function (read, res, primary) {
+      if (!read || this._profileAttached === false || this._profileHidden || read.epoch !== (this._profileReadEpoch || 0)
+          || read.target !== String(this.data.userId || '') || read.self !== this.data.isSelf) return false;
+      const owner = session.memberId(app), token = profileAuthorization();
+      if (read.self && (!owner || !token)) {
+        this._profileReadEpoch = (this._profileReadEpoch || 0) + 1;
+        this._clearSelfReadState('login');
+        return false;
+      }
+      if (read.owner !== owner || read.token !== token) { this._syncProfileReadIdentity(); return false; }
+      if (read.self && isAuthFailure(res)) {
+        this._profileReadEpoch = (this._profileReadEpoch || 0) + 1;
+        this.setData({ selfReadAccess: 'login' });
+        return false;
+      }
+      if (primary && read.self && res && res.code == 403) { this.setData({ selfReadAccess: 'permission' }); return false; }
+      return true;
+    },
+    loginToReadProfile: function () {
+      if (this._profileHidden || this._profileAttached === false) return;
+      if (this.data.selfReadAccess === 'permission') { this._profileKey = null; this.initializeProfile(); return; }
+      const epoch = this._profileReadEpoch || 0, owner = session.memberId(app);
+      return session.retryLogin(this, app, function () {
+        if (epoch !== (this._profileReadEpoch || 0) || (owner && owner !== session.memberId(app)) || !profileAuthorization()) return;
+        this._profileKey = null;
+        this.initializeProfile();
+      });
+    },
     refreshCoopPublisherAccess: function () {
+      const read = this._captureProfileRead(false);
+      if (!read) return;
       const epoch = this._coopAccessEpoch = (this._coopAccessEpoch || 0) + 1;
       this.setData({ canInviteCoop: false });
       if (!this.data.isMerchantView || this.data.isSelf) return;
       const memberId = String(app.getUserID() || '');
       readPublisherAccess(app, this.data, allowed => {
-        if (!this._profileAttached || epoch !== this._coopAccessEpoch) return;
+        if (!this._currentProfileRead(read) || !this._profileAttached || epoch !== this._coopAccessEpoch) return;
         this._coopPublisherMemberId = allowed ? memberId : '';
         this.setData({ canInviteCoop: allowed });
       });
@@ -594,11 +681,14 @@ Component({
   },
 
   _syncCommunityProfile() {
+    const read = this._captureProfileRead(false);
+    if (!read) return;
     const owner = String(app.getUserID() || '');
     const target = String(this.data.userId || '');
     const epoch = (this._communityProfileEpoch || 0) + 1;
     this._communityProfileEpoch = epoch;
     const settle = () => {
+      if (!this._currentProfileRead(read)) return;
       if (this._profileAttached === false || epoch !== this._communityProfileEpoch
           || owner !== String(app.getUserID() || '') || target !== String(this.data.userId || '')) return;
       const tabs = profileTabs(this.data.isSelf, this.data.isMerchantView);
@@ -619,6 +709,8 @@ Component({
   },
 
   initializeProfile: function () {
+    if (this._profileHidden) { this._profileNeedsInitialize = true; return; }
+    this._syncProfileReadIdentity();
     var hostSelf = this.data.viewer !== 'other';
     var isSelf = this.computeIsSelf();
     var userId = hostSelf ? String(app.getUserID() || '') : String(this.data.userId || '');
@@ -637,6 +729,7 @@ Component({
       coopInviteShow: false,
       hostSelf: hostSelf,
       isSelf: isSelf,
+      selfReadAccess: '',
       merchantAccess: inactiveAccess(),
       merchantAccessState: 'idle',
       merchantTeamEntryValue: '',
@@ -687,6 +780,8 @@ Component({
    * 把第三种收敛进第二种,就是拿「没查到」冒充「他不是商家」。
    */
   probeSubjectMerchant: function () {
+    const read = this._captureProfileRead(false);
+    if (!read) return Promise.resolve();
     var that = this;
     var memberId = String(this.data.userId || '');
     if (!memberId) {
@@ -702,6 +797,7 @@ Component({
       header: { 'Content-Type': 'application/json' },
       data: JSON.stringify({ memberId: Number(memberId) || memberId }),
       success: function (res) {
+        if (!that._currentProfileRead(read)) return;
         if (res && res.code == '200' && res.data) {
           that.applySubjectMerchant(res.data);
           return;
@@ -712,7 +808,7 @@ Component({
         }
         that.clearSubjectMerchant('network-error');
       },
-      fail: function () { that.clearSubjectMerchant('network-error'); }
+      fail: function () { if (that._currentProfileRead(read)) that.clearSubjectMerchant('network-error'); }
     });
   },
 
@@ -776,6 +872,8 @@ Component({
   },
 
   loadMerchantAccess: function () {
+    const read = this._captureProfileRead(true);
+    if (!read) return Promise.resolve();
     var that = this;
     if (!this.data.isSelf || !app.getUserID()) {
       this.setData({ merchantAccess: inactiveAccess(), merchantAccessState: 'ready', merchantTeamEntryValue: '' });
@@ -783,6 +881,7 @@ Component({
     }
     this.setData({ merchantAccessState: 'loading' });
     return req('/api/merchant/access/me', {}).then(function (res) {
+      if (!that._currentProfileRead(read, res)) return;
       if (res.code != '200' || !isRecord(res.data)) {
         that.setData({ merchantAccess: inactiveAccess(), merchantAccessState: 'error', merchantTeamEntryValue: '' });
         return;
@@ -827,6 +926,8 @@ Component({
   },
 
   refreshAll: function (silent) {
+    const read = this._captureProfileRead(true);
+    if (!read) return Promise.resolve();
     var that = this;
     if (!silent) this.setData({ page_no: 1, list: [], hasMore: false, nodata: false, feedErr: false });
     this.resetProfileMetricState();
@@ -856,6 +957,8 @@ Component({
   },
 
   loadBanner: function () {
+    const read = this._captureProfileRead(false);
+    if (!read) return Promise.resolve();
     var that = this;
     var local = this.data.isSelf ? wx.getStorageSync('member_hero_bg') : '';
     if (local) {
@@ -863,6 +966,7 @@ Component({
       return;
     }
     req('/api/common/banner', { showType: 2 }).then(function (res) {
+      if (!that._currentProfileRead(read, res)) return;
       if (res.code == '200' && isRecordList(res.data) && res.data.length) {
         that.setData({ heroImg: res.data[0].picUrl || that.data.heroImg });
       }
@@ -870,6 +974,8 @@ Component({
   },
 
   loadUserData: function () {
+    const read = this._captureProfileRead(false);
+    if (!read) return Promise.resolve();
     var that = this;
     if (that._profileAttached === false) return Promise.resolve();
     var loginMemberId = app.getUserID();
@@ -883,6 +989,7 @@ Component({
     // viewer —— 否则本人从 canonical 进来会误走公开分支。
     var url = this.data.isSelf ? '/api/user/info' : '/api/user/public-info';
     return req(url, { member_id: memberId }).then(function (res) {
+      if (!that._currentProfileRead(read, res, true)) return;
       if (that._profileAttached === false || requestId !== that._userDataRequestId
           || loginMemberId !== app.getUserID()) return;
       // 换了被看者后，旧资料响应整包作废；同一被看者若在请求期间完成关注写入，
@@ -948,9 +1055,12 @@ Component({
   },
 
   loadRoleInfo: function () {
+    const read = this._captureProfileRead(true);
+    if (!read) return Promise.resolve();
     var that = this;
     return new Promise(function (resolve) {
       roleGuard.load(function (data) {
+        if (!that._currentProfileRead(read)) { resolve(); return; }
         if (data && data.role) {
           var isClubLeader = data.isClubLeader === true || data.role === 'club';
           that.setData({
@@ -967,8 +1077,11 @@ Component({
   },
 
   loadClubSummary: function () {
+    const read = this._captureProfileRead(true);
+    if (!read) return Promise.resolve();
     var that = this;
     req('/api/club/my', {}).then(function (res) {
+      if (!that._currentProfileRead(read, res)) return;
       var owned = (res.code == '200' && res.data && res.data.owned) || [];
       if (owned && !Array.isArray(owned)) owned = [owned];
       that.setData({ clubOwnedCount: owned.length });
@@ -976,12 +1089,15 @@ Component({
   },
 
   loadGrowthBundle: function () {
+    const read = this._captureProfileRead(true);
+    if (!read) return Promise.resolve();
     var that = this;
     if (that._profileAttached === false) return Promise.resolve();
     var memberId = app.getUserID();
     var requestId = that._growthRequestId = (that._growthRequestId || 0) + 1;
     var profileEpoch = that._followEpoch || 0;
     return Promise.all([req('/api/play/growth', {}), req('/api/growth/center', {})]).then(function (arr) {
+      if (!that._currentProfileRead(read, arr.find(isAuthFailure))) return;
       if (that._profileAttached === false || requestId !== that._growthRequestId
           || memberId !== app.getUserID() || profileEpoch !== (that._followEpoch || 0)) return;
       var playOk = arr[0].code == '200' && arr[0].data;
@@ -1026,19 +1142,25 @@ Component({
   },
 
   loadJoinData: function () {
+    const read = this._captureProfileRead(true);
+    if (!read) return Promise.resolve();
     var that = this;
     return req('/api/registration/join_info', { member_id: app.getUserID() }).then(function (res) {
+      if (!that._currentProfileRead(read, res)) return;
       if (res.code == '200') that.setData({ joinInfo: res.data || { id: 0 } });
     });
   },
 
   loadThemes: function () {
+    const read = this._captureProfileRead(true);
+    if (!read) return Promise.resolve();
     var that = this;
     if (that._profileAttached === false) return Promise.resolve();
     var memberId = app.getUserID();
     var requestId = that._themesRequestId = (that._themesRequestId || 0) + 1;
     var profileEpoch = that._followEpoch || 0;
     return req('/api/play/my-completed', {}).then(function (res) {
+      if (!that._currentProfileRead(read, res)) return;
       if (that._profileAttached === false || requestId !== that._themesRequestId
           || memberId !== app.getUserID() || profileEpoch !== (that._followEpoch || 0)) return;
       if (res.code != '200' || !isRecordList(res.data)) {
@@ -1067,8 +1189,11 @@ Component({
   },
 
   loadMedals: function () {
+    const read = this._captureProfileRead(true);
+    if (!read) return Promise.resolve();
     var that = this;
     return req('/api/medal/wall', {}).then(function (res) {
+      if (!that._currentProfileRead(read, res)) return;
       // 原码失败即 return,medals 停在 [] → 渲染「完成城市节点即可点亮勋章」= 把失败说成没勋章
       if (res.code != '200' || !isRecord(res.data)
           || (res.data.medals != null && !isRecordList(res.data.medals))) {
@@ -1095,43 +1220,48 @@ Component({
   },
 
   loadPointsStat: function () {
+    const read = this._captureProfileRead(true);
+    if (!read) return Promise.resolve();
     var that = this;
     if (that._profileAttached === false) return Promise.resolve();
     var memberId = app.getUserID();
     var requestId = that._pointsStatRequestId = (that._pointsStatRequestId || 0) + 1;
     var profileEpoch = that._followEpoch || 0;
-    return req('/api/user/points/statistics', {}).then(function (res) {
+    return Promise.all([
+      req('/api/user/points/statistics', {}),
+      req('/api/growth/leaderboard', { metric: 'exp', period: 'week', limit: 1 })
+    ]).then(function (arr) {
+      if (!that._currentProfileRead(read, arr.find(isAuthFailure))) return;
       if (that._profileAttached === false || requestId !== that._pointsStatRequestId
           || memberId !== app.getUserID() || profileEpoch !== (that._followEpoch || 0)) return;
-      if (res.code != '200' || !res.data) {
-        that.recordProfileMetricSource('points', 'error', res);
-        return;
+      var res = arr[0];
+      var weekPoints = res.code == '200' && isRecord(res.data) ? metricNumber(res.data.weekPoints) : null;
+      var rankPercentage = isRecord(res.data) ? res.data.rankPercentage : null;
+      var pointsOk = weekPoints != null && typeof rankPercentage === 'string' && !!rankPercentage.trim();
+      if (pointsOk) {
+        var hasRank = rankPercentage.trim() !== 'TOP0%' && metricNumber(res.data.userRank) !== 0;
+        that.setData({
+          pointsStat: { weekPoints: weekPoints, rankPercentage: rankPercentage },
+          rankDisplay: {
+            no: hasRank ? rankPercentage : '—',
+            delta: hasRank && res.data.rankDelta ? ('上升 ' + res.data.rankDelta) : ''
+          }
+        });
       }
-      var weekPoints = metricNumber(res.data.weekPoints);
-      var rankPercentage = res.data.rankPercentage;
-      if (weekPoints == null || typeof rankPercentage !== 'string' || !rankPercentage.trim()) {
-        that.recordProfileMetricSource('points', 'error');
-        return;
-      }
-      var hasRank = rankPercentage.trim() !== 'TOP0%' && metricNumber(res.data.userRank) !== 0;
-      that.setData({
-        pointsStat: {
-          weekPoints: weekPoints,
-          rankPercentage: rankPercentage
-        },
-        // shops 来自 play.totalCheckins = 历史累计签到,不是本周;exp 才是周值(weekPoints)。
-        // 故此块按各自真实口径分别标注,别用一个「本周」把两种口径盖在一起。
-        'exploreStat.weekExp': weekPoints,
-        rankDisplay: {
-          no: hasRank ? rankPercentage : '—',
-          delta: hasRank && res.data.rankDelta ? ('上升 ' + res.data.rankDelta) : ''
-        }
-      });
-      that.recordProfileMetricSource('points', 'ready', [weekPoints]);
+      // 「本周经验」取经验周榜里本人的 score，不能拿可抵现积分(weekPoints)冒充经验。
+      var board = arr[1];
+      var me = isRecord(board.data) && isRecord(board.data.me) ? board.data.me : null;
+      var expOk = board.code == '200' && me && board.data.metric === 'exp' && board.data.period === 'week'
+        && String(me.memberId) === String(memberId) && Number.isSafeInteger(me.score) && me.score >= 0;
+      if (expOk) that.setData({ 'exploreStat.weekExp': me.score });
+      that.recordProfileMetricSource('points', pointsOk && expOk ? 'ready' : 'error',
+        pointsOk && expOk ? [weekPoints, me.score] : arr.find(isAuthFailure));
     });
   },
 
   loadOrderPreview: function () {
+    const read = this._captureProfileRead(true);
+    if (!read) return Promise.resolve();
     var that = this;
     if (that._profileAttached === false) return Promise.resolve();
     var memberId = app.getUserID();
@@ -1147,6 +1277,7 @@ Component({
       owner_type: 3,
       status: '0'
     }).then(function (res) {
+      if (!that._currentProfileRead(read, res)) return;
       if (that._profileAttached === false || requestId !== that._orderPreviewRequestId
           || memberId !== app.getUserID() || profileEpoch !== (that._followEpoch || 0)) return;
       // 原码把失败和「200 但没有订单」都收敛成 list=[] → 渲染「暂无订单」
@@ -1175,6 +1306,8 @@ Component({
   // 「本页零进行中且还有下一页」时继续翻,拿到 8 条进行中或翻完为止(接口口径不变)。
   // MAX_PAGES 是兜底:预览不值得为一个老账号翻几十页,5 页内没有进行中的就如实收起。
   loadProjectPreview: function () {
+    const read = this._captureProfileRead(true);
+    if (!read) return Promise.resolve();
     var that = this;
     if (that._profileAttached === false) return Promise.resolve();
     var memberId = app.getUserID();
@@ -1205,6 +1338,7 @@ Component({
         pageNum: pageNum,
         pageSize: PAGE_SIZE
       }).then(function (res) {
+        if (!that._currentProfileRead(read, res)) return;
         if (that._profileAttached === false || requestId !== that._projectPreviewRequestId
             || memberId !== app.getUserID() || profileEpoch !== (that._followEpoch || 0)) return;
         // 读取失败保留旧列表,不能当作本人没有项目。
@@ -1291,11 +1425,14 @@ Component({
   },
   // 出参口径:value=每次得分;pointsNum 被后端复写为「我已获得次数」(见 ApiPointsController.resultList)
   loadPointsTasks: function () {
+    const read = this._captureProfileRead(true);
+    if (!read) return Promise.resolve();
     var that = this;
     var sheet = that.data.pointsSheet;
     if (sheet.loading) return;
     that.setData({ 'pointsSheet.loading': !sheet.loaded, 'pointsSheet.failed': false });
     req('/api/points/result_list', {}).then(function (res) {
+      if (!that._currentProfileRead(read, res)) return;
       if (res.code != '200' || !res.data) {
         // 首次加载失败给显式失败态(可点重试);已有列表则保留旧数据不打扰
         that.setData({ 'pointsSheet.loading': false, 'pointsSheet.failed': !that.data.pointsSheet.loaded });
@@ -1683,6 +1820,8 @@ Component({
   },
 
   getCreativesquareList: function () {
+    const read = this._captureProfileRead(false);
+    if (!read) return Promise.resolve(false);
     var that = this;
     if (!communityReadable()) return Promise.resolve(false);
     const pageNum = that.data.page_no;
@@ -1695,6 +1834,7 @@ Component({
     };
     if (!that.data.isSelf) data.user_id = that.data.userId;
     return req('/api/creativesquare/list', data).then(function (res) {
+      if (!that._currentProfileRead(read, res)) return false;
       if (generation !== that._postsRequestGeneration) return false;
       // 原码把失败显式写成 nodata=true → 渲染「还没有动态,发布一次城市发现吧」
       if (res.code != '200') {
@@ -1752,6 +1892,8 @@ Component({
 
   // C7:我的项目入口待处理角标(未通过+审核中;/api/publish/home projectSummary 无草稿档)
   loadProjectPending: function () {
+    const read = this._captureProfileRead(true);
+    if (!read) return Promise.resolve();
     var that = this;
     if (that._profileAttached === false) return Promise.resolve();
     var memberId = app.getUserID();
@@ -1760,6 +1902,7 @@ Component({
     if (that._projectPendingMemberId !== undefined && that._projectPendingMemberId !== memberId) that.setData({ projectPendingCount: 0 });
     that._projectPendingMemberId = memberId;
     return req('/api/publish/home', {}).then(function (res) {
+      if (!that._currentProfileRead(read, res)) return;
       if (that._profileAttached === false || requestId !== that._projectPendingRequestId
           || memberId !== app.getUserID() || profileEpoch !== (that._followEpoch || 0)) return;
       if (res.code != '200' || !res.data || !res.data.projectSummary) return;

@@ -205,6 +205,7 @@ class ApiTemplateMerchantOperatorScopeTest {
                 .param("id", "74").param("scope", "MERCHANT"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data.memberId").value(OWNER))
+                .andExpect(jsonPath("$.data.canEdit").value(true))
                 .andExpect(jsonPath("$.data.questionAnswer").value("商家草稿答案"))
                 .andExpect(jsonPath("$.data.advancedConfigJson").value(draft(OWNER).getAdvancedConfigJson()));
         IMerchantAccessService access = (IMerchantAccessService) ReflectionTestUtils.getField(controller, "merchantAccessService");
@@ -245,6 +246,7 @@ class ApiTemplateMerchantOperatorScopeTest {
         MockMvcBuilders.standaloneSetup(controller).build().perform(post("/api/template/myinfo")
                 .param("id", "74").param("scope", "MERCHANT"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data.canEdit").value(false))
                 .andExpect(jsonPath("$.data.questionAnswer").doesNotExist())
                 .andExpect(jsonPath("$.data.advancedConfigJson").value(org.hamcrest.Matchers.containsString("\"schemaVersion\":1")))
                 .andExpect(jsonPath("$.data.advancedConfigJson").value(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("private-card"))));
@@ -307,6 +309,7 @@ class ApiTemplateMerchantOperatorScopeTest {
                 .param("id", "74").param("scope", "MERCHANT"))
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data.memberId").value(OWNER))
+                .andExpect(jsonPath("$.data.canEdit").value(true))
                 .andExpect(jsonPath("$.data.questionAnswer").value(pending.getQuestionAnswer()));
         IMerchantAccessService access = (IMerchantAccessService) ReflectionTestUtils.getField(controller, "merchantAccessService");
         verify(access).require(PRINCIPAL, MerchantPermission.PROJECT_MANAGE);
@@ -320,7 +323,7 @@ class ApiTemplateMerchantOperatorScopeTest {
             row.setCheckStatus(0);
             String expected = "模版审核中";
             if ("deleted".equals(state)) { row.setDelFlag(2); expected = "模版已删除"; }
-            if ("rejected".equals(state)) { row.setStatus(2L); row.setCheckStatus(2); }
+            if ("rejected".equals(state)) { row.setStatus(2L); row.setCheckStatus(2); expected = "模版审核未通过"; }
             if ("unlisted".equals(state)) { row.setStatus(1L); expected = "模版已下架"; }
             if ("unknown-draft".equals(state)) row.setDraftStatus(2);
             if ("null-status".equals(state)) row.setStatus(null);

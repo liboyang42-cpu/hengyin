@@ -27,6 +27,8 @@
                style="height:calc(100vh - {{statusBarHeight + navBarHeight}}px);"
                bindscrolltolower="onFeedReachBottom" lower-threshold="120">
     <view class="pc-body">
+      <cy-empty wx:if="{{isSelf && selfReadAccess}}" kind="no-permission" fill size="lg" title="{{selfReadAccess === 'login' ? '登录后查看我的主页' : '当前账号无法查看主页'}}" sub="{{selfReadAccess === 'login' ? '登录后可查看自己的资料、订单与成长记录' : '请确认当前账号的查看权限'}}" cta="{{selfReadAccess === 'login' ? '登录' : '重试'}}" bind:cta="loginToReadProfile" />
+      <block wx:else>
 
       <!-- 首屏身份卡(ADA §二G):头像 + 玩家名 + 所在城市 + 三项统计合成一张卡,
            层级只靠表面明度(elevated)+ 顶缘高光,不加边框。
@@ -560,6 +562,7 @@
         </block>
       </block>
 
+      </block>
       <view style="height:180rpx;"></view>
     </view>
   </scroll-view>

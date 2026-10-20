@@ -32,9 +32,8 @@ function mountListPage() {
     getApp: () => ({ globalData: {}, sendRequest() {} }),
     Page(config) { definition = config },
     require(request) {
-      const base = path.basename(request)
       if (request.indexOf('../../../utils/') === 0) {
-        return require(path.join(ROOT, 'utils', base))
+        return require(path.join(ROOT, 'utils', request.slice('../../../utils/'.length)))
       }
       throw new Error(`unexpected require: ${request}`)
     },
