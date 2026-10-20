@@ -59,6 +59,31 @@ public class TopicBundleReviewService {
         this.templateMapper = templateMapper;
     }
 
+    /**
+     * 自由定向(探店日)开放商家承接时，站点玩法由入驻商家提供，而商家只能承接已上架过审的主题。
+     * 因此允许「零玩法」提交，但仅当每个未配玩法的站点都落在开放承接(recruitEnabled=1)的章节里；
+     * 商家玩法在入驻时走供给审核，不绕过审核。owner 2026-10-20 决定(#299)。
+     */
+    static boolean awaitsMerchantGameplay(CmsTopic topic, List<CmsTopicChapter> chapters, List<CmsTopicNode> nodes) {
+        if (topic == null || !Integer.valueOf(com.chengyinhub.common.constant.ProductType.FREE_EXPLORE).equals(topic.getProductType())) {
+            return false;
+        }
+        Set<Long> recruiting = new LinkedHashSet<Long>();
+        for (CmsTopicChapter chapter : chapters) {
+            if (chapter != null && chapter.getId() != null && Integer.valueOf(1).equals(chapter.getRecruitEnabled())) {
+                recruiting.add(chapter.getId());
+            }
+        }
+        if (recruiting.isEmpty()) return false;
+        for (CmsTopicNode node : nodes) {
+            boolean hasGameplay = node.getTemplateId() != null && node.getTemplateId() > 0L;
+            if (!hasGameplay && (node.getChapterId() == null || !recruiting.contains(node.getChapterId()))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     public Submission freezeForSubmission(Long topicId, Long ownerId) {
         CmsTopic topic = topicMapper.selectCmsTopicById(topicId);
         if (topic == null || Integer.valueOf(2).equals(topic.getDelFlag())) {
@@ -101,7 +126,7 @@ public class TopicBundleReviewService {
                 referencedTemplateIds.add(node.getTemplateId());
             }
         }
-        if (referencedTemplateIds.isEmpty()) {
+        if (referencedTemplateIds.isEmpty() && !awaitsMerchantGameplay(topic, chapters, nodes)) {
             throw new IllegalArgumentException("专业主题至少需要一个节点玩法");
         }
 
