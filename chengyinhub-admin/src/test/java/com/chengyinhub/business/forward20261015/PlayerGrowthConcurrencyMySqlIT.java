@@ -515,6 +515,7 @@ class PlayerGrowthConcurrencyMySqlIT {
             throws Exception {
         assertTrue(firstConnection > 0 && secondConnection > 0 && firstConnection != secondConnection,
                 "必须绑定两个不同的真实事务连接");
+        // INSERT 隐式锁可由等待者代为显式化：THREAD_ID 是结构创建者，事务 ID 才能确定锁的实际所有者。
         long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
         while (System.nanoTime() < deadline) {
             requirePending(one, "首请求");
@@ -525,13 +526,15 @@ class PlayerGrowthConcurrencyMySqlIT {
                     + " and requested.ENGINE_LOCK_ID = w.REQUESTING_ENGINE_LOCK_ID"
                     + " join performance_schema.data_locks blocking on blocking.ENGINE = w.ENGINE"
                     + " and blocking.ENGINE_LOCK_ID = w.BLOCKING_ENGINE_LOCK_ID"
-                    + " join performance_schema.threads requester on requester.THREAD_ID = w.REQUESTING_THREAD_ID"
-                    + " join performance_schema.threads holder on holder.THREAD_ID = w.BLOCKING_THREAD_ID"
+                    + " join information_schema.innodb_trx requester"
+                    + " on requester.TRX_ID = w.REQUESTING_ENGINE_TRANSACTION_ID"
+                    + " join information_schema.innodb_trx holder"
+                    + " on holder.TRX_ID = w.BLOCKING_ENGINE_TRANSACTION_ID"
                     + " where requested.OBJECT_SCHEMA = ? and blocking.OBJECT_SCHEMA = ?"
                     + " and requested.OBJECT_NAME = 'player_badge' and blocking.OBJECT_NAME = 'player_badge'"
                     + " and requested.INDEX_NAME = 'uk_member_badge'"
                     + " and requested.LOCK_STATUS = 'WAITING' and blocking.LOCK_STATUS = 'GRANTED'"
-                    + " and requester.PROCESSLIST_ID = ? and holder.PROCESSLIST_ID = ?",
+                    + " and requester.TRX_MYSQL_THREAD_ID = ? and holder.TRX_MYSQL_THREAD_ID = ?",
                     Integer.class, database, database, secondConnection, firstConnection);
             if (waiting != null && waiting > 0) return;
             Thread.sleep(10);
@@ -542,18 +545,27 @@ class PlayerGrowthConcurrencyMySqlIT {
                 + "; firstConnection=" + firstConnection + "; secondConnection=" + secondConnection
                 + "; firstDone=" + one.isDone() + "; secondDone=" + two.isDone()
                 + "; ownSchemaLocks=" + admin.queryForList(
-                        "select t.PROCESSLIST_ID, l.ENGINE_TRANSACTION_ID, l.OBJECT_NAME, l.INDEX_NAME,"
+                        "select owner.TRX_MYSQL_THREAD_ID as OWNER_CONNECTION_ID, l.THREAD_ID as CREATOR_THREAD_ID,"
+                        + " l.ENGINE_TRANSACTION_ID, l.OBJECT_NAME, l.INDEX_NAME,"
                         + " l.LOCK_TYPE, l.LOCK_MODE, l.LOCK_STATUS, l.LOCK_DATA"
                         + " from performance_schema.data_locks l"
-                        + " left join performance_schema.threads t on t.THREAD_ID = l.THREAD_ID"
-                        + " where l.OBJECT_SCHEMA = ? order by t.PROCESSLIST_ID, l.OBJECT_NAME, l.INDEX_NAME",
+                        + " left join information_schema.innodb_trx owner on owner.TRX_ID = l.ENGINE_TRANSACTION_ID"
+                        + " where l.OBJECT_SCHEMA = ? order by l.ENGINE_TRANSACTION_ID, l.OBJECT_NAME, l.INDEX_NAME",
                         database)
                 + "; ownSchemaWaits=" + admin.queryForList(
                         "select w.REQUESTING_ENGINE_TRANSACTION_ID, w.BLOCKING_ENGINE_TRANSACTION_ID,"
-                        + " w.REQUESTING_THREAD_ID, w.BLOCKING_THREAD_ID, requested.OBJECT_NAME, requested.INDEX_NAME"
+                        + " w.REQUESTING_THREAD_ID as REQUESTING_CREATOR_THREAD_ID,"
+                        + " w.BLOCKING_THREAD_ID as BLOCKING_CREATOR_THREAD_ID,"
+                        + " requester.TRX_MYSQL_THREAD_ID as REQUESTING_OWNER_CONNECTION_ID,"
+                        + " holder.TRX_MYSQL_THREAD_ID as BLOCKING_OWNER_CONNECTION_ID,"
+                        + " requested.OBJECT_NAME, requested.INDEX_NAME"
                         + " from performance_schema.data_lock_waits w"
                         + " join performance_schema.data_locks requested on requested.ENGINE = w.ENGINE"
                         + " and requested.ENGINE_LOCK_ID = w.REQUESTING_ENGINE_LOCK_ID"
+                        + " left join information_schema.innodb_trx requester"
+                        + " on requester.TRX_ID = w.REQUESTING_ENGINE_TRANSACTION_ID"
+                        + " left join information_schema.innodb_trx holder"
+                        + " on holder.TRX_ID = w.BLOCKING_ENGINE_TRANSACTION_ID"
                         + " where requested.OBJECT_SCHEMA = ?", database));
     }
 

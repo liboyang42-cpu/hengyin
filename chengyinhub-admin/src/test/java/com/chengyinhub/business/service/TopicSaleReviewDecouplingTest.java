@@ -79,6 +79,11 @@ class TopicSaleReviewDecouplingTest {
         });
         OmsTicketMapper ticketMapper = mock(OmsTicketMapper.class);
         CmsActivityMapper activityMapper = mock(CmsActivityMapper.class);
+        java.util.concurrent.atomic.AtomicLong activityIds = new java.util.concurrent.atomic.AtomicLong(300L);
+        when(activityMapper.insertCmsActivity(any())).thenAnswer(call -> {
+            ((CmsActivity) call.getArgument(0)).setId(activityIds.incrementAndGet());
+            return 1;
+        });
         CmsRegistrationMapper registrationMapper = mock(CmsRegistrationMapper.class);
         auditTaskService = mock(IAuditTaskService.class);
         canonicalMutationService = mock(ITopicSaleCanonicalMutationService.class);
