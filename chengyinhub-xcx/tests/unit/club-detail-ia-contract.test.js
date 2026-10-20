@@ -54,13 +54,15 @@ function loadDetail() {
       if (modules[request]) return modules[request]
       // PR10 F-W1-12:页面新依赖登录引导判定(真模块,无副作用)
       if (request.endsWith('/utils/session/login-reload.js')) return require('../../utils/session/login-reload.js')
+      // BL-20:俱乐部详情图片预览走 utils/media-preview(纯模块,给真实现)
+      if (request === '../../../utils/media-preview.js') return require('../../utils/media-preview.js')
       throw new Error(`unexpected require: ${request}`)
     },
     Set,
     Date,
     JSON,
     wx: {
-      navigateTo(options) { navigations.push(options.url) },
+      navigateTo(options) { navigations.push(options.url); if (options.complete) options.complete() },
       pageScrollTo(options) { scrolls.push(options) },
       showToast() {},
       showModal() {},
@@ -119,6 +121,8 @@ function loadSettings() {
       if (modules[request]) return modules[request]
       // PR10 F-W1-12:页面新依赖登录引导判定(真模块,无副作用)
       if (request.endsWith('/utils/session/login-reload.js')) return require('../../utils/session/login-reload.js')
+      // BL-20:俱乐部详情图片预览走 utils/media-preview(纯模块,给真实现)
+      if (request === '../../../utils/media-preview.js') return require('../../utils/media-preview.js')
       throw new Error(`unexpected require: ${request}`)
     },
     wx: {

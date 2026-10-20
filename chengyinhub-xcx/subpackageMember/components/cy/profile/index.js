@@ -7,6 +7,12 @@ const motion = require('../../../../utils/motion.js');
 const { readReducedMotion } = require('../../../../utils/motion-preference.js');
 const { toTimestamp } = require('../../../../utils/datetime');
 const app = getApp();
+const session = require('../../../../utils/session/login-reload.js');
+function profileAuthorization() {
+  const value = typeof app.getAuthorization === 'function' ? app.getAuthorization()
+    : typeof app.getToken === 'function' ? app.getToken() : app.globalData && app.globalData.authorization;
+  return typeof value === 'string' ? value.trim() : '';
+}
 const community = require('../../../../utils/community-post-api.js').createClient(app, wx);
 const roleGuard = require('../../../../utils/roleGuard.js');
 const policy = require('../../../../utils/identity/identity-policy.js');
@@ -20,6 +26,9 @@ const { offerVerificationReadback } = require('../../../../utils/verification-re
 const { isRecord, isRecordList } = require('../../../../utils/response-shape.js');
 const { inactiveAccess, normalizeMerchantAccess } = require('../../../../utils/merchant-access-policy.js');
 const { isEndedProject, statusLabelOf } = require('../../../../utils/merchant-workbench.js');
+const mediaPreview = require('../../../../utils/media-preview.js');
+const { shapeMerchantSafety } = require('./merchant-safety-summary.js');
+const { shapeMerchantNode, readFavoriteToggle } = require('./merchant-node-favorite.js');
 const THEME_EMOJI = ['🍜', '❤️', '📚', '☕', '🌸', '🎮', '📷', '🏯'];
 const MEDAL_EMOJI = {
   ramen: '🍜', coffee: '☕', book: '📚', history: '🏯', spring: '🌸',
@@ -364,11 +373,18 @@ Component({
     //                    绝不能当商家身份真源。
     hostSelf: true,
     isSelf: true,
+    selfReadAccess: '',
     merchantAccess: inactiveAccess(),
     merchantAccessState: 'idle',
     merchantTeamEntryValue: '',
     _avatarSrc: '',
     _avatarInitial: '',
+    reportShow: false,
+    reportTargetType: '',
+    reportTargetId: '',
+    reportTitle: '举报',
+    correctionShow: false,
+    correctionMerchantId: '',
     subjectIsMerchant: false,
     subjectMerchant: null,
     // 门店 NPC 对话:开关 + 面板可见性。
@@ -383,6 +399,9 @@ Component({
     merchantTags: [],
     merchantCategories: [],
     merchantHasGeo: false,
+    merchantSafety: null,
+    merchantNode: null,
+    merchantNodeBusy: false,
     // 招牌主推卡:null = 未设置/已下架/已易主/坏数据,整块不渲染
     featured: null,
     activeTab: 'projects',
@@ -394,7 +413,7 @@ Component({
     benefits: buildBenefits({}),
     clubOwnedCount: 0,
     pointsStat: { weekPoints: 0, rankPercentage: 0 },
-    pointsSheet: { show: false, loading: false, loaded: false, failed: false, tasks: [] },
+    pointsSheet: { show: false, loading: false, loaded: false, failed: false, tasks: [], spendRules: [] },
 
     growthLevel: 1,
     streakDays: 0,
@@ -419,7 +438,7 @@ Component({
 
     identityCard: { shops: 0, themes: 0, routes: 0, km: '0', medals: 0, cities: 1 },
     rankDisplay: { no: 0, delta: '' },
-    exploreStat: { shops: 0, weekExp: 0 },
+    exploreStat: { shops: 0, weekExp: 0, km: '0.0' },
     themeProgress: [],
     medals: [],
     medalCount: 0,
@@ -480,12 +499,14 @@ Component({
   lifetimes: {
     attached: function () {
       this._profileAttached = true;
+      this._profileHidden = false;
       this._syncProfileReducedMotion();
       this.initializeProfile();
       this._syncCommunityProfile();
     },
     detached: function () {
       this._profileAttached = false;
+      this._profileReadEpoch = (this._profileReadEpoch || 0) + 1;
       this._coopAccessEpoch = (this._coopAccessEpoch || 0) + 1;
       this._following = false;
       this._followEpoch = (this._followEpoch || 0) + 1;
@@ -495,7 +516,16 @@ Component({
 
   pageLifetimes: {
     show: function () {
-      if (!this._profileAttached) return;
+      if (!this._profileAttached) return; this._navigating = false;
+      this._profileHidden = false;
+      const identityChanged = this._syncProfileReadIdentity();
+      if (identityChanged || this._profileNeedsInitialize) {
+        this._profileNeedsInitialize = false;
+        this._profileKey = null;
+        this.initializeProfile();
+        this._syncCommunityProfile();
+        return;
+      }
       this._syncProfileReducedMotion();
       const firstShow = !this._profileShown;
       this._profileShown = true;
@@ -525,19 +555,88 @@ Component({
     // applyTheme 的那些)会顶着一条白导航栏 —— 旧 merchant/profile 页用
     // merchantPageRestore 处理的就是这件事,收编后这层责任跟着搬过来。
     hide: function () {
+      this._profileHidden = true;
+      this._profileReadEpoch = (this._profileReadEpoch || 0) + 1;
+      if (this.data.pointsSheet.loading) this.setData({ 'pointsSheet.loading': false });
       this._profileShown = true;
       if (!this.data.hostSelf && this.data.subjectIsMerchant) applyTheme('dark');
     }
   },
 
   methods: {
+    _clearSelfReadState: function (access) {
+      this.setData({ selfReadAccess: access, userInfo: {}, categoryList: [], casePicsList: [], joinInfo: { id: 0 },
+        merchantAccess: inactiveAccess(), merchantAccessState: 'idle', merchantTeamEntryValue: '', isMerchantView: false,
+        role: 'player', isClubLeader: false, clubOwnedCount: 0, benefits: buildBenefits({}), balanceText: null,
+        friendNum: 0, followNum: 0, fansNum: 0, growthLevel: 1, streakDays: 0, exploreValue: 0, profilePoint: null,
+        pointsStat: { weekPoints: 0, rankPercentage: 0 }, rankDisplay: { no: 0, delta: '' },
+        identityCard: { shops: 0, themes: 0, routes: 0, km: '0', medals: 0, cities: 1 },
+        exploreStat: { shops: 0, weekExp: 0 }, themeProgress: [], medals: [], medalCount: 0,
+        orderPreviewList: [], projectPreviewList: [], projectPendingCount: 0, orderLoaded: false,
+        orderErr: false, orderAuthError: false, projectErr: false, projectAuthError: false, medalErr: false, medalAuthError: false,
+        list: [], page_no: 1, hasMore: false, nodata: false, feedErr: false, feedAuthError: false,
+        pointsSheet: { show: false, loading: false, loaded: false, failed: false, tasks: [] },
+        sceneStack: [], sceneCurrent: null, sceneConfirm: { show: false, action: null, pending: null } });
+    },
+    _syncProfileReadIdentity: function () {
+      const owner = session.memberId(app), token = profileAuthorization();
+      const changed = this._readProfileOwner !== undefined
+        && (owner !== this._readProfileOwner || token !== this._readProfileToken);
+      this._readProfileOwner = owner;
+      this._readProfileToken = token;
+      if (changed) {
+        this._profileReadEpoch = (this._profileReadEpoch || 0) + 1;
+        this._profileKey = null;
+        if (this.data.isSelf) this._clearSelfReadState(owner && token ? '' : 'login');
+      }
+      return changed;
+    },
+    _captureProfileRead: function (privateOnly) {
+      if (this._profileAttached === false || this._profileHidden || privateOnly && !this.data.isSelf) return null;
+      this._syncProfileReadIdentity();
+      const owner = session.memberId(app), token = profileAuthorization();
+      if (this.data.isSelf && (!owner || !token)) { this._clearSelfReadState('login'); return null; }
+      if (this.data.isSelf && this.data.selfReadAccess === 'login') return null;
+      if (this._readProfileOwner === undefined) { this._readProfileOwner = owner; this._readProfileToken = token; }
+      return { epoch: this._profileReadEpoch || 0, owner, token, target: String(this.data.userId || ''), self: this.data.isSelf };
+    },
+    _currentProfileRead: function (read, res, primary) {
+      if (!read || this._profileAttached === false || this._profileHidden || read.epoch !== (this._profileReadEpoch || 0)
+          || read.target !== String(this.data.userId || '') || read.self !== this.data.isSelf) return false;
+      const owner = session.memberId(app), token = profileAuthorization();
+      if (read.self && (!owner || !token)) {
+        this._profileReadEpoch = (this._profileReadEpoch || 0) + 1;
+        this._clearSelfReadState('login');
+        return false;
+      }
+      if (read.owner !== owner || read.token !== token) { this._syncProfileReadIdentity(); return false; }
+      if (read.self && isAuthFailure(res)) {
+        this._profileReadEpoch = (this._profileReadEpoch || 0) + 1;
+        this.setData({ selfReadAccess: 'login' });
+        return false;
+      }
+      if (primary && read.self && res && res.code == 403) { this.setData({ selfReadAccess: 'permission' }); return false; }
+      return true;
+    },
+    loginToReadProfile: function () {
+      if (this._profileHidden || this._profileAttached === false) return;
+      if (this.data.selfReadAccess === 'permission') { this._profileKey = null; this.initializeProfile(); return; }
+      const epoch = this._profileReadEpoch || 0, owner = session.memberId(app);
+      return session.retryLogin(this, app, function () {
+        if (epoch !== (this._profileReadEpoch || 0) || (owner && owner !== session.memberId(app)) || !profileAuthorization()) return;
+        this._profileKey = null;
+        this.initializeProfile();
+      });
+    },
     refreshCoopPublisherAccess: function () {
+      const read = this._captureProfileRead(false);
+      if (!read) return;
       const epoch = this._coopAccessEpoch = (this._coopAccessEpoch || 0) + 1;
       this.setData({ canInviteCoop: false });
       if (!this.data.isMerchantView || this.data.isSelf) return;
       const memberId = String(app.getUserID() || '');
       readPublisherAccess(app, this.data, allowed => {
-        if (!this._profileAttached || epoch !== this._coopAccessEpoch) return;
+        if (!this._currentProfileRead(read) || !this._profileAttached || epoch !== this._coopAccessEpoch) return;
         this._coopPublisherMemberId = allowed ? memberId : '';
         this.setData({ canInviteCoop: allowed });
       });
@@ -594,11 +693,14 @@ Component({
   },
 
   _syncCommunityProfile() {
+    const read = this._captureProfileRead(false);
+    if (!read) return;
     const owner = String(app.getUserID() || '');
     const target = String(this.data.userId || '');
     const epoch = (this._communityProfileEpoch || 0) + 1;
     this._communityProfileEpoch = epoch;
     const settle = () => {
+      if (!this._currentProfileRead(read)) return;
       if (this._profileAttached === false || epoch !== this._communityProfileEpoch
           || owner !== String(app.getUserID() || '') || target !== String(this.data.userId || '')) return;
       const tabs = profileTabs(this.data.isSelf, this.data.isMerchantView);
@@ -619,6 +721,8 @@ Component({
   },
 
   initializeProfile: function () {
+    if (this._profileHidden) { this._profileNeedsInitialize = true; return; }
+    this._syncProfileReadIdentity();
     var hostSelf = this.data.viewer !== 'other';
     var isSelf = this.computeIsSelf();
     var userId = hostSelf ? String(app.getUserID() || '') : String(this.data.userId || '');
@@ -637,6 +741,7 @@ Component({
       coopInviteShow: false,
       hostSelf: hostSelf,
       isSelf: isSelf,
+      selfReadAccess: '',
       merchantAccess: inactiveAccess(),
       merchantAccessState: 'idle',
       merchantTeamEntryValue: '',
@@ -649,6 +754,9 @@ Component({
       merchantTags: [],
       merchantCategories: [],
       merchantHasGeo: false,
+      merchantSafety: null,
+      merchantNode: null,
+      merchantNodeBusy: false,
       // 合法 initialTab 优先;非法值回退原规则(自己 projects、别人 posts)
       activeTab: initialTab || (isSelf ? 'projects' : (communityReadable() ? 'posts' : 'about')),
       memberTabs: memberTabs,
@@ -687,6 +795,8 @@ Component({
    * 把第三种收敛进第二种,就是拿「没查到」冒充「他不是商家」。
    */
   probeSubjectMerchant: function () {
+    const read = this._captureProfileRead(false);
+    if (!read) return Promise.resolve();
     var that = this;
     var memberId = String(this.data.userId || '');
     if (!memberId) {
@@ -702,6 +812,7 @@ Component({
       header: { 'Content-Type': 'application/json' },
       data: JSON.stringify({ memberId: Number(memberId) || memberId }),
       success: function (res) {
+        if (!that._currentProfileRead(read)) return;
         if (res && res.code == '200' && res.data) {
           that.applySubjectMerchant(res.data);
           return;
@@ -712,7 +823,7 @@ Component({
         }
         that.clearSubjectMerchant('network-error');
       },
-      fail: function () { that.clearSubjectMerchant('network-error'); }
+      fail: function () { if (that._currentProfileRead(read)) that.clearSubjectMerchant('network-error'); }
     });
   },
 
@@ -725,9 +836,14 @@ Component({
       merchantTags: [],
       merchantCategories: [],
       merchantHasGeo: false,
+      merchantSafety: null,
+      merchantNode: null,
+      merchantNodeBusy: false,
       featured: null,
       isMerchantView: false
     });
+    this._merchantSafetyEpoch = (this._merchantSafetyEpoch || 0) + 1;
+    this._merchantNodeEpoch = (this._merchantNodeEpoch || 0) + 1;
     applyTheme('dark');
   },
 
@@ -746,6 +862,9 @@ Component({
       merchantTags: parseDisplayList(m.tags),
       merchantCategories: m.sysCategoryList || [],
       merchantHasGeo: hasGeo,
+      merchantSafety: null,
+      merchantNode: null,
+      merchantNodeBusy: false,
       featured: shapeFeaturedCard(m.featured),
       // 商家公开身份接管身份头:品牌名 / 头像 / 主页封面 / 城市角色 / 品牌口号
       heroImg: m.coverImage || this.data.heroImg,
@@ -753,6 +872,80 @@ Component({
     });
     // 商家主题由被看者决定,与观看者角色无关
     applyTheme('light');
+    this.loadMerchantSafety(m.id);
+    this.loadMerchantNode(m.id);
+  },
+
+  // BL-66:安全感受摘要只读;样本不足/无数据/失败都不展示,不打扰主页
+  loadMerchantSafety: function (merchantId) {
+    var that = this;
+    var id = Number(merchantId);
+    var epoch = this._merchantSafetyEpoch = (this._merchantSafetyEpoch || 0) + 1;
+    if (!Number.isInteger(id) || id <= 0) return;
+    app.sendRequest({
+      url: `/api/community-trust/safety/merchants/${id}`,
+      method: 'GET',
+      hideLoading: true,
+      silentError: true,
+      success: function (res) {
+        if (epoch !== that._merchantSafetyEpoch || !that.data.subjectIsMerchant) return;
+        if (!that.data.subjectMerchant || Number(that.data.subjectMerchant.id) !== id) return;
+        that.setData({ merchantSafety: res && res.code == 200 ? shapeMerchantSafety(res.data) : null });
+      },
+      fail: function () {}
+    });
+  },
+
+  // BL-69:商家在架据点。无节点(data 为空)/读取失败都不展示收藏按钮,不打扰主页
+  loadMerchantNode: function (merchantId) {
+    var that = this;
+    var id = Number(merchantId);
+    var epoch = this._merchantNodeEpoch = (this._merchantNodeEpoch || 0) + 1;
+    if (this.data.isSelf || !Number.isInteger(id) || id <= 0) return;
+    app.sendRequest({
+      url: '/api/city/nodes/merchant/' + id,
+      method: 'GET',
+      hideLoading: true,
+      silentError: true,
+      success: function (res) {
+        if (epoch !== that._merchantNodeEpoch || !that.data.subjectIsMerchant) return;
+        if (!that.data.subjectMerchant || Number(that.data.subjectMerchant.id) !== id) return;
+        that.setData({ merchantNode: res && res.code == 200 ? shapeMerchantNode(res.data) : null });
+      },
+      fail: function () {}
+    });
+  },
+
+  // BL-69:收藏/取消收藏据点,以切换接口返回的 favorited 回读;失败如实提示,不改本地态
+  toggleMerchantNodeFavorite: function () {
+    var that = this;
+    var node = this.data.merchantNode;
+    if (this.data.merchantNodeBusy || !node || !node.poiId) return;
+    var epoch = this._merchantNodeEpoch;
+    var poiId = node.poiId;
+    var settle = function (favorited, msg) {
+      if (epoch !== that._merchantNodeEpoch || !that.data.merchantNode || that.data.merchantNode.poiId !== poiId) return;
+      if (favorited === null) {
+        that.setData({ merchantNodeBusy: false });
+        cyToast(msg);
+        return;
+      }
+      that.setData({ merchantNodeBusy: false, 'merchantNode.favorited': favorited });
+      cyToast(favorited ? '已收藏据点' : '已取消收藏');
+    };
+    this.setData({ merchantNodeBusy: true });
+    app.sendRequest({
+      url: '/api/city/nodes/' + poiId + '/favorite',
+      method: 'POST',
+      hideLoading: true,
+      silentError: true,
+      success: function (res) {
+        var favorited = readFavoriteToggle(res);
+        settle(favorited, (res && res.msg) || '收藏状态没有更新，请重试');
+      },
+      fail: function () { settle(null, '网络异常，收藏状态没有更新'); },
+      successStatusAbnormal: function () { settle(null, '收藏状态没有更新，请重试'); }
+    });
   },
 
   retryMerchantProbe: function () { this.probeSubjectMerchant(); },
@@ -776,6 +969,8 @@ Component({
   },
 
   loadMerchantAccess: function () {
+    const read = this._captureProfileRead(true);
+    if (!read) return Promise.resolve();
     var that = this;
     if (!this.data.isSelf || !app.getUserID()) {
       this.setData({ merchantAccess: inactiveAccess(), merchantAccessState: 'ready', merchantTeamEntryValue: '' });
@@ -783,6 +978,7 @@ Component({
     }
     this.setData({ merchantAccessState: 'loading' });
     return req('/api/merchant/access/me', {}).then(function (res) {
+      if (!that._currentProfileRead(read, res)) return;
       if (res.code != '200' || !isRecord(res.data)) {
         that.setData({ merchantAccess: inactiveAccess(), merchantAccessState: 'error', merchantTeamEntryValue: '' });
         return;
@@ -827,6 +1023,8 @@ Component({
   },
 
   refreshAll: function (silent) {
+    const read = this._captureProfileRead(true);
+    if (!read) return Promise.resolve();
     var that = this;
     if (!silent) this.setData({ page_no: 1, list: [], hasMore: false, nodata: false, feedErr: false });
     this.resetProfileMetricState();
@@ -856,6 +1054,8 @@ Component({
   },
 
   loadBanner: function () {
+    const read = this._captureProfileRead(false);
+    if (!read) return Promise.resolve();
     var that = this;
     var local = this.data.isSelf ? wx.getStorageSync('member_hero_bg') : '';
     if (local) {
@@ -863,6 +1063,7 @@ Component({
       return;
     }
     req('/api/common/banner', { showType: 2 }).then(function (res) {
+      if (!that._currentProfileRead(read, res)) return;
       if (res.code == '200' && isRecordList(res.data) && res.data.length) {
         that.setData({ heroImg: res.data[0].picUrl || that.data.heroImg });
       }
@@ -870,6 +1071,8 @@ Component({
   },
 
   loadUserData: function () {
+    const read = this._captureProfileRead(false);
+    if (!read) return Promise.resolve();
     var that = this;
     if (that._profileAttached === false) return Promise.resolve();
     var loginMemberId = app.getUserID();
@@ -883,6 +1086,7 @@ Component({
     // viewer —— 否则本人从 canonical 进来会误走公开分支。
     var url = this.data.isSelf ? '/api/user/info' : '/api/user/public-info';
     return req(url, { member_id: memberId }).then(function (res) {
+      if (!that._currentProfileRead(read, res, true)) return;
       if (that._profileAttached === false || requestId !== that._userDataRequestId
           || loginMemberId !== app.getUserID()) return;
       // 换了被看者后，旧资料响应整包作废；同一被看者若在请求期间完成关注写入，
@@ -948,9 +1152,12 @@ Component({
   },
 
   loadRoleInfo: function () {
+    const read = this._captureProfileRead(true);
+    if (!read) return Promise.resolve();
     var that = this;
     return new Promise(function (resolve) {
       roleGuard.load(function (data) {
+        if (!that._currentProfileRead(read)) { resolve(); return; }
         if (data && data.role) {
           var isClubLeader = data.isClubLeader === true || data.role === 'club';
           that.setData({
@@ -967,8 +1174,11 @@ Component({
   },
 
   loadClubSummary: function () {
+    const read = this._captureProfileRead(true);
+    if (!read) return Promise.resolve();
     var that = this;
     req('/api/club/my', {}).then(function (res) {
+      if (!that._currentProfileRead(read, res)) return;
       var owned = (res.code == '200' && res.data && res.data.owned) || [];
       if (owned && !Array.isArray(owned)) owned = [owned];
       that.setData({ clubOwnedCount: owned.length });
@@ -976,12 +1186,15 @@ Component({
   },
 
   loadGrowthBundle: function () {
+    const read = this._captureProfileRead(true);
+    if (!read) return Promise.resolve();
     var that = this;
     if (that._profileAttached === false) return Promise.resolve();
     var memberId = app.getUserID();
     var requestId = that._growthRequestId = (that._growthRequestId || 0) + 1;
     var profileEpoch = that._followEpoch || 0;
     return Promise.all([req('/api/play/growth', {}), req('/api/growth/center', {})]).then(function (arr) {
+      if (!that._currentProfileRead(read, arr.find(isAuthFailure))) return;
       if (that._profileAttached === false || requestId !== that._growthRequestId
           || memberId !== app.getUserID() || profileEpoch !== (that._followEpoch || 0)) return;
       var playOk = arr[0].code == '200' && arr[0].data;
@@ -1017,7 +1230,7 @@ Component({
           medals: that.data.identityCard.medals, // BE-01 勋章单真源:勋章数只由 loadMedals(/api/medal/wall)写,growth 不再返 badgeCount
           cities: 1
         },
-        'exploreStat.shops': shops
+        'exploreStat.shops': shops, 'exploreStat.km': km // BL-95: 累计里程补进现有「累计探索」块(同行写,不挪动基线行号)
       });
       // 是否开始过只看历史参与信号(totalCheckins / my-completed),绝不拿里程是否为 0 判断。
       // 这样已完成节点但真实里程为 0.0km 的老用户仍进入 ready,不会被错藏成首访。
@@ -1026,19 +1239,25 @@ Component({
   },
 
   loadJoinData: function () {
+    const read = this._captureProfileRead(true);
+    if (!read) return Promise.resolve();
     var that = this;
     return req('/api/registration/join_info', { member_id: app.getUserID() }).then(function (res) {
+      if (!that._currentProfileRead(read, res)) return;
       if (res.code == '200') that.setData({ joinInfo: res.data || { id: 0 } });
     });
   },
 
   loadThemes: function () {
+    const read = this._captureProfileRead(true);
+    if (!read) return Promise.resolve();
     var that = this;
     if (that._profileAttached === false) return Promise.resolve();
     var memberId = app.getUserID();
     var requestId = that._themesRequestId = (that._themesRequestId || 0) + 1;
     var profileEpoch = that._followEpoch || 0;
     return req('/api/play/my-completed', {}).then(function (res) {
+      if (!that._currentProfileRead(read, res)) return;
       if (that._profileAttached === false || requestId !== that._themesRequestId
           || memberId !== app.getUserID() || profileEpoch !== (that._followEpoch || 0)) return;
       if (res.code != '200' || !isRecordList(res.data)) {
@@ -1067,8 +1286,11 @@ Component({
   },
 
   loadMedals: function () {
+    const read = this._captureProfileRead(true);
+    if (!read) return Promise.resolve();
     var that = this;
     return req('/api/medal/wall', {}).then(function (res) {
+      if (!that._currentProfileRead(read, res)) return;
       // 原码失败即 return,medals 停在 [] → 渲染「完成城市节点即可点亮勋章」= 把失败说成没勋章
       if (res.code != '200' || !isRecord(res.data)
           || (res.data.medals != null && !isRecordList(res.data.medals))) {
@@ -1095,43 +1317,48 @@ Component({
   },
 
   loadPointsStat: function () {
+    const read = this._captureProfileRead(true);
+    if (!read) return Promise.resolve();
     var that = this;
     if (that._profileAttached === false) return Promise.resolve();
     var memberId = app.getUserID();
     var requestId = that._pointsStatRequestId = (that._pointsStatRequestId || 0) + 1;
     var profileEpoch = that._followEpoch || 0;
-    return req('/api/user/points/statistics', {}).then(function (res) {
+    return Promise.all([
+      req('/api/user/points/statistics', {}),
+      req('/api/growth/leaderboard', { metric: 'exp', period: 'week', limit: 1 })
+    ]).then(function (arr) {
+      if (!that._currentProfileRead(read, arr.find(isAuthFailure))) return;
       if (that._profileAttached === false || requestId !== that._pointsStatRequestId
           || memberId !== app.getUserID() || profileEpoch !== (that._followEpoch || 0)) return;
-      if (res.code != '200' || !res.data) {
-        that.recordProfileMetricSource('points', 'error', res);
-        return;
+      var res = arr[0];
+      var weekPoints = res.code == '200' && isRecord(res.data) ? metricNumber(res.data.weekPoints) : null;
+      var rankPercentage = isRecord(res.data) ? res.data.rankPercentage : null;
+      var pointsOk = weekPoints != null && typeof rankPercentage === 'string' && !!rankPercentage.trim();
+      if (pointsOk) {
+        var hasRank = rankPercentage.trim() !== 'TOP0%' && metricNumber(res.data.userRank) !== 0;
+        that.setData({
+          pointsStat: { weekPoints: weekPoints, rankPercentage: rankPercentage },
+          rankDisplay: {
+            no: hasRank ? rankPercentage : '—',
+            delta: hasRank && res.data.rankDelta ? ('上升 ' + res.data.rankDelta) : ''
+          }
+        });
       }
-      var weekPoints = metricNumber(res.data.weekPoints);
-      var rankPercentage = res.data.rankPercentage;
-      if (weekPoints == null || typeof rankPercentage !== 'string' || !rankPercentage.trim()) {
-        that.recordProfileMetricSource('points', 'error');
-        return;
-      }
-      var hasRank = rankPercentage.trim() !== 'TOP0%' && metricNumber(res.data.userRank) !== 0;
-      that.setData({
-        pointsStat: {
-          weekPoints: weekPoints,
-          rankPercentage: rankPercentage
-        },
-        // shops 来自 play.totalCheckins = 历史累计签到,不是本周;exp 才是周值(weekPoints)。
-        // 故此块按各自真实口径分别标注,别用一个「本周」把两种口径盖在一起。
-        'exploreStat.weekExp': weekPoints,
-        rankDisplay: {
-          no: hasRank ? rankPercentage : '—',
-          delta: hasRank && res.data.rankDelta ? ('上升 ' + res.data.rankDelta) : ''
-        }
-      });
-      that.recordProfileMetricSource('points', 'ready', [weekPoints]);
+      // 「本周经验」取经验周榜里本人的 score，不能拿可抵现积分(weekPoints)冒充经验。
+      var board = arr[1];
+      var me = isRecord(board.data) && isRecord(board.data.me) ? board.data.me : null;
+      var expOk = board.code == '200' && me && board.data.metric === 'exp' && board.data.period === 'week'
+        && String(me.memberId) === String(memberId) && Number.isSafeInteger(me.score) && me.score >= 0;
+      if (expOk) that.setData({ 'exploreStat.weekExp': me.score });
+      that.recordProfileMetricSource('points', pointsOk && expOk ? 'ready' : 'error',
+        pointsOk && expOk ? [weekPoints, me.score] : arr.find(isAuthFailure));
     });
   },
 
   loadOrderPreview: function () {
+    const read = this._captureProfileRead(true);
+    if (!read) return Promise.resolve();
     var that = this;
     if (that._profileAttached === false) return Promise.resolve();
     var memberId = app.getUserID();
@@ -1147,6 +1374,7 @@ Component({
       owner_type: 3,
       status: '0'
     }).then(function (res) {
+      if (!that._currentProfileRead(read, res)) return;
       if (that._profileAttached === false || requestId !== that._orderPreviewRequestId
           || memberId !== app.getUserID() || profileEpoch !== (that._followEpoch || 0)) return;
       // 原码把失败和「200 但没有订单」都收敛成 list=[] → 渲染「暂无订单」
@@ -1175,6 +1403,8 @@ Component({
   // 「本页零进行中且还有下一页」时继续翻,拿到 8 条进行中或翻完为止(接口口径不变)。
   // MAX_PAGES 是兜底:预览不值得为一个老账号翻几十页,5 页内没有进行中的就如实收起。
   loadProjectPreview: function () {
+    const read = this._captureProfileRead(true);
+    if (!read) return Promise.resolve();
     var that = this;
     if (that._profileAttached === false) return Promise.resolve();
     var memberId = app.getUserID();
@@ -1205,6 +1435,7 @@ Component({
         pageNum: pageNum,
         pageSize: PAGE_SIZE
       }).then(function (res) {
+        if (!that._currentProfileRead(read, res)) return;
         if (that._profileAttached === false || requestId !== that._projectPreviewRequestId
             || memberId !== app.getUserID() || profileEpoch !== (that._followEpoch || 0)) return;
         // 读取失败保留旧列表,不能当作本人没有项目。
@@ -1286,36 +1517,40 @@ Component({
     this.openScene('points-tasks');
     this.loadPointsTasks();
   },
+  goPointsHistory: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageMember/points-history/index', complete: () => { this._navigating = false; } }); },
   onPointsSheetClose: function () {
     this.closeScene();
   },
   // 出参口径:value=每次得分;pointsNum 被后端复写为「我已获得次数」(见 ApiPointsController.resultList)
   loadPointsTasks: function () {
+    const read = this._captureProfileRead(true);
+    if (!read) return Promise.resolve();
     var that = this;
     var sheet = that.data.pointsSheet;
     if (sheet.loading) return;
     that.setData({ 'pointsSheet.loading': !sheet.loaded, 'pointsSheet.failed': false });
     req('/api/points/result_list', {}).then(function (res) {
-      if (res.code != '200' || !res.data) {
+      if (!that._currentProfileRead(read, res)) return;
+      // G4:规则整理收进同目录 points-rules.js(纯函数,有单测)。
+      //   · 赚分任务与花分规则(eventType=14 解锁提示)都取自后台积分规则配置,客户端不写死分值;
+      //     原先这里把 14 直接过滤掉,用户看不到花分口径,现在单列为「积分消耗」。
+      //   · 回包不是数组 / 含非对象行 → 按失败处理,不伪装成「暂无积分任务」。
+      //   · 积分抵扣现金的汇率是服务端常量,没有只读接口,这里不展示也不编造。
+      //     (常量在 CmsRegistrationServiceImpl.POINT_DEDUCT_RATE;规则本身归 Codex B03,本处只读展示)
+      // ⚠️ require 写在这里而不是文件顶部:本文件的 UI-GATE 基线按行号登记,顶部加一行会让后面
+      //   所有登记项整体漂移;就地 require 由运行时缓存,不重复加载。
+      var rules = res.code == '200' ? require('./points-rules.js').splitPointsRules(res.data) : null;
+      if (!rules) {
         // 首次加载失败给显式失败态(可点重试);已有列表则保留旧数据不打扰
         that.setData({ 'pointsSheet.loading': false, 'pointsSheet.failed': !that.data.pointsSheet.loaded });
         return;
       }
-      var tasks = [];
-      for (var i = 0; i < res.data.length; i++) {
-        var r = res.data[i];
-        // 只列赚分任务:启用中;event_type=14(解锁提示)是花分规则,不属于任务
-        if (Number(r.status) !== 1 || Number(r.eventType) === 14) continue;
-        tasks.push({
-          id: r.id,
-          eventType: r.eventType,
-          title: r.title || '',
-          description: r.description || '',
-          points: Number(r.value) || 0,
-          doneCount: Number(r.pointsNum) || 0
-        });
-      }
-      that.setData({ 'pointsSheet.tasks': tasks, 'pointsSheet.loading': false, 'pointsSheet.loaded': true });
+      that.setData({
+        'pointsSheet.tasks': rules.earn,
+        'pointsSheet.spendRules': rules.spend,
+        'pointsSheet.loading': false,
+        'pointsSheet.loaded': true
+      });
     });
   },
 
@@ -1333,7 +1568,7 @@ Component({
   },
 
   goSignup: function () {
-    wx.navigateTo({ url: '/subpackageMember/signup/index' });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageMember/signup/index', complete: () => { this._navigating = false; } });
   },
 
   toggleFollow: function () {
@@ -1386,7 +1621,7 @@ Component({
       if (app.tips) app.tips('用户不存在');
       return;
     }
-    community.request({
+    if (that._navigating) return; that._navigating = true; community.request({ // 请求在途/跳转中不响应连点
       url: '/api/im/start',
       method: 'POST',
       hideLoading: true,
@@ -1397,15 +1632,15 @@ Component({
           wx.navigateTo({
             url: '/subpackageB/pages/im/chat/index?conversationId=' + res.data.conversationId +
               '&name=' + encodeURIComponent(ui.nickname || '') +
-              '&avatar=' + encodeURIComponent(ui.avatar || '') + '&type=1'
+              '&avatar=' + encodeURIComponent(ui.avatar || '') + '&type=1', complete: function () { that._navigating = false; }
           });
           return;
         }
-        if (app.tips) app.tips((res && res.msg) || '无法发起会话');
+        that._navigating = false; if (app.tips) app.tips((res && res.msg) || '无法发起会话');
       },
       fail: function () {
-        if (app.tips) app.tips('网络异常，请重试');
-      }
+        that._navigating = false; if (app.tips) app.tips('网络异常，请重试');
+      }, successStatusAbnormal: function (res) { that._navigating = false; if (app.tips) app.tips((res && res.msg) || '无法发起会话'); }
     });
   },
 
@@ -1630,6 +1865,34 @@ Component({
   openMoreMenu: function () { this.openScene('member-more-menu'); },
   closeMoreMenu: function () { this.closeScene(); },
 
+  onReportMember: function () {
+    this.closeMoreMenu();
+    this.setData({ reportShow: true, reportTargetType: 'MEMBER', reportTargetId: String(this.data.userId || ''), reportTitle: '举报这位用户' });
+  },
+
+  onReportMerchant: function () {
+    var merchantId = this.data.subjectMerchant && this.data.subjectMerchant.id;
+    this.closeMoreMenu();
+    if (merchantId == null || merchantId === '') return;
+    this.setData({ reportShow: true, reportTargetType: 'MERCHANT', reportTargetId: String(merchantId), reportTitle: '举报这家商家' });
+  },
+
+  onReportClose: function () {
+    this.setData({ reportShow: false });
+  },
+
+  // BL-67:商家公开主页「信息纠错」(问题上报,纯文字),走纠错半屏
+  onMerchantCorrection: function () {
+    var merchantId = this.data.subjectMerchant && this.data.subjectMerchant.id;
+    this.closeMoreMenu();
+    if (merchantId == null || merchantId === '') return;
+    this.setData({ correctionShow: true, correctionMerchantId: String(merchantId) });
+  },
+
+  onCorrectionClose: function () {
+    this.setData({ correctionShow: false });
+  },
+
   onShareProfile: function () {
     this.closeMoreMenu();
     cyToast('点击右上角分享主页');
@@ -1650,7 +1913,7 @@ Component({
 
   onMoreSetting: function () {
     this.closeMoreMenu();
-    wx.navigateTo({ url: '/pages/shezhi/shezhi' });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/shezhi/shezhi', complete: () => { this._navigating = false; } });
   },
 
   // CU-M-43(2026-09-23 用户裁决 B):onBlock 随「屏蔽」入口一起摘掉 —— 原来只弹一句
@@ -1683,6 +1946,8 @@ Component({
   },
 
   getCreativesquareList: function () {
+    const read = this._captureProfileRead(false);
+    if (!read) return Promise.resolve(false);
     var that = this;
     if (!communityReadable()) return Promise.resolve(false);
     const pageNum = that.data.page_no;
@@ -1695,6 +1960,7 @@ Component({
     };
     if (!that.data.isSelf) data.user_id = that.data.userId;
     return req('/api/creativesquare/list', data).then(function (res) {
+      if (!that._currentProfileRead(read, res)) return false;
       if (generation !== that._postsRequestGeneration) return false;
       // 原码把失败显式写成 nodata=true → 渲染「还没有动态,发布一次城市发现吧」
       if (res.code != '200') {
@@ -1752,6 +2018,8 @@ Component({
 
   // C7:我的项目入口待处理角标(未通过+审核中;/api/publish/home projectSummary 无草稿档)
   loadProjectPending: function () {
+    const read = this._captureProfileRead(true);
+    if (!read) return Promise.resolve();
     var that = this;
     if (that._profileAttached === false) return Promise.resolve();
     var memberId = app.getUserID();
@@ -1760,6 +2028,7 @@ Component({
     if (that._projectPendingMemberId !== undefined && that._projectPendingMemberId !== memberId) that.setData({ projectPendingCount: 0 });
     that._projectPendingMemberId = memberId;
     return req('/api/publish/home', {}).then(function (res) {
+      if (!that._currentProfileRead(read, res)) return;
       if (that._profileAttached === false || requestId !== that._projectPendingRequestId
           || memberId !== app.getUserID() || profileEpoch !== (that._followEpoch || 0)) return;
       if (res.code != '200' || !res.data || !res.data.projectSummary) return;
@@ -1791,9 +2060,10 @@ Component({
         cyToast(app.getRequestErrorMessage(res, '操作失败'));
         return;
       }
-      var current = that.data.list[index];
-      current = Object.assign({}, current, { isLiked: res.data.isLiked, likeCount: res.data.likeCount, version: res.data.version });
-      that.setData({ ['list[' + index + ']']: current });
+      var pos = that.data.list.findIndex(function (row) { return row && String(row.id) === String(item.id); });
+      if (pos < 0) return;
+      var current = Object.assign({}, that.data.list[pos], { isLiked: res.data.isLiked, likeCount: res.data.likeCount, version: res.data.version });
+      that.setData({ ['list[' + pos + ']']: current });
     });
   },
 
@@ -1817,7 +2087,9 @@ Component({
         cyToast(app.getRequestErrorMessage(res, '操作失败'));
         return;
       }
-      that.setData({ ['list[' + index + '].isBookmarked']: res.data.isBookmarked });
+      var pos = that.data.list.findIndex(function (row) { return row && String(row.id) === String(item.id); });
+      if (pos < 0) return;
+      that.setData({ ['list[' + pos + ']']: Object.assign({}, that.data.list[pos], { isBookmarked: res.data.isBookmarked }) });
     });
   },
 
@@ -1829,20 +2101,20 @@ Component({
   onAvatarTap: function () {
     if (this.data.isSelf) this.goUserInfo();
   },
-  goSetting: function () { wx.navigateTo({ url: '/pages/shezhi/shezhi' }); },
+  goSetting: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/shezhi/shezhi', complete: () => { this._navigating = false; } }); },
   // 直达个人资料真页。原来跳的是 `shezhi?scene=settings-profile` —— 那会让「设置」一进去就
   // 盖一层弹窗(2026-08-08 用户提「点到设置不要弹这个弹窗」),而弹窗里是 scene-route-content
   // 的通用表单,只有昵称+邮箱,pages/gerenziliao 那 390 行的头像/介绍/标签全没了。
   // 2026-08-20 用户定:商家视角个人资料与店铺装修合并,编辑头像/资料一律进店铺装修。
   goUserInfo: function () {
-    if (this.data.isMerchantView) { wx.navigateTo({ url: '/pages/merchant/decor/index' }); return; }
-    wx.navigateTo({ url: '/pages/gerenziliao/gerenziliao' });
+    if (this.data.isMerchantView) { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/merchant/decor/index', complete: () => { this._navigating = false; } }); return; }
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/gerenziliao/gerenziliao', complete: () => { this._navigating = false; } });
   },
   // CU-M-28:这一块显示的是会员本人的 introduction,编辑必须进个人资料;
   // goUserInfo 在商家视角会去品牌中心,那里没有「个人介绍」字段。
-  goEditIntro: function () { wx.navigateTo({ url: '/pages/gerenziliao/gerenziliao' }); },
+  goEditIntro: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/gerenziliao/gerenziliao', complete: () => { this._navigating = false; } }); },
   // FE-14 商家店铺资料收编进「我的」更多菜单(原 shanghuziliao 页保留即重定向)
-  goShop: function () { this.closeScene(); wx.navigateTo({ url: '/pages/merchant/decor/index' }); },
+  goShop: function () { this.closeScene(); if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/merchant/decor/index', complete: () => { this._navigating = false; } }); },
   // 访客看商家主页的底部「发起合作」:与 club/detail onInviteMerchant 同链路(coop/invite type=0,
   // toId=memberId)。userId 在商家主页语境下就是对方 memberId。
   onCoopInvite() {
@@ -1855,41 +2127,41 @@ Component({
     this.closeCoopInvite();
     returnToCoopOrigin(e.detail.topicId);
   },
-  goOrder: function () { wx.navigateTo({ url: '/subpackageMember/order/order' }); },
-  goProject: function () { wx.navigateTo({ url: '/subpackageA/pages/myproject/index' }); },
+  goOrder: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageMember/order/order', complete: () => { this._navigating = false; } }); },
+  goProject: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageA/pages/myproject/index', complete: () => { this._navigating = false; } }); },
   onOrderPreviewTap: function (e) {
     var id = e.currentTarget.dataset.id;
     // 订单详情是「订单」二级页的子场景;一级「我的」先进入父页,由父页托管返回关系。
-    if (id) wx.navigateTo({ url: '/subpackageMember/order/order?detailId=' + encodeURIComponent(String(id)) });
+    if (id) { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageMember/order/order?detailId=' + encodeURIComponent(String(id)), complete: () => { this._navigating = false; } }); }
     else this.goOrder();
   },
   onProjectPreviewTap: function (e) {
     // projectPreviewList 源为 /api/topic/list?is_my=1(仅 topic),故单卡直达主题详情;无 id 兜底进 myproject
     var id = e.currentTarget.dataset.id;
-    if (id) wx.navigateTo({ url: '/pages/topic/index/index?id=' + id });
+    if (id) { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/topic/index/index?id=' + id, complete: () => { this._navigating = false; } }); }
     else this.goProject();
   },
   goMyJoin: function () { wx.navigateTo({ url: '/subpackageMember/mycanyu/mycanyu' }); },
-  goGrowthCenter: function () { wx.navigateTo({ url: '/subpackageP3/pages/growthcenter/index/index' }); },
-  goWall: function () { wx.navigateTo({ url: '/subpackageP3/pages/badge-wall/index/index' }); },
-  goAlbum: function () { wx.navigateTo({ url: '/subpackageP3/pages/stamp-album/index/index' }); },
-  goObjectCards: function () { wx.navigateTo({ url: '/subpackageP3/pages/object-cards/index/index' }); },
+  goGrowthCenter: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageP3/pages/growthcenter/index/index', complete: () => { this._navigating = false; } }); },
+  goWall: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageP3/pages/badge-wall/index/index', complete: () => { this._navigating = false; } }); },
+  goAlbum: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageP3/pages/stamp-album/index/index', complete: () => { this._navigating = false; } }); },
+  goObjectCards: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageP3/pages/object-cards/index/index', complete: () => { this._navigating = false; } }); },
   // 当前权益里可点的行(收益提现→提现页;承接原 role/center 对赚钱角色 role!==player 的提现入口,按 withdrawable 权限门控)
   onBenefitTap: function (e) {
     var ds = e.currentTarget.dataset;
-    if (ds.route && ds.unlocked) wx.navigateTo({ url: ds.route });
+    if (ds.route && ds.unlocked) { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: ds.route, complete: () => { this._navigating = false; } }); }
   },
   goInvite: function () { this.openScene('share-invite'); },
-  goComplaint: function () { wx.navigateTo({ url: '/subpackageMember/complaint/index' }); },
-  goEarnings: function () { wx.navigateTo({ url: '/subpackageA/pages/assetcenter/earnings/index' }); },
-  goMerchantTeam: function () { wx.navigateTo({ url: '/pages/merchant/team/index' }); },
-  goClubWorkbench: function () { wx.navigateTo({ url: '/pages/club/detail/index?owner=1&tab=manage' }); },
-  goCoupon: function () { wx.navigateTo({ url: '/subpackageMember/coupon-wallet/index' }); },
+  goComplaint: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageMember/complaint/index', complete: () => { this._navigating = false; } }); },
+  goEarnings: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageA/pages/assetcenter/earnings/index', complete: () => { this._navigating = false; } }); },
+  goMerchantTeam: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/merchant/team/index', complete: () => { this._navigating = false; } }); },
+  goClubWorkbench: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/club/detail/index?owner=1&tab=manage', complete: () => { this._navigating = false; } }); },
+  goCoupon: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageMember/coupon-wallet/index', complete: () => { this._navigating = false; } }); },
   goClub: function () {
-    wx.navigateTo({ url: this.data.clubOwnedCount >= 1 ? '/pages/club/detail/index?owner=1' : '/pages/club/create/index' });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: this.data.clubOwnedCount >= 1 ? '/pages/club/detail/index?owner=1' : '/pages/club/create/index', complete: () => { this._navigating = false; } });
   },
   goBecomeTalent: function () {
-    cyLoading.show('加载中');
+    var that = this; cyLoading.show('加载中');
     req('/api/club/my', {}).then(function (res) {
       cyLoading.hide();
       if (res.code != '200') {
@@ -1897,26 +2169,26 @@ Component({
         return;
       }
       var owned = (res.code == '200' && res.data && res.data.owned) || [];
-      if (owned && !Array.isArray(owned)) owned = [owned];
-      if (owned.length >= 1) wx.navigateTo({ url: '/pages/club/detail/index?id=' + ((owned[0] && owned[0].id) || '') });
-      else if (roleGuard.isClubLeader()) wx.navigateTo({ url: '/pages/club/create/index' });
-      else wx.navigateTo({ url: '/pages/club/apply/index' });
+      if (owned && !Array.isArray(owned)) owned = [owned]; if (that._navigating) return; that._navigating = true; // 跳转中不响应连点,免得叠两层
+      if (owned.length >= 1) wx.navigateTo({ url: '/pages/club/detail/index?id=' + ((owned[0] && owned[0].id) || ''), complete: function () { that._navigating = false; } });
+      else if (roleGuard.isClubLeader()) wx.navigateTo({ url: '/pages/club/create/index', complete: function () { that._navigating = false; } });
+      else wx.navigateTo({ url: '/pages/club/apply/index', complete: function () { that._navigating = false; } });
     });
   },
   jumpDetail: function (e) {
     var activity = this.data.list[e.currentTarget.dataset.index];
-    if (activity) wx.navigateTo({ url: '/pages/square/detail/index?id=' + activity.id });
+    if (activity) { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/square/detail/index?id=' + activity.id, complete: () => { this._navigating = false; } }); }
   },
 
   previewImage: function (e) {
     var picList = e.currentTarget.dataset.piclist;
     var index = e.currentTarget.dataset.index;
-    wx.previewImage({ current: picList[index], urls: picList });
+    mediaPreview.open(picList, picList && picList[index]);
   },
 
   previewMerchantGallery: function (e) {
     var src = e.currentTarget.dataset.src;
-    if (src) wx.previewImage({ current: src, urls: this.data.merchantGallery || [src] });
+    if (src) mediaPreview.open(this.data.merchantGallery || [src], src);
   },
 
   goMerchantLocation: function () {
@@ -1941,10 +2213,10 @@ Component({
   goFeatured: function () {
     var f = this.data.featured || {};
     if (f.featuredType === 1 && f.featuredId) {
-      wx.navigateTo({ url: '/pages/activity/detail/index?id=' + f.featuredId });
+      if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/activity/detail/index?id=' + f.featuredId, complete: () => { this._navigating = false; } });
       return;
     }
-    if (f.featuredType === 2) wx.navigateTo({ url: '/subpackageMember/coupon-wallet/index' });
+    if (f.featuredType === 2) { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageMember/coupon-wallet/index', complete: () => { this._navigating = false; } }); }
   },
 
   goMerchantReviews: function () {
@@ -1953,14 +2225,14 @@ Component({
       cyToast('该商家评价暂不可查看');
       return;
     }
-    wx.navigateTo({
-      url: '/pages/merchant/reviews/index?merchantRowId=' + encodeURIComponent(merchantRowId)
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({
+      url: '/pages/merchant/reviews/index?merchantRowId=' + encodeURIComponent(merchantRowId), complete: () => { this._navigating = false; }
     });
   },
 
   previewWork: function (e) {
     var url = e.currentTarget.dataset.url;
-    wx.previewImage({ current: url, urls: this.data.casePicsList });
+    mediaPreview.open(this.data.casePicsList, url);
   },
 
   formatTimeDifference: function (createTimeStr) {

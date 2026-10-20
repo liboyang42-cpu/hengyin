@@ -177,9 +177,9 @@ public class NodeNpcService {
     @org.springframework.beans.factory.annotation.Autowired
     private com.chengyinhub.business.service.support.AppMediaReferenceGuard mediaReferences;
 
-    public NpcProfile voiceEnroll(Long ownerMemberId, Long nodeId, String rawSample) {
+    public NpcProfile voiceEnroll(Long actorMemberId, Long ownerMemberId, Long nodeId, String rawSample) {
         chapterMerchantNodeService.requireOwnLiveNode(ownerMemberId, nodeId);
-        consentGuard.requireCurrentAgreement(ownerMemberId, "voice_clone_processing", "merchant_voice");
+        consentGuard.requireCurrentAgreement(actorMemberId, "voice_clone_processing", "merchant_voice");
 
         String sample = trimToNull(rawSample);
         if (sample == null) throw new IllegalStateException("请先录一段话");
@@ -192,7 +192,7 @@ public class NodeNpcService {
         if (mine == null || mine.getScopeId() == null || !mine.getScopeId().equals(nodeId)) {
             throw new IllegalStateException("请先保存节点 NPC,再给他配声音");
         }
-        sample = mediaReferences.requireAttachment(ownerMemberId, sample, true);
+        sample = mediaReferences.requireAttachment(actorMemberId, sample, true);
         if (sample.length() > 255) throw new IllegalStateException("录音引用过长");
         // 同一段录音重复提交:已经复刻中/已可用就是幂等命中,别再烧一次上游。
         if (sample.equals(mine.getVoiceSample())
@@ -208,7 +208,7 @@ public class NodeNpcService {
             throw new IllegalStateException("语音服务未开通");
         }
 
-        String processingSample = mediaReferences.processingUrl(sample, ownerMemberId, "AUDIO");
+        String processingSample = mediaReferences.processingUrl(sample, actorMemberId, "AUDIO");
 
         NpcProfile pending = new NpcProfile();
         pending.setId(mine.getId());

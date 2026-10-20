@@ -85,7 +85,7 @@ Page({
     noPermission: false,
     toolsOpen: false,
     canSegment: false,
-    canExport: false,
+    canExport: false, canCampaigns: false,
     sourceType: '',
     sourceStart: '',
     sourceEnd: '',
@@ -126,7 +126,7 @@ Page({
   },
 
   onShow() {
-    merchantTheme.merchantPageShow();
+    merchantTheme.merchantPageShow(); this._navigating = false;
     const memberId = currentMemberId();
     if (this._scopeMemberId === undefined) {
       this._scopeMemberId = memberId;
@@ -174,7 +174,7 @@ Page({
       error: '',
       noPermission: false,
       canSegment: false,
-      canExport: false,
+      canExport: false, canCampaigns: false,
     });
     app.sendRequest({
       hideLoading: true,
@@ -207,7 +207,7 @@ Page({
         }
         this.setData({
           canSegment: access.canSegmentCrm,
-          canExport: access.canExportCrm,
+          canExport: access.canExportCrm, canCampaigns: access.canReadMarketing,
         });
         this.load();
         this.loadSavedSegments();
@@ -359,7 +359,7 @@ Page({
         exportState: 'idle',
         exportError: '',
         canSegment: false,
-        canExport: false,
+        canExport: false, canCampaigns: false,
     });
   },
 
@@ -381,7 +381,7 @@ Page({
       return;
     }
     if (this.data.emptyAction === 'go-coop') {
-      wx.navigateTo({ url: '/pages/merchant/coop-center/index' });
+      if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/merchant/coop-center/index', complete: () => { this._navigating = false; } });
       return;
     }
     this.load();
@@ -663,9 +663,9 @@ Page({
       this.setData({ selectedIds: selected, rows: markSelected(this.data.rows, selected) });
       return;
     }
-    wx.navigateTo({
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ // 跳转中不响应连点,免得叠两层客户详情
       url: `/pages/merchant/customer/detail/index?customerMemberId=${memberId}`,
-    });
+      complete: () => { this._navigating = false; } });
   },
 
   toggleSelectMode() {
@@ -906,6 +906,14 @@ Page({
 
   _customerQuery(pageNum) {
     return Object.assign({ pageNum, pageSize: PAGE_SIZE, keyword: this.data.keyword || null }, this._segmentFilter());
+  },
+
+  // BL-100:触达任务记录只读页;页内自己再按 access/me 判 MARKETING_READ。
+  goCampaigns() {
+    if (!this.data.canCampaigns || this._navigating) return; // 跳转中不响应连点,免得叠两层触达记录页
+    this._navigating = true;
+    this.setData({ toolsOpen: false });
+    wx.navigateTo({ url: '/pages/merchant/crm-campaigns/index', complete: () => { this._navigating = false; } });
   },
 });
 

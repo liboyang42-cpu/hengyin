@@ -1,0 +1,20 @@
+<!-- BL-89 到访安全感受评价:选项来自 GET /api/community-trust/safety/taxonomy,
+     提交 POST /api/community-trust/safety/ratings;资格(真实核销到店)以后端报错为准如实回显。 -->
+<cy-sheet show="{{show && stage === 'form'}}" title="评价安全感受" bind:close="onClose" footer="{{state === 'ready'}}">
+  <view class="srs">
+    <text class="srs-intro">评价只反映你这次到店的安全感受，不代表平台担保；不会展示给其他人看你的评价内容。</text>
+    <view class="srs-loading" wx:if="{{state === 'loading'}}" aria-role="status">正在读取评价选项…</view>
+    <cy-inline-error wx:elif="{{state === 'error'}}" kind="data" title="评价选项没有加载" sub="{{error}}" action="重试" bind:action="load" />
+    <block wx:else>
+      <cy-tabs variant="chip" tabs="{{levelTabs}}" active="{{level}}" bind:change="onLevel" />
+      <cy-field class="srs-field" label="说说原因" required variant="textarea" value="{{reason}}" maxlength="1000" show-count
+                placeholder="例如：照明、店员引导、周边环境" bind:input="onReason" />
+      <cy-inline-error wx:if="{{submitError}}" kind="data" title="评价没有提交成功" sub="{{submitError}}" />
+    </block>
+  </view>
+  <view slot="footer">
+    <cy-btn variant="{{canSubmit ? 'primary' : 'disabled'}}" disabled="{{!canSubmit}}" loading="{{submitting}}" bindtap="submit">提交评价</cy-btn>
+  </view>
+</cy-sheet>
+<cy-result-sheet show="{{show && stage === 'done'}}" kind="success" title="评价已提交"
+                 sub="{{receiptText}}" primary-text="知道了" bind:primary="onClose" bind:close="onClose" />

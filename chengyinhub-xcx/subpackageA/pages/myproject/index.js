@@ -6,6 +6,14 @@ const merchantAccessPolicy = require('../../../utils/merchant-access-policy.js')
 const { openScene } = require('../../../utils/scene-entry.js');
 const { isRecordList } = require('../../../utils/response-shape.js');
 const { marketView } = require('../../../utils/template-market.js');
+const modal = require('../../../utils/modal.js');
+const { memberId, isLoginRequired, failureStatus, retryLogin, waitForInitialSession, recoverReadSession } = require('../../../utils/session/login-reload.js');
+
+function authorization() {
+  return typeof app.getAuthorization === 'function' ? app.getAuthorization()
+    : typeof app.getToken === 'function' ? app.getToken() : app.globalData && app.globalData.authorization;
+}
+function hasSession() { return !!(memberId(app) && authorization()); }
 
 // C6 重组(发布域重构 §3C):唯一管理容器,主结构=类型三 tab(主题/活动/模板)。
 // 身份和状态在卡片展示，列表只按主题 / 活动 / 模板切换。
@@ -57,11 +65,14 @@ const PENDING_RANK = { rejected: 0, draft: 1, pending: 2 };
 
 const LOAD_CAP = 200;
 
-function currentRead(page) {
+function currentRead(page, sessionRecovery) {
   const epoch = page._readEpoch || 0;
   const memberId = String(app.getUserID() || '');
-  return () => page._visible !== false && (page._readEpoch || 0) === epoch
-    && String(app.getUserID() || '') === memberId;
+  const token = authorization();
+  return (res, statusCode) => page._visible !== false && (page._readEpoch || 0) === epoch
+    && ((String(app.getUserID() || '') === memberId && authorization() === token)
+      || sessionRecovery && (res && res.reason === 'sessionChanged'
+        || failureStatus(res, statusCode) === 401 && !hasSession()));
 }
 
 Page({
@@ -75,9 +86,12 @@ Page({
     /* 稿 260:277 把上下架 / 删除赶出了卡面,这个面板是它们的新家(长按卡片打开)。
        只存这张卡自己的判定结果,不存整条 item —— 面板开着的时候列表可能已经刷新了。 */
     opsSheet: { show: false, title: '', id: '', biz: '', online: false,
-                canToggle: false, canDelete: false, canViewApplies: false, toggleLabel: '' },
+                canToggle: false, canDelete: false, canViewApplies: false, canSaveAsTemplate: false, toggleLabel: '' },
     loading: false,
     loaded: false,
+    authRequired: false,
+    projectAccessDenied: false,
+    tplAccessDenied: false,
     projectState: 'loading', // loading | error | ready
     projectErrorMsg: '',
     emptyTit: TYPE_EMPTY.topic.tit,
@@ -93,6 +107,7 @@ Page({
   onLoad(options) {
     options = options || {};
     this._ownerId = String(app.getUserID() || '');
+    this._ownerToken = authorization();
     // 2026-09-23 裁决(CU-C-22):俱乐部主理人可发独立单场活动,原来全站没有新建入口。
     // 2026-09-25 裁决(CU-M-05):商家同样可发单场活动,商家态入口改看岗位权限。
     // 本地身份只决定入口显不显示;能不能发由发布页 guardPublisherRole 回读权威接口判定,
@@ -100,9 +115,11 @@ Page({
     const merchantScope = options.scope === 'MERCHANT';
     this.setData({
       operationScope: merchantScope ? 'MERCHANT' : '',
-      canPublishActivity: merchantScope ? false : roleGuard.role() === 'club',
+      canPublishActivity: hasSession() && !merchantScope && roleGuard.role() === 'club',
     });
-    if (merchantScope) {
+    if (!hasSession()) {
+      this.resetPrivateState(true);
+    } else if (merchantScope) {
       this.loadMerchantPublishEntry();
     } else {
       const current = currentRead(this);
@@ -123,17 +140,19 @@ Page({
   },
 
   onShow() {
+    this._navigating = false;
     const memberId = String(app.getUserID() || '');
-    const changedOwner = this._ownerId !== undefined && this._ownerId !== memberId;
+    const changedOwner = this._ownerId !== undefined
+      && (this._ownerId !== memberId || this._ownerToken !== authorization());
     const refreshAccess = this._visible === false || changedOwner;
     this._visible = true;
-    if (changedOwner) {
-      this._all = [];
-      this.setData({ list: [], loaded: false, capped: false, hasRowOps: false,
-        tplList: [], tplLoaded: false, tplLoading: false, tplErrorMsg: '',
-        canPublishActivity: false, 'opsSheet.show': false });
-    }
+    this._hidden = false;
+    this._unloaded = false;
+    if (changedOwner) this.resetPrivateState(!hasSession());
     this._ownerId = memberId;
+    this._ownerToken = authorization();
+    merchantTheme.merchantPageShow();
+    if (!this.requireSession()) return;
     if (refreshAccess && this.data.operationScope === 'MERCHANT') {
       this.loadMerchantPublishEntry();
     } else if (refreshAccess) {
@@ -149,11 +168,11 @@ Page({
     //   路径(同步抛错 / 页面被顶掉再回来)会把 flag 永远留在 true,按钮就此死掉。
     this._togglingIds = null;
     this._templateActionIds = null;
-    merchantTheme.merchantPageShow();
     this.reload();
   },
   onHide() {
     this._visible = false;
+    this._hidden = true;
     this._readEpoch = (this._readEpoch || 0) + 1;
     ['#dcActivity', '#dcCancel', '#dcCancelTopic', '#dcRoute', '#dcTpl'].forEach(id => {
       const dc = this.selectComponent && this.selectComponent(id);
@@ -162,9 +181,62 @@ Page({
     this.setData({ loading: false, tplLoading: false });
     merchantTheme.merchantPageRestore();
   },
-  onUnload() { this.onHide(); },
+  onUnload() { this.onHide(); this._unloaded = true; },
+
+  resetPrivateState(authRequired) {
+    this._loginRequired = !!authRequired;
+    this._readEpoch = (this._readEpoch || 0) + 1;
+    this._seq = (this._seq || 0) + 1;
+    this._all = [];
+    this.setData({ authRequired: !!authRequired, list: [], loaded: false, loading: false,
+      projectState: 'loading', projectErrorMsg: '', projectAccessDenied: false,
+      capped: false, hasRowOps: false, tplList: [], tplLoaded: false, tplLoading: false,
+      tplErrorMsg: '', tplAccessDenied: false, canPublishActivity: false, 'opsSheet.show': false });
+  },
+
+  requireSession() {
+    if (hasSession() && !this._loginRequired) { this.setData({ authRequired: false }); return true; }
+    this.resetPrivateState(true);
+    waitForInitialSession(this, app, this.onShow);
+    return false;
+  },
+
+  onLogin() {
+    const epoch = this._readEpoch || 0;
+    return retryLogin(this, app, function () {
+      if ((this._readEpoch || 0) !== epoch) return;
+      this._loginRequired = false;
+      this.onShow();
+    });
+  },
+
+  readFailure(kind, res, statusCode) {
+    if (recoverReadSession(this, app, res, function (anonymous) {
+      this.resetPrivateState(anonymous);
+    }, this.onShow, statusCode)) return;
+    if (isLoginRequired(app, res, statusCode) || !authorization()) { this.resetPrivateState(true); return; }
+    const denied = failureStatus(res, statusCode) === 403;
+    if (kind === 'project') {
+      if (denied) {
+        this._all = [];
+        this.setData({ list: [], loaded: false, hasRowOps: false, capped: false, 'opsSheet.show': false });
+      }
+      this.setData({ loading: false, projectAccessDenied: denied,
+        projectState: this.data.loaded ? 'ready' : 'error',
+        projectErrorMsg: app.getRequestErrorMessage(res, '项目加载失败，请稍后重试') });
+    } else {
+      if (denied) {
+        this.setData({ tplLoading: false, tplAccessDenied: true, tplList: [], tplLoaded: false,
+          tplErrorMsg: app.getRequestErrorMessage(res, '节点玩法加载失败') });
+      } else {
+        this.setData({ tplLoading: false, tplAccessDenied: false,
+          tplErrorMsg: app.getRequestErrorMessage(res, '节点玩法加载失败') });
+      }
+    }
+  },
 
   reload() {
+    if (!this.requireSession()) return;
     // 递增序号作废在途请求(修 toggle/delete 后空跑 + 响应污染,沿旧版)
     this._seq = (this._seq || 0) + 1;
     this.loadProjects();
@@ -176,6 +248,7 @@ Page({
     const k = e.detail.key;
     if (!k || k === this.data.typeTab) return;
     this.setData({ typeTab: k });
+    if (!this.requireSession()) return;
     if (k === 'template') {
       if (!this.data.tplLoaded) this.loadTemplates();
     } else {
@@ -187,7 +260,7 @@ Page({
      本地 scope 参数只决定问哪个接口,不作放行依据;读不到就按没有入口处理(fail-closed),
      真闸在服务端 —— 商家 scope 下 publish 仍要过 merchantAccessService.require。 */
   loadMerchantPublishEntry() {
-    if (this._visible === false) return;
+    if (this._visible === false || !this.requireSession()) return;
     this.setData({ canPublishActivity: false });
     const that = this;
     const current = currentRead(this);
@@ -212,16 +285,17 @@ Page({
 
   // ===== 数据:一次拉全,前端派生 =====
   loadProjects() {
-    if (this._visible === false) return;
+    if (this._visible === false || !this.requireSession()) return;
     const that = this;
-    const current = currentRead(this);
+    const current = currentRead(this, true);
     const seq = (this._seq || 0) + 1;
     this._seq = seq;
     const hasContent = this.data.loaded === true;
     this.setData({
       loading: true,
       projectState: hasContent ? 'ready' : 'loading',
-      projectErrorMsg: ''
+      projectErrorMsg: '',
+      projectAccessDenied: false
     });
     app.sendRequest({
       hideLoading: true,
@@ -231,7 +305,7 @@ Page({
       data: { ownerType: 'all', state: 'all', type: 'all', pageNum: 1, pageSize: LOAD_CAP,
         scope: this.data.operationScope },
       success(res) {
-        if (!current() || that._seq !== seq) return;
+        if (!current(res) || that._seq !== seq) return;
         if (res && res.code == '200' && res.data && isRecordList(res.data.rows)) {
           const rows = res.data.rows.map(decorate);
           that._all = rows;
@@ -242,22 +316,13 @@ Page({
             capped: (res.data.total || 0) > rows.length
           });
           that.applyView();
-        } else {
-          that.setData({
-            loaded: hasContent,
-            projectState: hasContent ? 'ready' : 'error',
-            projectErrorMsg: app.getRequestErrorMessage(res, '项目加载失败，请稍后重试')
-          });
-        }
+        } else { that.readFailure('project', res); }
       },
-      fail(res) {
-        if (current() && that._seq === seq) {
-          that.setData({
-            loaded: hasContent,
-            projectState: hasContent ? 'ready' : 'error',
-            projectErrorMsg: app.getRequestErrorMessage(res, '网络异常，项目暂时没能加载')
-          });
-        }
+      fail(res, statusCode) {
+        if (current(res, statusCode) && that._seq === seq) that.readFailure('project', res, statusCode);
+      },
+      successStatusAbnormal(res, statusCode) {
+        if (current(res, statusCode) && that._seq === seq) that.readFailure('project', res, statusCode);
       },
       complete() { if (current() && that._seq === seq) that.setData({ loading: false }); }
     });
@@ -289,19 +354,19 @@ Page({
   // ===== 项目卡交互(沿旧版) =====
   onCardTap(e) {
     const item = e.currentTarget.dataset.item;
-    if (!item) return;
+    if (!item || this._navigating) return; // 跳转中不响应连点
     // 草稿 / 未通过(编辑重发)→ 进专业编辑器继续编辑
     if (item.bizType === 'topic' && (item.state === 'draft' || item.state === 'rejected')) {
-      wx.navigateTo({ url: '/pages/publish/fabu/index?id=' + item.id
-        + (this.data.operationScope ? '&scope=MERCHANT' : '') });
+      this._navigating = true; wx.navigateTo({ url: '/pages/publish/fabu/index?id=' + item.id
+        + (this.data.operationScope ? '&scope=MERCHANT' : ''), complete: () => { this._navigating = false; } });
       return;
     }
     if (item.bizType === 'activity') {
       // 待审核 / 未通过的活动还没有玩家可见的详情页,点击进编辑器续写 ——
       // 与上面主题卡「草稿/未通过 → 编辑器」同判据;_canEdit 已挡掉承办只读卡。
       if (item._canEdit && (item.state === 'pending' || item.state === 'rejected')) {
-        wx.navigateTo({ url: '/pages/publish/activity/index?id=' + item.id
-          + (this.data.operationScope ? '&scope=MERCHANT' : '') });
+        this._navigating = true; wx.navigateTo({ url: '/pages/publish/activity/index?id=' + item.id
+          + (this.data.operationScope ? '&scope=MERCHANT' : ''), complete: () => { this._navigating = false; } });
         return;
       }
       const id = item.id;
@@ -310,8 +375,8 @@ Page({
     }
     // 这个列表就是「我发布的」,所以主题一律进项目主页(主办视图)——
     // 原来跳的 topic/index 是玩家买票页,发布者在那儿看不到谁来接、卖了多少。
-    wx.navigateTo({ url: '/pages/topic/merchantinfo/merchantinfo?topicId=' + item.id
-      + (this.data.operationScope ? '&scope=MERCHANT' : '') });
+    this._navigating = true; wx.navigateTo({ url: '/pages/topic/merchantinfo/merchantinfo?topicId=' + item.id
+      + (this.data.operationScope ? '&scope=MERCHANT' : ''), complete: () => { this._navigating = false; } });
   },
 
   /* 长按 = 列表管理动作的唯一入口(稿裁决:卡面不放按钮)。
@@ -319,7 +384,8 @@ Page({
   onCardLong(e) {
     const item = e.currentTarget.dataset.item;
     if (!item) return;
-    if (!item._canToggle && !item._canDelete && !item._canViewApplies && !item._canEdit && !item._canCancel) return;
+    if (!item._canToggle && !item._canDelete && !item._canViewApplies && !item._canEdit && !item._canCancel
+      && !item._canSaveAsTemplate) return;
     this.setData({
       opsSheet: {
         show: true,
@@ -332,6 +398,7 @@ Page({
         canViewApplies: !!item._canViewApplies,
         canEdit: !!item._canEdit,
         canCancel: !!item._canCancel,
+        canSaveAsTemplate: !!item._canSaveAsTemplate,
         toggleLabel: item._toggleLabel || '下架',
       }
     });
@@ -354,11 +421,52 @@ Page({
       return p.biz === 'topic' ? this.cancelTopic(cancelDs) : this.cancelActivity(cancelDs);
     }
     if (k === 'delete') return this.deleteItem({ currentTarget: { dataset: ds } });
+    if (k === 'saveAsTemplate') return this.saveAsTemplate({ currentTarget: { dataset: ds } });
+  },
+
+  // BL-120 另存为模板:POST /api/template/topic-template/save-as(id, scope)。
+  // 后端把本主题置 is_template=1(不复制),只认本人(商家 scope 认店主)且审核通过的主题,
+  // 其余按后端文案如实提示;回包无 topicId,成功后回读列表。
+  saveAsTemplate(e) {
+    const ds = e.currentTarget.dataset;
+    const id = ds.id;
+    if (!id) return;
+    const that = this;
+    modal.show({
+      title: '另存为模板',
+      content: '「' + (ds.title || '这个主题') + '」会出现在主题模板货架上，其他人可以复制它作为草稿起点。',
+      confirmText: '另存为模板',
+      success(r) {
+        if (r && r.confirm) that._postSaveAsTemplate(id);
+      }
+    });
+  },
+
+  _postSaveAsTemplate(id) {
+    const inflight = this._savingTplIds || (this._savingTplIds = {});
+    if (inflight[id]) return;
+    inflight[id] = true;
+    const that = this;
+    const release = function () { if (that._savingTplIds) delete that._savingTplIds[id]; };
+    try {
+      app.sendRequest({
+        hideLoading: true, silentError: true,
+        url: '/api/template/topic-template/save-as', method: 'POST',
+        data: { id: id, scope: this.data.operationScope },
+        success(res) {
+          release();
+          if (res && res.code == '200') { toast((res && res.msg) || '已另存为主题模板'); that.reload(); }
+          else toast(app.getRequestErrorMessage(res, '另存为模板失败'));
+        },
+        fail(res) { release(); toast(app.getRequestErrorMessage(res, '网络异常，请重试')); },
+        complete: release
+      });
+    } catch (error) { release(); toast('网络异常，请重试'); }
   },
 
   goCreate() {
-    wx.navigateTo({ url: '/pages/publish/fabu/index'
-      + (this.data.operationScope ? '?scope=MERCHANT' : '') });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/publish/fabu/index'
+      + (this.data.operationScope ? '?scope=MERCHANT' : ''), complete: () => { this._navigating = false; } });
   },
 
   onEmptyCta() {
@@ -368,8 +476,8 @@ Page({
 
   goCreateActivity() {
     // CU-M-05:不带 scope 进去就按俱乐部主理人判身份,商家自家活动反而被拦在门外。
-    wx.navigateTo({ url: '/pages/publish/activity/index'
-      + (this.data.operationScope ? '?scope=MERCHANT' : '') });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/publish/activity/index'
+      + (this.data.operationScope ? '?scope=MERCHANT' : ''), complete: () => { this._navigating = false; } });
   },
 
   editActivity(e) {
@@ -380,8 +488,8 @@ Page({
       toast('已有人买票，不能再改这场活动');
       return;
     }
-    wx.navigateTo({ url: '/pages/publish/activity/index?id=' + item.id
-      + (this.data.operationScope ? '&scope=MERCHANT' : '') });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/publish/activity/index?id=' + item.id
+      + (this.data.operationScope ? '&scope=MERCHANT' : ''), complete: () => { this._navigating = false; } });
   },
 
   // 确认框必须写明「将给 N 位已付款玩家全额退款」(9-18 拍板)。N 问后端预览接口,拿不到就不弹、不发取消。
@@ -428,8 +536,8 @@ Page({
 
   // P0-4:收到的申请(俱乐部申请/商家承接报名)统一在协作列表「收到的」处理,候选池页已下线
   goReceivedApplies() {
-    wx.navigateTo({ url: '/pages/coop/list/index?tab=received'
-      + (this.data.operationScope ? '&scope=MERCHANT' : '') });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/coop/list/index?tab=received'
+      + (this.data.operationScope ? '&scope=MERCHANT' : ''), complete: () => { this._navigating = false; } });
   },
 
   // 上/下架切换(按 bizType 派发,单接口翻转)
@@ -500,12 +608,13 @@ Page({
 
   // ===== 模板 tab(原 mytemplate 列表收编) =====
   loadTemplates() {
-    if (this._visible === false || this.data.tplLoading) return;
+    if (this._visible === false || !this.requireSession() || this.data.tplLoading) return;
     const that = this;
-    const current = currentRead(this);
-    this.setData({ tplLoading: true, tplErrorMsg: '' });
+    const current = currentRead(this, true);
+    this.setData({ tplLoading: true, tplErrorMsg: '', tplAccessDenied: false });
     app.sendRequest({
       hideLoading: true,
+      silentError: true,
       url: '/api/template/my-list',
       method: 'POST',
       data: {
@@ -513,20 +622,20 @@ Page({
         scope: this.data.operationScope
       },
       success(res) {
-        if (!current()) return;
-        if (res.code == '200' && res.data && isRecordList(res.data.rows)) {
+        if (!current(res)) return;
+        if (res && res.code == '200' && res.data && isRecordList(res.data.rows)) {
           const rows = res.data.rows.map(function (t) {
             const view = marketView(t);
             return Object.assign({}, t, view, { _stateVariant: stateVariant(view._stateClass) });
           });
           that.setData({ tplList: rows, tplLoaded: true });
-        } else {
-          that.setData({ tplErrorMsg: app.getRequestErrorMessage(res, '节点玩法加载失败') });
-        }
+        } else { that.readFailure('template', res); }
       },
-      fail(res) {
-        if (!current()) return;
-        that.setData({ tplErrorMsg: app.getRequestErrorMessage(res, '节点玩法加载失败') });
+      fail(res, statusCode) {
+        if (current(res, statusCode)) that.readFailure('template', res, statusCode);
+      },
+      successStatusAbnormal(res, statusCode) {
+        if (current(res, statusCode)) that.readFailure('template', res, statusCode);
       },
       complete() { if (current()) that.setData({ tplLoading: false }); }
     });
@@ -536,8 +645,8 @@ Page({
 
   tplTap(e) {
     const id = e.currentTarget.dataset.id;
-    if (!id) return;
-    wx.navigateTo({ url: '/pages/templatedetail/templatedetail?id=' + id + '&scope=my' });
+    if (!id || this._navigating) return;
+    this._navigating = true; wx.navigateTo({ url: '/pages/templatedetail/templatedetail?id=' + id + '&scope=my', complete: () => { this._navigating = false; } });
   },
 
   tplSubmitMarket(e) {
@@ -748,10 +857,15 @@ function decorate(p) {
   /* 稿 260:277 承办卡底行写「待核销 2」。后端只对承办活动下发这个数(主办卡不需要,
      算了就是给每张卡白打一次库)。⚠️ 没下发和下发 0 是两件事:没下发就不写这一行,
      不能把「没算」印成「0 个待核销」。 */
-  const pendingVerify = Number(p.pendingVerifyCount);
-  const showPendingVerify = Number.isFinite(pendingVerify);
+  const rawPendingVerify = p.pendingVerifyCount;
+  const pendingVerify = typeof rawPendingVerify === 'number'
+    || typeof rawPendingVerify === 'string' && rawPendingVerify.trim() !== '' ? Number(rawPendingVerify) : NaN;
+  const showPendingVerify = Number.isInteger(pendingVerify) && pendingVerify >= 0;
   // 未承接=去看申请;已承接=去看合作现状(候选池同页展示已接受邀约),满足「每卡有下一步 CTA」
   const canViewApplies = p.bizType === 'topic' && (p.acceptStatus === 'clubOpen' || p.acceptStatus === 'merchantOpen' || acceptAccented);
+  // BL-120:后端只放行审核通过(status=1)的主题;draft/pending/rejected 以外的主题 state 都是审核通过后的派生态。
+  const canSaveAsTemplate = p.bizType === 'topic'
+    && (online || p.state === 'offline' || p.state === 'completed');
   return Object.assign({}, p, {
     _stateClass: stateClass, _stateVariant: stateVariant(stateClass),
     // _online = 渲染这一刻的上架态,随按钮一起下发给 toggleStatus 当 CAS 的期望态。
@@ -761,6 +875,7 @@ function decorate(p) {
     _canDelete: merchantActivity ? false : canDelete,
     _canEdit: canEdit,
     _canCancel: canCancel,
+    _canSaveAsTemplate: canSaveAsTemplate,
     _sold: sold,
     _showAccept: showAccept, _acceptAccented: acceptAccented, _canViewApplies: canViewApplies,
     _showPendingVerify: showPendingVerify, _pendingVerifyText: showPendingVerify ? ('待核销 ' + pendingVerify) : '',

@@ -23,6 +23,7 @@ const marketingConsent = require('../../../utils/marketing-consent-entry.js');
 const ticketSource = require('../../../utils/ticket-source.js');
 const { buildTopicShare, resolveTopicCover } = require('../../../utils/topic-share.js');
 const { decodeDisplayText } = require('../../../utils/display-text.js');
+const mediaPreview = require('../../../utils/media-preview.js');
 
 /* 稿 214:689 路线 tab 每两站之间那行「15min 步行」。
    接口没有逐段步行时长,只有站点经纬度 —— 与 pages/club/topic-story 用的是同一份
@@ -303,7 +304,7 @@ Page({
    */
   onShow() {
     const reducedMotion = readReducedMotion();
-    if (this.data.reducedMotion !== reducedMotion) this.setData({ reducedMotion });
+    if (this.data.reducedMotion !== reducedMotion) this.setData({ reducedMotion }); this._navigating = false; // 返回时兜底清跳转锁
     const that = this;
     
     // 重新获取所有位置信息
@@ -431,7 +432,7 @@ Page({
   
   goTemplateDetail(e) {
     let id = e.currentTarget.dataset.id;
-    wx.navigateTo({
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ complete: () => { this._navigating = false; },
       url: '/pages/templatedetail/templatedetail?id=' + id + '&scope=my',
     })
   },
@@ -460,7 +461,7 @@ Page({
   },
   
   goPoint() {
-    wx.navigateTo({
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ complete: () => { this._navigating = false; },
       url: '/subpackageP3/pages/growthcenter/index/index',
     })
   },
@@ -568,7 +569,7 @@ Page({
     const { kind, id } = e.currentTarget.dataset;
     const targetId = Number(id) || 0;
     if (!targetId) return;
-    wx.navigateTo({
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ complete: () => { this._navigating = false; },
       url: kind === 'club'
         ? '/pages/club/detail/index?id=' + targetId
         : '/pages/userinfo/userinfo?userId=' + targetId,
@@ -724,6 +725,9 @@ Page({
       toast('请输入评价内容');
       return;
     }
+    // BL-198:单飞,请求在途时忽略重复点击,避免同一条评价发两次。
+    if (that._commentSubmitting) return;
+    that._commentSubmitting = true;
     app.sendRequest({
       url: '/api/comment/add',
       data: {
@@ -744,6 +748,9 @@ Page({
         } else {
           app.tips(res.msg);
         }
+      },
+      complete: function () {
+        that._commentSubmitting = false;
       }
     });
   },
@@ -754,7 +761,7 @@ Page({
     const lc = this.data.info && this.data.info.lifecycle;
     if (![1, 2, 7].includes(Number(lc))) return false;
     if (lc == 2 && this.data.info && this.data.info.isOwner == 1) {
-      wx.navigateTo({ url: '/pages/topic/pricing/index?topicId=' + this.data.id });
+      if (!this._navigating) { this._navigating = true; wx.navigateTo({ url: '/pages/topic/pricing/index?topicId=' + this.data.id, complete: () => { this._navigating = false; } }); }
       return true;
     }
     toast(lc == 7 ? '该主题立项待审,暂未开售' : (lc == 1 ? '该主题招募中,暂未开售' : '该主题定价中,暂未开售'));
@@ -836,6 +843,9 @@ Page({
     const that = this;
     const topicId = that.data.id;
     if (!topicId) return;
+    // BL-201:移交每调一次服务端就复制一份新草稿;成功后入口仍在、页面不回读,本实例内不再放行。
+    if (that._transferredToClub) { app.tips('已移交，请到新主题继续配置'); return; }
+    if (that._transferringToClub) return;
     app.sendRequest({
       hideLoading: true, url: '/api/club/my', method: 'POST', data: {},
       success(res) {
@@ -869,6 +879,8 @@ Page({
       confirmText: '确认移交',
       success(m) {
         if (!m.confirm) return;
+        if (that._transferredToClub || that._transferringToClub) return;
+        that._transferringToClub = true;
         app.sendRequest({
           url: '/api/topic/transfer-to-club',
           // 后端 transferToClub(String topicId, String clubId, …) 是 form 绑定(ApiTopicController:783):
@@ -877,6 +889,7 @@ Page({
           method: 'POST',
           success(r) {
             if (r.code == '200') {
+              that._transferredToClub = true; // 成功后保持在途标记,直到页面重新加载
               const newId = r.data && r.data.newTopicId;
               modal.show({
                 title: '已移交',
@@ -889,10 +902,11 @@ Page({
                 }
               });
             } else {
+              that._transferringToClub = false;
               app.tips(r.msg || '移交失败');
             }
           },
-          fail() { app.tips('网络异常，请重试'); }
+          fail() { that._transferringToClub = false; app.tips('网络异常，请重试'); }
         });
       }
     });
@@ -1076,7 +1090,7 @@ Page({
   },
 
   goMyOrders() {
-    wx.navigateTo({ url: '/subpackageMember/order/order' });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageMember/order/order', complete: () => { this._navigating = false; } });
   },
 
   // /api/registration/create 的 realName/phone 是 @NotBlank(RegistrationRequest.java:37,42)。
@@ -1330,7 +1344,7 @@ Page({
   // 票夹的 focusId 是 registrationId(signup/index.js:118),这里手上只有 topicId,传过去永远定位不到;
   // 老实打开路线票 tab,让用户在票夹里点那张票进 play。
   goJoinedPlay() {
-    wx.navigateTo({ url: '/subpackageMember/signup/index?stype=0' });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageMember/signup/index?stype=0', complete: () => { this._navigating = false; } });
   },
 
   //投票弹框打开
@@ -1378,10 +1392,7 @@ Page({
   // 预览图片
   previewImage(e) {
     const src = e.currentTarget.dataset.src;
-    wx.previewImage({
-      current: src,
-      urls: this.data.uploadImages
-    });
+    mediaPreview.open(this.data.uploadImages, src);
   },
   
   

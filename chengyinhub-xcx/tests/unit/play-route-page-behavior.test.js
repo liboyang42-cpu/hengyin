@@ -249,7 +249,9 @@ test('所有会完成节点的请求都走统一路线动作上下文与冲突�
 
   contracts.forEach(([endpoint, kind]) => {
     const escaped = endpoint.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-    assert.match(source, new RegExp("req\\(" + escaped + "[\\s\\S]{0,180}_routeWritePayload\\('" + kind + "'"),
+    // 完成请求体可以直接在 req(...) 里生成,也可以在同一个写回调里紧挨着 req 先生成(同步伏笔之后)。
+    assert.match(source, new RegExp("req\\(" + escaped + "[\\s\\S]{0,180}_routeWritePayload\\('" + kind + "'"
+      + "|(_routeWritePayload\\('" + kind + "'|_legacyGameWritePayload\\('\\w+', '" + kind + "')[\\s\\S]{0,400}req\\(" + escaped),
       `${endpoint} 未使用 ${kind} 路线动作上下文`)
   })
   assert.ok((source.match(/_handleRouteConflict\(r,/g) || []).length >= contracts.length,

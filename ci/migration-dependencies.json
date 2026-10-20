@@ -760,6 +760,9 @@
       "20261012_media_review_menu",
       "role2_analytics_perm_20260918"
     ],
+    "20261015_wx_bill_ingestion": [],
+    "20261015_retention_job_missing_registration": [],
+    "20261017_job_dictionary_missing_seed": [],
     "20261013_monitor_remaining_jobs": [
       "club_session_reconciliation_job_20260807",
       "activity_designer_commission",

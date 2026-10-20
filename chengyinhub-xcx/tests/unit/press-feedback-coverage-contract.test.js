@@ -139,9 +139,11 @@ function surveyAll(overrides = {}) {
    八层壳退场,换成队伍卡/队长审批/我的队伍三层(主题半屏保留),subpackageRoam/nearby 9 → 4。修好五格,显式调小。 */
 /* 2026-09-11 并 github/master:master 那边 10 → 11(cy-popover 的 .pop__catch),
    本分支 10 → 52,两批叠加 ⇒ 53。两边加的都是挡板,各自有反查表。 */
+// 2026-10-15 BL-01 +1:漫游点位筛选半屏的防穿透挡板(已登记进 SWALLOWER_CEILING),49 → 50。
 /* 2026-10-12 49 → 50:主题编辑页故事流站点块上的「计入方式」选择器外包一层 catchtap="noop" 挡板,
    防止点选择器同时打开站点编辑。是挡板不是缺反馈,已登记在下表并由逐文件那条反查必须是 noop。 */
-const RATCHET = 50
+// 2026-10-20 合并 master 进 #293:上面两条 49 → 50 是不同的两处挡板(漫游点位筛选 / 故事流计入方式),合并后实测 51。
+const RATCHET = 51
 /** 实测剩下的 9 处全部是 bindtap="noop" 的弹窗挡板(吞点击防穿透关闭)。
  *  挡板本身不是动作,给它按压态就是伪造可交互暗示 —— 所以它们**永远**留在这张表上,
  *  作为「已判定为不该有反馈」的登记,而不是被悄悄移出分母。 */
@@ -163,7 +165,8 @@ const SWALLOWER_CEILING = {
   //   2026-09-10 第三批:补上工具抽屉 + 设置页 + 清空确认三层壳,16 → 19。
   //   2026-09-11 第四批:roam-discover 半屏从漫游摘掉,19 → 18;
   //   同日补 f-topic/f-city 与 f-checkin 两层,18 → 20。
-  'pages/roam/index.wxml': 20,
+  //   2026-10-15 BL-01 点位筛选半屏(走 sceneCurrent 'roam-poi-filter')同一防穿透挡板,20 → 21。
+  'pages/roam/index.wxml': 21,
   // 2026-09-10 旅程手记照原型 journalScreen 重做成半屏:本体带一个防穿透挡板。
   // 2026-09-11 游玩页 12 个 .psheet + 2 个 .sheet 也换完,挡板 1 → 15。
   'pages/play/index.wxml': 15,

@@ -25,6 +25,20 @@ function topicIdOf(data) {
   return Number(id) > 0 ? Number(id) : 0;
 }
 
+function matchingTopic(detail, topicId) {
+  const topic = detail && detail.topic;
+  return topic && Number(topic.id) === Number(topicId)
+    && ['number', 'string'].includes(typeof topic.status) && String(topic.status).trim() !== ''
+    && [0, 1, 2].includes(Number(topic.status));
+}
+
+function confirmedPublication(data, topicId) {
+  return data && typeof data === 'object'
+    && (data.topicId == null || Number(data.topicId) === Number(topicId))
+    && (data.published === true || data.published === false
+      && (data.commercialAwaitingReview === true || ['PENDING', 'ESCALATED'].includes(data.reviewState)));
+}
+
 function parseConfig(raw) {
   try { return templateBinding.parse(raw) || {}; } catch (error) { return null; }
 }
@@ -128,29 +142,42 @@ function createServerDraftSaver(deps) {
   let busy = false;
   let published = false;
   let destroyed = false;
+  const current = () => !destroyed && (!deps.isCurrent || deps.isCurrent());
   let unconfirmedPublish = 0; // 上次发布结果不确定的主题号:下次发布前先查真实状态,别对已发布主题再存草稿
+
+  function request(kind, value, callback) {
+    let settled = false;
+    const done = (result) => {
+      if (settled || !current()) return;
+      settled = true;
+      callback(result);
+    };
+    try { deps[kind](value, done); }
+    catch (error) { done({ ok: false, networkError: true }); }
+  }
 
   function run(payload, publish, handlers) {
     handlers = handlers || {};
     // 防重:在途或已发布都不再发起(连点只会有一次请求)
-    if (busy || published || destroyed) return false;
+    if (busy || published || !current()) return false;
     busy = true;
+    if (deps.pendingPublish) unconfirmedPublish = topicIdOf(deps.pendingPublish());
     const finish = (fn, arg) => {
       busy = false;
-      if (!destroyed && typeof fn === 'function') fn(arg);
+      if (current() && typeof fn === 'function') fn(arg);
     };
     const draftPayload = Object.assign({}, payload, { saveDraft: 1 });
 
     const reconcilePublish = (topicId, savedDetail, pub) => {
       // 发布结果不确定(丢回包),或重试时服务端说「不是草稿」:回读真实状态再说话
-      deps.readback(topicId, (back) => {
-        if (destroyed) return;
-        if (back && back.ok && back.data && back.data.isDraft === false) {
+      request('readback', topicId, (back) => {
+        if (!current()) return;
+        if (back && back.ok && matchingTopic(back.data, topicId) && back.data.isDraft === false) {
           published = true;
-          finish(handlers.onSuccess, { topicId, detail: back.data, published: { recovered: true, status: (back.data.topic || {}).status } });
+          finish(handlers.onSuccess, { topicId, detail: back.data, published: { recovered: true, status: (back.data.topic || {}).status }, localChanges: !!readbackIssue(payload, back.data, false) });
           return;
         }
-        if (back && back.ok && back.data && back.data.isDraft === true) {
+        if (back && back.ok && matchingTopic(back.data, topicId) && back.data.isDraft === true) {
           finish(handlers.onFail, Object.assign({ stage: 'publish', topicId, detail: back.data }, pub || {}, { unknown: false }));
           return;
         }
@@ -160,8 +187,8 @@ function createServerDraftSaver(deps) {
     };
 
     const afterSaved = (topicId) => {
-      deps.readback(topicId, (back) => {
-        if (destroyed) return;
+      request('readback', topicId, (back) => {
+        if (!current()) return;
         const issue = back && back.ok ? readbackIssue(payload, back.data, true) : '';
         if (!back || !back.ok || issue) {
           finish(handlers.onFail, Object.assign({ stage: 'readback', topicId }, back || {}, issue ? { ok: false, msg: issue } : {}));
@@ -171,21 +198,26 @@ function createServerDraftSaver(deps) {
           finish(handlers.onSuccess, { topicId, detail: back.data });
           return;
         }
-        deps.publish(topicId, (pub) => {
-          if (destroyed) return;
-          if (pub && pub.ok) {
+        // 写请求发出前落盘；杀进程或丢回包后仍先核对同一主题。
+        if (deps.beforePublish && deps.beforePublish(topicId) === false) {
+          finish(handlers.onFail, { stage: 'persist', topicId, msg: '本地草稿保存失败，尚未发起发布，请检查存储空间' });
+          return;
+        }
+        request('publish', topicId, (pub) => {
+          if (!current()) return;
+          if (pub && pub.ok && confirmedPublication(pub.data, topicId)) {
             published = true;
             finish(handlers.onSuccess, { topicId, detail: back.data, published: pub.data || {} });
             return;
           }
-          if (!pub || pub.networkError || /不是草稿/.test(String(pub.msg || ''))) { reconcilePublish(topicId, back.data, pub); return; }
+          if (!pub || pub.ok || pub.networkError || /不是草稿/.test(String(pub.msg || ''))) { reconcilePublish(topicId, back.data, pub); return; }
           finish(handlers.onFail, Object.assign({ stage: 'publish', topicId, detail: back.data }, pub, { unknown: false }));
         });
       });
     };
 
-    const start = () => deps.save(draftPayload, (res) => {
-      if (destroyed) return;
+    const start = () => request('save', draftPayload, (res) => {
+      if (!current()) return;
       const topicId = res && res.ok ? topicIdOf(res.data) : 0;
       if (!topicId) {
         finish(handlers.onFail, Object.assign({ stage: 'save' }, res || {},
@@ -195,8 +227,8 @@ function createServerDraftSaver(deps) {
       if (typeof handlers.onSaved === 'function') handlers.onSaved(topicId);
       // 丢回包后的重试被服务端认出:那份草稿是上次的内容,随即用当前内容再存一次(此时已按主题号走 update)
       if (res.data && res.data.recovered) {
-        deps.save(draftPayload, (again) => {
-          if (destroyed) return;
+        request('save', draftPayload, (again) => {
+          if (!current()) return;
           if (!again || !again.ok) {
             finish(handlers.onFail, Object.assign({ stage: 'save', topicId }, again || {}, { unknown: !!(again && again.networkError) }));
             return;
@@ -209,14 +241,14 @@ function createServerDraftSaver(deps) {
     });
     if (unconfirmedPublish) {
       const topicId = unconfirmedPublish;
-      deps.readback(topicId, (back) => {
-        if (destroyed) return;
-        if (back && back.ok && back.data && back.data.isDraft === false) {
+      request('readback', topicId, (back) => {
+        if (!current()) return;
+        if (back && back.ok && matchingTopic(back.data, topicId) && back.data.isDraft === false) {
           published = true; unconfirmedPublish = 0;
-          finish(handlers.onSuccess, { topicId, detail: back.data, published: { recovered: true, status: (back.data.topic || {}).status } });
+          finish(handlers.onSuccess, { topicId, detail: back.data, published: { recovered: true, status: (back.data.topic || {}).status }, localChanges: !!readbackIssue(payload, back.data, false) });
           return;
         }
-        if (back && back.ok) { unconfirmedPublish = 0; start(); return; }
+        if (back && back.ok && matchingTopic(back.data, topicId) && back.data.isDraft === true) { unconfirmedPublish = 0; start(); return; }
         finish(handlers.onFail, Object.assign({ stage: 'publish', topicId }, back || {}, { unknown: true }));
       });
     } else start();

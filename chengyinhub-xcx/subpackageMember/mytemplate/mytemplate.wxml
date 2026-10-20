@@ -10,6 +10,8 @@
     <view class="tablist">
       <!-- 用户原话"这个删除搜索"/"还没有节点玩法向下 正中 删除搜索":两态都不要搜索入口 -->
       <view class="tabcont box-shadow">
+        <cy-empty wx:if="{{readAccess}}" kind="no-permission" fill size="lg" class="fill-slot" title="{{readAccess === 'login' ? '登录后查看我的节点玩法' : '当前账号无法查看节点玩法'}}" sub="{{readAccess === 'login' ? '登录后可管理当前账号创作的节点玩法' : '请确认当前账号的查看权限'}}" cta="{{readAccess === 'login' ? '登录' : '重试'}}" bind:cta="retryRead" />
+        <block wx:else>
         <view class="activity-list">
           <view class="li" wx:for="{{list}}" wx:key="id">
             <view class="item">
@@ -132,6 +134,7 @@
         <view wx:elif="{{hasMore && list.length > 0}}" class="load-more"
           aria-role="button" aria-label="加载更多节点玩法" bindtap="loadMore" hover-class="cy-pressed" hover-stay-time="80">加载更多</view>
 
+        </block>
       </view>
     </view>
   </view>

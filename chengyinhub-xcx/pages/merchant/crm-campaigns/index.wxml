@@ -1,0 +1,76 @@
+<view class="ccl-page theme-merchant" style="padding-top: {{statusBarHeight + navBarHeight}}px;">
+  <cy-toast id="cy-toast" />
+  <cy-loading-mask id="cy-loading" />
+  <cy-modal-host id="cy-modal-host" />
+  <!-- BL-100:结构照 pages/merchant/verify-records(cy-nav-bar + cy-page-title 大标题 + fin 行)。只读,不做创建/投递/重试。 -->
+  <cy-nav-bar custom-back bind:back="onNavBack" />
+  <cy-page-title title="触达记录" safe-top="{{false}}" />
+
+  <cy-skeleton wx:if="{{pageState === 'loading'}}" type="list" count="4" />
+  <cy-error wx:elif="{{pageState === 'error'}}" fill size="lg"
+            title="触达记录加载失败" sub="{{errorMessage}}"
+            retry="重新加载" bind:retry="retry" auto-back />
+  <cy-error wx:elif="{{pageState === 'no-permission'}}" fill size="lg"
+            title="当前岗位没有营销数据查看权限"
+            sub="请联系店主调整经营团队权限"
+            retry="" bind:back="onNavBack" auto-back custom-back />
+  <cy-empty wx:elif="{{pageState === 'empty'}}" fill size="lg" kind="empty"
+            title="还没有触达记录" sub="这里显示最近 20 次客户触达任务" />
+
+  <scroll-view wx:elif="{{pageState === 'ready'}}" scroll-y class="ccl-scroll"
+               enhanced show-scrollbar="{{false}}">
+    <view class="ccl-shell">
+      <view class="fin-card ccl-card">
+        <view class="fin-row ccl-row" wx:for="{{items}}" wx:key="id"
+              data-id="{{item.id}}" bindtap="openDetail"
+              hover-class="cy-pressed" hover-stay-time="80" aria-role="button"
+              aria-label="{{item.titleText}}，{{item.statusText}}，{{item.summaryText}}，查看逐人结果">
+          <view class="fin-row__main">
+            <text class="fin-row__t1">{{item.titleText}}</text>
+            <view class="fin-row__t2">
+              <text wx:if="{{item.timeText}}">{{item.timeText}} ·</text>
+              <text wx:if="{{item.channelText}}">{{item.channelText}} ·</text>
+              <text class="ccl-status ccl-status--{{item.statusTone}}">{{item.statusText}}</text>
+            </view>
+            <text class="ccl-sub">{{item.summaryText}}</text>
+          </view>
+          <cy-icon class="ccl-arrow" name="arrow-right" size="24" />
+        </view>
+      </view>
+      <text class="ccl-more">仅显示最近 20 条</text>
+    </view>
+  </scroll-view>
+
+  <cy-sheet show="{{detailOpen}}" title="{{detail ? detail.titleText : '触达明细'}}" bind:close="closeDetail">
+    <view class="ccl-detail">
+      <cy-skeleton wx:if="{{detailState === 'loading'}}" type="list" count="3" />
+      <cy-inline-error wx:elif="{{detailState === 'error'}}" kind="data"
+                       title="触达明细没有加载出来" sub="{{detailError}}"
+                       action="重新加载" bind:action="retryDetail" />
+      <block wx:elif="{{detailState === 'ready' && detail}}">
+        <view class="ccl-metrics">
+          <view class="ccl-metric"><text class="ccl-metric-num">{{detail.recipientCount || 0}}</text><text class="ccl-metric-label">名单人数</text></view>
+          <view class="ccl-metric"><text class="ccl-metric-num">{{detail.deliveredCount || 0}}</text><text class="ccl-metric-label">已送达</text></view>
+          <view class="ccl-metric"><text class="ccl-metric-num">{{detail.noConsentCount || 0}}</text><text class="ccl-metric-label">未同意</text></view>
+          <view class="ccl-metric"><text class="ccl-metric-num">{{detail.frequencySkippedCount || 0}}</text><text class="ccl-metric-label">频控跳过</text></view>
+          <view class="ccl-metric"><text class="ccl-metric-num">{{(detail.failedCount || 0) + (detail.retryableCount || 0)}}</text><text class="ccl-metric-label">未送达</text></view>
+        </view>
+        <text class="ccl-note">名单不含联系方式</text>
+        <view class="fin-card ccl-card" wx:if="{{detail.recipients.length}}">
+          <view class="fin-row ccl-row" wx:for="{{detail.recipients}}" wx:key="key"
+                aria-label="{{item.nameText}}，{{item.statusText}}{{item.reasonText ? '，' + item.reasonText : ''}}">
+            <view class="fin-row__main">
+              <text class="fin-row__t1">{{item.nameText}}</text>
+              <view class="fin-row__t2">
+                <text wx:if="{{item.timeText}}">{{item.timeText}} ·</text>
+                <text class="ccl-status ccl-status--{{item.statusTone}}">{{item.statusText}}</text>
+              </view>
+              <text class="ccl-sub" wx:if="{{item.reasonText}}">{{item.reasonText}}</text>
+            </view>
+          </view>
+        </view>
+        <text class="ccl-more" wx:else>这次触达没有逐人结果</text>
+      </block>
+    </view>
+  </cy-sheet>
+</view>

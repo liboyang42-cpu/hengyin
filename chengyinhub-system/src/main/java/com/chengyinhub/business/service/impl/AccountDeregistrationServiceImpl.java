@@ -291,10 +291,12 @@ public class AccountDeregistrationServiceImpl implements IAccountDeregistrationS
         Long memberId = deregistration.getMemberId();
         UmsMember member = memberMapper.selectUmsMemberById(memberId);
         if (member == null) {
+            deregistrationMapper.deleteMemberAddresses(memberId);
             return completeDeregistration(deregistration.getId(), now); // 账号已不存在,直接结案
         }
         // 已注销过(幂等):直接结案
         if (Integer.valueOf(2).equals(member.getDelFlag())) {
+            deregistrationMapper.deleteMemberAddresses(memberId);
             return completeDeregistration(deregistration.getId(), now);
         }
         // ★执行期重校验:冷静期内可能有资金/订单变化

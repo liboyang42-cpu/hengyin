@@ -5,6 +5,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('../helpers/ui-sandbox-vm.js'); // node:vm + 沙箱里装真 utils/toast.js·loading.js
+const { loadMediaPreview } = require('../helpers/media-preview-sandbox.js');
 
 const ROOT = path.resolve(__dirname, '../..');
 const WXML = fs.readFileSync(path.join(ROOT, 'pages/topic/merchantinfo/merchantinfo.wxml'), 'utf8');
@@ -46,6 +47,7 @@ function merchantInfoPageFrom(source) {
       if (request === '../../../utils/nav-safe-area.js') {
         return require('../../utils/nav-safe-area.js');
       }
+      if (request === '../../../utils/media-preview.js') return loadMediaPreview({ previewImage() {} });
       throw new Error('unexpected require: ' + request);
     },
   };

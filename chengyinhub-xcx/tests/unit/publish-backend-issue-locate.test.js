@@ -93,6 +93,7 @@ test('定位打开指定节点资源行、章节设置和投票工具', () => {
 test('后端拒绝发布显示可定位错误且不清本地草稿', () => {
   const p = page();
   p._draftEnvelope = { marker: '未提交内容' };
+  p.data.draftUuid = 'issue-draft'; // 发布前须先把「结果待确认」标记落进本机草稿
   let cleared = false;
   p._clearDraftEnvelope = () => { cleared = true; };
   p.buildPublishCheck = () => ({ blocking: [], advisory: [] });
@@ -100,7 +101,8 @@ test('后端拒绝发布显示可定位错误且不清本地草稿', () => {
   p._buildPublishPassed = () => [];
   p._buildPublishPreview = () => ({});
   let actions;
-  p.getPublishWorkflow = () => ({ submit: (_, callbacks) => { actions = callbacks; return true; } });
+  p.getPublishWorkflow = () => ({ getState: () => 'idle', isBusy: () => true,
+    submit: (_, callbacks) => { actions = callbacks; return true; } });
   p.sendData({});
   actions.onFail({ msg: '节点 77 资源槽 energy：资源未绑定' });
   assert.equal(p.data.publishCheck.blocking[0].field, 'templateBinding:77:energy');

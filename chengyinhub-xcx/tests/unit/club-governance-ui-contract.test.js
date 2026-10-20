@@ -24,6 +24,8 @@ function createHarness(source) {
       if (request === '../../../utils/response-shape.js') {
         return require(path.join(ROOT, 'utils/response-shape.js'))
       }
+      // BL-20:俱乐部详情图片预览走 utils/media-preview(纯模块,给真实现)
+      if (request === '../../../utils/media-preview.js') return require('../../utils/media-preview.js')
       throw new Error(`unexpected require: ${request}`)
     },
     Date,

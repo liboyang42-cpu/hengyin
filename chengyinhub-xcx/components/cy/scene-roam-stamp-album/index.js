@@ -3,6 +3,10 @@
 const app = getApp()
 const { isRecord, isRecordList } = require('../../../utils/response-shape.js')
 const reducedMotionBehavior = require('../../../behaviors/reduced-motion.js')
+const mediaPreview = require('../../../utils/media-preview.js')
+const { formatMinuteDots } = require('../../../utils/datetime.js')
+
+const TABS = ['mine', 'received']
 
 function isNonNegativeInteger(value) {
   return typeof value === 'number' && Number.isInteger(value) && value >= 0
@@ -17,6 +21,8 @@ function isStamp(row) {
 Component({
   behaviors: [reducedMotionBehavior],
   data: {
+    tab: 'mine', // mine=我的集邮册(/list) | received=收到的(/received,投一张换回来的)
+    tabs: [{ key: 'mine', label: '我的' }, { key: 'received', label: '收到的' }],
     items: [],
     total: 0,
     pageNum: 1,
@@ -24,6 +30,7 @@ Component({
     loaded: false,
     error: false,
     noMore: false,
+    detail: null, // BL-05「收到的」详情半屏:只放接口已有字段(picUrl/caption/kind/createTime)
   },
   lifetimes: {
     attached() {
@@ -34,13 +41,31 @@ Component({
     detached() { this._loadToken = (this._loadToken || 0) + 1 },
   },
   methods: {
+    // 两个 tab 各留一份分页状态,来回切不重复拉、也不串页
+    onTabChange(e) {
+      const next = e.detail && e.detail.key
+      if (!next || next === this.data.tab || TABS.indexOf(next) < 0) return
+      this._loadToken = (this._loadToken || 0) + 1 // 作废在途的另一边请求
+      if (this.data.detail) this.setData({ detail: null })
+      const cache = this._tabCache = this._tabCache || {}
+      const d = this.data
+      cache[d.tab] = { items: d.items, total: d.total, pageNum: d.pageNum, loaded: d.loaded, error: d.error, noMore: d.noMore }
+      const restored = cache[next] || { items: [], total: 0, pageNum: 1, loaded: false, error: false, noMore: false }
+      this.setData({
+        tab: next, loading: false, items: restored.items, total: restored.total, pageNum: restored.pageNum,
+        loaded: restored.loaded, error: restored.error, noMore: restored.noMore,
+      }, () => {
+        if (!restored.loaded) this.load()
+      })
+    },
     load() {
       if (this.data.loading || this.data.noMore) return
       const token = (this._loadToken || 0) + 1
       this._loadToken = token
       this.setData({ loading: true, error: false })
       app.sendRequest({
-        url: '/api/roam/stamp/list',
+        // 两个字面量直接写在这里(UI-GATE 要求请求路径可枚举)
+        url: this.data.tab === 'received' ? '/api/roam/stamp/received' : '/api/roam/stamp/list',
         method: 'POST',
         data: { pageNum: this.data.pageNum, pageSize: 50 },
         hideLoading: true,
@@ -60,6 +85,8 @@ Component({
             id: row.id,
             picUrl: row.picUrl.trim(),
             caption: typeof row.caption === 'string' ? row.caption.trim() : '',
+            kind: row.kind,
+            createTime: row.createTime,
           })))
           const total = Number(data.total) || 0
           this.setData({ items: merged, total, pageNum: this.data.pageNum + 1, noMore: rows.length === 0 || merged.length >= total, loading: false, loaded: true, error: false })
@@ -67,6 +94,26 @@ Component({
         fail: () => { if (token === this._loadToken) this.setData({ loading: false, error: true }) },
         successStatusAbnormal: () => { if (token === this._loadToken) this.setData({ loading: false, error: true }) },
       })
+    },
+    // BL-05:收到的票是匿名换回的(接口不带作者),来源只能如实写「投票换回」
+    openDetail(e) {
+      if (this.data.tab !== 'received') return
+      const index = Number(e.currentTarget.dataset.index)
+      const item = this.data.items[index]
+      if (!item) return
+      this.setData({
+        detail: {
+          picUrl: item.picUrl,
+          caption: item.caption,
+          kindLabel: item.kind === 1 ? '盖销票' : item.kind === 0 ? '自由拍' : '',
+          timeText: formatMinuteDots(item.createTime),
+        },
+      })
+    },
+    closeDetail() { this.setData({ detail: null }) },
+    previewDetail() {
+      const detail = this.data.detail
+      if (detail) mediaPreview.open([detail.picUrl], detail.picUrl)
     },
     retryLoad() { this.setData({ error: false }, () => this.load()) },
     loadMore() { this.load() },

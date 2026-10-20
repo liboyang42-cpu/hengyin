@@ -165,3 +165,6 @@ page {
   line-height: 1.6;
   color: var(--cy-color-text-tertiary);
 }
+
+/* BL-79 改名半屏内容区,间距走 token */
+.oc-rename { padding: var(--cy-space-2) 0 var(--cy-space-4); }

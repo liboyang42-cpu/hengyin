@@ -61,11 +61,12 @@ function harness(noBackground) {
   const revoke = h.tracker.revoke
   h.tracker.revoke = key => { h.revokedOrder = ++h.order; revoke(key) }
   const playSource = fs.readFileSync(require.resolve('../../pages/play/index.js'), 'utf8')
-  const context = { wx, bgTracker: h.tracker, cyModal: { show: o => h.modals.push(o) } }
+  const context = { wx, bgTracker: h.tracker, cyModal: { show: o => h.modals.push(o) },
+    playAccuracy: require('../../pages/play/utils/play-accuracy.js') }
   h.play = { data: { topicId: 31, gpsOk: false, nav: { active: false }, nodes: [], nextNode: null },
     setData: h.roam.setData, rebuild() {} }
   h.play._trackKey = vm.runInNewContext('({' + playSource.match(/  _trackKey\(\) \{[^\n]*\},/)[0] + '})', context)._trackKey
-  for (const name of ['requestPlayLocation', 'watchLocation']) {
+  for (const name of ['requestPlayLocation', 'watchLocation', '_noteLocAccuracy']) {
     const start = playSource.indexOf('  ' + name + '('); const end = playSource.indexOf('\n  },', start)
     h.play[name] = vm.runInNewContext('({' + playSource.slice(start, end + 4).trim() + '})', context)[name]
   }

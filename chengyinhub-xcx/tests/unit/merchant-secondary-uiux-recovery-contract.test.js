@@ -10,8 +10,10 @@ let pageConfig
 let requests
 let navigations
 let toasts
+let currentPagePath
 
 global.getApp = () => ({
+  ...(currentPagePath === 'subpackageA/pages/myproject/index.js' ? { getAuthorization: () => 'current-session' } : {}),
   globalData: { statusBarHeight: 44, navBarHeight: 44, menuButtonInfo: {} },
   getUserID: () => 7,
   getUserRole: () => 'merchant',
@@ -44,6 +46,7 @@ global.wx = {
 global.Page = (config) => { pageConfig = config }
 
 function loadPage(relativePath) {
+  currentPagePath = relativePath
   pageConfig = null
   requests = []
   navigations = []

@@ -37,18 +37,18 @@
         <view class="entry-activity__copy"><text class="entry-activity__title">{{entryActivity.title}}</text><text class="entry-activity__meta">{{entryActivity.meta || entryActivity.address || '查看活动详情'}}</text></view>
       </view>
       <view wx:if="{{!entryActivity.registered || entryActivity.ended}}" class="entry-sheet__primary" bindtap="openEntryActivityDetail" aria-role="button" aria-label="{{entryActivity.ended ? '查看详情' : '去报名'}}" hover-class="cy-pressed" hover-stay-time="80">{{entryActivity.ended ? '查看详情' : '去报名'}}</view>
-      <view class="entry-attendees" wx:if="{{entryActivity.participantCount}}"><view class="entry-team__avatars" wx:if="{{entryActivity.participantFaces.length}}"><image wx:for="{{entryActivity.participantFaces}}" wx:key="*this" src="{{item}}" mode="aspectFill" /></view><text>{{entryActivity.participantCount}} 人参加</text></view>
+      <view class="entry-attendees" wx:if="{{entryActivity.participantCount}}"><view class="entry-team__avatars" wx:if="{{entryActivity.participantFaces.length}}"><image wx:for="{{entryActivity.participantFaces}}" wx:key="index" src="{{item}}" mode="aspectFill" /></view><text>{{entryActivity.participantCount}} 人参加</text></view>
       <view class="entry-sheet__section" wx:if="{{entryActivity.teams.length}}">
         <view class="entry-sheet__section-head"><text class="entry-sheet__section-title">一起参加 · {{entryActivity.teams.length}} 队正在招募</text></view>
         <view class="entry-team" wx:for="{{entryActivity.teams}}" wx:key="teamId" data-id="{{item.teamId}}" bindtap="openEntryTeam" aria-role="button" aria-label="查看队伍 {{item.title}}" hover-class="cy-pressed" hover-stay-time="80">
-          <view class="entry-team__avatars" wx:if="{{item.faces.length}}"><image wx:for="{{item.faces}}" wx:for-item="face" wx:key="*this" src="{{face}}" mode="aspectFill" /></view>
+          <view class="entry-team__avatars" wx:if="{{item.faces.length}}"><image wx:for="{{item.faces}}" wx:for-item="face" wx:key="index" src="{{face}}" mode="aspectFill" /></view>
           <view class="entry-team__copy"><text>{{item.title}}</text><text>{{item.members}} · 队长审核</text></view><view class="entry-team__action {{entryActivity.registered?'':'is-disabled'}}">{{entryActivity.registered?'申请加入':'报名后申请'}}</view>
         </view>
       </view>
       <view wx:if="{{entryActivity.registered && !entryActivity.ended}}" class="entry-sheet__create-team" bindtap="openEntryActivityDetail" aria-role="button" aria-label="发起组队" hover-class="cy-pressed" hover-stay-time="80">发起组队</view>
       <view class="entry-sheet__section">
         <view class="entry-sheet__section-head"><text class="entry-sheet__section-title">现场动态{{entryActivity.dynamicImages.length ? ' · ' + entryActivity.dynamicImages.length : ''}}</text></view>
-        <view class="entry-posts" wx:if="{{entryActivity.dynamicImages.length}}"><image wx:for="{{entryActivity.dynamicImages}}" wx:key="*this" src="{{item}}" mode="aspectFill" /></view>
+        <view class="entry-posts" wx:if="{{entryActivity.dynamicImages.length}}"><image wx:for="{{entryActivity.dynamicImages}}" wx:key="index" src="{{item}}" mode="aspectFill" /></view>
         <view class="entry-sheet__empty entry-sheet__empty--compact" wx:else>还没有现场动态</view>
       </view>
     </block>
@@ -61,7 +61,7 @@
     </block>
 
     <block wx:elif="{{entrySheet=='activity' && entryActivity && entrySheetView=='team' && entryTeam}}">
-      <view class="entry-team-detail"><view class="entry-team__avatars" wx:if="{{entryTeam.faces.length}}"><image wx:for="{{entryTeam.faces}}" wx:key="*this" src="{{item}}" mode="aspectFill" /></view><text>{{entryTeam.members}}</text></view>
+      <view class="entry-team-detail"><view class="entry-team__avatars" wx:if="{{entryTeam.faces.length}}"><image wx:for="{{entryTeam.faces}}" wx:key="index" src="{{item}}" mode="aspectFill" /></view><text>{{entryTeam.members}}</text></view>
       <view class="entry-sheet__primary" bindtap="openEntryTeamAction" aria-role="button" aria-label="{{entryTeam.canApply?'申请加入':'去报名'}}" hover-class="cy-pressed" hover-stay-time="80">{{entryTeam.canApply?'申请加入':'去报名'}}</view>
     </block>
 
@@ -390,6 +390,12 @@
   <text>地图加载异常 · 点击重试</text>
 </view>
 
+<!-- BL-02 静止提示:只说明状态,不改计时;无操作,不可点 -->
+<view class="maptip maptip--offline" wx:if="{{roamIdle && !paused && screen=='map' && mapLoad!='slow'}}" aria-role="status" aria-live="polite">
+  <cy-icon name="pin" size="24" />
+  <text>原地停留中</text>
+</view>
+
 <!-- §7.4 据点加载失败可见:据点没拉到时说清「地图上的点未经核实」,并说明本地进度没丢。
      原来这里是静默的 —— 拉取失败照旧显示演示据点,用户分不出真假。 -->
 <view class="maptip maptip--offline maptip--recovery" wx:if="{{(revealWriteUnknown || recoveryError) && mapLoad!='slow'}}" aria-role="alert" aria-live="polite">
@@ -397,6 +403,11 @@
     <cy-icon name="warning" size="24" />
     <text>{{recoveryError ? recoveryError + ' · 点击核对' : '点亮同步结果待核对 · 点击核对'}}</text>
   </view>
+</view>
+<!-- BL-03 位置上报连续网络失败 / 系统断网:只提示,格子仍先记在本机;上报成功或网络恢复即消失。 -->
+<view class="maptip maptip--offline" wx:if="{{syncOffline && screen=='map' && !revealWriteUnknown && mapLoad!='slow'}}" aria-role="alert" aria-live="polite">
+  <cy-icon name="warning" size="24" />
+  <text>{{syncOfflineText}}</text>
 </view>
 
 </view>
@@ -432,6 +443,11 @@
           <view class="poi__last">
             <view class="poi__go" catchtap="onShopStripGo" data-id="{{item.id}}"
                   aria-role="button" aria-label="去{{item.name}}" hover-class="cy-pressed" hover-stay-time="80">去这儿</view>
+            <!-- BL-70:谁在这儿打过卡(/api/roam/shop/visitors),沿用原型 .poicard__been 的 poi__who 头像堆;total=0 不渲染 -->
+            <view class="poi__who" wx:if="{{item.visitors}}" aria-label="{{item.visitors.label}}">
+              <image class="poi__face" wx:for="{{item.visitors.faces}}" wx:for-item="face" wx:for-index="fi" wx:key="fi" src="{{face}}" mode="aspectFill" aria-hidden="true" />
+              <text class="poi__more">{{item.visitors.label}}</text>
+            </view>
           </view>
         </view>
         <image class="poi__im" wx:if="{{item.img}}" src="{{item.img}}" mode="aspectFill" />
@@ -538,7 +554,7 @@
 <block wx:if="{{topicView}}">
 <view class="pdim is-in {{reducedMotion ? 'is-reduced' : ''}}" bindtap="closeTopicView" aria-role="button" aria-label="关闭主题" hover-class="cy-pressed" hover-stay-time="80"></view>
 <scroll-view class="tstrip is-in" scroll-x enhanced show-scrollbar="{{false}}" wx:if="{{topicView.pics.length}}">
-  <image class="tstrip__i" wx:for="{{topicView.pics}}" wx:key="*this" src="{{item}}" mode="aspectFill" lazy-load="true" />
+  <image class="tstrip__i" wx:for="{{topicView.pics}}" wx:key="index" src="{{item}}" mode="aspectFill" lazy-load="true" />
 </scroll-view>
 <view class="psheet psheet--half is-in {{reducedMotion ? 'is-reduced' : ''}}" catchtap="noop">
   <view class="psheet__grab"></view>
@@ -597,6 +613,11 @@
   <view class="drow" bindtap="openRoamDiscover" aria-role="button" aria-label="查找附近好玩的" hover-class="cy-pressed" hover-stay-time="80">
     <view class="dic pic pic--filter2"></view>
     <view class="dcopy"><text class="dt">查找附近好玩的</text><text class="ds">{{more.funText}}</text></view>
+    <view class="darr"></view>
+  </view>
+  <view class="drow" bindtap="openPoiFilter" aria-role="button" aria-label="筛选地图点位，{{more.filterText}}" hover-class="cy-pressed" hover-stay-time="80">
+    <view class="dic pic pic--route"></view>
+    <view class="dcopy"><text class="dt">筛选点位</text><text class="ds">{{more.filterText}}</text></view>
     <view class="darr"></view>
   </view>
   <view class="drow" bindtap="openNearestRunner" aria-role="button" aria-label="附近正在走的人" hover-class="cy-pressed" hover-stay-time="80">
@@ -1039,6 +1060,28 @@
 	<!-- tabBar 只在起始页出现:地图入口与运行态保持沉浸，原有 intro 流程不变 -->
 	<tabBar wx:if="{{screen=='entry-map'||screen=='intro'}}" dark="{{true}}" monochrome="{{true}}" reduced-motion="{{reducedMotion}}"/>
 <cy-celebrate event-key="{{celebrationEvent}}" reduced-motion="{{reducedMotion}}" />
+</view>
+
+<!-- BL-01 点位筛选:本页半屏统一用原型 .psheet(scene-sheet-contract 钉死不回 cy-sheet),标题 + 右上 ✕。
+     显隐走 sceneCurrent 单宿主(scene-sheet-single-host-contract),从抽屉进、关闭回抽屉。
+     范围走 /api/roam/pois 的 radius;只看未到过只藏地图点,不改进度。 -->
+<view class="roam-scene-host" wx:if="{{sceneCurrent && sceneCurrent.id === 'roam-poi-filter'}}" catchtouchmove="blockSceneTouch">
+<view class="pdim {{sceneIn ? 'is-in' : ''}} {{reducedMotion ? 'is-reduced' : ''}}" bindtap="onProtoSheetClose" aria-role="button" aria-label="返回更多" hover-class="cy-pressed" hover-stay-time="80"></view>
+<view class="psheet psheet--half {{sceneIn ? 'is-in' : ''}} {{reducedMotion ? 'is-reduced' : ''}}" catchtap="noop">
+  <view class="psheet__grab" catchtap="onProtoSheetClose" aria-role="button" aria-label="返回更多" hover-class="cy-pressed" hover-stay-time="80"></view>
+  <view class="psheet__x" catchtap="onProtoSheetClose" aria-role="button" aria-label="返回更多" hover-class="cy-pressed" hover-stay-time="80"><view class="psheet__x-i"></view></view>
+  <text class="ph1">筛选点位</text>
+  <view class="poi-filter">
+    <text class="poi-filter__label">搜索范围</text>
+    <cy-tabs variant="chip" tabs="{{poiFilterTabs}}" active="{{poiFilter.radiusM + ''}}" bind:change="onPoiFilterRadius" />
+    <view class="drow">
+      <view class="dic pic pic--route"></view>
+      <view class="dcopy"><text class="dt">只看未到过</text><text class="ds">已到过、已打卡的点位先不显示</text></view>
+      <view class="dsw {{poiFilter.unvisitedOnly ? 'is-on' : ''}}" catchtap="togglePoiFilterUnvisited" aria-role="switch" aria-checked="{{poiFilter.unvisitedOnly}}" aria-label="只看未到过" hover-class="cy-pressed" hover-stay-time="80"><view class="dsw-i"></view></view>
+    </view>
+    <text class="roam-rules__lede">范围只影响漫游点位；筛选按账号保存在本机。</text>
+  </view>
+</view>
 </view>
 
 <!-- 隐私授权闸(真弹窗):页内组件,不压页面栈。app.js 在需要授权时调本页 showPrivacyGate()。 -->

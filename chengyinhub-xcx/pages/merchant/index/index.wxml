@@ -220,6 +220,28 @@
       </view>
     </view>
 
+    <!-- BL-85 开通前置检查(只读,GET /api/merchant/ops/prerequisites):只列未完成项;
+         全部完成或无数据时整块不显示。沿用「我的消息」区块结构,不新造样式。 -->
+    <view class="rv-section" wx:if="{{!consoleStatus && prerequisites.length}}">
+      <view class="rv-section-head">
+        <text class="rv-section-title">开通前置检查</text>
+      </view>
+      <view class="rv-msg-card">
+        <view class="rv-msg-item" wx:for="{{prerequisites}}" wx:key="key"
+              bindtap="goPrerequisite" data-key="{{item.key}}" hover-class="{{item.path ? 'rv-tap' : ''}}"
+              aria-role="{{item.path ? 'button' : ''}}" aria-label="未完成：{{item.title}}{{item.description ? '，' + item.description : ''}}">
+          <view class="rv-msg-ico">
+            <cy-icon name="bell" size="34" />
+          </view>
+          <view class="rv-msg-main">
+            <text class="rv-msg-title">{{item.title}}</text>
+            <text class="rv-msg-sub ep1" wx:if="{{item.description}}">{{item.description}}</text>
+          </view>
+          <text class="rv-msg-time" wx:if="{{item.path}}">去完善</text>
+        </view>
+      </view>
+    </view>
+
     <!-- 我的消息(2026-08-20 稿 3910:580):动态流水前 3 条铺在工作台底部,
          点开按类型去结算/核销记录(goEvent);项目卡气泡照旧按 topicId 归属。 -->
     <view class="rv-section" wx:if="{{notifications.length}}">
@@ -258,6 +280,11 @@
         <view class="rv-more-item" wx:if="{{merchantAccess.canReadAftercare}}" bindtap="onMoreItem" data-action="aftercare" aria-role="button" aria-label="打开退款售后" hover-class="cy-pressed" hover-stay-time="80">
           <image class="rv-more-ico" src="/pages/merchant/images/icon_wallet.svg" mode="aspectFit" />
           <text class="rv-more-label">退款售后</text>
+        </view>
+        <!-- BL-76:核销员(MERCHANT_CHECKIN)只有核销与核销记录权限,原先「更多」里没有任何可进的项。 -->
+        <view class="rv-more-item" wx:if="{{merchantAccess.canReadVerifyRecords}}" bindtap="onMoreItem" data-action="verifyRecords" aria-role="button" aria-label="打开核销记录" hover-class="cy-pressed" hover-stay-time="80">
+          <image class="rv-more-ico" src="/pages/merchant/images/icon_calendar.svg" mode="aspectFit" />
+          <text class="rv-more-label">核销记录</text>
         </view>
         <view class="rv-more-item" wx:if="{{merchantAccess.canManageCoupons}}" bindtap="onMoreItem" data-action="coupon" aria-role="button" aria-label="管理优惠券" hover-class="cy-pressed" hover-stay-time="80">
           <image class="rv-more-ico" src="/pages/merchant/images/icon_wallet.svg" mode="aspectFit" />

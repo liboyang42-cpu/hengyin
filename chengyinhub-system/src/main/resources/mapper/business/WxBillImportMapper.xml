@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.WxBillImportMapper">
+  <resultMap id="ImportResult" type="com.chengyinhub.business.domain.WxBillImport">
+    <id property="id" column="id"/>
+    <result property="billDate" column="bill_date"/>
+    <result property="merchantId" column="merchant_id"/>
+    <result property="billType" column="bill_type"/>
+    <result property="status" column="status"/>
+    <result property="sourceHash" column="source_hash"/>
+    <result property="rowCount" column="row_count"/>
+    <result property="incomeAmount" column="income_amount"/>
+    <result property="expenseAmount" column="expense_amount"/>
+    <result property="netAmount" column="net_amount"/>
+    <result property="balanceStatus" column="balance_status"/>
+    <result property="reviewReason" column="review_reason"/>
+  </resultMap>
+  <insert id="upsertImport" useGeneratedKeys="true" keyProperty="id">
+    insert into wx_bill_import
+      (bill_date, merchant_id, bill_type, status, source_hash, row_count, income_amount, expense_amount, net_amount, balance_status, review_reason)
+    values
+      (#{billDate,jdbcType=DATE}, #{merchantId,jdbcType=VARCHAR}, #{billType,jdbcType=VARCHAR}, #{status,jdbcType=VARCHAR}, #{sourceHash,jdbcType=VARCHAR}, #{rowCount,jdbcType=INTEGER}, #{incomeAmount,jdbcType=DECIMAL}, #{expenseAmount,jdbcType=DECIMAL}, #{netAmount,jdbcType=DECIMAL}, #{balanceStatus,jdbcType=VARCHAR}, #{reviewReason,jdbcType=VARCHAR})
+    on duplicate key update
+      source_hash = case when status = 'SUCCESS' and (#{status,jdbcType=VARCHAR} &lt;&gt; 'SUCCESS' or coalesce(source_hash,'') &lt;&gt; coalesce(#{sourceHash,jdbcType=VARCHAR},'')) then source_hash else #{sourceHash,jdbcType=VARCHAR} end,
+      row_count = case when status = 'SUCCESS' and (#{status,jdbcType=VARCHAR} &lt;&gt; 'SUCCESS' or coalesce(source_hash,'') &lt;&gt; coalesce(#{sourceHash,jdbcType=VARCHAR},'')) then row_count else #{rowCount,jdbcType=INTEGER} end,
+      income_amount = case when status = 'SUCCESS' and (#{status,jdbcType=VARCHAR} &lt;&gt; 'SUCCESS' or coalesce(source_hash,'') &lt;&gt; coalesce(#{sourceHash,jdbcType=VARCHAR},'')) then income_amount else #{incomeAmount,jdbcType=DECIMAL} end,
+      expense_amount = case when status = 'SUCCESS' and (#{status,jdbcType=VARCHAR} &lt;&gt; 'SUCCESS' or coalesce(source_hash,'') &lt;&gt; coalesce(#{sourceHash,jdbcType=VARCHAR},'')) then expense_amount else #{expenseAmount,jdbcType=DECIMAL} end,
+      net_amount = case when status = 'SUCCESS' and (#{status,jdbcType=VARCHAR} &lt;&gt; 'SUCCESS' or coalesce(source_hash,'') &lt;&gt; coalesce(#{sourceHash,jdbcType=VARCHAR},'')) then net_amount else #{netAmount,jdbcType=DECIMAL} end,
+      balance_status = case when status = 'SUCCESS' and (#{status,jdbcType=VARCHAR} &lt;&gt; 'SUCCESS' or coalesce(source_hash,'') &lt;&gt; coalesce(#{sourceHash,jdbcType=VARCHAR},'')) then balance_status else #{balanceStatus,jdbcType=VARCHAR} end,
+      review_reason = case when status = 'SUCCESS' and (#{status,jdbcType=VARCHAR} &lt;&gt; 'SUCCESS' or coalesce(source_hash,'') &lt;&gt; coalesce(#{sourceHash,jdbcType=VARCHAR},'')) then review_reason else #{reviewReason,jdbcType=VARCHAR} end,
+      status = case when status = 'SUCCESS' and (#{status,jdbcType=VARCHAR} &lt;&gt; 'SUCCESS' or coalesce(source_hash,'') &lt;&gt; coalesce(#{sourceHash,jdbcType=VARCHAR},'')) then status else #{status,jdbcType=VARCHAR} end
+  </insert>
+  <select id="selectImport" resultMap="ImportResult" useCache="false">
+    select id, bill_date, merchant_id, bill_type, status, source_hash, row_count, income_amount, expense_amount, net_amount, balance_status, review_reason from wx_bill_import
+    where merchant_id=#{merchantId} and bill_type=#{billType} and bill_date=#{billDate,jdbcType=DATE}
+  </select>
+</mapper>

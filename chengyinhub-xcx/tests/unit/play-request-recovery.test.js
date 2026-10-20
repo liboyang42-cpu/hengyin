@@ -71,16 +71,26 @@ function loadPage(modulePath) {
   return page
 }
 
+// 真实页面里偏好题/结果卡只在 loadPreference 读出本题后才可提交:按它落下的上下文建模已读出的状态。
+function preferenceLoaded(page) {
+  page._preferenceEpoch = (page._preferenceEpoch || 0) + 1
+  page._preferenceContext = { epoch: page._preferenceEpoch, nodeId: page.data.game.nodeId, viewContext: page._legacyGameContext() }
+}
+
 test('三个 RequestBody 写入口发 JSON，并保留基础路线幂等上下文', () => {
   const page = loadPage(PLAY_PAGE)
   page.data.game.nodeId = 11
   page._withThoughtSync = write => write()
   page._routeWritePayload = (_kind, nodeId, payload) => ({ ...payload, topicId: 7, nodeId, routeActionId: 'route_preference_1', expectedRouteVersion: 2 })
+  preferenceLoaded(page)
   page.submitPreference({ choices: { first: 'a' } })
   page.data.preference.pendingTag = { id: 9, tagValue: 'old' }
   page.data.preference.availableTagValues = ['new']
+  page.correctPreferenceTag()   // 选项弹层由「改错」打开,选中项来自弹层打开时的档位
   page.onTagSheetSelect({ detail: { index: 0 } })
   page.data.shopNpc.nodeId = 11
+  page.data.shopNpc.show = true   // 只有打开着的店铺分身对话才能发问
+  page.data.shopNpc.open = true
   page._askShopNpc('询问线索')
   assert.deepEqual(requests.map(row => row.url), ['/api/play/preference/11/submit', '/api/play/tag/9/correct', '/api/ai/npc/shop-chat'])
   for (const request of requests) {
@@ -252,6 +262,7 @@ test('偏好题整组提交在途防连点，并把服务端结果与待确认�
   page.data.preference = Object.assign({}, page.data.preference, {
     choices: { space: 'A' }, submitting: false,
   })
+  preferenceLoaded(page)
 
   page.submitPreference({ choices: page.data.preference.choices })
   page.submitPreference({ choices: page.data.preference.choices })
@@ -289,6 +300,7 @@ test('G4已确认标签可以在G5显式沿用；没有标签时仍保留现场�
   page.data.preference = Object.assign({}, page.data.preference, {
     inheritedTags: [{ id: 9, tagCode: 'space_constraints', tagValue: 'compact', status: 1 }],
   })
+  preferenceLoaded(page)
 
   page.useInheritedPreference({ currentTarget: { dataset: { code: 'space_constraints' } } })
   assert.equal(requests[0].data.reuseTagCode, 'space_constraints')
@@ -334,6 +346,7 @@ test('结果卡改错只提交服务端给出的标签档位并防重复写', as
     pendingTag: { id: 11, tagValue: 'compact', status: 0 },
     availableTagValues: ['compact', 'open'],
   })
+  preferenceLoaded(page)
   /* 2026-09-02:改错不再走 wx.showActionSheet(系统弹层已收编到 cy-option-sheet),
      所以断言改成「打开弹层 → 选第 2 项」这两步。防重复写那条闸(_preferenceTagWrite)
      仍然要在**选中**这一步生效 —— 连点两次只能发一次请求。 */

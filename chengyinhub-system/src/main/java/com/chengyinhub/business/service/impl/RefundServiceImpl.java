@@ -45,6 +45,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
@@ -369,7 +370,12 @@ public class RefundServiceImpl implements IRefundService {
     }
 
     @Override
-    public boolean handleRefundNotify(String outRefundNo, String refundStatus) {
+    public boolean handleRefundNotify(Map<String, String> facts) {
+        if (facts == null) {
+            return false;
+        }
+        String outRefundNo = facts.get("outRefundNo");
+        String refundStatus = facts.get("status");
         // 非本系统退款号/未知号(保证金由验签入口单独路由，不能在这里丢弃):回 true 让微信 ACK,避免重试风暴
         if (outRefundNo == null || outRefundNo.trim().isEmpty()) {
             return true;
@@ -379,6 +385,9 @@ public class RefundServiceImpl implements IRefundService {
             // 本系统退款号("RF"+regId)查不到 → 极可能是外层批量事务尚未提交(read-your-writes),
             // 回 false 让微信按重试策略稍后重投,那时行已提交才不丢失失败通知;不属于 RF/RDEP 的其他退款号才 ACK。
             return !outRefundNo.startsWith("RF") && !outRefundNo.startsWith("RDEP");
+        }
+        if (!matchesRefundFacts(refund, facts)) {
+            return false;
         }
         // P1:回调先落 inbox 去重(表 wx_payment_callback_inbox,notify_hash 唯一键);
         // 重投只多一次 insert ignore,不影响下方 ACK 与状态推进语义。
@@ -405,6 +414,27 @@ public class RefundServiceImpl implements IRefundService {
         }
         // PROCESSING:保持处理中,不动(定时对账任务兜底拉取终态)
         return true;
+    }
+
+    private boolean matchesRefundFacts(RefundApplication refund, Map<String, String> facts) {
+        if (!"registration".equals(refund.getSourceType()) || refund.getSourceId() == null) {
+            return false;
+        }
+        CmsRegistration registration = cmsRegistrationMapper.selectCmsRegistrationById(refund.getSourceId());
+        if (registration == null || StringUtils.isBlank(registration.getRegistrationNo())
+                || !registration.getRegistrationNo().equals(facts.get("outTradeNo"))
+                || !"CNY".equals(facts.get("currency"))) {
+            return false;
+        }
+        try {
+            long expectedRefund = refund.getRefundAmount().movePointRight(2).longValueExact();
+            long expectedTotal = registration.getWechatPaymentAmount().movePointRight(2).longValueExact();
+            return expectedRefund > 0 && expectedTotal > 0 && expectedRefund <= expectedTotal
+                    && expectedRefund == Long.parseLong(facts.get("refund"))
+                    && expectedTotal == Long.parseLong(facts.get("total"));
+        } catch (ArithmeticException | NumberFormatException | NullPointerException invalidAmount) {
+            return false;
+        }
     }
 
     private boolean updatePayoutTerminal(RefundApplication refund, int expectedStatus, String message) {

@@ -1,0 +1,27 @@
+<cy-result-sheet show="{{show && stage === 'loading'}}" kind="loading" title="正在读取纠错类型" />
+<cy-result-sheet show="{{show && stage === 'loadfail'}}" kind="fail" title="暂时无法纠错" why="{{failText}}"
+                 primary-text="重试" secondary-text="取消" bind:primary="loadTaxonomy" bind:secondary="close" bind:close="close" />
+<cy-option-sheet show="{{show && stage === 'pick'}}" title="哪里不对" items="{{issueLabels}}"
+                 confirm-text="下一步" bind:select="onIssueSelect" bind:cancel="close" />
+<cy-sheet show="{{show && stage === 'form'}}" title="信息纠错" bind:close="close" bind:requestclose="close">
+  <view class="mcs">
+    <text class="mcs__issue">问题类型：{{issueLabel}}</text>
+    <cy-field variant="textarea" label="具体说明" required show-count maxlength="{{maxLength}}"
+              placeholder="写一下哪里不对、正确的信息是什么"
+              value="{{description}}" error="{{!!descriptionError}}" error-text="{{descriptionError}}"
+              bind:input="onDescriptionInput" />
+    <text class="mcs__note">本次纠错仅支持文字说明，平台审核后才会更新商家信息。</text>
+    <view class="mcs__row">
+      <view class="mcs__cell"><cy-btn variant="secondary" bindtap="backToPick">换个类型</cy-btn></view>
+      <view class="mcs__cell"><cy-btn variant="primary" bindtap="submit">提交纠错</cy-btn></view>
+    </view>
+  </view>
+</cy-sheet>
+<cy-result-sheet show="{{show && stage === 'busy'}}" kind="loading" title="正在提交纠错" />
+<cy-result-sheet show="{{show && stage === 'ok'}}" kind="success" title="纠错已提交"
+                 sub="{{receiptText}}平台审核后才会更新商家信息。"
+                 primary-text="知道了" secondary-text="查看我的纠错" bind:primary="close" bind:secondary="openMine" bind:close="close" />
+<cy-result-sheet show="{{show && stage === 'fail'}}" kind="fail" title="纠错没有提交成功" why="{{failText}}"
+                 primary-text="返回修改" secondary-text="取消" bind:primary="backToForm" bind:secondary="close" bind:close="close" />
+<cy-result-sheet show="{{show && stage === 'unknown'}}" kind="fail" title="提交结果未知" why="{{failText}}"
+                 primary-text="再试一次" secondary-text="稍后再说" bind:primary="submit" bind:secondary="close" bind:close="close" />

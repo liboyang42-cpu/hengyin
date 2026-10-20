@@ -10,6 +10,7 @@ const { isRecord, isRecordList, isBizOk } = require('../../../utils/response-sha
 const { inactiveAccess, normalizeMerchantAccess } = require('../../../utils/merchant-access-policy.js');
 const { ensureSession } = require('../utils/session/ensure-session.js');
 const { normalizeMerchantFinanceRoute } = require('../utils/merchant-finance.js');
+const { pendingPrerequisites } = require('../utils/merchant-prerequisites.js');
 
 // cms_topic.product_type → 展示名(与 marketing 页同口径)
 const PRODUCT_TYPE_TEXT = { 1: '城市定向', 2: '自由探索' };
@@ -87,6 +88,8 @@ Page({
     // 参与项目真实总数(卡片只铺前几条,空态文案不能拿截断列表报数)
     joinTotal: 0,
     notifications: [],
+    // BL-85 开通前置检查未完成项(只读;全部完成/无数据/失败时为空,不展示)
+    prerequisites: [],
     todo: { biddingTopics: 0, pendingVerify: 0, verifiedCount: 0, pendingScanConfirm: 0, pendingOrders: 0, refundCount: 0 },
     todoLoading: true,
     todoError: false,
@@ -155,8 +158,8 @@ Page({
       success(res) {
         if (!isCurrentAction()) return;
         if (res.code == '200' || res.code === 200) {
-          that.setData({ businessStatus: next });
-          cyToast(next === 1 ? '已营业' : '已打烊');
+          // BL-141:写成功不等于状态已落库,以 /api/merchant/business-status 回读为准再刷新开关。
+          that.readBackBusinessStatus(next, isCurrentAction);
         } else {
           cyToast(app.getRequestErrorMessage(res, '切换失败'));
         }
@@ -164,6 +167,29 @@ Page({
       fail() {
         if (!isCurrentAction()) return;
         cyToast('网络异常，请重试');
+      }
+    });
+  },
+
+  readBackBusinessStatus(expected, isCurrentAction) {
+    const that = this;
+    app.sendRequest({
+      url: '/api/merchant/business-status', method: 'POST', silentError: true,
+      success(res) {
+        if (!isCurrentAction()) return;
+        const data = res && (res.code == '200' || res.code === 200) ? res.data : null;
+        const actual = data ? Number(data.businessStatus) : NaN;
+        if (actual !== 0 && actual !== 1) {
+          cyToast('状态未同步，请刷新后核对');
+          return;
+        }
+        that.setData({ businessStatus: actual });
+        cyToast(actual === expected ? (actual === 1 ? '已营业' : '已打烊')
+          : '状态未同步，当前' + (data.businessStatusText || (actual === 1 ? '营业中' : '已打烊')));
+      },
+      fail() {
+        if (!isCurrentAction()) return;
+        cyToast('状态未同步，请刷新后核对');
       }
     });
   },
@@ -218,8 +244,8 @@ Page({
   // 「投一张」:scene-roam-poi-detail 只发事件,由宿主收场景再进分包城市签(3-24)
   openCityStamp(e) {
     const place = (e && e.detail && e.detail.place) || '这一站';
-    this.closeScene();
-    wx.navigateTo({ url: '/subpackageRoam/citystamp/index?kind=sign&place=' + encodeURIComponent(place) });
+    if (this._navigating) return; this.closeScene(); // 跳转中不响应连点,免得叠两层城市签页
+    this._navigating = true; wx.navigateTo({ url: '/subpackageRoam/citystamp/index?kind=sign&place=' + encodeURIComponent(place), complete: () => { this._navigating = false; } });
   },
   closeScene() { this.setData({ sceneStack: [], sceneCurrent: null, sceneConfirm: { show: false, action: null, pending: null } }); },
   requestSceneClose() {
@@ -256,8 +282,8 @@ Page({
   },
   openCityStamp(event) {
     const place = (event && event.detail && event.detail.place) || '这一站';
-    this.closeScene();
-    wx.navigateTo({ url: '/subpackageRoam/citystamp/index?kind=sign&place=' + encodeURIComponent(place) });
+    if (this._navigating) return; this.closeScene(); // 跳转中不响应连点,免得叠两层城市签页
+    this._navigating = true; wx.navigateTo({ url: '/subpackageRoam/citystamp/index?kind=sign&place=' + encodeURIComponent(place), complete: () => { this._navigating = false; } });
   },
   submitSceneForm() {
     const content = this.selectComponent('#sceneRouteContent');
@@ -272,15 +298,22 @@ Page({
     else if (action === 'coupon') this.goManageCoupon();
     else if (action === 'brand') this.goBrandManage();
     else if (action === 'aftercare') this.goAftercare();
+    else if (action === 'verifyRecords') this.goVerifyRecords();
   },
 
   goManageCoupon() {
-    wx.navigateTo({ url: '/subpackageMember/coupon/coupon?scope=MERCHANT' });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageMember/coupon/coupon?scope=MERCHANT', complete: () => { this._navigating = false; } }); // 跳转中不响应连点,免得叠两层券管理页
   },
 
   goAftercare() {
-    if (!this.data.merchantAccess.canReadAftercare) return;
-    wx.navigateTo({ url: '/pages/merchant/aftercare/index' });
+    if (!this.data.merchantAccess.canReadAftercare || this._navigating) return; // 跳转中不响应连点
+    this._navigating = true; wx.navigateTo({ url: '/pages/merchant/aftercare/index', complete: () => { this._navigating = false; } });
+  },
+
+  goVerifyRecords() {
+    if (!this.data.merchantAccess.canReadVerifyRecords || this._navigating) return; // 跳转中不响应连点,免得叠两层核销记录页
+    this._navigating = true;
+    wx.navigateTo({ url: '/pages/merchant/verify-records/index', complete: () => { this._navigating = false; } });
   },
   // 今日待办(待核销/扫码待确认/待处理):后端 /api/merchant/todo-summary
   loadTodo(dataEpoch = this._dataEpoch || 0) {
@@ -412,6 +445,9 @@ Page({
     // access/me 已给出可安全展示的商家摘要；完整资料接口要求 PROFILE_WRITE，
     // 核销员/运营/财务不得为了加载工作台而先撞一次 403。
     if (currentAccess.canWriteProfile) this.loadMerchantInfo(dataEpoch);
+    // 前置检查按店主主体计算(permissionRequired=MERCHANT_OWNER),只给能改资料的岗位读。
+    if (currentAccess.canWriteProfile) this.loadPrerequisites(dataEpoch);
+    else this.setData({ prerequisites: [] });
     this.loadUserInfo(dataEpoch);
     // master #807 的商家游戏模组入口:自带 client 空守卫,与角色无关,所有员工都能看到入口。
     this.loadMerchantGameEntries();
@@ -519,6 +555,7 @@ Page({
       todoError: false,
       projectCards: [],
       notifications: [],
+      prerequisites: [],
       chapterSheet: { show: false, code: '', items: [] },
       stationSheet: { show: false, code: '', items: [] },
       verificationResult: { show: false, state: '', title: '', message: '' },
@@ -562,7 +599,7 @@ Page({
   },
 
   onShow(options) {
-    merchantTheme.merchantPageShow();
+    merchantTheme.merchantPageShow(); this._navigating = false;
     this.resetGameStationSummaries();
     this._businessActionEpoch = (this._businessActionEpoch || 0) + 1;
     // 页面重新进入时作废离开前的写操作；页内下拉刷新只重读经营数据，
@@ -724,13 +761,38 @@ Page({
   },
 
   goApplicationProgress() {
-    wx.navigateTo({ url: '/pages/merchant/apply/index' });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/merchant/apply/index', complete: () => { this._navigating = false; } });
   },
 
   // 竞猜待答:待办汇总里的 pendingPredict 只报条数,明细与「还剩几天」在待答页。
   goPredictInbox() {
-    if (!this.data.merchantAccess.canManageProjects) return;
-    wx.navigateTo({ url: '/pages/merchant/predict/index' });
+    if (!this.data.merchantAccess.canManageProjects || this._navigating) return; // 跳转中不响应连点
+    this._navigating = true; wx.navigateTo({ url: '/pages/merchant/predict/index', complete: () => { this._navigating = false; } });
+  },
+
+  loadPrerequisites(dataEpoch = this._dataEpoch || 0) {
+    const that = this;
+    app.sendRequest({
+      hideLoading: true, silentError: true,
+      url: '/api/merchant/ops/prerequisites', method: 'GET',
+      success(res) {
+        if (!that.isCurrentDataEpoch(dataEpoch)) return;
+        const ok = res && (res.code === '200' || res.code === 200);
+        that.setData({ prerequisites: ok ? pendingPrerequisites(res.data) : [] });
+      },
+      fail() {
+        if (!that.isCurrentDataEpoch(dataEpoch)) return;
+        that.setData({ prerequisites: [] });
+      },
+    });
+  },
+
+  goPrerequisite(e) {
+    const key = String((e.currentTarget.dataset || {}).key || '');
+    const item = (this.data.prerequisites || []).find(row => row.key === key);
+    if (!item || !item.path || this._navigating) return; // 跳转中不响应连点,免得叠两层前置项页
+    this._navigating = true;
+    wx.navigateTo({ url: item.path, complete: () => { this._navigating = false; } });
   },
 
   loadMerchantInfo(dataEpoch = this._dataEpoch || 0) {
@@ -1013,13 +1075,13 @@ Page({
 
   // 入口名「协作邀请」= 合作中心铃铛那一页(收到的/我发出的);聊天与系统通知在 ledger 的「站内消息」。旧的「消息与动态」是空兼容页(M-07)。
   goMessages() {
-    wx.navigateTo({ url: '/pages/coop/list/index' });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/coop/list/index', complete: () => { this._navigating = false; } });
   },
 
   // 「我的消息」是收入到账/核销流水,按类型去各自明细;「全部」与未知类型落核销记录(同时有待结算/已入账)。
   goEvent(e) {
     const type = e && e.currentTarget && e.currentTarget.dataset.type;
-    wx.navigateTo({ url: '/pages/merchant/ledger/index?view=' + (type === 'income' ? 'settlement' : 'redemptions') });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/merchant/ledger/index?view=' + (type === 'income' ? 'settlement' : 'redemptions'), complete: () => { this._navigating = false; } });
   },
 
   goSearch() {
@@ -1203,11 +1265,11 @@ Page({
   },
 
   goFinance() {
-    wx.navigateTo({ url: '/pages/merchant/ledger/index?view=settlement' });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/merchant/ledger/index?view=settlement', complete: () => { this._navigating = false; } });
   },
 
   goBrandManage() {
-    wx.navigateTo({ url: '/pages/merchant/decor/index' });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/merchant/decor/index', complete: () => { this._navigating = false; } });
   },
 
   // 「我的合作」进入商家关系页；订单由独立主入口承接。
@@ -1215,7 +1277,7 @@ Page({
   // 原来 reLaunch 到 pages/merchant/relation —— 那页标题是「合作」、内容是「找新的合作对象」,
   // 名不副实;合作仍从底部 tab「合作」进,这里不再重复给一个入口。
   goCustomers() {
-    wx.navigateTo({ url: '/pages/merchant/customer/index' });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/merchant/customer/index', complete: () => { this._navigating = false; } });
   },
 
   // 商家承接档案(B2B 撮合):声明可承接能力,供达人发现对接
@@ -1227,8 +1289,8 @@ Page({
   // 主题只按主题 ID 进入项目主页，主办/承办能力由后端 /home 投影决定。
   goHostProject(e) {
     const topicId = Number(e.currentTarget.dataset.topicid);
-    if (!Number.isSafeInteger(topicId) || topicId <= 0) return;
-    wx.navigateTo({ url: '/pages/topic/merchantinfo/merchantinfo?topicId=' + topicId + '&scope=MERCHANT' });
+    if (!Number.isSafeInteger(topicId) || topicId <= 0 || this._navigating) return; // 跳转中不响应连点,免得叠两层项目页
+    this._navigating = true; wx.navigateTo({ url: '/pages/topic/merchantinfo/merchantinfo?topicId=' + topicId + '&scope=MERCHANT', complete: () => { this._navigating = false; } });
   },
 
   openProjectCard(e) {
@@ -1244,12 +1306,12 @@ Page({
   goProjectMessages(e) {
     const ds = e && e.currentTarget && e.currentTarget.dataset || {};
     const route = normalizeMerchantFinanceRoute({ view: 'messages', ownerType: ds.ownertype, ownerId: ds.ownerid });
-    if (!route) return;
-    wx.navigateTo({ url: '/pages/merchant/ledger/index?view=messages&ownerType=' + route.ownerType + '&ownerId=' + route.ownerId });
+    if (!route || this._navigating) return; // 跳转中不响应连点
+    this._navigating = true; wx.navigateTo({ url: '/pages/merchant/ledger/index?view=messages&ownerType=' + route.ownerType + '&ownerId=' + route.ownerId, complete: () => { this._navigating = false; } });
   },
 
   goPublishedProjects() {
-    wx.navigateTo({ url: '/subpackageA/pages/myproject/index?scope=MERCHANT' });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageA/pages/myproject/index?scope=MERCHANT', complete: () => { this._navigating = false; } });
   },
 
 

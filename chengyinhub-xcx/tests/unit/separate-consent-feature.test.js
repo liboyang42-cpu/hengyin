@@ -50,9 +50,11 @@ function play(h){
   vm.runInNewContext(fs.readFileSync(file,'utf8'),{Page:p=>{def=p;},getApp:()=>h.app,wx:h.wx,
     require:createRequire(file),console,setTimeout,clearTimeout});
   const state={sessionId:17,version:3},actions=[];
+  // 真实 selectComponent 对同一个已挂载组件每次返回同一实例
+  const advancedGame={data:{state},action:(...args)=>actions.push(args)};
   const page=Object.assign({},def,{data:JSON.parse(JSON.stringify(def.data)),
     setData(patch){for(const[k,v]of Object.entries(patch)){const parts=k.split('.');let t=this.data;for(const p of parts.slice(0,-1)){t[p]=t[p]||{};t=t[p];}t[parts.at(-1)]=v;}},
-    selectComponent:()=>({data:{state},action:(...args)=>actions.push(args)})});
+    selectComponent:()=>advancedGame});
   page.data.playKit={kit:{type:'photocheck',mode:'CARD',sessionId:17,version:3}};
   let aborted=false;h.app.createPageBoundOperation=()=>({onAbort(){},isAborted:()=>aborted,finish(){},attach(){}});
   h.app.getUploadClient=()=>({uploadAll:(paths,opts)=>{h.uploads.push(paths);opts.onDone({ok:true,results:['/profile/upload/approved.jpg']});return{abort(){}};}});

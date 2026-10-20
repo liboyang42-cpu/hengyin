@@ -14,6 +14,7 @@ const fs = require('node:fs')
 const path = require('node:path')
 const test = require('node:test')
 const vm = require('../helpers/ui-sandbox-vm.js')
+const { loadMediaPreview } = require('../helpers/media-preview-sandbox.js')
 
 const ROOT = path.resolve(__dirname, '../..')
 const SOURCE = fs.readFileSync(path.join(ROOT, 'pages/templatedetail/templatedetail.js'), 'utf8')
@@ -38,6 +39,7 @@ function loadPage() {
       if (request === '../../utils/identity/identity-policy.js') return require(path.join(ROOT, 'utils/identity/identity-policy.js'))
       if (request === '../../utils/merchant-theme.js') return { merchantPageShow() {}, merchantPageRestore() {} }
       if (request === '../../utils/response-shape.js') return require(path.join(ROOT, 'utils/response-shape.js'))
+      if (request === '../../utils/media-preview.js') return loadMediaPreview({ previewImage() {} })
       throw new Error(`unexpected require: ${request}`)
     },
     wx: {
@@ -122,6 +124,7 @@ test('CU-M-130 负控:把判据换成「有行就给 tab」,上一条必须判�
       if (request === '../../utils/identity/identity-policy.js') return require(path.join(ROOT, 'utils/identity/identity-policy.js'))
       if (request === '../../utils/merchant-theme.js') return { merchantPageShow() {}, merchantPageRestore() {} }
       if (request === '../../utils/response-shape.js') return require(path.join(ROOT, 'utils/response-shape.js'))
+      if (request === '../../utils/media-preview.js') return loadMediaPreview({ previewImage() {} })
       throw new Error(`unexpected require: ${request}`)
     },
     wx: { getStorageSync: () => '', setStorageSync() {}, getAccountInfoSync: () => ({ miniProgram: { envVersion: 'develop' } }) },

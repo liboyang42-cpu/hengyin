@@ -30,7 +30,8 @@
         "list/index",
         "official-detail/index",
         "official-inbox/index",
-        "official-mine/index"
+        "official-mine/index",
+        "official-organizer/index"
       ]
     },
     {
@@ -80,6 +81,7 @@
       "name": "subpackageClub",
       "pages": [
         "apply/index",
+        "badges/index",
         "create/index",
         "customer-detail/index",
         "customers/index",
@@ -138,6 +140,8 @@
         "customer/index",
         "game-node/index",
         "customer/detail/index",
+        "verify-records/index",
+        "crm-campaigns/index",
         "team/index"
       ]
     },
@@ -250,6 +254,11 @@
         "mytemplate/mytemplate",
         "order/order",
         "orderinfo/orderinfo",
+        "points-history/index",
+        "report-mine/index",
+        "report-detail/index",
+        "correction-mine/index",
+        "correction-detail/index",
         "signup/index",
         "tixian/tixian",
         "tixianjilu/tixianjilu"
