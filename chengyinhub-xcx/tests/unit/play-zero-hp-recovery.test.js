@@ -178,7 +178,9 @@ test('九个真实 MySQL 回读摘录进入真实 Page，HP/恢复字段原样�
 
 test('普通计步入口在归零时按会员恢复授权路由，绝不 SUBMIT_STEPS；恢复后普通入口仍可用', async () => {
   const env = load(), ordinary = [];
-  env.page.selectComponent = () => ({ action: (...args) => ordinary.push(args) });
+  // 真实 selectComponent 对同一个已挂载组件每次返回同一实例
+  const advancedGame = { action: (...args) => ordinary.push(args) };
+  env.page.selectComponent = () => advancedGame;
   env.page.setData({ 'playKit.kit': { type: 'walk' } });
   env.respond(() => ({ code: 200, data: recorded('personal-steps-recovering') }));
   env.page._submitPlayKitAction('sync', {});

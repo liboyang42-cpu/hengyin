@@ -234,7 +234,7 @@ test('店铺分身语音回复走独立播放器并在离场时停止', () => {
   assert.match(js, /_pushShopNpcReply\([\s\S]{0,180}replaceIdx, d\.audioUrl\)/)
   assert.match(js, /d\.data && d\.data\.audioUrl/)
   assert.match(js, /_pushShopNpcReply\(text, replaceIdx, audioUrl\)[\s\S]{0,900}_playShopNpcVoice\(audioUrl\)/)
-  assert.match(js, /closeShopNpc\(\)[\s\S]{0,260}_stopShopNpcVoice\(\)/)
+  assert.match(js, /closeShopNpc\(\) \{(?:(?!\n  \},)[\s\S])*_stopShopNpcVoice\(\)/)
   assert.match(js, /onUnload\(\)[\s\S]*?_stopShopNpcVoice\(\)/)
 })
 

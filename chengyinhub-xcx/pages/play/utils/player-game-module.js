@@ -512,7 +512,7 @@ function mergeConfirmedReceipt(projection, receipt) {
   if (!receipt || receipt.requestId !== projection.write.requestId) return projection
   if (receipt.outcome !== 'APPLIED' && receipt.outcome !== 'COMMITTED') return projection
   return Object.assign({}, projection, {
-    revision: safeRevision(receipt.revision),
+    revision: Math.max(safeRevision(projection.revision), safeRevision(receipt.revision)),
     write: {
       status: 'confirmed',
       requestId: projection.write.requestId,

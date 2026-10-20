@@ -108,6 +108,7 @@ test('章节音频链路保留:WXML 三个入口 + JS 方法齐备', () => {
 
 test('章节音频行为不受清理影响:上传写 chapterForm,清空只清 chapterForm', () => {
   const page = makePage()
+  page.data.popChapter = true // 上传入口只在章节抽屉里;抽屉已关时的迟到回调会被丢弃
   chosenDocuments = [{ url: 'https://cdn/chapter.mp3', filename: 'chapter.mp3' }]
   try {
     page.uploadChapterAudio()

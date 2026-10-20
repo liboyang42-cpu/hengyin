@@ -84,6 +84,8 @@ function loadPage() {
 
 test('编辑页：首次保存草稿走 create，回读后才清本机恢复稿；再次保存 update 同一主题；发布先存后发', () => {
   const { page, sent, removed } = loadPage();
+  // 草稿删除只删本人确有的信封(发布分包 pro-editor-draft):先让新草稿 u-1 真的落一份本机稿
+  assert.equal(page._persistDraftEnvelope(), true);
   page.saveServerDraft();
   page.saveServerDraft();
   assert.equal(sent.length, 1, '连点只发一次');
