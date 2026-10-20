@@ -257,7 +257,7 @@ Page({
   // 「接下来」卡会停在改期前的 activityList(实测返回后仍写旧日期,退出重进才对)。
   // 首展闸照 pages/club/customers/index.js:首屏由 onLoad 负责,返回即重拉。
   onShow() {
-    if (!this._hasShown) { this._hasShown = true; return; }
+    this._navigating = false; if (!this._hasShown) { this._hasShown = true; return; }
     if (!this.data.loaded || this.data.loadError || this.data.missingParam) return;
     this.fetchDetail();
     this.loadManageStats(true);
@@ -654,14 +654,14 @@ Page({
      clubId 可选:topic-story 只把它当治理身份的线索,缺了也能按主题公开投影渲染。 */
   goStory() {
     if (!this._topicId) return;
-    wx.navigateTo({ url: '/pages/club/topic-story/index?topicId=' + this._topicId
-      + (this._clubId ? '&clubId=' + this._clubId : '') });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/club/topic-story/index?topicId=' + this._topicId
+      + (this._clubId ? '&clubId=' + this._clubId : ''), complete: () => { this._navigating = false; } });
   },
 
   goEventOps() {
     if (!this._clubId) return;
-    wx.navigateTo({ url: '/pages/club/event-ops/index?clubId=' + this._clubId
-      + '&topicId=' + this._topicId });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/club/event-ops/index?clubId=' + this._clubId
+      + '&topicId=' + this._topicId, complete: () => { this._navigating = false; } });
   },
 
   // CU-C-79(用户裁决 B):主键文案是「去选一场」,而原来它只跳场次管理页且不带 activityId ——
@@ -703,15 +703,15 @@ Page({
       this.loadManageStats();
       return;
     }
-    wx.navigateTo({ url: '/pages/club/event-ops/index?clubId=' + this._clubId
-      + '&topicId=' + this._topicId + '&activityId=' + activityId });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/club/event-ops/index?clubId=' + this._clubId
+      + '&topicId=' + this._topicId + '&activityId=' + activityId, complete: () => { this._navigating = false; } });
   },
 
   // 核销台账 = 本团名册里每个人的到场状态。名册页早就有这份数据,
   // 只是原来没把核销态显示出来(它只被用来算「能不能退款」)。
   goLedger() {
     if (!this._clubId || !this._topicId) { this.notReady('核销台账'); return; }
-    wx.navigateTo({ url: '/pages/club/enroll/index?clubId=' + this._clubId + '&topicId=' + this._topicId });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/club/enroll/index?clubId=' + this._clubId + '&topicId=' + this._topicId, complete: () => { this._navigating = false; } });
   },
 
 
@@ -1065,14 +1065,14 @@ Page({
 
   // 5-04:fabu 的编辑入口只读 options.id(pages/publish/fabu/index.js onLoad),
   // 原来拼 ?topicId= 会打开空白新建表单 —— 保存多出一条主题,原主题没改。
-  goEditTopic() { wx.navigateTo({ url: '/pages/publish/fabu/index?id=' + this._topicId }); },
+  goEditTopic() { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/publish/fabu/index?id=' + this._topicId, complete: () => { this._navigating = false; } }); },
 
   goChapterApplications() {
     if (!this.data.canReviewChapterApplications || !this._topicId) return;
     this.setData({ settingSheetVisible: false });
-    wx.navigateTo({
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({
       url: '/pages/topic/merchantinfo/merchantinfo?topicId=' + this._topicId + '&scope=CLUB',
-    });
+      complete: () => { this._navigating = false; } });
   },
 
   /* ——— Figma J3-A(按节点)/ J3-B(按章节)招商台 ——— */
