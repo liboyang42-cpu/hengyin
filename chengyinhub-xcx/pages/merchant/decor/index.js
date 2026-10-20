@@ -207,7 +207,7 @@ Page({
     merchantTheme.merchantPageShow && merchantTheme.merchantPageShow();
     if (this._loadedOnce && this.canReadProfileView() && !this.data.fieldSheet.show && !this.data.imageEditor) this.load();
     if (this._loadedOnce) this.loadPerks();
-    this._loadedOnce = true;
+    this._loadedOnce = true; this._navigating = false;
   },
 
   /** basic/brand/qualification 三个资料视图要 PROFILE_WRITE;深链进来时也要拦住。 */
@@ -760,11 +760,11 @@ Page({
     const action = e.currentTarget.dataset.action;
     if (['openField','geoLocate','goStory','previewLicense','previewBrandImages'].includes(action)) this[action](e);
   },
-  goSection(e) { wx.navigateTo({url: '/pages/merchant/decor/index?view=' + e.currentTarget.dataset.view}); },
+  goSection(e) { if (this._navigating) return; this._navigating = true; wx.navigateTo({url: '/pages/merchant/decor/index?view=' + e.currentTarget.dataset.view, complete: () => { this._navigating = false; } }); },
   openDerivatives() {
     this.openField({currentTarget:{dataset:{k:'derivativeBenefits'}}});
   },
-  goAiNpc() { wx.navigateTo({url: '/pages/merchant/decor/ai-npc/index'}); },
+  goAiNpc() { if (this._navigating) return; this._navigating = true; wx.navigateTo({url: '/pages/merchant/decor/ai-npc/index', complete: () => { this._navigating = false; } }); },
   // CU-M-71:执照/品牌图是入驻时提交的只读资料(补交入口在入驻流程)。无图时行上已无箭头,
   // 点击还得给一句稳定解释,别把「没图」当无事发生。说明落在行上的 description,toast 只做反馈。
   previewLicense() {
@@ -776,10 +776,10 @@ Page({
     else toast('入驻时提交，如需更新请联系平台');
   },
   onHoursSave(e) { this.saveBrand({businessTime: e.detail.value}, () => this.selectComponent('#business-hours').close()); },
-  goCoopSetting() { wx.navigateTo({ url: '/pages/merchant/decor/coop-setting/index' }); },
-  goGallery() { wx.navigateTo({ url: '/pages/merchant/decor/gallery/index' }); },
-  goPerks() { wx.navigateTo({ url: '/pages/merchant/decor/perks/index' }); },
-  goReviews() { wx.navigateTo({ url: '/pages/merchant/reviews/index?mode=manage' }); },
+  goCoopSetting() { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/merchant/decor/coop-setting/index', complete: () => { this._navigating = false; } }); },
+  goGallery() { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/merchant/decor/gallery/index', complete: () => { this._navigating = false; } }); },
+  goPerks() { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/merchant/decor/perks/index', complete: () => { this._navigating = false; } }); },
+  goReviews() { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/merchant/reviews/index?mode=manage', complete: () => { this._navigating = false; } }); },
 
 
   // ===== 营业状态(即时) =====
@@ -951,7 +951,7 @@ Page({
   goPublishActivity() {
     // CU-M-05:招牌主推的空候选里「去发布一个活动」是商家主办入口,必须带 scope ——
     // 不带的话发布页按俱乐部主理人判身份,商家进来直接被拦回本页且没有任何失败提示。
-    wx.navigateTo({ url: '/pages/publish/activity/index?scope=MERCHANT' });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/publish/activity/index?scope=MERCHANT', complete: () => { this._navigating = false; } });
   },
   selectFeatured(e) {
     if (this.data.saving || this.data.refreshing) return;
@@ -965,7 +965,7 @@ Page({
 
   // ===== 成为城市节点(E1/E2 citynode) =====
   goCityNode() {
-    wx.navigateTo({ url: '/pages/merchant/citynode/index' });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/merchant/citynode/index', complete: () => { this._navigating = false; } });
   },
 
   // ===== 看公开主页 =====
@@ -973,7 +973,7 @@ Page({
   goPreview() {
     const url = merchantHomeUrl(this.data.m && this.data.m.memberId);
     if (!url) { toast('资料加载中'); return; }
-    wx.navigateTo({ url: url + '&preview=1' });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: url + '&preview=1', complete: () => { this._navigating = false; } });
   },
 
   // ===== 门店定位校准(E2 geo,手动打点) =====
