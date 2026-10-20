@@ -2931,6 +2931,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
             }
             upd.setStatus(1);      // 简易版免审直发
             upd.setUserStatus(1);
+            upd.setCheckStatus(1); // 机审通过/免审,与后审中的 0 区分(见 createTopic 同口径)
         }
         if ((simple || upd.getCircleReviewedAt() != null) && cmsTopicMapper.updateCmsTopic(upd) != 1) {
             throw new IllegalStateException("主题发布状态保存失败");
@@ -4132,6 +4133,9 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         } else if (simpleMode) {
             topic.setStatus(1);
             topic.setUserStatus(1);
+            // 简易版免人工审核:文本已在控制器过机审门禁 ⇒ check_status=1(机审通过/免审),
+            // 与专业版「已发布、后审中」的 0 区分开。机审存疑的另挂 post_review_flag 抽检单,以未结单为准。
+            topic.setCheckStatus(1);
         } else {
             topic.setStatus(0);      // 内容落库期间尚未公开，事务末尾统一发布
             topic.setUserStatus(0);  // 用户端未上架

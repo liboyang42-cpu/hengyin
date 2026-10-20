@@ -153,6 +153,8 @@ class CmsTopicPublishDraftTest {
         verify(cmsTopicMapper).updateCmsTopic(cap.capture());
         assertEquals(Integer.valueOf(1), cap.getValue().getStatus(), "简易版发布 → 已上架");
         assertEquals(Integer.valueOf(1), cap.getValue().getUserStatus());
+        // AUDIT-G2-4:简易版免人工审核 = 机审已过,必须写 check_status=1,不能与「待审核(0)」长得一样。
+        assertEquals(Integer.valueOf(1), cap.getValue().getCheckStatus(), "简易版免审直发 → check_status=1(机审通过/免审)");
         verify(auditTaskService, never()).submit(anyString(), any(), any(), anyString(), anyString());
         verify(topicCommercialReviewService, never()).submitProjectReview(anyLong(), anyLong(), any());
     }
@@ -197,6 +199,7 @@ class CmsTopicPublishDraftTest {
         verify(cmsTopicMapper).updateCmsTopic(cap.capture());
         assertEquals(Integer.valueOf(1), cap.getValue().getStatus(), "简单 AI 草稿发布 → 已上架");
         assertEquals(Integer.valueOf(1), cap.getValue().getUserStatus());
+        assertEquals(Integer.valueOf(1), cap.getValue().getCheckStatus(), "ai_simple 免审直发 → check_status=1");
         verify(auditTaskService, never()).submit(anyString(), any(), any(), anyString(), anyString());
     }
 
