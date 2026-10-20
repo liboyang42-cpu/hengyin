@@ -2642,7 +2642,7 @@
     "authorization": "User explicitly permits independent integration and acceptance through existing CI.",
     "integration_writer": "local root coordinator only",
     "target_branch": "codex/final-backend-acceptance-20261020",
-    "state": "COMBINED95F_FAILURE_OBSERVED_EXACT_REQUIRE_REPAIR_AUTHORIZED",
+    "state": "COMBINED95F_FAILURES_EXACT_FIVE_PATH_SINGLE_REPAIR_SLOT_AUTHORIZED",
     "creation_or_candidate_sha": "95f038ae57ac38d35d532a07fbd82375c74d887f",
     "port_source": {
       "pr": 386,
@@ -2852,15 +2852,17 @@
     "integration_repair_authority": {
       "writer": "local root coordinator only",
       "target_branch": "codex/final-backend-acceptance-20261020",
-      "state": "AUTHORIZED_EXACT_REQUIRE_PATH_REPAIR_SOURCE_NOT_DELIVERED",
+      "state": "AUTHORIZED_EXACT_FIVE_PATH_REPAIR_SOURCE_NOT_DELIVERED",
       "base_source_sha": "95f038ae57ac38d35d532a07fbd82375c74d887f",
       "authorized_exact_paths": [
         "chengyinhub-xcx/utils/content-report.js",
         "chengyinhub-xcx/pages/topic/index/index.js",
-        "chengyinhub-xcx/pages/templatedetail/templatedetail.js"
+        "chengyinhub-xcx/pages/templatedetail/templatedetail.js",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E01_12Test.java",
+        "ci/silent-error-allowlist.txt"
       ],
       "repair_slot": "Same single local integration repair slot; no new Cloud writer",
-      "scope": "Only correct seven require references to the existing pages/square/utils/community-report-sheet.js tool. No module copy/addition, tool edit, UI/request/reporting policy/permission change, dependency or CI change; retain all tests.",
+      "scope": "Three require-reference files plus one constructor fixture and reviewed append-only silentError receipts. Same single root integration slot; no wider source/domain/gate permission.",
       "existing_tool_read_only": "chengyinhub-xcx/pages/square/utils/community-report-sheet.js",
       "read_only_source_evidence": {
         "content_report_bad_require": "./community-report-sheet.js",
@@ -2880,9 +2882,14 @@
         "scope": "Existing targeted test result reported by integration writer; C00 did not run it. Failed new references originated in #387."
       },
       "original_source_ownership": "Original source authors and source-branch locks retained/frozen; this grant is confined to the independently owned combination branch.",
-      "test_file_write_authorized": false,
+      "test_file_write_authorized": true,
       "other_paths_write_authorized": false,
-      "new_source_sha": "NOT_DELIVERED"
+      "new_source_sha": "NOT_DELIVERED",
+      "test_write_scope": "Only E01_12Test fixture adaptation; all methods and assertions retained, no other test edits.",
+      "supplemental_exact_path_scopes": {
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E01_12Test.java": "Fixture only: adapt the existing six-argument ClubSessionServiceImpl construction to its current ten dependencies, following existing ClubSessionServiceImplTest, with explicit safety/review outcomes. Retain every method and business assertion; no production constructor overload, review bypass or dependency change.",
+        "ci/silent-error-allowlist.txt": "Append only individually reviewed named silentError receipts for content-report.js four sites and existing myproject review timeline/appeal two sites, with truthful error-handling reasons and exact counts. Confirm error ownership for every site first; if unhandled, no invented exemption. Do not change frozen baseline, gate/rules/CI or request/permission policy."
+      }
     },
     "latest_failure_observations": {
       "source_sha": "95f038ae57ac38d35d532a07fbd82375c74d887f",
@@ -2916,7 +2923,7 @@
         "conclusion": "failure",
         "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39432014261"
       },
-      "failure_root_causes": "Fast/Migration/Funds/HTTP precise root causes pending log review; no source attribution or permission expansion inferred from red metadata.",
+      "failure_root_causes": "Backend testCompile constructor fixture, Fast missing reviewed receipts and Migration PR-body classification reported as above; HTTP precise cause remains pending. No assertion failure or wider production/gate defect inferred.",
       "workflow_metadata_scope": "Current workflow conclusions are metadata only; source-specific test counts/artifacts still require separate acceptance.",
       "funds_workflow": {
         "run_id": 39431906479,
@@ -2925,7 +2932,20 @@
         "status": "completed",
         "conclusion": "failure",
         "url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/39431906479"
-      }
+      },
+      "backend_compile_failure": {
+        "source_sha": "95f038ae57ac38d35d532a07fbd82375c74d887f",
+        "phase": "testCompile",
+        "production_compilation": "Six modules PASS reported",
+        "compiler_errors": 1,
+        "test_execution": "NOT_RUN",
+        "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E01_12Test.java",
+        "line": 66,
+        "cause": "Fixture invokes old six-argument ClubSessionServiceImpl; current producer requires ten arguments including IContentSafetyGate, ActivityReviewPolicy, IAuditTaskService, IUmsMemberService.",
+        "evidence_scope": "Compiler diagnosis reported by integration writer; C00 read the six-argument fixture but did not compile."
+      },
+      "fast_gate_diagnosis": "Reported #387 silentError registrations missing: content-report.js4 sites and myproject2. Each site requires actual error-handling review before an append-only truthful receipt; no baseline/rule change.",
+      "migration_gate_diagnosis": "Reported PR body lacks formal impact classification③; migration ledger14 and dependency order PASS. Root may correct PR description; no SQL/migration-executor edits or migration execution."
     },
     "current_runs_history": [
       {

@@ -1,10 +1,14 @@
-## 当前组合修复：95f038引用缺口，root三路径最小修复授权
+## 当前组合修复：95f038已定位缺口，root五路径单修复槽
 
 固定组合 `95f038ae57ac38d35d532a07fbd82375c74d887f` 的既有#387定向测试报告5项MODULE_NOT_FOUND。C00只读核到三文件共七个require指向不存在的utils下举报模块；既有动态举报工具为 `chengyinhub-xcx/pages/square/utils/community-report-sheet.js`，导出open/select/cancel。
 
 仅登记本地root在 `codex/final-backend-acceptance-20261020` 同一修复槽修改 `chengyinhub-xcx/utils/content-report.js`、`chengyinhub-xcx/pages/topic/index/index.js`、`chengyinhub-xcx/pages/templatedetail/templatedetail.js` 的require路径，复用该既有工具；不复制／新增模块、不改旧工具、UI、策略、权限或测试，保留原来源冻结与锁。新修复SHA尚未交付；无需新增Cloud作者。精确授权见 `LONGRUN_REMAINING.json.independent_backend_acceptance.integration_repair_authority`。
 
-固定95f的Fast gate／Migration safety gate已观察到FAIL，Funds39431906479亦已COMPLETED／FAILURE；[HTTP39432014261](https://github.com/liboyang42-cpu/hengyin/actions/runs/39432014261) 现已COMPLETED／FAILURE。这些失败的精确根因待日志核清，不据红灯归到此引用修复或扩大源码权。当前组合未验收，不继承旧源成绩；原运行保留，不取消或重复触发。Cloud仅更新文档，未执行构建、测试、CI或源码修改。
+固定95f的Fast gate／Migration safety gate已观察到FAIL，Funds39431906479亦已COMPLETED／FAILURE；[HTTP39432014261](https://github.com/liboyang42-cpu/hengyin/actions/runs/39432014261) 现已COMPLETED／FAILURE。Backend／Fast／Migration已取得下列定向诊断，HTTP精确根因仍待日志；不将不同失败一概归到require修复，也不扩大源码权。当前组合未验收，不继承旧源成绩；原运行保留，不取消或重复触发。Cloud仅更新文档，未执行构建、测试、CI或源码修改。
+
+同一root修复槽另追加两条精确路径：`chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E01_12Test.java` 仅按现有ClubSessionServiceImplTest适配10参依赖及明确审核结果，保全部方法／断言，不改生产或新增绕审核重载；`ci/silent-error-allowlist.txt` 仅在逐处确认错误承接后，为content-report四处及myproject审核时间线／申诉两处追加实名理由和准确计数，不改冻结基线、门禁或CI规则。无真实错误承接就不能虚构豁免。
+
+Backend报告为6生产模块编译通过、testCompile仅上述一处构造错误、测试未执行；不能称断言失败。Migration gate报告缺PR正文正式“影响分类③”，14迁移台账／依赖顺序通过，root仅补PR正文，不改SQL或执行器。以上根因为集成写者提供；C00未编译或测试。HTTP失败原因仍待核，旧失败记录保留。
 
 ## 独立组合源码交付：PR394固定95f038，五处冲突解决，验收未完成
 
