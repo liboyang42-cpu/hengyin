@@ -295,13 +295,56 @@ test('复制绑定使用稳定 client 键，移除源 id 和仅含归零挑战�
   const copied = src._buildCopiedDraft(2, false);
   const nodes = copied.formData.chapters[0].nodes;
   const saved = JSON.parse(copied.formData.themeRuntimeConfig);
-  assert.deepEqual(saved.chapters, [{ index: 0, completion: runtime.chapters[0].completion }]);
+  // 2026-10-12:互斥组与额外站点(共用额度关系)不再丢,换成新草稿的 client 引用,首次保存由服务端换回真实编号
+  assert.deepEqual(saved.chapters, [{ index: 0, completion: runtime.chapters[0].completion,
+    exclusiveGroups: [['client:stable-a', 'client:local-b']], extraNodes: [{ nodeId: 'client:' + nodes[2].clientNodeKey, slot: 'shared' }] }]);
   assert.equal(Object.hasOwn(saved, 'gameplayRuntime'), false);
   assert.deepEqual(saved.templateBindings['client:stable-a'], runtime.templateBindings[11]);
   assert.deepEqual(saved.templateBindings['client:local-b'], runtime.templateBindings[12]);
   assert.deepEqual(saved.templateBindings['client:' + nodes[2].clientNodeKey], runtime.templateBindings[13]);
   assert.ok(nodes.every(node => !Object.hasOwn(node, 'id') && node.clientNodeKey));
   assert.equal(Object.keys(saved.templateBindings).length, 3);
-  assert.equal(copied.copyReferenceNotice, '复制后需要重新选择：第1章互斥选项/额外节点、归零挑战需重新选择挑战站点、站点玩法资源绑定');
+  assert.equal(copied.copyReferenceNotice, '复制后需要重新选择：归零挑战需重新选择挑战站点、站点玩法资源绑定');
   assert.deepEqual(JSON.parse(src.data.formData.themeRuntimeConfig), runtime);
+});
+
+test('复制成新草稿：互斥组与额外站点(含共用额度)换成 client 引用保留，不再要求重选', () => {
+  const p = makePage();
+  p.data.formData = Object.assign({}, p.data.formData, { productType: 1, tickets: [] });
+  p.data.formData.chapters = [{ name: '一', nodes: [{ id: 101, name: '甲', _localId: 'a' }, { id: 102, name: '乙', _localId: 'b' }, { id: 103, name: '丙', _localId: 'c' }] }];
+  p.data.formData.themeRuntimeConfig = JSON.stringify({ chapters: [{ index: 0, hpCost: 0, luckCost: 0, grants: [], eggs: [], exclusiveGroups: [[102, 103]], extraNodes: [{ nodeId: 101, slot: 'shared_x' }] }] });
+  const copied = p._buildCopiedDraft(1, false);
+  const ch = JSON.parse(copied.formData.themeRuntimeConfig).chapters[0];
+  assert.deepEqual(ch.exclusiveGroups, [['client:b', 'client:c']]);
+  assert.deepEqual(ch.extraNodes, [{ nodeId: 'client:a', slot: 'shared_x' }]);
+  assert.doesNotMatch(copied.copyReferenceNotice, /互斥|额外/);
+});
+
+
+test('删除站点：从互斥组/额外站点/运行任务里明确移出并说明，不足两站的互斥组整组去掉；不改指别的站点', () => {
+  const p = makePage();
+  p.data.formData = Object.assign({}, p.data.formData, { productType: 1, chapters: [{ name: '一', nodes: [{ id: 116 }, { id: 117 }, { id: 118 }] }] });
+  p.data.formData.themeRuntimeConfig = JSON.stringify({
+    chapters: [{ index: 3, hpCost: 0, luckCost: 0, grants: [], eggs: [], exclusiveGroups: [[116, 117, 118]] },
+      { index: 5, hpCost: 0, luckCost: 0, grants: [], eggs: [], exclusiveGroups: [[121, 118]], extraNodes: [{ nodeId: 118, slot: 'shared' }, { nodeId: 123, slot: 'shared' }] }],
+    gameplayRuntime: { runtimeScope: 'TEAM', quests: [{ questKey: 'node_118', nodeId: 118, actKey: 'a' }, { questKey: 'node_116', nodeId: 116, actKey: 'a', prerequisites: ['node_118'], facilityKey: 'tpl_node_118' }],
+      acts: [{ actKey: 'a', questKeys: ['node_116', 'node_118'] }],
+      facilities: [{ facilityKey: 'tpl_node_118', operationNodeId: 118 }, { facilityKey: 'facility_1', operationNodeId: 116 }],
+      plans: [{ endingKey: 'plan_118' }, { endingKey: 'plan_keep' }],
+      templateTools: { nodes: [{ nodeId: 118, planKeys: ['plan_118'] }, { nodeId: 116, planKeys: [] }] } },
+  });
+  const refs = p._removeNodeRuleRefs({ id: 118 });
+  const c = JSON.parse(p.data.formData.themeRuntimeConfig);
+  assert.deepEqual(c.chapters[0].exclusiveGroups, [[116, 117]]);
+  assert.equal(Object.hasOwn(c.chapters[1], 'exclusiveGroups'), false, '只剩一站的互斥组整组去掉');
+  assert.deepEqual(c.chapters[1].extraNodes, [{ nodeId: 123, slot: 'shared' }], '共用额度里的其他站点不受影响');
+  assert.deepEqual(c.gameplayRuntime.quests, [{ questKey: 'node_116', nodeId: 116, actKey: 'a', prerequisites: [] }]);
+  assert.deepEqual(c.gameplayRuntime.facilities, [{ facilityKey: 'facility_1', operationNodeId: 116 }], '该站点生成/操作的设施移出,别的保留');
+  assert.deepEqual(c.gameplayRuntime.plans, [{ endingKey: 'plan_keep' }]);
+  assert.deepEqual(c.gameplayRuntime.templateTools.nodes, [{ nodeId: 116, planKeys: [] }]);
+  assert.deepEqual(c.gameplayRuntime.acts[0].questKeys, ['node_116']);
+  assert.match(refs.note, /第4章互斥选项、第6章互斥选项、第6章额外站点、该站点玩法生成的表决方案、该站点的设施/);
+  assert.equal(refs.before.length, 2);
+  assert.equal(refs.gameBefore.facilities.length, 2, '撤销用的原运行结构完整保留');
+  assert.equal(p._removeNodeRuleRefs({ id: 999 }), null, '没被引用的站点不改配置');
 });
