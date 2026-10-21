@@ -299,10 +299,7 @@
     "pages/index/index": {
       "network": "wifi",
       "packages": [
-        "subpackageA",
-        "subpackagePublish",
-        "subpackageClub",
-        "subpackageActivity"
+        "subpackageA"
       ]
     },
     "pages/square/list/index": {
@@ -314,7 +311,6 @@
     "subpackageMember/signup/index": {
       "network": "all",
       "packages": [
-        "subpackagePlay",
         "subpackageActivity"
       ]
     }
