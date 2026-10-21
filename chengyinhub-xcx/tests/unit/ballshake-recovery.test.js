@@ -19,7 +19,6 @@ function host(options = {}) {
     offAccelerometerChange(fn) { removed.push(fn); listeners.delete(fn); },
     startAccelerometer(arg) { starts.push(arg); if (options.startThrow) throw Error('start'); if (options.syncFail) arg.fail(); },
     stopAccelerometer() {},
-    showToast(arg) { toasts.push(arg); },
   };
   if (options.missingStart) delete wx.startAccelerometer;
   if (options.missingListen) delete wx.onAccelerometerChange;
@@ -28,7 +27,7 @@ function host(options = {}) {
   function load(file) {
     let def;
     vm.runInNewContext(fs.readFileSync(path.join(ROOT, file + '.js'), 'utf8'), {
-      Component: x => { def = x; }, require: () => ({ haptic() {} }), wx,
+      Component: x => { def = x; }, require: name => name.endsWith('/toast.js') ? title => toasts.push({title}) : ({ haptic() {} }), wx,
       Date: { now: () => now }, Math, Number,
       setTimeout: (fn, ms) => timer(fn, ms, false), clearTimeout: id => tasks.delete(id),
       setInterval: (fn, ms) => timer(fn, ms, true), clearInterval: id => tasks.delete(id),
@@ -172,7 +171,7 @@ test('normal finite frames score and submit unchanged payload exactly once', () 
   assert.equal(h.ball.data.awaitingResult,true); assert.equal(h.events.filter(e=>e.name==='start').length,1);
 });
 test('real visible deadline submits partial hits with existing fail protocol', () => {
-  const h = host({props:{seconds:1,challenge:{},sharedChallenge:true}}); h.run(); h.sample({x:0,y:0}); h.tick(1060);
+  const h = host({props:{seconds:3,challenge:{},sharedChallenge:true}}); h.run(); h.sample({x:0,y:0}); h.tick(3060);
   const submit=h.events.filter(e=>e.name==='submit'); assert.equal(submit.length,1); assert.equal(submit[0].detail.hits,0); assert.equal(submit[0].detail.passed,false);
 });
 test('duplicate taps during calibration do not begin twice, challenge success/disabled block start', () => {
@@ -233,4 +232,17 @@ test('submitted UNKNOWN ignores a late stage failure without forwarding another 
 test('a close blocks a queued start tap until the original entry opens the component again', () => {
   const h=host(); h.run(); h.ball.onClose(); h.ball.onStart(); assert.equal(h.ball._attempt,null);
   h.resume('close'); h.run(); assert.equal(h.ball.data.running,true);
+});
+for (const mode of ['manual-before-first-frame', 'three-second-deadline-before-first-frame', 'manual-after-expired-frame', 'stage-before-delayed-watchdog']) test(`${mode}: final submit requires a valid fresh measurement, no failure result`, () => {
+  const h = host({props:{seconds:3,challenge:{},sharedChallenge:true}}); h.run();
+  if (mode.includes('expired') || mode === 'stage-before-delayed-watchdog') { h.sample({x:0,y:0}); h.jump(3500); }
+  if (mode.startsWith('manual')) h.ball.onSubmitHits();
+  else if (mode.startsWith('three-second')) h.tick(3060);
+  else h.stage.failByTime();
+  assert.equal(writes(h).length,0);
+  assert.equal(h.ball.data.running,false);
+  assert.equal(h.ball.data.awaitingResult,false);
+  assert.equal(h.listeners.size,0);
+  assert.equal(h.tasks.size,0);
+  assert.equal(h.toasts.length,1);
 });

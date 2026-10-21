@@ -22,6 +22,7 @@ const EDGES = ['top', 'bottom', 'left', 'right'];
 
 const reducedMotionBehavior = require('../../../../behaviors/reduced-motion.js');
 const motion = require('../../../../utils/motion.js');
+const cyToast = require('../../../../utils/toast.js');
 
 /** 反弹:反向 + 一点随机。不加随机的话球会卡进一条来回直线,
  *  分照涨但人已经不用操作了 —— 那是动画不是游戏。 */
@@ -132,7 +133,7 @@ Component({
     _sensorFailed(attempt) {
       if (!this._current(attempt) || attempt.phase !== 'running') return;
       this._interrupt();
-      if (typeof wx.showToast === 'function') wx.showToast({ title: '动作读取中断，请重新开始', icon: 'none' });
+      cyToast('动作读取中断，请重新开始');
     },
     _armWatchdog(attempt) {
       if (this._watchdog) clearTimeout(this._watchdog);
@@ -246,6 +247,9 @@ Component({
     _finish(won) {
       const attempt = this._attempt;
       if (!this._current(attempt) || attempt.phase !== 'running' || this._submitted) return;
+      // Every exit, including the stage deadline and manual submit, needs a real fresh sample.
+      if (typeof attempt.lastFrame !== 'number' || !Number.isFinite(attempt.lastFrame)
+        || Date.now() - attempt.lastFrame >= SENSOR_GAP_MS) { this._sensorFailed(attempt); return; }
       this._submitted = true;
       attempt.phase = 'reporting';
       this._stop(); this._offTilt();
@@ -265,7 +269,7 @@ Component({
       if (!attempt || attempt.phase === 'finished') return;
       // 到点也提交本次部分撞击；去重和全队累计由服务端完成。
       if (e.detail && e.detail.kind === 'fail') this._finish(false);
-      this.triggerEvent('verdict', e.detail);
+      if (this._current(attempt)) this.triggerEvent('verdict', e.detail);
     },
     onClose(e) {
       if (e && (!e.currentTarget || !e.currentTarget.dataset

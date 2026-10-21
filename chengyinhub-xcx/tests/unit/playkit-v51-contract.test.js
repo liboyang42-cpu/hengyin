@@ -213,7 +213,7 @@ test('弹球超时/本队手动提交都发送本次部分 hits，一次跑动�
     const events = [];
     const ball = { ...def.methods, data: { ...def.data, show: true, running: true, challenge: { progress: 0, goal: 10, success: false }, sharedChallenge: true },
       _hits: 6, setData(patch, cb) { Object.assign(this.data, patch); if (cb) cb(); }, selectComponent() { return stage; }, triggerEvent(name, detail) { events.push({ name, detail }); } };
-    ball._attempt = { stage, key: 0, phase: 'running' };
+    ball._attempt = { stage, key: 0, phase: 'running', lastFrame: Date.now() };
     if (timed) ball.onVerdict({ currentTarget: { dataset: { stageKey: 0 } }, detail: { kind: 'fail', timedOut: true } }); else ball.onSubmitHits();
     ball.onVerdict({ currentTarget: { dataset: { stageKey: 0 } }, detail: { kind: 'fail' } });
     assert.deepEqual(events.filter(e => e.name === 'submit').map(e => e.detail.hits), [6]);
