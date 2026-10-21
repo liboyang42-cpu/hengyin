@@ -194,4 +194,14 @@ jobs:
           MYSQL_CONTAINER: ${{ steps.mysql.outputs.container }}
         run: |
           docker rm -f -v "$MYSQL_CONTAINER" >/dev/null 2>&1 || true
-          ! docker ps -a --format '{{.Names}}' | grep -Fxq "$MYSQL_CONTAINER"
+          if ! names="$(docker ps -a --format '{{.Names}}' 2>/dev/null)"; then
+            echo "::error::Funds scratch absence readback failed"
+            exit 1
+          fi
+          while IFS= read -r name; do
+            if [ "$name" = "$MYSQL_CONTAINER" ]; then
+              echo "::error::Funds scratch container remains"
+              exit 1
+            fi
+          done <<< "$names"
+          echo "::notice::Funds exact scratch container confirmed absent"

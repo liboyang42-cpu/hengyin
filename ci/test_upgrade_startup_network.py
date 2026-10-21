@@ -208,6 +208,8 @@ if '--list' in sys.argv:
         print('libforeign.so.1 => /trace-runtime/lib/libforeign.so.1 (0x1234)')
     if defect == 'duplicate':
         print('libc.so.6 => /trace-runtime/lib/libc.so.6 (0x1234)')
+    if defect == 'malformed':
+        print(chr(9) + 'SYNTHETIC_UNKNOWN' + chr(27) + '[31m ' + chr(0x8def) + chr(9))
 elif '--version' in sys.argv:
     print('strace -- version synthetic')
 PY_CAPTURE
@@ -271,6 +273,20 @@ PY_CAPTURE
                     self.assertEqual('--version', calls[1][-1])
                 self.assertEqual(not fail, result.returncode == 0)
                 self.assertEqual(not fail, (directory / 'reached').exists())
+
+    def test_unrecognized_target_line_is_numbered_escaped_and_still_fails_closed(self):
+        with tempfile.TemporaryDirectory() as temp:
+            directory = pathlib.Path(temp)
+            result, calls = self.capture(directory, 'check_trace_runtime', resolution_defect='malformed')
+            raw_line = '\tSYNTHETIC_UNKNOWN\x1b[31m \u8def\t'
+            self.assertNotEqual(0, result.returncode)
+            self.assertEqual(1, len(calls))
+            self.assertIn('Unrecognized target trace runtime dependency at line 4: ' + ascii(raw_line),
+                          result.stderr)
+            self.assertNotIn(raw_line, result.stderr)
+            self.assertNotIn('\x1b', result.stderr)
+            self.assertNotIn('\u8def', result.stderr)
+            self.assertFalse((directory / 'reached').exists())
 
     def test_target_loader_fallback_missing_unknown_and_duplicate_paths_fail_closed(self):
         for defect in ('fallback', 'missing', 'unknown', 'duplicate'):
