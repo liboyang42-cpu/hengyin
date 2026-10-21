@@ -89,7 +89,6 @@ function applyDataPatch(target, patch) {
 
 function loadEditPage(source = read(EDIT_PAGE_JS)) {
   let definition
-  const localDrafts = {}
   vm.runInNewContext(source, {
     getApp: () => ({ globalData: { statusBarHeight: 44, navBarHeight: 44 } }),
     Page(config) { definition = config },
@@ -101,6 +100,7 @@ function loadEditPage(source = read(EDIT_PAGE_JS)) {
 }
 
 function loadEditScene(source = read(EDIT_SCENE_JS)) {
+  const localDrafts = {}
   let definition
   const requests = []
   const modalCalls = []
