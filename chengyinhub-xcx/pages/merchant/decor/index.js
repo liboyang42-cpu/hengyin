@@ -498,7 +498,9 @@ Page({
   _commerceCurrent(scope) { return !this._destroyed && scope === this._commerceScope(); },
   loadSubs() {
     const scope = this._commerceScope(), epoch = this._capabilityEpoch = (this._capabilityEpoch || 0) + 1;
-    if (this._capabilityScope && this._capabilityScope !== scope) this.setData({ checkoutState: 'idle', checkoutBusy: false });
+    if (this._capabilityScope && this._capabilityScope !== scope) {
+      this.data.checkoutBusy = false; this.setData({ checkoutState: 'idle' });
+    }
     this._capabilityScope = scope;
     this.setData({ capabilityState: 'loading', chargeEnabled: null });
     const finish = (enabled) => {
@@ -546,7 +548,8 @@ Page({
   retryEntitlements() { this.loadSubs(); },
   _confirmCommerceEntitlement(bizType, scope) {
     this._pendingEntitlement = { bizType, scope };
-    this.setData({ checkoutBusy: false, checkoutState: 'entitlementPending' });
+    this.data.checkoutBusy = false;
+    this.setData({ checkoutState: 'entitlementPending' });
     this.loadActiveSubs();
   },
   _initCommerceWorkflow() {
@@ -555,7 +558,7 @@ Page({
     if (this._commerceWorkflow) {
       this._commerceWorkflow.destroy();
       this._commerceRequestId = null; this._commerceRequestBizType = null; this._pendingEntitlement = null;
-      this.setData({ checkoutBusy: false, checkoutState: 'idle' });
+      this.data.checkoutBusy = false; this.setData({ checkoutState: 'idle' });
     }
     this._commerceWorkflowScope = scope;
     const verifyPayment = createPaymentVerifier({
@@ -696,7 +699,9 @@ Page({
       handlers[key] = value => { if (that._commerceCurrent(scope)) handler(value); };
     });
     const submitted = workflow.submit({ bizType, requestId: this._commerceRequestId }, handlers);
-    if (submitted && workflow.getState() === 'submitting') this.setData({checkoutBusy: true, checkoutState: 'submitting'});
+    if (submitted && workflow.getState() === 'submitting') {
+      this.data.checkoutBusy = true; this.setData({checkoutState: 'submitting'});
+    }
   },
 
   // 图片编辑保持独立草稿；只有确认且服务端成功后更新主页。
