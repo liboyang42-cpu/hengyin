@@ -1,16 +1,13 @@
 package com.chengyinhub.business.service.rendezvous;
 
 import java.util.Objects;
-import org.apache.ibatis.mapping.Environment;
 import org.mybatis.spring.SqlSessionTemplate;
-import org.mybatis.spring.transaction.SpringManagedTransactionFactory;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 /**
- * Default-off check that the play-team session, the consent transaction manager, and the guard
- * mark are the same resource. {@code MANDATORY} only proves some transaction exists.
- * Not a Spring bean and not a production switch.
+ * Guard mark for the manager {@link PlayTeamHandoffDelegate} derived from the session.
+ * {@code MANDATORY} only proves some transaction exists. Not a Spring bean and not a production switch.
  */
 public final class PlayTeamHandoffAssembly {
     private static final Object HELD = new Object();
@@ -32,17 +29,20 @@ public final class PlayTeamHandoffAssembly {
         }
     }
 
+    /**
+     * Caller-supplied session and manager are not the handoff chain.
+     * Use {@link PlayTeamHandoffDelegate#bind}.
+     */
     public static PlayTeamHandoffGateway open(SqlSessionTemplate session, DataSourceTransactionManager manager,
                                               PlayTeamHandoffGateway delegate) {
         Objects.requireNonNull(session);
         Objects.requireNonNull(manager);
         Objects.requireNonNull(delegate);
-        Environment environment = session.getSqlSessionFactory().getConfiguration().getEnvironment();
-        if (environment.getDataSource() != manager.getDataSource()
-                || !(environment.getTransactionFactory() instanceof SpringManagedTransactionFactory)) {
-            throw new IllegalArgumentException("W16_TRANSACTION_RESOURCE_MISMATCH");
-        }
-        return new Guarded(delegate, manager);
+        throw new IllegalArgumentException("W16_CALLER_SUPPLIED_MANAGER_REFUSED");
+    }
+
+    static PlayTeamHandoffGateway guard(PlayTeamHandoffGateway delegate, DataSourceTransactionManager manager) {
+        return new Guarded(Objects.requireNonNull(delegate), Objects.requireNonNull(manager));
     }
 
     private static final class Guarded implements PlayTeamHandoffGateway {

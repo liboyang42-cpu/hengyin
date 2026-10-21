@@ -8,20 +8,20 @@ import com.chengyinhub.business.domain.ImConversationMember;
 import com.chengyinhub.business.domain.PlayTeam;
 import com.chengyinhub.business.domain.PlayTeamHandoffRequest;
 import com.chengyinhub.business.domain.PlayTeamMember;
-import com.chengyinhub.business.mapper.CmsActivityMapper;
-import com.chengyinhub.business.mapper.CmsTopicMapper;
-import com.chengyinhub.business.mapper.ImBlockMapper;
-import com.chengyinhub.business.mapper.ImConversationMapper;
-import com.chengyinhub.business.mapper.ImConversationMemberMapper;
 import com.chengyinhub.business.mapper.PlayTeamHandoffMapper;
-import com.chengyinhub.business.mapper.PlayTeamMapper;
 import com.chengyinhub.business.service.IImService;
 import com.chengyinhub.business.service.IPlayTeamService;
 import com.chengyinhub.business.service.impl.ImServiceImpl;
 import com.chengyinhub.business.service.impl.PlayTeamServiceImpl;
+import com.chengyinhub.common.core.domain.entity.AppUser;
+import com.chengyinhub.common.core.domain.model.LoginAppUser;
+import com.chengyinhub.web.controller.api.ApiRendezvousMeetingController;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.lang.reflect.Field;
+import java.lang.reflect.Proxy;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -30,7 +30,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
-import java.util.Date;
+import java.util.Collections;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -47,10 +47,16 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mybatis.spring.SqlSessionTemplate;
 import org.mybatis.spring.transaction.SpringManagedTransactionFactory;
-import org.springframework.aop.framework.ProxyFactory;
+import org.springframework.aop.framework.Advised;
+import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.transaction.interceptor.TransactionInterceptor;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.annotation.AnnotationTransactionAttributeSource;
 import org.springframework.transaction.interceptor.TransactionAttribute;
@@ -63,6 +69,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
 /** H2 only. Not a MySQL run and not a production dynamic-datasource proof. */
 class PlayTeamHandoffTest {
@@ -72,10 +80,12 @@ class PlayTeamHandoffTest {
     SqlSessionTemplate session;
     IPlayTeamService service;
     PlayTeamServiceImpl target;
-    PlayTeamBoundHandoff bound;
+    PlayTeamHandoffDelegate.Wiring wired;
     Gate gate;
+    final ObjectMapper json = new ObjectMapper();
     RendezvousConsentService consent;
     RendezvousMeetingService meetings;
+    Safety safety;
     final MutableClock clock = new MutableClock();
     final boolean[] failIm = new boolean[1];
     final AtomicBoolean safetyOpen = new AtomicBoolean(true);
@@ -104,7 +114,32 @@ class PlayTeamHandoffTest {
                 + " update_time TIMESTAMP, UNIQUE(team_id, member_id))");
         jdbc.execute("CREATE TABLE cms_registration (id BIGINT AUTO_INCREMENT PRIMARY KEY, member_id BIGINT, owner_type INT,"
                 + " owner_id BIGINT, payment_status INT, registration_status INT)");
-        jdbc.execute("CREATE TABLE cms_activity (id BIGINT PRIMARY KEY, topic_id BIGINT, del_flag INT, end_date TIMESTAMP, cancel_time TIMESTAMP)");
+        jdbc.execute("CREATE TABLE cms_activity (id BIGINT PRIMARY KEY, member_id BIGINT, name VARCHAR(200),"
+                + " description VARCHAR(500), img_url VARCHAR(255), img_arr VARCHAR(500), category_ids VARCHAR(255),"
+                + " address_name VARCHAR(200), longitude VARCHAR(64), latitude VARCHAR(64), address VARCHAR(255),"
+                + " status INT, publish_status INT, cancel_time TIMESTAMP, cancel_reason VARCHAR(255), reason VARCHAR(255),"
+                + " del_flag INT, start_date TIMESTAMP, end_date TIMESTAMP, template_id BIGINT, topic_id BIGINT, club_id BIGINT,"
+                + " check_status INT, is_settlement INT, create_by VARCHAR(64), create_time TIMESTAMP, update_by VARCHAR(64),"
+                + " update_time TIMESTAMP)");
+        jdbc.execute("CREATE TABLE cms_topic (id BIGINT PRIMARY KEY, member_id BIGINT, club_id BIGINT, topic_type INT,"
+                + " product_type INT, circle_theme_code VARCHAR(64), source_template_topic_id BIGINT, complete_rule_json VARCHAR(500),"
+                + " route_mode VARCHAR(64), route_graph_json VARCHAR(500), config_version INT, published_route_graph_json VARCHAR(500),"
+                + " published_config_version INT, game_module_config_json VARCHAR(500), journey_rules_json VARCHAR(500),"
+                + " journey_story_json VARCHAR(500), theme_runtime_config_json VARCHAR(500), published_theme_runtime_config_json VARCHAR(500),"
+                + " fee_platform_rate DECIMAL(10,4), fee_guarantee_base_rate DECIMAL(10,4), fee_guarantee_step_rate DECIMAL(10,4),"
+                + " fee_guarantee_max_merchant DECIMAL(10,4), topic_id BIGINT, name VARCHAR(200), subtitle VARCHAR(200),"
+                + " description VARCHAR(500), address_name VARCHAR(200), total_time INT, total_mileage INT, location_count INT,"
+                + " template_count INT, start_date TIMESTAMP, end_date TIMESTAMP, img_url VARCHAR(255), img_arr VARCHAR(500),"
+                + " category_ids VARCHAR(255), status INT, reason VARCHAR(255), user_status INT, merchant_status INT,"
+                + " open_club_pool INT, merchant_sign_up_start_date TIMESTAMP, merchant_sign_up_end_date TIMESTAMP, del_flag INT,"
+                + " is_sync INT, is_recommend INT, check_status INT, is_settlement INT, publish_mode INT, beta_flag INT,"
+                + " audio_url VARCHAR(255), audio_duration INT, self_play INT, self_play_price DECIMAL(10,2), self_play_quota INT,"
+                + " team_mode INT, team_max_members INT, xp_budget INT, finish_medal_name VARCHAR(100), finish_medal_img VARCHAR(255),"
+                + " complete_reward_coupon_id BIGINT, recruit_deadline TIMESTAMP, recruit_extend_count INT, club_coop_open INT,"
+                + " club_pinned INT, club_member_only INT, lifecycle VARCHAR(64), sale_end_at TIMESTAMP, selling_started_at TIMESTAMP,"
+                + " source_topic_id BIGINT, create_by VARCHAR(64), create_time TIMESTAMP, update_by VARCHAR(64), update_time TIMESTAMP)");
+        jdbc.update("INSERT INTO cms_topic(id, team_mode, team_max_members, del_flag) VALUES (20, 1, 4, 0)");
+        jdbc.update("INSERT INTO cms_activity(id, topic_id, del_flag, start_date) VALUES (99, 20, 0, DATEADD('DAY', 1, CURRENT_TIMESTAMP))");
         jdbc.execute("CREATE TABLE ums_member (id BIGINT PRIMARY KEY, nickname VARCHAR(40), avatar VARCHAR(255))");
         jdbc.execute("CREATE TABLE im_block (id BIGINT AUTO_INCREMENT PRIMARY KEY, member_id BIGINT, blocked_member_id BIGINT, create_time TIMESTAMP)");
         jdbc.execute("CREATE TABLE im_conversation (id BIGINT AUTO_INCREMENT PRIMARY KEY, type INT, biz_key VARCHAR(64),"
@@ -118,6 +153,8 @@ class PlayTeamHandoffTest {
         config.getTypeAliasRegistry().registerAlias("ImBlock", ImBlock.class);
         config.getTypeAliasRegistry().registerAlias("ImConversation", ImConversation.class);
         config.getTypeAliasRegistry().registerAlias("ImConversationMember", ImConversationMember.class);
+        config.getTypeAliasRegistry().registerAlias("CmsActivity", CmsActivity.class);
+        config.getTypeAliasRegistry().registerAlias("CmsTopic", CmsTopic.class);
         load(config, root, "chengyinhub-system/src/main/resources/mapper/business/RendezvousConsentMapper.xml", false);
         load(config, root, "chengyinhub-system/src/main/resources/mapper/business/RendezvousProtocolMapper.xml", false);
         load(config, root, "chengyinhub-system/src/main/resources/mapper/business/RendezvousHandoffMapper.xml", false);
@@ -127,40 +164,33 @@ class PlayTeamHandoffTest {
         load(config, root, "chengyinhub-system/src/main/resources/mapper/business/ImBlockMapper.xml", true);
         load(config, root, "chengyinhub-system/src/main/resources/mapper/business/ImConversationMapper.xml", true);
         load(config, root, "chengyinhub-system/src/main/resources/mapper/business/ImConversationMemberMapper.xml", true);
+        load(config, root, "chengyinhub-system/src/main/resources/mapper/business/CmsActivityMapper.xml", false);
+        load(config, root, "chengyinhub-system/src/main/resources/mapper/business/CmsTopicMapper.xml", false);
         session = new SqlSessionTemplate(new SqlSessionFactoryBuilder().build(config));
-        manager = new DataSourceTransactionManager(dataSource);
-        ImServiceImpl imTarget = new ImServiceImpl();
-        ReflectionTestUtils.setField(imTarget, "conversationMapper", session.getMapper(ImConversationMapper.class));
-        ReflectionTestUtils.setField(imTarget, "memberMapper", session.getMapper(ImConversationMemberMapper.class));
-        ReflectionTestUtils.setField(imTarget, "playTeamMapper", session.getMapper(PlayTeamMapper.class));
-        IImService realIm = proxy(imTarget);
-        IImService im = mock(IImService.class);
-        when(im.getOrCreateTeamGroup(any(), any())).thenAnswer(invocation -> {
-            Long id = realIm.getOrCreateTeamGroup(invocation.getArgument(0), invocation.getArgument(1));
-            if (failIm[0]) throw new IllegalStateException("IM_FAIL");
-            return id;
-        });
-        target = new PlayTeamServiceImpl();
-        ReflectionTestUtils.setField(target, "teamMapper", session.getMapper(PlayTeamMapper.class));
-        ReflectionTestUtils.setField(target, "handoffMapper", session.getMapper(PlayTeamHandoffMapper.class));
-        ReflectionTestUtils.setField(target, "blockMapper", session.getMapper(ImBlockMapper.class));
-        ReflectionTestUtils.setField(target, "imService", im);
-        CmsActivity activity = new CmsActivity();
-        activity.setId(99L); activity.setTopicId(20L); activity.setStartDate(new Date(System.currentTimeMillis() + 86400000L));
-        CmsActivityMapper activities = mock(CmsActivityMapper.class);
-        when(activities.selectCmsActivityById(99L)).thenReturn(activity);
-        ReflectionTestUtils.setField(target, "cmsActivityMapper", activities);
-        CmsTopic topic = new CmsTopic(); topic.setTeamMode(1); topic.setTeamMaxMembers(4);
-        CmsTopicMapper topics = mock(CmsTopicMapper.class);
-        when(topics.selectCmsTopicById(20L)).thenReturn(topic);
-        ReflectionTestUtils.setField(target, "cmsTopicMapper", topics);
-        service = proxy(target);
-        bound = new PlayTeamBoundHandoff(service);
-        gate = new Gate(PlayTeamHandoffAssembly.open(session, manager, bound));
-        MyBatisRendezvousConsentStore consentStore = new MyBatisRendezvousConsentStore(ISOLATED_PERSISTENCE_EVALUATION, session, manager);
-        MyBatisRendezvousMeetingStore meetingStore = new MyBatisRendezvousMeetingStore(
-                MyBatisRendezvousMeetingStore.Mode.ISOLATED_PERSISTENCE_EVALUATION, session, manager);
-        Safety safety = new Safety() {
+        wired = PlayTeamHandoffDelegate.bind(session);
+        manager = wired.manager();
+        target = wired.service();
+        service = wired.teams();
+        IImService delegated = (IImService) ReflectionTestUtils.getField(target, "imService");
+        ReflectionTestUtils.setField(target, "imService", (IImService) Proxy.newProxyInstance(IImService.class.getClassLoader(),
+                new Class<?>[]{IImService.class}, (proxy, method, args) -> {
+                    if ("getOrCreateTeamGroup".equals(method.getName()) && method.getParameterCount() == 2) {
+                        Long id = delegated.getOrCreateTeamGroup((Long) args[0], (Long) args[1]);
+                        if (failIm[0]) throw new IllegalStateException("IM_FAIL");
+                        return id;
+                    }
+                    if (method.getDeclaringClass() == Object.class) {
+                        if ("toString".equals(method.getName())) return "handoff-im";
+                        if ("hashCode".equals(method.getName())) return System.identityHashCode(proxy);
+                        if ("equals".equals(method.getName())) return proxy == args[0];
+                    }
+                    throw new IllegalStateException("W16_BLOCK_NOT_OWNED");
+                }));
+        gate = new Gate(wired.gateway());
+        MyBatisRendezvousConsentStore consentStore = wired.consent(ISOLATED_PERSISTENCE_EVALUATION);
+        MyBatisRendezvousMeetingStore meetingStore = wired.meetings(
+                MyBatisRendezvousMeetingStore.Mode.ISOLATED_PERSISTENCE_EVALUATION);
+        safety = new Safety() {
             public boolean eligible(long actor, String pool, String version, long now) { return true; }
             public boolean blocked(long a, long b) {
                 Integer n = jdbc.queryForObject("SELECT COUNT(*) FROM im_block WHERE (member_id=? AND blocked_member_id=?) OR (member_id=? AND blocked_member_id=?)",
@@ -177,7 +207,10 @@ class PlayTeamHandoffTest {
         safetyOpen.set(true);
     }
 
-    @AfterEach void cleanup() { jdbc.execute("SHUTDOWN"); }
+    @AfterEach void cleanup() {
+        SecurityContextHolder.clearContext();
+        jdbc.execute("SHUTDOWN");
+    }
 
     @Test void sameManagerAndMandatoryPropagation() throws Exception {
         Environment environment = session.getSqlSessionFactory().getConfiguration().getEnvironment();
@@ -370,7 +403,22 @@ class PlayTeamHandoffTest {
         assertNull(jdbc.queryForObject("SELECT team_id FROM w16_handoff_request WHERE first_actor=3", Long.class));
     }
 
-    @Test void assemblyRefusesWrongManagerDatasourceAndMissingGuard() {
+    @Test void delegateRefusesCallerManagerAndRequiresTheDerivedGuard() throws Exception {
+        Environment environment = session.getSqlSessionFactory().getConfiguration().getEnvironment();
+        assertSame(environment.getDataSource(), manager.getDataSource());
+        assertSame(session, ReflectionTestUtils.getField(Proxy.getInvocationHandler(wired.teamMapper()), "sqlSession"));
+        assertSame(wired.teamMapper(), ReflectionTestUtils.getField(target, "teamMapper"));
+        assertSame(session, ReflectionTestUtils.getField(Proxy.getInvocationHandler(
+                ReflectionTestUtils.getField(target, "cmsActivityMapper")), "sqlSession"));
+        assertSame(session, ReflectionTestUtils.getField(Proxy.getInvocationHandler(
+                ReflectionTestUtils.getField(target, "cmsTopicMapper")), "sqlSession"));
+        TransactionInterceptor interceptor = (TransactionInterceptor) ((Advised) service).getAdvisors()[0].getAdvice();
+        assertSame(manager, interceptor.getTransactionManager());
+        IllegalStateException owned = assertThrows(IllegalStateException.class,
+                () -> ((IImService) ReflectionTestUtils.getField(target, "imService")).block(1L, 2L));
+        assertEquals("W16_BLOCK_NOT_OWNED", owned.getMessage());
+        assertEquals(0, count("im_block"));
+
         IllegalStateException unmarked = assertThrows(IllegalStateException.class,
                 () -> new TransactionTemplate(manager).execute(status -> gate.create(null)));
         assertEquals("W16_GUARD_MISSING", unmarked.getMessage());
@@ -379,28 +427,112 @@ class PlayTeamHandoffTest {
                 () -> new TransactionTemplate(otherManager).execute(status -> gate.create(null)));
         assertEquals("W16_GUARD_MISSING", otherManagerCall.getMessage());
         JdbcDataSource otherSource = new JdbcDataSource();
-        otherSource.setURL("jdbc:h2:mem:w16-other;MODE=MySQL;DB_CLOSE_DELAY=-1");
+        otherSource.setURL("jdbc:h2:mem:w16-other-" + java.util.UUID.randomUUID() + ";MODE=MySQL;DB_CLOSE_DELAY=-1");
         DataSourceTransactionManager otherSourceManager = new DataSourceTransactionManager(otherSource);
-        IllegalArgumentException wrongSource = assertThrows(IllegalArgumentException.class,
-                () -> PlayTeamHandoffAssembly.open(session, otherSourceManager, bound));
-        assertEquals("W16_TRANSACTION_RESOURCE_MISMATCH", wrongSource.getMessage());
         IllegalStateException runtimeOtherSource = assertThrows(IllegalStateException.class,
                 () -> new TransactionTemplate(otherSourceManager).execute(status -> gate.create(null)));
         assertEquals("W16_TRANSACTION_RESOURCE_MISMATCH", runtimeOtherSource.getMessage());
         Configuration bare = new Configuration(new Environment("bad", new org.apache.ibatis.transaction.jdbc.JdbcTransactionFactory(), dataSource));
         SqlSessionTemplate bad = new SqlSessionTemplate(new SqlSessionFactoryBuilder().build(bare));
-        IllegalArgumentException wrongFactory = assertThrows(IllegalArgumentException.class,
-                () -> PlayTeamHandoffAssembly.open(bad, manager, bound));
+        IllegalArgumentException wrongFactory = assertThrows(IllegalArgumentException.class, () -> PlayTeamHandoffDelegate.bind(bad));
         assertEquals("W16_TRANSACTION_RESOURCE_MISMATCH", wrongFactory.getMessage());
+        IllegalArgumentException caller = assertThrows(IllegalArgumentException.class,
+                () -> PlayTeamHandoffAssembly.open(session, manager, wired.gateway()));
+        assertEquals("W16_CALLER_SUPPLIED_MANAGER_REFUSED", caller.getMessage());
         assertEquals(0, count("play_team"));
         assertEquals(0, count("play_team_member"));
         assertEquals(0, count("w16_play_team_handoff"));
         assertEquals(0, count("im_conversation"));
     }
 
+    @Test void realActivityAndTopicRulesRefuseClosedModeAndUnpaidLeader() {
+        jdbc.update("UPDATE cms_topic SET team_mode=0 WHERE id=20");
+        IllegalStateException closed = assertThrows(IllegalStateException.class,
+                () -> inGuard(() -> service.createForHandoff(request("closed-mode"))));
+        assertEquals("该主题未开放组队", closed.getMessage());
+        jdbc.update("UPDATE cms_topic SET team_mode=1 WHERE id=20");
+        PlayTeamHandoffRequest unpaid = request("unpaid");
+        unpaid.setLeaderMemberId(70L);
+        unpaid.setPeerMemberId(71L);
+        IllegalStateException denied = assertThrows(IllegalStateException.class, () -> inGuard(() -> service.createForHandoff(unpaid)));
+        assertEquals("报名成功后才能建队", denied.getMessage());
+        assertEquals(0, count("play_team"));
+        assertEquals(0, count("w16_play_team_handoff"));
+    }
+
+    @Test void challengeConfirmHandoffReadBackAndRestartKeepOneTeam() throws Exception {
+        String[] ids = paired(1, 2);
+        MockMvc mvc = MockMvcBuilders.standaloneSetup(new ApiRendezvousMeetingController(meetings)).build();
+        authenticate(1);
+        String challenge = response(mvc, post("/api/rendezvous/tickets/" + ids[0] + "/challenge")).get("challengeId").asText();
+        response(mvc, post("/api/rendezvous/tickets/" + ids[0] + "/challenge/confirm")
+                .contentType(MediaType.APPLICATION_JSON).content("{\"challengeId\":\"" + challenge + "\"}"));
+        authenticate(2);
+        response(mvc, post("/api/rendezvous/tickets/" + ids[1] + "/challenge/confirm")
+                .contentType(MediaType.APPLICATION_JSON).content("{\"challengeId\":\"" + challenge + "\"}"));
+        authenticate(1);
+        JsonNode done = response(mvc, post("/api/rendezvous/tickets/" + ids[0] + "/handoff"));
+        assertEquals("COMPLETED", done.get("state").asText());
+        long teamId = done.get("teamId").asLong();
+        assertEquals(4, jdbc.queryForObject("SELECT max_members FROM play_team WHERE id=?", Integer.class, teamId));
+        assertEquals(1, jdbc.queryForObject("SELECT join_mode FROM play_team WHERE id=?", Integer.class, teamId));
+        JsonNode read = response(mvc, get("/api/rendezvous/tickets/" + ids[0] + "/handoff"));
+        assertEquals(teamId, read.get("teamId").asLong());
+        assertEquals("COMPLETED", read.get("handoffPhase").asText());
+        authenticate(2);
+        assertEquals(teamId, response(mvc, get("/api/rendezvous/tickets/" + ids[1] + "/handoff")).get("teamId").asLong());
+        authenticate(9);
+        var missing = mvc.perform(get("/api/rendezvous/tickets/" + ids[0] + "/handoff")).andReturn();
+        assertEquals(404, missing.getResponse().getStatus());
+        assertEquals("NOT_FOUND", json.readTree(missing.getResponse().getContentAsString()).get("errorCode").asText());
+
+        PlayTeamHandoffDelegate.Wiring restarted = PlayTeamHandoffDelegate.bind(session);
+        RendezvousMeetingService again = new RendezvousMeetingService(RendezvousMeetingService.Mode.ISOLATED_CONTRACT_EVALUATION,
+                restarted.meetings(MyBatisRendezvousMeetingStore.Mode.ISOLATED_PERSISTENCE_EVALUATION),
+                safety, (m, t, a, p, n) -> safetyOpen.get(), new RendezvousHandoffLegacyTeamPort(), clock, 60_000,
+                restarted.gateway());
+        assertEquals(teamId, again.handoff(1, ids[0]).teamId);
+        assertEquals(teamId, again.result(2, ids[1]).teamId);
+        String requestId = jdbc.queryForObject("SELECT request_id FROM w16_handoff_request WHERE first_actor=1", String.class);
+        assertEquals(teamId, restarted.teams().findHandoff(PlayTeamHandoffGateway.NAMESPACE, requestId).teamId.longValue());
+        assertEquals(1, count("play_team"));
+        assertEquals(2, count("play_team_member"));
+        assertEquals(1, count("im_conversation"));
+    }
+
+    @Test void expiryBeforeDispatchCreatesNothingAndAfterDispatchIsNotRevoked() {
+        String[] ids = ready();
+        clock.now = 80_000;
+        RendezvousMeetingService.View expired = meetings.handoff(1, ids[0]);
+        assertEquals(RendezvousMeetingService.State.EXPIRED, expired.state);
+        assertNull(expired.teamId);
+        assertNull(expired.blocker);
+        assertEquals(0, count("play_team"));
+        assertEquals(0, count("w16_play_team_handoff"));
+
+        clock.now = 90_000;
+        String[] later = ready(7, 8);
+        paid(7L); paid(8L);
+        gate.afterCreate = () -> clock.now = 160_000;
+        RendezvousMeetingService.View kept = meetings.handoff(7, later[0]);
+        assertEquals(RendezvousMeetingService.State.RECOVERY_REQUIRED, kept.state);
+        assertEquals("EXPIRED_NOT_ROLLED_BACK", kept.blocker);
+        assertNull(kept.teamId);
+        assertEquals(1, count("play_team"));
+        assertNotEquals("REVOKED", kept.blocker);
+    }
+
     private String[] ready() { return ready(1, 2); }
 
     private String[] ready(long first, long second) {
+        String[] ids = paired(first, second);
+        String challenge = meetings.issue(first, ids[0]).challengeId;
+        meetings.confirm(first, ids[0], challenge);
+        meetings.confirm(second, ids[1], challenge);
+        return ids;
+    }
+
+    private String[] paired(long first, long second) {
         View a = consent.join(first, "pool", "v1", 100_000);
         View b = consent.join(second, "pool", "v1", 100_000);
         consent.propose(a.ticketId, b.ticketId, "public-place");
@@ -411,9 +543,6 @@ class PlayTeamHandoffTest {
                 + " review_approved, fact_source, rule_version) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
                 consent.read(first, a.ticketId).matchId, 99L, "public-place", first, second, 1, 1, 0, 0, 0, 0,
                 "AUTHORITY_FACT", "evidence-v1");
-        String challenge = meetings.issue(first, a.ticketId).challengeId;
-        meetings.confirm(first, a.ticketId, challenge);
-        meetings.confirm(second, b.ticketId, challenge);
         return new String[]{a.ticketId, b.ticketId};
     }
 
@@ -449,10 +578,18 @@ class PlayTeamHandoffTest {
 
     private int count(String table) { return jdbc.queryForObject("SELECT COUNT(*) FROM " + table, Integer.class); }
 
-    private <T> T proxy(T targetObject) {
-        ProxyFactory factory = new ProxyFactory(targetObject);
-        factory.addAdvice(new TransactionInterceptor(manager, new AnnotationTransactionAttributeSource()));
-        return (T) factory.getProxy();
+    private void authenticate(long actor) {
+        AppUser app = new AppUser();
+        app.setUserId(actor);
+        SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(
+                new LoginAppUser(999L, app), null, Collections.emptyList()));
+    }
+
+    private JsonNode response(MockMvc mvc, org.springframework.test.web.servlet.RequestBuilder request) throws Exception {
+        var result = mvc.perform(request).andReturn();
+        assertEquals(200, result.getResponse().getStatus(), result.getResponse().getContentAsString());
+        assertEquals("no-store", result.getResponse().getHeader("Cache-Control"));
+        return json.readTree(result.getResponse().getContentAsString()).get("data");
     }
 
     private static void load(Configuration config, Path root, String path, boolean clock) throws Exception {

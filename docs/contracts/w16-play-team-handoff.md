@@ -62,4 +62,10 @@ Fact findHandoff(String namespace, String requestId)
 3. `play_team`
 4. IM 会话（`getOrCreateTeamGroup` 里再锁队伍行，然后写会话）
 
-块表不在这条锁序里。`MANDATORY` 只说明调用方已经有某个事务，不能证明是同一 `DataSource`、同一 `DataSourceTransactionManager`，也不能证明已经持有 `w16_consent_guard`。`PlayTeamHandoffAssembly.open` 在构造时拒绝数据源不一致或不是 `SpringManagedTransactionFactory` 的装配。`create` / `join` 在运行时拒绝当前事务没有绑定该数据源，或该 manager 上没有守卫标记。同一 manager 的测试夹具只覆盖它自己那一次装配，不表示别的装配安全。生产不调用 `open`，也不打开这个开关。默认数据源的动态路由不能代替这个检查。
+块表不在这条锁序里。`MANDATORY` 只说明调用方已经有某个事务，不能证明是同一 `DataSource`、同一 `DataSourceTransactionManager`，也不能证明已经持有 `w16_consent_guard`。
+
+正式入口是 `PlayTeamHandoffDelegate.bind(SqlSessionTemplate)`。它只接收这一个会话：事务工厂必须是 `SpringManagedTransactionFactory`，否则 `W16_TRANSACTION_RESOURCE_MISMATCH`。事务管理器从该会话环境的 `DataSource` 新建。队伍、交接索引、拉黑查询、场次、主题、IM 会话和成员映射都从这一个会话取出，再挂到 `PlayTeamServiceImpl` 和 `ImServiceImpl` 上。这两个实现的事务代理都使用上面那个管理器。交给队伍服务的 IM 对象只转发 `getOrCreateTeamGroup`；包括 `block` 在内的其它方法抛出 `W16_BLOCK_NOT_OWNED`。`ImServiceImpl.block` 仍只由 H 修改。守卫包装使用这个派生管理器。比较调用者另外传入的 session 或 manager 不是这条链。`PlayTeamHandoffAssembly.open` 一律拒绝，错误码 `W16_CALLER_SUPPLIED_MANAGER_REFUSED`。
+
+会面存储和同意存储用 `bind` 返回的同一个管理器，这样 `lockGuard` 之后的守卫标记和队伍代理是同一资源。`create` / `join` 在运行时拒绝：当前事务没有绑定该数据源（`W16_TRANSACTION_RESOURCE_MISMATCH`），或该管理器上没有守卫标记（`W16_GUARD_MISSING`）。直接调用 `createForHandoff` 仍只有 `MANDATORY`，不查守卫标记；会面交接走 `bind` 返回的 gateway。生产不调用 `bind`，也不打开这个开关。默认数据源的动态路由不能代替这个检查。
+
+页面回读是已有的 `GET /api/rendezvous/tickets/{ticketId}/handoff`，演员来自登录主体，只读 `result`。该控制器仍要 `w16-consent-contract` 且容器里有会面 bean。本包不注册这个 bean。
