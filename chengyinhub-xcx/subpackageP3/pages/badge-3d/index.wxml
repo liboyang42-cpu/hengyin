@@ -10,7 +10,7 @@
     <view class="b3__back b3__back--ghost"></view>
   </view>
   <view class="b3__stage">
-    <image class="b3__fallback" wx:if="{{renderState !== 'ready'}}" src="{{fallbackSrc}}" mode="aspectFit" aria-role="img" aria-label="{{name}}静态预览" />
+    <image class="b3__fallback" wx:if="{{renderState !== 'ready'}}" src="{{fallbackSrc}}" mode="aspectFit" binderror="onFallbackError" aria-role="img" aria-label="{{name}}，{{sub}}，静态预览" />
     <!-- 双样式分流:enamel=3D珐琅转台;glow=二维发光大卡(与勋章墙同族观感,CSS 光环) -->
     <block wx:if="{{style=='enamel'}}">
       <xr-badge wx:if="{{!unsupported}}" id="xr" class="b3__xr {{renderState === 'ready' ? '' : 'b3__xr--loading'}}" src="{{src}}"
@@ -21,6 +21,7 @@
   </view>
   <view class="b3__name">{{name}}</view>
   <view class="b3__sub" wx:if="{{sub}}">{{sub}}</view>
+  <view class="b3__hint" wx:if="{{motionReduced && renderState === 'ready'}}">已减少动态效果</view>
   <view class="b3__hint" aria-live="polite">{{renderState === 'loading' ? (style === 'glow' ? '正在准备发光徽章…' : '正在准备 3D 徽章…') : (renderState === 'fallback' ? '当前环境显示静态徽章预览' : (style === 'glow' ? '' : '拖动可旋转查看'))}}</view>
 </view>
 </view>
