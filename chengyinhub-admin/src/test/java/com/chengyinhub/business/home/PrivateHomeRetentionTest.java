@@ -58,8 +58,10 @@ class PrivateHomeRetentionTest extends PrivateHomeTransactionTest {
         service.cleanupMyExpiredReferences();
         Proof replay=service.verifyReturn("verify",1,"run:1","evidence");
         assertEquals(p.proofId,replay.proofId); assertEquals("EXPIRED",replay.status); assertNull(replay.grantId);
-        time(NOW); // Even clock rollback cannot reuse the retained grant fingerprint under a new request.
-        assertThrows(Exception.class,()->service.verifyReturn("new-request",1,"run:1","evidence"));
+        time(NOW); // Clock rollback still cannot mint a second proof for the retained fingerprint.
+        Proof again=service.verifyReturn("new-request",1,"run:1","evidence");
+        assertEquals(p.proofId,again.proofId); assertEquals("EXPIRED",again.status); assertEquals(p.requestId,again.requestId);
+        assertEquals(p.grantFingerprint,jdbc.queryForObject("SELECT grant_fingerprint FROM player_private_home_proof",String.class));
         assertEquals(1,count("player_private_home_proof"));
     }
     @Test void cleanupPreservesReceiptAndDeleteTombstoneReplay() {

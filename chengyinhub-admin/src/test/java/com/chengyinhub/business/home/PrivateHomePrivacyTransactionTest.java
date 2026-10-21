@@ -39,8 +39,9 @@ class PrivateHomePrivacyTransactionTest {
                 assertEquals(fixture.point().latitude,service.getMyHome().latitude);
                 Proof proof=service.verifyReturn("verify-private",1,"run:1","private-evidence");
                 Receipt receipt=service.restore("restore-private",proof.proofId,"run:1");assertEquals("RESTORED",receipt.decision);
-                ServiceException failure=assertThrows(ServiceException.class,()->service.verifyReturn("duplicate-private",1,"run:1","private-evidence"));
-                assertEquals("HOME_UNAVAILABLE",failure.getMessage());assertNull(failure.getCause());
+                Proof again=service.verifyReturn("duplicate-private",1,"run:1","private-evidence");
+                assertEquals(proof.proofId,again.proofId);assertEquals(proof.requestId,again.requestId);
+                assertEquals(1,fixture.count("player_private_home_proof"));
                 StringBuilder logs=new StringBuilder();for(ILoggingEvent event:capture.list) {
                     logs.append(event.getLoggerName()).append(event.getFormattedMessage()).append(event.getMDCPropertyMap());
                     if(event.getThrowableProxy()!=null)logs.append(event.getThrowableProxy().getMessage());

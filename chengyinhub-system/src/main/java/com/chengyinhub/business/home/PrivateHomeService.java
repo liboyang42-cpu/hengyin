@@ -6,13 +6,18 @@ import com.chengyinhub.business.home.PrivateHomeLocationPolicy.Snapshot;
 import com.chengyinhub.business.mapper.PrivateHomeMapper;
 import com.chengyinhub.common.exception.ServiceException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import javax.sql.DataSource;
 import java.math.BigDecimal;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.time.Clock;
+import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -99,6 +104,8 @@ public class PrivateHomeService {
         long now = clock.millis();
         if (!"ACTIVE".equals(home.status) || home.version != expectedVersion) fail("HOME_VERSION_INVALID");
         if (now < home.effectiveAt) fail("HOME_NOT_EFFECTIVE");
+        Proof reused = reusedGrant(actor, expectedVersion, scope, evidenceHandle, resource);
+        if (reused != null) return reused;
         Verdict verdict = trusted(actor, home, resource, evidenceHandle, now);
         Arrival grant = authority.verifyArrival(actor, home, resource, evidenceHandle);
         String bound = PrivateHomeTrustedEvidence.fingerprint(verdict.evidenceId);
@@ -115,7 +122,13 @@ public class PrivateHomeService {
         proof.grantFingerprint = bound;
         proof.resourceType = resource.resourceType;
         proof.status = "READY"; proof.issuedAt = now; proof.expiresAt = Math.min(grant.expiresAt, add(now, policy.proofTtlMillis));
-        affected(mapper.insertProof(proof));
+        try {
+            affected(mapper.insertProof(proof));
+        } catch (RuntimeException error) {
+            Proof raced = racedProof(error, actor, requestId, expectedVersion, scope, resource, bound);
+            if (raced == null) throw error;
+            return raced;
+        }
         recheck(actor, home, policy, resource, proof);
         return proof;
     }
@@ -142,7 +155,7 @@ public class PrivateHomeService {
         Long last = mapper.lastProofIssued(actor.ownerId, scope);
         if (last != null && clock.millis() < add(last, rules.verifyCooldownMillis)) fail("HOME_VERIFY_COOLDOWN");
         Proof proof = verifyReturn(requestId, expectedVersion, scope, evidenceHandle);
-        if ("READY".equals(proof.status) && mapper.countLocationEvidence(actor.ownerId, proof.proofId) == 0) {
+        if (requestId.equals(proof.requestId) && "READY".equals(proof.status) && mapper.countLocationEvidence(actor.ownerId, proof.proofId) == 0) {
             long expires = Math.min(proof.expiresAt, add(proof.issuedAt, rules.locationRetentionTtlMillis));
             affected(mapper.insertLocationEvidence(actor.ownerId, proof.proofId, expires));
         }
@@ -232,6 +245,75 @@ public class PrivateHomeService {
         return expired;
     }
 
+    /**
+     * Same evidence already stored for this owner. Matching binding returns that proof.
+     * A different home version, scope, or rule returns REQUEST_CONFLICT. No second proof.
+     */
+    private Proof reusedGrant(Actor actor, long expectedVersion, String scope, String evidenceHandle, ResourcePolicy resource) {
+        String bound = PrivateHomeTrustedEvidence.fingerprint(evidenceHandle);
+        if (bound == null) return null;
+        Proof stored = findGrant(actor.ownerId, bound);
+        if (stored == null) return null;
+        if (!sameBinding(stored, expectedVersion, scope, resource)) fail("REQUEST_CONFLICT");
+        checkActor(actor);
+        return present(stored);
+    }
+    /** Only a named unique key with a visible winner is classified. Any other failure stays a failure. */
+    private Proof racedProof(RuntimeException error, Actor actor, String requestId, long expectedVersion, String scope, ResourcePolicy resource, String fingerprint) {
+        boolean grant = names(error, "uk_private_home_proof_grant");
+        boolean request = names(error, "uk_private_home_proof_request");
+        if (grant == request) return null;
+        Proof stored;
+        try {
+            stored = grant ? findGrant(actor.ownerId, fingerprint) : mapper.findProofRequest(actor.ownerId, requestId);
+        } catch (RuntimeException lookup) {
+            error.addSuppressed(lookup);
+            return null;
+        }
+        if (stored == null) return null;
+        if (grant) {
+            if (!sameBinding(stored, expectedVersion, scope, resource)) fail("REQUEST_CONFLICT");
+        } else if (!Long.valueOf(expectedVersion).equals(stored.homeVersion) || !scope.equals(stored.scope)) {
+            fail("REQUEST_CONFLICT");
+        }
+        checkActor(actor);
+        return present(stored);
+    }
+    private Proof findGrant(long owner, String fingerprint) {
+        List<Proof> rows = new JdbcTemplate(dataSource).query(
+                "SELECT proof_id,owner_id,home_version,auth_epoch,request_id,resource_scope,scope_revision,rule_version,policy_version,grant_id,grant_fingerprint,resource_type,action,status,issued_at,expires_at,consumed_at FROM player_private_home_proof WHERE owner_id=? AND grant_fingerprint=?",
+                (rs, row) -> proofRow(rs), owner, fingerprint);
+        return rows.isEmpty() ? null : rows.get(0);
+    }
+    private static Proof proofRow(ResultSet rs) throws SQLException {
+        Proof proof = new Proof();
+        proof.proofId = rs.getString("proof_id"); proof.ownerId = column(rs, "owner_id");
+        proof.homeVersion = column(rs, "home_version"); proof.epoch = column(rs, "auth_epoch");
+        proof.requestId = rs.getString("request_id"); proof.scope = rs.getString("resource_scope");
+        proof.scopeRevision = rs.getString("scope_revision"); proof.ruleVersion = rs.getString("rule_version");
+        proof.policyVersion = rs.getString("policy_version"); proof.grantId = rs.getString("grant_id");
+        proof.grantFingerprint = rs.getString("grant_fingerprint"); proof.resourceType = rs.getString("resource_type");
+        proof.action = rs.getString("action"); proof.status = rs.getString("status");
+        proof.issuedAt = column(rs, "issued_at"); proof.expiresAt = column(rs, "expires_at");
+        proof.consumedAt = column(rs, "consumed_at");
+        return proof;
+    }
+    private static Long column(ResultSet rs, String name) throws SQLException {
+        long value = rs.getLong(name);
+        return rs.wasNull() ? null : value;
+    }
+    private static boolean sameBinding(Proof stored, long expectedVersion, String scope, ResourcePolicy resource) {
+        return Long.valueOf(expectedVersion).equals(stored.homeVersion) && scope.equals(stored.scope)
+                && Objects.equals(resource.scopeRevision, stored.scopeRevision) && Objects.equals(resource.ruleVersion, stored.ruleVersion);
+    }
+    private static boolean names(Throwable error, String constraint) {
+        String needle = constraint.toLowerCase(Locale.ROOT);
+        for (int i = 0; error != null && i < 8; i++, error = error.getCause()) {
+            String message = error.getMessage();
+            if (message != null && message.toLowerCase(Locale.ROOT).contains(needle)) return true;
+        }
+        return false;
+    }
     /** Same gate for HTTP and internal verify. A handle, dwell, or device signal is not a verdict. */
     private Verdict trusted(Actor actor, Home home, ResourcePolicy resource, String evidenceHandle, long now) {
         if (trustedEvidence == null) fail("ARRIVAL_NOT_VERIFIED");
