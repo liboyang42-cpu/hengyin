@@ -19,6 +19,7 @@ import org.apache.ibatis.session.Configuration;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 import org.apache.ibatis.transaction.jdbc.JdbcTransactionFactory;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -28,6 +29,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.regex.Matcher;
@@ -54,6 +56,21 @@ class RedemptionRewardClawbackMyBatisTest {
     private static final long REGISTRATION = 9001L;
     private static final long ACTIVITY = 8001L;
     private static final long TOPIC = 700L;
+    private static final String[] SUITES = {"redemption_clawback", "redemption_clawback_whole_order",
+            "redemption_clawback_used", "redemption_clawback_identity", "redemption_clawback_recomplete"};
+
+    // 真库回执要求独立回读清理为 CLEAN：本类建的五个专用库在类结束时删除。
+    @AfterAll
+    static void dropDatabases() throws Exception {
+        String adminUrl = "jdbc:mysql://" + MybatisItDatabase.host() + ":" + MybatisItDatabase.port()
+                + "/?serverTimezone=GMT%2B8&useSSL=false&allowPublicKeyRetrieval=true";
+        try (Connection admin = DriverManager.getConnection(adminUrl, MybatisItDatabase.user(), MybatisItDatabase.password());
+             Statement statement = admin.createStatement()) {
+            for (String suite : SUITES) {
+                statement.execute("DROP DATABASE IF EXISTS `" + MybatisItDatabase.databaseName(suite) + "`");
+            }
+        }
+    }
 
     @Test
     void clawsOnceFloorsAtZeroAndLetsReVerificationEarnAgain() throws Exception {

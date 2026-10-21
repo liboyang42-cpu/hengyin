@@ -40,6 +40,10 @@ jobs:
           distribution: temurin
           java-version: '21'
           cache: maven
+      # The probe hashes the isolated Redis ACL fixture with crypt(BLOWFISH); Python 3.13 removed crypt.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
       - name: Verify hosted target and pure negative controls
         env:
           CHENGYIN_CI_AUTH_REDIS_RECOVERY: 'true'

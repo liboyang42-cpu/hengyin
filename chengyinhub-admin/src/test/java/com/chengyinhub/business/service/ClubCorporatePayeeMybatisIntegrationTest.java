@@ -283,14 +283,16 @@ class ClubCorporatePayeeMybatisIntegrationTest {
 
     // 2026-10-20 owner 裁定：历史补页迁移 20261013 保持原字节（迁移账本按 checksum 视为不可变），
     // 收款审核/打款互斥由前向迁移 20261016_admin_role_payee_separation_forward 统一纠正。
+    // 全新环境：20261013 按指纹在重建回放中排除（0816 已授运营打款，原补页自检会拒绝），
+    // 由前向迁移完成四角色补页、收款互斥与祖先补齐。
     @Test
-    void rolePageRepairThenPayeeForwardSeparatesPayeeGrantsAndReplays() throws Exception {
+    void freshInstallPayeeForwardInitializesSeparatedGrantsAndReplays() throws Exception {
         prepareRolePageFixture();
+        execute("DELETE FROM sys_user");
         List<String> before = roleGrants();
-        assertEquals(3, runRolePageMigration(0, null));
         runPayeeForward();
         List<String> after = roleGrants();
-        assertTrue(after.containsAll(before), "补页与前向纠正都不能删除既有正向授权");
+        assertTrue(after.containsAll(before), "前向纠正不能删除既有正向授权");
         assertEquals("1", scalar(rolePermissionCount("cy_operator", "business:clubpayee:payout")));
         assertEquals("1", scalar(rolePermissionCount("cy_finance", "business:clubpayee:verify")));
         assertEquals("0", scalar(rolePermissionCount("cy_operator", "business:clubpayee:verify")));
@@ -301,7 +303,6 @@ class ClubCorporatePayeeMybatisIntegrationTest {
                     + " AND (m.menu_id IN (9000,9001) OR m.perms='business:club:list')"),
                     "两个角色都必须实际拿到俱乐部页面及两级祖先");
         }
-        assertEquals(3, runRolePageMigration(0, null));
         runPayeeForward();
         assertEquals(after, roleGrants(), "重复执行不得增加或删除授权行");
     }
@@ -384,10 +385,6 @@ class ClubCorporatePayeeMybatisIntegrationTest {
             super("scalar-true #" + index + " readback=" + value + " sql=" + sql);
             this.index = index;
         }
-    }
-
-    private int runRolePageMigration(int injectBeforeReadback, String mutationSql) throws Exception {
-        return runCheckedMigration("migration_20261013_admin_role_page_grants.sql", 3, injectBeforeReadback, mutationSql);
     }
 
     // Reuse the existing RoamPresenceRevokeJobMySqlIT JDBC-proxy pattern: ScriptUtils owns SQL splitting,
