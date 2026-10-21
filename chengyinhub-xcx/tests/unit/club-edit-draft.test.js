@@ -7,7 +7,16 @@ const vm = require('node:vm')
 const drafts = require('../../utils/club-edit-draft.js')
 const { decodeDisplayText } = require('../../utils/display-text.js')
 const COMPONENT = path.resolve(__dirname, '../../components/cy/scene-club-edit/index.js')
-const CLUB = { id: 9, name: '原俱乐部', city: '上海', description: '介绍', isOwner: true, updateTime: 'v1' }
+// PublicClubVO.from/getters: nullable Java String/Integer fields are explicit null;
+ // detail adds Boolean viewer flags. It exposes no updateTime.
+const CLUB = { id: 9, memberId: 1, name: '原俱乐部', logo: null, cover: null,
+  description: '介绍', clubTypes: null, activityPrefs: null, clubType: null,
+  city: '上海', keywords: null, style: null, leaderName: null, level: null, tags: null,
+  memberCount: 1, topicCount: 0, prioritySignupEnabled: null, memberDiscountPrice: null,
+  memberReservedQuota: null, isJoined: true, isOwner: true, joinPolicy: null,
+  joinPolicySupported: true, memberPostAllowed: 1, merchantUndertakeOpen: 1,
+  myJoinStatus: null, myJoinReviewReason: '', viewerIsAdmin: false,
+  viewerIdentityUnavailable: false, pendingJoinRequestCount: 0, nonOwnerMemberCount: 0 }
 function mount(options = {}) {
   let member = '1', authorization = 'session-1', spec
   const values = options.values || {}, requests = [], events = [], notices = [], timers = [], media = []
@@ -117,7 +126,7 @@ test('主动放弃只清原账号原club的有效草稿并重新读取', () => {
 test('重开遇到服务器变化展示差异，旧稿不能恢复或直接提交', () => {
   const h = mount(); h.ready(); edit(h)
   const reopened = mount({ values: h.values })
-  reopened.ready({ ...CLUB, name: '当前新资料', updateTime: 'v2' })
+  reopened.ready({ ...CLUB, name: '当前新资料' })
   assert.equal(reopened.c.data.draftBlocked, true)
   assert.match(reopened.c.data.draftComparison, /我的修改.*当前新资料/)
   reopened.c.restoreDraft(); reopened.c.save()
@@ -126,7 +135,7 @@ test('重开遇到服务器变化展示差异，旧稿不能恢复或直接提�
 })
 test('保存前再次读差异，预读不一致不发送update', () => {
   const h = mount(); h.ready(); edit(h)
-  const write = preflight(h, { ...CLUB, name: '他人更新', updateTime: 'v2' })
+  const write = preflight(h, { ...CLUB, name: '他人更新' })
   assert.equal(write, undefined)
   assert.equal(h.c.data.draftBlocked, true)
   assert.match(h.c.data.draftComparison, /我的修改.*他人更新/)
@@ -261,7 +270,7 @@ test('已加载后出现坏档或较新本机草稿，保存前不覆盖也不�
 
 test('新编辑遇到预读冲突可明确放弃原稿并读取服务器当前资料', () => {
   const h = mount(); h.ready(); edit(h)
-  const latest = { ...CLUB, name: '服务器新名', updateTime: 'v2' }
+  const latest = { ...CLUB, name: '服务器新名' }
   assert.equal(preflight(h, latest), undefined)
   h.c.discardDraft()
   assert.equal(h.values[drafts.key(1, 9)], undefined)
@@ -294,7 +303,7 @@ test('成功后立即续编经权威回读迁移基线，二次保存与重开�
   const h = mount(); h.ready(); edit(h, 'name', '第一笔已保存')
   preflight(h).success({ code: 200 })
   edit(h, 'name', '成功后继续编辑')
-  const latest = { ...CLUB, name: '第一笔已保存', updateTime: 'v2' }
+  const latest = { ...CLUB, name: '第一笔已保存' }
   const readback = h.requests.shift()
   assert.equal(readback.url, '/api/club/detail')
   readback.success({ code: 200, data: latest })
@@ -311,7 +320,7 @@ test('回读失败仍保留续编，关闭重开从权威资料迁移，重试�
   preflight(h).success({ code: 200 }); edit(h, 'name', '续编')
   h.requests.shift().fail()
   assert.match(h.c.data.saveErrorText, /核对/)
-  const latest = { ...CLUB, name: '第一笔已保存', updateTime: 'v2' }
+  const latest = { ...CLUB, name: '第一笔已保存' }
   const reopened = mount({ values: JSON.parse(JSON.stringify(h.values)) }); reopened.ready(latest)
   assert.equal(reopened.c.data.draftAvailable, true)
   reopened.c.restoreDraft(); assert.equal(reopened.c.data.name, '续编')
@@ -328,7 +337,7 @@ for (const change of ['account', 'club', 'detach', 'ABA']) {
     if (change === 'club') h.switchClub('10')
     if (change === 'detach') h.detach()
     if (change === 'ABA') { h.change('2'); h.change('1', 'new-session') }
-    readback.success({ code: 200, data: { ...CLUB, name: '我的修改', updateTime: 'v2' } })
+    readback.success({ code: 200, data: { ...CLUB, name: '我的修改' } })
     assert.equal(JSON.stringify(h.values), before)
   })
 }
@@ -340,21 +349,20 @@ test('回读冲突、坏档和迁移存储失败不覆盖原记录', () => {
     if (mode === 'corrupt') h.values[key] = { damaged: true }
     if (mode === 'write') h.flags.write = true
     const before = JSON.stringify(h.values)
-    readback.success({ code: 200, data: { ...CLUB, name: mode === 'conflict' ? '其他人资料' : '我的修改', updateTime: 'v2' } })
+    readback.success({ code: 200, data: { ...CLUB, name: mode === 'conflict' ? '其他人资料' : '我的修改' } })
     assert.equal(JSON.stringify(h.values), before)
     assert.equal(h.c.data.name, '续编')
     assert.equal(h.c.data.draftBlocked || !!h.c.data.saveErrorText, true)
   }
 })
 
-test('权威回读后无续编可正常关闭，缺少更新时间与业务异常可重试且不伪建基线', () => {
+test('权威回读不需要更新时间，无续编可正常关闭，业务异常可重试', () => {
   const h = mount(); h.ready(); edit(h)
   preflight(h).success({ code: 200 })
-  h.requests.shift().success({ code: 200, data: { ...CLUB, name: '我的修改', updateTime: 'v2' } })
+  h.requests.shift().success({ code: 200, data: { ...CLUB, name: '我的修改' } })
   h.timers.forEach(fn => fn())
   assert.equal(h.events.some(e => e.name === 'saved'), true)
-  for (const res of [{ code: 500 }, { code: 200, data: null },
-    { code: 200, data: { ...CLUB, name: '我的修改', updateTime: '' } }]) {
+  for (const res of [{ code: 500 }, { code: 200, data: null }]) {
     const f = mount(); f.ready(); edit(f)
     preflight(f).success({ code: 200 }); edit(f, 'name', '续编')
     f.requests.shift().success(res)
@@ -370,7 +378,7 @@ test('待核对草稿重开遇到不匹配权威资料或迁移失败，保留�
     const values = JSON.parse(JSON.stringify(h.values)), r = mount({ values })
     if (mode === 'write') r.flags.write = true
     const before = JSON.stringify(values)
-    r.ready({ ...CLUB, name: mode === 'conflict' ? '其他修改' : '我的修改', updateTime: 'v2' })
+    r.ready({ ...CLUB, name: mode === 'conflict' ? '其他修改' : '我的修改' })
     assert.equal(JSON.stringify(values), before)
     assert.equal(r.c.data.draftAvailable, false)
     assert.equal(r.c.data.draftBlocked, true)
@@ -384,10 +392,54 @@ test('成功后权限变化回读与较新记录负控，不把payload当权威�
     const read = h.requests.shift(), key = drafts.key(1, 9)
     if (mode === 'newer') h.values[key].form.name = '另一个编辑者'
     const before = JSON.stringify(h.values)
-    read.success({ code: 200, data: { ...CLUB, name: '我的修改', updateTime: 'v2',
+    read.success({ code: 200, data: { ...CLUB, name: '我的修改',
       ...(mode === 'permission' ? { isOwner: false, viewerIsAdmin: true } : {}) } })
     assert.equal(JSON.stringify(h.values), before)
     assert.equal(h.c.data.draftBlocked, true)
     assert.equal(h.c._draftBase, drafts.base(CLUB))
   }
+})
+
+test('PublicClubVO缺失或非法可编辑字段不许默认为匹配并迁移', () => {
+  const fields = ['name', 'logo', 'cover', 'description', 'activityPrefs', 'clubType',
+    'city', 'keywords', 'style', 'prioritySignupEnabled', 'memberReservedQuota',
+    'joinPolicy', 'joinPolicySupported', 'isOwner', 'viewerIsAdmin', 'viewerIdentityUnavailable', 'id']
+  for (const field of fields) {
+    for (const invalid of ['missing', {}, [], true, 'wrong-integer']) {
+      const h = mount(); h.ready(); edit(h)
+      preflight(h).success({ code: 200 }); edit(h, 'name', '续编')
+      const read = h.requests.shift(), latest = { ...CLUB, name: '我的修改' }
+      if (invalid === 'missing') delete latest[field]
+      else latest[field] = invalid
+      // true is valid for Boolean properties; nonempty strings valid for text.
+      if (invalid === true && ['isOwner', 'viewerIsAdmin', 'joinPolicySupported'].includes(field)) continue
+      if (invalid === 'wrong-integer' && ['name','logo','cover','description','activityPrefs','clubType','city','keywords','style'].includes(field)) continue
+      const before = JSON.stringify(h.values)
+      read.success({ code: 200, data: latest })
+      assert.equal(JSON.stringify(h.values), before, field)
+      assert.equal(h.c._draftConfirmed !== null, true, field)
+      assert.equal(h.c.data.draftBlocked || !!h.c.data.saveErrorText, true, field)
+    }
+  }
+})
+test('PublicClubVO初读与预读不接受缺字段、错club或身份不可确认', () => {
+  for (const patch of [{ id: undefined }, { id: 10 }, { logo: undefined },
+    { memberReservedQuota: '0' }, { activityPrefs: [] }, { viewerIdentityUnavailable: true }]) {
+    const h = mount(); const malformed = { ...CLUB, ...patch }; h.ready(malformed)
+    assert.notEqual(h.c.data.loadState, 'ready')
+    const live = mount(); live.ready(); edit(live)
+    assert.equal(preflight(live, malformed), undefined)
+    assert.equal(drafts.read(live.wx, drafts.key(1, 9)).record.form.name, '我的修改')
+  }
+})
+
+test('DTO显式nullable字段允许按既有表单语义比较，缺字段仍不接受', () => {
+  const nullable = { ...CLUB, name: null, city: null, description: null, joinPolicySupported: null }
+  assert.equal(drafts.detail(nullable, 9), true)
+  const h = mount(); h.ready({ ...CLUB, joinPolicySupported: null })
+  edit(h); preflight(h, { ...CLUB, joinPolicySupported: null }).success({ code: 200 })
+  edit(h, 'name', '续编')
+  h.requests.shift().success({ code: 200, data: { ...CLUB, name: '我的修改', joinPolicySupported: null } })
+  assert.equal(h.c._draftConfirmed, null)
+  assert.equal(drafts.read(h.wx, drafts.key(1, 9)).record.form.name, '续编')
 })

@@ -4,6 +4,15 @@ const fs = require('node:fs')
 const path = require('node:path')
 const root = path.resolve(__dirname, '../..')
 
+// Editable subset of PublicClubVO plus detail viewer flags; no updateTime.
+function publicClub(overrides) {
+  return Object.assign({ id: 7001, name: '原名', logo: null, cover: null, description: null,
+    activityPrefs: null, clubType: null, city: '上海', keywords: null, style: null,
+    prioritySignupEnabled: null, memberReservedQuota: null, joinPolicy: null,
+    isOwner: true, viewerIsAdmin: false, viewerIdentityUnavailable: false,
+    joinPolicySupported: true }, overrides)
+}
+
 function mount(options) {
   let pageDefinition, componentDefinition, editor
   const requests = []
@@ -41,7 +50,7 @@ test('旧编辑链接在路由参数到位后首次加载正确俱乐部，未�
     const { page, editor, requests } = mount(options)
     assert.equal(requests.length, 1)
     assert.deepEqual(JSON.parse(requests[0].data), { id: '7001' })
-    requests[0].success({ code: 200, data: { name: '原俱乐部', city: '上海', isOwner: true } })
+    requests[0].success({ code: 200, data: publicClub({ name: '原俱乐部' }) })
     assert.equal(editor.data.loadState, 'ready')
     assert.equal(editor.data.name, '原俱乐部')
     page.onDirtyChange({ detail: { dirty: true } })

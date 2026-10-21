@@ -99,6 +99,15 @@ function loadEditPage(source = read(EDIT_PAGE_JS)) {
   return page
 }
 
+// Editable subset of PublicClubVO plus detail viewer flags; no updateTime.
+function publicClub(overrides) {
+  return Object.assign({ id: 7001, name: '原名', logo: null, cover: null, description: null,
+    activityPrefs: null, clubType: null, city: '上海', keywords: null, style: null,
+    prioritySignupEnabled: null, memberReservedQuota: null, joinPolicy: null,
+    isOwner: true, viewerIsAdmin: false, viewerIdentityUnavailable: false,
+    joinPolicySupported: true }, overrides)
+}
+
 function loadEditScene(source = read(EDIT_SCENE_JS)) {
   const localDrafts = {}
   let definition
@@ -138,7 +147,7 @@ function loadEditScene(source = read(EDIT_SCENE_JS)) {
   return { component, requests, modalCalls, events, prime(club) {
     component.data.clubId = String(club.id)
     component.fetchDetail()
-    requests.pop().success({ code: 200, data: club })
+    requests.pop().success({ code: 200, data: publicClub(club) })
   } }
 }
 
@@ -180,7 +189,7 @@ test('club edit valid boundary spaces remain in the normal save payload and reco
   component.save()
   const check = requests.shift()
   assert.equal(check.url, '/api/club/detail')
-  check.success({ code: 200, data: club })
+  check.success({ code: 200, data: publicClub(club) })
   assert.equal(requests.length, 1)
   const payload = JSON.parse(requests[0].data)
   assert.equal(payload.name, name)
@@ -310,7 +319,7 @@ test('X08：网络失败落到可观察、可重试的网络错误终态', () =>
 })
 
 test('X08：网络错误可原位重试，成功后回到表单终态', () => {
-  const marker = `club-${process.pid}`
+  const marker = String(990000 + process.pid)
   const network = loadEditScene()
   network.component.data.clubId = marker
   network.component.loadClub()
@@ -318,7 +327,7 @@ test('X08：网络错误可原位重试，成功后回到表单终态', () => {
   network.component.loadClub()
   const retriedRequest = network.requests[1]
   assert.equal(JSON.parse(retriedRequest.data).id, marker, '重试必须沿用用户正在编辑的俱乐部')
-  retriedRequest.success({ code: '200', data: { id: marker, name: `name-${process.pid}`, city: `city-${process.pid}`, isOwner: true } })
+  retriedRequest.success({ code: '200', data: publicClub({ id: marker, name: `name-${process.pid}`, city: `city-${process.pid}` }) })
   assert.ok(network.component.data.loadState === 'ready', '重试成功必须回到表单 ready 终态')
   assert.ok(!network.component.data.loadErrorText, '重试成功必须清空旧错误')
 })
@@ -336,11 +345,11 @@ test('X08：缺少 clubId 不发请求、不猜第一个俱乐部，只给返回
 
 test('X08：非主理人详情进入权限终态，保存防线不发写请求', () => {
   const harness = loadEditScene()
-  harness.component.data.clubId = `club-${process.pid}`
+  harness.component.data.clubId = String(990000 + process.pid)
   harness.component.loadClub()
   harness.requests[0].success({
     code: '200',
-    data: { id: harness.component.data.clubId, name: '只读俱乐部', city: '上海', isOwner: false },
+    data: publicClub({ id: harness.component.data.clubId, name: '只读俱乐部', isOwner: false }),
   })
   assert.equal(harness.component.data.loadState, 'permission')
   assert.equal(harness.component.data.isOwner, false)
@@ -379,7 +388,7 @@ function assertSaveFailurePreserves(outcome) {
     isOwner: true,
     canSave: true,
   })
-  const club = Object.assign({}, harness.component.data, { id: harness.component.data.clubId, activityPrefs: harness.component.data.activityPrefs.join(',') })
+  const club = Object.assign({}, harness.component.data, { id: harness.component.data.clubId, activityPrefs: harness.component.data.activityPrefs.join(','), prioritySignupEnabled: 1, memberReservedQuota: 3 })
   harness.prime(club)
   harness.component.markDirty()
   const before = formSnapshot(harness.component)
@@ -387,7 +396,7 @@ function assertSaveFailurePreserves(outcome) {
   harness.component.save()
   const check = harness.requests.shift()
   assert.equal(check.url, '/api/club/detail')
-  check.success({ code: 200, data: club })
+  check.success({ code: 200, data: publicClub(club) })
   const request = harness.requests[0]
   if (outcome === 'business') request.success({ code: '500', msg: `save-${process.pid}` })
   else request.fail({ errMsg: `save-${process.pid}` })

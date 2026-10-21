@@ -104,7 +104,7 @@ Component({
       app.sendRequest({
         url: '/api/club/detail', method: 'POST', data: jsonBody({ id: this.data.clubId }), header: jsonHeader(),
         success: function (res) { if (!that.isDraftCurrent(scope)) return;
-          if (res && res.code == '200' && res.data && typeof res.data === 'object' && !Array.isArray(res.data)) {
+          if (res && res.code == '200' && drafts.detail(res.data, scope.clubId)) {
             var c = res.data; if (c.id != null && String(c.id) !== scope.clubId) { that.setData({ loadState: 'business-error', loadErrorText: '返回的俱乐部资料不匹配，请重试' }); return; }
             // 2026-08-26:管理员(viewerIsAdmin)也能改**展示信息**;经营配置与解散仍只给主理人。
             // 后端 canGovernClub 是真闸,这里只是别把表单藏起来。
@@ -511,7 +511,7 @@ Component({
     },
     offerDraft(latest) {
       let found = drafts.read(typeof wx === 'undefined' ? null : wx, this._draftKey);
-      if (found.state === 'ready' && found.record.confirmed && typeof latest.updateTime === 'string' && latest.updateTime && this.confirmedDraftMatches(found.record.confirmed, latest)) {
+      if (found.state === 'ready' && found.record.confirmed && drafts.detail(latest, this._draftScope.clubId) && this.confirmedDraftMatches(found.record.confirmed, latest)) {
         const expected = JSON.stringify(found.record);
         if (drafts.write(wx, this._draftKey, this._draftBase, found.record.form, expected)) found = drafts.read(wx, this._draftKey);
         else { this.setData({ draftBlocked: true, draftNotice: '草稿基线未能保留，请勿退出，可重新读取。' }); return; }
@@ -527,7 +527,7 @@ Component({
         draftNotice: found.record ? (conflict ? '资料已更新，旧草稿不会直接提交。请对比后放弃旧草稿再编辑。' : '发现本账号未提交的本机草稿，请选择恢复或放弃。')
           : found.state === 'corrupt' ? '草稿已损坏，原记录已保留且不会覆盖，请勿退出丢失当前输入。'
           : found.state === 'error' ? '暂时无法读取草稿，原记录不会覆盖，请勿退出。可重新读取。' : '',
-        draftComparison: conflict ? drafts.compare(found.record.form, this.draftServer(latest)) || '资料更新时间已变化，请重新核对。' : '',
+        draftComparison: conflict ? drafts.compare(found.record.form, this.draftServer(latest)) || '资料已变化，请重新核对。' : '',
       });
     },
     restoreDraft() {
@@ -581,7 +581,7 @@ Component({
         url: '/api/club/detail', method: 'POST', data: jsonBody({ id: scope.clubId }), header: jsonHeader(),
         success(res) {
           if (!that.isDraftCurrent(scope)) return;
-          if (!res || res.code != '200' || !res.data || typeof res.data !== 'object' || Array.isArray(res.data)) {
+          if (!res || res.code != '200' || !drafts.detail(res.data, scope.clubId)) {
             that.setData({ saving: false, saveErrorText: '无法核对最新资料，请重试。' }); return;
           }
           const latest = res.data;
@@ -593,7 +593,7 @@ Component({
           if (drafts.base(that.draftServer(latest)) !== that._draftBase) {
             that.setData({ saving: false, draftBlocked: true, draftCanDiscard: found.state === 'ready',
               draftNotice: '资料已更新，本次未提交。请对比并放弃旧草稿后重新编辑。',
-              draftComparison: drafts.compare(that.data, that.draftServer(latest)) || '资料更新时间已变化，请重新核对。' }); return;
+              draftComparison: drafts.compare(that.data, that.draftServer(latest)) || '资料已变化，请重新核对。' }); return;
           }
           that.setData({ saving: false });
           that.submitDraft(scope);
@@ -604,7 +604,7 @@ Component({
     },
 
     // A confirmed write is not a new server baseline. Only a matching authoritative
-    // detail response supplies its timestamp and complete form; keep interim edits.
+    // detail response supplies the complete editable form; keep interim edits.
     confirmedDraftMatches(confirmed, latest) {
       const a = drafts.form(confirmed), b = drafts.form(this.draftServer(latest));
       // Empty quota is submitted as zero by the existing update contract.
@@ -627,7 +627,7 @@ Component({
           if (!that.isDraftCurrent(scope)) return;
           that._draftReading = false;
           const latest = res && res.data;
-          if (!res || res.code != '200' || !latest || typeof latest !== 'object' || Array.isArray(latest) || typeof latest.updateTime !== 'string' || !latest.updateTime) { failed(); return; }
+          if (!res || res.code != '200' || !drafts.detail(latest, scope.clubId)) { failed(); return; }
           if ((latest.id != null && String(latest.id) !== scope.clubId) ||
               (latest.isOwner !== true && latest.viewerIsAdmin !== true) ||
               (latest.isOwner === true) !== that.data.isOwner || !that.confirmedDraftMatches(confirmed, latest)) {

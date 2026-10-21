@@ -15,7 +15,23 @@ function form(value) {
   result.joinPolicy = Number(source.joinPolicy) === 1 ? 1 : 0;
   return result;
 }
-function base(value) { return JSON.stringify({ updateTime: typeof value.updateTime === 'string' ? value.updateTime : '', form: form(value) }); }
+// PublicClubVO has no updateTime/version. This fingerprint compares editable facts,
+ // not an atomic server revision. Keep the old record envelope readable.
+function base(value) { return JSON.stringify({ updateTime: '', form: form(value) }); }
+function detail(value, clubId) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const own = field => Object.prototype.hasOwnProperty.call(value, field);
+  const strings = ['name', 'logo', 'cover', 'description', 'activityPrefs', 'clubType', 'city', 'keywords', 'style'];
+  if (!strings.every(field => own(field) && (value[field] === null || typeof value[field] === 'string'))) return false;
+  if (!['isOwner', 'viewerIsAdmin', 'viewerIdentityUnavailable']
+    .every(field => own(field) && typeof value[field] === 'boolean') || value.viewerIdentityUnavailable) return false;
+  if (!own('joinPolicySupported') || !(value.joinPolicySupported === null || typeof value.joinPolicySupported === 'boolean')) return false;
+  if (!['prioritySignupEnabled', 'joinPolicy'].every(field => own(field) &&
+    (value[field] === null || value[field] === 0 || value[field] === 1))) return false;
+  if (!own('memberReservedQuota') || !(value.memberReservedQuota === null ||
+    (Number.isSafeInteger(value.memberReservedQuota) && value.memberReservedQuota >= 0))) return false;
+  return own('id') && !!key(1, value.id) && String(value.id) === String(clubId);
+}
 function validForm(value) {
   return !!value && typeof value === 'object' && !Array.isArray(value) &&
     FIELDS.every(field => Object.prototype.hasOwnProperty.call(value, field)) &&
@@ -74,4 +90,4 @@ function compare(saved, latest) {
     return LABELS[FIELDS.indexOf(field)] + '：草稿「' + show(a[field]) + '」／当前「' + show(b[field]) + '」';
   }).join('\n');
 }
-module.exports = { key, form, base, read, write, remove, compare };
+module.exports = { key, form, base, read, write, remove, compare, detail };

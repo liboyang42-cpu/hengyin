@@ -9,6 +9,15 @@ const test = require('node:test')
 const ROOT = path.resolve(__dirname, '../..')
 const WRITE_URLS = ['/api/club/update-mine', '/api/club/dissolve']
 
+// Editable subset of PublicClubVO plus detail viewer flags; no updateTime.
+function publicClub(overrides) {
+  return Object.assign({ id: 7001, name: '原名', logo: null, cover: null, description: null,
+    activityPrefs: null, clubType: null, city: '上海', keywords: null, style: null,
+    prioritySignupEnabled: null, memberReservedQuota: null, joinPolicy: null,
+    isOwner: true, viewerIsAdmin: false, viewerIdentityUnavailable: false,
+    joinPolicySupported: true }, overrides)
+}
+
 function mount(options) {
   let pageDef, compDef, editor
   const requests = []
@@ -45,7 +54,7 @@ function mount(options) {
 }
 
 function loadReady(h) {
-  h.requests[0].success({ code: 200, data: { id: 7001, name: '原名', city: '上海', isOwner: true } })
+  h.requests[0].success({ code: 200, data: publicClub() })
   assert.equal(h.editor.data.loadState, 'ready')
 }
 
@@ -70,7 +79,7 @@ test('编辑后返回 →「继续编辑」:不离页、草稿原样保留、不
   h.editor.save()
   const check = h.requests[h.requests.length - 1]
   assert.equal(check.url, '/api/club/detail')
-  check.success({ code: 200, data: { id: 7001, name: '原名', city: '上海', isOwner: true } })
+  check.success({ code: 200, data: publicClub() })
   const save = h.requests.find((r) => r.url === '/api/club/update-mine')
   assert.equal(JSON.parse(save.data).name, '新名字')
 })
