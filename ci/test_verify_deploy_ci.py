@@ -51,6 +51,39 @@ class ManualDeployCiTest(unittest.TestCase):
                     self.assertRaises(ValueError):
                 gate.verify(SHA, REPOSITORY)
 
+    def test_parallel_mini_requires_all_twenty_shards_and_static_gates(self):
+        def parallel_fixture(path):
+            result = self.fixture(path)
+            if "jobs" in result:
+                mini = next(job for job in result["jobs"] if job["name"] == "Mini program static checks")
+                mini["steps"] = [{"name": "Verify all mini program checks", "conclusion": "success"}]
+                result["jobs"].append({"name": "Mini program static gates", "conclusion": "success", "steps": [
+                    {"name": "Check mini program JavaScript and JSON (incl. U2/U3/U4 wxml-js bind gates)", "conclusion": "success"}]})
+                result["jobs"].extend({"name": "Mini program unit shard (%d/20)" % shard,
+                    "conclusion": "success", "steps": [{"name": "Run mini program unit contracts", "conclusion": "success"}]}
+                    for shard in range(1, 21))
+            return result
+        with patch.object(gate, "api", side_effect=parallel_fixture):
+            gate.verify(SHA, REPOSITORY)
+        targets = ["Mini program static gates", "Mini program static checks"] + [
+            "Mini program unit shard (%d/20)" % shard for shard in range(1, 21)]
+        for target in targets:
+            for mode in ("missing", "failure", "cancelled", "skipped", "skipped-step"):
+                def altered(path):
+                    result = parallel_fixture(path)
+                    if "jobs" in result:
+                        if mode == "missing":
+                            result["jobs"] = [job for job in result["jobs"] if job["name"] != target]
+                        else:
+                            job = next(job for job in result["jobs"] if job["name"] == target)
+                            if mode == "skipped-step":
+                                job["steps"][0]["conclusion"] = "skipped"
+                            else:
+                                job["conclusion"] = mode
+                    return result
+                with self.subTest(target=target, mode=mode), patch.object(gate, "api", side_effect=altered), self.assertRaises(ValueError):
+                    gate.verify(SHA, REPOSITORY)
+
     def assert_private_repository_guard(self, condition):
         condition = condition.strip().removeprefix('${{').removesuffix('}}').strip()
         prefix = "github.repository == 'liboyang42-cpu/chengyin' &&"

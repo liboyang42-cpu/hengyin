@@ -43,6 +43,16 @@ def verify(sha, repository):
             raise ValueError(workflow + ": latest exact-SHA run is not successful")
         jobs = {job["name"]: job for job in api("repos/%s/actions/runs/%s/jobs?per_page=100" %
                                               (repository, latest["id"]))["jobs"]}
+        # Older commits used one unit step; parallel runs must prove every shard.
+        mini = jobs.get("Mini program static checks", {})
+        parallel = any(item["name"] == "Verify all mini program checks"
+                       for item in mini.get("steps", []))
+        if workflow == "ci.yml" and parallel:
+            jobs_required = dict(jobs_required)
+            jobs_required["Mini program static checks"] = "Verify all mini program checks"
+            jobs_required["Mini program static gates"] = "Check mini program JavaScript and JSON (incl. U2/U3/U4 wxml-js bind gates)"
+            for shard in range(1, 21):
+                jobs_required["Mini program unit shard (%d/20)" % shard] = "Run mini program unit contracts"
         for name, step in jobs_required.items():
             job = jobs.get(name, {})
             if job.get("conclusion") != "success":

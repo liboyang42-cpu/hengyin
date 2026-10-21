@@ -38,8 +38,10 @@ from pathlib import Path
 
 try:
     import chain_postdeploy as post
+    from chain_admin_readback import AdminReadbackError, observe_admin
 except ModuleNotFoundError:
     from ci import chain_postdeploy as post
+    from ci.chain_admin_readback import AdminReadbackError, observe_admin
 
 RECEIPT_SCHEMA = "CY-CHAIN-ACCEPTANCE-RECEIPT-20261019"
 SUMMARY_SCHEMA = "CY-CHAIN-ACCEPTANCE-SUMMARY-20261019"
@@ -798,7 +800,8 @@ def stop_app(process):
 
 def postdeploy_http(path, token=None, password=None):
     """Only fixed loopback Actuator reads or normal admin login; never persist full beans or credentials."""
-    if path not in ("/login", "/actuator/info", "/actuator/health/isolatedStartup", "/actuator/beans"):
+    if path not in ("/login", "/getInfo", "/getRouters", "/actuator/info",
+                    "/actuator/health/isolatedStartup", "/actuator/beans"):
         raise GateError("postdeploy HTTP path outside fixed allowlist")
     class NoRedirect(urllib.request.HTTPRedirectHandler):
         def redirect_request(self, *args, **kwargs):
@@ -883,10 +886,12 @@ def observe_postdeploy(args, planned, process):
         postdeploy_http("/actuator/info", token),
         postdeploy_http("/actuator/health/isolatedStartup", token),
         postdeploy_http("/actuator/beans", token), planned["source_sha"])
+    admin = (observe_admin(lambda path: postdeploy_http(path, token), connect)
+             if planned["through"] == "post_deploy" else None)
     database = post.read_state(connect)
     if app_process_identity(process, command) != before or sha256_file(args.jar) != expected:
         raise GateError("candidate PID or original JAR changed during observation")
-    return dict(observation, process=before, jar_sha256=expected, schema=SCHEMA,
+    return dict(observation, admin=admin, process=before, jar_sha256=expected, schema=SCHEMA,
                 server_uuid=database["server_uuid"], observed_at=time.time(),
                 boundary="same exploded candidate JVM; external-provider stubs unchanged; no task invoked")
 
@@ -1085,7 +1090,9 @@ def cmd_run(args, environ):
         else:
             stage(args.out, "postdeploy", "FAIL", reason="prerequisite_chain_failed", sql_started=False)
     except Exception as error:
-        stage(args.out, "postdeploy", "FAIL", reason=type(error).__name__, sql_started=False)
+        code = str(error) if isinstance(error, AdminReadbackError) else None
+        stage(args.out, "postdeploy", "FAIL", reason=type(error).__name__, sql_started=False,
+              failure_code=code if code and re.fullmatch(r"ADMIN_[A-Z_]+", code) else None)
         raise GateError("postdeploy live prerequisite failed") from None
     finally:
         try:
@@ -1106,7 +1113,10 @@ def cmd_run(args, environ):
             raise GateError("postdeploy live observation is stale")
         stage(args.out, "postdeploy", "RUNNING", proof=proof, stopped_before_sql=True,
               app_exit_code=exit_code, sql_started=True, recovery="UNKNOWN_PARTIAL_DO_NOT_RETRY")
+        fixture = None
         try:
+            if planned["through"] == "post_deploy":
+                fixture = post.prepare_operator_fixture(connect, proof["server_uuid"])
             result = post.register_jobs(args.source, connect, proof["server_uuid"])
         except post.PostDeployError as error:
             stage(args.out, "postdeploy", "FAIL", proof=proof, stopped_before_sql=True,
@@ -1114,7 +1124,18 @@ def cmd_run(args, environ):
             raise GateError("strict POST_DEPLOY SQL or independent readback failed") from None
         stage(args.out, "postdeploy", "PASS", proof=proof, stopped_before_sql=True,
               app_exit_code=exit_code, sql_started=True, result=result,
+              scenario=post.OPERATOR_SCENARIO if fixture else "REGISTRATION_FROM_CURRENT_ROWS",
+              operator_fixture=fixture, unique_migration_count=3,
               not_covered="actual scheduled execution, persistent deployment and live old/new JAR rollback")
+        if fixture is not None:
+            stage(args.out, "postdeploy_commerce_rejection", "RUNNING",
+                  recovery="UNKNOWN_PARTIAL_DO_NOT_RETRY")
+            try:
+                rejection = post.characterize_commerce_rejection(args.source, connect, proof["server_uuid"], result)
+            except post.PostDeployError as error:
+                stage(args.out, "postdeploy_commerce_rejection", "FAIL", result=error.evidence)
+                raise GateError("commerce incompatible operator control failed") from None
+            stage(args.out, "postdeploy_commerce_rejection", "PASS", result=rejection)
     for result in results:
         print("chain %-14s %s %s" % (result["chain"], result["verdict"], "; ".join(result.get("problems", []))))
     return 0 if all(result["verdict"] == "PASS" for result in results) else 1
@@ -1169,6 +1190,31 @@ def summarize(out_dir):
             raise post.PostDeployError("post_stop_proof_missing")
         post.validate_result(result, proof, (receipt.get("plan") or {}).get("source_sha"),
                              stages.get("explode", {}).get("jar_sha256"))
+        if post_only:
+            admin = proof.get("admin") or {}
+            post.require(admin.get("status") == "PASS_FIXTURE_SUPERADMIN_HTTP_SQL_ONLY" and
+                         admin.get("userId") == 1 and admin.get("roleKeys") == ["admin"] and
+                         admin.get("permissions") == ["*:*:*"] and
+                         admin.get("sqlReadback") == {"schema": SCHEMA,
+                             "userIdentity": {"userId": 1, "userName": "admin", "status": "0", "delFlag": "0"},
+                             "roleBindings": [{"roleId": 1, "roleKey": "admin", "status": "0", "delFlag": "0"}]} and
+                         admin.get("routeScope") == "enabled_internal_C_plain_paths_with_enabled_M_ancestors_only" and
+                         admin.get("ordinaryRbacIsolationVerified") is False and admin.get("realRoleCardsVerified") == 0 and
+                         bool(admin.get("routes")) and all(
+                             type(row.get("menuId")) is int and row["menuId"] > 0 and
+                             isinstance(row.get("path"), str) and row["path"].startswith("/") and
+                             isinstance(row.get("component"), str) and bool(row["component"])
+                             for row in admin["routes"]), "post_admin_readback_incomplete")
+            fixture = registration.get("operator_fixture") or {}
+            post.validate_operator_fixture(fixture, proof["server_uuid"])
+            post.require(registration.get("scenario") == post.OPERATOR_SCENARIO and
+                         fixture.get("status") == "PASS" and fixture.get("inserted_targets") == 6 and
+                         registration.get("unique_migration_count") == 3 and
+                         result["before"] == fixture["after"] and result["after"] == fixture["after"],
+                         "post_existing_scenario_incomplete")
+            rejection = stages.get("postdeploy_commerce_rejection", {})
+            post.require(rejection.get("status") == "PASS", "post_rejection_stage_missing")
+            post.validate_commerce_rejection(rejection.get("result") or {}, result)
     except Exception:
         problems.append("postdeploy 缺同候选/停机/15句9标量完整回执")
     chains = []
@@ -1193,6 +1239,7 @@ def summarize(out_dir):
         "harness_drift": (stages.get("precheck", {}).get("harness") or {}).get("drift"),
         "chains": chains, "problems": problems, "not_covered": receipt.get("not_covered", NOT_COVERED),
         "postdeploy": stages.get("postdeploy", {}),
+        "postdeploy_commerce_rejection": stages.get("postdeploy_commerce_rejection", {}),
         "verdict": "PASS" if not problems else "FAIL",
     }
     return summary
@@ -1208,6 +1255,11 @@ def summary_markdown(summary):
               "Registration only; scheduled execution and live JAR rollback are not covered." % (
                   post_facts.get("status", "MISSING"), post_facts.get("stopped_before_sql", False),
                   post_result.get("statement_count", 0), post_result.get("scalar_count", 0)), ""]
+    if summary["through"] == "post_deploy":
+        lines += ["- Scenario: `EXISTING_OPERATOR_ROWS`; commerce incompatible configuration: `%s`. "
+                  "Expected original SQL rejection is a negative-control result, not migration PASS; "
+                  "3 unique migrations (repeated observations are not additional coverage)." %
+                  summary.get("postdeploy_commerce_rejection", {}).get("result", {}).get("status", "MISSING"), ""]
     lines += ["| chain | verdict | topic | terminal readbacks |", "|---|---|---|---|"]
     for chain in summary["chains"]:
         readbacks = "<br>".join("%s %s `%s`" % ("✅" if item["ok"] else "❌", item["label"], item["rows"])

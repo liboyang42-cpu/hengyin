@@ -150,7 +150,8 @@ def validate(source: str, backend_script: str | None = None, production_workflow
 
     expected = {
         "backend": "backend",
-        "mini_program": "xcx",
+        "mini_unit": "xcx",
+        "mini_static": "xcx",
         "admin_ui": "ui",
         "admin_ui_contract": "ui",
         "dependency_audit": "dependency",
@@ -189,6 +190,30 @@ def validate(source: str, backend_script: str | None = None, production_workflow
 """)
 
     mini = job_block(source, "mini_program")
+    for contract in (
+        "    needs: [changes, mini_unit, mini_static]\n",
+        "    if: ${{ always() && (needs.changes.result != 'success' || github.event_name == 'workflow_dispatch' || needs.changes.outputs.xcx == 'true') }}\n",
+        '          test "$CHANGES_RESULT" = success\n',
+        '          test "$UNIT_RESULT" = success\n',
+        '          test "$STATIC_RESULT" = success\n',
+        "          UNIT_RESULT: ${{ needs.mini_unit.result }}\n",
+        "          STATIC_RESULT: ${{ needs.mini_static.result }}\n",
+    ):
+        assert_contains(mini, contract)
+    unit = job_block(source, "mini_unit")
+    for contract in (
+        "    name: Mini program unit shard (${{ matrix.shard }}/20)\n",
+        "      fail-fast: false\n",
+        "      max-parallel: 20\n",
+        "        shard: [" + ", ".join(map(str, range(1, 21))) + "]\n",
+        "      TZ: Asia/Shanghai\n",
+        "    runs-on: ubuntu-latest\n",
+        "        run: node ci/xcx-unit-manifest.js --selftest\n",
+        '        run: node --test --test-shard=${{ matrix.shard }}/20 "tests/unit/**/*.test.js"\n',
+    ):
+        assert_contains(unit, contract)
+    if 'continue-on-error:' in mini + unit + job_block(source, "mini_static"):
+        raise AssertionError("mini program checks must fail closed")
     if "TZ=America/Los_Angeles" in mini:
         raise AssertionError("mini_program must not double-run unit tests in a second timezone")
     if "runs-on: ubuntu-latest" not in mini:
@@ -319,6 +344,17 @@ def main() -> None:
             "backend independent revision scratch credentials",
             remove_from_job(source, "backend", "          CHENGYIN_TEST_MYSQL_PASSWORD: root\n"),
         ),
+    )
+    negative_controls += tuple(
+        ("mini parallel " + needle.strip(), remove_from_job(source, job, needle))
+        for job, needle in (
+            ("mini_program", '          test "$UNIT_RESULT" = success\n'),
+            ("mini_program", '          test "$STATIC_RESULT" = success\n'),
+            ("mini_program", "always() && "),
+            ("mini_unit", "19, 20"),
+            ("mini_unit", "--test-shard=${{ matrix.shard }}/20 "),
+            ("mini_unit", "        run: node ci/xcx-unit-manifest.js --selftest\n"),
+        )
     )
     for label, mutated in negative_controls:
         try:
