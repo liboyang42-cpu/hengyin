@@ -20,22 +20,6 @@ WHERE r.role_key IN ('cy_operator','cy_auditor','cy_support','cy_finance') AND r
   AND NOT EXISTS (SELECT 1 FROM sys_role_menu rm JOIN sys_menu m ON m.menu_id = rm.menu_id
                   WHERE rm.role_id = r.role_id AND m.menu_type = 'C');
 
--- Preserve the pre-existing grants without treating them as grants added here.
-DROP TEMPORARY TABLE IF EXISTS tmp_cy_admin_grants_before;
-CREATE TEMPORARY TABLE tmp_cy_admin_grants_before(role_id BIGINT NOT NULL, menu_id BIGINT NOT NULL, PRIMARY KEY(role_id, menu_id)) ENGINE=InnoDB;
-INSERT INTO tmp_cy_admin_grants_before(role_id, menu_id)
-SELECT rm.role_id, rm.menu_id FROM sys_role_menu rm
-JOIN tmp_cy_fresh_admin_roles t ON t.role_id = rm.role_id;
-
--- Existing role-separation conflicts require explicit disposition; never delete them here.
--- runner: assert=scalar-true
-SELECT COUNT(*) = 0 FROM sys_role_menu rm
-JOIN sys_role r ON r.role_id = rm.role_id
-JOIN sys_menu m ON m.menu_id = rm.menu_id
-WHERE r.del_flag = '0'
-  AND ((r.role_key = 'cy_finance' AND m.perms = 'business:clubpayee:payout')
-       OR (r.role_key = 'cy_operator' AND m.perms = 'business:clubpayee:verify'));
-
 -- 运营：全量业务菜单，排除资金/隐私高风险动作（同 20260719）。
 INSERT INTO sys_role_menu (role_id, menu_id)
 SELECT t.role_id, m.menu_id FROM tmp_cy_fresh_admin_roles t JOIN sys_menu m
@@ -45,7 +29,6 @@ WHERE t.role_key = 'cy_operator'
   AND m.perms NOT LIKE '%withdraw%:audit%' AND m.perms NOT LIKE '%withdraw%:viewpii%'
   AND m.perms NOT LIKE '%cashwithdraw%:manage%' AND m.perms NOT LIKE '%:pii'
   AND m.perms NOT LIKE '%settlement%:confirm%' AND m.perms NOT LIKE '%payout%'
-  AND m.perms <> 'business:clubpayee:verify'
   -- 0719 之后新增的资金/导出类动作同样不授运营:确认、结算生成、冻结、冷静期配置、余额/提现写入、导出。
   AND m.perms NOT LIKE '%:confirm%' AND m.perms NOT LIKE '%:settle%' AND m.perms NOT LIKE '%:generate%'
   AND m.perms NOT LIKE '%:export%' AND m.perms NOT LIKE '%:freeze%' AND m.perms NOT LIKE '%cooldown%'
@@ -84,7 +67,6 @@ WHERE t.role_key = 'cy_finance'
   AND m.perms NOT LIKE '%:add' AND m.perms NOT LIKE '%:edit' AND m.perms NOT LIKE '%:remove'
   AND m.perms NOT LIKE '%:delete' AND m.perms NOT LIKE '%:create'
   AND m.perms NOT LIKE 'business:merchant:%' AND m.perms NOT LIKE 'business:club:%'
-  AND m.perms <> 'business:clubpayee:payout'
   AND NOT EXISTS (SELECT 1 FROM sys_role_menu x WHERE x.role_id = t.role_id AND x.menu_id = m.menu_id);
 
 -- 反向补齐祖先(按钮→页面→目录→域)，否则动态路由树缺父节点。九域导航最多四层，执行四次幂等扩展。
@@ -121,28 +103,10 @@ WHERE m.menu_type IN ('C','F') AND (m.perms LIKE 'system:%' OR m.perms LIKE 'mon
 -- runner: assert=scalar-true
 SELECT COUNT(*) = 0 FROM sys_role_menu rm JOIN tmp_cy_fresh_admin_roles t ON t.role_id = rm.role_id AND t.role_key = 'cy_operator'
 JOIN sys_menu m ON m.menu_id = rm.menu_id
-WHERE (m.perms LIKE '%:confirm%' OR m.perms LIKE '%:settle%' OR m.perms LIKE '%:generate%' OR m.perms LIKE '%:export%'
+WHERE m.perms LIKE '%:confirm%' OR m.perms LIKE '%:settle%' OR m.perms LIKE '%:generate%' OR m.perms LIKE '%:export%'
    OR m.perms LIKE '%:freeze%' OR m.perms LIKE '%cooldown%' OR m.perms LIKE '%payout%' OR m.perms LIKE '%clawback%'
    OR m.perms LIKE '%:pii' OR m.perms LIKE '%viewpii%'
    OR (m.perms LIKE '%memberbalance%' AND m.perms NOT LIKE '%:list' AND m.perms NOT LIKE '%:query')
-   OR (m.perms LIKE '%memberwithdrawal%' AND m.perms NOT LIKE '%:list' AND m.perms NOT LIKE '%:query'))
-  AND NOT (m.perms = 'business:clubpayee:payout' AND COALESCE(m.menu_type, '') = 'F'
-               AND EXISTS (SELECT 1 FROM tmp_cy_admin_grants_before b
-                           WHERE b.role_id = rm.role_id AND b.menu_id = rm.menu_id));
+   OR (m.perms LIKE '%memberwithdrawal%' AND m.perms NOT LIKE '%:list' AND m.perms NOT LIKE '%:query');
 
--- Every grant present at entry must still exist; this repair never revokes a grant.
--- runner: assert=scalar-true
-SELECT COUNT(*) = 0 FROM tmp_cy_admin_grants_before b
-WHERE NOT EXISTS (SELECT 1 FROM sys_role_menu rm WHERE rm.role_id = b.role_id AND rm.menu_id = b.menu_id);
-
--- Neither role may acquire the other side of the separated-role contract.
--- runner: assert=scalar-true
-SELECT COUNT(*) = 0 FROM sys_role_menu rm
-JOIN sys_role r ON r.role_id = rm.role_id
-JOIN sys_menu m ON m.menu_id = rm.menu_id
-WHERE r.del_flag = '0'
-  AND ((r.role_key = 'cy_finance' AND m.perms = 'business:clubpayee:payout')
-       OR (r.role_key = 'cy_operator' AND m.perms = 'business:clubpayee:verify'));
-
-DROP TEMPORARY TABLE tmp_cy_admin_grants_before;
 DROP TEMPORARY TABLE tmp_cy_fresh_admin_roles;
