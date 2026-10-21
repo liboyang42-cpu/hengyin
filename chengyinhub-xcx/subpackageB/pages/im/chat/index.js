@@ -564,20 +564,43 @@ Page({
       if (result && result.found === true && result.message) {
         this._mergeMessages([result.message]); sendRecovery.complete(receipt);
       } else if (result && result.found === false) this._sendMessage(m.sendPayload, m.id);
-    });
+    }, 'retry');
   },
 
-  _readReceipt(receipt, done) {
-    const current = this._viewGuard();
+  _readReceipt(receipt, done, purpose = 'recover') {
+    const viewCurrent = this._viewGuard();
+    const current = () => viewCurrent() && sendRecovery.current(receipt);
+    if (!current()) return;
+    const key = JSON.stringify([receipt.owner, receipt.conversation, receipt.id]);
+    const reads = this._receiptReads || (this._receiptReads = new Map());
+    const previous = reads.get(key);
+    if (previous && previous.current()) {
+      // 自动恢复和用户重试共享一次查询；同一用途只保留一个消费者。
+      previous.handlers.set(purpose, done);
+      return;
+    }
+    const flight = { current, handlers: new Map([[purpose, done]]) };
+    reads.set(key, flight);
+    let settled = false;
+    const finish = res => {
+      // 同一请求的重复回调，以及失效请求的迟到回调，都不能释放后继请求。
+      if (settled) return;
+      settled = true;
+      if (reads.get(key) !== flight) return;
+      try {
+        if (!current() || !isBizOk(res) || !res.data) return;
+        const result = res.data, message = result.message;
+        const notify = () => flight.handlers.forEach(handler => { if (current()) handler(result); });
+        if (result.found === false) { notify(); return; }
+        if (result.found === true && message && Number.isSafeInteger(Number(message.id)) && Number(message.id) > 0
+            && message.senderId == receipt.owner && message.clientMessageId === receipt.id) notify();
+      } finally {
+        if (reads.get(key) === flight) reads.delete(key);
+      }
+    };
     app.sendRequest({ url: '/api/im/send-receipt', method: 'POST', hideLoading: true, silentError: true,
       data: { conversation_id: receipt.conversation, client_message_id: receipt.id },
-      success: res => {
-        if (!current() || !sendRecovery.current(receipt) || !isBizOk(res) || !res.data) return;
-        const result = res.data, message = result.message;
-        if (result.found === false) { done(result); return; }
-        if (result.found === true && message && Number.isSafeInteger(Number(message.id)) && Number(message.id) > 0
-            && message.senderId == receipt.owner && message.clientMessageId === receipt.id) done(result);
-      }, fail() {}, successStatusAbnormal() {} });
+      success: finish, fail: finish, successStatusAbnormal: finish });
   },
   recoverPending() {
     sendRecovery.pending(this.data.myId, this.data.conversationId).forEach(receipt => {

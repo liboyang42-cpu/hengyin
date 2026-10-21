@@ -172,3 +172,70 @@ test('new private projection defeats an in-flight older public history read', ()
   assert.equal(h.page.data.topicCache[8].name, '路线已不可用');
   assert.equal(h.page.data.msgs[0].content, '路线已不可用');
 });
+
+test('delayed double receipt clicks query and retry the original message only once', () => {
+  const h = harness(); h.page.onSend(); h.requests[0].fail({});
+  const click = () => h.page.onResend({ currentTarget: { dataset: { index: 0 } } });
+  click(); click();
+  const reads = h.requests.filter(r => r.url === '/api/im/send-receipt');
+  assert.equal(reads.length, 1, 'same original identity must have one receipt query in flight');
+  reads[0].success({ code: 200, data: { found: false } });
+  reads[0].success({ code: 200, data: { found: false } });
+  click();
+  assert.equal(h.requests.filter(r => r.url === '/api/im/send').length, 2);
+  assert.equal(h.requests.filter(r => r.url === '/api/im/send-receipt').length, 1);
+  assert.equal(h.requests[0].data.client_message_id, h.requests.at(-1).data.client_message_id);
+});
+
+test('receipt failures release only their own flight and allow a fresh click', () => {
+  for (const kind of ['fail', 'successStatusAbnormal', 'business', 'malformed']) {
+    const h = harness(); h.page.onSend(); h.requests[0].fail({});
+    const click = () => h.page.onResend({ currentTarget: { dataset: { index: 0 } } });
+    click(); const read = h.requests[1];
+    if (kind === 'business') read.success({ code: 500, data: { found: false } });
+    else if (kind === 'malformed') read.success({ code: 200, data: {} });
+    else read[kind]({});
+    click();
+    assert.equal(h.requests.filter(r => r.url === '/api/im/send-receipt').length, 2, kind);
+    assert.equal(h.requests.filter(r => r.url === '/api/im/send').length, 1, kind);
+    assert.equal(h.page.data.msgs[0].failed, true);
+  }
+});
+
+test('receipt single-flight is per original identity and does not block independent messages', () => {
+  const h = harness(); h.page.onSend(); h.requests[0].fail({});
+  h.page.setData({ text: 'second' }); h.page.onSend(); h.requests[1].fail({});
+  h.page.onResend({ currentTarget: { dataset: { index: 0 } } });
+  h.page.onResend({ currentTarget: { dataset: { index: 1 } } });
+  const reads = h.requests.filter(r => r.url === '/api/im/send-receipt');
+  assert.equal(reads.length, 2);
+  assert.notEqual(reads[0].data.client_message_id, reads[1].data.client_message_id);
+});
+
+test('stale receipt callbacks cannot release a newer same-key flight after session or lifecycle invalidation', () => {
+  for (const boundary of ['credential', 'account', 'delete', 'unload']) {
+    const h = harness(); h.page.onSend(); h.requests[0].fail({});
+    const click = () => h.page.onResend({ currentTarget: { dataset: { index: 0 } } });
+    click(); const oldRead = h.requests[1];
+    const failedBubble = h.page.data.msgs[0];
+    if (boundary === 'credential') h.credential('session-two');
+    if (boundary === 'account') { h.account(2); h.page.data.myId = 2; }
+    if (boundary === 'delete') {
+      h.page._pendingClear = { conversationId: 26, memberId: 1 };
+      h.page.onDangerConfirm({ detail: { key: 'im.conversation.delete' } });
+      h.requests.find(r => r.url === '/api/im/delete').success({ code: 200 });
+      h.page._deleted = false;
+    }
+    if (boundary === 'unload') { h.page.onUnload(); h.page._disposed = false; h.page._viewEpoch = 1; }
+    const recovery = require('../../utils/im-send-recovery.js');
+    recovery.begin(h.page.data.myId, 26, failedBubble.clientMessageId);
+    h.page.setData({ msgs: [{ ...failedBubble, senderId: h.page.data.myId }], sending: false });
+    click();
+    const before = h.requests.filter(r => r.url === '/api/im/send-receipt').length;
+    assert.equal(before, 2, boundary);
+    oldRead.fail({}); oldRead.success({ code: 200, data: { found: false } });
+    click();
+    assert.equal(h.requests.filter(r => r.url === '/api/im/send-receipt').length, before, boundary);
+    assert.equal(h.requests.filter(r => r.url === '/api/im/send').length, 1, boundary);
+  }
+});
