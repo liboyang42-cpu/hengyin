@@ -234,10 +234,62 @@ class SummaryTest(unittest.TestCase):
         ca.merge_receipt(self.out, {"plan": ca.plan(SHA, "post_deploy", "")})
         for path in (self.out / "chains").glob("*.json"):
             path.unlink()
+        self.assertEqual("FAIL", ca.summarize(self.out)["verdict"])  # Old empty PASS is not this scenario.
+        self.install_existing_scenario()
         self.assertEqual("PASS", ca.summarize(self.out)["verdict"])
         document = ca.read_receipt(self.out); del document["stages"]["postdeploy"]
         ca.receipt_path(self.out).write_text(json.dumps(document))
         self.assertEqual("FAIL", ca.summarize(self.out)["verdict"])
+
+    def install_existing_scenario(self):
+        document = ca.read_receipt(self.out)
+        document["stages"]["postdeploy"]["proof"]["admin"] = {
+            "status": "PASS_FIXTURE_SUPERADMIN_HTTP_SQL_ONLY", "userId": 1, "roleKeys": ["admin"],
+            "permissions": ["*:*:*"], "sqlReadback": {"schema": ca.SCHEMA,
+                "userIdentity": {"userId": 1, "userName": "admin", "status": "0", "delFlag": "0"},
+                "roleBindings": [{"roleId": 1, "roleKey": "admin", "status": "0", "delFlag": "0"}]},
+            "routes": [{"menuId": 100, "path": "/system/user", "component": "system/user/index"}],
+            "routeScope": "enabled_internal_C_plain_paths_with_enabled_M_ancestors_only",
+            "ordinaryRbacIsolationVerified": False, "realRoleCardsVerified": 0}
+        ca.receipt_path(self.out).write_text(json.dumps(document))
+        db = PostStorage()
+        fixture = ca.post.prepare_operator_fixture(db.connect, POST_UUID)
+        result = ca.post.register_jobs(_HERE.parent, db.connect, POST_UUID)
+        good = ca.read_receipt(self.out)["stages"]["postdeploy"]
+        ca.stage(self.out, "postdeploy", **dict(good, scenario=ca.post.OPERATOR_SCENARIO,
+                 operator_fixture=fixture, result=result, unique_migration_count=3))
+        rejection = ca.post.characterize_commerce_rejection(_HERE.parent, db.connect, POST_UUID, result)
+        ca.stage(self.out, "postdeploy_commerce_rejection", "PASS", result=rejection)
+
+    def test_post_only_summary_rejects_missing_or_forged_existing_and_rejection_evidence(self):
+        ca.merge_receipt(self.out, {"plan": ca.plan(SHA, "post_deploy", "")})
+        self.install_existing_scenario()
+        good = copy.deepcopy(ca.read_receipt(self.out))
+        for mutation in ("missing", "migration_pass", "continued", "false_readback", "drift", "fixture", "empty"):
+            bad = copy.deepcopy(good)
+            rejection = bad["stages"]["postdeploy_commerce_rejection"]["result"]
+            if mutation == "missing": del bad["stages"]["postdeploy_commerce_rejection"]
+            if mutation == "migration_pass": rejection["rejected_migration"]["status"] = "PASS"
+            if mutation == "continued": rejection["rejected_migration"]["statement_count"] = 4
+            if mutation == "false_readback": rejection["scalar_readback"]["actual"] = [1]
+            if mutation == "drift": rejection["after"]["rows"][0][11] = "changed"
+            if mutation == "fixture": bad["stages"]["postdeploy"]["operator_fixture"]["after"]["rows"][0][7] = "0"
+            if mutation == "empty": bad["stages"]["postdeploy"]["result"]["before"]["rows"] = []
+            ca.receipt_path(self.out).write_text(json.dumps(bad))
+            with self.subTest(mutation=mutation): self.assertEqual("FAIL", ca.summarize(self.out)["verdict"])
+
+    def test_post_only_summary_rejects_missing_admin_identity_binding_or_routes(self):
+        ca.merge_receipt(self.out, {"plan": ca.plan(SHA, "post_deploy", "")})
+        self.install_existing_scenario()
+        good = copy.deepcopy(ca.read_receipt(self.out))
+        for field, value in (("status", "PASS"), ("userId", 2), ("roleKeys", []),
+                             ("permissions", []), ("sqlReadback", {}), ("routes", []),
+                             ("routeScope", "all"), ("ordinaryRbacIsolationVerified", True),
+                             ("realRoleCardsVerified", 84)):
+            bad = copy.deepcopy(good)
+            bad["stages"]["postdeploy"]["proof"]["admin"][field] = value
+            ca.receipt_path(self.out).write_text(json.dumps(bad))
+            with self.subTest(field=field): self.assertEqual("FAIL", ca.summarize(self.out)["verdict"])
 
     def test_summary_rejects_missing_live_or_per_statement_or_independent_sql_evidence(self):
         good = ca.read_receipt(self.out)["stages"]["postdeploy"]
@@ -686,6 +738,7 @@ class PostStorage:
     def __init__(self):
         self.rows, self.calls, self.opened, self.closed = [], [], 0, 0
         self.bad_scalar, self.write_error, self.uuid = None, False, POST_UUID
+        self.writes, self.commits, self.rollbacks = [], 0, 0
 
     def connect(self):
         model = self
@@ -693,11 +746,21 @@ class PostStorage:
         class Cursor:
             def execute(self, sql, args=None):
                 model.calls.append(sql)
-                self.one, self.many = None, []
+                self.one, self.many, self.rowcount = None, [], 0
                 if sql == "SELECT @@server_uuid,DATABASE()":
                     self.one = (model.uuid, ca.SCHEMA)
                 elif sql == ca.post.READ_ROWS:
                     self.many = sorted(model.rows, key=lambda row: (row[3], row[0]))
+                elif sql == ca.post.FIXTURE_INSERT:
+                    if model.write_error: raise RuntimeError("PRIVATE_SQL_ERROR")
+                    model.writes.append((sql, args))
+                    model.rows.append([len(model.rows) + 1] + list(args))
+                    self.rowcount = 1
+                elif sql == ca.post.COMMERCE_PAUSE:
+                    model.writes.append((sql, args))
+                    for row in model.rows:
+                        if (row[0], row[3]) == (args[2], args[3]):
+                            row[4], row[7], self.rowcount = args[0], args[1], 1
                 elif sql.startswith("INSERT INTO sys_job"):
                     if model.write_error: raise RuntimeError("PRIVATE_SQL_ERROR")
                     target = next(name for name in ca.post.NEW_ROWS if "'" + name + "'" in sql)
@@ -705,6 +768,11 @@ class PostStorage:
                         group, cron, misfire, concurrent, status = ca.post.NEW_ROWS[target]
                         model.rows.append([len(model.rows) + 1, "fixture", group, target, cron, misfire,
                                            concurrent, status, "system", "2026-10-20", "fixture", "", None])
+                elif "SUM(cron_expression" in sql:
+                    rows = [row for row in model.rows if row[3] == ca.post.COMMERCE]
+                    valid = len(rows) == 1 and tuple(rows[0][i] for i in (4, 5, 6, 7)) == ca.post.NEW_ROWS[ca.post.COMMERCE][1:]
+                    self.one = (int(valid),) if model.bad_scalar is None else model.bad_scalar
+                    self.many = [self.one]
                 else:
                     self.one = (1,) if model.bad_scalar is None else model.bad_scalar
             def fetchone(self): return self.one
@@ -713,10 +781,73 @@ class PostStorage:
         class Connection:
             def cursor(self): return Cursor()
             def close(self): model.closed += 1
+            def begin(self): self.before = copy.deepcopy(model.rows)
+            def commit(self): model.commits += 1
+            def rollback(self):
+                model.rollbacks += 1
+                model.rows = self.before
         return Connection()
 
 
 class PostDeployTest(unittest.TestCase):
+    def existing_scenario(self):
+        db = PostStorage()
+        fixture = ca.post.prepare_operator_fixture(db.connect, POST_UUID)
+        positive = ca.post.register_jobs(_HERE.parent, db.connect, POST_UUID)
+        rejection = ca.post.characterize_commerce_rejection(_HERE.parent, db.connect, POST_UUID, positive)
+        return db, fixture, positive, rejection
+
+    def test_existing_operator_six_rows_preserved_and_commerce_incompatible_rejected_by_original_sql(self):
+        db, fixture, positive, rejection = self.existing_scenario()
+        self.assertEqual([], fixture["before"]["rows"])
+        self.assertEqual(fixture["after"], positive["before"])
+        self.assertEqual(positive["before"], positive["after"])
+        self.assertEqual((15, 9), (positive["statement_count"], positive["scalar_count"]))
+        for row in positive["before"]["rows"]:
+            self.assertEqual(ca.post.operator_values(row[3]), row[1:])
+            self.assertEqual("0" if row[3] == ca.post.COMMERCE else "1", row[7])
+        self.assertEqual("FAIL", rejection["rejected_migration"]["status"])
+        self.assertEqual((3, 1), (rejection["rejected_migration"]["statement_count"],
+                                 rejection["rejected_migration"]["scalar_count"]))
+        self.assertEqual([0], rejection["scalar_readback"]["actual"])
+        self.assertEqual(rejection["before"], rejection["after"])
+        self.assertEqual(7, len(db.writes))
+        self.assertEqual(2, db.commits)
+        self.assertEqual(db.opened, db.closed)
+        # The last original execution ends at merchant stmt3; only its independent SELECT is repeated.
+        failed_start = next(i for i, sql in enumerate(db.calls) if sql == ca.post.COMMERCE_PAUSE)
+        self.assertFalse(any("roamPresenceRevokeAuditTask" in sql or "metricsProbeTask" in sql
+                             for sql in db.calls[failed_start:] if sql != ca.post.READ_ROWS))
+        self.assertEqual(3, rejection["unique_migration_count"])
+
+    def test_fixture_requires_empty_targets_and_parameterized_writes_roll_back_on_failure(self):
+        db = PostStorage(); ca.post.prepare_operator_fixture(db.connect, POST_UUID)
+        original = copy.deepcopy(db.rows); count = len(db.writes)
+        with self.assertRaises(ca.post.PostDeployError): ca.post.prepare_operator_fixture(db.connect, POST_UUID)
+        self.assertEqual(original, db.rows); self.assertEqual(count, len(db.writes))
+        db = PostStorage(); db.write_error = True
+        with self.assertRaises(ca.post.PostDeployError) as caught:
+            ca.post.prepare_operator_fixture(db.connect, POST_UUID)
+        self.assertEqual([], db.rows); self.assertEqual(0, db.commits); self.assertEqual(1, db.rollbacks)
+        self.assertNotIn("PRIVATE_SQL_ERROR", json.dumps(caught.exception.evidence))
+        self.assertEqual(db.opened, db.closed)
+
+    def test_nonempty_cron_pause_and_update_audit_drift_fail_preservation(self):
+        _, _, positive, rejection = self.existing_scenario()
+        for index, value in ((4, "0 18 2 * * ?"), (7, "0"), (11, "unexpected"), (12, "2026-10-21 00:00:00")):
+            changed = copy.deepcopy(positive["after"]["rows"]); changed[0][index] = value
+            with self.subTest(column=index), self.assertRaises(ca.post.PostDeployError):
+                ca.post.verify_rows(positive["before"]["rows"], changed)
+        for mutation in ("success", "extra_file", "bad_scalar", "drift", "unknown"):
+            changed = copy.deepcopy(rejection)
+            if mutation == "success": changed["rejected_migration"]["status"] = "PASS"
+            if mutation == "extra_file": changed["rejected_migration"]["files"].append({})
+            if mutation == "bad_scalar": changed["scalar_readback"]["actual"] = [1]
+            if mutation == "drift": changed["after"]["rows"][0][12] = "changed"
+            if mutation == "unknown": changed["rejected_migration"]["error_type"] = "RuntimeError"
+            with self.subTest(mutation=mutation), self.assertRaises(ca.post.PostDeployError):
+                ca.post.validate_commerce_rejection(changed, positive)
+
     def test_all_six_real_class_names_and_health_required(self):
         info, health, beans = live_documents()
         result = ca.post.validate_observation(info, health, beans, SHA)
@@ -825,10 +956,13 @@ class PostDeployTest(unittest.TestCase):
                 mock.patch.object(ca, "observe_postdeploy", side_effect=ca.GateError("bad bean") if observation_failure else None,
                                   return_value=proof), \
                 mock.patch.object(ca, "stop_app", side_effect=stop), \
+                mock.patch.object(ca.post, "prepare_operator_fixture", return_value={"status": "PASS"}) as fixture, \
+                mock.patch.object(ca.post, "characterize_commerce_rejection", return_value={"status": "PASS_EXPECTED_REJECTION"}) as reject, \
                 mock.patch.object(ca.post, "register_jobs", side_effect=register) as sql:
             if stop_unknown or observation_failure or stale:
                 with self.assertRaises(ca.GateError): ca.cmd_run(args, {})
                 sql.assert_not_called()
+                fixture.assert_not_called(); reject.assert_not_called()
                 self.assertEqual("FAIL", ca.read_receipt(out)["stages"]["postdeploy"]["status"])
             else:
                 self.assertEqual(0, ca.cmd_run(args, {}))
@@ -836,6 +970,10 @@ class PostDeployTest(unittest.TestCase):
                 self.assertTrue(ca.read_receipt(out)["stages"]["postdeploy"]["stopped_before_sql"])
             if through == "post_deploy":
                 chains.assert_not_called(); login_probe.assert_not_called()
+                if not (stop_unknown or observation_failure or stale):
+                    fixture.assert_called_once(); reject.assert_called_once()
+            else:
+                fixture.assert_not_called(); reject.assert_not_called()
 
     def test_original_jvm_confirmed_stopped_before_sql(self): self.run_control()
     def test_unknown_stop_blocks_every_sql(self): self.run_control(stop_unknown=True)
@@ -859,6 +997,7 @@ class PostDeployTest(unittest.TestCase):
                         mock.patch.object(ca, "java_command", return_value=["java"]), \
                         mock.patch.object(ca, "app_process_identity", side_effect=[before, after]), \
                         mock.patch.object(ca, "postdeploy_http", side_effect=[{"code": 200, "token": "PRIVATE_TOKEN"}, info, health, beans]), \
+                        mock.patch.object(ca, "observe_admin", return_value={"status": "READONLY_ADMIN"}) as admin, \
                         mock.patch.object(ca.post, "read_state", return_value={"server_uuid": POST_UUID}), \
                         mock.patch.object(ca, "sha256_file", return_value="c" * 64 if change == "jar" else "b" * 64):
                     if change:
@@ -866,6 +1005,8 @@ class PostDeployTest(unittest.TestCase):
                     else:
                         proof = ca.observe_postdeploy(args, planned, mock.Mock())
                         self.assertEqual(before, proof["process"])
+                        self.assertEqual({"status": "READONLY_ADMIN"}, proof["admin"])
+                        admin.assert_called_once()
                         self.assertNotIn("PRIVATE", json.dumps(proof))
 
     def test_pid_command_and_starttime_use_only_original_process(self):
