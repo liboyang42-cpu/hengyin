@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.service.rendezvous.RendezvousRoleContentMapper">
+  <resultMap id="bindingRow" type="com.chengyinhub.business.service.rendezvous.RendezvousRoleContentMapper$BindingRow">
+    <id property="matchId" column="match_id"/>
+    <result property="goalId" column="goal_id"/>
+    <result property="publishVersion" column="publish_version"/>
+    <result property="firstRoleKey" column="first_role_key"/>
+    <result property="secondRoleKey" column="second_role_key"/>
+    <result property="state" column="state"/>
+  </resultMap>
+  <resultMap id="grantRow" type="com.chengyinhub.business.service.rendezvous.RendezvousRoleContentMapper$GrantRow">
+    <id property="ticketId" column="ticket_id"/>
+    <result property="actor" column="actor_id"/>
+    <result property="matchId" column="match_id"/>
+    <result property="goalId" column="goal_id"/>
+    <result property="publishVersion" column="publish_version"/>
+    <result property="roleKey" column="role_key"/>
+    <result property="secretRef" column="secret_ref"/>
+  </resultMap>
+  <select id="binding" resultMap="bindingRow" useCache="false">
+    SELECT match_id, goal_id, publish_version, first_role_key, second_role_key, state
+    FROM w16_role_content_binding WHERE match_id=#{matchId}
+  </select>
+  <select id="publicationState" resultType="java.lang.String" useCache="false">
+    SELECT state FROM w16_role_content_publication
+    WHERE goal_id=#{goalId} AND publish_version=#{publishVersion}
+  </select>
+  <select id="roleBody" resultType="java.lang.String" useCache="false">
+    SELECT body FROM w16_role_content_body
+    WHERE goal_id=#{goalId} AND publish_version=#{publishVersion} AND role_key=#{roleKey}
+  </select>
+  <select id="grantByTicket" resultMap="grantRow" useCache="false">
+    SELECT ticket_id, actor_id, match_id, goal_id, publish_version, role_key, secret_ref
+    FROM w16_role_content_grant WHERE ticket_id=#{ticketId}
+  </select>
+  <insert id="insertGrant">
+    INSERT INTO w16_role_content_grant(ticket_id, actor_id, match_id, goal_id, publish_version, role_key, secret_ref)
+    VALUES(#{ticketId}, #{actor}, #{matchId}, #{goalId}, #{publishVersion}, #{roleKey}, #{secretRef})
+  </insert>
+</mapper>
