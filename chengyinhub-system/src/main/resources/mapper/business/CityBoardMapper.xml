@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.cityboard.mapper.CityBoardMapper">
+
+    <select id="selectDraftById" resultType="com.chengyinhub.business.cityboard.CityBoardDraftRow">
+        select id, owner_user_id as ownerUserId, region_id as regionId, version, status,
+               content_json as contentJson, content_hash as contentHash, approval_hash as approvalHash,
+               approver_user_id as approverUserId, approval_request_id as approvalRequestId,
+               parent_release_id as parentReleaseId, create_time as createTime, update_time as updateTime
+        from city_board_draft
+        where id = #{id}
+    </select>
+
+    <insert id="insertDraft">
+        insert into city_board_draft
+        (id, owner_user_id, region_id, version, status, content_json, content_hash, approval_hash,
+         approver_user_id, approval_request_id, parent_release_id, create_time, update_time)
+        values
+        (#{id}, #{ownerUserId}, #{regionId}, #{version}, #{status}, #{contentJson}, #{contentHash},
+         #{approvalHash,jdbcType=CHAR}, #{approverUserId,jdbcType=BIGINT}, #{approvalRequestId,jdbcType=VARCHAR},
+         #{parentReleaseId,jdbcType=BIGINT}, #{createTime}, #{updateTime})
+    </insert>
+
+    <update id="updateDraft">
+        update city_board_draft
+        set version = #{version},
+            status = #{status},
+            region_id = #{regionId},
+            content_json = #{contentJson},
+            content_hash = #{contentHash},
+            approval_hash = #{approvalHash,jdbcType=CHAR},
+            approver_user_id = #{approverUserId,jdbcType=BIGINT},
+            approval_request_id = #{approvalRequestId,jdbcType=VARCHAR},
+            parent_release_id = #{parentReleaseId,jdbcType=BIGINT},
+            update_time = #{updateTime}
+        where id = #{id}
+          and version = #{expectedVersion}
+    </update>
+
+    <select id="selectCurrentRelease" resultType="com.chengyinhub.business.cityboard.CityBoardReleaseRow">
+        select id, region_id as regionId, draft_id as draftId, revision, rules_release_id as rulesReleaseId,
+               game_id as gameId, board_id as boardId, season_id as seasonId, title, lifecycle,
+               content_hash as contentHash, approval_hash as approvalHash, approver_user_id as approverUserId,
+               snapshot_json as snapshotJson, current_flag as currentFlag, publisher_user_id as publisherUserId,
+               create_time as createTime
+        from city_board_release
+        where region_id = #{regionId}
+          and current_flag = 1
+        limit 1
+    </select>
+
+    <select id="selectReleaseById" resultType="com.chengyinhub.business.cityboard.CityBoardReleaseRow">
+        select id, region_id as regionId, draft_id as draftId, revision, rules_release_id as rulesReleaseId,
+               game_id as gameId, board_id as boardId, season_id as seasonId, title, lifecycle,
+               content_hash as contentHash, approval_hash as approvalHash, approver_user_id as approverUserId,
+               snapshot_json as snapshotJson, current_flag as currentFlag, publisher_user_id as publisherUserId,
+               create_time as createTime
+        from city_board_release
+        where id = #{id}
+    </select>
+
+    <select id="selectMaxRevision" resultType="java.lang.Long">
+        select max(revision) from city_board_release where region_id = #{regionId}
+    </select>
+
+    <update id="clearCurrent">
+        update city_board_release
+        set current_flag = 0
+        where region_id = #{regionId}
+          and current_flag = 1
+    </update>
+
+    <insert id="insertRelease">
+        insert into city_board_release
+        (id, region_id, draft_id, revision, rules_release_id, game_id, board_id, season_id, title, lifecycle,
+         content_hash, approval_hash, approver_user_id, snapshot_json, current_flag, publisher_user_id, create_time)
+        values
+        (#{id}, #{regionId}, #{draftId}, #{revision}, #{rulesReleaseId}, #{gameId}, #{boardId}, #{seasonId},
+         #{title}, #{lifecycle}, #{contentHash}, #{approvalHash}, #{approverUserId}, #{snapshotJson},
+         #{currentFlag}, #{publisherUserId}, #{createTime})
+    </insert>
+
+    <select id="selectOperation" resultType="com.chengyinhub.business.cityboard.CityBoardOperationRow">
+        select id, request_id as requestId, action, actor_user_id as actorUserId, request_hash as requestHash,
+               http_status as httpStatus, result_json as resultJson, draft_id as draftId, release_id as releaseId,
+               create_time as createTime
+        from city_board_operation
+        where request_id = #{requestId}
+    </select>
+
+    <insert id="insertOperation">
+        insert into city_board_operation
+        (id, request_id, action, actor_user_id, request_hash, http_status, result_json, draft_id, release_id, create_time)
+        values
+        (#{id}, #{requestId}, #{action}, #{actorUserId}, #{requestHash}, #{httpStatus}, #{resultJson},
+         #{draftId,jdbcType=BIGINT}, #{releaseId,jdbcType=BIGINT}, #{createTime})
+    </insert>
+</mapper>
