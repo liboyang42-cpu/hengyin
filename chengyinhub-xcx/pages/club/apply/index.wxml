@@ -144,7 +144,7 @@
     <view class="step cy-rise-in" wx:if="{{step===4}}">
       <view class="cap {{hasGuideCert ? 'on' : ''}}" data-field="hasGuideCert" bindtap="toggleBool"
             aria-role="switch" aria-checked="{{!!hasGuideCert}}" aria-label="持导游或旅游资质" hover-class="cy-pressed" hover-stay-time="80">
-        <view class="cap__main"><text class="cap__t">持导游 / 旅游资质</text><text class="cap__d">有证的话审核会快一些</text></view>
+        <view class="cap__main"><text class="cap__t">持导游 / 旅游资质</text><text class="cap__d">用于后续等级评定</text></view>
         <view class="sw" aria-hidden="true"><view class="sw__knob"></view></view>
       </view>
       <view class="field mt">
