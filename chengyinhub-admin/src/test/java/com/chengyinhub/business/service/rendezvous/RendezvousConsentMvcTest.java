@@ -67,7 +67,7 @@ class RendezvousConsentMvcTest {
         SqlSessionTemplate session = new SqlSessionTemplate(new SqlSessionFactoryBuilder().build(config));
         MyBatisRendezvousConsentStore store = new MyBatisRendezvousConsentStore(
                 MyBatisRendezvousConsentStore.Mode.ISOLATED_PERSISTENCE_EVALUATION, session, new DataSourceTransactionManager(source));
-        service = new RendezvousConsentService(store, new RendezvousSafetyAdapter(session.getMapper(ImBlockMapper.class), policy), clock);
+        service = new RendezvousConsentService(store, new RendezvousSafetyAdapter(session.getMapper(ImBlockMapper.class), policy), clock, RendezvousConsentServiceTest.permitsPairing);
         mvc = MockMvcBuilders.standaloneSetup(new ApiRendezvousConsentController(service)).build();
     }
     @AfterEach void cleanup() { SecurityContextHolder.clearContext(); jdbc.execute("SHUTDOWN"); }

@@ -16,7 +16,7 @@ class RendezvousConsentServiceTest {
     RendezvousConsentService service;
     @BeforeEach void setup() {
         store = new MemoryStore(); clock = new MutableClock(); safety = new SafetyPolicy();
-        service = new RendezvousConsentService(store, safety, clock);
+        service = new RendezvousConsentService(store, safety, clock, permitsPairing);
     }
     View join(long actor) { return service.join(actor, "public-pool", "reviewed-v1", 1000); }
     View[] pair() {
@@ -119,14 +119,14 @@ class RendezvousConsentServiceTest {
     }
     @Test void restartUsesStoreAndDoesNotInventConsent() {
         View[] p = pair(); service.accept(1, p[0].ticketId, 1);
-        RendezvousConsentService restarted = new RendezvousConsentService(store, safety, clock);
+        RendezvousConsentService restarted = new RendezvousConsentService(store, safety, clock, permitsPairing);
         View restored = restarted.read(2, p[1].ticketId);
         assertFalse(restored.acceptedByMe); assertTrue(restored.acceptedByOther);
         assertEquals(MatchState.PROPOSED, restored.matchState);
     }
     @Test void concurrentPairingAcrossServiceInstancesReservesEachActorOnce() throws Exception {
         View a = join(1), b = join(2), c = join(3);
-        RendezvousConsentService other = new RendezvousConsentService(store, safety, clock);
+        RendezvousConsentService other = new RendezvousConsentService(store, safety, clock, permitsPairing);
         ExecutorService executor = Executors.newFixedThreadPool(2);
         CountDownLatch start = new CountDownLatch(1);
         try {
@@ -235,6 +235,8 @@ class RendezvousConsentServiceTest {
         for (java.lang.reflect.Field f : View.class.getFields()) fields.add(f.getName());
         assertEquals(new HashSet<>(Arrays.asList("ticketId", "matchId", "publicPlace", "ticketState", "matchState", "acceptedByMe", "acceptedByOther", "expiresAt", "version")), fields);
     }
+    /** Explicit test admission. It does not write a quota row. */
+    static final Admission permitsPairing = (matchId, first, second, pool, now) -> { };
     static final class MutableClock extends Clock {
         long now = 10000;
         public ZoneId getZone() { return ZoneOffset.UTC; }

@@ -27,7 +27,8 @@
 
 ## 配对限额
 
-- 新配对准入只走 `RendezvousPoolScheduler.pairOnce`，再进 `RendezvousConsentService.propose`。propose 在同一 guard 事务里保存 match 之后必定调用 `Admission.charge`。调用方不能再传空回调跳过。`now` 是该事务内读取的服务端时刻。调度器挑选等待票的时刻不参与额度窗口。任一侧失败，match 和两侧计数一起回滚。
+- 新配对准入只走 `RendezvousPoolScheduler.pairOnce`，再进 `RendezvousConsentService.propose`。propose 在同一 guard 事务里保存 match 之后必定调用 `Admission.charge`。`now` 是该事务内读取的服务端时刻。调度器挑选等待票的时刻不参与额度窗口。任一侧失败，match 和两侧计数一起回滚。
+- 三参构造 `RendezvousConsentService(Store, Safety, Clock)` 没有接入额度。它的 Admission 在同一事务里抛 `POLICY_CLOSED`，match 和 reservation 随事务回滚。要完成新配对，调用方必须显式传入会记账的 Admission。
 - 同一 `match_id + actor_id` 只记一次。
 - 额度行在 `w16_contact_quota`。缺行、非 `OPEN`、scope 空白、`window_millis` 非正、`max_contacts` 非正，都是 `POLICY_CLOSED`。代码不把缺省窗口当成终身累计。
 - 计数窗口是 `(now - window_millis, now]`，并且只数同一 pool 和同一 scope。
