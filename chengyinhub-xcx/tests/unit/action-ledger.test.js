@@ -20,6 +20,7 @@ const ledger = require('../../scripts/uiaudit/action-ledger.json')
 const overlay = require('../../scripts/uiaudit/action-evidence.json')
 const {
   eventHandlerNames,
+  communityRequestContracts,
   inferActionClass,
   inferEffectClasses,
   buildExpectedReadback,
@@ -63,6 +64,16 @@ test('动态事件绑定保留同一入口的全部字面分支，不以别处�
     assert.deepEqual(entries.map(item => item.control.handler).sort(), names)
     assert.ok(entries.every(item => item.evidence.status === 'pending'))
   }
+})
+
+test('同进程重复掩码按源码内容区分真实请求与注释，源码改动不能复用旧分类', () => {
+  const call = "community.request({ url: '/api/creativesquare/info', data: { id: 1 } })"
+  const commented = `// ${call}`
+  const actual = communityRequestContracts(call, ['community']).contracts
+  assert.ok(actual.length > 0)
+  assert.deepEqual(communityRequestContracts(commented, ['community']).contracts, [])
+  assert.deepEqual(communityRequestContracts(call, ['community']).contracts, actual)
+  assert.deepEqual(communityRequestContracts(`/* ${call} */`, ['community']).contracts, [])
 })
 
 test('动态事件绑定未知取值路径显式失败，不能静默漏记', () => {
