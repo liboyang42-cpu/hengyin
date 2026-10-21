@@ -44,11 +44,26 @@ class RendezvousProtocolTest {
         h.consent.accept(1, joined.ticketId, 1);
         code("SECRET_UNAVAILABLE", () -> h.secrets.read(1, joined.ticketId));
         h.consent.accept(2, other.ticketId, 2);
+        h.secretStore.contentConnected = false;
         try {
             h.secrets.read(1, joined.ticketId);
+            fail("unconfigured role content returned a clue");
         } catch (Rejection rejected) {
             assertEquals("SECRET_UNAVAILABLE", rejected.getCode());
         }
+        h.secretStore.contentConnected = true;
+        h.db.clues.put(joined.ticketId, "published-lead");
+        h.db.clues.put(other.ticketId, "published-follow");
+        Projection mine = h.secrets.read(1, joined.ticketId);
+        Projection again = h.secrets.read(1, joined.ticketId);
+        Projection theirs = h.secrets.read(2, other.ticketId);
+        assertEquals(joined.ticketId, mine.ticketId);
+        assertEquals("published-lead", mine.roleClue);
+        assertEquals(mine.roleClue, again.roleClue);
+        assertEquals("published-follow", theirs.roleClue);
+        String matchId = h.consent.read(1, joined.ticketId).matchId;
+        assertEquals(joined.ticketId.equals(h.db.matches.get(matchId).firstTicket), mine.willLead);
+        assertNotEquals(mine.willLead, theirs.willLead);
         code("NOT_FOUND", () -> h.secrets.read(2, joined.ticketId));
         code("NOT_FOUND", () -> h.secrets.read(3, joined.ticketId));
         Set<String> fields = new HashSet<>();
@@ -119,7 +134,8 @@ class RendezvousProtocolTest {
         final Db db = new Db();
         final ConsentStore consentStore = new ConsentStore(db);
         final RendezvousConsentService consent = new RendezvousConsentService(consentStore, policy, clock, RendezvousConsentServiceTest.permitsPairing);
-        final RendezvousRoleSecretService secrets = new RendezvousRoleSecretService(consent, new SecretStore(db));
+        final SecretStore secretStore = new SecretStore(db);
+        final RendezvousRoleSecretService secrets = new RendezvousRoleSecretService(consent, secretStore);
         final RendezvousPoolScheduler scheduler = new RendezvousPoolScheduler(consent, policy, new Wait(db), catalog, clock);
         void allow() {
             for (String dimension : new String[]{"eligibility-source", "age", "region", "time-window"})
@@ -144,6 +160,16 @@ class RendezvousProtocolTest {
         Long windowMillis;
         void put(String dimension, String version, RendezvousVersionedPolicy.Row row) { rows.put(dimension + "\0" + version, row); }
         public RendezvousVersionedPolicy.Row find(String dimension, String version) { return rows.get(dimension + "\0" + version); }
+        /** Fixture opt-in. v1 actors have facts; any other version does not. Not a production rule. */
+        public RendezvousEligibilityFacts facts() {
+            return new RendezvousEligibilityFacts() {
+                public boolean connected() { return true; }
+                public String currentVersion() { return "v1"; }
+                public boolean admits(long actor, String clientVersion, long now) {
+                    return actor > 0 && "v1".equals(clientVersion);
+                }
+            };
+        }
         public int contacts(long actor) { return used(actor, "pool", scope, Long.MAX_VALUE); }
         public void charge(String matchId, long first, long second, String pool, long now) {
             if (scope == null || scope.trim().isEmpty() || windowMillis == null || windowMillis <= 0) throw new Rejection("POLICY_CLOSED");
@@ -203,6 +229,8 @@ class RendezvousProtocolTest {
     }
     static final class SecretStore implements RendezvousRoleSecretService.Store, RendezvousRoleSecretService.Tx {
         final Db db;
+        /** False means no published content is connected. Generated clues are not stored. */
+        boolean contentConnected;
         SecretStore(Db db) { this.db = db; }
         public synchronized <T> T transaction(Function<RendezvousRoleSecretService.Tx, T> work) { return work.apply(this); }
         public Ticket activeTicket(long actor) { return db.tickets.values().stream().filter(t -> t.actor == actor && t.active()).findFirst().orElse(null); }
@@ -210,8 +238,10 @@ class RendezvousProtocolTest {
         public Match match(String id) { return db.matches.get(id); }
         public void save(Ticket ticket) { throw new AssertionError("secret read does not save tickets"); }
         public void save(Match match) { throw new AssertionError("secret read does not save matches"); }
-        public String clue(String ticketId) { return db.clues.get(ticketId); }
-        public void insertClue(String ticketId, long actor, String matchId, String clue) { db.clues.putIfAbsent(ticketId, clue); }
+        public String clue(String ticketId) { return contentConnected ? db.clues.get(ticketId) : null; }
+        public void insertClue(String ticketId, long actor, String matchId, String clue) {
+            if (contentConnected) db.clues.putIfAbsent(ticketId, clue);
+        }
     }
     static final class Wait implements RendezvousPoolScheduler.Waiting {
         final Db db;

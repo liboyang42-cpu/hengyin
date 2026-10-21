@@ -23,7 +23,7 @@
 | `ums_member_address` | 收货地址 |
 | `member_interest_profile.city_code` | 兴趣城市 |
 
-`MyBatisRendezvousCatalog` 不传资格 mapper 时是接通且全部拒绝，不是全通过。`Catalog.facts()` 的默认 `unwired()` 只服务于尚未接通的测试目录，不能当作生产权威。
+`MyBatisRendezvousCatalog` 不传资格 mapper 时是接通且全部拒绝，不是全通过。`Catalog.facts()` 的默认也是 `closed()`：已接通且不录取，四行 `OPEN` 不够。`unwired()` 不再是默认。测试目录若要表达「这些 actor 在夹具版本上已有事实」，必须自己覆盖 `facts()`。
 
 ## 配对限额
 
