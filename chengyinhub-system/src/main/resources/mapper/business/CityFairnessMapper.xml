@@ -7,12 +7,16 @@
                source_ref as sourceRef,
                delta_millis as deltaMillis,
                horizon_millis as horizonMillis,
-               lower_effective_events as lowerEffectiveEvents
+               lower_effective_events as lowerEffectiveEvents,
+               max_events as maxEvents,
+               page_size as pageSize
         from city_fairness_parameter
+        where state = 'APPROVED'
     </select>
 
     <select id="selectEvents" resultType="com.chengyinhub.business.citygame.analytics.fairness.CityFairnessReader$EventRow">
-        select event_id as eventId,
+        select source_ref as source,
+               event_id as eventId,
                outing_id as outingId,
                kind,
                actor_id as actorId,
@@ -24,7 +28,53 @@
                gain_amount as gainAmount,
                verification_millis as verificationMillis
         from city_fairness_event
-        where occurred_at &gt; #{windowStartExclusive}
+        where actor_id = #{actorId}
+          and occurred_at &gt; #{windowStartExclusive}
           and occurred_at &lt;= #{asOfInclusive}
+        order by occurred_at, source_ref, event_id
+        limit #{limit}
+    </select>
+
+    <select id="selectEvent" resultType="com.chengyinhub.business.citygame.analytics.fairness.CityFairnessReader$EventRow">
+        select source_ref as source,
+               event_id as eventId,
+               outing_id as outingId,
+               kind,
+               actor_id as actorId,
+               occurred_at as occurredAt,
+               join_time as joinTime,
+               team_size as teamSize,
+               action_cost as actionCost,
+               newcomer,
+               gain_amount as gainAmount,
+               verification_millis as verificationMillis
+        from city_fairness_event
+        where source_ref = #{source}
+          and event_id = #{eventId}
+    </select>
+
+    <insert id="insertEvent">
+        insert into city_fairness_event (
+            source_ref, event_id, outing_id, kind, actor_id, occurred_at,
+            join_time, team_size, action_cost, newcomer, gain_amount, verification_millis
+        ) values (
+            #{source}, #{eventId}, #{outingId}, #{kind}, #{actorId}, #{occurredAt},
+            #{joinTime}, #{teamSize}, #{actionCost}, #{newcomer}, #{gainAmount}, #{verificationMillis}
+        )
+    </insert>
+
+    <insert id="insertRead">
+        insert into city_fairness_read (account_id, query_id, as_of, payload)
+        values (#{accountId}, #{queryId}, #{asOf}, #{payload})
+    </insert>
+
+    <select id="selectRead" resultType="com.chengyinhub.business.citygame.analytics.fairness.CityFairnessReadRow">
+        select account_id as accountId,
+               query_id as queryId,
+               as_of as asOf,
+               payload
+        from city_fairness_read
+        where account_id = #{accountId}
+          and query_id = #{queryId}
     </select>
 </mapper>

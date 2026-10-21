@@ -30,6 +30,8 @@ public final class FairnessFactContract {
     public static final String LOWER_EFFECTIVE_EVENTS = "lowerEffectiveEvents";
     public static final String PARAMETER_APPROVAL = "parameter-approval";
     public static final String PARAMETER_SOURCE_REF = "parameter-source-ref";
+    public static final String MAX_EVENTS = "maxEvents";
+    public static final String PAGE_SIZE = "pageSize";
 
     public static final List<String> STREAMS = List.of(
             "goals", "effective-gains", "concentration", "zero-point-blocks",

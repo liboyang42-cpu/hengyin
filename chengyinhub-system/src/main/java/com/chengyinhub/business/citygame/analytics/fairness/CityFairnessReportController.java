@@ -1,0 +1,68 @@
+package com.chengyinhub.business.citygame.analytics.fairness;
+
+import com.chengyinhub.common.core.controller.BaseController;
+import com.chengyinhub.common.core.domain.AjaxResult;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+/** Read-only report. The route is not anonymous. Each page is bound to the logged-in account and query id. */
+@RestController
+@RequestMapping("/api/city-game/fairness")
+public class CityFairnessReportController extends BaseController {
+    private final CityFairnessReportService reports;
+
+    public CityFairnessReportController(CityFairnessReportService reports) {
+        this.reports = reports;
+    }
+
+    @GetMapping("/report")
+    public ResponseEntity<AjaxResult> report(@RequestParam(required = false) String queryId,
+                                              @RequestParam(required = false) Long asOf,
+                                              @RequestParam(required = false) String cursor) {
+        Long accountId = currentAccount();
+        if (accountId == null) {
+            return respond(CityFairnessReportService.Page.reject(401, "UNAUTHORIZED"));
+        }
+        return respond(reports.read(accountId, queryId, asOf, cursor));
+    }
+
+    protected Long currentAccount() {
+        try {
+            Long accountId = getAppUserId();
+            return accountId == null || accountId <= 0 ? null : accountId;
+        } catch (RuntimeException ex) {
+            return null;
+        }
+    }
+
+    private static ResponseEntity<AjaxResult> respond(CityFairnessReportService.Page page) {
+        Map<String, Object> data = new LinkedHashMap<>();
+        data.put("accountId", page.accountId);
+        data.put("queryId", page.queryId);
+        data.put("asOf", page.asOf);
+        data.put("status", page.status);
+        data.put("maturity", page.maturity);
+        data.put("missing", page.missing);
+        data.put("groups", page.groups);
+        data.put("outingClasses", page.outingClasses);
+        data.put("secondOutings", page.secondOutings);
+        data.put("cursor", page.cursor);
+        data.put("nextCursor", page.nextCursor);
+        data.put("readBack", page.readBack);
+        if (page.errorCode != null) data.put("errorCode", page.errorCode);
+        boolean gap = CityFairnessReader.NOT_COMPUTABLE.equals(page.status);
+        int http = gap ? 422 : page.httpStatus;
+        AjaxResult body = http == 200
+                ? AjaxResult.success(data)
+                : AjaxResult.error(http, gap ? CityFairnessReader.NOT_COMPUTABLE : page.errorCode);
+        if (http != 200) body.put(AjaxResult.DATA_TAG, data);
+        body.put("candidate", Boolean.TRUE);
+        return ResponseEntity.status(http).header("X-Chengyin-Candidate", "city-fairness").body(body);
+    }
+}

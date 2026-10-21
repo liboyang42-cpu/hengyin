@@ -89,7 +89,7 @@ public final class CityFairnessReader {
                 missing.add("eventId");
                 continue;
             }
-            EventRow prior = byId.putIfAbsent(event.eventId, event);
+            EventRow prior = byId.putIfAbsent(dedupeKey(event), event);
             if (prior != null && !same(prior, event)) missing.add("event-conflict:" + event.eventId);
         }
         if (!missing.isEmpty()) return Result.notComputable(missing);
@@ -109,6 +109,9 @@ public final class CityFairnessReader {
             if (event.actionCost != null && event.actionCost < 0) missing.add("actionCost:" + event.eventId);
             if (!validNewcomer(event.newcomer)) missing.add("newcomer:" + event.eventId);
             if (GAIN.equals(event.kind) && event.gainAmount == null) missing.add("gainAmount:" + event.eventId);
+            if (GAIN.equals(event.kind) && event.gainAmount != null && event.gainAmount < 0) {
+                missing.add("negative-gain:" + event.eventId);
+            }
             if (MERCHANT_VERIFICATION.equals(event.kind) && (event.verificationMillis == null || event.verificationMillis < 0)) {
                 missing.add("verificationMillis:" + event.eventId);
             }
@@ -118,10 +121,18 @@ public final class CityFairnessReader {
 
         Map<GroupKey, Group> groups = new TreeMap<>();
         Map<Long, List<Outing>> byActor = new LinkedHashMap<>();
+        List<OutingClass> classes = new ArrayList<>();
         for (Map.Entry<String, List<EventRow>> entry : outings.entrySet()) {
             Outing outing = outing(entry.getKey(), entry.getValue(), parameter.lowerEffectiveEvents, missing);
             if (outing == null) continue;
-            if (outing.effective || counted(outing)) groups.computeIfAbsent(outing.key, Group::new).add(outing);
+            classes.add(new OutingClass(outing.id, outing.actorId,
+                    outing.effective ? "MATURE" : "IMMATURE",
+                    outing.effective ? "effective" : "below-lower-bound"));
+            try {
+                if (outing.effective || counted(outing)) groups.computeIfAbsent(outing.key, Group::new).add(outing);
+            } catch (FairnessReadException ex) {
+                return Result.notComputable(List.of(ex.missing));
+            }
             if (outing.effective) byActor.computeIfAbsent(outing.actorId, key -> new ArrayList<>()).add(outing);
         }
         if (!missing.isEmpty()) return Result.notComputable(missing);
@@ -140,7 +151,10 @@ public final class CityFairnessReader {
                     } catch (ArithmeticException ex) {
                         return Result.notComputable(List.of(DELTA_MILLIS));
                     }
-                    if (outing.anchor < due) continue;
+                    if (outing.anchor < due) {
+                        replaceClass(classes, outing.id, "IMMATURE", "inside-delta");
+                        continue;
+                    }
                 }
                 previous = outing.anchor;
                 counted++;
@@ -148,8 +162,24 @@ public final class CityFairnessReader {
             }
         }
         seconds.sort(Comparator.comparingLong(item -> item.actorId));
+        classes.sort(Comparator.comparing(item -> item.outingId));
         List<Group> listed = new ArrayList<>(groups.values());
-        return new Result(COMPUTABLE, List.of(), listed, seconds);
+        return new Result(COMPUTABLE, List.of(), listed, seconds, classes);
+    }
+
+    private static String dedupeKey(EventRow event) {
+        String source = event.source == null ? "" : event.source;
+        return source + "\0" + event.eventId;
+    }
+
+    private static void replaceClass(List<OutingClass> classes, String outingId, String maturity, String reason) {
+        for (int i = 0; i < classes.size(); i++) {
+            OutingClass current = classes.get(i);
+            if (outingId.equals(current.outingId)) {
+                classes.set(i, new OutingClass(outingId, current.actorId, maturity, reason));
+                return;
+            }
+        }
     }
 
     private static Outing outing(String id, List<EventRow> events, int lower, List<String> missing) {
@@ -208,8 +238,9 @@ public final class CityFairnessReader {
         return value;
     }
 
-    private static boolean same(EventRow left, EventRow right) {
-        return Objects.equals(left.outingId, right.outingId) && Objects.equals(left.kind, right.kind)
+    static boolean same(EventRow left, EventRow right) {
+        return Objects.equals(left.source, right.source)
+                && Objects.equals(left.outingId, right.outingId) && Objects.equals(left.kind, right.kind)
                 && Objects.equals(left.actorId, right.actorId) && Objects.equals(left.occurredAt, right.occurredAt)
                 && Objects.equals(left.joinTime, right.joinTime) && Objects.equals(left.teamSize, right.teamSize)
                 && Objects.equals(left.actionCost, right.actionCost) && Objects.equals(left.newcomer, right.newcomer)
@@ -237,9 +268,12 @@ public final class CityFairnessReader {
         public Long deltaMillis;
         public Long horizonMillis;
         public Integer lowerEffectiveEvents;
+        public Integer maxEvents;
+        public Integer pageSize;
     }
 
     public static final class EventRow {
+        public String source;
         public String eventId;
         public String outingId;
         public String kind;
@@ -258,21 +292,52 @@ public final class CityFairnessReader {
         public final List<String> missing;
         public final List<Group> groups;
         public final List<SecondOuting> secondOutings;
+        public final List<OutingClass> outingClasses;
 
-        Result(String status, List<String> missing, List<Group> groups, List<SecondOuting> secondOutings) {
+        Result(String status, List<String> missing, List<Group> groups, List<SecondOuting> secondOutings,
+               List<OutingClass> outingClasses) {
             this.status = status;
             this.missing = List.copyOf(missing);
             this.groups = List.copyOf(groups);
             this.secondOutings = List.copyOf(secondOutings);
+            this.outingClasses = List.copyOf(outingClasses);
         }
 
         static Result notComputable(List<String> missing) {
             List<String> sorted = new ArrayList<>(missing);
             sorted.sort(String::compareTo);
-            return new Result(NOT_COMPUTABLE, sorted.stream().distinct().toList(), List.of(), List.of());
+            return new Result(NOT_COMPUTABLE, sorted.stream().distinct().toList(), List.of(), List.of(), List.of());
         }
 
         public boolean computable() { return COMPUTABLE.equals(status); }
+
+        public String maturity() {
+            if (!computable()) return "MISSING";
+            boolean mature = false;
+            boolean immature = false;
+            for (OutingClass item : outingClasses) {
+                if ("IMMATURE".equals(item.maturity)) immature = true;
+                if ("MATURE".equals(item.maturity)) mature = true;
+            }
+            if (mature && immature) return "MIXED";
+            if (immature) return "IMMATURE";
+            if (mature) return "MATURE";
+            return "EMPTY";
+        }
+    }
+
+    public static final class OutingClass {
+        public final String outingId;
+        public final long actorId;
+        public final String maturity;
+        public final String reason;
+
+        public OutingClass(String outingId, long actorId, String maturity, String reason) {
+            this.outingId = outingId;
+            this.actorId = actorId;
+            this.maturity = maturity;
+            this.reason = reason;
+        }
     }
 
     public static final class Group {
@@ -305,8 +370,13 @@ public final class CityFairnessReader {
                     case GOAL_COMPLETED -> goalCompletions++;
                     case GAIN -> {
                         if (!outing.effective) break;
-                        effectiveGain += event.gainAmount;
-                        gainByActor.merge(event.actorId, event.gainAmount, Long::sum);
+                        try {
+                            effectiveGain = Math.addExact(effectiveGain, event.gainAmount);
+                            long prior = gainByActor.getOrDefault(event.actorId, 0L);
+                            gainByActor.put(event.actorId, Math.addExact(prior, event.gainAmount));
+                        } catch (ArithmeticException ex) {
+                            throw new FairnessReadException("gain-overflow");
+                        }
                     }
                     case ZERO_POINT_BLOCK -> zeroPointBlocks++;
                     case CHALLENGE_COMPENSATION_EXIT -> challengeCompensationExits++;
@@ -314,7 +384,11 @@ public final class CityFairnessReader {
                     case SAFETY_TICKET -> safetyTickets++;
                     case MERCHANT_VERIFICATION -> {
                         merchantVerifications++;
-                        merchantVerificationMillis += event.verificationMillis;
+                        try {
+                            merchantVerificationMillis = Math.addExact(merchantVerificationMillis, event.verificationMillis);
+                        } catch (ArithmeticException ex) {
+                            throw new FairnessReadException("verification-overflow");
+                        }
                     }
                     default -> { }
                 }
@@ -336,14 +410,23 @@ public final class CityFairnessReader {
         public final String newcomer;
 
         SecondOuting(long actorId, String outingId, long anchorMillis, GroupKey key) {
+            this(actorId, outingId, anchorMillis, key.joinTime, key.teamSize, key.actionCost, key.newcomer);
+        }
+
+        SecondOuting(long actorId, String outingId, long anchorMillis, Long joinTime, Integer teamSize,
+                     Integer actionCost, String newcomer) {
             this.actorId = actorId;
             this.outingId = outingId;
             this.anchorMillis = anchorMillis;
-            this.joinTime = key.joinTime;
-            this.teamSize = key.teamSize;
-            this.actionCost = key.actionCost;
-            this.newcomer = key.newcomer;
+            this.joinTime = joinTime;
+            this.teamSize = teamSize;
+            this.actionCost = actionCost;
+            this.newcomer = newcomer;
         }
+    }
+
+    static Group restoreGroup(Long joinTime, Integer teamSize, Integer actionCost, String newcomer) {
+        return new Group(new GroupKey(joinTime, teamSize, actionCost, newcomer));
     }
 
     private record GroupKey(Long joinTime, Integer teamSize, Integer actionCost, String newcomer)

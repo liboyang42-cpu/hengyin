@@ -1,39 +1,28 @@
-# W20.21 公平与二次有效出行（只读候选）
+# W20.21 公平与二次有效出行
 
-本组只读。没有 HTTP 入口，没有 Spring Bean，不改 `ConsentService`，不写 `citygame/analytics/value`。
-
-## 依赖
-
-已接受的 CITY 发布域：`36071cdfd55513b59966c5185153eac692a9753d`。本组不读它的参与或积分接口，那两项仍是 `UNAVAILABLE`。
-
-事实合同只放在本目录 `FairnessFactContract`（`city-fairness-fact-v1`）。价值统计组不要在公共目录再写一份。
-
-未接上的来源：
-
-- 没有事件生产者写入 `city_fairness_event`
-- 没有已批准的参数行
-- 没有把报名二报、重开 App、重连换成 `outing_id`
-
-`UnconnectedFairnessSource` 可调用，结果是 `NOT_COMPUTABLE`，并列出缺的流和 `deltaMillis`、`horizonMillis`、`lowerEffectiveEvents`。
+只读报告。不改 `ConsentService`，不写 `citygame/analytics/value`，不读 W10 报名二报。
 
 ## 可调用链
 
-`new CityFairnessReader().read(asOf, source)`
+1. `CityFairnessIngestionService.ingest(event)` 写入候选表 `city_fairness_event`。身份是 `(source_ref, event_id)`。相同身份且内容一致则 `DEDUPED`，内容不同则 `CONFLICT` 且不覆盖。`APP_REOPEN`、`RECONNECT`、`REGISTRATION_REPEAT` 直接拒绝，不落成出行。
+2. `CityFairnessReportService.read(accountId, queryId, asOf, cursor)` 只读该账号的事件。参数必须是唯一一行 `state = 'APPROVED'`，并带正数 `deltaMillis`、`horizonMillis`、`lowerEffectiveEvents`、`maxEvents`、`pageSize` 和来源 `sourceRef`。缺任一项是 `NOT_COMPUTABLE`，不填默认值。读到 `maxEvents + 1` 行则记 `event-bound`，不截断后当成功。
+3. `CityFairnessReader.read` 在窗口 `(asOf - horizonMillis, asOf]` 内按 `(source, event_id)` 去重，再按 `outing_id` 归并，用 Δ/H/L 算二次有效出行。
+4. 分类：报告不可计算是 `MISSING`。有效出行是 `MATURE` / `effective`。未达到 L 是 `IMMATURE` / `below-lower-bound`。已有效但距上次计入锚点不足 Δ 的，二次出行记 `IMMATURE` / `inside-delta`。没有出行的可计算窗口是 `EMPTY`，不是 0% 成功。
+5. 第一次读把结果写入 `city_fairness_read`，键是 `(account_id, query_id)`。同一查询重试返回这份快照（`readBack=true`）。同一查询换 `asOf` 是 `query-conflict`。游标只切这一份快照里的分组。
+6. `GET /api/city-game/fairness/report?queryId&asOf&cursor` 使用当前登录账号。没有登录是 401。不可计算的报告是 HTTP 422，body 里带缺项。这个路由没有加入匿名放行。
 
-- `source` 可以是 `MyBatisCityFairnessSource(CityFairnessMapper)` 或测试用的内存实现
-- `CityFairnessMapper` 没有 `@Mapper`，XML 在 `mapper/business/CityFairnessMapper.xml`
-- 候选表在 `chengyinhub-admin/sql/migration_w20_city_fairness_candidate.sql`，没有 INSERT，本次不执行
+生产者必须保证同一个 `(source_ref, event_id)` 不表示两件不同的事。`event_id` 单独不跨来源唯一。
 
-参数行必须恰好一行，且 `state=APPROVED`、`source_ref` 非空、`delta_millis`、`horizon_millis`、`lower_effective_events` 都是正数。否则 `NOT_COMPUTABLE`，缺什么就写什么，不填业务默认。
+## 候选表
 
-## 计算
+`chengyinhub-admin/sql/migration_w20_city_fairness_candidate.sql` 没有 INSERT，本轮不执行。`CityFairnessMapper` 没有 `@Mapper`。`UnconnectedFairnessSource` 只留给“流不可用”的阅读器测试，正式服务不调用它。
 
-窗口是 `(asOf - horizonMillis, asOf]`。`APP_REOPEN`、`RECONNECT`、`REGISTRATION_REPEAT` 不建出行，报名二报不算二次出行。
+## 缺实现
 
-其余事件必须带真实 `outing_id`。同一个 `event_id` 只计一次；落到两个出行或内容不一致则不可计算。一个出行里的加入时点、队伍人数、行动消耗、新手标记、actor 必须一致，报告按这四项分组。
-
-`EFFECTIVE_TASK` 与 `EFFECTIVE_SERVICE` 去重后的条数达到 `lowerEffectiveEvents`，该出行有效。未达到该下限、又没有目标完成、零积分受阻、挑战补偿退出、GPS 误拒、安全工单或商户验证的出行不进入分组。同一人的有效出行按锚点排序，后一次只有 `anchor >= 上一次计入的锚点 + deltaMillis` 才计入下一次。间隔不够的出行不推进锚点。第二次计入的出行写入 `secondOutings`。
-
-分组里另读：`GOAL_COMPLETED`、有效出行上的 `GAIN`、`ZERO_POINT_BLOCK`、`CHALLENGE_COMPENSATION_EXIT`、`GPS_FALSE_REJECTION`、`SAFETY_TICKET`、带 `verification_millis` 的 `MERCHANT_VERIFICATION`。有效收益合计为 0 时不报集中度百分比。增益或缺验证耗时则整份不可计算。
-
-表是空的且参数已批准时，结果是可计算的空分组，不是缺覆盖。流被标成不可用时，不把空分组当成 0% 成功。
+| 项 | 状态 |
+| --- | --- |
+| CITY 任务、服务、GPS 误拒、安全工单、商户验证的发出点调用 `ingest` | 未实现。仓库里没有这些事实的生产者。摄取服务本身已实现 |
+| 已批准的 Δ/H/L/`maxEvents`/`pageSize` 行 | 缺配置。没有批准行时报告 `MISSING`，不造阈值 |
+| 跨账号的城市范围 | 未实现。当前只读登录账号自己的 `actor_id` |
+| 客户端提交完成事实的 HTTP 入口 | 不提供。完成事实只能由服务端调用 `ingest` |
+| 执行候选 DDL、接通生产库 | 未执行 |

@@ -194,31 +194,96 @@ class CityFairnessReaderTest {
     }
 
     @Test void mapperFailuresStayNotComputable() {
-        CityFairnessReader.Result thrown = reader.read(10_000, new MyBatisCityFairnessSource(new CityFairnessMapper() {
+        CityFairnessReader.Result thrown = reader.read(10_000, new MyBatisCityFairnessSource(new MapperStub() {
             public List<CityFairnessReader.ParameterRow> selectParameters() { throw new IllegalStateException("down"); }
-            public List<CityFairnessReader.EventRow> selectEvents(long start, long asOf) { return List.of(); }
-        }));
+            public List<CityFairnessReader.EventRow> selectEvents(long actorId, long start, long asOf, int limit) { return List.of(); }
+        }, 7, 10));
         assertTrue(thrown.missing.contains("city_fairness_parameter"));
         CityFairnessReader.ParameterRow row = approved();
-        CityFairnessReader.Result ambiguous = reader.read(10_000, new MyBatisCityFairnessSource(new CityFairnessMapper() {
+        CityFairnessReader.Result ambiguous = reader.read(10_000, new MyBatisCityFairnessSource(new MapperStub() {
             public List<CityFairnessReader.ParameterRow> selectParameters() { return List.of(row, row); }
-            public List<CityFairnessReader.EventRow> selectEvents(long start, long asOf) { return List.of(); }
-        }));
+            public List<CityFairnessReader.EventRow> selectEvents(long actorId, long start, long asOf, int limit) { return List.of(); }
+        }, 7, 10));
         assertTrue(ambiguous.missing.contains("parameter-ambiguous"));
         CityFairnessReader.EventRow event = task("e1", "o1", 7, 6_000);
-        CityFairnessReader.Result computed = reader.read(10_000, new MyBatisCityFairnessSource(new CityFairnessMapper() {
+        CityFairnessReader.Result computed = reader.read(10_000, new MyBatisCityFairnessSource(new MapperStub() {
             public List<CityFairnessReader.ParameterRow> selectParameters() { return List.of(row); }
-            public List<CityFairnessReader.EventRow> selectEvents(long start, long asOf) { return List.of(event); }
-        }));
+            public List<CityFairnessReader.EventRow> selectEvents(long actorId, long start, long asOf, int limit) {
+                assertEquals(7L, actorId);
+                assertEquals(11, limit);
+                return List.of(event);
+            }
+        }, 7, 10));
         assertTrue(computed.computable());
         assertEquals(1, computed.groups.size());
+    }
+
+    @Test void approvedParameterIgnoresALeftoverDraft() {
+        CityFairnessReader.ParameterRow draft = approved();
+        draft.state = "DRAFT";
+        CityFairnessReader.ParameterRow approved = approved();
+        CityFairnessReader.EventRow event = task("e1", "o1", 7, 6_000);
+        CityFairnessReader.Result result = reader.read(10_000, new MyBatisCityFairnessSource(new MapperStub() {
+            public List<CityFairnessReader.ParameterRow> selectParameters() { return List.of(draft, approved); }
+            public List<CityFairnessReader.EventRow> selectEvents(long actorId, long start, long asOf, int limit) {
+                return List.of(event);
+            }
+        }, 7, 10));
+        assertTrue(result.computable());
+        assertEquals(1, result.groups.size());
+        assertFalse(result.missing.contains("parameter-ambiguous"));
+    }
+
+    @Test void negativeGainIsNamedAndNotCounted() {
+        Memory memory = approvedMemory();
+        memory.events.add(task("e1", "o1", 7, 6_000));
+        memory.events.add(gain("g1", "o1", 7, 6_010, -5));
+        CityFairnessReader.Result result = reader.read(10_000, memory);
+        assertFalse(result.computable());
+        assertTrue(result.missing.contains("negative-gain:g1"));
+        assertTrue(result.groups.isEmpty());
+        assertEquals("MISSING", result.maturity());
+    }
+
+    @Test void gainSumUsesExactAddition() {
+        Memory memory = approvedMemory();
+        memory.events.add(task("e1", "o1", 7, 6_000));
+        memory.events.add(gain("g1", "o1", 7, 6_010, Long.MAX_VALUE));
+        memory.events.add(gain("g2", "o1", 7, 6_020, 1));
+        CityFairnessReader.Result result = reader.read(10_000, memory);
+        assertFalse(result.computable());
+        assertTrue(result.missing.contains("gain-overflow"));
+        assertTrue(result.groups.isEmpty());
+    }
+
+    @Test void dedupeKeyIsSourceAndEventId() throws Exception {
+        Memory memory = approvedMemory();
+        CityFairnessReader.EventRow first = task("e1", "o1", 7, 6_000);
+        first.source = "city-task";
+        CityFairnessReader.EventRow again = task("e1", "o1", 7, 6_000);
+        again.source = "city-task";
+        CityFairnessReader.EventRow otherSource = task("e1", "o2", 7, 6_200);
+        otherSource.source = "city-service";
+        otherSource.teamSize = 4;
+        memory.events.add(first);
+        memory.events.add(again);
+        memory.events.add(otherSource);
+        CityFairnessReader.Result result = reader.read(10_000, memory);
+        assertTrue(result.computable());
+        assertEquals(2, result.groups.size());
+        assertEquals(1, result.secondOutings.size());
+        String contract = Files.readString(Path.of("../docs/contracts/w20-city-fairness.md"));
+        assertTrue(contract.contains("(source_ref, event_id)"));
+        assertTrue(contract.contains("event_id"));
     }
 
     @Test void candidateSqlAndMapperDoNotInsertThresholds() throws Exception {
         String sql = Files.readString(Path.of("sql/migration_w20_city_fairness_candidate.sql"));
         String xml = Files.readString(Path.of("../chengyinhub-system/src/main/resources/mapper/business/CityFairnessMapper.xml"));
         assertFalse(sql.toLowerCase().contains("insert"));
-        assertFalse(xml.toLowerCase().contains("insert"));
+        assertFalse(xml.toLowerCase().contains("insert into city_fairness_parameter"));
+        assertTrue(xml.contains("insert into city_fairness_event"));
+        assertTrue(xml.contains("where state = 'APPROVED'"));
         assertFalse(xml.toLowerCase().contains("coalesce"));
         assertTrue(xml.contains("city_fairness_parameter"));
         assertTrue(xml.contains("city_fairness_event"));
@@ -268,6 +333,15 @@ class CityFairnessReaderTest {
         row.actionCost = 3;
         row.newcomer = NEWCOMER;
         return row;
+    }
+
+    private static class MapperStub implements CityFairnessMapper {
+        public List<CityFairnessReader.ParameterRow> selectParameters() { return List.of(); }
+        public List<CityFairnessReader.EventRow> selectEvents(long actorId, long start, long asOf, int limit) { return List.of(); }
+        public CityFairnessReader.EventRow selectEvent(String source, String eventId) { return null; }
+        public int insertEvent(CityFairnessReader.EventRow row) { return 0; }
+        public int insertRead(CityFairnessReadRow row) { return 0; }
+        public CityFairnessReadRow selectRead(long accountId, String queryId) { return null; }
     }
 
     private static final class Memory implements CityFairnessReader.Source {
