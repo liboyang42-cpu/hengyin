@@ -1123908,234 +1123908,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:437"
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:490"
       }
     },
     {
-      "id": "subpackageMember/components/cy/scene-roam-poi-detail/index.wxml:27:bind:retry:recoverInteraction:4",
-      "route": "component:subpackageMember/components/cy/scene-roam-poi-detail/index",
-      "hostRoutes": [
-        "pages/merchant/index/index",
-        "pages/play/index",
-        "pages/roam/index",
-        "subpackageMember/coupon-wallet/index",
-        "subpackageRoam/poi-detail/index"
-      ],
-      "hostComponentPaths": [
-        {
-          "route": "pages/merchant/index/index",
-          "segments": [
-            {
-              "selector": "cy-scene-roam-poi-detail",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/play/index",
-          "segments": [
-            {
-              "selector": "cy-scene-roam-poi-detail",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/roam/index",
-          "segments": [
-            {
-              "selector": "cy-scene-roam-poi-detail",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageMember/coupon-wallet/index",
-          "segments": [
-            {
-              "selector": "cy-scene-deep-link",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-roam-poi-detail",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageRoam/poi-detail/index",
-          "segments": [
-            {
-              "selector": "cy-scene-deep-link",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-roam-poi-detail",
-              "index": 0
-            }
-          ]
-        }
-      ],
-      "role": "inherited",
-      "entry": {
-        "wxml": "subpackageMember/components/cy/scene-roam-poi-detail/index.wxml",
-        "js": "subpackageMember/components/cy/scene-roam-poi-detail/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {
-        "chooseImage-cancelled": "chooseImage",
-        "openSetting-cancelled": "openSetting",
-        "scanCode-cancelled": "scanCode",
-        "chooseImage-denied": "chooseImage",
-        "getLocation-denied": "getLocation",
-        "openSetting-denied": "openSetting",
-        "scanCode-denied": "scanCode"
-      },
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-error",
-        "event": "bind:retry",
-        "handler": "recoverInteraction",
-        "line": 27,
-        "selectorHint": "cy-error[bind:retry]",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "external",
-      "interactionMode": "event-contract",
-      "baseActionClass": "write",
-      "effectClasses": [
-        "write",
-        "state"
-      ],
-      "accessBoundary": "owned-resource",
-      "externalCapabilities": [
-        "app.chooseImage",
-        "getLocation",
-        "openSetting",
-        "scanCode"
-      ],
-      "successCapabilities": [
-        "app.chooseImage",
-        "getLocation",
-        "scanCode"
-      ],
-      "targets": {
-        "routes": [
-          "pages/crop/index",
-          "pages/privacy/index"
-        ],
-        "apis": [
-          "/api/city/nodes/{param}/complete",
-          "/api/common/uploadOSS",
-          "/api/config/features",
-          "/api/login/code",
-          "/api/media/asset/",
-          "/api/media/asset/{param}/retry",
-          "/api/role/info"
-        ],
-        "primaryApis": [
-          "/api/city/nodes/{param}/complete",
-          "/api/common/uploadOSS",
-          "/api/config/features",
-          "/api/media/asset/",
-          "/api/media/asset/{param}/retry"
-        ],
-        "auxiliaryApis": [
-          "/api/login/code",
-          "/api/role/info"
-        ],
-        "apiContracts": [
-          {
-            "url": "/api/city/nodes/{param}/complete",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/common/uploadOSS",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/config/features",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/login/code",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/media/asset/",
-            "method": "GET",
-            "auth": "authenticated"
-          },
-          {
-            "url": "/api/media/asset/{param}/retry",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/role/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
-        "writeApis": [
-          "/api/city/nodes/{param}/complete"
-        ]
-      },
-      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
-      "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger",
-        "forbidden-owner",
-        "chooseImage-cancelled",
-        "openSetting-cancelled",
-        "scanCode-cancelled",
-        "chooseImage-denied",
-        "getLocation-denied",
-        "openSetting-denied",
-        "scanCode-denied"
-      ],
-      "requiredPlatforms": [
-        "ios",
-        "android"
-      ],
-      "externalGate": "real-device-required",
-      "evidence": {
-        "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:292"
-      }
-    },
-    {
-      "id": "subpackageMember/components/cy/scene-roam-poi-detail/index.wxml:28:bind:retry:toggleFavorite:5",
+      "id": "subpackageMember/components/cy/scene-roam-poi-detail/index.wxml:27:bind:retry:toggleFavorite:4",
       "route": "component:subpackageMember/components/cy/scene-roam-poi-detail/index",
       "hostRoutes": [
         "pages/merchant/index/index",
@@ -1124218,7 +1123995,7 @@
         "tag": "cy-error",
         "event": "bind:retry",
         "handler": "toggleFavorite",
-        "line": 28,
+        "line": 27,
         "selectorHint": "cy-error[bind:retry]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1124302,7 +1124079,178 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:207"
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:256"
+      }
+    },
+    {
+      "id": "subpackageMember/components/cy/scene-roam-poi-detail/index.wxml:29:bindtap:toggleFavorite:5",
+      "route": "component:subpackageMember/components/cy/scene-roam-poi-detail/index",
+      "hostRoutes": [
+        "pages/merchant/index/index",
+        "pages/play/index",
+        "pages/roam/index",
+        "subpackageMember/coupon-wallet/index",
+        "subpackageRoam/poi-detail/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/merchant/index/index",
+          "segments": [
+            {
+              "selector": "cy-scene-roam-poi-detail",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "cy-scene-roam-poi-detail",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/roam/index",
+          "segments": [
+            {
+              "selector": "cy-scene-roam-poi-detail",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/coupon-wallet/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-roam-poi-detail",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/poi-detail/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-roam-poi-detail",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "subpackageMember/components/cy/scene-roam-poi-detail/index.wxml",
+        "js": "subpackageMember/components/cy/scene-roam-poi-detail/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "text",
+        "event": "bindtap",
+        "handler": "toggleFavorite",
+        "line": 29,
+        "selectorHint": ".poi-action",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "{{favoriteBusy ? '正在更新收藏' : (node.favorited ? '取消收藏' : '收藏')}}",
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": "{{favoriteBusy}}",
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "write",
+      "interactionMode": "tap",
+      "baseActionClass": "write",
+      "effectClasses": [
+        "write",
+        "state"
+      ],
+      "accessBoundary": "self",
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/city/nodes/{param}/favorite",
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "primaryApis": [
+          "/api/city/nodes/{param}/favorite",
+          "/api/config/features"
+        ],
+        "auxiliaryApis": [
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/city/nodes/{param}/favorite",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": [
+          "/api/city/nodes/{param}/favorite"
+        ]
+      },
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:256"
       }
     },
     {
@@ -1124429,182 +1124377,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:447"
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:500"
       }
     },
     {
-      "id": "subpackageMember/components/cy/scene-roam-poi-detail/index.wxml:30:bindtap:toggleFavorite:6",
-      "route": "component:subpackageMember/components/cy/scene-roam-poi-detail/index",
-      "hostRoutes": [
-        "pages/merchant/index/index",
-        "pages/play/index",
-        "pages/roam/index",
-        "subpackageMember/coupon-wallet/index",
-        "subpackageRoam/poi-detail/index"
-      ],
-      "hostComponentPaths": [
-        {
-          "route": "pages/merchant/index/index",
-          "segments": [
-            {
-              "selector": "cy-scene-roam-poi-detail",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/play/index",
-          "segments": [
-            {
-              "selector": "cy-scene-roam-poi-detail",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/roam/index",
-          "segments": [
-            {
-              "selector": "cy-scene-roam-poi-detail",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageMember/coupon-wallet/index",
-          "segments": [
-            {
-              "selector": "cy-scene-deep-link",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-roam-poi-detail",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageRoam/poi-detail/index",
-          "segments": [
-            {
-              "selector": "cy-scene-deep-link",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-roam-poi-detail",
-              "index": 0
-            }
-          ]
-        }
-      ],
-      "role": "inherited",
-      "entry": {
-        "wxml": "subpackageMember/components/cy/scene-roam-poi-detail/index.wxml",
-        "js": "subpackageMember/components/cy/scene-roam-poi-detail/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "text",
-        "event": "bindtap",
-        "handler": "toggleFavorite",
-        "line": 30,
-        "selectorHint": ".poi-action",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": "{{favoriteBusy ? '正在更新收藏' : (node.favorited ? '取消收藏' : '收藏')}}",
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": "{{favoriteBusy}}",
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "write",
-      "interactionMode": "tap",
-      "baseActionClass": "write",
-      "effectClasses": [
-        "write",
-        "state"
-      ],
-      "accessBoundary": "self",
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/privacy/index"
-        ],
-        "apis": [
-          "/api/city/nodes/{param}/favorite",
-          "/api/config/features",
-          "/api/login/code",
-          "/api/role/info"
-        ],
-        "primaryApis": [
-          "/api/city/nodes/{param}/favorite",
-          "/api/config/features"
-        ],
-        "auxiliaryApis": [
-          "/api/login/code",
-          "/api/role/info"
-        ],
-        "apiContracts": [
-          {
-            "url": "/api/city/nodes/{param}/favorite",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/config/features",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/login/code",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/role/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
-        "writeApis": [
-          "/api/city/nodes/{param}/favorite"
-        ]
-      },
-      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:207"
-      }
-    },
-    {
-      "id": "subpackageMember/components/cy/scene-roam-poi-detail/index.wxml:31:bindtap:openLocation:7",
+      "id": "subpackageMember/components/cy/scene-roam-poi-detail/index.wxml:30:bindtap:openLocation:6",
       "route": "component:subpackageMember/components/cy/scene-roam-poi-detail/index",
       "hostRoutes": [
         "pages/merchant/index/index",
@@ -1124687,7 +1124464,7 @@
         "tag": "text",
         "event": "bindtap",
         "handler": "openLocation",
-        "line": 31,
+        "line": 30,
         "selectorHint": ".poi-action",
         "visibleCondition": "{{hasLocation}}",
         "disabledCondition": null,
@@ -1124737,11 +1124514,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:240"
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:289"
       }
     },
     {
-      "id": "subpackageMember/components/cy/scene-roam-poi-detail/index.wxml:34:bindtap:openCityStamp:8",
+      "id": "subpackageMember/components/cy/scene-roam-poi-detail/index.wxml:33:bindtap:openCityStamp:7",
       "route": "component:subpackageMember/components/cy/scene-roam-poi-detail/index",
       "hostRoutes": [
         "pages/merchant/index/index",
@@ -1124824,7 +1124601,7 @@
         "tag": "text",
         "event": "bindtap",
         "handler": "openCityStamp",
-        "line": 34,
+        "line": 33,
         "selectorHint": ".poi-action",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1124865,11 +1124642,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:444"
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:497"
       }
     },
     {
-      "id": "subpackageMember/components/cy/scene-roam-poi-detail/index.wxml:35:bindtap:startInteract:9:variant:answer",
+      "id": "subpackageMember/components/cy/scene-roam-poi-detail/index.wxml:34:bindtap:startInteract:8:variant:answer",
       "route": "component:subpackageMember/components/cy/scene-roam-poi-detail/index",
       "hostRoutes": [
         "pages/merchant/index/index",
@@ -1124962,16 +1124739,16 @@
         "tag": "text",
         "event": "bindtap",
         "handler": "startInteract",
-        "line": 35,
+        "line": 34,
         "selectorHint": ".poi-action",
         "visibleCondition": null,
         "disabledCondition": null,
         "ariaLabel": null,
-        "ariaLabelExpression": "{{node.completed ? '已完成' : (node.needRedeem ? '出示核销码' : (!node.canInteract ? '暂不可打卡' : '开始互动'))}}",
+        "ariaLabelExpression": "{{checkinPending ? '结果待核对' : node.completed ? '已完成' : (node.needRedeem ? '出示核销码' : (!node.canInteract ? '暂不可打卡' : '开始互动'))}}",
         "ariaRole": "button",
         "ariaRoleExpression": null,
         "ariaDisabled": null,
-        "ariaDisabledExpression": "{{node.completed || (!node.needRedeem && !node.canInteract) || completing}}",
+        "ariaDisabledExpression": "{{checkinPending || node.completed || (!node.needRedeem && !node.canInteract) || completing}}",
         "ariaExpanded": null,
         "ariaExpandedExpression": null,
         "ariaChecked": null,
@@ -1125032,11 +1124809,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:312"
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:362"
       }
     },
     {
-      "id": "subpackageMember/components/cy/scene-roam-poi-detail/index.wxml:35:bindtap:startInteract:9:variant:choice",
+      "id": "subpackageMember/components/cy/scene-roam-poi-detail/index.wxml:34:bindtap:startInteract:8:variant:choice",
       "route": "component:subpackageMember/components/cy/scene-roam-poi-detail/index",
       "hostRoutes": [
         "pages/merchant/index/index",
@@ -1125130,16 +1124907,16 @@
         "tag": "text",
         "event": "bindtap",
         "handler": "startInteract",
-        "line": 35,
+        "line": 34,
         "selectorHint": ".poi-action",
         "visibleCondition": null,
         "disabledCondition": null,
         "ariaLabel": null,
-        "ariaLabelExpression": "{{node.completed ? '已完成' : (node.needRedeem ? '出示核销码' : (!node.canInteract ? '暂不可打卡' : '开始互动'))}}",
+        "ariaLabelExpression": "{{checkinPending ? '结果待核对' : node.completed ? '已完成' : (node.needRedeem ? '出示核销码' : (!node.canInteract ? '暂不可打卡' : '开始互动'))}}",
         "ariaRole": "button",
         "ariaRoleExpression": null,
         "ariaDisabled": null,
-        "ariaDisabledExpression": "{{node.completed || (!node.needRedeem && !node.canInteract) || completing}}",
+        "ariaDisabledExpression": "{{checkinPending || node.completed || (!node.needRedeem && !node.canInteract) || completing}}",
         "ariaExpanded": null,
         "ariaExpandedExpression": null,
         "ariaChecked": null,
@@ -1125202,11 +1124979,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:312"
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:362"
       }
     },
     {
-      "id": "subpackageMember/components/cy/scene-roam-poi-detail/index.wxml:35:bindtap:startInteract:9:variant:direct",
+      "id": "subpackageMember/components/cy/scene-roam-poi-detail/index.wxml:34:bindtap:startInteract:8:variant:direct",
       "route": "component:subpackageMember/components/cy/scene-roam-poi-detail/index",
       "hostRoutes": [
         "pages/merchant/index/index",
@@ -1125306,16 +1125083,16 @@
         "tag": "text",
         "event": "bindtap",
         "handler": "startInteract",
-        "line": 35,
+        "line": 34,
         "selectorHint": ".poi-action",
         "visibleCondition": null,
         "disabledCondition": null,
         "ariaLabel": null,
-        "ariaLabelExpression": "{{node.completed ? '已完成' : (node.needRedeem ? '出示核销码' : (!node.canInteract ? '暂不可打卡' : '开始互动'))}}",
+        "ariaLabelExpression": "{{checkinPending ? '结果待核对' : node.completed ? '已完成' : (node.needRedeem ? '出示核销码' : (!node.canInteract ? '暂不可打卡' : '开始互动'))}}",
         "ariaRole": "button",
         "ariaRoleExpression": null,
         "ariaDisabled": null,
-        "ariaDisabledExpression": "{{node.completed || (!node.needRedeem && !node.canInteract) || completing}}",
+        "ariaDisabledExpression": "{{checkinPending || node.completed || (!node.needRedeem && !node.canInteract) || completing}}",
         "ariaExpanded": null,
         "ariaExpandedExpression": null,
         "ariaChecked": null,
@@ -1125375,11 +1125152,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:312"
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:362"
       }
     },
     {
-      "id": "subpackageMember/components/cy/scene-roam-poi-detail/index.wxml:35:bindtap:startInteract:9:variant:photo",
+      "id": "subpackageMember/components/cy/scene-roam-poi-detail/index.wxml:34:bindtap:startInteract:8:variant:photo",
       "route": "component:subpackageMember/components/cy/scene-roam-poi-detail/index",
       "hostRoutes": [
         "pages/merchant/index/index",
@@ -1125609,16 +1125386,16 @@
         "tag": "text",
         "event": "bindtap",
         "handler": "startInteract",
-        "line": 35,
+        "line": 34,
         "selectorHint": ".poi-action",
         "visibleCondition": null,
         "disabledCondition": null,
         "ariaLabel": null,
-        "ariaLabelExpression": "{{node.completed ? '已完成' : (node.needRedeem ? '出示核销码' : (!node.canInteract ? '暂不可打卡' : '开始互动'))}}",
+        "ariaLabelExpression": "{{checkinPending ? '结果待核对' : node.completed ? '已完成' : (node.needRedeem ? '出示核销码' : (!node.canInteract ? '暂不可打卡' : '开始互动'))}}",
         "ariaRole": "button",
         "ariaRoleExpression": null,
         "ariaDisabled": null,
-        "ariaDisabledExpression": "{{node.completed || (!node.needRedeem && !node.canInteract) || completing}}",
+        "ariaDisabledExpression": "{{checkinPending || node.completed || (!node.needRedeem && !node.canInteract) || completing}}",
         "ariaExpanded": null,
         "ariaExpandedExpression": null,
         "ariaChecked": null,
@@ -1125693,11 +1125470,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:312"
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:362"
       }
     },
     {
-      "id": "subpackageMember/components/cy/scene-roam-poi-detail/index.wxml:35:bindtap:startInteract:9:variant:scan",
+      "id": "subpackageMember/components/cy/scene-roam-poi-detail/index.wxml:34:bindtap:startInteract:8:variant:scan",
       "route": "component:subpackageMember/components/cy/scene-roam-poi-detail/index",
       "hostRoutes": [
         "pages/merchant/index/index",
@@ -1125792,16 +1125569,16 @@
         "tag": "text",
         "event": "bindtap",
         "handler": "startInteract",
-        "line": 35,
+        "line": 34,
         "selectorHint": ".poi-action",
         "visibleCondition": null,
         "disabledCondition": null,
         "ariaLabel": null,
-        "ariaLabelExpression": "{{node.completed ? '已完成' : (node.needRedeem ? '出示核销码' : (!node.canInteract ? '暂不可打卡' : '开始互动'))}}",
+        "ariaLabelExpression": "{{checkinPending ? '结果待核对' : node.completed ? '已完成' : (node.needRedeem ? '出示核销码' : (!node.canInteract ? '暂不可打卡' : '开始互动'))}}",
         "ariaRole": "button",
         "ariaRoleExpression": null,
         "ariaDisabled": null,
-        "ariaDisabledExpression": "{{node.completed || (!node.needRedeem && !node.canInteract) || completing}}",
+        "ariaDisabledExpression": "{{checkinPending || node.completed || (!node.needRedeem && !node.canInteract) || completing}}",
         "ariaExpanded": null,
         "ariaExpandedExpression": null,
         "ariaChecked": null,
@@ -1125865,11 +1125642,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:312"
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:362"
       }
     },
     {
-      "id": "subpackageMember/components/cy/scene-roam-poi-detail/index.wxml:39:bindtap:previewGallery:11",
+      "id": "subpackageMember/components/cy/scene-roam-poi-detail/index.wxml:38:bindtap:previewGallery:10",
       "route": "component:subpackageMember/components/cy/scene-roam-poi-detail/index",
       "hostRoutes": [
         "pages/merchant/index/index",
@@ -1125952,7 +1125729,7 @@
         "tag": "image",
         "event": "bindtap",
         "handler": "previewGallery",
-        "line": 39,
+        "line": 38,
         "selectorHint": ".poi-gallery__image",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1126002,7 +1125779,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:203"
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:252"
       }
     },
     {
@@ -1126129,11 +1125906,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:447"
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:500"
       }
     },
     {
-      "id": "subpackageMember/components/cy/scene-roam-poi-detail/index.wxml:41:bindtap:openLocation:12",
+      "id": "subpackageMember/components/cy/scene-roam-poi-detail/index.wxml:40:bindtap:openLocation:11",
       "route": "component:subpackageMember/components/cy/scene-roam-poi-detail/index",
       "hostRoutes": [
         "pages/merchant/index/index",
@@ -1126216,7 +1125993,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openLocation",
-        "line": 41,
+        "line": 40,
         "selectorHint": ".poi-row",
         "visibleCondition": "{{merchant.address && hasLocation}}",
         "disabledCondition": null,
@@ -1126266,11 +1126043,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:240"
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:289"
       }
     },
     {
-      "id": "subpackageMember/components/cy/scene-roam-poi-detail/index.wxml:43:bind:cancel:onChoiceSheetCancel:14",
+      "id": "subpackageMember/components/cy/scene-roam-poi-detail/index.wxml:42:bind:cancel:onChoiceSheetCancel:13",
       "route": "component:subpackageMember/components/cy/scene-roam-poi-detail/index",
       "hostRoutes": [
         "pages/merchant/index/index",
@@ -1126353,7 +1126130,7 @@
         "tag": "cy-option-sheet",
         "event": "bind:cancel",
         "handler": "onChoiceSheetCancel",
-        "line": 43,
+        "line": 42,
         "selectorHint": "cy-option-sheet[bind:cancel]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1126393,11 +1126170,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:71"
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:102"
       }
     },
     {
-      "id": "subpackageMember/components/cy/scene-roam-poi-detail/index.wxml:43:bind:select:onChoiceSheetSelect:13",
+      "id": "subpackageMember/components/cy/scene-roam-poi-detail/index.wxml:42:bind:select:onChoiceSheetSelect:12",
       "route": "component:subpackageMember/components/cy/scene-roam-poi-detail/index",
       "hostRoutes": [
         "pages/merchant/index/index",
@@ -1126486,7 +1126263,7 @@
         "tag": "cy-option-sheet",
         "event": "bind:select",
         "handler": "onChoiceSheetSelect",
-        "line": 43,
+        "line": 42,
         "selectorHint": "cy-option-sheet[bind:select]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1126525,26 +1126302,36 @@
           "pages/privacy/index"
         ],
         "apis": [
+          "/api/city/nodes/",
           "/api/city/nodes/{param}/complete",
           "/api/common/uploadOSS",
           "/api/config/features",
           "/api/login/code",
           "/api/media/asset/",
           "/api/media/asset/{param}/retry",
+          "/api/merchant/public-detail",
           "/api/role/info"
         ],
         "primaryApis": [
+          "/api/city/nodes/",
           "/api/city/nodes/{param}/complete",
           "/api/common/uploadOSS",
           "/api/config/features",
           "/api/media/asset/",
-          "/api/media/asset/{param}/retry"
+          "/api/media/asset/{param}/retry",
+          "/api/merchant/public-detail"
         ],
         "auxiliaryApis": [
           "/api/login/code",
           "/api/role/info"
         ],
         "apiContracts": [
+          {
+            "url": "/api/city/nodes/",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
           {
             "url": "/api/city/nodes/{param}/complete",
             "method": "POST",
@@ -1126581,6 +1126368,12 @@
             "source": "server-controller"
           },
           {
+            "url": "/api/merchant/public-detail",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
             "url": "/api/role/info",
             "method": "POST",
             "auth": "authenticated",
@@ -1126611,7 +1126404,246 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:63"
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:94"
+      }
+    },
+    {
+      "id": "subpackageMember/components/cy/scene-roam-poi-detail/index.wxml:45:bind:retry:recoverInteraction:15",
+      "route": "component:subpackageMember/components/cy/scene-roam-poi-detail/index",
+      "hostRoutes": [
+        "pages/merchant/index/index",
+        "pages/play/index",
+        "pages/roam/index",
+        "subpackageMember/coupon-wallet/index",
+        "subpackageRoam/poi-detail/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/merchant/index/index",
+          "segments": [
+            {
+              "selector": "cy-scene-roam-poi-detail",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "cy-scene-roam-poi-detail",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/roam/index",
+          "segments": [
+            {
+              "selector": "cy-scene-roam-poi-detail",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/coupon-wallet/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-roam-poi-detail",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/poi-detail/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-roam-poi-detail",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "subpackageMember/components/cy/scene-roam-poi-detail/index.wxml",
+        "js": "subpackageMember/components/cy/scene-roam-poi-detail/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {
+        "chooseImage-cancelled": "chooseImage",
+        "openSetting-cancelled": "openSetting",
+        "scanCode-cancelled": "scanCode",
+        "chooseImage-denied": "chooseImage",
+        "getLocation-denied": "getLocation",
+        "openSetting-denied": "openSetting",
+        "scanCode-denied": "scanCode"
+      },
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-error",
+        "event": "bind:retry",
+        "handler": "recoverInteraction",
+        "line": 45,
+        "selectorHint": "cy-error[bind:retry]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "external",
+      "interactionMode": "event-contract",
+      "baseActionClass": "write",
+      "effectClasses": [
+        "write",
+        "state"
+      ],
+      "accessBoundary": "owned-resource",
+      "externalCapabilities": [
+        "app.chooseImage",
+        "getLocation",
+        "openSetting",
+        "scanCode"
+      ],
+      "successCapabilities": [
+        "app.chooseImage",
+        "getLocation",
+        "scanCode"
+      ],
+      "targets": {
+        "routes": [
+          "pages/crop/index",
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/city/nodes/",
+          "/api/city/nodes/{param}/complete",
+          "/api/common/uploadOSS",
+          "/api/config/features",
+          "/api/login/code",
+          "/api/media/asset/",
+          "/api/media/asset/{param}/retry",
+          "/api/merchant/public-detail",
+          "/api/role/info"
+        ],
+        "primaryApis": [
+          "/api/city/nodes/",
+          "/api/city/nodes/{param}/complete",
+          "/api/common/uploadOSS",
+          "/api/config/features",
+          "/api/media/asset/",
+          "/api/media/asset/{param}/retry",
+          "/api/merchant/public-detail"
+        ],
+        "auxiliaryApis": [
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/city/nodes/",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/city/nodes/{param}/complete",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/common/uploadOSS",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/media/asset/",
+            "method": "GET",
+            "auth": "authenticated"
+          },
+          {
+            "url": "/api/media/asset/{param}/retry",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/merchant/public-detail",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": [
+          "/api/city/nodes/{param}/complete"
+        ]
+      },
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger",
+        "forbidden-owner",
+        "chooseImage-cancelled",
+        "openSetting-cancelled",
+        "scanCode-cancelled",
+        "chooseImage-denied",
+        "getLocation-denied",
+        "openSetting-denied",
+        "scanCode-denied"
+      ],
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:341"
       }
     },
     {
