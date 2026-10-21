@@ -552,6 +552,13 @@ jobs:
       # 跑的就是部署链路那一份 ci/ui-build.sh:门禁绿 = 部署那条路能构建出产物。
       - name: Build admin UI
         run: bash ci/ui-build.sh "${{ github.sha }}"
+      - name: Preserve source-bound admin UI
+        uses: actions/upload-artifact@v4
+        with:
+          name: chengyin-admin-ui-${{ github.sha }}
+          path: chengyinhub-ui/dist/
+          if-no-files-found: error
+          retention-days: 7
 
   admin_ui_contract:
     name: Admin UI E2E contract gate

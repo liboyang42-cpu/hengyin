@@ -103,12 +103,19 @@ Component({
   },
   lifetimes: {
     attached() {
+      this._cancelDisposed = false
+      this._cancelGeneration = (this._cancelGeneration || 0) + 1
+      this._syncCancellationAccount()
       this._detached = false
       this.setData({ canDiscoverRoutes: canReachDiscoverRoutes() })
       this._initWorkflow()
       this.getList()
     },
     detached() {
+      if (this._finishCancelPrompt) this._finishCancelPrompt()
+      if (this._finishCancellation) this._finishCancellation()
+      this._cancelDisposed = true
+      this._cancelGeneration = (this._cancelGeneration || 0) + 1
       this._detached = true
       this._listRequestId = (this._listRequestId || 0) + 1
       this._listFetchInFlight = 0
@@ -119,6 +126,7 @@ Component({
   pageLifetimes: {
     // 首次 attached/show single-flight；支付/退款回来后的后续 show 从第一页替换刷新。
     show() {
+      this._syncCancellationAccount()
       this._hidden = false
       if (this._detached) return
       if (this._listFetchInFlight && this._listMemberId === (app.getUserID && app.getUserID())) return
@@ -274,9 +282,24 @@ Component({
       wx.switchTab({ url: '/pages/index/index' })
     },
 
+    _syncCancellationAccount() {
+      const member = app.getUserID && app.getUserID()
+      if (this._cancelMemberId !== undefined && this._cancelMemberId !== member) {
+        if (this._finishCancelPrompt) this._finishCancelPrompt()
+        if (this._finishCancellation) this._finishCancellation()
+        this._cancelGeneration = (this._cancelGeneration || 0) + 1
+      }
+      this._cancelMemberId = member
+    },
+
     cancelOrder(e) {
       const that = this
-      const memberId = app.getUserID && app.getUserID()
+      that._syncCancellationAccount()
+      if (that._cancelDisposed) return
+      const generation = that._cancelGeneration
+      const member = that._cancelMemberId
+      const isCurrent = () => !that._cancelDisposed && generation === that._cancelGeneration
+        && member === (app.getUserID && app.getUserID())
       const index = e.currentTarget.dataset.index
       const id = e.currentTarget.dataset.id
       const status = Number(e.currentTarget.dataset.status || 0)
@@ -286,33 +309,55 @@ Component({
         return
       }
       that._cancelPromptOpen = true
+      const finishCancelPrompt = () => {
+        if (that._finishCancelPrompt !== finishCancelPrompt) return false
+        that._finishCancelPrompt = null
+        that._cancelPromptOpen = false
+        return true
+      }
+      that._finishCancelPrompt = finishCancelPrompt
       modal.show({
         dangerKey: status === 2 ? (isFreeOrder(that.data.list[index]) ? 'order.cancel-free' : 'order.cancel-refund') : 'order.cancel',   // 三段式文案在 utils/danger-actions.js
         dangerParams: { deadline: refundDeadlineText(that.data.list[index]) },
         success(res) {
-          that._cancelPromptOpen = false
-          if (res.confirm && memberId === (app.getUserID && app.getUserID())) that.cancelOrderRequest(id, index, status)
+          if (!finishCancelPrompt() || !isCurrent()) return
+          if (res.confirm) {
+            that.cancelOrderRequest(id, index, status)
+          }
         },
-        fail() { that._cancelPromptOpen = false },
-        complete() { that._cancelPromptOpen = false },
+        fail: finishCancelPrompt,
+        complete: finishCancelPrompt,
       })
     },
 
     cancelOrderRequest(id, index, status) {
       const that = this
-      const memberId = app.getUserID && app.getUserID()
+      that._syncCancellationAccount()
+      if (that._cancelDisposed) return
+      const generation = that._cancelGeneration
+      const member = that._cancelMemberId
+      const isCurrent = () => !that._cancelDisposed && generation === that._cancelGeneration
+        && member === (app.getUserID && app.getUserID())
+        && that._finishCancellation === finishCancellation
       if (!id || that._cancelRequestInFlight || that.data.cancellingId) return
       that._cancelRequestInFlight = true
       cyLoading.show('处理中...')
       that.setData({ cancellingId: Number(id) })
+      const finishCancellation = () => {
+        if (that._finishCancellation !== finishCancellation) return
+        that._finishCancellation = null
+        that._cancelRequestInFlight = false
+        cyLoading.hide()
+        that.setData({ cancellingId: 0 })
+      }
+      that._finishCancellation = finishCancellation
       app.sendRequest({
         // 已支付(报名成功 registrationStatus==2)走退款接口,与详情页一致;待支付订单仍用普通取消
         url: Number(status) === 2 ? '/api/registration/cancel-refund' : '/api/registration/cancel',
         method: 'POST',
         data: { id },
         success(res) {
-          cyLoading.hide()
-          if (memberId !== (app.getUserID && app.getUserID())) return
+          if (!isCurrent()) return
           if (res.code == '200') {
             toast.success(Number(status) === 2 ? cancellationFeedback(res) : '已取消', { duration: 5000 })
             // 退款的实际打款状态由 refund_application 回传,刷新而不是前端猜成“已退款”。
@@ -323,8 +368,7 @@ Component({
           }
         },
         fail(resp, statusCode) {
-          cyLoading.hide()
-          if (memberId !== (app.getUserID && app.getUserID())) return
+          if (!isCurrent()) return
           if (isUnknownHttpStatus(statusCode)) {
             toast('取消结果暂未确认，正在刷新订单')
             that.setData({ page_no: 1 })
@@ -333,10 +377,7 @@ Component({
           }
           toast('网络错误，请重试', { duration: 2000 })
         },
-        complete() {
-          that._cancelRequestInFlight = false
-          that.setData({ cancellingId: 0 })
-        },
+        complete: finishCancellation,
       })
     },
 

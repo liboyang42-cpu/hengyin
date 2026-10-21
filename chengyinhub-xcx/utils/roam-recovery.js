@@ -33,4 +33,13 @@ function newSessionKey(platform) {
   })
 }
 
-module.exports = { exactSessionId, validRecovery, newSessionKey }
+function archiveRecords(pendingTiles, collectedAt) {
+  return pendingTiles.map(tile => {
+    const time = collectedAt && collectedAt[tile]
+    if (!/^[0123456789bcdefghjkmnpqrstuvwxyz]{7}$/.test(tile) || !Number.isSafeInteger(time) || time <= 0)
+      throw new Error('原采集时间缺失，待核记录仍保留')
+    return { tile, collectedAt: time }
+  })
+}
+
+module.exports = { exactSessionId, validRecovery, newSessionKey, archiveRecords }
