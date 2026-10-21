@@ -26,14 +26,11 @@ function send(app, options) {
     }))
   })
 }
-
 const isOk = (res) => !!res && (res.code === 200 || res.code === '200')
-
 function numberOrNull(value) {
   const number = typeof value === 'string' && value.trim() !== '' ? Number(value) : value
   return typeof number === 'number' && Number.isFinite(number) && number >= 0 ? number : null
 }
-
 /** 分享卡上看得到的东西,原样组成快照。session = 页面归一后的 s(含 routeName/time)。 */
 function buildSharePayload(session, privacy) {
   const clipped = limitTrack(clipSavedTrackForSharing((session && session.track) || [], privacy))
@@ -62,23 +59,19 @@ function buildSharePayload(session, privacy) {
     pois,
   }
 }
-
 /** 待办标记按账号分:A 作废失败留下的标记,不能被 B 登录后「补作废 B 自己的」顺手清掉。 */
 function revokePendingKey(app) {
   return REVOKE_PENDING_PREFIX + String((app && typeof app.getUserID === 'function' && app.getUserID()) || '')
 }
-
 function readRevokePending(app, storage) {
   try { return storage.getStorageSync(revokePendingKey(app)) === 1 } catch (_) { return true }
 }
-
 function writeRevokePending(storage, key, pending) {
   try {
     if (pending) storage.setStorageSync(key, 1)
     else storage.removeStorageSync(key)
   } catch (_) {}
 }
-
 /** 作废本人全部分享快照。返回 Promise<boolean>;false 时待办标记留着,下次发布前补做。 */
 function revokeShareSnapshots(app, storage) {
   const key = revokePendingKey(app)
@@ -89,7 +82,6 @@ function revokeShareSnapshots(app, storage) {
     return true
   })
 }
-
 /** Promise<{ token, reason }>:reason = '' | 'private' | 'revoke-pending' | 'failed'。 */
 function publishShareSnapshot(app, storage, session) {
   const owner = revokePendingKey(app)
@@ -120,7 +112,6 @@ function publishShareSnapshot(app, storage, session) {
     })
   })
 }
-
 /** 接收方读取。Promise<{ state: 'ready'|'gone'|'error', session }>:
  *  gone = 服务端明确说没有(分享者已作废/令牌不对);error = 没读到(断网/网关),可重试。 */
 function readShareSnapshot(app, token) {
