@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
-  "controlCount": 4932,
+  "controlCount": 4935,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -10505,6 +10505,32 @@
             },
             {
               "selector": "cy-btn",
+              "index": 10
+            }
+          ]
+        },
+        {
+          "route": "pages/club/detail/index",
+          "segments": [
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 11
+            }
+          ]
+        },
+        {
+          "route": "pages/club/detail/index",
+          "segments": [
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
               "index": 2
             }
           ]
@@ -10545,6 +10571,58 @@
             {
               "selector": "cy-btn",
               "index": 5
+            }
+          ]
+        },
+        {
+          "route": "pages/club/detail/index",
+          "segments": [
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 6
+            }
+          ]
+        },
+        {
+          "route": "pages/club/detail/index",
+          "segments": [
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 7
+            }
+          ]
+        },
+        {
+          "route": "pages/club/detail/index",
+          "segments": [
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 8
+            }
+          ]
+        },
+        {
+          "route": "pages/club/detail/index",
+          "segments": [
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 9
             }
           ]
         },
@@ -11197,6 +11275,32 @@
             },
             {
               "selector": "cy-btn",
+              "index": 10
+            }
+          ]
+        },
+        {
+          "route": "pages/club/edit/index",
+          "segments": [
+            {
+              "selector": "#clubEdit",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 11
+            }
+          ]
+        },
+        {
+          "route": "pages/club/edit/index",
+          "segments": [
+            {
+              "selector": "#clubEdit",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
               "index": 2
             }
           ]
@@ -11237,6 +11341,58 @@
             {
               "selector": "cy-btn",
               "index": 5
+            }
+          ]
+        },
+        {
+          "route": "pages/club/edit/index",
+          "segments": [
+            {
+              "selector": "#clubEdit",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 6
+            }
+          ]
+        },
+        {
+          "route": "pages/club/edit/index",
+          "segments": [
+            {
+              "selector": "#clubEdit",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 7
+            }
+          ]
+        },
+        {
+          "route": "pages/club/edit/index",
+          "segments": [
+            {
+              "selector": "#clubEdit",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 8
+            }
+          ]
+        },
+        {
+          "route": "pages/club/edit/index",
+          "segments": [
+            {
+              "selector": "#clubEdit",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 9
             }
           ]
         },
@@ -20909,6 +21065,48 @@
             },
             {
               "selector": "cy-btn",
+              "index": 10
+            }
+          ]
+        },
+        {
+          "route": "pages/member/index/index",
+          "segments": [
+            {
+              "selector": "#profile",
+              "index": 0
+            },
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 11
+            }
+          ]
+        },
+        {
+          "route": "pages/member/index/index",
+          "segments": [
+            {
+              "selector": "#profile",
+              "index": 0
+            },
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
               "index": 2
             }
           ]
@@ -20973,6 +21171,90 @@
             {
               "selector": "cy-btn",
               "index": 5
+            }
+          ]
+        },
+        {
+          "route": "pages/member/index/index",
+          "segments": [
+            {
+              "selector": "#profile",
+              "index": 0
+            },
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 6
+            }
+          ]
+        },
+        {
+          "route": "pages/member/index/index",
+          "segments": [
+            {
+              "selector": "#profile",
+              "index": 0
+            },
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 7
+            }
+          ]
+        },
+        {
+          "route": "pages/member/index/index",
+          "segments": [
+            {
+              "selector": "#profile",
+              "index": 0
+            },
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 8
+            }
+          ]
+        },
+        {
+          "route": "pages/member/index/index",
+          "segments": [
+            {
+              "selector": "#profile",
+              "index": 0
+            },
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 9
             }
           ]
         },
@@ -31421,6 +31703,40 @@
             },
             {
               "selector": "cy-btn",
+              "index": 10
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/index/index",
+          "segments": [
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 11
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/index/index",
+          "segments": [
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
               "index": 2
             }
           ]
@@ -31473,6 +31789,74 @@
             {
               "selector": "cy-btn",
               "index": 5
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/index/index",
+          "segments": [
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 6
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/index/index",
+          "segments": [
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 7
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/index/index",
+          "segments": [
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 8
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/index/index",
+          "segments": [
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 9
             }
           ]
         },
@@ -47019,6 +47403,40 @@
             },
             {
               "selector": "cy-btn",
+              "index": 10
+            }
+          ]
+        },
+        {
+          "route": "pages/shezhi/shezhi",
+          "segments": [
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 11
+            }
+          ]
+        },
+        {
+          "route": "pages/shezhi/shezhi",
+          "segments": [
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
               "index": 2
             }
           ]
@@ -47071,6 +47489,74 @@
             {
               "selector": "cy-btn",
               "index": 5
+            }
+          ]
+        },
+        {
+          "route": "pages/shezhi/shezhi",
+          "segments": [
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 6
+            }
+          ]
+        },
+        {
+          "route": "pages/shezhi/shezhi",
+          "segments": [
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 7
+            }
+          ]
+        },
+        {
+          "route": "pages/shezhi/shezhi",
+          "segments": [
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 8
+            }
+          ]
+        },
+        {
+          "route": "pages/shezhi/shezhi",
+          "segments": [
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 9
             }
           ]
         },
@@ -54797,6 +55283,48 @@
             },
             {
               "selector": "cy-btn",
+              "index": 10
+            }
+          ]
+        },
+        {
+          "route": "pages/userinfo/userinfo",
+          "segments": [
+            {
+              "selector": "#profile",
+              "index": 0
+            },
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 11
+            }
+          ]
+        },
+        {
+          "route": "pages/userinfo/userinfo",
+          "segments": [
+            {
+              "selector": "#profile",
+              "index": 0
+            },
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
               "index": 2
             }
           ]
@@ -54861,6 +55389,90 @@
             {
               "selector": "cy-btn",
               "index": 5
+            }
+          ]
+        },
+        {
+          "route": "pages/userinfo/userinfo",
+          "segments": [
+            {
+              "selector": "#profile",
+              "index": 0
+            },
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 6
+            }
+          ]
+        },
+        {
+          "route": "pages/userinfo/userinfo",
+          "segments": [
+            {
+              "selector": "#profile",
+              "index": 0
+            },
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 7
+            }
+          ]
+        },
+        {
+          "route": "pages/userinfo/userinfo",
+          "segments": [
+            {
+              "selector": "#profile",
+              "index": 0
+            },
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 8
+            }
+          ]
+        },
+        {
+          "route": "pages/userinfo/userinfo",
+          "segments": [
+            {
+              "selector": "#profile",
+              "index": 0
+            },
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 9
             }
           ]
         },
@@ -62549,6 +63161,48 @@
             },
             {
               "selector": "cy-btn",
+              "index": 10
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/coupon-wallet/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "#deepSceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 11
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/coupon-wallet/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "#deepSceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
               "index": 2
             }
           ]
@@ -62613,6 +63267,90 @@
             {
               "selector": "cy-btn",
               "index": 5
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/coupon-wallet/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "#deepSceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 6
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/coupon-wallet/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "#deepSceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 7
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/coupon-wallet/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "#deepSceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 8
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/coupon-wallet/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "#deepSceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 9
             }
           ]
         },
@@ -74409,6 +75147,48 @@
             },
             {
               "selector": "cy-btn",
+              "index": 10
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/poi-detail/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "#deepSceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 11
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/poi-detail/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "#deepSceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
               "index": 2
             }
           ]
@@ -74473,6 +75253,90 @@
             {
               "selector": "cy-btn",
               "index": 5
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/poi-detail/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "#deepSceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 6
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/poi-detail/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "#deepSceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 7
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/poi-detail/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "#deepSceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 8
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/poi-detail/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "#deepSceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 9
             }
           ]
         },
@@ -316405,7 +317269,7 @@
       }
     },
     {
-      "id": "components/cy/scene-club-edit/index.wxml:117:bindchange:onPrioritySignupChange:13",
+      "id": "components/cy/scene-club-edit/index.wxml:128:bindchange:onPrioritySignupChange:16",
       "route": "component:components/cy/scene-club-edit/index",
       "hostRoutes": [
         "pages/club/detail/index",
@@ -316550,10 +317414,10 @@
         "tag": "cy-switch",
         "event": "bindchange",
         "handler": "onPrioritySignupChange",
-        "line": 117,
+        "line": 128,
         "selectorHint": "cy-switch[bindchange]",
         "visibleCondition": null,
-        "disabledCondition": null,
+        "disabledCondition": "{{saving || draftAvailable || draftBlocked}}",
         "ariaLabel": null,
         "ariaLabelExpression": null,
         "ariaRole": null,
@@ -316576,10 +317440,21 @@
       "successCapabilities": [],
       "targets": {
         "routes": [],
-        "apis": [],
+        "apis": [
+          "/api/role/info"
+        ],
         "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
         "writeApis": []
       },
       "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
@@ -316594,7 +317469,7 @@
       }
     },
     {
-      "id": "components/cy/scene-club-edit/index.wxml:123:bindchange:onJoinPolicyChange:14",
+      "id": "components/cy/scene-club-edit/index.wxml:134:bindchange:onJoinPolicyChange:17",
       "route": "component:components/cy/scene-club-edit/index",
       "hostRoutes": [
         "pages/club/detail/index",
@@ -316739,10 +317614,10 @@
         "tag": "cy-switch",
         "event": "bindchange",
         "handler": "onJoinPolicyChange",
-        "line": 123,
+        "line": 134,
         "selectorHint": "cy-switch[bindchange]",
         "visibleCondition": null,
-        "disabledCondition": null,
+        "disabledCondition": "{{saving || draftAvailable || draftBlocked}}",
         "ariaLabel": null,
         "ariaLabelExpression": null,
         "ariaRole": null,
@@ -316765,10 +317640,21 @@
       "successCapabilities": [],
       "targets": {
         "routes": [],
-        "apis": [],
+        "apis": [
+          "/api/role/info"
+        ],
         "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
         "writeApis": []
       },
       "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
@@ -316783,7 +317669,7 @@
       }
     },
     {
-      "id": "components/cy/scene-club-edit/index.wxml:131:bindinput:onInput:15",
+      "id": "components/cy/scene-club-edit/index.wxml:142:bindinput:onInput:18",
       "route": "component:components/cy/scene-club-edit/index",
       "hostRoutes": [
         "pages/club/detail/index",
@@ -316928,10 +317814,10 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onInput",
-        "line": 131,
+        "line": 142,
         "selectorHint": ".fi",
         "visibleCondition": null,
-        "disabledCondition": null,
+        "disabledCondition": "{{saving || draftAvailable || draftBlocked}}",
         "ariaLabel": "成员保留名额",
         "ariaLabelExpression": null,
         "ariaRole": null,
@@ -316954,10 +317840,21 @@
       "successCapabilities": [],
       "targets": {
         "routes": [],
-        "apis": [],
+        "apis": [
+          "/api/role/info"
+        ],
         "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
         "writeApis": []
       },
       "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
@@ -316972,7 +317869,7 @@
       }
     },
     {
-      "id": "components/cy/scene-club-edit/index.wxml:145:bindtap:dissolveClub:16",
+      "id": "components/cy/scene-club-edit/index.wxml:156:bindtap:dissolveClub:19",
       "route": "component:components/cy/scene-club-edit/index",
       "hostRoutes": [
         "pages/club/detail/index",
@@ -317117,7 +318014,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "dissolveClub",
-        "line": 145,
+        "line": 156,
         "selectorHint": ".danger-btn",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -317162,7 +318059,7 @@
       }
     },
     {
-      "id": "components/cy/scene-club-edit/index.wxml:158:bind:retry:save:17",
+      "id": "components/cy/scene-club-edit/index.wxml:169:bind:retry:save:20",
       "route": "component:components/cy/scene-club-edit/index",
       "hostRoutes": [
         "pages/club/detail/index",
@@ -317307,7 +318204,7 @@
         "tag": "cy-error",
         "event": "bind:retry",
         "handler": "save",
-        "line": 158,
+        "line": 169,
         "selectorHint": "cy-error[bind:retry]",
         "visibleCondition": "{{saveErrorText}}",
         "disabledCondition": null,
@@ -317337,12 +318234,14 @@
           "pages/privacy/index"
         ],
         "apis": [
+          "/api/club/detail",
           "/api/club/update-mine",
           "/api/config/features",
           "/api/login/code",
           "/api/role/info"
         ],
         "primaryApis": [
+          "/api/club/detail",
           "/api/club/update-mine",
           "/api/config/features"
         ],
@@ -317351,6 +318250,12 @@
           "/api/role/info"
         ],
         "apiContracts": [
+          {
+            "url": "/api/club/detail",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
           {
             "url": "/api/club/update-mine",
             "method": "POST",
@@ -317390,11 +318295,211 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/scene-club-edit/index.js:242"
+        "staticSource": "components/cy/scene-club-edit/index.js:570"
       }
     },
     {
-      "id": "components/cy/scene-club-edit/index.wxml:159:bind:secondary:dismissSaveError:18",
+      "id": "components/cy/scene-club-edit/index.wxml:17:bindtap:restoreDraft:4",
+      "route": "component:components/cy/scene-club-edit/index",
+      "hostRoutes": [
+        "pages/club/detail/index",
+        "pages/club/edit/index",
+        "pages/member/index/index",
+        "pages/merchant/index/index",
+        "pages/shezhi/shezhi",
+        "pages/userinfo/userinfo",
+        "subpackageMember/coupon-wallet/index",
+        "subpackageRoam/poi-detail/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/club/detail/index",
+          "segments": [
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/edit/index",
+          "segments": [
+            {
+              "selector": "#clubEdit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/member/index/index",
+          "segments": [
+            {
+              "selector": "#profile",
+              "index": 0
+            },
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/index/index",
+          "segments": [
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/shezhi/shezhi",
+          "segments": [
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/userinfo/userinfo",
+          "segments": [
+            {
+              "selector": "#profile",
+              "index": 0
+            },
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/coupon-wallet/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "#deepSceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/poi-detail/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "#deepSceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "components/cy/scene-club-edit/index.wxml",
+        "js": "components/cy/scene-club-edit/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-btn",
+        "event": "bindtap",
+        "handler": "restoreDraft",
+        "line": 17,
+        "selectorHint": "cy-btn[bindtap]",
+        "visibleCondition": "{{draftAvailable}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [
+          "/api/role/info"
+        ],
+        "primaryApis": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "components/cy/scene-club-edit/index.js:533"
+      }
+    },
+    {
+      "id": "components/cy/scene-club-edit/index.wxml:170:bind:secondary:dismissSaveError:21",
       "route": "component:components/cy/scene-club-edit/index",
       "hostRoutes": [
         "pages/club/detail/index",
@@ -317539,7 +318644,7 @@
         "tag": "cy-error",
         "event": "bind:secondary",
         "handler": "dismissSaveError",
-        "line": 159,
+        "line": 170,
         "selectorHint": "cy-error[bind:secondary]",
         "visibleCondition": "{{saveErrorText}}",
         "disabledCondition": null,
@@ -317583,7 +318688,7 @@
       }
     },
     {
-      "id": "components/cy/scene-club-edit/index.wxml:161:bindtap:save:19",
+      "id": "components/cy/scene-club-edit/index.wxml:172:bindtap:save:22",
       "route": "component:components/cy/scene-club-edit/index",
       "hostRoutes": [
         "pages/club/detail/index",
@@ -317728,7 +318833,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "save",
-        "line": 161,
+        "line": 172,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -317758,12 +318863,14 @@
           "pages/privacy/index"
         ],
         "apis": [
+          "/api/club/detail",
           "/api/club/update-mine",
           "/api/config/features",
           "/api/login/code",
           "/api/role/info"
         ],
         "primaryApis": [
+          "/api/club/detail",
           "/api/club/update-mine",
           "/api/config/features"
         ],
@@ -317772,6 +318879,12 @@
           "/api/role/info"
         ],
         "apiContracts": [
+          {
+            "url": "/api/club/detail",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
           {
             "url": "/api/club/update-mine",
             "method": "POST",
@@ -317811,11 +318924,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/scene-club-edit/index.js:242"
+        "staticSource": "components/cy/scene-club-edit/index.js:570"
       }
     },
     {
-      "id": "components/cy/scene-club-edit/index.wxml:168:bind:close:closePicker:20",
+      "id": "components/cy/scene-club-edit/index.wxml:179:bind:close:closePicker:23",
       "route": "component:components/cy/scene-club-edit/index",
       "hostRoutes": [
         "pages/club/detail/index",
@@ -317960,7 +319073,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "closePicker",
-        "line": 168,
+        "line": 179,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -318004,7 +319117,238 @@
       }
     },
     {
-      "id": "components/cy/scene-club-edit/index.wxml:172:catchtap:pickDraftType:21",
+      "id": "components/cy/scene-club-edit/index.wxml:18:bindtap:discardDraft:5",
+      "route": "component:components/cy/scene-club-edit/index",
+      "hostRoutes": [
+        "pages/club/detail/index",
+        "pages/club/edit/index",
+        "pages/member/index/index",
+        "pages/merchant/index/index",
+        "pages/shezhi/shezhi",
+        "pages/userinfo/userinfo",
+        "subpackageMember/coupon-wallet/index",
+        "subpackageRoam/poi-detail/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/club/detail/index",
+          "segments": [
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/edit/index",
+          "segments": [
+            {
+              "selector": "#clubEdit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/member/index/index",
+          "segments": [
+            {
+              "selector": "#profile",
+              "index": 0
+            },
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/index/index",
+          "segments": [
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/shezhi/shezhi",
+          "segments": [
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/userinfo/userinfo",
+          "segments": [
+            {
+              "selector": "#profile",
+              "index": 0
+            },
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/coupon-wallet/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "#deepSceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/poi-detail/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "#deepSceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "components/cy/scene-club-edit/index.wxml",
+        "js": "components/cy/scene-club-edit/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-btn",
+        "event": "bindtap",
+        "handler": "discardDraft",
+        "line": 18,
+        "selectorHint": "cy-btn[bindtap]",
+        "visibleCondition": "{{draftCanDiscard}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "read",
+      "interactionMode": "tap",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/club/detail",
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "primaryApis": [
+          "/api/club/detail",
+          "/api/config/features"
+        ],
+        "auxiliaryApis": [
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/club/detail",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "components/cy/scene-club-edit/index.js:550"
+      }
+    },
+    {
+      "id": "components/cy/scene-club-edit/index.wxml:183:catchtap:pickDraftType:24",
       "route": "component:components/cy/scene-club-edit/index",
       "hostRoutes": [
         "pages/club/detail/index",
@@ -318149,7 +319493,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "pickDraftType",
-        "line": 172,
+        "line": 183,
         "selectorHint": ".pk-opt",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -318175,10 +319519,21 @@
       "successCapabilities": [],
       "targets": {
         "routes": [],
-        "apis": [],
+        "apis": [
+          "/api/role/info"
+        ],
         "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
         "writeApis": []
       },
       "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
@@ -318193,7 +319548,2261 @@
       }
     },
     {
-      "id": "components/cy/scene-club-edit/index.wxml:18:bindtap:pickLogo:4",
+      "id": "components/cy/scene-club-edit/index.wxml:19:bindtap:loadClub:6",
+      "route": "component:components/cy/scene-club-edit/index",
+      "hostRoutes": [
+        "pages/club/detail/index",
+        "pages/club/edit/index",
+        "pages/member/index/index",
+        "pages/merchant/index/index",
+        "pages/shezhi/shezhi",
+        "pages/userinfo/userinfo",
+        "subpackageMember/coupon-wallet/index",
+        "subpackageRoam/poi-detail/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/club/detail/index",
+          "segments": [
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/edit/index",
+          "segments": [
+            {
+              "selector": "#clubEdit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/member/index/index",
+          "segments": [
+            {
+              "selector": "#profile",
+              "index": 0
+            },
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/index/index",
+          "segments": [
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/shezhi/shezhi",
+          "segments": [
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/userinfo/userinfo",
+          "segments": [
+            {
+              "selector": "#profile",
+              "index": 0
+            },
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/coupon-wallet/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "#deepSceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/poi-detail/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "#deepSceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "components/cy/scene-club-edit/index.wxml",
+        "js": "components/cy/scene-club-edit/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-btn",
+        "event": "bindtap",
+        "handler": "loadClub",
+        "line": 19,
+        "selectorHint": "cy-btn[bindtap]",
+        "visibleCondition": "{{draftBlocked && !draftCanDiscard}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "read",
+      "interactionMode": "tap",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/club/detail",
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "primaryApis": [
+          "/api/club/detail",
+          "/api/config/features"
+        ],
+        "auxiliaryApis": [
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/club/detail",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "components/cy/scene-club-edit/index.js:93"
+      }
+    },
+    {
+      "id": "components/cy/scene-club-edit/index.wxml:193:bindtap:applyPicker:25",
+      "route": "component:components/cy/scene-club-edit/index",
+      "hostRoutes": [
+        "pages/club/detail/index",
+        "pages/club/edit/index",
+        "pages/member/index/index",
+        "pages/merchant/index/index",
+        "pages/shezhi/shezhi",
+        "pages/userinfo/userinfo",
+        "subpackageMember/coupon-wallet/index",
+        "subpackageRoam/poi-detail/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/club/detail/index",
+          "segments": [
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/edit/index",
+          "segments": [
+            {
+              "selector": "#clubEdit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/member/index/index",
+          "segments": [
+            {
+              "selector": "#profile",
+              "index": 0
+            },
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/index/index",
+          "segments": [
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/shezhi/shezhi",
+          "segments": [
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/userinfo/userinfo",
+          "segments": [
+            {
+              "selector": "#profile",
+              "index": 0
+            },
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/coupon-wallet/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "#deepSceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/poi-detail/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "#deepSceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "components/cy/scene-club-edit/index.wxml",
+        "js": "components/cy/scene-club-edit/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-btn",
+        "event": "bindtap",
+        "handler": "applyPicker",
+        "line": 193,
+        "selectorHint": "cy-btn[bindtap]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [
+          "/api/role/info"
+        ],
+        "primaryApis": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "components/cy/scene-club-edit/index.js:216"
+      }
+    },
+    {
+      "id": "components/cy/scene-club-edit/index.wxml:196:bind:close:closePicker:26",
+      "route": "component:components/cy/scene-club-edit/index",
+      "hostRoutes": [
+        "pages/club/detail/index",
+        "pages/club/edit/index",
+        "pages/member/index/index",
+        "pages/merchant/index/index",
+        "pages/shezhi/shezhi",
+        "pages/userinfo/userinfo",
+        "subpackageMember/coupon-wallet/index",
+        "subpackageRoam/poi-detail/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/club/detail/index",
+          "segments": [
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/edit/index",
+          "segments": [
+            {
+              "selector": "#clubEdit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/member/index/index",
+          "segments": [
+            {
+              "selector": "#profile",
+              "index": 0
+            },
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/index/index",
+          "segments": [
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/shezhi/shezhi",
+          "segments": [
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/userinfo/userinfo",
+          "segments": [
+            {
+              "selector": "#profile",
+              "index": 0
+            },
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/coupon-wallet/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "#deepSceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/poi-detail/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "#deepSceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "components/cy/scene-club-edit/index.wxml",
+        "js": "components/cy/scene-club-edit/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-sheet",
+        "event": "bind:close",
+        "handler": "closePicker",
+        "line": 196,
+        "selectorHint": "cy-sheet[bind:close]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "components/cy/scene-club-edit/index.js:198"
+      }
+    },
+    {
+      "id": "components/cy/scene-club-edit/index.wxml:201:catchtap:toggleDraftDir:27",
+      "route": "component:components/cy/scene-club-edit/index",
+      "hostRoutes": [
+        "pages/club/detail/index",
+        "pages/club/edit/index",
+        "pages/member/index/index",
+        "pages/merchant/index/index",
+        "pages/shezhi/shezhi",
+        "pages/userinfo/userinfo",
+        "subpackageMember/coupon-wallet/index",
+        "subpackageRoam/poi-detail/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/club/detail/index",
+          "segments": [
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/edit/index",
+          "segments": [
+            {
+              "selector": "#clubEdit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/member/index/index",
+          "segments": [
+            {
+              "selector": "#profile",
+              "index": 0
+            },
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/index/index",
+          "segments": [
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/shezhi/shezhi",
+          "segments": [
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/userinfo/userinfo",
+          "segments": [
+            {
+              "selector": "#profile",
+              "index": 0
+            },
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/coupon-wallet/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "#deepSceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/poi-detail/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "#deepSceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "components/cy/scene-club-edit/index.wxml",
+        "js": "components/cy/scene-club-edit/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "catchtap",
+        "handler": "toggleDraftDir",
+        "line": 201,
+        "selectorHint": ".chip",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "活动倾向：{{item}}",
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [
+          "/api/role/info"
+        ],
+        "primaryApis": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "components/cy/scene-club-edit/index.js:204"
+      }
+    },
+    {
+      "id": "components/cy/scene-club-edit/index.wxml:205:bindtap:applyPicker:28",
+      "route": "component:components/cy/scene-club-edit/index",
+      "hostRoutes": [
+        "pages/club/detail/index",
+        "pages/club/edit/index",
+        "pages/member/index/index",
+        "pages/merchant/index/index",
+        "pages/shezhi/shezhi",
+        "pages/userinfo/userinfo",
+        "subpackageMember/coupon-wallet/index",
+        "subpackageRoam/poi-detail/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/club/detail/index",
+          "segments": [
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/edit/index",
+          "segments": [
+            {
+              "selector": "#clubEdit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/member/index/index",
+          "segments": [
+            {
+              "selector": "#profile",
+              "index": 0
+            },
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/index/index",
+          "segments": [
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/shezhi/shezhi",
+          "segments": [
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/userinfo/userinfo",
+          "segments": [
+            {
+              "selector": "#profile",
+              "index": 0
+            },
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/coupon-wallet/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "#deepSceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/poi-detail/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "#deepSceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "components/cy/scene-club-edit/index.wxml",
+        "js": "components/cy/scene-club-edit/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-btn",
+        "event": "bindtap",
+        "handler": "applyPicker",
+        "line": 205,
+        "selectorHint": "cy-btn[bindtap]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [
+          "/api/role/info"
+        ],
+        "primaryApis": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "components/cy/scene-club-edit/index.js:216"
+      }
+    },
+    {
+      "id": "components/cy/scene-club-edit/index.wxml:210:bind:alt:onDissolveAlt:30",
+      "route": "component:components/cy/scene-club-edit/index",
+      "hostRoutes": [
+        "pages/club/detail/index",
+        "pages/club/edit/index",
+        "pages/member/index/index",
+        "pages/merchant/index/index",
+        "pages/shezhi/shezhi",
+        "pages/userinfo/userinfo",
+        "subpackageMember/coupon-wallet/index",
+        "subpackageRoam/poi-detail/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/club/detail/index",
+          "segments": [
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/edit/index",
+          "segments": [
+            {
+              "selector": "#clubEdit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/member/index/index",
+          "segments": [
+            {
+              "selector": "#profile",
+              "index": 0
+            },
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/index/index",
+          "segments": [
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/shezhi/shezhi",
+          "segments": [
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/userinfo/userinfo",
+          "segments": [
+            {
+              "selector": "#profile",
+              "index": 0
+            },
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/coupon-wallet/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "#deepSceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/poi-detail/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "#deepSceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "components/cy/scene-club-edit/index.wxml",
+        "js": "components/cy/scene-club-edit/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-danger-confirm",
+        "event": "bind:alt",
+        "handler": "onDissolveAlt",
+        "line": 210,
+        "selectorHint": "#dc",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "other",
+      "interactionMode": "event-contract",
+      "baseActionClass": "other",
+      "effectClasses": [
+        "other"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "components/cy/scene-club-edit/index.js:312"
+      }
+    },
+    {
+      "id": "components/cy/scene-club-edit/index.wxml:210:bind:confirm:onConfirmDissolve:29",
+      "route": "component:components/cy/scene-club-edit/index",
+      "hostRoutes": [
+        "pages/club/detail/index",
+        "pages/club/edit/index",
+        "pages/member/index/index",
+        "pages/merchant/index/index",
+        "pages/shezhi/shezhi",
+        "pages/userinfo/userinfo",
+        "subpackageMember/coupon-wallet/index",
+        "subpackageRoam/poi-detail/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/club/detail/index",
+          "segments": [
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/edit/index",
+          "segments": [
+            {
+              "selector": "#clubEdit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/member/index/index",
+          "segments": [
+            {
+              "selector": "#profile",
+              "index": 0
+            },
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/index/index",
+          "segments": [
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/shezhi/shezhi",
+          "segments": [
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/userinfo/userinfo",
+          "segments": [
+            {
+              "selector": "#profile",
+              "index": 0
+            },
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/coupon-wallet/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "#deepSceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/poi-detail/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "#deepSceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "components/cy/scene-club-edit/index.wxml",
+        "js": "components/cy/scene-club-edit/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-danger-confirm",
+        "event": "bind:confirm",
+        "handler": "onConfirmDissolve",
+        "line": 210,
+        "selectorHint": "#dc",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "write",
+      "interactionMode": "event-contract",
+      "baseActionClass": "write",
+      "effectClasses": [
+        "write",
+        "state"
+      ],
+      "accessBoundary": "owned-resource",
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/club/dissolve",
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "primaryApis": [
+          "/api/club/dissolve",
+          "/api/config/features"
+        ],
+        "auxiliaryApis": [
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/club/dissolve",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": [
+          "/api/club/dissolve"
+        ]
+      },
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger",
+        "forbidden-owner"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "components/cy/scene-club-edit/index.js:307"
+      }
+    },
+    {
+      "id": "components/cy/scene-club-edit/index.wxml:215:bind:close:closeDissolutionBlockers:31",
+      "route": "component:components/cy/scene-club-edit/index",
+      "hostRoutes": [
+        "pages/club/detail/index",
+        "pages/club/edit/index",
+        "pages/member/index/index",
+        "pages/merchant/index/index",
+        "pages/shezhi/shezhi",
+        "pages/userinfo/userinfo",
+        "subpackageMember/coupon-wallet/index",
+        "subpackageRoam/poi-detail/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/club/detail/index",
+          "segments": [
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/edit/index",
+          "segments": [
+            {
+              "selector": "#clubEdit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/member/index/index",
+          "segments": [
+            {
+              "selector": "#profile",
+              "index": 0
+            },
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/index/index",
+          "segments": [
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/shezhi/shezhi",
+          "segments": [
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/userinfo/userinfo",
+          "segments": [
+            {
+              "selector": "#profile",
+              "index": 0
+            },
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/coupon-wallet/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "#deepSceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/poi-detail/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "#deepSceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "components/cy/scene-club-edit/index.wxml",
+        "js": "components/cy/scene-club-edit/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-sheet",
+        "event": "bind:close",
+        "handler": "closeDissolutionBlockers",
+        "line": 215,
+        "selectorHint": "cy-sheet[bind:close]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "components/cy/scene-club-edit/index.js:370"
+      }
+    },
+    {
+      "id": "components/cy/scene-club-edit/index.wxml:226:catchtap:openDissolutionBlockerItem:32",
+      "route": "component:components/cy/scene-club-edit/index",
+      "hostRoutes": [
+        "pages/club/detail/index",
+        "pages/club/edit/index",
+        "pages/member/index/index",
+        "pages/merchant/index/index",
+        "pages/shezhi/shezhi",
+        "pages/userinfo/userinfo",
+        "subpackageMember/coupon-wallet/index",
+        "subpackageRoam/poi-detail/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/club/detail/index",
+          "segments": [
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/edit/index",
+          "segments": [
+            {
+              "selector": "#clubEdit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/member/index/index",
+          "segments": [
+            {
+              "selector": "#profile",
+              "index": 0
+            },
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/index/index",
+          "segments": [
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/shezhi/shezhi",
+          "segments": [
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/userinfo/userinfo",
+          "segments": [
+            {
+              "selector": "#profile",
+              "index": 0
+            },
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/coupon-wallet/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "#deepSceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/poi-detail/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "#deepSceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "components/cy/scene-club-edit/index.wxml",
+        "js": "components/cy/scene-club-edit/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "catchtap",
+        "handler": "openDissolutionBlockerItem",
+        "line": 226,
+        "selectorHint": ".dissolution-blocker-act",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "{{item.actionText || '处理'}}：{{item.title || item.label}}",
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "write",
+      "interactionMode": "tap",
+      "baseActionClass": "write",
+      "effectClasses": [
+        "write",
+        "navigation",
+        "state"
+      ],
+      "accessBoundary": "owned-resource",
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/club/dissolution-blockers",
+          "/api/config/features",
+          "/api/coop/deposit/refund/retry",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "primaryApis": [
+          "/api/club/dissolution-blockers",
+          "/api/config/features",
+          "/api/coop/deposit/refund/retry"
+        ],
+        "auxiliaryApis": [
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/club/dissolution-blockers",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/coop/deposit/refund/retry",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": [
+          "/api/coop/deposit/refund/retry"
+        ]
+      },
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger",
+        "forbidden-owner"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "components/cy/scene-club-edit/index.js:385"
+      }
+    },
+    {
+      "id": "components/cy/scene-club-edit/index.wxml:235:bind:close:closeDissolutionError:33",
+      "route": "component:components/cy/scene-club-edit/index",
+      "hostRoutes": [
+        "pages/club/detail/index",
+        "pages/club/edit/index",
+        "pages/member/index/index",
+        "pages/merchant/index/index",
+        "pages/shezhi/shezhi",
+        "pages/userinfo/userinfo",
+        "subpackageMember/coupon-wallet/index",
+        "subpackageRoam/poi-detail/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/club/detail/index",
+          "segments": [
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/edit/index",
+          "segments": [
+            {
+              "selector": "#clubEdit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/member/index/index",
+          "segments": [
+            {
+              "selector": "#profile",
+              "index": 0
+            },
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/index/index",
+          "segments": [
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/shezhi/shezhi",
+          "segments": [
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/userinfo/userinfo",
+          "segments": [
+            {
+              "selector": "#profile",
+              "index": 0
+            },
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/coupon-wallet/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "#deepSceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/poi-detail/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "#deepSceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "components/cy/scene-club-edit/index.wxml",
+        "js": "components/cy/scene-club-edit/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-sheet",
+        "event": "bind:close",
+        "handler": "closeDissolutionError",
+        "line": 235,
+        "selectorHint": "cy-sheet[bind:close]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "components/cy/scene-club-edit/index.js:376"
+      }
+    },
+    {
+      "id": "components/cy/scene-club-edit/index.wxml:236:bind:retry:closeDissolutionError:34",
+      "route": "component:components/cy/scene-club-edit/index",
+      "hostRoutes": [
+        "pages/club/detail/index",
+        "pages/club/edit/index",
+        "pages/member/index/index",
+        "pages/merchant/index/index",
+        "pages/shezhi/shezhi",
+        "pages/userinfo/userinfo",
+        "subpackageMember/coupon-wallet/index",
+        "subpackageRoam/poi-detail/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/club/detail/index",
+          "segments": [
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/edit/index",
+          "segments": [
+            {
+              "selector": "#clubEdit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/member/index/index",
+          "segments": [
+            {
+              "selector": "#profile",
+              "index": 0
+            },
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/index/index",
+          "segments": [
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/shezhi/shezhi",
+          "segments": [
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/userinfo/userinfo",
+          "segments": [
+            {
+              "selector": "#profile",
+              "index": 0
+            },
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/coupon-wallet/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "#deepSceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/poi-detail/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "#deepSceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "components/cy/scene-club-edit/index.wxml",
+        "js": "components/cy/scene-club-edit/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-error",
+        "event": "bind:retry",
+        "handler": "closeDissolutionError",
+        "line": 236,
+        "selectorHint": "cy-error[bind:retry]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "components/cy/scene-club-edit/index.js:376"
+      }
+    },
+    {
+      "id": "components/cy/scene-club-edit/index.wxml:29:bindtap:pickLogo:7",
       "route": "component:components/cy/scene-club-edit/index",
       "hostRoutes": [
         "pages/club/detail/index",
@@ -318341,7 +321950,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "pickLogo",
-        "line": 18,
+        "line": 29,
         "selectorHint": ".frow",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -318436,1997 +322045,7 @@
       }
     },
     {
-      "id": "components/cy/scene-club-edit/index.wxml:182:bindtap:applyPicker:22",
-      "route": "component:components/cy/scene-club-edit/index",
-      "hostRoutes": [
-        "pages/club/detail/index",
-        "pages/club/edit/index",
-        "pages/member/index/index",
-        "pages/merchant/index/index",
-        "pages/shezhi/shezhi",
-        "pages/userinfo/userinfo",
-        "subpackageMember/coupon-wallet/index",
-        "subpackageRoam/poi-detail/index"
-      ],
-      "hostComponentPaths": [
-        {
-          "route": "pages/club/detail/index",
-          "segments": [
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/edit/index",
-          "segments": [
-            {
-              "selector": "#clubEdit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/member/index/index",
-          "segments": [
-            {
-              "selector": "#profile",
-              "index": 0
-            },
-            {
-              "selector": "#sceneRouteContent",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/merchant/index/index",
-          "segments": [
-            {
-              "selector": "#sceneRouteContent",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/shezhi/shezhi",
-          "segments": [
-            {
-              "selector": "#sceneRouteContent",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/userinfo/userinfo",
-          "segments": [
-            {
-              "selector": "#profile",
-              "index": 0
-            },
-            {
-              "selector": "#sceneRouteContent",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageMember/coupon-wallet/index",
-          "segments": [
-            {
-              "selector": "cy-scene-deep-link",
-              "index": 0
-            },
-            {
-              "selector": "#deepSceneRouteContent",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageRoam/poi-detail/index",
-          "segments": [
-            {
-              "selector": "cy-scene-deep-link",
-              "index": 0
-            },
-            {
-              "selector": "#deepSceneRouteContent",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        }
-      ],
-      "role": "inherited",
-      "entry": {
-        "wxml": "components/cy/scene-club-edit/index.wxml",
-        "js": "components/cy/scene-club-edit/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-btn",
-        "event": "bindtap",
-        "handler": "applyPicker",
-        "line": 182,
-        "selectorHint": "cy-btn[bindtap]",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "components/cy/scene-club-edit/index.js:216"
-      }
-    },
-    {
-      "id": "components/cy/scene-club-edit/index.wxml:185:bind:close:closePicker:23",
-      "route": "component:components/cy/scene-club-edit/index",
-      "hostRoutes": [
-        "pages/club/detail/index",
-        "pages/club/edit/index",
-        "pages/member/index/index",
-        "pages/merchant/index/index",
-        "pages/shezhi/shezhi",
-        "pages/userinfo/userinfo",
-        "subpackageMember/coupon-wallet/index",
-        "subpackageRoam/poi-detail/index"
-      ],
-      "hostComponentPaths": [
-        {
-          "route": "pages/club/detail/index",
-          "segments": [
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/edit/index",
-          "segments": [
-            {
-              "selector": "#clubEdit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/member/index/index",
-          "segments": [
-            {
-              "selector": "#profile",
-              "index": 0
-            },
-            {
-              "selector": "#sceneRouteContent",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/merchant/index/index",
-          "segments": [
-            {
-              "selector": "#sceneRouteContent",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/shezhi/shezhi",
-          "segments": [
-            {
-              "selector": "#sceneRouteContent",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/userinfo/userinfo",
-          "segments": [
-            {
-              "selector": "#profile",
-              "index": 0
-            },
-            {
-              "selector": "#sceneRouteContent",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageMember/coupon-wallet/index",
-          "segments": [
-            {
-              "selector": "cy-scene-deep-link",
-              "index": 0
-            },
-            {
-              "selector": "#deepSceneRouteContent",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageRoam/poi-detail/index",
-          "segments": [
-            {
-              "selector": "cy-scene-deep-link",
-              "index": 0
-            },
-            {
-              "selector": "#deepSceneRouteContent",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        }
-      ],
-      "role": "inherited",
-      "entry": {
-        "wxml": "components/cy/scene-club-edit/index.wxml",
-        "js": "components/cy/scene-club-edit/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-sheet",
-        "event": "bind:close",
-        "handler": "closePicker",
-        "line": 185,
-        "selectorHint": "cy-sheet[bind:close]",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "event-contract",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "components/cy/scene-club-edit/index.js:198"
-      }
-    },
-    {
-      "id": "components/cy/scene-club-edit/index.wxml:190:catchtap:toggleDraftDir:24",
-      "route": "component:components/cy/scene-club-edit/index",
-      "hostRoutes": [
-        "pages/club/detail/index",
-        "pages/club/edit/index",
-        "pages/member/index/index",
-        "pages/merchant/index/index",
-        "pages/shezhi/shezhi",
-        "pages/userinfo/userinfo",
-        "subpackageMember/coupon-wallet/index",
-        "subpackageRoam/poi-detail/index"
-      ],
-      "hostComponentPaths": [
-        {
-          "route": "pages/club/detail/index",
-          "segments": [
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/edit/index",
-          "segments": [
-            {
-              "selector": "#clubEdit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/member/index/index",
-          "segments": [
-            {
-              "selector": "#profile",
-              "index": 0
-            },
-            {
-              "selector": "#sceneRouteContent",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/merchant/index/index",
-          "segments": [
-            {
-              "selector": "#sceneRouteContent",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/shezhi/shezhi",
-          "segments": [
-            {
-              "selector": "#sceneRouteContent",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/userinfo/userinfo",
-          "segments": [
-            {
-              "selector": "#profile",
-              "index": 0
-            },
-            {
-              "selector": "#sceneRouteContent",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageMember/coupon-wallet/index",
-          "segments": [
-            {
-              "selector": "cy-scene-deep-link",
-              "index": 0
-            },
-            {
-              "selector": "#deepSceneRouteContent",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageRoam/poi-detail/index",
-          "segments": [
-            {
-              "selector": "cy-scene-deep-link",
-              "index": 0
-            },
-            {
-              "selector": "#deepSceneRouteContent",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        }
-      ],
-      "role": "inherited",
-      "entry": {
-        "wxml": "components/cy/scene-club-edit/index.wxml",
-        "js": "components/cy/scene-club-edit/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "catchtap",
-        "handler": "toggleDraftDir",
-        "line": 190,
-        "selectorHint": ".chip",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": "活动倾向：{{item}}",
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "components/cy/scene-club-edit/index.js:204"
-      }
-    },
-    {
-      "id": "components/cy/scene-club-edit/index.wxml:194:bindtap:applyPicker:25",
-      "route": "component:components/cy/scene-club-edit/index",
-      "hostRoutes": [
-        "pages/club/detail/index",
-        "pages/club/edit/index",
-        "pages/member/index/index",
-        "pages/merchant/index/index",
-        "pages/shezhi/shezhi",
-        "pages/userinfo/userinfo",
-        "subpackageMember/coupon-wallet/index",
-        "subpackageRoam/poi-detail/index"
-      ],
-      "hostComponentPaths": [
-        {
-          "route": "pages/club/detail/index",
-          "segments": [
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/edit/index",
-          "segments": [
-            {
-              "selector": "#clubEdit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/member/index/index",
-          "segments": [
-            {
-              "selector": "#profile",
-              "index": 0
-            },
-            {
-              "selector": "#sceneRouteContent",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/merchant/index/index",
-          "segments": [
-            {
-              "selector": "#sceneRouteContent",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/shezhi/shezhi",
-          "segments": [
-            {
-              "selector": "#sceneRouteContent",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/userinfo/userinfo",
-          "segments": [
-            {
-              "selector": "#profile",
-              "index": 0
-            },
-            {
-              "selector": "#sceneRouteContent",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageMember/coupon-wallet/index",
-          "segments": [
-            {
-              "selector": "cy-scene-deep-link",
-              "index": 0
-            },
-            {
-              "selector": "#deepSceneRouteContent",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageRoam/poi-detail/index",
-          "segments": [
-            {
-              "selector": "cy-scene-deep-link",
-              "index": 0
-            },
-            {
-              "selector": "#deepSceneRouteContent",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        }
-      ],
-      "role": "inherited",
-      "entry": {
-        "wxml": "components/cy/scene-club-edit/index.wxml",
-        "js": "components/cy/scene-club-edit/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-btn",
-        "event": "bindtap",
-        "handler": "applyPicker",
-        "line": 194,
-        "selectorHint": "cy-btn[bindtap]",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "components/cy/scene-club-edit/index.js:216"
-      }
-    },
-    {
-      "id": "components/cy/scene-club-edit/index.wxml:199:bind:alt:onDissolveAlt:27",
-      "route": "component:components/cy/scene-club-edit/index",
-      "hostRoutes": [
-        "pages/club/detail/index",
-        "pages/club/edit/index",
-        "pages/member/index/index",
-        "pages/merchant/index/index",
-        "pages/shezhi/shezhi",
-        "pages/userinfo/userinfo",
-        "subpackageMember/coupon-wallet/index",
-        "subpackageRoam/poi-detail/index"
-      ],
-      "hostComponentPaths": [
-        {
-          "route": "pages/club/detail/index",
-          "segments": [
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/edit/index",
-          "segments": [
-            {
-              "selector": "#clubEdit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/member/index/index",
-          "segments": [
-            {
-              "selector": "#profile",
-              "index": 0
-            },
-            {
-              "selector": "#sceneRouteContent",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/merchant/index/index",
-          "segments": [
-            {
-              "selector": "#sceneRouteContent",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/shezhi/shezhi",
-          "segments": [
-            {
-              "selector": "#sceneRouteContent",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/userinfo/userinfo",
-          "segments": [
-            {
-              "selector": "#profile",
-              "index": 0
-            },
-            {
-              "selector": "#sceneRouteContent",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageMember/coupon-wallet/index",
-          "segments": [
-            {
-              "selector": "cy-scene-deep-link",
-              "index": 0
-            },
-            {
-              "selector": "#deepSceneRouteContent",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageRoam/poi-detail/index",
-          "segments": [
-            {
-              "selector": "cy-scene-deep-link",
-              "index": 0
-            },
-            {
-              "selector": "#deepSceneRouteContent",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        }
-      ],
-      "role": "inherited",
-      "entry": {
-        "wxml": "components/cy/scene-club-edit/index.wxml",
-        "js": "components/cy/scene-club-edit/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-danger-confirm",
-        "event": "bind:alt",
-        "handler": "onDissolveAlt",
-        "line": 199,
-        "selectorHint": "#dc",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "other",
-      "interactionMode": "event-contract",
-      "baseActionClass": "other",
-      "effectClasses": [
-        "other"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
-      "requiredBranches": [
-        "success",
-        "error"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "components/cy/scene-club-edit/index.js:312"
-      }
-    },
-    {
-      "id": "components/cy/scene-club-edit/index.wxml:199:bind:confirm:onConfirmDissolve:26",
-      "route": "component:components/cy/scene-club-edit/index",
-      "hostRoutes": [
-        "pages/club/detail/index",
-        "pages/club/edit/index",
-        "pages/member/index/index",
-        "pages/merchant/index/index",
-        "pages/shezhi/shezhi",
-        "pages/userinfo/userinfo",
-        "subpackageMember/coupon-wallet/index",
-        "subpackageRoam/poi-detail/index"
-      ],
-      "hostComponentPaths": [
-        {
-          "route": "pages/club/detail/index",
-          "segments": [
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/edit/index",
-          "segments": [
-            {
-              "selector": "#clubEdit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/member/index/index",
-          "segments": [
-            {
-              "selector": "#profile",
-              "index": 0
-            },
-            {
-              "selector": "#sceneRouteContent",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/merchant/index/index",
-          "segments": [
-            {
-              "selector": "#sceneRouteContent",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/shezhi/shezhi",
-          "segments": [
-            {
-              "selector": "#sceneRouteContent",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/userinfo/userinfo",
-          "segments": [
-            {
-              "selector": "#profile",
-              "index": 0
-            },
-            {
-              "selector": "#sceneRouteContent",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageMember/coupon-wallet/index",
-          "segments": [
-            {
-              "selector": "cy-scene-deep-link",
-              "index": 0
-            },
-            {
-              "selector": "#deepSceneRouteContent",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageRoam/poi-detail/index",
-          "segments": [
-            {
-              "selector": "cy-scene-deep-link",
-              "index": 0
-            },
-            {
-              "selector": "#deepSceneRouteContent",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        }
-      ],
-      "role": "inherited",
-      "entry": {
-        "wxml": "components/cy/scene-club-edit/index.wxml",
-        "js": "components/cy/scene-club-edit/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-danger-confirm",
-        "event": "bind:confirm",
-        "handler": "onConfirmDissolve",
-        "line": 199,
-        "selectorHint": "#dc",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "write",
-      "interactionMode": "event-contract",
-      "baseActionClass": "write",
-      "effectClasses": [
-        "write",
-        "state"
-      ],
-      "accessBoundary": "owned-resource",
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/privacy/index"
-        ],
-        "apis": [
-          "/api/club/dissolve",
-          "/api/config/features",
-          "/api/login/code",
-          "/api/role/info"
-        ],
-        "primaryApis": [
-          "/api/club/dissolve",
-          "/api/config/features"
-        ],
-        "auxiliaryApis": [
-          "/api/login/code",
-          "/api/role/info"
-        ],
-        "apiContracts": [
-          {
-            "url": "/api/club/dissolve",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/config/features",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/login/code",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/role/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
-        "writeApis": [
-          "/api/club/dissolve"
-        ]
-      },
-      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger",
-        "forbidden-owner"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "components/cy/scene-club-edit/index.js:307"
-      }
-    },
-    {
-      "id": "components/cy/scene-club-edit/index.wxml:204:bind:close:closeDissolutionBlockers:28",
-      "route": "component:components/cy/scene-club-edit/index",
-      "hostRoutes": [
-        "pages/club/detail/index",
-        "pages/club/edit/index",
-        "pages/member/index/index",
-        "pages/merchant/index/index",
-        "pages/shezhi/shezhi",
-        "pages/userinfo/userinfo",
-        "subpackageMember/coupon-wallet/index",
-        "subpackageRoam/poi-detail/index"
-      ],
-      "hostComponentPaths": [
-        {
-          "route": "pages/club/detail/index",
-          "segments": [
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/edit/index",
-          "segments": [
-            {
-              "selector": "#clubEdit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/member/index/index",
-          "segments": [
-            {
-              "selector": "#profile",
-              "index": 0
-            },
-            {
-              "selector": "#sceneRouteContent",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/merchant/index/index",
-          "segments": [
-            {
-              "selector": "#sceneRouteContent",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/shezhi/shezhi",
-          "segments": [
-            {
-              "selector": "#sceneRouteContent",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/userinfo/userinfo",
-          "segments": [
-            {
-              "selector": "#profile",
-              "index": 0
-            },
-            {
-              "selector": "#sceneRouteContent",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageMember/coupon-wallet/index",
-          "segments": [
-            {
-              "selector": "cy-scene-deep-link",
-              "index": 0
-            },
-            {
-              "selector": "#deepSceneRouteContent",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageRoam/poi-detail/index",
-          "segments": [
-            {
-              "selector": "cy-scene-deep-link",
-              "index": 0
-            },
-            {
-              "selector": "#deepSceneRouteContent",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        }
-      ],
-      "role": "inherited",
-      "entry": {
-        "wxml": "components/cy/scene-club-edit/index.wxml",
-        "js": "components/cy/scene-club-edit/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-sheet",
-        "event": "bind:close",
-        "handler": "closeDissolutionBlockers",
-        "line": 204,
-        "selectorHint": "cy-sheet[bind:close]",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "event-contract",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "components/cy/scene-club-edit/index.js:370"
-      }
-    },
-    {
-      "id": "components/cy/scene-club-edit/index.wxml:215:catchtap:openDissolutionBlockerItem:29",
-      "route": "component:components/cy/scene-club-edit/index",
-      "hostRoutes": [
-        "pages/club/detail/index",
-        "pages/club/edit/index",
-        "pages/member/index/index",
-        "pages/merchant/index/index",
-        "pages/shezhi/shezhi",
-        "pages/userinfo/userinfo",
-        "subpackageMember/coupon-wallet/index",
-        "subpackageRoam/poi-detail/index"
-      ],
-      "hostComponentPaths": [
-        {
-          "route": "pages/club/detail/index",
-          "segments": [
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/edit/index",
-          "segments": [
-            {
-              "selector": "#clubEdit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/member/index/index",
-          "segments": [
-            {
-              "selector": "#profile",
-              "index": 0
-            },
-            {
-              "selector": "#sceneRouteContent",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/merchant/index/index",
-          "segments": [
-            {
-              "selector": "#sceneRouteContent",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/shezhi/shezhi",
-          "segments": [
-            {
-              "selector": "#sceneRouteContent",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/userinfo/userinfo",
-          "segments": [
-            {
-              "selector": "#profile",
-              "index": 0
-            },
-            {
-              "selector": "#sceneRouteContent",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageMember/coupon-wallet/index",
-          "segments": [
-            {
-              "selector": "cy-scene-deep-link",
-              "index": 0
-            },
-            {
-              "selector": "#deepSceneRouteContent",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageRoam/poi-detail/index",
-          "segments": [
-            {
-              "selector": "cy-scene-deep-link",
-              "index": 0
-            },
-            {
-              "selector": "#deepSceneRouteContent",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        }
-      ],
-      "role": "inherited",
-      "entry": {
-        "wxml": "components/cy/scene-club-edit/index.wxml",
-        "js": "components/cy/scene-club-edit/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "catchtap",
-        "handler": "openDissolutionBlockerItem",
-        "line": 215,
-        "selectorHint": ".dissolution-blocker-act",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": "{{item.actionText || '处理'}}：{{item.title || item.label}}",
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "write",
-      "interactionMode": "tap",
-      "baseActionClass": "write",
-      "effectClasses": [
-        "write",
-        "navigation",
-        "state"
-      ],
-      "accessBoundary": "owned-resource",
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/privacy/index"
-        ],
-        "apis": [
-          "/api/club/dissolution-blockers",
-          "/api/config/features",
-          "/api/coop/deposit/refund/retry",
-          "/api/login/code",
-          "/api/role/info"
-        ],
-        "primaryApis": [
-          "/api/club/dissolution-blockers",
-          "/api/config/features",
-          "/api/coop/deposit/refund/retry"
-        ],
-        "auxiliaryApis": [
-          "/api/login/code",
-          "/api/role/info"
-        ],
-        "apiContracts": [
-          {
-            "url": "/api/club/dissolution-blockers",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/config/features",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/coop/deposit/refund/retry",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/login/code",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/role/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
-        "writeApis": [
-          "/api/coop/deposit/refund/retry"
-        ]
-      },
-      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger",
-        "forbidden-owner"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "components/cy/scene-club-edit/index.js:385"
-      }
-    },
-    {
-      "id": "components/cy/scene-club-edit/index.wxml:224:bind:close:closeDissolutionError:30",
-      "route": "component:components/cy/scene-club-edit/index",
-      "hostRoutes": [
-        "pages/club/detail/index",
-        "pages/club/edit/index",
-        "pages/member/index/index",
-        "pages/merchant/index/index",
-        "pages/shezhi/shezhi",
-        "pages/userinfo/userinfo",
-        "subpackageMember/coupon-wallet/index",
-        "subpackageRoam/poi-detail/index"
-      ],
-      "hostComponentPaths": [
-        {
-          "route": "pages/club/detail/index",
-          "segments": [
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/edit/index",
-          "segments": [
-            {
-              "selector": "#clubEdit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/member/index/index",
-          "segments": [
-            {
-              "selector": "#profile",
-              "index": 0
-            },
-            {
-              "selector": "#sceneRouteContent",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/merchant/index/index",
-          "segments": [
-            {
-              "selector": "#sceneRouteContent",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/shezhi/shezhi",
-          "segments": [
-            {
-              "selector": "#sceneRouteContent",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/userinfo/userinfo",
-          "segments": [
-            {
-              "selector": "#profile",
-              "index": 0
-            },
-            {
-              "selector": "#sceneRouteContent",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageMember/coupon-wallet/index",
-          "segments": [
-            {
-              "selector": "cy-scene-deep-link",
-              "index": 0
-            },
-            {
-              "selector": "#deepSceneRouteContent",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageRoam/poi-detail/index",
-          "segments": [
-            {
-              "selector": "cy-scene-deep-link",
-              "index": 0
-            },
-            {
-              "selector": "#deepSceneRouteContent",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        }
-      ],
-      "role": "inherited",
-      "entry": {
-        "wxml": "components/cy/scene-club-edit/index.wxml",
-        "js": "components/cy/scene-club-edit/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-sheet",
-        "event": "bind:close",
-        "handler": "closeDissolutionError",
-        "line": 224,
-        "selectorHint": "cy-sheet[bind:close]",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "event-contract",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "components/cy/scene-club-edit/index.js:376"
-      }
-    },
-    {
-      "id": "components/cy/scene-club-edit/index.wxml:225:bind:retry:closeDissolutionError:31",
-      "route": "component:components/cy/scene-club-edit/index",
-      "hostRoutes": [
-        "pages/club/detail/index",
-        "pages/club/edit/index",
-        "pages/member/index/index",
-        "pages/merchant/index/index",
-        "pages/shezhi/shezhi",
-        "pages/userinfo/userinfo",
-        "subpackageMember/coupon-wallet/index",
-        "subpackageRoam/poi-detail/index"
-      ],
-      "hostComponentPaths": [
-        {
-          "route": "pages/club/detail/index",
-          "segments": [
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/edit/index",
-          "segments": [
-            {
-              "selector": "#clubEdit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/member/index/index",
-          "segments": [
-            {
-              "selector": "#profile",
-              "index": 0
-            },
-            {
-              "selector": "#sceneRouteContent",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/merchant/index/index",
-          "segments": [
-            {
-              "selector": "#sceneRouteContent",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/shezhi/shezhi",
-          "segments": [
-            {
-              "selector": "#sceneRouteContent",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/userinfo/userinfo",
-          "segments": [
-            {
-              "selector": "#profile",
-              "index": 0
-            },
-            {
-              "selector": "#sceneRouteContent",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageMember/coupon-wallet/index",
-          "segments": [
-            {
-              "selector": "cy-scene-deep-link",
-              "index": 0
-            },
-            {
-              "selector": "#deepSceneRouteContent",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageRoam/poi-detail/index",
-          "segments": [
-            {
-              "selector": "cy-scene-deep-link",
-              "index": 0
-            },
-            {
-              "selector": "#deepSceneRouteContent",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        }
-      ],
-      "role": "inherited",
-      "entry": {
-        "wxml": "components/cy/scene-club-edit/index.wxml",
-        "js": "components/cy/scene-club-edit/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-error",
-        "event": "bind:retry",
-        "handler": "closeDissolutionError",
-        "line": 225,
-        "selectorHint": "cy-error[bind:retry]",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "event-contract",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "components/cy/scene-club-edit/index.js:376"
-      }
-    },
-    {
-      "id": "components/cy/scene-club-edit/index.wxml:26:bindtap:pickCover:5",
+      "id": "components/cy/scene-club-edit/index.wxml:37:bindtap:pickCover:8",
       "route": "component:components/cy/scene-club-edit/index",
       "hostRoutes": [
         "pages/club/detail/index",
@@ -320574,7 +322193,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "pickCover",
-        "line": 26,
+        "line": 37,
         "selectorHint": ".frow",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -320859,384 +322478,6 @@
       }
     },
     {
-      "id": "components/cy/scene-club-edit/index.wxml:44:bindinput:onInput:6",
-      "route": "component:components/cy/scene-club-edit/index",
-      "hostRoutes": [
-        "pages/club/detail/index",
-        "pages/club/edit/index",
-        "pages/member/index/index",
-        "pages/merchant/index/index",
-        "pages/shezhi/shezhi",
-        "pages/userinfo/userinfo",
-        "subpackageMember/coupon-wallet/index",
-        "subpackageRoam/poi-detail/index"
-      ],
-      "hostComponentPaths": [
-        {
-          "route": "pages/club/detail/index",
-          "segments": [
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/edit/index",
-          "segments": [
-            {
-              "selector": "#clubEdit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/member/index/index",
-          "segments": [
-            {
-              "selector": "#profile",
-              "index": 0
-            },
-            {
-              "selector": "#sceneRouteContent",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/merchant/index/index",
-          "segments": [
-            {
-              "selector": "#sceneRouteContent",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/shezhi/shezhi",
-          "segments": [
-            {
-              "selector": "#sceneRouteContent",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/userinfo/userinfo",
-          "segments": [
-            {
-              "selector": "#profile",
-              "index": 0
-            },
-            {
-              "selector": "#sceneRouteContent",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageMember/coupon-wallet/index",
-          "segments": [
-            {
-              "selector": "cy-scene-deep-link",
-              "index": 0
-            },
-            {
-              "selector": "#deepSceneRouteContent",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageRoam/poi-detail/index",
-          "segments": [
-            {
-              "selector": "cy-scene-deep-link",
-              "index": 0
-            },
-            {
-              "selector": "#deepSceneRouteContent",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        }
-      ],
-      "role": "inherited",
-      "entry": {
-        "wxml": "components/cy/scene-club-edit/index.wxml",
-        "js": "components/cy/scene-club-edit/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "input",
-        "event": "bindinput",
-        "handler": "onInput",
-        "line": 44,
-        "selectorHint": ".fi",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": "俱乐部名称，必填",
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "event-contract",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "components/cy/scene-club-edit/index.js:171"
-      }
-    },
-    {
-      "id": "components/cy/scene-club-edit/index.wxml:48:bindinput:onInput:7",
-      "route": "component:components/cy/scene-club-edit/index",
-      "hostRoutes": [
-        "pages/club/detail/index",
-        "pages/club/edit/index",
-        "pages/member/index/index",
-        "pages/merchant/index/index",
-        "pages/shezhi/shezhi",
-        "pages/userinfo/userinfo",
-        "subpackageMember/coupon-wallet/index",
-        "subpackageRoam/poi-detail/index"
-      ],
-      "hostComponentPaths": [
-        {
-          "route": "pages/club/detail/index",
-          "segments": [
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/edit/index",
-          "segments": [
-            {
-              "selector": "#clubEdit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/member/index/index",
-          "segments": [
-            {
-              "selector": "#profile",
-              "index": 0
-            },
-            {
-              "selector": "#sceneRouteContent",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/merchant/index/index",
-          "segments": [
-            {
-              "selector": "#sceneRouteContent",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/shezhi/shezhi",
-          "segments": [
-            {
-              "selector": "#sceneRouteContent",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/userinfo/userinfo",
-          "segments": [
-            {
-              "selector": "#profile",
-              "index": 0
-            },
-            {
-              "selector": "#sceneRouteContent",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageMember/coupon-wallet/index",
-          "segments": [
-            {
-              "selector": "cy-scene-deep-link",
-              "index": 0
-            },
-            {
-              "selector": "#deepSceneRouteContent",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageRoam/poi-detail/index",
-          "segments": [
-            {
-              "selector": "cy-scene-deep-link",
-              "index": 0
-            },
-            {
-              "selector": "#deepSceneRouteContent",
-              "index": 0
-            },
-            {
-              "selector": "cy-scene-club-edit",
-              "index": 0
-            }
-          ]
-        }
-      ],
-      "role": "inherited",
-      "entry": {
-        "wxml": "components/cy/scene-club-edit/index.wxml",
-        "js": "components/cy/scene-club-edit/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "input",
-        "event": "bindinput",
-        "handler": "onInput",
-        "line": 48,
-        "selectorHint": ".fi",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": "所在城市，必填",
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "event-contract",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "components/cy/scene-club-edit/index.js:171"
-      }
-    },
-    {
       "id": "components/cy/scene-club-edit/index.wxml:5:bind:retry:onBack:1",
       "route": "component:components/cy/scene-club-edit/index",
       "hostRoutes": [
@@ -321427,7 +322668,7 @@
       }
     },
     {
-      "id": "components/cy/scene-club-edit/index.wxml:52:bindinput:onInput:8",
+      "id": "components/cy/scene-club-edit/index.wxml:55:bindinput:onInput:9",
       "route": "component:components/cy/scene-club-edit/index",
       "hostRoutes": [
         "pages/club/detail/index",
@@ -321572,10 +322813,410 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onInput",
-        "line": 52,
+        "line": 55,
         "selectorHint": ".fi",
         "visibleCondition": null,
-        "disabledCondition": null,
+        "disabledCondition": "{{saving || draftAvailable || draftBlocked}}",
+        "ariaLabel": "俱乐部名称，必填",
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [
+          "/api/role/info"
+        ],
+        "primaryApis": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "components/cy/scene-club-edit/index.js:171"
+      }
+    },
+    {
+      "id": "components/cy/scene-club-edit/index.wxml:59:bindinput:onInput:10",
+      "route": "component:components/cy/scene-club-edit/index",
+      "hostRoutes": [
+        "pages/club/detail/index",
+        "pages/club/edit/index",
+        "pages/member/index/index",
+        "pages/merchant/index/index",
+        "pages/shezhi/shezhi",
+        "pages/userinfo/userinfo",
+        "subpackageMember/coupon-wallet/index",
+        "subpackageRoam/poi-detail/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/club/detail/index",
+          "segments": [
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/edit/index",
+          "segments": [
+            {
+              "selector": "#clubEdit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/member/index/index",
+          "segments": [
+            {
+              "selector": "#profile",
+              "index": 0
+            },
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/index/index",
+          "segments": [
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/shezhi/shezhi",
+          "segments": [
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/userinfo/userinfo",
+          "segments": [
+            {
+              "selector": "#profile",
+              "index": 0
+            },
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/coupon-wallet/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "#deepSceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/poi-detail/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "#deepSceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "components/cy/scene-club-edit/index.wxml",
+        "js": "components/cy/scene-club-edit/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "input",
+        "event": "bindinput",
+        "handler": "onInput",
+        "line": 59,
+        "selectorHint": ".fi",
+        "visibleCondition": null,
+        "disabledCondition": "{{saving || draftAvailable || draftBlocked}}",
+        "ariaLabel": "所在城市，必填",
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [
+          "/api/role/info"
+        ],
+        "primaryApis": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "components/cy/scene-club-edit/index.js:171"
+      }
+    },
+    {
+      "id": "components/cy/scene-club-edit/index.wxml:63:bindinput:onInput:11",
+      "route": "component:components/cy/scene-club-edit/index",
+      "hostRoutes": [
+        "pages/club/detail/index",
+        "pages/club/edit/index",
+        "pages/member/index/index",
+        "pages/merchant/index/index",
+        "pages/shezhi/shezhi",
+        "pages/userinfo/userinfo",
+        "subpackageMember/coupon-wallet/index",
+        "subpackageRoam/poi-detail/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/club/detail/index",
+          "segments": [
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/edit/index",
+          "segments": [
+            {
+              "selector": "#clubEdit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/member/index/index",
+          "segments": [
+            {
+              "selector": "#profile",
+              "index": 0
+            },
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/index/index",
+          "segments": [
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/shezhi/shezhi",
+          "segments": [
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/userinfo/userinfo",
+          "segments": [
+            {
+              "selector": "#profile",
+              "index": 0
+            },
+            {
+              "selector": "#sceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/coupon-wallet/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "#deepSceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/poi-detail/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "#deepSceneRouteContent",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-club-edit",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "components/cy/scene-club-edit/index.wxml",
+        "js": "components/cy/scene-club-edit/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "input",
+        "event": "bindinput",
+        "handler": "onInput",
+        "line": 63,
+        "selectorHint": ".fi",
+        "visibleCondition": null,
+        "disabledCondition": "{{saving || draftAvailable || draftBlocked}}",
         "ariaLabel": "俱乐部关键词，选填",
         "ariaLabelExpression": null,
         "ariaRole": null,
@@ -321598,10 +323239,21 @@
       "successCapabilities": [],
       "targets": {
         "routes": [],
-        "apis": [],
+        "apis": [
+          "/api/role/info"
+        ],
         "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
         "writeApis": []
       },
       "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
@@ -321616,7 +323268,7 @@
       }
     },
     {
-      "id": "components/cy/scene-club-edit/index.wxml:56:bindinput:onInput:9",
+      "id": "components/cy/scene-club-edit/index.wxml:67:bindinput:onInput:12",
       "route": "component:components/cy/scene-club-edit/index",
       "hostRoutes": [
         "pages/club/detail/index",
@@ -321761,10 +323413,10 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onInput",
-        "line": 56,
+        "line": 67,
         "selectorHint": ".fi",
         "visibleCondition": null,
-        "disabledCondition": null,
+        "disabledCondition": "{{saving || draftAvailable || draftBlocked}}",
         "ariaLabel": "俱乐部风格，选填",
         "ariaLabelExpression": null,
         "ariaRole": null,
@@ -321787,10 +323439,21 @@
       "successCapabilities": [],
       "targets": {
         "routes": [],
-        "apis": [],
+        "apis": [
+          "/api/role/info"
+        ],
         "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
         "writeApis": []
       },
       "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
@@ -321805,7 +323468,7 @@
       }
     },
     {
-      "id": "components/cy/scene-club-edit/index.wxml:64:bindinput:onInput:10",
+      "id": "components/cy/scene-club-edit/index.wxml:75:bindinput:onInput:13",
       "route": "component:components/cy/scene-club-edit/index",
       "hostRoutes": [
         "pages/club/detail/index",
@@ -321950,10 +323613,10 @@
         "tag": "textarea",
         "event": "bindinput",
         "handler": "onInput",
-        "line": 64,
+        "line": 75,
         "selectorHint": ".fta",
         "visibleCondition": null,
-        "disabledCondition": null,
+        "disabledCondition": "{{saving || draftAvailable || draftBlocked}}",
         "ariaLabel": "俱乐部介绍，最多 200 字",
         "ariaLabelExpression": null,
         "ariaRole": null,
@@ -321976,10 +323639,21 @@
       "successCapabilities": [],
       "targets": {
         "routes": [],
-        "apis": [],
+        "apis": [
+          "/api/role/info"
+        ],
         "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
         "writeApis": []
       },
       "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
@@ -321994,7 +323668,7 @@
       }
     },
     {
-      "id": "components/cy/scene-club-edit/index.wxml:74:bindtap:openTypePicker:11",
+      "id": "components/cy/scene-club-edit/index.wxml:85:bindtap:openTypePicker:14",
       "route": "component:components/cy/scene-club-edit/index",
       "hostRoutes": [
         "pages/club/detail/index",
@@ -322139,7 +323813,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openTypePicker",
-        "line": 74,
+        "line": 85,
         "selectorHint": ".frow",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -322165,10 +323839,21 @@
       "successCapabilities": [],
       "targets": {
         "routes": [],
-        "apis": [],
+        "apis": [
+          "/api/role/info"
+        ],
         "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
         "writeApis": []
       },
       "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
@@ -322183,7 +323868,7 @@
       }
     },
     {
-      "id": "components/cy/scene-club-edit/index.wxml:84:bindtap:openPrefsPicker:12",
+      "id": "components/cy/scene-club-edit/index.wxml:95:bindtap:openPrefsPicker:15",
       "route": "component:components/cy/scene-club-edit/index",
       "hostRoutes": [
         "pages/club/detail/index",
@@ -322328,7 +324013,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openPrefsPicker",
-        "line": 84,
+        "line": 95,
         "selectorHint": ".frow",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -322354,10 +324039,21 @@
       "successCapabilities": [],
       "targets": {
         "routes": [],
-        "apis": [],
+        "apis": [
+          "/api/role/info"
+        ],
         "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
         "writeApis": []
       },
       "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
