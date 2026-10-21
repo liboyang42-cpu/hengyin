@@ -26,8 +26,8 @@ public final class RendezvousVersionedPolicy implements RendezvousConsentService
     public interface Catalog {
         Row find(String dimension, String versionId);
         int contacts(long actor);
-        /** Unwired catalogs skip actor facts. That branch is not a connected authority. */
-        default RendezvousEligibilityFacts facts() { return RendezvousEligibilityFacts.unwired(); }
+        /** No fact source is connected and admits nobody. A test catalog opts in by overriding this. */
+        default RendezvousEligibilityFacts facts() { return RendezvousEligibilityFacts.closed(); }
     }
     private final Catalog catalog;
     private final ImBlockMapper blocks;
