@@ -662,3 +662,50 @@ test('C3结束恢复保留过期位置清理，徽章待交付回读也不得还
   assert.equal(values['roam_memory_v1:9:sessions'][0].locationExpired, true)
   assert.equal(page.data.finish.medal, '')
 })
+
+for (const hasTime of [true, false]) test(`C3过期行程有pending且采集时间${hasTime ? '存在' : '缺失'}：先清几何不补传，仍读回徽章`, async () => {
+  const page = mount(); page._roamSid = SID; page._clientSessionKey = '1'.repeat(32)
+  page._pendingTiles = ['wtw3sjr']; page._pendingCollectedAt = hasTime ? { wtw3sjr: 1234 } : {}
+  page._track = [{ lat: 31, lng: 121 }]; page._sessionTiles = { wtw3sjr: 1 }
+  page._recoveryArchiveTs = 1234; page._saveRoamRecovery()
+  values['roam_memory_v1:9:sessions'] = [{ ts: 1234, track: page._track }]
+  let state = 'DUE'
+  calls = [] // Only requests made by the recovery under test.
+  app.sendRequest = o => {
+    calls.push({ url: o.url, data: o.data })
+    if (o.url !== '/api/roam/session') { o.fail({}); return }
+    o.success({ code: 200, data: { state: 'FINISHED', sessionId: SID, clientSessionKey: page._clientSessionKey,
+      locationExpired: true, finishedAt: 1234, resultComplete: true, result: { totalXp: 7, medal: '原徽章' },
+      badgeDelivery: [{ badgeCode: 'ROAM_TILES_50', state }] } })
+  }
+  assert.equal(await page.recoverRoam(), true)
+  assert.equal(calls.filter(c => c.url === '/api/roam/session/records').length, 0)
+  const record = values['roam_memory_v1:9:recovery']
+  assert.deepEqual(record.pendingTiles, []); assert.deepEqual(record.collectedAt, {}); assert.deepEqual(record.track, [])
+  assert.equal(values['roam_memory_v1:9:sessions'][0].locationExpired, true)
+  assert.equal(page.data.finish.medal, '')
+  state = 'DELIVERED'; assert.equal(await page.recoverRoam(), true)
+  assert.equal(page.data.finish.medal, '原徽章')
+  assert.equal(calls.filter(c => c.url !== '/api/roam/session').length, 0)
+})
+
+for (const kind of ['reveal', 'archive']) test(`C3${kind}确认只保留pending时间，落盘失败同时回滚队列与时间`, async () => {
+  const page = mount(); page._roamSid = SID; page._clientSessionKey = '1'.repeat(32)
+  page._pendingTiles = ['wtw3sjq']; page._pendingCollectedAt = { wtw3sjq: 1234, staleKey: 123 }
+  let reply
+  app.sendRequest = o => { reply = o }
+  const run = () => kind === 'reveal' ? page._flushReveal() : page._archiveFinishedRecords()
+  let pending = run(); await settle()
+  page._pendingTiles.push('wtw3sjr'); page._pendingCollectedAt.wtw3sjr = 2345
+  const originalSave = page._saveRoamRecovery; page._saveRoamRecovery = () => false
+  reply.success({ code: 200, data: { sessionId: SID, acceptedRecords: 1, evidenceType: 'CLIENT_REPORTED' } })
+  assert.equal(await pending, false)
+  assert.deepEqual(page._pendingTiles, ['wtw3sjq', 'wtw3sjr']); assert.equal(page._pendingCollectedAt.wtw3sjq, 1234)
+  page._saveRoamRecovery = originalSave
+  pending = run(); await settle()
+  reply.success({ code: 200, data: { sessionId: SID, acceptedRecords: 2, evidenceType: 'CLIENT_REPORTED' } })
+  // Archive drains all batches; both paths now acknowledge every pending tile.
+  assert.equal(await pending, true)
+  assert.deepEqual(page._pendingCollectedAt, {})
+  assert.deepEqual(values['roam_memory_v1:9:recovery'].collectedAt, {})
+})

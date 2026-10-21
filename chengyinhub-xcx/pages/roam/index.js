@@ -1589,7 +1589,7 @@ Page({
     if (!this._recoveryOwnerCurrent()) return this._recoveryFailure('登录账号已变化，请回到漫游页核对');
     const record = {
       clientSessionKey: this._clientSessionKey || '', sessionId: exactSessionId(this._roamSid),
-      collectedAt: { ...(this._pendingCollectedAt || {}) },
+      collectedAt: Object.fromEntries((this._pendingTiles || []).filter(tile => Object.prototype.hasOwnProperty.call(this._pendingCollectedAt || {}, tile)).map(tile => [tile, this._pendingCollectedAt[tile]])),
       pendingTiles: (this._pendingTiles || []).slice(), allTiles: Object.keys(this._sessionTiles || {}),
       finishRequested: !!this._finishRequested, distanceM: this._finishRequested ? this._lastDistanceM : (this._dist || 0),
       archiveTs: this._recoveryArchiveTs || 0, finish: this.data.finish || {}, stats: this._stats, track: this._track || [],
@@ -1629,7 +1629,7 @@ Page({
     this._clientSessionKey = r.clientSessionKey || '';
     this._roamSid = exactSessionId(r.sessionId) || 0;
     this._pendingTiles = r.pendingTiles.slice();
-    this._pendingCollectedAt = r.collectedAt || {};
+    this._pendingCollectedAt = Object.fromEntries(r.pendingTiles.filter(tile => Object.prototype.hasOwnProperty.call(r.collectedAt || {}, tile)).map(tile => [tile, r.collectedAt[tile]]));
     this._sessionTiles = Object.fromEntries((r.allTiles || []).map(t => [t, 1]));
     this._sessionTileCount = Object.keys(this._sessionTiles).length;
     this._finishRequested = r.finishRequested;
@@ -1683,17 +1683,20 @@ Page({
         const result = fact.result;
         if (!result || typeof result.totalXp !== 'number' || !Number.isFinite(result.totalXp))
           return this._recoveryFailure('结算事实暂时无法读取，请重新核对');
-        if (!await this._archiveFinishedRecords() || generation !== this._roamWriteGeneration || !this._recoveryOwnerCurrent()) return false;
         if (fact.locationExpired === true) {
           this._track = []; this._pendingTiles = []; this._pendingCollectedAt = {}; this._sessionTiles = {}; this._foundRoamPois = {}; this._pois = [];
+          const { stripGeometry } = require('../../utils/roam-location-retention.js');
+          this.setData({ finish: stripGeometry(this.data.finish || {}) });
+          if (!this._saveRoamRecovery()) return false;
           const memory = roamMemory(this);
           const state = memory.readSessionState();
           if (!state.ok) return this._recoveryFailure('足迹存档暂时无法读取，请重试核对');
-          const { stripGeometry } = require('../../utils/roam-location-retention.js');
           const rows = state.sessions.map(row => row.ts === this._recoveryArchiveTs
             ? { ...stripGeometry(row), finishedAt: fact.finishedAt, locationExpired: true } : row);
           if (!memory.writeSessions(rows)) return this._recoveryFailure('过期足迹清理未保存，请重试核对');
         }
+        if (fact.locationExpired !== true && !await this._archiveFinishedRecords()) return false;
+        if (generation !== this._roamWriteGeneration || !this._recoveryOwnerCurrent()) return false;
         this._finishedAt = fact.finishedAt || result.finishedAt || 0;
         return this._applyRoamFinishResult(result, fact.resultComplete === true, fact.badgeDelivery);
       }
@@ -1721,8 +1724,10 @@ Page({
           || res.data.evidenceType !== 'CLIENT_REPORTED' || res.data.acceptedRecords !== new Set(batch).size)
         return this._recoveryFailure('原行程补传暂未确认，待核记录仍保留');
       const old = this._pendingTiles;
+      const oldTimes = this._pendingCollectedAt;
       this._pendingTiles = old.slice(batch.length);
-      if (!this._saveRoamRecovery()) { this._pendingTiles = old; return false; }
+      this._pendingCollectedAt = Object.fromEntries(this._pendingTiles.filter(tile => Object.prototype.hasOwnProperty.call(oldTimes || {}, tile)).map(tile => [tile, oldTimes[tile]]));
+      if (!this._saveRoamRecovery()) { this._pendingTiles = old; this._pendingCollectedAt = oldTimes; return false; }
     }
     return true;
   },
@@ -1759,8 +1764,10 @@ Page({
           if (this._npc) this._npc.setSessionId(this._roamSid);   // 埋点 bizId 只放 Long
         }
         const beforeAck = this._pendingTiles;
+        const beforeTimes = this._pendingCollectedAt;
         this._pendingTiles = beforeAck.slice(batch.length);
-        if (!this._saveRoamRecovery()) { this._pendingTiles = beforeAck; return false; } // 成功才出队,失败下轮重试
+        this._pendingCollectedAt = Object.fromEntries(this._pendingTiles.filter(tile => Object.prototype.hasOwnProperty.call(beforeTimes || {}, tile)).map(tile => [tile, beforeTimes[tile]]));
+        if (!this._saveRoamRecovery()) { this._pendingTiles = beforeAck; this._pendingCollectedAt = beforeTimes; return false; } // 成功才出队,失败下轮重试
         if (this._pendingTiles.length >= 50 && !this._finishPromise) this._flushReveal();
         return true;
       } else if ((httpFail(res) || netFail(res)) && !requestSessionId) {
