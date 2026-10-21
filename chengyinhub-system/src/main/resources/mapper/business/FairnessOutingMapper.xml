@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.citygame.analytics.fairness.source.mapper.FairnessOutingMapper">
+
+    <insert id="insertActive">
+        insert into city_fairness_outing
+            (member_id, instance_id, board_id, region_id, season_id, rules_release_id, release_id, content_hash)
+        select accepted_by, id, board_id, region_id, season_id, rules_release_id, release_id, content_hash
+          from city_onsite_task_instance
+         where id = #{instanceId}
+           and status = 'ACTIVE'
+           and accepted_by = #{memberId}
+    </insert>
+
+    <select id="selectByInstance" resultType="com.chengyinhub.business.citygame.analytics.fairness.source.FairnessOuting">
+        select id, member_id as memberId, instance_id as instanceId,
+               board_id as boardId, region_id as regionId, season_id as seasonId,
+               rules_release_id as rulesReleaseId, release_id as releaseId, content_hash as contentHash
+          from city_fairness_outing
+         where instance_id = #{instanceId}
+    </select>
+
+    <select id="selectCounting" resultType="java.lang.Integer">
+        select counts_as_effective_outing
+          from city_fairness_source_policy
+         where state = 'APPROVED'
+           and source_ref = #{sourceRef}
+           and board_id = #{boardId}
+           and region_id = #{regionId}
+           and season_id = #{seasonId}
+           and rules_version = #{rulesVersion}
+    </select>
+
+    <insert id="insertReceipt">
+        insert into city_fairness_source_receipt (source_ref, event_id, received_at)
+        values (#{sourceRef}, #{eventId}, #{receivedAt})
+    </insert>
+</mapper>

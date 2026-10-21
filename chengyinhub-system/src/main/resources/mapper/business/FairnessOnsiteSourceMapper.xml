@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.citygame.analytics.fairness.source.mapper.FairnessOnsiteSourceMapper">
+
+    <select id="selectFact" resultType="com.chengyinhub.business.citygame.analytics.fairness.source.OnsiteTaskFact">
+        select r.id as resultId,
+               r.instance_id as instanceId,
+               r.request_id as requestId,
+               r.outcome as outcome,
+               r.member_id as memberId,
+               substring(cast(r.evidence_checked_at as varchar), 1, 19) as evidenceCheckedAt,
+               substring(cast(r.created_at as varchar), 1, 19) as createdAt,
+               i.status as instanceStatus,
+               i.accepted_by as acceptedBy,
+               i.region_id as regionId,
+               i.board_id as boardId,
+               i.season_id as seasonId,
+               i.rules_release_id as rulesReleaseId,
+               i.release_id as releaseId,
+               i.content_hash as contentHash,
+               q.member_id as requestMemberId,
+               q.state as requestState,
+               q.http_status as httpStatus
+          from city_onsite_task_result r
+          join city_onsite_task_instance i on r.instance_id = i.id
+          join city_onsite_task_request q on r.request_id = q.request_id
+         where r.id = #{resultId}
+    </select>
+</mapper>
