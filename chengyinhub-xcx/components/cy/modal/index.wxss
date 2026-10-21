@@ -1,3 +1,4 @@
+@import "../../../style/reduced-motion.wxss";
 /* cy-modal · 居中 Alert 确认弹窗(文档1 §6)
  * 卡 640rpx / 共用圆角与紧凑内距;标题与关闭同排;正文 28/1.6;
  * 按钮左右:取消 secondary 左 · 主/危险 右,至少 88rpx，长文案自然增高。色随主题。 */

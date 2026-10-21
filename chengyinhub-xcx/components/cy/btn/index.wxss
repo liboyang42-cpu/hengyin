@@ -1,3 +1,4 @@
+@import "../../../style/reduced-motion.wxss";
 /* cy-btn · 语义按钮(文档1 §2):variant = primary / secondary / ghost / danger / accent / disabled
  * 旧 kind(blue/black/red/secondary/disabled)经 index.js observer 映射到 variant,向后兼容。
  * 全走 token,浅/深主题自动适配(token 由 page 注入,穿透 isolated)。 */
@@ -5,17 +6,23 @@
 :host { display: block; }
 .btn {
   display: flex;
-  position: relative;      /* 供 .btn--sm::after 触控热区定位 */
+  position: relative;
   width: 100%;
   align-items: center;
   justify-content: center;
   gap: var(--cy-space-1-5);
-  height: var(--cy-btn-h);
-  padding: 0 var(--cy-btn-pad-x);
+  min-width: 88rpx;
+  min-height: 88rpx;
+  height: auto;
+  padding: var(--cy-space-2) var(--cy-btn-pad-x);
   border-radius: var(--cy-comp-btn-radius);
   font-size: var(--cy-btn-font-size, var(--cy-font-body));
   font-weight: 700;
-  line-height: 1;
+  line-height: var(--cy-leading-normal);
+  flex-wrap: wrap;
+  white-space: normal;
+  word-break: break-word;
+  text-align: center;
   box-sizing: border-box;
   /* T3:按压=press 档。transform 用 spring 而不是 ease —— hover-class 移除(松手)时
      走的是「基态」这条 transition,过冲曲线在这里表现为按完轻弹一下回位;
@@ -25,23 +32,20 @@
   transition: transform var(--cy-motion-press) var(--cy-ease-spring), box-shadow var(--cy-motion-standard) var(--cy-ease), opacity var(--cy-motion-standard) var(--cy-ease);
 }
 .btn--sm {
-  height: var(--cy-btn-h-sm);
+  height: auto;
   padding: 0 var(--cy-space-4);
   font-size: var(--cy-font-label);
 }
-/* sm 视觉高度 64rpx 不变,透明 ::after 把纵向触控区抬到 88rpx(微信/Apple 最小可点)。
- * 事件冒泡到 <cy-btn> host,页面 bindtap 零改动。注:祖先 overflow:hidden 会裁热区(见交接) */
+/* 紧凑按钮也保留完整盒内热区，避免祖先裁切透明扩展区域。 */
 .btn--sm::after {
   content: '';
   position: absolute;
-  left: 0;
-  right: 0;
-  top: calc((var(--cy-btn-h-sm) - 88rpx) / 2);
-  bottom: calc((var(--cy-btn-h-sm) - 88rpx) / 2);
+  inset: 0;
+  min-height: 88rpx;
 }
 /* xs:sheet/弹窗顶栏文字钮(取消/完成)。配合全局 .cy-btn-inline(host 内联收缩)使用 */
 .btn--xs {
-  height: var(--cy-btn-h-xs);
+  height: auto;
   width: auto;
   padding: 0 var(--cy-space-1);
   font-size: var(--cy-font-label);
@@ -99,3 +103,7 @@
   animation: cy-btn-spin var(--cy-motion-spinner-cycle) linear infinite;
 }
 @keyframes cy-btn-spin { to { transform: rotate(360deg); } }
+
+.btn--reduced-motion .btn__spinner { animation: none; }
+.btn--reduced-motion { transition: none; }
+.btn--reduced-motion.btn--press { transform: none; }

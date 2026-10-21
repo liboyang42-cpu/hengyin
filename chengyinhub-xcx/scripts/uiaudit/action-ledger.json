@@ -80815,7 +80815,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/btn/index.js:34"
+        "staticSource": "components/cy/btn/index.js:38"
       }
     },
     {
@@ -82006,7 +82006,7 @@
         "visibleCondition": null,
         "disabledCondition": null,
         "ariaLabel": null,
-        "ariaLabelExpression": "{{title}}",
+        "ariaLabelExpression": "{{title}}{{required ? '，必填' : ''}}{{value ? '，' + value : ''}}{{description ? '，' + description : ''}}",
         "ariaRole": "button",
         "ariaRoleExpression": null,
         "ariaDisabled": null,
@@ -144281,7 +144281,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/empty/index.js:82"
+        "staticSource": "components/cy/empty/index.js:85"
       }
     },
     {
@@ -165697,11 +165697,11 @@
         "visibleCondition": "{{variant === 'select'}}",
         "disabledCondition": null,
         "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
+        "ariaLabelExpression": "{{label || placeholder}}{{required ? '，必填' : ''}}{{readonly ? '，只读' : ''}}{{error && errorText ? '，' + errorText : ''}}{{displayValue ? '，' + displayValue : ''}}",
+        "ariaRole": "button",
         "ariaRoleExpression": null,
         "ariaDisabled": null,
-        "ariaDisabledExpression": null,
+        "ariaDisabledExpression": "{{disabled || readonly}}",
         "ariaExpanded": null,
         "ariaExpandedExpression": null,
         "ariaChecked": null,
@@ -166015,7 +166015,7 @@
         "visibleCondition": null,
         "disabledCondition": "{{disabled || readonly}}",
         "ariaLabel": null,
-        "ariaLabelExpression": null,
+        "ariaLabelExpression": "{{label || placeholder}}{{required ? '，必填' : ''}}{{readonly ? '，只读' : ''}}{{error && errorText ? '，' + errorText : ''}}",
         "ariaRole": null,
         "ariaRoleExpression": null,
         "ariaDisabled": null,
@@ -166332,7 +166332,7 @@
         "visibleCondition": null,
         "disabledCondition": "{{disabled || readonly}}",
         "ariaLabel": null,
-        "ariaLabelExpression": null,
+        "ariaLabelExpression": "{{label || placeholder}}{{required ? '，必填' : ''}}{{readonly ? '，只读' : ''}}{{error && errorText ? '，' + errorText : ''}}",
         "ariaRole": null,
         "ariaRoleExpression": null,
         "ariaDisabled": null,
@@ -166649,7 +166649,7 @@
         "visibleCondition": null,
         "disabledCondition": "{{disabled || readonly}}",
         "ariaLabel": null,
-        "ariaLabelExpression": null,
+        "ariaLabelExpression": "{{label || placeholder}}{{required ? '，必填' : ''}}{{readonly ? '，只读' : ''}}{{error && errorText ? '，' + errorText : ''}}",
         "ariaRole": null,
         "ariaRoleExpression": null,
         "ariaDisabled": null,
@@ -166965,8 +166965,8 @@
         "selectorHint": ".fd__tail",
         "visibleCondition": "{{variant === 'text' && clearable && value && !disabled && !readonly}}",
         "disabledCondition": null,
-        "ariaLabel": "清空",
-        "ariaLabelExpression": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "清空{{label || placeholder}}",
         "ariaRole": "button",
         "ariaRoleExpression": null,
         "ariaDisabled": null,
@@ -167283,7 +167283,7 @@
         "visibleCondition": "{{variant === 'textarea'}}",
         "disabledCondition": "{{disabled || readonly}}",
         "ariaLabel": null,
-        "ariaLabelExpression": null,
+        "ariaLabelExpression": "{{label || placeholder}}{{required ? '，必填' : ''}}{{readonly ? '，只读' : ''}}{{error && errorText ? '，' + errorText : ''}}",
         "ariaRole": null,
         "ariaRoleExpression": null,
         "ariaDisabled": null,
@@ -167600,7 +167600,7 @@
         "visibleCondition": "{{variant === 'textarea'}}",
         "disabledCondition": "{{disabled || readonly}}",
         "ariaLabel": null,
-        "ariaLabelExpression": null,
+        "ariaLabelExpression": "{{label || placeholder}}{{required ? '，必填' : ''}}{{readonly ? '，只读' : ''}}{{error && errorText ? '，' + errorText : ''}}",
         "ariaRole": null,
         "ariaRoleExpression": null,
         "ariaDisabled": null,
@@ -167917,7 +167917,7 @@
         "visibleCondition": "{{variant === 'textarea'}}",
         "disabledCondition": "{{disabled || readonly}}",
         "ariaLabel": null,
-        "ariaLabelExpression": null,
+        "ariaLabelExpression": "{{label || placeholder}}{{required ? '，必填' : ''}}{{readonly ? '，只读' : ''}}{{error && errorText ? '，' + errorText : ''}}",
         "ariaRole": null,
         "ariaRoleExpression": null,
         "ariaDisabled": null,
@@ -225989,7 +225989,7 @@
         "visibleCondition": null,
         "disabledCondition": null,
         "ariaLabel": null,
-        "ariaLabelExpression": "{{confirmText}}",
+        "ariaLabelExpression": "{{loading ? '处理中' : confirmText}}",
         "ariaRole": "button",
         "ariaRoleExpression": null,
         "ariaDisabled": null,
@@ -362789,7 +362789,7 @@
       }
     },
     {
-      "id": "components/cy/search/index.wxml:12:bindinput:onInput:0",
+      "id": "components/cy/search/index.wxml:13:bindinput:onInput:0",
       "route": "component:components/cy/search/index",
       "hostRoutes": [
         "pages/activity/list/index",
@@ -362927,12 +362927,12 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onInput",
-        "line": 12,
+        "line": 13,
         "selectorHint": ".search__input",
         "visibleCondition": null,
         "disabledCondition": "{{disabled}}",
         "ariaLabel": null,
-        "ariaLabelExpression": null,
+        "ariaLabelExpression": "{{accessibilityLabel || placeholder || '搜索'}}",
         "ariaRole": null,
         "ariaRoleExpression": null,
         "ariaDisabled": null,
@@ -362968,11 +362968,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/search/index.js:18"
+        "staticSource": "components/cy/search/index.js:22"
       }
     },
     {
-      "id": "components/cy/search/index.wxml:13:bindconfirm:onConfirm:1",
+      "id": "components/cy/search/index.wxml:14:bindconfirm:onConfirm:1",
       "route": "component:components/cy/search/index",
       "hostRoutes": [
         "pages/activity/list/index",
@@ -363110,12 +363110,12 @@
         "tag": "input",
         "event": "bindconfirm",
         "handler": "onConfirm",
-        "line": 13,
+        "line": 14,
         "selectorHint": ".search__input",
         "visibleCondition": null,
         "disabledCondition": "{{disabled}}",
         "ariaLabel": null,
-        "ariaLabelExpression": null,
+        "ariaLabelExpression": "{{accessibilityLabel || placeholder || '搜索'}}",
         "ariaRole": null,
         "ariaRoleExpression": null,
         "ariaDisabled": null,
@@ -363151,11 +363151,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/search/index.js:19"
+        "staticSource": "components/cy/search/index.js:23"
       }
     },
     {
-      "id": "components/cy/search/index.wxml:14:bindfocus:onFocus:2",
+      "id": "components/cy/search/index.wxml:15:bindfocus:onFocus:2",
       "route": "component:components/cy/search/index",
       "hostRoutes": [
         "pages/activity/list/index",
@@ -363293,12 +363293,12 @@
         "tag": "input",
         "event": "bindfocus",
         "handler": "onFocus",
-        "line": 14,
+        "line": 15,
         "selectorHint": ".search__input",
         "visibleCondition": null,
         "disabledCondition": "{{disabled}}",
         "ariaLabel": null,
-        "ariaLabelExpression": null,
+        "ariaLabelExpression": "{{accessibilityLabel || placeholder || '搜索'}}",
         "ariaRole": null,
         "ariaRoleExpression": null,
         "ariaDisabled": null,
@@ -363333,11 +363333,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/search/index.js:16"
+        "staticSource": "components/cy/search/index.js:20"
       }
     },
     {
-      "id": "components/cy/search/index.wxml:15:bindblur:onBlur:3",
+      "id": "components/cy/search/index.wxml:16:bindblur:onBlur:3",
       "route": "component:components/cy/search/index",
       "hostRoutes": [
         "pages/activity/list/index",
@@ -363475,12 +363475,12 @@
         "tag": "input",
         "event": "bindblur",
         "handler": "onBlur",
-        "line": 15,
+        "line": 16,
         "selectorHint": ".search__input",
         "visibleCondition": null,
         "disabledCondition": "{{disabled}}",
         "ariaLabel": null,
-        "ariaLabelExpression": null,
+        "ariaLabelExpression": "{{accessibilityLabel || placeholder || '搜索'}}",
         "ariaRole": null,
         "ariaRoleExpression": null,
         "ariaDisabled": null,
@@ -363515,11 +363515,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/search/index.js:17"
+        "staticSource": "components/cy/search/index.js:21"
       }
     },
     {
-      "id": "components/cy/search/index.wxml:19:catchtap:onClear:4",
+      "id": "components/cy/search/index.wxml:20:catchtap:onClear:4",
       "route": "component:components/cy/search/index",
       "hostRoutes": [
         "pages/activity/list/index",
@@ -363657,13 +363657,13 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onClear",
-        "line": 19,
+        "line": 20,
         "selectorHint": ".search__clear",
         "visibleCondition": "{{value && !disabled}}",
         "disabledCondition": null,
-        "ariaLabel": "清除",
+        "ariaLabel": "清除搜索内容",
         "ariaLabelExpression": null,
-        "ariaRole": null,
+        "ariaRole": "button",
         "ariaRoleExpression": null,
         "ariaDisabled": null,
         "ariaDisabledExpression": null,
@@ -363697,7 +363697,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/search/index.js:20"
+        "staticSource": "components/cy/search/index.js:24"
       }
     },
     {
@@ -706051,8 +706051,8 @@
         "visibleCondition": null,
         "disabledCondition": null,
         "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
+        "ariaLabelExpression": "{{item.label}}",
+        "ariaRole": "tab",
         "ariaRoleExpression": null,
         "ariaDisabled": null,
         "ariaDisabledExpression": null,
@@ -706091,7 +706091,7 @@
       }
     },
     {
-      "id": "components/cy/tabs/index.wxml:40:bindtap:onTab:2",
+      "id": "components/cy/tabs/index.wxml:41:bindtap:onTab:2",
       "route": "component:components/cy/tabs/index",
       "hostRoutes": [
         "pages/activity/list/index",
@@ -706655,13 +706655,13 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onTab",
-        "line": 40,
+        "line": 41,
         "selectorHint": ".cy-tabs__item",
         "visibleCondition": null,
         "disabledCondition": null,
         "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
+        "ariaLabelExpression": "{{item.label}}",
+        "ariaRole": "tab",
         "ariaRoleExpression": null,
         "ariaDisabled": null,
         "ariaDisabledExpression": null,
@@ -706700,7 +706700,7 @@
       }
     },
     {
-      "id": "components/cy/tabs/index.wxml:52:bindtap:onTab:3",
+      "id": "components/cy/tabs/index.wxml:54:bindtap:onTab:3",
       "route": "component:components/cy/tabs/index",
       "hostRoutes": [
         "pages/activity/list/index",
@@ -707264,13 +707264,13 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onTab",
-        "line": 52,
+        "line": 54,
         "selectorHint": ".cy-tabs__item",
         "visibleCondition": null,
         "disabledCondition": null,
         "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
+        "ariaLabelExpression": "{{item.label}}",
+        "ariaRole": "tab",
         "ariaRoleExpression": null,
         "ariaDisabled": null,
         "ariaDisabledExpression": null,
@@ -708338,7 +708338,7 @@
       }
     },
     {
-      "id": "components/cy/upload/index.wxml:12:catchtap:onRetry:1",
+      "id": "components/cy/upload/index.wxml:13:catchtap:onRetry:1",
       "route": "component:components/cy/upload/index",
       "hostRoutes": [
         "pages/club/apply/index",
@@ -708383,7 +708383,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onRetry",
-        "line": 12,
+        "line": 13,
         "selectorHint": ".upload__mask",
         "visibleCondition": "{{item.error}}",
         "disabledCondition": null,
@@ -708424,11 +708424,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/upload/index.js:40"
+        "staticSource": "components/cy/upload/index.js:43"
       }
     },
     {
-      "id": "components/cy/upload/index.wxml:17:catchtap:onRemove:2",
+      "id": "components/cy/upload/index.wxml:18:catchtap:onRemove:2",
       "route": "component:components/cy/upload/index",
       "hostRoutes": [
         "pages/club/apply/index",
@@ -708473,7 +708473,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onRemove",
-        "line": 17,
+        "line": 18,
         "selectorHint": ".upload__remove",
         "visibleCondition": "{{!disabled && !item.uploading}}",
         "disabledCondition": null,
@@ -708514,11 +708514,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/upload/index.js:39"
+        "staticSource": "components/cy/upload/index.js:42"
       }
     },
     {
-      "id": "components/cy/upload/index.wxml:23:bindtap:onAdd:3",
+      "id": "components/cy/upload/index.wxml:24:bindtap:onAdd:3",
       "route": "component:components/cy/upload/index",
       "hostRoutes": [
         "pages/club/apply/index",
@@ -708563,7 +708563,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onAdd",
-        "line": 23,
+        "line": 24,
         "selectorHint": ".upload__add",
         "visibleCondition": "{{showAdd}}",
         "disabledCondition": null,
@@ -708604,7 +708604,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/upload/index.js:38"
+        "staticSource": "components/cy/upload/index.js:41"
       }
     },
     {
@@ -708694,7 +708694,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/upload/index.js:41"
+        "staticSource": "components/cy/upload/index.js:44"
       }
     },
     {
