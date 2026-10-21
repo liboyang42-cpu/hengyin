@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.MapPublicMapper">
+
+    <!-- visibility-watermark: map-public-v1 -->
+    <!--
+      roam_poi 玩家公开条件与 RoamMapper#selectPoisNear 相同：p.status = 1，
+      加上 cityNodeContentApproved（application_type 为空或 2，或 application_type = 1 且 audit_status = 1）。
+      这个片段不包含商家启用/删除。found / pendingRedeem 按当前 viewerId 投影。
+      不使用 selectPoisByIds。排序只用本表 id，供 keyset。
+    -->
+    <select id="selectRoamPois" resultType="com.chengyinhub.business.domain.map.MapPublicRow">
+        select 'roam_poi' as sourceType, p.id as sourceId, p.name as name,
+               p.lat as latitude, p.lng as longitude, p.address as address, p.cover_img as cover,
+               p.type as poiType,
+               (select n.avatar from npc_profile n
+                 where n.scope_type = 2 and n.scope_id = p.merchant_id
+                   and n.enabled = 1 and n.audit_status = 1 and n.del_flag = '0'
+                 order by n.sort asc, n.id asc limit 1) as npcAvatar,
+               (exists (select 1 from roam_poi_found f
+                         where f.poi_id = p.id and f.member_id = #{viewerId})
+                or exists (select 1 from roam_poi_reward_log r
+                            where r.poi_id = p.id and r.member_id = #{viewerId}
+                              and r.status in (0, 1))) as found,
+               (exists (select 1 from roam_poi_reward_log r
+                         where r.poi_id = p.id and r.member_id = #{viewerId}
+                           and r.status = 0 and r.coupon_id &gt; 0)) as pendingRedeem
+        from roam_poi p
+        where p.status = 1
+          and (p.application_type is null or p.application_type = 2
+               or (p.application_type = 1 and p.audit_status = 1))
+          and p.lat between #{minLat} and #{maxLat}
+          and p.lng between #{minLng} and #{maxLng}
+          <if test="afterId != null">and p.id &gt; #{afterId}</if>
+        order by p.id asc
+        limit #{limit}
+    </select>
+
+    <!--
+      门店公开条件复用 ApiMerchantController 公开列表强制写入查询对象的三列：
+      status = 1（审核通过）且 account_status = 1（账号启用）且 del_flag = 0。
+      business_status 是营业/打烊，公开主页不过滤它，这里也不过滤。
+      只选公开主页已有的点位字段。
+    -->
+    <select id="selectStores" resultType="com.chengyinhub.business.domain.map.MapPublicRow">
+        select 'store' as sourceType, id as sourceId, name as name,
+               location_lat as latitude, location_lng as longitude, address as address,
+               logo as cover, business_status as businessStatus
+        from mms_merchant
+        where status = 1 and account_status = 1 and del_flag = 0
+          and location_lat is not null and location_lng is not null
+          and location_lat between #{minLat} and #{maxLat}
+          and location_lng between #{minLng} and #{maxLng}
+          <if test="afterId != null">and id &gt; #{afterId}</if>
+        order by id asc
+        limit #{limit}
+    </select>
+
+    <!--
+      可报名活动复用 selectPublicCmsActivityList 写死的公开闸，并加上
+      PublicActivityScope.PUBLIC_SHELF：排除社群活动 (club_id 空)，且 end_date &gt; now()。
+      坐标是 varchar，先要求整段为十进制，再 cast。不用 IFNULL(...,0)。
+    -->
+    <select id="selectActivities" resultType="com.chengyinhub.business.domain.map.MapPublicRow">
+        select 'activity' as sourceType, id as sourceId, name as name,
+               cast(latitude as decimal(12,7)) as latitude, cast(longitude as decimal(12,7)) as longitude,
+               address_name as address, img_url as cover
+        from cms_activity
+        where status = 1 and publish_status = 1 and del_flag = 0 and cancel_time is null
+          and (topic_id is null or topic_id = 0 or exists (
+              select 1 from cms_topic live_parent
+              where live_parent.id = cms_activity.topic_id and live_parent.del_flag = 0
+                and live_parent.status = 1 and live_parent.user_status = 1))
+          and (club_id is null or club_id = 0 or exists (
+              select 1 from club active_club
+              where active_club.id = cms_activity.club_id and active_club.del_flag = 0))
+          and not exists (
+              select 1 from cms_topic parent_topic
+              left join club parent_club
+                on parent_club.id = parent_topic.club_id and parent_club.del_flag = 0
+              where parent_topic.id = cms_activity.topic_id
+                and parent_topic.club_id is not null and parent_topic.club_id != 0
+                and parent_club.id is null)
+          and (club_id is null or club_id = 0)
+          and end_date &gt; now()
+          and latitude is not null and latitude &lt;&gt; ''
+          and longitude is not null and longitude &lt;&gt; ''
+          and latitude regexp '^-?[0-9]+([.][0-9]+)?$'
+          and longitude regexp '^-?[0-9]+([.][0-9]+)?$'
+          and cast(latitude as decimal(12,7)) between #{minLat} and #{maxLat}
+          and cast(longitude as decimal(12,7)) between #{minLng} and #{maxLng}
+          <if test="afterId != null">and id &gt; #{afterId}</if>
+        order by id asc
+        limit #{limit}
+    </select>
+
+</mapper>
