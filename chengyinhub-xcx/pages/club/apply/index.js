@@ -264,7 +264,7 @@ Page({
       certErrorIndexes: this.data.certErrorIndexes
         .filter((index) => index !== i)
         .map((index) => index > i ? index - 1 : index),
-    });
+    }, this.validate);
   },
 
   // ===== 提交(填完即有 → /api/club/become-leader) =====

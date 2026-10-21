@@ -346,6 +346,60 @@ test('申请主理人不要求实名，直接提交资料且不发送身份证�
   assert.equal(h.page.data.mode, 'done')
 })
 
+test('删除最后一张失败资质图后恢复无资质提交', () => {
+  const h = loadPage()
+  Object.assign(h.page.data, {
+    bootstrapState: 'ready', mode: 'form', step: 4,
+    certImages: ['wxfile://tmp/failed-cert.jpg'], certErrorIndexes: [0],
+  })
+  h.page.validate()
+  assert.equal(h.page.data.canNext, false)
+
+  h.page.removeCert({ detail: { index: 0 } })
+
+  assert.equal(h.page.data.certImages.length, 0)
+  assert.equal(h.page.data.certErrorIndexes.length, 0)
+  assert.equal(h.page.data.canNext, true)
+  h.page.submit()
+  assert.equal(h.requests.length, 1)
+  assert.equal(JSON.parse(h.requests[0].data).certImages, '')
+})
+
+test('删除一张资质图后仍有失败项不得提交', () => {
+  const h = loadPage()
+  Object.assign(h.page.data, {
+    bootstrapState: 'ready', mode: 'form', step: 4,
+    certImages: ['wxfile://tmp/first.jpg', 'wxfile://tmp/second.jpg'],
+    certErrorIndexes: [0, 1],
+  })
+  h.page.validate()
+  h.page.removeCert({ detail: { index: 0 } })
+
+  assert.equal(h.page.data.certImages.length, 1)
+  assert.equal(h.page.data.certErrorIndexes.length, 1)
+  assert.equal(h.page.data.certErrorIndexes[0], 0)
+  assert.equal(h.page.data.canNext, false)
+  h.page.submit()
+  assert.equal(h.requests.length, 0)
+})
+
+test('删除失败资质图后仍有上传项不得提交', () => {
+  const h = loadPage()
+  Object.assign(h.page.data, {
+    bootstrapState: 'ready', mode: 'form', step: 4,
+    certImages: ['wxfile://tmp/uploading.jpg', 'wxfile://tmp/failed.jpg'],
+    certUploading: [0], certErrorIndexes: [1],
+  })
+  h.page.validate()
+  h.page.removeCert({ detail: { index: 1 } })
+
+  assert.equal(h.page.data.certErrorIndexes.length, 0)
+  assert.equal(h.page.data.certUploading.length, 1)
+  assert.equal(h.page.data.canNext, false)
+  h.page.submit()
+  assert.equal(h.requests.length, 0)
+})
+
 test('资质图片上传失败或仍在上传时不得提交本机临时路径', () => {
   const h = loadPage()
   Object.assign(h.page.data, {
