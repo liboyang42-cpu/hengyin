@@ -233,4 +233,3 @@ chengyinhub-xcx/subpackageRoam/official-routes/index.js 1  # 2026-10-19 移植�
 chengyinhub-xcx/subpackageRoam/official-route/index.js 1  # 2026-10-19 移植基线 366b846f:路线详情失败落 state=error/notfound 的页内可见态,error 带重试
 chengyinhub-xcx/subpackageMember/components/cy/team-report-sheet/index.js 1  # 2026-10-19 移植基线 f33f1180:举报失败落结果半屏 fail 态(含后端原因与重试),不再叠加统一 toast
 chengyinhub-xcx/pages/publish/components/topic-state-keys/index.js 3  # 2026-10-19 移植基线 49ee4a4d:状态键读取落 cy-error 重试;注册失败落表单 formError;删除失败落危险确认的 error 态,均为可见反馈
-chengyinhub-xcx/subpackageA/pages/myproject/index.js 1  # 模板读取由本页处理401/旧code2登录入口、403权限提示和tplErrorMsg；owner/token/代际隔离旧回包，myproject-login-recovery覆盖HTTP状态透传及失败重试，关闭通道toast避免重复反馈

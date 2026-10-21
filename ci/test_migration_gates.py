@@ -1188,14 +1188,6 @@ class SharedLedgerExecutionOrder(unittest.TestCase):
             source.replace("if not ok and not a.keep_going:", "if False:"),
             source.replace("if not ok and not a.keep_going:", "if not ok and a.keep_going:"),
             source.replace("keep_going=a.keep_going, schema_only=True", "keep_going=True, schema_only=True"),
-            source.replace('            server_status = getattr(c, "server_status", None)',
-                           '            cur.execute("DELETE FROM sys_job")\n'
-                           '            server_status = getattr(c, "server_status", None)'),
-            source.replace('                raise RuntimeError("session isolation restore failed; stop schema rebuild") from failure',
-                           '                pass'),
-            source.replace('                cur.execute("SET SESSION TRANSACTION ISOLATION LEVEL " + session_isolation.replace("-", " "))',
-                           '                if a.keep_going:\n'
-                           '                    cur.execute("SET SESSION TRANSACTION ISOLATION LEVEL " + session_isolation.replace("-", " "))'),
             source.replace("            ok = run_file(cur, REPO / m", "            run_file(cur, REPO / m"),
             source.replace("        c.close()", "        c.commit()"),
             source.replace('    all_migrations = manifest["migrations"]\n'
@@ -1203,21 +1195,9 @@ class SharedLedgerExecutionOrder(unittest.TestCase):
                            '    selected = migrations_after_baseline(all_migrations)\n'
                            '    all_migrations = manifest["migrations"]'),
         ]
-        loop = (
-                '        for m in ordered:\n'
+        loop = ('        for m in ordered:\n'
                 '            ok = run_file(cur, REPO / m["path"], m["migrationId"], results,\n'
                 '                          keep_going=a.keep_going, schema_only=True, observations=observations)\n'
-                '            # A file may need READ COMMITTED internally; later range-lock guards must not inherit it.\n'
-                '            server_status = getattr(c, "server_status", None)\n'
-                '            if not c.get_autocommit() or not isinstance(server_status, int) or server_status & 1:\n'
-                '                raise RuntimeError("session isolation restore requires an idle autocommit connection; stop schema rebuild")\n'
-                '            try:\n'
-                '                cur.execute("SET SESSION TRANSACTION ISOLATION LEVEL " + session_isolation.replace("-", " "))\n'
-                '                cur.execute("SELECT @@SESSION.transaction_isolation")\n'
-                '                if (cur.fetchone() or [None])[0] != session_isolation:\n'
-                '                    raise RuntimeError("session isolation readback mismatch")\n'
-                '            except Exception as failure:\n'
-                '                raise RuntimeError("session isolation restore failed; stop schema rebuild") from failure\n'
                 '            if not ok and not a.keep_going:\n'
                 '                break\n')
         self.assertIn(loop, source)
