@@ -7,6 +7,8 @@ const vm = require('node:vm');
 const ROOT = path.resolve(__dirname, '../..');
 const PAGE = path.join(ROOT, 'subpackageP3/pages/badge-3d/index.js');
 const XR = path.join(ROOT, 'subpackageP3/components/xr-badge/index.js');
+const XR_MOUNT = fs.readFileSync(PAGE.replace(/index\.js$/, 'index.wxml'), 'utf8')
+  .match(/<xr-badge\b[^>]*wx:if="\{\{([^}]+)\}\}"/)[1];
 const ENGINE = path.join(ROOT, 'subpackageP3/pages/badge-wall/index/engine.js');
 const ACTUAL = 'https://cdn.example.com/original-badge.png';
 
@@ -70,7 +72,7 @@ function linkedPage(coalesced = false) {
     selectComponent: () => child && child.instance,
     setData(patch, done) {
       Object.assign(this.data, patch);
-      const mounted = this.data.style === 'enamel' && this.data.rendererMounted !== false && !this.data.unsupported;
+      const mounted = this.data.style === 'enamel' && vm.runInNewContext(XR_MOUNT, { ...this.data });
       if (!mounted && child && !coalesced) { child.detach(); child = null; }
       if (mounted && !child) {
         child = realComponent(io, (name, detail) => {
