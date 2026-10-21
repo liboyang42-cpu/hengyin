@@ -6325,7 +6325,7 @@ Page({
   },
 
   toggleReducedMotion() {
-    const reducedMotion = writeReducedMotion(null, !this.data.reducedMotion);
+    const reducedMotion = writeReducedMotion(null, !this.data.reducedMotion); if (reducedMotion === null) { cyToast('设置未保存，请重试'); return; }
     this.setData({ reducedMotion });
     cyToast(reducedMotion ? '已减少动态效果' : '已恢复动态效果');
   },

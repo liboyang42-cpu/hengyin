@@ -824,7 +824,7 @@ Page({
     wx.openSetting && wx.openSetting({ success: () => this._syncRoamPermission() });
   },
   toggleReducedMotion() {
-    const reducedMotion = writeReducedMotion(null, !this.data.reducedMotion);
+    const reducedMotion = writeReducedMotion(null, !this.data.reducedMotion); if (reducedMotion === null) { cyToast('设置未保存，请重试'); return; }
     if (reducedMotion && this._zoomAnim) {
       clearInterval(this._zoomAnim);
       this._zoomAnim = null;
