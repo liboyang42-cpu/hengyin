@@ -1,4 +1,4 @@
-const toast = require('../../../utils/toast.js');
+const toast = require('../../../utils/toast.js'); const drafts = require('../../../utils/club-edit-draft.js');
 const { decodeDisplayText } = require('../../../utils/display-text.js');
 const app = getApp();
 function jsonBody(data) { return JSON.stringify(data || {}); }
@@ -16,7 +16,7 @@ function prefsMap(arr) {
 // pages/club/edit 保留为深链兼容壳。表单是可写的 ⇒ 关闭要走 dirty 闸,由宿主的 requestclose 承担。
 Component({
   properties: {
-    clubId: { type: String, value: '' },
+    clubId: { type: String, value: '', observer() { if (this._draftStarted) this.onDraftClubChanged(); } },
     theme: { type: String, value: 'player' },
   },
     data: {
@@ -49,7 +49,7 @@ Component({
       dirOptions: ['轻社交', '深度社交', 'RPG体验', '城市定向', '解谜路线', '沉浸式剧情', '运动路线', '艺术体验', '美食体验', '主题聚会'],
       loadState: 'loading',
       loadErrorText: '',
-      saveErrorText: '',
+      saveErrorText: '', draftNotice: '', draftAvailable: false, draftBlocked: false, draftComparison: '', draftCanDiscard: false,
       canSave: false,
       saving: false,
       dissolving: false,
@@ -74,15 +74,15 @@ Component({
     },
   lifetimes: {
     attached() {
-      const clubId = this.data.clubId
+      const clubId = this.data.clubId; this._draftDetached = false; this._draftStarted = false;
       if (clubId) this.setData({ clubId })
-      this.loadClub()
-    },
+      this._draftStarted = true; this.loadClub()
+    }, detached() { this._draftDetached = true; this._draftStarted = false; this._draftEpoch = (this._draftEpoch || 0) + 1; },
   },
   pageLifetimes: {
     // BL-140:从结算页处理完一项返回时,以 /api/club/dissolution-blockers 回读为准重新核对阻断列表。
     show() {
-      this._navigating = false; if (!this._blockerReturnCheck) return
+      this._navigating = false; if (this._draftScope && !this.isDraftCurrent(this._draftScope)) { this.fetchDetail(); return; } if (!this._blockerReturnCheck) return
       this._blockerReturnCheck = false
       if (!this.data.dissolutionBlockerItems.length) return
       this.setData({ showDissolutionBlockers: true, dissolutionBlockerText: '正在重新核对解散阻断明细…' })
@@ -91,7 +91,7 @@ Component({
   },
   methods: {
     loadClub() {
-      var that = this;
+      var that = this; if (!this.canReloadDraft()) return;
       this.setData({ loadState: 'loading', loadErrorText: '' });
       if (this.data.clubId) { this.fetchDetail(); return; }
       // 多俱乐部下不能猜 owned[0]：深链缺参时选错对象比打不开更危险。
@@ -99,13 +99,13 @@ Component({
     },
 
     fetchDetail() {
-      var that = this;
+      var that = this; const scope = this.beginDraftLoad();
       this.setData({ loadState: 'loading', loadErrorText: '' });
       app.sendRequest({
         url: '/api/club/detail', method: 'POST', data: jsonBody({ id: this.data.clubId }), header: jsonHeader(),
-        success: function (res) {
-          if (res.code == '200' && res.data) {
-            var c = res.data;
+        success: function (res) { if (!that.isDraftCurrent(scope)) return;
+          if (res && res.code == '200' && drafts.detail(res.data, scope.clubId)) {
+            var c = res.data; if (c.id != null && String(c.id) !== scope.clubId) { that.setData({ loadState: 'business-error', loadErrorText: '返回的俱乐部资料不匹配，请重试' }); return; }
             // 2026-08-26:管理员(viewerIsAdmin)也能改**展示信息**;经营配置与解散仍只给主理人。
             // 后端 canGovernClub 是真闸,这里只是别把表单藏起来。
             if (c.isOwner !== true && c.viewerIsAdmin !== true) {
@@ -116,7 +116,7 @@ Component({
               });
               return;
             }
-            that._nonOwnerMemberCount = Number(c.nonOwnerMemberCount) || 0;
+            that._nonOwnerMemberCount = Number(c.nonOwnerMemberCount) || 0; that._draftBase = drafts.base(that.draftServer(c));
             // 回填的是纯文本输入框:服务端过滤存下的 &lt; 等先解码,保存时提交的就是用户原文。
             that.setData({
               name: decodeDisplayText(c.name || ''),
@@ -136,14 +136,14 @@ Component({
               loadState: 'ready',
               loadErrorText: '',
               saveErrorText: ''
-            }, function () { that.validate(); that.syncDerived(); });
+            }, function () { that.validate(); that.syncDerived(); that.offerDraft(c); });
           } else {
-            that.setData({ loadState: 'business-error', loadErrorText: res.msg || '俱乐部不存在' });
+            that.setData({ loadState: 'business-error', loadErrorText: res && res.msg || '俱乐部不存在' });
           }
         },
-        fail: function () {
+        fail: function () { if (!that.isDraftCurrent(scope)) return;
           that.setData({ loadState: 'network-error', loadErrorText: '网络异常，请重试' });
-        }
+        }, successStatusAbnormal() { if (that.isDraftCurrent(scope)) that.setData({ loadState: 'network-error', loadErrorText: '资料暂无法确认，请重试' }); }
       });
     },
 
@@ -163,12 +163,12 @@ Component({
     },
 
     // ===== 输入 =====
-    markDirty() {
+    markDirty() { if (!this.canEditDraft()) return;
       if (this.data.saveErrorText) this.setData({ saveErrorText: '' });
-      this.triggerEvent('dirtychange', { dirty: true });
+      this._draftDirty = true; this.triggerEvent('dirtychange', { dirty: true }); this.persistDraft();
     },
 
-    onInput(e) {
+    onInput(e) { if (!this.canEditDraft()) return;
       var f = e.currentTarget.dataset.field;
       this.setData({ [f]: e.detail.value }, () => {
         this.validate();
@@ -176,32 +176,32 @@ Component({
       });
     },
 
-    onPrioritySignupChange(e) {
+    onPrioritySignupChange(e) { if (!this.canEditDraft()) return;
       this.setData({ prioritySignupEnabled: !!e.detail.value }, () => { this.markDirty(); this.syncDerived(); });
     },
 
-    onJoinPolicyChange(e) {
+    onJoinPolicyChange(e) { if (!this.canEditDraft()) return;
       this.setData({ joinPolicy: e.detail.value ? 1 : 0 }, () => { this.markDirty(); this.syncDerived(); });
     },
 
     // ===== 定位:T1 半屏选择器 =====
     // 打开时把当前值拷成 draft;改 draft 不影响表单,点「应用」才写回,直接关掉 = 放弃。
-    openTypePicker() {
+    openTypePicker() { if (!this.canEditDraft()) return;
       this.setData({ pickerKind: 'type', draftType: this.data.clubType });
     },
 
-    openPrefsPicker() {
+    openPrefsPicker() { if (!this.canEditDraft()) return;
       var arr = (this.data.activityPrefs || []).slice();
       this.setData({ pickerKind: 'prefs', draftPrefs: arr, draftPrefsOn: prefsMap(arr) });
     },
 
     closePicker() { this.setData({ pickerKind: '' }); },
 
-    pickDraftType(e) {
+    pickDraftType(e) { if (!this.canEditDraft()) return;
       this.setData({ draftType: e.currentTarget.dataset.val });
     },
 
-    toggleDraftDir(e) {
+    toggleDraftDir(e) { if (!this.canEditDraft()) return;
       var val = e.currentTarget.dataset.val;
       var arr = this.data.draftPrefs.slice();
       var i = arr.indexOf(val);
@@ -213,7 +213,7 @@ Component({
       this.setData({ draftPrefs: arr, draftPrefsOn: prefsMap(arr) });
     },
 
-    applyPicker() {
+    applyPicker() { if (!this.canEditDraft()) return;
       // 两个分支各写各的字面量字段:动态 setData(计算键/展开)静态门禁核不了消费面,
       // 会被 U4 判成「无法核对 WXML 消费」。
       var kind = this.data.pickerKind;
@@ -223,26 +223,26 @@ Component({
     },
 
     // ===== logo / 封面 =====
-    pickLogo() {
-      var that = this;
+    pickLogo() { if (!this.canEditDraft()) return;
+      var that = this; const scope = this._draftScope;
       app.chooseImage(function (urls) {
-        if (urls && urls.length) that.setData({ logo: urls[0] }, () => that.markDirty());
+        if (that.isDraftCurrent(scope) && that.canEditDraft() && urls && urls.length) that.setData({ logo: urls[0] }, () => that.markDirty());
       }, 1, { crop: true, cropScale: '1:1' });
     },
-    pickCover() {
-      var that = this;
+    pickCover() { if (!this.canEditDraft()) return;
+      var that = this; const scope = this._draftScope;
       app.chooseImage(function (urls) {
-        if (urls && urls.length) that.setData({ cover: urls[0] }, () => that.markDirty());
+        if (that.isDraftCurrent(scope) && that.canEditDraft() && urls && urls.length) that.setData({ cover: urls[0] }, () => that.markDirty());
       }, 1, { crop: true, cropScale: '16:9' });
     },
 
     // ===== 保存(JSON,带 id 改指定团)=====
     dismissSaveError() { if (!this.data.saving) this.setData({ saveErrorText: '' }); },
 
-    save() {
+    submitDraft(verifiedScope) { if (verifiedScope !== this._draftScope || !this.isDraftCurrent(verifiedScope)) return;
       // loadState==='ready' 本身就是权限证明(permission 态根本渲染不出表单),不另立 canEdit
       if (this.data.loadState !== 'ready' || !this.data.canSave || this.data.saving) return;
-      var d = this.data, that = this;
+      var d = this.data, that = this; const scope = this._draftScope, submittedForm = JSON.stringify(drafts.form(d)), expected = this._draftExpected;
       this.setData({ saving: true, saveErrorText: '' });
       var payload = {
         id: d.clubId,                 // 多俱乐部:必须带 id,改指定团(后端校验归属)
@@ -270,21 +270,21 @@ Component({
           'Content-Type': 'application/json',
           'Authorization': app.getAuthorization()
         },
-        success: function (res) {
-          if (res.code == '200') {
-            that.setData({ saving: false, saveErrorText: '' });
-            toast.success('已保存');
-            that.triggerEvent('dirtychange', { dirty: false });
-            // 保存成功 ⇒ 关掉编辑层回到管理页,并让宿主重拉(原来是 navigateBack 猜页面栈)
-            var self = that;
-            setTimeout(function () { self.triggerEvent('saved'); self.triggerEvent('back'); }, 800);
-          } else {
-            that.setData({ saving: false, saveErrorText: res.msg || '请稍后重试' });
-          }
-        },
-        fail: function () {
+        success: function (res) { that.finishDraftSave(res, scope, submittedForm, expected); },
+
+
+
+
+
+
+
+
+
+
+
+        fail: function () { if (!that.isDraftCurrent(scope)) return;
           that.setData({ saving: false, saveErrorText: '网络异常，请重试' });
-        }
+        }, successStatusAbnormal() { if (that.isDraftCurrent(scope)) that.setData({ saving: false, saveErrorText: '保存结果暂无法确认，草稿仍保留，请重试核对。' }); }
       });
     },
 
@@ -463,7 +463,218 @@ Component({
       });
     },
 
-    onBack() { this.triggerEvent('back'); }
+    onBack() { this.triggerEvent('back'); },
+
+    canReloadDraft() {
+      if (!this._draftDirty || !this.isDraftCurrent(this._draftScope)) return true;
+      const found = drafts.read(typeof wx === 'undefined' ? null : wx, this._draftKey);
+      if (found.state === 'ready' && JSON.stringify(found.record) === this._draftExpected &&
+          JSON.stringify(found.record.form) === JSON.stringify(drafts.form(this.data))) return true;
+      this.setData({ draftNotice: '当前输入尚未保留，请勿退出；请先复制或提交，暂不能重新读取。' });
+      return false;
+    },
+    draftContext() {
+      return { owner: String(typeof app.getUserID === 'function' ? app.getUserID() || '' : ''),
+        clubId: String(this.data.clubId || ''), epoch: this._draftEpoch,
+        authorization: typeof app.getAuthorization === 'function' ? app.getAuthorization() : app.globalData && app.globalData.authorization };
+    },
+    isDraftCurrent(scope) {
+      if (!scope || this._draftDetached) return false;
+      const current = this.draftContext();
+      return scope.owner === current.owner && scope.clubId === current.clubId &&
+        scope.epoch === current.epoch && scope.authorization === current.authorization;
+    },
+    onDraftClubChanged() {
+      this._draftEpoch = (this._draftEpoch || 0) + 1;
+      this.loadClub();
+    },
+    beginDraftLoad() {
+      this._draftEpoch = (this._draftEpoch || 0) + 1;
+      const scope = this.draftContext();
+      this._draftScope = scope;
+      this._draftKey = drafts.key(scope.owner, scope.clubId);
+      this._draftBase = ''; this._draftDirty = false; this._draftConfirmed = null; this._draftReading = false;
+      this._savedDraft = null;
+      this._draftExpected = '';
+      this._draftReadState = 'unavailable';
+      this.setData({ draftNotice: '', draftAvailable: false, draftBlocked: false,
+        draftComparison: '', draftCanDiscard: false, saving: false, pickerKind: '' });
+      return scope;
+    },
+    draftServer(value) {
+      return Object.assign({}, value, { name: decodeDisplayText(value.name || ''),
+        description: decodeDisplayText(value.description || '') });
+    },
+    canEditDraft() {
+      return this.isDraftCurrent(this._draftScope) && this.data.loadState === 'ready' &&
+        !this.data.saving && !this.data.draftAvailable && !this.data.draftBlocked;
+    },
+    offerDraft(latest) {
+      let found = drafts.read(typeof wx === 'undefined' ? null : wx, this._draftKey);
+      if (found.state === 'ready' && found.record.confirmed && drafts.detail(latest, this._draftScope.clubId) && this.confirmedDraftMatches(found.record.confirmed, latest)) {
+        const expected = JSON.stringify(found.record);
+        if (drafts.write(wx, this._draftKey, this._draftBase, found.record.form, expected)) found = drafts.read(wx, this._draftKey);
+        else { this.setData({ draftBlocked: true, draftNotice: '草稿基线未能保留，请勿退出，可重新读取。' }); return; }
+      }
+      this._draftReadState = found.state;
+      this._savedDraft = found.record || null;
+      this._draftExpected = found.record ? JSON.stringify(found.record) : '';
+      const conflict = found.record && (found.record.base !== this._draftBase || !!found.record.confirmed);
+      this.setData({
+        draftAvailable: !!found.record && !conflict,
+        draftBlocked: !!conflict || ['corrupt', 'error'].includes(found.state),
+        draftCanDiscard: found.state === 'ready',
+        draftNotice: found.record ? (conflict ? '资料已更新，旧草稿不会直接提交。请对比后放弃旧草稿再编辑。' : '发现本账号未提交的本机草稿，请选择恢复或放弃。')
+          : found.state === 'corrupt' ? '草稿已损坏，原记录已保留且不会覆盖，请勿退出丢失当前输入。'
+          : found.state === 'error' ? '暂时无法读取草稿，原记录不会覆盖，请勿退出。可重新读取。' : '',
+        draftComparison: conflict ? drafts.compare(found.record.form, this.draftServer(latest)) || '资料已变化，请重新核对。' : '',
+      });
+    },
+    restoreDraft() {
+      if (!this.isDraftCurrent(this._draftScope) || !this.data.draftAvailable || !this._savedDraft || this.data.saving) return;
+      const found = drafts.read(wx, this._draftKey);
+      if (found.state !== 'ready' || JSON.stringify(found.record) !== this._draftExpected) {
+        this.setData({ draftBlocked: true, draftNotice: '本机草稿已变化或无法读取，原记录已保留，请重新读取。' }); return;
+      }
+      const saved = drafts.form(this._savedDraft.form);
+      this.setData({
+        name: saved.name, clubType: saved.clubType, activityPrefs: saved.activityPrefs,
+        city: saved.city, keywords: saved.keywords, style: saved.style, description: saved.description,
+        logo: saved.logo, cover: saved.cover,
+        prioritySignupEnabled: this.data.isOwner ? saved.prioritySignupEnabled : this.data.prioritySignupEnabled,
+        memberReservedQuota: this.data.isOwner ? saved.memberReservedQuota : this.data.memberReservedQuota,
+        joinPolicy: this.data.isOwner ? saved.joinPolicy : this.data.joinPolicy,
+        draftAvailable: false, draftCanDiscard: false, draftNotice: '已恢复到表单，尚未提交。',
+      }, () => { this.validate(); this.syncDerived(); this.markDirty(); });
+    },
+    discardDraft() {
+      if (!this.isDraftCurrent(this._draftScope) || this.data.saving || this._draftReadState !== 'ready') return;
+      if (!drafts.remove(wx, this._draftKey, this._draftExpected)) {
+        this.setData({ draftNotice: '草稿未能清除，原记录已保留，请重试。' }); return;
+      }
+      this.triggerEvent('dirtychange', { dirty: false });
+      this.fetchDetail();
+    },
+    persistDraft() {
+      if (!this.canEditDraft()) return false;
+      if (!this._draftKey) { this.setData({ draftNotice: '未确认登录身份，草稿未保留，请勿退出。' }); return false; }
+      const saved = drafts.write(wx, this._draftKey, this._draftBase, this.data, this._draftExpected, this._draftConfirmed || undefined);
+      if (saved) {
+        this._draftExpected = JSON.stringify({ schemaVersion: 1, base: this._draftBase, form: drafts.form(this.data) });
+        if (this._draftConfirmed) this._draftExpected = JSON.stringify(Object.assign(JSON.parse(this._draftExpected), { confirmed: this._draftConfirmed }));
+        this._draftReadState = 'ready'; this._savedDraft = JSON.parse(this._draftExpected);
+      }
+      this.setData({ draftNotice: saved ? '草稿已保留在本机，尚未提交。' : '草稿未能保留，原记录不会覆盖，请勿退出；可重试修改或提交。' });
+      return saved;
+    },
+    save() {
+      if (!this.canEditDraft() || !this.data.canSave) return;
+      if (this._draftConfirmed) { this.readSavedDraftBase(this._draftScope); return; }
+      const scope = this._draftScope, that = this;
+      if (!this._draftKey) { this.setData({ saveErrorText: '未确认登录身份，请重新登录后编辑。' }); return; }
+      const found = drafts.read(wx, this._draftKey);
+      if (!['empty', 'ready'].includes(found.state) || (found.state === 'ready' && JSON.stringify(found.record) !== this._draftExpected) || (found.state === 'empty' && this._draftExpected !== '')) {
+        this.setData({ draftBlocked: true, draftNotice: '本机草稿已变化或无法读取，原记录已保留，请勿退出。' }); return;
+      }
+      this.setData({ saving: true, saveErrorText: '' });
+      app.sendRequest({
+        url: '/api/club/detail', method: 'POST', data: jsonBody({ id: scope.clubId }), header: jsonHeader(),
+        success(res) {
+          if (!that.isDraftCurrent(scope)) return;
+          if (!res || res.code != '200' || !drafts.detail(res.data, scope.clubId)) {
+            that.setData({ saving: false, saveErrorText: '无法核对最新资料，请重试。' }); return;
+          }
+          const latest = res.data;
+          if ((latest.id != null && String(latest.id) !== scope.clubId) ||
+              (latest.isOwner !== true && latest.viewerIsAdmin !== true) || (latest.isOwner === true) !== that.data.isOwner) {
+            that.setData({ saving: false, draftBlocked: true, draftCanDiscard: found.state === 'ready', draftNotice: '编辑对象或权限已变化，请重新打开核对。' }); return;
+          }
+          // 预读只能拦截此刻已存在的差异，不能消除随后到写入之间的并发窗口。
+          if (drafts.base(that.draftServer(latest)) !== that._draftBase) {
+            that.setData({ saving: false, draftBlocked: true, draftCanDiscard: found.state === 'ready',
+              draftNotice: '资料已更新，本次未提交。请对比并放弃旧草稿后重新编辑。',
+              draftComparison: drafts.compare(that.data, that.draftServer(latest)) || '资料已变化，请重新核对。' }); return;
+          }
+          that.setData({ saving: false });
+          that.submitDraft(scope);
+        },
+        fail() { if (that.isDraftCurrent(scope)) that.setData({ saving: false, saveErrorText: '无法核对最新资料，请重试。' }); },
+        successStatusAbnormal() { if (that.isDraftCurrent(scope)) that.setData({ saving: false, saveErrorText: '无法核对最新资料，请重试。' }); },
+      });
+    },
+
+    // A confirmed write is not a new server baseline. Only a matching authoritative
+    // detail response supplies the complete editable form; keep interim edits.
+    confirmedDraftMatches(confirmed, latest) {
+      const a = drafts.form(confirmed), b = drafts.form(this.draftServer(latest));
+      // Empty quota is submitted as zero by the existing update contract.
+      if (a.memberReservedQuota === '') a.memberReservedQuota = '0';
+      if (b.memberReservedQuota === '') b.memberReservedQuota = '0';
+      return JSON.stringify(a) === JSON.stringify(b);
+    },
+    readSavedDraftBase(scope) {
+      if (!this.isDraftCurrent(scope) || !this._draftConfirmed || this._draftReading) return;
+      this._draftReading = true;
+      const confirmed = this._draftConfirmed, that = this;
+      const failed = () => {
+        if (!that.isDraftCurrent(scope)) return;
+        that._draftReading = false;
+        that.setData({ saveErrorText: '资料已保存，最新资料尚未核对；续编草稿保留，请重试保存以核对。' });
+      };
+      app.sendRequest({
+        url: '/api/club/detail', method: 'POST', data: jsonBody({ id: scope.clubId }), header: jsonHeader(),
+        success(res) {
+          if (!that.isDraftCurrent(scope)) return;
+          that._draftReading = false;
+          const latest = res && res.data;
+          if (!res || res.code != '200' || !drafts.detail(latest, scope.clubId)) { failed(); return; }
+          if ((latest.id != null && String(latest.id) !== scope.clubId) ||
+              (latest.isOwner !== true && latest.viewerIsAdmin !== true) ||
+              (latest.isOwner === true) !== that.data.isOwner || !that.confirmedDraftMatches(confirmed, latest)) {
+            that.setData({ draftBlocked: true, draftCanDiscard: that._draftReadState === 'ready',
+              draftNotice: '保存后资料已变化，请对比后重新核对，续编草稿仍保留。',
+              draftComparison: drafts.compare(that.data, that.draftServer(latest)) }); return;
+          }
+          const nextBase = drafts.base(that.draftServer(latest));
+          const found = drafts.read(wx, that._draftKey);
+          if (!['empty', 'ready'].includes(found.state) ||
+              (found.state === 'ready' ? JSON.stringify(found.record) : '') !== that._draftExpected) {
+            that.setData({ draftBlocked: true, draftNotice: '本机草稿已变化或无法读取，原记录已保留，请勿退出。' }); return;
+          }
+          if (that._draftDirty) {
+            if (!drafts.write(wx, that._draftKey, nextBase, that.data, that._draftExpected)) { failed(); return; }
+            that._draftExpected = JSON.stringify({ schemaVersion: 1, base: nextBase, form: drafts.form(that.data) });
+            that._savedDraft = JSON.parse(that._draftExpected); that._draftReadState = 'ready';
+          }
+          that._draftBase = nextBase; that._draftConfirmed = null;
+          that.setData({ saveErrorText: '', draftNotice: that._draftDirty ? '草稿已保留在本机，尚未提交。' : '' });
+        },
+        fail: failed, successStatusAbnormal: failed,
+      });
+    },
+
+    finishDraftSave(res, scope, submittedForm, expected) {
+      if (!this.isDraftCurrent(scope)) return;
+      if (!res || res.code != '200') {
+        this.setData({ saving: false, saveErrorText: res && res.msg || '请稍后重试' }); return;
+      }
+      if (JSON.stringify(drafts.form(this.data)) !== submittedForm) {
+        this.setData({ saving: false, saveErrorText: '提交期间又有修改，草稿仍保留，请重新核对。' }); return;
+      }
+      this._draftDirty = false;
+      const cleared = drafts.remove(wx, drafts.key(scope.owner, scope.clubId), expected);
+      this.setData({ saving: false, saveErrorText: '', draftNotice: cleared ? '' : '资料已保存，本机草稿未能清除，请核对后关闭。' });
+      toast.success('已保存');
+      if (!cleared) { this.setData({ draftBlocked: true }); return; }
+      this._draftExpected = ''; this._savedDraft = null; this._draftReadState = 'empty';
+      this._draftConfirmed = JSON.parse(submittedForm); this.readSavedDraftBase(scope);
+      this.triggerEvent('dirtychange', { dirty: false });
+      setTimeout(() => {
+        if (!this.isDraftCurrent(scope) || this._draftConfirmed || this._draftDirty || JSON.stringify(drafts.form(this.data)) !== submittedForm) return;
+        this.triggerEvent('saved'); this.triggerEvent('back');
+      }, 800);
+    },
+
 
   },
 })
