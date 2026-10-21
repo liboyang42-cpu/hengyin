@@ -747,7 +747,7 @@ page{ background:var(--cy-color-bg-page); }
 .settle__big{ display:block; padding:31rpx 38rpx 0; font-size:170rpx; line-height:1.05; font-weight:800; color:#FFFFFF; } /* ds-ok Figma 实测 96pt 级 */
 .settle__unit{ display:block; padding:0 38rpx 23rpx; font-size:42rpx; color:#FFFFFF; } /* ds-ok Figma 实测(用户裁决字面值) */
 .settle__grid{ display:flex; flex-wrap:wrap; padding:23rpx 38rpx 0; }
-.sgc{ width:33.33%; box-sizing:border-box; padding-bottom:38rpx; display:flex; flex-direction:column; }
+.sgc{ width:25%; box-sizing:border-box; /* 四格一行,不再 3+1 落单 */ padding-bottom:38rpx; display:flex; flex-direction:column; }
 .sgc__v{ font-size:44rpx; font-weight:700; color:#FFFFFF; line-height:1.2; /* ds-ok Figma 实测(用户裁决字面值) */
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } /* ds-ok Figma 实测 */
 .sgc__l{ margin-top:4rpx; font-size:25rpx; color:#6A7282; } /* ds-ok Figma 实测 */

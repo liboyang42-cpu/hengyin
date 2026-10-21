@@ -32,9 +32,8 @@
 .oo-head { margin-top: var(--cy-space-2); }
 .oo-row { display: flex; justify-content: space-between; align-items: center; gap: var(--cy-space-2); }
 .oo-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--cy-font-subtitle); font-weight: 700; }
-.oo-meta, .oo-note, .oo-hint, .oo-item { display: block; margin-top: var(--cy-space-2); font-size: var(--cy-font-label); line-height: 1.5; word-break: break-all; }
+.oo-meta, .oo-hint, .oo-item { display: block; margin-top: var(--cy-space-2); font-size: var(--cy-font-label); line-height: 1.5; word-break: break-all; }
 .oo-meta { color: var(--cy-text-secondary); }
-.oo-note { padding: var(--cy-space-2); border-radius: var(--cy-radius-md); background: var(--cy-bg-card-2); color: var(--cy-text-secondary); }
 .oo-hint { color: var(--cy-text-tertiary); }
 .oo-item { color: var(--cy-text-secondary); }
 .oo-item--block { color: var(--cy-color-status-danger); }

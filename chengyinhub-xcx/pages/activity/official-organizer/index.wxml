@@ -23,7 +23,6 @@
       <text class="oo-meta">生命周期：{{view.statusText}}</text>
       <text wx:if="{{view.paused && view.pausedReason}}" class="oo-meta">暂停原因：{{view.pausedReason}}</text>
       <text wx:if="{{!view.paused && view.resumeNote}}" class="oo-meta">最近恢复说明：{{view.resumeNote}}</text>
-      <text class="oo-note">发布、暂停、恢复只有本场有效主办能完成；协办方也能打开这里，但提交会被平台拒绝。</text>
     </view>
 
     <view wx:if="{{result}}" class="oo-result">

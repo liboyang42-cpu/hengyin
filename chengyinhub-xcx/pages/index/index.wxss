@@ -191,7 +191,7 @@ page {
 }
 .v3-hero-greet-row {
   position: absolute;
-  left: var(--cy-space-2-5);
+  left: var(--cy-page-x); /* 与下方各区块同一左边距 */
   right: 0;
   z-index: 11;
   /* 与右侧头像同高并垂直居中:两者 top 相同,文字块矮于头像时会显得偏上。 */

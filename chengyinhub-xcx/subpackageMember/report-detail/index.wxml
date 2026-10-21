@@ -40,7 +40,6 @@
         </view>
 
         <view class="rd-actions" wx:if="{{report.appealable}}">
-          <text class="rd-actions__hint">对处理结论有异议，可以提交文字申诉，平台会重新调查</text>
           <cy-btn variant="secondary" bindtap="openAppeal">提交申诉</cy-btn>
         </view>
         <view class="rd-actions" wx:elif="{{report.appealing}}">
@@ -62,7 +61,6 @@
                 placeholder="说明你对处理结论的异议和相关事实"
                 value="{{reason}}" error="{{!!reasonError}}" error-text="{{reasonError}}"
                 bind:input="onReasonInput" />
-      <text class="rd-sheet__note">本次申诉仅支持文字说明，暂不能附图片或文件。</text>
       <cy-btn variant="primary" bindtap="toConfirm">下一步</cy-btn>
     </block>
     <block wx:elif="{{sheet === 'confirm'}}">

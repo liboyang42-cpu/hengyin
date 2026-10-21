@@ -1,8 +1,10 @@
+const sendRecovery = require('../../../../utils/im-send-recovery.js');
 const { toTimestamp, chinaDateKey, chinaParts } = require('../../../../utils/datetime');
 const { isRecordList, isBizOk } = require('../../../../utils/response-shape.js');
 const { decodeDisplayText } = require('../../../../utils/display-text.js');
 const { showPermissionGuide } = require('../../../../utils/location/location-manager.js');
 const { auditDetailUrl, shapeAuditDetail, shouldLoadAuditDetail, isRetryableAuditError } = require('./audit-detail.js');
+const { reportNoticeRows, makeReadRequestId } = require('../list/report-notices.js');
 const app = getApp();
 
 // 服务端可见顺序含微秒：不要转 JS Date 丢精度，也不要以客户端时钟推测审批时间。
@@ -29,6 +31,9 @@ Page({
   _closedReturnPath: '/subpackageB/pages/im/list/index',
   _blockedByMe: false,
   data: {
+    // 城瘾小助手(系统会话)顶部的「我的举报」入口:有举报进度通知才出现,读不到也照常给入口
+    reportEntry: false,
+    reportUnread: 0,
     plusSheetShow: false,
     plusSheetItems: ['图片', '位置', '路线'],
     moreSheetShow: false,
@@ -162,6 +167,50 @@ Page({
        type=3 官方客服按现状仍可写,不在这个闸里。 */
     if (type == 2) this.setData({ disabled: true, disabledText: '系统通知不支持回复，有新动态会出现在这里' });
     this.loadMessages(true);
+    if (type == 2) this.loadReportEntry();
+  },
+
+  // 系统消息只放在城瘾小助手:举报进度(社区治理通知)从这里进「我的举报」,不再在消息列表单列。
+  loadReportEntry() {
+    const that = this;
+    const epoch = (this._reportEntryEpoch || 0) + 1;
+    this._reportEntryEpoch = epoch;
+    app.sendRequest({
+      url: '/api/v1/community/notifications',
+      method: 'GET',
+      data: { limit: 50 },
+      hideLoading: true,
+      silentError: true,
+      success(res) {
+        if (epoch !== that._reportEntryEpoch) return;
+        const rows = isBizOk(res) && res.data ? reportNoticeRows(res.data.items) : null;
+        that._reportUnreadIds = (rows || []).filter(function (r) { return r.unread; }).map(function (r) { return r.notificationId; });
+        // 读不到(rows 为 null)也给入口:「我的举报」页自己有加载失败态
+        that.setData({ reportEntry: !rows || rows.length > 0, reportUnread: that._reportUnreadIds.length });
+      },
+      fail() {
+        if (epoch !== that._reportEntryEpoch) return;
+        that._reportUnreadIds = [];
+        that.setData({ reportEntry: true, reportUnread: 0 });
+      },
+    });
+  },
+
+  openReportMine() {
+    if (this._navigating) return;
+    this._navigating = true;
+    wx.navigateTo({ url: '/subpackageMember/report-mine/index', complete: () => { this._navigating = false; } });
+    // 进入即标已读;回到本页 onShow 重读,未读数以服务端 read_at 为准
+    (this._reportUnreadIds || []).forEach(function (id) {
+      app.sendRequest({
+        url: '/api/v1/community/notifications/' + id + '/read',
+        method: 'POST',
+        data: JSON.stringify({ requestId: makeReadRequestId(id) }),
+        header: { 'Content-Type': 'application/json' },
+        hideLoading: true,
+      });
+    });
+    this._reportUnreadIds = [];
   },
 
   // 会话身份兜底:只按会话类型给通用称呼,绝不臆造对方昵称。
@@ -175,6 +224,17 @@ Page({
   // 发送闸:守在**每个真发 /api/im/send 的出口**上,不只守入口。
   // (只挡 onPlus 的话,任何绕过动作面板的调用路径都能照旧把 conversation_id:0 发出去)
   _canSend() { return this.data.loadState === 'ready' && !this.data.disabled && !this.data.readOnly; },
+
+  _viewGuard() {
+    const owner = this.data.myId, conversation = this.data.conversationId;
+    const epoch = this._viewEpoch || 0;
+    const credential = app.globalData && app.globalData.authorization;
+    const recoveryEpoch = sendRecovery.epoch();
+    return () => recoveryEpoch === sendRecovery.epoch() && !this._disposed && !this._deleted && epoch === (this._viewEpoch || 0)
+      && owner === this.data.myId && conversation === this.data.conversationId
+      && (!app.getUserID || app.getUserID() == owner)
+      && credential === (app.globalData && app.globalData.authorization);
+  },
 
   _isReadContextCurrent(conversationId, memberId) {
     return !this._disposed
@@ -210,6 +270,7 @@ Page({
 
   loadMessages(toBottom) {
     const that = this;
+    const viewCurrent = this._viewGuard();
     const conversationId = this.data.conversationId;
     const memberId = this.data.myId;
     const pollEpoch = (this._pollRequestEpoch || 0) + 1;
@@ -218,7 +279,7 @@ Page({
     const requestEpoch = (this._messageRequestEpoch || 0) + 1;
     this._messageRequestEpoch = requestEpoch;
     const current = function () {
-      return requestEpoch === that._messageRequestEpoch
+      return viewCurrent() && requestEpoch === that._messageRequestEpoch
         && pollEpoch === that._pollRequestEpoch
         && that._isReadContextCurrent(conversationId, memberId);
     };
@@ -243,6 +304,7 @@ Page({
             moreSheetItems: that.data.readOnly ? ['隐藏会话'] : ['举报这条消息', '举报对方', blockedByMe ? '解除拉黑' : '拉黑', '隐藏会话'] });
           if (toBottom) that.scrollBottom();
           that._markReadWhenVisible(conversationId, memberId);
+          that.recoverPending();
           return;
         }
         that._setMessageLoadError(res);
@@ -280,13 +342,14 @@ Page({
   loadMore() {
     if (!this.data.hasMore || this.data.loadingMore) return;
     const that = this;
+    const viewCurrent = this._viewGuard();
     const cursor = this.data.cursor;
     const conversationId = this.data.conversationId;
     const memberId = this.data.myId;
     const requestEpoch = (this._loadMoreRequestEpoch || 0) + 1;
     this._loadMoreRequestEpoch = requestEpoch;
     const current = function () {
-      return requestEpoch === that._loadMoreRequestEpoch
+      return viewCurrent() && requestEpoch === that._loadMoreRequestEpoch
         && that._isReadContextCurrent(conversationId, memberId);
     };
     this.setData({ loadingMore: true, loadMoreError: '' });
@@ -359,27 +422,38 @@ Page({
       // route 与 signup 同构,共用现拉
       if (m.card && (m.card.cardType === 'route' || m.card.cardType === 'signup') && m.card.topicId) {
         const id = m.card.topicId;
+        if (m.card.cardType === 'route' && m.content === '路线已不可用') {
+          that.setData({ ['topicCache.' + id]: { name: '路线已不可用' } });
+          return;
+        }
+        // 路线名称只来自消息当前投影；详情权限可能允许作者读私密正文。
+        if (m.card.cardType === 'route' && typeof m.content === 'string' && m.content.startsWith('[路线]')) {
+          that.setData({ ['topicCache.' + id]: { name: m.content.replace(/^\[路线\]\s*/, ''), imgUrl: m.card.imgUrl || '', totalMileage: m.card.totalMileage || 0, locationCount: m.card.locationCount || 0 } });
+          return;
+        }
+        if (m.card.cardType === 'route') {
+          that.setData({ ['topicCache.' + id]: { name: '路线已不可用' } });
+          return;
+        }
         // 必须 === undefined:三态里 null 是「已确认下架」的终态答案,不是「还没拉」。
         // 用真值判断会把 null 当没拉过,对已下架主题每批 decorate 重发一次请求。
         if (cache[id] === undefined && ids.indexOf(id) < 0) ids.push(id);
       }
     });
     if (!ids.length) return;
-    // 迟到回包只回写发起时的同一账号/会话,换号后不把旧路线详情写进新视图。
-    const conversationId = this.data.conversationId;
-    const memberId = this.data.myId;
-    const current = () => that._isReadContextCurrent(conversationId, memberId);
+    const current = this._viewGuard();
+    const topicEpoch = this._topicEpoch || 0;
     ids.forEach(function (id) {
       app.sendRequest({
         url: '/api/topic/info-to-user', method: 'POST', hideLoading: true,
         data: { id: id },
         success(res) {
-          if (!current()) return;
+          if (!current() || topicEpoch !== (that._topicEpoch || 0)) return;
           const d = (res && res.code == 200) ? res.data : null;
           // 拉不到/已下架 → 记 null,渲染层出降级态「该路线已下架」
           that.setData({ ['topicCache.' + id]: d || null });
         },
-        fail() { if (current()) that.setData({ ['topicCache.' + id]: null }); },
+        fail() { if (current() && topicEpoch === (that._topicEpoch || 0)) that.setData({ ['topicCache.' + id]: null }); },
       });
     });
   },
@@ -402,8 +476,7 @@ Page({
     if (!content || this.data.sending) return;
     if (!this._canSend()) return;
     if (this._disposed || (app.getUserID && app.getUserID() != this.data.myId)) return;
-    this.setData({ text: '' });
-    this._sendMessage({ msg_type: 1, content });
+    if (this._sendMessage({ msg_type: 1, content })) this.setData({ text: '' });
   },
 
   _sendMessage(message, retryId) {
@@ -416,6 +489,8 @@ Page({
       this._sendSequence = (this._sendSequence || 0) + 1;
       payload.client_message_id = 'im_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2) + '_' + this._sendSequence;
     }
+    const receipt = sendRecovery.begin(owner, conversationId, payload.client_message_id);
+    if (!receipt) { app.tips && app.tips('原消息请求未能保存，请稍后重试'); return false; }
     const tmpId = retryId || 'tmp_' + payload.client_message_id;
     let msgs = this.data.msgs.slice();
     if (retryId) {
@@ -430,8 +505,8 @@ Page({
     }
     this.setData({ msgs, sending: true });
     this.scrollBottom();
-    const current = () => !this._disposed && this.data.myId === owner && this.data.conversationId === conversationId
-      && (!app.getUserID || app.getUserID() == owner);
+    const viewCurrent = this._viewGuard();
+    const current = () => viewCurrent() && sendRecovery.current(receipt);
     const finish = (res) => {
       if (!current()) return;
       const list = this.data.msgs.slice();
@@ -441,6 +516,7 @@ Page({
         const validId = (typeof id === 'number' || (typeof id === 'string' && /^[1-9]\d*$/.test(id)))
           && Number.isSafeInteger(Number(id)) && Number(id) > 0;
         if (isBizOk(res) && validId) {
+          sendRecovery.complete(receipt);
           list.splice(index, 1);
           this.setData({ msgs: list });
           this._mergeMessages([res.data]);
@@ -457,9 +533,12 @@ Page({
       url: '/api/im/send', method: 'POST', hideLoading: true,
       data: payload, success: finish, fail: finish, successStatusAbnormal: finish,
     });
+    return true;
   },
 
   _mergeMessages(incoming, prepend) {
+    // 新的不可见投影也使在途旧公开投影失效。
+    if (incoming.some(m => m.content === '路线已不可用')) this._topicEpoch = (this._topicEpoch || 0) + 1;
     const list = prepend ? incoming.slice() : this.data.msgs.slice();
     const additions = prepend ? this.data.msgs : incoming;
     additions.forEach(message => {
@@ -476,7 +555,97 @@ Page({
     const idx = e.currentTarget.dataset.index;
     const m = this.data.msgs[idx];
     if (!m || !m.failed || m.sending || m.senderId != this.data.myId || !m.sendPayload) return;
-    this._sendMessage(m.sendPayload, m.id);
+    const current = this._viewGuard();
+    const receipt = sendRecovery.pending(this.data.myId, this.data.conversationId)
+      .find(r => r.id === m.clientMessageId);
+    if (!receipt) return;
+    this._readReceipt(receipt, result => {
+      if (!current() || !sendRecovery.current(receipt)) return;
+      if (result && result.found === true && result.message) {
+        this._mergeMessages([result.message]); sendRecovery.complete(receipt);
+      } else if (result && result.found === false) this._sendMessage(m.sendPayload, m.id);
+    }, 'retry');
+  },
+
+  _readReceipt(receipt, done, purpose = 'recover') {
+    const viewCurrent = this._viewGuard();
+    const current = () => viewCurrent() && sendRecovery.current(receipt);
+    if (!current()) return;
+    const key = JSON.stringify([receipt.owner, receipt.conversation, receipt.id]);
+    const reads = this._receiptReads || (this._receiptReads = new Map());
+    const previous = reads.get(key);
+    if (previous && previous.current()) {
+      // 自动恢复和用户重试共享一次查询；同一用途只保留一个消费者。
+      previous.handlers.set(purpose, done);
+      return;
+    }
+    const flight = { current, handlers: new Map([[purpose, done]]) };
+    reads.set(key, flight);
+    let settled = false;
+    const finish = res => {
+      // 同一请求的重复回调，以及失效请求的迟到回调，都不能释放后继请求。
+      if (settled) return;
+      settled = true;
+      if (reads.get(key) !== flight) return;
+      try {
+        if (!current()) return;
+        const result = isBizOk(res) && res.data, message = result && result.message;
+        const found = result && result.found === true && message && Number.isSafeInteger(Number(message.id)) && Number(message.id) > 0
+          && message.senderId == receipt.owner && message.clientMessageId === receipt.id;
+        if (result && (result.found === false || found)) {
+          flight.handlers.forEach(handler => { if (current()) handler(result); });
+        } else if (flight.handlers.has('retry')) app.tips('发送状态暂时无法确认，请稍后重试');
+      } finally {
+        if (reads.get(key) === flight) reads.delete(key);
+      }
+    };
+    app.sendRequest({ url: '/api/im/send-receipt', method: 'POST', hideLoading: true, silentError: true,
+      data: { conversation_id: receipt.conversation, client_message_id: receipt.id },
+      success: finish, fail: () => finish(), successStatusAbnormal: () => finish() });
+  },
+  recoverPending() {
+    sendRecovery.pending(this.data.myId, this.data.conversationId).forEach(receipt => {
+      this._readReceipt(receipt, result => {
+        if (result.found === true && result.message) {
+          this._mergeMessages([result.message]); sendRecovery.complete(receipt);
+        }
+      });
+    });
+  },
+  refreshRouteProjections() {
+    const current = this._viewGuard();
+    if (!current()) return;
+    this._topicEpoch = (this._topicEpoch || 0) + 1;
+    const targets = new Set(this.data.msgs.filter(m => m.card && m.card.cardType === 'route'
+      && Number.isSafeInteger(Number(m.id)) && Number(m.id) > 0).map(m => String(m.id)));
+    if (!targets.size) return;
+    // 先清除消息本身与缓存的旧投影，其他消息合并也不能复活旧私密名称。
+    const masked = this.data.msgs.map(m => targets.has(String(m.id)) ? Object.assign({}, m, {
+      content: '路线已不可用', extraJson: JSON.stringify({ cardType: 'route', topicId: m.card.topicId })
+    }) : m);
+    this.setData({ msgs: this.decorate(masked) });
+    // 历史游标依据可见时间排序，不能用 id+1 猜一条不存在的游标行。
+    let projectionEpoch = this._topicEpoch;
+    const visited = new Set();
+    const read = cursor => {
+      visited.add(cursor);
+      app.sendRequest({ url: '/api/im/messages', method: 'POST', hideLoading: true, silentError: true,
+        data: { conversation_id: this.data.conversationId, cursor_id: cursor, size: 50 },
+        success: res => {
+          if (!current() || projectionEpoch !== this._topicEpoch || !isBizOk(res)
+              || !res.data || !isRecordList(res.data.list)) return;
+          const projected = res.data.list.filter(m => targets.has(String(m.id)));
+          projected.forEach(m => targets.delete(String(m.id)));
+          if (projected.length) {
+            this._mergeMessages(projected);
+            projectionEpoch = this._topicEpoch;
+          }
+          const next = Number(res.data.nextCursor);
+          if (targets.size && res.data.hasMore && Number.isSafeInteger(next) && next > 0
+              && !visited.has(next) && res.data.list.some(m => Number(m.id) === next)) read(next);
+        }, fail() {}, successStatusAbnormal() {} });
+    };
+    read(0);
   },
 
   /* 2026-09-02:原来这两处弹 wx.showActionSheet(系统弹层,设计体系外)。
@@ -501,7 +670,8 @@ Page({
     const that = this;
     const conversationId = this.data.conversationId;
     const memberId = this.data.myId;
-    const current = () => that._canSend() && that._isReadContextCurrent(conversationId, memberId);
+    const viewCurrent = this._viewGuard();
+    const current = () => viewCurrent() && that._canSend() && that._isReadContextCurrent(conversationId, memberId);
     if (!current()) return;
     wx.chooseLocation({
       success(loc) {
@@ -554,13 +724,14 @@ Page({
 
   loadRoutes() {
     const that = this;
+    const viewCurrent = this._viewGuard();
     const conversationId = this.data.conversationId;
     const memberId = this.data.myId;
     if (!this.data.routePickerOpen || !this._canSend() || !this._isReadContextCurrent(conversationId, memberId)) return;
     // 竞态守卫:只认最后一次请求的响应,防止先发的旧关键词后到、覆盖新结果
     const seq = (this._routeSeq || 0) + 1;
     this._routeSeq = seq;
-    const current = () => seq === that._routeSeq && that.data.routePickerOpen
+    const current = () => viewCurrent() && seq === that._routeSeq && that.data.routePickerOpen
       && that._canSend() && that._isReadContextCurrent(conversationId, memberId);
     this.setData({ routeLoading: true, routeError: '', routeList: [] });
     app.sendRequest({
@@ -613,7 +784,11 @@ Page({
   },
 
   markRead() {
-    app.sendRequest({ url: '/api/im/read', method: 'POST', hideLoading: true, data: { conversation_id: this.data.conversationId } });
+    if (!this._viewGuard()()) return;
+    const latest = this.data.msgs.filter(m => Number.isSafeInteger(Number(m.id)) && Number(m.id) > 0)
+      .reduce((last, m) => !last || compareMessages(m, last) > 0 ? m : last, null);
+    app.sendRequest({ url: '/api/im/read', method: 'POST', hideLoading: true,
+      data: { conversation_id: this.data.conversationId, read_to: latest ? latest.id : 0 } });
   },
 
   onMore() {
@@ -760,7 +935,8 @@ Page({
     const pending = clear ? this._pendingClear : this._pendingBlock;
     if (!pending || pending.submitting || (!clear && (!pending.targetId || !pending.opened))
         || !this._isReadContextCurrent(pending.conversationId, pending.memberId)) return;
-    const current = () => (clear ? this._pendingClear : this._pendingBlock) === pending
+    const viewCurrent = this._viewGuard();
+    const current = () => viewCurrent() && (clear ? this._pendingClear : this._pendingBlock) === pending
       && this._isReadContextCurrent(pending.conversationId, pending.memberId);
     pending.submitting = true;
     const dc = this.selectComponent && this.selectComponent('#dc');
@@ -778,6 +954,10 @@ Page({
         success: (res) => {
           if (!current()) return;
           if (!isBizOk(res)) { failed((res && res.msg) || '隐藏失败'); return; }
+          sendRecovery.abandon(pending.memberId, pending.conversationId);
+          this._deleted = true;
+          this.stopPoll();
+          this.setData({ msgs: [], topicCache: {}, sending: false });
           this._pendingClear = null;
           if (dc) dc.done();
           this._returnAfterClear(pending.conversationId, pending.memberId);
@@ -835,7 +1015,7 @@ Page({
     const id = e.currentTarget.dataset.topicid;
     if (!id || this._navigating) return; // 跳转中不响应连点
     // 只在「确认下架」(null)时拦;加载中(undefined)放行 —— 详情页自己会加载
-    if (this.data.topicCache[id] === null) { app.tips && app.tips('该路线已下架'); return; }
+    if (this.data.topicCache[id] === null || this.data.topicCache[id] && this.data.topicCache[id].name === '路线已不可用') { app.tips && app.tips('该路线已下架'); return; }
     this._navigating = true; wx.navigateTo({ url: '/pages/topic/index/index?id=' + id, complete: () => { this._navigating = false; } });
   },
 
@@ -914,6 +1094,7 @@ Page({
   onShow() {
     this._hidden = false;
     this._navigating = false;
+    if (this.data.type == 2 && this._reportEntryEpoch) this.loadReportEntry();
     const cleared = this._pendingClearReturn;
     const reported = this._pendingReportTip;
     this._pendingClearReturn = null;
@@ -933,6 +1114,7 @@ Page({
     if (pendingConversationId && this._isReadContextCurrent(pendingConversationId, pendingMemberId)) {
       this.markRead();
     }
+    this.refreshRouteProjections();
     this.startPoll();
   },
   onHide() {
@@ -976,6 +1158,7 @@ Page({
       this.loadMessages(false);
       return;
     }
+    this.refreshRouteProjections();
     const requestEpoch = (this._pollRequestEpoch || 0) + 1;
     this._pollRequestEpoch = requestEpoch;
     this._pollInFlight = true;
@@ -985,7 +1168,8 @@ Page({
   },
 
   _pollNewPage(context, cursorId, accumulated) {
-    const current = () => context.requestEpoch === this._pollRequestEpoch
+    const viewCurrent = this._viewGuard();
+    const current = () => viewCurrent() && context.requestEpoch === this._pollRequestEpoch
       && context.messageRequestEpoch === this._messageRequestEpoch
       && !this._hidden && this._isReadContextCurrent(context.conversationId, context.memberId);
     const fail = () => {

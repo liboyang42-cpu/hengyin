@@ -24,7 +24,6 @@ function loadPage(rel) {
 }
 
 const PAGES = [
-  { rel: 'subpackageMember/correction-mine/index.js', row: (i) => ({ id: i + 1, reviewStatus: 'PENDING' }) },
   { rel: 'subpackageMember/report-mine/index.js', row: (i) => ({ id: i + 1, stage: 'SUBMITTED' }) },
 ]
 

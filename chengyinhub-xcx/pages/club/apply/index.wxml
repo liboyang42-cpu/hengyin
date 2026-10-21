@@ -144,7 +144,7 @@
     <view class="step cy-rise-in" wx:if="{{step===4}}">
       <view class="cap {{hasGuideCert ? 'on' : ''}}" data-field="hasGuideCert" bindtap="toggleBool"
             aria-role="switch" aria-checked="{{!!hasGuideCert}}" aria-label="持导游或旅游资质" hover-class="cy-pressed" hover-stay-time="80">
-        <view class="cap__main"><text class="cap__t">持导游 / 旅游资质</text><text class="cap__d">有证的话审核会快一些</text></view>
+        <view class="cap__main"><text class="cap__t">持导游 / 旅游资质</text><text class="cap__d">用于后续等级评定</text></view>
         <view class="sw" aria-hidden="true"><view class="sw__knob"></view></view>
       </view>
       <view class="field mt">
@@ -176,7 +176,7 @@
       <view class="st-row">
         <view class="st-badge ok">已生效</view>
       </view>
-      <view class="st-desc">你已成为俱乐部主理人,身份立即生效。L1-L5 等级由平台后台稍后评定,不影响你现在创建与运营俱乐部。</view>
+      <view class="st-desc">你已成为俱乐部主理人，身份立即生效。</view>
       <view class="st-kv" wx:if="{{submissionReceipt && submissionReceipt.leaderName}}"><text class="k">主理人</text><text class="v">{{submissionReceipt.leaderName}}</text></view>
       <view class="st-kv"><text class="k">可建俱乐部</text><text class="v">最多 2 个</text></view>
     </view>

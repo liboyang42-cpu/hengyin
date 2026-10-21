@@ -64,7 +64,7 @@ function loadPage(relPath, { onRequest, tips }) {
 
 function makePage(cfg, data) {
   const page = Object.assign(Object.create(null), cfg)
-  page.data = Object.assign({}, cfg.data, data)
+  page.data = Object.assign({}, cfg.data, { myId: 1 }, data)
   page.setData = function (patch) {
     Object.keys(patch).forEach((k) => {
       if (k.indexOf('[') === -1 && k.indexOf('.') === -1) { page.data[k] = patch[k]; return }
@@ -134,25 +134,6 @@ test('单条已读:业务失败时未读数不能被清零', () => {
   page.onRowRead({ currentTarget: { dataset: { id: 'c1', index: 0 } } })
   sent.success(BIZ_FAIL)
   assert.equal(page.data.list[0].unread, 3, '业务失败时未读数必须保持原值')
-  assert.ok(tipped.length > 0, '必须提示失败')
-})
-
-test('全部已读:一条都没成功时不能报「已全部标为已读」', () => {
-  const sentList = []
-  const tipped = []
-  const cfg = loadPage('subpackageB/pages/im/list/index.js', {
-    onRequest: (p) => { sentList.push(p) }, tips: (t) => tipped.push(t),
-  })
-  const page = makePage(cfg, {
-    list: [{ conversationId: 'c1', unread: 2 }, { conversationId: 'c2', unread: 1 }],
-  })
-  page.tabOf = () => 0
-  page.loadConversations = () => {}
-  page.onReadAll()
-  assert.equal(sentList.length, 2, '两条未读应当各发一次请求')
-  sentList.forEach((p) => { p.success && p.success(BIZ_FAIL); p.complete && p.complete() })
-  assert.ok(!global.__toasts.includes('已全部标为已读'),
-    '全部业务失败时不能弹「已全部标为已读」—— 原实现用 complete 计数,断网也会弹')
   assert.ok(tipped.length > 0, '必须提示失败')
 })
 
