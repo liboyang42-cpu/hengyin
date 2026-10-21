@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.service.rendezvous.RendezvousReportCaseMapper">
+  <resultMap id="caseRow" type="com.chengyinhub.business.service.rendezvous.RendezvousReportCase$Row">
+    <id property="caseId" column="case_id"/>
+    <result property="reporterId" column="reporter_id"/>
+    <result property="requestId" column="request_id"/>
+    <result property="ticketId" column="ticket_id"/>
+    <result property="matchId" column="match_id"/>
+    <result property="payloadHash" column="payload_hash"/>
+    <result property="evidenceKind" column="evidence_kind"/>
+    <result property="state" column="state"/>
+    <result property="reviewConnection" column="review_connection"/>
+    <result property="reviewRef" column="review_ref"/>
+    <result property="dispositionCode" column="disposition_code"/>
+    <result property="createdAt" column="created_at"/>
+  </resultMap>
+  <select id="find" resultMap="caseRow" useCache="false" flushCache="true">
+    SELECT case_id, reporter_id, request_id, ticket_id, match_id, payload_hash, evidence_kind,
+           state, review_connection, review_ref, disposition_code, created_at
+    FROM w16_report_case
+    WHERE reporter_id=#{reporterId} AND request_id=#{requestId}
+    FOR UPDATE
+  </select>
+  <insert id="insert">
+    INSERT INTO w16_report_case(case_id, reporter_id, request_id, ticket_id, match_id, payload_hash,
+      evidence_kind, state, review_connection, review_ref, disposition_code, created_at)
+    VALUES(#{caseId}, #{reporterId}, #{requestId}, #{ticketId}, #{matchId}, #{payloadHash},
+      #{evidenceKind}, #{state}, #{reviewConnection},
+      #{reviewRef,jdbcType=VARCHAR}, #{dispositionCode,jdbcType=VARCHAR}, #{createdAt})
+  </insert>
+  <update id="updateReview">
+    UPDATE w16_report_case
+    SET state=#{state}, review_connection=#{reviewConnection},
+        review_ref=#{reviewRef,jdbcType=VARCHAR}, disposition_code=#{dispositionCode,jdbcType=VARCHAR}
+    WHERE case_id=#{caseId} AND reporter_id=#{reporterId} AND state=#{expectedState}
+  </update>
+</mapper>

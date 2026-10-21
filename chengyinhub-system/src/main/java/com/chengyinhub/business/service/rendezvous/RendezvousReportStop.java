@@ -6,7 +6,8 @@ import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import static com.chengyinhub.business.service.rendezvous.RendezvousConsentService.stopBlockedPair;
 
-/** Durable report receipt plus pair stop, in the consent guard transaction.
+/** Legacy pair marker only: one w16_safety_report row for two users, then stop that shared proposal.
+ * Not a case, not a reporter receipt, and not a review handoff. Case intake is RendezvousReportIntake.
  * Does not call ImServiceImpl.report and does not open an audit task.
  * Explicitly constructed. Not a Spring bean. */
 public final class RendezvousReportStop {
