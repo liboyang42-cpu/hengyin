@@ -1,16 +1,26 @@
 package com.chengyinhub.business.service.rendezvous;
 
 import com.chengyinhub.business.domain.ImBlock;
+import com.chengyinhub.business.service.rendezvous.RendezvousConsentService.Admission;
 import com.chengyinhub.business.service.rendezvous.RendezvousConsentService.Rejection;
+import com.chengyinhub.business.service.rendezvous.RendezvousConsentService.Safety;
+import com.chengyinhub.business.service.rendezvous.RendezvousConsentService.Store;
 import com.chengyinhub.business.service.rendezvous.RendezvousConsentService.TicketState;
-import com.chengyinhub.business.service.rendezvous.RendezvousPairingComposition.FormalMode;
+import com.chengyinhub.business.service.rendezvous.RendezvousConsentService.Transaction;
 import com.chengyinhub.business.service.rendezvous.RendezvousPairingComposition.Pairing;
+import com.chengyinhub.common.core.domain.entity.AppUser;
+import com.chengyinhub.common.core.domain.model.LoginAppUser;
+import com.chengyinhub.web.controller.api.ApiRendezvousActiveEntryController;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
+import java.time.Clock;
+import java.util.Collections;
 import java.util.UUID;
 import javax.sql.DataSource;
 import org.apache.ibatis.builder.xml.XMLMapperBuilder;
@@ -27,9 +37,16 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.env.MapPropertySource;
+import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static com.chengyinhub.business.service.rendezvous.RendezvousPairingComposition.ENABLED_PROPERTY;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -37,8 +54,10 @@ import static org.junit.jupiter.api.Assertions.*;
 class RendezvousPairingCompositionTest {
     @Test void defaultOffRegistersNothingAndDoesNotSchedule() throws Exception {
         assertFalse(RendezvousPairingComposition.DEFAULT_ENABLED);
-        assertEquals(FormalMode.UNCONTRACTED, RendezvousPairingComposition.FORMAL_MODE);
-        assertEquals("UNCONTRACTED", RendezvousPairingComposition.FACT_PROVIDER);
+        assertEquals("w16_eligibility_fact", RendezvousPairingComposition.FACT_PROVIDER);
+        assertNotNull(RendezvousConsentService.class.getConstructor(Store.class, Safety.class, Clock.class));
+        assertNotNull(RendezvousConsentService.class.getConstructor(Store.class, Safety.class, Clock.class, Admission.class));
+        assertNotNull(RendezvousConsentService.class.getMethod("terminateCurrentMatch", Transaction.class, long.class, long.class));
         Method factory = RendezvousPairingComposition.class.getDeclaredMethod("rendezvousPairing",
                 DataSource.class, SqlSessionTemplate.class, DataSourceTransactionManager.class);
         assertNotNull(factory.getAnnotation(Bean.class));
@@ -46,13 +65,16 @@ class RendezvousPairingCompositionTest {
         assertEquals(ENABLED_PROPERTY, condition.name()[0]);
         assertEquals("true", condition.havingValue());
         assertFalse(condition.matchIfMissing());
-        assertEquals(1, java.util.Arrays.stream(RendezvousPairingComposition.class.getDeclaredMethods())
+        assertEquals(3, java.util.Arrays.stream(RendezvousPairingComposition.class.getDeclaredMethods())
                 .filter(method -> method.isAnnotationPresent(Bean.class)).count());
         assertEquals(0, java.util.Arrays.stream(RendezvousPairingComposition.class.getDeclaredMethods())
                 .filter(method -> method.isAnnotationPresent(Scheduled.class)).count());
         String source = Files.readString(sourceRoot().resolve(
                 "chengyinhub-system/src/main/java/com/chengyinhub/business/service/rendezvous/RendezvousPairingComposition.java"));
+        String facts = Files.readString(sourceRoot().resolve(
+                "chengyinhub-system/src/main/resources/mapper/business/RendezvousEligibilityMapper.xml"));
         assertFalse(source.contains("UmsMember") || source.contains("birthday") || source.contains("areaId") || source.contains("area_id"));
+        assertFalse(facts.contains("birthday") || facts.contains("ums_member") || facts.contains("member_name"));
         assertFalse(source.contains("pairOnce"));
         try (AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(RendezvousPairingComposition.class)) {
             assertTrue(context.getBeansOfType(Pairing.class).isEmpty());
@@ -68,41 +90,42 @@ class RendezvousPairingCompositionTest {
             assertFalse(context.isActive());
         }
         IllegalStateException missing = assertThrows(IllegalStateException.class,
-                () -> RendezvousPairingComposition.formal(null, null, null));
+                () -> RendezvousPairingComposition.formal(null, null, null, null));
         assertEquals("W16_PAIRING_DEPENDENCY_MISSING", missing.getMessage());
     }
 
     @Test void differentDatabaseAndMissingMapperAreRejected() throws Exception {
         try (Fixture left = new Fixture(); Fixture right = new Fixture()) {
-            IllegalStateException foreign = assertThrows(IllegalStateException.class, () -> RendezvousPairingComposition.evaluation(
+            IllegalStateException foreign = assertThrows(IllegalStateException.class, () -> RendezvousPairingComposition.formal(
                     left.dataSource, left.session, right.manager, left.clock));
             assertEquals("W16_PAIRING_RESOURCE_MISMATCH", foreign.getMessage());
             Configuration jdbcTx = new Configuration(new Environment("jdbc-tx", new JdbcTransactionFactory(), left.dataSource));
             SqlSessionTemplate unmanaged = new SqlSessionTemplate(new SqlSessionFactoryBuilder().build(jdbcTx));
             IllegalStateException factory = assertThrows(IllegalStateException.class, () -> RendezvousPairingComposition.formal(
-                    left.dataSource, unmanaged, left.manager));
+                    left.dataSource, unmanaged, left.manager, left.clock));
             assertEquals("W16_PAIRING_RESOURCE_MISMATCH", factory.getMessage());
             Configuration bareConfig = new Configuration(new Environment("no-mapper", new SpringManagedTransactionFactory(), left.dataSource));
             SqlSessionTemplate bare = new SqlSessionTemplate(new SqlSessionFactoryBuilder().build(bareConfig));
             IllegalStateException absent = assertThrows(IllegalStateException.class, () -> RendezvousPairingComposition.formal(
-                    left.dataSource, bare, left.manager));
+                    left.dataSource, bare, left.manager, left.clock));
             assertEquals("W16_PAIRING_MAPPER_MISSING", absent.getMessage());
             assertEquals(0, left.count("w16_rendezvous_match"));
             assertEquals(0, left.count("w16_contact_event"));
         }
     }
 
-    @Test void formalModeDoesNotStartTheScheduler() throws Exception {
+    @Test void enabledFormalWiresTheChainWithoutStartingOrSeeding() throws Exception {
         try (Fixture fx = new Fixture(); AnnotationConfigApplicationContext context = enabled()) {
-            IllegalStateException direct = assertThrows(IllegalStateException.class, () -> RendezvousPairingComposition.formal(
-                    fx.dataSource, fx.session, fx.manager));
-            assertEquals("W16_PAIRING_FORMAL_MODE_UNCONTRACTED", direct.getMessage());
             context.registerBean(DataSource.class, () -> fx.dataSource);
             context.registerBean(SqlSessionTemplate.class, () -> fx.session);
             context.registerBean(DataSourceTransactionManager.class, () -> fx.manager);
             context.register(RendezvousPairingComposition.class);
-            Exception failure = assertThrows(Exception.class, context::refresh);
-            assertTrue(messageChain(failure, "W16_PAIRING_FORMAL_MODE_UNCONTRACTED"));
+            context.refresh();
+            Pairing pairing = context.getBean(Pairing.class);
+            assertSame(pairing.consent, context.getBean(RendezvousConsentService.class));
+            assertSame(pairing.policy, context.getBean(RendezvousVersionedPolicy.class));
+            assertTrue(pairing.policy.factsConnected());
+            assertFalse(pairing.policy.eligible(1, "pool", "v1", fx.clock.now));
             assertEquals(0, fx.count("w16_rendezvous_match"));
             assertEquals(0, fx.count("w16_policy_version"));
             assertEquals(0, fx.count("w16_eligibility_fact"));
@@ -161,6 +184,112 @@ class RendezvousPairingCompositionTest {
         }
     }
 
+    @Test void formalEntryChargesSeatsAndReadsBackTheOriginalRequest() throws Exception {
+        try (Fixture fx = new Fixture()) {
+            fx.rules(); fx.fact(1, 20); fx.fact(2, 21); fx.quota(4);
+            Pairing pairing = RendezvousPairingComposition.formal(fx.dataSource, fx.session, fx.manager, fx.clock);
+            MockMvc http = MockMvcBuilders.standaloneSetup(new ApiRendezvousActiveEntryController(pairing.consent, pairing.policy)).build();
+            ObjectMapper json = new ObjectMapper();
+            String first = join(http, json, 1);
+            String second = join(http, json, 2);
+            assertEquals(first, current(http, json, 1));
+            assertEquals(second, current(http, json, 2));
+            authenticate(3);
+            JsonNode stranger = json.readTree(http.perform(get("/api/rendezvous/pool/current")).andReturn().getResponse().getContentAsString());
+            assertEquals(404, stranger.get("code").asInt());
+            assertEquals("NOT_FOUND", stranger.get("errorCode").asText());
+            assertFalse(stranger.toString().contains("public-place"));
+            String match = pairing.scheduler.pairOnce("pool");
+            authenticate(3);
+            JsonNode hidden = json.readTree(http.perform(get("/api/rendezvous/tickets/" + first)).andReturn().getResponse().getContentAsString());
+            assertEquals(404, hidden.get("code").asInt());
+            assertFalse(hidden.toString().contains("public-place"));
+            assertEquals(1, fx.count("w16_rendezvous_match"));
+            assertEquals(2, fx.count("w16_match_reservation"));
+            assertEquals(2, fx.jdbc.queryForObject("SELECT COUNT(*) FROM w16_contact_event WHERE match_id=?", Integer.class, match));
+            JsonNode accepted = accept(http, json, 1, first, 1);
+            assertEquals("PROPOSED", accepted.get("matchState").asText());
+            JsonNode retried = accept(http, json, 1, first, 1);
+            assertEquals(first, retried.get("ticketId").asText());
+            assertEquals(accepted.get("version").asLong(), retried.get("version").asLong());
+            assertEquals("MUTUAL_ACCEPTED", accept(http, json, 2, second, 2).get("matchState").asText());
+            assertEquals(2, fx.count("w16_contact_event"));
+            Pairing restarted = RendezvousPairingComposition.formal(fx.dataSource, fx.session, fx.manager, fx.clock);
+            JsonNode readBack = read(httpOf(restarted), json, 1, first);
+            assertEquals(match, readBack.get("matchId").asText());
+            assertEquals("MUTUAL_ACCEPTED", readBack.get("matchState").asText());
+            assertEquals(2, fx.count("w16_contact_event"));
+            JsonNode withdrawn = postEmpty(http, json, 1, "/api/rendezvous/tickets/" + first + "/cancel");
+            assertEquals("CANCELLED", withdrawn.get("matchState").asText());
+            assertEquals(0, fx.count("w16_match_reservation"));
+            assertTrue(withdrawn.get("publicPlace") == null || withdrawn.get("publicPlace").isNull());
+            assertEquals("CANCELLED", read(http, json, 1, first).get("matchState").asText());
+
+            String againFirst = join(http, json, 1);
+            join(http, json, 2);
+            pairing.scheduler.pairOnce("pool");
+            assertEquals(2, fx.count("w16_match_reservation"));
+            fx.clock.now = 110_000;
+            assertEquals("EXPIRED", read(http, json, 1, againFirst).get("matchState").asText());
+            assertEquals(0, fx.count("w16_match_reservation"));
+            fx.clock.now = 10_000;
+            join(http, json, 1);
+            String rejected = join(http, json, 2);
+            pairing.scheduler.pairOnce("pool");
+            assertEquals(2, fx.count("w16_match_reservation"));
+            assertEquals("CANCELLED", postEmpty(http, json, 2, "/api/rendezvous/tickets/" + rejected + "/reject").get("matchState").asText());
+            assertEquals(0, fx.count("w16_match_reservation"));
+            assertEquals("CANCELLED", read(http, json, 2, rejected).get("matchState").asText());
+        }
+    }
+
+    private static MockMvc httpOf(Pairing pairing) {
+        return MockMvcBuilders.standaloneSetup(new ApiRendezvousActiveEntryController(pairing.consent, pairing.policy)).build();
+    }
+
+    private static String join(MockMvc http, ObjectMapper json, long actor) throws Exception {
+        authenticate(actor);
+        JsonNode body = json.readTree(http.perform(post("/api/rendezvous/pool/join").contentType(MediaType.APPLICATION_JSON)
+                .content("{\"pool\":\"pool\",\"eligibilityVersion\":\"v1\"}")).andReturn().getResponse().getContentAsString());
+        assertEquals(200, body.get("code").asInt(), body.toString());
+        return body.get("data").get("ticketId").asText();
+    }
+
+    private static String current(MockMvc http, ObjectMapper json, long actor) throws Exception {
+        authenticate(actor);
+        JsonNode body = json.readTree(http.perform(get("/api/rendezvous/pool/current")).andReturn().getResponse().getContentAsString());
+        assertEquals(200, body.get("code").asInt(), body.toString());
+        return body.get("data").get("ticketId").asText();
+    }
+
+    private static JsonNode accept(MockMvc http, ObjectMapper json, long actor, String ticket, long version) throws Exception {
+        authenticate(actor);
+        JsonNode body = json.readTree(http.perform(post("/api/rendezvous/tickets/" + ticket + "/accept").contentType(MediaType.APPLICATION_JSON)
+                .content("{\"expectedVersion\":" + version + "}")).andReturn().getResponse().getContentAsString());
+        assertEquals(200, body.get("code").asInt(), body.toString());
+        return body.get("data");
+    }
+
+    private static JsonNode read(MockMvc http, ObjectMapper json, long actor, String ticket) throws Exception {
+        authenticate(actor);
+        JsonNode body = json.readTree(http.perform(get("/api/rendezvous/tickets/" + ticket)).andReturn().getResponse().getContentAsString());
+        assertEquals(200, body.get("code").asInt(), body.toString());
+        return body.get("data");
+    }
+
+    private static JsonNode postEmpty(MockMvc http, ObjectMapper json, long actor, String path) throws Exception {
+        authenticate(actor);
+        JsonNode body = json.readTree(http.perform(post(path)).andReturn().getResponse().getContentAsString());
+        assertEquals(200, body.get("code").asInt(), body.toString());
+        return body.get("data");
+    }
+
+    private static void authenticate(long actor) {
+        AppUser app = new AppUser();
+        app.setUserId(actor);
+        SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(new LoginAppUser(9L, app), null, Collections.emptyList()));
+    }
+
     private static AnnotationConfigApplicationContext enabled() {
         AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
         context.getEnvironment().getPropertySources().addFirst(new MapPropertySource("w16-pairing",
@@ -170,13 +299,6 @@ class RendezvousPairingCompositionTest {
 
     private static boolean causedBy(Throwable error, Class<? extends Throwable> type) {
         for (Throwable cursor = error; cursor != null; cursor = cursor.getCause()) if (type.isInstance(cursor)) return true;
-        return false;
-    }
-
-    private static boolean messageChain(Throwable error, String token) {
-        for (Throwable cursor = error; cursor != null; cursor = cursor.getCause()) {
-            if (cursor.getMessage() != null && cursor.getMessage().contains(token)) return true;
-        }
         return false;
     }
 
