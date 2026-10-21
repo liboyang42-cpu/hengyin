@@ -281,9 +281,19 @@
               <text wx:if="{{checkoutState === 'unknown'}}" class="dc-muted">
                 支付结果待确认，请勿重复支付。
               </text>
+              <text wx:if="{{capabilityState === 'loading'}}" class="dc-muted">正在读取开通能力…</text>
+              <text wx:elif="{{capabilityState === 'error'}}" class="dc-muted">开通能力读取失败，请重新读取。</text>
+              <text wx:elif="{{chargeEnabled === false}}" class="dc-muted">自助开通暂未开放，可联系运营。</text>
+              <text wx:if="{{subscriptionState === 'loading'}}" class="dc-muted">正在读取生效权益…</text>
+              <text wx:elif="{{subscriptionState === 'error'}}" class="dc-muted">权益读取失败，当前状态未知。</text>
+              <text wx:elif="{{subscriptionState === 'empty'}}" class="dc-muted">尚未查到生效授予记录。</text>
+              <text wx:if="{{checkoutState === 'entitlementPending'}}" class="dc-muted">支付已确认，正在核对权益。</text>
+              <text wx:elif="{{checkoutState === 'entitlementUnknown'}}" class="dc-muted">支付已确认，权益待核对，请勿重复购买。</text>
+              <cy-cell wx:if="{{capabilityState === 'error' || subscriptionState === 'error' || checkoutState === 'entitlementUnknown'}}"
+                title="重新读取权益" arrow="{{false}}" required="{{false}}" bind:tap="retryEntitlements" />
               <!-- BL-108 已生效权益(只读):不展示价格、不做续费入口 -->
               <block wx:if="{{activeSubs.length}}">
-                <text class="dc-muted">已开通</text>
+                <text class="dc-muted">生效授予记录</text>
                 <view class="dc-choice" wx:for="{{activeSubs}}" wx:key="key">
                   <view>
                     <text>{{item.name}}</text>
