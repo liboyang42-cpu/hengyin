@@ -10,28 +10,29 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import static com.chengyinhub.business.service.rendezvous.MyBatisRendezvousConsentStore.Mode.FORMAL;
 import static com.chengyinhub.business.service.rendezvous.MyBatisRendezvousConsentStore.Mode.ISOLATED_PERSISTENCE_EVALUATION;
 
 /**
- * Default-off pairing composition. The property lives on this class and defaults to false.
- * Formal mode is uncontracted, so the bean method does not construct a scheduler.
- * {@link #evaluation} is not a bean. It does not run a pair and does not insert rules,
- * facts, or quota. Reviewed eligibility rows are the only facts; no member-profile reader is wired.
+ * Pairing composition. The property on this class defaults to false, so no bean is registered
+ * until that configuration is turned on. {@link #formal} then validates one DataSource, session
+ * and transaction manager and wires the real ledger charge. It does not insert rules or start a loop.
+ * Reviewed rows in {@code w16_eligibility_fact} are the only age, region and window facts.
  */
 @Configuration
 public class RendezvousPairingComposition {
     public static final String ENABLED_PROPERTY = "chengyinhub.w16.pairing";
     public static final boolean DEFAULT_ENABLED = false;
-    /** Consent store has no formal persistence mode, and no fact provider is contracted. */
-    public enum FormalMode { UNCONTRACTED }
-    public static final FormalMode FORMAL_MODE = FormalMode.UNCONTRACTED;
-    public static final String FACT_PROVIDER = "UNCONTRACTED";
+    /** Reviewed fact table. Member profile columns are not a source. */
+    public static final String FACT_PROVIDER = "w16_eligibility_fact";
 
     public static final class Pairing {
         public final RendezvousConsentService consent;
+        public final RendezvousVersionedPolicy policy;
         public final RendezvousPoolScheduler scheduler;
-        private Pairing(RendezvousConsentService consent, RendezvousPoolScheduler scheduler) {
+        private Pairing(RendezvousConsentService consent, RendezvousVersionedPolicy policy, RendezvousPoolScheduler scheduler) {
             this.consent = consent;
+            this.policy = policy;
             this.scheduler = scheduler;
         }
     }
@@ -39,29 +40,41 @@ public class RendezvousPairingComposition {
     @Bean
     @ConditionalOnProperty(name = ENABLED_PROPERTY, havingValue = "true", matchIfMissing = DEFAULT_ENABLED)
     public Pairing rendezvousPairing(DataSource authority, SqlSessionTemplate session, DataSourceTransactionManager manager) {
-        return formal(authority, session, manager);
+        return formal(authority, session, manager, Clock.systemUTC());
     }
 
-    /** Resources may agree. Formal mode still refuses and does not build a scheduler. */
-    public static Pairing formal(DataSource authority, SqlSessionTemplate session, DataSourceTransactionManager manager) {
-        requireConsistent(authority, session, manager);
-        throw new IllegalStateException("W16_PAIRING_FORMAL_MODE_UNCONTRACTED");
+    @Bean
+    @ConditionalOnProperty(name = ENABLED_PROPERTY, havingValue = "true", matchIfMissing = DEFAULT_ENABLED)
+    public RendezvousConsentService rendezvousConsentService(Pairing pairing) { return pairing.consent; }
+
+    @Bean
+    @ConditionalOnProperty(name = ENABLED_PROPERTY, havingValue = "true", matchIfMissing = DEFAULT_ENABLED)
+    public RendezvousVersionedPolicy rendezvousVersionedPolicy(Pairing pairing) { return pairing.policy; }
+
+    /** Property-on assembly. Uses {@link MyBatisRendezvousConsentStore.Mode#FORMAL}. Does not run a pair. */
+    public static Pairing formal(DataSource authority, SqlSessionTemplate session, DataSourceTransactionManager manager, Clock clock) {
+        return assemble(FORMAL, authority, session, manager, clock);
     }
 
-    /** Explicit isolated evaluation. Not a Spring bean and not started. */
+    /** Isolated local trial. Not a Spring bean. */
     public static Pairing evaluation(DataSource authority, SqlSessionTemplate session,
+            DataSourceTransactionManager manager, Clock clock) {
+        return assemble(ISOLATED_PERSISTENCE_EVALUATION, authority, session, manager, clock);
+    }
+
+    private static Pairing assemble(MyBatisRendezvousConsentStore.Mode mode, DataSource authority, SqlSessionTemplate session,
             DataSourceTransactionManager manager, Clock clock) {
         requireConsistent(authority, session, manager);
         if (clock == null) throw new IllegalStateException("W16_PAIRING_DEPENDENCY_MISSING");
-        MyBatisRendezvousConsentStore store = new MyBatisRendezvousConsentStore(ISOLATED_PERSISTENCE_EVALUATION, session, manager);
+        MyBatisRendezvousConsentStore store = new MyBatisRendezvousConsentStore(mode, session, manager);
         RendezvousProtocolMapper protocol = session.getMapper(RendezvousProtocolMapper.class);
         RendezvousContactLedger ledger = new RendezvousContactLedger(session.getMapper(RendezvousContactMapper.class));
         MyBatisRendezvousWaiting waiting = new MyBatisRendezvousWaiting(protocol, ledger);
         RendezvousVersionedPolicy policy = new RendezvousVersionedPolicy(
                 new MyBatisRendezvousCatalog(protocol, session.getMapper(RendezvousEligibilityMapper.class)),
                 session.getMapper(ImBlockMapper.class));
-        RendezvousConsentService consent = new RendezvousConsentService(store, policy, clock, waiting);
-        return new Pairing(consent, new RendezvousPoolScheduler(consent, policy, waiting, clock));
+        RendezvousConsentService consent = new RendezvousConsentService(store, policy, clock, ledger::charge);
+        return new Pairing(consent, policy, new RendezvousPoolScheduler(consent, policy, waiting, clock));
     }
 
     private static void requireConsistent(DataSource authority, SqlSessionTemplate session, DataSourceTransactionManager manager) {

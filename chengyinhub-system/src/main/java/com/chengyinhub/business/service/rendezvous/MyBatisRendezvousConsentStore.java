@@ -10,12 +10,13 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 import org.springframework.transaction.support.TransactionTemplate;
 import static com.chengyinhub.business.service.rendezvous.RendezvousConsentService.*;
 
-/** Durable pilot adapter. No Spring bean/controller/production mode is registered.
- * A database guard row serializes consent operations across JVMs. Correctness takes
- * priority over throughput for this bounded pilot; sharding requires a new lock contract.
+/** Durable consent store. Not a Spring bean; {@link RendezvousPairingComposition} builds it.
+ * {@link Mode#FORMAL} and {@link Mode#ISOLATED_PERSISTENCE_EVALUATION} both run this mapper
+ * inside the caller's transaction manager. {@link Mode#DISABLED} refuses every call.
+ * A guard row serializes consent operations. Sharding needs a new lock contract.
  */
 public final class MyBatisRendezvousConsentStore implements Store {
-    public enum Mode { DISABLED, ISOLATED_PERSISTENCE_EVALUATION }
+    public enum Mode { DISABLED, ISOLATED_PERSISTENCE_EVALUATION, FORMAL }
     private final Mode mode;
     private final RendezvousConsentMapper mapper;
     private final TransactionTemplate transactions;
@@ -34,7 +35,7 @@ public final class MyBatisRendezvousConsentStore implements Store {
         transactions.setTimeout(10);
     }
     public <T> T transaction(Function<Transaction, T> work) {
-        if (mode != Mode.ISOLATED_PERSISTENCE_EVALUATION) throw new IllegalStateException("W16_PERSISTENCE_DISABLED");
+        if (mode != Mode.ISOLATED_PERSISTENCE_EVALUATION && mode != Mode.FORMAL) throw new IllegalStateException("W16_PERSISTENCE_DISABLED");
         // Service rejections can be raised after committed cleanup; joining an outer transaction
         // would silently turn that cleanup back into a rollback. Never nest this boundary.
         if (TransactionSynchronizationManager.isActualTransactionActive()) throw new IllegalStateException("W16_NESTED_TRANSACTION_FORBIDDEN");
