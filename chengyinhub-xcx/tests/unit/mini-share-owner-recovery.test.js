@@ -139,3 +139,106 @@ test('ready read, business retry and transport failure preserve their separate s
     assert.deepEqual(await retry, { state: 'error', session: null })
   }
 })
+
+const { createRequestClient } = require('../../utils/transport/request-client.js')
+function transportHarness(onRequest) {
+  const h = harness(), wire = []
+  const client = createRequestClient({
+    getBaseUrl: () => 'https://example.invalid',
+    getUserID: h.app.getUserID, getAuthorization: h.app.getAuthorization,
+    wxRequest(options) {
+      wire.push(options)
+      if (onRequest) onRequest(h, wire)
+      return { abort() {} }
+    },
+  })
+  h.app.sendRequest = client.send
+  h.wire = wire
+  h.reply = (index, body) => wire[index].success({ statusCode: 200, data: body })
+  return h
+}
+test('real transport: P insert between R1 DELETE and late success cannot erase failed R2 pending', async () => {
+  const h = transportHarness()
+  let snapshotExists = false
+  const publish = share.publishShareSnapshot(h.app, h.storage, SESSION)
+  await Promise.resolve()
+  const r1 = share.revokeShareSnapshots(h.app, h.storage)
+  assert.equal(h.wire.length, 2)
+  snapshotExists = false // R1 DELETE commits; its HTTP response remains delayed.
+  snapshotExists = true // The already in-flight P INSERT commits afterwards.
+  h.reply(0, { code: 200, data: { token: TOKEN } })
+  assert.deepEqual(await publish, { token: TOKEN, reason: '' })
+  const r2 = share.revokeShareSnapshots(h.app, h.storage)
+  h.wire[2].fail({ errMsg: 'request:fail' })
+  assert.equal(await r2, false)
+  h.reply(1, { code: 200 })
+  assert.equal(await r1, false, 'superseded success cannot settle the newer revoke intent')
+  assert.equal(h.values[h.key('A')], 1)
+  const read = share.readShareSnapshot(h.app, TOKEN)
+  h.reply(3, snapshotExists ? { code: 200, data: { track: [] } } : { code: 500, msg: '这条足迹已不再公开' })
+  assert.equal((await read).state, 'ready', 'this protection does not invent a backend tombstone')
+  const retry = share.publishShareSnapshot(h.app, h.storage, SESSION)
+  assert.equal(h.wire[4].url, 'https://example.invalid/api/roam/share/revoke')
+  assert.equal(h.wire[4].header.Authorization, 'session-A-1')
+  snapshotExists = false
+  h.reply(4, { code: 200 })
+  await Promise.resolve()
+  await Promise.resolve()
+  assert.equal(h.wire[5].url, 'https://example.invalid/api/roam/share/snapshot')
+  h.reply(5, { code: 200, data: { token: TOKEN } })
+  assert.deepEqual(await retry, { token: TOKEN, reason: '' })
+  assert.equal(h.values[h.key('A')], undefined)
+})
+test('real transport: synchronous reentry creates a distinct newer revoke, never singleflights it', async () => {
+  let nested
+  const h = transportHarness((state, wire) => {
+    if (wire.length === 1) nested = share.revokeShareSnapshots(state.app, state.storage)
+  })
+  const first = share.revokeShareSnapshots(h.app, h.storage)
+  assert.equal(h.wire.length, 2)
+  h.reply(1, { code: 500, msg: 'temporarily unavailable' })
+  assert.equal(await nested, false)
+  h.reply(0, { code: 200 })
+  assert.equal(await first, false)
+  assert.equal(h.values[h.key('A')], 1)
+})
+test('real transport: older completion cannot clear a newer pending intent or restore one after success', async () => {
+  const h = transportHarness()
+  const first = share.revokeShareSnapshots(h.app, h.storage)
+  const second = share.revokeShareSnapshots(h.app, h.storage)
+  h.reply(0, { code: 200 })
+  assert.equal(await first, false)
+  assert.equal(h.values[h.key('A')], 1)
+  h.reply(1, { code: 200 })
+  assert.equal(await second, true)
+  assert.equal(h.values[h.key('A')], undefined)
+  const third = share.revokeShareSnapshots(h.app, h.storage)
+  const fourth = share.revokeShareSnapshots(h.app, h.storage)
+  h.reply(3, { code: 200 })
+  assert.equal(await fourth, true)
+  h.wire[2].fail({ errMsg: 'request:fail' })
+  assert.equal(await third, false)
+  assert.equal(h.values[h.key('A')], undefined)
+})
+test('real transport: different accounts keep independent revoke intents and session rejection', async () => {
+  const h = transportHarness()
+  const a = share.revokeShareSnapshots(h.app, h.storage)
+  h.switchTo('B')
+  const b = share.revokeShareSnapshots(h.app, h.storage)
+  h.reply(0, { code: 200 }) // Real transport rejects this old account callback.
+  h.reply(1, { code: 200 })
+  assert.equal(await a, false)
+  assert.equal(await b, true)
+  assert.equal(h.values[h.key('A')], 1)
+  assert.equal(h.values[h.key('B')], undefined)
+})
+test('real transport: sequential successful revokes retain the persisted boolean contract', async () => {
+  const h = transportHarness()
+  for (let i = 0; i < 2; i++) {
+    const result = share.revokeShareSnapshots(h.app, h.storage)
+    assert.equal(h.values[h.key('A')], 1)
+    h.reply(i, { code: 200 })
+    assert.equal(await result, true)
+    assert.equal(h.values[h.key('A')], undefined)
+  }
+})

@@ -1,5 +1,4 @@
 'use strict'
-
 /**
  * 第二轮拍板 17:足迹分享卡点开直接看那条足迹。
  *
@@ -13,10 +12,9 @@
  */
 const { clipSavedTrackForSharing, readSharePrivacy, VISIBILITY } = require('./roam-route-privacy.js')
 const { limitTrack } = require('./roam-track-simplify.js')
-
 const REVOKE_PENDING_PREFIX = 'roam_share_revoke_pending:'
 const TOKEN_RE = /^[a-f0-9]{32}$/
-
+const revokeGenerations = new Map()
 function send(app, options) {
   return new Promise((resolve) => {
     app.sendRequest(Object.assign({ hideLoading: true, silentError: true }, options, {
@@ -75,9 +73,11 @@ function writeRevokePending(storage, key, pending) {
 /** 作废本人全部分享快照。返回 Promise<boolean>;false 时待办标记留着,下次发布前补做。 */
 function revokeShareSnapshots(app, storage) {
   const key = revokePendingKey(app)
+  const generation = (revokeGenerations.get(key) || 0) + 1
+  revokeGenerations.set(key, generation)
   writeRevokePending(storage, key, true)
   return send(app, { url: '/api/roam/share/revoke', method: 'POST', data: {} }).then((res) => {
-    if (!isOk(res)) return false
+    if (!isOk(res) || revokeGenerations.get(key) !== generation) return false
     writeRevokePending(storage, key, false)
     return true
   })
