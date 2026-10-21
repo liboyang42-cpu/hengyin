@@ -241,6 +241,26 @@ class RendezvousEligibilityContactTest {
         assertEquals(version, jdbc.queryForObject("SELECT version FROM w16_rendezvous_match", Integer.class));
     }
 
+    @Test void blockStopsTheSharedMatchAndARepeatDoesNotReviveIt() {
+        readyRules(2);
+        fact(1, "v1", 20, "CN-SH", 80_000);
+        fact(2, "v1", 21, "CN-SH", 80_000);
+        View a = consent.join(1, "pool", "v1", 100_000);
+        View b = consent.join(2, "pool", "v1", 100_000);
+        scheduler.pairOnce("pool");
+        consent.accept(1, a.ticketId, 1);
+        consent.accept(2, b.ticketId, 2);
+        assertEquals(2, count("w16_match_reservation"));
+        store.transaction(tx -> { consent.terminateCurrentMatch(tx, 1, 2); return null; });
+        assertEquals(0, count("w16_match_reservation"));
+        assertEquals(MatchState.SAFETY_STOPPED, consent.read(1, a.ticketId).matchState);
+        assertEquals(TicketState.CANCELLED, consent.read(2, b.ticketId).ticketState);
+        int version = jdbc.queryForObject("SELECT version FROM w16_rendezvous_match", Integer.class);
+        store.transaction(tx -> { consent.terminateCurrentMatch(tx, 2, 1); return null; });
+        assertEquals(version, jdbc.queryForObject("SELECT version FROM w16_rendezvous_match", Integer.class));
+        assertEquals(MatchState.SAFETY_STOPPED, consent.accept(1, a.ticketId, version).matchState);
+    }
+
     @Test void revocationStopsTheMatchAfterItsOwnCharge() {
         readyRules(1);
         fact(1, "v1", 20, "CN-SH", 80_000);

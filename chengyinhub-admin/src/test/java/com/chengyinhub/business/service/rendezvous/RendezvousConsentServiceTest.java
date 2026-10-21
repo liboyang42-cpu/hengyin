@@ -210,6 +210,26 @@ class RendezvousConsentServiceTest {
         assertEquals(TicketState.RESERVED, store.ticket(p[1].ticketId).state);
         assertEquals("missing-side", store.match(p[0].matchId).secondTicket);
     }
+    @Test void terminateCurrentMatchStopsOnceAndAcceptDoesNotRevive() {
+        View[] p = pair();
+        service.accept(1, p[0].ticketId, 1);
+        service.accept(2, p[1].ticketId, 2);
+        View waiting = join(4);
+        store.transaction(tx -> {
+            service.terminateCurrentMatch(tx, 1, 2);
+            assertEquals(MatchState.SAFETY_STOPPED, tx.match(p[0].matchId).state);
+            assertEquals(TicketState.CANCELLED, tx.ticket(p[0].ticketId).state);
+            assertEquals(TicketState.CANCELLED, tx.ticket(p[1].ticketId).state);
+            long version = tx.match(p[0].matchId).version;
+            service.terminateCurrentMatch(tx, 2, 1);
+            assertEquals(version, tx.match(p[0].matchId).version);
+            service.terminateCurrentMatch(tx, 4, 5);
+            return null;
+        });
+        assertEquals(TicketState.WAITING, store.ticket(waiting.ticketId).state);
+        assertEquals(MatchState.SAFETY_STOPPED, service.accept(1, p[0].ticketId, 99).matchState);
+        assertEquals(MatchState.SAFETY_STOPPED, service.read(2, p[1].ticketId).matchState);
+    }
     @Test void projectionContainsNoPartnerIdentityOrSecretFields() {
         Set<String> fields = new HashSet<>();
         for (java.lang.reflect.Field f : View.class.getFields()) fields.add(f.getName());

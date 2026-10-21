@@ -41,5 +41,6 @@
 - `verifyParticipants(tx, ticketId)` 不证明归属，也不要求双方接受。有 actor 的调用方用下面这一条。
 - `verifyParticipants(tx, actor, ticketId, expectedMatchId, expectedPeer, requireMutualAccepted, now)`。`now` 是事务里已经取到的服务端时刻。空的 match 或 peer 表示没有提供该约束；提供了但不一致则失败关闭。`requireMutualAccepted` 为真时必须双方都有接受回执。不读接触计数，不写库。
 - `terminateCurrent(tx, actor, peer, ticketId, reason, now)`。`EXIT` 要求 peer 为空且票据属于 actor，双方预约一起释放。`BLOCK` 与 `REPORT` 只停止双方当前共同 match，持久状态都是 `SAFETY_STOPPED`，不另存原因码。已终止再调用不写第二笔。缺一侧时在任何保存之前失败。
+- H 使用 `void terminateCurrentMatch(Transaction tx, long actor, long other)`。它在已打开的 guard 事务里把两人当前共同 match 写成 `SAFETY_STOPPED`，两侧预约一起释放。没有共同 active match 时不写。再调用不增加 version。解除拉黑不会把这条 match 写回 `PROPOSED` 或 `MUTUAL_ACCEPTED`。
 
 公开 HTTP 的 join、accept、cancel 路径不变。
