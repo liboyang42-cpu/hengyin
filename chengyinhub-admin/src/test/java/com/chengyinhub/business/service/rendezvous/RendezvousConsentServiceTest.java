@@ -235,6 +235,7 @@ class RendezvousConsentServiceTest {
         for (java.lang.reflect.Field f : View.class.getFields()) fields.add(f.getName());
         assertEquals(new HashSet<>(Arrays.asList("ticketId", "matchId", "publicPlace", "ticketState", "matchState", "acceptedByMe", "acceptedByOther", "expiresAt", "version")), fields);
     }
+    /** Explicit test admission. It does not write a quota row. */
     static final Admission permitsPairing = (matchId, first, second, pool, now) -> { };
     static final class MutableClock extends Clock {
         long now = 10000;
