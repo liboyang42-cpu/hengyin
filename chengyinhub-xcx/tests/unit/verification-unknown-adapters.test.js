@@ -238,7 +238,7 @@ for (const [file, method] of entries) {
     assert.equal(h.requests.length, 0);
     assert.ok(h.messages.some(message => /未提交/.test(message)));
   });
-  test(file + ' 成功回执清理存储失败仍保留UNKNOWN，重建不重发', () => {
+  test(file + ' 成功回执清理存储失败不丢失原待办，重建不重发', () => {
     const storage = durableStorage(); storage.removeStorageSync = () => { throw Error('unavailable'); };
     const h = harness(file, method, false, undefined, storage); h.invoke();
     h.requests[0].success({ code: 200, msg: '核销成功' }); h.dispose();
@@ -299,4 +299,14 @@ test('同账号同端点原目标在四入口共享持久锁，不能换入口�
   for (const [file, method] of entries.slice(1)) {
     const next = harness(file, method, false, undefined, storage); next.invoke(); assert.equal(next.requests.length, 0);
   }
+});
+
+test('明确回执清理后读取异常不能改报无持久记录的UNKNOWN', () => {
+  const storage = durableStorage(); let finish, outcome;
+  const originalRead = storage.getStorageSync;
+  storage.removeStorageSync = key => { delete storage.values[key]; storage.getStorageSync = () => { throw Error('unavailable'); }; };
+  const flow = verification.createVerificationWorkflow({ storage, getOwner: () => 'synthetic', setTimer: () => 1, clearTimer() {} });
+  flow.run('synthetic:/synthetic-target', done => { finish = done; }, result => { outcome = result; });
+  finish({ status: 'success' }); assert.equal(outcome.status, 'success');
+  storage.getStorageSync = originalRead; assert.equal(Object.keys(storage.values).length, 0);
 });

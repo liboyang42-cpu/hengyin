@@ -149,7 +149,9 @@ function createVerificationWorkflow(options) {
           closed = true;
           result = result || unknownResult();
           // 迟回包只能结算捕获的原待办，绝不按当前账号或新请求删除。
-          if ((result.status === 'success' || result.status === 'failed') && !removeOriginal(meta, row)) result = unknownResult();
+          // 已证实的回执不因本机清理异常改报 UNKNOWN：删除可能已经完成。
+          // 未清掉的原记录仍会在下一次 run/重建时阻止 POST。
+          if (result.status === 'success' || result.status === 'failed') removeOriginal(meta, row);
           done(result);
         }
         try { return start(finish); }
