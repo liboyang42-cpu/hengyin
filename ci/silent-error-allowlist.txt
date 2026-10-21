@@ -152,6 +152,8 @@ chengyinhub-xcx/subpackageB/pages/im/chat/index.js 3  # 2026-10-10 举报、清�
 chengyinhub-xcx/subpackageB/pages/im/chat/index.js 1  # 2026-10-10 拉黑对象读取：复用本人会话接口，失败由 _showBlockConfirmation 在原账号/会话可见时提示，后台结果待 onShow；失败释放记录可重试，旧回包不覆盖新确认。
 chengyinhub-xcx/subpackageB/pages/im/chat/index.js 1  # 2026-10-15 BL-87 处理结果半屏回读审核记录:失败(含 403/404)由半屏内 cy-inline-error 如实回显并可重试,关闭全局 toast 免双弹
 chengyinhub-xcx/subpackageB/pages/im/chat/index.js 1  # 2026-10-20 城瘾小助手「我的举报」:举报进度读不到照常给入口(我的举报页自有失败态),回到本页 onShow 重读未读数
+chengyinhub-xcx/subpackageB/pages/im/chat/index.js 1  # 2026-10-21 原发送回执回读：失败保留原请求身份且不重发，手动重试保留消息失败态并释放本轮查询可再次点击；跨页面恢复只查回执，旧账号/页面回包由viewGuard淘汰，避免后台查询toast污染当前页
+chengyinhub-xcx/subpackageB/pages/im/chat/index.js 1  # 2026-10-21 路线卡隐私重核：轮询前先遮蔽旧投影，查询失败保持“路线已不可用”且后续轮询/onShow可重查；不把失败当公开、不恢复旧私密字段，后台多页读取不重复toast
 chengyinhub-xcx/subpackageB/pages/im/list/index.js 1  # 2026-08-25 状态底座:失败落页内错误态(cy-error / cy-inline-error / state:error / stale-error),通用 toast 会双弹
 chengyinhub-xcx/subpackageMember/complaint/index.js 1  # 2026-10-13 主题选项读取失败保留空白，不渲染伪主题；实际读取与举报提交的反馈另列下方实名记录
 chengyinhub-xcx/subpackageB/pages/im/list/index.js 1  # 2026-10-20 收件箱/发件箱:合作邀请读不到落 inviteError 局部错误(cy-inline-error 带重试),不影响会话列表
