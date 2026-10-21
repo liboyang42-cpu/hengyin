@@ -39,13 +39,12 @@ function clearInvalidSession() {
   if (session && typeof session.clearSession === 'function') session.clearSession();
 }
 
-const { resolveVerificationResult } = require('../../../utils/merchant-verification.js');
+const { resolveVerificationResult, classifyVerificationOutcome, createVerificationWorkflow } = require('../../../utils/merchant-verification.js');
 const { resolveVerificationScan } = require('../../../utils/verification-scan.js');
 const { getScene } = require('../../../utils/scene-registry.js');
 const { pushScene, popScene, currentScene, exitDecision } = require('../../../utils/scene-stack.js');
 const { hasTodoSummaryPayload, buildProjectCards, isEndedProject, localToday, attachVisitTexts } = require('../../../utils/merchant-workbench.js');
 const { resolveApplicationResponse, decorateApplication } = require('../../../utils/merchant-identity-policy.js');
-const { createWriteActionWorkflow } = require('../../../utils/write-action-workflow.js');
 const { offerVerificationReadback } = require('../../../utils/verification-readback.js');
 const { createGameSessionClient } = require('../../../utils/game-session-client.js');
 const { attachMerchantGameEntries } = require('../utils/game-session-merchant.js');
@@ -1090,9 +1089,11 @@ Page({
 
   _submitVerification(key, loadingTitle, options, callback) {
     const that = this;
+    const owner = String(app.getUserID && app.getUserID() || '');
+    key = owner + ':' + key;
     const verificationEpoch = this._verificationEpoch || 0;
     const scopeKey = this._merchantScopeKey || '';
-    if (!this._verificationWorkflow) this._verificationWorkflow = createWriteActionWorkflow({ deadlineMs: 15000 });
+    if (!this._verificationWorkflow) this._verificationWorkflow = createVerificationWorkflow({ deadlineMs: 15000, storage: wx, getOwner: () => app.getUserID && app.getUserID() });
     if (this._verificationWorkflow.isBusy(key)) {
       cyToast('核销处理中，请勿重复提交');
       return false;
@@ -1101,15 +1102,16 @@ Page({
     const submitted = this._verificationWorkflow.run(key, function (done) {
       return app.sendRequest(Object.assign({}, options, {
         autoErrorToast: false,
-        success(res) { done({ status: 'success', response: res }); },
-        fail() { done({ status: 'failed', response: { code: 500, msg: '网络错误，请重试' } }); },
-        successStatusAbnormal(res) {
-          done({ status: 'failed', response: { code: 500, msg: (res && res.msg) || '核销失败，请重试' } });
+        success(res) { done(classifyVerificationOutcome(res, 'success', undefined, options)); },
+        fail(res, status) { done(classifyVerificationOutcome(res, 'fail', status, options)); },
+        successStatusAbnormal(res, status) {
+          done(classifyVerificationOutcome(res, 'abnormal', status, options));
         }
       }));
     }, function (result) {
       loading.hide();
-      if (verificationEpoch !== (that._verificationEpoch || 0)
+      if (owner !== String(app.getUserID && app.getUserID() || '')
+        || verificationEpoch !== (that._verificationEpoch || 0)
         || scopeKey !== (that._merchantScopeKey || '')) return;
       if (result.status === 'unknown') {
         callback({ code: 202, msg: '核销结果待确认，请勿重复核销；请先查看核销记录' }, result);

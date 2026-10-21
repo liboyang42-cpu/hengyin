@@ -376,6 +376,19 @@ PY_CAPTURE
                 result, calls = self.capture(directory, 'check_trace_runtime', resolution_defect=defect)
                 self.assertNotEqual(0, result.returncode, defect)
                 self.assertNotIn('PASS target trace runtime', result.stdout)
+                if defect in ('vdso-mismatch', 'anonymous-mismatch'):
+                    kind = 'anonymous' if defect == 'anonymous-mismatch' else 'named'
+                    self.assertIn('at line 5: reason=address_mismatch '
+                                  'expected=0x7f1838e65000 actual=0x5678 '
+                                  'vdso_seen=False kind=' + kind + ' previous_kind=none raw=',
+                                  result.stderr)
+                elif defect in ('named-duplicate', 'anonymous-duplicate', 'anonymous-mixed'):
+                    previous = 'named' if defect == 'named-duplicate' else 'anonymous'
+                    kind = 'anonymous' if defect == 'anonymous-duplicate' else 'named'
+                    self.assertIn('at line 6: reason=duplicate_mapping '
+                                  'expected=0x7f1838e65000 actual=0x7f1838e65000 '
+                                  'vdso_seen=True kind=' + kind + ' previous_kind=' + previous + ' raw=',
+                                  result.stderr)
                 self.assertEqual(1, len(calls))
                 self.assertIn('--list', calls[0])
                 self.assertFalse((directory / 'reached').exists())

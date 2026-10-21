@@ -16,15 +16,16 @@ function mountProfile(options = {}) {
   const requests = []
   const toasts = []
   let definition = null
+  const persisted = {}
   const wx = {
     showToast(opts) { toasts.push(opts || {}) },
     hideToast() {},
     showLoading() {},
     hideLoading() {},
     showModal(opts) { if (opts && opts.success) opts.success({ confirm: false }) },
-    getStorageSync() { return '' },
-    setStorageSync() {},
-    removeStorageSync() {},
+    getStorageSync(key) { return persisted[key] || '' },
+    setStorageSync(key, value) { persisted[key] = JSON.parse(JSON.stringify(value)) },
+    removeStorageSync(key) { delete persisted[key] },
     scanCode(opts) { if (opts && opts.success) opts.success({ result: options.scanResult || '' }) },
     setNavigationBarColor() {},
     setBackgroundColor() {},
