@@ -113,7 +113,12 @@ for line_number, raw_line in enumerate(Path(sys.argv[2]).read_text().splitlines(
         virtual = re.fullmatch(r"\t \(0x([0-9a-fA-F]+)\)", raw_line)
     if virtual is not None:
         if vdso_seen or int(virtual.group(1), 16) != int(auxv["SYSINFO_EHDR"], 16):
-            raise ValueError(f"Target vDSO does not match unique process auxiliary address at line {line_number}: {ascii(raw_line)}")
+            raise ValueError(
+                f"Target vDSO does not match unique process auxiliary address at line {line_number}: "
+                f"reason={'duplicate_mapping' if vdso_seen else 'address_mismatch'} "
+                f"expected={int(auxv['SYSINFO_EHDR'], 16):#x} actual={int(virtual.group(1), 16):#x} "
+                f"vdso_seen={vdso_seen} kind={'anonymous' if anonymous_virtual else 'named'} "
+                f"previous_kind={vdso_kind if vdso_seen else 'none'} raw={ascii(raw_line)}")
         vdso_seen = True
         vdso_kind = "anonymous" if anonymous_virtual else "named"
         continue
