@@ -43,6 +43,7 @@ test('举报:对方没发过消息就不提交', () => {
 
 test('进会话读服务端拉黑态:我拉黑了对方 → 禁用输入', () => {
   const { page, requests } = loadChat()
+  page.data.myId = 1
   page.data.conversationId = 100
   page.loadMessages()
   requests[0].success({ code: 200, data: { list: [], blocked: true, blockedByMe: true } })
@@ -52,6 +53,7 @@ test('进会话读服务端拉黑态:我拉黑了对方 → 禁用输入', () =>
 
 test('进会话读服务端拉黑态:对方拉黑了我 → 也禁用', () => {
   const { page, requests } = loadChat()
+  page.data.myId = 1
   page.data.conversationId = 100
   page.loadMessages()
   requests[0].success({ code: 200, data: { list: [], blocked: true, blockedByMe: false } })
