@@ -449,13 +449,54 @@ jobs:
 
   mini_program:
     name: Mini program static checks
+    needs: [changes, mini_unit, mini_static]
+    if: ${{ always() && (github.event_name == 'workflow_dispatch' || needs.changes.outputs.xcx == 'true') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Verify all mini program checks
+        env:
+          CHANGES_RESULT: ${{ needs.changes.result }}
+          UNIT_RESULT: ${{ needs.mini_unit.result }}
+          STATIC_RESULT: ${{ needs.mini_static.result }}
+        run: |
+          test "$CHANGES_RESULT" = success
+          test "$UNIT_RESULT" = success
+          test "$STATIC_RESULT" = success
+
+  mini_unit:
+    name: Mini program unit shard (${{ matrix.shard }}/20)
     needs: changes
     if: ${{ github.event_name == 'workflow_dispatch' || needs.changes.outputs.xcx == 'true' }}
     runs-on: ubuntu-latest
-    # ★2026-09-01:单测只跑一遍 TZ=Asia/Shanghai。第二遍 America/Los_Angeles 把 ~4800 条
-    #   翻倍,额度上不值;UTC+8 已经能抓住「本地日 ≠ UTC 日」那类结构性缺陷。
-    # 全量单测在 hosted runner 已达 28 分钟，保留后续静态门禁的执行时间。
-    timeout-minutes: 60
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        shard: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+    env:
+      TZ: Asia/Shanghai
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          filter: blob:none
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify mini program unit discovery manifest
+        run: node ci/xcx-unit-manifest.js --selftest
+      - name: Run mini program unit contracts
+        working-directory: chengyinhub-xcx
+        run: node --test --test-shard=${{ matrix.shard }}/20 "tests/unit/**/*.test.js"
+
+  mini_static:
+    name: Mini program static gates
+    needs: changes
+    if: ${{ github.event_name == 'workflow_dispatch' || needs.changes.outputs.xcx == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
     # ★ 用**生产用户的时区**跑,不要用 runner 默认的 UTC。
     # 时区相关的缺陷在 UTC 下结构性地抓不到:UTC 机器上「UTC 日」恒等于「本地日」,
     # 于是 toISOString() 与本地取值两种写法完全等价,写错了也永远绿。
@@ -476,8 +517,6 @@ jobs:
       - name: Verify mini program unit discovery manifest
         # 必须在 node --test 之外先跑；否则 glob 漏掉 smoke 本身时仍可假绿。
         run: node ci/xcx-unit-manifest.js --selftest
-      - name: Run mini program unit contracts
-        run: npm --prefix chengyinhub-xcx run test:unit
       - name: Check mini program UI integrity
         run: npm --prefix chengyinhub-xcx run lint:ui
       - name: Check mini program RequestBody contracts
