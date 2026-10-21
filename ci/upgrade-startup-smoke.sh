@@ -64,12 +64,67 @@ destination.chmod(0o555)
 PY_TRACE
 }
 
+# Diagnostic output only: never changes the preflight verdict or container grants.
+report_trace_runtime_evidence() {
+  python3 - "$OUT" <<'PY_EVIDENCE'
+import hashlib
+import json
+import os
+from pathlib import Path
+import re
+import subprocess
+import sys
+
+root = Path(sys.argv[1])
+def emit(label, text):
+    print('TRACE_EVIDENCE ' + label)
+    for number, line in enumerate(text.splitlines(), 1):
+        print(str(number) + ': ' + ascii(line))
+for name in ('trace-resolved', 'trace-loader-debug'):
+    path = root / name
+    if path.is_file():
+        emit(name, path.read_text(errors='replace'))
+bundle = root / 'trace-runtime'
+manifest = json.loads((bundle / 'manifest.json').read_text())
+emit('manifest', json.dumps(manifest, sort_keys=True))
+environment = {key: value for key, value in os.environ.items() if not key.startswith('LD_')}
+environment['LC_ALL'] = 'C'
+for name, expected_hash in sorted(manifest['files'].items()):
+    if name not in ('loader', 'strace') and not re.fullmatch(r'lib/[A-Za-z0-9_.+-]+', name):
+        raise ValueError('Unexpected diagnostic bundle member')
+    target = bundle / name
+    measured = hashlib.sha256(target.read_bytes()).hexdigest()
+    emit('bundle-file', json.dumps({'name': name, 'sha256': measured, 'manifest_sha256': expected_hash}, sort_keys=True))
+    result = subprocess.run(['readelf', '-h', '-l', '-d', '-n', str(target)],
+        env=environment, capture_output=True, text=True)
+    emit('readelf ' + name + ' exit=' + str(result.returncode), result.stdout + result.stderr)
+PY_EVIDENCE
+  # Only publicly pinned image loader settings, never unrelated environment values.
+  docker image inspect "$JDK_IMAGE" --format '{{json .Config.Env}}' | python3 -c '
+import json, re, sys
+presence_only = {"LD_PRELOAD", "LD_AUDIT", "LD_LIBRARY_PATH", "GLIBC_TUNABLES"}
+selected = {}
+for entry in json.load(sys.stdin) or []:
+    key, separator, value = entry.partition("=")
+    if key == "LD_TRACE_LOADED_OBJECTS" and separator:
+        selected[key] = value if re.fullmatch(r"[0-9]{1,10}", value) else "<non-numeric>"
+    elif key in presence_only:
+        selected[key] = {"present": True}
+print("TRACE_EVIDENCE image-loader-env " + json.dumps(selected, ensure_ascii=True, sort_keys=True))
+'
+}
+
 check_trace_runtime() {
+  local resolution_result=0
   docker run --rm --name "$RUN_NAME-trace-check" --network none --read-only --cap-drop ALL \
     --user "$(id -u):$(id -g)" -v "$OUT/trace-runtime:/trace-runtime:ro" \
-    -e LD_SHOW_AUXV=1 --entrypoint /trace-runtime/loader "$JDK_IMAGE" \
-    --inhibit-cache --library-path /trace-runtime/lib --list /trace-runtime/strace > "$OUT/trace-resolved"
-  python3 - "$OUT/trace-runtime/manifest.json" "$OUT/trace-resolved" <<'PY_RESOLVED'
+    -e LD_SHOW_AUXV=1 -e LD_DEBUG=files --entrypoint /trace-runtime/loader "$JDK_IMAGE" \
+    --inhibit-cache --library-path /trace-runtime/lib --list /trace-runtime/strace > "$OUT/trace-resolved" 2> "$OUT/trace-loader-debug" || resolution_result=$?
+  if [ "$resolution_result" -ne 0 ]; then
+    if declare -F report_trace_runtime_evidence >/dev/null; then report_trace_runtime_evidence || true; fi
+    return "$resolution_result"
+  fi
+  python3 - "$OUT/trace-runtime/manifest.json" "$OUT/trace-resolved" <<'PY_RESOLVED' || resolution_result=$?
 import json
 from pathlib import Path
 import re
@@ -141,6 +196,10 @@ if seen != set(expected):
     raise ValueError(f"Target trace runtime dependency missing: {sorted(set(expected) - seen)}")
 print(f"PASS target trace runtime same-process vDSO={int(auxv['SYSINFO_EHDR'], 16):#x}; kind={vdso_kind}; bundled dependencies={len(seen)}")
 PY_RESOLVED
+  if [ "$resolution_result" -ne 0 ]; then
+    if declare -F report_trace_runtime_evidence >/dev/null; then report_trace_runtime_evidence || true; fi
+    return "$resolution_result"
+  fi
   docker run --rm --name "$RUN_NAME-trace-check" --network none --read-only --cap-drop ALL \
     --user "$(id -u):$(id -g)" -v "$OUT/trace-runtime:/trace-runtime:ro" \
     --entrypoint /trace-runtime/loader "$JDK_IMAGE" \

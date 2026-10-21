@@ -181,7 +181,7 @@ class TraceDockerCommandTest(unittest.TestCase):
         for target in ('/trace-runtime', '/evidence/trace-runtime'):
             self.assertIn(str(directory) + '/trace-runtime:' + target + ':ro', argv)
 
-    def capture(self, directory, name, fail=False, resolution_defect=None):
+    def capture(self, directory, name, fail=False, resolution_defect=None, report_result=None):
         env = os.environ.copy()
         env.update(OUT=str(directory), RUN_NAME='synthetic-startup', JDK_IMAGE='pinned-image',
                    JAR='/owned jar/app.jar', FIXTURE='/owned fixture', MYSQL_IP='172.18.0.2',
@@ -269,7 +269,8 @@ elif '--version' in sys.argv:
     print('strace -- version synthetic')
 PY_CAPTURE
 """ + ('  return 9\n' if fail else '') + '}\n'
-        command = docker + shell_function(name) + '\n' + name + '\ntouch "$OUT/reached"\n'
+        report = '' if report_result is None else ('report_trace_runtime_evidence() { touch "$OUT/report-called"; return ' + str(report_result) + '; }\n')
+        command = docker + report + shell_function(name) + '\n' + name + '\ntouch "$OUT/reached"\n'
         result = subprocess.run(['/bin/bash', '-euc', command], env=env, capture_output=True, text=True)
         calls = [json.loads(line) for line in (directory / 'argv.json').read_text().splitlines()]
         return result, calls
@@ -325,6 +326,9 @@ PY_CAPTURE
                     self.assertNotIn('SYS_PTRACE', argv)
                     self.assertEqual('/trace-runtime/loader', argv[argv.index('--entrypoint') + 1])
                 self.assertIn('--list', calls[0])
+                self.assertIn('LD_DEBUG=files', calls[0])
+                if not fail:
+                    self.assertFalse(any('LD_DEBUG' in value for value in calls[-1]))
                 self.assertEqual('-e', calls[0][calls[0].index('LD_SHOW_AUXV=1') - 1])
                 if not fail:
                     self.assertEqual('--version', calls[1][-1])
@@ -361,6 +365,49 @@ PY_CAPTURE
                 self.assertIn('PASS target trace runtime same-process vDSO=0x7f1838e65000; kind=anonymous; bundled dependencies=2',
                               result.stdout)
                 self.assertTrue((directory / 'reached').exists())
+
+    def test_evidence_output_cannot_approve_original_runtime_rejection(self):
+        for report_result in (0, 9):
+            with self.subTest(report_result=report_result), tempfile.TemporaryDirectory() as temp:
+                directory = pathlib.Path(temp)
+                result, calls = self.capture(directory, 'check_trace_runtime',
+                    resolution_defect='anonymous-mismatch', report_result=report_result)
+                self.assertNotEqual(0, result.returncode)
+                self.assertIn('reason=address_mismatch', result.stderr)
+                self.assertTrue((directory / 'report-called').exists())
+                self.assertFalse((directory / 'reached').exists())
+                self.assertEqual(1, len(calls))
+                self.assertNotIn('PASS target trace runtime', result.stdout)
+
+    def test_report_only_reads_metadata_escapes_rows_and_filters_image_environment(self):
+        with tempfile.TemporaryDirectory() as temp:
+            directory = pathlib.Path(temp)
+            bundle = directory / 'trace-runtime'; bundle.mkdir()
+            (bundle / 'loader').write_bytes(b'synthetic non-ELF diagnostic fixture')
+            (bundle / 'manifest.json').write_text(json.dumps({'interpreter': '/lib64/ld-linux-x86-64.so.2',
+                'files': {'loader': 'recorded-hash'}}))
+            (directory / 'trace-resolved').write_text('AT_SYSINFO_EHDR: 0x1234\n\t (0x5678)\nlinux-vdso.so.1 (0x1234)\n')
+            (directory / 'trace-loader-debug').write_text('link map\x1b[31m\n')
+            command = ("docker() { printf '%s\\n' \'[\"LD_TRACE_LOADED_OBJECTS=2\",\"LD_PRELOAD=preload-value-must-not-appear\",\"UNRELATED_VALUE=must-not-appear\"]\'; }\n"
+                + shell_function('report_trace_runtime_evidence') + '\nreport_trace_runtime_evidence\n')
+            result = subprocess.run(['/bin/bash', '-euc', command], capture_output=True, text=True,
+                env={**os.environ, 'OUT': str(directory), 'JDK_IMAGE': 'pinned-image'})
+            self.assertEqual(0, result.returncode, result.stderr)
+            self.assertIn('linux-vdso.so.1 (0x1234)', result.stdout)
+            self.assertIn('"LD_TRACE_LOADED_OBJECTS": "2"', result.stdout)
+            self.assertIn('"LD_PRELOAD": {"present": true}', result.stdout)
+            self.assertIn('recorded-hash', result.stdout)
+            self.assertIn(hashlib.sha256((bundle / 'loader').read_bytes()).hexdigest(), result.stdout)
+            self.assertIn('\\x1b', result.stdout)
+            self.assertNotIn('\x1b', result.stdout)
+            self.assertNotIn('must-not-appear', result.stdout)
+            redacted = subprocess.run(['/bin/bash', '-euc', command.replace(
+                'LD_TRACE_LOADED_OBJECTS=2', 'LD_TRACE_LOADED_OBJECTS=non-numeric-must-not-appear')],
+                capture_output=True, text=True,
+                env={**os.environ, 'OUT': str(directory), 'JDK_IMAGE': 'pinned-image'})
+            self.assertEqual(0, redacted.returncode, redacted.stderr)
+            self.assertIn('"LD_TRACE_LOADED_OBJECTS": "<non-numeric>"', redacted.stdout)
+            self.assertNotIn('must-not-appear', redacted.stdout)
 
     def test_auxv_identity_metadata_and_anonymous_mapping_fail_closed(self):
         for defect in ('auxv-missing', 'auxv-duplicate', 'auxv-malformed', 'auxv-zero',
