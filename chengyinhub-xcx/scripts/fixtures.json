@@ -9655,7 +9655,9 @@
    "accessState": "",
    "accessError": "",
    "entryError": "",
-   "recruitCount": 0
+   "recruitCount": 0,
+   "deckGhosts": 0,
+   "couponRate": ""
   },
   "dropped": [],
   "switchKeys": [
