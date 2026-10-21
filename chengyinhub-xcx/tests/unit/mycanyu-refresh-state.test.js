@@ -193,3 +193,29 @@ test('原报名Long字符串不经Number丢精度，畸形服务端行不产生�
   clickVoucher(page, 1); clickVoucher(page, 21);
   assert.equal(sandbox.navigations.length, 1);
 });
+
+test('导航回调前连点只发一次，失败可重试，成功返页重读后可再打开', () => {
+  const page = loadPage(); page.onLoad();
+  sandbox.requests[0].success({ code: 200, data: [joined(21)] });
+  let pending;
+  global.wx.navigateTo = options => { pending = options; sandbox.navigations.push(options.url); };
+  clickVoucher(page, 21); clickVoucher(page, 21);
+  assert.equal(sandbox.navigations.length, 1);
+  pending.fail({}); clickVoucher(page, 21); assert.equal(sandbox.navigations.length, 2);
+  const oldFail = pending.fail;
+  page.onHide(); page.onShow(); clickVoucher(page, 21); assert.equal(sandbox.navigations.length, 2);
+  sandbox.requests.at(-1).success({ code: 200, data: [joined(21)] });
+  clickVoucher(page, 21); oldFail({}); clickVoucher(page, 21);
+  assert.equal(sandbox.navigations.length, 3);
+});
+
+test('未知核销值不能被共享读模型强转成已完成；返页旧快照仅展示不能导航', () => {
+  const page = loadPage(); page.onLoad();
+  const row = { ...joined(21, true), cmsTopic: { startDate: '2099-01-01', endDate: '2099-01-02' } };
+  sandbox.requests[0].success({ code: 200, data: [row] });
+  assert.equal(page.data.list[0].stateText, '未开始');
+  assert.equal(page.data.list[0].verificationText, '核销状态待确认');
+  page.onHide(); page.onShow(); assert.equal(page.data.refreshing, true);
+  clickVoucher(page, 21); assert.equal(sandbox.navigations.length, 0);
+  sandbox.requests.at(-1).fail({}); clickVoucher(page, 21); assert.equal(sandbox.navigations.length, 0);
+});

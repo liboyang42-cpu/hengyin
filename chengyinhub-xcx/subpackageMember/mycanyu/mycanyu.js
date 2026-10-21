@@ -56,6 +56,7 @@ Page({
     if (this._participationDisposed) return;
     const reload = this._participationHidden || this._participationOwner !== currentOwner();
     this._participationHidden = false;
+    this._voucherNavigation = null;
     if (reload) this.getList();
   },
   onHide() {
@@ -96,7 +97,11 @@ Page({
   normalize(item) {
     const isTopic = Number(item.ownerType) === 1;
     const source = isTopic ? (item.cmsTopic || {}) : (item.cmsActivity || {});
-    const orderState = summarizeOrderState(item);
+    const verification = item.verificationStatus;
+    const orderState = summarizeOrderState(Object.assign({}, item, {
+      verificationStatus: verification === 1 || verification === '1' ? 1
+        : verification === 0 || verification === '0' ? 0 : undefined,
+    }));
     const isFreeExplore = Number(item.purchaseKind) === 3 || Number(source.productType) === 2;
     return Object.assign({}, item, {
       sourceName: source.name || '活动信息待补充',
@@ -132,6 +137,7 @@ Page({
       this.setData({ list: [], sceneStack: [], sceneCurrent: null });
     }
     this._participationOwner = owner;
+    this._participationReadEpoch = null;
     const epoch = this._participationEpoch = (this._participationEpoch || 0) + 1;
     const current = () => !that._participationHidden && !that._participationDisposed
       && epoch === that._participationEpoch && owner === currentOwner();
@@ -170,6 +176,7 @@ Page({
         if (res && (res.code === '200' || res.code === 200) && isRecordList(res.data)) {
           that.allList = res.data.map(item => that.normalize(item));
           that._participationListOwner = owner;
+          that._participationReadEpoch = epoch;
           that.renderList();
           that.setData({ firstLoading: false, refreshing: false, errorMsg: '' });
           return;
@@ -204,12 +211,18 @@ Page({
   },
   viewVoucher(e) {
     if (this._participationHidden || this._participationDisposed || !currentOwner()
-        || this._participationListOwner !== currentOwner()) return;
+        || this._participationListOwner !== currentOwner() || this._voucherNavigation
+        || this._participationReadEpoch !== this._participationEpoch) return;
     const id = registrationId(e && e.currentTarget && e.currentTarget.dataset && e.currentTarget.dataset.id);
     if (!id) return;
     const row = (this.data.list || []).find(item => registrationId(item.id) === id);
     if (!row) return;
-    wx.navigateTo({ url: '/subpackageMember/signup/index?focusId=' + encodeURIComponent(row.id) });
+    const navigation = { owner: currentOwner(), epoch: this._participationEpoch };
+    this._voucherNavigation = navigation;
+    const release = () => {
+      if (this._voucherNavigation === navigation) this._voucherNavigation = null;
+    };
+    wx.navigateTo({ url: '/subpackageMember/signup/index?focusId=' + encodeURIComponent(row.id), fail: release });
   },
   blockSceneTouch() {},
   closeScene() {

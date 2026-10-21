@@ -1,6 +1,13 @@
 const toast = require('../../utils/toast.js');
 const { isLoginRequired, retryLogin } = require('../../utils/session/login-reload.js');
 const app = getApp();
+function walletOwner() { return typeof app.getUserID === 'function' ? String(app.getUserID() || '') : ''; }
+function exactRegistrationId(value) {
+  if (typeof value === 'number') return Number.isSafeInteger(value) && value > 0 ? String(value) : '';
+  if (typeof value !== 'string' || !/^\d+$/.test(value)) return '';
+  const digits = value.replace(/^0+/, '');
+  return digits && (digits.length < 19 || (digits.length === 19 && digits <= '9223372036854775807')) ? digits : '';
+}
 // UI-17 返修(2026-09-18):cy-nav-bar 是 fixed(fixed 导航不占文档流),页面正文必须自己让出
 // 导航实高,否则卡片顶端会钻到导航底下被截掉一截(总控截图实证)。拿不到 globalData 时用兜底值。
 const appGlobal = (app && app.globalData) || {};
@@ -41,6 +48,8 @@ Page({
     currentSwiperTicket: 0,
     walletState: 'loading', // loading | ready | error | login | empty —— 由两条支线的状态合成
     walletErrorMsg: '',
+    focusState: '',
+    focusError: '',
     slides: [],
     indicatorDots: true,
     vertical: false,
@@ -66,6 +75,12 @@ Page({
     const that = this;
     that._unloaded = false;
     that._refreshOnShow = false;
+    that._walletOwner = walletOwner();
+    const focus = options && options.focusId;
+    that._explicitFocus = !!focus;
+    that._focusId = exactRegistrationId(focus) ? String(focus) : '';
+    that.setData({ focusState: focus ? (that._focusId ? 'loading' : 'missing') : '',
+      focusError: focus && !that._focusId ? '原报名编号无效，请返回参与记录重新打开' : '' });
     // 两条支线的原料。data 里没有它们,所以在这里立好,别让后面的 concat 撞上 undefined
     that._topic = { list: [], state: 'loading', err: '' };
     that._activity = { list: [], state: 'loading', err: '' };
@@ -74,20 +89,20 @@ Page({
     that.getTopicList()
     that.loadMyTeams()
 
-    // §7.6:订单详情「继续探索/查看票夹」带 focusId 过来 → 定位到对应票卡
-    if (options.focusId) {
-      that._focusId = String(options.focusId);
-      that._focusTries = 0;
-      that._tryFocusTicket();
-    }
+    if (that._focusId) that._tryFocusTicket();
   },
 
   onShow() {
     // onLoad 已发首批请求；只有隐藏后返回才重读服务端票状态。
-    if (!this._refreshOnShow || this._unloaded) return;
+    const ownerChanged = this._walletOwner !== walletOwner();
+    if ((!this._refreshOnShow && !ownerChanged) || this._unloaded) return;
+    this._walletOwner = walletOwner();
     this._refreshOnShow = false;
     const current = (this.data.ticketList || [])[this.data.currentSwiperTicket];
-    if (current) this._focusId = String(current.id);
+    if (current && !this._focusId) this._focusId = String(current.id);
+    if (ownerChanged) this._focusId = '';
+    if (ownerChanged && this.data.focusState) this.setData({ focusState: 'missing', focusError: '账号已变更，请从当前账号的参与记录重新打开凭证' });
+    else if (this._focusId && this._explicitFocus) this.setData({ focusState: 'loading', focusError: '' });
     this._focusTries = 0;
     this._topic = { list: [], state: 'loading', err: '' };
     this._activity = { list: [], state: 'loading', err: '' };
@@ -104,6 +119,8 @@ Page({
     this._topicRequestSeq = (this._topicRequestSeq || 0) + 1;
     this._activityRequestSeq = (this._activityRequestSeq || 0) + 1;
     this._teamsRequestSeq = (this._teamsRequestSeq || 0) + 1;
+    this._focusLookupSeq = (this._focusLookupSeq || 0) + 1;
+    this._focusLookupPending = null;
   },
 
   onHide() {
@@ -116,26 +133,72 @@ Page({
     this._invalidateWalletRequests();
   },
 
-  // 轮询等票夹列表就绪,匹配 focusId(=registrationId,与票卡 item.id 一致)→ 切到对应子tab与 swiper 卡
+  // 首屏未命中时使用已有本人报名详情接口，不轮询内存或依赖分页 total。
   _tryFocusTicket() {
-    if (this._unloaded || this._refreshOnShow) return;
-    const fid = this._focusId;
+    if (this._unloaded || this._refreshOnShow || this._walletOwner !== walletOwner()) return;
+    const fid = exactRegistrationId(this._focusId);
     if (!fid) return;
     const list = this.data.ticketList || [];
-    const i = list.findIndex(x => String(x.id) === fid);
+    const i = list.findIndex(x => exactRegistrationId(x.id) === fid);
     if (i >= 0) {
       this._focusId = '';
-      this.setData({ currentSwiperTicket: i, topicBg: list[i].wImg || this.data.topicBg });
+      this._focusLookupSeq = (this._focusLookupSeq || 0) + 1;
+      this._focusLookupPending = null;
+      this.setData({ currentSwiperTicket: i, topicBg: list[i].wImg || this.data.topicBg,
+        focusState: this._explicitFocus ? 'ready' : '', focusError: '' });
       this.syncCurrentTeam();
       return;
     }
-    if ((this._focusTries = (this._focusTries || 0) + 1) < 15) {
-      setTimeout(() => this._tryFocusTicket(), 200);
-    }
+    if (this.data.focusState === 'missing' || (this._topic || {}).state === 'loading'
+        || (this._activity || {}).state === 'loading') return;
+    if (!this._explicitFocus) { this._focusId = ''; return; }
+    this._readFocusTicket();
   },
 
+  _readFocusTicket() {
+    if (this._unloaded || this._refreshOnShow || this._walletOwner !== walletOwner() || this._focusLookupPending) return;
+    const fid = exactRegistrationId(this._focusId);
+    if (!fid) return;
+    const owner = walletOwner();
+    const seq = this._focusLookupSeq = (this._focusLookupSeq || 0) + 1;
+    this._focusLookupPending = { seq };
+    const current = () => !this._unloaded && !this._refreshOnShow && owner === walletOwner()
+      && seq === this._focusLookupSeq && exactRegistrationId(this._focusId) === fid;
+    const missing = () => {
+      if (!current()) return;
+      this._focusLookupPending = null;
+      this.setData({ focusState: 'missing', focusError: '未定位到原报名凭证，请返回参与记录确认或重试', currentTeam: null });
+    };
+    app.sendRequest({
+      url: '/api/registration/info', method: 'POST', hideLoading: true, silentError: true,
+      data: { id: this._focusId },
+      success: res => {
+        if (!current()) return;
+        const row = res && res.data;
+        if (!res || ![200, '200'].includes(res.code) || !row || Array.isArray(row)
+            || exactRegistrationId(row.id) !== fid || ![1, '1', 2, '2'].includes(row.ownerType)
+            || ![2, '2'].includes(row.registrationStatus)
+            || (row.memberId != null && String(row.memberId) !== owner)) { missing(); return; }
+        const key = row.ownerType === 1 || row.ownerType === '1' ? '_topic' : '_activity';
+        const branch = this[key] || { list: [] };
+        this[key] = { list: branch.list.filter(item => exactRegistrationId(item.id) !== fid).concat([row]), state: 'ready', err: '' };
+        this._focusLookupPending = null;
+        this.rebuildTicketList();
+        this._tryFocusTicket();
+      },
+      fail: missing, successStatusAbnormal: missing,
+    });
+  },
+  retryFocus() {
+    if (!exactRegistrationId(this._focusId)) return;
+    if (this._unloaded || this._refreshOnShow || this._walletOwner !== walletOwner()) return;
+    this.setData({ focusState: 'loading', focusError: '' });
+    this._readFocusTicket();
+  },
 
   _openTicket(item, kind) {
+    if (this._unloaded || this._refreshOnShow || this._walletOwner !== walletOwner()
+        || this.data.focusState === 'loading' || this.data.focusState === 'missing') return;
     if (!item || !item.id) {
       toast('跳转失败');
       return;
@@ -208,7 +271,13 @@ Page({
         wImg: a.imgUrl || '/images/route_city_cover.png',
       });
     });
-    const list = topics.concat(activities);
+    const seen = new Set();
+    const list = topics.concat(activities).filter(item => {
+      const id = exactRegistrationId(item.id);
+      if (!id) return true;
+      if (seen.has(id)) return false;
+      seen.add(id); return true;
+    });
     const ts = (this._topic || {}).state;
     const as = (this._activity || {}).state;
     let state;
@@ -231,6 +300,7 @@ Page({
       walletErrorMsg: (this._topic || {}).err || (this._activity || {}).err || '',
       topicBg: cur.wImg || this.data.topicBg,
     });
+    if (this._focusId) this._tryFocusTicket();
   },
 
   /* 点开一张票。两种票的落点不同,由 kind 分流 —— 这就是合并列表之后
@@ -258,12 +328,13 @@ Page({
      silentError:队伍拉不到只是这一行不出,不该拿一个全局 toast 盖在票夹上说「出错了」。 */
   loadMyTeams() {
     const that = this;
+    const owner = walletOwner();
     const requestSeq = this._teamsRequestSeq = (this._teamsRequestSeq || 0) + 1;
     app.sendRequest({
       url: '/api/team/my', method: 'POST', hideLoading: true, silentError: true,
       data: {},
       success(res) {
-        if (that._unloaded || requestSeq !== that._teamsRequestSeq) return;
+        if (that._unloaded || that._refreshOnShow || owner !== walletOwner() || requestSeq !== that._teamsRequestSeq) return;
         const rows = res && res.code == '200' && Array.isArray(res.data) ? res.data : null;
         if (!rows) return;            // 读不到 ≠ 没有队伍,保持这一行不出,不写一个空态
         const index = {};
@@ -317,6 +388,7 @@ Page({
 
   getTopicList: function () {
     var that = this;
+    const owner = walletOwner();
     const requestSeq = that._topicRequestSeq = (that._topicRequestSeq || 0) + 1;
     that._topic = { list: (that._topic && that._topic.list) || [], state: 'loading', err: '' };
     that.rebuildTicketList();
@@ -331,7 +403,7 @@ Page({
         pageSize: app.getPageSize(),
       },
       success: function (res) {
-        if (that._unloaded || requestSeq !== that._topicRequestSeq) return;
+        if (that._unloaded || that._refreshOnShow || owner !== walletOwner() || requestSeq !== that._topicRequestSeq) return;
         const payload = res && res.data;
         if (!(res && res.code == "200" && payload && Array.isArray(payload.rows))) {
           that._topic = { list: that._topic.list, state: 'error',
@@ -355,14 +427,14 @@ Page({
         }
       },
       fail: function (err, statusCode) {
-        if (that._unloaded || requestSeq !== that._topicRequestSeq) return;
+        if (that._unloaded || that._refreshOnShow || owner !== walletOwner() || requestSeq !== that._topicRequestSeq) return;
         // 原为空函数:请求失败被整个吞掉,列表停在 [] ⇒ 页面显示「还没有票!」= 错误伪装成空态
         that._topic = { list: that._topic.list, state: 'error',
           err: (err && err.errMsg) || '网络开了点小差', login: isLoginRequired(app, err, statusCode) };
         that.rebuildTicketList();
       },
       complete: function () {
-        if (that._unloaded || requestSeq !== that._topicRequestSeq) return;
+        if (that._unloaded || that._refreshOnShow || owner !== walletOwner() || requestSeq !== that._topicRequestSeq) return;
         that._reportHalfFailure();
         that.setData({
           nodata: that._topic.list.length < 1 ? true : false,
@@ -383,6 +455,7 @@ Page({
 
   getActivityList: function () {
     var that = this;
+    const owner = walletOwner();
     const requestSeq = that._activityRequestSeq = (that._activityRequestSeq || 0) + 1;
     that._activity = { list: (that._activity && that._activity.list) || [], state: 'loading', err: '' };
     that.rebuildTicketList();
@@ -397,7 +470,7 @@ Page({
         pageSize: app.getPageSize(),
       },
       success: function (res) {
-        if (that._unloaded || requestSeq !== that._activityRequestSeq) return;
+        if (that._unloaded || that._refreshOnShow || owner !== walletOwner() || requestSeq !== that._activityRequestSeq) return;
         const payload = res && res.data;
         if (!(res && res.code == "200" && payload && Array.isArray(payload.rows))) {
           that._activity = { list: that._activity.list, state: 'error',
@@ -421,14 +494,14 @@ Page({
         }
       },
       fail: function (err, statusCode) {
-        if (that._unloaded || requestSeq !== that._activityRequestSeq) return;
+        if (that._unloaded || that._refreshOnShow || owner !== walletOwner() || requestSeq !== that._activityRequestSeq) return;
         // 原为空函数:请求失败被整个吞掉,列表停在 [] ⇒ 页面显示「还没有票!」= 错误伪装成空态
         that._activity = { list: that._activity.list, state: 'error',
           err: (err && err.errMsg) || '网络开了点小差', login: isLoginRequired(app, err, statusCode) };
         that.rebuildTicketList();
       },
       complete: function () {
-        if (that._unloaded || requestSeq !== that._activityRequestSeq) return;
+        if (that._unloaded || that._refreshOnShow || owner !== walletOwner() || requestSeq !== that._activityRequestSeq) return;
         that._reportHalfFailure();
         that.setData({
           nodata: that._activity.list.length < 1 ? true : false,
