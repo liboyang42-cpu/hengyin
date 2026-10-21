@@ -72,25 +72,32 @@ function readRevokePending(app, storage) {
   try { return storage.getStorageSync(revokePendingKey(app)) === 1 } catch (_) { return true }
 }
 
-function writeRevokePending(app, storage, pending) {
+function writeRevokePending(storage, key, pending) {
   try {
-    if (pending) storage.setStorageSync(revokePendingKey(app), 1)
-    else storage.removeStorageSync(revokePendingKey(app))
+    if (pending) storage.setStorageSync(key, 1)
+    else storage.removeStorageSync(key)
   } catch (_) {}
 }
 
 /** 作废本人全部分享快照。返回 Promise<boolean>;false 时待办标记留着,下次发布前补做。 */
 function revokeShareSnapshots(app, storage) {
-  writeRevokePending(app, storage, true)
+  const key = revokePendingKey(app)
+  writeRevokePending(storage, key, true)
   return send(app, { url: '/api/roam/share/revoke', method: 'POST', data: {} }).then((res) => {
     if (!isOk(res)) return false
-    writeRevokePending(app, storage, false)
+    writeRevokePending(storage, key, false)
     return true
   })
 }
 
 /** Promise<{ token, reason }>:reason = '' | 'private' | 'revoke-pending' | 'failed'。 */
 function publishShareSnapshot(app, storage, session) {
+  const owner = revokePendingKey(app)
+  // 与现有 request-client/session-manager 一致：账号与会话凭据共同识别在途所有者。
+  const currentAuthorization = () => typeof app.getAuthorization === 'function'
+    ? app.getAuthorization() : app.globalData && app.globalData.authorization
+  const authorization = currentAuthorization()
+  const isCurrentOwner = () => owner === revokePendingKey(app) && authorization === currentAuthorization()
   const privacy = readSharePrivacy(storage)
   if (privacy.visibility === VISIBILITY.PRIVATE) return Promise.resolve({ token: '', reason: 'private' })
   const { exactSessionId } = require('./roam-recovery.js')
@@ -100,12 +107,14 @@ function publishShareSnapshot(app, storage, session) {
   if (!Number.isSafeInteger(clientTs) || clientTs <= 0) return Promise.resolve({ token: '', reason: 'failed' })
   const ready = readRevokePending(app, storage) ? revokeShareSnapshots(app, storage) : Promise.resolve(true)
   return ready.then((revoked) => {
+    if (!isCurrentOwner()) return { token: '', reason: 'failed' }
     if (!revoked) return { token: '', reason: 'revoke-pending' }
     return send(app, {
       url: '/api/roam/share/snapshot',
       method: 'POST',
       data: { clientTs, sessionId, snapshot: JSON.stringify(buildSharePayload(session, privacy)) },
     }).then((res) => {
+      if (!isCurrentOwner()) return { token: '', reason: 'failed' }
       const token = isOk(res) && res.data && res.data.token
       return TOKEN_RE.test(token || '') ? { token, reason: '' } : { token: '', reason: 'failed' }
     })
@@ -121,7 +130,8 @@ function readShareSnapshot(app, token) {
     app.sendRequest({
       url: '/api/roam/share/snapshot', method: 'GET', data: { token }, hideLoading: true, silentError: true,
       success: (res) => resolve(isOk(res) && res.data && typeof res.data === 'object' && !Array.isArray(res.data)
-        ? { state: 'ready', session: res.data } : { state: 'gone', session: null }),
+        ? { state: 'ready', session: res.data }
+        : { state: res && res.msg === '这条足迹已不再公开' ? 'gone' : 'error', session: null }),
       successStatusAbnormal: () => resolve({ state: 'error', session: null }),
       fail: () => resolve({ state: 'error', session: null }),
     })
