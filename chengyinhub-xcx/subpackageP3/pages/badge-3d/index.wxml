@@ -13,7 +13,7 @@
     <image class="b3__fallback" wx:if="{{renderState !== 'ready'}}" src="{{fallbackSrc}}" mode="aspectFit" binderror="onFallbackError" aria-role="img" aria-label="{{name}}，{{sub}}，静态预览" />
     <!-- 双样式分流:enamel=3D珐琅转台;glow=二维发光大卡(与勋章墙同族观感,CSS 光环) -->
     <block wx:if="{{style=='enamel'}}">
-      <xr-badge wx:if="{{!unsupported}}" id="xr" class="b3__xr {{renderState === 'ready' ? '' : 'b3__xr--loading'}}" src="{{src}}"
+      <xr-badge wx:if="{{rendererMounted && !unsupported}}" id="xr" class="b3__xr {{renderState === 'ready' ? '' : 'b3__xr--loading'}}" src="{{src}}"
                 reduced="{{reducedMotion}}" bind:unsupported="onUnsupported" bind:loaded="onLoaded" bind:xready="onXrReady" />
     </block>
     <!-- glow=勋章墙同一台波点引擎渲染单枚(用户裁决:不是 CSS 光圈,是那种波点) -->

@@ -314,6 +314,7 @@ var FS_PTS = [
 var ATLAS = 1024, CELL = 256, GRID = 4;   // 图集 4×4 × 256px,P0 上限 16 枚(超出的取前 16)
 
 function createEngine(opts) {
+  var disposed = false;
   var canvas = opts.canvas;
   // preserveDrawingBuffer:模拟器/截图链路读取 drawingBuffer 需要;整屏每帧全绘,无残留依赖
   var gl = canvas.getContext('webgl', { alpha: false, antialias: true, premultipliedAlpha: true, preserveDrawingBuffer: true });
@@ -421,9 +422,10 @@ function createEngine(opts) {
   }
 
   function loadEmblem(slot, url) {
-    if (!url) return;
+    if (disposed || !url) return;
     var img = off.createImage();
     img.onload = function () {
+      if (disposed) return;
       var x0 = (slot % GRID) * CELL, y0 = Math.floor(slot / GRID) * CELL;
       octx.fillStyle = '#000'; octx.fillRect(x0, y0, CELL, CELL);
       var s = Math.min((CELL - 48) / img.width, (CELL - 48) / img.height);
@@ -473,6 +475,7 @@ function createEngine(opts) {
   };
 
   function setBadges(list) {
+    if (disposed) return;
     S.badges = list.slice(0, GRID * GRID).map(function (b, i) {
       return {
         name: b.name, rarity: Math.max(0, Math.min(4, b.rarity | 0)),
@@ -560,6 +563,7 @@ function createEngine(opts) {
 
   var frameCount = 0, lastPixels = null;
   function render(now) {
+    if (disposed) return;
     frameCount++;
     if (atlasDirty) uploadAtlas();
     var t = (now - S.t0) / 1000;
@@ -640,7 +644,7 @@ function createEngine(opts) {
   // 帧循环 + 性能降档:前 90 帧均耗 >25ms → DPR=1 + 关漂浮粒子 + 弱化背景
   var lastT = 0;
   function frame() {
-    if (!S.running) return;
+    if (disposed || !S.running) return;
     var now = Date.now();
     if (lastT && !degraded) {
       frameDts.push(now - lastT);
@@ -661,6 +665,7 @@ function createEngine(opts) {
   // 减少动态效果：把入场/详情过渡直接推进到稳定终态，只画一帧且不续订 RAF。
   // 远程徽记稍后加载完成时，loadEmblem 会在 staticMode 下自动重画这一帧。
   function renderStatic() {
+    if (disposed) return;
     var now = Date.now();
     S.running = false;
     S.staticMode = true;
@@ -682,10 +687,10 @@ function createEngine(opts) {
   return {
     setBadges: setBadges,
     setInsets: setInsets,
-    start: function () { if (S.running) return; S.staticMode = false; S.running = true; lastT = 0; S.rafId = canvas.requestAnimationFrame(frame); },
-    stop: function () { S.running = false; if (S.rafId) canvas.cancelAnimationFrame(S.rafId); },
+    start: function () { if (disposed || S.running) return; S.staticMode = false; S.running = true; lastT = 0; S.rafId = canvas.requestAnimationFrame(frame); },
+    stop: function () { S.running = false; S.staticMode = false; if (S.rafId) canvas.cancelAnimationFrame(S.rafId); S.rafId = 0; },
     renderStatic: function () { renderStatic(); },
-    destroy: function () { this.stop(); ptCache = {}; },
+    destroy: function () { if (disposed) return; disposed = true; this.stop(); ptCache = {}; },
     setPointer: function (x, y) { S.ptr = { x: x, y: y }; S.hovIdx = hit(x, y); },
     clearPointer: function () { S.ptr = { x: -9999, y: -9999 }; S.hovIdx = -1; },
     tap: function (x, y) { return hit(x, y); },
@@ -701,6 +706,7 @@ function createEngine(opts) {
     // 回读当前帧(降采样 RGB,y 已翻正)。自动化视觉审用;P1 分享图同源复用。
     // 依赖 preserveDrawingBuffer:true(已开)。
     captureFrame: function (scale) {
+      if (disposed) return null;
       scale = scale || 4;
       var cw = canvas.width, ch = canvas.height;
       var w = Math.floor(cw / scale), h = Math.floor(ch / scale);

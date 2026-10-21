@@ -25,6 +25,7 @@ Page({
     renderState: 'loading',
     reducedMotion: readReducedMotion(),
     motionReduced: false,
+    rendererMounted: true,
     rarity: 0,
     style: 'enamel',   // glow=二维发光大卡 / enamel=3D珐琅转台(发布者选择,双样式统一路由)
   },
@@ -37,6 +38,8 @@ Page({
     return !this._renderHidden && !this._renderDisposed && epoch === this._renderEpoch;
   },
   _clearRendering() {
+    const xr = typeof this.selectComponent === 'function' ? this.selectComponent('#xr') : null;
+    if (xr && typeof xr.disposeRenderer === 'function') xr.disposeRenderer();
     for (const key of ['_xrTimer', '_glowTimer', '_glowDetailTimer']) {
       if (this[key]) clearTimeout(this[key]);
       this[key] = null;
@@ -70,6 +73,8 @@ Page({
       fallbackSrc: src,
       unsupported: false,
       renderState: 'loading',
+      rendererMounted: true,
+      motionReduced: false,
     });
     if (this.data.style === 'glow') this._scheduleGlow();
   },
@@ -170,6 +175,17 @@ Page({
   onShow() {
     if (this._renderDisposed) return;
     this._renderHidden = false;
+    if (this.data.style === 'enamel' && !this.data.unsupported && !this.data.rendererMounted) {
+      this._xrOk = false;
+      this._xrLoaded = false;
+      const mountEpoch = this._renderEpoch;
+      this.setData({ rendererMounted: true, renderState: 'loading', motionReduced: false }, () => {
+        if (!this._renderCurrent(mountEpoch) || this.data.unsupported) return;
+        const xr = typeof this.selectComponent === 'function' ? this.selectComponent('#xr') : null;
+        // hide/show 的视图更新若被合批，原实例仍须按新代次重建，不能停在已 dispose 的 canvas。
+        if (xr && typeof xr.resumeRenderer === 'function') xr.resumeRenderer();
+      });
+    }
     const reducedMotion = readReducedMotion();
     if (this.data.reducedMotion !== reducedMotion) this.setData({ reducedMotion });
     if (this.data.style === 'enamel') this.setData({ motionReduced: reducedMotion && this.data.renderState === 'ready' });
@@ -201,6 +217,7 @@ Page({
     this._renderHidden = true;
     this._renderEpoch = (this._renderEpoch || 0) + 1;
     this._clearRendering();
+    if (this.data.style === 'enamel') this.setData({ rendererMounted: false });
   },
   goBack() {
     if (getCurrentPages().length > 1) wx.navigateBack();
