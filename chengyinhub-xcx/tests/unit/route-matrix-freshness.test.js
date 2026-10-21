@@ -31,9 +31,10 @@ test('route-matrix 生成物必须与当前 app.json 和 scene 扫描逐字一�
   /* 2026-09-22 +1:Phase 3 藏品册页 subpackageP3/pages/object-cards/index(玩家侧卡片墙,个人页入口)。 */
   /* 2026-09-24 −1:Phase 0 实验室页随正式页接进玩法删除 ⇒ 132−1 = 131(按脚本重建实测)。 */
   /* 2026-10-14 +6:漫游上线(我的队伍、subpackageTools 5 个工具页)⇒ 130+6 = 136(按脚本重建实测)。 */
-  /* 2026-10-19 +2:移植共享基线 366b846f 官方线路列表/详情两页 ⇒ 136+2 = 138(按脚本重建实测)。 */
-  assert.equal(current.routes.length, 138)
-  assert.equal(matrix.counts.routes, 138)
+  /* 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新) +9:俱乐部勋章、核销记录、触达记录、主办控制台、积分明细、我的举报、举报进度、我的纠错、纠错进度 ⇒ 136+9 = 145(按脚本重建实测)。 */
+  /* 2026-10-20 合并主干官方线路两页，与本轮九页并集，145+2=147。 */
+  assert.equal(current.routes.length, 147)
+  assert.equal(matrix.counts.routes, 147)
   // 2026-09-02:+2 俱乐部客户列表与客户详情(club/customers、club/customer-detail)
   assert.equal(inventoryMatchesCurrent(matrix), true)
   // 2026-09-04 导演台整页收编:锚点换成新宿主页 topic-detail。这条要证的是

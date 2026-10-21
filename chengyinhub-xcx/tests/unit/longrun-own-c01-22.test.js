@@ -1,5 +1,4 @@
 'use strict';
-// Written only; NOT_RUN.
 const { test } = require('node:test'); const assert = require('node:assert/strict'); const path = require('node:path');
 function load() {
   let definition, member = '11'; const requests = [], feedback = [], reads = [];
@@ -39,3 +38,12 @@ for (const action of ['leadArrive', 'leadStart']) {
     assert.deepEqual(h.feedback, ['new fixture success']); assert.equal(h.reads.length, 1);
   });
 }
+
+test('A游玩页已绑定后切到B，不能在A页面发起新的集合签到', () => {
+  const h = load();
+  h.page._boundPlayOwner();
+  h.account('22');
+  h.page.leadArrive();
+  assert.equal(h.requests.length, 0);
+  assert.deepEqual(h.feedback, []);
+});

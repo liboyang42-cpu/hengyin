@@ -302,7 +302,7 @@ test('主题初始状态通过手机表单保存，编辑回填及 V2 提交保�
   page._doSubmit();
   const request = sent.find(r => r.url === '/api/topic/v2/update');
   assert.equal(JSON.parse(request.data).journeyRules, saved);
-  request.success({ code: 200, data: { topicId: 77, reviewState: 'PENDING' } });
+  request.success({ code: 200, data: { topicId: 77, published: false, reviewState: 'PENDING' } });
   assert.equal(page.data.resultSheet.title, '已提交审核');
   assert.doesNotMatch(page.data.resultSheet.sub, /已经发布/);
 });
@@ -311,7 +311,7 @@ test('V2 创建回执从 topicId 导航，不把对象写进 URL', () => {
   const page = makePage();
   page.onLoad({});
   page._doSubmit();
-  sent.find(r => r.url === '/api/topic/v2/create').success({ code: 200, data: { topicId: 123, reviewState: 'PENDING' } });
+  sent.find(r => r.url === '/api/topic/v2/create').success({ code: 200, data: { topicId: 123, published: false, reviewState: 'PENDING' } });
   assert.match(page._resultSheetNext, /topicId=123/);
   assert.doesNotMatch(page._resultSheetNext, /object/);
   assert.equal(page.data.resultSheet.title, '已提交审核');

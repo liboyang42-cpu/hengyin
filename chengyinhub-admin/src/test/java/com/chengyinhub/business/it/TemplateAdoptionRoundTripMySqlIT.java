@@ -25,6 +25,7 @@ import static org.mockito.Mockito.*;
 
 class TemplateAdoptionRoundTripMySqlIT {
     private static PooledDataSource source;
+    private static boolean scratchCreated;
     private static CmsMemberTemplateMapper members;
     private static CmsTemplateLibraryMapper libraries;
     private static ITemplatePublishService publish;
@@ -34,7 +35,9 @@ class TemplateAdoptionRoundTripMySqlIT {
 
     @BeforeAll static void start() throws Exception {
         assertEquals("127.0.0.1", MybatisItDatabase.host());
-        source = new PooledDataSource("com.mysql.cj.jdbc.Driver", MybatisItDatabase.url("template_adoption_roundtrip"), MybatisItDatabase.user(), MybatisItDatabase.password());
+        String scratchUrl = MybatisItDatabase.url("template_adoption_roundtrip");
+        scratchCreated = true;
+        source = new PooledDataSource("com.mysql.cj.jdbc.Driver", scratchUrl, MybatisItDatabase.user(), MybatisItDatabase.password());
         try (Connection c = source.getConnection()) {
             ItSchema.apply(c, "it-schema/journey-full-flow-it-schema.sql");
             ItSchema.applyMigrations(c, "sql/migration_20261012_app_media_asset.sql",
@@ -59,7 +62,10 @@ class TemplateAdoptionRoundTripMySqlIT {
         ProxyFactory proxy = new ProxyFactory(target); proxy.addAdvice(new TransactionInterceptor(new DataSourceTransactionManager(source), new AnnotationTransactionAttributeSource()));
         publish = (ITemplatePublishService) proxy.getProxy();
     }
-    @AfterAll static void close() { if (source != null) source.forceCloseAll(); }
+    @AfterAll static void close() throws Exception {
+        try { if (source != null) source.forceCloseAll(); }
+        finally { dropScratch(); }
+    }
 
     private static final String SCAN_QA="{\"schemaVersion\":1,\"present\":\"inline\",\"scan\":{\"enabled\":true,\"kind\":\"TEXT\",\"reply\":\"欢迎\"},\"qa\":{\"enabled\":true,\"mode\":\"TYPE\",\"title\":\"答案\",\"answerText\":\"yes\"}}";
     @BeforeEach void clean() { db.update("DELETE FROM cms_template_library"); db.update("DELETE FROM cms_member_template"); }
@@ -126,5 +132,29 @@ class TemplateAdoptionRoundTripMySqlIT {
         assertEquals(2, db.queryForObject("SELECT COUNT(*) FROM cms_member_template", Integer.class));
         assertThrows(RuntimeException.class, () -> publish.saveOrUpdateDraft(request, 8L, "outsider"));
         assertEquals("只修改副本标题", members.selectCmsMemberTemplateById(adoptedId).getTitle());
+    }
+
+    private static void dropScratch() throws Exception {
+        if (!scratchCreated) return;
+        String database = MybatisItDatabase.databaseName("template_adoption_roundtrip");
+        if (!"127.0.0.1".equals(MybatisItDatabase.host()) || !database.matches("chengyin_mybatis_[A-Za-z0-9_]+")) {
+            throw new IllegalStateException("Refusing cleanup outside owned loopback scratch");
+        }
+        try (java.sql.Connection admin = java.sql.DriverManager.getConnection(
+                "jdbc:mysql://127.0.0.1:" + MybatisItDatabase.port() + "/?useSSL=false&allowPublicKeyRetrieval=true",
+                MybatisItDatabase.user(), MybatisItDatabase.password());
+             java.sql.Statement statement = admin.createStatement()) {
+            statement.execute("DROP DATABASE `" + database + "`");
+            try (java.sql.PreparedStatement check = admin.prepareStatement(
+                    "SELECT COUNT(*) FROM information_schema.schemata WHERE schema_name=?")) {
+                check.setString(1, database);
+                try (java.sql.ResultSet row = check.executeQuery()) {
+                    assertTrue(row.next());
+                    assertEquals(0, row.getInt(1), "owned scratch must be absent");
+                    assertFalse(row.next());
+                }
+            }
+            scratchCreated = false;
+        }
     }
 }

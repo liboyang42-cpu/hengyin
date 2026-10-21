@@ -18,9 +18,7 @@ function loadPage(answer) {
   global.getCurrentPages = () => []
   global.getApp = () => ({
     getRequestErrorMessage: (response, fallback) => (response && (response.msg || response.errMsg)) || fallback,
-    getUserRole: () => 'user', getUserType: () => 'user', getUserID: () => 9,
-    // W8(#311)读取改为登录守卫：无会员号或令牌时停在登录态不发请求；本用例验的是已登录本人列表。
-    getAuthorization: () => 'token-9',
+    getUserRole: () => 'user', getUserType: () => 'user', getUserID: () => 9, getAuthorization: () => 'fixture-session',
     sendRequest: (options) => requests.push(options),
   })
   global.Page = (config) => { definition = config }

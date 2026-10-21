@@ -18,6 +18,7 @@ const {
 } = require('../../../utils/feed-play-card.js');
 const { remixTopicTemplate } = require('../utils/topic-template-remix.js');
 const { isRecordList } = require('../../../utils/response-shape.js');
+const mediaPreview = require('../../../utils/media-preview.js');
 Page({
   /**
    * 页面的初始数据
@@ -160,17 +161,17 @@ Page({
     if (key === 'follow') { this.followClick(); }   // 复用既有关注链路,不另造一条
   },
 
-  goUserInfo() {
+  goUserInfo() { const info = this.data.info || {}; if (!info.memberId || this._navigating) return; this._navigating = true; // 跳转中不响应连点
     wx.navigateTo({
-      url: '/pages/userinfo/userinfo?userId=' + this.data.info.memberId,
-      fail: () => toast('打不开这个主页'),
+      url: '/pages/userinfo/userinfo?userId=' + info.memberId,
+      fail: () => toast('打不开这个主页'), complete: () => { this._navigating = false; },
     });
   },
 
   // 关联活动回跳:点 route-map 下方链接 → 主题详情(报告 §3.3)
   goSportTopic() {
     const tid = this.data.info && this.data.info.sportTopicId;
-    if (tid) wx.navigateTo({ url: '/pages/topic/index/index?id=' + tid });
+    if (tid && !this._navigating) { this._navigating = true; wx.navigateTo({ url: '/pages/topic/index/index?id=' + tid, complete: () => { this._navigating = false; } }); } // 跳转中不响应连点
   },
 
   goRemixTemplate() {
@@ -185,11 +186,11 @@ Page({
   // 且漫游发帖刻意不挂关联,所以这里【不存在】跳 roam 的分支。与 square/list 的 goPlay 同一判据。
   goPlay() {
     const info = this.data.info || {};
-    if (!info.dataId) return;
+    if (!info.dataId || this._navigating) return; this._navigating = true; // 跳转中不响应连点
     const query = String(info.dataType) === '1'
       ? ('activityId=' + info.dataId)
       : ('topicId=' + info.dataId);
-    wx.navigateTo({ url: '/pages/play/index?' + query });
+    wx.navigateTo({ url: '/pages/play/index?' + query, complete: () => { this._navigating = false; } });
   },
 
   // 添加评论（回车发送）
@@ -678,13 +679,17 @@ Page({
       success: function (res) {
         if (res.code == "200") {
           // 后端是开关语义,以回包 data.isLiked 终态为准;旧后端没回就按开关取反(3-20)
-          let newlist = that.data.list
-          const row = newlist[index]
+          const pos = that.data.list.findIndex(function (row) { return row && String(row.id) === String(id); });
+          if (pos < 0) return;
+          const newlist = that.data.list.slice()
+          const row = newlist[pos]
           const was = row.isLiked == 1 ? 1 : 0
           const serverLiked = res.data && res.data.isLiked
           const now = serverLiked === 0 || serverLiked === 1 ? serverLiked : 1 - was
-          row.isLiked = now
-          row.likeCount = Math.max(0, (Number(row.likeCount) || 0) + now - was)
+          newlist[pos] = Object.assign({}, row, {
+            isLiked: now,
+            likeCount: Math.max(0, (Number(row.likeCount) || 0) + now - was)
+          })
           that.setData({
             list: newlist
           });
@@ -874,8 +879,13 @@ Page({
           success(resp) {
             if (!current() || Number(resp && resp.code) === 499) return;
             if (resp.code == '200') {
-              const list = that.data.list.filter(row => String(row.id) !== String(item.id));
-              that.setData({ list, nodata: list.length < 1 });
+              const list = that.data.list.filter(function (row) { return !row || String(row.id) !== String(item.id); });
+              if (list.length !== that.data.list.length) {
+                that.setData({
+                  list: list,
+                  nodata: list.length < 1
+                });
+              }
               toast('已提交举报');
             } else {
               toast(resp.msg || '举报失败');
@@ -967,10 +977,7 @@ Page({
   previewImage: function (e) {
     const picList = e.currentTarget.dataset.piclist;
     const index = e.currentTarget.dataset.index;
-    wx.previewImage({
-      current: picList[index],
-      urls: picList
-    });
+    mediaPreview.open(picList, picList && picList[index]);
   },
 
   getData: function () {
@@ -1249,7 +1256,7 @@ Page({
   /**
    * 生命周期函数--监听页面显示
    */
-  onShow() {
+  onShow() { this._navigating = false; // 跳转中保护兜底清锁
     const feedVersion = (app.globalData && app.globalData.squareListDirtyVersion) || 0;
     if (this.data.id && !this._unloaded && !this.data.composeShow) {
       if (feedVersion > (this._communityFeedVersion || 0)) this.getData();

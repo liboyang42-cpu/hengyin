@@ -13,8 +13,7 @@ let toasts
 let currentPagePath
 
 global.getApp = () => ({
-  ...(currentPagePath === 'subpackageA/pages/myproject/index.js'
-    ? { getAuthorization: () => 'current-session' } : {}),
+  ...(currentPagePath === 'subpackageA/pages/myproject/index.js' ? { getAuthorization: () => 'current-session' } : {}),
   globalData: { statusBarHeight: 44, navBarHeight: 44, menuButtonInfo: {} },
   getUserID: () => 7,
   getUserRole: () => 'merchant',

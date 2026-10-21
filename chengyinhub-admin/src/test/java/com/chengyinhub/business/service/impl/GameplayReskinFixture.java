@@ -179,7 +179,43 @@ public class GameplayReskinFixture {
         topic=activeTopics.selectCmsTopicById(id);assertNotNull(topic);
         assertTrue(authoring.publishDraft(id));topic=activeTopics.selectCmsTopicById(id);snapshot=JSON.readTree(topic.getPublishedRouteGraphJson());
         assertFalse(snapshot.toString().contains("resourceSlots"));assertFalse(snapshot.toString().contains("templateBindings"));
-        assertEquals(snapshot.path("themeConfig"),JSON.readTree(route.freezePublishedJourney(topic)).path("themeConfig"));
+        assertSameFrozenTheme(snapshot.path("themeConfig"),JSON.readTree(route.freezePublishedJourney(topic)).path("themeConfig"));
+    }
+
+    static void assertSameFrozenTheme(JsonNode expected, JsonNode actual) {
+        assertEquals(comparableFrozenTheme(expected), comparableFrozenTheme(actual));
+    }
+
+    /** 生成设施由对象键重建，MySQL JSON 不保留对象键序；其余字段及所有内部数组仍严格比较。 */
+    private static ObjectNode comparableFrozenTheme(JsonNode theme) {
+        assertTrue(theme.isObject(), "冻结主题必须为对象");
+        ObjectNode copy = theme.deepCopy();
+        JsonNode facilities = copy.path("gameplayRuntime").path("facilities");
+        assertTrue(facilities.isArray(), "冻结设施必须为数组");
+        ArrayNode ordered = JSON.createArrayNode();
+        Map<String, JsonNode> generated = new TreeMap<>();
+        Set<String> keys = new HashSet<>();
+        boolean generatedSeen = false;
+        for (JsonNode facility : facilities) {
+            assertTrue(facility.isObject(), "设施必须为对象");
+            String key = facility.path("facilityKey").asText();
+            assertFalse(key.isEmpty(), "设施标识不能为空");
+            assertTrue(keys.add(key), "设施标识重复: " + key);
+            if (key.startsWith("tpl_node_")) {
+                generatedSeen = true;
+                assertTrue(facility.path("operationNodeId").isIntegralNumber(), "生成设施缺少真实节点绑定");
+                assertEquals("tpl_node_" + facility.path("operationNodeId").asLong(), key);
+                assertEquals(key, facility.path("settlementSlot").asText(), "生成设施槽必须匹配节点");
+                assertFalse(facility.path("actKey").asText().isEmpty(), "生成设施缺少真实幕绑定");
+                generated.put(key, facility);
+            } else {
+                assertFalse(generatedSeen, "手工设施须保持在生成设施之前");
+                ordered.add(facility);
+            }
+        }
+        generated.values().forEach(ordered::add);
+        ((ObjectNode) copy.path("gameplayRuntime")).set("facilities", ordered);
+        return copy;
     }
     private void configureRuntime() {
         ReflectionTestUtils.setField(runtime,"runtimeMapper",gameMapper);ReflectionTestUtils.setField(runtime,"playTeamMapper",teamMapper);ReflectionTestUtils.setField(runtime,"topicRouteRuntimeService",route);

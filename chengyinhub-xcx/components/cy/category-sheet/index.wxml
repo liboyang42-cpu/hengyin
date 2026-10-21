@@ -11,7 +11,7 @@
       <view class="cs-li-ok" aria-hidden="true"></view>
     </view>
   </view>
-  <cy-empty wx:elif="{{loaded}}" kind="empty" title="暂无可选分类" sub="当前类型下还没有配置分类，可稍后再试。" />
+  <cy-empty wx:elif="{{loaded}}" kind="empty" title="暂无可选分类" sub="当前类型下还没有配置分类。" />
   <cy-inline-error load-failure wx:elif="{{loadError}}" kind="network" title="{{loadError}}" sub="分类没拉到时先别保存，可重试" action="重试" bind:action="getCategoryList" />
   <cy-skeleton wx:else type="list" count="4" />
   <view slot="footer">

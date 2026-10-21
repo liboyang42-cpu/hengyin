@@ -108,6 +108,7 @@ page { min-height: 100vh; background: var(--cy-color-bg-page); }
 .od-reward-tip > view { min-width: 0; }
 .od-reward-tip text { display: block; font-size: var(--cy-type-label); line-height: 1.55; }
 .od-reward-tip text + text { color: var(--cy-color-text-tertiary); }
+.od-organizer-entry { display: flex; align-items: center; justify-content: center; height: var(--cy-btn-h); margin-top: 20rpx; border-radius: var(--cy-radius-pill); background: var(--cy-color-bg-surface-subtle); color: var(--cy-color-text-primary); font-size: var(--cy-type-body); font-weight: 700; }
 .od-bottom-space { height: calc(150rpx + env(safe-area-inset-bottom)); }
 
 .od-cta-bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: var(--cy-z-sticky); display: flex; gap: 4rpx; padding: 20rpx 22rpx calc(20rpx + env(safe-area-inset-bottom)); background: var(--cy-color-bg-surface); border-top: 2rpx solid var(--cy-color-border-subtle); }

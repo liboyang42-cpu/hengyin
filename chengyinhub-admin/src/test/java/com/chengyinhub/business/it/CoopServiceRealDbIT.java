@@ -28,6 +28,8 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
@@ -40,6 +42,8 @@ import static org.mockito.Mockito.verify;
  * 真库不可达时硬失败，不跳过。
  */
 class CoopServiceRealDbIT {
+    private static boolean scratchCreated;
+    private PooledDataSource source;
 
     private SqlSessionFactory factory() throws Exception {
         Configuration cfg = new Configuration();
@@ -50,10 +54,13 @@ class CoopServiceRealDbIT {
                 com.chengyinhub.business.domain.CoopCreditLog.class);
         cfg.getTypeAliasRegistry().registerAlias("CoopPerk",
                 com.chengyinhub.business.domain.CoopPerk.class);
+        String scratchUrl = MybatisItDatabase.url("coop_service");
+        scratchCreated = true;
         PooledDataSource ds = new PooledDataSource(
                 "com.mysql.cj.jdbc.Driver",
-                MybatisItDatabase.url("coop_service"),
+                scratchUrl,
                 MybatisItDatabase.user(), MybatisItDatabase.password());
+        source = ds;
         cfg.setEnvironment(new Environment("it", new JdbcTransactionFactory(), ds));
         for (String r : new String[]{
                 "mapper/business/CoopInviteMapper.xml",
@@ -72,7 +79,8 @@ class CoopServiceRealDbIT {
 
     @Test
     void acceptWithLock_realDb_generatesOrderAndSupersedes_andPricing() throws Exception {
-        SqlSessionFactory f;
+        SqlSessionFactory f = null;
+        try {
         try {
             f = factory();
             try (SqlSession probe = f.openSession()) { probe.getConnection().isValid(2); }
@@ -174,6 +182,11 @@ class CoopServiceRealDbIT {
             assertEquals(0, new BigDecimal("29.42").compareTo(pr.getPriceMin()), "真库阵容算出的 P_min(含保底率)");
             assertEquals(2, pr.getLineup().size());
         }
+        } finally {
+            try {
+                if (source != null) source.forceCloseAll();
+            } finally { dropScratch(); }
+        }
     }
 
     private CoopInvite pending(Long gameId, Integer inviteType, Long fromId, Long toId, String toType) {
@@ -191,5 +204,29 @@ class CoopServiceRealDbIT {
         o.setShareRate(rate); o.setFixedFee(fee); o.setStatus(0); o.setDelFlag(0);
         o.setTermsVersion("v1"); o.setCreateTime(new Date());
         return o;
+    }
+
+    private static void dropScratch() throws Exception {
+        if (!scratchCreated) return;
+        String database = MybatisItDatabase.databaseName("coop_service");
+        if (!"127.0.0.1".equals(MybatisItDatabase.host()) || !database.matches("chengyin_mybatis_[A-Za-z0-9_]+")) {
+            throw new IllegalStateException("Refusing cleanup outside owned loopback scratch");
+        }
+        try (java.sql.Connection admin = java.sql.DriverManager.getConnection(
+                "jdbc:mysql://127.0.0.1:" + MybatisItDatabase.port() + "/?useSSL=false&allowPublicKeyRetrieval=true",
+                MybatisItDatabase.user(), MybatisItDatabase.password());
+             java.sql.Statement statement = admin.createStatement()) {
+            statement.execute("DROP DATABASE `" + database + "`");
+            try (java.sql.PreparedStatement check = admin.prepareStatement(
+                    "SELECT COUNT(*) FROM information_schema.schemata WHERE schema_name=?")) {
+                check.setString(1, database);
+                try (java.sql.ResultSet row = check.executeQuery()) {
+                    assertTrue(row.next());
+                    assertEquals(0, row.getInt(1), "owned scratch must be absent");
+                    assertFalse(row.next());
+                }
+            }
+            scratchCreated = false;
+        }
     }
 }

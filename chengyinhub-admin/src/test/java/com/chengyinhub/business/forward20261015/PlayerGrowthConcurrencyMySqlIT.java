@@ -42,6 +42,7 @@ import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.annotation.AnnotationTransactionAttributeSource;
 import org.springframework.transaction.interceptor.TransactionInterceptor;
 import org.springframework.transaction.support.TransactionTemplate;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Proxy;
@@ -62,6 +63,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -267,11 +269,14 @@ class PlayerGrowthConcurrencyMySqlIT {
         CountDownLatch releaseFirst = new CountDownLatch(1);
         CountDownLatch secondMarkerAttempted = new CountDownLatch(1);
         AtomicInteger growthReads = new AtomicInteger();
+        AtomicLong firstConnection = new AtomicLong();
+        AtomicLong secondConnection = new AtomicLong();
         PlayerGrowthMapper observedGrowth = (PlayerGrowthMapper) Proxy.newProxyInstance(getClass().getClassLoader(),
                 new Class<?>[] {PlayerGrowthMapper.class}, (proxy, method, args) -> {
                     Object result = invoke(growth, method, args);
                     if ("selectByMemberForUpdate".equals(method.getName())) {
                         growthReads.incrementAndGet();
+                        firstConnection.set(currentTransactionConnectionId());
                         firstLocked.countDown();
                         await(releaseFirst);
                     }
@@ -281,7 +286,10 @@ class PlayerGrowthConcurrencyMySqlIT {
                 new Class<?>[] {PlayerBadgeMapper.class}, (proxy, method, args) -> {
                     if ("insertPlayerBadge".equals(method.getName())
                             && ((PlayerBadge) args[0]).getBadgeCode().startsWith("TOPIC_FINISH_")
-                            && markerInserts.incrementAndGet() == 2) secondMarkerAttempted.countDown();
+                            && markerInserts.incrementAndGet() == 2) {
+                        secondConnection.set(currentTransactionConnectionId());
+                        secondMarkerAttempted.countDown();
+                    }
                     return invoke(badges, method, args);
                 });
         ITopicCompletionAwardService completion = completion(service(observedGrowth), observedBadges, retryBoundary);
@@ -289,10 +297,10 @@ class PlayerGrowthConcurrencyMySqlIT {
         Future<TopicCompletionAwardVO> one = workers.submit(() -> completion.grantOnce(1L, 11L, 0L, null));
         Future<TopicCompletionAwardVO> two;
         try {
-            assertTrue(firstLocked.await(5, TimeUnit.SECONDS));
+            awaitRequestBarrier(firstLocked, one, "首请求成长锁");
             two = workers.submit(() -> completion.grantOnce(1L, 11L, 0L, null));
-            assertTrue(secondMarkerAttempted.await(5, TimeUnit.SECONDS));
-            awaitMarkerInsertLockWait();
+            awaitRequestBarrier(secondMarkerAttempted, two, "第二请求通关事实 INSERT 调用");
+            awaitMarkerInsertLockWait(firstConnection.get(), secondConnection.get(), one, two);
             assertFalse(two.isDone(), "首个通关事实尚未提交时，第二请求不能确认通关");
             releaseFirst.countDown();
             assertTrue(one.get(5, TimeUnit.SECONDS).isFirstCompletion());
@@ -494,16 +502,88 @@ class PlayerGrowthConcurrencyMySqlIT {
         db.execute(ddl.substring(start, end + 1));
     }
 
-    /** latch 只说明第二请求要插了；等它在 InnoDB 里真正排上锁再放行首请求，否则首请求可能先提交、死锁不出现。 */
-    private void awaitMarkerInsertLockWait() throws InterruptedException {
+    /** JdbcTemplate 复用当前事务绑定的连接，不能用另开连接的 ID 代替真实业务事务。 */
+    private long currentTransactionConnectionId() {
+        assertTrue(TransactionSynchronizationManager.hasResource(source), "采样连接必须属于真实业务事务");
+        Long connectionId = db.queryForObject("select connection_id()", Long.class);
+        assertNotNull(connectionId);
+        return connectionId;
+    }
+
+    /** latch 只说明即将调用真实 INSERT；必须看到本请求被首请求的唯一事实锁阻塞后才能放行。 */
+    private void awaitMarkerInsertLockWait(long firstConnection, long secondConnection, Future<?> one, Future<?> two)
+            throws Exception {
+        assertTrue(firstConnection > 0 && secondConnection > 0 && firstConnection != secondConnection,
+                "必须绑定两个不同的真实事务连接");
+        // INSERT 隐式锁可由等待者代为显式化：THREAD_ID 是结构创建者，事务 ID 才能确定锁的实际所有者。
         long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
         while (System.nanoTime() < deadline) {
-            Integer waiting = admin.queryForObject("select count(*) from information_schema.innodb_trx"
-                    + " where trx_state = 'LOCK WAIT' and trx_query like '%player_badge%'", Integer.class);
+            requirePending(one, "首请求");
+            requirePending(two, "第二请求");
+            Integer waiting = admin.queryForObject(
+                    "select count(*) from performance_schema.data_lock_waits w"
+                    + " join performance_schema.data_locks requested on requested.ENGINE = w.ENGINE"
+                    + " and requested.ENGINE_LOCK_ID = w.REQUESTING_ENGINE_LOCK_ID"
+                    + " join performance_schema.data_locks blocking on blocking.ENGINE = w.ENGINE"
+                    + " and blocking.ENGINE_LOCK_ID = w.BLOCKING_ENGINE_LOCK_ID"
+                    + " join information_schema.innodb_trx requester"
+                    + " on requester.TRX_ID = w.REQUESTING_ENGINE_TRANSACTION_ID"
+                    + " join information_schema.innodb_trx holder"
+                    + " on holder.TRX_ID = w.BLOCKING_ENGINE_TRANSACTION_ID"
+                    + " where requested.OBJECT_SCHEMA = ? and blocking.OBJECT_SCHEMA = ?"
+                    + " and requested.OBJECT_NAME = 'player_badge' and blocking.OBJECT_NAME = 'player_badge'"
+                    + " and requested.INDEX_NAME = 'uk_member_badge'"
+                    + " and requested.LOCK_STATUS = 'WAITING' and blocking.LOCK_STATUS = 'GRANTED'"
+                    + " and requester.TRX_MYSQL_THREAD_ID = ? and holder.TRX_MYSQL_THREAD_ID = ?",
+                    Integer.class, database, database, secondConnection, firstConnection);
             if (waiting != null && waiting > 0) return;
             Thread.sleep(10);
         }
-        fail("第二请求的通关事实插入没有进入锁等待，时序前提不成立");
+        requirePending(one, "首请求");
+        requirePending(two, "第二请求");
+        fail("第二请求的真实通关事实 INSERT 未观察到被首请求阻塞，时序前提不成立"
+                + "; firstConnection=" + firstConnection + "; secondConnection=" + secondConnection
+                + "; firstDone=" + one.isDone() + "; secondDone=" + two.isDone()
+                + "; ownSchemaLocks=" + admin.queryForList(
+                        "select owner.TRX_MYSQL_THREAD_ID as OWNER_CONNECTION_ID, l.THREAD_ID as CREATOR_THREAD_ID,"
+                        + " l.ENGINE_TRANSACTION_ID, l.OBJECT_NAME, l.INDEX_NAME,"
+                        + " l.LOCK_TYPE, l.LOCK_MODE, l.LOCK_STATUS, l.LOCK_DATA"
+                        + " from performance_schema.data_locks l"
+                        + " left join information_schema.innodb_trx owner on owner.TRX_ID = l.ENGINE_TRANSACTION_ID"
+                        + " where l.OBJECT_SCHEMA = ? order by l.ENGINE_TRANSACTION_ID, l.OBJECT_NAME, l.INDEX_NAME",
+                        database)
+                + "; ownSchemaWaits=" + admin.queryForList(
+                        "select w.REQUESTING_ENGINE_TRANSACTION_ID, w.BLOCKING_ENGINE_TRANSACTION_ID,"
+                        + " w.REQUESTING_THREAD_ID as REQUESTING_CREATOR_THREAD_ID,"
+                        + " w.BLOCKING_THREAD_ID as BLOCKING_CREATOR_THREAD_ID,"
+                        + " requester.TRX_MYSQL_THREAD_ID as REQUESTING_OWNER_CONNECTION_ID,"
+                        + " holder.TRX_MYSQL_THREAD_ID as BLOCKING_OWNER_CONNECTION_ID,"
+                        + " requested.OBJECT_NAME, requested.INDEX_NAME"
+                        + " from performance_schema.data_lock_waits w"
+                        + " join performance_schema.data_locks requested on requested.ENGINE = w.ENGINE"
+                        + " and requested.ENGINE_LOCK_ID = w.REQUESTING_ENGINE_LOCK_ID"
+                        + " left join information_schema.innodb_trx requester"
+                        + " on requester.TRX_ID = w.REQUESTING_ENGINE_TRANSACTION_ID"
+                        + " left join information_schema.innodb_trx holder"
+                        + " on holder.TRX_ID = w.BLOCKING_ENGINE_TRANSACTION_ID"
+                        + " where requested.OBJECT_SCHEMA = ?", database));
+    }
+
+    private void awaitRequestBarrier(CountDownLatch barrier, Future<?> request, String label) throws Exception {
+        long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
+        while (System.nanoTime() < deadline) {
+            if (barrier.await(10, TimeUnit.MILLISECONDS)) return;
+            requirePending(request, label);
+        }
+        requirePending(request, label);
+        fail(label + "未在5秒内到达真实业务屏障");
+    }
+
+    private void requirePending(Future<?> request, String label) throws Exception {
+        if (request.isDone()) {
+            request.get(0, TimeUnit.SECONDS); // 原始 ExecutionException 不被时序断言或 finally 的释放锁掩盖。
+            fail(label + "在首请求释放屏障前已完成，未形成所需锁等待");
+        }
     }
 
     private static void await(CountDownLatch latch) {

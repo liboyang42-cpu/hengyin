@@ -43,8 +43,17 @@ class ContentSafetyGateImplTest {
                 .thenReturn(999L);
     }
 
+    /** 既有用例描述的是今天的先审后发语义(社区推文/回复的口径),显式传 PRE_REVIEW;断言一字未改。 */
     private PublishSafetyRequest req(String text) {
+        PublishSafetyRequest r = postReq(text);
+        r.setReviewMode(PublishSafetyRequest.ReviewMode.PRE_REVIEW.name());
+        return r;
+    }
+
+    /** 先发后审请求:显式 POST_REVIEW(入参默认值已是 PRE_REVIEW,见 PublishSafetyRequestDefaultModeTest) */
+    private PublishSafetyRequest postReq(String text) {
         PublishSafetyRequest r = new PublishSafetyRequest();
+        r.setReviewMode(PublishSafetyRequest.ReviewMode.POST_REVIEW.name());
         r.setContentType("SQUARE");
         r.setContentId(1L);
         r.setMemberId(100L);
@@ -148,5 +157,183 @@ class ContentSafetyGateImplTest {
         assertEquals("IDENTITY_REVIEW", decision.getReasonCode());
         verify(wxSec, never()).checkText(anyString(), anyString());
         verify(auditTaskService).submitSafetyHold(eq("SQUARE"), eq(1L), eq(100L), eq("NORMAL"), any());
+    }
+
+    // ==================== 2026-10-20 分级审核:POST_REVIEW / PRE_REVIEW / EXEMPT ====================
+
+    @Test
+    void defaultReviewModeIsPreReview() {
+        // AUDIT-INT-10:初值与门禁对空值/脏值的兜底一致,未设置 = 先审后发
+        assertEquals("PRE_REVIEW", new PublishSafetyRequest().getReviewMode());
+    }
+
+    @Test
+    void postReview_reviewRequired_passFlagged_noAuditTask() {
+        when(wxSec.checkText(anyString(), anyString())).thenReturn(IWxContentSecurityService.REVIEW_REQUIRED);
+
+        SafetyDecision d = gate.decide(postReq("疑似风险内容"));
+
+        assertTrue(d.isPass());
+        assertTrue(d.isVisible());
+        assertTrue(d.isFlagged());
+        assertEquals("TEXT_REVIEW", d.getFlagReason());
+        verify(auditTaskService, never()).submitSafetyHold(anyString(), any(), any(), anyString(), any());
+    }
+
+    @Test
+    void postReview_detectionBusy_passFlagged() {
+        when(wxSec.checkText(anyString(), anyString())).thenReturn(IWxContentSecurityService.MSG_BUSY);
+
+        SafetyDecision d = gate.decide(postReq("机审繁忙"));
+
+        assertTrue(d.isPass());
+        assertTrue(d.isFlagged());
+        assertEquals("TEXT_REVIEW", d.getFlagReason());
+        verify(auditTaskService, never()).submitSafetyHold(anyString(), any(), any(), anyString(), any());
+    }
+
+    @Test
+    void postReview_detectionThrows_passFlagged() {
+        when(wxSec.checkText(anyString(), anyString())).thenThrow(new RuntimeException("接口挂了"));
+
+        SafetyDecision d = gate.decide(postReq("检测异常"));
+
+        assertTrue(d.isPass());
+        assertTrue(d.isFlagged());
+        assertEquals("DETECT_ERROR", d.getFlagReason());
+        verify(auditTaskService, never()).submitSafetyHold(anyString(), any(), any(), anyString(), any());
+    }
+
+    @Test
+    void postReview_missingOpenid_passFlagged() {
+        PublishSafetyRequest r = postReq("App 发布");
+        r.setOpenid(" ");
+
+        SafetyDecision d = gate.decide(r);
+
+        assertTrue(d.isPass());
+        assertTrue(d.isFlagged());
+        assertEquals("IDENTITY_REVIEW", d.getFlagReason());
+        verify(wxSec, never()).checkText(anyString(), anyString());
+    }
+
+    @Test
+    void postReview_detectionDisabled_passFlagged() {
+        when(wxSec.isEnabled()).thenReturn(false);
+
+        SafetyDecision d = gate.decide(postReq("检测关了"));
+
+        assertTrue(d.isPass());
+        assertTrue(d.isFlagged());
+        assertEquals("DETECT_DISABLED", d.getFlagReason());
+    }
+
+    @Test
+    void preReview_reviewRequired_holdWithTask() {
+        when(wxSec.checkText(anyString(), anyString())).thenReturn(IWxContentSecurityService.REVIEW_REQUIRED);
+
+        SafetyDecision d = gate.decide(req("疑似风险内容"));
+
+        assertTrue(d.isHold());
+        assertFalse(d.isFlagged());
+        assertEquals(Long.valueOf(999L), d.getAuditTaskId());
+        verify(auditTaskService).submitSafetyHold(eq("SQUARE"), eq(1L), eq(100L), eq("NORMAL"), any());
+    }
+
+    @Test
+    void riskyText_block_inBothModes() {
+        when(wxSec.checkText(anyString(), anyString())).thenReturn("内容含违规词");
+        for (PublishSafetyRequest r : java.util.Arrays.asList(req("违规内容"), postReq("违规内容"))) {
+            SafetyDecision d = gate.decide(r);
+            assertTrue(d.isBlock(), r.getReviewMode());
+            assertEquals("TEXT_RISK", d.getReasonCode());
+        }
+        verify(auditTaskService, never()).submitSafetyHold(anyString(), any(), any(), anyString(), any());
+    }
+
+    @Test
+    void postReview_imagesPriceSignupGeo_pass_noAuditTask() {
+        when(wxSec.checkText(anyString(), anyString())).thenReturn(null);
+        PublishSafetyRequest r = postReq("收费路线活动");
+        r.setHasPrice(true);
+        r.setHasSignup(true);
+        r.setHasGeo(true);
+        r.setMediaUrls(Collections.singletonList("https://oss/x.jpg"));
+
+        SafetyDecision d = gate.decide(r);
+
+        assertTrue(d.isPass());
+        assertFalse(d.isFlagged());
+        verify(auditTaskService, never()).submitSafetyHold(anyString(), any(), any(), anyString(), any());
+    }
+
+    @Test
+    void exempt_pass_withoutDetection() {
+        PublishSafetyRequest r = postReq("豁免");
+        r.setReviewMode("EXEMPT");
+
+        SafetyDecision d = gate.decide(r);
+
+        assertTrue(d.isPass());
+        verify(wxSec, never()).checkText(anyString(), anyString());
+        verify(auditTaskService, never()).submitSafetyHold(anyString(), any(), any(), anyString(), any());
+    }
+
+    /** 脏值/空值不得 fail-open:一律按最严的 PRE_REVIEW(今天全部调用方的语义)。 */
+    @Test
+    void unknownOrNullMode_fallsBackToPreReview() {
+        when(wxSec.checkText(anyString(), anyString())).thenReturn(IWxContentSecurityService.REVIEW_REQUIRED);
+        for (String mode : java.util.Arrays.asList("garbage", "", null, "exempt ")) {
+            PublishSafetyRequest r = postReq("疑似风险内容");
+            r.setReviewMode(mode);
+            SafetyDecision d = gate.decide(r);
+            assertTrue(d.isHold(), String.valueOf(mode));
+            assertEquals("TEXT_REVIEW", d.getReasonCode());
+        }
+    }
+
+    /** 先审后发但内容还没落库(活动发布前置裁决):不建 bizId 为空的孤儿审核单,由调用方落库后建单。 */
+    @Test
+    void preReview_holdWithoutContentId_doesNotCreateOrphanTask() {
+        when(wxSec.checkText(anyString(), anyString())).thenReturn(null);
+        PublishSafetyRequest r = req("活动");
+        r.setContentId(null);
+        r.setHasSignup(true);
+
+        SafetyDecision d = gate.decide(r);
+
+        assertTrue(d.isHold());
+        assertEquals("STRUCTURED_REVIEW", d.getReasonCode());
+        assertEquals(null, d.getAuditTaskId());
+        verify(auditTaskService, never()).submitSafetyHold(anyString(), any(), any(), anyString(), any());
+    }
+
+    /** AUDIT-G3-7:HOLD 建单时把门禁 reasonCode 落进快照 _gate,审核员能看到为什么被拦。 */
+    @Test
+    void hold_storesGateReasonInAuditSnapshot() {
+        when(wxSec.checkText(anyString(), anyString()))
+                .thenReturn(IWxContentSecurityService.REVIEW_REQUIRED);
+        PublishSafetyRequest r = req("疑似风险内容");
+        r.setSnapshot("{\"contents\":\"疑似风险内容\"}");
+
+        gate.decide(r);
+
+        org.mockito.ArgumentCaptor<String> snapshot = org.mockito.ArgumentCaptor.forClass(String.class);
+        verify(auditTaskService).submitSafetyHold(eq("SQUARE"), eq(1L), eq(100L), eq("NORMAL"), snapshot.capture());
+        com.alibaba.fastjson2.JSONObject root = com.alibaba.fastjson2.JSON.parseObject(snapshot.getValue());
+        assertEquals("疑似风险内容", root.getString("contents"));
+        assertEquals("TEXT_REVIEW", root.getJSONObject("_gate").getString("reasonCode"));
+        assertEquals("NORMAL", root.getJSONObject("_gate").getString("riskLevel"));
+    }
+
+    @Test
+    void gateReason_survivesMissingOrNonObjectSnapshot() {
+        assertEquals("MEDIA_PENDING", com.alibaba.fastjson2.JSON.parseObject(
+                ContentSafetyGateImpl.withGateReason(null, "MEDIA_PENDING", "NORMAL"))
+                .getJSONObject("_gate").getString("reasonCode"));
+        com.alibaba.fastjson2.JSONObject wrapped = com.alibaba.fastjson2.JSON.parseObject(
+                ContentSafetyGateImpl.withGateReason("[1,2]", "DETECT_ERROR", "HIGH"));
+        assertEquals("[1,2]", wrapped.getString("_raw"));
+        assertEquals("HIGH", wrapped.getJSONObject("_gate").getString("riskLevel"));
     }
 }

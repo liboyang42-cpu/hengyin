@@ -434,12 +434,51 @@ class WxContentSecurityServiceImplTest {
 
     @Test
     void missingOpenidFailsClosedWithoutPretendingBusy() {
-        WxContentSecurityServiceImpl service = enabledTextService(new WxContentSecurityServiceImpl());
+        WxContentSecurityServiceImpl service = enabledTextService(new WxContentSecurityServiceImpl() {
+            @Override
+            String sendPost(String url, String body, String contentType) {
+                throw new AssertionError("缺少有效 openid 不得调用微信");
+            }
+        });
+        for (String openid : new String[] {null, "", " \t\r\n", "\u3000"}) {
+            assertSame(IWxContentSecurityService.MSG_UNAVAILABLE, service.checkText("hello", openid));
+        }
+        RedisCache cache = (RedisCache) ReflectionTestUtils.getField(service, "redisCache");
+        verify(cache, never()).getCacheObject(anyString());
+    }
 
-        String result = service.checkText("hello", "");
+    @Test
+    void blankMediaOrOpenidDoesNotFetchTokenOrSubmitUncheckedMedia() {
+        WxContentSecurityServiceImpl service = enabledTextService(new WxContentSecurityServiceImpl() {
+            @Override
+            String sendPost(String url, String body, String contentType) {
+                throw new AssertionError("图片或 openid 为空白时不得调用微信");
+            }
+        });
+        for (String blank : new String[] {null, "", " \t\r\n", "\u3000"}) {
+            assertNull(service.checkMediaAsync("https://example.test/media.jpg", blank));
+            assertNull(service.checkMediaAsync(blank, "openid-valid"));
+        }
+        RedisCache cache = (RedisCache) ReflectionTestUtils.getField(service, "redisCache");
+        verify(cache, never()).getCacheObject(anyString());
+    }
 
-        assertSame(IWxContentSecurityService.MSG_UNAVAILABLE, result);
-        assertNotSame(IWxContentSecurityService.MSG_BUSY, result);
+    @Test
+    void validMediaAndOpenidStillSubmitAndReturnTrace() {
+        int[] calls = {0};
+        WxContentSecurityServiceImpl service = enabledTextService(new WxContentSecurityServiceImpl() {
+            @Override
+            String sendPost(String url, String body, String contentType) {
+                calls[0]++;
+                assertEquals("https://api.weixin.qq.com/wxa/media_check_async?access_token=cached-token", url);
+                assertEquals("application/json", contentType);
+                assertTrue(body.contains("\"openid\":\"openid-valid\""));
+                assertTrue(body.contains("\"media_url\":\"https://example.test/media.jpg\""));
+                return "{\"errcode\":0,\"trace_id\":\"trace-valid\"}";
+            }
+        });
+        assertEquals("trace-valid", service.checkMediaAsync("https://example.test/media.jpg", "openid-valid"));
+        assertEquals(1, calls[0]);
     }
 
     @Test

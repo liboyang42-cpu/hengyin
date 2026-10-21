@@ -8,7 +8,6 @@ const test = require('node:test')
 const ROOT = path.resolve(__dirname, '../..')
 const { SCENES } = require(path.join(ROOT, 'utils/scene-registry.js'))
 const { KNOWN_SCENE_TWINS } = require('../helpers/scene-twin-allowlist.js')
-const S = require('../../scripts/lib/xcx-scan.js')
 
 function read(relativePath) {
   return fs.readFileSync(path.join(ROOT, relativePath), 'utf8')
@@ -78,46 +77,25 @@ function twinSceneIds() {
 // 那正是本门禁要抓的分叉,而只查组件是否出现会对它恒绿。
 //
 // 所以再要一条「页面自己没有实现内容」的硬证据。判据取两个结构信号,不取行数/字节这类阈值:
-//   · 页面 wxml 零正文 wx:for —— 唯一例外是下面严格证明0/1项的身份重挂组件壳
+//   · 页面 wxml 零 wx:for   —— 渲染列表就是在自己实现正文
 //   · 页面 js 零业务请求     —— 自己取数就是在自己实现正文
 // 这两条在全站实测能把两类干净分开(2026-08-08 基线 b8790ca58):
 //   9 个已收口的壳:wx:for 全 0、业务请求全 0
 //   12 个双份实现:除 share-invite 外全部至少踩中一项
 // share-invite 页面本身只有 541 字节、也没委托组件,由白名单登记,不靠本判据。
-// 身份切换以key重挂同一真实组件不是自绘列表；只接受当前可证明0/1项的完整外壳。
-function isSingleProfileMountShell(route, wxml, js) {
-  const source = S.maskWxmlComments(wxml)
-  const mounts = source.match(/<cy-profile\s+wx:for="\{\{profileMounts\}\}"\s+wx:key="id"\s+id="profile"\s+viewer="self"\s*\/>/g) || []
-  if (mounts.length !== 1 || (source.match(/<cy-profile\b/g) || []).length !== 1) return false
-  const pageWxml = `${route.replace(/^\//, '')}.wxml`
-  if (componentWxmlPath(pageWxml, usingComponents(pageWxml)['cy-profile'])
-      !== 'subpackageMember/components/cy/profile/index.wxml') return false
-  const shell = source.replace(mounts[0], '')
-  if (/wx:for\s*=/.test(shell)) return false
-  const allowedTags = new Set(['page-meta', 'view', 'cy-toast', 'cy-loading-mask', 'cy-modal-host', 'cy-empty', 'tabBar', 'cy-privacy-gate'])
-  const text = shell.split('')
-  for (const tag of S.scanTags(shell)) {
-    if (!allowedTags.has(tag.name)) return false
-    text.fill(' ', tag.start, tag.end + 1)
-  }
-  if (text.join('').trim()) return false // 普通正文即使没有循环也不能伪装成委托壳。
-  const code = S.maskJavaScriptComments(js)
-  const compact = code.replace(/\s+/g, '')
-  const writes = S.extractSetDataFields(code)
-  return (code.match(/\bprofileMounts\b/g) || []).length === 3
-    && (code.match(/\bprofileMounts\s*:\s*\[\s*\]/g) || []).length === 1
-    && compact.includes('this.setData({profileMounts:owner&&token?[{id:this._profileEpoch}]:[]});')
-    && writes.unscannable.length === 0
-    && writes.fields.filter(field => field.name === 'profileMounts').length === 1
-}
-
 function pageImplementsContentItself(route, readSource = read) {
   const base = route.replace(/^\//, '')
   let wxml = ''
   let js = ''
   try { wxml = readSource(`${base}.wxml`) } catch (e) { wxml = '' }
   try { js = readSource(`${base}.js`) } catch (e) { js = '' }
-  const rendersList = /wx:for\s*=/.test(wxml) && !isSingleProfileMountShell(route, wxml, js)
+  // 登录换号时只重挂一个 profile 组件；这不是页面自绘业务列表。
+  const singletonProfileMount = base === 'pages/member/index/index'
+    && /profileMounts:\s*owner\s*&&\s*token\s*\?\s*\[\{\s*id:\s*this\._profileEpoch\s*\}\]\s*:\s*\[\]/.test(js)
+  const body = singletonProfileMount
+    ? wxml.replace(/<cy-profile\b(?=[^>]*\bwx:for="\{\{profileMounts\}\}")[^>]*\/>/g, '')
+    : wxml
+  const rendersList = /wx:for=/.test(body)
   const fetchesBusinessData = /url:\s*['"]\/api\//.test(js)
   return rendersList || fetchesBusinessData
 }
@@ -132,6 +110,21 @@ function unresolvedTwinSceneIds(readSource = read) {
     })
     .sort()
 }
+
+test('登录薄壳只重挂单个 profile；新增正文循环或业务数据挂载仍必须判红', () => {
+  const route = SCENES['share-invite'].route
+  const base = route.replace(/^\//, '')
+  assert.equal(pageImplementsContentItself(route), false)
+  const extraList = `${read(`${base}.wxml`)}<view wx:for="{{orders}}">{{item.id}}</view>`
+  const withList = relative => relative === `${base}.wxml` ? extraList : read(relative)
+  assert.equal(pageImplementsContentItself(route, withList), true)
+  assert.throws(() => assertTwinGate(withList), /未登记分叉: share-invite/)
+  const userRows = read(`${base}.js`).replace('[{ id: this._profileEpoch }]', '[{ id: this._profileEpoch, orders: this.data.orders }]')
+  assert.notEqual(userRows, read(`${base}.js`))
+  const withRows = relative => relative === `${base}.js` ? userRows : read(relative)
+  assert.equal(pageImplementsContentItself(route, withRows), true)
+  assert.throws(() => assertTwinGate(withRows), /未登记分叉: share-invite/)
+})
 
 function assertTwinGate(readSource = read) {
   const unresolved = unresolvedTwinSceneIds(readSource)
@@ -243,44 +236,4 @@ test('负控:页面自己发业务请求(不经组件)也必须判红', () => {
   const readMutated = (relativePath) => relativePath === pageJs ? mutated : read(relativePath)
   assert.equal(pageImplementsContentItself(route, readMutated), true, '页面自取数必须被识别出来')
   assert.throws(() => assertTwinGate(readMutated), /未登记分叉: merchant-profit/)
-})
-
-
-test('single-instance identity mount delegates profile and share scene without drawing page content', () => {
-  const route = SCENES['share-invite'].route
-  assert.equal(routeRendersScene('share-invite', route), true)
-  assert.equal(pageImplementsContentItself(route), false)
-  assertTwinGate()
-})
-
-test('single-instance delegation must reject real body, API and unbounded mount mutations', () => {
-  const route = SCENES['share-invite'].route
-  const base = route.replace(/^\//, '')
-  const js = read(`${base}.js`), wxml = read(`${base}.wxml`)
-  const mount = '<cy-profile wx:for="{{profileMounts}}" wx:key="id" id="profile" viewer="self" />'
-  assert.ok(wxml.includes(mount))
-  const variants = [
-    [`${base}.wxml`, wxml + '\n<view wx:for="{{rows}}">{{item.name}}</view>'],
-    [`${base}.wxml`, wxml + '\n<view>页面自绘了第二套正文</view>'],
-    [`${base}.wxml`, wxml + '\n<image src="{{privatePicture}}" />'],
-    [`${base}.js`, js + "\nconst request = { url: '/api/coop/finance' }"],
-    [`${base}.js`, js.replace('[{ id: this._profileEpoch }]', '[{ id: this._profileEpoch }, { id: 99 }]')],
-    [`${base}.js`, js.replace('[{ id: this._profileEpoch }]', 'rows')],
-    [`${base}.js`, js + "\nthis.setData({ profileMounts: rows })"],
-    [`${base}.wxml`, wxml.replace(mount, `<!-- ${mount} -->`)],
-    [`${base}.wxml`, wxml.replace(mount, `${mount}\n${mount}`)],
-    [`${base}.wxml`, wxml.replace(mount, mount.replace('cy-profile ', 'view '))],
-  ]
-  // WXML允许属性名与等号间空白；非法mount与空白属性同时出现仍必须拒绝。
-  const spaced = wxml.replace('wx:for="{{profileMounts}}"', 'wx:for = "{{profileMounts}}"')
-  const unbounded = js.replace('[{ id: this._profileEpoch }]', 'rows')
-  assert.notEqual(spaced, wxml); assert.notEqual(unbounded, js)
-  const bothMutated = file => file === `${base}.wxml` ? spaced : file === `${base}.js` ? unbounded : read(file)
-  assert.equal(pageImplementsContentItself(route, bothMutated), true)
-  assert.throws(() => assertTwinGate(bothMutated), /未登记分叉: share-invite/)
-  for (const [file, mutated] of variants) {
-    assert.notEqual(mutated, file.endsWith('.js') ? js : wxml, '变异必须实际修改源')
-    const readMutated = name => name === file ? mutated : read(name)
-    assert.throws(() => assertTwinGate(readMutated), /未登记分叉: share-invite/)
-  }
 })

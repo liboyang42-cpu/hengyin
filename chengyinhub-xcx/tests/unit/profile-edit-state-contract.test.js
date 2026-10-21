@@ -45,6 +45,7 @@ function loadPage() {
     require(request) {
       if (request === '../../utils/response-shape.js') return require('../../utils/response-shape.js')
       if (request === '../../utils/form-state.js') return require('../../utils/form-state.js')
+      if (request === './nickname-check.js') return require('../../pages/gerenziliao/nickname-check.js')
       throw new Error(`unexpected require: ${request}`)
     },
     wx: {
@@ -446,3 +447,31 @@ test('a private read without a matching loading show must not dismiss phone bind
   h.requests[1].fail()
   assert.deepEqual(h.masks, ['show', 'hide'])
 })
+
+for (const transition of ['owner', 'hide']) {
+  test(`昵称查重和推荐在 ${transition} 后不写回旧账号`, () => {
+    for (const kind of ['check', 'suggest']) {
+      const h = loadPage()
+      h.page.getUserData()
+      h.requests[0].success({ code: 200, data: { name: '原昵称', phone: '' } })
+      h.page.openPop4()
+      h.page.data.tempName = '新昵称'
+      h.page._nicknameSeq = 3
+      if (kind === 'check') h.page.requestNicknameCheck('新昵称', 3)
+      else h.page.loadNicknameSuggestions('新昵称', false)
+      const pending = h.requests.at(-1)
+      if (transition === 'owner') {
+        h.session.owner = 8
+        h.session.token = 'unit-session-b'
+      } else h.page.onHide()
+      pending.success({ code: 200, data: { nickname: '旧账号推荐', available: false, cursor: 1 } })
+      assert.equal(h.requests.length, 2, '旧回复不继续触发下一轮推荐')
+      assert.equal(h.page.data.nicknameSuggestions.length, 0)
+      if (transition === 'owner') {
+        assert.equal(h.page.data.userInfo.name, '')
+        assert.equal(h.page.data.nicknameState, '')
+        assert.equal(h.page._savedName, undefined)
+      }
+    }
+  })
+}

@@ -1,4 +1,3 @@
-// NOT_RUN: verification deferred by user.
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const intents = require('../../utils/publish/publish-intent.js');

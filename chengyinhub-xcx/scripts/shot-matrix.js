@@ -2,12 +2,12 @@
  * Wave2 截图矩阵（机器可读），供总控在 verify worktree 串行采集。
  *
  * ── 机器统计（唯一真值，由本文件末尾 STATS 断言锁死）──────────────────
- *   total 334
- *   按 priority 计全部行：P0 133 / P1 191 / P2 10
+ *   total 343
+ *   按 priority 计全部行：P0 133 / P1 200 / P2 10
  *   其中 blocked 24（不采集）：P0 9 / P1 7 / P2 8
- *   ⇒ actionable（本轮真要拍）：P0 124 / P1 184 / P2 2 = 310
- *   按域：A 53 / B 69 / C 54 / D 39 / E 27 / F 86
- *   按 control：setData 173 / identity+setData 116 / real-data 38 / real-device 7
+ *   ⇒ actionable（本轮真要拍）：P0 124 / P1 193 / P2 2 = 319
+ *   按域：A 53 / B 70 / C 56 / D 44 / E 27 / F 93
+ *   按 control：setData 181 / identity+setData 117 / real-data 38 / real-device 7
  *     (2026-08-05：A10 由 real-data 改 setData —— 它和 A12 的差别是 picList 空/非空,
  *      不显式注入两张必然拍成同一张)
  *   fixtureVerified 16（只保留当前页面仍全量消费其矩阵键、且在本次源版本
@@ -261,6 +261,7 @@ const RAW = [
   ['B14', 'B14-play-journal.png', '/pages/play/index?mock=city', 'player', 'normal', { screen: '' }, undefined, TITLE, 'setData', 'P1', '', '调 openJournal() 后等 ≥2.5s；opacity 不衰减到 0'],
   ['B15', 'B15-play-story.png', '/pages/play/index?mock=city', 'player', 'normal', { screen: '' }, undefined, TITLE, 'setData', 'P1', '', '调 openStory({id,step})；关闭钮不遮胶囊'],
   ['B16', 'B16-play-finish.png', '/pages/play/index?mock=city', 'player', 'success', { screen: '' }, undefined, TITLE, 'setData', 'P1', '', '调 openFinish()；需 buildMilestone(n) 才有里程碑轴'],
+  ['B92', 'B92-official-organizer-console.png', '/pages/activity/official-organizer/index?id=7', 'merchant', 'normal', { phase: 'ready', refreshing: false, view: { title: '外滩夜行档案', statusText: '进行中', controlText: '正常运行', paused: false, pausedReason: '', resumeNote: '', stateKnown: true }, check: { known: true, pass: true, blockers: [], risks: [] }, avail: { schedule: { enabled: false, hint: '活动已发布，只有草稿需要发布' }, pause: { enabled: true, hint: '' }, resume: { enabled: false, hint: '活动未暂停' } }, busyAction: '', result: null }, undefined, { selector: '.oo-card', min: 3 }, 'setData', 'P1', '', 'CL4 主办控制台：发布/暂停两块齐全，暂停为预设+补充文字，置灰原因可见；真实主办身份须本地连测试服验'],
   ['B90', 'B90-official-routes-content.png', '/subpackageRoam/official-routes/index', 'player', 'normal', { state: 'ready', routes: [{ id: '1', name: '老城慢行', city: '上海', cover: '', metaText: '上海 · 4 km · 1 小时 30 分' }] }, undefined, { selector: '.orl-card', min: 1 }, 'setData', 'P1', '', '官方线路列表：卡片展示名称与城市/距离/时长；加载/空/失败三态由 state 切换'],
   ['B91', 'B91-official-route-content.png', '/subpackageRoam/official-route/index?id=1', 'player', 'normal', { state: 'ready', route: { name: '老城慢行', metaText: '上海 · 4 km', cover: '', nodes: [{ key: 'n1', order: 1, name: '第一站', address: '示例路 1 号', stayText: '20 分钟', lat: null, lng: null, img: '' }] } }, undefined, { selector: '.orr-node', min: 1 }, 'setData', 'P1', '', '官方线路详情：站点序号/地址/参考停留；无坐标站点不可点'],
   ['B17', 'B17-play-flight-cta.png', '/pages/play/index?mock=city', 'player', 'normal', { screen: '' }, undefined, TITLE, 'setData', 'P2',
@@ -405,6 +406,8 @@ const RAW = [
   ['C58', 'C58-settlement-coop-content.png', '/pages/merchant/ledger/index?view=settlement&source=coop', 'merchant', 'normal', { view: 'settlement', source: 'coop', loading: false, error: false, hasLoaded: true, overview: { netLabel: '净入账', personalNetDisplay: '¥128.00', publicPendingDisplay: '¥0.00', personalGrossDisplay: '¥128.00', personalAdjustmentDisplay: '¥0.00', hasAdjustmentPending: false }, entries: [{ entryKey: 'coop:1', sourceText: '合作分润', amountDisplay: '+¥128.00', amountTone: 'pos', timeText: '08-10', stateText: '已入个人账户', stateVariant: 'success' }], batches: [] }, undefined, TITLE, 'identity+setData', 'P0', '', '合作分润降级为结算收入来源筛选；不展示信用或评分'],
   ['C59', 'C59-settlement-coop-empty.png', '/pages/merchant/ledger/index?view=settlement&source=coop', 'merchant', 'empty', { view: 'settlement', source: 'coop', loading: false, error: false, hasLoaded: true, overview: { netLabel: '净入账', personalNetDisplay: '¥0.00', publicPendingDisplay: '¥0.00', personalGrossDisplay: '¥0.00', personalAdjustmentDisplay: '¥0.00', hasAdjustmentPending: false }, entries: [], batches: [] }, undefined, EMPTY, 'identity+setData', 'P1', '', '合作分润筛选空态'],
   ['C60', 'C60-coop-finance-content.png', '/pages/coop/finance/index', 'merchant', 'normal', { loaded: true, loadErr: false, statItems: [{ label: '已入账分润', value: '¥128.00' }], myIncomeTotal: '128.00', canWithdraw: true, pendingCount: 1, topics: [{ topicId: 1, topicName: '外滩夜行', settled: true, incomeText: '128.00', merchantStatus: '已打款', statusText: '已入账', badgeVariant: 'success' }] }, undefined, { selector: '.stat-grid, .fc-card, .fc-explainer', min: 3 }, 'identity+setData', 'P0', '', '已入账金额卡通栏；个人入账状态、主题已结算徽章和商家打款状态分开呈现', '#merchantProfit'],
+  ['C61', 'C61-merchant-verify-records.png', '/pages/merchant/verify-records/index', 'merchant', 'normal', { pageState: 'ready', bucket: 'all', groups: [{ key: '2026-10-18', label: '10月18日', items: [{ id: 1, nameText: '外滩夜行 · 成人票', statusText: '已核销', statusTone: 'positive', timeText: '19:42', methodText: '扫码核销', registrationText: '报名 #1024' }] }] }, undefined, { selector: '.vrl-row', min: 1 }, 'setData', 'P1', '', 'BL-76 核销记录(只读):按日分组,状态与核销方式同排'],
+  ['C62', 'C62-merchant-crm-campaigns.png', '/pages/merchant/crm-campaigns/index', 'merchant', 'normal', { pageState: 'ready', items: [{ id: 3, titleText: '会员回访 · 十月', statusText: '已完成', statusTone: 'positive', timeText: '10月16日', channelText: '订阅消息', summaryText: '送达 42 / 目标 45' }], detailOpen: false }, undefined, { selector: '.ccl-row', min: 1 }, 'setData', 'P1', '', 'BL-100 触达记录(只读):任务列表与送达概况'],
   // 2026-08-18 并入 master #738 的双向覆盖率体检时补:本页是这条线新加的(俱乐部自报四类工时+证据),
   //   app.json 里有、矩阵里一行都没有 ⇒ 全量复核会静默漏拍它。断言取页面自己的 .cer-card,
   //   不用恒真的 view —— 空壳也能有 view,有卡片才说明这一页真渲染出来了。
@@ -452,10 +455,15 @@ const RAW = [
   ['D32', 'D32-income-capsule.png', '/subpackageA/pages/assetcenter/income-detail/income-detail', 'player', 'empty', { loading: false, loadErr: false, activeFilter: 'create', hasMore: false, list: [] }, undefined, { selector: '.id-tabs, .id-state-fill', min: 2 }, 'setData', 'P0', '', '创作收益胶囊选中后的筛选空态；与全部收益空态 D30 可区分', '#incomeDetail'],
   ['D33', 'D33-earnings-normal.png', '/subpackageA/pages/assetcenter/earnings/index', 'player', 'normal', { state: 'ready', balance: '128.00' }, undefined, { selector: '.ae-hero, .ae-section', min: 2 }, 'setData', 'P0', '', '★拆四类入口；正文在 #assetEarnings，断言使用 ae-* 新 DOM', '#assetEarnings'],
   ['D34', 'D34-im-list-content.png', '/subpackageB/pages/im/list/index', 'player', 'normal', { loading: false, loaded: true, error: false, activeTab: 'dm', list: [{ conversationId: 9, type: 1, unread: 1, muted: 0, previewText: '明晚一起？', timeText: '19:20', offset: 0, counterparty: { nickname: '周行', avatar: '/images/d_profile.png' } }] }, undefined, TABS2, 'setData', 'P0', '', '★补页面标题（现在连标题都没有）；合并成一个页面'],
-  ['D35', 'D35-im-list-system.png', '/subpackageB/pages/im/list/index', 'player', 'normal', { loading: false, loaded: true, error: false, activeTab: 'sys', list: [{ conversationId: 2, type: 2, unread: 0, muted: 0, previewText: '报名已确认', timeText: '昨天', offset: 0, counterparty: { nickname: '系统通知', avatar: '' } }] }, undefined, TABS2, 'setData', 'P1', '', '—'],
+  ['D35', 'D35-im-list-system.png', '/subpackageB/pages/im/list/index', 'player', 'normal', { loading: false, loaded: true, error: false, activeTab: 'sys', list: [{ conversationId: 2, type: 2, unread: 0, muted: 0, previewText: '报名已确认', timeText: '昨天', offset: 0, counterparty: { nickname: '系统通知', avatar: '' } }], reportNotices: [] }, undefined, TABS2, 'setData', 'P1', '', '—'],
   ['D36', 'D36-im-chat-real.png', '/subpackageB/pages/im/chat/index?conversationId=9', 'player', 'normal', null, undefined, { selector: '.msg-bubble', min: 1 }, 'real-data', 'P0', '', '★34/35/35b 全是缺参或骨架；删顶部头像；整体上移'],
   ['D37', 'D37-im-chat-keyboard.png', '/subpackageB/pages/im/chat/index?conversationId=9', 'player', 'keyboard', null, undefined, TITLE, 'real-device', 'P2', '需真机键盘', '输入栏不被遮挡'],
   ['D38', 'D38-deregister-3states.png', '/pages/deregister/index', 'player', 'normal', { status: 'ELIGIBLE' }, undefined, { selector: '.deregister-copy', min: 1 }, 'setData', 'P0', '', '★删紫色 mask/方块；"暂时无法注销"红字；标题左对齐；改居中 alert（pliability 267）；按钮走 Revolut 76/77', '#deregisterFlow'],
+  ['D90', 'D90-points-history-content.png', '/subpackageMember/points-history/index', 'player', 'normal', { state: 'ready', rows: [{ id: '1', reason: '每日签到', delta: 5, deltaText: '+5', income: true, afterText: '余额 15', timeText: '2026-10-01 08:30' }], hasMore: false }, undefined, { selector: '.ph-row', min: 1 }, 'setData', 'P1', '', '积分明细：收支同排、金额带符号、到底提示'],
+  ['D91', 'D91-report-mine-content.png', '/subpackageMember/report-mine/index', 'player', 'normal', { state: 'ready', rows: [{ id: 9, targetText: '私信用户', reasonText: '骚扰或辱骂', stageText: '已处理', stageTone: 'success', createText: '10月14日 21:30', etaText: '' }], hasMore: false }, undefined, { selector: '.rp-row', min: 1 }, 'setData', 'P1', '', 'CL2 我的举报:阶段标签与编号'],
+  ['D92', 'D92-report-detail-content.png', '/subpackageMember/report-detail/index?reportId=9', 'player', 'normal', { state: 'ready', report: { id: 9, targetText: '私信用户', reasonText: '骚扰或辱骂', stageText: '已处理', stageTone: 'success', stageHint: '平台已给出处理结论', createText: '10月14日 21:30', etaText: '', privacyText: '', decisionSummary: '经核实违反社区规范，已限制对方私信 7 天并警告。', description: '对方在私信里多次发送辱骂内容。', appealable: false }, nodes: [] }, undefined, { selector: '.rd-card', min: 1 }, 'setData', 'P1', '', 'CL2 举报进度:处理结论与提交说明'],
+  ['D93', 'D93-correction-mine-content.png', '/subpackageMember/correction-mine/index', 'player', 'normal', { state: 'ready', rows: [{ id: 31, title: '营业时间有误', statusText: '需补充说明', statusTone: 'warning', createText: '10月15日 20:12', canSupplement: true }], hasMore: false }, undefined, { selector: '.rp-row', min: 1 }, 'setData', 'P1', '', 'BL-184 我的纠错:状态与可补充说明提示'],
+  ['D94', 'D94-correction-detail-content.png', '/subpackageMember/correction-detail/index?contributionId=31', 'player', 'normal', { state: 'ready', item: { id: 31, title: '营业时间有误', statusText: '需补充说明', statusTone: 'warning', statusHint: '请补充你看到营业时间的位置', createText: '10月15日 20:12', reviewedText: '10月16日 10:30', mergedText: '', rewardText: '', reviewReason: '请补充一下你看到营业时间的位置，比如门口告示。', canSupplement: true } }, undefined, { selector: '.rd-card', min: 1 }, 'setData', 'P1', '', 'BL-184 纠错进度:审核意见与补充说明入口'],
 
   // ---------- D-E 商家路由截图矩阵缺口（28） ----------
   ['E01', 'E01-official-detail-normal.png', '/pages/activity/official-detail/index?id=101', 'merchant', 'normal', { id: 101, e: { id: 101, coverImg: IMG, _statusText: '官方策展', status: 3, city: '上海', title: '外滩夜行计划', subtitle: '和全城玩家一起点亮城市', collective: { enabled: true, pct: 68, current: 136, threshold: 200 }, participants: 136, signed: true, _isV2: true, _taskDone: 1, _taskTotal: 2, eligible: false, _eligibleText: '再完成 1 项', paused: false, missions: [{ missionCode: 'ARRIVAL', title: '到达外滩观景台', description: '到达现场后验证', missionType: 'ARRIVAL_VERIFIED', complete: true, canVerifyArrival: false }, { missionCode: 'THEME', title: '完成建筑线索路线', description: '完成绑定主题后自动同步', missionType: 'THEME_VERIFIED_FINISH', complete: false, canVerifyArrival: false }], story: '在夜色里重新认识外滩的建筑与人。' }, rewards: ['🏅 限定徽章', '✨ 80 成长值'], cta: { text: '完成绑定主题后自动同步', type: 'theme' }, countdown: '距结束 3小时20分', loading: false, loadErr: false }, undefined, { selector: '.od-page', min: 1 }, 'identity+setData', 'P0', '', '官方活动正常态；奖励保持字符串数组，任务使用页面真实字段'],
@@ -519,6 +527,7 @@ const RAW = [
   ['F20', 'F20-club-governance-empty.png', '/pages/club/governance/index?clubId=1', 'club', 'empty', { state: 'empty', mode: 'manage', clubName: '城瘾夜行俱乐部', members: [], bans: [], cases: [] }, undefined, { selector: '.page', min: 1 }, 'identity+setData', 'P1', '', '成员治理空态；平台举报/申诉另由行为契约覆盖。'],
   ['F21', 'F21-club-event-ops-empty.png', '/pages/club/event-ops/index?clubId=1', 'club', 'empty', { state: 'ready', canManage: true, canCheckin: false, topics: [], seriesState: 'empty', seriesRows: [], leadOptions: [{ memberId: null, nickname: '主理人（默认）' }], leadIndex: 0 }, undefined, { selector: '.page', min: 1 }, 'identity+setData', 'P1', '', '活动运营无合作主题/无系列态；名册常态需真实 activityId 后补拍。'],
   ['F22', 'F22-club-notify-form.png', '/pages/club/notify/index?clubId=1', 'club', 'form', { state: 'ready', audiences: [{ value: 'ALL_MEMBERS', label: '全体成员', disabled: false }], audienceType: 'ALL_MEMBERS', title: '', content: '', previewState: 'idle', campaign: null }, undefined, { selector: '.page', min: 1 }, 'identity+setData', 'P1', '', '俱乐部站内通知表单初始态；不伪报微信订阅消息可用。'],
+  ['F102', 'F102-club-badges-empty.png', '/pages/club/badges/index?clubId=1', 'club', 'empty', { state: 'empty', isOwner: true, clubName: '城瘾夜行俱乐部', badges: [] }, undefined, { selector: '.page', min: 1 }, 'identity+setData', 'P1', '', '俱乐部勋章主理人空态(CL3);不伪造勋章与颁发记录。'],
   // 当前所有玩家玩法的可见填充态。分母由 cy-playkit.KIT_TYPES、基础任务 vm 分支和
   // cy-advanced-game 四个配置分支的单测自动回读；新增注册类型而漏截图会直接判红。
   ['F32', 'F32-playkit-timewindow.png', '/pages/play/index?mock=1', 'player', 'normal', { show: true, kit: { type: 'timewindow', eyebrow: '午夜限定', glyph: '🌙', title: '午夜电台即将开播', openFrom: '23:00', openTo: '01:00', remainSeconds: 3661, subscribed: true } }, undefined, { selector: 'cy-playkit-timewindow', min: 1 }, 'setData', 'P1', '', '时段限定玩法：开放窗口、权威倒计时与已订阅状态同屏。', 'cy-playkit'],
@@ -635,13 +644,15 @@ const countBy = (pred) => SHOTS.filter(pred).length;
 // 2026-10-03：收口合并的两条 F95 全字段相同，仅保留一个相册合同；仍未动态验证。
 // 2026-10-15：漫游上线补 F96-F101 六条(我的队伍 + 5 个工具页),均 P1 actionable;
 // total 326→332、P1 183→189、actionable 302→308、F 86→92、setData 166→171、real-data 37→38。
-// 2026-10-19 移植共享基线 366b846f/f49092b0:官方线路列表/详情补 B90/B91 两条 P1 setData 行(积分明细 D90 归 claude/mini-ui-on-master-20261019);
-// total 332→334、P1 189→191、actionable P1 182→184 / total 308→310、B 67→69、setData 171→173。
+// 2026-10-19：Claude 小程序线移植到 master(用户批准冻结数值更新)补 9 条 P1 actionable:B92 主办控制台、C61 核销记录、C62 触达记录、
+// D90 积分明细、D91–D94 我的举报/举报进度/我的纠错/纠错进度(均 setData)、F102 俱乐部勋章(identity+setData);
+// total 332→341、P1 189→198、actionable 308→317、B 67→68、C 54→56、D 39→44、F 92→93、setData 171→179、identity+setData 116→117。
+// 2026-10-20 与新主干两条官方线路按唯一ID并集，blocked/已验证不增加，计数由实列复算。
 const STATS = {
-  "total": 334,
+  "total": 343,
   "byPriority": {
     "P0": 133,
-    "P1": 191,
+    "P1": 200,
     "P2": 10
   },
   "blockedByPriority": {
@@ -651,22 +662,22 @@ const STATS = {
   },
   "actionable": {
     "P0": 124,
-    "P1": 184,
+    "P1": 193,
     "P2": 2,
-    "total": 310
+    "total": 319
   },
   "blocked": 24,
   "domains": {
     "A": 53,
-    "B": 69,
-    "C": 54,
-    "D": 39,
+    "B": 70,
+    "C": 56,
+    "D": 44,
     "E": 27,
-    "F": 92
+    "F": 93
   },
   "control": {
-    "setData": 173,
-    "identity+setData": 116,
+    "setData": 181,
+    "identity+setData": 117,
     "real-data": 38,
     "real-device": 7
   },

@@ -71,6 +71,8 @@ public class OfficialEvent
     public static final int ST_ENDED = 5;
     public static final int ST_REVIEWED = 6;
     public static final int ST_OFFLINE = 9;
+    /** control_state:官方活动已提交、等待审核台人工审核(status 保持 0 草稿,不公开、不进生命周期) */
+    public static final String CONTROL_PENDING_REVIEW = "PENDING_REVIEW";
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }

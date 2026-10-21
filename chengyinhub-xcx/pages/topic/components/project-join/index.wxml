@@ -210,7 +210,7 @@
         <view class="game-text">
           <text class="game-name">{{ play.name || templateSubText }}</text>
           <view class="game-chips" wx:if="{{ play.chips.length }}">
-            <view class="chip chip--sm" wx:for="{{ play.chips }}" wx:for-item="c" wx:key="*this">{{ c }}</view>
+            <view class="chip chip--sm" wx:for="{{ play.chips }}" wx:for-item="c" wx:key="index">{{ c }}</view>
           </view>
           <text class="game-verify" wx:if="{{ play.verifyText }}">{{ play.verifyText }}</text>
         </view>
@@ -476,7 +476,7 @@
         <view class="game-text">
           <text class="game-name">{{ nodeSheet.play.name || '未命名玩法' }}</text>
           <view class="game-chips" wx:if="{{ nodeSheet.play.chips.length }}">
-            <view class="chip chip--sm" wx:for="{{ nodeSheet.play.chips }}" wx:for-item="c" wx:key="*this">{{ c }}</view>
+            <view class="chip chip--sm" wx:for="{{ nodeSheet.play.chips }}" wx:for-item="c" wx:key="index">{{ c }}</view>
           </view>
           <text class="game-verify" wx:if="{{ nodeSheet.play.verifyText }}">{{ nodeSheet.play.verifyText }}</text>
         </view>

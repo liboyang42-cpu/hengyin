@@ -401,6 +401,7 @@ jobs:
           CHENGYIN_MYBATIS_IT_USER: root
           CHENGYIN_MYBATIS_IT_PASSWORD: root
           # 端口按 run 动态分配(见 Start MySQL 步的注释),不再是固定 3307
+          CHENGYIN_MYBATIS_IT_HOST: 127.0.0.1
           CHENGYIN_MYBATIS_IT_PORT: ${{ env.IT_PORT }}
           CHENGYIN_TEST_MYSQL_HOST: 127.0.0.1
           CHENGYIN_TEST_MYSQL_PORT: ${{ env.IT_PORT }}

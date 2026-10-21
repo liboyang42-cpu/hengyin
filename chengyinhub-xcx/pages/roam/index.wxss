@@ -851,3 +851,6 @@ cy-proto-cam{ position:fixed; left:0; right:0; top:0; bottom:0; z-index:58; poin
 .pp-new{ position:absolute; left:15rpx; top:15rpx; padding:2rpx 13rpx; border-radius: var(--cy-radius-sm); background:var(--cy-color-text-primary); color:var(--cy-color-text-inverse); font-size: var(--cy-type-micro); font-weight:800; letter-spacing:1rpx; } /* 漫游主路径保持中性色 */
 .pp-trip__card.is-closed .pp-trip__big, .pp-trip__card.is-closed .pp-trip__ic{ opacity:.4; }
 .pp-closed{ position:absolute; left:19rpx; top:19rpx; z-index:2; padding:6rpx 15rpx; border-radius:15rpx; background:rgba(0,0,0,.7); color:#FFFFFF; font-size:21rpx; font-weight:700; } /* ds-ok 原型 .closed-tag */
+/* BL-01 点位筛选(.psheet 内容) */
+.poi-filter{ display:flex; flex-direction:column; gap:var(--cy-space-3); margin-top:var(--cy-space-3); }
+.poi-filter__label{ font-size:var(--cy-type-caption); color:var(--cy-color-text-secondary); }

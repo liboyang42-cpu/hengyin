@@ -47,6 +47,11 @@ Page({
     // 现在起止一屏内切换、当场显示跨度、当场判定,滚轮与日期列表都在组件里。
     rangePickerShow: false,
     rangeValue: [], // ['YYYY-MM-DD HH:mm:ss', ...];打开时喂给组件
+
+    // BL-19 物理返回守卫(wxml 尾部 page-container):表单有内容或浮层开着时拦截返回键/侧滑。
+    formDirty: false,
+    backGuardOff: false,
+    guardLeaving: false, // 确认离开后关掉守卫,否则 navigateBack 本身也会被 page-container 吃掉
   },
 
   /**
@@ -78,6 +83,7 @@ Page({
   },
   onUnload() {
     this._disposed = true;
+    this._destroyed = true;
     this._submitContext = null;
     this.onHide();
   },
@@ -160,7 +166,7 @@ Page({
       submitError: '',
       submitErrorTitle: '',
       submitErrorRetryable: false,
-    })
+    }, () => this.syncFormDirty())
   },
 
   openCouponTypeSheet() {
@@ -186,6 +192,7 @@ Page({
   refreshSubmitState() {
     const canSubmit = couponForm.validate(this.data.formData).ok;
     if (canSubmit !== this.data.canSubmit) this.setData({ canSubmit });
+    this.syncFormDirty();
   },
 
   // 取消按钮
@@ -195,20 +202,44 @@ Page({
       this.exitPage()
       return
     }
+    this._discardPrompting = true
     modal.show({
       title: '放弃编辑？',
       content: '已填写的优惠券内容不会保存。',
       confirmText: '放弃',
       cancelText: '继续编辑',
       success: (res) => {
+        this._discardPrompting = false
         if (res.confirm) this.exitPage()
       },
+      fail: () => { this._discardPrompting = false },
     })
   },
 
   exitPage() {
-    if (getCurrentPages().length > 1) wx.navigateBack()
-    else wx.redirectTo({ url: '/subpackageMember/coupon/coupon' })
+    this.setData({ guardLeaving: true }, () => {
+      if (getCurrentPages().length > 1) wx.navigateBack()
+      else wx.redirectTo({ url: '/subpackageMember/coupon/coupon' })
+    })
+  },
+
+  // 物理返回守卫:先关最上层浮层(有效期 > 类型),再走与左上返回/取消同一条 onCancel(有内容先确认)
+  onNativeBackGuard() {
+    const d = this.data
+    if (d.rangePickerShow) this.onRangeCancel()
+    else if (d.couponTypeSheetVisible) this.closeCouponTypeSheet()
+    else if (!d.isSubmitting && !this._discardPrompting) this.onCancel()
+    const n = this.data
+    if (n.guardLeaving) return
+    if (n.formDirty || n.couponTypeSheetVisible || n.rangePickerShow) {
+      this.setData({ backGuardOff: true })
+      setTimeout(() => { if (!this._destroyed) this.setData({ backGuardOff: false }) }, 50)
+    }
+  },
+
+  syncFormDirty() {
+    const formDirty = couponForm.isDirty(this.data.formData)
+    if (formDirty !== this.data.formDirty) this.setData({ formDirty })
   },
 
   // 提交表单

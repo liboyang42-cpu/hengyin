@@ -58,14 +58,15 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         where id = #{id} and version = #{version} and status in (0, 3)
           and biz_type in ('TOPIC', 'TOPIC_PROJECT_REVIEW', 'TOPIC_SALE_REVIEW')
     </update>
+    <!-- 内容审核槽(open_guard=1)的未结单;举报单在独立槽(open_guard=2),不在此返回(AUDIT-INT-5) -->
     <select id="selectOpenAuditTaskForUpdate" resultMap="AuditTaskResult">
         <include refid="selectAuditTaskVo"/>
         where biz_type = #{bizType} and biz_id = #{bizId} and status in (0, 3)
+          and not (source_type &lt;=&gt; 'report' and biz_type in ('TOPIC', 'TEMPLATE', 'TEMPLATE_LIBRARY', 'ACTIVITY'))
         order by id desc limit 1 for update
     </select>
 
-    <select id="selectAuditTaskList" parameterType="AuditTask" resultMap="AuditTaskResult">
-        <include refid="selectAuditTaskVo"/>
+    <sql id="auditTaskListWhere">
         <where>
             <if test="bizType != null and bizType != ''"> and biz_type = #{bizType}</if>
             <if test="bizId != null"> and biz_id = #{bizId}</if>
@@ -73,7 +74,20 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="status != null"> and status = #{status}</if>
             <if test="riskLevel != null and riskLevel != ''"> and risk_level = #{riskLevel}</if>
         </where>
+    </sql>
+
+    <!-- 内部"取最新一单"语义(get(0)=最新),供开售/立项状态源、供给作废等读取,勿改排序 -->
+    <select id="selectAuditTaskList" parameterType="AuditTask" resultMap="AuditTaskResult">
+        <include refid="selectAuditTaskVo"/>
+        <include refid="auditTaskListWhere"/>
         order by submitted_at desc, id desc
+    </select>
+
+    <!-- 工作台队列:最紧急(deadline 最早)在前,无 deadline 的历史单垫底;id 兜底保证分页稳定 -->
+    <select id="selectAuditTaskQueue" parameterType="AuditTask" resultMap="AuditTaskResult">
+        <include refid="selectAuditTaskVo"/>
+        <include refid="auditTaskListWhere"/>
+        order by deadline_at is null, deadline_at asc, submitted_at asc, id asc
     </select>
 
     <insert id="insertAuditTask" parameterType="AuditTask" useGeneratedKeys="true" keyProperty="id">
@@ -123,6 +137,16 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
           and version = #{version}
     </update>
 
+    <!-- 认领:仅未被认领的待审单可认领,条件更新防并发双认领 -->
+    <update id="claimAuditTask">
+        update audit_task
+        set current_assignee = #{assignee},
+            update_time = #{updateTime}
+        where id = #{id}
+          and current_assignee is null
+          and status = 0
+    </update>
+
     <update id="revertAuditTaskDecisionCas">
         update audit_task
         set status = 0,
@@ -143,10 +167,22 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         where id = #{id} and status = 0
     </update>
 
+    <update id="updateTaskSnapshot">
+        update audit_task set snapshot_json = #{snapshotJson}, update_time = now() where id = #{id}
+    </update>
+
+    <update id="cancelOpenAuditTaskCas">
+        update audit_task set status = 4, version = version + 1, update_time = now()
+        where id = #{id} and version = #{version} and status in (0, 3)
+    </update>
+
+    <!-- 申诉单不在此撤销(AUDIT-INT-9):调用方先经 IAuditTaskService#withdrawOpenAppeal 以 WITHDRAWN 结案并通知作者;
+         举报单裁决的是已公开内容,作者改/撤模板不能顺手撤掉别人的举报(AUDIT-INT-5) -->
     <update id="cancelOpenTemplateTasks">
         update audit_task set status = 4, version = version + 1, update_time = now()
         where biz_type = #{bizType} and biz_type in ('TEMPLATE', 'TEMPLATE_LIBRARY')
           and biz_id = #{bizId} and status in (0, 3)
+          and (source_type is null or source_type not in ('appeal', 'report'))
     </update>
 
     <update id="refreshOpenAuditSnapshot">

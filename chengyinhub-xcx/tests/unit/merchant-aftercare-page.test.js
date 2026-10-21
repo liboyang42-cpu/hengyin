@@ -3,6 +3,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const test = require('node:test');
 const vm = require('../helpers/ui-sandbox-vm.js'); // node:vm + 沙箱里装真 utils/toast.js·loading.js
+const { loadMediaPreview } = require('../helpers/media-preview-sandbox.js');
 
 const root = path.resolve(__dirname, '../..');
 
@@ -51,6 +52,7 @@ function mountPage() {
         if (request.includes('merchant-theme')) {
           return { merchantPageShow() {}, merchantPageRestore() {} };
         }
+        if (request === '../../../../utils/media-preview.js') return loadMediaPreview(wx);
         if (request === './view-model.js') {
           return require('../../pages/merchant/aftercare/detail/view-model');
         }

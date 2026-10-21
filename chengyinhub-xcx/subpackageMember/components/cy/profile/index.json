@@ -19,7 +19,9 @@
     "cy-scene-roam-stamp-album": "/components/cy/scene-roam-stamp-album/index",
     "cy-scene-share-invite": "/components/cy/scene-share-invite/index",
     "cy-npc-avatar": "/components/cy/npc-avatar/index",
-    "cy-npc-chat": "/components/cy/npc-chat/index",
-    "cy-coop-invite-sheet": "/components/cy/coop-invite-sheet/index"
+    "cy-npc-chat": "/subpackageMember/components/cy/npc-chat/index",
+    "cy-coop-invite-sheet": "/components/cy/coop-invite-sheet/index",
+    "cy-report-sheet": "/subpackageMember/components/cy/report-sheet/index",
+    "cy-merchant-correction-sheet": "/subpackageMember/components/cy/merchant-correction-sheet/index"
   }
 }

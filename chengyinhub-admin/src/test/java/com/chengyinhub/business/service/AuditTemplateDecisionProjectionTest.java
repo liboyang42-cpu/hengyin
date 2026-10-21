@@ -200,6 +200,65 @@ class AuditTemplateDecisionProjectionTest {
         locks.verify(taskMapper).updateAuditTaskReviewCas(anyLong(), anyInt(), anyInt(), anyLong(), anyInt(), any());
     }
 
+    // ---------- AUDIT-G2-6:过审前重跑模板 schema 校验器,审核期间失效的配置 409 打回重提 ----------
+
+    @Test
+    void personalApprovalRevalidatesAdvancedConfigAndRefusesBrokenOne() {
+        canonical.setAdvancedConfigJson("{\"schemaVersion\":99}");
+        task.setSnapshotJson(com.chengyinhub.business.service.support.TemplateAuditSnapshot.personal(canonical));
+        AuditReviewDTO decision = new AuditReviewDTO(); decision.setExpectedVersion(0);
+        decision.setStatus(AuditTask.STATUS_APPROVED);
+
+        ServiceException e = assertThrows(ServiceException.class, () -> service.review(3L, 8L, decision));
+
+        assertEquals(Integer.valueOf(409), e.getCode());
+        org.junit.jupiter.api.Assertions.assertTrue(e.getMessage().contains("重新提交"), e.getMessage());
+        verify(taskMapper, never()).updateAuditTaskReviewCas(anyLong(), anyInt(), anyInt(), anyLong(), anyInt(), any());
+        verify(templateMapper, never()).applyAuditDecision(any(), anyLong());
+    }
+
+    @Test
+    void personalApprovalRevalidatesSensorFields() {
+        canonical.setValidationMethod(com.chengyinhub.common.constant.ValidationMethod.APP_SENSOR);
+        canonical.setSensorType("steps");
+        canonical.setSensorConfig("{\"targetSteps\":0}");
+        task.setSnapshotJson(com.chengyinhub.business.service.support.TemplateAuditSnapshot.personal(canonical));
+        AuditReviewDTO decision = new AuditReviewDTO(); decision.setExpectedVersion(0);
+        decision.setStatus(AuditTask.STATUS_APPROVED);
+
+        ServiceException e = assertThrows(ServiceException.class, () -> service.review(3L, 8L, decision));
+
+        assertEquals(Integer.valueOf(409), e.getCode());
+        verify(templateMapper, never()).applyAuditDecision(any(), anyLong());
+    }
+
+    @Test
+    void marketApprovalRevalidatesProjectionConfig() {
+        projection.setAdvancedConfigJson("not-json");
+        stubMarketTask();
+        AuditReviewDTO decision = new AuditReviewDTO(); decision.setExpectedVersion(0);
+        decision.setStatus(AuditTask.STATUS_APPROVED);
+
+        ServiceException e = assertThrows(ServiceException.class, () -> service.review(3L, 8L, decision));
+
+        assertEquals(Integer.valueOf(409), e.getCode());
+        verify(libraryMapper, never()).applyAuditDecision(any(), anyLong());
+    }
+
+    /** 驳回不受影响:配置坏了照样能驳回,别把审核员卡死。 */
+    @Test
+    void rejectionOfBrokenConfigStillWorks() {
+        canonical.setAdvancedConfigJson("{\"schemaVersion\":99}");
+        task.setSnapshotJson(com.chengyinhub.business.service.support.TemplateAuditSnapshot.personal(canonical));
+        AuditReviewDTO decision = new AuditReviewDTO(); decision.setExpectedVersion(0);
+        decision.setStatus(AuditTask.STATUS_REJECTED);
+        decision.setReasonText("配置失效");
+
+        service.review(3L, 8L, decision);
+
+        assertEquals(2L, captureMember().getStatus());
+    }
+
     private void stubMarketTask() {
         task = new AuditTask();
         task.setId(3L);

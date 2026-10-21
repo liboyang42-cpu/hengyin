@@ -19,11 +19,8 @@ class BuildSchemaMigrationSelectionTest(unittest.TestCase):
             {"migrationId": "job", "path": "job.sql", "executionPhase": "POST_DEPLOY"},
         ]
         cursor = mock.Mock()
-        cursor.fetchone.side_effect = [("8.0.45", "isolated-test"), ("REPEATABLE-READ",),
-                                       (1,), ("REPEATABLE-READ",), (1,)]
+        cursor.fetchone.side_effect = [("8.0.45", "isolated-test"), (1,), (1,)]
         connection = mock.Mock()
-        connection.get_autocommit.return_value = True
-        connection.server_status = 2
         connection.cursor.return_value = cursor
         with mock.patch.object(sys, "argv", ["build_schema.py", "--schema", "cy_e2e_phase"]), \
                 mock.patch.object(build_schema, "build_manifest", return_value={"migrations": candidate}), \
@@ -102,6 +99,7 @@ class BuildSchemaMigrationSelectionTest(unittest.TestCase):
     class SchemaCursor:
         def __init__(self):
             self.tables = set()
+            self.connection = mock.Mock()
 
         def execute(self, sql):
             match = re.match(r"CREATE TABLE(?: IF NOT EXISTS)?\s+`?([a-z0-9_]+)`?",
@@ -207,6 +205,43 @@ class BuildSchemaMigrationSelectionTest(unittest.TestCase):
             selected,
         )
 
+    def test_circle_business_seed_and_repair_skip_but_their_persistent_schema_replays(self):
+        policy = json.loads(build_schema.SCHEMA_REPLAY_POLICY.read_text(encoding="utf-8"))
+        paths = {
+            "chengyinhub-admin/sql/migration_seed_circle_theme_batch2_20260821.sql":
+                "44c1e8d44b59b7e7f6fb921bfdbd15bbcce59927857325a8112d37f9457342a2",
+            "chengyinhub-admin/sql/migration_seed_circle_theme_batch2_repair_20260821.sql":
+                "68870b97f45e8da01e01dafe261efa73aeeef25f75918ab5d9fdceb9cc29836f",
+        }
+        for path, fingerprint in paths.items():
+            with self.subTest(path=path):
+                source = (build_schema.REPO / path).read_bytes()
+                self.assertEqual(fingerprint, policy["dataOnlyMigrations"][path])
+                self.assertEqual(fingerprint, build_schema.hashlib.sha256(source).hexdigest())
+                # Existing preflight permits DML/temporary helpers and rejects persistent DDL.
+                build_schema.validate_transaction_statements(build_schema.split_statements(source.decode("utf-8")))
+        selected = {item["path"] for item in build_schema.migrations_after_baseline(
+            build_schema.build_manifest(build_schema.REPO, target_commit="a" * 40,
+                dependency_path=build_schema.REPO / "ci/migration-dependencies.json")["migrations"])}
+        self.assertTrue(set(paths).isdisjoint(selected))
+        schema = "chengyinhub-admin/sql/migration_circle_theme_batch2_20260821.sql"
+        self.assertNotIn(schema, policy["dataOnlyMigrations"])
+        self.assertIn(schema, selected)
+
+    def test_data_only_policy_rejects_either_circle_seed_fingerprint_drift(self):
+        manifest = build_schema.build_manifest(build_schema.REPO, target_commit="a" * 40,
+            dependency_path=build_schema.REPO / "ci/migration-dependencies.json")
+        for path in ("chengyinhub-admin/sql/migration_seed_circle_theme_batch2_20260821.sql",
+                     "chengyinhub-admin/sql/migration_seed_circle_theme_batch2_repair_20260821.sql"):
+            with self.subTest(path=path), tempfile.TemporaryDirectory() as tmp:
+                policy = json.loads(build_schema.SCHEMA_REPLAY_POLICY.read_text(encoding="utf-8"))
+                policy["dataOnlyMigrations"][path] = "0" * 64
+                stale = pathlib.Path(tmp) / "policy.json"
+                stale.write_text(json.dumps(policy), encoding="utf-8")
+                with mock.patch.object(build_schema, "SCHEMA_REPLAY_POLICY", stale):
+                    with self.assertRaisesRegex(RuntimeError, "data-only 指纹不一致"):
+                        build_schema.migrations_after_baseline(manifest["migrations"])
+
     def test_data_only_policy_rejects_stale_a8_fingerprint(self):
         policy = json.loads(build_schema.SCHEMA_REPLAY_POLICY.read_text(encoding="utf-8"))
         path = "chengyinhub-admin/sql/migration_seed_merchant_game_a8_20260823.sql"
@@ -268,150 +303,6 @@ class BuildSchemaMigrationSelectionTest(unittest.TestCase):
             with mock.patch.object(build_schema, "SCHEMA_REPLAY_POLICY", tampered):
                 with self.assertRaisesRegex(RuntimeError, "data-only 指纹不一致"):
                     build_schema.migrations_after_baseline(manifest["migrations"])
-
-    def test_marked_file_begins_and_commits_after_engine_preflight(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            path = pathlib.Path(tmp) / "atomic.sql"
-            path.write_text("-- runner: requires=transaction\nINSERT INTO sys_job(job_name) VALUES('one');\n", encoding="utf-8")
-            cursor = mock.Mock()
-            cursor.connection.get_autocommit.return_value = True
-            cursor.connection.server_status = 2
-            cursor.fetchone.return_value = ("cy_e2e_atomic",)
-            with mock.patch.object(build_schema, "assert_innodb_references", create=True) as engine:
-                self.assertTrue(build_schema.run_file(cursor, path, "atomic", [], False))
-                engine.assert_called_once()
-            cursor.connection.begin.assert_called_once()
-            cursor.connection.commit.assert_called_once()
-            cursor.connection.rollback.assert_not_called()
-
-    def test_marked_file_sql_failure_rolls_back_and_ignores_keep_going(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            path = pathlib.Path(tmp) / "atomic.sql"
-            path.write_text("-- runner: requires=transaction\nINSERT INTO sys_job(job_name) VALUES('one');\n"
-                            "INSERT INTO sys_job(job_name) VALUES('bad');\n"
-                            "INSERT INTO sys_job(job_name) VALUES('must_not_run');\n", encoding="utf-8")
-            cursor = mock.Mock()
-            cursor.connection.get_autocommit.return_value = True
-            cursor.connection.server_status = 2
-            cursor.fetchone.return_value = ("cy_e2e_atomic",)
-            def execute(sql):
-                if "'bad'" in sql:
-                    raise RuntimeError("owned SQL failure")
-            cursor.execute.side_effect = execute
-            errors = []
-            with mock.patch.object(build_schema, "assert_innodb_references", create=True):
-                self.assertFalse(build_schema.run_file(cursor, path, "atomic", errors, True))
-            cursor.connection.rollback.assert_called_once()
-            cursor.connection.commit.assert_not_called()
-            self.assertTrue(errors)
-            self.assertFalse(any("must_not_run" in call.args[0] for call in cursor.execute.call_args_list))
-
-    def test_marked_file_rowcount_assertion_failure_rolls_back(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            path = pathlib.Path(tmp) / "atomic.sql"
-            path.write_text("-- runner: requires=transaction\n-- runner: assert=rowcount-positive\n"
-                            "INSERT INTO sys_job(job_name) SELECT 'one' WHERE FALSE;\n", encoding="utf-8")
-            cursor = mock.Mock()
-            cursor.connection.get_autocommit.return_value = True
-            cursor.connection.server_status = 2
-            cursor.fetchone.return_value = ("cy_e2e_atomic",)
-            cursor.rowcount = 0
-            with mock.patch.object(build_schema, "assert_innodb_references", create=True):
-                self.assertFalse(build_schema.run_file(cursor, path, "atomic", [], True))
-            cursor.connection.rollback.assert_called_once()
-            cursor.connection.commit.assert_not_called()
-
-    def test_marked_file_unsupported_shape_is_rejected_before_touching_connection(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            path = pathlib.Path(tmp) / "atomic.sql"
-            path.write_text("-- runner: requires=transaction\nSELECT 1;\n", encoding="utf-8")
-            cursor = mock.Mock()
-            with mock.patch.object(build_schema, "assert_innodb_references", create=True):
-                self.assertFalse(build_schema.run_file(cursor, path, "atomic", [], True))
-            cursor.execute.assert_not_called()
-            cursor.connection.begin.assert_not_called()
-
-    def test_marked_file_non_innodb_is_rejected_before_begin_or_write(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            path = pathlib.Path(tmp) / "atomic.sql"
-            path.write_text("-- runner: requires=transaction\nINSERT INTO sys_job(job_name) VALUES('one');\n", encoding="utf-8")
-            cursor = mock.Mock()
-            cursor.connection.get_autocommit.return_value = True
-            cursor.connection.server_status = 2
-            cursor.fetchone.return_value = ("cy_e2e_atomic",)
-            with mock.patch.object(build_schema, "assert_innodb_references", create=True,
-                                   side_effect=ValueError("non-InnoDB fixture")):
-                self.assertFalse(build_schema.run_file(cursor, path, "atomic", [], True))
-            cursor.connection.begin.assert_not_called()
-            self.assertFalse(any("INSERT" in call.args[0] for call in cursor.execute.call_args_list))
-
-    def test_marked_file_does_not_commit_a_callers_existing_transaction(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            path = pathlib.Path(tmp) / "atomic.sql"
-            path.write_text("-- runner: requires=transaction\nINSERT INTO sys_job(job_name) VALUES('one');\n", encoding="utf-8")
-            cursor = mock.Mock()
-            cursor.connection.get_autocommit.return_value = False
-            with mock.patch.object(build_schema, "assert_innodb_references", create=True):
-                self.assertFalse(build_schema.run_file(cursor, path, "atomic", [], True))
-            cursor.connection.begin.assert_not_called()
-            cursor.connection.commit.assert_not_called()
-            cursor.connection.rollback.assert_not_called()
-
-    def test_marked_file_does_not_commit_an_explicit_transaction_with_autocommit_true(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            path = pathlib.Path(tmp) / "atomic.sql"
-            path.write_text("-- runner: requires=transaction\nINSERT INTO sys_job(job_name) VALUES('one');\n", encoding="utf-8")
-            cursor = mock.Mock()
-            cursor.connection.get_autocommit.return_value = True
-            cursor.connection.server_status = 3
-            cursor.fetchone.return_value = ("cy_e2e_atomic",)
-            with mock.patch.object(build_schema, "assert_innodb_references"):
-                self.assertFalse(build_schema.run_file(cursor, path, "atomic", [], True))
-            cursor.execute.assert_not_called()
-            cursor.connection.begin.assert_not_called()
-            cursor.connection.commit.assert_not_called()
-            cursor.connection.rollback.assert_not_called()
-
-    def test_unconfirmed_rollback_stops_keep_going_before_the_next_file(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            root = pathlib.Path(tmp)
-            baseline = root / "baseline.sql"
-            baseline.write_text("", encoding="utf-8")
-            atomic = root / "atomic.sql"
-            atomic.write_text("-- runner: requires=transaction\nINSERT INTO sys_job(job_name) VALUES('bad');\n", encoding="utf-8")
-            later = root / "later.sql"
-            later.write_text("INSERT INTO sys_job(job_name) VALUES('must_not_run');\n", encoding="utf-8")
-            cursor = mock.Mock()
-            connection = mock.Mock()
-            cursor.connection = connection
-            connection.cursor.return_value = cursor
-            connection.get_autocommit.return_value = True
-            connection.server_status = 2
-            connection.rollback.side_effect = RuntimeError("owned rollback failure")
-            last_sql = [""]
-            def execute(sql, *args):
-                last_sql[0] = sql
-                if "'bad'" in sql:
-                    raise RuntimeError("owned write failure")
-            cursor.execute.side_effect = execute
-            cursor.fetchone.side_effect = lambda: ("8.0.45", "isolated-test") if "VERSION()" in last_sql[0] else (
-                ("REPEATABLE-READ",) if "@@SESSION.transaction_isolation" in last_sql[0] else (
-                    ("cy_e2e_atomic",) if "DATABASE()" in last_sql[0] else (0,)))
-            migrations = [{"migrationId": "atomic", "path": str(atomic)},
-                          {"migrationId": "later", "path": str(later)}]
-            with mock.patch.object(sys, "argv", ["build_schema.py", "--schema", "cy_e2e_atomic", "--keep-going"]), \
-                    mock.patch.object(build_schema, "build_manifest", return_value={"migrations": migrations}), \
-                    mock.patch.object(build_schema, "migrations_after_baseline", return_value=migrations), \
-                    mock.patch.object(build_schema, "connect", side_effect=[mock.Mock(cursor=mock.Mock(return_value=cursor)), connection]), \
-                    mock.patch.object(build_schema, "BASELINE", baseline), \
-                    mock.patch.object(build_schema, "BASELINE_SEED", baseline), \
-                    mock.patch.object(build_schema, "assert_innodb_references"), \
-                    mock.patch.object(build_schema, "verify_seed_negative_controls", return_value=6), \
-                    mock.patch("builtins.print"):
-                with self.assertRaisesRegex(RuntimeError, "rollback"):
-                    build_schema.main()
-            self.assertFalse(any("must_not_run" in call.args[0] for call in cursor.execute.call_args_list))
-            connection.close.assert_called_once()
 
     def test_retention_job_registration_forward_replays_without_rewriting_the_included_seed(self):
         historical = "chengyinhub-admin/sql/migration_data_retention_job.sql"
@@ -518,6 +409,8 @@ class BuildSchemaMigrationSelectionTest(unittest.TestCase):
 
     def test_schema_mode_reports_data_assertion_without_hiding_schema_assertion(self):
         class FalseCursor:
+            connection = mock.Mock()
+
             def execute(self, _sql):
                 pass
 
@@ -568,9 +461,8 @@ class BuildSchemaMigrationSelectionTest(unittest.TestCase):
 class BuildSchemaExecutionFailureTest(unittest.TestCase):
     def run_failed_migration(self, keep_going):
         cursor = mock.Mock()
+        cursor.fetchone.side_effect = [("8.0.45", "isolated-test"), (1,), (1,)]
         executed = []
-        cursor.fetchone.side_effect = lambda: ("8.0.45", "isolated-test") if "VERSION()" in executed[-1] else (
-            ("REPEATABLE-READ",) if "@@SESSION.transaction_isolation" in executed[-1] else (1,))
         def execute(sql, *args):
             executed.append(sql)
             if "first_failure" in sql:
@@ -578,8 +470,6 @@ class BuildSchemaExecutionFailureTest(unittest.TestCase):
         cursor.execute.side_effect = execute
         admin = mock.Mock()
         connection = mock.Mock()
-        connection.get_autocommit.return_value = True
-        connection.server_status = 2
         admin.cursor.return_value = connection.cursor.return_value = cursor
         original_run = build_schema.run_file
         with tempfile.TemporaryDirectory() as tmp:
@@ -624,7 +514,7 @@ class BuildSchemaExecutionFailureTest(unittest.TestCase):
 
     def test_migration_read_exception_closes_connection(self):
         connection = mock.Mock()
-        connection.cursor.return_value.fetchone.side_effect = [("8.0.45", "isolated-test"), ("REPEATABLE-READ",)]
+        connection.cursor.return_value.fetchone.side_effect = [("8.0.45", "isolated-test")]
         with mock.patch.object(sys, "argv", ["build_schema.py", "--schema", "cy_e2e_failure"]), \
                 mock.patch.object(build_schema, "build_manifest", return_value={"migrations": []}), \
                 mock.patch.object(build_schema, "migrations_after_baseline", return_value=[]), \
@@ -636,130 +526,172 @@ class BuildSchemaExecutionFailureTest(unittest.TestCase):
         self.assertEqual(2, connection.close.call_count)
 
 
-class BuildSchemaSessionIsolationTest(unittest.TestCase):
-    class Connection:
-        def __init__(self, isolation="REPEATABLE-READ", restore="ok"):
-            self.isolation, self.restore = isolation, restore
-            self.server_status, self.closed = 2, False
-            self.last_sql, self.executed, self.observed = "", [], []
-            self.restore_attempts = 0
+class BuildSchemaFileBoundaryTest(unittest.TestCase):
+    class Cursor:
+        def __init__(self):
+            self.connection = mock.Mock()
+            self.connection.begin.side_effect = self.begin
+            self.connection.commit.side_effect = self.commit
+            self.connection.rollback.side_effect = self.rollback
+            self.isolation = "REPEATABLE-READ"
+            self.active = False
+            self.pending = []
+            self.persisted = []
+            self.executed = []
+            self.observed_isolations = []
+            self.rowcount = 1
 
-        def cursor(self):
-            return self
+        def begin(self):
+            self.active = True
 
-        def get_autocommit(self):
-            return True
+        def commit(self):
+            self.persisted.extend(self.pending)
+            self.pending.clear()
+            self.active = False
 
-        def execute(self, sql, *args):
-            self.last_sql = sql
+        def rollback(self):
+            self.pending.clear()
+            self.active = False
+
+        def execute(self, sql):
             self.executed.append(sql)
-            if sql.startswith("SET SESSION TRANSACTION ISOLATION LEVEL"):
-                level = sql.split("ISOLATION LEVEL ", 1)[1].replace(" ", "-")
-                if level != "READ-COMMITTED":
-                    self.restore_attempts += 1
-                    if self.restore == "raise":
-                        raise RuntimeError("controlled SET failure")
-                    if self.restore == "ignore":
-                        return
-                self.isolation = level
-            elif "observe_inside_file" in sql or "observe_next_file" in sql:
-                self.observed.append((sql, self.isolation))
-            elif sql == "START TRANSACTION":
-                self.server_status = 3
-            elif "controlled_file_failure" in sql:
+            if "TRANSACTION ISOLATION LEVEL READ COMMITTED" in sql:
+                self.isolation = "READ-COMMITTED"
+            elif "TRANSACTION ISOLATION LEVEL REPEATABLE READ" in sql:
+                self.isolation = "REPEATABLE-READ"
+            elif "fail_step" in sql:
                 raise RuntimeError("controlled SQL failure")
+            elif sql.startswith("SELECT"):
+                self.observed_isolations.append(self.isolation)
+            elif sql.startswith(("INSERT", "UPDATE", "CREATE")):
+                (self.pending if self.active else self.persisted).append(sql)
+            self.rowcount = 0 if "zero_rows" in sql else 1
 
         def fetchone(self):
-            if "@@SESSION.transaction_isolation" in self.last_sql:
-                return (self.isolation,)
-            if "VERSION()" in self.last_sql:
-                return ("8.0.45", "isolated-test")
-            return (0,)
+            return (1,)
 
-        def close(self):
-            self.closed = True
-
-    def run_main(self, connection, first, *, keep_going=False):
+    def replay(self, cursor, source, keep_going=False, failures=None):
+        if failures is None:
+            failures = []
         with tempfile.TemporaryDirectory() as tmp:
-            root = pathlib.Path(tmp)
-            baseline = root / "baseline.sql"
-            baseline.write_text("", encoding="utf-8")
-            one, two = root / "one.sql", root / "two.sql"
-            one.write_text(first, encoding="utf-8")
-            two.write_text("SELECT 'observe_next_file';", encoding="utf-8")
-            migrations = [{"migrationId": "one", "path": str(one)},
-                          {"migrationId": "two", "path": str(two)}]
-            argv = ["build_schema.py", "--schema", "cy_e2e_isolation"]
-            if keep_going:
-                argv.append("--keep-going")
-            with mock.patch.object(sys, "argv", argv), \
-                    mock.patch.object(build_schema, "build_manifest", return_value={"migrations": migrations}), \
-                    mock.patch.object(build_schema, "migrations_after_baseline", return_value=migrations), \
-                    mock.patch.object(build_schema, "connect", side_effect=[self.Connection(), connection]), \
-                    mock.patch.object(build_schema, "BASELINE", baseline), \
-                    mock.patch.object(build_schema, "BASELINE_SEED", baseline), \
-                    mock.patch.object(build_schema, "verify_seed_negative_controls", return_value=6), \
-                    mock.patch("builtins.print"):
-                return build_schema.main()
+            path = pathlib.Path(tmp) / "migration.sql"
+            path.write_text(source, encoding="utf-8")
+            result = build_schema.run_file(cursor, path, "fixture", failures, keep_going)
+        return result, failures
 
-    def test_file_uses_own_isolation_then_next_file_gets_initial_session_contract(self):
-        for initial in ["REPEATABLE-READ", "SERIALIZABLE", "READ-UNCOMMITTED"]:
-            with self.subTest(initial=initial):
-                c = self.Connection(initial)
-                self.assertEqual(0, self.run_main(c, "SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED;\n"
-                                                "SELECT 'observe_inside_file';"))
-                self.assertEqual(["READ-COMMITTED", initial], [level for _, level in c.observed])
-                self.assertEqual(initial, c.isolation)
-                self.assertTrue(c.closed)
+    def test_explicit_rc_runs_as_written_but_next_file_starts_in_rr(self):
+        cursor = self.Cursor()
+        self.assertEqual((True, []), self.replay(cursor,
+            "SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED; SELECT 1;"))
+        self.assertEqual("REPEATABLE-READ", cursor.isolation)
+        self.assertEqual((True, []), self.replay(cursor, "SELECT 1;"))
+        self.assertEqual(["READ-COMMITTED", "REPEATABLE-READ"], cursor.observed_isolations)
 
-    def test_failed_file_restores_even_when_keep_going_and_default_stops(self):
-        for keep_going in [False, True]:
-            with self.subTest(keep_going=keep_going):
-                c = self.Connection()
-                self.assertEqual(1, self.run_main(c, "SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED;\n"
-                                                "SELECT 'controlled_file_failure';", keep_going=keep_going))
-                self.assertEqual("REPEATABLE-READ", c.isolation)
-                self.assertEqual(["REPEATABLE-READ"] if keep_going else [], [level for _, level in c.observed])
-                self.assertTrue(c.closed)
+    def test_required_transaction_failure_stops_inside_file_and_rolls_back_with_keep_going(self):
+        cursor = self.Cursor()
+        result, failures = self.replay(cursor, "-- runner: requires=transaction\n"
+            "INSERT INTO fixture VALUES (1); UPDATE fixture SET n=fail_step WHERE id=1;"
+            "INSERT INTO fixture VALUES (2);", keep_going=True)
+        self.assertFalse(result)
+        self.assertEqual("EXEC", failures[0][2])
+        self.assertEqual([], cursor.persisted)
+        self.assertEqual([], cursor.pending)
+        self.assertFalse(any("VALUES (2)" in sql for sql in cursor.executed))
+        cursor.connection.begin.assert_called_once_with()
+        cursor.connection.commit.assert_not_called()
+        cursor.connection.rollback.assert_called_once_with()
+        self.assertEqual([mock.call(False), mock.call(True)], cursor.connection.autocommit.call_args_list)
+        self.assertEqual((True, failures), self.replay(cursor, "CREATE TABLE later(id INT);", failures=failures))
+        self.assertEqual(1, len(failures), "continuing outside the file cannot erase its failure")
 
-    def test_restore_failure_and_ineffective_restore_are_fatal_with_keep_going(self):
-        for restore in ["raise", "ignore"]:
-            with self.subTest(restore=restore):
-                c = self.Connection(restore=restore)
-                with self.assertRaisesRegex(RuntimeError, "isolation"):
-                    self.run_main(c, "SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED;", keep_going=True)
-                self.assertEqual([], c.observed)
-                self.assertTrue(c.closed)
+    def test_required_transaction_success_commits_all_writes_and_restores_session(self):
+        cursor = self.Cursor()
+        self.assertEqual((True, []), self.replay(cursor, "-- runner: requires=transaction\n"
+            "INSERT INTO fixture VALUES (1); UPDATE fixture SET n=2 WHERE id=1;"))
+        self.assertEqual(2, len(cursor.persisted))
+        cursor.connection.begin.assert_called_once_with()
+        cursor.connection.commit.assert_called_once_with()
+        cursor.connection.rollback.assert_not_called()
+        self.assertEqual(mock.call(True), cursor.connection.autocommit.call_args)
+        self.assertEqual("REPEATABLE-READ", cursor.isolation)
 
-    def test_unknown_transaction_state_stops_before_set_or_next_file(self):
-        c = self.Connection()
-        with self.assertRaisesRegex(RuntimeError, "idle"):
-            self.run_main(c, "START TRANSACTION; SELECT 'controlled_file_failure';", keep_going=True)
-        self.assertEqual(0, c.restore_attempts)
-        self.assertEqual([], c.observed)
-        self.assertTrue(c.closed)
+    def test_required_transaction_assertion_failure_rolls_back_without_commit(self):
+        cursor = self.Cursor()
+        result, failures = self.replay(cursor, "-- runner: requires=transaction\n"
+            "INSERT INTO fixture VALUES (1);\n-- runner: assert=rowcount-positive\n"
+            "UPDATE fixture SET n=zero_rows WHERE id=1; INSERT INTO fixture VALUES (2);", keep_going=True)
+        self.assertFalse(result)
+        self.assertEqual("ASSERT", failures[0][2])
+        self.assertEqual([], cursor.persisted)
+        self.assertFalse(any("VALUES (2)" in sql for sql in cursor.executed))
+        cursor.connection.commit.assert_not_called()
+        cursor.connection.rollback.assert_called_once_with()
 
-    def test_initial_isolation_must_be_a_known_mysql_level_before_file_execution(self):
-        c = self.Connection("REPEATABLE-READ; SELECT 'injected'")
-        with self.assertRaisesRegex(RuntimeError, "isolation"):
-            self.run_main(c, "SELECT 'observe_inside_file';", keep_going=True)
-        self.assertEqual([], c.observed)
-        self.assertEqual(0, c.restore_attempts)
-        self.assertTrue(c.closed)
+    def test_required_transaction_rejects_implicit_commit_ddl_before_execution(self):
+        cursor = self.Cursor()
+        result, failures = self.replay(cursor,
+            "-- runner: requires=transaction\nCREATE TABLE forbidden(id INT);", keep_going=True)
+        self.assertFalse(result)
+        self.assertEqual("PREFLIGHT", failures[0][2])
+        self.assertEqual([], cursor.executed)
+        cursor.connection.begin.assert_not_called()
 
-    def test_uncertain_file_exception_closes_without_attempting_set_or_masking_cause(self):
-        c = self.Connection()
-        original = build_schema.run_file
-        def fail(cur, path, label, results, *args, **kwargs):
-            if label == "one":
-                raise RuntimeError("rollback could not be confirmed")
-            return original(cur, path, label, results, *args, **kwargs)
-        with mock.patch.object(build_schema, "run_file", side_effect=fail):
-            with self.assertRaisesRegex(RuntimeError, "rollback could not be confirmed"):
-                self.run_main(c, "SELECT 1;", keep_going=True)
-        self.assertEqual(0, c.restore_attempts)
-        self.assertEqual([], c.observed)
-        self.assertTrue(c.closed)
+    def test_ordinary_ddl_is_not_wrapped_in_a_transaction(self):
+        cursor = self.Cursor()
+        self.assertEqual((True, []), self.replay(cursor, "CREATE TABLE ordinary(id INT);"))
+        self.assertEqual(["CREATE TABLE ordinary(id INT)"], cursor.persisted)
+        cursor.connection.begin.assert_not_called()
+        cursor.connection.commit.assert_not_called()
+
+    def test_commit_failure_aborts_even_with_keep_going_and_rolls_back(self):
+        cursor = self.Cursor()
+        cursor.connection.commit.side_effect = RuntimeError("commit unavailable")
+        failures = []
+        with self.assertRaisesRegex(RuntimeError, "commit unavailable"):
+            self.replay(cursor, "-- runner: requires=transaction\nINSERT INTO fixture VALUES (1);",
+                        keep_going=True, failures=failures)
+        self.assertEqual("COMMIT_UNKNOWN", failures[0][2])
+        self.assertEqual([], cursor.persisted)
+        cursor.connection.rollback.assert_called_once_with()
+
+    def test_malformed_data_assertion_readback_never_becomes_an_observation(self):
+        for row in (None, (), (0, 1), (None,), (2,), ("0",)):
+            with self.subTest(row=row), tempfile.TemporaryDirectory() as tmp:
+                cursor = self.Cursor()
+                cursor.fetchone = lambda: row
+                path = pathlib.Path(tmp) / "data.sql"
+                path.write_text("-- runner: assert=scalar-true\nSELECT COUNT(*)=1 FROM fixture;",
+                                encoding="utf-8")
+                failures, observations = [], []
+                self.assertFalse(build_schema.run_file(cursor, path, "data", failures, False,
+                                                       schema_only=True, observations=observations))
+                self.assertEqual("ASSERT", failures[0][2])
+                self.assertEqual([], observations)
+
+    def test_data_assertion_fetch_failure_never_becomes_an_observation(self):
+        cursor = self.Cursor()
+        cursor.fetchone = mock.Mock(side_effect=RuntimeError("fetch unavailable"))
+        with tempfile.TemporaryDirectory() as tmp:
+            path = pathlib.Path(tmp) / "data.sql"
+            path.write_text("-- runner: assert=scalar-true\nSELECT COUNT(*)=1 FROM fixture;",
+                            encoding="utf-8")
+            failures, observations = [], []
+            self.assertFalse(build_schema.run_file(cursor, path, "data", failures, False,
+                                                   schema_only=True, observations=observations))
+            self.assertEqual("ASSERT", failures[0][2])
+            self.assertEqual([], observations)
+
+    def test_failed_rollback_aborts_instead_of_reusing_an_unknown_session(self):
+        cursor = self.Cursor()
+        cursor.connection.rollback.side_effect = RuntimeError("rollback unknown")
+        with self.assertRaisesRegex(RuntimeError, "rollback unknown"):
+            self.replay(cursor, "-- runner: requires=transaction\n"
+                "UPDATE fixture SET n=fail_step WHERE id=1;", keep_going=True)
+        self.assertNotIn(mock.call(True), cursor.connection.autocommit.call_args_list)
+
+
+if __name__ == "__main__":
+    unittest.main()
 
 
 class AdminRolePayeeForwardContractTest(unittest.TestCase):

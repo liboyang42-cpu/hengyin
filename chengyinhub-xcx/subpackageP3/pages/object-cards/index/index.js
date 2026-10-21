@@ -31,6 +31,11 @@ Page({
     ball: false,
     // 放大态:null = 堆;非空 = 盖在堆上的那一件
     active: null,
+    // BL-79 改名:盖在放大态上的半屏;关掉回到放大态
+    renaming: false,
+    renameValue: '',
+    renameError: '',
+    renameSubmitting: false,
   },
 
   onLoad() {
@@ -266,6 +271,66 @@ Page({
   // 画布在放大态时是 display:none,回来补画一帧(停住的堆不会自己再画)
   onCloseActive() { this.setData({ active: null }, () => { if (this._ctx) this._draw(); }); },
 
+  // ---------------- BL-79 改名 ----------------
+  onRenameStart() {
+    const active = this.data.active;
+    if (!active) return;
+    this.setData({ renaming: true, renameValue: active.title || '', renameError: '', renameSubmitting: false });
+  },
+
+  onRenameInput(e) {
+    this.setData({ renameValue: String((e && e.detail && e.detail.value) || ''), renameError: '' });
+  },
+
+  onRenameCancel() {
+    if (this.data.renameSubmitting) return;
+    this.setData({ renaming: false, renameError: '' });
+  },
+
+  /** 空名/超长不在前端拦:后端是真源,报错原文回显;成功后以返回的卡名为准,再回读当前分类列表。 */
+  onRenameSubmit() {
+    const active = this.data.active;
+    if (!active || this.data.renameSubmitting) return;
+    this.setData({ renameSubmitting: true, renameError: '' });
+    app.sendRequest({
+      url: '/api/object-card/rename',
+      method: 'POST',
+      hideLoading: true,
+      silentError: true,
+      autoErrorToast: false,
+      data: { id: active.id, title: this.data.renameValue },
+      success: (res) => {
+        if (this._destroyed) return;
+        const saved = res && (res.code === 200 || res.code === '200') && res.data
+          && typeof res.data === 'object' && typeof res.data.title === 'string' ? res.data : null;
+        if (!saved) {
+          this.setData({ renameSubmitting: false, renameError: renameErrorText(res) });
+          return;
+        }
+        this.setData({
+          renaming: false,
+          renameSubmitting: false,
+          active: Object.assign({}, active, { title: saved.title }),
+        });
+        cyToast('已改名');
+        this.load(this.data.filter);
+      },
+      fail: () => {
+        if (this._destroyed) return;
+        this.setData({ renameSubmitting: false, renameError: '网络连接失败，请稍后重试' });
+      },
+      successStatusAbnormal: () => {
+        if (this._destroyed) return;
+        this.setData({ renameSubmitting: false, renameError: '改名没成功，请稍后重试' });
+      },
+    });
+  },
+
   // 自动化自证:堆里画了几件 + 后端说共几件
   __layoutProbe() { return { n: this._bodies.length, total: this._total, filter: this.data.filter }; },
 });
+
+function renameErrorText(res) {
+  const fallback = '改名没成功，请稍后重试';
+  return (app.getRequestErrorMessage && app.getRequestErrorMessage(res, fallback)) || fallback;
+}

@@ -213,11 +213,11 @@
                 <view class="v2-feyebrow ep1" wx:if="{{item.feedTypeLabel}}">{{item.feedTypeLabel}}</view>
                 <view class="v2-ftitle ep2">{{item.name}}</view>
                 <view class="v2-ftags flex-ac">
-                  <text class="v2-ftag" wx:for="{{item.feedTags}}" wx:key="*this">{{item}}</text>
+                  <text class="v2-ftag" wx:for="{{item.feedTags}}" wx:key="index">{{item}}</text>
                 </view>
               </view>
               <view class="v2-fgrid v2-fgrid--{{item.feedGridMode || '1'}}">
-                <block wx:for="{{item.feedImages}}" wx:for-item="im" wx:for-index="gi" wx:key="*this">
+                <block wx:for="{{item.feedImages}}" wx:for-item="im" wx:for-index="gi" wx:key="gi">
                   <view class="v2-fcell">
                     <image src="{{im}}" mode="aspectFill" lazy-load="true" />
                     <view class="v2-fmore" wx:if="{{gi === 1 && item.moreCount}}">+{{item.moreCount}}</view>
@@ -256,11 +256,11 @@
                 <view class="v2-feyebrow ep1" wx:if="{{item.feedTypeLabel}}">{{item.feedTypeLabel}}</view>
                 <view class="v2-ftitle ep2">{{item.name}}</view>
                 <view class="v2-ftags flex-ac">
-                  <text class="v2-ftag" wx:for="{{item.feedTags}}" wx:key="*this">{{item}}</text>
+                  <text class="v2-ftag" wx:for="{{item.feedTags}}" wx:key="index">{{item}}</text>
                 </view>
               </view>
               <view class="v2-fgrid v2-fgrid--{{item.feedGridMode || '1'}}">
-                <block wx:for="{{item.feedImages}}" wx:for-item="im" wx:for-index="gi" wx:key="*this">
+                <block wx:for="{{item.feedImages}}" wx:for-item="im" wx:for-index="gi" wx:key="gi">
                   <view class="v2-fcell">
                     <image src="{{im}}" mode="aspectFill" lazy-load="true" />
                     <view class="v2-fmore" wx:if="{{gi === 1 && item.moreCount}}">+{{item.moreCount}}</view>

@@ -70,6 +70,10 @@ public interface CommunityPostMapper {
     List<Map<String, Object>> selectMediaForSafety(Long postId);
     int updateMediaReviewState(@Param("postId") Long postId, @Param("reviewState") String reviewState,
                                @Param("now") Date now);
+    /** 审核分级标记(非生命周期字段,不 bump version;须在已锁行的事务里调用)。null = 保持原值。 */
+    int updateAuditMarks(@Param("postId") Long postId, @Param("auditLevel") Integer auditLevel,
+                         @Param("auditBeforePublish") Integer auditBeforePublish,
+                         @Param("reviewFlag") Integer reviewFlag, @Param("now") Date now);
     int deleteTopics(Long postId);
     int insertTopic(@Param("postId") Long postId, @Param("topicCode") String topicCode,
                     @Param("now") Date now);
@@ -256,6 +260,8 @@ public interface CommunityPostMapper {
                           @Param("operatorUserId") Long operatorUserId, @Param("startsAt") Date startsAt,
                           @Param("endsAt") Date endsAt, @Param("requestId") String requestId,
                           @Param("now") Date now);
+    int linkEnforcement(@Param("id") Long id, @Param("reportCaseId") Long reportCaseId,
+                        @Param("commentId") Long commentId);
     Map<String, Object> selectEnforcement(Long id);
     Map<String, Object> selectEnforcementByRequest(@Param("operatorUserId") Long operatorUserId,
                                                     @Param("requestId") String requestId);
@@ -266,8 +272,11 @@ public interface CommunityPostMapper {
     int insertAppeal(@Param("enforcementId") Long enforcementId,
                      @Param("appellantMemberId") Long appellantMemberId,
                      @Param("reason") String reason, @Param("evidenceJson") String evidenceJson,
-                     @Param("requestId") String requestId, @Param("now") Date now);
+                     @Param("requestId") String requestId, @Param("dueAt") Date dueAt, @Param("now") Date now);
     Map<String, Object> selectAppeal(Long id);
+    int claimAppealCas(@Param("id") Long id, @Param("reviewerUserId") Long reviewerUserId,
+                       @Param("expectedVersion") int expectedVersion, @Param("now") Date now);
+    Integer selectReportCaseFirstResponseMinutes(@Param("reportCaseId") Long reportCaseId);
     List<Map<String, Object>> selectAppeals(@Param("status") String status,
                                             @Param("cursor") Long cursor, @Param("limit") int limit);
     int reviewAppealCas(@Param("id") Long id, @Param("decision") String decision,

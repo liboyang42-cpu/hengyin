@@ -1,5 +1,5 @@
 // app.js
-const { installAppUpdate } = require('./utils/app-update.js');
+const { installUpdateManager, handlePageNotFound } = require('./utils/update-manager.js');
 const modal = require('./utils/modal.js');
 const { createNetworkStatus } = require('./utils/network-status.js');
 const cyToast = require('./utils/toast.js');
@@ -35,7 +35,7 @@ App({
   // 假 ready 修复(Phase 1.2):isAppReady 仅表示"初始化完成"(app 照常起、可看公共内容),
   // 不代表已登录;需要登录态的页面/动作用 getAuthorization()/getUserID() 判定真实会话。
   onLaunch(e) {
-    installAppUpdate(wx);
+    installUpdateManager(this, wx);
     const runtimeConfig = config.resolveFromWx(wx);
     // 全局基调:暗色(全站默认深空黑;原生导航栏/状态栏同步深色)。个别浅色页根节点挂 class="theme-light"。
     applyTheme('dark');
@@ -138,6 +138,10 @@ App({
         reject(err);
       });
     });
+  },
+
+  onPageNotFound(res) {
+    handlePageNotFound(res, wx);
   },
 
   // 热启动:从分享卡/扫码再次进入时,query 只出现在 onShow 上。
@@ -432,8 +436,10 @@ App({
       return;
     }
     this._privacyNavigationPending = true;
+    // SC-PRIV-04:回退页打不开(如页面栈满)时,把全部待决调用方按 disagree 各结算一次,不让它们永久挂起。
     wx.navigateTo({
       url: '/pages/privacy/index',
+      fail: function () { this.resolvePrivacyAuthorization({ event: 'disagree' }); }.bind(this),
       complete: function () { this._privacyNavigationPending = false; }.bind(this)
     });
   },

@@ -1,4 +1,6 @@
 # U5 silentError 白名单册子 —— ci/silent-error-gate.js 读这个文件。
+chengyinhub-xcx/utils/content-report.js 4  # 2026-10-20 举报原因读取和主题/广场模板/个人玩法三处提交：业务拒绝及网络失败均由当前页面显式 toast，结束在途状态；关闭通道 toast 避免双弹与换号后的旧响应提示，followup-a1-content-report-entries 覆盖失败和页面/身份失效。
+chengyinhub-xcx/subpackageA/pages/myproject/index.js 2  # 2026-10-20 审核记录读取失败落弹层 error 并 toast，可重试；申诉业务拒绝/网络失败明确 toast 且释放在途，关闭通道 toast 避免双弹，离页/换号后不提示旧结果，followup-a2-audit-appeal-timeline 覆盖失败恢复。
 chengyinhub-xcx/components/cy/club-direct-ledger/index.js 1  # 计酬账目读取失败由 cy-inline-error 显示取回失败并提供重试；旧请求和切号响应被 epoch 拒绝，关闭全局 toast 避免重复提示。
 #
 # 一行一条:<仓库根相对路径> <该行认领的 silentError:true 处数>   # 为什么这里可以静默
@@ -42,7 +44,7 @@ chengyinhub-xcx/components/cy/club-direct-ledger/index.js 1  # 计酬账目读�
 #   的 UNREVIEWED 存量 1 处随代码整删 ⇒ 73→72。同 2026-09-16 先例:存量变少不是长大。
 # BASELINE_TOTAL_20260818 72
 
-chengyinhub-xcx/components/cy/npc-chat/index.js 1  # UNREVIEWED_BASELINE_20260818:1 存量未审查,禁止新增
+chengyinhub-xcx/subpackageMember/components/cy/npc-chat/index.js 1  # 2026-10-19 随组件下沉会员分包一并审查(原 UNREVIEWED_BASELINE_20260818:1):NPC 提问失败(网络/异常状态码)在对话里追加一条可见回复「网络不太稳定，这条问题还没有送达，可以再试一次」并标 FAILED,配合「重试这条消息」;关自动 toast 免双弹
 chengyinhub-xcx/components/cy/profile/index.js 0  # UNREVIEWED_BASELINE_20260818:4 存量未审查,禁止新增(2026-08-21:本轮整改已删除 3 处静默调用)；2026-09-30 迁至会员分包，原路径调用清零，保留冻结收据
 chengyinhub-xcx/subpackageMember/components/cy/scene-game-coupon-wallet/index.js 1  # UNREVIEWED_BASELINE_20260818:1 存量未审查,禁止新增
 chengyinhub-xcx/components/cy/scene-member-invite-history/index.js 1  # UNREVIEWED_BASELINE_20260818:1 存量未审查,禁止新增
@@ -70,6 +72,7 @@ chengyinhub-xcx/pages/merchant/coop-center/index.js 2  # UNREVIEWED_BASELINE_202
 chengyinhub-xcx/pages/merchant/customer/index.js 1  # UNREVIEWED_BASELINE_20260818:1 存量未审查,禁止新增
 chengyinhub-xcx/pages/merchant/decor/index.js 1  # UNREVIEWED_BASELINE_20260818:1 存量未审查,禁止新增
 chengyinhub-xcx/pages/merchant/decor/index.js 1  # 订单状态轮询失败由 checkout unknown 状态承接并禁止重复支付；关闭自动 toast 避免轮询期间重复打扰
+chengyinhub-xcx/pages/merchant/decor/index.js 1  # BL-108 已生效权益是升级权益面板里的辅助只读信息，读取失败就不展示，不挡面板，也不弹 toast
 chengyinhub-xcx/pages/merchant/index/index.js 0  # UNREVIEWED_BASELINE_20260818:3 存量已清零(2026-08-21:本轮整改删除全部静默调用，保留冻结收据)
 chengyinhub-xcx/pages/merchant/marketing/ai-insight/index.js 1  # AI 参谋整页失败落 error 状态,由 cy-error 带 retry 渲染;关闭全局 toast 避免与页内错误双提示(2026-08-20 新增,已逐条审查)
 chengyinhub-xcx/pages/merchant/marketing/index.js 1  # UNREVIEWED_BASELINE_20260818:1 存量未审查,禁止新增
@@ -118,6 +121,7 @@ chengyinhub-xcx/pages/merchant/customer/index.js 6  # 2026-09-25 CRM 工作台:�
 chengyinhub-xcx/pages/merchant/customer/index.js 1  # 2026-09-15 F15 获取联系号码:失败由失败半屏承接并含可读原因,通用 toast 会与半屏双弹
 chengyinhub-xcx/pages/merchant/index/index.js 1  # 2026-08-25 商家工作台:经营身份失败关闭为 consoleState:error 并显示 consoleError,不冒充空态;通用 toast 会双弹
 chengyinhub-xcx/pages/merchant/index/index.js 1  # 2026-09-17 入驻申请状态回读:失败由页内 consoleError + 「重新加载」承接,不弹重复 toast
+chengyinhub-xcx/pages/merchant/index/index.js 1  # 2026-10-15 BL-85 开通前置检查(只读辅助区块):读取失败就不展示,不挡工作台其他区块,也不弹 toast
 chengyinhub-xcx/pages/merchant/predict/index.js 3  # 2026-09-12 竞猜待答:身份与待办列表失败落整页 cy-error/无权限空态;结算失败由本页 toast 精确文案并留在原地可再试。通用 toast 会双弹
 chengyinhub-xcx/pages/merchant/ledger/index.js 1  # 2026-08-25 状态底座:失败落页内错误态(cy-error / cy-inline-error / state:error / stale-error),通用 toast 会双弹
 chengyinhub-xcx/pages/merchant/team/index.js 7  # 2026-08-25 团队页:权限、成员、岗位、邀请与写操作失败落页内/弹层精确错误并保留重试;通用 toast 会双弹
@@ -146,8 +150,10 @@ chengyinhub-xcx/subpackageA/pages/myproject/index.js 2  # 2026-08-25 状态底�
 chengyinhub-xcx/subpackageB/pages/im/chat/index.js 3  # 2026-08-25 状态底座:失败落页内错误态(cy-error / cy-inline-error / state:error / stale-error),通用 toast 会双弹
 chengyinhub-xcx/subpackageB/pages/im/chat/index.js 3  # 2026-10-10 举报、清空与拉黑三路：举报 finish 在原账号/会话可见时显式提示，隐藏时待 onShow；清空/拉黑 failed 显示危险确认错误并允许重试，无组件时显式提示。迟到回包只淘汰旧上下文，不让全局 toast 污染新页面。
 chengyinhub-xcx/subpackageB/pages/im/chat/index.js 1  # 2026-10-10 拉黑对象读取：复用本人会话接口，失败由 _showBlockConfirmation 在原账号/会话可见时提示，后台结果待 onShow；失败释放记录可重试，旧回包不覆盖新确认。
+chengyinhub-xcx/subpackageB/pages/im/chat/index.js 1  # 2026-10-15 BL-87 处理结果半屏回读审核记录:失败(含 403/404)由半屏内 cy-inline-error 如实回显并可重试,关闭全局 toast 免双弹
 chengyinhub-xcx/subpackageB/pages/im/list/index.js 1  # 2026-08-25 状态底座:失败落页内错误态(cy-error / cy-inline-error / state:error / stale-error),通用 toast 会双弹
 chengyinhub-xcx/subpackageMember/complaint/index.js 1  # 2026-10-13 主题选项读取失败保留空白，不渲染伪主题；实际读取与举报提交的反馈另列下方实名记录
+chengyinhub-xcx/subpackageB/pages/im/list/index.js 2  # 2026-08-25 状态底座:失败落页内错误态(cy-error / cy-inline-error / state:error / stale-error),通用 toast 会双弹;CL2 系统 tab 举报进度通知失败落 reportNoticeError 局部错误;BL-31 标记已读失败同落 reportNoticeError,红点保留,不挡跳转
 chengyinhub-xcx/subpackageMember/components/scene-member-participation-detail/index.js 1  # 2026-08-25 状态底座:失败落页内错误态(cy-error / cy-inline-error / state:error / stale-error),通用 toast 会双弹
 chengyinhub-xcx/subpackageMember/mytemplate/mytemplate.js 1  # 2026-08-25 状态底座:失败落页内错误态(cy-error / cy-inline-error / state:error / stale-error),通用 toast 会双弹
 chengyinhub-xcx/subpackageP3/pages/stamp-camera/index/index.js 1  # 2026-08-25 状态底座:调用点自己 showToast 精确文案,关掉通用 toast 是防双弹
@@ -181,9 +187,11 @@ chengyinhub-xcx/subpackageA/pages/myproject/index.js 2  # 2026-09-18 C8-05 取�
 chengyinhub-xcx/pages/topic/merchantinfo/merchantinfo.js 1  # 2026-09-24 CU-C-68 本站运营资格探测(probeStationOperable):开抽屉时预探一次 /api/game/session/merchant/entries,只看本商家有没有本站入口。探不到≠没资格,所以失败不弹 toast(弹了会盖在抽屉上且说不清是哪一件事),改为把「本站运营」那组置灰 + stationOpsErrorText 落到抽屉里一行可重试的说明(project-host wxml 消费)
 chengyinhub-xcx/subpackageA/pages/myproject/index.js 1  # 提交广场审核：业务失败和网络失败均显式 toast，complete/fail 释放单次提交锁；关闭通道 toast 避免重复提示，myproject-toggle-cas-guard 覆盖重复点击及失败恢复。
 chengyinhub-xcx/subpackageA/pages/myproject/index.js 5  # 2026-10-11 上下架、取消活动/主题、删除项目/模板五处：当前页面的业务与网络失败由 toast 或确认组件 failed 显式展示，离开或换账号后丢弃旧结果；关闭通道 toast 防止旧回包污染新页面，myproject-merchant-publish-entry 覆盖成功、业务失败、网络失败和返回恢复。
+chengyinhub-xcx/subpackageA/pages/myproject/index.js 1  # 2026-10-20 本人玩法列表按账号和scope读取：业务/网络/畸形响应由readFailure写tplErrorMsg或登录/权限态并保留旧列表；迟到或换号回包不弹通用toast，myproject-login-recovery及malformed-list-response覆盖失败恢复。
+chengyinhub-xcx/subpackageA/pages/myproject/index.js 1  # BL-120 另存为模板：业务失败按后端文案、网络失败均显式 toast，成功 toast 后回读；complete/fail 释放在途锁，关闭通道 toast 避免双弹，myproject-save-as-template 覆盖
 
 # 2026-09-30 会员分包组件迁移：按实际路径重新核对，旧路径冻结收据保留，不增加冻结额度。
-chengyinhub-xcx/subpackageMember/components/cy/profile/index.js 1  # 商家身份探测失败落 merchantState=network-error，界面区分非商家与网络失败并提供重试；通道 toast 会重复报错。
+chengyinhub-xcx/subpackageMember/components/cy/profile/index.js 2  # 商家身份探测失败落 merchantState=network-error，界面区分非商家与网络失败并提供重试；通道 toast 会重复报错。BL-66 安全感受摘要只读附加块，失败与样本不足同样不展示（merchantSafety=null），不挡主页。
 chengyinhub-xcx/subpackageMember/components/cy/scene-play-activity-detail/index.js 4  # 详情读取落 state:error，取消预检和取消提交落 cancelError，评价提交落 commentError；各有页内反馈与恢复入口，通道 toast 会重复报错。
 chengyinhub-xcx/subpackageMember/components/cy/scene-qr-coupon/index.js 2  # 凭证签发失败落 qrState:error，状态轮询失败落 pollError；已使用或失效会清凭证，各有页内恢复入口，通道 toast 会重复报错。
 chengyinhub-xcx/subpackageMember/components/cy/scene-roam-poi-detail/index.js 4  # 据点和商家读取落页内错误态，收藏失败落 favoriteError，打卡业务拒绝或网络异常落专用恢复面板；通道 toast 会重复报错。
@@ -197,6 +205,30 @@ chengyinhub-xcx/pages/publish/fabu/index.js 8  # edit-detail按作者/seq恢复�
 chengyinhub-xcx/pages/shezhi/shezhi.js 1  # user/info真实401/403显示WXML错误标题并清账号资料，500留旧资料或留白；该处仅读取，club/my路由判据失败toast已记原1处
 chengyinhub-xcx/subpackageB/pages/im/chat/index.js 1  # 解除拉黑失败由当前会话tips或dc.failed明确显示；epoch/账号/会话隔离迟到回包，不静默写失败、不污染新页面
 chengyinhub-xcx/subpackageMember/complaint/index.js 2  # mine读取401/403/参数错误落WXML且owner/seq/hidden隔离；report真实写失败落submitError并保持可重试，不报成功；主题读取另记1处
+chengyinhub-xcx/subpackageMember/points-history/index.js 1  # 积分明细首次失败落页内 cy-error 重试;下拉刷新失败走自管 toast
+chengyinhub-xcx/subpackageMember/report-mine/index.js 2  # 我的举报列表首次失败落 cy-state-shell 错误态带重试,刷新失败走自管 toast;原因表读不到只用兜底名
+chengyinhub-xcx/subpackageMember/report-detail/index.js 4  # 举报进度失败落 error/no-permission 页内态(error 带重试),刷新失败自管 toast;申诉失败落 cy-sheet fail(含后端原因),未知先回读再落 unknown 可同幂等键重试
+chengyinhub-xcx/subpackageMember/correction-mine/index.js 1  # BL-184 我的纠错列表首次失败落 cy-state-shell 错误态带重试,刷新失败走自管 toast
+chengyinhub-xcx/subpackageMember/correction-detail/index.js 3  # BL-184 纠错进度失败落 error/no-permission 页内态(error 带重试),刷新失败自管 toast;补证失败落 cy-sheet fail(含后端原因),未知先回读再落 unknown 可同幂等键重试
+chengyinhub-xcx/subpackageMember/components/cy/npc-chat/index.js 1  # 清除对话记录失败落 clearError 可见文案与危险确认 error 态,关自动 toast 避免双弹
+chengyinhub-xcx/subpackageMember/components/cy/report-sheet/index.js 2  # BL-32 共用举报半屏:读原因失败落 loadfail 结果半屏(带重试),提交失败落 fail/unknown 结果半屏(含后端原因、同键重试),关自动 toast 避免双弹
+chengyinhub-xcx/pages/merchant/verify-records/index.js 2  # BL-76:access/me 与核销记录读取失败都落页内 cy-error(带重新加载);关全局 toast 避免双弹。
+chengyinhub-xcx/subpackageP3/pages/object-cards/index/index.js 1  # BL-79:改名失败(后端原文/网络)回显在改名半屏 cy-field 错误位;关全局 toast 避免双弹。
+chengyinhub-xcx/pages/activity/official-mine/index.js 1  # BL-80:通知复盘读取失败如实写在该卡触达行并可再点重试;关全局 toast 避免双弹。
+chengyinhub-xcx/pages/play/merchant/components/safety-rating-sheet/index.js 3  # 2026-10-15 BL-89 安全感受评价半屏:选项读取/商家 ID 换取/提交失败均落半屏内 cy-inline-error(含后端资格报错原文)，保留输入可重试，关闭全局 toast 免双弹
+chengyinhub-xcx/pages/merchant/crm-campaigns/index.js 3  # BL-100:access/me、触达列表读取失败落页内 cy-error,回执读取失败落半屏 cy-inline-error(均带重新加载);关全局 toast 避免双弹。
+chengyinhub-xcx/pages/coop/invite-detail/index.js 1  # BL-103:对方近 90 天履约摘要(POST /api/coop/credit)是附属只读信息,读不到或样本为 0 就不展示该行,不挡详情页,也不弹 toast
+chengyinhub-xcx/subpackageMember/coupon/coupon.js 1  # BL-77:券统计卡是辅助只读信息,读取失败即不展示、不挡券列表,不弹 toast。
+
+# 2026-10-19 Claude 小程序线移植到 master(claude/mini-ui-on-master-20261019):本线新增的静默调用逐处实名登记,不动 BASELINE_TOTAL 与任何 UNREVIEWED 额度。
+chengyinhub-xcx/pages/roam/index.js 1  # BL-70 漫游商家横滑卡打卡头像堆(/api/roam/shop/visitors):头像堆只是附加信息,失败或迟到回包一律不动卡片,不挡「去这儿」;关全局 toast 免打扰
+chengyinhub-xcx/pages/roam/index.js 1  # BL-41 护照「官方活动」大卡读可参与的漫游官方活动(/api/official/active-for-roam):读不到时卡片保持原文案与原行为,不弹 toast
+chengyinhub-xcx/pages/club/topic-detail/index.js 1  # BL-98 报名人数按日趋势:失败落 trendState=error,后端原因(如 403 无权查看)原样回显在趋势区块;seq 只认最后一次回包,关全局 toast 免双弹
+chengyinhub-xcx/pages/merchant/decor/index.js 1  # BL-141 营业状态写后回读:回读不到或与提交值不一致都按保存失败处理,由 _startSave 回滚开关并给重试提示;关全局 toast 免双弹
+chengyinhub-xcx/pages/merchant/index/index.js 1  # BL-141 营业状态写后回读:回读不到或不一致明确 toast「状态未同步…」并以回读值为准;关全局 toast 免双弹
+chengyinhub-xcx/subpackageMember/components/cy/profile/index.js 2  # BL-69 商家主页在架据点读取失败即不展示收藏按钮(只读附加块,不打扰主页);收藏切换失败用 cyToast 明确提示且不改本地态,以接口返回的 favorited 为准
+chengyinhub-xcx/components/cy/scene-share-invite/index.js 1  # 个人码签发失败落 qrState=code-error 并显示 qrErrorText(含后端原因)供重试,epoch 丢弃迟到回包;关全局 toast 免双弹
+chengyinhub-xcx/subpackageMember/components/cy/merchant-correction-sheet/index.js 2  # BL-67 商家纠错半屏:读纠错类型失败落 loadfail 结果态(带重试),提交失败落 fail/unknown 结果态(含后端原因,同键可重试);关全局 toast 免双弹
 chengyinhub-xcx/subpackageRoam/official-routes/index.js 1  # 2026-10-19 移植基线 366b846f:官方路线列表失败落页面 state=error(cy-error 带重试),不再叠加统一 toast
 chengyinhub-xcx/subpackageRoam/official-route/index.js 1  # 2026-10-19 移植基线 366b846f:路线详情失败落 state=error/notfound 的页内可见态,error 带重试
 chengyinhub-xcx/subpackageMember/components/cy/team-report-sheet/index.js 1  # 2026-10-19 移植基线 f33f1180:举报失败落结果半屏 fail 态(含后端原因与重试),不再叠加统一 toast

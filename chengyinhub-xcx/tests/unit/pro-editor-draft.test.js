@@ -26,6 +26,7 @@ function makeStorage() {
 function input(over) {
   return Object.assign({
     memberId: 42,
+    operationScope: '',
     draftUuid: 'draft-a',
     baseRevision: '',
     formData: { name: '河畔路线', chapters: [{ name: '第一章', nodes: [] }] },
@@ -61,6 +62,7 @@ test('一次同步写入完整草稿信封，章节与待编排素材来自同�
   assert.equal(envelopeWrites.length, 1, '完整信封必须一次 setStorageSync 原子写入')
   assert.deepEqual(envelopeWrites[0].value, {
     memberId: 42,
+    operationScope: '',
     draftUuid: 'draft-a',
     baseRevision: '',
     formData: source.formData,

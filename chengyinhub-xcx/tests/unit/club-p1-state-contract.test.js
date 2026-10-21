@@ -40,6 +40,8 @@ function loadPage(relativePath, app, requireMap = {}) {
       if (request === '../utils/owner-action-guard.js') return require(path.join(ROOT, 'pages/club/utils/owner-action-guard.js'))
       // PR10 F-W1-12:页面新依赖登录引导判定(真模块,无副作用)
       if (request.endsWith('/utils/session/login-reload.js')) return require('../../utils/session/login-reload.js')
+      // BL-20:俱乐部详情图片预览走 utils/media-preview(纯模块,给真实现)
+      if (request === '../../../utils/media-preview.js') return require('../../utils/media-preview.js')
       if (request === '../utils/club-pinned-notice.js') return require('../../pages/club/utils/club-pinned-notice.js')
       throw new Error(`unexpected require: ${request}`)
     },

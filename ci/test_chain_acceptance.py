@@ -7,6 +7,7 @@ import re
 import subprocess
 import tempfile
 import unittest
+from unittest import mock
 from pathlib import Path
 
 _HERE = Path(__file__).resolve().parent
@@ -506,6 +507,77 @@ class WorkflowContractTest(unittest.TestCase):
             with self.subTest(label):
                 self.assertNotEqual(self.text, mutated, "negative control could not mutate: " + label)
                 self.assertTrue(workflow_problems(mutated), label)
+
+
+class StorageStopTest(unittest.TestCase):
+    def stop(self, readbacks, rm_failure=None, log_failure=False):
+        env = {"GITHUB_RUN_ID": "123", "GITHUB_RUN_ATTEMPT": "2"}
+        names = ca.container_names(env)
+        calls, pending = [], iter(readbacks)
+
+        def run(command, **kwargs):
+            calls.append(command)
+            self.assertEqual("docker", command[0])
+            if command[1] == "logs":
+                if log_failure:
+                    raise OSError("synthetic log capture failure")
+                return subprocess.CompletedProcess(command, 0, stdout=b"fixture logs")
+            if command[1] == "rm":
+                self.assertEqual(["docker", "rm", "-f", "-v", command[-1]], command)
+                self.assertIn(command[-1], names.values())
+                if isinstance(rm_failure, Exception):
+                    raise rm_failure
+                return subprocess.CompletedProcess(command, rm_failure or 0, stdout="", stderr="synthetic rm failure")
+            self.assertEqual(["docker", "ps", "-a", "--format", "{{.Names}}"], command)
+            result = next(pending)
+            if isinstance(result, Exception):
+                raise result
+            code, stdout = result
+            return subprocess.CompletedProcess(command, code, stdout=stdout, stderr="synthetic ps failure")
+
+        with tempfile.TemporaryDirectory() as directory, mock.patch.object(ca.subprocess, "run", side_effect=run):
+            status = ca.cmd_storage_stop(ca.argparse.Namespace(out=directory), env)
+            receipt = ca.read_receipt(directory)
+        self.assertEqual([names["mysql"], names["redis"]], [call[-1] for call in calls if call[1] == "rm"])
+        self.assertEqual(2, sum(call[1] == "ps" for call in calls))
+        return status, receipt
+
+    def test_nonzero_empty_ps_is_unknown_not_absent(self):
+        status, receipt = self.stop([(1, ""), (0, "")])
+        self.assertEqual(1, status)
+        self.assertEqual({"mysql": False, "redis": True}, receipt["teardown"])
+        self.assertEqual({"mysql": "UNKNOWN", "redis": "ABSENT"}, receipt["teardown_readback"])
+
+    def test_leftover_container_is_not_removed(self):
+        status, receipt = self.stop([(0, "cy-chain-123-2-mysql\n"), (0, "")])
+        self.assertEqual(1, status)
+        self.assertEqual({"mysql": False, "redis": True}, receipt["teardown"])
+        self.assertEqual({"mysql": "LEFTOVER", "redis": "ABSENT"}, receipt["teardown_readback"])
+
+    def test_readback_oserror_still_cleans_the_other_exact_container(self):
+        status, receipt = self.stop([OSError("synthetic readback failure"), (0, "")])
+        self.assertEqual(1, status)
+        self.assertEqual({"mysql": False, "redis": True}, receipt["teardown"])
+        self.assertEqual({"mysql": "UNKNOWN", "redis": "ABSENT"}, receipt["teardown_readback"])
+
+    def test_successful_rm_and_empty_successful_ps_confirm_absence(self):
+        status, receipt = self.stop([(0, ""), (0, "")])
+        self.assertEqual(0, status)
+        self.assertEqual({"mysql": True, "redis": True}, receipt["teardown"])
+        self.assertEqual({"mysql": "ABSENT", "redis": "ABSENT"}, receipt["teardown_readback"])
+
+    def test_failed_rm_can_pass_only_if_successful_ps_proves_already_absent(self):
+        for failure in (1, OSError("synthetic rm failure")):
+            with self.subTest(failure=type(failure).__name__):
+                status, receipt = self.stop([(0, ""), (0, "")], rm_failure=failure)
+                self.assertEqual(0, status)
+                self.assertEqual({"mysql": True, "redis": True}, receipt["teardown"])
+                self.assertEqual({"mysql": "ABSENT", "redis": "ABSENT"}, receipt["teardown_readback"])
+
+    def test_log_capture_failure_does_not_skip_exact_cleanup(self):
+        status, receipt = self.stop([(0, ""), (0, "")], log_failure=True)
+        self.assertEqual(0, status)
+        self.assertEqual({"mysql": True, "redis": True}, receipt["teardown"])
 
 
 if __name__ == "__main__":

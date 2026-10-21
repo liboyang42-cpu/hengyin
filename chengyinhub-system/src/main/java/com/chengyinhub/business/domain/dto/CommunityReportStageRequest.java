@@ -11,6 +11,8 @@ public class CommunityReportStageRequest {
     private String decisionSummary;
     private Date estimatedResolveAt;
     private String requestId;
+    /** 进入 RESOLVED 且判定违规时携带:按此处置举报对象(仅 CONTENT / COMMENT),处置行回指本举报单。 */
+    private CommunityPostRequests.Enforcement enforcement;
 
     public Long getReportId() { return reportId; }
     public void setReportId(Long reportId) { this.reportId = reportId; }
@@ -28,4 +30,6 @@ public class CommunityReportStageRequest {
     public void setEstimatedResolveAt(Date estimatedResolveAt) { this.estimatedResolveAt = estimatedResolveAt; }
     public String getRequestId() { return requestId; }
     public void setRequestId(String requestId) { this.requestId = requestId; }
+    public CommunityPostRequests.Enforcement getEnforcement() { return enforcement; }
+    public void setEnforcement(CommunityPostRequests.Enforcement enforcement) { this.enforcement = enforcement; }
 }
