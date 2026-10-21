@@ -1,6 +1,7 @@
 package com.chengyinhub.business.home;
 
 import com.chengyinhub.business.home.PrivateHomeContracts.*;
+import com.chengyinhub.business.home.PrivateHomeTrustedEvidence.Verdict;
 import com.chengyinhub.business.home.PrivateHomeLocationPolicy.Snapshot;
 import com.chengyinhub.business.mapper.PrivateHomeMapper;
 import com.chengyinhub.common.exception.ServiceException;
@@ -23,6 +24,7 @@ public class PrivateHomeService {
     @Autowired private PrivateHomeAccess access;
     @Autowired private DataSource dataSource;
     @Autowired(required = false) private PrivateHomeAuthority authority;
+    @Autowired(required = false) private PrivateHomeTrustedEvidence trustedEvidence;
     @Autowired(required = false) private PrivateHomeResources resources;
     @Autowired private PrivateHomeRetentionPolicy retention = new PrivateHomeRetentionPolicy();
     @Autowired private PrivateHomeLocationPolicy locationPolicy = new PrivateHomeLocationPolicy();
@@ -92,22 +94,25 @@ public class PrivateHomeService {
         if (replay != null) {
             if (replay.homeVersion != expectedVersion || !scope.equals(replay.scope)) fail("REQUEST_CONFLICT");
             checkActor(actor);
-            return replay; // Original proof never becomes fresh again. Restore rechecks expiry/revocation/scope.
+            return present(replay); // Original proof never becomes fresh again. Restore rechecks expiry/revocation/scope.
         }
         long now = clock.millis();
         if (!"ACTIVE".equals(home.status) || home.version != expectedVersion) fail("HOME_VERSION_INVALID");
         if (now < home.effectiveAt) fail("HOME_NOT_EFFECTIVE");
+        Verdict verdict = trusted(actor, home, resource, evidenceHandle, now);
         Arrival grant = authority.verifyArrival(actor, home, resource, evidenceHandle);
-        if (grant == null || grant.ownerId != actor.ownerId || grant.epoch != actor.epoch
-                || grant.homeVersion != home.version || !scope.equals(grant.scope)
-                || !resource.scopeRevision.equals(grant.scopeRevision) || !resource.ruleVersion.equals(grant.ruleVersion)
-                || !ACTION.equals(grant.action) || grant.expiresAt <= now) fail("ARRIVAL_NOT_VERIFIED");
+        String bound = PrivateHomeTrustedEvidence.fingerprint(verdict.evidenceId);
+        if (grant == null || bound == null || grant.ownerId != verdict.ownerId || grant.epoch != actor.epoch
+                || grant.homeVersion != verdict.homeVersion || !verdict.resourceScope.equals(grant.scope)
+                || !resource.scopeRevision.equals(grant.scopeRevision) || !verdict.ruleVersion.equals(grant.ruleVersion)
+                || !ACTION.equals(grant.action) || grant.expiresAt <= now || grant.expiresAt > verdict.freshUntil
+                || (grant.evidenceFingerprint != null && !bound.equals(grant.evidenceFingerprint))) fail("ARRIVAL_NOT_VERIFIED");
         token(grant.grantId);
         Proof proof = new Proof(); proof.proofId = UUID.randomUUID().toString(); proof.ownerId = actor.ownerId;
         proof.homeVersion = home.version; proof.epoch = actor.epoch; proof.requestId = requestId; proof.scope = scope;
         proof.scopeRevision = resource.scopeRevision; proof.ruleVersion = resource.ruleVersion;
         proof.policyVersion = policy.version; proof.grantId = grant.grantId; proof.action = ACTION;
-        proof.grantFingerprint = sha256(grant.grantId);
+        proof.grantFingerprint = bound;
         proof.resourceType = resource.resourceType;
         proof.status = "READY"; proof.issuedAt = now; proof.expiresAt = Math.min(grant.expiresAt, add(now, policy.proofTtlMillis));
         affected(mapper.insertProof(proof));
@@ -129,7 +134,7 @@ public class PrivateHomeService {
         if (prior != null) {
             if (prior.homeVersion != expectedVersion || !scope.equals(prior.scope)) fail("REQUEST_CONFLICT");
             checkActor(actor);
-            return prior;
+            return present(prior);
         }
         if (!"ACTIVE".equals(home.status) || home.version != expectedVersion) fail("HOME_VERSION_INVALID");
         String location = PrivateHomeLocationRules.classify(rules, home, observation, clock.millis());
@@ -151,7 +156,7 @@ public class PrivateHomeService {
         Proof proof = mapper.findProofRequest(actor.ownerId, requestId);
         if (proof == null) fail("HOME_RESULT_ABSENT");
         checkActor(actor);
-        return proof;
+        return present(proof);
     }
 
     @Transactional(readOnly = true)
@@ -227,6 +232,24 @@ public class PrivateHomeService {
         return expired;
     }
 
+    /** Same gate for HTTP and internal verify. A handle, dwell, or device signal is not a verdict. */
+    private Verdict trusted(Actor actor, Home home, ResourcePolicy resource, String evidenceHandle, long now) {
+        if (trustedEvidence == null) fail("ARRIVAL_NOT_VERIFIED");
+        Verdict verdict = trustedEvidence.resolve(new PrivateHomeTrustedEvidence.Query(
+                actor.ownerId, home.version, resource.scope, evidenceHandle, resource.ruleVersion, now));
+        if (verdict == null || verdict.evidenceId == null || !verdict.evidenceId.equals(evidenceHandle)
+                || verdict.ownerId != actor.ownerId || verdict.homeVersion != home.version
+                || verdict.resourceScope == null || !verdict.resourceScope.equals(resource.scope)
+                || verdict.ruleVersion == null || !verdict.ruleVersion.equals(resource.ruleVersion)
+                || verdict.freshUntil <= now) fail("ARRIVAL_NOT_VERIFIED");
+        return verdict;
+    }
+    /** Read-side projection only. Does not write the row; TTL cleanup stays on its own entry point. */
+    private Proof present(Proof proof) {
+        if (proof != null && "READY".equals(proof.status) && proof.expiresAt != null && proof.expiresAt <= clock.millis())
+            proof.status = "EXPIRED";
+        return proof;
+    }
     private String proofDecision(Actor actor, Home home, Policy policy, ResourcePolicy resource, Proof proof, long now) {
         if (proof == null) return "PROOF_INVALID";
         if (!"READY".equals(proof.status)) return "CONSUMED".equals(proof.status) ? "PROOF_CONSUMED" : "EXPIRED".equals(proof.status) ? "PROOF_EXPIRED" : "PROOF_REVOKED";
@@ -333,14 +356,5 @@ public class PrivateHomeService {
     private static void token(String value) { if (!validToken(value)) fail("HOME_REQUEST_INVALID"); }
     private static void id(String value) { token(value); if (value.length()>64) fail("HOME_REQUEST_INVALID"); }
     private static void affected(int rows) { if (rows != 1) fail("HOME_WRITE_CONFLICT"); }
-    private static String sha256(String value) {
-        try {
-            byte[] digest = java.security.MessageDigest.getInstance("SHA-256")
-                .digest(value.getBytes(java.nio.charset.StandardCharsets.UTF_8));
-            StringBuilder hex = new StringBuilder(digest.length * 2);
-            for (byte b : digest) hex.append(String.format("%02x", b & 0xff));
-            return hex.toString();
-        } catch (java.security.NoSuchAlgorithmException e) { fail("HOME_UNAVAILABLE"); return ""; }
-    }
     private static void fail(String code) { throw new ServiceException(code); }
 }

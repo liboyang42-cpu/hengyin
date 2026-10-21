@@ -83,7 +83,7 @@ GET 只返回本人据点。响应 `Cache-Control: no-store`、`Pragma: no-cache
 8. 停留短于配置 → `HOME_DWELL_INSUFFICIENT`
 9. 坐标非法 → `HOME_POINT_INVALID`；与据点的球面距离大于半径（边界上算在内）→ `HOME_OUT_OF_RADIUS`
 10. 距本人上一次该 scope 的 proof 签发未满验证冷却 → `HOME_VERIFY_COOLDOWN`
-11. 通过后才进入既有 proof 签发。据点非 ACTIVE、版本不符、未到生效时间，沿用既有码：`HOME_VERSION_INVALID`、`HOME_NOT_EFFECTIVE`。权威不发达到凭证 → `ARRIVAL_NOT_VERIFIED`。
+11. 通过后才进入既有 proof 签发。据点非 ACTIVE、版本不符、未到生效时间，沿用既有码：`HOME_VERSION_INVALID`、`HOME_NOT_EFFECTIVE`。`MANUAL_OWNER_FIX` 只是必要开关，不够签发。HTTP 与内部 `verifyReturn` 走同一条 trusted-evidence 边界：判定必须绑定 owner、homeVersion、resourceScope、证据标识、新鲜度（`freshUntil`）和 rule version。缺省 Bean 是 fail-closed，`resolve` 恒为 null，**未接真实 provider**。格式合法的 handle、自报停留、精度或坐标、以及设备完整性信号单独都不能签发，请求正文也不能改写已核验的判定。权威不发达到凭证，或判定与凭证不一致 → `ARRIVAL_NOT_VERIFIED`。
 
 成功时 `data`：
 
@@ -102,7 +102,9 @@ GET 只返回本人据点。响应 `Cache-Control: no-store`、`Pragma: no-cache
 
 成功响应不含纬度、经度、标签、datum、`ownerId`、`grantId`、`evidenceHandle`。
 
-幂等键 `(owner, requestId)`。已落库字段只比较 `expectedVersion`（即 proof 上的 homeVersion）和 `scope`。不一致 → `REQUEST_CONFLICT`。一致 → 返回原 proof，不重新验证、不第二次签发、不把第二份观测写进去。观测原文和 evidenceHandle 不落库。
+幂等键 `(owner, requestId)`。已落库字段只比较 `expectedVersion`（即 proof 上的 homeVersion）和 `scope`。不一致 → `REQUEST_CONFLICT`。一致 → 返回原 proof，不重新验证、不第二次签发、不把第二份观测写进去。观测原文和 evidenceHandle 不落库。`grant_fingerprint` 只存证据标识的 SHA-256，不存原文，也不存随机 `grantId` 的哈希。同一 owner 再次使用同一证据标识、换一个 requestId，会撞上既有唯一键；本接口不新增错误码。
+
+兼容差异（成功体字段不变）：以前「格式合法的 handle + 自报观测通过」可以签发；现在同一条件返回既有码 `ARRIVAL_NOT_VERIFIED`，不新增字段。`deviceIntegrity` 仍是未知字段，仍为 `HOME_REQUEST_INVALID`。
 
 同一事务内写入 proof，并写入位置证据索引（只有 owner、proofId、到期时刻，没有坐标）。proof 行版本/账户不在本接口改动。
 
@@ -147,6 +149,8 @@ GET 只返回本人据点。响应 `Cache-Control: no-store`、`Pragma: no-cache
 
 只按当前会话 owner 查询。没有记录时 `HOME_RESULT_ABSENT`（错误体，不是 `decision=RESTORED` 的成功）。别人的 requestId 同样是 `HOME_RESULT_ABSENT`，不返回对方数据。读回不消费 proof、不改余额。`Cache-Control: no-store`。
 
+READY 且 `expiresAt <= now` 时，读回把 `status` 投影为 `EXPIRED`、`decision` 为 `EXPIRED`，不写该行。这不是 TTL 清理，也不清空 `grant_fingerprint`。
+
 丢响应时客户端应先 GET 读回；读回命中则使用原 proof/receipt。只有确认不存在时才允许用**同一个** requestId 重放 POST，由第 3、4 节的幂等保证只生效一次。
 
 ## 6. 错误体
@@ -180,7 +184,7 @@ GET 只返回本人据点。响应 `Cache-Control: no-store`、`Pragma: no-cache
 | D13 | activation-delay-millis | ≥ 0 | 关闭 | 否 |
 | D14 | version | 策略版本令牌 | 关闭 | 否 |
 | D15 | placement-rule-version | 仅认识 `OWNER_PIN_ONLY`；区域多边形未实现 | 拒绝落点 | 否 |
-| D16 | arrival-grant-mode | 仅认识 `MANUAL_OWNER_FIX`；否则不发达到凭证 | 不发 proof | 否 |
+| D16 | arrival-grant-mode | 仅认识 `MANUAL_OWNER_FIX`，且必须再有绑定 owner、homeVersion、resourceScope、证据标识、新鲜度、rule version 的 trusted 判定；缺省 fail-closed，未接真实 provider | 不发 proof | 否 |
 
 另有清理开关，缺省关闭，且没有 HTTP、没有调度器：
 
@@ -189,6 +193,16 @@ GET 只返回本人据点。响应 `Cache-Control: no-store`、`Pragma: no-cache
 | D17 | `app.private-home.retention.enabled` + `version` + `expired-reference-grace-millis` | 不清理过期权威引用 | 否 |
 
 仍未批准、本协议不实现、也不用默认值代替的产品规则：年龄、地区多边形、时段、频率、会面安全策略。金钱、赞助预算、购买权益不得映射为体力或 ENERGY。
+
+本组未决、不写入生产值：
+
+| 编号 | 缺口 | 影响 |
+| --- | --- | --- |
+| D18 | 没有可复用的回家 verifier、证据库或挑战协议。生产只装配 fail-closed | 不能声称已接真实核验 |
+| D19 | 证据标识只以 SHA-256 写入既有 `grant_fingerprint`，不新增列 | 同一证据不能换 requestId 再签发；原文不落库 |
+| D20 | 删除是否应在位置策略未完成时仍可用，未决。当前删除仍走 `requireNative` | 不完整策略下删除失败 |
+| D21 | 玩法体力字段、scope、上限、回满契约未批准。`player_private_home_resource` 不是对局账户 | 资源恢复保持 NOT_CONNECTED |
+| D22 | TTL 索引清理仍走既有 cleanup。读回 EXPIRED 只是投影 | 投影不是清理完成 |
 
 ## 8. 删除、证据索引与保留
 

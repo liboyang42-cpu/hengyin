@@ -56,6 +56,8 @@ public final class PrivateHomeContracts {
     public static final class Arrival extends Redacted {
         /** Opaque, non-location receipt from the authoritative provider; no raw GPS evidence. */
         public String grantId;
+        /** SHA-256 of the evidence identity. Absent on legacy test grants. Not the raw handle. */
+        public String evidenceFingerprint;
         public long ownerId, homeVersion, epoch, expiresAt;
         public String scope, scopeRevision, ruleVersion, action;
     }

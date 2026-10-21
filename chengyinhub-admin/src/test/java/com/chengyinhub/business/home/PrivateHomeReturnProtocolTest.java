@@ -124,10 +124,11 @@ class PrivateHomeReturnProtocolTest extends PrivateHomeTransactionTest {
                 .run(context -> {
                     assertNull(context.getStartupFailure());
                     assertTrue(context.getBeansOfType(PrivateHomeAuthority.class).isEmpty());
+                    assertTrue(context.getBeansOfType(PrivateHomeTrustedEvidence.class).isEmpty());
                     assertTrue(context.getBeansOfType(PrivateHomeResources.class).isEmpty());
                 });
         PrivateHomeLocationPolicy policy = new PrivateHomeLocationPolicy();
-        PrivateHomeConfiguredAuthority authority = new PrivateHomeConfiguredAuthority(policy);
+        PrivateHomeConfiguredAuthority authority = new PrivateHomeConfiguredAuthority(policy, new PrivateHomeFailClosedEvidence());
         assertEquals("HOME_RULES_UNAVAILABLE", code(() -> authority.requireNative(new Actor(7, 1))));
         assertFalse(authority.placementAllowed(new Actor(7, 1), point()));
         assertNull(authority.verifyArrival(new Actor(7, 1), new Home(), new ResourcePolicy(), "evidence"));
@@ -136,8 +137,7 @@ class PrivateHomeReturnProtocolTest extends PrivateHomeTransactionTest {
         assertNull(authority.verifyArrival(new Actor(7, 1), activeHome(), resource("run:1"), "evidence"));
         ((PrivateHomeLocationPolicy) ReflectionTestUtils.getField(target, "locationPolicy")).setArrivalGrantMode(PrivateHomeConfiguredAuthority.GRANT);
         ((PrivateHomeLocationPolicy) ReflectionTestUtils.getField(target, "locationPolicy")).setPlacementRuleVersion(PrivateHomeConfiguredAuthority.PLACEMENT);
-        Arrival grant = authority.verifyArrival(new Actor(7, 1), activeHome(), resource("run:1"), "evidence");
-        assertNotNull(grant); assertEquals("RESTORE_TO_CAP", grant.action); assertFalse(grant.toString().contains("30.123456"));
+        assertNull(authority.verifyArrival(new Actor(7, 1), activeHome(), resource("run:1"), "evidence"));
         assertTrue(authority.placementAllowed(new Actor(7, 1), point()));
     }
     private Home activeHome() { Home home = new Home(); home.version = 1L; home.status = "ACTIVE"; return home; }

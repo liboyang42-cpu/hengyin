@@ -10,8 +10,14 @@ import org.springframework.context.annotation.Configuration;
 public class PrivateHomeAuthorityConfiguration {
     @Bean
     @ConditionalOnProperty(name = "app.private-home.authority-enabled", havingValue = "true")
-    public PrivateHomeAuthority privateHomeAuthority(PrivateHomeLocationPolicy policy) {
-        return new PrivateHomeConfiguredAuthority(policy);
+    public PrivateHomeTrustedEvidence privateHomeTrustedEvidence() {
+        return new PrivateHomeFailClosedEvidence();
+    }
+
+    @Bean
+    @ConditionalOnProperty(name = "app.private-home.authority-enabled", havingValue = "true")
+    public PrivateHomeAuthority privateHomeAuthority(PrivateHomeLocationPolicy policy, PrivateHomeTrustedEvidence evidence) {
+        return new PrivateHomeConfiguredAuthority(policy, evidence);
     }
 
     @Bean

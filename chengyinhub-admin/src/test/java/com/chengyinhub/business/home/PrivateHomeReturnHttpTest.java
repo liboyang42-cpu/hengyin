@@ -21,6 +21,17 @@ class PrivateHomeReturnHttpTest extends PrivateHomeHttpContractTest {
                 .andExpect(header().string("Cache-Control", "no-store")).andExpect(jsonPath("msg").value("HOME_REQUEST_INVALID"));
         verifyNoInteractions(service);
     }
+    @Test void deviceIntegrityIsNotAGrantAndExpiredReadbackIsNotVerified() throws Exception {
+        mvc.perform(post("/api/native/home/return-verifications").contentType("application/json")
+                .content("{\"requestId\":\"v\",\"expectedVersion\":1,\"scope\":\"run:1\",\"evidenceHandle\":\"e\",\"deviceIntegrity\":\"pass\",\"observation\":{\"permission\":\"GRANTED\",\"network\":\"KNOWN\"}}"))
+                .andExpect(jsonPath("msg").value("HOME_REQUEST_INVALID"));
+        verifyNoInteractions(service);
+        Proof expired = new Proof(); expired.requestId = "v"; expired.proofId = "proof-1"; expired.scope = "run:1";
+        expired.status = "EXPIRED"; expired.homeVersion = 1L; expired.issuedAt = 5L; expired.expiresAt = 9L;
+        when(service.readMyProof("v")).thenReturn(expired);
+        mvc.perform(get("/api/native/home/return-verifications/v"))
+                .andExpect(jsonPath("data.decision").value("EXPIRED")).andExpect(jsonPath("data.status").value("EXPIRED"));
+    }
     @Test void proofAndReceiptBodiesDoNotLeakHome() throws Exception {
         Proof proof = new Proof(); proof.requestId = "v"; proof.proofId = "proof-1"; proof.scope = "run:1"; proof.status = "READY";
         proof.homeVersion = 1L; proof.issuedAt = 5L; proof.expiresAt = 9L; proof.grantId = "secret-grant"; proof.ownerId = 7L;

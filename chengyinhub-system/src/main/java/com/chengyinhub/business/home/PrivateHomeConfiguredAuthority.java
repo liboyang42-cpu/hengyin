@@ -19,8 +19,12 @@ public final class PrivateHomeConfiguredAuthority implements PrivateHomeAuthorit
     static final String PLACEMENT = "OWNER_PIN_ONLY";
     static final String GRANT = "MANUAL_OWNER_FIX";
     private final PrivateHomeLocationPolicy rules;
+    private final PrivateHomeTrustedEvidence evidence;
 
-    public PrivateHomeConfiguredAuthority(PrivateHomeLocationPolicy rules) { this.rules = rules; }
+    public PrivateHomeConfiguredAuthority(PrivateHomeLocationPolicy rules, PrivateHomeTrustedEvidence evidence) {
+        this.rules = rules;
+        this.evidence = evidence;
+    }
 
     @Override public void requireNative(Actor actor) {
         if (actor == null || actor.ownerId <= 0 || actor.epoch < 0) throw new ServiceException("HOME_UNAUTHORIZED");
@@ -60,21 +64,31 @@ public final class PrivateHomeConfiguredAuthority implements PrivateHomeAuthorit
         Snapshot snapshot;
         try { snapshot = rules.requireComplete(); }
         catch (ServiceException closed) { return null; }
-        if (!GRANT.equals(rules.getArrivalGrantMode()) || evidenceHandle == null
-                || !evidenceHandle.matches("[A-Za-z0-9._:-]{1,128}") || home == null || home.version == null
-                || resource == null || !snapshot.resourceScope.equals(resource.scope)) return null;
+        // A token-shaped handle is only a lookup key. It is not a verdict.
+        if (!GRANT.equals(rules.getArrivalGrantMode()) || evidence == null || actor == null
+                || evidenceHandle == null || !evidenceHandle.matches("[A-Za-z0-9._:-]{1,128}")
+                || home == null || home.version == null || resource == null
+                || !snapshot.resourceScope.equals(resource.scope)) return null;
+        long now = System.currentTimeMillis();
+        PrivateHomeTrustedEvidence.Verdict verdict = evidence.resolve(new PrivateHomeTrustedEvidence.Query(
+                actor.ownerId, home.version, resource.scope, evidenceHandle, resource.ruleVersion, now));
+        if (verdict == null || !evidenceHandle.equals(verdict.evidenceId) || verdict.ownerId != actor.ownerId
+                || verdict.homeVersion != home.version || verdict.resourceScope == null
+                || !verdict.resourceScope.equals(resource.scope) || verdict.ruleVersion == null
+                || !verdict.ruleVersion.equals(resource.ruleVersion) || verdict.freshUntil <= now) return null;
+        String bound = PrivateHomeTrustedEvidence.fingerprint(verdict.evidenceId);
+        if (bound == null) return null;
         Arrival grant = new Arrival();
         grant.grantId = UUID.randomUUID().toString();
-        grant.ownerId = actor.ownerId;
+        grant.evidenceFingerprint = bound;
+        grant.ownerId = verdict.ownerId;
         grant.epoch = actor.epoch;
-        grant.homeVersion = home.version;
-        grant.scope = resource.scope;
+        grant.homeVersion = verdict.homeVersion;
+        grant.scope = verdict.resourceScope;
         grant.scopeRevision = resource.scopeRevision;
-        grant.ruleVersion = resource.ruleVersion;
+        grant.ruleVersion = verdict.ruleVersion;
         grant.action = "RESTORE_TO_CAP";
-        long ttl = snapshot.proofTtlMillis;
-        long now = System.currentTimeMillis();
-        grant.expiresAt = ttl > Long.MAX_VALUE - now ? Long.MAX_VALUE : now + ttl;
+        grant.expiresAt = verdict.freshUntil;
         return grant;
     }
 

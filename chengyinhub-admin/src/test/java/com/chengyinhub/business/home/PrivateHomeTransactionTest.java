@@ -70,6 +70,7 @@ class PrivateHomeTransactionTest {
         fixture=new Fixture(); target=new PrivateHomeService();
         ReflectionTestUtils.setField(target,"mapper",mapper); ReflectionTestUtils.setField(target,"access",fixture);
         ReflectionTestUtils.setField(target,"dataSource",ds); ReflectionTestUtils.setField(target,"authority",fixture);
+        ReflectionTestUtils.setField(target,"trustedEvidence",fixture);
         ReflectionTestUtils.setField(target,"resources",fixture); ReflectionTestUtils.setField(target,"clock",Clock.fixed(Instant.ofEpochMilli(NOW),ZoneOffset.UTC));
         ProxyFactory proxy=new ProxyFactory(target); proxy.setProxyTargetClass(true);
         proxy.addAdvice(new TransactionInterceptor(new DataSourceTransactionManager(ds),new AnnotationTransactionAttributeSource()));
@@ -188,7 +189,7 @@ class PrivateHomeTransactionTest {
         assertThrows(Exception.class,()->jdbc.update("UPDATE player_private_home SET latitude=NULL WHERE owner_id=7"));
         assertThrows(Exception.class,()->jdbc.update("INSERT INTO player_private_home_mutation SELECT * FROM player_private_home_mutation"));
     }
-    class Fixture implements PrivateHomeAccess, PrivateHomeAuthority, PrivateHomeResources {
+    class Fixture implements PrivateHomeAccess, PrivateHomeAuthority, PrivateHomeResources, PrivateHomeTrustedEvidence {
         ThreadLocal<Long> owner=ThreadLocal.withInitial(()->7L); volatile boolean revoked,failAfterWrite,revokeAfterWrite,expireAfterWrite,changePolicyAfterWrite,changeResourceAfterWrite;
         Policy sharedPolicy; ResourcePolicy sharedResource; String fixedGrant;
         public Actor current(){return new Actor(owner.get(),1);}
@@ -198,6 +199,10 @@ class PrivateHomeTransactionTest {
         public boolean placementAllowed(Actor actor,Point point){return true;}
         public ResourcePolicy resourcePolicy(Actor actor,String scope){if(sharedResource!=null)return sharedResource;ResourcePolicy p=new ResourcePolicy();p.scope=scope;p.resourceType="STAMINA";p.scopeRevision="scope1";p.ruleVersion="test-only";p.restoreCooldownMillis=0L;return p;}
         public Arrival verifyArrival(Actor actor,Home home,ResourcePolicy resource,String handle){Arrival a=new Arrival();a.grantId=fixedGrant==null?UUID.randomUUID().toString():fixedGrant;a.ownerId=actor.ownerId;a.epoch=actor.epoch;a.homeVersion=home.version;a.scope=resource.scope;a.scopeRevision=resource.scopeRevision;a.ruleVersion=resource.ruleVersion;a.action="RESTORE_TO_CAP";a.expiresAt=NOW+1000;return a;}
+        public PrivateHomeTrustedEvidence.Verdict resolve(PrivateHomeTrustedEvidence.Query query){
+            if(query==null || query.evidenceId==null || query.resourceScope==null || query.ruleVersion==null) return null;
+            return new PrivateHomeTrustedEvidence.Verdict(query.evidenceId, query.ownerId, query.homeVersion, query.resourceScope, query.ruleVersion, NOW+1000L);
+        }
         public boolean grantCurrent(Actor actor,Home home,Proof proof){return !revoked;}
         public DataSource transactionDataSource(){return ds;}
         public Resource lockAuthorized(Actor actor,ResourcePolicy policy){return jdbc.queryForObject("SELECT * FROM test_resource WHERE owner_id=? AND scope=? FOR UPDATE",(rs,n)->{Resource r=new Resource();r.current=rs.getLong("current_value");r.cap=rs.getLong("cap");r.version=rs.getLong("version");return r;},actor.ownerId,policy.scope);}
