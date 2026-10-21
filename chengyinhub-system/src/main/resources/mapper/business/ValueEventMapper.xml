@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.citygame.analytics.value.mapper.ValueEventMapper">
+
+    <insert id="insertEvent">
+        insert into city_value_event
+        (id, dedupe_key, payload_hash, source_id, kind, region_id, board_id, season_id, rules_release_id,
+         member_id, visit_id, service_id, action_code, goal_id, reason_code, amount, unit, currency, rating,
+         detail_json, occurred_at, create_time)
+        values
+        (#{id}, #{dedupeKey}, #{payloadHash}, #{sourceId}, #{kind}, #{regionId}, #{boardId}, #{seasonId},
+         #{rulesReleaseId}, #{memberId}, #{visitId,jdbcType=VARCHAR}, #{serviceId,jdbcType=VARCHAR},
+         #{actionCode,jdbcType=VARCHAR}, #{goalId,jdbcType=VARCHAR}, #{reasonCode,jdbcType=VARCHAR},
+         #{amount,jdbcType=BIGINT}, #{unit,jdbcType=VARCHAR}, #{currency,jdbcType=CHAR}, #{rating,jdbcType=INTEGER},
+         #{detailJson,jdbcType=VARCHAR}, #{occurredAt}, #{createTime})
+    </insert>
+
+    <select id="selectByDedupe" resultType="com.chengyinhub.business.citygame.analytics.value.ValueEventRow">
+        select id, dedupe_key as dedupeKey, payload_hash as payloadHash, source_id as sourceId, kind,
+               region_id as regionId, board_id as boardId, season_id as seasonId, rules_release_id as rulesReleaseId,
+               member_id as memberId, visit_id as visitId, service_id as serviceId, action_code as actionCode,
+               goal_id as goalId, reason_code as reasonCode, amount, unit, currency, rating,
+               detail_json as detailJson, occurred_at as occurredAt, create_time as createTime
+        from city_value_event
+        where dedupe_key = #{dedupeKey}
+    </select>
+
+    <select id="selectVisits" resultType="com.chengyinhub.business.citygame.analytics.value.ValueEventRow">
+        select id, dedupe_key as dedupeKey, payload_hash as payloadHash, source_id as sourceId, kind,
+               region_id as regionId, board_id as boardId, season_id as seasonId, rules_release_id as rulesReleaseId,
+               member_id as memberId, visit_id as visitId, service_id as serviceId, action_code as actionCode,
+               goal_id as goalId, reason_code as reasonCode, amount, unit, currency, rating,
+               detail_json as detailJson, occurred_at as occurredAt, create_time as createTime
+        from city_value_event
+        where region_id = #{regionId}
+          and board_id = #{boardId}
+          and season_id = #{seasonId}
+          and rules_release_id = #{rulesReleaseId}
+          and kind not in ('DEFINITION', 'COVERAGE')
+          and occurred_at &gt;= #{from}
+          and occurred_at &lt; #{to}
+        <if test="cursorAt != null">
+          and (occurred_at &gt; #{cursorAt} or (occurred_at = #{cursorAt} and id &gt; #{cursorId}))
+        </if>
+        order by occurred_at, id
+        limit #{limit}
+    </select>
+
+    <select id="selectFacts" resultType="com.chengyinhub.business.citygame.analytics.value.ValueEventRow">
+        select id, dedupe_key as dedupeKey, payload_hash as payloadHash, source_id as sourceId, kind,
+               region_id as regionId, board_id as boardId, season_id as seasonId, rules_release_id as rulesReleaseId,
+               member_id as memberId, visit_id as visitId, service_id as serviceId, action_code as actionCode,
+               goal_id as goalId, reason_code as reasonCode, amount, unit, currency, rating,
+               detail_json as detailJson, occurred_at as occurredAt, create_time as createTime
+        from city_value_event
+        where region_id = #{regionId}
+          and board_id = #{boardId}
+          and season_id = #{seasonId}
+          and rules_release_id = #{rulesReleaseId}
+          and kind in ('DEFINITION', 'COVERAGE')
+        order by id
+        limit #{limit}
+    </select>
+
+    <insert id="insertReport">
+        insert into city_value_report
+        (id, result_key, region_id, rules_release_id, definition_hash, actor_user_id, body_json, create_time)
+        values
+        (#{id}, #{resultKey}, #{regionId}, #{rulesReleaseId}, #{definitionHash}, #{actorUserId}, #{bodyJson}, #{createTime})
+    </insert>
+
+    <select id="selectReportByKey" resultType="com.chengyinhub.business.citygame.analytics.value.ValueReportRow">
+        select id, result_key as resultKey, region_id as regionId, rules_release_id as rulesReleaseId,
+               definition_hash as definitionHash, actor_user_id as actorUserId, body_json as bodyJson,
+               create_time as createTime
+        from city_value_report
+        where result_key = #{resultKey}
+    </select>
+
+    <select id="selectReportById" resultType="com.chengyinhub.business.citygame.analytics.value.ValueReportRow">
+        select id, result_key as resultKey, region_id as regionId, rules_release_id as rulesReleaseId,
+               definition_hash as definitionHash, actor_user_id as actorUserId, body_json as bodyJson,
+               create_time as createTime
+        from city_value_report
+        where id = #{id}
+    </select>
+
+    <insert id="insertRequest">
+        insert into city_value_request
+        (id, request_id, actor_user_id, payload_hash, status, result_id, region_id, rules_release_id, body_json, create_time)
+        values
+        (#{id}, #{requestId}, #{actorUserId}, #{payloadHash}, #{status}, #{resultId,jdbcType=BIGINT},
+         #{regionId,jdbcType=VARCHAR}, #{rulesReleaseId,jdbcType=VARCHAR}, #{bodyJson}, #{createTime})
+    </insert>
+
+    <select id="selectRequest" resultType="com.chengyinhub.business.citygame.analytics.value.ValueRequestRow">
+        select id, request_id as requestId, actor_user_id as actorUserId, payload_hash as payloadHash, status,
+               result_id as resultId, region_id as regionId, rules_release_id as rulesReleaseId,
+               body_json as bodyJson, create_time as createTime
+        from city_value_request
+        where request_id = #{requestId}
+    </select>
+</mapper>
