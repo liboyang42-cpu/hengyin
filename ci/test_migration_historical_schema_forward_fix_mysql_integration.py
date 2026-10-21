@@ -242,7 +242,7 @@ class HistoricalSchemaForwardFixMysqlIntegrationTest(unittest.TestCase):
         before = self.payee_grants()
         ok, results = self.apply_payee_forward()
         self.assertFalse(ok)
-        self.assertEqual('TRANSACTION', results[0][2])
+        self.assertEqual('EXEC', results[0][2])
         self.assertEqual(before, self.payee_grants())
         connection = self.connect()
         try:
@@ -351,7 +351,7 @@ class HistoricalSchemaForwardFixMysqlIntegrationTest(unittest.TestCase):
         before = self.job_dict_rows()
         ok, results = self.apply_job_dict_forward()
         self.assertFalse(ok)
-        self.assertEqual("TRANSACTION", results[0][2])
+        self.assertEqual("EXEC", results[0][2])
         self.assertEqual(before, self.job_dict_rows())
         # A legacy schema without its unique index can contain two type keys
         # that the real case-insensitive API treats as the same dictionary.
@@ -367,7 +367,7 @@ class HistoricalSchemaForwardFixMysqlIntegrationTest(unittest.TestCase):
         before = self.job_dict_rows()
         ok, results = self.apply_job_dict_forward()
         self.assertFalse(ok)
-        self.assertEqual("TRANSACTION", results[0][2])
+        self.assertEqual("EXEC", results[0][2])
         self.assertEqual(before, self.job_dict_rows())
 
     def test_job_dictionary_late_actual_error_rolls_back_both_tables(self):
@@ -382,7 +382,7 @@ class HistoricalSchemaForwardFixMysqlIntegrationTest(unittest.TestCase):
             path.write_text(text, encoding="utf-8")
             ok, results = self.apply_job_dict_forward(path)
         self.assertFalse(ok)
-        self.assertEqual("TRANSACTION", results[0][2])
+        self.assertEqual("EXEC", results[0][2])
         self.assertEqual(before, self.job_dict_rows())
 
     def test_job_dictionary_nontransactional_table_rejects_before_seed_write(self):
@@ -393,9 +393,19 @@ class HistoricalSchemaForwardFixMysqlIntegrationTest(unittest.TestCase):
         finally:
             connection.close()
         before = self.job_dict_rows()
-        ok, results = self.apply_job_dict_forward()
-        self.assertFalse(ok)
-        self.assertEqual("TRANSACTION", results[0][2])
+        # The fresh-schema replay tool no longer pre-checks engines; the real migration runner does,
+        # and it must refuse this transaction-marked file before any statement executes.
+        from ci.run_migration import assert_innodb_references
+        from ci.sql_splitter import split_statements
+        statements = split_statements(self.JOB_DICT_FORWARD.read_text(encoding="utf-8"))
+        connection = self.connect()
+        try:
+            with connection.cursor() as cur:
+                cur.execute("SELECT DATABASE()")
+                with self.assertRaises(ValueError):
+                    assert_innodb_references(cur, cur.fetchone()[0], statements)
+        finally:
+            connection.close()
         self.assertEqual(before, self.job_dict_rows())
 
 

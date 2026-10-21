@@ -84,6 +84,11 @@ def run_file(cur, path, label, results, keep_going, schema_only=False, observati
             return False
 
     connection = cur.connection
+    # A caller's open transaction must never be committed implicitly by this file's BEGIN/autocommit switch.
+    server_status = getattr(connection, "server_status", None)
+    if transactional and isinstance(server_status, int) and server_status & 1:
+        results.append((label, 0, "PREFLIGHT", "caller transaction already active", "requires=transaction"))
+        return False
     repeatable_read = "SET SESSION TRANSACTION ISOLATION LEVEL REPEATABLE READ"
     committed = False
     ok = True
