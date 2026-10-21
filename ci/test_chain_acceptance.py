@@ -3,10 +3,13 @@
 注入没生效 / 工作流被放宽」都会转红，而不是只在注释里这么写。"""
 import importlib.util
 import json
+import hashlib
+import copy
 import re
 import subprocess
 import tempfile
 import unittest
+import zipfile
 from unittest import mock
 from pathlib import Path
 
@@ -67,6 +70,8 @@ class PlanTest(unittest.TestCase):
         self.assertEqual(["platform", "merchant_club", "sale_close"], result["chains"])
         self.assertEqual("/api/play/checkin", result["fail_path"])
         self.assertEqual(list(ca.CHAIN_NAMES), ca.plan(SHA, "finance", "")["chains"])
+        self.assertEqual([], ca.plan(SHA, "post_deploy", "")["chains"])
+        with self.assertRaises(ca.GateError): ca.plan(SHA, "post_deploy", "/api/play/checkin")
 
     def test_rejects_bad_inputs(self):
         for sha in ("", "a" * 39, "A" * 40, "g" * 40, SHA + "\n"):
@@ -188,6 +193,14 @@ class SummaryTest(unittest.TestCase):
         ca.merge_receipt(self.out, {"plan": ca.plan(SHA, "finance", "")})
         for name in ("plan", "precheck", "explode", "storage", "schema", "app"):
             ca.stage(self.out, name, "PASS")
+        ca.stage(self.out, "explode", "PASS", jar_sha256="b" * 64)
+        proof = dict(ca.post.validate_observation(*live_documents(), SHA), jar_sha256="b" * 64,
+                     schema=ca.SCHEMA, server_uuid=POST_UUID,
+                     process={"pid": 123, "starttime": "456", "command_sha256": "d" * 64,
+                              "listener_inodes": ["789"]})
+        result = ca.post.register_jobs(_HERE.parent, PostStorage().connect, POST_UUID)
+        ca.stage(self.out, "postdeploy", "PASS", stopped_before_sql=True, app_exit_code=-15,
+                 proof=proof, result=result)
         ca.run_chains(list(ca.CHAIN_NAMES), self.out, {}, self.out, good_query(), Runner())
 
     def tearDown(self):
@@ -208,6 +221,38 @@ class SummaryTest(unittest.TestCase):
     def test_no_plan_fails(self):
         with tempfile.TemporaryDirectory() as empty:
             self.assertEqual("FAIL", ca.summarize(empty)["verdict"])
+
+    def test_postdeploy_missing_partial_or_wrong_candidate_cannot_be_green(self):
+        good = ca.read_receipt(self.out)["stages"]["postdeploy"]
+        for patch in ({"status": "FAIL"}, {"stopped_before_sql": False},
+                      {"result": {"status": "PASS", "statement_count": 14, "scalar_count": 9}},
+                      {"proof": dict(good["proof"], source_sha="c" * 40)}):
+            ca.stage(self.out, "postdeploy", **dict(good, **patch))
+            self.assertEqual("FAIL", ca.summarize(self.out)["verdict"])
+
+    def test_post_only_has_no_five_chain_receipts_but_still_requires_complete_post_stage(self):
+        ca.merge_receipt(self.out, {"plan": ca.plan(SHA, "post_deploy", "")})
+        for path in (self.out / "chains").glob("*.json"):
+            path.unlink()
+        self.assertEqual("PASS", ca.summarize(self.out)["verdict"])
+        document = ca.read_receipt(self.out); del document["stages"]["postdeploy"]
+        ca.receipt_path(self.out).write_text(json.dumps(document))
+        self.assertEqual("FAIL", ca.summarize(self.out)["verdict"])
+
+    def test_summary_rejects_missing_live_or_per_statement_or_independent_sql_evidence(self):
+        good = ca.read_receipt(self.out)["stages"]["postdeploy"]
+        for mutation in ("bean", "health", "listener", "file", "scalar", "uuid", "rows", "file_readback"):
+            bad = copy.deepcopy(good)
+            if mutation == "bean": bad["proof"]["beans"].pop(next(iter(ca.post.BEANS)))
+            if mutation == "health": bad["proof"]["redis"] = "DOWN"
+            if mutation == "listener": bad["proof"]["process"].pop("listener_inodes")
+            if mutation == "file": bad["result"]["files"].pop()
+            if mutation == "scalar": bad["result"]["files"][0]["scalars"][0]["actual"] = [0]
+            if mutation == "uuid": bad["result"]["after"]["server_uuid"] = "other"
+            if mutation == "rows": bad["result"]["after"]["rows"].pop()
+            if mutation == "file_readback": bad["result"]["files"][0].pop("independent_readback")
+            ca.stage(self.out, "postdeploy", **bad)
+            with self.subTest(mutation=mutation): self.assertEqual("FAIL", ca.summarize(self.out)["verdict"])
 
     def test_refuses_to_run_after_failed_stage(self):
         ca.stage(self.out, "schema", "FAIL")
@@ -364,6 +409,12 @@ class RuntimeIsolationTest(unittest.TestCase):
         self.assertTrue(props["spring.datasource.druid.master.url"].startswith("jdbc:mysql://127.0.0.1:3316/cy_e2e_51?"))
         self.assertEqual(("127.0.0.1", "6379", "9"), (props["spring.data.redis.host"], props["spring.data.redis.port"],
                                                       props["spring.data.redis.database"]))
+        self.assertEqual("health,info,beans", props["management.endpoints.web.exposure.include"])
+        self.assertEqual("full", props["management.info.git.mode"])
+        self.assertEqual("true", props["management.endpoint.health.probes.enabled"])
+        self.assertEqual("db,redis,livenessState,readinessState",
+                         props["management.endpoint.health.group.isolatedStartup.include"])
+        self.assertEqual("when_authorized", props["management.endpoint.health.group.isolatedStartup.show-details"])
         for key, value in props.items():
             if "password" in key.lower() or "secret" in key.lower():
                 self.assertEqual("", value, key)
@@ -378,7 +429,7 @@ def workflow_problems(text):
         problems.append("must be manual-only (workflow_dispatch)")
     through = re.search(r"^      through:\n[\s\S]*?options:\n((?:          - .+\n)+)", text, re.MULTILINE)
     options = re.findall(r"- (\S+)", through.group(1)) if through else []
-    if options != list(ca.CHAIN_NAMES):
+    if options != list(ca.CHAIN_NAMES) + ["post_deploy"]:
         problems.append("through choices %s != chain order %s" % (options, list(ca.CHAIN_NAMES)))
     if "\npermissions:\n  contents: read\n" not in text or re.search(r":\s*write\b", text):
         problems.append("permissions must be contents: read only")
@@ -578,6 +629,278 @@ class StorageStopTest(unittest.TestCase):
         status, receipt = self.stop([(0, ""), (0, "")], log_failure=True)
         self.assertEqual(0, status)
         self.assertEqual({"mysql": True, "redis": True}, receipt["teardown"])
+
+
+class NativeJarTest(unittest.TestCase):
+    def test_native_parameters_require_exact_pair(self):
+        self.assertIsNone(ca.plan(SHA, "finance", "")["native_jar"])
+        self.assertEqual(123, ca.plan(SHA, "finance", "", "123", "b" * 64)["native_jar"]["run_id"])
+        for run, digest in (("", "b" * 64), ("123", ""), ("0", "b" * 64),
+                            ("1;id", "b" * 64), ("1\n", "b" * 64), ("123", "B" * 64)):
+            with self.subTest(run=run), self.assertRaises(ca.GateError):
+                ca.plan(SHA, "finance", "", run, digest)
+
+    def test_native_original_marker_sidecar_and_embedded_commit_are_required(self):
+        with tempfile.TemporaryDirectory() as folder:
+            jar = Path(folder) / "chengyinhub-admin.jar"
+            with zipfile.ZipFile(jar, "w") as archive:
+                archive.writestr("BOOT-INF/classes/git.properties", "git.commit.id=" + SHA + "\n")
+            digest = ca.sha256_file(jar)
+            planned = ca.plan(SHA, "finance", "", "123", digest)
+            marker, sidecar = jar.parent / "SOURCE_SHA", jar.with_name(jar.name + ".sha256")
+            marker.write_text(SHA + "\n"); sidecar.write_text(digest + "  " + jar.name + "\n")
+            self.assertEqual(digest, ca.verify_candidate_jar(jar, planned)["jar_sha256"])
+            for target, bad in ((marker, "c" * 40), (sidecar, "0" * 64 + "  " + jar.name)):
+                original = target.read_bytes(); target.write_text(bad)
+                with self.assertRaises(ca.GateError): ca.verify_candidate_jar(jar, planned)
+                target.write_bytes(original)
+            with self.assertRaises(ca.GateError):
+                ca.verify_candidate_jar(jar, ca.plan(SHA, "finance", "", "123", "0" * 64))
+            with self.assertRaises(ca.GateError):
+                ca.verify_candidate_jar(jar, ca.plan("c" * 40, "finance", ""))
+
+    def test_jar_mismatch_refuses_before_any_java_compile(self):
+        with tempfile.TemporaryDirectory() as folder:
+            out = Path(folder); jar = out / "jar"
+            with zipfile.ZipFile(jar, "w") as archive:
+                archive.writestr("BOOT-INF/classes/git.properties", "git.commit.id=" + "c" * 40)
+            ca.merge_receipt(out, {"plan": ca.plan(SHA, "finance", "")})
+            ca.stage(out, "precheck", "PASS")
+            with mock.patch.object(ca.subprocess, "run") as java, self.assertRaises(ca.GateError):
+                ca.cmd_explode(ca.argparse.Namespace(out=out, jar=jar), {})
+            java.assert_not_called()
+
+
+POST_UUID = "12345678-1234-1234-1234-123456789012"
+
+
+def live_documents():
+    return ({"git": {"commit": {"id": SHA}}},
+            {"status": "UP", "components": {key: {"status": "UP"} for key in
+             ("db", "redis", "livenessState", "readinessState")}},
+            {"contexts": {"app": {"beans": {name: {"type": value} for name, value in ca.post.BEANS.items()}}}})
+
+
+class PostStorage:
+    """Pure cursor model: tests shared execution/assertion and readback gates, not MySQL semantics."""
+    def __init__(self):
+        self.rows, self.calls, self.opened, self.closed = [], [], 0, 0
+        self.bad_scalar, self.write_error, self.uuid = None, False, POST_UUID
+
+    def connect(self):
+        model = self
+        self.opened += 1
+        class Cursor:
+            def execute(self, sql, args=None):
+                model.calls.append(sql)
+                self.one, self.many = None, []
+                if sql == "SELECT @@server_uuid,DATABASE()":
+                    self.one = (model.uuid, ca.SCHEMA)
+                elif sql == ca.post.READ_ROWS:
+                    self.many = sorted(model.rows, key=lambda row: (row[3], row[0]))
+                elif sql.startswith("INSERT INTO sys_job"):
+                    if model.write_error: raise RuntimeError("PRIVATE_SQL_ERROR")
+                    target = next(name for name in ca.post.NEW_ROWS if "'" + name + "'" in sql)
+                    if not any(row[3] == target for row in model.rows):
+                        group, cron, misfire, concurrent, status = ca.post.NEW_ROWS[target]
+                        model.rows.append([len(model.rows) + 1, "fixture", group, target, cron, misfire,
+                                           concurrent, status, "system", "2026-10-20", "fixture", "", None])
+                else:
+                    self.one = (1,) if model.bad_scalar is None else model.bad_scalar
+            def fetchone(self): return self.one
+            def fetchall(self): return self.many
+            def close(self): pass
+        class Connection:
+            def cursor(self): return Cursor()
+            def close(self): model.closed += 1
+        return Connection()
+
+
+class PostDeployTest(unittest.TestCase):
+    def test_all_six_real_class_names_and_health_required(self):
+        info, health, beans = live_documents()
+        result = ca.post.validate_observation(info, health, beans, SHA)
+        self.assertEqual(set(ca.post.BEANS), set(result["beans"]))
+        for mutation in ("missing", "duplicate", "wrong_type", "source", "db"):
+            info, health, beans = live_documents()
+            key = next(iter(ca.post.BEANS))
+            if mutation == "missing": del beans["contexts"]["app"]["beans"][key]
+            if mutation == "duplicate": beans["contexts"]["other"] = {"beans": {key: {"type": ca.post.BEANS[key]}}}
+            if mutation == "wrong_type": beans["contexts"]["app"]["beans"][key]["type"] = "fixture.Fake"
+            if mutation == "source": info["git"]["commit"]["id"] = "c" * 40
+            if mutation == "db": health["components"]["db"]["status"] = "DOWN"
+            with self.subTest(mutation=mutation), self.assertRaises(ca.post.PostDeployError):
+                ca.post.validate_observation(info, health, beans, SHA)
+
+    def test_original_sql_15_statements_9_real_cursor_scalars_and_fresh_readbacks(self):
+        db = PostStorage()
+        result = ca.post.register_jobs(_HERE.parent, db.connect, POST_UUID)
+        self.assertEqual(("PASS", 15, 9), (result["status"], result["statement_count"], result["scalar_count"]))
+        self.assertEqual(6, len(result["after"]["rows"]))
+        self.assertEqual(6, db.opened)  # before, writer, three independent per-file reads, final
+        self.assertEqual(db.opened, db.closed)
+        self.assertTrue(all(x["actual"] == [1] for f in result["files"] for x in f["scalars"]))
+        before = [row[:] for row in db.rows]
+        replay = ca.post.register_jobs(_HERE.parent, db.connect, POST_UUID)
+        self.assertEqual(before, db.rows)
+        self.assertTrue(replay["existing_rows_preserved"])
+
+    def test_bad_scalar_and_sql_error_stop_immediately_and_retain_partial_evidence(self):
+        for row in ((0,), ("1",), (1, 1), ()):
+            db = PostStorage(); db.bad_scalar = row
+            with self.subTest(row=row), self.assertRaises(ca.post.PostDeployError) as caught:
+                ca.post.register_jobs(_HERE.parent, db.connect, POST_UUID)
+            self.assertEqual(1, caught.exception.evidence["statement_count"])
+            self.assertFalse(any(sql.startswith("INSERT") for sql in db.calls))
+            self.assertEqual(db.opened, db.closed)
+        db = PostStorage(); db.write_error = True
+        with self.assertRaises(ca.post.PostDeployError) as caught:
+            ca.post.register_jobs(_HERE.parent, db.connect, POST_UUID)
+        self.assertNotIn("PRIVATE_SQL_ERROR", json.dumps(caught.exception.evidence))
+        self.assertEqual(1, caught.exception.evidence["statement_count"])
+
+    def test_original_sql_fingerprint_must_pass_before_any_database_connection(self):
+        with tempfile.TemporaryDirectory() as source, mock.patch.object(ca.post, "SQL_FILES", (
+                ("changed.sql", "0" * 64, 1, 1),)):
+            folder = Path(source) / "chengyinhub-admin/sql"; folder.mkdir(parents=True)
+            (folder / "changed.sql").write_text("SELECT 1;")
+            connect = mock.Mock()
+            with self.assertRaises(ca.post.PostDeployError):
+                ca.post.register_jobs(source, connect, POST_UUID)
+            connect.assert_not_called()
+
+    def test_duplicate_targets_or_wrong_database_stop_before_writes(self):
+        db = PostStorage(); ca.post.register_jobs(_HERE.parent, db.connect, POST_UUID)
+        db.rows.append([99] + db.rows[0][1:]); db.calls.clear()
+        with self.assertRaises(ca.post.PostDeployError):
+            ca.post.register_jobs(_HERE.parent, db.connect, POST_UUID)
+        self.assertFalse(any(sql.startswith("INSERT") for sql in db.calls))
+        db = PostStorage(); db.uuid = "00000000-0000-0000-0000-000000000000"
+        with self.assertRaises(ca.post.PostDeployError):
+            ca.post.register_jobs(_HERE.parent, db.connect, POST_UUID)
+        self.assertFalse(any(sql.startswith("INSERT") for sql in db.calls))
+
+    def test_operator_paused_rows_preserved_and_new_wrong_schedule_rejected(self):
+        db = PostStorage(); ca.post.register_jobs(_HERE.parent, db.connect, POST_UUID)
+        original = [row[:] for row in db.rows]
+        original[1][4], original[1][7] = "operator-cron", "1"
+        ca.post.verify_rows(original, [row[:] for row in original])
+        with self.assertRaises(ca.post.PostDeployError): ca.post.verify_rows(original, db.rows)
+        for index, value in ((11, "unexpected-operator"), (12, "2026-10-21")):
+            drifted = [row[:] for row in original]; drifted[1][index] = value
+            with self.subTest(column=index), self.assertRaises(ca.post.PostDeployError):
+                ca.post.verify_rows(original, drifted)
+        changed = [row[:] for row in db.rows]; changed[0][4] = "wrong"
+        with self.assertRaises(ca.post.PostDeployError): ca.post.verify_rows([], changed)
+
+    def test_http_json_and_errors_cannot_leak_response_payload(self):
+        response = mock.MagicMock(); response.__enter__.return_value = response
+        response.status, response.read.return_value = 200, b'PRIVATE_RESPONSE_NOT_JSON'
+        opener = mock.Mock(); opener.open.return_value = response
+        with mock.patch.object(ca.urllib.request, "build_opener", return_value=opener):
+            with self.assertRaises(ca.GateError) as caught: ca.postdeploy_http("/actuator/beans", "PRIVATE_TOKEN")
+        self.assertNotIn("PRIVATE_RESPONSE", str(caught.exception))
+        self.assertNotIn("PRIVATE_TOKEN", str(caught.exception))
+        with self.assertRaises(ca.GateError): ca.postdeploy_http("https://outside.invalid")
+
+    def run_control(self, stop_unknown=False, observation_failure=False, through="finance", stale=False):
+        temp = tempfile.TemporaryDirectory(); self.addCleanup(temp.cleanup)
+        out = Path(temp.name); planned = ca.plan(SHA, through, "")
+        ca.merge_receipt(out, {"plan": planned}); ca.stage(out, "schema", "PASS")
+        process = mock.Mock(pid=123); process.poll.return_value = None
+        proof = {"source_sha": SHA, "server_uuid": POST_UUID, "observed_at": ca.time.time() - (91 if stale else 0)}
+        args = ca.argparse.Namespace(out=out, source=_HERE.parent, gate=_HERE.parent,
+                                    work=out, app=out, jar=out / "jar")
+        order = []
+        def stop(p):
+            order.append("stop")
+            p.poll.return_value = None if stop_unknown else -15
+        def register(*args):
+            order.append("sql"); self.assertIsNotNone(process.poll())
+            return {"status": "PASS", "statement_count": 15, "scalar_count": 9}
+        with mock.patch.object(ca, "start_app", return_value=(process, {})), \
+                mock.patch.object(ca, "probe_token", return_value="token") as login_probe, \
+                mock.patch.object(ca, "fault_probe", return_value={}), \
+                mock.patch.object(ca, "run_chains", return_value=[{"verdict": "PASS", "chain": "platform", "problems": []}]) as chains, \
+                mock.patch.object(ca, "observe_postdeploy", side_effect=ca.GateError("bad bean") if observation_failure else None,
+                                  return_value=proof), \
+                mock.patch.object(ca, "stop_app", side_effect=stop), \
+                mock.patch.object(ca.post, "register_jobs", side_effect=register) as sql:
+            if stop_unknown or observation_failure or stale:
+                with self.assertRaises(ca.GateError): ca.cmd_run(args, {})
+                sql.assert_not_called()
+                self.assertEqual("FAIL", ca.read_receipt(out)["stages"]["postdeploy"]["status"])
+            else:
+                self.assertEqual(0, ca.cmd_run(args, {}))
+                self.assertEqual(["stop", "sql"], order)
+                self.assertTrue(ca.read_receipt(out)["stages"]["postdeploy"]["stopped_before_sql"])
+            if through == "post_deploy":
+                chains.assert_not_called(); login_probe.assert_not_called()
+
+    def test_original_jvm_confirmed_stopped_before_sql(self): self.run_control()
+    def test_unknown_stop_blocks_every_sql(self): self.run_control(stop_unknown=True)
+    def test_failed_live_observation_stops_jvm_and_blocks_sql(self): self.run_control(observation_failure=True)
+    def test_post_only_does_not_repeat_chain_or_gameplay_fault_probe(self): self.run_control(through="post_deploy")
+    def test_stale_live_proof_cannot_start_sql(self): self.run_control(stale=True)
+
+    def test_observation_keeps_only_six_beans_and_same_pid_and_jar(self):
+        with tempfile.TemporaryDirectory() as folder:
+            out = Path(folder); ca.stage(out, "explode", "PASS", jar_sha256="b" * 64)
+            args = ca.argparse.Namespace(out=out, jar=out / "jar", app=out, gate=_HERE.parent)
+            planned = ca.plan(SHA, "post_deploy", "")
+            info, health, beans = live_documents()
+            beans["contexts"]["app"]["beans"]["unrelated"] = {"secret": "PRIVATE_BEAN_DETAIL"}
+            before = {"pid": 123, "starttime": "456", "command_sha256": "d" * 64, "listener_inodes": ["1234"]}
+            for change in (None, "pid", "jar", "listener"):
+                after = dict(before)
+                if change == "pid": after["starttime"] = "789"
+                if change == "listener": after["listener_inodes"] = ["789"]
+                with mock.patch.object(ca, "verify_candidate_jar", return_value={"jar_sha256": "b" * 64}), \
+                        mock.patch.object(ca, "java_command", return_value=["java"]), \
+                        mock.patch.object(ca, "app_process_identity", side_effect=[before, after]), \
+                        mock.patch.object(ca, "postdeploy_http", side_effect=[{"code": 200, "token": "PRIVATE_TOKEN"}, info, health, beans]), \
+                        mock.patch.object(ca.post, "read_state", return_value={"server_uuid": POST_UUID}), \
+                        mock.patch.object(ca, "sha256_file", return_value="c" * 64 if change == "jar" else "b" * 64):
+                    if change:
+                        with self.assertRaises(ca.GateError): ca.observe_postdeploy(args, planned, mock.Mock())
+                    else:
+                        proof = ca.observe_postdeploy(args, planned, mock.Mock())
+                        self.assertEqual(before, proof["process"])
+                        self.assertNotIn("PRIVATE", json.dumps(proof))
+
+    def test_pid_command_and_starttime_use_only_original_process(self):
+        process = mock.Mock(pid=123); process.poll.return_value = None
+        with tempfile.TemporaryDirectory() as temporary:
+            proc = Path(temporary); folder = proc / "123"; folder.mkdir()
+            (folder / "fd").mkdir(); (folder / "net").mkdir()
+            (folder / "cmdline").write_bytes(b"java\0-cp\0fixture\0")
+            (folder / "stat").write_text("123 (java) S " + "0 " * 18 + "456")
+            fd = folder / "fd/1"; fd.symlink_to("socket:[1234]")
+            header = "sl local_address rem_address st queues timer retransmit uid timeout inode\n"
+            def tcp(table, address=None, state="0A", inode="1234"):
+                row = ("0: " + address + " 00000000:0000 " + state + " 0:0 00:0 0 1000 0 " + inode + "\n") if address else ""
+                (folder / "net" / table).write_text(header + row)
+            with mock.patch.object(ca, "Path", return_value=proc):
+                for table, address in (("tcp", "0100007F:1FA3"),
+                                       ("tcp6", "0000000000000000FFFF00000100007F:1FA3")):
+                    tcp("tcp"); tcp("tcp6"); tcp(table, address)
+                    actual = ca.app_process_identity(process, ["java", "-cp", "fixture"])
+                    self.assertEqual("456", actual["starttime"])
+                    self.assertEqual(["1234"], actual["listener_inodes"])
+                with self.assertRaises(ca.GateError): ca.app_process_identity(process, ["java", "other"])
+                for table, address, state, inode in (
+                    ("tcp", "00000000:1FA3", "0A", "1234"),
+                    ("tcp6", "00000000000000000000000000000000:1FA3", "0A", "1234"),
+                    ("tcp", "0100007F:1F90", "0A", "1234"),
+                    ("tcp", "0100007F:1FA3", "01", "1234"),
+                    ("tcp", "0100007F:1FA3", "0A", "9999")):
+                    tcp("tcp"); tcp("tcp6"); tcp(table, address, state, inode)
+                    with self.subTest(table=table, address=address, state=state, inode=inode), self.assertRaises(ca.GateError):
+                        ca.app_process_identity(process, ["java", "-cp", "fixture"])
+                fd.unlink(); tcp("tcp", "0100007F:1FA3")
+                with self.assertRaises(ca.GateError): ca.app_process_identity(process, ["java", "-cp", "fixture"])
+        process.poll.return_value = 1
+        with self.assertRaises(ca.GateError): ca.app_process_identity(process, ["java"])
 
 
 if __name__ == "__main__":
