@@ -67,7 +67,7 @@ PY_TRACE
 check_trace_runtime() {
   docker run --rm --name "$RUN_NAME-trace-check" --network none --read-only --cap-drop ALL \
     --user "$(id -u):$(id -g)" -v "$OUT/trace-runtime:/trace-runtime:ro" \
-    --entrypoint /trace-runtime/loader "$JDK_IMAGE" \
+    -e LD_SHOW_AUXV=1 --entrypoint /trace-runtime/loader "$JDK_IMAGE" \
     --inhibit-cache --library-path /trace-runtime/lib --list /trace-runtime/strace > "$OUT/trace-resolved"
   python3 - "$OUT/trace-runtime/manifest.json" "$OUT/trace-resolved" <<'PY_RESOLVED'
 import json
@@ -78,10 +78,49 @@ import sys
 manifest = json.loads(Path(sys.argv[1]).read_text())
 expected = {name: "/trace-runtime/" + name for name in manifest["files"] if name != "strace"}
 loader_names = {manifest["interpreter"], Path(manifest["interpreter"]).name, "/trace-runtime/loader"}
-seen = set()
+# LD_SHOW_AUXV belongs to this exact --list process, so ASLR addresses are comparable.
+hex_auxv = set("PHDR BASE FLAGS ENTRY NOTELF FPUCW SYSINFO SYSINFO_EHDR RANDOM HWCAP HWCAP2 HWCAP3 HWCAP4 DCACHEBSIZE ICACHEBSIZE UCACHEBSIZE L1I_CACHEGEOMETRY L1D_CACHEGEOMETRY L2_CACHEGEOMETRY L3_CACHEGEOMETRY".split())
+dec_auxv = set("EXECFD PHENT PHNUM PAGESZ UID EUID GID EGID CLKTCK SECURE MINSIGSTKSZ RSEQ_FEATURE_SIZE RSEQ_ALIGN L1I_CACHESIZE L1D_CACHESIZE L2_CACHESIZE L3_CACHESIZE".split())
+text_auxv = {"EXECFN": r"/trace-runtime/loader", "PLATFORM": r"x86_64", "BASE_PLATFORM": r"x86_64"}
+seen, auxv = set(), {}
+dependencies_started = vdso_seen = False
 for line_number, raw_line in enumerate(Path(sys.argv[2]).read_text().splitlines(), 1):
     line = raw_line.strip()
-    if re.fullmatch(r"linux-(?:vdso|gate)[\w.-]* \((?:0x)?[0-9a-fA-F]+\)", line):
+    if raw_line.startswith("AT_"):
+        metadata = re.fullmatch(r"AT_([A-Z0-9_]+):[ \t]+(\S+)", raw_line)
+        numeric = re.fullmatch(r"AT_\?\?\? \(0x([0-9a-fA-F]+)\): 0x([0-9a-fA-F]+)", raw_line)
+        if dependencies_started or not (metadata or numeric):
+            raise ValueError(f"Invalid target auxiliary vector at line {line_number}: {ascii(raw_line)}")
+        if numeric:
+            # Linux RSEQ entries may be unnamed in this glibc's display table.
+            name = {0x1b: "RSEQ_FEATURE_SIZE", 0x1c: "RSEQ_ALIGN"}.get(int(numeric.group(1), 16))
+            value = str(int(numeric.group(2), 16))
+        else:
+            name, value = metadata.groups()
+        pattern = r"(?:0x)?[0-9a-fA-F]+" if name in hex_auxv else r"[0-9]+" if name in dec_auxv else text_auxv.get(name)
+        if name in auxv or pattern is None or not re.fullmatch(pattern, value):
+            raise ValueError(f"Invalid target auxiliary vector at line {line_number}: {ascii(raw_line)}")
+        if name == "SYSINFO_EHDR" and (not value.startswith("0x") or int(value, 16) == 0):
+            raise ValueError("Target vDSO auxiliary address must be nonzero hexadecimal")
+        auxv[name] = value
+        continue
+    dependencies_started = True
+    if "SYSINFO_EHDR" not in auxv:
+        raise ValueError("Target vDSO auxiliary address missing before dependencies")
+    virtual = re.fullmatch(r"linux-(?:vdso|gate)[\w.-]* \((?:0x)?([0-9a-fA-F]+)\)", line)
+    anonymous_virtual = virtual is None
+    if anonymous_virtual:
+        virtual = re.fullmatch(r"\t \(0x([0-9a-fA-F]+)\)", raw_line)
+    if virtual is not None:
+        if vdso_seen or int(virtual.group(1), 16) != int(auxv["SYSINFO_EHDR"], 16):
+            raise ValueError(
+                f"Target vDSO does not match unique process auxiliary address at line {line_number}: "
+                f"reason={'duplicate_mapping' if vdso_seen else 'address_mismatch'} "
+                f"expected={int(auxv['SYSINFO_EHDR'], 16):#x} actual={int(virtual.group(1), 16):#x} "
+                f"vdso_seen={vdso_seen} kind={'anonymous' if anonymous_virtual else 'named'} "
+                f"previous_kind={vdso_kind if vdso_seen else 'none'} raw={ascii(raw_line)}")
+        vdso_seen = True
+        vdso_kind = "anonymous" if anonymous_virtual else "named"
         continue
     match = re.fullmatch(r"(\S+) => (/\S+) \((?:0x)?[0-9a-fA-F]+\)", line)
     if match:
@@ -96,8 +135,11 @@ for line_number, raw_line in enumerate(Path(sys.argv[2]).read_text().splitlines(
     if key in seen or expected.get(key) != resolved:
         raise ValueError(f"Target trace runtime escaped its private bundle at line {line_number}: {ascii(raw_line)}")
     seen.add(key)
+if not vdso_seen:
+    raise ValueError("Target vDSO mapping missing")
 if seen != set(expected):
     raise ValueError(f"Target trace runtime dependency missing: {sorted(set(expected) - seen)}")
+print(f"PASS target trace runtime same-process vDSO={int(auxv['SYSINFO_EHDR'], 16):#x}; kind={vdso_kind}; bundled dependencies={len(seen)}")
 PY_RESOLVED
   docker run --rm --name "$RUN_NAME-trace-check" --network none --read-only --cap-drop ALL \
     --user "$(id -u):$(id -g)" -v "$OUT/trace-runtime:/trace-runtime:ro" \

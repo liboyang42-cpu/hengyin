@@ -1,12 +1,13 @@
-<view class="upload">
+<view class="upload {{reducedMotion ? 'upload--reduced-motion' : ''}}">
   <view wx:if="{{tipText}}" class="upload__tip">{{tipText}}</view>
   <view class="upload__grid">
     <view class="upload__item" wx:for="{{items}}" wx:key="index">
       <image class="upload__img" src="{{item.url}}" mode="aspectFill" bindtap="onPreview" aria-role="button" aria-label="预览" data-index="{{index}}"  hover-class="cy-pressed" hover-stay-time="80"/>
 
       <!-- uploading:进度遮罩 -->
-      <view wx:if="{{item.uploading}}" class="upload__mask">
-        <view class="upload__spin"></view>
+      <view wx:if="{{item.uploading}}" class="upload__mask" aria-role="status" aria-live="polite" aria-busy="{{item.uploading}}" aria-label="上传中">
+        <view class="upload__spin" aria-hidden="true"></view>
+        <text class="upload__status">上传中</text>
       </view>
       <!-- error:保留位就地重试(§3.13 禁静默丢图) -->
       <view wx:elif="{{item.error}}" class="upload__mask upload__mask--error" catchtap="onRetry" data-index="{{index}}" hover-class="cy-pressed" hover-stay-time="80">

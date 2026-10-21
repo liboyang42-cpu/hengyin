@@ -1,3 +1,4 @@
+@import "../../../style/reduced-motion.wxss";
 /* cy-skeleton · 统一加载骨架(走 token,双主题自适配)。
  * shimmer 用 skeleton-base → -highlight → -base 的横向流光(DS §2.3/§2.4 独立骨架 token,
  * R1:禁与卡面同色,修暗端骨架几乎不可见)。 */

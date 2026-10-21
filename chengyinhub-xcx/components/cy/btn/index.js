@@ -1,4 +1,7 @@
+const reducedMotionBehavior = require('../../../behaviors/reduced-motion.js');
+
 Component({
+  behaviors: [reducedMotionBehavior],
   options: { multipleSlots: false },
   properties: {
     // 新语义 API(文档1 §2):primary(反色中性) | secondary | ghost | danger
@@ -7,6 +10,7 @@ Component({
     // 2026-09-01(D8):旧 API kind(blue|black|secondary|red|disabled)已删除。
     // 全部 8 处调用点已迁到 variant(blue/black 原本就映射到 primary,视觉零变化)。
     size: { type: String, value: '' },     // '' 标准(--cy-btn-h) | sm 小(--cy-btn-h-sm)
+    loadingLabel: { type: String, value: '处理中' },
     loading: { type: Boolean, value: false },  // 提交转圈(替代原生 <button loading>);loading 时压掉按压反馈
     disabled: { type: Boolean, value: false }, // 禁用:视觉置灰 + 组件内拦截点击;被拦时补发 disabledtap 供页面挂引导提示
     accessibilityLabel: { type: String, value: '' }, // 纯图标/动态文案调用方显式覆盖；普通文字按钮由可见文本提供名称

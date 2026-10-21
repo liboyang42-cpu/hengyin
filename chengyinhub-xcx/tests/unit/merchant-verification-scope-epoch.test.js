@@ -29,7 +29,11 @@ beforeEach(() => {
   };
   global.getApp = () => app;
   global.getCurrentPages = () => [];
+  const persisted = {};
   global.wx = {
+    getStorageSync: key => persisted[key],
+    setStorageSync(key, value) { persisted[key] = JSON.parse(JSON.stringify(value)); },
+    removeStorageSync(key) { delete persisted[key]; },
     scanCode({ success }) {
       success({ result: JSON.stringify({ type: 'topic', code: 'OLD-TICKET' }) });
     },
@@ -101,7 +105,8 @@ test('切换商家后，旧核销响应不得打开上一商家的选章或结�
     { code: 200, msg: '旧商家核销成功', data: {} },
   ];
 
-  for (const response of lateResponses) {
+  for (const [index, response] of lateResponses.entries()) {
+    wx.scanCode = ({ success }) => success({ result: JSON.stringify({ type: 'topic', code: 'synthetic-case-' + index }) });
     requests = [];
     userId = 11;
     const page = makePage();
@@ -152,7 +157,7 @@ test('仅刷新经营读数据不得静默丢弃在途核销回执', () => {
   page.goScanQR();
   const verificationRequest = requests.find((request) => request.url === '/api/registration/scan_qr_code');
   page._reloadAll();
-  verificationRequest.success({ code: 200, msg: '刷新期间核销成功', data: {} });
+  verificationRequest.success({ code: 200, msg: '核销成功' });
 
   assert.equal(page.data.sceneCurrent.id, 'merchant-verification-result');
   assert.equal(page.data.verificationResult.state, 'success');
@@ -164,7 +169,7 @@ test('当前商家当前数据轮次的核销回执仍可正常打开', () => {
 
   page.goScanQR();
   const verificationRequest = requests.find((request) => request.url === '/api/registration/scan_qr_code');
-  verificationRequest.success({ code: 200, msg: '核销成功', data: {} });
+  verificationRequest.success({ code: 200, msg: '核销成功' });
 
   assert.equal(page.data.sceneCurrent.id, 'merchant-verification-result');
   assert.equal(page.data.verificationResult.state, 'success');

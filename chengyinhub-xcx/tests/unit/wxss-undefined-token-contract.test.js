@@ -55,7 +55,7 @@ function scanUndefined(files, defined) {
 
 /* 既有的一处:组件把它当「调用方可覆盖的钩子」用,没有兜底值。
    不是本轮引入,单独记账,别让它把新账一起放行。 */
-const KNOWN = ['components/cy/tabs/index.wxss:3 --cy-tabs-accent']
+const KNOWN = ['components/cy/tabs/index.wxss:4 --cy-tabs-accent']
 
 const FILES = wxssFiles(ROOT)
 const DEFINED = globalTokens()

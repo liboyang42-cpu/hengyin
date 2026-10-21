@@ -1,3 +1,4 @@
+@import "../../../style/reduced-motion.wxss";
 /* cy-tabs 组件:封装 style/components.wxss §5.2 的 .cy-tabs 类系统。
    styleIsolation:isolated,故自带样式副本;--cy-* token 从页面继承(自定义属性穿透组件边界)。
    variant:''|fill|wide|segmented|chip;sticky:Boolean;强调色 var(--cy-tabs-accent) 可被页面覆盖,

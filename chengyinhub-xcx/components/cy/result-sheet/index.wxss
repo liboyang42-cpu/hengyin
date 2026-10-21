@@ -1,3 +1,4 @@
+@import "../../../style/reduced-motion.wxss";
 /* cy-result-sheet · 结果面板内容层。壳(遮罩/上滑/退场/安全区/主题 role)在 cy-sheet。
  * 色一律走语义 token:徽章 = status-success / result-fail-badge(稿色 #F94D5C),转圈 = 本主题的 brand accent。
  * 稿子给的 11 个 feedback/* 只有浅色档,直接落值等于深色态没做 —— 故映射到既有语义层。 */
