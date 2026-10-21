@@ -435,10 +435,12 @@ Component({
       this._pendingCompletion = { answer: answer || '', photoUrl: photoUrl || '', code: code || '', poiId }
       this._clearInteractionRecovery()
       this.setData({ completing: true })
+      let locationSettled = false
       wx.getLocation({
         type: 'gcj02',
         success: (location) => {
-          if (!isCurrent()) return
+          if (!isCurrent() || locationSettled) return
+          locationSettled = true
           const record = { v: 1, ownerId: context.ownerId, poiId: context.poiId, attemptId: Date.now() + ':' + (++attemptSequence) + ':' + Math.random() }
           try {
             if (readPending(context)) { this._pendingNotice(false); return }
@@ -453,7 +455,10 @@ Component({
             url: '/api/city/nodes/' + poiId + '/complete', method: 'POST', hideLoading: true, silentError: true,
             data: { lat: location.latitude, lng: location.longitude, answer: answer || '', photoUrl: photoUrl || '', code: code || '' },
             success: (res) => {
-              const ok = res && (res.code === 200 || res.code === '200') && isRecord(res.data) && typeof res.data.needRedeem === 'boolean' && (res.data.completed == null || (typeof res.data.completed === 'boolean' && res.data.completed !== res.data.needRedeem)) && (res.data.alreadyClaimed == null || typeof res.data.alreadyClaimed === 'boolean')
+              const receipt = res && res.data
+              const matchingPoi = isRecord(receipt) && ['poiId', 'id'].every((key) => !Object.prototype.hasOwnProperty.call(receipt, key) || positiveId(receipt[key]) === context.poiId)
+              const validCoupon = isRecord(receipt) && (receipt.needRedeem !== true || positiveId(receipt.couponId) !== null)
+              const ok = res && (res.code === 200 || res.code === '200') && matchingPoi && validCoupon && typeof res.data.needRedeem === 'boolean' && (res.data.completed == null || (typeof res.data.completed === 'boolean' && res.data.completed !== res.data.needRedeem)) && (res.data.alreadyClaimed == null || typeof res.data.alreadyClaimed === 'boolean')
               // Only these controller messages prove rejection before insertRewardLogIgnore.
               const rejected = res && (res.code === 500 || res.code === '500') && PREWRITE_REJECTIONS.has(res.msg)
               if (!ok && !rejected) { unknown(); return }
@@ -474,7 +479,8 @@ Component({
           })
         },
         fail: (error) => {
-          if (!isCurrent()) return
+          if (!isCurrent() || locationSettled) return
+          locationSettled = true
           this.setData({ completing: false })
           if (this._isPermissionDenied(error)) { this._setInteractionRecovery('location-permission', '需要定位权限', '在设置里允许定位，返回后会继续本次打卡。', 'complete'); return }
           this._setInteractionRecovery('retry', '定位没有完成', '暂时无法获取位置，请稍后重试。', 'complete')
