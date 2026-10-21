@@ -353,6 +353,60 @@ function relaxError(relax, model) {
   return '';
 }
 
+/** variants.when reuses AdvancedGameConfigValidator's existing condition DSL.
+ * Key registration and node ownership still belong to the server publish gate. */
+function variantWhenError(when) {
+  const label = 'variants 的 when';
+  if (!when || typeof when !== 'object' || Array.isArray(when)) return label + ' 格式不正确';
+  const op = when.op;
+  if (op === 'ITEM_HELD' || op === 'ITEM_ACQUIRED') {
+    return typeof when.itemId === 'string' && /^[a-z][a-z0-9_]{0,31}$/.test(when.itemId) &&
+      Number.isInteger(when.quantity) && when.quantity >= 1 && when.quantity <= 999
+      ? '' : label + ' 的物资条件不合法';
+  }
+  if (op === 'NODE_COMPLETED') {
+    return typeof when.nodeId === 'number' && Number.isFinite(when.nodeId) &&
+      Math.trunc(when.nodeId) > 0 && when.nodeId < 9223372036854775808
+      ? '' : label + ' 的 NODE_COMPLETED 必须带正整数 nodeId';
+  }
+  if (op === 'HAS_TAG') return EFFECT_TAG_PATTERN.test(text(when.value))
+    ? '' : label + ' 的 tag 值必须以 tag. 开头，点号后小写字母开头';
+  if (!['EQ', 'NE', 'GT', 'GTE', 'LT', 'LTE'].includes(op)) return label + ' 的 op 不受支持';
+  const variable = text(when.var);
+  if (!EFFECT_VAR_PATTERN.test(variable) && !['sys.hp', 'sys.luck', 'sys.exhausted'].includes(variable) &&
+      !/^sys\.asked\.[1-9][0-9]*\.[A-Za-z0-9_-]{1,32}$/.test(variable) &&
+      !/^sys\.(mistakes|outcome|passed)\.[1-9][0-9]*$/.test(variable)) return label + ' 的 var 不是可读的状态变量';
+  return Number.isInteger(when.value) && when.value >= MIN_EFFECT_VALUE && when.value <= MAX_EFFECT_VALUE
+    ? '' : label + ' 的 value 须为 -99 至 99 之间的整数';
+}
+
+/** Runtime uses first match: simulate each row against the original, never accumulate.
+ * Reuse the existing complete validator so range limits stay in one place. */
+function relaxedVariantsError(model, opts) {
+  for (let i = 0; i < (model.variants || []).length; i += 1) {
+    const simulated = clone(model);
+    delete simulated.variants;
+    const relax = model.variants[i].relax;
+    for (const path of Object.keys(relax)) {
+      const [section, field] = path.split('.');
+      const raw = text(relax[path]), amount = Number(raw.slice(1));
+      simulated[section][field] = raw[0] === '=' ? amount :
+        (Number(simulated[section][field]) || 0) + (raw[0] === '-' ? -amount : amount);
+    }
+    // Every ATTEMPTS field has the same existing server range (0 means unlimited).
+    // Some local kit checks only enforce its lower bound; check the relaxed value here.
+    for (const path of Object.keys(relax)) {
+      const [section, field] = path.split('.');
+      if (RELAX_ATTEMPTS.includes(path) && Number(simulated[section][field]) > MAX_ATTEMPTS) {
+        return 'variants 第 ' + (i + 1) + ' 条放宽后不合法：' + path + ' 须为 0 至 10，0 表示不限';
+      }
+    }
+    const error = validateNormalized(simulated, opts);
+    if (error) return 'variants 第 ' + (i + 1) + ' 条放宽后不合法：' + error;
+  }
+  return '';
+}
+
 /** variants 的形状校验。每条都必须带 when —— 无条件放宽等于直接改配置。 */
 function variantsError(model) {
   const variants = model && model.variants;
@@ -360,8 +414,10 @@ function variantsError(model) {
   if (!Array.isArray(variants)) return 'variants 必须是数组';
   if (variants.length > MAX_VARIANTS) return 'variants 最多配置 ' + MAX_VARIANTS + ' 条';
   for (const item of variants) {
-    if (!item || typeof item !== 'object') return 'variants 条目格式不正确';
+    if (!item || typeof item !== 'object' || Array.isArray(item)) return 'variants 条目格式不正确';
     if (item.when == null) return 'variants 的每条都必须带 when —— 无条件放宽等于直接改配置';
+    const whenInvalid = variantWhenError(item.when);
+    if (whenInvalid) return whenInvalid;
     const bad = relaxError(item.relax, model);
     if (bad) return bad;
   }
@@ -1271,6 +1327,8 @@ function validateNormalized(model, opts) {
   if (mistakeTierInvalid) return mistakeTierInvalid;
   const variantsInvalid = variantsError(model);
   if (variantsInvalid) return variantsInvalid;
+  const relaxedInvalid = relaxedVariantsError(model, opts);
+  if (relaxedInvalid) return relaxedInvalid;
   if (model.check && model.check.enabled) {
     const modsInvalid = modsError(model.check.mods);
     if (modsInvalid) return modsInvalid;
