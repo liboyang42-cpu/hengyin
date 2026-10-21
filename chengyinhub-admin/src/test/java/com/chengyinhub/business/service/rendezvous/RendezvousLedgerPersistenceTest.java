@@ -31,6 +31,7 @@ import org.mybatis.spring.SqlSessionTemplate;
 import org.mybatis.spring.transaction.SpringManagedTransactionFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.util.ReflectionTestUtils;
 import static com.chengyinhub.business.service.rendezvous.MyBatisRendezvousConsentStore.Mode.ISOLATED_PERSISTENCE_EVALUATION;
 import static com.chengyinhub.business.service.rendezvous.RendezvousConsentService.*;
@@ -51,6 +52,7 @@ class RendezvousLedgerPersistenceTest {
     boolean failJoin;
 
     @BeforeEach void setup() throws Exception {
+        SecurityContextHolder.clearContext();
         dataSource = new JdbcDataSource();
         dataSource.setURL("jdbc:h2:mem:w16ledger_" + UUID.randomUUID() + ";MODE=MySQL;DB_CLOSE_DELAY=-1;LOCK_TIMEOUT=5000");
         jdbc = new JdbcTemplate(dataSource);
@@ -72,7 +74,7 @@ class RendezvousLedgerPersistenceTest {
         consentStore = new MyBatisRendezvousConsentStore(ISOLATED_PERSISTENCE_EVALUATION, session, manager);
         meetingStore = new MyBatisRendezvousMeetingStore(MyBatisRendezvousMeetingStore.Mode.ISOLATED_PERSISTENCE_EVALUATION, session, manager);
         OpenSafety safety = new OpenSafety();
-        consent = new RendezvousConsentService(consentStore, safety, clock);
+        consent = new RendezvousConsentService(consentStore, safety, clock, (matchId, first, second, pool, now) -> { });
         meetings = new RendezvousMeetingService(RendezvousMeetingService.Mode.ISOLATED_CONTRACT_EVALUATION, meetingStore, safety, new Goal(), handoff(), clock, 30_000);
         creates[0] = 0; failJoin = false;
     }

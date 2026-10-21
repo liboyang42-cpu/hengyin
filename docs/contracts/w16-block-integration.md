@@ -62,7 +62,7 @@ B、C 读已有 match 状态，不读新表。`SAFETY_STOPPED` 之后：接受�
 
 属性为 `true` 且同一个 `DataSource`、`SqlSessionTemplate`、`DataSourceTransactionManager` 一致时，`formal` 用该会话上的 `ImBlockMapper` 和 `MyBatisRendezvousConsentStore` 装配唯一入口。终止调用 A 的 `terminateCurrent(..., Termination.BLOCK, now)`。同一事务写屏蔽、终止、读回双方当前联系。`ApiImController.block` 用 `getAppUserId()` 作为 actor，响应仍是「已拉黑」，data 带读回。登录主体的 app user 与传入 actor 不一致时拒绝，不写行。
 
-A 的 `Mode` 枚举仍没有单独的生产成员。store 的 `transaction()` 只在 `ISOLATED_PERSISTENCE_EVALUATION` 下写。`formal` 使用这个已有可写模式，不把 `evaluation()` 注册成 Bean，也不使用内存替身。新配对的 Admission 固定抛 `POLICY_CLOSED`，这条装配不记账、不放行新配对。
+`formal` 使用 A 的 `Mode.FORMAL` 创建 `MyBatisRendezvousConsentStore`。`transaction()` 在 `FORMAL` 和 `ISOLATED_PERSISTENCE_EVALUATION` 下都写。资源校验仍是同一个 `DataSource`、`SqlSessionTemplate`、`DataSourceTransactionManager`。`evaluation()` 不是 Bean，仍走隔离评估模式。不注册内存替身。新配对的 Admission 固定抛 `POLICY_CLOSED`，这条装配不记账、不放行新配对。配对侧的 `ledger::charge` 不接到这里。
 
 依赖缺失抛 `W16_BLOCK_DEPENDENCY_MISSING`（容器缺 Bean 时由 Spring 拒绝创建）。数据源或事务工厂不一致抛 `W16_BLOCK_RESOURCE_MISMATCH`。会话缺少拉黑或同意 mapper 抛 `W16_BLOCK_MAPPER_MISSING`。传入的 mapper 不属于该会话抛 `W16_BLOCK_MAPPER_MISMATCH`。
 

@@ -15,21 +15,21 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import static com.chengyinhub.business.service.rendezvous.MyBatisRendezvousConsentStore.Mode.FORMAL;
 import static com.chengyinhub.business.service.rendezvous.MyBatisRendezvousConsentStore.Mode.ISOLATED_PERSISTENCE_EVALUATION;
 import static com.chengyinhub.business.service.rendezvous.RendezvousConsentService.Rejection;
 
 /**
  * Default-off composition root. The enable flag lives here and defaults to false.
- * {@link #formal} binds the session's block mapper and A's consent store on that same
- * session, data source and transaction manager. {@link #evaluation} is not a bean.
- * A's {@code Mode} enum still has no separate production member; the store writes only in
- * {@code ISOLATED_PERSISTENCE_EVALUATION}. This class does not register an in-memory stand-in.
+ * {@link #formal} binds the session's block mapper and A's consent store in
+ * {@link MyBatisRendezvousConsentStore.Mode#FORMAL} on that same session, data source
+ * and transaction manager. {@link #evaluation} is not a bean and is not an in-memory stand-in.
  */
 @Configuration
 public class RendezvousBlockComposition {
     public static final String ENABLED_PROPERTY = "chengyinhub.w16.block-termination";
     public static final boolean DEFAULT_ENABLED = false;
-    /** Wired to the consent store's only writable mode. Not an in-memory evaluation bean. */
+    /** Production entry marker. The store mode is {@code Mode.FORMAL}. */
     public enum FormalMode { PERSISTED }
     public static final FormalMode FORMAL_MODE = FormalMode.PERSISTED;
 
@@ -46,7 +46,7 @@ public class RendezvousBlockComposition {
         requireSession(authority, session, manager);
         if (clock == null) throw new IllegalStateException("W16_BLOCK_DEPENDENCY_MISSING");
         MyBatisRendezvousConsentStore store = new MyBatisRendezvousConsentStore(
-                ISOLATED_PERSISTENCE_EVALUATION, session, manager);
+                FORMAL, session, manager);
         ImBlockMapper blocks = session.getMapper(ImBlockMapper.class);
         RendezvousConsentService consent = new RendezvousConsentService(store,
                 new RendezvousSafetyAdapter(blocks, ClosedPolicy.INSTANCE), clock,
