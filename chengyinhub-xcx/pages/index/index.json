@@ -3,6 +3,7 @@
     "tabBar": "/components/tabBar/index",
     "cy-starfield": "/components/cy/starfield/index",
     "cy-icon": "/components/cy/icon/index",
+    "cy-btn": "/components/cy/btn/index",
     "cy-tag": "/components/cy/tag/index",
     "cy-error": "/components/cy/error/index",
     "cy-empty": "/components/cy/empty/index",

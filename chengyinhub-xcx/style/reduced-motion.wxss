@@ -1,0 +1,72 @@
+/* isolated 组件显式导入；只停止装饰运动，状态文字仍由原组件渲染。 */
+@media (prefers-reduced-motion: reduce) {
+  .btn,
+  .btn__spinner,
+  .search,
+  .search__spin,
+  .cy-empty-spinner,
+  .upload__spin,
+  .mo__mask,
+  .mo__card,
+  .mo__btn,
+  .mo--closing .mo__card,
+  .mo--closing .mo__mask,
+  .mo__spinner,
+  .mo--reduced-motion .mo__spinner,
+  .offline-banner__signal::after,
+  .ds__mask,
+  .ds-pop,
+  .ds--closing .ds-pop,
+  .ds--closing .ds__mask,
+  .pulse,
+  .sc,
+  .sc__knob,
+  .scp,
+  .ps__runner,
+  .ps__marker--current::after,
+  .sh__mask,
+  .sh__panel,
+  .sh--closing .sh__panel,
+  .sh--closing .sh__mask,
+  .sh.sh--snap .sh__panel,
+  .sh--full .sh__progress-seg,
+  .sh.sh--morph.sh--morph-open .sh__panel--morph,
+  .sh.sh--morph .sh__panel--morph .sh__body,
+  .sh.sh--morph .sh__panel--morph .sh__footer,
+  .sh.sh--morph.sh--morph-open .sh__panel--morph .sh__body,
+  .sh.sh--morph.sh--morph-open .sh__panel--morph .sh__footer,
+  .sh.sh--morph.sh--closing .sh__panel--morph,
+  .sh.sh--morph.sh--closing .sh__panel--morph .sh__body,
+  .sh.sh--morph.sh--closing .sh__panel--morph .sh__footer,
+  .cdd__panel,
+  .cdd__layer--closing .cdd__panel,
+  .lm,
+  .lm__spinner,
+  .qr__panel,
+  .qr__spin,
+  .rs--success .rs__scallop,
+  .rs__ring,
+  .rs__spark,
+  .rs__bar,
+  .rs__arm--b .rs__bar,
+  .rs__spinner,
+  .rs--reduced-motion .rs__spinner,
+  .sf-dim,
+  .sf-bright,
+  .sk-bar,
+  .cy-celebrate__piece,
+  .fd__arrow,
+  .cy-tabs__item,
+  .cy-tabs__item .cy-tabs__label::after,
+  .cy-tabs--shared-slab .cy-tabs__slab {
+    animation: none !important;
+    transition: none !important;
+  }
+  .cy-celebrate, .pulse, .rs__ring, .rs__spark { display: none !important; }
+  .sk-bar { background: var(--cy-color-skeleton-base) !important; }
+  .ps__marker--current::after { opacity: .32; transform: none; }
+  .ps__runner { opacity: .72; transform: translateX(75%); }
+  .btn--press { transform: none !important; }
+  .sc__face, .sc__photo { transform: none !important; }
+  .sc__foil, .sc__sheen { opacity: 0 !important; }
+}
