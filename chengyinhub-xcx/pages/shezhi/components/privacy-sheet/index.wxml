@@ -1,11 +1,11 @@
 <!-- 半屏 sheet:内容短(说明 + 一个链接 + 一个动作),不需要全屏 -->
 <cy-scene-sheet show="{{show}}" variant="half" theme="{{theme}}" title="隐私与定位" mask-closable="{{true}}" bind:requestclose="onClose">
   <view class="pv-sheet">
-    <text class="pv-sheet__body">定位只在你漫游或游玩时使用，结束即停止；照片、文字和录音只在你单独同意后才会交给第三方模型处理。</text>
+    <text class="pv-sheet__body">定位只在你漫游、游玩或开启首页城市定位时使用；照片、文字和录音只在你单独同意后才会交给第三方模型处理。</text>
     <view class="pv-sheet__link" bindtap="openPrivacyContract" aria-role="button" aria-label="查看用户隐私保护指引" hover-class="cy-pressed" hover-stay-time="80">查看《用户隐私保护指引》</view>
 
-    <text class="pv-sheet__title">我的待审媒体</text>
-    <cy-btn variant="secondary" disabled="{{submitting}}" aria-disabled="{{submitting}}" class="pv-sheet__action" bindtap="openOwnMedia">查看本人媒体与审核状态</cy-btn>
+    <text class="pv-sheet__title">更多隐私设置</text>
+    <cy-btn variant="secondary" disabled="{{submitting}}" aria-disabled="{{submitting}}" class="pv-sheet__action" bindtap="openOwnMedia">城市定位与更多隐私设置</cy-btn>
     <text class="pv-sheet__title">附近的人位置分享</text>
     <text class="pv-sheet__sub">关闭后立即停止向其他用户展示位置，不影响自己的定位和轨迹。</text>
     <cy-btn variant="secondary" loading="{{submitting}}" disabled="{{submitting}}" class="pv-sheet__action" bindtap="disablePresenceSharing">关闭附近的人位置分享</cy-btn>

@@ -7,6 +7,13 @@ const { openScene } = require('../../../utils/scene-entry.js');
 const { isRecordList } = require('../../../utils/response-shape.js');
 const { marketView } = require('../../../utils/template-market.js');
 const modal = require('../../../utils/modal.js');
+const { memberId, isLoginRequired, failureStatus, retryLogin, waitForInitialSession, recoverReadSession } = require('../../../utils/session/login-reload.js');
+
+function authorization() {
+  return typeof app.getAuthorization === 'function' ? app.getAuthorization()
+    : typeof app.getToken === 'function' ? app.getToken() : app.globalData && app.globalData.authorization;
+}
+function hasSession() { return !!(memberId(app) && authorization()); }
 
 // C6 重组(发布域重构 §3C):唯一管理容器,主结构=类型三 tab(主题/活动/模板)。
 // 身份和状态在卡片展示，列表只按主题 / 活动 / 模板切换。
@@ -58,11 +65,14 @@ const PENDING_RANK = { rejected: 0, draft: 1, pending: 2 };
 
 const LOAD_CAP = 200;
 
-function currentRead(page) {
+function currentRead(page, sessionRecovery) {
   const epoch = page._readEpoch || 0;
   const memberId = String(app.getUserID() || '');
-  return () => page._visible !== false && (page._readEpoch || 0) === epoch
-    && String(app.getUserID() || '') === memberId;
+  const token = authorization();
+  return (res, statusCode) => page._visible !== false && (page._readEpoch || 0) === epoch
+    && ((String(app.getUserID() || '') === memberId && authorization() === token)
+      || sessionRecovery && (res && res.reason === 'sessionChanged'
+        || failureStatus(res, statusCode) === 401 && !hasSession()));
 }
 
 Page({
@@ -79,6 +89,9 @@ Page({
                 canToggle: false, canDelete: false, canViewApplies: false, canSaveAsTemplate: false, toggleLabel: '' },
     loading: false,
     loaded: false,
+    authRequired: false,
+    projectAccessDenied: false,
+    tplAccessDenied: false,
     projectState: 'loading', // loading | error | ready
     projectErrorMsg: '',
     emptyTit: TYPE_EMPTY.topic.tit,
@@ -94,6 +107,7 @@ Page({
   onLoad(options) {
     options = options || {};
     this._ownerId = String(app.getUserID() || '');
+    this._ownerToken = authorization();
     // 2026-09-23 裁决(CU-C-22):俱乐部主理人可发独立单场活动,原来全站没有新建入口。
     // 2026-09-25 裁决(CU-M-05):商家同样可发单场活动,商家态入口改看岗位权限。
     // 本地身份只决定入口显不显示;能不能发由发布页 guardPublisherRole 回读权威接口判定,
@@ -101,9 +115,11 @@ Page({
     const merchantScope = options.scope === 'MERCHANT';
     this.setData({
       operationScope: merchantScope ? 'MERCHANT' : '',
-      canPublishActivity: merchantScope ? false : roleGuard.role() === 'club',
+      canPublishActivity: hasSession() && !merchantScope && roleGuard.role() === 'club',
     });
-    if (merchantScope) {
+    if (!hasSession()) {
+      this.resetPrivateState(true);
+    } else if (merchantScope) {
       this.loadMerchantPublishEntry();
     } else {
       const current = currentRead(this);
@@ -124,17 +140,19 @@ Page({
   },
 
   onShow() {
+    this._navigating = false;
     const memberId = String(app.getUserID() || '');
-    const changedOwner = this._ownerId !== undefined && this._ownerId !== memberId;
+    const changedOwner = this._ownerId !== undefined
+      && (this._ownerId !== memberId || this._ownerToken !== authorization());
     const refreshAccess = this._visible === false || changedOwner;
     this._visible = true;
-    if (changedOwner) {
-      this._all = [];
-      this.setData({ list: [], loaded: false, capped: false, hasRowOps: false,
-        tplList: [], tplLoaded: false, tplLoading: false, tplErrorMsg: '',
-        canPublishActivity: false, 'opsSheet.show': false });
-    }
+    this._hidden = false;
+    this._unloaded = false;
+    if (changedOwner) this.resetPrivateState(!hasSession());
     this._ownerId = memberId;
+    this._ownerToken = authorization();
+    merchantTheme.merchantPageShow();
+    if (!this.requireSession()) return;
     if (refreshAccess && this.data.operationScope === 'MERCHANT') {
       this.loadMerchantPublishEntry();
     } else if (refreshAccess) {
@@ -150,11 +168,11 @@ Page({
     //   路径(同步抛错 / 页面被顶掉再回来)会把 flag 永远留在 true,按钮就此死掉。
     this._togglingIds = null;
     this._templateActionIds = null;
-    merchantTheme.merchantPageShow(); this._navigating = false; // 兜底清跳转中标记
     this.reload();
   },
   onHide() {
     this._visible = false;
+    this._hidden = true;
     this._readEpoch = (this._readEpoch || 0) + 1;
     ['#dcActivity', '#dcCancel', '#dcCancelTopic', '#dcRoute', '#dcTpl'].forEach(id => {
       const dc = this.selectComponent && this.selectComponent(id);
@@ -163,9 +181,64 @@ Page({
     this.setData({ loading: false, tplLoading: false });
     merchantTheme.merchantPageRestore();
   },
-  onUnload() { this.onHide(); },
+  onUnload() { this.onHide(); this._unloaded = true; },
+
+  resetPrivateState(authRequired) {
+    this._loginRequired = !!authRequired;
+    this._readEpoch = (this._readEpoch || 0) + 1;
+    this._seq = (this._seq || 0) + 1;
+    this._all = [];
+    this.setData({ authRequired: !!authRequired, list: [], loaded: false, loading: false,
+      projectState: 'loading', projectErrorMsg: '', projectAccessDenied: false,
+      capped: false, hasRowOps: false, tplList: [], tplLoaded: false, tplLoading: false,
+      tplErrorMsg: '', tplAccessDenied: false, canPublishActivity: false, 'opsSheet.show': false,
+      auditSheet: { show: false, loading: false, error: '', title: '', bizType: '', bizId: '',
+        rows: [], appealText: '', canAppeal: false } });
+  },
+
+  requireSession() {
+    if (hasSession() && !this._loginRequired) { this.setData({ authRequired: false }); return true; }
+    this.resetPrivateState(true);
+    waitForInitialSession(this, app, this.onShow);
+    return false;
+  },
+
+  onLogin() {
+    const epoch = this._readEpoch || 0;
+    return retryLogin(this, app, function () {
+      if ((this._readEpoch || 0) !== epoch) return;
+      this._loginRequired = false;
+      this.onShow();
+    });
+  },
+
+  readFailure(kind, res, statusCode) {
+    if (recoverReadSession(this, app, res, function (anonymous) {
+      this.resetPrivateState(anonymous);
+    }, this.onShow, statusCode)) return;
+    if (isLoginRequired(app, res, statusCode) || !authorization()) { this.resetPrivateState(true); return; }
+    const denied = failureStatus(res, statusCode) === 403;
+    if (kind === 'project') {
+      if (denied) {
+        this._all = [];
+        this.setData({ list: [], loaded: false, hasRowOps: false, capped: false, 'opsSheet.show': false });
+      }
+      this.setData({ loading: false, projectAccessDenied: denied,
+        projectState: this.data.loaded ? 'ready' : 'error',
+        projectErrorMsg: app.getRequestErrorMessage(res, '项目加载失败，请稍后重试') });
+    } else {
+      if (denied) {
+        this.setData({ tplLoading: false, tplAccessDenied: true, tplList: [], tplLoaded: false,
+          tplErrorMsg: app.getRequestErrorMessage(res, '节点玩法加载失败') });
+      } else {
+        this.setData({ tplLoading: false, tplAccessDenied: false,
+          tplErrorMsg: app.getRequestErrorMessage(res, '节点玩法加载失败') });
+      }
+    }
+  },
 
   reload() {
+    if (!this.requireSession()) return;
     // 递增序号作废在途请求(修 toggle/delete 后空跑 + 响应污染,沿旧版)
     this._seq = (this._seq || 0) + 1;
     this.loadProjects();
@@ -177,6 +250,7 @@ Page({
     const k = e.detail.key;
     if (!k || k === this.data.typeTab) return;
     this.setData({ typeTab: k });
+    if (!this.requireSession()) return;
     if (k === 'template') {
       if (!this.data.tplLoaded) this.loadTemplates();
     } else {
@@ -188,7 +262,7 @@ Page({
      本地 scope 参数只决定问哪个接口,不作放行依据;读不到就按没有入口处理(fail-closed),
      真闸在服务端 —— 商家 scope 下 publish 仍要过 merchantAccessService.require。 */
   loadMerchantPublishEntry() {
-    if (this._visible === false) return;
+    if (this._visible === false || !this.requireSession()) return;
     this.setData({ canPublishActivity: false });
     const that = this;
     const current = currentRead(this);
@@ -213,16 +287,17 @@ Page({
 
   // ===== 数据:一次拉全,前端派生 =====
   loadProjects() {
-    if (this._visible === false) return;
+    if (this._visible === false || !this.requireSession()) return;
     const that = this;
-    const current = currentRead(this);
+    const current = currentRead(this, true);
     const seq = (this._seq || 0) + 1;
     this._seq = seq;
     const hasContent = this.data.loaded === true;
     this.setData({
       loading: true,
       projectState: hasContent ? 'ready' : 'loading',
-      projectErrorMsg: ''
+      projectErrorMsg: '',
+      projectAccessDenied: false
     });
     app.sendRequest({
       hideLoading: true,
@@ -232,7 +307,7 @@ Page({
       data: { ownerType: 'all', state: 'all', type: 'all', pageNum: 1, pageSize: LOAD_CAP,
         scope: this.data.operationScope },
       success(res) {
-        if (!current() || that._seq !== seq) return;
+        if (!current(res) || that._seq !== seq) return;
         if (res && res.code == '200' && res.data && isRecordList(res.data.rows)) {
           const rows = res.data.rows.map(decorate);
           that._all = rows;
@@ -243,22 +318,13 @@ Page({
             capped: (res.data.total || 0) > rows.length
           });
           that.applyView();
-        } else {
-          that.setData({
-            loaded: hasContent,
-            projectState: hasContent ? 'ready' : 'error',
-            projectErrorMsg: app.getRequestErrorMessage(res, '项目加载失败，请稍后重试')
-          });
-        }
+        } else { that.readFailure('project', res); }
       },
-      fail(res) {
-        if (current() && that._seq === seq) {
-          that.setData({
-            loaded: hasContent,
-            projectState: hasContent ? 'ready' : 'error',
-            projectErrorMsg: app.getRequestErrorMessage(res, '网络异常，项目暂时没能加载')
-          });
-        }
+      fail(res, statusCode) {
+        if (current(res, statusCode) && that._seq === seq) that.readFailure('project', res, statusCode);
+      },
+      successStatusAbnormal(res, statusCode) {
+        if (current(res, statusCode) && that._seq === seq) that.readFailure('project', res, statusCode);
       },
       complete() { if (current() && that._seq === seq) that.setData({ loading: false }); }
     });
@@ -321,7 +387,7 @@ Page({
     const item = e.currentTarget.dataset.item;
     if (!item) return;
     if (!item._canToggle && !item._canDelete && !item._canViewApplies && !item._canEdit && !item._canCancel
-      && !item._canSaveAsTemplate) return;
+      && !item._canAudit && !item._canSaveAsTemplate) return;
     this.setData({
       opsSheet: {
         show: true,
@@ -333,7 +399,7 @@ Page({
         canDelete: !!item._canDelete,
         canViewApplies: !!item._canViewApplies,
         canEdit: !!item._canEdit,
-        canCancel: !!item._canCancel,
+        canCancel: !!item._canCancel, canAudit: !!item._canAudit, state: item.state,
         canSaveAsTemplate: !!item._canSaveAsTemplate,
         toggleLabel: item._toggleLabel || '下架',
       }
@@ -345,7 +411,7 @@ Page({
   },
 
   onOpsPick(e) {
-    const k = e.currentTarget.dataset.k;
+    const k = e.currentTarget.dataset.k; if (k === 'audit') return this.onOpsAudit();
     const p = this.data.opsSheet;
     this.setData({ 'opsSheet.show': false });
     const ds = { id: p.id, biz: p.biz, online: p.online, title: p.title };
@@ -544,12 +610,13 @@ Page({
 
   // ===== 模板 tab(原 mytemplate 列表收编) =====
   loadTemplates() {
-    if (this._visible === false || this.data.tplLoading) return;
+    if (this._visible === false || !this.requireSession() || this.data.tplLoading) return;
     const that = this;
-    const current = currentRead(this);
-    this.setData({ tplLoading: true, tplErrorMsg: '' });
+    const current = currentRead(this, true);
+    this.setData({ tplLoading: true, tplErrorMsg: '', tplAccessDenied: false });
     app.sendRequest({
       hideLoading: true,
+      silentError: true,
       url: '/api/template/my-list',
       method: 'POST',
       data: {
@@ -557,26 +624,112 @@ Page({
         scope: this.data.operationScope
       },
       success(res) {
-        if (!current()) return;
-        if (res.code == '200' && res.data && isRecordList(res.data.rows)) {
+        if (!current(res)) return;
+        if (res && res.code == '200' && res.data && isRecordList(res.data.rows)) {
           const rows = res.data.rows.map(function (t) {
             const view = marketView(t);
-            return Object.assign({}, t, view, { _stateVariant: stateVariant(view._stateClass) });
+            return Object.assign({}, t, view, { _stateVariant: stateVariant(view._stateClass), _audit: auditTimeline.templateTarget(t) });
           });
           that.setData({ tplList: rows, tplLoaded: true });
-        } else {
-          that.setData({ tplErrorMsg: app.getRequestErrorMessage(res, '节点玩法加载失败') });
-        }
+        } else { that.readFailure('template', res); }
       },
-      fail(res) {
-        if (!current()) return;
-        that.setData({ tplErrorMsg: app.getRequestErrorMessage(res, '节点玩法加载失败') });
+      fail(res, statusCode) {
+        if (current(res, statusCode)) that.readFailure('template', res, statusCode);
+      },
+      successStatusAbnormal(res, statusCode) {
+        if (current(res, statusCode)) that.readFailure('template', res, statusCode);
       },
       complete() { if (current()) that.setData({ tplLoading: false }); }
     });
   },
 
   retryTemplates() { this.loadTemplates(); },
+
+  // ===== FOLLOWUP-A-2:审核记录 / 申诉 =====
+  // 长按面板的「审核记录」行:面板里只存了这张卡的 id / biz / state,按同一判据还原审核对象
+  onOpsAudit() {
+    const p = this.data.opsSheet;
+    this.setData({ 'opsSheet.show': false });
+    this.openAudit(auditTimeline.projectTarget({ id: p.id, bizType: p.biz, state: p.state }), p.title);
+  },
+
+  tplAudit(e) {
+    const ds = e.currentTarget.dataset;
+    this.openAudit(ds.biz && ds.bizid ? { bizType: ds.biz, bizId: String(ds.bizid) } : null, ds.title);
+  },
+
+  openAudit(target, title) {
+    if (!target) return;
+    this.setData({ auditSheet: { show: true, loading: true, error: '', title: title || '', bizType: target.bizType,
+      bizId: target.bizId, rows: [], appealText: '', canAppeal: false } });
+    this.loadAudit();
+  },
+
+  loadAudit() {
+    const that = this;
+    const sheet = this.data.auditSheet;
+    const current = currentRead(this);
+    const same = () => current() && that.data.auditSheet.show
+      && that.data.auditSheet.bizType === sheet.bizType && that.data.auditSheet.bizId === sheet.bizId;
+    app.sendRequest({
+      hideLoading: true, silentError: true, url: '/api/audit/timeline', method: 'GET',
+      data: { bizType: sheet.bizType, bizId: sheet.bizId },
+      success(res) {
+        if (!same()) return;
+        if (res && res.code == '200' && res.data) {
+          that.setData({ auditSheet: Object.assign({}, that.data.auditSheet, { loading: false, error: '',
+            rows: auditTimeline.timelineRows(res.data), appealText: auditTimeline.appealText(res.data),
+            canAppeal: res.data.canAppeal === true }) });
+        } else {
+          const msg = app.getRequestErrorMessage(res, '审核记录加载失败');
+          that.setData({ auditSheet: Object.assign({}, that.data.auditSheet, { loading: false, error: msg, canAppeal: false }) });
+          toast(msg);
+        }
+      },
+      fail() {
+        if (!same()) return;
+        that.setData({ auditSheet: Object.assign({}, that.data.auditSheet, { loading: false, error: '网络异常，请重试', canAppeal: false }) });
+        toast('网络异常，请重试');
+      }
+    });
+  },
+
+  closeAuditSheet() {
+    this.setData({ auditSheet: Object.assign({}, this.data.auditSheet, { show: false }) });
+  },
+
+  appealAudit() {
+    const sheet = this.data.auditSheet;
+    if (!sheet.show || !sheet.canAppeal || this._appealing) return;
+    const that = this;
+    const current = currentRead(this);
+    modal.show({
+      title: '申诉', editable: true, multiline: true, confirmText: '提交申诉',
+      placeholderText: '写清你认为处理有误的理由（500 字内），每条内容只能申诉一次',
+      validate: auditTimeline.validateReason,
+      success(r) {
+        if (!r.confirm || !current() || that._appealing) return;
+        if (auditTimeline.validateReason(r.content)) { toast(auditTimeline.validateReason(r.content)); return; }
+        that._appealing = true;
+        app.sendRequest({
+          hideLoading: true, silentError: true, url: '/api/audit/appeal', method: 'POST',
+          header: { 'content-type': 'application/json' },
+          data: JSON.stringify({ bizType: sheet.bizType, bizId: Number(sheet.bizId), reason: String(r.content).trim() }),
+          success(res) {
+            that._appealing = false;
+            if (!current()) return;
+            if (res && res.code == '200') {
+              toast('申诉已提交');
+              if (that.data.auditSheet.show && that.data.auditSheet.bizId === sheet.bizId) that.loadAudit();
+            } else {
+              toast(app.getRequestErrorMessage(res, '申诉失败'));
+            }
+          },
+          fail() { that._appealing = false; if (current()) toast('网络异常，请重试'); }
+        });
+      }
+    });
+  },
 
   tplTap(e) {
     const id = e.currentTarget.dataset.id;
@@ -792,8 +945,10 @@ function decorate(p) {
   /* 稿 260:277 承办卡底行写「待核销 2」。后端只对承办活动下发这个数(主办卡不需要,
      算了就是给每张卡白打一次库)。⚠️ 没下发和下发 0 是两件事:没下发就不写这一行,
      不能把「没算」印成「0 个待核销」。 */
-  const pendingVerify = Number(p.pendingVerifyCount);
-  const showPendingVerify = Number.isFinite(pendingVerify);
+  const rawPendingVerify = p.pendingVerifyCount;
+  const pendingVerify = typeof rawPendingVerify === 'number'
+    || typeof rawPendingVerify === 'string' && rawPendingVerify.trim() !== '' ? Number(rawPendingVerify) : NaN;
+  const showPendingVerify = Number.isInteger(pendingVerify) && pendingVerify >= 0;
   // 未承接=去看申请;已承接=去看合作现状(候选池同页展示已接受邀约),满足「每卡有下一步 CTA」
   const canViewApplies = p.bizType === 'topic' && (p.acceptStatus === 'clubOpen' || p.acceptStatus === 'merchantOpen' || acceptAccented);
   // BL-120:后端只放行审核通过(status=1)的主题;draft/pending/rejected 以外的主题 state 都是审核通过后的派生态。
@@ -808,6 +963,8 @@ function decorate(p) {
     _canDelete: merchantActivity ? false : canDelete,
     _canEdit: canEdit,
     _canCancel: canCancel,
+    // FOLLOWUP-A-2:未通过 / 已下架的主题、活动给「审核记录」(含申诉)
+    _canAudit: !!auditTimeline.projectTarget(p),
     _canSaveAsTemplate: canSaveAsTemplate,
     _sold: sold,
     _showAccept: showAccept, _acceptAccented: acceptAccented, _canViewApplies: canViewApplies,
@@ -828,3 +985,7 @@ function decorate(p) {
     _dot: PENDING_RANK[p.state] != null
   });
 }
+
+// FOLLOWUP-A-2 的依赖放在文件尾:上方 U1 基线(tests/lint/ui-integrity-baseline.js)按行号锚定,不挪既有行。
+// 页面方法都在模块求值完成后才被调用,此处的 const 届时已初始化。
+const auditTimeline = require('../../../utils/audit-timeline.js');

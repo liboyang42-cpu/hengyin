@@ -16,7 +16,7 @@ global.getApp = () => ({
   sendRequest: (p) => { sent.push(p); },
   getRequestErrorMessage: (res, fallback) => (res && res.msg) || fallback,
   getUserID: () => 1,
-  getToken: () => '',
+  getToken: () => 'fixture-session',
 });
 global.wx = {
   getStorageSync: () => undefined,

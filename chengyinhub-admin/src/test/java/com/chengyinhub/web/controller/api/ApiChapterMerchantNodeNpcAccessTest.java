@@ -27,7 +27,7 @@ import static org.mockito.Mockito.when;
 
 /**
  * 节点 NPC 端点的门禁合同(CR-927):
- * 身份走员工→店主解析后的 ownerMemberId(不是登录的店员),没权限不落到 service;
+ * 节点归属走解析后的 ownerMemberId，声音素材与单独同意保留真实登录者；没权限不落到 service;
  * openid 透传给内容安全;未配过 NPC 的 status 端点回 0 而不是报错。
  */
 class ApiChapterMerchantNodeNpcAccessTest {
@@ -136,7 +136,7 @@ class ApiChapterMerchantNodeNpcAccessTest {
     }
 
     @Test
-    void voiceEnrollPassesSampleAndOwner() {
+    void voiceEnrollKeepsManagerActorSeparateFromNodeOwner() {
         NodeNpcService npc = mock(NodeNpcService.class);
         IMerchantAccessService access = mock(IMerchantAccessService.class);
         when(access.require(PRINCIPAL, MerchantPermission.PROJECT_MANAGE)).thenReturn(ownerAccess());
@@ -146,6 +146,6 @@ class ApiChapterMerchantNodeNpcAccessTest {
         AjaxResult result = controller(npc, access, null).npcVoiceEnroll(req);
 
         assertEquals(200, result.get(AjaxResult.CODE_TAG));
-        verify(npc).voiceEnroll(OWNER, NODE, "/profile/voice/a.mp3");
+        verify(npc).voiceEnroll(PRINCIPAL, OWNER, NODE, "/profile/voice/a.mp3");
     }
 }

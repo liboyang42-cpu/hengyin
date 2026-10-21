@@ -72,7 +72,7 @@
     "chengyinhub-admin/sql/migration_20260808_player_withdrawable.sql": "3153581f219ff4aeb72c8acb12cd6907ec77b5ab1c5e94a06e99432d636344ec",
     "chengyinhub-admin/sql/migration_p2_4_admin_ia_menu.sql": "e56f1e2ae1227af1ee56f93a48227460b0eea252a0320a2369811d9b37c91743",
     "chengyinhub-admin/sql/migration_web_admin_nine_domains_20260719.sql": "d7dfb04a890923dbe6b946393c0c5db62450e56036b67a5c18359563cb11d358",
-    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsActivityController.java": "62e65e5a05ed6b39afba5b224c073bb8ee2ce8a91d632d7e8b0915a304d6e3ac",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsActivityController.java": "0ac7044d7d65aef23006fdccd33c2527193c8d8ee309a4208f5f5509fddc0821",
     "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsMemberTemplateController.java": "9b4e7579acdc0d7e13121f63447606bdc43eee3688646603e799d3cd26022b72",
     "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/OmsTicketController.java": "456f847d569996c3a57349ab77f620f3e61de3ed46e19078450ed6340ed4f367",
     "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/MmsMerchantController.java": "714f2e37dc86303a9bc2e47307eeb2c3a98349019fb3234f5b0871bf4618acd3",

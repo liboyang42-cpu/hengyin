@@ -75,6 +75,7 @@ function mountProfile(opts) {
     canUseCommunity: () => true, // Current-account server-open fixture.
     globalData: { statusBarHeight: 20, navBarHeight: 44 },
     getUserID: () => options.loginId,
+    getAuthorization: () => options.loginId ? 'Bearer unit-fixture' : '',
     getUserRole: () => options.role,
     getUserType: () => (options.role === 'merchant' ? 2 : 1),
     isDevEnv: () => false,
@@ -388,8 +389,8 @@ test('§3.7 网络错误在 About 有自己的出口,不落进玩家 About', () 
 
 test('§3.7 负控:把网络失败收敛成 not-merchant,状态机契约必须红', () => {
   const mutated = read(PROFILE_JS)
-    .replace("fail: function () { that.clearSubjectMerchant('network-error'); }",
-      "fail: function () { that.clearSubjectMerchant('not-merchant'); }")
+    .replace("fail: function () { if (that._currentProfileRead(read)) that.clearSubjectMerchant('network-error'); }",
+      "fail: function () { if (that._currentProfileRead(read)) that.clearSubjectMerchant('not-merchant'); }")
   assert.notEqual(mutated, read(PROFILE_JS), '变异没生效,负控无意义')
   const component = mountProfile({ userId: '88', source: mutated })
   component.initializeProfile()

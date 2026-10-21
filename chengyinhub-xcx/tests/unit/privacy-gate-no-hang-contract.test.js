@@ -37,6 +37,7 @@ function loadPrivacyPage(source = fs.readFileSync(PAGE, 'utf8')) {
     if (vm.isUiModule(p)) return vm.loadUiModule(p, vm.createContext({ wx }))
     if (p === '../../utils/roam-presence-privacy.js') return require('../../utils/roam-presence-privacy.js')
     if (p === '../../utils/location/bg-tracker.js') return require('../../utils/location/bg-tracker.js')
+    if (p === '../../utils/compliance/usage-consent.js') return require('../../utils/compliance/usage-consent.js')
     throw new Error('unexpected require: ' + p)
   }
   const fn = new Function('Page', 'getApp', 'wx', 'console', 'require', source)

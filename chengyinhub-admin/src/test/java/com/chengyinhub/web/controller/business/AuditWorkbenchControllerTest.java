@@ -34,6 +34,7 @@ import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -149,6 +150,21 @@ class AuditWorkbenchControllerTest {
 
         assertEquals(com.chengyinhub.common.constant.HttpStatus.CONFLICT, result.get(AjaxResult.CODE_TAG));
         assertEquals("审核状态已变化，请刷新后重试", result.get(AjaxResult.MSG_TAG));
+    }
+
+    /** FOLLOWUP-C-3:清单外原因编码经真实服务校验后,接口返回 400 AUDIT_REVIEW_INVALID,不碰审核单。 */
+    @Test
+    void controllerReviewRefusesUnknownReasonCodeWith400() {
+        AuditWorkbenchController controller = new TestableAuditWorkbenchController(100L);
+        ReflectionTestUtils.setField(controller, "auditTaskService", service);
+        AuditReviewDTO request = reviewWithId(10L, AuditTask.STATUS_REJECTED, "risk");
+        request.setReasonCodes(java.util.Arrays.asList("IMAGE_RISK", "NOT_A_CODE"));
+
+        AjaxResult result = controller.review(request);
+
+        assertEquals(com.chengyinhub.common.constant.HttpStatus.BAD_REQUEST, result.get(AjaxResult.CODE_TAG));
+        assertEquals("AUDIT_REVIEW_INVALID", result.get("errorCode"));
+        assertTrue(String.valueOf(result.get(AjaxResult.MSG_TAG)).contains("NOT_A_CODE"));
     }
 
     @Test

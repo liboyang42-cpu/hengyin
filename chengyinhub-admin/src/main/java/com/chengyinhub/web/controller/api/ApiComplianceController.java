@@ -33,7 +33,7 @@ public class ApiComplianceController extends BaseController {
 
     static {
         Map<String, Set<String>> scenes = new HashMap<>();
-        scenes.put("privacy_policy", setOf("app_launch", "roam_location"));
+        scenes.put("privacy_policy", setOf("app_launch", "roam_location", "home_city_location"));
         scenes.put("user_service_agreement", setOf("app_launch"));
         scenes.put("photo_model_processing", setOf("object_photo"));
         scenes.put("voice_clone_processing", setOf("merchant_voice"));
@@ -97,9 +97,14 @@ public class ApiComplianceController extends BaseController {
                 return success(consentData(readback));
             }
             if (!StringUtils.isEmpty(scopeType) || scopeId != null) return error("授权范围不合法");
-            if ("privacy_policy".equals(docType) && "roam_location".equals(scene)) {
+            if ("privacy_policy".equals(docType) && ("roam_location".equals(scene) || "home_city_location".equals(scene))) {
                 String expected = body.containsKey("expectedRequestId") ? value(body,"expectedRequestId") : null;
-                return success(consentData(roamLocationConsentService.record(memberId,eventType,requestId,expected,IpUtils.getIpAddr(request))));
+                ConsentRecord receipt = "roam_location".equals(scene)
+                        ? roamLocationConsentService.record(memberId,eventType,requestId,expected,IpUtils.getIpAddr(request))
+                        : roamLocationConsentService.record(memberId,scene,eventType,requestId,expected,IpUtils.getIpAddr(request));
+                if (!matchesWrite(receipt, docType, docVersion, scene, null, null, eventType)
+                        || !requestId.equals(receipt.getRequestId())) return error("授权状态回读失败");
+                return success(consentData(receipt));
             }
             consentRecordService.record(memberId, docType, docVersion, scene, eventType, requestId,
                     IpUtils.getIpAddr(request));

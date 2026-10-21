@@ -52,7 +52,7 @@
       "pkg": "main",
       "tabBar": true,
       "role": "player",
-      "needsLogin": false,
+      "needsLogin": true,
       "needsData": false,
       "dataKeys": [],
       "hasJs": true,

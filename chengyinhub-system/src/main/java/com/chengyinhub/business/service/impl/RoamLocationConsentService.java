@@ -25,13 +25,20 @@ public class RoamLocationConsentService {
     }
     @Transactional(rollbackFor=Exception.class)
     public ConsentRecord record(Long member, String event, String requestId, String expectedRequestId, String ip) {
+        return record(member, "roam_location", event, requestId, expectedRequestId, ip);
+    }
+    @Transactional(rollbackFor=Exception.class)
+    public ConsentRecord record(Long member, String scene, String event, String requestId, String expectedRequestId, String ip) {
+        if (!("roam_location".equals(scene) || "home_city_location".equals(scene)))
+            throw new IllegalArgumentException("定位授权场景不合法");
         if (member == null || member <= 0 || requestId == null || requestId.isBlank() || requestId.length()>64
                 || !("AGREE".equals(event) || "REVOKE".equals(event))) throw new IllegalArgumentException("定位授权参数不合法");
         if (roam.lockClaimOwner(member)==null) throw new ServiceException("账号状态已变化");
-        ConsentRecord current=records.selectLatestRoamLocationForUpdate(member);
+        ConsentRecord current="roam_location".equals(scene) ? records.selectLatestRoamLocationForUpdate(member)
+                : records.selectLatestLocationForUpdate(member, scene);
         ConsentRecord previous=records.selectByRequestId(member,requestId);
         if (previous!=null) {
-            if (!"privacy_policy".equals(previous.getDocType()) || !"roam_location".equals(previous.getScene())
+            if (!"privacy_policy".equals(previous.getDocType()) || !scene.equals(previous.getScene())
                     || !event.equals(previous.getEventType()) || previous.getScopeType()!=null || previous.getScopeId()!=null)
                 throw new IllegalArgumentException("请求标识已被其他授权使用");
             // A committed old AGREE receipt is never permission to restart after a later REVOKE.
@@ -44,12 +51,12 @@ public class RoamLocationConsentService {
         String version=properties.versionOf("privacy_policy");
         if (version==null || version.isBlank()) throw new IllegalStateException("Privacy version unavailable");
         ConsentRecord row=new ConsentRecord(); Date now=new Date();
-        row.setMemberId(member);row.setDocType("privacy_policy");row.setDocVersion(version);row.setScene("roam_location");
+        row.setMemberId(member);row.setDocType("privacy_policy");row.setDocVersion(version);row.setScene(scene);
         row.setEventType(event);row.setRequestId(requestId);row.setIpAddress(ip);row.setOccurredAt(now);row.setCreateTime(now);
         if(records.insertConsentRecord(row)!=1)throw new IllegalStateException("定位授权未保存");
         // 撤回漫游定位在服务端立即生效:同一事务里关闭本人所有未结束会话的「附近的人」展示,
         // 不等 5 分钟心跳过期,也不依赖客户端是否还在运行。
-        if("REVOKE".equals(event)) roam.updatePresenceVisibility(null,member,false);
+        if("roam_location".equals(scene) && "REVOKE".equals(event)) roam.updatePresenceVisibility(null,member,false);
         ConsentRecord receipt=records.selectByRequestId(member,requestId);
         if(receipt==null)throw new IllegalStateException("定位授权回读失败");
         return receipt;

@@ -212,35 +212,55 @@ test('④ roleBadge 的 role 不得收到 null(未登录时 userInfo.role 为空
   assert.match(wxml, /<roleBadge role="\{\{userInfo\.role \|\| ''\}\}"/, 'C03 调用方补空串兜底(不动 components/roleBadge)')
 })
 
-// ⚠️ R5 变更:本页的自造底栏 .bmbottom 已被删除,保存栏收编 cy-footer-bar
-//    (原因:裸 fixed 无 z-index,C03-R4 复拍 S1 里滚到底后整条消失)。
-//    「占位必须 ≥ 底栏实高」这条不变量没有丢,已迁到 c03-r5-contract.test.js 的 ④ 段
-//    与 c03-r3-contract.test.js 的 D 段(改为对 cy-footer-bar 解算)。
-test.skip('④ gerenziliao 底栏占位必须等于 .bmbottom 的真实高度(R5 已迁走,见注释)', () => {
-  const wxss = read('pages/gerenziliao/gerenziliao.wxss')
-  const hold = /\.gz-footer-hold\s*\{([^}]*)\}/.exec(wxss)
-  assert.ok(hold, '必须有占位规则')
-  const bar = /\.bmbottom\s*\{([^}]*)\}/.exec(wxss)
-  assert.ok(bar, '必须有底栏规则')
+// R5 已用 cy-footer-bar 替换自造底栏；仍核对页面占位与组件实际盒高同源。
+const profileFooterFiles = () => ({
+  wxml: stripComments(read('pages/gerenziliao/gerenziliao.wxml')),
+  wxss: read('pages/gerenziliao/gerenziliao.wxss'),
+  footer: read('components/cy/footer-bar/index.wxss'),
+  tokens: read('style/tokens.wxss'),
+})
 
-  // 底栏实高 = 上内距(--cy-space-4)+ 按钮高 + 下内距(--cy-space-6)+ 安全区。
-  // 按钮高不写在 .bmbottom 里,而是内嵌 cy-btn 自己的 --cy-btn-h 默认档 ⇒ 分别断言:
-  //  a) .bmbottom 的两档内距与安全区
-  for (const tok of ['--cy-space-4', '--cy-space-6']) {
-    assert.ok(bar[1].includes(tok), `.bmbottom 应仍使用 ${tok}`)
-  }
-  assert.match(bar[1], /env\(safe-area-inset-bottom\)/, '.bmbottom 必须自带安全区')
-  //  b) .bmbottom 不得覆写 --cy-btn-h,否则按钮实高与占位算式脱钩
-  assert.doesNotMatch(bar[1], /--cy-btn-h\s*:/, '.bmbottom 覆写 --cy-btn-h 会让占位算式失真')
-  assert.match(stripComments(read('pages/gerenziliao/gerenziliao.wxml')),
-    /<view class="bmbottom">\s*<cy-btn/, '底栏内必须是 cy-btn(高度取 --cy-btn-h 默认档)')
-  //  c) 占位必须把这四项逐项算齐,且不得借 --cy-comp-footer-h
-  //     (那是 cy-footer-bar 的 144rpx+safe;本页底栏 184rpx+safe,差 40rpx 会压住最后一行)
-  for (const tok of ['--cy-space-4', '--cy-btn-h', '--cy-space-6']) {
-    assert.ok(hold[1].includes(tok), `占位必须包含 ${tok}(与 .bmbottom 同源)`)
-  }
-  assert.match(hold[1], /env\(safe-area-inset-bottom\)/, '占位必须含安全区')
-  assert.doesNotMatch(hold[1], /--cy-comp-footer-h/, '本页底栏不是 cy-footer-bar,借它的高度会短 40rpx')
+function assertProfileFooterGeometry(files) {
+  assert.match(files.wxml, /<cy-footer-bar>\s*<cy-btn[^>]*bindtap="saveInfo"/, '保存必须在现行固定底栏内')
+  assert.doesNotMatch(files.wxml, /class="bmbottom"/, '不得恢复已退役的自造底栏')
+  const hold = /\.gz-footer-hold\s*\{([^}]*)\}/.exec(files.wxss)
+  assert.ok(hold, '必须保留底栏避让占位')
+  assert.match(hold[1], /height:\s*var\(--cy-comp-footer-h\)\s*;/, '占位必须使用官方等高 token')
+  const height = /--cy-comp-footer-h:\s*([^;]+);/.exec(files.tokens)
+  assert.ok(height, '官方底栏高度必须已定义')
+  assert.match(height[1], /^calc\(var\(--cy-btn-h\) \+ var\(--cy-comp-footer-pad-y\) \* 2 \+ env\(safe-area-inset-bottom\)\)$/, '盒高必须逐项包含按钮、上下内距及安全区')
+  const bar = /\.cy-footer-bar\s*\{([^}]*)\}/.exec(files.footer.replace(/\/\*[\s\S]*?\*\//g, ''))
+  assert.ok(bar, '固定底栏组件必须存在')
+  assert.match(bar[1], /padding:\s*var\(--cy-comp-footer-pad-y\) var\(--cy-page-x\)\s*;/, '实际上下内距须与高度 token 同源')
+  assert.match(bar[1], /padding-bottom:\s*calc\(var\(--cy-comp-footer-pad-y\) \+ env\(safe-area-inset-bottom\)\)\s*;/, '实际底部内距必须包含同一安全区')
+  assert.doesNotMatch(files.wxss + bar[1], /--cy-btn-h\s*:/, '页面与底栏不得另起按钮高度导致占位失真')
+}
+
+test('④ gerenziliao 底栏占位必须等于现行 cy-footer-bar 的真实高度', () => {
+  assertProfileFooterGeometry(profileFooterFiles())
+})
+
+test('④ 负控:资料页占位缩水必须判红', () => {
+  const files = profileFooterFiles()
+  const mutated = files.wxss.replace('height: var(--cy-comp-footer-h);', 'height: 64rpx;')
+  assert.notEqual(mutated, files.wxss, '占位变异锚点必须存在')
+  assert.throws(() => assertProfileFooterGeometry({ ...files, wxss: mutated }), assert.AssertionError)
+})
+
+test('④ 负控:官方盒高漏掉安全区必须判红', () => {
+  const files = profileFooterFiles()
+  const mutated = files.tokens.replace(
+    '--cy-comp-footer-h: calc(var(--cy-btn-h) + var(--cy-comp-footer-pad-y) * 2 + env(safe-area-inset-bottom));',
+    '--cy-comp-footer-h: calc(var(--cy-btn-h) + var(--cy-comp-footer-pad-y) * 2);')
+  assert.notEqual(mutated, files.tokens, '安全区变异锚点必须存在')
+  assert.throws(() => assertProfileFooterGeometry({ ...files, tokens: mutated }), assert.AssertionError)
+})
+
+test('④ 负控:组件内距偏离占位算式必须判红', () => {
+  const files = profileFooterFiles()
+  const mutated = files.footer.replace('padding-bottom: calc(var(--cy-comp-footer-pad-y) + env(safe-area-inset-bottom));', 'padding-bottom: var(--cy-comp-footer-pad-y);')
+  assert.notEqual(mutated, files.footer, '组件内距变异锚点必须存在')
+  assert.throws(() => assertProfileFooterGeometry({ ...files, footer: mutated }), assert.AssertionError)
 })
 
 test('④ 用 cy-footer-bar 的两页仍应留 --cy-comp-footer-h 等高空白(别被上一条带偏)', () => {

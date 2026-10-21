@@ -26,6 +26,13 @@
       <!-- 设置态只留一张分组列表:每行标题 + 右侧一个动作;待审媒体点开才展开 -->
       <view class="privacy-list">
         <view class="privacy-row">
+          <text class="privacy-row__title">首页城市自动定位</text>
+          <view class="privacy-row__acts">
+            <cy-btn variant="secondary" size="sm" loading="{{homeCityBusy}}" disabled="{{submitting || homeCityBusy}}" aria-disabled="{{submitting || homeCityBusy}}" bindtap="enableHomeCityLocation">开启</cy-btn>
+            <cy-btn variant="secondary" size="sm" loading="{{homeCityBusy}}" disabled="{{submitting || homeCityBusy}}" aria-disabled="{{submitting || homeCityBusy}}" bindtap="disableHomeCityLocation">关闭</cy-btn>
+          </view>
+        </view>
+        <view class="privacy-row">
           <text class="privacy-row__title">附近的人位置分享</text>
           <cy-btn variant="secondary" size="sm" loading="{{submitting}}" disabled="{{submitting}}" aria-disabled="{{submitting}}" bindtap="disablePresenceSharing">关闭</cy-btn>
         </view>
@@ -38,6 +45,7 @@
           <text class="privacy-row__more">{{mediaOpen ? '收起' : '查看'}}</text>
         </view>
       </view>
+      <cy-inline-error wx:if="{{homeCityError}}" title="{{homeCityError}}" />
       <view wx:if="{{mediaOpen}}" class="privacy-media">
         <text wx:if="{{mediaAccessDenied}}" class="privacy-setting-body">当前账号暂不能读取本人媒体，请刷新重试</text>
         <cy-btn wx:if="{{mediaAuthRequired}}" variant="secondary" bindtap="onMediaLogin">登录查看本人媒体</cy-btn>

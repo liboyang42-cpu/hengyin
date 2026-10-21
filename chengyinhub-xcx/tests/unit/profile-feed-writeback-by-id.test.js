@@ -34,7 +34,7 @@ function mountProfile() {
   let definition = null
   const app = {
     globalData: { statusBarHeight: 20, navBarHeight: 44 },
-    getUserID: () => '9',
+    getUserID: () => '9', getAuthorization: () => 'fixture-session',
     getUserRole: () => 'player',
     getUserType: () => 1,
     isDevEnv: () => false,

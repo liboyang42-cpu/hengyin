@@ -35,11 +35,12 @@ test('BL-143 isVisitedPoi:只认 passed/done', () => {
   assert.equal(f.isVisitedPoi({}), false)
 })
 
-// 已知缺口(不改被测代码,交 #37 处理):VISITED_STATES 是普通对象,原型键(toString/constructor)会被当成「到过」。
-// 后端 state 不会出现这些值,风险极低;修法是 Object.create(null) 或 hasOwnProperty。
-test('BL-143 isVisitedPoi:原型键不应算到过', { todo: '#37 VISITED_STATES 用了普通对象' }, () => {
-  assert.equal(f.isVisitedPoi({ state: 'toString' }), false)
-  assert.equal(f.isVisitedPoi({ state: 'constructor' }), false)
+// 已限定自有状态键，原型链键不能隐藏未到访点位。
+test('BL-143 isVisitedPoi:原型键不应算到过', () => {
+  for (const state of ['toString', 'constructor', '__proto__', 'hasOwnProperty', 'valueOf', 'toLocaleString']) {
+    assert.equal(f.isVisitedPoi({ state }), false, state)
+    assert.equal(f.hiddenByFilter({ state }, { unvisitedOnly: true }), false, '未到访点位仍保留')
+  }
 })
 
 test('BL-143 radiusLabel:米转 km 文案', () => {

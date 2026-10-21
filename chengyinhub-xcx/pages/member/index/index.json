@@ -1,6 +1,8 @@
 {
   "usingComponents": {
     "cy-profile": "/subpackageMember/components/cy/profile/index",
+    "cy-empty": "/components/cy/empty/index",
+    "tabBar": "/components/tabBar/index",
     "cy-privacy-gate": "/components/cy/privacy-gate/index",
     "cy-toast": "/components/cy/toast/index",
     "cy-loading-mask": "/components/cy/loading-mask/index",

@@ -841,3 +841,11 @@ test('玩家读回优先顶层纪元、兼容 player 纪元；所有命令与内
     assert.equal(pending.command.expectedRevision, 4)
   }
 })
+
+test('confirmed old receipt never lowers an existing newer projection revision', () => {
+  const current = { revision: 12, nodes: [{ nodeId: 31 }], write: { status: 'unknown', requestId: 'req-old' } }
+  const merged = mergeConfirmedReceipt(current, { requestId: 'req-old', outcome: 'APPLIED', revision: 10 })
+  assert.equal(merged.revision, 12)
+  assert.equal(merged.write.status, 'confirmed')
+  assert.equal(merged.nodes, current.nodes)
+})

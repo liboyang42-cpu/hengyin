@@ -550,10 +550,11 @@ public class ApiCreativeSquareController extends BaseController {
 
         umsCreativeSquare.setMemberId(member_id);
         boolean isEdit = Convert.toLong(id, 0L) > 0;
+        UmsCreativeSquare existing = null;
         if (isEdit) {
             //编辑
             umsCreativeSquare.setId(Convert.toLong(id));
-            UmsCreativeSquare existing = umsCreativeSquareService.selectUmsCreativeSquareById(umsCreativeSquare.getId());
+            existing = umsCreativeSquareService.selectUmsCreativeSquareById(umsCreativeSquare.getId());
             if (existing == null) {
                 return error("内容不存在");
             }
@@ -645,9 +646,7 @@ public class ApiCreativeSquareController extends BaseController {
         // R10-03:发布意图键的幂等发布;编辑与旧调用者保持原路径/原语义(空串清除语义不变)。
         boolean idempotentPublish = false;
         if (isEdit) {
-            if (umsCreativeSquareService.updateUmsCreativeSquare(umsCreativeSquare) <= 0) {
-                return error("编辑失败");
-            }
+            return applyEdit(umsCreativeSquare, existing, contents, pics, member_id);
         } else if (StringUtils.isNotEmpty(request_id)) {
             String rid = request_id.trim();
             if (!rid.matches("[A-Za-z0-9_-]{16,64}")) {
@@ -727,25 +726,19 @@ public class ApiCreativeSquareController extends BaseController {
             UmsMember publisher = umsMemberService.selectUmsMemberById(member_id);
             String openid = publisher != null ? publisher.getWxOpenId() : null;
             String secMsg = wxContentSecurityService.checkText(contents, openid);
-            if (secMsg != null) {
+            // AUDIT-G3-2:机审「审不了」(繁忙/不可用)不是违规,先发后审照常公开、留待人工复核;只有真违规才下架。
+            boolean detectionUnavailable = IWxContentSecurityService.isDetectionUnavailable(secMsg);
+            if (secMsg != null && !detectionUnavailable) {
                 umsCreativeSquare.setStatus(2); // BLOCK:下架不公开
                 umsCreativeSquareService.updateUmsCreativeSquare(umsCreativeSquare);
                 return error(secMsg);
             }
-            if (isEdit) {
-                // A-03:编辑不得重置平台审核态。原实现编辑分支无条件 status=1,于是被文本/媒体审核
-                // 下架(status=2)的违规帖改一个字的正文就整条复活;而编辑 payload 不带 pics,
-                // 图片不二次送检 ⇒ 违规图片借编辑绕过审核重新公开。
-                // 这里保持原状态(mapper 只写非 null 字段),只给明确提示;要恢复公开走平台复核。
-                UmsCreativeSquare latest = umsCreativeSquareService.selectUmsCreativeSquareById(umsCreativeSquare.getId());
-                if (latest != null && Integer.valueOf(2).equals(latest.getStatus())) {
-                    return error("内容已保存，但该帖曾被平台下架，仍不可公开，请联系客服复核");
-                }
-                return success(umsCreativeSquare);
-            }
             umsCreativeSquare.setStatus(1); // 发布即可见
             umsCreativeSquareService.updateUmsCreativeSquare(umsCreativeSquare);
             wxContentSecurityService.submitMediaCheck(IWxContentSecurityService.BIZ_TYPE_SQUARE, umsCreativeSquare.getId(), pics, openid);
+            if (detectionUnavailable) {
+                flagForLaterReview(umsCreativeSquare, member_id, contents, pics);
+            }
             return success(umsCreativeSquare);
         } finally {
             if (auditLocked && auditLockKey != null) {
@@ -754,6 +747,62 @@ public class ApiCreativeSquareController extends BaseController {
                 } catch (Exception ignored) {
                 }
             }
+        }
+    }
+
+    /**
+     * 编辑:先审新正文、再替换线上内容(AUDIT-G3-3)。原实现先把新正文写进线上帖子再送检,违规文本会公开一个往返;
+     * 现在新正文违规直接拒绝编辑,线上继续是旧内容;机审审不了不当违规,照常保存并留待人工复核(AUDIT-G3-2)。
+     * A-03:编辑不得重置平台审核态 —— 不写 status 列(mapper 只写非 null 字段),被下架的帖子编辑后仍下架。
+     * 编辑换了图片就把新图重新送异步检测,命中由回调下架;原实现编辑后的图片从不复检。
+     */
+    private AjaxResult applyEdit(UmsCreativeSquare edit, UmsCreativeSquare existing, String contents, String pics,
+                                 Long memberId) {
+        UmsMember publisher = umsMemberService.selectUmsMemberById(memberId);
+        String openid = publisher != null ? publisher.getWxOpenId() : null;
+        String secMsg = wxContentSecurityService.checkText(contents, openid);
+        boolean detectionUnavailable = IWxContentSecurityService.isDetectionUnavailable(secMsg);
+        if (secMsg != null && !detectionUnavailable) {
+            return error(secMsg);
+        }
+        if (umsCreativeSquareService.updateUmsCreativeSquare(edit) <= 0) {
+            return error("编辑失败");
+        }
+        boolean picsChanged = StringUtils.isNotEmpty(pics) && (existing == null || !pics.equals(existing.getPics()));
+        if (picsChanged) {
+            wxContentSecurityService.submitMediaCheck(IWxContentSecurityService.BIZ_TYPE_SQUARE, edit.getId(), pics, openid);
+        }
+        if (detectionUnavailable) {
+            flagForLaterReview(edit, memberId, contents, StringUtils.isNotEmpty(pics) ? pics
+                    : existing == null ? null : existing.getPics());
+        }
+        UmsCreativeSquare latest = umsCreativeSquareService.selectUmsCreativeSquareById(edit.getId());
+        if (latest != null && Integer.valueOf(2).equals(latest.getStatus())) {
+            return error("内容已保存，但该帖曾被平台下架，仍不可公开，请联系客服复核");
+        }
+        return success(edit);
+    }
+
+    /**
+     * 机审审不了时先发后审的「留待复核」:送统一审核台(与后台 /review 同一类安全复核单),驳回即下架。
+     * 送审失败只记 ERROR,不把已发布的内容改成失败回执(同图片送检的 best-effort 口径)。
+     */
+    private void flagForLaterReview(UmsCreativeSquare square, Long memberId, String contents, String pics) {
+        try {
+            Map<String, Object> snapshot = new LinkedHashMap<>();
+            snapshot.put("bizType", AuditTask.BIZ_SQUARE);
+            snapshot.put("bizId", square.getId());
+            snapshot.put("memberId", memberId);
+            snapshot.put("contents", contents);
+            snapshot.put("pics", pics);
+            Map<String, Object> gate = new LinkedHashMap<>();
+            gate.put("reasonCode", "TEXT_DETECTION_UNAVAILABLE");
+            gate.put("riskLevel", "NORMAL");
+            snapshot.put("_gate", gate);
+            auditTaskService.submitSafetyHold(AuditTask.BIZ_SQUARE, square.getId(), memberId, "NORMAL",
+                    com.alibaba.fastjson2.JSON.toJSONString(snapshot));
+        } catch (Exception e) {
+            logger.error("广场帖机审不可用后送人工复核失败,需人工补审 id={}", square.getId(), e);
         }
     }
 

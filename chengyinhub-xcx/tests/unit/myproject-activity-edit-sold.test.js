@@ -13,7 +13,7 @@ global.getApp = () => ({
   globalData: { statusBarHeight: 20, navBarHeight: 44 },
   sendRequest: (p) => { sent.push(p); },
   getUserID: () => 1,
-  getToken: () => '',
+  getToken: () => 'current-session',
   getRequestErrorMessage: (res, fallback) => (res && res.msg) || fallback,
 });
 global.wx = {
@@ -95,3 +95,14 @@ test('已开卖活动点编辑留在本页并说明，不进表单；上下架�
   assert.ok(toasts.some((t) => t && String(t).indexOf('已有人买票，不能再改这场活动') >= 0),
     '必须留在本页并说明原因，实际:' + JSON.stringify(toasts));
 });
+
+
+test('待核销统计只有明确非负整数才展示，缺值不得冒充零', () => {
+  const page = makePage()
+  const values = [undefined, null, '', ' ', false, -1, 1.5, 'invalid', 0, '0', 3]
+  loadActivities(page, values.map((value, index) => activityRow({ id: index + 1, pendingVerifyCount: value })))
+  assert.deepEqual(page.data.list.map(row => row._showPendingVerify),
+    [false, false, false, false, false, false, false, false, true, true, true])
+  assert.deepEqual(page.data.list.slice(-3).map(row => row._pendingVerifyText), ['待核销 0', '待核销 0', '待核销 3'])
+  assert.equal(page.data.list[1]._pendingVerifyText, '')
+})

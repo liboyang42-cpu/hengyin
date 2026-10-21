@@ -159,7 +159,9 @@ class ClubOwnerTransferIdentityFlowTest {
         ReflectionTestUtils.setField(topicController, "clubService", clubService);
         ReflectionTestUtils.setField(topicController, "coopInviteService", mock(ICoopInviteService.class));
         ReflectionTestUtils.setField(topicController, "umsMemberService", memberService);
-        ReflectionTestUtils.setField(topicController, "wxContentSecurityService", mock(IWxContentSecurityService.class));
+        IWxContentSecurityService topicSecurity = mock(IWxContentSecurityService.class);
+        ReflectionTestUtils.setField(topicController, "wxContentSecurityService", topicSecurity);
+        TopicContentSafetyTestFixtures.wire(topicController, topicSecurity);
         // RUN-52 发布者实名:本用例测的是「转让后的新Owner能不能接着发团」,实名闸在这里放行
         // (mock 的 checkRegistered 返回 null = 已登记)。
         ReflectionTestUtils.setField(topicController, "memberIdentityService",

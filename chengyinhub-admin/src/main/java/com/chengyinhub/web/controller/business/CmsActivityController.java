@@ -4,7 +4,11 @@ import java.util.List;
 import jakarta.servlet.http.HttpServletResponse;
 
 import com.chengyinhub.business.domain.*;
+import com.chengyinhub.business.domain.dto.CmsActivityPublishRequest;
+import com.chengyinhub.business.domain.dto.PublishSafetyRequest;
+import com.chengyinhub.business.domain.dto.SafetyDecision;
 import com.chengyinhub.business.service.*;
+import com.chengyinhub.business.service.support.ActivityReviewPolicy;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -45,6 +49,13 @@ public class CmsActivityController extends BaseController
 
     @Autowired
     private IOmsTicketService omsTicketService;
+
+    /** Gap 12·03 P0-5:后台建/改活动与小程序发布同一套分级审核 + 统一门禁,审核态不认请求体。 */
+    @Autowired
+    private ActivityReviewPolicy activityReviewPolicy;
+
+    @Autowired
+    private IContentSafetyGate contentSafetyGate;
 
     /**
      * 查询活动列表
@@ -110,7 +121,16 @@ public class CmsActivityController extends BaseController
     @PostMapping
     public AjaxResult add(@RequestBody CmsActivity cmsActivity)
     {
-        return toAjax(cmsActivityService.insertCmsActivity(cmsActivity));
+        // Gap 12·03 P0-5:后台新建与小程序 /api/activity/publish 同口径 —— 模式由 ActivityReviewPolicy 定,
+        // 门禁 decide() 裁决;明确违规拒,HOLD 落库待审并建 BIZ_ACTIVITY 审核单。status/publish_status 不认请求体。
+        PublishSafetyRequest.ReviewMode mode = activityReviewPolicy.modeOf(policyView(cmsActivity, null), STAFF);
+        SafetyDecision decision = decide(cmsActivity, cmsActivity.getMemberId(), mode);
+        if (decision == null || decision.isBlock()) {
+            return error("活动内容包含违规信息，请修改后重试");
+        }
+        boolean preReview = decision.isHold();
+        return toAjax(cmsActivityService.insertCmsActivityByAdmin(cmsActivity, getUsername(), preReview,
+                decision.isFlagged() ? decision.getFlagReason() : null));
     }
 
     /**
@@ -136,7 +156,52 @@ public class CmsActivityController extends BaseController
                 return error("活动已售出，" + lockedChange + "不能修改；文字、图片、音频仍可改");
             }
         }
-        return toAjax(cmsActivityService.updateCmsActivity(editable));
+        // Gap 12·03 P0-5:改文案与小程序 /api/activity/update 同一道门禁 + 同一套分级;
+        // 编辑只能把活动留在原状态或退回待审,公开只能由审核台通过。
+        CmsActivity current = cmsActivityService.selectCmsActivityById(editable.getId());
+        if (current == null) {
+            return error("活动不存在");
+        }
+        PublishSafetyRequest.ReviewMode mode = activityReviewPolicy.modeOf(policyView(editable, current), STAFF);
+        SafetyDecision decision = decide(editable, current.getMemberId(), mode);
+        if (decision == null || decision.isBlock()) {
+            return error("活动内容包含违规信息，请修改后重试");
+        }
+        boolean preReview = mode == PublishSafetyRequest.ReviewMode.PRE_REVIEW || decision.isHold();
+        return toAjax(cmsActivityService.updateCmsActivityByAdmin(editable, getUsername(), preReview,
+                decision.isFlagged() ? decision.getFlagReason() : null));
+    }
+
+    /**
+     * 后台操作人是平台员工,不是商家主体:不走「未审核商家」那一条,类目高风险与总闸照常生效。
+     * 没有给运营的免审通道 —— 若确需官方直发,应另设独立权限,不能借 business:activity:add 绕过。
+     */
+    private static final ActivityReviewPolicy.Publisher STAFF = new ActivityReviewPolicy.Publisher(false, false);
+
+    /** 分级只看类目:编辑没回带类目时按库里的类目判,不能因为没传就降成先发后审。 */
+    private CmsActivityPublishRequest policyView(CmsActivity activity, CmsActivity current)
+    {
+        CmsActivityPublishRequest view = new CmsActivityPublishRequest();
+        view.setName(activity.getName());
+        view.setDescription(activity.getDescription());
+        view.setCategoryIds(activity.getCategoryIds() != null || current == null
+                ? activity.getCategoryIds() : current.getCategoryIds());
+        return view;
+    }
+
+    /**
+     * 员工没有小程序 openid,门禁按「身份待复核」处理:先审 → HOLD,先发后审 → 打标抽检,与 App 缺 openid 同口径。
+     */
+    private SafetyDecision decide(CmsActivity activity, Long ownerMemberId, PublishSafetyRequest.ReviewMode mode)
+    {
+        PublishSafetyRequest safety = new PublishSafetyRequest();
+        safety.setContentType(AuditTask.BIZ_ACTIVITY);
+        safety.setMemberId(ownerMemberId);
+        safety.setOpenid("");
+        safety.setText(IWxContentSecurityService.joinText(activity.getName(), activity.getDescription()));
+        safety.setHasSignup(true);
+        safety.setReviewMode(mode.name());
+        return contentSafetyGate.decide(safety);
     }
 
     /**

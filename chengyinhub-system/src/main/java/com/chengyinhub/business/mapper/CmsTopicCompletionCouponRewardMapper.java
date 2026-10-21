@@ -8,7 +8,7 @@ public interface CmsTopicCompletionCouponRewardMapper
     int insertIgnore(@Param("topicId") Long topicId, @Param("memberId") Long memberId,
                      @Param("couponId") Long couponId);
 
-    /** 仅绑定本事务新占位的原领取回执；零行必须回滚发券及占位。 */
+    /** 绑定本事务发出的原领取回执；必须恰好写一行，否则发券与占位一并回滚。 */
     int bindHistoryId(@Param("topicId") Long topicId, @Param("memberId") Long memberId,
                       @Param("couponId") Long couponId, @Param("historyId") Long historyId);
 

@@ -2842,6 +2842,18 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
     }
 
     @Override
+    public void markContentSafetyHold(Long topicId) {
+        if (topicId == null || topicId <= 0L) return;
+        cmsTopicMapper.markContentSafetyHold(topicId);
+    }
+
+    @Override
+    public void markReviewFlag(Long topicId, boolean flagged) {
+        if (topicId == null || topicId <= 0L) return;
+        cmsTopicMapper.updateReviewFlag(topicId, flagged ? 1 : 0);
+    }
+
+    @Override
     public int graduateBeta(Long topicId) {
         // 竞态安全:仅当前确在 Beta 期(beta_flag=1)才清,重复点击/并发只成功一次
         return cmsTopicMapper.graduateBetaIfBeta(topicId);
@@ -2959,6 +2971,8 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         if (topic.getMerchantStatus() == null || topic.getMerchantStatus() != 1) {
             settlementDebtLedger.requireNoOverdueDebt(topic.getMemberId());
         }
+        // AUDIT-G2-1:内容安全下架留置中的草稿,发布只保存内容并送人工复核,不回到在架。
+        boolean contentSafetyHeld = com.chengyinhub.business.util.TopicContentSafetyHold.isHeld(topic);
         CmsTopic upd = new CmsTopic();
         upd.setId(id);
         if (!StringUtils.isEmpty(topic.getCircleThemeCode())) {
@@ -2969,7 +2983,10 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
                 assertOrdinarySupplyRestored(cmsTopicMapper.selectCmsTopicByIdForUpdate(id));
             }
             upd.setStatus(1);      // 简易版免审直发
-            upd.setUserStatus(1);
+            if (!contentSafetyHeld) {
+                upd.setUserStatus(1);
+                upd.setCheckStatus(1); // 机审通过/免审,与后审中的 0 区分(见 createTopic 同口径)
+            }
         }
         if ((simple || upd.getCircleReviewedAt() != null) && cmsTopicMapper.updateCmsTopic(upd) != 1) {
             throw new IllegalStateException("主题发布状态保存失败");
@@ -2977,14 +2994,21 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         // 与直接发布同源：带招募截止的草稿发布后必须进入既有立项流程，不能停在 DRAFT 关闭招商。
         submitPublishedProjectReview(id, topic.getMemberId(), topic.getRecruitDeadline());
         TopicBundleSubmitResultVO reviewResult = simple ? null : submitTopicBundle(id, topic.getMemberId());
-        // 发布草稿后同步恢复公开帖；专业版审核任务留在后台。
-        syncCreativeSquarePostVisibility(id, true);
+        // 发布草稿后同步恢复公开帖；专业版审核任务留在后台。留置中不公开。
+        if (!contentSafetyHeld) syncCreativeSquarePostVisibility(id, true);
         if (simple && cmsTopicMapper.publishRouteSnapshot(id, publishedRouteSnapshot, new Date()) != 1) {
             throw new IllegalStateException("路线发布快照保存失败");
         }
         // R18-DRAFT:草稿期不再预建自办活动壳(草稿不得出现在公开活动列表)⇒ 自办主题在这里补建,
         // 否则「草稿 → 发布」之后没有活动壳,玩家无票可买。商家池主题不建(由中标流程生成)。
-        // 专业版已在 publishBeforeReview 中补建，简易版在这里补建。
+        // 专业版已在 publishBeforeReview 中补建，简易版在这里补建。留置中由复核过审时补建。
+        if (simple && contentSafetyHeld) {
+            Long relistTaskId = requestContentSafetyRelistReview(id, topic.getMemberId());
+            TopicBundleSubmitResultVO held = new TopicBundleSubmitResultVO(
+                    id, relistTaskId, "PENDING", Collections.<Long>emptyList());
+            held.setPublished(false);
+            return held;
+        }
         if (simple) ensureSelfHostActivityShell(id);
         return reviewResult != null ? reviewResult : noBundleReview(id, "NOT_REQUIRED");
     }
@@ -4172,6 +4196,9 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         } else if (simpleMode) {
             topic.setStatus(1);
             topic.setUserStatus(1);
+            // 简易版免人工审核:文本已在控制器过机审门禁 ⇒ check_status=1(机审通过/免审),
+            // 与专业版「已发布、后审中」的 0 区分开。机审存疑的另挂 post_review_flag 抽检单,以未结单为准。
+            topic.setCheckStatus(1);
         } else {
             topic.setStatus(0);      // 内容落库期间尚未公开，事务末尾统一发布
             topic.setUserStatus(0);  // 用户端未上架
@@ -4433,18 +4460,79 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
                 && !AuditTask.STATUS_ESCALATED.equals(task.getStatus()))) {
             throw new IllegalStateException("审核任务状态读取失败");
         }
-        publishBeforeReview(topicId, memberId);
+        boolean published = publishBeforeReview(topicId, memberId);
         String reviewState = AuditTask.STATUS_ESCALATED.equals(task.getStatus()) ? "ESCALATED" : "PENDING";
         TopicBundleSubmitResultVO result = new TopicBundleSubmitResultVO(
                 topicId, taskId, reviewState, submission.getBundledTemplateIds());
-        result.setPublished(true);
+        result.setPublished(published);
         attachCommercialPublicationState(result);
         return result;
     }
 
-    /** 内容先发布、后台后审；审核状态独立保留，不能伪装为已过审。 */
-    private void publishBeforeReview(Long topicId, Long memberId) {
+    @Override
+    public Long requestContentSafetyRelistReview(Long topicId, Long submitterId) {
+        if (topicId == null || topicId <= 0L) throw new IllegalArgumentException("主题ID不能为空");
+        Long open = findOpenTopicTaskId(topicId);
+        if (open != null) return open;
+        CmsTopic topic = cmsTopicMapper.selectCmsTopicById(topicId);
+        if (topic == null) throw new IllegalStateException("主题不存在");
+        java.util.Map<String, Object> snap = new java.util.LinkedHashMap<>();
+        snap.put("bizType", AuditTask.BIZ_TOPIC);
+        snap.put("bizId", topicId);
+        snap.put("holdReason", com.chengyinhub.business.util.TopicContentSafetyHold.REASON);
+        snap.put("name", topic.getName());
+        snap.put("imgUrl", topic.getImgUrl());
+        snap.put("imgArr", topic.getImgArr());
+        String snapshot;
+        try {
+            snapshot = new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(snap);
+        } catch (Exception e) {
+            throw new IllegalStateException("复核快照生成失败", e);
+        }
+        Long owner = submitterId != null && submitterId > 0L ? submitterId : topic.getMemberId();
+        try {
+            return auditTaskService.submit(AuditTask.BIZ_TOPIC, topicId, owner,
+                    com.chengyinhub.business.util.TopicContentSafetyHold.SOURCE_RELIST, snapshot);
+        } catch (org.springframework.dao.DuplicateKeyException concurrent) {
+            // uk_audit_biz_open:并发下另一张未结单先落库,复用它即可
+            Long again = findOpenTopicTaskId(topicId);
+            if (again != null) return again;
+            throw concurrent;
+        }
+    }
+
+    private Long findOpenTopicTaskId(Long topicId) {
+        AuditTask query = new AuditTask();
+        query.setBizType(AuditTask.BIZ_TOPIC);
+        query.setBizId(topicId);
+        List<AuditTask> tasks = auditTaskService.selectAuditTaskList(query);
+        if (tasks != null) for (AuditTask task : tasks) {
+            // AUDIT-INT-5:举报单在独立槽,不能顶替复核上架单(举报不成立会顺手解除留置)。
+            if ((AuditTask.STATUS_PENDING.equals(task.getStatus())
+                    || AuditTask.STATUS_ESCALATED.equals(task.getStatus())) && !task.isOpenReport()) {
+                return task.getId();
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 内容先发布、后台后审；审核状态独立保留，不能伪装为已过审。
+     *
+     * <p>AUDIT-G2-1:内容安全图片回调下架留置中的主题,编辑/重发照常保存内容并送审,但不回到在架、
+     * 不清留置 —— 只确保有人工复核单,过审由审核台恢复在架。
+     *
+     * @return 是否真的上架了(留置中为 false)
+     */
+    private boolean publishBeforeReview(Long topicId, Long memberId) {
         mediaPublicationGuard.requireTopicPublication(topicId);
+        CmsTopic current = cmsTopicMapper.selectCmsTopicById(topicId);
+        if (com.chengyinhub.business.util.TopicContentSafetyHold.isHeld(current)) {
+            // 已发布过的主题照常刷新路线快照,复核通过上架时就是最新内容;未发布的由过审时统一发布。
+            if (Integer.valueOf(1).equals(current.getStatus())) publishValidatedRouteSnapshot(current);
+            requestContentSafetyRelistReview(topicId, memberId);
+            return false;
+        }
         String quotaError = quotaService.lockAndCheckThemeOnline(memberId, topicId);
         if (quotaError != null) throw new ServiceException(quotaError);
         publishValidatedRouteSnapshot(cmsTopicMapper.selectCmsTopicById(topicId));
@@ -4459,6 +4547,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         }
         syncCreativeSquarePostVisibility(topicId, true);
         ensureSelfHostActivityShell(topicId);
+        return true;
     }
 
     private void submitPublishedProjectReview(Long topicId, Long memberId, Date recruitDeadline) {
@@ -4550,6 +4639,8 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
     private void rebuildTopicContent(CmsTopic exist, com.chengyinhub.business.domain.dto.TopicUpdateDTO dto,
                                      Long memberId, String username, boolean chapterFlowV2, boolean draft) {
         Long topicId = exist.getId();
+        // 2026-10-20 分级审核:写前记下开售条款指纹,重建后只有价格/条款变了才重置开售审核。
+        java.util.Map<String, Object> saleTermsBefore = saleTerms(exist);
         preserveOmittedAuthorConfig(exist, dto);
         // 9-15 拍板:写前记下「已发布免费主题」,整包重建后复核;变商业即抛出,整个事务回滚。
         boolean conversionProtected = commercialTopicPolicy.isConversionProtected(exist);
@@ -4740,7 +4831,14 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         if (!draft) mediaPublicationGuard.requireTopicPublication(topicId);
 
         // 版本必须先递增，再创建新审核快照；否则本次编辑刚提交的任务会立刻被判为旧批准。
-        invalidateApprovedCanonical(topicId, "topic-content-rebuild");
+        // 2026-10-20 分级审核:开售审核与内容审核解耦 —— 只有价格/条款(TopicSaleTerms)变化才递增版本
+        // (= 重置开售审核);只改故事/名称/简介时版本不动,待审的开售审核单原地刷新快照,不丢进度。
+        if (com.chengyinhub.business.service.support.TopicSaleTerms.changed(saleTermsBefore,
+                saleTerms(cmsTopicMapper.selectCmsTopicById(topicId)))) {
+            invalidateApprovedCanonical(topicId, "topic-content-rebuild");
+        } else {
+            refreshPendingSaleReview(topicId, memberId);
+        }
 
         // R18-DRAFT:草稿保存不得触发任何审核 —— 起草稿只是存内容。这里原来按「带 recruitDeadline
         // 即送立项审」走,对草稿等于一次保存就把主题推进 RECRUITING(商业轨道);草稿要等作者点发布
@@ -4765,6 +4863,40 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         if (!draft) {
             refreshSelfHostActivity(topicId, memberId, username);
         }
+    }
+
+    /** 开售条款指纹;任何读不到/算不出的情况返回 null,由 {@code TopicSaleTerms.changed} 当作已变化。 */
+    private java.util.Map<String, Object> saleTerms(CmsTopic topic) {
+        if (topic == null || topic.getId() == null || commercialTopicPolicy == null) return null;
+        com.chengyinhub.business.service.support.CommercialTopicPolicy.Evaluation evaluation =
+                commercialTopicPolicy.evaluate(topic.getId());
+        if (evaluation == null) return null;
+        return com.chengyinhub.business.service.support.TopicSaleTerms.of(
+                commercialTopicPolicy.saleParameters(topic, evaluation));
+    }
+
+    /**
+     * 条款没变时,待审(PENDING/ESCALATED)的开售审核单用最新内容刷新快照(同一张单,不重排队),
+     * 审核员通过时看到并冻结的就是当前内容。没有待审开售单、或不在 PRICING,什么都不做。
+     */
+    private void refreshPendingSaleReview(Long topicId, Long memberId) {
+        if (topicCommercialReviewService == null || auditTaskService == null) return;
+        CmsTopic current = cmsTopicMapper.selectCmsTopicById(topicId);
+        if (current == null || !Integer.valueOf(TopicLifecycleState.PRICING.getCode()).equals(current.getLifecycle())) {
+            return;
+        }
+        AuditTask query = new AuditTask();
+        query.setBizType(AuditTask.BIZ_TOPIC_SALE_REVIEW);
+        query.setBizId(topicId);
+        List<AuditTask> tasks = auditTaskService.selectAuditTaskList(query);
+        boolean open = false;
+        if (tasks != null) for (AuditTask task : tasks) {
+            if (AuditTask.STATUS_PENDING.equals(task.getStatus()) || AuditTask.STATUS_ESCALATED.equals(task.getStatus())) {
+                open = true;
+                break;
+            }
+        }
+        if (open) topicCommercialReviewService.submitSaleReview(topicId, memberId);
     }
 
     private Map<Long, Long> existingNodeUnlocks(Long topicId) {

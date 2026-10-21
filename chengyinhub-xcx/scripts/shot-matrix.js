@@ -643,11 +643,9 @@ const countBy = (pred) => SHOTS.filter(pred).length;
 // 2026-10-15：漫游上线补 F96-F101 六条(我的队伍 + 5 个工具页),均 P1 actionable;
 // total 326→332、P1 183→189、actionable 302→308、F 86→92、setData 166→171、real-data 37→38。
 // 2026-10-19：Claude 小程序线移植到 master(用户批准冻结数值更新)补 9 条 P1 actionable:B92 主办控制台、C61 核销记录、C62 触达记录、
-// D90 积分明细、D91–D92 我的举报/举报进度(均 setData;D93/D94 我的纠错/纠错进度按用户 2026-10-20 要求删页)、F102 俱乐部勋章(identity+setData);
+// D90 积分明细、D91–D92 我的举报/举报进度(均 setData;D93/D94 按用户 2026-10-20 要求删页)、F102 俱乐部勋章(identity+setData);
 // total 332→341、P1 189→198、actionable 308→317、B 67→68、C 54→56、D 39→44、F 92→93、setData 171→179、identity+setData 116→117。
-// 2026-10-19 移植共享基线 366b846f/f49092b0:官方线路列表/详情补 B90/B91 两条 P1 setData 行(积分明细 D90 归 claude/mini-ui-on-master-20261019);
-// total 332→334、P1 189→191、actionable P1 182→184 / total 308→310、B 67→69、setData 171→173。
-// 2026-10-20 合并 master(#396)进 #293:两侧新增行互不重叠(本线 9 条 + 共享基线 B90/B91),total 343、P1 200、actionable 319(P1 193)、B 70、setData 181。
+// 2026-10-20 与新主干两条官方线路按唯一ID并集，blocked/已验证不增加，计数由实列复算。
 // 2026-10-20 用户要求删掉「我的纠错 / 纠错进度」两页:D93/D94 两条 P1 setData 行退场,total 341、P1 198、actionable 317(P1 191)、D 42、setData 179。
 const STATS = {
   "total": 341,

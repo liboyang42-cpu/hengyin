@@ -80,6 +80,11 @@ class TemplateMarketLifecycleMySqlIT {
             int applied = 0;
             while (alter.find()) { connection.createStatement().execute(alter.group()); applied++; }
             assertEquals(2, applied, "审核治理的两条真实 ALTER 必须加载");
+            // FOLLOWUP-C-3:migration_audit_followup_20261020.sql 给 audit_record 加的列(该文件还要求社区申诉表,这里只取 audit_record 这一条)。
+            String followup = new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get("sql/migration_audit_followup_20261020.sql")), java.nio.charset.StandardCharsets.UTF_8);
+            java.util.regex.Matcher reasonCodes = java.util.regex.Pattern.compile("ALTER TABLE audit_record ADD COLUMN reason_codes_json JSON NULL COMMENT ''([^']*)''").matcher(followup);
+            assertTrue(reasonCodes.find(), "必须加载真实迁移里的 reason_codes_json 列定义");
+            connection.createStatement().execute("ALTER TABLE audit_record ADD COLUMN reason_codes_json JSON NULL COMMENT '" + reasonCodes.group(1) + "'");
         }
     }
 

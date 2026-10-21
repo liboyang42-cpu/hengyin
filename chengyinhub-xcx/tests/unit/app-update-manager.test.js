@@ -24,7 +24,7 @@ test('modal failure or absent UI never acts as consent',()=>{
  for(const configure of [h=>delete h.wx.showModal,h=>{h.wx.showModal=()=>{throw Error('UI unavailable');};}]){const h=harness();configure(h);installAppUpdate(h.wx);assert.doesNotThrow(()=>h.ready());assert.equal(h.applies(),0);}
 });
 test('app installs standard update manager once through existing launch entry',()=>{
- const source=fs.readFileSync(path.resolve(__dirname,'../../app.js'),'utf8');assert.match(source,/require\('\.\/utils\/app-update\.js'\)/);assert.match(source,/onLaunch\(e\)\s*\{\s*installAppUpdate\(wx\)/);assert.equal((source.match(/installAppUpdate\(wx\)/g)||[]).length,1);
+ const source=fs.readFileSync(path.resolve(__dirname,'../../app.js'),'utf8');assert.match(source,/require\('\.\/utils\/update-manager\.js'\)/);assert.match(source,/onLaunch\(e\)\s*\{\s*installUpdateManager\(this,\s*wx\)/);assert.equal((source.match(/installUpdateManager\(this,\s*wx\)/g)||[]).length,1);
 });
 
 test('duplicate modal completion cannot apply twice or turn an earlier refusal into approval',()=>{

@@ -6,6 +6,7 @@ const assert = require('node:assert/strict')
 const PAGE = '../../pages/publish/fabu/index.js'
 const STORY = '../../pages/publish/utils/publish/pro-editor-story.js'
 
+let storage = {}
 let sent = []
 let pageConfig = null
 
@@ -20,9 +21,9 @@ global.getApp = () => ({
   chooseImage: () => {},
 })
 global.wx = {
-  getStorageSync: () => '',
-  setStorageSync: () => {},
-  removeStorageSync: () => {},
+  getStorageSync: key => storage[key],
+  setStorageSync: (key, value) => { storage[key] = value },
+  removeStorageSync: key => { delete storage[key] },
   getSystemInfoSync: () => ({ windowWidth: 375 }),
   showToast: () => {},
   showLoading: () => {},
@@ -38,6 +39,7 @@ global.Page = (config) => { pageConfig = config }
 
 beforeEach(() => {
   sent = []
+  storage = {}
   pageConfig = null
   delete require.cache[require.resolve(PAGE)]
   require(PAGE)
@@ -46,6 +48,8 @@ beforeEach(() => {
 function makePage() {
   const page = Object.assign({}, pageConfig)
   page.data = JSON.parse(JSON.stringify(pageConfig.data))
+  page.data.draftUuid = 'route-editor-draft'
+  page.data.draftMemberId = 101
   page._routeGraph = JSON.parse(JSON.stringify(pageConfig._routeGraph))
   page._routeMappingSourceNodeId = ''
   page._routeMappingReturnToNodeEditor = false

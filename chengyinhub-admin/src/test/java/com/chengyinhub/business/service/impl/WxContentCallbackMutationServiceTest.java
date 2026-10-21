@@ -121,10 +121,28 @@ class WxContentCallbackMutationServiceTest
         assertUnsupportedBusinessTypeIsManuallyReviewed(7);
     }
 
+    /** AUDIT-G1-4:官方活动已有下线分支,不再整类转人工 —— 照常锁行后交给 mutation。 */
     @Test
-    void officialEventIsManuallyReviewedBeforeTargetLockOrMutation()
+    void officialEventLocksTargetAndMutatesInsteadOfManualReview()
     {
-        assertUnsupportedBusinessTypeIsManuallyReviewed(8);
+        WxContentCallbackInboxMapper mapper = mock(WxContentCallbackInboxMapper.class);
+        IWxContentCallbackInboxService.Mutation mutation = mock(IWxContentCallbackInboxService.Mutation.class);
+        WxContentCallbackClaim claim = WxContentCallbackClaim.acquired("hash", "owner", 8L);
+        WxContentCallbackInbox row = processingRow(8, 42L, "media-hash");
+        when(mapper.selectOwnedForUpdate("hash", "owner", 8L)).thenReturn(row);
+        when(mapper.lockBusinessTarget(8, 42L)).thenReturn(42L);
+        when(mutation.isCurrent(row)).thenReturn(true);
+        when(mutation.apply(row, true)).thenReturn(true);
+        when(mapper.markDone("hash", "owner", 8L, 1)).thenReturn(1);
+        WxContentCallbackMutationService service = new WxContentCallbackMutationService();
+        ReflectionTestUtils.setField(service, "mapper", mapper);
+
+        assertTrue(service.apply(claim, true, mutation));
+
+        verify(mapper).lockBusinessTarget(8, 42L);
+        verify(mutation).apply(row, true);
+        verify(mapper, never()).markManualReview(anyString(), anyString(), org.mockito.ArgumentMatchers.anyLong(),
+                org.mockito.ArgumentMatchers.anyInt(), anyString());
     }
 
     private void assertUnsupportedBusinessTypeIsManuallyReviewed(int bizType)

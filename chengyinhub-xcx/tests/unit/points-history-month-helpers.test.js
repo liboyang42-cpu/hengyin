@@ -39,9 +39,10 @@ test('BL-145 monthLabel:YYYY-MM → 年月,月份去前导零;非法键 → 时�
   }
 })
 
-// 已知缺口(不改被测代码,交 #40 处理):正则只校验位数,不校验月份范围。
-// 后端 createTime 来自数据库 datetime,不会出现 13 月/00 月,风险极低。
-test('BL-145 月份越界应视为非法', { todo: '#40 monthKey/monthLabel 未校验 01–12' }, () => {
-  assert.equal(p.monthKey('2026-13-01 00:00:00'), '')
-  assert.equal(p.monthLabel('2026-00'), '时间未知')
+// 月份范围校验已落地，非法月份仍须归入时间未知组。
+test('BL-145 月份越界应视为非法', () => {
+  for (const month of ['00', '13', '99']) {
+    assert.equal(p.monthKey(`2026-${month}-01 00:00:00`), '')
+    assert.equal(p.monthLabel(`2026-${month}`), '时间未知')
+  }
 })

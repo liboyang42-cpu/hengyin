@@ -7,11 +7,7 @@ import com.chengyinhub.common.core.domain.BaseEntity;
 /**
  * 微信交易账单(T+1下载)本地留痕快照 wx_trade_bill_snapshot(P1-6 N块)。
  *
- * <p>对应微信官方「交易账单」(download_bill)/「资金账单」(download_fund_flow_bill)接口,
- * T+1 早10点后可下载 T 日完整账单。本轮只建表结构,真实下载/解析逻辑见 {@link com.chengyinhub.business.service.IWxTradeBillService}
- * 的骨架方法注释——不在本轮实现,属 P1-7 范围。
- *
- * <p>⚠️ {@link #amount} 是绝对值,方向由 {@link #bizType} 承载,与 {@code MerchantPayable} 同一范式。
+ * <p>由已校验的官方交易账单导出成功态快照；全部原始状态、应结额、券额和费用独立留存。\n * 资金账单另表按账户保存，不写入本表。\n *\n * <p>⚠️ {@link #amount} 是绝对值,方向由 {@link #bizType} 承载,与 {@code MerchantPayable} 同一范式。
  */
 public class WxTradeBillSnapshot extends BaseEntity {
     private static final long serialVersionUID = 1L;

@@ -571,9 +571,11 @@ test('「点亮坐标」必须取已完成数(doneCount),部分完成时不得�
   assert.equal(cell[1], 'doneCount', '「点亮坐标」绑的必须是 doneCount,不能是 total')
 
   // ② 分享卡 canvas:同一标签的同一口径
-  assert.match(js, /\[String\(that\.data\.doneCount \|\| 0\), '点亮坐标'\]/,
+  // 分享卡画的是点开时捕获的 artwork 快照,快照里的 doneCount 取自页面 doneCount。
+  assert.match(js, /\[String\(artwork\.doneCount \|\| 0\), '点亮坐标'\]/,
     '分享卡的「点亮坐标」也必须取 doneCount —— 错数字会被烤进分享图')
-  assert.doesNotMatch(js, /\[String\(that\.data\.total \|\| 0\), '点亮坐标'\]/)
+  assert.match(js, /doneCount: this\.data\.doneCount/, 'artwork 快照的 doneCount 必须来自页面 doneCount')
+  assert.doesNotMatch(js, /\[String\((that\.data|artwork)\.total \|\| 0\), '点亮坐标'\]/)
 
   // ③ 行为口径:doneCount 只数 done 的节点(部分完成时必然 < total)
   assert.match(js, /doneCount: nodes\.filter\(\(n\) => n\.done\)\.length/)

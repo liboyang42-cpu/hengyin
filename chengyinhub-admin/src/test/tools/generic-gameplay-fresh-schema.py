@@ -82,7 +82,7 @@ def build_plan():
     dependencies = json.loads((ROOT / 'ci/migration-dependencies.json').read_text())['dependencies']
     ordered = _ordered_migrations(migrations, dependencies)
     files = [plan_file(ROOT / record['path']) for record in [baseline['baseSchema'], policy['baselineSeed']]]
-    files.append(plan_file(ROOT / 'sql/quartz.sql'))
+    # The frozen baseline already contains all 11 Quartz tables and their foreign keys.
     for m in ordered:
         if m['path'] not in included:
             files.append(plan_file(ROOT / m['path'], True, m['path'] in policy['dataOnlyMigrations']))
@@ -105,6 +105,32 @@ def mysql_command(args):
             '--local-infile=0', '--batch', '--skip-column-names']
 
 
+def safe_failure_diagnostic(error, plan):
+    # Never publish exception messages, SQL, stderr, connection values or file contents.
+    allowed_types = {'CalledProcessError', 'TimeoutExpired', 'ValueError', 'OSError',
+                     'FileNotFoundError', 'PermissionError', 'JSONDecodeError'}
+    diagnostic = {'exceptionType': type(error).__name__ if type(error).__name__ in allowed_types else 'Exception'}
+    phase = plan.get('currentPhase')
+    if phase in ('plan-build', 'mysql-version', 'schema-absence', 'schema-create', 'schema-apply'):
+        diagnostic['phase'] = phase
+    stderr = error.stderr if isinstance(error, subprocess.CalledProcessError) else None
+    if isinstance(stderr, str):
+        match = re.search(r'^ERROR[ \t]+([0-9]{3,5})(?:[ \t]+\([A-Z0-9]+\))?(?:[ \t]+at line[ \t]+([0-9]+))?:', stderr, re.MULTILINE)
+        if match:
+            diagnostic['mysqlErrorCode'] = int(match.group(1))
+            if match.group(2):
+                diagnostic['mysqlLine'] = int(match.group(2))
+    current = plan.get('currentFile')
+    files = plan.get('files', [])
+    matching = [(i, f) for i, f in enumerate(files, 1) if f.get('path') == current]
+    if (len(matching) == 1 and isinstance(current, str) and
+            re.fullmatch(r'(?:sql/|chengyinhub-admin/sql/)[A-Za-z0-9_./-]+\.sql', current) and
+            '..' not in pathlib.PurePosixPath(current).parts):
+        index, file = matching[0]
+        diagnostic.update(file=current, fileIndex=index)
+    return diagnostic
+
+
 def execute(args, plan):
     command = mysql_command(args)
     env = dict(os.environ, MYSQL_PWD=os.environ.get('CHENGYIN_MYBATIS_IT_PASSWORD', ''))
@@ -114,14 +140,18 @@ def execute(args, plan):
                               input=sql, text=True, capture_output=True, env=env,
                               timeout=120, check=True).stdout.strip()
 
+    plan['currentPhase'] = 'mysql-version'
     if not run('SELECT VERSION();').startswith('8.'):
         raise ValueError('Local fixture requires MySQL 8')
+    plan['currentPhase'] = 'schema-absence'
     if run("SELECT SCHEMA_NAME FROM information_schema.schemata WHERE SCHEMA_NAME='" + args.database + "';"):
         raise ValueError('Existing schema refused; choose a new fixture name')
     # Baseline tables use general_ci; temporary migration tables inherit the schema collation.
+    plan['currentPhase'] = 'schema-create'
     run('CREATE DATABASE `' + args.database + '` CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;')
     plan.update(mode='EXECUTING', database=args.database, completed=[])
     for file in plan['files']:
+        plan['currentPhase'] = 'schema-apply'
         plan['currentFile'] = file['path']
         if file['apply']:
             if any('$$' in sql for sql in file['apply']):
@@ -135,28 +165,51 @@ def execute(args, plan):
         plan['completed'].append(file['path'])
     plan['mode'] = 'SUCCEEDED'
     plan.pop('currentFile', None)
+    plan.pop('currentPhase', None)
+
+
+def execution_profile_error(profile, platform, env):
+    if platform != 'linux':
+        return 'Database execution requires the dedicated test VPS or GitHub-hosted Linux; macOS backend execution is forbidden'
+    if profile == 'vps':
+        if env.get('GITHUB_ACTIONS') == 'true':
+            return 'GitHub Actions must use the honest github-hosted profile, not the VPS flag'
+        return None if env.get('CHENGYIN_VPS_TEST_RUN') == '1' else 'Database execution requires the dedicated test VPS (CHENGYIN_VPS_TEST_RUN=1)'
+    if profile == 'github-hosted':
+        if (env.get('GITHUB_ACTIONS') == 'true' and
+                env.get('GITHUB_REPOSITORY') == 'liboyang42-cpu/hengyin' and
+                env.get('RUNNER_ENVIRONMENT') == 'github-hosted' and
+                env.get('CHENGYIN_VPS_TEST_RUN', '') == ''):
+            return None
+        return 'Explicit public-repository GitHub-hosted execution is required; never impersonate the VPS'
+    return 'Unknown execution profile'
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--execute', action='store_true')
+    parser.add_argument('--profile', choices=('vps', 'github-hosted'), default='vps')
     parser.add_argument('--host', default='127.0.0.1')
     parser.add_argument('--port', type=int, default=3316)
     parser.add_argument('--user', default='root')
     parser.add_argument('--database', default='cy_e2e_generic_gameplay')
     parser.add_argument('--report', type=pathlib.Path, required=True)
     args = parser.parse_args()
-    if args.execute and (sys.platform != 'linux' or os.environ.get('CHENGYIN_VPS_TEST_RUN') != '1'):
-        parser.error('Database execution requires the dedicated test VPS (CHENGYIN_VPS_TEST_RUN=1)')
-    plan = build_plan()
+    if args.execute:
+        error = execution_profile_error(args.profile, sys.platform, os.environ)
+        if error:
+            parser.error(error)
+    plan = {'mode': 'PLANNING', 'files': [], 'currentPhase': 'plan-build'}
     try:
+        plan = build_plan()
         for file in plan['files']:
             for skip in file['skipped']:
                 print('SKIP %s #%s: %s\n  %s' % (file['path'], skip['statement'], skip['reason'], skip['sql']))
         if args.execute:
             execute(args, plan)
-    except Exception:
+    except Exception as error:
         plan['mode'] = 'FAILED'
+        plan['failureDiagnostic'] = safe_failure_diagnostic(error, plan)
         raise
     finally:
         args.report.write_text(json.dumps(plan, ensure_ascii=False, indent=2) + '\n')

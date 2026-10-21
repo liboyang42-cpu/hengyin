@@ -47,6 +47,9 @@ MYBATIS_ITS=(
   NpcChatRetentionMyBatisIT
   NpcChatUserDataMyBatisIT
   NpcGeneratedAudioMySqlIT
+  # 2026-10-20:当前NPC资格的过期/续期与真实账单DDL、幂等、事务回滚必须在MySQL执行。
+  NpcCurrentRegistrationMySqlIT
+  WxBillIngestionPersistenceTest
   NpcGovernanceMapperMyBatisIT
   # 2026-09-15 CR-927 节点NPC:npc_profile scope_type=4 的读闸(未审/停用不下发)、
   #   一节点一条的 uk_active_scope 唯一键、以及三条写语句的 scope 隔离 —— 全要真库才验得动。
@@ -70,6 +73,7 @@ MYBATIS_ITS=(
   #   FINISH 后复盘=结果行、订单/库存/权益/奖励=实际履约、二次 FINISH 不改任何行。真库真 mapper 才验得动。
   GameSessionScanLegalMySqlIT
   GameSessionCityEndMySqlIT
+  HangoutAuditLockMyBatisIT
   ImSendIdempotencyMybatisIntegrationTest
   # R9-02 迟到下注竞态:两个真事务交错(结算等锁定读、锁定读拒已结算),Mock 单测测不到
   PredictLateBetRaceMySqlIT
@@ -102,7 +106,7 @@ IFS=, ; IT_LIST="${MYBATIS_ITS[*]}" ; unset IFS
 #   少一个上游模块照样以「No tests matching pattern」失败)。
 #   「到底跑没跑」的保证**不靠这两个开关**,靠下面 assert_it_ran.py 的回读。
 CHENGYIN_IM_SEND_MYSQL_IT=1 CHENGYIN_FUNDS_MYSQL_IT=1 mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false \
-  -Dsurefire.failIfNoSpecifiedTests=false -Dtest="$IT_LIST"
+  -Dsurefire.failIfNoSpecifiedTests=false -Dchengyin.npc.expiry.mysql.it=true -Dtest="$IT_LIST"
 
 # 回读观测:surefire 绿不够。skipped != 0 说明又有人把「连不上就跳过」放回来了,
 # 那等于这段白跑 —— 必须红。(回执 ≠ 观测)

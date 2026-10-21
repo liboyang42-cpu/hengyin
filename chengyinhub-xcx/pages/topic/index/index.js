@@ -23,6 +23,8 @@ const marketingConsent = require('../../../utils/marketing-consent-entry.js');
 const ticketSource = require('../../../utils/ticket-source.js');
 const { buildTopicShare, resolveTopicCover } = require('../../../utils/topic-share.js');
 const { decodeDisplayText } = require('../../../utils/display-text.js');
+const contentReport = require('../../../utils/content-report.js');
+const reportSheet = require('../../../utils/community-report-sheet.js');
 const mediaPreview = require('../../../utils/media-preview.js');
 
 /* 稿 214:689 路线 tab 每两站之间那行「15min 步行」。
@@ -75,6 +77,13 @@ function hasTopicDetail(data) {
   return true;
 }
 
+// FOLLOWUP-A-1:只有公开可见(审核通过且上架)、且不是本人的主题才给举报;口径同后端 /api/topic/report。
+function canReportTopic(info, me) {
+  if (!info || Number(info.isOwner) === 1) return false;
+  if (me && String(info.memberId || '') === String(me)) return false;
+  return Number(info.status) === 1 && Number(info.userStatus) === 1;
+}
+
 Page({
   ...themeRecords.methods(recordsRequest, false),
   openThemeRecordCard(e) { return this.openThemeResultCard({ currentTarget: { dataset: e.detail } }); },
@@ -84,6 +93,9 @@ Page({
     sessionPicker: { show: false },
     clubSheetShow: false,
     clubSheetItems: [],
+    canReport: false,
+    reportReasonShow: false,
+    reportReasonItems: [],
     resultSheet: { show: false, kind: 'success', title: '', sub: '', meta: '', pill: '',
       why: '', duration: RESULT_SHEET_MS,
       consentName: '', consentChecked: false, consentState: 'idle', consentError: '' },
@@ -334,6 +346,8 @@ Page({
    * 页面卸载时
    */
   onUnload() {
+    this._unloaded = true;
+    reportSheet.cancel(this);
     this._themeRecordsDisposed = true;
     this._themeRecordsEpoch = (this._themeRecordsEpoch || 0) + 1;
     this.destroyTopicAudio();
@@ -1728,6 +1742,7 @@ Page({
 
           that.setData({
             info: res.data,
+            canReport: canReportTopic(res.data, typeof app.getUserID === 'function' ? app.getUserID() : ''),
             // P0(2026-09-05 审核):已购态不再只信 URL 参数 is_join(全仓只有订单详情会传 1,
             // 从首页/搜索进来的已购用户永远看不到「开始玩」)。/info-to-user 已按 ownerType=1 &
             // registrationStatus=2 回填 isSignUp,与自玩通行证的建单口径同源,直接用它。
@@ -1907,6 +1922,14 @@ Page({
   },
 
   // 修改展开/收起函数，支持独立控制每个票务
+
+  // FOLLOWUP-A-1:举报主题,流程与动态详情 reportSquare 同一套(utils/content-report.js)
+  reportTopic() {
+    if (!this.data.canReport) return;
+    contentReport.reportTopic(this, app, this.data.id);
+  },
+  onReportReasonSelect(e) { reportSheet.select(this, e); },
+  onReportReasonCancel() { reportSheet.cancel(this); },
 
   /**
    * 用户点击右上角分享

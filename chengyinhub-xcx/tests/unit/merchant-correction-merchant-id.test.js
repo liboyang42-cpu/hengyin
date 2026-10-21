@@ -24,11 +24,9 @@ test('BL-145 validMerchantId:非数字字符串/小数/超安全整数/空值拒
   }
 })
 
-// 已知缺口(不改被测代码,交 #110 处理):Number() 宽松转换会放行这些写法。
-// 入参来自 subjectMerchant.id(后端 Long),现实中不会出现,风险极低;
-// 若要收紧,可改为 /^[1-9]\d{0,15}$/ 先校验字符串再转数字。
-test('BL-145 validMerchantId:非十进制写法应拒绝', { todo: '#110 Number() 宽松转换' }, () => {
-  for (const v of ['0x10', '1e3', true, [5]]) {
+// 严格十进制校验已落地，保持非法写法为硬断言回归。
+test('BL-145 validMerchantId:非十进制写法应拒绝', () => {
+  for (const v of ['0x10', '0b10', '0o10', '1e3', ' 1e3 ', '+12', '12.0', true, [5]]) {
     assert.equal(model.validMerchantId(v), false, JSON.stringify(v))
   }
 })

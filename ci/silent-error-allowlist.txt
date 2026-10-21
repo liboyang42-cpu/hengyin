@@ -1,4 +1,6 @@
 # U5 silentError 白名单册子 —— ci/silent-error-gate.js 读这个文件。
+chengyinhub-xcx/utils/content-report.js 4  # 2026-10-20 举报原因读取和主题/广场模板/个人玩法三处提交：业务拒绝及网络失败均由当前页面显式 toast，结束在途状态；关闭通道 toast 避免双弹与换号后的旧响应提示，followup-a1-content-report-entries 覆盖失败和页面/身份失效。
+chengyinhub-xcx/subpackageA/pages/myproject/index.js 2  # 2026-10-20 审核记录读取失败落弹层 error 并 toast，可重试；申诉业务拒绝/网络失败明确 toast 且释放在途，关闭通道 toast 避免双弹，离页/换号后不提示旧结果，followup-a2-audit-appeal-timeline 覆盖失败恢复。
 chengyinhub-xcx/components/cy/club-direct-ledger/index.js 1  # 计酬账目读取失败由 cy-inline-error 显示取回失败并提供重试；旧请求和切号响应被 epoch 拒绝，关闭全局 toast 避免重复提示。
 #
 # 一行一条:<仓库根相对路径> <该行认领的 silentError:true 处数>   # 为什么这里可以静默
@@ -186,6 +188,7 @@ chengyinhub-xcx/subpackageA/pages/myproject/index.js 2  # 2026-09-18 C8-05 取�
 chengyinhub-xcx/pages/topic/merchantinfo/merchantinfo.js 1  # 2026-09-24 CU-C-68 本站运营资格探测(probeStationOperable):开抽屉时预探一次 /api/game/session/merchant/entries,只看本商家有没有本站入口。探不到≠没资格,所以失败不弹 toast(弹了会盖在抽屉上且说不清是哪一件事),改为把「本站运营」那组置灰 + stationOpsErrorText 落到抽屉里一行可重试的说明(project-host wxml 消费)
 chengyinhub-xcx/subpackageA/pages/myproject/index.js 1  # 提交广场审核：业务失败和网络失败均显式 toast，complete/fail 释放单次提交锁；关闭通道 toast 避免重复提示，myproject-toggle-cas-guard 覆盖重复点击及失败恢复。
 chengyinhub-xcx/subpackageA/pages/myproject/index.js 5  # 2026-10-11 上下架、取消活动/主题、删除项目/模板五处：当前页面的业务与网络失败由 toast 或确认组件 failed 显式展示，离开或换账号后丢弃旧结果；关闭通道 toast 防止旧回包污染新页面，myproject-merchant-publish-entry 覆盖成功、业务失败、网络失败和返回恢复。
+chengyinhub-xcx/subpackageA/pages/myproject/index.js 1  # 2026-10-20 本人玩法列表按账号和scope读取：业务/网络/畸形响应由readFailure写tplErrorMsg或登录/权限态并保留旧列表；迟到或换号回包不弹通用toast，myproject-login-recovery及malformed-list-response覆盖失败恢复。
 chengyinhub-xcx/subpackageA/pages/myproject/index.js 1  # BL-120 另存为模板：业务失败按后端文案、网络失败均显式 toast，成功 toast 后回读；complete/fail 释放在途锁，关闭通道 toast 避免双弹，myproject-save-as-template 覆盖
 
 # 2026-09-30 会员分包组件迁移：按实际路径重新核对，旧路径冻结收据保留，不增加冻结额度。

@@ -216,12 +216,13 @@ public class AppUploadService
 
     String uploadImage(String filePath, MultipartFile file)
     {
-        return uploadImage(filePath, file, null);
+        MultipartFile sanitized = validateImage(file);
+        verifyImageForPublication(sanitized);
+        return storeApprovedImage(filePath, sanitized, null);
     }
 
-    private String uploadImage(String filePath, MultipartFile file, FileUploadUtils.UploadDirectoryContext directoryContext)
+    private String storeApprovedImage(String filePath, MultipartFile sanitized, FileUploadUtils.UploadDirectoryContext directoryContext)
     {
-        MultipartFile sanitized = validateImage(file);
         try
         {
             if (directoryContext == null)
@@ -243,17 +244,20 @@ public class AppUploadService
     List<String> uploadImages(String filePath, List<MultipartFile> files)
     {
         assertBatchAllowed(files);
+        List<MultipartFile> approvedFiles = new ArrayList<MultipartFile>();
         for (MultipartFile file : files)
         {
-            validateImage(file);
+            MultipartFile sanitized = validateImage(file);
+            verifyImageForPublication(sanitized);
+            approvedFiles.add(sanitized);
         }
         List<String> fileNames = new ArrayList<String>();
         FileUploadUtils.UploadDirectoryContext directoryContext = FileUploadUtils.newUploadDirectoryContext(filePath);
         try
         {
-            for (MultipartFile file : files)
+            for (MultipartFile approved : approvedFiles)
             {
-                fileNames.add(uploadImage(filePath, file, directoryContext));
+                fileNames.add(storeApprovedImage(filePath, approved, directoryContext));
             }
             return fileNames;
         }

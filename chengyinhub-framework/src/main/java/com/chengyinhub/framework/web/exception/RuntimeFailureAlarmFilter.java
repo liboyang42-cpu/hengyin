@@ -55,7 +55,8 @@ public class RuntimeFailureAlarmFilter extends OncePerRequestFilter {
             }
             if (failure instanceof org.springframework.data.redis.RedisConnectionFailureException
                     || type.equals("org.springframework.data.redis.connection.PoolException")
-                    || type.equals("io.lettuce.core.RedisConnectionException")) {
+                    || type.equals("io.lettuce.core.RedisConnectionException")
+                    || type.equals("io.lettuce.core.RedisCommandTimeoutException")) {
                 report("runtime.redis.connection", "缓存连接异常", "type=" + failure.getClass().getSimpleName());
                 return true;
             }

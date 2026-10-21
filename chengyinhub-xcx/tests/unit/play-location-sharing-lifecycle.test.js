@@ -18,11 +18,11 @@ function harness() {
   vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../../utils/location/bg-tracker.js'), 'utf8'), { wx, module });
   const bgTracker = module.exports;
   const source = fs.readFileSync(path.join(__dirname, '../../pages/play/index.js'), 'utf8');
-  const context = { wx, bgTracker };
+  const context = { wx, bgTracker, playLocationOwnerSequence: 0, app: { getUserID: () => 9 } };
   const page = { data: { topicId: 31, nav: { active: false }, nodes: [], nextNode: null },
     setData(patch) { Object.assign(this.data, patch); }, _persistRunSession() {},
     _pauseSessionClock() {}, _clearRunSessionEverywhere() {}, _syncRunState() {} };
-  for (const name of ['_trackKey', '_stopTracking', 'watchLocation', 'onPlayHudToggle', '_endRunSession']) {
+  for (const name of ['_playMember', '_boundPlayOwner', '_isPlayAccountCurrent', '_sessionParams', '_sessionKey', '_trackKey', '_stopTracking', 'watchLocation', 'onPlayHudToggle', '_endRunSession']) {
     const start = source.indexOf('  ' + name + '(');
     const end = source.indexOf('\n  },', start);
     assert.ok(start >= 0 && end > start);

@@ -96,7 +96,9 @@ test('异步加载立即抛错会显示可离开的失败态；他人主页返�
 
 test('本人占位无业务方法时下拉立即收圈、分享采用原默认；真实组件继续委托', async () => {
   let stopped = 0, refreshed = 0;
-  const p = load('pages/member/index/index.js', { stopPullDownRefresh: () => { stopped++; } }).instance;
+  const p = load('pages/member/index/index.js', { stopPullDownRefresh: () => { stopped++; } }, {
+    getUserID: () => '42', getAuthorization: () => 'Bearer existing-member-fixture'
+  }).instance;
   p.selectComponent = () => ({});
   p.onPullDownRefresh();
   assert.equal(stopped, 1);

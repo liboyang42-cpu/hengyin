@@ -14,6 +14,7 @@ function loadPage() {
   global.getApp = () => ({
     getRequestErrorMessage: (response, fallback) => (response && (response.msg || response.errMsg)) || fallback,
     getUserRole: () => 'user',
+    getUserID: () => '9', getAuthorization: () => 'fixture-session',
     getUserType: () => 'user',
     sendRequest: (options) => requests.push(options),
   })

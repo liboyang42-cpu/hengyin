@@ -26,7 +26,7 @@ global.getApp = () => ({
     sent.push(p);
   },
   getUserID: () => 1,
-  getToken: () => '',
+  getToken: () => 'current-session',
 });
 global.wx = {
   getStorageSync: () => undefined,

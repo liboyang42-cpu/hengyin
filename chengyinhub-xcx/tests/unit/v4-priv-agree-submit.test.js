@@ -1,6 +1,6 @@
 'use strict';
 // SC-PRIV-05:pages/privacy/index(回退路由页)与 cy-privacy-gate(宿主页真弹窗)的同意提交。
-// 连点同意、提交中点拒绝、留痕失败后重试:失败的记录不得把调用方结算成 agree;重试只结算一次;数请求。
+// 连点同意、提交中点拒绝、留痕失败后补传：原生授权按明确同意结算一次，留痕失败保留待补传及原幂等号。
 // 与 v4-priv-auth-host-chain 同一装配:真 app.js + 真 usage-consent/consent-client,只桩 wx 与 sendRequest。
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
@@ -127,7 +127,7 @@ test('SC-PRIV-05 未勾选服务协议导致提交失败:调用方不结算,页�
   assert.equal(h.requests.length, 2); assert.equal(h.backs, 1);
 });
 
-test('SC-PRIV-05 DEFECT(记录现状):留痕失败前调用方已被结算 agree;补传重试复用同一幂等号、不再结算', async () => {
+test('SC-PRIV-05 F-L5C-10:明确同意后结算 agree，留痕失败保留待补传；重试复用幂等号、不再结算', async () => {
   const h = harness();
   h.pages.push(hostPage(h));
   const callers = [h.caller(), h.caller()];
@@ -156,19 +156,4 @@ test('SC-PRIV-05 DEFECT(记录现状):留痕失败前调用方已被结算 agree
   assert.equal(new Set(ids(h)).size, 2);
   assert.deepEqual(h.storage.get(PENDING).pending, {});
   for (const c of callers) assert.equal(c.length, 1, '重试不得再次结算调用方');
-});
-
-test('SC-PRIV-05 期望:同意留痕失败时不得把待决调用方结算为 agree', {
-  todo: 'usage-consent.js:79-83 在登录/留痕前就 resolveNative({event:"agree"});cy-privacy-gate/index.js:46-49 与 pages/privacy/index.js:276-282 留痕失败仍按 agree 放行(F-L5C-10 有意设计,需产品确认)',
-}, async () => {
-  const h = harness();
-  h.pages.push(hostPage(h));
-  const caller = h.caller();
-  const gate = load(h, 'components/cy/privacy-gate/index.js');
-  gate.data.serviceAgreed = true;
-  gate.agreePrivacy({ detail: { buttonId: 'g1' } });
-  await settle();
-  h.requests[0].success({ code: 500, msg: '服务繁忙' });
-  await settle();
-  assert.equal(caller.some(r => r.event === 'agree'), false);
 });

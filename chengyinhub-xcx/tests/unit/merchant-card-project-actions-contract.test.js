@@ -34,7 +34,8 @@ function assertContract(overrides = {}) {
      它们搬进「长按卡片」打开的操作面板。所以 .mp-op 只剩模板 tab 那两个,
      新的三行按 .mp-ops-row 计 —— 动作总数没变,热区与可读名称的要求也没变。 */
   const actions = [...projectWxml.matchAll(/<view\b[^>]*class="mp-op(?:\s[^"\n]*)?"[^>]*>/g)].map((match) => match[0])
-  assert.equal(actions.length, 3, '模板管理应保留提交广场、上下架和删除动作')
+  // 2026-10-20 FOLLOWUP-A-2:被驳回 / 下架的玩法卡多一个「审核记录」(含申诉),3 → 4。
+  assert.equal(actions.length, 4, '模板管理应保留提交广场、上下架、审核记录和删除动作')
   for (const action of actions) {
     assert.match(action, /aria-role="button"/)
     assert.match(action, /aria-label=/)
@@ -46,10 +47,12 @@ function assertContract(overrides = {}) {
   assert.doesNotMatch(projectWxml, /catchtap="(goCandidates|toggleStatus|deleteItem)"/,
     '候选池 / 上下架 / 删除不能回到卡面上')
   assert.match(projectWxml, /bindlongpress="onCardLong"/, '长按是这三个动作唯一的入口,不能丢')
-  const sheetRows = [...projectWxml.matchAll(/<view\b[^>]*class="mp-ops-row(?:\s[^"\n]*)?"[^>]*>/g)].map((m) => m[0])
-  // BL-120（#164）在取消与删除之间新增「另存为模板」行（仅 canSaveAsTemplate 时渲染），
-  // 同样走 .mp-ops-row + onOpsPick，下方 44px 热区断言按类名覆盖到这一行。
-  assert.equal(sheetRows.length, 6, '操作面板应有候选池 / 编辑 / 上下架 / 取消 / 另存为模板 / 删除')
+  // 长按面板同时保留审核记录与另存为模板；另一张审核 cy-sheet 不计入操作行。
+  const opsStart = projectWxml.indexOf('<cy-sheet show="{{opsSheet.show}}"')
+  assert.notEqual(opsStart, -1, '长按操作面板必须存在')
+  const opsSheet = projectWxml.slice(opsStart, projectWxml.indexOf('</cy-sheet>', opsStart))
+  const sheetRows = [...opsSheet.matchAll(/<view\b[^>]*class="mp-ops-row(?:\s[^"\n]*)?"[^>]*>/g)].map((m) => m[0])
+  assert.equal(sheetRows.length, 7, '操作面板应有候选池 / 编辑 / 上下架 / 取消 / 审核记录 / 另存为模板 / 删除')
   for (const row of sheetRows) assert.match(row, /bindtap="onOpsPick"/)
   assert.match(rule(projectWxss, '.mp-ops-row'), /min-height:\s*var\(--cy-btn-h\)/)
 }
