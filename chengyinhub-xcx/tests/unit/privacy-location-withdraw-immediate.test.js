@@ -10,10 +10,20 @@ const { VERSIONS } = require('../../utils/compliance/usage-consent.js');
 const settle = () => new Promise(resolve => setImmediate(resolve));
 
 // 真实 Page/Component、漫游 consumer、tracker 和 consent-client；仅隔离系统定位及网络。
-function harness(t, entry, storage = new Map()) {
+function harness(t, entry, storage = new Map(), realTransport = false) {
   const h = { storage, requests: [], atPost: [], toasts: [], starts: [], listeners: new Set(), modals: [], stops: 0, uid: '9' };
   const app = { globalData: { user_id: 9, features: {} }, getUserID: () => h.uid, isDevEnv: () => false,
     sendRequest(options) { if (options.url === '/api/compliance/consents') h.atPost.push(h.tracker.hasOwner('roam')); h.requests.push(options); } };
+  if (realTransport) {
+    const { createRequestClient } = require('../../utils/transport/request-client.js');
+    app.sendRequest = createRequestClient({ getBaseUrl: () => '', getUserID: app.getUserID,
+      getAuthorization: () => 'test-session-' + h.uid,
+      wxRequest(options) {
+        if (options.url === '/api/compliance/consents') h.atPost.push(h.tracker.hasOwner('roam'));
+        h.requests.push({ ...options, success(body) { options.success({ statusCode: 200, data: body }); } });
+        return { abort() {} };
+      } }).send;
+  }
   const client = createConsentClient({ sendRequest: app.sendRequest, getUserID: app.getUserID,
     getPending: key => storage.get(key), setPending(key, value) { if (value) storage.set(key, value); else storage.delete(key); },
     settleTimeoutMs: 1000 });
@@ -95,7 +105,7 @@ for (const entry of ['privacy', 'sheet']) {
     assert.equal(next.storage.size, 0); assert.equal(next.toasts.at(-1), '已撤回漫游定位同意');
   });
   for (const late of ['POST', 'latest']) test(entry + ' 旧账号迟到' + late + '不能停新账号用途或向其报成功', async t => {
-    const h = harness(t, entry); h.start(); h.target.withdrawRoamLocationConsent();
+    const h = harness(t, entry, new Map(), true); h.start(); h.target.withdrawRoamLocationConsent();
     const original = h.posts()[0];
     if (late === 'latest') original.fail({ errMsg: 'request:fail' });
     h.uid = '22'; h.roam._stopReal(); h.start(); h.tracker.acquire('independent-purpose', { success() {} });
@@ -150,5 +160,74 @@ for (const entry of ['privacy', 'sheet']) {
     agree.success(receipt(agree)); await settle();
     assert.equal(h.starts.length, 0); assert.equal(h.tracker.hasOwner('roam'), false);
     await failAudit(h);
+  });
+}
+
+for (const entry of ['privacy', 'sheet']) {
+  for (const change of ['old-request', 'missing-request', 'wrong-version', 'missing-version', 'scope-type', 'scope-id', 'wrong-scene', 'wrong-doc', 'wrong-event']) {
+    test(entry + ' real transport latest ' + change + ' cannot confirm this REVOKE; recreation retries original identity', async t => {
+      const h = harness(t, entry, new Map(), true); h.start();
+      h.tracker.acquire('independent-purpose', { success() {} });
+      h.target.withdrawRoamLocationConsent();
+      const original = h.posts()[0], body = JSON.parse(original.data);
+      original.fail({ errMsg: 'request:fail timeout' });
+      const response = receipt(original);
+      if (change === 'old-request') response.data.requestId = 'historical-revoke';
+      if (change === 'missing-request') delete response.data.requestId;
+      if (change === 'wrong-version') response.data.docVersion = 'v1.0';
+      if (change === 'missing-version') delete response.data.docVersion;
+      if (change === 'scope-type') response.data.scopeType = 'MERCHANT';
+      if (change === 'scope-id') response.data.scopeId = 17;
+      if (change === 'wrong-scene') response.data.scene = 'home_city_location';
+      if (change === 'wrong-doc') response.data.docType = 'user_service_agreement';
+      if (change === 'wrong-event') response.data.eventType = 'AGREE';
+      h.reads().at(-1).success(response); await settle();
+      assert.equal(h.storage.size, 1); assert.match(h.errorText(), /记录.*待确认/);
+      assert.ok(!h.toasts.includes('已撤回漫游定位同意'));
+      assert.equal(h.tracker.hasOwner('roam'), false);
+      assert.equal(h.tracker.hasOwner('independent-purpose'), true);
+      const next = harness(t, entry, h.storage, true);
+      next.target.withdrawRoamLocationConsent();
+      assert.deepEqual(JSON.parse(next.posts()[0].data), body);
+      next.posts()[0].fail({ errMsg: 'request:fail timeout' });
+      next.reads().at(-1).success(receipt(next.posts()[0])); await settle();
+      assert.equal(next.storage.size, 0);
+      assert.equal(next.toasts.at(-1), '已撤回漫游定位同意');
+    });
+  }
+}
+
+test('privacy leave and return after old latest retains original pending and retry key', async t => {
+  const h = harness(t, 'privacy', new Map(), true); h.start();
+  h.target.withdrawRoamLocationConsent(); const original = h.posts()[0];
+  h.app.hasPendingPrivacyAuthorization = () => false;
+  h.target.onHide(); h.target.onUnload();
+  original.fail({ errMsg: 'request:fail timeout' });
+  const old = receipt(original); old.data.requestId = 'previous-revoke';
+  h.reads().at(-1).success(old); await settle();
+  assert.equal(h.storage.size, 1);
+  const next = harness(t, 'privacy', h.storage, true); next.target.withdrawRoamLocationConsent();
+  assert.deepEqual(JSON.parse(next.posts()[0].data), JSON.parse(original.data));
+  await failAudit(next); assert.equal(h.storage.size, 1);
+});
+
+for (const scope of ['missing-type', 'wrong-type', 'missing-id', 'wrong-id', 'exact']) {
+  test('scoped REVOKE latest requires original scope: ' + scope, async () => {
+    const requests = [], storage = new Map();
+    const client = createConsentClient({ sendRequest: row => requests.push(row), getUserID: () => '9',
+      getPending: key => storage.get(key), setPending: (key, value) => value ? storage.set(key, value) : storage.delete(key) });
+    const promise = client.record({ docType: 'merchant_onsite_data_sharing', scene: 'merchant_redeem',
+      eventType: 'REVOKE', scopeType: 'MERCHANT', scopeId: 17 });
+    const outcome = promise.then(() => true, () => false);
+    const original = requests[0], row = { ...JSON.parse(original.data), docVersion: 'v1.0' };
+    original.fail({ errMsg: 'request:fail timeout' });
+    assert.deepEqual(JSON.parse(requests[1].data), { docType: row.docType, scene: row.scene, scopeType: 'MERCHANT', scopeId: 17 });
+    if (scope === 'missing-type') delete row.scopeType;
+    if (scope === 'wrong-type') row.scopeType = 'OTHER';
+    if (scope === 'missing-id') delete row.scopeId;
+    if (scope === 'wrong-id') row.scopeId = 18;
+    requests[1].success({ code: 200, data: row });
+    assert.equal(await outcome, scope === 'exact');
+    assert.equal(storage.size, scope === 'exact' ? 0 : 1);
   });
 }
