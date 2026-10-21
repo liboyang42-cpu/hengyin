@@ -156,6 +156,60 @@ class RendezvousConsentServiceTest {
         service.propose(a.ticketId, b.ticketId, "approved-public-place"); safety.compatible = false;
         assertEquals(MatchState.SAFETY_STOPPED, service.read(1, a.ticketId).matchState);
     }
+    @Test void boundRecheckFailsClosedUntilMutualAndTerminateIsIdempotent() {
+        View[] p = pair();
+        store.transaction(tx -> {
+            OngoingVerdict stranger = service.verifyParticipants(tx, 3, p[0].ticketId, p[0].matchId, 2L, true, clock.now);
+            assertFalse(stranger.safe); assertFalse(stranger.owned); assertNull(stranger.matchId);
+            OngoingVerdict early = service.verifyParticipants(tx, 1, p[0].ticketId, p[0].matchId, 2L, true, clock.now);
+            assertTrue(early.owned); assertFalse(early.mutual); assertFalse(early.safe);
+            assertFalse(service.verifyParticipants(tx, 1, p[0].ticketId, "other-match", 2L, false, clock.now).safe);
+            assertFalse(service.verifyParticipants(tx, 1, p[0].ticketId, p[0].matchId, 9L, false, clock.now).safe);
+            assertTrue(service.verifyParticipants(tx, 1, p[0].ticketId, null, null, false, clock.now).safe);
+            return null;
+        });
+        service.accept(1, p[0].ticketId, 1);
+        service.accept(2, p[1].ticketId, 2);
+        store.transaction(tx -> {
+            OngoingVerdict ready = service.verifyParticipants(tx, 1, p[0].ticketId, p[0].matchId, 2L, true, clock.now);
+            assertTrue(ready.safe); assertTrue(ready.mutual);
+            OngoingVerdict stopped = service.terminateCurrent(tx, 1, 2L, p[0].ticketId, Termination.BLOCK, clock.now);
+            assertEquals(MatchState.SAFETY_STOPPED, stopped.matchState);
+            long version = tx.match(p[0].matchId).version;
+            OngoingVerdict again = service.terminateCurrent(tx, 1, 2L, null, Termination.REPORT, clock.now);
+            assertEquals(version, tx.match(p[0].matchId).version);
+            assertEquals(MatchState.SAFETY_STOPPED, tx.match(p[0].matchId).state);
+            assertFalse(again.safe);
+            assertEquals(TicketState.CANCELLED, tx.ticket(p[1].ticketId).state);
+            return null;
+        });
+    }
+    @Test void exitReleasesBothSidesOnceAndStrangerWritesNothing() {
+        View[] p = pair();
+        View third = join(3);
+        store.transaction(tx -> {
+            service.terminateCurrent(tx, 1, null, p[0].ticketId, Termination.EXIT, clock.now);
+            assertEquals(MatchState.CANCELLED, tx.match(p[0].matchId).state);
+            assertEquals(TicketState.CANCELLED, tx.ticket(p[0].ticketId).state);
+            assertEquals(TicketState.CANCELLED, tx.ticket(p[1].ticketId).state);
+            long version = tx.match(p[0].matchId).version;
+            service.terminateCurrent(tx, 1, null, p[0].ticketId, Termination.EXIT, clock.now);
+            assertEquals(version, tx.match(p[0].matchId).version);
+            return null;
+        });
+        assertEquals(TicketState.WAITING, service.read(3, third.ticketId).ticketState);
+        code("NOT_FOUND", () -> { store.transaction(tx -> { service.terminateCurrent(tx, 3, null, p[0].ticketId, Termination.EXIT, clock.now); return null; }); });
+    }
+    @Test void missingSideAbortsBeforeEitherTicketChanges() {
+        View[] p = pair();
+        Match existing = store.match(p[0].matchId);
+        store.matches.put(existing.id, new Match(existing.id, existing.firstTicket, "missing-side",
+                existing.publicPlace, existing.expiresAt, existing.version, null, null, existing.state));
+        code("CORRUPT_RESERVATION", () -> { store.transaction(tx -> { service.terminateCurrent(tx, 1, 2L, p[0].ticketId, Termination.REPORT, clock.now); return null; }); });
+        assertEquals(TicketState.RESERVED, store.ticket(p[0].ticketId).state);
+        assertEquals(TicketState.RESERVED, store.ticket(p[1].ticketId).state);
+        assertEquals("missing-side", store.match(p[0].matchId).secondTicket);
+    }
     @Test void projectionContainsNoPartnerIdentityOrSecretFields() {
         Set<String> fields = new HashSet<>();
         for (java.lang.reflect.Field f : View.class.getFields()) fields.add(f.getName());

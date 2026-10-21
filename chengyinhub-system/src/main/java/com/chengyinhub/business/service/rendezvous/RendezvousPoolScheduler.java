@@ -11,7 +11,8 @@ public final class RendezvousPoolScheduler {
         List<String> waitingIds(String pool, long now, int limit);
         long actorOf(String ticketId);
     }
-    public interface Contacts { void record(long first, long second); }
+    /** Runs inside the consent guard transaction. Throw to roll the pair back. */
+    public interface Contacts { void charge(String matchId, long first, long second, String pool, long now); }
     private final RendezvousConsentService consent;
     private final RendezvousVersionedPolicy policy;
     private final Waiting waiting;
@@ -29,15 +30,15 @@ public final class RendezvousPoolScheduler {
         if (pool == null || pool.trim().isEmpty()) throw new Rejection("INVALID_INPUT");
         String place = policy.approvedPlace(pool);
         if (place == null) throw new Rejection("POLICY_CLOSED");
-        List<String> ids = waiting.waitingIds(pool, clock.millis(), 8);
+        long now = clock.millis();
+        List<String> ids = waiting.waitingIds(pool, now, 8);
         Rejection last = new Rejection("PAIR_UNAVAILABLE");
         for (int i = 0; i < ids.size(); i++) {
             for (int j = i + 1; j < ids.size(); j++) {
                 String first = ids.get(i), second = ids.get(j);
                 try {
-                    String matchId = consent.propose(first, second, place);
-                    contacts.record(waiting.actorOf(first), waiting.actorOf(second));
-                    return matchId;
+                    return consent.propose(first, second, place, matchId ->
+                            contacts.charge(matchId, waiting.actorOf(first), waiting.actorOf(second), pool, now));
                 } catch (Rejection rejected) {
                     last = rejected;
                     if (!"PAIR_UNAVAILABLE".equals(rejected.getCode())) throw rejected;
