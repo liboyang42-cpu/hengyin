@@ -52,12 +52,20 @@ B、C 读已有 match 状态，不读新表。`SAFETY_STOPPED` 之后：接受�
 - `rendezvousBlock == null`，或注入的 `RendezvousBlockEntry.connected()` 为 false：仍调用原来的 `blockMapper.insertImBlock`。不停止 match，也不报 W16 已接通。
 - 显式注入且 `connected()` 为 true：只调用 `RendezvousBlockEntry.block`。这一路径用构造时传入的同一个 `SqlSessionTemplate` 和 `DataSourceTransactionManager`，在 consent guard 里写权威 `im_block` 并 `consentStop` → `terminateCurrentMatch`。不再次调用 `blockMapper.insertImBlock`。
 
-`RendezvousBlockEntry` 不是 Spring Bean。字段是 `@Autowired(required = false)`，容器里没有 Bean 时保持 null，不会空指针。`open` 只有隔离评估模式且 consent 非空才接通，并且只绑定 `consentStop`，不使用 `guardStop` 或三参 mutation。`DISABLED`、consent 为空都保持断开。
+`ImServiceImpl.setRendezvousBlock` 是 `@Autowired(required = false)`。容器里没有 Bean 时不会调用，字段保持 null，不会空指针。`open` 只有隔离评估模式且 consent 非空才接通，并且只绑定 `consentStop`，不使用 `guardStop` 或三参 mutation。`DISABLED`、consent 为空都保持断开。
 
 `unblock`、`report`、聊天和队伍语义没有改。
 
+## 组合根默认关闭
+
+`RendezvousBlockComposition` 是唯一的入口 `@Bean`。属性 `chengyinhub.w16.block-termination` 写在该类上，默认 `false`，不写入 `application*.yml`。属性不是 `true` 时不注册 Bean，原 `block` 保持不变。
+
+同意存储的 `Mode` 只有 `DISABLED` 和 `ISOLATED_PERSISTENCE_EVALUATION`，没有正式持久化成员。因此 `FORMAL_MODE` 固定为 `UNCONTRACTED`。显式打开属性且 DataSource、`ImBlockMapper`、事务管理器一致时，`formal` 抛 `W16_BLOCK_FORMAL_MODE_UNCONTRACTED`，不返回已接通入口，也不把隔离模式注册成正式 Bean。依赖缺失抛 `W16_BLOCK_DEPENDENCY_MISSING`（容器缺 Bean 时由 Spring 拒绝创建）。数据源或事务工厂不一致抛 `W16_BLOCK_RESOURCE_MISMATCH`。mapper 不属于该会话抛 `W16_BLOCK_MAPPER_MISSING` 或 `W16_BLOCK_MAPPER_MISMATCH`。
+
+`evaluation` 只给隔离本地试验，不是 Spring Bean，不是正式装配。
+
 ## 仍未接通的生产开关
 
-- 没有注册 `RendezvousBlockEntry` Bean，也没有改全局安全配置。生产默认仍是原来的屏蔽插入。
+- 默认没有 `RendezvousBlockEntry` Bean，也没有改全局安全配置或动态数据源。生产默认仍是原来的屏蔽插入。
 - 三参 `RendezvousImBlockMutation` 仍走 `guardStop` → `stopBlockedPair`。入口测试用 A 的四参 `Admission` 构造，不走三参免记账。
 - 合成替身只覆盖未接线端口和空终止的回滚。真实入口的回滚、重复、反向、无关配对和解除不复活走 `ImServiceImpl.block`。
