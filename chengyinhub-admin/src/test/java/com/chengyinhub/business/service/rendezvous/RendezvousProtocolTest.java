@@ -102,7 +102,7 @@ class RendezvousProtocolTest {
         final MutableClock clock = new MutableClock();
         final Db db = new Db();
         final ConsentStore consentStore = new ConsentStore(db);
-        final RendezvousConsentService consent = new RendezvousConsentService(consentStore, policy, clock);
+        final RendezvousConsentService consent = new RendezvousConsentService(consentStore, policy, clock, RendezvousConsentServiceTest.permitsPairing);
         final RendezvousRoleSecretService secrets = new RendezvousRoleSecretService(consent, new SecretStore(db));
         final RendezvousPoolScheduler scheduler = new RendezvousPoolScheduler(consent, policy, new Wait(db), catalog, clock);
         void allow() {

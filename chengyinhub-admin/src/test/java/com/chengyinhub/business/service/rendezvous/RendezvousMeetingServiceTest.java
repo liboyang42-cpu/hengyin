@@ -73,7 +73,7 @@ public final class RendezvousMeetingServiceTest {
         Fixture(){
             consent=new RendezvousConsentService(new RendezvousConsentService.Store(){
                 public <T>T transaction(Function<Transaction,T> work){return db.transaction(tx->work.apply(tx));}
-            },this,time);
+            },this,time,RendezvousConsentServiceTest.permitsPairing);
             first=consent.join(1,"pool","v1",100000).ticketId;
             second=consent.join(2,"pool","v1",100000).ticketId;
             match=consent.propose(first,second,"public-place");

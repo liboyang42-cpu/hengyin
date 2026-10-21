@@ -21,9 +21,10 @@ public final class MyBatisRendezvousMeetingStore implements RendezvousMeetingSer
     private final RendezvousHandoffMapper handoffs;
     private final RendezvousMeetingEvidenceMapper evidence;
     private final TransactionTemplate transactions;
+    private final DataSourceTransactionManager manager;
 
     public MyBatisRendezvousMeetingStore() {
-        mode = Mode.DISABLED; consent = null; protocol = null; handoffs = null; evidence = null; transactions = null;
+        mode = Mode.DISABLED; consent = null; protocol = null; handoffs = null; evidence = null; transactions = null; manager = null;
     }
 
     public MyBatisRendezvousMeetingStore(Mode mode, SqlSessionTemplate session, DataSourceTransactionManager manager) {
@@ -39,6 +40,7 @@ public final class MyBatisRendezvousMeetingStore implements RendezvousMeetingSer
         protocol = session.getMapper(RendezvousProtocolMapper.class);
         handoffs = session.getMapper(RendezvousHandoffMapper.class);
         evidence = session.getMapper(RendezvousMeetingEvidenceMapper.class);
+        this.manager = manager;
         transactions = new TransactionTemplate(manager);
         transactions.setIsolationLevel(TransactionDefinition.ISOLATION_READ_COMMITTED);
         transactions.setTimeout(10);
@@ -50,9 +52,11 @@ public final class MyBatisRendezvousMeetingStore implements RendezvousMeetingSer
         Objects.requireNonNull(work);
         return transactions.execute(status -> {
             if (!Integer.valueOf(1).equals(consent.lockGuard())) throw new IllegalStateException("W16_GUARD_MISSING");
+            PlayTeamHandoffAssembly.hold(manager);
             RendezvousConsentSession tickets = new RendezvousConsentSession(consent);
             MeetingTx tx = new MeetingTx(tickets, protocol, handoffs, evidence);
-            try { return work.apply(tx); } finally { tickets.close(); tx.open = false; }
+            try { return work.apply(tx); }
+            finally { PlayTeamHandoffAssembly.release(manager); tickets.close(); tx.open = false; }
         });
     }
 

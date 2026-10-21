@@ -83,7 +83,7 @@ class RendezvousLedgerPersistenceTest {
         consentStore = new MyBatisRendezvousConsentStore(ISOLATED_PERSISTENCE_EVALUATION, session, manager);
         meetingStore = new MyBatisRendezvousMeetingStore(MyBatisRendezvousMeetingStore.Mode.ISOLATED_PERSISTENCE_EVALUATION, session, manager);
         OpenSafety safety = new OpenSafety();
-        consent = new RendezvousConsentService(consentStore, safety, clock);
+        consent = new RendezvousConsentService(consentStore, safety, clock, RendezvousConsentServiceTest.permitsPairing);
         meetings = new RendezvousMeetingService(RendezvousMeetingService.Mode.ISOLATED_CONTRACT_EVALUATION, meetingStore, safety, (m, t, a, p, n) -> true, teamPort(), clock, 30_000);
         creates[0] = 0; lookups[0] = 0; failJoin = false; createdTeams.clear(); joinedTeams.clear();
     }

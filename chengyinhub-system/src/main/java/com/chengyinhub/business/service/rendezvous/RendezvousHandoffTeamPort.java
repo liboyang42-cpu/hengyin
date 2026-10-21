@@ -21,17 +21,34 @@ public interface RendezvousHandoffTeamPort {
         public final Status status;
         public final Long teamId;
         public final String blocker;
+        public final String namespace;
+        public final String requestId;
+        public final String matchId;
+        public final Long leader;
+        public final Long peer;
+        public final Long activity;
 
-        private Lookup(Status status, Long teamId, String blocker) {
+        private Lookup(Status status, Long teamId, String blocker, String namespace, String requestId, String matchId,
+                       Long leader, Long peer, Long activity) {
             this.status = status;
             this.teamId = teamId;
             this.blocker = blocker;
+            this.namespace = namespace;
+            this.requestId = requestId;
+            this.matchId = matchId;
+            this.leader = leader;
+            this.peer = peer;
+            this.activity = activity;
         }
 
-        public static Lookup absent() { return new Lookup(Status.ABSENT, null, null); }
-        public static Lookup created(long teamId) { return new Lookup(Status.TEAM_CREATED, teamId, null); }
-        public static Lookup joined(long teamId) { return new Lookup(Status.JOINED, teamId, null); }
-        public static Lookup unknown(String blocker) { return new Lookup(Status.UNKNOWN, null, blocker); }
+        public static Lookup absent() { return new Lookup(Status.ABSENT, null, null, null, null, null, null, null, null); }
+        public static Lookup created(long teamId) { return new Lookup(Status.TEAM_CREATED, teamId, null, null, null, null, null, null, null); }
+        public static Lookup joined(long teamId) { return new Lookup(Status.JOINED, teamId, null, null, null, null, null, null, null); }
+        public static Lookup unknown(String blocker) { return new Lookup(Status.UNKNOWN, null, blocker, null, null, null, null, null, null); }
+        public static Lookup carried(Status status, long teamId, String namespace, String requestId, String matchId,
+                                     long leader, long peer, long activity) {
+            return new Lookup(status, teamId, null, namespace, requestId, matchId, leader, peer, activity);
+        }
     }
 
     final class Created {

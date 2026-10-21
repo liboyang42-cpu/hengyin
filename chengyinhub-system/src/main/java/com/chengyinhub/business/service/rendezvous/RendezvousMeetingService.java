@@ -219,6 +219,15 @@ public final class RendezvousMeetingService {
             tx.save(r); return view(tx,t,r);
         });
     }
+    /** Index or gateway binding must be the meeting request. A missing field is a mismatch. */
+    private static boolean sameBinding(RendezvousHandoffTeamPort.Lookup lookup, RendezvousHandoffRequest req) {
+        return PlayTeamHandoffGateway.NAMESPACE.equals(lookup.namespace)
+                && lookup.requestId != null && lookup.requestId.equals(req.requestId)
+                && lookup.matchId != null && lookup.matchId.equals(req.matchId)
+                && lookup.leader != null && lookup.leader.longValue() == req.firstActor
+                && lookup.peer != null && lookup.peer.longValue() == req.secondActor
+                && lookup.activity != null && lookup.activity.longValue() == req.activityId;
+    }
     /** True after the markDispatched commit, or once a team phase or team id is stored. */
     private static boolean dispatched(RendezvousHandoffRequest req) {
         return req.dispatched || req.phase != RendezvousHandoffRequest.Phase.UNKNOWN
@@ -321,6 +330,9 @@ public final class RendezvousMeetingService {
         catch (RuntimeException failed) { return stick(actor, ticketId, "TEAM_QUERY_TIMEOUT"); }
         if (lookup.status == RendezvousHandoffTeamPort.Status.UNKNOWN) {
             return stick(actor, ticketId, lookup.blocker == null ? "TEAM_QUERY_UNKNOWN" : lookup.blocker);
+        }
+        if (lookup.status != RendezvousHandoffTeamPort.Status.ABSENT && !sameBinding(lookup, req)) {
+            return read(actor, ticketId);
         }
         try {
             if (req.phase == RendezvousHandoffRequest.Phase.UNKNOWN) {

@@ -31,6 +31,8 @@ Fact findHandoff(String namespace, String requestId)
 
 `findHandoff` 只读。没有行且读取成功才是 `ABSENT`。SQL 失败抛错，调用方记为未知，不创建。索引指向的队伍不存在是 `UNKNOWN`，不补建。
 
+查询结果带上索引行的 `namespace`、`requestId`、`matchId`、`leader`、`peer`、`activity`。会面恢复在采纳 `teamId`、跳过已 `JOINED` 的加入、以及发布之前，把这六项和当前会面请求逐项比较。缺任意一项，或和预期不一致，直接返回当前只读结果：不建队、不加入、不改索引、不把外来 `teamId` 写成已完成。这是损坏行或错接 gateway 的拒绝，不是已发生的越权证明。正常唯一索引没有被用来声称线上已经串队。
+
 ## 取消
 
 取消先提交到守卫上：这次创建或加入还没开始，队伍行数是 0，阻断码 `CANCELLED_PREVENTED`。
@@ -39,7 +41,7 @@ Fact findHandoff(String namespace, String requestId)
 
 加入前会再取守卫并重读安全。创建和加入之间提交的撒权或拉黑，使加入事务拒绝，不再 `reserveSlot`。这不证明加入事务内部 `existsBetween` 之后才提交的拉黑也被挡住。H3 仍是 `ImServiceImpl.block` 的唯一写入方。要对齐竞争，H3 的写锁顺序应是先 `w16_consent_guard`，再块表。本组不改 H3 的文件，也不把一次块查询说成竞争已关闭。
 
-A 的事实目录和 `RendezvousConsentService(Store, Safety, Clock, Admission)` 四参数构造不在本分支。本路径不构造同意服务，因此也不会记 admission charge。安全复核仍走本组已有的 `verifyCurrent`。
+`RendezvousConsentService` 使用 A 在 `08f44986` 的原文件。三参构造的默认 `Admission` 对新配对抛出 `POLICY_CLOSED`。要形成新配对必须走四参，并在守卫事务里调用 `Admission.charge`。本组不恢复不记账的三参旁路。联系人账本 `RendezvousContactLedger` 不在这份同意服务的类型依赖里，本增量不复制、不启用它。安全复核仍走本组已有的 `verifyCurrent`。
 
 ## 幂等
 
@@ -60,4 +62,4 @@ A 的事实目录和 `RendezvousConsentService(Store, Safety, Clock, Admission)`
 3. `play_team`
 4. IM 会话（`getOrCreateTeamGroup` 里再锁队伍行，然后写会话）
 
-块表不在这条锁序里。默认数据源的动态路由不能代替上面的同一 `DataSourceTransactionManager` 证明。
+块表不在这条锁序里。`MANDATORY` 只说明调用方已经有某个事务，不能证明是同一 `DataSource`、同一 `DataSourceTransactionManager`，也不能证明已经持有 `w16_consent_guard`。`PlayTeamHandoffAssembly.open` 在构造时拒绝数据源不一致或不是 `SpringManagedTransactionFactory` 的装配。`create` / `join` 在运行时拒绝当前事务没有绑定该数据源，或该 manager 上没有守卫标记。同一 manager 的测试夹具只覆盖它自己那一次装配，不表示别的装配安全。生产不调用 `open`，也不打开这个开关。默认数据源的动态路由不能代替这个检查。

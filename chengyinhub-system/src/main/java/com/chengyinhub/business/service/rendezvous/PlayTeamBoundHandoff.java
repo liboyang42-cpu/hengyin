@@ -21,13 +21,17 @@ public final class PlayTeamBoundHandoff implements PlayTeamHandoffGateway {
         if (fact.kind == PlayTeamHandoffRequest.Fact.Kind.UNKNOWN || fact.teamId == null || fact.teamId <= 0) {
             return RendezvousHandoffTeamPort.Lookup.unknown("TEAM_QUERY_UNKNOWN");
         }
-        if (fact.kind == PlayTeamHandoffRequest.Fact.Kind.JOINED && fact.peerActive) {
-            return RendezvousHandoffTeamPort.Lookup.joined(fact.teamId);
-        }
         if (fact.kind == PlayTeamHandoffRequest.Fact.Kind.ENDED || fact.kind == PlayTeamHandoffRequest.Fact.Kind.LEFT) {
             return RendezvousHandoffTeamPort.Lookup.unknown("TEAM_MEMBERSHIP_ENDED");
         }
-        return RendezvousHandoffTeamPort.Lookup.created(fact.teamId);
+        RendezvousHandoffTeamPort.Status status = fact.kind == PlayTeamHandoffRequest.Fact.Kind.JOINED && fact.peerActive
+                ? RendezvousHandoffTeamPort.Status.JOINED : RendezvousHandoffTeamPort.Status.TEAM_CREATED;
+        if (fact.namespace == null || fact.requestId == null || fact.matchId == null
+                || fact.leaderMemberId == null || fact.peerMemberId == null || fact.activityId == null) {
+            return RendezvousHandoffTeamPort.Lookup.unknown("TEAM_QUERY_UNKNOWN");
+        }
+        return RendezvousHandoffTeamPort.Lookup.carried(status, fact.teamId, fact.namespace, fact.requestId, fact.matchId,
+                fact.leaderMemberId, fact.peerMemberId, fact.activityId);
     }
 
     public long create(RendezvousHandoffRequest request) {

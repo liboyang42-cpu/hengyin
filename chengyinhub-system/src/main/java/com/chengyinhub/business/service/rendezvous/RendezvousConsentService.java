@@ -73,6 +73,27 @@ public final class RendezvousConsentService {
         }
         public boolean active() { return state == MatchState.PROPOSED || state == MatchState.MUTUAL_ACCEPTED; }
     }
+    /**
+     * Result of {@link #verifyParticipants}. No partner id, clue, place text, or contact count.
+     * {@code safe} does not consult {@link Safety#compatible} and does not read a contact counter,
+     * so this match's own admission charge is not a failure. Callers that still need the mixed
+     * preference flag read {@link Safety} themselves. This object does not stop or write anything.
+     */
+    public static final class OngoingVerdict {
+        public final boolean safe, intact, expired, eligible, blocked, placeAllowed, owned, mutual;
+        public final String ticketId, matchId;
+        public final TicketState ticketState;
+        public final MatchState matchState;
+        public OngoingVerdict(boolean safe, boolean intact, boolean expired, boolean eligible, boolean blocked,
+                              boolean placeAllowed, boolean owned, boolean mutual, String ticketId, String matchId,
+                              TicketState ticketState, MatchState matchState) {
+            this.safe = safe; this.intact = intact; this.expired = expired; this.eligible = eligible;
+            this.blocked = blocked; this.placeAllowed = placeAllowed; this.owned = owned; this.mutual = mutual;
+            this.ticketId = ticketId; this.matchId = matchId; this.ticketState = ticketState; this.matchState = matchState;
+        }
+    }
+    /** Why an in-transaction stop was requested. BLOCK and REPORT both persist as SAFETY_STOPPED. */
+    public enum Termination { BLOCK, REPORT, EXIT }
     /** Participant-only projection: no partner identifier, clue, contact or coordinates. */
     public static final class View {
         public final String ticketId, matchId, publicPlace;
@@ -94,11 +115,22 @@ public final class RendezvousConsentService {
         final View view; final String rejection;
         Reply(View view, String rejection) { this.view = view; this.rejection = rejection; }
     }
+    /** Writes the admission for one new match. Called inside the guard transaction.
+     * {@code now} is the clock read in that transaction, not a time taken before the lock. */
+    public interface Admission {
+        void charge(String matchId, long first, long second, String pool, long now);
+    }
     private final Store store;
     private final Safety safety;
     private final Clock clock;
+    private final Admission admission;
+    /** No ledger is attached. The guard transaction refuses the new pair and keeps no reservation. */
     public RendezvousConsentService(Store store, Safety safety, Clock clock) {
-        this.store = Objects.requireNonNull(store); this.safety = Objects.requireNonNull(safety); this.clock = Objects.requireNonNull(clock);
+        this(store, safety, clock, (matchId, first, second, pool, now) -> { throw new Rejection("POLICY_CLOSED"); });
+    }
+    public RendezvousConsentService(Store store, Safety safety, Clock clock, Admission admission) {
+        this.store = Objects.requireNonNull(store); this.safety = Objects.requireNonNull(safety);
+        this.clock = Objects.requireNonNull(clock); this.admission = Objects.requireNonNull(admission);
     }
     /** Explicit user opt-in. TTL comes from approved server policy, never a request body. */
     public View join(long actor, String pool, String eligibilityVersion, long ttlMillis) {
@@ -123,7 +155,132 @@ public final class RendezvousConsentService {
         if (reply.rejection != null) throw new Rejection(reply.rejection);
         return reply.view;
     }
-    /** Internal scheduler operation only. It cannot opt either person into the pool. */
+    /**
+     * Structural check. Does not prove ownership or mutual acceptance.
+     * Callers that have an actor must use the bound overload. Does not open a transaction.
+     */
+    public OngoingVerdict verifyParticipants(Transaction tx, String ticketId) {
+        return inspect(tx, 0, ticketId, null, null, false, clock.millis(), false);
+    }
+    /**
+     * Bound check for B and C. {@code now} is the server instant already chosen in this transaction.
+     * A null match id or null peer means that binding was not supplied. A supplied value that does not
+     * match fails closed. {@code requireMutualAccepted} requires both receipts. Does not open a transaction
+     * and does not write. Contact counters are not read.
+     */
+    public OngoingVerdict verifyParticipants(Transaction tx, long actor, String ticketId, String expectedMatchId,
+                                             Long expectedPeer, boolean requireMutualAccepted, long now) {
+        actor(actor);
+        if (now < 0) throw new Rejection("INVALID_INPUT");
+        return inspect(tx, actor, ticketId, expectedMatchId, expectedPeer, requireMutualAccepted, now, true);
+    }
+    /**
+     * Stops the current match inside the caller's guard transaction. Does not open one.
+     * EXIT requires a null peer and an owned ticket, then cancels both sides or the waiting ticket.
+     * BLOCK and REPORT require the other participant and stop only a shared active match.
+     * Already-terminal matches are left unchanged. Both tickets are checked before either is saved.
+     * Reservations are released by the terminal ticket save. A missing side throws and writes nothing.
+     */
+    public OngoingVerdict terminateCurrent(Transaction tx, long actor, Long peer, String ticketId, Termination reason, long now) {
+        Objects.requireNonNull(tx, "tx");
+        if (reason == null || now < 0) throw new Rejection("INVALID_INPUT");
+        actor(actor);
+        if (reason == Termination.EXIT) return exit(tx, actor, peer, ticketId, now);
+        return stopNamedPair(tx, actor, peer, ticketId);
+    }
+    /**
+     * H, inside the caller's already-open guard transaction. Stops only the shared active match.
+     * Does not open a transaction. A second call writes nothing. SAFETY_STOPPED is not written back.
+     */
+    public void terminateCurrentMatch(Transaction tx, long actor, long other) {
+        Objects.requireNonNull(tx, "tx");
+        actor(actor);
+        actor(other);
+        if (actor == other) throw new Rejection("INVALID_INPUT");
+        stopBlockedPair(tx, actor, other);
+    }
+    private OngoingVerdict inspect(Transaction tx, long actor, String ticketId, String expectedMatchId,
+                                   Long expectedPeer, boolean requireMutualAccepted, long now, boolean bindOwner) {
+        Objects.requireNonNull(tx, "tx");
+        text(ticketId);
+        if (expectedMatchId != null) text(expectedMatchId);
+        if (expectedPeer != null && expectedPeer <= 0) throw new Rejection("INVALID_INPUT");
+        Ticket ticket = tx.ticket(ticketId);
+        if (bindOwner && (ticket == null || ticket.actor != actor)) return closed(ticketId);
+        if (ticket == null || ticket.matchId == null) {
+            return new OngoingVerdict(false, false, false, false, false, false, bindOwner && ticket != null, false, ticketId,
+                    null, ticket == null ? null : ticket.state, null);
+        }
+        Match match = tx.match(ticket.matchId);
+        if (match == null) return new OngoingVerdict(false, false, false, false, false, false, bindOwner, false, ticket.id, ticket.matchId, ticket.state, null);
+        Ticket first = tx.ticket(match.firstTicket), second = tx.ticket(match.secondTicket);
+        boolean participant = ticket.id.equals(match.firstTicket) || ticket.id.equals(match.secondTicket);
+        boolean intact = participant && first != null && second != null && first.actor != second.actor
+                && match.id.equals(first.matchId) && match.id.equals(second.matchId);
+        boolean expired = match.expiresAt <= now
+                || (first != null && first.expiresAt <= now) || (second != null && second.expiresAt <= now);
+        boolean eligible = intact && safety.eligible(first.actor, first.pool, first.eligibilityVersion, now)
+                && safety.eligible(second.actor, second.pool, second.eligibilityVersion, now);
+        boolean blocked = intact && safety.blocked(first.actor, second.actor);
+        boolean placeAllowed = intact && safety.publicMeetingAllowed(first.pool, match.publicPlace, now);
+        boolean owned = bindOwner && ticket.actor == actor;
+        boolean mutual = intact && match.state == MatchState.MUTUAL_ACCEPTED
+                && match.firstAcceptedAt != null && match.secondAcceptedAt != null;
+        long other = !intact ? 0 : (ticket.id.equals(match.firstTicket) ? second.actor : first.actor);
+        boolean matchBound = expectedMatchId == null || expectedMatchId.equals(match.id);
+        boolean peerBound = expectedPeer == null || (intact && expectedPeer.longValue() == other && expectedPeer.longValue() != actor);
+        boolean safe = intact && matchBound && peerBound && !expired && eligible && !blocked && placeAllowed
+                && match.active() && first.active() && second.active()
+                && (!bindOwner || owned) && (!requireMutualAccepted || mutual);
+        return new OngoingVerdict(safe, intact, expired, eligible, blocked, placeAllowed, owned, mutual,
+                ticket.id, match.id, ticket.state, match.state);
+    }
+    private OngoingVerdict exit(Transaction tx, long actor, Long peer, String ticketId, long now) {
+        if (peer != null) throw new Rejection("INVALID_INPUT");
+        text(ticketId);
+        Ticket ticket = tx.ticket(ticketId);
+        if (ticket == null || ticket.actor != actor) throw new Rejection("NOT_FOUND");
+        if (!ticket.active()) return verifyParticipants(tx, ticketId);
+        if (ticket.matchId == null) {
+            tx.save(ticket.transition(ticket.expiresAt <= now ? TicketState.EXPIRED : TicketState.CANCELLED, null));
+            return verifyParticipants(tx, ticketId);
+        }
+        Match match = tx.match(ticket.matchId);
+        if (match == null) throw new Rejection("CORRUPT_RESERVATION");
+        if (match.active()) stop(tx, match, match.expiresAt <= now ? MatchState.EXPIRED : MatchState.CANCELLED);
+        return verifyParticipants(tx, ticketId);
+    }
+    private OngoingVerdict stopNamedPair(Transaction tx, long actor, Long peer, String ticketId) {
+        if (peer == null || peer <= 0 || peer.longValue() == actor) throw new Rejection("INVALID_INPUT");
+        Ticket left = tx.activeTicket(actor), right = tx.activeTicket(peer);
+        if (left == null || right == null || left.matchId == null || !left.matchId.equals(right.matchId)) {
+            if (ticketId != null) {
+                text(ticketId);
+                Ticket named = tx.ticket(ticketId);
+                if (named == null || (named.actor != actor && named.actor != peer.longValue())) throw new Rejection("NOT_FOUND");
+            }
+            return closed(ticketId);
+        }
+        Match match = tx.match(left.matchId);
+        if (match == null || !pair(match, left, right)) throw new Rejection("CORRUPT_RESERVATION");
+        if (ticketId != null) {
+            text(ticketId);
+            Ticket named = tx.ticket(ticketId);
+            if (named == null || (named.actor != actor && named.actor != peer.longValue()) || !match.id.equals(named.matchId))
+                throw new Rejection("NOT_FOUND");
+        }
+        if (match.active()) stop(tx, match, MatchState.SAFETY_STOPPED);
+        return verifyParticipants(tx, left.id);
+    }
+    private static boolean pair(Match match, Ticket left, Ticket right) {
+        return (match.firstTicket.equals(left.id) && match.secondTicket.equals(right.id))
+                || (match.firstTicket.equals(right.id) && match.secondTicket.equals(left.id));
+    }
+    private static OngoingVerdict closed(String ticketId) {
+        return new OngoingVerdict(false, false, false, false, false, false, false, false, ticketId, null, null, null);
+    }
+    /** Internal scheduler operation only. It cannot opt either person into the pool.
+     * The admission charge always runs in this guard transaction, using this transaction's clock. */
     public String propose(String firstTicket, String secondTicket, String publicPlace) {
         text(firstTicket); text(secondTicket); text(publicPlace);
         return store.transaction(tx -> {
@@ -135,6 +292,7 @@ public final class RendezvousConsentService {
             String id = UUID.randomUUID().toString();
             Match m = new Match(id, a.id, b.id, publicPlace, Math.min(a.expiresAt, b.expiresAt), 1, null, null, MatchState.PROPOSED);
             tx.save(a.transition(TicketState.RESERVED, id)); tx.save(b.transition(TicketState.RESERVED, id)); tx.save(m);
+            admission.charge(id, a.actor, b.actor, a.pool, now);
             return id;
         });
     }
@@ -238,7 +396,8 @@ public final class RendezvousConsentService {
         if (!m.active()) return;
         Ticket a = tx.ticket(m.firstTicket), b = tx.ticket(m.secondTicket);
         if (m.expiresAt <= now) stop(tx, m, MatchState.EXPIRED);
-        else if (a == null || b == null || !safe(a, b, m.publicPlace, now)) stop(tx, m, MatchState.SAFETY_STOPPED);
+        else if (a == null || b == null || !verifyParticipants(tx, t.id).safe
+                || !safety.compatible(a.actor, b.actor, a.pool, now)) stop(tx, m, MatchState.SAFETY_STOPPED);
     }
     private boolean safe(Ticket a, Ticket b, String place, long now) {
         return safety.eligible(a.actor, a.pool, a.eligibilityVersion, now)

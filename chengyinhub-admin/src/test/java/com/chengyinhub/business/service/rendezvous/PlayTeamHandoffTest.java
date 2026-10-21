@@ -156,7 +156,7 @@ class PlayTeamHandoffTest {
         ReflectionTestUtils.setField(target, "cmsTopicMapper", topics);
         service = proxy(target);
         bound = new PlayTeamBoundHandoff(service);
-        gate = new Gate(bound);
+        gate = new Gate(PlayTeamHandoffAssembly.open(session, manager, bound));
         MyBatisRendezvousConsentStore consentStore = new MyBatisRendezvousConsentStore(ISOLATED_PERSISTENCE_EVALUATION, session, manager);
         MyBatisRendezvousMeetingStore meetingStore = new MyBatisRendezvousMeetingStore(
                 MyBatisRendezvousMeetingStore.Mode.ISOLATED_PERSISTENCE_EVALUATION, session, manager);
@@ -170,7 +170,7 @@ class PlayTeamHandoffTest {
             public boolean compatible(long a, long b, String pool, long now) { return true; }
             public boolean publicMeetingAllowed(String pool, String place, long now) { return "public-place".equals(place); }
         };
-        consent = new RendezvousConsentService(consentStore, safety, clock);
+        consent = new RendezvousConsentService(consentStore, safety, clock, RendezvousConsentServiceTest.permitsPairing);
         meetings = new RendezvousMeetingService(RendezvousMeetingService.Mode.ISOLATED_CONTRACT_EVALUATION, meetingStore, safety,
                 (m, t, a, p, n) -> safetyOpen.get(), new RendezvousHandoffLegacyTeamPort(), clock, 60_000, gate);
         failIm[0] = false;
@@ -332,6 +332,72 @@ class PlayTeamHandoffTest {
         assertEquals(1, count("w16_play_team_handoff"));
     }
 
+    @Test void mismatchedBindingRefusesAdoptJoinAndPublishWithNoTeamWrite() {
+        gate.replacement = RendezvousHandoffTeamPort.Lookup.joined(424242L);
+        String[] forgedIds = ready();
+        RendezvousMeetingService.View forged = meetings.handoff(1, forgedIds[0]);
+        assertNotEquals(RendezvousMeetingService.State.COMPLETED, forged.state);
+        assertNull(forged.teamId);
+        assertEquals(0, count("play_team"));
+        assertEquals(0, count("play_team_member"));
+        assertEquals(0, count("im_conversation"));
+        assertEquals(0, count("w16_play_team_handoff"));
+        assertEquals("UNKNOWN", jdbc.queryForObject("SELECT phase FROM w16_handoff_request", String.class));
+        assertNull(jdbc.queryForObject("SELECT team_id FROM w16_handoff_request", Long.class));
+
+        gate.replacement = null;
+        String[] ids = ready(3, 4);
+        paid(3L); paid(4L);
+        gate.beforeLookup = () -> {
+            jdbc.update("INSERT INTO play_team (leader_member_id, invite_code, join_mode, max_members, joined_count, status) VALUES (8,'foreign',1,4,1,1)");
+            Long foreign = jdbc.queryForObject("SELECT id FROM play_team", Long.class);
+            jdbc.update("INSERT INTO play_team_member (team_id, member_id, role, status) VALUES (?,?,1,1)", foreign, 8L);
+            jdbc.update("INSERT INTO play_team_member (team_id, member_id, role, status) VALUES (?,?,0,1)", foreign, 9L);
+            String requestId = jdbc.queryForObject("SELECT request_id FROM w16_handoff_request WHERE first_actor=3", String.class);
+            jdbc.update("INSERT INTO w16_play_team_handoff(namespace, request_id, match_id, leader_member_id, peer_member_id, activity_id, team_id, phase)"
+                    + " VALUES (?,?,?,?,?,?,?,?)", PlayTeamHandoffGateway.NAMESPACE, requestId, "other-match", 8, 9, 99, foreign, "JOINED");
+        };
+        RendezvousMeetingService.View mismatched = meetings.handoff(3, ids[0]);
+        assertNotEquals(RendezvousMeetingService.State.COMPLETED, mismatched.state);
+        assertNull(mismatched.teamId);
+        assertEquals(1, count("play_team"));
+        assertEquals(2, count("play_team_member"));
+        assertEquals(0, jdbc.queryForObject("SELECT COUNT(*) FROM play_team_member WHERE member_id IN (3,4)", Integer.class));
+        assertEquals(0, count("im_conversation"));
+        assertEquals(1, count("w16_play_team_handoff"));
+        assertEquals("JOINED", jdbc.queryForObject("SELECT phase FROM w16_play_team_handoff", String.class));
+        assertEquals("UNKNOWN", jdbc.queryForObject("SELECT phase FROM w16_handoff_request WHERE first_actor=3", String.class));
+        assertNull(jdbc.queryForObject("SELECT team_id FROM w16_handoff_request WHERE first_actor=3", Long.class));
+    }
+
+    @Test void assemblyRefusesWrongManagerDatasourceAndMissingGuard() {
+        IllegalStateException unmarked = assertThrows(IllegalStateException.class,
+                () -> new TransactionTemplate(manager).execute(status -> gate.create(null)));
+        assertEquals("W16_GUARD_MISSING", unmarked.getMessage());
+        DataSourceTransactionManager otherManager = new DataSourceTransactionManager(dataSource);
+        IllegalStateException otherManagerCall = assertThrows(IllegalStateException.class,
+                () -> new TransactionTemplate(otherManager).execute(status -> gate.create(null)));
+        assertEquals("W16_GUARD_MISSING", otherManagerCall.getMessage());
+        JdbcDataSource otherSource = new JdbcDataSource();
+        otherSource.setURL("jdbc:h2:mem:w16-other;MODE=MySQL;DB_CLOSE_DELAY=-1");
+        DataSourceTransactionManager otherSourceManager = new DataSourceTransactionManager(otherSource);
+        IllegalArgumentException wrongSource = assertThrows(IllegalArgumentException.class,
+                () -> PlayTeamHandoffAssembly.open(session, otherSourceManager, bound));
+        assertEquals("W16_TRANSACTION_RESOURCE_MISMATCH", wrongSource.getMessage());
+        IllegalStateException runtimeOtherSource = assertThrows(IllegalStateException.class,
+                () -> new TransactionTemplate(otherSourceManager).execute(status -> gate.create(null)));
+        assertEquals("W16_TRANSACTION_RESOURCE_MISMATCH", runtimeOtherSource.getMessage());
+        Configuration bare = new Configuration(new Environment("bad", new org.apache.ibatis.transaction.jdbc.JdbcTransactionFactory(), dataSource));
+        SqlSessionTemplate bad = new SqlSessionTemplate(new SqlSessionFactoryBuilder().build(bare));
+        IllegalArgumentException wrongFactory = assertThrows(IllegalArgumentException.class,
+                () -> PlayTeamHandoffAssembly.open(bad, manager, bound));
+        assertEquals("W16_TRANSACTION_RESOURCE_MISMATCH", wrongFactory.getMessage());
+        assertEquals(0, count("play_team"));
+        assertEquals(0, count("play_team_member"));
+        assertEquals(0, count("w16_play_team_handoff"));
+        assertEquals(0, count("im_conversation"));
+    }
+
     private String[] ready() { return ready(1, 2); }
 
     private String[] ready(long first, long second) {
@@ -406,14 +472,15 @@ class PlayTeamHandoffTest {
     }
 
     static final class Gate implements PlayTeamHandoffGateway {
-        final PlayTeamBoundHandoff inner;
+        final PlayTeamHandoffGateway inner;
         Runnable beforeLookup = () -> {};
         Runnable afterCreate = () -> {};
-        Gate(PlayTeamBoundHandoff inner) { this.inner = inner; }
+        RendezvousHandoffTeamPort.Lookup replacement;
+        Gate(PlayTeamHandoffGateway inner) { this.inner = inner; }
         public boolean enabled() { return true; }
         public RendezvousHandoffTeamPort.Lookup lookup(String requestId) {
             beforeLookup.run();
-            return inner.lookup(requestId);
+            return replacement != null ? replacement : inner.lookup(requestId);
         }
         public long create(RendezvousHandoffRequest request) { return inner.create(request); }
         public boolean join(RendezvousHandoffRequest request) { return inner.join(request); }

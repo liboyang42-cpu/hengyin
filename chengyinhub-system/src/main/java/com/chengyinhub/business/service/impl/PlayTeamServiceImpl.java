@@ -625,7 +625,7 @@ public class PlayTeamServiceImpl implements IPlayTeamService {
         else if (PlayTeamHandoffRequest.PHASE_JOINED.equals(row.getPhase()) && !peerActive) kind = PlayTeamHandoffRequest.Fact.Kind.LEFT;
         else if (PlayTeamHandoffRequest.PHASE_JOINED.equals(row.getPhase())) kind = PlayTeamHandoffRequest.Fact.Kind.JOINED;
         else kind = PlayTeamHandoffRequest.Fact.Kind.TEAM_CREATED;
-        return PlayTeamHandoffRequest.Fact.of(kind, team.getId(), team.getStatus(), peerActive, row.getPhase());
+        return PlayTeamHandoffRequest.Fact.bound(kind, team.getId(), team.getStatus(), peerActive, row.getPhase(), row);
     }
 
     private PlayTeamHandoffRequest.Fact existingTeam(PlayTeamHandoffRequest locked) {
