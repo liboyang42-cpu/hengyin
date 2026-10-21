@@ -8,7 +8,7 @@
   explode       解开候选 jar，把两个 e2e 桩（支付通道、故障注入）编进 exploded classes
   storage-start 起一次性 MySQL(127.0.0.1:3316) / Redis(127.0.0.1:6379)，写 redis-cli 垫片并自检
   schema        用候选自己的 build_schema.py + seed_fixtures.py 建 cy_e2e_51，再直读 SQL 核对
-  run           起应用（夹具配置 + 每次随机生成的合成密钥）→ 按序跑链路 → 每条写回执 → 停应用
+  run           同一应用取证（可选五链）→ 确认停机 → 严格3POST SQL及独立回读
   storage-stop  导出容器日志并删除容器
   summarize     汇总全部回执；任一计划内链路不是 PASS 即失败
 
@@ -35,6 +35,11 @@ import urllib.parse
 import urllib.request
 import zipfile
 from pathlib import Path
+
+try:
+    import chain_postdeploy as post
+except ModuleNotFoundError:
+    from ci import chain_postdeploy as post
 
 RECEIPT_SCHEMA = "CY-CHAIN-ACCEPTANCE-RECEIPT-20261019"
 SUMMARY_SCHEMA = "CY-CHAIN-ACCEPTANCE-SUMMARY-20261019"
@@ -76,6 +81,7 @@ NOT_COVERED = [
     "device / WeChat DevTools / real-phone behaviour",
     "integrated cross-branch candidate unless SOURCE_SHA is that candidate",
     "production data, persistent-database migration execution, merge or deployment",
+    "actual execution of the six POST_DEPLOY scheduled tasks or live old/new JAR rollback",
 ]
 
 
@@ -186,17 +192,27 @@ CHAIN_BY_NAME = {chain["name"]: chain for chain in CHAINS}
 
 # ---------------------------------------------------------------- 计划
 
-def plan(source_sha, through, fail_path):
+def plan(source_sha, through, fail_path, native_jar_run_id="", native_jar_sha256=""):
     if not SHA_RE.fullmatch(source_sha or ""):
         raise GateError("source_sha 必须是完整 40 位小写 commit SHA: %r" % source_sha)
-    if through not in CHAIN_NAMES:
+    if through not in CHAIN_NAMES + ("post_deploy",):
         raise GateError("through 必须是 %s 之一: %r" % (list(CHAIN_NAMES), through))
     fail_path = (fail_path or "").strip()
     if fail_path and not FAIL_PATH_RE.fullmatch(fail_path):
         raise GateError("fail_path 只接受 /api/... 或 /business/... 的路径段: %r" % fail_path)
+    if through == "post_deploy" and fail_path:
+        raise GateError("post_deploy-only does not execute gameplay fault probes")
     # 后续链路都依赖 platform 建出的 topicId，所以子集只能是从头开始的前缀。
-    chains = list(CHAIN_NAMES[:CHAIN_NAMES.index(through) + 1])
-    return {"source_sha": source_sha, "through": through, "chains": chains, "fail_path": fail_path}
+    chains = [] if through == "post_deploy" else list(CHAIN_NAMES[:CHAIN_NAMES.index(through) + 1])
+    native = None
+    if native_jar_run_id or native_jar_sha256:
+        if (not re.fullmatch(r"[1-9][0-9]{0,18}", native_jar_run_id or "") or
+                not re.fullmatch(r"[0-9a-f]{64}", native_jar_sha256 or "")):
+            raise GateError("native JAR requires paired positive run id and lowercase SHA256")
+        native = {"run_id": int(native_jar_run_id), "sha256": native_jar_sha256,
+                  "artifact_name": "backend-jar-" + source_sha}
+    return {"source_sha": source_sha, "through": through, "chains": chains, "fail_path": fail_path,
+            "native_jar": native}
 
 
 # ---------------------------------------------------------------- 预检
@@ -332,6 +348,30 @@ def sha256_file(path):
         for block in iter(lambda: handle.read(1 << 20), b""):
             digest.update(block)
     return digest.hexdigest()
+
+
+def verify_candidate_jar(jar, planned):
+    """Downloaded original bytes and their marker/sidecar must agree before extraction or Java."""
+    jar = Path(jar)
+    digest = sha256_file(jar)
+    with zipfile.ZipFile(jar) as archive:
+        entry = "BOOT-INF/classes/git.properties"
+        if archive.namelist().count(entry) != 1:
+            raise GateError("candidate JAR requires one git.properties")
+        commits = re.findall(r"^git\.commit\.id=([^\r\n]+)\r?$", archive.read(entry).decode("utf-8"), re.MULTILINE)
+        if commits != [planned["source_sha"]]:
+            raise GateError("candidate JAR embedded source differs from plan")
+    native = planned.get("native_jar")
+    if native:
+        if digest != native["sha256"]:
+            raise GateError("native JAR checksum mismatch")
+        if (jar.parent / "SOURCE_SHA").read_text(encoding="utf-8") not in (
+                planned["source_sha"], planned["source_sha"] + "\n"):
+            raise GateError("native JAR source marker mismatch")
+        sidecar = (jar.parent / (jar.name + ".sha256")).read_text(encoding="utf-8")
+        if sidecar not in (digest + "  " + jar.name, digest + "  " + jar.name + "\n"):
+            raise GateError("native JAR checksum sidecar mismatch")
+    return {"jar_sha256": digest, "source_sha": planned["source_sha"], "native_jar": native}
 
 
 # ---------------------------------------------------------------- 容器
@@ -756,10 +796,106 @@ def stop_app(process):
     return process.returncode
 
 
+def postdeploy_http(path, token=None, password=None):
+    """Only fixed loopback Actuator reads or normal admin login; never persist full beans or credentials."""
+    if path not in ("/login", "/actuator/info", "/actuator/health/isolatedStartup", "/actuator/beans"):
+        raise GateError("postdeploy HTTP path outside fixed allowlist")
+    class NoRedirect(urllib.request.HTTPRedirectHandler):
+        def redirect_request(self, *args, **kwargs):
+            return None
+    data = json.dumps({"username": "admin", "password": password}).encode() if path == "/login" else None
+    headers = {"Content-Type": "application/json"}
+    if token:
+        headers["Authorization"] = "Bearer " + token
+    request = urllib.request.Request(APP_BASE + path, data=data, headers=headers)
+    try:
+        opener = urllib.request.build_opener(urllib.request.ProxyHandler({}), NoRedirect())
+        with opener.open(request, timeout=15) as response:
+            raw = response.read(8 * 1024 * 1024 + 1)
+            if response.status != 200 or len(raw) > 8 * 1024 * 1024:
+                raise ValueError("invalid response")
+        value = json.loads(raw)
+        if not isinstance(value, dict):
+            raise ValueError("invalid JSON shape")
+        return value
+    except Exception as error:
+        raise GateError("postdeploy HTTP unavailable (%s)" % type(error).__name__) from None
+
+
+def app_process_identity(process, command):
+    if process.poll() is not None or not isinstance(process.pid, int) or process.pid <= 0:
+        raise GateError("original application PID is not alive")
+    folder = Path("/proc") / str(process.pid)
+    try:
+        raw = (folder / "cmdline").read_bytes().rstrip(b"\0")
+        if raw.split(b"\0") != [os.fsencode(arg) for arg in command]:
+            raise ValueError("command changed")
+        # Field22 is starttime; command names can contain spaces and parentheses.
+        starttime = (folder / "stat").read_text().rsplit(")", 1)[1].split()[19]
+        if not starttime.isdigit():
+            raise ValueError("invalid starttime")
+        owned_sockets = set()
+        for fd in (folder / "fd").iterdir():
+            try:
+                match = re.fullmatch(r"socket:\[([0-9]+)\]", os.readlink(fd))
+            except FileNotFoundError:
+                continue  # A closing unrelated descriptor does not prove ownership of a listener.
+            if match:
+                owned_sockets.add(match.group(1))
+        listeners = set()
+        for table, address in (("tcp", "0100007F:1FA3"),
+                               ("tcp6", "0000000000000000FFFF00000100007F:1FA3")):
+            try:
+                rows = (folder / "net" / table).read_text().splitlines()[1:]
+            except FileNotFoundError:
+                if table == "tcp6":
+                    continue  # IPv6 can be disabled; the IPv4 listener must still be owned.
+                raise
+            for row in rows:
+                fields = row.split()
+                if len(fields) < 10:
+                    raise ValueError("invalid TCP metadata")
+                if fields[1].upper() == address and fields[3].upper() == "0A":
+                    if not fields[9].isdigit():
+                        raise ValueError("invalid socket inode")
+                    listeners.add(fields[9])
+        listener_inodes = sorted(owned_sockets & listeners)
+        if not listener_inodes:
+            raise ValueError("original PID does not own the exact loopback listener")
+        return {"pid": process.pid, "starttime": starttime,
+                "command_sha256": hashlib.sha256(raw).hexdigest(), "listener_inodes": listener_inodes}
+    except (OSError, ValueError, IndexError):
+        raise GateError("original application process identity unavailable") from None
+
+
+def observe_postdeploy(args, planned, process):
+    expected = read_receipt(args.out)["stages"]["explode"]["jar_sha256"]
+    binding = verify_candidate_jar(args.jar, planned)
+    if binding["jar_sha256"] != expected:
+        raise GateError("original candidate JAR changed since explode")
+    command = java_command(args.app, planned["fail_path"])
+    before = app_process_identity(process, command)
+    login = postdeploy_http("/login", password=fixture_admin_password(args.gate))
+    token = login.get("token")
+    if login.get("code") != 200 or not isinstance(token, str) or not token:
+        raise GateError("postdeploy normal administrator login failed")
+    observation = post.validate_observation(
+        postdeploy_http("/actuator/info", token),
+        postdeploy_http("/actuator/health/isolatedStartup", token),
+        postdeploy_http("/actuator/beans", token), planned["source_sha"])
+    database = post.read_state(connect)
+    if app_process_identity(process, command) != before or sha256_file(args.jar) != expected:
+        raise GateError("candidate PID or original JAR changed during observation")
+    return dict(observation, process=before, jar_sha256=expected, schema=SCHEMA,
+                server_uuid=database["server_uuid"], observed_at=time.time(),
+                boundary="same exploded candidate JVM; external-provider stubs unchanged; no task invoked")
+
+
 # ---------------------------------------------------------------- 子命令
 
 def cmd_plan(args, environ):
-    result = plan(environ.get("SOURCE_SHA", ""), environ.get("THROUGH", ""), environ.get("FAIL_PATH", ""))
+    result = plan(environ.get("SOURCE_SHA", ""), environ.get("THROUGH", ""), environ.get("FAIL_PATH", ""),
+                  environ.get("NATIVE_JAR_RUN_ID", ""), environ.get("NATIVE_JAR_SHA256", ""))
     merge_receipt(args.out, {"schema": RECEIPT_SCHEMA, "plan": result, "workflow": workflow_facts(environ),
                              "not_covered": NOT_COVERED})
     stage(args.out, "plan", "PASS", chains=result["chains"])
@@ -795,6 +931,10 @@ def cmd_explode(args, environ):
     jar = Path(args.jar)
     if not jar.is_file():
         raise GateError("候选 jar 不存在: %s" % jar)
+    try:
+        binding = verify_candidate_jar(jar, read_receipt(args.out)["plan"])
+    except (OSError, UnicodeError, zipfile.BadZipFile, KeyError):
+        raise GateError("candidate JAR source/checksum evidence unavailable") from None
     app = Path(args.app)
     if app.exists():
         shutil.rmtree(app)
@@ -828,7 +968,7 @@ def cmd_explode(args, environ):
     for name in STUBS:
         if not (classes / "com" / "chengyinhub" / "e2e" / ("%s.class" % name)).is_file():
             raise GateError("桩 %s 编译后没有 class" % name)
-    stage(args.out, "explode", "PASS", jar_sha256=sha256_file(jar), main_class=main_class(app),
+    stage(args.out, "explode", "PASS", **binding, main_class=main_class(app),
           stub_sha256=stubs, lib_count=len(libs))
     print("explode: %d libs, stubs %s compiled into exploded classes" % (len(libs), list(STUBS)))
     return 0
@@ -930,15 +1070,51 @@ def cmd_run(args, environ):
     require_stage(args.out, "schema")
     planned = read_receipt(args.out)["plan"]
     process, facts = start_app(args.app, args.work, args.out, planned["fail_path"], environ)
+    proof = None
     try:
-        target = planned["fail_path"] or DEFAULT_FAULT_PROBE_PATH
-        token = probe_token(target, args.gate, Path(args.work) / "bin", environ)
-        facts["fault_injection"] = fault_probe(planned["fail_path"], token)
+        if planned["through"] != "post_deploy":
+            target = planned["fail_path"] or DEFAULT_FAULT_PROBE_PATH
+            token = probe_token(target, args.gate, Path(args.work) / "bin", environ)
+            facts["fault_injection"] = fault_probe(planned["fail_path"], token)
         stage(args.out, "app", "PASS", **facts)
-        results = run_chains(planned["chains"], args.gate, chain_env(environ, Path(args.work) / "bin"), args.out)
+        results = (run_chains(planned["chains"], args.gate, chain_env(environ, Path(args.work) / "bin"), args.out)
+                   if planned["through"] != "post_deploy" else [])
+        if all(result["verdict"] == "PASS" for result in results):
+            post.prepared_sql(args.source)
+            proof = observe_postdeploy(args, planned, process)
+        else:
+            stage(args.out, "postdeploy", "FAIL", reason="prerequisite_chain_failed", sql_started=False)
+    except Exception as error:
+        stage(args.out, "postdeploy", "FAIL", reason=type(error).__name__, sql_started=False)
+        raise GateError("postdeploy live prerequisite failed") from None
     finally:
-        exit_code = stop_app(process)
-        merge_receipt(args.out, {"app_exit_code": exit_code})
+        try:
+            if proof is not None and process.poll() is not None:
+                raise GateError("original JVM exited before the controlled stop")
+            stop_app(process)
+            exit_code = process.poll()
+            if exit_code is None:
+                raise GateError("application stop outcome is unknown")
+            merge_receipt(args.out, {"app_exit_code": exit_code})
+        except Exception as error:
+            stage(args.out, "postdeploy", "FAIL", reason="application_stop_unknown",
+                  error_type=type(error).__name__, sql_started=False)
+            raise GateError("postdeploy requires confirmed original JVM exit") from None
+    if proof is not None:
+        if not 0 <= time.time() - proof["observed_at"] <= 90:
+            stage(args.out, "postdeploy", "FAIL", reason="live_proof_expired", sql_started=False)
+            raise GateError("postdeploy live observation is stale")
+        stage(args.out, "postdeploy", "RUNNING", proof=proof, stopped_before_sql=True,
+              app_exit_code=exit_code, sql_started=True, recovery="UNKNOWN_PARTIAL_DO_NOT_RETRY")
+        try:
+            result = post.register_jobs(args.source, connect, proof["server_uuid"])
+        except post.PostDeployError as error:
+            stage(args.out, "postdeploy", "FAIL", proof=proof, stopped_before_sql=True,
+                  sql_started=True, result=error.evidence)
+            raise GateError("strict POST_DEPLOY SQL or independent readback failed") from None
+        stage(args.out, "postdeploy", "PASS", proof=proof, stopped_before_sql=True,
+              app_exit_code=exit_code, sql_started=True, result=result,
+              not_covered="actual scheduled execution, persistent deployment and live old/new JAR rollback")
     for result in results:
         print("chain %-14s %s %s" % (result["chain"], result["verdict"], "; ".join(result.get("problems", []))))
     return 0 if all(result["verdict"] == "PASS" for result in results) else 1
@@ -974,12 +1150,27 @@ def summarize(out_dir):
     receipt = read_receipt(out_dir)
     planned = (receipt.get("plan") or {}).get("chains") or []
     problems = []
-    if not planned:
+    post_only = (receipt.get("plan") or {}).get("through") == "post_deploy"
+    if not SHA_RE.fullmatch((receipt.get("plan") or {}).get("source_sha") or ""):
+        problems.append("缺完整候选 source_sha")
+    if not planned and not post_only:
         problems.append("没有计划回执")
+    if post_only and (receipt.get("plan") or {}).get("chains") != []:
+        problems.append("post_deploy-only 不得混入五条既有链路")
     stages = receipt.get("stages", {})
-    for name in ("plan", "precheck", "explode", "storage", "schema", "app"):
+    for name in ("plan", "precheck", "explode", "storage", "schema", "app", "postdeploy"):
         if stages.get(name, {}).get("status") != "PASS":
             problems.append("步骤 %s 未通过（%s）" % (name, stages.get(name, {}).get("status", "缺回执")))
+    registration = stages.get("postdeploy", {})
+    result = registration.get("result", {})
+    proof = registration.get("proof", {})
+    try:
+        if registration.get("stopped_before_sql") is not True or type(registration.get("app_exit_code")) is not int:
+            raise post.PostDeployError("post_stop_proof_missing")
+        post.validate_result(result, proof, (receipt.get("plan") or {}).get("source_sha"),
+                             stages.get("explode", {}).get("jar_sha256"))
+    except Exception:
+        problems.append("postdeploy 缺同候选/停机/15句9标量完整回执")
     chains = []
     for name in planned:
         path = Path(out_dir) / "chains" / ("%s.json" % name)
@@ -1001,6 +1192,7 @@ def summarize(out_dir):
         "master_basis": stages.get("precheck", {}).get("master_basis"),
         "harness_drift": (stages.get("precheck", {}).get("harness") or {}).get("drift"),
         "chains": chains, "problems": problems, "not_covered": receipt.get("not_covered", NOT_COVERED),
+        "postdeploy": stages.get("postdeploy", {}),
         "verdict": "PASS" if not problems else "FAIL",
     }
     return summary
@@ -1010,6 +1202,12 @@ def summary_markdown(summary):
     lines = ["## Chain acceptance: %s" % summary["verdict"], "",
              "- source: `%s` (through `%s`, fail_path `%s`)" % (summary["source_sha"], summary["through"],
                                                                summary["fail_path"] or "-"), ""]
+    post_facts = summary.get("postdeploy", {})
+    post_result = post_facts.get("result", {})
+    lines += ["- POST_DEPLOY: `%s`; stopped before SQL: `%s`; statements/scalars: `%s/%s`. "
+              "Registration only; scheduled execution and live JAR rollback are not covered." % (
+                  post_facts.get("status", "MISSING"), post_facts.get("stopped_before_sql", False),
+                  post_result.get("statement_count", 0), post_result.get("scalar_count", 0)), ""]
     lines += ["| chain | verdict | topic | terminal readbacks |", "|---|---|---|---|"]
     for chain in summary["chains"]:
         readbacks = "<br>".join("%s %s `%s`" % ("✅" if item["ok"] else "❌", item["label"], item["rows"])
