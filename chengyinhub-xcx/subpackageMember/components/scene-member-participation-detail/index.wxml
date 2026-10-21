@@ -99,8 +99,7 @@
     <image class="mci-avatar" lazy-load="true" src="/subpackageMember/images/d_cyinfo4.png" mode="widthFix" />
   </view>
   <view class="cyinfobottom_sum_txt">
-    退出与暂停规则说明： 商家仅可在路线场次开始前3天申请退出。一旦场次启动，鉴于官方统一调度及多方协作的特性，商家不可中途退出或自行暂停。如遇不可抗力等紧急情况，请务必联系客服介入处理。
-  </view>
+    退出与暂停规则：场次开始前 3 天可申请退出，开始后不能退出或暂停，紧急情况请联系客服。</view>
 </view>
 
 <!-- 固定底栏避让走 token,不再内联字面高度(全局规范 §3.11-2) -->

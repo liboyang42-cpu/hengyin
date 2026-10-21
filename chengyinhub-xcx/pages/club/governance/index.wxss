@@ -29,7 +29,7 @@ page { background: var(--cy-bg-page); }
 .row-act--danger { color: var(--cy-color-status-danger); }
 .row-act--warning { color: var(--cy-color-status-warning); }
 .row--disabled { opacity: .45; }
-.picker { padding: 0 var(--cy-page-x) calc(24rpx + env(safe-area-inset-bottom)); }
+.picker { padding: 0 0 24rpx; /* cy-sheet 面板已带页边距,内容不再重复内缩 */ }
 .picker-row { display: flex; align-items: center; gap: var(--cy-space-3); padding: var(--cy-space-3) 0;
   border-top: 1rpx solid var(--cy-color-border-subtle); }
 .picker-row--on .picker-mark { color: var(--cy-color-status-success); }

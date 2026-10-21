@@ -65,7 +65,7 @@ page { background: var(--cy-bg-page); }
 .ac-help { padding: 0; overflow: hidden; }
 
 /* —— 回应面板(Revolut 314/315) —— */
-.ac-sheet { padding: var(--cy-space-3) var(--cy-page-x) var(--cy-space-6); }
+.ac-sheet { padding: var(--cy-space-3) 0 var(--cy-space-6); /* cy-sheet 面板已带页边距,内容不再重复内缩 */ }
 .ac-sheet-amount { display: flex; align-items: center; gap: var(--cy-space-3); padding: var(--cy-space-3); border-radius: var(--cy-radius-lg); background: var(--cy-bg-card); }
 .ac-sheet-amount-main { min-width: 0; flex: 1; display: flex; flex-direction: column; }
 .ac-sheet-amount-title { font-size: var(--cy-font-body); font-weight: 600; color: var(--cy-text-title); }

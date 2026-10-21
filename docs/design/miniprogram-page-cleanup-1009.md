@@ -193,8 +193,6 @@ node --test tests/unit/page-cleanup-audit.test.js
 | `subpackageMember/points-history/index` | 否 | `chengyinhub-xcx/subpackageMember/components/cy/profile/index.js:1386` | KEEP |
 | `subpackageMember/report-mine/index` | 否 | `` | KEEP |
 | `subpackageMember/report-detail/index` | 否 | `` | KEEP |
-| `subpackageMember/correction-mine/index` | 否 | `` | KEEP |
-| `subpackageMember/correction-detail/index` | 否 | `` | KEEP |
 | `subpackageMember/signup/index` | 否 | `chengyinhub-xcx/pages/play/index.js:2876` | KEEP |
 | `subpackageMember/tixian/tixian` | 否 | `chengyinhub-xcx/utils/scene-registry.js:63` | KEEP |
 | `subpackageMember/tixianjilu/tixianjilu` | 否 | `chengyinhub-xcx/pages/coop/withdraw/records/index.js:7` | KEEP |

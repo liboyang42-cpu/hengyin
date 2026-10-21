@@ -155,7 +155,8 @@ test('正常隐私设置明确提供城市定位入口，并沿原按钮到达�
   const wxml=read('pages/shezhi/components/privacy-sheet/index.wxml')
   const entry=wxml.match(/<cy-btn[^>]*bindtap="([^"]+)"[^>]*>城市定位与更多隐私设置<\/cy-btn>/)
   assert.ok(entry,'城市定位设置不能藏在仅标注媒体管理的入口下')
-  assert.match(wxml,/首页在你单独同意后使用精确位置并发送给城瘾以确定首页城市/)
+  // 文案以 master #293 精简版为准，只要求明确告知首页城市定位这一用途。
+  assert.match(wxml,/首页城市定位/)
   assert.doesNotMatch(wxml,/仅用于推荐附近活动/)
   let definition;global.Component=value=>{definition=value}
   const sourcePath=path.join(ROOT,'pages/shezhi/components/privacy-sheet/index.js')

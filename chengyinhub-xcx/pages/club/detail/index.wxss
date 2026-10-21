@@ -801,7 +801,7 @@ page { background: var(--cy-bg-page); }
 /* P1 带领场标识 */
 
 /* 团核销码 · 选场次(sheet 内容,弹窗化 2026-07-31) */
-.gc-hint { padding: 0 var(--cy-page-x) var(--cy-space-3); color: var(--cy-text-secondary); font-size: var(--cy-font-caption); }
+.gc-hint { padding: 0 0 var(--cy-space-3); color: var(--cy-text-secondary); font-size: var(--cy-font-caption); /* cy-sheet 面板已带页边距,内容不再重复内缩 */ }
 .gc-item { margin: 0 var(--cy-page-x) var(--cy-space-3); padding: var(--cy-space-4) var(--cy-space-3-5); display: flex; justify-content: space-between; align-items: center; border-radius: var(--cy-radius-sm); background: var(--cy-bg-card-2); font-size: var(--cy-font-body); color: var(--cy-text-title); }
 
 /* —— 管理 tab 收敛(2026-08-26) —— */
@@ -932,7 +932,7 @@ page { background: var(--cy-bg-page); }
 .post-ref-name { flex: 1; min-width: 0; color: var(--club-text); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .post-ref-del { flex: none; display: flex; align-items: center; justify-content: center; min-width: var(--cy-btn-h); min-height: var(--cy-btn-h); }
 .post-ref-ico { flex: none; }
-.post-ref-pick { padding: 0 var(--cy-page-x) var(--cy-space-4); max-height: 60vh; overflow-y: auto; }
+.post-ref-pick { padding: 0 0 var(--cy-space-4); max-height: 60vh; overflow-y: auto; /* cy-sheet 面板已带页边距,内容不再重复内缩 */ }
 .post-ref-opt {
   min-height: 104rpx; display: flex; align-items: center; gap: var(--cy-space-2);
   border-bottom: 1rpx solid var(--club-glass-border);
