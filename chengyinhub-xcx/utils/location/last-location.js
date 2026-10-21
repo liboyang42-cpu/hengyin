@@ -7,10 +7,21 @@
 const KEY = 'cy_last_location'
 const FIXED = { latitude: 31.230416, longitude: 121.473701 }
 
+function coordinate(value) {
+  // Preserve numeric-string compatibility without coercing missing values,
+  // booleans, arrays or objects into plausible coordinates such as zero.
+  if (typeof value !== 'number' && typeof value !== 'string') return NaN
+  if (typeof value === 'string' && value.trim() === '') return NaN
+  return Number(value)
+}
+
 function valid(p) {
-  return !!p && Number.isFinite(Number(p.latitude)) && Number.isFinite(Number(p.longitude))
-    && Math.abs(Number(p.latitude)) <= 90 && Math.abs(Number(p.longitude)) <= 180
-    && !(Number(p.latitude) === 0 && Number(p.longitude) === 0)
+  if (!p || typeof p !== 'object' || Array.isArray(p)) return false
+  const latitude = coordinate(p.latitude)
+  const longitude = coordinate(p.longitude)
+  return Number.isFinite(latitude) && Number.isFinite(longitude)
+    && Math.abs(latitude) <= 90 && Math.abs(longitude) <= 180
+    && !(latitude === 0 && longitude === 0)
 }
 
 function load(env) {
