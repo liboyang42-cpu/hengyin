@@ -20,11 +20,16 @@ beforeEach(() => {
   pageConfig = null;
   app = {
     globalData: { statusBarHeight: 20, navBarHeight: 44 },
+    getUserID: () => 11,
     sendRequest: (request) => requests.push(request),
   };
   global.getApp = () => app;
   global.getCurrentPages = () => [];
+  const persisted = {};
   global.wx = {
+    getStorageSync: key => persisted[key],
+    setStorageSync(key, value) { persisted[key] = JSON.parse(JSON.stringify(value)); },
+    removeStorageSync(key) { delete persisted[key]; },
     scanCode: ({ success }) => success({ result: JSON.stringify({ type: 'topic', code: 'TICKET-1' }) }),
     showLoading() {},
     hideLoading() {},
@@ -151,7 +156,7 @@ test('商家扫码历史章与待核销章并存必须点选，重试返回原�
   assert.equal(page.data.verificationResult.show,false);
   page.onChapterPick({currentTarget:{dataset:{id:31}}});
   assert.deepEqual(requests[1].data,{code:'TICKET-1',chapterId:31});
-  requests[1].success({code:200,data:{replayed:true,redemptionId:66,completionEarnedXp:36}});
+  requests[1].success({code:200,data:{replayed:true,redemptionId:66,chapterId:31,completionEarnedXp:36}});
   assert.equal(page.data.verificationResult.state,'duplicate');
   assert.equal(page.data.verificationResult.message,'该章节已核销，请勿重复提供权益');
 });
@@ -165,7 +170,7 @@ test('参与详情实际快捷扫码显示重复回执而非核销成功', () =>
   const component=Object.assign({},definition.methods);
   component.data=JSON.parse(JSON.stringify(definition.data));
   component.setData=patch=>Object.assign(component.data,patch);
-  component._submitVerification=(key,title,request,callback)=>callback({code:200,data:{replayed:true,redemptionId:66,completionEarnedXp:36}});
+  component._submitVerification=(key,title,request,callback)=>callback({code:200,data:{replayed:true,redemptionId:66,chapterId:31,completionEarnedXp:36}});
   component.goScanQR();
   assert.equal(toasts.at(-1).title,'已核销：该章节已核销，请勿重复提供权益');
   assert.equal(toasts.at(-1).icon,'none');
