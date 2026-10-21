@@ -3,6 +3,7 @@
 //   展示层存 /api/merchant/decor/save;品牌基础存 /api/merchant/update;
 //   承接能力存 /api/merchant/coop-profile/save;营业状态存 /api/merchant/business-status/update
 const modal = require('../../../utils/modal.js');
+const mediaPreview = require('../../../utils/media-preview.js');
 const toast = require('../../../utils/toast.js');
 const app = getApp();
 const merchantTheme = require('../../../utils/merchant-theme.js');
@@ -767,11 +768,11 @@ Page({
   // CU-M-71:执照/品牌图是入驻时提交的只读资料(补交入口在入驻流程)。无图时行上已无箭头,
   // 点击还得给一句稳定解释,别把「没图」当无事发生。说明落在行上的 description,toast 只做反馈。
   previewLicense() {
-    if (this.data.m.businessLicense) wx.previewImage({urls: [this.data.m.businessLicense]});
+    if (this.data.m.businessLicense) mediaPreview.open([this.data.m.businessLicense], this.data.m.businessLicense);
     else toast('入驻时提交，如需更新请联系平台');
   },
   previewBrandImages() {
-    if (this.data.brandImages.length) wx.previewImage({urls: this.data.brandImages});
+    if (this.data.brandImages.length) mediaPreview.open(this.data.brandImages, this.data.brandImages[0]);
     else toast('入驻时提交，如需更新请联系平台');
   },
   onHoursSave(e) { this.saveBrand({businessTime: e.detail.value}, () => this.selectComponent('#business-hours').close()); },
