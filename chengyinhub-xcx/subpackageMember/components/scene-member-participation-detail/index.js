@@ -3,10 +3,9 @@ const cyLoading = require('../../../utils/loading.js');
 const cyToast = require('../../../utils/toast.js');
 const { toTimestamp, chinaDayStart } = require('../../../utils/datetime');
 const { resolveVerificationScan } = require('../../../utils/verification-scan');
-const { resolveVerificationResult, classifyVerificationOutcome } = require('../../../utils/merchant-verification.js');
+const { resolveVerificationResult, classifyVerificationOutcome, createVerificationWorkflow } = require('../../../utils/merchant-verification.js');
 const app = getApp();
 const merchantTheme = require('../../../utils/merchant-theme.js');
-const { createWriteActionWorkflow } = require('../../../utils/write-action-workflow.js');
 const { offerVerificationReadback } = require('../../../utils/verification-readback.js');
 const { summarizeOrderState, canRequestOrderRefund } = require('../../../utils/order-status.js');
 const { isFreeOrder } = require('../../../utils/order-actual-pay.js');
@@ -105,7 +104,7 @@ Component({
       const generation = this._detailGeneration || 0;
       if (this._detailDisposed) return false;
       key = owner + ':' + key;
-      if (!this._verificationWorkflow) this._verificationWorkflow = createWriteActionWorkflow({ deadlineMs: 15000 });
+      if (!this._verificationWorkflow) this._verificationWorkflow = createVerificationWorkflow({ deadlineMs: 15000, storage: wx, getOwner: () => app.getUserID && app.getUserID() });
       if (this._verificationWorkflow.isBusy(key)) {
         cyToast('核销处理中，请勿重复提交');
         return false;

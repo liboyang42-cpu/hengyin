@@ -39,13 +39,12 @@ function clearInvalidSession() {
   if (session && typeof session.clearSession === 'function') session.clearSession();
 }
 
-const { resolveVerificationResult, classifyVerificationOutcome } = require('../../../utils/merchant-verification.js');
+const { resolveVerificationResult, classifyVerificationOutcome, createVerificationWorkflow } = require('../../../utils/merchant-verification.js');
 const { resolveVerificationScan } = require('../../../utils/verification-scan.js');
 const { getScene } = require('../../../utils/scene-registry.js');
 const { pushScene, popScene, currentScene, exitDecision } = require('../../../utils/scene-stack.js');
 const { hasTodoSummaryPayload, buildProjectCards, isEndedProject, localToday, attachVisitTexts } = require('../../../utils/merchant-workbench.js');
 const { resolveApplicationResponse, decorateApplication } = require('../../../utils/merchant-identity-policy.js');
-const { createWriteActionWorkflow } = require('../../../utils/write-action-workflow.js');
 const { offerVerificationReadback } = require('../../../utils/verification-readback.js');
 const { createGameSessionClient } = require('../../../utils/game-session-client.js');
 const { attachMerchantGameEntries } = require('../utils/game-session-merchant.js');
@@ -1094,7 +1093,7 @@ Page({
     key = owner + ':' + key;
     const verificationEpoch = this._verificationEpoch || 0;
     const scopeKey = this._merchantScopeKey || '';
-    if (!this._verificationWorkflow) this._verificationWorkflow = createWriteActionWorkflow({ deadlineMs: 15000 });
+    if (!this._verificationWorkflow) this._verificationWorkflow = createVerificationWorkflow({ deadlineMs: 15000, storage: wx, getOwner: () => app.getUserID && app.getUserID() });
     if (this._verificationWorkflow.isBusy(key)) {
       cyToast('核销处理中，请勿重复提交');
       return false;

@@ -18,10 +18,9 @@ const roleGuard = require('../../../../utils/roleGuard.js');
 const policy = require('../../../../utils/identity/identity-policy.js');
 const { applyTheme } = require('../../../../utils/theme.js');
 const { resolveVerificationScan } = require('../../../../utils/verification-scan.js');
-const { completionReceiptMessage, resolveVerificationResult, classifyVerificationOutcome } = require('../../../../utils/merchant-verification.js');
+const { completionReceiptMessage, resolveVerificationResult, classifyVerificationOutcome, createVerificationWorkflow } = require('../../../../utils/merchant-verification.js');
 const { getScene } = require('../../../../utils/scene-registry.js');
 const { pushScene, popScene, currentScene, exitDecision } = require('../../../../utils/scene-stack.js');
-const { createWriteActionWorkflow } = require('../../../../utils/write-action-workflow.js');
 const { offerVerificationReadback } = require('../../../../utils/verification-readback.js');
 const { isRecord, isRecordList } = require('../../../../utils/response-shape.js');
 const { inactiveAccess, normalizeMerchantAccess } = require('../../../../utils/merchant-access-policy.js');
@@ -654,7 +653,7 @@ Component({
       const generation = this._verificationGeneration || 0;
       if (this._profileAttached === false) return false;
       key = owner + ':' + key;
-      if (!this._verificationWorkflow) this._verificationWorkflow = createWriteActionWorkflow({ deadlineMs: 15000 });
+      if (!this._verificationWorkflow) this._verificationWorkflow = createVerificationWorkflow({ deadlineMs: 15000, storage: wx, getOwner: () => app.getUserID && app.getUserID() });
       if (this._verificationWorkflow.isBusy(key)) {
         cyToast('核销处理中，请勿重复提交');
         return false;

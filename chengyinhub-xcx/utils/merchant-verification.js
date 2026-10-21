@@ -1,3 +1,4 @@
+const { createVerificationWorkflow } = require('./verification-readback.js');
 // 只使用现有端点的回执合同；通用业务500可能发生在核销事务提交之后。
 const UNKNOWN_MESSAGE = '核销结果待确认，请勿重复核销；请先查看核销记录';
 const record = value => value && typeof value === 'object' && !Array.isArray(value);
@@ -110,4 +111,4 @@ function resolveVerificationResult(response, action) {
   };
 }
 
-module.exports = { resolveVerificationResult, completionReceiptMessage, classifyVerificationOutcome };
+module.exports = { resolveVerificationResult, completionReceiptMessage, classifyVerificationOutcome, createVerificationWorkflow };

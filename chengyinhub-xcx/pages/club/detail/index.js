@@ -34,10 +34,9 @@ const { decodeDisplayText, decodeDisplayFields } = require('../../../utils/displ
 // CU-C-60:扫码核销复用全站唯一的路由表(utils/verification-scan)与写闸(防重提/结果未知),
 // 不在本页另写一套解析。
 const { resolveVerificationScan } = require('../../../utils/verification-scan.js');
-const { createWriteActionWorkflow } = require('../../../utils/write-action-workflow.js');
 const loading = require('../../../utils/loading.js');
 const { postExcerpt } = require('../../../utils/danger-actions.js');
-const { classifyVerificationOutcome } = require('../../../utils/merchant-verification.js');
+const { classifyVerificationOutcome, createVerificationWorkflow } = require('../../../utils/merchant-verification.js');
 // AI 策划:频控超限文案(后端运行时拼 dailyLimit,数字随配置变)→ 只做包含匹配
 const AI_QUOTA_MARK = '今日AI次数已用完';
 const AI_IDEA_CHIPS = ['静安 情侣 夜间 Citywalk 90分钟', '外滩 亲子 半天 城市打卡', '苏州河 摄影 徒步 2小时'];
@@ -937,7 +936,7 @@ Page({
     const owner = String(app.getUserID && app.getUserID() || '');
     const generation = this._scanGeneration || 0;
     const ownerPage = this;
-    if (!this._scanWorkflow) this._scanWorkflow = createWriteActionWorkflow({ deadlineMs: 15000 });
+    if (!this._scanWorkflow) this._scanWorkflow = createVerificationWorkflow({ deadlineMs: 15000, storage: wx, getOwner: () => app.getUserID && app.getUserID() });
     const key = owner + ':' + url + ':' + (scan.code || '');
     if (this._scanWorkflow.isBusy(key)) { cyToast('核销处理中，请勿重复提交'); return; }
     loading.show(scan.loadingTitle);

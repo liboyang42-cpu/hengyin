@@ -20,11 +20,16 @@ beforeEach(() => {
   pageConfig = null;
   app = {
     globalData: { statusBarHeight: 20, navBarHeight: 44 },
+    getUserID: () => 11,
     sendRequest: (request) => requests.push(request),
   };
   global.getApp = () => app;
   global.getCurrentPages = () => [];
+  const persisted = {};
   global.wx = {
+    getStorageSync: key => persisted[key],
+    setStorageSync(key, value) { persisted[key] = JSON.parse(JSON.stringify(value)); },
+    removeStorageSync(key) { delete persisted[key]; },
     scanCode: ({ success }) => success({ result: JSON.stringify({ type: 'topic', code: 'TICKET-1' }) }),
     showLoading() {},
     hideLoading() {},

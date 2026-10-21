@@ -2,7 +2,6 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const { createWriteActionWorkflow } = require('../../utils/write-action-workflow.js');
 const verification = require('../../utils/merchant-verification.js');
 const entries = [
   ['pages/club/detail/index.js', 'submitClubScan'],
@@ -11,7 +10,7 @@ const entries = [
   ['subpackageMember/components/scene-member-participation-detail/index.js', '_submitVerification'],
 ];
 // 执行生产 adapter 方法本体及真实 workflow，隔离无关页面加载/相机 UI。
-function harness(file, method, transport, request) {
+function harness(file, method, transport, request, sharedStorage) {
   request = request || { url: '/api/registration/scan_qr_code', method: 'POST', data: { type: 'activity', code: 'ticket' } };
   const source = fs.readFileSync(path.resolve(__dirname, '../..', file), 'utf8');
   const match = source.match(new RegExp('^( +)' + method + '(?:\\(|: function)', 'm'));
@@ -20,7 +19,7 @@ function harness(file, method, transport, request) {
   const end = source.indexOf('\n' + match[1] + '},', start);
   assert.ok(end > start);
   let body = source.slice(start, end + match[1].length + 3);
-  const hook = method === 'submitClubScan' ? 'onUnload' : file.startsWith('pages/') ? '' : 'detached';
+  const hook = method === 'submitClubScan' ? 'onUnload' : file.startsWith('pages/') ? 'onUnload' : 'detached';
   if (hook) {
     const hm = source.match(new RegExp('^( +)' + hook + '(?:\\(|: function)', 'm'));
     const hs = hm.index + hm[1].length;
@@ -29,10 +28,23 @@ function harness(file, method, transport, request) {
     const row = source.slice(hs, he + hm[1].length + 2).replace(/,$/, '');
     body += row + ',';
   }
+  for (const [name, alias] of (file.startsWith('pages/') ? [['onShow', 'pageShow'], ['onHide', 'pageHide']] : [['show', 'pageShow'], ['hide', 'pageHide']])) {
+    const scope = file.startsWith('pages/') ? source : source.slice(source.indexOf('  pageLifetimes:'));
+    const hm = scope.match(new RegExp('^( +)' + name + '(?:\\(|: function)', 'm'));
+    if (!hm) continue;
+    const hs = hm.index + hm[1].length;
+    const he = scope.indexOf('\n' + hm[1] + '}', hs);
+    assert.ok(he > hs);
+    body += scope.slice(hs, he + hm[1].length + 2).replace(new RegExp('^' + name), alias) + ',';
+  }
+  const values = {};
+  const storage = sharedStorage || { getStorageSync: key => values[key],
+    setStorageSync(key, value) { values[key] = JSON.parse(JSON.stringify(value)); },
+    removeStorageSync(key) { delete values[key]; } };
   const requests = [], messages = [];
   let memberId = 11;
   let deadline;
-  const app = { getUserID: () => memberId, sendRequest(options) { requests.push(options); return { abort() {} }; } };
+  const app = { getUserID: () => memberId, getAvatar: () => '', getNickname: () => '', sendRequest(options) { requests.push(options); return { abort() {} }; } };
   if (transport) {
     const { createRequestClient } = require('../../utils/transport/request-client.js');
     const client = createRequestClient({ getBaseUrl: () => 'https://example.invalid', getUserID: () => memberId,
@@ -40,18 +52,21 @@ function harness(file, method, transport, request) {
     app.sendRequest = options => client.send(options);
   }
   const loading = { show() {}, hide() {} };
-  const workflow = options => createWriteActionWorkflow({ ...options,
+  const workflow = options => verification.createVerificationWorkflow({ ...options,
     setTimer(fn) { deadline = fn; return 1; }, clearTimer() {} });
   const methodObject = new Function('app', 'loading', 'cyLoading', 'cyToast', 'modal',
-    'jsonHeader', 'createWriteActionWorkflow', 'classifyVerificationOutcome', 'offerVerificationReadback',
+    'jsonHeader', 'readReducedMotion', 'applyTheme', 'merchantTheme', 'createVerificationWorkflow', 'wx', 'classifyVerificationOutcome', 'offerVerificationReadback',
     'return ({' + body + '});')(app, loading, loading, m => messages.push(m),
-      { show: o => messages.push(o.content) }, () => ({}), workflow,
+      { show: o => messages.push(o.content) }, () => ({}), () => false, () => {}, { merchantPageRestore() {}, merchantPageShow() {} }, workflow, storage,
       verification.classifyVerificationOutcome, () => {});
-  const owner = { ...methodObject, clearGroupCodeTimer() {}, _invalidateParticipationCancellation() {} };
+  const owner = { ...methodObject, clearGroupCodeTimer() {}, resetGameStationSummaries() {}, _invalidateParticipationCancellation() {},
+    data: { reducedMotion: false, myAvatar: '', myNickname: '', pointsSheet: {}, id: '' },
+    _profileAttached: true, _syncProfileReadIdentity: () => true, initializeProfile() {}, _syncCommunityProfile() {},
+    refreshCoopPublisherAccess() {}, enterConsole() {}, _syncCancellationAccount() {} };
   const invoke = () => method === 'submitClubScan'
     ? owner[method](request.url, { code: request.data.code, data: request.data })
-    : owner[method]('verify:ticket', '核销中', request, r => messages.push(r.msg));
-  return { owner, requests, messages, invoke, dispose: () => hook && owner[hook](), switchOwner: id => { memberId = id; }, deadline: () => deadline() };
+    : owner[method](request.url + ':' + (request.data.code || ''), '核销中', request, r => messages.push(r.msg));
+  return { owner, storage, requests, messages, invoke, dispose: () => { if (hook) owner[hook](); else if (owner._verificationWorkflow) { owner._verificationWorkflow.destroy(); owner._verificationWorkflow = null; } }, switchOwner: id => { memberId = id; }, deadline: () => deadline() };
 }
 for (const [file, method] of entries) {
   for (const [label, callback, response, status] of [
@@ -140,7 +155,7 @@ for (const [file, method] of entries) {
     ['/api/verify/groupcode/redeem', { code: 'v1.2.group_v2_3_4.9.1.sig' }, { code: 200, data: { topicId: 9, activityId: 3, leaderMemberId: 4, coopOrderId: 5, alreadyVerified: false } }],
     ['/api/coupon/verification', { code: 'coupon' }, { code: 200 }],
     ['/api/registration/scan_qr_code', { code: 'ticket' }, { code: 500, msg: '数据库操作异常，请稍后重试' }],
-  ]) test(file + ' 畸形/异目标/事务后失败不能解锁 ' + url + JSON.stringify(response), () => {
+  ]) test(file + ' 畸形/异目标/事务后失败不能解锁 ' + url + (response.msg || '畸形回执'), () => {
     const h = harness(file, method, false, { url, data, method: 'POST' }); h.invoke();
     h.requests[0].success(response); h.invoke();
     assert.equal(h.requests.length, 1);
@@ -178,3 +193,110 @@ for (const [file, method] of entries.filter(row => row[0] !== 'pages/merchant/in
     assert.deepEqual(h.messages, []);
   });
 }
+
+function durableStorage() {
+  const values = {};
+  return { values, getStorageSync: key => values[key],
+    setStorageSync(key, value) { values[key] = JSON.parse(JSON.stringify(value)); },
+    removeStorageSync(key) { delete values[key]; } };
+}
+for (const [file, method] of entries) {
+  for (const outcome of ['inflight', 'deadline', '202', 'postWrite500', 'empty200']) {
+    test(file + ' 持久待办销毁重建 ' + outcome, () => {
+      const storage = durableStorage();
+      const first = harness(file, method, false, undefined, storage); first.invoke();
+      assert.equal(first.requests.length, 1);
+      if (outcome === 'deadline') first.deadline();
+      if (outcome === '202') first.requests[0].success({ code: 202 });
+      if (outcome === 'postWrite500') first.requests[0].success({ code: 500, msg: '数据库操作异常，请稍后重试' });
+      if (outcome === 'empty200') first.requests[0].success({ code: 200 });
+      first.dispose();
+      const next = harness(file, method, false, undefined, storage); next.invoke();
+      assert.equal(next.requests.length, 0);
+      assert.ok(next.messages.some(message => /待确认|勿重复/.test(message)));
+      first.requests[0].success({ code: 200, msg: '核销成功' });
+      const again = harness(file, method, false, undefined, storage); again.invoke();
+      assert.equal(again.requests.length, 0);
+    });
+  }
+  test(file + ' 重建跨账号隔离，B明确成功只清B待办', () => {
+    const storage = durableStorage();
+    const first = harness(file, method, true, undefined, storage); first.invoke(); first.switchOwner(22);
+    first.requests[0].success({ statusCode: 200, data: { code: 200, msg: '核销成功' } }); first.dispose();
+    const next = harness(file, method, false, undefined, storage); next.switchOwner(22); next.invoke();
+    assert.equal(next.requests.length, 1); next.requests[0].success({ code: 200, msg: '核销成功' }); next.dispose();
+    const original = harness(file, method, false, undefined, storage); original.invoke();
+    assert.equal(original.requests.length, 0);
+  });
+  for (const failure of ['read', 'write', 'silentWrite', 'corrupt']) test(file + ' 存储失败不发POST ' + failure, () => {
+    const storage = durableStorage();
+    if (failure === 'read') storage.getStorageSync = () => { throw Error('unavailable'); };
+    if (failure === 'write') storage.setStorageSync = () => { throw Error('quota'); };
+    if (failure === 'silentWrite') storage.setStorageSync = () => {};
+    if (failure === 'corrupt') storage.getStorageSync = () => ({ version: 1 });
+    const h = harness(file, method, false, undefined, storage); h.invoke(); h.invoke();
+    assert.equal(h.requests.length, 0);
+    assert.ok(h.messages.some(message => /未提交/.test(message)));
+  });
+  test(file + ' 成功回执清理存储失败仍保留UNKNOWN，重建不重发', () => {
+    const storage = durableStorage(); storage.removeStorageSync = () => { throw Error('unavailable'); };
+    const h = harness(file, method, false, undefined, storage); h.invoke();
+    h.requests[0].success({ code: 200, msg: '核销成功' }); h.dispose();
+    const next = harness(file, method, false, undefined, storage); next.invoke();
+    assert.equal(next.requests.length, 0);
+  });
+}
+test('待办仅保存原owner与业务键摘要，使用既有SHA256合同', () => {
+  const crypto = require('node:crypto');
+  const storage = durableStorage();
+  const owner = 'synthetic-owner-' + Date.now(); const target = '/synthetic/verification:' + Math.random();
+  const flow = verification.createVerificationWorkflow({ storage, getOwner: () => owner, setTimer: () => 1, clearTimer() {} });
+  flow.run(owner + ':' + target, () => null, () => {});
+  const row = Object.values(storage.values)[0];
+  const hash = text => crypto.createHash('sha256').update(text).digest('hex');
+  const existingHash = require('../../pages/publish/utils/publish/template-binding.js').sha256;
+  assert.equal(row.ownerDigest, existingHash('verification-owner:' + owner));
+  assert.equal(row.ownerDigest, hash('verification-owner:' + owner));
+  assert.equal(row.targetDigest, hash('verification-target:' + target));
+  assert.equal(Object.keys(storage.values)[0], 'verification_unknown_v1:' + hash(row.ownerDigest + ':' + row.targetDigest));
+  assert.ok(!JSON.stringify(storage.values).includes(owner)); assert.ok(!JSON.stringify(storage.values).includes(target));
+});
+
+for (const [file, method] of entries) test(file + ' 真实hide/show不释放UNKNOWN，重建仍保留', () => {
+  const storage = durableStorage(); const h = harness(file, method, false, undefined, storage);
+  h.invoke(); h.requests[0].success({ code: 202 });
+  if (h.owner.pageHide) h.owner.pageHide();
+  assert.equal(typeof h.owner.pageShow, 'function'); h.owner.pageShow(); h.invoke();
+  assert.equal(h.requests.length, 1); h.dispose();
+  const next = harness(file, method, false, undefined, storage); next.invoke(); assert.equal(next.requests.length, 0);
+});
+test('重复旧callback不能结算下一次尝试；deadline后合法迟回执不能清持久待办', () => {
+  const storage = durableStorage(); let deadline, first, second;
+  const make = () => verification.createVerificationWorkflow({ storage, getOwner: () => 'synthetic',
+    setTimer(fn) { deadline = fn; return 1; }, clearTimer() {} });
+  const flow = make(); const key = 'synthetic:/synthetic-target';
+  flow.run(key, done => { first = done; }, () => {}); first({ status: 'failed' });
+  flow.run(key, done => { second = done; }, () => {}); const snapshot = JSON.stringify(storage.values);
+  first({ status: 'success' }); assert.equal(JSON.stringify(storage.values), snapshot);
+  deadline(); second({ status: 'success' }); assert.equal(JSON.stringify(storage.values), snapshot);
+  flow.destroy(); let posts = 0; make().run(key, () => { posts++; }, () => {}); assert.equal(posts, 0);
+});
+
+test('正常退出清账号态仍保留原UNKNOWN，重新登录原owner不能重发', () => {
+  const storage = durableStorage(); storage.getStorageInfoSync = () => ({ keys: Object.keys(storage.values) });
+  storage.values.authorization = 'synthetic';
+  const h = harness(entries[0][0], entries[0][1], false, undefined, storage); h.invoke(); h.dispose();
+  const { clearStoragePreservingPlayerRoamMemory } = require('../../utils/roam-player-memory.js');
+  assert.equal(clearStoragePreservingPlayerRoamMemory(storage), true);
+  assert.equal(storage.values.authorization, undefined);
+  const next = harness(entries[0][0], entries[0][1], false, undefined, storage); next.invoke();
+  assert.equal(next.requests.length, 0);
+});
+
+test('同账号同端点原目标在四入口共享持久锁，不能换入口重发', () => {
+  const storage = durableStorage();
+  const first = harness(entries[0][0], entries[0][1], false, undefined, storage); first.invoke(); first.dispose();
+  for (const [file, method] of entries.slice(1)) {
+    const next = harness(file, method, false, undefined, storage); next.invoke(); assert.equal(next.requests.length, 0);
+  }
+});
