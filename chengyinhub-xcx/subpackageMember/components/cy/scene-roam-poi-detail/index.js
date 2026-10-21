@@ -88,7 +88,8 @@ Component({
     _pendingNotice(storageError) {
       this._pendingCompletion = null
       this.setData({ completing: false, checkinPending: true })
-      this._setInteractionRecovery('unknown', storageError ? '打卡记录暂时无法读取或保存' : '打卡结果待核对', storageError ? '本地存储异常，暂不提交打卡。请恢复存储后查询当前状态。' : '上次请求结果尚未确认，请查询当前状态；暂不重复提交。', 'query', '查询当前状态')
+      this._setInteractionRecovery('unknown', '打卡结果待核对', '上次请求结果尚未确认，请查询当前状态；暂不重复提交。', 'query', '查询当前状态')
+      if (storageError) this.setData({ interactionTitle: '打卡记录暂时无法读取或保存', interactionText: '本地存储异常，暂不提交打卡。请恢复存储后查询当前状态。' })
     },
     onChoiceSheetSelect(e) {
       if (!this.data.choiceSheetShow || this._choiceSheetToken !== this._interactionToken || this._closed) return
@@ -120,6 +121,7 @@ Component({
       try { if (context) pending = readPending(context) } catch (_) { storageError = true }
       const merchantId = this.data.merchantId
       const resetState = (state) => this.setData({
+        checkinPending: false,
         errorText: '',
         merchant: null,
         merchantError: '',
@@ -467,7 +469,7 @@ Component({
               if (result.needRedeem) this.triggerEvent('open', { id: 'qr-citynode', params: { poiId, name: this.data.node.name || '据点' } })
               else toast(result.alreadyClaimed ? '你已完成过' : '打卡成功', { icon: result.alreadyClaimed ? 'none' : 'success' })
             },
-            fail: unknown,
+            fail: () => { if (isCurrent()) this._pendingNotice(false) },
             successStatusAbnormal: unknown,
           })
         },
