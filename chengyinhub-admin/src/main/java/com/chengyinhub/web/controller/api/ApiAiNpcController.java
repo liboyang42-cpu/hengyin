@@ -78,6 +78,9 @@ public class ApiAiNpcController extends BaseController
     @Autowired
     private SpeechToTextService speechToTextService;
 
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.merchantauthoring.PublicReleaseFacts publicReleaseFacts;
+
     /**
      * 取出场 NPC。
      * scope=global -> 全局 NPC; scope=activity -> 局内 NPC(活动角色+门店分身);
@@ -365,6 +368,11 @@ public class ApiAiNpcController extends BaseController
                 // 取不到玩法只让回答少一条事实,不能让整条对话挂掉
                 log.debug("[npc/shop-chat] 玩法模板读取失败 nodeId={}", node.getId(), e);
             }
+        }
+        if (publicReleaseFacts != null && node.getMerchantMemberId() != null && node.getTopicId() != null)
+        {
+            String approved = publicReleaseFacts.publicPromptForShopMember(node.getMerchantMemberId(), node.getTopicId());
+            if (approved != null && !approved.isBlank()) sb.append("；已批准公开事实:").append(approved);
         }
         return sb.append("。只依据以上事实回答，不知道就说不知道，不要编造。").toString();
     }

@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.merchantauthoring.MerchantAuthoringMapper">
+  <resultMap id="job" type="com.chengyinhub.business.domain.merchantauthoring.MerchantAuthoringRows$Job">
+    <id property="id" column="id"/>
+    <result property="ownerId" column="owner_id"/>
+    <result property="requestId" column="request_id"/>
+    <result property="payloadFingerprint" column="payload_fingerprint"/>
+    <result property="merchantId" column="merchant_id"/>
+    <result property="themeId" column="theme_id"/>
+    <result property="draftId" column="draft_id"/>
+    <result property="productId" column="product_id"/>
+    <result property="skuId" column="sku_id"/>
+    <result property="templateId" column="template_id"/>
+    <result property="factVersion" column="fact_version"/>
+    <result property="promptVersion" column="prompt_version"/>
+    <result property="modelVersion" column="model_version"/>
+    <result property="costRef" column="cost_ref"/>
+    <result property="outputHash" column="output_hash"/>
+    <result property="errorCode" column="error_code"/>
+    <result property="status" column="status"/>
+    <result property="scene" column="scene"/>
+    <result property="runId" column="run_id"/>
+    <result property="bindingKey" column="binding_key"/>
+    <result property="expectedVersion" column="expected_version"/>
+    <result property="createdAtMs" column="created_at_ms"/>
+    <result property="updatedAtMs" column="updated_at_ms"/>
+  </resultMap>
+  <resultMap id="draft" type="com.chengyinhub.business.domain.merchantauthoring.MerchantAuthoringRows$Draft">
+    <id property="id" column="id"/>
+    <result property="ownerId" column="owner_id"/>
+    <result property="merchantId" column="merchant_id"/>
+    <result property="themeId" column="theme_id"/>
+    <result property="productId" column="product_id"/>
+    <result property="skuId" column="sku_id"/>
+    <result property="templateId" column="template_id"/>
+    <result property="scene" column="scene"/>
+    <result property="runId" column="run_id"/>
+    <result property="bindingKey" column="binding_key"/>
+    <result property="factVersion" column="fact_version"/>
+    <result property="currentVersion" column="current_version"/>
+    <result property="createdAtMs" column="created_at_ms"/>
+  </resultMap>
+  <resultMap id="revision" type="com.chengyinhub.business.domain.merchantauthoring.MerchantAuthoringRows$Revision">
+    <id property="id" column="id"/>
+    <result property="draftId" column="draft_id"/>
+    <result property="version" column="version"/>
+    <result property="bodyJson" column="body_json"/>
+    <result property="bodyHash" column="body_hash"/>
+    <result property="factHash" column="fact_hash"/>
+    <result property="contentHash" column="content_hash"/>
+    <result property="createdBy" column="created_by"/>
+    <result property="createdAtMs" column="created_at_ms"/>
+  </resultMap>
+  <resultMap id="approval" type="com.chengyinhub.business.domain.merchantauthoring.MerchantAuthoringRows$Approval">
+    <id property="id" column="id"/>
+    <result property="draftId" column="draft_id"/>
+    <result property="revisionId" column="revision_id"/>
+    <result property="revisionVersion" column="revision_version"/>
+    <result property="kind" column="kind"/>
+    <result property="actorId" column="actor_id"/>
+    <result property="subjectHash" column="subject_hash"/>
+    <result property="auditTaskId" column="audit_task_id"/>
+    <result property="status" column="status"/>
+    <result property="createdAtMs" column="created_at_ms"/>
+  </resultMap>
+  <resultMap id="release" type="com.chengyinhub.business.domain.merchantauthoring.MerchantAuthoringRows$Release">
+    <id property="id" column="id"/>
+    <result property="ownerId" column="owner_id"/>
+    <result property="requestId" column="request_id"/>
+    <result property="payloadFingerprint" column="payload_fingerprint"/>
+    <result property="draftId" column="draft_id"/>
+    <result property="revisionId" column="revision_id"/>
+    <result property="revisionVersion" column="revision_version"/>
+    <result property="merchantId" column="merchant_id"/>
+    <result property="themeId" column="theme_id"/>
+    <result property="runId" column="run_id"/>
+    <result property="bindingKey" column="binding_key"/>
+    <result property="snapshotJson" column="snapshot_json"/>
+    <result property="snapshotHash" column="snapshot_hash"/>
+    <result property="factHash" column="fact_hash"/>
+    <result property="contentHash" column="content_hash"/>
+    <result property="status" column="status"/>
+    <result property="visibility" column="visibility"/>
+    <result property="publishedAtMs" column="published_at_ms"/>
+    <result property="withdrawnAtMs" column="withdrawn_at_ms"/>
+    <result property="withdrawRequestId" column="withdraw_request_id"/>
+  </resultMap>
+  <resultMap id="environment" type="com.chengyinhub.business.domain.merchantauthoring.MerchantAuthoringRows$Environment">
+    <id property="id" column="id"/>
+    <result property="releaseId" column="release_id"/>
+    <result property="provider" column="provider"/>
+    <result property="source" column="source"/>
+    <result property="observedAtMs" column="observed_at_ms"/>
+    <result property="expiresAtMs" column="expires_at_ms"/>
+    <result property="timezone" column="timezone"/>
+    <result property="accuracy" column="accuracy"/>
+    <result property="branch" column="branch"/>
+    <result property="weather" column="weather"/>
+    <result property="action" column="action"/>
+    <result property="storeHours" column="store_hours"/>
+    <result property="createdAtMs" column="created_at_ms"/>
+  </resultMap>
+
+  <insert id="insertJob" useGeneratedKeys="true" keyProperty="id">
+    insert into w05_authoring_job(owner_id,request_id,payload_fingerprint,merchant_id,theme_id,draft_id,product_id,sku_id,template_id,fact_version,prompt_version,model_version,cost_ref,output_hash,error_code,status,scene,run_id,binding_key,expected_version,created_at_ms,updated_at_ms)
+    values(#{ownerId},#{requestId},#{payloadFingerprint},#{merchantId},#{themeId},#{draftId},#{productId},#{skuId},#{templateId},#{factVersion},#{promptVersion},#{modelVersion},#{costRef},#{outputHash},#{errorCode},#{status},#{scene},#{runId},#{bindingKey},#{expectedVersion},#{createdAtMs},#{updatedAtMs})
+  </insert>
+  <select id="findJob" resultMap="job">
+    select * from w05_authoring_job where owner_id=#{ownerId} and request_id=#{requestId}
+  </select>
+  <update id="updateClaimedJob">
+    update w05_authoring_job
+    set status=#{status},cost_ref=#{costRef},output_hash=#{outputHash},error_code=#{errorCode},model_version=#{modelVersion},draft_id=#{draftId},prompt_version=#{promptVersion},updated_at_ms=#{updatedAtMs}
+    where id=#{id} and status='CLAIMED'
+  </update>
+  <update id="cancelJob">
+    update w05_authoring_job set status='CANCELLED',updated_at_ms=#{updatedAtMs}
+    where id=#{id} and owner_id=#{ownerId} and status='CLAIMED'
+  </update>
+
+  <insert id="insertDraft">
+    insert into w05_authoring_draft(id,owner_id,merchant_id,theme_id,product_id,sku_id,template_id,scene,run_id,binding_key,fact_version,current_version,created_at_ms)
+    values(#{id},#{ownerId},#{merchantId},#{themeId},#{productId},#{skuId},#{templateId},#{scene},#{runId},#{bindingKey},#{factVersion},#{currentVersion},#{createdAtMs})
+  </insert>
+  <select id="findDraftById" resultMap="draft">
+    select * from w05_authoring_draft where id=#{id}
+  </select>
+  <select id="lockDraft" resultMap="draft">
+    select * from w05_authoring_draft where id=#{id} and merchant_id=#{merchantId} for update
+  </select>
+  <select id="listDrafts" resultMap="draft">
+    select * from w05_authoring_draft where merchant_id=#{merchantId} order by created_at_ms desc, id desc
+  </select>
+  <update id="casDraftVersion">
+    update w05_authoring_draft set current_version=#{next}
+    where id=#{id} and merchant_id=#{ownerMerchantId} and current_version=#{expected}
+  </update>
+
+  <insert id="insertRevision" useGeneratedKeys="true" keyProperty="id">
+    insert into w05_authoring_revision(draft_id,version,body_json,body_hash,fact_hash,content_hash,created_by,created_at_ms)
+    values(#{draftId},#{version},#{bodyJson},#{bodyHash},#{factHash},#{contentHash},#{createdBy},#{createdAtMs})
+  </insert>
+  <select id="findRevision" resultMap="revision">
+    select * from w05_authoring_revision where draft_id=#{draftId} and version=#{version}
+  </select>
+
+  <insert id="insertApproval" useGeneratedKeys="true" keyProperty="id">
+    insert into w05_authoring_approval(draft_id,revision_id,revision_version,kind,actor_id,subject_hash,audit_task_id,status,created_at_ms)
+    values(#{draftId},#{revisionId},#{revisionVersion},#{kind},#{actorId},#{subjectHash},#{auditTaskId},#{status},#{createdAtMs})
+  </insert>
+  <select id="findApproval" resultMap="approval">
+    select * from w05_authoring_approval where draft_id=#{draftId} and revision_version=#{version} and kind=#{kind}
+  </select>
+  <update id="invalidateApprovals">
+    update w05_authoring_approval set status='INVALIDATED' where draft_id=#{draftId} and status='APPROVED'
+  </update>
+
+  <insert id="insertRelease" useGeneratedKeys="true" keyProperty="id">
+    insert into w05_authoring_release(owner_id,request_id,payload_fingerprint,draft_id,revision_id,revision_version,merchant_id,theme_id,run_id,binding_key,snapshot_json,snapshot_hash,fact_hash,content_hash,status,visibility,published_at_ms,withdrawn_at_ms,withdraw_request_id)
+    values(#{ownerId},#{requestId},#{payloadFingerprint},#{draftId},#{revisionId},#{revisionVersion},#{merchantId},#{themeId},#{runId},#{bindingKey},#{snapshotJson},#{snapshotHash},#{factHash},#{contentHash},#{status},#{visibility},#{publishedAtMs},#{withdrawnAtMs},#{withdrawRequestId})
+  </insert>
+  <select id="findRelease" resultMap="release">
+    select * from w05_authoring_release where owner_id=#{ownerId} and request_id=#{requestId}
+  </select>
+  <select id="findReleaseById" resultMap="release">
+    select * from w05_authoring_release where id=#{id}
+  </select>
+  <select id="latestReleaseForDraft" resultMap="release">
+    select * from w05_authoring_release where draft_id=#{draftId} order by id desc limit 1
+  </select>
+  <update id="withdrawRelease">
+    update w05_authoring_release
+    set status='WITHDRAWN', withdrawn_at_ms=#{withdrawnAtMs}, withdraw_request_id=#{withdrawRequestId}
+    where id=#{id} and owner_id=#{ownerId} and status='PUBLISHED'
+  </update>
+  <select id="findPublic" resultMap="release">
+    select * from w05_authoring_release
+    where merchant_id=#{merchantId} and status='PUBLISHED' and binding_key=#{bindingKey}
+    <choose>
+      <when test="themeId == null">and theme_id is null</when>
+      <otherwise>and theme_id=#{themeId}</otherwise>
+    </choose>
+    <choose>
+      <when test="runId == null or runId == ''">and run_id is null</when>
+      <otherwise>and run_id=#{runId}</otherwise>
+    </choose>
+    <if test="releaseId != null">and id=#{releaseId}</if>
+    order by id desc limit 1
+  </select>
+  <select id="latestPublished" resultMap="release">
+    select * from w05_authoring_release
+    where merchant_id=#{merchantId} and status='PUBLISHED' and binding_key='THEME' and run_id is null
+    <choose>
+      <when test="themeId == null">and theme_id is null</when>
+      <otherwise>and theme_id=#{themeId}</otherwise>
+    </choose>
+    order by id desc limit 1
+  </select>
+
+  <insert id="insertEnvironment" useGeneratedKeys="true" keyProperty="id">
+    insert into w05_environment_snapshot(release_id,provider,source,observed_at_ms,expires_at_ms,timezone,accuracy,branch,weather,action,store_hours,created_at_ms)
+    values(#{releaseId},#{provider},#{source},#{observedAtMs},#{expiresAtMs},#{timezone},#{accuracy},#{branch},#{weather},#{action},#{storeHours},#{createdAtMs})
+  </insert>
+  <select id="findEnvironment" resultMap="environment">
+    select * from w05_environment_snapshot where release_id=#{releaseId} order by id desc limit 1
+  </select>
+</mapper>

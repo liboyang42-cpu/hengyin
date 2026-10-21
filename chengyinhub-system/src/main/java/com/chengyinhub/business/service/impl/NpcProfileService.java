@@ -24,6 +24,19 @@ public class NpcProfileService
     @Autowired
     private NpcProfileMapper npcProfileMapper;
 
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.merchantauthoring.PublicReleaseFacts publicReleaseFacts;
+
+    /** Approved store release for this merchant, or null when nothing public is bound to STORE. */
+    public String approvedPublicFacts(Long merchantId)
+    {
+        if (publicReleaseFacts == null || merchantId == null)
+        {
+            return null;
+        }
+        return publicReleaseFacts.publicPrompt(merchantId, null, null, null, "STORE");
+    }
+
     /**
      * 取全局 NPC(scope_type=3,常驻地图/我的页)。
      */
