@@ -4,35 +4,28 @@
 
 控制器只在 profile `w16-consent-contract` 且容器里已经有 `RendezvousSafeExitService` Bean 时才装载。应用默认 profile 是 `druid`。本线不提供该 Service 的 `@Bean`。
 
-本补丁只含 J 的文件。它依赖 A4，不把 A 的提交带进本分支。
+本补丁只含 J 的文件。编译依赖 A4 `08f44986`，不把 A 的提交带进本分支。
 
 ## 依赖
 
-A4：`cursor/w16-a-eligibility` @ `08f44986`。退出在 A 的同意守卫事务里调用，不再保留 J 自己的 `OngoingVerdict` / `Termination` 镜像：
-
-```text
-OngoingVerdict verifyParticipants(Transaction tx, long actor, String ticketId, String expectedMatchId, Long expectedPeer, boolean requireMutualAccepted, long now)
-OngoingVerdict terminateCurrent(Transaction tx, long actor, Long peer, String ticketId, Termination reason, long now)
-```
-
-本线实际调用：
+A4：`cursor/w16-a-eligibility` @ `08f44986`。退出在已经打开的同意守卫事务里调用：
 
 ```text
 verifyParticipants(tx, actor, ticketId, null, null, false, now)
 terminateCurrent(tx, actor, null, ticketId, Termination.EXIT, now)
 ```
 
-`peer` 固定为 null。不调用 `terminateCurrentMatch`（那是拉黑停在 `SAFETY_STOPPED`）。不调用三参构造；测试里的配对使用四参构造和 `MyBatisRendezvousWaiting`。退出账本的读写使用交给同意守卫的同一个 `SqlSessionTemplate` 和 `DataSourceTransactionManager`。`terminateCurrent` 删除占位和退出行插入发生在这一次 `store.transaction` 里。插入失败则两边一起回滚。本线不写队伍表，这次回滚也不碰到队伍。
+`peer` 固定为 null。不调用 `terminateCurrentMatch`。测试里的配对使用四参构造和 `MyBatisRendezvousWaiting`。退出账本与占位释放共用同一个 `SqlSessionTemplate` 和 `DataSourceTransactionManager`。插入失败则两边一起回滚。本线不写队伍表，这次回滚也不碰到队伍。
 
-C：`cursor/w16-c-handoff-recovery` @ `9b8293df` 的正式查询是
+C5：`cursor/w16-c-handoff-recovery` @ `dd143d03`。正式查询是
 
 ```text
 RendezvousMeetingService.HandoffState handoffStateFor(String matchId)
 ```
 
-返回 `NOT_STARTED`、`UNKNOWN`、`CREATED_JOIN_UNCONFIRMED`、`COMPLETE`。见该分支 `docs/contracts/w16-handoff-recovery.md`。C5 仍在进行，这个类型不在本树。J 不复制这四个状态，也不调用一个替身。查询未进本树之前，`SOLO` 直接拒绝，不释放占位，不写退出行。
+只返回 `NOT_STARTED`、`UNKNOWN`、`CREATED_JOIN_UNCONFIRMED`、`COMPLETE`。J 不声明这份枚举。端口 `HandoffStateQuery.handoffStateFor(String)` 把上述名字原样传回。没有 match id 时不调用查询，交接记为 `NOT_STARTED`。查询抛错、返回空或返回这四个名字以外的值，都记成明确的 `UNKNOWN`。这不表示队伍已经回滚。
 
-单人启动器没有接通。`completed` 恒为 false。没有第二次启动。
+单人启动器端口 `SoloLauncher.startOrResume(long, String, String)` 默认不接通，生产不注册实现。`completed` 只有结果口对同一回执返回 `COMPLETED` 才为 true。
 
 ## 路由
 
@@ -50,30 +43,36 @@ body 有且仅有一个字段：`{"choice":"EXIT"}` 或 `{"choice":"SOLO"}`。�
 
 ## 成功投影
 
-不包含对方、线索、角色、地点、队伍、罚则、难度、奖励。
+不包含对方、线索、角色、地点、队伍、罚则、难度、奖励。没有「队伍已回滚」字段。
 
 | 字段 | 含义 |
 | --- | --- |
 | ticketId | 本人票据 |
 | decided | 是否已有持久选择 |
-| exitAllowed | 未决定且当前阶段允许退出时为 true |
-| soloAllowed | 恒为 false。交接查询和单人启动器都未接通 |
+| exitAllowed | 未决定且当前阶段允许退出时为 true。查询失败不关掉它 |
+| soloAllowed | 未决定，且交接正好是 `NOT_STARTED`，同时有已发布单人目标和已接通的启动器 |
 | choice | `EXIT` 或 `SOLO`；未决定时为空 |
 | phase | `WAITING`、`ONE_SIDED`、`MUTUAL` |
-| handoff | 未决定或本次 `EXIT` 记为 `NOT_PUBLISHED`。这不是 C 的状态值 |
-| soloState | 退出行为 `NOT_REQUESTED` |
-| soloBlock | 可空 |
-| goalRef | 空。没有接通的单人目标 |
-| launchReceipt | 空 |
-| resumed | false |
-| completed | false |
+| handoff | C 的四个名字之一。查询故障是 `UNKNOWN` |
+| soloState | `NOT_REQUESTED`、`STARTED`、`COMPLETED`，或启动结果不明时的 `UNKNOWN` |
+| soloBlock | 可空。调用方只看 `soloState` 就能知道启动可能已经发出 |
+| goalRef | 这次选择绑定到的已发布单人目标，可空 |
+| launchReceipt | 权威回执，可空。空回执不是成功 |
+| resumed | 启动器是否声明为恢复 |
+| completed | 只有结果口返回 `COMPLETED` 才为 true |
+
+`soloState=UNKNOWN` 是启动待核的主状态：异常、空回执，或进程停在 `STARTING` 之后的读回，都投影成它。它不是「还没启动」。同一选择不再次启动。
 
 ## 行为
 
 - 可退出阶段只有等待、单边接受、双方接受。终态是 `EXIT_UNAVAILABLE`。非本人与缺票是 `NOT_FOUND`。`safe=false` 本身不拒绝退出。
-- `EXIT` 在同一次同意守卫事务里调用 `terminateCurrent(..., null, ..., EXIT, now)`，成功后再插入退出行。等待票只取消自己。有 match 时两边变为 `CANCELLED`（已过期则 `EXPIRED`），两边占位删除。这些写都是 A 的方法。重复同一选择只读回原行，不再调用终止。另一选择返回 `EXIT_CONFLICT`。
-- `SOLO` 在交接查询和启动器接通之前拒绝，代码 `SOLO_LAUNCHER_UNAVAILABLE`。不写选择、不释放占位、不调用启动器。
-- 拒绝单人或退出都不得扣资源、记罚或发奖。本线没有罚则、难度、奖励参数，也不回滚队伍。
+- 新的 `EXIT` 和 `SOLO` 都先取交接。查询故障变成 `UNKNOWN`，不在 `terminateCurrent` 之前把退出打失败。
+- `EXIT` 在任何已识别交接（含 `UNKNOWN`）上仍调用 `terminateCurrent(..., null, ..., EXIT, now)`，成功后再插入退出行。等待票只取消自己。有 match 时两边变为 `CANCELLED`（已过期则 `EXPIRED`），两边占位删除。重复同一选择只读回，不再终止，也不再启动。
+- `options` 同样把查询故障显示为 `UNKNOWN`，`soloAllowed` 为 false，`exitAllowed` 仍按阶段给出。它不释放占位，也不声称队伍已回滚。
+- `SOLO` 在交接不是 `NOT_STARTED` 时拒绝，不释放占位，不写行，不调用启动器。`UNKNOWN` 是 `HANDOFF_UNKNOWN`，`CREATED_JOIN_UNCONFIRMED` 和 `COMPLETE` 各用自己的码。
+- 交接是 `NOT_STARTED` 但没有已发布目标或启动器时，同样在终止之前拒绝。
+- 允许的 `SOLO` 先在守卫事务里写下 `STARTING` 并释放占位，提交后再调用一次启动器。异常或空回执把主状态写成 `UNKNOWN`，不写成 `NOT_STARTED`。读到残留的 `STARTING` 也投影为 `UNKNOWN`。不再次调用启动器。
+- 拒绝或退出都不扣资源、不记罚、不发奖，也不回滚队伍。
 
 ## 错误
 
@@ -84,8 +83,10 @@ body 有且仅有一个字段：`{"choice":"EXIT"}` 或 `{"choice":"SOLO"}`。�
 | NOT_FOUND | 404 | 非本人或没有这张票据 |
 | EXIT_UNAVAILABLE | 409 | 阶段不可退出 |
 | EXIT_CONFLICT | 409 | 已有不同选择 |
-| SOLO_LAUNCHER_UNAVAILABLE | 409 | 选择了 `SOLO`。启动器未接通，交接查询也未进本树 |
+| HANDOFF_UNKNOWN | 409 | `SOLO`，交接不是 `NOT_STARTED`（含查询故障） |
+| HANDOFF_JOIN_UNCONFIRMED | 409 | `SOLO`，交接是 `CREATED_JOIN_UNCONFIRMED` |
+| HANDOFF_COMPLETE | 409 | `SOLO`，交接是 `COMPLETE` |
+| SOLO_GOAL_UNAVAILABLE | 409 | `SOLO`，没有已发布单人目标 |
+| SOLO_LAUNCHER_UNAVAILABLE | 409 | `SOLO`，启动器未接通 |
 | W16_EXIT_DISABLED | 503 | 服务未处于隔离合同评估 |
 | W16_UNAVAILABLE | 503 | 其他未分类故障 |
-
-`HANDOFF_UNKNOWN`、`HANDOFF_JOIN_UNCONFIRMED`、`HANDOFF_COMPLETE`、`SOLO_GOAL_UNAVAILABLE` 仍留在控制器映射里，留给 C 的查询进树之后。本树现在不会发出这些码。

@@ -27,6 +27,7 @@ import static com.chengyinhub.business.service.rendezvous.RendezvousConsentServi
 import static com.chengyinhub.business.service.rendezvous.RendezvousSafeExitStore.Mode.ISOLATED_PERSISTENCE_EVALUATION;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -58,7 +59,7 @@ class RendezvousSafeExitPersistenceTest {
         RendezvousConsentService.View ticket = db.consent.join(1, "pool", "v1", 100_000);
         View exited = db.service.choose(1, ticket.ticketId, "EXIT");
         assertEquals("WAITING", exited.phase);
-        assertEquals("NOT_PUBLISHED", exited.handoff);
+        assertEquals("NOT_STARTED", exited.handoff);
         assertFalse(exited.soloAllowed);
         assertFalse(exited.completed);
         assertEquals(TicketState.CANCELLED, db.consent.read(1, ticket.ticketId).ticketState);
@@ -117,7 +118,7 @@ class RendezvousSafeExitPersistenceTest {
                     public int markLaunch(ExitRow row) { return real.markLaunch(row); }
                 });
         RendezvousSafeExitService service = new RendezvousSafeExitService(Mode.ISOLATED_CONTRACT_EVALUATION,
-                db.guard, db.consent, failing, db.clock);
+                db.guard, db.consent, failing, null, null, null, null, db.clock);
         assertThrows(IllegalStateException.class, () -> service.choose(1, pair[0].ticketId, "EXIT"));
         assertEquals(2, db.count("w16_match_reservation"));
         assertEquals(0, db.count("w16_safe_exit"));
@@ -128,7 +129,7 @@ class RendezvousSafeExitPersistenceTest {
 
     @Test void soloDoesNotReleaseOrCompleteWhileHandoffAndLauncherAreUnpublished() {
         RendezvousConsentService.View[] pair = db.pair();
-        assertEquals("SOLO_LAUNCHER_UNAVAILABLE",
+        assertEquals("HANDOFF_UNKNOWN",
                 assertThrows(Rejection.class, () -> db.service.choose(1, pair[0].ticketId, "SOLO")).getCode());
         assertEquals(2, db.count("w16_match_reservation"));
         assertEquals(0, db.count("w16_safe_exit"));
@@ -136,14 +137,14 @@ class RendezvousSafeExitPersistenceTest {
         View options = db.service.options(1, pair[0].ticketId);
         assertFalse(options.soloAllowed);
         assertFalse(options.completed);
-        assertEquals("NOT_PUBLISHED", options.handoff);
+        assertEquals("UNKNOWN", options.handoff);
         assertTrue(options.exitAllowed);
     }
 
     @Test void strangerAndDisabledExitWriteNothing() {
         RendezvousConsentService.View[] pair = db.pair();
         assertEquals("NOT_FOUND", assertThrows(Rejection.class, () -> db.service.choose(9, pair[0].ticketId, "EXIT")).getCode());
-        RendezvousSafeExitService disabled = new RendezvousSafeExitService(Mode.DISABLED, db.guard, db.consent, db.exits, db.clock);
+        RendezvousSafeExitService disabled = new RendezvousSafeExitService(Mode.DISABLED, db.guard, db.consent, db.exits, null, null, null, null, db.clock);
         assertEquals("W16_EXIT_DISABLED", assertThrows(Rejection.class, () -> disabled.choose(1, pair[0].ticketId, "EXIT")).getCode());
         assertEquals(2, db.count("w16_match_reservation"));
         assertEquals(0, db.count("w16_safe_exit"));
@@ -151,6 +152,81 @@ class RendezvousSafeExitPersistenceTest {
             db.service.choose(1, pair[0].ticketId, "EXIT");
             db.service.choose(1, pair[0].ticketId, "SOLO");
         }).getCode());
+    }
+
+    @Test void handoffFailureDoesNotBlockExitAndDoesNotStartSolo() {
+        RendezvousConsentService.View[] pair = db.pair();
+        RendezvousSafeExitService broken = db.service(matchId -> { throw new IllegalStateException("down"); }, null, null, null);
+        View options = broken.options(1, pair[0].ticketId);
+        assertEquals("UNKNOWN", options.handoff);
+        assertFalse(options.soloAllowed);
+        assertTrue(options.exitAllowed);
+        assertFalse(options.completed);
+        assertEquals(2, db.count("w16_match_reservation"));
+        assertEquals("HANDOFF_UNKNOWN", assertThrows(Rejection.class, () -> broken.choose(1, pair[0].ticketId, "SOLO")).getCode());
+        assertEquals(2, db.count("w16_match_reservation"));
+        assertEquals(0, db.count("w16_safe_exit"));
+        View exited = broken.choose(1, pair[0].ticketId, "EXIT");
+        assertEquals("UNKNOWN", exited.handoff);
+        assertEquals("NOT_REQUESTED", exited.soloState);
+        assertEquals(0, db.count("w16_match_reservation"));
+        assertEquals(MatchState.CANCELLED, db.consent.read(2, pair[1].ticketId).matchState);
+    }
+
+    @Test void blankHandoffAnswerIsUnknownAndSoloDoesNotRelease() {
+        RendezvousConsentService.View[] pair = db.pair();
+        RendezvousSafeExitService blank = db.service(matchId -> null, null, null, null);
+        assertEquals("UNKNOWN", blank.options(1, pair[0].ticketId).handoff);
+        assertEquals("HANDOFF_UNKNOWN", assertThrows(Rejection.class, () -> blank.choose(1, pair[0].ticketId, "SOLO")).getCode());
+        assertEquals(2, db.count("w16_match_reservation"));
+        assertEquals(0, db.count("w16_safe_exit"));
+    }
+
+    @Test void unconfirmedHandoffRefusesSoloWhileExitKeepsTheName() {
+        RendezvousConsentService.View[] pair = db.pair();
+        RendezvousSafeExitService service = db.service(matchId -> "CREATED_JOIN_UNCONFIRMED", null, null, null);
+        assertEquals("HANDOFF_JOIN_UNCONFIRMED", assertThrows(Rejection.class, () -> service.choose(1, pair[0].ticketId, "SOLO")).getCode());
+        assertEquals(2, db.count("w16_match_reservation"));
+        View exited = service.choose(1, pair[0].ticketId, "EXIT");
+        assertEquals("CREATED_JOIN_UNCONFIRMED", exited.handoff);
+        assertEquals(0, db.count("w16_match_reservation"));
+    }
+
+    @Test void launchFailureAndEmptyReceiptStayUnknownAndAreNotSentAgain() {
+        RendezvousConsentService.View[] pair = db.pair();
+        int[] calls = {0};
+        RendezvousSafeExitService failed = db.service(matchId -> "NOT_STARTED", (tx, actor, matchId) -> "published-solo-1",
+                (actor, goal, attempt) -> { calls[0]++; throw new IllegalStateException("boom"); }, null);
+        View unknown = failed.choose(1, pair[0].ticketId, "SOLO");
+        assertEquals("UNKNOWN", unknown.soloState);
+        assertNotEquals("NOT_STARTED", unknown.soloState);
+        assertFalse(unknown.completed);
+        assertEquals(1, calls[0]);
+        assertEquals(0, db.count("w16_match_reservation"));
+        failed.choose(1, pair[0].ticketId, "SOLO");
+        assertEquals(1, calls[0]);
+
+        RendezvousConsentService.View[] second = db.pair(3, 4);
+        int[] emptyCalls = {0};
+        RendezvousSafeExitService empty = db.service(matchId -> "NOT_STARTED", (tx, actor, matchId) -> "published-solo-1",
+                (actor, goal, attempt) -> { emptyCalls[0]++; return new RendezvousSafeExitService.LaunchReceipt(" ", false); }, null);
+        assertEquals("UNKNOWN", empty.choose(3, second[0].ticketId, "SOLO").soloState);
+        empty.choose(3, second[0].ticketId, "SOLO");
+        assertEquals(1, emptyCalls[0]);
+    }
+
+    @Test void crashedStartingProjectsUnknownAndDoesNotRelaunch() {
+        RendezvousConsentService.View ticket = db.consent.join(1, "pool", "v1", 100_000);
+        int[] calls = {0};
+        RendezvousSafeExitService service = db.service(null, null, (actor, goal, attempt) -> { calls[0]++; return null; }, null);
+        service.choose(1, ticket.ticketId, "EXIT");
+        db.jdbc.update("UPDATE w16_safe_exit SET choice='SOLO', solo_state='STARTING' WHERE ticket_id=?", ticket.ticketId);
+        View read = service.options(1, ticket.ticketId);
+        assertEquals("UNKNOWN", read.soloState);
+        assertNotEquals("NOT_STARTED", read.soloState);
+        assertFalse(read.completed);
+        assertEquals("UNKNOWN", service.choose(1, ticket.ticketId, "SOLO").soloState);
+        assertEquals(0, calls[0]);
     }
 }
 
@@ -213,16 +289,26 @@ final class RendezvousExitDatabase {
         RendezvousConsentServiceTest.MutableClock clock = new RendezvousConsentServiceTest.MutableClock();
         RendezvousConsentService consent = new RendezvousConsentService(guard, new RendezvousConsentServiceTest.SafetyPolicy(), clock, admission);
         RendezvousSafeExitStore exits = new RendezvousSafeExitStore(ISOLATED_PERSISTENCE_EVALUATION, session, manager);
-        RendezvousSafeExitService service = new RendezvousSafeExitService(Mode.ISOLATED_CONTRACT_EVALUATION, guard, consent, exits, clock);
+        RendezvousSafeExitService service = new RendezvousSafeExitService(Mode.ISOLATED_CONTRACT_EVALUATION, guard, consent, exits, null, null, null, null, clock);
         jdbc.update("INSERT INTO w16_contact_quota(pool, scope, window_millis, max_contacts, decision) VALUES ('pool','POOL',100000,4,'OPEN')");
         return new RendezvousExitDatabase(dataSource, jdbc, manager, session, guard, consent, exits, service, clock);
     }
 
-    RendezvousConsentService.View[] pair() {
-        RendezvousConsentService.View first = consent.join(1, "pool", "v1", 100_000);
-        RendezvousConsentService.View second = consent.join(2, "pool", "v1", 100_000);
+    RendezvousSafeExitService service(RendezvousSafeExitService.HandoffStateQuery handoff,
+                                      RendezvousSafeExitService.SoloGoalCatalog catalog,
+                                      RendezvousSafeExitService.SoloLauncher launcher,
+                                      RendezvousSafeExitService.SoloResult results) {
+        return new RendezvousSafeExitService(Mode.ISOLATED_CONTRACT_EVALUATION, guard, consent, exits,
+                handoff, catalog, launcher, results, clock);
+    }
+
+    RendezvousConsentService.View[] pair() { return pair(1, 2); }
+
+    RendezvousConsentService.View[] pair(long firstActor, long secondActor) {
+        RendezvousConsentService.View first = consent.join(firstActor, "pool", "v1", 100_000);
+        RendezvousConsentService.View second = consent.join(secondActor, "pool", "v1", 100_000);
         consent.propose(first.ticketId, second.ticketId, "approved-public-place");
-        return new RendezvousConsentService.View[]{consent.read(1, first.ticketId), consent.read(2, second.ticketId)};
+        return new RendezvousConsentService.View[]{consent.read(firstActor, first.ticketId), consent.read(secondActor, second.ticketId)};
     }
 
     long count(String table) { return jdbc.queryForObject("SELECT COUNT(*) FROM " + table, Long.class); }

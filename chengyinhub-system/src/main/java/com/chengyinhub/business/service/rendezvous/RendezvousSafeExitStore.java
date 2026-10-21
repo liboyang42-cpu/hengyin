@@ -52,6 +52,11 @@ public final class RendezvousSafeExitStore {
         if (mapper.insert(Objects.requireNonNull(row)) != 1) throw new IllegalStateException("W16_STALE_OR_INVALID_WRITE");
     }
 
+    void markLaunch(ExitRow row) {
+        bound();
+        if (mapper.markLaunch(Objects.requireNonNull(row)) != 1) throw new IllegalStateException("W16_STALE_OR_INVALID_WRITE");
+    }
+
     private void bound() {
         if (mode != Mode.ISOLATED_PERSISTENCE_EVALUATION || mapper == null || manager == null) {
             throw new IllegalStateException("W16_EXIT_PERSISTENCE_DISABLED");

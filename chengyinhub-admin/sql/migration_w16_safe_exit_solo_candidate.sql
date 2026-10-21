@@ -12,7 +12,7 @@ CREATE TABLE w16_safe_exit (
   match_id VARCHAR(128) COLLATE utf8mb4_bin NULL,
   choice VARCHAR(16) NOT NULL,
   phase VARCHAR(16) NOT NULL,
-  handoff VARCHAR(16) NOT NULL,
+  handoff VARCHAR(32) NOT NULL,
   solo_state VARCHAR(24) NOT NULL,
   solo_block VARCHAR(64) NULL,
   goal_ref VARCHAR(128) COLLATE utf8mb4_bin NULL,

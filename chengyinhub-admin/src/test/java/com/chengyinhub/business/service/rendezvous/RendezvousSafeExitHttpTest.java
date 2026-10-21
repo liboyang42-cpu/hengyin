@@ -51,7 +51,7 @@ class RendezvousSafeExitHttpTest {
         assertEquals("EXIT", exited.get("choice").asText());
         assertFalse(exited.get("completed").asBoolean());
         assertFalse(exited.get("soloAllowed").asBoolean());
-        assertEquals("NOT_PUBLISHED", exited.get("handoff").asText());
+        assertEquals("NOT_STARTED", exited.get("handoff").asText());
         JsonNode again = response(get("/api/rendezvous/tickets/" + ticket.ticketId + "/exit"), 200).get("data");
         assertEquals("EXIT", again.get("choice").asText());
         assertFalse(again.get("completed").asBoolean());
@@ -63,7 +63,7 @@ class RendezvousSafeExitHttpTest {
         authenticate(1);
         JsonNode denied = response(post("/api/rendezvous/tickets/" + pair[0].ticketId + "/exit")
                 .contentType(MediaType.APPLICATION_JSON).content("{\"choice\":\"SOLO\"}"), 409);
-        assertEquals("SOLO_LAUNCHER_UNAVAILABLE", denied.get("errorCode").asText());
+        assertEquals("HANDOFF_UNKNOWN", denied.get("errorCode").asText());
         assertEquals(2, db.count("w16_match_reservation"));
         assertEquals(0, db.count("w16_safe_exit"));
     }
