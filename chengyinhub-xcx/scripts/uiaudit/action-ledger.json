@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
-  "controlCount": 4938,
+  "controlCount": 4940,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -1096994,29 +1096994,33 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "read",
+      "actionClass": "write",
       "interactionMode": "tap",
-      "baseActionClass": "read",
+      "baseActionClass": "write",
       "effectClasses": [
-        "read",
+        "write",
+        "navigation",
         "state"
       ],
-      "accessBoundary": null,
+      "accessBoundary": "owned-resource",
       "externalCapabilities": [],
       "successCapabilities": [],
       "targets": {
         "routes": [
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/coupon-wallet/index"
         ],
         "apis": [
           "/api/audit/{param}/detail",
           "/api/config/features",
           "/api/login/code",
+          "/api/official/broadcast/{param}/click",
           "/api/role/info"
         ],
         "primaryApis": [
           "/api/audit/{param}/detail",
-          "/api/config/features"
+          "/api/config/features",
+          "/api/official/broadcast/{param}/click"
         ],
         "auxiliaryApis": [
           "/api/login/code",
@@ -1097042,26 +1097046,35 @@
             "source": "server-controller"
           },
           {
+            "url": "/api/official/broadcast/{param}/click",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
             "url": "/api/role/info",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
           }
         ],
-        "writeApis": []
+        "writeApis": [
+          "/api/official/broadcast/{param}/click"
+        ]
       },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
         "success",
         "error",
         "timeout",
-        "duplicate-trigger"
+        "duplicate-trigger",
+        "forbidden-owner"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:1037"
+        "staticSource": "subpackageB/pages/im/chat/index.js:1040"
       }
     },
     {
@@ -1097103,29 +1097116,33 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "read",
+      "actionClass": "write",
       "interactionMode": "tap",
-      "baseActionClass": "read",
+      "baseActionClass": "write",
       "effectClasses": [
-        "read",
+        "write",
+        "navigation",
         "state"
       ],
-      "accessBoundary": null,
+      "accessBoundary": "owned-resource",
       "externalCapabilities": [],
       "successCapabilities": [],
       "targets": {
         "routes": [
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/coupon-wallet/index"
         ],
         "apis": [
           "/api/audit/{param}/detail",
           "/api/config/features",
           "/api/login/code",
+          "/api/official/broadcast/{param}/click",
           "/api/role/info"
         ],
         "primaryApis": [
           "/api/audit/{param}/detail",
-          "/api/config/features"
+          "/api/config/features",
+          "/api/official/broadcast/{param}/click"
         ],
         "auxiliaryApis": [
           "/api/login/code",
@@ -1097151,26 +1097168,35 @@
             "source": "server-controller"
           },
           {
+            "url": "/api/official/broadcast/{param}/click",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
             "url": "/api/role/info",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
           }
         ],
-        "writeApis": []
+        "writeApis": [
+          "/api/official/broadcast/{param}/click"
+        ]
       },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
         "success",
         "error",
         "timeout",
-        "duplicate-trigger"
+        "duplicate-trigger",
+        "forbidden-owner"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:1037"
+        "staticSource": "subpackageB/pages/im/chat/index.js:1040"
       }
     },
     {
@@ -1097226,7 +1097252,8 @@
         "routes": [
           "pages/privacy/index",
           "pages/square/detail/index",
-          "pages/topic/index/index"
+          "pages/topic/index/index",
+          "subpackageMember/coupon-wallet/index"
         ],
         "apis": [
           "/api/config/features",
@@ -1097284,11 +1097311,248 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:1097"
+        "staticSource": "subpackageB/pages/im/chat/index.js:1108"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:131:catchtap:onResend:11",
+      "id": "subpackageB/pages/im/chat/index.wxml:120:catchtap:onCardBtn:11",
+      "route": "subpackageB/pages/im/chat/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageB/pages/im/chat/index.wxml",
+        "js": "subpackageB/pages/im/chat/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "catchtap",
+        "handler": "onCardBtn",
+        "line": 120,
+        "selectorHint": ".card-btn",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "write",
+      "interactionMode": "tap",
+      "baseActionClass": "write",
+      "effectClasses": [
+        "write",
+        "navigation"
+      ],
+      "accessBoundary": "owned-resource",
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/privacy/index",
+          "pages/square/detail/index",
+          "pages/topic/index/index",
+          "subpackageMember/coupon-wallet/index"
+        ],
+        "apis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/official/broadcast/{param}/click",
+          "/api/role/info"
+        ],
+        "primaryApis": [
+          "/api/config/features",
+          "/api/official/broadcast/{param}/click"
+        ],
+        "auxiliaryApis": [
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/official/broadcast/{param}/click",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": [
+          "/api/official/broadcast/{param}/click"
+        ]
+      },
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger",
+        "forbidden-owner"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageB/pages/im/chat/index.js:1108"
+      }
+    },
+    {
+      "id": "subpackageB/pages/im/chat/index.wxml:123:catchtap:onCardTap:12",
+      "route": "subpackageB/pages/im/chat/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageB/pages/im/chat/index.wxml",
+        "js": "subpackageB/pages/im/chat/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "catchtap",
+        "handler": "onCardTap",
+        "line": 123,
+        "selectorHint": ".card-btn",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "write",
+      "interactionMode": "tap",
+      "baseActionClass": "write",
+      "effectClasses": [
+        "write",
+        "navigation",
+        "state"
+      ],
+      "accessBoundary": "owned-resource",
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/privacy/index",
+          "subpackageMember/coupon-wallet/index"
+        ],
+        "apis": [
+          "/api/audit/{param}/detail",
+          "/api/config/features",
+          "/api/login/code",
+          "/api/official/broadcast/{param}/click",
+          "/api/role/info"
+        ],
+        "primaryApis": [
+          "/api/audit/{param}/detail",
+          "/api/config/features",
+          "/api/official/broadcast/{param}/click"
+        ],
+        "auxiliaryApis": [
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/audit/{param}/detail",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/official/broadcast/{param}/click",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": [
+          "/api/official/broadcast/{param}/click"
+        ]
+      },
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger",
+        "forbidden-owner"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageB/pages/im/chat/index.js:1040"
+      }
+    },
+    {
+      "id": "subpackageB/pages/im/chat/index.wxml:137:catchtap:onResend:13",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1097311,7 +1097575,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onResend",
-        "line": 131,
+        "line": 137,
         "selectorHint": ".fail-hit",
         "visibleCondition": "{{item.failed}}",
         "disabledCondition": null,
@@ -1097340,7 +1097604,8 @@
         "routes": [
           "pages/privacy/index",
           "pages/square/detail/index",
-          "pages/topic/index/index"
+          "pages/topic/index/index",
+          "subpackageMember/coupon-wallet/index"
         ],
         "apis": [
           "/api/config/features",
@@ -1097411,11 +1097676,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:559"
+        "staticSource": "subpackageB/pages/im/chat/index.js:562"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:149:catchtap:onResend:12",
+      "id": "subpackageB/pages/im/chat/index.wxml:155:catchtap:onResend:14",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1097438,7 +1097703,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onResend",
-        "line": 149,
+        "line": 155,
         "selectorHint": ".fail-hit",
         "visibleCondition": "{{item.failed}}",
         "disabledCondition": null,
@@ -1097467,7 +1097732,8 @@
         "routes": [
           "pages/privacy/index",
           "pages/square/detail/index",
-          "pages/topic/index/index"
+          "pages/topic/index/index",
+          "subpackageMember/coupon-wallet/index"
         ],
         "apis": [
           "/api/config/features",
@@ -1097538,11 +1097804,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:559"
+        "staticSource": "subpackageB/pages/im/chat/index.js:562"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:170:bindtap:onPlus:13",
+      "id": "subpackageB/pages/im/chat/index.wxml:176:bindtap:onPlus:15",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1097565,7 +1097831,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onPlus",
-        "line": 170,
+        "line": 176,
         "selectorHint": ".plus",
         "visibleCondition": "{{!disabled}}",
         "disabledCondition": null,
@@ -1097605,11 +1097871,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:659"
+        "staticSource": "subpackageB/pages/im/chat/index.js:662"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:173:bindconfirm:onSend:15",
+      "id": "subpackageB/pages/im/chat/index.wxml:179:bindconfirm:onSend:17",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1097632,7 +1097898,7 @@
         "tag": "input",
         "event": "bindconfirm",
         "handler": "onSend",
-        "line": 173,
+        "line": 179,
         "selectorHint": ".inp",
         "visibleCondition": null,
         "disabledCondition": "{{disabled || loadState !== 'ready'}}",
@@ -1097661,7 +1097927,8 @@
         "routes": [
           "pages/privacy/index",
           "pages/square/detail/index",
-          "pages/topic/index/index"
+          "pages/topic/index/index",
+          "subpackageMember/coupon-wallet/index"
         ],
         "apis": [
           "/api/config/features",
@@ -1097724,11 +1097991,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:479"
+        "staticSource": "subpackageB/pages/im/chat/index.js:482"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:173:bindinput:onInput:14",
+      "id": "subpackageB/pages/im/chat/index.wxml:179:bindinput:onInput:16",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1097751,7 +1098018,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onInput",
-        "line": 173,
+        "line": 179,
         "selectorHint": ".inp",
         "visibleCondition": null,
         "disabledCondition": "{{disabled || loadState !== 'ready'}}",
@@ -1097791,11 +1098058,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:477"
+        "staticSource": "subpackageB/pages/im/chat/index.js:480"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:174:bindtap:onSend:16",
+      "id": "subpackageB/pages/im/chat/index.wxml:180:bindtap:onSend:18",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1097818,7 +1098085,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onSend",
-        "line": 174,
+        "line": 180,
         "selectorHint": ".send-hit",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1097847,7 +1098114,8 @@
         "routes": [
           "pages/privacy/index",
           "pages/square/detail/index",
-          "pages/topic/index/index"
+          "pages/topic/index/index",
+          "subpackageMember/coupon-wallet/index"
         ],
         "apis": [
           "/api/config/features",
@@ -1097910,11 +1098178,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:479"
+        "staticSource": "subpackageB/pages/im/chat/index.js:482"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:184:bind:close:closeReviewResult:17",
+      "id": "subpackageB/pages/im/chat/index.wxml:190:bind:close:closeReviewResult:19",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1097937,7 +1098205,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "closeReviewResult",
-        "line": 184,
+        "line": 190,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1097977,11 +1098245,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:1060"
+        "staticSource": "subpackageB/pages/im/chat/index.js:1071"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:195:bind:action:retryReviewDetail:18",
+      "id": "subpackageB/pages/im/chat/index.wxml:201:bind:action:retryReviewDetail:20",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1098004,7 +1098272,7 @@
         "tag": "cy-inline-error",
         "event": "bind:action",
         "handler": "retryReviewDetail",
-        "line": 195,
+        "line": 201,
         "selectorHint": "cy-inline-error[bind:action]",
         "visibleCondition": "{{reviewDetail && reviewDetail.state === 'error'}}",
         "disabledCondition": null,
@@ -1098086,11 +1098354,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:1093"
+        "staticSource": "subpackageB/pages/im/chat/index.js:1104"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:204:bind:close:closeRoutePicker:19",
+      "id": "subpackageB/pages/im/chat/index.wxml:210:bind:close:closeRoutePicker:21",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1098113,7 +1098381,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "closeRoutePicker",
-        "line": 204,
+        "line": 210,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1098153,11 +1098421,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:712"
+        "staticSource": "subpackageB/pages/im/chat/index.js:715"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:205:bind:input:onRouteSearch:20",
+      "id": "subpackageB/pages/im/chat/index.wxml:211:bind:input:onRouteSearch:22",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1098180,7 +1098448,7 @@
         "tag": "cy-search",
         "event": "bind:input",
         "handler": "onRouteSearch",
-        "line": 205,
+        "line": 211,
         "selectorHint": "cy-search[bind:input]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1098262,11 +1098530,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:718"
+        "staticSource": "subpackageB/pages/im/chat/index.js:721"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:212:bindtap:onRoutePick:22",
+      "id": "subpackageB/pages/im/chat/index.wxml:218:bindtap:onRoutePick:24",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1098289,7 +1098557,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onRoutePick",
-        "line": 212,
+        "line": 218,
         "selectorHint": ".route-item",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1098318,7 +1098586,8 @@
         "routes": [
           "pages/privacy/index",
           "pages/square/detail/index",
-          "pages/topic/index/index"
+          "pages/topic/index/index",
+          "subpackageMember/coupon-wallet/index"
         ],
         "apis": [
           "/api/config/features",
@@ -1098381,11 +1098650,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:770"
+        "staticSource": "subpackageB/pages/im/chat/index.js:773"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:223:bind:cancel:onPlusCancel:24",
+      "id": "subpackageB/pages/im/chat/index.wxml:229:bind:cancel:onPlusCancel:26",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1098408,7 +1098677,7 @@
         "tag": "cy-option-sheet",
         "event": "bind:cancel",
         "handler": "onPlusCancel",
-        "line": 223,
+        "line": 229,
         "selectorHint": "cy-option-sheet[bind:cancel]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1098448,11 +1098717,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:672"
+        "staticSource": "subpackageB/pages/im/chat/index.js:675"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:223:bind:select:onPlusSelect:23",
+      "id": "subpackageB/pages/im/chat/index.wxml:229:bind:select:onPlusSelect:25",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1098482,7 +1098751,7 @@
         "tag": "cy-option-sheet",
         "event": "bind:select",
         "handler": "onPlusSelect",
-        "line": 223,
+        "line": 229,
         "selectorHint": "cy-option-sheet[bind:select]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1098519,7 +1098788,8 @@
           "pages/crop/index",
           "pages/privacy/index",
           "pages/square/detail/index",
-          "pages/topic/index/index"
+          "pages/topic/index/index",
+          "subpackageMember/coupon-wallet/index"
         ],
         "apis": [
           "/api/common/uploadOSS",
@@ -1098622,11 +1098892,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:664"
+        "staticSource": "subpackageB/pages/im/chat/index.js:667"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:225:bind:cancel:onMoreCancel:26",
+      "id": "subpackageB/pages/im/chat/index.wxml:231:bind:cancel:onMoreCancel:28",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1098649,7 +1098919,7 @@
         "tag": "cy-option-sheet",
         "event": "bind:cancel",
         "handler": "onMoreCancel",
-        "line": 225,
+        "line": 231,
         "selectorHint": "cy-option-sheet[bind:cancel]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1098689,11 +1098959,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:833"
+        "staticSource": "subpackageB/pages/im/chat/index.js:836"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:225:bind:select:onMoreSelect:25:variant:block",
+      "id": "subpackageB/pages/im/chat/index.wxml:231:bind:select:onMoreSelect:27:variant:block",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1098724,7 +1098994,7 @@
         "tag": "cy-option-sheet",
         "event": "bind:select",
         "handler": "onMoreSelect",
-        "line": 225,
+        "line": 231,
         "selectorHint": "cy-option-sheet[bind:select]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1098753,7 +1099023,8 @@
           "pages/privacy/index",
           "pages/square/detail/index",
           "pages/topic/index/index",
-          "subpackageB/pages/im/list/index"
+          "subpackageB/pages/im/list/index",
+          "subpackageMember/coupon-wallet/index"
         ],
         "apis": [
           "/api/im/conversations"
@@ -1098780,11 +1099051,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:804"
+        "staticSource": "subpackageB/pages/im/chat/index.js:807"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:225:bind:select:onMoreSelect:25:variant:clear",
+      "id": "subpackageB/pages/im/chat/index.wxml:231:bind:select:onMoreSelect:27:variant:clear",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1098815,7 +1099086,7 @@
         "tag": "cy-option-sheet",
         "event": "bind:select",
         "handler": "onMoreSelect",
-        "line": 225,
+        "line": 231,
         "selectorHint": "cy-option-sheet[bind:select]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1098855,11 +1099126,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:804"
+        "staticSource": "subpackageB/pages/im/chat/index.js:807"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:225:bind:select:onMoreSelect:25:variant:report",
+      "id": "subpackageB/pages/im/chat/index.wxml:231:bind:select:onMoreSelect:27:variant:report",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1098890,7 +1099161,7 @@
         "tag": "cy-option-sheet",
         "event": "bind:select",
         "handler": "onMoreSelect",
-        "line": 225,
+        "line": 231,
         "selectorHint": "cy-option-sheet[bind:select]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1098949,11 +1099220,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:804"
+        "staticSource": "subpackageB/pages/im/chat/index.js:807"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:225:bind:select:onMoreSelect:25:variant:unblock",
+      "id": "subpackageB/pages/im/chat/index.wxml:231:bind:select:onMoreSelect:27:variant:unblock",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1099006,7 +1099277,7 @@
         "tag": "cy-option-sheet",
         "event": "bind:select",
         "handler": "onMoreSelect",
-        "line": 225,
+        "line": 231,
         "selectorHint": "cy-option-sheet[bind:select]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1099037,7 +1099308,8 @@
           "pages/privacy/index",
           "pages/square/detail/index",
           "pages/topic/index/index",
-          "subpackageB/pages/im/list/index"
+          "subpackageB/pages/im/list/index",
+          "subpackageMember/coupon-wallet/index"
         ],
         "apis": [
           "/api/im/conversations",
@@ -1099095,11 +1099367,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:804"
+        "staticSource": "subpackageB/pages/im/chat/index.js:807"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:226:bind:close:onReportClose:27",
+      "id": "subpackageB/pages/im/chat/index.wxml:232:bind:close:onReportClose:29",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1099122,7 +1099394,7 @@
         "tag": "cy-report-sheet",
         "event": "bind:close",
         "handler": "onReportClose",
-        "line": 226,
+        "line": 232,
         "selectorHint": "cy-report-sheet[bind:close]",
         "visibleCondition": "{{!readOnly}}",
         "disabledCondition": null,
@@ -1099162,11 +1099434,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:900"
+        "staticSource": "subpackageB/pages/im/chat/index.js:903"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:228:bind:settled:onPrivacyGateSettled:28",
+      "id": "subpackageB/pages/im/chat/index.wxml:234:bind:settled:onPrivacyGateSettled:30",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1099189,7 +1099461,7 @@
         "tag": "cy-privacy-gate",
         "event": "bind:settled",
         "handler": "onPrivacyGateSettled",
-        "line": 228,
+        "line": 234,
         "selectorHint": "cy-privacy-gate[bind:settled]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1099233,7 +1099505,7 @@
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:230:bind:cancel:onDangerCancel:30",
+      "id": "subpackageB/pages/im/chat/index.wxml:236:bind:cancel:onDangerCancel:32",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1099256,7 +1099528,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:cancel",
         "handler": "onDangerCancel",
-        "line": 230,
+        "line": 236,
         "selectorHint": "#dc",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1099297,11 +1099569,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:828"
+        "staticSource": "subpackageB/pages/im/chat/index.js:831"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:230:bind:confirm:onDangerConfirm:29:variant:block",
+      "id": "subpackageB/pages/im/chat/index.wxml:236:bind:confirm:onDangerConfirm:31:variant:block",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1099336,7 +1099608,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:confirm",
         "handler": "onDangerConfirm",
-        "line": 230,
+        "line": 236,
         "selectorHint": "#dc",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1099398,11 +1099670,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:936"
+        "staticSource": "subpackageB/pages/im/chat/index.js:939"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:230:bind:confirm:onDangerConfirm:29:variant:clear",
+      "id": "subpackageB/pages/im/chat/index.wxml:236:bind:confirm:onDangerConfirm:31:variant:clear",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1099437,7 +1099709,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:confirm",
         "handler": "onDangerConfirm",
-        "line": 230,
+        "line": 236,
         "selectorHint": "#dc",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1099499,11 +1099771,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:936"
+        "staticSource": "subpackageB/pages/im/chat/index.js:939"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:230:bind:done:onDangerCancel:31",
+      "id": "subpackageB/pages/im/chat/index.wxml:236:bind:done:onDangerCancel:33",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1099526,7 +1099798,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:done",
         "handler": "onDangerCancel",
-        "line": 230,
+        "line": 236,
         "selectorHint": "#dc",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1099567,7 +1099839,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:828"
+        "staticSource": "subpackageB/pages/im/chat/index.js:831"
       }
     },
     {
@@ -1099734,7 +1100006,8 @@
         "routes": [
           "pages/privacy/index",
           "pages/square/detail/index",
-          "pages/topic/index/index"
+          "pages/topic/index/index",
+          "subpackageMember/coupon-wallet/index"
         ],
         "apis": [
           "/api/config/features",
@@ -1099944,7 +1100217,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:1007"
+        "staticSource": "subpackageB/pages/im/chat/index.js:1010"
       }
     },
     {
@@ -1100014,7 +1100287,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:1019"
+        "staticSource": "subpackageB/pages/im/chat/index.js:1022"
       }
     },
     {
@@ -1100092,7 +1100365,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:799"
+        "staticSource": "subpackageB/pages/im/chat/index.js:802"
       }
     },
     {

@@ -29,4 +29,27 @@ function buttonUrl(message, index) {
   const button = Array.isArray(buttons) && buttons[Number(index)];
   return url && button && button.action === url ? url : '';
 }
-module.exports = { positiveId, recordOf, originalUrl, buttonUrl };
+// Legacy system cards may link to these current business pages; dataset URLs are never authority.
+function genericActionInfo(message, index) {
+  if (!message || ![0, '0'].includes(message.senderId) || ![3, '3'].includes(message.msgType)) return null;
+  const card = message.card;
+  if (!card || typeof card !== 'object' || Array.isArray(card) || card.cardType !== 'generic'
+      || Object.prototype.hasOwnProperty.call(card, 'result')) return null;
+  let action = card.action;
+  if (index !== undefined) {
+    if (typeof index !== 'number' && typeof index !== 'string' || !/^(0|[1-9]\d*)$/.test(String(index))) return null;
+    const button = Array.isArray(card.buttons) && card.buttons[Number(index)];
+    if (!button || typeof button !== 'object' || Array.isArray(button)) return null;
+    action = button.action;
+  }
+  let url = '';
+  if (typeof action === 'string') {
+    const match = action.match(/^\/(pages\/activity\/detail\/index|pages\/topic\/index\/index|pages\/square\/detail\/index)\?id=([1-9]\d*)$/);
+    if (match && positiveId(match[2])) url = action;
+    else if (action === '/subpackageMember/coupon-wallet/index') url = action;
+    else return null;
+  } else if (action != null) return null;
+  const bcId = positiveId(card.bcId);
+  return url || index === undefined && bcId ? { url, bcId } : null;
+}
+module.exports = { positiveId, recordOf, originalUrl, buttonUrl, genericActionInfo };

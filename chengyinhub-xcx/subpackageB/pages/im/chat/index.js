@@ -406,10 +406,13 @@ Page({
       }
       const projected = Object.assign({}, m, { card });
       const systemRecord = !!systemCard.recordOf(projected), currentOriginalUrl = systemCard.originalUrl(projected);
-      const cardTarget = systemRecord || !!currentOriginalUrl;
+      const genericAction = systemCard.genericActionInfo(projected);
+      const genericButtons = !systemRecord && Array.isArray(card && card.buttons) ? card.buttons.map((button, index) =>
+        systemCard.genericActionInfo(projected, index) ? { index, text: button.text || '查看详情', type: button.type } : null).filter(Boolean) : [];
+      const cardTarget = systemRecord || !!currentOriginalUrl || !!genericAction;
       // 对方气泡上方「名字·时间」一行用的名字:单聊/客服/系统统一用会话对方名(name)。
       // 小程序不露出群聊(见 list/index.js:tabOf),故无需逐条 senderName。
-      return Object.assign({}, m, { timeDivider: divider, card: card, cardTarget, systemRecord, currentOriginalUrl, displayContent: displayContent,
+      return Object.assign({}, m, { timeDivider: divider, card: card, cardTarget, systemRecord, currentOriginalUrl, genericAction, genericButtons, displayContent: displayContent,
         displayName: that.data.name || '' });
     });
     if (that._reviewMessageId && !that._reviewMatches(decorated.find(row => String(row.id) === String(that._reviewMessageId)))) that.closeReviewResult();
@@ -1037,7 +1040,7 @@ Page({
   onCardTap(e) {
     if (this._navigating) return;
     const message = this._cardMessage(e.currentTarget.dataset.msg), result = systemCard.recordOf(message);
-    if (!result) return;
+    if (!result) { this._openGenericCard(message); return; }
     if (this.data.reviewResult && this._reviewMessageId === message.id && this._reviewMatches(message)) return;
     this._reviewMessageId = message.id; this._reviewRecordKey = JSON.stringify(result);
     this.setData({ reviewResult: { taskId: systemCard.positiveId(result.taskId), bizId: systemCard.positiveId(result.bizId),
@@ -1045,14 +1048,22 @@ Page({
     if (shouldLoadAuditDetail(message.card)) this.loadReviewDetail(result.taskId);
   },
   onCurrentCard(e) { this._openCardOriginal(this._cardMessage(e.currentTarget.dataset.msg)); },
+  _openGenericCard(message, index) {
+    const target = systemCard.genericActionInfo(message, index);
+    if (target) this._openCardTarget(target.url, target.bcId);
+  },
   _openCardOriginal(message) {
     const url = systemCard.originalUrl(message);
-    if (!url || this._navigating) return;
+    if (url) this._openCardTarget(url, systemCard.positiveId(message.card.bcId));
+  },
+  _openCardTarget(url, bcid) {
+    if ((!url && !bcid) || this._navigating) return;
     const current = this._viewGuard(), epoch = this._cardNavEpoch = (this._cardNavEpoch || 0) + 1;
     this._navigating = true;
-    const bcid = systemCard.positiveId(message.card.bcId);
+    const release = () => { if (current() && epoch === this._cardNavEpoch) this._navigating = false; };
     if (bcid) app.sendRequest({ url: '/api/official/broadcast/' + bcid + '/click', method: 'POST',
-      hideLoading: true, data: { channel: 'inapp' }, success() {}, fail() {} });
+      hideLoading: true, data: { channel: 'inapp' }, success() {}, fail() {}, complete: () => { if (!url) release(); } });
+    if (!url) return;
     wx.navigateTo({ url,
       fail: () => { if (current() && epoch === this._cardNavEpoch) app.tips && app.tips('原单暂时无法打开'); },
       complete: () => { if (current() && epoch === this._cardNavEpoch) this._navigating = false; } });
@@ -1098,6 +1109,7 @@ Page({
     const ds = e.currentTarget.dataset, message = this._cardMessage(ds.msg);
     if (ds.mode === 'original') { this.onCurrentCard(e); return; }
     if (systemCard.buttonUrl(message, ds.index)) this._openCardOriginal(message);
+    else this._openGenericCard(message, ds.index);
   },
 
   // ===== 准实时:页面可见时轮询新消息 =====

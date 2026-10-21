@@ -116,6 +116,12 @@
           <view class="card-btn full" hover-class="cy-pressed" catchtap="onCardTap" data-msg="{{item.id}}" aria-role="button" aria-label="查看生成时记录">查看生成时记录</view>
           <view wx:if="{{item.currentOriginalUrl}}" class="card-btn full" hover-class="cy-pressed" catchtap="onCardBtn" data-mode="original" data-msg="{{item.id}}" aria-role="button" aria-label="查看当前原单">查看当前原单</view>
         </view>
+        <view class="card-btns" wx:elif="{{item.genericButtons.length}}">
+          <view wx:for="{{item.genericButtons}}" wx:for-item="btn" wx:key="index" class="card-btn {{btn.type === 'reject' ? 'reject' : ''}}" hover-class="cy-pressed" catchtap="onCardBtn" data-msg="{{item.id}}" data-index="{{btn.index}}" hover-stop-propagation="true">{{btn.text}}</view>
+        </view>
+        <view class="card-btns" wx:elif="{{item.genericAction.url}}">
+          <view class="card-btn full" hover-class="cy-pressed" catchtap="onCardTap" data-msg="{{item.id}}" hover-stop-propagation="true">查看详情</view>
+        </view>
       </cy-card>
 
       <!-- 自己(右,反色实底)。对齐 Airbnb:自己一侧不放头像;时间贴在气泡正上方、右对齐 -->

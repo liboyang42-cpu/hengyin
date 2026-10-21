@@ -582,7 +582,7 @@ test('真实点击与组件事件合同分母分开，非 tap 不得伪装按钮
   // 2026-10-20 审核整合保留举报三入口、模板审核、项目审核、重试与申诉七个 tap，2090 → 2097。
   // 2026-10-20 用户要求删掉「我的纠错 / 纠错进度」两页、消息页改收件箱/发件箱(合并 master 584470ad 后按重建实测),2109 → 2101。
   // 首页来源说明、原票导航及三项本机草稿操作并集：本地 tap 2106。
-  assert.equal(local.filter((item) => item.interactionMode === 'tap').length, 2104)  /* 2026-10-07 动态绑定补齐4条tap。2026-09-22 现场感三件套 S1 新增 4 颗 tap(uploadPhotoFrame / clearPhotoFrame /
+  assert.equal(local.filter((item) => item.interactionMode === 'tap').length, 2106)  /* 2026-10-07 动态绑定补齐4条tap。2026-09-22 现场感三件套 S1 新增 4 颗 tap(uploadPhotoFrame / clearPhotoFrame /
      onFrameShutter / onFrameCancel),其中 uploadPhotoFrame 与 onFrameShutter 是
      actionClass=external(real-device-required)、不进 local 分母 ⇒ 进账的是
      onFrameCancel(玩家端「退出取景」)+ clearPhotoFrame(商家端删图),1787 → 1789(重建实测)。 */
@@ -1577,18 +1577,40 @@ test('合并后可达动作 variant 全部进入台账且 handler 真源可定�
   const decorWxml = fs.readFileSync(path.join(__dirname, '../../pages/merchant/decor/index.wxml'), 'utf8')
   assert.match(decorWxml, /<cy-cell\b[^>]*bind:tap="retryEntitlements"[^>]*>/,
     '台账不能脱离实际 WXML 绑定')
-  // IM 保留生成记录和受控原单，撤回旧的第三个通用 data-url 点击入口。
-  const imRecord = ledger.controls.filter(item => item.entry.wxml === 'subpackageB/pages/im/chat/index.wxml'
-    && item.control.tag === 'view' && item.control.event === 'catchtap' && item.control.handler === 'onCardTap')
-  assert.equal(imRecord.length, 1, '生成时记录只保留一个按钮，旧通用 data-url 入口不应复活')
-  assert.equal(imRecord[0].control.ariaLabel, '查看生成时记录')
-  assert.equal(imRecord[0].actionClass, 'read')
-  assert.deepEqual(imRecord[0].targets.writeApis, [])
-  const imOriginal = ledger.controls.filter(item => item.entry.wxml === 'subpackageB/pages/im/chat/index.wxml'
-    && item.control.tag === 'view' && item.control.event === 'catchtap' && item.control.handler === 'onCardBtn')
+  // IM 记录/原单与合法 generic 卡片共用 handler；台账保守包含历史广播 click 写入。
+  const imViews = ledger.controls.filter(item => item.entry.wxml === 'subpackageB/pages/im/chat/index.wxml'
+    && item.control.tag === 'view' && item.control.event === 'catchtap')
+  const imRecord = imViews.filter(item => item.control.handler === 'onCardTap' && item.control.ariaLabel === '查看生成时记录')
+  assert.equal(imRecord.length, 1, '生成时记录必须保持一个独立按钮')
+  assert.equal(imRecord[0].actionClass, 'write')
+  assert.deepEqual(imRecord[0].targets.writeApis, ['/api/official/broadcast/{param}/click'])
+  const imOriginal = imViews.filter(item => item.control.handler === 'onCardBtn' && item.control.ariaLabel === '查看当前原单')
   assert.equal(imOriginal.length, 1)
-  assert.equal(imOriginal[0].control.ariaLabel, '查看当前原单')
   assert.equal(imOriginal[0].control.visibleCondition, '{{item.currentOriginalUrl}}')
+  const imWxml = fs.readFileSync(path.join(__dirname, '../../subpackageB/pages/im/chat/index.wxml'), 'utf8')
+  for (const handler of ['onCardTap', 'onCardBtn']) {
+    const generic = imViews.filter(item => item.control.handler === handler && !item.control.ariaLabel)
+    assert.equal(generic.length, 1, handler + '合法 generic 卡片保留一个真实绑定')
+    assert.equal(generic[0].interactionMode, 'tap')
+    assert.deepEqual(generic[0].targets.writeApis, ['/api/official/broadcast/{param}/click'])
+  }
+  assert.match(imWxml, /wx:elif="{{item.genericButtons.length}}"[\s\S]*?catchtap="onCardBtn"[^>]*data-index="{{btn.index}}"/)
+  assert.match(imWxml, /wx:elif="{{item.genericAction.url}}"[\s\S]*?catchtap="onCardTap"[^>]*data-msg="{{item.id}}"/)
+  // 共用 handler 的保守写分类不能冒充记录分支会写：执行实际方法，记录仍只展示/回读。
+  const imSource = fs.readFileSync(path.join(__dirname, '../../subpackageB/pages/im/chat/index.js'), 'utf8')
+  const onCardTapSource = imSource.slice(imSource.indexOf('  onCardTap(e) {'), imSource.indexOf('  onCurrentCard(e)'))
+  const onCardTap = require('node:vm').runInNewContext('({' + onCardTapSource + '}).onCardTap', {
+    systemCard: require('../../subpackageB/pages/im/chat/system-card-target'),
+    shouldLoadAuditDetail: require('../../subpackageB/pages/im/chat/audit-detail').shouldLoadAuditDetail,
+  })
+  const recordMessage = { id: 7, senderId: 0, msgType: 3, card: { cardType: 'generic', bcId: 9,
+    result: { taskId: 11, bizId: 13, bizType: 'TOPIC', outcome: 'APPROVED' } } }
+  const recordPage = { data: {}, _cardMessage: () => recordMessage,
+    _openGenericCard: () => assert.fail('记录分支不能进入 generic 导航/广播写入'),
+    setData(value) { Object.assign(this.data, value) }, loadReviewDetail(taskId) { assert.equal(taskId, 11) } }
+  onCardTap.call(recordPage, { currentTarget: { dataset: { msg: 7 } } })
+  assert.equal(recordPage.data.reviewResult.taskId, 11)
+  assert.equal(recordPage.data.reviewResult.bizId, 13)
   // 两类录音失败链现在真实读取 getSetting：2 tap +4事件移入 external，不是删除动作。
   for (const kind of ['quiethold', 'shout']) {
     for (const [handler, event] of [['onStart', 'bindtap'], ['onCalibrated', 'bind:calibrated'], ['onRun', 'bind:run']]) {
@@ -1600,7 +1622,7 @@ test('合并后可达动作 variant 全部进入台账且 handler 真源可定�
       assert.equal(permission[0].interactionMode, handler === 'onStart' ? 'tap' : 'event-contract')
     }
   }
-  assert.equal(ledger.controlCount, 4938)
+  assert.equal(ledger.controlCount, 4940)
   // 搜索主题与其它结果拆成互斥点击 +1，合计 3268 → 3271（取动作账本重建实测）。
   // 合作页新增会话失效/无权限两个独立 cy-empty CTA，3271 → 3273。
   // 2026-09-02 俱乐部客户系统落地，3273 → 3295。

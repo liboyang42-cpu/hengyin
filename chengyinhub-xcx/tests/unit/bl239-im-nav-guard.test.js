@@ -52,15 +52,20 @@ test('聊天页 路线卡连点只跳一次', () => {
 
 test('聊天页 卡片「查看详情」连点只跳一次', () => {
   const { page, navs } = load(CHAT)
-  page.data.msgs = []
-  const ev = { currentTarget: { dataset: { url: '/pages/activity/detail/index?id=9' } } }
+  Object.assign(page.data, { myId: 1, conversationId: 10, type: 2 })
+  page.data.msgs = page.decorate([{ id: 5, senderId: 0, msgType: 3, content: '活动通知',
+    extraJson: JSON.stringify({ cardType: 'generic', action: '/pages/activity/detail/index?id=9' }) }])
+  const ev = { currentTarget: { dataset: { msg: 5 } } }
   onceThenAgain(page, navs, () => page.onCardTap(ev), '/pages/activity/detail/index?id=9')
 })
 
 test('聊天页 卡片可配置按钮连点只跳一次', () => {
   const { page, navs } = load(CHAT)
-  const ev = { currentTarget: { dataset: { action: '/pages/coupon/index' } } }
-  onceThenAgain(page, navs, () => page.onCardBtn(ev), '/pages/coupon/index')
+  Object.assign(page.data, { myId: 1, conversationId: 10, type: 2 })
+  page.data.msgs = page.decorate([{ id: 5, senderId: 0, msgType: 3, content: '领券通知',
+    extraJson: JSON.stringify({ cardType: 'generic', buttons: [{ text: '查看票夹', action: '/subpackageMember/coupon-wallet/index' }] }) }])
+  const ev = { currentTarget: { dataset: { msg: 5, index: 0 } } }
+  onceThenAgain(page, navs, () => page.onCardBtn(ev), '/subpackageMember/coupon-wallet/index')
 })
 
 test('会话列表 竞猜待公布入口连点只跳一次', () => {

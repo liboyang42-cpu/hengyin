@@ -727,7 +727,7 @@ function assertGenericCardAffordance(wxml) {
 test('CU-M-124 行为:通用卡按真有的动作决定可点性,无去向的通知不再冒充按钮', () => {
   assert.equal(decorateCard('{"title":"报名成功","sub":"你的报名已提交"}').cardTarget, false,
     '没有 action / 结果 / 回流的通用卡必须报成不可点')
-  assert.equal(decorateCard('{"title":"路线","action":"/subpackageRoam/detail/index?topicId=7"}').cardTarget, true,
+  assert.equal(decorateCard('{"title":"活动","action":"/pages/activity/detail/index?id=7"}').cardTarget, true,
     '带 action 的卡照旧可点,收口不许把所有卡片一起做成死的')
   assert.equal(decorateCard('{"title":"公告","bcId":9}').cardTarget, true,
     '官方通知卡点开要打回流,不能因为没 action 就判成不可点')
@@ -749,9 +749,9 @@ test('negative control CU-M-124: 退回「一律可点」或漏掉 bcId/result,�
     '把可点性写回 true 时本节必须判红,否则上一条断言恒真',
   )
   // ② 判定漏掉 bcId ⇒ 公告卡的 cardTarget 变 false,正控里的真值断言不是白拿的
-  const dropBcId = decorateCard('{"title":"公告","bcId":9}', null, (src) => src.replace(
-    "          || (card.result && m.senderId == 0) || card.bcId));",
-    '          || (card.result && m.senderId == 0)));',
+  const dropBcId = decorateCard('{"title":"公告","bcId":9}', null, (src) => replaceRequired(src,
+    'systemCard.genericActionInfo(projected)',
+    'systemCard.genericActionInfo(Object.assign({}, projected, { card: Object.assign({}, card, { bcId: undefined }) }))',
   ))
   assert.equal(dropBcId.cardTarget, false, '病灶形态:漏判 bcId 后官方通知又变成不可点,回流入口消失')
   assert.throws(
