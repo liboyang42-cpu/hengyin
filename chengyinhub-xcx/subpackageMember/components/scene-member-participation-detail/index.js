@@ -3,10 +3,9 @@ const cyLoading = require('../../../utils/loading.js');
 const cyToast = require('../../../utils/toast.js');
 const { toTimestamp, chinaDayStart } = require('../../../utils/datetime');
 const { resolveVerificationScan } = require('../../../utils/verification-scan');
-const { resolveVerificationResult } = require('../../../utils/merchant-verification.js');
+const { resolveVerificationResult, classifyVerificationOutcome, createVerificationWorkflow } = require('../../../utils/merchant-verification.js');
 const app = getApp();
 const merchantTheme = require('../../../utils/merchant-theme.js');
-const { createWriteActionWorkflow } = require('../../../utils/write-action-workflow.js');
 const { offerVerificationReadback } = require('../../../utils/verification-readback.js');
 const { summarizeOrderState, canRequestOrderRefund } = require('../../../utils/order-status.js');
 const { isFreeOrder } = require('../../../utils/order-actual-pay.js');
@@ -67,7 +66,7 @@ Component({
     detached() {
       this._invalidateParticipationCancellation();
       this._cancelDisposed = true;
-      this._detailDisposed = true; this._detailGeneration = (this._detailGeneration || 0) + 1; if (this._verificationWorkflow) this._verificationWorkflow.destroy();
+      this._detailDisposed = true; this._detailGeneration = (this._detailGeneration || 0) + 1; if (this._verificationWorkflow) { this._verificationWorkflow.destroy(); this._verificationWorkflow = null; cyLoading.hide(); }
     },
   },
   // ⚠️ 深链壳(subpackageMember/mycanyuinfo)的 id 是页面 onLoad 里 setData 进去的:组件 attached
@@ -101,7 +100,11 @@ Component({
     },
     _submitVerification(key, loadingTitle, options, callback) {
       const that = this;
-      if (!this._verificationWorkflow) this._verificationWorkflow = createWriteActionWorkflow({ deadlineMs: 15000 });
+      const owner = String(app.getUserID && app.getUserID() || '');
+      const generation = this._detailGeneration || 0;
+      if (this._detailDisposed) return false;
+      key = owner + ':' + key;
+      if (!this._verificationWorkflow) this._verificationWorkflow = createVerificationWorkflow({ deadlineMs: 15000, storage: wx, getOwner: () => app.getUserID && app.getUserID() });
       if (this._verificationWorkflow.isBusy(key)) {
         cyToast('核销处理中，请勿重复提交');
         return false;
@@ -110,14 +113,16 @@ Component({
       const submitted = this._verificationWorkflow.run(key, function (done) {
         return app.sendRequest(Object.assign({}, options, {
           autoErrorToast: false,
-          success(r) { done({ status: 'success', response: r }); },
-          fail() { done({ status: 'failed', response: { code: 500, msg: '网络错误，请重试' } }); },
-          successStatusAbnormal(res) {
-            done({ status: 'failed', response: { code: 500, msg: (res && res.msg) || '核销失败，请重试' } });
+          success(r) { done(classifyVerificationOutcome(r, 'success', undefined, options)); },
+          fail(res, status) { done(classifyVerificationOutcome(res, 'fail', status, options)); },
+          successStatusAbnormal(res, status) {
+            done(classifyVerificationOutcome(res, 'abnormal', status, options));
           }
         }));
       }, function (result) {
         cyLoading.hide();
+        if (that._detailDisposed || generation !== (that._detailGeneration || 0)
+            || owner !== String(app.getUserID && app.getUserID() || '')) return;
         if (result.status === 'unknown') {
           callback({ code: 202, msg: '核销结果待确认，请勿重复核销；请先查看核销记录' });
           offerVerificationReadback(key, that._verificationWorkflow);

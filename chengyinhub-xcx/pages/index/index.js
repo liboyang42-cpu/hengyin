@@ -771,7 +771,7 @@ Page({
     this.setData({ heroBannerList: buildHomeActionBanners() });
   },
 
-  // Figma 3579:11316 — 为你专属推荐主题 Hero
+  // is_recommend 返回编辑精选，不代表个人兴趣或当前参加资格。
   _buildRecoHero() {
     const items = (this.data.recommendedTopicList || []).slice(0, 5);
     if (!items.length) {
@@ -784,7 +784,6 @@ Page({
       const metaParts = [];
       if (enroll) metaParts.push('🔥 ' + enroll + ' 人已报名');
       if (item.formattedDateTime) metaParts.push(item.formattedDateTime);
-      const started = item.startDate && fmtRemain(item.startDate).started;
       return {
         id: item.id,
         name: item.name,
@@ -792,7 +791,7 @@ Page({
         tags: tags,
         clubLabel: item.clubName || item.merchantName || tags[0] || '',
         clubAvatar: item.clubAvatar || item.merchantAvatar || item.cover,
-        statusLabel: started ? '进行中' : '',
+        statusLabel: '',
         betaFlag: item.betaFlag == 1 ? 1 : 0,
         metaLine: metaParts.join(' · ') || item.addressName || '',
       };
@@ -803,6 +802,15 @@ Page({
       recoCards: cards,
       recoCurrent: current,
       recoCardStyles: buildRecoCardStyles(cards.length, current, -1, 0),
+    });
+  },
+
+  showRecommendationSource() {
+    modal.show({
+      title: '为什么看到这些主题',
+      content: '这里展示编辑精选，不是根据个人兴趣生成的推荐。是否可以参加及参加条件，请以主题详情的当前信息为准。',
+      confirmText: '知道了',
+      showCancel: false,
     });
   },
 

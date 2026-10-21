@@ -1,5 +1,6 @@
 const REDUCED_MOTION_KEY = 'play_reduced_motion'
 const LEGACY_REDUCED_MOTION_KEY = 'roam_reduced_motion'
+const listeners = new Set()
 
 function resolveStorage(storage) {
   if (storage) return storage
@@ -18,6 +19,11 @@ function readReducedMotion(storage) {
   }
 }
 
+function subscribeReducedMotion(listener) {
+  if (typeof listener === 'function') listeners.add(listener)
+  return () => listeners.delete(listener)
+}
+
 // null 表示主键未保存；false 是已保存的“恢复动态效果”。
 function writeReducedMotion(storage, value) {
   const enabled = value === true
@@ -32,6 +38,9 @@ function writeReducedMotion(storage, value) {
   try {
     target.setStorageSync(LEGACY_REDUCED_MOTION_KEY, enabled)
   } catch (e) {}
+  Array.from(listeners).forEach((listener) => {
+    try { listener(enabled) } catch (e) {}
+  })
   return enabled
 }
 
@@ -40,4 +49,5 @@ module.exports = {
   LEGACY_REDUCED_MOTION_KEY,
   readReducedMotion,
   writeReducedMotion,
+  subscribeReducedMotion,
 }

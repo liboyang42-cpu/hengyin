@@ -55,23 +55,24 @@
         </view>
       </view>
 
-      <!-- 推荐主题：紧跟 Banner，作为首页首个内容区块 -->
+      <!-- 编辑精选：紧跟 Banner，作为首页首个内容区块 -->
       <view id="sec-reco" class="v3-sec v3-sec-reco">
         <view class="v3-sec-head">
-          <text class="v3-sec-title">推荐主题</text>
+          <text class="v3-sec-title">编辑精选</text>
+          <cy-btn variant="ghost" size="sm" bindtap="showRecommendationSource">为什么看到</cy-btn>
         </view>
         <view class="v3-sec-state" wx:if="{{listLoading.recommendedTopicList && !recoHero}}">
           <cy-skeleton type="feed-card" count="1" />
         </view>
         <view class="v3-sec-state" wx:elif="{{listErr.recommendedTopicList && !recoHero}}">
-          <cy-error load-failure title="推荐主题没能加载出来" sub="网络请求失败，重试会重新拉取一次"
+          <cy-error load-failure title="编辑精选没能加载出来" sub="网络请求失败，重试会重新拉取一次"
                     retry="重试" data-list="recommendedTopicList" bind:retry="retryList" />
         </view>
         <view class="v3-sec-state" wx:elif="{{!listLoading.recommendedTopicList && !recoHero}}">
-          <cy-empty title="还没有能推给你的主题" sub="下面的主题列表里先逛逛" />
+          <cy-empty title="暂时没有精选主题" sub="下面的主题列表里先逛逛" />
         </view>
         <text class="v3-sec-sync" wx:if="{{listLoading.recommendedTopicList && recoHero}}"
-              aria-role="status" aria-live="polite">正在更新推荐主题…</text>
+              aria-role="status" aria-live="polite">正在更新编辑精选…</text>
         <swiper class="v3-reco-swiper" wx:if="{{recoCards.length}}" current="{{recoCurrent}}"
                 circular="{{recoCards.length > 1}}" previous-margin="40rpx" next-margin="60rpx"
                 duration="{{reducedMotion ? 0 : 280}}" easing-function="easeOutCubic"
@@ -98,6 +99,7 @@
                   </view>
                   <view class="v3-reco-title">{{item.name}}</view>
                   <text class="v3-reco-meta ep1">{{item.metaLine}}</text>
+                  <text class="v3-reco-meta">编辑精选 · 参加条件以详情为准</text>
                 </view>
                 <view class="v3-reco-focus-mask"></view>
               </view>
@@ -136,7 +138,7 @@
                     retry="重试" data-list="nearbyActivityList" bind:retry="retryList" />
         </view>
         <view class="v3-sec-state" wx:elif="{{!listLoading.nearbyActivityList && !nearbyActivityList.length}}">
-          <cy-empty title="你附近暂时没有可点亮的节点" sub="换个时间再来，或看看下面的推荐主题" />
+          <cy-empty title="你附近暂时没有可点亮的节点" sub="换个时间再来，或看看编辑精选" />
         </view>
         <text class="v3-sec-sync" wx:if="{{listLoading.nearbyActivityList && nearbyActivityList.length}}"
               aria-role="status" aria-live="polite">正在更新附近活动…</text>

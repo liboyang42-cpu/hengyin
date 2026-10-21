@@ -1,3 +1,4 @@
+@import "../../../style/reduced-motion.wxss";
 :host { display: block; --cy-btn-font-size: var(--cy-type-button); }
 
 /* 根:全屏定位层 = 遮罩 + 贴底面板。2026-08-25 之前这里只有面板本身,

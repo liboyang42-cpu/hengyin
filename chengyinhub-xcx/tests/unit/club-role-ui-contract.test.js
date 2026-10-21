@@ -95,6 +95,7 @@ function createDetailHarness(storage = {}) {
         // CU-C-60:快捷扫码的写请求也要能在这层沙箱里跑起来
         '../../../utils/verification-scan.js': require('../../utils/verification-scan.js'),
         '../../../utils/write-action-workflow.js': require('../../utils/write-action-workflow.js'),
+        '../../../utils/merchant-verification.js': require('../../utils/merchant-verification.js'),
         '../../../utils/danger-actions.js': require('../../utils/danger-actions.js'),
       }
       if (Object.prototype.hasOwnProperty.call(modules, request)) return modules[request]
