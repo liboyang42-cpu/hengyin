@@ -180,7 +180,7 @@ def validate(source: str, backend_script: str | None = None, production_workflow
     mini = job_block(source, "mini_program")
     for contract in (
         "    needs: [changes, mini_unit, mini_static]\n",
-        "    if: ${{ always() && (github.event_name == 'workflow_dispatch' || needs.changes.outputs.xcx == 'true') }}\n",
+        "    if: ${{ always() && (needs.changes.result != 'success' || github.event_name == 'workflow_dispatch' || needs.changes.outputs.xcx == 'true') }}\n",
         '          test "$CHANGES_RESULT" = success\n',
         '          test "$UNIT_RESULT" = success\n',
         '          test "$STATIC_RESULT" = success\n',

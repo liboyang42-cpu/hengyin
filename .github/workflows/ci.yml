@@ -450,7 +450,7 @@ jobs:
   mini_program:
     name: Mini program static checks
     needs: [changes, mini_unit, mini_static]
-    if: ${{ always() && (github.event_name == 'workflow_dispatch' || needs.changes.outputs.xcx == 'true') }}
+    if: ${{ always() && (needs.changes.result != 'success' || github.event_name == 'workflow_dispatch' || needs.changes.outputs.xcx == 'true') }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
