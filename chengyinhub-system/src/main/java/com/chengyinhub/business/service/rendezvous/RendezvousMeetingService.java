@@ -103,19 +103,27 @@ public final class RendezvousMeetingService {
     private final Safety safety;
     private final RendezvousHandoffSafety handoffSafety;
     private final RendezvousHandoffTeamPort teams;
+    private final PlayTeamHandoffGateway playTeams;
     private final Clock clock;
     private final long ttl;
     private final SecureRandom random = new SecureRandom();
     /** No constructor silently enables this service. Hard cap five minutes, server supplied.
-     * {@code handoffSafety} and {@code teams} fail closed when they refuse or cannot prove a result. */
+     * {@code handoffSafety} and {@code teams} fail closed when they refuse or cannot prove a result.
+     * {@code playTeams} stays null unless a caller opts into the real play-team transaction. */
     public RendezvousMeetingService(Mode mode, Store store, Safety safety, RendezvousHandoffSafety handoffSafety,
                                     RendezvousHandoffTeamPort teams, Clock clock, long ttlMillis) {
+        this(mode, store, safety, handoffSafety, teams, clock, ttlMillis, null);
+    }
+    public RendezvousMeetingService(Mode mode, Store store, Safety safety, RendezvousHandoffSafety handoffSafety,
+                                    RendezvousHandoffTeamPort teams, Clock clock, long ttlMillis,
+                                    PlayTeamHandoffGateway playTeams) {
         this.mode=Objects.requireNonNull(mode); this.store=Objects.requireNonNull(store);
         this.safety=Objects.requireNonNull(safety); this.handoffSafety=Objects.requireNonNull(handoffSafety);
-        this.teams=Objects.requireNonNull(teams); this.clock=Objects.requireNonNull(clock);
+        this.teams=Objects.requireNonNull(teams); this.playTeams=playTeams; this.clock=Objects.requireNonNull(clock);
         if (ttlMillis <= 0 || ttlMillis > 300000) throw new IllegalArgumentException("INVALID_TTL");
         ttl=ttlMillis;
     }
+    private boolean playTeamEnabled() { return playTeams != null && playTeams.enabled(); }
     /** Actor comes only from authenticated context. No peer ID, activity or evidence in request. */
     public View issue(long actor, String ticketId) {
         enabled();
@@ -239,7 +247,7 @@ public final class RendezvousMeetingService {
         if (r.state == State.READY) {
             r=assess(tx,m,r);
             if (r.state != State.READY) { tx.save(r); return view(tx,t,r); }
-            if (req == null && !teams.available()) return view(tx,t,r);
+            if (req == null && !teams.available() && !playTeamEnabled()) return view(tx,t,r);
             if (req == null) {
                 Ticket first=tx.ticket(m.firstTicket), second=tx.ticket(m.secondTicket);
                 long now=clock.millis();
@@ -257,6 +265,7 @@ public final class RendezvousMeetingService {
         return null;
     }
     private View recover(long actor, String ticketId, RendezvousHandoffRequest req) {
+        if (playTeamEnabled()) return recoverPlayTeam(actor, ticketId, req);
         RendezvousHandoffTeamPort.Lookup lookup;
         try { lookup=teams.lookup(req.requestId); }
         catch (RuntimeException failed) { return stick(actor, ticketId, "TEAM_QUERY_TIMEOUT"); }
@@ -297,6 +306,99 @@ public final class RendezvousMeetingService {
         } catch (RuntimeException uncertain) {
             return stick(actor, ticketId, req.phase == RendezvousHandoffRequest.Phase.UNKNOWN
                     ? "CREATE_RESULT_UNKNOWN" : "JOIN_RESULT_UNKNOWN");
+        }
+    }
+    /**
+     * Create and join are separate transactions. Each one holds the consent guard, re-reads safety
+     * and the original request, then writes the real team before that transaction commits.
+     * There is no earlier {@code markDispatched} commit.
+     */
+    private View recoverPlayTeam(long actor, String ticketId, RendezvousHandoffRequest req) {
+        final String requestId = req.requestId;
+        final String matchId = req.matchId;
+        RendezvousHandoffTeamPort.Lookup lookup;
+        try { lookup = playTeams.lookup(requestId); }
+        catch (RuntimeException failed) { return stick(actor, ticketId, "TEAM_QUERY_TIMEOUT"); }
+        if (lookup.status == RendezvousHandoffTeamPort.Status.UNKNOWN) {
+            return stick(actor, ticketId, lookup.blocker == null ? "TEAM_QUERY_UNKNOWN" : lookup.blocker);
+        }
+        try {
+            if (req.phase == RendezvousHandoffRequest.Phase.UNKNOWN) {
+                if (lookup.status == RendezvousHandoffTeamPort.Status.ABSENT) {
+                    if (req.dispatched) return stick(actor, ticketId, "CALL_RESULT_UNKNOWN");
+                    View stopped = store.transaction(tx -> {
+                        Loaded loaded = load(tx, actor, ticketId, requestId);
+                        if (loaded.view != null) return loaded.view;
+                        long teamId = playTeams.create(loaded.request);
+                        tx.save(loaded.request.teamCreated(teamId, clock.millis()));
+                        tx.save(loaded.meeting.withTeam(teamId, State.RECOVERY_REQUIRED));
+                        return null;
+                    });
+                    if (stopped != null) return stopped;
+                } else {
+                    if (lookup.teamId == null || lookup.teamId <= 0) return stick(actor, ticketId, "TEAM_QUERY_UNKNOWN");
+                    long adopted = lookup.teamId;
+                    View stopped = store.transaction(tx -> {
+                        Loaded loaded = load(tx, actor, ticketId, requestId);
+                        if (loaded.view != null) return loaded.view;
+                        tx.save(loaded.request.teamCreated(adopted, clock.millis()));
+                        tx.save(loaded.meeting.withTeam(adopted, State.RECOVERY_REQUIRED));
+                        return null;
+                    });
+                    if (stopped != null) return stopped;
+                }
+                req = store.transaction(tx -> tx.handoffRequest(matchId));
+            }
+            if (req.phase == RendezvousHandoffRequest.Phase.COMPLETED) return publish(actor, ticketId);
+            if (lookup.status != RendezvousHandoffTeamPort.Status.JOINED) {
+                playTeams.betweenCreateAndJoin();
+                final RendezvousHandoffRequest joining = req;
+                View stopped = store.transaction(tx -> {
+                    Loaded loaded = load(tx, actor, ticketId, joining.requestId);
+                    if (loaded.view != null) return loaded.view;
+                    if (loaded.request.phase != RendezvousHandoffRequest.Phase.TEAM_CREATED
+                            || loaded.request.teamId == null || loaded.request.teamId <= 0) {
+                        return view(tx, loaded.ticket, loaded.meeting);
+                    }
+                    if (!playTeams.join(loaded.request)) {
+                        tx.save(loaded.request.blocker("PEER_NOT_ACTIVE_NOT_ROLLED_BACK", clock.millis()));
+                        tx.save(loaded.meeting.withTeam(loaded.request.teamId, State.RECOVERY_REQUIRED));
+                        return view(tx, loaded.ticket, loaded.meeting.withTeam(loaded.request.teamId, State.RECOVERY_REQUIRED));
+                    }
+                    return null;
+                });
+                if (stopped != null) return stopped;
+            }
+            return publish(actor, ticketId);
+        } catch (RuntimeException uncertain) {
+            return stick(actor, ticketId, req.phase == RendezvousHandoffRequest.Phase.UNKNOWN
+                    ? "CREATE_RESULT_UNKNOWN" : "JOIN_RESULT_UNKNOWN");
+        }
+    }
+    /** Re-read inside the open guard transaction. A non-null view is the refusal; no team write follows it. */
+    private Loaded load(Tx tx, long actor, String ticketId, String requestId) {
+        Ticket t = owned(tx, actor, ticketId);
+        Match m = match(tx, t);
+        Meeting r = refresh(tx, m, required(tx, m));
+        RendezvousHandoffRequest current = tx.handoffRequest(m.id);
+        if (!bound(current, requestId, m, r, tx)) return new Loaded(t, r, current, view(tx, t, r));
+        String denial = denial(tx, m, r);
+        if (denial != null) {
+            if (r.state != State.CANCELLED) hold(tx, t, r, current, denial);
+            Meeting shown = tx.meeting(m.id);
+            return new Loaded(t, shown, current, view(tx, t, shown));
+        }
+        RendezvousMeetingEvidence.Decision decision = decision(tx, m);
+        if (decision.activityId != r.activityId || !decision.ready()) return new Loaded(t, r, current, view(tx, t, r));
+        return new Loaded(t, r, current, null);
+    }
+    private static final class Loaded {
+        final Ticket ticket;
+        final Meeting meeting;
+        final RendezvousHandoffRequest request;
+        final View view;
+        Loaded(Ticket ticket, Meeting meeting, RendezvousHandoffRequest request, View view) {
+            this.ticket = ticket; this.meeting = meeting; this.request = request; this.view = view;
         }
     }
     /**

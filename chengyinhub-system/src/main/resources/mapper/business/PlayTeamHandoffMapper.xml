@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.PlayTeamHandoffMapper">
+    <resultMap id="HandoffRow" type="com.chengyinhub.business.domain.PlayTeamHandoffRequest">
+        <result property="namespace" column="namespace"/>
+        <result property="requestId" column="request_id"/>
+        <result property="matchId" column="match_id"/>
+        <result property="leaderMemberId" column="leader_member_id"/>
+        <result property="peerMemberId" column="peer_member_id"/>
+        <result property="activityId" column="activity_id"/>
+        <result property="teamId" column="team_id"/>
+        <result property="phase" column="phase"/>
+    </resultMap>
+
+    <select id="lockByRequest" resultMap="HandoffRow" useCache="false" flushCache="true">
+        select namespace, request_id, match_id, leader_member_id, peer_member_id, activity_id, team_id, phase
+        from w16_play_team_handoff
+        where namespace = #{namespace} and request_id = #{requestId}
+        for update
+    </select>
+
+    <select id="lockByMatch" resultMap="HandoffRow" useCache="false" flushCache="true">
+        select namespace, request_id, match_id, leader_member_id, peer_member_id, activity_id, team_id, phase
+        from w16_play_team_handoff
+        where namespace = #{namespace} and match_id = #{matchId}
+        for update
+    </select>
+
+    <select id="find" resultMap="HandoffRow">
+        select namespace, request_id, match_id, leader_member_id, peer_member_id, activity_id, team_id, phase
+        from w16_play_team_handoff
+        where namespace = #{namespace} and request_id = #{requestId}
+    </select>
+
+    <insert id="insert">
+        insert into w16_play_team_handoff
+            (namespace, request_id, match_id, leader_member_id, peer_member_id, activity_id, team_id, phase)
+        values
+            (#{namespace}, #{requestId}, #{matchId}, #{leaderMemberId}, #{peerMemberId}, #{activityId}, #{teamId}, #{phase})
+    </insert>
+
+    <update id="markJoined">
+        update w16_play_team_handoff
+        set phase = 'JOINED'
+        where namespace = #{namespace} and request_id = #{requestId} and phase = 'TEAM_CREATED'
+    </update>
+</mapper>

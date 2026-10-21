@@ -4,12 +4,14 @@ import com.chengyinhub.business.domain.AuditTask;
 import com.chengyinhub.business.domain.CmsActivity;
 import com.chengyinhub.business.domain.CmsTopic;
 import com.chengyinhub.business.domain.PlayTeam;
+import com.chengyinhub.business.domain.PlayTeamHandoffRequest;
 import com.chengyinhub.business.domain.PlayTeamMember;
 import com.chengyinhub.business.domain.UmsMember;
 import com.chengyinhub.business.domain.vo.PlayTeamNearbyVO;
 import com.chengyinhub.business.mapper.CmsActivityMapper;
 import com.chengyinhub.business.mapper.CmsTopicMapper;
 import com.chengyinhub.business.mapper.ImBlockMapper;
+import com.chengyinhub.business.mapper.PlayTeamHandoffMapper;
 import com.chengyinhub.business.mapper.PlayTeamMapper;
 import com.chengyinhub.business.service.IAuditTaskService;
 import com.chengyinhub.business.service.IImService;
@@ -20,6 +22,7 @@ import com.chengyinhub.business.service.IWxContentSecurityService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
@@ -42,6 +45,8 @@ public class PlayTeamServiceImpl implements IPlayTeamService {
 
     @Autowired
     private PlayTeamMapper teamMapper;
+    @Autowired
+    private PlayTeamHandoffMapper handoffMapper;
     @Autowired
     private ImBlockMapper blockMapper;
     @Autowired
@@ -524,5 +529,179 @@ public class PlayTeamServiceImpl implements IPlayTeamService {
         byte[] bytes = new byte[16];
         INVITE_RANDOM.nextBytes(bytes);
         return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
+    }
+
+    /**
+     * Joins the caller transaction. Does not call {@link #create} (that would skip the proxy
+     * and open a second transaction). Invite-only so the team is not listed for public apply.
+     * Session, paid registration, teamMode and capacity follow the same rules as {@link #create}.
+     */
+    @Override
+    @Transactional(propagation = Propagation.MANDATORY, rollbackFor = Exception.class)
+    public PlayTeamHandoffRequest.Fact createForHandoff(PlayTeamHandoffRequest request) {
+        requireContext(request);
+        PlayTeamHandoffRequest locked = handoffMapper.lockByRequest(request.getNamespace(), request.getRequestId());
+        if (locked != null) {
+            if (!sameContext(locked, request)) throw conflict();
+            return existingTeam(locked);
+        }
+        PlayTeamHandoffRequest match = handoffMapper.lockByMatch(request.getNamespace(), request.getMatchId());
+        if (match != null) throw conflict();
+        PlayTeam team = openHandoffTeam(request.getLeaderMemberId(), request.getActivityId());
+        request.setTeamId(team.getId());
+        request.setPhase(PlayTeamHandoffRequest.PHASE_CREATED);
+        handoffMapper.insert(request);
+        imService.getOrCreateTeamGroup(team.getId(), request.getLeaderMemberId());
+        return PlayTeamHandoffRequest.Fact.of(PlayTeamHandoffRequest.Fact.Kind.TEAM_CREATED, team.getId(),
+                team.getStatus(), false, PlayTeamHandoffRequest.PHASE_CREATED);
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.MANDATORY, rollbackFor = Exception.class)
+    public PlayTeamHandoffRequest.Fact joinForHandoff(PlayTeamHandoffRequest request) {
+        requireContext(request);
+        PlayTeamHandoffRequest locked = handoffMapper.lockByRequest(request.getNamespace(), request.getRequestId());
+        if (locked == null) throw new TeamRejection("HANDOFF_ABSENT", "交接请求不存在");
+        if (!sameContext(locked, request)) throw conflict();
+        PlayTeam team = requireTeam(locked.getTeamId(), true);
+        boolean peerActive = teamMapper.selectActiveMember(team.getId(), locked.getPeerMemberId()) != null;
+        if (ended(team)) return PlayTeamHandoffRequest.Fact.of(PlayTeamHandoffRequest.Fact.Kind.ENDED,
+                team.getId(), team.getStatus(), peerActive, locked.getPhase());
+        if (PlayTeamHandoffRequest.PHASE_JOINED.equals(locked.getPhase())) {
+            PlayTeamHandoffRequest.Fact.Kind kind = peerActive
+                    ? PlayTeamHandoffRequest.Fact.Kind.JOINED : PlayTeamHandoffRequest.Fact.Kind.LEFT;
+            return PlayTeamHandoffRequest.Fact.of(kind, team.getId(), team.getStatus(), peerActive, locked.getPhase());
+        }
+        if (peerActive) {
+            handoffMapper.markJoined(locked.getNamespace(), locked.getRequestId());
+            return PlayTeamHandoffRequest.Fact.of(PlayTeamHandoffRequest.Fact.Kind.JOINED, team.getId(),
+                    team.getStatus(), true, PlayTeamHandoffRequest.PHASE_JOINED);
+        }
+        requireMember(locked.getPeerMemberId());
+        if (locked.getPeerMemberId().equals(team.getLeaderMemberId())) {
+            throw new IllegalStateException("你已在队伍中");
+        }
+        if (blockMapper.existsBetween(team.getLeaderMemberId(), locked.getPeerMemberId()) > 0) {
+            throw new IllegalStateException("暂时无法加入该队伍");
+        }
+        if (teamMapper.hasPaidRegistration(locked.getPeerMemberId(), 2, team.getOwnerId()) <= 0) {
+            throw new TeamRejection("TICKET_REQUIRED", "持有这一场的票才能加入");
+        }
+        if (teamMapper.reserveSlot(team.getId()) == 0) {
+            throw new IllegalStateException("队伍已满或已停止招募");
+        }
+        PlayTeamMember member = new PlayTeamMember();
+        member.setTeamId(team.getId());
+        member.setMemberId(locked.getPeerMemberId());
+        member.setRole(0);
+        member.setStatus(PlayTeamMember.STATUS_JOINED);
+        try {
+            teamMapper.insertPlayTeamMember(member);
+        } catch (DuplicateKeyException duplicate) {
+            throw new IllegalStateException("你已在队伍中或不能重复加入");
+        }
+        expirePendingIfFull(team.getId());
+        imService.getOrCreateTeamGroup(team.getId(), locked.getPeerMemberId());
+        handoffMapper.markJoined(locked.getNamespace(), locked.getRequestId());
+        PlayTeam stored = teamMapper.selectPlayTeamById(team.getId());
+        return PlayTeamHandoffRequest.Fact.of(PlayTeamHandoffRequest.Fact.Kind.JOINED, team.getId(),
+                stored.getStatus(), true, PlayTeamHandoffRequest.PHASE_JOINED);
+    }
+
+    @Override
+    @Transactional(readOnly = true, rollbackFor = Exception.class)
+    public PlayTeamHandoffRequest.Fact findHandoff(String namespace, String requestId) {
+        if (namespace == null || namespace.isEmpty() || requestId == null || requestId.isEmpty()) {
+            throw new IllegalArgumentException("交接参数有误");
+        }
+        PlayTeamHandoffRequest row = handoffMapper.find(namespace, requestId);
+        if (row == null) return PlayTeamHandoffRequest.Fact.absent();
+        if (row.getTeamId() == null) return PlayTeamHandoffRequest.Fact.unknown();
+        PlayTeam team = teamMapper.selectPlayTeamById(row.getTeamId());
+        if (team == null) return PlayTeamHandoffRequest.Fact.unknown();
+        boolean peerActive = teamMapper.selectActiveMember(team.getId(), row.getPeerMemberId()) != null;
+        PlayTeamHandoffRequest.Fact.Kind kind;
+        if (ended(team)) kind = PlayTeamHandoffRequest.Fact.Kind.ENDED;
+        else if (PlayTeamHandoffRequest.PHASE_JOINED.equals(row.getPhase()) && !peerActive) kind = PlayTeamHandoffRequest.Fact.Kind.LEFT;
+        else if (PlayTeamHandoffRequest.PHASE_JOINED.equals(row.getPhase())) kind = PlayTeamHandoffRequest.Fact.Kind.JOINED;
+        else kind = PlayTeamHandoffRequest.Fact.Kind.TEAM_CREATED;
+        return PlayTeamHandoffRequest.Fact.of(kind, team.getId(), team.getStatus(), peerActive, row.getPhase());
+    }
+
+    private PlayTeamHandoffRequest.Fact existingTeam(PlayTeamHandoffRequest locked) {
+        if (locked.getTeamId() == null) throw new TeamRejection("HANDOFF_INCONSISTENT", "交接索引和队伍不一致");
+        PlayTeam team = teamMapper.selectPlayTeamById(locked.getTeamId());
+        if (team == null) throw new TeamRejection("HANDOFF_INCONSISTENT", "交接索引和队伍不一致");
+        boolean peerActive = teamMapper.selectActiveMember(team.getId(), locked.getPeerMemberId()) != null;
+        PlayTeamHandoffRequest.Fact.Kind kind = ended(team) ? PlayTeamHandoffRequest.Fact.Kind.ENDED
+                : PlayTeamHandoffRequest.PHASE_JOINED.equals(locked.getPhase())
+                ? (peerActive ? PlayTeamHandoffRequest.Fact.Kind.JOINED : PlayTeamHandoffRequest.Fact.Kind.LEFT)
+                : PlayTeamHandoffRequest.Fact.Kind.TEAM_CREATED;
+        return PlayTeamHandoffRequest.Fact.of(kind, team.getId(), team.getStatus(), peerActive, locked.getPhase());
+    }
+
+    private PlayTeam openHandoffTeam(Long memberId, Long activityId) {
+        requireMember(memberId);
+        if (activityId == null || activityId <= 0) throw new IllegalArgumentException("场次参数有误");
+        CmsActivity activity = cmsActivityMapper.selectCmsActivityById(activityId);
+        if (activity == null) throw new IllegalArgumentException("场次不存在");
+        CmsTopic topic = activity.getTopicId() == null ? null : cmsTopicMapper.selectCmsTopicById(activity.getTopicId());
+        if (topic == null || topic.getTeamMode() == null || topic.getTeamMode() == 0) {
+            throw new IllegalStateException("该主题未开放组队");
+        }
+        Date expireTime = activity.getStartDate();
+        if (expireTime == null) throw new IllegalStateException("该活动未设置开始时间，暂不能建队");
+        if (teamMapper.hasPaidRegistration(memberId, 2, activityId) <= 0) {
+            throw new IllegalStateException("报名成功后才能建队");
+        }
+        int configuredMax = topic.getTeamMaxMembers() == null ? 4 : topic.getTeamMaxMembers();
+        configuredMax = Math.max(2, Math.min(4, configuredMax));
+        PlayTeam team = new PlayTeam();
+        team.setOwnerType(2);
+        team.setOwnerId(activityId);
+        team.setLeaderMemberId(memberId);
+        team.setInviteCode(newInviteCode());
+        team.setJoinMode(1);
+        team.setMaxMembers(configuredMax);
+        team.setJoinedCount(1);
+        team.setStatus(PlayTeam.STATUS_RECRUITING);
+        team.setExpireTime(expireTime);
+        teamMapper.insertPlayTeam(team);
+        PlayTeamMember leader = new PlayTeamMember();
+        leader.setTeamId(team.getId());
+        leader.setMemberId(memberId);
+        leader.setRole(1);
+        leader.setStatus(PlayTeamMember.STATUS_JOINED);
+        teamMapper.insertPlayTeamMember(leader);
+        return team;
+    }
+
+    private static void requireContext(PlayTeamHandoffRequest request) {
+        if (request == null || blank(request.getNamespace()) || blank(request.getRequestId()) || blank(request.getMatchId())
+                || request.getLeaderMemberId() == null || request.getLeaderMemberId() <= 0
+                || request.getPeerMemberId() == null || request.getPeerMemberId() <= 0
+                || request.getLeaderMemberId().equals(request.getPeerMemberId())
+                || request.getActivityId() == null || request.getActivityId() <= 0) {
+            throw new IllegalArgumentException("交接参数有误");
+        }
+    }
+
+    private static boolean sameContext(PlayTeamHandoffRequest stored, PlayTeamHandoffRequest request) {
+        return stored.getNamespace().equals(request.getNamespace())
+                && stored.getRequestId().equals(request.getRequestId())
+                && stored.getMatchId().equals(request.getMatchId())
+                && stored.getLeaderMemberId().equals(request.getLeaderMemberId())
+                && stored.getPeerMemberId().equals(request.getPeerMemberId())
+                && stored.getActivityId().equals(request.getActivityId());
+    }
+
+    private static boolean ended(PlayTeam team) {
+        return team.getStatus() != null && team.getStatus() >= PlayTeam.STATUS_ENDED;
+    }
+
+    private static boolean blank(String value) { return value == null || value.isEmpty(); }
+
+    private static TeamRejection conflict() {
+        return new TeamRejection("HANDOFF_CONTEXT_CONFLICT", "交接上下文和已有请求不一致");
     }
 }

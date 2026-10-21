@@ -1,6 +1,7 @@
 package com.chengyinhub.business.service;
 
 import com.chengyinhub.business.domain.PlayTeam;
+import com.chengyinhub.business.domain.PlayTeamHandoffRequest;
 import com.chengyinhub.business.domain.vo.PlayTeamNearbyVO;
 
 import java.util.Date;
@@ -36,6 +37,27 @@ public interface IPlayTeamService {
     List<Long> selectExpiredTeamIds(Date now, int limit);
     int endExpiredTeam(Long teamId, Date now);
     int expireStaleApplications(Date now);
+
+    /**
+     * Idempotent handoff create. Must join the caller's guard transaction.
+     * Same namespace and request returns the original team. A different context is rejected.
+     * The result does not carry an invite code.
+     */
+    PlayTeamHandoffRequest.Fact createForHandoff(PlayTeamHandoffRequest request);
+
+    /**
+     * Binds the original peer to the team already stored for this request.
+     * Does not create a team. A peer who already joined is not reserved again,
+     * including after a later quit or kick.
+     */
+    PlayTeamHandoffRequest.Fact joinForHandoff(PlayTeamHandoffRequest request);
+
+    /**
+     * Read-only. No row and a successful read is {@code ABSENT}.
+     * A SQL failure throws. An index row that does not match the team is {@code UNKNOWN}.
+     * Never creates or repairs.
+     */
+    PlayTeamHandoffRequest.Fact findHandoff(String namespace, String requestId);
 
     /** 带机器可读 errorCode 的业务拒绝;小程序按 errorCode 分支,不解析文案。 */
     class TeamRejection extends IllegalStateException {

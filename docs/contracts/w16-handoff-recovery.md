@@ -43,7 +43,7 @@ RendezvousMeetingService.HandoffState handoffStateFor(String matchId)
 
 `permit` 已经返回之后才执行的取消，不能阻止随后的外部 `create` 或 `join`。调用发生了就记下结果，并保持 `NOT_ROLLED_BACK`。没有请求行、但会面已是 `IN_PROGRESS` 的旧声明，取消仍停在 `RECOVERY_REQUIRED`，不写成已阻止。
 
-以后接到真实组队时：幂等创建和权威查询仍按 `request_id`，并且只能在这次 `markDispatched` 提交之后调用。同一个请求号必须回到同一个 team，这是收敛，不是删除或回滚。`dispatched=true` 且查询仍不能证明结果时，继续保持 `UNKNOWN`，不自动再创建。授权仍是提交 `markDispatched` 之前的那次 `permit` 重读。真实端口不另加一道检查来宣称 `permit` 返回后的窗口已关闭。`IPlayTeamService` 上的三个方法仍见 `/opt/cursor/artifacts/C-playteam-change-request.md`，本组不实现。加入若要单独的持久派发位，需要给 `w16_handoff_request` 加列；本轮不加。
+上面这段说的是默认关闭的外部端口：`permit` 先提交 `markDispatched`，真实队伍写在事务外面。真实 PlayTeam 接通走另一条路，见 `docs/contracts/w16-play-team-handoff.md`。那条路默认不装配。它把守卫锁、安全复核、原请求核对和真实 `create` 或 `join` 放进同一事务，不再先提交 `markDispatched` 再写队伍。加入若要单独的持久派发位，需要给 `w16_handoff_request` 加列；本轮不加。
 
 ## 证据
 
@@ -61,4 +61,4 @@ verifyParticipants(tx, actor, ticketId, matchId, peer, true, now)
 
 ## 组队端口
 
-`IPlayTeamService.create` / `join` 仍没有请求号和权威结果查询。`RendezvousHandoffLegacyTeamPort` 的 `lookup` 固定为未知，`create` / `join` 直接拒绝，不写队伍表。完整接通等跨模块改动获准之后。
+`RendezvousHandoffLegacyTeamPort` 仍是默认端口：`lookup` 固定为未知，`create` / `join` 直接拒绝，不写队伍表。真实请求索引在 `IPlayTeamService` 的 handoff 入口上，默认不装配，合同见 `docs/contracts/w16-play-team-handoff.md`。
