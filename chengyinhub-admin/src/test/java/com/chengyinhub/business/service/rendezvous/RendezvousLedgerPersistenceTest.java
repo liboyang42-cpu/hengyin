@@ -14,6 +14,11 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import org.apache.ibatis.builder.xml.XMLMapperBuilder;
 import org.apache.ibatis.mapping.Environment;
 import org.apache.ibatis.session.Configuration;
@@ -123,6 +128,31 @@ class RendezvousLedgerPersistenceTest {
         assertEquals(77L, meetings.result(2, ids[1]).teamId.longValue());
         meetings.handoff(1, ids[0]);
         assertEquals(1, creates[0]);
+    }
+
+    @Test void acceptAndBlockRaceLeavesNoActiveReservation() throws Exception {
+        View a = consent.join(6, "pool", "v1", 100_000);
+        View b = consent.join(7, "pool", "v1", 100_000);
+        consent.propose(a.ticketId, b.ticketId, "public-place");
+        ExecutorService workers = Executors.newFixedThreadPool(2);
+        CountDownLatch start = new CountDownLatch(1);
+        try {
+            Future<?> block = workers.submit(() -> {
+                start.await();
+                ImBlock request = new ImBlock();
+                request.setMemberId(6L);
+                request.setBlockedMemberId(7L);
+                new RendezvousImBlockMutation(ISOLATED_PERSISTENCE_EVALUATION, session, manager).insert(request);
+                return null;
+            });
+            Future<?> accept = workers.submit(() -> { start.await(); consent.accept(7, b.ticketId, 1); return null; });
+            start.countDown();
+            block.get(10, TimeUnit.SECONDS);
+            accept.get(10, TimeUnit.SECONDS);
+        } finally { workers.shutdownNow(); }
+        assertEquals(MatchState.SAFETY_STOPPED, consent.read(6, a.ticketId).matchState);
+        assertNull(consent.read(7, b.ticketId).publicPlace);
+        assertEquals(0, jdbc.queryForObject("SELECT COUNT(*) FROM w16_match_reservation", Integer.class));
     }
 
     @Test void reportAndBlockStopThePairWithoutTouchingTheSharedBlockMethod() {
