@@ -9,7 +9,8 @@ const root=path.resolve(__dirname,'../..');
 function mount() {
   let app; const storage=new Map(), requests=[], logins=[], native=[]; let shown=0;
   const wx={getStorageSync:k=>storage.get(k),setStorageSync:(k,v)=>storage.set(k,v),removeStorageSync:k=>storage.delete(k),
-    request:r=>{requests.push(r);return{abort(){}};},login:r=>logins.push(r),showLoading(){},hideLoading(){},hideToast(){}};
+    request:r=>{requests.push(r);return{abort(){}};},login:r=>logins.push(r),showLoading(){},hideLoading(){},hideToast(){},
+    getStorageInfoSync:()=>({keys:[...storage.keys()]}),reLaunch:r=>{wx.relaunched=r.url;}};
   vm.runInNewContext(fs.readFileSync(path.join(root,'app.js'),'utf8'),{App:a=>{app=a;},wx,console,setTimeout,clearTimeout,
     require:f=>f==='./utils/toast.js'?Object.assign(()=>{},{hide(){}}):require(path.join(root,f))});
   app.getSession=(()=>{const session=createSessionStore({target:app.globalData,wx});return()=>session;})();
@@ -21,6 +22,32 @@ async function settle(){for(let i=0;i<40;i++)await Promise.resolve();}
 function reply(r,data,statusCode=200){r.success({statusCode,data});if(r.complete)r.complete({statusCode,data});}
 function consentReply(r){const body=JSON.parse(r.data);reply(r,{code:200,data:Object.assign(body,{docVersion:body.docType==='privacy_policy'?'v2.1':'v2.2'})});}
 async function exchange(h){h.logins.at(-1).success({code:'fresh-login'});await settle();const r=h.requests.find(x=>x.url.endsWith('/api/login/code'));assert.ok(r);reply(r,{token:'fixture-seven',data:{id:'7',role:'player',userType:1,wxOpenId:'fixture-openid'}});await settle();}
+
+async function logoutThroughSettings(h) {
+  let page;
+  vm.runInNewContext(fs.readFileSync(path.join(root,'pages/shezhi/shezhi.js'),'utf8'),{
+    Page:p=>{page=p;},getApp:()=>h.app,wx:h.wx,console,setTimeout,clearTimeout,
+    require:f=>require(path.resolve(root,'pages/shezhi',f))
+  });
+  page.selectComponent=()=>({busyOn(){},failed(message){assert.fail(message);}});
+  h.storage.set('roam_memory_v1:7:sessions',[{sessionId:'logout-fixture'}]);
+  page.onDangerConfirm({detail:{key:'account.logout'}});
+  reply(h.requests.filter(r=>r.url.endsWith('/api/logout')).at(-1),{code:200});await settle();
+  for(const key of ['authorization','open_id','user_id','user_type','avatar','nickname','role']) assert.equal(h.app.globalData[key],'');
+  assert.equal(h.storage.has('authorization'),false);
+  assert.equal(h.storage.has('cy_usage_choice_v1'),false);
+  assert.equal([...h.storage.keys()].some(key=>key.startsWith('cy_consent_retry:')),false);
+  assert.equal(h.storage.get('roam_memory_v1:7:sessions')[0].sessionId,'logout-fixture');
+  assert.equal(h.wx.relaunched,'/pages/index/index');
+}
+async function reloginAfterLogout(h,owner='7') {
+  const before=h.requests.length,shown=h.shown(),waiting=h.app.firstLogin();await settle();
+  assert.equal(h.shown(),shown,'same-instance explicit choice remains effective');
+  h.logins.at(-1).success({code:'logout-relogin'});await settle();
+  const request=h.requests.slice(before).find(r=>r.url.endsWith('/api/login/code'));assert.ok(request);
+  reply(request,{token:'fixture-relogin-'+owner,data:{id:owner,role:'player',userType:1,wxOpenId:'fixture-openid-'+owner}});
+  assert.equal((await waiting).ok,true);await settle();
+}
 test('guest initialization finishes and public reads work before any native login or identity exchange',async()=>{
   const h=mount();await h.app.appInitial({});
   assert.equal(h.logins.length,0);assert.equal(h.requests.some(r=>r.url.endsWith('/api/login/code')),false);
@@ -154,4 +181,62 @@ test('refusal during pending receipt prevents clearing and no login writes until
   consentReply(h.requests.filter(r=>r.url.endsWith('/consents')).at(-1));await settle();
   consentReply(h.requests.filter(r=>r.url.endsWith('/consents')).at(-1));await retry;
   assert.deepEqual(Object.keys(h.storage.get('cy_usage_pending_v1:7').pending),[]);
+});
+
+test('normal settings logout retains completed owner consent ledger without recording agreement again',async()=>{
+  const h=mount();const attempt=h.app.agreeUsageConsent({detail:{buttonId:'agree'}},true);await settle();await exchange(h);
+  consentReply(h.requests.find(r=>r.url.endsWith('/consents')));await settle();
+  consentReply(h.requests.filter(r=>r.url.endsWith('/consents')).at(-1));await attempt;
+  const ledger=h.storage.get('cy_usage_pending_v1:7');
+  assert.deepEqual(Object.keys(ledger.pending),[]);
+  const count=h.requests.filter(r=>r.url.endsWith('/consents')).length;
+  await logoutThroughSettings(h);
+  assert.equal(h.storage.get('cy_usage_pending_v1:7'),ledger,'completed frozen-version receipt must survive logout');
+  await reloginAfterLogout(h);
+  assert.equal(h.requests.filter(r=>r.url.endsWith('/consents')).length,count,'logout must not turn a completed agreement into a new event');
+});
+test('normal settings logout resumes both pending consent documents with their original UUIDs',async()=>{
+  const h=mount();const attempt=h.app.agreeUsageConsent({detail:{buttonId:'agree'}},true);await settle();await exchange(h);
+  const first=h.requests.find(r=>r.url.endsWith('/consents'));
+  const ledger=h.storage.get('cy_usage_pending_v1:7');
+  const privacyId=ledger.pending.privacy_policy.requestId,serviceId=ledger.pending.user_service_agreement.requestId;
+  reply(first,{code:500,msg:'fixture consent unavailable'});await assert.rejects(attempt,/fixture consent unavailable/);
+  await logoutThroughSettings(h);
+  assert.equal(h.storage.get('cy_usage_pending_v1:7'),ledger,'failed write must retain the original durable identity');
+  await reloginAfterLogout(h);
+  const privacy=h.requests.filter(r=>r.url.endsWith('/consents')).at(-1);assert.equal(JSON.parse(privacy.data).requestId,privacyId);
+  consentReply(privacy);await settle();const service=h.requests.filter(r=>r.url.endsWith('/consents')).at(-1);
+  assert.equal(JSON.parse(service.data).requestId,serviceId);consentReply(service);await settle();
+  assert.deepEqual(Object.keys(h.storage.get('cy_usage_pending_v1:7').pending),[]);
+});
+test('logout and another normal account login cannot consume the former owner consent ledger',async()=>{
+  const h=mount();const attempt=h.app.agreeUsageConsent({detail:{buttonId:'agree'}},true);await settle();await exchange(h);
+  const first=h.requests.find(r=>r.url.endsWith('/consents')),ledger=h.storage.get('cy_usage_pending_v1:7');
+  reply(first,{code:500,msg:'fixture consent unavailable'});await assert.rejects(attempt,/fixture consent unavailable/);
+  await logoutThroughSettings(h);
+  assert.equal(h.storage.get('cy_usage_pending_v1:7'),ledger);
+  await reloginAfterLogout(h,'8');
+  const privacy=h.requests.filter(r=>r.url.endsWith('/consents')).at(-1),body=JSON.parse(privacy.data);
+  assert.notEqual(body.requestId,ledger.pending.privacy_policy.requestId);
+  assert.equal(h.storage.get('cy_usage_pending_v1:8').pending.privacy_policy.requestId,body.requestId);
+  consentReply(privacy);await settle();const service=h.requests.filter(r=>r.url.endsWith('/consents')).at(-1);
+  assert.notEqual(JSON.parse(service.data).requestId,ledger.pending.user_service_agreement.requestId);
+  consentReply(service);await settle();
+  assert.deepEqual(Object.keys(h.storage.get('cy_usage_pending_v1:8').pending),[]);
+  assert.equal(h.storage.get('cy_usage_pending_v1:7'),ledger);
+  assert.equal(Object.keys(ledger.pending).length,2);
+});
+test('preserving an owner ledger on logout does not preserve the global choice or bypass a cold consent gate',async()=>{
+  const h=mount();const attempt=h.app.agreeUsageConsent({detail:{buttonId:'agree'}},true);await settle();await exchange(h);
+  consentReply(h.requests.find(r=>r.url.endsWith('/consents')));await settle();
+  consentReply(h.requests.filter(r=>r.url.endsWith('/consents')).at(-1));await attempt;
+  const ledger=h.storage.get('cy_usage_pending_v1:7');await logoutThroughSettings(h);
+  assert.equal(h.storage.get('cy_usage_pending_v1:7'),ledger);
+  h.app._usageConsent=null;h.app._consentClient=null;
+  const shown=h.shown(),loginCount=h.logins.length,requestCount=h.requests.length,waiting=h.app.firstLogin();await settle();
+  assert.equal(h.shown(),shown+1);
+  assert.equal(h.logins.length,loginCount);
+  assert.equal(h.requests.length,requestCount);
+  h.app.declineUsageConsent();await waiting;
+  assert.equal(h.storage.get('cy_usage_pending_v1:7'),ledger);
 });

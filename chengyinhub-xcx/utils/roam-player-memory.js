@@ -184,7 +184,8 @@ function clearStoragePreservingPlayerRoamMemory(storage) {
 
   for (let index = 0; index < keys.length; index += 1) {
     const storageKey = keys[index]
-    if (isPlayerMemoryKey(storageKey)) continue
+    const consentLedger = typeof storageKey === 'string' && storageKey.match(/^cy_usage_pending_v1:[1-9][0-9]*$/)
+    if (isPlayerMemoryKey(storageKey) || (consentLedger && consentLedger[0] === storageKey)) continue
     try {
       target.removeStorageSync(storageKey)
     } catch (_) {
