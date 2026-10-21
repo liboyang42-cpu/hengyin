@@ -105,6 +105,7 @@ function loadSettings() {
     Page(page) { definition = page },
     require(request) {
       const modules = {
+        '../../utils/im-send-recovery.js': require('../../utils/im-send-recovery.js'),
         '../../utils/motion.js': require('../../utils/motion.js'),
         '../../utils/motion-preference.js': require('../../utils/motion-preference.js'),
         '../../utils/identity/identity-policy.js': { isMerchantView: () => false },
