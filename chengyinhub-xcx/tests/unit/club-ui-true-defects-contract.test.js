@@ -89,6 +89,7 @@ function applyDataPatch(target, patch) {
 
 function loadEditPage(source = read(EDIT_PAGE_JS)) {
   let definition
+  const localDrafts = {}
   vm.runInNewContext(source, {
     getApp: () => ({ globalData: { statusBarHeight: 44, navBarHeight: 44 } }),
     Page(config) { definition = config },
@@ -107,13 +108,21 @@ function loadEditScene(source = read(EDIT_SCENE_JS)) {
   const app = {
     sendRequest(request) { requests.push(request) },
     getAuthorization() { return 'boundary-token' },
+    getUserID() { return '9' },
     chooseImage() {},
   }
   vm.runInNewContext(source, {
     getApp: () => app,
     Component(config) { definition = config },
     setTimeout() { return 0 },
+    require(request) {
+      if (request.endsWith('/club-edit-draft.js')) return require('../../utils/club-edit-draft.js')
+      throw new Error('unexpected require: ' + request)
+    },
     wx: {
+      getStorageSync: key => localDrafts[key],
+      setStorageSync: (key, value) => { localDrafts[key] = value },
+      removeStorageSync: key => { delete localDrafts[key] },
       showModal(options) { modalCalls.push(options) },
       showToast() {},
     },
@@ -126,7 +135,11 @@ function loadEditScene(source = read(EDIT_SCENE_JS)) {
     if (callback) callback.call(component)
   }
   component.triggerEvent = (name, detail) => events.push({ name, detail })
-  return { component, requests, modalCalls, events }
+  return { component, requests, modalCalls, events, prime(club) {
+    component.data.clubId = String(club.id)
+    component.fetchDetail()
+    requests.pop().success({ code: 200, data: club })
+  } }
 }
 
 function formSnapshot(component) {
@@ -142,8 +155,8 @@ function formSnapshot(component) {
 test('club edit required inputs reject blank and whitespace without altering the draft', () => {
   for (const field of ['name', 'city']) {
     for (const value of ['', '   ', '\t\n']) {
-      const { component, requests } = loadEditScene()
-      Object.assign(component.data, { loadState: 'ready', name: '测试俱乐部', city: '测试城市' })
+      const { component, requests, prime } = loadEditScene()
+      prime({ id: 990005, name: '测试俱乐部', city: '测试城市', isOwner: true })
       component.onInput({ currentTarget: { dataset: { field } }, detail: { value } })
       assert.equal(component.data.canSave, false, `${field} must reject whitespace-only input`)
       assert.equal(component.data[field], value, 'validation must preserve the original input')
@@ -154,8 +167,10 @@ test('club edit required inputs reject blank and whitespace without altering the
 })
 
 test('club edit valid boundary spaces remain in the normal save payload and recover after failure', () => {
-  const { component, requests } = loadEditScene()
-  Object.assign(component.data, { loadState: 'ready', clubId: 990005, description: '原简介', saveErrorText: '上次保存失败' })
+  const { component, requests, prime } = loadEditScene()
+  const club = { id: 990005, name: '原俱乐部', city: '原城市', description: '原简介', isOwner: true }
+  prime(club)
+  component.data.saveErrorText = '上次保存失败'
   const name = '  测试俱乐部  '
   const city = ' 测试城市 '
   component.onInput({ currentTarget: { dataset: { field: 'name' } }, detail: { value: name } })
@@ -163,13 +178,16 @@ test('club edit valid boundary spaces remain in the normal save payload and reco
   assert.equal(component.data.canSave, true)
   assert.equal(component.data.saveErrorText, '')
   component.save()
+  const check = requests.shift()
+  assert.equal(check.url, '/api/club/detail')
+  check.success({ code: 200, data: club })
   assert.equal(requests.length, 1)
   const payload = JSON.parse(requests[0].data)
   assert.equal(payload.name, name)
   assert.equal(payload.city, city)
   assert.equal(payload.address, city)
   assert.equal(payload.description, '原简介')
-  requests[0].success({ data: { code: 500, msg: '保存失败' } })
+  requests[0].success({ code: 500, msg: '保存失败' })
   assert.equal(component.data.name, name)
   assert.equal(component.data.city, city)
   assert.equal(component.data.saving, false)
@@ -346,7 +364,7 @@ function assertSaveFailurePreserves(outcome) {
   const harness = loadEditScene()
   Object.assign(harness.component.data, {
     loadState: 'ready',
-    clubId: `club-${outcome}-${process.pid}`,
+    clubId: String(990000 + process.pid),
     name: `name-${outcome}-${process.pid}`,
     clubType: `type-${outcome}-${process.pid}`,
     activityPrefs: [`pref-${outcome}-${process.pid}`],
@@ -361,9 +379,15 @@ function assertSaveFailurePreserves(outcome) {
     isOwner: true,
     canSave: true,
   })
+  const club = Object.assign({}, harness.component.data, { id: harness.component.data.clubId, activityPrefs: harness.component.data.activityPrefs.join(',') })
+  harness.prime(club)
+  harness.component.markDirty()
   const before = formSnapshot(harness.component)
   const beforeLoadState = harness.component.data.loadState
   harness.component.save()
+  const check = harness.requests.shift()
+  assert.equal(check.url, '/api/club/detail')
+  check.success({ code: 200, data: club })
   const request = harness.requests[0]
   if (outcome === 'business') request.success({ code: '500', msg: `save-${process.pid}` })
   else request.fail({ errMsg: `save-${process.pid}` })

@@ -522,7 +522,7 @@ Component({
         draftNotice: found.record ? (conflict ? '资料已更新，旧草稿不会直接提交。请对比后放弃旧草稿再编辑。' : '发现本账号未提交的本机草稿，请选择恢复或放弃。')
           : found.state === 'corrupt' ? '草稿已损坏，原记录已保留且不会覆盖，请勿退出丢失当前输入。'
           : found.state === 'error' ? '暂时无法读取草稿，原记录不会覆盖，请勿退出。可重新读取。' : '',
-        draftComparison: conflict ? drafts.compare(found.record.form, this.draftServer(latest)) || '服务端更新时间已变化，请重新核对。' : '',
+        draftComparison: conflict ? drafts.compare(found.record.form, this.draftServer(latest)) || '资料更新时间已变化，请重新核对。' : '',
       });
     },
     restoreDraft() {
@@ -586,7 +586,7 @@ Component({
           if (drafts.base(that.draftServer(latest)) !== that._draftBase) {
             that.setData({ saving: false, draftBlocked: true, draftCanDiscard: found.state === 'ready',
               draftNotice: '资料已更新，本次未提交。请对比并放弃旧草稿后重新编辑。',
-              draftComparison: drafts.compare(that.data, that.draftServer(latest)) || '服务端更新时间已变化，请重新核对。' }); return;
+              draftComparison: drafts.compare(that.data, that.draftServer(latest)) || '资料更新时间已变化，请重新核对。' }); return;
           }
           that.setData({ saving: false });
           that.submitDraft(scope);
