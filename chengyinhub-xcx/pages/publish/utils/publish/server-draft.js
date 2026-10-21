@@ -19,6 +19,7 @@
 
 const templateBinding = require('./template-binding.js');
 const initial = require('./story-initial-state.js');
+const { normalizeAtmosphere } = require('../../../../utils/chapter-atmosphere.js');
 
 function topicIdOf(data) {
   const id = data && typeof data === 'object' ? data.topicId : data;
@@ -104,13 +105,138 @@ function initialOf(raw) {
   } catch (error) { return 'invalid'; }
 }
 
+// 只核对当前写接口实际持久的票字段；totalStock 写入 totalInventory，票号与顺序由服务端决定。
+function ticketMatches(before, after, productType) {
+  if (!before || typeof before !== 'object' || Array.isArray(before)) return false;
+  const numbers = ['price', 'totalStock', 'teamSize', 'gatherLng', 'gatherLat', 'needAudit'];
+  const fields = ['name', 'startTime', 'endTime', 'saleStartTime', 'saleEndTime',
+    'meetingPoint', 'meetingPointAddress', 'refundRule', 'refundSupported', 'syncWithTheme'].concat(numbers);
+  if (productType != null && Number(after.mode) !== Number(productType)) return false;
+  return fields.every(field => {
+    if (before[field] === undefined) return true;
+    const left = before[field], right = after[field === 'totalStock' ? 'totalInventory' : field];
+    if (numbers.includes(field)) {
+      // 地图坐标落入 DECIMAL(10,6)，其余数字只消除字符串/小数尾零差异。
+      const numeric = value => {
+        if (value == null || value === '') return null;
+        if (!['number', 'string'].includes(typeof value) || !Number.isFinite(Number(value))) return NaN;
+        return ['gatherLng', 'gatherLat'].includes(field) ? Number(Number(value).toFixed(6)) : Number(value);
+      };
+      return numeric(left) === numeric(right);
+    }
+    return (left == null ? '' : left) === (right == null ? '' : right);
+  });
+}
+
+function stable(value) {
+  return JSON.stringify(value, (key, row) => row && typeof row === 'object' && !Array.isArray(row)
+    ? Object.keys(row).sort().reduce((out, field) => { out[field] = row[field]; return out; }, {}) : row);
+}
+
+// 对照 ChapterFlowCompiler.materializeBlocks；只忽略服务端补出的 key，不能忽略正文、条件或节点引用。
+function storedBlock(block, nodes, submitted, keepKey) {
+  const row = {};
+  const fields = {
+    text: ['content', 'who', 'level', 'when', 'beat', 'field', 'qid', 'npcId', 'claimLater'],
+    node: [], image: ['url'], audio: ['url'], mood: ['mood'], thought: ['thoughtKey'],
+    voice: ['who', 'content', 'when'], odd: ['level'], reveal: ['who', 'content'], dream: ['title', 'images'],
+  };
+  if (!block || !Object.prototype.hasOwnProperty.call(fields, block.type)) throw new Error('invalid block');
+  row.type = block.type;
+  if (keepKey && block.key != null) row.key = block.key;
+  for (const field of fields[block.type]) if (block[field] != null) row[field] = block[field];
+  if (block.type === 'node' || block.type === 'text' && String(block.beat || '').trim()) {
+    const id = submitted ? (nodes[block.nodeIndex] || {}).id : block.nodeId;
+    if (!topicIdOf(id)) throw new Error('invalid block node');
+    row.nodeId = String(id);
+  }
+  if (block.type === 'node' && block.locationRequired === false) row.locationRequired = false;
+  if (['text', 'reveal'].includes(block.type) && row.who != null) {
+    row.who = row.who.trim(); if (!row.who) delete row.who;
+  }
+  if (block.type === 'text' && row.beat) {
+    for (const field of ['beat', 'field', 'qid']) if (row[field] != null) row[field] = row[field].trim();
+  }
+  if (['voice', 'reveal'].includes(block.type)) row.content = String(row.content || '').trim();
+  if (block.type === 'mood') row.mood = normalizeAtmosphere(row.mood);
+  if (block.type === 'thought') row.thoughtKey = row.thoughtKey.trim();
+  if (block.type === 'dream') {
+    if (row.title != null) { row.title = row.title.trim(); if (!row.title) delete row.title; }
+    row.images = row.images.map(image => {
+      const out = { url: image.url };
+      if (String(image.line || '').trim()) out.line = image.line;
+      return out;
+    });
+  }
+  return row;
+}
+
+function savedContentIssue(sent, detail) {
+  if (sent.collaboratorIds !== undefined) {
+    const ids = list => Array.isArray(list) && list.every(id => topicIdOf(id))
+      ? list.map(id => String(Number(id))).sort() : null;
+    const want = ids(sent.collaboratorIds), have = ids(detail.collaboratorIds);
+    if (!want || !have || stable(want) !== stable(have)) return '云端保存的协作者与本机不一致';
+  }
+  if (sent.tickets !== undefined) {
+    if (!Array.isArray(sent.tickets) || !Array.isArray(detail.tickets)
+        || sent.tickets.length !== detail.tickets.length) return '云端保存的票种数量与本机不一致';
+    const tickets = detail.tickets.slice(), ids = new Set();
+    for (const ticket of tickets) {
+      if (!ticket || !topicIdOf(ticket.id) || ids.has(String(Number(ticket.id)))
+          || String(ticket.ownerId) !== String(detail.topic.id) || Number(ticket.ownerType) !== 1)
+        return '云端保存的票种编号或归属不一致';
+      ids.add(String(Number(ticket.id)));
+    }
+    // 半填草稿允许省略字段，不能让宽匹配先占用另一张票唯一能匹配的回读行。
+    const paired = new Map();
+    const match = (index, seen) => {
+      for (let at = 0; at < tickets.length; at++) {
+        if (seen.has(at) || !ticketMatches(sent.tickets[index], tickets[at], sent.productType)) continue;
+        seen.add(at);
+        if (!paired.has(at) || match(paired.get(at), seen)) { paired.set(at, index); return true; }
+      }
+      return false;
+    };
+    if (!sent.tickets.every((ticket, index) => match(index, new Set()))) return '云端保存的票种内容与本机不一致';
+  }
+  const chapterIds = new Set(), nodeIds = new Set();
+  for (let ci = 0; ci < (sent.chapters || []).length; ci++) {
+    const before = sent.chapters[ci], after = detail.chapters[ci], nodes = after.cmsTopicNodeList || [];
+    if (!topicIdOf(after.id) || chapterIds.has(String(Number(after.id)))
+        || String(after.topicId) !== String(detail.topic.id)) return '云端保存的章节或站点编号、归属不完整';
+    chapterIds.add(String(Number(after.id)));
+    for (const node of nodes) {
+      if (!topicIdOf(node.id) || nodeIds.has(String(Number(node.id)))
+          || String(node.chapterId) !== String(after.id) || String(node.topicId) !== String(detail.topic.id))
+        return '云端保存的站点编号或章节归属不一致';
+      nodeIds.add(String(Number(node.id)));
+    }
+    if (Array.isArray(before.blocks)) {
+      try {
+        const blocks = after.blocks == null ? JSON.parse(after.blocksJson || 'null') : after.blocks;
+        if (!Array.isArray(blocks) || blocks.length !== before.blocks.length) return '云端保存的章节剧情块与本机不一致';
+        for (let bi = 0; bi < blocks.length; bi++) {
+          const keepKey = !!before.blocks[bi].key;
+          if (stable(storedBlock(before.blocks[bi], nodes, true, keepKey))
+              !== stable(storedBlock(blocks[bi], nodes, false, keepKey))) return '云端保存的章节剧情块或节点引用与本机不一致';
+        }
+      } catch (error) { return '云端保存的章节剧情块无法核对'; }
+    }
+  }
+  return '';
+}
+
 /** 回读与刚保存的内容是否对得上;对不上返回一句原因,对得上返回 ''。 */
 function readbackIssue(sent, detail, expectDraft) {
   if (!detail || !detail.topic) return '没能取回云端保存的主题';
   if (expectDraft && detail.isDraft !== true) return '云端保存的主题不是草稿';
   if (String(detail.topic.name || '') !== String((sent && sent.name) || '')) return '云端保存的主题名与本机不一致';
   const sentChapters = (sent && sent.chapters) || [];
-  const got = detail.chapters || [];
+  const got = detail.chapters;
+  if (!Array.isArray(sentChapters) || !Array.isArray(got)
+      || got.some(chapter => !chapter || !Array.isArray(chapter.cmsTopicNodeList)))
+    return '云端保存的章节或站点列表不完整';
   if (sentChapters.length !== got.length) return '云端保存的章节数与本机不一致';
   for (let ci = 0; ci < got.length; ci++) {
     const a = sentChapters[ci] || {}, b = got[ci] || {};
@@ -123,6 +249,8 @@ function readbackIssue(sent, detail, expectDraft) {
       if ((Number(an[ni].templateId) || 0) !== (Number(bn[ni].templateId) || 0)) return '第' + (ci + 1) + '章「' + (bn[ni].name || '') + '」的玩法与本机不一致';
     }
   }
+  const contentIssue = savedContentIssue(sent || {}, detail);
+  if (contentIssue) return contentIssue;
   const sentConfig = parseConfig(sent && sent.themeRuntimeConfig);
   const gotConfig = parseConfig(detail.themeRuntimeConfig || detail.topic.themeRuntimeConfigJson);
   if (!sentConfig || !gotConfig) return '云端保存的玩法配置无法解析';
