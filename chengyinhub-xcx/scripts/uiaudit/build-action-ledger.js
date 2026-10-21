@@ -1069,11 +1069,17 @@ function nestedCallbackRanges(source) {
   return ranges
 }
 
+// 同一源码会被多个控件反复解析；只缓存成功掩码，每轮台账构建清空。
+const nonCodeMasks = new Map()
 function maskNonCodeSafely(source) {
+  const text = String(source || '')
+  if (nonCodeMasks.has(text)) return nonCodeMasks.get(text)
   try {
-    return maskNonCode(String(source || ''))
+    const masked = maskNonCode(text)
+    nonCodeMasks.set(text, masked)
+    return masked
   } catch (_) {
-    return String(source || '')
+    return text
   }
 }
 
@@ -2279,6 +2285,7 @@ function targetsForHandler(jsFile, handlerName) {
 }
 
 function buildLedger() {
+  nonCodeMasks.clear()
   const roles = loadRoles()
   const registeredRoutes = new Set(readAppRoutes().map((route) => route.pagePath))
   const { map } = buildJsToWxmlMap(ROOT)
@@ -2499,6 +2506,7 @@ function buildLedger() {
   })
 
   controls.sort((a, b) => a.id.localeCompare(b.id))
+  nonCodeMasks.clear()
   return {
     schemaVersion: 7,
     generatedBy: 'scripts/uiaudit/build-action-ledger.js --write',
