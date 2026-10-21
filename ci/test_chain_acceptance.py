@@ -953,7 +953,8 @@ class PostDeployTest(unittest.TestCase):
                 mock.patch.object(ca, "probe_token", return_value="token") as login_probe, \
                 mock.patch.object(ca, "fault_probe", return_value={}), \
                 mock.patch.object(ca, "run_chains", return_value=[{"verdict": "PASS", "chain": "platform", "problems": []}]) as chains, \
-                mock.patch.object(ca, "observe_postdeploy", side_effect=ca.GateError("bad bean") if observation_failure else None,
+                mock.patch.object(ca, "observe_postdeploy", side_effect=(ca.AdminReadbackError(observation_failure)
+                                  if isinstance(observation_failure, str) else ca.GateError("bad bean")) if observation_failure else None,
                                   return_value=proof), \
                 mock.patch.object(ca, "stop_app", side_effect=stop), \
                 mock.patch.object(ca.post, "prepare_operator_fixture", return_value={"status": "PASS"}) as fixture, \
@@ -963,7 +964,11 @@ class PostDeployTest(unittest.TestCase):
                 with self.assertRaises(ca.GateError): ca.cmd_run(args, {})
                 sql.assert_not_called()
                 fixture.assert_not_called(); reject.assert_not_called()
-                self.assertEqual("FAIL", ca.read_receipt(out)["stages"]["postdeploy"]["status"])
+                failed = ca.read_receipt(out)["stages"]["postdeploy"]
+                self.assertEqual("FAIL", failed["status"])
+                if isinstance(observation_failure, str):
+                    self.assertEqual(observation_failure if re.fullmatch(r"ADMIN_[A-Z_]+", observation_failure) else None,
+                                     failed["failure_code"])
             else:
                 self.assertEqual(0, ca.cmd_run(args, {}))
                 self.assertEqual(["stop", "sql"], order)
@@ -978,6 +983,9 @@ class PostDeployTest(unittest.TestCase):
     def test_original_jvm_confirmed_stopped_before_sql(self): self.run_control()
     def test_unknown_stop_blocks_every_sql(self): self.run_control(stop_unknown=True)
     def test_failed_live_observation_stops_jvm_and_blocks_sql(self): self.run_control(observation_failure=True)
+    def test_admin_failure_keeps_only_safe_fixed_code_and_blocks_sql(self):
+        self.run_control(observation_failure="ADMIN_ROUTER_SQL_MISMATCH")
+        self.run_control(observation_failure="private raw error payload")
     def test_post_only_does_not_repeat_chain_or_gameplay_fault_probe(self): self.run_control(through="post_deploy")
     def test_stale_live_proof_cannot_start_sql(self): self.run_control(stale=True)
 

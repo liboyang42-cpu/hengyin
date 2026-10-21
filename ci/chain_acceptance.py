@@ -38,10 +38,10 @@ from pathlib import Path
 
 try:
     import chain_postdeploy as post
-    from chain_admin_readback import observe_admin
+    from chain_admin_readback import AdminReadbackError, observe_admin
 except ModuleNotFoundError:
     from ci import chain_postdeploy as post
-    from ci.chain_admin_readback import observe_admin
+    from ci.chain_admin_readback import AdminReadbackError, observe_admin
 
 RECEIPT_SCHEMA = "CY-CHAIN-ACCEPTANCE-RECEIPT-20261019"
 SUMMARY_SCHEMA = "CY-CHAIN-ACCEPTANCE-SUMMARY-20261019"
@@ -1090,7 +1090,9 @@ def cmd_run(args, environ):
         else:
             stage(args.out, "postdeploy", "FAIL", reason="prerequisite_chain_failed", sql_started=False)
     except Exception as error:
-        stage(args.out, "postdeploy", "FAIL", reason=type(error).__name__, sql_started=False)
+        code = str(error) if isinstance(error, AdminReadbackError) else None
+        stage(args.out, "postdeploy", "FAIL", reason=type(error).__name__, sql_started=False,
+              failure_code=code if code and re.fullmatch(r"ADMIN_[A-Z_]+", code) else None)
         raise GateError("postdeploy live prerequisite failed") from None
     finally:
         try:
