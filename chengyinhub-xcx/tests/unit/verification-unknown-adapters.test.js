@@ -310,3 +310,58 @@ test('明确回执清理后读取异常不能改报无持久记录的UNKNOWN', (
   finish({ status: 'success' }); assert.equal(outcome.status, 'success');
   storage.getStorageSync = originalRead; assert.equal(Object.keys(storage.values).length, 0);
 });
+
+for (const [file, method] of entries) {
+  test(file + ' 非法UTF16在持久写入和POST前拒绝，不与合法原码共用摘要', () => {
+    const storage = durableStorage(); let writes = 0;
+    const write = storage.setStorageSync;
+    storage.setStorageSync = (key, value) => { writes++; write(key, value); };
+    for (const code of ['\ud800\u0000', '\ud800', '\udc00', '\ud800A']) {
+      const h = harness(file, method, false, { url: '/api/registration/scan_qr_code', data: { type: 'activity', code } }, storage);
+      h.invoke();
+      assert.equal(h.requests.length, 0, '非法代理项不得进入写请求');
+      assert.equal(writes, 0, '非法代理项不得占用持久待办');
+      assert.deepEqual(storage.values, {});
+      assert.ok(h.messages.some(message => /未提交/.test(message)));
+    }
+    const valid = harness(file, method, false, { url: '/api/registration/scan_qr_code', data: { type: 'activity', code: '\u2400' } }, storage);
+    valid.invoke();
+    assert.equal(valid.requests.length, 1, '合法原码不能被非法UTF16的编码碰撞锁住');
+    assert.equal(writes, 1);
+  });
+
+  test(file + ' 真实request-client历史code2重登失败释放原待办，重开仍可提交', () => {
+    const storage = durableStorage();
+    const h = harness(file, method, true, undefined, storage); h.invoke();
+    h.requests[0].success({ statusCode: 200, data: { code: 2, msg: '登录已过期' } });
+    assert.equal(h.requests.length, 1, '重登失败不能自动重发写请求');
+    assert.deepEqual(storage.values, {}, '明确鉴权拒绝不能永久占用UNKNOWN');
+    assert.ok(h.messages.every(message => !/待确认/.test(message)));
+    h.dispose();
+    const next = harness(file, method, false, undefined, storage); next.invoke();
+    assert.equal(next.requests.length, 1);
+  });
+}
+
+test('合法Unicode与摘要块边界保持标准SHA256，非法owner也不得落盘', () => {
+  const hash = text => require('node:crypto').createHash('sha256').update(text).digest('hex');
+  for (const target of ['', 'a'.repeat(55), 'b'.repeat(56), 'c'.repeat(63), 'd'.repeat(64), 'e'.repeat(1000), '核销🙂𐀀']) {
+    const storage = durableStorage();
+    const flow = verification.createVerificationWorkflow({ storage, getOwner: () => '11', setTimer: () => 1, clearTimer() {} });
+    flow.run('11:' + target, () => null, () => {});
+    assert.equal(Object.values(storage.values)[0].targetDigest, hash('verification-target:' + target));
+  }
+  const storage = durableStorage(); let posts = 0;
+  verification.createVerificationWorkflow({ storage, getOwner: () => '\ud800', setTimer: () => 1, clearTimer() {} })
+    .run('\ud800:target', () => { posts++; }, () => {});
+  assert.equal(posts, 0); assert.deepEqual(storage.values, {});
+});
+
+test('历史登录拒绝仅接受fail通道的精确status2与code2，其余仍UNKNOWN', () => {
+  for (const code of [2, '2']) {
+    assert.equal(verification.classifyVerificationOutcome({ code }, 'fail', 2).status, 'failed');
+  }
+  for (const [code, channel, status] of [[2, 'success', 200], [2, 'abnormal', 2], ['2e0', 'fail', 2], [true, 'fail', 2], [500, 'fail', 2], [2, 'fail', '2']]) {
+    assert.equal(verification.classifyVerificationOutcome({ code }, channel, status).status, 'unknown');
+  }
+});

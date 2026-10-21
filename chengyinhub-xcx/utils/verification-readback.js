@@ -44,7 +44,12 @@ function sha256(value) {
   const bytes = [];
   for (let i = 0; i < value.length; i++) {
     let cp = value.charCodeAt(i);
-    if (cp >= 0xd800 && cp <= 0xdbff) cp = 0x10000 + ((cp - 0xd800) << 10) + (value.charCodeAt(++i) - 0xdc00);
+    if (cp >= 0xd800 && cp <= 0xdbff) {
+      const low = value.charCodeAt(i + 1);
+      if (!(low >= 0xdc00 && low <= 0xdfff)) throw Error('invalid UTF-16');
+      cp = 0x10000 + ((cp - 0xd800) << 10) + (low - 0xdc00);
+      i += 1;
+    } else if (cp >= 0xdc00 && cp <= 0xdfff) throw Error('invalid UTF-16');
     if (cp < 0x80) bytes.push(cp);
     else if (cp < 0x800) bytes.push(0xc0 | (cp >> 6), 0x80 | (cp & 63));
     else if (cp < 0x10000) bytes.push(0xe0 | (cp >> 12), 0x80 | ((cp >> 6) & 63), 0x80 | (cp & 63));

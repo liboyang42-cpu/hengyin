@@ -15,6 +15,7 @@
  *   node tests/lint/ui-integrity.js --selftest
  */
 const fs = require('fs');
+const { scanSharedA11y } = require('./shared-a11y');
 const crypto = require('crypto');
 const os = require('os');
 const path = require('path');
@@ -926,8 +927,8 @@ function scanLegacy(jsFiles, wxmlFiles) {
   return { errors, warnings };
 }
 
-function enforcedLegacyViolations(legacy) {
-  return [...legacy.errors, ...(WARN_AS_ERROR ? legacy.warnings : [])];
+function enforcedLegacyViolations(legacy, warnAsError = WARN_AS_ERROR) {
+  return [...legacy.errors, ...(warnAsError ? legacy.warnings : [])];
 }
 
 function assertSelftest(name, bad, good, detail) {
@@ -1094,10 +1095,10 @@ function runSelftest() {
       "Page({show(){toast('这家还没有在平台建档,先电话联系')}})\n",
       "Page({show(){toast.error('主办退出必须先完成受控转交，不能在收件箱直接退出')}})\n",
       "Page({show(){app.tips('标记已读失败,请重试')}})\n",
-    ].every((src) => { fs.writeFileSync(js, src); return enforcedLegacyViolations(scanLegacy([js], [])).length >= 1; });
+    ].every((src) => { fs.writeFileSync(js, src); return enforcedLegacyViolations(scanLegacy([js], []), true).length >= 1; });
     // 注释里提到这些词、代码里 includes('参数错误') 拦它们,都不算违规
     fs.writeFileSync(js, "// 后端偶尔回 '参数错误'\nPage({show(){wx.showToast({title:'操作完成'}); toast('网络异常，请重试'); if (msg.includes('参数错误')) return;}})\n");
-    const placeholderGood = enforcedLegacyViolations(scanLegacy([js], [])).length === 0;
+    const placeholderGood = enforcedLegacyViolations(scanLegacy([js], []), true).length === 0;
     assertSelftest('WARN-AS-ERROR', placeholderBad, placeholderGood,
       '--warn-as-error 下占位/开发者口径/裸网络/半角逗号/超长提示文案会进入失败判定');
 
@@ -1133,6 +1134,7 @@ function runRepoScan() {
   const u4 = scanU4(jsFiles);
   const u5 = scanU5(jsFiles);
   const legacy = scanLegacy(jsFiles, wxmlFiles);
+  const a11y = scanSharedA11y();
   const ratchet = BASELINE.ratchet || {};
   const baselineViolations = [
     ...baselineContract('U1-VARIABLE', U1_VARIABLE_ALLOWLIST,
@@ -1149,7 +1151,7 @@ function runRepoScan() {
   ];
   const violations = [
     ...u1.violations, ...u2Violations, ...u3.violations, ...u4.violations,
-    ...u5.violations, ...enforcedLegacyViolations(legacy), ...baselineViolations,
+    ...u5.violations, ...enforcedLegacyViolations(legacy), ...baselineViolations, ...a11y,
   ];
 
   console.log(`UI-GATE-0 扫描:${jsFiles.length} JS / ${wxmlFiles.length} WXML / ${backendRoutes.size} backend Mapping`);
@@ -1160,6 +1162,7 @@ function runRepoScan() {
   console.log(`U3 ${u3.violations.length ? 'FAIL' : 'PASS'}:零绑定债务 ${u3.candidates.length}/${u3.candidates.filter((item) => item.allowed).length} 已登记,生命周期规则 ${PAGE_LIFECYCLES.size}`);
   console.log(`U4 ${u4.violations.length ? 'FAIL' : 'PASS'}:零消费债务 ${u4.candidates.length}/${u4.candidates.filter((item) => item.allowed).length} 已登记,动态 setData ${u4.dynamicReports.length}/${u4.dynamicReports.filter((item) => item.allowed).length} 已登记`);
   console.log(`U5 ${u5.violations.length ? 'FAIL' : 'PASS'}:需逐项理由 ${u5.callsites.length},同请求内静态证明显式处理 ${u5.autoSafe.length},逐项理由 ${u5.callsites.filter((item) => item.allowed).length}`);
+  console.log(`A11Y ${a11y.length ? 'FAIL' : 'PASS'}:共享组件语义、触达与静态替代契约`);
   console.log(`Legacy ${legacy.errors.length ? 'FAIL' : 'PASS'}:error ${legacy.errors.length},warn ${legacy.warnings.length}`);
   legacy.warnings.forEach((item) => console.log(`  [WARN] ${item.key} ${item.message}`));
 

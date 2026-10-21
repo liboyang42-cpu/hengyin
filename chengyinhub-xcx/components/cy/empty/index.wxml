@@ -1,4 +1,4 @@
-<view class="cy-empty {{fill ? 'cy-empty--fill' : ''}} {{size === 'lg' ? 'cy-empty--lg' : (size === 'sm' ? 'cy-empty--sm' : '')}}"
+<view class="cy-empty {{reducedMotion ? 'cy-empty--reduced-motion' : ''}} {{fill ? 'cy-empty--fill' : ''}} {{size === 'lg' ? 'cy-empty--lg' : (size === 'sm' ? 'cy-empty--sm' : '')}}"
       aria-role="status" aria-live="polite" aria-label="{{aria || _title}}{{!aria && _sub ? '，' + _sub : ''}}" aria-busy="{{_loading}}">
   <view wx:if="{{_loading}}" class="cy-empty-spinner" aria-hidden="true"></view>
   <view wx:elif="{{_glyph}}" class="cy-empty-glyph" aria-hidden="true">

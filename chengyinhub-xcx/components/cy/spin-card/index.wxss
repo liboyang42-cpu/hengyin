@@ -1,3 +1,4 @@
+@import "../../../style/reduced-motion.wxss";
 /* cy-spin-card · 立体藏品卡
  *
  * 姿态由根节点的一段内联样式喂进来(--rx/--ry/--px/--py/--fx/--fy/--fo),

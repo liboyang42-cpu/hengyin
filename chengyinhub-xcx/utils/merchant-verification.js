@@ -27,6 +27,9 @@ function validChoice(data) {
 function classifyVerificationOutcome(response, channel, httpStatus, request) {
   const unknown = () => ({ status: 'unknown', response: { code: 202, msg: UNKNOWN_MESSAGE } });
   const status = Number(httpStatus);
+  // request-client 只在历史 code=2 鉴权拒绝且重登失败时以 fail(body, 2) 返回。
+  if (channel === 'fail' && httpStatus === 2 && record(response) && (response.code === 2 || response.code === '2'))
+    return { status: 'failed', response: { code: 401, msg: '登录状态已失效，未执行核销' } };
   // request-client 保留的 HTTP 拒绝；408/5xx/无 HTTP 回执绝不走此分支。
   if ([400, 401, 403, 404, 405, 413, 415, 426, 429].includes(status))
     return { status: 'failed', response: { code: status, msg: '请求被拒绝，未执行核销' } };
