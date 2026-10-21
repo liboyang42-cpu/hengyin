@@ -213,6 +213,16 @@ test('C13 营销空态夹具把优惠券落成零张，不是数据待同步', (
   assert.equal(data.marketingDataState, 'empty')
   assert.equal(data.couponCard, null)
   assert.equal(data.entries.length, 0)
+  assert.equal(data.deckGhosts, 0)
+  assert.equal(data.couponRate, '')
+  new (require('node:vm').Script)(read('scripts/_gen_fixtures.js'))
+  const override = read('scripts/_gen_fixtures.js').match(/C13:\s*\{([^}]+)\}/)[1]
+  assert.match(override, /deckGhosts:\s*0/)
+  assert.match(override, /couponRate:\s*''/)
+  // _shot_full_matrix setData merges into the current page; clear the previous shot's decoration.
+  const merged = Object.assign({ deckGhosts: 2, couponRate: '领取后核销 50%' }, data)
+  assert.equal(merged.deckGhosts, 0)
+  assert.equal(merged.couponRate, '')
 })
 
 test('A28 搜索加载夹具只留全部 tab，不带零计数', () => {
