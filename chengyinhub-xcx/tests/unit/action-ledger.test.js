@@ -581,7 +581,8 @@ test('真实点击与组件事件合同分母分开，非 tap 不得伪装按钮
   // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):本线新页面与入口按 build-action-ledger --write 重建实测,tap 2022 → 2092。 合并 master #327(owner 批准)后两侧之和:2026-10-20 R5 尾段(#327,owner 批准):章节弹层按 Figma J3 重排 -6 tap(两段完成要求、额外节点/任务位),故事流计数方式标记 +1 等,按重建实测 2022 → 2018。 → 合并实测 2088。
   // 2026-10-20 审核整合保留举报三入口、模板审核、项目审核、重试与申诉七个 tap，2090 → 2097。
   // 2026-10-20 用户要求删掉「我的纠错 / 纠错进度」两页、消息页改收件箱/发件箱(合并 master 584470ad 后按重建实测),2109 → 2101。
-  assert.equal(local.filter((item) => item.interactionMode === 'tap').length, 2101)  /* 2026-10-07 动态绑定补齐4条tap。2026-09-22 现场感三件套 S1 新增 4 颗 tap(uploadPhotoFrame / clearPhotoFrame /
+  // 2026-10-21 首页新增编辑精选来源说明，纯页内 tap +1，重建实测 2101 → 2102。
+  assert.equal(local.filter((item) => item.interactionMode === 'tap').length, 2102)  /* 2026-10-07 动态绑定补齐4条tap。2026-09-22 现场感三件套 S1 新增 4 颗 tap(uploadPhotoFrame / clearPhotoFrame /
      onFrameShutter / onFrameCancel),其中 uploadPhotoFrame 与 onFrameShutter 是
      actionClass=external(real-device-required)、不进 local 分母 ⇒ 进账的是
      onFrameCancel(玩家端「退出取景」)+ clearPhotoFrame(商家端删图),1787 → 1789(重建实测)。 */
@@ -1549,7 +1550,8 @@ test('合并后可达动作 variant 全部进入台账且 handler 真源可定�
   // 2026-10-20 与审核分支按最终源码并集合并：新增12条、移除0条，语义差分见本轮记录，4894 → 4906。
   // 2026-10-20 合并18e：按wxml/tag/event/handler/variant多重集新增40、移除0；本地tap+12、事件+23、外部+5，未添加验收通过证据。
   // 2026-10-20 用户要求删掉「我的纠错 / 纠错进度」两页、消息页改收件箱/发件箱(合并 master 584470ad 后按重建实测),4946 → 4931。
-  assert.equal(ledger.controlCount, 4931) // F-L5C-06 帖文详情社区未开放空态 CTA +1(与 E2 合并后实测)。 // F-W1-12 口碑管理登录失效「重新登录」+1。 // 四个章节确认合同替换原合并事件，净增三项。
+  // 2026-10-21 首页新增编辑精选来源说明，纯页内 tap +1，重建实测 4931 → 4932。
+  assert.equal(ledger.controlCount, 4932) // F-L5C-06 帖文详情社区未开放空态 CTA +1(与 E2 合并后实测)。 // F-W1-12 口碑管理登录失效「重新登录」+1。 // 四个章节确认合同替换原合并事件，净增三项。
   // 搜索主题与其它结果拆成互斥点击 +1，合计 3268 → 3271（取动作账本重建实测）。
   // 合作页新增会话失效/无权限两个独立 cy-empty CTA，3271 → 3273。
   // 2026-09-02 俱乐部客户系统落地，3273 → 3295。
