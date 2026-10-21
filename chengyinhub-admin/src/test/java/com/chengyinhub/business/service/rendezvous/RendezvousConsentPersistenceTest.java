@@ -38,7 +38,7 @@ class RendezvousConsentPersistenceTest {
         initializeSchema();
         manager = new DataSourceTransactionManager(dataSource);
         store = newStore(); clock = new MutableClock(); policy = new Policy();
-        service = new RendezvousConsentService(store, policy, clock);
+        service = new RendezvousConsentService(store, policy, clock, RendezvousConsentServiceTest.permitsPairing);
     }
     void initializeSchema() throws Exception {
         // Execute candidate schema only in the newly allocated in-memory DB. These explicit
@@ -77,12 +77,22 @@ class RendezvousConsentPersistenceTest {
         View a = join(1), b = join(2); service.propose(a.ticketId, b.ticketId, "public-poi");
         return new View[]{service.read(1, a.ticketId), service.read(2, b.ticketId)};
     }
+    @Test void threeArgConstructorRejectsAnEligiblePairWithNoMatchOrReservation() {
+        RendezvousConsentService bare = new RendezvousConsentService(store, policy, clock);
+        View a = bare.join(1, "pool", "reviewed-v1", 1000);
+        View b = bare.join(2, "pool", "reviewed-v1", 1000);
+        assertEquals("POLICY_CLOSED", assertThrows(Rejection.class, () -> bare.propose(a.ticketId, b.ticketId, "public-poi")).getCode());
+        assertEquals(0, count("w16_rendezvous_match"));
+        assertEquals(0, count("w16_match_reservation"));
+        assertEquals(TicketState.WAITING, bare.read(1, a.ticketId).ticketState);
+        assertEquals(TicketState.WAITING, bare.read(2, b.ticketId).ticketState);
+    }
     @Test void defaultDisabledMakesNoDatabaseCall() {
         assertThrows(IllegalStateException.class, () -> new MyBatisRendezvousConsentStore().transaction(tx -> fail("must not run")));
     }
     @Test void realCommitPersistsReceiptsAndNewServiceReadsThemWithoutReacceptance() throws Exception {
         View[] p = pair(); service.accept(1, p[0].ticketId, 1);
-        RendezvousConsentService restarted = new RendezvousConsentService(newStore(), policy, clock);
+        RendezvousConsentService restarted = new RendezvousConsentService(newStore(), policy, clock, RendezvousConsentServiceTest.permitsPairing);
         View restored = restarted.read(2, p[1].ticketId);
         assertEquals(MatchState.PROPOSED, restored.matchState); assertFalse(restored.acceptedByMe); assertTrue(restored.acceptedByOther);
         View mutual = restarted.accept(2, restored.ticketId, restored.version);
@@ -95,12 +105,12 @@ class RendezvousConsentPersistenceTest {
         String url = "jdbc:h2:file:" + temporary.resolve("consent").toAbsolutePath() + ";MODE=MySQL;LOCK_TIMEOUT=5000";
         dataSource = new JdbcDataSource(); dataSource.setURL(url); jdbc = new JdbcTemplate(dataSource);
         initializeSchema(); manager = new DataSourceTransactionManager(dataSource); store = newStore();
-        service = new RendezvousConsentService(store, policy, clock);
+        service = new RendezvousConsentService(store, policy, clock, RendezvousConsentServiceTest.permitsPairing);
         View[] p = pair(); service.accept(1, p[0].ticketId, 1);
         jdbc.execute("SHUTDOWN");
         dataSource = new JdbcDataSource(); dataSource.setURL(url); jdbc = new JdbcTemplate(dataSource);
         manager = new DataSourceTransactionManager(dataSource); store = newStore();
-        service = new RendezvousConsentService(store, policy, clock);
+        service = new RendezvousConsentService(store, policy, clock, RendezvousConsentServiceTest.permitsPairing);
         View restored = service.read(2, p[1].ticketId);
         assertEquals(MatchState.PROPOSED, restored.matchState);
         assertTrue(restored.acceptedByOther); assertFalse(restored.acceptedByMe);
@@ -161,20 +171,20 @@ class RendezvousConsentPersistenceTest {
         assertEquals(2, count("w16_match_reservation"));
     }
     @Test void concurrentJoinsAcrossIndependentSessionsReturnOneTicket() throws Exception {
-        RendezvousConsentService other = new RendezvousConsentService(newStore(), policy, clock);
+        RendezvousConsentService other = new RendezvousConsentService(newStore(), policy, clock, RendezvousConsentServiceTest.permitsPairing);
         List<String> ids = race(() -> service.join(7, "pool", "reviewed-v1", 1000).ticketId,
                 () -> other.join(7, "pool", "reviewed-v1", 1000).ticketId);
         assertEquals(ids.get(0), ids.get(1)); assertEquals(1, count("w16_match_ticket"));
     }
     @Test void concurrentProposalsAcrossIndependentSessionsCannotDoubleReserve() throws Exception {
         View a = join(1), b = join(2), c = join(3);
-        RendezvousConsentService other = new RendezvousConsentService(newStore(), policy, clock);
+        RendezvousConsentService other = new RendezvousConsentService(newStore(), policy, clock, RendezvousConsentServiceTest.permitsPairing);
         List<Boolean> results = race(() -> propose(service, a, b), () -> propose(other, c, a));
         assertNotEquals(results.get(0), results.get(1));
         assertEquals(1, count("w16_rendezvous_match")); assertEquals(2, count("w16_match_reservation"));
     }
     @Test void concurrentCancelAndAcceptNeverResurrectCancelledProposal() throws Exception {
-        View[] p = pair(); RendezvousConsentService other = new RendezvousConsentService(newStore(), policy, clock);
+        View[] p = pair(); RendezvousConsentService other = new RendezvousConsentService(newStore(), policy, clock, RendezvousConsentServiceTest.permitsPairing);
         race(() -> service.cancel(1, p[0].ticketId), () -> other.accept(2, p[1].ticketId, 1));
         assertEquals(MatchState.CANCELLED, service.read(1, p[0].ticketId).matchState);
         assertEquals(0, count("w16_match_reservation"));
