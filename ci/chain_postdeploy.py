@@ -40,6 +40,21 @@ READ_ROWS = ("SELECT job_id,job_name,job_group,invoke_target,cron_expression,mis
              "concurrent,status,create_by,create_time,remark,update_by,update_time FROM sys_job WHERE "
              "CAST(invoke_target AS BINARY) IN (" + ",".join(["CAST(%s AS BINARY)"] * 6)
              + ") ORDER BY invoke_target,job_id")
+COMMERCE = "merchantCommerceReconcileTask.reconcile()"
+OPERATOR_SCENARIO = "EXISTING_OPERATOR_ROWS"
+OPERATOR_CRON = "0 17 2 * * ?"
+FIXTURE_INSERT = ("INSERT INTO sys_job(job_name,job_group,invoke_target,cron_expression,misfire_policy,"
+                  "concurrent,status,create_by,create_time,remark,update_by,update_time) VALUES ("
+                  + ",".join(["%s"] * 12) + ")")
+COMMERCE_PAUSE = ("UPDATE sys_job SET cron_expression=%s,status=%s WHERE job_id=%s "
+                  "AND CAST(invoke_target AS BINARY)=CAST(%s AS BINARY)")
+
+
+def operator_values(target):
+    schedule = NEW_ROWS[target][1:] if target == COMMERCE else (OPERATOR_CRON, "2", "0", "1")
+    return ["SYNTHETIC_OPERATOR_" + str(list(NEW_ROWS).index(target)), "OPERATOR_FIXTURE", target,
+            *schedule, "synthetic-ci-operator", "2026-10-20 12:34:56",
+            "SYNTHETIC_OPERATOR_FIXTURE_NO_TASK_EXECUTION", "synthetic-ci-update", "2026-10-20 12:35:56"]
 
 
 class PostDeployError(ValueError):
@@ -228,3 +243,119 @@ def register_jobs(source, connect, expected_uuid):
     except Exception as error:
         result.update(error_type=type(error).__name__, recovery="UNKNOWN_PARTIAL_KEEP_ORIGINAL_STATE_NO_RETRY")
         raise PostDeployError("strict_post_sql_failed", result) from None
+
+
+def fixture_write(connect, expected_uuid, writes):
+    """Only the disposable schema's exact six fixture targets; unknown writes are never retried."""
+    connection = connect()
+    try:
+        cursor = connection.cursor()
+        try:
+            identity(cursor, expected_uuid)
+            connection.begin()
+            for sql, args in writes:
+                cursor.execute(sql, args)
+                require(cursor.rowcount == 1, "operator_fixture_write_cardinality")
+            connection.commit()
+        except Exception:
+            connection.rollback()
+            raise
+        finally:
+            cursor.close()
+    finally:
+        connection.close()
+
+
+def prepare_operator_fixture(connect, expected_uuid):
+    evidence = {"status": "FAIL", "scenario": OPERATOR_SCENARIO,
+                "recovery": "UNKNOWN_PARTIAL_KEEP_ORIGINAL_STATE_NO_RETRY"}
+    try:
+        evidence["before"] = read_state(connect, expected_uuid)
+        require(evidence["before"]["rows"] == [], "operator_fixture_requires_empty_targets")
+        fixture_write(connect, expected_uuid,
+                      [(FIXTURE_INSERT, tuple(operator_values(target))) for target in NEW_ROWS])
+        evidence["after"] = read_state(connect, expected_uuid)
+        validate_operator_fixture(evidence, expected_uuid)
+        evidence.update(status="PASS", inserted_targets=6)
+        return evidence
+    except Exception as error:
+        evidence["error_type"] = type(error).__name__
+        raise PostDeployError("operator_fixture_failed", evidence) from None
+
+
+def validate_operator_fixture(fixture, expected_uuid):
+    require(fixture.get("scenario") == OPERATOR_SCENARIO, "operator_fixture_scenario_missing")
+    for label in ("before", "after"):
+        state = fixture.get(label, {})
+        require(state.get("schema") == SCHEMA and state.get("server_uuid") == expected_uuid,
+                "operator_fixture_identity_mismatch")
+    require(fixture["before"].get("rows") == [], "operator_fixture_not_fresh")
+    rows = fixture["after"].get("rows", [])
+    require(len(rows) == 6 and len({row[0] for row in rows}) == 6 and
+            {row[3] for row in rows} == set(NEW_ROWS) and
+            all(len(row) == 13 and row[1:] == operator_values(row[3]) for row in rows),
+            "operator_fixture_readback_mismatch")
+
+
+def validate_commerce_rejection(result, positive):
+    require(result.get("status") == "PASS_EXPECTED_REJECTION" and
+            result.get("scenario") == "COMMERCE_INCOMPATIBLE_OPERATOR_ROWS" and
+            result.get("unique_migration_count") == 3, "commerce_rejection_missing")
+    expected = dict(positive["after"], rows=[row[:] for row in positive["after"]["rows"]])
+    commerce = [row for row in expected["rows"] if row[3] == COMMERCE]
+    require(len(commerce) == 1, "commerce_fixture_missing")
+    commerce[0][4], commerce[0][7] = OPERATOR_CRON, "1"
+    require(result.get("before") == expected and result.get("after") == expected,
+            "commerce_rejection_changed_rows")
+    require(result.get("scalar_readback") == {"server_uuid": expected["server_uuid"], "schema": SCHEMA,
+            "file": SQL_FILES[0][0], "sha256": SQL_FILES[0][1], "index": 3, "actual": [0]},
+            "commerce_false_scalar_not_observed")
+    rejected = result.get("rejected_migration", {})
+    require(rejected.get("status") == "FAIL" and rejected.get("schema") == SCHEMA and
+            rejected.get("before") == expected and rejected.get("error_type") == "ValueError" and
+            rejected.get("recovery") == "UNKNOWN_PARTIAL_KEEP_ORIGINAL_STATE_NO_RETRY" and
+            (rejected.get("statement_count"), rejected.get("scalar_count")) == (3, 1) and
+            rejected.get("files") == [{"file": SQL_FILES[0][0], "sha256": SQL_FILES[0][1],
+                "statements": 3, "scalars": [{"index": 1, "actual": [1]}]}] and
+            "after" not in rejected, "commerce_did_not_stop_at_original_assertion")
+
+
+def characterize_commerce_rejection(source, connect, expected_uuid, positive):
+    prepared = prepared_sql(source)
+    result = {"status": "FAIL", "scenario": "COMMERCE_INCOMPATIBLE_OPERATOR_ROWS",
+              "unique_migration_count": 3, "recovery": "UNKNOWN_PARTIAL_KEEP_ORIGINAL_STATE_NO_RETRY"}
+    try:
+        current = read_state(connect, expected_uuid)
+        require(current == positive["after"], "operator_rows_changed_before_negative_control")
+        commerce = next(row for row in current["rows"] if row[3] == COMMERCE)
+        fixture_write(connect, expected_uuid,
+                      [(COMMERCE_PAUSE, (OPERATOR_CRON, "1", commerce[0], COMMERCE))])
+        result["before"] = read_state(connect, expected_uuid)
+        try:
+            register_jobs(source, connect, expected_uuid)
+        except PostDeployError as rejected:
+            result["rejected_migration"] = rejected.evidence
+        else:
+            raise PostDeployError("commerce_incompatible_configuration_was_accepted")
+        connection = connect()
+        try:
+            cursor = connection.cursor()
+            try:
+                identity(cursor, expected_uuid)
+                cursor.execute(executable_statement(prepared[0][2][2]).strip().rstrip(";"))
+                rows = cursor.fetchall()
+                require(len(rows) == 1 and len(rows[0]) == 1 and type(rows[0][0]) is int and rows[0][0] == 0,
+                        "commerce_false_scalar_not_observed")
+                result["scalar_readback"] = {"server_uuid": expected_uuid, "schema": SCHEMA,
+                    "file": SQL_FILES[0][0], "sha256": SQL_FILES[0][1], "index": 3, "actual": [0]}
+            finally:
+                cursor.close()
+        finally:
+            connection.close()
+        result["after"] = read_state(connect, expected_uuid)
+        result["status"] = "PASS_EXPECTED_REJECTION"
+        validate_commerce_rejection(result, positive)
+        return result
+    except Exception as error:
+        result.update(status="FAIL", error_type=type(error).__name__)
+        raise PostDeployError("commerce_rejection_control_failed", result) from None

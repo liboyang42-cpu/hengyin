@@ -79,7 +79,7 @@ jobs:
         run: python3 -m pip install --disable-pip-version-check PyMySQL==1.1.1
       - name: Chain acceptance negative controls
         working-directory: gate
-        run: python3 -m unittest -v ci/test_chain_acceptance.py scripts/e2e/test_chain_lib.py
+        run: python3 -m unittest -v ci/test_chain_acceptance.py ci/test_chain_admin_readback.py scripts/e2e/test_chain_lib.py
       - name: Plan
         run: python3 gate/ci/chain_acceptance.py plan
       - name: Checkout candidate source
