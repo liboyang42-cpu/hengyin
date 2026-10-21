@@ -3,7 +3,6 @@ package com.chengyinhub.business.service.rendezvous;
 import java.time.Clock;
 import java.util.Objects;
 import java.util.UUID;
-import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**
@@ -116,11 +115,24 @@ public final class RendezvousConsentService {
         final View view; final String rejection;
         Reply(View view, String rejection) { this.view = view; this.rejection = rejection; }
     }
+    /** Writes the admission for one new match. Called inside the guard transaction.
+     * {@code now} is the clock read in that transaction, not a time taken before the lock. */
+    public interface Admission {
+        void charge(String matchId, long first, long second, String pool, long now);
+    }
     private final Store store;
     private final Safety safety;
     private final Clock clock;
+    private final Admission admission;
     public RendezvousConsentService(Store store, Safety safety, Clock clock) {
-        this.store = Objects.requireNonNull(store); this.safety = Objects.requireNonNull(safety); this.clock = Objects.requireNonNull(clock);
+        this(store, safety, clock, (matchId, first, second, pool, now) -> {
+            if (matchId == null || matchId.trim().isEmpty() || pool == null || pool.trim().isEmpty()
+                    || first <= 0 || second <= 0 || first == second || now < 0) throw new Rejection("PAIR_UNAVAILABLE");
+        });
+    }
+    public RendezvousConsentService(Store store, Safety safety, Clock clock, Admission admission) {
+        this.store = Objects.requireNonNull(store); this.safety = Objects.requireNonNull(safety);
+        this.clock = Objects.requireNonNull(clock); this.admission = Objects.requireNonNull(admission);
     }
     /** Explicit user opt-in. TTL comes from approved server policy, never a request body. */
     public View join(long actor, String pool, String eligibilityVersion, long ttlMillis) {
@@ -269,13 +281,9 @@ public final class RendezvousConsentService {
     private static OngoingVerdict closed(String ticketId) {
         return new OngoingVerdict(false, false, false, false, false, false, false, false, ticketId, null, null, null);
     }
-    /** Internal scheduler operation only. It cannot opt either person into the pool. */
+    /** Internal scheduler operation only. It cannot opt either person into the pool.
+     * The admission charge always runs in this guard transaction, using this transaction's clock. */
     public String propose(String firstTicket, String secondTicket, String publicPlace) {
-        return propose(firstTicket, secondTicket, publicPlace, null);
-    }
-    /** Same guard transaction as the match. {@code charge} runs after the rows are staged and before commit.
-     * A rejection from {@code charge} rolls the match and both reservations back. Null does not write a ledger. */
-    public String propose(String firstTicket, String secondTicket, String publicPlace, Consumer<String> charge) {
         text(firstTicket); text(secondTicket); text(publicPlace);
         return store.transaction(tx -> {
             long now = clock.millis();
@@ -286,7 +294,7 @@ public final class RendezvousConsentService {
             String id = UUID.randomUUID().toString();
             Match m = new Match(id, a.id, b.id, publicPlace, Math.min(a.expiresAt, b.expiresAt), 1, null, null, MatchState.PROPOSED);
             tx.save(a.transition(TicketState.RESERVED, id)); tx.save(b.transition(TicketState.RESERVED, id)); tx.save(m);
-            if (charge != null) charge.accept(id);
+            admission.charge(id, a.actor, b.actor, a.pool, now);
             return id;
         });
     }
