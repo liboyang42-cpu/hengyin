@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.service.rendezvous.RendezvousProtocolMapper">
+  <resultMap id="policyRow" type="com.chengyinhub.business.service.rendezvous.RendezvousVersionedPolicy$Row">
+    <result property="decision" column="decision"/>
+    <result property="maxContacts" column="max_contacts"/>
+    <result property="ticketTtlMillis" column="ticket_ttl_millis"/>
+    <result property="publicPlace" column="public_place"/>
+  </resultMap>
+  <resultMap id="meetingRow" type="com.chengyinhub.business.service.rendezvous.RendezvousProtocolMapper$MeetingRow">
+    <id property="matchId" column="match_id"/>
+    <result property="challengeId" column="challenge_id"/>
+    <result property="activityId" column="activity_id"/>
+    <result property="issuedAt" column="issued_at"/>
+    <result property="expiresAt" column="expires_at"/>
+    <result property="firstConfirmedAt" column="first_confirmed_at"/>
+    <result property="secondConfirmedAt" column="second_confirmed_at"/>
+    <result property="teamId" column="team_id"/>
+    <result property="state" column="state"/>
+  </resultMap>
+  <select id="policy" resultMap="policyRow" useCache="false">
+    SELECT decision, max_contacts, ticket_ttl_millis, public_place
+    FROM w16_policy_version WHERE dimension=#{dimension} AND version_id=#{versionId}
+  </select>
+  <select id="contacts" resultType="java.lang.Integer" useCache="false">
+    SELECT contacts FROM w16_contact_counter WHERE actor_id=#{actor}
+  </select>
+  <insert id="insertContact">INSERT INTO w16_contact_counter(actor_id, contacts) VALUES(#{actor}, 1)</insert>
+  <update id="bumpContact">UPDATE w16_contact_counter SET contacts=contacts+1 WHERE actor_id=#{actor}</update>
+  <select id="waitingIds" resultType="java.lang.String" useCache="false">
+    SELECT id FROM w16_match_ticket
+    WHERE pool=#{pool} AND state='WAITING' AND expires_at &gt; #{now}
+    ORDER BY expires_at, id LIMIT #{limit}
+  </select>
+  <select id="actorOf" resultType="java.lang.Long" useCache="false">
+    SELECT actor_id FROM w16_match_ticket WHERE id=#{ticketId}
+  </select>
+  <select id="meeting" resultMap="meetingRow" useCache="false">
+    SELECT match_id, challenge_id, activity_id, issued_at, expires_at, first_confirmed_at, second_confirmed_at, team_id, state
+    FROM w16_rendezvous_meeting WHERE match_id=#{matchId}
+  </select>
+  <insert id="insertMeeting">
+    INSERT INTO w16_rendezvous_meeting(match_id, challenge_id, idempotency_key, activity_id, issued_at, expires_at,
+      first_confirmed_at, second_confirmed_at, team_id, state)
+    VALUES(#{matchId}, #{challengeId}, #{matchId}, #{activityId}, #{issuedAt}, #{expiresAt},
+      #{firstConfirmedAt,jdbcType=BIGINT}, #{secondConfirmedAt,jdbcType=BIGINT}, #{teamId,jdbcType=BIGINT}, #{state})
+  </insert>
+  <update id="updateMeeting">
+    UPDATE w16_rendezvous_meeting
+    SET expires_at=#{expiresAt}, first_confirmed_at=#{firstConfirmedAt,jdbcType=BIGINT},
+        second_confirmed_at=#{secondConfirmedAt,jdbcType=BIGINT}, team_id=#{teamId,jdbcType=BIGINT}, state=#{state}
+    WHERE match_id=#{matchId} AND challenge_id=#{challengeId} AND idempotency_key=#{matchId}
+      AND activity_id=#{activityId} AND issued_at=#{issuedAt}
+      AND (first_confirmed_at IS NULL OR first_confirmed_at=#{firstConfirmedAt,jdbcType=BIGINT})
+      AND (second_confirmed_at IS NULL OR second_confirmed_at=#{secondConfirmedAt,jdbcType=BIGINT})
+      AND (team_id IS NULL OR team_id=#{teamId,jdbcType=BIGINT})
+  </update>
+  <select id="roleClue" resultType="java.lang.String" useCache="false">
+    SELECT role_clue FROM w16_role_secret WHERE ticket_id=#{ticketId}
+  </select>
+  <insert id="insertRole">
+    INSERT INTO w16_role_secret(ticket_id, actor_id, match_id, role_clue)
+    VALUES(#{ticketId}, #{actor}, #{matchId}, #{roleClue})
+  </insert>
+  <select id="reportExists" resultType="java.lang.Integer" useCache="false">
+    SELECT 1 FROM w16_safety_report WHERE reporter_id=#{reporter} AND reported_id=#{reported}
+  </select>
+  <insert id="insertReport">
+    INSERT INTO w16_safety_report(reporter_id, reported_id, created_at) VALUES(#{reporter}, #{reported}, #{createdAt})
+  </insert>
+</mapper>
