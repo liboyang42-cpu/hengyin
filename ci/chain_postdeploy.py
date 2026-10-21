@@ -1,6 +1,7 @@
 """Strict registration checks on the chain's disposable database, after its JVM exits."""
 import hashlib
 from decimal import Decimal
+from datetime import datetime
 import json
 import time
 from pathlib import Path
@@ -248,17 +249,27 @@ def register_jobs(source, connect, expected_uuid):
         raise PostDeployError("strict_post_sql_failed", result) from None
 
 
-def fixture_write(connect, expected_uuid, writes):
-    """Only the disposable schema's exact six fixture targets; unknown writes are never retried."""
+def fixture_write(connect, expected_uuid, writes, expected_jobs=None):
+    """Disposable schema fixtures only; unknown writes are never retried."""
     connection = connect()
     try:
         cursor = connection.cursor()
         try:
             identity(cursor, expected_uuid)
+            if expected_jobs is not None:
+                cursor.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ")
             connection.begin()
+            if expected_jobs is not None:
+                cursor.execute(ALL_JOBS + " FOR UPDATE")
+                locked = [[v if isinstance(v, (int, float, str, type(None))) else str(v) for v in row]
+                          for row in cursor.fetchall()]
+                require(locked == expected_jobs, "restart_seed_locked_preimage_changed")
             for sql, args in writes:
                 cursor.execute(sql, args)
                 require(cursor.rowcount == 1, "operator_fixture_write_cardinality")
+            if expected_jobs is not None:
+                cursor.execute(ALL_JOBS + " FOR UPDATE")
+                require(not cursor.fetchall(), "restart_seed_nonempty_before_commit")
             connection.commit()
         except Exception:
             connection.rollback()
@@ -366,7 +377,6 @@ def characterize_commerce_rejection(source, connect, expected_uuid, positive):
 
 # This scenario only owns the disposable chain schema and these six persisted definitions.
 RESTART_MODE = "post_restart"
-RECRUIT = "topicRecruitDeadlineTask.run()"
 ALL_JOBS = READ_ROWS.split(" WHERE ", 1)[0] + " ORDER BY job_id"
 JOB_COLUMNS = ("job_id", "job_name", "job_group", "invoke_target", "cron_expression", "misfire_policy",
                "concurrent", "status", "create_by", "create_time", "remark", "update_by", "update_time")
@@ -414,25 +424,128 @@ def passive_queues(connect, server):
     return {"crm_export_tasks": 0, "account_deregistrations": 0}
 
 
+RESTART_SEED_SOURCE = '6cd9b026ccba50a9d7eb8fdd1cf3228af95628c2'
+# Fixed source replay, including the final three pause repairs; unknown rows must stop before deletion.
+RESTART_SEED_ROWS = {
+    'playTeamExpireTask.run()': [
+        '玩家队伍超时结束', 'DEFAULT', 'playTeamExpireTask.run()', '0 0/10 * * * ?', '3', '1', '0',
+        'admin', None, '逐team幂等结束已到场次开始时间的邀请制队伍并关闭群聊；不读取订单、不触发退款', '', None],
+    'imNotificationDeliveryTask.deliverPending()': [
+        '原站内通知意图投递', 'DEFAULT', 'imNotificationDeliveryTask.deliverPending()', '0 0/1 * * * ?', '3', '1', '1',
+        'system', None, '默认暂停；仅原站内消息，不投外部渠道；待测试库事务和原事件回读验证后启用', '', None],
+    'roamRewardDeliveryTask.run()': [
+        '原漫游掉落补交付', 'DEFAULT', 'roamRewardDeliveryTask.run()', '0 0/10 * * * ?', '3', '1', '1',
+        'system', None, '暂停；负责人:C包；启用条件:A原来源发券、掉落原日志与C当次XP金额快照已集成并完成测试账回读；生产启用另验。', '', None],
+    'dataRetentionCleanupTask.run()': [
+        '数据留存清理', 'COMPLIANCE', 'dataRetentionCleanupTask.run()', '0 30 3 * * ?', '3', '1', '1',
+        'system', None, '仅补缺失登记且默认暂停；核对隐私指引、留存配置与候选后再由责任人启用', '', None],
+    'aiQuotaRecoveryTask.run()': [
+        'AI原日配额恢复', 'DEFAULT', 'aiQuotaRecoveryTask.run()', '0 */1 * * * ?', '3', '1', '1',
+        'admin', None, 'C包原日原nonce补偿；默认暂停，开发测试数据库/Redis和崩溃场景回读后另行启用', '', None],
+    'merchantAftercareTimeoutTask.run()': [
+        '售后-商家超时转平台客服', 'DEFAULT', 'merchantAftercareTimeoutTask.run()', '0 0/10 * * * ?', '3', '1', '0',
+        'merchant-aftercare-migrate', None, '拍板2026-09-16#12 MerchantAftercareTimeoutTask', '', None],
+    'merchantCrmDeliveryRecoveryTask.run()': [
+        '商家CRM触达恢复', 'DEFAULT', 'merchantCrmDeliveryRecoveryTask.run()', '0 * * * * ?', '3', '1', '1',
+        'admin', None, '每分钟恢复过期PROCESSING；version+token CAS；未知外部结果不自动重发；默认暂停；触发时机=全部前置schema新连接回读通过+生产jar自报commit等于本次master SHA+sha256指纹/唯一进程/启动时间回读通过+三个Quartz bean存在性回读通过，另行独立授权启用；负责人=城瘾发布负责人；到期日=2026-08-31（到期未启用必须复核，不得自动启用）', 'admin', None],
+    'communityPostMaintenanceTask.run()': [
+        '广场帖文投影治理与擦除', 'DEFAULT', 'communityPostMaintenanceTask.run()', '0 * * * * ?', '3', '1', '0',
+        'admin', None, '社区平台长期任务：新 jar 部署并回读后启用；消费帖文 outbox、应用/到期治理处置、执行删除搜索通知媒体擦除', '', None],
+    'analyticsAggregationTask.aggregateRecentWindow()': [
+        '每日行为漏斗聚合', 'DEFAULT', 'analyticsAggregationTask.aggregateRecentWindow()', '0 10 0 * * ?', '2', '1', '0',
+        'admin', None, '社区平台长期任务：每日重算最近15个完整自然日，吸收允许时间窗内迟到事件；删除与重建同事务', '', None],
+    'predictVoidExpiredTask.run()': [
+        '竞猜轮次超时作废', 'DEFAULT', 'predictVoidExpiredTask.run()', '0 0 3 * * ?', '3', '1', '0',
+        'system', None, '商家超过48小时不给竞猜答案的轮次作废且不发奖;自收敛任务,无过期轮次时空跑', '', None],
+    'clubEventOpsTask.run()': [
+        '俱乐部活动运营维护', 'DEFAULT', 'clubEventOpsTask.run()', '0 * * * * ?', '3', '1', '1',
+        'admin', None, '每分钟维护候补到期/报名终态/晋级与站内通知失败项；CAS有界批处理；默认暂停；触发时机=全部前置schema新连接回读通过+生产jar自报commit等于本次master SHA+sha256指纹/唯一进程/启动时间回读通过+三个Quartz bean存在性回读通过，另行独立授权启用；负责人=城瘾发布负责人；到期日=2026-08-31（到期未启用必须复核，不得自动启用）', 'admin', None],
+    'registrationAutoVerifyTask.run()': [
+        '到期未核销场次票自动核销', 'DEFAULT', 'registrationAutoVerifyTask.run()', '0 30 * * * ?', '3', '1', '0',
+        'system', None, 'RUN-01 拍板#5:活动结束满7天仍已支付未核销的场次票自动置已核销收口(不退款;退款在途/缺锚点不扫)', '', None],
+    'orderCloseTask.reconcileExpiredPaying()': [
+        '支付中过期订单对账', 'DEFAULT', 'orderCloseTask.reconcileExpiredPaying()', '0 0/10 * * * ?', '3', '1', '0',
+        'system', None, '§5-3 PAYING 过支付窗口:查微信真实态——已支付补记/未支付关单回补/查单失败告警不猜', '', None],
+    'roamHangoutExpireTask.run()': [
+        '漫游附近的局过期关闭', 'DEFAULT', 'roamHangoutExpireTask.run()', '0 0/30 * * * ?', '3', '1', '0',
+        'admin', None, '关闭已过期的玩家自组局并关闭其群聊;不读取订单、不触发退款', '', None],
+    'storeVerifyGrowthTask.run()': [
+        '核销成长奖励恢复', 'DEFAULT', 'storeVerifyGrowthTask.run()', '0 * * * * ?', '3', '1', '0',
+        'system', None, '每分钟最多50条，恢复已入队核销成长奖励；不扫描历史核销补造奖励', '', None],
+    'refundReconcileTask.reconcile()': [
+        '退款对账兜底', 'DEFAULT', 'refundReconcileTask.reconcile()', '0 0/15 * * * ?', '3', '1', '1',
+        'system', None, '仅补缺失登记且默认暂停：除按微信终态回写外还会发起保证金退款与审核后出款，须由资金owner核对目标环境后启用', '', None],
+    'clubSessionReconciliationTask.run()': [
+        '俱乐部带队场次对账', 'DEFAULT', 'clubSessionReconciliationTask.run()', '0 20 3 * * ?', '3', '1', '0',
+        'system', None, '仅补缺失登记(原 migration_club_session_reconciliation_job_20260807)；只告警，不自动补场次', '', None],
+    'settlementTask.run()': [
+        '分润结算（活动+主题）', 'DEFAULT', 'settlementTask.run()', '0 0 * * * ?', '3', '1', '1',
+        'system', None, '仅补缺失登记且默认暂停：资金任务须由资金owner核对目标环境后在「定时任务」页启用', '', None],
+    'coopSettlementPayoutTask.run()': [
+        '商家结算T+7打款', 'DEFAULT', 'coopSettlementPayoutTask.run()', '0 0 3 * * ?', '3', '1', '1',
+        'system', None, '仅补缺失登记且默认暂停：会真实出款，须由资金owner核对目标环境与商户号后启用', '', None],
+    'beforeStartNotifyTask.run()': [
+        '出发前提醒', 'DEFAULT', 'beforeStartNotifyTask.run()', '0 0 * * * ?', '3', '1', '1',
+        'system', None, '仅补缺失登记且默认暂停：会向用户发订阅消息，须核对订阅模板与目标环境后启用', '', None],
+    'clubPostMediaReviewTask.run()': [
+        '俱乐部动态图片送审恢复', 'DEFAULT', 'clubPostMediaReviewTask.run()', '0 * * * * ?', '3', '1', '1',
+        'admin', None, '每分钟最多50条；运行25秒后不再启动下一条；瞬时故障本轮熔断；CAS lease可重入；持续积压告警；默认暂停；触发时机=全部前置schema新连接回读通过+生产jar自报commit等于本次master SHA+sha256指纹/唯一进程/启动时间回读通过+三个Quartz bean存在性回读通过，另行独立授权启用；负责人=城瘾发布负责人；到期日=2026-08-31（到期未启用必须复核，不得自动启用）', 'admin', None],
+    'topicRecruitDeadlineTask.run()': [
+        '双死线-招募到期判定', 'DEFAULT', 'topicRecruitDeadlineTask.run()', '0 0/10 * * * ?', '3', '1', '0',
+        'e2e-seed', None, 'E2E TopicRecruitDeadlineTask', '', None],
+}
+
+
+def restart_seed_datetime(value):
+    require(isinstance(value, str) and re.fullmatch(r"[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}", value),
+            "restart_seed_datetime_invalid")
+    try:
+        parsed = datetime.fromisoformat(value)
+    except ValueError:
+        raise PostDeployError("restart_seed_datetime_invalid")
+    require(parsed.year >= 2020, "restart_seed_datetime_invalid")
+    return parsed
+
+
 def prepare_restart_seed(connect, fresh):
     require(fresh.get("build_exit") == 0 and fresh.get("seed_exit") == 0 and
+            fresh.get("source_sha") == RESTART_SEED_SOURCE and
             fresh.get("containers") and set(fresh["containers"]) == {"mysql", "redis"} and
             all(re.fullmatch(r"cy-chain-[0-9]+-[0-9]+-" + kind, n)
                 for kind, n in fresh["containers"].items()), "restart_requires_fresh_chain_provenance")
     server = read_state(connect)["server_uuid"]
+    before, after = (fresh.get(key, {}) for key in ("clock_before", "clock_after"))
+    require(all(clock.get("server_uuid") == server for clock in (before, after)) and
+            all(isinstance(before.get(key), str) and before[key] and before[key] == after.get(key)
+                for key in ("session_timezone", "system_timezone")), "restart_seed_clock_identity_mismatch")
+    begin, end = (restart_seed_datetime(clock.get("datetime")) for clock in (before, after))
+    require(begin <= end, "restart_seed_clock_reversed")
     rows = restart_rows(connect, server, ALL_JOBS)
-    require(len(rows) == 1 and len(rows[0]) == 13, "restart_unexpected_seed_jobs")
-    row = rows[0]
-    require(row[1:9] == ["双死线-招募到期判定", "DEFAULT", RECRUIT, "0 0/10 * * * ?", "3", "1", "0", "e2e-seed"]
-            and row[9] is not None and row[10] == "E2E TopicRecruitDeadlineTask",
-            "restart_recruit_seed_identity_mismatch")
-    fingerprint = hashlib.sha256(json.dumps(row, ensure_ascii=False).encode()).hexdigest()
+    require(len(rows) == len(RESTART_SEED_ROWS) and all(len(row) == 13 for row in rows),
+            "restart_unexpected_seed_jobs")
+    require(all(type(row[0]) is int and row[0] > 0 for row in rows) and
+            len({row[0] for row in rows}) == len(rows) and
+            all(isinstance(row[3], str) for row in rows) and
+            {row[3] for row in rows} == set(RESTART_SEED_ROWS), "restart_seed_job_identity_mismatch")
+    for row in rows:
+        expected = RESTART_SEED_ROWS[row[3]]
+        require(row[1:9] == expected[:8] and row[10:12] == expected[9:11],
+                "restart_seed_static_fields_mismatch")
+        created = restart_seed_datetime(row[9])
+        require(begin <= created <= end, "restart_seed_create_time_outside_preparation")
+        if expected[10] == "admin":
+            updated = restart_seed_datetime(row[12])
+            require(created <= updated <= end, "restart_seed_update_time_outside_preparation")
+        else:
+            require(row[12] is None, "restart_seed_unexpected_update_time")
+    fingerprints = [hashlib.sha256(json.dumps(row, ensure_ascii=False).encode()).hexdigest() for row in rows]
     where = " AND ".join("`%s` <=> %%s" % column for column in JOB_COLUMNS)
-    fixture_write(connect, server, [("DELETE FROM sys_job WHERE " + where, tuple(row))])
+    fixture_write(connect, server, [("DELETE FROM sys_job WHERE " + where, tuple(row)) for row in rows],
+                  expected_jobs=rows)
     require(restart_rows(connect, server, ALL_JOBS) == [], "restart_seed_removal_unknown")
     passive = passive_queues(connect, server)
     return {"status": "PASS", "server_uuid": server, "schema": SCHEMA, "fresh": fresh,
-            "removed_seed_job_id": row[0], "removed_seed_fingerprint": fingerprint,
+            "removed_seed_job_ids": [row[0] for row in rows], "removed_seed_fingerprints": fingerprints,
             "jobs_before_jvm1": 0, "passive_queues": passive}
 
 

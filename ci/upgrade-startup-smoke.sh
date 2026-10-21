@@ -67,7 +67,7 @@ PY_TRACE
 check_trace_runtime() {
   docker run --rm --name "$RUN_NAME-trace-check" --network none --read-only --cap-drop ALL \
     --user "$(id -u):$(id -g)" -v "$OUT/trace-runtime:/trace-runtime:ro" \
-    -e LD_SHOW_AUXV=1 --entrypoint /trace-runtime/loader "$JDK_IMAGE" \
+    -e LD_SHOW_AUXV=1 -e LD_TRACE_LOADED_OBJECTS=1 --entrypoint /trace-runtime/loader "$JDK_IMAGE" \
     --inhibit-cache --library-path /trace-runtime/lib --list /trace-runtime/strace > "$OUT/trace-resolved"
   python3 - "$OUT/trace-runtime/manifest.json" "$OUT/trace-resolved" <<'PY_RESOLVED'
 import json

@@ -177,12 +177,22 @@ class TraceRuntimeBundleTest(unittest.TestCase):
 
 
 class TraceDockerCommandTest(unittest.TestCase):
+    def assert_dependency_list_mode(self, argv):
+        start = argv.index('LD_SHOW_AUXV=1') - 1
+        self.assertEqual(['-e', 'LD_SHOW_AUXV=1', '-e', 'LD_TRACE_LOADED_OBJECTS=1',
+                          '--entrypoint', '/trace-runtime/loader'], argv[start:start + 6])
+        self.assertEqual(['LD_TRACE_LOADED_OBJECTS=1'],
+                         [value for value in argv if value.startswith('LD_TRACE_LOADED_OBJECTS')])
+        self.assertEqual(['--inhibit-cache', '--library-path', '/trace-runtime/lib',
+                          '--list', '/trace-runtime/strace'], argv[argv.index('pinned-image') + 1:])
+
     def assert_readonly_tool_aliases(self, argv, directory):
         for target in ('/trace-runtime', '/evidence/trace-runtime'):
             self.assertIn(str(directory) + '/trace-runtime:' + target + ':ro', argv)
 
     def capture(self, directory, name, fail=False, resolution_defect=None):
         env = os.environ.copy()
+        env.pop('LD_TRACE_LOADED_OBJECTS', None)
         env.update(OUT=str(directory), RUN_NAME='synthetic-startup', JDK_IMAGE='pinned-image',
                    JAR='/owned jar/app.jar', FIXTURE='/owned fixture', MYSQL_IP='172.18.0.2',
                    REDIS_IP='172.18.0.3', CAPTURE=str(directory / 'argv.json'),
@@ -195,6 +205,7 @@ class TraceDockerCommandTest(unittest.TestCase):
         docker = """docker() {
   python3 - "$@" <<'PY_CAPTURE'
 import json, os, pathlib, sys
+assert 'LD_TRACE_LOADED_OBJECTS' not in os.environ, 'Trace mode leaked to Docker CLI environment'
 with pathlib.Path(os.environ['CAPTURE']).open('a') as capture:
     capture.write(json.dumps(sys.argv[1:]) + '\\n')
 if '--list' in sys.argv:
@@ -292,6 +303,7 @@ PY_CAPTURE
                               '-o', '/evidence/network.trace'], tool)
             self.assertNotIn('--library-path', argv[java:])
             self.assertFalse(any('LD_SHOW_AUXV' in value for value in argv))
+            self.assertFalse(any('LD_TRACE_LOADED_OBJECTS' in value for value in argv))
             self.assertFalse(any(value.startswith(('LD_LIBRARY_PATH=', 'LD_PRELOAD=', 'LD_AUDIT='))
                                  for value in argv))
             self.assertEqual('SYS_PTRACE', argv[argv.index('--cap-add') + 1])
@@ -325,13 +337,29 @@ PY_CAPTURE
                     self.assertNotIn('SYS_PTRACE', argv)
                     self.assertEqual('/trace-runtime/loader', argv[argv.index('--entrypoint') + 1])
                 self.assertIn('--list', calls[0])
-                self.assertEqual('-e', calls[0][calls[0].index('LD_SHOW_AUXV=1') - 1])
+                self.assert_dependency_list_mode(calls[0])
                 if not fail:
                     self.assertEqual('--version', calls[1][-1])
                     self.assertFalse(any('LD_SHOW_AUXV' in value for value in calls[1]))
+                    self.assertFalse(any('LD_TRACE_LOADED_OBJECTS' in value for value in calls[1]))
                     self.assertIn('vDSO=0x7f1838e65000; kind=named; bundled dependencies=2', result.stdout)
                 self.assertEqual(not fail, result.returncode == 0)
                 self.assertEqual(not fail, (directory / 'reached').exists())
+
+    def test_missing_or_main_program_trace_mode_is_rejected(self):
+        with tempfile.TemporaryDirectory() as temp:
+            result, calls = self.capture(pathlib.Path(temp), 'check_trace_runtime')
+            self.assertEqual(0, result.returncode, result.stderr)
+            for defect in ('missing', 'main-program'):
+                with self.subTest(defect=defect):
+                    argv = calls[0].copy()
+                    index = argv.index('LD_TRACE_LOADED_OBJECTS=1')
+                    if defect == 'missing':
+                        del argv[index - 1:index + 1]
+                    else:
+                        argv[index] = 'LD_TRACE_LOADED_OBJECTS=2'
+                    with self.assertRaises(AssertionError):
+                        self.assert_dependency_list_mode(argv)
 
     def test_unrecognized_target_line_is_numbered_escaped_and_still_fails_closed(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -354,8 +382,9 @@ PY_CAPTURE
                 result, calls = self.capture(directory, 'check_trace_runtime', resolution_defect=fixture)
                 self.assertEqual(0, result.returncode, result.stderr)
                 self.assertEqual(2, len(calls))
-                self.assertEqual('-e', calls[0][calls[0].index('LD_SHOW_AUXV=1') - 1])
+                self.assert_dependency_list_mode(calls[0])
                 self.assertFalse(any('LD_SHOW_AUXV' in value for value in calls[1]))
+                self.assertFalse(any('LD_TRACE_LOADED_OBJECTS' in value for value in calls[1]))
                 self.assertEqual('--version', calls[1][-1])
                 self.assertIn('\t (0x00007f1838e65000)', (directory / 'trace-resolved').read_text().splitlines())
                 self.assertIn('PASS target trace runtime same-process vDSO=0x7f1838e65000; kind=anonymous; bundled dependencies=2',

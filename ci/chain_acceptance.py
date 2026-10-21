@@ -442,17 +442,19 @@ def verify_redis_shim(bin_dir, environ):
 
 # ---------------------------------------------------------------- SQL
 
-def connect():
+def connect(database=SCHEMA):
+    if database not in (SCHEMA, "mysql"):
+        raise GateError("SQL 回读禁止其他schema")
     import pymysql
-    connection = pymysql.connect(host=DB_HOST, port=DB_PORT, user="root", password="", database=SCHEMA,
+    connection = pymysql.connect(host=DB_HOST, port=DB_PORT, user="root", password="", database=database,
                                  autocommit=True, charset="utf8mb4")
     cursor = connection.cursor()
     cursor.execute("SELECT DATABASE()")
     actual = cursor.fetchone()[0]
     cursor.close()
-    if actual != SCHEMA:
+    if actual != database:
         connection.close()
-        raise GateError("SQL 回读串库: %s != %s" % (actual, SCHEMA))
+        raise GateError("SQL 回读串库: %s != %s" % (actual, database))
     return connection
 
 
@@ -1034,8 +1036,26 @@ def cmd_storage_start(args, environ):
     return 0
 
 
+def restart_seed_clock():
+    connection = connect("mysql")
+    try:
+        cursor = connection.cursor()
+        try:
+            cursor.execute("SELECT @@server_uuid,DATE_FORMAT(NOW(),'%Y-%m-%d %H:%i:%s'),"
+                           "@@session.time_zone,@@system_time_zone")
+            row = cursor.fetchone()
+            post.require(row is not None and len(row) == 4, "restart_seed_clock_shape")
+            return dict(zip(("server_uuid", "datetime", "session_timezone", "system_timezone"), row))
+        finally:
+            cursor.close()
+    finally:
+        connection.close()
+
+
 def cmd_schema(args, environ):
     require_stage(args.out, "storage")
+    restart = read_receipt(args.out)["plan"]["through"] == post.RESTART_MODE
+    preparation_before = restart_seed_clock() if restart else None
     env = {key: value for key, value in environ.items() if not key.startswith("CHENGYIN_")}
     env["PYTHONIOENCODING"] = "utf-8"
     build = subprocess.run([sys.executable, "scripts/e2e/build_schema.py", "--schema", SCHEMA, "--drop",
@@ -1080,8 +1100,10 @@ def cmd_schema(args, environ):
                 problems.append("夹具回读 %s=%s，期望 %s" % (label, value, want))
         if readback.get("tables", 0) < 100:
             problems.append("建库后表数异常: %s" % readback.get("tables"))
-    if not problems and read_receipt(args.out)["plan"]["through"] == post.RESTART_MODE:
+    if not problems and restart:
         fresh = {"build_exit": build.returncode, "seed_exit": seed_code,
+                 "source_sha": read_receipt(args.out)["plan"]["source_sha"],
+                 "clock_before": preparation_before, "clock_after": restart_seed_clock(),
                  "containers": read_receipt(args.out)["stages"]["storage"]["containers"]}
         readback["restart_seed"] = post.prepare_restart_seed(connect, fresh)
     status = "PASS" if not problems else "FAIL"

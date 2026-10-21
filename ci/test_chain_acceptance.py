@@ -739,6 +739,7 @@ class PostStorage:
         self.rows, self.calls, self.opened, self.closed = [], [], 0, 0
         self.bad_scalar, self.write_error, self.uuid = None, False, POST_UUID
         self.writes, self.commits, self.rollbacks = [], 0, 0
+        self.delete_failure_after, self.extra_after_deletes = None, False
 
     def connect(self):
         model = self
@@ -751,6 +752,17 @@ class PostStorage:
                     self.one = (model.uuid, ca.SCHEMA)
                 elif sql == ca.post.READ_ROWS:
                     self.many = sorted(model.rows, key=lambda row: (row[3], row[0]))
+                elif sql in (ca.post.ALL_JOBS, ca.post.ALL_JOBS + " FOR UPDATE"):
+                    self.many = copy.deepcopy(sorted(model.rows, key=lambda row: row[0]))
+                elif sql.startswith("DELETE FROM sys_job WHERE "):
+                    if model.delete_failure_after is not None and len(model.writes) >= model.delete_failure_after:
+                        return
+                    model.writes.append((sql, args))
+                    matched = [row for row in model.rows if tuple(row) == args]
+                    self.rowcount = len(matched)
+                    model.rows = [row for row in model.rows if tuple(row) != args]
+                    if not model.rows and model.extra_after_deletes:
+                        model.rows = [[999, "unknown"] + [None] * 11]
                 elif sql == ca.post.FIXTURE_INSERT:
                     if model.write_error: raise RuntimeError("PRIVATE_SQL_ERROR")
                     model.writes.append((sql, args))
@@ -776,7 +788,7 @@ class PostStorage:
                 else:
                     self.one = (1,) if model.bad_scalar is None else model.bad_scalar
             def fetchone(self): return self.one
-            def fetchall(self): return self.many
+            def fetchall(self): return tuple(self.many)
             def close(self): pass
         class Connection:
             def cursor(self): return Cursor()
@@ -1119,24 +1131,170 @@ class PostRestartTest(unittest.TestCase):
         with self.assertRaises(ca.GateError): ca.plan(SHA, "post_restart", "/api/play/checkin")
         self.assertEqual("post_deploy", ca.plan(SHA, "post_deploy", "")["through"])
 
-    def test_recruit_seed_removal_uses_full_row_and_rejects_unknown_or_wrong_creator(self):
-        row = [77, "双死线-招募到期判定", "DEFAULT", ca.post.RECRUIT, "0 0/10 * * * ?", "3", "1", "0",
-               "e2e-seed", "2026-10-21 00:00:00", "E2E TopicRecruitDeadlineTask", "", None]
-        fresh = {"build_exit": 0, "seed_exit": 0,
+    def seed_fixture(self):
+        rows = []
+        for i, fields in enumerate(ca.post.RESTART_SEED_ROWS.values(), 1):
+            row = [i] + copy.deepcopy(fields)
+            row[9] = "2026-10-21 00:00:01"
+            row[12] = "2026-10-21 00:00:02" if row[11] == "admin" else None
+            rows.append(row)
+        clock = {"server_uuid": POST_UUID, "datetime": "2026-10-21 00:00:00",
+                 "session_timezone": "SYSTEM", "system_timezone": "UTC"}
+        fresh = {"build_exit": 0, "seed_exit": 0, "source_sha": ca.post.RESTART_SEED_SOURCE,
+                 "clock_before": clock, "clock_after": dict(clock, datetime="2026-10-21 00:00:03"),
                  "containers": {"mysql": "cy-chain-1-1-mysql", "redis": "cy-chain-1-1-redis"}}
+        return rows, fresh
+
+    def test_preparation_clock_uses_mysql_system_schema_and_closes_its_read_only_connection(self):
+        connection = mock.Mock()
+        cursor = connection.cursor.return_value
+        cursor.fetchone.return_value = (POST_UUID, "2026-10-21 00:00:00", "SYSTEM", "UTC")
+        with mock.patch.object(ca, "connect", return_value=connection) as connect:
+            clock = ca.restart_seed_clock()
+        connect.assert_called_once_with("mysql")
+        self.assertEqual(POST_UUID, clock["server_uuid"])
+        self.assertEqual("2026-10-21 00:00:00", clock["datetime"])
+        self.assertIn("DATE_FORMAT(NOW()", cursor.execute.call_args.args[0])
+        cursor.close.assert_called_once()
+        connection.close.assert_called_once()
+        with self.assertRaises(ca.GateError):
+            ca.connect("unrelated_schema")
+
+    def test_schema_captures_database_window_before_builder_and_after_seed_only_for_restart(self):
+        _, fresh = self.seed_fixture()
+        for mode in ("post_restart", "post_deploy"):
+            with self.subTest(mode=mode), tempfile.TemporaryDirectory() as out:
+                events = []
+                receipt = {"plan": {"through": mode, "source_sha": ca.post.RESTART_SEED_SOURCE},
+                           "stages": {"storage": {"containers": fresh["containers"]}}}
+                def run(command, **kwargs):
+                    events.append("build" if "build_schema.py" in command[1] else "seed")
+                    return subprocess.CompletedProcess(command, 0, "迁移阶段问题: 0".encode())
+                def clock():
+                    events.append("clock")
+                    return fresh["clock_before"] if events.count("clock") == 1 else fresh["clock_after"]
+                def prepare(connect, observed):
+                    events.append("prepare")
+                    self.assertEqual(fresh, observed)
+                    return {"status": "PASS"}
+                def query(sql, args):
+                    return [(9 if "ums_member" in sql else 5 if "mms_merchant" in sql else
+                             2 if "club " in sql else 1 if "sys_config" in sql else 378,)]
+                args = mock.Mock(out=out, source=_HERE.parent)
+                with mock.patch.object(ca, "require_stage"), mock.patch.object(ca, "read_receipt", return_value=receipt), \
+                     mock.patch.object(ca, "restart_seed_clock", side_effect=clock), \
+                     mock.patch.object(ca.subprocess, "run", side_effect=run), \
+                     mock.patch.object(ca, "query", side_effect=query), mock.patch.object(ca, "execute", return_value=9), \
+                     mock.patch.object(ca.post, "prepare_restart_seed", side_effect=prepare), mock.patch.object(ca, "stage"):
+                    self.assertEqual(0, ca.cmd_schema(args, {}))
+                self.assertEqual(["clock", "build", "seed", "clock", "prepare"] if mode == "post_restart"
+                                 else ["build", "seed"], events)
+
+    def test_full_seed_contract_deletes_exact_22_rows_and_independently_reads_empty(self):
+        rows, fresh = self.seed_fixture()
+        db = PostStorage()
+        db.rows = copy.deepcopy(rows)
         with mock.patch.object(ca.post, "read_state", return_value={"server_uuid": POST_UUID}), \
-             mock.patch.object(ca.post, "restart_rows", side_effect=[[row], [], [[0, 0]]]), \
-             mock.patch.object(ca.post, "fixture_write") as write:
-            result = ca.post.prepare_restart_seed(None, fresh)
-            sql, params = write.call_args.args[2][0]
-            self.assertEqual(13, sql.count("<=> %s")); self.assertEqual(tuple(row), params)
-            self.assertEqual(0, result["jobs_before_jvm1"])
-        for rows in ([row, row], [row[:8] + ["not-our-seed"] + row[9:]], [row[:10] + ["wrong"] + row[11:]]):
-            with mock.patch.object(ca.post, "read_state", return_value={"server_uuid": POST_UUID}), \
-                 mock.patch.object(ca.post, "restart_rows", return_value=rows), mock.patch.object(ca.post, "fixture_write") as write:
-                with self.assertRaises(ca.post.PostDeployError): ca.post.prepare_restart_seed(None, fresh)
+             mock.patch.object(ca.post, "passive_queues", return_value={}):
+            result = ca.post.prepare_restart_seed(db.connect, fresh)
+        self.assertEqual(22, len(db.writes))
+        self.assertEqual(1, db.commits)
+        self.assertEqual(0, db.rollbacks)
+        self.assertEqual([], db.rows)
+        for (sql, params), row in zip(db.writes, rows):
+            self.assertEqual(13, sql.count("<=> %s"))
+            self.assertEqual(tuple(row), params)
+        self.assertEqual([r[0] for r in rows], result["removed_seed_job_ids"])
+        self.assertEqual(22, len(result["removed_seed_fingerprints"]))
+        self.assertEqual(0, result["jobs_before_jvm1"])
+        self.assertEqual(2, db.calls.count(ca.post.ALL_JOBS + " FOR UPDATE"))
+        self.assertEqual(2, db.calls.count(ca.post.ALL_JOBS))
+        self.assertIn("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ", db.calls)
+
+    def test_seed_contract_rejects_extra_missing_duplicate_identity_and_every_static_column(self):
+        rows, fresh = self.seed_fixture()
+        cases = [rows[:-1], rows + [rows[0]], rows[:1] * 22,
+                 [[False] + rows[0][1:]] + rows[1:],
+                 [[0] + rows[0][1:]] + rows[1:],
+                 [rows[0][:-1]] + rows[1:]]
+        duplicate_id = copy.deepcopy(rows)
+        duplicate_id[1][0] = duplicate_id[0][0]
+        cases.append(duplicate_id)
+        extra = copy.deepcopy(rows[0]); extra[0] = 999; extra[3] = "unknown.run()"
+        cases.append(rows + [extra])
+        for index, row in enumerate(rows):
+            for column in list(range(1, 9)) + [10, 11]:
+                changed = copy.deepcopy(rows)
+                changed[index][column] = str(row[column]) + "-drift"
+                cases.append(changed)
+        for changed in cases:
+            with self.subTest(rows=len(changed), first=changed[0][:4]), \
+                 mock.patch.object(ca.post, "read_state", return_value={"server_uuid": POST_UUID}), \
+                 mock.patch.object(ca.post, "restart_rows", return_value=changed), \
+                 mock.patch.object(ca.post, "fixture_write") as write:
+                with self.assertRaises(ca.post.PostDeployError):
+                    ca.post.prepare_restart_seed(None, fresh)
                 write.assert_not_called()
-        with self.assertRaises(ca.post.PostDeployError): ca.post.prepare_restart_seed(None, {})
+
+    def test_seed_contract_rejects_invalid_stale_create_and_update_times_before_writes(self):
+        rows, fresh = self.seed_fixture()
+        for index, row in enumerate(rows):
+            bad_created = [None, "2026-02-30 00:00:01", "1970-01-01 00:00:00",
+                           "2026-10-20 23:59:59", "2026-10-21 00:00:04"]
+            for column, value in [(9, value) for value in bad_created] + (
+                    [(12, None), (12, "2026-10-21 00:00:00"), (12, "2026-10-21 00:00:04")]
+                    if row[11] == "admin" else [(12, "2026-10-21 00:00:02")]):
+                changed = copy.deepcopy(rows); changed[index][column] = value
+                with self.subTest(target=row[3], column=column, value=value), \
+                     mock.patch.object(ca.post, "read_state", return_value={"server_uuid": POST_UUID}), \
+                     mock.patch.object(ca.post, "restart_rows", return_value=changed), \
+                     mock.patch.object(ca.post, "fixture_write") as write:
+                    with self.assertRaises(ca.post.PostDeployError):
+                        ca.post.prepare_restart_seed(None, fresh)
+                    write.assert_not_called()
+
+    def test_seed_provenance_database_clock_and_timezone_cannot_be_forged(self):
+        rows, fresh = self.seed_fixture()
+        cases = [{}, dict(fresh, source_sha=SHA), dict(fresh, build_exit=1), dict(fresh, seed_exit=1),
+                 dict(fresh, containers={"mysql": "other", "redis": "cy-chain-1-1-redis"})]
+        for field, value in [("server_uuid", "foreign"), ("session_timezone", "+01:00"),
+                             ("system_timezone", "other"), ("datetime", "2026-10-20 00:00:00"),
+                             ("datetime", None)]:
+            cases.append(dict(fresh, clock_after=dict(fresh["clock_after"], **{field: value})))
+        for bad in cases:
+            with self.subTest(fresh=bad), mock.patch.object(ca.post, "read_state", return_value={"server_uuid": POST_UUID}), \
+                 mock.patch.object(ca.post, "restart_rows", return_value=rows), \
+                 mock.patch.object(ca.post, "fixture_write") as write:
+                with self.assertRaises(ca.post.PostDeployError):
+                    ca.post.prepare_restart_seed(None, bad)
+                write.assert_not_called()
+
+    def test_seed_locked_drift_mid_delete_and_extra_row_roll_back_before_commit(self):
+        rows, _ = self.seed_fixture()
+        where = " AND ".join("`%s` <=> %%s" % c for c in ca.post.JOB_COLUMNS)
+        writes = [("DELETE FROM sys_job WHERE " + where, tuple(row)) for row in rows]
+        for scenario in ("locked_drift", "cas_zero", "extra_before_commit"):
+            db = PostStorage(); db.rows = copy.deepcopy(rows)
+            if scenario == "locked_drift": db.rows[0][10] += "-drift"
+            if scenario == "cas_zero": db.delete_failure_after = 1
+            if scenario == "extra_before_commit": db.extra_after_deletes = True
+            before = copy.deepcopy(db.rows)
+            with self.subTest(scenario=scenario), self.assertRaises(ca.post.PostDeployError):
+                ca.post.fixture_write(db.connect, POST_UUID, writes, expected_jobs=rows)
+            self.assertEqual(0, db.commits)
+            self.assertEqual(1, db.rollbacks)
+            self.assertEqual(before, db.rows)
+
+    def test_seed_postcommit_nonempty_or_foreign_identity_cannot_pass(self):
+        rows, fresh = self.seed_fixture()
+        with mock.patch.object(ca.post, "read_state", return_value={"server_uuid": POST_UUID}), \
+             mock.patch.object(ca.post, "restart_rows", side_effect=[rows, [rows[0]]]), \
+             mock.patch.object(ca.post, "fixture_write"):
+            with self.assertRaisesRegex(ca.post.PostDeployError, "restart_seed_removal_unknown"):
+                ca.post.prepare_restart_seed(None, fresh)
+        db = PostStorage(); db.uuid = "foreign"
+        with self.assertRaisesRegex(ca.post.PostDeployError, "post_database_identity_mismatch"):
+            ca.post.restart_rows(db.connect, POST_UUID, ca.post.ALL_JOBS)
 
     def test_required_effects_and_repeats_pass_and_fake_evidence_fails(self):
         good = self.result(); ca.post.validate_restart_result(good)
