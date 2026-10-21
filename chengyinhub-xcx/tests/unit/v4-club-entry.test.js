@@ -126,6 +126,7 @@ function loadDetail() {
         '../../../utils/feed-play-card.js': require('../../utils/feed-play-card.js'),
         '../../../utils/verification-scan.js': require('../../utils/verification-scan.js'),
         '../../../utils/write-action-workflow.js': require('../../utils/write-action-workflow.js'),
+        '../../../utils/merchant-verification.js': require('../../utils/merchant-verification.js'),
         '../../../utils/danger-actions.js': require('../../utils/danger-actions.js'),
         // 移植分支的俱乐部详情多引的模块（置顶公告、合作回跳、发布者权限、通用弹层/提示）：按真实模块接入。
         '../../../utils/coop-invite-return.js': require('../../utils/coop-invite-return.js'),

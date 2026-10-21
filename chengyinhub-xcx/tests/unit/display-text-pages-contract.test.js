@@ -143,7 +143,18 @@ test('俱乐部页:帖子、评论、修改历史、简介与审核原因解码;
 
 test('俱乐部资料:enrichClub 解码名称、简介、审核原因;编辑表单回填解码值', async () => {
   const h = load('components/cy/scene-club-edit/index.js', {
-    '/api/club/detail': ok({ id: 5, isOwner: true, name: 'A&lt;B 社', description: '人数&lt;10 且 &gt;5', city: '上海' }),
+    '/api/club/detail': ok({
+      // PublicClubVO.from/getters: explicit nullable DTO fields, no updateTime.
+      id: 5, memberId: 1, name: 'A&lt;B 社', logo: null, cover: null,
+      description: '人数&lt;10 且 &gt;5', clubTypes: null, activityPrefs: null,
+      clubType: null, city: '上海', keywords: null, style: null, leaderName: null,
+      level: null, tags: null, memberCount: 1, topicCount: 0,
+      prioritySignupEnabled: null, memberDiscountPrice: null, memberReservedQuota: null,
+      isJoined: true, isOwner: true, joinPolicy: null, joinPolicySupported: true,
+      memberPostAllowed: 1, merchantUndertakeOpen: 1, myJoinStatus: null,
+      myJoinReviewReason: '', viewerIsAdmin: false, viewerIdentityUnavailable: false,
+      pendingJoinRequestCount: 0, nonOwnerMemberCount: 0,
+    }),
   });
   h.page.validate = () => {}; h.page.syncDerived = () => {};
   h.page.data.clubId = 5;

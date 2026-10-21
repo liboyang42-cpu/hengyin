@@ -47,6 +47,7 @@ function loadDetail() {
         // 都是纯模块,沙箱里给真实现。
         '../../../utils/verification-scan.js': require('../../utils/verification-scan.js'),
         '../../../utils/write-action-workflow.js': require('../../utils/write-action-workflow.js'),
+        '../../../utils/merchant-verification.js': require('../../utils/merchant-verification.js'),
         '../../../utils/danger-actions.js': require('../../utils/danger-actions.js'),
       }
       if (modules[request]) return modules[request]
