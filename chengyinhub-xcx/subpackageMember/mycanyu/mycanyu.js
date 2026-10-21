@@ -3,6 +3,14 @@ const { summarizeOrderState } = require('../../utils/order-status.js');
 const { getScene } = require('../../utils/scene-registry.js');
 const { isRecordList } = require('../../utils/response-shape.js');
 
+function registrationId(value) {
+  if (typeof value === 'number') return Number.isSafeInteger(value) && value > 0 ? String(value) : '';
+  if (typeof value !== 'string' || !/^\d+$/.test(value)) return '';
+  const digits = value.replace(/^0+/, '');
+  return digits && (digits.length < 19 || (digits.length === 19 && digits <= '9223372036854775807')) ? value : '';
+}
+function currentOwner() { return typeof app.getUserID === 'function' ? String(app.getUserID() || '') : ''; }
+
 const TABS = [
   { key: 'all', label: '全部' },
   { key: 'not_started', label: '未开始' },
@@ -39,7 +47,24 @@ Page({
 
 
   onLoad() {
+    this._participationHidden = false;
+    this._participationDisposed = false;
     this.getList();
+  },
+
+  onShow() {
+    if (this._participationDisposed) return;
+    const reload = this._participationHidden || this._participationOwner !== currentOwner();
+    this._participationHidden = false;
+    if (reload) this.getList();
+  },
+  onHide() {
+    this._participationHidden = true;
+    this._participationEpoch = (this._participationEpoch || 0) + 1;
+  },
+  onUnload() {
+    this._participationDisposed = true;
+    this._participationEpoch = (this._participationEpoch || 0) + 1;
   },
 
   onBack() {
@@ -80,6 +105,9 @@ Page({
       dateText: this.formatDateRange(source.startDate, source.endDate),
       stateKey: orderState.key,
       stateText: orderState.text,
+      verificationText: item.verificationStatus === 1 || item.verificationStatus === '1' ? '已核销'
+        : item.verificationStatus === 0 || item.verificationStatus === '0' ? '未核销' : '核销状态待确认',
+      voucherAvailable: !!registrationId(item.id),
       stateVariant: orderState.key === 'not_started' ? 'info'
         : orderState.key === 'in_progress' ? 'success' : 'neutral',
       typeLabel: isTopic ? (isFreeExplore ? '自由探索' : '城市定向') : '线下活动'
@@ -95,10 +123,22 @@ Page({
   },
 
   getList(fromPullDown) {
+    if (this._participationHidden || this._participationDisposed) return;
     const that = this;
+    const owner = currentOwner();
+    if (this._participationOwner !== owner) {
+      this.allList = undefined;
+      this._participationListOwner = undefined;
+      this.setData({ list: [], sceneStack: [], sceneCurrent: null });
+    }
+    this._participationOwner = owner;
+    const epoch = this._participationEpoch = (this._participationEpoch || 0) + 1;
+    const current = () => !that._participationHidden && !that._participationDisposed
+      && epoch === that._participationEpoch && owner === currentOwner();
     const stopPullAfterComplete = fromPullDown === true;
     const hasSnapshot = Array.isArray(this.allList);
     const finishLoadError = (res, fallback) => {
+      if (!current()) return;
       const message = app.getRequestErrorMessage(res, fallback);
       if (hasSnapshot) {
         that.setData({
@@ -125,9 +165,11 @@ Page({
       url: '/api/registration/my-joined',
       method: 'POST',
       success(res) {
+        if (!current()) return;
         // R9-14:服务端回包 code 可能是数字 200(与 app.js 同口径),只认字符串会把正常记录判成失败。
-        if ((res.code === '200' || res.code === 200) && isRecordList(res.data)) {
+        if (res && (res.code === '200' || res.code === 200) && isRecordList(res.data)) {
           that.allList = res.data.map(item => that.normalize(item));
+          that._participationListOwner = owner;
           that.renderList();
           that.setData({ firstLoading: false, refreshing: false, errorMsg: '' });
           return;
@@ -141,6 +183,7 @@ Page({
         finishLoadError(res, '网络异常，请重试');
       },
       complete() {
+        if (!current()) return;
         if (stopPullAfterComplete && typeof wx.stopPullDownRefresh === 'function') wx.stopPullDownRefresh();
       }
     });
@@ -158,6 +201,15 @@ Page({
     const scene = getScene('member-participation-detail', { id });
     if (!scene) return;
     this.setData({ sceneStack: [scene], sceneCurrent: scene });
+  },
+  viewVoucher(e) {
+    if (this._participationHidden || this._participationDisposed || !currentOwner()
+        || this._participationListOwner !== currentOwner()) return;
+    const id = registrationId(e && e.currentTarget && e.currentTarget.dataset && e.currentTarget.dataset.id);
+    if (!id) return;
+    const row = (this.data.list || []).find(item => registrationId(item.id) === id);
+    if (!row) return;
+    wx.navigateTo({ url: '/subpackageMember/signup/index?focusId=' + encodeURIComponent(row.id) });
   },
   blockSceneTouch() {},
   closeScene() {
