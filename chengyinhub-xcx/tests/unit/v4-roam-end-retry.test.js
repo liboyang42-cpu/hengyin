@@ -47,7 +47,7 @@ beforeEach(() => {
       if (o.url === '/api/roam/finish') {
         // 服务端已结算,回包丢失(超时)
         const k = Object.keys(sessions)[0]
-        sessions[k] = { ...sessions[k], state: 'FINISHED', resultComplete: true, result: { totalXp: 7, medal: '城市初探' } }
+        sessions[k] = { ...sessions[k], state: 'FINISHED', resultComplete: true, badgeDelivery: [{ badgeCode: 'ROAM_TILES_50', state: 'DELIVERED' }], result: { totalXp: 7, medal: '城市初探' } }
         if (finishMode === 'timeout-after-apply') o.fail({ errMsg: 'request:fail timeout' })
         else o.successStatusAbnormal({ statusCode: 504 })
         return
