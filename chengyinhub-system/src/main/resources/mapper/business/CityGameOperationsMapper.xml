@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.citygame.operations.mapper.CityGameOperationsMapper">
+
+    <select id="selectCaseById" resultType="com.chengyinhub.business.citygame.operations.CityGameOperationsCaseRow">
+        select id, action_id as actionId, region_id as regionId, version, status,
+               correction_state as correctionState, execution, binding_status as bindingStatus,
+               source_request_id as sourceRequestId, owner_user_id as ownerUserId, object_role as objectRole,
+               proposer_user_id as proposerUserId, reviewer_user_id as reviewerUserId, reason, kind,
+               merchant_id as merchantId, object_type as objectType, object_id as objectId,
+               trace_json as traceJson, proposal_json as proposalJson, rollback_json as rollbackJson,
+               classification, ops_note as opsNote, blocker, create_time as createTime, update_time as updateTime
+        from city_game_ops_case
+        where id = #{id}
+    </select>
+
+    <select id="selectCaseByActionId" resultType="com.chengyinhub.business.citygame.operations.CityGameOperationsCaseRow">
+        select id, action_id as actionId, region_id as regionId, version, status,
+               correction_state as correctionState, execution, binding_status as bindingStatus,
+               source_request_id as sourceRequestId, owner_user_id as ownerUserId, object_role as objectRole,
+               proposer_user_id as proposerUserId, reviewer_user_id as reviewerUserId, reason, kind,
+               merchant_id as merchantId, object_type as objectType, object_id as objectId,
+               trace_json as traceJson, proposal_json as proposalJson, rollback_json as rollbackJson,
+               classification, ops_note as opsNote, blocker, create_time as createTime, update_time as updateTime
+        from city_game_ops_case
+        where action_id = #{actionId}
+    </select>
+
+    <insert id="insertCase">
+        insert into city_game_ops_case
+        (id, action_id, region_id, version, status, correction_state, execution, binding_status,
+         source_request_id, owner_user_id, object_role, proposer_user_id, reviewer_user_id, reason, kind,
+         merchant_id, object_type, object_id, trace_json, proposal_json, rollback_json, classification,
+         ops_note, blocker, create_time, update_time)
+        values
+        (#{id}, #{actionId}, #{regionId}, #{version}, #{status}, #{correctionState,jdbcType=VARCHAR},
+         #{execution,jdbcType=VARCHAR}, #{bindingStatus}, #{sourceRequestId}, #{ownerUserId,jdbcType=BIGINT},
+         #{objectRole,jdbcType=VARCHAR}, #{proposerUserId,jdbcType=BIGINT}, #{reviewerUserId,jdbcType=BIGINT},
+         #{reason,jdbcType=VARCHAR}, #{kind,jdbcType=VARCHAR}, #{merchantId,jdbcType=VARCHAR},
+         #{objectType,jdbcType=VARCHAR}, #{objectId,jdbcType=VARCHAR}, #{traceJson},
+         #{proposalJson,jdbcType=LONGVARCHAR}, #{rollbackJson,jdbcType=LONGVARCHAR},
+         #{classification,jdbcType=VARCHAR}, #{opsNote,jdbcType=VARCHAR}, #{blocker,jdbcType=VARCHAR},
+         #{createTime}, #{updateTime})
+    </insert>
+
+    <update id="updateCase">
+        update city_game_ops_case
+        set version = #{version},
+            status = #{status},
+            correction_state = #{correctionState,jdbcType=VARCHAR},
+            execution = #{execution,jdbcType=VARCHAR},
+            binding_status = #{bindingStatus},
+            owner_user_id = #{ownerUserId,jdbcType=BIGINT},
+            object_role = #{objectRole,jdbcType=VARCHAR},
+            proposer_user_id = #{proposerUserId,jdbcType=BIGINT},
+            reviewer_user_id = #{reviewerUserId,jdbcType=BIGINT},
+            reason = #{reason,jdbcType=VARCHAR},
+            kind = #{kind,jdbcType=VARCHAR},
+            merchant_id = #{merchantId,jdbcType=VARCHAR},
+            object_type = #{objectType,jdbcType=VARCHAR},
+            object_id = #{objectId,jdbcType=VARCHAR},
+            trace_json = #{traceJson},
+            proposal_json = #{proposalJson,jdbcType=LONGVARCHAR},
+            rollback_json = #{rollbackJson,jdbcType=LONGVARCHAR},
+            classification = #{classification,jdbcType=VARCHAR},
+            ops_note = #{opsNote,jdbcType=VARCHAR},
+            blocker = #{blocker,jdbcType=VARCHAR},
+            update_time = #{updateTime}
+        where id = #{id}
+          and version = #{expectedVersion}
+    </update>
+
+    <select id="selectRequest" resultType="com.chengyinhub.business.citygame.operations.CityGameOperationsRequestRow">
+        select id, request_id as requestId, request_hash as requestHash, body_json as bodyJson,
+               case_id as caseId, action, actor_user_id as actorUserId, role_keys as roleKeys,
+               state, http_status as httpStatus, result_json as resultJson,
+               create_time as createTime, update_time as updateTime
+        from city_game_ops_request
+        where request_id = #{requestId}
+    </select>
+
+    <insert id="insertRequest">
+        insert into city_game_ops_request
+        (id, request_id, request_hash, body_json, case_id, action, actor_user_id, role_keys,
+         state, http_status, result_json, create_time, update_time)
+        values
+        (#{id}, #{requestId}, #{requestHash}, #{bodyJson}, #{caseId,jdbcType=BIGINT}, #{action},
+         #{actorUserId}, #{roleKeys,jdbcType=VARCHAR}, #{state}, #{httpStatus}, #{resultJson},
+         #{createTime}, #{updateTime})
+    </insert>
+
+    <update id="updateRequestState">
+        update city_game_ops_request
+        set state = #{state},
+            http_status = #{httpStatus},
+            result_json = #{resultJson},
+            case_id = #{caseId,jdbcType=BIGINT},
+            update_time = #{updateTime}
+        where request_id = #{requestId}
+          and state = 'UNKNOWN'
+    </update>
+
+    <select id="selectAuditsByCaseId" resultType="com.chengyinhub.business.citygame.operations.CityGameOperationsAuditRow">
+        select id, request_id as requestId, case_id as caseId, action, event_type as eventType,
+               actor_user_id as actorUserId, role_keys as roleKeys, request_hash as requestHash,
+               http_status as httpStatus, result_json as resultJson, create_time as createTime
+        from city_game_ops_audit
+        where case_id = #{caseId}
+        order by id
+    </select>
+
+    <select id="selectAuditsByRequestId" resultType="com.chengyinhub.business.citygame.operations.CityGameOperationsAuditRow">
+        select id, request_id as requestId, case_id as caseId, action, event_type as eventType,
+               actor_user_id as actorUserId, role_keys as roleKeys, request_hash as requestHash,
+               http_status as httpStatus, result_json as resultJson, create_time as createTime
+        from city_game_ops_audit
+        where request_id = #{requestId}
+        order by id
+    </select>
+
+    <insert id="insertAudit">
+        insert into city_game_ops_audit
+        (id, request_id, case_id, action, event_type, actor_user_id, role_keys, request_hash,
+         http_status, result_json, create_time)
+        values
+        (#{id}, #{requestId}, #{caseId,jdbcType=BIGINT}, #{action}, #{eventType}, #{actorUserId},
+         #{roleKeys,jdbcType=VARCHAR}, #{requestHash}, #{httpStatus}, #{resultJson}, #{createTime})
+    </insert>
+
+    <select id="selectStore" resultType="com.chengyinhub.business.citygame.operations.CityGameOperationsStoreFactRow">
+        select merchant_id as merchantId, fact_status as factStatus, version, case_id as caseId,
+               action_id as actionId, update_time as updateTime
+        from city_game_ops_store_fact
+        where merchant_id = #{merchantId}
+    </select>
+
+    <insert id="insertStore">
+        insert into city_game_ops_store_fact
+        (merchant_id, fact_status, version, case_id, action_id, update_time)
+        values
+        (#{merchantId}, #{factStatus}, #{version}, #{caseId}, #{actionId}, #{updateTime})
+    </insert>
+
+    <update id="updateStore">
+        update city_game_ops_store_fact
+        set fact_status = #{factStatus},
+            version = #{version},
+            case_id = #{caseId},
+            action_id = #{actionId},
+            update_time = #{updateTime}
+        where merchant_id = #{merchantId}
+          and version = #{expectedVersion}
+    </update>
+</mapper>
