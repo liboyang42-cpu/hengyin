@@ -2725,7 +2725,7 @@ Page({
     // Existing system permission does not replace a fresh explicit choice after a recorded revoke.
     try { cyModal.show({
       title: '开启实时定位',
-      content: '主动开启后用于实时定位、到点打卡和轨迹记录。锁屏或切到后台后仍会记录，结束漫游即停止。附近的人位置分享默认关闭，需要另行单独同意；你可随时在设置中撤回。',
+      content: '用于实时定位、打卡和轨迹记录，锁屏后仍会记录，结束漫游即停止。',
       confirmText: '同意并开启',
       cancelText: '暂不开启',
       success: (result) => {
@@ -3776,7 +3776,7 @@ Page({
     if (consentAlreadyRecorded) { startLocation(); return; }
     cyModal.show({
       title: '开启实时定位',
-      content: '主动开启后用于实时定位、到点打卡和轨迹记录。锁屏或切到后台后仍会记录，结束漫游即停止。附近的人位置分享默认关闭，需要另行单独同意；你可随时在设置中撤回。',
+      content: '用于实时定位、打卡和轨迹记录，锁屏后仍会记录，结束漫游即停止。',
       confirmText: '同意并开启',
       cancelText: '暂不开启',
       success(result) {

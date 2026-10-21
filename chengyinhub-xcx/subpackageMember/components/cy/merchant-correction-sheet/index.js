@@ -108,11 +108,5 @@ Component({
     },
     backToForm() { if (!this._busy) this.setData({ stage: 'form' }) },
     close() { if (!this._busy) { this._taxSeq = (this._taxSeq || 0) + 1; this.triggerEvent('close') } },
-    // BL-184:成功态唯一次按钮,进入「我的纠错」看审核进度
-    openMine() {
-      if (this._navigating) return // 跳转中不响应连点,免得叠两层列表
-      this.triggerEvent('close')
-      this._navigating = true; wx.navigateTo({ url: '/subpackageMember/correction-mine/index', complete: () => { this._navigating = false } })
-    },
   },
 })

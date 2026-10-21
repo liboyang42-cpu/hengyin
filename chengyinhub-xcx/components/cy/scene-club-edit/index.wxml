@@ -102,7 +102,7 @@
     <view class="card" wx:if="{{!isOwner}}">
       <view class="op-locked">
         <text class="op-locked-title">只有主理人能改经营配置</text>
-        <text class="op-locked-sub">成员优先报名 · 入会需要审批 · 成员保留名额 —— 这三项直接决定开卖时票怎么分、钱怎么收,所以留给主理人。</text>
+        <text class="op-locked-sub">这三项影响开卖时的分票和收款，只能由主理人设置。</text>
         <!-- 现状回显(Figma 29:149):管理员改不了这三项,但要能看见现值 ——
              这是管理员唯一能知道「保留了几个名额」的地方,没有它锁说明就只是拒绝。 -->
         <text class="op-locked-cur">当前:{{opCurrentText}}</text>
@@ -141,7 +141,7 @@
       <view class="sec-label mt danger-label">危险操作</view>
       <view class="danger-card">
         <text class="danger-title">解散俱乐部</text>
-        <text class="danger-copy">成员会失去俱乐部与群聊入口。已报名不会自动取消或退款;存在生效合作、未结束场次或未结算款项时会被拒绝。</text>
+        <text class="danger-copy">成员将失去俱乐部与群聊入口，已报名不会自动退款。</text>
         <view class="danger-btn {{dissolving || saving ? 'is-disabled' : ''}}" bindtap="dissolveClub"
               aria-role="button" aria-label="解散俱乐部" aria-disabled="{{dissolving || saving}}"
               hover-class="{{dissolving || saving ? 'none' : 'cy-pressed'}}" hover-stay-time="80">{{dissolving ? '正在解散…' : '解散俱乐部'}}</view>

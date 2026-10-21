@@ -13,7 +13,7 @@ Page({
     homeCityError: '',
     mediaRows: [],
     mediaLoading: false,
-    mediaHasMore: false,
+    mediaHasMore: false, mediaOpen: false, // 设置态「我的待审媒体」默认收起
     mediaBusyId: '',
     mediaError: '',
     mediaAuthRequired: false,
@@ -21,7 +21,7 @@ Page({
     mediaPreviewUrl: '',
     mediaPreviewType: '',
 
-    // 进入弹窗不再单独勾选服务协议:点「同意并继续」即同意一句话里的两份文件。
+    serviceAgreed: false, // 进入弹窗:一行勾选同意两份文件后才能点「同意并继续」
     showServiceSheet: false,
     submitError: '',
     failedAction: '',
@@ -212,7 +212,7 @@ Page({
     const viewer = this.selectComponent('#authorMediaModel');
     if (viewer && typeof viewer.rotate === 'function') viewer.rotate();
   },
-  closeMediaPreview() { this.setData({ mediaPreviewUrl: '', mediaPreviewType: '' }); },
+  closeMediaPreview() { this.setData({ mediaPreviewUrl: '', mediaPreviewType: '' }); }, toggleMediaPanel() { this.setData({ mediaOpen: !this.data.mediaOpen }); },
   copyApprovedMedia(event) {
     const row = this.ownMediaFromEvent(event);
     if (!row || row.reviewState !== 'APPROVED' || this.data.mediaBusyId) return;
@@ -257,7 +257,7 @@ Page({
     });
   },
 
-  // toggleService 已撤(勾选框随弹窗简化移除)。
+  toggleService(event) { this.setData({ serviceAgreed: !!event.detail.value.length }); },
   openService() { this.setData({ showServiceSheet: true }); },
   closeService() { this.setData({ showServiceSheet: false }); },
   openPrivacyContract() {
@@ -273,7 +273,7 @@ Page({
     this._lastPrivacyButtonId = event && event.detail && event.detail.buttonId;
     this.data.failedAction = '';
     this.setData({ submitting: true, submitError: '' });
-    app.agreeUsageConsent(event, true).then(() => {
+    app.agreeUsageConsent(event, this.data.serviceAgreed).then(() => {
       wx.navigateBack({
         fail() { wx.switchTab({ url: '/pages/index/index' }); },
       });

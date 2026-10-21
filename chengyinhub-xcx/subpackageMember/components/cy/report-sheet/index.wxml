@@ -11,7 +11,7 @@
               placeholder="写一下具体发生了什么，便于平台核实"
               value="{{description}}" error="{{!!descriptionError}}" error-text="{{descriptionError}}"
               bind:input="onDescriptionInput" />
-    <text class="rs__note">本次举报仅支持文字说明。被举报方看不到你的身份。</text>
+    <text class="rs__note">被举报方看不到你的身份。</text>
     <view class="rs__row">
       <cy-btn class="rs__act" variant="secondary" bindtap="backToPick">换个原因</cy-btn>
       <cy-btn class="rs__act" variant="primary" bindtap="submit">提交举报</cy-btn>

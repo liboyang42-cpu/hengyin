@@ -27,7 +27,6 @@ function loadPage(rel, stack) {
 }
 
 const PAGES = [
-  { rel: 'subpackageMember/correction-detail/index.js', list: 'subpackageMember/correction-mine/index' },
   { rel: 'subpackageMember/report-detail/index.js', list: 'subpackageMember/report-mine/index' },
 ]
 

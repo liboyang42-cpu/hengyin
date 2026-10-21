@@ -2,7 +2,7 @@
 :host { display: block; }
 
 .cs-list {
-  padding: var(--cy-space-2) var(--cy-page-x) 0;
+  padding: var(--cy-space-2) 0 0;
   display: flex;
   flex-wrap: wrap;
   gap: var(--cy-space-2-5);

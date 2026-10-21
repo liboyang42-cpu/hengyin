@@ -61,7 +61,7 @@
           <cy-icon class="topic-row-arrow" name="arrow-right" size="24" />
         </view>
       </view>
-      <text class="footnote">已入账以账户打款记录为准；核算净额包含已执行调整，后续调整不代表已到账。作废记录保留历史金额，不再打款。</text>
+      <text class="footnote">已入账以打款记录为准，作废记录不再打款。</text>
     </view>
   </block>
 </view>

@@ -75,7 +75,7 @@
   <view class="sec rules" bindtap="emit" data-act="toggleRules" aria-role="button" aria-expanded="{{rulesOpen}}"
         aria-label="{{rulesOpen ? '收起可修改内容说明' : '查看哪些内容还能修改'}}" hover-class="cy-pressed" hover-stay-time="80">
     <cy-icon name="info" size="{{ 26 }}" />
-    <text wx:if="{{ rulesOpen }}">已开卖后,路线的日期、章节站点结构和票价不能再改 —— 玩家买的就是这几样。要改只能下架退款后重发。名称、描述、封面和营销类型随时可改。</text>
+    <text wx:if="{{ rulesOpen }}">开卖后日期、站点和票价不能再改，名称、描述和封面可以随时改。</text>
     <text wx:else>哪些内容还能改</text>
     <cy-icon wx:if="{{ !rulesOpen }}" name="arrow-right" size="24" />
   </view>
