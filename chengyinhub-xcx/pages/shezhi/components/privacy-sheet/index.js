@@ -71,7 +71,7 @@ Component({
         toast('已撤回漫游定位同意');
       }).catch(() => {
         if (!current()) return;
-        toast('本机漫游定位已停，撤回记录待确认，请重试补传');
+        toast('本机漫游已停，记录待确认');
       }).finally(() => {
         if (epoch === this._roamRevokeEpoch) this.setData({ submitting: false });
       });

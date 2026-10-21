@@ -72,7 +72,7 @@ for (const entry of ['privacy', 'sheet']) {
     oldLocation({ latitude: 31, longitude: 121 });
     assert.equal(h.requests.length, requests); assert.equal(h.roam._track.length, 0);
     await failAudit(h);
-    assert.match(h.errorText(), /本机.*已停/); assert.match(h.errorText(), /撤回记录.*待确认/);
+    assert.match(h.errorText(), /本机.*已停/); assert.match(h.errorText(), /记录.*待确认/);
     assert.ok(!h.toasts.includes('已撤回漫游定位同意'));
   });
   test(entry + ' POST及latest均失败仍停该purpose，独立purpose继续持有系统采集', async t => {
