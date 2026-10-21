@@ -47,6 +47,33 @@ const ROLE_OVERRIDES = new Map([
   ['pages/activity/official-detail/index', 'merchant'],
 ]);
 
+// These existing factories enforce identity in onShow before constructing a client.
+// Match the resolved module AND the exported function used by Page(), not a package/name hint.
+function usesLoginPageFactory(js, entryFile, masked = S.maskNonCode(js)) {
+  const factories = new Map([
+    [path.join(ROOT, 'subpackageTools/cloud-ten-runtime.js'), 'page'],
+    [path.join(ROOT, 'subpackageTools/lib/runtime.js'), 'runtime'],
+  ]);
+  const imports = /\b(?:const|let|var)\s*\{([^}]+)\}\s*=\s*require\s*\(\s*(['"])([^'"]+)\2\s*\)/g;
+  for (const match of js.matchAll(imports)) {
+    // An apparent declaration inside a comment/string is not a dependency.
+    if (!/^(?:const|let|var)\b/.test(masked.slice(match.index))) continue;
+    if (!match[3].startsWith('.')) continue;
+    const resolved = path.resolve(path.dirname(entryFile), match[3].replace(/\.js$/, '') + '.js');
+    const exported = factories.get(resolved);
+    if (!exported) continue;
+    const open = match.index + match[0].indexOf('{') + 1;
+    const bindings = masked.slice(open, match.index + match[0].indexOf('}'));
+    for (const binding of bindings.split(',')) {
+      const parsed = /^\s*([\w$]+)(?:\s*:\s*([\w$]+))?\s*$/.exec(binding);
+      if (!parsed || parsed[1] !== exported) continue;
+      const local = (parsed[2] || parsed[1]).replace(/\$/g, '\\function classify(route) {');
+      if (new RegExp('\\bPage\\s*\\(\\s*' + local + '\\s*\\(').test(masked)) return true;
+    }
+  }
+  return false;
+}
+
 function classify(route) {
   const base = path.join(ROOT, route.pagePath);
   const js = fs.existsSync(base + '.js') ? fs.readFileSync(base + '.js', 'utf8') : '';
@@ -62,7 +89,7 @@ function classify(route) {
   if (ROLE_OVERRIDES.has(route.pagePath)) role = ROLE_OVERRIDES.get(route.pagePath);
 
   // 登录态:页面完全不碰会话也不发请求的,才算公开页(协议页、裁图页这类)
-  const needsLogin = READ_USER.test(masked);
+  const needsLogin = READ_USER.test(masked) || usesLoginPageFactory(js, base + '.js', masked);
 
   // 数据前置:onLoad 从 options 里取业务 id ⇒ 必须先有一条真数据才拍得出正常态
   const optionKeys = new Set();
@@ -259,6 +286,7 @@ module.exports = {
   inventoryMatchesCurrent,
   readAppRoutes,
   classify,
+  usesLoginPageFactory,
   findSceneComponents,
   guessTwinRoute,
 };
