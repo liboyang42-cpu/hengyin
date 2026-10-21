@@ -1,6 +1,129 @@
 #!/usr/bin/env bash
 # Real packaged application, disposable stores, no published ports or provider credentials.
 set -euo pipefail
+prepare_trace_runtime() {
+  python3 - "$STRACE" "$OUT/trace-runtime" <<'PY_TRACE'
+import hashlib
+import json
+import os
+from pathlib import Path
+import re
+import shutil
+import subprocess
+import sys
+
+binary, destination = map(Path, sys.argv[1:])
+environment = {k: v for k, v in os.environ.items() if not k.startswith("LD_")}
+environment["LC_ALL"] = "C"
+def output(command):
+    return subprocess.run(command, check=True, capture_output=True, text=True,
+                          env=environment).stdout
+def checked_path(value):
+    path = Path(value)
+    if not path.is_absolute() or any(c.isspace() for c in value) or ".." in path.parts or not path.is_file():
+        raise ValueError("Invalid trace runtime library path")
+    return path
+interpreters = re.findall(r"Requesting program interpreter:\s*([^\]]+)\]", output(["readelf", "-l", str(binary)]))
+if len(interpreters) != 1:
+    raise ValueError("Trace runtime requires one ELF interpreter")
+loader = checked_path(interpreters[0])
+libraries, observed_loader = {}, []
+for line in output(["ldd", str(binary)]).splitlines():
+    line = line.strip()
+    if re.fullmatch(r"linux-(?:vdso|gate)[\w.-]* \((?:0x)?[0-9a-fA-F]+\)", line):
+        continue
+    match = re.fullmatch(r"([A-Za-z0-9_.+-]+) => (/\S+) \((?:0x)?[0-9a-fA-F]+\)", line)
+    if match:
+        name, value = match.groups()
+        library = checked_path(value)
+        if name in libraries:
+            raise ValueError("Conflicting trace runtime library")
+        libraries[name] = library
+        continue
+    match = re.fullmatch(r"(/\S+) \((?:0x)?[0-9a-fA-F]+\)", line)
+    if match:
+        observed_loader.append(checked_path(match.group(1)))
+        continue
+    raise ValueError("Unresolved trace runtime dependency")
+if "libc.so.6" not in libraries or len(observed_loader) != 1 or observed_loader[0].resolve() != loader.resolve():
+    raise ValueError("Trace runtime libc or interpreter missing")
+destination.mkdir()
+(destination / "lib").mkdir()
+sources = {"strace": checked_path(str(binary)), "loader": loader}
+sources.update({"lib/" + name: path for name, path in libraries.items()})
+manifest = {}
+for name, source in sources.items():
+    target = destination / name
+    shutil.copyfile(source, target)
+    target.chmod(0o555 if name in ("strace", "loader") else 0o444)
+    manifest[name] = hashlib.sha256(target.read_bytes()).hexdigest()
+(destination / "manifest.json").write_text(json.dumps({"interpreter": str(loader), "files": manifest}, sort_keys=True) + "\n")
+(destination / "manifest.json").chmod(0o444)
+(destination / "lib").chmod(0o555)
+destination.chmod(0o555)
+PY_TRACE
+}
+
+check_trace_runtime() {
+  docker run --rm --name "$RUN_NAME-trace-check" --network none --read-only --cap-drop ALL \
+    --user "$(id -u):$(id -g)" -v "$OUT/trace-runtime:/trace-runtime:ro" \
+    --entrypoint /trace-runtime/loader "$JDK_IMAGE" \
+    --inhibit-cache --library-path /trace-runtime/lib --list /trace-runtime/strace > "$OUT/trace-resolved"
+  python3 - "$OUT/trace-runtime/manifest.json" "$OUT/trace-resolved" <<'PY_RESOLVED'
+import json
+from pathlib import Path
+import re
+import sys
+
+manifest = json.loads(Path(sys.argv[1]).read_text())
+expected = {name: "/trace-runtime/" + name for name in manifest["files"] if name != "strace"}
+loader_names = {manifest["interpreter"], Path(manifest["interpreter"]).name, "/trace-runtime/loader"}
+seen = set()
+for line in Path(sys.argv[2]).read_text().splitlines():
+    line = line.strip()
+    if re.fullmatch(r"linux-(?:vdso|gate)[\w.-]* \((?:0x)?[0-9a-fA-F]+\)", line):
+        continue
+    match = re.fullmatch(r"(\S+) => (/\S+) \((?:0x)?[0-9a-fA-F]+\)", line)
+    if match:
+        name, resolved = match.groups()
+        key = "loader" if name in loader_names else "lib/" + name
+    else:
+        match = re.fullmatch(r"(/\S+) \((?:0x)?[0-9a-fA-F]+\)", line)
+        if not match:
+            raise ValueError("Unrecognized target trace runtime dependency")
+        resolved = match.group(1)
+        key = "loader" if resolved == "/trace-runtime/loader" else ""
+    if key in seen or expected.get(key) != resolved:
+        raise ValueError("Target trace runtime escaped its private bundle")
+    seen.add(key)
+if seen != set(expected):
+    raise ValueError("Target trace runtime dependency missing")
+PY_RESOLVED
+  docker run --rm --name "$RUN_NAME-trace-check" --network none --read-only --cap-drop ALL \
+    --user "$(id -u):$(id -g)" -v "$OUT/trace-runtime:/trace-runtime:ro" \
+    --entrypoint /trace-runtime/loader "$JDK_IMAGE" \
+    --inhibit-cache --library-path /trace-runtime/lib /trace-runtime/strace --version > "$OUT/trace-version"
+  grep -q '^strace -- version ' "$OUT/trace-version"
+}
+
+start_traced_application() {
+  docker run -d --name "$RUN_NAME-app" --network "$RUN_NAME" --dns 127.0.0.1 \
+    --read-only --tmpfs /tmp:rw,size=256m --cap-drop ALL --cap-add SYS_PTRACE \
+    --user "$(id -u):$(id -g)" \
+    -v "$OUT/trace-runtime:/trace-runtime:ro" \
+    -v "$JAR:/application.jar:ro" -v "$FIXTURE:/fixture:ro" -v "$OUT:/evidence" \
+    -v "$OUT/trace-runtime:/evidence/trace-runtime:ro" \
+    --entrypoint /trace-runtime/loader "$JDK_IMAGE" \
+    --inhibit-cache --library-path /trace-runtime/lib /trace-runtime/strace \
+    -f -s 0 -e trace=connect,sendto,sendmsg -E LD_LIBRARY_PATH -E LD_PRELOAD -E LD_AUDIT \
+    -o /evidence/network.trace \
+    java -Xmx512m -Djava.rmi.server.hostname=127.0.0.1 \
+    -Dlogging.config=/fixture/logback.xml -Dlogback.configurationFile=/fixture/logback.xml \
+    -jar /application.jar --spring.config.location=file:/fixture/application.properties \
+    "--spring.datasource.druid.master.url=jdbc:mysql://$MYSQL_IP:3306/upgrade_startup_probe?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC" \
+    "--spring.data.redis.host=$REDIS_IP" >/dev/null
+}
+
 case "$(uname -s)" in
   Linux) ;;
   *) echo 'Startup smoke requires Linux; Mac Java/Docker execution is forbidden' >&2; exit 1 ;;
@@ -35,16 +158,14 @@ docker info >/dev/null
 RUN_NAME="cy-startup-$$-$RANDOM"
 OUT=$(mktemp -d "${TMPDIR:-/tmp}/cy-startup.XXXXXXXX")
 chmod 755 "$OUT"
-mkdir "$OUT/trace-libs"
 STRACE=$(command -v strace)
-# Host strace and its non-libc dependencies; never mount host credentials or config.
-while read -r library; do cp -L "$library" "$OUT/trace-libs/"; done < <(
-  ldd "$STRACE" | awk '/=> \// && $1 != "libc.so.6" {print $3}')
+# Keep the tracer's loader/libc closure separate from the application's image libraries.
+prepare_trace_runtime
 cleanup() {
   local result=$?
   trap - EXIT
   docker logs "$RUN_NAME-app" > "$OUT/application.log" 2>&1 || true
-  docker rm -f "$RUN_NAME-app" "$RUN_NAME-mysql" "$RUN_NAME-redis" >/dev/null 2>&1 || true
+  docker rm -f "$RUN_NAME-app" "$RUN_NAME-mysql" "$RUN_NAME-redis" "$RUN_NAME-trace-check" >/dev/null 2>&1 || true
   docker network rm "$RUN_NAME" >/dev/null 2>&1 || true
   echo "Startup evidence: $OUT (exit=$result)"
   if [ "$result" -ne 0 ]; then
@@ -58,6 +179,7 @@ JDK_IMAGE=maven:3.9.11-eclipse-temurin-21@sha256:6fdc855a6ed81d288ca7ca37ac6ff5e
 MYSQL_IMAGE=mysql:8.0.45@sha256:4af1f8815716546f5b12410f7621f37f93db8dd11a184706ef59111930b8c2ff
 REDIS_IMAGE=redis:7.4-alpine@sha256:858f009f9709ce576febc734aa78b8f6d624b82571f9ddb6bda4377c833b3499
 for image in "$JDK_IMAGE" "$MYSQL_IMAGE" "$REDIS_IMAGE"; do docker image inspect "$image" >/dev/null 2>&1 || docker pull "$image"; done
+check_trace_runtime
 docker network create --internal "$RUN_NAME" >/dev/null
 test "$(docker network inspect "$RUN_NAME" --format '{{.Internal}}')" = true
 docker run -d --name "$RUN_NAME-mysql" --network "$RUN_NAME" --tmpfs /var/lib/mysql:rw,size=768m \
@@ -79,17 +201,7 @@ test "$(docker exec "$RUN_NAME-redis" redis-cli DBSIZE)" = 0
 docker exec -i "$RUN_NAME-mysql" mysql -uroot upgrade_startup_probe < "$FIXTURE/schema.sql"
 MYSQL_IP=$(docker inspect "$RUN_NAME-mysql" --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}')
 REDIS_IP=$(docker inspect "$RUN_NAME-redis" --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}')
-docker run -d --name "$RUN_NAME-app" --network "$RUN_NAME" --dns 127.0.0.1 \
-  --read-only --tmpfs /tmp:rw,size=256m --cap-drop ALL --cap-add SYS_PTRACE \
-  --user "$(id -u):$(id -g)" -e LD_LIBRARY_PATH=/trace-libs \
-  -v "$STRACE:/trace/strace:ro" -v "$OUT/trace-libs:/trace-libs:ro" \
-  -v "$JAR:/application.jar:ro" -v "$FIXTURE:/fixture:ro" -v "$OUT:/evidence" \
-  --entrypoint /trace/strace "$JDK_IMAGE" -f -s 0 -e trace=connect,sendto,sendmsg -o /evidence/network.trace \
-  java -Xmx512m -Djava.rmi.server.hostname=127.0.0.1 \
-  -Dlogging.config=/fixture/logback.xml -Dlogback.configurationFile=/fixture/logback.xml \
-  -jar /application.jar --spring.config.location=file:/fixture/application.properties \
-  "--spring.datasource.druid.master.url=jdbc:mysql://$MYSQL_IP:3306/upgrade_startup_probe?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC" \
-  "--spring.data.redis.host=$REDIS_IP" >/dev/null
+start_traced_application
 ready=false
 for attempt in $(seq 1 120); do
   docker logs "$RUN_NAME-app" > "$OUT/application.log" 2>&1
