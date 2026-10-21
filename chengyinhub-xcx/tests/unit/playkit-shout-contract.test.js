@@ -40,11 +40,15 @@ function load(source) {
   let frameCb = null;
   let errCb = null;
   let tickFn = null;
+  let startCb = null;
+  let stopCb = null;
 
   // 定时器不真挂事件循环,只把回调抓出来手动喂拍(onRun 只许调一次,
   // 重调会把 _held 清零、把 start 事件翻倍 —— 那是要测的行为,不是脚手架)
   global.setInterval = (fn) => { tickFn = fn; return { fake: true }; };
   global.clearInterval = () => {};
+  global.setTimeout = () => ({ fake: true });
+  global.clearTimeout = () => {};
 
   global.Component = (config) => { definition = config; };
   global.wx = {
@@ -52,7 +56,12 @@ function load(source) {
       return {
         onFrameRecorded(cb) { frameCb = cb; },
         onError(cb) { errCb = cb; },
-        start(o) { events.push('rec.start:' + (o && o.format)); },
+        onStart(cb) { startCb = cb; }, onStop(cb) { stopCb = cb; },
+        offFrameRecorded(cb) { if (frameCb === cb) frameCb = null; },
+        offError(cb) { if (errCb === cb) errCb = null; },
+        offStart(cb) { if (startCb === cb) startCb = null; },
+        offStop(cb) { if (stopCb === cb) stopCb = null; },
+        start(o) { events.push('rec.start:' + (o && o.format)); if (startCb) startCb(); },
         stop() { events.push('rec.stop'); },
       };
     },
@@ -76,15 +85,21 @@ function load(source) {
   Object.assign(vm.data, vm.properties);
   vm.setData = (patch) => Object.assign(vm.data, patch);
   vm.triggerEvent = (name, detail) => events.push({ name, detail });
-  vm.selectComponent = () => ({
+  const stage = {
+    _stopAll() { stageCalls.push('stopAll'); },
     begin() { stageCalls.push('begin'); },
     win(t) { stageCalls.push('win:' + t); },
     fail(t) { stageCalls.push('fail:' + t); },
-  });
+  };
+  vm.selectComponent = () => stage;
+  for (const name of ['onSample', 'onCalibrated', 'onRun']) {
+    const fn = vm[name];
+    vm[name] = () => fn.call(vm, { currentTarget: { dataset: { stageKey: vm.data.stageKeys[0] } } });
+  }
   vm.events = events;
   vm.stageCalls = stageCalls;
   vm.frame = (x) => frameCb && frameCb({ frameBuffer: pcmPeak(x) });
-  vm.micError = () => errCb && errCb({});
+  vm.micError = () => errCb && errCb({errMsg: 'operateRecorder:fail auth deny'});
   vm.tick = () => {
     if (!tickFn) throw new Error('表还没开:先 onRun() 再喂拍');
     tickFn();
@@ -96,7 +111,7 @@ function load(source) {
 /** 手动喂 n 拍定时器(每拍 stepMs 毫秒真实时间,source 在每一拍前送帧) */
 function advance(vm, ticks, stepMs, source) {
   const realNow = Date.now;
-  let now = vm._last == null ? Date.now() : vm._last;
+  let now = vm._clockNow == null ? (vm._last == null ? Date.now() : vm._last) : vm._clockNow;
   Date.now = () => now;
   try {
     for (let i = 0; i < ticks; i++) {
@@ -104,6 +119,7 @@ function advance(vm, ticks, stepMs, source) {
       if (source) source(i);
       vm.tick();
     }
+    vm._clockNow = now;
   } finally {
     Date.now = realNow;
   }
@@ -125,6 +141,7 @@ test('开跑先开表:submit 之前必有 start 事件(成绩按服务器时间�
   vm.onStart();
   assert.deepEqual(vm.stageCalls, ['begin'], '校准屏由 stage 出');
   assert.ok(vm.events.includes('rec.start:PCM'), '采样链路是 PCM 逐帧,与 quietHold 同参数');
+  vm.frame(0); vm.onSample();
   vm.onCalibrated();
   vm.onRun();
   const names = vm.events.filter((e) => e && e.name).map((e) => e.name);
@@ -174,10 +191,10 @@ test('喊满秒数:判一次,交的是 submit + { heldMs },并且停表停麦', 
   assert.ok(submits[0].detail.heldMs >= 5000 && submits[0].detail.heldMs <= 5300,
     'payload 只有毫秒数:实得 ' + JSON.stringify(submits[0].detail));
   assert.ok(vm.events.includes('rec.stop'), '用完即弃:停麦');
-  assert.match(vm.stageCalls.join('|'), /整整 5 秒，声音没掉下去/);
+  assert.match(vm.stageCalls.join('|'), /本机相对阈值持续过线 5 秒/);
 });
 
-test('一帧最多记 0.1 秒:后台限频回来的大间隔不送分', () => {
+test('帧间断流中断测量，后台大间隔不送分', () => {
   const vm = load();
   vm.onStart();
   for (let i = 0; i < 20; i++) { vm.frame(0.05); vm.onSample(); }
@@ -185,12 +202,14 @@ test('一帧最多记 0.1 秒:后台限频回来的大间隔不送分', () => {
   vm.onRun();
   const hot = vm._hot + 0.05;
   advance(vm, 3, 5000, () => vm.frame(hot));   // 三拍各隔 5 秒
-  assert.ok(vm._held <= 0.31, '3 拍最多记 0.3 秒,不许一次送 15 秒:实得 ' + vm._held);
+  assert.equal(vm._held, 0);
+  assert.equal(vm.data.running, false);
+  assert.equal(vm.events.filter(e => e && e.name === 'submit').length, 0);
 });
 
 test('拿不到麦克风就明说:micdenied 事件 + 停表,不假装在听', () => {
   const vm = load();
-  vm.onStart();
+  vm.onStart(); vm.frame(0); vm.onSample();
   vm.onCalibrated();
   vm.onRun();
   vm.micError();
@@ -212,9 +231,10 @@ test('切后台中止:表停麦停,回来不许接着攒', () => {
   assert.ok(vm.events.includes('rec.stop'));
 });
 
-test('文案全角逗号:胜利句与过线句钉死', () => {
-  assert.match(SOURCE, /整整 ' \+ this\.data\.seconds \+ ' 秒，声音没掉下去/);
-  assert.match(WXML, /过线了，别停/);
+test('本机相对阈值文案与舒适音量提示', () => {
+  assert.match(SOURCE, /本机相对阈值持续过线/);
+  assert.match(WXML, /过线了，保持舒适音量/);
+  assert.match(WXML, /不适请停止/);
 });
 
 test('wxss:只有 transition 没有 keyframes,无 tag 选择器', () => {

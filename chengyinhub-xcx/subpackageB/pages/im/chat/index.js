@@ -5,6 +5,7 @@ const { decodeDisplayText } = require('../../../../utils/display-text.js');
 const { showPermissionGuide } = require('../../../../utils/location/location-manager.js');
 const { auditDetailUrl, shapeAuditDetail, shouldLoadAuditDetail, isRetryableAuditError } = require('./audit-detail.js');
 const { reportNoticeRows, makeReadRequestId } = require('../list/report-notices.js');
+const systemCard = require('./system-card-target.js');
 const app = getApp();
 
 // 服务端可见顺序含微秒：不要转 JS Date 丢精度，也不要以客户端时钟推测审批时间。
@@ -110,6 +111,10 @@ Page({
 
 
   onLoad(options) {
+    this._reviewDetailEpoch = (this._reviewDetailEpoch || 0) + 1;
+    this._cardNavEpoch = (this._cardNavEpoch || 0) + 1;
+    this._reviewMessageId = null; this._reviewRecordKey = null; this._navigating = false;
+    this.setData({ reviewResult: null, reviewDetail: null });
     this._disposed = false;
     this._hidden = false;
     this._pendingClear = null;
@@ -395,19 +400,22 @@ Page({
       const displayContent = m.msgType == 2 ? m.content : decodeDisplayText(m.content);
       if (m.msgType == 3) {
         try { card = JSON.parse(m.extraJson || '{}'); } catch (e) { card = {}; }
+        if (!card || typeof card !== 'object' || Array.isArray(card)) card = {};
         if (!card.cardType) card.cardType = 'generic';
         if (card.cardType === 'generic' && !card.title) card.title = displayContent || '通知';
       }
-      /* CU-M-124:这张通用卡过去无条件报成 aria-role=button「查看卡片详情」,但只有
-         action / result / bcId 三种tap动作。没有去处的通知(如报名没挂主题的「报名成功」卡)
-         于是每次都成了一次死点击。卡的可点性按真有的动作给,不猜路径。 */
-      const cardTarget = !!(card && (card.action
-          || (card.result && m.senderId == 0) || card.bcId));
+      const projected = Object.assign({}, m, { card });
+      const systemRecord = !!systemCard.recordOf(projected), currentOriginalUrl = systemCard.originalUrl(projected);
+      const genericAction = systemCard.genericActionInfo(projected);
+      const genericButtons = !systemRecord && Array.isArray(card && card.buttons) ? card.buttons.map((button, index) =>
+        systemCard.genericActionInfo(projected, index) ? { index, text: button.text || '查看详情', type: button.type } : null).filter(Boolean) : [];
+      const cardTarget = systemRecord || !!currentOriginalUrl || !!genericAction;
       // 对方气泡上方「名字·时间」一行用的名字:单聊/客服/系统统一用会话对方名(name)。
       // 小程序不露出群聊(见 list/index.js:tabOf),故无需逐条 senderName。
-      return Object.assign({}, m, { timeDivider: divider, card: card, cardTarget: cardTarget, displayContent: displayContent,
+      return Object.assign({}, m, { timeDivider: divider, card: card, cardTarget, systemRecord, currentOriginalUrl, genericAction, genericButtons, displayContent: displayContent,
         displayName: that.data.name || '' });
     });
+    if (that._reviewMessageId && !that._reviewMatches(decorated.find(row => String(row.id) === String(that._reviewMessageId)))) that.closeReviewResult();
     that.fetchTopics(decorated);
     return decorated;
   },
@@ -1019,75 +1027,89 @@ Page({
     this._navigating = true; wx.navigateTo({ url: '/pages/topic/index/index?id=' + id, complete: () => { this._navigating = false; } });
   },
 
-  onCardTap(e) {
-    if (this._navigating) return; const ds = e.currentTarget.dataset;
-    const message = this.data.msgs.find(item => String(item.id) === String(ds.msg));
-    if (message && Number(message.senderId) === 0 && Number(message.msgType) === 3
-        && message.card && message.card.result) {
-      const result = message.card.result;
-      this.setData({ reviewResult: { taskId: result.taskId, bizId: result.bizId,
-        outcome: result.outcome, reason: result.reason, followUp: result.followUp } });
-      if (shouldLoadAuditDetail(message.card)) this.loadReviewDetail(result.taskId);
-      else this.setData({ reviewDetail: null });
-      return;
-    }
-    // FE-13 官方通知点击回流(best-effort)
-    if (ds.bcid) {
-      app.sendRequest({
-        url: '/api/official/broadcast/' + ds.bcid + '/click', method: 'POST',
-        hideLoading: true, data: { channel: 'inapp' }, success() {}, fail() {}
-      });
-    }
-    if (ds.url) { this._navigating = true; wx.navigateTo({ url: ds.url, complete: () => { this._navigating = false; } }); }
+  _cardMessage(id) {
+    if (this._disposed || this._hidden || ![2, '2'].includes(this.data.type) || !systemCard.positiveId(id)
+        || app.getUserID && app.getUserID() != this.data.myId) return null;
+    const message = this.data.msgs.find(row => String(row.id) === String(id));
+    return message && (message.conversationId == null || String(message.conversationId) === String(this.data.conversationId)) ? message : null;
   },
-
+  _reviewMatches(message) {
+    const record = systemCard.recordOf(message);
+    return !!record && JSON.stringify(record) === this._reviewRecordKey;
+  },
+  onCardTap(e) {
+    if (this._navigating) return;
+    const message = this._cardMessage(e.currentTarget.dataset.msg), result = systemCard.recordOf(message);
+    if (!result) { this._openGenericCard(message); return; }
+    if (this.data.reviewResult && this._reviewMessageId === message.id && this._reviewMatches(message)) return;
+    this._reviewMessageId = message.id; this._reviewRecordKey = JSON.stringify(result);
+    this.setData({ reviewResult: { taskId: systemCard.positiveId(result.taskId), bizId: systemCard.positiveId(result.bizId),
+      outcome: result.outcome, reason: result.reason, followUp: result.followUp }, reviewDetail: null });
+    if (shouldLoadAuditDetail(message.card)) this.loadReviewDetail(result.taskId);
+  },
+  onCurrentCard(e) { this._openCardOriginal(this._cardMessage(e.currentTarget.dataset.msg)); },
+  _openGenericCard(message, index) {
+    const target = systemCard.genericActionInfo(message, index);
+    if (target) this._openCardTarget(target.url, target.bcId);
+  },
+  _openCardOriginal(message) {
+    const url = systemCard.originalUrl(message);
+    if (url) this._openCardTarget(url, systemCard.positiveId(message.card.bcId));
+  },
+  _openCardTarget(url, bcid) {
+    if ((!url && !bcid) || this._navigating) return;
+    const current = this._viewGuard(), epoch = this._cardNavEpoch = (this._cardNavEpoch || 0) + 1;
+    this._navigating = true;
+    const release = () => { if (current() && epoch === this._cardNavEpoch) this._navigating = false; };
+    if (bcid) app.sendRequest({ url: '/api/official/broadcast/' + bcid + '/click', method: 'POST',
+      hideLoading: true, data: { channel: 'inapp' }, success() {}, fail() {}, complete: () => { if (!url) release(); } });
+    if (!url) return;
+    wx.navigateTo({ url,
+      fail: () => { if (current() && epoch === this._cardNavEpoch) app.tips && app.tips('原单暂时无法打开'); },
+      complete: () => { if (current() && epoch === this._cardNavEpoch) this._navigating = false; } });
+  },
   closeReviewResult() {
     this._reviewDetailEpoch = (this._reviewDetailEpoch || 0) + 1;
+    this._reviewMessageId = null; this._reviewRecordKey = null;
     this.setData({ reviewResult: null, reviewDetail: null });
   },
 
-  // BL-87:处理结果半屏里回读审核任务详情(仅提交人本人;403/404 如实回显,不挡卡片原有内容)。
+  // 通知生成时记录与当前审核详情分开；详情仍只读既有 GET，权限由原接口判定。
   loadReviewDetail(taskId) {
-    const epoch = (this._reviewDetailEpoch || 0) + 1;
-    this._reviewDetailEpoch = epoch;
-    const auditUrl = auditDetailUrl(taskId);
-    if (!auditUrl) { this.setData({ reviewDetail: null }); return; }
-    const auditTaskId = Number(taskId);
+    const auditTaskId = systemCard.positiveId(taskId), auditUrl = auditTaskId && auditDetailUrl(auditTaskId);
+    if (!auditUrl || !this.data.reviewResult || !this._reviewMatches(this._cardMessage(this._reviewMessageId))) return;
+    const epoch = this._reviewDetailEpoch = (this._reviewDetailEpoch || 0) + 1, viewCurrent = this._viewGuard();
     this.setData({ reviewDetail: { state: 'loading', statusLabel: '', timeline: [], error: '' } });
-    const settle = (detail) => {
-      if (epoch !== this._reviewDetailEpoch) return;
+    const settle = detail => {
+      if (epoch !== this._reviewDetailEpoch || !viewCurrent()
+          || !this._reviewMatches(this._cardMessage(this._reviewMessageId))) return;
       this.setData({ reviewDetail: detail });
     };
     app.sendRequest({
-      hideLoading: true,
-      silentError: true,
-      url: `/api/audit/${auditTaskId}/detail`,
-      method: 'GET',
-      success: (res) => {
+      hideLoading: true, silentError: true, url: `/api/audit/${auditTaskId}/detail`, method: 'GET',
+      success: res => {
         const ok = res && (res.code === 200 || res.code === '200');
-        const shaped = ok ? shapeAuditDetail(res.data) : null;
+        const task = ok && res.data && res.data.task;
+        const shaped = task && systemCard.positiveId(task.id) === auditTaskId ? shapeAuditDetail(res.data) : null;
         if (shaped) { settle(Object.assign({ state: 'ready', error: '' }, shaped)); return; }
         settle({ state: 'error', statusLabel: '', timeline: [], retryable: isRetryableAuditError(res),
-          error: ok ? '审核记录暂时无法读取' : app.getRequestErrorMessage(res, '审核记录暂时无法读取') });
+          error: ok ? '审核记录与当前通知不一致' : app.getRequestErrorMessage(res, '审核记录暂时无法读取') });
       },
-      fail: (res) => settle({ state: 'error', statusLabel: '', timeline: [], retryable: true,
-        error: app.getRequestErrorMessage(res, '网络异常，审核记录没有加载') }),
+      successStatusAbnormal: (res, status) => settle({ state: 'error', statusLabel: '', timeline: [],
+        retryable: isRetryableAuditError({ code: status || res && res.code }), error: app.getRequestErrorMessage(res, '审核记录暂时无法读取') }),
+      fail: res => settle({ state: 'error', statusLabel: '', timeline: [],
+        retryable: isRetryableAuditError({ code: res && (res.statusCode || res.code) }), error: app.getRequestErrorMessage(res, '网络异常，审核记录没有加载') }),
     });
   },
-
   retryReviewDetail() {
     const detail = this.data.reviewDetail;
     if (this.data.reviewResult && detail && detail.retryable) this.loadReviewDetail(this.data.reviewResult.taskId);
   },
-
-  // 系统卡片可配置按钮:action 是路径则跳转;否则按 key 走业务(MVP 提示)
   onCardBtn(e) {
-    if (this._navigating) return; const ds = e.currentTarget.dataset;
-    if (ds.action && String(ds.action).indexOf('/') === 0) {
-      this._navigating = true; wx.navigateTo({ url: ds.action, complete: () => { this._navigating = false; } });
-    } else {
-      app.tips && app.tips('已处理');
-    }
+    const ds = e.currentTarget.dataset, message = this._cardMessage(ds.msg);
+    if (ds.mode === 'original') { this.onCurrentCard(e); return; }
+    if (systemCard.buttonUrl(message, ds.index)) this._openCardOriginal(message);
+    else this._openGenericCard(message, ds.index);
   },
 
   // ===== 准实时:页面可见时轮询新消息 =====
@@ -1118,6 +1140,7 @@ Page({
     this.startPoll();
   },
   onHide() {
+    if (this.data.reviewResult) this.closeReviewResult();
     this._hidden = true;
     if (this.data.routePickerOpen) this.closeRoutePicker();
     this._pollRequestEpoch = (this._pollRequestEpoch || 0) + 1;
@@ -1125,6 +1148,8 @@ Page({
     this.stopPoll();
   },
   onUnload() {
+    this._reviewDetailEpoch = (this._reviewDetailEpoch || 0) + 1;
+    this._reviewMessageId = null; this._reviewRecordKey = null;
     this._disposed = true;
     this._pendingBlock = null;
     this._pendingClearReturn = null;

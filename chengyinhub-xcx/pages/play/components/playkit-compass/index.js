@@ -11,9 +11,11 @@
 
 const motion = require('../../../../utils/motion.js');
 const { readReducedMotion } = require('../../../../utils/motion-preference.js');
+const cyToast = require('../../../../utils/toast.js');
 
 const TICK_MS = 100;
-const NODATA_TICKS = 30;   // 3 秒没等到一帧方向 = 这台机器压根没在报,别装忙
+const FIRST_FRAME_MS = 3000;
+const FRAME_GAP_MS = 500;
 
 /** 两方位角的最小夹角。与服务端 angleDiff 同口径:359° 与 1° 相差 2° 而不是 358°。 */
 function angleDiff(a, b) {
@@ -55,6 +57,7 @@ function isLowAccuracy(accuracy) {
 // 刻度尺:每 5° 一格、30° 一道长刻度并标度数,四个正方位换成方位字
 /** 容差区:顶上 ±tolerance 那一段,每 2.5° 一根短棒(固定在屏上,不随刻度盘转) */
 function zoneBars(tol) {
+  tol = typeof tol === 'number' && Number.isFinite(tol) && tol > 0 ? Math.min(180, tol) : 15;
   const n = Math.floor(tol / 2.5);
   const bars = Array.from({ length: n * 2 + 1 }, (_, i) => (i - n) * 2.5);
   // 容差不是 2.5 的整数倍时补上两端,画出来的区不能比判定区窄
@@ -79,6 +82,7 @@ Component({
     done: { type: Boolean, value: false },     // 进来就对准过:只读状态,不再收
   },
   data: {
+    stageKeys: [0],
     phase: 'idle',       // idle = 还没开始 / run = 表在走
     heading: 0,          // 当前朝向(屏上那个大数)
     needleDeg: 0,        // 连续针角,transform 用它
@@ -96,16 +100,20 @@ Component({
     lowAccuracy: false,
   },
   observers: {
-    show(v) { if (!v) { this._stop(); this._stopCompass(); this.setData({ phase: 'idle', aligned: false, noData: false, lowAccuracy: false }); } },
+    show(v) { if (!v) this._abort(); else this._closed = false; },
+    done(v) { if (v) this._abort(); },
     tolerance(v) { this.setData({ zoneBars: zoneBars(v > 0 ? v : 15) }); },
   },
   lifetimes: {
     attached() { this.setData({ rm: readReducedMotion() }); },
-    detached() { this._stop(); this._stopCompass(); },
+    detached() { this._detached = true; this._abort(); },
   },
   // 切后台停表:罗盘事件在后台会被限频,回来那一帧的间隔可能好几秒 ——
   // 不夹住的话等于「揣兜里那半分钟」白赚保持时长(与 quiethold 同一条)
-  pageLifetimes: { hide() { this._abort(); } },
+  pageLifetimes: {
+    hide() { this._hidden = true; this._abort(); },
+    show() { this._hidden = false; },
+  },
   methods: {
     _angleDiff: angleDiff,       // 纯算法出口,供单测
     _normalize: normalize,
@@ -115,88 +123,143 @@ Component({
     _isLowAccuracy: isLowAccuracy,
     _zoneBars: zoneBars,
 
-    _stop() { if (this._timer) { clearInterval(this._timer); this._timer = null; } },
+    _current(attempt) {
+      return !!attempt && this._attempt === attempt && !this._hidden && !this._closed
+        && !this._detached && this.data.show;
+    },
+    _eventAttempt(e) {
+      const attempt = this._attempt;
+      return this._current(attempt) && e && e.currentTarget && e.currentTarget.dataset
+        && String(e.currentTarget.dataset.stageKey) === String(attempt.key) ? attempt : null;
+    },
+    _stop() {
+      if (this._timer) clearInterval(this._timer);
+      if (this._watchdog) clearTimeout(this._watchdog);
+      this._timer = null; this._watchdog = null;
+    },
     _stopCompass() {
+      const cb = this._cb;
+      this._cb = null;
       if (!this._listening) return;
       this._listening = false;
-      try { if (this._cb && wx.offCompassChange) wx.offCompassChange(this._cb); } catch (e) { /* 没注册成功过 */ }
-      try { wx.stopCompass(); } catch (e) { /* 已经停了 */ }
-      this._cb = null;
+      try { if (cb && wx.offCompassChange) wx.offCompassChange(cb); } catch (e) { /* invalidated callback is inert */ }
+      try { if (wx.stopCompass) wx.stopCompass({ fail() {} }); } catch (e) { /* best effort after callback invalidation */ }
     },
     _abort() {
-      if (this.data.phase !== 'run' || this._sent) return;
+      const stage = this._attempt ? this._attempt.stage : this.selectComponent('#cy-play-stage');
+      this._attempt = null;
       this._stop(); this._stopCompass();
-      this.setData({ phase: 'idle', aligned: false, noData: false, lowAccuracy: false });
+      this._heading = null; this._held = 0;
+      if (stage) stage._stopAll();
+      this._retiredStage = stage;
+      this.setData({
+        stageKeys: [this.data.stageKeys[0] + 1], phase: this._sent ? 'done' : 'idle',
+        aligned: false, noData: false, hasHeading: false, holdPct: 0, holdLeft: '0.0', turnHint: '', lowAccuracy: false,
+      });
+    },
+    _failed(attempt) {
+      if (!this._current(attempt) || attempt.phase === 'reporting' || attempt.phase === 'done') return;
+      this._abort();
+      this.setData({ noData: true });
+      cyToast('方向读取失败，请重试或退出');
+    },
+    _armWatchdog(attempt, ms) {
+      if (this._watchdog) clearTimeout(this._watchdog);
+      this._watchdog = setTimeout(() => this._failed(attempt), ms);
+    },
+    _fresh(attempt) {
+      return this._current(attempt) && typeof attempt.lastFrame === 'number'
+        && Number.isFinite(attempt.lastFrame) && Date.now() - attempt.lastFrame < FRAME_GAP_MS;
     },
 
     onStart() {
-      if (this.data.done || this.data.phase === 'run') return;
+      if (this._hidden || this._closed || this._detached || !this.data.show || this._sent || this.data.done || this._attempt) return;
       const stage = this.selectComponent('#cy-play-stage');
-      // 没有限时也没有校准:begin() 会直接回 'run',走这一层是为了和其余玩法同一条开跑线
-      if (stage) stage.begin(); else this.onRun();
+      if (!stage || stage === this._retiredStage) return;
+      const attempt = this._attempt = { stage, key: this.data.stageKeys[0], phase: 'starting',
+        startedAt: Date.now(), lastFrame: null, frames: 0, lastAligned: false, startReturned: false, succeeded: false };
+      this._heading = null; this._held = 0; this._lowAccuracy = false;
+      this._prevNeedle = null; this._prevRose = null;
+      this.setData({ phase: 'idle', hasHeading: false, noData: false, aligned: false, holdPct: 0, turnHint: '', lowAccuracy: false });
+      if (typeof wx.startCompass !== 'function' || typeof wx.onCompassChange !== 'function'
+        || typeof wx.offCompassChange !== 'function' || typeof wx.stopCompass !== 'function'
+        || typeof this.data.target !== 'number' || !Number.isFinite(this.data.target)) {
+        this._failed(attempt); return;
+      }
+      this._target = ((this.data.target % 360) + 360) % 360;
+      const accept = () => {
+        if (!this._current(attempt) || !attempt.startReturned || !attempt.succeeded || attempt.phase !== 'starting') return;
+        attempt.phase = 'preparing';
+        stage.begin();
+      };
+      const cb = (res) => {
+        if (!this._current(attempt) || attempt.phase !== 'run') return;
+        if (!res || typeof res.direction !== 'number' || !Number.isFinite(res.direction)) {
+          attempt.lastAligned = false; this._held = 0;
+          this.setData({ aligned: false, hasHeading: false, holdPct: 0, holdLeft: this._holdTotal().toFixed(1) });
+          return;
+        }
+        const now = Date.now();
+        const gap = now - (attempt.lastFrame === null ? attempt.startedAt : attempt.lastFrame);
+        if (gap >= (attempt.lastFrame === null ? FIRST_FRAME_MS : FRAME_GAP_MS)) { this._failed(attempt); return; }
+        const direction = ((res.direction % 360) + 360) % 360;
+        const aligned = angleDiff(direction, this._target) <= this._tolerance();
+        // Only measured sample pairs earn time. Repeating a timer against one sample earns none.
+        if (attempt.lastFrame !== null && attempt.lastAligned && aligned) this._held += Math.max(0, Math.min(0.1, gap / 1000));
+        else this._held = 0;
+        attempt.lastFrame = now; attempt.lastAligned = aligned; attempt.frames += 1;
+        this._heading = direction; this._lowAccuracy = isLowAccuracy(res.accuracy);
+        this._armWatchdog(attempt, FRAME_GAP_MS);
+      };
+      this._cb = cb; this._listening = true;
+      this._armWatchdog(attempt, FIRST_FRAME_MS);
+      try {
+        wx.onCompassChange(cb);
+        if (!this._current(attempt)) return;
+        wx.startCompass({
+          success: () => { attempt.succeeded = true; accept(); },
+          fail: () => this._failed(attempt),
+        });
+        attempt.startReturned = true;
+      } catch (error) { this._failed(attempt); return; }
+      accept();
     },
 
-    /** stage 放行后真正开跑:订阅罗盘 + 起表 */
-    onRun() {
-      if (this._sent || this.data.done) return;
-      this._heading = null;
-      this._prevNeedle = null;
-      this._prevRose = null;
-      this._held = 0;
-      this._ticks = 0;
-      this._last = Date.now();
-      this._lowAccuracy = false;
-      this.setData({
-        phase: 'run', aligned: false, noData: false, holdLeft: (this._holdTotal()).toFixed(1),
-        hasHeading: false, roseDeg: 0, holdPct: 0, turnHint: '', lowAccuracy: false,
-      });
-
-      this._cb = (res) => {
-        const d = res && Number(res.direction);
-        if (Number.isFinite(d)) { this._heading = d; this._ticks = 0; }
-        if (res) this._lowAccuracy = isLowAccuracy(res.accuracy);
-      };
-      this._listening = true;
-      wx.onCompassChange(this._cb);
-
-      this._stop();
-      this._timer = setInterval(() => this._tick(), TICK_MS);
+    onRun(e) {
+      const attempt = this._eventAttempt(e);
+      if (!attempt || attempt.phase !== 'preparing' || this._sent || this.data.done) return;
+      attempt.phase = 'run';
+      this.setData({ phase: 'run', aligned: false, noData: false, holdLeft: this._holdTotal().toFixed(1),
+        hasHeading: false, roseDeg: 0, holdPct: 0, turnHint: '', lowAccuracy: false });
+      this._timer = setInterval(() => { if (this._current(attempt)) this._tick(); }, TICK_MS);
+    },
+    _tolerance() {
+      const t = this.data.tolerance;
+      return typeof t === 'number' && Number.isFinite(t) && t > 0 ? t : 15;
     },
 
     _holdTotal() {
       const h = this.data.holdSeconds;
-      return h > 0 ? h : 1;
+      return typeof h === 'number' && Number.isFinite(h) && h > 0 ? h : 1;
     },
 
     _tick() {
-      // 判过之后就算计时器还在也别再动:清表靠 _stop,这一行兜住任何漏网的拍
-      if (this._sent || this.data.phase !== 'run') return;
+      const attempt = this._attempt;
+      if (!this._current(attempt) || this._sent || attempt.phase !== 'run' || this.data.phase !== 'run') return;
       const now = Date.now();
-      // 一帧最多只记 0.1 秒:定时器被后台限频时,回来那一帧的间隔可能有好几秒
-      const dt = Math.min(0.1, (now - this._last) / 1000);
-      this._last = now;
-
-      if (this._heading == null) {
-        this._ticks += 1;
-        if (this._ticks === NODATA_TICKS) this.setData({ noData: true });
+      if (attempt.lastFrame === null) {
+        if (now - attempt.startedAt >= FIRST_FRAME_MS) this._failed(attempt);
         return;
       }
-
-      const target = this.data.target || 0;
-      const tol = this.data.tolerance > 0 ? this.data.tolerance : 15;
-      const diff = angleDiff(this._heading, target);
-      const aligned = diff <= tol;
+      if (!this._fresh(attempt)) { this._failed(attempt); return; }
+      const target = this._target;
+      const aligned = angleDiff(this._heading, target) <= this._tolerance();
       const needle = continuous(target - this._heading, this._prevNeedle);
       this._prevNeedle = needle;
       const rose = continuous(-this._heading, this._prevRose);
       this._prevRose = rose;
 
-      if (aligned) {
-        this._held += dt;
-        if (this._held >= this._holdTotal()) { this._finish(); return; }
-      } else {
-        this._held = 0;
-      }
+      if (aligned && this._held >= this._holdTotal() && attempt.frames >= 2) { this._finish(); return; }
 
       this.setData({
         heading: normalize(this._heading),
@@ -204,7 +267,7 @@ Component({
         roseDeg: rose,
         hasHeading: true,
         aligned,
-        holdPct: Math.round(Math.min(1, this._held / this._holdTotal()) * 100),
+        holdPct: Math.min(99, Math.floor(Math.max(0, this._held / this._holdTotal()) * 100)),
         turnHint: turnText(signedDelta(target, this._heading)),
         lowAccuracy: this._lowAccuracy,
         holdLeft: Math.max(0, this._holdTotal() - this._held).toFixed(1),
@@ -212,17 +275,29 @@ Component({
     },
 
     _finish() {
+      const attempt = this._attempt;
+      if (!this._fresh(attempt) || attempt.phase !== 'run' || this._sent || attempt.frames < 2
+        || this._held < this._holdTotal() || typeof this._heading !== 'number' || !Number.isFinite(this._heading)
+        || angleDiff(this._heading, this._target) > this._tolerance()) return;
+      const bearing = normalize(this._heading);
       this._stop(); this._stopCompass();
-      this._sent = true;
-      this.setData({ holdPct: 100 });
+      this._sent = true; attempt.phase = 'reporting';
+      this.setData({ phase: 'done', holdPct: 100 });
       motion.haptic({ reducedMotion: this.data.rm, type: 'medium' });
-      const stage = this.selectComponent('#cy-play-stage');
+      const stage = attempt.stage;
       if (stage) stage.win('对准了，保持了 ' + this._holdTotal() + ' 秒');
-      // 报当前读数不报目标值:服务端按同一容差复核,拿读数去复核才是真判过
-      this.triggerEvent('submit', { bearing: normalize(this._heading || this.data.target) });
+      attempt.phase = 'done';
+      if (this._current(attempt)) this.triggerEvent('submit', { bearing });
     },
 
-    onVerdict(e) { this.triggerEvent('verdict', e.detail); },
-    onClose() { this._stop(); this._stopCompass(); this.triggerEvent('close'); },
+    onVerdict(e) {
+      const attempt = this._eventAttempt(e);
+      if (attempt && attempt.phase === 'reporting') this.triggerEvent('verdict', e.detail);
+    },
+    onClose(e) {
+      if (e && (!e.currentTarget || !e.currentTarget.dataset
+        || String(e.currentTarget.dataset.stageKey) !== String(this.data.stageKeys[0]))) return;
+      this._closed = true; this._abort(); this.triggerEvent('close');
+    },
   },
 });

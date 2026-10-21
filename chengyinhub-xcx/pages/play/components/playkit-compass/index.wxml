@@ -1,4 +1,5 @@
-<cy-play-stage id="cy-play-stage" show="{{show}}" back-label="退出"
+<block wx:for="{{stageKeys}}" wx:key="*this" wx:for-item="stageKey">
+<cy-play-stage id="cy-play-stage" data-stage-key="{{stageKey}}" show="{{show}}" back-label="退出"
                bind:back="onClose" bind:run="onRun" bind:verdict="onVerdict">
   <view class="cp {{aligned || done ? 'cp--on' : ''}} {{rm ? 'cp--rm' : ''}}">
     <view class="g-kicker">{{kicker}}</view>
@@ -28,9 +29,10 @@
     </view>
 
     <!-- 读数是这一屏的大数字。没开跑前它还是 0 —— 那就别看表,看那句要人站定的话 -->
-    <view wx:if="{{phase === 'run' && !noData}}" class="g-figure cp__n">{{heading}}°</view>
+    <view wx:if="{{phase === 'run' && hasHeading && !noData}}" class="g-figure cp__n">{{heading}}°</view>
     <view wx:if="{{phase === 'run' && aligned}}" class="cp__hold">对准了，再保持 {{holdLeft}} 秒</view>
-    <view wx:elif="{{noData}}" class="g-sub cp__s">这台设备还没报出方向，先转一转手机</view>
+    <view wx:elif="{{noData}}" class="g-sub cp__s">这台设备还没报出方向或读数已中断，请重试或退出</view>
+    <view wx:elif="{{phase === 'done' && !done}}" class="g-sub cp__s">本次方向已提交</view>
     <view wx:elif="{{done}}" class="g-sub cp__s">你已经对准过这个方向了</view>
     <block wx:else>
       <view class="cp__how">{{phase === 'run' && turnHint ? turnHint : '点开始后转动手机，把红色箭头转到顶上的白线'}}</view>
@@ -49,3 +51,5 @@
     <view wx:if="{{phase === 'idle' && !done}}" class="cp__safe">找个能站稳的地方再开始</view>
   </view>
 </cy-play-stage>
+
+</block>

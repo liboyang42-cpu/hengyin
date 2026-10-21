@@ -855,6 +855,7 @@ test('负控：把刷新失败横幅加回列表页必须判红', () => {
 
 test('系统举报通知可回查完整结果，普通消息不能伪造结果入口', () => {
   const { page } = loadPage(CHAT_MODULE)
+  Object.assign(page.data, { type: 2, myId: 8 })
   const result = { taskId: 40, bizId: 88, outcome: '举报成立，组局已关闭', reason: '扰民', followUp: '联系客服并提供任务编号' }
   page.data.msgs = [{ id: 51, senderId: 0, msgType: 3, card: { result } }]
   page.onCardTap({ currentTarget: { dataset: { msg: 51 } } })
@@ -864,7 +865,7 @@ test('系统举报通知可回查完整结果，普通消息不能伪造结果�
   page.data.msgs[0].senderId = 8
   page.onCardTap({ currentTarget: { dataset: { msg: 51 } } })
   assert.equal(page.data.reviewResult, null)
-  assert.match(read('subpackageB/pages/im/chat/index.wxml'), /查看处理结果/)
+  assert.match(read('subpackageB/pages/im/chat/index.wxml'), /查看生成时记录/)
   assert.match(read('subpackageB/pages/im/chat/index.wxml'), /reviewResult.reason/)
 })
 

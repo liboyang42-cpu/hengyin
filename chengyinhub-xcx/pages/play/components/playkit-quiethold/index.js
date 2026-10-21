@@ -1,20 +1,24 @@
-// cy-playkit-quiethold · 安静挑战(原型真源:模板编辑页 v2 · playkit quiet)
-//
-// ★ 过线就判输,不是清零重来。「一声都不许出」这条规则要立得住,就不能给第二次。
-//
-// ⚠️ 录音**不上传、不落盘,用完即弃**:这一屏只需要每帧的振幅,不需要内容。
-// ⚠️ 这是这批里最贵的一个玩法 —— 麦克风授权弹窗会劝退一部分人。
-//    适合本来就安静的场所(书店、茶室),不适合街边。
-
+// 安静挑战：只比较本机相对 PCM 振幅；录音不上传、不落盘。
 const TICK_MS = 100;
-const FRAME_MS = 100;
-
+const FIRST_FRAME_MS = 3000;
+const FRAME_GAP_MS = 500;
 const reducedMotionBehavior = require('../../../../behaviors/reduced-motion.js');
 const motion = require('../../../../utils/motion.js');
-// 电平算法与 shout 共用一份(现场感契约 §5.1 抽出),这里只留用法。
-const audioLevel = require('../../utils/play-audio-level.js');
-const { baseline, thresholds, bandOf, peakOf } = audioLevel;
+const cyToast = require('../../../../utils/toast.js');
+const { baseline, thresholds, bandOf, peakOf } = require('../../utils/play-audio-level.js');
 
+function pcmPeak(buffer) {
+  try {
+    const bytes = Object.getOwnPropertyDescriptor(ArrayBuffer.prototype, 'byteLength').get.call(buffer);
+    if (!bytes || bytes % 2) return null;
+    const value = peakOf(buffer);
+    return typeof value === 'number' && Number.isFinite(value) ? value : null;
+  } catch (error) { return null; }
+}
+function denied(error) {
+  const message = error && error.errMsg;
+  return typeof message === 'string' && /^(?:operateRecorder|startRecord|startRecorder|recorderManager\.start):fail (?:auth deny|auth denied|authorize denied|permission denied)$/i.test(message);
+}
 Component({
   behaviors: [reducedMotionBehavior],
   properties: {
@@ -23,113 +27,216 @@ Component({
     sub: { type: String, value: '' },
     seconds: { type: Number, value: 15 },
   },
-  data: {
-    left: '15.0',
-    band: 'ok',
-    running: false,
-  },
+  data: { left: '15.0', band: 'ok', running: false, preparing: false, stageKeys: [0] },
   observers: {
     'show, seconds': function (show, seconds) {
-      this._stop();
-      if (!show) { this._stopMic(); return; }
-      this.setData({ left: (seconds > 0 ? seconds : 0).toFixed(1), band: 'ok', running: false });
+      this._abort();
+      if (show) this._closed = false;
     },
   },
-  lifetimes: { detached() { this._stop(); this._stopMic(); } },
-  // 切后台就停:回来那一帧的间隔可能有好几秒,不停等于「熄屏几秒」白赚几秒安静,
-  // 而那几秒根本没在听
-  pageLifetimes: { hide() { this._abort(); } },
+  lifetimes: { detached() { this._detached = true; this._abort(); } },
+  pageLifetimes: {
+    hide() { this._hidden = true; this._abort(); },
+    show() { this._hidden = false; },
+  },
   methods: {
-    _baseline: baseline,        // 纯算法出口,供单测
+    _baseline: baseline,
     _thresholds: thresholds,
     _bandOf: bandOf,
     _peakOf: peakOf,
-
-    _stop() { if (this._timer) { clearInterval(this._timer); this._timer = null; } },
-    _stopMic() {
-      if (!this._rec) return;
-      try { this._rec.stop(); } catch (e) { /* 已经停了 */ }
-      this._rec = null;
+    _total() {
+      const value = this.data.seconds;
+      return typeof value === 'number' && Number.isFinite(value) && value > 0 ? value : 15;
     },
-    _abort() {
-      if (!this.data.running) return;
-      this._stop(); this._stopMic();
-      this.setData({ running: false, band: 'ok' });
+    _current(attempt) {
+      return !!attempt && this._attempt === attempt && this.data.show
+        && !this._hidden && !this._closed && !this._detached;
     },
-
+    _eventAttempt(e) {
+      const attempt = this._attempt;
+      return this._current(attempt) && e && e.currentTarget && e.currentTarget.dataset
+        && String(e.currentTarget.dataset.stageKey) === String(attempt.key) ? attempt : null;
+    },
+    _stop() {
+      if (this._timer) clearInterval(this._timer);
+      if (this._watchdog) clearTimeout(this._watchdog);
+      this._timer = null; this._watchdog = null;
+    },
+    _stopMic(attempt) {
+      const owner = attempt || this._attempt;
+      if (!owner || !owner.rec) return;
+      const rec = owner.rec;
+      owner.rec = null;
+      if (this._rec === rec) this._rec = null;
+      // Remove exact owned callbacks before stop() can synchronously emit onStop/error.
+      for (const name of ['Start', 'Stop', 'Error', 'FrameRecorded']) {
+        try { rec['off' + name](owner.handlers[name]); } catch (error) { /* invalidated callback remains inert */ }
+      }
+      try { rec.stop(); } catch (error) { /* already stopped */ }
+    },
+    _abort(after) {
+      const attempt = this._attempt;
+      const stage = attempt ? attempt.stage : this.selectComponent('#cy-play-stage');
+      this._attempt = null;
+      this._stop(); this._stopMic(attempt);
+      this._samples = []; this._peak = null; this._held = 0;
+      if (stage) stage._stopAll();
+      this._retiredStage = stage;
+      const key = this.data.stageKeys[0] + 1;
+      this.setData({ running: false, preparing: false, band: 'ok', left: this._total().toFixed(1),
+        stageKeys: [key] }, () => { if (after && this.data.stageKeys[0] === key && !this._detached) after(); });
+    },
+    _micFailure(attempt, error) {
+      if (!this._current(attempt) || attempt.phase === 'finished') return;
+      this._abort();
+      const key = this.data.stageKeys[0];
+      const canReport = () => !this._attempt && this.data.stageKeys[0] === key && this.data.show
+        && !this._hidden && !this._closed && !this._detached;
+      if (denied(error)) { if (canReport()) this.triggerEvent('micdenied'); return; }
+      cyToast('声音读取失败，请重试或退出');
+      if (typeof wx.getSetting === 'function') {
+        try { wx.getSetting({
+          success: (res) => {
+            if (canReport() && res && res.authSetting && res.authSetting['scope.record'] === false) this.triggerEvent('micdenied');
+          },
+          fail() { /* failure is already visible; unknown permission is not denial */ },
+        }); } catch (settingError) { /* permission remains unknown; failure is already visible */ }
+      }
+    },
+    _watch(attempt, ms) {
+      if (this._watchdog) clearTimeout(this._watchdog);
+      this._watchdog = setTimeout(() => this._micFailure(attempt), ms);
+    },
+    _fresh(attempt) {
+      return attempt.lastFrame !== null && Number.isFinite(attempt.lastFrame)
+        && Date.now() - attempt.lastFrame < FRAME_GAP_MS;
+    },
     onStart() {
-      if (this.data.running) return;
-      this._samples = [];
-      this._peak = 0;
-      this._startMic();
-      // 校准屏由 stage 出:量 2 秒环境音,期间每一拍回调 onSample
+      if (!this.data.show || this._hidden || this._closed || this._detached) return;
+      if (this._attempt && this._attempt.phase === 'finished') { this._abort(() => this.onStart()); return; }
+      if (this._attempt) return;
       const stage = this.selectComponent('#cy-play-stage');
-      if (stage) stage.begin();
+      if (!stage || stage === this._retiredStage) return;
+      const attempt = { stage, key: this.data.stageKeys[0], phase: 'starting', lastFrame: null,
+        runFrame: null, serial: 0, sampled: 0, startReturned: false, started: false };
+      this._attempt = attempt;
+      this._samples = []; this._peak = null; this._held = 0;
+      this.setData({ preparing: true, running: false, band: 'ok', left: this._total().toFixed(1) });
+      this._startMic(attempt);
     },
-
-    _startMic() {
-      const rec = wx.getRecorderManager();
-      this._rec = rec;
-      rec.onFrameRecorded((res) => { this._peak = peakOf(res.frameBuffer); });
-      // 拿不到麦克风就明说,不假装在听 —— 让人以为在真听是更糟的事
-      rec.onError(() => {
-        this._stop(); this._stopMic();
-        this.setData({ running: false, band: 'ok' });
-        this.triggerEvent('micdenied');
-      });
-      rec.start({ duration: 600000, sampleRate: 16000, numberOfChannels: 1,
-                  format: 'PCM', frameSize: 1 });
+    _startMic(attempt) {
+      try {
+        if (typeof wx.getRecorderManager !== 'function') throw Error('unavailable');
+        const rec = wx.getRecorderManager();
+        if (!rec || typeof rec.start !== 'function' || typeof rec.stop !== 'function'
+          || ['Start', 'Stop', 'Error', 'FrameRecorded'].some(name => typeof rec['on' + name] !== 'function' || typeof rec['off' + name] !== 'function')) throw Error('unavailable');
+        attempt.rec = rec; this._rec = rec;
+        attempt.handlers = {
+          Start: () => {
+            if (!this._current(attempt) || attempt.phase !== 'starting') return;
+            attempt.started = true;
+            this._beginStage(attempt);
+          },
+          Stop: () => {
+            // Singleton recorder may broadcast a queued previous stop to newly registered listeners.
+            // Stop does not certify any samples; the frame watchdog detects a current interruption.
+          },
+          Error: error => this._micFailure(attempt, error),
+          FrameRecorded: res => this._onFrame(attempt, res),
+        };
+        this._watch(attempt, FIRST_FRAME_MS);
+        for (const name of ['Start', 'Stop', 'Error', 'FrameRecorded']) {
+          rec['on' + name](attempt.handlers[name]);
+          if (!this._current(attempt)) return;
+        }
+        rec.start({ duration: 600000, sampleRate: 16000, numberOfChannels: 1, format: 'PCM', frameSize: 1 });
+        if (!this._current(attempt)) return;
+        attempt.startReturned = true;
+        this._beginStage(attempt);
+      } catch (error) { this._micFailure(attempt, error); }
     },
-
-    /** 校准期间每一拍采一个峰值 */
-    onSample() { this._samples.push(this._peak || 0); },
-
-    onCalibrated() {
+    _beginStage(attempt) {
+      if (!this._current(attempt) || attempt.phase !== 'starting' || !attempt.started || !attempt.startReturned) return;
+      attempt.phase = 'calibrating';
+      this._watch(attempt, attempt.lastFrame === null ? FIRST_FRAME_MS : FRAME_GAP_MS);
+      attempt.stage.begin();
+    },
+    _onFrame(attempt, res) {
+      if (!this._current(attempt) || !['calibrating', 'ready', 'running'].includes(attempt.phase)) return;
+      const peak = pcmPeak(res && res.frameBuffer);
+      if (peak === null) {
+        if (attempt.phase === 'running') {
+          attempt.runFrame = null; this._held = 0;
+          this.setData({ left: this._total().toFixed(1) });
+        }
+        return;
+      }
+      const now = Date.now();
+      if (attempt.lastFrame !== null && now - attempt.lastFrame >= FRAME_GAP_MS) { this._micFailure(attempt); return; }
+      attempt.lastFrame = now; attempt.serial += 1; this._peak = peak;
+      this._watch(attempt, FRAME_GAP_MS);
+      if (attempt.phase !== 'running') return;
+      const previous = attempt.runFrame;
+      attempt.runFrame = now;
+      const band = bandOf(peak, this._mid, this._hot);
+      this.setData({ band });
+      if (band === 'hot') { this._finish(false); return; }
+      // Only consecutive real PCM frames establish a measured interval; timers never add time.
+      const dt = previous === null ? 0 : Math.max(0, Math.min(TICK_MS / 1000, (now - previous) / 1000));
+      this._held += dt;
+      const left = Math.max(0, this._total() - this._held);
+      this.setData({ left: left.toFixed(1) });
+      if (this._held >= this._total()) this._finish(true);
+    },
+    onSample(e) {
+      const attempt = this._eventAttempt(e);
+      if (!attempt || attempt.phase !== 'calibrating' || !this._fresh(attempt) || attempt.serial === attempt.sampled) return;
+      this._samples.push(this._peak); attempt.sampled = attempt.serial;
+    },
+    onCalibrated(e) {
+      const attempt = this._eventAttempt(e);
+      if (!attempt || attempt.phase !== 'calibrating') return;
+      if (!this._fresh(attempt)) { this._micFailure(attempt); return; }
+      if (!this._samples.length) this._samples.push(this._peak);
       const t = thresholds(baseline(this._samples));
-      this._mid = t.mid;
-      this._hot = t.hot;
+      this._mid = t.mid; this._hot = t.hot;
+      attempt.phase = 'ready';
     },
-
-    /** stage 校准完(这玩法没有限时开关,所以不数 3-2-1)之后真正开跑 */
-    onRun() {
-      const total = this.data.seconds > 0 ? this.data.seconds : 15;
+    onRun(e) {
+      const attempt = this._eventAttempt(e);
+      if (!attempt || attempt.phase !== 'ready') return;
+      if (!this._fresh(attempt)) { this._micFailure(attempt); return; }
+      attempt.phase = 'running'; attempt.runFrame = null;
       this._held = 0;
-      this._last = Date.now();
-      this.setData({ running: true, left: total.toFixed(1), band: 'ok' });
-      // 开表要报给服务端:成绩按服务器时间复核,不先开表提交会被判成「还没开始」
+      this.setData({ running: true, preparing: false, left: this._total().toFixed(1), band: 'ok' });
       this.triggerEvent('start');
-      this._stop();
+      if (!this._current(attempt)) return;
       this._timer = setInterval(() => {
-        const now = Date.now();
-        // ★ 一帧最多只记 0.1 秒:切后台时定时器会被限频,回来那一帧的间隔可能有好几秒 ——
-        // 不夹的话等于熄屏几秒就白得几秒安静,而那几秒根本没在听
-        const dt = Math.min(0.1, (now - this._last) / 1000);
-        this._last = now;
-
-        const band = bandOf(this._peak || 0, this._mid, this._hot);
-        if (band !== this.data.band) this.setData({ band });
-        if (band === 'hot') { this._finish(false); return; }
-
-        this._held += dt;
-        const left = Math.max(0, total - this._held);
-        this.setData({ left: left.toFixed(1) });
-        if (this._held >= total) this._finish(true);
+        if (this._current(attempt) && attempt.phase === 'running' && !this._fresh(attempt)) this._micFailure(attempt);
       }, TICK_MS);
     },
-
     _finish(won) {
-      this._stop(); this._stopMic();
-      this.setData({ running: false });
+      const attempt = this._attempt;
+      if (!this._current(attempt) || attempt.phase !== 'running') return;
+      if (!this._fresh(attempt) || attempt.runFrame === null || !Number.isFinite(this._held)
+        || this._held < 0 || won && this._held < this._total()) { this._micFailure(attempt); return; }
+      attempt.phase = 'finished';
+      const heldSeconds = Math.round(this._held);
+      this._stop(); this._stopMic(attempt);
+      this.setData({ running: false, preparing: false });
       motion.haptic({ reducedMotion: this.data.reducedMotion, type: 'medium' });
-      const stage = this.selectComponent('#cy-play-stage');
-      if (stage) {
-        if (won) stage.win('整整 ' + this.data.seconds + ' 秒,一声没出');
-        else stage.fail(false);      // 出声不是超时,那两个字是「失败」
-      }
-      this.triggerEvent('submit', { heldSeconds: Math.round(this._held || 0), passed: !!won });
+      attempt.reporting = true;
+      if (won) attempt.stage.win('本机相对振幅保持了 ' + this._total() + ' 秒'); else attempt.stage.fail(false);
+      attempt.reporting = false;
+      if (this._current(attempt)) this.triggerEvent('submit', { heldSeconds, passed: !!won });
     },
-
-    onVerdict(e) { this.triggerEvent('verdict', e.detail); },
-    onClose() { this._stop(); this._stopMic(); this.triggerEvent('close'); },
+    onVerdict(e) {
+      const attempt = this._eventAttempt(e);
+      if (attempt && attempt.reporting) this.triggerEvent('verdict', e.detail);
+    },
+    onClose(e) {
+      if (e && (!e.currentTarget || !e.currentTarget.dataset || String(e.currentTarget.dataset.stageKey) !== String(this.data.stageKeys[0]))) return;
+      this._closed = true; this._abort(); this.triggerEvent('close');
+    },
   },
 });
