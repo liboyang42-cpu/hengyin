@@ -36,7 +36,7 @@ function read(storage, storageKey) {
     const record = storage.getStorageSync(storageKey);
     if (record == null || record === '') return { state: 'empty' };
     if (typeof record !== 'object' || Array.isArray(record) || record.schemaVersion !== 1 ||
-        typeof record.base !== 'string' || !validBase(record.base) || !validForm(record.form)) return { state: 'corrupt' };
+        typeof record.base !== 'string' || !validBase(record.base) || !validForm(record.form) || (record.confirmed !== undefined && !validForm(record.confirmed))) return { state: 'corrupt' };
     return { state: 'ready', record: JSON.parse(JSON.stringify(record)) };
   } catch (e) { return { state: 'error' }; }
 }
@@ -45,14 +45,16 @@ function matches(found, expected) {
   return expected === undefined || (found.state === 'empty' ? expected === '' :
     found.state === 'ready' && JSON.stringify(found.record) === expected);
 }
-function write(storage, storageKey, original, value, expected) {
+function write(storage, storageKey, original, value, expected, confirmed) {
   if (!storageKey || !validBase(original)) return false;
   try {
     const found = read(storage, storageKey);
     if (!['empty', 'ready'].includes(found.state) || !matches(found, expected)) return false;
     const normalized = form(value);
     if (!validForm(normalized)) return false;
-    storage.setStorageSync(storageKey, { schemaVersion: 1, base: original, form: normalized });
+    const record = { schemaVersion: 1, base: original, form: normalized };
+    if (confirmed !== undefined) { if (!validForm(confirmed)) return false; record.confirmed = form(confirmed); }
+    storage.setStorageSync(storageKey, record);
     return true;
   } catch (e) { return false; }
 }

@@ -493,7 +493,7 @@ Component({
       const scope = this.draftContext();
       this._draftScope = scope;
       this._draftKey = drafts.key(scope.owner, scope.clubId);
-      this._draftBase = ''; this._draftDirty = false;
+      this._draftBase = ''; this._draftDirty = false; this._draftConfirmed = null; this._draftReading = false;
       this._savedDraft = null;
       this._draftExpected = '';
       this._draftReadState = 'unavailable';
@@ -510,11 +510,16 @@ Component({
         !this.data.saving && !this.data.draftAvailable && !this.data.draftBlocked;
     },
     offerDraft(latest) {
-      const found = drafts.read(typeof wx === 'undefined' ? null : wx, this._draftKey);
+      let found = drafts.read(typeof wx === 'undefined' ? null : wx, this._draftKey);
+      if (found.state === 'ready' && found.record.confirmed && typeof latest.updateTime === 'string' && latest.updateTime && this.confirmedDraftMatches(found.record.confirmed, latest)) {
+        const expected = JSON.stringify(found.record);
+        if (drafts.write(wx, this._draftKey, this._draftBase, found.record.form, expected)) found = drafts.read(wx, this._draftKey);
+        else { this.setData({ draftBlocked: true, draftNotice: '草稿基线未能保留，请勿退出，可重新读取。' }); return; }
+      }
       this._draftReadState = found.state;
       this._savedDraft = found.record || null;
       this._draftExpected = found.record ? JSON.stringify(found.record) : '';
-      const conflict = found.record && found.record.base !== this._draftBase;
+      const conflict = found.record && (found.record.base !== this._draftBase || !!found.record.confirmed);
       this.setData({
         draftAvailable: !!found.record && !conflict,
         draftBlocked: !!conflict || ['corrupt', 'error'].includes(found.state),
@@ -553,9 +558,10 @@ Component({
     persistDraft() {
       if (!this.canEditDraft()) return false;
       if (!this._draftKey) { this.setData({ draftNotice: '未确认登录身份，草稿未保留，请勿退出。' }); return false; }
-      const saved = drafts.write(wx, this._draftKey, this._draftBase, this.data, this._draftExpected);
+      const saved = drafts.write(wx, this._draftKey, this._draftBase, this.data, this._draftExpected, this._draftConfirmed || undefined);
       if (saved) {
         this._draftExpected = JSON.stringify({ schemaVersion: 1, base: this._draftBase, form: drafts.form(this.data) });
+        if (this._draftConfirmed) this._draftExpected = JSON.stringify(Object.assign(JSON.parse(this._draftExpected), { confirmed: this._draftConfirmed }));
         this._draftReadState = 'ready'; this._savedDraft = JSON.parse(this._draftExpected);
       }
       this.setData({ draftNotice: saved ? '草稿已保留在本机，尚未提交。' : '草稿未能保留，原记录不会覆盖，请勿退出；可重试修改或提交。' });
@@ -563,6 +569,7 @@ Component({
     },
     save() {
       if (!this.canEditDraft() || !this.data.canSave) return;
+      if (this._draftConfirmed) { this.readSavedDraftBase(this._draftScope); return; }
       const scope = this._draftScope, that = this;
       if (!this._draftKey) { this.setData({ saveErrorText: '未确认登录身份，请重新登录后编辑。' }); return; }
       const found = drafts.read(wx, this._draftKey);
@@ -595,6 +602,57 @@ Component({
         successStatusAbnormal() { if (that.isDraftCurrent(scope)) that.setData({ saving: false, saveErrorText: '无法核对最新资料，请重试。' }); },
       });
     },
+
+    // A confirmed write is not a new server baseline. Only a matching authoritative
+    // detail response supplies its timestamp and complete form; keep interim edits.
+    confirmedDraftMatches(confirmed, latest) {
+      const a = drafts.form(confirmed), b = drafts.form(this.draftServer(latest));
+      // Empty quota is submitted as zero by the existing update contract.
+      if (a.memberReservedQuota === '') a.memberReservedQuota = '0';
+      if (b.memberReservedQuota === '') b.memberReservedQuota = '0';
+      return JSON.stringify(a) === JSON.stringify(b);
+    },
+    readSavedDraftBase(scope) {
+      if (!this.isDraftCurrent(scope) || !this._draftConfirmed || this._draftReading) return;
+      this._draftReading = true;
+      const confirmed = this._draftConfirmed, that = this;
+      const failed = () => {
+        if (!that.isDraftCurrent(scope)) return;
+        that._draftReading = false;
+        that.setData({ saveErrorText: '资料已保存，最新资料尚未核对；续编草稿保留，请重试保存以核对。' });
+      };
+      app.sendRequest({
+        url: '/api/club/detail', method: 'POST', data: jsonBody({ id: scope.clubId }), header: jsonHeader(),
+        success(res) {
+          if (!that.isDraftCurrent(scope)) return;
+          that._draftReading = false;
+          const latest = res && res.data;
+          if (!res || res.code != '200' || !latest || typeof latest !== 'object' || Array.isArray(latest) || typeof latest.updateTime !== 'string' || !latest.updateTime) { failed(); return; }
+          if ((latest.id != null && String(latest.id) !== scope.clubId) ||
+              (latest.isOwner !== true && latest.viewerIsAdmin !== true) ||
+              (latest.isOwner === true) !== that.data.isOwner || !that.confirmedDraftMatches(confirmed, latest)) {
+            that.setData({ draftBlocked: true, draftCanDiscard: that._draftReadState === 'ready',
+              draftNotice: '保存后资料已变化，请对比后重新核对，续编草稿仍保留。',
+              draftComparison: drafts.compare(that.data, that.draftServer(latest)) }); return;
+          }
+          const nextBase = drafts.base(that.draftServer(latest));
+          const found = drafts.read(wx, that._draftKey);
+          if (!['empty', 'ready'].includes(found.state) ||
+              (found.state === 'ready' ? JSON.stringify(found.record) : '') !== that._draftExpected) {
+            that.setData({ draftBlocked: true, draftNotice: '本机草稿已变化或无法读取，原记录已保留，请勿退出。' }); return;
+          }
+          if (that._draftDirty) {
+            if (!drafts.write(wx, that._draftKey, nextBase, that.data, that._draftExpected)) { failed(); return; }
+            that._draftExpected = JSON.stringify({ schemaVersion: 1, base: nextBase, form: drafts.form(that.data) });
+            that._savedDraft = JSON.parse(that._draftExpected); that._draftReadState = 'ready';
+          }
+          that._draftBase = nextBase; that._draftConfirmed = null;
+          that.setData({ saveErrorText: '', draftNotice: that._draftDirty ? '草稿已保留在本机，尚未提交。' : '' });
+        },
+        fail: failed, successStatusAbnormal: failed,
+      });
+    },
+
     finishDraftSave(res, scope, submittedForm, expected) {
       if (!this.isDraftCurrent(scope)) return;
       if (!res || res.code != '200') {
@@ -607,11 +665,12 @@ Component({
       const cleared = drafts.remove(wx, drafts.key(scope.owner, scope.clubId), expected);
       this.setData({ saving: false, saveErrorText: '', draftNotice: cleared ? '' : '资料已保存，本机草稿未能清除，请核对后关闭。' });
       toast.success('已保存');
-      if (!cleared) return;
+      if (!cleared) { this.setData({ draftBlocked: true }); return; }
       this._draftExpected = ''; this._savedDraft = null; this._draftReadState = 'empty';
+      this._draftConfirmed = JSON.parse(submittedForm); this.readSavedDraftBase(scope);
       this.triggerEvent('dirtychange', { dirty: false });
       setTimeout(() => {
-        if (!this.isDraftCurrent(scope) || this._draftDirty || JSON.stringify(drafts.form(this.data)) !== submittedForm) return;
+        if (!this.isDraftCurrent(scope) || this._draftConfirmed || this._draftDirty || JSON.stringify(drafts.form(this.data)) !== submittedForm) return;
         this.triggerEvent('saved'); this.triggerEvent('back');
       }, 800);
     },

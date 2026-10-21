@@ -289,3 +289,105 @@ test('保存成功后的延迟关闭不吞掉期间新输入，新稿仍可落�
   assert.equal(h.events.some(e => e.name === 'saved' || e.name === 'back'), false)
   assert.equal(drafts.read(h.wx, drafts.key(1, 9)).record.form.name, '成功后继续编辑')
 })
+
+test('成功后立即续编经权威回读迁移基线，二次保存与重开恢复均可达', () => {
+  const h = mount(); h.ready(); edit(h, 'name', '第一笔已保存')
+  preflight(h).success({ code: 200 })
+  edit(h, 'name', '成功后继续编辑')
+  const latest = { ...CLUB, name: '第一笔已保存', updateTime: 'v2' }
+  const readback = h.requests.shift()
+  assert.equal(readback.url, '/api/club/detail')
+  readback.success({ code: 200, data: latest })
+  assert.equal(h.c.data.name, '成功后继续编辑')
+  assert.equal(h.c._draftBase, drafts.base(latest))
+  const reopened = mount({ values: h.values }); reopened.ready(latest)
+  assert.equal(reopened.c.data.draftAvailable, true)
+  reopened.c.restoreDraft()
+  assert.equal(reopened.c.data.name, '成功后继续编辑')
+  assert.equal(preflight(h, latest).url, '/api/club/update-mine')
+})
+test('回读失败仍保留续编，关闭重开从权威资料迁移，重试可二次保存', () => {
+  const h = mount(); h.ready(); edit(h, 'name', '第一笔已保存')
+  preflight(h).success({ code: 200 }); edit(h, 'name', '续编')
+  h.requests.shift().fail()
+  assert.match(h.c.data.saveErrorText, /核对/)
+  const latest = { ...CLUB, name: '第一笔已保存', updateTime: 'v2' }
+  const reopened = mount({ values: JSON.parse(JSON.stringify(h.values)) }); reopened.ready(latest)
+  assert.equal(reopened.c.data.draftAvailable, true)
+  reopened.c.restoreDraft(); assert.equal(reopened.c.data.name, '续编')
+  h.c.save(); h.requests.shift().success({ code: 200, data: latest })
+  assert.equal(h.requests.length, 0)
+  assert.equal(preflight(h, latest).url, '/api/club/update-mine')
+})
+for (const change of ['account', 'club', 'detach', 'ABA']) {
+  test('成功后回读迟到不迁移其他身份或对象：' + change, () => {
+    const h = mount(); h.ready(); edit(h)
+    preflight(h).success({ code: 200 }); edit(h, 'name', '续编')
+    const readback = h.requests.shift(), before = JSON.stringify(h.values)
+    if (change === 'account') h.change('2')
+    if (change === 'club') h.switchClub('10')
+    if (change === 'detach') h.detach()
+    if (change === 'ABA') { h.change('2'); h.change('1', 'new-session') }
+    readback.success({ code: 200, data: { ...CLUB, name: '我的修改', updateTime: 'v2' } })
+    assert.equal(JSON.stringify(h.values), before)
+  })
+}
+test('回读冲突、坏档和迁移存储失败不覆盖原记录', () => {
+  for (const mode of ['conflict', 'corrupt', 'write']) {
+    const h = mount(); h.ready(); edit(h)
+    preflight(h).success({ code: 200 }); edit(h, 'name', '续编')
+    const key = drafts.key(1, 9), readback = h.requests.shift()
+    if (mode === 'corrupt') h.values[key] = { damaged: true }
+    if (mode === 'write') h.flags.write = true
+    const before = JSON.stringify(h.values)
+    readback.success({ code: 200, data: { ...CLUB, name: mode === 'conflict' ? '其他人资料' : '我的修改', updateTime: 'v2' } })
+    assert.equal(JSON.stringify(h.values), before)
+    assert.equal(h.c.data.name, '续编')
+    assert.equal(h.c.data.draftBlocked || !!h.c.data.saveErrorText, true)
+  }
+})
+
+test('权威回读后无续编可正常关闭，缺少更新时间与业务异常可重试且不伪建基线', () => {
+  const h = mount(); h.ready(); edit(h)
+  preflight(h).success({ code: 200 })
+  h.requests.shift().success({ code: 200, data: { ...CLUB, name: '我的修改', updateTime: 'v2' } })
+  h.timers.forEach(fn => fn())
+  assert.equal(h.events.some(e => e.name === 'saved'), true)
+  for (const res of [{ code: 500 }, { code: 200, data: null },
+    { code: 200, data: { ...CLUB, name: '我的修改', updateTime: '' } }]) {
+    const f = mount(); f.ready(); edit(f)
+    preflight(f).success({ code: 200 }); edit(f, 'name', '续编')
+    f.requests.shift().success(res)
+    assert.equal(f.c._draftBase, drafts.base(CLUB))
+    assert.equal(drafts.read(f.wx, drafts.key(1, 9)).record.form.name, '续编')
+    assert.match(f.c.data.saveErrorText, /核对/)
+  }
+})
+test('待核对草稿重开遇到不匹配权威资料或迁移失败，保留原稿不允许恢复', () => {
+  const h = mount(); h.ready(); edit(h)
+  preflight(h).success({ code: 200 }); edit(h, 'name', '续编'); h.detach()
+  for (const mode of ['conflict', 'write']) {
+    const values = JSON.parse(JSON.stringify(h.values)), r = mount({ values })
+    if (mode === 'write') r.flags.write = true
+    const before = JSON.stringify(values)
+    r.ready({ ...CLUB, name: mode === 'conflict' ? '其他修改' : '我的修改', updateTime: 'v2' })
+    assert.equal(JSON.stringify(values), before)
+    assert.equal(r.c.data.draftAvailable, false)
+    assert.equal(r.c.data.draftBlocked, true)
+  }
+})
+
+test('成功后权限变化回读与较新记录负控，不把payload当权威事实', () => {
+  for (const mode of ['permission', 'newer']) {
+    const h = mount(); h.ready(); edit(h)
+    preflight(h).success({ code: 200 }); edit(h, 'name', '续编')
+    const read = h.requests.shift(), key = drafts.key(1, 9)
+    if (mode === 'newer') h.values[key].form.name = '另一个编辑者'
+    const before = JSON.stringify(h.values)
+    read.success({ code: 200, data: { ...CLUB, name: '我的修改', updateTime: 'v2',
+      ...(mode === 'permission' ? { isOwner: false, viewerIsAdmin: true } : {}) } })
+    assert.equal(JSON.stringify(h.values), before)
+    assert.equal(h.c.data.draftBlocked, true)
+    assert.equal(h.c._draftBase, drafts.base(CLUB))
+  }
+})
