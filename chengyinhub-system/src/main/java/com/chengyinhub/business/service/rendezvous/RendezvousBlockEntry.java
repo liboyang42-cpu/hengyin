@@ -1,7 +1,9 @@
 package com.chengyinhub.business.service.rendezvous;
 
+import java.time.Clock;
 import java.util.Objects;
 import com.chengyinhub.business.domain.ImBlock;
+import com.chengyinhub.business.mapper.ImBlockMapper;
 import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import static com.chengyinhub.business.service.rendezvous.MyBatisRendezvousConsentStore.Mode.ISOLATED_PERSISTENCE_EVALUATION;
@@ -24,6 +26,15 @@ public final class RendezvousBlockEntry {
         return new RendezvousBlockEntry(null);
     }
 
+    /** Formal assembly: one store, the session's block mapper, and {@code terminate(BLOCK)}. */
+    public static RendezvousBlockEntry persisted(MyBatisRendezvousConsentStore store, ImBlockMapper blocks,
+            RendezvousConsentService consent, Clock clock) {
+        Objects.requireNonNull(store, "store");
+        Objects.requireNonNull(blocks, "blocks");
+        return new RendezvousBlockEntry(new RendezvousBlockIntegration(store, blocks,
+                RendezvousBlockIntegration.blockStop(consent, clock)));
+    }
+
     /** Connected only for an explicit consent service in the isolated evaluation mode. */
     public static RendezvousBlockEntry open(MyBatisRendezvousConsentStore.Mode mode, SqlSessionTemplate session,
             DataSourceTransactionManager manager, RendezvousConsentService consent) {
@@ -36,8 +47,8 @@ public final class RendezvousBlockEntry {
 
     public boolean connected() { return integration != null; }
 
-    public void block(ImBlock block) {
+    public RendezvousBlockReadback block(ImBlock block) {
         if (integration == null) throw new IllegalStateException("W16_BLOCK_NOT_CONNECTED");
-        integration.block(block);
+        return integration.block(block);
     }
 }

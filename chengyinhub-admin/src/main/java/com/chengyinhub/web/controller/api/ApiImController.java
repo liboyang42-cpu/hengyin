@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.chengyinhub.business.domain.ImMessage;
 import com.chengyinhub.business.service.IImService;
+import com.chengyinhub.business.service.rendezvous.RendezvousBlockReadback;
 import com.chengyinhub.common.core.controller.BaseController;
 import com.chengyinhub.common.core.domain.AjaxResult;
 import com.chengyinhub.common.core.text.Convert;
@@ -226,8 +227,8 @@ public class ApiImController extends BaseController
     {
         try
         {
-            imService.block(getAppUserId(), Convert.toLong(target_member_id, 0L));
-            return AjaxResult.success("已拉黑");
+            RendezvousBlockReadback readback = imService.block(getAppUserId(), Convert.toLong(target_member_id, 0L));
+            return readback == null ? AjaxResult.success("已拉黑") : AjaxResult.success("已拉黑", readback);
         }
         catch (ServiceException e)
         {

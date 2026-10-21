@@ -94,8 +94,8 @@ public interface IImService
     /** 用户可控文本在进入系统消息通道前，按真实发送者身份执行内容安全检查。 */
     void checkUserGeneratedText(Long senderMemberId, String content);
 
-    /** 拉黑 / 取消拉黑 */
-    void block(Long memberId, Long targetMemberId);
+    /** 拉黑。未接通 W16 时返回 null；接通后返回同一事务里的双方联系读回。 */
+    com.chengyinhub.business.service.rendezvous.RendezvousBlockReadback block(Long memberId, Long targetMemberId);
     void unblock(Long memberId, Long targetMemberId);
     boolean isBlockedBetween(Long memberId, Long targetMemberId);
 

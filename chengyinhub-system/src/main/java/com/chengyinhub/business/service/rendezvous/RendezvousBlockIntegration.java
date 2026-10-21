@@ -1,5 +1,6 @@
 package com.chengyinhub.business.service.rendezvous;
 
+import java.time.Clock;
 import java.util.Objects;
 import com.chengyinhub.business.domain.ImBlock;
 import com.chengyinhub.business.mapper.ImBlockMapper;
@@ -17,8 +18,9 @@ import static com.chengyinhub.business.service.rendezvous.RendezvousConsentServi
  * {@code new RendezvousBlockIntegration(mode, session, manager, guardStop())}.
  * {@link #guardStop()} calls {@code RendezvousConsentService.stopBlockedPair}.
  * It does not select {@link #unwired()} and it does not call
- * {@code terminateCurrentMatch}. {@link #consentStop} is the binding that
- * delegates to {@code consent.terminateCurrentMatch(tx, actor, other)}.
+ * {@code terminateCurrentMatch}. {@link #consentStop} delegates to
+ * {@link #blockStop}, which calls {@code terminateCurrent(..., Termination.BLOCK, now)}
+ * inside the guard transaction the caller already opened.
  */
 public final class RendezvousBlockIntegration {
     private final Store store;
@@ -49,13 +51,18 @@ public final class RendezvousBlockIntegration {
         return (tx, actor, other) -> stopBlockedPair(tx, actor, other);
     }
 
-    /** Port wired to A's instance method. The caller has already opened the guard transaction. */
+    /** Port wired to A's {@code terminateCurrent(..., BLOCK)}. The caller has already opened the guard transaction. */
     public static RendezvousBlockIntegrationTermination consentStop(RendezvousConsentService consent) {
-        Objects.requireNonNull(consent, "consent");
-        return consent::terminateCurrentMatch;
+        return blockStop(consent, Clock.systemUTC());
     }
 
-    public void block(ImBlock block) {
+    public static RendezvousBlockIntegrationTermination blockStop(RendezvousConsentService consent, Clock clock) {
+        Objects.requireNonNull(consent, "consent");
+        Objects.requireNonNull(clock, "clock");
+        return (tx, actor, other) -> consent.terminateCurrent(tx, actor, Long.valueOf(other), null, Termination.BLOCK, clock.millis());
+    }
+
+    public RendezvousBlockReadback block(ImBlock block) {
         Objects.requireNonNull(block);
         Long first = block.getMemberId(), second = block.getBlockedMemberId();
         if (first == null || second == null || first <= 0 || second <= 0 || first.equals(second)) {
@@ -64,7 +71,7 @@ public final class RendezvousBlockIntegration {
         ImBlock persisted = new ImBlock();
         persisted.setMemberId(first);
         persisted.setBlockedMemberId(second);
-        store.transaction(tx -> {
+        return store.transaction(tx -> {
             blocks.insertImBlock(persisted);
             if (blocks.selectOne(first, second) == null || blocks.existsBetween(first, second) <= 0) {
                 throw new IllegalStateException("W16_BLOCK_NOT_PERSISTED");
@@ -72,8 +79,30 @@ public final class RendezvousBlockIntegration {
             String shared = sharedActiveMatch(tx, first, second);
             termination.terminateCurrentMatch(tx, first, second);
             if (shared != null) requireStopped(tx, shared);
-            return null;
+            return readback(tx, first, second, shared);
         });
+    }
+
+    private RendezvousBlockReadback readback(Transaction tx, long actor, long other, String shared) {
+        boolean blocked = blocks.selectOne(actor, other) != null && blocks.existsBetween(actor, other) > 0;
+        String matchState = null;
+        String actorTicket = null;
+        String otherTicket = null;
+        if (shared != null) {
+            Match match = tx.match(shared);
+            if (match != null && match.state != null) matchState = match.state.name();
+            Ticket left = match == null ? null : tx.ticket(match.firstTicket);
+            Ticket right = match == null ? null : tx.ticket(match.secondTicket);
+            if (left != null && left.actor == actor) {
+                actorTicket = left.state == null ? null : left.state.name();
+                otherTicket = right == null || right.state == null ? null : right.state.name();
+            } else if (right != null && right.actor == actor) {
+                actorTicket = right.state == null ? null : right.state.name();
+                otherTicket = left == null || left.state == null ? null : left.state.name();
+            }
+        }
+        return new RendezvousBlockReadback(actor, other, blocked, tx.activeTicket(actor) != null, tx.activeTicket(other) != null,
+                matchState, actorTicket, otherTicket);
     }
 
     /** Deletes only this directional block row. Does not write tickets or matches. */

@@ -11,6 +11,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.beans.BeanUtils;
@@ -23,6 +25,8 @@ import com.chengyinhub.business.domain.Club;
 import com.chengyinhub.business.domain.ClubMember;
 import com.chengyinhub.business.domain.CmsTopic;
 import com.chengyinhub.business.domain.ImBlock;
+import com.chengyinhub.business.service.rendezvous.RendezvousBlockReadback;
+import com.chengyinhub.common.core.domain.model.LoginAppUser;
 import com.chengyinhub.business.security.PiiCryptoService;
 import com.chengyinhub.business.domain.ImConversation;
 import com.chengyinhub.business.domain.ImConversationMember;
@@ -1373,21 +1377,30 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
     }
 
     @Override
-    public void block(Long memberId, Long targetMemberId)
+    public RendezvousBlockReadback block(Long memberId, Long targetMemberId)
     {
         if (memberId == null || targetMemberId == null || memberId.equals(targetMemberId))
         {
             throw new ServiceException("参数有误");
+        }
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof LoginAppUser login)
+        {
+            Long current = login.getAppUser() == null ? null : login.getAppUser().getUserId();
+            if (current == null || !current.equals(memberId))
+            {
+                throw new ServiceException("不能代替其他账号拉黑");
+            }
         }
         ImBlock b = new ImBlock();
         b.setMemberId(memberId);
         b.setBlockedMemberId(targetMemberId);
         if (rendezvousBlock != null && rendezvousBlock.connected())
         {
-            rendezvousBlock.block(b);
-            return;
+            return rendezvousBlock.block(b);
         }
         blockMapper.insertImBlock(b);
+        return null;
     }
 
     @Override
