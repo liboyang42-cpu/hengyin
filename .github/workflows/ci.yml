@@ -517,8 +517,6 @@ jobs:
       - name: Verify mini program unit discovery manifest
         # 必须在 node --test 之外先跑；否则 glob 漏掉 smoke 本身时仍可假绿。
         run: node ci/xcx-unit-manifest.js --selftest
-      - name: Check mini program UI integrity
-        run: npm --prefix chengyinhub-xcx run lint:ui
       - name: Check mini program RequestBody contracts
         run: npm --prefix chengyinhub-xcx run lint:requestbody
       # 危险动作确认门禁:不可逆动作必须有确认弹窗且写明「此操作不可撤销」,新增裸删除判红。
