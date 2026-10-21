@@ -252,20 +252,25 @@ class RendezvousRoleContentPersistenceTest {
         Transaction[] seen = new Transaction[1];
         long[] seenActor = {0};
         int[] calls = {0};
-        RendezvousRoleContentGuardAdapter<String> adapter = new RendezvousRoleContentGuardAdapter<>((tx, ticketId) -> {
-            calls[0]++;
-            seen[0] = tx;
-            seenActor[0] = tx.ticket(ticketId).actor;
-            if (calls[0] == 1) assertEquals(ids[0], ticketId);
-            return "ongoing";
-        });
+        RendezvousRoleContentGuardAdapter adapter = new RendezvousRoleContentGuardAdapter(
+                (tx, actor, ticketId, expectedMatchId, expectedPeer, requireMutualAccepted, now) -> {
+                    calls[0]++;
+                    seen[0] = tx;
+                    seenActor[0] = tx.ticket(ticketId).actor;
+                    assertNull(expectedMatchId);
+                    assertNull(expectedPeer);
+                    assertTrue(requireMutualAccepted);
+                    if (calls[0] == 1) assertEquals(ids[0], ticketId);
+                    return consent.verifyParticipants(tx, actor, ticketId, expectedMatchId, expectedPeer, requireMutualAccepted, now);
+                });
         Projection issued = new RendezvousRoleSecretService(
                 consent, secretStore, adapter, RendezvousRoleContentSource.Rows.INSTANCE, clock).read(11, ids[0]);
         assertEquals("fixture-body-first", issued.roleClue);
         assertNotNull(seen[0]);
         assertEquals(11L, seenActor[0]);
         assertEquals(1, calls[0]);
-        RendezvousRoleContentGuardAdapter<String> absent = new RendezvousRoleContentGuardAdapter<>((tx, ticketId) -> null);
+        RendezvousRoleContentGuardAdapter absent = new RendezvousRoleContentGuardAdapter(
+                (tx, actor, ticketId, expectedMatchId, expectedPeer, requireMutualAccepted, now) -> null);
         String[] other = mutual(13, 14);
         publish(other[2], "goal-7", "pub-1", "role-first", "role-second", "fixture-body-first", "fixture-body-second");
         Rejection missing = assertThrows(Rejection.class, () -> new RendezvousRoleSecretService(

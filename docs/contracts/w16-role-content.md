@@ -13,25 +13,25 @@
 void recheck(RendezvousConsentService.Transaction tx, long actor, String ticketId, long now)
 ```
 
-- A 组已冻结的调用，以及本组适配器的精确映射（同一 `tx`，不新开事务，不调用 `consent.read`）：
+- A 组在 `37b4b3459ea946d301896abac3ad507e117f3bf6` 冻结的调用，以及本组适配器的精确映射（同一 `tx`，不新开事务，不调用 `consent.read`）：
 
 ```text
-OngoingVerdict verdict = groupA.verifyParticipants(tx, ticketId);
-if (verdict == null) throw Rejection("SECRET_UNAVAILABLE");
+OngoingVerdict verdict = groupA.verifyParticipants(tx, actor, ticketId, null, null, true, now);
 // A 的 Rejection 原样抛出。其它运行时失败变成 SECRET_UNAVAILABLE，不保留 cause。
-// 不读取 OngoingVerdict 的字段。null 或失败才是拒绝。
-RendezvousRoleContentGuardAdapter.requireOwnedMutual(tx, actor, ticketId, now);
+// 只有 verdict 的运行时类型是 OngoingVerdict，且 safe && owned && mutual，才通过。
+// null、其它类型、以及任一标志不为真，都是 SECRET_UNAVAILABLE。
+// 票据不存在或属于陌生人时，A 返回 safe=false 且 owned=false，本组不把它改写成 NOT_FOUND。
 ```
 
-Java 接线是方法引用，合并前不要构造它：
+Java 接线是方法引用。生产构造不要使用它：
 
 ```text
-new RendezvousRoleContentGuardAdapter<OngoingVerdict>(groupA::verifyParticipants)
+new RendezvousRoleContentGuardAdapter(groupA::verifyParticipants)
 ```
 
-`requireOwnedMutual` 在本组代码里完成：票据属于 `actor`（否则 `NOT_FOUND`）；对侧是另一个 actor 且 `matchId` 相同；状态为 `MUTUAL_ACCEPTED`；双方接受戳都在；`now < expiresAt`，即使行状态仍是 `MUTUAL_ACCEPTED`。这些不依赖 A 尚未冻结的 actor/peer 参数和 `requireMutualAccepted`。资格、拉黑和地点仍只通过 `verifyParticipants` 交给 A。A 若把失败放在 `OngoingVerdict` 的字段里而不是 null 或 `Rejection`，这个映射还不能识别，合并前必须改适配器。
+服务在守卫通过之后仍调用 `requireOwnedMutual` 读取 match 行，用来选择角色侧。缺行、非属主、未双方同意或已到期在这里拒绝。它不代替 A 的资格、拉黑和地点判断。
 
-服务构造仍使用 `RendezvousRoleContentGuard.Closed`。适配器类存在，但没有实例被注册。
+服务构造仍使用 `RendezvousRoleContentGuard.Closed`。适配器类存在，但没有实例被注册。内容发布权威是另一项，状态为 NOT_CONNECTED，不因守卫类型可编译而视为已接通。
 
 - 安全核验通过后才解析内容。内容只来自同一事务里可见的发布行：绑定状态必须是 `BOUND`，发布状态必须是 `ISSUED`，并且只取调用者这一侧的 `role_key` 正文。缺绑定、错 match、错角色、下线、撤销、空正文都是 `CONTENT_UNAVAILABLE`。
 - 不生成剧情，不把随机字符串当作线索。没有发布行时结果是不可用。
@@ -51,5 +51,5 @@ new RendezvousRoleContentGuardAdapter<OngoingVerdict>(groupA::verifyParticipants
 
 ## 尚未接通
 
-- A 组的 `verifyParticipants` 还没有接到本组进程。生产构造使用 `Closed`，因此即使库里后来有发布行，未接线时也不会发秘密。适配器只说明合并时的方法引用。
-- 仓库里没有可复用的、已绑定到接头 match 的合作目标发布源。游戏会话角色线索不是这个绑定。在绑定和发布权威出现之前，内容保持不可用。
+- 守卫：A 组的 `verifyParticipants` 还没有接到本组进程。生产构造使用 `Closed`，因此即使库里后来有发布行，未接线时也不会发秘密。适配器只说明合并时的方法引用，默认不是接通。
+- 发布权威：NOT_CONNECTED。与守卫分开。仓库里没有可复用的、已绑定到接头 match 的合作目标发布源。游戏会话角色线索不是这个绑定。服务和 mapper 不发布。空候选表即不可用。

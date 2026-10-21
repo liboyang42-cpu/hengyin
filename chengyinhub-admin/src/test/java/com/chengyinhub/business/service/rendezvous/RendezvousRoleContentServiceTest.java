@@ -63,7 +63,53 @@ class RendezvousRoleContentServiceTest {
         assertTrue(mem.grants.isEmpty());
     }
 
-    @Test void adapterCallsVerifyParticipantsOnTheSameTransactionThenChecksMutual() {
+    @Test void onlyExplicitSafeOwnedMutualPasses() {
+        OngoingVerdict[] next = new OngoingVerdict[1];
+        RendezvousRoleContentGuardAdapter adapter = new RendezvousRoleContentGuardAdapter(
+                (tx, actor, ticketId, expectedMatchId, expectedPeer, requireMutualAccepted, now) -> {
+                    assertNull(expectedMatchId);
+                    assertNull(expectedPeer);
+                    assertTrue(requireMutualAccepted);
+                    assertEquals(7L, actor);
+                    assertEquals("ticket-7", ticketId);
+                    assertEquals(99L, now);
+                    return next[0];
+                });
+        next[0] = verdict(true, true, true);
+        adapter.recheck(null, 7, "ticket-7", 99);
+        int rejected = 0;
+        for (boolean safe : new boolean[]{false, true}) {
+            for (boolean owned : new boolean[]{false, true}) {
+                for (boolean mutual : new boolean[]{false, true}) {
+                    if (safe && owned && mutual) continue;
+                    next[0] = verdict(safe, owned, mutual);
+                    Rejection partial = assertThrows(Rejection.class, () -> adapter.recheck(null, 7, "ticket-7", 99));
+                    assertEquals("SECRET_UNAVAILABLE", partial.getCode());
+                    assertNotEquals("NOT_FOUND", partial.getCode());
+                    assertNull(partial.getCause());
+                    rejected++;
+                }
+            }
+        }
+        assertEquals(7, rejected);
+        next[0] = null;
+        assertEquals("SECRET_UNAVAILABLE", assertThrows(Rejection.class, () -> adapter.recheck(null, 7, "ticket-7", 99)).getCode());
+        next[0] = new OngoingVerdict(false, false, false, false, false, false, false, false, "missing", null, null, null);
+        Rejection stranger = assertThrows(Rejection.class, () -> adapter.recheck(null, 7, "ticket-7", 99));
+        assertEquals("SECRET_UNAVAILABLE", stranger.getCode());
+        assertFalse(RendezvousRoleContentGuardAdapter.allows("ongoing"));
+        assertFalse(RendezvousRoleContentGuardAdapter.allows(new Object()));
+        RendezvousRoleContentGuardAdapter broken = new RendezvousRoleContentGuardAdapter(
+                (tx, actor, ticketId, expectedMatchId, expectedPeer, requireMutualAccepted, now) -> {
+                    throw new IllegalStateException("fixture-body-first");
+                });
+        Rejection hidden = assertThrows(Rejection.class, () -> broken.recheck(null, 7, "ticket-7", 99));
+        assertEquals("SECRET_UNAVAILABLE", hidden.getCode());
+        assertNull(hidden.getCause());
+        assertFalse(hidden.getMessage().contains("fixture-body"));
+    }
+
+    @Test void realVerifyParticipantsSafePassesOnTheSameTransaction() {
         Mem mem = new Mem();
         int[] consentTx = {0};
         Store consentStore = consentStore(mem, consentTx);
@@ -76,55 +122,60 @@ class RendezvousRoleContentServiceTest {
         consent.accept(1, first.ticketId, 1);
         Transaction[] seen = new Transaction[1];
         int[] calls = {0};
-        RendezvousRoleContentGuardAdapter<String> early = new RendezvousRoleContentGuardAdapter<>((tx, ticketId) -> {
-            calls[0]++;
-            seen[0] = tx;
-            assertEquals(first.ticketId, ticketId);
-            return "ongoing";
-        });
-        RendezvousRoleSecretService beforeMutual = new RendezvousRoleSecretService(
-                consent, secretStore, early, RendezvousRoleContentSource.Rows.INSTANCE, clock);
+        RendezvousRoleContentGuardAdapter adapter = new RendezvousRoleContentGuardAdapter(
+                (tx, actor, ticketId, expectedMatchId, expectedPeer, requireMutualAccepted, now) -> {
+                    calls[0]++;
+                    seen[0] = tx;
+                    assertNull(expectedMatchId);
+                    assertNull(expectedPeer);
+                    assertTrue(requireMutualAccepted);
+                    assertEquals(clock.millis(), now);
+                    return consent.verifyParticipants(tx, actor, ticketId, expectedMatchId, expectedPeer, requireMutualAccepted, now);
+                });
+        RendezvousRoleSecretService secrets = new RendezvousRoleSecretService(
+                consent, secretStore, adapter, RendezvousRoleContentSource.Rows.INSTANCE, clock);
         int before = consentTx[0];
-        Rejection oneSide = assertThrows(Rejection.class, () -> beforeMutual.read(1, first.ticketId));
+        Rejection oneSide = assertThrows(Rejection.class, () -> secrets.read(1, first.ticketId));
         assertEquals("SECRET_UNAVAILABLE", oneSide.getCode());
         assertEquals(1, calls[0]);
         assertSame(mem, seen[0]);
         assertEquals(before, consentTx[0]);
+        assertTrue(mem.grants.isEmpty());
         View done = consent.accept(2, second.ticketId, 2);
         mem.binding = new Binding(done.matchId, "goal-1", "pub-1", "role-first", "role-second", "BOUND");
         mem.publicationState = "ISSUED";
         mem.bodies.put("role-first", "fixture-body-first");
         mem.bodies.put("role-second", "fixture-body-second");
-        RendezvousRoleContentGuardAdapter<String> missing = new RendezvousRoleContentGuardAdapter<>((tx, ticketId) -> null);
-        Rejection absent = assertThrows(Rejection.class, () -> new RendezvousRoleSecretService(
-                consent, secretStore, missing, RendezvousRoleContentSource.Rows.INSTANCE, clock).read(1, first.ticketId));
-        assertEquals("SECRET_UNAVAILABLE", absent.getCode());
-        assertTrue(mem.grants.isEmpty());
-        RendezvousRoleContentGuardAdapter<String> refused = new RendezvousRoleContentGuardAdapter<>((tx, ticketId) -> {
-            throw new Rejection("NOT_ELIGIBLE");
-        });
+        RendezvousRoleContentGuardAdapter refused = new RendezvousRoleContentGuardAdapter(
+                (tx, actor, ticketId, expectedMatchId, expectedPeer, requireMutualAccepted, now) -> {
+                    throw new Rejection("NOT_ELIGIBLE");
+                });
         Rejection propagated = assertThrows(Rejection.class, () -> new RendezvousRoleSecretService(
                 consent, secretStore, refused, RendezvousRoleContentSource.Rows.INSTANCE, clock).read(1, first.ticketId));
         assertEquals("NOT_ELIGIBLE", propagated.getCode());
         assertTrue(mem.grants.isEmpty());
         calls[0] = 0;
-        RendezvousRoleContentGuardAdapter<String> passed = new RendezvousRoleContentGuardAdapter<>((tx, ticketId) -> {
-            calls[0]++;
-            seen[0] = tx;
-            assertSame(mem, tx);
-            assertNotNull(tx.ticket(ticketId));
-            return "ongoing";
-        });
-        Projection mine = new RendezvousRoleSecretService(
-                consent, secretStore, passed, RendezvousRoleContentSource.Rows.INSTANCE, clock).read(1, first.ticketId);
+        Projection mine = secrets.read(1, first.ticketId);
         assertEquals("fixture-body-first", mine.roleClue);
         assertEquals(1, calls[0]);
+        assertSame(mem, seen[0]);
+        Rejection stranger = assertThrows(Rejection.class, () -> consentStore.transaction(tx -> {
+            adapter.recheck(tx, 3, first.ticketId, clock.millis());
+            return null;
+        }));
+        assertEquals("SECRET_UNAVAILABLE", stranger.getCode());
         clock.now = 11_000;
-        Rejection expired = assertThrows(Rejection.class, () -> new RendezvousRoleSecretService(
-                consent, secretStore, passed, RendezvousRoleContentSource.Rows.INSTANCE, clock).read(1, first.ticketId));
+        Rejection expired = assertThrows(Rejection.class, () -> secrets.read(1, first.ticketId));
         assertEquals("SECRET_UNAVAILABLE", expired.getCode());
         assertEquals(MatchState.MUTUAL_ACCEPTED, mem.match(done.matchId).state);
         assertFalse(expired.getMessage().contains("fixture-body-first"));
+        Rejection closed = assertThrows(Rejection.class, () -> new RendezvousRoleSecretService(consent, secretStore).read(2, second.ticketId));
+        assertEquals("SECRET_UNAVAILABLE", closed.getCode());
+    }
+
+    private static OngoingVerdict verdict(boolean safe, boolean owned, boolean mutual) {
+        return new OngoingVerdict(safe, true, false, true, false, true, owned, mutual,
+                "ticket-7", "match-7", TicketState.ACCEPTED, MatchState.MUTUAL_ACCEPTED);
     }
 
     @Test void httpProjectionKeepsOnlyTheCallerBody() throws Exception {

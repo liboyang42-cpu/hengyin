@@ -4,45 +4,53 @@ import java.util.Objects;
 import static com.chengyinhub.business.service.rendezvous.RendezvousConsentService.*;
 
 /**
- * Maps {@link RendezvousRoleContentGuard} onto Group A's frozen call.
- * Not wired. {@link RendezvousRoleContentGuard.Closed} stays the service default until merge.
- * The method reference is {@code groupA::verifyParticipants} on the same open transaction.
+ * Maps {@code recheck(tx, actor, ticketId, now)} onto Group A's frozen
+ * {@code verifyParticipants(tx, actor, ticketId, null, null, true, now)}.
+ * Not wired. {@link RendezvousRoleContentGuard.Closed} stays the service default.
+ * Publication authority stays NOT_CONNECTED and is not invoked here.
  */
-public final class RendezvousRoleContentGuardAdapter<V> implements RendezvousRoleContentGuard {
-    /** Structural target of {@code OngoingVerdict verifyParticipants(Transaction tx, String ticketId)}. */
+public final class RendezvousRoleContentGuardAdapter implements RendezvousRoleContentGuard {
+    /** Target of {@code OngoingVerdict verifyParticipants(Transaction, long, String, String, Long, boolean, long)}. */
     @FunctionalInterface
-    public interface Participants<V> {
-        V verifyParticipants(Transaction tx, String ticketId);
+    public interface Participants {
+        OngoingVerdict verifyParticipants(Transaction tx, long actor, String ticketId, String expectedMatchId,
+                                          Long expectedPeer, boolean requireMutualAccepted, long now);
     }
 
-    private final Participants<V> participants;
+    private final Participants participants;
 
-    public RendezvousRoleContentGuardAdapter(Participants<V> participants) {
+    public RendezvousRoleContentGuardAdapter(Participants participants) {
         this.participants = Objects.requireNonNull(participants);
     }
 
     /**
-     * Calls A's {@code verifyParticipants(tx, ticketId)} and then applies caller ownership,
-     * peer binding, mutual acceptance and expiry. A's frozen call has no actor and no
-     * {@code requireMutualAccepted} flag, so those checks stay here. A null verdict or an
-     * unexpected failure refuses. {@link Rejection} from A is kept. Verdict fields are not read.
+     * Only an {@link OngoingVerdict} with {@code safe}, {@code owned} and {@code mutual} all true passes.
+     * Null, a non-verdict, or any other combination is {@code SECRET_UNAVAILABLE}.
+     * A's missing or stranger result ({@code safe=false}, {@code owned=false}) is not rewritten as {@code NOT_FOUND}.
+     * {@link Rejection} from A is kept. Any other failure drops its cause.
      */
     public void recheck(Transaction tx, long actor, String ticketId, long now) {
-        V verdict;
+        OngoingVerdict verdict;
         try {
-            verdict = participants.verifyParticipants(tx, ticketId);
+            verdict = participants.verifyParticipants(tx, actor, ticketId, null, null, true, now);
         } catch (Rejection rejected) {
             throw rejected;
         } catch (RuntimeException failed) {
             throw new Rejection("SECRET_UNAVAILABLE");
         }
-        if (verdict == null) throw new Rejection("SECRET_UNAVAILABLE");
-        requireOwnedMutual(tx, actor, ticketId, now);
+        if (!allows(verdict)) throw new Rejection("SECRET_UNAVAILABLE");
+    }
+
+    /** Explicit SAFE. Unknown types and partial flags fail closed. */
+    static boolean allows(Object verdict) {
+        if (!(verdict instanceof OngoingVerdict ongoing)) return false;
+        return ongoing.safe && ongoing.owned && ongoing.mutual;
     }
 
     /**
      * Caller owns the ticket, the other side is a different actor on the same match,
      * both accepts are present, and {@code now} is before expiry. Does not write.
+     * Used by the content read after the guard, so a SAFE verdict still needs a live match row.
      */
     public static Match requireOwnedMutual(Transaction tx, long actor, String ticketId, long now) {
         Ticket ticket = tx.ticket(ticketId);

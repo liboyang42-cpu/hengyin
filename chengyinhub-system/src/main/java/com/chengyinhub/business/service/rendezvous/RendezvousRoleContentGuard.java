@@ -10,22 +10,21 @@ import static com.chengyinhub.business.service.rendezvous.RendezvousConsentServi
  * another transaction. A missing or closed port refuses; it never grants a secret.
  *
  * <p>This port stays {@code void recheck(Transaction tx, long actor, String ticketId, long now)}.
- * Group A's frozen call is {@code OngoingVerdict verifyParticipants(Transaction, String)}.
- * {@link RendezvousRoleContentGuardAdapter} is the mapping and is not wired;
- * {@link Closed} remains the service default. {@code now} is epoch millis from the
- * caller's clock. Checks read durable rows from {@code tx}, not an earlier snapshot.
+ * Group A's frozen call is {@code OngoingVerdict verifyParticipants(Transaction, long, String, String, Long, boolean, long)}.
+ * The adapter maps that to {@code verifyParticipants(tx, actor, ticketId, null, null, true, now)}
+ * and allows only {@code safe && owned && mutual}. It is not wired;
+ * {@link Closed} remains the service default. Publication authority is a separate
+ * NOT_CONNECTED dependency. {@code now} is epoch millis from the caller's clock.
  */
 public interface RendezvousRoleContentGuard {
     /**
-     * Re-read the current ticket and its match inside {@code tx} and require both
-     * sides still safe. Reject unless all of the following hold:
-     * the ticket exists and belongs to {@code actor} ({@code NOT_FOUND} otherwise);
-     * the match is that ticket's current match and {@code MUTUAL_ACCEPTED}, with both
-     * accept timestamps present; {@code now} is strictly before the match expiry even
-     * when the stored state is still {@code MUTUAL_ACCEPTED}; both actors are still
-     * eligible; they are not blocked; the public place is still allowed; cancellation,
-     * safety stop, eligibility revocation and place revocation all refuse.
-     * Any unknown or failed check throws {@link Rejection} and must not be treated as success.
+     * Re-check both sides on the already-open transaction. Pass only an explicit
+     * {@code OngoingVerdict} with {@code safe}, {@code owned} and {@code mutual} all true.
+     * Null, an unknown result, and every partial combination throw {@link Rejection}
+     * {@code SECRET_UNAVAILABLE}. A's missing or stranger verdict is {@code safe=false}
+     * and {@code owned=false}; do not rewrite it as {@code NOT_FOUND}.
+     * Eligibility, block, place, expiry and cancellation are A's {@code safe} flag.
+     * Any unknown or failed check must not be treated as success.
      */
     void recheck(Transaction tx, long actor, String ticketId, long now);
 
