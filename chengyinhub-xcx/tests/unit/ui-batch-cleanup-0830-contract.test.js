@@ -37,10 +37,24 @@ test('预置协作对象入口向页内邀约弹窗透传真实目标，邀请�
   const merchantView = read('subpackageMember/components/cy/profile/index.wxml')
   assert.match(club, /coopInviteShow: true/)
   assert.match(clubView, /target-id="\{\{clubId\}\}"/)
-  assert.match(clubView, /target-name="\{\{club.name\}\}"/)
+  const binding = (view, name, data) => {
+    const sheet = view.match(/<cy-coop-invite-sheet\b[^>]*>/)[0]
+    const expression = sheet.match(new RegExp(name + '="\\{\\{(.*?)\\}\\}"'))[1]
+    return require('node:vm').runInNewContext(expression, data)
+  }
+  assert.equal(binding(clubView, 'target-name', { club: null }), '')
+  assert.equal(binding(clubView, 'target-name', { club: { name: '真实俱乐部' } }), '真实俱乐部')
+  assert.equal(binding(clubView, 'topic-name', { topicName: undefined }), '')
+  assert.equal(binding(clubView, 'operation-scope', { coopInviteScope: undefined }), '')
+  assert.equal(binding(clubView, 'operation-scope', { coopInviteScope: 'CLUB' }), 'CLUB')
   assert.match(merchant, /coopInviteShow: true/)
   assert.match(merchantView, /target-id="\{\{userId\}\}"/)
-  assert.match(merchantView, /target-name="\{\{subjectMerchant.name \|\| nickname\}\}"/)
+  assert.equal(binding(merchantView, 'target-name', { subjectMerchant: null, userInfo: { nickname: '当前资料名' }, nickname: '旧顶层名' }), '当前资料名')
+  assert.equal(binding(merchantView, 'target-name', { subjectMerchant: { name: '真实门店' }, userInfo: { nickname: '当前资料名' } }), '真实门店')
+  assert.equal(binding(merchantView, 'target-name', { subjectMerchant: null, userInfo: null }), '')
+  assert.equal(binding(merchantView, 'topic-name', { topicName: undefined }), '')
+  assert.equal(binding(merchantView, 'operation-scope', { operationScope: undefined }), '')
+  assert.equal(binding(merchantView, 'operation-scope', { operationScope: 'MERCHANT' }), 'MERCHANT')
   assert.match(invite, /logo:\s*routeText\(options\.toLogo\)/)
   assert.match(invite, /meta:\s*routeText\(options\.toMeta\)/)
 })
