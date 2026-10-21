@@ -71,6 +71,9 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
     private ImPollMapper pollMapper;
     @Autowired
     private ImBlockMapper blockMapper;
+    /** 未注册时保持 null，走原 im_block 插入。只有显式注入且 connected 才进入 W16。 */
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.rendezvous.RendezvousBlockEntry rendezvousBlock;
     @Autowired
     private IUmsMemberService umsMemberService;
     @Autowired
@@ -1374,6 +1377,11 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
         ImBlock b = new ImBlock();
         b.setMemberId(memberId);
         b.setBlockedMemberId(targetMemberId);
+        if (rendezvousBlock != null && rendezvousBlock.connected())
+        {
+            rendezvousBlock.block(b);
+            return;
+        }
         blockMapper.insertImBlock(b);
     }
 

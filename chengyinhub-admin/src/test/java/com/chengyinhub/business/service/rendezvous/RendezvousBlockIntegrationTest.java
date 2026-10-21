@@ -43,6 +43,7 @@ class RendezvousBlockIntegrationTest {
     SqlSessionTemplate session;
     MyBatisRendezvousConsentStore consentStore;
     RendezvousConsentService consent;
+    RecordingAdmission charges;
     RendezvousRoleSecretService secrets;
     RendezvousMeetingService meetings;
     RendezvousBlockIntegration integration;
@@ -73,7 +74,8 @@ class RendezvousBlockIntegrationTest {
         consentStore = new MyBatisRendezvousConsentStore(ISOLATED_PERSISTENCE_EVALUATION, session, manager);
         ImBlockMapper blocks = session.getMapper(ImBlockMapper.class);
         BlockSafety safety = new BlockSafety(blocks);
-        consent = new RendezvousConsentService(consentStore, safety, clock);
+        charges = new RecordingAdmission();
+        consent = new RendezvousConsentService(consentStore, safety, clock, charges);
         secrets = new RendezvousRoleSecretService(consent, new MyBatisRendezvousRoleSecretStore(consentStore, session.getMapper(RendezvousProtocolMapper.class)));
         meetings = new RendezvousMeetingService(RendezvousMeetingService.Mode.ISOLATED_CONTRACT_EVALUATION,
                 new MyBatisRendezvousMeetingStore(MyBatisRendezvousMeetingStore.Mode.ISOLATED_PERSISTENCE_EVALUATION, session, manager),
@@ -153,7 +155,7 @@ class RendezvousBlockIntegrationTest {
         assertEquals(0, count("im_block"));
         assertRejected(pair[0], clue, matchId);
 
-        RendezvousConsentService restarted = new RendezvousConsentService(newStore(), new BlockSafety(session.getMapper(ImBlockMapper.class)), clock);
+        RendezvousConsentService restarted = new RendezvousConsentService(newStore(), new BlockSafety(session.getMapper(ImBlockMapper.class)), clock, new RecordingAdmission());
         RendezvousRoleSecretService restartedSecrets = new RendezvousRoleSecretService(restarted,
                 new MyBatisRendezvousRoleSecretStore(newStore(), session.getMapper(RendezvousProtocolMapper.class)));
         RendezvousMeetingService restartedMeetings = new RendezvousMeetingService(RendezvousMeetingService.Mode.ISOLATED_CONTRACT_EVALUATION,
@@ -263,7 +265,9 @@ class RendezvousBlockIntegrationTest {
     private String[] mutual(long first, long second) {
         View a = consent.join(first, "pool", "v1", 100_000);
         View b = consent.join(second, "pool", "v1", 100_000);
+        int before = charges.charges;
         consent.propose(a.ticketId, b.ticketId, "public-place");
+        assertEquals(before + 1, charges.charges);
         consent.accept(first, a.ticketId, 1);
         consent.accept(second, b.ticketId, 2);
         return new String[]{a.ticketId, b.ticketId};
@@ -319,6 +323,17 @@ class RendezvousBlockIntegrationTest {
     }
 
     interface Throwing { void run() throws Exception; }
+
+    static final class RecordingAdmission implements RendezvousConsentService.Admission {
+        int charges;
+        public void charge(String matchId, long first, long second, String pool, long now) {
+            if (matchId == null || matchId.trim().isEmpty() || pool == null || pool.trim().isEmpty()
+                    || first <= 0 || second <= 0 || first == second || now < 0) {
+                throw new Rejection("PAIR_UNAVAILABLE");
+            }
+            charges++;
+        }
+    }
 
     static final class SyntheticStop implements RendezvousBlockIntegrationTermination {
         int calls;

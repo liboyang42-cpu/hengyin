@@ -1,6 +1,6 @@
 # W16.4 屏蔽即时终止（候选，默认关闭）
 
-本人既有屏蔽写进权威 `im_block` 后，同一条同意 guard 事务停止双方当前共同接头。解除只删这一方向的屏蔽行，不把已停止的 match 改回活跃。本文不是生产接通说明。`ImServiceImpl.block` 未接。
+本人既有屏蔽写进权威 `im_block` 后，同一条同意 guard 事务停止双方当前共同接头。解除只删这一方向的屏蔽行，不把已停止的 match 改回活跃。本文不是生产接通说明。没有显式注入已接通的入口时，`ImServiceImpl.block` 仍走原来的插入。
 
 ## 入口
 
@@ -45,9 +45,19 @@ new RendezvousBlockIntegration(mode, session, manager, RendezvousBlockIntegratio
 
 B、C 读已有 match 状态，不读新表。`SAFETY_STOPPED` 之后：接受不再变成双方同意；角色线索 `SECRET_UNAVAILABLE`；挑战和交接由会面刷新拒绝，且不调用组队。屏蔽事务本身不改线索行、会面行或 team。
 
-## 未接
+## 真实 block 入口
 
-- `ImServiceImpl.block` 仍直接 `insertImBlock`。最小 hunk 只交给 dot，本线不应用、不注册 Bean、不替换全局 IM Service。
-- `ImServiceImpl.unblock` 本就只删屏蔽行。match 已是 `SAFETY_STOPPED` 时，这条旧实现也不会把旧 match 复活。本线不改该方法。
-- 三参 `RendezvousImBlockMutation` 仍走 `guardStop` → `stopBlockedPair`，不是 `consent.terminateCurrentMatch`。
-- 合成替身只覆盖未接线端口和空终止的回滚。重复、反向、第三人、解除和损坏预约回滚走 `consentStop`。
+`ImServiceImpl.block` 在双方 id 合法后：
+
+- `rendezvousBlock == null`，或注入的 `RendezvousBlockEntry.connected()` 为 false：仍调用原来的 `blockMapper.insertImBlock`。不停止 match，也不报 W16 已接通。
+- 显式注入且 `connected()` 为 true：只调用 `RendezvousBlockEntry.block`。这一路径用构造时传入的同一个 `SqlSessionTemplate` 和 `DataSourceTransactionManager`，在 consent guard 里写权威 `im_block` 并 `consentStop` → `terminateCurrentMatch`。不再次调用 `blockMapper.insertImBlock`。
+
+`RendezvousBlockEntry` 不是 Spring Bean。字段是 `@Autowired(required = false)`，容器里没有 Bean 时保持 null，不会空指针。`open` 只有隔离评估模式且 consent 非空才接通，并且只绑定 `consentStop`，不使用 `guardStop` 或三参 mutation。`DISABLED`、consent 为空都保持断开。
+
+`unblock`、`report`、聊天和队伍语义没有改。
+
+## 仍未接通的生产开关
+
+- 没有注册 `RendezvousBlockEntry` Bean，也没有改全局安全配置。生产默认仍是原来的屏蔽插入。
+- 三参 `RendezvousImBlockMutation` 仍走 `guardStop` → `stopBlockedPair`。入口测试用 A 的四参 `Admission` 构造，不走三参免记账。
+- 合成替身只覆盖未接线端口和空终止的回滚。真实入口的回滚、重复、反向、无关配对和解除不复活走 `ImServiceImpl.block`。
