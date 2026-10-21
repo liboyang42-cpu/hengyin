@@ -136,3 +136,29 @@ test('半填同名票匹配不抢占完整票的唯一回读行', () => {
   detail.tickets.push({ ...detail.tickets[0], id: 602, price: 25 });
   assert.equal(readbackIssue(sent, detail, true), '');
 });
+
+for (const [label, value] of [['缺失', undefined], ['null', null], ['未知值', 'UNKNOWN_MOOD']]) {
+  test('DEFAULT mood回读' + label + '不能被默认值掩盖，且不继续发布', () => {
+    const { sent, detail } = fixture();
+    sent.chapters[0].blocks = [{ type: 'mood', mood: 'DEFAULT' }];
+    detail.chapters[0].blocks = [{ type: 'mood', key: 'server-key', mood: value }];
+    if (value === undefined) delete detail.chapters[0].blocks[0].mood;
+    assert.notEqual(readbackIssue(sent, detail, true), '');
+    let published = 0, success = 0, failure;
+    const saver = createServerDraftSaver({ save: (p, cb) => cb({ ok: true, data: 501 }),
+      readback: (id, cb) => cb({ ok: true, data: detail }), publish: () => { published++; } });
+    saver.saveAndPublish(sent, { onSuccess: () => success++, onFail: r => { failure = r; } });
+    assert.equal(published, 0); assert.equal(success, 0); assert.equal(failure.stage, 'readback');
+  });
+}
+
+test('mood合法预设和已知历史别名可正规化；与后端正常物化输出一致', () => {
+  for (const [before, after] of [['DEFAULT', 'DEFAULT'], ['BLUE', 'BLUE'], ['RED', 'RED'],
+    ['YELLOW', 'YELLOW'], ['WHITE', 'WHITE'], ['NIGHT', 'BLUE'], ['ARCHIVE', 'YELLOW'],
+    ['NEON', 'RED'], ['MOSS', 'DEFAULT'], ['BLUE', ' night ']]) {
+    const { sent, detail } = fixture();
+    sent.chapters[0].blocks = [{ type: 'mood', mood: before }];
+    detail.chapters[0].blocks = [{ type: 'mood', key: 'server-key', mood: after }];
+    assert.equal(readbackIssue(sent, detail, true), '', before + ' → ' + after);
+  }
+});

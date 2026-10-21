@@ -19,7 +19,7 @@
 
 const templateBinding = require('./template-binding.js');
 const initial = require('./story-initial-state.js');
-const { normalizeAtmosphere } = require('../../../../utils/chapter-atmosphere.js');
+const { PRESETS, LEGACY_ALIAS, normalizeAtmosphere } = require('../../../../utils/chapter-atmosphere.js');
 
 function topicIdOf(data) {
   const id = data && typeof data === 'object' ? data.topicId : data;
@@ -158,7 +158,13 @@ function storedBlock(block, nodes, submitted, keepKey) {
     for (const field of ['beat', 'field', 'qid']) if (row[field] != null) row[field] = row[field].trim();
   }
   if (['voice', 'reveal'].includes(block.type)) row.content = String(row.content || '').trim();
-  if (block.type === 'mood') row.mood = normalizeAtmosphere(row.mood);
+  if (block.type === 'mood') {
+    // 回读不能用展示层 DEFAULT 兜底掩盖丢字段；正常编译输出必有合法 mood。
+    const mood = typeof row.mood === 'string' ? row.mood.trim().toUpperCase() : '';
+    if (!PRESETS.some(preset => preset.value === mood)
+        && !Object.prototype.hasOwnProperty.call(LEGACY_ALIAS, mood)) throw new Error('invalid mood');
+    row.mood = normalizeAtmosphere(mood);
+  }
   if (block.type === 'thought') row.thoughtKey = row.thoughtKey.trim();
   if (block.type === 'dream') {
     if (row.title != null) { row.title = row.title.trim(); if (!row.title) delete row.title; }
