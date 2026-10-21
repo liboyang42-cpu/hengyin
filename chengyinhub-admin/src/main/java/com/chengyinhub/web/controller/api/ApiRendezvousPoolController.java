@@ -43,9 +43,11 @@ public final class ApiRendezvousPoolController {
             if (body == null || body.size() != 2 || !body.containsKey("pool") || !body.containsKey("eligibilityVersion")) throw new InvalidRequest();
             Object pool = body.get("pool"), version = body.get("eligibilityVersion");
             if (!(pool instanceof String) || !(version instanceof String)) throw new InvalidRequest();
-            Long ttl = policy.ticketTtl((String) version);
+            policy.requireClientVersion((String) version);
+            String ttlVersion = policy.ttlVersion((String) version);
+            Long ttl = policy.ticketTtl(ttlVersion);
             if (ttl == null) throw new PolicyClosed();
-            return consent.join(actor, (String) pool, (String) version, ttl);
+            return consent.join(actor, (String) pool, ttlVersion, ttl);
         });
     }
 

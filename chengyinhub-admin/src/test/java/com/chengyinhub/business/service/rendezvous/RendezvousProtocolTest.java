@@ -39,6 +39,7 @@ class RendezvousProtocolTest {
         View other = h.consent.join(2, "pool", "v1", h.policy.ticketTtl("v1"));
         String match = h.scheduler.pairOnce("pool");
         assertNotNull(match);
+        assertEquals(2, h.catalog.events.size());
         assertThrows(Rejection.class, () -> h.scheduler.pairOnce("pool"));
         h.consent.accept(1, joined.ticketId, 1);
         code("SECRET_UNAVAILABLE", () -> h.secrets.read(1, joined.ticketId));
@@ -67,6 +68,9 @@ class RendezvousProtocolTest {
         View b = h.consent.join(2, "pool", "v1", 1000);
         View c = h.consent.join(3, "pool", "v1", 1000);
         h.scheduler.pairOnce("pool");
+        assertEquals(MatchState.PROPOSED, h.consent.accept(1, a.ticketId, 1).matchState);
+        assertEquals(MatchState.MUTUAL_ACCEPTED, h.consent.accept(2, b.ticketId, 2).matchState);
+        assertEquals(MatchState.MUTUAL_ACCEPTED, h.consent.read(1, a.ticketId).matchState);
         h.consent.cancel(1, a.ticketId);
         h.consent.join(1, "pool", "v1", 1000);
         h.consent.join(2, "pool", "v1", 1000);
@@ -77,6 +81,19 @@ class RendezvousProtocolTest {
         h.consent.stopForReport(1, 2);
         assertEquals(TicketState.WAITING, h.consent.current(3).ticketState);
         assertNotEquals(MatchState.MUTUAL_ACCEPTED, h.consent.read(2, b.ticketId).matchState);
+    }
+
+    @Test void secondChargeFailureRollsBackTheMatchAndTheFirstCount() {
+        Harness h = new Harness();
+        h.allow();
+        h.catalog.put("frequency", "pool", new RendezvousVersionedPolicy.Row("OPEN", 1, null, null));
+        h.catalog.events.add(new MemoryCatalog.Event("already", 2, "pool", "POOL", h.clock.now));
+        h.consent.join(1, "pool", "v1", 1000);
+        h.consent.join(2, "pool", "v1", 1000);
+        code("PAIR_UNAVAILABLE", () -> h.scheduler.pairOnce("pool"));
+        assertTrue(h.db.matches.isEmpty());
+        assertEquals(1, h.catalog.events.size());
+        assertEquals(TicketState.WAITING, h.consent.current(1).ticketState);
     }
 
     @Test void closedPlaceCannotBeInventedByTheScheduler() {
@@ -111,16 +128,46 @@ class RendezvousProtocolTest {
             catalog.put("frequency", "pool", new RendezvousVersionedPolicy.Row("OPEN", 2, null, null));
             catalog.put("ticket-ttl", "v1", new RendezvousVersionedPolicy.Row("OPEN", null, 1000L, null));
             catalog.put("meeting-safety", "pool", new RendezvousVersionedPolicy.Row("OPEN", null, null, "public-place"));
+            catalog.scope = "POOL";
+            catalog.windowMillis = 3_600_000L;
         }
     }
     static final class MemoryCatalog implements RendezvousVersionedPolicy.Catalog, RendezvousPoolScheduler.Contacts {
+        static final class Event {
+            final String matchId, pool, scope; final long actor, at;
+            Event(String matchId, long actor, String pool, String scope, long at) {
+                this.matchId = matchId; this.actor = actor; this.pool = pool; this.scope = scope; this.at = at;
+            }
+        }
         final Map<String, RendezvousVersionedPolicy.Row> rows = new HashMap<>();
-        final Map<Long, Integer> counts = new HashMap<>();
+        final List<Event> events = new ArrayList<>();
+        String scope;
+        Long windowMillis;
         void put(String dimension, String version, RendezvousVersionedPolicy.Row row) { rows.put(dimension + "\0" + version, row); }
         public RendezvousVersionedPolicy.Row find(String dimension, String version) { return rows.get(dimension + "\0" + version); }
-        public int contacts(long actor) { return counts.getOrDefault(actor, 0); }
-        public void record(long first, long second) {
-            counts.merge(first, 1, Integer::sum); counts.merge(second, 1, Integer::sum);
+        public int contacts(long actor) { return used(actor, "pool", scope, Long.MAX_VALUE); }
+        public void charge(String matchId, long first, long second, String pool, long now) {
+            if (scope == null || scope.trim().isEmpty() || windowMillis == null || windowMillis <= 0) throw new Rejection("POLICY_CLOSED");
+            RendezvousVersionedPolicy.Row cap = find("frequency", pool);
+            if (cap == null || !cap.open() || cap.maxContacts == null || cap.maxContacts <= 0) throw new Rejection("POLICY_CLOSED");
+            boolean firstSeen = seen(matchId, first), secondSeen = seen(matchId, second);
+            if (!firstSeen && used(first, pool, scope, now) >= cap.maxContacts) throw new Rejection("PAIR_UNAVAILABLE");
+            if (!secondSeen && used(second, pool, scope, now) >= cap.maxContacts) throw new Rejection("PAIR_UNAVAILABLE");
+            if (!firstSeen) events.add(new Event(matchId, first, pool, scope, now));
+            if (!secondSeen) events.add(new Event(matchId, second, pool, scope, now));
+        }
+        private boolean seen(String matchId, long actor) {
+            for (Event event : events) if (event.matchId.equals(matchId) && event.actor == actor) return true;
+            return false;
+        }
+        private int used(long actor, String pool, String scope, long now) {
+            if (scope == null || windowMillis == null) return 0;
+            int count = 0;
+            for (Event event : events) {
+                if (event.actor == actor && event.pool.equals(pool) && event.scope.equals(scope)
+                        && event.at > now - windowMillis && event.at <= now) count++;
+            }
+            return count;
         }
     }
     static final class Blocks implements ImBlockMapper {
