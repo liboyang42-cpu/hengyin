@@ -36,7 +36,7 @@ class RendezvousRoleContentServiceTest {
         Store consentStore = consentStore(mem, consentTx);
         RendezvousRoleSecretService.Store secretStore = secretStore(mem);
         Clock clock = new MutableClock();
-        RendezvousConsentService consent = new RendezvousConsentService(consentStore, new OpenSafety(), clock);
+        RendezvousConsentService consent = new RendezvousConsentService(consentStore, new OpenSafety(), clock, new RecordedAdmission());
         View first = consent.join(1, "pool", "v1", 1000);
         View second = consent.join(2, "pool", "v1", 1000);
         consent.propose(first.ticketId, second.ticketId, "public-poi");
@@ -115,7 +115,7 @@ class RendezvousRoleContentServiceTest {
         Store consentStore = consentStore(mem, consentTx);
         RendezvousRoleSecretService.Store secretStore = secretStore(mem);
         MutableClock clock = new MutableClock();
-        RendezvousConsentService consent = new RendezvousConsentService(consentStore, new OpenSafety(), clock);
+        RendezvousConsentService consent = new RendezvousConsentService(consentStore, new OpenSafety(), clock, new RecordedAdmission());
         View first = consent.join(1, "pool", "v1", 1000);
         View second = consent.join(2, "pool", "v1", 1000);
         consent.propose(first.ticketId, second.ticketId, "public-poi");
@@ -184,7 +184,7 @@ class RendezvousRoleContentServiceTest {
         RendezvousRoleSecretService.Store secretStore = secretStore(mem);
         MutableClock clock = new MutableClock();
         OpenSafety safety = new OpenSafety();
-        RendezvousConsentService consent = new RendezvousConsentService(consentStore, safety, clock);
+        RendezvousConsentService consent = new RendezvousConsentService(consentStore, safety, clock, new RecordedAdmission());
         RendezvousVersionedPolicy policy = new RendezvousVersionedPolicy(new EmptyCatalog(), new RendezvousProtocolTest.Blocks());
         RendezvousRoleSecretService secrets = new RendezvousRoleSecretService(
                 consent, secretStore, new CheckingGuard(safety), RendezvousRoleContentSource.Rows.INSTANCE, clock);
@@ -252,6 +252,18 @@ class RendezvousRoleContentServiceTest {
             if (a == null || b == null || !safety.eligible(a.actor, a.pool, a.eligibilityVersion, now)
                     || !safety.eligible(b.actor, b.pool, b.eligibilityVersion, now) || safety.blocked(a.actor, b.actor)
                     || !safety.publicMeetingAllowed(a.pool, match.publicPlace, now)) throw new Rejection("SECRET_UNAVAILABLE");
+        }
+    }
+
+    /** Records the pair inside the guard transaction. Not a quota ledger and not the closed default. */
+    static final class RecordedAdmission implements Admission {
+        final java.util.List<String> matchIds = new java.util.ArrayList<>();
+        public void charge(String matchId, long first, long second, String pool, long now) {
+            if (matchId == null || matchId.trim().isEmpty() || pool == null || pool.trim().isEmpty()
+                    || first <= 0 || second <= 0 || first == second || now < 0) {
+                throw new Rejection("POLICY_CLOSED");
+            }
+            matchIds.add(matchId);
         }
     }
 

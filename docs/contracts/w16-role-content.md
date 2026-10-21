@@ -13,7 +13,8 @@
 void recheck(RendezvousConsentService.Transaction tx, long actor, String ticketId, long now)
 ```
 
-- A 组在 `37b4b3459ea946d301896abac3ad507e117f3bf6` 冻结的调用，以及本组适配器的精确映射（同一 `tx`，不新开事务，不调用 `consent.read`）：
+- 依赖：A4 `08f4498662b95ad5fe24e411d1a62a79887c1f03` 的 `RendezvousConsentService`（四参构造与 `Admission`）。该类不是本组增量。`9ffc1430` 里复制的 blob `7298b5f0` 已退出本组净增量，运行树保留的是 A4 的类，不是删掉这个类。
+- 本组适配器只认显式通过：`OngoingVerdict` 且 `safe && owned && mutual`。映射（同一 `tx`，不新开事务，不调用 `consent.read`）：
 
 ```text
 OngoingVerdict verdict = groupA.verifyParticipants(tx, actor, ticketId, null, null, true, now);
@@ -51,5 +52,5 @@ new RendezvousRoleContentGuardAdapter(groupA::verifyParticipants)
 
 ## 尚未接通
 
-- 守卫：A 组的 `verifyParticipants` 还没有接到本组进程。生产构造使用 `Closed`，因此即使库里后来有发布行，未接线时也不会发秘密。适配器只说明合并时的方法引用，默认不是接通。
-- 发布权威：NOT_CONNECTED。与守卫分开。仓库里没有可复用的、已绑定到接头 match 的合作目标发布源。游戏会话角色线索不是这个绑定。服务和 mapper 不发布。空候选表即不可用。
+- 守卫：生产构造使用 `Closed`。适配器未注册。默认关闭。
+- 发布权威：NOT_CONNECTED。服务和 mapper 不发布。空候选表即不可用。与 A4 的同意服务依赖分开。

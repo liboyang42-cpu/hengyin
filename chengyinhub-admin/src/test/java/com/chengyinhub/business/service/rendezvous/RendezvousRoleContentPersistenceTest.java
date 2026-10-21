@@ -65,7 +65,7 @@ class RendezvousRoleContentPersistenceTest {
         manager = new DataSourceTransactionManager(dataSource);
         consentStore = new MyBatisRendezvousConsentStore(ISOLATED_PERSISTENCE_EVALUATION, session, manager);
         secretStore = new MyBatisRendezvousRoleSecretStore(consentStore, session.getMapper(RendezvousRoleContentMapper.class));
-        consent = new RendezvousConsentService(consentStore, safety, clock);
+        consent = new RendezvousConsentService(consentStore, safety, clock, new RendezvousRoleContentServiceTest.RecordedAdmission());
         logs = new ListAppender<>();
         logs.start();
         this.root = (Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
