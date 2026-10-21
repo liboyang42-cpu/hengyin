@@ -45,6 +45,7 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -1457,6 +1458,94 @@ class CommunityPostServiceImplTest {
         verify(mapper).deletePostNotifications(7L);
         verify(mapper).eraseDueMedia(eq(7L), any());
         verify(mapper).completeErasureJob(eq(31L), any());
+    }
+
+    @Test
+    void completedOwnDeletedCreateReceiptReturnsOnlyTerminalFlag() {
+        CommunityPostRequests.Upsert request = validUpsert();
+        Map<String, Object> receipt = captureCreateReceipt(request);
+        CommunityPost deleted = draft(7L, 9L, 1);
+        deleted.setLifecycle("DELETED");
+        when(mapper.selectCommandReceipt(9L, request.getClientRequestId())).thenReturn(receipt);
+        when(mapper.selectByAuthorRequest(9L, request.getClientRequestId())).thenReturn(deleted);
+        when(mapper.countAuthorDeleteEvidence(9L, 7L)).thenReturn(1);
+        clearInvocations(mapper);
+
+        assertEquals(Map.of("intentDiscarded", true), service.createDraft(9L, request));
+
+        verify(mapper, never()).selectById(anyLong(), anyLong());
+        verify(mapper, never()).insertPost(any());
+        verify(mapper, never()).insertCommandReceipt(anyLong(), anyString(), anyString(), anyLong(), anyString(), any());
+        verify(mapper, never()).insertOutbox(anyString(), anyLong(), anyString(), anyString(), any());
+    }
+
+    @Test
+    void nonDeletedCreateReplaysNeverReturnDeletedTerminalFlag() {
+        CommunityPostRequests.Upsert request = validUpsert();
+        Map<String, Object> receipt = captureCreateReceipt(request);
+        when(mapper.selectCommandReceipt(9L, request.getClientRequestId())).thenReturn(receipt);
+        for (String lifecycle : List.of("DRAFT", "CHECKING", "PUBLISHED", "LIMITED", "HIDDEN", "REMOVED")) {
+            CommunityPost existing = draft(7L, 9L, 1);
+            existing.setLifecycle(lifecycle);
+            when(mapper.selectByAuthorRequest(9L, request.getClientRequestId())).thenReturn(existing);
+            when(mapper.selectById(7L, 9L)).thenReturn(existing);
+            Map<String, Object> result = service.createDraft(9L, request);
+            assertFalse(result.containsKey("intentDiscarded"));
+        }
+        verify(mapper, never()).countAuthorDeleteEvidence(anyLong(), anyLong());
+        verify(mapper, times(1)).insertPost(any());
+    }
+
+    @Test
+    void deletedCreateReplayWithoutVerifiedAuthorDeletionEvidenceNeverDiscards() {
+        CommunityPostRequests.Upsert request = validUpsert();
+        Map<String, Object> receipt = captureCreateReceipt(request);
+        CommunityPost deleted = draft(7L, 9L, 1);
+        deleted.setLifecycle("DELETED");
+        when(mapper.selectCommandReceipt(9L, request.getClientRequestId())).thenReturn(receipt);
+        when(mapper.selectByAuthorRequest(9L, request.getClientRequestId())).thenReturn(deleted);
+        when(mapper.selectById(7L, 9L)).thenReturn(null);
+        // 0 covers absent/partial deletion evidence, copyright removal, deregistration and legal hold.
+        when(mapper.countAuthorDeleteEvidence(9L, 7L)).thenReturn(0);
+        clearInvocations(mapper);
+        assertEquals(Integer.valueOf(404), assertThrows(ServiceException.class,
+                () -> service.createDraft(9L, request)).getCode());
+        verify(mapper).countAuthorDeleteEvidence(9L, 7L);
+        verify(mapper, never()).insertPost(any());
+
+        CommunityPost otherOwner = draft(7L, 10L, 1);
+        otherOwner.setLifecycle("DELETED");
+        CommunityPost otherAggregate = draft(8L, 9L, 1);
+        otherAggregate.setLifecycle("DELETED");
+        for (CommunityPost candidate : Arrays.asList(otherOwner, otherAggregate, null)) {
+            when(mapper.selectByAuthorRequest(9L, request.getClientRequestId())).thenReturn(candidate);
+            assertEquals(Integer.valueOf(404), assertThrows(ServiceException.class,
+                    () -> service.createDraft(9L, request)).getCode());
+        }
+        verify(mapper, times(1)).countAuthorDeleteEvidence(anyLong(), anyLong());
+    }
+
+    private Map<String, Object> captureCreateReceipt(CommunityPostRequests.Upsert request) {
+        AtomicReference<Map<String, Object>> captured = new AtomicReference<>();
+        when(mapper.insertPost(any())).thenAnswer(invocation -> {
+            CommunityPost inserted = invocation.getArgument(0);
+            inserted.setId(7L);
+            return 1;
+        });
+        when(mapper.selectById(7L, 9L)).thenReturn(draft(7L, 9L, 0));
+        when(mapper.insertCommandReceipt(eq(9L), eq(request.getClientRequestId()), eq("POST_CREATE"),
+                eq(7L), anyString(), any())).thenAnswer(invocation -> {
+            Map<String, Object> receipt = new HashMap<>();
+            receipt.put("member_id", 9L);
+            receipt.put("request_id", request.getClientRequestId());
+            receipt.put("command_type", "POST_CREATE");
+            receipt.put("aggregate_id", 7L);
+            receipt.put("result_json", invocation.getArgument(4));
+            captured.set(receipt);
+            return 1;
+        });
+        service.createDraft(9L, request);
+        return captured.get();
     }
 
     private CommunityPost draft(Long id, Long authorId, int version) {

@@ -3,13 +3,13 @@ package com.chengyinhub.business.domain.dto;
 /**
  * 后台玩法说明新增/编辑请求白名单。
  *
- * <p>变更说明仅用于后台操作日志，不能混入 {@code CmsInfomation}，否则会随小程序公开读取接口返回。
+ * <p>变更说明仅用于后台专用审计，不能混入 {@code CmsInfomation}，否则会随小程序公开读取接口返回。
  */
 public class CmsInfomationWriteDTO {
 
     private Long id;
 
-    /** 放在富文本之前，避免操作日志截断时丢失变更理由。 */
+    /** 仅传入专用审计，不写入公开玩法说明。 */
     private String auditReason;
 
     private String title;

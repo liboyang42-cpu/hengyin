@@ -178,6 +178,18 @@ def validate(source: str, backend_script: str | None = None, production_workflow
     if "needs: changes" in secret or "needs.changes.outputs" in secret or "\n    if:" in secret:
         raise AssertionError("secret_scan must remain unconditional")
 
+    audit = job_block(source, "dependency_audit")
+    assert_contains(audit, "          output-file: ${{ github.workspace }}/chengyin-dependency-scan.json\n")
+    assert_contains(audit, "        run: python3 ci/dependency-audit-gate.py chengyin-dependency-scan.json\n")
+    assert_contains(audit, """      - name: Preserve dependency scan evidence
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: chengyin-dependency-scan-${{ github.run_attempt }}
+          path: chengyin-dependency-scan.json
+          if-no-files-found: error
+""")
+
     mini = job_block(source, "mini_program")
     for contract in (
         "    needs: [changes, mini_unit, mini_static]\n",
@@ -282,6 +294,19 @@ def main() -> None:
         (
             "dependency path",
             remove_from_filter(source, "dependency", "              - '**/pom.xml'\n"),
+        ),
+        (
+            "dependency report retained after gate failure",
+            remove_from_job(source, "dependency_audit", "        if: ${{ !cancelled() }}\n"),
+        ),
+        (
+            "dependency report exact JSON path",
+            remove_from_job(source, "dependency_audit", "          path: chengyin-dependency-scan.json\n"),
+        ),
+        (
+            "dependency report retained per attempt",
+            source.replace("name: chengyin-dependency-scan-${{ github.run_attempt }}",
+                           "name: chengyin-dependency-scan"),
         ),
         (
             "migration path",

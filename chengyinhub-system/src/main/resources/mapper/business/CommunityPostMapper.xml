@@ -448,6 +448,19 @@
       SELECT id,member_id,request_id,command_type,aggregate_id,result_json,create_time
       FROM community_post_command_receipt WHERE member_id=#{memberId} AND request_id=#{requestId}
     </select>
+    <select id="countAuthorDeleteEvidence" resultType="int">
+      SELECT COUNT(*) FROM community_post p
+      WHERE p.id=#{postId} AND p.author_id=#{memberId} AND p.lifecycle='DELETED'
+        AND EXISTS(SELECT 1 FROM community_post_command_receipt deletion
+          JOIN community_erasure_job job ON job.post_id=deletion.aggregate_id AND job.request_id=deletion.request_id
+          WHERE deletion.member_id=#{memberId} AND deletion.aggregate_id=p.id AND deletion.command_type='POST_DELETE'
+            AND job.trigger_type='POST_DELETE' AND job.legal_hold=0)
+        AND NOT EXISTS(SELECT 1 FROM community_erasure_job restriction
+          WHERE restriction.post_id=p.id AND (restriction.trigger_type IN ('COPYRIGHT_REMOVE','ACCOUNT_DEREGISTER')
+            OR restriction.legal_hold=1))
+        AND NOT EXISTS(SELECT 1 FROM community_post_command_receipt copyright
+          WHERE copyright.aggregate_id=p.id AND copyright.command_type='COPYRIGHT_REMOVE')
+    </select>
     <insert id="insertCommandReceipt">
       INSERT IGNORE INTO community_post_command_receipt
         (member_id,request_id,command_type,aggregate_id,result_json,create_time)

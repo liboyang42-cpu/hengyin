@@ -105,6 +105,7 @@ def all_required_clean(directory):
         ("MissingBusinessSeedsMySqlIT", 4),
         ("RoamPresenceRevokeDurabilityMySqlIT", 10),
         ("RoamPresenceRevokeJobMySqlIT", 4),
+        ("WxBillIngestionPersistenceTest", 6),
     ):
         write_report(directory, short, tests)
 
@@ -112,6 +113,16 @@ def all_required_clean(directory):
 class FundsItGateTest(unittest.TestCase):
     def setUp(self):
         self.dir = tempfile.mkdtemp()
+
+    def test_bill_ingestion_missing_or_skipped_reports_are_not_a_pass(self):
+        all_required_clean(self.dir)
+        for report in pathlib.Path(self.dir).glob("TEST-*WxBillIngestionPersistenceTest.xml"):
+            report.unlink()
+        self.assertTrue(any("WxBillIngestionPersistenceTest" in error
+                            for error in funds_it_gate.enforce(self.dir)))
+        write_report(self.dir, "WxBillIngestionPersistenceTest", 6, skipped=6)
+        self.assertTrue(any("WxBillIngestionPersistenceTest" in error
+                            for error in funds_it_gate.enforce(self.dir)))
 
     def test_green_when_all_required_ran_fully(self):
         all_required_clean(self.dir)

@@ -133,10 +133,40 @@ test('分润组件隐藏/卸载拒绝旧结果，返回重读且初次show不重
   assert.equal(h.requests.length, 2); assert.equal(h.scene.data.loadErr, false)
 })
 
+test('同身份返回重读失败保留已核分润快照，但不能用旧快照执行资金动作', () => {
+  for (const failure of ['fail', 'successStatusAbnormal', 'success']) {
+    const h = loadScene()
+    h.definition.lifetimes.attached.call(h.scene)
+    h.requests[0].success(contextResponse(60))
+    const topics = JSON.stringify(h.scene.data.topics)
+    const stats = JSON.stringify(h.scene.data.statItems)
+    h.definition.pageLifetimes.hide.call(h.scene)
+    h.definition.pageLifetimes.show.call(h.scene)
+    assert.equal(JSON.stringify(h.scene.data.topics), topics)
+    h.scene.goWithdraw()
+    assert.equal(h.popups.length, 0)
+    h.requests[1][failure]({ code: 500 })
+    assert.equal(JSON.stringify(h.scene.data.topics), topics)
+    assert.equal(JSON.stringify(h.scene.data.statItems), stats)
+    assert.equal(h.scene.data.myIncomeTotal, '60.00')
+    assert.equal(h.scene.data.loadErr, true)
+    assert.equal(h.scene.data.canWithdraw, false)
+    h.scene.goWithdraw()
+    h.scene.goSettlementDetail({ currentTarget: { dataset: { id: 7 } } })
+    assert.equal(h.popups.length, 0)
+    assert.equal(h.navigations.length, 0)
+    h.scene.onRetry()
+    h.requests[2].success(contextResponse(20, 8))
+    assert.equal(h.scene.data.myIncomeTotal, '20.00')
+    assert.equal(h.scene.data.loadErr, false)
+    assert.equal(h.scene.data.canWithdraw, true)
+  }
+})
+
 test('分润游客不请求私有财务，登录落地后按当前账号读且403清除旧数据', () => {
   const h=loadScene();h.app.globalData.user_id='';h.scene.load();assert.equal(h.requests.length,0);assert.equal(h.scene.data.authRequired,true)
   h.app.globalData.user_id=990001;h.definition.pageLifetimes.show.call(h.scene);assert.equal(h.requests.length,1)
-  h.requests[0].success(contextResponse(20));h.scene.onRetry();assert.equal(h.scene.data.topics.length,0)
+  h.requests[0].success(contextResponse(20));h.scene.onRetry();assert.equal(h.scene.data.topics.length,1)
   h.requests[1].success({code:403,msg:'无权限'});assert.equal(h.scene.data.accessDenied,true);assert.equal(h.scene.data.myIncomeTotal,null)
 })
 

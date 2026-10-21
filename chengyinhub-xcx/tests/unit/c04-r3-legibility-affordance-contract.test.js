@@ -39,6 +39,11 @@ function loadPage(pageRelDir, source, stack) {
     sendRequest: r => sandbox.requests.push(r),
     tips: m => sandbox.toasts.push(m),
   }
+  if (pageRelDir === 'subpackageMember/complaint') {
+    app.getUserID = () => 7
+    app.getAuthorization = () => 'Bearer unit-fixture'
+    app.reLogin = () => Promise.resolve({ ok: true })
+  }
   const nav = api => options => sandbox.nav.push({ api, options: options ? Object.assign({}, options) : options })
   const ctx = {
     getApp: () => app,
@@ -420,17 +425,18 @@ test('负控 R4:提交成功后退回裸 navigateBack 必须判红', () => {
   assert.throws(() => assertSubmitSuccessExit(mutated), assert.AssertionError)
 })
 
-test('R3-3b 过期登录错误态与重试未被本轮改动波及', () => {
+test('R3-3b 过期登录保留明确入口，正常重登后可重新读取', async () => {
   const wxml = stripComments(read(`${COMPLAINT}.wxml`))
   // aaa 三件套(整屏空态补 fill+size=lg)后属性顺序变了，正则放宽到"包含"而非"紧邻"，断言意图不变
   assert.match(wxml, /<cy-error\b[^>]*\btitle="可投诉活动没能加载出来"[^>]*\bsub="\{\{errorMsg\}\}"[^>]*\bbind:retry="onRetry"[^>]*\/>/)
   const { page, sandbox } = loadComplaint([COMPLAINT])
   page.onLoad()
-  assert.equal(sandbox.requests.length, 1)
+  assert.equal(sandbox.requests.length, 2)
   sandbox.requests[0].successStatusAbnormal({ code: 401, msg: '登录已过期，请重新进入' })
   assert.equal(page.data.loading, false)
-  assert.equal(page.data.errorMsg, '登录已过期，请重新进入', '后端错误文案必须原样透传')
-  page.onRetry()
+  assert.equal(page.data.readAccess, 'login')
+  assert.equal(page.data.readAccessMessage, '登录已过期，请重新进入', '后端错误文案必须原样透传')
+  await page.onRetry()
   assert.equal(page.data.loading, true)
-  assert.equal(sandbox.requests.length, 2, '重试必须真的重新发请求')
+  assert.equal(sandbox.requests.length, 4, '明确重登成功后必须真的重新发出两条读取请求')
 })

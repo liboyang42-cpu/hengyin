@@ -22,6 +22,8 @@ function loadPage(mutate) {
   let definition
   const sandbox = {
     getApp: () => ({
+      getUserID: () => '7',
+      getAuthorization: () => 'Bearer unit-fixture',
       sendRequest: (options) => requests.push(options),
       getRequestErrorMessage: (res, fallback) => (res && (res.msg || res.errMsg)) || fallback,
     }),

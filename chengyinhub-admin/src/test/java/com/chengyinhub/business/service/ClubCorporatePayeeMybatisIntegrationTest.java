@@ -281,13 +281,18 @@ class ClubCorporatePayeeMybatisIntegrationTest {
                 "批准这份资料的人与能看到完整明文对公账号的人必须分开，否则那句 remark 就是假的");
     }
 
+    // 2026-10-20 owner 裁定：历史补页迁移 20261013 保持原字节（迁移账本按 checksum 视为不可变），
+    // 收款审核/打款互斥由前向迁移 20261016_admin_role_payee_separation_forward 统一纠正。
+    // 全新环境：20261013 按指纹在重建回放中排除（0816 已授运营打款，原补页自检会拒绝），
+    // 由前向迁移完成四角色补页、收款互斥与祖先补齐。
     @Test
-    void rolePageRepairPreservesPayeeGrantsAndAncestorsOnReplay() throws Exception {
+    void freshInstallPayeeForwardInitializesSeparatedGrantsAndReplays() throws Exception {
         prepareRolePageFixture();
+        execute("DELETE FROM sys_user");
         List<String> before = roleGrants();
-        assertEquals(6, runRolePageMigration(0, null));
+        runPayeeForward();
         List<String> after = roleGrants();
-        assertTrue(after.containsAll(before), "补页不能删除任何既有授权");
+        assertTrue(after.containsAll(before), "前向纠正不能删除既有正向授权");
         assertEquals("1", scalar(rolePermissionCount("cy_operator", "business:clubpayee:payout")));
         assertEquals("1", scalar(rolePermissionCount("cy_finance", "business:clubpayee:verify")));
         assertEquals("0", scalar(rolePermissionCount("cy_operator", "business:clubpayee:verify")));
@@ -298,68 +303,65 @@ class ClubCorporatePayeeMybatisIntegrationTest {
                     + " AND (m.menu_id IN (9000,9001) OR m.perms='business:club:list')"),
                     "两个角色都必须实际拿到俱乐部页面及两级祖先");
         }
-        assertEquals(6, runRolePageMigration(0, null));
+        runPayeeForward();
         assertEquals(after, roleGrants(), "重复执行不得增加或删除授权行");
     }
 
     @Test
-    void rolePageRepairRejectsExistingOppositeGrantsBeforePersistentWrites() throws Exception {
-        for (String conflict : new String[]{"(100, 'business:clubpayee:verify')", "(103, 'business:clubpayee:payout')"}) {
+    void payeeForwardRemovesExistingOppositeGrantsAndKeepsEveryOtherGrant() throws Exception {
+        for (String conflict : new String[]{"cy_operator:business:clubpayee:verify", "cy_finance:business:clubpayee:payout"}) {
             prepareRolePageFixture();
-            String[] pair = conflict.substring(1, conflict.length() - 1).split(", ", 2);
-            execute("INSERT INTO sys_role_menu SELECT " + pair[0] + ",menu_id FROM sys_menu WHERE perms=" + pair[1]);
+            String[] pair = conflict.split(":", 2);
+            execute("INSERT INTO sys_role_menu SELECT r.role_id,m.menu_id FROM sys_role r JOIN sys_menu m"
+                    + " WHERE r.role_key='" + pair[0] + "' AND m.perms='" + pair[1] + "'");
+            assertEquals("1", scalar(rolePermissionCount(pair[0], pair[1])));
             List<String> before = roleGrants();
-            ReadbackFailure failure = assertThrows(ReadbackFailure.class, () -> runRolePageMigration(0, null));
-            assertEquals(1, failure.index, "必须由写入前的第一条真实scalar断言拒绝");
-            assertEquals(before, roleGrants(), "异常旧授权只报错，不删除或补写持久授权");
+            runPayeeForward();
+            assertEquals("0", scalar(rolePermissionCount(pair[0], pair[1])), "交叉授权必须被前向迁移移除");
+            List<String> after = roleGrants();
+            assertEquals(before.size() - 1, after.size(), "只移除这一条交叉授权");
+            assertTrue(before.containsAll(after), "已有用户的安装不得批量补授");
         }
     }
 
     @Test
-    void rolePageRepairStillRejectsNewSensitiveGrantsAndLostOldGrants() throws Exception {
-        for (String permission : new String[]{"business:clubpayee:payout", "business:test:payout",
-                "business:test:confirm", "business:test:export", "business:test:pii"}) {
-            prepareRolePageFixture();
-            execute("INSERT INTO sys_menu(menu_id,parent_id,menu_type,visible,status,perms)"
-                    + " VALUES(9010,9001,'F','0','0','" + permission + "')");
-            ReadbackFailure failure = assertThrows(ReadbackFailure.class,
-                    () -> runRolePageMigration(4, "INSERT INTO sys_role_menu VALUES(100,9010)"));
-            assertEquals(4, failure.index, "before快照不得豁免新增敏感权限，即使权限串与旧payout相同");
-        }
-        for (String menuType : new String[]{"NULL", "'C'", "''"}) {
-            prepareRolePageFixture();
-            ReadbackFailure malformed = assertThrows(ReadbackFailure.class,
-                    () -> runRolePageMigration(4, "UPDATE sys_menu SET menu_type=" + menuType
-                            + " WHERE perms='business:clubpayee:payout'"));
-            assertEquals(4, malformed.index, "旧payout只有真实F类型可保留，NULL/C/空串必须实际判红");
-        }
+    void payeeForwardRejectsMissingMenuBeforeAnyGrantChange() throws Exception {
         prepareRolePageFixture();
-        ReadbackFailure removed = assertThrows(ReadbackFailure.class,
-                () -> runRolePageMigration(5, "DELETE rm FROM sys_role_menu rm JOIN sys_menu m ON m.menu_id=rm.menu_id"
-                        + " WHERE rm.role_id=100 AND m.perms='business:clubpayee:payout'"));
-        assertEquals(5, removed.index, "删除旧授权必须由保留断言拒绝");
-        for (String conflict : new String[]{"100,'business:clubpayee:verify'", "103,'business:clubpayee:payout'"}) {
-            prepareRolePageFixture();
-            String[] pair = conflict.split(",", 2);
-            ReadbackFailure crossed = assertThrows(ReadbackFailure.class,
-                    () -> runRolePageMigration(6, "INSERT INTO sys_role_menu SELECT " + pair[0]
-                            + ",menu_id FROM sys_menu WHERE perms=" + pair[1]));
-            assertEquals(6, crossed.index, "末尾互斥自检也必须实际拒绝交叉授权");
-        }
+        execute("INSERT INTO sys_role_menu SELECT r.role_id,m.menu_id FROM sys_role r JOIN sys_menu m"
+                + " WHERE r.role_key='cy_finance' AND m.perms='business:clubpayee:payout'");
+        execute("DELETE FROM sys_menu WHERE perms='business:clubhours:correct'");
+        List<String> before = roleGrants();
+        assertThrows(Exception.class, this::runPayeeForward, "缺菜单必须在任何授权改动前拒绝");
+        assertEquals(before, roleGrants(), "拒绝时交叉授权也保持原样，等待人工处置");
     }
 
     private void prepareRolePageFixture() throws Exception {
         resetSchema();
         execute("DELETE FROM sys_role_menu", "DELETE FROM sys_role",
                 "INSERT INTO sys_role(role_id,role_name,role_key,del_flag) VALUES"
-                        + "(100,'operator','cy_operator','0'),(103,'finance','cy_finance','0')",
+                        + "(100,'operator','cy_operator','0'),(101,'auditor','cy_auditor','0'),"
+                        + "(102,'support','cy_support','0'),(103,'finance','cy_finance','0')",
+                "DROP TABLE IF EXISTS sys_user",
+                "CREATE TABLE sys_user (user_id BIGINT PRIMARY KEY) ENGINE=InnoDB",
+                "INSERT INTO sys_user VALUES(1)",
                 "INSERT INTO sys_menu(menu_id,menu_name,parent_id,menu_type,visible,status,perms) VALUES"
                         + "(9000,'root',0,'M','0','0',''),(9001,'clubs',9000,'M','0','0',''),"
                         + "(9002,'query',9001,'F','0','0','business:club:query')",
                 "UPDATE sys_menu SET parent_id=9001 WHERE perms='business:club:list'");
         assertEquals(2, runCheckedMigration("migration_20260816_tandianri_batch3_funds_club_payee.sql", 2, 0, null),
                 "旧payee迁移的两条真实scalar合同必须先成立");
-        execute("INSERT INTO sys_role_menu VALUES(100,9002)");
+        execute("INSERT INTO sys_role_menu VALUES(100,9002)",
+                "INSERT INTO sys_menu(menu_id,menu_name,parent_id,menu_type,visible,status,perms) VALUES"
+                        + "(9003,'payable-confirm',9001,'F','0','0','business:clubpayable:confirm'),"
+                        + "(9004,'hours-correct',9001,'F','0','0','business:clubhours:correct')");
+    }
+
+    private void runPayeeForward() throws Exception {
+        Path path = Paths.get("sql", "migration_20261016_admin_role_payee_separation_forward.sql");
+        if (!Files.isRegularFile(path)) path = Paths.get("chengyinhub-admin", "sql", path.getFileName().toString());
+        try (Connection connection = dataSource.getConnection()) {
+            ScriptUtils.executeSqlScript(connection, new FileSystemResource(path.toFile()));
+        }
     }
 
     private List<String> roleGrants() throws Exception {
@@ -383,10 +385,6 @@ class ClubCorporatePayeeMybatisIntegrationTest {
             super("scalar-true #" + index + " readback=" + value + " sql=" + sql);
             this.index = index;
         }
-    }
-
-    private int runRolePageMigration(int injectBeforeReadback, String mutationSql) throws Exception {
-        return runCheckedMigration("migration_20261013_admin_role_page_grants.sql", 6, injectBeforeReadback, mutationSql);
     }
 
     // Reuse the existing RoamPresenceRevokeJobMySqlIT JDBC-proxy pattern: ScriptUtils owns SQL splitting,

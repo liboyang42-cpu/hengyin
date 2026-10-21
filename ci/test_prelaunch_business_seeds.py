@@ -12,6 +12,10 @@ from run_migration import validate_transaction_statements, referenced_persistent
 from sql_splitter import split_statements
 
 
+JOB_DICT_FORWARD = ROOT / "chengyinhub-admin/sql/migration_20261017_job_dictionary_missing_seed.sql"
+JOB_DICT_DEPENDENCIES = ROOT / "ci/migration-dependencies.json"
+
+
 class MissingBusinessSeedsContract(unittest.TestCase):
     def setUp(self):
         self.provenance = json.loads((ROOT / "ci/prelaunch-seed-provenance.json").read_text())
@@ -99,6 +103,46 @@ class MissingBusinessSeedsContract(unittest.TestCase):
             self.assertNotIn("INSERT INTO sys_role_menu", sql)
             self.assertNotIn("INSERT INTO sys_user_role", sql)
             self.assertNotIn("LIMIT 1", sql)
+
+    def test_task_dictionary_forward_is_atomic_missing_only_and_keeps_legacy_values(self):
+        import re
+        sql = JOB_DICT_FORWARD.read_text(encoding="utf-8")
+        statements = split_statements(sql)
+        validate_transaction_statements(statements)
+        self.assertEqual({"sys_dict_type", "sys_dict_data"},
+                         set(referenced_persistent_tables(statements, "scratch")))
+        self.assertIn("-- runner: requires=transaction", sql)
+        self.assertEqual(6, sum(bool(re.match(r"INSERT INTO sys_dict_(type|data)\b", item))
+                                for item in statements))
+        self.assertEqual(6, sql.count("WHERE NOT EXISTS"))
+        self.assertNotRegex(sql, r"(?i)\b(?:UPDATE|DELETE|REPLACE|ALTER)\s")
+        legacy = (ROOT / "sql/ry_20250522.sql").read_text(encoding="utf-8")
+        for name, key, remark in (("任务状态", "sys_job_status", "任务状态列表"),
+                                  ("任务分组", "sys_job_group", "任务分组列表")):
+            self.assertIn("SELECT '" + name + "','" + key + "','0'", sql)
+            self.assertRegex(legacy, re.escape("'" + name + "'") + r",\s*" + re.escape("'" + key + "'") + r",\s*'0'")
+            self.assertIn(remark, legacy)
+        for sort, label, value, key, style, default, remark in (
+            (1,"正常","0","sys_job_status","primary","Y","正常状态"),
+            (2,"暂停","1","sys_job_status","danger","N","停用状态"),
+            (1,"默认","DEFAULT","sys_job_group","","Y","默认分组"),
+            (2,"系统","SYSTEM","sys_job_group","","N","系统分组")):
+            self.assertIn(f"SELECT {sort},'{label}','{value}','{key}','','{style}','{default}','0'", sql)
+            self.assertRegex(legacy, rf"\b{sort},\s*'{label}',\s*'{value}',\s*'{key}'")
+            self.assertIn(remark, legacy)
+
+    def test_task_dictionary_forward_is_selected_by_supported_fresh_builder(self):
+        from scripts.e2e import build_schema
+        key = "20261017_job_dictionary_missing_seed"
+        dependencies = json.loads(JOB_DICT_DEPENDENCIES.read_text(encoding="utf-8"))
+        self.assertEqual([], dependencies["dependencies"][key])
+        manifest = build_schema.build_manifest(ROOT, target_commit="a" * 40,
+                                              dependency_path=ROOT / "ci/migration-dependencies.json")
+        path = "chengyinhub-admin/sql/migration_" + key + ".sql"
+        migrations = manifest["migrations"]
+        self.assertIn(path, {row["path"] for row in migrations})
+        selected = build_schema.migrations_after_baseline(migrations)
+        self.assertIn(path, {row["path"] for row in selected})
 
 
 if __name__ == "__main__":

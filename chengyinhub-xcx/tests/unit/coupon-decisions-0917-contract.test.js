@@ -15,7 +15,7 @@ const ROOT = path.resolve(__dirname, '../..')
 const read = (rel) => fs.readFileSync(path.join(ROOT, rel), 'utf8')
 
 const COUPON_PAGE = 'subpackageMember/coupon/coupon.js'
-const WALLET = 'components/cy/scene-game-coupon-wallet/index.js'
+const WALLET = 'subpackageMember/components/cy/scene-game-coupon-wallet/index.js'
 const QR_SCENE = 'subpackageMember/components/cy/scene-qr-coupon/index.js'
 const QR_PAGE = 'subpackageMember/coupon-qr/index.js'
 const CREDENTIAL = 'utils/coupon-credential.js'
@@ -59,7 +59,7 @@ function loadCouponPage(source) {
   const toasts = []
   let definition
   vm.runInNewContext(source || read(COUPON_PAGE), {
-    getApp: () => ({ getUserID: () => 1, sendRequest: (options) => requests.push(options) }),
+    getApp: () => ({ getAuthorization: () => 'current-session', getUserID: () => 1, sendRequest: (options) => requests.push(options) }),
     Page: (value) => { definition = value },
     require: (id) => {
       if (/coupon-credential\.js$/.test(id)) return require(path.join(ROOT, 'utils/coupon-credential.js'))
@@ -173,7 +173,7 @@ test('停发确认文案已登记且写明不可撤销与已领不受影响', ()
 test('钱包:手动失效(3)显示「已失效」且不给查看/出码入口', () => {
   const { flattenComponentToPage } = require('../helpers/component-as-page.js')
   const sandbox = { requests: [], events: [] }
-  global.getApp = () => ({ getUserID: () => 'member-A', sendRequest: (options) => sandbox.requests.push(options) })
+  global.getApp = () => ({ getAuthorization: () => 'current-session', getUserID: () => 'member-A', sendRequest: (options) => sandbox.requests.push(options) })
   global.Component = (config) => { sandbox.def = flattenComponentToPage(config) }
   global.wx = {}
   delete require.cache[require.resolve(path.join(ROOT, WALLET))]
@@ -203,7 +203,7 @@ test('出码页:qr-token 回 useStatus=3 即终态「已失效」,不亮码不�
   const requests = []
   const timers = []
   let definition
-  const app = { getUserID: () => 'member-A', sendRequest: (options) => requests.push(options) }
+  const app = { getAuthorization: () => 'current-session', getUserID: () => 'member-A', sendRequest: (options) => requests.push(options) }
   vm.runInNewContext(read(QR_PAGE), {
     getApp: () => app,
     getCurrentPages: () => [{}, {}],
@@ -233,7 +233,7 @@ test('场景出码组件:qr-token 回 useStatus=3 时结果态为「该券已失
   const requests = []
   const timers = []
   let definition
-  const app = { getUserID: () => 'member-A', sendRequest: (options) => requests.push(options) }
+  const app = { getAuthorization: () => 'current-session', getUserID: () => 'member-A', sendRequest: (options) => requests.push(options) }
   vm.runInNewContext(read(QR_SCENE), {
     getApp: () => app,
     getCurrentPages: () => [{}, {}],

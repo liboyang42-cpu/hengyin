@@ -107,6 +107,7 @@ public interface CommunityPostMapper {
     int insertCommandReceipt(@Param("memberId") Long memberId, @Param("requestId") String requestId,
                              @Param("commandType") String commandType, @Param("aggregateId") Long aggregateId,
                              @Param("resultJson") String resultJson, @Param("now") Date now);
+    int countAuthorDeleteEvidence(@Param("memberId") Long memberId, @Param("postId") Long postId);
     int recomputeCounts(Long postId);
     int insertOutbox(@Param("eventId") String eventId, @Param("aggregateId") Long aggregateId,
                      @Param("eventType") String eventType, @Param("payloadJson") String payloadJson,

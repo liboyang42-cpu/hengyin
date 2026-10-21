@@ -257,6 +257,69 @@ class BuildSchemaMigrationSelectionTest(unittest.TestCase):
                         build_schema.REPO, target_commit="a" * 40,
                         dependency_path=build_schema.REPO / "ci/migration-dependencies.json")["migrations"])
 
+    def test_content_seed_closure_is_excluded_but_its_persistent_schema_still_replays(self):
+        names = [
+            "seed_new_city_lifestyle_category_20260821", "seed_circle_theme_batch2_20260821",
+            "seed_circle_theme_batch2_repair_20260821", "seed_circle_theme_primary_20260821",
+            "seed_shanghai_solo_topics_20260822", "seed_celebrate_games_20260821",
+            "seed_celebrate_topic_20260821", "seed_life_backup_categories_20260820",
+            "seed_life_backup_games_20260820", "20260829_circle_theme_merge_free_explore",
+            "fix_celebrate_copy_20260821",
+        ]
+        policy = json.loads(build_schema.SCHEMA_REPLAY_POLICY.read_text(encoding="utf-8"))
+        excluded = policy["dataOnlyMigrations"]
+        for name in names:
+            path = "chengyinhub-admin/sql/migration_" + name + ".sql"
+            with self.subTest(path=path):
+                self.assertIn(path, excluded, "content seed must not invent business rows in a zero-data rebuild")
+                source = (build_schema.REPO / path).read_bytes()
+                self.assertEqual(hashlib.sha256(source).hexdigest(), excluded[path])
+                for statement in build_schema.split_statements(source.decode("utf-8")):
+                    sql = build_schema.executable_statement(statement).strip()
+                    if sql:
+                        self.assertRegex(sql, r"(?is)^(?:INSERT|UPDATE|SELECT|CREATE TEMPORARY TABLE|DROP TEMPORARY TABLE)\b",
+                                         "do not classify persistent or dynamic DDL as data-only")
+        selected = {item["path"] for item in build_schema.migrations_after_baseline(
+            build_schema.build_manifest(build_schema.REPO, target_commit="a" * 40,
+                dependency_path=build_schema.REPO / "ci/migration-dependencies.json")["migrations"])}
+        for name in names:
+            self.assertNotIn("chengyinhub-admin/sql/migration_" + name + ".sql", selected)
+        for name in ["circle_theme_batch2_20260821", "circle_theme_primary_schema_20260821",
+                     "20260829_celebration_board_decommission", "20260820_new_city_setup_plan",
+                     "20260821_new_city_preference_library", "20261015_retention_job_missing_registration",
+                     "20261012_legacy_game_v51_category_collation"]:
+            self.assertIn("chengyinhub-admin/sql/migration_" + name + ".sql", selected,
+                          "structural or explicitly approved forward migrations must still run")
+
+    def test_content_seed_exclusion_still_rejects_changed_sql_fingerprint(self):
+        policy = json.loads(build_schema.SCHEMA_REPLAY_POLICY.read_text(encoding="utf-8"))
+        path = "chengyinhub-admin/sql/migration_seed_circle_theme_batch2_20260821.sql"
+        policy["dataOnlyMigrations"][path] = "0" * 64
+        manifest = build_schema.build_manifest(build_schema.REPO, target_commit="a" * 40,
+                                              dependency_path=build_schema.REPO / "ci/migration-dependencies.json")
+        with tempfile.TemporaryDirectory() as tmp:
+            tampered = pathlib.Path(tmp) / "policy.json"
+            tampered.write_text(json.dumps(policy), encoding="utf-8")
+            with mock.patch.object(build_schema, "SCHEMA_REPLAY_POLICY", tampered):
+                with self.assertRaisesRegex(RuntimeError, "data-only 指纹不一致"):
+                    build_schema.migrations_after_baseline(manifest["migrations"])
+
+    def test_retention_job_registration_forward_replays_without_rewriting_the_included_seed(self):
+        historical = "chengyinhub-admin/sql/migration_data_retention_job.sql"
+        forward = "chengyinhub-admin/sql/migration_20261015_retention_job_missing_registration.sql"
+        manifest = build_schema.build_manifest(
+            build_schema.REPO, target_commit="a" * 40,
+            dependency_path=build_schema.REPO / "ci/migration-dependencies.json")
+        selected = build_schema.migrations_after_baseline(manifest["migrations"])
+        selected_by_path = {item["path"]: item for item in selected}
+        self.assertIn(forward, selected_by_path, "fresh rebuild must register the missing paused retention job")
+        self.assertNotIn(historical, selected_by_path)
+        self.assertNotEqual("POST_DEPLOY", selected_by_path[forward].get("executionPhase"))
+        self.assertEqual("e263fb95eb2f83ebc29429aabac9da3db39c16a3b20c589ba8711c6af4514a60",
+                         hashlib.sha256((build_schema.REPO / historical).read_bytes()).hexdigest())
+        dependencies = json.loads((build_schema.REPO / "ci/migration-dependencies.json").read_text())["dependencies"]
+        self.assertIn("data_retention_job", dependencies["20261015_retention_job_missing_registration"])
+
     def test_category_collation_forward_replays_without_changing_historical_fingerprint(self):
         historical = "chengyinhub-admin/sql/migration_20261007_legacy_game_v51_categories.sql"
         forward = "chengyinhub-admin/sql/migration_20261012_legacy_game_v51_category_collation.sql"
@@ -625,6 +688,82 @@ class BuildSchemaFileBoundaryTest(unittest.TestCase):
             self.replay(cursor, "-- runner: requires=transaction\n"
                 "UPDATE fixture SET n=fail_step WHERE id=1;", keep_going=True)
         self.assertNotIn(mock.call(True), cursor.connection.autocommit.call_args_list)
+
+
+if __name__ == "__main__":
+    unittest.main()
+
+
+class AdminRolePayeeForwardContractTest(unittest.TestCase):
+    ROOT = pathlib.Path(__file__).resolve().parents[2]
+    OLD = "chengyinhub-admin/sql/migration_20261013_admin_role_page_grants.sql"
+    NEW = "chengyinhub-admin/sql/migration_20261016_admin_role_payee_separation_forward.sql"
+
+    def test_exact_legacy_role_initializer_is_excluded_but_atomic_replacement_is_selected(self):
+        from ci.migration_ledger import build_manifest
+        root = self.ROOT
+        policy = json.loads((root / "scripts/e2e/schema_replay_policy_20260921.json").read_text())
+        old_sha = "1f147a2136e999b6fd87a7e0a865d8fde5b0c332170d561b28e415b9fccaf56e"
+        self.assertEqual(old_sha, hashlib.sha256((root / self.OLD).read_bytes()).hexdigest())
+        self.assertIn(self.OLD, policy["dataOnlyMigrations"])
+        self.assertEqual(old_sha, policy["dataOnlyMigrations"][self.OLD])
+        self.assertNotIn(self.NEW, policy["dataOnlyMigrations"])
+        with mock.patch.multiple(build_schema, REPO=root,
+                BASELINE=root / "sql/base_schema_20260818.sql",
+                BASELINE_SEED=root / "sql/base_seed_20260818.sql",
+                BASELINE_MANIFEST=root / "scripts/e2e/base_schema_20260818_migrations.json",
+                SCHEMA_REPLAY_POLICY=root / "scripts/e2e/schema_replay_policy_20260921.json"):
+            migrations = build_manifest(root, "a" * 40)["migrations"]
+            selected = {row["path"] for row in build_schema.migrations_after_baseline(migrations)}
+        self.assertNotIn(self.OLD, selected)
+        self.assertIn(self.NEW, selected)
+        changed = dict(policy["dataOnlyMigrations"])
+        changed[self.OLD] = "0" * 64
+        policy["dataOnlyMigrations"] = changed
+        with tempfile.TemporaryDirectory() as directory:
+            bad_policy = pathlib.Path(directory) / "policy.json"
+            bad_policy.write_text(json.dumps(policy))
+            with mock.patch.multiple(build_schema, REPO=root,
+                    BASELINE=root / "sql/base_schema_20260818.sql",
+                    BASELINE_SEED=root / "sql/base_seed_20260818.sql",
+                    BASELINE_MANIFEST=root / "scripts/e2e/base_schema_20260818_migrations.json",
+                    SCHEMA_REPLAY_POLICY=bad_policy):
+                with self.assertRaisesRegex(RuntimeError, "指纹不一致"):
+                    build_schema.migrations_after_baseline(migrations)
+
+    def test_existing_applied_history_stays_valid_when_only_the_new_forward_is_pending(self):
+        from ci.migration_ledger import build_manifest, plan_release
+        root = self.ROOT
+        manifest = build_manifest(root, "a" * 40)
+        history = [{"migrationId": row["migrationId"], "path": row["path"],
+                    "checksum": row["sha256"], "targetCommit": "a" * 40,
+                    "appliedAt": "2026-10-16T00:00:00Z", "status": "APPLIED"}
+                   for row in manifest["migrations"] if row["path"] != self.NEW]
+        plan = plan_release(manifest, history, bootstrap={"status": "RECONCILED"},
+                            baseline_ids={row["migrationId"] for row in history})
+        states = {row["path"]: row["state"] for row in plan["migrations"]}
+        self.assertEqual("APPLIED", states[self.OLD])
+        self.assertEqual("PENDING", states[self.NEW])
+        self.assertFalse(any(state.startswith("BLOCKED") for state in states.values()))
+        dependencies = json.loads((root / "ci/migration-dependencies.json").read_text())["dependencies"]
+        self.assertEqual({"web_admin_roles_20260719", "20261012_missing_business_menu",
+                          "20261012_media_review_menu", "role2_analytics_perm_20260918"},
+                         set(dependencies["20261013_admin_role_page_grants"]))
+        self.assertIn("20261013_admin_role_page_grants", dependencies["20261016_admin_role_payee_separation_forward"])
+        self.assertIn("20260817_tandianri_batch3_funds_club_hours_correction",
+                      dependencies["20261016_admin_role_payee_separation_forward"])
+
+    def test_payee_forward_declares_atomic_and_only_the_two_approved_inverse_deletes(self):
+        from ci.run_migration import required_transaction_declared
+        sql = (self.ROOT / self.NEW).read_text()
+        self.assertTrue(required_transaction_declared(sql))
+        deletes = [build_schema.executable_statement(st).strip().rstrip(";")
+                   for st in build_schema.split_statements(sql)
+                   if build_schema.executable_statement(st).lstrip().upper().startswith("DELETE")]
+        prefix = "DELETE FROM sys_role_menu WHERE role_id = (SELECT role_id FROM tmp_cy_payee_roles WHERE role_key = '{}'" + ") AND menu_id = (SELECT menu_id FROM tmp_cy_payee_menus WHERE perms = '{}')"
+        self.assertEqual([prefix.format("cy_operator", "business:clubpayee:verify"),
+                          prefix.format("cy_finance", "business:clubpayee:payout")], deletes)
+        self.assertNotRegex(sql, r"(?im)^\s*(SET|CALL|PREPARE|EXECUTE|COMMIT|START|ALTER|TRUNCATE)\b")
 
 
 if __name__ == "__main__":

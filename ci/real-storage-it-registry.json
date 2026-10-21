@@ -234,6 +234,16 @@
       "classes": [
         "com.chengyinhub.business.it.FunnelMaxDateMySqlIT"
       ]
+    },
+    "port-prelaunch-69": {
+      "lineage": "W8 port/prelaunch-20261019 (PR #69 ported onto master)",
+      "registered_source": "23c3a6d72fe851ed5ec7b8337e70441e2d53ac88",
+      "note": "PR #69 real-MySQL classes on the master-side port: ordinary refund notify/query fact verification (9), refund retry and remainder (5), roam location retention cleanup (21). WxBillIngestionPersistenceTest is left out: it switches H2/MySQL via System.getenv, which the static gate precheck cannot see.",
+      "classes": [
+        "com.chengyinhub.business.service.RefundNotificationMybatisIntegrationTest",
+        "com.chengyinhub.business.service.impl.RefundRetryAndRemainderMySqlIT",
+        "com.chengyinhub.web.controller.api.RoamLocationRetentionMySqlIT"
+      ]
     }
   },
   "classes": {
@@ -538,6 +548,21 @@
     },
     "com.chengyinhub.business.it.FunnelMaxDateMySqlIT": {
       "tests": 4,
+      "storage": ["mysql"],
+      "gates": {"CHENGYIN_FUNDS_MYSQL_IT": "1"}
+    },
+    "com.chengyinhub.business.service.RefundNotificationMybatisIntegrationTest": {
+      "tests": 9,
+      "storage": ["mysql"],
+      "gates": {"CHENGYIN_FUNDS_MYSQL_IT": "1"}
+    },
+    "com.chengyinhub.business.service.impl.RefundRetryAndRemainderMySqlIT": {
+      "tests": 5,
+      "storage": ["mysql"],
+      "gates": {"CHENGYIN_FUNDS_MYSQL_IT": "1"}
+    },
+    "com.chengyinhub.web.controller.api.RoamLocationRetentionMySqlIT": {
+      "tests": 21,
       "storage": ["mysql"],
       "gates": {"CHENGYIN_FUNDS_MYSQL_IT": "1"}
     }

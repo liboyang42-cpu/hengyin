@@ -55,6 +55,8 @@ const permission = {
 // 遍历后台传来的路由字符串，转换为组件对象
 function filterAsyncRouter(asyncRouterMap, lastRouter = false, type = false) {
   return asyncRouterMap.filter(route => {
+    const legacyQuotaLeaf = route.component === 'business/userpermission/index' &&
+      !(route.children && route.children.length)
     if (type && route.children) {
       route.children = filterChildren(route.children)
     }
@@ -66,6 +68,9 @@ function filterAsyncRouter(asyncRouterMap, lastRouter = false, type = false) {
         route.component = ParentView
       } else if (route.component === 'InnerLink') {
         route.component = InnerLink
+      } else if (legacyQuotaLeaf) {
+        route.redirect = to => ({ path: '/config/role-quota', query: to.query })
+        delete route.component
       } else {
         route.component = loadView(route.component)
       }
@@ -74,7 +79,7 @@ function filterAsyncRouter(asyncRouterMap, lastRouter = false, type = false) {
       route.children = filterAsyncRouter(route.children, route, type)
     } else {
       delete route['children']
-      delete route['redirect']
+      if (!legacyQuotaLeaf) delete route['redirect']
     }
     return true
   })

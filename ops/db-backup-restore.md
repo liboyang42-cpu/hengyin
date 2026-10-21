@@ -6,8 +6,10 @@
 ## 1. 工具保证什么
 
 - 备份命令固定为 `mysqldump --single-transaction --routines --triggers --events --set-gtid-purged=OFF --no-tablespaces --hex-blob`，**不加 `--force`**。坏视图、权限不足、任何对象导出失败都会让整次备份失败，而不是得到「看似成功、实际不完整」的文件（旧交接文档里的 `--force` 命令作废）。
-- 备份前后各取一次快照：每张表的行数与 `CHECKSUM TABLE … EXTENDED`、视图清单、例程/触发器/事件数量。前后不一致即判失败（说明备份期间有写入），不发布 `.partial` 为成功备份。
-- 回执 `<备份>.json`（600）记录来源 server_uuid、MySQL 版本、库名、备份文件 SHA-256 与快照。
+- 备份前后各取一次快照：每张表的行数与 `CHECKSUM TABLE … EXTENDED`、视图清单、例程/触发器/事件数量，以及数据库、表、视图、过程、函数、触发器、事件的 `SHOW CREATE` 字段指纹。表定义含列、索引、约束和 `AUTO_INCREMENT`；对象定义含 SQL 正文、definer、SQL mode、字符集、事件计划等。前后不一致即判失败，不发布 `.partial` 为成功备份。
+- 定义按字段名排序后计算 SHA-256，不替换 schema 名、不折叠 SQL 空白、不删 `AUTO_INCREMENT`。仅排除触发器的 `Created` 字段：它是恢复时重新生成的创建时刻，不是触发器正文。MySQL batch 输出只解转义一次，保留 Unicode、真实换行/制表符与字面反斜杠的区别；客户端显式使用 `utf8mb4`。定义不可见（例如例程正文返回 SQL NULL）时拒绝生成成功备份。参见 [MySQL batch/raw 输出规则](https://dev.mysql.com/doc/refman/8.0/en/mysql-command-options.html)、[SHOW CREATE TRIGGER 字段](https://dev.mysql.com/doc/refman/8.0/en/show-create-trigger.html)。
+- 回执 `<备份>.json`（600）使用 `formatVersion: 3` 和 `definitionAlgorithm: mysql8-column-charset-v1`，记录来源 server_uuid、MySQL 版本、库名、备份文件 SHA-256 与快照；只存定义指纹，不写 SQL 正文。
+- MySQL 已确认 [#110825](https://bugs.mysql.com/bug.php?id=110825)：隐式列排序规则在 `SHOW CREATE` 导出、重建后，可能多显示 `CHARACTER SET utf8mb4`。v3 仅根据真实 `information_schema.COLUMNS` 的列名、字符集、排序规则，把列声明顶层 `COLLATE` 前缺少的 utf8mb4 字符集显式写入指纹输入，并把上述列元数据一起纳入指纹。扫描器区分引号、反引号、注释和括号；字符串、注释、生成表达式内的同名文字不作改写。其余定义字节、CHECK、索引、外键和 AUTO_INCREMENT 保持；元数据矛盾、重复/缺失列或无法解析的定义均拒绝。遇到改变引号或反斜杠含义的 `ANSI_QUOTES` / `NO_BACKSLASH_ESCAPES` SQL mode，扫描器明确拒绝，不猜测其语法。SQL 备份文件本身不作改写。
 - 恢复只接受：与来源**不同** server_uuid、**相同** MySQL 版本、库名与来源一致、目标库**完全为空**、`event_scheduler` 为 OFF/DISABLED 的实例，且必须显式 `--confirm-test-target`。恢复后重新计算快照，必须与回执逐表、逐对象完全一致。失败目标保持现场，不覆盖重试，不 DROP 任何东西。
 
 ## 2. 备份
@@ -26,7 +28,7 @@ python3 scripts/db-backup-restore.py backup \
 
 ## 3. 隔离恢复
 
-恢复到任务独占的另一台 MySQL 实例（同版本、`--event-scheduler=OFF`），先建同名空库。保留同名 schema 是为了避免备份中的视图引用错库。
+恢复到任务独占的另一台 MySQL 实例（同版本、`--event-scheduler=OFF`），先建同名、数据库定义选项一致的空库（含字符集、排序规则等）。保留同名 schema 是为了避免备份中的视图引用错库。当前 dump 不含 `CREATE DATABASE`，工具不会代建或修改目标库；数据库定义指纹不一致会在导入前拒绝。
 
 ```sh
 python3 scripts/db-backup-restore.py restore \
@@ -35,6 +37,8 @@ python3 scripts/db-backup-restore.py restore \
 ```
 
 确认参数不自动证明主机属于测试环境：执行者必须先核对容器/实例归属、端点与 server_uuid。
+
+旧 v1/v2 回执、未知算法或 v3 回执缺少任何对象指纹时，工具在访问恢复目标、执行导入前就拒绝。旧 SQL、回执和匹配版本的工具必须保留原件；v3 工具不自动升级、改写或导入旧算法回执。只有旧备份时须保留现场并单独核验其原算法和恢复目标，不能把旧 raw hash 或对象数量当作 v3 结构证明。先前的失败、OOM 或哈希不一致记录也不因新算法出现而改写。
 
 ## 4. 恢复后应用冒烟与 RTO/RPO 记录
 
@@ -74,13 +78,14 @@ python3 scripts/db-backup-restore.py restore \
 在两个新建、任务独占、不同 UUID 的 MySQL 8.0.45 测试实例中准备同名空库，源库加入以下夹具（不构成业务验收）：
 
 ```sql
-CREATE TABLE sample_data (id BIGINT PRIMARY KEY, sample_text VARCHAR(100), data_blob BLOB) ENGINE=InnoDB;
+CREATE TABLE sample_data (id BIGINT PRIMARY KEY, sample_text VARCHAR(100), data_blob BLOB) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 INSERT INTO sample_data VALUES (1, '恢复夹具', UNHEX('00FF1020')), (2, 'plain fixture', NULL);
 CREATE TABLE trigger_history (sample_id BIGINT) ENGINE=InnoDB;
 CREATE VIEW sample_view AS SELECT id, sample_text FROM sample_data;
 CREATE TRIGGER sample_added AFTER INSERT ON sample_data FOR EACH ROW INSERT INTO trigger_history VALUES (NEW.id);
 CREATE PROCEDURE sample_total() SELECT COUNT(*) FROM sample_data;
+CREATE FUNCTION sample_next(v INT) RETURNS INT DETERMINISTIC NO SQL RETURN v + 1;
 CREATE EVENT sample_disabled ON SCHEDULE EVERY 1 DAY DISABLE DO INSERT INTO trigger_history VALUES (0);
 ```
 
-正控：恢复侧行数、BLOB、视图、`CALL sample_total()`、例程/触发器/事件定义一致；向恢复侧插入新行后 trigger_history 增加，证明触发器可用；事件保持禁用。负控：篡改备份一字节、同 UUID、非空目标、缺确认、源库坏视图时必须失败且不覆盖备份、不清空目标。
+正控：恢复侧行数、BLOB、视图、`CALL sample_total()`、`SELECT sample_next(8)`、例程/触发器/事件定义一致；向恢复侧插入新行后 trigger_history 增加，证明触发器可用；事件保持禁用。负控：篡改备份一字节、同 UUID、非空目标、缺确认、源库坏视图时必须失败且不覆盖备份、不清空目标。同名/同数量对象被改定义、索引或约束丢失、事件计划改变时也必须失败；仅触发器创建时刻变化允许通过。旧回执、缺对象指纹、目标库默认定义不同必须在导入前拒绝。

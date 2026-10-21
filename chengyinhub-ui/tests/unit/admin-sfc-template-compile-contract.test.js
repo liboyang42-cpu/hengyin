@@ -15,6 +15,73 @@ const uiRoot = path.resolve(__dirname, '../..')
 const compiler = require(path.join(uiRoot, 'node_modules/vue-template-compiler'))
 const vueVersion = require(path.join(uiRoot, 'node_modules/vue/package.json')).version
 
+// Exercise actual SFC methods; the observer only contains the old uncaught rejection during the red regression.
+function presetPage(relativePath, listName, request) {
+  const source = fs.readFileSync(path.join(uiRoot, relativePath), 'utf8')
+  const script = compiler.parseComponent(source).script.content
+  const component = new Function(listName, script.replace(/^import[^\n]*$/gm, '').replace('export default', 'return'))(request)
+  const page = component.data()
+  for (const [name, method] of Object.entries(component.methods)) page[name] = method.bind(page)
+  return page
+}
+
+for (const [kind, listName, rowsKey] of [['style', 'listPresetStyle', 'styleList'], ['route', 'listPresetRoute', 'routeList']]) {
+  test(`预设${kind}实际列表读失败结束loading、保留已读内容且搜索可重试`, async () => {
+    let response, reject = true
+    const calls = []
+    const request = query => {
+      calls.push({ ...query })
+      const pending = reject ? Promise.reject(new Error('HTTP 503')) : Promise.resolve(response)
+      const then = pending.then.bind(pending)
+      pending.then = (...args) => {
+        const child = then(...args)
+        child.catch(() => {})
+        return child
+      }
+      return pending
+    }
+    const page = presetPage(`src/views/business/preset/${kind}/index.vue`, listName, request)
+    page.$modal = { msgError() { assert.fail('共享request已提示，不应再次弹错') } }
+    const settle = () => new Promise(resolve => setImmediate(resolve))
+    page.getList()
+    await settle()
+    assert.equal(page.loading, false)
+    assert.equal(page.total, 0)
+    assert.equal(page[rowsKey].length, 0)
+
+    reject = false
+    response = { rows: [{ id: 71, name: '原有列表' }], total: 1 }
+    page.getList()
+    await settle()
+    assert.equal(page.loading, false)
+    assert.equal(page[rowsKey], response.rows)
+    assert.equal(page.total, 1)
+    const previousRows = page[rowsKey]
+
+    reject = true
+    page.getList()
+    await settle()
+    assert.equal(page.loading, false)
+    assert.equal(page[rowsKey], previousRows)
+    assert.equal(page.total, 1)
+
+    reject = false
+    response = { rows: [{ id: 72, name: '重试后列表' }], total: 2 }
+    page.queryParams.pageNum = 3
+    page.queryParams.name = '重试'
+    page.queryParams.status = '1'
+    page.handleQuery()
+    await settle()
+    assert.equal(page.loading, false)
+    assert.equal(page[rowsKey], response.rows)
+    assert.equal(page.total, 2)
+    assert.equal(calls.length, 4)
+    assert.equal(calls[3].pageNum, 1)
+    assert.equal(calls[3].name, '重试')
+    assert.equal(calls[3].status, '1')
+  })
+}
+
 function collectVueFiles(dir, acc) {
   for (const entry of fs.readdirSync(dir)) {
     const full = path.join(dir, entry)
