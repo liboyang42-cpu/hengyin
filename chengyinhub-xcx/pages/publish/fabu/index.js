@@ -1205,6 +1205,7 @@ Page({
   // ⚠️ 先上传、拿到 url 再落块 —— 反过来先插一个空壳块再回填,上传失败时会留下一个
   // 既点不开也说不清的空块,而这块已经算进「每章 200 块」的额度里了。
   insertStoryImageAt(e) {
+    if (this._storyMediaUploadOperation && !this._storyMediaUploadOperation.isFinished() && !this._storyMediaUploadOperation.isAborted()) return;
     const index = Number(e.currentTarget.dataset.index);
     const editor = this.data.storyEditor;
     const chapter = (this.data.formData.chapters || [])[editor.chapterIndex];
@@ -1215,7 +1216,7 @@ Page({
     const beforeKey = blocks[index - 1] && blocks[index - 1].key;
     const afterKey = blocks[index] && blocks[index].key;
     this.setData({ 'storyEditor.insertMenuAt': -1 });
-    app.chooseImage((res) => {
+    this._storyMediaUploadOperation = app.chooseImage((res) => {
       const current = (this.data.formData.chapters || [])[editor.chapterIndex];
       if (this._unloaded || this.data.storyEditor !== editor || !editor.show
           || memberId !== String(app.getUserID() || '') || !current || current._localId !== chapterId) return;
