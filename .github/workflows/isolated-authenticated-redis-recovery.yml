@@ -31,7 +31,9 @@ permissions:
 
 jobs:
   isolated-authenticated-redis-recovery:
-    runs-on: ubuntu-latest
+    # Pinned: the probe copies host strace into the app container (needs a matching glibc)
+    # and hashes the Redis ACL fixture with Python crypt, which Python 3.13 removed.
+    runs-on: ubuntu-24.04
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
@@ -40,10 +42,6 @@ jobs:
           distribution: temurin
           java-version: '21'
           cache: maven
-      # The probe hashes the isolated Redis ACL fixture with crypt(BLOWFISH); Python 3.13 removed crypt.
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
       - name: Verify hosted target and pure negative controls
         env:
           CHENGYIN_CI_AUTH_REDIS_RECOVERY: 'true'
