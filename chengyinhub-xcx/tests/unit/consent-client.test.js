@@ -289,3 +289,39 @@ test('首页意图按账号隔离，切回各自账号后同一用途请求各�
   owner = 10;
   succeedWrite(requests[3]); await second;
 });
+
+test('首页撤回回包丢失时沿用主线真实状态回读，不重放写请求', async () => {
+  let writes = 0, reads = 0, receipt
+  const client = createConsentClient({ getUserID: () => 9, settleTimeoutMs: 5,
+    sendRequest(request) {
+      if (request.url.endsWith('/latest')) {
+        reads++
+        request.success({ code: 200, data: receipt })
+        return
+      }
+      writes++
+      receipt = { ...JSON.parse(request.data), docVersion: 'v2.1' }
+      request.fail({ errMsg: 'reply lost' })
+    } })
+  const result = await client.record(locationInput('home_city_location', 'REVOKE'))
+  assert.equal(writes, 1)
+  assert.equal(reads, 1)
+  assert.equal(result.readback.requestId, receipt.requestId)
+  assert.equal(result.readback.scene, 'home_city_location')
+})
+
+test('首页撤回未知时，其他用途或其他账号的回读不能冒充当前撤回成功', async () => {
+  for (const changed of ['scene', 'owner']) {
+    let owner = 9
+    const client = createConsentClient({ getUserID: () => owner, settleTimeoutMs: 5,
+      sendRequest(request) {
+        if (request.url.endsWith('/latest')) {
+          if (changed === 'owner') owner = 10
+          request.success({ code: 200, data: locationRow(changed === 'scene' ? 'roam_location' : 'home_city_location', 'server-revoke', 'REVOKE') })
+          return
+        }
+        request.fail({ errMsg: 'reply lost' })
+      } })
+    await assert.rejects(client.record(locationInput('home_city_location', 'REVOKE')), /同意记录失败/)
+  }
+})

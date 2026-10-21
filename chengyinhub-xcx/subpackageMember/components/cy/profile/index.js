@@ -26,6 +26,9 @@ const { offerVerificationReadback } = require('../../../../utils/verification-re
 const { isRecord, isRecordList } = require('../../../../utils/response-shape.js');
 const { inactiveAccess, normalizeMerchantAccess } = require('../../../../utils/merchant-access-policy.js');
 const { isEndedProject, statusLabelOf } = require('../../../../utils/merchant-workbench.js');
+const mediaPreview = require('../../../../utils/media-preview.js');
+const { shapeMerchantSafety } = require('./merchant-safety-summary.js');
+const { shapeMerchantNode, readFavoriteToggle } = require('./merchant-node-favorite.js');
 const THEME_EMOJI = ['🍜', '❤️', '📚', '☕', '🌸', '🎮', '📷', '🏯'];
 const MEDAL_EMOJI = {
   ramen: '🍜', coffee: '☕', book: '📚', history: '🏯', spring: '🌸',
@@ -376,6 +379,12 @@ Component({
     merchantTeamEntryValue: '',
     _avatarSrc: '',
     _avatarInitial: '',
+    reportShow: false,
+    reportTargetType: '',
+    reportTargetId: '',
+    reportTitle: '举报',
+    correctionShow: false,
+    correctionMerchantId: '',
     subjectIsMerchant: false,
     subjectMerchant: null,
     // 门店 NPC 对话:开关 + 面板可见性。
@@ -390,6 +399,9 @@ Component({
     merchantTags: [],
     merchantCategories: [],
     merchantHasGeo: false,
+    merchantSafety: null,
+    merchantNode: null,
+    merchantNodeBusy: false,
     // 招牌主推卡:null = 未设置/已下架/已易主/坏数据,整块不渲染
     featured: null,
     activeTab: 'projects',
@@ -401,7 +413,7 @@ Component({
     benefits: buildBenefits({}),
     clubOwnedCount: 0,
     pointsStat: { weekPoints: 0, rankPercentage: 0 },
-    pointsSheet: { show: false, loading: false, loaded: false, failed: false, tasks: [] },
+    pointsSheet: { show: false, loading: false, loaded: false, failed: false, tasks: [], spendRules: [] },
 
     growthLevel: 1,
     streakDays: 0,
@@ -426,7 +438,7 @@ Component({
 
     identityCard: { shops: 0, themes: 0, routes: 0, km: '0', medals: 0, cities: 1 },
     rankDisplay: { no: 0, delta: '' },
-    exploreStat: { shops: 0, weekExp: 0 },
+    exploreStat: { shops: 0, weekExp: 0, km: '0.0' },
     themeProgress: [],
     medals: [],
     medalCount: 0,
@@ -504,7 +516,7 @@ Component({
 
   pageLifetimes: {
     show: function () {
-      if (!this._profileAttached) return;
+      if (!this._profileAttached) return; this._navigating = false;
       this._profileHidden = false;
       const identityChanged = this._syncProfileReadIdentity();
       if (identityChanged || this._profileNeedsInitialize) {
@@ -742,6 +754,9 @@ Component({
       merchantTags: [],
       merchantCategories: [],
       merchantHasGeo: false,
+      merchantSafety: null,
+      merchantNode: null,
+      merchantNodeBusy: false,
       // 合法 initialTab 优先;非法值回退原规则(自己 projects、别人 posts)
       activeTab: initialTab || (isSelf ? 'projects' : (communityReadable() ? 'posts' : 'about')),
       memberTabs: memberTabs,
@@ -821,9 +836,14 @@ Component({
       merchantTags: [],
       merchantCategories: [],
       merchantHasGeo: false,
+      merchantSafety: null,
+      merchantNode: null,
+      merchantNodeBusy: false,
       featured: null,
       isMerchantView: false
     });
+    this._merchantSafetyEpoch = (this._merchantSafetyEpoch || 0) + 1;
+    this._merchantNodeEpoch = (this._merchantNodeEpoch || 0) + 1;
     applyTheme('dark');
   },
 
@@ -842,6 +862,9 @@ Component({
       merchantTags: parseDisplayList(m.tags),
       merchantCategories: m.sysCategoryList || [],
       merchantHasGeo: hasGeo,
+      merchantSafety: null,
+      merchantNode: null,
+      merchantNodeBusy: false,
       featured: shapeFeaturedCard(m.featured),
       // 商家公开身份接管身份头:品牌名 / 头像 / 主页封面 / 城市角色 / 品牌口号
       heroImg: m.coverImage || this.data.heroImg,
@@ -849,6 +872,80 @@ Component({
     });
     // 商家主题由被看者决定,与观看者角色无关
     applyTheme('light');
+    this.loadMerchantSafety(m.id);
+    this.loadMerchantNode(m.id);
+  },
+
+  // BL-66:安全感受摘要只读;样本不足/无数据/失败都不展示,不打扰主页
+  loadMerchantSafety: function (merchantId) {
+    var that = this;
+    var id = Number(merchantId);
+    var epoch = this._merchantSafetyEpoch = (this._merchantSafetyEpoch || 0) + 1;
+    if (!Number.isInteger(id) || id <= 0) return;
+    app.sendRequest({
+      url: `/api/community-trust/safety/merchants/${id}`,
+      method: 'GET',
+      hideLoading: true,
+      silentError: true,
+      success: function (res) {
+        if (epoch !== that._merchantSafetyEpoch || !that.data.subjectIsMerchant) return;
+        if (!that.data.subjectMerchant || Number(that.data.subjectMerchant.id) !== id) return;
+        that.setData({ merchantSafety: res && res.code == 200 ? shapeMerchantSafety(res.data) : null });
+      },
+      fail: function () {}
+    });
+  },
+
+  // BL-69:商家在架据点。无节点(data 为空)/读取失败都不展示收藏按钮,不打扰主页
+  loadMerchantNode: function (merchantId) {
+    var that = this;
+    var id = Number(merchantId);
+    var epoch = this._merchantNodeEpoch = (this._merchantNodeEpoch || 0) + 1;
+    if (this.data.isSelf || !Number.isInteger(id) || id <= 0) return;
+    app.sendRequest({
+      url: '/api/city/nodes/merchant/' + id,
+      method: 'GET',
+      hideLoading: true,
+      silentError: true,
+      success: function (res) {
+        if (epoch !== that._merchantNodeEpoch || !that.data.subjectIsMerchant) return;
+        if (!that.data.subjectMerchant || Number(that.data.subjectMerchant.id) !== id) return;
+        that.setData({ merchantNode: res && res.code == 200 ? shapeMerchantNode(res.data) : null });
+      },
+      fail: function () {}
+    });
+  },
+
+  // BL-69:收藏/取消收藏据点,以切换接口返回的 favorited 回读;失败如实提示,不改本地态
+  toggleMerchantNodeFavorite: function () {
+    var that = this;
+    var node = this.data.merchantNode;
+    if (this.data.merchantNodeBusy || !node || !node.poiId) return;
+    var epoch = this._merchantNodeEpoch;
+    var poiId = node.poiId;
+    var settle = function (favorited, msg) {
+      if (epoch !== that._merchantNodeEpoch || !that.data.merchantNode || that.data.merchantNode.poiId !== poiId) return;
+      if (favorited === null) {
+        that.setData({ merchantNodeBusy: false });
+        cyToast(msg);
+        return;
+      }
+      that.setData({ merchantNodeBusy: false, 'merchantNode.favorited': favorited });
+      cyToast(favorited ? '已收藏据点' : '已取消收藏');
+    };
+    this.setData({ merchantNodeBusy: true });
+    app.sendRequest({
+      url: '/api/city/nodes/' + poiId + '/favorite',
+      method: 'POST',
+      hideLoading: true,
+      silentError: true,
+      success: function (res) {
+        var favorited = readFavoriteToggle(res);
+        settle(favorited, (res && res.msg) || '收藏状态没有更新，请重试');
+      },
+      fail: function () { settle(null, '网络异常，收藏状态没有更新'); },
+      successStatusAbnormal: function () { settle(null, '收藏状态没有更新，请重试'); }
+    });
   },
 
   retryMerchantProbe: function () { this.probeSubjectMerchant(); },
@@ -1133,7 +1230,7 @@ Component({
           medals: that.data.identityCard.medals, // BE-01 勋章单真源:勋章数只由 loadMedals(/api/medal/wall)写,growth 不再返 badgeCount
           cities: 1
         },
-        'exploreStat.shops': shops
+        'exploreStat.shops': shops, 'exploreStat.km': km // BL-95: 累计里程补进现有「累计探索」块(同行写,不挪动基线行号)
       });
       // 是否开始过只看历史参与信号(totalCheckins / my-completed),绝不拿里程是否为 0 判断。
       // 这样已完成节点但真实里程为 0.0km 的老用户仍进入 ready,不会被错藏成首访。
@@ -1420,6 +1517,7 @@ Component({
     this.openScene('points-tasks');
     this.loadPointsTasks();
   },
+  goPointsHistory: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageMember/points-history/index', complete: () => { this._navigating = false; } }); },
   onPointsSheetClose: function () {
     this.closeScene();
   },
@@ -1433,26 +1531,26 @@ Component({
     that.setData({ 'pointsSheet.loading': !sheet.loaded, 'pointsSheet.failed': false });
     req('/api/points/result_list', {}).then(function (res) {
       if (!that._currentProfileRead(read, res)) return;
-      if (res.code != '200' || !res.data) {
+      // G4:规则整理收进同目录 points-rules.js(纯函数,有单测)。
+      //   · 赚分任务与花分规则(eventType=14 解锁提示)都取自后台积分规则配置,客户端不写死分值;
+      //     原先这里把 14 直接过滤掉,用户看不到花分口径,现在单列为「积分消耗」。
+      //   · 回包不是数组 / 含非对象行 → 按失败处理,不伪装成「暂无积分任务」。
+      //   · 积分抵扣现金的汇率是服务端常量,没有只读接口,这里不展示也不编造。
+      //     (常量在 CmsRegistrationServiceImpl.POINT_DEDUCT_RATE;规则本身归 Codex B03,本处只读展示)
+      // ⚠️ require 写在这里而不是文件顶部:本文件的 UI-GATE 基线按行号登记,顶部加一行会让后面
+      //   所有登记项整体漂移;就地 require 由运行时缓存,不重复加载。
+      var rules = res.code == '200' ? require('./points-rules.js').splitPointsRules(res.data) : null;
+      if (!rules) {
         // 首次加载失败给显式失败态(可点重试);已有列表则保留旧数据不打扰
         that.setData({ 'pointsSheet.loading': false, 'pointsSheet.failed': !that.data.pointsSheet.loaded });
         return;
       }
-      var tasks = [];
-      for (var i = 0; i < res.data.length; i++) {
-        var r = res.data[i];
-        // 只列赚分任务:启用中;event_type=14(解锁提示)是花分规则,不属于任务
-        if (Number(r.status) !== 1 || Number(r.eventType) === 14) continue;
-        tasks.push({
-          id: r.id,
-          eventType: r.eventType,
-          title: r.title || '',
-          description: r.description || '',
-          points: Number(r.value) || 0,
-          doneCount: Number(r.pointsNum) || 0
-        });
-      }
-      that.setData({ 'pointsSheet.tasks': tasks, 'pointsSheet.loading': false, 'pointsSheet.loaded': true });
+      that.setData({
+        'pointsSheet.tasks': rules.earn,
+        'pointsSheet.spendRules': rules.spend,
+        'pointsSheet.loading': false,
+        'pointsSheet.loaded': true
+      });
     });
   },
 
@@ -1470,7 +1568,7 @@ Component({
   },
 
   goSignup: function () {
-    wx.navigateTo({ url: '/subpackageMember/signup/index' });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageMember/signup/index', complete: () => { this._navigating = false; } });
   },
 
   toggleFollow: function () {
@@ -1523,7 +1621,7 @@ Component({
       if (app.tips) app.tips('用户不存在');
       return;
     }
-    community.request({
+    if (that._navigating) return; that._navigating = true; community.request({ // 请求在途/跳转中不响应连点
       url: '/api/im/start',
       method: 'POST',
       hideLoading: true,
@@ -1534,15 +1632,15 @@ Component({
           wx.navigateTo({
             url: '/subpackageB/pages/im/chat/index?conversationId=' + res.data.conversationId +
               '&name=' + encodeURIComponent(ui.nickname || '') +
-              '&avatar=' + encodeURIComponent(ui.avatar || '') + '&type=1'
+              '&avatar=' + encodeURIComponent(ui.avatar || '') + '&type=1', complete: function () { that._navigating = false; }
           });
           return;
         }
-        if (app.tips) app.tips((res && res.msg) || '无法发起会话');
+        that._navigating = false; if (app.tips) app.tips((res && res.msg) || '无法发起会话');
       },
       fail: function () {
-        if (app.tips) app.tips('网络异常，请重试');
-      }
+        that._navigating = false; if (app.tips) app.tips('网络异常，请重试');
+      }, successStatusAbnormal: function (res) { that._navigating = false; if (app.tips) app.tips((res && res.msg) || '无法发起会话'); }
     });
   },
 
@@ -1767,6 +1865,34 @@ Component({
   openMoreMenu: function () { this.openScene('member-more-menu'); },
   closeMoreMenu: function () { this.closeScene(); },
 
+  onReportMember: function () {
+    this.closeMoreMenu();
+    this.setData({ reportShow: true, reportTargetType: 'MEMBER', reportTargetId: String(this.data.userId || ''), reportTitle: '举报这位用户' });
+  },
+
+  onReportMerchant: function () {
+    var merchantId = this.data.subjectMerchant && this.data.subjectMerchant.id;
+    this.closeMoreMenu();
+    if (merchantId == null || merchantId === '') return;
+    this.setData({ reportShow: true, reportTargetType: 'MERCHANT', reportTargetId: String(merchantId), reportTitle: '举报这家商家' });
+  },
+
+  onReportClose: function () {
+    this.setData({ reportShow: false });
+  },
+
+  // BL-67:商家公开主页「信息纠错」(问题上报,纯文字),走纠错半屏
+  onMerchantCorrection: function () {
+    var merchantId = this.data.subjectMerchant && this.data.subjectMerchant.id;
+    this.closeMoreMenu();
+    if (merchantId == null || merchantId === '') return;
+    this.setData({ correctionShow: true, correctionMerchantId: String(merchantId) });
+  },
+
+  onCorrectionClose: function () {
+    this.setData({ correctionShow: false });
+  },
+
   onShareProfile: function () {
     this.closeMoreMenu();
     cyToast('点击右上角分享主页');
@@ -1787,7 +1913,7 @@ Component({
 
   onMoreSetting: function () {
     this.closeMoreMenu();
-    wx.navigateTo({ url: '/pages/shezhi/shezhi' });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/shezhi/shezhi', complete: () => { this._navigating = false; } });
   },
 
   // CU-M-43(2026-09-23 用户裁决 B):onBlock 随「屏蔽」入口一起摘掉 —— 原来只弹一句
@@ -1934,9 +2060,10 @@ Component({
         cyToast(app.getRequestErrorMessage(res, '操作失败'));
         return;
       }
-      var current = that.data.list[index];
-      current = Object.assign({}, current, { isLiked: res.data.isLiked, likeCount: res.data.likeCount, version: res.data.version });
-      that.setData({ ['list[' + index + ']']: current });
+      var pos = that.data.list.findIndex(function (row) { return row && String(row.id) === String(item.id); });
+      if (pos < 0) return;
+      var current = Object.assign({}, that.data.list[pos], { isLiked: res.data.isLiked, likeCount: res.data.likeCount, version: res.data.version });
+      that.setData({ ['list[' + pos + ']']: current });
     });
   },
 
@@ -1960,7 +2087,9 @@ Component({
         cyToast(app.getRequestErrorMessage(res, '操作失败'));
         return;
       }
-      that.setData({ ['list[' + index + '].isBookmarked']: res.data.isBookmarked });
+      var pos = that.data.list.findIndex(function (row) { return row && String(row.id) === String(item.id); });
+      if (pos < 0) return;
+      that.setData({ ['list[' + pos + ']']: Object.assign({}, that.data.list[pos], { isBookmarked: res.data.isBookmarked }) });
     });
   },
 
@@ -1972,20 +2101,20 @@ Component({
   onAvatarTap: function () {
     if (this.data.isSelf) this.goUserInfo();
   },
-  goSetting: function () { wx.navigateTo({ url: '/pages/shezhi/shezhi' }); },
+  goSetting: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/shezhi/shezhi', complete: () => { this._navigating = false; } }); },
   // 直达个人资料真页。原来跳的是 `shezhi?scene=settings-profile` —— 那会让「设置」一进去就
   // 盖一层弹窗(2026-08-08 用户提「点到设置不要弹这个弹窗」),而弹窗里是 scene-route-content
   // 的通用表单,只有昵称+邮箱,pages/gerenziliao 那 390 行的头像/介绍/标签全没了。
   // 2026-08-20 用户定:商家视角个人资料与店铺装修合并,编辑头像/资料一律进店铺装修。
   goUserInfo: function () {
-    if (this.data.isMerchantView) { wx.navigateTo({ url: '/pages/merchant/decor/index' }); return; }
-    wx.navigateTo({ url: '/pages/gerenziliao/gerenziliao' });
+    if (this.data.isMerchantView) { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/merchant/decor/index', complete: () => { this._navigating = false; } }); return; }
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/gerenziliao/gerenziliao', complete: () => { this._navigating = false; } });
   },
   // CU-M-28:这一块显示的是会员本人的 introduction,编辑必须进个人资料;
   // goUserInfo 在商家视角会去品牌中心,那里没有「个人介绍」字段。
-  goEditIntro: function () { wx.navigateTo({ url: '/pages/gerenziliao/gerenziliao' }); },
+  goEditIntro: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/gerenziliao/gerenziliao', complete: () => { this._navigating = false; } }); },
   // FE-14 商家店铺资料收编进「我的」更多菜单(原 shanghuziliao 页保留即重定向)
-  goShop: function () { this.closeScene(); wx.navigateTo({ url: '/pages/merchant/decor/index' }); },
+  goShop: function () { this.closeScene(); if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/merchant/decor/index', complete: () => { this._navigating = false; } }); },
   // 访客看商家主页的底部「发起合作」:与 club/detail onInviteMerchant 同链路(coop/invite type=0,
   // toId=memberId)。userId 在商家主页语境下就是对方 memberId。
   onCoopInvite() {
@@ -1998,41 +2127,41 @@ Component({
     this.closeCoopInvite();
     returnToCoopOrigin(e.detail.topicId);
   },
-  goOrder: function () { wx.navigateTo({ url: '/subpackageMember/order/order' }); },
-  goProject: function () { wx.navigateTo({ url: '/subpackageA/pages/myproject/index' }); },
+  goOrder: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageMember/order/order', complete: () => { this._navigating = false; } }); },
+  goProject: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageA/pages/myproject/index', complete: () => { this._navigating = false; } }); },
   onOrderPreviewTap: function (e) {
     var id = e.currentTarget.dataset.id;
     // 订单详情是「订单」二级页的子场景;一级「我的」先进入父页,由父页托管返回关系。
-    if (id) wx.navigateTo({ url: '/subpackageMember/order/order?detailId=' + encodeURIComponent(String(id)) });
+    if (id) { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageMember/order/order?detailId=' + encodeURIComponent(String(id)), complete: () => { this._navigating = false; } }); }
     else this.goOrder();
   },
   onProjectPreviewTap: function (e) {
     // projectPreviewList 源为 /api/topic/list?is_my=1(仅 topic),故单卡直达主题详情;无 id 兜底进 myproject
     var id = e.currentTarget.dataset.id;
-    if (id) wx.navigateTo({ url: '/pages/topic/index/index?id=' + id });
+    if (id) { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/topic/index/index?id=' + id, complete: () => { this._navigating = false; } }); }
     else this.goProject();
   },
   goMyJoin: function () { wx.navigateTo({ url: '/subpackageMember/mycanyu/mycanyu' }); },
-  goGrowthCenter: function () { wx.navigateTo({ url: '/subpackageP3/pages/growthcenter/index/index' }); },
-  goWall: function () { wx.navigateTo({ url: '/subpackageP3/pages/badge-wall/index/index' }); },
-  goAlbum: function () { wx.navigateTo({ url: '/subpackageP3/pages/stamp-album/index/index' }); },
-  goObjectCards: function () { wx.navigateTo({ url: '/subpackageP3/pages/object-cards/index/index' }); },
+  goGrowthCenter: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageP3/pages/growthcenter/index/index', complete: () => { this._navigating = false; } }); },
+  goWall: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageP3/pages/badge-wall/index/index', complete: () => { this._navigating = false; } }); },
+  goAlbum: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageP3/pages/stamp-album/index/index', complete: () => { this._navigating = false; } }); },
+  goObjectCards: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageP3/pages/object-cards/index/index', complete: () => { this._navigating = false; } }); },
   // 当前权益里可点的行(收益提现→提现页;承接原 role/center 对赚钱角色 role!==player 的提现入口,按 withdrawable 权限门控)
   onBenefitTap: function (e) {
     var ds = e.currentTarget.dataset;
-    if (ds.route && ds.unlocked) wx.navigateTo({ url: ds.route });
+    if (ds.route && ds.unlocked) { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: ds.route, complete: () => { this._navigating = false; } }); }
   },
   goInvite: function () { this.openScene('share-invite'); },
-  goComplaint: function () { wx.navigateTo({ url: '/subpackageMember/complaint/index' }); },
-  goEarnings: function () { wx.navigateTo({ url: '/subpackageA/pages/assetcenter/earnings/index' }); },
-  goMerchantTeam: function () { wx.navigateTo({ url: '/pages/merchant/team/index' }); },
-  goClubWorkbench: function () { wx.navigateTo({ url: '/pages/club/detail/index?owner=1&tab=manage' }); },
-  goCoupon: function () { wx.navigateTo({ url: '/subpackageMember/coupon-wallet/index' }); },
+  goComplaint: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageMember/complaint/index', complete: () => { this._navigating = false; } }); },
+  goEarnings: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageA/pages/assetcenter/earnings/index', complete: () => { this._navigating = false; } }); },
+  goMerchantTeam: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/merchant/team/index', complete: () => { this._navigating = false; } }); },
+  goClubWorkbench: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/club/detail/index?owner=1&tab=manage', complete: () => { this._navigating = false; } }); },
+  goCoupon: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageMember/coupon-wallet/index', complete: () => { this._navigating = false; } }); },
   goClub: function () {
-    wx.navigateTo({ url: this.data.clubOwnedCount >= 1 ? '/pages/club/detail/index?owner=1' : '/pages/club/create/index' });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: this.data.clubOwnedCount >= 1 ? '/pages/club/detail/index?owner=1' : '/pages/club/create/index', complete: () => { this._navigating = false; } });
   },
   goBecomeTalent: function () {
-    cyLoading.show('加载中');
+    var that = this; cyLoading.show('加载中');
     req('/api/club/my', {}).then(function (res) {
       cyLoading.hide();
       if (res.code != '200') {
@@ -2040,26 +2169,26 @@ Component({
         return;
       }
       var owned = (res.code == '200' && res.data && res.data.owned) || [];
-      if (owned && !Array.isArray(owned)) owned = [owned];
-      if (owned.length >= 1) wx.navigateTo({ url: '/pages/club/detail/index?id=' + ((owned[0] && owned[0].id) || '') });
-      else if (roleGuard.isClubLeader()) wx.navigateTo({ url: '/pages/club/create/index' });
-      else wx.navigateTo({ url: '/pages/club/apply/index' });
+      if (owned && !Array.isArray(owned)) owned = [owned]; if (that._navigating) return; that._navigating = true; // 跳转中不响应连点,免得叠两层
+      if (owned.length >= 1) wx.navigateTo({ url: '/pages/club/detail/index?id=' + ((owned[0] && owned[0].id) || ''), complete: function () { that._navigating = false; } });
+      else if (roleGuard.isClubLeader()) wx.navigateTo({ url: '/pages/club/create/index', complete: function () { that._navigating = false; } });
+      else wx.navigateTo({ url: '/pages/club/apply/index', complete: function () { that._navigating = false; } });
     });
   },
   jumpDetail: function (e) {
     var activity = this.data.list[e.currentTarget.dataset.index];
-    if (activity) wx.navigateTo({ url: '/pages/square/detail/index?id=' + activity.id });
+    if (activity) { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/square/detail/index?id=' + activity.id, complete: () => { this._navigating = false; } }); }
   },
 
   previewImage: function (e) {
     var picList = e.currentTarget.dataset.piclist;
     var index = e.currentTarget.dataset.index;
-    wx.previewImage({ current: picList[index], urls: picList });
+    mediaPreview.open(picList, picList && picList[index]);
   },
 
   previewMerchantGallery: function (e) {
     var src = e.currentTarget.dataset.src;
-    if (src) wx.previewImage({ current: src, urls: this.data.merchantGallery || [src] });
+    if (src) mediaPreview.open(this.data.merchantGallery || [src], src);
   },
 
   goMerchantLocation: function () {
@@ -2084,10 +2213,10 @@ Component({
   goFeatured: function () {
     var f = this.data.featured || {};
     if (f.featuredType === 1 && f.featuredId) {
-      wx.navigateTo({ url: '/pages/activity/detail/index?id=' + f.featuredId });
+      if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/activity/detail/index?id=' + f.featuredId, complete: () => { this._navigating = false; } });
       return;
     }
-    if (f.featuredType === 2) wx.navigateTo({ url: '/subpackageMember/coupon-wallet/index' });
+    if (f.featuredType === 2) { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageMember/coupon-wallet/index', complete: () => { this._navigating = false; } }); }
   },
 
   goMerchantReviews: function () {
@@ -2096,14 +2225,14 @@ Component({
       cyToast('该商家评价暂不可查看');
       return;
     }
-    wx.navigateTo({
-      url: '/pages/merchant/reviews/index?merchantRowId=' + encodeURIComponent(merchantRowId)
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({
+      url: '/pages/merchant/reviews/index?merchantRowId=' + encodeURIComponent(merchantRowId), complete: () => { this._navigating = false; }
     });
   },
 
   previewWork: function (e) {
     var url = e.currentTarget.dataset.url;
-    wx.previewImage({ current: url, urls: this.data.casePicsList });
+    mediaPreview.open(this.data.casePicsList, url);
   },
 
   formatTimeDifference: function (createTimeStr) {

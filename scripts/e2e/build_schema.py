@@ -19,9 +19,8 @@ import argparse, hashlib, io, json, pathlib, re, subprocess, sys, tarfile, time
 REPO = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO))
 from ci.sql_splitter import split_statements, executable_statement
-from ci.run_migration import (statement_assertion, required_transaction_declared,
-                              validate_transaction_statements, assert_innodb_references,
-                              assert_statement_result)
+from ci.run_migration import (assert_statement_result, required_transaction_declared,
+                              statement_assertion, validate_transaction_statements)
 from ci.migration_ledger import build_manifest, EXPLICIT_MANAGED_SQL, MIGRATION_PATH
 from scripts.e2e.policy_source_custody import SourceCustody
 
@@ -75,74 +74,77 @@ def assertion_is_data_only(sql):
 
 def run_file(cur, path, label, results, keep_going, schema_only=False, observations=None):
     text = pathlib.Path(path).read_text(encoding="utf-8")
-    if required_transaction_declared(text):
-        statements = split_statements(text)
-        connection = None
-        started = False
-        idx = 0
+    statements = split_statements(text)
+    transactional = required_transaction_declared(text)
+    if transactional:
         try:
             validate_transaction_statements(statements)
-            connection = cur.connection
-            if not connection.get_autocommit():
-                raise ValueError("transaction-marked file requires an idle autocommit connection")
-            server_status = getattr(connection, "server_status", None)
-            if not isinstance(server_status, int) or server_status & 1:
-                raise ValueError("transaction-marked file cannot own an already active transaction")
-            cur.execute("SELECT DATABASE()")
-            current_db = cur.fetchone()[0]
-            assert_innodb_references(cur, current_db, statements)
-            connection.begin()
-            started = True
-            for idx, statement in enumerate(statements, 1):
-                sql = scratch_schema_sql(executable_statement(statement).strip().rstrip(";"))
-                if not sql:
-                    continue
-                cur.execute(sql)
-                assertion = statement_assertion(statement)
-                if assertion:
-                    assert_statement_result(cur, assertion, idx)
-            connection.commit()
-            return True
-        except Exception as failure:
-            results.append((label, idx, "TRANSACTION",
-                            "%s: %s" % (type(failure).__name__, str(failure)[:200]),
-                            "transaction-marked file failed"))
-            if started:
-                try:
-                    connection.rollback()
-                except Exception as rollback_failure:
-                    results.append((label, idx, "ROLLBACK",
-                                    type(rollback_failure).__name__, "rollback could not be confirmed"))
-                    raise RuntimeError("transaction rollback could not be confirmed; stop schema rebuild") from rollback_failure
+        except ValueError as error:
+            results.append((label, 0, "PREFLIGHT", str(error)[:200], "requires=transaction"))
             return False
-    for idx, st in enumerate(split_statements(text), 1):
-        sql = scratch_schema_sql(executable_statement(st).strip().rstrip(";"))
-        if not sql:
-            continue
-        assertion = statement_assertion(st)
-        try:
-            cur.execute(sql)
-        except Exception as e:
-            results.append((label, idx, "EXEC", "%s: %s" % (type(e).__name__, str(e)[:200]),
-                            sql.splitlines()[0][:110]))
-            if not keep_going:
-                return False
-            continue
-        if assertion == "scalar-true":
-            row = cur.fetchone()
-            if int((row or [0])[0] or 0) != 1:
-                target = results
-                kind = "ASSERT"
-                if schema_only and assertion_is_data_only(sql):
-                    target = observations if observations is not None else []
-                    kind = "DATA_ASSERT"
-                target.append((label, idx, kind, "scalar-true 求值不为 1",
-                               sql.splitlines()[0][:110]))
-                if kind == "DATA_ASSERT":
-                    continue
-                if not keep_going:
+
+    connection = cur.connection
+    # A caller's open transaction must never be committed implicitly by this file's BEGIN/autocommit switch.
+    server_status = getattr(connection, "server_status", None)
+    if transactional and isinstance(server_status, int) and server_status & 1:
+        results.append((label, 0, "PREFLIGHT", "caller transaction already active", "requires=transaction"))
+        return False
+    repeatable_read = "SET SESSION TRANSACTION ISOLATION LEVEL REPEATABLE READ"
+    committed = False
+    ok = True
+    try:
+        # A preceding file's explicit RC is local to that file, as in a fresh runner session.
+        cur.execute(repeatable_read)
+        if transactional:
+            connection.autocommit(False)
+            connection.begin()
+        for idx, st in enumerate(statements, 1):
+            sql = scratch_schema_sql(executable_statement(st).strip().rstrip(";"))
+            if not sql:
+                continue
+            kind = "EXEC"
+            try:
+                assertion = statement_assertion(st)
+                cur.execute(sql)
+                if assertion == "scalar-true":
+                    kind = "ASSERT"
+                    row = cur.fetchone()
+                    if row is None or len(row) != 1 or row[0] not in (0, 1):
+                        raise ValueError("scalar-true readback has an invalid shape or value: %r" % (row,))
+                    if row[0] != 1:
+                        if schema_only and assertion_is_data_only(sql):
+                            if observations is not None:
+                                observations.append((label, idx, "DATA_ASSERT",
+                                                     "scalar-true readback=0", sql.splitlines()[0][:110]))
+                            continue
+                        raise ValueError("scalar-true readback=0")
+                elif assertion:
+                    kind = "ASSERT"
+                    assert_statement_result(cur, assertion, idx)
+            except Exception as error:
+                results.append((label, idx, kind,
+                                "%s: %s" % (type(error).__name__, str(error)[:200]),
+                                sql.splitlines()[0][:110]))
+                ok = False
+                # A declared transaction cannot continue after any failed statement or assertion.
+                if transactional or not keep_going:
                     return False
-    return True
+        if transactional:
+            try:
+                connection.commit()
+                committed = True
+            except Exception as error:
+                results.append((label, 0, "COMMIT_UNKNOWN",
+                                "%s: %s" % (type(error).__name__, str(error)[:200]), "COMMIT"))
+                raise
+        return ok
+    finally:
+        # Also discard unfinished hand-written transactions in ordinary SQL files.
+        # If rollback/session restoration fails, abort instead of continuing on an unknown session.
+        if not committed:
+            connection.rollback()
+        connection.autocommit(True)
+        cur.execute(repeatable_read)
 
 
 def verify_seed_negative_controls(connection):
@@ -409,10 +411,6 @@ def main():
     c = connect(a, a.schema)
     try:
         cur = c.cursor()
-        cur.execute("SELECT @@SESSION.transaction_isolation")
-        session_isolation = (cur.fetchone() or [None])[0]
-        if session_isolation not in {"READ-UNCOMMITTED", "READ-COMMITTED", "REPEATABLE-READ", "SERIALIZABLE"}:
-            raise RuntimeError("unknown initial session isolation; stop schema rebuild")
         results = []
         observations = []
         t0 = time.time()
@@ -441,17 +439,6 @@ def main():
         for m in ordered:
             ok = run_file(cur, REPO / m["path"], m["migrationId"], results,
                           keep_going=a.keep_going, schema_only=True, observations=observations)
-            # A file may need READ COMMITTED internally; later range-lock guards must not inherit it.
-            server_status = getattr(c, "server_status", None)
-            if not c.get_autocommit() or not isinstance(server_status, int) or server_status & 1:
-                raise RuntimeError("session isolation restore requires an idle autocommit connection; stop schema rebuild")
-            try:
-                cur.execute("SET SESSION TRANSACTION ISOLATION LEVEL " + session_isolation.replace("-", " "))
-                cur.execute("SELECT @@SESSION.transaction_isolation")
-                if (cur.fetchone() or [None])[0] != session_isolation:
-                    raise RuntimeError("session isolation readback mismatch")
-            except Exception as failure:
-                raise RuntimeError("session isolation restore failed; stop schema rebuild") from failure
             if not ok and not a.keep_going:
                 break
         cur.execute("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=%s", (a.schema,))

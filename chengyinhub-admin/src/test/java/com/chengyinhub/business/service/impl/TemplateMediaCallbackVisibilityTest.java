@@ -93,6 +93,11 @@ class TemplateMediaCallbackVisibilityTest {
         ReflectionTestUtils.setField(service, "cmsMemberTemplateMapper", memberTemplateMapper);
         ReflectionTestUtils.setField(service, "cmsTemplateLibraryMapper", session.getMapper(CmsTemplateLibraryMapper.class));
         ReflectionTestUtils.setField(service, "auditTaskMapper", session.getMapper(AuditTaskMapper.class));
+        @SuppressWarnings("unchecked")
+        org.springframework.beans.factory.ObjectProvider<com.chengyinhub.business.service.IAuditTaskService> auditTasks =
+                mock(org.springframework.beans.factory.ObjectProvider.class);
+        when(auditTasks.getObject()).thenReturn(mock(com.chengyinhub.business.service.IAuditTaskService.class));
+        ReflectionTestUtils.setField(service, "auditTaskServiceProvider", auditTasks);
     }
 
     @AfterEach
@@ -246,10 +251,10 @@ class TemplateMediaCallbackVisibilityTest {
                 + "status,publish_status,del_flag,use_num,create_time) values (?,11,?,'approved',1,?,1,1,0,0,now())",
                 PROJECTION_ID, MEMBER_TEMPLATE_ID, COVER);
         jdbc.execute("create table audit_task(id bigint primary key, biz_type varchar(32), biz_id bigint,"
-                + " status int, version int, update_time timestamp)");
+                + " status int, version int, update_time timestamp, source_type varchar(40))");
         // 1 = 本模板投影在途的广场复审单;2 = 别的模板投影的审核单。
-        jdbc.update("insert into audit_task values (1,'TEMPLATE_LIBRARY',?,0,0,now())", PROJECTION_ID);
-        jdbc.update("insert into audit_task values (2,'TEMPLATE_LIBRARY',99,0,0,now())");
+        jdbc.update("insert into audit_task(id,biz_type,biz_id,status,version,update_time,source_type) values (1,'TEMPLATE_LIBRARY',?,0,0,now(),'template_market')", PROJECTION_ID);
+        jdbc.update("insert into audit_task(id,biz_type,biz_id,status,version,update_time,source_type) values (2,'TEMPLATE_LIBRARY',99,0,0,now(),'template_market')");
     }
 
     private SqlSessionFactory factory(DriverManagerDataSource dataSource) throws Exception {

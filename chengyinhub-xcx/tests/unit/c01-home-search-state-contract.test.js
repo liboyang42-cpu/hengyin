@@ -8,6 +8,7 @@ const fs = require('node:fs')
 const path = require('node:path')
 const test = require('node:test')
 const vm = require('../helpers/ui-sandbox-vm.js') // node:vm + 沙箱里装真 utils/toast.js·loading.js
+const { loadMediaPreview } = require('../helpers/media-preview-sandbox.js')
 
 // 2026-08-06：主页统一到 cy-profile 共用组件后，member/index 与 userinfo 的 wxml
 // 只剩一行 <cy-profile />，本文件的断言原本钉在旧结构的节点上。约束没失效、只是搬进了
@@ -105,6 +106,7 @@ const loadPage = (rel, options = {}) => {
     if (request.endsWith('community-post-api.js')) return require('../helpers/community-page-seam.js')
     if (request === '../../../utils/datetime') return { toTimestamp: (value) => value }
     if (request === '../../../utils/analytics.js') return { track: () => {} }
+    if (request === '../../../utils/media-preview.js') return loadMediaPreview({ previewImage() {} })
     if (request === '../../../utils/feed-play-card.js') return require(path.join(ROOT, 'utils/feed-play-card.js'))
     if (request === '../../../utils/response-shape.js') return require(path.join(ROOT, 'utils/response-shape.js'))
     if (request === '../utils/community-report-sheet.js') return require(path.join(ROOT, 'pages/square/utils/community-report-sheet.js'))

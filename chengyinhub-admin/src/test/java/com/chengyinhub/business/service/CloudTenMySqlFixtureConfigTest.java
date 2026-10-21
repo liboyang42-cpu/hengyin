@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.Set;
 import static org.junit.jupiter.api.Assertions.*;
 
-/** Pure configuration tests, run with the rest of the backend tests on the dedicated VPS. */
+/** Pure configuration tests; never opens a connection. */
 class CloudTenMySqlFixtureConfigTest {
     private Map<String, String> explicit() {
         Map<String, String> env = new HashMap<>();
@@ -25,6 +25,27 @@ class CloudTenMySqlFixtureConfigTest {
         MysqlIntegrationTestConfig config = CloudTenMySqlFixture.configuration(explicit(), "relay");
         assertEquals("cy_cloudten_it_relay_run12345678", config.databaseName());
         assertEquals("isolated_test", config.user());
+    }
+    @Test void hostedCiRequiresAllRunnerFactsAndLoopbackWithoutClaimingToBeAVps() {
+        Map<String, String> env = explicit();
+        env.remove("CHENGYIN_TEN_FEATURES_VPS");
+        Map<String, String> runner = Map.of("GITHUB_ACTIONS", "true", "GITHUB_REPOSITORY", "liboyang42-cpu/hengyin",
+                "RUNNER_ENVIRONMENT", "github-hosted", "RUNNER_OS", "Linux");
+        env.putAll(runner);
+        assertEquals("cy_cloudten_it_relay_run12345678", CloudTenMySqlFixture.configuration(env, "relay").databaseName());
+        for (String key : runner.keySet()) {
+            Map<String, String> missing = new HashMap<>(env); missing.remove(key);
+            assertThrows(IllegalArgumentException.class, () -> CloudTenMySqlFixture.configuration(missing, "relay"), key);
+            Map<String, String> wrong = new HashMap<>(env); wrong.put(key, "unapproved");
+            assertThrows(IllegalArgumentException.class, () -> CloudTenMySqlFixture.configuration(wrong, "relay"), key);
+        }
+        for (String host : new String[]{"localhost", "203.0.113.7", "127.0.0.1&host=203.0.113.7"}) {
+            env.put("CHENGYIN_TEST_MYSQL_HOST", host);
+            assertThrows(IllegalArgumentException.class, () -> CloudTenMySqlFixture.configuration(env, "relay"), host);
+        }
+        env.put("CHENGYIN_TEST_MYSQL_HOST", "127.0.0.1");
+        env.put("CHENGYIN_TEN_FEATURES_VPS", "1");
+        assertThrows(IllegalArgumentException.class, () -> CloudTenMySqlFixture.configuration(env, "relay"));
     }
     @Test void noConnectionSettingCanSilentlyUseAnExistingDefault() {
         for (String key : explicit().keySet()) {

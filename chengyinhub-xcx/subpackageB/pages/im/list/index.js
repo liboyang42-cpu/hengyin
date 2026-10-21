@@ -4,6 +4,7 @@ const { isRecordList, isBizOk } = require('../../../../utils/response-shape.js')
 const { decodeDisplayText } = require('../../../../utils/display-text.js');
 const { normalizeMerchantAccess } = require('../../../../utils/merchant-access-policy.js');
 const { isLoginRequired, retryLogin } = require('../../../../utils/session/login-reload.js');
+const { reportNoticeRows, reportDetailUrl, makeReadRequestId } = require('./report-notices.js');
 const app = getApp();
 
 Page({
@@ -25,6 +26,9 @@ Page({
     tabs: [],
     viewList: [],
     hasUnread: false,
+    // 系统 tab「举报进度」:社区治理通知里的举报进度(见 report-notices.js),点进举报详情
+    reportNotices: [],
+    reportNoticeError: '',
   },
 
   onLoad() {
@@ -40,11 +44,15 @@ Page({
     // 左滑面板总宽 = 3 × 120rpx = 360rpx;rpx→px 换算随屏宽变,不能写死 px(P1-1:大屏机型上曾被写死值压掉)
     this._openPx = Math.round(360 * ((sys.windowWidth || 375) / 750));
     this.loadConversations();
+    this.loadReportNotices();
   },
   onShow() {
+    this._navigating = false; // 从聊天页返回时刷新未读/最后一条;兜底清跳转中标记
     this._syncCommunityEntry();
-    // 从聊天页返回时刷新未读/最后一条
-    if (this.data.loaded) this.loadConversations(true);
+    if (this.data.loaded) {
+      this.loadConversations(true);
+      this.loadReportNotices();
+    }
     this.loadMerchantEntry();
   },
   onUnload() { this._disposed = true; },
@@ -135,6 +143,38 @@ Page({
     retryLogin(this, app, function () { if (!this._disposed) this.loadConversations(false); });
   },
 
+  // 举报进度通知独立于 IM 会话:读不到只在系统 tab 显示局部错误,不影响会话列表。
+  loadReportNotices() {
+    const that = this;
+    const epoch = (this._reportNoticeEpoch || 0) + 1;
+    this._reportNoticeEpoch = epoch;
+    app.sendRequest({
+      url: '/api/v1/community/notifications',
+      method: 'GET',
+      data: { limit: 50 },
+      hideLoading: true,
+      silentError: true,
+      success(res) {
+        if (epoch !== that._reportNoticeEpoch) return;
+        const rows = isBizOk(res) && res.data ? reportNoticeRows(res.data.items) : null;
+        if (!rows) { that.setData({ reportNoticeError: '举报进度暂时没读到' }); return; }
+        that.setData({
+          reportNotices: rows.map(function (row) { return Object.assign({}, row, { timeText: that.fmtTime(row.createTime) }); }),
+          reportNoticeError: '',
+        });
+      },
+      fail() {
+        if (epoch !== that._reportNoticeEpoch) return;
+        that.setData({ reportNoticeError: '举报进度暂时没读到' });
+      },
+    });
+  },
+
+  openReportNotice(e) {
+    const url = reportDetailUrl(e && e.currentTarget && e.currentTarget.dataset.reportId); if (!url || this._navigating) return; // 跳转中不响应连点
+    this._navigating = true; wx.navigateTo({ url: url, complete: () => { this._navigating = false; } }); this.markReportNoticeRead(e.currentTarget.dataset);
+  },
+
   // 会话归类(spec 决策 2:客服 type=3 归私信 —— 分 tab 的轴是「能不能回」)
   // 返回 null = 不属于任何 tab,不在小程序里展示。
   tabOf(c) {
@@ -177,7 +217,7 @@ Page({
     this.refreshView();
   },
 
-  goPredictInbox() { wx.navigateTo({ url: '/pages/merchant/predict/index' }); },
+  goPredictInbox() { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/merchant/predict/index', complete: () => { this._navigating = false; } }); },
 
   /**
    * 这一条只对**能结算竞猜的人**出现,所以问的是身份,不是待办条数。
@@ -223,7 +263,7 @@ Page({
   onEmptyCta() {
     if (typeof app.canUseCommunity !== 'function' || !app.canUseCommunity(false)) return;
     const tab = this.data.activeTab;
-    if (tab === 'dm') { wx.navigateTo({ url: '/pages/square/list/index' }); }
+    if (tab === 'dm' && !this._navigating) { this._navigating = true; wx.navigateTo({ url: '/pages/square/list/index', complete: () => { this._navigating = false; } }); }
   },
 
   fmtPreview(c) {
@@ -479,12 +519,35 @@ Page({
 
   openChat(e) {
     if (this._moved) { this._moved = false; return; } // 滑动中不触发跳转
-    const ds = e.currentTarget.dataset;
-    wx.navigateTo({
+    if (this._navigating) return; const ds = e.currentTarget.dataset;
+    this._navigating = true; wx.navigateTo({ complete: () => { this._navigating = false; },
       url: '/subpackageB/pages/im/chat/index?conversationId=' + ds.id +
         '&name=' + encodeURIComponent(ds.name || '') +
         '&avatar=' + encodeURIComponent(ds.avatar || '') +
         '&type=' + (ds.type || 1),
+    });
+  },
+
+  // BL-31:点开举报进度即标记该条通知已读,不等结果先跳转(失败不阻塞查看)。
+  // 成功后重新拉通知,未读点以服务端 read_at 回读为准;失败在系统 tab 局部提示,红点保留。
+  markReportNoticeRead(dataset) {
+    const that = this;
+    const id = Number(dataset && dataset.noticeId);
+    if (!(Number.isSafeInteger(id) && id > 0) || !(dataset && dataset.unread)) return;
+    app.sendRequest({
+      url: '/api/v1/community/notifications/' + id + '/read',
+      method: 'POST',
+      data: JSON.stringify({ requestId: makeReadRequestId(id) }),
+      header: { 'Content-Type': 'application/json' },
+      hideLoading: true,
+      silentError: true,
+      success(res) {
+        if (isBizOk(res)) { that.loadReportNotices(); return; }
+        that.setData({ reportNoticeError: '举报进度已读状态没更新' });
+      },
+      fail() {
+        that.setData({ reportNoticeError: '举报进度已读状态没更新' });
+      },
     });
   },
 });

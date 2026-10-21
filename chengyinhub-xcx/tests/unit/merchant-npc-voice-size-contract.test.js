@@ -56,6 +56,7 @@ function loadPage(options = {}) {
   }
   const localRequire = (id) => {
     if (id.endsWith('toast.js')) return function () {}
+    if (id.endsWith('modal.js')) return { show() {} }
     if (id.endsWith('merchant-theme.js')) return { merchantPageShow() {}, merchantPageRestore() {} }
     if (id.endsWith('pixel-avatar.js')) return {
       AVATAR_IDS: ['one'], isPixelAvatar() { return false }, parseCode() { return 'one' }, stringifyCode() { return 'px1:one' },

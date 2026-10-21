@@ -273,7 +273,8 @@ for (const changed of [false, true]) {
     h.requests[0].success({ code: 200, data: [{ conversationId: 42, type: 1, unread: 2 }] })
     if (changed) h.setUserId(9)
     h.page.onShow()
-    assert.equal(h.requests.length, 3)
+    // onShow:会话重读 + 举报进度通知重读(CL2,系统 tab 回到列表时刷新) + 商家入口,共 3 个新请求;requests[1] 仍是会话重读。
+    assert.equal(h.requests.length, 4)
     if (changed) {
       assert.deepEqual(h.page.data.list, [])
       assert.deepEqual(h.page.data.viewList, [])

@@ -60,11 +60,14 @@ test('actor switch during consent readback cannot make a foreign owner agreement
   const first=h.requests.find(r=>r.url.endsWith('/consents'));h.app.getSession().setUserID('8');consentReply(first);
   await assert.rejects(attempt,/同意记录失败/);assert.equal(h.requests.filter(r=>r.url.endsWith('/consents')).length,1);
 });
-test('privacy page and real gate expose a separate service checkbox and actual agreement content',()=>{
+test('privacy page and real gate link both agreements in one sentence; agreeing passes explicit service consent',()=>{
   for(const name of ['pages/privacy','components/cy/privacy-gate']){
     const w=fs.readFileSync(path.join(root,name,'index.wxml'),'utf8');
-    assert.match(w,/checkbox-group bindchange="toggleService"/);assert.match(w,/type="service"/);assert.match(w,/bindtap="openService"/);
-    assert.match(w,/open-type="agreePrivacyAuthorization"/);
+    assert.doesNotMatch(w,/checkbox-group/);assert.match(w,/type="service"/);
+    assert.match(w,/bindtap="openService"[^>]*>《用户服务协议》/);assert.match(w,/bindtap="openPrivacyContract"[^>]*>《隐私保护指引》/);
+    assert.match(w,/open-type="agreePrivacyAuthorization"/);assert.match(w,/bindtap="disagreePrivacy"/);
+    const j=fs.readFileSync(path.join(root,name,'index.js'),'utf8');
+    assert.match(j,/app\.agreeUsageConsent\(event, true\)/);
   }
 });
 test('cold reentry retries unsaved explicit consent with both original UUIDs and frozen versions',async()=>{

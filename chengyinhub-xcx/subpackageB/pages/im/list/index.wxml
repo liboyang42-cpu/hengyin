@@ -26,6 +26,25 @@
     <cy-icon name="clock" size="28" /><text>正在刷新消息</text>
   </view>
 
+  <!-- 系统 tab「举报进度」:社区治理通知里的举报进度(SYSTEM_GOVERNANCE,payload 带 reportId),点进举报详情与申诉。
+       与 IM 会话是两套数据源,读不到只在这里局部报错,不影响下面的会话列表。 -->
+  <view wx:if="{{activeTab === 'sys' && (reportNotices.length || reportNoticeError)}}" class="report-notices">
+    <cy-inline-error wx:if="{{reportNoticeError}}" kind="data" title="{{reportNoticeError}}" sub="会话消息不受影响" action="重试" bind:action="loadReportNotices" />
+    <view wx:for="{{reportNotices}}" wx:key="key" class="report-notice" data-report-id="{{item.reportId}}" data-notice-id="{{item.notificationId}}" data-unread="{{item.unread}}" bindtap="openReportNotice"
+          aria-role="button" aria-label="举报进度：{{item.title}}，举报编号 {{item.reportId}}，查看详情"
+          hover-class="cy-pressed-bg" hover-stay-time="80">
+      <view class="sys-avatar"><cy-icon name="bell" size="48" /></view>
+      <view class="report-notice__body">
+        <view class="report-notice__top">
+          <text class="report-notice__title">{{item.title}}</text>
+          <text class="report-notice__time">{{item.timeText}}</text>
+        </view>
+        <text class="report-notice__sub">举报编号 {{item.reportId}} · 查看进度</text>
+      </view>
+      <view wx:if="{{item.unread}}" class="report-notice__dot" aria-label="未读"></view>
+    </view>
+  </view>
+
   <!-- 骨架 -->
   <cy-skeleton wx:if="{{loading}}" type="list" count="{{6}}" />
 
@@ -36,7 +55,7 @@
   <cy-error load-failure class="cy-fade-in" wx:elif="{{error}}" title="加载失败" sub="{{errorMsg || '网络好像出了点问题'}}" retry="重试" bind:retry="retryConversations" />
 
   <!-- 空态 -->
-  <cy-empty wx:elif="{{loaded && viewList.length === 0}}"
+  <cy-empty wx:elif="{{loaded && viewList.length === 0 && !(activeTab === 'sys' && reportNotices.length)}}"
             fill
             size="lg"
             title="{{activeTab === 'dm' ? '还没有私信' : '还没有系统通知'}}"

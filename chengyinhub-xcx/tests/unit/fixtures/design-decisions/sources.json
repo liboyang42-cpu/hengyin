@@ -1,0 +1,18 @@
+[
+  {
+    "file": "ui-execution-20260729.md",
+    "source": "小程序UI总执行表_规整加ADA整合_20260729.md",
+    "sourceSha256": "ec2fb4745b1dd390c72c5517c78555f0ffdf194092dead6f312fc8043343320a",
+    "startLine": 22,
+    "endLine": 24,
+    "excerptSha256": "a7a4a90e7673c8680841cf4b3df49eeb082f864e96af3d087bef1bcd33888051"
+  },
+  {
+    "file": "ada-prescription-20260729.md",
+    "source": "小程序ADA级设计升级方案_页面级处方_20260729.md",
+    "sourceSha256": "9056467cead8d168573889e2ddaeaaf40a2c24161d8b3aedff7c3b30aaad0068",
+    "startLine": 62,
+    "endLine": 63,
+    "excerptSha256": "388f32514afc5f21d8540a2c1e0a8b0a13ec1620f31ef588264a4130036de23a"
+  }
+]

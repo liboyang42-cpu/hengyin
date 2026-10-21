@@ -16,6 +16,27 @@ public class AuditTask extends BaseEntity {
     public static final Integer STATUS_ESCALATED = 3;
     public static final Integer STATUS_CANCELLED = 4;
 
+    /** 举报单来源。 */
+    public static final String SOURCE_REPORT = "report";
+
+    /**
+     * AUDIT-INT-5:这几类内容的举报单有独立开放槽(open_guard=2),与内容审核单(open_guard=1)可并存;
+     * 须与 migration_audit_report_lane_20261020.sql 的生成列表达式一致。其余类型举报仍与审核单共用一个槽。
+     */
+    public static final java.util.Set<String> REPORT_LANE_BIZ_TYPES =
+            java.util.Set.of("TOPIC", "TEMPLATE", "TEMPLATE_LIBRARY", "ACTIVITY");
+
+    /** 是否进举报独立槽的来源/类型组合。 */
+    public static boolean isReportLane(String bizType, String sourceType) {
+        return SOURCE_REPORT.equals(sourceType) && REPORT_LANE_BIZ_TYPES.contains(bizType);
+    }
+
+    /** 独立槽里未结(待审/升级)的举报单 —— 不属于内容审核槽,不挡作者编辑/重提、也不吸收内容审核。 */
+    public boolean isOpenReport() {
+        return isReportLane(getBizType(), getSourceType())
+                && (STATUS_PENDING.equals(getStatus()) || STATUS_ESCALATED.equals(getStatus()));
+    }
+
     /** 内容举报 bizType(对齐既有 submit 约定·大写);软封口径:SQUARE/COMMENT 用 status(下2/复1),CLUB_POST(_COMMENT) 用 del_flag(下2/复0),IM 用 status(BLOCKED/NORMAL) */
     public static final String BIZ_MEDIA_ASSET = "MEDIA_ASSET";
     public static final String BIZ_SQUARE = "SQUARE";
@@ -31,12 +52,22 @@ public class AuditTask extends BaseEntity {
     public static final String BIZ_HANGOUT = "HANGOUT";
     /** 地图附近的公开队伍(play_team.join_mode=2);REJECT=确认违规改回邀请制并使待审申请失效,APPROVE=不动。 */
     public static final String BIZ_TEAM = "TEAM";
-    /** M0-6 先审后发 bizType;审核通过(APPROVE)→status=1(上架),驳回(REJECT)→status=2 */
+    /**
+     * 主题内容审核 bizType。2026-10-20 起主题创建/编辑「先发后审」:专业版发布即上架(status=1),
+     * 同时挂一张 topic_bundle_v2 后审单;简易版机审通过直发(check_status=1),机审存疑才挂 post_review_flag 抽检单;
+     * 内容安全图片回调下架的主题(check_status=2 且 status≠2)作者不能自助上架,须过本类审核单(content_safety_relist)。
+     * 审核通过(APPROVE)→check_status=1,首次发布进 Beta;驳回(REJECT)→status=2/check_status=2 并下架。
+     * 开售另由 BIZ_TOPIC_SALE_REVIEW「先审后售」。
+     */
     public static final String BIZ_TOPIC = "TOPIC";
     /** H3 商业主题两阶段审核；bizType 分相保证同一主题可同时拥有独立阶段历史。 */
     public static final String BIZ_TOPIC_PROJECT_REVIEW = "TOPIC_PROJECT_REVIEW";
     public static final String BIZ_TOPIC_SALE_REVIEW = "TOPIC_SALE_REVIEW";
     public static final String BIZ_ACTIVITY = "ACTIVITY";
+    /** 官方活动先审后发(2026-10-20 分级审核);bizId 指向 official_event.id。APPROVE=上架(V1 按时间定状态/V2 进已排期),REJECT=保持不公开 */
+    public static final String BIZ_OFFICIAL_EVENT = "OFFICIAL_EVENT";
+    /** 商家优惠券先发后审抽检单(source=post_review_flag);bizId 指向 sms_coupon.id。REJECT=平台手动失效(status=3),APPROVE=不动 */
+    public static final String BIZ_COUPON = "COUPON";
     /** 玩法模板先审后发；bizId 指向 cms_member_template.id，模板库记录是其同步投影。 */
     public static final String BIZ_TEMPLATE = "TEMPLATE";
     /** 模板广场独立审核；bizId 指向 cms_template_library.id，不回写个人玩法。 */

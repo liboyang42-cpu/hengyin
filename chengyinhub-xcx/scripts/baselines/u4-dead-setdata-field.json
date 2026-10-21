@@ -1,7 +1,7 @@
 {
   "note": "U4 死数据字段存量。只能变小不能变大;修完一条就重跑 --update-baseline。",
   "generatedBy": "setdata-dead-field-lint.js --update-baseline",
-  "count": 310,
+  "count": 309,
   "entries": [
     "components/cy/category-sheet/index.js::selectedIds::A2",
     "components/cy/publish-sheet/index.js::selectedMode::A2",
@@ -47,7 +47,6 @@
     "pages/club/detail/index.js::rawMerchants::A2",
     "pages/club/detail/index.js::sceneStack::A1",
     "pages/club/detail/index.js::tabInitialized::A2",
-    "pages/club/edit/index.js::dirty::A2",
     "pages/club/enroll/index.js::clubId::A2",
     "pages/club/event-ops/index.js::clubId::A2",
     "pages/club/event-ops/index.js::defaultLeadMemberId::A2",

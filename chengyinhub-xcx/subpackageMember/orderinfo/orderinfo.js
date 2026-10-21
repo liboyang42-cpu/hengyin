@@ -2,9 +2,14 @@
 const { openScene } = require('../../utils/scene-entry.js');
 
 Page({
-  data: { id: '' },
+  data: { id: '', navScrolled: false },
   onLoad(options) {
     this.setData({ id: (options && options.id) || '' });
+  },
+  // 透明导航只留给首屏;滚动后转实底,内容不再压到返回键和胶囊下面。
+  onPageScroll(e) {
+    const scrolled = !!(e && e.scrollTop > 60);
+    if (scrolled !== this.data.navScrolled) this.setData({ navScrolled: scrolled });
   },
   // 组件在场景里发 back/close 是「回上一层场景」;深链壳里没有场景栈,退回页面导航。
   // 方法名与按钮字面一致 —— c04-r2 的「按钮字面必须为真」就是盯这条。

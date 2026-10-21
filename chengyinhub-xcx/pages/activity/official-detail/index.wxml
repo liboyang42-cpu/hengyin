@@ -156,6 +156,16 @@
         </view>
       </view>
 
+      <!-- CL6-SLOT official-coorganizers:联合主办展示挂载位(主办 + 全部协办方)。
+           待 CL6 分支 claude/cl6-official-coorganizers-20261015 合入、且公开详情读接口返回 parties 后,
+           在此挂 <cy-official-coorganizers mode="section" parties="{{parties}}" />(index.json 同步登记)。
+           当前 detail/eventBase 不返回 parties,不编造字段,故暂不渲染。 -->
+      <!-- 主办入口:仅当服务端 publish-check 对当前账号放行(本场主办/协办)才出现,玩家看不到 -->
+      <view wx:if="{{organizerEntry}}" class="od-section od-section--divided">
+        <text class="od-heading">主办控制台</text>
+        <text class="od-copy">你参与主办这场活动，可以在控制台里发布、暂停或恢复活动（只有本场有效主办能提交）。</text>
+        <view class="od-organizer-entry" bindtap="openOrganizer" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="打开主办控制台">打开主办控制台</view>
+      </view>
       <view class="od-bottom-space"></view>
     </scroll-view>
 

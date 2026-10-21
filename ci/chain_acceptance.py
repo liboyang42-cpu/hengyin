@@ -946,15 +946,27 @@ def cmd_run(args, environ):
 
 def cmd_storage_stop(args, environ):
     names = container_names(environ)
-    removed = {}
+    removed, readback = {}, {}
     for kind, name in names.items():
-        logs = subprocess.run(["docker", "logs", "--tail", "400", name], stdout=subprocess.PIPE,
-                              stderr=subprocess.STDOUT)
-        Path(args.out).mkdir(parents=True, exist_ok=True)
-        (Path(args.out) / ("%s.container.log" % kind)).write_bytes(logs.stdout)
-        docker("rm", "-f", "-v", name, check=False)
-        removed[kind] = name not in docker("ps", "-a", "--format", "{{.Names}}", check=False).split()
-    merge_receipt(args.out, {"teardown": removed})
+        try:
+            logs = subprocess.run(["docker", "logs", "--tail", "400", name], stdout=subprocess.PIPE,
+                                  stderr=subprocess.STDOUT)
+            Path(args.out).mkdir(parents=True, exist_ok=True)
+            (Path(args.out) / ("%s.container.log" % kind)).write_bytes(logs.stdout)
+        except OSError:
+            pass  # Best-effort logs must not prevent either exact container's cleanup.
+        try:
+            docker("rm", "-f", "-v", name, check=False)
+        except OSError:
+            pass  # A successful independent readback may still prove it was already absent.
+        try:
+            remaining = docker("ps", "-a", "--format", "{{.Names}}", check=True).split()
+        except (GateError, OSError):
+            removed[kind], readback[kind] = False, "UNKNOWN"
+        else:
+            removed[kind] = name not in remaining
+            readback[kind] = "ABSENT" if removed[kind] else "LEFTOVER"
+    merge_receipt(args.out, {"teardown": removed, "teardown_readback": readback})
     return 0 if all(removed.values()) else 1
 
 

@@ -46,7 +46,7 @@ def all_required_clean(directory):
     write_report(directory, "TandianriBatch0FundsMybatisIntegrationTest", 16)
     write_report(directory, "ShopDayOneTicketMySqlIT", 5)
     write_report(directory, "TandianriBatch3FundsMybatisIntegrationTest", 18)
-    write_report(directory, "ClubCorporatePayeeMybatisIntegrationTest", 11)
+    write_report(directory, "ClubCorporatePayeeMybatisIntegrationTest", 14)
     write_report(directory, "ClubEditionCompensationMybatisIntegrationTest", 21)
     write_report(directory, "PlayerWithdrawalCooldownMybatisIntegrationTest", 16)
     write_report(directory, "ClubPayableMybatisIntegrationTest", 20)
@@ -78,6 +78,7 @@ def all_required_clean(directory):
         ("ClubWaitlistTokenMybatisIntegrationTest", 7),
         ("CmsMemberTemplateAudioPatchMybatisIntegrationTest", 9),
         ("CmsTemplateLibraryAudioPatchMybatisIntegrationTest", 9),
+        ("TemplateUseNumFirstAdoptionMybatisIntegrationTest", 3),
         ("ContentInteractionMybatisIntegrationTest", 18),
         ("CreativeSquarePublishIdempotencyMybatisIntegrationTest", 7),
         ("FollowConcurrencyMybatisIntegrationTest", 4),
@@ -240,7 +241,9 @@ class FundsItExpectedCountTest(unittest.TestCase):
         short = "RoamLocationRetentionMySqlIT"
         self.assertEqual(21, funds_it_gate.EXPECTED[short])
         source = _REPO_ROOT / funds_it_gate.SOURCE_FILES[short]
-        self.assertEqual(21, funds_it_gate.count_test_methods(source.read_text(encoding="utf-8")))
+        source_text = source.read_text(encoding="utf-8")
+        self.assertEqual(21, funds_it_gate.count_test_methods(source_text))
+        self.assertIn("void realCleanupTaskPreservesFavoriteRouteAndNonLocationFactsAcrossReplay()", source_text)
         import re
         selector = re.search(r"-Dtest=([^\s]+)", _GATE_SCRIPT.read_text(encoding="utf-8")).group(1).split(",")
         self.assertEqual(1, selector.count(short))

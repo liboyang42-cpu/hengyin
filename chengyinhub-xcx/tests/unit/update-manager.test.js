@@ -106,10 +106,9 @@ test('handlePageNotFound reLaunches the app.json home page once and never loops 
   assert.equal(fresh().handlePageNotFound({ path: 'pages/x' }, {}), false, 'no reLaunch API → no throw');
 });
 
-// app.js 归 C00(LONGRUN_SOURCE_OWNERS.json reserved_not_transferred),本 PR 不改它;
-// 接线以 PR #328 的 CY-HANDOFF 为准。C00 落地后此用例会变红 —— 届时删掉本用例并改为断言已接线。
-test('app.js does not wire utils/update-manager.js yet', { todo: 'app.js 接线待 C00 按 PR #328 CY-HANDOFF 落地' }, () => {
+test('app.js installs the shared update manager and recovers missing pages through the tested helper', () => {
   const source = fs.readFileSync(path.resolve(__dirname, '../../app.js'), 'utf8');
-  assert.doesNotMatch(source, /update-manager\.js/);
-  assert.doesNotMatch(source, /onPageNotFound/);
+  assert.match(source, /require\(['"]\.\/utils\/update-manager\.js['"]\)/);
+  assert.match(source, /installUpdateManager\(this,\s*wx\)/);
+  assert.match(source, /onPageNotFound\s*\([^)]*\)\s*\{\s*handlePageNotFound\(res,\s*wx\)/);
 });

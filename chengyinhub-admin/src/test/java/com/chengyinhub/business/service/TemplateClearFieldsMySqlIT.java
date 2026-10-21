@@ -15,6 +15,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class TemplateClearFieldsMySqlIT {
     private static PooledDataSource source;
+    private static boolean scratchCreated;
     private static JdbcTemplate db;
     private static CmsMemberTemplateMapper mapper;
     private static final Map<String, String> COLUMNS = new LinkedHashMap<>();
@@ -25,7 +26,9 @@ class TemplateClearFieldsMySqlIT {
 
     @BeforeAll static void start() throws Exception {
         assertEquals("127.0.0.1", MybatisItDatabase.host());
-        source = new PooledDataSource("com.mysql.cj.jdbc.Driver", MybatisItDatabase.url("template_clear_fields"), MybatisItDatabase.user(), MybatisItDatabase.password());
+        String scratchUrl = MybatisItDatabase.url("template_clear_fields");
+        scratchCreated = true;
+        source = new PooledDataSource("com.mysql.cj.jdbc.Driver", scratchUrl, MybatisItDatabase.user(), MybatisItDatabase.password());
         db = new JdbcTemplate(source);
         db.execute("CREATE TABLE cms_member_template (id BIGINT PRIMARY KEY, title VARCHAR(255), validation_method INT, reward_rules_json TEXT, merchant_guide TEXT, sensor_type VARCHAR(32), sensor_config TEXT, story_img TEXT)");
         SqlSessionFactoryBean factory = new SqlSessionFactoryBean(); factory.setDataSource(source);
@@ -33,7 +36,10 @@ class TemplateClearFieldsMySqlIT {
         factory.setMapperLocations(new ClassPathResource("mapper/business/CmsMemberTemplateMapper.xml"));
         mapper = new SqlSessionTemplate(factory.getObject()).getMapper(CmsMemberTemplateMapper.class);
     }
-    @AfterAll static void close() { if (source != null) source.forceCloseAll(); }
+    @AfterAll static void close() throws Exception {
+        try { if (source != null) source.forceCloseAll(); }
+        finally { dropScratch(); }
+    }
     private void seed() {
         db.update("DELETE FROM cms_member_template");
         db.update("INSERT INTO cms_member_template VALUES (1,'original',7,'[]','guide','still','{}','image')");
@@ -62,5 +68,29 @@ class TemplateClearFieldsMySqlIT {
         CmsMemberTemplate patch = new ObjectMapper().readValue("{\"id\":1,\"title\":\"updated\",\"clearFields\":[\"sensorConfig\"],\"params\":{\"clearFields\":[\"sensorConfig\"]}}", CmsMemberTemplate.class);
         assertNull(patch.getClearFields()); assertEquals(1, mapper.updateCmsMemberTemplate(patch));
         for (String column : COLUMNS.values()) assertEquals(original.get(column), read().get(column));
+    }
+
+    private static void dropScratch() throws Exception {
+        if (!scratchCreated) return;
+        String database = MybatisItDatabase.databaseName("template_clear_fields");
+        if (!"127.0.0.1".equals(MybatisItDatabase.host()) || !database.matches("chengyin_mybatis_[A-Za-z0-9_]+")) {
+            throw new IllegalStateException("Refusing cleanup outside owned loopback scratch");
+        }
+        try (java.sql.Connection admin = java.sql.DriverManager.getConnection(
+                "jdbc:mysql://127.0.0.1:" + MybatisItDatabase.port() + "/?useSSL=false&allowPublicKeyRetrieval=true",
+                MybatisItDatabase.user(), MybatisItDatabase.password());
+             java.sql.Statement statement = admin.createStatement()) {
+            statement.execute("DROP DATABASE `" + database + "`");
+            try (java.sql.PreparedStatement check = admin.prepareStatement(
+                    "SELECT COUNT(*) FROM information_schema.schemata WHERE schema_name=?")) {
+                check.setString(1, database);
+                try (java.sql.ResultSet row = check.executeQuery()) {
+                    assertTrue(row.next());
+                    assertEquals(0, row.getInt(1), "owned scratch must be absent");
+                    assertFalse(row.next());
+                }
+            }
+            scratchCreated = false;
+        }
     }
 }

@@ -282,8 +282,14 @@
   <cy-sheet variant="full" show="{{moreShow}}" maskClosable bind:close="closeMore">
     <button class="xb-sheet-item" open-type="share" bindtap="onShare" hover-class="xb-sheet-item--press" hover-stay-time="80">分享玩法</button>
     <view class="xb-sheet-item" wx:if="{{ info.validationMethod }}" bindtap="openPopFromMore" hover-class="xb-sheet-item--press" hover-stay-time="80">预览节点</view>
+    <view class="xb-sheet-item" wx:if="{{ reportKind === 'template' }}" bindtap="reportTemplate" hover-class="xb-sheet-item--press" hover-stay-time="80">举报</view>
+    <view class="xb-sheet-item" wx:elif="{{ reportKind === 'personalTemplate' }}" bindtap="reportPersonalTemplate" hover-class="xb-sheet-item--press" hover-stay-time="80">举报</view>
     <view class="xb-sheet-item xb-sheet-cancel" bindtap="closeMore" hover-class="xb-sheet-item--press" hover-stay-time="80">取消</view>
   </cy-sheet>
+
+  <!-- FOLLOWUP-A-1:举报原因弹层,与动态详情同一组件 / 同一文案 -->
+  <cy-option-sheet show="{{reportReasonShow}}" title="选择举报原因" items="{{reportReasonItems}}"
+    confirm-text="提交举报" bind:select="onReportReasonSelect" bind:cancel="onReportReasonCancel" />
 
   <!-- 节点预览:chrome 交给 cy-sheet(标题 + 右上角 ✕)。
        原来面板自己摆一行「取消 / 节点交互预览 / 关闭」,与全站统一的右上 ✕ 是两套关闭手势;

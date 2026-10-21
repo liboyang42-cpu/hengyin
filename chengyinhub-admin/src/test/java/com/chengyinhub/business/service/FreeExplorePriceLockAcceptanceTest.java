@@ -1,5 +1,6 @@
 package com.chengyinhub.business.service;
 
+import com.chengyinhub.business.domain.CmsActivity;
 import com.chengyinhub.business.domain.CmsTopic;
 import com.chengyinhub.business.domain.CoopOrder;
 import com.chengyinhub.business.domain.OmsTicket;
@@ -385,11 +386,11 @@ class FreeExplorePriceLockAcceptanceTest {
         projected.setTotalInventory(37L);
 
         projected.setPrice(new BigDecimal("128")); // 同值不同 scale:玩家报价与锁价一致,放行
-        ReflectionTestUtils.invokeMethod(finalization, "assertTicketProjection", locked, projected);
+        ReflectionTestUtils.invokeMethod(finalization, "assertTicketProjection", locked, projected, new CmsActivity());
 
         projected.setPrice(new BigDecimal("99.00")); // 玩家看到的价 ≠ 锁定价:开售闸拒绝
         IllegalStateException e = assertThrows(IllegalStateException.class,
-                () -> ReflectionTestUtils.invokeMethod(finalization, "assertTicketProjection", locked, projected));
+                () -> ReflectionTestUtils.invokeMethod(finalization, "assertTicketProjection", locked, projected, new CmsActivity()));
         assertEquals("SALE_TICKET_PROJECTION_MISMATCH_PRICE", e.getMessage());
     }
 }

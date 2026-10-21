@@ -50,6 +50,7 @@ class ApiTopicChapterFlowV2ControllerTest
         ReflectionTestUtils.setField(controller, "cmsTopicService", topicService);
         ReflectionTestUtils.setField(controller, "umsMemberService", mock(IUmsMemberService.class));
         ReflectionTestUtils.setField(controller, "wxContentSecurityService", wxSecurity);
+        TopicContentSafetyTestFixtures.wire(controller, wxSecurity);
         // X03:updateTopic 现在会先过节点数额度闸,mock 返回 null=放行,
         // 本用例断言的是章节流契约错误的 400 语义,不该被额度闸挡在前面。
         ReflectionTestUtils.setField(controller, "quotaService", mock(IQuotaService.class));

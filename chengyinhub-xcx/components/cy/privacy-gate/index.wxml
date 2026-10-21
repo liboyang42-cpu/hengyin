@@ -4,21 +4,18 @@
   show="{{true}}"
   variant="half"
   theme="player"
-  title="隐私与定位"
+  title="隐私保护"
   closable="{{false}}"
   mask-closable="{{false}}"
 >
   <view class="pg">
-    <text class="pg__body">为提供城市定位和漫游服务，我们会在你授权后使用位置信息。</text>
-    <view class="pg__link" bindtap="openPrivacyContract" aria-role="button" aria-label="查看用户隐私保护指引" hover-class="cy-pressed" hover-stay-time="80">查看《用户隐私保护指引》</view>
+    <view class="pg__lead"><text>使用城瘾前，请阅读并同意</text><view class="pg__lead-link" bindtap="openService" aria-role="button" aria-label="阅读用户服务协议" hover-class="cy-pressed" hover-stay-time="80">《用户服务协议》</view><text>和</text><view class="pg__lead-link" bindtap="openPrivacyContract" aria-role="button" aria-label="查看用户隐私保护指引" hover-class="cy-pressed" hover-stay-time="80">《隐私保护指引》</view><text>。</text></view>
     <!-- 微信强制:同意必须是原生 button open-type,不能收编 cy-btn。
          2026-09-18 对齐 pages/privacy 已定方案:两颗并排,不同意在左(secondary 描边)、同意在右;
          原来竖排 + ghost 玻璃底与卡面同色,「暂不同意」根本看不清。 -->
-    <view bindtap="openService" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="阅读用户服务协议">阅读《用户服务协议》</view>
-    <checkbox-group bindchange="toggleService"><label><checkbox value="service" checked="{{serviceAgreed}}"/>我已阅读并同意《用户服务协议》及隐私保护指引</label></checkbox-group>
     <view class="pg__actions">
       <cy-btn variant="secondary" disabled="{{submitting}}" class="pg__action" bindtap="disagreePrivacy">暂不同意</cy-btn>
-      <button class="pg__agree" open-type="agreePrivacyAuthorization" bindagreeprivacyauthorization="agreePrivacy" loading="{{submitting}}" disabled="{{submitting || !serviceAgreed}}" aria-disabled="{{submitting || !serviceAgreed}}">同意并继续</button>
+      <button class="pg__agree" open-type="agreePrivacyAuthorization" bindagreeprivacyauthorization="agreePrivacy" loading="{{submitting}}" disabled="{{submitting}}" aria-disabled="{{submitting}}">同意并继续</button>
     </view>
   </view>
 </cy-scene-sheet>

@@ -1,3 +1,5 @@
+// 圈层主题候选表(BL-183)。主包已满(3 MiB 发版棘轮):pages/play 与 pages/topic 两个分包各留一份完全相同的副本
+// (分包之间不能互相 require),tests/unit/circle-theme-copies-identical.test.js 保证两份逐字一致 —— 改一份必须同步另一份。
 const ROLE_LABELS = {
   EXPERIENCE: '主体验',
   REST: '补给/休息',

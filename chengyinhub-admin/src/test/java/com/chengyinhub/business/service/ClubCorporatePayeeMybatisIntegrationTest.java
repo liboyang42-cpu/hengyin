@@ -19,16 +19,28 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
 
 import javax.sql.DataSource;
 import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Proxy;
+import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Date;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -267,6 +279,157 @@ class ClubCorporatePayeeMybatisIntegrationTest {
                 + " where ma.perms = 'business:clubpayee:verify'"
                 + " and mb.perms = 'business:clubpayee:payout'"),
                 "批准这份资料的人与能看到完整明文对公账号的人必须分开，否则那句 remark 就是假的");
+    }
+
+    // 2026-10-20 owner 裁定：历史补页迁移 20261013 保持原字节（迁移账本按 checksum 视为不可变），
+    // 收款审核/打款互斥由前向迁移 20261016_admin_role_payee_separation_forward 统一纠正。
+    // 全新环境：20261013 按指纹在重建回放中排除（0816 已授运营打款，原补页自检会拒绝），
+    // 由前向迁移完成四角色补页、收款互斥与祖先补齐。
+    @Test
+    void freshInstallPayeeForwardInitializesSeparatedGrantsAndReplays() throws Exception {
+        prepareRolePageFixture();
+        execute("DELETE FROM sys_user");
+        List<String> before = roleGrants();
+        runPayeeForward();
+        List<String> after = roleGrants();
+        assertTrue(after.containsAll(before), "前向纠正不能删除既有正向授权");
+        assertEquals("1", scalar(rolePermissionCount("cy_operator", "business:clubpayee:payout")));
+        assertEquals("1", scalar(rolePermissionCount("cy_finance", "business:clubpayee:verify")));
+        assertEquals("0", scalar(rolePermissionCount("cy_operator", "business:clubpayee:verify")));
+        assertEquals("0", scalar(rolePermissionCount("cy_finance", "business:clubpayee:payout")));
+        for (String role : new String[]{"cy_operator", "cy_finance"}) {
+            assertEquals("3", scalar("SELECT COUNT(*) FROM sys_role_menu rm JOIN sys_role r ON r.role_id=rm.role_id"
+                    + " JOIN sys_menu m ON m.menu_id=rm.menu_id WHERE r.role_key='" + role + "'"
+                    + " AND (m.menu_id IN (9000,9001) OR m.perms='business:club:list')"),
+                    "两个角色都必须实际拿到俱乐部页面及两级祖先");
+        }
+        runPayeeForward();
+        assertEquals(after, roleGrants(), "重复执行不得增加或删除授权行");
+    }
+
+    @Test
+    void payeeForwardRemovesExistingOppositeGrantsAndKeepsEveryOtherGrant() throws Exception {
+        for (String conflict : new String[]{"cy_operator:business:clubpayee:verify", "cy_finance:business:clubpayee:payout"}) {
+            prepareRolePageFixture();
+            String[] pair = conflict.split(":", 2);
+            execute("INSERT INTO sys_role_menu SELECT r.role_id,m.menu_id FROM sys_role r JOIN sys_menu m"
+                    + " WHERE r.role_key='" + pair[0] + "' AND m.perms='" + pair[1] + "'");
+            assertEquals("1", scalar(rolePermissionCount(pair[0], pair[1])));
+            List<String> before = roleGrants();
+            runPayeeForward();
+            assertEquals("0", scalar(rolePermissionCount(pair[0], pair[1])), "交叉授权必须被前向迁移移除");
+            List<String> after = roleGrants();
+            assertEquals(before.size() - 1, after.size(), "只移除这一条交叉授权");
+            assertTrue(before.containsAll(after), "已有用户的安装不得批量补授");
+        }
+    }
+
+    @Test
+    void payeeForwardRejectsMissingMenuBeforeAnyGrantChange() throws Exception {
+        prepareRolePageFixture();
+        execute("INSERT INTO sys_role_menu SELECT r.role_id,m.menu_id FROM sys_role r JOIN sys_menu m"
+                + " WHERE r.role_key='cy_finance' AND m.perms='business:clubpayee:payout'");
+        execute("DELETE FROM sys_menu WHERE perms='business:clubhours:correct'");
+        List<String> before = roleGrants();
+        assertThrows(Exception.class, this::runPayeeForward, "缺菜单必须在任何授权改动前拒绝");
+        assertEquals(before, roleGrants(), "拒绝时交叉授权也保持原样，等待人工处置");
+    }
+
+    private void prepareRolePageFixture() throws Exception {
+        resetSchema();
+        execute("DELETE FROM sys_role_menu", "DELETE FROM sys_role",
+                "INSERT INTO sys_role(role_id,role_name,role_key,del_flag) VALUES"
+                        + "(100,'operator','cy_operator','0'),(101,'auditor','cy_auditor','0'),"
+                        + "(102,'support','cy_support','0'),(103,'finance','cy_finance','0')",
+                "DROP TABLE IF EXISTS sys_user",
+                "CREATE TABLE sys_user (user_id BIGINT PRIMARY KEY) ENGINE=InnoDB",
+                "INSERT INTO sys_user VALUES(1)",
+                "INSERT INTO sys_menu(menu_id,menu_name,parent_id,menu_type,visible,status,perms) VALUES"
+                        + "(9000,'root',0,'M','0','0',''),(9001,'clubs',9000,'M','0','0',''),"
+                        + "(9002,'query',9001,'F','0','0','business:club:query')",
+                "UPDATE sys_menu SET parent_id=9001 WHERE perms='business:club:list'");
+        assertEquals(2, runCheckedMigration("migration_20260816_tandianri_batch3_funds_club_payee.sql", 2, 0, null),
+                "旧payee迁移的两条真实scalar合同必须先成立");
+        execute("INSERT INTO sys_role_menu VALUES(100,9002)",
+                "INSERT INTO sys_menu(menu_id,menu_name,parent_id,menu_type,visible,status,perms) VALUES"
+                        + "(9003,'payable-confirm',9001,'F','0','0','business:clubpayable:confirm'),"
+                        + "(9004,'hours-correct',9001,'F','0','0','business:clubhours:correct')");
+    }
+
+    private void runPayeeForward() throws Exception {
+        Path path = Paths.get("sql", "migration_20261016_admin_role_payee_separation_forward.sql");
+        if (!Files.isRegularFile(path)) path = Paths.get("chengyinhub-admin", "sql", path.getFileName().toString());
+        try (Connection connection = dataSource.getConnection()) {
+            ScriptUtils.executeSqlScript(connection, new FileSystemResource(path.toFile()));
+        }
+    }
+
+    private List<String> roleGrants() throws Exception {
+        List<String> rows = new ArrayList<>();
+        try (Connection connection = dataSource.getConnection(); Statement statement = connection.createStatement();
+             ResultSet result = statement.executeQuery("SELECT role_id,menu_id FROM sys_role_menu ORDER BY role_id,menu_id")) {
+            while (result.next()) rows.add(result.getLong(1) + ":" + result.getLong(2));
+        }
+        return rows;
+    }
+
+    private String rolePermissionCount(String role, String permission) {
+        return "SELECT COUNT(*) FROM sys_role_menu rm JOIN sys_role r ON r.role_id=rm.role_id"
+                + " JOIN sys_menu m ON m.menu_id=rm.menu_id WHERE r.role_key='" + role + "' AND m.perms='" + permission + "'";
+    }
+
+    private static final class ReadbackFailure extends AssertionError {
+        private final int index;
+
+        private ReadbackFailure(int index, String sql, Object value) {
+            super("scalar-true #" + index + " readback=" + value + " sql=" + sql);
+            this.index = index;
+        }
+    }
+
+    // Reuse the existing RoamPresenceRevokeJobMySqlIT JDBC-proxy pattern: ScriptUtils owns SQL splitting,
+    // while every top-level SELECT must actually return exactly one column/row whose numeric value is one.
+    private int runCheckedMigration(String filename, int expected, int injectBeforeReadback, String mutationSql) throws Exception {
+        Path path = Paths.get("sql", filename);
+        if (!Files.isRegularFile(path)) path = Paths.get("chengyinhub-admin", "sql", filename);
+        String migration = Files.readString(path, StandardCharsets.UTF_8);
+        assertEquals((long) expected, migration.lines().filter(line -> line.trim().equals("-- runner: assert=scalar-true")).count());
+        AtomicInteger observed = new AtomicInteger();
+        try (Connection connection = dataSource.getConnection()) {
+            Connection checked = (Connection) Proxy.newProxyInstance(Connection.class.getClassLoader(), new Class<?>[]{Connection.class},
+                    (proxy, method, args) -> {
+                        Object result;
+                        try { result = method.invoke(connection, args); } catch (InvocationTargetException e) { throw e.getCause(); }
+                        if (!method.getName().equals("createStatement")) return result;
+                        Statement statement = (Statement) result;
+                        return Proxy.newProxyInstance(Statement.class.getClassLoader(), new Class<?>[]{Statement.class},
+                                (p, operation, parameters) -> {
+                                    String sql = operation.getName().equals("execute") && parameters != null
+                                            && parameters[0] instanceof String ? (String) parameters[0] : null;
+                                    boolean readback = sql != null && sql.stripLeading().toUpperCase(Locale.ROOT).startsWith("SELECT ");
+                                    int index = observed.get() + 1;
+                                    if (readback && index == injectBeforeReadback && mutationSql != null) {
+                                        try (Statement injection = connection.createStatement()) { injection.execute(mutationSql); }
+                                    }
+                                    Object value;
+                                    try { value = operation.invoke(statement, parameters); } catch (InvocationTargetException e) { throw e.getCause(); }
+                                    if (readback) {
+                                        assertEquals(Boolean.TRUE, value);
+                                        try (ResultSet rows = statement.getResultSet()) {
+                                            if (rows.getMetaData().getColumnCount() != 1 || !rows.next()) throw new ReadbackFailure(index, sql, "shape");
+                                            Object scalar = rows.getObject(1);
+                                            if (!(scalar instanceof Number) || new BigDecimal(scalar.toString()).compareTo(BigDecimal.ONE) != 0
+                                                    || rows.next()) throw new ReadbackFailure(index, sql, scalar);
+                                        }
+                                        observed.incrementAndGet();
+                                    }
+                                    return value;
+                                });
+                    });
+            ScriptUtils.executeSqlScript(checked, new ByteArrayResource(migration.getBytes(StandardCharsets.UTF_8)));
+        }
+        assertEquals(expected, observed.get(), "所有声明的scalar断言都必须实际读回");
+        return observed.get();
     }
 
     private String scalar(String sql) throws Exception {

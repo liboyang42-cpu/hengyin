@@ -31,7 +31,9 @@ permissions:
 
 jobs:
   isolated-authenticated-redis-recovery:
-    runs-on: ubuntu-latest
+    # Pinned: the probe copies host strace into the app container (needs a matching glibc)
+    # and hashes the Redis ACL fixture with Python crypt, which Python 3.13 removed.
+    runs-on: ubuntu-24.04
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4

@@ -19,6 +19,7 @@ import org.apache.ibatis.session.Configuration;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 import org.apache.ibatis.transaction.jdbc.JdbcTransactionFactory;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -28,6 +29,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.regex.Matcher;
@@ -54,6 +56,21 @@ class RedemptionRewardClawbackMyBatisTest {
     private static final long REGISTRATION = 9001L;
     private static final long ACTIVITY = 8001L;
     private static final long TOPIC = 700L;
+    private static final String[] SUITES = {"redemption_clawback", "redemption_clawback_whole_order",
+            "redemption_clawback_used", "redemption_clawback_identity", "redemption_clawback_recomplete"};
+
+    // 真库回执要求独立回读清理为 CLEAN：本类建的五个专用库在类结束时删除。
+    @AfterAll
+    static void dropDatabases() throws Exception {
+        String adminUrl = "jdbc:mysql://" + MybatisItDatabase.host() + ":" + MybatisItDatabase.port()
+                + "/?serverTimezone=GMT%2B8&useSSL=false&allowPublicKeyRetrieval=true";
+        try (Connection admin = DriverManager.getConnection(adminUrl, MybatisItDatabase.user(), MybatisItDatabase.password());
+             Statement statement = admin.createStatement()) {
+            for (String suite : SUITES) {
+                statement.execute("DROP DATABASE IF EXISTS `" + MybatisItDatabase.databaseName(suite) + "`");
+            }
+        }
+    }
 
     @Test
     void clawsOnceFloorsAtZeroAndLetsReVerificationEarnAgain() throws Exception {
@@ -178,6 +195,28 @@ class RedemptionRewardClawbackMyBatisTest {
         }
     }
 
+    @Test
+    void laterUnrelatedSameTemplateCouponNeverSubstitutesTheOriginalReceipt() throws Exception {
+        try (SqlSession session = openSession("redemption_clawback_identity")) {
+            Connection c = session.getConnection();
+            createTables(c);
+            exec(c, "INSERT INTO ums_member (id, point, del_flag) VALUES (" + MEMBER + ", 0, 0)",
+                    "INSERT INTO cms_topic_completion_coupon_reward_log (topic_id, member_id, coupon_id, history_id, created_at)"
+                            + " VALUES (" + TOPIC + ", " + MEMBER + ", 30, 41, NOW())",
+                    "INSERT INTO sms_coupon_history (id, coupon_id, member_id, coupon_code, use_status, get_time, del_flag)"
+                            + " VALUES (41, 30, " + MEMBER + ", 'original', 0, NOW(), 0),"
+                            + " (43, 30, " + MEMBER + ", 'unrelated-later', 0, NOW(), 0)");
+            service(session).clawback(redemption(61L), registration(), false, true, "原券冲回", 1L);
+            assertEquals(2, number(c, "SELECT use_status FROM sms_coupon_history WHERE id=41"));
+            assertEquals(0, number(c, "SELECT use_status FROM sms_coupon_history WHERE id=43"),
+                    "同玩家同模板同一分钟的新领取也不能替代原通关券");
+            service(session).clawback(redemption(62L), registration(), false, true, "重复冲回", 1L);
+            assertEquals(0, number(c, "SELECT use_status FROM sms_coupon_history WHERE id=43"));
+            assertEquals(1, number(c, "SELECT COUNT(*) FROM growth_mission_progress"
+                    + " WHERE mission_code='COMPLETION_CLAWBACK_COUPON'"));
+        }
+    }
+
     /**
      * 总控复查补做(拍板4):通关 → 撤销冲回 → 再通关 = 通关积分/XP/通关券只剩一份;勋章不重复;重复冲回不重复扣。
      * 通关奖励服务与冲回服务都是真实现、走真表;只把与本链路无关的依赖(主题读取/成长徽章/官方活动/预算)桩掉。
@@ -255,16 +294,18 @@ class RedemptionRewardClawbackMyBatisTest {
         when(couponHistory.grantCouponWithReceipt(anyLong(), any())).thenAnswer(i -> {
             long id = nextHistoryId.incrementAndGet();
             exec(c, "INSERT INTO sms_coupon_history (id, coupon_id, member_id, coupon_code, use_status, get_time, del_flag)"
-                    + " VALUES (" + id + ", " + ((com.chengyinhub.business.domain.SmsCoupon)i.getArgument(1)).getId() + ", " + i.getArgument(0) + ", 'C" + id + "', 0, NOW(), 0)");
+                    + " VALUES (" + id + ", " + ((com.chengyinhub.business.domain.SmsCoupon) i.getArgument(1)).getId() + ", " + i.getArgument(0) + ", 'C" + id + "', 0, NOW(), 0)");
             return id;
         });
         com.chengyinhub.business.service.impl.TopicCompletionCouponRewardServiceImpl coupons =
                 new com.chengyinhub.business.service.impl.TopicCompletionCouponRewardServiceImpl();
         ReflectionTestUtils.setField(coupons, "rewardMapper", session.getMapper(CmsTopicCompletionCouponRewardMapper.class));
-        com.chengyinhub.business.mapper.SmsCouponMapper couponTemplates = mock(com.chengyinhub.business.mapper.SmsCouponMapper.class);
-        com.chengyinhub.business.domain.SmsCoupon template = new com.chengyinhub.business.domain.SmsCoupon(); template.setId(30L);
-        when(couponTemplates.selectSmsCouponById(30L)).thenReturn(template);
-        ReflectionTestUtils.setField(coupons, "smsCouponMapper", couponTemplates);
+        com.chengyinhub.business.mapper.SmsCouponMapper couponMapper =
+                mock(com.chengyinhub.business.mapper.SmsCouponMapper.class);
+        com.chengyinhub.business.domain.SmsCoupon coupon = new com.chengyinhub.business.domain.SmsCoupon();
+        coupon.setId(30L);
+        when(couponMapper.selectSmsCouponById(30L)).thenReturn(coupon);
+        ReflectionTestUtils.setField(coupons, "smsCouponMapper", couponMapper);
         ReflectionTestUtils.setField(coupons, "smsCouponHistoryService", couponHistory);
 
         com.chengyinhub.business.domain.CmsTopic topic = new com.chengyinhub.business.domain.CmsTopic();
@@ -359,7 +400,7 @@ class RedemptionRewardClawbackMyBatisTest {
                 "member_growth", "sms_coupon_history", "cms_topic_completion_coupon_reward_log"}) {
             exec(c, ddl(base, table));
         }
-        exec(c, "ALTER TABLE cms_topic_completion_coupon_reward_log ADD COLUMN history_id BIGINT NULL");
+        ItSchema.applyMigrations(c, "sql/migration_topic_completion_coupon_history_receipt_20261016.sql");
         // base_schema 快照晚于 migration_app_open_id.sql 之前导出;UmsMemberMapper 的通用查询要这一列
         exec(c, "ALTER TABLE ums_member ADD COLUMN app_open_id varchar(64) NULL AFTER wx_open_id");
         exec(c, ddl(read("chengyinhub-admin/sql/migration_store_verify_growth_delivery_20260913.sql"), "store_verify_growth_delivery"),

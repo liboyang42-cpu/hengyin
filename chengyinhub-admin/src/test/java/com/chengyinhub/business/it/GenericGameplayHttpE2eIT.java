@@ -27,6 +27,11 @@ import com.chengyinhub.framework.web.service.AppLoginService;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.nio.file.Path;
+import java.net.URL;
+import java.net.URLClassLoader;
+import javax.tools.ToolProvider;
+import java.util.Comparator;
 import java.security.Permission;
 import java.security.AllPermission;
 import java.security.CodeSource;
@@ -57,6 +62,278 @@ class GenericGameplayHttpE2eIT {
     @Autowired private JdbcTemplate database;
     private final com.fasterxml.jackson.databind.ObjectMapper json = new com.fasterxml.jackson.databind.ObjectMapper();
     private final com.fasterxml.jackson.databind.node.ArrayNode transcript = json.createArrayNode();
+    private final ReviewedMediaFixture mediaFixture = new ReviewedMediaFixture("generic");
+
+    // shortcut: local PNG and offline signatures exclude OSS I/O; use dedicated OSS acceptance for upload/download.
+    static final class ReviewedMediaFixture implements AutoCloseable {
+        private static final String ENDPOINT = "http://127.0.0.1:9";
+        private static final String BUCKET = "offline-http-e2e";
+        private static final String ACCESS_ID = "offline-http-e2e-not-a-credential";
+        private final String label;
+        private Path directory;
+        private final java.util.Map<Long, String> byOwner = new java.util.LinkedHashMap<>();
+        private final java.util.Map<String, String> byKey = new java.util.LinkedHashMap<>();
+        private final java.util.List<Path> files = new java.util.ArrayList<>();
+        private final ArrayNode evidence = new com.fasterxml.jackson.databind.ObjectMapper().createArrayNode();
+
+        ReviewedMediaFixture(String label) { this.label = label; }
+
+        static void configure(ConfigurableApplicationContext application) {
+            String[][] properties = {{"CHENGYIN_OSS_ENDPOINT", ENDPOINT}, {"CHENGYIN_OSS_BUCKET_NAME", BUCKET},
+                    {"CHENGYIN_OSS_ACCESS_KEY_ID", ACCESS_ID}, {"CHENGYIN_OSS_ACCESS_KEY_SECRET", "offline-http-e2e-not-a-secret"}};
+            for (String[] property : properties) {
+                String inherited = System.getenv(property[0]);
+                assertTrue(inherited == null || inherited.trim().isEmpty() || property[1].equals(inherited),
+                        "HTTP fixture refuses inherited non-fixture OSS settings");
+                TestPropertySourceUtils.addInlinedPropertiesToEnvironment(application, property[0] + "=" + property[1]);
+            }
+        }
+
+        String approvedImage(ConfigurableApplicationContext application, JdbcTemplate database, long memberId) {
+            if (byOwner.containsKey(memberId)) return byOwner.get(memberId);
+            try {
+                if (directory == null) directory = Files.createTempDirectory("http-e2e-media-");
+                String key = "upload/" + UUID.randomUUID().toString().replace("-", "") + ".png";
+                Path file = directory.resolve(key.substring("upload/".length()));
+                java.awt.image.BufferedImage image = new java.awt.image.BufferedImage(2, 2, java.awt.image.BufferedImage.TYPE_INT_RGB);
+                assertTrue(javax.imageio.ImageIO.write(image, "png", file.toFile())); files.add(file);
+                byte[] bytes = Files.readAllBytes(file);
+                String digest = String.format("%064x", new java.math.BigInteger(1, java.security.MessageDigest.getInstance("SHA-256").digest(bytes)));
+                assertArrayEquals(bytes, Files.readAllBytes(file));
+                assertEquals(2, javax.imageio.ImageIO.read(file.toFile()).getWidth());
+                assertEquals(digest, String.format("%064x", new java.math.BigInteger(1,
+                        java.security.MessageDigest.getInstance("SHA-256").digest(Files.readAllBytes(file)))));
+                com.chengyinhub.business.service.impl.AppMediaAssetService assets = application.getBean(com.chengyinhub.business.service.impl.AppMediaAssetService.class);
+                com.chengyinhub.business.service.IAuditTaskService audits = application.getBean(com.chengyinhub.business.service.IAuditTaskService.class);
+                com.chengyinhub.business.service.support.AppMediaPublicationGuard guard = application.getBean(com.chengyinhub.business.service.support.AppMediaPublicationGuard.class);
+                java.util.Map<String, Object> staged = assets.stage(memberId, key);
+                long id = ((Number) staged.get("assetId")).longValue(); String reference = "media-asset:" + id;
+                long taskId = database.queryForObject("SELECT audit_task_id FROM app_media_asset WHERE id=?", Long.class, id);
+                int version = database.queryForObject("SELECT version FROM audit_task WHERE id=?", Integer.class, taskId);
+                assertEquals(1, database.queryForObject("SELECT COUNT(*) FROM app_media_asset WHERE id=? AND member_id=? AND owner_type='APP'"
+                        + " AND storage_type='OSS' AND object_key=? AND media_type='IMAGE' AND review_state='HOLD' AND version=0 AND audit_task_id=?",
+                        Integer.class, id, memberId, key, taskId));
+                assertEquals(1, database.queryForObject("SELECT COUNT(*) FROM audit_task WHERE id=? AND biz_type='MEDIA_ASSET' AND biz_id=?"
+                        + " AND submitter_id=? AND status=0 AND version=? AND JSON_EXTRACT(snapshot_json,'$.assetVersion')=0",
+                        Integer.class, taskId, id, memberId, version));
+                assertEquals("媒体尚未审核通过，暂不能公开", assertThrows(com.chengyinhub.common.exception.ServiceException.class,
+                        () -> guard.requireMedia(memberId, reference, true)).getMessage());
+                assertEquals("媒体来源未经审核，请重新上传", assertThrows(com.chengyinhub.common.exception.ServiceException.class,
+                        () -> guard.requireMedia(memberId, "https://unreviewed.invalid/foreign.png", true)).getMessage());
+
+                com.chengyinhub.common.core.domain.entity.SysUser operator = new com.chengyinhub.common.core.domain.entity.SysUser();
+                operator.setUserId(900000000000L + memberId); operator.setUserName("e2e_media_" + UUID.randomUUID().toString().substring(0, 8));
+                operator.setNickName("HTTP媒体夹具审核员"); operator.setStatus("0");
+                assertEquals(1, application.getBean(com.chengyinhub.system.service.ISysUserService.class).insertUser(operator));
+                assertFalse(operator.isAdmin());
+                assertEquals(1, database.queryForObject("SELECT COUNT(*) FROM sys_user WHERE user_id=? AND status='0' AND del_flag='0'", Integer.class, operator.getUserId()));
+                com.chengyinhub.common.core.domain.model.LoginUser principal = new com.chengyinhub.common.core.domain.model.LoginUser(
+                        operator.getUserId(), null, operator, java.util.Collections.emptySet());
+                com.chengyinhub.business.domain.dto.AuditReviewDTO request = new com.chengyinhub.business.domain.dto.AuditReviewDTO();
+                request.setExpectedVersion(version); request.setStatus(com.chengyinhub.business.domain.AuditTask.STATUS_APPROVED);
+                request.setRequestId("http-media-" + UUID.randomUUID()); request.setActorRoleCode("SYS_USER");
+                org.springframework.security.core.context.SecurityContext previous = org.springframework.security.core.context.SecurityContextHolder.getContext();
+                try {
+                    org.springframework.security.core.context.SecurityContext local = org.springframework.security.core.context.SecurityContextHolder.createEmptyContext();
+                    local.setAuthentication(new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(principal, null, java.util.Collections.emptyList()));
+                    org.springframework.security.core.context.SecurityContextHolder.setContext(local);
+                    assertEquals("无媒体审核权限", assertThrows(com.chengyinhub.common.exception.ServiceException.class,
+                            () -> audits.review(taskId, operator.getUserId(), request)).getMessage());
+                    assertEquals(1, database.queryForObject("SELECT COUNT(*) FROM audit_task WHERE id=? AND status=0 AND version=?", Integer.class, taskId, version));
+                    assertEquals("HOLD", database.queryForObject("SELECT review_state FROM app_media_asset WHERE id=?", String.class, id));
+                    assertEquals(0, database.queryForObject("SELECT COUNT(*) FROM audit_record WHERE task_id=? AND action='APPROVE'", Integer.class, taskId));
+                    assertEquals(0, database.queryForObject("SELECT COUNT(*) FROM business_audit_event WHERE domain_type='PLATFORM' AND domain_id=? AND action='AUDIT_DECISION_APPROVE'", Integer.class, taskId));
+                    assertEquals(0, notificationCount(database, memberId, taskId));
+                    principal.setPermissions(java.util.Collections.singleton("business:mediaReview:approve"));
+                    assertEquals(1, audits.review(taskId, operator.getUserId(), request));
+                } finally { org.springframework.security.core.context.SecurityContextHolder.setContext(previous); }
+                assertEquals(1, database.queryForObject("SELECT COUNT(*) FROM app_media_asset WHERE id=? AND member_id=? AND owner_type='APP'"
+                        + " AND object_key=? AND review_state='APPROVED' AND version=0 AND audit_task_id=?", Integer.class, id, memberId, key, taskId));
+                assertEquals(1, database.queryForObject("SELECT COUNT(*) FROM audit_task WHERE id=? AND status=1 AND version=?", Integer.class, taskId, version + 1));
+                assertEquals(1, database.queryForObject("SELECT COUNT(*) FROM audit_record WHERE task_id=? AND action='APPROVE' AND operator_id=?", Integer.class, taskId, operator.getUserId()));
+                assertEquals(1, database.queryForObject("SELECT COUNT(*) FROM business_audit_event WHERE domain_type='PLATFORM' AND domain_id=?"
+                        + " AND action='AUDIT_DECISION_APPROVE' AND actor_type='SYS_USER' AND actor_member_id=? AND request_id=?",
+                        Integer.class, taskId, operator.getUserId(), request.getRequestId()));
+                assertEquals(1, notificationCount(database, memberId, taskId));
+                assertEquals(reference, guard.requireMedia(memberId, reference, true));
+                byKey.put(key, reference);
+                String signed = assets.approvedUrl(id);
+                assertEquals(reference, knownReference(signed));
+                assertReadViewCanonicalContract(signed, key, reference);
+                byOwner.put(memberId, reference);
+                evidence.addObject().put("assetId", id).put("auditTaskId", taskId).put("pngBytes", bytes.length).put("localPngSha256", digest)
+                        .put("auditState", "APPROVED").put("ossUploadDownload", "NOT_RUN").put("providerReview", "NOT_RUN");
+                return reference;
+            } catch (java.io.IOException | java.security.NoSuchAlgorithmException failure) {
+                throw new IllegalStateException("Local gameplay media fixture failed", failure);
+            }
+        }
+
+        private int notificationCount(JdbcTemplate database, long memberId, long taskId) {
+            return database.queryForObject("SELECT COUNT(*) FROM im_message WHERE receiver_id=? AND sender_id=0"
+                    + " AND JSON_UNQUOTE(JSON_EXTRACT(extra_json,'$.result.taskId'))=?", Integer.class, memberId, String.valueOf(taskId));
+        }
+
+        private String knownReference(String value) {
+            java.net.URI uri = java.net.URI.create(value);
+            assertTrue("http".equals(uri.getScheme()) && "127.0.0.1".equals(uri.getHost()) && uri.getPort() == 9
+                    && uri.getUserInfo() == null && uri.getFragment() == null, "Offline fixture origin required");
+            String prefix = "/" + BUCKET + "/";
+            assertTrue(uri.getRawPath().startsWith(prefix), "Offline fixture bucket required");
+            String key = uri.getRawPath().substring(prefix.length());
+            assertTrue(byKey.containsKey(key), "Only this fixture's known object may be restored");
+            java.util.Map<String, String> query = new java.util.HashMap<>();
+            assertNotNull(uri.getRawQuery());
+            for (String entry : uri.getRawQuery().split("&", -1)) {
+                String[] pair = entry.split("=", 2); assertEquals(2, pair.length);
+                assertNull(query.put(pair[0], pair[1]), "Duplicate offline signature field");
+            }
+            assertEquals(new java.util.HashSet<>(java.util.Arrays.asList("Expires", "OSSAccessKeyId", "Signature")), query.keySet());
+            assertTrue(ACCESS_ID.equals(query.get("OSSAccessKeyId")) && query.get("Expires").matches("[1-9][0-9]{0,11}"),
+                    "Offline public signature shape required");
+            long expires = Long.parseLong(query.get("Expires")), now = java.time.Instant.now().getEpochSecond();
+            assertTrue(expires >= now + 9L * 365 * 24 * 60 * 60 && expires <= now + 11L * 365 * 24 * 60 * 60,
+                    "Short owner/reviewer preview must not become a stable public reference");
+            String signature = java.net.URLDecoder.decode(query.get("Signature"), java.nio.charset.StandardCharsets.UTF_8);
+            assertEquals(20, java.util.Base64.getDecoder().decode(signature).length, "OSS V1 signature shape required");
+            assertEquals(query.get("Signature"), java.net.URLEncoder.encode(signature, java.nio.charset.StandardCharsets.UTF_8),
+                    "Canonical encoded signature required");
+            return byKey.get(key);
+        }
+
+        JsonNode canonicalReadView(JsonNode view) {
+            JsonNode copy = view.deepCopy();
+            if (copy.isTextual() && copy.asText().startsWith(ENDPOINT + "/" + BUCKET + "/"))
+                return new com.fasterxml.jackson.databind.node.TextNode(knownReference(copy.asText()));
+            if (copy.isArray()) for (int i = 0; i < copy.size(); i++)
+                ((ArrayNode) copy).set(i, canonicalReadView(copy.get(i)));
+            if (copy.isObject()) copy.fields().forEachRemaining(field ->
+                    ((ObjectNode) copy).set(field.getKey(), canonicalReadView(field.getValue())));
+            return copy;
+        }
+
+        private void assertReadViewCanonicalContract(String first, String key, String reference) {
+            com.aliyun.oss.OSSClient signer = new com.aliyun.oss.OSSClient(ENDPOINT, ACCESS_ID, "offline-http-e2e-not-a-secret");
+            String second, preview;
+            try {
+                com.aliyun.oss.model.GeneratePresignedUrlRequest request = new com.aliyun.oss.model.GeneratePresignedUrlRequest(BUCKET, key);
+                request.setExpiration(new java.util.Date(System.currentTimeMillis() + 10L * 365 * 24 * 60 * 60 * 1000 + 2000));
+                second = signer.generatePresignedUrl(request).toString();
+                request.setExpiration(new java.util.Date(System.currentTimeMillis() + 300000));
+                preview = signer.generatePresignedUrl(request).toString();
+            } finally { signer.shutdown(); }
+            assertNotEquals(first, second);
+            ObjectNode original = new com.fasterxml.jackson.databind.ObjectMapper().createObjectNode()
+                    .put("text", "fixture-text").put("scope", "TEAM").put("nodeId", 123).put("quantity", 2).put("image", first);
+            original.putArray("order").add("first").add("second");
+            ObjectNode snapshot = original.deepCopy(), expected = original.deepCopy().put("image", reference);
+            assertEquals(expected, canonicalReadView(original));
+            assertEquals(expected, canonicalReadView(original.deepCopy().put("image", second)));
+            assertEquals(snapshot, original, "Read view canonicalization must not mutate the response");
+            assertNotEquals(expected, canonicalReadView(original.deepCopy().put("text", "different")));
+            ObjectNode reordered = original.deepCopy(); reordered.putArray("order").add("second").add("first");
+            assertNotEquals(expected, canonicalReadView(reordered));
+            String foreign = first.replace(ENDPOINT, "http://127.0.0.2:9");
+            assertNotEquals(expected, canonicalReadView(original.deepCopy().put("image", foreign)));
+            assertEquals(foreign, canonicalReadView(original.deepCopy().put("image", foreign)).path("image").asText());
+            for (String refused : new String[]{first.replace(key, "upload/00000000000000000000000000000000.png"),
+                    first + "&Expires=1", first + "&", first.replace("OSSAccessKeyId=" + ACCESS_ID, "OSSAccessKeyId=foreign"),
+                    first.replaceFirst("Signature=[^&]+", "Signature=AAAA"), preview})
+                assertThrows(AssertionError.class, () -> canonicalReadView(original.deepCopy().put("image", refused)));
+        }
+
+        void restoreKnownItemImages(ObjectNode config) {
+            for (JsonNode item : config.path("items")) {
+                String value = item.path("image").asText();
+                if (value.startsWith(ENDPOINT + "/" + BUCKET + "/")) ((ObjectNode) item).put("image", knownReference(value));
+            }
+        }
+
+        @Override public void close() throws java.io.IOException {
+            for (Path file : files) { assertEquals(directory, file.getParent()); Files.delete(file); assertFalse(Files.exists(file)); }
+            if (directory != null) { Files.delete(directory); assertFalse(Files.exists(directory)); }
+            Files.createDirectories(Paths.get("target/http-e2e"));
+            ObjectNode receipt = new com.fasterxml.jackson.databind.ObjectMapper().createObjectNode().put("scope", "GAMEPLAY_MEDIA_STATE_FIXTURE_ONLY")
+                    .put("localFilesRemoved", true).put("ossUploadDownload", "NOT_RUN").put("providerDeviceAcceptance", "NOT_RUN");
+            receipt.set("assets", evidence);
+            Files.write(Paths.get("target/http-e2e/media-fixture-" + label + ".json"), receipt.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        }
+    }
+
+    static JsonNode requireGameCommandReceipt(JsonNode receipt, String outcome) {
+        assertTrue(receipt.isObject(), "Game command receipt required");
+        for (String id : new String[]{"receiptId", "activityId"})
+            assertTrue(receipt.path(id).isIntegralNumber() && receipt.path(id).canConvertToLong() && receipt.path(id).asLong() > 0, "Positive command receipt identity required");
+        assertTrue(receipt.path("requestId").isTextual() && !receipt.path("requestId").asText().trim().isEmpty()
+                && receipt.path("requestId").asText().length() <= 64, "Command request identity required");
+        assertTrue(receipt.path("action").isTextual() && receipt.path("action").asText().matches("[A-Z][A-Z0-9_]{0,63}"), "Command action required");
+        assertEquals(outcome, receipt.path("outcome").asText(), receipt.toString());
+        assertTrue(receipt.path("revision").isIntegralNumber() && receipt.path("revision").canConvertToInt() && receipt.path("revision").asInt(-1) >= 0, "Command revision required");
+        assertTrue(receipt.path("replayed").isBoolean() && receipt.path("result").isObject(), "Complete command receipt required");
+        if ("FAILED".equals(outcome))
+            assertTrue(receipt.path("reasonCode").isTextual() && receipt.path("reasonCode").asText().matches("GAME_[A-Z0-9_]+"), "Game failure reason required");
+        return receipt;
+    }
+
+    static JsonNode appliedResponseData(JsonNode response) {
+        assertEquals(200, response.path("code").asInt(), response.toString());
+        JsonNode data = response.path("data");
+        if (data.isObject() && (data.has("receiptId") || (data.has("requestId") && data.has("action") && data.has("outcome"))))
+            requireGameCommandReceipt(data, "APPLIED");
+        return data;
+    }
+
+    static void rejectedGameCommand(JsonNode response) {
+        assertTrue(response.path("code").isIntegralNumber() && response.path("code").canConvertToInt(), "Ajax command response required");
+        JsonNode data = response.path("data");
+        if (response.path("code").asInt() == 200) requireGameCommandReceipt(data, "FAILED");
+        else assertTrue(data.path("reasonCode").isTextual() && data.path("reasonCode").asText().matches("GAME_[A-Z0-9_]+"),
+                "A technical error without a game reason is not a verified command rejection");
+    }
+
+    static void configureRequestSerialization(TestRestTemplate client, com.fasterxml.jackson.databind.ObjectMapper plainJson) throws java.io.IOException {
+        java.util.List<org.springframework.http.converter.HttpMessageConverter<?>> original =
+                new java.util.ArrayList<>(client.getRestTemplate().getMessageConverters());
+        java.util.List<org.springframework.http.converter.HttpMessageConverter<?>> replacements = new java.util.ArrayList<>();
+        java.util.Map<org.springframework.http.converter.json.MappingJackson2HttpMessageConverter,
+                com.fasterxml.jackson.databind.ObjectMapper> unchanged = new java.util.IdentityHashMap<>();
+        for (org.springframework.http.converter.HttpMessageConverter<?> converter : original) {
+            if (converter instanceof org.springframework.http.converter.json.MappingJackson2HttpMessageConverter) {
+                org.springframework.http.converter.json.MappingJackson2HttpMessageConverter prior =
+                        (org.springframework.http.converter.json.MappingJackson2HttpMessageConverter) converter;
+                unchanged.put(prior, prior.getObjectMapper());
+                assertNotSame(prior.getObjectMapper(), plainJson);
+                org.springframework.http.converter.json.MappingJackson2HttpMessageConverter isolated =
+                        new org.springframework.http.converter.json.MappingJackson2HttpMessageConverter(plainJson);
+                assertNotSame(prior, isolated);
+                ObjectNode request = plainJson.createObjectNode().put("image", "media-asset:1");
+                request.putArray("imageUrls").add("/profile/lc-owned-1.png").add("media-asset:1");
+                org.springframework.mock.http.MockHttpOutputMessage wire = new org.springframework.mock.http.MockHttpOutputMessage();
+                isolated.write(request, org.springframework.http.MediaType.APPLICATION_JSON, wire);
+                assertEquals(request, plainJson.readTree(wire.getBodyAsBytes()), "Client request media values must reach the wire unchanged");
+                replacements.add(isolated);
+            } else replacements.add(converter);
+        }
+        assertFalse(unchanged.isEmpty(), "Expected Jackson2 client converter");
+        client.getRestTemplate().setMessageConverters(replacements);
+        unchanged.forEach((converter, mapper) -> assertSame(mapper, converter.getObjectMapper(), "Server-shared converter must remain untouched"));
+        assertEquals(replacements, client.getRestTemplate().getMessageConverters());
+        ObjectNode receipt = plainJson.createObjectNode().put("receiptId", 1).put("activityId", 1).put("requestId", "fixture-contract")
+                .put("action", "QUEST_RESOLVE").put("outcome", "APPLIED").put("revision", 1).put("replayed", false);
+        receipt.putObject("result");
+        ObjectNode response = plainJson.createObjectNode().put("code", 200); response.set("data", receipt);
+        assertSame(receipt, appliedResponseData(response));
+        assertThrows(AssertionError.class, () -> rejectedGameCommand(response));
+        ObjectNode failed = response.deepCopy();
+        ((ObjectNode) failed.path("data")).put("outcome", "FAILED").put("reasonCode", "GAME_TASK_COST_UNAVAILABLE");
+        rejectedGameCommand(failed);
+        assertThrows(AssertionError.class, () -> appliedResponseData(failed));
+        ObjectNode incomplete = response.deepCopy(); ((ObjectNode) incomplete.path("data")).remove("receiptId");
+        assertThrows(AssertionError.class, () -> appliedResponseData(incomplete));
+        assertThrows(AssertionError.class, () -> rejectedGameCommand(plainJson.createObjectNode().put("code", 500)));
+        ObjectNode noReceipt = plainJson.createObjectNode().put("code", 200); noReceipt.putObject("data");
+        assertThrows(AssertionError.class, () -> rejectedGameCommand(noReceipt));
+    }
 
     static void assertFixtureMapperColumns(Statement statement) throws SQLException {
         try(ResultSet columns=statement.executeQuery("SELECT withdraw_reason, withdraw_required, replacement_of_offer_id FROM merchant_chapter_offer WHERE 1=0")) {
@@ -126,14 +403,89 @@ class GenericGameplayHttpE2eIT {
                     "token.secret=" + secret, "coupon.qr-secret=" + secret,
                     "chengyin.pii.key=" + Base64.getEncoder().encodeToString(key),
                     "withdrawal.pii.key=" + Base64.getEncoder().encodeToString(key),
-                    "wx.pay.enabled=false", "wx.pay.api-v3-key=", "wx.sec-check.enabled=false", "wx.mini.secret=",
+                    "wx.pay.enabled=false", "wx.pay.api-v3-key=", "wx.sec-check.enabled=true", "wx.mini.secret=",
                     "alarm.webhook=", "alarm.failure-webhook=",
                     "spring.quartz.auto-startup=false", "spring.devtools.restart.enabled=false",
                     "chengyin.status.feed-file=target/http-e2e/status.json", "logging.level.com.chengyinhub=WARN");
+            registerContentSecurityFixture(application);
+            ReviewedMediaFixture.configure(application);
         }
     }
 
+    private static void registerContentSecurityFixture(ConfigurableApplicationContext application) {
+        Path root = Paths.get("").toAbsolutePath();
+        while (root != null && !Files.exists(root.resolve("scripts/e2e/E2eWxContentSecurityStub.java.stub"))) root = root.getParent();
+        assertNotNull(root, "Reviewed content-security fixture must exist");
+        assertNotNull(ToolProvider.getSystemJavaCompiler(), "Content-security fixture requires a JDK");
+        try {
+            Path scratch = Files.createTempDirectory("cy-http-content-security-");
+            try {
+                Path source = scratch.resolve("E2eWxContentSecurityStub.java");
+                Files.copy(root.resolve("scripts/e2e/E2eWxContentSecurityStub.java.stub"), source);
+                String classpath = System.getProperty("surefire.test.class.path", System.getProperty("java.class.path"));
+                assertEquals(0, ToolProvider.getSystemJavaCompiler().run(null, null, null,
+                        "-proc:none", "-classpath", classpath, "-d", scratch.toString(), source.toString()));
+                try (URLClassLoader loader = new URLClassLoader(new URL[]{scratch.toUri().toURL()},
+                        GenericGameplayHttpE2eIT.class.getClassLoader())) {
+                    Class<?> stub = loader.loadClass("com.chengyinhub.e2e.E2eWxContentSecurityStub");
+                    org.springframework.beans.factory.support.RootBeanDefinition definition =
+                            new org.springframework.beans.factory.support.RootBeanDefinition(stub);
+                    definition.setPrimary(true);
+                    ((org.springframework.beans.factory.support.BeanDefinitionRegistry) application.getBeanFactory())
+                            .registerBeanDefinition("httpE2eWxContentSecurityStub", definition);
+                }
+            } finally {
+                try (java.util.stream.Stream<Path> files = Files.walk(scratch)) {
+                    for (Path file : (Iterable<Path>) files.sorted(Comparator.reverseOrder())::iterator) Files.delete(file);
+                }
+            }
+        } catch (Exception failure) {
+            throw new IllegalStateException("Reviewed content-security fixture could not be registered", failure);
+        }
+    }
+
+    static void assertContentSecurityFixture(ConfigurableApplicationContext application) {
+        com.chengyinhub.business.service.IWxContentSecurityService security =
+                application.getBean(com.chengyinhub.business.service.IWxContentSecurityService.class);
+        assertSame(application.getBean("httpE2eWxContentSecurityStub"), security);
+        Object target = org.springframework.test.util.AopTestUtils.getUltimateTargetObject(security);
+        assertEquals("com.chengyinhub.e2e.E2eWxContentSecurityStub", target.getClass().getName());
+        assertEquals(com.chengyinhub.business.service.impl.WxContentSecurityServiceImpl.class, target.getClass().getSuperclass());
+        assertTrue(security.isEnabled());
+        assertNull(security.checkText("HTTP fixture", "e2e-http-security-probe"));
+        assertEquals("内容包含违规信息，请修改后重试", security.checkText("E2E-SEC-REJECT", "e2e-http-security-probe"));
+        assertEquals(com.chengyinhub.business.service.IWxContentSecurityService.MSG_UNAVAILABLE, security.checkText("HTTP fixture", null));
+        assertEquals(com.chengyinhub.business.service.IWxContentSecurityService.MSG_UNAVAILABLE, security.checkText("HTTP fixture", ""));
+        assertEquals(com.chengyinhub.business.service.IWxContentSecurityService.MSG_UNAVAILABLE, security.checkText("HTTP fixture", " "));
+        com.chengyinhub.business.service.IWxContentSecurityService real = application.getBean(
+                "wxContentSecurityServiceImpl", com.chengyinhub.business.service.IWxContentSecurityService.class);
+        assertEquals(com.chengyinhub.business.service.IWxContentSecurityService.MSG_UNAVAILABLE, real.checkText("HTTP fixture", " "));
+    }
+
+    static void registerPublisherIdentity(ConfigurableApplicationContext application, JdbcTemplate database, Long memberId) {
+        com.chengyinhub.business.service.impl.MemberIdentityService identities =
+                application.getBean(com.chengyinhub.business.service.impl.MemberIdentityService.class);
+        assertEquals(com.chengyinhub.business.service.impl.MemberIdentityService.MSG_NOT_REGISTERED,
+                identities.checkRegistered(memberId));
+        assertFalse(identities.isRegistered(memberId));
+        // Public synthetic ID from MemberIdentityServiceTest; this is registration, not real-person verification.
+        identities.register(memberId, "测试主理人", "110105199003070017", true,
+                com.chengyinhub.business.service.impl.MemberIdentityService.SOURCE_TOPIC_PUBLISH, "127.0.0.1");
+        assertNull(identities.checkRegistered(memberId));
+        assertTrue(identities.isRegistered(memberId));
+        identities.register(memberId, "测试主理人", "110105199003070017", true,
+                com.chengyinhub.business.service.impl.MemberIdentityService.SOURCE_TOPIC_PUBLISH, "127.0.0.1");
+        assertEquals(1, database.queryForObject("SELECT COUNT(*) FROM ums_member_identity WHERE member_id=?", Integer.class, memberId));
+        assertEquals(1, database.queryForObject("SELECT COUNT(*) FROM consent_record WHERE member_id=? AND doc_type='publisher_identity'", Integer.class, memberId));
+        assertEquals(1, database.queryForObject("SELECT COUNT(*) FROM consent_record WHERE member_id=? AND doc_type='publisher_identity'"
+                + " AND doc_version='v1' AND scene='topic_publish' AND event_type='AGREE'"
+                + " AND scope_type IS NULL AND scope_id IS NULL AND request_id REGEXP '^[0-9a-f]{32}$'"
+                + " AND occurred_at IS NOT NULL AND create_time IS NOT NULL", Integer.class, memberId));
+    }
+
     @org.junit.jupiter.api.BeforeAll void loadExistingPermissionFixture() throws Exception {
+        configureRequestSerialization(http, json);
+        assertContentSecurityFixture(context);
         // Fresh-schema skips migration data; reuse its existing role defaults for local author capabilities.
         for(String file:new String[]{"sql/migration_p1_rbac_permission_defaults.sql","sql/migration_m1_permission_full.sql","sql/migration_p1_rbac_permission_defaults.sql"})
             for(String statement:ItSchema.splitStatements(new String(Files.readAllBytes(Paths.get(file)),java.nio.charset.StandardCharsets.UTF_8))) {
@@ -143,13 +495,15 @@ class GenericGameplayHttpE2eIT {
     }
 
     @AfterAll void closeLocalServer() throws Exception {
-        if (context != null) {
-            java.util.concurrent.ScheduledExecutorService executor = context.getBean("scheduledExecutorService", java.util.concurrent.ScheduledExecutorService.class);
-            executor.shutdown();
-            if (!executor.awaitTermination(5, java.util.concurrent.TimeUnit.SECONDS)) executor.shutdownNow();
+        try { mediaFixture.close(); } finally {
+            if (context != null) {
+                java.util.concurrent.ScheduledExecutorService executor = context.getBean("scheduledExecutorService", java.util.concurrent.ScheduledExecutorService.class);
+                executor.shutdown();
+                if (!executor.awaitTermination(5, java.util.concurrent.TimeUnit.SECONDS)) executor.shutdownNow();
+            }
+            Files.createDirectories(Paths.get("target/http-e2e"));
+            json.writerWithDefaultPrettyPrinter().writeValue(Paths.get("target/http-e2e/transcript.json").toFile(),transcript);
         }
-        Files.createDirectories(Paths.get("target/http-e2e"));
-        json.writerWithDefaultPrettyPrinter().writeValue(Paths.get("target/http-e2e/transcript.json").toFile(),transcript);
     }
 
     @Test void realHttpUsesTheProductionControllerAndRejectsAnonymousState() throws Exception {
@@ -158,7 +512,8 @@ class GenericGameplayHttpE2eIT {
         record("GET","/api/play/theme/state?topicId=1",null,anonymous);
         assertNotEquals(200, anonymous.getBody().path("code").asInt());
         UmsMember author = new UmsMember();author.setPhone("13800000001");author.setNickname("本地测试作者");
-        author.setStatus(1L);author.setDelFlag(0);members.insertUmsMember(author);
+        author.setStatus(1L);author.setDelFlag(0);author.setWxOpenId("e2e-http-generic-13800000001");members.insertUmsMember(author);
+        registerPublisherIdentity(context, database, author.getId());
         MockHttpServletRequest issuance = new MockHttpServletRequest();issuance.setRemoteAddr("127.0.0.1");
         issuance.addHeader("User-Agent", "Local HTTP E2E");
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(issuance));
@@ -337,7 +692,7 @@ class GenericGameplayHttpE2eIT {
         if("WAIT".equals(policy))survival.putObject("zeroWait").put("version",1).put("minutes",1).put("restoreTo",4).put("limit",2).put("thenPolicy","THEME_FAIL");
         if("TEAM".equals(scope))theme.with("gameplayRuntime").put("worldMode","WORLD_SHARED");
         boolean stock=config.path("interactionTools").path("plans").path(0).path("materialCost").size()>0;
-        if(stock){theme.putArray("items").addObject().put("id","paper").put("kind","ITEM").put("name","纸张").put("image","https://static.chengyinhub.com/food.png").put("slotCost",1);theme.putArray("events").addObject().put("id","initial_stock").put("content","初始物资").putArray("grants").addObject().put("itemId","paper").put("quantity",2);}
+        if(stock){theme.putArray("items").addObject().put("id","paper").put("kind","ITEM").put("name","纸张").put("image",mediaFixture.approvedImage(context, database, s.memberId)).put("slotCost",1);theme.putArray("events").addObject().put("id","initial_stock").put("content","初始物资").putArray("grants").addObject().put("itemId","paper").put("quantity",2);}
         for(int i=0;i<2;i++){ObjectNode b=theme.with("templateBindings").putObject("client:lc"+i).put("templateId",s.templateId).put("slotDigest",GameplayTemplateRules.slotDigest(config.path("interactionRules").path("resourceSlots")));b.putObject("values").put("vital",valueKey);ObjectNode items=b.putObject("items");if(stock)items.put("stock","paper");}
         topic.put("themeRuntimeConfig",theme.toString());success(post("/api/topic/v2/update",topic,s.headers));success(form("/api/topic/edit-detail",s.topicId,s.headers));
         s.nodeId=database.queryForObject("SELECT id FROM cms_topic_node WHERE topic_id=? ORDER BY id LIMIT 1",Long.class,s.topicId);
@@ -511,10 +866,23 @@ class GenericGameplayHttpE2eIT {
         // Existing IT upload-verifier seam: HTTP/transactions are real, OSS metadata is local evidence.
         org.springframework.test.util.ReflectionTestUtils.setField(target,"photoEvidenceVerifier",(java.util.function.BiConsumer<String,Long>)(url,member)->{if(!url.equals("/profile/lc-owned-"+member+".png"))throw new IllegalArgumentException("foreign upload");});
         try {
-            Lifecycle s=lifecycle(r5("album"),"BLOCK_HP_COST");ObjectNode foreign=json.createObjectNode();foreign.putArray("imageUrls").add("/profile/lc-owned-0.png");String before=stored(s).toString();rejected(post("/api/play/advanced/action",actionBody(s,"SUBMIT_ALBUM","foreign",foreign),s.headers));assertEquals(before,stored(s).toString());
-            ObjectNode owned=json.createObjectNode();owned.putArray("imageUrls").add("/profile/lc-owned-"+s.memberId+".png");ObjectNode body=actionBody(s,"SUBMIT_ALBUM","album",owned);JsonNode done=success(post("/api/play/advanced/action",body,s.headers));assertTrue(done.path("playKit").path("album").path("done").asBoolean(),done.toString());assertEquals(done,success(post("/api/play/advanced/action",body,s.headers)));success(route(s,"QUEST_RESOLVE","confirm"));assertOutcome(s,"PASS",5,1);
+            Lifecycle s=lifecycle(r5("album"),"BLOCK_HP_COST");
+            ObjectNode foreign=json.createObjectNode();
+            foreign.putArray("imageUrls").add("/profile/lc-owned-0.png");
+            String before=stored(s).toString();
+            rejected(post("/api/play/advanced/action",actionBody(s,"SUBMIT_ALBUM","foreign",foreign),s.headers));
+            assertEquals(before,stored(s).toString());
+            ObjectNode owned=json.createObjectNode();
+            owned.putArray("imageUrls").add("/profile/lc-owned-"+s.memberId+".png");
+            ObjectNode body=actionBody(s,"SUBMIT_ALBUM","album",owned);
+            JsonNode done=success(post("/api/play/advanced/action",body,s.headers));
+            assertTrue(done.path("playKit").path("album").path("done").asBoolean(),done.toString());
+            assertEquals(done,success(post("/api/play/advanced/action",body,s.headers)));
+            success(route(s,"QUEST_RESOLVE","confirm"));
+            assertOutcome(s,"PASS",5,1);
         } finally {org.springframework.test.util.ReflectionTestUtils.setField(target,"photoEvidenceVerifier",original);}
     }
+
     @org.junit.jupiter.params.ParameterizedTest
     @org.junit.jupiter.params.provider.ValueSource(strings={"PASS","FAIL","CLOSED"})
     void r5HttpSettledFeedbackCanReopenThroughTheComponentStartPath(String outcome) throws Exception {
@@ -574,7 +942,7 @@ class GenericGameplayHttpE2eIT {
         ObjectNode c=r5("qa");ObjectNode tools=c.putObject("interactionTools").put("votePolicy","MAJORITY");tools.putArray("plans").addObject().put("planKey","continue").put("title","继续前行").putArray("materialCost").addObject().put("itemId","stock").put("quantity",1);c.with("interactionRules").withArray("resourceSlots").addObject().put("key","stock").put("kind","ITEM").put("label","投入物资").put("required",true);
         Lifecycle s=lifecycle(c,"BLOCK_HP_COST","counter.energy","TEAM",true);JsonNode frozen=persistedTopic(s.topicId,"vote-team-world");assertEquals("TEAM",frozen.path("published").path("gameplayRuntime").path("runtimeScope").asText());assertEquals("WORLD_SHARED",frozen.path("published").path("gameplayRuntime").path("worldMode").asText());assertTrue(frozen.path("published").path("gameplayRuntime").path("plans").size()>0,frozen.toString());assertEquals("paper",frozen.path("published").path("gameplayRuntime").path("plans").path(0).path("materialCost").path(0).path("itemId").asText());
         JsonNode read=success(form("/api/topic/edit-detail",s.topicId,s.headers));assertTrue(read.toString().contains("MAJORITY"));
-        ObjectNode topic=topicRequest("PLAYER投票拒绝");long topicId=success(post("/api/topic/v2/create",topic,s.headers)).path("topicId").asLong();topic.put("id",topicId);refreshChapterIds(topic,topicId);topic.put("journeyRules","{\"schemaVersion\":1,\"stateEnabled\":true,\"attributes\":[{\"key\":\"counter.energy\",\"label\":\"能量\",\"initial\":6,\"min\":0,\"max\":12}]}");ObjectNode reg=json.createObjectNode().put("topicId",topicId);reg.putArray("keys").addObject().put("stateKey","counter.energy").put("keyType","counter").put("scope","run").put("label","能量").put("initialValue",6);success(post("/api/topic/state-keys",reg,s.headers));ObjectNode ch=(ObjectNode)topic.path("chapters").path(0);ch.withArray("nodes").addObject().put("clientNodeKey","vote-player").put("name","投票站").put("templateId",s.templateId).put("nodeTime",0).put("nodeMoney",0).put("latitude","31.2304").put("longitude","121.4737").put("address","本地位置");ch.withArray("blocks").addObject().put("type","node").put("nodeIndex",0);ObjectNode theme=json.createObjectNode().put("schemaVersion",1).put("capacity",6);theme.putObject("gameplayRuntime").put("runtimeScope","PLAYER");ObjectNode b=theme.putObject("templateBindings").putObject("client:vote-player").put("templateId",s.templateId).put("slotDigest",GameplayTemplateRules.slotDigest(c.path("interactionRules").path("resourceSlots")));b.putObject("values").put("vital","counter.energy");b.putObject("items").put("stock","paper");theme.putArray("items").addObject().put("id","paper").put("kind","ITEM").put("name","纸张").put("image","https://static.chengyinhub.com/food.png").put("slotCost",1);topic.put("themeRuntimeConfig",theme.toString());JsonNode refusal=post("/api/topic/v2/update",topic,s.headers);rejected(refusal);assertTrue(refusal.path("msg").asText().contains("投票")||refusal.path("msg").asText().contains("公共世界"),refusal.toString());
+        ObjectNode topic=topicRequest("PLAYER投票拒绝");long topicId=success(post("/api/topic/v2/create",topic,s.headers)).path("topicId").asLong();topic.put("id",topicId);refreshChapterIds(topic,topicId);topic.put("journeyRules","{\"schemaVersion\":1,\"stateEnabled\":true,\"attributes\":[{\"key\":\"counter.energy\",\"label\":\"能量\",\"initial\":6,\"min\":0,\"max\":12}]}");ObjectNode reg=json.createObjectNode().put("topicId",topicId);reg.putArray("keys").addObject().put("stateKey","counter.energy").put("keyType","counter").put("scope","run").put("label","能量").put("initialValue",6);success(post("/api/topic/state-keys",reg,s.headers));ObjectNode ch=(ObjectNode)topic.path("chapters").path(0);ch.withArray("nodes").addObject().put("clientNodeKey","vote-player").put("name","投票站").put("templateId",s.templateId).put("nodeTime",0).put("nodeMoney",0).put("latitude","31.2304").put("longitude","121.4737").put("address","本地位置");ch.withArray("blocks").addObject().put("type","node").put("nodeIndex",0);ObjectNode theme=json.createObjectNode().put("schemaVersion",1).put("capacity",6);theme.putObject("gameplayRuntime").put("runtimeScope","PLAYER");ObjectNode b=theme.putObject("templateBindings").putObject("client:vote-player").put("templateId",s.templateId).put("slotDigest",GameplayTemplateRules.slotDigest(c.path("interactionRules").path("resourceSlots")));b.putObject("values").put("vital","counter.energy");b.putObject("items").put("stock","paper");theme.putArray("items").addObject().put("id","paper").put("kind","ITEM").put("name","纸张").put("image",mediaFixture.approvedImage(context, database, s.memberId)).put("slotCost",1);topic.put("themeRuntimeConfig",theme.toString());JsonNode refusal=post("/api/topic/v2/update",topic,s.headers);rejected(refusal);assertTrue(refusal.path("msg").asText().contains("投票")||refusal.path("msg").asText().contains("公共世界"),refusal.toString());
     }
     @Test void legacyHttpFrozenScanSessionIgnoresLaterR5TemplateEdit() throws Exception {
         ObjectNode legacy=json.createObjectNode().put("schemaVersion",1);legacy.putObject("interactionRules").put("limit",2).putArray("resourceSlots").addObject().put("key","vital").put("kind","VALUE").put("label","能量").put("required",true);legacy.putArray("effects").addObject().put("var","vital").put("op","INC").put("value",1);
@@ -590,7 +958,9 @@ class GenericGameplayHttpE2eIT {
     }
     private Lifecycle teamLifecycle(ObjectNode config) throws Exception {
         Lifecycle s=lifecycle(config,"BLOCK_HP_COST","counter.energy","TEAM",true);
-        long club=success(post("/api/club/apply",json.createObjectNode().put("name","LC真实本地主理团").put("leaderName","LC主理人"),s.headers)).path("clubId").asLong();assertTrue(club>0);
+        String clubName="LC真实本地主理团"+s.memberId;
+        long club=success(post("/api/club/apply",json.createObjectNode().put("name",clubName).put("leaderName","LC主理人"),s.headers)).path("clubId").asLong();assertTrue(club>0);
+        assertEquals(1,database.queryForObject("SELECT COUNT(*) FROM club WHERE id=? AND member_id=? AND name=? AND del_flag=0",Integer.class,club,s.memberId,clubName));
         // Existing local activity/paid/scope fixtures; topic publication and all runtime state/actions use HTTP.
         database.update("INSERT INTO cms_activity(member_id,topic_id,club_id,name,status,publish_status,del_flag,start_date,end_date) VALUES(?,?,?,'LC隔离场次',1,1,0,?,?)",s.memberId,s.topicId,club,new java.sql.Timestamp(System.currentTimeMillis()-3600000),new java.sql.Timestamp(System.currentTimeMillis()+3600000));
         long activity=database.queryForObject("SELECT id FROM cms_activity WHERE topic_id=? AND name='LC隔离场次' ORDER BY id DESC LIMIT 1",Long.class,s.topicId);
@@ -609,16 +979,45 @@ class GenericGameplayHttpE2eIT {
     @org.junit.jupiter.params.ParameterizedTest
     @org.junit.jupiter.params.provider.ValueSource(strings={"easy","medium","hard"})
     void r5HttpTeamCheckRerollIsCaptainOnlyAndSharedSettlementIsIdempotent(String tier) throws Exception {
-        ObjectNode config=r5("check");config.with("check").put("tier",tier);Lifecycle s=teamLifecycle(config);long activity=s.activityId,teamId=s.teamId;org.springframework.http.HttpHeaders partner=s.partner;
-        JsonNode opened=success(post("/api/play/advanced/start",json.createObjectNode().put("topicId",s.topicId).put("nodeId",s.nodeId).put("activityId",activity).put("teamId",teamId),s.headers));s.advancedId=opened.path("sessionId").asLong();assertEquals(2,opened.path("ownerType").asInt(),opened.toString());
-        act(s,"ROLL_CHECK","roll",json.createObjectNode());JsonNode captain=advanced(s);JsonNode other=success(get("/api/play/advanced/state?sessionId="+s.advancedId,partner));com.chengyinhub.business.domain.JourneyRules.Tiers tiers=new com.chengyinhub.business.domain.JourneyRules().getTiers();assertEquals(("easy".equals(tier)?tiers.getEasy():"medium".equals(tier)?tiers.getMedium():tiers.getHard()).getDc(),captain.path("check").path("dc").asInt());assertEquals(tier,captain.path("check").path("tier").asText());assertTrue(captain.path("check").path("allowedActions").toString().contains("REROLL_CHECK"));assertFalse(other.path("check").path("allowedActions").toString().contains("REROLL_CHECK"));
-        rejected(post("/api/play/advanced/action",actionBody(s,"REROLL_CHECK","member-reroll",json.createObjectNode()),partner));act(s,"REROLL_CHECK","captain-reroll",json.createObjectNode());ObjectNode submit=actionBody(s,"SUBMIT_CHECK","submit",json.createObjectNode());JsonNode outcome=success(post("/api/play/advanced/action",submit,s.headers));assertEquals(outcome,success(post("/api/play/advanced/action",submit,s.headers)));
+        ObjectNode config=r5("check");
+        config.with("check").put("tier",tier);
+        Lifecycle s=teamLifecycle(config);
+        long activity=s.activityId,teamId=s.teamId;
+        org.springframework.http.HttpHeaders partner=s.partner;
+        JsonNode opened=success(post("/api/play/advanced/start",json.createObjectNode().put("topicId",s.topicId).put("nodeId",s.nodeId).put("activityId",activity).put("teamId",teamId),s.headers));
+        s.advancedId=opened.path("sessionId").asLong();
+        assertEquals(2,opened.path("ownerType").asInt(),opened.toString());
+        act(s,"ROLL_CHECK","roll",json.createObjectNode());
+        JsonNode captain=advanced(s);
+        JsonNode other=success(get("/api/play/advanced/state?sessionId="+s.advancedId,partner));
+        com.chengyinhub.business.domain.JourneyRules.Tiers tiers=new com.chengyinhub.business.domain.JourneyRules().getTiers();
+        assertEquals(("easy".equals(tier)?tiers.getEasy():"medium".equals(tier)?tiers.getMedium():tiers.getHard()).getDc(),captain.path("check").path("dc").asInt());
+        assertEquals(tier,captain.path("check").path("tier").asText());
+        assertTrue(captain.path("check").path("allowedActions").toString().contains("REROLL_CHECK"));
+        assertFalse(other.path("check").path("allowedActions").toString().contains("REROLL_CHECK"));
+        rejected(post("/api/play/advanced/action",actionBody(s,"REROLL_CHECK","member-reroll",json.createObjectNode()),partner));
+        act(s,"REROLL_CHECK","captain-reroll",json.createObjectNode());
+        ObjectNode submit=actionBody(s,"SUBMIT_CHECK","submit",json.createObjectNode());
+        JsonNode outcome=success(post("/api/play/advanced/action",submit,s.headers));
+        assertEquals(outcome,success(post("/api/play/advanced/action",submit,s.headers)));
         boolean passed=outcome.path("check").path("success").asBoolean();
-        if(passed){JsonNode view=success(get("/api/game/session/view?activityId="+activity+"&perspective=CLUB",s.headers));ObjectNode settle=json.createObjectNode().put("activityId",activity).put("expectedRevision",view.path("revision").asInt()).put("authorityEpoch",view.path("authorityEpoch").asInt()).put("requestId","settle").put("action","QUEST_RESOLVE");settle.putObject("payload").put("questKey","node_"+s.nodeId);JsonNode done=success(post("/api/game/session/command",settle,s.headers));JsonNode repeat=success(post("/api/game/session/command",settle,s.headers));assertEquals(done.path("result"),repeat.path("result"));assertTrue(repeat.path("replayed").asBoolean());}
-        JsonNode player=success(get("/api/game/session/view?activityId="+activity+"&perspective=PLAYER",s.headers)).path("player");assertEquals(passed?"PASS":"FAIL",player.path("lastOutcome").path("outcome").asText(),player.toString());
+        if(passed){JsonNode view=success(get("/api/game/session/view?activityId="+activity+"&perspective=CLUB",s.headers));
+        ObjectNode settle=json.createObjectNode().put("activityId",activity).put("expectedRevision",view.path("revision").asInt()).put("authorityEpoch",view.path("authorityEpoch").asInt()).put("requestId","settle").put("action","QUEST_RESOLVE");
+        settle.putObject("payload").put("questKey","node_"+s.nodeId);
+        JsonNode done=success(post("/api/game/session/command",settle,s.headers));
+        JsonNode repeat=success(post("/api/game/session/command",settle,s.headers));
+        assertEquals(done.path("result"),repeat.path("result"));
+        assertTrue(repeat.path("replayed").asBoolean());
+        }
+        JsonNode player=success(get("/api/game/session/view?activityId="+activity+"&perspective=PLAYER",s.headers)).path("player");
+        assertEquals(passed?"PASS":"FAIL",player.path("lastOutcome").path("outcome").asText(),player.toString());
         assertFalse(player.has("resultCard"),player.toString());
         JsonNode usage=null;for(JsonNode tool:player.path("interactionTools"))if(tool.path("nodeId").asLong()==s.nodeId)usage=tool;assertNotNull(usage,player.toString());assertEquals(passed?1:0,usage.path("count").asInt());assertEquals(passed?1:2,usage.path("remainingCount").asInt());
-        JsonNode owner=json.readTree(database.queryForObject("SELECT variables_json FROM game_story_state WHERE game_session_id=(SELECT id FROM game_session WHERE activity_id=?) AND owner_type='TEAM' AND owner_id=?",String.class,activity,teamId));assertEquals(passed?5:0,owner.path("variables").path(s.valueKey).asInt());assertEquals(passed?1:0,owner.path("themeRuntime").path("cooperation").path("facilities").path("tpl_node_"+s.nodeId).path("count").asInt());success(form("/api/topic/edit-detail",s.topicId,s.headers));success(form("/api/template/myinfo",s.templateId,s.headers));
+        JsonNode owner=json.readTree(database.queryForObject("SELECT variables_json FROM game_story_state WHERE game_session_id=(SELECT id FROM game_session WHERE activity_id=?) AND owner_type='TEAM' AND owner_id=?",String.class,activity,teamId));
+        assertEquals(passed?5:0,owner.path("variables").path(s.valueKey).asInt());
+        assertEquals(passed?1:0,owner.path("themeRuntime").path("cooperation").path("facilities").path("tpl_node_"+s.nodeId).path("count").asInt());
+        success(form("/api/topic/edit-detail",s.topicId,s.headers));
+        success(form("/api/template/myinfo",s.templateId,s.headers));
     }
 
     @Test void r5HttpTeamVoteStakeExecutesOnceAndReopensPublishedTemplate() throws Exception {
@@ -662,7 +1061,8 @@ class GenericGameplayHttpE2eIT {
         request.put("configVersion",database.queryForObject("SELECT config_version FROM cms_topic WHERE id=?",Long.class,topicId));
     }
     private org.springframework.http.HttpHeaders loginHeaders(String phone,String nickname) {
-        UmsMember member=new UmsMember();member.setPhone(phone);member.setNickname(nickname);member.setStatus(1L);member.setDelFlag(0);members.insertUmsMember(member);
+        UmsMember member=new UmsMember();member.setPhone(phone);member.setNickname(nickname);member.setStatus(1L);member.setDelFlag(0);member.setWxOpenId("e2e-http-generic-"+phone);members.insertUmsMember(member);
+        registerPublisherIdentity(context, database, member.getId());
         context.getBean(com.chengyinhub.business.service.ICapabilityService.class).grant(member.getId(),"club_leader",member.getId());
         MockHttpServletRequest request=new MockHttpServletRequest();request.setRemoteAddr("127.0.0.1");request.addHeader("User-Agent","Local HTTP E2E");
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
@@ -680,7 +1080,7 @@ class GenericGameplayHttpE2eIT {
         ResponseEntity<JsonNode> response=http.exchange(path,org.springframework.http.HttpMethod.POST,new org.springframework.http.HttpEntity<>(body,headers),JsonNode.class);
         record("POST",path,json.createObjectNode().put("id",id),response);return response.getBody();
     }
-    private JsonNode success(JsonNode response) {assertEquals(200,response.path("code").asInt(),response.toString());return response.path("data");}
+    private JsonNode success(JsonNode response) {return appliedResponseData(response);}
     private void rejected(JsonNode response) {assertNotEquals(200,response.path("code").asInt(),response.toString());}
     private JsonNode persistedTopic(long id,String phase) throws Exception {
         java.util.Map<String,Object> row=database.queryForMap("SELECT id,member_id,is_template,journey_rules_json,journey_story_json,theme_runtime_config_json,published_theme_runtime_config_json,published_route_graph_json FROM cms_topic WHERE id=?",id);

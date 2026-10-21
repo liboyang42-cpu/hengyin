@@ -1,0 +1,320 @@
+{
+  "baseline": "d83a7d7a5be34961fb07a582000af9b408a8dfa2",
+  "moves": [
+    {
+      "section": "u1Variable",
+      "from": "chengyinhub-xcx/subpackageMember/components/cy/profile/index.js:571",
+      "to": "chengyinhub-xcx/subpackageMember/components/cy/profile/index.js:658",
+      "exactLine": true
+    },
+    {
+      "section": "u1Variable",
+      "from": "chengyinhub-xcx/subpackageMember/components/cy/profile/index.js:982",
+      "to": "chengyinhub-xcx/subpackageMember/components/cy/profile/index.js:1088",
+      "exactLine": true
+    },
+    {
+      "section": "u1Variable",
+      "from": "chengyinhub-xcx/pages/index/index.js:1019",
+      "to": "chengyinhub-xcx/pages/index/index.js:1041",
+      "exactLine": true
+    },
+    {
+      "section": "u1Variable",
+      "from": "chengyinhub-xcx/subpackageA/pages/myproject/index.js:505",
+      "to": "chengyinhub-xcx/subpackageA/pages/myproject/index.js:569",
+      "exactLine": true
+    },
+    {
+      "section": "u4Dynamic",
+      "from": "chengyinhub-xcx/subpackageMember/components/cy/profile/index.js:1847",
+      "to": "chengyinhub-xcx/subpackageMember/components/cy/profile/index.js:1987",
+      "exactLine": true
+    },
+    {
+      "section": "u4Dynamic",
+      "from": "chengyinhub-xcx/pages/index/index.js:1287",
+      "to": "chengyinhub-xcx/pages/index/index.js:1309",
+      "exactLine": true
+    },
+    {
+      "section": "u4Dynamic",
+      "from": "chengyinhub-xcx/pages/index/index.js:1394",
+      "to": "chengyinhub-xcx/pages/index/index.js:1416",
+      "exactLine": true
+    },
+    {
+      "section": "u4Dynamic",
+      "from": "chengyinhub-xcx/pages/play/index.js:1518",
+      "to": "chengyinhub-xcx/pages/play/index.js:1614",
+      "exactLine": true
+    },
+    {
+      "section": "u4Dynamic",
+      "from": "chengyinhub-xcx/subpackageMember/components/cy/profile/index.js:1038",
+      "to": "chengyinhub-xcx/subpackageMember/components/cy/profile/index.js:1145",
+      "exactLine": true
+    },
+    {
+      "section": "u4Dynamic",
+      "from": "chengyinhub-xcx/pages/index/index.js:1178",
+      "to": "chengyinhub-xcx/pages/index/index.js:1200",
+      "exactLine": true
+    },
+    {
+      "section": "u4Dynamic",
+      "from": "chengyinhub-xcx/pages/publish/fabu/index.js:732",
+      "to": "chengyinhub-xcx/pages/publish/fabu/index.js:742",
+      "exactLine": true
+    },
+    {
+      "section": "u4Dynamic",
+      "from": "chengyinhub-xcx/pages/publish/fabu/index.js:901",
+      "to": "chengyinhub-xcx/pages/publish/fabu/index.js:994",
+      "exactLine": true
+    },
+    {
+      "section": "u4Dynamic",
+      "from": "chengyinhub-xcx/pages/publish/fabu/index.js:2531",
+      "to": "chengyinhub-xcx/pages/publish/fabu/index.js:2681",
+      "exactLine": true
+    },
+    {
+      "section": "u4Dynamic",
+      "from": "chengyinhub-xcx/pages/publish/fabu/index.js:3589",
+      "to": "chengyinhub-xcx/pages/publish/fabu/index.js:3741",
+      "exactLine": true
+    },
+    {
+      "section": "u4Dynamic",
+      "from": "chengyinhub-xcx/pages/publish/fabu/index.js:3970",
+      "to": "chengyinhub-xcx/pages/publish/fabu/index.js:4122",
+      "exactLine": true
+    },
+    {
+      "section": "u4Dynamic",
+      "from": "chengyinhub-xcx/pages/publish/fabu/index.js:4991",
+      "to": "chengyinhub-xcx/pages/publish/fabu/index.js:5185",
+      "exactLine": true
+    },
+    {
+      "section": "u4Dynamic",
+      "from": "chengyinhub-xcx/pages/publish/fabu/index.js:5249",
+      "to": "chengyinhub-xcx/pages/publish/fabu/index.js:5444",
+      "exactLine": true
+    },
+    {
+      "section": "u4Dynamic",
+      "from": "chengyinhub-xcx/pages/publish/fabu/index.js:5900",
+      "to": "chengyinhub-xcx/pages/publish/fabu/index.js:6100",
+      "exactLine": true
+    },
+    {
+      "section": "u4Dynamic",
+      "from": "chengyinhub-xcx/pages/publish/fabu/index.js:5910",
+      "to": "chengyinhub-xcx/pages/publish/fabu/index.js:6110",
+      "exactLine": true
+    },
+    {
+      "section": "u4Dynamic",
+      "from": "chengyinhub-xcx/pages/publish/fabu/index.js:5963",
+      "to": "chengyinhub-xcx/pages/publish/fabu/index.js:6163",
+      "exactLine": true
+    },
+    {
+      "section": "u4Dynamic",
+      "from": "chengyinhub-xcx/pages/publish/fabu/index.js:8061",
+      "to": "chengyinhub-xcx/pages/publish/fabu/index.js:8355",
+      "exactLine": true
+    },
+    {
+      "section": "u4Dynamic",
+      "from": "chengyinhub-xcx/pages/publish/fabu/index.js:6304",
+      "to": "chengyinhub-xcx/pages/publish/fabu/index.js:6504",
+      "exactLine": true
+    },
+    {
+      "section": "u5Silent",
+      "from": "chengyinhub-xcx/pages/play/index.js:6691",
+      "to": "chengyinhub-xcx/pages/play/index.js:7649",
+      "exactLine": true
+    }
+  ],
+  "removedDebt": [
+    "chengyinhub-xcx/pages/publish/fabu/index.js#inlineEdit",
+    "chengyinhub-xcx/pages/index/index.js#locationInfo"
+  ],
+  "newExemptions": 0,
+  "ratchetU4Field": {
+    "before": 129,
+    "after": 127
+  },
+  "actionLedger": {
+    "before": {
+      "controls": 4888,
+      "tap": 2088,
+      "eventContract": 2435
+    },
+    "after": {
+      "controls": 4894,
+      "tap": 2090,
+      "eventContract": 2438
+    },
+    "addedControls": [
+      "home city location enable",
+      "home city location disable",
+      "member login recovery",
+      "myproject login recovery",
+      "profile login recovery",
+      "mytemplate retry"
+    ],
+    "classificationChanges": [
+      "home privacy settled: state to external",
+      "voice touch end/cancel: state to other"
+    ]
+  },
+  "finalLineReanchors": [
+    {
+      "sourceCommit": "6288fb127dececdf0e9065cb2e7af6b2cf763a67",
+      "baselineBeforeSha256": "29eeb4d2a1c9c01105af08299e7119bad0be093d63a0bdab76eb9112cb08f36b",
+      "baselineAfterSha256": "cbfc933d19fa9ae0cf5e5aed8a84ca45f45340899cad86f2ccdb2d092a0618b1",
+      "moves": [
+        {
+          "section": "u4Dynamic",
+          "from": "chengyinhub-xcx/pages/play/index.js:1614",
+          "to": "chengyinhub-xcx/pages/play/index.js:1620",
+          "exactLine": true,
+          "sourceLineSha256": "83ee3075ca1fe8861aba54ad0f9b937740c1615204539498ae0cc547eca435f7",
+          "sourceLine": "        that.setData(patch);"
+        },
+        {
+          "section": "u4Dynamic",
+          "from": "chengyinhub-xcx/pages/publish/fabu/index.js:742",
+          "to": "chengyinhub-xcx/pages/publish/fabu/index.js:758",
+          "exactLine": true,
+          "sourceLineSha256": "0ba6d6e918622310b25857a0459e7146375f7e96fcf8ce90b84b62e33731f69f",
+          "sourceLine": "    this.setData(patch, () => {"
+        },
+        {
+          "section": "u4Dynamic",
+          "from": "chengyinhub-xcx/pages/publish/fabu/index.js:994",
+          "to": "chengyinhub-xcx/pages/publish/fabu/index.js:1010",
+          "exactLine": true,
+          "sourceLineSha256": "aa2060fbc8bf6b9a045b977b989f2bbb1c7f8bfa6e5cdeed02ed100da446f9a0",
+          "sourceLine": "    this.setData(Object.assign({"
+        },
+        {
+          "section": "u4Dynamic",
+          "from": "chengyinhub-xcx/pages/publish/fabu/index.js:2681",
+          "to": "chengyinhub-xcx/pages/publish/fabu/index.js:2697",
+          "exactLine": true,
+          "sourceLineSha256": "7f74352385ab8f0288ff8e9078fb388bb0daa1f60248e037e3bb08a59f630937",
+          "sourceLine": "    this.setData(patch);"
+        },
+        {
+          "section": "u4Dynamic",
+          "from": "chengyinhub-xcx/pages/publish/fabu/index.js:3741",
+          "to": "chengyinhub-xcx/pages/publish/fabu/index.js:3757",
+          "exactLine": true,
+          "sourceLineSha256": "c170ce0c5331bfd545b11ea412417ac884d22e0816aa4cbed62b449996b80072",
+          "sourceLine": "        that.setData(patch, () => that.refreshPrimaryActionState());"
+        },
+        {
+          "section": "u4Dynamic",
+          "from": "chengyinhub-xcx/pages/publish/fabu/index.js:4122",
+          "to": "chengyinhub-xcx/pages/publish/fabu/index.js:4138",
+          "exactLine": true,
+          "sourceLineSha256": "7f74352385ab8f0288ff8e9078fb388bb0daa1f60248e037e3bb08a59f630937",
+          "sourceLine": "    this.setData(patch);"
+        },
+        {
+          "section": "u4Dynamic",
+          "from": "chengyinhub-xcx/pages/publish/fabu/index.js:5185",
+          "to": "chengyinhub-xcx/pages/publish/fabu/index.js:5201",
+          "exactLine": true,
+          "sourceLineSha256": "4346e41f393d6a3f7054dcb4d9fafb16890f8045a8e19560cca01d439f2f774b",
+          "sourceLine": "          that.setData(patch, () => {"
+        },
+        {
+          "section": "u4Dynamic",
+          "from": "chengyinhub-xcx/pages/publish/fabu/index.js:5444",
+          "to": "chengyinhub-xcx/pages/publish/fabu/index.js:5460",
+          "exactLine": true,
+          "sourceLineSha256": "08e613e824632f0bb3639658a84e4d24f7ea6c8723850b7e70a7443030a0bfbb",
+          "sourceLine": "    this.setData(update, () => this.refreshTicketSaveState());"
+        },
+        {
+          "section": "u4Dynamic",
+          "from": "chengyinhub-xcx/pages/publish/fabu/index.js:6100",
+          "to": "chengyinhub-xcx/pages/publish/fabu/index.js:6116",
+          "exactLine": true,
+          "sourceLineSha256": "293683734127c6cf70c70d5f85ecf01e007c8e8f24dc28e2f87552d751270b97",
+          "sourceLine": "    if (Object.keys(summaryPatch).length) this.setData(summaryPatch);"
+        },
+        {
+          "section": "u4Dynamic",
+          "from": "chengyinhub-xcx/pages/publish/fabu/index.js:6110",
+          "to": "chengyinhub-xcx/pages/publish/fabu/index.js:6126",
+          "exactLine": true,
+          "sourceLineSha256": "0e854a780ba56c16e22018e67824020e022bfff59858494e7a738b443dbaa3c4",
+          "sourceLine": "    if (Object.keys(patch).length) this.setData(patch);"
+        },
+        {
+          "section": "u4Dynamic",
+          "from": "chengyinhub-xcx/pages/publish/fabu/index.js:6163",
+          "to": "chengyinhub-xcx/pages/publish/fabu/index.js:6179",
+          "exactLine": true,
+          "sourceLineSha256": "0ba6d6e918622310b25857a0459e7146375f7e96fcf8ce90b84b62e33731f69f",
+          "sourceLine": "    this.setData(patch, () => {"
+        },
+        {
+          "section": "u4Dynamic",
+          "from": "chengyinhub-xcx/pages/publish/fabu/index.js:8355",
+          "to": "chengyinhub-xcx/pages/publish/fabu/index.js:8418",
+          "exactLine": true,
+          "sourceLineSha256": "fbccefe657ad6463b7abadb4843cf292e61a04befe829b5a1cfcaff889eba1b1",
+          "sourceLine": "    this.setData(view.patch);"
+        },
+        {
+          "section": "u4Dynamic",
+          "from": "chengyinhub-xcx/pages/publish/fabu/index.js:6504",
+          "to": "chengyinhub-xcx/pages/publish/fabu/index.js:6520",
+          "exactLine": true,
+          "sourceLineSha256": "518466e76845e461e68b93bc1f24610107c85779d33061b63a4f9d4e5e9e4ca8",
+          "sourceLine": "    this.setData({ [field]: e.detail.value, identityError: '' }, () => this.syncIdentityReady());"
+        },
+        {
+          "section": "u5Silent",
+          "from": "chengyinhub-xcx/pages/play/index.js:7649",
+          "to": "chengyinhub-xcx/pages/play/index.js:7688",
+          "exactLine": true,
+          "sourceLineSha256": "2c39a2ce32ad8c581494f22e47712905a1fe4f152a2fb2b5290313b444d24e5c",
+          "sourceLine": "      url: '/api/play/my-completed', method: 'POST', hideLoading: true, silentError: true,"
+        }
+      ],
+      "sourceFiles": {
+        "chengyinhub-xcx/pages/play/index.js": {
+          "beforeSha256": "62b7b55d820d280aec87f1d3a5a3460b19f5f7b2e9b07a990eca23a372af13d1",
+          "afterSha256": "139ed25a15f6f540a09f611f3df3938eb12a6e47b2612e7c65d5c4d173ce3fde"
+        },
+        "chengyinhub-xcx/pages/publish/fabu/index.js": {
+          "beforeSha256": "11bc4249a1da78594e50359becbaea2aedba2eee0ec73d5cd0dee7e2ce6de56c",
+          "afterSha256": "f5b123b8cdf23a3cebf787d97320cec1dc9b7323688ad4f967a461fc3a602afa"
+        }
+      },
+      "newExemptions": 0,
+      "debtCountsBefore": {
+        "u1Variable": 11,
+        "u4Dynamic": 64,
+        "u5Silent": 37
+      },
+      "debtCountsAfter": {
+        "u1Variable": 11,
+        "u4Dynamic": 64,
+        "u5Silent": 37
+      },
+      "retentionReasonsUnchanged": true,
+      "ratchetLimitsUnchanged": true
+    }
+  ]
+}

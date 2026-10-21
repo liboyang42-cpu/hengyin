@@ -51,6 +51,7 @@ class OWN_C03_24Test {
                 mock(com.chengyinhub.business.service.impl.MemberIdentityService.class));
         when(quotaService.checkCreate(anyLong(), anyString())).thenReturn(null);
         when(contentSecurity.checkText(any(), any())).thenReturn(null);
+        com.chengyinhub.web.controller.api.TopicContentSafetyTestFixtures.wire(controller, contentSecurity);
     }
 
     /** 自由探索:绕开经典定向那段俱乐部门禁,直达 service 调用,让抛出的异常走到 catch。 */
@@ -64,7 +65,8 @@ class OWN_C03_24Test {
 
     private void rejected(AjaxResult result) {
         assertEquals(400, result.get(AjaxResult.CODE_TAG));
-        org.mockito.Mockito.verifyNoInteractions(topicService);
+        org.mockito.Mockito.verify(topicService).selectCmsTopicById(77L);
+        org.mockito.Mockito.verifyNoMoreInteractions(topicService);
     }
     @Test void titleRejectionIsKnownBeforeWrite() {
         when(contentSecurity.checkText(any(), any())).thenReturn("内容包含违规信息");

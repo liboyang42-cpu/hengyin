@@ -269,6 +269,8 @@ export default {
         { label: '主题开售审核', value: 'TOPIC_SALE_REVIEW' },
         { label: '主题', value: 'TOPIC' },
         { label: '活动', value: 'ACTIVITY' },
+        { label: '官方活动', value: 'OFFICIAL_EVENT' },
+        { label: '优惠券抽检', value: 'COUPON' },
         { label: '玩法模板', value: 'TEMPLATE' },
         { label: '商家城市节点', value: 'merchant_node' },
         { label: '商家节点模板', value: 'merchant_node_template' },

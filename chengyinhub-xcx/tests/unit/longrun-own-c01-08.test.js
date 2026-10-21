@@ -1,5 +1,4 @@
 'use strict';
-// Written only; NOT_RUN.
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { createGameSessionClient } = require('../../utils/game-session-client.js');

@@ -7,6 +7,7 @@ const cyToast = require('../../utils/toast.js');
 const motion = require('../../utils/motion.js');
 const app = getApp();
 const bgTracker = require('../../utils/location/bg-tracker.js');
+let playLocationOwnerSequence = 0; // 每次实际持有使用独立key，旧页面不能释放新会话。
 const analytics = require('../../utils/analytics.js');
 const { activityShareFromEvent } = require('../../utils/activity-share.js');
 const { bundledMerchantGameAudioPath } = require('./utils/merchant-game-assets.js');
@@ -830,12 +831,17 @@ Page({
 
   /** 行程结束的唯一收尾口(通关/退出/离开页面都走它),幂等 */
   _stopTracking() {
+    this._playLocationEpoch = (this._playLocationEpoch || 0) + 1;
+    this._locationRequesting = false;
     this._watching = false;
     if (this._playLocationHandler) {
       try { wx.offLocationChange(this._playLocationHandler); } catch (e) {}
       this._playLocationHandler = null;
     }
-    bgTracker.release(this._trackKey());
+    const release = this._releasePlayTracking;
+    this._releasePlayTracking = null;
+    this._playTrackingKey = null;
+    if (release) release();
   },
 
   onUnload() {
@@ -4440,9 +4446,15 @@ Page({
   // ---------- 定位 ----------
   // 仅由「开始游玩」或「前往此站」触发。进入页面时不预先请求，拒绝后仍可扫码完成。
   requestPlayLocation() {
-    if (this.data.isPreview || this.data.isMock || this.data.gpsOk || this._locationRequesting) return;
+    if (!this._isPlayAccountCurrent() || this.data.isPreview || this.data.isMock || this.data.gpsOk || this._locationRequesting) return;
     const that = this;
+    // 与加载代际分开：锁屏或切后台不撤回已明确同意的游玩定位。
+    const epoch = this._playLocationEpoch = (this._playLocationEpoch || 0) + 1;
+    const sessionKey = this._sessionKey();
+    const current = () => that._isPlayAccountCurrent() && epoch === that._playLocationEpoch
+      && sessionKey === that._sessionKey();
     const unavailable = (hint) => {
+      if (!current()) return;
       that._locationRequesting = false;
       that.setData({ gpsOk: false, gpsHint: hint });
     };
@@ -4454,16 +4466,19 @@ Page({
       confirmText: '开启定位',
       cancelText: '先用扫码',
       success(result) {
+        if (!current()) return;
         if (!result.confirm) { unavailable('定位未开启 · 可扫码完成到达'); return; }
         wx.getLocation({
           type: 'gcj02', isHighAccuracy: true,
           success(loc) {
+            if (!current()) return;
             that._loc = { longitude: loc.longitude, latitude: loc.latitude, accuracy: loc.accuracy };
             that._locationRequesting = false;
             that.setData({ gpsOk: true, gpsHint: '定位已开启 · 靠近后会自动点亮' }, () => {
+              if (!current()) return;
               that._noteLocAccuracy(loc.accuracy);
               that.rebuild();
-              that.watchLocation();
+              if (current()) that.watchLocation();
             });
           },
           fail() { unavailable('定位未开启 · 可扫码完成到达'); }
@@ -4481,8 +4496,31 @@ Page({
   },
   watchLocation() {
     const that = this;
-    if (this._watching) return;                       // 防 onShow 重复注册→监听叠加→一次定位多次 arrive
+    if (!this._isPlayAccountCurrent()) { this._stopTracking(); return; }
+    if (this._watching) return; // 同一持有者不重复注册监听。
     this._watching = true;
+    const epoch = this._playLocationEpoch || 0;
+    const sessionKey = this._sessionKey();
+    const trackingKey = this._trackKey() + ':' + (++playLocationOwnerSequence);
+    let released = false;
+    const release = () => {
+      if (released) return;
+      released = true;
+      if (that._releasePlayTracking === release) {
+        that._releasePlayTracking = null;
+        that._playTrackingKey = null;
+        that._watching = false;
+        if (that._playLocationHandler) {
+          try { wx.offLocationChange(that._playLocationHandler); } catch (e) {}
+          that._playLocationHandler = null;
+        }
+      }
+      bgTracker.release(trackingKey);
+    };
+    this._playTrackingKey = trackingKey;
+    this._releasePlayTracking = release;
+    const current = () => that._releasePlayTracking === release && that._isPlayAccountCurrent()
+      && epoch === (that._playLocationEpoch || 0) && sessionKey === that._sessionKey();
     if (this._playLocationHandler) {
       try { wx.offLocationChange(this._playLocationHandler); } catch (e) {}
       this._playLocationHandler = null;
@@ -4490,15 +4528,16 @@ Page({
     // 后台定位:玩家锁屏塞兜里走路是本场景的常态(在架路线 2–4.5 小时、7.8–10.5 公里),
     // 前台版一锁屏就断,轨迹断段、走到点位也判不出到达。拿不到后台权限时自动降级前台。
     // ⚠️ 停的时机见 onUnload / _stopTracking —— **不能**在 onHide 停。
-    bgTracker.acquire(this._trackKey(), {
+    bgTracker.acquire(trackingKey, {
       fail() {
-        that._watching = false;
+        if (!current()) { release(); return; }
+        release();
         that.setData({ gpsOk: false, gpsHint: '实时定位未开启 · 可扫码完成到达' });
       },
       success() {
-        if (!that._watching || that._playDisposed) return;
+        if (!current() || !that._watching) { release(); return; }
         that._playLocationHandler = (loc) => {
-          if (!that._watching || that._playDisposed) return;
+          if (!current() || !that._watching) { release(); return; }
           that._loc = { longitude: loc.longitude, latitude: loc.latitude, accuracy: loc.accuracy };
           that._noteLocAccuracy(loc.accuracy);
           // S2 陪伴态:仅 nav.active 时才把玩家位置回灌地图(箭头需要跟着走)+ 刷新剩余距离/途中气泡阈值
@@ -4627,7 +4666,7 @@ Page({
   },
   leadArrive() {
     const that = this;
-    if (this._playDisposed || this._themeHidden || this._leadArriving || this.data.isPreview || this.data.isMock) return;
+    if (!this._isPlayAccountCurrent() || this._themeHidden || this._leadArriving || this.data.isPreview || this.data.isMock) return;
     const activityId = this.data.activityId;
     const memberId = app.getUserID && app.getUserID();
     const authorization = app.getAuthorization && app.getAuthorization();

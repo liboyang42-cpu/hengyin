@@ -44,6 +44,11 @@
     </block>
   </scroll-view>
 
+  <!-- 列表模式首屏加载占位:数据未到前不留空白黑屏 -->
+  <view class="bw-list" wx:if="{{viewMode === 'list' && !loaded && !loadFail && !partialFail}}">
+    <cy-skeleton type="list" count="5" loading-label="正在加载勋章" />
+  </view>
+
   <cy-empty class="bw-empty-state" fill size="lg" title="还没有点亮勋章"
     sub="完成一次城市探索或成长里程，第一枚勋章会在这里出现" cta="去探索" bind:cta="goExplore"
     wx:if="{{loaded && !badges.length && !loadFail && !partialFail}}" />

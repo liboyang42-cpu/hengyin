@@ -6,6 +6,7 @@ const merchantAccessPolicy = require('../../../utils/merchant-access-policy.js')
 const { openScene } = require('../../../utils/scene-entry.js');
 const { isRecordList } = require('../../../utils/response-shape.js');
 const { marketView } = require('../../../utils/template-market.js');
+const modal = require('../../../utils/modal.js');
 const { memberId, isLoginRequired, failureStatus, retryLogin, waitForInitialSession, recoverReadSession } = require('../../../utils/session/login-reload.js');
 
 function authorization() {
@@ -85,7 +86,7 @@ Page({
     /* 稿 260:277 把上下架 / 删除赶出了卡面,这个面板是它们的新家(长按卡片打开)。
        只存这张卡自己的判定结果,不存整条 item —— 面板开着的时候列表可能已经刷新了。 */
     opsSheet: { show: false, title: '', id: '', biz: '', online: false,
-                canToggle: false, canDelete: false, canViewApplies: false, toggleLabel: '' },
+                canToggle: false, canDelete: false, canViewApplies: false, canSaveAsTemplate: false, toggleLabel: '' },
     loading: false,
     loaded: false,
     authRequired: false,
@@ -139,6 +140,7 @@ Page({
   },
 
   onShow() {
+    this._navigating = false;
     const memberId = String(app.getUserID() || '');
     const changedOwner = this._ownerId !== undefined
       && (this._ownerId !== memberId || this._ownerToken !== authorization());
@@ -189,7 +191,9 @@ Page({
     this.setData({ authRequired: !!authRequired, list: [], loaded: false, loading: false,
       projectState: 'loading', projectErrorMsg: '', projectAccessDenied: false,
       capped: false, hasRowOps: false, tplList: [], tplLoaded: false, tplLoading: false,
-      tplErrorMsg: '', tplAccessDenied: false, canPublishActivity: false, 'opsSheet.show': false });
+      tplErrorMsg: '', tplAccessDenied: false, canPublishActivity: false, 'opsSheet.show': false,
+      auditSheet: { show: false, loading: false, error: '', title: '', bizType: '', bizId: '',
+        rows: [], appealText: '', canAppeal: false } });
   },
 
   requireSession() {
@@ -352,19 +356,19 @@ Page({
   // ===== 项目卡交互(沿旧版) =====
   onCardTap(e) {
     const item = e.currentTarget.dataset.item;
-    if (!item) return;
+    if (!item || this._navigating) return; // 跳转中不响应连点
     // 草稿 / 未通过(编辑重发)→ 进专业编辑器继续编辑
     if (item.bizType === 'topic' && (item.state === 'draft' || item.state === 'rejected')) {
-      wx.navigateTo({ url: '/pages/publish/fabu/index?id=' + item.id
-        + (this.data.operationScope ? '&scope=MERCHANT' : '') });
+      this._navigating = true; wx.navigateTo({ url: '/pages/publish/fabu/index?id=' + item.id
+        + (this.data.operationScope ? '&scope=MERCHANT' : ''), complete: () => { this._navigating = false; } });
       return;
     }
     if (item.bizType === 'activity') {
       // 待审核 / 未通过的活动还没有玩家可见的详情页,点击进编辑器续写 ——
       // 与上面主题卡「草稿/未通过 → 编辑器」同判据;_canEdit 已挡掉承办只读卡。
       if (item._canEdit && (item.state === 'pending' || item.state === 'rejected')) {
-        wx.navigateTo({ url: '/pages/publish/activity/index?id=' + item.id
-          + (this.data.operationScope ? '&scope=MERCHANT' : '') });
+        this._navigating = true; wx.navigateTo({ url: '/pages/publish/activity/index?id=' + item.id
+          + (this.data.operationScope ? '&scope=MERCHANT' : ''), complete: () => { this._navigating = false; } });
         return;
       }
       const id = item.id;
@@ -373,8 +377,8 @@ Page({
     }
     // 这个列表就是「我发布的」,所以主题一律进项目主页(主办视图)——
     // 原来跳的 topic/index 是玩家买票页,发布者在那儿看不到谁来接、卖了多少。
-    wx.navigateTo({ url: '/pages/topic/merchantinfo/merchantinfo?topicId=' + item.id
-      + (this.data.operationScope ? '&scope=MERCHANT' : '') });
+    this._navigating = true; wx.navigateTo({ url: '/pages/topic/merchantinfo/merchantinfo?topicId=' + item.id
+      + (this.data.operationScope ? '&scope=MERCHANT' : ''), complete: () => { this._navigating = false; } });
   },
 
   /* 长按 = 列表管理动作的唯一入口(稿裁决:卡面不放按钮)。
@@ -382,7 +386,8 @@ Page({
   onCardLong(e) {
     const item = e.currentTarget.dataset.item;
     if (!item) return;
-    if (!item._canToggle && !item._canDelete && !item._canViewApplies && !item._canEdit && !item._canCancel) return;
+    if (!item._canToggle && !item._canDelete && !item._canViewApplies && !item._canEdit && !item._canCancel
+      && !item._canAudit && !item._canSaveAsTemplate) return;
     this.setData({
       opsSheet: {
         show: true,
@@ -394,7 +399,8 @@ Page({
         canDelete: !!item._canDelete,
         canViewApplies: !!item._canViewApplies,
         canEdit: !!item._canEdit,
-        canCancel: !!item._canCancel,
+        canCancel: !!item._canCancel, canAudit: !!item._canAudit, state: item.state,
+        canSaveAsTemplate: !!item._canSaveAsTemplate,
         toggleLabel: item._toggleLabel || '下架',
       }
     });
@@ -405,7 +411,7 @@ Page({
   },
 
   onOpsPick(e) {
-    const k = e.currentTarget.dataset.k;
+    const k = e.currentTarget.dataset.k; if (k === 'audit') return this.onOpsAudit();
     const p = this.data.opsSheet;
     this.setData({ 'opsSheet.show': false });
     const ds = { id: p.id, biz: p.biz, online: p.online, title: p.title };
@@ -417,11 +423,52 @@ Page({
       return p.biz === 'topic' ? this.cancelTopic(cancelDs) : this.cancelActivity(cancelDs);
     }
     if (k === 'delete') return this.deleteItem({ currentTarget: { dataset: ds } });
+    if (k === 'saveAsTemplate') return this.saveAsTemplate({ currentTarget: { dataset: ds } });
+  },
+
+  // BL-120 另存为模板:POST /api/template/topic-template/save-as(id, scope)。
+  // 后端把本主题置 is_template=1(不复制),只认本人(商家 scope 认店主)且审核通过的主题,
+  // 其余按后端文案如实提示;回包无 topicId,成功后回读列表。
+  saveAsTemplate(e) {
+    const ds = e.currentTarget.dataset;
+    const id = ds.id;
+    if (!id) return;
+    const that = this;
+    modal.show({
+      title: '另存为模板',
+      content: '「' + (ds.title || '这个主题') + '」会出现在主题模板货架上，其他人可以复制它作为草稿起点。',
+      confirmText: '另存为模板',
+      success(r) {
+        if (r && r.confirm) that._postSaveAsTemplate(id);
+      }
+    });
+  },
+
+  _postSaveAsTemplate(id) {
+    const inflight = this._savingTplIds || (this._savingTplIds = {});
+    if (inflight[id]) return;
+    inflight[id] = true;
+    const that = this;
+    const release = function () { if (that._savingTplIds) delete that._savingTplIds[id]; };
+    try {
+      app.sendRequest({
+        hideLoading: true, silentError: true,
+        url: '/api/template/topic-template/save-as', method: 'POST',
+        data: { id: id, scope: this.data.operationScope },
+        success(res) {
+          release();
+          if (res && res.code == '200') { toast((res && res.msg) || '已另存为主题模板'); that.reload(); }
+          else toast(app.getRequestErrorMessage(res, '另存为模板失败'));
+        },
+        fail(res) { release(); toast(app.getRequestErrorMessage(res, '网络异常，请重试')); },
+        complete: release
+      });
+    } catch (error) { release(); toast('网络异常，请重试'); }
   },
 
   goCreate() {
-    wx.navigateTo({ url: '/pages/publish/fabu/index'
-      + (this.data.operationScope ? '?scope=MERCHANT' : '') });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/publish/fabu/index'
+      + (this.data.operationScope ? '?scope=MERCHANT' : ''), complete: () => { this._navigating = false; } });
   },
 
   onEmptyCta() {
@@ -431,8 +478,8 @@ Page({
 
   goCreateActivity() {
     // CU-M-05:不带 scope 进去就按俱乐部主理人判身份,商家自家活动反而被拦在门外。
-    wx.navigateTo({ url: '/pages/publish/activity/index'
-      + (this.data.operationScope ? '?scope=MERCHANT' : '') });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/publish/activity/index'
+      + (this.data.operationScope ? '?scope=MERCHANT' : ''), complete: () => { this._navigating = false; } });
   },
 
   editActivity(e) {
@@ -443,8 +490,8 @@ Page({
       toast('已有人买票，不能再改这场活动');
       return;
     }
-    wx.navigateTo({ url: '/pages/publish/activity/index?id=' + item.id
-      + (this.data.operationScope ? '&scope=MERCHANT' : '') });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/publish/activity/index?id=' + item.id
+      + (this.data.operationScope ? '&scope=MERCHANT' : ''), complete: () => { this._navigating = false; } });
   },
 
   // 确认框必须写明「将给 N 位已付款玩家全额退款」(9-18 拍板)。N 问后端预览接口,拿不到就不弹、不发取消。
@@ -491,8 +538,8 @@ Page({
 
   // P0-4:收到的申请(俱乐部申请/商家承接报名)统一在协作列表「收到的」处理,候选池页已下线
   goReceivedApplies() {
-    wx.navigateTo({ url: '/pages/coop/list/index?tab=received'
-      + (this.data.operationScope ? '&scope=MERCHANT' : '') });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/coop/list/index?tab=received'
+      + (this.data.operationScope ? '&scope=MERCHANT' : ''), complete: () => { this._navigating = false; } });
   },
 
   // 上/下架切换(按 bizType 派发,单接口翻转)
@@ -581,7 +628,7 @@ Page({
         if (res && res.code == '200' && res.data && isRecordList(res.data.rows)) {
           const rows = res.data.rows.map(function (t) {
             const view = marketView(t);
-            return Object.assign({}, t, view, { _stateVariant: stateVariant(view._stateClass) });
+            return Object.assign({}, t, view, { _stateVariant: stateVariant(view._stateClass), _audit: auditTimeline.templateTarget(t) });
           });
           that.setData({ tplList: rows, tplLoaded: true });
         } else { that.readFailure('template', res); }
@@ -598,10 +645,96 @@ Page({
 
   retryTemplates() { this.loadTemplates(); },
 
+  // ===== FOLLOWUP-A-2:审核记录 / 申诉 =====
+  // 长按面板的「审核记录」行:面板里只存了这张卡的 id / biz / state,按同一判据还原审核对象
+  onOpsAudit() {
+    const p = this.data.opsSheet;
+    this.setData({ 'opsSheet.show': false });
+    this.openAudit(auditTimeline.projectTarget({ id: p.id, bizType: p.biz, state: p.state }), p.title);
+  },
+
+  tplAudit(e) {
+    const ds = e.currentTarget.dataset;
+    this.openAudit(ds.biz && ds.bizid ? { bizType: ds.biz, bizId: String(ds.bizid) } : null, ds.title);
+  },
+
+  openAudit(target, title) {
+    if (!target) return;
+    this.setData({ auditSheet: { show: true, loading: true, error: '', title: title || '', bizType: target.bizType,
+      bizId: target.bizId, rows: [], appealText: '', canAppeal: false } });
+    this.loadAudit();
+  },
+
+  loadAudit() {
+    const that = this;
+    const sheet = this.data.auditSheet;
+    const current = currentRead(this);
+    const same = () => current() && that.data.auditSheet.show
+      && that.data.auditSheet.bizType === sheet.bizType && that.data.auditSheet.bizId === sheet.bizId;
+    app.sendRequest({
+      hideLoading: true, silentError: true, url: '/api/audit/timeline', method: 'GET',
+      data: { bizType: sheet.bizType, bizId: sheet.bizId },
+      success(res) {
+        if (!same()) return;
+        if (res && res.code == '200' && res.data) {
+          that.setData({ auditSheet: Object.assign({}, that.data.auditSheet, { loading: false, error: '',
+            rows: auditTimeline.timelineRows(res.data), appealText: auditTimeline.appealText(res.data),
+            canAppeal: res.data.canAppeal === true }) });
+        } else {
+          const msg = app.getRequestErrorMessage(res, '审核记录加载失败');
+          that.setData({ auditSheet: Object.assign({}, that.data.auditSheet, { loading: false, error: msg, canAppeal: false }) });
+          toast(msg);
+        }
+      },
+      fail() {
+        if (!same()) return;
+        that.setData({ auditSheet: Object.assign({}, that.data.auditSheet, { loading: false, error: '网络异常，请重试', canAppeal: false }) });
+        toast('网络异常，请重试');
+      }
+    });
+  },
+
+  closeAuditSheet() {
+    this.setData({ auditSheet: Object.assign({}, this.data.auditSheet, { show: false }) });
+  },
+
+  appealAudit() {
+    const sheet = this.data.auditSheet;
+    if (!sheet.show || !sheet.canAppeal || this._appealing) return;
+    const that = this;
+    const current = currentRead(this);
+    modal.show({
+      title: '申诉', editable: true, multiline: true, confirmText: '提交申诉',
+      placeholderText: '写清你认为处理有误的理由（500 字内），每条内容只能申诉一次',
+      validate: auditTimeline.validateReason,
+      success(r) {
+        if (!r.confirm || !current() || that._appealing) return;
+        if (auditTimeline.validateReason(r.content)) { toast(auditTimeline.validateReason(r.content)); return; }
+        that._appealing = true;
+        app.sendRequest({
+          hideLoading: true, silentError: true, url: '/api/audit/appeal', method: 'POST',
+          header: { 'content-type': 'application/json' },
+          data: JSON.stringify({ bizType: sheet.bizType, bizId: Number(sheet.bizId), reason: String(r.content).trim() }),
+          success(res) {
+            that._appealing = false;
+            if (!current()) return;
+            if (res && res.code == '200') {
+              toast('申诉已提交');
+              if (that.data.auditSheet.show && that.data.auditSheet.bizId === sheet.bizId) that.loadAudit();
+            } else {
+              toast(app.getRequestErrorMessage(res, '申诉失败'));
+            }
+          },
+          fail() { that._appealing = false; if (current()) toast('网络异常，请重试'); }
+        });
+      }
+    });
+  },
+
   tplTap(e) {
     const id = e.currentTarget.dataset.id;
-    if (!id) return;
-    wx.navigateTo({ url: '/pages/templatedetail/templatedetail?id=' + id + '&scope=my' });
+    if (!id || this._navigating) return;
+    this._navigating = true; wx.navigateTo({ url: '/pages/templatedetail/templatedetail?id=' + id + '&scope=my', complete: () => { this._navigating = false; } });
   },
 
   tplSubmitMarket(e) {
@@ -818,6 +951,9 @@ function decorate(p) {
   const showPendingVerify = Number.isInteger(pendingVerify) && pendingVerify >= 0;
   // 未承接=去看申请;已承接=去看合作现状(候选池同页展示已接受邀约),满足「每卡有下一步 CTA」
   const canViewApplies = p.bizType === 'topic' && (p.acceptStatus === 'clubOpen' || p.acceptStatus === 'merchantOpen' || acceptAccented);
+  // BL-120:后端只放行审核通过(status=1)的主题;draft/pending/rejected 以外的主题 state 都是审核通过后的派生态。
+  const canSaveAsTemplate = p.bizType === 'topic'
+    && (online || p.state === 'offline' || p.state === 'completed');
   return Object.assign({}, p, {
     _stateClass: stateClass, _stateVariant: stateVariant(stateClass),
     // _online = 渲染这一刻的上架态,随按钮一起下发给 toggleStatus 当 CAS 的期望态。
@@ -827,6 +963,9 @@ function decorate(p) {
     _canDelete: merchantActivity ? false : canDelete,
     _canEdit: canEdit,
     _canCancel: canCancel,
+    // FOLLOWUP-A-2:未通过 / 已下架的主题、活动给「审核记录」(含申诉)
+    _canAudit: !!auditTimeline.projectTarget(p),
+    _canSaveAsTemplate: canSaveAsTemplate,
     _sold: sold,
     _showAccept: showAccept, _acceptAccented: acceptAccented, _canViewApplies: canViewApplies,
     _showPendingVerify: showPendingVerify, _pendingVerifyText: showPendingVerify ? ('待核销 ' + pendingVerify) : '',
@@ -846,3 +985,7 @@ function decorate(p) {
     _dot: PENDING_RANK[p.state] != null
   });
 }
+
+// FOLLOWUP-A-2 的依赖放在文件尾:上方 U1 基线(tests/lint/ui-integrity-baseline.js)按行号锚定,不挪既有行。
+// 页面方法都在模块求值完成后才被调用,此处的 const 届时已初始化。
+const auditTimeline = require('../../../utils/audit-timeline.js');

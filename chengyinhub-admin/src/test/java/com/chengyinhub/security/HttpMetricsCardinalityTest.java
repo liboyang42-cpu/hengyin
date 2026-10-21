@@ -77,7 +77,10 @@ class HttpMetricsCardinalityTest {
     private static ServletWebServerApplicationContext start() {
         SpringApplication application = new SpringApplication(TestApplication.class);
         application.setRegisterShutdownHook(false);
+        // 与 application.yml 一致开启 Tomcat MBean 注册：默认关闭会全局不可逆地 disableRegistry，
+        // 同一 JVM 中后跑的 TomcatMetricsProbeMBeanRegistryTest 将取不到线程池 MBean。
         return (ServletWebServerApplicationContext) application.run("--server.port=0", "--server.address=127.0.0.1",
+                "--server.tomcat.mbeanregistry.enabled=true",
                 "--spring.config.location=optional:classpath:/metrics-canary-does-not-exist.properties",
                 "--spring.main.banner-mode=off", "--logging.level.root=ERROR");
     }

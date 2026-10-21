@@ -124,9 +124,18 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         order by ifnull(use_num, 0) desc, id desc
     </select>
 
-    <!-- 模板市场热度:被采用一次 +1(原子自增,避免读改写竞态) -->
-    <update id="incrementUseNum" parameterType="Long">
-        update cms_template_library set use_num = ifnull(use_num, 0) + 1 where id = #{id}
+    <!-- 模板市场热度:按「会员首次采用」+1(原子自增,避免读改写竞态)。
+         该会员此前已有任何一条(含已删除)出自本库模板的个人玩法 ⇒ 不再计数,
+         反复新建/删了再建都只算一次;判重以 cms_member_template 为真源,无需新表。 -->
+    <update id="incrementUseNumOnFirstAdoption">
+        update cms_template_library set use_num = ifnull(use_num, 0) + 1
+        where id = #{libraryId}
+          and not exists (
+              select 1 from cms_member_template m
+              where m.member_id = #{memberId}
+                and m.original_template_id = #{libraryId}
+                and m.id &lt;&gt; #{memberTemplateId}
+          )
     </update>
 
 
@@ -289,6 +298,17 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         where id = #{row.id} and member_id = #{ownerId} and del_flag = 0 and status = 0 and member_template_id = #{row.memberTemplateId}
     </update>
 
+    <!-- AUDIT-G2-2:举报成立下架(审核台举报单 REJECT);只动公开中的行,幂等 -->
+    <update id="takeDownReported">
+        update cms_template_library set status = 2, publish_status = 0, reason = #{reason}, update_time = now()
+        where id = #{id} and del_flag = 0 and status = 1
+    </update>
+
+    <update id="takeDownReportedByMemberTemplate">
+        update cms_template_library set status = 2, publish_status = 0, reason = #{reason}, update_time = now()
+        where member_template_id = #{memberTemplateId} and del_flag = 0 and status = 1
+    </update>
+
     <update id="updateCmsTemplateLibrary" parameterType="CmsTemplateLibrary">
         update cms_template_library
         <trim prefix="SET" suffixOverrides=",">
@@ -392,4 +412,19 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             #{id}
         </foreach>
     </delete>
+
+    <!-- 审核撤销/申诉复核：仅当内容仍停在该审核决定写下的状态时才回到待审 -->
+    <update id="reopenAuditDecision">
+        update cms_template_library set status = 0, publish_status = 0, update_time = now()
+        where id = #{id} and member_id = #{ownerId} and del_flag = 0 and member_template_id = #{memberTemplateId}
+          and status = #{fromStatus} and publish_status = #{fromPublishStatus}
+    </update>
+
+    <!-- AUDIT-INT-4:举报下架申诉成立,只从举报下架态(2/0)原样恢复 -->
+    <update id="restoreReportTakedown">
+        update cms_template_library set status = #{status}, publish_status = #{publishStatus},
+            reason = #{reason}, update_time = now()
+        where id = #{id} and del_flag = 0 and status = 2 and publish_status = 0
+    </update>
+
 </mapper>

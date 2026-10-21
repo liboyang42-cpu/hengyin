@@ -1,4 +1,3 @@
-// NOT_RUN: verification deferred by user.
 // Real Page methods, deferred request callbacks and local storage exercise lost-write responses.
 const { test, beforeEach } = require('node:test');
 const assert = require('node:assert/strict');

@@ -6,6 +6,7 @@ const policy = require('../../utils/identity/identity-policy.js');
 const merchantTheme = require('../../utils/merchant-theme.js');
 const { isRecord } = require('../../utils/response-shape.js');
 const toast = require('../../utils/toast.js');
+const mediaPreview = require('../../utils/media-preview.js');
 
 function difficultyMeta(difficulty) {
   var d = String(difficulty || '').trim();
@@ -220,7 +221,7 @@ Page({
 
   onShow() {
     var isMerchant = policy.isMerchantView({ role: app.getUserRole(), userType: app.getUserType() });
-    this.setData({ isMerchant: isMerchant });
+    this.setData({ isMerchant: isMerchant }); this._navigating = false;
     if (isMerchant) merchantTheme.merchantPageShow();
     else merchantTheme.merchantPageRestore();
     var context = this.detailContext();
@@ -232,7 +233,7 @@ Page({
 
   onHide() { merchantTheme.merchantPageRestore(); },
   onUnload() {
-    this._disposed = true;
+    this._disposed = true; this._unloaded = true; if (this._reportReasonSelection) require('../../utils/community-report-sheet.js').cancel(this);
     this._editorContext = null;
     merchantTheme.merchantPageRestore();
   },
@@ -331,7 +332,7 @@ Page({
     that._detailRequestToken = token;
     if (that._detailContext && that._detailContext !== context) {
       that.applyDetailPayload({});
-      that.setData({ moreShow: false });
+      that.setData({ moreShow: false, reportKind: '' });
       that.closePop();
     }
     that._detailContext = context;
@@ -350,6 +351,7 @@ Page({
         if (!that.isDetailRequestCurrent(token, context)) return;
         if (res && res.code == '200' && isRecord(res.data)) {
           that.applyDetailPayload(res.data);
+          that.setData({ reportKind: reportKindOf(res.data, that.data.scope, typeof app.getUserID === 'function' ? app.getUserID() : '') });
         } else {
           that.setData({
             loadError: true,
@@ -421,10 +423,7 @@ Page({
   previewGallery(e) {
     var urls = this.data.gallery;
     if (!urls.length) return;
-    wx.previewImage({
-      current: e.currentTarget.dataset.url || urls[0],
-      urls: urls
-    });
+    mediaPreview.open(urls, e.currentTarget.dataset.url || urls[0]);
   },
 
   // 画廊「查看全部」:从第一张进全量预览。复用 previewGallery 的同一条通道,
@@ -432,7 +431,7 @@ Page({
   previewGalleryAll() {
     var urls = this.data.gallery;
     if (!urls.length) return;
-    wx.previewImage({ current: urls[0], urls: urls });
+    mediaPreview.open(urls, urls[0]);
   },
 
   openMore() {
@@ -457,6 +456,21 @@ Page({
   onShare() {
     this.setData({ moreShow: false });
   },
+
+  // FOLLOWUP-A-1:举报玩法,流程与动态详情 reportSquare 同一套(utils/content-report.js)。
+  // 广场记录与个人玩法各走各的举报接口,两个入口分开绑定。
+  reportTemplate() {
+    if (this.data.reportKind !== 'template') return;
+    this.setData({ moreShow: false });
+    require('../../utils/content-report.js').reportTemplate(this, app, this.data.id);
+  },
+  reportPersonalTemplate() {
+    if (this.data.reportKind !== 'personalTemplate') return;
+    this.setData({ moreShow: false });
+    require('../../utils/content-report.js').reportPersonalTemplate(this, app, this.data.id);
+  },
+  onReportReasonSelect(e) { require('../../utils/community-report-sheet.js').select(this, e); },
+  onReportReasonCancel() { require('../../utils/community-report-sheet.js').cancel(this); },
 
   closePop() {
     this.setData({
@@ -504,9 +518,9 @@ Page({
   },
 
   goPrimary() {
-    var that = this;
+    var that = this; if (that._navigating) return; that._navigating = true;
     if (that.data.scope === 'my' && (!that.data.info || that.data.info.canEdit !== true)) {
-      wx.switchTab({ url: '/pages/template/index' });
+      wx.switchTab({ url: '/pages/template/index', complete: function () { that._navigating = false; } });
       return;
     }
     if (that.data.scope !== 'my') {
@@ -525,7 +539,8 @@ Page({
           : (that.data.operationScope === 'MERCHANT' ? '&scope=MERCHANT' : '')),
       success: function () {
         if (ownTemplate && !that._disposed && context === that.detailContext()) that._editorContext = context;
-      }
+      },
+      complete: function () { that._navigating = false; }
     });
   },
 
@@ -538,3 +553,14 @@ Page({
     };
   }
 });
+
+// FOLLOWUP-A-1:公开可见、且不是本人的玩法才给举报;谓词与后端 /api/template/report、/personal-report 一致。
+// library = 广场记录(已审核 + 已上架);my = 个人玩法(非草稿 + 已审核 + 已上架)。返回 '' 即不出入口。
+function reportKindOf(info, scope, me) {
+  info = info || {};
+  if (!(Number(info.id) > 0) || Number(info.delFlag || 0) !== 0) return '';
+  if (me && String(info.memberId || '') === String(me)) return '';
+  if (Number(info.status) !== 1 || Number(info.publishStatus) !== 1) return '';
+  if (scope === 'my') return Number(info.draftStatus) === 1 ? 'personalTemplate' : '';
+  return 'template';
+}

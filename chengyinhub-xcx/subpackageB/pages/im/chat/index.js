@@ -2,6 +2,7 @@ const { toTimestamp, chinaDateKey, chinaParts } = require('../../../../utils/dat
 const { isRecordList, isBizOk } = require('../../../../utils/response-shape.js');
 const { decodeDisplayText } = require('../../../../utils/display-text.js');
 const { showPermissionGuide } = require('../../../../utils/location/location-manager.js');
+const { auditDetailUrl, shapeAuditDetail, shouldLoadAuditDetail, isRetryableAuditError } = require('./audit-detail.js');
 const app = getApp();
 
 // 服务端可见顺序含微秒：不要转 JS Date 丢精度，也不要以客户端时钟推测审批时间。
@@ -33,7 +34,9 @@ Page({
     moreSheetShow: false,
     // CU-C-120:系统通知(type=2)没有可交流的对象,举报/拉黑的目标也是空的 ⇒ 面板只留真能做的隐藏会话。
     // 初始值按可回复的私信给,onLoad 里再按会话类型收窄(见 _moreItemsFor)。
-    moreSheetItems: ['举报', '拉黑', '隐藏会话'],
+    moreSheetItems: ['举报这条消息', '举报对方', '拉黑', '隐藏会话'],
+    reportShow: false,
+    reportPeerId: '',
     // 只读会话:能读不能写。判据只有「对方是不是一个可交流的人」,不是 loadState。
     readOnly: false,
     readOnlyTip: '系统通知，不能回复',
@@ -58,6 +61,7 @@ Page({
     myAvatar: '',
     msgs: [],
     reviewResult: null,
+    reviewDetail: null,
     text: '',
     sending: false,
     hasMore: false,
@@ -144,7 +148,7 @@ Page({
       avatar: decodeURIComponent(options.avatar || ''),
       type: type,
       readOnly: readOnly,
-      moreSheetItems: readOnly ? ['隐藏会话'] : ['举报', '拉黑', '隐藏会话'],
+      moreSheetItems: readOnly ? ['隐藏会话'] : ['举报这条消息', '举报对方', '拉黑', '隐藏会话'],
       myId: app.getUserID(),
       myAvatar: app.getAvatar(),
     });
@@ -236,7 +240,7 @@ Page({
           const blockedByMe = res.data.blockedByMe === true;
           that._blockedByMe = blockedByMe;
           that.setData({ disabled: that.data.readOnly || res.data.blocked === true, disabledText: that.data.readOnly ? '系统通知不支持回复，有新动态会出现在这里' : res.data.blocked === true ? (blockedByMe ? '你已拉黑对方，无法发送消息' : '对方暂不可联系，无法发送消息') : '',
-            moreSheetItems: that.data.readOnly ? ['隐藏会话'] : ['举报', blockedByMe ? '解除拉黑' : '拉黑', '隐藏会话'] });
+            moreSheetItems: that.data.readOnly ? ['隐藏会话'] : ['举报这条消息', '举报对方', blockedByMe ? '解除拉黑' : '拉黑', '隐藏会话'] });
           if (toBottom) that.scrollBottom();
           that._markReadWhenVisible(conversationId, memberId);
           return;
@@ -621,7 +625,8 @@ Page({
     if (!this._isReadContextCurrent(this.data.conversationId, this.data.myId)) return;
     const label = e.detail.label;
     this.setData({ moreSheetShow: false });
-    if (label === '举报') this.doReport();
+    if (label === '举报这条消息') this.doReport();
+    else if (label === '举报对方') this.doReportPeer();
     else if (label === '拉黑') this.doBlock();
     else if (label === '解除拉黑') this.doBlock(true);
     else if (label === '隐藏会话') this.clearConversation();
@@ -703,6 +708,16 @@ Page({
       fail() { finish({ msg: '会话对象读取失败，请重试' }); },
     });
   },
+  // BL-36:举报对方(社区信任举报 targetType=MEMBER),走共用举报半屏。
+  // 本页拿不到会话对方 id,与「拉黑」同口径:取最近一条对方消息的 senderId。
+  doReportPeer() {
+    if (this.data.readOnly) return;
+    let otherId = 0;
+    for (let i = this.data.msgs.length - 1; i >= 0; i--) { if (this.data.msgs[i].senderId && this.data.msgs[i].senderId != this.data.myId) { otherId = this.data.msgs[i].senderId; break; } }
+    if (!otherId) { app.tips && app.tips('对方还没发过消息，暂不能举报'); return; }
+    this.setData({ reportShow: true, reportPeerId: String(otherId) });
+  },
+  onReportClose() { this.setData({ reportShow: false }); },
 
   _showBlockConfirmation(pending) {
     if (!pending || this._pendingBlock !== pending || pending.submitting || pending.opened || this._hidden
@@ -779,7 +794,7 @@ Page({
         if (!current()) return;
         if (!isBizOk(res)) { failed((res && res.msg) || '拉黑失败，请重试'); return; }
         this._blockedByMe = true;
-        this.setData({ disabled: true, disabledText: '你已拉黑对方，无法发送消息', moreSheetItems: ['举报', '解除拉黑', '隐藏会话'] });
+        this.setData({ disabled: true, disabledText: '你已拉黑对方，无法发送消息', moreSheetItems: ['举报这条消息', '举报对方', '解除拉黑', '隐藏会话'] });
         this._pendingBlock = null;
         if (dc) dc.done();
       },
@@ -818,20 +833,22 @@ Page({
   // 路线卡:写死主题详情,不读 extra_json 里的 action
   onRouteTap(e) {
     const id = e.currentTarget.dataset.topicid;
-    if (!id) return;
+    if (!id || this._navigating) return; // 跳转中不响应连点
     // 只在「确认下架」(null)时拦;加载中(undefined)放行 —— 详情页自己会加载
     if (this.data.topicCache[id] === null) { app.tips && app.tips('该路线已下架'); return; }
-    wx.navigateTo({ url: '/pages/topic/index/index?id=' + id });
+    this._navigating = true; wx.navigateTo({ url: '/pages/topic/index/index?id=' + id, complete: () => { this._navigating = false; } });
   },
 
   onCardTap(e) {
-    const ds = e.currentTarget.dataset;
+    if (this._navigating) return; const ds = e.currentTarget.dataset;
     const message = this.data.msgs.find(item => String(item.id) === String(ds.msg));
     if (message && Number(message.senderId) === 0 && Number(message.msgType) === 3
         && message.card && message.card.result) {
       const result = message.card.result;
       this.setData({ reviewResult: { taskId: result.taskId, bizId: result.bizId,
         outcome: result.outcome, reason: result.reason, followUp: result.followUp } });
+      if (shouldLoadAuditDetail(message.card)) this.loadReviewDetail(result.taskId);
+      else this.setData({ reviewDetail: null });
       return;
     }
     // FE-13 官方通知点击回流(best-effort)
@@ -841,18 +858,53 @@ Page({
         hideLoading: true, data: { channel: 'inapp' }, success() {}, fail() {}
       });
     }
-    if (ds.url) wx.navigateTo({ url: ds.url });
+    if (ds.url) { this._navigating = true; wx.navigateTo({ url: ds.url, complete: () => { this._navigating = false; } }); }
   },
 
   closeReviewResult() {
-    this.setData({ reviewResult: null });
+    this._reviewDetailEpoch = (this._reviewDetailEpoch || 0) + 1;
+    this.setData({ reviewResult: null, reviewDetail: null });
+  },
+
+  // BL-87:处理结果半屏里回读审核任务详情(仅提交人本人;403/404 如实回显,不挡卡片原有内容)。
+  loadReviewDetail(taskId) {
+    const epoch = (this._reviewDetailEpoch || 0) + 1;
+    this._reviewDetailEpoch = epoch;
+    const auditUrl = auditDetailUrl(taskId);
+    if (!auditUrl) { this.setData({ reviewDetail: null }); return; }
+    const auditTaskId = Number(taskId);
+    this.setData({ reviewDetail: { state: 'loading', statusLabel: '', timeline: [], error: '' } });
+    const settle = (detail) => {
+      if (epoch !== this._reviewDetailEpoch) return;
+      this.setData({ reviewDetail: detail });
+    };
+    app.sendRequest({
+      hideLoading: true,
+      silentError: true,
+      url: `/api/audit/${auditTaskId}/detail`,
+      method: 'GET',
+      success: (res) => {
+        const ok = res && (res.code === 200 || res.code === '200');
+        const shaped = ok ? shapeAuditDetail(res.data) : null;
+        if (shaped) { settle(Object.assign({ state: 'ready', error: '' }, shaped)); return; }
+        settle({ state: 'error', statusLabel: '', timeline: [], retryable: isRetryableAuditError(res),
+          error: ok ? '审核记录暂时无法读取' : app.getRequestErrorMessage(res, '审核记录暂时无法读取') });
+      },
+      fail: (res) => settle({ state: 'error', statusLabel: '', timeline: [], retryable: true,
+        error: app.getRequestErrorMessage(res, '网络异常，审核记录没有加载') }),
+    });
+  },
+
+  retryReviewDetail() {
+    const detail = this.data.reviewDetail;
+    if (this.data.reviewResult && detail && detail.retryable) this.loadReviewDetail(this.data.reviewResult.taskId);
   },
 
   // 系统卡片可配置按钮:action 是路径则跳转;否则按 key 走业务(MVP 提示)
   onCardBtn(e) {
-    const ds = e.currentTarget.dataset;
+    if (this._navigating) return; const ds = e.currentTarget.dataset;
     if (ds.action && String(ds.action).indexOf('/') === 0) {
-      wx.navigateTo({ url: ds.action });
+      this._navigating = true; wx.navigateTo({ url: ds.action, complete: () => { this._navigating = false; } });
     } else {
       app.tips && app.tips('已处理');
     }
@@ -861,6 +913,7 @@ Page({
   // ===== 准实时:页面可见时轮询新消息 =====
   onShow() {
     this._hidden = false;
+    this._navigating = false;
     const cleared = this._pendingClearReturn;
     const reported = this._pendingReportTip;
     this._pendingClearReturn = null;

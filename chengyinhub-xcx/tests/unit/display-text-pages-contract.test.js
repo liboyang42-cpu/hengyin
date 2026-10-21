@@ -127,6 +127,8 @@ test('俱乐部页:帖子、评论、修改历史、简介与审核原因解码;
   h.page.loadPosts(); await flush();
   assert.equal(h.page.data.posts[0].contents, SHOWN);
   assert.equal(h.page.data.posts[0].content, SHOWN);
+  // 真实流程由 onToggleComments 先置 openCommentPost 再读;BL-196 起回包时已切到别的动态会被丢弃
+  h.page.setData({ openCommentPost: 7 });
   h.page.loadComments(7); await flush();
   assert.equal(h.page.data.comments[0].content, 'x<y');
   h.page.onViewPostHistory({ currentTarget: { dataset: { id: 7 } } }); await flush();

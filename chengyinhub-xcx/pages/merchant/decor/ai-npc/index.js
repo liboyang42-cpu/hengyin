@@ -8,6 +8,7 @@
 // 能不上传就不上传 —— 端上处理完只传处理后的结果,原图不出手机。
 const app = getApp();
 const toast = require('../../../../utils/toast.js');
+const modal = require('../../../../utils/modal.js');
 const merchantTheme = require('../../../../utils/merchant-theme.js');
 const pixelAvatar = require('../../../../utils/pixel-avatar.js');
 const pixelPortrait = require('../../../../utils/pixel-portrait.js');
@@ -798,6 +799,40 @@ Page({
       voiceFinalizing: true,
     });
     this._voiceRecorder.stop();
+  },
+  // BL-43:清除已生成的角色声音(POST /api/merchant/npc/voice/reset),二次确认后回读 voice/status。
+  // 「重新录音」只清本地录音,服务端旧音色在新音色生成前仍会被用来合成;这里才是真正停用旧音色。
+  clearVoice() {
+    if (this.data.voiceBusy || this.data.voiceUnknown || this._voiceClearing) return;
+    modal.show({
+      title: '清除角色声音？',
+      content: '清除后店铺角色不再用这段声音说话，需要重新录音生成才能恢复。',
+      confirmText: '清除',
+      danger: true,
+      success: (res) => { if (res && res.confirm) this._doClearVoice(); },
+    });
+  },
+  _doClearVoice() {
+    if (this._voiceClearing) return;
+    this._voiceClearing = true;
+    if (this._audio) this._audio.stop();
+    this.setData({ voiceBusy: true, voiceError: '', voicePlaying: false });
+    this._request('/api/merchant/npc/voice/reset')
+      .then(() => this.refreshVoice())
+      .then(() => {
+        this._voiceClearing = false;
+        if (this._destroyed) return;
+        if (this.data.voiceStatus === 0 && !this.data.voiceError) {
+          this.setData({ voiceBusy: false, voiceSample: '' });
+          toast('角色声音已清除');
+        } else {
+          this.setData({ voiceBusy: false, voiceError: this.data.voiceError || '声音状态还没更新，请稍后刷新再看' });
+        }
+      })
+      .catch((e) => {
+        this._voiceClearing = false;
+        if (!this._destroyed) this.setData({ voiceBusy: false, voiceError: e.message });
+      });
   },
   resetVoiceRecording() {
     if (this.data.voiceBusy || this.data.voiceUnknown) return;

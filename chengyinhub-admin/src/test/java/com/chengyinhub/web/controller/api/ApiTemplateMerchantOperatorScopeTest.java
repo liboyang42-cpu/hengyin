@@ -278,6 +278,7 @@ class ApiTemplateMerchantOperatorScopeTest {
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data.id").value(74))
                 .andExpect(jsonPath("$.data.memberId").value(PRINCIPAL))
+                .andExpect(jsonPath("$.data.canEdit").value(true))
                 .andExpect(jsonPath("$.data.draftStatus").value(1))
                 .andExpect(jsonPath("$.data.status").value(0))
                 .andExpect(jsonPath("$.data.publishStatus").value(0))
@@ -341,5 +342,16 @@ class ApiTemplateMerchantOperatorScopeTest {
                 .andExpect(jsonPath("$.code").value(400))
                 .andExpect(jsonPath("$.data").doesNotExist());
         verify(memberTemplateService, never()).selectCmsMemberTemplateById(any());
+    }
+
+    @Test
+    void canEditIsReturnedToClientsButCannotBeSetByRequestJson() throws Exception {
+        com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+        CmsMemberTemplate submitted = mapper.readValue("{\"id\":74,\"canEdit\":true}", CmsMemberTemplate.class);
+        org.junit.jupiter.api.Assertions.assertNull(submitted.getCanEdit());
+
+        submitted.setCanEdit(false);
+        org.junit.jupiter.api.Assertions.assertFalse(mapper.readTree(mapper.writeValueAsString(submitted))
+                .get("canEdit").asBoolean());
     }
 }

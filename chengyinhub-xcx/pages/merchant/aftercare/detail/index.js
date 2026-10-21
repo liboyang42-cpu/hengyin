@@ -3,6 +3,7 @@ const modal = require('../../../../utils/modal.js');
 const app = getApp();
 const merchantTheme = require('../../../../utils/merchant-theme.js');
 const { inactiveAccess, normalizeMerchantAccess } = require('../../../../utils/merchant-access-policy.js');
+const mediaPreview = require('../../../../utils/media-preview.js');
 const {
   RESPONSE_FLOW,
   buildResponseDraft,
@@ -202,7 +203,7 @@ Page({
   previewEvidence() {
     const url = this.data.evidencePreviewUrl;
     if (!url) return;
-    wx.previewImage({ current: url, urls: [url] });
+    mediaPreview.open([url], url);
   },
 
   removeEvidence() {
@@ -225,7 +226,7 @@ Page({
     const item = Number.isInteger(index) && index >= 0 ? responses[index] : null;
     const url = item && item.hasEvidence === true ? String(item.evidenceUrl || '') : '';
     if (!url) return;
-    wx.previewImage({ current: url, urls: [url] });
+    mediaPreview.open([url], url);
   },
 
   refreshSubmitState() {

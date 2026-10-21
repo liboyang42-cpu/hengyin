@@ -1097,7 +1097,13 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         where id = #{id} and coalesce(user_status, 0) = #{expected} and del_flag = 0
         <if test="target == 1">
             and status = 1 and is_draft = 0
+            <!-- AUDIT-G2-1:内容安全下架留置(check_status=2)中不得自助上架,须人工复核 -->
+            and coalesce(check_status, 0) &lt;&gt; 2
         </if>
+    </update>
+
+    <update id="updateReviewFlag">
+        update cms_topic set review_flag = #{reviewFlag} where id = #{id}
     </update>
 
     <update id="transitionLifecycle">
@@ -1264,6 +1270,26 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
          selectCmsTopicVo:该列由 R9-STORY 落地,加进公共列表会让「列还没落库」波及全部主题查询。 -->
     <select id="selectJourneyStoryJsonById" parameterType="Long" resultType="String">
         select journey_story_json from cms_topic where id = #{id}
+    </select>
+
+
+    <!-- 审核撤销/申诉复核：仅当内容仍停在该审核决定写下的状态时才回到待审 -->
+    <update id="reopenAuditDecision">
+        update cms_topic set status = 0, check_status = 0, user_status = 0
+        where id = #{id} and del_flag = 0
+          and status = #{fromStatus} and check_status = #{fromCheckStatus}
+          <if test="configVersion != null">and config_version = #{configVersion}</if>
+    </update>
+
+    <!-- AUDIT-INT-7:内容安全留置标记,独立语句,不进通用 resultMap/动态更新 -->
+    <update id="markContentSafetyHold">
+        update cms_topic set content_safety_hold = 1 where id = #{id}
+    </update>
+    <update id="clearContentSafetyHold">
+        update cms_topic set content_safety_hold = 0 where id = #{id} and content_safety_hold = 1
+    </update>
+    <select id="selectContentSafetyHold" resultType="java.lang.Integer">
+        select content_safety_hold from cms_topic where id = #{id}
     </select>
 
 </mapper>

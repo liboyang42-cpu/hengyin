@@ -723,18 +723,8 @@ def check_schema_manifest_order_source(source):
             indices.append(matches[0])
     expected_loop = ast.parse(
         'for m in ordered:\n'
-        '    ok = run_file(cur, REPO / m["path"], m["migrationId"], results,\n'
-        '                  keep_going=a.keep_going, schema_only=True, observations=observations)\n'
-        '    server_status = getattr(c, "server_status", None)\n'
-        '    if not c.get_autocommit() or not isinstance(server_status, int) or server_status & 1:\n'
-        '        raise RuntimeError("session isolation restore requires an idle autocommit connection; stop schema rebuild")\n'
-        '    try:\n'
-        '        cur.execute("SET SESSION TRANSACTION ISOLATION LEVEL " + session_isolation.replace("-", " "))\n'
-        '        cur.execute("SELECT @@SESSION.transaction_isolation")\n'
-        '        if (cur.fetchone() or [None])[0] != session_isolation:\n'
-        '            raise RuntimeError("session isolation readback mismatch")\n'
-        '    except Exception as failure:\n'
-        '        raise RuntimeError("session isolation restore failed; stop schema rebuild") from failure\n'
+        '    ok = run_file(cur, REPO / m["path"], m["migrationId"], results, '
+        'keep_going=a.keep_going, schema_only=True, observations=observations)\n'
         '    if not ok and not a.keep_going:\n'
         '        break\n').body[0]
     expected_close = ast.parse('c.close()').body[0]

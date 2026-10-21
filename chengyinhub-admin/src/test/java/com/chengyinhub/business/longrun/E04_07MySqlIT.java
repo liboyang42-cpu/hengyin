@@ -2,6 +2,7 @@ package com.chengyinhub.business.longrun;
 
 import com.chengyinhub.business.domain.*;
 import com.chengyinhub.business.mapper.*;
+import com.chengyinhub.business.it.ItSchema;
 import com.chengyinhub.business.service.*;
 import com.chengyinhub.business.service.impl.*;
 import org.apache.ibatis.builder.xml.XMLMapperBuilder;
@@ -91,7 +92,7 @@ class E04_07MySqlIT {
             jdbc.execute("DROP TABLE IF EXISTS "+table);
         for(String table:new String[]{"sms_coupon_history","sms_coupon","cms_topic_completion_coupon_reward_log",
                 "ums_member","ums_member_points_detail","growth_mission_progress","member_growth"}) createTable("sql/base_schema_20260818.sql",table);
-        jdbc.execute("ALTER TABLE cms_topic_completion_coupon_reward_log ADD COLUMN history_id BIGINT NULL");
+        applyReceiptMigration();
         jdbc.execute("ALTER TABLE ums_member ADD COLUMN app_open_id VARCHAR(128) NULL");
         createTable("chengyinhub-admin/sql/migration_20260817_tandianri_r6_product_contracts.sql","topic_completion_xp_award");
         // master 的经验冲回按 migration_20261012_exp_reward_reversal 的 earned_exp_id 定位原入账；本夹具无原入账行。
@@ -131,15 +132,22 @@ class E04_07MySqlIT {
         reverse(61);
         assertEquals(2,state(41)); assertEquals(0,state(43)); assertEquals(0L,count("cms_topic_completion_coupon_reward_log"));
         assertTrue(jdbc.queryForObject("SELECT after_json FROM business_audit_event WHERE target_id=61",String.class).contains("VOIDED"));
+        reverse(62);
+        assertEquals(2,state(41)); assertEquals(0,state(43));
+        assertEquals(1L,jdbc.queryForObject("SELECT COUNT(*) FROM growth_mission_progress"
+                + " WHERE mission_code='COMPLETION_CLAWBACK_COUPON'",Long.class));
         assertTrue(producer.grantOnce(700L,501L,30L));
         Long next=jdbc.queryForObject("SELECT history_id FROM cms_topic_completion_coupon_reward_log",Long.class);
         assertNotEquals(Long.valueOf(41),next); assertNotEquals(Long.valueOf(43),next);
         assertFalse(producer.grantOnce(700L,501L,30L)); assertEquals(0,state(43));
     }
 
-    @Test void legacyNullIdentityAuditsWithoutTouchingEitherCouponWhilePointsAndXpContinue() {
+    @Test void legacyNullIdentityAuditsWithoutTouchingEitherCouponWhilePointsAndXpContinue() throws Exception {
         seedHistory(41,0); seedHistory(43,0);
         jdbc.update("INSERT INTO cms_topic_completion_coupon_reward_log(topic_id,member_id,coupon_id) VALUES(700,501,30)");
+        applyReceiptMigration();
+        assertNull(jdbc.queryForObject("SELECT history_id FROM cms_topic_completion_coupon_reward_log", Long.class),
+                "重跑迁移仍不按领取时间回填旧身份");
         jdbc.update("INSERT INTO ums_member_points_detail(member_id,change_points,event_type,event_id,change_type,del_flag) VALUES(501,5,13,8001,1,0)");
         jdbc.update("INSERT INTO topic_completion_xp_award(member_id,topic_id,xp_amount,granted_at) VALUES(501,700,3,NOW())");
         reverse(61);
@@ -149,6 +157,9 @@ class E04_07MySqlIT {
         assertEquals(0L,count("topic_completion_xp_award"));
         assertEquals(0L,jdbc.queryForObject("SELECT COUNT(*) FROM growth_mission_progress WHERE mission_code='COMPLETION_CLAWBACK_COUPON'",Long.class));
         assertTrue(jdbc.queryForObject("SELECT after_json FROM business_audit_event WHERE target_id=61",String.class).contains("UNKNOWN_IDENTITY_NOT_RECOVERED"));
+        assertFalse(producer.grantOnce(700L,501L,30L), "旧身份未明的占位不允许变成补发");
+        assertEquals(2L,count("sms_coupon_history"));
+        assertEquals(0L,jdbc.queryForObject("SELECT receive_count FROM sms_coupon WHERE id=30",Long.class));
     }
 
     @Test void usedOriginalReceiptKeepsUsedCouponAndGrantWithoutSubstitutingUnused43() {
@@ -175,6 +186,17 @@ class E04_07MySqlIT {
         String sql=new String(Files.readAllBytes(root.resolve(file)),StandardCharsets.UTF_8);
         Matcher m=Pattern.compile("CREATE TABLE (?:IF NOT EXISTS )?`?"+table+"`? \\(.*?\\) ENGINE=[^;]*;",Pattern.DOTALL).matcher(sql);
         assertTrue(m.find(),"Missing table "+table); jdbc.execute(m.group());
+    }
+
+    private void applyReceiptMigration() throws Exception {
+        try (java.sql.Connection connection = ds.getConnection()) {
+            ItSchema.applyMigrations(connection,
+                    root.resolve("chengyinhub-admin/sql/migration_topic_completion_coupon_history_receipt_20261016.sql").toString());
+        }
+        assertEquals(1, jdbc.queryForObject("SELECT COUNT(*) FROM information_schema.columns"
+                + " WHERE table_schema=DATABASE() AND table_name='cms_topic_completion_coupon_reward_log'"
+                + " AND column_name='history_id' AND column_type='bigint' AND is_nullable='YES'"
+                + " AND column_default IS NULL AND extra=''", Integer.class));
     }
     private boolean hasVendorCode(Throwable ex,int expected) {
         for(Throwable t=ex;t!=null;t=t.getCause()) if(t instanceof java.sql.SQLException&&expected==((java.sql.SQLException)t).getErrorCode()) return true;

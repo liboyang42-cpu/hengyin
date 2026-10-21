@@ -20,6 +20,15 @@ function nonBlank(value, fallback) {
   return typeof value === 'string' && value.trim() ? value.trim() : fallback;
 }
 
+/** BL-80:stats = { reached, clicked }(OfficialBroadcastServiceImpl.reachStats);形状不对返回空串。 */
+function broadcastStatsText(res) {
+  if (!res || !(res.code == 200 || res.code == '200') || !isRecord(res.data)) return '';
+  const reached = Number(res.data.reached);
+  const clicked = Number(res.data.clicked);
+  if (!finiteCount(reached) || !finiteCount(clicked)) return '';
+  return '站内触达 ' + reached + ' 人 · 点击 ' + clicked + ' 人';
+}
+
 function validPayload(data) {
   return isRecord(data)
     && isRecordList(data.events)
@@ -40,7 +49,7 @@ Page({
   },
 
   onLoad() { this._unloaded = false; this.syncViewerTheme(); this.fetch(); },
-  onShow() { this.syncViewerTheme(); if (this._loaded) this.fetch(); },
+  onShow() { this._navigating = false; this.syncViewerTheme(); if (this._loaded) this.fetch(); },
   onHide() { merchantTheme.merchantPageRestore(); },
   onUnload() {
     merchantTheme.merchantPageRestore();
@@ -105,6 +114,8 @@ Page({
       _city: nonBlank(event.city, '城市待确认'),
       _category: nonBlank(event.category, ''),
       _st: status || '状态待确认',
+      // 只给 V2 合同活动挂主办控制台入口;是否真是本场主办由控制台页的 publish-check 决定
+      _isV2: Number(event.contractVersion) >= 2,
     });
   },
 
@@ -123,7 +134,45 @@ Page({
     });
   },
 
-  openEvent(e) {
-    wx.navigateTo({ url: '/pages/activity/official-detail/index?id=' + e.currentTarget.dataset.id });
+  // BL-80 通知复盘:只读 reached/clicked;失败如实写在原触达行,再点一次重试。
+  openBroadcastStats(e) {
+    const index = Number(e && e.currentTarget && e.currentTarget.dataset && e.currentTarget.dataset.index);
+    const item = Number.isInteger(index) ? this.data.broadcasts[index] : null;
+    if (!item || !hasUsableId(item.id) || item._statsLoading) return;
+    const id = item.id;
+    const key = 'broadcasts[' + index + ']';
+    const sameItem = () => !this._unloaded && this.data.broadcasts[index] && this.data.broadcasts[index].id === id;
+    this.setData({ [key + '._statsLoading']: true, [key + '._statsText']: '正在读取复盘…' });
+    app.sendRequest({
+      url: '/api/official/broadcast/' + encodeURIComponent(String(id)) + '/stats',
+      method: 'GET', hideLoading: true, silentError: true, autoErrorToast: false,
+      success: (res) => {
+        if (!sameItem()) return;
+        const text = broadcastStatsText(res);
+        this.setData({
+          [key + '._statsLoading']: false,
+          [key + '._statsText']: text || (app.getRequestErrorMessage(res, '复盘没读到') + '，点一下重试'),
+        });
+      },
+      fail: (res) => {
+        if (!sameItem()) return;
+        this.setData({
+          [key + '._statsLoading']: false,
+          [key + '._statsText']: app.getRequestErrorMessage(res, '网络连接失败') + '，点一下重试',
+        });
+      },
+    });
+  },
+
+  openEvent(e) { if (this._navigating) return; this._navigating = true; // 跳转中不响应连点,免得叠两层详情
+    wx.navigateTo({ url: '/pages/activity/official-detail/index?id=' + e.currentTarget.dataset.id, complete: () => { this._navigating = false; } });
+  },
+
+  // 草稿在公开详情里不可见,发布等主办操作统一从控制台进
+  openOrganizer(e) {
+    const id = e && e.currentTarget && e.currentTarget.dataset.id;
+    if (!hasUsableId(id) || this._navigating) return; // 跳转中不响应连点,免得叠两层控制台
+    this._navigating = true;
+    wx.navigateTo({ url: '/pages/activity/official-organizer/index?id=' + id, complete: () => { this._navigating = false; } });
   },
 });
