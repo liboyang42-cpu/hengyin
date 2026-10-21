@@ -52,11 +52,12 @@ public final class RendezvousMeetingServiceTest {
         }
         public boolean markDispatched(String requestId,long now){
             for(Map.Entry<String,RendezvousHandoffRequest> entry:new ArrayList<>(handoffs.entrySet())){
-                if(entry.getValue().requestId.equals(requestId)){
-                    if(entry.getValue().dispatched)return false;
-                    handoffs.put(entry.getKey(),entry.getValue().dispatched(now));
-                    return true;
-                }
+                RendezvousHandoffRequest row=entry.getValue();
+                if(!row.requestId.equals(requestId))continue;
+                if(row.dispatched||row.phase!=RendezvousHandoffRequest.Phase.UNKNOWN)return false;
+                if(row.blocker!=null&&row.blocker.endsWith("NOT_ROLLED_BACK"))return false;
+                handoffs.put(entry.getKey(),row.dispatched(now));
+                return true;
             }
             return false;
         }
@@ -103,9 +104,11 @@ public final class RendezvousMeetingServiceTest {
     static final class TeamDouble implements RendezvousHandoffTeamPort {
         Fixture fixture; final Map<String,Long> created=new HashMap<>(); final Set<String> joined=new HashSet<>();
         int creates,joins,lookups; boolean obscure,lookupThrows,failJoin;
+        Runnable beforeLookup=()->{};
         public boolean available(){return fixture.available;}
         public Lookup lookup(String requestId){
             lookups++;
+            beforeLookup.run();
             if(lookupThrows)throw new IllegalStateException("synthetic query timeout");
             if(obscure)return Lookup.unknown("SYNTHETIC_QUERY_UNKNOWN");
             if(joined.contains(requestId))return Lookup.joined(created.get(requestId));

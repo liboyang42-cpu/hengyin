@@ -5,11 +5,12 @@ import com.chengyinhub.business.service.rendezvous.RendezvousConsentService.Matc
 import com.chengyinhub.business.service.rendezvous.RendezvousConsentService.Ticket;
 import com.chengyinhub.business.service.rendezvous.RendezvousConsentService.TicketState;
 import com.chengyinhub.business.service.rendezvous.RendezvousConsentService.Transaction;
-import com.chengyinhub.business.service.rendezvous.RendezvousHandoffParticipantAdapter.Verdict;
+import com.chengyinhub.business.service.rendezvous.RendezvousHandoffParticipantAdapter.BoundVerdict;
 import com.chengyinhub.business.service.rendezvous.RendezvousHandoffRequest.Phase;
 import com.chengyinhub.business.service.rendezvous.RendezvousMeetingService.HandoffState;
 import com.chengyinhub.business.service.rendezvous.RendezvousMeetingService.State;
 import com.chengyinhub.business.service.rendezvous.RendezvousMeetingServiceTest.Fixture;
+import java.util.function.Consumer;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -162,25 +163,56 @@ class RendezvousHandoffRecoveryTest {
         assertEquals(HandoffState.NOT_STARTED, scan.service.handoffStateFor(" "));
     }
 
+    @Test void cancelWhileLookupIsPausedDoesNotDispatch() throws Exception {
+        pausedRevocation(this::fresh, f -> f.service.cancel(2, f.second), "CANCELLED_NOT_ROLLED_BACK");
+        pausedRevocation(this::createdButUnjoined, f -> f.service.cancel(2, f.second), "CANCELLED_NOT_ROLLED_BACK");
+    }
+
+    @Test void blockWhileLookupIsPausedDoesNotDispatch() throws Exception {
+        pausedRevocation(this::fresh, f -> f.blocked = true, "SAFETY_REVOKED_NOT_ROLLED_BACK");
+        pausedRevocation(this::createdButUnjoined, f -> f.blocked = true, "SAFETY_REVOKED_NOT_ROLLED_BACK");
+    }
+
+    @Test void expiryWhileLookupIsPausedDoesNotDispatch() throws Exception {
+        pausedRevocation(this::fresh, f -> f.time.now = f.db.meeting(f.match).expiresAt, "EXPIRED_NOT_ROLLED_BACK");
+        pausedRevocation(this::createdButUnjoined, f -> f.time.now = f.db.meeting(f.match).expiresAt, "EXPIRED_NOT_ROLLED_BACK");
+    }
+
     @Test void participantAdapterUsesTheOpenTransactionAndLocalBinding() {
         Ticket first = new Ticket("t1", 1, "pool", "v1", 50_000, TicketState.ACCEPTED, "m1");
         Ticket second = new Ticket("t2", 2, "pool", "v1", 50_000, TicketState.ACCEPTED, "m1");
         Match match = new Match("m1", "t1", "t2", "public-place", 50_000, 1L, 1L, 2L, MatchState.MUTUAL_ACCEPTED);
         Transaction[] seen = new Transaction[1];
+        boolean[] mutual = new boolean[1];
         Stub tx = new Stub(first, second, match);
-        RendezvousHandoffParticipantAdapter adapter = new RendezvousHandoffParticipantAdapter((open, ticketId) -> {
-            seen[0] = open;
-            assertEquals("t1", ticketId);
-            return Verdict.SAFE;
+        RendezvousHandoffParticipantAdapter adapter = new RendezvousHandoffParticipantAdapter(
+                (open, actor, ticketId, matchId, peer, requireMutual, now) -> {
+            if (seen[0] == null) {
+                seen[0] = open;
+                mutual[0] = requireMutual;
+                assertEquals(1L, actor);
+                assertEquals("t1", ticketId);
+                assertEquals("m1", matchId);
+                assertEquals(2L, peer);
+                assertEquals(10L, now);
+            }
+            return new BoundVerdict(true, true, true);
         });
         assertTrue(adapter.verifyCurrent(tx, "m1", "t1", 1, 2, 10));
         assertSame(tx, seen[0]);
+        assertTrue(mutual[0]);
         assertFalse(adapter.verifyCurrent(tx, "m1", "t1", 1, 9, 10));
         assertFalse(adapter.verifyCurrent(tx, "other", "t1", 1, 2, 10));
         assertFalse(adapter.verifyCurrent("m1", "t1", 1, 2, 10));
-        RendezvousHandoffParticipantAdapter denied = new RendezvousHandoffParticipantAdapter((open, ticketId) -> Verdict.CLOSED);
-        assertFalse(denied.verifyCurrent(tx, "m1", "t1", 1, 2, 10));
-        RendezvousHandoffParticipantAdapter exploded = new RendezvousHandoffParticipantAdapter((open, ticketId) -> {
+        assertFalse(new RendezvousHandoffParticipantAdapter((open, actor, ticketId, matchId, peer, requireMutual, now) -> null)
+                .verifyCurrent(tx, "m1", "t1", 1, 2, 10));
+        assertFalse(new RendezvousHandoffParticipantAdapter((open, actor, ticketId, matchId, peer, requireMutual, now) -> new BoundVerdict(true, false, true))
+                .verifyCurrent(tx, "m1", "t1", 1, 2, 10));
+        assertFalse(new RendezvousHandoffParticipantAdapter((open, actor, ticketId, matchId, peer, requireMutual, now) -> new BoundVerdict(true, true, false))
+                .verifyCurrent(tx, "m1", "t1", 1, 2, 10));
+        assertFalse(new RendezvousHandoffParticipantAdapter((open, actor, ticketId, matchId, peer, requireMutual, now) -> new BoundVerdict(false, true, true))
+                .verifyCurrent(tx, "m1", "t1", 1, 2, 10));
+        RendezvousHandoffParticipantAdapter exploded = new RendezvousHandoffParticipantAdapter((open, actor, ticketId, matchId, peer, requireMutual, now) -> {
             throw new IllegalStateException("A unavailable");
         });
         assertFalse(exploded.verifyCurrent(tx, "m1", "t1", 1, 2, 10));
@@ -195,6 +227,49 @@ class RendezvousHandoffRecoveryTest {
         assertThrows(IllegalStateException.class, () -> port.join("req"));
         assertEquals(0, teams.creates);
         assertEquals(0, teams.joins);
+    }
+
+    private Fixture fresh() { return ready(); }
+
+    /** Team already stored for this request. A paused lookup must not add another join. */
+    private Fixture createdButUnjoined() {
+        Fixture f = ready();
+        RendezvousHandoffRequest request = new RendezvousHandoffRequest("req-join", f.match, 1, 2, 99,
+                Phase.TEAM_CREATED, 77L, null, true, f.time.now, f.time.now);
+        f.db.save(request);
+        f.db.save(f.db.meeting(f.match).withTeam(77L, State.IN_PROGRESS));
+        f.team.created.put("req-join", 77L);
+        return f;
+    }
+
+    private void pausedRevocation(java.util.function.Supplier<Fixture> setup, Consumer<Fixture> revoke, String blocker) throws Exception {
+        Fixture f = setup.get();
+        CountDownLatch entered = new CountDownLatch(1);
+        CountDownLatch release = new CountDownLatch(1);
+        f.team.beforeLookup = () -> {
+            entered.countDown();
+            try {
+                if (!release.await(10, TimeUnit.SECONDS)) throw new AssertionError("lookup not released");
+            } catch (InterruptedException interrupted) {
+                Thread.currentThread().interrupt();
+                throw new AssertionError(interrupted);
+            }
+        };
+        ExecutorService pool = Executors.newSingleThreadExecutor();
+        try {
+            Future<RendezvousMeetingService.View> pending = pool.submit(() -> f.service.handoff(1, f.first));
+            assertTrue(entered.await(10, TimeUnit.SECONDS));
+            revoke.accept(f);
+            release.countDown();
+            RendezvousMeetingService.View view = pending.get(10, TimeUnit.SECONDS);
+            assertNotEquals(State.COMPLETED, view.state);
+            assertNull(view.teamId);
+        } finally { pool.shutdownNow(); }
+        assertEquals(0, f.attempts());
+        assertEquals(0, f.team.joins);
+        assertEquals(blocker, f.db.handoffRequest(f.match).blocker);
+        if (f.team.created.containsKey("req-join")) assertEquals(77L, f.db.meeting(f.match).teamId.longValue());
+        else assertFalse(f.db.handoffRequest(f.match).dispatched);
     }
 
     private static Fixture ready() { Fixture f = new Fixture(); f.ready(); return f; }

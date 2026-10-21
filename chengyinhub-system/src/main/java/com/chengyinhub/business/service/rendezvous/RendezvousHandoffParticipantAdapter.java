@@ -5,22 +5,25 @@ import com.chengyinhub.business.service.rendezvous.RendezvousConsentService.Tick
 import com.chengyinhub.business.service.rendezvous.RendezvousConsentService.Transaction;
 
 /**
- * Builds this group's port on Group A's frozen call
- * {@code OngoingVerdict verifyParticipants(Transaction tx, String ticketId)}.
- * A's type is not in this tree, so the delegate returns {@link Verdict} and the merge
- * maps {@code OngoingVerdict} onto {@link Verdict#SAFE} only when that verdict explicitly
- * says the participants are still safe. Any other value, null, or exception is closed.
- *
- * <p>The frozen call does not take matchId, actor, or peer. Those checks happen here on the
- * same {@code tx} instance. This class does not call {@code read}/{@code current} and does
- * not open a transaction. Actor/peer binding, {@code requireMutualAccepted}, and terminate
- * are not frozen yet; mutual acceptance stays in the meeting service's own guard.
+ * Maps Group A's frozen call at {@code 37b4b345}:
+ * {@code verifyParticipants(tx, actor, ticketId, matchId, peer, requireMutualAccepted, now)}.
+ * {@code OngoingVerdict} is not in this tree, so the delegate returns {@link BoundVerdict}.
+ * Passes only when {@code safe}, {@code owned} and {@code mutual} are all explicitly true.
+ * {@code requireMutualAccepted} is always {@code true}. This class does not open a transaction
+ * and does not call {@code read} or {@code current}.
  */
 public final class RendezvousHandoffParticipantAdapter implements RendezvousHandoffSafety {
-    public enum Verdict { SAFE, CLOSED }
+    /** Explicit flags from A's verdict. Missing or false on any of the three is closed. */
+    public static final class BoundVerdict {
+        public final boolean safe, owned, mutual;
+        public BoundVerdict(boolean safe, boolean owned, boolean mutual) {
+            this.safe = safe; this.owned = owned; this.mutual = mutual;
+        }
+    }
 
     public interface Participants {
-        Verdict verifyParticipants(Transaction tx, String ticketId);
+        BoundVerdict verifyParticipants(Transaction tx, long actor, String ticketId, String matchId,
+                                        long peer, boolean requireMutualAccepted, long now);
     }
 
     private final Participants participants;
@@ -34,10 +37,10 @@ public final class RendezvousHandoffParticipantAdapter implements RendezvousHand
         if (participants == null || tx == null || blank(matchId) || blank(ticketId) || actor <= 0 || peer <= 0 || actor == peer) {
             return false;
         }
-        Verdict verdict;
-        try { verdict = participants.verifyParticipants(tx, ticketId); }
+        BoundVerdict verdict;
+        try { verdict = participants.verifyParticipants(tx, actor, ticketId, matchId, peer, true, now); }
         catch (RuntimeException denied) { return false; }
-        if (verdict != Verdict.SAFE) return false;
+        if (verdict == null || !verdict.safe || !verdict.owned || !verdict.mutual) return false;
         try {
             Ticket ticket = tx.ticket(ticketId);
             Match match = tx.match(matchId);

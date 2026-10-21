@@ -26,6 +26,8 @@ RendezvousMeetingService.HandoffState handoffStateFor(String matchId)
 - `lookup` 不能证明缺席、或调用已经发出但结果未落库时，保持 `UNKNOWN`，不删队、不补偿、不再创建。
 - 创建已确认而加入失败时，只对同一请求 `join`。
 - 恢复过程中取消、拉黑或到期会停下后续组队。已记下的 team id 保留，阻断码以 `NOT_ROLLED_BACK` 结尾。
+- 每次 `create` 或 `join` 之前，在同一条守卫事务里重读原请求、双方当前安全、截止时间、证据行和停止标记，并按原 `request_id` 原子决定。`markDispatched` 只在 `dispatched=0`、阶段 `UNKNOWN`、且阻断码不是 `NOT_ROLLED_BACK` 时成功。
+- 线性化边界：在这条守卫事务开始之前已经提交的撤销，排序在派发之前，禁止 `create` 和 `join`。外部组队调用不在守卫事务里。事务返回之后才提交的撤销，仍可能和这次调用交错；之后拒绝 `COMPLETED` 不能把这次调用说成已回滚。
 
 ## 证据
 
@@ -33,13 +35,13 @@ RendezvousMeetingService.HandoffState handoffStateFor(String matchId)
 
 ## A 的事务内检查
 
-本组端口仍是 `RendezvousHandoffSafety.verifyCurrent`。适配器 `RendezvousHandoffParticipantAdapter` 在调用方已经打开的 `Transaction` 上调用
+本组端口仍是 `RendezvousHandoffSafety.verifyCurrent`。适配器在调用方已经打开的同一个 `Transaction` 上调用 A 在 `37b4b345` 冻结的
 
 ```text
-OngoingVerdict verifyParticipants(Transaction tx, String ticketId)
+verifyParticipants(tx, actor, ticketId, matchId, peer, true, now)
 ```
 
-A 的类型还不在这棵树上。合并前只把明确的仍安全结论映射为 `Verdict.SAFE`，其余失败关闭。`matchId`、`actor`、`peer` 由适配器在同一个 `tx` 上核对。`requireMutualAccepted` 和事务内 terminate 还没冻结，本组不调用它们。
+`OngoingVerdict` 不在这棵树上，适配器只接收 `safe`、`owned`、`mutual` 三个显式布尔。三者都为 true 才通过，缺一、`null` 或异常都失败关闭。`requireMutualAccepted` 固定为 true。派发前对双方各查一次。事务内 terminate 本组不调用。
 
 ## 组队端口
 

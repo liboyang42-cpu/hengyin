@@ -211,7 +211,7 @@ public final class RendezvousMeetingService {
         RendezvousHandoffRequest req=tx.handoffRequest(m.id);
         boolean advancing=r.state == State.READY || r.state == State.IN_PROGRESS || r.state == State.RECOVERY_REQUIRED;
         if (advancing) {
-            String denial=denial(tx,m,r,t);
+            String denial=denial(tx,m,r);
             if (denial != null) return hold(tx,t,r,req,denial);
         }
         if (r.state == State.CANCELLED || r.state == State.EXPIRED || r.state == State.SAFETY_STOPPED
@@ -248,9 +248,7 @@ public final class RendezvousMeetingService {
                 if (lookup.status == RendezvousHandoffTeamPort.Status.ABSENT) {
                     if (req.dispatched) return stick(actor, ticketId, "CALL_RESULT_UNKNOWN");
                     if (!teams.available()) return stick(actor, ticketId, "TEAM_PORT_DISABLED");
-                    final String requestId=req.requestId;
-                    boolean won=store.transaction(tx -> tx.markDispatched(requestId, clock.millis()));
-                    if (!won) return read(actor, ticketId);
+                    if (!permit(actor, ticketId, req.requestId, true)) return read(actor, ticketId);
                     RendezvousHandoffTeamPort.Created created=teams.create(req.requestId, req.firstActor, req.secondActor, req.activityId);
                     if (created == null || created.teamId <= 0) return stick(actor, ticketId, "CREATE_RESULT_UNKNOWN");
                     req=req.teamCreated(created.teamId, clock.millis());
@@ -268,6 +266,7 @@ public final class RendezvousMeetingService {
             if (req.phase == RendezvousHandoffRequest.Phase.COMPLETED) return publish(actor, ticketId);
             if (lookup.status != RendezvousHandoffTeamPort.Status.JOINED) {
                 if (!teams.available()) return stick(actor, ticketId, "TEAM_PORT_DISABLED");
+                if (!permit(actor, ticketId, req.requestId, false)) return read(actor, ticketId);
                 teams.join(req.requestId);
             }
             return publish(actor, ticketId);
@@ -279,6 +278,35 @@ public final class RendezvousMeetingService {
             return stick(actor, ticketId, req.phase == RendezvousHandoffRequest.Phase.UNKNOWN
                     ? "CREATE_RESULT_UNKNOWN" : "JOIN_RESULT_UNKNOWN");
         }
+    }
+    /**
+     * Linearization point against revocation. One guard transaction re-reads the original request,
+     * both sides, the deadline, the evidence row and the stop marker, then decides for this identity.
+     * A revocation committed before this transaction forbids create and join. The external call stays
+     * outside the guard: a revocation that commits after this method returns can still meet that call,
+     * and a later publish cannot roll the call back.
+     */
+    private boolean permit(long actor, String ticketId, String requestId, boolean create) {
+        return store.transaction(tx -> {
+            Ticket t=owned(tx, actor, ticketId); Match m=match(tx, t); Meeting r=refresh(tx, m, required(tx, m));
+            RendezvousHandoffRequest current=tx.handoffRequest(m.id);
+            if (!bound(current, requestId, m, r, tx)) return false;
+            String denial=denial(tx, m, r);
+            if (denial != null) { hold(tx, t, r, current, denial); return false; }
+            RendezvousMeetingEvidence.Decision decision=decision(tx, m);
+            if (decision.activityId != r.activityId || !decision.ready()) return false;
+            if (create) {
+                if (current.phase != RendezvousHandoffRequest.Phase.UNKNOWN || current.dispatched) return false;
+                return tx.markDispatched(requestId, clock.millis());
+            }
+            return current.phase == RendezvousHandoffRequest.Phase.TEAM_CREATED && current.teamId != null && current.teamId > 0;
+        });
+    }
+    private boolean bound(RendezvousHandoffRequest current, String requestId, Match m, Meeting r, Tx tx) {
+        Ticket first=tx.ticket(m.firstTicket), second=tx.ticket(m.secondTicket);
+        return current != null && requestId != null && requestId.equals(current.requestId) && m.id.equals(current.matchId)
+                && first != null && second != null && current.firstActor == first.actor && current.secondActor == second.actor
+                && current.activityId == r.activityId;
     }
     /** False when a stop blocker already says the side effect must not be continued. The team id is kept. */
     private boolean persist(RendezvousHandoffRequest req) {
@@ -301,7 +329,7 @@ public final class RendezvousMeetingService {
             Ticket t=owned(tx,actor,ticketId); Match m=match(tx,t); Meeting r=required(tx,m);
             RendezvousHandoffRequest req=tx.handoffRequest(m.id);
             if (r.state == State.COMPLETED) return view(tx,t,r);
-            String denial=req == null ? "TEAM_QUERY_UNKNOWN" : denial(tx,m,r,t);
+            String denial=req == null ? "TEAM_QUERY_UNKNOWN" : denial(tx,m,r);
             RendezvousMeetingEvidence.Decision decision=decision(tx,m);
             boolean ready=denial == null && req.teamId != null && req.teamId > 0
                     && decision.activityId == r.activityId && decision.ready();
@@ -346,21 +374,23 @@ public final class RendezvousMeetingService {
             return view(tx,t,r.withTeam(team, State.RECOVERY_REQUIRED));
         });
     }
-    private String denial(Tx tx, Match m, Meeting r, Ticket caller) {
+    private String denial(Tx tx, Match m, Meeting r) {
         if (m.state == MatchState.CANCELLED) return "CANCELLED_NOT_ROLLED_BACK";
         if (clock.millis() >= r.expiresAt || m.state == MatchState.EXPIRED) return "EXPIRED_NOT_ROLLED_BACK";
         if (!safe(tx,m)) return "SAFETY_REVOKED_NOT_ROLLED_BACK";
-        if (!verifyOngoing(tx,m,caller)) return "SAFETY_REVOKED_NOT_ROLLED_BACK";
+        if (!verifyOngoing(tx,m)) return "SAFETY_REVOKED_NOT_ROLLED_BACK";
         RendezvousHandoffRequest req=tx.handoffRequest(m.id);
         if (req != null && req.blocker != null && req.blocker.endsWith("NOT_ROLLED_BACK")) return req.blocker;
         return null;
     }
-    private boolean verifyOngoing(Tx tx, Match m, Ticket caller) {
+    private boolean verifyOngoing(Tx tx, Match m) {
         Ticket first=tx.ticket(m.firstTicket), second=tx.ticket(m.secondTicket);
-        if (first == null || second == null) return false;
-        long peer=caller.actor == first.actor ? second.actor : first.actor;
-        try { return handoffSafety.verifyCurrent(tx, m.id, caller.id, caller.actor, peer, clock.millis()); }
-        catch (RuntimeException denied) { return false; }
+        if (first == null || second == null || first.actor == second.actor) return false;
+        long now=clock.millis();
+        try {
+            return handoffSafety.verifyCurrent(tx, m.id, first.id, first.actor, second.actor, now)
+                    && handoffSafety.verifyCurrent(tx, m.id, second.id, second.actor, first.actor, now);
+        } catch (RuntimeException denied) { return false; }
     }
     private Meeting assess(Tx tx, Match m, Meeting r) {
         RendezvousMeetingEvidence.Decision decision=decision(tx,m);

@@ -3,8 +3,9 @@ package com.chengyinhub.business.service.rendezvous;
 /**
  * Narrow port kept by Group C. Synthetic doubles implement {@link #verifyCurrent}.
  * The same-transaction overload is what {@link RendezvousHandoffParticipantAdapter} overrides
- * to call Group A's frozen {@code verifyParticipants(Transaction, ticketId)} without opening
- * another transaction. A missing or non-safe verdict stays fail-closed until that type is merged.
+ * to call Group A's frozen {@code verifyParticipants(tx, actor, ticketId, matchId, peer, requireMutualAccepted, now)}
+ * without opening another transaction. {@code OngoingVerdict} is not in this tree. Only an explicit
+ * {@code safe && owned && mutual} passes; anything else stays fail-closed.
  */
 public interface RendezvousHandoffSafety {
     boolean verifyCurrent(String matchId, String ticketId, long actor, long peer, long now);
