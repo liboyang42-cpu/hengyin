@@ -67,6 +67,11 @@ public final class FairnessFieldContract {
     public static final String AWAITING_MATURITY = "awaiting-maturity";
     public static final String SECOND_OUTING = "second-outing";
     public static final String NO_SECOND_OUTING = "no-second-outing";
+    public static final String FIRST_OUTING = "first-outing";
+    public static final String INSIDE_DELTA = "inside-delta";
+    public static final String AFTER_HORIZON = "after-horizon";
+    public static final String BEFORE_T0 = "before-t0";
+    public static final String NOT_EFFECTIVE = "not-effective";
     public static final String TEST = "test";
     public static final String CHEAT = "confirm-cheat";
     public static final String NO_T0 = "no-t0";

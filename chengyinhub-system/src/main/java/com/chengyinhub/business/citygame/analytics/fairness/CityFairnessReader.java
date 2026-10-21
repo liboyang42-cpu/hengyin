@@ -179,9 +179,10 @@ public final class CityFairnessReader {
         List<OutingClass> classes = new ArrayList<>();
         List<SecondOuting> seconds = new ArrayList<>();
         List<LateEvent> late = new ArrayList<>();
+        List<OutingEvidence> evidence = new ArrayList<>();
         try {
             for (ActorFacts actor : actors.values()) {
-                classify(asOf, parameter, actor, groups, classes, seconds, late, missing);
+                classify(asOf, parameter, actor, groups, classes, seconds, late, evidence, missing);
             }
         } catch (FairnessReadException ex) {
             return Result.notComputable(asOf, List.of(ex.missing), version(parameter));
@@ -191,6 +192,7 @@ public final class CityFairnessReader {
         classes.sort(Comparator.comparingLong(item -> item.actorId));
         seconds.sort(Comparator.comparingLong(item -> item.actorId));
         late.sort(Comparator.comparing((LateEvent item) -> item.outingId).thenComparing(item -> item.eventId));
+        evidence.sort(Comparator.comparingLong((OutingEvidence item) -> item.actorId).thenComparing(item -> item.outingId));
         int denominator = 0;
         int numerator = 0;
         for (OutingClass item : classes) {
@@ -200,14 +202,14 @@ public final class CityFairnessReader {
         }
         Integer matureCount = denominator == 0 ? null : numerator;
         Integer denominatorCount = denominator == 0 ? null : denominator;
-        return new Result(COMPUTABLE, List.of(), new ArrayList<>(groups.values()), seconds, classes, late, asOf,
+        return new Result(COMPUTABLE, List.of(), new ArrayList<>(groups.values()), seconds, classes, late, evidence, asOf,
                 parameter.metricVersion, matureCount, denominatorCount, FairnessFieldContract.FORMULA_ID,
                 anyFact ? factRevision : null);
     }
 
     private static void classify(long asOf, ParameterRow parameter, ActorFacts actor, Map<GroupKey, Group> groups,
                                  List<OutingClass> classes, List<SecondOuting> seconds, List<LateEvent> late,
-                                 List<String> missing) {
+                                 List<OutingEvidence> evidence, List<String> missing) {
         for (Map.Entry<String, List<EventRow>> outing : actor.outings.entrySet()) {
             long earliest = Long.MAX_VALUE;
             long latest = Long.MIN_VALUE;
@@ -229,6 +231,10 @@ public final class CityFairnessReader {
         if (t0Event == null) {
             classes.add(new OutingClass("-", actor.actorId, FairnessFieldContract.IMMATURE, FairnessFieldContract.NO_T0,
                     null, null, null));
+            for (String outingId : actor.outings.keySet()) {
+                evidence.add(new OutingEvidence(actor.actorId, outingId, null, false, FairnessFieldContract.NOT_EFFECTIVE,
+                        false, FairnessFieldContract.IMMATURE));
+            }
             return;
         }
         for (List<EventRow> outing : actor.outings.values()) {
@@ -306,6 +312,25 @@ public final class CityFairnessReader {
         }
         classes.add(new OutingClass(t0Event.outingId, actor.actorId, maturity, reason, t0Event.occurredAt,
                 newcomer(t0Event.newcomer), secondId));
+        for (Map.Entry<String, List<EventRow>> outing : actor.outings.entrySet()) {
+            EventRow anchor = null;
+            for (EventRow event : outing.getValue()) {
+                if (!effective(event.kind) || anchor != null && !earlier(event, anchor)) continue;
+                anchor = event;
+            }
+            boolean valid = anchor != null;
+            boolean inWindow = valid && anchor.occurredAt > t0Event.occurredAt && anchor.occurredAt <= horizonEnd
+                    && anchor.occurredAt >= deltaDue;
+            String lineReason;
+            if (!valid) lineReason = FairnessFieldContract.NOT_EFFECTIVE;
+            else if (outing.getKey().equals(t0Event.outingId)) lineReason = FairnessFieldContract.FIRST_OUTING;
+            else if (anchor.occurredAt <= t0Event.occurredAt) lineReason = FairnessFieldContract.BEFORE_T0;
+            else if (anchor.occurredAt > horizonEnd) lineReason = FairnessFieldContract.AFTER_HORIZON;
+            else if (anchor.occurredAt < deltaDue) lineReason = FairnessFieldContract.INSIDE_DELTA;
+            else lineReason = FairnessFieldContract.SECOND_OUTING;
+            evidence.add(new OutingEvidence(actor.actorId, outing.getKey(), t0Event.occurredAt, valid, lineReason,
+                    inWindow, maturity));
+        }
     }
 
     private static boolean earlier(EventRow left, EventRow right) {
@@ -438,6 +463,7 @@ public final class CityFairnessReader {
         public final List<SecondOuting> secondOutings;
         public final List<OutingClass> outingClasses;
         public final List<LateEvent> lateEvents;
+        public final List<OutingEvidence> evidence;
         public final long asOf;
         public final String metricVersion;
         public final Integer matureCount;
@@ -446,14 +472,15 @@ public final class CityFairnessReader {
         public final Long factRevision;
 
         Result(String status, List<String> missing, List<Group> groups, List<SecondOuting> secondOutings,
-               List<OutingClass> outingClasses, List<LateEvent> lateEvents, long asOf, String metricVersion,
-               Integer matureCount, Integer denominator, String formulaId, Long factRevision) {
+               List<OutingClass> outingClasses, List<LateEvent> lateEvents, List<OutingEvidence> evidence, long asOf,
+               String metricVersion, Integer matureCount, Integer denominator, String formulaId, Long factRevision) {
             this.status = status;
             this.missing = List.copyOf(missing);
             this.groups = List.copyOf(groups);
             this.secondOutings = List.copyOf(secondOutings);
             this.outingClasses = List.copyOf(outingClasses);
             this.lateEvents = List.copyOf(lateEvents);
+            this.evidence = List.copyOf(evidence);
             this.asOf = asOf;
             this.metricVersion = metricVersion;
             this.matureCount = matureCount;
@@ -471,7 +498,7 @@ public final class CityFairnessReader {
             sorted.sort(String::compareTo);
             String version = metricVersion == null || metricVersion.isBlank() ? null : metricVersion;
             return new Result(NOT_COMPUTABLE, sorted.stream().distinct().toList(), List.of(), List.of(), List.of(),
-                    List.of(), asOf, version, null, null, FairnessFieldContract.FORMULA_ID, null);
+                    List.of(), List.of(), asOf, version, null, null, FairnessFieldContract.FORMULA_ID, null);
         }
 
         public boolean computable() { return COMPUTABLE.equals(status); }
@@ -501,6 +528,27 @@ public final class CityFairnessReader {
             this.t0 = t0;
             this.newbieQueue = newbieQueue;
             this.secondOutingId = secondOutingId;
+        }
+    }
+
+    public static final class OutingEvidence {
+        public final long actorId;
+        public final String outingId;
+        public final Long t0;
+        public final boolean valid;
+        public final String reason;
+        public final boolean inWindow;
+        public final String maturity;
+
+        public OutingEvidence(long actorId, String outingId, Long t0, boolean valid, String reason, boolean inWindow,
+                              String maturity) {
+            this.actorId = actorId;
+            this.outingId = outingId;
+            this.t0 = t0;
+            this.valid = valid;
+            this.reason = reason;
+            this.inWindow = inWindow;
+            this.maturity = maturity;
         }
     }
 

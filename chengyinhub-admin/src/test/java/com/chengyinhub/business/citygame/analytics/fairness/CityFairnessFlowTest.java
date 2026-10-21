@@ -217,6 +217,122 @@ class CityFairnessFlowTest {
         assertNotNull(data.get("members"));
     }
 
+    @Test void outingDetailIsOnlyTheCallerAndPagesOneMergedOuting() {
+        Store store = approvedStore();
+        store.parameter.pageSize = 1;
+        CityFairnessIngestionService ingestion = new CityFairnessIngestionService(store);
+        ingestion.ingest(task("city-task", "e1", "o1", 7, 6_000));
+        ingestion.ingest(task("city-task", "e1b", "o1", 7, 6_100));
+        ingestion.ingest(task("city-task", "e2", "o2", 7, 6_200));
+        ingestion.ingest(task("city-task", "eb", "ob", 8, 6_000));
+        CityFairnessReportService reports = new CityFairnessReportService(store);
+
+        CityFairnessReportService.Page first = outings(reports, 7, "oq", 12_000L, null);
+        assertEquals(200, first.httpStatus);
+        assertEquals(1, first.outings.size());
+        assertEquals("o1", first.outings.get(0).outingId);
+        assertTrue(first.outings.get(0).valid);
+        assertEquals(FairnessFieldContract.FIRST_OUTING, first.outings.get(0).reason);
+        assertFalse(first.outings.get(0).inWindow);
+        assertEquals(6_000L, first.t0);
+        assertEquals(6_000L, first.outings.get(0).t0);
+        assertEquals(FairnessFieldContract.MATURE, first.maturity);
+        assertEquals(FairnessFieldContract.MATURE, first.outings.get(0).maturity);
+        assertEquals("metric-1", first.metricVersion);
+        assertEquals(6_200L, first.factRevision);
+        assertEquals("1", first.nextCursor);
+        assertFalse(first.readBack);
+        assertTrue(first.groups.isEmpty());
+
+        CityFairnessReportService.Page second = outings(reports, 7, "oq", 12_000L, "1");
+        assertTrue(second.readBack);
+        assertEquals("o2", second.outings.get(0).outingId);
+        assertTrue(second.outings.get(0).inWindow);
+        assertEquals(FairnessFieldContract.SECOND_OUTING, second.outings.get(0).reason);
+        assertNull(second.nextCursor);
+
+        CityFairnessReportService.Page other = outings(reports, 8, "oq", 12_000L, null);
+        assertFalse(other.readBack);
+        assertEquals(1, other.outings.size());
+        assertEquals("ob", other.outings.get(0).outingId);
+        assertEquals(FairnessFieldContract.FIRST_OUTING, other.outings.get(0).reason);
+
+        ingestion.ingest(task("city-task", "e3", "o3", 7, 6_400));
+        CityFairnessReportService.Page replay = outings(reports, 7, "oq", 12_000L, null);
+        assertTrue(replay.readBack);
+        assertEquals("o1", replay.outings.get(0).outingId);
+        assertEquals("1", replay.nextCursor);
+        assertEquals(6_200L, replay.factRevision);
+
+        CityFairnessReportService.Page immature = outings(reports, 7, "early", 7_000L, null);
+        assertEquals(FairnessFieldContract.IMMATURE, immature.maturity);
+        assertEquals(6_000L, immature.t0);
+        assertEquals(FairnessFieldContract.FIRST_OUTING, immature.outings.get(0).reason);
+        CityFairnessReportService.Page immatureNext = outings(reports, 7, "early", 7_000L, "1");
+        assertEquals("o2", immatureNext.outings.get(0).outingId);
+        assertTrue(immatureNext.outings.get(0).inWindow);
+        assertEquals(FairnessFieldContract.IMMATURE, immatureNext.outings.get(0).maturity);
+        CityFairnessReportService.Page cohort = scoped(reports, 7, "early-report", 7_000L, null);
+        assertEquals(FairnessFieldContract.NO_MATURE_SAMPLE, cohort.maturity);
+        assertNull(cohort.matureCount);
+        assertNull(cohort.denominator);
+
+        CityFairnessReportService.Page rejected = reports.outings(7, "bad-board", 12_000L, null, "board-9", "region-1", "season-1", "rules-1");
+        assertEquals(403, rejected.httpStatus);
+        assertEquals("scope-rejected", rejected.errorCode);
+        assertTrue(rejected.outings.isEmpty());
+
+        Store broken = new Store();
+        broken.parametersDown = true;
+        CityFairnessReportService.Page unavailable = new CityFairnessReportService(broken)
+                .outings(7, "down", 12_000L, null, "board-1", "region-1", "season-1", "rules-1");
+        assertEquals(503, unavailable.httpStatus);
+        assertEquals("city_fairness_parameter", unavailable.errorCode);
+        assertTrue(broken.reads.isEmpty());
+
+        CityFairnessReportController stranger = new CityFairnessReportController(reports) {
+            protected Long currentAccount() { return null; }
+        };
+        ResponseEntity<AjaxResult> denied = stranger.outing("c-out", 12_000L, null, "board-1", "region-1", "season-1", "rules-1");
+        assertEquals(401, denied.getStatusCode().value());
+        CityFairnessReportController owner = new CityFairnessReportController(reports) {
+            protected Long currentAccount() { return 7L; }
+        };
+        ResponseEntity<AjaxResult> allowed = owner.outing("c-out", 12_000L, null, "board-1", "region-1", "season-1", "rules-1");
+        assertEquals(200, allowed.getStatusCode().value());
+        @SuppressWarnings("unchecked")
+        Map<String, Object> data = (Map<String, Object>) allowed.getBody().get(AjaxResult.DATA_TAG);
+        assertEquals(7L, data.get("accountId"));
+        assertEquals(6_000L, data.get("t0"));
+        assertEquals("metric-1", data.get("metricVersion"));
+        assertEquals(6_400L, data.get("factRevision"));
+        assertNull(data.get("groups"));
+        assertNull(data.get("members"));
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> rows = (List<Map<String, Object>>) data.get("outings");
+        assertEquals(1, rows.size());
+        assertEquals("o1", rows.get(0).get("outingId"));
+        assertEquals(Boolean.TRUE, rows.get(0).get("valid"));
+        assertEquals(FairnessFieldContract.FIRST_OUTING, rows.get(0).get("reason"));
+        assertEquals(Boolean.FALSE, rows.get(0).get("inWindow"));
+        assertEquals(FairnessFieldContract.MATURE, rows.get(0).get("maturity"));
+        assertEquals("metric-1", rows.get(0).get("metricVersion"));
+        assertEquals(6_400L, rows.get(0).get("factRevision"));
+
+        store.parameter.graceMillis = null;
+        CityFairnessReportService.Page missing = outings(reports, 7, "nograce", 12_000L, null);
+        assertEquals(CityFairnessReader.NOT_COMPUTABLE, missing.status);
+        assertTrue(missing.missing.contains(GRACE_MILLIS));
+        assertNull(missing.matureCount);
+        ResponseEntity<AjaxResult> gap = owner.outing("nograce-http", 12_000L, null, "board-1", "region-1", "season-1", "rules-1");
+        assertEquals(422, gap.getStatusCode().value());
+    }
+
+    private static CityFairnessReportService.Page outings(CityFairnessReportService reports, long account, String query,
+                                                           Long asOf, String cursor) {
+        return reports.outings(account, query, asOf, cursor, "board-1", "region-1", "season-1", "rules-1");
+    }
+
     private static CityFairnessReportService.Page scoped(CityFairnessReportService reports, long account, String query,
                                                           Long asOf, String cursor) {
         return reports.read(account, query, asOf, cursor, "board-1", "region-1", "season-1", "rules-1");
@@ -275,11 +391,13 @@ class CityFairnessFlowTest {
 
     private static final class Store implements CityFairnessMapper {
         CityFairnessReader.ParameterRow parameter;
+        boolean parametersDown;
         final List<CityFairnessReader.ParameterRow> parameters = new ArrayList<>();
         final List<CityFairnessReader.EventRow> events = new ArrayList<>();
         final Map<String, CityFairnessReadRow> reads = new LinkedHashMap<>();
 
         public List<CityFairnessReader.ParameterRow> selectParameters(String boardId, String regionId, String seasonId, String rulesVersion) {
+            if (parametersDown) throw new IllegalStateException("down");
             List<CityFairnessReader.ParameterRow> out = new ArrayList<>();
             for (CityFairnessReader.ParameterRow row : parameters) {
                 if (boardId.equals(row.boardId) && regionId.equals(row.regionId) && seasonId.equals(row.seasonId)
