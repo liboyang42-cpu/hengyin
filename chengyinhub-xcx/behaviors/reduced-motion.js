@@ -13,7 +13,7 @@ module.exports = Behavior({
   },
   lifetimes: {
     attached() {
-      this._pageReducedMotion = this.data.reducedMotion === true
+      if (typeof this._pageReducedMotion !== 'boolean') this._pageReducedMotion = this.data.reducedMotion === true
       this._unsubscribeReducedMotion = subscribeReducedMotion(() => this._syncReducedMotionPreference())
       this._syncReducedMotionPreference()
     },

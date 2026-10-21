@@ -927,8 +927,8 @@ function scanLegacy(jsFiles, wxmlFiles) {
   return { errors, warnings };
 }
 
-function enforcedLegacyViolations(legacy) {
-  return [...legacy.errors, ...(WARN_AS_ERROR ? legacy.warnings : [])];
+function enforcedLegacyViolations(legacy, warnAsError = WARN_AS_ERROR) {
+  return [...legacy.errors, ...(warnAsError ? legacy.warnings : [])];
 }
 
 function assertSelftest(name, bad, good, detail) {
@@ -1095,10 +1095,10 @@ function runSelftest() {
       "Page({show(){toast('这家还没有在平台建档,先电话联系')}})\n",
       "Page({show(){toast.error('主办退出必须先完成受控转交，不能在收件箱直接退出')}})\n",
       "Page({show(){app.tips('标记已读失败,请重试')}})\n",
-    ].every((src) => { fs.writeFileSync(js, src); return enforcedLegacyViolations(scanLegacy([js], [])).length >= 1; });
+    ].every((src) => { fs.writeFileSync(js, src); return enforcedLegacyViolations(scanLegacy([js], []), true).length >= 1; });
     // 注释里提到这些词、代码里 includes('参数错误') 拦它们,都不算违规
     fs.writeFileSync(js, "// 后端偶尔回 '参数错误'\nPage({show(){wx.showToast({title:'操作完成'}); toast('网络异常，请重试'); if (msg.includes('参数错误')) return;}})\n");
-    const placeholderGood = enforcedLegacyViolations(scanLegacy([js], [])).length === 0;
+    const placeholderGood = enforcedLegacyViolations(scanLegacy([js], []), true).length === 0;
     assertSelftest('WARN-AS-ERROR', placeholderBad, placeholderGood,
       '--warn-as-error 下占位/开发者口径/裸网络/半角逗号/超长提示文案会进入失败判定');
 

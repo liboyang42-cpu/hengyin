@@ -23,7 +23,7 @@ function harness(initial = false) {
     module: behaviorModule, Behavior(value) { return value; }, require() { return preference; },
   });
   const behavior = behaviorModule.exports;
-  function mount(explicit = false) {
+  function mount(explicit = false, observeBeforeAttach = false) {
     const instance = {
       data: { reducedMotion: explicit }, updates: 0, ...behavior.methods,
       setData(patch) {
@@ -33,6 +33,7 @@ function harness(initial = false) {
         observe(this, patch.reducedMotion);
       },
     };
+    if (observeBeforeAttach) observe(instance, explicit);
     behavior.lifetimes.attached.call(instance);
     return instance;
   }
@@ -52,6 +53,14 @@ test('共享偏好实时开关同步所有已挂载组件，无需返回页面',
   assert.equal(a.data.reducedMotion, false);
   assert.equal(b.data.reducedMotion, false);
   h.behavior.lifetimes.detached.call(a); h.behavior.lifetimes.detached.call(b);
+});
+test('attached 前的属性监听不会把存储偏好误记为页面显式值', () => {
+  const h = harness(true), implicit = h.mount(false, true), explicit = h.mount(true, true);
+  h.preference.writeReducedMotion(h.wx, false);
+  assert.equal(implicit.data.reducedMotion, false);
+  assert.equal(implicit._pageReducedMotion, false);
+  assert.equal(explicit.data.reducedMotion, true);
+  h.behavior.lifetimes.detached.call(implicit); h.behavior.lifetimes.detached.call(explicit);
 });
 test('detached 退订后不再写组件，其他订阅继续生效', () => {
   const h = harness(), a = h.mount(), b = h.mount();
