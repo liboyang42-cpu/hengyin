@@ -7,11 +7,20 @@
                source_ref as sourceRef,
                delta_millis as deltaMillis,
                horizon_millis as horizonMillis,
-               lower_effective_events as lowerEffectiveEvents,
+               grace_millis as graceMillis,
                max_events as maxEvents,
-               page_size as pageSize
+               page_size as pageSize,
+               board_id as boardId,
+               region_id as regionId,
+               season_id as seasonId,
+               rules_version as rulesVersion,
+               metric_version as metricVersion
         from city_fairness_parameter
         where state = 'APPROVED'
+          and board_id = #{boardId}
+          and region_id = #{regionId}
+          and season_id = #{seasonId}
+          and rules_version = #{rulesVersion}
     </select>
 
     <select id="selectEvents" resultType="com.chengyinhub.business.citygame.analytics.fairness.CityFairnessReader$EventRow">
@@ -26,9 +35,17 @@
                action_cost as actionCost,
                newcomer,
                gain_amount as gainAmount,
-               verification_millis as verificationMillis
+               verification_millis as verificationMillis,
+               board_id as boardId,
+               region_id as regionId,
+               season_id as seasonId,
+               rules_version as rulesVersion
         from city_fairness_event
         where actor_id = #{actorId}
+          and board_id = #{boardId}
+          and region_id = #{regionId}
+          and season_id = #{seasonId}
+          and rules_version = #{rulesVersion}
           and occurred_at &gt; #{windowStartExclusive}
           and occurred_at &lt;= #{asOfInclusive}
         order by occurred_at, source_ref, event_id
@@ -47,7 +64,11 @@
                action_cost as actionCost,
                newcomer,
                gain_amount as gainAmount,
-               verification_millis as verificationMillis
+               verification_millis as verificationMillis,
+               board_id as boardId,
+               region_id as regionId,
+               season_id as seasonId,
+               rules_version as rulesVersion
         from city_fairness_event
         where source_ref = #{source}
           and event_id = #{eventId}
@@ -56,25 +77,38 @@
     <insert id="insertEvent">
         insert into city_fairness_event (
             source_ref, event_id, outing_id, kind, actor_id, occurred_at,
-            join_time, team_size, action_cost, newcomer, gain_amount, verification_millis
+            join_time, team_size, action_cost, newcomer, gain_amount, verification_millis,
+            board_id, region_id, season_id, rules_version
         ) values (
             #{source}, #{eventId}, #{outingId}, #{kind}, #{actorId}, #{occurredAt},
-            #{joinTime}, #{teamSize}, #{actionCost}, #{newcomer}, #{gainAmount}, #{verificationMillis}
+            #{joinTime}, #{teamSize}, #{actionCost}, #{newcomer}, #{gainAmount}, #{verificationMillis},
+            #{boardId}, #{regionId}, #{seasonId}, #{rulesVersion}
         )
     </insert>
 
     <insert id="insertRead">
-        insert into city_fairness_read (account_id, query_id, as_of, payload)
-        values (#{accountId}, #{queryId}, #{asOf}, #{payload})
+        insert into city_fairness_read (
+            account_id, query_id, as_of, board_id, region_id, season_id, rules_version, payload
+        ) values (
+            #{accountId}, #{queryId}, #{asOf}, #{boardId}, #{regionId}, #{seasonId}, #{rulesVersion}, #{payload}
+        )
     </insert>
 
     <select id="selectRead" resultType="com.chengyinhub.business.citygame.analytics.fairness.CityFairnessReadRow">
         select account_id as accountId,
                query_id as queryId,
                as_of as asOf,
+               board_id as boardId,
+               region_id as regionId,
+               season_id as seasonId,
+               rules_version as rulesVersion,
                payload
         from city_fairness_read
         where account_id = #{accountId}
           and query_id = #{queryId}
+          and board_id = #{boardId}
+          and region_id = #{regionId}
+          and season_id = #{seasonId}
+          and rules_version = #{rulesVersion}
     </select>
 </mapper>

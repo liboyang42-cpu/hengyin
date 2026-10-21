@@ -10,7 +10,7 @@ import java.util.List;
 import static com.chengyinhub.business.citygame.analytics.fairness.FairnessFactContract.*;
 
 /**
- * Account-scoped read, snapshot, and page. A repeated query reads the stored snapshot back.
+ * Account- and scope-scoped read, snapshot, and page. A repeated query reads that scope's snapshot back.
  */
 @Service
 public class CityFairnessReportService {
@@ -22,102 +22,123 @@ public class CityFairnessReportService {
         this.mapper = mapper;
     }
 
-    public Page read(long accountId, String queryId, Long asOf, String cursor) {
-        if (accountId <= 0) return Page.reject(401, "UNAUTHORIZED");
-        if (queryId == null || !queryId.matches(QUERY_ID)) return Page.reject(400, "queryId");
-        if (cursor != null && !cursor.isBlank() && !cursor.matches("[0-9]{1,9}")) return Page.reject(400, "cursor");
+    public Page read(long accountId, String queryId, Long asOf, String cursor,
+                     String boardId, String regionId, String seasonId, String rulesVersion) {
+        if (accountId <= 0) return Page.reject(401, "UNAUTHORIZED", asOf);
+        if (queryId == null || !queryId.matches(QUERY_ID)) return Page.reject(400, "queryId", asOf);
+        if (cursor != null && !cursor.isBlank() && !cursor.matches("[0-9]{1,9}")) return Page.reject(400, "cursor", asOf);
+        List<String> scopeMissing = new ArrayList<>();
+        if (boardId == null || boardId.isBlank()) scopeMissing.add("boardId");
+        if (regionId == null || regionId.isBlank()) scopeMissing.add("regionId");
+        if (seasonId == null || seasonId.isBlank()) scopeMissing.add("seasonId");
+        if (rulesVersion == null || rulesVersion.isBlank()) scopeMissing.add("rulesVersion");
+        if (!scopeMissing.isEmpty()) {
+            return unanswered(accountId, queryId, asOf, boardId, regionId, seasonId, rulesVersion, scopeMissing);
+        }
         int offset = cursor == null || cursor.isBlank() ? 0 : Integer.parseInt(cursor);
-        CityFairnessReadRow stored = mapper.selectRead(accountId, queryId);
+        CityFairnessReadRow stored = mapper.selectRead(accountId, queryId, boardId, regionId, seasonId, rulesVersion);
         if (stored != null) {
-            if (asOf != null && !asOf.equals(stored.asOf)) return Page.reject(409, "query-conflict");
+            if (asOf != null && !asOf.equals(stored.asOf)) return Page.reject(409, "query-conflict", asOf);
             return slice(accountId, queryId, stored, offset, true);
         }
-        if (asOf == null || asOf < 0) return Page.reject(400, "asOf");
-        return compute(accountId, queryId, asOf, offset);
+        if (asOf == null || asOf < 0) return Page.reject(400, "asOf", asOf);
+        return compute(accountId, queryId, asOf, offset, boardId, regionId, seasonId, rulesVersion);
     }
 
-    private Page compute(long accountId, String queryId, long asOf, int offset) {
+    private Page compute(long accountId, String queryId, long asOf, int offset,
+                         String boardId, String regionId, String seasonId, String rulesVersion) {
         CityFairnessReader.ParameterRow parameter;
         try {
-            parameter = MyBatisCityFairnessSource.oneApproved(mapper.selectParameters());
+            parameter = MyBatisCityFairnessSource.oneApproved(
+                    mapper.selectParameters(boardId, regionId, seasonId, rulesVersion),
+                    boardId, regionId, seasonId, rulesVersion);
         } catch (CityFairnessReader.FairnessReadException ex) {
-            return persist(accountId, queryId, asOf, offset, CityFairnessReader.NOT_COMPUTABLE, "MISSING",
-                    List.of(ex.missing), List.of(), List.of(), List.of(), 0);
+            return persist(accountId, queryId, asOf, offset, boardId, regionId, seasonId, rulesVersion,
+                    CityFairnessReader.Result.notComputable(asOf, List.of(ex.missing)), 0);
         } catch (RuntimeException ex) {
-            return Page.reject(503, "city_fairness_parameter");
+            return Page.reject(503, "city_fairness_parameter", asOf);
         }
+        if (parameter == null) return Page.reject(403, "scope-rejected", asOf);
         List<String> gaps = gaps(parameter);
         if (!gaps.isEmpty()) {
-            return persist(accountId, queryId, asOf, offset, CityFairnessReader.NOT_COMPUTABLE, "MISSING",
-                    gaps, List.of(), List.of(), List.of(), 0);
+            return persist(accountId, queryId, asOf, offset, boardId, regionId, seasonId, rulesVersion,
+                    CityFairnessReader.Result.notComputable(asOf, gaps, parameter.metricVersion), 0);
         }
         long start;
         try {
             start = Math.subtractExact(asOf, parameter.horizonMillis);
         } catch (ArithmeticException ex) {
-            return persist(accountId, queryId, asOf, offset, CityFairnessReader.NOT_COMPUTABLE, "MISSING",
-                    List.of(HORIZON_MILLIS), List.of(), List.of(), List.of(), parameter.pageSize);
+            return persist(accountId, queryId, asOf, offset, boardId, regionId, seasonId, rulesVersion,
+                    CityFairnessReader.Result.notComputable(asOf, List.of(HORIZON_MILLIS), parameter.metricVersion),
+                    parameter.pageSize);
         }
         List<CityFairnessReader.EventRow> events;
         try {
-            events = mapper.selectEvents(accountId, start, asOf, parameter.maxEvents + 1);
+            events = mapper.selectEvents(accountId, boardId, regionId, seasonId, rulesVersion, start, asOf,
+                    parameter.maxEvents + 1);
         } catch (RuntimeException ex) {
-            return Page.reject(503, "city_fairness_event");
+            return Page.reject(503, "city_fairness_event", asOf);
         }
         if (events == null) events = List.of();
         if (events.size() > parameter.maxEvents) {
-            return persist(accountId, queryId, asOf, offset, CityFairnessReader.NOT_COMPUTABLE, "MISSING",
-                    List.of("event-bound"), List.of(), List.of(), List.of(), parameter.pageSize);
+            return persist(accountId, queryId, asOf, offset, boardId, regionId, seasonId, rulesVersion,
+                    CityFairnessReader.Result.notComputable(asOf, List.of("event-bound"), parameter.metricVersion),
+                    parameter.pageSize);
         }
         for (CityFairnessReader.EventRow event : events) {
-            if (event == null || event.actorId == null || event.actorId != accountId) {
-                return persist(accountId, queryId, asOf, offset, CityFairnessReader.NOT_COMPUTABLE, "MISSING",
-                        List.of("scope"), List.of(), List.of(), List.of(), parameter.pageSize);
+            if (event == null || event.actorId == null || event.actorId != accountId
+                    || !boardId.equals(event.boardId) || !regionId.equals(event.regionId)
+                    || !seasonId.equals(event.seasonId) || !rulesVersion.equals(event.rulesVersion)) {
+                return persist(accountId, queryId, asOf, offset, boardId, regionId, seasonId, rulesVersion,
+                        CityFairnessReader.Result.notComputable(asOf, List.of("scope"), parameter.metricVersion),
+                        parameter.pageSize);
             }
         }
         CityFairnessReader.Result result = reader.read(asOf, new Prefetched(parameter, events));
-        return persist(accountId, queryId, asOf, offset, result.status, result.maturity(), result.missing,
-                result.groups, result.secondOutings, result.outingClasses, parameter.pageSize);
+        return persist(accountId, queryId, asOf, offset, boardId, regionId, seasonId, rulesVersion, result,
+                parameter.pageSize);
     }
 
-    private Page persist(long accountId, String queryId, long asOf, int offset, String status, String maturity,
-                          List<String> missing, List<CityFairnessReader.Group> groups,
-                          List<CityFairnessReader.SecondOuting> seconds, List<CityFairnessReader.OutingClass> classes,
-                          int pageSize) {
+    private Page persist(long accountId, String queryId, long asOf, int offset, String boardId, String regionId,
+                          String seasonId, String rulesVersion, CityFairnessReader.Result result, int pageSize) {
         CityFairnessReadRow row = new CityFairnessReadRow();
         row.accountId = accountId;
         row.queryId = queryId;
         row.asOf = asOf;
-        row.payload = encode(asOf, status, maturity, pageSize, missing, groups, seconds, classes);
+        row.boardId = boardId;
+        row.regionId = regionId;
+        row.seasonId = seasonId;
+        row.rulesVersion = rulesVersion;
+        row.payload = encode(result, pageSize);
         try {
             mapper.insertRead(row);
         } catch (DuplicateKeyException duplicate) {
-            CityFairnessReadRow winner = mapper.selectRead(accountId, queryId);
-            if (winner == null || !winner.asOf.equals(asOf)) return Page.reject(409, "query-conflict");
+            CityFairnessReadRow winner = mapper.selectRead(accountId, queryId, boardId, regionId, seasonId, rulesVersion);
+            if (winner == null || !winner.asOf.equals(asOf)) return Page.reject(409, "query-conflict", asOf);
             return slice(accountId, queryId, winner, offset, true);
         } catch (RuntimeException ex) {
-            return Page.reject(503, "city_fairness_read");
+            return Page.reject(503, "city_fairness_read", asOf);
         }
         return slice(accountId, queryId, row, offset, false);
     }
 
+    private static Page unanswered(long accountId, String queryId, Long asOf, String boardId, String regionId,
+                                   String seasonId, String rulesVersion, List<String> missing) {
+        List<String> sorted = new ArrayList<>(missing);
+        sorted.sort(String::compareTo);
+        return new Page(200, null, false, accountId, queryId, asOf, CityFairnessReader.NOT_COMPUTABLE, "MISSING",
+                null, null, null, boardId, regionId, seasonId, rulesVersion, sorted, List.of(), List.of(), List.of(),
+                List.of(), "0", null);
+    }
+
     private static List<String> gaps(CityFairnessReader.ParameterRow parameter) {
         List<String> missing = new ArrayList<>();
-        if (parameter == null) {
-            missing.add(DELTA_MILLIS);
-            missing.add(HORIZON_MILLIS);
-            missing.add(LOWER_EFFECTIVE_EVENTS);
-            missing.add(PARAMETER_APPROVAL);
-            missing.add(PARAMETER_SOURCE_REF);
-            missing.add(MAX_EVENTS);
-            missing.add(PAGE_SIZE);
-            return missing;
-        }
         if (!"APPROVED".equals(parameter.state)) missing.add(PARAMETER_APPROVAL);
         if (parameter.sourceRef == null || parameter.sourceRef.isBlank()) missing.add(PARAMETER_SOURCE_REF);
         if (parameter.deltaMillis == null || parameter.deltaMillis <= 0) missing.add(DELTA_MILLIS);
         if (parameter.horizonMillis == null || parameter.horizonMillis <= 0) missing.add(HORIZON_MILLIS);
-        if (parameter.lowerEffectiveEvents == null || parameter.lowerEffectiveEvents <= 0) missing.add(LOWER_EFFECTIVE_EVENTS);
+        if (parameter.graceMillis == null || parameter.graceMillis <= 0) missing.add(GRACE_MILLIS);
+        if (parameter.metricVersion == null || parameter.metricVersion.isBlank()) missing.add(METRIC_VERSION);
         if (parameter.maxEvents == null || parameter.maxEvents <= 0) missing.add(MAX_EVENTS);
         if (parameter.pageSize == null || parameter.pageSize <= 0) missing.add(PAGE_SIZE);
         missing.sort(String::compareTo);
@@ -131,17 +152,18 @@ public class CityFairnessReportService {
         int to = decoded.pageSize <= 0 ? from : Math.min(size, from + decoded.pageSize);
         String next = to < size ? Integer.toString(to) : null;
         return new Page(200, null, readBack, accountId, queryId, row.asOf, decoded.status, decoded.maturity,
-                decoded.missing, List.copyOf(decoded.groups.subList(from, to)), decoded.outingClasses,
-                decoded.secondOutings, Integer.toString(from), next);
+                decoded.metricVersion, decoded.matureCount, decoded.denominator, row.boardId, row.regionId,
+                row.seasonId, row.rulesVersion, decoded.missing, List.copyOf(decoded.groups.subList(from, to)),
+                decoded.outingClasses, decoded.secondOutings, decoded.lateEvents, Integer.toString(from), next);
     }
 
-    static String encode(long asOf, String status, String maturity, int pageSize, List<String> missing,
-                          List<CityFairnessReader.Group> groups, List<CityFairnessReader.SecondOuting> seconds,
-                          List<CityFairnessReader.OutingClass> classes) {
+    static String encode(CityFairnessReader.Result result, int pageSize) {
         StringBuilder out = new StringBuilder();
-        out.append("v1\n").append(asOf).append('\n').append(status).append('\n').append(maturity).append('\n')
-                .append(pageSize).append('\n').append(String.join("\u001f", missing)).append('\n');
-        for (CityFairnessReader.Group group : groups) {
+        out.append("v2\n").append(result.asOf).append('\n').append(result.status).append('\n').append(result.maturity())
+                .append('\n').append(pageSize).append('\n').append(cell(result.metricVersion)).append('\n')
+                .append(cell(result.matureCount)).append('\n').append(cell(result.denominator)).append('\n')
+                .append(String.join("\u001f", result.missing)).append('\n');
+        for (CityFairnessReader.Group group : result.groups) {
             out.append("G\t").append(cell(group.joinTime)).append('\t').append(cell(group.teamSize)).append('\t')
                     .append(cell(group.actionCost)).append('\t').append(cell(group.newcomer)).append('\t')
                     .append(group.goalCompletions).append('\t').append(group.effectiveGain).append('\t')
@@ -150,15 +172,19 @@ public class CityFairnessReportService {
                     .append(group.gpsFalseRejections).append('\t').append(group.safetyTickets).append('\t')
                     .append(group.merchantVerifications).append('\t').append(group.merchantVerificationMillis).append('\n');
         }
-        for (CityFairnessReader.OutingClass item : classes) {
+        for (CityFairnessReader.OutingClass item : result.outingClasses) {
             out.append("C\t").append(item.outingId).append('\t').append(item.actorId).append('\t')
-                    .append(item.maturity).append('\t').append(item.reason).append('\n');
+                    .append(item.maturity).append('\t').append(item.reason).append('\t').append(cell(item.t0)).append('\n');
         }
-        for (CityFairnessReader.SecondOuting item : seconds) {
+        for (CityFairnessReader.SecondOuting item : result.secondOutings) {
             out.append("S\t").append(item.actorId).append('\t').append(item.outingId).append('\t')
                     .append(item.anchorMillis).append('\t').append(cell(item.joinTime)).append('\t')
                     .append(cell(item.teamSize)).append('\t').append(cell(item.actionCost)).append('\t')
                     .append(cell(item.newcomer)).append('\n');
+        }
+        for (CityFairnessReader.LateEvent item : result.lateEvents) {
+            out.append("L\t").append(item.outingId).append('\t').append(item.eventId).append('\t')
+                    .append(item.occurredAt).append('\n');
         }
         return out.toString();
     }
@@ -169,11 +195,15 @@ public class CityFairnessReportService {
         decoded.status = lines[2];
         decoded.maturity = lines[3];
         decoded.pageSize = Integer.parseInt(lines[4]);
-        decoded.missing = lines[5].isEmpty() ? List.of() : List.of(lines[5].split("\u001f", -1));
+        decoded.metricVersion = textOrNull(lines[5]);
+        decoded.matureCount = intOrNull(lines[6]);
+        decoded.denominator = intOrNull(lines[7]);
+        decoded.missing = lines[8].isEmpty() ? List.of() : List.of(lines[8].split("\u001f", -1));
         List<CityFairnessReader.Group> groups = new ArrayList<>();
         List<CityFairnessReader.OutingClass> classes = new ArrayList<>();
         List<CityFairnessReader.SecondOuting> seconds = new ArrayList<>();
-        for (int i = 6; i < lines.length; i++) {
+        List<CityFairnessReader.LateEvent> late = new ArrayList<>();
+        for (int i = 9; i < lines.length; i++) {
             if (lines[i].isEmpty()) continue;
             String[] field = lines[i].split("\t", -1);
             if (field[0].equals("G")) {
@@ -191,15 +221,19 @@ public class CityFairnessReportService {
                 group.merchantVerificationMillis = Long.parseLong(field[14]);
                 groups.add(group);
             } else if (field[0].equals("C")) {
-                classes.add(new CityFairnessReader.OutingClass(field[1], Long.parseLong(field[2]), field[3], field[4]));
+                classes.add(new CityFairnessReader.OutingClass(field[1], Long.parseLong(field[2]), field[3], field[4],
+                        longOrNull(field[5])));
             } else if (field[0].equals("S")) {
                 seconds.add(new CityFairnessReader.SecondOuting(Long.parseLong(field[1]), field[2], Long.parseLong(field[3]),
                         longOrNull(field[4]), intOrNull(field[5]), intOrNull(field[6]), textOrNull(field[7])));
+            } else if (field[0].equals("L")) {
+                late.add(new CityFairnessReader.LateEvent(field[1], field[2], Long.parseLong(field[3])));
             }
         }
         decoded.groups = groups;
         decoded.outingClasses = List.copyOf(classes);
         decoded.secondOutings = List.copyOf(seconds);
+        decoded.lateEvents = List.copyOf(late);
         return decoded;
     }
 
@@ -229,10 +263,14 @@ public class CityFairnessReportService {
         String status;
         String maturity;
         int pageSize;
+        String metricVersion;
+        Integer matureCount;
+        Integer denominator;
         List<String> missing = List.of();
         List<CityFairnessReader.Group> groups = List.of();
         List<CityFairnessReader.OutingClass> outingClasses = List.of();
         List<CityFairnessReader.SecondOuting> secondOutings = List.of();
+        List<CityFairnessReader.LateEvent> lateEvents = List.of();
     }
 
     public static final class Page {
@@ -244,16 +282,26 @@ public class CityFairnessReportService {
         public final Long asOf;
         public final String status;
         public final String maturity;
+        public final String metricVersion;
+        public final Integer matureCount;
+        public final Integer denominator;
+        public final String boardId;
+        public final String regionId;
+        public final String seasonId;
+        public final String rulesVersion;
         public final List<String> missing;
         public final List<CityFairnessReader.Group> groups;
         public final List<CityFairnessReader.OutingClass> outingClasses;
         public final List<CityFairnessReader.SecondOuting> secondOutings;
+        public final List<CityFairnessReader.LateEvent> lateEvents;
         public final String cursor;
         public final String nextCursor;
 
         Page(int httpStatus, String errorCode, boolean readBack, long accountId, String queryId, Long asOf,
-             String status, String maturity, List<String> missing, List<CityFairnessReader.Group> groups,
-             List<CityFairnessReader.OutingClass> outingClasses, List<CityFairnessReader.SecondOuting> secondOutings,
+             String status, String maturity, String metricVersion, Integer matureCount, Integer denominator,
+             String boardId, String regionId, String seasonId, String rulesVersion, List<String> missing,
+             List<CityFairnessReader.Group> groups, List<CityFairnessReader.OutingClass> outingClasses,
+             List<CityFairnessReader.SecondOuting> secondOutings, List<CityFairnessReader.LateEvent> lateEvents,
              String cursor, String nextCursor) {
             this.httpStatus = httpStatus;
             this.errorCode = errorCode;
@@ -263,17 +311,25 @@ public class CityFairnessReportService {
             this.asOf = asOf;
             this.status = status;
             this.maturity = maturity;
+            this.metricVersion = metricVersion;
+            this.matureCount = matureCount;
+            this.denominator = denominator;
+            this.boardId = boardId;
+            this.regionId = regionId;
+            this.seasonId = seasonId;
+            this.rulesVersion = rulesVersion;
             this.missing = missing;
             this.groups = groups;
             this.outingClasses = outingClasses;
             this.secondOutings = secondOutings;
+            this.lateEvents = lateEvents;
             this.cursor = cursor;
             this.nextCursor = nextCursor;
         }
 
-        static Page reject(int httpStatus, String errorCode) {
-            return new Page(httpStatus, errorCode, false, 0, null, null, null, null, List.of(), List.of(), List.of(),
-                    List.of(), null, null);
+        static Page reject(int httpStatus, String errorCode, Long asOf) {
+            return new Page(httpStatus, errorCode, false, 0, null, asOf, null, null, null, null, null,
+                    null, null, null, null, List.of(), List.of(), List.of(), List.of(), List.of(), null, null);
         }
     }
 }

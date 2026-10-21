@@ -52,6 +52,10 @@ public class CityFairnessIngestionService {
         if (fact.outingId == null || fact.outingId.isBlank()) return "outingId";
         if (fact.outingId.indexOf('\t') >= 0 || fact.outingId.indexOf('\n') >= 0) return "outingId";
         if (fact.occurredAt == null) return "occurredAt";
+        if (fact.boardId == null || fact.boardId.isBlank()) return "boardId";
+        if (fact.regionId == null || fact.regionId.isBlank()) return "regionId";
+        if (fact.seasonId == null || fact.seasonId.isBlank()) return "seasonId";
+        if (fact.rulesVersion == null || fact.rulesVersion.isBlank()) return "rulesVersion";
         if (GAIN.equals(fact.kind) && (fact.gainAmount == null || fact.gainAmount < 0)) return "gainAmount";
         if (MERCHANT_VERIFICATION.equals(fact.kind) && (fact.verificationMillis == null || fact.verificationMillis < 0)) {
             return "verificationMillis";

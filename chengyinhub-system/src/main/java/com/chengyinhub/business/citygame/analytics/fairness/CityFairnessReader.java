@@ -38,22 +38,22 @@ public final class CityFairnessReader {
             }
         }
         missing.addAll(parameterGaps(parameter));
-        if (!missing.isEmpty()) return Result.notComputable(missing);
+        if (!missing.isEmpty()) return Result.notComputable(asOf, missing, version(parameter));
         long start;
         try {
             start = Math.subtractExact(asOf, parameter.horizonMillis);
         } catch (ArithmeticException ex) {
-            return Result.notComputable(List.of(HORIZON_MILLIS));
+            return Result.notComputable(asOf, List.of(HORIZON_MILLIS), version(parameter));
         }
         List<EventRow> events;
         try {
             events = source.events(start, asOf);
         } catch (FairnessReadException ex) {
-            return Result.notComputable(List.of(ex.missing));
+            return Result.notComputable(asOf, List.of(ex.missing), version(parameter));
         } catch (RuntimeException ex) {
-            return Result.notComputable(List.of("city_fairness_event"));
+            return Result.notComputable(asOf, List.of("city_fairness_event"), version(parameter));
         }
-        if (events == null) return Result.notComputable(List.of("city_fairness_event"));
+        if (events == null) return Result.notComputable(asOf, List.of("city_fairness_event"), version(parameter));
         return compute(asOf, start, parameter, events);
     }
 
@@ -62,7 +62,12 @@ public final class CityFairnessReader {
         if (parameter == null) {
             missing.add(DELTA_MILLIS);
             missing.add(HORIZON_MILLIS);
-            missing.add(LOWER_EFFECTIVE_EVENTS);
+            missing.add(GRACE_MILLIS);
+            missing.add(METRIC_VERSION);
+            missing.add("boardId");
+            missing.add("regionId");
+            missing.add("seasonId");
+            missing.add("rulesVersion");
             missing.add(PARAMETER_APPROVAL);
             missing.add(PARAMETER_SOURCE_REF);
             return missing;
@@ -71,7 +76,12 @@ public final class CityFairnessReader {
         if (parameter.sourceRef == null || parameter.sourceRef.isBlank()) missing.add(PARAMETER_SOURCE_REF);
         if (parameter.deltaMillis == null || parameter.deltaMillis <= 0) missing.add(DELTA_MILLIS);
         if (parameter.horizonMillis == null || parameter.horizonMillis <= 0) missing.add(HORIZON_MILLIS);
-        if (parameter.lowerEffectiveEvents == null || parameter.lowerEffectiveEvents <= 0) missing.add(LOWER_EFFECTIVE_EVENTS);
+        if (parameter.graceMillis == null || parameter.graceMillis <= 0) missing.add(GRACE_MILLIS);
+        if (parameter.metricVersion == null || parameter.metricVersion.isBlank()) missing.add(METRIC_VERSION);
+        if (parameter.boardId == null || parameter.boardId.isBlank()) missing.add("boardId");
+        if (parameter.regionId == null || parameter.regionId.isBlank()) missing.add("regionId");
+        if (parameter.seasonId == null || parameter.seasonId.isBlank()) missing.add("seasonId");
+        if (parameter.rulesVersion == null || parameter.rulesVersion.isBlank()) missing.add("rulesVersion");
         return missing;
     }
 
@@ -92,7 +102,7 @@ public final class CityFairnessReader {
             EventRow prior = byId.putIfAbsent(dedupeKey(event), event);
             if (prior != null && !same(prior, event)) missing.add("event-conflict:" + event.eventId);
         }
-        if (!missing.isEmpty()) return Result.notComputable(missing);
+        if (!missing.isEmpty()) return Result.notComputable(asOf, missing, version(parameter));
 
         Map<String, List<EventRow>> outings = new LinkedHashMap<>();
         for (EventRow event : byId.values()) {
@@ -108,6 +118,7 @@ public final class CityFairnessReader {
             if (event.teamSize != null && event.teamSize < 0) missing.add("teamSize:" + event.eventId);
             if (event.actionCost != null && event.actionCost < 0) missing.add("actionCost:" + event.eventId);
             if (!validNewcomer(event.newcomer)) missing.add("newcomer:" + event.eventId);
+            if (!sameScope(parameter, event)) missing.add("scope-mix:" + event.eventId);
             if (GAIN.equals(event.kind) && event.gainAmount == null) missing.add("gainAmount:" + event.eventId);
             if (GAIN.equals(event.kind) && event.gainAmount != null && event.gainAmount < 0) {
                 missing.add("negative-gain:" + event.eventId);
@@ -117,30 +128,29 @@ public final class CityFairnessReader {
             }
             outings.computeIfAbsent(event.outingId, key -> new ArrayList<>()).add(event);
         }
-        if (!missing.isEmpty()) return Result.notComputable(missing);
+        if (!missing.isEmpty()) return Result.notComputable(asOf, missing, version(parameter));
 
         Map<GroupKey, Group> groups = new TreeMap<>();
         Map<Long, List<Outing>> byActor = new LinkedHashMap<>();
         List<OutingClass> classes = new ArrayList<>();
+        List<LateEvent> late = new ArrayList<>();
         for (Map.Entry<String, List<EventRow>> entry : outings.entrySet()) {
-            Outing outing = outing(entry.getKey(), entry.getValue(), parameter.lowerEffectiveEvents, missing);
+            Outing outing = outing(entry.getKey(), entry.getValue(), asOf, parameter.graceMillis, missing, late);
             if (outing == null) continue;
-            classes.add(new OutingClass(outing.id, outing.actorId,
-                    outing.effective ? "MATURE" : "IMMATURE",
-                    outing.effective ? "effective" : "below-lower-bound"));
+            classes.add(new OutingClass(outing.id, outing.actorId, outing.maturity, outing.reason, outing.t0));
             try {
-                if (outing.effective || counted(outing)) groups.computeIfAbsent(outing.key, Group::new).add(outing);
+                if (outing.t0 != null || counted(outing)) groups.computeIfAbsent(outing.key, Group::new).add(outing);
             } catch (FairnessReadException ex) {
-                return Result.notComputable(List.of(ex.missing));
+                return Result.notComputable(asOf, List.of(ex.missing), version(parameter));
             }
-            if (outing.effective) byActor.computeIfAbsent(outing.actorId, key -> new ArrayList<>()).add(outing);
+            if (outing.closed) byActor.computeIfAbsent(outing.actorId, key -> new ArrayList<>()).add(outing);
         }
-        if (!missing.isEmpty()) return Result.notComputable(missing);
+        if (!missing.isEmpty()) return Result.notComputable(asOf, missing, version(parameter));
 
         List<SecondOuting> seconds = new ArrayList<>();
         for (Map.Entry<Long, List<Outing>> entry : byActor.entrySet()) {
             List<Outing> ordered = new ArrayList<>(entry.getValue());
-            ordered.sort(Comparator.comparingLong(item -> item.anchor));
+            ordered.sort(Comparator.comparingLong(item -> item.t0));
             Long previous = null;
             int counted = 0;
             for (Outing outing : ordered) {
@@ -149,22 +159,38 @@ public final class CityFairnessReader {
                     try {
                         due = Math.addExact(previous, parameter.deltaMillis);
                     } catch (ArithmeticException ex) {
-                        return Result.notComputable(List.of(DELTA_MILLIS));
+                        return Result.notComputable(asOf, List.of(DELTA_MILLIS), version(parameter));
                     }
-                    if (outing.anchor < due) {
+                    if (outing.t0 < due) {
                         replaceClass(classes, outing.id, "IMMATURE", "inside-delta");
                         continue;
                     }
                 }
-                previous = outing.anchor;
+                previous = outing.t0;
                 counted++;
-                if (counted == 2) seconds.add(new SecondOuting(entry.getKey(), outing.id, outing.anchor, outing.key));
+                if (counted == 2) seconds.add(new SecondOuting(entry.getKey(), outing.id, outing.t0, outing.key));
             }
         }
         seconds.sort(Comparator.comparingLong(item -> item.actorId));
         classes.sort(Comparator.comparing(item -> item.outingId));
+        late.sort(Comparator.comparing((LateEvent item) -> item.outingId).thenComparing(item -> item.eventId));
+        int denominator = 0;
+        int mature = 0;
+        for (OutingClass item : classes) {
+            if (item.t0 == null || "inside-grace".equals(item.reason)) continue;
+            denominator++;
+            if ("MATURE".equals(item.maturity)) mature++;
+        }
+        Integer matureCount = denominator == 0 ? null : mature;
+        Integer denominatorCount = denominator == 0 ? null : denominator;
         List<Group> listed = new ArrayList<>(groups.values());
-        return new Result(COMPUTABLE, List.of(), listed, seconds, classes);
+        return new Result(COMPUTABLE, List.of(), listed, seconds, classes, late, asOf, parameter.metricVersion,
+                matureCount, denominatorCount);
+    }
+
+    private static String version(ParameterRow parameter) {
+        if (parameter == null || parameter.metricVersion == null || parameter.metricVersion.isBlank()) return null;
+        return parameter.metricVersion;
     }
 
     private static String dedupeKey(EventRow event) {
@@ -176,21 +202,21 @@ public final class CityFairnessReader {
         for (int i = 0; i < classes.size(); i++) {
             OutingClass current = classes.get(i);
             if (outingId.equals(current.outingId)) {
-                classes.set(i, new OutingClass(outingId, current.actorId, maturity, reason));
+                classes.set(i, new OutingClass(outingId, current.actorId, maturity, reason, current.t0));
                 return;
             }
         }
     }
 
-    private static Outing outing(String id, List<EventRow> events, int lower, List<String> missing) {
+    private static Outing outing(String id, List<EventRow> events, long asOf, long grace, List<String> missing,
+                                 List<LateEvent> late) {
         EventRow first = events.get(0);
         Long joinTime = first.joinTime;
         Integer teamSize = first.teamSize;
         Integer actionCost = first.actionCost;
         String newcomer = newcomer(first.newcomer);
         Long actorId = first.actorId;
-        int effectiveEvents = 0;
-        long anchor = Long.MAX_VALUE;
+        Long t0 = null;
         for (EventRow event : events) {
             if (!Objects.equals(joinTime, event.joinTime) || !Objects.equals(teamSize, event.teamSize)
                     || !Objects.equals(actionCost, event.actionCost) || !Objects.equals(newcomer, newcomer(event.newcomer))
@@ -199,13 +225,38 @@ public final class CityFairnessReader {
                 return null;
             }
             if (EFFECTIVE_TASK.equals(event.kind) || EFFECTIVE_SERVICE.equals(event.kind)) {
-                effectiveEvents++;
-                anchor = Math.min(anchor, event.occurredAt);
+                t0 = t0 == null ? event.occurredAt : Math.min(t0, event.occurredAt);
             }
         }
-        boolean effective = effectiveEvents >= lower;
-        if (!effective) anchor = events.stream().mapToLong(event -> event.occurredAt).min().orElse(0L);
-        return new Outing(id, actorId, new GroupKey(joinTime, teamSize, actionCost, newcomer), anchor, effective, events);
+        Long cutoff = null;
+        if (t0 != null) {
+            try {
+                cutoff = Math.addExact(t0, grace);
+            } catch (ArithmeticException ex) {
+                missing.add(GRACE_MILLIS);
+                return null;
+            }
+        }
+        List<EventRow> countedEvents = new ArrayList<>();
+        for (EventRow event : events) {
+            if (cutoff != null && event.occurredAt > cutoff) {
+                late.add(new LateEvent(id, event.eventId, event.occurredAt));
+            } else {
+                countedEvents.add(event);
+            }
+        }
+        boolean closed = cutoff != null && asOf >= cutoff;
+        String maturity = closed ? "MATURE" : "IMMATURE";
+        String reason = t0 == null ? "no-t0" : closed ? "effective" : "inside-grace";
+        return new Outing(id, actorId, new GroupKey(joinTime, teamSize, actionCost, newcomer), t0, closed, maturity,
+                reason, countedEvents);
+    }
+
+    private static boolean sameScope(ParameterRow parameter, EventRow event) {
+        return Objects.equals(parameter.boardId, event.boardId)
+                && Objects.equals(parameter.regionId, event.regionId)
+                && Objects.equals(parameter.seasonId, event.seasonId)
+                && Objects.equals(parameter.rulesVersion, event.rulesVersion);
     }
 
     private static boolean counted(Outing outing) {
@@ -245,7 +296,11 @@ public final class CityFairnessReader {
                 && Objects.equals(left.joinTime, right.joinTime) && Objects.equals(left.teamSize, right.teamSize)
                 && Objects.equals(left.actionCost, right.actionCost) && Objects.equals(left.newcomer, right.newcomer)
                 && Objects.equals(left.gainAmount, right.gainAmount)
-                && Objects.equals(left.verificationMillis, right.verificationMillis);
+                && Objects.equals(left.verificationMillis, right.verificationMillis)
+                && Objects.equals(left.boardId, right.boardId)
+                && Objects.equals(left.regionId, right.regionId)
+                && Objects.equals(left.seasonId, right.seasonId)
+                && Objects.equals(left.rulesVersion, right.rulesVersion);
     }
 
     public static final class FairnessReadException extends RuntimeException {
@@ -267,9 +322,14 @@ public final class CityFairnessReader {
         public String sourceRef;
         public Long deltaMillis;
         public Long horizonMillis;
-        public Integer lowerEffectiveEvents;
+        public Long graceMillis;
         public Integer maxEvents;
         public Integer pageSize;
+        public String boardId;
+        public String regionId;
+        public String seasonId;
+        public String rulesVersion;
+        public String metricVersion;
     }
 
     public static final class EventRow {
@@ -285,6 +345,10 @@ public final class CityFairnessReader {
         public String newcomer;
         public Long gainAmount;
         public Long verificationMillis;
+        public String boardId;
+        public String regionId;
+        public String seasonId;
+        public String rulesVersion;
     }
 
     public static final class Result {
@@ -293,20 +357,37 @@ public final class CityFairnessReader {
         public final List<Group> groups;
         public final List<SecondOuting> secondOutings;
         public final List<OutingClass> outingClasses;
+        public final List<LateEvent> lateEvents;
+        public final long asOf;
+        public final String metricVersion;
+        public final Integer matureCount;
+        public final Integer denominator;
 
         Result(String status, List<String> missing, List<Group> groups, List<SecondOuting> secondOutings,
-               List<OutingClass> outingClasses) {
+               List<OutingClass> outingClasses, List<LateEvent> lateEvents, long asOf, String metricVersion,
+               Integer matureCount, Integer denominator) {
             this.status = status;
             this.missing = List.copyOf(missing);
             this.groups = List.copyOf(groups);
             this.secondOutings = List.copyOf(secondOutings);
             this.outingClasses = List.copyOf(outingClasses);
+            this.lateEvents = List.copyOf(lateEvents);
+            this.asOf = asOf;
+            this.metricVersion = metricVersion;
+            this.matureCount = matureCount;
+            this.denominator = denominator;
         }
 
-        static Result notComputable(List<String> missing) {
+        static Result notComputable(long asOf, List<String> missing) {
+            return notComputable(asOf, missing, null);
+        }
+
+        static Result notComputable(long asOf, List<String> missing, String metricVersion) {
             List<String> sorted = new ArrayList<>(missing);
             sorted.sort(String::compareTo);
-            return new Result(NOT_COMPUTABLE, sorted.stream().distinct().toList(), List.of(), List.of(), List.of());
+            String version = metricVersion == null || metricVersion.isBlank() ? null : metricVersion;
+            return new Result(NOT_COMPUTABLE, sorted.stream().distinct().toList(), List.of(), List.of(), List.of(),
+                    List.of(), asOf, version, null, null);
         }
 
         public boolean computable() { return COMPUTABLE.equals(status); }
@@ -331,12 +412,26 @@ public final class CityFairnessReader {
         public final long actorId;
         public final String maturity;
         public final String reason;
+        public final Long t0;
 
-        public OutingClass(String outingId, long actorId, String maturity, String reason) {
+        public OutingClass(String outingId, long actorId, String maturity, String reason, Long t0) {
             this.outingId = outingId;
             this.actorId = actorId;
             this.maturity = maturity;
             this.reason = reason;
+            this.t0 = t0;
+        }
+    }
+
+    public static final class LateEvent {
+        public final String outingId;
+        public final String eventId;
+        public final long occurredAt;
+
+        public LateEvent(String outingId, String eventId, long occurredAt) {
+            this.outingId = outingId;
+            this.eventId = eventId;
+            this.occurredAt = occurredAt;
         }
     }
 
@@ -369,7 +464,7 @@ public final class CityFairnessReader {
                 switch (event.kind) {
                     case GOAL_COMPLETED -> goalCompletions++;
                     case GAIN -> {
-                        if (!outing.effective) break;
+                        if (outing.t0 == null) break;
                         try {
                             effectiveGain = Math.addExact(effectiveGain, event.gainAmount);
                             long prior = gainByActor.getOrDefault(event.actorId, 0L);
@@ -456,16 +551,21 @@ public final class CityFairnessReader {
         final String id;
         final long actorId;
         final GroupKey key;
-        final long anchor;
-        final boolean effective;
+        final Long t0;
+        final boolean closed;
+        final String maturity;
+        final String reason;
         final List<EventRow> events;
 
-        Outing(String id, long actorId, GroupKey key, long anchor, boolean effective, List<EventRow> events) {
+        Outing(String id, long actorId, GroupKey key, Long t0, boolean closed, String maturity, String reason,
+               List<EventRow> events) {
             this.id = id;
             this.actorId = actorId;
             this.key = key;
-            this.anchor = anchor;
-            this.effective = effective;
+            this.t0 = t0;
+            this.closed = closed;
+            this.maturity = maturity;
+            this.reason = reason;
             this.events = events;
         }
     }

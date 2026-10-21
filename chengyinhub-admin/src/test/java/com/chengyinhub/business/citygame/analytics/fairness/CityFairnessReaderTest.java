@@ -19,7 +19,12 @@ class CityFairnessReaderTest {
         memory.parameter.sourceRef = "draft-note";
         memory.parameter.deltaMillis = 1L;
         memory.parameter.horizonMillis = 1L;
-        memory.parameter.lowerEffectiveEvents = 1;
+        memory.parameter.graceMillis = 1L;
+        memory.parameter.metricVersion = "metric-1";
+        memory.parameter.boardId = "board-1";
+        memory.parameter.regionId = "region-1";
+        memory.parameter.seasonId = "season-1";
+        memory.parameter.rulesVersion = "rules-1";
         memory.events.add(task("e1", "o1", 1, 8_000));
         CityFairnessReader.Result result = reader.read(10_000, memory);
         assertEquals(CityFairnessReader.NOT_COMPUTABLE, result.status);
@@ -89,16 +94,16 @@ class CityFairnessReaderTest {
         assertEquals(1, result.groups.size());
     }
 
-    @Test void duplicateEffectiveEventCountsOnceTowardTheLowerBound() {
+    @Test void duplicateEventIdStillCountsOnce() {
         Memory memory = approvedMemory();
-        memory.parameter.lowerEffectiveEvents = 2;
-        CityFairnessReader.EventRow first = task("e1", "o1", 7, 6_000);
-        memory.events.add(first);
+        memory.events.add(task("e1", "o1", 7, 6_000));
         memory.events.add(task("e1", "o1", 7, 6_000));
         CityFairnessReader.Result result = reader.read(10_000, memory);
         assertTrue(result.computable());
-        assertTrue(result.secondOutings.isEmpty());
-        assertTrue(result.groups.isEmpty());
+        assertEquals(1, result.outingClasses.size());
+        assertEquals(1, result.groups.size());
+        assertEquals(1, result.matureCount);
+        assertEquals(1, result.denominator);
     }
 
     @Test void sameEventOnTwoOutingsIsNotComputable() {
@@ -155,14 +160,66 @@ class CityFairnessReaderTest {
         assertFalse(group.concentrationReported());
     }
 
-    @Test void gainOnAnIneffectiveOutingIsNotAnEffectiveGain() {
+    @Test void eventAfterGraceCutoffIsLateAndAGainInsideGraceCounts() {
         Memory memory = approvedMemory();
-        memory.parameter.lowerEffectiveEvents = 2;
+        memory.parameter.graceMillis = 100L;
         memory.events.add(task("e1", "o1", 7, 6_000));
-        memory.events.add(gain("g1", "o1", 7, 6_010, 5));
+        memory.events.add(gain("in", "o1", 7, 6_100, 4));
+        memory.events.add(gain("out", "o1", 7, 6_101, 9));
+        memory.events.add(mark("goal-late", "o1", GOAL_COMPLETED, 7, 6_150));
         CityFairnessReader.Result result = reader.read(10_000, memory);
         assertTrue(result.computable());
-        assertTrue(result.groups.isEmpty());
+        assertEquals(4L, result.groups.get(0).effectiveGain);
+        assertEquals(0, result.groups.get(0).goalCompletions);
+        assertEquals(2, result.lateEvents.size());
+        assertEquals(6_000L, result.outingClasses.get(0).t0);
+        assertEquals("MATURE", result.outingClasses.get(0).maturity);
+        assertEquals("metric-1", result.metricVersion);
+        assertEquals(10_000L, result.asOf);
+        assertEquals(1, result.matureCount);
+        assertEquals(1, result.denominator);
+    }
+
+    @Test void outingInsideGraceStaysImmatureAndDoesNotPublishZero() {
+        Memory memory = approvedMemory();
+        memory.parameter.graceMillis = 5_000L;
+        memory.events.add(task("e1", "o1", 7, 6_000));
+        CityFairnessReader.Result result = reader.read(10_000, memory);
+        assertTrue(result.computable());
+        assertEquals("IMMATURE", result.outingClasses.get(0).maturity);
+        assertEquals("inside-grace", result.outingClasses.get(0).reason);
+        assertEquals(6_000L, result.outingClasses.get(0).t0);
+        assertNull(result.matureCount);
+        assertNull(result.denominator);
+        assertEquals(10_000L, result.asOf);
+        assertEquals("metric-1", result.metricVersion);
+    }
+
+    @Test void unsetGraceIsMissingRatherThanZero() {
+        Memory memory = approvedMemory();
+        memory.parameter.graceMillis = null;
+        memory.events.add(task("e1", "o1", 7, 6_000));
+        CityFairnessReader.Result result = reader.read(10_000, memory);
+        assertFalse(result.computable());
+        assertTrue(result.missing.contains(GRACE_MILLIS));
+        assertNull(result.matureCount);
+        assertNull(result.denominator);
+        assertEquals("MISSING", result.maturity());
+        assertEquals("metric-1", result.metricVersion);
+        assertEquals(10_000L, result.asOf);
+    }
+
+    @Test void eventFromAnotherScopeIsNotMixed() {
+        Memory memory = approvedMemory();
+        memory.events.add(task("e1", "o1", 7, 6_000));
+        CityFairnessReader.EventRow other = task("e2", "o2", 7, 6_200);
+        other.boardId = "board-2";
+        memory.events.add(other);
+        CityFairnessReader.Result result = reader.read(10_000, memory);
+        assertFalse(result.computable());
+        assertTrue(result.missing.contains("scope-mix:e2"));
+        assertNull(result.matureCount);
+        assertNull(result.denominator);
     }
 
     @Test void missingGainOrVerificationDurationIsNamed() {
@@ -195,25 +252,26 @@ class CityFairnessReaderTest {
 
     @Test void mapperFailuresStayNotComputable() {
         CityFairnessReader.Result thrown = reader.read(10_000, new MyBatisCityFairnessSource(new MapperStub() {
-            public List<CityFairnessReader.ParameterRow> selectParameters() { throw new IllegalStateException("down"); }
-            public List<CityFairnessReader.EventRow> selectEvents(long actorId, long start, long asOf, int limit) { return List.of(); }
-        }, 7, 10));
+            public List<CityFairnessReader.ParameterRow> selectParameters(String boardId, String regionId, String seasonId, String rulesVersion) { throw new IllegalStateException("down"); }
+            public List<CityFairnessReader.EventRow> selectEvents(long actorId, String boardId, String regionId, String seasonId, String rulesVersion, long start, long asOf, int limit) { return List.of(); }
+        }, 7, 10, "board-1", "region-1", "season-1", "rules-1"));
         assertTrue(thrown.missing.contains("city_fairness_parameter"));
         CityFairnessReader.ParameterRow row = approved();
         CityFairnessReader.Result ambiguous = reader.read(10_000, new MyBatisCityFairnessSource(new MapperStub() {
-            public List<CityFairnessReader.ParameterRow> selectParameters() { return List.of(row, row); }
-            public List<CityFairnessReader.EventRow> selectEvents(long actorId, long start, long asOf, int limit) { return List.of(); }
-        }, 7, 10));
+            public List<CityFairnessReader.ParameterRow> selectParameters(String boardId, String regionId, String seasonId, String rulesVersion) { return List.of(row, row); }
+            public List<CityFairnessReader.EventRow> selectEvents(long actorId, String boardId, String regionId, String seasonId, String rulesVersion, long start, long asOf, int limit) { return List.of(); }
+        }, 7, 10, "board-1", "region-1", "season-1", "rules-1"));
         assertTrue(ambiguous.missing.contains("parameter-ambiguous"));
         CityFairnessReader.EventRow event = task("e1", "o1", 7, 6_000);
         CityFairnessReader.Result computed = reader.read(10_000, new MyBatisCityFairnessSource(new MapperStub() {
-            public List<CityFairnessReader.ParameterRow> selectParameters() { return List.of(row); }
-            public List<CityFairnessReader.EventRow> selectEvents(long actorId, long start, long asOf, int limit) {
+            public List<CityFairnessReader.ParameterRow> selectParameters(String boardId, String regionId, String seasonId, String rulesVersion) { return List.of(row); }
+            public List<CityFairnessReader.EventRow> selectEvents(long actorId, String boardId, String regionId, String seasonId, String rulesVersion, long start, long asOf, int limit) {
                 assertEquals(7L, actorId);
+                assertEquals("board-1", boardId);
                 assertEquals(11, limit);
                 return List.of(event);
             }
-        }, 7, 10));
+        }, 7, 10, "board-1", "region-1", "season-1", "rules-1"));
         assertTrue(computed.computable());
         assertEquals(1, computed.groups.size());
     }
@@ -224,11 +282,11 @@ class CityFairnessReaderTest {
         CityFairnessReader.ParameterRow approved = approved();
         CityFairnessReader.EventRow event = task("e1", "o1", 7, 6_000);
         CityFairnessReader.Result result = reader.read(10_000, new MyBatisCityFairnessSource(new MapperStub() {
-            public List<CityFairnessReader.ParameterRow> selectParameters() { return List.of(draft, approved); }
-            public List<CityFairnessReader.EventRow> selectEvents(long actorId, long start, long asOf, int limit) {
+            public List<CityFairnessReader.ParameterRow> selectParameters(String boardId, String regionId, String seasonId, String rulesVersion) { return List.of(draft, approved); }
+            public List<CityFairnessReader.EventRow> selectEvents(long actorId, String boardId, String regionId, String seasonId, String rulesVersion, long start, long asOf, int limit) {
                 return List.of(event);
             }
-        }, 7, 10));
+        }, 7, 10, "board-1", "region-1", "season-1", "rules-1"));
         assertTrue(result.computable());
         assertEquals(1, result.groups.size());
         assertFalse(result.missing.contains("parameter-ambiguous"));
@@ -285,7 +343,10 @@ class CityFairnessReaderTest {
         assertTrue(xml.contains("insert into city_fairness_event"));
         assertTrue(xml.contains("where state = 'APPROVED'"));
         assertFalse(xml.toLowerCase().contains("coalesce"));
-        assertTrue(xml.contains("city_fairness_parameter"));
+        assertTrue(xml.contains("grace_millis"));
+        assertTrue(xml.contains("board_id = #{boardId}"));
+        assertFalse(xml.contains("lower_effective_events"));
+        assertFalse(sql.contains("lower_effective_events"));
         assertTrue(xml.contains("city_fairness_event"));
     }
 
@@ -301,7 +362,12 @@ class CityFairnessReaderTest {
         row.sourceRef = "fairness-approval-1";
         row.deltaMillis = 100L;
         row.horizonMillis = 5_000L;
-        row.lowerEffectiveEvents = 1;
+        row.graceMillis = 1_000L;
+        row.boardId = "board-1";
+        row.regionId = "region-1";
+        row.seasonId = "season-1";
+        row.rulesVersion = "rules-1";
+        row.metricVersion = "metric-1";
         return row;
     }
 
@@ -332,16 +398,20 @@ class CityFairnessReaderTest {
         row.teamSize = 2;
         row.actionCost = 3;
         row.newcomer = NEWCOMER;
+        row.boardId = "board-1";
+        row.regionId = "region-1";
+        row.seasonId = "season-1";
+        row.rulesVersion = "rules-1";
         return row;
     }
 
     private static class MapperStub implements CityFairnessMapper {
-        public List<CityFairnessReader.ParameterRow> selectParameters() { return List.of(); }
-        public List<CityFairnessReader.EventRow> selectEvents(long actorId, long start, long asOf, int limit) { return List.of(); }
+        public List<CityFairnessReader.ParameterRow> selectParameters(String boardId, String regionId, String seasonId, String rulesVersion) { return List.of(); }
+        public List<CityFairnessReader.EventRow> selectEvents(long actorId, String boardId, String regionId, String seasonId, String rulesVersion, long start, long asOf, int limit) { return List.of(); }
         public CityFairnessReader.EventRow selectEvent(String source, String eventId) { return null; }
         public int insertEvent(CityFairnessReader.EventRow row) { return 0; }
         public int insertRead(CityFairnessReadRow row) { return 0; }
-        public CityFairnessReadRow selectRead(long accountId, String queryId) { return null; }
+        public CityFairnessReadRow selectRead(long accountId, String queryId, String boardId, String regionId, String seasonId, String rulesVersion) { return null; }
     }
 
     private static final class Memory implements CityFairnessReader.Source {

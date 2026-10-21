@@ -24,12 +24,16 @@ public class CityFairnessReportController extends BaseController {
     @GetMapping("/report")
     public ResponseEntity<AjaxResult> report(@RequestParam(required = false) String queryId,
                                               @RequestParam(required = false) Long asOf,
-                                              @RequestParam(required = false) String cursor) {
+                                              @RequestParam(required = false) String cursor,
+                                              @RequestParam(required = false) String boardId,
+                                              @RequestParam(required = false) String regionId,
+                                              @RequestParam(required = false) String seasonId,
+                                              @RequestParam(required = false) String rulesVersion) {
         Long accountId = currentAccount();
         if (accountId == null) {
-            return respond(CityFairnessReportService.Page.reject(401, "UNAUTHORIZED"));
+            return respond(CityFairnessReportService.Page.reject(401, "UNAUTHORIZED", asOf));
         }
-        return respond(reports.read(accountId, queryId, asOf, cursor));
+        return respond(reports.read(accountId, queryId, asOf, cursor, boardId, regionId, seasonId, rulesVersion));
     }
 
     protected Long currentAccount() {
@@ -46,12 +50,20 @@ public class CityFairnessReportController extends BaseController {
         data.put("accountId", page.accountId);
         data.put("queryId", page.queryId);
         data.put("asOf", page.asOf);
+        data.put("metricVersion", page.metricVersion);
+        data.put("matureCount", page.matureCount);
+        data.put("denominator", page.denominator);
+        data.put("boardId", page.boardId);
+        data.put("regionId", page.regionId);
+        data.put("seasonId", page.seasonId);
+        data.put("rulesVersion", page.rulesVersion);
         data.put("status", page.status);
         data.put("maturity", page.maturity);
         data.put("missing", page.missing);
         data.put("groups", page.groups);
         data.put("outingClasses", page.outingClasses);
         data.put("secondOutings", page.secondOutings);
+        data.put("lateEvents", page.lateEvents);
         data.put("cursor", page.cursor);
         data.put("nextCursor", page.nextCursor);
         data.put("readBack", page.readBack);
