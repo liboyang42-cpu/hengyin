@@ -55,7 +55,7 @@ public final class RendezvousMeetingServiceTest {
                 RendezvousHandoffRequest row=entry.getValue();
                 if(!row.requestId.equals(requestId))continue;
                 if(row.dispatched||row.phase!=RendezvousHandoffRequest.Phase.UNKNOWN)return false;
-                if(row.blocker!=null&&row.blocker.endsWith("NOT_ROLLED_BACK"))return false;
+                if(row.blocker!=null&&(row.blocker.endsWith("NOT_ROLLED_BACK")||"CANCELLED_PREVENTED".equals(row.blocker)))return false;
                 handoffs.put(entry.getKey(),row.dispatched(now));
                 return true;
             }
@@ -104,7 +104,7 @@ public final class RendezvousMeetingServiceTest {
     static final class TeamDouble implements RendezvousHandoffTeamPort {
         Fixture fixture; final Map<String,Long> created=new HashMap<>(); final Set<String> joined=new HashSet<>();
         int creates,joins,lookups; boolean obscure,lookupThrows,failJoin;
-        Runnable beforeLookup=()->{};
+        Runnable beforeLookup=()->{}, beforeCreate=()->{}, beforeJoin=()->{};
         public boolean available(){return fixture.available;}
         public Lookup lookup(String requestId){
             lookups++;
@@ -116,6 +116,7 @@ public final class RendezvousMeetingServiceTest {
             return Lookup.absent();
         }
         public Created create(String requestId,long leader,long member,long activity){
+            beforeCreate.run();
             if(created.containsKey(requestId))return new Created(created.get(requestId));
             creates++;
             check(leader==1&&member==2&&activity==fixture.activityId,"bound actors/goal");
@@ -127,6 +128,7 @@ public final class RendezvousMeetingServiceTest {
             return new Created(77L);
         }
         public void join(String requestId){
+            beforeJoin.run();
             joins++;
             Long team=created.get(requestId);
             if(team==null||failJoin)throw new RendezvousHandoffTeamPort.Unconfirmed(team);

@@ -27,7 +27,23 @@ RendezvousMeetingService.HandoffState handoffStateFor(String matchId)
 - 创建已确认而加入失败时，只对同一请求 `join`。
 - 恢复过程中取消、拉黑或到期会停下后续组队。已记下的 team id 保留，阻断码以 `NOT_ROLLED_BACK` 结尾。
 - 每次 `create` 或 `join` 之前，在同一条守卫事务里重读原请求、双方当前安全、截止时间、证据行和停止标记，并按原 `request_id` 原子决定。`markDispatched` 只在 `dispatched=0`、阶段 `UNKNOWN`、且阻断码不是 `NOT_ROLLED_BACK` 时成功。
-- 线性化边界：在这条守卫事务开始之前已经提交的撤销，排序在派发之前，禁止 `create` 和 `join`。外部组队调用不在守卫事务里。事务返回之后才提交的撤销，仍可能和这次调用交错；之后拒绝 `COMPLETED` 不能把这次调用说成已回滚。
+- 守卫事务在 `permit` 里重读原请求、双方安全、截止时间、证据和停止标记。这只排序 `permit` 返回之前已经提交的撤销。`permit` 返回之后到外部 `create` / `join` 之间的窗口是真的，不再加一道检查把它说成已经关上。
+
+## 派发与取消
+
+交接变成已派发的时刻，是创建用的 `markDispatched` 提交成功：同一条守卫事务里重读通过，并且 `dispatched` 从 0 改成 1 的那次更新提交。不是 `permit` 开始，不是外部 `create` 进入，也不是 team id 落库。`markDispatched` 只在 `dispatched=0`、阶段 `UNKNOWN`、且阻断码不是 `NOT_ROLLED_BACK` 或 `CANCELLED_PREVENTED` 时成功。加入没有第二枚持久派发位；创建一旦已派发，取消答案就已经是不保证回滚。
+
+`cancel` 的返回用现有的 `state` 和 `blocker` 区分，不新增对外字段：
+
+| 返回 | 含义 |
+| --- | --- |
+| `state=CANCELLED`，没有请求行，`blocker` 为空 | 还没有交接请求。派发被阻止。 |
+| `state=CANCELLED`，`blocker=CANCELLED_PREVENTED` | 请求已有，`markDispatched` 尚未提交。外部创建未被放行。 |
+| `state=RECOVERY_REQUIRED`，`blocker=CANCELLED_NOT_ROLLED_BACK` | `markDispatched` 已经提交。回滚不保证。已有 team id 留在账本上，响应不公布 team。 |
+
+`permit` 已经返回之后才执行的取消，不能阻止随后的外部 `create` 或 `join`。调用发生了就记下结果，并保持 `NOT_ROLLED_BACK`。没有请求行、但会面已是 `IN_PROGRESS` 的旧声明，取消仍停在 `RECOVERY_REQUIRED`，不写成已阻止。
+
+以后接到真实组队时：幂等创建和权威查询仍按 `request_id`，并且只能在这次 `markDispatched` 提交之后调用。同一个请求号必须回到同一个 team，这是收敛，不是删除或回滚。`dispatched=true` 且查询仍不能证明结果时，继续保持 `UNKNOWN`，不自动再创建。授权仍是提交 `markDispatched` 之前的那次 `permit` 重读。真实端口不另加一道检查来宣称 `permit` 返回后的窗口已关闭。`IPlayTeamService` 上的三个方法仍见 `/opt/cursor/artifacts/C-playteam-change-request.md`，本组不实现。加入若要单独的持久派发位，需要给 `w16_handoff_request` 加列；本轮不加。
 
 ## 证据
 

@@ -164,8 +164,47 @@ class RendezvousHandoffRecoveryTest {
     }
 
     @Test void cancelWhileLookupIsPausedDoesNotDispatch() throws Exception {
-        pausedRevocation(this::fresh, f -> f.service.cancel(2, f.second), "CANCELLED_NOT_ROLLED_BACK");
-        pausedRevocation(this::createdButUnjoined, f -> f.service.cancel(2, f.second), "CANCELLED_NOT_ROLLED_BACK");
+        RendezvousMeetingService.View[] response = new RendezvousMeetingService.View[1];
+        pausedRevocation(this::fresh, f -> response[0] = f.service.cancel(2, f.second), "CANCELLED_PREVENTED");
+        assertEquals(State.CANCELLED, response[0].state);
+        assertEquals("CANCELLED_PREVENTED", response[0].blocker);
+        assertNull(response[0].teamId);
+        pausedRevocation(this::createdButUnjoined, f -> response[0] = f.service.cancel(2, f.second), "CANCELLED_NOT_ROLLED_BACK");
+        assertEquals(State.RECOVERY_REQUIRED, response[0].state);
+        assertEquals("CANCELLED_NOT_ROLLED_BACK", response[0].blocker);
+        assertNull(response[0].teamId);
+    }
+
+    @Test void cancelAfterMarkDispatchedDoesNotStopTheExternalCreate() {
+        Fixture f = ready();
+        f.team.beforeCreate = () -> {
+            assertTrue(f.db.handoffRequest(f.match).dispatched);
+            RendezvousMeetingService.View cancel = f.service.cancel(2, f.second);
+            assertEquals(State.RECOVERY_REQUIRED, cancel.state);
+            assertEquals("CANCELLED_NOT_ROLLED_BACK", cancel.blocker);
+            assertNull(cancel.teamId);
+        };
+        RendezvousMeetingService.View handoff = f.service.handoff(1, f.first);
+        assertEquals(1, f.attempts());
+        assertEquals(0, f.team.joins);
+        assertEquals(State.RECOVERY_REQUIRED, handoff.state);
+        assertEquals(77L, f.db.meeting(f.match).teamId.longValue());
+        assertEquals("CANCELLED_NOT_ROLLED_BACK", f.db.handoffRequest(f.match).blocker);
+    }
+
+    @Test void cancelAfterJoinPermitDoesNotStopTheExternalJoin() {
+        Fixture f = createdButUnjoined();
+        f.team.beforeJoin = () -> {
+            RendezvousMeetingService.View cancel = f.service.cancel(2, f.second);
+            assertEquals("CANCELLED_NOT_ROLLED_BACK", cancel.blocker);
+            assertEquals(State.RECOVERY_REQUIRED, cancel.state);
+        };
+        RendezvousMeetingService.View handoff = f.service.handoff(1, f.first);
+        assertEquals(0, f.attempts());
+        assertEquals(1, f.team.joins);
+        assertEquals(State.RECOVERY_REQUIRED, handoff.state);
+        assertEquals(77L, f.db.meeting(f.match).teamId.longValue());
+        assertNull(handoff.teamId);
     }
 
     @Test void blockWhileLookupIsPausedDoesNotDispatch() throws Exception {

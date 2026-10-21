@@ -186,15 +186,35 @@ public final class RendezvousMeetingService {
             return view(tx,t,r);
         });
     }
+    /**
+     * Prevented: no committed {@code markDispatched}. Response state is {@code CANCELLED}.
+     * A request row uses blocker {@code CANCELLED_PREVENTED}; no row leaves blocker null.
+     * Already dispatched: blocker {@code CANCELLED_NOT_ROLLED_BACK}, state {@code RECOVERY_REQUIRED}.
+     * That answer does not stop an external create or join that {@code permit} already released.
+     */
     public View cancel(long actor, String ticketId) {
         enabled(); return store.transaction(tx -> {
             Ticket t=owned(tx,actor,ticketId); Match m=match(tx,t); Meeting r=refresh(tx,m,required(tx,m));
+            if (r.state == State.COMPLETED) return view(tx,t,r);
             RendezvousHandoffRequest req=tx.handoffRequest(m.id);
-            if (r.open()) r=r.state(State.CANCELLED);
-            else if (r.state == State.IN_PROGRESS || r.state == State.RECOVERY_REQUIRED) r=r.withTeam(r.teamId, State.RECOVERY_REQUIRED);
-            if (req != null && r.state != State.COMPLETED) tx.save(req.blocker("CANCELLED_NOT_ROLLED_BACK", clock.millis()));
+            if (req != null && dispatched(req)) {
+                r=r.withTeam(r.teamId, State.RECOVERY_REQUIRED);
+                tx.save(req.blocker("CANCELLED_NOT_ROLLED_BACK", clock.millis()));
+            } else if (req != null) {
+                r=r.state(State.CANCELLED);
+                tx.save(req.blocker("CANCELLED_PREVENTED", clock.millis()));
+            } else if (r.open()) {
+                r=r.state(State.CANCELLED);
+            } else if (r.state == State.IN_PROGRESS || r.state == State.RECOVERY_REQUIRED) {
+                r=r.withTeam(r.teamId, State.RECOVERY_REQUIRED);
+            }
             tx.save(r); return view(tx,t,r);
         });
+    }
+    /** True after the markDispatched commit, or once a team phase or team id is stored. */
+    private static boolean dispatched(RendezvousHandoffRequest req) {
+        return req.dispatched || req.phase != RendezvousHandoffRequest.Phase.UNKNOWN
+                || (req.teamId != null && req.teamId > 0);
     }
     /** Query the original request, then create or join at most once for that same id.
      * A timeout does not allocate another id. An unproved side effect stays UNKNOWN. */
@@ -292,7 +312,10 @@ public final class RendezvousMeetingService {
             RendezvousHandoffRequest current=tx.handoffRequest(m.id);
             if (!bound(current, requestId, m, r, tx)) return false;
             String denial=denial(tx, m, r);
-            if (denial != null) { hold(tx, t, r, current, denial); return false; }
+            if (denial != null) {
+                if (r.state != State.CANCELLED) hold(tx, t, r, current, denial);
+                return false;
+            }
             RendezvousMeetingEvidence.Decision decision=decision(tx, m);
             if (decision.activityId != r.activityId || !decision.ready()) return false;
             if (create) {
@@ -375,12 +398,14 @@ public final class RendezvousMeetingService {
         });
     }
     private String denial(Tx tx, Match m, Meeting r) {
+        if (r.state == State.CANCELLED) return "CANCELLED_PREVENTED";
         if (m.state == MatchState.CANCELLED) return "CANCELLED_NOT_ROLLED_BACK";
         if (clock.millis() >= r.expiresAt || m.state == MatchState.EXPIRED) return "EXPIRED_NOT_ROLLED_BACK";
         if (!safe(tx,m)) return "SAFETY_REVOKED_NOT_ROLLED_BACK";
         if (!verifyOngoing(tx,m)) return "SAFETY_REVOKED_NOT_ROLLED_BACK";
         RendezvousHandoffRequest req=tx.handoffRequest(m.id);
         if (req != null && req.blocker != null && req.blocker.endsWith("NOT_ROLLED_BACK")) return req.blocker;
+        if (req != null && "CANCELLED_PREVENTED".equals(req.blocker)) return req.blocker;
         return null;
     }
     private boolean verifyOngoing(Tx tx, Match m) {

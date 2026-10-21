@@ -36,6 +36,6 @@
     UPDATE w16_handoff_request
     SET dispatched=1, updated_at=#{updatedAt}
     WHERE request_id=#{requestId} AND dispatched=0 AND phase='UNKNOWN'
-      AND (blocker IS NULL OR blocker NOT LIKE '%NOT_ROLLED_BACK')
+      AND (blocker IS NULL OR (blocker NOT LIKE '%NOT_ROLLED_BACK' AND blocker != 'CANCELLED_PREVENTED'))
   </update>
 </mapper>
