@@ -47,7 +47,7 @@ beforeEach(() => {
       if (o.url === '/api/roam/finish') {
         // 服务端已结算,回包丢失(超时)
         const k = Object.keys(sessions)[0]
-        sessions[k] = { ...sessions[k], state: 'FINISHED', resultComplete: true, result: { totalXp: 7, medal: '城市初探' } }
+        sessions[k] = { ...sessions[k], state: 'FINISHED', resultComplete: true, badgeDelivery: [{ badgeCode: 'ROAM_TILES_50', state: 'DELIVERED' }], result: { totalXp: 7, medal: '城市点亮 50 格' } }
         if (finishMode === 'timeout-after-apply') o.fail({ errMsg: 'request:fail timeout' })
         else o.successStatusAbnormal({ statusCode: 504 })
         return
@@ -94,7 +94,7 @@ for (const mode of ['timeout-after-apply', 'http-504-after-apply']) {
     assert.equal(finishCalls(), 1, '重试不得重发 /api/roam/finish')
     assert.equal(calls.filter(c => c.url === '/api/roam/session').length, 1, '连点只发一次回读')
     assert.equal(page.data.finish.xpAwarded, 7)
-    assert.equal(page.data.finish.medal, '城市初探')
+    assert.equal(page.data.finish.medal, '城市点亮 50 格')
     assert.equal(page.data.finish.settleErr, '', '结算核对完成后重试入口消失')
     assert.equal(medalToasts(), 1, '勋章提示只出现一次')
     assert.equal(page.celebrations.filter(c => c === 'medal-earned').length, 1, '勋章庆祝只出现一次')
