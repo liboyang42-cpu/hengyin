@@ -258,3 +258,25 @@ test('已加载后出现坏档或较新本机草稿，保存前不覆盖也不�
   assert.equal(newer.requests.length, 0)
   assert.equal(newer.values[key].form.name, '另一个窗口的新草稿')
 })
+
+test('新编辑遇到预读冲突可明确放弃原稿并读取服务器当前资料', () => {
+  const h = mount(); h.ready(); edit(h)
+  const latest = { ...CLUB, name: '服务器新名', updateTime: 'v2' }
+  assert.equal(preflight(h, latest), undefined)
+  h.c.discardDraft()
+  assert.equal(h.values[drafts.key(1, 9)], undefined)
+  assert.equal(h.requests.length, 1)
+  h.ready(latest)
+  assert.equal(h.c.data.name, '服务器新名')
+  assert.equal(h.c.data.draftBlocked, false)
+})
+test('存储失败后的重新读取不得丢弃未保留输入', () => {
+  const h = mount(); h.ready(); h.flags.write = true; edit(h)
+  h.c.loadClub()
+  assert.equal(h.requests.length, 0)
+  assert.equal(h.c.data.name, '我的修改')
+  assert.match(h.c.data.draftNotice, /尚未保留.*勿退出/)
+  h.flags.write = false; edit(h, 'name', '重新保留')
+  h.c.loadClub()
+  assert.equal(h.requests.length, 1)
+})

@@ -91,7 +91,7 @@ Component({
   },
   methods: {
     loadClub() {
-      var that = this;
+      var that = this; if (!this.canReloadDraft()) return;
       this.setData({ loadState: 'loading', loadErrorText: '' });
       if (this.data.clubId) { this.fetchDetail(); return; }
       // 多俱乐部下不能猜 owned[0]：深链缺参时选错对象比打不开更危险。
@@ -165,7 +165,7 @@ Component({
     // ===== 输入 =====
     markDirty() { if (!this.canEditDraft()) return;
       if (this.data.saveErrorText) this.setData({ saveErrorText: '' });
-      this.triggerEvent('dirtychange', { dirty: true }); this.persistDraft();
+      this._draftDirty = true; this.triggerEvent('dirtychange', { dirty: true }); this.persistDraft();
     },
 
     onInput(e) { if (!this.canEditDraft()) return;
@@ -465,6 +465,14 @@ Component({
 
     onBack() { this.triggerEvent('back'); },
 
+    canReloadDraft() {
+      if (!this._draftDirty || !this.isDraftCurrent(this._draftScope)) return true;
+      const found = drafts.read(typeof wx === 'undefined' ? null : wx, this._draftKey);
+      if (found.state === 'ready' && JSON.stringify(found.record) === this._draftExpected &&
+          JSON.stringify(found.record.form) === JSON.stringify(drafts.form(this.data))) return true;
+      this.setData({ draftNotice: '当前输入尚未保留，请勿退出；请先复制或提交，暂不能重新读取。' });
+      return false;
+    },
     draftContext() {
       return { owner: String(typeof app.getUserID === 'function' ? app.getUserID() || '' : ''),
         clubId: String(this.data.clubId || ''), epoch: this._draftEpoch,
@@ -485,7 +493,7 @@ Component({
       const scope = this.draftContext();
       this._draftScope = scope;
       this._draftKey = drafts.key(scope.owner, scope.clubId);
-      this._draftBase = '';
+      this._draftBase = ''; this._draftDirty = false;
       this._savedDraft = null;
       this._draftExpected = '';
       this._draftReadState = 'unavailable';
@@ -546,7 +554,10 @@ Component({
       if (!this.canEditDraft()) return false;
       if (!this._draftKey) { this.setData({ draftNotice: '未确认登录身份，草稿未保留，请勿退出。' }); return false; }
       const saved = drafts.write(wx, this._draftKey, this._draftBase, this.data, this._draftExpected);
-      if (saved) this._draftExpected = JSON.stringify({ schemaVersion: 1, base: this._draftBase, form: drafts.form(this.data) });
+      if (saved) {
+        this._draftExpected = JSON.stringify({ schemaVersion: 1, base: this._draftBase, form: drafts.form(this.data) });
+        this._draftReadState = 'ready'; this._savedDraft = JSON.parse(this._draftExpected);
+      }
       this.setData({ draftNotice: saved ? '草稿已保留在本机，尚未提交。' : '草稿未能保留，原记录不会覆盖，请勿退出；可重试修改或提交。' });
       return saved;
     },
@@ -569,7 +580,7 @@ Component({
           const latest = res.data;
           if ((latest.id != null && String(latest.id) !== scope.clubId) ||
               (latest.isOwner !== true && latest.viewerIsAdmin !== true) || (latest.isOwner === true) !== that.data.isOwner) {
-            that.setData({ saving: false, draftBlocked: true, draftNotice: '编辑对象或权限已变化，请重新打开核对。' }); return;
+            that.setData({ saving: false, draftBlocked: true, draftCanDiscard: found.state === 'ready', draftNotice: '编辑对象或权限已变化，请重新打开核对。' }); return;
           }
           // 预读只能拦截此刻已存在的差异，不能消除随后到写入之间的并发窗口。
           if (drafts.base(that.draftServer(latest)) !== that._draftBase) {
@@ -592,6 +603,7 @@ Component({
       if (JSON.stringify(drafts.form(this.data)) !== submittedForm) {
         this.setData({ saving: false, saveErrorText: '提交期间又有修改，草稿仍保留，请重新核对。' }); return;
       }
+      this._draftDirty = false;
       const cleared = drafts.remove(wx, drafts.key(scope.owner, scope.clubId), expected);
       this.setData({ saving: false, saveErrorText: '', draftNotice: cleared ? '' : '资料已保存，本机草稿未能清除，请核对后关闭。' });
       toast.success('已保存');
