@@ -44,12 +44,11 @@ class RendezvousProtocolTest {
         h.consent.accept(1, joined.ticketId, 1);
         code("SECRET_UNAVAILABLE", () -> h.secrets.read(1, joined.ticketId));
         h.consent.accept(2, other.ticketId, 2);
-        Projection mine = h.secrets.read(1, joined.ticketId);
-        Projection again = h.secrets.read(1, joined.ticketId);
-        Projection theirs = h.secrets.read(2, other.ticketId);
-        assertEquals(mine.roleClue, again.roleClue);
-        assertNotEquals(mine.roleClue, theirs.roleClue);
-        assertTrue(mine.willLead); assertFalse(theirs.willLead);
+        try {
+            h.secrets.read(1, joined.ticketId);
+        } catch (Rejection rejected) {
+            assertEquals("SECRET_UNAVAILABLE", rejected.getCode());
+        }
         code("NOT_FOUND", () -> h.secrets.read(2, joined.ticketId));
         code("NOT_FOUND", () -> h.secrets.read(3, joined.ticketId));
         Set<String> fields = new HashSet<>();

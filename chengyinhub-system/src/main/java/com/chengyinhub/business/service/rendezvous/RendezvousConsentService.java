@@ -178,6 +178,17 @@ public final class RendezvousConsentService {
         if (reason == Termination.EXIT) return exit(tx, actor, peer, ticketId, now);
         return stopNamedPair(tx, actor, peer, ticketId);
     }
+    /**
+     * H, inside the caller's already-open guard transaction. Stops only the shared active match.
+     * Does not open a transaction. A second call writes nothing. SAFETY_STOPPED is not written back.
+     */
+    public void terminateCurrentMatch(Transaction tx, long actor, long other) {
+        Objects.requireNonNull(tx, "tx");
+        actor(actor);
+        actor(other);
+        if (actor == other) throw new Rejection("INVALID_INPUT");
+        stopBlockedPair(tx, actor, other);
+    }
     private OngoingVerdict inspect(Transaction tx, long actor, String ticketId, String expectedMatchId,
                                    Long expectedPeer, boolean requireMutualAccepted, long now, boolean bindOwner) {
         Objects.requireNonNull(tx, "tx");
