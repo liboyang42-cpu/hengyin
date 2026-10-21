@@ -18,7 +18,7 @@ const roleGuard = require('../../../../utils/roleGuard.js');
 const policy = require('../../../../utils/identity/identity-policy.js');
 const { applyTheme } = require('../../../../utils/theme.js');
 const { resolveVerificationScan } = require('../../../../utils/verification-scan.js');
-const { completionReceiptMessage, resolveVerificationResult } = require('../../../../utils/merchant-verification.js');
+const { completionReceiptMessage, resolveVerificationResult, classifyVerificationOutcome } = require('../../../../utils/merchant-verification.js');
 const { getScene } = require('../../../../utils/scene-registry.js');
 const { pushScene, popScene, currentScene, exitDecision } = require('../../../../utils/scene-stack.js');
 const { createWriteActionWorkflow } = require('../../../../utils/write-action-workflow.js');
@@ -657,10 +657,10 @@ Component({
       var submitted = this._verificationWorkflow.run(key, function (done) {
         return app.sendRequest(Object.assign({}, options, {
           autoErrorToast: false,
-          success: function (res) { done({ status: 'success', response: res }); },
-          fail: function () { done({ status: 'failed', response: { code: 500, msg: '网络错误，请重试' } }); },
-          successStatusAbnormal: function (res) {
-            done({ status: 'failed', response: { code: 500, msg: (res && res.msg) || '核销失败，请重试' } });
+          success: function (res) { done(classifyVerificationOutcome(res, 'success')); },
+          fail: function (res, status) { done(classifyVerificationOutcome(res, 'fail', status)); },
+          successStatusAbnormal: function (res, status) {
+            done(classifyVerificationOutcome(res, 'abnormal', status));
           }
         }));
       }, function (result) {

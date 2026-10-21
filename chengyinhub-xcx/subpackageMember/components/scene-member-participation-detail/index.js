@@ -3,7 +3,7 @@ const cyLoading = require('../../../utils/loading.js');
 const cyToast = require('../../../utils/toast.js');
 const { toTimestamp, chinaDayStart } = require('../../../utils/datetime');
 const { resolveVerificationScan } = require('../../../utils/verification-scan');
-const { resolveVerificationResult } = require('../../../utils/merchant-verification.js');
+const { resolveVerificationResult, classifyVerificationOutcome } = require('../../../utils/merchant-verification.js');
 const app = getApp();
 const merchantTheme = require('../../../utils/merchant-theme.js');
 const { createWriteActionWorkflow } = require('../../../utils/write-action-workflow.js');
@@ -110,10 +110,10 @@ Component({
       const submitted = this._verificationWorkflow.run(key, function (done) {
         return app.sendRequest(Object.assign({}, options, {
           autoErrorToast: false,
-          success(r) { done({ status: 'success', response: r }); },
-          fail() { done({ status: 'failed', response: { code: 500, msg: '网络错误，请重试' } }); },
-          successStatusAbnormal(res) {
-            done({ status: 'failed', response: { code: 500, msg: (res && res.msg) || '核销失败，请重试' } });
+          success(r) { done(classifyVerificationOutcome(r, 'success')); },
+          fail(res, status) { done(classifyVerificationOutcome(res, 'fail', status)); },
+          successStatusAbnormal(res, status) {
+            done(classifyVerificationOutcome(res, 'abnormal', status));
           }
         }));
       }, function (result) {

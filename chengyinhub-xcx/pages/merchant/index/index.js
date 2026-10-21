@@ -39,7 +39,7 @@ function clearInvalidSession() {
   if (session && typeof session.clearSession === 'function') session.clearSession();
 }
 
-const { resolveVerificationResult } = require('../../../utils/merchant-verification.js');
+const { resolveVerificationResult, classifyVerificationOutcome } = require('../../../utils/merchant-verification.js');
 const { resolveVerificationScan } = require('../../../utils/verification-scan.js');
 const { getScene } = require('../../../utils/scene-registry.js');
 const { pushScene, popScene, currentScene, exitDecision } = require('../../../utils/scene-stack.js');
@@ -1101,10 +1101,10 @@ Page({
     const submitted = this._verificationWorkflow.run(key, function (done) {
       return app.sendRequest(Object.assign({}, options, {
         autoErrorToast: false,
-        success(res) { done({ status: 'success', response: res }); },
-        fail() { done({ status: 'failed', response: { code: 500, msg: '网络错误，请重试' } }); },
-        successStatusAbnormal(res) {
-          done({ status: 'failed', response: { code: 500, msg: (res && res.msg) || '核销失败，请重试' } });
+        success(res) { done(classifyVerificationOutcome(res, 'success')); },
+        fail(res, status) { done(classifyVerificationOutcome(res, 'fail', status)); },
+        successStatusAbnormal(res, status) {
+          done(classifyVerificationOutcome(res, 'abnormal', status));
         }
       }));
     }, function (result) {

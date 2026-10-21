@@ -37,7 +37,7 @@ const { resolveVerificationScan } = require('../../../utils/verification-scan.js
 const { createWriteActionWorkflow } = require('../../../utils/write-action-workflow.js');
 const loading = require('../../../utils/loading.js');
 const { postExcerpt } = require('../../../utils/danger-actions.js');
-
+const { classifyVerificationOutcome } = require('../../../utils/merchant-verification.js');
 // AI 策划:频控超限文案(后端运行时拼 dailyLimit,数字随配置变)→ 只做包含匹配
 const AI_QUOTA_MARK = '今日AI次数已用完';
 const AI_IDEA_CHIPS = ['静安 情侣 夜间 Citywalk 90分钟', '外滩 亲子 半天 城市打卡', '苏州河 摄影 徒步 2小时'];
@@ -939,10 +939,10 @@ Page({
       return app.sendRequest(Object.assign({}, {
         url: url, data: scan.data, method: 'POST', header: jsonHeader(),
         autoErrorToast: false,
-        success(res) { done({ status: 'success', response: res }); },
-        fail() { done({ status: 'failed', response: { code: 500, msg: '网络错误，请重试' } }); },
-        successStatusAbnormal(res) {
-          done({ status: 'failed', response: { code: 500, msg: (res && res.msg) || '核销失败，请重试' } });
+        success(res) { done(classifyVerificationOutcome(res, 'success')); },
+        fail(res, status) { done(classifyVerificationOutcome(res, 'fail', status)); },
+        successStatusAbnormal(res, status) {
+          done(classifyVerificationOutcome(res, 'abnormal', status));
         },
       }));
     }, function (result) {

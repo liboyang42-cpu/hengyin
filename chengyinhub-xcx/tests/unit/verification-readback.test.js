@@ -18,6 +18,8 @@ test('无法按目标事实关联时只打开核销记录，不得用页面加�
   });
 
   assert.equal(offered, true);
+  assert.doesNotMatch(modal.content, /重新进入后再试|退出.*重试/);
+  assert.match(modal.content, /不能证明未核销/);
   assert.equal(resetKeys.length, 0, '只弹提示时不得解锁');
   modal.success({ confirm: true });
   assert.equal(navigation.url, '/pages/merchant/ledger/index?view=redemptions');
