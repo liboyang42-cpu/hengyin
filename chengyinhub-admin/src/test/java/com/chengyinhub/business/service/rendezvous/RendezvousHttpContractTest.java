@@ -118,16 +118,6 @@ class RendezvousHttpContractTest {
         final HashMap<Long, Integer> counts = new HashMap<>();
         public RendezvousVersionedPolicy.Row find(String dimension, String version) { return rows.get(dimension + "\0" + version); }
         public int contacts(long actor) { return counts.getOrDefault(actor, 0); }
-        /** Fixture opt-in. v1 actors have facts; any other version does not. Not a production rule. */
-        public RendezvousEligibilityFacts facts() {
-            return new RendezvousEligibilityFacts() {
-                public boolean connected() { return true; }
-                public String currentVersion() { return "v1"; }
-                public boolean admits(long actor, String clientVersion, long now) {
-                    return actor > 0 && "v1".equals(clientVersion);
-                }
-            };
-        }
     }
     static final class MutableClock extends Clock {
         long now = 10_000;

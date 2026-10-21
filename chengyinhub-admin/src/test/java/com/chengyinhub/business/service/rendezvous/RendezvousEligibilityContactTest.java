@@ -87,10 +87,10 @@ class RendezvousEligibilityContactTest {
         RendezvousProtocolMapper protocol = session.getMapper(RendezvousProtocolMapper.class);
         RendezvousContactMapper contacts = session.getMapper(RendezvousContactMapper.class);
         policy = new RendezvousVersionedPolicy(new MyBatisRendezvousCatalog(protocol, eligibility), new RendezvousProtocolTest.Blocks());
-        consent = new RendezvousConsentService(store, policy, clock);
         ledger = new RendezvousContactLedger(contacts);
+        consent = new RendezvousConsentService(store, policy, clock, ledger::charge);
         MyBatisRendezvousWaiting waiting = new MyBatisRendezvousWaiting(protocol, ledger);
-        scheduler = new RendezvousPoolScheduler(consent, policy, waiting, waiting, clock);
+        scheduler = new RendezvousPoolScheduler(consent, policy, waiting, clock);
     }
 
     @AfterEach void cleanup() {
@@ -180,16 +180,49 @@ class RendezvousEligibilityContactTest {
         assertEquals(1, count("w16_contact_event"));
     }
 
+    @Test void directProposeRecordsBothCharges() {
+        readyRules(1);
+        fact(1, "v1", 20, "CN-SH", 80_000);
+        fact(2, "v1", 21, "CN-SH", 80_000);
+        View a = consent.join(1, "pool", "v1", 100_000);
+        View b = consent.join(2, "pool", "v1", 100_000);
+        String match = consent.propose(a.ticketId, b.ticketId, "public-place");
+        assertEquals(2, count("w16_contact_event"));
+        assertEquals(clock.now, jdbc.queryForObject("SELECT charged_at FROM w16_contact_event WHERE match_id=? AND actor_id=1", Long.class, match));
+        assertEquals(clock.now, jdbc.queryForObject("SELECT charged_at FROM w16_contact_event WHERE match_id=? AND actor_id=2", Long.class, match));
+    }
+
+    @Test void quotaWindowUsesGuardTimeNotTheListingTime() {
+        readyRules(1);
+        jdbc.update("UPDATE w16_contact_quota SET window_millis=10000 WHERE pool='pool'");
+        fact(1, "v1", 20, "CN-SH", 80_000);
+        fact(2, "v1", 21, "CN-SH", 80_000);
+        consent.join(1, "pool", "v1", 100_000);
+        consent.join(2, "pool", "v1", 100_000);
+        jdbc.update("INSERT INTO w16_contact_event(match_id, actor_id, pool, scope, charged_at) VALUES ('seed',1,'pool','POOL',15000)");
+        clock.readings.add(1_000L);
+        clock.readings.add(20_000L);
+        assertEquals("PAIR_UNAVAILABLE", assertThrows(Rejection.class, () -> scheduler.pairOnce("pool")).getCode());
+        assertEquals(1, count("w16_contact_event"));
+        clock.readings.add(1_000L);
+        clock.readings.add(20_000L);
+        jdbc.update("DELETE FROM w16_contact_event");
+        String match = scheduler.pairOnce("pool");
+        assertEquals(2, jdbc.queryForObject("SELECT COUNT(*) FROM w16_contact_event WHERE match_id=? AND charged_at=20000", Integer.class, match));
+        assertEquals(0, jdbc.queryForObject("SELECT COUNT(*) FROM w16_contact_event WHERE match_id=? AND charged_at<>20000", Integer.class, match));
+    }
+
     @Test void lostResponseAndDuplicateMatchChargeOnce() {
         readyRules(1);
         fact(1, "v1", 20, "CN-SH", 80_000);
         fact(2, "v1", 21, "CN-SH", 80_000);
         View a = consent.join(1, "pool", "v1", 100_000);
         View b = consent.join(2, "pool", "v1", 100_000);
-        assertThrows(IllegalStateException.class, () -> consent.propose(a.ticketId, b.ticketId, "public-place", id -> {
-            ledger.charge(id, 1, 2, "pool", clock.now);
+        RendezvousConsentService lost = new RendezvousConsentService(store, policy, clock, (id, first, second, pool, now) -> {
+            ledger.charge(id, first, second, pool, now);
             throw new IllegalStateException("lost");
-        }));
+        });
+        assertThrows(IllegalStateException.class, () -> lost.propose(a.ticketId, b.ticketId, "public-place"));
         assertEquals(TicketState.WAITING, consent.read(1, a.ticketId).ticketState);
         assertEquals(0, count("w16_contact_event"));
         String match = scheduler.pairOnce("pool");
@@ -281,8 +314,8 @@ class RendezvousEligibilityContactTest {
         consent.join(1, "pool", "v1", 100_000);
         consent.join(2, "pool", "v1", 100_000);
         consent.join(3, "pool", "v1", 100_000);
-        RendezvousPoolScheduler other = new RendezvousPoolScheduler(new RendezvousConsentService(store, policy, clock), policy,
-                new MyBatisRendezvousWaiting(session.getMapper(RendezvousProtocolMapper.class), ledger),
+        RendezvousPoolScheduler other = new RendezvousPoolScheduler(
+                new RendezvousConsentService(store, policy, clock, ledger::charge), policy,
                 new MyBatisRendezvousWaiting(session.getMapper(RendezvousProtocolMapper.class), ledger), clock);
         ExecutorService executor = Executors.newFixedThreadPool(2);
         CountDownLatch start = new CountDownLatch(1);

@@ -30,6 +30,30 @@ class RendezvousProtocolTest {
         assertFalse(policy.eligible(1, "pool", "v1", 0));
     }
 
+    @Test void explicitUnwiredRejectsOpenRowsAndClientVersion() {
+        MemoryCatalog unwired = new MemoryCatalog() {
+            public RendezvousEligibilityFacts facts() { return RendezvousEligibilityFacts.unwired(); }
+        };
+        RendezvousVersionedPolicy disconnected = new RendezvousVersionedPolicy(unwired, new Blocks());
+        for (String dimension : new String[]{"eligibility-source", "age", "region", "time-window"})
+            unwired.put(dimension, "v1", open());
+        unwired.put("frequency", "pool", new RendezvousVersionedPolicy.Row("OPEN", 2, null, null));
+        assertFalse(disconnected.eligible(1, "pool", "v1", 0));
+        assertEquals("NOT_ELIGIBLE", assertThrows(Rejection.class, () -> disconnected.requireClientVersion("v1")).getCode());
+        assertNull(disconnected.ttlVersion("v-client"));
+        RendezvousVersionedPolicy.Catalog bare = new RendezvousVersionedPolicy.Catalog() {
+            public RendezvousVersionedPolicy.Row find(String dimension, String version) {
+                return new RendezvousVersionedPolicy.Row("OPEN", 2, 1000L, "public-place");
+            }
+            public int contacts(long actor) { return 0; }
+        };
+        RendezvousVersionedPolicy closed = new RendezvousVersionedPolicy(bare, new Blocks());
+        assertTrue(closed.factsConnected());
+        assertFalse(closed.eligible(1, "pool", "v1", 0));
+        assertEquals("NOT_ELIGIBLE", assertThrows(Rejection.class, () -> closed.requireClientVersion("v-client")).getCode());
+        assertNull(closed.ttlVersion("v-client"));
+    }
+
     @Test void joinReadbackRejectAndSecretStayOnTheCaller() {
         Harness h = new Harness();
         h.allow();
@@ -51,24 +75,36 @@ class RendezvousProtocolTest {
         } catch (Rejection rejected) {
             assertEquals("SECRET_UNAVAILABLE", rejected.getCode());
         }
-        h.secretStore.contentConnected = true;
-        h.db.clues.put(joined.ticketId, "published-lead");
-        h.db.clues.put(other.ticketId, "published-follow");
-        Projection mine = h.secrets.read(1, joined.ticketId);
-        Projection again = h.secrets.read(1, joined.ticketId);
-        Projection theirs = h.secrets.read(2, other.ticketId);
+        Map<String, String> published = new LinkedHashMap<>();
+        published.put(joined.ticketId, "published-lead");
+        published.put(other.ticketId, "published-follow");
+        RendezvousRoleSecretService wired = publishedService(h, published);
+        Projection mine = wired.read(1, joined.ticketId);
+        Projection again = wired.read(1, joined.ticketId);
+        Projection theirs = wired.read(2, other.ticketId);
         assertEquals(joined.ticketId, mine.ticketId);
         assertEquals("published-lead", mine.roleClue);
         assertEquals(mine.roleClue, again.roleClue);
         assertEquals("published-follow", theirs.roleClue);
+        assertNotEquals(mine.roleClue, theirs.roleClue);
         String matchId = h.consent.read(1, joined.ticketId).matchId;
         assertEquals(joined.ticketId.equals(h.db.matches.get(matchId).firstTicket), mine.willLead);
         assertNotEquals(mine.willLead, theirs.willLead);
-        code("NOT_FOUND", () -> h.secrets.read(2, joined.ticketId));
-        code("NOT_FOUND", () -> h.secrets.read(3, joined.ticketId));
+        assertNoPeerMaterial(mine, other.ticketId, "published-follow");
+        assertNoPeerMaterial(theirs, joined.ticketId, "published-lead");
+        code("NOT_FOUND", () -> wired.read(2, joined.ticketId));
+        code("NOT_FOUND", () -> wired.read(3, joined.ticketId));
         Set<String> fields = new HashSet<>();
         for (java.lang.reflect.Field f : Projection.class.getFields()) fields.add(f.getName());
-        assertEquals(new HashSet<>(Arrays.asList("ticketId", "roleClue", "willLead")), fields);
+        assertTrue(fields.contains("ticketId") && fields.contains("roleClue") && fields.contains("willLead"), fields.toString());
+        Set<String> allowed = new HashSet<>(Arrays.asList("ticketId", "roleClue", "willLead", "goalId", "publishVersion", "roleKey", "secretRef"));
+        assertTrue(allowed.containsAll(fields), fields.toString());
+        for (String name : fields) {
+            String lower = name.toLowerCase(Locale.ROOT);
+            assertFalse(lower.contains("partner") || lower.contains("phone") || lower.contains("latitude")
+                    || lower.contains("longitude") || lower.contains("coordinate") || lower.contains("place")
+                    || lower.contains("address") || lower.contains("peer"), name);
+        }
         View rejected = h.consent.cancel(1, joined.ticketId);
         assertEquals(MatchState.CANCELLED, rejected.matchState);
         code("NOT_FOUND", () -> h.consent.current(1));
@@ -120,6 +156,99 @@ class RendezvousProtocolTest {
         assertTrue(h.db.matches.isEmpty());
     }
 
+    /** Default service stays closed. A wired read uses an injected publication, not a generated clue. */
+    private static RendezvousRoleSecretService publishedService(Harness h, Map<String, String> published) {
+        try {
+            Class<?> guardType = Class.forName("com.chengyinhub.business.service.rendezvous.RendezvousRoleContentGuard");
+            Class<?> sourceType = Class.forName("com.chengyinhub.business.service.rendezvous.RendezvousRoleContentSource");
+            return injectPublication(h, published, guardType, sourceType); // B: injected source, not the closed default
+        } catch (ClassNotFoundException absent) {
+            h.secretStore.contentConnected = true;
+            h.db.clues.putAll(published);
+            return h.secrets;
+        }
+    }
+    private static RendezvousRoleSecretService injectPublication(Harness h, Map<String, String> published, Class<?> guardType, Class<?> sourceType) {
+        try {
+            Class<?> issuedType = Class.forName("com.chengyinhub.business.service.rendezvous.RendezvousRoleContentSource$Issued");
+            java.lang.reflect.Constructor<?> issued = issuedType.getConstructor(String.class, String.class, String.class, String.class);
+            java.lang.reflect.Constructor<?> service = RendezvousRoleSecretService.class.getConstructor(
+                    RendezvousConsentService.class, RendezvousRoleSecretService.Store.class, guardType, sourceType, Clock.class);
+            Map<String, Object> grants = new HashMap<>();
+            Object guard = java.lang.reflect.Proxy.newProxyInstance(guardType.getClassLoader(), new Class<?>[]{guardType}, (proxy, method, args) -> {
+                if ("recheck".equals(method.getName())) return null;
+                if ("toString".equals(method.getName())) return "open-guard";
+                return null;
+            });
+            Object source = java.lang.reflect.Proxy.newProxyInstance(sourceType.getClassLoader(), new Class<?>[]{sourceType}, (proxy, method, args) -> {
+                if (!"resolve".equals(method.getName())) return "toString".equals(method.getName()) ? "published-source" : null;
+                Object tx = args[0];
+                String matchId = (String) args[1];
+                boolean ownSideFirst = (Boolean) args[2];
+                Match match = (Match) tx.getClass().getMethod("match", String.class).invoke(tx, matchId);
+                if (match == null) return null;
+                String ticketId = ownSideFirst ? match.firstTicket : match.secondTicket;
+                String body = published.get(ticketId);
+                if (body == null) return null;
+                return issued.newInstance("goal-fixture", "pub-1", ownSideFirst ? "lead" : "follow", body);
+            });
+            RendezvousRoleSecretService.Store store = (RendezvousRoleSecretService.Store) java.lang.reflect.Proxy.newProxyInstance(
+                    RendezvousRoleSecretService.Store.class.getClassLoader(),
+                    new Class<?>[]{RendezvousRoleSecretService.Store.class},
+                    (proxy, method, args) -> {
+                        if (!"transaction".equals(method.getName())) throw new UnsupportedOperationException(method.getName());
+                        Function<RendezvousRoleSecretService.Tx, ?> work = (Function<RendezvousRoleSecretService.Tx, ?>) args[0];
+                        return h.secretStore.transaction(tx -> work.apply(contentTx(tx, grants)));
+                    });
+            return (RendezvousRoleSecretService) service.newInstance(h.consent, store, guard, source, h.clock);
+        } catch (RuntimeException failed) {
+            throw failed;
+        } catch (Exception failed) {
+            throw new AssertionError("content source was not injected", failed);
+        }
+    }
+    private static RendezvousRoleSecretService.Tx contentTx(RendezvousRoleSecretService.Tx delegate, Map<String, Object> grants) {
+        return (RendezvousRoleSecretService.Tx) java.lang.reflect.Proxy.newProxyInstance(
+                RendezvousRoleSecretService.Tx.class.getClassLoader(),
+                new Class<?>[]{RendezvousRoleSecretService.Tx.class},
+                (proxy, method, args) -> {
+                    String name = method.getName();
+                    if ("insertGrant".equals(name)) {
+                        grants.put((String) args[0].getClass().getField("ticketId").get(args[0]), args[0]);
+                        return null;
+                    }
+                    if ("grantByTicket".equals(name)) return grants.get(args[0]);
+                    if ("clue".equals(name)) return null;
+                    if ("insertClue".equals(name)) return null;
+                    if ("toString".equals(name)) return "content-tx";
+                    try {
+                        return RendezvousRoleSecretService.Tx.class.getMethod(name, method.getParameterTypes()).invoke(delegate, args);
+                    } catch (java.lang.reflect.InvocationTargetException failed) {
+                        if (failed.getCause() instanceof RuntimeException runtime) throw runtime;
+                        throw failed.getCause();
+                    }
+                });
+    }
+    private static void assertNoPeerMaterial(Projection projection, String peerTicket, String peerBody) {
+        try {
+            for (java.lang.reflect.Field field : Projection.class.getFields()) {
+                if (field.getType() != String.class) continue;
+                Object value = field.get(projection);
+                if (value == null) continue;
+                assertNotEquals(peerTicket, value, field.getName());
+                assertNotEquals(peerBody, value, field.getName());
+            }
+            java.lang.reflect.Field ref = null;
+            for (java.lang.reflect.Field field : Projection.class.getFields()) if ("secretRef".equals(field.getName())) ref = field;
+            if (ref != null) {
+                Object value = ref.get(projection);
+                assertNotEquals(projection.roleClue, value);
+                assertNotEquals(peerBody, value);
+            }
+        } catch (IllegalAccessException failed) {
+            throw new AssertionError(failed);
+        }
+    }
     private static void code(String code, Runnable work) {
         assertEquals(code, assertThrows(Rejection.class, work::run).getCode());
     }
@@ -133,10 +262,10 @@ class RendezvousProtocolTest {
         final MutableClock clock = new MutableClock();
         final Db db = new Db();
         final ConsentStore consentStore = new ConsentStore(db);
-        final RendezvousConsentService consent = new RendezvousConsentService(consentStore, policy, clock, RendezvousConsentServiceTest.permitsPairing);
+        final RendezvousConsentService consent = new RendezvousConsentService(consentStore, policy, clock, catalog::charge);
         final SecretStore secretStore = new SecretStore(db);
         final RendezvousRoleSecretService secrets = new RendezvousRoleSecretService(consent, secretStore);
-        final RendezvousPoolScheduler scheduler = new RendezvousPoolScheduler(consent, policy, new Wait(db), catalog, clock);
+        final RendezvousPoolScheduler scheduler = new RendezvousPoolScheduler(consent, policy, new Wait(db), clock);
         void allow() {
             for (String dimension : new String[]{"eligibility-source", "age", "region", "time-window"})
                 catalog.put(dimension, "v1", open());
@@ -147,7 +276,7 @@ class RendezvousProtocolTest {
             catalog.windowMillis = 3_600_000L;
         }
     }
-    static final class MemoryCatalog implements RendezvousVersionedPolicy.Catalog, RendezvousPoolScheduler.Contacts {
+    static class MemoryCatalog implements RendezvousVersionedPolicy.Catalog, Admission {
         static final class Event {
             final String matchId, pool, scope; final long actor, at;
             Event(String matchId, long actor, String pool, String scope, long at) {
@@ -203,9 +332,13 @@ class RendezvousProtocolTest {
     }
     static final class MutableClock extends Clock {
         long now = 10_000;
+        final ArrayDeque<Long> readings = new ArrayDeque<>();
         public ZoneId getZone() { return ZoneOffset.UTC; }
         public Clock withZone(ZoneId zone) { return this; }
-        public Instant instant() { return Instant.ofEpochMilli(now); }
+        public Instant instant() {
+            if (!readings.isEmpty()) now = readings.removeFirst();
+            return Instant.ofEpochMilli(now);
+        }
     }
     static final class Db {
         final Map<String, Ticket> tickets = new HashMap<>();

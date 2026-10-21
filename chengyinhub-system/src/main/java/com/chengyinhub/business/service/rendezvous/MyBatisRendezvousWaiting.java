@@ -3,7 +3,7 @@ package com.chengyinhub.business.service.rendezvous;
 import java.util.List;
 
 /** Pool read model for the scheduler. Not a Spring bean and not an HTTP route. */
-public final class MyBatisRendezvousWaiting implements RendezvousPoolScheduler.Waiting, RendezvousPoolScheduler.Contacts {
+public final class MyBatisRendezvousWaiting implements RendezvousPoolScheduler.Waiting, RendezvousConsentService.Admission {
     private final RendezvousProtocolMapper protocol;
     private final RendezvousContactLedger ledger;
     public MyBatisRendezvousWaiting(RendezvousProtocolMapper protocol, RendezvousContactLedger ledger) {
