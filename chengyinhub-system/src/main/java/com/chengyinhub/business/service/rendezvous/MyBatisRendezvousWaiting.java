@@ -5,9 +5,9 @@ import java.util.List;
 /** Pool read model for the scheduler. Not a Spring bean and not an HTTP route. */
 public final class MyBatisRendezvousWaiting implements RendezvousPoolScheduler.Waiting, RendezvousPoolScheduler.Contacts {
     private final RendezvousProtocolMapper protocol;
-    private final MyBatisRendezvousCatalog catalog;
-    public MyBatisRendezvousWaiting(RendezvousProtocolMapper protocol, MyBatisRendezvousCatalog catalog) {
-        this.protocol = protocol; this.catalog = catalog;
+    private final RendezvousContactLedger ledger;
+    public MyBatisRendezvousWaiting(RendezvousProtocolMapper protocol, RendezvousContactLedger ledger) {
+        this.protocol = protocol; this.ledger = ledger;
     }
     public List<String> waitingIds(String pool, long now, int limit) { return protocol.waitingIds(pool, now, limit); }
     public long actorOf(String ticketId) {
@@ -15,5 +15,7 @@ public final class MyBatisRendezvousWaiting implements RendezvousPoolScheduler.W
         if (actor == null || actor <= 0) throw new RendezvousConsentService.Rejection("PAIR_UNAVAILABLE");
         return actor;
     }
-    public void record(long first, long second) { catalog.record(first); catalog.record(second); }
+    public void charge(String matchId, long first, long second, String pool, long now) {
+        ledger.charge(matchId, first, second, pool, now);
+    }
 }
