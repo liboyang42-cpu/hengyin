@@ -13,6 +13,10 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -48,6 +52,9 @@ class RendezvousLedgerPersistenceTest {
     RendezvousMeetingService meetings;
     final MutableClock clock = new MutableClock();
     final int[] creates = new int[1];
+    final int[] lookups = new int[1];
+    final Map<String, Long> createdTeams = new HashMap<>();
+    final Set<String> joinedTeams = new HashSet<>();
     boolean failJoin;
 
     @BeforeEach void setup() throws Exception {
@@ -60,12 +67,16 @@ class RendezvousLedgerPersistenceTest {
                     root.resolve("chengyinhub-admin/sql/migration_w16_consent_persistence_candidate.sql"))));
             RendezvousH2Schema.apply(connection, RendezvousH2Schema.protocol(RendezvousH2Schema.read(
                     root.resolve("chengyinhub-admin/sql/migration_w16_rendezvous_protocol_candidate.sql"))));
+            RendezvousH2Schema.apply(connection, RendezvousH2Schema.protocol(RendezvousH2Schema.read(
+                    root.resolve("chengyinhub-admin/sql/migration_w16_handoff_recovery_candidate.sql"))));
         }
         jdbc.execute("CREATE TABLE im_block(id BIGINT AUTO_INCREMENT PRIMARY KEY, member_id BIGINT NOT NULL, blocked_member_id BIGINT NOT NULL, create_time TIMESTAMP, UNIQUE(member_id, blocked_member_id))");
         Configuration config = new Configuration(new Environment("w16-ledger", new SpringManagedTransactionFactory(), dataSource));
         config.getTypeAliasRegistry().registerAlias("ImBlock", ImBlock.class);
         load(config, root, "chengyinhub-system/src/main/resources/mapper/business/RendezvousConsentMapper.xml", false);
         load(config, root, "chengyinhub-system/src/main/resources/mapper/business/RendezvousProtocolMapper.xml", false);
+        load(config, root, "chengyinhub-system/src/main/resources/mapper/business/RendezvousHandoffMapper.xml", false);
+        load(config, root, "chengyinhub-system/src/main/resources/mapper/business/RendezvousMeetingEvidenceMapper.xml", false);
         load(config, root, "chengyinhub-system/src/main/resources/mapper/business/ImBlockMapper.xml", true);
         session = new SqlSessionTemplate(new SqlSessionFactoryBuilder().build(config));
         manager = new DataSourceTransactionManager(dataSource);
@@ -73,8 +84,8 @@ class RendezvousLedgerPersistenceTest {
         meetingStore = new MyBatisRendezvousMeetingStore(MyBatisRendezvousMeetingStore.Mode.ISOLATED_PERSISTENCE_EVALUATION, session, manager);
         OpenSafety safety = new OpenSafety();
         consent = new RendezvousConsentService(consentStore, safety, clock);
-        meetings = new RendezvousMeetingService(RendezvousMeetingService.Mode.ISOLATED_CONTRACT_EVALUATION, meetingStore, safety, new Goal(), handoff(), clock, 30_000);
-        creates[0] = 0; failJoin = false;
+        meetings = new RendezvousMeetingService(RendezvousMeetingService.Mode.ISOLATED_CONTRACT_EVALUATION, meetingStore, safety, (m, t, a, p, n) -> true, teamPort(), clock, 30_000);
+        creates[0] = 0; lookups[0] = 0; failJoin = false; createdTeams.clear(); joinedTeams.clear();
     }
 
     @AfterEach void cleanup() { jdbc.execute("SHUTDOWN"); }
@@ -92,7 +103,7 @@ class RendezvousLedgerPersistenceTest {
         String[] ids = mutual();
         String challenge = meetings.issue(1, ids[0]).challengeId;
         assertEquals(challenge, meetings.issue(2, ids[1]).challengeId);
-        RendezvousMeetingService restarted = new RendezvousMeetingService(RendezvousMeetingService.Mode.ISOLATED_CONTRACT_EVALUATION, newStore(), new OpenSafety(), new Goal(), handoff(), clock, 30_000);
+        RendezvousMeetingService restarted = new RendezvousMeetingService(RendezvousMeetingService.Mode.ISOLATED_CONTRACT_EVALUATION, newStore(), new OpenSafety(), (m, t, a, p, n) -> true, teamPort(), clock, 30_000);
         assertEquals(challenge, restarted.read(1, ids[0]).challengeId);
         assertEquals(0, creates[0]);
         clock.now = 40_000;
@@ -117,6 +128,8 @@ class RendezvousLedgerPersistenceTest {
         meetings.handoff(2, ids[1]);
         assertEquals(1, creates[0]);
         assertEquals(1, jdbc.queryForObject("SELECT COUNT(*) FROM w16_rendezvous_meeting", Integer.class));
+        assertEquals(1, jdbc.queryForObject("SELECT COUNT(*) FROM w16_handoff_request", Integer.class));
+        assertEquals("TEAM_CREATED", jdbc.queryForObject("SELECT phase FROM w16_handoff_request", String.class));
     }
 
     @Test void completedHandoffReplayCreatesOneTeam() {
@@ -126,8 +139,30 @@ class RendezvousLedgerPersistenceTest {
         meetings.confirm(2, ids[1], challenge);
         assertEquals(RendezvousMeetingService.State.COMPLETED, meetings.handoff(1, ids[0]).state);
         assertEquals(77L, meetings.result(2, ids[1]).teamId.longValue());
+        int seen = lookups[0];
+        assertEquals(RendezvousMeetingService.HandoffState.COMPLETE, meetings.handoffStateFor(consent.read(1, ids[0]).matchId));
         meetings.handoff(1, ids[0]);
         assertEquals(1, creates[0]);
+        assertEquals(seen, lookups[0]);
+        assertEquals(1, jdbc.queryForObject("SELECT COUNT(*) FROM w16_handoff_request", Integer.class));
+    }
+
+    @Test void missingOrUnapprovedEvidenceDoesNotIssue() {
+        View a = consent.join(1, "pool", "v1", 100_000);
+        View b = consent.join(2, "pool", "v1", 100_000);
+        String matchId = consent.propose(a.ticketId, b.ticketId, "public-place");
+        consent.accept(1, a.ticketId, 1);
+        consent.accept(2, b.ticketId, 2);
+        Rejection missing = assertThrows(Rejection.class, () -> meetings.issue(1, a.ticketId));
+        assertEquals("GOAL_UNAVAILABLE", missing.getCode());
+        jdbc.update("INSERT INTO w16_meeting_evidence(match_id, activity_id, place_id, first_actor, second_actor,"
+                + " risk_clear, time_distance_plausible, merchant_required, merchant_verified, review_required,"
+                + " review_approved, fact_source, rule_version) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                matchId, 99L, "public-place", 1L, 2L, 1, 1, 0, 0, 0, 0, "SCAN", "evidence-v1");
+        Rejection scan = assertThrows(Rejection.class, () -> meetings.issue(1, a.ticketId));
+        assertEquals("GOAL_UNAVAILABLE", scan.getCode());
+        assertEquals(0, jdbc.queryForObject("SELECT COUNT(*) FROM w16_handoff_request", Integer.class));
+        assertEquals(0, creates[0]);
     }
 
     @Test void acceptAndBlockRaceLeavesNoActiveReservation() throws Exception {
@@ -183,6 +218,11 @@ class RendezvousLedgerPersistenceTest {
         consent.propose(a.ticketId, b.ticketId, "public-place");
         consent.accept(1, a.ticketId, 1);
         consent.accept(2, b.ticketId, 2);
+        jdbc.update("INSERT INTO w16_meeting_evidence(match_id, activity_id, place_id, first_actor, second_actor,"
+                + " risk_clear, time_distance_plausible, merchant_required, merchant_verified, review_required,"
+                + " review_approved, fact_source, rule_version) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                consent.read(1, a.ticketId).matchId, 99L, "public-place", 1L, 2L, 1, 1, 0, 0, 0, 0,
+                "AUTHORITY_FACT", "evidence-v1");
         return new String[]{a.ticketId, b.ticketId};
     }
 
@@ -190,14 +230,25 @@ class RendezvousLedgerPersistenceTest {
         return new MyBatisRendezvousMeetingStore(MyBatisRendezvousMeetingStore.Mode.ISOLATED_PERSISTENCE_EVALUATION, session, manager);
     }
 
-    private RendezvousMeetingService.Handoff handoff() {
-        return new RendezvousMeetingService.Handoff() {
+    private RendezvousHandoffTeamPort teamPort() {
+        return new RendezvousHandoffTeamPort() {
             public boolean available() { return true; }
-            public long createAndJoin(long first, long second, long activity) {
+            public Lookup lookup(String requestId) {
+                lookups[0]++;
+                if (joinedTeams.contains(requestId)) return Lookup.joined(createdTeams.get(requestId));
+                if (createdTeams.containsKey(requestId)) return Lookup.created(createdTeams.get(requestId));
+                return Lookup.absent();
+            }
+            public Created create(String requestId, long first, long second, long activity) {
+                if (createdTeams.containsKey(requestId)) return new Created(createdTeams.get(requestId));
                 creates[0]++;
                 assertEquals(1, first); assertEquals(2, second); assertEquals(99, activity);
-                if (failJoin) throw new RendezvousMeetingService.RecoveryRequired(77L);
-                return 77;
+                createdTeams.put(requestId, 77L);
+                return new Created(77L);
+            }
+            public void join(String requestId) {
+                if (!createdTeams.containsKey(requestId) || failJoin) throw new Unconfirmed(createdTeams.get(requestId));
+                joinedTeams.add(requestId);
             }
         };
     }
@@ -221,11 +272,5 @@ class RendezvousLedgerPersistenceTest {
         public boolean blocked(long a, long b) { return false; }
         public boolean compatible(long a, long b, String pool, long now) { return true; }
         public boolean publicMeetingAllowed(String pool, String place, long now) { return "public-place".equals(place); }
-    }
-    static final class Goal implements RendezvousMeetingService.Policy {
-        public long activity(Match match) { return 99; }
-        public RendezvousMeetingService.Evidence evaluate(RendezvousMeetingService.Meeting meeting, Ticket first, Ticket second, long now) {
-            return new RendezvousMeetingService.Evidence(true, true, false, false, false, false);
-        }
     }
 }

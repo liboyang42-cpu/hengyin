@@ -42,7 +42,7 @@ class RendezvousHttpContractTest {
         RendezvousVersionedPolicy policy = new RendezvousVersionedPolicy(catalog, new RendezvousProtocolTest.Blocks());
         consent = new RendezvousConsentService(store, policy, clock);
         RendezvousRoleSecretService secrets = new RendezvousRoleSecretService(consent, new RendezvousProtocolTest.SecretStore(db));
-        RendezvousMeetingService meetings = new RendezvousMeetingService(RendezvousMeetingService.Mode.DISABLED, new EmptyMeeting(), policy, new DisabledPolicy(), new DisabledHandoff(), clock, 1000);
+        RendezvousMeetingService meetings = new RendezvousMeetingService(RendezvousMeetingService.Mode.DISABLED, new EmptyMeeting(), policy, new RendezvousHandoffSafety.Closed(), new RendezvousHandoffLegacyTeamPort(), clock, 1000);
         mvc = MockMvcBuilders.standaloneSetup(
                 new ApiRendezvousPoolController(consent, policy, secrets),
                 new ApiRendezvousMeetingController(meetings)).build();
@@ -134,13 +134,9 @@ class RendezvousHttpContractTest {
         public void save(Match match) {}
         public RendezvousMeetingService.Meeting meeting(String matchId) { return null; }
         public void save(RendezvousMeetingService.Meeting meeting) {}
-    }
-    static final class DisabledPolicy implements RendezvousMeetingService.Policy {
-        public long activity(Match match) { return 0; }
-        public RendezvousMeetingService.Evidence evaluate(RendezvousMeetingService.Meeting meeting, Ticket first, Ticket second, long now) { return null; }
-    }
-    static final class DisabledHandoff implements RendezvousMeetingService.Handoff {
-        public boolean available() { return false; }
-        public long createAndJoin(long first, long second, long activity) { throw new AssertionError("disabled handoff"); }
+        public RendezvousHandoffRequest handoffRequest(String matchId) { return null; }
+        public void save(RendezvousHandoffRequest request) {}
+        public boolean markDispatched(String requestId, long now) { return false; }
+        public RendezvousMeetingEvidence.Fact evidenceFact(String matchId) { return null; }
     }
 }

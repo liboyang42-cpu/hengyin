@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.service.rendezvous.RendezvousHandoffMapper">
+  <resultMap id="handoffRow" type="com.chengyinhub.business.service.rendezvous.RendezvousHandoffMapper$Row">
+    <id property="requestId" column="request_id"/>
+    <result property="matchId" column="match_id"/>
+    <result property="firstActor" column="first_actor"/>
+    <result property="secondActor" column="second_actor"/>
+    <result property="activityId" column="activity_id"/>
+    <result property="phase" column="phase"/>
+    <result property="teamId" column="team_id"/>
+    <result property="blocker" column="blocker"/>
+    <result property="dispatched" column="dispatched"/>
+    <result property="createdAt" column="created_at"/>
+    <result property="updatedAt" column="updated_at"/>
+  </resultMap>
+  <select id="findByMatch" resultMap="handoffRow" useCache="false">
+    SELECT request_id, match_id, first_actor, second_actor, activity_id, phase, team_id, blocker,
+           dispatched, created_at, updated_at
+    FROM w16_handoff_request WHERE match_id=#{matchId}
+  </select>
+  <insert id="insert">
+    INSERT INTO w16_handoff_request(request_id, match_id, first_actor, second_actor, activity_id, phase,
+      team_id, blocker, dispatched, created_at, updated_at)
+    VALUES(#{requestId}, #{matchId}, #{firstActor}, #{secondActor}, #{activityId}, #{phase},
+      #{teamId,jdbcType=BIGINT}, #{blocker,jdbcType=VARCHAR}, #{dispatchedBit}, #{createdAt}, #{updatedAt})
+  </insert>
+  <update id="update">
+    UPDATE w16_handoff_request
+    SET phase=#{phase}, team_id=#{teamId,jdbcType=BIGINT}, blocker=#{blocker,jdbcType=VARCHAR},
+        dispatched=#{dispatchedBit}, updated_at=#{updatedAt}
+    WHERE request_id=#{requestId} AND match_id=#{matchId}
+      AND first_actor=#{firstActor} AND second_actor=#{secondActor} AND activity_id=#{activityId}
+  </update>
+  <update id="markDispatched">
+    UPDATE w16_handoff_request
+    SET dispatched=1, updated_at=#{updatedAt}
+    WHERE request_id=#{requestId} AND dispatched=0 AND phase='UNKNOWN'
+  </update>
+</mapper>

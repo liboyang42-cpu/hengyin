@@ -18,9 +18,13 @@ public final class MyBatisRendezvousMeetingStore implements RendezvousMeetingSer
     private final Mode mode;
     private final RendezvousConsentMapper consent;
     private final RendezvousProtocolMapper protocol;
+    private final RendezvousHandoffMapper handoffs;
+    private final RendezvousMeetingEvidenceMapper evidence;
     private final TransactionTemplate transactions;
 
-    public MyBatisRendezvousMeetingStore() { mode = Mode.DISABLED; consent = null; protocol = null; transactions = null; }
+    public MyBatisRendezvousMeetingStore() {
+        mode = Mode.DISABLED; consent = null; protocol = null; handoffs = null; evidence = null; transactions = null;
+    }
 
     public MyBatisRendezvousMeetingStore(Mode mode, SqlSessionTemplate session, DataSourceTransactionManager manager) {
         this.mode = Objects.requireNonNull(mode);
@@ -33,6 +37,8 @@ public final class MyBatisRendezvousMeetingStore implements RendezvousMeetingSer
         }
         consent = session.getMapper(RendezvousConsentMapper.class);
         protocol = session.getMapper(RendezvousProtocolMapper.class);
+        handoffs = session.getMapper(RendezvousHandoffMapper.class);
+        evidence = session.getMapper(RendezvousMeetingEvidenceMapper.class);
         transactions = new TransactionTemplate(manager);
         transactions.setIsolationLevel(TransactionDefinition.ISOLATION_READ_COMMITTED);
         transactions.setTimeout(10);
@@ -45,7 +51,7 @@ public final class MyBatisRendezvousMeetingStore implements RendezvousMeetingSer
         return transactions.execute(status -> {
             if (!Integer.valueOf(1).equals(consent.lockGuard())) throw new IllegalStateException("W16_GUARD_MISSING");
             RendezvousConsentSession tickets = new RendezvousConsentSession(consent);
-            MeetingTx tx = new MeetingTx(tickets, protocol);
+            MeetingTx tx = new MeetingTx(tickets, protocol, handoffs, evidence);
             try { return work.apply(tx); } finally { tickets.close(); tx.open = false; }
         });
     }
@@ -53,9 +59,12 @@ public final class MyBatisRendezvousMeetingStore implements RendezvousMeetingSer
     private static final class MeetingTx implements Tx {
         private final RendezvousConsentSession tickets;
         private final RendezvousProtocolMapper protocol;
+        private final RendezvousHandoffMapper handoffs;
+        private final RendezvousMeetingEvidenceMapper evidence;
         private boolean open = true;
-        MeetingTx(RendezvousConsentSession tickets, RendezvousProtocolMapper protocol) {
-            this.tickets = tickets; this.protocol = protocol;
+        MeetingTx(RendezvousConsentSession tickets, RendezvousProtocolMapper protocol,
+                  RendezvousHandoffMapper handoffs, RendezvousMeetingEvidenceMapper evidence) {
+            this.tickets = tickets; this.protocol = protocol; this.handoffs = handoffs; this.evidence = evidence;
         }
         private void check() { if (!open) throw new IllegalStateException("W16_TRANSACTION_ACCESS_EXPIRED"); }
         public Ticket activeTicket(long actor) { check(); return tickets.activeTicket(actor); }
@@ -73,6 +82,29 @@ public final class MyBatisRendezvousMeetingStore implements RendezvousMeetingSer
             Objects.requireNonNull(meeting);
             if (meeting(meeting.matchId) == null) changed(protocol.insertMeeting(meeting));
             else changed(protocol.updateMeeting(meeting));
+        }
+        public RendezvousHandoffRequest handoffRequest(String matchId) {
+            check();
+            RendezvousHandoffMapper.Row row = handoffs.findByMatch(matchId);
+            return row == null ? null : row.value();
+        }
+        public void save(RendezvousHandoffRequest request) {
+            check();
+            Objects.requireNonNull(request);
+            RendezvousHandoffRequest existing = handoffRequest(request.matchId);
+            if (existing == null) changed(handoffs.insert(request));
+            else {
+                if (!existing.requestId.equals(request.requestId)) throw new IllegalStateException("W16_HANDOFF_IDENTITY_CONFLICT");
+                changed(handoffs.update(request));
+            }
+        }
+        public boolean markDispatched(String requestId, long now) {
+            check();
+            return handoffs.markDispatched(requestId, now) == 1;
+        }
+        public RendezvousMeetingEvidence.Fact evidenceFact(String matchId) {
+            check();
+            return evidence.find(matchId);
         }
         private static void changed(int count) {
             if (count != 1) throw new IllegalStateException("W16_STALE_OR_INVALID_WRITE");
