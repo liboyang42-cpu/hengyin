@@ -4,7 +4,7 @@ const { createServerDraftSaver, readbackIssue } = require('../../pages/publish/u
 
 const payload = { name: '寒冬', publishMode: 'pro', productType: 1, chapters: [{ nodes: [{ name: '甲' }, { name: '乙' }] }] };
 const detail = (extra) => Object.assign({ isDraft: true,
-  chapters: [{ cmsTopicNodeList: [{ id: 11, name: '甲' }, { id: 12, name: '乙' }] }] }, extra,
+  chapters: [{ id: 101, topicId: 501, cmsTopicNodeList: [{ id: 11, chapterId: 101, topicId: 501, name: '甲' }, { id: 12, chapterId: 101, topicId: 501, name: '乙' }] }] }, extra,
   { topic: Object.assign({ id: 501, status: 0, name: '寒冬' }, extra && extra.topic) });
 
 test('回读校验：必须仍是草稿、站点都有编号且与本机一致', () => {
@@ -175,10 +175,10 @@ const richBack = (mutate) => {
     templateBindings: { 901: { templateId: 7, values: { value_1: 'sys.hp' }, items: {}, slotDigest: 'changed' }, 902: { templateId: 8, values: {}, items: { item_1: 'i1' } } },
     gameplayRuntime: { runtimeScope: 'TEAM', worldMode: 'WORLD_SHARED', quests: [{ questKey: 'q1', nodeId: 901, actKey: 'act_a', extraSlot: 'compiled' }], survival: { rations: [{ rationKey: 'r1', actKey: 'act_a', itemId: 'i1', quantity: 1, fallbackHpCost: 2 }] } },
   };
-  const d = { isDraft: true, topic: { name: '寒冬' }, journeyRules: JSON.stringify({ schemaVersion: 1, stateEnabled: true, checkEnabled: true, hp: { enabled: true, init: 8, max: 12 } }),
+  const d = { isDraft: true, topic: { id: 501, name: '寒冬' }, journeyRules: JSON.stringify({ schemaVersion: 1, stateEnabled: true, checkEnabled: true, hp: { enabled: true, init: 8, max: 12 } }),
     chapters: [
-      { name: '一', cmsTopicNodeList: [{ id: 901, name: '甲', templateId: 7 }, { id: 902, name: '乙', templateId: 8 }] },
-      { name: '二', cmsTopicNodeList: [{ id: 903, name: '丙', templateId: 9 }, { id: 904, name: '丁', templateId: 0 }] },
+      { id: 301, topicId: 501, name: '一', cmsTopicNodeList: [{ id: 901, chapterId: 301, topicId: 501, name: '甲', templateId: 7 }, { id: 902, chapterId: 301, topicId: 501, name: '乙', templateId: 8 }] },
+      { id: 302, topicId: 501, name: '二', cmsTopicNodeList: [{ id: 903, chapterId: 302, topicId: 501, name: '丙', templateId: 9 }, { id: 904, chapterId: 302, topicId: 501, name: '丁', templateId: 0 }] },
     ], themeRuntimeConfig: cfg };
   if (mutate) mutate(d, cfg);
   d.themeRuntimeConfig = JSON.stringify(d.themeRuntimeConfig);
