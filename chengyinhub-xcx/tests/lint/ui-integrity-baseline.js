@@ -1,3 +1,4 @@
+// 2026-10-21 核销 UNKNOWN 恢复：profile 658→663/1088→1095/1145→1152/1987→1994、participation 185→190，逐条回读为原调用点；条数、理由、冻结上限不变，u1Variable/u4Dynamic 摘要按既有排序键算法显式重算。
 // 2026-10-20 消息页改收件箱/发件箱(用户要求):u4Dynamic im/list 317→323 仅行号位移(同一 this.setData(patch) 行,上下各一行逐字相同);条数与理由不变,u4Dynamic digest 按同一算法显式重算。
 // 2026-10-20 PR396并集：24个既有锚点按两版源码同调用重定位，理由与数量不变；22处上下各一行逐字相同，roam常量3000及analytics更强accepted校验沿master已登记同请求人工复核。证据：本任务私有anchor-receipt.json；不增加ratchet或豁免。
 // 同轮城市定位同意接线使 locationInfo 有真实消费，移除第二条旧债务，u4Field 128→127。
@@ -387,7 +388,7 @@ module.exports = {
       // 受控路由、理由及 10 条登记保持，digest 仅随行号更新。
       // 2026-10-11 登录隔离及正常失败状态兼容：App consent wrapper 329→343，同一调用及理由，数量仍11。
       // 2026-10-14 W5尾项:profile 544→559/870→885、参与详情 176→177 仅行号下移，同一调用及理由，数量仍11。
-      "u1Variable": "95d3febed1070ba8aa4278cf9e9929a83d52da8007e94b31e92df59f3d663cf0",
+      "u1Variable": "de9c3eac2cc62d9e2280f2853e1ce8c6f418aba4adb639eed55728b4ca97a693",
       // 2026-08-25 816 并入:key 集合按上面的逐条核对结果变化,digest 显式更新。
       "u3Debt": // 2026-09-09 一枚圆钮:roam#onCenterHoldStart / onCenterHoldEnd 两笔零绑定债务已还
       //   —— 长按 3 秒结束的逻辑接到了主键的 touchstart/touchend 上。99→97,digest 显式更新。
@@ -805,7 +806,7 @@ module.exports = {
 // 2026-10-17 合并 master 进漫游上线分支:roam/index.js 14 条、nearby/index.js 2 条既有调用仅行号位移(按 master 源码逐行回读定位);漫游两栏改版删掉 /api/registration/list 静默读取(749),U5 29→28。digest 按同一算法显式重算。
 // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):45 个既有锚点仅行号位移换 key + 本线 6 处新增登记,digest 按门禁同一算法(sha256 of sorted keys joined by \n)重算。
 // 2026-10-20 合并 master(#327 等)进 #293:两侧重锚逐条按合并后源码同一行文本定位一致(fabu 12 条、merchantinfo 2 条、scene-club-edit 1 条),square/list 196/1259 随 #325 点赞修复后移一行;digest 按门禁同一算法重算。
-"88f5026ec75fd7f4c7db57081dc129b710057dd5a7bf8f09c29c2c2f3c9d7120",
+"9dba2887d78b9317d28439ca0328eb8d92bccae5dc5abc98d2edb25c32d8b554",
 // 2026-10-20 R5 尾段(#327,owner 批准 12 条重锚):fabu 729→731、898→900、2524→2530、3570→3588、3951→3969、4957→4990、5215→5248、5866→5899、5876→5909、5929→5962、6270→6303、7936→8060,逐行比对 master 原行一字未改,理由与条数 58 不变;digest 按同一算法显式重算。
       // 2026-08-20 开卡包四拍动效:u5Silent 条数不变(12),只是 play/index.js 的调用点
       //   行号从 2360 移到 2573(见下方 u5Silent 区块的逐条说明)。等量换 key,显式改 digest。
