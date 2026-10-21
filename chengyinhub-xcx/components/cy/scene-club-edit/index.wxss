@@ -160,3 +160,8 @@
 
 /* 锁态卡第三行:现值回显比说明亮一档,它是「数据」不是「解释」 */
 .op-locked-cur { display: block; margin-top: var(--cy-space-1-5); font-size: var(--cy-font-caption); color: var(--cy-text-body); line-height: var(--cy-leading-normal); }
+
+.draft-panel { margin-bottom: var(--cy-space-3); padding: var(--cy-space-3); border-radius: var(--cy-radius-md); background: var(--cy-color-bg-surface-subtle); }
+.draft-notice, .draft-comparison { display: block; color: var(--cy-color-text-primary); font-size: var(--cy-font-body); line-height: var(--cy-leading-normal); }
+.draft-comparison { margin-top: var(--cy-space-2); white-space: pre-wrap; overflow-wrap: anywhere; }
+.draft-actions { display: flex; flex-direction: column; gap: var(--cy-space-2); margin-top: var(--cy-space-2); }
