@@ -6,9 +6,14 @@ import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 
 /** Isolated block adapter. Explicitly constructed. Not a Spring bean and not wired to
- * {@code ImServiceImpl.block}. The three-argument constructor binds {@code guardStop},
- * the existing in-tree pair stop, because A's {@code terminateCurrentMatch} is absent.
- * A missing terminate port must use {@link RendezvousBlockIntegration#unwired()} and fails closed.
+ * {@code ImServiceImpl.block}.
+ *
+ * <p>The three-argument constructor does this and nothing else:
+ * {@code new RendezvousBlockIntegration(mode, session, manager, RendezvousBlockIntegration.guardStop())}.
+ * {@code guardStop()} calls {@code RendezvousConsentService.stopBlockedPair}.
+ * It does not select {@code unwired()}, and it does not call
+ * {@code RendezvousConsentService.terminateCurrentMatch}. Callers that hold a consent
+ * service use {@code RendezvousBlockIntegration.consentStop(consent)} for that instance method.
  */
 public final class RendezvousImBlockMutation implements ImBlockMutation {
     private final RendezvousBlockIntegration integration;

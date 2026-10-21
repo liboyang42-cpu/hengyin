@@ -11,11 +11,14 @@ import static com.chengyinhub.business.service.rendezvous.RendezvousConsentServi
  * Authoritative {@code im_block} write and current-match stop in one consent guard
  * transaction. Not a Spring bean and not a replacement for the global IM service.
  * Does not create a block table, dissolve a team, or delete a chat.
+ * {@code ImServiceImpl.block} is not called from here.
  *
- * <p>The terminate port defaults fail-closed ({@code W16_MATCH_TERMINATION_UNWIRED}).
- * {@link #guardStop()} is only the existing package-private pair stop used by the
- * isolated adapter. It is not A's frozen signature. {@code ImServiceImpl.block} is
- * not called from here.
+ * <p>Construction of the three-argument {@code RendezvousImBlockMutation} is
+ * {@code new RendezvousBlockIntegration(mode, session, manager, guardStop())}.
+ * {@link #guardStop()} calls {@code RendezvousConsentService.stopBlockedPair}.
+ * It does not select {@link #unwired()} and it does not call
+ * {@code terminateCurrentMatch}. {@link #consentStop} is the binding that
+ * delegates to {@code consent.terminateCurrentMatch(tx, actor, other)}.
  */
 public final class RendezvousBlockIntegration {
     private final Store store;
@@ -40,15 +43,22 @@ public final class RendezvousBlockIntegration {
         };
     }
 
-    /** In-tree pair stop. Not {@code terminateCurrentMatch} and not {@code verifyParticipants}. */
+    /** Selected by the three-argument {@code RendezvousImBlockMutation}.
+     * Calls {@code stopBlockedPair}, not {@code terminateCurrentMatch}, and not {@link #unwired()}. */
     public static RendezvousBlockIntegrationTermination guardStop() {
         return (tx, actor, other) -> stopBlockedPair(tx, actor, other);
+    }
+
+    /** Port wired to A's instance method. The caller has already opened the guard transaction. */
+    public static RendezvousBlockIntegrationTermination consentStop(RendezvousConsentService consent) {
+        Objects.requireNonNull(consent, "consent");
+        return consent::terminateCurrentMatch;
     }
 
     public void block(ImBlock block) {
         Objects.requireNonNull(block);
         Long first = block.getMemberId(), second = block.getBlockedMemberId();
-        if (first == null || second == null || first.equals(second)) {
+        if (first == null || second == null || first <= 0 || second <= 0 || first.equals(second)) {
             throw new IllegalArgumentException("W16_INVALID_BLOCK");
         }
         ImBlock persisted = new ImBlock();

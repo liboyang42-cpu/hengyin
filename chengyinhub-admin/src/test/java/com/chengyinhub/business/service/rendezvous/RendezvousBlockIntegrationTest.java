@@ -34,8 +34,8 @@ import static com.chengyinhub.business.service.rendezvous.MyBatisRendezvousConse
 import static com.chengyinhub.business.service.rendezvous.RendezvousConsentService.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-/** H2 guard transaction. The terminate port is a synthetic double, not A's class.
- * ImServiceImpl.block is not on this path. */
+/** H2 guard transaction. {@code real} calls {@code consent.terminateCurrentMatch}.
+ * The synthetic port only covers an unwired or empty stop. ImServiceImpl.block is not on this path. */
 class RendezvousBlockIntegrationTest {
     JdbcDataSource dataSource;
     JdbcTemplate jdbc;
@@ -46,6 +46,7 @@ class RendezvousBlockIntegrationTest {
     RendezvousRoleSecretService secrets;
     RendezvousMeetingService meetings;
     RendezvousBlockIntegration integration;
+    RendezvousBlockIntegration real;
     SyntheticStop stop;
     final MutableClock clock = new MutableClock();
     final int[] creates = new int[1];
@@ -80,6 +81,7 @@ class RendezvousBlockIntegrationTest {
         stop = new SyntheticStop();
         stop.mutate = true;
         integration = new RendezvousBlockIntegration(consentStore, blocks, stop);
+        real = new RendezvousBlockIntegration(consentStore, blocks, RendezvousBlockIntegration.consentStop(consent));
         creates[0] = 0;
     }
 
@@ -121,6 +123,7 @@ class RendezvousBlockIntegrationTest {
     }
 
     @Test void blockStopsOnlyTheSharedMatchAndSurvivesRestart() {
+        integration = real;
         String[] pair = mutual(1, 2);
         String[] other = mutual(3, 4);
         String matchId = consent.read(1, pair[0]).matchId;
@@ -167,6 +170,7 @@ class RendezvousBlockIntegrationTest {
     }
 
     @Test void reverseBlockStopsThePairAndANonPartnerDoesNot() {
+        integration = real;
         String[] pair = mutual(1, 2);
         String[] other = mutual(3, 4);
         String matchId = consent.read(1, pair[0]).matchId;
@@ -183,6 +187,7 @@ class RendezvousBlockIntegrationTest {
         assertNotNull(consent.read(6, live[1]).publicPlace);
     }
 
+    /** Three-arg constructor selects guardStop, which calls stopBlockedPair, not terminateCurrentMatch. */
     @Test void legacyAdapterStillStopsInsideTheGuard() {
         String[] pair = mutual(8, 9);
         String matchId = consent.read(8, pair[0]).matchId;
@@ -193,7 +198,22 @@ class RendezvousBlockIntegrationTest {
                 Integer.class));
     }
 
+    @Test void realTerminateRollsBackWhenTheReservationIsCorrupt() {
+        String[] ids = mutual(1, 2);
+        String matchId = consent.read(1, ids[0]).matchId;
+        assertEquals("W16_INVALID_BLOCK", assertThrows(IllegalArgumentException.class, () -> real.block(block(0, 2))).getMessage());
+        assertEquals("W16_INVALID_BLOCK", assertThrows(IllegalArgumentException.class, () -> real.block(block(1, -5L))).getMessage());
+        assertStillLive(matchId);
+        jdbc.update("UPDATE w16_rendezvous_match SET first_ticket=? WHERE id=?", "corrupt-ticket", matchId);
+        Rejection corrupt = assertThrows(Rejection.class, () -> real.block(block(1, 2)));
+        assertEquals("CORRUPT_RESERVATION", corrupt.getCode());
+        assertEquals(0, count("im_block"));
+        assertEquals("MUTUAL_ACCEPTED", state(matchId));
+        assertEquals(2, count("w16_match_reservation"));
+    }
+
     @Test void blockRacesAcceptAndProposeWithoutAnActivePair() throws Exception {
+        integration = real;
         View a = consent.join(6, "pool", "v1", 100_000);
         View b = consent.join(7, "pool", "v1", 100_000);
         consent.propose(a.ticketId, b.ticketId, "public-place");
