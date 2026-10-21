@@ -67,7 +67,7 @@ function usesLoginPageFactory(js, entryFile, masked = S.maskNonCode(js)) {
     for (const binding of bindings.split(',')) {
       const parsed = /^\s*([\w$]+)(?:\s*:\s*([\w$]+))?\s*$/.exec(binding);
       if (!parsed || parsed[1] !== exported) continue;
-      const local = (parsed[2] || parsed[1]).replace(/\$/g, '\\function classify(route) {');
+      const local = (parsed[2] || parsed[1]).replace(/\$/g, () => '\\$');
       if (new RegExp('\\bPage\\s*\\(\\s*' + local + '\\s*\\(').test(masked)) return true;
     }
   }

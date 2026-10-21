@@ -87,8 +87,12 @@ test('只认实际用于Page的已核实factory依赖，允许别名和等价相
   const file = path.join(ROOT, 'subpackageTools/example/index.js')
   for (const source of [
     "const { page } = require('../cloud-ten-runtime'); Page(page({}));",
+    "const { page: make$page } = require('../cloud-ten-runtime'); Page(make$page({}));",
+    "const { page: $page } = require('../cloud-ten-runtime'); Page($page({}));",
     "const { page: makePage } = require('../cloud-ten-runtime.js'); Page(makePage({}));",
     "const { runtime } = require('../lib/runtime'); Page(runtime('goals', {}));",
+    "const { runtime: make$runtime } = require('../lib/runtime'); Page(make$runtime('goals', {}));",
+    "const { runtime: $runtime } = require('../lib/runtime'); Page($runtime('goals', {}));",
     "const { runtime: makePage } = require('../lib/../lib/runtime.js'); Page(makePage('goals', {}));",
   ]) assert.equal(usesLoginPageFactory(source, file), true, source)
 })
@@ -98,6 +102,10 @@ test('合法guest page/factory、未使用导入、同名其它模块及注释�
   const { ROOT } = require('../../scripts/lib/xcx-scan')
   const file = path.join(ROOT, 'subpackageTools/example/index.js')
   for (const source of [
+    "const { page: $page } = require('../guest-runtime'); Page($page({}));",
+    "const { runtime: make$runtime } = require('../lib/guest-runtime'); Page(make$runtime('public', {}));",
+    "const { storage: $page } = require('../cloud-ten-runtime'); Page($page({}));",
+    "const { page: $page } = require('../cloud-ten-runtime'); Page({});",
     'Page({ data: { title: "公开说明" } });',
     "const { page } = require('../guest-runtime'); Page(page({}));",
     "const { runtime } = require('../lib/guest-runtime'); Page(runtime('public', {}));",
