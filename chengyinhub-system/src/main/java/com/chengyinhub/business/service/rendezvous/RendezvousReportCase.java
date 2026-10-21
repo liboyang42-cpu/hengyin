@@ -7,8 +7,8 @@ import java.security.NoSuchAlgorithmException;
 /** Reporter-visible receipt and the case row behind it.
  * The receipt has no counterpart, place, clue, or evidence body. */
 public final class RendezvousReportCase {
-    public enum State { LOCAL_INTAKE, SENT_TO_REVIEW, RESOLVED }
-    public enum ReviewConnection { NOT_CONNECTED, AMBIGUOUS, ACCEPTED }
+    public enum State { LOCAL_INTAKE, UNKNOWN, SENT_TO_REVIEW, RESOLVED }
+    public enum ReviewConnection { NOT_CONNECTED, AMBIGUOUS, UNKNOWN, ACCEPTED }
     public static final String EVIDENCE_TICKET_REF = "TICKET_REF";
 
     private RendezvousReportCase() {}

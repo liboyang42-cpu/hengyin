@@ -232,31 +232,93 @@ class RendezvousReportIntakeTest {
         assertHidden(read);
     }
 
-    @Test void reviewTimeoutOrEarlyResolutionStaysLocal() {
+    @Test void earlyResolutionDoesNotBecomeResolved() {
         String[] ids = mutual();
         review.submitThrows = true;
         Receipt timedOut = intake.intake(1, "slow", ids[0], EVIDENCE_TICKET_REF);
-        assertLocal(timedOut, "slow", ids[0]);
+        assertEquals("UNKNOWN", timedOut.state);
+        assertEquals("UNKNOWN", timedOut.reviewConnection);
+        assertNull(timedOut.reviewRef);
         review.submitThrows = false;
         review.submitAnswer = ReviewAnswer.ambiguous();
         Receipt ambiguous = intake.intake(1, "unknown", ids[0], EVIDENCE_TICKET_REF);
-        assertEquals("LOCAL_INTAKE", ambiguous.state);
+        assertEquals("UNKNOWN", ambiguous.state);
         assertEquals("AMBIGUOUS", ambiguous.reviewConnection);
         assertNull(ambiguous.reviewRef);
         assertNull(ambiguous.dispositionCode);
         review.submitAnswer = ReviewAnswer.resolved("RECORDED");
         Receipt skipped = intake.intake(1, "skip", ids[0], EVIDENCE_TICKET_REF);
-        assertEquals("LOCAL_INTAKE", skipped.state);
+        assertEquals("UNKNOWN", skipped.state);
         assertNull(skipped.dispositionCode);
         review.submitAnswer = ReviewAnswer.accepted(" ");
         Receipt blank = intake.intake(1, "blank", ids[0], EVIDENCE_TICKET_REF);
-        assertEquals("LOCAL_INTAKE", blank.state);
+        assertEquals("UNKNOWN", blank.state);
         assertNull(blank.reviewRef);
         review.statusAnswer = ReviewAnswer.resolved("RECORDED");
         Receipt refreshed = intake.refresh(1, "slow");
-        assertEquals("LOCAL_INTAKE", refreshed.state);
+        assertEquals("UNKNOWN", refreshed.state);
         assertNull(refreshed.dispositionCode);
         assertEquals("NOT_FOUND", assertThrows(Rejection.class, () -> intake.read(2, "slow")).getCode());
+    }
+
+    @Test void replayAfterAmbiguousDoesNotSubmitAgain() {
+        String[] ids = mutual();
+        review.submitAnswer = ReviewAnswer.ambiguous();
+        Receipt first = intake.intake(1, "amb", ids[0], EVIDENCE_TICKET_REF);
+        assertEquals("UNKNOWN", first.state);
+        assertEquals("AMBIGUOUS", first.reviewConnection);
+        assertEquals(1, review.submits);
+        review.submitAnswer = ReviewAnswer.accepted("second-side-effect");
+        review.statusAnswer = ReviewAnswer.notConnected();
+        Receipt again = intake.intake(1, "amb", ids[0], EVIDENCE_TICKET_REF);
+        assertEquals(first.caseId, again.caseId);
+        assertEquals(1, review.submits);
+        assertEquals(1, review.statuses);
+        assertEquals("UNKNOWN", again.state);
+        assertEquals("AMBIGUOUS", again.reviewConnection);
+        assertNull(again.reviewRef);
+    }
+
+    @Test void replayAfterTimeoutDoesNotSubmitAgain() {
+        String[] ids = mutual();
+        review.submitThrows = true;
+        Receipt first = intake.intake(1, "slow", ids[0], EVIDENCE_TICKET_REF);
+        assertEquals("UNKNOWN", first.state);
+        assertEquals("UNKNOWN", first.reviewConnection);
+        assertNull(first.reviewRef);
+        assertEquals(1, review.submits);
+        review.submitThrows = false;
+        review.submitAnswer = ReviewAnswer.accepted("late");
+        review.statusThrows = true;
+        Receipt again = intake.intake(1, "slow", ids[0], EVIDENCE_TICKET_REF);
+        assertEquals(first.caseId, again.caseId);
+        assertEquals(1, review.submits);
+        assertEquals(1, review.statuses);
+        assertEquals("UNKNOWN", again.state);
+        assertNull(again.reviewRef);
+        assertNull(again.dispositionCode);
+    }
+
+    @Test void replayAfterLocalAcceptUpdateFailsDoesNotSubmitAgain() {
+        String[] ids = mutual();
+        RendezvousReportCaseMapper real = session.getMapper(RendezvousReportCaseMapper.class);
+        RendezvousReportIntake failing = new RendezvousReportIntake(ISOLATED_PERSISTENCE_EVALUATION, session, manager, CLOCK,
+                new SentUpdateFails(real), consent, review);
+        review.submitAnswer = ReviewAnswer.accepted("rev-9");
+        Receipt first = failing.intake(1, "lost-write", ids[0], EVIDENCE_TICKET_REF);
+        assertEquals("UNKNOWN", first.state);
+        assertEquals("UNKNOWN", first.reviewConnection);
+        assertNull(first.reviewRef);
+        assertEquals(1, review.submits);
+        assertEquals(0, jdbc.queryForObject("SELECT COUNT(*) FROM w16_report_case WHERE review_ref IS NOT NULL", Integer.class));
+        review.submitAnswer = ReviewAnswer.accepted("other");
+        review.statusAnswer = ReviewAnswer.notConnected();
+        Receipt again = failing.intake(1, "lost-write", ids[0], EVIDENCE_TICKET_REF);
+        assertEquals(first.caseId, again.caseId);
+        assertEquals(1, review.submits);
+        assertEquals(1, review.statuses);
+        assertEquals("UNKNOWN", again.state);
+        assertNull(again.reviewRef);
     }
 
     @Test void sentAndResolvedStayDistinctWhenAReviewDoubleAnswers() {
@@ -346,14 +408,31 @@ class RendezvousReportIntakeTest {
     static final class ScriptedReview implements ReviewPort {
         ReviewAnswer submitAnswer = ReviewAnswer.notConnected();
         ReviewAnswer statusAnswer = ReviewAnswer.notConnected();
-        boolean submitThrows;
-        int submits;
+        boolean submitThrows, statusThrows;
+        int submits, statuses;
         public ReviewAnswer submit(String caseId, String requestId) {
             submits++;
             if (submitThrows) throw new IllegalStateException("REVIEW_TIMEOUT");
             return submitAnswer;
         }
-        public ReviewAnswer status(String caseId, String requestId) { return statusAnswer; }
+        public ReviewAnswer status(String caseId, String requestId) {
+            statuses++;
+            if (statusThrows) throw new IllegalStateException("STATUS_TIMEOUT");
+            return statusAnswer;
+        }
+    }
+
+    /** The accept write fails. A following UNKNOWN write is allowed through. */
+    static final class SentUpdateFails implements RendezvousReportCaseMapper {
+        private final RendezvousReportCaseMapper delegate;
+        SentUpdateFails(RendezvousReportCaseMapper delegate) { this.delegate = delegate; }
+        public RendezvousReportCase.Row find(long reporterId, String requestId) { return delegate.find(reporterId, requestId); }
+        public int insert(RendezvousReportCase.Row row) { return delegate.insert(row); }
+        public int updateReview(String caseId, long reporterId, String expectedState, String state, String reviewConnection,
+                                String reviewRef, String dispositionCode) {
+            if ("SENT_TO_REVIEW".equals(state)) throw new IllegalStateException("REVIEW_STORE_FAILED");
+            return delegate.updateReview(caseId, reporterId, expectedState, state, reviewConnection, reviewRef, dispositionCode);
+        }
     }
 
     static final class InsertFails implements RendezvousReportCaseMapper {

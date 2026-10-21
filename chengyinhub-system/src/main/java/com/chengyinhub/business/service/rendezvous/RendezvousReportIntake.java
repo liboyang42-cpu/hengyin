@@ -86,6 +86,7 @@ public final class RendezvousReportIntake {
         text(ticketId);
         if (!EVIDENCE_TICKET_REF.equals(evidenceKind)) throw new Rejection("INVALID_INPUT");
         Receipt stored = store.transaction(tx -> persist(tx, reporter, requestId, ticketId, evidenceKind));
+        if (State.UNKNOWN.name().equals(stored.state)) return applyStatus(reporter, stored);
         if (!State.LOCAL_INTAKE.name().equals(stored.state)) return stored;
         return attemptSubmit(reporter, stored);
     }
@@ -102,9 +103,13 @@ public final class RendezvousReportIntake {
         });
     }
 
-    /** One explicit review read. Does not schedule itself and does not invent a deadline. */
+    /** One explicit review read. Does not schedule itself and does not invent a deadline. Does not submit. */
     public Receipt refresh(long reporter, String requestId) {
-        Receipt current = read(reporter, requestId);
+        return applyStatus(reporter, read(reporter, requestId));
+    }
+
+    /** Status only. Used for refresh and for a replay whose submit was already attempted. */
+    private Receipt applyStatus(long reporter, Receipt current) {
         ReviewAnswer answer;
         try {
             answer = review.status(current.caseId, current.requestId);
@@ -113,13 +118,13 @@ public final class RendezvousReportIntake {
         }
         if (answer == null || answer.kind == null || answer.kind == ReviewAnswer.Kind.NOT_CONNECTED) return current;
         if (answer.kind == ReviewAnswer.Kind.AMBIGUOUS) {
-            if (!State.LOCAL_INTAKE.name().equals(current.state)) return current;
-            return storeReview(reporter, current, State.LOCAL_INTAKE.name(), State.LOCAL_INTAKE.name(),
+            if (!awaitingAccept(current.state)) return current;
+            return storeReview(reporter, current, current.state, State.UNKNOWN.name(),
                     ReviewConnection.AMBIGUOUS.name(), null, null);
         }
         if (answer.kind == ReviewAnswer.Kind.ACCEPTED) {
-            if (!State.LOCAL_INTAKE.name().equals(current.state) || !refOk(answer.reviewRef)) return current;
-            return storeReview(reporter, current, State.LOCAL_INTAKE.name(), State.SENT_TO_REVIEW.name(),
+            if (!awaitingAccept(current.state) || !refOk(answer.reviewRef)) return current;
+            return storeReview(reporter, current, current.state, State.SENT_TO_REVIEW.name(),
                     ReviewConnection.ACCEPTED.name(), answer.reviewRef, null);
         }
         if (answer.kind == ReviewAnswer.Kind.RESOLVED
@@ -176,15 +181,30 @@ public final class RendezvousReportIntake {
         try {
             answer = review.submit(current.caseId, current.requestId);
         } catch (RuntimeException failed) {
-            return current;
+            return markUnknown(reporter, current);
         }
         if (answer == null || answer.kind == null || answer.kind == ReviewAnswer.Kind.NOT_CONNECTED) return current;
         if (answer.kind == ReviewAnswer.Kind.ACCEPTED && refOk(answer.reviewRef)) {
-            return storeReview(reporter, current, State.LOCAL_INTAKE.name(), State.SENT_TO_REVIEW.name(),
+            Receipt stored = storeReview(reporter, current, State.LOCAL_INTAKE.name(), State.SENT_TO_REVIEW.name(),
                     ReviewConnection.ACCEPTED.name(), answer.reviewRef, null);
+            if (State.SENT_TO_REVIEW.name().equals(stored.state)) return stored;
+            return markUnknown(reporter, current);
         }
-        return storeReview(reporter, current, State.LOCAL_INTAKE.name(), State.LOCAL_INTAKE.name(),
-                ReviewConnection.AMBIGUOUS.name(), null, null);
+        return markUnknown(reporter, current, ReviewConnection.AMBIGUOUS.name());
+    }
+
+    /** Records that submit already ran. A later intake of this case checks status and does not submit. */
+    private Receipt markUnknown(long reporter, Receipt current) {
+        return markUnknown(reporter, current, ReviewConnection.UNKNOWN.name());
+    }
+
+    private Receipt markUnknown(long reporter, Receipt current, String connection) {
+        Receipt marked = storeReview(reporter, current, State.LOCAL_INTAKE.name(), State.UNKNOWN.name(), connection, null, null);
+        return State.UNKNOWN.name().equals(marked.state) ? marked : current;
+    }
+
+    private static boolean awaitingAccept(String state) {
+        return State.LOCAL_INTAKE.name().equals(state) || State.UNKNOWN.name().equals(state);
     }
 
     private Receipt storeReview(long reporter, Receipt current, String expectedState, String nextState,

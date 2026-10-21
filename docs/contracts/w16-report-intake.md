@@ -24,15 +24,16 @@
 
 ## 状态
 
-三个状态分开，不能跳步，也不能把后一个状态当成前一个的别名。
+四个状态分开，不能跳步，也不能把后一个状态当成前一个的别名。
 
 | state | 含义 | reviewConnection | reviewRef | dispositionCode |
 | --- | --- | --- | --- | --- |
-| `LOCAL_INTAKE` | 本地已受理。同一守卫事务里已停止该对这次接头联系，回执已提交。 | `NOT_CONNECTED` 或 `AMBIGUOUS` | 空 | 空 |
-| `SENT_TO_REVIEW` | 真实审核端口返回了接受，并且带了非空 `reviewRef`。 | `ACCEPTED` | 端口给的不透明引用 | 空 |
+| `LOCAL_INTAKE` | 本地已受理。同一守卫事务里已停止该对这次接头联系，回执已提交。还没有一次有结果的 submit。 | `NOT_CONNECTED` | 空 | 空 |
+| `UNKNOWN` | 已经调用过一次 submit，结果没有落成已保存的接受。回放只核对 status，不再 submit。 | `UNKNOWN` 或 `AMBIGUOUS` | 空 | 空 |
+| `SENT_TO_REVIEW` | 真实审核端口返回了接受，并且带了非空 `reviewRef`，本地已写下。 | `ACCEPTED` | 端口给的不透明引用 | 空 |
 | `RESOLVED` | 此前已经是 `SENT_TO_REVIEW`，端口随后给了符合字面规则的处置码。 | `ACCEPTED` | 保持原引用 | 端口给的码 |
 
-`LOCAL_INTAKE` 不是已送审核。`AMBIGUOUS`（含端口超时、抛错、接受但没有引用、在本地受理阶段直接返回已处置）都留在 `LOCAL_INTAKE`，不记成已送审核或已处置。处置码只保存，不解释成封禁，不触发处罚。
+`LOCAL_INTAKE` 不是已送审核。`UNKNOWN` 也不是已送审核，更不是已处置。端口超时、抛错、含糊、接受但没有引用、在还没送到审核时直接返回已处置，都记成 `UNKNOWN`。对方接受但本地没有写成 `SENT_TO_REVIEW` 时，同样记成 `UNKNOWN`，不保留那个没写上的引用。处置码只保存，不解释成封禁，不触发处罚。`RESOLVED` 不能从 `LOCAL_INTAKE` 或 `UNKNOWN` 直接跳来。
 
 ## 错误
 
@@ -69,6 +70,25 @@ terminateCurrent(tx, reporter, reported, ticketId, Termination.REPORT, now)
 审核端口生产装配固定为 `NotConnectedReview`。它不返回引用，也不返回处置码。`connected(...)` 只接上 A 的停止，审核仍是这个未接通实现。因此生产回执停在 `LOCAL_INTAKE` / `NOT_CONNECTED`。`SENT_TO_REVIEW` 与 `RESOLVED` 只有测试里换上的审核替身才能到达，生产路径到不了。
 
 HTTP 控制器 `ApiRendezvousReportController` **不在本树中**。没有 Bean，没有 profile，没有菜单，没有匿名白名单。上面的路径不是现有 API。
+
+## 审核幂等合同（真实端口尚未接通）
+
+相同 `caseId` 不等于外部已经去重。生产端口现在没有副作用。未接通时的再次 `submit` 不能说成已经发生了外部重复，也不能说成端到端已经去重。
+
+将来若接通真实审核，该端口必须把 `(caseId, requestId)` 当作同一次移交：
+
+- `submit(caseId, requestId)` 再次出现时，返回这一次移交的原结果，不另开一单。
+- `status(caseId, requestId)` 只核对这一次移交，不另开一单，可以重复调用。
+- 超时不证明对方没收到。端口不能因为“没见过这次调用”就新开一单。
+
+本进程只保证下面这些，并且只在本地行写成功时成立：
+
+- 新案件在回执提交后调用一次 `submit`。
+- 返回 `NOT_CONNECTED` 时不改状态。这是未接通，不是一次有结果的尝试。同键回放仍可能再调用 `submit`。生产实现没有外部副作用。这不是端到端去重。
+- `submit` 得到含糊、抛错（含超时）、无引用的接受、或过早的已处置：状态改为 `UNKNOWN`。之后同键回放只调用 `status`，不再 `submit`。
+- 对方接受且引用合法，但本地没有写成 `SENT_TO_REVIEW`：再写一笔 `UNKNOWN`，不留下 `reviewRef`。写成功之后，回放只调用 `status`。
+- `UNKNOWN` 上的 `status` 若给出带合法引用的接受，可以进入 `SENT_TO_REVIEW`。这仍是核对，不是第二次 `submit`。
+- `UNKNOWN` 这一笔如果也写失败，行会留在 `LOCAL_INTAKE`。那种失败没有被记成已去重。
 
 ## 不在本线
 
