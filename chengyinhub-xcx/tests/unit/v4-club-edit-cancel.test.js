@@ -13,10 +13,11 @@ function mount(options) {
   let pageDef, compDef, editor
   const requests = []
   const backs = []
-  global.getApp = () => ({ globalData: {}, sendRequest(r) { requests.push(r) }, getAuthorization: () => 'Bearer t' })
+  global.getApp = () => ({ globalData: {}, sendRequest(r) { requests.push(r) }, getAuthorization: () => 'Bearer t', getUserID: () => '9' })
   global.Page = (d) => { pageDef = d }
   global.Component = (d) => { compDef = d }
-  global.wx = { navigateBack(o) { backs.push(o || {}) }, switchTab() {}, showToast() {}, navigateTo() {} }
+  const localDrafts = {}
+  global.wx = { getStorageSync: key => localDrafts[key], setStorageSync: (key, value) => { localDrafts[key] = value }, removeStorageSync: key => { delete localDrafts[key] }, navigateBack(o) { backs.push(o || {}) }, switchTab() {}, showToast() {}, navigateTo() {} }
   for (const file of ['pages/club/edit/index.js', 'components/cy/scene-club-edit/index.js']) {
     const abs = path.join(ROOT, file)
     delete require.cache[require.resolve(abs)]
@@ -67,6 +68,9 @@ test('编辑后返回 →「继续编辑」:不离页、草稿原样保留、不
 
   // 继续编辑后仍是同一个草稿,可以正常保存
   h.editor.save()
+  const check = h.requests[h.requests.length - 1]
+  assert.equal(check.url, '/api/club/detail')
+  check.success({ code: 200, data: { id: 7001, name: '原名', city: '上海', isOwner: true } })
   const save = h.requests.find((r) => r.url === '/api/club/update-mine')
   assert.equal(JSON.parse(save.data).name, '新名字')
 })
