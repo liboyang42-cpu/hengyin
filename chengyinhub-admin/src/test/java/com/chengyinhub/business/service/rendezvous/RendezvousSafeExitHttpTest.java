@@ -1,10 +1,5 @@
 package com.chengyinhub.business.service.rendezvous;
 
-import com.chengyinhub.business.service.rendezvous.RendezvousSafeExitPorts.HandoffState;
-import com.chengyinhub.business.service.rendezvous.RendezvousSafeExitPorts.OngoingVerdict;
-import com.chengyinhub.business.service.rendezvous.RendezvousSafeExitPorts.Phase;
-import com.chengyinhub.business.service.rendezvous.RendezvousSafeExitPorts.SoloResult;
-import com.chengyinhub.business.service.rendezvous.RendezvousSafeExitService.Mode;
 import com.chengyinhub.common.core.domain.entity.AppUser;
 import com.chengyinhub.common.core.domain.model.LoginAppUser;
 import com.chengyinhub.web.controller.api.ApiRendezvousExitController;
@@ -14,107 +9,79 @@ import java.util.Collections;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
-/** Standalone MVC for the proposed exit route. No application context and no production bean. */
+/** Standalone MVC. The controller is not registered as a production bean. */
 class RendezvousSafeExitHttpTest {
     private final ObjectMapper json = new ObjectMapper();
-    private RendezvousSafeExitServiceTest.Ports ports;
-    private RendezvousSafeExitServiceTest.Memory memory;
+    private RendezvousExitDatabase db;
     private MockMvc mvc;
 
-    @BeforeEach void setup() {
+    @BeforeEach void setup() throws Exception {
         SecurityContextHolder.clearContext();
-        ports = new RendezvousSafeExitServiceTest.Ports();
-        memory = new RendezvousSafeExitServiceTest.Memory();
-        RendezvousSafeExitService service = new RendezvousSafeExitService(Mode.ISOLATED_CONTRACT_EVALUATION, memory,
-                ports, ports, ports, ports, null, ports, ports.clock);
-        mvc = MockMvcBuilders.standaloneSetup(new ApiRendezvousExitController(service)).build();
+        db = RendezvousExitDatabase.open();
+        mvc = MockMvcBuilders.standaloneSetup(new ApiRendezvousExitController(db.service)).build();
     }
 
-    @AfterEach void cleanup() { SecurityContextHolder.clearContext(); }
+    @AfterEach void cleanup() {
+        SecurityContextHolder.clearContext();
+        if (db != null) db.close();
+    }
+
+    @Test void routeStaysProfileGated() {
+        assertEquals("w16-consent-contract", ApiRendezvousExitController.class.getAnnotation(Profile.class).value()[0]);
+        assertEquals(RendezvousSafeExitService.class, ApiRendezvousExitController.class.getAnnotation(ConditionalOnBean.class).value()[0]);
+    }
 
     @Test void exitThenReadbackStaysIncomplete() throws Exception {
+        RendezvousConsentService.View ticket = db.consent.join(1, "pool", "v1", 100_000);
         authenticate(1);
-        JsonNode exited = response(post("/api/rendezvous/tickets/ticket-1/exit").contentType(MediaType.APPLICATION_JSON)
-                .content("{\"choice\":\"EXIT\"}"), 200).get("data");
-        assertEquals("ticket-1", exited.get("ticketId").asText());
+        JsonNode exited = response(post("/api/rendezvous/tickets/" + ticket.ticketId + "/exit")
+                .contentType(MediaType.APPLICATION_JSON).content("{\"choice\":\"EXIT\"}"), 200).get("data");
         assertEquals("EXIT", exited.get("choice").asText());
         assertFalse(exited.get("completed").asBoolean());
-        JsonNode again = response(get("/api/rendezvous/tickets/ticket-1/exit"), 200).get("data");
-        assertEquals(exited.get("choice").asText(), again.get("choice").asText());
-        assertEquals(1, ports.releases);
-        assertEquals(0, ports.launches);
+        assertFalse(exited.get("soloAllowed").asBoolean());
+        assertEquals("NOT_PUBLISHED", exited.get("handoff").asText());
+        JsonNode again = response(get("/api/rendezvous/tickets/" + ticket.ticketId + "/exit"), 200).get("data");
+        assertEquals("EXIT", again.get("choice").asText());
+        assertFalse(again.get("completed").asBoolean());
+        assertEquals(0, db.count("w16_match_reservation"));
     }
 
-    @Test void soloWithoutAPublishedGoalOrLauncherIsRejected() throws Exception {
+    @Test void soloIsRejectedAndDoesNotRelease() throws Exception {
+        RendezvousConsentService.View[] pair = db.pair();
         authenticate(1);
-        JsonNode denied = response(post("/api/rendezvous/tickets/ticket-1/exit").contentType(MediaType.APPLICATION_JSON)
-                .content("{\"choice\":\"SOLO\"}"), 409);
-        assertEquals("SOLO_GOAL_UNAVAILABLE", denied.get("errorCode").asText());
-        assertEquals(0, memory.rows.size());
-        assertEquals(0, ports.launches);
+        JsonNode denied = response(post("/api/rendezvous/tickets/" + pair[0].ticketId + "/exit")
+                .contentType(MediaType.APPLICATION_JSON).content("{\"choice\":\"SOLO\"}"), 409);
+        assertEquals("SOLO_LAUNCHER_UNAVAILABLE", denied.get("errorCode").asText());
+        assertEquals(2, db.count("w16_match_reservation"));
+        assertEquals(0, db.count("w16_safe_exit"));
     }
 
-    @Test void handoffStatesOtherThanNotStartedRejectSolo() throws Exception {
+    @Test void strayFieldsAndStrangerAreRejected() throws Exception {
+        RendezvousConsentService.View ticket = db.consent.join(1, "pool", "v1", 100_000);
         authenticate(1);
-        ports.verdict = RendezvousSafeExitServiceTest.verdict(Phase.MUTUAL, "match-1");
-        ports.goal = "published-solo-1";
-        ports.answer = HandoffState.UNKNOWN;
-        assertEquals("HANDOFF_UNKNOWN", response(post("/api/rendezvous/tickets/ticket-1/exit").contentType(MediaType.APPLICATION_JSON)
-                .content("{\"choice\":\"SOLO\"}"), 409).get("errorCode").asText());
-        ports.answer = HandoffState.CREATED_JOIN_UNCONFIRMED;
-        assertEquals("HANDOFF_JOIN_UNCONFIRMED", response(post("/api/rendezvous/tickets/ticket-1/exit").contentType(MediaType.APPLICATION_JSON)
-                .content("{\"choice\":\"SOLO\"}"), 409).get("errorCode").asText());
-        ports.answer = HandoffState.COMPLETE;
-        assertEquals("HANDOFF_COMPLETE", response(post("/api/rendezvous/tickets/ticket-1/exit").contentType(MediaType.APPLICATION_JSON)
-                .content("{\"choice\":\"SOLO\"}"), 409).get("errorCode").asText());
-        assertEquals(0, ports.launches);
-        assertEquals(0, memory.rows.size());
-    }
-
-    @Test void authoritativeResultIsTheOnlyCompletion() throws Exception {
-        ports.verdict = RendezvousSafeExitServiceTest.verdict(Phase.ONE_SIDED, "match-1");
-        ports.answer = HandoffState.NOT_STARTED;
-        ports.goal = "published-solo-1";
-        ports.launcherPresent = true;
-        RendezvousSafeExitService service = new RendezvousSafeExitService(Mode.ISOLATED_CONTRACT_EVALUATION, memory,
-                ports, ports, ports, ports, ports, ports, ports.clock);
-        mvc = MockMvcBuilders.standaloneSetup(new ApiRendezvousExitController(service)).build();
-        authenticate(1);
-        JsonNode started = response(post("/api/rendezvous/tickets/ticket-1/exit").contentType(MediaType.APPLICATION_JSON)
-                .content("{\"choice\":\"SOLO\"}"), 200).get("data");
-        assertEquals("STARTED", started.get("soloState").asText());
-        assertFalse(started.get("completed").asBoolean());
-        assertEquals("published-solo-1", started.get("goalRef").asText());
-        ports.status = SoloResult.Status.COMPLETED;
-        JsonNode done = response(get("/api/rendezvous/tickets/ticket-1/exit"), 200).get("data");
-        assertTrue(done.get("completed").asBoolean());
-        assertEquals("COMPLETED", done.get("soloState").asText());
-        assertEquals(1, ports.launches);
-        assertFalse(done.has("peer"));
-        assertFalse(done.has("teamId"));
-    }
-
-    @Test void strayFieldsPenaltyAndStrangerAreRejected() throws Exception {
-        authenticate(1);
-        assertEquals("INVALID_REQUEST", response(post("/api/rendezvous/tickets/ticket-1/exit").contentType(MediaType.APPLICATION_JSON)
+        String path = "/api/rendezvous/tickets/" + ticket.ticketId + "/exit";
+        assertEquals("INVALID_REQUEST", response(post(path).contentType(MediaType.APPLICATION_JSON)
                 .content("{\"choice\":\"EXIT\",\"penalty\":1}"), 400).get("errorCode").asText());
-        assertEquals("INVALID_REQUEST", response(post("/api/rendezvous/tickets/ticket-1/exit?difficulty=1").contentType(MediaType.APPLICATION_JSON)
+        assertEquals("INVALID_REQUEST", response(post(path + "?difficulty=1").contentType(MediaType.APPLICATION_JSON)
                 .content("{\"choice\":\"EXIT\"}"), 400).get("errorCode").asText());
-        assertEquals(0, ports.releases);
-        response(post("/api/rendezvous/tickets/ticket-1/exit").contentType(MediaType.APPLICATION_JSON).content("{\"choice\":\"EXIT\"}"), 200);
+        assertEquals(0, db.count("w16_safe_exit"));
+        response(post(path).contentType(MediaType.APPLICATION_JSON).content("{\"choice\":\"EXIT\"}"), 200);
         authenticate(2);
-        assertEquals("NOT_FOUND", response(get("/api/rendezvous/tickets/ticket-1/exit"), 404).get("errorCode").asText());
+        assertEquals("NOT_FOUND", response(get(path), 404).get("errorCode").asText());
         SecurityContextHolder.clearContext();
-        assertEquals("AUTH_REQUIRED", response(post("/api/rendezvous/tickets/ticket-1/exit").contentType(MediaType.APPLICATION_JSON)
+        assertEquals("AUTH_REQUIRED", response(post(path).contentType(MediaType.APPLICATION_JSON)
                 .content("{\"choice\":\"EXIT\"}"), 401).get("errorCode").asText());
     }
 

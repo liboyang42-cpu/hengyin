@@ -1,44 +1,25 @@
 package com.chengyinhub.business.service.rendezvous;
 
-import com.chengyinhub.business.service.rendezvous.RendezvousSafeExitPorts.HandoffState;
-import com.chengyinhub.business.service.rendezvous.RendezvousSafeExitPorts.HandoffStateQuery;
-import com.chengyinhub.business.service.rendezvous.RendezvousSafeExitPorts.LaunchReceipt;
-import com.chengyinhub.business.service.rendezvous.RendezvousSafeExitPorts.CurrentTermination;
-import com.chengyinhub.business.service.rendezvous.RendezvousSafeExitPorts.OngoingVerdict;
-import com.chengyinhub.business.service.rendezvous.RendezvousSafeExitPorts.ParticipantVerification;
-import com.chengyinhub.business.service.rendezvous.RendezvousSafeExitPorts.Phase;
-import com.chengyinhub.business.service.rendezvous.RendezvousSafeExitPorts.Termination;
-import com.chengyinhub.business.service.rendezvous.RendezvousSafeExitPorts.SoloGoalCatalog;
-import com.chengyinhub.business.service.rendezvous.RendezvousSafeExitPorts.SoloLauncher;
-import com.chengyinhub.business.service.rendezvous.RendezvousSafeExitPorts.SoloResult;
-import com.chengyinhub.business.service.rendezvous.RendezvousSoloContinuation.Plan;
 import java.time.Clock;
 import java.util.Objects;
-import java.util.function.Function;
 import static com.chengyinhub.business.service.rendezvous.RendezvousConsentService.MatchState;
+import static com.chengyinhub.business.service.rendezvous.RendezvousConsentService.OngoingVerdict;
 import static com.chengyinhub.business.service.rendezvous.RendezvousConsentService.Rejection;
+import static com.chengyinhub.business.service.rendezvous.RendezvousConsentService.Store;
+import static com.chengyinhub.business.service.rendezvous.RendezvousConsentService.Termination;
 import static com.chengyinhub.business.service.rendezvous.RendezvousConsentService.TicketState;
-import static com.chengyinhub.business.service.rendezvous.RendezvousConsentService.Transaction;
 
 /**
  * Safe exit for one authenticated participant. Not a Spring bean.
- * Solo start runs only when C's {@code handoffStateFor} returns NOT_STARTED and both the
- * published solo goal and the authoritative launcher were supplied. Completion is never inferred.
- * No team lifecycle change, reward, penalty, or difficulty decision.
+ * Seat release and the exit row share the consent guard transaction.
+ * C's {@code handoffStateFor} is not in this tree, and no solo launcher is connected.
+ * {@code completed} is therefore never true. This service does not touch team rows.
  */
 public final class RendezvousSafeExitService {
     public enum Mode { DISABLED, ISOLATED_CONTRACT_EVALUATION }
-
-    public interface Store {
-        <T> T transaction(Function<Tx, T> work);
-    }
-
-    /** Consent reads and writes fail closed until A's guard transaction is bound. */
-    public interface Tx extends Transaction {
-        ExitRow find(String ticketId);
-        void insert(ExitRow row);
-        void markLaunch(ExitRow row);
-    }
+    public enum Phase { WAITING, ONE_SIDED, MUTUAL }
+    /** Not one of C's handoff states. The query is not on this tree. */
+    static final String HANDOFF_NOT_PUBLISHED = "NOT_PUBLISHED";
 
     public static final class ExitRow {
         public String ticketId;
@@ -53,23 +34,6 @@ public final class RendezvousSafeExitService {
         public String launchReceipt;
         public int resumed;
         public long createdAt;
-
-        public ExitRow copy() {
-            ExitRow next = new ExitRow();
-            next.ticketId = ticketId;
-            next.actorId = actorId;
-            next.matchId = matchId;
-            next.choice = choice;
-            next.phase = phase;
-            next.handoff = handoff;
-            next.soloState = soloState;
-            next.soloBlock = soloBlock;
-            next.goalRef = goalRef;
-            next.launchReceipt = launchReceipt;
-            next.resumed = resumed;
-            next.createdAt = createdAt;
-            return next;
-        }
     }
 
     public static final class View {
@@ -94,33 +58,18 @@ public final class RendezvousSafeExitService {
         }
     }
 
-    private static final class Claim {
-        final ExitRow row;
-        final boolean launch;
-        Claim(ExitRow row, boolean launch) { this.row = row; this.launch = launch; }
-    }
-
     private final Mode mode;
-    private final Store store;
-    private final ParticipantVerification participants;
-    private final CurrentTermination termination;
-    private final HandoffStateQuery handoff;
-    private final SoloGoalCatalog catalog;
-    private final SoloLauncher launcher;
-    private final SoloResult results;
+    private final Store guard;
+    private final RendezvousConsentService consent;
+    private final RendezvousSafeExitStore exits;
     private final Clock clock;
 
-    public RendezvousSafeExitService(Mode mode, Store store, ParticipantVerification participants,
-                                     CurrentTermination termination, HandoffStateQuery handoff,
-                                     SoloGoalCatalog catalog, SoloLauncher launcher, SoloResult results, Clock clock) {
+    public RendezvousSafeExitService(Mode mode, Store guard, RendezvousConsentService consent,
+                                     RendezvousSafeExitStore exits, Clock clock) {
         this.mode = Objects.requireNonNull(mode);
-        this.store = Objects.requireNonNull(store);
-        this.participants = Objects.requireNonNull(participants);
-        this.termination = Objects.requireNonNull(termination);
-        this.handoff = handoff;
-        this.catalog = catalog;
-        this.launcher = launcher;
-        this.results = results;
+        this.guard = Objects.requireNonNull(guard);
+        this.consent = Objects.requireNonNull(consent);
+        this.exits = Objects.requireNonNull(exits);
         this.clock = Objects.requireNonNull(clock);
     }
 
@@ -128,13 +77,14 @@ public final class RendezvousSafeExitService {
         enabled();
         actor(actor);
         ticket(ticketId);
-        return store.transaction(tx -> {
-            ExitRow existing = tx.find(ticketId);
+        return guard.transaction(tx -> {
+            ExitRow existing = exits.find(ticketId);
             if (existing != null) {
                 if (existing.actorId != actor) throw new Rejection("NOT_FOUND");
                 return view(existing);
             }
-            return openView(tx, actor, ticketId);
+            OngoingVerdict verdict = consent.verifyParticipants(tx, actor, ticketId, null, null, false, clock.millis());
+            return open(ticketId, phase(verdict));
         });
     }
 
@@ -143,161 +93,64 @@ public final class RendezvousSafeExitService {
         actor(actor);
         ticket(ticketId);
         if (!"EXIT".equals(choice) && !"SOLO".equals(choice)) throw new Rejection("INVALID_INPUT");
-        Claim claim = store.transaction(tx -> claim(tx, actor, ticketId, choice));
-        if (!claim.launch) return view(claim.row);
-        return finishLaunch(actor, claim.row);
-    }
-
-    private View openView(Tx tx, long actor, String ticketId) {
-        OngoingVerdict verdict = participants.verifyParticipants(tx, actor, ticketId, null, null, false, clock.millis());
-        Phase phase = phase(verdict);
-        String matchId = requiredMatch(phase, verdict.matchId);
-        HandoffState state = handoffState(matchId);
-        Plan plan = RendezvousSoloContinuation.plan(state, goal(tx, actor, matchId, state), launcher != null);
-        return new View(ticketId, false, true, plan.start, null, phase.name(), handoffName(state),
-                "NOT_REQUESTED", plan.start ? null : plan.block, plan.start ? plan.goalRef : null,
-                null, false, false);
-    }
-
-    private Claim claim(Tx tx, long actor, String ticketId, String choice) {
-        ExitRow existing = tx.find(ticketId);
-        if (existing != null) {
-            if (existing.actorId != actor) throw new Rejection("NOT_FOUND");
-            if (!choice.equals(existing.choice)) throw new Rejection("EXIT_CONFLICT");
-            return new Claim(existing, false);
-        }
-        long now = clock.millis();
-        OngoingVerdict verdict = participants.verifyParticipants(tx, actor, ticketId, null, null, false, now);
-        Phase phase = phase(verdict);
-        String matchId = requiredMatch(phase, verdict.matchId);
-        HandoffState state = handoffState(matchId);
-        String goalRef = null;
-        if ("SOLO".equals(choice)) {
-            Plan plan = RendezvousSoloContinuation.plan(state, goal(tx, actor, matchId, state), launcher != null);
-            if (!plan.start) throw new Rejection(plan.rejectionCode);
-            goalRef = plan.goalRef;
-        }
-        // A's exit writes the consent rows. Call it before the exit ledger insert so a NOT_FOUND writes nothing.
-        termination.terminateCurrent(tx, actor, null, ticketId, Termination.EXIT, now);
-        ExitRow row = row(ticketId, actor, matchId, choice, phase, state,
-                "SOLO".equals(choice) ? "STARTING" : "NOT_REQUESTED", null, goalRef, null, 0);
-        tx.insert(row);
-        return new Claim(row, "SOLO".equals(choice));
-    }
-
-    private View finishLaunch(long actor, ExitRow claimed) {
-        String receipt = null;
-        int resumed = 0;
-        boolean unknown = false;
-        try {
-            LaunchReceipt got = launcher.startOrResume(actor, claimed.goalRef, claimed.ticketId);
-            if (got == null || !RendezvousSoloContinuation.ref(got.receiptId)) unknown = true;
-            else {
-                receipt = got.receiptId;
-                resumed = got.resumed ? 1 : 0;
+        return guard.transaction(tx -> {
+            ExitRow existing = exits.find(ticketId);
+            if (existing != null) {
+                if (existing.actorId != actor) throw new Rejection("NOT_FOUND");
+                if (!choice.equals(existing.choice)) throw new Rejection("EXIT_CONFLICT");
+                return view(existing);
             }
-        } catch (RuntimeException failed) {
-            unknown = true;
-        }
-        final boolean unresolved = unknown;
-        final String savedReceipt = receipt;
-        final int savedResumed = resumed;
-        ExitRow updated = store.transaction(tx -> {
-            ExitRow current = tx.find(claimed.ticketId);
-            if (current == null || current.actorId != actor) throw new IllegalStateException("W16_EXIT_CLAIM_LOST");
-            if (!"STARTING".equals(current.soloState)) return current;
-            ExitRow next = current.copy();
-            next.soloState = unresolved ? "NOT_STARTED" : "STARTED";
-            next.soloBlock = unresolved ? "LAUNCH_UNKNOWN" : null;
-            next.launchReceipt = unresolved ? null : savedReceipt;
-            next.resumed = unresolved ? 0 : savedResumed;
-            tx.markLaunch(next);
-            return next;
+            long now = clock.millis();
+            OngoingVerdict verdict = consent.verifyParticipants(tx, actor, ticketId, null, null, false, now);
+            Phase phase = phase(verdict);
+            if ("SOLO".equals(choice)) throw new Rejection("SOLO_LAUNCHER_UNAVAILABLE");
+            consent.terminateCurrent(tx, actor, null, ticketId, Termination.EXIT, now);
+            ExitRow row = row(ticketId, actor, verdict.matchId, phase, now);
+            exits.insert(row);
+            return view(row);
         });
-        return view(updated);
     }
 
-    private String goal(Tx tx, long actor, String matchId, HandoffState state) {
-        if (catalog == null || state != HandoffState.NOT_STARTED) return null;
-        return catalog.publishedSoloGoal(tx, actor, matchId);
+    private static View open(String ticketId, Phase phase) {
+        return new View(ticketId, false, true, false, null, phase.name(), HANDOFF_NOT_PUBLISHED,
+                "NOT_REQUESTED", null, null, null, false, false);
     }
 
-    /** No match means handoff never started, so C is not asked and no request id is minted.
-     *  A missing or unrecognized answer is not NOT_STARTED. */
-    private HandoffState handoffState(String matchId) {
-        if (matchId == null) return HandoffState.NOT_STARTED;
-        if (handoff == null) return null;
-        HandoffState state = handoff.handoffStateFor(matchId);
-        if (state == HandoffState.NOT_STARTED || state == HandoffState.UNKNOWN
-                || state == HandoffState.CREATED_JOIN_UNCONFIRMED || state == HandoffState.COMPLETE) return state;
-        return null;
-    }
-
-    private static String handoffName(HandoffState state) {
-        return state == null ? HandoffState.UNKNOWN.name() : state.name();
-    }
-
-    private View view(ExitRow row) {
-        String soloState = row.soloState;
-        String block = row.soloBlock;
-        boolean completed = false;
-        if ("STARTING".equals(soloState)) {
-            soloState = "NOT_STARTED";
-            if (block == null) block = "LAUNCH_UNKNOWN";
-        } else if ("STARTED".equals(row.soloState) && RendezvousSoloContinuation.ref(row.launchReceipt) && results != null) {
-            try {
-                if (RendezvousSoloContinuation.completed(results.read(row.launchReceipt))) {
-                    completed = true;
-                    soloState = "COMPLETED";
-                }
-            } catch (RuntimeException ignored) {
-                completed = false;
-            }
-        }
+    private static View view(ExitRow row) {
         return new View(row.ticketId, true, false, false, row.choice, row.phase, row.handoff,
-                soloState, block, row.goalRef, row.launchReceipt, row.resumed == 1, completed);
+                row.soloState, row.soloBlock, row.goalRef, row.launchReceipt, row.resumed == 1, false);
     }
 
-    private ExitRow row(String ticketId, long actor, String matchId, String choice, Phase phase,
-                        HandoffState state, String soloState, String soloBlock, String goalRef,
-                        String launchReceipt, int resumed) {
+    private static ExitRow row(String ticketId, long actor, String matchId, Phase phase, long now) {
         ExitRow row = new ExitRow();
         row.ticketId = ticketId;
         row.actorId = actor;
         row.matchId = matchId;
-        row.choice = choice;
+        row.choice = "EXIT";
         row.phase = phase.name();
-        row.handoff = handoffName(state);
-        row.soloState = soloState;
-        row.soloBlock = soloBlock;
-        row.goalRef = goalRef;
-        row.launchReceipt = launchReceipt;
-        row.resumed = resumed;
-        row.createdAt = clock.millis();
+        row.handoff = HANDOFF_NOT_PUBLISHED;
+        row.soloState = "NOT_REQUESTED";
+        row.resumed = 0;
+        row.createdAt = now;
         return row;
     }
 
-    /** Reads A's verdict. Does not treat {@code safe=false} as a refused exit. */
+    /** {@code safe=false} does not refuse the exit. Ownership does. */
     private static Phase phase(OngoingVerdict verdict) {
         if (verdict == null || !verdict.owned || verdict.ticketState == null) throw new Rejection("NOT_FOUND");
-        if (verdict.ticketState == TicketState.CANCELLED || verdict.ticketState == TicketState.EXPIRED) throw new Rejection("EXIT_UNAVAILABLE");
+        if (verdict.ticketState == TicketState.CANCELLED || verdict.ticketState == TicketState.EXPIRED) {
+            throw new Rejection("EXIT_UNAVAILABLE");
+        }
         if (verdict.ticketState == TicketState.WAITING) {
             if (verdict.matchId != null) throw new Rejection("EXIT_UNAVAILABLE");
             return Phase.WAITING;
         }
-        if (verdict.ticketState != TicketState.RESERVED && verdict.ticketState != TicketState.ACCEPTED) throw new Rejection("EXIT_UNAVAILABLE");
+        if (verdict.ticketState != TicketState.RESERVED && verdict.ticketState != TicketState.ACCEPTED) {
+            throw new Rejection("EXIT_UNAVAILABLE");
+        }
         if (verdict.mutual || verdict.matchState == MatchState.MUTUAL_ACCEPTED) return Phase.MUTUAL;
         if (verdict.matchState == MatchState.PROPOSED) return Phase.ONE_SIDED;
         throw new Rejection("EXIT_UNAVAILABLE");
-    }
-
-    private static String requiredMatch(Phase phase, String raw) {
-        if (raw == null || raw.isEmpty()) {
-            if (phase == Phase.WAITING) return null;
-            throw new Rejection("EXIT_UNAVAILABLE");
-        }
-        if (!RendezvousSoloContinuation.ref(raw) || phase == Phase.WAITING) throw new Rejection("EXIT_UNAVAILABLE");
-        return raw;
     }
 
     private void enabled() {
@@ -307,6 +160,8 @@ public final class RendezvousSafeExitService {
     private static void actor(long actor) { if (actor <= 0) throw new Rejection("AUTH_REQUIRED"); }
 
     private static void ticket(String value) {
-        if (!RendezvousSoloContinuation.ref(value)) throw new Rejection("INVALID_INPUT");
+        if (value == null || value.isEmpty() || value.length() > 128 || !value.trim().equals(value)) {
+            throw new Rejection("INVALID_INPUT");
+        }
     }
 }
