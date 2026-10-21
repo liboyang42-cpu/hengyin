@@ -1159,6 +1159,71 @@ class PostRestartTest(unittest.TestCase):
             with self.subTest(ttl=ttl), self.assertRaises(ca.post.PostDeployError):
                 ca.restart_alarm('"1"', ttl)
 
+    def test_alarm_reads_exact_db9_argv_and_rejects_default_db_for_either_read(self):
+        import ast
+        tree = ast.parse((_HERE / "chain_acceptance.py").read_text())
+        run = next(node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == "run_post_restart")
+        original = next(node for node in ast.walk(run) if isinstance(node, ast.FunctionDef) and node.name == "alarm")
+        key = "alarm:attempt:monitor.audit.backlog"
+        for omitted in (None, "GET", "PTTL"):
+            node = copy.deepcopy(original)
+            if omitted:
+                call = next(call for call in ast.walk(node) if isinstance(call, ast.Call)
+                            and isinstance(call.func, ast.Name) and call.func.id == "docker"
+                            and any(isinstance(arg, ast.Constant) and arg.value == omitted for arg in call.args))
+                del call.args[3:5]
+            calls = []
+            def docker(*args):
+                calls.append(args)
+                database = args[args.index("-n") + 1] if "-n" in args else "0"
+                return ('"1"\n' if args[-2] == "GET" else "599999\n") if database == "9" else (
+                    "\n" if args[-2] == "GET" else "-2\n")
+            namespace = {"docker": docker, "names": {"redis": "cy-chain-1-1-redis"},
+                         "REDIS_DB": ca.REDIS_DB, "restart_alarm": ca.restart_alarm}
+            exec(compile(ast.fix_missing_locations(ast.Module(body=[node], type_ignores=[])), "<alarm>", "exec"), namespace)
+            if omitted:
+                with self.subTest(omitted=omitted), self.assertRaises(ca.post.PostDeployError):
+                    namespace["alarm"](key)
+            else:
+                self.assertEqual({"value": "1", "ttl_ms": 599999}, namespace["alarm"](key))
+                self.assertEqual([("exec", "cy-chain-1-1-redis", "redis-cli", "-n", "9", command, key)
+                                  for command in ("GET", "PTTL")], calls)
+
+    def test_failure_receipt_keeps_fixed_code_but_never_free_exception_text(self):
+        for error in (ca.post.PostDeployError("restart_monitor_attempt_invalid_ttl"), RuntimeError("PRIVATE_FREE_TEXT")):
+            with self.subTest(error_type=type(error).__name__), tempfile.TemporaryDirectory() as tmp:
+                out = Path(tmp)
+                ca.stage(out, "storage", "PASS")
+                args = ca.argparse.Namespace(out=out, work=out)
+                first = mock.Mock(); first.poll.return_value = 143
+                with mock.patch.object(ca.post, "prepare_restart_effects", side_effect=error):
+                    with self.assertRaises(ca.GateError):
+                        ca.run_post_restart(args, {}, {}, {"server_uuid": POST_UUID}, first, out / "config")
+                stored = ca.read_receipt(out)["stages"]["post_restart"]["result"]
+                self.assertEqual(type(error).__name__, stored["error_type"])
+                if isinstance(error, ca.post.PostDeployError):
+                    self.assertEqual("restart_monitor_attempt_invalid_ttl", stored["error_code"])
+                else:
+                    self.assertNotIn("error_code", stored)
+                    self.assertNotIn("PRIVATE_FREE_TEXT", json.dumps(stored))
+
+    def test_postdeploy_error_codes_only_come_from_literal_call_sites(self):
+        import ast
+        for filename in ("chain_acceptance.py", "chain_postdeploy.py"):
+            tree = ast.parse((_HERE / filename).read_text())
+            parents = {child: node for node in ast.walk(tree) for child in ast.iter_child_nodes(node)}
+            for call in ast.walk(tree):
+                if not isinstance(call, ast.Call): continue
+                name = call.func.id if isinstance(call.func, ast.Name) else call.func.attr if isinstance(call.func, ast.Attribute) else ""
+                if name not in ("require", "PostDeployError"): continue
+                code = call.args[1 if name == "require" else 0]
+                if isinstance(code, ast.Constant) and isinstance(code.value, str): continue
+                parent = call
+                while parent in parents and not isinstance(parent, ast.FunctionDef):
+                    parent = parents[parent]
+                self.assertEqual(("chain_postdeploy.py", "require", "PostDeployError", "code"),
+                                 (filename, parent.name, name, ast.unparse(code)))
+
     def test_alarm_capture_uses_the_strict_decoder_without_rewriting_keys(self):
         import ast
         tree = ast.parse((_HERE / "chain_acceptance.py").read_text())

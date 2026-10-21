@@ -64,6 +64,7 @@ def operator_values(target):
 class PostDeployError(ValueError):
     def __init__(self, message, evidence=None):
         super().__init__(message)
+        self.code = message
         self.evidence = evidence or {}
 
 

@@ -1256,8 +1256,8 @@ def run_post_restart(args, environ, planned, first_proof, first_process, config)
             live()
 
         def alarm(key):
-            value = docker("exec", names["redis"], "redis-cli", "GET", key).strip()
-            ttl = docker("exec", names["redis"], "redis-cli", "PTTL", key).strip()
+            value = docker("exec", names["redis"], "redis-cli", "-n", str(REDIS_DB), "GET", key).strip()
+            ttl = docker("exec", names["redis"], "redis-cli", "-n", str(REDIS_DB), "PTTL", key).strip()
             return restart_alarm(value, ttl)
 
         def invoke(target, automatic=False, settlement_negative=False):
@@ -1334,6 +1334,8 @@ def run_post_restart(args, environ, planned, first_proof, first_process, config)
         result["local_files"] = restart_local_files(args.work)
     except Exception as error:
         failure = type(error).__name__
+        if isinstance(error, post.PostDeployError):
+            result["error_code"] = error.code
     finally:
         if process is not None:
             try:
