@@ -1,3 +1,5 @@
+const reducedMotionBehavior = require('../../../behaviors/reduced-motion.js');
+
 // 统一空态:图 + 主文案 + 副文案 + 可选 CTA。点 CTA 触发 'cta' 事件。
 //
 // ADA 状态族:空 / 错 / 无权限 / 未开始不能继续共用同一张灰色插画。
@@ -38,6 +40,7 @@ const KIND_DEFAULTS = {
 const LEGACY_DEFAULT = { icon: '', glyph: '', title: '暂无内容', sub: '' };
 
 Component({
+  behaviors: [reducedMotionBehavior],
   properties: {
     icon: { type: String, value: '' },
     // title 默认由 '暂无内容' 改为 ''(空 = 未指定),真正的默认值下沉到 KIND_DEFAULTS.empty.title,

@@ -1,3 +1,4 @@
+@import "../../../style/reduced-motion.wxss";
 /* cy-loading-mask · 全屏遮罩 + 居中转圈;遮罩吃掉触摸,防支付/核销期间重复提交
  * 遮罩淡入用 transition;转圈是唯一一组 @keyframes(减动效下停转,改为静态环)。 */
 :host { display: block; }

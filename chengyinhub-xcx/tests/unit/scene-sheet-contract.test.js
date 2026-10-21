@@ -71,10 +71,26 @@ test('negative control: 热区退回 63.992rpx 时必须判红', () => {
   )
 })
 
-test('cy-modal remains the only confirmation container and exposes button semantics', () => {
-  const wxml = read('components/cy/modal/index.wxml')
+function assertModalButtonSemantics(wxml) {
   assert.match(wxml, /bindtap="onCancel"[^>]*aria-role="button"[^>]*aria-label="\{\{cancelText\}\}"/)
-  assert.match(wxml, /bindtap="onConfirm"[^>]*aria-role="button"[^>]*aria-label="\{\{confirmText\}\}"/)
+  assert.match(wxml, /bindtap="onConfirm"[^>]*aria-role="button"[^>]*aria-label="\{\{loading \? '处理中' : confirmText\}\}"[^>]*aria-busy="\{\{loading\}\}"/)
+}
+
+test('cy-modal remains the only confirmation container and exposes button semantics', () => {
+  assertModalButtonSemantics(read('components/cy/modal/index.wxml'))
+})
+
+test('negative control: modal 忙碌名称或状态丢失必须判红', () => {
+  const wxml = read('components/cy/modal/index.wxml')
+  for (const [before, after] of [
+    ['aria-label="{{loading ? \'处理中\' : confirmText}}"', 'aria-label="{{confirmText}}"'],
+    ['aria-busy="{{loading}}"', ''],
+  ]) {
+    assert.equal(wxml.split(before).length - 1, 1, 'modal 负控必须命中唯一确认按钮')
+    const mutated = wxml.replace(before, after)
+    assert.notEqual(mutated, wxml, 'modal 负控锚点失效')
+    assert.throws(() => assertModalButtonSemantics(mutated), assert.AssertionError)
+  }
 })
 
 test('roam pilot is wired to the scene stack and requires a real trigger', () => {
