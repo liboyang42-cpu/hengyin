@@ -588,19 +588,20 @@ Page({
       settled = true;
       if (reads.get(key) !== flight) return;
       try {
-        if (!current() || !isBizOk(res) || !res.data) return;
-        const result = res.data, message = result.message;
-        const notify = () => flight.handlers.forEach(handler => { if (current()) handler(result); });
-        if (result.found === false) { notify(); return; }
-        if (result.found === true && message && Number.isSafeInteger(Number(message.id)) && Number(message.id) > 0
-            && message.senderId == receipt.owner && message.clientMessageId === receipt.id) notify();
+        if (!current()) return;
+        const result = isBizOk(res) && res.data, message = result && result.message;
+        const found = result && result.found === true && message && Number.isSafeInteger(Number(message.id)) && Number(message.id) > 0
+          && message.senderId == receipt.owner && message.clientMessageId === receipt.id;
+        if (result && (result.found === false || found)) {
+          flight.handlers.forEach(handler => { if (current()) handler(result); });
+        } else if (flight.handlers.has('retry')) app.tips('发送状态暂时无法确认，请稍后重试');
       } finally {
         if (reads.get(key) === flight) reads.delete(key);
       }
     };
     app.sendRequest({ url: '/api/im/send-receipt', method: 'POST', hideLoading: true, silentError: true,
       data: { conversation_id: receipt.conversation, client_message_id: receipt.id },
-      success: finish, fail: finish, successStatusAbnormal: finish });
+      success: finish, fail: () => finish(), successStatusAbnormal: () => finish() });
   },
   recoverPending() {
     sendRecovery.pending(this.data.myId, this.data.conversationId).forEach(receipt => {
