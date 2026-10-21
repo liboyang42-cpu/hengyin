@@ -11,6 +11,8 @@ public class MapPublicResult {
     private Cluster cluster;
     private List<Layer> layers = new ArrayList<>();
     private String nextCursor;
+    /** 本响应不是聚合查询。调用方不得把它打开。 */
+    private boolean aggregatedQueryEnabled;
 
     public String getDatum() { return datum; }
     public void setDatum(String datum) { this.datum = datum; }
@@ -20,6 +22,10 @@ public class MapPublicResult {
     public void setLayers(List<Layer> layers) { this.layers = layers; }
     public String getNextCursor() { return nextCursor; }
     public void setNextCursor(String nextCursor) { this.nextCursor = nextCursor; }
+    public boolean isAggregatedQueryEnabled() { return aggregatedQueryEnabled; }
+    public void setAggregatedQueryEnabled(boolean aggregatedQueryEnabled) {
+        this.aggregatedQueryEnabled = aggregatedQueryEnabled;
+    }
 
     public static class Cluster {
         private boolean supported;
@@ -60,6 +66,9 @@ public class MapPublicResult {
         private Boolean found;
         private Boolean pendingRedeem;
         private Integer businessStatus;
+        private String visibilityVersion;
+        private String visualState;
+        private List<String> actions = new ArrayList<>();
 
         public static Item from(MapPublicRow row) {
             Item item = new Item();
@@ -102,6 +111,12 @@ public class MapPublicResult {
         public void setPendingRedeem(Boolean pendingRedeem) { this.pendingRedeem = pendingRedeem; }
         public Integer getBusinessStatus() { return businessStatus; }
         public void setBusinessStatus(Integer businessStatus) { this.businessStatus = businessStatus; }
+        public String getVisibilityVersion() { return visibilityVersion; }
+        public void setVisibilityVersion(String visibilityVersion) { this.visibilityVersion = visibilityVersion; }
+        public String getVisualState() { return visualState; }
+        public void setVisualState(String visualState) { this.visualState = visualState; }
+        public List<String> getActions() { return actions; }
+        public void setActions(List<String> actions) { this.actions = actions == null ? new ArrayList<>() : actions; }
     }
 
     public static class Layer {

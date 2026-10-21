@@ -1,5 +1,6 @@
 package com.chengyinhub.business.mapper;
 
+import com.chengyinhub.business.domain.map.MapPublicItemFacts;
 import com.chengyinhub.business.domain.map.MapPublicRow;
 import org.apache.ibatis.builder.xml.XMLMapperBuilder;
 import org.apache.ibatis.datasource.pooled.PooledDataSource;
@@ -56,11 +57,13 @@ class MapPublicMapperMyBatisIT {
                 long deletes = status(statement, "Com_delete");
                 List<Long> roam = ids(mapper.selectRoamPois(77L, A_MIN_LAT, A_MAX_LAT, A_MIN_LNG, A_MAX_LNG, null, 50));
                 List<Long> roamAgain = ids(mapper.selectRoamPois(77L, A_MIN_LAT, A_MAX_LAT, A_MIN_LNG, A_MAX_LNG, null, 50));
-                assertEquals(List.of(1L, 4L, 5L, 6L, 7L), roam);
+                assertEquals(List.of(1L, 4L, 5L, 6L, 7L, 12L), roam);
                 assertEquals(roam, roamAgain, "同一页重复读取结果相同");
-                assertEquals(List.of(5L, 6L, 7L),
+                assertEquals(List.of(5L, 6L, 7L, 12L),
                         ids(mapper.selectRoamPois(77L, A_MIN_LAT, A_MAX_LAT, A_MIN_LNG, A_MAX_LNG, 4L, 50)));
-                assertTrue(mapper.selectRoamPois(77L, A_MIN_LAT, A_MAX_LAT, A_MIN_LNG, A_MAX_LNG, 7L, 50).isEmpty());
+                assertEquals(List.of(12L),
+                        ids(mapper.selectRoamPois(77L, A_MIN_LAT, A_MAX_LAT, A_MIN_LNG, A_MAX_LNG, 7L, 50)));
+                assertTrue(mapper.selectRoamPois(77L, A_MIN_LAT, A_MAX_LAT, A_MIN_LNG, A_MAX_LNG, 12L, 50).isEmpty());
                 assertEquals(inserts, status(statement, "Com_insert"));
                 assertEquals(updates, status(statement, "Com_update"));
                 assertEquals(deletes, status(statement, "Com_delete"));
@@ -73,17 +76,29 @@ class MapPublicMapperMyBatisIT {
                 assertEquals(Boolean.FALSE, flag(player, 6L).getFound());
                 assertEquals("face.png", flag(player, 1L).getNpcAvatar());
                 assertNull(flag(player, 4L).getNpcAvatar());
+                assertEquals("4100000001", flag(player, 1L).getVisibilityVersion());
+                assertEquals("4100000004", flag(player, 4L).getVisibilityVersion());
+                assertEquals("4100000005", flag(player, 5L).getVisibilityVersion());
+                assertNull(flag(player, 12L).getVisibilityVersion());
+                assertEquals("unfound", MapPublicItemFacts.visualState(flag(player, 1L)));
+                assertEquals("found", MapPublicItemFacts.visualState(flag(player, 4L)));
+                assertEquals("pending_redeem", MapPublicItemFacts.visualState(flag(player, 5L)));
+                assertTrue(MapPublicItemFacts.actions(flag(player, 1L)).isEmpty());
                 List<MapPublicRow> stranger = mapper.selectRoamPois(88L, A_MIN_LAT, A_MAX_LAT, A_MIN_LNG, A_MAX_LNG, null, 50);
                 assertEquals(Boolean.FALSE, flag(stranger, 4L).getFound());
                 assertEquals(Boolean.TRUE, flag(stranger, 6L).getFound());
                 assertEquals(Boolean.FALSE, flag(stranger, 6L).getPendingRedeem());
+                assertEquals("found", MapPublicItemFacts.visualState(flag(stranger, 6L)));
+                assertEquals("unfound", MapPublicItemFacts.visualState(flag(player, 6L)));
                 assertFalse(ids(mapper.selectRoamPois(77L, A_MIN_LAT, new BigDecimal("31.229"), A_MIN_LNG, A_MAX_LNG, null, 50))
                         .contains(1L), "收紧 bbox 后框外的已公开点不再出现");
 
                 statement.execute("insert into roam_poi(id,name,type,lat,lng,status,application_type)"
                         + " values (15,'临时点',1,31.2300000,121.4730000,1,null)");
                 session.clearCache();
-                assertTrue(ids(mapper.selectRoamPois(77L, A_MIN_LAT, A_MAX_LAT, A_MIN_LNG, A_MAX_LNG, null, 50)).contains(15L));
+                List<MapPublicRow> withTemporary = mapper.selectRoamPois(77L, A_MIN_LAT, A_MAX_LAT, A_MIN_LNG, A_MAX_LNG, null, 50);
+                assertTrue(ids(withTemporary).contains(15L));
+                assertNull(flag(withTemporary, 15L).getVisibilityVersion());
                 long foundRows = count(statement, "roam_poi_found");
                 statement.execute("delete from roam_poi where id = 15");
                 session.clearCache();
@@ -96,15 +111,28 @@ class MapPublicMapperMyBatisIT {
                         ids(mapper.selectRoamPois(77L, B_MIN_LAT, B_MAX_LAT, B_MIN_LNG, B_MAX_LNG, 31L, 2)));
                 assertTrue(mapper.selectRoamPois(77L, B_MIN_LAT, B_MAX_LAT, B_MIN_LNG, B_MAX_LNG, 32L, 2).isEmpty());
 
-                assertEquals(List.of(4L), ids(mapper.selectStores(A_MIN_LAT, A_MAX_LAT, A_MIN_LNG, A_MAX_LNG, null, 50)));
-                assertEquals(0, flag(mapper.selectStores(A_MIN_LAT, A_MAX_LAT, A_MIN_LNG, A_MAX_LNG, null, 50), 4L)
-                        .getBusinessStatus());
+                List<MapPublicRow> stores = mapper.selectStores(A_MIN_LAT, A_MAX_LAT, A_MIN_LNG, A_MAX_LNG, null, 50);
+                assertEquals(List.of(4L, 56L, 57L), ids(stores));
+                assertEquals(0, flag(stores, 4L).getBusinessStatus());
+                assertEquals("2026-03-01T08:00:00", flag(stores, 4L).getVisibilityVersion());
+                assertEquals("closed", MapPublicItemFacts.visualState(flag(stores, 4L)));
+                assertTrue(MapPublicItemFacts.actions(flag(stores, 4L)).isEmpty());
+                assertEquals("2026-03-02T09:00:00", flag(stores, 56L).getVisibilityVersion());
+                assertEquals("open", MapPublicItemFacts.visualState(flag(stores, 56L)));
+                assertEquals(List.of(MapPublicItemFacts.NAVIGATE), MapPublicItemFacts.actions(flag(stores, 56L)));
+                assertNull(flag(stores, 57L).getVisibilityVersion());
+                assertTrue(MapPublicItemFacts.actions(flag(stores, 57L)).isEmpty());
                 assertEquals(List.of(40L, 41L), ids(mapper.selectStores(B_MIN_LAT, B_MAX_LAT, B_MIN_LNG, B_MAX_LNG, null, 2)));
                 assertEquals(List.of(42L), ids(mapper.selectStores(B_MIN_LAT, B_MAX_LAT, B_MIN_LNG, B_MAX_LNG, 41L, 2)));
                 assertTrue(mapper.selectStores(B_MIN_LAT, B_MAX_LAT, B_MIN_LNG, B_MAX_LNG, 42L, 2).isEmpty());
 
-                assertEquals(List.of(4L, 16L, 17L),
-                        ids(mapper.selectActivities(A_MIN_LAT, A_MAX_LAT, A_MIN_LNG, A_MAX_LNG, null, 50)));
+                List<MapPublicRow> activities = mapper.selectActivities(A_MIN_LAT, A_MAX_LAT, A_MIN_LNG, A_MAX_LNG, null, 50);
+                assertEquals(List.of(4L, 16L, 17L, 18L), ids(activities));
+                assertEquals("2026-04-01T10:00:00", flag(activities, 4L).getVisibilityVersion());
+                assertEquals("notStarted", MapPublicItemFacts.visualState(flag(activities, 4L)));
+                assertEquals("running", MapPublicItemFacts.visualState(flag(activities, 16L)));
+                assertNull(flag(activities, 18L).getVisibilityVersion());
+                assertTrue(MapPublicItemFacts.actions(flag(activities, 4L)).isEmpty());
                 assertEquals(ids(mapper.selectActivities(A_MIN_LAT, A_MAX_LAT, A_MIN_LNG, A_MAX_LNG, null, 50)),
                         ids(mapper.selectActivities(A_MIN_LAT, A_MAX_LAT, A_MIN_LNG, A_MAX_LNG, null, 50)));
                 assertEquals(List.of(20L, 21L),
@@ -193,7 +221,7 @@ class MapPublicMapperMyBatisIT {
             "drop table if exists mms_merchant",
             "create table roam_poi (id bigint primary key, name varchar(80), type int, lat decimal(12,7),"
                     + " lng decimal(12,7), address varchar(100), cover_img varchar(100), status int,"
-                    + " audit_status int, application_type int, merchant_id bigint)",
+                    + " audit_status int, application_type int, merchant_id bigint, visibility_version bigint)",
             "create table roam_poi_found (id bigint primary key auto_increment, member_id bigint, poi_id bigint)",
             "create table roam_poi_reward_log (id bigint primary key auto_increment, poi_id bigint, member_id bigint,"
                     + " coupon_id bigint, status int)",
@@ -201,13 +229,13 @@ class MapPublicMapperMyBatisIT {
                     + " enabled int, audit_status int, del_flag varchar(2), sort int)",
             "create table mms_merchant (id bigint primary key, name varchar(80), logo varchar(100), address varchar(100),"
                     + " location_lat decimal(12,7), location_lng decimal(12,7), status int, account_status int,"
-                    + " del_flag int, business_status int)",
+                    + " del_flag int, business_status int, location_verified int, update_time datetime)",
             "create table club (id bigint primary key, del_flag int)",
             "create table cms_topic (id bigint primary key, del_flag int, status int, user_status int, club_id bigint)",
             "create table cms_activity (id bigint primary key, name varchar(80), img_url varchar(100),"
                     + " address_name varchar(100), longitude varchar(40), latitude varchar(40), status int,"
                     + " publish_status int, del_flag int, cancel_time datetime, start_date datetime, end_date datetime,"
-                    + " topic_id bigint, club_id bigint)"
+                    + " topic_id bigint, club_id bigint, update_time datetime)"
     };
 
     private static final String[] DML = {
@@ -270,8 +298,27 @@ class MapPublicMapperMyBatisIT {
                     + " (14,'死俱乐部父主题','p','a','121.4730000','31.2300000',1,1,0,null,'2027-06-01',60,null),"
                     + " (16,'父主题在架','p','a','121.4730000','31.2300000',1,1,0,null,'2027-06-01',62,null),"
                     + " (17,'无父主题','p','a','121.4730000','31.2300000',1,1,0,null,'2027-06-01',0,null),"
+                    + " (18,'无版本','p','a','121.4730000','31.2300000',1,1,0,null,'2027-06-01',null,null),"
                     + " (20,'活页1','p','a','121.0500000','32.0100000',1,1,0,null,'2027-06-01',null,null),"
                     + " (21,'活页2','p','a','121.0500000','32.0200000',1,1,0,null,'2027-06-01',null,null),"
-                    + " (22,'活页3','p','a','121.0500000','32.0300000',1,1,0,null,'2027-06-01',null,null)"
+                    + " (22,'活页3','p','a','121.0500000','32.0300000',1,1,0,null,'2027-06-01',null,null)",
+            "insert into roam_poi(id,name,type,lat,lng,status,application_type,visibility_version)"
+                    + " values (12,'无版本',1,31.2300000,121.4730000,1,null,null)",
+            "update roam_poi set visibility_version = 4100000001 where id = 1",
+            "update roam_poi set visibility_version = 4100000004 where id = 4",
+            "update roam_poi set visibility_version = 4100000005 where id = 5",
+            "update roam_poi set visibility_version = 4100000006 where id = 6",
+            "update roam_poi set visibility_version = 4100000007 where id = 7",
+            "update roam_poi set visibility_version = 4100000030 where id = 30",
+            "update roam_poi set visibility_version = 4100000031 where id = 31",
+            "update roam_poi set visibility_version = 4100000032 where id = 32",
+            "update mms_merchant set update_time = '2026-03-01 08:00:00', location_verified = 0 where id = 4",
+            "insert into mms_merchant(id,name,location_lat,location_lng,status,account_status,del_flag,business_status,"
+                    + "location_verified,update_time) values"
+                    + " (56,'已选点',31.2300000,121.4730000,1,1,0,1,1,'2026-03-02 09:00:00'),"
+                    + " (57,'无版本店',31.2300000,121.4730000,1,1,0,1,2,null)",
+            "update cms_activity set update_time = '2026-04-01 10:00:00', start_date = '2027-01-01 00:00:00' where id = 4",
+            "update cms_activity set update_time = '2026-04-02 11:00:00', start_date = '2026-01-01 00:00:00' where id = 16",
+            "update cms_activity set update_time = '2026-04-03 12:00:00' where id = 17"
     };
 }

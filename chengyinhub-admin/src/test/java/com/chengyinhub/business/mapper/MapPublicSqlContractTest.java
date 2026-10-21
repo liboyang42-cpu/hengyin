@@ -27,7 +27,9 @@ class MapPublicSqlContractTest {
         assertTrue(select.contains("p.status = 1"));
         assertTrue(select.contains("f.member_id = #{viewerId}"));
         assertTrue(select.contains("r.status = 0 and r.coupon_id &gt; 0"));
+        assertTrue(select.contains("cast(p.visibility_version as char) as visibilityVersion"));
         assertTrue(select.contains("order by p.id asc"));
+        assertFalse(select.toLowerCase(Locale.ROOT).contains("ifnull"));
         String where = select.substring(select.indexOf("where p.status"));
         assertFalse(where.contains("mms_merchant"));
         assertFalse(where.contains("account_status"));
@@ -45,12 +47,17 @@ class MapPublicSqlContractTest {
         assertFalse(store.contains("wechat"));
         assertFalse(store.contains("business_license"));
         assertFalse(store.contains("business_status ="));
+        assertTrue(store.contains("date_format(update_time, '%Y-%m-%dT%H:%i:%s') as visibilityVersion"));
+        assertTrue(store.contains("location_verified as locationVerified"));
+        assertFalse(store.contains("location_verified ="));
 
         String activity = between(map, "<select id=\"selectActivities\"", "</select>");
         assertTrue(activity.contains("status = 1 and publish_status = 1 and del_flag = 0 and cancel_time is null"));
         assertTrue(activity.contains("live_parent.status = 1 and live_parent.user_status = 1"));
         assertTrue(activity.contains("and (club_id is null or club_id = 0)"));
         assertTrue(activity.contains("end_date &gt; now()"));
+        assertTrue(activity.contains("date_format(update_time, '%Y-%m-%dT%H:%i:%s') as visibilityVersion"));
+        assertTrue(activity.contains("start_date as startDate"));
         assertFalse(activity.contains("IFNULL"));
         assertFalse(activity.contains("correct_answer"));
 
@@ -58,6 +65,13 @@ class MapPublicSqlContractTest {
         assertFalse(lower.contains("<insert"));
         assertFalse(lower.contains("<update"));
         assertFalse(lower.contains("<delete"));
+        assertFalse(map.contains("sideQuest"));
+        assertFalse(map.contains("visibilityVersion = 1"));
+        String candidate = read("docs/w13/map-public-visibility-version.sql");
+        assertTrue(candidate.contains("CANDIDATE ONLY"));
+        assertTrue(candidate.contains("visibility_version"));
+        assertFalse(candidate.contains("DEFAULT 1"));
+        assertFalse(candidate.contains("DEFAULT '1'"));
         for (Method method : MapPublicMapper.class.getMethods()) {
             if (method.getDeclaringClass() == MapPublicMapper.class) {
                 assertTrue(method.getName().startsWith("select"));

@@ -1,6 +1,7 @@
 package com.chengyinhub.business.service.impl;
 
 import com.chengyinhub.business.domain.map.MapPublicException;
+import com.chengyinhub.business.domain.map.MapPublicItemFacts;
 import com.chengyinhub.business.domain.map.MapPublicLimits;
 import com.chengyinhub.business.domain.map.MapPublicQuery;
 import com.chengyinhub.business.domain.map.MapPublicResult;
@@ -12,6 +13,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
+import java.util.Date;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -64,11 +66,15 @@ class MapPublicServiceTest {
         MapPublicResult result = service.query(77L, query);
 
         assertEquals("GCJ-02", result.getDatum());
+        assertFalse(result.isAggregatedQueryEnabled());
         assertFalse(result.getCluster().isSupported());
         assertEquals(List.of("roam_poi", "store", "theme"),
                 result.getLayers().stream().map(MapPublicResult.Layer::getSourceType).toList());
         assertEquals(4L, result.getLayers().get(0).getItems().get(0).getSourceId());
         assertEquals("roam_poi", result.getLayers().get(0).getItems().get(0).getSourceType());
+        assertEquals("v-roam_poi-4", result.getLayers().get(0).getItems().get(0).getVisibilityVersion());
+        assertEquals("unfound", result.getLayers().get(0).getItems().get(0).getVisualState());
+        assertTrue(result.getLayers().get(0).getItems().get(0).getActions().isEmpty());
         assertEquals(4L, result.getLayers().get(1).getItems().get(0).getSourceId());
         assertEquals("store", result.getLayers().get(1).getItems().get(0).getSourceType());
         assertEquals("UNAVAILABLE", result.getLayers().get(2).getStatus());
@@ -95,6 +101,9 @@ class MapPublicServiceTest {
         assertEquals("LAYERS_REJECTED", ex.getMessage());
         ex = assertThrows(MapPublicException.class, () -> service.query(77L, query(List.of("w20"), 1)));
         assertEquals("LAYERS_REJECTED", ex.getMessage());
+        ex = assertThrows(MapPublicException.class, () -> service.query(77L, query(List.of("sideQuest"), 1)));
+        assertEquals("LAYERS_REJECTED", ex.getMessage());
+        assertEquals("story_node", new StoryNodeMapPublicSourceAdapter().sourceType());
         verify(roam, never()).page(anyLong(), any(), any(), any(), any(), nullable(Long.class), anyInt());
         verify(store, never()).page(anyLong(), any(), any(), any(), any(), nullable(Long.class), anyInt());
         verify(activity, never()).page(anyLong(), any(), any(), any(), any(), nullable(Long.class), anyInt());
@@ -206,6 +215,71 @@ class MapPublicServiceTest {
     }
 
     @Test
+    void publishesPersistedVersionAndOnlyProvenActions() {
+        MapPublicRow poi = row("roam_poi", 5);
+        poi.setFound(true);
+        poi.setPendingRedeem(true);
+        poi.setVisibilityVersion("4100000005");
+        MapPublicRow closed = row("store", 4);
+        closed.setBusinessStatus(0);
+        closed.setLocationVerified(0);
+        closed.setVisibilityVersion("2026-03-01T08:00:00");
+        MapPublicRow pinned = row("store", 8);
+        pinned.setBusinessStatus(1);
+        pinned.setLocationVerified(1);
+        pinned.setVisibilityVersion("2026-03-02T09:00:00");
+        MapPublicRow later = row("activity", 16);
+        later.setStartDate(new Date(System.currentTimeMillis() - 86_400_000L));
+        later.setEndDate(new Date(System.currentTimeMillis() + 86_400_000L));
+        later.setVisibilityVersion("2026-04-02T11:00:00");
+        when(roam.page(anyLong(), any(), any(), any(), any(), nullable(Long.class), anyInt()))
+                .thenReturn(List.of(poi));
+        when(store.page(anyLong(), any(), any(), any(), any(), nullable(Long.class), anyInt()))
+                .thenReturn(List.of(closed, pinned));
+        when(activity.page(anyLong(), any(), any(), any(), any(), nullable(Long.class), anyInt()))
+                .thenReturn(List.of(later));
+
+        MapPublicResult result = service.query(77L, query(List.of("roam_poi", "store", "activity"), 10));
+
+        MapPublicResult.Item roamItem = result.getLayers().get(0).getItems().get(0);
+        assertEquals("4100000005", roamItem.getVisibilityVersion());
+        assertEquals("pending_redeem", roamItem.getVisualState());
+        assertFalse(roamItem.getActions().contains(MapPublicItemFacts.NAVIGATE));
+        assertFalse(roamItem.getActions().contains(MapPublicItemFacts.REGISTER));
+        assertEquals("closed", result.getLayers().get(1).getItems().get(0).getVisualState());
+        assertTrue(result.getLayers().get(1).getItems().get(0).getActions().isEmpty());
+        assertEquals(List.of(MapPublicItemFacts.NAVIGATE), result.getLayers().get(1).getItems().get(1).getActions());
+        assertEquals("running", result.getLayers().get(2).getItems().get(0).getVisualState());
+        assertFalse(result.getLayers().get(2).getItems().get(0).getActions().contains(MapPublicItemFacts.REGISTER));
+        assertFalse(result.isAggregatedQueryEnabled());
+    }
+
+    @Test
+    void refusesAPageWhenARowHasNoPersistedVersionOrVisualState() {
+        MapPublicRow missing = row("store", 4);
+        missing.setVisibilityVersion(null);
+        when(store.page(anyLong(), any(), any(), any(), any(), nullable(Long.class), anyInt()))
+                .thenReturn(List.of(missing));
+        when(roam.page(anyLong(), any(), any(), any(), any(), nullable(Long.class), anyInt()))
+                .thenReturn(List.of(row("roam_poi", 1)));
+        MapPublicResult result = service.query(77L, query(List.of("roam_poi", "store"), 10));
+        assertEquals("OK", result.getLayers().get(0).getStatus());
+        assertEquals("v-roam_poi-1", result.getLayers().get(0).getItems().get(0).getVisibilityVersion());
+        assertEquals("FAILED", result.getLayers().get(1).getStatus());
+        assertEquals("VISIBILITY_VERSION_ABSENT", result.getLayers().get(1).getReason());
+        assertTrue(result.getLayers().get(1).getItems().isEmpty());
+        assertNull(result.getNextCursor());
+
+        MapPublicRow odd = row("store", 9);
+        odd.setBusinessStatus(9);
+        when(store.page(anyLong(), any(), any(), any(), any(), nullable(Long.class), anyInt()))
+                .thenReturn(List.of(odd));
+        MapPublicResult visual = service.query(77L, query(List.of("store"), 10));
+        assertEquals("VISUAL_STATE_ABSENT", visual.getLayers().get(0).getReason());
+        assertTrue(visual.getLayers().get(0).getItems().isEmpty());
+    }
+
+    @Test
     void dropsAPageThatIsNotOrderedBySourceId() {
         when(roam.page(anyLong(), any(), any(), any(), any(), nullable(Long.class), anyInt()))
                 .thenReturn(List.of(row("roam_poi", 5), row("roam_poi", 4)));
@@ -276,6 +350,16 @@ class MapPublicServiceTest {
         row.setName("n" + id);
         row.setLatitude(new BigDecimal("31.23"));
         row.setLongitude(new BigDecimal("121.47"));
+        row.setVisibilityVersion("v-" + sourceType + "-" + id);
+        if ("roam_poi".equals(sourceType)) {
+            row.setFound(false);
+            row.setPendingRedeem(false);
+        } else if ("store".equals(sourceType)) {
+            row.setBusinessStatus(1);
+        } else if ("activity".equals(sourceType)) {
+            row.setStartDate(new Date(System.currentTimeMillis() + 86_400_000L));
+            row.setEndDate(new Date(System.currentTimeMillis() + 172_800_000L));
+        }
         return row;
     }
 

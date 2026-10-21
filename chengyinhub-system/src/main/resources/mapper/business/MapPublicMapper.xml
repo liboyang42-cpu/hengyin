@@ -12,7 +12,7 @@
     <select id="selectRoamPois" resultType="com.chengyinhub.business.domain.map.MapPublicRow">
         select 'roam_poi' as sourceType, p.id as sourceId, p.name as name,
                p.lat as latitude, p.lng as longitude, p.address as address, p.cover_img as cover,
-               p.type as poiType,
+               p.type as poiType, cast(p.visibility_version as char) as visibilityVersion,
                (select n.avatar from npc_profile n
                  where n.scope_type = 2 and n.scope_id = p.merchant_id
                    and n.enabled = 1 and n.audit_status = 1 and n.del_flag = '0'
@@ -45,7 +45,9 @@
     <select id="selectStores" resultType="com.chengyinhub.business.domain.map.MapPublicRow">
         select 'store' as sourceType, id as sourceId, name as name,
                location_lat as latitude, location_lng as longitude, address as address,
-               logo as cover, business_status as businessStatus
+               logo as cover, business_status as businessStatus,
+               date_format(update_time, '%Y-%m-%dT%H:%i:%s') as visibilityVersion,
+               location_verified as locationVerified
         from mms_merchant
         where status = 1 and account_status = 1 and del_flag = 0
           and location_lat is not null and location_lng is not null
@@ -64,7 +66,9 @@
     <select id="selectActivities" resultType="com.chengyinhub.business.domain.map.MapPublicRow">
         select 'activity' as sourceType, id as sourceId, name as name,
                cast(latitude as decimal(12,7)) as latitude, cast(longitude as decimal(12,7)) as longitude,
-               address_name as address, img_url as cover
+               address_name as address, img_url as cover,
+               date_format(update_time, '%Y-%m-%dT%H:%i:%s') as visibilityVersion,
+               start_date as startDate, end_date as endDate
         from cms_activity
         where status = 1 and publish_status = 1 and del_flag = 0 and cancel_time is null
           and (topic_id is null or topic_id = 0 or exists (

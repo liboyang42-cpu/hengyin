@@ -1,6 +1,7 @@
 package com.chengyinhub.business.domain.map;
 
 import java.math.BigDecimal;
+import java.util.Date;
 
 /** Mapper 行。只含已经对玩家公开的点位字段，审核材料和联系方式不进这个类型。 */
 public class MapPublicRow {
@@ -17,6 +18,11 @@ public class MapPublicRow {
     private Boolean found;
     private Boolean pendingRedeem;
     private Integer businessStatus;
+    /** 来源行上的可见版本。roam_poi 读 visibility_version；门店和活动读 update_time。空值不是 1。 */
+    private String visibilityVersion;
+    private Integer locationVerified;
+    private Date startDate;
+    private Date endDate;
 
     public String getSourceType() { return sourceType; }
     public void setSourceType(String sourceType) { this.sourceType = sourceType; }
@@ -42,4 +48,12 @@ public class MapPublicRow {
     public void setPendingRedeem(Boolean pendingRedeem) { this.pendingRedeem = pendingRedeem; }
     public Integer getBusinessStatus() { return businessStatus; }
     public void setBusinessStatus(Integer businessStatus) { this.businessStatus = businessStatus; }
+    public String getVisibilityVersion() { return visibilityVersion; }
+    public void setVisibilityVersion(String visibilityVersion) { this.visibilityVersion = visibilityVersion; }
+    public Integer getLocationVerified() { return locationVerified; }
+    public void setLocationVerified(Integer locationVerified) { this.locationVerified = locationVerified; }
+    public Date getStartDate() { return startDate; }
+    public void setStartDate(Date startDate) { this.startDate = startDate; }
+    public Date getEndDate() { return endDate; }
+    public void setEndDate(Date endDate) { this.endDate = endDate; }
 }

@@ -2,6 +2,8 @@ package com.chengyinhub.business.service.impl;
 
 import com.chengyinhub.business.domain.map.MapPublicCursor;
 import com.chengyinhub.business.domain.map.MapPublicException;
+import com.chengyinhub.business.domain.map.MapPublicItemFacts;
+import com.chengyinhub.business.domain.map.MapPublicLayerFailure;
 import com.chengyinhub.business.domain.map.MapPublicLimits;
 import com.chengyinhub.business.domain.map.MapPublicQuery;
 import com.chengyinhub.business.domain.map.MapPublicResult;
@@ -101,6 +103,11 @@ public class MapPublicServiceImpl implements MapPublicService {
                     more = true;
                     next.add(MapPublicCursor.Pos.after(adapter.sourceType(), items.get(items.size() - 1).getSourceId()));
                 }
+            } catch (MapPublicLayerFailure ex) {
+                failed = true;
+                layer.setStatus("FAILED");
+                layer.setReason(ex.getMessage());
+                layer.setItems(List.of());
             } catch (MapPublicException ex) {
                 throw ex;
             } catch (RuntimeException ex) {
@@ -114,6 +121,7 @@ public class MapPublicServiceImpl implements MapPublicService {
 
         MapPublicResult result = new MapPublicResult();
         result.setDatum(MapPublicLimits.DATUM);
+        result.setAggregatedQueryEnabled(false);
         result.setCluster(MapPublicResult.Cluster.unsupported());
         result.setLayers(layers);
         if (!failed && more) {
@@ -159,8 +167,28 @@ public class MapPublicServiceImpl implements MapPublicService {
                 throw new IllegalStateException("source key");
             }
             previous = row.getSourceId();
-            items.add(MapPublicResult.Item.from(row));
+            items.add(item(row));
         }
         return items;
+    }
+
+    private static MapPublicResult.Item item(MapPublicRow row) {
+        String version = MapPublicItemFacts.visibilityVersion(row);
+        String state = MapPublicItemFacts.visualState(row);
+        List<String> actions = MapPublicItemFacts.actions(row);
+        if (version == null) {
+            throw new MapPublicLayerFailure("VISIBILITY_VERSION_ABSENT");
+        }
+        if (state == null || "available".equals(state)) {
+            throw new MapPublicLayerFailure("VISUAL_STATE_ABSENT");
+        }
+        if (actions.contains(MapPublicItemFacts.REGISTER)) {
+            throw new MapPublicLayerFailure("ACTION_REJECTED");
+        }
+        MapPublicResult.Item item = MapPublicResult.Item.from(row);
+        item.setVisibilityVersion(version);
+        item.setVisualState(state);
+        item.setActions(actions);
+        return item;
     }
 }
