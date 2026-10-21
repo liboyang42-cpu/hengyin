@@ -50,7 +50,7 @@ page { background: var(--cy-bg-page); }
 /* 城瘾小助手顶部「我的举报」入口:一行,左右走页边距 */
 .sys-entry { display: flex; align-items: center; gap: var(--cy-space-2); margin: 0 var(--cy-page-x) var(--cy-space-3); padding: var(--cy-space-4); border-radius: var(--cy-radius-md); background: var(--cy-bg-card); color: var(--cy-color-text-secondary); }
 .sys-entry__title { flex: 1; min-width: 0; font-size: var(--cy-font-body); font-weight: 600; color: var(--cy-text-title); }
-.sys-entry__badge { min-width: 36rpx; height: 36rpx; padding: 0 var(--cy-space-1); border-radius: 18rpx; background: var(--cy-danger); color: var(--cy-color-text-inverse); font-size: var(--cy-type-micro); line-height: 36rpx; text-align: center; box-sizing: border-box; }
+.sys-entry__badge { min-width: 36rpx; height: 36rpx; padding: 0 var(--cy-space-1); border-radius: var(--cy-radius-pill); background: var(--cy-danger); color: var(--cy-color-text-inverse); font-size: var(--cy-type-micro); line-height: 36rpx; text-align: center; box-sizing: border-box; }
 .load-more { min-height: 88rpx; display: flex; align-items: center; justify-content: center; padding: 0; color: var(--cy-color-status-info); font-size: var(--cy-font-label); }
 .load-more-error { display: block; margin: var(--cy-space-2) var(--cy-page-x); }
 .time-div { text-align: center; color: var(--cy-text-secondary); font-size: var(--cy-font-label); margin: 24rpx 0 var(--cy-space-1-5); }
