@@ -11,6 +11,7 @@ function loadComponentFromSource(source, filename) {
   let definition
   vm.runInNewContext(source, {
     Component(value) { definition = value },
+    require(request) { assert.match(request, /behaviors\/reduced-motion\.js$/); return {} },
   }, { filename })
   assert.ok(definition, `${filename} 必须注册 Component`)
   return definition

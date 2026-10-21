@@ -1,3 +1,4 @@
+@import "../../../style/reduced-motion.wxss";
 /* cy-qr-voucher · QR 凭证(DS §5.9)
  * 统一 scene-full 外壳 + 永远浅色码卡 + 纯黑二维码 + 中性定位角 + 中心 logo 挖空。
  * 品牌紫走 var(--cy-brand)(两主题同值);码卡与其内文为物理浅色(扫码要求,不随主题),

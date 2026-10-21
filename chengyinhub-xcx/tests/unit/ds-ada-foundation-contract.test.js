@@ -309,13 +309,16 @@ test('负控:footer-bar 承托底改半透明(内容透出)必须判红', () => 
 function loadComponent(rel) {
   const abs = path.join(ROOT, rel)
   const prevComponent = global.Component
+  const prevBehavior = global.Behavior
   let captured = null
   global.Component = (options) => { captured = options }
+  global.Behavior = (options) => options
   try {
     delete require.cache[require.resolve(abs)]
     require(abs)
   } finally {
     global.Component = prevComponent
+    global.Behavior = prevBehavior
   }
   assert.ok(captured, `${rel} 必须调用 Component() 注册`)
   return captured
@@ -898,6 +901,9 @@ function assertSpinnerCycleToken(tokens, wxssByRel) {
     let declaredCount = 0
     for (const rule of targeting) {
       for (const [, prop, value] of rule.body.matchAll(DURATION_DECLS)) {
+        // 静态替代没有转速；只认减少动效规则中的完整 none，运行中的任何转速声明仍严格校验。
+        if (prop === 'animation' && /^none(?:\s*!important)?\s*$/.test(value.trim())
+            && /--reduced-motion(?:\s|\.)/.test(rule.selector)) continue
         declaredCount += 1
         assert.doesNotMatch(value, LITERAL_DURATION,
           `${rule.selector} 的 ${prop} 写了字面时长,会层叠覆盖 spinner 转速(${rel}):${value.trim()}`)
@@ -1067,4 +1073,18 @@ test('负控:文档漏写「地图退出例外」必须判红', () => {
   assert.throws(() => assertDocsMatchDecision([
     { rel: '<mutated>', text: '普通二级页返回 = 裸 chevron,全站统一。\n' },
   ]), assert.AssertionError)
+})
+
+
+test('减少动效静态 none 无需转速，恢复转动或在普通规则停转都不能逃过 spinner token 契约', () => {
+  const tokens = read('style/tokens.wxss')
+  for (const { rel, selector, keyframe } of SPINNER_RULES) {
+    assert.doesNotThrow(() => assertSpinnerCycleToken(tokens, readSpinnerWxss()))
+    assert.throws(() => assertSpinnerCycleToken(tokens, readSpinnerWxss({
+      [rel]: read(rel) + `\n.contract--reduced-motion ${selector} { animation: ${keyframe} 700ms infinite; }`,
+    })), assert.AssertionError)
+    assert.throws(() => assertSpinnerCycleToken(tokens, readSpinnerWxss({
+      [rel]: read(rel) + `\n.contract-normal ${selector} { animation: none; }`,
+    })), assert.AssertionError)
+  }
 })
