@@ -98,7 +98,7 @@ function createConsentClient(options) {
         fn(value);
       };
       // SC-PRIV-03:撤回超时/回包丢失 = 结果未知(服务端可能已落库)。先用既有 latest 回读服务端真状态:
-      // 服务端最新一条就是撤回 → 按成功;读不到/不是撤回 → 仍按原错误 reject。业务失败(有回包)不走这里。
+      // 只有精确回读本次原请求才能确认；历史撤回不能证明本次审计已落库。
       let checking = false;
       const unknown = function (error) {
         if (settled || checking) return;
@@ -107,14 +107,21 @@ function createConsentClient(options) {
         clearTimeout(timer);
         const giveUp = function () { settle(reject, error); };
         const readTimer = setTimeout(giveUp, settleTimeoutMs);
-        const done = function (fn) { clearTimeout(readTimer); fn(); };
+        const done = function (fn) { clearTimeout(readTimer); if (!settled) fn(); };
+        const readData = { docType, scene };
+        if (data.scopeType != null) readData.scopeType = data.scopeType;
+        if (data.scopeId != null) readData.scopeId = data.scopeId;
         try { sendRequest({
-          url: '/api/compliance/consents/latest', method: 'POST', data: JSON.stringify({ docType, scene }),
+          url: '/api/compliance/consents/latest', method: 'POST', data: JSON.stringify(readData),
           header: { 'Content-Type': 'application/json' }, hideLoading: true, autoErrorToast: false,
           success: function (res) {
             const row = res && res.data;
             if (res && Number(res.code) === 200 && row && row.docType === docType && row.scene === scene
-                && row.eventType === 'REVOKE' && typeof row.requestId === 'string' && row.requestId
+                && row.eventType === 'REVOKE' && row.requestId === requestId
+                && typeof row.docVersion === 'string' && row.docVersion.trim()
+                && (!VERSIONS[docType] || row.docVersion === VERSIONS[docType])
+                && (data.scopeType == null ? null : data.scopeType) === (row.scopeType == null ? null : row.scopeType)
+                && (data.scopeId == null ? null : data.scopeId) === (row.scopeId == null ? null : row.scopeId)
                 && intentCurrent() && (!options.getUserID || owner === String(options.getUserID() || ''))) {
               done(function () {
                 pending.delete(key);

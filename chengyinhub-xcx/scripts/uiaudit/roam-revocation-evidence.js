@@ -63,21 +63,26 @@ function validate(action, branch, receipt, capture) {
     && record.body.eventType === 'REVOKE' && record.body.requestId
     && proof.sourceRefs.recordRequest.requestIdValue === record.body.requestId,
   '缺本次真实record request/body')
-  // record失败仍走既有错误合同，不能反向清掉正在使用的用途。
-  if (['error', 'timeout'].includes(branch) && proof.scenario === 'record-failed') {
-    requireFact(stableJson(before) === stableJson(after), 'REVOKE写失败却改变定位用途')
-    return
+  // 审计结果与本机用途分开证明：写失败也必须有完整停采/独立用途保留事实，不能冒充已落库。
+  const recordFailed = ['error', 'timeout'].includes(branch) && proof.scenario === 'record-failed'
+  const scenario = recordFailed ? proof.localScenario : proof.scenario
+  requireFact(proof.requestId === record.body.requestId, 'proof未绑定原审计请求')
+  if (recordFailed) {
+    requireFact(['stop-confirmed', 'prior-stop-completed', 'independent-play-retained'].includes(scenario), '缺审计未确认时的本机用途终态')
+    requireFact(!proof.recordEcho && !(latest && latest.eventType === 'REVOKE'
+      && latest.requestId === record.body.requestId), '审计未确认不能伪造成功回执')
+  } else {
+    source(proof.sourceRefs.recordEcho, 'utils/compliance/consent-client.js#record.success')
+    requireFact(proof.recordEcho && proof.recordEcho.requestId === record.body.requestId
+      && proof.recordEcho.docType === record.body.docType && proof.recordEcho.scene === record.body.scene
+      && proof.recordEcho.eventType === record.body.eventType && proof.recordEcho.docVersion
+      && proof.requestId === record.body.requestId
+      && proof.sourceRefs.recordEcho.requestIdValue === proof.recordEcho.requestId,
+    '本次record request/echo与proof不一致')
+    requireFact(latest && latest.docType === 'privacy_policy' && latest.scene === 'roam_location'
+      && latest.eventType === 'REVOKE' && latest.requestId && latest.requestId === proof.requestId
+      && latest.docVersion === proof.recordEcho.docVersion, 'latest不是本次REVOKE')
   }
-  source(proof.sourceRefs.recordEcho, 'utils/compliance/consent-client.js#record.success')
-  requireFact(proof.recordEcho && proof.recordEcho.requestId === record.body.requestId
-    && proof.recordEcho.docType === record.body.docType && proof.recordEcho.scene === record.body.scene
-    && proof.recordEcho.eventType === record.body.eventType && proof.recordEcho.docVersion
-    && proof.requestId === record.body.requestId
-    && proof.sourceRefs.recordEcho.requestIdValue === proof.recordEcho.requestId,
-  '本次record request/echo与proof不一致')
-  requireFact(latest && latest.docType === 'privacy_policy' && latest.scene === 'roam_location'
-    && latest.eventType === 'REVOKE' && latest.requestId && latest.requestId === proof.requestId
-    && latest.docVersion === proof.recordEcho.docVersion, 'latest不是本次REVOKE')
   requireFact(after.revision > before.revision && after.realEpoch >= before.realEpoch
     && (!before.roamOwner && !before.listener && !before.starting && !before.goPending && !before.fogPending
       || after.realEpoch > before.realEpoch), '旧revision/epoch未失效')
@@ -87,6 +92,9 @@ function validate(action, branch, receipt, capture) {
   const sdk = proof.sdk
   requireFact(sdk && Number.isSafeInteger(sdk.revokedOrder) && Number.isSafeInteger(sdk.settledOrder)
     && sdk.settledOrder > sdk.revokedOrder && Array.isArray(sdk.calls), '缺SDK撤回与终态时序')
+  requireFact(Number.isSafeInteger(record.startedOrder) && sdk.revokedOrder < record.startedOrder
+    && record.startedOrder < sdk.settledOrder
+    && proof.sourceRefs.recordRequest.startedOrderValue === record.startedOrder, '本机撤回必须早于原审计POST')
   const ids = new Set()
   sdk.calls.forEach(call => {
     requireFact(call && call.id && !ids.has(call.id) && METHODS.includes(call.method)
@@ -112,7 +120,7 @@ function validate(action, branch, receipt, capture) {
     requireFact(oldStarts.length > 0 || stops.some(call => call.startedOrder < sdk.revokedOrder
       && call.completedOrder > sdk.revokedOrder), '原持有者启动/停止在途历史未回读，不能仅snapshot停止认成功')
   }
-  const pendingPlay = ['independent-play-pending-started', 'independent-play-pending-denied'].includes(proof.scenario)
+  const pendingPlay = ['independent-play-pending-started', 'independent-play-pending-denied'].includes(scenario)
   oldStarts.filter(call => call.outcome === 'success' && !pendingPlay).forEach(call => requireFact(
     stops.some(stop => stop.startedOrder > call.completedOrder && stop.outcome === 'success'), '旧start成功后缺补停终态'))
   const success = call => {
@@ -136,15 +144,15 @@ function validate(action, branch, receipt, capture) {
     stops.forEach(success)
     requireFact(newCalls.every(call => call.method === 'stopLocationUpdate'), '漫游撤回后出现未授权新start')
   }
-  if (proof.scenario === 'stop-confirmed') {
+  if (scenario === 'stop-confirmed') {
     requireFact(newCalls.some(call => call.method === 'stopLocationUpdate'), '缺本次实际stop')
     stopped()
-    requireFact(['success', 'duplicate-trigger', 'timeout'].includes(branch), '停止形态不符分支')
-  } else if (proof.scenario === 'prior-stop-completed') {
+    requireFact(['success', 'duplicate-trigger', 'timeout'].includes(branch) || recordFailed, '停止形态不符分支')
+  } else if (scenario === 'prior-stop-completed') {
     requireFact(newCalls.length === 0 && stops.some(call => call.startedOrder < sdk.revokedOrder
       && call.completedOrder > sdk.revokedOrder), '缺此前在途stop的真实终态')
     stopped()
-    requireFact(['success', 'duplicate-trigger', 'timeout'].includes(branch), '先前stop形态不符分支')
+    requireFact(['success', 'duplicate-trigger', 'timeout'].includes(branch) || recordFailed, '先前stop形态不符分支')
   } else {
     const play = proof.play
     requireFact(play && /^play:[^\s]+$/.test(play.key), '缺独立play用途')
@@ -168,7 +176,7 @@ function validate(action, branch, receipt, capture) {
         && terminalStarts[0].method === 'startLocationUpdateBackground' && terminalStarts[0].outcome === 'denied'
         && final.method === 'startLocationUpdate' && final.startedOrder > terminalStarts[0].completedOrder,
       'pending play没有真实BG拒→FG链')
-      if (proof.scenario === 'independent-play-pending-denied') {
+      if (scenario === 'independent-play-pending-denied') {
         requireFact(branch === 'startLocationUpdate-denied' && final.method === 'startLocationUpdate'
           && final.outcome === 'denied' && after.trackerRunning === false
           && play.ownerAfter === false && play.watchingAfter === false, 'pending拒绝没有真实失败终态')
@@ -181,22 +189,22 @@ function validate(action, branch, receipt, capture) {
       if (branch === 'startLocationUpdateBackground-denied') requireFact(terminalStarts.length === 2, '缺实际BG拒绝')
       return
     }
-    if (proof.scenario === 'independent-play-retained') {
+    if (scenario === 'independent-play-retained') {
       requireFact(before.trackerRunning === true && after.trackerRunning === true && play.ownerBefore === true
         && play.ownerAfter === true && play.watchingAfter === true && newCalls.length === 0,
       '保留play形态发生了stop/start或未保留实际owner')
-      requireFact(['success', 'duplicate-trigger', 'timeout'].includes(branch), '保留play形态不符分支')
+      requireFact(['success', 'duplicate-trigger', 'timeout'].includes(branch) || recordFailed, '保留play形态不符分支')
     } else {
       requireFact(stops.some(call => call.outcome === 'success'), '独立重启缺真实stop终态')
       stops.forEach(success)
       const bg = newCalls.filter(call => call.method === 'startLocationUpdateBackground')
       const fg = newCalls.filter(call => call.method === 'startLocationUpdate')
-      if (['independent-play-fg-only-restarted', 'independent-play-fg-only-denied'].includes(proof.scenario)) {
+      if (['independent-play-fg-only-restarted', 'independent-play-fg-only-denied'].includes(scenario)) {
         source(play.availabilitySource, 'wx.startLocationUpdateBackground#available')
         requireFact(play.backgroundApiAvailable === false && play.availabilitySource.value === false
           && bg.length === 0 && fg.length === 1
           && fg[0].startedOrder > Math.max(...stops.map(call => call.completedOrder)), '缺实际FG-only能力与时序')
-        if (proof.scenario === 'independent-play-fg-only-denied') {
+        if (scenario === 'independent-play-fg-only-denied') {
           requireFact(branch === 'startLocationUpdate-denied' && fg[0].outcome === 'denied'
             && after.trackerRunning === false && play.ownerAfter === false && play.watchingAfter === false,
           'FG-only拒绝未回读失败终态')
@@ -208,14 +216,14 @@ function validate(action, branch, receipt, capture) {
         return
       }
       requireFact(bg.length === 1 && bg[0].startedOrder > Math.max(...stops.map(call => call.completedOrder)), '重启未在stop终态之后')
-      if (proof.scenario === 'independent-play-bg-restarted') {
+      if (scenario === 'independent-play-bg-restarted') {
         requireFact(branch === 'success' && fg.length === 0, 'BG成功形态不符实际调用')
         success(bg[0])
-      } else if (proof.scenario === 'independent-play-fg-restarted') {
+      } else if (scenario === 'independent-play-fg-restarted') {
         requireFact(['success', 'startLocationUpdateBackground-denied'].includes(branch)
           && bg[0].outcome === 'denied' && fg.length === 1 && fg[0].startedOrder > bg[0].completedOrder, '缺BG拒绝→FG实际降级')
         success(fg[0])
-      } else if (proof.scenario === 'independent-play-both-denied') {
+      } else if (scenario === 'independent-play-both-denied') {
         requireFact(branch === 'startLocationUpdate-denied' && bg[0].outcome === 'denied'
           && fg.length === 1 && fg[0].startedOrder > bg[0].completedOrder && fg[0].outcome === 'denied'
           && after.trackerRunning === false && play.ownerAfter === false && play.watchingAfter === false,
@@ -225,6 +233,6 @@ function validate(action, branch, receipt, capture) {
       requireFact(after.trackerRunning === true && play.ownerAfter === true && play.watchingAfter === true, '独立play没有恢复运行')
     }
   }
-  requireFact(['success', 'duplicate-trigger', 'timeout', 'startLocationUpdateBackground-denied'].includes(branch), '形态与分支不匹配')
+  requireFact(['success', 'duplicate-trigger', 'timeout', 'startLocationUpdateBackground-denied'].includes(branch) || recordFailed, '形态与分支不匹配')
 }
 module.exports = { CONTRACT, isCaller, isContract, validate }

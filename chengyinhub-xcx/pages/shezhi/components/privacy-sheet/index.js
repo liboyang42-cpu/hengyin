@@ -55,17 +55,25 @@ Component({
     withdrawRoamLocationConsent() {
       if (this.data.submitting) return;
       this.setData({ submitting: true });
-      app.recordConsent({
-        docType: 'privacy_policy',
-        scene: 'roam_location',
-        eventType: 'REVOKE',
-      }).then(() => {
-        bgTracker.revoke('roam');
+      const owner = String(app.getUserID ? app.getUserID() || '' : '');
+      const epoch = this._roamRevokeEpoch = (this._roamRevokeEpoch || 0) + 1;
+      const current = () => epoch === this._roamRevokeEpoch
+        && owner === String(app.getUserID ? app.getUserID() || '' : '');
+      // 撤回先作用于本机用途；审计失败仍由 consent-client 保留原账号/requestId 补传。
+      bgTracker.revoke('roam');
+      let audit;
+      try {
+        audit = current() ? app.recordConsent({ docType: 'privacy_policy', scene: 'roam_location', eventType: 'REVOKE' })
+          : Promise.reject(new Error('账号已变化'));
+      } catch (error) { audit = Promise.reject(error); }
+      Promise.resolve(audit).then(() => {
+        if (!current()) return;
         toast('已撤回漫游定位同意');
-        this.setData({ submitting: false });
       }).catch(() => {
-        toast('撤回记录失败，请检查网络后重试');
-        this.setData({ submitting: false });
+        if (!current()) return;
+        toast('本机漫游已停，记录待确认');
+      }).finally(() => {
+        if (epoch === this._roamRevokeEpoch) this.setData({ submitting: false });
       });
     },
   },
