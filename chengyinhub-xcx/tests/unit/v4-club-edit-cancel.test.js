@@ -9,14 +9,24 @@ const test = require('node:test')
 const ROOT = path.resolve(__dirname, '../..')
 const WRITE_URLS = ['/api/club/update-mine', '/api/club/dissolve']
 
+// Editable subset of PublicClubVO plus detail viewer flags; no updateTime.
+function publicClub(overrides) {
+  return Object.assign({ id: 7001, name: '原名', logo: null, cover: null, description: null,
+    activityPrefs: null, clubType: null, city: '上海', keywords: null, style: null,
+    prioritySignupEnabled: null, memberReservedQuota: null, joinPolicy: null,
+    isOwner: true, viewerIsAdmin: false, viewerIdentityUnavailable: false,
+    joinPolicySupported: true }, overrides)
+}
+
 function mount(options) {
   let pageDef, compDef, editor
   const requests = []
   const backs = []
-  global.getApp = () => ({ globalData: {}, sendRequest(r) { requests.push(r) }, getAuthorization: () => 'Bearer t' })
+  global.getApp = () => ({ globalData: {}, sendRequest(r) { requests.push(r) }, getAuthorization: () => 'Bearer t', getUserID: () => '9' })
   global.Page = (d) => { pageDef = d }
   global.Component = (d) => { compDef = d }
-  global.wx = { navigateBack(o) { backs.push(o || {}) }, switchTab() {}, showToast() {}, navigateTo() {} }
+  const localDrafts = {}
+  global.wx = { getStorageSync: key => localDrafts[key], setStorageSync: (key, value) => { localDrafts[key] = value }, removeStorageSync: key => { delete localDrafts[key] }, navigateBack(o) { backs.push(o || {}) }, switchTab() {}, showToast() {}, navigateTo() {} }
   for (const file of ['pages/club/edit/index.js', 'components/cy/scene-club-edit/index.js']) {
     const abs = path.join(ROOT, file)
     delete require.cache[require.resolve(abs)]
@@ -44,7 +54,7 @@ function mount(options) {
 }
 
 function loadReady(h) {
-  h.requests[0].success({ code: 200, data: { id: 7001, name: '原名', city: '上海', isOwner: true } })
+  h.requests[0].success({ code: 200, data: publicClub() })
   assert.equal(h.editor.data.loadState, 'ready')
 }
 
@@ -67,6 +77,9 @@ test('编辑后返回 →「继续编辑」:不离页、草稿原样保留、不
 
   // 继续编辑后仍是同一个草稿,可以正常保存
   h.editor.save()
+  const check = h.requests[h.requests.length - 1]
+  assert.equal(check.url, '/api/club/detail')
+  check.success({ code: 200, data: publicClub() })
   const save = h.requests.find((r) => r.url === '/api/club/update-mine')
   assert.equal(JSON.parse(save.data).name, '新名字')
 })

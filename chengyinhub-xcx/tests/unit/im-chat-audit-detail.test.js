@@ -16,7 +16,7 @@ function loadChat() {
   delete require.cache[mod]
   require(mod)
   const page = Object.assign({}, def)
-  page.data = { ...JSON.parse(JSON.stringify(def.data)), myId: 1 }
+  page.data = { ...JSON.parse(JSON.stringify(def.data)), myId: 1, type: 2 }
   page.setData = function (patch) { Object.assign(this.data, patch) }
   page.data.msgs = [{ id: 5, senderId: 0, msgType: 3,
     card: { title: '审核未通过', result: { taskId: 77, bizId: 9, outcome: '你提交的内容未通过审核', reason: '含广告', followUp: 'x' } } }]

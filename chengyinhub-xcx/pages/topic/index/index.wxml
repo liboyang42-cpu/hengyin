@@ -330,7 +330,7 @@
           <!-- 稿 219:389/416 的评价空态:第二行说清「写了有什么好处」,再给一个入口。
                入口走的就是「投票」那颗同一个 voteClick —— 不另开一条打分路径。 -->
           <view class="wp det6-empty" wx:if="{{!info.commentCount}}">
-            <text class="det6-empty-s">玩过之后回来写一条，可以获得平台积分。</text>
+            <text class="det6-empty-s">未参与也可以评价。已支付或已核销报名后的首条评价可按当前规则获得积分，以实际积分记录为准。</text>
             <cy-btn variant="secondary" size="sm" bindtap="voteClick">成为第一个评价的人</cy-btn>
           </view>
           <view class="scroll-list" style="margin-bottom: 0;" wx:else>
@@ -359,7 +359,7 @@
                 <image lazy-load="true" src="/pages/topic/images/icon_lp.png" mode="widthFix" />
               </view>
               <view class="info flex-a">
-                <view class="tit">设计路线、报名、分享、评论都可以获得平台积分</view>
+                <view class="tit">评论积分须符合参与及首评条件，以实际积分记录为准</view>
                 <view class="desc">和好友一起报名更划算，路线票可抵扣减免</view>
               </view>
             </view>
@@ -405,7 +405,7 @@
             </view>
           </view>-->
 
-          <!-- 路线地图：橙色 polyline 把节点按顺序连起来 -->
+          <!-- 道路和节点直线按章分段，来源说明与地图计算结果一致。 -->
           <view class="route-map-wrap" wx:if="{{routeReady}}">
             <map
               id="routeMap"
@@ -419,7 +419,7 @@
               show-location
               bindmarkertap="onNodeTap">
             </map>
-            <view class="route-map-tip" wx:if="{{!routeIsRoad}}">直连预览 · 道路路线待生成</view>
+            <view class="route-map-tip">{{routeSourceText}}</view>
           </view>
 
           <cy-empty wx:if="{{activeTab == '1' && !info.chaptersList.length}}" kind="empty"
@@ -521,12 +521,7 @@
             </view>
           </view>
           <view class="list">
-            <!-- 稿 214:689:「N min 步行」画在**两站之间**,说的是从上一站走到这一站。
-                 所以它属于本站这一格的开头,不是上一站的结尾。
-                 ⚠️ 原来这里注释掉的那版用的是 node.nodeTime —— 那一列的注释写着
-                    「建议停留时长(分钟)」,当成步行时间是语义错配,没有恢复它;
-                    现在用站点经纬度直线估算(与 club/topic-story 同一份 walkText),
-                    拿不到坐标就整行不出。 -->
+            <!-- 站间只展示坐标直线距离；接口未提供实际步行时长。 -->
             <view class="li" wx:for="{{chapter.nodes}}" wx:key="index" wx:for-item="node" wx:for-index="nodeIndex">
               <view class="item-walk" wx:if="{{node.walkText}}">{{node.walkText}}</view>
               <view class="xh flex-cc">{{ nodeIndex+1 }}</view>

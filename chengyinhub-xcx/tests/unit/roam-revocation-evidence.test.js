@@ -45,7 +45,7 @@ function harness(noBackground) {
       request.success({ code: 200, data: { requestId: 'previous-agree', docType: 'privacy_policy', scene: 'roam_location', eventType: 'AGREE' } })
       return
     }
-    h.recordRequest = { url: request.url, method: request.method, body: JSON.parse(request.data) }
+    h.recordRequest = { url: request.url, method: request.method, body: JSON.parse(request.data), startedOrder: ++h.order }
     if (h.rejectRecord) { request.fail(); return }
     h.recordEcho = { ...h.recordRequest.body, docVersion: 'unit-version' }
     request.success({ code: 200, data: h.recordEcho })
@@ -109,13 +109,13 @@ async function receiptFor(kind, branch = 'success') {
   if (kind === 'cold') h.roam._startReal()
   else { h.roam._startReal(true); if (kind !== 'inflight-success' && kind !== 'inflight-denied' && !kind.startsWith('pending-play')) h.fire(h.calls[0]) }
   if (kind === 'already-stopped') { h.roam._stopReal(); h.fire(h.calls.at(-1)) }
-  if (kind === 'retained' || kind.startsWith('pending-play')) h.startPlay()
+  if (kind === 'retained' || kind === 'record-failed-retained' || kind.startsWith('pending-play')) h.startPlay()
   if (kind === 'prior-stop') { h.roam._stopReal(); h.roam._startReal() }
   const before = h.frame(); const playBefore = h.tracker.hasOwner(h.playKey || h.play._trackKey())
-  if (kind === 'record-failed') h.rejectRecord = true
+  if (kind.startsWith('record-failed')) h.rejectRecord = true
   h.privacy.withdrawRoamLocationConsent(); await settle()
   if (['bg-restart', 'fg-restart', 'both-denied', 'fg-only-restart', 'fg-only-denied'].includes(kind)) h.startPlay()
-  if (kind !== 'retained' && kind !== 'record-failed' && !kind.startsWith('pending-play')) h.fire(h.calls.find(c => c.method === 'stopLocationUpdate' && c.outcome === 'pending'))
+  if (kind !== 'retained' && kind !== 'record-failed-retained' && !kind.startsWith('pending-play')) h.fire(h.calls.find(c => c.method === 'stopLocationUpdate' && c.outcome === 'pending'))
   if (kind === 'inflight-success' || kind === 'inflight-denied') {
     h.fire(h.calls[0], kind === 'inflight-success' ? 'success' : 'denied')
     if (kind === 'inflight-success') h.fire(h.calls.at(-1))
@@ -131,22 +131,22 @@ async function receiptFor(kind, branch = 'success') {
   const scenario = ({ cold: 'stop-confirmed', stopped: 'stop-confirmed', 'already-stopped': 'stop-confirmed', 'inflight-success': 'stop-confirmed',
     'inflight-denied': 'stop-confirmed', 'prior-stop': 'prior-stop-completed', retained: 'independent-play-retained',
     'bg-restart': 'independent-play-bg-restarted', 'fg-restart': 'independent-play-fg-restarted',
-    'both-denied': 'independent-play-both-denied', 'record-failed': 'record-failed',
+    'both-denied': 'independent-play-both-denied', 'record-failed': 'record-failed', 'record-failed-retained': 'record-failed',
     'fg-only-restart': 'independent-play-fg-only-restarted', 'fg-only-denied': 'independent-play-fg-only-denied',
     'pending-play-bg': 'independent-play-pending-started', 'pending-play-fg': 'independent-play-pending-started',
     'pending-play-denied': 'independent-play-pending-denied' })[kind]
   const capabilities = Object.fromEntries(h.calls.filter(c => c.outcome !== 'pending').map(c => [c.method,
     { outcome: c.outcome, callId: c.id, ok: c.ok, latitude: c.latitude, longitude: c.longitude }]))
   const calls = h.calls.map(({ options, ...call }) => call)
-  const proof = { captureId: 'unit-capture', principalFingerprint: principal, scenario, requestId: h.recordRequest.body.requestId, recordRequest: h.recordRequest, recordEcho: h.recordEcho, before,
+  const proof = { captureId: 'unit-capture', principalFingerprint: principal, scenario, localScenario: kind.startsWith('record-failed') ? (kind === 'record-failed-retained' ? 'independent-play-retained' : 'stop-confirmed') : undefined, requestId: h.recordRequest.body.requestId, recordRequest: h.recordRequest, recordEcho: h.recordEcho, before,
     after: h.frame(), sourceRefs: Object.fromEntries(Object.entries(sources).map(([key, value]) => [key, ref(value)])),
     sdk: { revokedOrder: h.revokedOrder, settledOrder: ++h.order, calls },
     play: { key: h.playKey || h.play._trackKey(), ...h.playAtStart, ownerBefore: playBefore, ownerAfter: h.tracker.hasOwner(h.playKey || h.play._trackKey()),
       watchingAfter: !!h.play._watching, ownerSource: ref('utils/location/bg-tracker.js#hasOwner:' + (h.playKey || h.play._trackKey())),
       permissionSource: ref('pages/play/index.js#requestPlayLocation'), backgroundApiAvailable: typeof global.wx.startLocationUpdateBackground === 'function',
       availabilitySource: { ...ref('wx.startLocationUpdateBackground#available'), value: typeof global.wx.startLocationUpdateBackground === 'function' } } }
-  const latest = { ...h.recordEcho, ...(kind === 'record-failed' ? { requestId: 'previous-agree', docType: 'privacy_policy', scene: 'roam_location', eventType: 'AGREE' } : {}) }
-  proof.sourceRefs.recordRequest = { ...ref('utils/compliance/consent-client.js#record'), requestIdValue: h.recordRequest.body.requestId }
+  const latest = { ...h.recordEcho, ...(kind.startsWith('record-failed') ? { requestId: 'previous-agree', docType: 'privacy_policy', scene: 'roam_location', eventType: 'AGREE' } : {}) }
+  proof.sourceRefs.recordRequest = { ...ref('utils/compliance/consent-client.js#record'), requestIdValue: h.recordRequest.body.requestId, startedOrderValue: h.recordRequest.startedOrder }
   proof.sourceRefs.recordEcho = { ...ref('utils/compliance/consent-client.js#record.success'), requestIdValue: h.recordEcho && h.recordEcho.requestId }
   Object.assign(proof.play.ownerSource, { beforeValue: proof.play.ownerBefore, atStartValue: proof.play.ownerAtStart, afterValue: proof.play.ownerAfter })
   Object.assign(proof.play.permissionSource, { gpsOkAtStartValue: proof.play.gpsOkAtStart,
@@ -169,10 +169,31 @@ test('真实BG拒绝→FG成功和两者都拒绝匹配各自capability错误枝
   validate((await receiptFor('fg-restart', 'startLocationUpdateBackground-denied')).receipt)
   validate((await receiptFor('both-denied', 'startLocationUpdate-denied')).receipt)
 })
-test('真实record失败保留用途，不能把SDK/owner清理伪造成成功', async () => {
+test('真实record未确认也必须撤回本机用途，不能冒充审计成功', async () => {
   const { receipt } = await receiptFor('record-failed', 'error'); validate(receipt)
-  receipt.observed.roamRevocation.after.roamOwner = false
-  assert.throws(() => validate(receipt), /capture|写失败却改变/)
+  assert.equal(receipt.observed.roamRevocation.after.roamOwner, false)
+  assert.equal(receipt.authoritativeReadback.authority.after.eventType, 'AGREE')
+  for (const mutation of [
+    proof => { proof.after = structuredClone(proof.before); for (const field of Object.keys(proof.before)) proof.sourceRefs[field].afterValue = proof.before[field] },
+    proof => { proof.after.roamOwner = true; proof.sourceRefs.roamOwner.afterValue = true },
+    proof => { proof.after.listener = true; proof.sourceRefs.listener.afterValue = true },
+    proof => { proof.sdk.calls.at(-1).outcome = 'pending' },
+    proof => { proof.sdk.calls = proof.sdk.calls.filter(call => call.method !== 'stopLocationUpdate') },
+    proof => { proof.recordEcho = { ...proof.recordRequest.body, docVersion: 'unit-version' } },
+    proof => { proof.recordRequest.startedOrder = proof.sdk.revokedOrder; proof.sourceRefs.recordRequest.startedOrderValue = proof.sdk.revokedOrder },
+    proof => { proof.localScenario = 'unsupported-local-shape' },
+  ]) {
+    const changed = structuredClone(receipt); mutation(changed.observed.roamRevocation)
+    assert.throws(() => validate(changed), /UNVERIFIED/)
+  }
+  const timeout = structuredClone(receipt); timeout.branch = 'timeout'
+  assert.throws(() => validate(timeout), /elapsedMs\/timedOut=true\/aborted=true/)
+})
+test('审计未确认时独立play的真实许可和持有仍必须保留', async () => {
+  const { receipt } = await receiptFor('record-failed-retained', 'error'); validate(receipt)
+  const changed = structuredClone(receipt); const proof = changed.observed.roamRevocation
+  proof.play.ownerAfter = false; proof.play.ownerSource.afterValue = false
+  assert.throws(() => validate(changed), /UNVERIFIED/)
 })
 test('缺来源、SDK未知、latest错请求或旧owner/listener/epoch一律UNVERIFIED', async () => {
   const { receipt } = await receiptFor('stopped')
@@ -250,5 +271,5 @@ test('本次actual consent-client请求是new，但latest/proof/echo都old REVOK
   proof.requestId = 'old-revoke'; proof.recordEcho.requestId = 'old-revoke'
   proof.sourceRefs.recordEcho.requestIdValue = 'old-revoke'
   receipt.authoritativeReadback.authority.after.requestId = 'old-revoke'
-  assert.throws(() => validate(receipt), /request\/echo与proof不一致/)
+  assert.throws(() => validate(receipt), /proof未绑定原审计请求/)
 })

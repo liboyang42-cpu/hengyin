@@ -54,11 +54,16 @@ function assertComplaintTerminalHandler(source) {
 }
 
 function assertMyCanyuTerminalHandler(source) {
-  assert.match(source, /const finishLoadError = \(res, fallback\) => \{\s*const message = app\.getRequestErrorMessage\(res, fallback\);/)
+  assert.match(source, /const current = \(\) => !that\._participationHidden && !that\._participationDisposed\s*&& epoch === that\._participationEpoch && owner === currentOwner\(\);/,
+    '错误终态必须同时核验页面可见、未销毁、请求代次和当前账号')
+  const terminal = source.match(/const finishLoadError = \(res, fallback\) => \{([\s\S]*?)\n    \};/)
+  assert.ok(terminal, '必须保留独立的 finishLoadError 错误终态处理')
+  assert.match(terminal[1], /^\s*if \(!current\(\)\) return;\s*const message = app\.getRequestErrorMessage\(res, fallback\);/,
+    '错误终态写页面前必须调用当前账号与生命周期守卫')
   // 2026-08-26 刷新失败横幅退役:有旧快照时静默降级(不写 errorMsg,旧列表留在屏上),
   // 只有无快照的首载失败才落 errorMsg 走整页错误。
-  assert.match(source, /if \(hasSnapshot\) \{[\s\S]*firstLoading:\s*false[\s\S]*errorMsg:\s*''/)
-  assert.match(source, /\} else \{[\s\S]*firstLoading:\s*false[\s\S]*errorMsg:\s*message/)
+  assert.match(terminal[1], /if \(hasSnapshot\) \{[\s\S]*firstLoading:\s*false[\s\S]*refreshing:\s*false[\s\S]*errorMsg:\s*''/)
+  assert.match(terminal[1], /\} else \{[\s\S]*firstLoading:\s*false[\s\S]*refreshing:\s*false[\s\S]*errorMsg:\s*message/)
   assert.match(source, /successStatusAbnormal\(res\)\s*\{\s*finishLoadError\(res, '服务暂时不可用，请稍后再试'\);\s*\}/)
   assert.match(source, /fail\(res\)\s*\{\s*finishLoadError\(res, '网络异常，请重试'\);\s*\}/)
   assert.match(source, /silentError:\s*true/)
@@ -137,4 +142,23 @@ test('负控：移除首次认证失败的 fail 终态时，两个页面闸必�
 test('投诉与我的参与均显式声明 HTTP 非正常终态处理', () => {
   assertComplaintTerminalHandler(read('subpackageMember/complaint/index.js'))
   assertMyCanyuTerminalHandler(read('subpackageMember/mycanyu/mycanyu.js'))
+})
+
+test('负控：我的参与错误终态缺失或账号与生命周期守卫被绕过必须判红', () => {
+  const source = read('subpackageMember/mycanyu/mycanyu.js')
+  assertMyCanyuTerminalHandler(source)
+  for (const [before, after] of [
+    ['const finishLoadError = (res, fallback) => {\n      if (!current()) return;', 'const finishLoadError = (res, fallback) => {'],
+    ['!that._participationHidden && ', ''],
+    ['!that._participationDisposed\n      && ', ''],
+    ['epoch === that._participationEpoch && ', ''],
+    ['owner === currentOwner();', 'true;'],
+    ['errorMsg: message,', "errorMsg: '',"],
+    ["finishLoadError(res, '服务暂时不可用，请稍后再试');", ''],
+  ]) {
+    assert.equal(source.split(before).length - 1, 1, '变异必须命中唯一目标：' + before)
+    const mutated = source.replace(before, after)
+    assert.notEqual(mutated, source, '变异锚点失效：' + before)
+    assert.throws(() => assertMyCanyuTerminalHandler(mutated), assert.AssertionError)
+  }
 })

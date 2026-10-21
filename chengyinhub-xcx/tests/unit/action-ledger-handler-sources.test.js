@@ -179,7 +179,11 @@ test('聊天拉黑选项读取会话对象，清空只打开确认，两者都�
     // doBlock includes the guarded unblock->message refresh closed-conversation fallback.
     // Static candidates are conservative; the ordinary block branch still performs no write.
     // Auth renewal may reopen the explicit first-use agreement gate; it does not record consent here.
-    assert.deepEqual(row.targets.routes, id === 'block' ? ['pages/privacy/index', 'subpackageB/pages/im/list/index'] : [])
+    // loadMessages -> decorate constructs canonical card URLs and the allowed generic coupon-wallet URL.
+    // extractTargets records route literals in that source closure, not observed navigation destinations;
+    // neither the block confirmation nor the clear confirmation navigates to these card destinations.
+    assert.deepEqual(row.targets.routes, id === 'block'
+      ? ['pages/privacy/index', 'pages/square/detail/index', 'pages/topic/index/index', 'subpackageB/pages/im/list/index', 'subpackageMember/coupon-wallet/index'] : [])
   }
 })
 

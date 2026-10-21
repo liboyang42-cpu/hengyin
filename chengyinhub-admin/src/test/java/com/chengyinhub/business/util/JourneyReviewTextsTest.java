@@ -39,6 +39,32 @@ import static org.mockito.Mockito.when;
 class JourneyReviewTextsTest {
 
     @Test
+    void mediaAltTextIsReviewedFromBothDtoAndStoredBlocksWithoutTreatingUrlsAsText() {
+        ChapterBlockDTO image = new ChapterBlockDTO();
+        image.setType("image"); image.setUrl("media-asset:901"); image.setAltText("图片说明");
+        ChapterBlockDTO audio = new ChapterBlockDTO();
+        audio.setType("audio"); audio.setUrl("media-asset:902"); audio.setAltText("音频转写");
+        ChapterBlockDTO legacy = new ChapterBlockDTO();
+        legacy.setType("image"); legacy.setUrl("media-asset:903");
+        ChapterBlockDTO nonMedia = new ChapterBlockDTO();
+        nonMedia.setType("text"); nonMedia.setAltText("非媒体字段不采集");
+        ChapterDTO chapter = new ChapterDTO();
+        chapter.setBlocks(Arrays.asList(image, audio, legacy, nonMedia));
+        List<JourneyReviewTexts.Entry> dtoEntries =
+                JourneyReviewTexts.collectChapterNarrativeBlocks(Collections.singletonList(chapter));
+        assertEquals(Arrays.asList("图片说明", "音频转写"), texts(dtoEntries));
+        assertEquals(Arrays.asList("storyFlow.chapter1.altText", "storyFlow.chapter1.altText"), fields(dtoEntries));
+
+        String stored = "[{\"type\":\"image\",\"url\":\"media-asset:901\",\"altText\":\"图片说明\"},"
+                + "{\"type\":\"audio\",\"url\":\"media-asset:902\",\"altText\":\"音频转写\"},"
+                + "{\"type\":\"image\",\"altText\":null},{\"type\":\"audio\",\"altText\":\"\"},"
+                + "{\"type\":\"text\",\"altText\":\"非媒体字段不采集\"}]";
+        List<JourneyReviewTexts.Entry> storedEntries = JourneyReviewTexts.collectChapterBlocks(stored, 1);
+        assertEquals(texts(dtoEntries), texts(storedEntries));
+        assertEquals(fields(dtoEntries), fields(storedEntries));
+    }
+
+    @Test
     void chapterAndNodeUserFacingTextIsCollectedButCoordinatesAndMediaAreNotText() {
         ChapterDTO chapter = new ChapterDTO();
         chapter.setName("章节名"); chapter.setDescription("章节正文"); chapter.setCategory("咖啡");

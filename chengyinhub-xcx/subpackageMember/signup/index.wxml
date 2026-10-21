@@ -49,7 +49,13 @@ module.exports = { state: state, label: label, cta: cta };
        不是用户要做的选择 —— 打开票夹只想看「我有哪些票」。合并只在渲染层做,
        落点差异由每张票自己带的 kind 分流(见 index.js goTicket)。 -->
 
-  <view class="davidwu" wx:if="{{walletState === 'loading'}}">
+  <view class="davidwu" wx:if="{{focusState === 'loading'}}">
+    <cy-skeleton class="fill-slot" type="ticket" count="1" loading-label="正在定位原报名凭证" />
+  </view>
+  <view class="davidwu" wx:elif="{{focusState === 'missing'}}">
+    <cy-state-shell class="fill-slot" kind="error" title="未定位到原报名凭证" sub="{{focusError}}" primary="重试" fill="{{true}}" size="lg" theme="player" bind:primary="retryFocus" />
+  </view>
+  <view class="davidwu" wx:elif="{{walletState === 'loading'}}">
     <cy-skeleton class="fill-slot" type="ticket" count="1" loading-label="正在加载我的票" />
   </view>
   <view class="davidwu" wx:elif="{{walletState === 'error'}}">
@@ -63,7 +69,7 @@ module.exports = { state: state, label: label, cta: cta };
     <cy-state-shell class="fill-slot" kind="empty" title="还没有票" sub="去首页发现路线或报名场次，票会在这里出现。" fill="{{true}}" size="lg" theme="player" />
   </view>
 
-  <view class="flex-a flex-col main" wx:if="{{walletState === 'ready'}}" style="padding-top:{{navTop}}px;">
+  <view class="flex-a flex-col main" wx:if="{{walletState === 'ready' && (!focusState || focusState === 'ready')}}" style="padding-top:{{navTop}}px;">
     <view class="wrap flex-a flex-c">
       <!-- UI-17 二次返修(2026-09-18):票名回到卡外、紧贴卡顶之上;卡面仍零可见文字。
            名称与当前卡同源(读 currentSwiperTicket,不新增 data 字段),滑动换卡时跟着切。 -->

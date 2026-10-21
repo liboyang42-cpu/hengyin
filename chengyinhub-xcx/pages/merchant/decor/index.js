@@ -120,7 +120,9 @@ Page({
 
     perkTypes: ['礼品', '优惠券', '折扣'],
     // E4 升级权益(先做能力,收费开关默认关)
-    chargeEnabled: false,
+    chargeEnabled: null,
+    capabilityState: 'loading',
+    subscriptionState: 'loading',
     // BL-108 已生效权益(只读,/api/merchant/subscription);空列表不展示
     activeSubs: [],
 
@@ -207,6 +209,8 @@ Page({
     merchantTheme.merchantPageShow && merchantTheme.merchantPageShow();
     if (this._loadedOnce && this.canReadProfileView() && !this.data.fieldSheet.show && !this.data.imageEditor) this.load();
     if (this._loadedOnce) this.loadPerks();
+    if (this._loadedOnce && this.data.merchantAccess.canWriteProfile
+        && this._capabilityScope !== this._commerceScope()) this.loadSubs();
     this._loadedOnce = true; this._navigating = false;
   },
 
@@ -486,36 +490,80 @@ Page({
     });
   },
   // ===== E4 升级权益 =====
+  _commerceScope() {
+    const owner = app.getUserID ? app.getUserID() : app.globalData && app.globalData.user_id;
+    const merchant = this.data.merchantAccess && this.data.merchantAccess.merchant;
+    return JSON.stringify([String(owner || ''), String(merchant && merchant.id || '')]);
+  },
+  _commerceCurrent(scope) { return !this._destroyed && scope === this._commerceScope(); },
   loadSubs() {
-    const that = this;
+    const scope = this._commerceScope(), epoch = this._capabilityEpoch = (this._capabilityEpoch || 0) + 1;
+    if (this._capabilityScope && this._capabilityScope !== scope) {
+      this.data.checkoutBusy = false; this.setData({ checkoutState: 'idle' });
+    }
+    this._capabilityScope = scope;
+    this.setData({ capabilityState: 'loading', chargeEnabled: null });
+    const finish = (enabled) => {
+      if (!this._commerceCurrent(scope) || epoch !== this._capabilityEpoch) return;
+      this.setData({ capabilityState: typeof enabled === 'boolean' ? 'ready' : 'error',
+        chargeEnabled: typeof enabled === 'boolean' ? enabled : null });
+    };
     app.sendRequest({
-      hideLoading: true, url: '/api/merchant/commerce/capabilities', method: 'POST',
-      success(res) {
-        if ((res.code == '200' || res.code == 200) && res.data) {
-          (Object.assign(that.data, {chargeEnabled: !!res.data.selfCheckoutEnabled}), that.setData({}));
-        }
-      }
+      hideLoading: true, autoErrorToast: false,
+      url: '/api/merchant/commerce/capabilities', method: 'POST',
+      success(res) { finish(res && res.code == 200 && res.data ? res.data.selfCheckoutEnabled : null); },
+      successStatusAbnormal() { finish(null); }, fail() { finish(null); }
     });
     this.loadActiveSubs();
-
   },
   loadActiveSubs() {
-    const that = this;
+    const scope = this._commerceScope(), epoch = this._subscriptionEpoch = (this._subscriptionEpoch || 0) + 1;
+    this.setData({ subscriptionState: 'loading', activeSubs: [] });
+    const finish = (rows) => {
+      if (!this._commerceCurrent(scope) || epoch !== this._subscriptionEpoch) return;
+      const valid = Array.isArray(rows) && rows.every(row => row && typeof row === 'object'
+        && !Array.isArray(row) && typeof row.subscriptionType === 'string'
+        && (row.isActive === 1 || row.isActive === '1'));
+      const active = valid ? buildActiveSubscriptions(rows, this.data.tiers) : [];
+      this.setData({ activeSubs: active, subscriptionState: !valid ? 'error' : active.length ? 'ready' : 'empty' });
+      const pending = this._pendingEntitlement;
+      if (!pending || pending.scope !== scope) return;
+      // subscription 是 owner 范围的生效授予列表，不含订单关联或可用额度。
+      const confirmed = valid && rows.some(row => row.subscriptionType === pending.bizType
+        && active.some(item => item.key === String(row.id)));
+      this.setData({ checkoutState: confirmed ? 'success' : 'entitlementUnknown' });
+      if (confirmed) {
+        this._pendingEntitlement = null;
+        this._commerceRequestId = null; this._commerceRequestBizType = null;
+        toast.success('已确认该权益生效');
+      }
+    };
     app.sendRequest({
       hideLoading: true, silentError: true, autoErrorToast: false,
       url: '/api/merchant/subscription', method: 'POST',
-      success(res) {
-        if (!that._destroyed && res && (res.code == '200' || res.code == 200)) {
-          that.setData({ activeSubs: buildActiveSubscriptions(res.data, that.data.tiers) });
-        }
-      },
-      fail() {}
+      success(res) { finish(res && res.code == 200 ? res.data : null); },
+      successStatusAbnormal() { finish(null); }, fail() { finish(null); }
     });
   },
+  retryEntitlements() { this.loadSubs(); },
+  _confirmCommerceEntitlement(bizType, scope) {
+    this._pendingEntitlement = { bizType, scope };
+    this.data.checkoutBusy = false;
+    this.setData({ checkoutState: 'entitlementPending' });
+    this.loadActiveSubs();
+  },
   _initCommerceWorkflow() {
-    if (this._commerceWorkflow) return this._commerceWorkflow;
+    const that = this, scope = this._commerceScope();
+    if (this._commerceWorkflow && this._commerceWorkflowScope === scope) return this._commerceWorkflow;
+    if (this._commerceWorkflow) {
+      this._commerceWorkflow.destroy();
+      this._commerceRequestId = null; this._commerceRequestBizType = null; this._pendingEntitlement = null;
+      this.data.checkoutBusy = false; this.setData({ checkoutState: 'idle' });
+    }
+    this._commerceWorkflowScope = scope;
     const verifyPayment = createPaymentVerifier({
       requestStatus(ref, options, cb) {
+        if (!that._commerceCurrent(scope)) return;
         return app.sendRequest({
           hideLoading: true,
           silentError: true,
@@ -544,6 +592,7 @@ Page({
           data: JSON.stringify(payload),
           header: { 'Content-Type': 'application/json' },
           success(res) {
+            if (!that._commerceCurrent(scope)) return;
             if (!(res.code == '200' || res.code == 200) || !res.data) {
               cb({ ok: false, errMsg: '暂不能自助开通' });
               return;
@@ -577,9 +626,11 @@ Page({
         });
       },
       requestPayment(order, cb) {
+        if (!that._commerceCurrent(scope)) return;
         wx.requestPayment(Object.assign({}, order.payParams, {
-          success() { cb({ ok: true }); },
+          success() { if (that._commerceCurrent(scope)) cb({ ok: true }); },
           fail(err) {
+            if (!that._commerceCurrent(scope)) return;
             const cancelled = !!err && String(err.errMsg || '').indexOf('cancel') >= 0;
             cb({ ok: false, cancelled: cancelled, errMsg: cancelled ? '已取消支付' : '支付未完成' });
           }
@@ -593,6 +644,11 @@ Page({
   },
   tapTier(e) {
     const bizType = e.currentTarget.dataset.key;
+    if (bizType !== 'brand_home' && this._capabilityScope !== this._commerceScope()) { this.loadSubs(); return; }
+    if (bizType !== 'brand_home' && this.data.capabilityState !== 'ready') {
+      toast(this.data.capabilityState === 'loading' ? '开通能力读取中' : '开通能力读取失败，请重试');
+      return;
+    }
     if (!this.data.chargeEnabled || bizType === 'brand_home') {
       // CU-M-80:自助结账没开(何况 brand_home 永远只走人工)时不能只弹一句就断头 ——
       // 面板底部挂了真实的客服会话入口(联系运营开通),这里把用户指过去。
@@ -605,8 +661,8 @@ Page({
       this._commerceRequestId = 'commerce_' + Date.now() + '_' + Math.random().toString(36).slice(2, 10);
       this._commerceRequestBizType = bizType;
     }
-    const that = this;
-    const submitted = workflow.submit({ bizType: bizType, requestId: this._commerceRequestId }, {
+    const that = this, scope = this._commerceScope();
+    const handlers = {
       onOrderFail(res) {
         if (res && res.terminal) {
           that._commerceRequestId = null;
@@ -615,21 +671,9 @@ Page({
         (Object.assign(that.data, {checkoutBusy: false}), that.setData({checkoutState: 'failed'}));
         toast(res && res.errMsg || '暂不能自助开通');
       },
-      onFreeSuccess() {
-        that._commerceRequestId = null;
-        that._commerceRequestBizType = null;
-        (Object.assign(that.data, {checkoutBusy: false}), that.setData({checkoutState: 'success'}));
-        toast.success('权益已到账');
-        that.loadSubs();
-      },
+      onFreeSuccess() { that._confirmCommerceEntitlement(bizType, scope); },
       onPayVerifying() { that.setData({ checkoutState: 'verifying' }); },
-      onPaySuccess() {
-        that._commerceRequestId = null;
-        that._commerceRequestBizType = null;
-        (Object.assign(that.data, {checkoutBusy: false}), that.setData({checkoutState: 'success'}));
-        toast.success('支付成功，权益已到账');
-        that.loadSubs();
-      },
+      onPaySuccess() { that._confirmCommerceEntitlement(bizType, scope); },
       onPayCancel() {
         (Object.assign(that.data, {checkoutBusy: false}), that.setData({checkoutState: 'idle'}));
       },
@@ -649,8 +693,15 @@ Page({
           showCancel: false
         });
       }
+    };
+    Object.keys(handlers).forEach(key => {
+      const handler = handlers[key];
+      handlers[key] = value => { if (that._commerceCurrent(scope)) handler(value); };
     });
-    if (submitted) (Object.assign(this.data, {checkoutBusy: true}), this.setData({checkoutState: 'submitting'}));
+    const submitted = workflow.submit({ bizType, requestId: this._commerceRequestId }, handlers);
+    if (submitted && workflow.getState() === 'submitting') {
+      this.data.checkoutBusy = true; this.setData({checkoutState: 'submitting'});
+    }
   },
 
   // 图片编辑保持独立草稿；只有确认且服务端成功后更新主页。

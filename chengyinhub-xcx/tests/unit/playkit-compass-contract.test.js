@@ -30,6 +30,8 @@ const VIEW_AT = new Date(2026, 8, 22, 12, 0);
 // 计时器一律拦下:表的每一拍由测试手动喂(真 setInterval 会把测试进程吊住)
 global.setInterval = () => ({ fake: true });
 global.clearInterval = () => {};
+global.setTimeout = () => ({ fake: true });
+global.clearTimeout = () => {};
 function compassKit(seg) {
   return pickPlayKit({ sessionId: 1, version: 0, playKit: { compass: seg } }, VIEW_AT);
 }
@@ -49,7 +51,9 @@ function load(arg, options) {
   global.wx = {
     onCompassChange(cb) { compassHandlers.push(cb); },
     offCompassChange(cb) { const i = compassHandlers.indexOf(cb); if (i >= 0) compassHandlers.splice(i, 1); },
+    startCompass({ success }) { success(); },
     stopCompass() {},
+    showToast() {},
     vibrateShort() {},
     getStorageSync: () => '',
   };
@@ -70,7 +74,8 @@ function load(arg, options) {
     properties: props,
   });
   const stage = {
-    begin() { stageCalls.push('begin'); if (opts.autoRun !== false) vm.onRun(); },
+    begin() { stageCalls.push('begin'); if (opts.autoRun !== false) vm.onRun({ currentTarget: { dataset: { stageKey: vm.data.stageKeys[0] } } }); },
+    _stopAll() { stageCalls.push('stop'); },
     win(text) { stageCalls.push(['win', text]); },
     fail(timedOut) { stageCalls.push(['fail', timedOut]); },
   };
@@ -81,22 +86,22 @@ function load(arg, options) {
   vm.stageCalls = stageCalls;
   vm.compassHandlers = compassHandlers;
   vm.definition = definition;
-  vm.pushHeading = (d) => compassHandlers.slice().forEach((cb) => cb({ direction: d }));
+  vm._clockTime = Date.now();
+  const withClock = (fn) => { const real = Date.now; Date.now = () => vm._clockTime; try { return fn(); } finally { Date.now = real; } };
+  vm.pushHeading = (d, accuracy) => { vm._lastAccuracy = accuracy; return withClock(() => compassHandlers.slice().forEach((cb) => cb({ direction: d, accuracy }))); };
+  for (const name of ['onStart', '_tick']) { const original = vm[name]; vm[name] = function () { return withClock(() => original.apply(vm, arguments)); }; }
   vm.hide = () => definition.pageLifetimes.hide.call(vm);
   return vm;
 }
 
 /** 用假时钟把 n 帧 × ms 毫秒喂过去:真时钟下 for 循环里 dt≈0,保持永远攒不满 */
-function advance(vm, frames, ms, step) {
-  const real = Date.now;
-  let t = real();
-  Date.now = () => t;
-  try {
-    for (let i = 0; i < frames; i++) {
-      if (step) t += ms; else vm._last = t - ms;
-      vm._tick();
-    }
-  } finally { Date.now = real; }
+function advance(vm, frames, ms, step, feed) {
+  for (let i = 0; i < frames; i++) {
+    vm._clockTime += ms;
+    // A duration is measured from actual continuous samples, not a timer rereading one old sample.
+    if (feed !== false && typeof vm._heading === 'number') vm.pushHeading(vm._heading, vm._lastAccuracy);
+    vm._tick();
+  }
 }
 
 const sourceOf = () => fs.readFileSync(COMPONENT_PATH, 'utf8');
@@ -178,14 +183,14 @@ test('开跑后一帧读数:刻度盘反转、转向提示、读数不稳提示�
   const vm = load();
   vm.onStart();
   assert.equal(vm.data.hasHeading, false, '还没读数时不画方位字 —— 画了就是假的');
-  vm.compassHandlers.slice().forEach((cb) => cb({ direction: 40, accuracy: 'unreliable' }));
+  vm.pushHeading(40, 'unreliable');
   advance(vm, 1, 100);
   assert.equal(vm.data.hasHeading, true);
   assert.equal(vm.data.roseDeg, 320, '刻度盘转 -40°(连续轨道落在 320)');
   assert.equal(vm.data.turnHint, '往右转 95°');
   assert.equal(vm.data.lowAccuracy, true);
   assert.equal(vm.data.aligned, false);
-  vm.compassHandlers.slice().forEach((cb) => cb({ direction: 130, accuracy: 'high' }));
+  vm.pushHeading(130, 'high');
   advance(vm, 10, 100);
   assert.equal(vm.data.lowAccuracy, false);
   assert.equal(vm.data.aligned, true);
@@ -246,9 +251,9 @@ test('后台限频那一帧不许白赚保持时长(dt 夹 0.1s)', () => {
 test('设备不报方向:3 秒后明说没数据,不装忙也不判输', () => {
   const vm = load();
   vm.onStart();
-  for (let i = 0; i < 29; i++) vm._tick();
+  advance(vm, 29, 100, true, false);
   assert.equal(vm.data.noData, false, '不到 3 秒先别急着下结论');
-  vm._tick();
+  advance(vm, 1, 100, true, false);
   assert.equal(vm.data.noData, true);
   assert.match(WXML, /这台设备还没报出方向/, '这行字必须真的在屏上(死数据闸)');
   assert.equal(vm.events.filter((e) => e && e.name === 'submit').length, 0);

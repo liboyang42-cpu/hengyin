@@ -7,6 +7,9 @@ const matrix = require('../../scripts/uiaudit/route-matrix.json')
 const {
   build,
   inventoryMatchesCurrent,
+  classify,
+  usesLoginPageFactory,
+  materialize,
 } = require('../../scripts/uiaudit/build-route-matrix')
 
 test('route-matrix 生成物必须与当前 app.json 和 scene 扫描逐字一致', () => {
@@ -60,4 +63,58 @@ test('route-matrix 少一页或角色被改写必须判为过期', () => {
   const wrongRole = JSON.parse(JSON.stringify(matrix))
   wrongRole.routes.find((route) => route.pagePath === 'pages/club/checkin-detail/index').role = 'player'
   assert.equal(inventoryMatchesCurrent(wrongRole), false)
+})
+
+test('已有identity page factory的五个工具路由都必须标记需登录，公开页仍公开', () => {
+  const current = build()
+  const tools = ['capsule', 'monthly-recap', 'exploration-goals', 'anniversary', 'exploration-export']
+  for (const name of tools) {
+    const pagePath = 'subpackageTools/' + name + '/index'
+    assert.equal(current.routes.find(route => route.pagePath === pagePath).needsLogin, true, pagePath)
+    assert.equal(matrix.routes.find(route => route.pagePath === pagePath).needsLogin, true, pagePath)
+  }
+  assert.equal(classify({ pagePath: 'pages/crop/index' }).needsLogin, false)
+  assert.equal(classify({ pagePath: 'pages/agreement/index' }).needsLogin, false)
+  assert.deepEqual(materialize(build()), materialize(build()), '生成器重复运行必须一致')
+  const wrongLogin = JSON.parse(JSON.stringify(matrix))
+  wrongLogin.routes.find(route => route.pagePath === 'subpackageTools/monthly-recap/index').needsLogin = false
+  assert.equal(inventoryMatchesCurrent(wrongLogin), false)
+})
+
+test('只认实际用于Page的已核实factory依赖，允许别名和等价相对路径', () => {
+  const path = require('node:path')
+  const { ROOT } = require('../../scripts/lib/xcx-scan')
+  const file = path.join(ROOT, 'subpackageTools/example/index.js')
+  for (const source of [
+    "const { page } = require('../cloud-ten-runtime'); Page(page({}));",
+    "const { page: make$page } = require('../cloud-ten-runtime'); Page(make$page({}));",
+    "const { page: $page } = require('../cloud-ten-runtime'); Page($page({}));",
+    "const { page: makePage } = require('../cloud-ten-runtime.js'); Page(makePage({}));",
+    "const { runtime } = require('../lib/runtime'); Page(runtime('goals', {}));",
+    "const { runtime: make$runtime } = require('../lib/runtime'); Page(make$runtime('goals', {}));",
+    "const { runtime: $runtime } = require('../lib/runtime'); Page($runtime('goals', {}));",
+    "const { runtime: makePage } = require('../lib/../lib/runtime.js'); Page(makePage('goals', {}));",
+  ]) assert.equal(usesLoginPageFactory(source, file), true, source)
+})
+
+test('合法guest page/factory、未使用导入、同名其它模块及注释字符串不能误判登录', () => {
+  const path = require('node:path')
+  const { ROOT } = require('../../scripts/lib/xcx-scan')
+  const file = path.join(ROOT, 'subpackageTools/example/index.js')
+  for (const source of [
+    "const { page: $page } = require('../guest-runtime'); Page($page({}));",
+    "const { runtime: make$runtime } = require('../lib/guest-runtime'); Page(make$runtime('public', {}));",
+    "const { storage: $page } = require('../cloud-ten-runtime'); Page($page({}));",
+    "const { page: $page } = require('../cloud-ten-runtime'); Page({});",
+    'Page({ data: { title: "公开说明" } });',
+    "const { page } = require('../guest-runtime'); Page(page({}));",
+    "const { runtime } = require('../lib/guest-runtime'); Page(runtime('public', {}));",
+    "const { page } = require('../cloud-ten-runtime'); Page({});",
+    "const { storage } = require('../cloud-ten-runtime'); Page(storage({}));",
+    "const { page } = require('../lib/runtime'); Page(page({}));",
+    "// const { page } = require('../cloud-ten-runtime');\nPage(page({}));",
+    "const sample = \"const { page } = require('../cloud-ten-runtime');\"; Page(page({}));",
+    "const { page } = require('../cloud-ten-runtime'); /* Page(page({})); */ Page({});",
+    "const { page } = require('../cloud-ten-runtime'); const sample = 'Page(page({}));'; Page({});",
+  ]) assert.equal(usesLoginPageFactory(source, file), false, source)
 })

@@ -68,6 +68,7 @@
   <cy-skeleton wx:if="{{docsState === 'loading'}}" type="list" count="2" />
   <cy-error load-failure class="cy-fade-in" wx:elif="{{docsState === 'error'}}" title="玩法文档没能加载出来" sub="{{docsError}}" retry="重试" bind:retry="getList" />
   <view class="gl-docs cy-fade-in" wx:elif="{{docsState === 'ready'}}">
+    <text class="gl-sec-sub">教程适用版本暂未标注；实际玩法以进入后的规则说明为准。</text>
     <block wx:for="{{list}}" wx:key="id">
       <cy-cell wx:if="{{item.usable}}" title="{{item.title}}" description="{{item.description}}" bindtap="goToDetail" data-id="{{item.id}}" />
       <!-- disabled 显式写 {{true}}:自定义组件的 Boolean 属性写成裸属性时值的语义不稳,

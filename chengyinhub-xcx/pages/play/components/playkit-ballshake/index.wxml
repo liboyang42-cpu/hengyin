@@ -1,6 +1,7 @@
+<block wx:for="{{stageKeys}}" wx:key="*this" wx:for-item="stageKey">
 <!-- 墙就是手机的四条边，不画内框 —— 多一个框，人会以为框外还有别的东西,
      而这一屏外面什么都没有。 -->
-<cy-play-stage id="cy-play-stage" show="{{show}}" back-label="退出"
+<cy-play-stage id="cy-play-stage" data-stage-key="{{stageKey}}" show="{{show}}" back-label="退出"
                limit-seconds="{{timed ? seconds : 0}}"
                calibrate-label="拿成你打算玩的姿势" calibrate-ms="1200"
                bind:back="onClose" bind:run="onRun" bind:verdict="onVerdict">
@@ -22,6 +23,8 @@
       <view class="g-sub bl__sub" wx:if="{{sharedChallenge}}">本次撞击 {{hits}} · 提交后计入全队进度</view>
       <view class="g-sub bl__sub" wx:if="{{challenge.disabledReason}}">{{challenge.disabledReason === 'CHALLENGE_LIMIT' ? '挑战次数已用完' : challenge.disabledReason}}</view>
       <view class="g-sub bl__sub">{{timed ? (seconds + ' 秒内撞满') : '不限时，撞满为止'}}</view>
+      <view class="g-sub bl__sub">撞击根据本机动作测量，每次开始前先校准。</view>
+      <view class="g-sub bl__sub bl__notice" wx:if="{{localNotice && !awaitingResult && !(challenge && (challenge.success || challenge.disabledReason))}}">{{localNotice}}</view>
     </view>
   </view>
 
@@ -35,3 +38,5 @@
     {{awaitingResult ? '正在核对…' : (running ? '撞!' : (challenge ? '免费重试' : '开始'))}}
   </view>
 </cy-play-stage>
+
+</block>

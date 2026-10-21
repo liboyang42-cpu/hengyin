@@ -177,12 +177,22 @@ class TraceRuntimeBundleTest(unittest.TestCase):
 
 
 class TraceDockerCommandTest(unittest.TestCase):
+    def assert_dependency_list_mode(self, argv):
+        start = argv.index('LD_SHOW_AUXV=1') - 1
+        self.assertEqual(['-e', 'LD_SHOW_AUXV=1', '-e', 'LD_TRACE_LOADED_OBJECTS=1',
+                          '--entrypoint', '/trace-runtime/loader'], argv[start:start + 6])
+        self.assertEqual(['LD_TRACE_LOADED_OBJECTS=1'],
+                         [value for value in argv if value.startswith('LD_TRACE_LOADED_OBJECTS')])
+        self.assertEqual(['--inhibit-cache', '--library-path', '/trace-runtime/lib',
+                          '--list', '/trace-runtime/strace'], argv[argv.index('pinned-image') + 1:])
+
     def assert_readonly_tool_aliases(self, argv, directory):
         for target in ('/trace-runtime', '/evidence/trace-runtime'):
             self.assertIn(str(directory) + '/trace-runtime:' + target + ':ro', argv)
 
     def capture(self, directory, name, fail=False, resolution_defect=None):
         env = os.environ.copy()
+        env.pop('LD_TRACE_LOADED_OBJECTS', None)
         env.update(OUT=str(directory), RUN_NAME='synthetic-startup', JDK_IMAGE='pinned-image',
                    JAR='/owned jar/app.jar', FIXTURE='/owned fixture', MYSQL_IP='172.18.0.2',
                    REDIS_IP='172.18.0.3', CAPTURE=str(directory / 'argv.json'),
@@ -195,12 +205,68 @@ class TraceDockerCommandTest(unittest.TestCase):
         docker = """docker() {
   python3 - "$@" <<'PY_CAPTURE'
 import json, os, pathlib, sys
+assert 'LD_TRACE_LOADED_OBJECTS' not in os.environ, 'Trace mode leaked to Docker CLI environment'
 with pathlib.Path(os.environ['CAPTURE']).open('a') as capture:
     capture.write(json.dumps(sys.argv[1:]) + '\\n')
 if '--list' in sys.argv:
     defect = os.environ['RESOLUTION_DEFECT']
-    print('linux-vdso.so.1 (0x1234)')
-    if defect != 'missing':
+    vdso = '0x00007f1838e65000'
+    # Source-based synthetic glibc display, not a sampled runtime auxiliary vector.
+    metadata = ['AT_SYSINFO_EHDR: ' + vdso, 'AT_PAGESZ: 4096',
+                'AT_EXECFN: /trace-runtime/loader', 'AT_PLATFORM: x86_64']
+    if defect == 'anonymous-full-auxv':
+        metadata += ['AT_MINSIGSTKSZ: 3632', 'AT_HWCAP: bfebfbff', 'AT_HWCAP2: 0x2',
+                     'AT_CLKTCK: 100', 'AT_PHDR: 0x1000', 'AT_PHENT: 56', 'AT_PHNUM: 9',
+                     'AT_BASE: 0x0', 'AT_FLAGS: 0x0', 'AT_ENTRY: 0x2000', 'AT_UID: 1001',
+                     'AT_EUID: 1001', 'AT_GID: 1001', 'AT_EGID: 1001', 'AT_SECURE: 0',
+                     'AT_RANDOM: 0x3000', 'AT_??? (0x1b): 0x1c', 'AT_??? (0x1c): 0x20',
+                     'AT_FPUCW: 0x37f']
+    if defect in ('auxv-missing', 'anonymous-no-auxv'):
+        metadata.pop(0)
+    elif defect == 'auxv-duplicate':
+        metadata.append(metadata[0])
+    elif defect == 'auxv-malformed':
+        metadata[0] = 'AT_SYSINFO_EHDR: no-address'
+    elif defect == 'auxv-zero':
+        metadata[0] = 'AT_SYSINFO_EHDR: 0x0'
+    elif defect == 'auxv-no-hex-prefix':
+        metadata[0] = 'AT_SYSINFO_EHDR: 00007f1838e65000'
+    elif defect == 'metadata-missing-colon':
+        metadata[0] = 'AT_SYSINFO_EHDR ' + vdso
+    elif defect == 'metadata-space':
+        metadata[0] = ' ' + metadata[0]
+    elif defect == 'metadata-tab':
+        metadata[0] = chr(9) + metadata[0]
+    elif defect == 'metadata-unknown':
+        metadata.append('AT_FAKE: 1')
+    elif defect == 'metadata-invalid-number':
+        metadata[1] = 'AT_PAGESZ: /trace-runtime/lib/libforeign.so'
+    elif defect == 'metadata-duplicate':
+        metadata.append(metadata[1])
+    elif defect == 'numeric-unknown':
+        metadata.append('AT_??? (0x999): 0x1')
+    elif defect == 'numeric-forged-vdso':
+        metadata.append('AT_??? (0x21): ' + vdso)
+    elif defect == 'numeric-duplicate':
+        metadata += ['AT_??? (0x1b): 0x1c', 'AT_RSEQ_FEATURE_SIZE: 28']
+    elif defect == 'numeric-malformed':
+        metadata.append('AT_??? (0x1b): /trace-runtime/lib/libforeign.so')
+    elif defect == 'numeric-tab':
+        metadata.append(chr(9) + 'AT_??? (0x1b): 0x1c')
+    print('\\n'.join(metadata))
+    if defect == 'blank-row':
+        print('')
+    address = '0x5678' if defect in ('vdso-mismatch', 'anonymous-mismatch') else vdso
+    anonymous = chr(9) + ' (' + address + ')'
+    named = 'linux-vdso.so.1 (' + address + ')'
+    print(anonymous if defect.startswith('anonymous') else named)
+    if defect in ('anonymous-duplicate', 'anonymous-mixed'):
+        print(anonymous if defect == 'anonymous-duplicate' else named)
+    if defect == 'named-duplicate':
+        print(named)
+    if defect == 'metadata-late':
+        print('AT_UID: 1001')
+    if defect not in ('missing', 'anonymous-missing-lib'):
         target = '/lib/x86_64-linux-gnu/libc.so.6' if defect == 'fallback' else '/trace-runtime/lib/libc.so.6'
         print('libc.so.6 => ' + target + ' (0x1234)')
     print('/lib64/ld-linux-x86-64.so.2 => /trace-runtime/loader (0x1234)')
@@ -236,6 +302,8 @@ PY_CAPTURE
                               '-E', 'LD_LIBRARY_PATH', '-E', 'LD_PRELOAD', '-E', 'LD_AUDIT',
                               '-o', '/evidence/network.trace'], tool)
             self.assertNotIn('--library-path', argv[java:])
+            self.assertFalse(any('LD_SHOW_AUXV' in value for value in argv))
+            self.assertFalse(any('LD_TRACE_LOADED_OBJECTS' in value for value in argv))
             self.assertFalse(any(value.startswith(('LD_LIBRARY_PATH=', 'LD_PRELOAD=', 'LD_AUDIT='))
                                  for value in argv))
             self.assertEqual('SYS_PTRACE', argv[argv.index('--cap-add') + 1])
@@ -269,10 +337,29 @@ PY_CAPTURE
                     self.assertNotIn('SYS_PTRACE', argv)
                     self.assertEqual('/trace-runtime/loader', argv[argv.index('--entrypoint') + 1])
                 self.assertIn('--list', calls[0])
+                self.assert_dependency_list_mode(calls[0])
                 if not fail:
                     self.assertEqual('--version', calls[1][-1])
+                    self.assertFalse(any('LD_SHOW_AUXV' in value for value in calls[1]))
+                    self.assertFalse(any('LD_TRACE_LOADED_OBJECTS' in value for value in calls[1]))
+                    self.assertIn('vDSO=0x7f1838e65000; kind=named; bundled dependencies=2', result.stdout)
                 self.assertEqual(not fail, result.returncode == 0)
                 self.assertEqual(not fail, (directory / 'reached').exists())
+
+    def test_missing_or_main_program_trace_mode_is_rejected(self):
+        with tempfile.TemporaryDirectory() as temp:
+            result, calls = self.capture(pathlib.Path(temp), 'check_trace_runtime')
+            self.assertEqual(0, result.returncode, result.stderr)
+            for defect in ('missing', 'main-program'):
+                with self.subTest(defect=defect):
+                    argv = calls[0].copy()
+                    index = argv.index('LD_TRACE_LOADED_OBJECTS=1')
+                    if defect == 'missing':
+                        del argv[index - 1:index + 1]
+                    else:
+                        argv[index] = 'LD_TRACE_LOADED_OBJECTS=2'
+                    with self.assertRaises(AssertionError):
+                        self.assert_dependency_list_mode(argv)
 
     def test_unrecognized_target_line_is_numbered_escaped_and_still_fails_closed(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -281,12 +368,59 @@ PY_CAPTURE
             raw_line = '\tSYNTHETIC_UNKNOWN\x1b[31m \u8def\t'
             self.assertNotEqual(0, result.returncode)
             self.assertEqual(1, len(calls))
-            self.assertIn('Unrecognized target trace runtime dependency at line 4: ' + ascii(raw_line),
+            self.assertIn('Unrecognized target trace runtime dependency at line 8: ' + ascii(raw_line),
                           result.stderr)
             self.assertNotIn(raw_line, result.stderr)
             self.assertNotIn('\x1b', result.stderr)
             self.assertNotIn('\u8def', result.stderr)
             self.assertFalse((directory / 'reached').exists())
+
+    def test_anonymous_mapping_requires_same_process_auxv_and_keeps_version_check(self):
+        for fixture in ('anonymous', 'anonymous-full-auxv'):
+            with self.subTest(fixture=fixture), tempfile.TemporaryDirectory() as temp:
+                directory = pathlib.Path(temp)
+                result, calls = self.capture(directory, 'check_trace_runtime', resolution_defect=fixture)
+                self.assertEqual(0, result.returncode, result.stderr)
+                self.assertEqual(2, len(calls))
+                self.assert_dependency_list_mode(calls[0])
+                self.assertFalse(any('LD_SHOW_AUXV' in value for value in calls[1]))
+                self.assertFalse(any('LD_TRACE_LOADED_OBJECTS' in value for value in calls[1]))
+                self.assertEqual('--version', calls[1][-1])
+                self.assertIn('\t (0x00007f1838e65000)', (directory / 'trace-resolved').read_text().splitlines())
+                self.assertIn('PASS target trace runtime same-process vDSO=0x7f1838e65000; kind=anonymous; bundled dependencies=2',
+                              result.stdout)
+                self.assertTrue((directory / 'reached').exists())
+
+    def test_auxv_identity_metadata_and_anonymous_mapping_fail_closed(self):
+        for defect in ('auxv-missing', 'auxv-duplicate', 'auxv-malformed', 'auxv-zero',
+                       'auxv-no-hex-prefix', 'metadata-missing-colon', 'metadata-space', 'blank-row',
+                       'vdso-mismatch', 'named-duplicate', 'anonymous-no-auxv',
+                       'anonymous-mismatch', 'anonymous-duplicate', 'anonymous-mixed',
+                       'metadata-tab', 'metadata-late', 'metadata-unknown',
+                       'metadata-invalid-number', 'metadata-duplicate', 'anonymous-missing-lib',
+                       'numeric-unknown', 'numeric-forged-vdso', 'numeric-duplicate',
+                       'numeric-malformed', 'numeric-tab'):
+            with self.subTest(defect=defect), tempfile.TemporaryDirectory() as temp:
+                directory = pathlib.Path(temp)
+                result, calls = self.capture(directory, 'check_trace_runtime', resolution_defect=defect)
+                self.assertNotEqual(0, result.returncode, defect)
+                self.assertNotIn('PASS target trace runtime', result.stdout)
+                if defect in ('vdso-mismatch', 'anonymous-mismatch'):
+                    kind = 'anonymous' if defect == 'anonymous-mismatch' else 'named'
+                    self.assertIn('at line 5: reason=address_mismatch '
+                                  'expected=0x7f1838e65000 actual=0x5678 '
+                                  'vdso_seen=False kind=' + kind + ' previous_kind=none raw=',
+                                  result.stderr)
+                elif defect in ('named-duplicate', 'anonymous-duplicate', 'anonymous-mixed'):
+                    previous = 'named' if defect == 'named-duplicate' else 'anonymous'
+                    kind = 'anonymous' if defect == 'anonymous-duplicate' else 'named'
+                    self.assertIn('at line 6: reason=duplicate_mapping '
+                                  'expected=0x7f1838e65000 actual=0x7f1838e65000 '
+                                  'vdso_seen=True kind=' + kind + ' previous_kind=' + previous + ' raw=',
+                                  result.stderr)
+                self.assertEqual(1, len(calls))
+                self.assertIn('--list', calls[0])
+                self.assertFalse((directory / 'reached').exists())
 
     def test_target_loader_fallback_missing_unknown_and_duplicate_paths_fail_closed(self):
         for defect in ('fallback', 'missing', 'unknown', 'duplicate'):

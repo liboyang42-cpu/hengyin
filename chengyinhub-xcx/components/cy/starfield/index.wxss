@@ -1,3 +1,4 @@
+@import "../../../style/reduced-motion.wxss";
 /* 纯 CSS 固定星空(非原生组件 → position:fixed 真正生效,不随页面滚动;静止=沉静)
    暗底由 CSS 提供,杜绝白;星点用 box-shadow 随机散布,无网格 */
 :host { display: block; }

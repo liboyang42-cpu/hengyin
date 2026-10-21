@@ -19,6 +19,7 @@ let toasts;
 let scans;
 let dcCalls;
 let routes;
+let persisted;
 
 global.getApp = () => ({
   globalData: { statusBarHeight: 20, navBarHeight: 44 },
@@ -45,9 +46,9 @@ global.wx = {
   redirectTo: (option) => navigations.push(option.url),
   pageScrollTo() {},
   scanCode(option) { scans.push(option); },
-  getStorageSync: () => '',
-  setStorageSync() {},
-  removeStorageSync() {},
+  getStorageSync: key => persisted[key] || '',
+  setStorageSync(key, value) { persisted[key] = JSON.parse(JSON.stringify(value)); },
+  removeStorageSync(key) { delete persisted[key]; },
   setNavigationBarColor() {},
   setBackgroundColor() {},
 };
@@ -62,6 +63,7 @@ beforeEach(() => {
   scans = [];
   dcCalls = [];
   routes = {};
+  persisted = {};
 });
 
 function loadPage() {
@@ -339,9 +341,9 @@ test('CU-C-60 扫码核销真的调起扫码,并按码类型发到对应端点',
   global.wx.showModal = (option) => modals.push(option);
   try {
     const toastCount = toasts.length;
-    requests[0].success({ code: '200', msg: '验票成功' });
+    requests[0].success({ code: '200', msg: '核销成功' });
     assert.equal(modals.length, 1);
-    assert.equal(modals[0].content, '验票成功');
+    assert.equal(modals[0].content, '核销成功');
     assert.equal(modals[0].showCancel, false);
     assert.equal(toasts.length, toastCount, '成功不再走 toast');
   } finally {

@@ -47,7 +47,8 @@ def assert_contains(source: str, needle: str) -> None:
         raise AssertionError(f"missing CI contract: {needle}")
 
 
-def validate(source: str, backend_script: str | None = None, production_workflows: dict | None = None) -> None:
+def validate(source: str, backend_script: str | None = None, production_workflows: dict | None = None,
+             mini_script: str | None = None) -> None:
     changes = job_block(source, "changes")
 
     for output in ("dependency", "migration"):
@@ -212,7 +213,18 @@ def validate(source: str, backend_script: str | None = None, production_workflow
         '        run: node --test --test-shard=${{ matrix.shard }}/20 "tests/unit/**/*.test.js"\n',
     ):
         assert_contains(unit, contract)
-    if 'continue-on-error:' in mini + unit + job_block(source, "mini_static"):
+    static = job_block(source, "mini_static")
+    assert_contains(static, "        run: bash ci/xcx-check.sh\n")
+    if 'lint:ui' in static or 'ui-integrity.js' in static:
+        raise AssertionError("mini_static must run UI integrity once through xcx-check.sh")
+    if mini_script is None:
+        mini_script = Path('ci/xcx-check.sh').read_text(encoding='utf-8')
+    ui_selftest = 'node "$XCX_DIR/tests/lint/ui-integrity.js" --selftest --warn-as-error || mark_fail 自证\n'
+    ui_scan = 'if ! node "$XCX_DIR/tests/lint/ui-integrity.js" --warn-as-error; then\n  mark_fail\nfi\n'
+    if (mini_script.count(ui_selftest) != 1 or mini_script.count(ui_scan) != 1
+            or mini_script.index(ui_selftest) > mini_script.index(ui_scan)):
+        raise AssertionError("xcx-check must retain one fail-closed UI selftest followed by one full scan")
+    if 'continue-on-error:' in mini + unit + static:
         raise AssertionError("mini program checks must fail closed")
     if "TZ=America/Los_Angeles" in mini:
         raise AssertionError("mini_program must not double-run unit tests in a second timezone")
@@ -354,11 +366,32 @@ def main() -> None:
             ("mini_unit", "19, 20"),
             ("mini_unit", "--test-shard=${{ matrix.shard }}/20 "),
             ("mini_unit", "        run: node ci/xcx-unit-manifest.js --selftest\n"),
+            ("mini_static", "        run: bash ci/xcx-check.sh\n"),
         )
     )
+    negative_controls += (("duplicate UI scan", source.replace(
+        "      - name: Check mini program RequestBody contracts\n",
+        "      - name: Check mini program UI integrity\n"
+        "        run: npm --prefix chengyinhub-xcx run lint:ui\n"
+        "      - name: Check mini program RequestBody contracts\n", 1)),)
     for label, mutated in negative_controls:
         try:
             validate(mutated)
+        except AssertionError:
+            continue
+        raise AssertionError(f"negative control unexpectedly green: {label}")
+
+    mini_script = Path('ci/xcx-check.sh').read_text(encoding='utf-8')
+    ui_selftest = 'node "$XCX_DIR/tests/lint/ui-integrity.js" --selftest --warn-as-error || mark_fail 自证\n'
+    ui_scan = 'if ! node "$XCX_DIR/tests/lint/ui-integrity.js" --warn-as-error; then\n  mark_fail\nfi\n'
+    for label, mutated in (
+        ("missing UI selftest", mini_script.replace(ui_selftest, '', 1)),
+        ("missing UI full scan", mini_script.replace(ui_scan, '', 1)),
+        ("duplicate UI full scan", mini_script.replace(ui_scan, ui_scan * 2, 1)),
+        ("UI selftest after scan", mini_script.replace(ui_selftest, '', 1).replace(ui_scan, ui_scan + ui_selftest, 1)),
+    ):
+        try:
+            validate(source, mini_script=mutated)
         except AssertionError:
             continue
         raise AssertionError(f"negative control unexpectedly green: {label}")
