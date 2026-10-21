@@ -29,7 +29,8 @@ import static com.chengyinhub.business.service.rendezvous.RendezvousReportCase.R
 import static com.chengyinhub.business.service.rendezvous.RendezvousReportIntake.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-/** Isolated H2 for report intake. Not a MySQL acceptance test and not a review-channel test. */
+/** Isolated H2 for report intake. Not a MySQL acceptance test and not a review-channel test.
+ * Stop uses A's 4-arg constructor and {@link RendezvousContactLedger}. Review stays unwired on {@code connected}. */
 class RendezvousReportIntakeTest {
     private static final Clock CLOCK = Clock.fixed(Instant.ofEpochMilli(10_000), ZoneOffset.UTC);
     JdbcDataSource dataSource;
@@ -37,7 +38,6 @@ class RendezvousReportIntakeTest {
     DataSourceTransactionManager manager;
     SqlSessionTemplate session;
     RendezvousConsentService consent;
-    GuardStop guard;
     ScriptedReview review;
     RendezvousReportIntake intake;
 
@@ -52,37 +52,34 @@ class RendezvousReportIntakeTest {
             RendezvousH2Schema.apply(connection, RendezvousH2Schema.protocol(RendezvousH2Schema.read(
                     root.resolve("chengyinhub-admin/sql/migration_w16_rendezvous_protocol_candidate.sql"))));
             RendezvousH2Schema.apply(connection, RendezvousH2Schema.protocol(RendezvousH2Schema.read(
+                    root.resolve("chengyinhub-admin/sql/migration_w16_eligibility_contact_candidate.sql"))));
+            RendezvousH2Schema.apply(connection, RendezvousH2Schema.protocol(RendezvousH2Schema.read(
                     root.resolve("chengyinhub-admin/sql/migration_w16_report_case_candidate.sql"))));
         }
         jdbc.execute("CREATE TABLE im_block(id BIGINT AUTO_INCREMENT PRIMARY KEY, member_id BIGINT NOT NULL, blocked_member_id BIGINT NOT NULL, create_time TIMESTAMP, UNIQUE(member_id, blocked_member_id))");
         Configuration config = new Configuration(new Environment("w16-report", new SpringManagedTransactionFactory(), dataSource));
         load(config, root, "chengyinhub-system/src/main/resources/mapper/business/RendezvousConsentMapper.xml");
+        load(config, root, "chengyinhub-system/src/main/resources/mapper/business/RendezvousContactMapper.xml");
         load(config, root, "chengyinhub-system/src/main/resources/mapper/business/RendezvousReportCaseMapper.xml");
         session = new SqlSessionTemplate(new SqlSessionFactoryBuilder().build(config));
         manager = new DataSourceTransactionManager(dataSource);
-        consent = new RendezvousConsentService(new MyBatisRendezvousConsentStore(ISOLATED_PERSISTENCE_EVALUATION, session, manager), new OpenSafety(), CLOCK);
-        guard = new GuardStop();
+        jdbc.update("INSERT INTO w16_contact_quota(pool, scope, window_millis, max_contacts, decision) VALUES ('pool','POOL',100000,10,'OPEN')");
+        RendezvousContactLedger ledger = new RendezvousContactLedger(session.getMapper(RendezvousContactMapper.class));
+        consent = new RendezvousConsentService(
+                new MyBatisRendezvousConsentStore(ISOLATED_PERSISTENCE_EVALUATION, session, manager),
+                new OpenSafety(), CLOCK, ledger::charge);
         review = new ScriptedReview();
-        intake = new RendezvousReportIntake(ISOLATED_PERSISTENCE_EVALUATION, session, manager, CLOCK, guard, review);
+        intake = new RendezvousReportIntake(ISOLATED_PERSISTENCE_EVALUATION, session, manager, CLOCK, consent, review);
     }
 
     @AfterEach void cleanup() { jdbc.execute("SHUTDOWN"); }
 
     @Test void disabledIntakeDoesNotCallPorts() {
-        ParticipantPort port = new ParticipantPort() {
-            public OngoingVerdict verifyParticipants(Transaction tx, long actor, String ticketId, String expectedMatchId,
-                                                     Long expectedPeer, boolean requireMutualAccepted, long now) {
-                throw new AssertionError("verify");
-            }
-            public OngoingVerdict terminateCurrent(Transaction tx, long actor, Long peer, String ticketId, Termination reason, long now) {
-                throw new AssertionError("stop");
-            }
-        };
         ReviewPort channel = new ReviewPort() {
             public ReviewAnswer submit(String caseId, String requestId) { throw new AssertionError("submit"); }
             public ReviewAnswer status(String caseId, String requestId) { throw new AssertionError("status"); }
         };
-        RendezvousReportIntake closed = new RendezvousReportIntake(DISABLED, null, null, CLOCK, port, channel);
+        RendezvousReportIntake closed = new RendezvousReportIntake(DISABLED, null, null, CLOCK, null, channel);
         IllegalStateException rejected = assertThrows(IllegalStateException.class, () -> closed.intake(1, "req", "ticket", EVIDENCE_TICKET_REF));
         assertEquals("W16_PERSISTENCE_DISABLED", rejected.getMessage());
         assertEquals("W16_PERSISTENCE_DISABLED", assertThrows(IllegalStateException.class, () -> closed.read(1, "req")).getMessage());
@@ -90,24 +87,21 @@ class RendezvousReportIntakeTest {
 
     @Test void strangerOrMissingTicketIsNotFound() {
         String[] ids = mutual();
-        guard.rejectIfCalled = true;
         assertEquals("NOT_FOUND", assertThrows(Rejection.class, () -> intake.intake(9, "imp", ids[0], EVIDENCE_TICKET_REF)).getCode());
         assertEquals("NOT_FOUND", assertThrows(Rejection.class, () -> intake.intake(1, "missing", "no-such-ticket", EVIDENCE_TICKET_REF)).getCode());
         assertEquals("AUTH_REQUIRED", assertThrows(Rejection.class, () -> intake.intake(0, "req", ids[0], EVIDENCE_TICKET_REF)).getCode());
         assertEquals("INVALID_INPUT", assertThrows(Rejection.class, () -> intake.intake(1, "req", ids[0], "CHAT_LOG")).getCode());
         assertEquals(MatchState.MUTUAL_ACCEPTED, consent.read(1, ids[0]).matchState);
         assertEquals(0, count("w16_report_case"));
-        assertEquals(0, guard.verifies);
-        assertEquals(0, guard.stops);
+        assertEquals(2, count("w16_contact_event"));
     }
 
     @Test void ownWaitingTicketIsNotAssociated() {
         View alone = consent.join(4, "pool", "v1", 100_000);
-        guard.rejectIfCalled = true;
         assertEquals("NOT_ASSOCIATED", assertThrows(Rejection.class, () -> intake.intake(4, "alone", alone.ticketId, EVIDENCE_TICKET_REF)).getCode());
         assertEquals(TicketState.WAITING, consent.read(4, alone.ticketId).ticketState);
         assertEquals(0, count("w16_report_case"));
-        assertEquals(0, guard.verifies);
+        assertEquals(0, count("w16_contact_event"));
     }
 
     @Test void unwiredStopRefusesTheCase() {
@@ -125,20 +119,18 @@ class RendezvousReportIntakeTest {
     @Test void intakeStopsThePairAndStoresALocalReceipt() {
         String[] ids = mutual();
         View outsider = consent.join(8, "pool", "v1", 100_000);
+        long version = consent.read(1, ids[0]).version;
         Receipt receipt = intake.intake(1, "req-1", ids[0], EVIDENCE_TICKET_REF);
         assertLocal(receipt, "req-1", ids[0]);
-        assertEquals(MatchState.SAFETY_STOPPED, consent.read(1, ids[0]).matchState);
+        View stopped = consent.read(1, ids[0]);
+        assertEquals(MatchState.SAFETY_STOPPED, stopped.matchState);
+        assertEquals(version + 1, stopped.version);
         assertNull(consent.read(2, ids[1]).publicPlace);
-        assertEquals(TicketState.CANCELLED, consent.read(1, ids[0]).ticketState);
+        assertEquals(TicketState.CANCELLED, stopped.ticketState);
         assertEquals(TicketState.WAITING, consent.read(8, outsider.ticketId).ticketState);
-        assertEquals(Termination.REPORT, guard.lastReason);
-        assertEquals(ids[0], guard.lastTicketId);
-        assertEquals(Long.valueOf(2L), guard.lastPeer);
-        assertFalse(guard.requiredMutual);
-        assertEquals(10_000L, guard.lastNow);
-        assertEquals(1, guard.stops);
         assertEquals(1, count("w16_report_case"));
         assertEquals(0, count("w16_match_reservation"));
+        assertEquals(2, count("w16_contact_event"));
         assertEquals(0, count("w16_safety_report"));
         assertEquals(0, count("im_block"));
         assertEquals(10_000L, jdbc.queryForObject("SELECT created_at FROM w16_report_case", Long.class).longValue());
@@ -146,42 +138,47 @@ class RendezvousReportIntakeTest {
         assertHidden(receipt);
     }
 
+    @Test void connectedFactoryStopsAndLeavesReviewNotConnected() {
+        String[] ids = mutual();
+        RendezvousReportIntake wired = RendezvousReportIntake.connected(ISOLATED_PERSISTENCE_EVALUATION, session, manager, CLOCK, consent);
+        Receipt receipt = wired.intake(1, "wired", ids[0], EVIDENCE_TICKET_REF);
+        assertLocal(receipt, "wired", ids[0]);
+        assertEquals(MatchState.SAFETY_STOPPED, consent.read(1, ids[0]).matchState);
+        Receipt refreshed = wired.refresh(1, "wired");
+        assertEquals("LOCAL_INTAKE", refreshed.state);
+        assertEquals("NOT_CONNECTED", refreshed.reviewConnection);
+        assertNull(refreshed.reviewRef);
+        assertNull(refreshed.dispositionCode);
+    }
+
     @Test void retryIsStableAndADifferentPayloadConflicts() {
         String[] ids = mutual();
         Receipt first = intake.intake(1, "same", ids[0], EVIDENCE_TICKET_REF);
+        long stopped = consent.read(1, ids[0]).version;
         Receipt second = intake.intake(1, "same", ids[0], EVIDENCE_TICKET_REF);
         assertEquals(first.caseId, second.caseId);
-        assertEquals(1, guard.stops);
+        assertEquals(stopped, consent.read(1, ids[0]).version);
         assertEquals(1, count("w16_report_case"));
-        ParticipantPort closed = new ParticipantPort() {
-            public OngoingVerdict verifyParticipants(Transaction tx, long actor, String ticketId, String expectedMatchId,
-                                                     Long expectedPeer, boolean requireMutualAccepted, long now) {
-                throw new AssertionError("verify");
-            }
-            public OngoingVerdict terminateCurrent(Transaction tx, long actor, Long peer, String ticketId, Termination reason, long now) {
-                throw new AssertionError("stop");
-            }
-        };
-        ReviewPort quiet = new ReviewPort() {
-            public ReviewAnswer submit(String caseId, String requestId) { return ReviewAnswer.notConnected(); }
-            public ReviewAnswer status(String caseId, String requestId) { return ReviewAnswer.notConnected(); }
-        };
-        RendezvousReportIntake restarted = new RendezvousReportIntake(ISOLATED_PERSISTENCE_EVALUATION, session, manager, CLOCK, closed, quiet);
+        RendezvousReportIntake restarted = RendezvousReportIntake.notConnected(ISOLATED_PERSISTENCE_EVALUATION, session, manager, CLOCK);
         assertEquals(first.caseId, restarted.intake(1, "same", ids[0], EVIDENCE_TICKET_REF).caseId);
         assertEquals(first.caseId, restarted.read(1, "same").caseId);
+        assertEquals(stopped, consent.read(1, ids[0]).version);
         View again = consent.join(1, "pool", "v1", 100_000);
         View other = consent.join(5, "pool", "v1", 100_000);
         consent.propose(again.ticketId, other.ticketId, "public-place");
+        long proposed = consent.read(1, again.ticketId).version;
         assertEquals("CONFLICT", assertThrows(Rejection.class, () -> intake.intake(1, "same", again.ticketId, EVIDENCE_TICKET_REF)).getCode());
         assertEquals(MatchState.PROPOSED, consent.read(1, again.ticketId).matchState);
+        assertEquals(proposed, consent.read(1, again.ticketId).version);
         assertEquals(first.caseId, intake.read(1, "same").caseId);
         assertEquals(1, count("w16_report_case"));
-        assertEquals(1, guard.stops);
+        assertEquals(4, count("w16_contact_event"));
     }
 
     @Test void anotherRequestDoesNotOverwriteTheCase() {
         String[] ids = mutual();
         Receipt first = intake.intake(1, "one", ids[0], EVIDENCE_TICKET_REF);
+        long stopped = consent.read(1, ids[0]).version;
         Receipt second = intake.intake(1, "two", ids[0], EVIDENCE_TICKET_REF);
         Receipt counterpart = intake.intake(2, "one", ids[1], EVIDENCE_TICKET_REF);
         assertNotEquals(first.caseId, second.caseId);
@@ -190,20 +187,21 @@ class RendezvousReportIntakeTest {
         assertEquals(second.caseId, intake.read(1, "two").caseId);
         assertEquals(counterpart.caseId, intake.read(2, "one").caseId);
         assertEquals(3, count("w16_report_case"));
-        assertEquals(1, guard.stops);
+        assertEquals(stopped, consent.read(1, ids[0]).version);
+        assertEquals(MatchState.SAFETY_STOPPED, consent.read(1, ids[0]).matchState);
         assertEquals("NOT_FOUND", assertThrows(Rejection.class, () -> intake.read(2, "two")).getCode());
         assertEquals("NOT_FOUND", assertThrows(Rejection.class, () -> intake.read(8, "one")).getCode());
     }
 
-    @Test void corruptStopWritesNothingAndRollsTheReceiptBack() {
+    @Test void missingMatchWritesNothing() {
         String[] ids = mutual();
-        guard.corrupt = true;
-        assertEquals("CORRUPT_RESERVATION", assertThrows(Rejection.class, () -> intake.intake(1, "boom", ids[0], EVIDENCE_TICKET_REF)).getCode());
-        assertEquals(MatchState.MUTUAL_ACCEPTED, consent.read(1, ids[0]).matchState);
-        assertNotNull(consent.read(1, ids[0]).publicPlace);
+        String matchId = jdbc.queryForObject("SELECT match_id FROM w16_match_ticket WHERE id=?", String.class, ids[0]);
+        jdbc.update("DELETE FROM w16_rendezvous_match WHERE id=?", matchId);
+        assertEquals("NOT_ASSOCIATED", assertThrows(Rejection.class, () -> intake.intake(1, "boom", ids[0], EVIDENCE_TICKET_REF)).getCode());
+        assertEquals("ACCEPTED", jdbc.queryForObject("SELECT state FROM w16_match_ticket WHERE id=?", String.class, ids[0]));
         assertEquals(2, count("w16_match_reservation"));
         assertEquals(0, count("w16_report_case"));
-        assertEquals(0, guard.stops);
+        assertEquals(2, count("w16_contact_event"));
         assertEquals(0, review.submits);
     }
 
@@ -211,20 +209,21 @@ class RendezvousReportIntakeTest {
         String[] ids = mutual();
         RendezvousReportCaseMapper real = session.getMapper(RendezvousReportCaseMapper.class);
         RendezvousReportIntake failing = new RendezvousReportIntake(ISOLATED_PERSISTENCE_EVALUATION, session, manager, CLOCK,
-                new InsertFails(real), guard, review);
+                new InsertFails(real), consent, review);
         assertEquals("INTAKE_STORE_FAILED", assertThrows(IllegalStateException.class,
                 () -> failing.intake(1, "boom", ids[0], EVIDENCE_TICKET_REF)).getMessage());
         assertEquals(MatchState.MUTUAL_ACCEPTED, consent.read(2, ids[1]).matchState);
+        assertNotNull(consent.read(1, ids[0]).publicPlace);
         assertEquals(2, count("w16_match_reservation"));
         assertEquals(0, count("w16_report_case"));
-        assertEquals(1, guard.stops);
+        assertEquals(2, count("w16_contact_event"));
         assertEquals(0, review.submits);
     }
 
     @Test void ownerCanReadTheReceiptAfterRestartAndOthersCannot() {
         String[] ids = mutual();
         Receipt stored = intake.intake(2, "lost", ids[1], EVIDENCE_TICKET_REF);
-        RendezvousReportIntake restarted = new RendezvousReportIntake(ISOLATED_PERSISTENCE_EVALUATION, session, manager, CLOCK, guard, review);
+        RendezvousReportIntake restarted = RendezvousReportIntake.notConnected(ISOLATED_PERSISTENCE_EVALUATION, session, manager, CLOCK);
         Receipt read = restarted.read(2, "lost");
         assertEquals(stored.caseId, read.caseId);
         assertLocal(read, "lost", ids[1]);
@@ -288,11 +287,12 @@ class RendezvousReportIntakeTest {
     @Test void anEndedMatchIsNotRevived() {
         String[] ids = mutual();
         consent.cancel(1, ids[0]);
+        long version = consent.read(1, ids[0]).version;
         assertEquals(MatchState.CANCELLED, consent.read(1, ids[0]).matchState);
         Receipt receipt = intake.intake(2, "after", ids[1], EVIDENCE_TICKET_REF);
         assertLocal(receipt, "after", ids[1]);
         assertEquals(MatchState.CANCELLED, consent.read(2, ids[1]).matchState);
-        assertEquals(0, guard.stops);
+        assertEquals(version, consent.read(1, ids[0]).version);
         assertNull(consent.read(1, ids[0]).publicPlace);
     }
 
@@ -341,86 +341,6 @@ class RendezvousReportIntakeTest {
         public boolean blocked(long first, long second) { return false; }
         public boolean compatible(long first, long second, String pool, long now) { return true; }
         public boolean publicMeetingAllowed(String pool, String place, long now) { return "public-place".equals(place); }
-    }
-
-    /** Test double for A's guard methods. Not the production adapter. */
-    static final class GuardStop implements ParticipantPort {
-        int verifies, stops;
-        boolean corrupt, rejectIfCalled, requiredMutual;
-        Termination lastReason;
-        String lastTicketId;
-        Long lastPeer;
-        long lastNow = -1;
-        public OngoingVerdict verifyParticipants(Transaction tx, long actor, String ticketId, String expectedMatchId,
-                                                 Long expectedPeer, boolean requireMutualAccepted, long now) {
-            if (rejectIfCalled) throw new AssertionError("verify");
-            verifies++;
-            if (requireMutualAccepted) requiredMutual = true;
-            Ticket ticket = tx.ticket(ticketId);
-            if (ticket == null || ticket.actor != actor) return OngoingVerdict.closed(ticketId);
-            if (ticket.matchId == null) {
-                return new OngoingVerdict(false, false, false, false, false, false, true, false, ticketId, null, ticket.state, null);
-            }
-            Match match = tx.match(ticket.matchId);
-            if (match == null) {
-                return new OngoingVerdict(false, false, false, false, false, false, true, false, ticket.id, ticket.matchId, ticket.state, null);
-            }
-            Ticket first = tx.ticket(match.firstTicket), second = tx.ticket(match.secondTicket);
-            boolean participant = ticket.id.equals(match.firstTicket) || ticket.id.equals(match.secondTicket);
-            boolean intact = participant && first != null && second != null && first.actor != second.actor
-                    && match.id.equals(first.matchId) && match.id.equals(second.matchId);
-            long other = !intact ? 0 : ticket.id.equals(match.firstTicket) ? second.actor : first.actor;
-            boolean matchBound = expectedMatchId == null || expectedMatchId.equals(match.id);
-            boolean peerBound = expectedPeer == null || (intact && expectedPeer.longValue() == other && expectedPeer.longValue() != actor);
-            boolean mutual = intact && match.state == MatchState.MUTUAL_ACCEPTED
-                    && match.firstAcceptedAt != null && match.secondAcceptedAt != null;
-            boolean expired = match.expiresAt <= now;
-            boolean safe = intact && matchBound && peerBound && !expired && match.active()
-                    && first.active() && second.active() && (!requireMutualAccepted || mutual);
-            return new OngoingVerdict(safe, intact, expired, intact, false, intact, true, mutual,
-                    ticket.id, match.id, ticket.state, match.state);
-        }
-        public OngoingVerdict terminateCurrent(Transaction tx, long actor, Long peer, String ticketId, Termination reason, long now) {
-            if (rejectIfCalled) throw new AssertionError("stop");
-            lastReason = reason;
-            lastTicketId = ticketId;
-            lastPeer = peer;
-            lastNow = now;
-            if (reason != Termination.REPORT || peer == null || peer <= 0 || peer.longValue() == actor || now < 0) {
-                throw new Rejection("INVALID_INPUT");
-            }
-            if (corrupt) throw new Rejection("CORRUPT_RESERVATION");
-            Ticket left = tx.activeTicket(actor), right = tx.activeTicket(peer);
-            if (left == null || right == null || left.matchId == null || !left.matchId.equals(right.matchId)) {
-                if (ticketId != null) {
-                    Ticket named = tx.ticket(ticketId);
-                    if (named == null || (named.actor != actor && named.actor != peer.longValue())) throw new Rejection("NOT_FOUND");
-                }
-                return OngoingVerdict.closed(ticketId);
-            }
-            Match match = tx.match(left.matchId);
-            if (match == null || !paired(match, left, right)) throw new Rejection("CORRUPT_RESERVATION");
-            if (ticketId != null) {
-                Ticket named = tx.ticket(ticketId);
-                if (named == null || (named.actor != actor && named.actor != peer.longValue()) || !match.id.equals(named.matchId)) {
-                    throw new Rejection("NOT_FOUND");
-                }
-            }
-            if (match.active()) {
-                Ticket first = tx.ticket(match.firstTicket), second = tx.ticket(match.secondTicket);
-                if (first == null || second == null) throw new Rejection("CORRUPT_RESERVATION");
-                tx.save(first.transition(TicketState.CANCELLED, match.id));
-                tx.save(second.transition(TicketState.CANCELLED, match.id));
-                tx.save(new Match(match.id, match.firstTicket, match.secondTicket, match.publicPlace, match.expiresAt,
-                        match.version + 1, match.firstAcceptedAt, match.secondAcceptedAt, MatchState.SAFETY_STOPPED));
-                stops++;
-            }
-            return verifyParticipants(tx, actor, left.id, match.id, peer, false, now);
-        }
-        private static boolean paired(Match match, Ticket left, Ticket right) {
-            return (match.firstTicket.equals(left.id) && match.secondTicket.equals(right.id))
-                    || (match.firstTicket.equals(right.id) && match.secondTicket.equals(left.id));
-        }
     }
 
     static final class ScriptedReview implements ReviewPort {

@@ -11,32 +11,10 @@ import static com.chengyinhub.business.service.rendezvous.RendezvousReportCase.*
 
 /** Report intake for one rendezvous event the caller already belongs to.
  * Explicitly constructed. Not a Spring bean and not an HTTP API.
- * The production ports are fail-closed: a missing stop or review channel never becomes a successful handoff.
- * A must merge the participant signatures below into the consent guard. This class does not edit Consent. */
+ * Depends on A's ConsentService at A4 {@code 08f44986}. This class does not modify it.
+ * The receipt and {@code Termination.REPORT} are written in the same guard transaction.
+ * Review stays unwired: a missing review channel never becomes a successful handoff. */
 public final class RendezvousReportIntake {
-    /** Same shape as {@code RendezvousConsentService.OngoingVerdict} at A 37b4b345.
-     * Field order is the adapter mapping. This object has no partner id. */
-    public static final class OngoingVerdict {
-        public final boolean safe, intact, expired, eligible, blocked, placeAllowed, owned, mutual;
-        public final String ticketId, matchId;
-        public final TicketState ticketState;
-        public final MatchState matchState;
-        public OngoingVerdict(boolean safe, boolean intact, boolean expired, boolean eligible, boolean blocked,
-                              boolean placeAllowed, boolean owned, boolean mutual, String ticketId, String matchId,
-                              TicketState ticketState, MatchState matchState) {
-            this.safe = safe; this.intact = intact; this.expired = expired; this.eligible = eligible;
-            this.blocked = blocked; this.placeAllowed = placeAllowed; this.owned = owned; this.mutual = mutual;
-            this.ticketId = ticketId; this.matchId = matchId; this.ticketState = ticketState; this.matchState = matchState;
-        }
-        /** Shape A returns when the two actors have no shared active match. Not a substitute for an unwired port. */
-        public static OngoingVerdict closed(String ticketId) {
-            return new OngoingVerdict(false, false, false, false, false, false, false, false, ticketId, null, null, null);
-        }
-    }
-
-    /** Same names as {@code RendezvousConsentService.Termination}. This line calls only REPORT. */
-    public enum Termination { BLOCK, REPORT, EXIT }
-
     /** Review channel result. {@code RESOLVED} is not a successful submit. Timeout is {@code AMBIGUOUS}, not accepted. */
     public static final class ReviewAnswer {
         public enum Kind { NOT_CONNECTED, ACCEPTED, AMBIGUOUS, RESOLVED }
@@ -51,16 +29,7 @@ public final class RendezvousReportIntake {
         public static ReviewAnswer resolved(String dispositionCode) { return new ReviewAnswer(Kind.RESOLVED, null, dispositionCode); }
     }
 
-/** Ports A and the review owner can implement. The copies in this class do not reach them.
-     * Adapter, once Consent from cursor/w16-a-eligibility @ 37b4b345 is on the classpath:
-     * {@code consent.verifyParticipants(tx, actor, ticketId, expectedMatchId, expectedPeer, requireMutualAccepted, now)}
-     * and {@code consent.terminateCurrent(tx, actor, peer, ticketId, RendezvousConsentService.Termination.REPORT, now)}.
-     * Copy {@code OngoingVerdict} fields in constructor order. Do not open another transaction. */
-    public interface ParticipantPort {
-        OngoingVerdict verifyParticipants(Transaction tx, long actor, String ticketId, String expectedMatchId,
-                                          Long expectedPeer, boolean requireMutualAccepted, long now);
-        OngoingVerdict terminateCurrent(Transaction tx, long actor, Long peer, String ticketId, Termination reason, long now);
-    }
+    /** Review handoff. Production uses {@link NotConnectedReview}. Not an HTTP controller. */
     public interface ReviewPort {
         /** Hand-off after the local receipt has committed. Arguments are case id and request id only. */
         ReviewAnswer submit(String caseId, String requestId);
@@ -69,27 +38,36 @@ public final class RendezvousReportIntake {
 
     private final Mode mode;
     private final Clock clock;
-    private final ParticipantPort participants;
+    private final RendezvousConsentService consent;
     private final ReviewPort review;
     private final MyBatisRendezvousConsentStore store;
     private final RendezvousReportCaseMapper cases;
 
+    /** No consent service is attached. A new case is refused and nothing is written. */
     public static RendezvousReportIntake notConnected(Mode mode, SqlSessionTemplate session,
                                                       DataSourceTransactionManager manager, Clock clock) {
-        return new RendezvousReportIntake(mode, session, manager, clock, null, new NotConnectedParticipants(), new NotConnectedReview());
+        return new RendezvousReportIntake(mode, session, manager, clock, null, null, new NotConnectedReview());
+    }
+
+    /** Real stop, review still not connected. {@code consent} is A's service and is not wrapped. */
+    public static RendezvousReportIntake connected(Mode mode, SqlSessionTemplate session,
+                                                   DataSourceTransactionManager manager, Clock clock,
+                                                   RendezvousConsentService consent) {
+        return new RendezvousReportIntake(mode, session, manager, clock, null, Objects.requireNonNull(consent), new NotConnectedReview());
     }
 
     public RendezvousReportIntake(Mode mode, SqlSessionTemplate session, DataSourceTransactionManager manager, Clock clock,
-                                  ParticipantPort participants, ReviewPort review) {
-        this(mode, session, manager, clock, null, participants, review);
+                                  RendezvousConsentService consent, ReviewPort review) {
+        this(mode, session, manager, clock, null, consent, review);
     }
 
-    /** {@code cases} replaces the session mapper in tests that have to fail a write. Production passes null. */
+    /** {@code cases} replaces the session mapper in tests that have to fail a write. Production passes null.
+     * {@code consent} null means the stop is not connected. */
     RendezvousReportIntake(Mode mode, SqlSessionTemplate session, DataSourceTransactionManager manager, Clock clock,
-                           RendezvousReportCaseMapper cases, ParticipantPort participants, ReviewPort review) {
+                           RendezvousReportCaseMapper cases, RendezvousConsentService consent, ReviewPort review) {
         this.mode = Objects.requireNonNull(mode);
         this.clock = Objects.requireNonNull(clock);
-        this.participants = Objects.requireNonNull(participants);
+        this.consent = consent;
         this.review = Objects.requireNonNull(review);
         if (mode != Mode.ISOLATED_PERSISTENCE_EVALUATION) {
             this.store = null;
@@ -163,17 +141,17 @@ public final class RendezvousReportIntake {
             if (!hash.equals(existing.payloadHash)) throw new Rejection("CONFLICT");
             return receipt(existing);
         }
+        if (consent == null) throw new Rejection("CONTACT_STOP_NOT_CONNECTED");
         long now = clock.millis();
         Long reported = counterpart;
-        OngoingVerdict verdict = participants.verifyParticipants(tx, reporter, ticketId, ticket.matchId, reported, false, now);
-        if (verdict == null) throw new Rejection("CONTACT_STOP_FAILED");
-        if (!verdict.owned) throw new Rejection("NOT_FOUND");
+        OngoingVerdict verdict = consent.verifyParticipants(tx, reporter, ticketId, ticket.matchId, reported, false, now);
+        if (verdict == null || !verdict.owned) throw new Rejection("NOT_FOUND");
         if (!verdict.intact || verdict.matchId == null || !verdict.matchId.equals(ticket.matchId)) throw new Rejection("NOT_ASSOCIATED");
         Match before = tx.match(ticket.matchId);
         if (before == null) throw new Rejection("NOT_ASSOCIATED");
         boolean wasActive = before.active();
         MatchState previous = before.state;
-        participants.terminateCurrent(tx, reporter, reported, ticketId, Termination.REPORT, now);
+        consent.terminateCurrent(tx, reporter, reported, ticketId, Termination.REPORT, now);
         Match after = tx.match(ticket.matchId);
         if (after == null || (wasActive ? after.state != MatchState.SAFETY_STOPPED : after.state != previous)) {
             throw new Rejection("CONTACT_STOP_FAILED");
@@ -266,16 +244,7 @@ public final class RendezvousReportIntake {
         if (value == null || value.trim().isEmpty() || value.length() > 128) throw new Rejection("INVALID_INPUT");
     }
 
-    private static final class NotConnectedParticipants implements ParticipantPort {
-        public OngoingVerdict verifyParticipants(Transaction tx, long actor, String ticketId, String expectedMatchId,
-                                                 Long expectedPeer, boolean requireMutualAccepted, long now) {
-            throw new Rejection("CONTACT_STOP_NOT_CONNECTED");
-        }
-        public OngoingVerdict terminateCurrent(Transaction tx, long actor, Long peer, String ticketId, Termination reason, long now) {
-            throw new Rejection("CONTACT_STOP_NOT_CONNECTED");
-        }
-    }
-
+    /** Production review port. Never returns a reference or a disposition. */
     private static final class NotConnectedReview implements ReviewPort {
         public ReviewAnswer submit(String caseId, String requestId) { return ReviewAnswer.notConnected(); }
         public ReviewAnswer status(String caseId, String requestId) { return ReviewAnswer.notConnected(); }

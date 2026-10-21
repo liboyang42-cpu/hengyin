@@ -49,31 +49,27 @@
 
 冒充他人票据与无此票据同一 `NOT_FOUND`。无关联不写案件。重试同一个键且载荷相同，返回原来的 `caseId`，不第二行、不第二次停止。同键不同载荷返回 `CONFLICT`，不覆盖旧案。另一个 `requestId` 是另一起案件，即使仍是同一对人。
 
-## 同事务端口（对齐 A @ 37b4b345）
+## 同事务停止（依赖 A4 `08f44986`，本线不改 ConsentService）
 
-A 在 `cursor/w16-a-eligibility` 的 `37b4b345` 上冻结了守卫事务内的两个方法。本线不改 Consent。生产适配器尚未接入；接通时必须逐参转发，不能改名或改含义。
+停止依赖 `cursor/w16-a-eligibility` 的 A4 `08f44986`（三参构造默认拒绝未记账的新配对）及其前置提交。`RendezvousConsentService` 是共享类型，本线不修改它，也不再保留 `OngoingVerdict` / `Termination` 的镜像副本。类型和下面两个方法都用 A 的正式定义。
 
-```text
-OngoingVerdict verifyParticipants(Transaction tx, long actor, String ticketId,
-    String expectedMatchId, Long expectedPeer, boolean requireMutualAccepted, long now)
-OngoingVerdict terminateCurrent(Transaction tx, long actor, Long peer, String ticketId,
-    Termination reason, long now)
-Termination { BLOCK, REPORT, EXIT }
-```
-
-`OngoingVerdict` 的字段顺序与 A 相同：`safe`、`intact`、`expired`、`eligible`、`blocked`、`placeAllowed`、`owned`、`mutual`、`ticketId`、`matchId`、`ticketState`、`matchState`。适配器按这个顺序抄字段。`Termination.REPORT` 对应 `RendezvousConsentService.Termination.REPORT`。本线不调用 `BLOCK` 或 `EXIT`。
-
-本线实际调用：
+生产受理在**已经打开的同一守卫事务、同一库**里调用：
 
 ```text
 verifyParticipants(tx, reporter, ticketId, matchId, reported, false, now)
 terminateCurrent(tx, reporter, reported, ticketId, Termination.REPORT, now)
 ```
 
-`reported` 从该票据的 match 推导，不来自客户端。`requireMutualAccepted` 固定为 false：举报只要求这条接头属于本人，不要求双方都已接受。`terminateCurrent` 只停止这两人当前共同的活跃 match（`SAFETY_STOPPED`，并释放预约），重复调用不改版本；任一侧对不上时在写入前抛 `CORRUPT_RESERVATION`。已经结束的 match 保持原状态，不复活。
+`reported` 从该票据的 match 推导，不来自客户端。`requireMutualAccepted` 固定为 false。`owned` 不为真，或票据不属于举报人：`NOT_FOUND`。不完整，或 match 对不上：`NOT_ASSOCIATED`。不把 `safe=false` 当成未接通。已经结束的 match 保持原状态，不复活。活跃 match 被记为 `SAFETY_STOPPED` 并释放预约。回执插入与这次停止在同一事务：任一步失败，两边一起回滚。同一个 `requestId` 且载荷相同只读回原案，不再次停止。同键不同载荷是 `CONFLICT`，不覆盖、不再次停止。
 
-未接通的适配器直接抛 `CONTACT_STOP_NOT_CONNECTED`，不返回 `safe=false`。`safe=false` 是 A 的真实否定结论，不能拿来表示端口不存在。
+未传入 `RendezvousConsentService` 时抛 `CONTACT_STOP_NOT_CONNECTED`，不写回执，不停止。这和 `safe=false` 不是一回事。
+
+## 审核与 HTTP（未接通）
+
+审核端口生产装配固定为 `NotConnectedReview`。它不返回引用，也不返回处置码。`connected(...)` 只接上 A 的停止，审核仍是这个未接通实现。因此生产回执停在 `LOCAL_INTAKE` / `NOT_CONNECTED`。`SENT_TO_REVIEW` 与 `RESOLVED` 只有测试里换上的审核替身才能到达，生产路径到不了。
+
+HTTP 控制器 `ApiRendezvousReportController` **不在本树中**。没有 Bean，没有 profile，没有菜单，没有匿名白名单。上面的路径不是现有 API。
 
 ## 不在本线
 
-不自动封禁。不设阈值、TTL、审核时限或频率窗口。不写全局 IM、社区举报或 `audit_task`。不调用 `ImServiceImpl.report`。不把 `w16_safety_report` 的一对用户行当成案件。审核端口在本树没有可写的接头审核实现，生产装配固定为未接通，读回不得显示已送审核。
+不自动封禁。不设阈值、TTL、审核时限或频率窗口。不写全局 IM、社区举报或 `audit_task`。不调用 `ImServiceImpl.report` 或 `ImServiceImpl.block`。不把 `w16_safety_report` 的一对用户行当成案件。不改共享 `RendezvousConsentService`。
