@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.citygame.analytics.fairness.source.mapper.FairnessCompletionSourceMapper">
+
+    <select id="selectById" resultType="com.chengyinhub.business.citygame.analytics.fairness.source.FairnessCompletionRow">
+        select id,
+               game_session_id as gameSessionId,
+               member_id as memberId,
+               status,
+               completion_source as completionSource,
+               completed_at as completedAt
+          from game_player_node_outcome
+         where id = #{id}
+    </select>
+</mapper>
