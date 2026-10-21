@@ -35,6 +35,8 @@
         <view class="canyubox_li_right_txt ep1">
           <image lazy-load="true" src="/subpackageMember/images/d_cyIcon2.png" mode="widthFix" />{{item.typeLabel}} · {{item.sourceAddress}}
         </view>
+        <cy-badge type="status" variant="neutral" label="{{item.verificationText}}" />
+        <cy-btn wx:if="{{item.voucherAvailable}}" variant="ghost" size="sm" catchtap="viewVoucher" data-id="{{item.id}}">查看报名凭证</cy-btn>
       </view>
     </view>
   </view>

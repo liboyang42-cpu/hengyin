@@ -82,7 +82,7 @@ test('=0 是放宽,=K 是收紧', () => {
 test('每条都必须带 when', () => {
   const withVariants = (variants) => Object.assign({}, ENABLED, { variants })
   assert.match(cfg.variantsError(withVariants([{ relax: { 'timer.durationSeconds': '+30' } }])), /必须带 when/)
-  assert.equal(cfg.variantsError(withVariants([{ when: {}, relax: { 'timer.durationSeconds': '+30' } }])), '')
+  assert.equal(cfg.variantsError(withVariants([{ when: { var: 'sys.hp', op: 'LTE', value: 3 }, relax: { 'timer.durationSeconds': '+30' } }])), '')
 })
 
 test('不配 = 合法', () => {
@@ -98,7 +98,7 @@ test('relax 指向未启用的玩法段:两边都拒', () => {
     cfg.variantsError({
       schemaVersion: 1,
       timer: { enabled: true, durationSeconds: 60 },
-      variants: [{ when: {}, relax: { 'typeIn.seconds': '+10' } }],
+      variants: [{ when: { var: 'sys.hp', op: 'LTE', value: 3 }, relax: { 'typeIn.seconds': '+10' } }],
     }),
     /没有启用/)
 })
@@ -110,7 +110,7 @@ test('底值已经是不限还要 +N:两边都拒', () => {
     cfg.variantsError({
       schemaVersion: 1,
       sort: { enabled: true, maxAttempts: 0 },
-      variants: [{ when: {}, relax: { 'sort.maxAttempts': '+3' } }],
+      variants: [{ when: { var: 'sys.hp', op: 'LTE', value: 3 }, relax: { 'sort.maxAttempts': '+3' } }],
     }),
     /已经是不限/)
 })
@@ -137,7 +137,7 @@ test('缺省的次数字段与显式 0 同判:都算不限', () => {
     const field = key === 'sort' ? 'sort.maxAttempts' : 'typeIn.tries'
     assert.match(
       cfg.variantsError(Object.assign({ schemaVersion: 1 }, seg,
-        { variants: [{ when: {}, relax: { [field]: '+3' } }] })),
+        { variants: [{ when: { var: 'sys.hp', op: 'LTE', value: 3 }, relax: { [field]: '+3' } }] })),
       /已经是不限/, field + ' 缺省时必须拒')
   }
 })

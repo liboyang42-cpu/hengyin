@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
-  "controlCount": 4936,
+  "controlCount": 4938,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -68548,6 +68548,24 @@
           "route": "subpackageMember/mycanyu/mycanyu",
           "segments": [
             {
+              "selector": "cy-btn",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/mycanyu/mycanyu",
+          "segments": [
+            {
+              "selector": "cy-btn",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/mycanyu/mycanyu",
+          "segments": [
+            {
               "selector": "cy-error.cy-fill-state",
               "index": 0
             },
@@ -72409,6 +72427,174 @@
             {
               "selector": "cy-state-shell.fill-slot",
               "index": 2
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/signup/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.fill-slot",
+              "index": 3
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn.rs__act",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/signup/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.fill-slot",
+              "index": 3
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn.rs__act",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/signup/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.fill-slot",
+              "index": 3
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/signup/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.fill-slot",
+              "index": 3
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/signup/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.fill-slot",
+              "index": 3
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn.rs__act",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/signup/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.fill-slot",
+              "index": 3
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn.rs__act",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/signup/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.fill-slot",
+              "index": 3
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/signup/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.fill-slot",
+              "index": 3
             },
             {
               "selector": "cy-error",
@@ -97749,6 +97935,48 @@
             {
               "selector": "cy-state-shell.fill-slot",
               "index": 2
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-consent-check",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/signup/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.fill-slot",
+              "index": 3
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-consent-check",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/signup/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.fill-slot",
+              "index": 3
             },
             {
               "selector": "cy-error",
@@ -144326,6 +144554,19 @@
           ]
         },
         {
+          "route": "subpackageMember/signup/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.fill-slot",
+              "index": 3
+            },
+            {
+              "selector": "cy-empty",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "subpackageMember/tixian/tixian",
           "segments": [
             {
@@ -150995,6 +151236,32 @@
             {
               "selector": "cy-state-shell.fill-slot",
               "index": 2
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/signup/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.fill-slot",
+              "index": 3
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/signup/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.fill-slot",
+              "index": 3
             },
             {
               "selector": "cy-error",
@@ -157830,6 +158097,32 @@
           ]
         },
         {
+          "route": "subpackageMember/signup/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.fill-slot",
+              "index": 3
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/signup/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.fill-slot",
+              "index": 3
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            }
+          ]
+        },
+        {
           "route": "subpackageMember/tixian/tixian",
           "segments": [
             {
@@ -164649,6 +164942,32 @@
             {
               "selector": "cy-state-shell.fill-slot",
               "index": 2
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/signup/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.fill-slot",
+              "index": 3
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/signup/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.fill-slot",
+              "index": 3
             },
             {
               "selector": "cy-error",
@@ -262898,6 +263217,40 @@
           ]
         },
         {
+          "route": "subpackageMember/signup/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.fill-slot",
+              "index": 3
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/signup/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.fill-slot",
+              "index": 3
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "subpackageMember/tixian/tixian",
           "segments": [
             {
@@ -275755,6 +276108,40 @@
             {
               "selector": "cy-state-shell.fill-slot",
               "index": 2
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/signup/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.fill-slot",
+              "index": 3
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/signup/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.fill-slot",
+              "index": 3
             },
             {
               "selector": "cy-error",
@@ -288636,6 +289023,40 @@
           ]
         },
         {
+          "route": "subpackageMember/signup/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.fill-slot",
+              "index": 3
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/signup/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.fill-slot",
+              "index": 3
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "subpackageMember/tixian/tixian",
           "segments": [
             {
@@ -301505,6 +301926,40 @@
           ]
         },
         {
+          "route": "subpackageMember/signup/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.fill-slot",
+              "index": 3
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/signup/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.fill-slot",
+              "index": 3
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "subpackageMember/tixian/tixian",
           "segments": [
             {
@@ -314362,6 +314817,40 @@
             {
               "selector": "cy-state-shell.fill-slot",
               "index": 2
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/signup/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.fill-slot",
+              "index": 3
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/signup/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.fill-slot",
+              "index": 3
             },
             {
               "selector": "cy-error",
@@ -398651,6 +399140,90 @@
           ]
         },
         {
+          "route": "subpackageMember/signup/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.fill-slot",
+              "index": 3
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/signup/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.fill-slot",
+              "index": 3
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/signup/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.fill-slot",
+              "index": 3
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/signup/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.fill-slot",
+              "index": 3
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "subpackageMember/tixian/tixian",
           "segments": [
             {
@@ -436032,6 +436605,90 @@
             {
               "selector": "cy-state-shell.fill-slot",
               "index": 2
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/signup/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.fill-slot",
+              "index": 3
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/signup/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.fill-slot",
+              "index": 3
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/signup/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.fill-slot",
+              "index": 3
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/signup/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.fill-slot",
+              "index": 3
             },
             {
               "selector": "cy-error",
@@ -473445,6 +474102,90 @@
           ]
         },
         {
+          "route": "subpackageMember/signup/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.fill-slot",
+              "index": 3
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/signup/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.fill-slot",
+              "index": 3
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/signup/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.fill-slot",
+              "index": 3
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/signup/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.fill-slot",
+              "index": 3
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "subpackageMember/tixian/tixian",
           "segments": [
             {
@@ -510842,6 +511583,90 @@
           ]
         },
         {
+          "route": "subpackageMember/signup/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.fill-slot",
+              "index": 3
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/signup/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.fill-slot",
+              "index": 3
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/signup/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.fill-slot",
+              "index": 3
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/signup/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.fill-slot",
+              "index": 3
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "subpackageMember/tixian/tixian",
           "segments": [
             {
@@ -548223,6 +549048,90 @@
             {
               "selector": "cy-state-shell.fill-slot",
               "index": 2
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/signup/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.fill-slot",
+              "index": 3
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/signup/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.fill-slot",
+              "index": 3
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/signup/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.fill-slot",
+              "index": 3
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/signup/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.fill-slot",
+              "index": 3
             },
             {
               "selector": "cy-error",
@@ -585637,6 +586546,90 @@
           ]
         },
         {
+          "route": "subpackageMember/signup/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.fill-slot",
+              "index": 3
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/signup/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.fill-slot",
+              "index": 3
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/signup/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.fill-slot",
+              "index": 3
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/signup/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.fill-slot",
+              "index": 3
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "subpackageMember/tixian/tixian",
           "segments": [
             {
@@ -623019,6 +624012,90 @@
             {
               "selector": "cy-state-shell.fill-slot",
               "index": 2
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/signup/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.fill-slot",
+              "index": 3
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/signup/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.fill-slot",
+              "index": 3
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/signup/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.fill-slot",
+              "index": 3
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/signup/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.fill-slot",
+              "index": 3
             },
             {
               "selector": "cy-error",
@@ -660433,6 +661510,90 @@
           ]
         },
         {
+          "route": "subpackageMember/signup/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.fill-slot",
+              "index": 3
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/signup/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.fill-slot",
+              "index": 3
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/signup/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.fill-slot",
+              "index": 3
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/signup/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.fill-slot",
+              "index": 3
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "subpackageMember/tixian/tixian",
           "segments": [
             {
@@ -697831,6 +698992,90 @@
           ]
         },
         {
+          "route": "subpackageMember/signup/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.fill-slot",
+              "index": 3
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/signup/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.fill-slot",
+              "index": 3
+            },
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/signup/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.fill-slot",
+              "index": 3
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/signup/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.fill-slot",
+              "index": 3
+            },
+            {
+              "selector": "cy-error",
+              "index": 1
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
           "route": "subpackageMember/tixian/tixian",
           "segments": [
             {
@@ -703893,6 +705138,15 @@
               "index": 2
             }
           ]
+        },
+        {
+          "route": "subpackageMember/signup/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.fill-slot",
+              "index": 3
+            }
+          ]
         }
       ],
       "role": "inherited",
@@ -704321,6 +705575,15 @@
             {
               "selector": "cy-state-shell.fill-slot",
               "index": 2
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/signup/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.fill-slot",
+              "index": 3
             }
           ]
         }
@@ -704753,6 +706016,15 @@
               "index": 2
             }
           ]
+        },
+        {
+          "route": "subpackageMember/signup/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.fill-slot",
+              "index": 3
+            }
+          ]
         }
       ],
       "role": "inherited",
@@ -705183,6 +706455,15 @@
               "index": 2
             }
           ]
+        },
+        {
+          "route": "subpackageMember/signup/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.fill-slot",
+              "index": 3
+            }
+          ]
         }
       ],
       "role": "inherited",
@@ -705611,6 +706892,15 @@
             {
               "selector": "cy-state-shell.fill-slot",
               "index": 2
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/signup/index",
+          "segments": [
+            {
+              "selector": "cy-state-shell.fill-slot",
+              "index": 3
             }
           ]
         }
@@ -1131962,7 +1133252,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/mycanyu/mycanyu.js:149"
+        "staticSource": "subpackageMember/mycanyu/mycanyu.js:199"
       }
     },
     {
@@ -1132068,11 +1133358,81 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/mycanyu/mycanyu.js:155"
+        "staticSource": "subpackageMember/mycanyu/mycanyu.js:205"
       }
     },
     {
-      "id": "subpackageMember/mycanyu/mycanyu.wxml:44:catchtouchmove:blockSceneTouch:4",
+      "id": "subpackageMember/mycanyu/mycanyu.wxml:39:catchtap:viewVoucher:4",
+      "route": "subpackageMember/mycanyu/mycanyu",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageMember/mycanyu/mycanyu.wxml",
+        "js": "subpackageMember/mycanyu/mycanyu.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-btn",
+        "event": "catchtap",
+        "handler": "viewVoucher",
+        "line": 39,
+        "selectorHint": "cy-btn[catchtap]",
+        "visibleCondition": "{{item.voucherAvailable}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "tap",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "subpackageMember/signup/index?focusId="
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageMember/mycanyu/mycanyu.js:212"
+      }
+    },
+    {
+      "id": "subpackageMember/mycanyu/mycanyu.wxml:46:catchtouchmove:blockSceneTouch:5",
       "route": "subpackageMember/mycanyu/mycanyu",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1132095,7 +1133455,7 @@
         "tag": "view",
         "event": "catchtouchmove",
         "handler": "blockSceneTouch",
-        "line": 44,
+        "line": 46,
         "selectorHint": ".canyu-scene-host",
         "visibleCondition": "{{sceneCurrent && sceneCurrent.id === 'member-participation-detail'}}",
         "disabledCondition": null,
@@ -1132136,11 +1133496,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/mycanyu/mycanyu.js:162"
+        "staticSource": "subpackageMember/mycanyu/mycanyu.js:227"
       }
     },
     {
-      "id": "subpackageMember/mycanyu/mycanyu.wxml:45:bind:back:closeScene:6",
+      "id": "subpackageMember/mycanyu/mycanyu.wxml:47:bind:back:closeScene:7",
       "route": "subpackageMember/mycanyu/mycanyu",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1132163,7 +1133523,7 @@
         "tag": "cy-scene-sheet",
         "event": "bind:back",
         "handler": "closeScene",
-        "line": 45,
+        "line": 47,
         "selectorHint": "cy-scene-sheet[bind:back]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1132203,11 +1133563,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/mycanyu/mycanyu.js:163"
+        "staticSource": "subpackageMember/mycanyu/mycanyu.js:228"
       }
     },
     {
-      "id": "subpackageMember/mycanyu/mycanyu.wxml:45:bind:requestclose:closeScene:5",
+      "id": "subpackageMember/mycanyu/mycanyu.wxml:47:bind:requestclose:closeScene:6",
       "route": "subpackageMember/mycanyu/mycanyu",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1132230,7 +1133590,7 @@
         "tag": "cy-scene-sheet",
         "event": "bind:requestclose",
         "handler": "closeScene",
-        "line": 45,
+        "line": 47,
         "selectorHint": "cy-scene-sheet[bind:requestclose]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1132270,11 +1133630,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/mycanyu/mycanyu.js:163"
+        "staticSource": "subpackageMember/mycanyu/mycanyu.js:228"
       }
     },
     {
-      "id": "subpackageMember/mycanyu/mycanyu.wxml:46:bind:back:closeScene:7",
+      "id": "subpackageMember/mycanyu/mycanyu.wxml:48:bind:back:closeScene:8",
       "route": "subpackageMember/mycanyu/mycanyu",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1132297,7 +1133657,7 @@
         "tag": "cy-scene-member-participation-detail",
         "event": "bind:back",
         "handler": "closeScene",
-        "line": 46,
+        "line": 48,
         "selectorHint": "cy-scene-member-participation-detail[bind:back]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1132337,11 +1133697,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/mycanyu/mycanyu.js:163"
+        "staticSource": "subpackageMember/mycanyu/mycanyu.js:228"
       }
     },
     {
-      "id": "subpackageMember/mycanyu/mycanyu.wxml:46:bind:close:closeScene:8",
+      "id": "subpackageMember/mycanyu/mycanyu.wxml:48:bind:close:closeScene:9",
       "route": "subpackageMember/mycanyu/mycanyu",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1132364,7 +1133724,7 @@
         "tag": "cy-scene-member-participation-detail",
         "event": "bind:close",
         "handler": "closeScene",
-        "line": 46,
+        "line": 48,
         "selectorHint": "cy-scene-member-participation-detail[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1132404,11 +1133764,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/mycanyu/mycanyu.js:163"
+        "staticSource": "subpackageMember/mycanyu/mycanyu.js:228"
       }
     },
     {
-      "id": "subpackageMember/mycanyu/mycanyu.wxml:46:bind:refresh:onRetry:9",
+      "id": "subpackageMember/mycanyu/mycanyu.wxml:48:bind:refresh:onRetry:10",
       "route": "subpackageMember/mycanyu/mycanyu",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1132431,7 +1133791,7 @@
         "tag": "cy-scene-member-participation-detail",
         "event": "bind:refresh",
         "handler": "onRetry",
-        "line": 46,
+        "line": 48,
         "selectorHint": "cy-scene-member-participation-detail[bind:refresh]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1132513,11 +1133873,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/mycanyu/mycanyu.js:54"
+        "staticSource": "subpackageMember/mycanyu/mycanyu.js:80"
       }
     },
     {
-      "id": "subpackageMember/mycanyu/mycanyu.wxml:50:bind:settled:onPrivacyGateSettled:10",
+      "id": "subpackageMember/mycanyu/mycanyu.wxml:52:bind:settled:onPrivacyGateSettled:11",
       "route": "subpackageMember/mycanyu/mycanyu",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1132540,7 +1133900,7 @@
         "tag": "cy-privacy-gate",
         "event": "bind:settled",
         "handler": "onPrivacyGateSettled",
-        "line": 50,
+        "line": 52,
         "selectorHint": "cy-privacy-gate[bind:settled]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1132580,7 +1133940,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/mycanyu/mycanyu.js:34"
+        "staticSource": "subpackageMember/mycanyu/mycanyu.js:42"
       }
     },
     {
@@ -1132650,7 +1134010,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/mycanyu/mycanyu.js:45"
+        "staticSource": "subpackageMember/mycanyu/mycanyu.js:71"
       }
     },
     {
@@ -1137123,7 +1138483,7 @@
       }
     },
     {
-      "id": "subpackageMember/signup/index.wxml:109:bindtap:goMyTeam:4",
+      "id": "subpackageMember/signup/index.wxml:115:bindtap:goMyTeam:5",
       "route": "subpackageMember/signup/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1137146,7 +1138506,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goMyTeam",
-        "line": 109,
+        "line": 115,
         "selectorHint": ".team-entry",
         "visibleCondition": "{{currentTeam}}",
         "disabledCondition": null,
@@ -1137189,11 +1138549,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/signup/index.js:305"
+        "staticSource": "subpackageMember/signup/index.js:376"
       }
     },
     {
-      "id": "subpackageMember/signup/index.wxml:56:bind:primary:retryWallet:0",
+      "id": "subpackageMember/signup/index.wxml:56:bind:primary:retryFocus:0",
       "route": "subpackageMember/signup/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1137215,7 +1138575,7 @@
       "control": {
         "tag": "cy-state-shell",
         "event": "bind:primary",
-        "handler": "retryWallet",
+        "handler": "retryFocus",
         "line": 56,
         "selectorHint": ".fill-slot",
         "visibleCondition": null,
@@ -1137248,11 +1138608,122 @@
         "apis": [
           "/api/config/features",
           "/api/login/code",
+          "/api/registration/info",
+          "/api/role/info"
+        ],
+        "primaryApis": [
+          "/api/config/features",
+          "/api/registration/info"
+        ],
+        "auxiliaryApis": [
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/registration/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageMember/signup/index.js:192"
+      }
+    },
+    {
+      "id": "subpackageMember/signup/index.wxml:62:bind:primary:retryWallet:1",
+      "route": "subpackageMember/signup/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageMember/signup/index.wxml",
+        "js": "subpackageMember/signup/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-state-shell",
+        "event": "bind:primary",
+        "handler": "retryWallet",
+        "line": 62,
+        "selectorHint": ".fill-slot",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "read",
+      "interactionMode": "event-contract",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/registration/info",
           "/api/registration/list",
           "/api/role/info"
         ],
         "primaryApis": [
           "/api/config/features",
+          "/api/registration/info",
           "/api/registration/list"
         ],
         "auxiliaryApis": [
@@ -1137268,6 +1138739,12 @@
           },
           {
             "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/registration/info",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -1137298,11 +1138775,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/signup/index.js:246"
+        "staticSource": "subpackageMember/signup/index.js:316"
       }
     },
     {
-      "id": "subpackageMember/signup/index.wxml:60:bind:primary:loginWallet:1",
+      "id": "subpackageMember/signup/index.wxml:66:bind:primary:loginWallet:2",
       "route": "subpackageMember/signup/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1137325,7 +1138802,7 @@
         "tag": "cy-state-shell",
         "event": "bind:primary",
         "handler": "loginWallet",
-        "line": 60,
+        "line": 66,
         "selectorHint": ".fill-slot",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1137366,11 +1138843,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/signup/index.js:252"
+        "staticSource": "subpackageMember/signup/index.js:322"
       }
     },
     {
-      "id": "subpackageMember/signup/index.wxml:82:bindchange:onTicketSwiperChange:2",
+      "id": "subpackageMember/signup/index.wxml:88:bindchange:onTicketSwiperChange:3",
       "route": "subpackageMember/signup/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1137393,7 +1138870,7 @@
         "tag": "swiper",
         "event": "bindchange",
         "handler": "onTicketSwiperChange",
-        "line": 82,
+        "line": 88,
         "selectorHint": "swiper[bindchange]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1137433,11 +1138910,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/signup/index.js:186"
+        "staticSource": "subpackageMember/signup/index.js:249"
       }
     },
     {
-      "id": "subpackageMember/signup/index.wxml:89:bindtap:goTicket:3",
+      "id": "subpackageMember/signup/index.wxml:95:bindtap:goTicket:4",
       "route": "subpackageMember/signup/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1137460,7 +1138937,7 @@
         "tag": "swiper-item",
         "event": "bindtap",
         "handler": "goTicket",
-        "line": 89,
+        "line": 95,
         "selectorHint": "swiper-item[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1137504,7 +1138981,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/signup/index.js:238"
+        "staticSource": "subpackageMember/signup/index.js:308"
       }
     },
     {
