@@ -481,7 +481,7 @@ def workflow_problems(text):
         problems.append("must be manual-only (workflow_dispatch)")
     through = re.search(r"^      through:\n[\s\S]*?options:\n((?:          - .+\n)+)", text, re.MULTILINE)
     options = re.findall(r"- (\S+)", through.group(1)) if through else []
-    if options != list(ca.CHAIN_NAMES) + ["post_deploy"]:
+    if options != list(ca.CHAIN_NAMES) + ["post_deploy", "post_restart"]:
         problems.append("through choices %s != chain order %s" % (options, list(ca.CHAIN_NAMES)))
     if "\npermissions:\n  contents: read\n" not in text or re.search(r":\s*write\b", text):
         problems.append("permissions must be contents: read only")
@@ -1050,6 +1050,419 @@ class PostDeployTest(unittest.TestCase):
                 with self.assertRaises(ca.GateError): ca.app_process_identity(process, ["java", "-cp", "fixture"])
         process.poll.return_value = 1
         with self.assertRaises(ca.GateError): ca.app_process_identity(process, ["java"])
+
+
+
+class PostRestartTest(unittest.TestCase):
+    EPOCH = 1800000000
+    def state(self):
+        return {"roam": [[2, 1, 0]], "metrics": [["jvm.heap.used.ratio", "jvm", "start", "end", "OK", "0.1"]],
+                "audit": [[ca.post.FIXTURE_ID, 0, ca.post.FIXTURE_ID, 9009]],
+                "withdraw": [[ca.post.FIXTURE_ID, 9009, "1.00", 3, 0]],
+                "settlement": [[ca.post.FIXTURE_ID, "1.00", "1.00"]],
+                "commerce": [[ca.post.FIXTURE_ID, "TPLTM_9932001", 9009, "premium_template", 0, "1.00", 0, None, None, None]],
+                "assets": [["0.00"]], "entitlements": []}
+
+    def result(self):
+        db = PostStorage()
+        ca.post.register_jobs(_HERE.parent, db.connect, POST_UUID)
+        jobs = [r[:7] + ["1"] + r[8:] for r in db.rows]
+        state = self.state()
+        def effect(target, n, negative=False):
+            job = next(r for r in jobs if r[3] == target)
+            before, after = copy.deepcopy(state), copy.deepcopy(state)
+            if target == ca.post.ROAM_TARGET and n == 1: before["roam"] = [[0, 0, 0]]
+            if target == "metricsProbeTask.run()" and n == 2: before["metrics"] = []
+            kind = "COMMERCE_UNKNOWN" if target == ca.post.COMMERCE else "SETTLEMENT_MISMATCH" if negative else "OTHER"
+            if negative: before["settlement"] = after["settlement"] = [[ca.post.FIXTURE_ID, "2.00", "1.00"]]
+            row = {"target": target, "job_id": job[0], "baseline_log_id": 0,
+                   "new_jvm_start_database_epoch": self.EPOCH,
+                   "log": [n, "1" if target == ca.post.COMMERCE or negative else "0", self.EPOCH + 1, kind, job[1], job[2], target],
+                   "before": before, "after": after,
+                   "invocation": "ORIGINAL_MINUTE_CRON" if target == ca.post.ROAM_TARGET and n == 1 else "SINGLE_NORMAL_ADMIN_PUT"}
+            if target == ca.post.COMMERCE:
+                row["specific_cause"] = {"code": "COMMERCE_QUERY_UNCONFIRMED", "job_log_id": n,
+                    "start_offset": 0, "end_offset": 100, "cause_class": "java.lang.IllegalStateException",
+                    "source_frame": "MerchantCommerceService.reconcileOrder:177"}
+            if target in ("auditBacklogMonitorTask.run()", "withdrawReconciliationTask.run()") or negative:
+                row["alarm"] = {"value": "1", "ttl_ms": 10000 - n}
+            return row
+        targets = [ca.post.ROAM_TARGET, "metricsProbeTask.run()", "auditBacklogMonitorTask.run()",
+                   "withdrawReconciliationTask.run()", "settlementReconciliationTask.run()", ca.post.COMMERCE]
+        effects = [effect(t, i) for i, t in enumerate(targets, 1)]
+        rejection = effect("settlementReconciliationTask.run()", 10, True)
+        return {"status": "PASS", "schema": ca.SCHEMA, "jvm1_stopped": True, "jvm2_stopped": True,
+                "jvm2_exit_code": 143, "jvm2_new_identity": True, "jvm2_started_database_epoch": self.EPOCH,
+                "server_uuid": POST_UUID, "controlled_stop": True,
+                "stop_precondition": {"pid": 124, "starttime": "457", "command_sha256": "d" * 64, "listener_inodes": ["790"]},
+                "proof": {"server_uuid": POST_UUID, "observed_at": self.EPOCH + 1,
+                          "process": {"pid": 124, "starttime": "457", "command_sha256": "d" * 64, "listener_inodes": ["790"]}},
+                "clock": {"before_start": self.clock(), "after_live": self.clock(2), "before_stop": self.clock(20)},
+                "payment_stub_binding": {"task": True, "service": True, "type": "com.chengyinhub.e2e.E2eWechatPayStub",
+                                         "source_sha256": "62daf04bc0e6aac703e7536fe17b79999b86d92ddec722cfb88c59cadba87161"},
+                "automatic_roam_observed": True, "fixture": {"status": "PASS", "schema": ca.SCHEMA, "jobs": jobs, "server_uuid": POST_UUID},
+                "effects": effects, "roam_repeat": effect(ca.post.ROAM_TARGET, 7),
+                "metrics_repeat": effect("metricsProbeTask.run()", 8),
+                "audit_repeat": effect("auditBacklogMonitorTask.run()", 9), "settlement_rejection": rejection,
+                "final_readback": copy.deepcopy(rejection["after"]), "after_stop_readback": copy.deepcopy(rejection["after"]),
+                "final_jobs": copy.deepcopy(jobs), "after_stop_jobs": copy.deepcopy(jobs),
+                "passive_queues": {"crm_export_tasks": 0, "account_deregistrations": 0},
+                "local_files": {"crm_export_directory": "EMPTY_TASK_OWNED"},
+                "after_stop_local_files": {"crm_export_directory": "EMPTY_TASK_OWNED"}}
+
+    def clock(self, offset=0):
+        return {"epoch": self.EPOCH + offset, "host_before": self.EPOCH + offset + 0.01,
+                "host_after": self.EPOCH + offset + 0.02}
+
+    def test_mode_is_separate_no_chains_or_fault_probe(self):
+        self.assertEqual([], ca.plan(SHA, "post_restart", "")["chains"])
+        with self.assertRaises(ca.GateError): ca.plan(SHA, "post_restart", "/api/play/checkin")
+        self.assertEqual("post_deploy", ca.plan(SHA, "post_deploy", "")["through"])
+
+    def test_recruit_seed_removal_uses_full_row_and_rejects_unknown_or_wrong_creator(self):
+        row = [77, "双死线-招募到期判定", "DEFAULT", ca.post.RECRUIT, "0 0/10 * * * ?", "3", "1", "0",
+               "e2e-seed", "2026-10-21 00:00:00", "E2E TopicRecruitDeadlineTask", "", None]
+        fresh = {"build_exit": 0, "seed_exit": 0,
+                 "containers": {"mysql": "cy-chain-1-1-mysql", "redis": "cy-chain-1-1-redis"}}
+        with mock.patch.object(ca.post, "read_state", return_value={"server_uuid": POST_UUID}), \
+             mock.patch.object(ca.post, "restart_rows", side_effect=[[row], [], [[0, 0]]]), \
+             mock.patch.object(ca.post, "fixture_write") as write:
+            result = ca.post.prepare_restart_seed(None, fresh)
+            sql, params = write.call_args.args[2][0]
+            self.assertEqual(13, sql.count("<=> %s")); self.assertEqual(tuple(row), params)
+            self.assertEqual(0, result["jobs_before_jvm1"])
+        for rows in ([row, row], [row[:8] + ["not-our-seed"] + row[9:]], [row[:10] + ["wrong"] + row[11:]]):
+            with mock.patch.object(ca.post, "read_state", return_value={"server_uuid": POST_UUID}), \
+                 mock.patch.object(ca.post, "restart_rows", return_value=rows), mock.patch.object(ca.post, "fixture_write") as write:
+                with self.assertRaises(ca.post.PostDeployError): ca.post.prepare_restart_seed(None, fresh)
+                write.assert_not_called()
+        with self.assertRaises(ca.post.PostDeployError): ca.post.prepare_restart_seed(None, {})
+
+    def test_required_effects_and_repeats_pass_and_fake_evidence_fails(self):
+        good = self.result(); ca.post.validate_restart_result(good)
+        for mutate in (
+            lambda r: r.update(jvm2_stopped=False),
+            lambda r: r["effects"].pop(),
+            lambda r: r["effects"][0]["after"].update(roam=[[0, 0, 0]]),
+            lambda r: r["effects"][0]["log"].__setitem__(0, 0),
+            lambda r: r["effects"][1]["after"].update(metrics=[]),
+            lambda r: r["effects"][1]["after"]["metrics"][0].__setitem__(5, "NaN"),
+            lambda r: r["effects"][2].pop("alarm"),
+            lambda r: r["effects"][3]["log"].__setitem__(4, "foreign-name"),
+            lambda r: r["effects"][5]["log"].__setitem__(3, "OTHER"),
+            lambda r: r["metrics_repeat"]["after"]["metrics"][0].__setitem__(2, "another-window"),
+            lambda r: r["audit_repeat"]["alarm"].update(ttl_ms=600000),
+            lambda r: r["settlement_rejection"]["log"].__setitem__(3, "OTHER"),
+            lambda r: r["after_stop_readback"].update(assets=[["99.00"]]),
+            lambda r: r["after_stop_jobs"].append(copy.deepcopy(r["after_stop_jobs"][0])),
+        ):
+            with self.subTest(mutate=mutate):
+                changed = copy.deepcopy(good); mutate(changed)
+                with self.assertRaises((ca.post.PostDeployError, KeyError)): ca.post.validate_restart_result(changed)
+
+    def test_log_must_be_new_and_bound_to_exact_names_target_and_new_jvm_time(self):
+        job = self.result()["fixture"]["jobs"][0]
+        good = [11, "0", 1001, "OTHER", job[1], job[2], job[3]]
+        for rows, valid in (([good], True), ([], True), ([good, good], False),
+                            ([[10] + good[1:]], False), ([good[:2] + [999] + good[3:]], False),
+                            ([good[:4] + ["foreign"] + good[5:]], False)):
+            with mock.patch.object(ca.post, "restart_rows", return_value=rows) as query:
+                if valid: ca.post.restart_log(None, POST_UUID, job, 10, 1000)
+                else:
+                    with self.assertRaises(ca.post.PostDeployError): ca.post.restart_log(None, POST_UUID, job, 10, 1000)
+                self.assertEqual((job[3], job[1], job[2]), query.call_args.args[3][-3:])
+
+    def test_restart_config_pins_background_limits_webhooks_and_owned_path(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            args = ca.argparse.Namespace(source=Path(tmp) / "source", work=Path(tmp) / "work")
+            def digest(path): return ca.RESTART_BACKGROUND_SOURCE[str(Path(path).relative_to(args.source))]
+            with mock.patch.object(ca, "sha256_file", side_effect=digest):
+                config = ca.restart_config(args)
+                text = config.read_text()
+                for line in ("chengyin.jobs.enabled=true", "withdrawal.pii.backfill-limit=0", "member.password.legacy-hash-limit=0",
+                             "alarm.webhook=", "alarm.failure-webhook=", "chengyin.status.feed-file=" + str(args.work.resolve() / "restart-status/chengyin-status.json")):
+                    self.assertIn(line + "\n", text)
+                self.assertEqual(0o600, config.stat().st_mode & 0o777)
+                with self.assertRaises(ca.GateError): ca.restart_config(args)
+            with mock.patch.object(ca, "sha256_file", return_value="wrong"):
+                with self.assertRaises(ca.GateError): ca.restart_config(args)
+
+    def test_private_crm_directory_refuses_symlink_and_any_existing_file(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.assertEqual({"crm_export_directory": "EMPTY_TASK_OWNED"}, ca.restart_local_files(root))
+            crm = root / "upload-private/merchant-crm-export"
+            crm.mkdir(parents=True)
+            (crm / "foreign.xlsx").write_text("must preserve")
+            with self.assertRaises(ca.GateError): ca.restart_local_files(root)
+            self.assertEqual("must preserve", (crm / "foreign.xlsx").read_text())
+            (crm / "foreign.xlsx").unlink()
+            crm.rmdir(); crm.symlink_to(root, target_is_directory=True)
+            with self.assertRaises(ca.GateError): ca.restart_local_files(root)
+
+    def test_fresh_effect_writes_are_parameterized_exact_rows_and_unknown_queue_refuses(self):
+        good = self.result()
+        jobs = [row[:7] + ["0"] + row[8:] for row in good["fixture"]["jobs"]]
+        calls = []
+        def rows(c, server, sql, params=()):
+            if sql == ca.post.ALL_JOBS:
+                return jobs if not calls else good["fixture"]["jobs"]
+            if "merchant_crm_export_task" in sql: return [[0, 0]]
+            if "COUNT(*) FROM audit_task" in sql: return [[0, 0, 0, 0, 0, 0]]
+            raise AssertionError(sql)
+        def write(c, server, statements):
+            for sql, params in statements:
+                self.assertEqual(sql.count("%s"), len(params))
+                self.assertNotIn(str(ca.post.FIXTURE_ID), sql)
+            calls.append(statements)
+        with mock.patch.object(ca.post, "restart_rows", side_effect=rows), \
+             mock.patch.object(ca.post, "fixture_write", side_effect=write), \
+             mock.patch.object(ca.post, "restart_effect_state", return_value=dict(self.state(), roam=[[0, 0, 0]], metrics=[])):
+            fixture = ca.post.prepare_restart_effects(None, POST_UUID)
+            self.assertEqual(2, len(calls)); self.assertEqual(6, len(calls[0])); self.assertEqual(7, len(calls[1]))
+            self.assertEqual(6, len(fixture["jobs"]))
+        with mock.patch.object(ca.post, "restart_rows", return_value=[[1, 0]]):
+            with self.assertRaises(ca.post.PostDeployError): ca.post.passive_queues(None, POST_UUID)
+
+    def test_live_and_summary_job_definitions_refuse_every_immutable_column_drift(self):
+        good = self.result()
+        jobs = good["fixture"]["jobs"]
+        ca.post.verify_restart_jobs(jobs, copy.deepcopy(jobs))
+        roam = next(i for i, row in enumerate(jobs) if row[3] == ca.post.ROAM_TARGET)
+        resumed = copy.deepcopy(jobs); resumed[roam][7] = "0"; resumed[roam][12] = "2026-10-21 12:34:56"
+        ca.post.verify_restart_jobs(jobs, resumed, "0")
+        with self.assertRaises(ca.post.PostDeployError): ca.post.verify_restart_jobs(jobs, resumed)
+        for index, job in enumerate(jobs):
+            for col in range(13):
+                if index == roam and col == 12: continue
+                changed = copy.deepcopy(jobs); changed[index][col] = "DRIFT"
+                with self.subTest(target=job[3], column=ca.post.JOB_COLUMNS[col]):
+                    with self.assertRaises(ca.post.PostDeployError): ca.post.verify_restart_jobs(jobs, changed)
+                    result = copy.deepcopy(good)
+                    result["final_jobs"] = result["after_stop_jobs"] = changed
+                    with self.assertRaises(ca.post.PostDeployError): ca.post.validate_restart_result(result)
+        paused = copy.deepcopy(resumed); paused[roam][7] = "1"
+        good["final_jobs"] = good["after_stop_jobs"] = paused
+        ca.post.validate_restart_result(good)
+
+    def test_commerce_projection_covers_actual_paid_order_and_subscription_writes(self):
+        state = self.state()
+        order = dict(zip(("id","order_sn","member_id","biz_type","status","pay_amount","pay_type",
+                          "payment_transaction_id","payment_time","update_time"), state["commerce"][0]))
+        subscription = {"id": 1, "merchant_id": 9009, "subscription_type": "premium_template",
+                        "start_date": "2026-01-01", "end_date": "2026-01-02", "max_usage": 1,
+                        "used_count": 0, "is_active": 1, "remark": None,
+                        "create_time": "2026-01-01", "update_time": "2026-01-01"}
+        selected = {}
+        def query(c, server, sql, params=()):
+            for table, row in (("oms_order", order), ("merchant_subscription", subscription)):
+                if "FROM " + table in sql:
+                    cols = sql.split(" FROM ")[0][7:].split(","); selected[table] = cols
+                    return [[row[col.strip()] for col in cols]]
+            if "roam_presence" in sql: return state["roam"]
+            for table,key in (("metrics_snapshot","metrics"),("audit_task","audit"),
+                              ("member_cash_withdraw","withdraw"),("settlement_batch","settlement"),("ums_member","assets")):
+                if "FROM " + table in sql: return state[key]
+            raise AssertionError(sql)
+        with mock.patch.object(ca.post, "restart_rows", side_effect=query):
+            before = ca.post.restart_effect_state(None, POST_UUID)
+            self.assertEqual(set(subscription), set(selected["merchant_subscription"]))
+            self.assertTrue({"pay_type", "payment_transaction_id", "payment_time", "update_time"} <= set(selected["oms_order"]))
+            for row, fields in ((order, ("pay_type", "payment_transaction_id", "payment_time", "update_time")),
+                                (subscription, ("start_date", "end_date", "max_usage", "used_count", "is_active", "update_time"))):
+                for field in fields:
+                    original = row[field]; row[field] = "DRIFT"
+                    after = ca.post.restart_effect_state(None, POST_UUID)
+                    with self.subTest(field=field), self.assertRaises(ca.post.PostDeployError):
+                        ca.post.validate_restart_effect(ca.post.COMMERCE, [1,"1",1001,"COMMERCE_UNKNOWN"], before, after)
+                    row[field] = original
+
+    def test_unknown_put_stops_before_readback_and_never_resends(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp); args = ca.argparse.Namespace(out=out, app=out, work=out, jar=out / "jar", gate=_HERE.parent)
+            ca.stage(out, "storage", "PASS", containers={"mysql": "cy-chain-1-1-mysql", "redis": "cy-chain-1-1-redis"})
+            fixture = self.result()["fixture"]; fixture.update(server_uuid=POST_UUID, before=self.state())
+            events = []; process = mock.Mock(); process.returncode = None; process.poll.side_effect = lambda: process.returncode
+            first = mock.Mock(); first.poll.return_value = 143
+            proof = {"server_uuid": POST_UUID, "jar_sha256": "b" * 64,
+                     "process": {"pid": 124, "starttime": "new", "command_sha256": "d" * 64, "listener_inodes": ["9"]}}
+            def identity(*unused):
+                if process.returncode is not None: raise ca.GateError("gone")
+                return proof["process"]
+            def stop(unused, require_alive=False): events.append("stop"); process.returncode = 143
+            def query(c, u, sql, params=()):
+                if sql == "SELECT UNIX_TIMESTAMP()": return [[1000]]
+                if sql == ca.post.ALL_JOBS: return fixture["jobs"]
+                if "MAX(job_log_id)" in sql: return [[0]]
+                if "IS_USED_LOCK" in sql: return [[None]]
+                raise AssertionError(sql)
+            def state(*unused):
+                events.append("after_stop_readback" if process.returncode is not None else "before_put")
+                return self.state()
+            def http(path, *unused, **kwargs):
+                if path == "/login": return {"token": "fixture-token"}
+                if path == "/actuator/beans": return {"contexts": {"a": {"beans": {
+                    "e2eWechatPayStub": {"type": "com.chengyinhub.e2e.E2eWechatPayStub"},
+                    "merchantCommerceReconcileTask": {"dependencies": ["e2eWechatPayStub"]},
+                    "merchantCommerceService": {"dependencies": ["e2eWechatPayStub"]}}}}}
+                events.append("put_unknown"); raise TimeoutError("PRIVATE_TRANSPORT_DETAIL")
+            with mock.patch.object(ca.post, "prepare_restart_effects", return_value=fixture), \
+                 mock.patch.object(ca.post, "restart_rows", side_effect=query), mock.patch.object(ca.post, "restart_effect_state", side_effect=state), \
+                 mock.patch.object(ca, "start_app", return_value=(process, {})), mock.patch.object(ca, "observe_postdeploy", return_value=proof), \
+                 mock.patch.object(ca, "java_command", return_value=["java", "fixture"]), mock.patch.object(ca, "app_process_identity", side_effect=identity), \
+                 mock.patch.object(ca, "sha256_file", side_effect=lambda p: "62daf04bc0e6aac703e7536fe17b79999b86d92ddec722cfb88c59cadba87161" if str(p).endswith(".stub") else "b" * 64), \
+                 mock.patch.object(ca.post, "restart_clock", return_value=self.clock()), mock.patch.object(ca, "postdeploy_http", side_effect=http), \
+                 mock.patch.object(ca, "stop_app", side_effect=stop):
+                with self.assertRaises(ca.GateError):
+                    ca.run_post_restart(args, {}, ca.plan(SHA, "post_restart", ""), {"server_uuid": POST_UUID, "process": {"pid": 123}}, first, out / "fixture")
+            self.assertEqual(1, events.count("put_unknown"))
+            self.assertLess(events.index("put_unknown"), events.index("stop"))
+            self.assertLess(events.index("stop"), events.index("after_stop_readback"))
+            receipt = ca.read_receipt(out)["stages"]["post_restart"]
+            self.assertEqual("FAIL", receipt["status"])
+            self.assertNotIn("PRIVATE_TRANSPORT_DETAIL", json.dumps(receipt))
+
+    def test_clock_uuid_and_summary_refuse_zero_stale_foreign_and_future_logs(self):
+        with mock.patch.object(ca.post, "restart_rows", return_value=[[self.EPOCH]]) as rows, \
+             mock.patch.object(ca.post.time, "time", side_effect=[self.EPOCH + .01, self.EPOCH + .02]):
+            self.assertEqual(self.clock(), ca.post.restart_clock(None, POST_UUID))
+            self.assertEqual(POST_UUID, rows.call_args.args[1])
+        for clock in ({"epoch": 0, "host_before": self.EPOCH, "host_after": self.EPOCH},
+                      {"epoch": self.EPOCH - 30, "host_before": self.EPOCH, "host_after": self.EPOCH},
+                      {"epoch": self.EPOCH, "host_before": self.EPOCH, "host_after": self.EPOCH + 31}):
+            with self.assertRaises(ca.post.PostDeployError): ca.post.validate_restart_clock(clock)
+        for mutate in (lambda r: r["fixture"].update(server_uuid="foreign"),
+                       lambda r: r["clock"]["before_start"].update(epoch=0),
+                       lambda r: r["clock"]["after_live"].update(epoch=self.EPOCH - 30),
+                       lambda r: r["proof"].update(observed_at=self.EPOCH - 90),
+                       lambda r: r["effects"][0]["log"].__setitem__(2, self.EPOCH + 100),
+                       lambda r: r.update(controlled_stop=False)):
+            result = self.result(); mutate(result)
+            with self.assertRaises(ca.post.PostDeployError): ca.post.validate_restart_result(result)
+        stale = self.result(); stale["jvm2_started_database_epoch"] = 0
+        for effect in stale["effects"] + [stale[k] for k in ("roam_repeat", "metrics_repeat", "audit_repeat", "settlement_rejection")]:
+            effect["new_jvm_start_database_epoch"] = 0; effect["log"][2] = 1
+        with self.assertRaises(ca.post.PostDeployError): ca.post.validate_restart_result(stale)
+
+    def test_commerce_specific_new_log_cause_not_generic_or_technical_failure(self):
+        text = ("java.lang.IllegalStateException: 商业化查单补偿失败 1 单\n"
+                "Caused by: java.lang.IllegalStateException: 商业化查单结果无法确认\n"
+                "    at com.chengyinhub.business.service.impl.MerchantCommerceService.reconcileOrder(MerchantCommerceService.java:177)\n")
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "application.log"; prefix = "old fixture output\n"
+            path.write_text(prefix + text)
+            result = ca.post.commerce_cause(path, len(prefix.encode()), 6)
+            self.assertEqual(6, result["job_log_id"]); self.assertNotIn("raw", result)
+            for bad in (text.replace("商业化查单结果无法确认", "SQL fixture failure"),
+                        text.replace("MerchantCommerceService.java:177", "OtherService.java:177"),
+                        "java.lang.IllegalStateException: 商业化查单补偿失败 1 单\n",
+                        text + "Caused by: java.sql.SQLException: fixture-only\n"):
+                path.write_text(prefix + bad)
+                with self.assertRaises(ca.post.PostDeployError): ca.post.commerce_cause(path, len(prefix.encode()), 6)
+            path.write_text(text + prefix)
+            with self.assertRaises(ca.post.PostDeployError): ca.post.commerce_cause(path, len(text.encode()), 6)
+        result = self.result()
+        commerce = next(e for e in result["effects"] if e["target"] == ca.post.COMMERCE)
+        for mutate in (lambda r: r.pop("specific_cause"), lambda r: r["specific_cause"].update(job_log_id=999)):
+            bad = copy.deepcopy(result); item = next(e for e in bad["effects"] if e["target"] == ca.post.COMMERCE); mutate(item)
+            with self.assertRaises(ca.post.PostDeployError): ca.post.validate_restart_result(bad)
+        result["payment_stub_binding"]["service"] = False
+        with self.assertRaises(ca.post.PostDeployError): ca.post.validate_restart_result(result)
+
+    def test_controlled_stop_rejects_dead_process_but_cleanup_preserves_exit(self):
+        dead = mock.Mock(returncode=-9); dead.poll.return_value = -9
+        with self.assertRaises(ca.GateError): ca.stop_app(dead, require_alive=True)
+        dead.terminate.assert_not_called()
+        self.assertEqual(-9, ca.stop_app(dead)); dead.terminate.assert_not_called()
+        alive = mock.Mock(returncode=-15); alive.poll.return_value = None
+        ca.stop_app(alive, require_alive=True); alive.terminate.assert_called_once(); alive.wait.assert_called_once()
+
+    def test_lifecycle_final_readback_crash_is_fail_and_exact_cleanup_still_runs(self):
+        for crash in (False, True):
+            with self.subTest(crash=crash), tempfile.TemporaryDirectory() as tmp:
+                out = Path(tmp); args = ca.argparse.Namespace(out=out, app=out, work=out, jar=out / "jar", gate=_HERE.parent)
+                ca.stage(out, "storage", "PASS", containers={"mysql": "cy-chain-1-1-mysql", "redis": "cy-chain-1-1-redis"})
+                good = self.result(); fixture = copy.deepcopy(good["fixture"]); current = copy.deepcopy(fixture["jobs"])
+                proof = dict(good["proof"], jar_sha256="b" * 64)
+                process = mock.Mock(returncode=None)
+                process.poll.side_effect = lambda: process.returncode
+                process.terminate.side_effect = lambda: setattr(process, "returncode", -15)
+                process.wait.side_effect = lambda **kw: process.returncode
+                first = mock.Mock(); first.poll.return_value = -15
+                sequence = [good["effects"][0], good["roam_repeat"], good["effects"][1], good["metrics_repeat"],
+                            *good["effects"][2:], good["audit_repeat"], good["settlement_rejection"]]
+                states = [copy.deepcopy(state) for effect in sequence for state in (effect["before"], effect["after"])]
+                states += [good["final_readback"], good["after_stop_readback"]]
+                logs = [copy.deepcopy(e["log"]) for e in sequence]
+                for log in logs:
+                    if log[-1] == ca.post.COMMERCE: log[3] = "COMMERCE_AGGREGATE_FAILURE"
+                reads = []
+                def state(*unused):
+                    reads.append(1); result = states.pop(0)
+                    if crash and len(reads) == 21: process.returncode = -9
+                    return result
+                def identity(*unused):
+                    if process.returncode is not None: raise ca.GateError("gone")
+                    return proof["process"]
+                def query(c,u,sql,params=()):
+                    if sql == ca.post.ALL_JOBS: return copy.deepcopy(current)
+                    if "MAX(job_log_id)" in sql: return [[0]]
+                    if "SELECT status FROM sys_job" in sql: return [["1"]]
+                    if "IS_USED_LOCK" in sql: return [[None]]
+                    raise AssertionError(sql)
+                def start(*unused,**kw):
+                    (out / "post_restart/application.log").write_text("")
+                    return process, {}
+                def http(path,*unused,**kw):
+                    if path == "/login": return {"token": "fixture"}
+                    if path == "/actuator/beans": return {"contexts": {"a": {"beans": {
+                        "e2eWechatPayStub": {"type": "com.chengyinhub.e2e.E2eWechatPayStub"},
+                        "merchantCommerceReconcileTask": {"dependencies": ["e2eWechatPayStub"]},
+                        "merchantCommerceService": {"dependencies": ["e2eWechatPayStub"]}}}}}
+                    job = kw["job"]
+                    if path.endswith("changeStatus"):
+                        row = next(r for r in current if r[0] == job["jobId"]); row[7] = job["status"]
+                    if path.endswith("run") and job["jobId"] == next(r[0] for r in current if r[3] == ca.post.COMMERCE):
+                        (out / "post_restart/application.log").write_text(
+                            "java.lang.IllegalStateException: 商业化查单补偿失败 1 单\n"
+                            "Caused by: java.lang.IllegalStateException: 商业化查单结果无法确认\n"
+                            " at com.chengyinhub.business.service.impl.MerchantCommerceService.reconcileOrder(MerchantCommerceService.java:177)\n")
+                    return {"code": 200}
+                with mock.patch.object(ca.post,"prepare_restart_effects",return_value=fixture), \
+                     mock.patch.object(ca.post,"restart_clock",side_effect=[self.clock(),self.clock(2),self.clock(20)]), \
+                     mock.patch.object(ca.post,"restart_rows",side_effect=query), mock.patch.object(ca.post,"restart_effect_state",side_effect=state), \
+                     mock.patch.object(ca.post,"restart_log",side_effect=lambda *a: logs.pop(0)), mock.patch.object(ca.post,"fixture_write"), \
+                     mock.patch.object(ca.post,"passive_queues",return_value={"crm_export_tasks":0,"account_deregistrations":0}), \
+                     mock.patch.object(ca,"start_app",side_effect=start), mock.patch.object(ca,"observe_postdeploy",return_value=proof), \
+                     mock.patch.object(ca,"java_command",return_value=["fixture"]), mock.patch.object(ca,"app_process_identity",side_effect=identity), \
+                     mock.patch.object(ca,"postdeploy_http",side_effect=http), mock.patch.object(ca.time,"time",return_value=self.EPOCH+10), \
+                     mock.patch.object(ca,"docker",side_effect=lambda *a: "1" if a[-2]=="GET" else "10000"), \
+                     mock.patch.object(ca,"sha256_file",side_effect=lambda p: "62daf04bc0e6aac703e7536fe17b79999b86d92ddec722cfb88c59cadba87161" if str(p).endswith(".stub") else "b"*64):
+                    if crash:
+                        with self.assertRaises(ca.GateError): ca.run_post_restart(args,{}, {}, {"server_uuid":POST_UUID,"process":{"pid":123}},first,out/"fixture")
+                    else: ca.run_post_restart(args,{}, {}, {"server_uuid":POST_UUID,"process":{"pid":123}},first,out/"fixture")
+                result = ca.read_receipt(out)["stages"]["post_restart"]["result"]
+                self.assertEqual("FAIL" if crash else "PASS", result["status"])
+                self.assertEqual(22, len(reads))
+                self.assertEqual(0 if crash else 1, process.terminate.call_count)
+                if crash: self.assertEqual(-9, result["jvm2_exit_code"])
+
+    def test_summary_cannot_pass_restart_mode_without_complete_restart_stage(self):
+        original = SummaryTest(); original.setUp()
+        try:
+            ca.merge_receipt(original.out, {"plan": ca.plan(SHA, "post_restart", "")})
+            self.assertEqual("FAIL", ca.summarize(original.out)["verdict"])
+            result = self.result()
+            proof = copy.deepcopy(ca.read_receipt(original.out)["stages"]["postdeploy"]["proof"])
+            proof["process"].update(pid=124, starttime="457", listener_inodes=["790"])
+            proof["observed_at"] = self.EPOCH + 1
+            result["proof"] = proof
+            ca.stage(original.out, "post_restart", "PASS", result=result)
+            self.assertEqual("PASS", ca.summarize(original.out)["verdict"])
+            result["effects"][0]["after"]["roam"] = [[0, 0, 0]]
+            ca.stage(original.out, "post_restart", "PASS", result=result)
+            self.assertEqual("FAIL", ca.summarize(original.out)["verdict"])
+        finally: original.tearDown()
 
 
 if __name__ == "__main__":

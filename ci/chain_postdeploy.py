@@ -1,5 +1,8 @@
 """Strict registration checks on the chain's disposable database, after its JVM exits."""
 import hashlib
+from decimal import Decimal
+import json
+import time
 from pathlib import Path
 import re
 
@@ -359,3 +362,297 @@ def characterize_commerce_rejection(source, connect, expected_uuid, positive):
     except Exception as error:
         result.update(status="FAIL", error_type=type(error).__name__)
         raise PostDeployError("commerce_rejection_control_failed", result) from None
+
+
+# This scenario only owns the disposable chain schema and these six persisted definitions.
+RESTART_MODE = "post_restart"
+RECRUIT = "topicRecruitDeadlineTask.run()"
+ALL_JOBS = READ_ROWS.split(" WHERE ", 1)[0] + " ORDER BY job_id"
+JOB_COLUMNS = ("job_id", "job_name", "job_group", "invoke_target", "cron_expression", "misfire_policy",
+               "concurrent", "status", "create_by", "create_time", "remark", "update_by", "update_time")
+FIXTURE_ID = 9932001
+ROAM_TARGET = "roamPresenceRevokeAuditTask.run()"
+
+
+def restart_rows(connect, server, sql, args=()):
+    connection = connect()
+    try:
+        cursor = connection.cursor()
+        try:
+            identity(cursor, server)
+            cursor.execute(sql, args)
+            return [[v if isinstance(v, (int, float, str, type(None))) else str(v) for v in row]
+                    for row in cursor.fetchall()]
+        finally:
+            cursor.close()
+    finally:
+        connection.close()
+
+
+def restart_clock(connect, server):
+    before = time.time()
+    rows = restart_rows(connect, server, "SELECT UNIX_TIMESTAMP()")
+    after = time.time()
+    require(len(rows) == 1 and len(rows[0]) == 1, "restart_clock_shape")
+    value = {"epoch": rows[0][0], "host_before": before, "host_after": after}
+    validate_restart_clock(value)
+    return value
+
+
+def validate_restart_clock(value):
+    epoch, before, after = (value.get(k) for k in ("epoch", "host_before", "host_after"))
+    require(type(epoch) is int and epoch >= 1600000000 and
+            all(type(v) in (int, float) and 1600000000 <= v < 10000000000 for v in (before, after)) and
+            0 <= after - before <= 30 and before - 1 <= epoch <= after + 1,
+            "restart_database_clock_outside_actual_host_read_window")
+
+
+def passive_queues(connect, server):
+    rows = restart_rows(connect, server, "SELECT (SELECT COUNT(*) FROM merchant_crm_export_task),"
+                        "(SELECT COUNT(*) FROM account_deregistration)")
+    require(rows == [[0, 0]], "restart_unknown_background_queue")
+    return {"crm_export_tasks": 0, "account_deregistrations": 0}
+
+
+def prepare_restart_seed(connect, fresh):
+    require(fresh.get("build_exit") == 0 and fresh.get("seed_exit") == 0 and
+            fresh.get("containers") and set(fresh["containers"]) == {"mysql", "redis"} and
+            all(re.fullmatch(r"cy-chain-[0-9]+-[0-9]+-" + kind, n)
+                for kind, n in fresh["containers"].items()), "restart_requires_fresh_chain_provenance")
+    server = read_state(connect)["server_uuid"]
+    rows = restart_rows(connect, server, ALL_JOBS)
+    require(len(rows) == 1 and len(rows[0]) == 13, "restart_unexpected_seed_jobs")
+    row = rows[0]
+    require(row[1:9] == ["双死线-招募到期判定", "DEFAULT", RECRUIT, "0 0/10 * * * ?", "3", "1", "0", "e2e-seed"]
+            and row[9] is not None and row[10] == "E2E TopicRecruitDeadlineTask",
+            "restart_recruit_seed_identity_mismatch")
+    fingerprint = hashlib.sha256(json.dumps(row, ensure_ascii=False).encode()).hexdigest()
+    where = " AND ".join("`%s` <=> %%s" % column for column in JOB_COLUMNS)
+    fixture_write(connect, server, [("DELETE FROM sys_job WHERE " + where, tuple(row))])
+    require(restart_rows(connect, server, ALL_JOBS) == [], "restart_seed_removal_unknown")
+    passive = passive_queues(connect, server)
+    return {"status": "PASS", "server_uuid": server, "schema": SCHEMA, "fresh": fresh,
+            "removed_seed_job_id": row[0], "removed_seed_fingerprint": fingerprint,
+            "jobs_before_jvm1": 0, "passive_queues": passive}
+
+
+def prepare_restart_effects(connect, server):
+    rows = restart_rows(connect, server, ALL_JOBS)
+    verify_rows([], rows)
+    require(len(rows) == 6, "restart_not_exact_six_jobs")
+    # All six are exact fresh rows. Pausing is an explicit synthetic scheduling fixture, after SQL proof.
+    fixture_write(connect, server, [("UPDATE sys_job SET status='1' WHERE job_id=%s "
+                  "AND CAST(invoke_target AS BINARY)=CAST(%s AS BINARY) AND status='0'", (r[0], r[3]))
+                  for r in rows])
+    paused = restart_rows(connect, server, ALL_JOBS)
+    expected = [r[:7] + ["1"] + r[8:] for r in rows]
+    require(paused == expected, "restart_pause_snapshot_mismatch")
+    passive_queues(connect, server)
+    empty = restart_rows(connect, server, "SELECT (SELECT COUNT(*) FROM audit_task),"
+                         "(SELECT COUNT(*) FROM member_cash_withdraw),(SELECT COUNT(*) FROM settlement_batch),"
+                         "(SELECT COUNT(*) FROM settlement_detail),(SELECT COUNT(*) FROM metrics_snapshot),"
+                         "(SELECT COUNT(*) FROM oms_order WHERE biz_type IS NOT NULL)")
+    require(empty == [[0, 0, 0, 0, 0, 0]], "restart_effect_fixture_not_fresh")
+    request = "post-restart-" + str(FIXTURE_ID)
+    writes = [
+        ("INSERT INTO audit_task(id,biz_type,biz_id,submitter_id,status,submitted_at,deadline_at,create_by,create_time) "
+         "VALUES(%s,'community_post',%s,9009,0,NOW(),DATE_SUB(NOW(),INTERVAL 1 MINUTE),'e2e-post-restart',NOW())", (FIXTURE_ID, FIXTURE_ID)),
+        ("INSERT INTO member_cash_withdraw(id,member_id,amount,status,create_time,del_flag) VALUES(%s,9009,1,3,NOW(),0)", (FIXTURE_ID,)),
+        ("INSERT INTO settlement_batch(id,batch_no,merchant_id,total_amount,idempotency_key) VALUES(%s,%s,8001,1,%s)",
+         (FIXTURE_ID, request, request)),
+        ("INSERT INTO settlement_detail(id,batch_id,merchant_id,source_type,source_id,receiver_type,receiver_id,"
+         "settlement_amount,idempotency_key) VALUES(%s,%s,8001,'order',%s,'merchant',8001,1,%s)",
+         (FIXTURE_ID, FIXTURE_ID, FIXTURE_ID, request)),
+        ("INSERT INTO roam_session(id,member_id,status,presence_visible,started_at,create_time) VALUES(%s,9009,0,0,NOW(),NOW())", (FIXTURE_ID,)),
+        ("INSERT INTO roam_presence_revoke_intent(request_id,member_id,event_type,occurred_at,state,next_attempt_at) "
+         "VALUES(%s,9009,'REVOKE',NOW(6),0,NOW(6))", (request,)),
+        ("INSERT INTO oms_order(id,order_sn,member_id,biz_type,status,pay_amount,create_time,del_flag) "
+         "VALUES(%s,%s,9009,'premium_template',0,1,DATE_SUB(NOW(),INTERVAL 6 MINUTE),0)",
+         (FIXTURE_ID, "TPLTM_" + str(FIXTURE_ID))),
+    ]
+    fixture_write(connect, server, writes)
+    before = restart_effect_state(connect, server)
+    require(before["roam"] == [[0, 0, 0]] and before["metrics"] == [], "restart_initial_effect_already_present")
+    return {"status": "PASS", "jobs": paused, "server_uuid": server, "schema": SCHEMA,
+            "fixture_id": FIXTURE_ID, "request_id": request, "before": before,
+            "scope": "SYNTHETIC_DATABASE_FACTS_NOT_REAL_CONSENT_OR_PAYMENT"}
+
+
+def restart_effect_state(connect, server):
+    request = "post-restart-" + str(FIXTURE_ID)
+    return {
+        "roam": restart_rows(connect, server, "SELECT e.state,(SELECT COUNT(*) FROM consent_record c WHERE "
+                   "c.request_id=e.request_id AND c.member_id=9009 AND c.doc_type='privacy_policy' "
+                   "AND c.doc_version='roam-presence-v1' AND c.scene='roam_presence' AND c.event_type='REVOKE'),"
+                   "r.presence_visible FROM roam_presence_revoke_intent e JOIN roam_session r ON r.id=%s "
+                   "WHERE e.request_id=%s AND e.member_id=9009", (FIXTURE_ID, request)),
+        "metrics": restart_rows(connect, server, "SELECT metric_key,source,window_start,window_end,status,value "
+                     "FROM metrics_snapshot ORDER BY metric_key,window_start,window_end"),
+        "audit": restart_rows(connect, server, "SELECT id,status,biz_id,submitter_id FROM audit_task WHERE id=%s", (FIXTURE_ID,)),
+        "withdraw": restart_rows(connect, server, "SELECT id,member_id,amount,status,del_flag FROM member_cash_withdraw WHERE id=%s", (FIXTURE_ID,)),
+        "settlement": restart_rows(connect, server, "SELECT b.id,b.total_amount,COALESCE(SUM(d.settlement_amount),0) "
+                       "FROM settlement_batch b LEFT JOIN settlement_detail d ON d.batch_id=b.id WHERE b.id=%s GROUP BY b.id,b.total_amount", (FIXTURE_ID,)),
+        "commerce": restart_rows(connect, server, "SELECT id,order_sn,member_id,biz_type,status,pay_amount,pay_type,payment_transaction_id,payment_time,update_time FROM oms_order WHERE id=%s", (FIXTURE_ID,)),
+        "assets": restart_rows(connect, server, "SELECT balance FROM ums_member WHERE id=9009"),
+        "entitlements": restart_rows(connect, server, "SELECT id,merchant_id,subscription_type,start_date,end_date,max_usage,used_count,is_active,remark,create_time,update_time FROM merchant_subscription WHERE merchant_id=9009 ORDER BY id"),
+    }
+
+
+def restart_log(connect, server, job, baseline, started):
+    rows = restart_rows(connect, server, "SELECT job_log_id,status,UNIX_TIMESTAMP(create_time),"
+                        "CASE WHEN exception_info LIKE %s THEN 'COMMERCE_AGGREGATE_FAILURE' "
+                        "WHEN exception_info LIKE %s THEN 'SETTLEMENT_MISMATCH' ELSE 'OTHER' END,job_name,job_group,invoke_target "
+                        "FROM sys_job_log WHERE job_log_id>%s AND CAST(invoke_target AS BINARY)=CAST(%s AS BINARY) "
+                        "AND CAST(job_name AS BINARY)=CAST(%s AS BINARY) AND CAST(job_group AS BINARY)=CAST(%s AS BINARY) ORDER BY job_log_id",
+                        ("%商业化查单补偿失败 1 单%", "%Settlement mismatch count=1%", baseline, job[3], job[1], job[2]))
+    require(all(len(r) == 7 and r[0] > baseline and r[2] is not None and float(r[2]) >= int(started)
+                and r[4:] == [job[1], job[2], job[3]] for r in rows), "restart_stale_or_malformed_log")
+    require(len(rows) <= 1, "restart_ambiguous_duplicate_log")
+    return rows[0] if rows else None
+
+
+def commerce_cause(path, offset, job_log_id):
+    end = Path(path).stat().st_size
+    require(type(offset) is int and 0 <= offset < end and end - offset <= 8 * 1024 * 1024,
+            "restart_commerce_log_window_missing")
+    with Path(path).open("rb") as handle:
+        handle.seek(offset)
+        raw = handle.read(end - offset)
+    text = raw.decode("utf-8", errors="strict")
+    cause = "Caused by: java.lang.IllegalStateException: 商业化查单结果无法确认"
+    causes = [line.strip() for line in text.splitlines() if line.strip().startswith("Caused by:")]
+    allowed = {cause, "Caused by: java.lang.reflect.InvocationTargetException",
+               "Caused by: java.lang.IllegalStateException: 商业化查单补偿失败 1 单"}
+    require(causes.count(cause) == 1 and set(causes) <= allowed and
+            "java.lang.IllegalStateException: 商业化查单补偿失败 1 单" in text and
+            re.search(r"(?m)^\s*at com\.chengyinhub\.business\.service\.impl\.MerchantCommerceService\.reconcileOrder\(MerchantCommerceService\.java:177\)\s*$", text),
+            "restart_commerce_specific_cause_not_observed")
+    return {"code": "COMMERCE_QUERY_UNCONFIRMED", "job_log_id": job_log_id,
+            "start_offset": offset, "end_offset": end,
+            "cause_class": "java.lang.IllegalStateException",
+            "source_frame": "MerchantCommerceService.reconcileOrder:177"}
+
+
+def verify_restart_jobs(fixture, current, roam_status="1"):
+    require(roam_status in ("0", "1") and len(fixture) == len(current) == 6 and
+            all(len(row) == 13 for row in fixture + current), "restart_job_snapshot_shape")
+    expected = {row[0]: row for row in fixture}
+    require(len(expected) == 6 and len({row[0] for row in current}) == 6 and
+            {row[3] for row in fixture} == set(NEW_ROWS), "restart_job_snapshot_identity")
+    for row in current:
+        original = expected.get(row[0])
+        require(original is not None, "restart_unexpected_job_id")
+        if row[3] == ROAM_TARGET:
+            # Normal changeStatus carries the stored definition unchanged; only status/update_time can change.
+            require(row[:7] == original[:7] and row[8:12] == original[8:12] and row[7] == roam_status and
+                    (row[12] == original[12] or isinstance(row[12], str) and
+                     re.fullmatch(r"[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}(?:\.[0-9]{1,6})?", row[12])),
+                    "restart_roam_definition_drift")
+        else:
+            require(row == original, "restart_paused_definition_drift")
+
+
+def validate_restart_effect(target, log, before, after, alarm=None):
+    require(log is not None and log[1] == ("1" if target == COMMERCE else "0"), "restart_job_did_not_complete")
+    require(all(after[name] == before[name] for name in ("audit", "withdraw", "settlement", "commerce", "assets", "entitlements")), "restart_unexpected_business_write")
+    if target == ROAM_TARGET:
+        require(after["roam"] == [[2, 1, 0]], "restart_revoke_effect_missing_or_duplicate")
+    elif target == "metricsProbeTask.run()":
+        metrics = after["metrics"]
+        require(bool(metrics) and any(row[0] == "jvm.heap.used.ratio" and row[1] == "jvm" for row in metrics)
+                and all(len(row) == 6 and row[4] == "OK" and row[5] is not None
+                        and Decimal(str(row[5])).is_finite() for row in metrics)
+                and len({tuple(row[:1] + row[2:4]) for row in metrics}) == len(metrics), "restart_metrics_effect_missing")
+    elif target in ("auditBacklogMonitorTask.run()", "withdrawReconciliationTask.run()"):
+        require(alarm is not None and alarm.get("value") == "1" and 0 < alarm.get("ttl_ms", 0) <= 600000,
+                "restart_monitor_attempt_missing")
+    elif target == "settlementReconciliationTask.run()":
+        require(after["settlement"] == [[FIXTURE_ID, "1.00", "1.00"]], "restart_settlement_fixture_not_balanced")
+    elif target == COMMERCE:
+        require(log[3] == "COMMERCE_UNKNOWN", "restart_wrong_commerce_failure")
+    else:
+        raise PostDeployError("restart_unknown_task")
+
+
+def validate_restart_result(result):
+    require(result.get("status") == "PASS" and result.get("schema") == SCHEMA and
+            result.get("jvm1_stopped") is True and result.get("jvm2_stopped") is True and
+            type(result.get("jvm2_exit_code")) is int and result.get("jvm2_new_identity") is True and
+            result.get("automatic_roam_observed") is True, "restart_lifecycle_evidence_missing")
+    proof = result.get("proof", {})
+    fixture = result.get("fixture", {})
+    require(fixture.get("server_uuid") == proof.get("server_uuid") == result.get("server_uuid") and
+            isinstance(result.get("server_uuid"), str) and
+            re.fullmatch(r"[0-9a-f-]{36}", result["server_uuid"]), "restart_fixture_database_identity_mismatch")
+    clocks = result.get("clock", {})
+    for key in ("before_start", "after_live", "before_stop"):
+        validate_restart_clock(clocks.get(key, {}))
+    begin, live, stop = (clocks[k] for k in ("before_start", "after_live", "before_stop"))
+    observed = proof.get("observed_at")
+    require(type(observed) in (int, float) and begin["host_after"] <= observed <= live["host_before"] + 1 and
+            begin["host_after"] <= live["host_before"] <= stop["host_before"] and
+            live["host_after"] <= stop["host_after"] and
+            result.get("jvm2_started_database_epoch") == begin["epoch"] and
+            begin["epoch"] <= live["epoch"] <= stop["epoch"] and
+            result.get("controlled_stop") is True and result.get("stop_precondition") == proof.get("process") and
+            isinstance(proof.get("process"), dict) and bool(proof["process"]),
+            "restart_original_jvm_time_or_controlled_stop_binding_missing")
+    jobs = fixture.get("jobs", [])
+    require(fixture.get("status") == "PASS" and fixture.get("schema") == SCHEMA and
+            len(jobs) == 6 and all(len(row) == 13 and row[7] == "1" for row in jobs) and
+            {row[3] for row in jobs} == set(NEW_ROWS), "restart_fixture_evidence_missing")
+    verify_restart_jobs(jobs, result.get("final_jobs", []))
+    verify_restart_jobs(jobs, result.get("after_stop_jobs", []))
+    by_target = {r[3]: r for r in jobs}
+    def checked(effect):
+        target = effect["target"]
+        job = by_target[target]
+        log = effect["log"]
+        require(effect.get("job_id") == job[0] and len(log) == 7 and
+                type(effect.get("baseline_log_id")) is int and log[0] > effect["baseline_log_id"] and
+                begin["epoch"] <= float(log[2]) <= stop["epoch"] + 1 and
+                log[4:] == [job[1], job[2], target] and
+                effect.get("new_jvm_start_database_epoch") == result["jvm2_started_database_epoch"],
+                "restart_log_binding_missing")
+        return target
+    effects = result.get("effects", [])
+    require(len(effects) == 6 and {e.get("target") for e in effects} == set(NEW_ROWS), "restart_six_effects_missing")
+    for effect in effects:
+        target = checked(effect)
+        validate_restart_effect(target, effect.get("log"), effect["before"], effect["after"], effect.get("alarm"))
+        if target == COMMERCE:
+            cause = effect.get("specific_cause", {})
+            require(cause.get("code") == "COMMERCE_QUERY_UNCONFIRMED" and cause.get("job_log_id") == effect["log"][0] and
+                    cause.get("cause_class") == "java.lang.IllegalStateException" and
+                    cause.get("source_frame") == "MerchantCommerceService.reconcileOrder:177" and
+                    type(cause.get("start_offset")) is int and type(cause.get("end_offset")) is int and
+                    0 <= cause["start_offset"] < cause["end_offset"] and
+                    result.get("payment_stub_binding") == {"task": True, "service": True,
+                        "type": "com.chengyinhub.e2e.E2eWechatPayStub",
+                        "source_sha256": "62daf04bc0e6aac703e7536fe17b79999b86d92ddec722cfb88c59cadba87161"},
+                    "restart_commerce_unknown_cause_or_actual_stub_binding_missing")
+        require(effect.get("invocation") == ("ORIGINAL_MINUTE_CRON" if target == ROAM_TARGET else "SINGLE_NORMAL_ADMIN_PUT"),
+                "restart_invocation_scope_missing")
+    for name, target in (("roam_repeat", ROAM_TARGET), ("metrics_repeat", "metricsProbeTask.run()"),
+                         ("audit_repeat", "auditBacklogMonitorTask.run()")):
+        effect = result.get(name, {})
+        require(checked(effect) == target and effect.get("invocation") == "SINGLE_NORMAL_ADMIN_PUT", "restart_repeat_evidence_missing")
+        validate_restart_effect(target, effect["log"], effect["before"], effect["after"], effect.get("alarm"))
+    metric = next(e for e in effects if e["target"] == "metricsProbeTask.run()")
+    require([r[:4] for r in result["metrics_repeat"]["after"]["metrics"]] ==
+            [r[:4] for r in metric["after"]["metrics"]], "restart_metric_repeat_not_same_window")
+    audit = next(e for e in effects if e["target"] == "auditBacklogMonitorTask.run()")
+    require(result["audit_repeat"]["alarm"]["ttl_ms"] <= audit["alarm"]["ttl_ms"], "restart_alarm_repeat_extended_lease")
+    rejected = result.get("settlement_rejection", {})
+    require(checked(rejected) == "settlementReconciliationTask.run()" and rejected["log"][1:2] == ["1"] and
+            rejected["log"][3] == "SETTLEMENT_MISMATCH" and rejected["before"] == rejected["after"] and
+            rejected["after"]["settlement"] == [[FIXTURE_ID, "2.00", "1.00"]] and
+            rejected.get("alarm", {}).get("value") == "1" and rejected["alarm"].get("ttl_ms", 0) > 0,
+            "restart_settlement_negative_evidence_missing")
+    require(result.get("final_readback") == result.get("after_stop_readback") and
+            result["after_stop_readback"]["roam"] == [[2, 1, 0]] and
+            result.get("final_jobs") == result.get("after_stop_jobs") and
+            len(result["after_stop_jobs"]) == 6 and all(r[7] == "1" for r in result["after_stop_jobs"]) and
+            result.get("passive_queues") == {"crm_export_tasks": 0, "account_deregistrations": 0} and
+            result.get("local_files") == result.get("after_stop_local_files") == {"crm_export_directory": "EMPTY_TASK_OWNED"},
+            "restart_final_readback_drift")
