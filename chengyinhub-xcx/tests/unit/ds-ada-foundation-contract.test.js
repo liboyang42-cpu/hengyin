@@ -6,6 +6,7 @@ const assert = require('node:assert/strict')
 const fs = require('node:fs')
 const path = require('node:path')
 const test = require('node:test')
+const { createHash } = require('node:crypto')
 
 const ROOT = path.resolve(__dirname, '../..')
 const read = (rel) => fs.readFileSync(path.join(ROOT, rel), 'utf8')
@@ -998,14 +999,29 @@ test('负控:删掉 --cy-motion-spinner-cycle(组件指向空气)必须判红', 
 // ============================================================
 // 11) 设计文档写的必须是现行裁决,不是已被推翻的旧裁决
 // ============================================================
-// ⚠️ 文档在 Obsidian vault(仓库外),CI 机器上不存在 ⇒ 缺文件时 skip,不是 pass。
-//   skip 会在报告里显式打印,不会伪装成绿。本机磁盘负控已跑过(见 WT2 报告「负控」节)。
-const VAULT = process.env.CY_VAULT_DIR
-  || path.join(process.env.HOME || '', 'Documents/城瘾/文档整理_20260711')
+// 归档原文的最小逐字摘录随仓库保存；来源、行段与原文件/摘录哈希见 sources.json。
+const DESIGN_FIXTURES = path.join(__dirname, 'fixtures/design-decisions')
 const DESIGN_DOCS = [
-  '04-未开始/小程序UI总执行表_规整加ADA整合_20260729.md',
-  '04-未开始/小程序ADA级设计升级方案_页面级处方_20260729.md',
+  '小程序UI总执行表_规整加ADA整合_20260729.md',
+  '小程序ADA级设计升级方案_页面级处方_20260729.md',
 ]
+const readDesignFixture = (file) => fs.readFileSync(path.join(DESIGN_FIXTURES, file))
+
+function readDesignDocs(readFile = readDesignFixture) {
+  const sources = JSON.parse(readFile('sources.json').toString('utf8'))
+  assert.equal(sources.length, DESIGN_DOCS.length, '两份原文摘录必须齐全')
+  return DESIGN_DOCS.map((source) => {
+    const rows = sources.filter((row) => row.source === source)
+    assert.equal(rows.length, 1, `${source} 必须唯一登记`)
+    const row = rows[0]
+    assert.match(row.file, /^[a-z0-9-]+\.md$/, '摘录只能来自本夹具目录')
+    assert.match(row.sourceSha256, /^[a-f0-9]{64}$/, '必须记录完整原文 SHA256')
+    assert.ok(Number.isInteger(row.startLine) && row.startLine > 0 && Number.isInteger(row.endLine) && row.endLine >= row.startLine, '必须记录原文行段')
+    const bytes = readFile(row.file)
+    assert.equal(createHash('sha256').update(bytes).digest('hex'), row.excerptSha256, `${source} 摘录哈希不匹配`)
+    return { rel: source, text: bytes.toString('utf8') }
+  })
+}
 
 function assertDocsMatchDecision(texts) {
   for (const { rel, text } of texts) {
@@ -1019,14 +1035,26 @@ function assertDocsMatchDecision(texts) {
   }
 }
 
-test('设计文档写的是现行裁决:普通二级页裸 chevron + 地图退出例外', (t) => {
-  const texts = []
-  for (const rel of DESIGN_DOCS) {
-    const p = path.join(VAULT, rel)
-    if (!fs.existsSync(p)) return t.skip(`vault 不在本机(${p}),文档契约跳过`)
-    texts.push({ rel, text: fs.readFileSync(p, 'utf8') })
-  }
-  assertDocsMatchDecision(texts)
+test('设计原文摘录写的是现行裁决:普通二级页裸 chevron + 地图退出例外', () => {
+  assertDocsMatchDecision(readDesignDocs())
+})
+
+test('负控:必需设计摘录缺失必须失败，不得回落 vault 或跳过', () => {
+  assert.throws(() => readDesignDocs((file) => {
+    if (file === 'ui-execution-20260729.md') {
+      const missing = new Error('required excerpt missing')
+      missing.code = 'ENOENT'
+      throw missing
+    }
+    return readDesignFixture(file)
+  }), { code: 'ENOENT' })
+})
+
+test('负控:原文摘录字节被篡改必须判红', () => {
+  assert.throws(() => readDesignDocs((file) => {
+    const bytes = readDesignFixture(file)
+    return file === 'ada-prescription-20260729.md' ? Buffer.concat([bytes, Buffer.from(' ')]) : bytes
+  }), /摘录哈希不匹配/)
 })
 
 test('负控:文档写回「圆 chip 全站默认」旧裁决必须判红', () => {
