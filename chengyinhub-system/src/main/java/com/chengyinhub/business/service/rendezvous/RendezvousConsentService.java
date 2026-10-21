@@ -124,11 +124,9 @@ public final class RendezvousConsentService {
     private final Safety safety;
     private final Clock clock;
     private final Admission admission;
+    /** No ledger is attached. The guard transaction refuses the new pair and keeps no reservation. */
     public RendezvousConsentService(Store store, Safety safety, Clock clock) {
-        this(store, safety, clock, (matchId, first, second, pool, now) -> {
-            if (matchId == null || matchId.trim().isEmpty() || pool == null || pool.trim().isEmpty()
-                    || first <= 0 || second <= 0 || first == second || now < 0) throw new Rejection("PAIR_UNAVAILABLE");
-        });
+        this(store, safety, clock, (matchId, first, second, pool, now) -> { throw new Rejection("POLICY_CLOSED"); });
     }
     public RendezvousConsentService(Store store, Safety safety, Clock clock, Admission admission) {
         this.store = Objects.requireNonNull(store); this.safety = Objects.requireNonNull(safety);
