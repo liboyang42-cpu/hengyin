@@ -11,7 +11,7 @@ const STAGE = 'pages/play/components/play-stage/index';
 // so a stopped old stage can still deliver its captured callbacks in negative controls.
 function host(options = {}) {
   let now = 1000, serial = 0, stage;
-  const tasks = new Map(), history = [], listeners = new Set(), removed = [], starts = [], events = [];
+  const tasks = new Map(), history = [], listeners = new Set(), removed = [], starts = [], events = [], toasts = [];
   const timer = (fn, ms, repeat) => { const id = ++serial; const t = { id, fn, due: now + ms, ms, repeat }; tasks.set(id, t); history.push(t); return id; };
   const wx = {
     getSystemInfoSync: () => ({ windowWidth: 375, windowHeight: 700 }),
@@ -19,6 +19,7 @@ function host(options = {}) {
     offAccelerometerChange(fn) { removed.push(fn); listeners.delete(fn); },
     startAccelerometer(arg) { starts.push(arg); if (options.startThrow) throw Error('start'); if (options.syncFail) arg.fail(); },
     stopAccelerometer() {},
+    showToast(arg) { toasts.push(arg); },
   };
   if (options.missingStart) delete wx.startAccelerometer;
   if (options.missingListen) delete wx.onAccelerometerChange;
@@ -77,7 +78,7 @@ function host(options = {}) {
     }
     now = end;
   }
-  return { ball, ballDef, wx, tasks, history, listeners, removed, starts, events, tick,
+  return { ball, ballDef, wx, tasks, history, listeners, removed, starts, events, toasts, tick,
     get stage() { return stage; },
     run() { ball.onStart(); stage.onCalibrated(); stage.onCountedIn(); },
     sample(value) { for (const fn of [...listeners]) fn(value); },
@@ -134,6 +135,7 @@ for (const option of ['missingStart','missingListen','missingOff','missingStop',
   assert.equal(h.listeners.size, 0);
   assert.equal(h.tasks.size, 0);
   assert.equal(writes(h).length, 0);
+  assert.equal(h.toasts.length,1);
 });
 test('async start failure clears listener and real deadline; can restart', () => {
   const h = host(); h.run(); h.starts[0].fail();
@@ -185,7 +187,7 @@ test('finite pure tilt calculation rejects coercible and malformed coordinates',
 test('finished free-play retry also replaces old stage and ignores its queued callbacks', () => {
   const h=host({props:{goal:1}}); h.run(); h.sample({x:0,y:0}); const old=h.stage, fail=h.starts[0].fail;
   h.ball._x=0; h.ball._step(); const count=writes(h).length;
-  fail(); assert.equal(h.ball.data.sensorError,'');
+  fail(); assert.equal(h.toasts.length,0);
   h.run(); assert.notEqual(h.stage,old); old.fail(true); old.onCountedIn();
   assert.equal(h.ball.data.running,true); assert.equal(writes(h).length,count); assert.equal(h.listeners.size,1);
 });

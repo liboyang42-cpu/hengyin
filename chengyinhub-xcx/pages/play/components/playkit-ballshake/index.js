@@ -57,7 +57,6 @@ Component({
   },
   data: {
     stageKeys: [0],
-    sensorError: '',
     hits: 0,
     running: false,
     awaitingResult: false,
@@ -71,7 +70,7 @@ Component({
       if (!challenge) return;
       this.setData({ awaitingResult: false });
       if (challenge.success === true || challenge.disabledReason) {
-        this._interrupt('', () => {
+        this._interrupt(() => {
           const stage = this.selectComponent('#cy-play-stage');
           if (challenge.success === true && stage && !this._hidden && !this._detached) stage.win('挑战已完成');
         });
@@ -107,7 +106,7 @@ Component({
       try { if (wx.offAccelerometerChange) wx.offAccelerometerChange(listener); } catch (e) { /* invalidated callback is inert */ }
       try { if (wx.stopAccelerometer) wx.stopAccelerometer({ fail() {} }); } catch (e) { /* cleanup is best effort */ }
     },
-    _interrupt(message, after) {
+    _interrupt(after) {
       const stage = this._attempt ? this._attempt.stage : this.selectComponent('#cy-play-stage');
       this._attempt = null; // invalidate before cleanup or any reentrant callback
       this._stop(); this._offTilt();
@@ -117,7 +116,7 @@ Component({
       // Keyed replacement isolates even an already queued child calibration/deadline callback.
       // It must never run against the stage used by the next attempt.
       const key = this.data.stageKeys[0] + 1;
-      this.setData({ running: false, sensorError: message || '', stageKeys: [key] }, () => {
+      this.setData({ running: false, stageKeys: [key] }, () => {
         if (after && this.data.stageKeys[0] === key && !this._detached) after();
       });
     },
@@ -131,7 +130,9 @@ Component({
         && String(e.currentTarget.dataset.stageKey) === String(attempt.key) ? attempt : null;
     },
     _sensorFailed(attempt) {
-      if (this._current(attempt) && attempt.phase === 'running') this._interrupt('未能持续读取手机动作，请重新开始');
+      if (!this._current(attempt) || attempt.phase !== 'running') return;
+      this._interrupt();
+      if (typeof wx.showToast === 'function') wx.showToast({ title: '动作读取中断，请重新开始', icon: 'none' });
     },
     _armWatchdog(attempt) {
       if (this._watchdog) clearTimeout(this._watchdog);
@@ -153,14 +154,13 @@ Component({
         || this.data.running || this.data.awaitingResult
         || this.data.challenge && (this.data.challenge.success || this.data.challenge.disabledReason)) return;
       if (this._attempt && this._attempt.phase === 'finished') {
-        this._interrupt('', () => this.onStart()); return;
+        this._interrupt(() => this.onStart()); return;
       }
       const stage = this.selectComponent('#cy-play-stage');
       if (!stage || stage === this._retiredStage) return;
       this._closed = false;
       this._zero = null;
       this._attempt = { stage, key: this.data.stageKeys[0], phase: 'preparing', lastFrame: null };
-      this.setData({ sensorError: '' });
       stage.begin();
     },
 

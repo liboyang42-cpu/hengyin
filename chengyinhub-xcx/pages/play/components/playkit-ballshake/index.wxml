@@ -21,7 +21,6 @@
       <view class="bl__n g-figure" wx:if="{{sharedChallenge && challenge}}">{{challenge.progress}}<text class="bl__unit">/ {{challenge.goal}} 次（本队）</text></view>
       <view class="bl__n g-figure" wx:else>{{hits}}<text class="bl__unit">/ {{goal}} 次</text></view>
       <view class="g-sub bl__sub" wx:if="{{sharedChallenge}}">本次撞击 {{hits}} · 提交后计入全队进度</view>
-      <view class="g-sub bl__sub" wx:if="{{sensorError}}">{{sensorError}}</view>
       <view class="g-sub bl__sub" wx:if="{{challenge.disabledReason}}">{{challenge.disabledReason === 'CHALLENGE_LIMIT' ? '挑战次数已用完' : challenge.disabledReason}}</view>
       <view class="g-sub bl__sub">{{timed ? (seconds + ' 秒内撞满') : '不限时，撞满为止'}}</view>
     </view>
