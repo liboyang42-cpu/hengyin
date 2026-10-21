@@ -37,22 +37,23 @@ public final class RendezvousVersionedPolicy implements RendezvousConsentService
     }
     public boolean eligible(long actor, String pool, String version, long now) {
         RendezvousEligibilityFacts facts = catalog.facts();
-        if (facts.connected() && !facts.admits(actor, version, now)) return false;
+        if (!facts.connected() || !facts.admits(actor, version, now)) return false;
         return open("eligibility-source", version) && open("age", version) && open("region", version)
                 && open("time-window", version) && frequency(pool) != null;
     }
     public boolean factsConnected() { return catalog.facts().connected(); }
-    /** No-op unless a fact source is connected. A missing or different server version refuses. */
+    /** A disconnected source, a missing server version, or a different client version refuses. */
     public void requireClientVersion(String clientVersion) {
-        if (!factsConnected()) return;
-        String current = catalog.facts().currentVersion();
-        if (current == null || clientVersion == null || !current.equals(clientVersion)) throw new RendezvousConsentService.Rejection("NOT_ELIGIBLE");
+        RendezvousEligibilityFacts facts = catalog.facts();
+        String current = facts.currentVersion();
+        if (!facts.connected() || current == null || clientVersion == null || !current.equals(clientVersion))
+            throw new RendezvousConsentService.Rejection("NOT_ELIGIBLE");
     }
-    /** Connected calls use the server version. Unwired calls keep the client value. */
+    /** Server current version only. A disconnected source or a missing row does not adopt the client value. */
     public String ttlVersion(String clientVersion) {
-        if (!factsConnected()) return clientVersion;
-        String current = catalog.facts().currentVersion();
-        return current == null ? clientVersion : current;
+        RendezvousEligibilityFacts facts = catalog.facts();
+        if (!facts.connected()) return null;
+        return facts.currentVersion();
     }
     public boolean blocked(long first, long second) { return blocks.existsBetween(first, second) > 0; }
     /** Ongoing rule only. Admission counts live in {@link RendezvousContactLedger}, not here. */

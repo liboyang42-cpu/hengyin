@@ -23,11 +23,11 @@
 | `ums_member_address` | 收货地址 |
 | `member_interest_profile.city_code` | 兴趣城市 |
 
-`MyBatisRendezvousCatalog` 不传资格 mapper 时是接通且全部拒绝，不是全通过。`Catalog.facts()` 的默认也是 `closed()`：已接通且不录取，四行 `OPEN` 不够。`unwired()` 不再是默认。测试目录若要表达「这些 actor 在夹具版本上已有事实」，必须自己覆盖 `facts()`。
+`MyBatisRendezvousCatalog` 不传资格 mapper 时是接通且全部拒绝，不是全通过。`Catalog.facts()` 的默认是 `closed()`。显式返回 `unwired()` 也同样失败关闭：`eligible` 为 false，`requireClientVersion` 拒绝，`ttlVersion` 不采用客户端版本。四行 `OPEN` 不能补上这个缺口。测试目录若要表达「这些 actor 在夹具版本上已有事实」，必须自己覆盖 `facts()`。
 
 ## 配对限额
 
-- 新配对准入只走 `RendezvousPoolScheduler.pairOnce`。它在同意 guard 事务里保存 match 之后调用 `RendezvousContactLedger.charge`。任一侧失败，match 和两侧计数一起回滚。
+- 新配对准入只走 `RendezvousPoolScheduler.pairOnce`，再进 `RendezvousConsentService.propose`。propose 在同一 guard 事务里保存 match 之后必定调用 `Admission.charge`。调用方不能再传空回调跳过。`now` 是该事务内读取的服务端时刻。调度器挑选等待票的时刻不参与额度窗口。任一侧失败，match 和两侧计数一起回滚。
 - 同一 `match_id + actor_id` 只记一次。
 - 额度行在 `w16_contact_quota`。缺行、非 `OPEN`、scope 空白、`window_millis` 非正、`max_contacts` 非正，都是 `POLICY_CLOSED`。代码不把缺省窗口当成终身累计。
 - 计数窗口是 `(now - window_millis, now]`，并且只数同一 pool 和同一 scope。
