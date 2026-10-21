@@ -29,8 +29,6 @@ function loadPage(rel, stack) {
 }
 
 const PAGES = [
-  { rel: 'subpackageMember/correction-detail/index.js', list: 'subpackageMember/correction-mine/index',
-    opt: { contributionId: '7' }, body: { id: 7, reviewStatus: 'PENDING', version: 1 } },
   { rel: 'subpackageMember/report-detail/index.js', list: 'subpackageMember/report-mine/index',
     opt: { reportId: '7' }, body: { id: 7, stage: 'SUBMITTED' } },
 ]

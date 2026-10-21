@@ -2,12 +2,12 @@
  * Wave2 截图矩阵（机器可读），供总控在 verify worktree 串行采集。
  *
  * ── 机器统计（唯一真值，由本文件末尾 STATS 断言锁死）──────────────────
- *   total 343
- *   按 priority 计全部行：P0 133 / P1 200 / P2 10
+ *   total 341
+ *   按 priority 计全部行：P0 133 / P1 198 / P2 10
  *   其中 blocked 24（不采集）：P0 9 / P1 7 / P2 8
- *   ⇒ actionable（本轮真要拍）：P0 124 / P1 193 / P2 2 = 319
- *   按域：A 53 / B 70 / C 56 / D 44 / E 27 / F 93
- *   按 control：setData 181 / identity+setData 117 / real-data 38 / real-device 7
+ *   ⇒ actionable（本轮真要拍）：P0 124 / P1 191 / P2 2 = 317
+ *   按域：A 53 / B 70 / C 56 / D 42 / E 27 / F 93
+ *   按 control：setData 179 / identity+setData 117 / real-data 38 / real-device 7
  *     (2026-08-05：A10 由 real-data 改 setData —— 它和 A12 的差别是 picList 空/非空,
  *      不显式注入两张必然拍成同一张)
  *   fixtureVerified 16（只保留当前页面仍全量消费其矩阵键、且在本次源版本
@@ -462,8 +462,6 @@ const RAW = [
   ['D90', 'D90-points-history-content.png', '/subpackageMember/points-history/index', 'player', 'normal', { state: 'ready', rows: [{ id: '1', reason: '每日签到', delta: 5, deltaText: '+5', income: true, afterText: '余额 15', timeText: '2026-10-01 08:30' }], hasMore: false }, undefined, { selector: '.ph-row', min: 1 }, 'setData', 'P1', '', '积分明细：收支同排、金额带符号、到底提示'],
   ['D91', 'D91-report-mine-content.png', '/subpackageMember/report-mine/index', 'player', 'normal', { state: 'ready', rows: [{ id: 9, targetText: '私信用户', reasonText: '骚扰或辱骂', stageText: '已处理', stageTone: 'success', createText: '10月14日 21:30', etaText: '' }], hasMore: false }, undefined, { selector: '.rp-row', min: 1 }, 'setData', 'P1', '', 'CL2 我的举报:阶段标签与编号'],
   ['D92', 'D92-report-detail-content.png', '/subpackageMember/report-detail/index?reportId=9', 'player', 'normal', { state: 'ready', report: { id: 9, targetText: '私信用户', reasonText: '骚扰或辱骂', stageText: '已处理', stageTone: 'success', stageHint: '平台已给出处理结论', createText: '10月14日 21:30', etaText: '', privacyText: '', decisionSummary: '经核实违反社区规范，已限制对方私信 7 天并警告。', description: '对方在私信里多次发送辱骂内容。', appealable: false }, nodes: [] }, undefined, { selector: '.rd-card', min: 1 }, 'setData', 'P1', '', 'CL2 举报进度:处理结论与提交说明'],
-  ['D93', 'D93-correction-mine-content.png', '/subpackageMember/correction-mine/index', 'player', 'normal', { state: 'ready', rows: [{ id: 31, title: '营业时间有误', statusText: '需补充说明', statusTone: 'warning', createText: '10月15日 20:12', canSupplement: true }], hasMore: false }, undefined, { selector: '.rp-row', min: 1 }, 'setData', 'P1', '', 'BL-184 我的纠错:状态与可补充说明提示'],
-  ['D94', 'D94-correction-detail-content.png', '/subpackageMember/correction-detail/index?contributionId=31', 'player', 'normal', { state: 'ready', item: { id: 31, title: '营业时间有误', statusText: '需补充说明', statusTone: 'warning', statusHint: '请补充你看到营业时间的位置', createText: '10月15日 20:12', reviewedText: '10月16日 10:30', mergedText: '', rewardText: '', reviewReason: '请补充一下你看到营业时间的位置，比如门口告示。', canSupplement: true } }, undefined, { selector: '.rd-card', min: 1 }, 'setData', 'P1', '', 'BL-184 纠错进度:审核意见与补充说明入口'],
 
   // ---------- D-E 商家路由截图矩阵缺口（28） ----------
   ['E01', 'E01-official-detail-normal.png', '/pages/activity/official-detail/index?id=101', 'merchant', 'normal', { id: 101, e: { id: 101, coverImg: IMG, _statusText: '官方策展', status: 3, city: '上海', title: '外滩夜行计划', subtitle: '和全城玩家一起点亮城市', collective: { enabled: true, pct: 68, current: 136, threshold: 200 }, participants: 136, signed: true, _isV2: true, _taskDone: 1, _taskTotal: 2, eligible: false, _eligibleText: '再完成 1 项', paused: false, missions: [{ missionCode: 'ARRIVAL', title: '到达外滩观景台', description: '到达现场后验证', missionType: 'ARRIVAL_VERIFIED', complete: true, canVerifyArrival: false }, { missionCode: 'THEME', title: '完成建筑线索路线', description: '完成绑定主题后自动同步', missionType: 'THEME_VERIFIED_FINISH', complete: false, canVerifyArrival: false }], story: '在夜色里重新认识外滩的建筑与人。' }, rewards: ['🏅 限定徽章', '✨ 80 成长值'], cta: { text: '完成绑定主题后自动同步', type: 'theme' }, countdown: '距结束 3小时20分', loading: false, loadErr: false }, undefined, { selector: '.od-page', min: 1 }, 'identity+setData', 'P0', '', '官方活动正常态；奖励保持字符串数组，任务使用页面真实字段'],
@@ -645,16 +643,17 @@ const countBy = (pred) => SHOTS.filter(pred).length;
 // 2026-10-15：漫游上线补 F96-F101 六条(我的队伍 + 5 个工具页),均 P1 actionable;
 // total 326→332、P1 183→189、actionable 302→308、F 86→92、setData 166→171、real-data 37→38。
 // 2026-10-19：Claude 小程序线移植到 master(用户批准冻结数值更新)补 9 条 P1 actionable:B92 主办控制台、C61 核销记录、C62 触达记录、
-// D90 积分明细、D91–D94 我的举报/举报进度/我的纠错/纠错进度(均 setData)、F102 俱乐部勋章(identity+setData);
+// D90 积分明细、D91–D92 我的举报/举报进度(均 setData;D93/D94 我的纠错/纠错进度按用户 2026-10-20 要求删页)、F102 俱乐部勋章(identity+setData);
 // total 332→341、P1 189→198、actionable 308→317、B 67→68、C 54→56、D 39→44、F 92→93、setData 171→179、identity+setData 116→117。
 // 2026-10-19 移植共享基线 366b846f/f49092b0:官方线路列表/详情补 B90/B91 两条 P1 setData 行(积分明细 D90 归 claude/mini-ui-on-master-20261019);
 // total 332→334、P1 189→191、actionable P1 182→184 / total 308→310、B 67→69、setData 171→173。
 // 2026-10-20 合并 master(#396)进 #293:两侧新增行互不重叠(本线 9 条 + 共享基线 B90/B91),total 343、P1 200、actionable 319(P1 193)、B 70、setData 181。
+// 2026-10-20 用户要求删掉「我的纠错 / 纠错进度」两页:D93/D94 两条 P1 setData 行退场,total 341、P1 198、actionable 317(P1 191)、D 42、setData 179。
 const STATS = {
-  "total": 343,
+  "total": 341,
   "byPriority": {
     "P0": 133,
-    "P1": 200,
+    "P1": 198,
     "P2": 10
   },
   "blockedByPriority": {
@@ -664,21 +663,21 @@ const STATS = {
   },
   "actionable": {
     "P0": 124,
-    "P1": 193,
+    "P1": 191,
     "P2": 2,
-    "total": 319
+    "total": 317
   },
   "blocked": 24,
   "domains": {
     "A": 53,
     "B": 70,
     "C": 56,
-    "D": 44,
+    "D": 42,
     "E": 27,
     "F": 93
   },
   "control": {
-    "setData": 181,
+    "setData": 179,
     "identity+setData": 117,
     "real-data": 38,
     "real-device": 7

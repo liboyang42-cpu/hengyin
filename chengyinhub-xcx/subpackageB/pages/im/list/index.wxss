@@ -5,19 +5,6 @@
 page { background: var(--cy-bg-page); }
 .im-list { min-height: 100vh; background: var(--cy-bg-page); }
 
-/* 右上角圆形图标按钮(Airbnb 210.png 参照量得直径 80rpx≈40pt;这里用 88rpx 顶到 DS §3 触达区下限,
-   视觉与实测值接近,不额外加 hit-slop padding)。 */
-.hd-icon-btn {
-  flex: none; width: 88rpx; height: 88rpx; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  background: var(--cy-color-bg-elevated); color: var(--cy-color-text-primary);
-}
-/* R4 #3 沿用:全部已读在无未读时是死操作。原 opacity:.4 会把图标和圆底一起冲淡,
-   实测(automator 截图取色)✓ 图标只剩 2.65:1、不达标(见 airbnb-fix2-report.md)。
-   改用 text-tertiary 实色(同 .badge.is-muted「灰化不透明」的既有范式),圆底不变,
-   仍可辨认「已禁用」,且不再靠透明度混色降对比度。 */
-.hd-icon-btn.is-disabled { color: var(--cy-color-text-tertiary); pointer-events: none; }
-
 /* chips 行左对齐留出页边距(48rpx,量自 210.png);右侧不设 padding,让横滑内容自然出血到屏右,
    横滑手势自身就是溢出提示,不需要额外留白。
    上边距:标题回到 nav-bar 居中槽后,原 .hero 的 --cy-space-5 上留白由本行承接,
@@ -140,13 +127,9 @@ page { background: var(--cy-bg-page); }
   box-shadow: none;
 }
 
-/* 系统 tab「举报进度」:与系统会话行同一视觉(铃铛圆头像 + 标题/时间 + 副行),左右走页边距。 */
-.report-notices { display: flex; flex-direction: column; padding: 0; }
-.report-notice { display: flex; align-items: center; gap: var(--cy-legacy-22); min-height: 88rpx; padding: var(--cy-space-4) var(--cy-page-x); background: var(--cy-bg-card); }
-.report-notice .sys-avatar { flex-shrink: 0; }
-.report-notice__body { flex: 1; min-width: 0; overflow: hidden; }
-.report-notice__top { display: flex; align-items: baseline; min-width: 0; gap: var(--cy-space-2); }
-.report-notice__title { flex: 0 1 auto; min-width: 0; font-size: var(--cy-font-subtitle); font-weight: 700; color: var(--cy-text-title); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.report-notice__time { flex-shrink: 0; margin-left: auto; font-size: var(--cy-font-label); color: var(--cy-text-secondary); }
-.report-notice__sub { display: block; margin-top: 8rpx; font-size: var(--cy-font-label); color: var(--cy-text-secondary); }
-.report-notice__dot { flex-shrink: 0; width: 16rpx; height: 16rpx; border-radius: 50%; background: var(--cy-info); }
+/* 合作邀请行:与会话行同一视觉(圆头像 + 名称/状态/时间 + 副行),左右走页边距。 */
+.invite-row { display: flex; align-items: center; padding: var(--cy-space-4) var(--cy-page-x); background: var(--cy-bg-card); }
+.invite-row .sys-avatar { flex-shrink: 0; margin-right: var(--cy-legacy-22); }
+.invite-status { flex-shrink: 0; margin-left: var(--cy-space-1-5); font-size: var(--cy-type-micro); font-weight: 700; color: var(--cy-color-text-secondary); }
+.invite-status.is-pending { color: var(--cy-color-status-info); }
+.invite-status.is-accepted { color: var(--cy-color-status-success); }

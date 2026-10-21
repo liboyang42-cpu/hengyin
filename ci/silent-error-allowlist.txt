@@ -149,9 +149,10 @@ chengyinhub-xcx/subpackageB/pages/im/chat/index.js 3  # 2026-08-25 状态底座:
 chengyinhub-xcx/subpackageB/pages/im/chat/index.js 3  # 2026-10-10 举报、清空与拉黑三路：举报 finish 在原账号/会话可见时显式提示，隐藏时待 onShow；清空/拉黑 failed 显示危险确认错误并允许重试，无组件时显式提示。迟到回包只淘汰旧上下文，不让全局 toast 污染新页面。
 chengyinhub-xcx/subpackageB/pages/im/chat/index.js 1  # 2026-10-10 拉黑对象读取：复用本人会话接口，失败由 _showBlockConfirmation 在原账号/会话可见时提示，后台结果待 onShow；失败释放记录可重试，旧回包不覆盖新确认。
 chengyinhub-xcx/subpackageB/pages/im/chat/index.js 1  # 2026-10-15 BL-87 处理结果半屏回读审核记录:失败(含 403/404)由半屏内 cy-inline-error 如实回显并可重试,关闭全局 toast 免双弹
+chengyinhub-xcx/subpackageB/pages/im/chat/index.js 1  # 2026-10-20 城瘾小助手「我的举报」:举报进度读不到照常给入口(我的举报页自有失败态),回到本页 onShow 重读未读数
 chengyinhub-xcx/subpackageB/pages/im/list/index.js 1  # 2026-08-25 状态底座:失败落页内错误态(cy-error / cy-inline-error / state:error / stale-error),通用 toast 会双弹
 chengyinhub-xcx/subpackageMember/complaint/index.js 1  # 2026-10-13 主题选项读取失败保留空白，不渲染伪主题；实际读取与举报提交的反馈另列下方实名记录
-chengyinhub-xcx/subpackageB/pages/im/list/index.js 2  # 2026-08-25 状态底座:失败落页内错误态(cy-error / cy-inline-error / state:error / stale-error),通用 toast 会双弹;CL2 系统 tab 举报进度通知失败落 reportNoticeError 局部错误;BL-31 标记已读失败同落 reportNoticeError,红点保留,不挡跳转
+chengyinhub-xcx/subpackageB/pages/im/list/index.js 1  # 2026-10-20 收件箱/发件箱:合作邀请读不到落 inviteError 局部错误(cy-inline-error 带重试),不影响会话列表
 chengyinhub-xcx/subpackageMember/components/scene-member-participation-detail/index.js 1  # 2026-08-25 状态底座:失败落页内错误态(cy-error / cy-inline-error / state:error / stale-error),通用 toast 会双弹
 chengyinhub-xcx/subpackageMember/mytemplate/mytemplate.js 1  # 2026-08-25 状态底座:失败落页内错误态(cy-error / cy-inline-error / state:error / stale-error),通用 toast 会双弹
 chengyinhub-xcx/subpackageP3/pages/stamp-camera/index/index.js 1  # 2026-08-25 状态底座:调用点自己 showToast 精确文案,关掉通用 toast 是防双弹
@@ -205,8 +206,6 @@ chengyinhub-xcx/subpackageMember/complaint/index.js 2  # mine读取401/403/参�
 chengyinhub-xcx/subpackageMember/points-history/index.js 1  # 积分明细首次失败落页内 cy-error 重试;下拉刷新失败走自管 toast
 chengyinhub-xcx/subpackageMember/report-mine/index.js 2  # 我的举报列表首次失败落 cy-state-shell 错误态带重试,刷新失败走自管 toast;原因表读不到只用兜底名
 chengyinhub-xcx/subpackageMember/report-detail/index.js 4  # 举报进度失败落 error/no-permission 页内态(error 带重试),刷新失败自管 toast;申诉失败落 cy-sheet fail(含后端原因),未知先回读再落 unknown 可同幂等键重试
-chengyinhub-xcx/subpackageMember/correction-mine/index.js 1  # BL-184 我的纠错列表首次失败落 cy-state-shell 错误态带重试,刷新失败走自管 toast
-chengyinhub-xcx/subpackageMember/correction-detail/index.js 3  # BL-184 纠错进度失败落 error/no-permission 页内态(error 带重试),刷新失败自管 toast;补证失败落 cy-sheet fail(含后端原因),未知先回读再落 unknown 可同幂等键重试
 chengyinhub-xcx/subpackageMember/components/cy/npc-chat/index.js 1  # 清除对话记录失败落 clearError 可见文案与危险确认 error 态,关自动 toast 避免双弹
 chengyinhub-xcx/subpackageMember/components/cy/report-sheet/index.js 2  # BL-32 共用举报半屏:读原因失败落 loadfail 结果半屏(带重试),提交失败落 fail/unknown 结果半屏(含后端原因、同键重试),关自动 toast 避免双弹
 chengyinhub-xcx/pages/merchant/verify-records/index.js 2  # BL-76:access/me 与核销记录读取失败都落页内 cy-error(带重新加载);关全局 toast 避免双弹。

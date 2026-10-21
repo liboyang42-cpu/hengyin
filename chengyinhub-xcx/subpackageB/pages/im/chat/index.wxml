@@ -21,6 +21,12 @@
                scroll-into-view="{{toView}}" scroll-with-animation
                style="top: {{headerH + heroH}}px; bottom: {{inputH}}px;">
     <view class="msgs-top" aria-hidden="true"></view>
+    <view wx:if="{{type == 2 && reportEntry}}" class="sys-entry" bindtap="openReportMine" hover-class="cy-pressed-bg" hover-stay-time="80"
+          aria-role="button" aria-label="我的举报{{reportUnread ? '，' + reportUnread + ' 条新进度' : ''}}">
+      <text class="sys-entry__title">我的举报</text>
+      <view wx:if="{{reportUnread}}" class="sys-entry__badge">{{reportUnread > 99 ? '99+' : reportUnread}}</view>
+      <cy-icon name="chevron-right" size="32" />
+    </view>
     <cy-inline-error load-failure wx:if="{{loadMoreError}}" class="load-more-error" kind="network"
                      title="更早消息没有加载" sub="{{loadMoreError}}" action="重试"
                      bind:action="retryLoadMore" />

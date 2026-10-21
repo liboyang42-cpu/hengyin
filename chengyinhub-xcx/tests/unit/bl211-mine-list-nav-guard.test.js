@@ -6,7 +6,6 @@ const path = require('node:path')
 
 const CASES = [
   { rel: 'subpackageMember/report-mine/index.js', handler: 'openDetail', id: 7, url: '/subpackageMember/report-detail/index?reportId=7' },
-  { rel: 'subpackageMember/correction-mine/index.js', handler: 'openDetail', id: 8, url: '/subpackageMember/correction-detail/index?contributionId=8' },
 ]
 
 function boot(rel) {

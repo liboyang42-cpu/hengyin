@@ -4,7 +4,7 @@ const path = require('node:path')
 const test = require('node:test')
 const vm = require('../helpers/ui-sandbox-vm.js')
 
-// BL-247:私信空态「去广场找人」与客户页空态「去合作中心」连点只跳一次;complete 或 onShow 后可再跳;
+// BL-247:收件箱空态「去广场找人」与客户页空态「去合作中心」连点只跳一次;complete 或 onShow 后可再跳;
 // 非 dm 标签/非 go-coop 时不跳也不上锁
 
 const ROOT = path.resolve(__dirname, '../..')
@@ -38,9 +38,9 @@ function load(file) {
 
 const CASES = [
   {
-    name: '私信空态「去广场找人」', file: 'subpackageB/pages/im/list/index.js',
+    name: '收件箱空态「去广场找人」', file: 'subpackageB/pages/im/list/index.js',
     url: '/pages/square/list/index',
-    prep(page) { page.data.activeTab = 'dm' },
+    prep(page) { page.data.activeTab = 'in' },
     tap(page) { page.onEmptyCta() },
   },
   {
@@ -74,9 +74,9 @@ for (const c of CASES) {
   })
 }
 
-test('BL-247:私信以外的标签点空态按钮不跳也不上锁', () => {
+test('BL-247:发件箱点空态按钮不跳也不上锁', () => {
   const { page, navs } = load('subpackageB/pages/im/list/index.js')
-  page.data.activeTab = 'notice'
+  page.data.activeTab = 'out'
   page.onEmptyCta()
   assert.equal(navs.length, 0)
   assert.ok(!page._navigating)
