@@ -6,6 +6,8 @@
         aria-role="button" aria-label="{{phase === 'wait' ? '等待变色，变色后立刻点' : '现在点'}}">
     <view class="rx__k g-kicker">{{kicker}}</view>
     <view class="rx__big g-figure">{{big}}</view>
+    <view wx:if="{{unit}}" class="rx__sub g-sub">{{unit}}</view>
     <view class="rx__sub g-sub" wx:if="{{sub}}">{{sub}}</view>
+    <view class="rx__sub g-sub">本机记录屏幕变绿到点击的时间差</view>
   </view>
 </cy-play-stage>
