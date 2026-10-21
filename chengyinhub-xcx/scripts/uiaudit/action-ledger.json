@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
-  "controlCount": 4931,
+  "controlCount": 4932,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -20162,6 +20162,24 @@
               "selector": "cy-result-sheet",
               "index": 0
             },
+            {
+              "selector": "cy-btn",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/index/index",
+          "segments": [
+            {
+              "selector": "cy-btn",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/index/index",
+          "segments": [
             {
               "selector": "cy-btn",
               "index": 1
@@ -770916,7 +770934,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/index/index.js:855"
+        "staticSource": "pages/index/index.js:863"
       }
     },
     {
@@ -771033,11 +771051,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/index/index.js:863"
+        "staticSource": "pages/index/index.js:871"
       }
     },
     {
-      "id": "pages/index/index.wxml:112:bindtap:goContinueExplore:10",
+      "id": "pages/index/index.wxml:114:bindtap:goContinueExplore:11",
       "route": "pages/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -771060,7 +771078,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goContinueExplore",
-        "line": 112,
+        "line": 114,
         "selectorHint": ".v3-continue",
         "visibleCondition": "{{continueExplore}}",
         "disabledCondition": null,
@@ -771101,7 +771119,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/index/index.js:1091"
+        "staticSource": "pages/index/index.js:1099"
       }
     },
     {
@@ -771251,7 +771269,7 @@
       }
     },
     {
-      "id": "pages/index/index.wxml:146:bindtap:goActivity:12",
+      "id": "pages/index/index.wxml:148:bindtap:goActivity:13",
       "route": "pages/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -771274,7 +771292,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goActivity",
-        "line": 146,
+        "line": 148,
         "selectorHint": ".v3-nearby-card",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -771315,11 +771333,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/index/index.js:928"
+        "staticSource": "pages/index/index.js:936"
       }
     },
     {
-      "id": "pages/index/index.wxml:183:bindtap:goActivity:14",
+      "id": "pages/index/index.wxml:185:bindtap:goActivity:15",
       "route": "pages/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -771342,7 +771360,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goActivity",
-        "line": 183,
+        "line": 185,
         "selectorHint": ".v3-upreview",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -771383,7 +771401,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/index/index.js:928"
+        "staticSource": "pages/index/index.js:936"
       }
     },
     {
@@ -771450,11 +771468,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/index/index.js:819"
+        "staticSource": "pages/index/index.js:827"
       }
     },
     {
-      "id": "pages/index/index.wxml:206:bind:change:switchTab:15",
+      "id": "pages/index/index.wxml:208:bind:change:switchTab:16",
       "route": "pages/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -771477,7 +771495,7 @@
         "tag": "cy-tabs",
         "event": "bind:change",
         "handler": "switchTab",
-        "line": 206,
+        "line": 208,
         "selectorHint": "cy-tabs[bind:change]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -771639,11 +771657,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/index/index.js:809"
+        "staticSource": "pages/index/index.js:817"
       }
     },
     {
-      "id": "pages/index/index.wxml:211:bindtap:goTopic:16",
+      "id": "pages/index/index.wxml:213:bindtap:goTopic:17",
       "route": "pages/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -771666,7 +771684,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goTopic",
-        "line": 211,
+        "line": 213,
         "selectorHint": ".v2-fcard",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -771709,11 +771727,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/index/index.js:933"
+        "staticSource": "pages/index/index.js:941"
       }
     },
     {
-      "id": "pages/index/index.wxml:229:bindtap:goTopic:17",
+      "id": "pages/index/index.wxml:231:bindtap:goTopic:18",
       "route": "pages/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -771736,7 +771754,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goTopic",
-        "line": 229,
+        "line": 231,
         "selectorHint": ".v2-status",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -771779,11 +771797,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/index/index.js:933"
+        "staticSource": "pages/index/index.js:941"
       }
     },
     {
-      "id": "pages/index/index.wxml:254:bindtap:goActivity:19",
+      "id": "pages/index/index.wxml:256:bindtap:goActivity:20",
       "route": "pages/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -771806,7 +771824,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goActivity",
-        "line": 254,
+        "line": 256,
         "selectorHint": ".v2-fcard",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -771847,11 +771865,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/index/index.js:928"
+        "staticSource": "pages/index/index.js:936"
       }
     },
     {
-      "id": "pages/index/index.wxml:272:bindtap:goActivity:20",
+      "id": "pages/index/index.wxml:274:bindtap:goActivity:21",
       "route": "pages/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -771874,7 +771892,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goActivity",
-        "line": 272,
+        "line": 274,
         "selectorHint": ".v2-status",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -771915,11 +771933,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/index/index.js:928"
+        "staticSource": "pages/index/index.js:936"
       }
     },
     {
-      "id": "pages/index/index.wxml:300:bindtap:closePhoneModal:22",
+      "id": "pages/index/index.wxml:302:bindtap:closePhoneModal:23",
       "route": "pages/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -771942,7 +771960,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "closePhoneModal",
-        "line": 300,
+        "line": 302,
         "selectorHint": ".tkbg",
         "visibleCondition": "{{showPhoneModal}}",
         "disabledCondition": null,
@@ -771993,11 +772011,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/index/index.js:982"
+        "staticSource": "pages/index/index.js:990"
       }
     },
     {
-      "id": "pages/index/index.wxml:303:bindgetphonenumber:getPhoneNumber:23",
+      "id": "pages/index/index.wxml:305:bindgetphonenumber:getPhoneNumber:24",
       "route": "pages/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -772020,7 +772038,7 @@
         "tag": "button",
         "event": "bindgetphonenumber",
         "handler": "getPhoneNumber",
-        "line": 303,
+        "line": 305,
         "selectorHint": ".tkbox_but",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -772102,11 +772120,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/index/index.js:939"
+        "staticSource": "pages/index/index.js:947"
       }
     },
     {
-      "id": "pages/index/index.wxml:304:bindtap:closePhoneModal:24",
+      "id": "pages/index/index.wxml:306:bindtap:closePhoneModal:25",
       "route": "pages/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -772129,7 +772147,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "closePhoneModal",
-        "line": 304,
+        "line": 306,
         "selectorHint": ".tkbox_skip",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -772180,11 +772198,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/index/index.js:982"
+        "staticSource": "pages/index/index.js:990"
       }
     },
     {
-      "id": "pages/index/index.wxml:310:bind:settled:onPrivacyGateSettled:25",
+      "id": "pages/index/index.wxml:312:bind:settled:onPrivacyGateSettled:26",
       "route": "pages/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -772209,7 +772227,7 @@
         "tag": "cy-privacy-gate",
         "event": "bind:settled",
         "handler": "onPrivacyGateSettled",
-        "line": 310,
+        "line": 312,
         "selectorHint": "cy-privacy-gate[bind:settled]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -772434,7 +772452,74 @@
       }
     },
     {
-      "id": "pages/index/index.wxml:78:bindchange:onRecoChange:8",
+      "id": "pages/index/index.wxml:62:bindtap:showRecommendationSource:6",
+      "route": "pages/index/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/index/index.wxml",
+        "js": "pages/index/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-btn",
+        "event": "bindtap",
+        "handler": "showRecommendationSource",
+        "line": 62,
+        "selectorHint": "cy-btn[bindtap]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/index/index.js:808"
+      }
+    },
+    {
+      "id": "pages/index/index.wxml:79:bindchange:onRecoChange:9",
       "route": "pages/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -772457,7 +772542,7 @@
         "tag": "swiper",
         "event": "bindchange",
         "handler": "onRecoChange",
-        "line": 78,
+        "line": 79,
         "selectorHint": ".v3-reco-swiper",
         "visibleCondition": "{{recoCards.length}}",
         "disabledCondition": null,
@@ -772497,11 +772582,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/index/index.js:844"
+        "staticSource": "pages/index/index.js:852"
       }
     },
     {
-      "id": "pages/index/index.wxml:78:bindtransition:onRecoTransition:7",
+      "id": "pages/index/index.wxml:79:bindtransition:onRecoTransition:8",
       "route": "pages/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -772524,7 +772609,7 @@
         "tag": "swiper",
         "event": "bindtransition",
         "handler": "onRecoTransition",
-        "line": 78,
+        "line": 79,
         "selectorHint": ".v3-reco-swiper",
         "visibleCondition": "{{recoCards.length}}",
         "disabledCondition": null,
@@ -772564,11 +772649,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/index/index.js:824"
+        "staticSource": "pages/index/index.js:832"
       }
     },
     {
-      "id": "pages/index/index.wxml:82:bindtap:goRecoHero:9",
+      "id": "pages/index/index.wxml:83:bindtap:goRecoHero:10",
       "route": "pages/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -772591,7 +772676,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goRecoHero",
-        "line": 82,
+        "line": 83,
         "selectorHint": ".v3-reco-card",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -772635,7 +772720,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/index/index.js:912"
+        "staticSource": "pages/index/index.js:920"
       }
     },
     {
