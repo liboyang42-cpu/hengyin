@@ -77,8 +77,8 @@ function revokeShareSnapshots(app, storage) {
   revokeGenerations.set(key, generation)
   writeRevokePending(storage, key, true)
   return send(app, { url: '/api/roam/share/revoke', method: 'POST', data: {} }).then((res) => {
-    if (!isOk(res) || revokeGenerations.get(key) !== generation) return false
-    writeRevokePending(storage, key, false)
+    if (!isOk(res)) return false
+    if (revokeGenerations.get(key) === generation) writeRevokePending(storage, key, false)
     return true
   })
 }
@@ -100,7 +100,7 @@ function publishShareSnapshot(app, storage, session) {
   const ready = readRevokePending(app, storage) ? revokeShareSnapshots(app, storage) : Promise.resolve(true)
   return ready.then((revoked) => {
     if (!isCurrentOwner()) return { token: '', reason: 'failed' }
-    if (!revoked) return { token: '', reason: 'revoke-pending' }
+    if (!revoked || readRevokePending(app, storage)) return { token: '', reason: 'revoke-pending' }
     return send(app, {
       url: '/api/roam/share/snapshot',
       method: 'POST',

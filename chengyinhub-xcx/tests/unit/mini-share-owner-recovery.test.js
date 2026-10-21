@@ -172,7 +172,7 @@ test('real transport: P insert between R1 DELETE and late success cannot erase f
   h.wire[2].fail({ errMsg: 'request:fail' })
   assert.equal(await r2, false)
   h.reply(1, { code: 200 })
-  assert.equal(await r1, false, 'superseded success cannot settle the newer revoke intent')
+  assert.equal(await r1, true, 'acknowledge this DELETE without settling the newer pending intent')
   assert.equal(h.values[h.key('A')], 1)
   const read = share.readShareSnapshot(h.app, TOKEN)
   h.reply(3, snapshotExists ? { code: 200, data: { track: [] } } : { code: 500, msg: '这条足迹已不再公开' })
@@ -199,7 +199,7 @@ test('real transport: synchronous reentry creates a distinct newer revoke, never
   h.reply(1, { code: 500, msg: 'temporarily unavailable' })
   assert.equal(await nested, false)
   h.reply(0, { code: 200 })
-  assert.equal(await first, false)
+  assert.equal(await first, true)
   assert.equal(h.values[h.key('A')], 1)
 })
 test('real transport: older completion cannot clear a newer pending intent or restore one after success', async () => {
@@ -207,7 +207,7 @@ test('real transport: older completion cannot clear a newer pending intent or re
   const first = share.revokeShareSnapshots(h.app, h.storage)
   const second = share.revokeShareSnapshots(h.app, h.storage)
   h.reply(0, { code: 200 })
-  assert.equal(await first, false)
+  assert.equal(await first, true)
   assert.equal(h.values[h.key('A')], 1)
   h.reply(1, { code: 200 })
   assert.equal(await second, true)
@@ -241,4 +241,17 @@ test('real transport: sequential successful revokes retain the persisted boolean
     assert.equal(await result, true)
     assert.equal(h.values[h.key('A')], undefined)
   }
+})
+
+test('real transport: successful old repair cannot resume publish across a newer failed revoke', async () => {
+  const h = transportHarness()
+  h.values[h.key('A')] = 1
+  const publish = share.publishShareSnapshot(h.app, h.storage, SESSION)
+  const newer = share.revokeShareSnapshots(h.app, h.storage)
+  h.wire[1].fail({ errMsg: 'request:fail' })
+  assert.equal(await newer, false)
+  h.reply(0, { code: 200 })
+  assert.deepEqual(await publish, { token: '', reason: 'revoke-pending' })
+  assert.equal(h.wire.length, 2, 'no snapshot POST across the unresolved newer intent')
+  assert.equal(h.values[h.key('A')], 1)
 })
