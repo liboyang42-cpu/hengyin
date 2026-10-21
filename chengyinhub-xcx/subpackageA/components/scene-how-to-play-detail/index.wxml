@@ -21,6 +21,8 @@
       <text class="detail-time" wx:if="{{detailData.createTime}}">{{detailData.createTime}}</text>
     </view>
 
+    <view class="detail-meta">适用玩法版本暂未标注；教程用于说明，实际任务、完成条件与奖励以游玩页为准。</view>
+
     <!-- HTML内容区域 -->
     <view class="html-content">
       <rich-text nodes="{{contentNodes}}"></rich-text>

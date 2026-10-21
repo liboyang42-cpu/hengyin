@@ -10,7 +10,7 @@
        而 .session-picker 只有 padding-bottom、没有横向 padding ——
        加了 flush 标题就贴出屏幕左边缘（实拍 C51 里「选」字被切掉半个）。 -->
   <cy-page-title title="选择场次" subtitle="选择本次带队场次" safe-top="{{false}}" />
-  <view class="session-picker__hint" wx:if="{{state === 'selecting'}}">团码只登记当前场次，不能跨场次使用。商家扫码后按人数核销。</view>
+  <view class="session-picker__hint" wx:if="{{state === 'selecting'}}">活动核验团码供商家登记本场次接待，不能跨场次使用；玩家组队邀请码不能用于核销。</view>
   <view wx:for="{{activityOptions}}" wx:key="id" wx:if="{{state === 'selecting'}}" class="session-picker__item" bindtap="onSelectActivity" data-id="{{item.id}}" data-name="{{item.name}}" hover-class="cy-pressed" hover-stay-time="80">
     <text>{{item.name}}</text><cy-icon name="arrow-right" size="32" />
   </view>
@@ -39,7 +39,7 @@
      现场靠纸质码核销,所以那个下载图标是这张稿存在的理由,不是装饰。 -->
 <cy-club-game-code-sheet wx:else
   show="{{true}}"
-  title="出示团码"
+  title="活动核验团码"
   name="{{title}}"
   qr="{{qrcodeUrl}}"
   state="{{state}}"

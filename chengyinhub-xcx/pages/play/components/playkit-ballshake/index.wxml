@@ -23,6 +23,8 @@
       <view class="g-sub bl__sub" wx:if="{{sharedChallenge}}">本次撞击 {{hits}} · 提交后计入全队进度</view>
       <view class="g-sub bl__sub" wx:if="{{challenge.disabledReason}}">{{challenge.disabledReason === 'CHALLENGE_LIMIT' ? '挑战次数已用完' : challenge.disabledReason}}</view>
       <view class="g-sub bl__sub">{{timed ? (seconds + ' 秒内撞满') : '不限时，撞满为止'}}</view>
+      <view class="g-sub bl__sub">撞击根据本机动作测量，每次开始前先校准。</view>
+      <view class="g-sub bl__sub bl__notice" wx:if="{{localNotice && !awaitingResult && !(challenge && (challenge.success || challenge.disabledReason))}}">{{localNotice}}</view>
     </view>
   </view>
 

@@ -582,7 +582,7 @@ test('真实点击与组件事件合同分母分开，非 tap 不得伪装按钮
   // 2026-10-20 审核整合保留举报三入口、模板审核、项目审核、重试与申诉七个 tap，2090 → 2097。
   // 2026-10-20 用户要求删掉「我的纠错 / 纠错进度」两页、消息页改收件箱/发件箱(合并 master 584470ad 后按重建实测),2109 → 2101。
   // 首页来源说明、原票导航及三项本机草稿操作并集：本地 tap 2106。
-  assert.equal(local.filter((item) => item.interactionMode === 'tap').length, 2106)  /* 2026-10-07 动态绑定补齐4条tap。2026-09-22 现场感三件套 S1 新增 4 颗 tap(uploadPhotoFrame / clearPhotoFrame /
+  assert.equal(local.filter((item) => item.interactionMode === 'tap').length, 2107)  /* 2026-10-07 动态绑定补齐4条tap。2026-09-22 现场感三件套 S1 新增 4 颗 tap(uploadPhotoFrame / clearPhotoFrame /
      onFrameShutter / onFrameCancel),其中 uploadPhotoFrame 与 onFrameShutter 是
      actionClass=external(real-device-required)、不进 local 分母 ⇒ 进账的是
      onFrameCancel(玩家端「退出取景」)+ clearPhotoFrame(商家端删图),1787 → 1789(重建实测)。 */
@@ -1563,7 +1563,21 @@ test('合并后可达动作 variant 全部进入台账且 handler 真源可定�
     assert.equal(action.length, 1, handler)
     assert.equal(action[0].interactionMode, 'tap', handler)
   }
-  assert.equal(ledger.controlCount, 4938)
+  // 权益状态未知时只重读当前商家事实：新增真实 retryEntitlements 点击，非支付重发。
+  const entitlementRetry = ledger.controls.filter(item => item.entry.wxml === 'pages/merchant/decor/index.wxml'
+    && item.control.tag === 'cy-cell' && item.control.event === 'bind:tap'
+    && item.control.handler === 'retryEntitlements')
+  assert.equal(entitlementRetry.length, 1, 'retryEntitlements 必须保持一个真实 cy-cell 点击绑定')
+  assert.equal(entitlementRetry[0].interactionMode, 'tap')
+  assert.equal(entitlementRetry[0].actionClass, 'read')
+  assert.deepEqual(entitlementRetry[0].targets.writeApis, [], '权益重试不得变成写入或支付重发')
+  for (const api of ['/api/merchant/commerce/capabilities', '/api/merchant/subscription']) {
+    assert.ok(entitlementRetry[0].targets.primaryApis.includes(api), '权益重试必须回读 ' + api)
+  }
+  const decorWxml = fs.readFileSync(path.join(__dirname, '../../pages/merchant/decor/index.wxml'), 'utf8')
+  assert.match(decorWxml, /<cy-cell\b[^>]*bind:tap="retryEntitlements"[^>]*>/,
+    '台账不能脱离实际 WXML 绑定')
+  assert.equal(ledger.controlCount, 4939)
   // 搜索主题与其它结果拆成互斥点击 +1，合计 3268 → 3271（取动作账本重建实测）。
   // 合作页新增会话失效/无权限两个独立 cy-empty CTA，3271 → 3273。
   // 2026-09-02 俱乐部客户系统落地，3273 → 3295。

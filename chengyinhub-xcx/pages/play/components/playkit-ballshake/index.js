@@ -61,6 +61,7 @@ Component({
     hits: 0,
     running: false,
     awaitingResult: false,
+    localNotice: '',
     ball: { x: 0, y: 0 },
     trail: [],
     flash: '',
@@ -74,7 +75,7 @@ Component({
         this._interrupt(() => {
           const stage = this.selectComponent('#cy-play-stage');
           if (challenge.success === true && stage && !this._hidden && !this._detached) stage.win('挑战已完成');
-        });
+        }, '');
       }
     },
     show: function (show) {
@@ -107,7 +108,8 @@ Component({
       try { if (wx.offAccelerometerChange) wx.offAccelerometerChange(listener); } catch (e) { /* invalidated callback is inert */ }
       try { if (wx.stopAccelerometer) wx.stopAccelerometer({ fail() {} }); } catch (e) { /* cleanup is best effort */ }
     },
-    _interrupt(after) {
+    _interrupt(after, notice) {
+      const interrupted = this._attempt && (this._attempt.phase === 'preparing' || this._attempt.phase === 'running');
       const stage = this._attempt ? this._attempt.stage : this.selectComponent('#cy-play-stage');
       this._attempt = null; // invalidate before cleanup or any reentrant callback
       this._stop(); this._offTilt();
@@ -117,7 +119,8 @@ Component({
       // Keyed replacement isolates even an already queued child calibration/deadline callback.
       // It must never run against the stage used by the next attempt.
       const key = this.data.stageKeys[0] + 1;
-      this.setData({ running: false, stageKeys: [key] }, () => {
+      this.setData({ running: false, stageKeys: [key],
+        localNotice: notice !== undefined ? notice : (interrupted ? '本次已中断，重新开始会重新校准。' : this.data.localNotice) }, () => {
         if (after && this.data.stageKeys[0] === key && !this._detached) after();
       });
     },
@@ -130,9 +133,9 @@ Component({
       return this._current(attempt) && e && e.currentTarget && e.currentTarget.dataset
         && String(e.currentTarget.dataset.stageKey) === String(attempt.key) ? attempt : null;
     },
-    _sensorFailed(attempt) {
+    _sensorFailed(attempt, notice = '动作读取已中断，重新开始会重新校准。') {
       if (!this._current(attempt) || attempt.phase !== 'running') return;
-      this._interrupt();
+      this._interrupt(null, notice);
       cyToast('动作读取中断，请重新开始');
     },
     _armWatchdog(attempt) {
@@ -160,6 +163,7 @@ Component({
       const stage = this.selectComponent('#cy-play-stage');
       if (!stage || stage === this._retiredStage) return;
       this._closed = false;
+      this.setData({ localNotice: '' });
       this._zero = null;
       this._attempt = { stage, key: this.data.stageKeys[0], phase: 'preparing', lastFrame: null };
       stage.begin();
@@ -178,7 +182,7 @@ Component({
       this.setData({ hits: 0, running: true });
       if (typeof wx.startAccelerometer !== 'function' || typeof wx.onAccelerometerChange !== 'function'
         || typeof wx.offAccelerometerChange !== 'function' || typeof wx.stopAccelerometer !== 'function') {
-        this._sensorFailed(attempt); return;
+        this._sensorFailed(attempt, '当前无法读取手机动作，重新开始会重新校准。'); return;
       }
       const listener = (res) => {
         if (!this._current(attempt) || attempt.phase !== 'running' || !finiteTilt(res)) return;
@@ -196,8 +200,8 @@ Component({
       try {
         wx.onAccelerometerChange(listener);
         if (!this._current(attempt)) return;
-        wx.startAccelerometer({ interval: 'game', fail: () => this._sensorFailed(attempt) });
-      } catch (error) { this._sensorFailed(attempt); return; }
+        wx.startAccelerometer({ interval: 'game', fail: () => this._sensorFailed(attempt, '动作读取未能开始，重新开始会重新校准。') });
+      } catch (error) { this._sensorFailed(attempt, '动作读取未能开始，重新开始会重新校准。'); return; }
       if (!this._current(attempt)) return;
       /* Preserve the existing server start/submit protocol. No result is sent on interruption. */
       this.triggerEvent('start');

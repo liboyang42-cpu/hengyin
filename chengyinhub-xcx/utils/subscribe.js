@@ -106,13 +106,19 @@ function request(keys) {
         success: function (res) {
           var acceptedKeys = [];
           var rejectedKeys = [];
+          var validResponse = res && typeof res === 'object' && !Array.isArray(res);
+          var unknown = false;
           requestedKeys.forEach(function (key, index) {
-            if (res && res[requestedIds[index]] === 'accept') acceptedKeys.push(key);
-            else rejectedKeys.push(key);
+            var id = requestedIds[index];
+            var decision = validResponse && Object.prototype.hasOwnProperty.call(res, id) ? res[id] : undefined;
+            if (decision === 'accept') acceptedKeys.push(key);
+            else if (decision === 'reject' || decision === 'ban') rejectedKeys.push(key);
+            else unknown = true;
           });
-          var status = acceptedKeys.length === requestedKeys.length
-            ? STATUS.ACCEPTED
-            : (acceptedKeys.length ? STATUS.PARTIAL : STATUS.REJECTED);
+          // 没有明确的逐模板结果，不能当成用户拒绝。
+          var status = unknown ? STATUS.FAILED
+            : (acceptedKeys.length === requestedKeys.length ? STATUS.ACCEPTED
+              : (acceptedKeys.length ? STATUS.PARTIAL : STATUS.REJECTED));
           resolve(result(status, requestedKeys, acceptedKeys, rejectedKeys, missingKeys));
         },
         fail: function () {

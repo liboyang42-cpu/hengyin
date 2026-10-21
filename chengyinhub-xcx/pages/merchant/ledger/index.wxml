@@ -114,9 +114,9 @@
 
     <cy-btn class="fin-assets-cta" bindtap="goAssets">去我的资产</cy-btn>
     <view class="fin-alert-row" role="switch" aria-checked="{{settleAlertsEnabled}}">
-      <view class="fin-alert-copy"><text class="fin-alert-title">结算到账提醒</text><text class="fin-alert-sub">入账后通过服务通知告诉你</text></view>
+      <view class="fin-alert-copy"><text class="fin-alert-title">结算到账提醒</text><text class="fin-alert-sub">仅申请微信通知授权；到账情况请查看本页账本</text><text class="fin-alert-sub" aria-role="status">{{settleAlertsState === 'allowed' ? '已允许微信通知' : settleAlertsHint}}</text></view>
       <cy-switch checked="{{settleAlertsEnabled}}" disabled="{{settleAlertsLoading}}"
-        accessibility-label="结算到账提醒" bind:change="enableCoopSettleAlerts" />
+        accessibility-label="结算到账提醒，{{settleAlertsHint}}" bind:change="enableCoopSettleAlerts" />
     </view>
 
     <view class="fin-group">

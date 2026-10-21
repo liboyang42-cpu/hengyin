@@ -42,6 +42,7 @@
   <view class="shzlbox_li">
     <view class="shzlbox_li_left">
       <view class="shzlbox_li_left_name">城市签名</view>
+      <view class="shzlbox_li_left_txt">修改签名文字不会改变定位城市。</view>
       <view class="shzlbox_li_left_txt {{userInfo.introduction ? '' : 'is-empty'}}">{{userInfo.introduction || '未填写'}}</view>
     </view>
     <view class="shzlbox_li_right" bindtap="openPop" aria-role="button" aria-label="编辑城市签名" hover-class="cy-pressed" hover-stay-time="80"><image lazy-load="true" src="/pages/gerenziliao/images/d_bianji2.png" mode="widthFix" /></view>

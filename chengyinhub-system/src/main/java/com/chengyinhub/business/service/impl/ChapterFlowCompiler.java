@@ -242,6 +242,10 @@ final class ChapterFlowCompiler
                     {
                         throw invalid(chapterNumber, block.getType() + " 块不能携带 nodeIndex");
                     }
+                    if (block.getAltText() != null && block.getAltText().length() > 2000)
+                    {
+                        throw invalid(chapterNumber, "媒体文字替代最多 2000 字");
+                    }
                     String url = block.getUrl();
                     if (url == null || url.trim().isEmpty())
                     {
@@ -610,6 +614,7 @@ final class ChapterFlowCompiler
                 else if (TYPE_IMAGE.equals(block.getType()) || TYPE_AUDIO.equals(block.getType()))
                 {
                     row.put("url", block.getUrl());
+                    if (block.getAltText() != null) row.put("altText", block.getAltText());
                 }
                 else if (TYPE_MOOD.equals(block.getType()))
                 {
