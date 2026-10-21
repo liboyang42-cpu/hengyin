@@ -34,10 +34,9 @@ const { decodeDisplayText, decodeDisplayFields } = require('../../../utils/displ
 // CU-C-60:扫码核销复用全站唯一的路由表(utils/verification-scan)与写闸(防重提/结果未知),
 // 不在本页另写一套解析。
 const { resolveVerificationScan } = require('../../../utils/verification-scan.js');
-const { createWriteActionWorkflow } = require('../../../utils/write-action-workflow.js');
 const loading = require('../../../utils/loading.js');
 const { postExcerpt } = require('../../../utils/danger-actions.js');
-
+const { classifyVerificationOutcome, createVerificationWorkflow } = require('../../../utils/merchant-verification.js');
 // AI 策划:频控超限文案(后端运行时拼 dailyLimit,数字随配置变)→ 只做包含匹配
 const AI_QUOTA_MARK = '今日AI次数已用完';
 const AI_IDEA_CHIPS = ['静安 情侣 夜间 Citywalk 90分钟', '外滩 亲子 半天 城市打卡', '苏州河 摄影 徒步 2小时'];
@@ -681,6 +680,7 @@ Page({
   },
 
   onLoad(opt) {
+    this._scanDisposed = false; this._scanGeneration = (this._scanGeneration || 0) + 1;
     this._operationScope = opt && opt.scope === 'MERCHANT' ? 'MERCHANT' : '';
     // 纯内部态:wxml 渲染的是派生结果(manageTopics / upcomingTopics / endedTopics /
     // leaderboardSortLabel),从不直接渲染这两个。放 data 里每次 setData 都白白做一次
@@ -785,6 +785,8 @@ Page({
 
   // 页面销毁:作废在途 AI 生成的回调,避免 setData after unload(sendRequest 不可中断)
   onUnload() {
+    this._scanDisposed = true; this._scanGeneration = (this._scanGeneration || 0) + 1;
+    if (this._scanWorkflow) { this._scanWorkflow.destroy(); this._scanWorkflow = null; loading.hide(); }
     this._sceneGuardDestroyed = true;
     this._coopAccessEpoch = (this._coopAccessEpoch || 0) + 1;
     this._clubAiToken = (this._clubAiToken || 0) + 1;
@@ -930,23 +932,28 @@ Page({
    */
   submitClubScan(url, options) {
     const scan = options || {};
-    if (!url) return;
-    if (!this._scanWorkflow) this._scanWorkflow = createWriteActionWorkflow({ deadlineMs: 15000 });
-    const key = url + ':' + (scan.code || '');
+    if (!url || this._scanDisposed) return;
+    const owner = String(app.getUserID && app.getUserID() || '');
+    const generation = this._scanGeneration || 0;
+    const ownerPage = this;
+    if (!this._scanWorkflow) this._scanWorkflow = createVerificationWorkflow({ deadlineMs: 15000, storage: wx, getOwner: () => app.getUserID && app.getUserID() });
+    const key = owner + ':' + url + ':' + (scan.code || '');
     if (this._scanWorkflow.isBusy(key)) { cyToast('核销处理中，请勿重复提交'); return; }
     loading.show(scan.loadingTitle);
     this._scanWorkflow.run(key, function (done) {
       return app.sendRequest(Object.assign({}, {
         url: url, data: scan.data, method: 'POST', header: jsonHeader(),
         autoErrorToast: false,
-        success(res) { done({ status: 'success', response: res }); },
-        fail() { done({ status: 'failed', response: { code: 500, msg: '网络错误，请重试' } }); },
-        successStatusAbnormal(res) {
-          done({ status: 'failed', response: { code: 500, msg: (res && res.msg) || '核销失败，请重试' } });
+        success(res) { done(classifyVerificationOutcome(res, 'success', undefined, { url: url, data: scan.data })); },
+        fail(res, status) { done(classifyVerificationOutcome(res, 'fail', status, { url: url, data: scan.data })); },
+        successStatusAbnormal(res, status) {
+          done(classifyVerificationOutcome(res, 'abnormal', status, { url: url, data: scan.data }));
         },
       }));
     }, function (result) {
       loading.hide();
+      if (ownerPage._scanDisposed || generation !== (ownerPage._scanGeneration || 0)
+          || owner !== String(app.getUserID && app.getUserID() || '')) return;
       // 结果未知 = 服务端可能已经写入。提示重试等于把「未知」变成重复核销。
       if (result.status === 'unknown') { cyToast('核销结果待确认，请勿重复核销'); return; }
       const res = result.response || {};

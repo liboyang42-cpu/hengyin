@@ -36,6 +36,7 @@ function loadPage(relativePath, app, requireMap = {}) {
       // CU-C-60/CU-C-107:俱乐部页新增的三个 require(扫码路由表 / 核销写闸 / 正文摘要),都是纯模块
       if (request === '../../../utils/verification-scan.js') return require(path.join(ROOT, 'utils/verification-scan.js'))
       if (request === '../../../utils/write-action-workflow.js') return require(path.join(ROOT, 'utils/write-action-workflow.js'))
+      if (request === '../../../utils/merchant-verification.js') return require(path.join(ROOT, 'utils/merchant-verification.js'))
       if (request === '../../../utils/danger-actions.js') return require(path.join(ROOT, 'utils/danger-actions.js'))
       if (request === '../utils/owner-action-guard.js') return require(path.join(ROOT, 'pages/club/utils/owner-action-guard.js'))
       // PR10 F-W1-12:页面新依赖登录引导判定(真模块,无副作用)

@@ -18,10 +18,9 @@ const roleGuard = require('../../../../utils/roleGuard.js');
 const policy = require('../../../../utils/identity/identity-policy.js');
 const { applyTheme } = require('../../../../utils/theme.js');
 const { resolveVerificationScan } = require('../../../../utils/verification-scan.js');
-const { completionReceiptMessage, resolveVerificationResult } = require('../../../../utils/merchant-verification.js');
+const { completionReceiptMessage, resolveVerificationResult, classifyVerificationOutcome, createVerificationWorkflow } = require('../../../../utils/merchant-verification.js');
 const { getScene } = require('../../../../utils/scene-registry.js');
 const { pushScene, popScene, currentScene, exitDecision } = require('../../../../utils/scene-stack.js');
-const { createWriteActionWorkflow } = require('../../../../utils/write-action-workflow.js');
 const { offerVerificationReadback } = require('../../../../utils/verification-readback.js');
 const { isRecord, isRecordList } = require('../../../../utils/response-shape.js');
 const { inactiveAccess, normalizeMerchantAccess } = require('../../../../utils/merchant-access-policy.js');
@@ -498,6 +497,7 @@ Component({
 
   lifetimes: {
     attached: function () {
+      this._verificationGeneration = (this._verificationGeneration || 0) + 1;
       this._profileAttached = true;
       this._profileHidden = false;
       this._syncProfileReducedMotion();
@@ -505,12 +505,13 @@ Component({
       this._syncCommunityProfile();
     },
     detached: function () {
+      this._verificationGeneration = (this._verificationGeneration || 0) + 1;
       this._profileAttached = false;
       this._profileReadEpoch = (this._profileReadEpoch || 0) + 1;
       this._coopAccessEpoch = (this._coopAccessEpoch || 0) + 1;
       this._following = false;
       this._followEpoch = (this._followEpoch || 0) + 1;
-      if (this._verificationWorkflow) this._verificationWorkflow.destroy();
+      if (this._verificationWorkflow) { this._verificationWorkflow.destroy(); this._verificationWorkflow = null; cyLoading.hide(); }
     }
   },
 
@@ -648,7 +649,11 @@ Component({
 
     _submitVerification: function (key, loadingTitle, options, callback) {
       var that = this;
-      if (!this._verificationWorkflow) this._verificationWorkflow = createWriteActionWorkflow({ deadlineMs: 15000 });
+      const owner = String(app.getUserID && app.getUserID() || '');
+      const generation = this._verificationGeneration || 0;
+      if (this._profileAttached === false) return false;
+      key = owner + ':' + key;
+      if (!this._verificationWorkflow) this._verificationWorkflow = createVerificationWorkflow({ deadlineMs: 15000, storage: wx, getOwner: () => app.getUserID && app.getUserID() });
       if (this._verificationWorkflow.isBusy(key)) {
         cyToast('核销处理中，请勿重复提交');
         return false;
@@ -657,14 +662,16 @@ Component({
       var submitted = this._verificationWorkflow.run(key, function (done) {
         return app.sendRequest(Object.assign({}, options, {
           autoErrorToast: false,
-          success: function (res) { done({ status: 'success', response: res }); },
-          fail: function () { done({ status: 'failed', response: { code: 500, msg: '网络错误，请重试' } }); },
-          successStatusAbnormal: function (res) {
-            done({ status: 'failed', response: { code: 500, msg: (res && res.msg) || '核销失败，请重试' } });
+          success: function (res) { done(classifyVerificationOutcome(res, 'success', undefined, options)); },
+          fail: function (res, status) { done(classifyVerificationOutcome(res, 'fail', status, options)); },
+          successStatusAbnormal: function (res, status) {
+            done(classifyVerificationOutcome(res, 'abnormal', status, options));
           }
         }));
       }, function (result) {
         cyLoading.hide();
+        if (that._profileAttached === false || generation !== (that._verificationGeneration || 0)
+            || owner !== String(app.getUserID && app.getUserID() || '')) return;
         if (result.status === 'unknown') {
           callback({ code: 202, msg: '核销结果待确认，请勿重复核销；请先查看核销记录' });
           offerVerificationReadback(key, that._verificationWorkflow);
