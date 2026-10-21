@@ -539,6 +539,22 @@ def enforce_workflow(workflow_text, gate_text):
     if ("if: always() && steps.mysql.outputs.container != ''" not in main_job_text
             or "docker rm -f -v \"$MYSQL_CONTAINER\"" not in main_job_text):
         problems.append("资金 IT 必须 always() 清理 scratch MySQL 容器")
+    cleanup_step = re.search(
+        r"^      - name: Stop Oracle MySQL scratch\n([\s\S]*?)(?=^      - |\Z)",
+        main_job_text, re.MULTILINE,
+    )
+    cleanup_text = cleanup_step.group(1) if cleanup_step else ""
+    if ('''if ! names="$(docker ps -a --format '{{.Names}}' 2>/dev/null)"; then
+            echo "::error::Funds scratch absence readback failed"
+            exit 1
+          fi''' not in cleanup_text
+            or '''while IFS= read -r name; do
+            if [ "$name" = "$MYSQL_CONTAINER" ]; then
+              echo "::error::Funds scratch container remains"
+              exit 1
+            fi
+          done <<< "$names"''' not in cleanup_text):
+        problems.append("资金 IT 清理必须独立确认 docker ps 成功，并精确拒绝同名残留容器")
     container_output = main_job_text.find('echo "container=$container" >> "$GITHUB_OUTPUT"')
     if container_output < 0 or container_output > main_job_text.find("docker run -d"):
         problems.append("资金 IT 必须在容器启动前登记名称，确保启动后失败仍可清理")

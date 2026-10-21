@@ -79,8 +79,8 @@ manifest = json.loads(Path(sys.argv[1]).read_text())
 expected = {name: "/trace-runtime/" + name for name in manifest["files"] if name != "strace"}
 loader_names = {manifest["interpreter"], Path(manifest["interpreter"]).name, "/trace-runtime/loader"}
 seen = set()
-for line in Path(sys.argv[2]).read_text().splitlines():
-    line = line.strip()
+for line_number, raw_line in enumerate(Path(sys.argv[2]).read_text().splitlines(), 1):
+    line = raw_line.strip()
     if re.fullmatch(r"linux-(?:vdso|gate)[\w.-]* \((?:0x)?[0-9a-fA-F]+\)", line):
         continue
     match = re.fullmatch(r"(\S+) => (/\S+) \((?:0x)?[0-9a-fA-F]+\)", line)
@@ -90,14 +90,14 @@ for line in Path(sys.argv[2]).read_text().splitlines():
     else:
         match = re.fullmatch(r"(/\S+) \((?:0x)?[0-9a-fA-F]+\)", line)
         if not match:
-            raise ValueError("Unrecognized target trace runtime dependency")
+            raise ValueError(f"Unrecognized target trace runtime dependency at line {line_number}: {ascii(raw_line)}")
         resolved = match.group(1)
         key = "loader" if resolved == "/trace-runtime/loader" else ""
     if key in seen or expected.get(key) != resolved:
-        raise ValueError("Target trace runtime escaped its private bundle")
+        raise ValueError(f"Target trace runtime escaped its private bundle at line {line_number}: {ascii(raw_line)}")
     seen.add(key)
 if seen != set(expected):
-    raise ValueError("Target trace runtime dependency missing")
+    raise ValueError(f"Target trace runtime dependency missing: {sorted(set(expected) - seen)}")
 PY_RESOLVED
   docker run --rm --name "$RUN_NAME-trace-check" --network none --read-only --cap-drop ALL \
     --user "$(id -u):$(id -g)" -v "$OUT/trace-runtime:/trace-runtime:ro" \

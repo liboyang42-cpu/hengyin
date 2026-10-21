@@ -471,6 +471,73 @@ class FundsItWorkflowContractTest(unittest.TestCase):
     def test_repo_workflow_satisfies_contract(self):
         self.assertEqual([], funds_it_gate.enforce_workflow(self.workflow, self.gate))
 
+    def cleanup_script(self):
+        step = self.workflow.split("      - name: Stop Oracle MySQL scratch\n", 1)[1]
+        lines = step.split("        run: |\n", 1)[1].splitlines()
+        script = []
+        for line in lines:
+            if line and not line.startswith("          "):
+                break
+            script.append(line[10:])
+        return "\n".join(script) + "\n"
+
+    def run_cleanup(self, script, rm_exit, ps_exit, names):
+        with tempfile.TemporaryDirectory() as directory:
+            root = pathlib.Path(directory)
+            docker = root / "docker"
+            docker.write_text(
+                "#!/usr/bin/env python3\n"
+                "import json, os, sys\n"
+                "from pathlib import Path\n"
+                "with Path(os.environ['FAKE_CALLS']).open('a') as f:\n"
+                "    f.write(json.dumps(sys.argv[1:])+'\\n')\n"
+                "if sys.argv[1:] == ['rm', '-f', '-v', os.environ['MYSQL_CONTAINER']]:\n"
+                "    raise SystemExit(int(os.environ['FAKE_RM_EXIT']))\n"
+                "if sys.argv[1:] == ['ps', '-a', '--format', '{{.Names}}']:\n"
+                "    print(os.environ['FAKE_NAMES'])\n"
+                "    raise SystemExit(int(os.environ['FAKE_PS_EXIT']))\n"
+                "raise SystemExit(99)\n", encoding="utf-8")
+            docker.chmod(0o700)
+            env = dict(os.environ, PATH=directory + os.pathsep + os.environ.get("PATH", ""),
+                       MYSQL_CONTAINER="cy-funds-fixture-1", FAKE_CALLS=str(root / "calls"),
+                       FAKE_RM_EXIT=str(rm_exit), FAKE_PS_EXIT=str(ps_exit), FAKE_NAMES=names)
+            result = subprocess.run(["bash", "-e", "-c", script], env=env,
+                                    capture_output=True, text=True, timeout=10)
+            calls = (root / "calls").read_text(encoding="utf-8").splitlines()
+            self.assertEqual([
+                '["rm", "-f", "-v", "cy-funds-fixture-1"]',
+                '["ps", "-a", "--format", "{{.Names}}"]',
+            ], calls)
+            return result
+
+    def test_cleanup_actual_block_requires_successful_exact_absence_readback(self):
+        for rm_exit, ps_exit, names, succeeds in (
+            (0, 0, "", True),
+            (1, 0, "", True),
+            (0, 7, "", False),
+            (0, 7, "unrelated-fixture", False),
+            (0, 0, "cy-funds-fixture-1", False),
+            (1, 0, "cy-funds-fixture-1", False),
+            (0, 0, "cy-funds-fixture-1-suffix\nprefix-cy-funds-fixture-1", True),
+        ):
+            with self.subTest(rm_exit=rm_exit, ps_exit=ps_exit, names=names):
+                result = self.run_cleanup(self.cleanup_script(), rm_exit, ps_exit, names)
+                self.assertEqual(succeeds, result.returncode == 0, result.stdout + result.stderr)
+
+    def test_original_cleanup_pipeline_falsely_accepts_failed_empty_ps(self):
+        original = ('docker rm -f -v "$MYSQL_CONTAINER" >/dev/null 2>&1 || true\n'
+                    '! docker ps -a --format \'{{.Names}}\' | grep -Fxq "$MYSQL_CONTAINER"\n')
+        self.assertEqual(0, self.run_cleanup(original, 0, 7, "").returncode)
+
+    def test_red_when_cleanup_loses_ps_success_or_exact_name_guard(self):
+        for before, after in (
+            ('if ! names="$(docker ps', 'if names="$(docker ps'),
+            ('if [ "$name" = "$MYSQL_CONTAINER" ]; then', 'if false; then'),
+        ):
+            with self.subTest(before=before):
+                problems = funds_it_gate.enforce_workflow(self.workflow.replace(before, after), self.gate)
+                self.assertTrue(any("独立确认 docker ps" in p for p in problems), problems)
+
     def test_red_when_self_hosted_label_loses_temp_marker(self):
         self.assertIn("runs-on: ubuntu-latest", self.workflow)
         broken = self.workflow.replace(
