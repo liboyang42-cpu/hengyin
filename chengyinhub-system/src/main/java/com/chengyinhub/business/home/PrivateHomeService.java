@@ -17,7 +17,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.Clock;
 import java.util.List;
-import java.util.Locale;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -104,8 +103,7 @@ public class PrivateHomeService {
         long now = clock.millis();
         if (!"ACTIVE".equals(home.status) || home.version != expectedVersion) fail("HOME_VERSION_INVALID");
         if (now < home.effectiveAt) fail("HOME_NOT_EFFECTIVE");
-        Proof reused = reusedGrant(actor, expectedVersion, scope, evidenceHandle, resource);
-        if (reused != null) return reused;
+        rejectReusedGrant(actor, expectedVersion, scope, evidenceHandle, resource);
         Verdict verdict = trusted(actor, home, resource, evidenceHandle, now);
         Arrival grant = authority.verifyArrival(actor, home, resource, evidenceHandle);
         String bound = PrivateHomeTrustedEvidence.fingerprint(verdict.evidenceId);
@@ -122,13 +120,7 @@ public class PrivateHomeService {
         proof.grantFingerprint = bound;
         proof.resourceType = resource.resourceType;
         proof.status = "READY"; proof.issuedAt = now; proof.expiresAt = Math.min(grant.expiresAt, add(now, policy.proofTtlMillis));
-        try {
-            affected(mapper.insertProof(proof));
-        } catch (RuntimeException error) {
-            Proof raced = racedProof(error, actor, requestId, expectedVersion, scope, resource, bound);
-            if (raced == null) throw error;
-            return raced;
-        }
+        affected(mapper.insertProof(proof));
         recheck(actor, home, policy, resource, proof);
         return proof;
     }
@@ -246,38 +238,16 @@ public class PrivateHomeService {
     }
 
     /**
-     * Same evidence already stored for this owner. Matching binding returns that proof.
-     * A different home version, scope, or rule returns REQUEST_CONFLICT. No second proof.
+     * A new request for evidence this owner already stored is rejected. Binding is re-checked first.
+     * Only the original requestId reads the stored proof back. Insert failures are not recovered here.
      */
-    private Proof reusedGrant(Actor actor, long expectedVersion, String scope, String evidenceHandle, ResourcePolicy resource) {
+    private void rejectReusedGrant(Actor actor, long expectedVersion, String scope, String evidenceHandle, ResourcePolicy resource) {
         String bound = PrivateHomeTrustedEvidence.fingerprint(evidenceHandle);
-        if (bound == null) return null;
+        if (bound == null) return;
         Proof stored = findGrant(actor.ownerId, bound);
-        if (stored == null) return null;
+        if (stored == null) return;
         if (!sameBinding(stored, expectedVersion, scope, resource)) fail("REQUEST_CONFLICT");
-        checkActor(actor);
-        return present(stored);
-    }
-    /** Only a named unique key with a visible winner is classified. Any other failure stays a failure. */
-    private Proof racedProof(RuntimeException error, Actor actor, String requestId, long expectedVersion, String scope, ResourcePolicy resource, String fingerprint) {
-        boolean grant = names(error, "uk_private_home_proof_grant");
-        boolean request = names(error, "uk_private_home_proof_request");
-        if (grant == request) return null;
-        Proof stored;
-        try {
-            stored = grant ? findGrant(actor.ownerId, fingerprint) : mapper.findProofRequest(actor.ownerId, requestId);
-        } catch (RuntimeException lookup) {
-            error.addSuppressed(lookup);
-            return null;
-        }
-        if (stored == null) return null;
-        if (grant) {
-            if (!sameBinding(stored, expectedVersion, scope, resource)) fail("REQUEST_CONFLICT");
-        } else if (!Long.valueOf(expectedVersion).equals(stored.homeVersion) || !scope.equals(stored.scope)) {
-            fail("REQUEST_CONFLICT");
-        }
-        checkActor(actor);
-        return present(stored);
+        fail("REQUEST_CONFLICT");
     }
     private Proof findGrant(long owner, String fingerprint) {
         List<Proof> rows = new JdbcTemplate(dataSource).query(
@@ -305,14 +275,6 @@ public class PrivateHomeService {
     private static boolean sameBinding(Proof stored, long expectedVersion, String scope, ResourcePolicy resource) {
         return Long.valueOf(expectedVersion).equals(stored.homeVersion) && scope.equals(stored.scope)
                 && Objects.equals(resource.scopeRevision, stored.scopeRevision) && Objects.equals(resource.ruleVersion, stored.ruleVersion);
-    }
-    private static boolean names(Throwable error, String constraint) {
-        String needle = constraint.toLowerCase(Locale.ROOT);
-        for (int i = 0; error != null && i < 8; i++, error = error.getCause()) {
-            String message = error.getMessage();
-            if (message != null && message.toLowerCase(Locale.ROOT).contains(needle)) return true;
-        }
-        return false;
     }
     /** Same gate for HTTP and internal verify. A handle, dwell, or device signal is not a verdict. */
     private Verdict trusted(Actor actor, Home home, ResourcePolicy resource, String evidenceHandle, long now) {

@@ -165,8 +165,8 @@ class PrivateHomeTransactionTest {
     }
     @Test void arrivalGrantCannotMintSecondProofAfterConsumption() {
         fixture.fixedGrant="single-authoritative-grant"; Proof proof=proof(); service.restore("restore",proof.proofId,"run:1");
-        Proof again=service.verifyReturn("another",1,"run:1","evidence");
-        assertEquals(proof.proofId,again.proofId); assertEquals("CONSUMED",again.status); assertEquals(proof.requestId,again.requestId);
+        ServiceException rejected=assertThrows(ServiceException.class,()->service.verifyReturn("another",1,"run:1","evidence"));
+        assertEquals("REQUEST_CONFLICT",rejected.getMessage());
         assertEquals(proof.grantFingerprint,jdbc.queryForObject("SELECT grant_fingerprint FROM player_private_home_proof",String.class));
         assertEquals(1,count("player_private_home_proof"));
     }

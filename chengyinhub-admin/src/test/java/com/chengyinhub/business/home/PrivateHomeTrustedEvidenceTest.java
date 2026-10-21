@@ -59,9 +59,8 @@ class PrivateHomeTrustedEvidenceTest extends PrivateHomeReturnProtocolTest {
         Proof external = service.verifyReturnHome("external", 1, "run:1", "challenge-http", here());
         assertEquals("READY", external.status);
         assertEquals(PrivateHomeTrustedEvidence.fingerprint("challenge-http"), external.grantFingerprint);
-        Proof reuse = service.verifyReturn("reuse", 1, "run:1", "challenge-http");
-        assertEquals(external.proofId, reuse.proofId);
-        assertEquals(external.requestId, reuse.requestId);
+        ServiceException reuse = assertThrows(ServiceException.class, () -> service.verifyReturn("reuse", 1, "run:1", "challenge-http"));
+        assertEquals("REQUEST_CONFLICT", reuse.getMessage());
         assertEquals(2, count("player_private_home_proof"));
     }
 

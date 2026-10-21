@@ -104,7 +104,7 @@ GET 只返回本人据点。响应 `Cache-Control: no-store`、`Pragma: no-cache
 
 幂等键 `(owner, requestId)`。已落库字段只比较 `expectedVersion`（即 proof 上的 homeVersion）和 `scope`。不一致 → `REQUEST_CONFLICT`。一致 → 返回原 proof，不重新验证、不第二次签发、不把第二份观测写进去。观测原文和 evidenceHandle 不落库。`grant_fingerprint` 只存证据标识的 SHA-256，不存原文，也不存随机 `grantId` 的哈希。撤回和过期都不清空该指纹。
 
-同一 owner、同一证据标识、另一个 requestId：不第二次签发，也不新增错误码或响应字段。homeVersion、scope、scopeRevision、ruleVersion 都与原 proof 一致时，返回原 proof（响应里的 `requestId` 仍是第一次的）。其中任一不一致 → 既有码 `REQUEST_CONFLICT`。其它数据库失败不当成重复证据。HTTP 的验证冷却仍在进入该判断之前。
+同一 owner、同一证据标识、另一个 requestId：既有码 `REQUEST_CONFLICT`。不回读原 proof，不第二次签发，不新增错误码或响应字段。绑定仍核对 homeVersion、scope、scopeRevision、ruleVersion；无论是否一致，新请求都拒绝。只有原 requestId 的合法重放才回读。插入时的数据库异常不在同一事务里收成成功。HTTP 的验证冷却仍在进入该判断之前。
 
 兼容差异（成功体字段不变）：以前「格式合法的 handle + 自报观测通过」可以签发；现在同一条件返回既有码 `ARRIVAL_NOT_VERIFIED`，不新增字段。`deviceIntegrity` 仍是未知字段，仍为 `HOME_REQUEST_INVALID`。
 

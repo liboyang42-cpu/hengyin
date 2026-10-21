@@ -12,7 +12,7 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.test.util.ReflectionTestUtils;
 import static org.junit.jupiter.api.Assertions.*;
 
-/** Same-evidence reuse stays on the stored proof. A database failure is not relabelled as a duplicate. */
+/** A new request for stored evidence is rejected. Only the original request reads it back. */
 class PrivateHomeEvidenceReuseTest extends PrivateHomeReturnProtocolTest {
     @Test void replayReturnsTheOriginalProof() {
         Proof proof = proof();
@@ -28,21 +28,22 @@ class PrivateHomeEvidenceReuseTest extends PrivateHomeReturnProtocolTest {
         assertEquals("PrivateHome[redacted]", again.toString());
     }
 
-    @Test void sameEvidenceUnderANewRequestReadsBackAndDoesNotResign() {
+    @Test void sameEvidenceUnderANewRequestIsRejected() {
         Proof proof = proof();
         fixture.fixedGrant = "would-resign";
-        Proof again = service.verifyReturn("second", 1, "run:1", "evidence");
-        assertEquals(proof.proofId, again.proofId);
-        assertEquals("verify", again.requestId);
-        assertEquals(proof.grantId, again.grantId);
-        assertEquals(proof.grantFingerprint, again.grantFingerprint);
+        ServiceException rejected = assertThrows(ServiceException.class, () -> service.verifyReturn("second", 1, "run:1", "evidence"));
+        assertEquals("REQUEST_CONFLICT", rejected.getMessage());
+        assertNull(rejected.getCause());
+        assertFalse(rejected.getMessage().contains("evidence"));
+        assertFalse(rejected.getMessage().contains("7"));
         assertEquals(0L, jdbc.queryForObject("SELECT COUNT(*) FROM player_private_home_proof WHERE request_id='second'", Long.class));
+        assertEquals(proof.proofId, jdbc.queryForObject("SELECT proof_id FROM player_private_home_proof", String.class));
+        assertEquals(proof.grantId, jdbc.queryForObject("SELECT grant_id FROM player_private_home_proof", String.class));
         openRules();
-        Proof http = service.verifyReturnHome("third", 1, "run:1", "evidence", here());
-        assertEquals(proof.proofId, http.proofId);
-        assertEquals("verify", http.requestId);
+        assertEquals("REQUEST_CONFLICT", code(() -> service.verifyReturnHome("third", 1, "run:1", "evidence", here())));
         assertEquals(0, count("player_private_home_location_evidence"));
         assertEquals(1, count("player_private_home_proof"));
+        assertEquals(proof.proofId, service.verifyReturn("verify", 1, "run:1", "evidence").proofId);
     }
 
     @Test void sameKeyWithADifferentPayloadConflicts() {
@@ -63,18 +64,18 @@ class PrivateHomeEvidenceReuseTest extends PrivateHomeReturnProtocolTest {
         assertEquals(1, count("player_private_home_proof"));
     }
 
-    @Test void concurrentSamePayloadReadsBackOneProof() throws Exception {
+    @Test void concurrentSamePayloadRejectsTheSecondRequest() throws Exception {
         home();
         ExecutorService pool = Executors.newFixedThreadPool(2);
         CountDownLatch go = new CountDownLatch(1);
         try {
-            Future<Proof> first = pool.submit(() -> { go.await(); return service.verifyReturn("a", 1, "run:1", "evidence"); });
-            Future<Proof> second = pool.submit(() -> { go.await(); return service.verifyReturn("b", 1, "run:1", "evidence"); });
+            Future<Object> first = pool.submit(() -> { go.await(); return call("a", "run:1"); });
+            Future<Object> second = pool.submit(() -> { go.await(); return call("b", "run:1"); });
             go.countDown();
-            Proof left = first.get(10, TimeUnit.SECONDS);
-            Proof right = second.get(10, TimeUnit.SECONDS);
-            assertEquals(left.proofId, right.proofId);
-            assertEquals(left.requestId, right.requestId);
+            Object left = first.get(10, TimeUnit.SECONDS);
+            Object right = second.get(10, TimeUnit.SECONDS);
+            assertTrue((left instanceof Proof) ^ (right instanceof Proof));
+            assertTrue("REQUEST_CONFLICT".equals(left) || "REQUEST_CONFLICT".equals(right));
             assertEquals(1, count("player_private_home_proof"));
         } finally { pool.shutdownNow(); }
     }
@@ -112,6 +113,20 @@ class PrivateHomeEvidenceReuseTest extends PrivateHomeReturnProtocolTest {
         bomb(new DuplicateKeyException("Duplicate entry for key 'uk_private_home_proof_request'"));
         assertThrows(DuplicateKeyException.class, () -> service.verifyReturn("unproven-request", 1, "run:1", "evidence"));
         assertEquals(0, count("player_private_home_proof"));
+    }
+
+    @Test void nonDuplicateFailureWithAWinningRowStillThrows() {
+        Proof proof = proof();
+        bomb(new DataIntegrityViolationException("mentioned uk_private_home_proof_grant but this is not a duplicate"));
+        DataIntegrityViolationException failure = assertThrows(DataIntegrityViolationException.class,
+                () -> service.verifyReturn("other", 1, "run:1", "other-evidence"));
+        assertFalse(failure instanceof DuplicateKeyException);
+        assertFalse(failure.getMessage().contains("REQUEST_CONFLICT"));
+        bomb(new DuplicateKeyException("Duplicate entry for key 'uk_private_home_proof_grant'"));
+        assertThrows(DuplicateKeyException.class, () -> service.verifyReturn("forced-grant", 1, "run:1", "another-evidence"));
+        assertEquals(1, count("player_private_home_proof"));
+        assertEquals(proof.proofId, jdbc.queryForObject("SELECT proof_id FROM player_private_home_proof", String.class));
+        assertEquals("verify", jdbc.queryForObject("SELECT request_id FROM player_private_home_proof", String.class));
     }
 
     @Test void anotherOwnerDoesNotReadThisProof() {
