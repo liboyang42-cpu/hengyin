@@ -1,4 +1,4 @@
-// CL2 / N1 举报透明化:系统消息「举报进度」→ 举报详情(含 cy-sheet 文字申诉)→ 我的举报。
+// CL2 / N1 举报透明化:城瘾小助手「我的举报」→ 我的举报 → 举报详情(含 cy-sheet 文字申诉)。
 // 2026-10-15 用户决定:阶段名 已提交/已受理/调查中/已处理/已关闭/申诉中;只做文字申诉;不做被举报方视图;不在「我的」放入口。
 // 合同真源:ApiCommunityTrustController + CommunityTrustServiceImpl + CommunityReport*VO。
 const { test } = require('node:test')
@@ -163,7 +163,7 @@ test('N1 合同: 只调用控制器里真实存在的路径；系统消息字段
   assert.equal((detail.match(/url: `\/api\/community-trust\/reports\/\$\{id\}`, method: 'GET'/g) || []).length, 2)
   assert.match(detail, /url: '\/api\/community-trust\/reports\/appeal', method: 'POST'/)
   assert.doesNotMatch(detail + mine, /\/subject|view=subject/, '被举报方视图按用户决定不做')
-  const im = read('subpackageB/pages/im/list/index.js')
+  const im = read('subpackageB/pages/im/chat/index.js')
   assert.match(im, /url: '\/api\/v1\/community\/notifications',\s*method: 'GET'/)
 })
 
@@ -307,65 +307,58 @@ test('N1 处理器: 业务 409 显示后端原因并回读；未出结论的举�
   } finally { h2.restore() }
 })
 
-test('N1 处理器: 系统 tab 读举报进度通知，点进举报详情；读取失败只在局部报错', () => {
-  const h = loadPage('subpackageB/pages/im/list/index.js', (o) => {
-    if (o.url === '/api/v1/community/notifications') {
-      o.success({ code: 200, data: { items: [{ id: 3, notification_type: 'SYSTEM_GOVERNANCE', payload_json: JSON.stringify({ reportId: 41, action: 'REPORT_STAGE_RESOLVED', publicNote: '已处理' }), read_at: null, create_time: '2026-10-15 10:00:00' }] } })
-    } else if (o.url === '/api/im/conversations') o.success({ code: 200, data: [] })
+// 2026-10-20 用户决定:系统消息只放在城瘾小助手。举报进度不再在消息列表单列,改为小助手会话顶部一行「我的举报」。
+const CHAT = 'subpackageB/pages/im/chat/index.js'
+
+test('N1 处理器: 城瘾小助手读举报进度通知,有通知才出「我的举报」并带未读数;读取失败照常给入口', () => {
+  let readAt = null
+  const h = loadPage(CHAT, (o) => {
+    if (o.url === '/api/v1/community/notifications') o.success({ code: 200, data: { items: [{ id: 3, notification_type: 'SYSTEM_GOVERNANCE', payload_json: JSON.stringify({ reportId: 41, action: 'REPORT_STAGE_RESOLVED', publicNote: '已处理' }), read_at: readAt, create_time: '2026-10-15 10:00:00' }] } })
   })
   try {
-    h.vm.fmtTime = () => '10:00'
-    h.vm.loadReportNotices()
-    assert.equal(h.vm.data.reportNotices.length, 1)
-    assert.equal(h.vm.data.reportNotices[0].reportId, '41')
-    assert.equal(h.vm.data.reportNoticeError, '')
-    h.vm.openReportNotice({ currentTarget: { dataset: { reportId: '41' } } })
-    assert.deepEqual(h.nav, ['/subpackageMember/report-detail/index?reportId=41'])
+    h.vm.data.type = 2
+    h.vm.loadReportEntry()
+    assert.equal(h.vm.data.reportEntry, true)
+    assert.equal(h.vm.data.reportUnread, 1)
   } finally { h.restore() }
-  const h2 = loadPage('subpackageB/pages/im/list/index.js', (o) => { o.fail({}) })
+  const empty = loadPage(CHAT, (o) => { o.success({ code: 200, data: { items: [] } }) })
   try {
-    h2.vm.fmtTime = () => ''
-    h2.vm.loadReportNotices()
-    assert.equal(h2.vm.data.reportNoticeError, '举报进度暂时没读到')
+    empty.vm.loadReportEntry()
+    assert.equal(empty.vm.data.reportEntry, false, '没有举报过就不出入口')
+  } finally { empty.restore() }
+  const h2 = loadPage(CHAT, (o) => { o.fail({}) })
+  try {
+    h2.vm.loadReportEntry()
+    assert.equal(h2.vm.data.reportEntry, true, '读不到也给入口,「我的举报」页自己有失败态')
+    assert.equal(h2.vm.data.reportUnread, 0)
   } finally { h2.restore() }
 })
 
-test('BL-31 处理器: 点开未读举报进度先跳转再标记已读，成功后回读未读状态；失败局部提示不挡查看', () => {
+test('BL-31 处理器: 点开「我的举报」先跳转再把未读举报进度标已读,回到小助手按服务端回读', () => {
   let readAt = null
-  let readOk = true
-  const h = loadPage('subpackageB/pages/im/list/index.js', (o) => {
+  const h = loadPage(CHAT, (o) => {
     if (o.url === '/api/v1/community/notifications') {
       o.success({ code: 200, data: { items: [{ id: 3, notification_type: 'SYSTEM_GOVERNANCE', payload_json: JSON.stringify({ reportId: 41, action: 'REPORT_STAGE_RESOLVED', publicNote: '已处理' }), read_at: readAt, create_time: '2026-10-15 10:00:00' }] } })
     } else if (o.url === '/api/v1/community/notifications/3/read') {
-      if (!readOk) { o.fail({}); return }
       readAt = '2026-10-15 10:05:00'
-      o.success({ code: 200 })
+      if (o.success) o.success({ code: 200 })
     }
   })
   try {
-    h.vm.fmtTime = () => '10:00'
-    h.vm.loadReportNotices()
-    const row = h.vm.data.reportNotices[0]
-    assert.equal(row.notificationId, '3')
-    assert.equal(row.unread, true)
-    h.vm.openReportNotice({ currentTarget: { dataset: { reportId: row.reportId, noticeId: row.notificationId, unread: row.unread } } })
-    assert.deepEqual(h.nav, ['/subpackageMember/report-detail/index?reportId=41'], '先跳转，不等已读结果')
+    h.vm.data.type = 2
+    h.vm.loadReportEntry()
+    h.vm.openReportMine()
+    assert.deepEqual(h.nav, ['/subpackageMember/report-mine/index'], '先跳转，不等已读结果')
     const read = h.requests.find((r) => r.url === '/api/v1/community/notifications/3/read')
     assert.ok(read, '发出已读请求')
     assert.equal(read.method, 'POST')
     const rid = JSON.parse(read.data).requestId
     assert.ok(rid.length >= 8 && rid.length <= 96, 'requestId 8–96 字符')
-    assert.equal(h.vm.data.reportNotices[0].unread, false, '红点以回读 read_at 为准')
     const before = h.requests.length
-    h.vm.openReportNotice({ currentTarget: { dataset: { reportId: '41', noticeId: '3', unread: false } } })
-    assert.equal(h.requests.length, before, '已读的不再发')
-    readOk = false
-    readAt = null
-    h.vm.loadReportNotices()
-    h.vm.openReportNotice({ currentTarget: { dataset: { reportId: '41', noticeId: '3', unread: true } } })
-    assert.equal(h.nav.length, 3, '失败不挡查看')
-    assert.equal(h.vm.data.reportNoticeError, '举报进度已读状态没更新')
-    assert.equal(h.vm.data.reportNotices[0].unread, true, '失败不假装已读')
+    h.vm.openReportMine()
+    assert.equal(h.requests.length, before, '已发过的不再发')
+    h.vm.onShow && h.vm.loadReportEntry()
+    assert.equal(h.vm.data.reportUnread, 0, '未读以回读 read_at 为准')
   } finally { h.restore() }
   assert.equal(notices.makeReadRequestId('3', 1760000000000, 'abcd1234'), 'ntr-3-' + (1760000000000).toString(36) + '-abcd1234')
 })
@@ -420,15 +413,16 @@ test('BL-52 处理器: 申诉成功时 ok 半屏展示后端回执；网络失�
 
 // ---------- 入口与注册 ----------
 
-test('N1 入口: 只从系统消息进入；不在设置页放入口；两页注册在 subpackageMember', () => {
+test('N1 入口: 只从城瘾小助手进入；不在设置页放入口；两页注册在 subpackageMember', () => {
   const app = JSON.parse(read('app.json'))
   const pages = app.subPackages.find((p) => p.root === 'subpackageMember').pages
   for (const p of ['report-mine/index', 'report-detail/index']) assert.ok(pages.includes(p), p)
   assert.ok(!pages.includes('report-appeal/index'), '申诉改为详情页内 cy-sheet')
   assert.doesNotMatch(read('pages/shezhi/shezhi.wxml'), /我的举报|report-mine/)
-  const im = read('subpackageB/pages/im/list/index.wxml')
-  assert.match(im, /activeTab === 'sys' && \(reportNotices\.length \|\| reportNoticeError\)/)
-  assert.match(im, /bindtap="openReportNotice"/)
+  const chat = read('subpackageB/pages/im/chat/index.wxml')
+  assert.match(chat, /wx:if="\{\{type == 2 && reportEntry\}\}"/)
+  assert.match(chat, /bindtap="openReportMine"/)
+  assert.doesNotMatch(read('subpackageB/pages/im/list/index.wxml'), /reportNotices|openReportNotice/, '消息列表不再单列系统消息')
   assert.match(read('subpackageMember/report-detail/index.wxml'), /<cy-sheet show="\{\{!!sheet\}\}"/)
   for (const p of ['report-mine', 'report-detail']) {
     assert.match(read('subpackageMember/' + p + '/index.wxml'), /<cy-state-shell/, p + ' 四态走 cy-state-shell')
@@ -436,21 +430,20 @@ test('N1 入口: 只从系统消息进入；不在设置页放入口；两页注
   }
 })
 
-test('BL-212 处理器: 举报进度通知连点只跳一层详情、只发一次已读；complete 后可再次打开', () => {
-  const h = loadPage('subpackageB/pages/im/list/index.js', () => {})
+test('BL-212 处理器: 「我的举报」连点只跳一层;complete 或 onShow 后可再次打开', () => {
+  const h = loadPage(CHAT, () => {})
   try {
     const pending = []
     global.wx.navigateTo = (o) => { h.nav.push(o.url); pending.push(o) }
-    const tap = { currentTarget: { dataset: { reportId: '41', noticeId: '3', unread: true } } }
-    h.vm.openReportNotice(tap)
-    h.vm.openReportNotice(tap)
-    assert.deepEqual(h.nav, ['/subpackageMember/report-detail/index?reportId=41'], '连点只跳 1 次')
-    assert.equal(h.requests.filter((r) => r.url === '/api/v1/community/notifications/3/read').length, 1, '只发 1 个已读请求')
+    h.vm.openReportMine()
+    h.vm.openReportMine()
+    assert.deepEqual(h.nav, ['/subpackageMember/report-mine/index'], '连点只跳 1 次')
     pending[0].complete()
-    h.vm.openReportNotice(tap)
+    h.vm.openReportMine()
     assert.equal(h.nav.length, 2, 'complete 后可再次打开')
+    h.vm._navigating = true
     h.vm.onShow()
-    h.vm.openReportNotice(tap)
+    h.vm.openReportMine()
     assert.equal(h.nav.length, 3, 'onShow 后可再次打开')
   } finally { h.restore() }
 })

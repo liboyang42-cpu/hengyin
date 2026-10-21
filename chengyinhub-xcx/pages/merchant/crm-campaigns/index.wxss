@@ -14,7 +14,7 @@ page { background: var(--cy-bg-page); }
 .ccl-status--neutral { color: var(--cy-text-secondary); }
 .ccl-sub { margin-top: var(--cy-space-1); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: var(--cy-text-secondary); font-size: var(--cy-font-caption); }
 .ccl-more { display: block; padding: var(--cy-space-4) 0; text-align: center; color: var(--cy-text-secondary); font-size: var(--cy-font-caption); }
-.ccl-detail { box-sizing: border-box; padding: 0 var(--cy-page-x) var(--cy-space-6); }
+.ccl-detail { box-sizing: border-box; padding: 0 0 var(--cy-space-6); /* cy-sheet 面板已带页边距,内容不再重复内缩 */ }
 .ccl-metrics { display: flex; flex-wrap: wrap; gap: var(--cy-space-2); margin-bottom: var(--cy-space-3); }
 .ccl-metric { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: var(--cy-space-1); }
 .ccl-metric-num { color: var(--cy-text-title); font-size: var(--cy-font-subtitle); font-weight: 700; font-variant-numeric: tabular-nums; }

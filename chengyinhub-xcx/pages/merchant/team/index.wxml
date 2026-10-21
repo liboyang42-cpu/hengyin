@@ -109,7 +109,7 @@
     <view class="tm-self-card" wx:else>
       <text class="tm-self-title">你的岗位权限</text>
       <text class="tm-self-role">{{access.roleName}}</text>
-      <text class="tm-self-copy">工作台只显示当前岗位可用的经营入口。岗位调整或离职由店主操作，并在下一次请求时立即生效。</text>
+      <text class="tm-self-copy">岗位调整或离职由店主操作，立即生效。</text>
       <cy-btn variant="primary" bind:tap="goWorkbench">进入工作台</cy-btn>
     </view>
 

@@ -353,7 +353,7 @@
     <view class="rules" wx:if="{{ !coopPartner }}" bindtap="emit" data-act="toggleRules" aria-role="button" aria-expanded="{{rulesOpen}}"
           aria-label="{{rulesOpen ? '收起退出与暂停规则' : '查看退出与暂停规则'}}" hover-class="cy-pressed" hover-stay-time="80">
       <cy-icon name="info" size="{{ 26 }}" />
-      <text wx:if="{{ rulesOpen }}">退出与暂停规则说明： 商家仅可在路线场次开始前3天申请退出。一旦场次启动，鉴于官方统一调度及多方协作的特性，商家不可中途退出或自行暂停。如遇不可抗力等紧急情况，请务必联系客服介入处理。</text>
+      <text wx:if="{{ rulesOpen }}">退出与暂停规则：场次开始前 3 天可申请退出，开始后不能退出或暂停，紧急情况请联系客服。</text>
       <text wx:else>退出与暂停规则</text>
       <cy-icon wx:if="{{ !rulesOpen }}" name="arrow-right" size="24" />
     </view>

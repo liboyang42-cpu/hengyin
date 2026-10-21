@@ -3,6 +3,7 @@ const { isRecordList, isBizOk } = require('../../../../utils/response-shape.js')
 const { decodeDisplayText } = require('../../../../utils/display-text.js');
 const { showPermissionGuide } = require('../../../../utils/location/location-manager.js');
 const { auditDetailUrl, shapeAuditDetail, shouldLoadAuditDetail, isRetryableAuditError } = require('./audit-detail.js');
+const { reportNoticeRows, makeReadRequestId } = require('../list/report-notices.js');
 const app = getApp();
 
 // 服务端可见顺序含微秒：不要转 JS Date 丢精度，也不要以客户端时钟推测审批时间。
@@ -29,6 +30,9 @@ Page({
   _closedReturnPath: '/subpackageB/pages/im/list/index',
   _blockedByMe: false,
   data: {
+    // 城瘾小助手(系统会话)顶部的「我的举报」入口:有举报进度通知才出现,读不到也照常给入口
+    reportEntry: false,
+    reportUnread: 0,
     plusSheetShow: false,
     plusSheetItems: ['图片', '位置', '路线'],
     moreSheetShow: false,
@@ -162,6 +166,50 @@ Page({
        type=3 官方客服按现状仍可写,不在这个闸里。 */
     if (type == 2) this.setData({ disabled: true, disabledText: '系统通知不支持回复，有新动态会出现在这里' });
     this.loadMessages(true);
+    if (type == 2) this.loadReportEntry();
+  },
+
+  // 系统消息只放在城瘾小助手:举报进度(社区治理通知)从这里进「我的举报」,不再在消息列表单列。
+  loadReportEntry() {
+    const that = this;
+    const epoch = (this._reportEntryEpoch || 0) + 1;
+    this._reportEntryEpoch = epoch;
+    app.sendRequest({
+      url: '/api/v1/community/notifications',
+      method: 'GET',
+      data: { limit: 50 },
+      hideLoading: true,
+      silentError: true,
+      success(res) {
+        if (epoch !== that._reportEntryEpoch) return;
+        const rows = isBizOk(res) && res.data ? reportNoticeRows(res.data.items) : null;
+        that._reportUnreadIds = (rows || []).filter(function (r) { return r.unread; }).map(function (r) { return r.notificationId; });
+        // 读不到(rows 为 null)也给入口:「我的举报」页自己有加载失败态
+        that.setData({ reportEntry: !rows || rows.length > 0, reportUnread: that._reportUnreadIds.length });
+      },
+      fail() {
+        if (epoch !== that._reportEntryEpoch) return;
+        that._reportUnreadIds = [];
+        that.setData({ reportEntry: true, reportUnread: 0 });
+      },
+    });
+  },
+
+  openReportMine() {
+    if (this._navigating) return;
+    this._navigating = true;
+    wx.navigateTo({ url: '/subpackageMember/report-mine/index', complete: () => { this._navigating = false; } });
+    // 进入即标已读;回到本页 onShow 重读,未读数以服务端 read_at 为准
+    (this._reportUnreadIds || []).forEach(function (id) {
+      app.sendRequest({
+        url: '/api/v1/community/notifications/' + id + '/read',
+        method: 'POST',
+        data: JSON.stringify({ requestId: makeReadRequestId(id) }),
+        header: { 'Content-Type': 'application/json' },
+        hideLoading: true,
+      });
+    });
+    this._reportUnreadIds = [];
   },
 
   // 会话身份兜底:只按会话类型给通用称呼,绝不臆造对方昵称。
@@ -914,6 +962,7 @@ Page({
   onShow() {
     this._hidden = false;
     this._navigating = false;
+    if (this.data.type == 2 && this._reportEntryEpoch) this.loadReportEntry();
     const cleared = this._pendingClearReturn;
     const reported = this._pendingReportTip;
     this._pendingClearReturn = null;

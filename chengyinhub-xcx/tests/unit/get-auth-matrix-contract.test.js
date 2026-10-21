@@ -156,13 +156,10 @@ const MATRIX = [
   ['pages/play/merchant/components/safety-rating-sheet/index.js', "url: '/api/community-trust/safety/taxonomy'", 'required', 'member', 'global-authenticated-read'],
   ['pages/roam/index.js', "req('/api/official/active-for-roam'", 'required', 'member', 'global-authenticated-read'],
   ['subpackageB/pages/im/chat/index.js', 'url: `/api/audit/${auditTaskId}/detail`', 'required', 'member', 'self-account'],
-  ['subpackageB/pages/im/list/index.js', "url: '/api/v1/community/notifications'", 'required', 'member', 'self-account'],
+  ['subpackageB/pages/im/chat/index.js', "url: '/api/v1/community/notifications'", 'required', 'member', 'self-account'],
   ['subpackageMember/components/cy/merchant-correction-sheet/index.js', "url: '/api/community-trust/contributions/taxonomy'", 'required', 'member', 'global-authenticated-read'],
   ['subpackageMember/components/cy/profile/index.js', 'url: `/api/community-trust/safety/merchants/${id}`', 'required', 'member', 'global-authenticated-read'],
   ['subpackageMember/components/cy/profile/index.js', "url: '/api/city/nodes/merchant/' + id", 'required', 'member', 'global-authenticated-read'],
-  ['subpackageMember/correction-detail/index.js', 'url: `/api/community-trust/contributions/${id}`', 'required', 'member', 'self-account'],
-  ['subpackageMember/correction-detail/index.js', 'confirmByReadBack(accepted) {', 'required', 'member', 'self-account'],
-  ['subpackageMember/correction-mine/index.js', "url: '/api/community-trust/contributions/mine'", 'required', 'member', 'self-account'],
   ['subpackageMember/report-detail/index.js', 'url: `/api/community-trust/reports/${id}`', 'required', 'member', 'self-account'],
   ['subpackageMember/report-detail/index.js', "url: '/api/community-trust/reports/taxonomy'", 'required', 'member', 'global-authenticated-read'],
   ['subpackageMember/report-detail/index.js', 'confirmByReadBack(accepted, receipt) {', 'required', 'member', 'self-account'],
@@ -299,7 +296,8 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
   // 2026-10-20 合并举报原因与作者审核时间线两处 GET；保留小程序线新增24处逐项权限登记，62 → 64。
   // 2026-10-19 移植共享基线(W2):认领状态、主题状态键、官方路线列表/详情四处直接 GET,38 → 42(权限档见 MATRIX 同日注释)。
   // 合并两线逐项新增：本线64 + 共享基线4 = 68，权限矩阵保留双方全部条目。
-  assert.equal(directCount, 68, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
+  // 2026-10-20 用户要求删掉「我的纠错 / 纠错进度」两页、消息页改收件箱/发件箱(合并 master 584470ad 后按重建实测):contributions/mine 1 处 + contributions/{id} 2 处退场,68 → 65;举报进度通知读取从消息列表移到城瘾小助手(同端点同权限档)。
+  assert.equal(directCount, 65, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
   // 2026-10-09 U04 只读主题请求增加6处，22 → 28。
   // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):漫游 BL-41 可参与官方活动 req 包装 GET +1(已入 MATRIX),28 → 29。
   assert.equal(wrapperCount, 29, 'req 包装 GET 数量变化时必须逐条复核权限并更新矩阵');

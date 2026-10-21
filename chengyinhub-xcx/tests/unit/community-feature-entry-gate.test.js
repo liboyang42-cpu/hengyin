@@ -72,8 +72,8 @@ test('play publish and IM read entries enforce distinct server gates before navi
   const play = method('pages/play/index.js', 'shareFinish', context);
   const im = method('subpackageB/pages/im/list/index.js', 'onEmptyCta', context);
   play.call({}); assert.equal(navigation.length, 0);
-  im.call({ data: { activeTab: 'dm' } }); assert.equal(navigation.length, 1);
-  read = false; im.call({ data: { activeTab: 'dm' } }); assert.equal(navigation.length, 1);
+  im.call({ data: { activeTab: 'in' } }); assert.equal(navigation.length, 1);
+  read = false; im.call({ data: { activeTab: 'in' } }); assert.equal(navigation.length, 1);
   write = true; play.call({}); assert.equal(navigation.length, 2);
 });
 

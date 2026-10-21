@@ -584,7 +584,7 @@
   "min": 1
  },
  "A58": {
-  "selector": ".privacy-setting-title",
+  "selector": ".privacy-list",
   "min": 1,
   "forbid": [
    ".privacy-actions"
