@@ -23,6 +23,7 @@ const path = require('path');
 // wxml-handler-lint 只剩判据 + 自证,所以这里分两处 require —— 别再从 lint 模块要解析函数。
 const {
   extractHandlerNames,
+  parseJavaScript,
   extractOwnHandlerEntries,
   findEventBindings,
   maskNonCode,
@@ -406,6 +407,160 @@ function requestTransportRegex(source, masked) {
   return name ? new RegExp('\\.\\s*sendRequest\\s*\\(|\\b' + escaped + '\\.\\s*request\\s*\\(', 'g') : /\.\s*sendRequest\s*\(/g;
 }
 
+// Finite URL facts belong to lexical bindings and their current writes, not names.
+// Unknown branches and captured mutable values stay unproved; no module execution.
+function finiteApiAnalysis(source) {
+  const ast = parseJavaScript(source), scopes = new Map(), parents = new Map();
+  const calls = [], functions = [], assignments = [], unknown = Symbol('unknown');
+  function scope(parent, fn) { return { parent, fn, bindings: new Map() }; }
+  const root = scope(null, ast);
+  function lookup(s, name) {
+    for (; s; s = s.parent) if (s.bindings.has(name)) return s.bindings.get(name);
+    return null;
+  }
+  function declare(s, id, init, kind) {
+    if (!id) return;
+    if (id.type === 'Identifier') {
+      if (kind === 'var') while (s.parent && s.fn === s.parent.fn) s = s.parent;
+      const previous = s.bindings.get(id.name);
+      if (kind === 'var' && previous) {
+        if (init) {
+          const write = { type: 'AssignmentExpression', operator: '=', right: init, start: id.start };
+          scopes.set(write, s); previous.writes.push({ node: write, uncertain: false });
+        }
+      } else s.bindings.set(id.name, { scope: s, id, init, kind, writes: [] });
+    } else {
+      targets(id).forEach(child => declare(s, child, null, kind));
+    }
+  }
+  function visit(node, current, parent, uncertain = false) {
+    if (!node || typeof node.type !== 'string') return;
+    parents.set(node, parent);
+    if (node.type === 'FunctionDeclaration' && node.id) declare(current, node.id, node, 'function');
+    if (/^(?:FunctionDeclaration|FunctionExpression|ArrowFunctionExpression)$/.test(node.type)) {
+      functions.push(node); current = scope(current, node);
+      if (node.type === 'FunctionExpression' && node.id) declare(current, node.id, node, 'function');
+      node.params.forEach(param => declare(current, param, null, 'param'));
+      uncertain = false;
+    } else if (node.type === 'BlockStatement' || node.type === 'CatchClause' ||
+        /^(?:ForStatement|ForInStatement|ForOfStatement|SwitchStatement)$/.test(node.type)) {
+      current = scope(current, current.fn);
+      if (node.type === 'CatchClause') declare(current, node.param, null, 'param');
+    }
+    scopes.set(node, current);
+    if (node.type === 'VariableDeclaration') for (const d of node.declarations) declare(current, d.id, d.init, node.kind);
+    if (node.type === 'CallExpression') calls.push(node);
+    if (node.type === 'AssignmentExpression' || node.type === 'UpdateExpression') assignments.push({ node, uncertain });
+    const branch = uncertain || /^(?:IfStatement|ConditionalExpression|SwitchCase|WhileStatement|DoWhileStatement|ForStatement|ForInStatement|ForOfStatement|TryStatement)$/.test(node.type);
+    for (const [key, value] of Object.entries(node)) {
+      if (key === 'loc') continue;
+      if (Array.isArray(value)) value.forEach(child => visit(child, current, node, branch));
+      else if (value && typeof value.type === 'string') visit(value, current, node, branch);
+    }
+  }
+  visit(ast, root, null);
+  function targets(node, out = []) {
+    if (!node) return out;
+    if (node.type === 'Identifier') out.push(node);
+    else if (node.type === 'RestElement') targets(node.argument, out);
+    else if (node.type === 'AssignmentPattern') targets(node.left, out);
+    else if (node.type === 'ArrayPattern') node.elements.forEach(n => targets(n, out));
+    else if (node.type === 'ObjectPattern') node.properties.forEach(p => targets(p.value || p.argument, out));
+    return out;
+  }
+  for (const item of assignments) for (const id of targets(item.node.left || item.node.argument)) {
+    const binding = lookup(scopes.get(item.node), id.name);
+    if (binding) binding.writes.push(item);
+  }
+  function currentValue(binding, read) {
+    if (!binding || binding.kind === 'param') return unknown;
+    if (binding.kind !== 'function' && binding.id.start > read.start && binding.scope.fn === scopes.get(read).fn) return unknown;
+    const readScope = scopes.get(read);
+    // Closures can run after later outer writes; source order is not execution order.
+    if (binding.writes.some(w => scopes.get(w.node).fn !== readScope.fn) ||
+        (binding.scope.fn !== readScope.fn && binding.writes.length)) return unknown;
+    const writes = binding.writes.filter(w => w.node.start < read.start).sort((a, b) => a.node.start - b.node.start);
+    const last = writes[writes.length - 1];
+    if (!last) return binding.init;
+    return !last.uncertain && last.node.type === 'AssignmentExpression' && last.node.operator === '=' ? last.node.right : unknown;
+  }
+  function owner(node) {
+    for (let p = node; p; p = parents.get(p)) if (/^(?:FunctionDeclaration|FunctionExpression)$/.test(p.type)) {
+      const property = parents.get(p);
+      return property && property.type === 'Property' ? parents.get(property) : null;
+    }
+    return null;
+  }
+  function target(node, read = node, active = new Set()) {
+    if (!node || node === unknown || active.has(node)) return unknown;
+    const next = new Set(active); next.add(node);
+    if (/^(?:FunctionDeclaration|FunctionExpression|ArrowFunctionExpression)$/.test(node.type)) return node;
+    if (node.type === 'Identifier') { const value = currentValue(lookup(scopes.get(node), node.name), read); return target(value, value, next); }
+    if (node.type === 'MemberExpression' && !node.computed && node.object.type === 'ThisExpression') {
+      const object = owner(node);
+      const property = object && object.properties.find(p => p.type === 'Property' && !p.computed && (p.key.name || p.key.value) === node.property.name);
+      return property ? target(property.value, read, next) : unknown;
+    }
+    return unknown;
+  }
+  function possible(node, active = new Set()) {
+    if (!node || active.has(node)) return [];
+    const next = new Set(active); next.add(node);
+    if (/^(?:FunctionDeclaration|FunctionExpression|ArrowFunctionExpression)$/.test(node.type)) return [node];
+    if (node.type === 'Identifier') {
+      const binding = lookup(scopes.get(node), node.name);
+      return binding ? [binding.init, ...binding.writes.map(w => w.node.right)].flatMap(value => possible(value, next)) : [];
+    }
+    const resolved = target(node);
+    return resolved === unknown ? [] : [resolved];
+  }
+  function values(node, read = node, active = new Set()) {
+    if (!node || node === unknown || active.has(node)) return null;
+    const next = new Set(active); next.add(node);
+    if (node.type === 'Literal' && typeof node.value === 'string') return [node.value];
+    if (node.type === 'Identifier') { const value = currentValue(lookup(scopes.get(node), node.name), read); return values(value, value, next); }
+    if (node.type === 'TemplateLiteral') return [node.quasis.map(q => q.value.cooked).join(':dynamic')];
+    if (node.type === 'ConditionalExpression') {
+      const a = values(node.consequent, read, next), b = values(node.alternate, read, next);
+      return a && b ? a.concat(b) : null;
+    }
+    if (node.type === 'BinaryExpression' && node.operator === '+') {
+      const a = values(node.left, read, next), b = values(node.right, read, next);
+      return a && a.every(v => v.startsWith('/api/')) ? a.flatMap(x => (b || [':dynamic']).map(y => x + y)) : null;
+    }
+    return null;
+  }
+  function finite(node) {
+    const result = values(node);
+    return !!result && result.length > 0 && result.every(v => v.startsWith('/api/'));
+  }
+  return {
+    requestFinite(offset) {
+      const call = calls.find(call => call.callee.start <= offset && call.callee.end > offset);
+      const options = call && call.arguments[0];
+      const property = options && options.type === 'ObjectExpression' && options.properties.find(p => p.type === 'Property' && !p.computed && (p.key.name || p.key.value) === 'url');
+      return !!property && finite(property.value);
+    },
+    functionAt(offset) {
+      return functions.find(fn => (fn.id && fn.id.start === offset) || (parents.get(fn)?.type === 'Property' && parents.get(fn).key.start === offset));
+    },
+    stableParameter(fn, index) {
+      const parameter = fn && fn.params[index];
+      const binding = parameter?.type === 'Identifier' && lookup(scopes.get(fn), parameter.name);
+      return !!binding && binding.writes.length === 0;
+    },
+    wrapperCalls(wrappers) {
+      const byNode = new Map([...wrappers].filter(w => w.node).map(w => [w.node, w]));
+      return calls.flatMap(call => {
+        const actual = target(call.callee);
+        const related = possible(call.callee).find(fn => byNode.has(fn));
+        const wrapper = byNode.get(actual) || byNode.get(related);
+        return wrapper ? [{ node: call, wrapper, proven: actual === wrapper.node && finite(call.arguments[wrapper.urlParamIndex]) }] : [];
+      });
+    },
+  };
+}
+
 function scanU1(jsFiles, backendRoutes, namespacePrefixes = collectBackendMappings(REPO_ROOT).namespacePrefixes) {
   const violations = [];
   const dynamicReports = [];
@@ -424,6 +579,7 @@ function scanU1(jsFiles, backendRoutes, namespacePrefixes = collectBackendMappin
       }
     }
     const masked = maskNonCode(source);
+    const finite = finiteApiAnalysis(source);
     const wrappers = new Map();
     const requestRe = requestTransportRegex(source, masked);
     let request;
@@ -441,15 +597,14 @@ function scanU1(jsFiles, backendRoutes, namespacePrefixes = collectBackendMappin
         if (urlProp) {
           const colon = urlProp.raw.indexOf(':');
           expression = colon >= 0 ? urlProp.raw.slice(colon + 1).trim() : urlProp.name;
-          if (expressionToApiRoute(expression)) continue;
-          if (collectApiLiterals(expression).length > 0) continue;
+          if (finite.requestFinite(request.index)) continue;
         }
       } else {
         const closeParen = masked.indexOf(')', argStart);
         expression = source.slice(argStart, closeParen < 0 ? argStart + 120 : closeParen).trim();
       }
       let urlParamIndex = -1;
-      const wrapper = enclosing.find((fn) => fn.params.some((param, index) => {
+      const wrapper = enclosing.sort((a, b) => b.nameOffset - a.nameOffset).find((fn) => fn.params.some((param, index) => {
         const matches = (expression === param
           && (fn.kind !== 'property' || param === 'url'))
         || (fn.kind !== 'property' && /^Object\.assign\s*\(/.test(expression)
@@ -457,8 +612,8 @@ function scanU1(jsFiles, backendRoutes, namespacePrefixes = collectBackendMappin
         if (matches) urlParamIndex = index;
         return matches;
       }));
-      if (wrapper) {
-        wrappers.set(wrapper.name, { ...wrapper, urlParamIndex });
+      if (wrapper && finite.stableParameter(finite.functionAt(wrapper.nameOffset), urlParamIndex)) {
+        wrappers.set(wrapper.nameOffset, { ...wrapper, urlParamIndex, node: finite.functionAt(wrapper.nameOffset) });
         continue;
       }
       const key = `${repoRel(file)}:${lineNumber(source, request.index)}`;
@@ -468,24 +623,13 @@ function scanU1(jsFiles, backendRoutes, namespacePrefixes = collectBackendMappin
         violations.push({ code: 'U1', key, message: '运行时变量请求路径无法核对，必须改成可枚举 /api 字面量或受控 wrapper' });
       }
     }
-    for (const wrapper of wrappers.values()) {
-      const callRe = new RegExp(`(?:\\bthis\\.${wrapper.name}|(?<![\\w$.])${wrapper.name})\\s*\\(`, 'g');
-      let call;
-      while ((call = callRe.exec(masked))) {
-        const nameOffset = call.index;
-        if (nameOffset === wrapper.nameOffset) continue;
-        const openParen = masked.indexOf('(', nameOffset);
-        const args = callArguments(source, masked, openParen);
-        const argument = args[wrapper.urlParamIndex] || '';
-        if (collectApiLiterals(argument).length > 0) continue;
-        const key = `${repoRel(file)}:${lineNumber(source, nameOffset)}`;
-        const allowed = U1_VARIABLE_ALLOWLIST.get(key);
-        variableReports.push({ key, detail: `${wrapper.name}(${argument.slice(0, 80)})`, allowed });
-        if (!allowed) {
-          violations.push({ code: 'U1', key,
-            message: `受控 wrapper ${wrapper.name} 的首参不是可枚举 /api 字面量` });
-        }
-      }
+    for (const call of finite.wrapperCalls(wrappers.values())) {
+      if (call.proven) continue;
+      const key = `${repoRel(file)}:${lineNumber(source, call.node.start)}`;
+      const allowed = U1_VARIABLE_ALLOWLIST.get(key);
+      variableReports.push({ key, detail: source.slice(call.node.start, call.node.end).slice(0, 100), allowed });
+      if (!allowed) violations.push({ code: 'U1', key,
+        message: `受控 wrapper ${call.wrapper.name} 的调用目标或路径不是可证明的有限 /api 表达式` });
     }
   }
   return { violations, staticCount, dynamicReports, variableReports, backendRouteCount: backendRoutes.size };
@@ -537,7 +681,7 @@ function scanU3(jsFiles, debtBaseline = U3_DEBT_BASELINE) {
     const entries = extractOwnHandlerEntries(file);
     ownDefs.set(file, new Map(entries.map((entry) => [entry.name, entry])));
     const names = new Set(findEventBindings(collectWxmlSource(wxmlFile)).flatMap((binding) => binding.value.match(/[A-Za-z_$][\w$]*/g) || []));
-    entries.forEach((entry) => { if (entry.file !== file && names.has(entry.name)) sharedBound.add(`${entry.file}#${entry.name}`); });
+    entries.forEach((entry) => { if (entry.file !== file && names.has(entry.name)) sharedBound.add(`${entry.file}:${entry.start}:${entry.end}`); });
   }
   for (const file of jsFiles) {
     const wxmlFile = file.replace(/\.js$/, '.wxml');
@@ -562,7 +706,7 @@ function scanU3(jsFiles, debtBaseline = U3_DEBT_BASELINE) {
       if (!HANDLER_LIKE_RE.test(name) || PAGE_LIFECYCLES.has(name) || bound.has(name)
           || jsReferencesMethod(jsScope, name)) continue;
       const def = ownDefs.get(file) && ownDefs.get(file).get(name);
-      if (def && def.file !== file && sharedBound.has(`${def.file}#${name}`)) continue;
+      if (def && def.file !== file && sharedBound.has(`${def.file}:${def.start}:${def.end}`)) continue;
       const key = `${repoRel(file)}#${name}`;
       const allowed = debtBaseline.get(key);
       const item = { key, line: methodLine(source, name), allowed };
