@@ -420,51 +420,126 @@ test('据点商家未知收费和营业状态如实显示，缺图时不再注�
   assert.doesNotMatch(wxml, /businessStatus == 0 \? '已打烊' : '营业中'/)
 })
 
-test('据点打卡业务拒绝给回输入机会，只有传输失败才按原答案续跑', () => {
-  const relativePath = 'subpackageMember/components/cy/scene-roam-poi-detail/index.js'
-  /* CU-M-52:业务拒绝后重试要重开输入框(走 modal),这里替掉外层 wx 的 showModal。 */
-  const modalCalls = []
-  const previousWx = global.wx
-  global.wx = { showModal(options) { modalCalls.push(options) } }
-  try {
-    const harness = mount(relativePath, {}, {
-      getLocation(options) { options.success({ latitude: 31.2, longitude: 121.5 }) },
-    })
-    harness.instance.data.poiId = 'poi-1'
-    harness.instance.data.node = { poiId: 21, status: 1, name: '测试据点', validationMethod: 1 }
-
-    harness.instance.completeNode('保留的暗号')
-    harness.instance.completeNode('重复提交')
-    assert.equal(harness.requests.length, 1, '提交中再次触发不得并发请求')
-    assert.equal(harness.requests[0].silentError, true)
-
-    // 业务拒绝 = 服务端说「这次就是没成」(答案错):重试不能拿同一个答案再撞一次
-    harness.requests[0].success({ code: 500, msg: '答案不正确' })
-    assert.equal(harness.instance.data.completing, false)
-    assert.equal(harness.instance.data.interactionState, 'retry')
-    assert.match(harness.instance.data.interactionText, /答案不正确/)
-    assert.equal(harness.instance.data.interactionActionText, '重新作答')
-    harness.instance.recoverInteraction()
-    assert.equal(harness.requests.length, 1, '业务拒绝不得重放旧答案')
-    assert.equal(modalCalls.length, 1, '业务拒绝的重试必须重新打开输入框')
-
-    // 传输失败才是「原输入已保留」那句话说的那一档:仍按原答案续跑
-    const offline = mount(relativePath, {}, {
-      getLocation(options) { options.success({ latitude: 31.2, longitude: 121.5 }) },
-    })
-    offline.instance.data.poiId = 'poi-1'
-    offline.instance.data.node = { poiId: 21, status: 1, name: '测试据点', validationMethod: 1 }
-    offline.instance.completeNode('保留的暗号')
-    offline.requests[0].fail({ errMsg: 'request:fail timeout' })
-    assert.match(offline.instance.data.interactionText, /原输入已保留/)
-    assert.equal(offline.instance.data.interactionActionText, '重试')
-    offline.instance.recoverInteraction()
-    assert.equal(offline.requests.length, 2)
-    assert.equal(offline.requests[1].data.answer, '保留的暗号')
-  } finally {
-    if (previousWx === undefined) delete global.wx
-    else global.wx = previousWx
+// POI 打卡专项 fixture：独立沙箱，不改变其他场景共用的 mount 合同。
+function mountPoiCheckin({ storage = new Map(), owner = 7, poiId = '21', source } = {}) {
+  const requests = []; const locations = []; const modalCalls = []; const events = []; const notices = []
+  let definition
+  const app = { getUserID: () => owner, sendRequest(options) { requests.push(options) } }
+  const wx = {
+    getLocation(options) { locations.push(options); options.success({ latitude: 31.2, longitude: 121.5 }) },
+    getStorageSync(key) { return storage.get(key) },
+    setStorageSync(key, value) { storage.set(key, JSON.parse(JSON.stringify(value))) },
+    removeStorageSync(key) { storage.delete(key) },
+    showModal(options) { modalCalls.push(options) },
+    showToast(options) { notices.push(options.title) },
   }
+  const relativePath = 'subpackageMember/components/cy/scene-roam-poi-detail/index.js'
+  const absolutePath = path.join(ROOT, relativePath)
+  require('../helpers/ui-sandbox-vm.js').runInNewContext(source || read(relativePath), {
+    Component(options) { definition = options }, getApp: () => app, wx,
+    require(id) { return require(path.resolve(path.dirname(absolutePath), id)) },
+  }, { filename: absolutePath })
+  const instance = {
+    data: { ...JSON.parse(JSON.stringify(definition.data)), poiId, merchantId: '' },
+    setData(patch) { Object.entries(patch).forEach(([key, value]) => setByPath(this.data, key, value)) },
+    triggerEvent(name, detail) { events.push({ name, detail }) },
+  }
+  Object.entries(definition.methods).forEach(([name, method]) => { instance[name] = method.bind(instance) })
+  definition.lifetimes.attached.call(instance)
+  const replyGet = (state = {}) => {
+    assert.equal(requests.at(-1).method, 'GET')
+    assert.equal(requests.at(-1).url, '/api/city/nodes/' + poiId)
+    requests.at(-1).success({ code: 200, data: { poiId: Number(poiId), status: 1, validationMethod: 1, completed: false, needRedeem: false, ...state } })
+  }
+  replyGet()
+  return { instance, requests, locations, modalCalls, storage, events, notices, replyGet,
+    detach() { definition.lifetimes.detached.call(instance) },
+    posts() { return requests.filter(request => request.method === 'POST') },
+  }
+}
+
+test('据点打卡明确写前拒绝给回输入机会，提交中不得并发', () => {
+  const harness = mountPoiCheckin()
+  harness.instance.completeNode('保留的暗号')
+  harness.instance.completeNode('重复提交')
+  assert.equal(harness.posts().length, 1, '提交中再次触发不得并发请求')
+  assert.equal(harness.posts()[0].silentError, true)
+  assert.equal(harness.storage.size, 1, 'POST 前先保存原 owner/poi pending')
+  harness.posts()[0].success({ code: 500, msg: '答案不正确' })
+  assert.equal(harness.instance.data.completing, false)
+  assert.equal(harness.instance.data.interactionState, 'retry')
+  assert.match(harness.instance.data.interactionText, /答案不正确/)
+  assert.equal(harness.instance.data.interactionActionText, '重新作答')
+  assert.equal(harness.storage.size, 0, '明确写前拒绝才能释放 pending')
+  harness.instance.recoverInteraction()
+  assert.equal(harness.posts().length, 1, '业务拒绝不得重放旧答案')
+  assert.equal(harness.modalCalls.length, 1, '业务拒绝的重试必须重新打开输入框')
+  harness.modalCalls[0].success({ confirm: true, content: '重新输入的暗号' })
+  assert.equal(harness.posts().length, 2)
+  assert.equal(harness.posts()[1].data.answer, '重新输入的暗号')
+})
+
+function assertPoiUnknownRecovery(source) {
+  const offline = mountPoiCheckin({ source })
+  offline.instance.completeNode('保留的暗号')
+  assert.equal(offline.posts().length, 1)
+  assert.equal(offline.storage.size, 1, '持久记录必须先于 POST')
+  const record = [...offline.storage.values()][0]
+  assert.equal(record.ownerId, 7)
+  assert.equal(record.poiId, 21)
+  assert.ok(record.attemptId)
+  assert.equal('answer' in record, false, '敏感作答不得落盘')
+  offline.posts()[0].fail({ errMsg: 'request:fail timeout' })
+  assert.equal(offline.instance.data.interactionState, 'unknown')
+  assert.equal(offline.instance.data.checkinPending, true)
+  assert.equal(offline.instance._pendingCompletion, null, '未知结果不得保留重放入口')
+  assert.equal(offline.instance.data.interactionActionText, '查询当前状态')
+  offline.instance.completeNode('不得重发')
+  offline.instance.startInteract()
+  assert.equal(offline.locations.length, 1, 'UNKNOWN 只能查询，不得再次采集位置')
+  assert.equal(offline.modalCalls.length, 0, 'UNKNOWN 不得重新索要输入')
+  offline.instance.recoverInteraction()
+  assert.equal(offline.requests.at(-1).method, 'GET')
+  offline.replyGet()
+  assert.equal(offline.instance.data.checkinPending, true, '负 GET 不能证明没有写入')
+  assert.equal(offline.posts().length, 1, '超时恢复不得产生第二个 POST')
+  offline.detach()
+
+  const reopened = mountPoiCheckin({ source, storage: offline.storage })
+  assert.equal(reopened.instance.data.checkinPending, true, '原 owner/poi 重挂载必须读到持久 UNKNOWN')
+  reopened.instance.completeNode('重开后不得重放')
+  assert.equal(reopened.locations.length, 0)
+  assert.equal(reopened.posts().length, 0)
+  for (const scope of [{ owner: 8 }, { poiId: '22' }]) {
+    const other = mountPoiCheckin({ source, storage: offline.storage, ...scope })
+    assert.equal(other.instance.data.checkinPending, false, '原 pending 不得污染其他 owner/poi')
+    assert.equal(other.storage.size, 1, '读取其他身份或据点不得清除原 key')
+  }
+  reopened.instance.recoverInteraction()
+  reopened.replyGet({ completed: true, needRedeem: false })
+  assert.equal(reopened.storage.size, 0)
+  assert.equal(reopened.instance.data.checkinPending, false)
+  assert.equal(reopened.events.at(-1).detail.recovered, true, '正 GET 只确认当前事实')
+  assert.equal(reopened.notices.includes('打卡成功'), false, '查询结果不能声称原请求成功')
+  assert.equal(reopened.posts().length, 0)
+}
+
+test('据点打卡超时按原 owner/poi 持久恢复 UNKNOWN，只 GET 不发第二 POST', () => {
+  assertPoiUnknownRecovery()
+})
+
+test('POI UNKNOWN 负控：删除持久化、重开读取或在途入口保护必红', () => {
+  const source = read('subpackageMember/components/cy/scene-roam-poi-detail/index.js')
+  const mutants = [
+    source.replace('wx.setStorageSync(context.key, record)', 'void record'),
+    source.replace('if (context) pending = readPending(context)', 'if (context) pending = null'),
+    source.replaceAll('if (this.data.checkinPending) return', 'if (false) return'),
+  ]
+  for (const mutant of mutants) {
+    assert.notEqual(mutant, source, '负控必须确实删除目标保护')
+    assert.throws(() => assertPoiUnknownRecovery(mutant), { name: 'AssertionError' }, '删除 UNKNOWN 安全逻辑必须让真实生命周期断言变红')
+  }
+  assert.doesNotThrow(() => assertPoiUnknownRecovery(source), '恢复真实源码后必须变绿')
 })
 
 test('活动详情不虚构主理人和统计零值，合法零仍原样呈现', () => {

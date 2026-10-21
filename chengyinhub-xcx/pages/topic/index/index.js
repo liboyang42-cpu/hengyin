@@ -18,7 +18,7 @@ const subscribe = require('../../../utils/subscribe.js');
 const { createRegistrationPaymentVerifier } = require('../../../utils/checkout/registration-payment-verifier.js');
 const { buildTopicStatBar } = require('../utils/topic-detail-facts.js');
 const { isRecordList } = require('../../../utils/response-shape.js');
-const { haversine } = require('../../../utils/geo.js');
+const { haversine, distanceText } = require('../../../utils/geo.js');
 const marketingConsent = require('../../../utils/marketing-consent-entry.js');
 const ticketSource = require('../../../utils/ticket-source.js');
 const { buildTopicShare, resolveTopicCover } = require('../../../utils/topic-share.js');
@@ -27,21 +27,26 @@ const contentReport = require('../../../utils/content-report.js');
 const reportSheet = require('../../../utils/community-report-sheet.js');
 const mediaPreview = require('../../../utils/media-preview.js');
 
-/* 稿 214:689 路线 tab 每两站之间那行「15min 步行」。
-   接口没有逐段步行时长,只有站点经纬度 —— 与 pages/club/topic-story 用的是同一份
-   直线估算(80m/min ≈ 4.8km/h),拿不到坐标就整行不画,不编一个数字充数。
-   ⚠️ 不要拿 node.nodeTime 顶替:那一列的注释写着「建议停留时长(分钟)」,
-      是「在这站待多久」,不是「走多久到下一站」。 */
-const WALK_METERS_PER_MIN = 80;
+// 只接受真实数值/十进制数字串；先验类型，不能把布尔、数组或空值强转为坐标。
+function routeCoordinate(value, limit) {
+  if (typeof value !== 'number' && typeof value !== 'string') return null;
+  if (typeof value === 'string' && !/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/.test(value.trim())) return null;
+  const number = Number(value);
+  return Number.isFinite(number) && Math.abs(number) <= limit ? number : null;
+}
+function routePoint(row) {
+  if (!row || typeof row !== 'object' || Array.isArray(row)) return null;
+  const latitude = routeCoordinate(row.latitude === undefined ? row.lat : row.latitude, 90);
+  const longitude = routeCoordinate(row.longitude === undefined ? row.lng : row.longitude, 180);
+  return latitude === null || longitude === null ? null : { latitude, longitude };
+}
+// 只有站点坐标，没有道路距离和实际步行时长；nodeTime 是停留时长，不能代替交通时间。
 function walkText(prev, node) {
-  if (!prev || !node) return '';
-  const la1 = Number(prev.latitude); const lo1 = Number(prev.longitude);
-  const la2 = Number(node.latitude); const lo2 = Number(node.longitude);
-  if (![la1, lo1, la2, lo2].every(Number.isFinite)) return '';
-  if (!la1 || !lo1 || !la2 || !lo2) return '';
-  const meters = haversine(la1, lo1, la2, lo2);
+  const a = routePoint(prev), b = routePoint(node);
+  if (!a || !b) return '';
+  const meters = haversine(a.latitude, a.longitude, b.latitude, b.longitude);
   if (!Number.isFinite(meters) || meters <= 0) return '';
-  return Math.max(1, Math.round(meters / WALK_METERS_PER_MIN)) + 'min 步行';
+  return '直线约 ' + distanceText(meters) + ' · 步行用时待确认';
 }
 
 /* CU-C-65:站点级字段裸插值会把 null 印成字面「null」(WXML 文本插值对 null 就是这么做的,
@@ -127,11 +132,11 @@ Page({
 
     // ===== 路线地图（橙色 polyline）相关 =====
     routeReady: false,        // 是否有可画的路线
-    routeIsRoad: false,       // true=后端算好的贴路线 false=节点直连兜底
     mapLatitude: 0,           // 地图中心纬度
     mapLongitude: 0,          // 地图中心经度
     routeMarkers: [],         // 节点标记（编号 1/2/3…）
-    routePolyline: [],        // 橙色路线
+    routePolyline: [],        // 按章分段的道路/节点虚线
+    routeSourceText: '',
     routeIncludePoints: [],   // 让地图自动缩放到看全整条线
 
     statusBarHeight: getApp().globalData.statusBarHeight,
@@ -1574,105 +1579,58 @@ Page({
   },
    
   //获取数据
-  /**
-   * 构建路线地图数据：把所有章节的节点按 sort_id 拍平，
-   * 生成节点 marker + 橙色 polyline。
-   * 贴路线优先：若后端在 chapter 上返回 routeGeometry（算好的沿路坐标），
-   * 则拼接成贴路线；否则用节点直连兜底（开发期立即可见）。
-   */
+  /** 每章单独使用完整道路；缺失或损坏时只画本章节点虚线，不能跨章补线。 */
   buildRouteMap: function (chaptersList) {
-    const that = this;
-    const chapters = chaptersList || [];
-
-    // 1) 拍平所有节点并按 sort_id 排序（后端已排，这里防御性再排一次）
-    const nodes = [];
-    chapters.forEach(function (c) {
-      (c.nodes || []).forEach(function (n) { nodes.push(n); });
+    const chapters = (Array.isArray(chaptersList) ? chaptersList : []).filter(function (chapter) {
+      return chapter && typeof chapter === 'object' && !Array.isArray(chapter);
     });
-    nodes.sort(function (a, b) {
-      return (Number(a.sortId) || 0) - (Number(b.sortId) || 0);
+    const valid = [], polyline = [];
+    let roadSegments = 0, straightSegments = 0;
+    chapters.forEach(function (chapter) {
+      const nodes = (Array.isArray(chapter.nodes) ? chapter.nodes : []).slice().sort(function (a, b) {
+        return (Number(a && a.sortId) || 0) - (Number(b && b.sortId) || 0);
+      }).filter(function (node) { return routePoint(node) !== null; });
+      nodes.forEach(function (node) { valid.push(node); });
+      let points = [];
+      try {
+        const geometry = typeof chapter.routeGeometry === 'string' ? JSON.parse(chapter.routeGeometry) : chapter.routeGeometry;
+        // 不过滤坏道路点：任何断点都让整章道路降级，不能跳点后虚连成道路。
+        if (Array.isArray(geometry) && geometry.length >= 2 && Array.from(geometry).every(function (row) { return routePoint(row) !== null; }))
+          points = geometry.map(routePoint);
+      } catch (error) { points = []; }
+      const road = points.length >= 2;
+      if (road) roadSegments += 1;
+      else points = nodes.map(routePoint);
+      if (points.length >= 2) {
+        if (!road) straightSegments += 1;
+        polyline.push({
+          points: points, color: '#1A1A1A', width: 5, borderColor: '#FFFFFF', borderWidth: 1, /* ds-ok: 原生地图不支持CSS token，沿用既有路线颜色 */
+          arrowLine: road, dottedLine: !road
+        });
+      }
     });
-
-    // 2) 过滤出有合法经纬度的节点（库里是 String，需转 Number）
-    const valid = nodes.filter(function (n) {
-      const lat = Number(n.latitude);
-      const lng = Number(n.longitude);
-      return n.latitude && n.longitude && !isNaN(lat) && !isNaN(lng);
-    });
-
-    if (valid.length === 0) {
-      that.setData({ routeReady: false });
-      return;
-    }
-
-    // 3) 节点 marker（编号 1/2/3…）
-    const markers = valid.map(function (n, i) {
+    const markers = valid.map(function (node, i) {
+      const point = routePoint(node);
       return {
-        id: i,
-        latitude: Number(n.latitude),
-        longitude: Number(n.longitude),
-        width: 24,
-        height: 24,
-        iconPath: '/images/icon_map4.png',
+        id: i, latitude: point.latitude, longitude: point.longitude,
+        width: 24, height: 24, iconPath: '/images/icon_map4.png',
         callout: {
-          content: (i + 1) + (n.name ? ' ' + n.name : ''),
-          color: '#FFFFFF',
-          bgColor: '#1A1A1A',   // 去紫:原生 map callout 是 JS 字面量,吃不到 CSS var
-          padding: 6,
-          borderRadius: 8,
-          fontSize: 11,
-          display: 'BYCLICK'
+          content: (i + 1) + (node.name ? ' ' + node.name : ''),
+          color: '#FFFFFF', bgColor: '#1A1A1A', /* ds-ok: 原生地图callout不支持CSS token，沿用既有颜色 */
+          padding: 6, borderRadius: 8, fontSize: 11, display: 'BYCLICK'
         }
       };
     });
-
-    // 4) 路线：贴路线优先（拼接各章节 routeGeometry），否则节点直连
-    let linePoints = [];
-    let hasRoad = false;
-    chapters.forEach(function (c) {
-      if (c.routeGeometry) {
-        try {
-          const seg = JSON.parse(c.routeGeometry);
-          if (Array.isArray(seg) && seg.length) {
-            seg.forEach(function (p) {
-              const lat = Number(p.latitude !== undefined ? p.latitude : p.lat);
-              const lng = Number(p.longitude !== undefined ? p.longitude : p.lng);
-              if (!isNaN(lat) && !isNaN(lng)) {
-                linePoints.push({ latitude: lat, longitude: lng });
-              }
-            });
-            hasRoad = true;
-          }
-        } catch (e) {
-          // routeGeometry 解析失败则忽略，走兜底
-        }
-      }
-    });
-    if (!hasRoad) {
-      linePoints = valid.map(function (n) {
-        return { latitude: Number(n.latitude), longitude: Number(n.longitude) };
-      });
-    }
-
-    const polyline = linePoints.length >= 2 ? [{
-      points: linePoints,
-      color: '#1A1A1A',        // 去紫:原生 map polyline,与 callout 同色系
-      width: 5,
-      borderColor: '#FFFFFF',
-      borderWidth: 1,
-      arrowLine: true
-    }] : [];
-
-    that.setData({
-      routeReady: true,
-      routeIsRoad: hasRoad,
-      mapLatitude: Number(valid[0].latitude),
-      mapLongitude: Number(valid[0].longitude),
-      routeMarkers: markers,
-      routePolyline: polyline,
-      routeIncludePoints: linePoints.length ? linePoints : markers.map(function (m) {
-        return { latitude: m.latitude, longitude: m.longitude };
-      })
+    // 包含道路以及所有节点，不能因为某章已有道路就把另一章单独的节点排除出视野。
+    const include = markers.map(function (marker) { return { latitude: marker.latitude, longitude: marker.longitude }; });
+    polyline.forEach(function (line) { line.points.forEach(function (point) { include.push(point); }); });
+    const source = roadSegments ? (straightSegments ? '道路段参考 · 虚线为节点直线预览，章间未规划' : '道路段参考 · 按章节分段，章间未规划')
+      : (straightSegments ? '节点直线预览 · 尚未规划步行路线，章间未规划' : '仅显示节点位置 · 尚未规划步行路线，章间未规划');
+    this.setData({
+      routeReady: include.length > 0,
+      routeSourceText: include.length ? source : '', routeMarkers: markers, routePolyline: polyline, routeIncludePoints: include,
+      mapLatitude: include.length ? include[0].latitude : 0,
+      mapLongitude: include.length ? include[0].longitude : 0
     });
   },
 
@@ -1882,7 +1840,7 @@ Page({
       chaptersList[j].metaPlace = nodeCount > 0 ? nodeCount + ' 个节点' : '';
       chaptersList[j].metaPlay = Number(chapter.templateCount) > 0 ? chapter.templateCount + ' 个玩法' : '';
       chaptersList[j].hasMeta = !!(chaptersList[j].metaTime || chaptersList[j].metaPlace || chaptersList[j].metaPlay);
-      // 稿 214:689:站与站之间写「N min 步行」。第一站没有上一站,自然不画。
+      // 站间只写坐标直线距离；第一站没有上一站，不跨章计算。
       const ns = chapter.nodes || [];
       for (let n = 0; n < ns.length; n++) {
         // CU-C-65:站点这一层的裸字段全部归一,别把 null 渲染给玩家

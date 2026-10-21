@@ -1,3 +1,4 @@
+// 2026-10-21 #426：signup 原 /api/team/my 同一请求仅行号263→334；理由、37项数量与上限不变，排序键摘要按原算法重算。新原票查读不静默，失败另有明确定位错误态。
 // 2026-10-21 核销 UNKNOWN 恢复：profile 658→663/1088→1095/1145→1152/1987→1994、participation 185→190，逐条回读为原调用点；条数、理由、冻结上限不变，u1Variable/u4Dynamic 摘要按既有排序键算法显式重算。
 // 2026-10-21 首页编辑精选来源说明新增方法：4 个既有调用锚点后移 8 行；上下文逐字核对，理由、条数和阈值不变，仅重算对应 key digest。
 // 2026-10-20 消息页改收件箱/发件箱(用户要求):u4Dynamic im/list 317→323 仅行号位移(同一 this.setData(patch) 行,上下各一行逐字相同);条数与理由不变,u4Dynamic digest 按同一算法显式重算。
@@ -996,7 +997,7 @@ module.exports = {
       //   逐条回读仍是「只为读章节 recruitEnabled、失败不弹全局 toast」这一处,静默理由一字未改,条数 27 不变。
 // 2026-10-17 合并 master 进漫游上线分支:roam/index.js 14 条、nearby/index.js 2 条既有调用仅行号位移(按 master 源码逐行回读定位);漫游两栏改版删掉 /api/registration/list 静默读取(749),U5 29→28。digest 按同一算法显式重算。
 // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):锚点位移 + 举报半屏/AI 对话组件下沉会员分包换路径 + 本线 9 处新增登记,digest 按同一算法重算。
-"b9d68818bac5fae0ba0d6e1361bb365c6a4812ce3713e3172cc004a4ba7c6cf1"
+"18a357b4c6367cfb906968b03ace986c1ef81e9397b60d6a62eb245b80e4879f"
 
     }
   },
@@ -1392,7 +1393,7 @@ module.exports = {
     // 2026-09-17 广播实现收尾:同文件删掉只写不读的 cast.preview 死状态(净 -1 行),
     //   锚点按门禁实测 1179→1178;调用点上下逐字一致,理由一字未改,条数仍 23。
     "chengyinhub-xcx/pages/topic/merchantapply/index.js:227": "/api/merchant/info 只用来给报名表单补「你的门店」那张卡(稿 133:310):三行都是给主办方看的补充信息,不是提交字段,拉不到就整块不渲染,报名照常填照常交。全局 toast 在这里会被当成「我表单填错了」;owner=小程序,复核=2026-09-30",
-    "chengyinhub-xcx/subpackageMember/signup/index.js:263": "/api/team/my 只用来给票下面那一行「我的队伍 ›」找落点:拉不到就整行不出,票夹本身照常可用。弹全局 toast 会让人以为票没加载出来;owner=小程序,复核=2026-09-30",
+    "chengyinhub-xcx/subpackageMember/signup/index.js:334": "/api/team/my 只用来给票下面那一行「我的队伍 ›」找落点:拉不到就整行不出,票夹本身照常可用。弹全局 toast 会让人以为票没加载出来;owner=小程序,复核=2026-09-30",
     "chengyinhub-xcx/components/cy/scene-member-invite-history/index.js:63": "邀请历史使用本地 request wrapper 将网络/异常状态归一成空响应，列表据此展示无记录而不弹全局错误；owner=小程序，复核=2026-09-15",
     "chengyinhub-xcx/utils/analytics.js:226": "埋点投递是纯副作用且不应打扰玩家，fail 只回报 onDone(false)；必须显式登记，禁止因非空回调自动安全；owner=小程序，复核=2026-09-15",
     "chengyinhub-xcx/utils/ui-state-request.js:10": "共用请求封装,静默由调用方接管:各页在 fail 分支写页内错误态与重试,禁止 request-client 再弹一次；owner=小程序，复核=2026-09-30",

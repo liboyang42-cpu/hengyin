@@ -47,7 +47,7 @@ const FIXTURE_OVERRIDES = {
     badges: [{ code: 'FIRST_STEP', family: 'identity', name: '开始在场', unlocked: true }],
     badgeGroups: [{ key: 'identity', title: '', items: [{ code: 'FIRST_STEP', family: 'identity', name: '开始在场', unlocked: true }] }],
   },
-  C13: { marketingLoaded: true, marketingDataState: 'empty', couponCard: null, entries: [] },
+  C13: { marketingLoaded: true, marketingDataState: 'empty', couponCard: null, entries: [], deckGhosts: 0, couponRate: '' },
   C21: {
     loadState: 'error', loadErrTitle: '店铺装修加载失败',
     loadErrSub: '暂时没有加载出来，请稍后重试', saveError: '', featuredError: '',

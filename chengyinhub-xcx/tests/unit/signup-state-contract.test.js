@@ -54,6 +54,7 @@ function loadPage(js = source()) {
     Object.entries(patch).forEach(([key, value]) => setPath(page.data, key, value))
     if (callback) callback()
   }
+  page._walletOwner = app.getUserID()
   return { page, sandbox }
 }
 
@@ -73,8 +74,8 @@ function loadPage(js = source()) {
 function assertWalletStatesAreExclusive(template) {
   assert.match(
     template,
-    /wx:if="\{\{walletState === 'loading'\}\}"/,
-    'loading 态必须由 walletState 单独控制',
+    /wx:elif="\{\{walletState === 'loading'\}\}"/,
+    '原票定位状态后，普通票夹loading仍由walletState控制',
   )
   for (const state of ['error', 'empty']) {
     assert.match(
@@ -85,8 +86,8 @@ function assertWalletStatesAreExclusive(template) {
   }
   assert.match(
     template,
-    /class="flex-a flex-col main"\s+wx:if="\{\{walletState === 'ready'\}\}"/,
-    'ready 主容器只由 walletState 控制',
+    /class="flex-a flex-col main"\s+wx:if="\{\{walletState === 'ready' && \(!focusState \|\| focusState === 'ready'\)\}\}"/,
+    'ready票夹只有无定位请求或原票已定位时才可显示',
   )
   assert.doesNotMatch(
     template,
