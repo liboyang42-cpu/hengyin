@@ -14,6 +14,7 @@ function load(candidate = source) {
   vm.runInNewContext(candidate, { getApp: () => app, Page: p => { def = p; }, wx: {
     getStorageSync: k => storage[k], reLaunch() {},
   }, require(id) {
+    if (id.includes('im-send-recovery')) return require('../../utils/im-send-recovery.js');
     if (id.includes('identity-policy')) return require('../../utils/identity/identity-policy.js');
     if (id.includes('roleGuard')) return { isClubLeader: () => app.globalData.role === 'club', clear() {} };
     if (id.includes('merchant-theme')) return { merchantPageShow() {}, merchantPageRestore() {} };
