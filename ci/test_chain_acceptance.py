@@ -1145,6 +1145,30 @@ class PostRestartTest(unittest.TestCase):
                  "containers": {"mysql": "cy-chain-1-1-mysql", "redis": "cy-chain-1-1-redis"}}
         return rows, fresh
 
+    def test_alarm_attempt_decodes_exact_json_string_and_keeps_bounded_ttl(self):
+        self.assertEqual({"value": "1", "ttl_ms": 599999}, ca.restart_alarm('"1"', "599999"))
+        self.assertEqual({"value": "1", "ttl_ms": 600000}, ca.restart_alarm('"1"', "600000"))
+        state = self.state()
+        ca.post.validate_restart_effect("auditBacklogMonitorTask.run()", [1, "0"], state, state,
+                                        ca.restart_alarm('"1"', "599999"))
+        for raw in ("1", "true", "null", "[]", "{}", '["1"]', '{"value":"1"}', '"other"', '""',
+                    "", "malformed", '"1', None):
+            with self.subTest(raw=raw), self.assertRaises(ca.post.PostDeployError):
+                ca.restart_alarm(raw, "599999")
+        for ttl in ("0", "-1", "-2", "600001", "1000000", "1.0", "1e3", "", "invalid", None):
+            with self.subTest(ttl=ttl), self.assertRaises(ca.post.PostDeployError):
+                ca.restart_alarm('"1"', ttl)
+
+    def test_alarm_capture_uses_the_strict_decoder_without_rewriting_keys(self):
+        import ast
+        tree = ast.parse((_HERE / "chain_acceptance.py").read_text())
+        run = next(node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == "run_post_restart")
+        alarm = next(node for node in ast.walk(run) if isinstance(node, ast.FunctionDef) and node.name == "alarm")
+        returned = next(node for node in alarm.body if isinstance(node, ast.Return)).value
+        self.assertIsInstance(returned, ast.Call)
+        self.assertEqual("restart_alarm", returned.func.id)
+        self.assertEqual(["value", "ttl"], [arg.id for arg in returned.args])
+
     def test_preparation_clock_uses_mysql_system_schema_and_closes_its_read_only_connection(self):
         connection = mock.Mock()
         cursor = connection.cursor.return_value
@@ -1594,7 +1618,7 @@ class PostRestartTest(unittest.TestCase):
                      mock.patch.object(ca,"start_app",side_effect=start), mock.patch.object(ca,"observe_postdeploy",return_value=proof), \
                      mock.patch.object(ca,"java_command",return_value=["fixture"]), mock.patch.object(ca,"app_process_identity",side_effect=identity), \
                      mock.patch.object(ca,"postdeploy_http",side_effect=http), mock.patch.object(ca.time,"time",return_value=self.EPOCH+10), \
-                     mock.patch.object(ca,"docker",side_effect=lambda *a: "1" if a[-2]=="GET" else "10000"), \
+                     mock.patch.object(ca,"docker",side_effect=lambda *a: '\"1\"' if a[-2]=="GET" else "10000"), \
                      mock.patch.object(ca,"sha256_file",side_effect=lambda p: "62daf04bc0e6aac703e7536fe17b79999b86d92ddec722cfb88c59cadba87161" if str(p).endswith(".stub") else "b"*64):
                     if crash:
                         with self.assertRaises(ca.GateError): ca.run_post_restart(args,{}, {}, {"server_uuid":POST_UUID,"process":{"pid":123}},first,out/"fixture")

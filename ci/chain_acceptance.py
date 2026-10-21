@@ -1184,6 +1184,17 @@ def restart_config(args):
     return target
 
 
+def restart_alarm(raw_value, raw_ttl):
+    try:
+        value = json.loads(raw_value)
+    except (TypeError, ValueError):
+        raise post.PostDeployError("restart_monitor_attempt_malformed_json")
+    post.require(type(value) is str and value == "1", "restart_monitor_attempt_wrong_value")
+    post.require(isinstance(raw_ttl, str) and re.fullmatch(r"[0-9]{1,6}", raw_ttl) and
+                 0 < int(raw_ttl) <= 600000, "restart_monitor_attempt_invalid_ttl")
+    return {"value": value, "ttl_ms": int(raw_ttl)}
+
+
 def run_post_restart(args, environ, planned, first_proof, first_process, config):
     result = {"status": "FAIL", "schema": SCHEMA, "effects": [], "jvm1_stopped": first_process.poll() is not None,
               "recovery": "UNKNOWN_KEEP_ORIGINAL_COMMAND_IDENTITY_NO_RETRY"}
@@ -1247,7 +1258,7 @@ def run_post_restart(args, environ, planned, first_proof, first_process, config)
         def alarm(key):
             value = docker("exec", names["redis"], "redis-cli", "GET", key).strip()
             ttl = docker("exec", names["redis"], "redis-cli", "PTTL", key).strip()
-            return {"value": value, "ttl_ms": int(ttl)}
+            return restart_alarm(value, ttl)
 
         def invoke(target, automatic=False, settlement_negative=False):
             live()
