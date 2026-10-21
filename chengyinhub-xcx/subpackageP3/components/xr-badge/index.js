@@ -99,24 +99,39 @@ Component({
     reduced: { type: Boolean, value: false },
   },
   lifetimes: {
-    attached() { this._initSoon(); },
-    detached() {
-      this._dead = true;
-      if (this._cv && this._raf) this._cv.cancelAnimationFrame(this._raf);
-    },
+    attached() { this._dead = false; this._xrEpoch = (this._xrEpoch || 0) + 1; this._initSoon(); },
+    detached() { this.disposeRenderer(); },
   },
   methods: {
+    resumeRenderer() {
+      if (!this._dead) return;
+      this._dead = false;
+      this._xrEpoch = (this._xrEpoch || 0) + 1;
+      this._initSoon();
+    },
+    disposeRenderer() {
+      this._dead = true;
+      this._xrEpoch = (this._xrEpoch || 0) + 1;
+      if (this._cv && this._raf) this._cv.cancelAnimationFrame(this._raf);
+      this._raf = 0;
+      this._cv = null;
+    },
     _initSoon() {
       const that = this;
+      const epoch = this._xrEpoch;
       this.createSelectorQuery().select('#pincv').fields({ node: true, size: true }).exec((res) => {
+        if (that._dead || epoch !== that._xrEpoch) return;
         try {
           const info = res && res[0];
           if (!info || !info.node) { that.triggerEvent('unsupported'); return; }
           that._boot(info.node, info.width, info.height);
-        } catch (e) { that.triggerEvent('unsupported'); }
+        } catch (e) { if (!that._dead && epoch === that._xrEpoch) that.triggerEvent('unsupported'); }
       });
     },
     _boot(canvas, w, h) {
+      if (this._dead) return;
+      const epoch = this._xrEpoch || 0;
+      const alive = () => !this._dead && epoch === (this._xrEpoch || 0);
       const dpr = (wx.getWindowInfo ? wx.getWindowInfo().pixelRatio : 2) || 2;
       canvas.width = Math.floor(w * dpr); canvas.height = Math.floor(h * dpr);
       const gl = canvas.getContext('webgl', { alpha: false, antialias: true, premultipliedAlpha: true, preserveDrawingBuffer: true });
@@ -171,7 +186,7 @@ Component({
       gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([214, 172, 80, 255]));
       const mimg = off.createImage();
       mimg.onload = () => {
-        if (that._dead) return;
+        if (!alive()) return;
         octx.clearRect(0, 0, TEX, TEX);
         octx.drawImage(mimg, 0, 0, TEX, TEX);
         const d = octx.getImageData(0, 0, TEX, TEX);
@@ -187,7 +202,7 @@ Component({
       mimg.src = '/subpackageP3/assets/gold-matcap.png';
       const img = off.createImage();
       img.onload = () => {
-        if (that._dead) return;
+        if (!alive()) return;
         octx.clearRect(0, 0, TEX, TEX);
         octx.drawImage(img, 0, 0, TEX, TEX);
         const data = octx.getImageData(0, 0, TEX, TEX);
@@ -201,7 +216,7 @@ Component({
         that.triggerEvent('loaded');
       };
       img.onerror = () => {
-        if (!that._dead) that.triggerEvent('unsupported', { reason: 'asset' });
+        if (alive()) that.triggerEvent('unsupported', { reason: 'asset' });
       };
       img.src = this.data.src;
 
@@ -212,7 +227,7 @@ Component({
       this._dragging = false;
       let last = 0;
       const frame = (ts) => {
-        if (that._dead) return;
+        if (!alive()) return;
         const dt = last ? Math.min(50, ts - last) : 16; last = ts;
         if (!that._dragging && !that.data.reduced) that._rot += (dt / 1000) * 0.9;  // ~14s/圈,对齐参考视频慢速
         gl.viewport(0, 0, canvas.width, canvas.height);
@@ -226,7 +241,7 @@ Component({
         gl.bindTexture(gl.TEXTURE_2D, tex);
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, iboFace);
         gl.drawElements(gl.TRIANGLES, g.face.length, gl.UNSIGNED_SHORT, 0);
-        that._raf = canvas.requestAnimationFrame(frame);
+        if (alive()) that._raf = canvas.requestAnimationFrame(frame);
       };
       this._raf = canvas.requestAnimationFrame(frame);
       this.triggerEvent('xready');   // 页面 3s 超时判定的活信号(契约与 xr 版一致)

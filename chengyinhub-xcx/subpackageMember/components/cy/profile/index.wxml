@@ -725,4 +725,4 @@
   greeting="{{subjectMerchant.npc.greeting}}"
   bind:close="closeMerchantNpcChat" />
 
-<view class="{{isMerchantView ? 'theme-merchant' : ''}}"><cy-coop-invite-sheet id="coop-invite" show="{{coopInviteShow}}" target-id="{{userId}}" target-name="{{subjectMerchant.name || nickname}}" invite-type="{{0}}" topic-id="{{topicId}}" chapter-id="{{chapterId}}" topic-name="{{topicName}}" operation-scope="{{operationScope}}" bind:close="closeCoopInvite" bind:sent="onCoopInviteSent" /></view>
+<view class="{{isMerchantView ? 'theme-merchant' : ''}}"><cy-coop-invite-sheet id="coop-invite" show="{{coopInviteShow}}" target-id="{{userId}}" target-name="{{(subjectMerchant && subjectMerchant.name) || (userInfo && userInfo.nickname) || ''}}" invite-type="{{0}}" topic-id="{{topicId}}" chapter-id="{{chapterId}}" topic-name="{{topicName || ''}}" operation-scope="{{operationScope || ''}}" bind:close="closeCoopInvite" bind:sent="onCoopInviteSent" /></view>

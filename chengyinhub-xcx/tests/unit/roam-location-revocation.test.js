@@ -62,13 +62,14 @@ for (const entry of ['privacy', 'sheet']) {
   });
 }
 
-test('撤回失败保持原追踪与错误重试，不把未写成功的REVOKE说成已完成', async () => {
+test('撤回审计失败仍停止本机追踪并保留补传错误，不假报已记录', async () => {
   let failed = true;
   const h = harness(() => failed ? Promise.reject(new Error('offline')) : Promise.resolve());
   h.page._startReal(true); h.starts[0].success();
   h.privacy.withdrawRoamLocationConsent(); await settle();
-  assert.equal(h.tracker.isRunning(), true); assert.equal(h.page._realOn, true);
-  assert.equal(h.stops, 0); assert.equal(h.privacy.data.failedAction, 'revoke');
+  assert.equal(h.tracker.isRunning(), false); assert.equal(h.page._realOn, false);
+  assert.equal(h.stops, 1); assert.equal(h.privacy.data.failedAction, 'revoke');
+  assert.match(h.privacy.data.submitError, /本机.*已停/);
   failed = false; h.privacy.retrySubmit(); await settle();
   assert.equal(h.tracker.isRunning(), false); assert.equal(h.privacy.data.submitError, '');
 });
