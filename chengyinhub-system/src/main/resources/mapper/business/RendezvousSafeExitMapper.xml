@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.service.rendezvous.RendezvousSafeExitMapper">
+  <resultMap id="exitRow" type="com.chengyinhub.business.service.rendezvous.RendezvousSafeExitService$ExitRow">
+    <id property="ticketId" column="ticket_id"/>
+    <result property="actorId" column="actor_id"/>
+    <result property="matchId" column="match_id"/>
+    <result property="choice" column="choice"/>
+    <result property="phase" column="phase"/>
+    <result property="handoff" column="handoff"/>
+    <result property="soloState" column="solo_state"/>
+    <result property="soloBlock" column="solo_block"/>
+    <result property="goalRef" column="goal_ref"/>
+    <result property="launchReceipt" column="launch_receipt"/>
+    <result property="resumed" column="resumed"/>
+    <result property="createdAt" column="created_at"/>
+  </resultMap>
+  <select id="lockGuard" resultType="java.lang.Integer" useCache="false" flushCache="true">SELECT id FROM w16_safe_exit_guard WHERE id = 1 FOR UPDATE</select>
+  <select id="find" resultMap="exitRow" useCache="false">
+    SELECT ticket_id, actor_id, match_id, choice, phase, handoff, solo_state, solo_block, goal_ref, launch_receipt, resumed, created_at
+    FROM w16_safe_exit WHERE ticket_id = #{ticketId}
+  </select>
+  <insert id="insert">
+    INSERT INTO w16_safe_exit(ticket_id, actor_id, match_id, choice, phase, handoff, solo_state, solo_block, goal_ref, launch_receipt, resumed, created_at)
+    VALUES(#{ticketId}, #{actorId}, #{matchId,jdbcType=VARCHAR}, #{choice}, #{phase}, #{handoff}, #{soloState},
+           #{soloBlock,jdbcType=VARCHAR}, #{goalRef,jdbcType=VARCHAR}, #{launchReceipt,jdbcType=VARCHAR}, #{resumed}, #{createdAt})
+  </insert>
+  <update id="markLaunch">
+    UPDATE w16_safe_exit
+    SET solo_state=#{soloState}, solo_block=#{soloBlock,jdbcType=VARCHAR},
+        launch_receipt=#{launchReceipt,jdbcType=VARCHAR}, resumed=#{resumed}
+    WHERE ticket_id=#{ticketId} AND actor_id=#{actorId} AND solo_state='STARTING'
+  </update>
+</mapper>
