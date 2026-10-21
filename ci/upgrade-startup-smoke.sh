@@ -29,7 +29,6 @@ FIXTURE="$ROOT/ci/upgrade-startup"
 JAR="$ROOT/chengyinhub-admin/target/chengyinhub-admin.jar"
 test -f "$JAR"
 command -v docker >/dev/null
-command -v strace >/dev/null
 command -v python3 >/dev/null
 docker info >/dev/null
 # Pool fault scenario is opt-in for the exact isolated hosted workflow only.
@@ -40,19 +39,16 @@ if [ "${CHENGYIN_CI_POOL_RECOVERY:-false}" = true ]; then
   POOL_PROFILE=(--spring.datasource.druid.maxActive=20 --spring.datasource.druid.maxWait=5000 --spring.datasource.druid.socketTimeout=60000)
 fi
 RUN_NAME="cy-startup-$$-$RANDOM"
+TRACE_IMAGE="$RUN_NAME-strace:local"
 OUT=$(mktemp -d "${TMPDIR:-/tmp}/cy-startup.XXXXXXXX")
 chmod 755 "$OUT"
-mkdir "$OUT/trace-libs"
-STRACE=$(command -v strace)
-# Host strace and its non-libc dependencies; never mount host credentials or config.
-while read -r library; do cp -L "$library" "$OUT/trace-libs/"; done < <(
-  ldd "$STRACE" | awk '/=> \// && $1 != "libc.so.6" {print $3}')
 cleanup() {
   local result=$?
   trap - EXIT
   docker logs "$RUN_NAME-app" > "$OUT/application.log" 2>&1 || true
   docker rm -f "$RUN_NAME-app" "$RUN_NAME-mysql" "$RUN_NAME-redis" >/dev/null 2>&1 || true
   docker network rm "$RUN_NAME" >/dev/null 2>&1 || true
+  docker image rm "$TRACE_IMAGE" >/dev/null 2>&1 || true
   echo "Startup evidence: $OUT (exit=$result)"
   if [ "$result" -ne 0 ]; then
     if [ -f "$OUT/health.log" ]; then cat "$OUT/health.log"; fi
@@ -65,6 +61,11 @@ JDK_IMAGE=maven:3.9.11-eclipse-temurin-21@sha256:6fdc855a6ed81d288ca7ca37ac6ff5e
 MYSQL_IMAGE=mysql:8.0.45@sha256:4af1f8815716546f5b12410f7621f37f93db8dd11a184706ef59111930b8c2ff
 REDIS_IMAGE=redis:7.4-alpine@sha256:858f009f9709ce576febc734aa78b8f6d624b82571f9ddb6bda4377c833b3499
 for image in "$JDK_IMAGE" "$MYSQL_IMAGE" "$REDIS_IMAGE"; do docker image inspect "$image" >/dev/null 2>&1 || docker pull "$image"; done
+# strace comes from the pinned JDK image's own distribution, so it always matches the container glibc;
+# host binaries/libraries are never mounted. Only this build step has network; the app stays internal.
+printf 'FROM %s\nRUN apt-get update && apt-get install -y --no-install-recommends strace && rm -rf /var/lib/apt/lists/*\n' \
+  "$JDK_IMAGE" | docker build -q -t "$TRACE_IMAGE" - >/dev/null
+docker run --rm --entrypoint strace "$TRACE_IMAGE" -V >/dev/null
 docker network create --internal "$RUN_NAME" >/dev/null
 test "$(docker network inspect "$RUN_NAME" --format '{{.Internal}}')" = true
 docker run -d --name "$RUN_NAME-mysql" --network "$RUN_NAME" --tmpfs /var/lib/mysql:rw,size=768m \
@@ -88,10 +89,9 @@ MYSQL_IP=$(docker inspect "$RUN_NAME-mysql" --format '{{range .NetworkSettings.N
 REDIS_IP=$(docker inspect "$RUN_NAME-redis" --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}')
 docker run -d --name "$RUN_NAME-app" --network "$RUN_NAME" --dns 127.0.0.1 \
   --read-only --tmpfs /tmp:rw,size=256m --cap-drop ALL --cap-add SYS_PTRACE \
-  --user "$(id -u):$(id -g)" -e LD_LIBRARY_PATH=/trace-libs \
-  -v "$STRACE:/trace/strace:ro" -v "$OUT/trace-libs:/trace-libs:ro" \
+  --user "$(id -u):$(id -g)" \
   -v "$JAR:/application.jar:ro" -v "$FIXTURE:/fixture:ro" -v "$OUT:/evidence" \
-  --entrypoint /trace/strace "$JDK_IMAGE" -f -s 0 -e trace=connect,sendto,sendmsg -o /evidence/network.trace \
+  --entrypoint strace "$TRACE_IMAGE" -f -s 0 -e trace=connect,sendto,sendmsg -o /evidence/network.trace \
   java -Xmx512m -Djava.rmi.server.hostname=127.0.0.1 \
   -Dlogging.config=/fixture/logback.xml -Dlogback.configurationFile=/fixture/logback.xml \
   -jar /application.jar --spring.config.location=file:/fixture/application.properties \
