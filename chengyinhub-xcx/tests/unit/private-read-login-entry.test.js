@@ -14,6 +14,41 @@ function mount(kind){
   return {page,app,requests,owner(id){owner=id;},load(){kind==='order'?page.getList(false,true):kind==='earnings'?page.load(true):kind==='board'?page.loadBoard():kind==='growth'?(page.loadOverview(),page.loadMyRank()):kind==='income'||kind==='withdraw'?page.getList():kind==='invite'||kind==='profit'?page.load(true):page.loadData();}};
 }
 const flush=()=>new Promise(resolve=>setImmediate(resolve));
+function badgeErrorView(data) {
+  const source = require('node:fs').readFileSync(path.resolve(__dirname, '../../subpackageP3/pages/badge-wall/index/index.wxml'), 'utf8');
+  const tag = source.match(/<cy-error[^>]*class="bw-error-state"[\s\S]*?\/>/);
+  assert.ok(tag, 'badge wall must retain its visible error/login outlet');
+  const attrs = {};
+  for (const [, key, expression] of tag[0].matchAll(/([\w:-]+)="\{\{([\s\S]*?)\}\}"/g)) {
+    attrs[key] = require('node:vm').runInNewContext(expression, data);
+  }
+  return attrs;
+}
+test('badge guest renders login title, explanation and login entry without a private read', () => {
+  const h = mount('badge'); h.owner(''); h.load();
+  const shown = badgeErrorView(h.page.data);
+  assert.equal(h.requests.length, 0);
+  assert.equal(shown['wx:if'], true);
+  assert.equal(shown.title, '登录后查看我的勋章');
+  assert.equal(shown.sub, '登录后可查看你已获得的城市勋章');
+  assert.equal(shown.retry, '登录');
+  assert.equal(shown['load-failure'], false);
+});
+test('badge actual401 renders login while offline, partial, renderer and empty states keep their own copy', async () => {
+  const expired = mount('badge'); expired.load();
+  expired.requests.forEach(row => row.success({ code: 401, msg: '请先登录' })); await flush();
+  assert.equal(badgeErrorView(expired.page.data).title, '登录后查看我的勋章');
+  const offline = mount('badge'); offline.load();
+  offline.requests.forEach(row => row.fail({ errMsg: 'offline' })); await flush();
+  const shown = badgeErrorView(offline.page.data);
+  assert.equal(shown.title, '勋章数据没有到达'); assert.equal(shown.retry, '重试');
+  assert.equal(shown['load-failure'], true);
+  const other = Object.assign({}, offline.page.data, { loadFail: false, partialFail: true });
+  assert.equal(badgeErrorView(other).title, '部分勋章数据未到达，当前结果不完整');
+  Object.assign(other, { partialFail: false, glFail: true, viewMode: 'wall' });
+  assert.equal(badgeErrorView(other).title, '勋章墙渲染失败');
+  other.glFail = false; assert.equal(badgeErrorView(other)['wx:if'], false);
+});
 for(const kind of ['order','badge']){
   const auth=kind==='order'?'orderAuthRequired':'wallAuthRequired';const deny=kind==='order'?'orderAccessDenied':'wallAccessDenied';
   test(kind+' anonymous private read shows login and avoids authenticated APIs until login succeeds',async()=>{

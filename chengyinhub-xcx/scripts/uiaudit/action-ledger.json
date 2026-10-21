@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
-  "controlCount": 4939,
+  "controlCount": 4938,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -843494,7 +843494,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit-compass/index.wxml:2:bind:back:onClose:0",
+      "id": "pages/play/components/playkit-compass/index.wxml:3:bind:back:onClose:0",
       "route": "component:pages/play/components/playkit-compass/index",
       "hostRoutes": [
         "pages/play/index",
@@ -843573,7 +843573,7 @@
         "tag": "cy-play-stage",
         "event": "bind:back",
         "handler": "onClose",
-        "line": 2,
+        "line": 3,
         "selectorHint": "#cy-play-stage",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -843588,11 +843588,11 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "other",
+      "actionClass": "state",
       "interactionMode": "event-contract",
-      "baseActionClass": "other",
+      "baseActionClass": "state",
       "effectClasses": [
-        "other"
+        "state"
       ],
       "accessBoundary": null,
       "externalCapabilities": [],
@@ -843605,20 +843605,19 @@
         "apiContracts": [],
         "writeApis": []
       },
-      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
-        "success",
-        "error"
+        "success"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-compass/index.js:226"
+        "staticSource": "pages/play/components/playkit-compass/index.js:297"
       }
     },
     {
-      "id": "pages/play/components/playkit-compass/index.wxml:2:bind:run:onRun:1",
+      "id": "pages/play/components/playkit-compass/index.wxml:3:bind:run:onRun:1",
       "route": "component:pages/play/components/playkit-compass/index",
       "hostRoutes": [
         "pages/play/index",
@@ -843697,7 +843696,7 @@
         "tag": "cy-play-stage",
         "event": "bind:run",
         "handler": "onRun",
-        "line": 2,
+        "line": 3,
         "selectorHint": "#cy-play-stage",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -843737,11 +843736,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-compass/index.js:140"
+        "staticSource": "pages/play/components/playkit-compass/index.js:228"
       }
     },
     {
-      "id": "pages/play/components/playkit-compass/index.wxml:2:bind:verdict:onVerdict:2",
+      "id": "pages/play/components/playkit-compass/index.wxml:3:bind:verdict:onVerdict:2",
       "route": "component:pages/play/components/playkit-compass/index",
       "hostRoutes": [
         "pages/play/index",
@@ -843820,7 +843819,7 @@
         "tag": "cy-play-stage",
         "event": "bind:verdict",
         "handler": "onVerdict",
-        "line": 2,
+        "line": 3,
         "selectorHint": "#cy-play-stage",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -843861,11 +843860,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-compass/index.js:225"
+        "staticSource": "pages/play/components/playkit-compass/index.js:293"
       }
     },
     {
-      "id": "pages/play/components/playkit-compass/index.wxml:41:bindtap:onStart:3",
+      "id": "pages/play/components/playkit-compass/index.wxml:43:bindtap:onStart:3",
       "route": "component:pages/play/components/playkit-compass/index",
       "hostRoutes": [
         "pages/play/index",
@@ -843944,7 +843943,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onStart",
-        "line": 41,
+        "line": 43,
         "selectorHint": ".cp__b",
         "visibleCondition": "{{phase === 'idle' && !done}}",
         "disabledCondition": null,
@@ -843984,7 +843983,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-compass/index.js:132"
+        "staticSource": "pages/play/components/playkit-compass/index.js:175"
       }
     },
     {
@@ -855136,7 +855135,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit-quiethold/index.wxml:15:bindtap:onStart:5",
+      "id": "pages/play/components/playkit-quiethold/index.wxml:17:bindtap:onStart:5",
       "route": "component:pages/play/components/playkit-quiethold/index",
       "hostRoutes": [
         "pages/play/index",
@@ -855215,7 +855214,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onStart",
-        "line": 15,
+        "line": 17,
         "selectorHint": ".qt__b",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -855230,15 +855229,19 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "state",
+      "actionClass": "external",
       "interactionMode": "tap",
       "baseActionClass": "state",
       "effectClasses": [
         "state"
       ],
       "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
+      "externalCapabilities": [
+        "getSetting"
+      ],
+      "successCapabilities": [
+        "getSetting"
+      ],
       "targets": {
         "routes": [],
         "apis": [],
@@ -855247,19 +855250,25 @@
         "apiContracts": [],
         "writeApis": []
       },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
-        "success"
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
       ],
-      "requiredPlatforms": [],
-      "externalGate": null,
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-quiethold/index.js:60"
+        "staticSource": "pages/play/components/playkit-quiethold/index.js:114"
       }
     },
     {
-      "id": "pages/play/components/playkit-quiethold/index.wxml:3:bind:back:onClose:0",
+      "id": "pages/play/components/playkit-quiethold/index.wxml:4:bind:back:onClose:0",
       "route": "component:pages/play/components/playkit-quiethold/index",
       "hostRoutes": [
         "pages/play/index",
@@ -855338,7 +855347,7 @@
         "tag": "cy-play-stage",
         "event": "bind:back",
         "handler": "onClose",
-        "line": 3,
+        "line": 4,
         "selectorHint": "#cy-play-stage",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -855353,11 +855362,11 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "other",
+      "actionClass": "state",
       "interactionMode": "event-contract",
-      "baseActionClass": "other",
+      "baseActionClass": "state",
       "effectClasses": [
-        "other"
+        "state"
       ],
       "accessBoundary": null,
       "externalCapabilities": [],
@@ -855370,20 +855379,19 @@
         "apiContracts": [],
         "writeApis": []
       },
-      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
-        "success",
-        "error"
+        "success"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-quiethold/index.js:133"
+        "staticSource": "pages/play/components/playkit-quiethold/index.js:237"
       }
     },
     {
-      "id": "pages/play/components/playkit-quiethold/index.wxml:3:bind:calibrated:onCalibrated:2",
+      "id": "pages/play/components/playkit-quiethold/index.wxml:4:bind:calibrated:onCalibrated:2",
       "route": "component:pages/play/components/playkit-quiethold/index",
       "hostRoutes": [
         "pages/play/index",
@@ -855462,7 +855470,7 @@
         "tag": "cy-play-stage",
         "event": "bind:calibrated",
         "handler": "onCalibrated",
-        "line": 3,
+        "line": 4,
         "selectorHint": "#cy-play-stage",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -855477,15 +855485,19 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "other",
+      "actionClass": "external",
       "interactionMode": "event-contract",
-      "baseActionClass": "other",
+      "baseActionClass": "state",
       "effectClasses": [
-        "other"
+        "state"
       ],
       "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
+      "externalCapabilities": [
+        "getSetting"
+      ],
+      "successCapabilities": [
+        "getSetting"
+      ],
       "targets": {
         "routes": [],
         "apis": [],
@@ -855494,20 +855506,25 @@
         "apiContracts": [],
         "writeApis": []
       },
-      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error"
+        "error",
+        "timeout",
+        "duplicate-trigger"
       ],
-      "requiredPlatforms": [],
-      "externalGate": null,
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-quiethold/index.js:87"
+        "staticSource": "pages/play/components/playkit-quiethold/index.js:196"
       }
     },
     {
-      "id": "pages/play/components/playkit-quiethold/index.wxml:3:bind:calibratetick:onSample:1",
+      "id": "pages/play/components/playkit-quiethold/index.wxml:4:bind:calibratetick:onSample:1",
       "route": "component:pages/play/components/playkit-quiethold/index",
       "hostRoutes": [
         "pages/play/index",
@@ -855586,7 +855603,7 @@
         "tag": "cy-play-stage",
         "event": "bind:calibratetick",
         "handler": "onSample",
-        "line": 3,
+        "line": 4,
         "selectorHint": "#cy-play-stage",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -855627,11 +855644,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-quiethold/index.js:85"
+        "staticSource": "pages/play/components/playkit-quiethold/index.js:191"
       }
     },
     {
-      "id": "pages/play/components/playkit-quiethold/index.wxml:4:bind:run:onRun:3",
+      "id": "pages/play/components/playkit-quiethold/index.wxml:5:bind:run:onRun:3",
       "route": "component:pages/play/components/playkit-quiethold/index",
       "hostRoutes": [
         "pages/play/index",
@@ -855710,7 +855727,7 @@
         "tag": "cy-play-stage",
         "event": "bind:run",
         "handler": "onRun",
-        "line": 4,
+        "line": 5,
         "selectorHint": "#cy-play-stage",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -855725,15 +855742,19 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "state",
+      "actionClass": "external",
       "interactionMode": "event-contract",
       "baseActionClass": "state",
       "effectClasses": [
         "state"
       ],
       "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
+      "externalCapabilities": [
+        "getSetting"
+      ],
+      "successCapabilities": [
+        "getSetting"
+      ],
       "targets": {
         "routes": [],
         "apis": [],
@@ -855742,19 +855763,25 @@
         "apiContracts": [],
         "writeApis": []
       },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
-        "success"
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
       ],
-      "requiredPlatforms": [],
-      "externalGate": null,
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-quiethold/index.js:94"
+        "staticSource": "pages/play/components/playkit-quiethold/index.js:205"
       }
     },
     {
-      "id": "pages/play/components/playkit-quiethold/index.wxml:4:bind:verdict:onVerdict:4",
+      "id": "pages/play/components/playkit-quiethold/index.wxml:5:bind:verdict:onVerdict:4",
       "route": "component:pages/play/components/playkit-quiethold/index",
       "hostRoutes": [
         "pages/play/index",
@@ -855833,7 +855860,7 @@
         "tag": "cy-play-stage",
         "event": "bind:verdict",
         "handler": "onVerdict",
-        "line": 4,
+        "line": 5,
         "selectorHint": "#cy-play-stage",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -855874,7 +855901,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-quiethold/index.js:132"
+        "staticSource": "pages/play/components/playkit-quiethold/index.js:233"
       }
     },
     {
@@ -859856,7 +859883,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit-shout/index.wxml:12:bindtap:onStart:5",
+      "id": "pages/play/components/playkit-shout/index.wxml:16:bindtap:onStart:5",
       "route": "component:pages/play/components/playkit-shout/index",
       "hostRoutes": [
         "pages/play/index",
@@ -859935,7 +859962,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onStart",
-        "line": 12,
+        "line": 16,
         "selectorHint": ".sh__b",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -859950,15 +859977,19 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "state",
+      "actionClass": "external",
       "interactionMode": "tap",
       "baseActionClass": "state",
       "effectClasses": [
         "state"
       ],
       "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
+      "externalCapabilities": [
+        "getSetting"
+      ],
+      "successCapabilities": [
+        "getSetting"
+      ],
       "targets": {
         "routes": [],
         "apis": [],
@@ -859967,19 +859998,25 @@
         "apiContracts": [],
         "writeApis": []
       },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
-        "success"
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
       ],
-      "requiredPlatforms": [],
-      "externalGate": null,
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-shout/index.js:60"
+        "staticSource": "pages/play/components/playkit-shout/index.js:105"
       }
     },
     {
-      "id": "pages/play/components/playkit-shout/index.wxml:3:bind:back:onClose:0",
+      "id": "pages/play/components/playkit-shout/index.wxml:4:bind:back:onClose:0",
       "route": "component:pages/play/components/playkit-shout/index",
       "hostRoutes": [
         "pages/play/index",
@@ -860058,7 +860095,7 @@
         "tag": "cy-play-stage",
         "event": "bind:back",
         "handler": "onClose",
-        "line": 3,
+        "line": 4,
         "selectorHint": "#cy-play-stage",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -860073,11 +860110,11 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "other",
+      "actionClass": "state",
       "interactionMode": "event-contract",
-      "baseActionClass": "other",
+      "baseActionClass": "state",
       "effectClasses": [
-        "other"
+        "state"
       ],
       "accessBoundary": null,
       "externalCapabilities": [],
@@ -860090,20 +860127,19 @@
         "apiContracts": [],
         "writeApis": []
       },
-      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
-        "success",
-        "error"
+        "success"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-shout/index.js:133"
+        "staticSource": "pages/play/components/playkit-shout/index.js:208"
       }
     },
     {
-      "id": "pages/play/components/playkit-shout/index.wxml:3:bind:calibrated:onCalibrated:2",
+      "id": "pages/play/components/playkit-shout/index.wxml:4:bind:calibrated:onCalibrated:2",
       "route": "component:pages/play/components/playkit-shout/index",
       "hostRoutes": [
         "pages/play/index",
@@ -860182,7 +860218,7 @@
         "tag": "cy-play-stage",
         "event": "bind:calibrated",
         "handler": "onCalibrated",
-        "line": 3,
+        "line": 4,
         "selectorHint": "#cy-play-stage",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -860197,15 +860233,19 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "other",
+      "actionClass": "external",
       "interactionMode": "event-contract",
-      "baseActionClass": "other",
+      "baseActionClass": "state",
       "effectClasses": [
-        "other"
+        "state"
       ],
       "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
+      "externalCapabilities": [
+        "getSetting"
+      ],
+      "successCapabilities": [
+        "getSetting"
+      ],
       "targets": {
         "routes": [],
         "apis": [],
@@ -860214,20 +860254,25 @@
         "apiContracts": [],
         "writeApis": []
       },
-      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error"
+        "error",
+        "timeout",
+        "duplicate-trigger"
       ],
-      "requiredPlatforms": [],
-      "externalGate": null,
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-shout/index.js:87"
+        "staticSource": "pages/play/components/playkit-shout/index.js:170"
       }
     },
     {
-      "id": "pages/play/components/playkit-shout/index.wxml:3:bind:calibratetick:onSample:1",
+      "id": "pages/play/components/playkit-shout/index.wxml:4:bind:calibratetick:onSample:1",
       "route": "component:pages/play/components/playkit-shout/index",
       "hostRoutes": [
         "pages/play/index",
@@ -860306,7 +860351,7 @@
         "tag": "cy-play-stage",
         "event": "bind:calibratetick",
         "handler": "onSample",
-        "line": 3,
+        "line": 4,
         "selectorHint": "#cy-play-stage",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -860347,11 +860392,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-shout/index.js:85"
+        "staticSource": "pages/play/components/playkit-shout/index.js:165"
       }
     },
     {
-      "id": "pages/play/components/playkit-shout/index.wxml:4:bind:run:onRun:3",
+      "id": "pages/play/components/playkit-shout/index.wxml:5:bind:run:onRun:3",
       "route": "component:pages/play/components/playkit-shout/index",
       "hostRoutes": [
         "pages/play/index",
@@ -860430,7 +860475,7 @@
         "tag": "cy-play-stage",
         "event": "bind:run",
         "handler": "onRun",
-        "line": 4,
+        "line": 5,
         "selectorHint": "#cy-play-stage",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -860445,15 +860490,19 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "state",
+      "actionClass": "external",
       "interactionMode": "event-contract",
       "baseActionClass": "state",
       "effectClasses": [
         "state"
       ],
       "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
+      "externalCapabilities": [
+        "getSetting"
+      ],
+      "successCapabilities": [
+        "getSetting"
+      ],
       "targets": {
         "routes": [],
         "apis": [],
@@ -860462,19 +860511,25 @@
         "apiContracts": [],
         "writeApis": []
       },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
-        "success"
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
       ],
-      "requiredPlatforms": [],
-      "externalGate": null,
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-shout/index.js:94"
+        "staticSource": "pages/play/components/playkit-shout/index.js:177"
       }
     },
     {
-      "id": "pages/play/components/playkit-shout/index.wxml:4:bind:verdict:onVerdict:4",
+      "id": "pages/play/components/playkit-shout/index.wxml:5:bind:verdict:onVerdict:4",
       "route": "component:pages/play/components/playkit-shout/index",
       "hostRoutes": [
         "pages/play/index",
@@ -860553,7 +860608,7 @@
         "tag": "cy-play-stage",
         "event": "bind:verdict",
         "handler": "onVerdict",
-        "line": 4,
+        "line": 5,
         "selectorHint": "#cy-play-stage",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -860594,7 +860649,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-shout/index.js:132"
+        "staticSource": "pages/play/components/playkit-shout/index.js:207"
       }
     },
     {
@@ -1096939,15 +1096994,14 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "write",
+      "actionClass": "read",
       "interactionMode": "tap",
-      "baseActionClass": "write",
+      "baseActionClass": "read",
       "effectClasses": [
-        "write",
-        "navigation",
+        "read",
         "state"
       ],
-      "accessBoundary": "owned-resource",
+      "accessBoundary": null,
       "externalCapabilities": [],
       "successCapabilities": [],
       "targets": {
@@ -1096958,13 +1097012,11 @@
           "/api/audit/{param}/detail",
           "/api/config/features",
           "/api/login/code",
-          "/api/official/broadcast/{param}/click",
           "/api/role/info"
         ],
         "primaryApis": [
           "/api/audit/{param}/detail",
-          "/api/config/features",
-          "/api/official/broadcast/{param}/click"
+          "/api/config/features"
         ],
         "auxiliaryApis": [
           "/api/login/code",
@@ -1096990,35 +1097042,26 @@
             "source": "server-controller"
           },
           {
-            "url": "/api/official/broadcast/{param}/click",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
             "url": "/api/role/info",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
           }
         ],
-        "writeApis": [
-          "/api/official/broadcast/{param}/click"
-        ]
+        "writeApis": []
       },
-      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
         "success",
         "error",
         "timeout",
-        "duplicate-trigger",
-        "forbidden-owner"
+        "duplicate-trigger"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:1022"
+        "staticSource": "subpackageB/pages/im/chat/index.js:1037"
       }
     },
     {
@@ -1097049,7 +1097092,7 @@
         "selectorHint": ".card-btn",
         "visibleCondition": null,
         "disabledCondition": null,
-        "ariaLabel": "查看处理结果",
+        "ariaLabel": "查看生成时记录",
         "ariaLabelExpression": null,
         "ariaRole": "button",
         "ariaRoleExpression": null,
@@ -1097060,15 +1097103,14 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "write",
+      "actionClass": "read",
       "interactionMode": "tap",
-      "baseActionClass": "write",
+      "baseActionClass": "read",
       "effectClasses": [
-        "write",
-        "navigation",
+        "read",
         "state"
       ],
-      "accessBoundary": "owned-resource",
+      "accessBoundary": null,
       "externalCapabilities": [],
       "successCapabilities": [],
       "targets": {
@@ -1097079,13 +1097121,11 @@
           "/api/audit/{param}/detail",
           "/api/config/features",
           "/api/login/code",
-          "/api/official/broadcast/{param}/click",
           "/api/role/info"
         ],
         "primaryApis": [
           "/api/audit/{param}/detail",
-          "/api/config/features",
-          "/api/official/broadcast/{param}/click"
+          "/api/config/features"
         ],
         "auxiliaryApis": [
           "/api/login/code",
@@ -1097111,39 +1097151,30 @@
             "source": "server-controller"
           },
           {
-            "url": "/api/official/broadcast/{param}/click",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
             "url": "/api/role/info",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
           }
         ],
-        "writeApis": [
-          "/api/official/broadcast/{param}/click"
-        ]
+        "writeApis": []
       },
-      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
         "success",
         "error",
         "timeout",
-        "duplicate-trigger",
-        "forbidden-owner"
+        "duplicate-trigger"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:1022"
+        "staticSource": "subpackageB/pages/im/chat/index.js:1037"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:122:catchtap:onCardBtn:10",
+      "id": "subpackageB/pages/im/chat/index.wxml:117:catchtap:onCardBtn:10",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1097166,81 +1097197,13 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onCardBtn",
-        "line": 122,
+        "line": 117,
         "selectorHint": ".card-btn",
-        "visibleCondition": null,
+        "visibleCondition": "{{item.currentOriginalUrl}}",
         "disabledCondition": null,
-        "ariaLabel": null,
+        "ariaLabel": "查看当前原单",
         "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "navigation",
-      "interactionMode": "tap",
-      "baseActionClass": "navigation",
-      "effectClasses": [
-        "navigation"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
-      "requiredBranches": [
-        "success",
-        "error"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:1084"
-      }
-    },
-    {
-      "id": "subpackageB/pages/im/chat/index.wxml:125:catchtap:onCardTap:11",
-      "route": "subpackageB/pages/im/chat/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "subpackageB/pages/im/chat/index.wxml",
-        "js": "subpackageB/pages/im/chat/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "catchtap",
-        "handler": "onCardTap",
-        "line": 125,
-        "selectorHint": ".card-btn",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
+        "ariaRole": "button",
         "ariaRoleExpression": null,
         "ariaDisabled": null,
         "ariaDisabledExpression": null,
@@ -1097254,25 +1097217,24 @@
       "baseActionClass": "write",
       "effectClasses": [
         "write",
-        "navigation",
-        "state"
+        "navigation"
       ],
       "accessBoundary": "owned-resource",
       "externalCapabilities": [],
       "successCapabilities": [],
       "targets": {
         "routes": [
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "pages/square/detail/index",
+          "pages/topic/index/index"
         ],
         "apis": [
-          "/api/audit/{param}/detail",
           "/api/config/features",
           "/api/login/code",
           "/api/official/broadcast/{param}/click",
           "/api/role/info"
         ],
         "primaryApis": [
-          "/api/audit/{param}/detail",
           "/api/config/features",
           "/api/official/broadcast/{param}/click"
         ],
@@ -1097281,12 +1097243,6 @@
           "/api/role/info"
         ],
         "apiContracts": [
-          {
-            "url": "/api/audit/{param}/detail",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
           {
             "url": "/api/config/features",
             "method": "POST",
@@ -1097316,7 +1097272,7 @@
           "/api/official/broadcast/{param}/click"
         ]
       },
-      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
       "requiredBranches": [
         "success",
         "error",
@@ -1097328,11 +1097284,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:1022"
+        "staticSource": "subpackageB/pages/im/chat/index.js:1097"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:139:catchtap:onResend:12",
+      "id": "subpackageB/pages/im/chat/index.wxml:131:catchtap:onResend:11",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1097355,7 +1097311,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onResend",
-        "line": 139,
+        "line": 131,
         "selectorHint": ".fail-hit",
         "visibleCondition": "{{item.failed}}",
         "disabledCondition": null,
@@ -1097382,7 +1097338,9 @@
       "successCapabilities": [],
       "targets": {
         "routes": [
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "pages/square/detail/index",
+          "pages/topic/index/index"
         ],
         "apis": [
           "/api/config/features",
@@ -1097453,11 +1097411,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:554"
+        "staticSource": "subpackageB/pages/im/chat/index.js:559"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:157:catchtap:onResend:13",
+      "id": "subpackageB/pages/im/chat/index.wxml:149:catchtap:onResend:12",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1097480,7 +1097438,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onResend",
-        "line": 157,
+        "line": 149,
         "selectorHint": ".fail-hit",
         "visibleCondition": "{{item.failed}}",
         "disabledCondition": null,
@@ -1097507,7 +1097465,9 @@
       "successCapabilities": [],
       "targets": {
         "routes": [
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "pages/square/detail/index",
+          "pages/topic/index/index"
         ],
         "apis": [
           "/api/config/features",
@@ -1097578,11 +1097538,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:554"
+        "staticSource": "subpackageB/pages/im/chat/index.js:559"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:178:bindtap:onPlus:14",
+      "id": "subpackageB/pages/im/chat/index.wxml:170:bindtap:onPlus:13",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1097605,7 +1097565,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onPlus",
-        "line": 178,
+        "line": 170,
         "selectorHint": ".plus",
         "visibleCondition": "{{!disabled}}",
         "disabledCondition": null,
@@ -1097645,11 +1097605,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:654"
+        "staticSource": "subpackageB/pages/im/chat/index.js:659"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:181:bindconfirm:onSend:16",
+      "id": "subpackageB/pages/im/chat/index.wxml:173:bindconfirm:onSend:15",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1097672,7 +1097632,7 @@
         "tag": "input",
         "event": "bindconfirm",
         "handler": "onSend",
-        "line": 181,
+        "line": 173,
         "selectorHint": ".inp",
         "visibleCondition": null,
         "disabledCondition": "{{disabled || loadState !== 'ready'}}",
@@ -1097699,7 +1097659,9 @@
       "successCapabilities": [],
       "targets": {
         "routes": [
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "pages/square/detail/index",
+          "pages/topic/index/index"
         ],
         "apis": [
           "/api/config/features",
@@ -1097762,11 +1097724,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:474"
+        "staticSource": "subpackageB/pages/im/chat/index.js:479"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:181:bindinput:onInput:15",
+      "id": "subpackageB/pages/im/chat/index.wxml:173:bindinput:onInput:14",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1097789,7 +1097751,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onInput",
-        "line": 181,
+        "line": 173,
         "selectorHint": ".inp",
         "visibleCondition": null,
         "disabledCondition": "{{disabled || loadState !== 'ready'}}",
@@ -1097829,11 +1097791,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:472"
+        "staticSource": "subpackageB/pages/im/chat/index.js:477"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:182:bindtap:onSend:17",
+      "id": "subpackageB/pages/im/chat/index.wxml:174:bindtap:onSend:16",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1097856,7 +1097818,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onSend",
-        "line": 182,
+        "line": 174,
         "selectorHint": ".send-hit",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1097883,7 +1097845,9 @@
       "successCapabilities": [],
       "targets": {
         "routes": [
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "pages/square/detail/index",
+          "pages/topic/index/index"
         ],
         "apis": [
           "/api/config/features",
@@ -1097946,11 +1097910,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:474"
+        "staticSource": "subpackageB/pages/im/chat/index.js:479"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:192:bind:close:closeReviewResult:18",
+      "id": "subpackageB/pages/im/chat/index.wxml:184:bind:close:closeReviewResult:17",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1097973,7 +1097937,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "closeReviewResult",
-        "line": 192,
+        "line": 184,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1098013,11 +1097977,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:1044"
+        "staticSource": "subpackageB/pages/im/chat/index.js:1060"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:201:bind:action:retryReviewDetail:19",
+      "id": "subpackageB/pages/im/chat/index.wxml:195:bind:action:retryReviewDetail:18",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1098040,7 +1098004,7 @@
         "tag": "cy-inline-error",
         "event": "bind:action",
         "handler": "retryReviewDetail",
-        "line": 201,
+        "line": 195,
         "selectorHint": "cy-inline-error[bind:action]",
         "visibleCondition": "{{reviewDetail && reviewDetail.state === 'error'}}",
         "disabledCondition": null,
@@ -1098122,11 +1098086,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:1078"
+        "staticSource": "subpackageB/pages/im/chat/index.js:1093"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:210:bind:close:closeRoutePicker:20",
+      "id": "subpackageB/pages/im/chat/index.wxml:204:bind:close:closeRoutePicker:19",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1098149,7 +1098113,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "closeRoutePicker",
-        "line": 210,
+        "line": 204,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1098189,11 +1098153,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:707"
+        "staticSource": "subpackageB/pages/im/chat/index.js:712"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:211:bind:input:onRouteSearch:21",
+      "id": "subpackageB/pages/im/chat/index.wxml:205:bind:input:onRouteSearch:20",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1098216,7 +1098180,7 @@
         "tag": "cy-search",
         "event": "bind:input",
         "handler": "onRouteSearch",
-        "line": 211,
+        "line": 205,
         "selectorHint": "cy-search[bind:input]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1098298,11 +1098262,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:713"
+        "staticSource": "subpackageB/pages/im/chat/index.js:718"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:218:bindtap:onRoutePick:23",
+      "id": "subpackageB/pages/im/chat/index.wxml:212:bindtap:onRoutePick:22",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1098325,7 +1098289,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onRoutePick",
-        "line": 218,
+        "line": 212,
         "selectorHint": ".route-item",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1098352,7 +1098316,9 @@
       "successCapabilities": [],
       "targets": {
         "routes": [
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "pages/square/detail/index",
+          "pages/topic/index/index"
         ],
         "apis": [
           "/api/config/features",
@@ -1098415,11 +1098381,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:765"
+        "staticSource": "subpackageB/pages/im/chat/index.js:770"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:229:bind:cancel:onPlusCancel:25",
+      "id": "subpackageB/pages/im/chat/index.wxml:223:bind:cancel:onPlusCancel:24",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1098442,7 +1098408,7 @@
         "tag": "cy-option-sheet",
         "event": "bind:cancel",
         "handler": "onPlusCancel",
-        "line": 229,
+        "line": 223,
         "selectorHint": "cy-option-sheet[bind:cancel]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1098482,11 +1098448,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:667"
+        "staticSource": "subpackageB/pages/im/chat/index.js:672"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:229:bind:select:onPlusSelect:24",
+      "id": "subpackageB/pages/im/chat/index.wxml:223:bind:select:onPlusSelect:23",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1098516,7 +1098482,7 @@
         "tag": "cy-option-sheet",
         "event": "bind:select",
         "handler": "onPlusSelect",
-        "line": 229,
+        "line": 223,
         "selectorHint": "cy-option-sheet[bind:select]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1098551,7 +1098517,9 @@
       "targets": {
         "routes": [
           "pages/crop/index",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "pages/square/detail/index",
+          "pages/topic/index/index"
         ],
         "apis": [
           "/api/common/uploadOSS",
@@ -1098654,11 +1098622,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:659"
+        "staticSource": "subpackageB/pages/im/chat/index.js:664"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:231:bind:cancel:onMoreCancel:27",
+      "id": "subpackageB/pages/im/chat/index.wxml:225:bind:cancel:onMoreCancel:26",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1098681,7 +1098649,7 @@
         "tag": "cy-option-sheet",
         "event": "bind:cancel",
         "handler": "onMoreCancel",
-        "line": 231,
+        "line": 225,
         "selectorHint": "cy-option-sheet[bind:cancel]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1098721,11 +1098689,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:828"
+        "staticSource": "subpackageB/pages/im/chat/index.js:833"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:231:bind:select:onMoreSelect:26:variant:block",
+      "id": "subpackageB/pages/im/chat/index.wxml:225:bind:select:onMoreSelect:25:variant:block",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1098756,7 +1098724,7 @@
         "tag": "cy-option-sheet",
         "event": "bind:select",
         "handler": "onMoreSelect",
-        "line": 231,
+        "line": 225,
         "selectorHint": "cy-option-sheet[bind:select]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1098783,6 +1098751,8 @@
       "targets": {
         "routes": [
           "pages/privacy/index",
+          "pages/square/detail/index",
+          "pages/topic/index/index",
           "subpackageB/pages/im/list/index"
         ],
         "apis": [
@@ -1098810,11 +1098780,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:799"
+        "staticSource": "subpackageB/pages/im/chat/index.js:804"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:231:bind:select:onMoreSelect:26:variant:clear",
+      "id": "subpackageB/pages/im/chat/index.wxml:225:bind:select:onMoreSelect:25:variant:clear",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1098845,7 +1098815,7 @@
         "tag": "cy-option-sheet",
         "event": "bind:select",
         "handler": "onMoreSelect",
-        "line": 231,
+        "line": 225,
         "selectorHint": "cy-option-sheet[bind:select]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1098885,11 +1098855,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:799"
+        "staticSource": "subpackageB/pages/im/chat/index.js:804"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:231:bind:select:onMoreSelect:26:variant:report",
+      "id": "subpackageB/pages/im/chat/index.wxml:225:bind:select:onMoreSelect:25:variant:report",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1098920,7 +1098890,7 @@
         "tag": "cy-option-sheet",
         "event": "bind:select",
         "handler": "onMoreSelect",
-        "line": 231,
+        "line": 225,
         "selectorHint": "cy-option-sheet[bind:select]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1098979,11 +1098949,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:799"
+        "staticSource": "subpackageB/pages/im/chat/index.js:804"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:231:bind:select:onMoreSelect:26:variant:unblock",
+      "id": "subpackageB/pages/im/chat/index.wxml:225:bind:select:onMoreSelect:25:variant:unblock",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1099036,7 +1099006,7 @@
         "tag": "cy-option-sheet",
         "event": "bind:select",
         "handler": "onMoreSelect",
-        "line": 231,
+        "line": 225,
         "selectorHint": "cy-option-sheet[bind:select]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1099065,6 +1099035,8 @@
       "targets": {
         "routes": [
           "pages/privacy/index",
+          "pages/square/detail/index",
+          "pages/topic/index/index",
           "subpackageB/pages/im/list/index"
         ],
         "apis": [
@@ -1099123,11 +1099095,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:799"
+        "staticSource": "subpackageB/pages/im/chat/index.js:804"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:232:bind:close:onReportClose:28",
+      "id": "subpackageB/pages/im/chat/index.wxml:226:bind:close:onReportClose:27",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1099150,7 +1099122,7 @@
         "tag": "cy-report-sheet",
         "event": "bind:close",
         "handler": "onReportClose",
-        "line": 232,
+        "line": 226,
         "selectorHint": "cy-report-sheet[bind:close]",
         "visibleCondition": "{{!readOnly}}",
         "disabledCondition": null,
@@ -1099190,11 +1099162,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:895"
+        "staticSource": "subpackageB/pages/im/chat/index.js:900"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:234:bind:settled:onPrivacyGateSettled:29",
+      "id": "subpackageB/pages/im/chat/index.wxml:228:bind:settled:onPrivacyGateSettled:28",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1099217,7 +1099189,7 @@
         "tag": "cy-privacy-gate",
         "event": "bind:settled",
         "handler": "onPrivacyGateSettled",
-        "line": 234,
+        "line": 228,
         "selectorHint": "cy-privacy-gate[bind:settled]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1099257,11 +1099229,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:105"
+        "staticSource": "subpackageB/pages/im/chat/index.js:106"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:236:bind:cancel:onDangerCancel:31",
+      "id": "subpackageB/pages/im/chat/index.wxml:230:bind:cancel:onDangerCancel:30",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1099284,7 +1099256,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:cancel",
         "handler": "onDangerCancel",
-        "line": 236,
+        "line": 230,
         "selectorHint": "#dc",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1099325,11 +1099297,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:823"
+        "staticSource": "subpackageB/pages/im/chat/index.js:828"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:236:bind:confirm:onDangerConfirm:30:variant:block",
+      "id": "subpackageB/pages/im/chat/index.wxml:230:bind:confirm:onDangerConfirm:29:variant:block",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1099364,7 +1099336,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:confirm",
         "handler": "onDangerConfirm",
-        "line": 236,
+        "line": 230,
         "selectorHint": "#dc",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1099426,11 +1099398,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:931"
+        "staticSource": "subpackageB/pages/im/chat/index.js:936"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:236:bind:confirm:onDangerConfirm:30:variant:clear",
+      "id": "subpackageB/pages/im/chat/index.wxml:230:bind:confirm:onDangerConfirm:29:variant:clear",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1099465,7 +1099437,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:confirm",
         "handler": "onDangerConfirm",
-        "line": 236,
+        "line": 230,
         "selectorHint": "#dc",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1099527,11 +1099499,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:931"
+        "staticSource": "subpackageB/pages/im/chat/index.js:936"
       }
     },
     {
-      "id": "subpackageB/pages/im/chat/index.wxml:236:bind:done:onDangerCancel:32",
+      "id": "subpackageB/pages/im/chat/index.wxml:230:bind:done:onDangerCancel:31",
       "route": "subpackageB/pages/im/chat/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1099554,7 +1099526,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:done",
         "handler": "onDangerCancel",
-        "line": 236,
+        "line": 230,
         "selectorHint": "#dc",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1099595,7 +1099567,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:823"
+        "staticSource": "subpackageB/pages/im/chat/index.js:828"
       }
     },
     {
@@ -1099706,7 +1099678,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:199"
+        "staticSource": "subpackageB/pages/im/chat/index.js:204"
       }
     },
     {
@@ -1099760,7 +1099732,9 @@
       "successCapabilities": [],
       "targets": {
         "routes": [
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "pages/square/detail/index",
+          "pages/topic/index/index"
         ],
         "apis": [
           "/api/config/features",
@@ -1099823,7 +1099797,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:342"
+        "staticSource": "subpackageB/pages/im/chat/index.js:347"
       }
     },
     {
@@ -1099893,7 +1099867,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:337"
+        "staticSource": "subpackageB/pages/im/chat/index.js:342"
       }
     },
     {
@@ -1099970,7 +1099944,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:1002"
+        "staticSource": "subpackageB/pages/im/chat/index.js:1007"
       }
     },
     {
@@ -1100040,7 +1100014,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:1014"
+        "staticSource": "subpackageB/pages/im/chat/index.js:1019"
       }
     },
     {
@@ -1100118,7 +1100092,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:794"
+        "staticSource": "subpackageB/pages/im/chat/index.js:799"
       }
     },
     {
