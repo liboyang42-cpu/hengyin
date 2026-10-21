@@ -13,6 +13,7 @@ import com.chengyinhub.business.service.impl.ImServiceImpl;
 import com.chengyinhub.business.service.impl.PlayTeamServiceImpl;
 import java.lang.reflect.Field;
 import java.lang.reflect.Proxy;
+import java.time.Clock;
 import java.util.Objects;
 import org.apache.ibatis.mapping.Environment;
 import org.mybatis.spring.SqlSessionTemplate;
@@ -23,20 +24,27 @@ import org.springframework.transaction.annotation.AnnotationTransactionAttribute
 import org.springframework.transaction.interceptor.TransactionInterceptor;
 
 /**
- * Formal handoff assembly. The only input is the session. The transaction manager is created from
- * that session's data source, and every mapper the team and team-group calls use is taken from
- * that same session. Not a Spring bean and not a production switch.
+ * Formal handoff assembly. The only caller input is the session. The transaction manager is created
+ * from that session's data source. {@link RendezvousPairingComposition#formal} then checks that
+ * same data source, session and manager and binds {@code Mode.FORMAL} to {@code ledger::charge}.
+ * Not a Spring bean and not a production switch.
  */
 public final class PlayTeamHandoffDelegate {
     private PlayTeamHandoffDelegate() {}
 
     public static Wiring bind(SqlSessionTemplate session) {
+        return bind(session, Clock.systemUTC());
+    }
+
+    public static Wiring bind(SqlSessionTemplate session, Clock clock) {
         Objects.requireNonNull(session);
         Environment environment = session.getSqlSessionFactory().getConfiguration().getEnvironment();
         if (!(environment.getTransactionFactory() instanceof SpringManagedTransactionFactory)) {
             throw new IllegalArgumentException("W16_TRANSACTION_RESOURCE_MISMATCH");
         }
         DataSourceTransactionManager manager = new DataSourceTransactionManager(environment.getDataSource());
+        RendezvousPairingComposition.Pairing pairing = RendezvousPairingComposition.formal(
+                environment.getDataSource(), session, manager, clock);
         PlayTeamMapper teams = session.getMapper(PlayTeamMapper.class);
         ImServiceImpl imTarget = new ImServiceImpl();
         set(imTarget, "conversationMapper", session.getMapper(ImConversationMapper.class));
@@ -52,7 +60,7 @@ public final class PlayTeamHandoffDelegate {
         set(target, "imService", teamGroupOnly(grouped));
         IPlayTeamService proxied = transactional(target, manager);
         PlayTeamHandoffGateway gateway = PlayTeamHandoffAssembly.guard(new PlayTeamBoundHandoff(proxied), manager);
-        return new Wiring(session, manager, target, proxied, teams, gateway);
+        return new Wiring(session, manager, target, proxied, teams, gateway, pairing);
     }
 
     /** Forwards only team-group creation. Block writes stay on H's service. */
@@ -100,15 +108,18 @@ public final class PlayTeamHandoffDelegate {
         private final IPlayTeamService teams;
         private final PlayTeamMapper teamMapper;
         private final PlayTeamHandoffGateway gateway;
+        private final RendezvousPairingComposition.Pairing pairing;
 
         Wiring(SqlSessionTemplate session, DataSourceTransactionManager manager, PlayTeamServiceImpl service,
-               IPlayTeamService teams, PlayTeamMapper teamMapper, PlayTeamHandoffGateway gateway) {
+               IPlayTeamService teams, PlayTeamMapper teamMapper, PlayTeamHandoffGateway gateway,
+               RendezvousPairingComposition.Pairing pairing) {
             this.session = session;
             this.manager = manager;
             this.service = service;
             this.teams = teams;
             this.teamMapper = teamMapper;
             this.gateway = gateway;
+            this.pairing = pairing;
         }
 
         public DataSourceTransactionManager manager() { return manager; }
@@ -116,6 +127,8 @@ public final class PlayTeamHandoffDelegate {
         public IPlayTeamService teams() { return teams; }
         public PlayTeamMapper teamMapper() { return teamMapper; }
         public PlayTeamHandoffGateway gateway() { return gateway; }
+        /** A's formal consent. Admission is {@code ledger::charge} on this session. */
+        public RendezvousConsentService consentService() { return pairing.consent; }
 
         public MyBatisRendezvousConsentStore consent(MyBatisRendezvousConsentStore.Mode mode) {
             return new MyBatisRendezvousConsentStore(mode, session, manager);

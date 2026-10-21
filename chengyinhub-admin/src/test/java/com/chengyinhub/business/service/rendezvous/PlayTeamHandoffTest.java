@@ -62,7 +62,6 @@ import org.springframework.transaction.annotation.AnnotationTransactionAttribute
 import org.springframework.transaction.interceptor.TransactionAttribute;
 import org.springframework.transaction.interceptor.TransactionInterceptor;
 import org.springframework.transaction.support.TransactionTemplate;
-import static com.chengyinhub.business.service.rendezvous.MyBatisRendezvousConsentStore.Mode.ISOLATED_PERSISTENCE_EVALUATION;
 import static com.chengyinhub.business.service.rendezvous.RendezvousConsentService.Safety;
 import static com.chengyinhub.business.service.rendezvous.RendezvousConsentService.View;
 import static org.junit.jupiter.api.Assertions.*;
@@ -105,6 +104,8 @@ class PlayTeamHandoffTest {
                     root.resolve("chengyinhub-admin/sql/migration_w16_handoff_recovery_candidate.sql"))));
             RendezvousH2Schema.apply(connection, RendezvousH2Schema.protocol(RendezvousH2Schema.read(
                     root.resolve("chengyinhub-admin/sql/migration_w16_play_team_handoff_candidate.sql"))));
+            RendezvousH2Schema.apply(connection, RendezvousH2Schema.protocol(RendezvousH2Schema.read(
+                    root.resolve("chengyinhub-admin/sql/migration_w16_eligibility_contact_candidate.sql"))));
         }
         jdbc.execute("CREATE TABLE play_team (id BIGINT AUTO_INCREMENT PRIMARY KEY, owner_type INT, owner_id BIGINT,"
                 + " leader_member_id BIGINT, invite_code VARCHAR(64), title VARCHAR(60), join_mode INT, max_members INT,"
@@ -157,6 +158,8 @@ class PlayTeamHandoffTest {
         config.getTypeAliasRegistry().registerAlias("CmsTopic", CmsTopic.class);
         load(config, root, "chengyinhub-system/src/main/resources/mapper/business/RendezvousConsentMapper.xml", false);
         load(config, root, "chengyinhub-system/src/main/resources/mapper/business/RendezvousProtocolMapper.xml", false);
+        load(config, root, "chengyinhub-system/src/main/resources/mapper/business/RendezvousEligibilityMapper.xml", false);
+        load(config, root, "chengyinhub-system/src/main/resources/mapper/business/RendezvousContactMapper.xml", false);
         load(config, root, "chengyinhub-system/src/main/resources/mapper/business/RendezvousHandoffMapper.xml", false);
         load(config, root, "chengyinhub-system/src/main/resources/mapper/business/RendezvousMeetingEvidenceMapper.xml", false);
         load(config, root, "chengyinhub-system/src/main/resources/mapper/business/PlayTeamMapper.xml", false);
@@ -167,7 +170,7 @@ class PlayTeamHandoffTest {
         load(config, root, "chengyinhub-system/src/main/resources/mapper/business/CmsActivityMapper.xml", false);
         load(config, root, "chengyinhub-system/src/main/resources/mapper/business/CmsTopicMapper.xml", false);
         session = new SqlSessionTemplate(new SqlSessionFactoryBuilder().build(config));
-        wired = PlayTeamHandoffDelegate.bind(session);
+        wired = PlayTeamHandoffDelegate.bind(session, clock);
         manager = wired.manager();
         target = wired.service();
         service = wired.teams();
@@ -187,9 +190,9 @@ class PlayTeamHandoffTest {
                     throw new IllegalStateException("W16_BLOCK_NOT_OWNED");
                 }));
         gate = new Gate(wired.gateway());
-        MyBatisRendezvousConsentStore consentStore = wired.consent(ISOLATED_PERSISTENCE_EVALUATION);
         MyBatisRendezvousMeetingStore meetingStore = wired.meetings(
                 MyBatisRendezvousMeetingStore.Mode.ISOLATED_PERSISTENCE_EVALUATION);
+        openFormalRows();
         safety = new Safety() {
             public boolean eligible(long actor, String pool, String version, long now) { return true; }
             public boolean blocked(long a, long b) {
@@ -200,7 +203,7 @@ class PlayTeamHandoffTest {
             public boolean compatible(long a, long b, String pool, long now) { return true; }
             public boolean publicMeetingAllowed(String pool, String place, long now) { return "public-place".equals(place); }
         };
-        consent = new RendezvousConsentService(consentStore, safety, clock, RendezvousConsentServiceTest.permitsPairing);
+        consent = wired.consentService();
         meetings = new RendezvousMeetingService(RendezvousMeetingService.Mode.ISOLATED_CONTRACT_EVALUATION, meetingStore, safety,
                 (m, t, a, p, n) -> safetyOpen.get(), new RendezvousHandoffLegacyTeamPort(), clock, 60_000, gate);
         failIm[0] = false;
@@ -486,7 +489,10 @@ class PlayTeamHandoffTest {
         assertEquals(404, missing.getResponse().getStatus());
         assertEquals("NOT_FOUND", json.readTree(missing.getResponse().getContentAsString()).get("errorCode").asText());
 
-        PlayTeamHandoffDelegate.Wiring restarted = PlayTeamHandoffDelegate.bind(session);
+        assertEquals(2, count("w16_contact_event"));
+        assertEquals(10_000L, jdbc.queryForObject("SELECT charged_at FROM w16_contact_event WHERE actor_id=1", Long.class));
+        assertEquals(10_000L, jdbc.queryForObject("SELECT charged_at FROM w16_contact_event WHERE actor_id=2", Long.class));
+        PlayTeamHandoffDelegate.Wiring restarted = PlayTeamHandoffDelegate.bind(session, clock);
         RendezvousMeetingService again = new RendezvousMeetingService(RendezvousMeetingService.Mode.ISOLATED_CONTRACT_EVALUATION,
                 restarted.meetings(MyBatisRendezvousMeetingStore.Mode.ISOLATED_PERSISTENCE_EVALUATION),
                 safety, (m, t, a, p, n) -> safetyOpen.get(), new RendezvousHandoffLegacyTeamPort(), clock, 60_000,
@@ -498,6 +504,7 @@ class PlayTeamHandoffTest {
         assertEquals(1, count("play_team"));
         assertEquals(2, count("play_team_member"));
         assertEquals(1, count("im_conversation"));
+        assertEquals(2, count("w16_contact_event"));
     }
 
     @Test void expiryBeforeDispatchCreatesNothingAndAfterDispatchIsNotRevoked() {
@@ -520,6 +527,22 @@ class PlayTeamHandoffTest {
         assertNull(kept.teamId);
         assertEquals(1, count("play_team"));
         assertNotEquals("REVOKED", kept.blocker);
+    }
+
+    private void openFormalRows() {
+        for (String dimension : new String[]{"eligibility-source", "age", "region", "time-window"}) {
+            jdbc.update("INSERT INTO w16_policy_version(dimension, version_id, decision) VALUES (?, 'v1', 'OPEN')", dimension);
+        }
+        jdbc.update("INSERT INTO w16_policy_version(dimension, version_id, decision, ticket_ttl_millis) VALUES ('ticket-ttl','v1','OPEN',100000)");
+        jdbc.update("INSERT INTO w16_policy_version(dimension, version_id, decision, max_contacts) VALUES ('frequency','pool','OPEN',8)");
+        jdbc.update("INSERT INTO w16_policy_version(dimension, version_id, decision, public_place) VALUES ('meeting-safety','pool','OPEN','public-place')");
+        jdbc.update("INSERT INTO w16_eligibility_current(id, version_id) VALUES (1, 'v1')");
+        jdbc.update("INSERT INTO w16_eligibility_rule(version_id, decision, min_age, max_age, region_code, window_start, window_end) VALUES ('v1','OPEN',18,NULL,'CN-SH',0,1000000000)");
+        for (long actor = 1; actor <= 8; actor++) {
+            jdbc.update("INSERT INTO w16_eligibility_fact(actor_id, rule_version, age_years, region_code, reviewed_at, expires_at) VALUES (?,?,?,?,?,?)",
+                    actor, "v1", 20, "CN-SH", 1, 1_000_000_000L);
+        }
+        jdbc.update("INSERT INTO w16_contact_quota(pool, scope, window_millis, max_contacts, decision) VALUES ('pool','POOL',1000000000,8,'OPEN')");
     }
 
     private String[] ready() { return ready(1, 2); }
