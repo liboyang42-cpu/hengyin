@@ -141,7 +141,7 @@ test('合法原结算单号原样展示，缺失或非法单号不伪造也不�
     assert.equal(club.rows[0].claimNo, String(claimId));
     assert.deepEqual(club.rows, merchant.rows);
   }
-  for (const claimId of badIds) {
+  for (const claimId of badIds.filter(value => value !== '9007199254740992')) {
     const view = ledgerView({ code: 200, data: [{ ...base, claimId }] }, scope);
     assert.ok(view);
     assert.equal(view.rows.length, 1);
@@ -169,4 +169,28 @@ test('负控：恢复旧强转校验，布尔 ID 会再次产出有效一元账�
   const unitScope = { kind: 'club', clubId: 1, topicId: 0 };
   assert.equal(ledgerView(response, unitScope), null);
   assert.equal(sandbox.module.exports.ledgerView(response, unitScope).stats[0].value, '¥1.00');
+});
+
+
+test('原结算单展示接受精确Long字符串，仍拒绝溢出与不安全数字', () => {
+  for (const claimId of ['9007199254740992', '9007199254740993', '9223372036854775807', '009223372036854775807']) {
+    const view = ledgerView({ code: 200, data: [{ ...base, claimId }] }, scope);
+    assert.equal(view.rows[0].claimNo, claimId);
+    assert.equal(view.stats[0].value, '¥0.01');
+  }
+  for (const claimId of ['9223372036854775808', '99999999999999999999', '000', '-1', '1.5',
+    true, [], ['9223372036854775807'], {}, 9007199254740992]) {
+    const view = ledgerView({ code: 200, data: [{ ...base, claimId }] }, scope);
+    assert.equal(view.rows[0].claimNo, '');
+    assert.equal(view.rows.length, 1);
+  }
+});
+
+test('数字0与字符串0的scope均不按主题过滤，正主题仍严格匹配', () => {
+  for (const kind of ['club', 'merchant']) {
+    const s = { ...scope, kind };
+    assert.deepEqual(ledgerView({ code: 200, data: [base] }, { ...s, topicId: '0' }),
+      ledgerView({ code: 200, data: [base] }, { ...s, topicId: 0 }));
+    assert.equal(ledgerView({ code: 200, data: [base] }, { ...s, topicId: 1 }), null);
+  }
 });
