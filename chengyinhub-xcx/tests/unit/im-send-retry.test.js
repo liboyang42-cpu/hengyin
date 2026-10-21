@@ -8,6 +8,8 @@ const file = path.resolve(__dirname, '../../subpackageB/pages/im/chat/index.js')
 function chat() {
   let page;
   const requests = [];
+  const storage = new Map();
+  global.wx = { getStorageSync: key => storage.get(key), setStorageSync: (key, value) => storage.set(key, value), removeStorageSync: key => storage.delete(key) };
   let imageCallback;
   let account = 1;
   const app = { sendRequest: r => requests.push(r), getUserID: () => account,
@@ -25,6 +27,8 @@ test('a retry and an intentional identical new message must have distinguishable
   page.onSend();
   requests[0].fail({ errMsg: 'response lost after commit' });
   page.onResend({ currentTarget: { dataset: { index: 0 } } });
+  assert.equal(requests[requests.length - 1].method, 'POST');
+  requests.pop().success({ code: 200, data: { found: false } });
   const first = JSON.parse(JSON.stringify(requests[0].data));
   const retry = JSON.parse(JSON.stringify(requests[1].data));
   assert.deepEqual(retry, first, 'retry must preserve the original logical send');
@@ -40,6 +44,8 @@ test('retrying a failed bubble must preserve an unrelated current draft', () => 
   requests[0].fail({ errMsg: 'response lost after commit' });
   page.setData({ text: 'next message draft' });
   page.onResend({ currentTarget: { dataset: { index: 0 } } });
+  assert.equal(requests[requests.length - 1].method, 'POST');
+  requests.pop().success({ code: 200, data: { found: false } });
   assert.equal(page.data.text, 'next message draft');
 });
 
@@ -51,6 +57,7 @@ test('image and card retries retain original type and payload, not text messages
     const first = JSON.parse(JSON.stringify(h.requests[0].data));
     h.requests[0].fail({ errMsg: 'lost' });
     h.page.onResend({ currentTarget: { dataset: { index: 0 } } });
+    h.requests.pop().success({ code: 200, data: { found: false } });
     assert.deepEqual(JSON.parse(JSON.stringify(h.requests[1].data)), first);
     assert.equal(first.msg_type, kind === 'image' ? 2 : 3);
   }
@@ -90,6 +97,7 @@ test('refresh keeps a failed unsent message available for retry', () => {
   assert.equal(h.page.data.msgs.length, 1);
   assert.equal(h.page.data.msgs[0].failed, true);
   h.page.onResend({ currentTarget: { dataset: { index: 0 } } });
+    h.requests.pop().success({ code: 200, data: { found: false } });
   const sends = h.requests.filter(r => r.url === '/api/im/send');
   assert.equal(sends.length, 2);
   assert.deepEqual(sends[1].data, sends[0].data);
