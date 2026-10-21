@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.PrivateHomeMapper">
+  <resultMap id="home" type="com.chengyinhub.business.home.PrivateHomeContracts$Home">
+    <id column="owner_id" property="ownerId"/><result column="home_version" property="version"/>
+    <result column="changed_at" property="changedAt"/><result column="effective_at" property="effectiveAt"/>
+    <result column="label" property="label"/><result column="datum" property="datum"/>
+    <result column="status" property="status"/><result column="latitude" property="latitude"/><result column="longitude" property="longitude"/>
+  </resultMap>
+  <resultMap id="mutation" type="com.chengyinhub.business.home.PrivateHomeContracts$Mutation">
+    <id column="owner_id" property="ownerId"/><id column="request_id" property="requestId"/>
+    <result column="expected_version" property="expectedVersion"/><result column="result_version" property="resultVersion"/>
+    <result column="created_at" property="createdAt"/><result column="operation" property="operation"/><result column="decision" property="decision"/>
+  </resultMap>
+  <resultMap id="proof" type="com.chengyinhub.business.home.PrivateHomeContracts$Proof">
+    <id column="proof_id" property="proofId"/><result column="owner_id" property="ownerId"/>
+    <result column="home_version" property="homeVersion"/><result column="auth_epoch" property="epoch"/>
+    <result column="request_id" property="requestId"/><result column="resource_scope" property="scope"/>
+    <result column="scope_revision" property="scopeRevision"/><result column="rule_version" property="ruleVersion"/>
+    <result column="policy_version" property="policyVersion"/><result column="grant_id" property="grantId"/>
+    <result column="grant_fingerprint" property="grantFingerprint"/><result column="resource_type" property="resourceType"/>
+    <result column="action" property="action"/><result column="status" property="status"/>
+    <result column="issued_at" property="issuedAt"/><result column="expires_at" property="expiresAt"/><result column="consumed_at" property="consumedAt"/>
+  </resultMap>
+  <resultMap id="receipt" type="com.chengyinhub.business.home.PrivateHomeContracts$Receipt">
+    <id column="receipt_id" property="receiptId"/><result column="owner_id" property="ownerId"/>
+    <result column="home_version" property="homeVersion"/><result column="request_id" property="requestId"/>
+    <result column="proof_id" property="proofId"/><result column="resource_scope" property="scope"/>
+    <result column="scope_revision" property="scopeRevision"/><result column="rule_version" property="ruleVersion"/>
+    <result column="decision" property="decision"/><result column="created_at" property="createdAt"/>
+    <result column="before_value" property="beforeValue"/><result column="after_value" property="afterValue"/><result column="amount" property="amount"/>
+  </resultMap>
+  <!-- Serializes first creation too. The existing tombstone is never reset by this upsert. -->
+  <insert id="ensureOwner">INSERT INTO player_private_home(owner_id,home_version,status,changed_at,effective_at)
+    VALUES(#{owner},0,'DELETED',0,0) ON DUPLICATE KEY UPDATE owner_id=VALUES(owner_id)</insert>
+  <select id="findHome" resultMap="home">SELECT * FROM player_private_home WHERE owner_id=#{owner}</select>
+  <select id="lockHome" resultMap="home">SELECT * FROM player_private_home WHERE owner_id=#{owner} FOR UPDATE</select>
+  <update id="writeHome">UPDATE player_private_home SET home_version=#{version},label=#{label},latitude=#{latitude},
+    longitude=#{longitude},datum=#{datum},status=#{status},changed_at=#{changedAt},effective_at=#{effectiveAt}
+    WHERE owner_id=#{ownerId} AND home_version=#{version}-1</update>
+  <select id="findMutation" resultMap="mutation">SELECT * FROM player_private_home_mutation WHERE owner_id=#{owner} AND request_id=#{requestId}</select>
+  <insert id="insertMutation">INSERT INTO player_private_home_mutation(owner_id,request_id,operation,expected_version,result_version,decision,created_at)
+    VALUES(#{ownerId},#{requestId},#{operation},#{expectedVersion},#{resultVersion},#{decision},#{createdAt})</insert>
+  <!-- A home change/deletion removes the opaque provider reference as well as invalidating the proof. -->
+  <update id="expireProofs">UPDATE player_private_home_proof SET status='EXPIRED',grant_id=NULL WHERE owner_id=#{owner} AND status='READY' AND expires_at &lt;= #{now}</update>
+  <update id="revokeProofs">UPDATE player_private_home_proof SET status='REVOKED',grant_id=NULL WHERE owner_id=#{owner} AND status='READY'</update>
+  <select id="findProof" resultMap="proof">SELECT * FROM player_private_home_proof WHERE owner_id=#{owner} AND proof_id=#{proofId} FOR UPDATE</select>
+  <select id="findProofRequest" resultMap="proof">SELECT * FROM player_private_home_proof WHERE owner_id=#{owner} AND request_id=#{requestId}</select>
+  <insert id="insertProof">INSERT INTO player_private_home_proof(proof_id,owner_id,home_version,auth_epoch,request_id,resource_scope,
+    scope_revision,rule_version,policy_version,grant_id,grant_fingerprint,resource_type,action,status,issued_at,expires_at)
+    VALUES(#{proofId},#{ownerId},#{homeVersion},#{epoch},#{requestId},#{scope},#{scopeRevision},#{ruleVersion},#{policyVersion},#{grantId},#{grantFingerprint},#{resourceType},#{action},#{status},#{issuedAt},#{expiresAt})</insert>
+  <update id="consumeProof">UPDATE player_private_home_proof SET status='CONSUMED',consumed_at=#{now},grant_id=NULL
+    WHERE owner_id=#{owner} AND proof_id=#{proofId} AND status='READY' AND expires_at &gt; #{now}</update>
+  <select id="findReceipt" resultMap="receipt">SELECT * FROM player_private_home_restore WHERE owner_id=#{owner} AND request_id=#{requestId}</select>
+  <select id="lastRestore" resultType="java.lang.Long">SELECT MAX(created_at) FROM player_private_home_restore WHERE owner_id=#{owner} AND resource_scope=#{scope} AND decision='RESTORED'</select>
+  <insert id="insertReceipt">INSERT INTO player_private_home_restore(receipt_id,owner_id,home_version,request_id,proof_id,resource_scope,
+    scope_revision,rule_version,decision,created_at,before_value,after_value,amount)
+    VALUES(#{receiptId},#{ownerId},#{homeVersion},#{requestId},#{proofId},#{scope},#{scopeRevision},#{ruleVersion},#{decision},#{createdAt},#{beforeValue},#{afterValue},#{amount})</insert>
+  <select id="lastProofIssued" resultType="java.lang.Long">SELECT MAX(issued_at) FROM player_private_home_proof WHERE owner_id=#{owner} AND resource_scope=#{scope}</select>
+  <insert id="insertLocationEvidence">INSERT INTO player_private_home_location_evidence(owner_id,proof_id,expires_at) VALUES(#{owner},#{proofId},#{expiresAt})</insert>
+  <select id="countLocationEvidence" resultType="int">SELECT COUNT(*) FROM player_private_home_location_evidence WHERE owner_id=#{owner} AND proof_id=#{proofId}</select>
+  <delete id="clearLocationEvidence">DELETE FROM player_private_home_location_evidence WHERE owner_id=#{owner}</delete>
+  <delete id="expireLocationEvidence">DELETE FROM player_private_home_location_evidence WHERE owner_id=#{owner} AND expires_at &lt;= #{now}</delete>
+</mapper>
