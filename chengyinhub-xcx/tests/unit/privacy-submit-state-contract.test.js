@@ -69,7 +69,7 @@ test('撤回记录失败保持页面与错误，重试成功后清除错误', as
   page.withdrawRoamLocationConsent()
   await settle()
   assert.equal(page.data.failedAction, 'revoke')
-  assert.match(page.data.submitError, /撤回记录失败/)
+  assert.match(page.data.submitError, /本机.*已停.*撤回记录待确认/)
   assert.equal(sandbox.toasts.length, 0)
 
   shouldFail = false
