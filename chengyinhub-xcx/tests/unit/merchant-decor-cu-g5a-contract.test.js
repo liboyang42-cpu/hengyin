@@ -7,6 +7,7 @@ const fs = require('node:fs')
 const path = require('node:path')
 const vm = require('../helpers/ui-sandbox-vm.js') // node:vm + 沙箱里装真 utils/toast.js
 const { createRequire } = require('node:module')
+const { loadMediaPreview } = require('../helpers/media-preview-sandbox.js')
 
 const ROOT = path.resolve(__dirname, '../..')
 const read = (...p) => fs.readFileSync(path.join(ROOT, ...p), 'utf8')
@@ -50,6 +51,7 @@ function loadPage(relativePath, options = {}) {
     getCurrentPages: () => [{}, {}],
     Page(config) { definition = config },
     require(request) {
+      if (request.endsWith('/media-preview.js')) return loadMediaPreview(wx)
       if (request.endsWith('merchant-theme.js')) {
         return { merchantPageShow() {}, merchantPageRestore() {} }
       }
