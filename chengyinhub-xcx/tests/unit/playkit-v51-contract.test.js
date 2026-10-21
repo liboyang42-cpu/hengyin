@@ -211,10 +211,11 @@ test('弹球超时/本队手动提交都发送本次部分 hits，一次跑动�
   const stage = { wins: 0, _stopAll() {}, win() { this.wins++; }, fail() { throw new Error('共享挑战不可本地判负'); } };
   for (const timed of [true, false]) {
     const events = [];
-    const ball = { ...def.methods, data: { ...def.data, running: true, challenge: { progress: 0, goal: 10, success: false }, sharedChallenge: true },
-      _hits: 6, setData(patch) { Object.assign(this.data, patch); }, selectComponent() { return stage; }, triggerEvent(name, detail) { events.push({ name, detail }); } };
-    if (timed) ball.onVerdict({ detail: { kind: 'fail', timedOut: true } }); else ball.onSubmitHits();
-    ball.onVerdict({ detail: { kind: 'fail' } });
+    const ball = { ...def.methods, data: { ...def.data, show: true, running: true, challenge: { progress: 0, goal: 10, success: false }, sharedChallenge: true },
+      _hits: 6, setData(patch, cb) { Object.assign(this.data, patch); if (cb) cb(); }, selectComponent() { return stage; }, triggerEvent(name, detail) { events.push({ name, detail }); } };
+    ball._attempt = { stage, key: 0, phase: 'running' };
+    if (timed) ball.onVerdict({ currentTarget: { dataset: { stageKey: 0 } }, detail: { kind: 'fail', timedOut: true } }); else ball.onSubmitHits();
+    ball.onVerdict({ currentTarget: { dataset: { stageKey: 0 } }, detail: { kind: 'fail' } });
     assert.deepEqual(events.filter(e => e.name === 'submit').map(e => e.detail.hits), [6]);
     assert.equal(stage.wins, 0); assert.equal(ball.data.awaitingResult, true);
     def.observers.challenge.call(ball, { progress: 6, goal: 10, success: false });
