@@ -152,7 +152,7 @@ test('仅刷新经营读数据不得静默丢弃在途核销回执', () => {
   page.goScanQR();
   const verificationRequest = requests.find((request) => request.url === '/api/registration/scan_qr_code');
   page._reloadAll();
-  verificationRequest.success({ code: 200, msg: '刷新期间核销成功', data: {} });
+  verificationRequest.success({ code: 200, msg: '核销成功' });
 
   assert.equal(page.data.sceneCurrent.id, 'merchant-verification-result');
   assert.equal(page.data.verificationResult.state, 'success');
@@ -164,7 +164,7 @@ test('当前商家当前数据轮次的核销回执仍可正常打开', () => {
 
   page.goScanQR();
   const verificationRequest = requests.find((request) => request.url === '/api/registration/scan_qr_code');
-  verificationRequest.success({ code: 200, msg: '核销成功', data: {} });
+  verificationRequest.success({ code: 200, msg: '核销成功' });
 
   assert.equal(page.data.sceneCurrent.id, 'merchant-verification-result');
   assert.equal(page.data.verificationResult.state, 'success');

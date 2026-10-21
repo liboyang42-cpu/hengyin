@@ -1090,6 +1090,8 @@ Page({
 
   _submitVerification(key, loadingTitle, options, callback) {
     const that = this;
+    const owner = String(app.getUserID && app.getUserID() || '');
+    key = owner + ':' + key;
     const verificationEpoch = this._verificationEpoch || 0;
     const scopeKey = this._merchantScopeKey || '';
     if (!this._verificationWorkflow) this._verificationWorkflow = createWriteActionWorkflow({ deadlineMs: 15000 });
@@ -1101,15 +1103,16 @@ Page({
     const submitted = this._verificationWorkflow.run(key, function (done) {
       return app.sendRequest(Object.assign({}, options, {
         autoErrorToast: false,
-        success(res) { done(classifyVerificationOutcome(res, 'success')); },
-        fail(res, status) { done(classifyVerificationOutcome(res, 'fail', status)); },
+        success(res) { done(classifyVerificationOutcome(res, 'success', undefined, options)); },
+        fail(res, status) { done(classifyVerificationOutcome(res, 'fail', status, options)); },
         successStatusAbnormal(res, status) {
-          done(classifyVerificationOutcome(res, 'abnormal', status));
+          done(classifyVerificationOutcome(res, 'abnormal', status, options));
         }
       }));
     }, function (result) {
       loading.hide();
-      if (verificationEpoch !== (that._verificationEpoch || 0)
+      if (owner !== String(app.getUserID && app.getUserID() || '')
+        || verificationEpoch !== (that._verificationEpoch || 0)
         || scopeKey !== (that._merchantScopeKey || '')) return;
       if (result.status === 'unknown') {
         callback({ code: 202, msg: '核销结果待确认，请勿重复核销；请先查看核销记录' }, result);

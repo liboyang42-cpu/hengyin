@@ -681,6 +681,7 @@ Page({
   },
 
   onLoad(opt) {
+    this._scanDisposed = false; this._scanGeneration = (this._scanGeneration || 0) + 1;
     this._operationScope = opt && opt.scope === 'MERCHANT' ? 'MERCHANT' : '';
     // 纯内部态:wxml 渲染的是派生结果(manageTopics / upcomingTopics / endedTopics /
     // leaderboardSortLabel),从不直接渲染这两个。放 data 里每次 setData 都白白做一次
@@ -785,6 +786,8 @@ Page({
 
   // 页面销毁:作废在途 AI 生成的回调,避免 setData after unload(sendRequest 不可中断)
   onUnload() {
+    this._scanDisposed = true; this._scanGeneration = (this._scanGeneration || 0) + 1;
+    if (this._scanWorkflow) { this._scanWorkflow.destroy(); this._scanWorkflow = null; loading.hide(); }
     this._sceneGuardDestroyed = true;
     this._coopAccessEpoch = (this._coopAccessEpoch || 0) + 1;
     this._clubAiToken = (this._clubAiToken || 0) + 1;
@@ -930,23 +933,28 @@ Page({
    */
   submitClubScan(url, options) {
     const scan = options || {};
-    if (!url) return;
+    if (!url || this._scanDisposed) return;
+    const owner = String(app.getUserID && app.getUserID() || '');
+    const generation = this._scanGeneration || 0;
+    const ownerPage = this;
     if (!this._scanWorkflow) this._scanWorkflow = createWriteActionWorkflow({ deadlineMs: 15000 });
-    const key = url + ':' + (scan.code || '');
+    const key = owner + ':' + url + ':' + (scan.code || '');
     if (this._scanWorkflow.isBusy(key)) { cyToast('核销处理中，请勿重复提交'); return; }
     loading.show(scan.loadingTitle);
     this._scanWorkflow.run(key, function (done) {
       return app.sendRequest(Object.assign({}, {
         url: url, data: scan.data, method: 'POST', header: jsonHeader(),
         autoErrorToast: false,
-        success(res) { done(classifyVerificationOutcome(res, 'success')); },
-        fail(res, status) { done(classifyVerificationOutcome(res, 'fail', status)); },
+        success(res) { done(classifyVerificationOutcome(res, 'success', undefined, { url: url, data: scan.data })); },
+        fail(res, status) { done(classifyVerificationOutcome(res, 'fail', status, { url: url, data: scan.data })); },
         successStatusAbnormal(res, status) {
-          done(classifyVerificationOutcome(res, 'abnormal', status));
+          done(classifyVerificationOutcome(res, 'abnormal', status, { url: url, data: scan.data }));
         },
       }));
     }, function (result) {
       loading.hide();
+      if (ownerPage._scanDisposed || generation !== (ownerPage._scanGeneration || 0)
+          || owner !== String(app.getUserID && app.getUserID() || '')) return;
       // 结果未知 = 服务端可能已经写入。提示重试等于把「未知」变成重复核销。
       if (result.status === 'unknown') { cyToast('核销结果待确认，请勿重复核销'); return; }
       const res = result.response || {};

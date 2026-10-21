@@ -498,6 +498,7 @@ Component({
 
   lifetimes: {
     attached: function () {
+      this._verificationGeneration = (this._verificationGeneration || 0) + 1;
       this._profileAttached = true;
       this._profileHidden = false;
       this._syncProfileReducedMotion();
@@ -505,12 +506,13 @@ Component({
       this._syncCommunityProfile();
     },
     detached: function () {
+      this._verificationGeneration = (this._verificationGeneration || 0) + 1;
       this._profileAttached = false;
       this._profileReadEpoch = (this._profileReadEpoch || 0) + 1;
       this._coopAccessEpoch = (this._coopAccessEpoch || 0) + 1;
       this._following = false;
       this._followEpoch = (this._followEpoch || 0) + 1;
-      if (this._verificationWorkflow) this._verificationWorkflow.destroy();
+      if (this._verificationWorkflow) { this._verificationWorkflow.destroy(); this._verificationWorkflow = null; cyLoading.hide(); }
     }
   },
 
@@ -648,6 +650,10 @@ Component({
 
     _submitVerification: function (key, loadingTitle, options, callback) {
       var that = this;
+      const owner = String(app.getUserID && app.getUserID() || '');
+      const generation = this._verificationGeneration || 0;
+      if (this._profileAttached === false) return false;
+      key = owner + ':' + key;
       if (!this._verificationWorkflow) this._verificationWorkflow = createWriteActionWorkflow({ deadlineMs: 15000 });
       if (this._verificationWorkflow.isBusy(key)) {
         cyToast('核销处理中，请勿重复提交');
@@ -657,14 +663,16 @@ Component({
       var submitted = this._verificationWorkflow.run(key, function (done) {
         return app.sendRequest(Object.assign({}, options, {
           autoErrorToast: false,
-          success: function (res) { done(classifyVerificationOutcome(res, 'success')); },
-          fail: function (res, status) { done(classifyVerificationOutcome(res, 'fail', status)); },
+          success: function (res) { done(classifyVerificationOutcome(res, 'success', undefined, options)); },
+          fail: function (res, status) { done(classifyVerificationOutcome(res, 'fail', status, options)); },
           successStatusAbnormal: function (res, status) {
-            done(classifyVerificationOutcome(res, 'abnormal', status));
+            done(classifyVerificationOutcome(res, 'abnormal', status, options));
           }
         }));
       }, function (result) {
         cyLoading.hide();
+        if (that._profileAttached === false || generation !== (that._verificationGeneration || 0)
+            || owner !== String(app.getUserID && app.getUserID() || '')) return;
         if (result.status === 'unknown') {
           callback({ code: 202, msg: '核销结果待确认，请勿重复核销；请先查看核销记录' });
           offerVerificationReadback(key, that._verificationWorkflow);

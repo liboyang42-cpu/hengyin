@@ -67,7 +67,7 @@ Component({
     detached() {
       this._invalidateParticipationCancellation();
       this._cancelDisposed = true;
-      this._detailDisposed = true; this._detailGeneration = (this._detailGeneration || 0) + 1; if (this._verificationWorkflow) this._verificationWorkflow.destroy();
+      this._detailDisposed = true; this._detailGeneration = (this._detailGeneration || 0) + 1; if (this._verificationWorkflow) { this._verificationWorkflow.destroy(); this._verificationWorkflow = null; cyLoading.hide(); }
     },
   },
   // ⚠️ 深链壳(subpackageMember/mycanyuinfo)的 id 是页面 onLoad 里 setData 进去的:组件 attached
@@ -101,6 +101,10 @@ Component({
     },
     _submitVerification(key, loadingTitle, options, callback) {
       const that = this;
+      const owner = String(app.getUserID && app.getUserID() || '');
+      const generation = this._detailGeneration || 0;
+      if (this._detailDisposed) return false;
+      key = owner + ':' + key;
       if (!this._verificationWorkflow) this._verificationWorkflow = createWriteActionWorkflow({ deadlineMs: 15000 });
       if (this._verificationWorkflow.isBusy(key)) {
         cyToast('核销处理中，请勿重复提交');
@@ -110,14 +114,16 @@ Component({
       const submitted = this._verificationWorkflow.run(key, function (done) {
         return app.sendRequest(Object.assign({}, options, {
           autoErrorToast: false,
-          success(r) { done(classifyVerificationOutcome(r, 'success')); },
-          fail(res, status) { done(classifyVerificationOutcome(res, 'fail', status)); },
+          success(r) { done(classifyVerificationOutcome(r, 'success', undefined, options)); },
+          fail(res, status) { done(classifyVerificationOutcome(res, 'fail', status, options)); },
           successStatusAbnormal(res, status) {
-            done(classifyVerificationOutcome(res, 'abnormal', status));
+            done(classifyVerificationOutcome(res, 'abnormal', status, options));
           }
         }));
       }, function (result) {
         cyLoading.hide();
+        if (that._detailDisposed || generation !== (that._detailGeneration || 0)
+            || owner !== String(app.getUserID && app.getUserID() || '')) return;
         if (result.status === 'unknown') {
           callback({ code: 202, msg: '核销结果待确认，请勿重复核销；请先查看核销记录' });
           offerVerificationReadback(key, that._verificationWorkflow);
