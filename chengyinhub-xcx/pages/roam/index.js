@@ -1704,9 +1704,13 @@ Page({
       this.setData({ revealWriteUnknown: false, recoveryError: '', roamSessionReady: !!this._roamSid, 'finish.settleErr': '' });
       if (!this._saveRoamRecovery()) return false;
       return this._flushReveal().then(ok => ok && this._finishRequested ? this._postRoamFinish(this._lastDistanceM || 0) : ok);
+    }).catch(() => {
+      if (generation !== this._roamWriteGeneration || !this._recoveryOwnerCurrent()) return false;
+      return this._recoveryFailure('漫游状态暂时无法核对，请稍后重试；原会话记录仍保留');
     });
     this._recoveryPromise = pending;
-    pending.then(() => { if (this._recoveryPromise === pending) this._recoveryPromise = null; });
+    const release = () => { if (this._recoveryPromise === pending) this._recoveryPromise = null; };
+    pending.then(release, release);
     return pending;
   },
 
@@ -1996,8 +2000,12 @@ Page({
       return this._recoveryFailure('结算事实暂时无法读取，请重新核对');
     this._finishedAt = result.finishedAt || this._finishedAt || 0;
     const statuses = Array.isArray(badgeDelivery) ? badgeDelivery : result.badgeDelivery;
-    const delivered = code => Array.isArray(statuses) && statuses.some(row => row.badgeCode === code && row.state === 'DELIVERED');
-    const medal = result.medal && (Array.isArray(statuses) && statuses.some(row => /^ROAM_TILES_/.test(row.badgeCode) && row.state === 'DELIVERED')) ? result.medal : '';
+    const delivered = (code, sourceId) => Array.isArray(statuses) && statuses.some(row => row && typeof row === 'object'
+      && row.badgeCode === code && row.state === 'DELIVERED'
+      && (sourceId == null || row.sourceId == null || String(row.sourceId) === sourceId));
+    // ApiRoamController freezes this exact name/code pair; another tier is not its receipt.
+    const milestone = typeof result.medal === 'string' && result.medal.match(/^城市点亮 ([1-9]\d*) 格$/);
+    const medal = milestone && delivered('ROAM_TILES_' + milestone[1], milestone[1]) ? result.medal : '';
     const shopMedal = result.shopMedal && delivered(result.shopMedal.code) ? result.shopMedal : null;
     this.setData({ screen: 'arrive', 'finish.xpAwarded': result.totalXp, 'finish.medal': medal,
       'finish.shopMedal': shopMedal, 'finish.routeStory': result.routeStory || '',

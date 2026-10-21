@@ -175,7 +175,7 @@ test('finish已提交但timeout，冷重进只回读原结果，不重复奖励�
     if (o.url !== '/api/roam/finish') return original(o)
     calls.push({ url: o.url, data: o.data })
     const key = Object.keys(sessions)[0]
-    sessions[key] = { ...sessions[key], state: 'FINISHED', resultComplete: true, badgeDelivery: [{ badgeCode: 'ROAM_TILES_50', state: 'DELIVERED' }], result: { totalXp: 7, medal: '原结算徽章' } }
+    sessions[key] = { ...sessions[key], state: 'FINISHED', resultComplete: true, badgeDelivery: [{ badgeCode: 'ROAM_TILES_50', state: 'DELIVERED' }], result: { totalXp: 7, medal: '城市点亮 50 格' } }
     o.fail({ errMsg: 'request:fail timeout' })
   }
   const first = mount(); first._pendingTiles = ['wtw3sjq']; first._pois = []; first._dist = 10
@@ -183,7 +183,7 @@ test('finish已提交但timeout，冷重进只回读原结果，不重复奖励�
   assert.equal(first.data.finish.settleErr, 'unknown')
   const second = mount(); await settle()
   assert.equal(second.data.finish.xpAwarded, 7)
-  assert.equal(second.data.finish.medal, '原结算徽章')
+  assert.equal(second.data.finish.medal, '城市点亮 50 格')
   assert.equal(calls.filter(c => c.url === '/api/roam/finish').length, 1)
 })
 
@@ -600,12 +600,12 @@ test('C3旧记录缺采集时间不伪造时间，保原pending供核对', async
 
 test('M0116已成功结算的待交付徽章不伪报到手，独立回读DELIVERED后显示原徽章', () => {
   const page = mount(); page._roamSid = SID
-  const result = { totalXp: 7, medal: '原50格徽章', shopMedal: { code: 'ROAM_SHOP_STREAK', name: '原三店徽章' },
+  const result = { totalXp: 7, medal: '城市点亮 50 格', shopMedal: { code: 'ROAM_SHOP_STREAK', name: '原三店徽章' },
     badgeDelivery: [{ badgeCode: 'ROAM_TILES_50', state: 'DUE' }, { badgeCode: 'ROAM_SHOP_STREAK', state: 'DUE' }] }
   assert.equal(page._applyRoamFinishResult(result, true), true)
   assert.equal(page.data.finish.xpAwarded, 7); assert.equal(page.data.finish.medal, ''); assert.equal(page.data.finish.shopMedal, null)
   assert.equal(page._applyRoamFinishResult(result, true, result.badgeDelivery.map(r => ({ ...r, state: 'DELIVERED' }))), true)
-  assert.equal(page.data.finish.medal, '原50格徽章'); assert.equal(page.data.finish.shopMedal.name, '原三店徽章')
+  assert.equal(page.data.finish.medal, '城市点亮 50 格'); assert.equal(page.data.finish.shopMedal.name, '原三店徽章')
   assert.equal(calls.filter(c => c.url === '/api/roam/finish').length, 0)
 })
 
@@ -675,7 +675,7 @@ for (const hasTime of [true, false]) test(`C3过期行程有pending且采集时�
     calls.push({ url: o.url, data: o.data })
     if (o.url !== '/api/roam/session') { o.fail({}); return }
     o.success({ code: 200, data: { state: 'FINISHED', sessionId: SID, clientSessionKey: page._clientSessionKey,
-      locationExpired: true, finishedAt: 1234, resultComplete: true, result: { totalXp: 7, medal: '原徽章' },
+      locationExpired: true, finishedAt: 1234, resultComplete: true, result: { totalXp: 7, medal: '城市点亮 50 格' },
       badgeDelivery: [{ badgeCode: 'ROAM_TILES_50', state }] } })
   }
   assert.equal(await page.recoverRoam(), true)
@@ -685,7 +685,7 @@ for (const hasTime of [true, false]) test(`C3过期行程有pending且采集时�
   assert.equal(values['roam_memory_v1:9:sessions'][0].locationExpired, true)
   assert.equal(page.data.finish.medal, '')
   state = 'DELIVERED'; assert.equal(await page.recoverRoam(), true)
-  assert.equal(page.data.finish.medal, '原徽章')
+  assert.equal(page.data.finish.medal, '城市点亮 50 格')
   assert.equal(calls.filter(c => c.url !== '/api/roam/session').length, 0)
 })
 
@@ -708,4 +708,38 @@ for (const kind of ['reveal', 'archive']) test(`C3${kind}确认只保留pending�
   assert.equal(await pending, true)
   assert.deepEqual(page._pendingCollectedAt, {})
   assert.deepEqual(values['roam_memory_v1:9:recovery'].collectedAt, {})
+})
+
+test('M0116低档DELIVERED不证明200格徽章已得，原200档回执确认后才显示', () => {
+  const page = mount(); page._roamSid = SID
+  const result = { totalXp: 7, medal: '城市点亮 200 格' }
+  const rows = [{ badgeCode: 'ROAM_TILES_50', sourceId: 50, state: 'DELIVERED' }, { badgeCode: 'ROAM_TILES_200', sourceId: 200, state: 'DUE' }]
+  assert.equal(page._applyRoamFinishResult(result, true, rows), true)
+  assert.equal(page.data.finish.medal, '')
+  assert.equal(values['roam_memory_v1:9:recovery'].sessionId, SID)
+  rows[1].state = 'DELIVERED'
+  assert.equal(page._applyRoamFinishResult(result, true, rows), true)
+  assert.equal(page.data.finish.medal, result.medal)
+})
+
+test('M0116空交付收据安全保原SID，查询promise释放后可以重试', async () => {
+  const page = mount(); page._roamSid = SID; page._clientSessionKey = '1'.repeat(32); page._saveRoamRecovery()
+  let rows = [null]
+  app.sendRequest = o => o.success({ code: 200, data: { state: 'FINISHED', sessionId: SID,
+    clientSessionKey: page._clientSessionKey, resultComplete: true, result: { totalXp: 7, medal: '城市点亮 200 格' }, badgeDelivery: rows } })
+  assert.equal(await page.recoverRoam(), true); await settle()
+  assert.equal(page._recoveryPromise, null); assert.equal(page.data.finish.medal, '')
+  assert.equal(values['roam_memory_v1:9:recovery'].sessionId, SID)
+  rows = [{ badgeCode: 'ROAM_TILES_200', state: 'DELIVERED' }]
+  assert.equal(await page.recoverRoam(), true); assert.equal(page.data.finish.medal, '城市点亮 200 格')
+})
+
+test('M0116恢复处理异常也释放本轮promise，保留SID重查', async () => {
+  const page = mount(); page._roamSid = SID; page._clientSessionKey = '1'.repeat(32); page._saveRoamRecovery()
+  app.sendRequest = o => o.success({ code: 200, data: { state: 'FINISHED', sessionId: SID,
+    clientSessionKey: page._clientSessionKey, resultComplete: true, result: { totalXp: 7 } } })
+  const apply = page._applyRoamFinishResult; page._applyRoamFinishResult = () => { throw new Error('read failure') }
+  assert.equal(await page.recoverRoam(), false); await settle(); assert.equal(page._recoveryPromise, null)
+  assert.equal(values['roam_memory_v1:9:recovery'].sessionId, SID)
+  page._applyRoamFinishResult = apply; assert.equal(await page.recoverRoam(), true)
 })
