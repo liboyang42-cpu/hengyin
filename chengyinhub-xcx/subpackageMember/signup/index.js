@@ -170,7 +170,7 @@ Page({
       this.setData({ focusState: 'missing', focusError: '未定位到原报名凭证，请返回参与记录确认或重试', currentTeam: null });
     };
     app.sendRequest({
-      url: '/api/registration/info', method: 'POST', hideLoading: true, silentError: true,
+      url: '/api/registration/info', method: 'POST', hideLoading: true,
       data: { id: this._focusId },
       success: res => {
         if (!current()) return;
