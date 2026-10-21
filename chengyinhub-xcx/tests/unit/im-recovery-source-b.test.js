@@ -191,15 +191,28 @@ test('receipt failures release only their own flight and allow a fresh click', (
   for (const kind of ['fail', 'successStatusAbnormal', 'business', 'malformed']) {
     const h = harness(); h.page.onSend(); h.requests[0].fail({});
     const click = () => h.page.onResend({ currentTarget: { dataset: { index: 0 } } });
-    click(); const read = h.requests[1];
+    click(); const read = h.requests[1]; const tipsBefore = h.tips.length;
     if (kind === 'business') read.success({ code: 500, data: { found: false } });
     else if (kind === 'malformed') read.success({ code: 200, data: {} });
     else read[kind]({});
+    assert.equal(h.tips.length, tipsBefore + 1, kind + ' must explain an unconfirmed manual retry');
+    read.fail({});
+    assert.equal(h.tips.length, tipsBefore + 1, 'duplicate callback must not repeat feedback');
     click();
     assert.equal(h.requests.filter(r => r.url === '/api/im/send-receipt').length, 2, kind);
     assert.equal(h.requests.filter(r => r.url === '/api/im/send').length, 1, kind);
     assert.equal(h.page.data.msgs[0].failed, true);
   }
+});
+
+test('background receipt failures and stale manual retries do not toast into the current page', () => {
+  const h = harness(); h.page.onSend(); h.requests[0].fail({});
+  const before = h.tips.length;
+  h.page.recoverPending(); h.requests[1].fail({});
+  assert.equal(h.tips.length, before);
+  h.page.onResend({ currentTarget: { dataset: { index: 0 } } });
+  h.credential('new-session'); h.requests[2].fail({});
+  assert.equal(h.tips.length, before);
 });
 
 test('receipt single-flight is per original identity and does not block independent messages', () => {
