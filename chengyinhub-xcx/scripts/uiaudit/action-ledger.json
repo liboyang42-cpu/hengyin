@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
-  "controlCount": 4937,
+  "controlCount": 4938,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -1139509,7 +1139509,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageP3/components/xr-badge/index.js:241"
+        "staticSource": "subpackageP3/components/xr-badge/index.js:256"
       }
     },
     {
@@ -1139589,7 +1139589,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageP3/components/xr-badge/index.js:241"
+        "staticSource": "subpackageP3/components/xr-badge/index.js:256"
       }
     },
     {
@@ -1139669,7 +1139669,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageP3/components/xr-badge/index.js:235"
+        "staticSource": "subpackageP3/components/xr-badge/index.js:250"
       }
     },
     {
@@ -1139749,11 +1139749,78 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageP3/components/xr-badge/index.js:234"
+        "staticSource": "subpackageP3/components/xr-badge/index.js:249"
       }
     },
     {
-      "id": "subpackageP3/pages/badge-3d/index.wxml:17:bind:loaded:onLoaded:2",
+      "id": "subpackageP3/pages/badge-3d/index.wxml:13:binderror:onFallbackError:1",
+      "route": "subpackageP3/pages/badge-3d/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageP3/pages/badge-3d/index.wxml",
+        "js": "subpackageP3/pages/badge-3d/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "image",
+        "event": "binderror",
+        "handler": "onFallbackError",
+        "line": 13,
+        "selectorHint": ".b3__fallback",
+        "visibleCondition": "{{renderState !== 'ready'}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "{{name}}，{{sub}}，静态预览",
+        "ariaRole": "img",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageP3/pages/badge-3d/index.js:113"
+      }
+    },
+    {
+      "id": "subpackageP3/pages/badge-3d/index.wxml:17:bind:loaded:onLoaded:3",
       "route": "subpackageP3/pages/badge-3d/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1139778,7 +1139845,7 @@
         "handler": "onLoaded",
         "line": 17,
         "selectorHint": "#xr",
-        "visibleCondition": "{{!unsupported}}",
+        "visibleCondition": "{{rendererMounted && !unsupported}}",
         "disabledCondition": null,
         "ariaLabel": null,
         "ariaLabelExpression": null,
@@ -1139816,11 +1139883,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageP3/pages/badge-3d/index.js:64"
+        "staticSource": "subpackageP3/pages/badge-3d/index.js:96"
       }
     },
     {
-      "id": "subpackageP3/pages/badge-3d/index.wxml:17:bind:unsupported:onUnsupported:1",
+      "id": "subpackageP3/pages/badge-3d/index.wxml:17:bind:unsupported:onUnsupported:2",
       "route": "subpackageP3/pages/badge-3d/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1139845,7 +1139912,7 @@
         "handler": "onUnsupported",
         "line": 17,
         "selectorHint": "#xr",
-        "visibleCondition": "{{!unsupported}}",
+        "visibleCondition": "{{rendererMounted && !unsupported}}",
         "disabledCondition": null,
         "ariaLabel": null,
         "ariaLabelExpression": null,
@@ -1139883,11 +1139950,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageP3/pages/badge-3d/index.js:69"
+        "staticSource": "subpackageP3/pages/badge-3d/index.js:102"
       }
     },
     {
-      "id": "subpackageP3/pages/badge-3d/index.wxml:17:bind:xready:onXrReady:3",
+      "id": "subpackageP3/pages/badge-3d/index.wxml:17:bind:xready:onXrReady:4",
       "route": "subpackageP3/pages/badge-3d/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1139912,7 +1139979,7 @@
         "handler": "onXrReady",
         "line": 17,
         "selectorHint": "#xr",
-        "visibleCondition": "{{!unsupported}}",
+        "visibleCondition": "{{rendererMounted && !unsupported}}",
         "disabledCondition": null,
         "ariaLabel": null,
         "ariaLabelExpression": null,
@@ -1139951,7 +1140018,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageP3/pages/badge-3d/index.js:63"
+        "staticSource": "subpackageP3/pages/badge-3d/index.js:92"
       }
     },
     {
@@ -1140021,7 +1140088,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageP3/pages/badge-3d/index.js:138"
+        "staticSource": "subpackageP3/pages/badge-3d/index.js:222"
       }
     },
     {
