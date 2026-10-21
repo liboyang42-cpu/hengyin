@@ -3,7 +3,10 @@ const STATUS = {
   REFUND_DUE: '待退回', REFUNDED: '已退回',
 };
 
-function positiveId(value) { return Number.isSafeInteger(Number(value)) && Number(value) > 0; }
+function positiveId(value) {
+  if (typeof value !== 'number' && (typeof value !== 'string' || !/^\d+$/.test(value))) return false;
+  return Number.isSafeInteger(Number(value)) && Number(value) > 0;
+}
 function cents(value) {
   if (value === null || value === undefined || !/^\d+(\.\d{1,2})?$/.test(String(value))) return null;
   const amount = Math.round(Number(value) * 100);
@@ -13,6 +16,9 @@ function amountText(value) { return '¥' + (value / 100).toFixed(2); }
 
 function ledgerView(response, scope) {
   if (!response || ![200, '200'].includes(response.code) || !Array.isArray(response.data)) return null;
+  if (!scope || !['club', 'merchant'].includes(scope.kind)
+      || (scope.kind === 'club' && !positiveId(scope.clubId))
+      || (scope.topicId != null && scope.topicId !== 0 && scope.topicId !== '0' && !positiveId(scope.topicId))) return null;
   const seen = new Set();
   const totals = { OPEN: 0, SETTLED: 0, REFUND_DUE: 0 };
   let activeCount = 0;
@@ -31,6 +37,7 @@ function ledgerView(response, scope) {
       if (!Number.isSafeInteger(totals[row.status])) return null;
     }
     rows.push({ id: row.id, redemptionId: row.redemptionId, amountText: amountText(amount),
+      claimNo: positiveId(row.claimId) ? String(row.claimId) : '',
       statusText: STATUS[row.status], status: row.status,
       timeText: typeof row.createTime === 'string' ? row.createTime.slice(0, 16).replace('T', ' ') : '',
       voucher: row.status === 'SETTLED' || row.status === 'REFUND_DUE'
