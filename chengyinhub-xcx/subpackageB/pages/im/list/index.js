@@ -4,7 +4,7 @@ const { isRecordList, isBizOk } = require('../../../../utils/response-shape.js')
 const { decodeDisplayText } = require('../../../../utils/display-text.js');
 const { normalizeMerchantAccess } = require('../../../../utils/merchant-access-policy.js');
 const { isLoginRequired, retryLogin } = require('../../../../utils/session/login-reload.js');
-const { reportNoticeRows, reportDetailUrl, makeReadRequestId } = require('./report-notices.js');
+const { decorate: decorateInvites } = require('../../../../utils/coop-invite-view.js');
 const app = getApp();
 
 Page({
@@ -20,15 +20,15 @@ Page({
     loginRequired: false,   // PR10 F-W1-12:读失败是未登录 ⇒ 登录引导
     refreshing: false,
     list: [],
-    activeTab: 'dm',
+    activeTab: 'in',   // 收件箱 = 全部会话 + 收到的邀请;发件箱 = 我发出的邀请
     // 竞猜待答入口:只给能结算竞猜的人看 —— 玩家看见它只会点进去撞一堵权限墙
     canSettlePredict: false,
     tabs: [],
     viewList: [],
-    hasUnread: false,
-    // 系统 tab「举报进度」:社区治理通知里的举报进度(见 report-notices.js),点进举报详情
-    reportNotices: [],
-    reportNoticeError: '',
+    // 合作邀请(/api/coop/list):收到的进收件箱,我发出的进发件箱;读不到只局部提示,不影响会话列表
+    invitesIn: [],
+    invitesOut: [],
+    inviteError: '',
   },
 
   onLoad() {
@@ -44,14 +44,14 @@ Page({
     // 左滑面板总宽 = 3 × 120rpx = 360rpx;rpx→px 换算随屏宽变,不能写死 px(P1-1:大屏机型上曾被写死值压掉)
     this._openPx = Math.round(360 * ((sys.windowWidth || 375) / 750));
     this.loadConversations();
-    this.loadReportNotices();
+    this.loadInvites();
   },
   onShow() {
     this._navigating = false; // 从聊天页返回时刷新未读/最后一条;兜底清跳转中标记
     this._syncCommunityEntry();
     if (this.data.loaded) {
       this.loadConversations(true);
-      this.loadReportNotices();
+      this.loadInvites();
     }
     this.loadMerchantEntry();
   },
@@ -69,7 +69,7 @@ Page({
     const preserveConfirmed = !!silent && this.data.loaded && !identityChanged;
     this._conversationMemberId = memberId;
     if (identityChanged) {
-      this.setData({ list: [], viewList: [], loaded: false, hasUnread: false, canSettlePredict: false });
+      this.setData({ list: [], viewList: [], loaded: false, invitesIn: [], invitesOut: [], canSettlePredict: false });
       this._pendingDelete = null;
       const dc = this.selectComponent && this.selectComponent('#dc');
       if (dc) dc.close();
@@ -143,40 +143,49 @@ Page({
     retryLogin(this, app, function () { if (!this._disposed) this.loadConversations(false); });
   },
 
-  // 举报进度通知独立于 IM 会话:读不到只在系统 tab 显示局部错误,不影响会话列表。
-  loadReportNotices() {
+  // 合作邀请与 IM 会话是两套数据源:读不到只在列表上方局部报错,不影响会话。
+  // 普通玩家返回两份空数组,收发件箱里就只有会话。
+  loadInvites() {
     const that = this;
-    const epoch = (this._reportNoticeEpoch || 0) + 1;
-    this._reportNoticeEpoch = epoch;
+    const epoch = (this._inviteEpoch || 0) + 1;
+    this._inviteEpoch = epoch;
     app.sendRequest({
-      url: '/api/v1/community/notifications',
-      method: 'GET',
-      data: { limit: 50 },
+      url: '/api/coop/list',
+      method: 'POST',
+      data: JSON.stringify({}),
+      header: { 'Content-Type': 'application/json' },
       hideLoading: true,
       silentError: true,
       success(res) {
-        if (epoch !== that._reportNoticeEpoch) return;
-        const rows = isBizOk(res) && res.data ? reportNoticeRows(res.data.items) : null;
-        if (!rows) { that.setData({ reportNoticeError: '举报进度暂时没读到' }); return; }
-        that.setData({
-          reportNotices: rows.map(function (row) { return Object.assign({}, row, { timeText: that.fmtTime(row.createTime) }); }),
-          reportNoticeError: '',
-        });
+        if (epoch !== that._inviteEpoch) return;
+        const d = res && res.code == 200 ? res.data : null;
+        if (!d || !isRecordList(d.received) || !isRecordList(d.sent)) {
+          that.setData({ invitesIn: [], invitesOut: [], inviteError: (res && res.msg) || '邀请暂时没读到' });
+          return;
+        }
+        const shape = function (rows) {
+          return decorateInvites(rows, d.slots).filter(function (it) { return it.inviteId; });
+        };
+        that.setData({ invitesIn: shape(d.received), invitesOut: shape(d.sent), inviteError: '' });
+        that.refreshView();
       },
       fail() {
-        if (epoch !== that._reportNoticeEpoch) return;
-        that.setData({ reportNoticeError: '举报进度暂时没读到' });
+        if (epoch !== that._inviteEpoch) return;
+        that.setData({ inviteError: '邀请暂时没读到' });
       },
     });
   },
 
-  openReportNotice(e) {
-    const url = reportDetailUrl(e && e.currentTarget && e.currentTarget.dataset.reportId); if (!url || this._navigating) return; // 跳转中不响应连点
-    this._navigating = true; wx.navigateTo({ url: url, complete: () => { this._navigating = false; } }); this.markReportNoticeRead(e.currentTarget.dataset);
+  openInvite(e) {
+    const ds = (e && e.currentTarget && e.currentTarget.dataset) || {};
+    if (!ds.id || this._navigating) return;
+    this._navigating = true;
+    wx.navigateTo({ url: '/pages/coop/invite-detail/index?inviteId=' + ds.id + '&box=' + (ds.box === 'sent' ? 'sent' : 'received'),
+      complete: () => { this._navigating = false; } });
   },
 
-  // 会话归类(spec 决策 2:客服 type=3 归私信 —— 分 tab 的轴是「能不能回」)
-  // 返回 null = 不属于任何 tab,不在小程序里展示。
+  // 会话归类:全部会话(单聊、城瘾小助手、官方客服)都在收件箱;发件箱只放我发出的邀请。
+  // 返回 null = 不在小程序里展示。
   tabOf(c) {
     const t = parseInt(c.type) || 1;
     // 群聊(type=4)不在小程序露出:微信里已经有群,小程序内做群聊是和宿主抢用户,
@@ -184,8 +193,7 @@ Page({
     // 等地基仍在,app 接手时直接调。这里必须显式排除,不能让它掉进 dm 兜底:
     // 两端共用 /api/im/conversations,app 一旦真建了群,靠兜底会让群会话冒进「私信」里。
     if (t === 4) return null;
-    if (t === 2) return 'sys';
-    return 'dm'; // 1 单聊 + 3 官方客服
+    return 'in'; // 1 单聊 + 2 城瘾小助手 + 3 官方客服
   },
 
   // 重算 tabs(含未读角标)与当前 tab 的可见列表
@@ -199,16 +207,14 @@ Page({
         return n + (parseInt(c.unread) || 0);
       }, 0);
     };
+    const pendingIn = this.data.invitesIn.filter(function (it) { return it.status === 0; }).length;
     this.setData({
       tabs: [
-        { key: 'dm', label: '私信', badge: count('dm') },
-        { key: 'sys', label: '系统', badge: count('sys') },
+        { key: 'in', label: '收件箱', badge: count('in') + pendingIn },
+        { key: 'out', label: '发件箱', badge: 0 },
       ],
       viewList: list.filter(function (c) { return that.tabOf(c) === that.data.activeTab; })
         .map(function (c) { if (c._open || c.offset) { c.offset = 0; c._open = false; } return c; }),
-      // R4 #3:「全部已读」按钮的禁用态判据,与 onReadAll 里 ids 的筛选条件同源。
-      // 只算露出的会话(tabOf 非 null):点不到的东西不该让按钮亮着,也不该被「全部已读」悄悄标掉。
-      hasUnread: list.some(function (c) { return c.unread > 0 && that.tabOf(c) !== null; }),
     });
   },
 
@@ -249,7 +255,7 @@ Page({
     });
   },
 
-  // 空态 CTA:私信→广场(帖文已降级为非 tab 页面,改为 navigateTo)
+  // 空态 CTA:收件箱→广场(帖文已降级为非 tab 页面,改为 navigateTo)
   _syncCommunityEntry() {
     const memberId = app.getUserID && app.getUserID();
     const sync = () => {
@@ -263,7 +269,7 @@ Page({
   onEmptyCta() {
     if (typeof app.canUseCommunity !== 'function' || !app.canUseCommunity(false)) return;
     const tab = this.data.activeTab;
-    if (tab === 'dm' && !this._navigating) { this._navigating = true; wx.navigateTo({ url: '/pages/square/list/index', complete: () => { this._navigating = false; } }); }
+    if (tab === 'in' && !this._navigating) { this._navigating = true; wx.navigateTo({ url: '/pages/square/list/index', complete: () => { this._navigating = false; } }); }
   },
 
   fmtPreview(c) {
@@ -476,47 +482,6 @@ Page({
 
   onBack() { wx.navigateBack({ delta: 1, fail() { wx.switchTab({ url: '/pages/index/index' }); } }); },
 
-  onReadAll() {
-    const that = this;
-    const memberId = app.getUserID ? app.getUserID() : 0;
-    if (!this._isPageContextCurrent(memberId)) return;
-    const pending = this._readAllPending || (this._readAllPending = new Set());
-    if (pending.has(memberId)) return;
-    const ids = this.data.list.filter(function (c) {
-      return c.unread > 0 && that.tabOf(c) !== null;
-    }).map(function (c) { return c.conversationId; });
-    if (ids.length === 0) { toast('没有未读消息'); return; }
-    pending.add(memberId);
-    // ⚠️ 原实现用 complete() 计数:断网、HTTP 错误、业务失败全都会走到 complete,
-    // 于是一条都没成功也照样弹「已全部标为已读」。改成分别记成功数与失败数,
-    // 只有全成功才报成功;有失败就如实说明还剩几条。
-    let done = 0;
-    let failed = 0;
-    ids.forEach(function (id) {
-      app.sendRequest({
-        url: '/api/im/read', method: 'POST', hideLoading: true,
-        data: { conversation_id: id },
-        success(res) { if (!isBizOk(res)) failed++; },
-        fail() { failed++; },
-        complete() {
-          done++;
-          if (done === ids.length) {
-            pending.delete(memberId);
-            if (!that._isPageContextCurrent(memberId)) return;
-            that.loadConversations(true);
-            if (failed === 0) {
-              toast.success('已全部标为已读');
-            } else if (failed === ids.length) {
-              app.tips && app.tips('标记已读失败，请重试');
-            } else {
-              app.tips && app.tips('还有 ' + failed + ' 条没标记成功,请重试');
-            }
-          }
-        },
-      });
-    });
-  },
-
   openChat(e) {
     if (this._moved) { this._moved = false; return; } // 滑动中不触发跳转
     if (this._navigating) return; const ds = e.currentTarget.dataset;
@@ -525,29 +490,6 @@ Page({
         '&name=' + encodeURIComponent(ds.name || '') +
         '&avatar=' + encodeURIComponent(ds.avatar || '') +
         '&type=' + (ds.type || 1),
-    });
-  },
-
-  // BL-31:点开举报进度即标记该条通知已读,不等结果先跳转(失败不阻塞查看)。
-  // 成功后重新拉通知,未读点以服务端 read_at 回读为准;失败在系统 tab 局部提示,红点保留。
-  markReportNoticeRead(dataset) {
-    const that = this;
-    const id = Number(dataset && dataset.noticeId);
-    if (!(Number.isSafeInteger(id) && id > 0) || !(dataset && dataset.unread)) return;
-    app.sendRequest({
-      url: '/api/v1/community/notifications/' + id + '/read',
-      method: 'POST',
-      data: JSON.stringify({ requestId: makeReadRequestId(id) }),
-      header: { 'Content-Type': 'application/json' },
-      hideLoading: true,
-      silentError: true,
-      success(res) {
-        if (isBizOk(res)) { that.loadReportNotices(); return; }
-        that.setData({ reportNoticeError: '举报进度已读状态没更新' });
-      },
-      fail() {
-        that.setData({ reportNoticeError: '举报进度已读状态没更新' });
-      },
     });
   },
 });

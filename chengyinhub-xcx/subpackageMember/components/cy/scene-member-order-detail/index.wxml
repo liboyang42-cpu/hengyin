@@ -263,7 +263,7 @@
       <view class="section-title">{{info.isFreeOrder ? '报名与客服' : '退款与客服'}}</view>
       <view class="refund-main">{{info.refundDeadlineDisplay || info.refundDisplayText || '支付成功后将按订单退款截止时间判断是否可原路退款。'}}</view>
       <view class="refund-sub" wx:if="{{info.isFreeOrder}}">本单未收取费用。如需咨询报名安排，请联系客服。</view>
-      <view class="refund-sub" wx:else>现金退款和积分返还按本单实际支付记录处理，进度以订单查询结果为准。规则有疑问可联系客服。</view>
+      <view class="refund-sub" wx:else>退款按本单实际支付原路处理，有疑问可联系客服。</view>
       <view class="refund-org" wx:if="{{info.organizerDisplayName}}">{{info.organizerLabel}}：{{info.organizerDisplayName}}</view>
     </cy-card>
 

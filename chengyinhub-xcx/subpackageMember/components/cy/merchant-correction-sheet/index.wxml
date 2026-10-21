@@ -10,7 +10,6 @@
               placeholder="写一下哪里不对、正确的信息是什么"
               value="{{description}}" error="{{!!descriptionError}}" error-text="{{descriptionError}}"
               bind:input="onDescriptionInput" />
-    <text class="mcs__note">本次纠错仅支持文字说明，平台审核后才会更新商家信息。</text>
     <view class="mcs__row">
       <view class="mcs__cell"><cy-btn variant="secondary" bindtap="backToPick">换个类型</cy-btn></view>
       <view class="mcs__cell"><cy-btn variant="primary" bindtap="submit">提交纠错</cy-btn></view>
@@ -20,7 +19,7 @@
 <cy-result-sheet show="{{show && stage === 'busy'}}" kind="loading" title="正在提交纠错" />
 <cy-result-sheet show="{{show && stage === 'ok'}}" kind="success" title="纠错已提交"
                  sub="{{receiptText}}平台审核后才会更新商家信息。"
-                 primary-text="知道了" secondary-text="查看我的纠错" bind:primary="close" bind:secondary="openMine" bind:close="close" />
+                 primary-text="知道了" bind:primary="close" bind:close="close" />
 <cy-result-sheet show="{{show && stage === 'fail'}}" kind="fail" title="纠错没有提交成功" why="{{failText}}"
                  primary-text="返回修改" secondary-text="取消" bind:primary="backToForm" bind:secondary="close" bind:close="close" />
 <cy-result-sheet show="{{show && stage === 'unknown'}}" kind="fail" title="提交结果未知" why="{{failText}}"

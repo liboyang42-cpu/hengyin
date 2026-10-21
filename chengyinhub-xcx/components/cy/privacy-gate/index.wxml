@@ -9,13 +9,14 @@
   mask-closable="{{false}}"
 >
   <view class="pg">
-    <view class="pg__lead"><text>使用城瘾前，请阅读并同意</text><view class="pg__lead-link" bindtap="openService" aria-role="button" aria-label="阅读用户服务协议" hover-class="cy-pressed" hover-stay-time="80">《用户服务协议》</view><text>和</text><view class="pg__lead-link" bindtap="openPrivacyContract" aria-role="button" aria-label="查看用户隐私保护指引" hover-class="cy-pressed" hover-stay-time="80">《隐私保护指引》</view><text>。</text></view>
+    <text class="pg__lead">我们只在你使用相关功能时处理必要信息。</text>
+    <checkbox-group class="pg-check" bindchange="toggleService"><label class="pg-check-row"><checkbox class="pg-checkbox" value="service" checked="{{serviceAgreed}}"/><text>我已阅读并同意</text><view class="pg-doc" catchtap="openService" aria-role="button" aria-label="阅读用户服务协议" hover-class="cy-pressed" hover-stay-time="80">《用户服务协议》</view><view class="pg-doc" catchtap="openPrivacyContract" aria-role="button" aria-label="查看用户隐私保护指引" hover-class="cy-pressed" hover-stay-time="80">《隐私保护指引》</view></label></checkbox-group>
     <!-- 微信强制:同意必须是原生 button open-type,不能收编 cy-btn。
          2026-09-18 对齐 pages/privacy 已定方案:两颗并排,不同意在左(secondary 描边)、同意在右;
          原来竖排 + ghost 玻璃底与卡面同色,「暂不同意」根本看不清。 -->
     <view class="pg__actions">
       <cy-btn variant="secondary" disabled="{{submitting}}" class="pg__action" bindtap="disagreePrivacy">暂不同意</cy-btn>
-      <button class="pg__agree" open-type="agreePrivacyAuthorization" bindagreeprivacyauthorization="agreePrivacy" loading="{{submitting}}" disabled="{{submitting}}" aria-disabled="{{submitting}}">同意并继续</button>
+      <button class="pg__agree" open-type="agreePrivacyAuthorization" bindagreeprivacyauthorization="agreePrivacy" loading="{{submitting}}" disabled="{{submitting || !serviceAgreed}}" aria-disabled="{{submitting || !serviceAgreed}}">同意并继续</button>
     </view>
   </view>
 </cy-scene-sheet>

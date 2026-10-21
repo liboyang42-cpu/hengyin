@@ -52,7 +52,7 @@
           </view>
         </view>
       </view>
-      <text class="action-note">申诉进入平台治理队列；俱乐部主理人和副主理人不能裁决。申诉通过后解除封禁，但不会自动恢复成员身份。</text>
+      <text class="action-note">申诉由平台裁决，通过后解除封禁，但不会自动恢复成员身份。</text>
       <view class="platform-button {{actingKey ? 'disabled' : ''}}" bindtap="appealBan"
         aria-role="button" aria-disabled="{{actingKey !== ''}}" hover-class="{{actingKey ? 'none' : 'cy-pressed'}}" hover-stay-time="80">填写理由并提交申诉</view>
     </view>

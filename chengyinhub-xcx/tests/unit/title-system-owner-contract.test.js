@@ -28,8 +28,6 @@ const WEBGL_EXCEPTION = 'subpackageP3/pages/badge-wall/index/index'
 const EXPECTED_NAV_ROUTES = [
   // 2026-10-19 Claude 小程序线移植到 master(用户批准):本线 6 个新二级页,均为 cy-nav-bar + cy-page-title 标准二级页
   'pages/merchant/crm-campaigns/index',
-  'subpackageMember/correction-detail/index',
-  'subpackageMember/correction-mine/index',
   'subpackageMember/points-history/index',
   'subpackageMember/report-detail/index',
   'subpackageMember/report-mine/index',
@@ -108,8 +106,6 @@ const EXPECTED_NAV_ROUTES = [
 const EXPECTED_PAGE_TITLE_ROUTES = [
   // 2026-10-19 Claude 小程序线移植到 master(用户批准):本线 6 个新二级页使用共享 cy-page-title 大标题
   'pages/merchant/crm-campaigns/index',
-  'subpackageMember/correction-detail/index',
-  'subpackageMember/correction-mine/index',
   'subpackageMember/points-history/index',
   'subpackageMember/report-detail/index',
   'subpackageMember/report-mine/index',
@@ -287,8 +283,9 @@ function assertTitleInventory(readSource = read) {
   /* 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新) +9:俱乐部勋章、核销记录、触达记录、主办控制台、积分明细、我的举报、举报进度、我的纠错、纠错进度,均为 custom 导航 + cy-nav-bar + cy-page-title ⇒ 136+9 = 145;custom 同步 145。 */
   /* 2026-10-19 +2:移植共享基线官方线路列表/详情(custom 导航 + cy-nav-bar + cy-page-title 二级页)⇒ 136+2 = 138;custom 同步 138。 */
   // 两线新增页面不重叠：本线145 + 官方线路列表/详情2 = 147。
-  assert.equal(rows.length, 147, '注册页面盘点数量发生漂移,需重新核对标题规范')
-  assert.equal(rows.filter((row) => row.custom).length, 147)
+  // 2026-10-20 用户要求删掉「我的纠错 / 纠错进度」两页、消息页改收件箱/发件箱(合并 master 584470ad 后按重建实测) ⇒ 145。
+  assert.equal(rows.length, 145, '注册页面盘点数量发生漂移,需重新核对标题规范')
+  assert.equal(rows.filter((row) => row.custom).length, 145)
   // 2026-09-02:+2 俱乐部客户列表与客户详情(club/customers、club/customer-detail),
   //   均为 custom 导航 + cy-nav-bar + cy-page-title 的普通二级页 = 133；custom 导航 129 + 2 = 131。
   const knownRoutes = new Set(routes)

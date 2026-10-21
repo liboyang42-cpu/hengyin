@@ -134,7 +134,6 @@ function listActionHarness() {
 
 function startListAction(h, action) {
   if (action === 'delete') { h.page.onRowDelete(h.event); h.page.onDangerConfirm(h.confirm) }
-  else if (action === 'all') h.page.onReadAll()
   else h.page[action === 'read' ? 'onRowRead' : 'onRowMute'](h.event)
 }
 
@@ -144,7 +143,7 @@ function finishListAction(request, outcome) {
   if (request.complete) request.complete()
 }
 
-for (const action of ['read', 'mute', 'delete', 'all']) {
+for (const action of ['read', 'mute', 'delete']) {
   for (const invalidation of ['account', 'unload']) {
     for (const outcome of ['ok', 'business', 'network']) {
       test(`消息列表${action} ${invalidation}后${outcome}回包不能改页或给回执`, () => {
@@ -170,7 +169,6 @@ for (const action of ['read', 'mute', 'delete', 'all']) {
     if (action === 'read') assert.equal(h.page.data.list[0].unread, 0)
     if (action === 'mute') { assert.equal(h.page.data.list[0].muted, 1); assert.ok(h.toasts.includes('已开启免打扰')) }
     if (action === 'delete') { assert.deepEqual(h.page.data.list, []); assert.ok(h.effects.danger.some(x => x[0] === 'done')) }
-    if (action === 'all') { assert.equal(h.effects.loads, 1); assert.ok(h.toasts.includes('已全部标为已读')) }
   })
 }
 
@@ -190,7 +188,7 @@ for (const action of ['read', 'mute']) {
   }
 }
 
-for (const action of ['mute', 'delete', 'all']) {
+for (const action of ['mute', 'delete']) {
   test(`消息列表${action}执行中重复点击只发一批`, () => {
     const h = listActionHarness()
     startListAction(h, action)
@@ -253,7 +251,7 @@ test('单条已读回包按当前可见会话关闭操作栏', () => {
   assert.equal(h.page.data.viewList[0]._open, true)
 })
 
-for (const action of ['read', 'mute', 'delete', 'all']) {
+for (const action of ['read', 'mute', 'delete']) {
   test(`消息列表${action}不能对上个账号尚未刷新的列表发起操作`, () => {
     const h = listActionHarness()
     h.page._conversationMemberId = 8
@@ -273,12 +271,12 @@ for (const changed of [false, true]) {
     h.requests[0].success({ code: 200, data: [{ conversationId: 42, type: 1, unread: 2 }] })
     if (changed) h.setUserId(9)
     h.page.onShow()
-    // onShow:会话重读 + 举报进度通知重读(CL2,系统 tab 回到列表时刷新) + 商家入口,共 3 个新请求;requests[1] 仍是会话重读。
+    // onShow:会话重读 + 合作邀请重读(收件箱/发件箱) + 商家入口,共 3 个新请求;requests[1] 仍是会话重读。
     assert.equal(h.requests.length, 4)
     if (changed) {
       assert.deepEqual(h.page.data.list, [])
       assert.deepEqual(h.page.data.viewList, [])
-      assert.equal(h.page.data.hasUnread, false)
+      assert.deepEqual(h.page.data.invitesIn, [])
       assert.equal(h.page.data.loaded, false)
       h.requests[1].success({ code: 200, data: [{ conversationId: 43, type: 1, unread: 1 }] })
       assert.equal(h.page.data.list[0].conversationId, 43)

@@ -16,7 +16,6 @@
 
     <view wx:if="{{isOwner}}" class="section">
       <cy-btn variant="primary" bindtap="openCreate">创建勋章</cy-btn>
-      <text class="section-caption">勋章名必填。创建后可在下方把勋章颁给俱乐部成员。</text>
     </view>
 
     <cy-state-shell wx:if="{{state === 'empty'}}" kind="empty" title="还没有俱乐部勋章"
@@ -40,7 +39,6 @@
         </view>
       </view>
     </view>
-    <text wx:if="{{isOwner && state === 'ready'}}" class="page-note">颁发需要二次确认；颁发后目前没有收回入口。</text>
   </block>
 </view>
 </view>
@@ -53,7 +51,6 @@
     <cy-field variant="textarea" label="说明（选填）" value="{{form.desc}}" placeholder="这枚勋章颁给谁、为什么" maxlength="{{descMax}}" showCount
               disabled="{{creating}}" data-field="desc" bind:input="onFormInput"
               error="{{!!formErrors.desc}}" errorText="{{formErrors.desc}}" />
-    <text class="form-note">勋章图标沿用平台勋章的默认样式；自定义图标暂不开放。</text>
     <cy-inline-error wx:if="{{createError && createUnknown}}" title="创建结果未确认" sub="{{createError}}"
                      action="我已核对" bind:action="confirmCreateChecked" />
     <cy-inline-error wx:elif="{{createError}}" title="勋章没有创建" sub="{{createError}}" />

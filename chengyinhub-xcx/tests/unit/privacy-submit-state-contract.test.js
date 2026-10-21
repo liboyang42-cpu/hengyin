@@ -89,14 +89,17 @@ test('WXML 提供持久 inline error 与真实重试，按钮暴露 busy/disable
   assert.equal(json.usingComponents['cy-inline-error'], '/components/cy/inline-error/index')
 })
 
-test('首次隐私闸保留一句协议提示，设置页仍提供用途说明与独立选择', () => {
+// 2026-10-20 用户定稿(#293):进入弹窗 = 一句话 + 一行勾选(两份文件入口在勾选行内);设置态 = 一张分组列表,
+// 每项一行标题 + 动作。首页城市定位的用途说明在开启时的单独同意弹窗里(见下方 enableHomeCityLocation 用例)。
+test('首次隐私闸保留一句话与一行勾选，设置页每项保留独立选择', () => {
   const wxml = fs.readFileSync(path.join(ROOT, 'pages/privacy/index.wxml'), 'utf8')
   const initial = wxml.match(/<block wx:if="{{pendingAuthorization}}">([\s\S]*?)<\/block>/)[1]
-  assert.ok(initial.includes('使用城瘾前，请阅读并同意'))
-  assert.ok(initial.includes('bindtap="openService"'))
-  assert.ok(initial.includes('bindtap="openPrivacyContract"'))
+  assert.ok(initial.includes('class="privacy-lead"'))
+  assert.ok(initial.includes('catchtap="openService"'))
+  assert.ok(initial.includes('catchtap="openPrivacyContract"'))
+  assert.ok(initial.includes('bindchange="toggleService"'))
   assert.equal(initial.includes('privacy-body'), false, '首次闸保留 #293 已确认的一句话')
-  assert.ok(wxml.includes('首页在你单独同意后使用精确位置确定城市'))
+  assert.ok(wxml.includes('首页城市自动定位'))
   assert.ok(!wxml.includes('仅用于推荐附近活动'), '城市用途不得误述为精确附近排序')
   for (const handler of ['enableHomeCityLocation', 'disableHomeCityLocation', 'disablePresenceSharing', 'withdrawRoamLocationConsent']) {
     assert.ok(wxml.includes('bindtap="' + handler + '"'), handler + ' 独立选择入口不能因精简文案被删除')

@@ -214,7 +214,7 @@
     </view>
     <cy-scene-sheet show="{{genericOpsSheet}}" variant="half" title="{{genericOpsTitle}}" closable maskClosable bind:close="closeGenericOps">
       <scroll-view scroll-y class="ctd-generic-ops__form">
-        <text class="ctd-director-note">任务标识与操作标识二选一；人工事件由本人签署。时间填 YYYY-MM-DD HH:mm:ss（北京时间）或毫秒时间戳，不能补造余额。</text>
+        <text class="ctd-director-note">任务标识与操作标识二选一，时间按北京时间填写。</text>
         <text class="ctd-director-note" wx:if="{{genericOpsAction === 'QUEST_GUIDE' || genericOpsAction === 'STAFF_MANUAL_SIGN' && genericOpsDraft.signedAction === 'QUEST_GUIDE'}}">请选择本局任务并录入队伍实际作答；本面板不提供正确答案，完整填写后会核验作答。</text>
         <text wx:for="{{genericOpsLedgerRows}}" wx:key="*this" class="ctd-director-note" selectable>{{item}}</text>
         <view wx:for="{{genericOpsFields}}" wx:key="key" class="ctd-director-field">

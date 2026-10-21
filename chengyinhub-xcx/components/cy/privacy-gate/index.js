@@ -18,11 +18,11 @@ Component({
   },
   data: {
     submitting: false,
-    // 进入弹窗不再单独勾选服务协议:点「同意并继续」即同意一句话里的两份文件。
+    serviceAgreed: false, // 进入弹窗:一行勾选同意两份文件后才能点「同意并继续」
     showServiceSheet: false,
   },
   methods: {
-    // toggleService 已撤(勾选框随弹窗简化移除)。
+    toggleService(event) { this.setData({ serviceAgreed: !!event.detail.value.length }); },
     openService() { this.setData({ showServiceSheet: true }); },
     closeService() { this.setData({ showServiceSheet: false }); },
     openPrivacyContract() {
@@ -34,7 +34,7 @@ Component({
     agreePrivacy(event) {
       if (this.data.submitting) return;
       this.setData({ submitting: true });
-      app.agreeUsageConsent(event, true)
+      app.agreeUsageConsent(event, this.data.serviceAgreed)
         .then(() => {
           this.setData({ submitting: false });
           this.triggerEvent('settled', { event: 'agree' });

@@ -366,3 +366,26 @@ test('资质图片上传失败或仍在上传时不得提交本机临时路径',
   h.page.submit()
   assert.equal(h.requests.length, 0)
 })
+
+function assertDirectLeaderActivationCopy(wxml) {
+  assert.doesNotMatch(wxml, /有证的话审核会快一些|等待审核|待审核|审核通过后/, '即时生效的身份申请不得暗示等待审核')
+  assert.match(wxml, /填完身份立即生效，不用等审核/)
+  assert.match(wxml, /class="st-desc">你已成为俱乐部主理人，身份立即生效。/)
+  assert.match(wxml, /用于后续等级评定/)
+}
+
+test('主理人身份立即生效，资质只说明后续等级评定', () => {
+  assertDirectLeaderActivationCopy(WXML)
+})
+
+test('负控：资质文案恢复审核提速暗示必须判红', () => {
+  const mutated = WXML.replace('用于后续等级评定', '有证的话审核会快一些')
+  assert.notEqual(mutated, WXML, '文案负控锚点必须存在')
+  assert.throws(() => assertDirectLeaderActivationCopy(mutated), /即时生效的身份申请不得暗示等待审核/)
+})
+
+test('负控：完成态失去身份立即生效提示必须判红', () => {
+  const mutated = WXML.replace('你已成为俱乐部主理人，身份立即生效。', '身份申请已提交。')
+  assert.notEqual(mutated, WXML, '完成态负控锚点必须存在')
+  assert.throws(() => assertDirectLeaderActivationCopy(mutated))
+})

@@ -248,7 +248,7 @@
         <text class="field-label">候补认领时长<text class="field-required" aria-hidden="true">*</text></text>
         <input class="field-input" type="number" value="{{offerMinutes}}" bindinput="onOfferInput" placeholder="5 分钟 – 1 天" />
         <text class="field-hint" wx:if="{{offerWindowText}}">当前为 {{offerWindowText}}。</text>
-        <text class="field-hint">名额空出来后为队首保留这么久，逾期顺延给下一位。窗口再长也不会超过这张票的报名截止时间。</text>
+        <text class="field-hint">名额空出后为队首保留这段时间，逾期顺延，最晚到报名截止。</text>
       </view>
 
       <button class="primary-btn" loading="{{submitting}}" disabled="{{submitting}}" bindtap="submitSeries">

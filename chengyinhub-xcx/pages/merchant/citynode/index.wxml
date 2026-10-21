@@ -9,7 +9,7 @@
     <view class="cn-intro-row">
       <text class="cn-intro-t">把门店变成漫游地图上的互动据点</text>
       <cy-info-pop title="据点是什么"
-        content="据点就是门店在漫游地图上的互动打卡点。投放或认领申请经平台审核通过后，玩家才会在地图看到；到店可按模板完成暗号、问答、拍照、扫码或 GPS 验证。" />
+        content="据点是门店在漫游地图上的打卡点，审核通过后玩家才能看到。" />
     </view>
     <text class="cn-quota" wx:if="{{quotaState === 'ready'}}">在架据点 {{used}}/{{max}}<block wx:if="{{used >= max}}"> · {{max === 0 ? '当前没有据点配额，暂不能投放新据点' : '已满，先下线一个再投放'}}</block></text>
     <text class="cn-quota" wx:elif="{{quotaState === 'loading'}}">正在读取据点配额</text>

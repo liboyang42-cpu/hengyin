@@ -43,7 +43,7 @@ page{ background: var(--cy-bg-page);}
    icon_line.jpg 是固定白底的黑线画,压深渐变在它上面每一点对比都不一样。
    底与字取同主题的成对档(--cy-bg-card / --cy-text-*),深色页就是深卡白字。 */
 .topic .slide1 .cover-brief {
-  max-width: 560rpx; /* ds-ok: 与商家版 slide1 锚点同宽(merchantinfo.wxss:59) */
+  max-width: none; /* 与下方「查看详情与报名」按钮同宽;商家版 merchantinfo.wxss 同步 */
   margin: 0 auto var(--cy-space-4);
   padding: var(--cy-space-4);
   box-sizing: border-box;
