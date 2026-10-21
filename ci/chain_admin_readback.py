@@ -11,13 +11,18 @@ def _require(condition, code):
         raise AdminReadbackError(code)
 
 
+def _internal_frame(value):
+    # MySQL INT is returned as int; Java SysMenu exposes the same column as String.
+    return type(value) in (int, str) and value in (1, "1")
+
+
 def _menu_routes(rows):
     menus = {row[0]: row for row in rows}
     _require(len(menus) == len(rows), "ADMIN_MENU_DUPLICATE_ID")
     expected = []
     plain = r"[A-Za-z0-9_-]+(?:/[A-Za-z0-9_-]+)*"
     for menu_id, parent_id, path, component, is_frame, kind in rows:
-        if (kind != "C" or is_frame != "1" or not isinstance(component, str)
+        if (kind != "C" or not _internal_frame(is_frame) or not isinstance(component, str)
                 or not re.fullmatch(plain, component) or not isinstance(path, str)
                 or not re.fullmatch(plain, path)):
             continue
@@ -29,7 +34,7 @@ def _menu_routes(rows):
                 break
             seen.add(parent_id)
             ancestor = menus[parent_id]
-            if not (ancestor[5] == "M" and ancestor[4] == "1"
+            if not (ancestor[5] == "M" and _internal_frame(ancestor[4])
                     and isinstance(ancestor[2], str) and re.fullmatch(plain, ancestor[2])):
                 supported = False
                 break

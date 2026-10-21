@@ -11,8 +11,8 @@ class Connection:
         self.schema = ("cy_e2e_51",)
         self.users = ((1, "admin", "0", "0"),)
         self.roles = ((1, "admin", "0", "0"),)
-        self.menus = ((1, 0, "system", None, "1", "M"),
-                      (100, 1, "user", "system/user/index", "1", "C"))
+        self.menus = ((1, 0, "system", None, 1, "M"),
+                      (100, 1, "user", "system/user/index", 1, "C"))
         self.closed = False
         self.sql = []
 
@@ -71,6 +71,24 @@ class ObserverTests(unittest.TestCase):
         self.assertEqual(result["realRoleCardsVerified"], 0)
         for value in ("secret-token-fixture", "secret-password-hash-fixture", "secret-profile-fixture"):
             self.assertNotIn(value, json.dumps(result))
+
+    def test_integer_and_string_internal_flags_on_leaf_and_ancestor(self):
+        for parent_flag, leaf_flag in ((1, 1), ("1", "1"), (1, "1"), ("1", 1)):
+            with self.subTest(parent=parent_flag, leaf=leaf_flag):
+                self.db.menus = ((1, 0, "system", None, parent_flag, "M"),
+                                 (100, 1, "user", "system/user/index", leaf_flag, "C"))
+                result = observe_admin(self.get, self.connect)
+                self.assertEqual(result["routes"][0]["path"], "/system/user")
+
+    def test_boolean_float_or_other_flag_never_claims_internal_menu(self):
+        for bad in (True, False, 1.0, 0.0, 0, "0", "01"):
+            for index in (0, 1):
+                with self.subTest(flag=bad, row=index):
+                    rows = [list(row) for row in Connection().menus]
+                    rows[index][4] = bad
+                    self.db.menus = tuple(tuple(row) for row in rows)
+                    with self.assertRaisesRegex(AdminReadbackError, "ADMIN_MENU_NO_SUPPORTED_INTERNAL_ROUTE"):
+                        observe_admin(self.get, self.connect)
 
     def test_wrong_http_user_status_or_wildcard_fails_before_db(self):
         for path, value in [("userId", 2), ("userId", True), ("userName", "other"),
