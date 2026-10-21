@@ -1092533,7 +1092533,7 @@
       }
     },
     {
-      "id": "subpackageA/pages/infomation/infomation.wxml:72:bindtap:goToDetail:8",
+      "id": "subpackageA/pages/infomation/infomation.wxml:73:bindtap:goToDetail:8",
       "route": "subpackageA/pages/infomation/infomation",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1092556,7 +1092556,7 @@
         "tag": "cy-cell",
         "event": "bindtap",
         "handler": "goToDetail",
-        "line": 72,
+        "line": 73,
         "selectorHint": "cy-cell[bindtap]",
         "visibleCondition": "{{item.usable}}",
         "disabledCondition": null,
@@ -1092709,7 +1092709,7 @@
       }
     },
     {
-      "id": "subpackageA/pages/infomation/infomation.wxml:87:catchtouchmove:blockSceneTouch:9",
+      "id": "subpackageA/pages/infomation/infomation.wxml:88:catchtouchmove:blockSceneTouch:9",
       "route": "subpackageA/pages/infomation/infomation",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1092732,7 +1092732,7 @@
         "tag": "view",
         "event": "catchtouchmove",
         "handler": "blockSceneTouch",
-        "line": 87,
+        "line": 88,
         "selectorHint": ".info-scene-host",
         "visibleCondition": "{{sceneCurrent && sceneCurrent.id === 'settings-how-to-play-detail'}}",
         "disabledCondition": null,
@@ -1092777,7 +1092777,7 @@
       }
     },
     {
-      "id": "subpackageA/pages/infomation/infomation.wxml:88:bind:back:closeScene:11",
+      "id": "subpackageA/pages/infomation/infomation.wxml:89:bind:back:closeScene:11",
       "route": "subpackageA/pages/infomation/infomation",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1092800,7 +1092800,7 @@
         "tag": "cy-scene-sheet",
         "event": "bind:back",
         "handler": "closeScene",
-        "line": 88,
+        "line": 89,
         "selectorHint": "cy-scene-sheet[bind:back]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1092844,7 +1092844,7 @@
       }
     },
     {
-      "id": "subpackageA/pages/infomation/infomation.wxml:88:bind:requestclose:closeScene:10",
+      "id": "subpackageA/pages/infomation/infomation.wxml:89:bind:requestclose:closeScene:10",
       "route": "subpackageA/pages/infomation/infomation",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1092867,7 +1092867,7 @@
         "tag": "cy-scene-sheet",
         "event": "bind:requestclose",
         "handler": "closeScene",
-        "line": 88,
+        "line": 89,
         "selectorHint": "cy-scene-sheet[bind:requestclose]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1092911,7 +1092911,7 @@
       }
     },
     {
-      "id": "subpackageA/pages/infomation/infomation.wxml:89:bind:back:closeScene:12",
+      "id": "subpackageA/pages/infomation/infomation.wxml:90:bind:back:closeScene:12",
       "route": "subpackageA/pages/infomation/infomation",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1092934,7 +1092934,7 @@
         "tag": "cy-scene-how-to-play-detail",
         "event": "bind:back",
         "handler": "closeScene",
-        "line": 89,
+        "line": 90,
         "selectorHint": "#howToPlay",
         "visibleCondition": null,
         "disabledCondition": null,
