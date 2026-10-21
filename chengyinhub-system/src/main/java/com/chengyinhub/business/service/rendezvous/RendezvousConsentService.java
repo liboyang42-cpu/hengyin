@@ -73,6 +73,25 @@ public final class RendezvousConsentService {
         }
         public boolean active() { return state == MatchState.PROPOSED || state == MatchState.MUTUAL_ACCEPTED; }
     }
+    /**
+     * Result of {@link #verifyParticipants}. No partner id, clue, place text, or contact count.
+     * {@code safe} does not consult {@link Safety#compatible} and does not read a contact counter,
+     * so this match's own admission charge is not a failure. Callers that still need the mixed
+     * preference flag read {@link Safety} themselves. This object does not stop or write anything.
+     */
+    public static final class OngoingVerdict {
+        public final boolean safe, intact, expired, eligible, blocked, placeAllowed;
+        public final String ticketId, matchId;
+        public final TicketState ticketState;
+        public final MatchState matchState;
+        public OngoingVerdict(boolean safe, boolean intact, boolean expired, boolean eligible, boolean blocked,
+                              boolean placeAllowed, String ticketId, String matchId,
+                              TicketState ticketState, MatchState matchState) {
+            this.safe = safe; this.intact = intact; this.expired = expired; this.eligible = eligible;
+            this.blocked = blocked; this.placeAllowed = placeAllowed; this.ticketId = ticketId;
+            this.matchId = matchId; this.ticketState = ticketState; this.matchState = matchState;
+        }
+    }
     /** Participant-only projection: no partner identifier, clue, contact or coordinates. */
     public static final class View {
         public final String ticketId, matchId, publicPlace;
@@ -122,6 +141,44 @@ public final class RendezvousConsentService {
         });
         if (reply.rejection != null) throw new Rejection(reply.rejection);
         return reply.view;
+    }
+    /**
+     * Ongoing check for B/C. The caller must already be inside the consent guard transaction
+     * and passes that transaction in. This method does not call {@link Store#transaction},
+     * {@link #read}, or any other method that opens a transaction.
+     * A closed session throws {@code W16_TRANSACTION_ACCESS_EXPIRED} instead of starting one.
+     * Blank ticket id is {@code INVALID_INPUT}. A missing ticket or a ticket with no match is
+     * not safe and is not an exception. Both participants must still be eligible, unblocked,
+     * inside the approved place, unexpired, and pointing at this same active match.
+     * Contact counters are not read. A false verdict does not write.
+     */
+    public OngoingVerdict verifyParticipants(Transaction tx, String ticketId) {
+        Objects.requireNonNull(tx, "tx");
+        text(ticketId);
+        Ticket ticket = tx.ticket(ticketId);
+        if (ticket == null || ticket.matchId == null) {
+            return new OngoingVerdict(false, false, false, false, false, false, ticketId,
+                    ticket == null ? null : ticket.matchId, ticket == null ? null : ticket.state, null);
+        }
+        Match match = tx.match(ticket.matchId);
+        if (match == null) {
+            return new OngoingVerdict(false, false, false, false, false, false, ticket.id, ticket.matchId, ticket.state, null);
+        }
+        Ticket first = tx.ticket(match.firstTicket), second = tx.ticket(match.secondTicket);
+        long now = clock.millis();
+        boolean intact = (ticket.id.equals(match.firstTicket) || ticket.id.equals(match.secondTicket))
+                && first != null && second != null && first.actor != second.actor
+                && match.id.equals(first.matchId) && match.id.equals(second.matchId);
+        boolean expired = match.expiresAt <= now
+                || (first != null && first.expiresAt <= now) || (second != null && second.expiresAt <= now);
+        boolean eligible = intact && safety.eligible(first.actor, first.pool, first.eligibilityVersion, now)
+                && safety.eligible(second.actor, second.pool, second.eligibilityVersion, now);
+        boolean blocked = intact && safety.blocked(first.actor, second.actor);
+        boolean placeAllowed = intact && safety.publicMeetingAllowed(first.pool, match.publicPlace, now);
+        boolean safe = intact && !expired && eligible && !blocked && placeAllowed
+                && match.active() && first.active() && second.active();
+        return new OngoingVerdict(safe, intact, expired, eligible, blocked, placeAllowed,
+                ticket.id, match.id, ticket.state, match.state);
     }
     /** Internal scheduler operation only. It cannot opt either person into the pool. */
     public String propose(String firstTicket, String secondTicket, String publicPlace) {
