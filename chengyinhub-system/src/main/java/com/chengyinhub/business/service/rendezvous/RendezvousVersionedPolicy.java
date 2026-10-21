@@ -26,6 +26,8 @@ public final class RendezvousVersionedPolicy implements RendezvousConsentService
     public interface Catalog {
         Row find(String dimension, String versionId);
         int contacts(long actor);
+        /** Unwired catalogs skip actor facts. That branch is not a connected authority. */
+        default RendezvousEligibilityFacts facts() { return RendezvousEligibilityFacts.unwired(); }
     }
     private final Catalog catalog;
     private final ImBlockMapper blocks;
@@ -34,14 +36,28 @@ public final class RendezvousVersionedPolicy implements RendezvousConsentService
         this.blocks = Objects.requireNonNull(blocks);
     }
     public boolean eligible(long actor, String pool, String version, long now) {
+        RendezvousEligibilityFacts facts = catalog.facts();
+        if (facts.connected() && !facts.admits(actor, version, now)) return false;
         return open("eligibility-source", version) && open("age", version) && open("region", version)
                 && open("time-window", version) && frequency(pool) != null;
     }
+    public boolean factsConnected() { return catalog.facts().connected(); }
+    /** No-op unless a fact source is connected. A missing or different server version refuses. */
+    public void requireClientVersion(String clientVersion) {
+        if (!factsConnected()) return;
+        String current = catalog.facts().currentVersion();
+        if (current == null || clientVersion == null || !current.equals(clientVersion)) throw new RendezvousConsentService.Rejection("NOT_ELIGIBLE");
+    }
+    /** Connected calls use the server version. Unwired calls keep the client value. */
+    public String ttlVersion(String clientVersion) {
+        if (!factsConnected()) return clientVersion;
+        String current = catalog.facts().currentVersion();
+        return current == null ? clientVersion : current;
+    }
     public boolean blocked(long first, long second) { return blocks.existsBetween(first, second) > 0; }
+    /** Ongoing rule only. Admission counts live in {@link RendezvousContactLedger}, not here. */
     public boolean compatible(long first, long second, String pool, long now) {
-        Row cap = frequency(pool);
-        if (cap == null) return false;
-        return catalog.contacts(first) < cap.maxContacts && catalog.contacts(second) < cap.maxContacts;
+        return frequency(pool) != null;
     }
     public boolean publicMeetingAllowed(String pool, String place, long now) {
         String approved = approvedPlace(pool);

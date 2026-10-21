@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.service.rendezvous.RendezvousContactMapper">
+  <resultMap id="quotaRow" type="com.chengyinhub.business.service.rendezvous.RendezvousContactMapper$Quota">
+    <result property="decision" column="decision"/>
+    <result property="scope" column="scope"/>
+    <result property="windowMillis" column="window_millis"/>
+    <result property="maxContacts" column="max_contacts"/>
+  </resultMap>
+  <select id="quota" resultMap="quotaRow" useCache="false">
+    SELECT decision, scope, window_millis, max_contacts FROM w16_contact_quota WHERE pool = #{pool}
+  </select>
+  <select id="eventExists" resultType="java.lang.Integer" useCache="false">
+    SELECT 1 FROM w16_contact_event WHERE match_id = #{matchId} AND actor_id = #{actor}
+  </select>
+  <select id="countInWindow" resultType="int" useCache="false">
+    SELECT COUNT(*) FROM w16_contact_event
+    WHERE actor_id = #{actor} AND pool = #{pool} AND scope = #{scope}
+      AND charged_at &gt; #{since} AND charged_at &lt;= #{now}
+  </select>
+  <insert id="insertEvent">
+    INSERT INTO w16_contact_event(match_id, actor_id, pool, scope, charged_at)
+    VALUES(#{matchId}, #{actor}, #{pool}, #{scope}, #{chargedAt})
+  </insert>
+</mapper>
