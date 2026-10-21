@@ -280,3 +280,12 @@ test('存储失败后的重新读取不得丢弃未保留输入', () => {
   h.c.loadClub()
   assert.equal(h.requests.length, 1)
 })
+
+test('保存成功后的延迟关闭不吞掉期间新输入，新稿仍可落盘', () => {
+  const h = mount(); h.ready(); edit(h)
+  preflight(h).success({ code: 200 })
+  edit(h, 'name', '成功后继续编辑')
+  h.timers.forEach(fn => fn())
+  assert.equal(h.events.some(e => e.name === 'saved' || e.name === 'back'), false)
+  assert.equal(drafts.read(h.wx, drafts.key(1, 9)).record.form.name, '成功后继续编辑')
+})

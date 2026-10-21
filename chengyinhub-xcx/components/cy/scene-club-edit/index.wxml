@@ -12,7 +12,7 @@
 
     <view class="draft-panel" wx:if="{{draftNotice}}">
       <text class="draft-notice" aria-role="status" aria-live="polite">{{draftNotice}}</text>
-      <text class="draft-comparison" wx:if="{{draftComparison}}">{{draftComparison}}</text>
+      <text selectable="{{true}}" class="draft-comparison" wx:if="{{draftComparison}}">{{draftComparison}}</text>
       <view class="draft-actions">
         <cy-btn wx:if="{{draftAvailable}}" variant="primary" bindtap="restoreDraft">恢复草稿</cy-btn>
         <cy-btn wx:if="{{draftCanDiscard}}" variant="secondary" bindtap="discardDraft">放弃本机草稿，读取当前资料</cy-btn>

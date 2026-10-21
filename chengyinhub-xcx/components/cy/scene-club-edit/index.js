@@ -608,9 +608,10 @@ Component({
       this.setData({ saving: false, saveErrorText: '', draftNotice: cleared ? '' : '资料已保存，本机草稿未能清除，请核对后关闭。' });
       toast.success('已保存');
       if (!cleared) return;
+      this._draftExpected = ''; this._savedDraft = null; this._draftReadState = 'empty';
       this.triggerEvent('dirtychange', { dirty: false });
       setTimeout(() => {
-        if (!this.isDraftCurrent(scope)) return;
+        if (!this.isDraftCurrent(scope) || this._draftDirty || JSON.stringify(drafts.form(this.data)) !== submittedForm) return;
         this.triggerEvent('saved'); this.triggerEvent('back');
       }, 800);
     },
