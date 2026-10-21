@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.rewardpledge.RewardPledgeMapper">
+  <resultMap id="policy" type="com.chengyinhub.business.domain.rewardpledge.RewardPledgeRows$Policy">
+    <result property="policyCode" column="policy_code"/>
+    <result property="ruleVersion" column="rule_version"/>
+    <result property="decision" column="decision"/>
+    <result property="actorMemberId" column="actor_member_id"/>
+  </resultMap>
+  <resultMap id="pledge" type="com.chengyinhub.business.domain.rewardpledge.RewardPledgeRows$Pledge">
+    <id property="pledgeId" column="pledge_id"/>
+    <result property="storeId" column="store_id"/>
+    <result property="merchantMemberId" column="merchant_member_id"/>
+    <result property="couponId" column="coupon_id"/>
+    <result property="supplyRef" column="supply_ref"/>
+    <result property="quantity" column="quantity"/>
+    <result property="serviceStart" column="service_start"/>
+    <result property="serviceEnd" column="service_end"/>
+    <result property="redeemStart" column="redeem_start"/>
+    <result property="redeemEnd" column="redeem_end"/>
+    <result property="terms" column="terms"/>
+    <result property="minorRestricted" column="minor_restricted"/>
+    <result property="state" column="state"/>
+    <result property="createdAt" column="created_at"/>
+  </resultMap>
+  <resultMap id="version" type="com.chengyinhub.business.domain.rewardpledge.RewardPledgeRows$Version">
+    <id property="versionId" column="version_id"/>
+    <result property="pledgeId" column="pledge_id"/>
+    <result property="versionNo" column="version_no"/>
+    <result property="payloadHash" column="payload_hash"/>
+    <result property="quantity" column="quantity"/>
+    <result property="serviceStart" column="service_start"/>
+    <result property="serviceEnd" column="service_end"/>
+    <result property="redeemStart" column="redeem_start"/>
+    <result property="redeemEnd" column="redeem_end"/>
+    <result property="terms" column="terms"/>
+    <result property="minorRestricted" column="minor_restricted"/>
+    <result property="ruleVersion" column="rule_version"/>
+    <result property="state" column="state"/>
+    <result property="merchantMemberId" column="merchant_member_id"/>
+    <result property="merchantHash" column="merchant_hash"/>
+    <result property="merchantConfirmedAt" column="merchant_confirmed_at"/>
+    <result property="reviewerMemberId" column="reviewer_member_id"/>
+    <result property="reviewerHash" column="reviewer_hash"/>
+    <result property="frozenAt" column="frozen_at"/>
+  </resultMap>
+  <resultMap id="stock" type="com.chengyinhub.business.domain.rewardpledge.RewardPledgeRows$Stock">
+    <id property="versionId" column="version_id"/>
+    <result property="quantity" column="quantity"/>
+    <result property="available" column="available"/>
+    <result property="reserved" column="reserved"/>
+    <result property="awardedUnredeemed" column="awarded_unredeemed"/>
+    <result property="redeemed" column="redeemed"/>
+    <result property="expired" column="expired"/>
+    <result property="frozenUnits" column="frozen_units"/>
+    <result property="withdrawn" column="withdrawn"/>
+    <result property="versionNo" column="version_no"/>
+  </resultMap>
+  <resultMap id="intent" type="com.chengyinhub.business.domain.rewardpledge.RewardPledgeRows$Intent">
+    <result property="ownerId" column="owner_id"/>
+    <result property="requestId" column="request_id"/>
+    <result property="payloadHash" column="payload_hash"/>
+    <result property="versionId" column="version_id"/>
+    <result property="branch" column="branch"/>
+    <result property="subjectId" column="subject_id"/>
+    <result property="state" column="state"/>
+    <result property="awardId" column="award_id"/>
+    <result property="errorCode" column="error_code"/>
+  </resultMap>
+  <resultMap id="award" type="com.chengyinhub.business.domain.rewardpledge.RewardPledgeRows$Award">
+    <id property="awardId" column="award_id"/>
+    <result property="versionId" column="version_id"/>
+    <result property="ruleVersion" column="rule_version"/>
+    <result property="beneficiaryId" column="beneficiary_id"/>
+    <result property="rewardScope" column="reward_scope"/>
+    <result property="factRef" column="fact_ref"/>
+    <result property="historyId" column="history_id"/>
+    <result property="state" column="state"/>
+    <result property="requestId" column="request_id"/>
+    <result property="createdAt" column="created_at"/>
+  </resultMap>
+  <resultMap id="caseRow" type="com.chengyinhub.business.domain.rewardpledge.RewardPledgeRows$CaseRow">
+    <id property="caseId" column="case_id"/>
+    <result property="awardId" column="award_id"/>
+    <result property="versionId" column="version_id"/>
+    <result property="ownerId" column="owner_id"/>
+    <result property="reason" column="reason"/>
+    <result property="state" column="state"/>
+    <result property="createdAt" column="created_at"/>
+  </resultMap>
+
+  <select id="findPolicy" resultMap="policy">
+    SELECT policy_code, rule_version, decision, actor_member_id FROM w17_reward_policy
+    WHERE policy_code=#{policyCode} AND rule_version=#{ruleVersion}
+  </select>
+  <insert id="insertPledge">
+    INSERT INTO w17_reward_pledge(pledge_id, store_id, merchant_member_id, coupon_id, supply_ref, quantity,
+      service_start, service_end, redeem_start, redeem_end, terms, minor_restricted, state, created_at)
+    VALUES(#{pledgeId}, #{storeId}, #{merchantMemberId}, #{couponId}, #{supplyRef}, #{quantity},
+      #{serviceStart}, #{serviceEnd}, #{redeemStart}, #{redeemEnd}, #{terms}, #{minorRestricted}, #{state}, #{createdAt})
+  </insert>
+  <select id="findPledge" resultMap="pledge">
+    SELECT pledge_id, store_id, merchant_member_id, coupon_id, supply_ref, quantity, service_start, service_end,
+           redeem_start, redeem_end, terms, minor_restricted, state, created_at
+    FROM w17_reward_pledge WHERE pledge_id=#{pledgeId}
+  </select>
+  <update id="updatePledgeState">
+    UPDATE w17_reward_pledge SET state=#{state} WHERE pledge_id=#{pledgeId}
+  </update>
+  <update id="updatePledgePayload">
+    UPDATE w17_reward_pledge
+    SET quantity=#{quantity}, service_start=#{serviceStart}, service_end=#{serviceEnd},
+        redeem_start=#{redeemStart}, redeem_end=#{redeemEnd}, terms=#{terms}, minor_restricted=#{minorRestricted}
+    WHERE pledge_id=#{pledgeId}
+  </update>
+  <insert id="insertVersion">
+    INSERT INTO w17_reward_pledge_version(version_id, pledge_id, version_no, payload_hash, quantity, service_start,
+      service_end, redeem_start, redeem_end, terms, minor_restricted, rule_version, state)
+    VALUES(#{versionId}, #{pledgeId}, #{versionNo}, #{payloadHash}, #{quantity}, #{serviceStart}, #{serviceEnd},
+      #{redeemStart}, #{redeemEnd}, #{terms}, #{minorRestricted}, #{ruleVersion}, #{state})
+  </insert>
+  <select id="findVersion" resultMap="version">
+    SELECT version_id, pledge_id, version_no, payload_hash, quantity, service_start, service_end, redeem_start,
+           redeem_end, terms, minor_restricted, rule_version, state, merchant_member_id, merchant_hash,
+           merchant_confirmed_at, reviewer_member_id, reviewer_hash, frozen_at
+    FROM w17_reward_pledge_version WHERE version_id=#{versionId}
+  </select>
+  <select id="latestVersion" resultMap="version">
+    SELECT version_id, pledge_id, version_no, payload_hash, quantity, service_start, service_end, redeem_start,
+           redeem_end, terms, minor_restricted, rule_version, state, merchant_member_id, merchant_hash,
+           merchant_confirmed_at, reviewer_member_id, reviewer_hash, frozen_at
+    FROM w17_reward_pledge_version WHERE pledge_id=#{pledgeId} ORDER BY version_no DESC LIMIT 1
+  </select>
+  <update id="confirmVersion">
+    UPDATE w17_reward_pledge_version
+    SET state='CONFIRMED', merchant_member_id=#{memberId}, merchant_hash=#{hash}, merchant_confirmed_at=#{at}
+    WHERE version_id=#{versionId} AND state='SUBMITTED'
+  </update>
+  <update id="freezeVersion">
+    UPDATE w17_reward_pledge_version
+    SET state='FROZEN', reviewer_member_id=#{memberId}, reviewer_hash=#{hash}, rule_version=#{ruleVersion}, frozen_at=#{at}
+    WHERE version_id=#{versionId} AND state='CONFIRMED' AND merchant_member_id IS NOT NULL AND merchant_member_id &lt;&gt; #{memberId}
+  </update>
+  <update id="withdrawVersion">
+    UPDATE w17_reward_pledge_version SET state='WITHDRAWN' WHERE version_id=#{versionId} AND state='FROZEN'
+  </update>
+  <insert id="insertStock">
+    INSERT INTO w17_reward_stock(version_id, quantity, available, reserved, awarded_unredeemed, redeemed, expired, frozen_units, withdrawn, version_no)
+    VALUES(#{versionId}, #{quantity}, #{available}, 0, 0, 0, 0, 0, 0, 0)
+  </insert>
+  <select id="lockStock" resultMap="stock">
+    SELECT version_id, quantity, available, reserved, awarded_unredeemed, redeemed, expired, frozen_units, withdrawn, version_no
+    FROM w17_reward_stock WHERE version_id=#{versionId} FOR UPDATE
+  </select>
+  <update id="reserveOne">
+    UPDATE w17_reward_stock SET available=available-1, reserved=reserved+1, version_no=version_no+1
+    WHERE version_id=#{versionId} AND version_no=#{versionNo} AND available&gt;=1
+  </update>
+  <update id="settleAward">
+    UPDATE w17_reward_stock SET reserved=reserved-1, awarded_unredeemed=awarded_unredeemed+1, version_no=version_no+1
+    WHERE version_id=#{versionId} AND version_no=#{versionNo} AND reserved&gt;=1
+  </update>
+  <update id="withdrawAvailable">
+    UPDATE w17_reward_stock SET withdrawn=withdrawn+available, available=0, version_no=version_no+1
+    WHERE version_id=#{versionId} AND version_no=#{versionNo}
+  </update>
+  <update id="holdAvailable">
+    UPDATE w17_reward_stock SET frozen_units=frozen_units+available, available=0, version_no=version_no+1
+    WHERE version_id=#{versionId} AND version_no=#{versionNo}
+  </update>
+  <update id="markRedeemed">
+    UPDATE w17_reward_stock SET awarded_unredeemed=awarded_unredeemed-1, redeemed=redeemed+1, version_no=version_no+1
+    WHERE version_id=#{versionId} AND awarded_unredeemed&gt;=1
+  </update>
+  <update id="markExpired">
+    UPDATE w17_reward_stock SET awarded_unredeemed=awarded_unredeemed-1, expired=expired+1, version_no=version_no+1
+    WHERE version_id=#{versionId} AND awarded_unredeemed&gt;=1
+  </update>
+  <update id="returnExpired">
+    UPDATE w17_reward_stock SET expired=expired-1, available=available+1, version_no=version_no+1
+    WHERE version_id=#{versionId} AND expired&gt;=1
+  </update>
+  <insert id="insertIntent">
+    INSERT INTO w17_reward_intent(owner_id, request_id, payload_hash, version_id, branch, subject_id, state)
+    VALUES(#{ownerId}, #{requestId}, #{payloadHash}, #{versionId}, #{branch}, #{subjectId}, #{state})
+  </insert>
+  <select id="lockIntent" resultMap="intent">
+    SELECT owner_id, request_id, payload_hash, version_id, branch, subject_id, state, award_id, error_code
+    FROM w17_reward_intent WHERE owner_id=#{ownerId} AND request_id=#{requestId} FOR UPDATE
+  </select>
+  <update id="updateIntent">
+    UPDATE w17_reward_intent SET state=#{state}, award_id=#{awardId}, error_code=#{errorCode}
+    WHERE owner_id=#{ownerId} AND request_id=#{requestId}
+  </update>
+  <select id="findAwardByKey" resultMap="award">
+    SELECT award_id, version_id, rule_version, beneficiary_id, reward_scope, fact_ref, history_id, state, request_id, created_at
+    FROM w17_reward_award
+    WHERE rule_version=#{ruleVersion} AND beneficiary_id=#{beneficiaryId} AND reward_scope=#{rewardScope} AND fact_ref=#{factRef}
+  </select>
+  <select id="findAward" resultMap="award">
+    SELECT award_id, version_id, rule_version, beneficiary_id, reward_scope, fact_ref, history_id, state, request_id, created_at
+    FROM w17_reward_award WHERE award_id=#{awardId}
+  </select>
+  <insert id="insertAward">
+    INSERT INTO w17_reward_award(award_id, version_id, rule_version, beneficiary_id, reward_scope, fact_ref, state, request_id, created_at)
+    VALUES(#{awardId}, #{versionId}, #{ruleVersion}, #{beneficiaryId}, #{rewardScope}, #{factRef}, #{state}, #{requestId}, #{createdAt})
+  </insert>
+  <update id="bindHistory">
+    UPDATE w17_reward_award SET history_id=#{historyId}, state='AWARDED' WHERE award_id=#{awardId} AND history_id IS NULL
+  </update>
+  <update id="markAwardReturned">
+    UPDATE w17_reward_award SET state='RETURNED' WHERE award_id=#{awardId} AND state='AWARDED'
+  </update>
+  <insert id="insertReceipt">
+    INSERT INTO w17_reward_receipt(award_id, history_id, terms_hash, created_at)
+    VALUES(#{awardId}, #{historyId}, #{termsHash}, #{createdAt})
+  </insert>
+  <insert id="insertOutbox">
+    INSERT INTO w17_reward_outbox(award_id, state, attempt) VALUES(#{awardId}, 'PENDING', 0)
+  </insert>
+  <update id="markOutboxSent">
+    UPDATE w17_reward_outbox SET state='SENT', attempt=attempt+1 WHERE award_id=#{awardId} AND state='PENDING'
+  </update>
+  <select id="outboxAttempt" resultType="int">
+    SELECT attempt FROM w17_reward_outbox WHERE award_id=#{awardId}
+  </select>
+  <insert id="insertCase">
+    INSERT INTO w17_reward_case(case_id, award_id, version_id, owner_id, reason, state, created_at)
+    VALUES(#{caseId}, #{awardId}, #{versionId}, #{ownerId}, #{reason}, #{state}, #{createdAt})
+  </insert>
+  <select id="findCase" resultMap="caseRow">
+    SELECT case_id, award_id, version_id, owner_id, reason, state, created_at FROM w17_reward_case WHERE case_id=#{caseId}
+  </select>
+  <select id="completedThemeSession" resultType="long">
+    SELECT MIN(id) FROM topic_route_session
+    WHERE member_id=#{memberId} AND topic_id=#{topicId} AND status=1 AND completed_at IS NOT NULL
+  </select>
+  <select id="listAwards" resultMap="award">
+    SELECT award_id, version_id, rule_version, beneficiary_id, reward_scope, fact_ref, history_id, state, request_id, created_at
+    FROM w17_reward_award WHERE beneficiary_id=#{ownerId} ORDER BY created_at, award_id
+  </select>
+  <select id="countAwards" resultType="int">
+    SELECT COUNT(*) FROM w17_reward_award WHERE version_id=#{versionId}
+  </select>
+</mapper>
