@@ -96,6 +96,43 @@ function host(options = {}) {
 }
 const writes = h => h.events.filter(e => e.name === 'submit' || e.name === 'verdict');
 
+test('local notice is visible after an interruption, not while awaiting or after authoritative completion', () => {
+  const wxml = fs.readFileSync(path.join(ROOT, BALL + '.wxml'), 'utf8');
+  assert.match(wxml, /撞击根据本机动作测量，每次开始前先校准/);
+  assert.match(wxml, /calibrate-label="拿成你打算玩的姿势"/);
+  const condition = wxml.match(/wx:if="{{([^}]+)}}"[^>]*>{{localNotice}}/)[1];
+  const visible = (state) => vm.runInNewContext(condition, state);
+  const state = { localNotice: '动作读取已中断', awaitingResult: false, challenge: null };
+  assert.equal(!!visible(state), true);
+  for (const patch of [{ localNotice: '' }, { awaitingResult: true }, { challenge: { success: true } }, { challenge: { disabledReason: 'CHALLENGE_LIMIT' } }]) {
+    assert.equal(!!visible({ ...state, ...patch }), false);
+  }
+});
+
+test('explicit retry clears the notice only when a new keyed calibration can begin', () => {
+  const h = host(); h.run(); h.interrupt('hide');
+  const notice = h.ball.data.localNotice;
+  assert.match(notice, /已中断.*重新校准/);
+  h.ball.onStart(); assert.equal(h.ball.data.localNotice, notice);
+  h.resume('hide'); assert.equal(h.ball.data.localNotice, notice);
+  h.ball.onStart();
+  assert.equal(h.ball.data.localNotice, '');
+  assert.equal(h.stage.data.calibrating, true);
+  assert.equal(h.ball.data.running, false);
+  assert.equal(h.listeners.size, 0);
+});
+
+test('authoritative challenge completion clears a prior notice without submitting a local score', () => {
+  const h = host(); h.run(); const oldFail = h.starts[0].fail; oldFail();
+  assert.match(h.ball.data.localNotice, /未能开始/);
+  h.ball.data.challenge = { success: true };
+  h.ballDef.observers.challenge.call(h.ball, h.ball.data.challenge);
+  assert.equal(h.ball.data.localNotice, '');
+  assert.equal(h.stage.data.verdict, 'win');
+  oldFail(); assert.equal(h.ball.data.localNotice, '');
+  assert.equal(writes(h).length, 0);
+});
+
 for (const kind of ['hide', 'close', 'false', 'detach']) {
   for (const phase of ['calibrate', 'count', 'run']) test(`${kind} interrupts ${phase}, stops real stage and emits no result`, () => {
     const h = host(); h.ball.onStart();
@@ -104,6 +141,7 @@ for (const kind of ['hide', 'close', 'false', 'detach']) {
     const old = h.stage;
     h.interrupt(kind);
     assert.equal(h.ball.data.running, false);
+    assert.match(h.ball.data.localNotice, /已中断.*重新校准/);
     assert.equal(h.listeners.size, 0);
     assert.equal(h.tasks.size, 0);
     assert.equal(old.data.calibrating, false);
@@ -135,16 +173,26 @@ for (const option of ['missingStart','missingListen','missingOff','missingStop',
   assert.equal(h.tasks.size, 0);
   assert.equal(writes(h).length, 0);
   assert.equal(h.toasts.length,1);
+  assert.match(h.ball.data.localNotice, /无法读取手机动作|动作读取未能开始/);
+  assert.match(h.ball.data.localNotice, /重新开始会重新校准/);
 });
 test('async start failure clears listener and real deadline; can restart', () => {
   const h = host(); h.run(); h.starts[0].fail();
   assert.equal(h.listeners.size, 0); assert.equal(h.tasks.size, 0); assert.equal(h.ball.data.running, false);
-  h.run(); assert.equal(h.ball.data.running, true);
+  assert.match(h.ball.data.localNotice, /动作读取未能开始/);
+  h.ball.onStart();
+  assert.equal(h.ball.data.localNotice, '');
+  assert.equal(h.stage.data.calibrating, true);
+  assert.equal(h.ball.data.running, false);
+  h.stage.onCalibrated(); h.stage.onCountedIn();
+  assert.equal(h.ball.data.running, true);
 });
 test('first frame watchdog and malformed frames cannot leave a running attempt', () => {
   for (const value of [undefined, {}, {x:true,y:0}, {x:'1',y:0}, {x:NaN,y:0}, {x:0,y:Infinity}, {x:[],y:0}]) {
     const h = host(); h.run(); h.sample(value); h.tick(3500);
     assert.equal(h.ball.data.running, false); assert.equal(h.listeners.size, 0); assert.equal(h.tasks.size, 0); assert.equal(writes(h).length, 0);
+    assert.match(h.ball.data.localNotice, /动作读取已中断.*重新校准/);
+    h.tick(10000); assert.match(h.ball.data.localNotice, /动作读取已中断/);
   }
 });
 test('valid zero sample calibrates; stalled stream cannot score through inertia even before watchdog task', () => {
@@ -153,6 +201,7 @@ test('valid zero sample calibrates; stalled stream cannot score through inertia 
   h.sample({x:1,y:1}); h.ball._vx = 1000; h.ball._x = 1000;
   h.jump(3500); h.ball._step();
   assert.equal(h.ball.data.hits, 0); assert.equal(h.ball.data.running, false); assert.equal(writes(h).length, 0);
+  assert.match(h.ball.data.localNotice, /动作读取已中断.*重新校准/);
 });
 test('invalid frames do not refresh watchdog after valid stream', () => {
   const h = host(); h.run(); h.sample({x:0,y:0}); h.tick(2000);
@@ -195,6 +244,7 @@ test('UNKNOWN awaiting result survives every interruption and show transition', 
     const h=host({props:{challenge:{},sharedChallenge:true}}); h.run(); h.sample({x:0,y:0}); h.ball.onSubmitHits();
     h.interrupt(kind); h.resume(kind); h.ball.onStart();
     assert.equal(h.ball.data.awaitingResult,true); assert.equal(h.events.filter(e=>e.name==='submit').length,1); assert.equal(h.events.filter(e=>e.name==='start').length,1);
+    assert.equal(h.ball.data.localNotice, '');
   }
 });
 test('queued old physics/watchdog callbacks do not touch next attempt', () => {

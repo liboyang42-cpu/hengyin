@@ -20,6 +20,9 @@
         <view class="sw__tip">
           <view>开跑 1 秒后数字会消失</view>
           <view>点屏幕任意处停</view>
+          <view>本机测量读数，仅供娱乐参考。</view>
+          <view>与目标相差不超过 {{tolText}} 秒算命中。</view>
+          <view>切到后台会中断本机计时，返回后请重新开始。</view>
         </view>
       </view>
       <view class="sw__foot">
@@ -44,7 +47,7 @@
           <!-- 盲停:1 秒后只藏走动的数字,目标和容差一直挂着 -->
           <view class="sw__giant" wx:if="{{!hidden}}">{{big}}</view>
           <view class="sw__dash" wx:else>—— · ——</view>
-          <view class="sw__pill">目标 {{targetText}} 秒 · 容差 ±{{tolText}}</view>
+          <view class="sw__pill">目标 {{targetText}} 秒 · 容差 ±{{tolText}} 秒</view>
           <block wx:if="{{phase === 'over'}}">
             <view class="sw__dev">{{dev}}</view>
             <view class="sw__cap" wx:if="{{left > 0}}">还有 {{left}} 次机会</view>

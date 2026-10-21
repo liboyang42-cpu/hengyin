@@ -119,3 +119,47 @@ test('空模板跳过微信申请并且同一个 key 只告警一次', async (t)
   assert.strictEqual(requestCount, 0);
   assert.strictEqual(warnings.length, 1);
 });
+
+for (const [name, makeResponse] of [
+  ['null', () => null],
+  ['undefined', () => undefined],
+  ['array', () => []],
+  ['array with decision', id => Object.assign([], { [id]: 'accept' })],
+  ['string', () => 'accept'],
+  ['number', () => 1],
+  ['missing template', () => ({})],
+  ['unrelated template', () => ({ other: 'accept' })],
+  ['inherited decision', id => Object.create({ [id]: 'accept' })],
+  ['missing decision', id => ({ [id]: undefined })],
+  ['unknown decision', id => ({ [id]: 'unknown' })],
+  ['filtered decision', id => ({ [id]: 'filter' })],
+  ['null decision', id => ({ [id]: null })],
+  ['boolean decision', id => ({ [id]: true })],
+]) test('不完整授权结果保持未确认，不捏造拒绝：' + name, async (t) => {
+  replaceWx(t, { requestSubscribeMessage: options => options.success(makeResponse(TEMPLATES.coopSettle)) });
+  const value = await request(['coopSettle']);
+  assert.strictEqual(value.status, STATUS.FAILED);
+  assert.deepStrictEqual(value.acceptedKeys, []);
+  assert.deepStrictEqual(value.rejectedKeys, []);
+});
+
+for (const [decisions, status, accepted, rejected] of [
+  [['accept', 'accept', 'accept'], STATUS.ACCEPTED, ['signupSuccess', 'activityStart', 'refund'], []],
+  [['accept', 'reject', 'ban'], STATUS.PARTIAL, ['signupSuccess'], ['activityStart', 'refund']],
+  [['reject', 'ban', 'reject'], STATUS.REJECTED, [], ['signupSuccess', 'activityStart', 'refund']],
+  [['accept', undefined, 'reject'], STATUS.FAILED, ['signupSuccess'], ['refund']],
+  [['reject', 'filter', 'ban'], STATUS.FAILED, [], ['signupSuccess', 'refund']],
+  [['unknown', 'accept', 'accept'], STATUS.FAILED, ['activityStart', 'refund'], []],
+]) test('多模板只保留明确逐项事实，未知不伪装全拒绝：' + JSON.stringify(decisions), async (t) => {
+  replaceWx(t, { requestSubscribeMessage: options => options.success({
+    [TEMPLATES.signupSuccess]: decisions[0],
+    [TEMPLATES.activityStart]: decisions[1],
+    [TEMPLATES.refund]: decisions[2],
+  }) });
+  const value = await request(['signupSuccess', 'activityStart', 'refund']);
+  assert.strictEqual(value.status, status);
+  assert.deepStrictEqual(value.acceptedKeys, accepted);
+  assert.deepStrictEqual(value.rejectedKeys, rejected);
+  assert.deepStrictEqual(Object.keys(value).sort(),
+    ['status', 'requestedKeys', 'acceptedKeys', 'rejectedKeys', 'unconfiguredKeys'].sort());
+});

@@ -40,6 +40,8 @@
   opacity: .5;
 }
 
+.bl__notice { opacity: .85; }
+
 .bl__ball {
   position: absolute;
   left: 0; top: 0;

@@ -27,6 +27,7 @@ import com.chengyinhub.business.service.ICmsTopicNodeService;
 import com.chengyinhub.business.service.IPlayerNodeProgressService;
 import com.chengyinhub.business.service.IXpBudgetService;
 import com.chengyinhub.business.service.support.TopicBundleReviewService;
+import com.chengyinhub.business.util.ChapterBlockReadSupport;
 import com.chengyinhub.web.controller.api.ApiPlayProgressController;
 import com.chengyinhub.common.constant.ProductType;
 import com.chengyinhub.common.utils.DistanceCalculatorUtils;
@@ -854,6 +855,81 @@ class ChapterFlowWriteServiceTest
                 () -> service.updateTopicByOwnerV2(update(nodeWithContent), MEMBER_ID, "tester"));
         assertTrue(nodeFieldError.getMessage().contains("node 块不能携带 content"),
                 "必须由 node 字段形状闸拒绝: " + nodeFieldError.getMessage());
+    }
+
+    @Test
+    void mediaAltTextJsonRoundTripSurvivesWriteAndPlayerProgressProjection() throws Exception
+    {
+        ChapterBlockDTO image = JSON.readValue(
+                "{\"type\":\"image\",\"url\":\"media-asset:901\",\"altText\":\"路口的指示牌\"}", ChapterBlockDTO.class);
+        ChapterBlockDTO audio = JSON.readValue(
+                "{\"type\":\"audio\",\"url\":\"media-asset:902\",\"altText\":\"向左转后到达广场\"}", ChapterBlockDTO.class);
+        assertEquals("路口的指示牌", JSON.readTree(JSON.writeValueAsString(image)).path("altText").asText());
+        assertEquals("向左转后到达广场", JSON.readTree(JSON.writeValueAsString(audio)).path("altText").asText());
+        ChapterDTO chapter = chapter("媒体章", node("关卡"));
+        chapter.setBlocks(Arrays.asList(text("开场"), image, nodeBlock(0), audio));
+
+        service.updateTopicByOwnerV2(update(chapter), MEMBER_ID, "tester");
+
+        CmsTopicChapter saved = updatedChapters.get(0);
+        List<Map<String, Object>> stored = storedBlocks(saved);
+        assertEquals("路口的指示牌", stored.get(1).get("altText"));
+        assertEquals("向左转后到达广场", stored.get(3).get("altText"));
+        assertFalse(saved.getDescription().contains("路口的指示牌"));
+        List<Object> resolved = ChapterBlockReadSupport.resolve(saved, Collections.emptyList());
+        List<Object> beforeNode = ChapterBlockReadSupport.projectForPlayer(resolved, Collections.emptySet());
+        assertEquals(3, beforeNode.size(), "未完成节点后的音频及转写不能提前下发");
+        assertEquals("路口的指示牌", ((Map<?, ?>) beforeNode.get(1)).get("altText"));
+        List<Object> afterNode = ChapterBlockReadSupport.projectForPlayer(resolved,
+                Collections.singleton(longValue(stored.get(2).get("nodeId"))));
+        assertEquals("向左转后到达广场", ((Map<?, ?>) afterNode.get(3)).get("altText"));
+    }
+
+    @Test
+    void mediaAltTextMissingNullAndEmptyKeepExistingMediaCompatible() throws Exception
+    {
+        ChapterBlockDTO image = JSON.readValue(
+                "{\"type\":\"image\",\"url\":\"media-asset:901\"}", ChapterBlockDTO.class);
+        ChapterBlockDTO audio = JSON.readValue(
+                "{\"type\":\"audio\",\"url\":\"media-asset:902\",\"altText\":null}", ChapterBlockDTO.class);
+        assertNull(image.getAltText());
+        assertNull(audio.getAltText());
+        ChapterBlockDTO empty = imageBlock("media-asset:903");
+        empty.setAltText("");
+        ChapterDTO chapter = chapter("旧媒体章", node("关卡"));
+        chapter.setBlocks(Arrays.asList(image, audio, empty, nodeBlock(0)));
+
+        service.updateTopicByOwnerV2(update(chapter), MEMBER_ID, "tester");
+
+        List<Map<String, Object>> stored = storedBlocks(updatedChapters.get(0));
+        assertFalse(stored.get(0).containsKey("altText"));
+        assertFalse(stored.get(1).containsKey("altText"));
+        assertEquals("", stored.get(2).get("altText"));
+        assertEquals("media-asset:901", stored.get(0).get("url"));
+        assertEquals("media-asset:902", stored.get(1).get("url"));
+    }
+
+    @Test
+    void mediaAltTextAcceptsLimitAndRejectsOversizeBeforeWrites() throws Exception
+    {
+        for (String type : Arrays.asList("image", "audio"))
+        {
+            ChapterBlockDTO media = imageBlock("media-asset:901");
+            media.setType(type);
+            media.setAltText(repeat("字", 2000));
+            ChapterDTO chapter = chapter("媒体章", node("关卡"));
+            chapter.setBlocks(Arrays.asList(media, nodeBlock(0)));
+            String stored = ChapterFlowCompiler.compileChapterFlow(Collections.singletonList(chapter))
+                    .getChapters().get(0).materializeBlocks(Collections.singletonList(901L));
+            assertEquals(media.getAltText(), JSON.readTree(stored).get(0).path("altText").asText());
+
+            media.setAltText(repeat("字", 2001));
+            ChapterFlowValidationException failure = assertThrows(ChapterFlowValidationException.class,
+                    () -> service.updateTopicByOwnerV2(update(chapter), MEMBER_ID, "tester"));
+            assertTrue(failure.getMessage().contains("媒体文字替代最多 2000 字"));
+        }
+        verify(chapterMapper, never()).insertCmsTopicChapter(any());
+        verify(nodeMapper, never()).insertCmsTopicNode(any());
     }
 
     /**

@@ -7,7 +7,8 @@
 // 这一点与猜数字相反 —— 那边容差能反推出答案区间,所以那边藏。
 //
 // 判定仍在服务端:客户端报的毫秒数是设备时钟算的,而设备时钟玩家改得动。
-// 后端 SUBMIT_STOPWATCH 用 START_CHALLENGE 记的服务器时间戳复核。
+// 后端用 START_CHALLENGE 的服务端经过时间检查上报值的合理性上界，
+// 命中仍按本机上报的停表毫秒数计算，不是服务端精确测量。
 
 const TICK_MS = 50;                 // 与原型同值
 const HIDE_AFTER_MS = 1000;         // 开跑 1 秒后数字消失
@@ -58,8 +59,8 @@ Component({
     timeText: '00:00.00',
     cap: CAP_ON,
     round: 1,
-    targetText: '10.00',
-    tolText: '0.30',
+    targetText: '10.000',
+    tolText: '0.300',
     dev: '',                                 // 没停准时的偏差「早 2.40 秒」
     left: 0,                                 // 没停准时还剩几次(台面记账,这里只读来显示)
   },
@@ -75,8 +76,8 @@ Component({
         cap: CAP_ON, round: 1,
         // 商家没填标题就用原型那句 —— 空着的话这一屏最上面会缺一行
         eyebrow: String(kicker || '').trim() || EYEBROW,
-        targetText: Number(target || 0).toFixed(2),
-        tolText: (Number(tol || 0) / 1000).toFixed(2),
+        targetText: Number(target || 0).toFixed(3),
+        tolText: (Number(tol || 0) / 1000).toFixed(3),
       });
     },
   },
@@ -103,7 +104,7 @@ Component({
       this.setData({ phase: 'run', big: '0.00', hidden: false, timeText: '00:00.00', cap: CAP_ON });
       this._stop();
       this._timer = setInterval(() => this._tick(), TICK_MS);
-      // 开表要报给服务端:成绩按服务器时间复核(设备时钟玩家改得动),
+      // 开表要报给服务端，用于检查本机上报用时的合理性上界；
       // 不先开表,SUBMIT_STOPWATCH 会被判成「还没开始」
       this.triggerEvent('start');
     },

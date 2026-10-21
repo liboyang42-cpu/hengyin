@@ -29,8 +29,9 @@ function page() {
   delete require.cache[require.resolve(PAGE_PATH)];
   require(PAGE_PATH);
   const vm = Object.assign({}, sandbox.config);
-  vm.data = Object.assign({}, sandbox.config.data, { chargeEnabled: true });
+  vm.data = Object.assign({}, sandbox.config.data, { chargeEnabled: true, capabilityState: 'ready' });
   vm.setData = function (patch, cb) { Object.assign(this.data, patch); if (cb) cb(); };
+  vm._capabilityScope = vm._commerceScope();
   return vm;
 }
 
@@ -55,7 +56,7 @@ test('升级权益双击只创建一个带 requestId 的订单', () => {
   assert.equal(vm.data.checkoutBusy, true);
 });
 
-test('微信支付 success 后必须查询服务端订单终态才显示到账', () => {
+test('微信支付及订单成功后仍须核对生效授予记录', () => {
   const vm = page();
   vm.tapTier({ currentTarget: { dataset: { key: 'premium_template' } } });
   sandbox.requests[0].success({ code: 200, data: validOrder() });
@@ -67,7 +68,10 @@ test('微信支付 success 后必须查询服务端订单终态才显示到账',
   assert.equal(sandbox.toasts.includes('支付成功，权益已到账'), false);
 
   sandbox.requests[1].success({ code: 200, data: { paymentStatus: 'success' } });
-  assert.ok(sandbox.toasts.includes('支付成功，权益已到账'));
+  assert.equal(sandbox.toasts.includes('支付成功，权益已到账'), false);
+  assert.equal(vm.data.checkoutState, 'entitlementPending');
+  sandbox.requests.at(-1).success({ code: 200, data: [{ id: 1, merchantId: 9, subscriptionType: 'premium_template', isActive: 1 }] });
+  assert.ok(sandbox.toasts.includes('已确认该权益生效'));
   assert.equal(vm.data.checkoutBusy, false);
 });
 
