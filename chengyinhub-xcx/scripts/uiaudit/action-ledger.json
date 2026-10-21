@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
-  "controlCount": 4931,
+  "controlCount": 4932,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -67782,6 +67782,24 @@
               "selector": "cy-result-sheet",
               "index": 0
             },
+            {
+              "selector": "cy-btn",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/mycanyu/mycanyu",
+          "segments": [
+            {
+              "selector": "cy-btn",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/mycanyu/mycanyu",
+          "segments": [
             {
               "selector": "cy-btn",
               "index": 1
@@ -1129849,7 +1129867,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/mycanyu/mycanyu.js:149"
+        "staticSource": "subpackageMember/mycanyu/mycanyu.js:192"
       }
     },
     {
@@ -1129955,11 +1129973,81 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/mycanyu/mycanyu.js:155"
+        "staticSource": "subpackageMember/mycanyu/mycanyu.js:198"
       }
     },
     {
-      "id": "subpackageMember/mycanyu/mycanyu.wxml:44:catchtouchmove:blockSceneTouch:4",
+      "id": "subpackageMember/mycanyu/mycanyu.wxml:39:catchtap:viewVoucher:4",
+      "route": "subpackageMember/mycanyu/mycanyu",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageMember/mycanyu/mycanyu.wxml",
+        "js": "subpackageMember/mycanyu/mycanyu.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-btn",
+        "event": "catchtap",
+        "handler": "viewVoucher",
+        "line": 39,
+        "selectorHint": "cy-btn[catchtap]",
+        "visibleCondition": "{{item.voucherAvailable}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "tap",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "subpackageMember/signup/index?focusId="
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageMember/mycanyu/mycanyu.js:205"
+      }
+    },
+    {
+      "id": "subpackageMember/mycanyu/mycanyu.wxml:46:catchtouchmove:blockSceneTouch:5",
       "route": "subpackageMember/mycanyu/mycanyu",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1129982,7 +1130070,7 @@
         "tag": "view",
         "event": "catchtouchmove",
         "handler": "blockSceneTouch",
-        "line": 44,
+        "line": 46,
         "selectorHint": ".canyu-scene-host",
         "visibleCondition": "{{sceneCurrent && sceneCurrent.id === 'member-participation-detail'}}",
         "disabledCondition": null,
@@ -1130023,11 +1130111,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/mycanyu/mycanyu.js:162"
+        "staticSource": "subpackageMember/mycanyu/mycanyu.js:214"
       }
     },
     {
-      "id": "subpackageMember/mycanyu/mycanyu.wxml:45:bind:back:closeScene:6",
+      "id": "subpackageMember/mycanyu/mycanyu.wxml:47:bind:back:closeScene:7",
       "route": "subpackageMember/mycanyu/mycanyu",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1130050,7 +1130138,7 @@
         "tag": "cy-scene-sheet",
         "event": "bind:back",
         "handler": "closeScene",
-        "line": 45,
+        "line": 47,
         "selectorHint": "cy-scene-sheet[bind:back]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1130090,11 +1130178,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/mycanyu/mycanyu.js:163"
+        "staticSource": "subpackageMember/mycanyu/mycanyu.js:215"
       }
     },
     {
-      "id": "subpackageMember/mycanyu/mycanyu.wxml:45:bind:requestclose:closeScene:5",
+      "id": "subpackageMember/mycanyu/mycanyu.wxml:47:bind:requestclose:closeScene:6",
       "route": "subpackageMember/mycanyu/mycanyu",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1130117,7 +1130205,7 @@
         "tag": "cy-scene-sheet",
         "event": "bind:requestclose",
         "handler": "closeScene",
-        "line": 45,
+        "line": 47,
         "selectorHint": "cy-scene-sheet[bind:requestclose]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1130157,11 +1130245,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/mycanyu/mycanyu.js:163"
+        "staticSource": "subpackageMember/mycanyu/mycanyu.js:215"
       }
     },
     {
-      "id": "subpackageMember/mycanyu/mycanyu.wxml:46:bind:back:closeScene:7",
+      "id": "subpackageMember/mycanyu/mycanyu.wxml:48:bind:back:closeScene:8",
       "route": "subpackageMember/mycanyu/mycanyu",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1130184,7 +1130272,7 @@
         "tag": "cy-scene-member-participation-detail",
         "event": "bind:back",
         "handler": "closeScene",
-        "line": 46,
+        "line": 48,
         "selectorHint": "cy-scene-member-participation-detail[bind:back]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1130224,11 +1130312,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/mycanyu/mycanyu.js:163"
+        "staticSource": "subpackageMember/mycanyu/mycanyu.js:215"
       }
     },
     {
-      "id": "subpackageMember/mycanyu/mycanyu.wxml:46:bind:close:closeScene:8",
+      "id": "subpackageMember/mycanyu/mycanyu.wxml:48:bind:close:closeScene:9",
       "route": "subpackageMember/mycanyu/mycanyu",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1130251,7 +1130339,7 @@
         "tag": "cy-scene-member-participation-detail",
         "event": "bind:close",
         "handler": "closeScene",
-        "line": 46,
+        "line": 48,
         "selectorHint": "cy-scene-member-participation-detail[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1130291,11 +1130379,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/mycanyu/mycanyu.js:163"
+        "staticSource": "subpackageMember/mycanyu/mycanyu.js:215"
       }
     },
     {
-      "id": "subpackageMember/mycanyu/mycanyu.wxml:46:bind:refresh:onRetry:9",
+      "id": "subpackageMember/mycanyu/mycanyu.wxml:48:bind:refresh:onRetry:10",
       "route": "subpackageMember/mycanyu/mycanyu",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1130318,7 +1130406,7 @@
         "tag": "cy-scene-member-participation-detail",
         "event": "bind:refresh",
         "handler": "onRetry",
-        "line": 46,
+        "line": 48,
         "selectorHint": "cy-scene-member-participation-detail[bind:refresh]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1130400,11 +1130488,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/mycanyu/mycanyu.js:54"
+        "staticSource": "subpackageMember/mycanyu/mycanyu.js:79"
       }
     },
     {
-      "id": "subpackageMember/mycanyu/mycanyu.wxml:50:bind:settled:onPrivacyGateSettled:10",
+      "id": "subpackageMember/mycanyu/mycanyu.wxml:52:bind:settled:onPrivacyGateSettled:11",
       "route": "subpackageMember/mycanyu/mycanyu",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1130427,7 +1130515,7 @@
         "tag": "cy-privacy-gate",
         "event": "bind:settled",
         "handler": "onPrivacyGateSettled",
-        "line": 50,
+        "line": 52,
         "selectorHint": "cy-privacy-gate[bind:settled]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1130467,7 +1130555,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/mycanyu/mycanyu.js:34"
+        "staticSource": "subpackageMember/mycanyu/mycanyu.js:42"
       }
     },
     {
@@ -1130537,7 +1130625,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/mycanyu/mycanyu.js:45"
+        "staticSource": "subpackageMember/mycanyu/mycanyu.js:70"
       }
     },
     {
