@@ -13,6 +13,7 @@ import io.micrometer.core.instrument.Tag;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.webmvc.autoconfigure.DispatcherServletAutoConfiguration;
 import org.springframework.boot.tomcat.autoconfigure.servlet.TomcatServletWebServerAutoConfiguration;
+import org.springframework.boot.tomcat.servlet.TomcatServletWebServerFactory;
 import org.springframework.boot.webmvc.autoconfigure.WebMvcAutoConfiguration;
 import org.springframework.boot.web.server.servlet.context.ServletWebServerApplicationContext;
 import org.springframework.context.annotation.Configuration;
@@ -52,6 +53,8 @@ class HttpMetricsCardinalityTest {
     @Test
     void realLoopbackRequestsCannotCreateOneMeterPerCustomMethod() throws Exception {
         try (ServletWebServerApplicationContext context = start()) {
+            assertFalse(context.getBean(TomcatServletWebServerFactory.class).isDisableMBeanRegistry(),
+                    "独立 HTTP 夹具必须沿用生产的 MBean 注册配置，不能禁用同 JVM 后续探针");
             int port = context.getWebServer().getPort();
             for (int i = 0; i < 100; i++) {
                 try (Socket socket = new Socket("127.0.0.1", port)) {
@@ -79,6 +82,7 @@ class HttpMetricsCardinalityTest {
         application.setRegisterShutdownHook(false);
         return (ServletWebServerApplicationContext) application.run("--server.port=0", "--server.address=127.0.0.1",
                 "--spring.config.location=optional:classpath:/metrics-canary-does-not-exist.properties",
+                "--server.tomcat.mbeanregistry.enabled=true",
                 "--spring.main.banner-mode=off", "--logging.level.root=ERROR");
     }
 
