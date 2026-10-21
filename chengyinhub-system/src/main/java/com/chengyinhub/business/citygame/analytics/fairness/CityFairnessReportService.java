@@ -1,5 +1,6 @@
 package com.chengyinhub.business.citygame.analytics.fairness;
 
+import com.chengyinhub.business.citygame.analytics.fairness.contract.FairnessFieldContract;
 import com.chengyinhub.business.citygame.analytics.fairness.mapper.CityFairnessMapper;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
@@ -64,18 +65,9 @@ public class CityFairnessReportService {
             return persist(accountId, queryId, asOf, offset, boardId, regionId, seasonId, rulesVersion,
                     CityFairnessReader.Result.notComputable(asOf, gaps, parameter.metricVersion), 0);
         }
-        long start;
-        try {
-            start = Math.subtractExact(asOf, parameter.horizonMillis);
-        } catch (ArithmeticException ex) {
-            return persist(accountId, queryId, asOf, offset, boardId, regionId, seasonId, rulesVersion,
-                    CityFairnessReader.Result.notComputable(asOf, List.of(HORIZON_MILLIS), parameter.metricVersion),
-                    parameter.pageSize);
-        }
         List<CityFairnessReader.EventRow> events;
         try {
-            events = mapper.selectEvents(accountId, boardId, regionId, seasonId, rulesVersion, start, asOf,
-                    parameter.maxEvents + 1);
+            events = mapper.selectEvents(boardId, regionId, seasonId, rulesVersion, asOf, parameter.maxEvents + 1);
         } catch (RuntimeException ex) {
             return Page.reject(503, "city_fairness_event", asOf);
         }
@@ -86,7 +78,7 @@ public class CityFairnessReportService {
                     parameter.pageSize);
         }
         for (CityFairnessReader.EventRow event : events) {
-            if (event == null || event.actorId == null || event.actorId != accountId
+            if (event == null || event.actorId == null || event.actorId <= 0
                     || !boardId.equals(event.boardId) || !regionId.equals(event.regionId)
                     || !seasonId.equals(event.seasonId) || !rulesVersion.equals(event.rulesVersion)) {
                 return persist(accountId, queryId, asOf, offset, boardId, regionId, seasonId, rulesVersion,
@@ -127,8 +119,8 @@ public class CityFairnessReportService {
         List<String> sorted = new ArrayList<>(missing);
         sorted.sort(String::compareTo);
         return new Page(200, null, false, accountId, queryId, asOf, CityFairnessReader.NOT_COMPUTABLE, "MISSING",
-                null, null, null, boardId, regionId, seasonId, rulesVersion, sorted, List.of(), List.of(), List.of(),
-                List.of(), "0", null);
+                null, null, null, FairnessFieldContract.FORMULA_ID, null, boardId, regionId, seasonId, rulesVersion,
+                sorted, List.of(), List.of(), List.of(), List.of(), "0", null);
     }
 
     private static List<String> gaps(CityFairnessReader.ParameterRow parameter) {
@@ -138,6 +130,8 @@ public class CityFairnessReportService {
         if (parameter.deltaMillis == null || parameter.deltaMillis <= 0) missing.add(DELTA_MILLIS);
         if (parameter.horizonMillis == null || parameter.horizonMillis <= 0) missing.add(HORIZON_MILLIS);
         if (parameter.graceMillis == null || parameter.graceMillis <= 0) missing.add(GRACE_MILLIS);
+        if (parameter.mergeWindowMillis == null || parameter.mergeWindowMillis <= 0) missing.add(MERGE_WINDOW_MILLIS);
+        if (!FairnessFieldContract.STATE_RULE.equals(parameter.stateRule)) missing.add(STATE_RULE);
         if (parameter.metricVersion == null || parameter.metricVersion.isBlank()) missing.add(METRIC_VERSION);
         if (parameter.maxEvents == null || parameter.maxEvents <= 0) missing.add(MAX_EVENTS);
         if (parameter.pageSize == null || parameter.pageSize <= 0) missing.add(PAGE_SIZE);
@@ -152,16 +146,18 @@ public class CityFairnessReportService {
         int to = decoded.pageSize <= 0 ? from : Math.min(size, from + decoded.pageSize);
         String next = to < size ? Integer.toString(to) : null;
         return new Page(200, null, readBack, accountId, queryId, row.asOf, decoded.status, decoded.maturity,
-                decoded.metricVersion, decoded.matureCount, decoded.denominator, row.boardId, row.regionId,
-                row.seasonId, row.rulesVersion, decoded.missing, List.copyOf(decoded.groups.subList(from, to)),
-                decoded.outingClasses, decoded.secondOutings, decoded.lateEvents, Integer.toString(from), next);
+                decoded.metricVersion, decoded.matureCount, decoded.denominator, decoded.formulaId, decoded.factRevision,
+                row.boardId, row.regionId, row.seasonId, row.rulesVersion, decoded.missing,
+                List.copyOf(decoded.groups.subList(from, to)), decoded.outingClasses, decoded.secondOutings,
+                decoded.lateEvents, Integer.toString(from), next);
     }
 
     static String encode(CityFairnessReader.Result result, int pageSize) {
         StringBuilder out = new StringBuilder();
-        out.append("v2\n").append(result.asOf).append('\n').append(result.status).append('\n').append(result.maturity())
+        out.append("v3\n").append(result.asOf).append('\n').append(result.status).append('\n').append(result.maturity())
                 .append('\n').append(pageSize).append('\n').append(cell(result.metricVersion)).append('\n')
                 .append(cell(result.matureCount)).append('\n').append(cell(result.denominator)).append('\n')
+                .append(cell(result.formulaId)).append('\n').append(cell(result.factRevision)).append('\n')
                 .append(String.join("\u001f", result.missing)).append('\n');
         for (CityFairnessReader.Group group : result.groups) {
             out.append("G\t").append(cell(group.joinTime)).append('\t').append(cell(group.teamSize)).append('\t')
@@ -174,7 +170,8 @@ public class CityFairnessReportService {
         }
         for (CityFairnessReader.OutingClass item : result.outingClasses) {
             out.append("C\t").append(item.outingId).append('\t').append(item.actorId).append('\t')
-                    .append(item.maturity).append('\t').append(item.reason).append('\t').append(cell(item.t0)).append('\n');
+                    .append(item.maturity).append('\t').append(item.reason).append('\t').append(cell(item.t0)).append('\t')
+                    .append(cell(item.newbieQueue)).append('\t').append(cell(item.secondOutingId)).append('\n');
         }
         for (CityFairnessReader.SecondOuting item : result.secondOutings) {
             out.append("S\t").append(item.actorId).append('\t').append(item.outingId).append('\t')
@@ -198,12 +195,14 @@ public class CityFairnessReportService {
         decoded.metricVersion = textOrNull(lines[5]);
         decoded.matureCount = intOrNull(lines[6]);
         decoded.denominator = intOrNull(lines[7]);
-        decoded.missing = lines[8].isEmpty() ? List.of() : List.of(lines[8].split("\u001f", -1));
+        decoded.formulaId = textOrNull(lines[8]);
+        decoded.factRevision = longOrNull(lines[9]);
+        decoded.missing = lines[10].isEmpty() ? List.of() : List.of(lines[10].split("\u001f", -1));
         List<CityFairnessReader.Group> groups = new ArrayList<>();
         List<CityFairnessReader.OutingClass> classes = new ArrayList<>();
         List<CityFairnessReader.SecondOuting> seconds = new ArrayList<>();
         List<CityFairnessReader.LateEvent> late = new ArrayList<>();
-        for (int i = 9; i < lines.length; i++) {
+        for (int i = 11; i < lines.length; i++) {
             if (lines[i].isEmpty()) continue;
             String[] field = lines[i].split("\t", -1);
             if (field[0].equals("G")) {
@@ -222,7 +221,7 @@ public class CityFairnessReportService {
                 groups.add(group);
             } else if (field[0].equals("C")) {
                 classes.add(new CityFairnessReader.OutingClass(field[1], Long.parseLong(field[2]), field[3], field[4],
-                        longOrNull(field[5])));
+                        longOrNull(field[5]), textOrNull(field[6]), textOrNull(field[7])));
             } else if (field[0].equals("S")) {
                 seconds.add(new CityFairnessReader.SecondOuting(Long.parseLong(field[1]), field[2], Long.parseLong(field[3]),
                         longOrNull(field[4]), intOrNull(field[5]), intOrNull(field[6]), textOrNull(field[7])));
@@ -255,7 +254,7 @@ public class CityFairnessReportService {
         }
 
         public CityFairnessReader.ParameterRow parameters() { return parameter; }
-        public List<CityFairnessReader.EventRow> events(long windowStartExclusive, long asOfInclusive) { return events; }
+        public List<CityFairnessReader.EventRow> events(long asOfInclusive) { return events; }
         public List<String> unavailableStreams() { return List.of(); }
     }
 
@@ -266,6 +265,8 @@ public class CityFairnessReportService {
         String metricVersion;
         Integer matureCount;
         Integer denominator;
+        String formulaId;
+        Long factRevision;
         List<String> missing = List.of();
         List<CityFairnessReader.Group> groups = List.of();
         List<CityFairnessReader.OutingClass> outingClasses = List.of();
@@ -285,6 +286,8 @@ public class CityFairnessReportService {
         public final String metricVersion;
         public final Integer matureCount;
         public final Integer denominator;
+        public final String formulaId;
+        public final Long factRevision;
         public final String boardId;
         public final String regionId;
         public final String seasonId;
@@ -299,8 +302,8 @@ public class CityFairnessReportService {
 
         Page(int httpStatus, String errorCode, boolean readBack, long accountId, String queryId, Long asOf,
              String status, String maturity, String metricVersion, Integer matureCount, Integer denominator,
-             String boardId, String regionId, String seasonId, String rulesVersion, List<String> missing,
-             List<CityFairnessReader.Group> groups, List<CityFairnessReader.OutingClass> outingClasses,
+             String formulaId, Long factRevision, String boardId, String regionId, String seasonId, String rulesVersion,
+             List<String> missing, List<CityFairnessReader.Group> groups, List<CityFairnessReader.OutingClass> outingClasses,
              List<CityFairnessReader.SecondOuting> secondOutings, List<CityFairnessReader.LateEvent> lateEvents,
              String cursor, String nextCursor) {
             this.httpStatus = httpStatus;
@@ -314,6 +317,8 @@ public class CityFairnessReportService {
             this.metricVersion = metricVersion;
             this.matureCount = matureCount;
             this.denominator = denominator;
+            this.formulaId = formulaId;
+            this.factRevision = factRevision;
             this.boardId = boardId;
             this.regionId = regionId;
             this.seasonId = seasonId;
@@ -329,7 +334,7 @@ public class CityFairnessReportService {
 
         static Page reject(int httpStatus, String errorCode, Long asOf) {
             return new Page(httpStatus, errorCode, false, 0, null, asOf, null, null, null, null, null,
-                    null, null, null, null, List.of(), List.of(), List.of(), List.of(), List.of(), null, null);
+                    null, null, null, null, null, null, List.of(), List.of(), List.of(), List.of(), List.of(), null, null);
         }
     }
 }

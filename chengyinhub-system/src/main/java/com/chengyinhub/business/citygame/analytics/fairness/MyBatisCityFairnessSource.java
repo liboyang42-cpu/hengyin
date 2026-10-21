@@ -9,17 +9,15 @@ import java.util.Objects;
 /** Reads one approved scope. A draft row and a different scope are not this query. */
 public final class MyBatisCityFairnessSource implements CityFairnessReader.Source {
     private final CityFairnessMapper mapper;
-    private final long actorId;
     private final int maxEvents;
     private final String boardId;
     private final String regionId;
     private final String seasonId;
     private final String rulesVersion;
 
-    public MyBatisCityFairnessSource(CityFairnessMapper mapper, long actorId, int maxEvents,
+    public MyBatisCityFairnessSource(CityFairnessMapper mapper, int maxEvents,
                                       String boardId, String regionId, String seasonId, String rulesVersion) {
         this.mapper = mapper;
-        this.actorId = actorId;
         this.maxEvents = maxEvents;
         this.boardId = boardId;
         this.regionId = regionId;
@@ -50,14 +48,14 @@ public final class MyBatisCityFairnessSource implements CityFairnessReader.Sourc
                 boardId, regionId, seasonId, rulesVersion);
     }
 
-    public List<CityFairnessReader.EventRow> events(long windowStartExclusive, long asOfInclusive) {
+    public List<CityFairnessReader.EventRow> events(long asOfInclusive) {
         if (maxEvents <= 0) throw new CityFairnessReader.FairnessReadException("maxEvents");
-        List<CityFairnessReader.EventRow> rows = mapper.selectEvents(actorId, boardId, regionId, seasonId, rulesVersion,
-                windowStartExclusive, asOfInclusive, maxEvents + 1);
+        List<CityFairnessReader.EventRow> rows = mapper.selectEvents(boardId, regionId, seasonId, rulesVersion,
+                asOfInclusive, maxEvents + 1);
         if (rows == null) return List.of();
         if (rows.size() > maxEvents) throw new CityFairnessReader.FairnessReadException("event-bound");
         for (CityFairnessReader.EventRow row : rows) {
-            if (row == null || row.actorId == null || row.actorId != actorId
+            if (row == null || row.actorId == null || row.actorId <= 0
                     || !boardId.equals(row.boardId) || !regionId.equals(row.regionId)
                     || !seasonId.equals(row.seasonId) || !rulesVersion.equals(row.rulesVersion)) {
                 throw new CityFairnessReader.FairnessReadException("scope");

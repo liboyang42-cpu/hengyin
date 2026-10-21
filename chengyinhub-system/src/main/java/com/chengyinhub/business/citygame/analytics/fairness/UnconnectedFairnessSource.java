@@ -6,7 +6,7 @@ import java.util.List;
 public final class UnconnectedFairnessSource implements CityFairnessReader.Source {
     public CityFairnessReader.ParameterRow parameters() { return null; }
 
-    public List<CityFairnessReader.EventRow> events(long windowStartExclusive, long asOfInclusive) {
+    public List<CityFairnessReader.EventRow> events(long asOfInclusive) {
         return List.of();
     }
 

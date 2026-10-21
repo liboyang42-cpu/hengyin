@@ -1,5 +1,7 @@
 package com.chengyinhub.business.citygame.analytics.fairness;
 
+import com.chengyinhub.business.citygame.analytics.fairness.contract.FairnessFieldContract;
+
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
@@ -11,8 +13,10 @@ import java.util.TreeMap;
 import static com.chengyinhub.business.citygame.analytics.fairness.FairnessFactContract.*;
 
 /**
- * Read-only fairness and second-effective-outing report.
- * Not a Spring bean. Unapproved parameters or a broken read produce NOT_COMPUTABLE and no filled-in rates.
+ * Member cohort for one approved scope.
+ * t0 is the member's first confirmed valid completion. D is members with t0+H+L &lt;= asOf,
+ * excluding test and confirm-cheat. N is members in D with another valid outing in (t0, t0+H] at least Δ later.
+ * A fact with knownAt after asOf is invisible. Unset config stays unset.
  */
 public final class CityFairnessReader {
     public static final String COMPUTABLE = "COMPUTABLE";
@@ -39,22 +43,16 @@ public final class CityFairnessReader {
         }
         missing.addAll(parameterGaps(parameter));
         if (!missing.isEmpty()) return Result.notComputable(asOf, missing, version(parameter));
-        long start;
-        try {
-            start = Math.subtractExact(asOf, parameter.horizonMillis);
-        } catch (ArithmeticException ex) {
-            return Result.notComputable(asOf, List.of(HORIZON_MILLIS), version(parameter));
-        }
         List<EventRow> events;
         try {
-            events = source.events(start, asOf);
+            events = source.events(asOf);
         } catch (FairnessReadException ex) {
             return Result.notComputable(asOf, List.of(ex.missing), version(parameter));
         } catch (RuntimeException ex) {
             return Result.notComputable(asOf, List.of("city_fairness_event"), version(parameter));
         }
         if (events == null) return Result.notComputable(asOf, List.of("city_fairness_event"), version(parameter));
-        return compute(asOf, start, parameter, events);
+        return compute(asOf, parameter, events);
     }
 
     private static List<String> parameterGaps(ParameterRow parameter) {
@@ -63,6 +61,8 @@ public final class CityFairnessReader {
             missing.add(DELTA_MILLIS);
             missing.add(HORIZON_MILLIS);
             missing.add(GRACE_MILLIS);
+            missing.add(MERGE_WINDOW_MILLIS);
+            missing.add(STATE_RULE);
             missing.add(METRIC_VERSION);
             missing.add("boardId");
             missing.add("regionId");
@@ -77,6 +77,8 @@ public final class CityFairnessReader {
         if (parameter.deltaMillis == null || parameter.deltaMillis <= 0) missing.add(DELTA_MILLIS);
         if (parameter.horizonMillis == null || parameter.horizonMillis <= 0) missing.add(HORIZON_MILLIS);
         if (parameter.graceMillis == null || parameter.graceMillis <= 0) missing.add(GRACE_MILLIS);
+        if (parameter.mergeWindowMillis == null || parameter.mergeWindowMillis <= 0) missing.add(MERGE_WINDOW_MILLIS);
+        if (!FairnessFieldContract.STATE_RULE.equals(parameter.stateRule)) missing.add(STATE_RULE);
         if (parameter.metricVersion == null || parameter.metricVersion.isBlank()) missing.add(METRIC_VERSION);
         if (parameter.boardId == null || parameter.boardId.isBlank()) missing.add("boardId");
         if (parameter.regionId == null || parameter.regionId.isBlank()) missing.add("regionId");
@@ -85,7 +87,7 @@ public final class CityFairnessReader {
         return missing;
     }
 
-    private static Result compute(long asOf, long start, ParameterRow parameter, List<EventRow> events) {
+    private static Result compute(long asOf, ParameterRow parameter, List<EventRow> events) {
         List<String> missing = new ArrayList<>();
         Map<String, EventRow> byId = new LinkedHashMap<>();
         for (EventRow event : events) {
@@ -93,27 +95,39 @@ public final class CityFairnessReader {
                 missing.add("event");
                 continue;
             }
-            if (event.occurredAt == null || event.occurredAt <= start || event.occurredAt > asOf) continue;
-            if (ignored(event.kind)) continue;
             if (event.eventId == null || event.eventId.isBlank()) {
                 missing.add("eventId");
                 continue;
             }
+            if (event.knownAt == null || event.occurredAt == null || event.knownAt < 0 || event.occurredAt < 0
+                    || event.knownAt < event.occurredAt) {
+                missing.add("knownAt:" + event.eventId);
+                continue;
+            }
+            if (event.knownAt > asOf || event.occurredAt > asOf) continue;
+            if (ignored(event.kind)) continue;
             EventRow prior = byId.putIfAbsent(dedupeKey(event), event);
             if (prior != null && !same(prior, event)) missing.add("event-conflict:" + event.eventId);
         }
         if (!missing.isEmpty()) return Result.notComputable(asOf, missing, version(parameter));
 
-        Map<String, List<EventRow>> outings = new LinkedHashMap<>();
+        long factRevision = Long.MIN_VALUE;
+        boolean anyFact = false;
         for (EventRow event : byId.values()) {
+            anyFact = true;
+            factRevision = Math.max(factRevision, event.knownAt);
             if (!known(event.kind)) {
                 missing.add("kind:" + event.eventId);
                 continue;
             }
             if (event.actorId == null || event.actorId <= 0) missing.add("actorId:" + event.eventId);
-            if (event.outingId == null || event.outingId.isBlank()) {
+            if (needsOuting(event.kind) && (event.outingId == null || event.outingId.isBlank())) {
                 missing.add("outingId:" + event.eventId);
-                continue;
+            }
+            if (REVOKE.equals(event.kind)
+                    && (event.subjectSource == null || event.subjectSource.isBlank()
+                    || event.subjectEventId == null || event.subjectEventId.isBlank())) {
+                missing.add("subjectEventId:" + event.eventId);
             }
             if (event.teamSize != null && event.teamSize < 0) missing.add("teamSize:" + event.eventId);
             if (event.actionCost != null && event.actionCost < 0) missing.add("actionCost:" + event.eventId);
@@ -126,66 +140,180 @@ public final class CityFairnessReader {
             if (MERCHANT_VERIFICATION.equals(event.kind) && (event.verificationMillis == null || event.verificationMillis < 0)) {
                 missing.add("verificationMillis:" + event.eventId);
             }
-            outings.computeIfAbsent(event.outingId, key -> new ArrayList<>()).add(event);
+        }
+        if (!missing.isEmpty()) return Result.notComputable(asOf, missing, version(parameter));
+
+        List<EventRow> revokes = new ArrayList<>();
+        for (EventRow event : byId.values()) {
+            if (REVOKE.equals(event.kind)) revokes.add(event);
+        }
+        for (EventRow revoke : revokes) {
+            byId.remove(revoke.subjectSource + "\0" + revoke.subjectEventId);
+            byId.remove(dedupeKey(revoke));
+        }
+
+        Map<Long, ActorFacts> actors = new LinkedHashMap<>();
+        Map<String, Long> outingOwner = new LinkedHashMap<>();
+        for (EventRow event : byId.values()) {
+            if (REVOKE.equals(event.kind)) continue;
+            ActorFacts actor = actors.computeIfAbsent(event.actorId, ActorFacts::new);
+            if (CONFIRM_CHEAT.equals(event.kind)) {
+                actor.cheat = true;
+                continue;
+            }
+            if (TEST_MEMBER.equals(event.kind)) {
+                actor.test = true;
+                continue;
+            }
+            if (event.outingId == null || event.outingId.isBlank()) continue;
+            Long owner = outingOwner.putIfAbsent(event.outingId, event.actorId);
+            if (owner != null && !owner.equals(event.actorId)) {
+                missing.add("outing-actor:" + event.outingId);
+                continue;
+            }
+            actor.outings.computeIfAbsent(event.outingId, key -> new ArrayList<>()).add(event);
         }
         if (!missing.isEmpty()) return Result.notComputable(asOf, missing, version(parameter));
 
         Map<GroupKey, Group> groups = new TreeMap<>();
-        Map<Long, List<Outing>> byActor = new LinkedHashMap<>();
         List<OutingClass> classes = new ArrayList<>();
+        List<SecondOuting> seconds = new ArrayList<>();
         List<LateEvent> late = new ArrayList<>();
-        for (Map.Entry<String, List<EventRow>> entry : outings.entrySet()) {
-            Outing outing = outing(entry.getKey(), entry.getValue(), asOf, parameter.graceMillis, missing, late);
-            if (outing == null) continue;
-            classes.add(new OutingClass(outing.id, outing.actorId, outing.maturity, outing.reason, outing.t0));
-            try {
-                if (outing.t0 != null || counted(outing)) groups.computeIfAbsent(outing.key, Group::new).add(outing);
-            } catch (FairnessReadException ex) {
-                return Result.notComputable(asOf, List.of(ex.missing), version(parameter));
+        try {
+            for (ActorFacts actor : actors.values()) {
+                classify(asOf, parameter, actor, groups, classes, seconds, late, missing);
             }
-            if (outing.closed) byActor.computeIfAbsent(outing.actorId, key -> new ArrayList<>()).add(outing);
+        } catch (FairnessReadException ex) {
+            return Result.notComputable(asOf, List.of(ex.missing), version(parameter));
         }
         if (!missing.isEmpty()) return Result.notComputable(asOf, missing, version(parameter));
 
-        List<SecondOuting> seconds = new ArrayList<>();
-        for (Map.Entry<Long, List<Outing>> entry : byActor.entrySet()) {
-            List<Outing> ordered = new ArrayList<>(entry.getValue());
-            ordered.sort(Comparator.comparingLong(item -> item.t0));
-            Long previous = null;
-            int counted = 0;
-            for (Outing outing : ordered) {
-                if (previous != null) {
-                    long due;
-                    try {
-                        due = Math.addExact(previous, parameter.deltaMillis);
-                    } catch (ArithmeticException ex) {
-                        return Result.notComputable(asOf, List.of(DELTA_MILLIS), version(parameter));
-                    }
-                    if (outing.t0 < due) {
-                        replaceClass(classes, outing.id, "IMMATURE", "inside-delta");
-                        continue;
-                    }
-                }
-                previous = outing.t0;
-                counted++;
-                if (counted == 2) seconds.add(new SecondOuting(entry.getKey(), outing.id, outing.t0, outing.key));
-            }
-        }
+        classes.sort(Comparator.comparingLong(item -> item.actorId));
         seconds.sort(Comparator.comparingLong(item -> item.actorId));
-        classes.sort(Comparator.comparing(item -> item.outingId));
         late.sort(Comparator.comparing((LateEvent item) -> item.outingId).thenComparing(item -> item.eventId));
         int denominator = 0;
-        int mature = 0;
+        int numerator = 0;
         for (OutingClass item : classes) {
-            if (item.t0 == null || "inside-grace".equals(item.reason)) continue;
+            if (!FairnessFieldContract.MATURE.equals(item.maturity)) continue;
             denominator++;
-            if ("MATURE".equals(item.maturity)) mature++;
+            if (FairnessFieldContract.SECOND_OUTING.equals(item.reason)) numerator++;
         }
-        Integer matureCount = denominator == 0 ? null : mature;
+        Integer matureCount = denominator == 0 ? null : numerator;
         Integer denominatorCount = denominator == 0 ? null : denominator;
-        List<Group> listed = new ArrayList<>(groups.values());
-        return new Result(COMPUTABLE, List.of(), listed, seconds, classes, late, asOf, parameter.metricVersion,
-                matureCount, denominatorCount);
+        return new Result(COMPUTABLE, List.of(), new ArrayList<>(groups.values()), seconds, classes, late, asOf,
+                parameter.metricVersion, matureCount, denominatorCount, FairnessFieldContract.FORMULA_ID,
+                anyFact ? factRevision : null);
+    }
+
+    private static void classify(long asOf, ParameterRow parameter, ActorFacts actor, Map<GroupKey, Group> groups,
+                                 List<OutingClass> classes, List<SecondOuting> seconds, List<LateEvent> late,
+                                 List<String> missing) {
+        for (Map.Entry<String, List<EventRow>> outing : actor.outings.entrySet()) {
+            long earliest = Long.MAX_VALUE;
+            long latest = Long.MIN_VALUE;
+            for (EventRow event : outing.getValue()) {
+                earliest = Math.min(earliest, event.occurredAt);
+                latest = Math.max(latest, event.occurredAt);
+            }
+            if (latest - earliest > parameter.mergeWindowMillis) missing.add("merge-window:" + outing.getKey());
+        }
+        if (!missing.isEmpty()) return;
+
+        EventRow t0Event = null;
+        for (List<EventRow> outing : actor.outings.values()) {
+            for (EventRow event : outing) {
+                if (!effective(event.kind)) continue;
+                if (t0Event == null || earlier(event, t0Event)) t0Event = event;
+            }
+        }
+        if (t0Event == null) {
+            classes.add(new OutingClass("-", actor.actorId, FairnessFieldContract.IMMATURE, FairnessFieldContract.NO_T0,
+                    null, null, null));
+            return;
+        }
+        for (List<EventRow> outing : actor.outings.values()) {
+            for (EventRow event : outing) {
+                if (!effective(event.kind) || !event.occurredAt.equals(t0Event.occurredAt)) continue;
+                if (!Objects.equals(event.boardId, t0Event.boardId) || !Objects.equals(newcomer(event.newcomer), newcomer(t0Event.newcomer))) {
+                    missing.add("cohort-conflict:" + actor.actorId);
+                    return;
+                }
+            }
+        }
+        long horizonEnd;
+        long matureAt;
+        long deltaDue;
+        try {
+            horizonEnd = Math.addExact(t0Event.occurredAt, parameter.horizonMillis);
+        } catch (ArithmeticException ex) {
+            missing.add(HORIZON_MILLIS);
+            return;
+        }
+        try {
+            matureAt = Math.addExact(horizonEnd, parameter.graceMillis);
+        } catch (ArithmeticException ex) {
+            missing.add(GRACE_MILLIS);
+            return;
+        }
+        try {
+            deltaDue = Math.addExact(t0Event.occurredAt, parameter.deltaMillis);
+        } catch (ArithmeticException ex) {
+            missing.add(DELTA_MILLIS);
+            return;
+        }
+        boolean counted = !actor.cheat && !actor.test && asOf >= matureAt;
+        Group group = actor.cheat || actor.test ? null : groups.computeIfAbsent(
+                new GroupKey(t0Event.joinTime, t0Event.teamSize, t0Event.actionCost, newcomer(t0Event.newcomer)),
+                Group::new);
+        EventRow second = null;
+        for (Map.Entry<String, List<EventRow>> outing : actor.outings.entrySet()) {
+            EventRow anchor = null;
+            for (EventRow event : outing.getValue()) {
+                if (event.occurredAt > horizonEnd) {
+                    late.add(new LateEvent(outing.getKey(), event.eventId, event.occurredAt));
+                    continue;
+                }
+                if (group != null) group.add(event);
+                if (!effective(event.kind)) continue;
+                if (anchor == null || earlier(event, anchor)) anchor = event;
+            }
+            if (anchor == null || outing.getKey().equals(t0Event.outingId)) continue;
+            long at = anchor.occurredAt;
+            if (at <= t0Event.occurredAt || at > horizonEnd || at < deltaDue) continue;
+            if (second == null || earlier(anchor, second)) second = anchor;
+        }
+        String maturity;
+        String reason;
+        String secondId = null;
+        if (actor.cheat) {
+            maturity = FairnessFieldContract.EXCLUDED;
+            reason = FairnessFieldContract.CHEAT;
+        } else if (actor.test) {
+            maturity = FairnessFieldContract.EXCLUDED;
+            reason = FairnessFieldContract.TEST;
+        } else if (!counted) {
+            maturity = FairnessFieldContract.IMMATURE;
+            reason = FairnessFieldContract.AWAITING_MATURITY;
+        } else if (second != null) {
+            maturity = FairnessFieldContract.MATURE;
+            reason = FairnessFieldContract.SECOND_OUTING;
+            secondId = second.outingId;
+            seconds.add(new SecondOuting(actor.actorId, second.outingId, second.occurredAt, second.joinTime,
+                    second.teamSize, second.actionCost, newcomer(second.newcomer)));
+        } else {
+            maturity = FairnessFieldContract.MATURE;
+            reason = FairnessFieldContract.NO_SECOND_OUTING;
+        }
+        classes.add(new OutingClass(t0Event.outingId, actor.actorId, maturity, reason, t0Event.occurredAt,
+                newcomer(t0Event.newcomer), secondId));
+    }
+
+    private static boolean earlier(EventRow left, EventRow right) {
+        int time = left.occurredAt.compareTo(right.occurredAt);
+        if (time != 0) return time < 0;
+        int source = String.valueOf(left.source).compareTo(String.valueOf(right.source));
+        if (source != 0) return source < 0;
+        return String.valueOf(left.eventId).compareTo(String.valueOf(right.eventId)) < 0;
     }
 
     private static String version(ParameterRow parameter) {
@@ -198,60 +326,6 @@ public final class CityFairnessReader {
         return source + "\0" + event.eventId;
     }
 
-    private static void replaceClass(List<OutingClass> classes, String outingId, String maturity, String reason) {
-        for (int i = 0; i < classes.size(); i++) {
-            OutingClass current = classes.get(i);
-            if (outingId.equals(current.outingId)) {
-                classes.set(i, new OutingClass(outingId, current.actorId, maturity, reason, current.t0));
-                return;
-            }
-        }
-    }
-
-    private static Outing outing(String id, List<EventRow> events, long asOf, long grace, List<String> missing,
-                                 List<LateEvent> late) {
-        EventRow first = events.get(0);
-        Long joinTime = first.joinTime;
-        Integer teamSize = first.teamSize;
-        Integer actionCost = first.actionCost;
-        String newcomer = newcomer(first.newcomer);
-        Long actorId = first.actorId;
-        Long t0 = null;
-        for (EventRow event : events) {
-            if (!Objects.equals(joinTime, event.joinTime) || !Objects.equals(teamSize, event.teamSize)
-                    || !Objects.equals(actionCost, event.actionCost) || !Objects.equals(newcomer, newcomer(event.newcomer))
-                    || !Objects.equals(actorId, event.actorId)) {
-                missing.add("outing-attribute-conflict:" + id);
-                return null;
-            }
-            if (EFFECTIVE_TASK.equals(event.kind) || EFFECTIVE_SERVICE.equals(event.kind)) {
-                t0 = t0 == null ? event.occurredAt : Math.min(t0, event.occurredAt);
-            }
-        }
-        Long cutoff = null;
-        if (t0 != null) {
-            try {
-                cutoff = Math.addExact(t0, grace);
-            } catch (ArithmeticException ex) {
-                missing.add(GRACE_MILLIS);
-                return null;
-            }
-        }
-        List<EventRow> countedEvents = new ArrayList<>();
-        for (EventRow event : events) {
-            if (cutoff != null && event.occurredAt > cutoff) {
-                late.add(new LateEvent(id, event.eventId, event.occurredAt));
-            } else {
-                countedEvents.add(event);
-            }
-        }
-        boolean closed = cutoff != null && asOf >= cutoff;
-        String maturity = closed ? "MATURE" : "IMMATURE";
-        String reason = t0 == null ? "no-t0" : closed ? "effective" : "inside-grace";
-        return new Outing(id, actorId, new GroupKey(joinTime, teamSize, actionCost, newcomer), t0, closed, maturity,
-                reason, countedEvents);
-    }
-
     private static boolean sameScope(ParameterRow parameter, EventRow event) {
         return Objects.equals(parameter.boardId, event.boardId)
                 && Objects.equals(parameter.regionId, event.regionId)
@@ -259,25 +333,23 @@ public final class CityFairnessReader {
                 && Objects.equals(parameter.rulesVersion, event.rulesVersion);
     }
 
-    private static boolean counted(Outing outing) {
-        for (EventRow event : outing.events) {
-            switch (event.kind) {
-                case GOAL_COMPLETED, ZERO_POINT_BLOCK, CHALLENGE_COMPENSATION_EXIT,
-                        GPS_FALSE_REJECTION, SAFETY_TICKET, MERCHANT_VERIFICATION -> { return true; }
-                default -> { }
-            }
-        }
-        return false;
+    private static boolean effective(String kind) {
+        return EFFECTIVE_TASK.equals(kind) || EFFECTIVE_SERVICE.equals(kind);
     }
 
     private static boolean ignored(String kind) {
         return APP_REOPEN.equals(kind) || RECONNECT.equals(kind) || REGISTRATION_REPEAT.equals(kind);
     }
 
+    private static boolean needsOuting(String kind) {
+        return effective(kind) || GOAL_COMPLETED.equals(kind) || GAIN.equals(kind) || ZERO_POINT_BLOCK.equals(kind)
+                || CHALLENGE_COMPENSATION_EXIT.equals(kind) || GPS_FALSE_REJECTION.equals(kind)
+                || SAFETY_TICKET.equals(kind) || MERCHANT_VERIFICATION.equals(kind);
+    }
+
     private static boolean known(String kind) {
-        return EFFECTIVE_TASK.equals(kind) || EFFECTIVE_SERVICE.equals(kind) || GOAL_COMPLETED.equals(kind)
-                || GAIN.equals(kind) || ZERO_POINT_BLOCK.equals(kind) || CHALLENGE_COMPENSATION_EXIT.equals(kind)
-                || GPS_FALSE_REJECTION.equals(kind) || SAFETY_TICKET.equals(kind) || MERCHANT_VERIFICATION.equals(kind);
+        return needsOuting(kind) || SCAN.equals(kind) || EXIT.equals(kind) || LOW_ACTIVITY.equals(kind)
+                || CONFIRM_CHEAT.equals(kind) || TEST_MEMBER.equals(kind) || REVOKE.equals(kind);
     }
 
     private static boolean validNewcomer(String value) {
@@ -293,6 +365,9 @@ public final class CityFairnessReader {
         return Objects.equals(left.source, right.source)
                 && Objects.equals(left.outingId, right.outingId) && Objects.equals(left.kind, right.kind)
                 && Objects.equals(left.actorId, right.actorId) && Objects.equals(left.occurredAt, right.occurredAt)
+                && Objects.equals(left.knownAt, right.knownAt)
+                && Objects.equals(left.subjectSource, right.subjectSource)
+                && Objects.equals(left.subjectEventId, right.subjectEventId)
                 && Objects.equals(left.joinTime, right.joinTime) && Objects.equals(left.teamSize, right.teamSize)
                 && Objects.equals(left.actionCost, right.actionCost) && Objects.equals(left.newcomer, right.newcomer)
                 && Objects.equals(left.gainAmount, right.gainAmount)
@@ -313,7 +388,7 @@ public final class CityFairnessReader {
 
     public interface Source {
         ParameterRow parameters();
-        List<EventRow> events(long windowStartExclusive, long asOfInclusive);
+        List<EventRow> events(long asOfInclusive);
         List<String> unavailableStreams();
     }
 
@@ -323,6 +398,8 @@ public final class CityFairnessReader {
         public Long deltaMillis;
         public Long horizonMillis;
         public Long graceMillis;
+        public Long mergeWindowMillis;
+        public String stateRule;
         public Integer maxEvents;
         public Integer pageSize;
         public String boardId;
@@ -339,6 +416,9 @@ public final class CityFairnessReader {
         public String kind;
         public Long actorId;
         public Long occurredAt;
+        public Long knownAt;
+        public String subjectSource;
+        public String subjectEventId;
         public Long joinTime;
         public Integer teamSize;
         public Integer actionCost;
@@ -362,10 +442,12 @@ public final class CityFairnessReader {
         public final String metricVersion;
         public final Integer matureCount;
         public final Integer denominator;
+        public final String formulaId;
+        public final Long factRevision;
 
         Result(String status, List<String> missing, List<Group> groups, List<SecondOuting> secondOutings,
                List<OutingClass> outingClasses, List<LateEvent> lateEvents, long asOf, String metricVersion,
-               Integer matureCount, Integer denominator) {
+               Integer matureCount, Integer denominator, String formulaId, Long factRevision) {
             this.status = status;
             this.missing = List.copyOf(missing);
             this.groups = List.copyOf(groups);
@@ -376,6 +458,8 @@ public final class CityFairnessReader {
             this.metricVersion = metricVersion;
             this.matureCount = matureCount;
             this.denominator = denominator;
+            this.formulaId = formulaId;
+            this.factRevision = factRevision;
         }
 
         static Result notComputable(long asOf, List<String> missing) {
@@ -387,23 +471,15 @@ public final class CityFairnessReader {
             sorted.sort(String::compareTo);
             String version = metricVersion == null || metricVersion.isBlank() ? null : metricVersion;
             return new Result(NOT_COMPUTABLE, sorted.stream().distinct().toList(), List.of(), List.of(), List.of(),
-                    List.of(), asOf, version, null, null);
+                    List.of(), asOf, version, null, null, FairnessFieldContract.FORMULA_ID, null);
         }
 
         public boolean computable() { return COMPUTABLE.equals(status); }
 
         public String maturity() {
             if (!computable()) return "MISSING";
-            boolean mature = false;
-            boolean immature = false;
-            for (OutingClass item : outingClasses) {
-                if ("IMMATURE".equals(item.maturity)) immature = true;
-                if ("MATURE".equals(item.maturity)) mature = true;
-            }
-            if (mature && immature) return "MIXED";
-            if (immature) return "IMMATURE";
-            if (mature) return "MATURE";
-            return "EMPTY";
+            if (denominator == null) return FairnessFieldContract.NO_MATURE_SAMPLE;
+            return FairnessFieldContract.COUNTED;
         }
     }
 
@@ -413,13 +489,18 @@ public final class CityFairnessReader {
         public final String maturity;
         public final String reason;
         public final Long t0;
+        public final String newbieQueue;
+        public final String secondOutingId;
 
-        public OutingClass(String outingId, long actorId, String maturity, String reason, Long t0) {
+        public OutingClass(String outingId, long actorId, String maturity, String reason, Long t0,
+                           String newbieQueue, String secondOutingId) {
             this.outingId = outingId;
             this.actorId = actorId;
             this.maturity = maturity;
             this.reason = reason;
             this.t0 = t0;
+            this.newbieQueue = newbieQueue;
+            this.secondOutingId = secondOutingId;
         }
     }
 
@@ -459,34 +540,31 @@ public final class CityFairnessReader {
             this.newcomer = key.newcomer;
         }
 
-        void add(Outing outing) {
-            for (EventRow event : outing.events) {
-                switch (event.kind) {
-                    case GOAL_COMPLETED -> goalCompletions++;
-                    case GAIN -> {
-                        if (outing.t0 == null) break;
-                        try {
-                            effectiveGain = Math.addExact(effectiveGain, event.gainAmount);
-                            long prior = gainByActor.getOrDefault(event.actorId, 0L);
-                            gainByActor.put(event.actorId, Math.addExact(prior, event.gainAmount));
-                        } catch (ArithmeticException ex) {
-                            throw new FairnessReadException("gain-overflow");
-                        }
+        void add(EventRow event) {
+            switch (event.kind) {
+                case GOAL_COMPLETED -> goalCompletions++;
+                case GAIN -> {
+                    try {
+                        effectiveGain = Math.addExact(effectiveGain, event.gainAmount);
+                        long prior = gainByActor.getOrDefault(event.actorId, 0L);
+                        gainByActor.put(event.actorId, Math.addExact(prior, event.gainAmount));
+                    } catch (ArithmeticException ex) {
+                        throw new FairnessReadException("gain-overflow");
                     }
-                    case ZERO_POINT_BLOCK -> zeroPointBlocks++;
-                    case CHALLENGE_COMPENSATION_EXIT -> challengeCompensationExits++;
-                    case GPS_FALSE_REJECTION -> gpsFalseRejections++;
-                    case SAFETY_TICKET -> safetyTickets++;
-                    case MERCHANT_VERIFICATION -> {
-                        merchantVerifications++;
-                        try {
-                            merchantVerificationMillis = Math.addExact(merchantVerificationMillis, event.verificationMillis);
-                        } catch (ArithmeticException ex) {
-                            throw new FairnessReadException("verification-overflow");
-                        }
-                    }
-                    default -> { }
                 }
+                case ZERO_POINT_BLOCK -> zeroPointBlocks++;
+                case CHALLENGE_COMPENSATION_EXIT -> challengeCompensationExits++;
+                case GPS_FALSE_REJECTION -> gpsFalseRejections++;
+                case SAFETY_TICKET -> safetyTickets++;
+                case MERCHANT_VERIFICATION -> {
+                    merchantVerifications++;
+                    try {
+                        merchantVerificationMillis = Math.addExact(merchantVerificationMillis, event.verificationMillis);
+                    } catch (ArithmeticException ex) {
+                        throw new FairnessReadException("verification-overflow");
+                    }
+                }
+                default -> { }
             }
             totalGain = effectiveGain;
             topActorGain = gainByActor.values().stream().mapToLong(Long::longValue).max().orElse(0L);
@@ -503,10 +581,6 @@ public final class CityFairnessReader {
         public final Integer teamSize;
         public final Integer actionCost;
         public final String newcomer;
-
-        SecondOuting(long actorId, String outingId, long anchorMillis, GroupKey key) {
-            this(actorId, outingId, anchorMillis, key.joinTime, key.teamSize, key.actionCost, key.newcomer);
-        }
 
         SecondOuting(long actorId, String outingId, long anchorMillis, Long joinTime, Integer teamSize,
                      Integer actionCost, String newcomer) {
@@ -547,26 +621,12 @@ public final class CityFairnessReader {
         }
     }
 
-    private static final class Outing {
-        final String id;
+    private static final class ActorFacts {
         final long actorId;
-        final GroupKey key;
-        final Long t0;
-        final boolean closed;
-        final String maturity;
-        final String reason;
-        final List<EventRow> events;
+        final Map<String, List<EventRow>> outings = new LinkedHashMap<>();
+        boolean cheat;
+        boolean test;
 
-        Outing(String id, long actorId, GroupKey key, Long t0, boolean closed, String maturity, String reason,
-               List<EventRow> events) {
-            this.id = id;
-            this.actorId = actorId;
-            this.key = key;
-            this.t0 = t0;
-            this.closed = closed;
-            this.maturity = maturity;
-            this.reason = reason;
-            this.events = events;
-        }
+        ActorFacts(long actorId) { this.actorId = actorId; }
     }
 }

@@ -8,6 +8,8 @@
                delta_millis as deltaMillis,
                horizon_millis as horizonMillis,
                grace_millis as graceMillis,
+               merge_window_millis as mergeWindowMillis,
+               state_rule as stateRule,
                max_events as maxEvents,
                page_size as pageSize,
                board_id as boardId,
@@ -30,6 +32,9 @@
                kind,
                actor_id as actorId,
                occurred_at as occurredAt,
+               known_at as knownAt,
+               subject_source as subjectSource,
+               subject_event_id as subjectEventId,
                join_time as joinTime,
                team_size as teamSize,
                action_cost as actionCost,
@@ -41,14 +46,13 @@
                season_id as seasonId,
                rules_version as rulesVersion
         from city_fairness_event
-        where actor_id = #{actorId}
-          and board_id = #{boardId}
+        where board_id = #{boardId}
           and region_id = #{regionId}
           and season_id = #{seasonId}
           and rules_version = #{rulesVersion}
-          and occurred_at &gt; #{windowStartExclusive}
+          and known_at &lt;= #{asOfInclusive}
           and occurred_at &lt;= #{asOfInclusive}
-        order by occurred_at, source_ref, event_id
+        order by known_at, occurred_at, source_ref, event_id
         limit #{limit}
     </select>
 
@@ -59,6 +63,9 @@
                kind,
                actor_id as actorId,
                occurred_at as occurredAt,
+               known_at as knownAt,
+               subject_source as subjectSource,
+               subject_event_id as subjectEventId,
                join_time as joinTime,
                team_size as teamSize,
                action_cost as actionCost,
@@ -76,12 +83,13 @@
 
     <insert id="insertEvent">
         insert into city_fairness_event (
-            source_ref, event_id, outing_id, kind, actor_id, occurred_at,
-            join_time, team_size, action_cost, newcomer, gain_amount, verification_millis,
-            board_id, region_id, season_id, rules_version
+            source_ref, event_id, outing_id, kind, actor_id, occurred_at, known_at,
+            subject_source, subject_event_id, join_time, team_size, action_cost, newcomer,
+            gain_amount, verification_millis, board_id, region_id, season_id, rules_version
         ) values (
-            #{source}, #{eventId}, #{outingId}, #{kind}, #{actorId}, #{occurredAt},
-            #{joinTime}, #{teamSize}, #{actionCost}, #{newcomer}, #{gainAmount}, #{verificationMillis},
+            #{source}, #{eventId}, #{outingId}, #{kind}, #{actorId}, #{occurredAt}, #{knownAt},
+            #{subjectSource}, #{subjectEventId}, #{joinTime}, #{teamSize}, #{actionCost}, #{newcomer},
+            #{gainAmount}, #{verificationMillis},
             #{boardId}, #{regionId}, #{seasonId}, #{rulesVersion}
         )
     </insert>

@@ -49,13 +49,16 @@ public class CityFairnessIngestionService {
         }
         if (!known(fact.kind)) return "kind";
         if (fact.actorId == null || fact.actorId <= 0) return "actorId";
-        if (fact.outingId == null || fact.outingId.isBlank()) return "outingId";
-        if (fact.outingId.indexOf('\t') >= 0 || fact.outingId.indexOf('\n') >= 0) return "outingId";
-        if (fact.occurredAt == null) return "occurredAt";
+        if (fact.outingId != null && (fact.outingId.indexOf('\t') >= 0 || fact.outingId.indexOf('\n') >= 0)) return "outingId";
+        if (fact.occurredAt == null || fact.occurredAt < 0) return "occurredAt";
+        if (fact.knownAt == null || fact.knownAt < fact.occurredAt) return "knownAt";
+        if (REVOKE.equals(fact.kind) && (fact.subjectSource == null || fact.subjectSource.isBlank()
+                || fact.subjectEventId == null || fact.subjectEventId.isBlank())) return "subjectEventId";
         if (fact.boardId == null || fact.boardId.isBlank()) return "boardId";
         if (fact.regionId == null || fact.regionId.isBlank()) return "regionId";
         if (fact.seasonId == null || fact.seasonId.isBlank()) return "seasonId";
         if (fact.rulesVersion == null || fact.rulesVersion.isBlank()) return "rulesVersion";
+        if (needsOuting(fact.kind) && (fact.outingId == null || fact.outingId.isBlank())) return "outingId";
         if (GAIN.equals(fact.kind) && (fact.gainAmount == null || fact.gainAmount < 0)) return "gainAmount";
         if (MERCHANT_VERIFICATION.equals(fact.kind) && (fact.verificationMillis == null || fact.verificationMillis < 0)) {
             return "verificationMillis";
@@ -63,10 +66,15 @@ public class CityFairnessIngestionService {
         return null;
     }
 
-    private static boolean known(String kind) {
+    private static boolean needsOuting(String kind) {
         return EFFECTIVE_TASK.equals(kind) || EFFECTIVE_SERVICE.equals(kind) || GOAL_COMPLETED.equals(kind)
                 || GAIN.equals(kind) || ZERO_POINT_BLOCK.equals(kind) || CHALLENGE_COMPENSATION_EXIT.equals(kind)
                 || GPS_FALSE_REJECTION.equals(kind) || SAFETY_TICKET.equals(kind) || MERCHANT_VERIFICATION.equals(kind);
+    }
+
+    private static boolean known(String kind) {
+        return needsOuting(kind) || SCAN.equals(kind) || EXIT.equals(kind) || LOW_ACTIVITY.equals(kind)
+                || CONFIRM_CHEAT.equals(kind) || TEST_MEMBER.equals(kind) || REVOKE.equals(kind);
     }
 
     public static final class IngestResult {

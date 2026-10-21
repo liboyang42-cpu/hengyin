@@ -51,6 +51,8 @@ public class CityFairnessReportController extends BaseController {
         data.put("queryId", page.queryId);
         data.put("asOf", page.asOf);
         data.put("metricVersion", page.metricVersion);
+        data.put("formulaId", page.formulaId);
+        data.put("factRevision", page.factRevision);
         data.put("matureCount", page.matureCount);
         data.put("denominator", page.denominator);
         data.put("boardId", page.boardId);
@@ -61,6 +63,7 @@ public class CityFairnessReportController extends BaseController {
         data.put("maturity", page.maturity);
         data.put("missing", page.missing);
         data.put("groups", page.groups);
+        data.put("members", page.outingClasses);
         data.put("outingClasses", page.outingClasses);
         data.put("secondOutings", page.secondOutings);
         data.put("lateEvents", page.lateEvents);

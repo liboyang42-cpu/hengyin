@@ -14,12 +14,10 @@ public interface CityFairnessMapper {
                                          @Param("seasonId") String seasonId,
                                          @Param("rulesVersion") String rulesVersion);
 
-    List<EventRow> selectEvents(@Param("actorId") long actorId,
-                                 @Param("boardId") String boardId,
+    List<EventRow> selectEvents(@Param("boardId") String boardId,
                                  @Param("regionId") String regionId,
                                  @Param("seasonId") String seasonId,
                                  @Param("rulesVersion") String rulesVersion,
-                                 @Param("windowStartExclusive") long windowStartExclusive,
                                  @Param("asOfInclusive") long asOfInclusive,
                                  @Param("limit") int limit);
 
