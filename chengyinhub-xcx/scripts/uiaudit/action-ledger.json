@@ -841021,7 +841021,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit-ballshake/index.wxml:31:bindtap:onSubmitHits:3",
+      "id": "pages/play/components/playkit-ballshake/index.wxml:32:bindtap:onSubmitHits:3",
       "route": "component:pages/play/components/playkit-ballshake/index",
       "hostRoutes": [
         "pages/play/index",
@@ -841100,7 +841100,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onSubmitHits",
-        "line": 31,
+        "line": 32,
         "selectorHint": ".bl__b",
         "visibleCondition": "{{sharedChallenge && running}}",
         "disabledCondition": null,
@@ -841140,11 +841140,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-ballshake/index.js:183"
+        "staticSource": "pages/play/components/playkit-ballshake/index.js:265"
       }
     },
     {
-      "id": "pages/play/components/playkit-ballshake/index.wxml:33:bindtap:onStart:4",
+      "id": "pages/play/components/playkit-ballshake/index.wxml:34:bindtap:onStart:4",
       "route": "component:pages/play/components/playkit-ballshake/index",
       "hostRoutes": [
         "pages/play/index",
@@ -841223,7 +841223,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onStart",
-        "line": 33,
+        "line": 34,
         "selectorHint": ".bl__b",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -841238,11 +841238,11 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "other",
+      "actionClass": "state",
       "interactionMode": "tap",
-      "baseActionClass": "other",
+      "baseActionClass": "state",
       "effectClasses": [
-        "other"
+        "state"
       ],
       "accessBoundary": null,
       "externalCapabilities": [],
@@ -841255,20 +841255,19 @@
         "apiContracts": [],
         "writeApis": []
       },
-      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
-        "success",
-        "error"
+        "success"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-ballshake/index.js:103"
+        "staticSource": "pages/play/components/playkit-ballshake/index.js:153"
       }
     },
     {
-      "id": "pages/play/components/playkit-ballshake/index.wxml:6:bind:back:onClose:0",
+      "id": "pages/play/components/playkit-ballshake/index.wxml:7:bind:back:onClose:0",
       "route": "component:pages/play/components/playkit-ballshake/index",
       "hostRoutes": [
         "pages/play/index",
@@ -841347,7 +841346,7 @@
         "tag": "cy-play-stage",
         "event": "bind:back",
         "handler": "onClose",
-        "line": 6,
+        "line": 7,
         "selectorHint": "#cy-play-stage",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -841362,11 +841361,11 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "other",
+      "actionClass": "state",
       "interactionMode": "event-contract",
-      "baseActionClass": "other",
+      "baseActionClass": "state",
       "effectClasses": [
-        "other"
+        "state"
       ],
       "accessBoundary": null,
       "externalCapabilities": [],
@@ -841379,20 +841378,19 @@
         "apiContracts": [],
         "writeApis": []
       },
-      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
-        "success",
-        "error"
+        "success"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-ballshake/index.js:190"
+        "staticSource": "pages/play/components/playkit-ballshake/index.js:274"
       }
     },
     {
-      "id": "pages/play/components/playkit-ballshake/index.wxml:6:bind:run:onRun:1",
+      "id": "pages/play/components/playkit-ballshake/index.wxml:7:bind:run:onRun:1",
       "route": "component:pages/play/components/playkit-ballshake/index",
       "hostRoutes": [
         "pages/play/index",
@@ -841471,7 +841469,7 @@
         "tag": "cy-play-stage",
         "event": "bind:run",
         "handler": "onRun",
-        "line": 6,
+        "line": 7,
         "selectorHint": "#cy-play-stage",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -841511,11 +841509,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-ballshake/index.js:112"
+        "staticSource": "pages/play/components/playkit-ballshake/index.js:169"
       }
     },
     {
-      "id": "pages/play/components/playkit-ballshake/index.wxml:6:bind:verdict:onVerdict:2",
+      "id": "pages/play/components/playkit-ballshake/index.wxml:7:bind:verdict:onVerdict:2",
       "route": "component:pages/play/components/playkit-ballshake/index",
       "hostRoutes": [
         "pages/play/index",
@@ -841594,7 +841592,7 @@
         "tag": "cy-play-stage",
         "event": "bind:verdict",
         "handler": "onVerdict",
-        "line": 6,
+        "line": 7,
         "selectorHint": "#cy-play-stage",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -841634,7 +841632,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-ballshake/index.js:185"
+        "staticSource": "pages/play/components/playkit-ballshake/index.js:267"
       }
     },
     {
