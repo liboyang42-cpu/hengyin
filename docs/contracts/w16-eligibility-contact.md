@@ -35,6 +35,14 @@
 - `w16_contact_counter` 仍留在旧候选迁移里。本组配对不再写入它，也不再用它判断已预留 match 是否继续有效。
 - `Safety.compatible` 对已接通策略只表示频率规则行仍然有效。它不再比较累计次数。已预留 match 的 read/accept 不因这次配对自己的计数变成 `SAFETY_STOPPED`。下一次新配对在额度用尽时拒绝。
 
+## 组合根默认关闭
+
+`RendezvousPairingComposition` 是唯一的配对 `@Bean`。属性 `chengyinhub.w16.pairing` 写在该类上，默认 `false`，不写入 `application*.yml`。属性不是 `true` 时不注册 Bean，也不调用 `pairOnce`。
+
+同意存储的 `Mode` 没有正式持久化成员，也没有签约的会员资料事实来源。`ums_member` 的生日和地区不是资格证明。`FACT_PROVIDER` 与 `FORMAL_MODE` 固定为 `UNCONTRACTED`。显式打开属性且 DataSource、SqlSession、事务管理器一致时，`formal` 抛 `W16_PAIRING_FORMAL_MODE_UNCONTRACTED`，不构造 scheduler，不插入规则、事实或额度。依赖缺失抛 `W16_PAIRING_DEPENDENCY_MISSING`。数据源或事务工厂不一致抛 `W16_PAIRING_RESOURCE_MISMATCH`。同意、协议、资格、额度或拉黑 mapper 不在该会话抛 `W16_PAIRING_MAPPER_MISSING`。
+
+`evaluation` 只给隔离本地试验，不是 Spring Bean。它把同一 SqlSession 和事务管理器上的 `MyBatisRendezvousConsentStore`、`RendezvousContactLedger`、`MyBatisRendezvousWaiting` 接到四参 `RendezvousConsentService` 和 `RendezvousPoolScheduler`，然后返回。它自己不配对。缺规则、缺 `w16_eligibility_fact`、缺额度行时，入池或 `pairOnce` 仍拒绝，不补生产默认值。
+
 ## 给 B/C/H/I/J 的内部操作
 
 都在调用方已经持有的 guard 事务里执行，不调用 `Store.transaction` 或 `read`。
