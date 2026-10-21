@@ -116,7 +116,8 @@ public final class RendezvousConsentService {
         Reply(View view, String rejection) { this.view = view; this.rejection = rejection; }
     }
     /** Writes the admission for one new match. Called inside the guard transaction.
-     * {@code now} is the clock read in that transaction, not a time taken before the lock. */
+     * {@code now} is the clock read in that transaction, not a time taken before the lock.
+     * The formal wiring passes {@link RendezvousContactLedger#charge}. */
     public interface Admission {
         void charge(String matchId, long first, long second, String pool, long now);
     }
@@ -124,10 +125,12 @@ public final class RendezvousConsentService {
     private final Safety safety;
     private final Clock clock;
     private final Admission admission;
-    /** No ledger is attached. The guard transaction refuses the new pair and keeps no reservation. */
+    /** No ledger is attached. The guard transaction refuses the new pair and keeps no reservation.
+     * This constructor stays for callers that only join, read, accept, or stop. */
     public RendezvousConsentService(Store store, Safety safety, Clock clock) {
         this(store, safety, clock, (matchId, first, second, pool, now) -> { throw new Rejection("POLICY_CLOSED"); });
     }
+    /** Stable four-argument contract. C and H pass their own admission. The pairing composition passes {@code ledger::charge}. */
     public RendezvousConsentService(Store store, Safety safety, Clock clock, Admission admission) {
         this.store = Objects.requireNonNull(store); this.safety = Objects.requireNonNull(safety);
         this.clock = Objects.requireNonNull(clock); this.admission = Objects.requireNonNull(admission);
