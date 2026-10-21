@@ -26,7 +26,11 @@ function loadPage(modulePath) {
   }
   global.getApp = () => app
   global.Page = (config) => { definition = config }
+  const storage = new Map()
   global.wx = {
+    getStorageSync: key => storage.get(key),
+    setStorageSync: (key, value) => storage.set(key, value),
+    removeStorageSync: key => storage.delete(key),
     showToast: (options) => toasts.push(options && options.title),
   }
   delete require.cache[require.resolve(modulePath)]
@@ -291,6 +295,7 @@ test('聊天记录加载更多单飞，失败保留现有消息与同一游标�
   const h = loadPage(CHAT_MODULE)
   const old = [{ id: 9, content: '已确认消息' }]
   h.page.data.conversationId = 7
+  h.page.data.myId = 8
   h.page.data.hasMore = true
   h.page.data.cursor = 42
   h.page.data.msgs = old
@@ -883,6 +888,7 @@ test('F-R2S-10 发送位置被拒绝授权时给出「去设置」恢复入口�
     const h = loadPage(CHAT_MODULE)
     const picks = []
     global.wx.chooseLocation = (options) => picks.push(options)
+    h.page.data.myId = 8
     h.page._canSend = () => true
     h.page._isReadContextCurrent = () => true
     h.page.onSendLocation()

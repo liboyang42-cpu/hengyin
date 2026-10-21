@@ -1,3 +1,4 @@
+const sendRecovery = require('../../utils/im-send-recovery.js');
 const loading = require('../../utils/loading.js');
 const toast = require('../../utils/toast.js');
 const app = getApp();
@@ -300,6 +301,7 @@ Page({
     if (dc) dc.busyOn();
     const clearLocalLogin = function () {
       if (!clearStoragePreservingPlayerRoamMemory(wx)) return false;
+      sendRecovery.invalidate();
       app.globalData.authorization = '';
       app.globalData.open_id = '';
       app.globalData.user_id = '';

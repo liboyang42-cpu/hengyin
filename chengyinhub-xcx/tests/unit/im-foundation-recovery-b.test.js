@@ -1,7 +1,5 @@
 'use strict';
-// 端口自 1e403b13 的 im-foundation-recovery-b:只保留 master 后端已支持的部分。
-// 收据回读(/api/im/send-receipt)、增量拉取(after_id/nextAfter)、read_to、路线投影依赖
-// 1e403b13 的后端改动,master 后端未提供,前端不在此层叠(见移植报告)。
+// 路线卡只信消息投影；signup 详情继续验证账号隔离。
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -29,7 +27,7 @@ function committed(id, key) { return { id, senderId: 1, msgType: 1, content: 'he
 test('switched account cannot apply old history, current load, polling or route results', () => {
   const h = harness();
   h.page.setData({ hasMore: true, cursor: 80 }); h.page.loadMore(); h.page.loadMessages(false); h.page.pollNew();
-  h.page.fetchTopics([{ card: { cardType: 'route', topicId: 8 } }]);
+  h.page.fetchTopics([{ card: { cardType: 'signup', topicId: 8 } }]);
   assert.ok(h.requests.some(r => r.url === '/api/topic/info-to-user'));
   const before = JSON.stringify(h.page.data); h.account(2);
   h.requests.forEach(r => r.success({ code: 200, data: { list: [committed(99, 'other')], hasMore: false, name: 'other account route' } }));
@@ -44,9 +42,9 @@ test('switched account drops late route detail failure as well', () => {
   assert.equal(h.page.data.topicCache[9], undefined);
 });
 
-test('same account route detail still lands', () => {
+test('same account signup detail still lands', () => {
   const h = harness();
-  h.page.fetchTopics([{ card: { cardType: 'route', topicId: 8 } }]);
+  h.page.fetchTopics([{ card: { cardType: 'signup', topicId: 8 } }]);
   h.requests[0].success({ code: 200, data: { name: 'public route' } });
   assert.equal(h.page.data.topicCache[8].name, 'public route');
 });
