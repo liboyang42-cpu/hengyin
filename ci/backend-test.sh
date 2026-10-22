@@ -98,6 +98,13 @@ MYBATIS_ITS=(
   JourneyFullFlowMySqlIT
   # Lane W10b:资料版本号递增 / 头像回执读 inbox / 分享版本 CAS 列与按令牌撤销,真迁移跑两遍证幂等。
   LaneW10bReadbackMySqlIT
+  # 2026-10-22 AC1 发布验收 P0 链(docs/delivery/release-closeout-20261022/acceptance-p0-backend.md):
+  #   核销(扫码/团码/撤销/双店员竞态)、跨账号、城市跑恢复竞态与冻结、自由探索供给闸、注销清理范围。
+  P0RedemptionChainMySqlIT
+  P0CrossAccountMySqlIT
+  P0CityRunChainMySqlIT
+  P0FreeExploreSupplyGateMySqlIT
+  P0DeregistrationMySqlIT
 )
 IFS=, ; IT_LIST="${MYBATIS_ITS[*]}" ; unset IFS
 # ⚠️ 必须带 -am:上面那句 `mvn clean test` 不 install 兄弟模块,
