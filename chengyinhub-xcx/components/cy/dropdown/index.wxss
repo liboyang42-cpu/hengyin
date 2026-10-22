@@ -94,7 +94,7 @@
   color: var(--cy-color-text-primary);
 }
 .cdd__item--on { color: var(--cy-color-action-primary-bg); font-weight: 600; }
-.cdd__check { width: 28rpx; flex-shrink: 0; display: flex; align-items: center; }
+.cdd__check { width: 28rpx; flex-shrink: 0; display: flex; align-items: center; justify-content: flex-end; } /* 2026-10-22 勾移到文字右侧 */
 .cdd__item-txt { flex: 1; min-width: 0; word-break: break-word; }
 
 @keyframes cdd-in  { from { opacity: 0; transform: scaleY(0.92) translateY(-4rpx); } to { opacity: 1; transform: scaleY(1) translateY(0); } }

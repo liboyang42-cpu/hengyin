@@ -1626,3 +1626,15 @@ page {
 .cg-edit-sheet .cg-gcfg .cg-input, .cg-edit-sheet .cg-gcfg .cg-cfg-input, .cg-edit-sheet .cg-gcfg .cg-textarea,
 .cg-edit-sheet .cg-gcfg .cg-cfg-textarea, .cg-edit-sheet .cg-gcfg .cg-pick { background: var(--cy-bg-card-2); border-color: transparent; }
 .cg-tstrip__in { padding-left: var(--cy-space-4); padding-right: var(--cy-space-6); }
+
+/* 玩法图标按分类上一层浅色:浅底 + 同色图标,不用渐变 */
+.cg-game-ico--qa { background: rgba(252,63,63,.10); color: #E5484D; } /* ds-ok: 原型定稿的玩法分类色 */
+.cg-game-ico--logic { background: rgba(91,140,255,.12); color: #3E6FE0; } /* ds-ok: 原型定稿的玩法分类色 */
+.cg-game-ico--play { background: rgba(18,184,134,.12); color: #0E9E73; } /* ds-ok: 原型定稿的玩法分类色 */
+.cg-game-ico--challenge { background: rgba(124,92,255,.12); color: #6A4CE8; } /* ds-ok: 原型定稿的玩法分类色 */
+
+/* 浮层上下两端按透明度渐隐(2026-10-22 主人定稿):固定头下方、底部各一段,内容滚过去时淡出,不是换颜色 */
+.cg-edit-head::after { content: ""; position: absolute; left: 0; right: 0; bottom: -32rpx; height: 32rpx; pointer-events: none;
+  background: linear-gradient(var(--cy-color-bg-surface), transparent); }
+.cg-sheet::after { content: ""; display: block; position: sticky; bottom: calc(-1 * (var(--cy-space-4) + env(safe-area-inset-bottom))); height: 64rpx; margin-top: -64rpx; pointer-events: none;
+  background: linear-gradient(transparent, var(--cy-bg-card)); }

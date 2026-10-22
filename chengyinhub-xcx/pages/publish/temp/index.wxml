@@ -210,7 +210,7 @@
           <view wx:if="{{!gameKey}}" class="cg-r5-row" bindtap="openR5GameSheet" aria-role="button" aria-label="选择玩法" hover-class="cy-pressed" hover-stay-time="80"><view class="cg-r5-row__main"><text class="cg-r5-row__title">选择玩法</text><cy-inline-error wx:if="{{errors.finish}}" class="cg-r5-row__sub is-err" kind="error" title="{{errors.finish}}" /></view><view class="cg-r5-pill">选择<cy-icon name="chevron-right" size="24" /></view></view>
           <block wx:else>
             <view class="cg-r5-row">
-              <view class="cg-game-ico"><cy-icon name="{{gameCurrent.icon}}" size="36" /></view>
+              <view class="cg-game-ico cg-game-ico--{{r5Editor.gameTint}}"><cy-icon name="{{gameCurrent.icon}}" size="36" /></view>
               <view class="cg-r5-row__main"><text class="cg-r5-row__title">{{gameCurrent.label}}</text><text class="cg-r5-row__sub" wx:if="{{gameCurrent.sub}}">{{gameCurrent.sub}}</text></view>
               <view class="cg-r5-pill" bindtap="openR5GameSheet" aria-role="button" aria-label="更换玩法" hover-class="cy-pressed" hover-stay-time="80">更换</view>
             </view>
@@ -288,7 +288,7 @@
       <view class="cg-adv-del" data-path="pricePair.items" data-index="{{gi}}" bindtap="removeAdvancedRow" aria-role="button" aria-label="删除" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="28" /></view>
     </view>
     <input class="cg-cfg-input" value="{{item.name}}" placeholder="这张图叫什么，如 冰美式" data-path="pricePair.items" data-index="{{gi}}" data-field="name" bindinput="updateAdvancedRow" />
-    <input class="cg-cfg-input" value="{{item.imageUrl}}" placeholder="图片地址（选填，https 或站内路径）" data-path="pricePair.items" data-index="{{gi}}" data-field="imageUrl" bindinput="updateAdvancedRow" />
+    <input class="cg-cfg-input" value="{{item.imageUrl}}" placeholder="图片地址(https 或站内路径)" data-path="pricePair.items" data-index="{{gi}}" data-field="imageUrl" bindinput="updateAdvancedRow" />
     <!-- 正确答案是**单选**:点圆圈设为正确答案。用开关的话会出现「把答案关掉」这种无意义状态 -->
     <view class="cg-choice-li cg-adv-correct" data-index="{{gi}}" bindtap="pickCorrectPicture"
           aria-role="radio" aria-checked="{{item.correct}}" aria-label="把图 {{gi + 1}} 设为正确答案"
@@ -357,10 +357,10 @@
     <view class="cg-qa-sec cg-qa-sec--first">题目</view>
     <view class="cg-cfg-label">题干 <text class="req" aria-hidden="true">*</text></view>
     <input class="cg-cfg-input" value="{{advanced.qa.title}}" placeholder="例如 这座桥建于哪一年?" data-section="qa" data-field="title" bindinput="onAdvancedField" />
-    <view class="cg-cfg-label">前置说明{{advanced.qa.mode === 'SHOT' ? '' : ' · 选填'}} <text class="req" wx:if="{{advanced.qa.mode === 'SHOT'}}" aria-hidden="true">*</text></view>
+    <view class="cg-cfg-label">前置说明 <text class="req" wx:if="{{advanced.qa.mode === 'SHOT'}}" aria-hidden="true">*</text></view>
     <input class="cg-cfg-input" value="{{advanced.qa.lead}}" placeholder="例如 先闭上眼睛尝一口" data-section="qa" data-field="lead" bindinput="onAdvancedField" />
     <block wx:if="{{advanced.qa.mode === 'SHOT'}}">
-    <view class="cg-cfg-label">补充说明 · 选填</view>
+    <view class="cg-cfg-label">补充说明</view>
     <input class="cg-cfg-input" value="{{advanced.qa.shotNote}}" placeholder="例如 站在树的左边，把整棵树都框进去" data-section="qa" data-field="shotNote" bindinput="onAdvancedField" />
     </block>
 
@@ -394,7 +394,7 @@
       <input class="cg-cfg-input" value="{{item.label}}" placeholder="玩家看到的文案" data-path="qa.options" data-index="{{qi}}" data-field="label" bindinput="updateAdvancedRow" />
       <view class="cg-qa-fb">
         <view class="cg-cfg-label">选中后的反馈</view>
-        <textarea class="cg-cfg-textarea" value="{{item.fb}}" placeholder="选了它之后玩家看到的文字 · 选填" maxlength="120" data-path="qa.options" data-index="{{qi}}" data-field="fb" bindinput="updateAdvancedRow" />
+        <textarea class="cg-cfg-textarea" value="{{item.fb}}" placeholder="选了它之后玩家看到的文字" maxlength="120" data-path="qa.options" data-index="{{qi}}" data-field="fb" bindinput="updateAdvancedRow" />
         <view class="cg-qmedia cg-qa-imgs">
           <view class="cg-qmedia-slot" wx:for="{{item.fbImgs}}" wx:key="*this" wx:for-item="img" wx:for-index="ii" data-index="{{qi}}" data-img="{{ii}}" bindtap="tapQaFbImg" aria-role="button" aria-label="选项 {{qi + 1}} 反馈图片 {{ii + 1}}" hover-class="cy-pressed" hover-stay-time="80">
             <image class="cg-qmedia-img" src="{{img}}" mode="aspectFill" />
@@ -536,7 +536,7 @@
     <view><view class="cg-cfg-label">容差（度） <text class="req" aria-hidden="true">*</text></view><input class="cg-cfg-input" type="number" value="{{advanced.compass.tolerance}}" placeholder="5 至 90" data-section="compass" data-field="tolerance" data-numeric="1" bindinput="onAdvancedField" /></view>
     <view><view class="cg-cfg-label">保持几秒 <text class="req" aria-hidden="true">*</text></view><input class="cg-cfg-input" type="number" value="{{advanced.compass.holdSeconds}}" placeholder="1 至 10" data-section="compass" data-field="holdSeconds" data-numeric="1" bindinput="onAdvancedField" /></view>
     </view>
-    <view class="cg-cfg-label">提示语 · 选填</view>
+    <view class="cg-cfg-label">提示语</view>
     <input class="cg-cfg-input" value="{{advanced.compass.hint}}" placeholder="例如 它比你想的更靠右" data-section="compass" data-field="hint" bindinput="onAdvancedField" />
     <view class="cg-cfg-label">对准奖励分</view>
     <input class="cg-cfg-input" type="number" value="{{advanced.compass.xp}}" placeholder="0 表示不给分" data-section="compass" data-field="xp" data-numeric="1" bindinput="onAdvancedField" />
@@ -651,7 +651,7 @@
       <view class="cg-adv-body">
     <view class="cg-cfg-label">标题 <text class="req" aria-hidden="true">*</text></view>
     <input class="cg-cfg-input" value="{{advanced.profile.title}}" placeholder="例如 出生登记" data-section="profile" data-field="title" bindinput="onAdvancedField" />
-    <view class="cg-cfg-label">引导语 · 选填</view>
+    <view class="cg-cfg-label">引导语</view>
     <input class="cg-cfg-input" value="{{advanced.profile.lead}}" placeholder="例如 填完这张表，你就有了身份" data-section="profile" data-field="lead" bindinput="onAdvancedField" />
     <view class="cg-rw-line compact"><view class="cg-rw-name">填写后添加头像</view><cy-switch checked="{{advanced.profile.avatar.enabled}}" data-key="profile.avatar.enabled" bindchange="onAdvancedSubToggle" /></view>
     <view class="cg-rw-line compact" wx:if="{{advanced.profile.avatar.enabled}}"><view class="cg-rw-name">头像必填</view><cy-switch checked="{{advanced.profile.avatar.required}}" data-key="profile.avatar.required" bindchange="onAdvancedSubToggle" /></view>
@@ -729,14 +729,14 @@
     <!-- 拍物成卡的兜底卡名:卡名先用 AI 认出来的物品名,认不出来用这里的,这里也空就用上面的标题。
        只在拍物成卡模式出现 —— 普通拍照审核没有卡。 -->
     <view wx:if="{{advanced.photoCheck.mode === 'CARD'}}">
-    <view class="cg-cfg-label">兜底卡名 · 选填</view>
+    <view class="cg-cfg-label">兜底卡名</view>
     <input class="cg-cfg-input" value="{{advanced.photoCheck.cardTitle}}" placeholder="例如 一枚旧弹壳" maxlength="64" data-section="photoCheck" data-field="cardTitle" bindinput="onAdvancedField" />
     </view>
-    <view class="cg-cfg-label">提示词 · 选填</view>
+    <view class="cg-cfg-label">提示词</view>
     <input class="cg-cfg-input" value="{{advanced.photoCheck.shotNote}}" placeholder="例如 把窗框也拍进去" data-section="photoCheck" data-field="shotNote" bindinput="onAdvancedField" />
     <view class="cg-cfg-label">要拍到什么才算过 <text class="req" aria-hidden="true">*</text></view>
     <input class="cg-cfg-input" value="{{advanced.photoCheck.requirement}}" placeholder="例如 画面里要能看见窗外的街景，窗框入镜" maxlength="60" data-section="photoCheck" data-field="requirement" bindinput="onAdvancedField" />
-    <view class="cg-cfg-label">取景轮廓 · 选填</view>
+    <view class="cg-cfg-label">取景轮廓</view>
     <!-- cg-qmedia--one:只有一个槽。不加这个修饰类的话 .cg-qmedia 的 flex:1 会把它
        撑满整行 —— 那个宽度是给「配图 + 音频」两个槽并排设计的(见题干附件那段)。 -->
     <view class="cg-qmedia cg-qmedia--one">
@@ -773,7 +773,7 @@
        fumbleEffects / failCostTag 这轮不做界面,但保存时必须原样保留。 -->
     <view class="cg-gcfg" wx:if="{{gameSection === 'check'}}">
       <view class="cg-adv-body">
-    <view class="cg-cfg-label">判定什么技能 · 选填</view>
+    <view class="cg-cfg-label">判定什么技能</view>
     <input class="cg-cfg-input" value="{{advanced.check.skill}}" placeholder="例如 潜行 / 观察" data-section="check" data-field="skill" bindinput="onAdvancedField" />
     <view class="cg-cfg-label">难度</view>
     <cy-dropdown portal="{{false}}" range="{{checkTiers}}" range-key="label" value="{{opt.idx(checkTiers, advanced.check.tier)}}" bind:change="pickCheckTier"><view class="cg-pick {{opt.idx(checkTiers, advanced.check.tier) < 0 ? 'empty' : ''}}">{{opt.label(checkTiers, advanced.check.tier)}}<view class="cg-caret"><cy-icon name="back" size="28" /></view></view></cy-dropdown>
@@ -856,7 +856,7 @@
         <view class="cg-qmedia cg-qmedia--one">
           <view class="cg-qmedia-slot" data-index="{{ai}}" bindtap="chooseAlbumImage" aria-role="button" aria-label="替换第{{(ai + 1) || 1}}张照片" hover-class="cy-pressed" hover-stay-time="80"><image class="cg-qmedia-img" src="{{item.url}}" mode="aspectFill" /></view>
         </view>
-        <input class="cg-cfg-input" value="{{item.line}}" maxlength="40" placeholder="这一张的配文 · 选填" data-index="{{ai}}" bindinput="onAlbumLine" aria-label="第{{(ai + 1) || 1}}张照片配文" />
+        <input class="cg-cfg-input" value="{{item.line}}" maxlength="40" placeholder="这一张的配文" data-index="{{ai}}" bindinput="onAlbumLine" aria-label="第{{(ai + 1) || 1}}张照片配文" />
       </view>
       <view class="cg-adv-add" wx:if="{{advanced.album.images.length < 6}}" bindtap="chooseAlbumImage" aria-role="button" aria-label="添加照片" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加照片</view>
     </view>
@@ -1048,7 +1048,7 @@
 
     <!-- 题干附件:文字作答与选项问答共用一段,别在两张卡里各写一份(改一处漏一处) -->
     <cy-card class="cg-cfg" wx:if="{{ formData.validationMethod === 1 || formData.validationMethod === 3 }}">
-    <view class="cg-cfg-label">题干附件 · 选填</view>
+    <view class="cg-cfg-label">题干附件</view>
     <view class="cg-qmedia">
       <view class="cg-qmedia-slot" wx:if="{{ formData.questionImg }}">
         <image class="cg-qmedia-img" src="{{ formData.questionImg }}" mode="aspectFill" />
@@ -1085,7 +1085,7 @@
       <view class="cg-hint-head">
         <view class="cg-hint-emoji"><cy-icon name="info" size="32" /></view>
         <view>
-          <view class="cg-sw-label">提示(选填)</view>
+          <view class="cg-sw-label">提示</view>
         </view>
       </view>
       <cy-switch checked="{{ hintEnabled }}" bindchange="onHintEnabledChange" />
@@ -1263,11 +1263,11 @@
               placeholder="这一刻发生了什么?写下玩家此时读到的片段…" placeholder-class="cg-ph" />
             <view class="cg-beat-row">
               <input class="cg-beat-tagin" value="{{ beat.tag }}" bindinput="onStoryBeatTag" data-index="{{ bi }}"
-                placeholder="时刻标签(选填,如「此刻」)" placeholder-class="cg-ph" />
+                placeholder="时刻标签,如「此刻」" placeholder-class="cg-ph" />
             </view>
             <view class="cg-beat-photos">
               <view class="pgrid-head">
-                <text class="pgrid-hint">配图(选填,最多6张)</text>
+                <text class="pgrid-hint">配图(最多6张)</text>
                 <text class="pgrid-count">{{ beat.imgs.length }}/6</text>
               </view>
               <view class="pgrid">
@@ -1622,7 +1622,7 @@
       </block>
       <!-- 3D 模型(2026-09-23):有模型放模型,没模型把显形图做成立牌;只收 .glb(xr-frame 的格式) -->
       <block wx:if="{{advanced.scan.arMode !== 'NONE'}}">
-        <view class="cg-cfg-label">3D 模型 · 选填</view>
+        <view class="cg-cfg-label">3D 模型</view>
         <!-- 整行、与上下输入框左右对齐(用户 9-23):模型没有缩略图,不用方形图片槽 -->
         <view class="cg-adv-add cg-model cg-model--done" wx:if="{{advanced.scan.modelUrl}}">
           <cy-icon name="check" size="28" />已上传 3D 模型
@@ -1670,7 +1670,7 @@
           <input class="cg-cfg-input" value="{{advanced.timeWindow.eyebrow}}" placeholder="例如 午夜电台 · 时段限定" data-section="timeWindow" data-field="eyebrow" bindinput="onAdvancedField" />
           <view class="cg-cfg-label">未开放时的标题</view>
           <input class="cg-cfg-input" value="{{advanced.timeWindow.title}}" placeholder="例如 还没到开播时间" data-section="timeWindow" data-field="title" bindinput="onAdvancedField" />
-          <view class="cg-cfg-label">订阅消息模板 ID · 选填</view>
+          <view class="cg-cfg-label">订阅消息模板 ID</view>
           <input class="cg-cfg-input" value="{{advanced.timeWindow.subscribeTmplId}}" placeholder="留空则不提供开播提醒" data-section="timeWindow" data-field="subscribeTmplId" bindinput="onAdvancedField" />
         </view>
       </view>

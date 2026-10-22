@@ -167,9 +167,10 @@ test('RUN-003: 空选项不打开空面板，自定义面板仍可打开', () =>
   assert.equal(opened, 1)
 })
 
-test('RUN-012: 选择勾在文字前，未选中行保留同宽位置', () => {
+// 2026-10-22 主人定稿推翻 RUN-012 的位置:勾移到文字右侧(与 Figma 标签、原型一致),未选中行仍保留同宽位置
+test('选择勾在文字后，未选中行保留同宽位置', () => {
   const wxml = read('components/cy/dropdown/index.wxml')
-  assert.ok(wxml.indexOf('cdd__check') < wxml.indexOf('cdd__item-txt'))
+  assert.ok(wxml.indexOf('cdd__check') > wxml.indexOf('cdd__item-txt'))
   assert.match(wxml, /<view class="cdd__check">/)
 })
 
@@ -186,7 +187,7 @@ test('两列档:不可选卡片(带原因)点了不收起、不回传;可选卡�
   assert.equal(events[0].detail.value, 0)
 })
 
-test('说明档(原两列档)改为单列菜单:名称+说明/原因、勾在文字前、header 插槽,不再排两列、行间无分隔线', () => {
+test('说明档(原两列档)改为单列菜单:名称+说明/原因、勾在文字后、header 插槽,不再排两列、行间无分隔线', () => {
   const wxml = read('components/cy/dropdown/index.wxml')
   assert.match(wxml, /wx:elif="\{\{columns > 1\}\}"/)
   assert.match(wxml, /<slot name="header" \/>/)

@@ -26,8 +26,8 @@
                   data-index="{{index}}" bindtap="onPick"
                   hover-class="{{item.reason ? '' : 'cdd__item--press'}}" hover-stay-time="60"
                   aria-role="button" aria-label="{{item.label}}{{item.reason ? '，' + item.reason : ''}}" aria-disabled="{{!!item.reason}}">
+                <view class="cdd__item-txt"><text class="cdd__cell-name">{{item.label}}</text><text class="cdd__cell-sub" wx:if="{{item.reason || item.sub}}">{{item.reason || item.sub}}</text></view>
               <view class="cdd__check"><cy-icon wx:if="{{index === value && index !== uncheckedValue}}" name="check" size="28" /></view>
-              <view class="cdd__item-txt"><text class="cdd__cell-name">{{item.label}}</text><text class="cdd__cell-sub" wx:if="{{item.reason || item.sub}}">{{item.reason || item.sub}}</text></view>
             </view>
           </block>
           <block wx:else>
@@ -36,8 +36,8 @@
                 data-index="{{index}}" bindtap="onPick"
                 hover-class="cdd__item--press" hover-stay-time="60"
                 aria-role="button" aria-label="{{item}}">
-            <view class="cdd__check"><cy-icon wx:if="{{index === value && index !== uncheckedValue}}" name="check" size="28" /></view>
             <text class="cdd__item-txt">{{item}}</text>
+            <view class="cdd__check"><cy-icon wx:if="{{index === value && index !== uncheckedValue}}" name="check" size="28" /></view>
           </view>
           </block>
         </scroll-view>
