@@ -26,9 +26,11 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.sql.DataSource;
 import java.nio.charset.StandardCharsets;
+import java.sql.Timestamp;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.ExecutorService;
@@ -39,10 +41,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/** Fixture schema only. This does not run the onsite producer. */
-class CityFairnessOnsiteRelayTest {
+/** Fixture schema only. This does not run the onsite producer or MySQL. */
+public class CityFairnessOnsiteRelayTest {
     private static final long MEMBER = 7L;
     private static final String HASH = "a".repeat(64);
     private static final String RULES = "rules-rel-1";
@@ -59,12 +62,18 @@ class CityFairnessOnsiteRelayTest {
         context = new AnnotationConfigApplicationContext(Wiring.class);
         jdbc = new JdbcTemplate(context.getBean(DataSource.class));
         bean = context.getBean(CityFairnessOnsiteRelay.class);
-        AopTestUtils.<CityFairnessOnsiteRelay>getUltimateTargetObject(bean).clock = CLOCK;
+        CityFairnessOnsiteRelay target = AopTestUtils.getUltimateTargetObject(bean);
+        assertFalse(target.enabled);
+        target.clock = CLOCK;
+        target.enabled = true;
         reports = context.getBean(CityFairnessReportService.class);
         String xml = new String(CityFairnessOnsiteRelayTest.class.getClassLoader()
                 .getResourceAsStream("mapper/business/FairnessOnsiteSourceMapper.xml").readAllBytes(), StandardCharsets.UTF_8);
         assertTrue(xml.contains("join city_onsite_task_instance"));
         assertTrue(xml.contains("join city_onsite_task_request"));
+        assertTrue(xml.contains("date_format(r.created_at, '%Y-%m-%d %H:%i:%s')"));
+        assertTrue(xml.contains("date_format(r.evidence_checked_at, '%Y-%m-%d %H:%i:%s')"));
+        assertFalse(xml.toLowerCase().contains("as varchar"));
         assertFalse(xml.toLowerCase().contains("for update"));
         assertFalse(xml.contains("option_id"));
         assertFalse(xml.contains("result_json"));
@@ -134,6 +143,8 @@ class CityFairnessOnsiteRelayTest {
         RelayResult replay = bean.forward(MEMBER, result);
         assertEquals("STORED", stored.status);
         assertEquals("DEDUPED", replay.status);
+        assertEquals(1, jdbc.queryForObject(
+                "select count(*) from city_fairness_event where event_id=?", Integer.class, result));
         assertEquals(result, stored.eventId);
         assertEquals(outingId, stored.outingId);
         assertEquals(0, stored.occurredAt % 1000);
@@ -203,6 +214,140 @@ class CityFairnessOnsiteRelayTest {
     }
 
     @Test
+    void disabledWiringIgnoresMissingStatsTables() {
+        CityFairnessOnsiteRelay off = new CityFairnessOnsiteRelay(null, null, null, null);
+        OnsiteTaskFairnessCalls calls = new OnsiteTaskFairnessCalls(off);
+        assertFalse(off.enabled);
+        assertEquals("DISABLED", calls.acceptActive(MEMBER, "instance").status);
+        assertEquals("DISABLED", calls.submitPassed(MEMBER, "result").status);
+        assertEquals("NOT_AN_OUTING", off.reopen(MEMBER).status);
+    }
+
+    @Test
+    void acceptBindsThenOnlyObjectivePassForwards() {
+        Scope scope = new Scope("board-wire", "region-wire", "season-wire");
+        String result = seed(scope, "ACTIVE", "PASSED", "COMPLETE", 200, MEMBER, "2026-10-21 12:00:00");
+        String instance = instanceOf(result);
+        approve(scope);
+        policy(scope);
+        OnsiteTaskFairnessCalls calls = new OnsiteTaskFairnessCalls(bean);
+        assertEquals("BOUND", calls.acceptActive(MEMBER, instance).status);
+        assertEquals("NOT_COMMITTED", calls.submitPassed(MEMBER, result).status);
+        int outings = jdbc.queryForObject(
+                "select count(*) from city_fairness_outing where instance_id=?", Integer.class, instance);
+        assertEquals("NOT_AN_OUTING", bean.reopen(MEMBER).status);
+        assertEquals(outings, jdbc.queryForObject(
+                "select count(*) from city_fairness_outing where instance_id=?", Integer.class, instance));
+        jdbc.update("update city_onsite_task_instance set status='PASSED' where id=?", instance);
+        assertEquals("STORED", calls.submitPassed(MEMBER, result).status);
+        assertEquals("DEDUPED", calls.submitPassed(MEMBER, result).status);
+        assertEquals("CROSS_ACCOUNT", bean.forward(8L, result).status);
+        assertEquals(1, jdbc.queryForObject(
+                "select count(*) from city_fairness_event where event_id=?", Integer.class, result));
+    }
+
+    @Test
+    void sourceFinishAndRelayFailuresLeaveNoFacts() {
+        CityFairnessOnsiteRelay target = AopTestUtils.getUltimateTargetObject(bean);
+        TransactionTemplate tx = new TransactionTemplate(context.getBean(DataSourceTransactionManager.class));
+        Scope scope = new Scope("board-fail", "region-fail", "season-fail");
+        String sourceFailed = tx.execute(status -> {
+            String result = seed(scope, "ACTIVE", "PASSED", "COMPLETE", 200, MEMBER, "2026-10-21 12:00:00");
+            status.setRollbackOnly();
+            return result;
+        });
+        assertAbsent(scope, sourceFailed);
+        String finishFailed = tx.execute(status -> {
+            String result = seed(scope, "ACTIVE", "PASSED", "COMPLETE", 200, MEMBER, "2026-10-21 12:00:00");
+            approve(scope);
+            bean.bind(MEMBER, instanceOf(result));
+            status.setRollbackOnly();
+            return result;
+        });
+        assertAbsent(scope, finishFailed);
+        String[] relayFailed = new String[1];
+        assertThrows(NullPointerException.class, () -> tx.execute(status -> {
+            relayFailed[0] = seed(scope, "ACTIVE", "PASSED", "COMPLETE", 200, MEMBER, "2026-10-21 12:00:00");
+            approve(scope);
+            policy(scope);
+            bean.bind(MEMBER, instanceOf(relayFailed[0]));
+            jdbc.update("update city_onsite_task_instance set status='PASSED' where id=?", instanceOf(relayFailed[0]));
+            target.clock = null;
+            try {
+                bean.forward(MEMBER, relayFailed[0]);
+            } finally {
+                target.clock = CLOCK;
+            }
+            return null;
+        }));
+        assertAbsent(scope, relayFailed[0]);
+    }
+
+    @Test
+    void sameQueryIsFixedAndAnotherQueryIsNotAReceiptCutoff() {
+        Scope scope = new Scope("board-cut", "region-cut", "season-cut");
+        approve(scope);
+        policy(scope);
+        long asOf = Instant.parse("2026-10-21T12:00:10Z").toEpochMilli();
+        CityFairnessReportService.Page fixed = reports.outings(MEMBER, "fixed-query", asOf, null,
+                scope.board, scope.region, scope.season, RULES);
+        assertEquals(FairnessFieldContract.NO_MATURE_SAMPLE, fixed.maturity);
+        assertTrue(fixed.outings.isEmpty());
+        String result = seed(scope, "ACTIVE", "PASSED", "COMPLETE", 200, MEMBER, "2026-10-21 12:00:00.9");
+        bean.bind(MEMBER, instanceOf(result));
+        jdbc.update("update city_onsite_task_instance set status='PASSED' where id=?", instanceOf(result));
+        int events = count("city_fairness_event");
+        int receipts = count("city_fairness_source_receipt");
+        RelayResult stored = bean.forward(MEMBER, result);
+        assertEquals("STORED", stored.status);
+        assertTrue(stored.occurredAt <= asOf);
+        assertEquals(stored.occurredAt + 5_000L, stored.verifiedAt);
+        assertEquals(CLOCK.millis(), stored.receivedAt);
+        assertTrue(stored.receivedAt > asOf);
+        CityFairnessReportService.Page again = reports.outings(MEMBER, "fixed-query", asOf, null,
+                scope.board, scope.region, scope.season, RULES);
+        assertTrue(again.readBack);
+        assertTrue(again.outings.isEmpty());
+        CityFairnessReportService.Page recomputed = reports.outings(MEMBER, "recompute-query", asOf, null,
+                scope.board, scope.region, scope.season, RULES);
+        assertEquals(1, recomputed.outings.size());
+        assertEquals(FairnessFieldContract.FIRST_OUTING, recomputed.outings.get(0).reason);
+        assertEquals(stored.outingId, recomputed.outings.get(0).outingId);
+        CityFairnessReportService.Page report = reports.read(MEMBER, "cut-report", asOf, null,
+                scope.board, scope.region, scope.season, RULES);
+        assertEquals(200, report.httpStatus);
+        assertEquals(CityFairnessReader.COMPUTABLE, report.status);
+        assertEquals(1, jdbc.queryForObject(
+                "select count(*) from city_fairness_event where event_id=?", Integer.class, result));
+        assertEquals(events + 1, count("city_fairness_event"));
+        assertEquals(receipts + 1, count("city_fairness_source_receipt"));
+    }
+
+    @Test
+    void unapprovedParameterDoesNotPublishStats() {
+        Scope scope = new Scope("board-draft", "region-draft", "season-draft");
+        long asOf = Instant.parse("2026-10-21T12:00:30Z").toEpochMilli();
+        int events = count("city_fairness_event");
+        CityFairnessReportService.Page missing = reports.outings(MEMBER, "no-param", asOf, null,
+                scope.board, scope.region, scope.season, RULES);
+        assertEquals(403, missing.httpStatus);
+        assertEquals("scope-rejected", missing.errorCode);
+        jdbc.update("insert into city_fairness_parameter (id, state, source_ref, board_id, region_id, season_id,"
+                        + " rules_version) values (?,?,?,?,?,?,?)",
+                3_000 + seq, "DRAFT", "parameter-source", scope.board, scope.region, scope.season, RULES);
+        CityFairnessReportService.Page draft = reports.read(MEMBER, "draft-param", asOf, null,
+                scope.board, scope.region, scope.season, RULES);
+        assertEquals(403, draft.httpStatus);
+        assertEquals("scope-rejected", draft.errorCode);
+        assertNull(draft.status);
+        assertNull(draft.matureCount);
+        assertNull(draft.denominator);
+        assertEquals(events, count("city_fairness_event"));
+        assertEquals(0, jdbc.queryForObject(
+                "select count(*) from city_fairness_read where query_id in ('no-param','draft-param')", Integer.class));
+    }
+
+    @Test
     void unverifiedZoneDoesNotIngest() {
         Scope scope = new Scope("board-zone", "region-zone", "season-zone");
         String result = seed(scope, "ACTIVE", "PASSED", "COMPLETE", 200, MEMBER, "2026-10-21 12:00:00");
@@ -241,6 +386,29 @@ class CityFairnessOnsiteRelayTest {
         assertEquals(1, jdbc.queryForObject(
                 "select count(*) from city_fairness_outing where instance_id=?", Integer.class, instance));
         assertEquals(leftOuting(instance), bean.bind(MEMBER, instance).outingId);
+    }
+
+    /** H2 stand-in for MySQL DATE_FORMAT. Whole seconds in UTC; MySQL itself is not executed. */
+    public static String dateFormat(Timestamp value, String pattern) {
+        if (value == null || !"%Y-%m-%d %H:%i:%s".equals(pattern)) return null;
+        return value.toInstant().atOffset(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+    }
+
+    private static void assertAbsent(Scope scope, String result) {
+        assertEquals(0, jdbc.queryForObject(
+                "select count(*) from city_onsite_task_result where id=?", Integer.class, result));
+        assertEquals(0, jdbc.queryForObject(
+                "select count(*) from city_onsite_task_instance where board_id=?", Integer.class, scope.board));
+        assertEquals(0, jdbc.queryForObject(
+                "select count(*) from city_fairness_outing where board_id=?", Integer.class, scope.board));
+        assertEquals(0, jdbc.queryForObject(
+                "select count(*) from city_fairness_event where event_id=?", Integer.class, result));
+        assertEquals(0, jdbc.queryForObject(
+                "select count(*) from city_fairness_source_receipt where event_id=?", Integer.class, result));
+    }
+
+    private static int count(String table) {
+        return jdbc.queryForObject("select count(*) from " + table, Integer.class);
     }
 
     private static String leftOuting(String instance) {
@@ -357,6 +525,7 @@ class CityFairnessOnsiteRelayTest {
             dataSource.setUsername("sa");
             dataSource.setPassword("");
             JdbcTemplate setup = new JdbcTemplate(dataSource);
+            setup.execute("create alias date_format for \"" + CityFairnessOnsiteRelayTest.class.getName() + ".dateFormat\"");
             setup.execute("create table city_onsite_task_instance ("
                     + "id varchar(36) primary key, team_id varchar(36), session_id varchar(36),"
                     + "region_id varchar(96), board_id varchar(96), season_id varchar(96), round_id varchar(96),"
@@ -421,5 +590,22 @@ class CityFairnessOnsiteRelayTest {
                     new ClassPathResource("mapper/business/FairnessOutingMapper.xml"));
             return factory.getObject();
         }
+    }
+}
+
+/** Compilable ACCEPT/SUBMIT calls. CityOnsiteTaskService is absent at 9ff759d2. */
+final class OnsiteTaskFairnessCalls {
+    private final CityFairnessOnsiteRelay fairnessOnsiteRelay;
+
+    OnsiteTaskFairnessCalls(CityFairnessOnsiteRelay fairnessOnsiteRelay) {
+        this.fairnessOnsiteRelay = fairnessOnsiteRelay;
+    }
+
+    CityFairnessOnsiteRelay.RelayResult acceptActive(long serverMemberId, String instanceId) {
+        return fairnessOnsiteRelay.bind(serverMemberId, instanceId);
+    }
+
+    CityFairnessOnsiteRelay.RelayResult submitPassed(long serverMemberId, String resultId) {
+        return fairnessOnsiteRelay.forward(serverMemberId, resultId);
     }
 }

@@ -22,6 +22,24 @@
 
 源表没有 `outing_id`。`team_id`、`session_id` 不改名为出行。公平侧出行只在实例仍为 `ACTIVE` 且 `accepted_by` 为服务端本人时绑定，范围从实例行复制。一个实例一行。完成后不按时间或地点回填。没有绑定是 `SOURCE_UNBOUND`。`APP_REOPEN` 不建出行、不写有效事件。
 
+## 出行归并（BLOCKED）
+
+`city_fairness_outing.id` 只定位这一条实例，不是把多条实例合成一次真实出行。没有独立的出行身份，也没有获批的归并规则。不把 `team_id`、`session_id` 或 visit 改名充数，不按时间或地点猜测。此项保持 BLOCKED。
+
+## 方言与开关
+
+`evidence_checked_at` 与 `created_at` 用 `date_format(ts, '%Y-%m-%d %H:%i:%s')` 取整秒。墙钟属于已核验的会话偏移；`SYSTEM` 和命名时区仍是 `TIMEZONE_UNVERIFIED`。H2 只在测试里安装等价函数。MySQL 未执行，记 NOT_RUN。
+
+`enabled` 默认 false，生产不打开。关闭时 `bind` 与 `forward` 不访问数据库，未建统计表不影响原任务。该开关不是到场任务的写权限。不执行 DDL，不给 `counts_as_effective_outing` 生产赋值。
+
+## 时间
+
+`occurredAt` 与事件上的 `knownAt` 都是 `r.created_at` 的整秒。`verifiedAt` 是 `r.evidence_checked_at` 的整秒，只放在转发结果里，不写入 `verification_millis`。`receivedAt` 是适配器时钟的整秒，只写入来源回执。
+
+读数条件是 `known_at <= asOf` 且 `occurred_at <= asOf`。同一个 `queryId` 固定返回已存快照。另一个 `queryId` 按当前行重算。`knownAt` 等于发生时间，不等于 `receivedAt`，所以后到、但发生时间更早的事实会出现在 asOf 晚于发生时间的新查询里。这不是摄取知识截止。
+
+Δ、H、L、归并窗、状态规则和 `metric_version` 不在这里赋值。参数未批准时读数 fail closed。查询不写 `city_fairness_event`。报告服务原有的快照行不属于这条来源写入。
+
 撤销没有本源字段。历史 `PASSED` 保留，不因离队、门店暂停或证据过期删除。
 
 ## 覆盖缺口

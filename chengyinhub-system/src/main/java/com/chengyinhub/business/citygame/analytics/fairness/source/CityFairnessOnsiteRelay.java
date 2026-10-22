@@ -42,6 +42,8 @@ public class CityFairnessOnsiteRelay {
     public final CityFairnessIngestionService ingestion;
     private final DataSource dataSource;
     Clock clock;
+    /** Stats path. Stays false in production; closed calls do not touch fairness or onsite tables. */
+    boolean enabled;
 
     @Autowired
     public CityFairnessOnsiteRelay(FairnessOnsiteSourceMapper facts, FairnessOutingMapper outings,
@@ -60,6 +62,7 @@ public class CityFairnessOnsiteRelay {
 
     @Transactional
     public RelayResult bind(long memberId, String instanceId) {
+        if (!enabled) return RelayResult.of("DISABLED", "stats", null, null, null, null, null);
         if (memberId <= 0 || blank(instanceId)) return RelayResult.of("NOT_ACTIVE", "instance", null, null, null, null, null);
         FairnessOuting existing = outings.selectByInstance(instanceId);
         if (existing != null) return bound(existing, memberId);
@@ -79,6 +82,7 @@ public class CityFairnessOnsiteRelay {
 
     @Transactional
     public RelayResult forward(long memberId, String resultId) {
+        if (!enabled) return RelayResult.of("DISABLED", "stats", null, null, null, null, null);
         if (memberId <= 0 || blank(resultId)) return RelayResult.of("ABSENT", null, null, null, null, null, null);
         OnsiteTaskFact fact = facts.selectFact(resultId);
         if (fact == null || blank(fact.resultId)) return RelayResult.of("ABSENT", null, null, null, null, null, null);
