@@ -1,5 +1,7 @@
 package com.chengyinhub.business.service.impl;
 
+import com.chengyinhub.common.observability.CriticalPathCode;
+import com.chengyinhub.common.observability.CriticalPathEvents;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 
@@ -93,6 +95,7 @@ public class WxPaymentCallbackInboxServiceImpl implements IWxPaymentCallbackInbo
         }
         catch (RuntimeException e)
         {
+            CriticalPathEvents.failure(CriticalPathCode.CP_PAYMENT_INBOX_FAILED, "process", e);
             claimService.release(notifyHash, claim.getOwnerToken(), claim.getFenceToken());
             // 不记录 notifyId 原文与回调体,避免微信密文/单号进入日志。
             log.error("[支付回调] inbox 事务失败,已按 owner/fence 释放;未记录 notifyId 或回调内容");

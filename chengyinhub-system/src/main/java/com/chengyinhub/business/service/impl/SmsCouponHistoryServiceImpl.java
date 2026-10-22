@@ -1,5 +1,7 @@
 package com.chengyinhub.business.service.impl;
 
+import com.chengyinhub.common.annotation.CriticalPath;
+import com.chengyinhub.common.observability.CriticalPathCode;
 import java.util.List;
 import com.chengyinhub.common.utils.DateUtils;
 import com.chengyinhub.common.utils.uuid.IdUtils;
@@ -45,6 +47,7 @@ public class SmsCouponHistoryServiceImpl implements ISmsCouponHistoryService
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CriticalPath(value = CriticalPathCode.CP_REDEMPTION_FAILED, op = "coupon")
     public RedemptionResult redeemCoupon(Long historyId, Long ownerMemberId, Long merchantId,
                                          Long actorMemberId, String actorRoleCode) {
         if (historyId == null || ownerMemberId == null || ownerMemberId <= 0) {

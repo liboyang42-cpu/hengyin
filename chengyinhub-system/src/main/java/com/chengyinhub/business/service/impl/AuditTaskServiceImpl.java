@@ -1,5 +1,7 @@
 package com.chengyinhub.business.service.impl;
 
+import com.chengyinhub.common.annotation.CriticalPath;
+import com.chengyinhub.common.observability.CriticalPathCode;
 import com.chengyinhub.business.domain.CmsMemberTemplate;
 import com.chengyinhub.business.domain.CmsTemplateLibrary;
 import com.chengyinhub.business.mapper.CmsMemberTemplateMapper;
@@ -689,6 +691,7 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CriticalPath(value = CriticalPathCode.CP_AUDIT_DECISION_FAILED, op = "review")
     public int review(Long taskId, Long operatorId, AuditReviewDTO request) {
         if (taskId == null || request == null || request.getStatus() == null) {
             throw new IllegalArgumentException("审核参数不完整");
@@ -1050,6 +1053,7 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CriticalPath(value = CriticalPathCode.CP_AUDIT_DECISION_FAILED, op = "revert")
     public AuditRevertResultVO revert(Long taskId, Long operatorId, boolean platformAdmin, AuditRevertDTO request) {
         if (taskId == null || operatorId == null || request == null || request.getExpectedVersion() == null) {
             throw governanceError(ERROR_REVERT_BAD_REQUEST, "撤销参数不完整", HttpStatus.BAD_REQUEST);
