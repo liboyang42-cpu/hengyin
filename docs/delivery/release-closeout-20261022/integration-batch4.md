@@ -161,6 +161,16 @@ DL1、O15、O3/O9、F5、O11/O17、O8/O10 没有新增迁移。所有迁移都�
 - 修复：在该 IT 的 `applyMigrations` 中按同样写法紧跟追加 F2 迁移。断言不变，没有跳过或放宽任何用例。
 - 全仓复查：套用 `migration_theme_state_key_20260916.sql` 却没有追加 F2 迁移的 IT，只有这一个。
 
-### 修复后
+### 修复后（head `5c9e7139`）——全绿
 
-（推送后补记）
+| workflow | 事件 | run | 结论 |
+|---|---|---|---|
+| GitHub CI | workflow_dispatch | 39836155769 | success（含 Backend tests） |
+| Funds MySQL IT | workflow_dispatch | 39836160409 | success |
+| Mini followup focused regression | pull_request | 39836157798 | success |
+| Isolated pool recovery | pull_request | 39836157718 | success |
+| Isolated authenticated Redis recovery | pull_request | 39836157837 | success |
+
+- 首轮 head `e2f3df5a` 上的 Funds MySQL IT 39834729553 也是 success。
+- 本节之后只追加了纯文档提交，以 `5c9e7139` 的检查为准。
+- #512 合入 master、本 PR base 改为 master 后，`pull_request` 事件会自动重跑全部必需 check。
