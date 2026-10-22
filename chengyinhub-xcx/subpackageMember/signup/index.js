@@ -45,7 +45,7 @@ Page({
        ⚠️ 不要为了「合并」去动后端:两类票的字段和落点本来就不同,合到一个接口只会把
           差异塞进 if,还丢掉各自的分页。 */
     ticketList: [],
-    currentSwiperTicket: 0,
+    currentSwiperTicket: 0, deckStyle: '', // deckStyle:2026-10-22 当前卡跟手拖动 / 新卡落入的内联变换
     walletState: 'loading', // loading | ready | error | login | empty —— 由两条支线的状态合成
     walletErrorMsg: '',
     focusState: '',
@@ -77,7 +77,7 @@ Page({
     that._refreshOnShow = false;
     that._walletOwner = walletOwner();
     const focus = options && options.focusId;
-    that._explicitFocus = !!focus;
+    that._explicitFocus = !!focus; that._arrive = !!(options && String(options.arrive) === '1') && !reducedMotionOn();
     that._focusId = exactRegistrationId(focus) ? String(focus) : '';
     that.setData({ focusState: focus ? (that._focusId ? 'loading' : 'missing') : '',
       focusError: focus && !that._focusId ? '原报名编号无效，请返回参与记录重新打开' : '' });
@@ -300,7 +300,7 @@ Page({
       walletErrorMsg: (this._topic || {}).err || (this._activity || {}).err || '',
       topicBg: cur.wImg || this.data.topicBg,
     });
-    if (this._focusId) this._tryFocusTicket();
+    if (this._focusId) this._tryFocusTicket(); if (state === 'ready' && this._arrive) { this._arrive = false; this._playArrive(); }
   },
 
   /* 点开一张票。两种票的落点不同,由 kind 分流 —— 这就是合并列表之后
@@ -510,4 +510,52 @@ Page({
     })
   },
 
+  /* ===== 2026-10-22 业主:票夹卡堆 =====
+     新卡落进票夹:先放到屏幕上方(无过渡),下一帧带回弹过渡落回原位 */
+  _playArrive() {
+    this.setData({ deckStyle: 'transform: translateY(-130%) rotate(-6deg) scale(1.04); opacity: 0; transition: none;' });
+    setTimeout(() => {
+      if (this._unloaded) return;
+      this.setData({ deckStyle: 'transform: none; opacity: 1; transition: transform .75s cubic-bezier(.2, .9, .25, 1.12), opacity .3s ease;' });
+      setTimeout(() => { if (!this._unloaded && !this._drag) this.setData({ deckStyle: '' }); }, 800);
+    }, 60);
+  },
+
+  /* 手指拖当前卡:任意方向跟手(带一点倾斜);松手横向/纵向越过阈值就按方向换卡,否则回弹。
+     原生 swiper 的横滑交给这里统一处理(disable-touch),点按仍由 swiper-item 的 goTicket 接。 */
+  onDeckStart(e) {
+    const t = e.touches && e.touches[0];
+    if (!t || (this.data.ticketList || []).length === 0) return;
+    this._drag = { x: t.clientX, y: t.clientY, dx: 0, dy: 0, at: 0 };
+  },
+  onDeckMove(e) {
+    const d = this._drag, t = e.touches && e.touches[0];
+    if (!d || !t) return;
+    d.dx = t.clientX - d.x; d.dy = t.clientY - d.y;
+    const now = Date.now();
+    if (now - d.at < 16) return;
+    d.at = now;
+    this.setData({ deckStyle: 'transform: translate(' + d.dx + 'px,' + d.dy + 'px) rotate(' + (d.dx * 0.04).toFixed(2) + 'deg); transition: none;' });
+  },
+  onDeckEnd() {
+    const d = this._drag;
+    this._drag = null;
+    if (!d) return;
+    const list = this.data.ticketList || [];
+    const back = 'transform: none; transition: transform .45s cubic-bezier(.2, .9, .3, 1.1);';
+    const far = Math.abs(d.dx) > 70 || Math.abs(d.dy) > 110;
+    if (!far || list.length < 2) { this.setData({ deckStyle: back }); return; }
+    const forward = Math.abs(d.dx) >= Math.abs(d.dy) ? d.dx < 0 : d.dy < 0;
+    const i = (this.data.currentSwiperTicket + (forward ? 1 : -1) + list.length) % list.length;
+    this.setData({ deckStyle: back, currentSwiperTicket: i, topicBg: (list[i] && list[i].wImg) || this.data.topicBg });
+  },
 })
+
+// 与 utils/motion-preference.js 同一组存储键(玩家「减少动态效果」开关);内联读取,不为一个布尔值多挂一个依赖
+function reducedMotionOn() {
+  try {
+    if (typeof wx === 'undefined') return false;
+    const v = wx.getStorageSync('play_reduced_motion');
+    return v === true || (v !== false && wx.getStorageSync('roam_reduced_motion') === true);
+  } catch (e) { return false; }
+}

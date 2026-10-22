@@ -45,8 +45,9 @@ function assertWalletContract(wxml, wxss, json) {
   assert.doesNotMatch(wxml, /tk-meta|tk-stub|tk-perf/, '票名/时间/状态/入口文字不得回到票面')
   assert.match(wxml, /aria-label="\{\{tk\.cta\(item\) \|\| tk\.label\(item\)\}\}，\{\{item\.wTitle\}\}"/,
     '票名与状态必须以 aria-label 保留(读屏等价物),不能连同可见文字一起消失')
-  assert.match(wxml, /<cy-nav-bar overlay pill pillDark tint="light"\s*\/>/,
-    '全屏主题图上只保留悬浮返回按钮,不得重新长出实底导航条')
+  /* 2026-10-22 业主:票夹标题放回顶栏居中。仍是悬浮(overlay)导航 —— 不长出实底导航条。 */
+  assert.match(wxml, /<cy-nav-bar overlay pill pillDark tint="light" title="票夹"\s*\/>/,
+    '全屏主题图上只保留悬浮导航(返回 + 居中标题),不得重新长出实底导航条')
   assert.match(wxss, /\.signup \.ztbg\s*\{[^}]*pointer-events:\s*none/s)
   assert.match(wxss, /\.davidwu\s*\{[^}]*position:\s*relative;[^}]*z-index:\s*1/s,
     '加载/失败/空态必须浮在主题背景之上')

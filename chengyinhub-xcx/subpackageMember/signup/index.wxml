@@ -41,7 +41,7 @@ module.exports = { state: state, label: label, cta: cta };
        卡面本身仍然零叠字。 -->
   <image wx:if="{{topicBg}}" lazy-load="true" src="{{topicBg}}" mode="aspectFill" class="ztbg" />
   <view class="signup-scrim"></view>
-  <cy-nav-bar overlay pill pillDark tint="light" />
+  <cy-nav-bar overlay pill pillDark tint="light" title="票夹" />
 
   <!-- 2026-07-31:优惠券已独立(subpackageMember/coupon),「票夹/优惠券」那层 tab 已删。
        2026-09-09 用户裁决:「路线 / 场次」这层 tab 也删掉,两种票放一起。
@@ -77,7 +77,7 @@ module.exports = { state: state, label: label, cta: cta };
         <text class="ticket-name__t ep1">{{ticketList[currentSwiperTicket].wTitle}}</text>
         <text class="ticket-name__state">{{tk.label(ticketList[currentSwiperTicket])}}{{tk.cta(ticketList[currentSwiperTicket]) ? ' · ' + tk.cta(ticketList[currentSwiperTicket]) : ''}}</text>
       </view>
-      <view class="slides rd">
+      <view class="slides rd" bindtouchstart="onDeckStart" bindtouchmove="onDeckMove" bindtouchend="onDeckEnd" bindtouchcancel="onDeckEnd">
         <swiper
           indicator-dots="{{indicatorDots}}"
           autoplay="{{autoplay}}"
@@ -89,11 +89,12 @@ module.exports = { state: state, label: label, cta: cta };
           previous-margin="115rpx"
           next-margin="115rpx"
           circular="{{true}}"
+          disable-touch="{{true}}"
           current="{{currentSwiperTicket}}"
           key="ticket-swiper-{{currentSwiperTicket}}">
           <block wx:for="{{ticketList}}" wx:key="wKey">
             <swiper-item bindtap="goTicket" data-index="{{index}}" aria-role="button" aria-label="{{tk.cta(item) || tk.label(item)}}，{{item.wTitle}}" hover-class="cy-pressed" hover-stay-time="80">
-              <view class="swiper-item-content {{currentSwiperTicket === index ? 'active' : 'inactive'}}">
+              <view class="swiper-item-content {{currentSwiperTicket === index ? 'active' : 'inactive'}}" style="{{currentSwiperTicket === index ? deckStyle : ''}}">
                 <!-- 卡面 = 一张完整票图:不再叠票名/日期/状态/入口文字。
                      票名与状态只走 aria-label(读屏可达),点击分区仍由 _openTicket 按状态兜底;
                      wImg 缺失时 rebuildTicketList 已退回 /images/route_city_cover.png,不会留空洞。 -->
