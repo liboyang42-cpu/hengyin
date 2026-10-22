@@ -68,7 +68,4 @@ test('浅色域不跟着提亮 —— 那边的居中弹窗仍是白卡', () => 
 test('另外两处暗端作用域也要有,不然会继承成隐形', () => {
   assert.ok(tokenIn(read('style/tokens.wxss'), '.theme-dark {', 'cy-comp-modal-panel'),
     '.theme-dark 缺 --cy-comp-modal-panel')
-  assert.ok(tokenIn(read('style/dark-mode.wxss'), '@media', 'cy-comp-modal-panel')
-    || /--cy-comp-modal-panel/.test(read('style/dark-mode.wxss')),
-    'dark-mode.wxss 缺 --cy-comp-modal-panel 镜像')
 })

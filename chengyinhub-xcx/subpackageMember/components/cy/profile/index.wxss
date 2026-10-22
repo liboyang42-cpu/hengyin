@@ -928,9 +928,7 @@
 }
 .pc-merchant .pc-sec-tit,
 .pc-merchant .pc-gamer-name { color: var(--cy-color-text-primary); }
-.pc-merchant .pc-gamer-lv,
-.pc-merchant .pc-sec-link { color: var(--cy-color-text-secondary); }
-.pc-merchant .pc-sec-link { color: var(--cy-color-text-primary); }
+.pc-merchant .pc-gamer-lv { color: var(--cy-color-text-secondary); }
 /* 末张卡(经营团队)被自定义 tabBar 盖住:在原底距上再加一段并计安全区,保证滚到底能完整露出 */
 .pc-merchant .pc-body { padding-bottom: calc(var(--cy-space-8) + var(--cy-tabbar-h)); }
 .pc-merchant .pc-team-entry { margin-bottom: var(--cy-space-4); }
