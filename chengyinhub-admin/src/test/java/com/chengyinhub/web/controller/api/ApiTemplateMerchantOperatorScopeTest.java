@@ -10,6 +10,7 @@ import com.chengyinhub.business.domain.vo.MemberTemplateVO;
 import com.chengyinhub.business.service.ICmsMemberTemplateService;
 import com.chengyinhub.business.service.ICouponRewardAuthorizationService;
 import com.chengyinhub.business.service.ITemplatePublishService;
+import com.chengyinhub.business.service.support.TemplateLibraryRepublishReview;
 import com.chengyinhub.common.core.domain.AjaxResult;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.AfterEach;
@@ -104,7 +105,19 @@ class ApiTemplateMerchantOperatorScopeTest {
     @Test
     void merchantDeleteToggleAndListUseOwnerScope() {
         when(publishService.deleteTemplateWithSync(71L, OWNER)).thenReturn(true);
-        when(publishService.updateTemplateLibraryStatus(71L, 1, OWNER)).thenReturn(true);
+        // 上架复检按我的模板 + 归属读投影(#398 F2),商家操作员同样落到店主 OWNER 名下。
+        com.chengyinhub.business.service.ICmsTemplateLibraryService libraryService =
+                mock(com.chengyinhub.business.service.ICmsTemplateLibraryService.class);
+        com.chengyinhub.business.domain.CmsTemplateLibrary library =
+                new com.chengyinhub.business.domain.CmsTemplateLibrary();
+        library.setId(171L);
+        library.setMemberTemplateId(71L);
+        library.setMemberId(OWNER);
+        library.setDelFlag(0);
+        when(libraryService.selectCmsTemplateLibraryList(any())).thenReturn(Collections.singletonList(library));
+        ReflectionTestUtils.setField(controller, "templateLibraryService", libraryService);
+        when(publishService.updateTemplateLibraryStatus(eq(71L), eq(1), eq(OWNER),
+                any(TemplateLibraryRepublishReview.class))).thenReturn(true);
 
         assertEquals(200, controller.deleteTemplate("71", "MERCHANT").get(AjaxResult.CODE_TAG));
         assertEquals(200, controller.updateTemplateLibraryStatus("71", "1", "MERCHANT")

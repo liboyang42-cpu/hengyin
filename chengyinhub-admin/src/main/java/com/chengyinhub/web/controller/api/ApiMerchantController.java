@@ -839,11 +839,14 @@ public class ApiMerchantController extends BaseController {
         }
 
         // 上传的照片要走异步内容安全;预设是内置资源,没有送检的意义。
-        if (!preset) {
+        // 送检对象必须是这一行 NPC(BIZ_TYPE_MERCHANT_NPC,bizId=npc_profile.id),不能借 MERCHANT_PROFILE
+        // (bizId=merchantId):那条回调核对的是商家 logo/封面/相册,头像哈希永远对不上,违规头像会被当旧媒体放过。
+        Long npcId = mine != null ? mine.getId() : save.getId();
+        if (!preset && npcId != null) {
             try {
                 // 单图走 submitMediaCheckOne:submitMediaCheck 是多图接口,返回不了单一 trace_id
                 wxContentSecurityService.submitMediaCheckOne(
-                        IWxContentSecurityService.BIZ_TYPE_MERCHANT_PROFILE, merchantId,
+                        IWxContentSecurityService.BIZ_TYPE_MERCHANT_NPC, npcId,
                         avatar, merchantOpenid(access.getOwnerMemberId()));
             } catch (Exception ignore) {}
         }

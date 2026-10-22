@@ -67,6 +67,10 @@ class NodeNpcStationScopeAcceptanceTest {
         ReflectionTestUtils.setField(service, "mediaReferences", media);
         reader = new NpcProfileService();
         ReflectionTestUtils.setField(reader, "npcProfileMapper", mapper);
+        // 本店未登记商户行:门店分身兜底解析不到商户主键
+        ReflectionTestUtils.setField(reader, "merchantNpcIdentityDirectory",
+                new com.chengyinhub.business.service.support.MerchantNpcIdentityDirectory(
+                        mock(com.chengyinhub.business.mapper.MmsMerchantMapper.class)));
 
         when(gate.requireOwnLiveNode(OWNER, STATION_A)).thenReturn(node(STATION_A, OWNER));
         when(gate.requireOwnLiveNode(OWNER, STATION_B)).thenReturn(node(STATION_B, OWNER));
