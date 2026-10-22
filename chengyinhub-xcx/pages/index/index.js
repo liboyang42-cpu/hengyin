@@ -132,6 +132,9 @@ function isCurrentLocationRequest(page, scope) {
     && scope.authorization === ((app.globalData || {}).authorization || '');
 }
 
+const MANUAL_CITY_OPTIONS = ['北京市', '上海市', '广州市', '深圳市', '杭州市', '成都市', '重庆市', '武汉市', '西安市', '南京市',
+  '苏州市', '天津市', '长沙市', '郑州市', '青岛市', '厦门市', '昆明市', '沈阳市', '济南市', '合肥市'];
+
 const HOME_CITY_MSG = {
   consent: '定位同意状态获取失败，请稍后重试',
   device: '获取位置失败，请检查手机定位是否开启',
@@ -249,6 +252,7 @@ Page({
     _needsRedirect: isMerchantView(),
     city: '',
     cityManual: false,
+    manualCityOptions: MANUAL_CITY_OPTIONS,
     isAppReady: false,
     isLoading: true,
     userInfo: {
@@ -1651,8 +1655,8 @@ loadBottomActivityList: function(pageNo, isRefresh = false) {
 
   // 手动选择城市:仅本地展示,不上传位置、不写同意记录。
   onManualCityChange(e) {
-    const value = (e && e.detail && e.detail.value) || [];
-    const city = String(value[1] || value[0] || '').trim();
+    const idx = Number(e && e.detail && e.detail.value);
+    const city = String(MANUAL_CITY_OPTIONS[idx] || '').trim();
     if (city) this.setData({ city: city, cityManual: false });
   },
 })

@@ -132,7 +132,7 @@ test('服务端要求手动输入时露出手动选城市而不是死胡同',()=
   const geo=requests.find(x=>x.url==='/api/map/reverse-geocode')
   geo.success({code:200,data:{city:'',manualInputRequired:true,reason:'MAP_UNAVAILABLE'}})
   assert.equal(p.data.cityManual,true);assert.equal(p.data.city,'')
-  p.onManualCityChange({detail:{value:['上海市','上海市','徐汇区']}})
+  p.onManualCityChange({detail:{value:1}})
   assert.equal(p.data.city,'上海市');assert.equal(p.data.cityManual,false)
 })
 test('逆地理请求失败与空城市给出不同提示',()=>{
