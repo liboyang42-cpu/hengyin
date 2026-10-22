@@ -328,6 +328,55 @@ Page({
     return list;
   },
 
+  // PC-180:推荐偏好设置与「不再推荐」尚未上线——说明只讲现状,不给任何会被理解成已能排除推荐的入口。
+  showRecommendNote() {
+    modal.show({
+      title: '收藏与推荐',
+      content: '推荐会参考你的浏览、点赞等行为。取消收藏只会把内容从这里移除，不会撤回已经记录的推荐兴趣。目前还不能设置推荐偏好，也不能把某个内容排除出推荐。',
+      showCancel: false,
+      confirmText: '知道了',
+    });
+  },
+
+  // PC-024:取消收藏结果未知时按 like_list 逐页回读。读到该主题=没取消成功,放锁可再试;
+  // 读完全部仍没有=已取消,按 ID 摘卡。任何一页失败/畸形或超出回读上限都保持未知锁,下次点击再核对。
+  _readbackTopicUnlike(requestKey, request, owner, generation) {
+    const that = this;
+    const pageSize = 50;
+    const maxPages = 10;
+    const isCurrent = () => that._isFavoriteResponseCurrent(owner, generation)
+      && that._unlikeRequests && that._unlikeRequests[requestKey] === request;
+    const stillUnknown = () => { request.reading = false; toast('取消结果未确认，请稍后再点核对'); };
+    request.reading = true;
+    const readPage = function (pageNum) {
+      app.sendRequest({
+        hideLoading: true, silentError: true, url: '/api/topic/like_list', method: 'POST',
+        data: { pageNum: pageNum, pageSize: pageSize },
+        success: function (res) {
+          if (!isCurrent()) return;
+          const rows = res && res.code == '200' && res.data && isRecordList(res.data.rows) ? res.data.rows : null;
+          if (!rows) return stillUnknown();
+          if (rows.some(row => String(row.id) === requestKey)) {
+            delete that._unlikeRequests[requestKey];
+            toast('取消没成功，可以再试一次');
+            return;
+          }
+          if (rows.length >= pageSize) {
+            if (pageNum >= maxPages) return stillUnknown();
+            return readPage(pageNum + 1);
+          }
+          delete that._unlikeRequests[requestKey];
+          that._recordFavoriteRemoval('topics', requestKey);
+          that.setData({ ztList1: that.data.ztList1.filter(topic => String(topic.id) !== requestKey) });
+          toast('已取消收藏');
+        },
+        fail: function () { if (isCurrent()) stillUnknown(); },
+        successStatusAbnormal: function () { if (isCurrent()) stillUnknown(); },
+      });
+    };
+    readPage(1);
+  },
+
   /**
    * 取消路线点赞
    */
@@ -341,7 +390,12 @@ Page({
     // A-07:后端 /api/topic/like 是「查无即插」的 toggle(type=0 被忽略),
     // 取消请求在途时再点一次会把刚删的收藏重新插回去。per-id in-flight 锁挡住第二次发送。
     that._unlikeRequests = that._unlikeRequests || Object.create(null);
-    if (that._unlikeRequests[requestKey]) return;
+    const pendingUnlike = that._unlikeRequests[requestKey];
+    if (pendingUnlike) {
+      // PC-024:结果未知时再点只回读 like_list,不再发 toggle(否则可能把已取消的收藏插回来)
+      if (pendingUnlike.unknown && !pendingUnlike.reading) that._readbackTopicUnlike(requestKey, pendingUnlike, owner, generation);
+      return;
+    }
     const prompts = that._unlikePrompts || (that._unlikePrompts = Object.create(null));
     if (prompts[requestKey]) return;
     const prompt = {};
@@ -385,11 +439,14 @@ Page({
             },
             fail: function (res) {
               if (!isCurrent()) return;
-              toast('网络错误，请重试');
+              // 断网=结果未知:锁不放、原卡片不摘,经 like_list 回读后再决定
+              request.unknown = true;
+              toast('取消结果未确认，正在核对');
             },
             complete: function () {
               if (!isCurrent()) return;
-              delete that._unlikeRequests[requestKey];
+              if (request.unknown) that._readbackTopicUnlike(requestKey, request, owner, generation);
+              else delete that._unlikeRequests[requestKey];
             }
           });
         }

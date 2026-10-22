@@ -37,14 +37,15 @@ public class ApiMerchantReviewController extends BaseController {
         }
     }
 
-    @Operation(summary = "商家评价管理列表（当前商家主体）")
+    @Operation(summary = "商家评价管理列表（当前商家主体；filter=all/pending/low/photo/platform 服务端筛选 + 全量计数）")
     @PostMapping("/manage")
-    public AjaxResult manageList(@RequestParam(value = "pageNum", required = false) Integer pageNum,
+    public AjaxResult manageList(@RequestParam(value = "filter", required = false) String filter,
+                                 @RequestParam(value = "pageNum", required = false) Integer pageNum,
                                  @RequestParam(value = "pageSize", required = false) Integer pageSize) {
         Long principal = optionalPrincipal();
         if (principal == null) return error("请先登录");
         try {
-            return success(merchantReviewService.manageList(principal, pageNum, pageSize));
+            return success(merchantReviewService.manageList(principal, filter, pageNum, pageSize));
         } catch (ServiceException e) {
             return serviceError(e);
         }

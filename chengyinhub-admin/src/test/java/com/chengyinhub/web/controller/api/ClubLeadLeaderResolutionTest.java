@@ -49,6 +49,9 @@ class ClubLeadLeaderResolutionTest {
         ReflectionTestUtils.setField(controller, "clubRoleAssignmentMapper", clubRoleAssignmentMapper);
         ReflectionTestUtils.setField(controller, "cmsActivityService", cmsActivityService);
         ReflectionTestUtils.setField(controller, "clubService", clubService);
+        // 默认未售出:条件 UPDATE 命中 1 行。已售场景在各自用例里改桩为 0 行。
+        when(cmsActivityService.updateLeadOpsUnlessSold(any(CmsActivity.class),
+                org.mockito.ArgumentMatchers.anyBoolean())).thenReturn(1);
         // 领队解析口径已抽到 ClubEventLeadResolver(与 /api/play/nodes 共用同一份);
         // 这里用同样两个 mock 现搭一个真实例,判定内容与原私有方法完全一致。
         ReflectionTestUtils.setField(controller, "clubEventLeadResolver",
@@ -120,12 +123,18 @@ class ClubLeadLeaderResolutionTest {
         java.util.Map<String, Object> body = new java.util.HashMap<>();
         body.put("activityId", 100L); body.put("address", "新集合点·地铁A口"); body.put("dayNote", "雨天改室内");
 
-        leader.editOps(body);
+        com.chengyinhub.common.core.domain.AjaxResult ok = leader.editOps(body);
 
         org.mockito.ArgumentCaptor<CmsActivity> cap = org.mockito.ArgumentCaptor.forClass(CmsActivity.class);
-        org.mockito.Mockito.verify(cmsActivityService).updateCmsActivity(cap.capture());
+        org.mockito.Mockito.verify(cmsActivityService).updateLeadOpsUnlessSold(cap.capture(), eq(true));
         assertEquals("新集合点·地铁A口", cap.getValue().getAddress(), "承接方可改集合地点");
         assertEquals("雨天改室内", cap.getValue().getDayNote(), "承接方可改当日备注");
+        // 只留痕、没有推送:响应不得声称已通知发起人。
+        assertEquals(200, ((Integer) ok.get("code")).intValue());
+        assertEquals(Boolean.FALSE, ((Map<?, ?>) ok.get("data")).get("organizerNotified"));
+        assertEquals("LOGGED_ONLY", ((Map<?, ?>) ok.get("data")).get("noticeReceipt"));
+        org.junit.jupiter.api.Assertions.assertTrue(String.valueOf(ok.get("msg")).contains("未推送"),
+                "实际:" + ok.get("msg"));
     }
 
     @Test
@@ -138,7 +147,7 @@ class ClubLeadLeaderResolutionTest {
         stranger.editOps(body);
 
         org.mockito.Mockito.verify(cmsActivityService, org.mockito.Mockito.never())
-                .updateCmsActivity(org.mockito.ArgumentMatchers.any());
+                .updateLeadOpsUnlessSold(any(), org.mockito.ArgumentMatchers.anyBoolean());
     }
 
     @Test
@@ -168,7 +177,7 @@ class ClubLeadLeaderResolutionTest {
                 org.mockito.ArgumentCaptor.forClass(ClubLeadState.class);
         verify(clubLeadMapper).updateClubLeadState(stateUpdate.capture());
         assertEquals(Long.valueOf(7L), stateUpdate.getValue().getLeaderMemberId());
-        verify(cmsActivityService).updateCmsActivity(any(CmsActivity.class));
+        verify(cmsActivityService).updateLeadOpsUnlessSold(any(CmsActivity.class), eq(false));
     }
 
     @Test
@@ -191,7 +200,7 @@ class ClubLeadLeaderResolutionTest {
 
         assertEquals(500, spyAs(7L).editOps(body).get("code"));
         org.mockito.Mockito.verify(cmsActivityService, org.mockito.Mockito.never())
-                .updateCmsActivity(any(CmsActivity.class));
+                .updateLeadOpsUnlessSold(any(CmsActivity.class), org.mockito.ArgumentMatchers.anyBoolean());
     }
 
     @Test
@@ -228,21 +237,26 @@ class ClubLeadLeaderResolutionTest {
     /**
      * CR-63(2026-09-15 裁决 15):已售出(有已支付报名)的场次锁集合时间与地点;
      * 当日备注属文字,仍可改。服务端为准 —— 前端置灰只是体验。
-     * P1-2(审查D):判据含待支付/支付中,所以这里桩 countOpenSaleRegistrations。
+     * P1-2(审查D):判据含待支付/支付中。W3(#334 F7):判据并进条件 UPDATE,零行 = 已售锁定,
+     * 控制器不再先数后写;条件 SQL 与并发下单竞态见 ClubLeadOpsSoldLockMySqlIT。
      */
     @Test
     void editOps_soldActivityLocksTimeAndPlace_butAllowsDayNote() {
         ApiClubLeadController leader = spyAs(9L); // 承接主理人=领队=9
         stubLeadActivity(100L, 200L, 999L, 9L);
-        when(cmsActivityService.countOpenSaleRegistrations(100L)).thenReturn(1);
+        when(cmsActivityService.updateLeadOpsUnlessSold(any(CmsActivity.class), eq(true))).thenReturn(0);
 
         java.util.Map<String, Object> place = new java.util.HashMap<>();
         place.put("activityId", 100L);
         place.put("address", "越权改集合点");
         com.chengyinhub.common.core.domain.AjaxResult rejected = leader.editOps(place);
         assertEquals(500, ((Integer) rejected.get("code")).intValue(), "实际:" + rejected.get("msg"));
+        assertEquals("CLUB_OPS_SOLD_LOCKED", rejected.get("errorCode"));
+        assertEquals("该场次已售出，集合时间与地点不能修改；当日备注仍可改", rejected.get("msg"));
         org.mockito.Mockito.verify(cmsActivityService, org.mockito.Mockito.never())
                 .updateCmsActivity(org.mockito.ArgumentMatchers.any());
+        org.mockito.Mockito.verify(cmsActivityService, org.mockito.Mockito.never())
+                .countOpenSaleRegistrations(org.mockito.ArgumentMatchers.anyLong());
 
         java.util.Map<String, Object> noteOnly = new java.util.HashMap<>();
         noteOnly.put("activityId", 100L);
@@ -250,7 +264,7 @@ class ClubLeadLeaderResolutionTest {
         com.chengyinhub.common.core.domain.AjaxResult ok = leader.editOps(noteOnly);
         assertEquals(200, ((Integer) ok.get("code")).intValue(), "实际:" + ok.get("msg"));
         org.mockito.ArgumentCaptor<CmsActivity> cap = org.mockito.ArgumentCaptor.forClass(CmsActivity.class);
-        org.mockito.Mockito.verify(cmsActivityService).updateCmsActivity(cap.capture());
+        org.mockito.Mockito.verify(cmsActivityService).updateLeadOpsUnlessSold(cap.capture(), eq(false));
         assertEquals("雨天改室内", cap.getValue().getDayNote(), "当日备注是文字,裁决不锁");
     }
     @Test

@@ -12,6 +12,7 @@
 
     <view wx:if="{{running && hasFrame}}" class="sh__s">相对本机阈值 {{levelPct}}%（非分贝）</view>
     <view class="sh__s">使用舒适音量，不适请停止，勿持续大声喊叫</view>
+    <view class="sh__s" wx:if="{{rewardNote}}">{{rewardNote}}</view>
 
     <view class="sh__b {{running || preparing ? 'sh__b--busy' : ''}}" bindtap="onStart"
           aria-role="button" aria-label="开始喊一嗓子" hover-class="sh__b--press" hover-stay-time="80">

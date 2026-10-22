@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.UmsMemberProfileVersionMapper">
+
+    <resultMap id="VersionResult" type="com.chengyinhub.business.domain.UmsMemberProfileVersion">
+        <id property="id" column="id"/>
+        <result property="memberId" column="member_id"/>
+        <result property="versionNo" column="version_no"/>
+        <result property="changedFields" column="changed_fields"/>
+        <result property="avatarRef" column="avatar_ref"/>
+        <result property="avatarMediaHash" column="avatar_media_hash"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <sql id="columns">
+        id, member_id, version_no, changed_fields, avatar_ref, avatar_media_hash, create_time
+    </sql>
+
+    <insert id="insertNextVersion" parameterType="com.chengyinhub.business.domain.UmsMemberProfileVersion">
+        insert into ums_member_profile_version
+            (member_id, version_no, changed_fields, avatar_ref, avatar_media_hash, create_time)
+        select #{memberId}, coalesce(max(v.version_no), 0) + 1, #{changedFields}, #{avatarRef}, #{avatarMediaHash}, now()
+        from ums_member_profile_version v where v.member_id = #{memberId}
+    </insert>
+
+    <select id="selectLatest" resultMap="VersionResult">
+        select <include refid="columns"/> from ums_member_profile_version
+        where member_id = #{memberId} order by version_no desc limit 1
+    </select>
+
+    <select id="selectLatestAvatarVersion" resultMap="VersionResult">
+        select <include refid="columns"/> from ums_member_profile_version
+        where member_id = #{memberId} and avatar_ref is not null order by version_no desc limit 1
+    </select>
+</mapper>

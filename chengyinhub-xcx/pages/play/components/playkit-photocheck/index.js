@@ -14,6 +14,8 @@ const reducedMotionBehavior = require('../../../../behaviors/reduced-motion.js')
 const replayMotionBehavior = require('../../../../behaviors/replay-motion.js');
 const motion = require('../../../../utils/motion.js');
 const cyToast = require('../../../../utils/toast.js');
+// C1:核验说明只认服务端 photoVerified=true;兜底放行另有一句,不说「这张过了」
+const { PHOTO_VERIFIED_NOTE, PHOTO_FALLBACK_VERDICT, rewardNote } = require('../../utils/sensor-contract.js');
 
 Component({
   behaviors: [reducedMotionBehavior, replayMotionBehavior],
@@ -30,6 +32,9 @@ Component({
     degraded: { type: Boolean, value: false },
     lastReason: { type: String, value: '' },
     lastUrl: { type: String, value: '' },
+    // C1:服务端 photoVerified(视觉模型当场真判 PASS)与奖励上限;缺失时不说核验、不承诺奖励
+    photoVerified: { type: Boolean, value: false },
+    rewardCeiling: { type: String, value: '' },
     // 内嵌呈现(故事流里就地玩)。只影响取不取景,不影响判定 —— 见 onShoot 的说明
     inline: { type: Boolean, value: false },
     // 取景轮廓(S1):作者给的半透明轮廓，玩家把实物套进去再按快门。没配则整块取景逻辑不启动
@@ -44,6 +49,8 @@ Component({
     verdict: '',
     verdictKind: '',
     reason: '',
+    verifiedNote: '',
+    rewardNote: '',
     // framing:页内取景中。取景器起不来过没有(camErr)只影响下一条快门走哪条路，
     // 屏上没有任何东西看它 —— 那是实例状态，不进 data(见 onFrameError 的 this._camErr)。
     framing: false,
@@ -51,6 +58,12 @@ Component({
     outlineFailed: false,
   },
   observers: {
+    'photoVerified, rewardCeiling, passed': function (photoVerified, rewardCeiling, passed) {
+      this.setData({
+        verifiedNote: passed && photoVerified === true ? PHOTO_VERIFIED_NOTE : '',
+        rewardNote: passed ? rewardNote(rewardCeiling) : '',
+      });
+    },
     'show, tries, maxTries, passed, flagged, degraded, fallback, lastReason': function (show, tries, maxTries, passed, flagged, degraded, fallback, lastReason) {
       if (!show) return;
       const total = Number(maxTries) || 0;
@@ -63,6 +76,10 @@ Component({
         // 降级:这次没有结论。不许说「通过 / 不通过」,也不把玩家卡在这一屏
         verdict = '这次没能审，先往下走';
         verdictKind = '';
+      } else if (passed && flagged) {
+        // 次数用尽兜底放行:服务端 passed 与 flagged 同时为真。这张是「先算过」,不是「过了」
+        verdict = PHOTO_FALLBACK_VERDICT;
+        verdictKind = 'ok';
       } else if (passed) {
         verdict = '这张过了';
         verdictKind = 'ok';

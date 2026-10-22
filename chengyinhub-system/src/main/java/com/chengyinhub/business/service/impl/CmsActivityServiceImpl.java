@@ -36,6 +36,7 @@ import com.chengyinhub.business.mapper.CmsActivityMapper;
 import com.chengyinhub.business.domain.CmsActivity;
 import com.chengyinhub.business.domain.enums.PublicActivityScope;
 import com.chengyinhub.business.service.ICmsActivityService;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -716,6 +717,19 @@ public class CmsActivityServiceImpl implements ICmsActivityService
     }
 
     @Override
+    // 条件 UPDATE 的「未售出」子查询在 RR 下是加锁读(锁住在途下单/间隙);显式钉 RR,不随连接默认隔离级漂移。
+    @Transactional(isolation = Isolation.REPEATABLE_READ, rollbackFor = Exception.class)
+    public int updateLeadOpsUnlessSold(CmsActivity ops, boolean touchesTimeOrPlace)
+    {
+        if (ops == null || ops.getId() == null) {
+            return 0;
+        }
+        ops.setUpdateTime(DateUtils.getNowDate());
+        return touchesTimeOrPlace ? cmsActivityMapper.updateOpsFieldsIfUnsold(ops)
+                : cmsActivityMapper.updateCmsActivity(ops);
+    }
+
+    @Override
     @Transactional(rollbackFor = Exception.class)
     public int insertCmsActivityByAdmin(CmsActivity cmsActivity, String username, boolean preReview, String flagReason)
     {
@@ -891,17 +905,8 @@ public class CmsActivityServiceImpl implements ICmsActivityService
         }
         Long activityId = activity.getId();
 
-        //3. 处理合作者
-        if (request.getCollaborators() != null && !request.getCollaborators().isEmpty()) {
-            for (Long collaboratorId : request.getCollaborators()) {
-                CmsCollaborators collaborator = new CmsCollaborators();
-                collaborator.setDataType(2L);
-                collaborator.setDataId(activityId);
-                collaborator.setMemberId(memberId);
-                collaborator.setCreateTime(new Date());
-                cmsCollaboratorsMapper.insertCmsCollaborators(collaborator);
-            }
-        }
+        //3. 处理合作者(F0258:写入所选成员,而不是发布者本人)
+        saveActivityCollaborators(request.getCollaborators(), activityId);
 
         //4. 处理票务
         List<OmsTicket> insertedTickets = new java.util.ArrayList<>();
@@ -977,8 +982,33 @@ public class CmsActivityServiceImpl implements ICmsActivityService
         if (rows <= 0) {
             throw new ServiceException("更新失败");
         }
+        // F0258:合作者仅作展示署名。传了列表(含空列表)才整体替换;未传(null)保持原样。
+        // 删除语句自带 cms_activity.member_id = owner 条件,主表更新已按 owner 命中后才执行。
+        if (request.getCollaborators() != null) {
+            cmsCollaboratorsMapper.deleteActivityCollaboratorsByOwner(request.getId(), memberId);
+            saveActivityCollaborators(request.getCollaborators(), request.getId());
+        }
         resubmitForReviewIfNeeded(currentForCollect, request, memberId, preReview);
         return rows;
+    }
+
+    /** 去重写入活动合作者;成员不存在或写入失败整单回滚,不报假成功。 */
+    private void saveActivityCollaborators(List<Long> memberIds, Long activityId) {
+        if (memberIds == null || memberIds.isEmpty()) return;
+        for (Long collaboratorId : new java.util.LinkedHashSet<>(memberIds)) {
+            if (collaboratorId == null || collaboratorId <= 0
+                    || umsMemberService.selectUmsMemberById(collaboratorId) == null) {
+                throw new ServiceException("合作者不存在，请重新选择");
+            }
+            CmsCollaborators collaborator = new CmsCollaborators();
+            collaborator.setDataType(2L);
+            collaborator.setDataId(activityId);
+            collaborator.setMemberId(collaboratorId);
+            collaborator.setCreateTime(new Date());
+            if (cmsCollaboratorsMapper.insertCmsCollaborators(collaborator) <= 0) {
+                throw new ServiceException("保存合作者失败");
+            }
+        }
     }
 
     /**

@@ -13,6 +13,8 @@ public interface ConsentRecordMapper {
 
     ConsentRecord selectByRequestId(@Param("memberId") Long memberId, @Param("requestId") String requestId);
 
+    ConsentRecord selectByRequestIdForShare(@Param("requestId") String requestId);
+
     ConsentRecord selectLatestRoamPresence(@Param("memberId") Long memberId);
 
     ConsentRecord selectLatest(@Param("memberId") Long memberId,

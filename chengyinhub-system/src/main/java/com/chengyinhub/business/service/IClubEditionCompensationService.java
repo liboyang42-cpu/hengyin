@@ -98,6 +98,22 @@ public interface IClubEditionCompensationService {
      */
     List<Map<String, Object>> editionsForExecutingClub(Long clubId);
 
+    /** 期次非空。 */
+    String EDITIONS_REASON_HAS_EDITIONS = "HAS_EDITIONS";
+    /** 本俱乐部没有作为执行俱乐部(ORGANIZER)的有效合作单。 */
+    String EDITIONS_REASON_NOT_UNDERTAKEN = "NOT_UNDERTAKEN";
+    /** 有有效 ORGANIZER 合作单,但还没有任何一期开售冻结出以本俱乐部为执行方的条款。 */
+    String EDITIONS_REASON_UNDERTAKEN_NOT_ON_SALE = "UNDERTAKEN_NOT_ON_SALE";
+    /** 调用方不是本俱乐部负责人(群主或 role=1 管理员);由 Controller 判定,不读任何承接数据。 */
+    String EDITIONS_REASON_NO_PERMISSION = "NO_PERMISSION";
+
+    /**
+     * 解释 {@link #editionsForExecutingClub} 为什么为空(W10a #26)。
+     *
+     * <p>只读服务端真源:冻结条款 + 有效 ORGANIZER 合作单。调用方必须先过归属闸。
+     */
+    String editionsEmptyReason(Long clubId);
+
     /** FINAL 只消费已确认事实；未到 T+7 且 Q 未决 ⇒ PENDING，不得 FINAL。 */
     FinalCompensationFacts computeFinalCompensationFacts(Long topicId, Date now);
 

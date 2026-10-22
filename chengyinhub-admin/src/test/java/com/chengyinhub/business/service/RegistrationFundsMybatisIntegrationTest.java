@@ -142,10 +142,6 @@ class RegistrationFundsMybatisIntegrationTest {
         ReflectionTestUtils.setField(target, "merchantReferralBountyService", mock(MerchantReferralBountyService.class));
         perkLedgerService = mock(IPerkLedgerService.class);
         ReflectionTestUtils.setField(target, "perkLedgerService", perkLedgerService);
-        // 2026-09-16: 回调 inbox 去重(cc36b4552)是支付/退款回调的必经一步,本套手工装配漏注入即 NPE。
-        // inbox 自身语义由 WxPaymentCallbackInboxServiceImplTest 覆盖,这里桩掉。
-        ReflectionTestUtils.setField(target, "wxPaymentCallbackInboxService",
-                mock(IWxPaymentCallbackInboxService.class));
         ReflectionTestUtils.setField(target, "alarmService", mock(AlarmService.class));
 
         CmsPointsSettingServiceImpl pointsSettingService = new CmsPointsSettingServiceImpl();
@@ -157,6 +153,12 @@ class RegistrationFundsMybatisIntegrationTest {
         ReflectionTestUtils.setField(target, "settlementEntryService", settlementEntryService);
 
         transactionManager = new DataSourceTransactionManager(dataSource);
+        // 2026-09-16: 回调 inbox 去重(cc36b4552)是支付/退款回调的必经一步,本套手工装配漏注入即 NPE。
+        // 2026-10-22 W3:报名支付回调改走 inbox process fence,业务在 fence 事务内提交;
+        // inbox 自身语义由 WxPaymentCallbackInboxServiceImplTest / WxPaymentCallbackFencingMySqlIT 覆盖,
+        // 这里用直通桩:每次都在独立事务里跑业务 mutation,失败整笔回滚。
+        ReflectionTestUtils.setField(target, "wxPaymentCallbackInboxService",
+                PaymentCallbackInboxStubs.passThrough(transactionManager));
         java.util.concurrent.ScheduledExecutorService noticeExecutor =
                 mock(java.util.concurrent.ScheduledExecutorService.class);
         when(noticeExecutor.schedule(org.mockito.ArgumentMatchers.any(Runnable.class),
@@ -794,9 +796,8 @@ class RegistrationFundsMybatisIntegrationTest {
         execute("ALTER TABLE ums_member_points_detail ADD CONSTRAINT ck_reject_participation CHECK (change_reason <> '参与活动')");
         Map<String, String> callback = callback();
 
-        RuntimeException error = assertThrows(RuntimeException.class,
-                () -> registrationService.handleWechatPayCallback(callback));
-        assertTrue(error.getMessage() != null || error.getCause() != null);
+        // fence 事务内的下游失败整笔回滚、inbox 释放,回调回 FAIL 等微信重投(不再把异常抛给验签入口)。
+        assertEquals("FAIL", registrationService.handleWechatPayCallback(callback));
         assertEquals(0, number("SELECT payment_status FROM cms_registration WHERE id=11"));
         assertEquals(1, number("SELECT registration_status FROM cms_registration WHERE id=11"));
         assertEquals(100, number("SELECT point FROM ums_member WHERE id=7"));
@@ -1940,8 +1941,8 @@ class RegistrationFundsMybatisIntegrationTest {
         execute("INSERT INTO ums_member_points_detail(member_id,current_points,after_points,change_points,change_reason,event_type,event_id,reward_business_key,change_type,del_flag)"
                 + " VALUES (7,100,1099,999,'冲突奖励',3,11,'registration:3:11',1,0)");
 
-        assertThrows(org.springframework.dao.DuplicateKeyException.class,
-                () -> registrationService.handleWechatPayCallback(callback()));
+        // fence 事务内的冲突奖励键整笔回滚、inbox 释放,回调回 FAIL 等微信重投。
+        assertEquals("FAIL", registrationService.handleWechatPayCallback(callback()));
 
         assertEquals(100, number("SELECT point FROM ums_member WHERE id=7"));
         assertEquals(0, number("SELECT COUNT(*) FROM ums_member_points_detail WHERE member_id=7 "

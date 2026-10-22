@@ -134,9 +134,10 @@
         <text class="op-name">已评价</text>
         <text class="op-hint">{{myReviewStars}}</text>
       </view>
-      <view class="op" wx:elif="{{box === 'received' || invite.toType === 'merchant'}}" bindtap="reviewCoop" aria-role="button" aria-label="评价本次合作" hover-class="cy-pressed" hover-stay-time="80">
+      <view class="op" wx:elif="{{box === 'received' || invite.toType === 'merchant'}}" bindtap="reviewCoop" aria-role="button" aria-label="评价本次合作" aria-disabled="{{reviewVerifying}}" hover-class="cy-pressed" hover-stay-time="80">
         <text class="op-name">评价</text>
-        <cy-icon name="arrow-right" size="24" />
+        <text class="op-hint" wx:if="{{reviewVerifying}}">核对中…</text>
+        <cy-icon wx:else name="arrow-right" size="24" />
       </view>
       <!-- 取消合作是涉资动作(锁价前可取消并退保证金):后端 status==1 双方都可取消
            (ApiCoopController 取消分支只拦「既非发起方又非收件方」),所以这一行不按 box 分侧。

@@ -9,6 +9,8 @@ const {
   createReviewRequestId,
   fallbackRoute,
   fingerprint,
+  MANAGE_REVIEW_FILTERS,
+  normalizeManageFilter,
   parseReviewRouteOptions,
   positiveId,
   shapePage,
@@ -37,6 +39,9 @@ Page({
     monthNewCount: 0,
     replyRatePct: 0,
     activeFilter: 'all',
+    // 管理态:服务端全量计数(null = 后端未给,页面不显示数字);filterLoading = 切筛选后的重读中。
+    filterCounts: null,
+    filterLoading: false,
     hasMore: false,
     loadingMore: false,
     eligibility: { canCreate: false, reasonCode: 'UNAVAILABLE', registrationId: null },
@@ -166,14 +171,15 @@ Page({
     this.loadReviews(false);
   },
 
-  loadReviews(append) {
+  loadReviews(append, keepShell) {
     if (this._hidden || this._unloaded) return;
     if (append && (this.data.loadingMore || !this.data.hasMore)) return;
     const mode = this.data.mode;
     const owner = String(app.getUserID() || '');
     if (this._reviewOwner !== undefined && this._reviewOwner !== owner) {
       this.setData({ items: [], filteredItems: [], total: 0, averageRating: '0.0', ratingStars: [],
-        pendingReplyCount: 0, monthNewCount: 0, replyRatePct: 0, hasMore: false, loadingMore: false,
+        pendingReplyCount: 0, monthNewCount: 0, replyRatePct: 0, filterCounts: null, filterLoading: false,
+        hasMore: false, loadingMore: false,
         eligibility: { canCreate: false, reasonCode: 'UNAVAILABLE', registrationId: null },
         replyReviewId: null, replyEditing: false, replyContent: '', replyError: '',
         reportReviewId: null, reportReason: '', reportError: '', content: '', images: [], rating: 0, canSubmit: false });
@@ -184,8 +190,12 @@ Page({
     const isCurrent = () => !this._hidden && !this._unloaded && readEpoch === this._reviewReadEpoch
       && owner === String(app.getUserID() || '');
     const pageNum = append ? this._pageNum + 1 : 1;
+    const filter = normalizeManageFilter(this.data.activeFilter);
     if (append) this.setData({ loadingMore: true });
-    else this.setData({ pageState: 'loading', errorMessage: '' });
+    else if (keepShell === true && this.data.pageState === 'ready') {
+      // 切筛选:保留页头与统计,只清列表 —— 旧筛选的条目不能留在新 tab 下冒充结果。
+      this.setData({ filterLoading: true, items: [], filteredItems: [], hasMore: false, errorMessage: '' });
+    } else this.setData({ pageState: 'loading', errorMessage: '' });
     const requestOptions = {
       hideLoading: true,
       method: 'POST',
@@ -200,25 +210,31 @@ Page({
           this.setData({
             pageState: append ? this.data.pageState : failedState,
             loadingMore: false,
+            filterLoading: false,
             errorMessage: failedState === 'no-permission'
               ? '当前账号没有口碑管理权限'
               : app.getRequestErrorMessage(res, '评价加载失败'),
           });
           return;
         }
-        const shaped = shapePage(res.data, mode, pageNum, 20);
+        const shaped = shapePage(res.data, mode, pageNum, 20, mode === 'manage' ? filter : undefined);
         if (!shaped) {
-          this.setData({ pageState: 'error', loadingMore: false, errorMessage: '评价数据不完整，请稍后重试' });
+          this.setData({ pageState: 'error', loadingMore: false, filterLoading: false, errorMessage: '评价数据不完整，请稍后重试' });
           return;
         }
         const items = append ? this.data.items.concat(shaped.items) : shaped.items;
         this._pageNum = shaped.pageNum;
-        const empty = mode === 'manage' && items.length === 0;
+        // 管理态:列表已由服务端按筛选收窄;整页空态只属于「全部」,筛选为空走列表内的筛选空态。
+        const empty = mode === 'manage' && items.length === 0 && filter === 'all';
         this.setData({
           pageState: empty ? 'empty' : 'ready',
           items,
-          filteredItems: filterReviewItems(items, this.data.activeFilter),
-          total: shaped.total,
+          filteredItems: mode === 'manage' ? items : filterReviewItems(items, this.data.activeFilter),
+          filterCounts: shaped.filterCounts,
+          filterLoading: false,
+          // 页头「N 条已核销评价」是全店口径:有服务端全量计数就用它,不用筛选后的 total。
+          total: mode === 'manage' && shaped.filterCounts ? shaped.filterCounts.all
+            : (mode === 'manage' && filter !== 'all' ? this.data.total : shaped.total),
           averageRating: shaped.averageRating,
           ratingStars: shaped.ratingStars,
           pendingReplyCount: shaped.pendingReplyCount,
@@ -240,6 +256,7 @@ Page({
         this.setData({
           pageState: append ? this.data.pageState : 'error',
           loadingMore: false,
+          filterLoading: false,
           errorMessage: '网络连接失败，请稍后重试',
         });
       },
@@ -247,7 +264,7 @@ Page({
     if (mode === 'manage') {
       app.sendRequest({
         hideLoading: requestOptions.hideLoading, autoErrorToast: false,
-        url: `/api/merchant/reviews/manage?pageNum=${pageNum}&pageSize=20`,
+        url: `/api/merchant/reviews/manage?filter=${encodeURIComponent(filter)}&pageNum=${pageNum}&pageSize=20`,
         method: requestOptions.method,
         success: requestOptions.success,
         fail: requestOptions.fail,
@@ -269,15 +286,27 @@ Page({
 
   setReviewFilter(event) {
     const filter = String(event && event.currentTarget && event.currentTarget.dataset.filter || 'all');
-    if (!['all', 'pending', 'low', 'photo'].includes(filter)) return;
+    const manage = this.data.mode === 'manage';
+    if (manage ? !MANAGE_REVIEW_FILTERS.includes(filter) : !['all', 'low', 'photo'].includes(filter)) return;
+    if (filter === this.data.activeFilter && !(manage && this.data.filterLoading)) return;
     this.setData({
       activeFilter: filter,
-      filteredItems: filterReviewItems(this.data.items, filter),
       replyReviewId: null,
       replyEditing: false,
       replyContent: '',
       replyError: '',
+      reportReviewId: null,
+      reportReason: '',
+      reportError: '',
     });
+    if (manage) {
+      // W10a #20:管理态筛选走服务端,重读第一页;计数随响应刷新。
+      this._pageNum = 1;
+      this.loadReviews(false, true);
+      return;
+    }
+    // 公开态仍只在已加载评价里筛(没有公开态服务端筛选接口)。
+    this.setData({ filteredItems: filterReviewItems(this.data.items, filter) });
   },
 
   selectRating(event) {

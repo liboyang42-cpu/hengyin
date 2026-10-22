@@ -53,6 +53,9 @@ function mountCityNodePage() {
         // 发布者实名:场景表单在 data 里就要读它的两句文案,用真模块而不是桩
         if (request.includes('publisher-identity')) return require('../../utils/publisher-identity.js');
         if (request.includes('code-text')) return require('../../pages/merchant/utils/code-text.js');
+        // 据点核销与 #424 共用核销写闸(PRIVATE-GROUP-nucleation-original-request),给真实现
+        if (request.includes('verification-readback')) return require('../../utils/verification-readback.js');
+        if (request.includes('citynode-redeem-outcome')) return require('../../utils/citynode-redeem-outcome.js');
         throw new Error('unexpected require: ' + request);
       },
       wx,
@@ -110,6 +113,9 @@ function mountCityNodeCreatePage() {
         // 发布者实名:场景表单在 data 里就要读它的两句文案,用真模块而不是桩
         if (request.includes('publisher-identity')) return require('../../utils/publisher-identity.js');
         if (request.includes('code-text')) return require('../../pages/merchant/utils/code-text.js');
+        // 据点核销与 #424 共用核销写闸(PRIVATE-GROUP-nucleation-original-request),给真实现
+        if (request.includes('verification-readback')) return require('../../utils/verification-readback.js');
+        if (request.includes('citynode-redeem-outcome')) return require('../../utils/citynode-redeem-outcome.js');
         throw new Error('unexpected require: ' + request);
       },
       wx,
