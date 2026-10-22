@@ -132,51 +132,9 @@ function isCurrentLocationRequest(page, scope) {
     && scope.authorization === ((app.globalData || {}).authorization || '');
 }
 
-const MANUAL_CITY_OPTIONS = ['北京市', '上海市', '广州市', '深圳市', '杭州市', '成都市', '重庆市', '武汉市', '西安市', '南京市',
-  '苏州市', '天津市', '长沙市', '郑州市', '青岛市', '厦门市', '昆明市', '沈阳市', '济南市', '合肥市'];
-
-const HOME_CITY_MSG = {
-  consent: '定位同意状态获取失败，请稍后重试',
-  device: '获取位置失败，请检查手机定位是否开启',
-  network: '城市识别请求失败，请检查网络',
-  empty: '未识别到所在城市，可手动选择城市',
-  generic: '暂时无法定位城市，可继续浏览'
-};
-
+const homeCity = require('../../utils/index/home-city-location.js');
 function showHomeCityLocationError(page, scope, kind) {
-  hideLocationLoading(page, scope);
-  if (isCurrentLocationRequest(page, scope)) cyToast(HOME_CITY_MSG[kind] || HOME_CITY_MSG.generic);
-}
-
-// 服务端 MAP_UNAVAILABLE / MAP_RATE_LIMITED:不再死胡同,露出手动选城市入口。
-function offerManualCity(page, scope, reason) {
-  hideLocationLoading(page, scope);
-  if (!isCurrentLocationRequest(page, scope)) return;
-  page.setData({ cityManual: true });
-  cyToast(reason === 'MAP_RATE_LIMITED' ? '定位请求较频繁，请手动选择城市' : '暂时无法自动识别城市，请手动选择');
-}
-
-// 权限被拒/系统定位关闭:只引导打开设置一次(本页面实例内)。
-function offerLocationSettings(page, scope) {
-  hideLocationLoading(page, scope);
-  if (!isCurrentLocationRequest(page, scope)) return;
-  if (page._locationSettingsOffered) { cyToast(HOME_CITY_MSG.device); return; }
-  page._locationSettingsOffered = true;
-  modal.show({
-    title: '需要定位权限',
-    content: '无法获取位置。请确认已开启手机定位，并在设置中允许小程序使用位置信息。',
-    confirmText: '去设置',
-    cancelText: '暂不',
-    success(result) {
-      if (!result.confirm || !isCurrentLocationRequest(page, scope) || typeof wx.openSetting !== 'function') return;
-      wx.openSetting({
-        success(setting) {
-          const granted = setting && setting.authSetting && setting.authSetting['scope.userLocation'];
-          if (granted && isCurrentLocationRequest(page, scope)) page.getHomeCityLocation();
-        }
-      });
-    }
-  });
+  hideLocationLoading(page, scope); if (isCurrentLocationRequest(page, scope)) cyToast(homeCity.message(kind));
 }
 
 function hideLocationLoading(page, scope) {
@@ -250,9 +208,7 @@ Page({
     // 身份分流：商户在首页 tab 渲染前直接跳商户首页，避免玩家首页闪一帧
     // debug_user_view='user' 强制使用普通用户视角（调试用）
     _needsRedirect: isMerchantView(),
-    city: '',
-    cityManual: false,
-    manualCityOptions: MANUAL_CITY_OPTIONS,
+    city: '', cityManual: false, manualCityOptions: homeCity.CITY_OPTIONS,
     isAppReady: false,
     isLoading: true,
     userInfo: {
@@ -1656,7 +1612,38 @@ loadBottomActivityList: function(pageNo, isRefresh = false) {
   // 手动选择城市:仅本地展示,不上传位置、不写同意记录。
   onManualCityChange(e) {
     const idx = Number(e && e.detail && e.detail.value);
-    const city = String(MANUAL_CITY_OPTIONS[idx] || '').trim();
+    const city = String(homeCity.CITY_OPTIONS[idx] || '').trim();
     if (city) this.setData({ city: city, cityManual: false });
   },
 })
+
+// 服务端 MAP_UNAVAILABLE / MAP_RATE_LIMITED:不再死胡同,露出手动选城市入口。
+function offerManualCity(page, scope, reason) {
+  hideLocationLoading(page, scope);
+  if (!isCurrentLocationRequest(page, scope)) return;
+  page.setData({ cityManual: true });
+  cyToast(reason === 'MAP_RATE_LIMITED' ? '定位请求较频繁，请手动选择城市' : '暂时无法自动识别城市，请手动选择');
+}
+
+// 权限被拒/系统定位关闭:只引导打开设置一次(本页面实例内)。
+function offerLocationSettings(page, scope) {
+  hideLocationLoading(page, scope);
+  if (!isCurrentLocationRequest(page, scope)) return;
+  if (page._locationSettingsOffered) { cyToast(homeCity.message('device')); return; }
+  page._locationSettingsOffered = true;
+  modal.show({
+    title: '需要定位权限',
+    content: '无法获取位置。请确认已开启手机定位，并在设置中允许小程序使用位置信息。',
+    confirmText: '去设置',
+    cancelText: '暂不',
+    success(result) {
+      if (!result.confirm || !isCurrentLocationRequest(page, scope) || typeof wx.openSetting !== 'function') return;
+      wx.openSetting({
+        success(setting) {
+          const granted = setting && setting.authSetting && setting.authSetting['scope.userLocation'];
+          if (granted && isCurrentLocationRequest(page, scope)) page.getHomeCityLocation();
+        }
+      });
+    }
+  });
+}
