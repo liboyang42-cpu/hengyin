@@ -89,10 +89,11 @@ function createDetailHarness() {
     '../../../utils/ticket-source.js': require('../../utils/ticket-source.js'),
     '../../../utils/topic-share.js': require('../../utils/topic-share.js'),
     '../utils/club-event-calendar.js': require('../../pages/club/utils/club-event-calendar.js'),
+    '../utils/edition-empty-reason.js': require('../../pages/club/utils/edition-empty-reason.js'),
   })
   page.data.clubId = '9'
   page.data.myMemberId = '7'
-  return { page, requests }
+  return { page, requests, appRef: app }
 }
 
 function byUrl(requests, url) {
@@ -112,13 +113,16 @@ test('点赞业务失败提示服务端文案,网络失败提示「网络异常�
   byUrl(h.requests, '/api/club/post/like')[1].success({ code: '500' })
   assert.equal(toasts.pop(), '点赞没成功')
 
+  // 断网=结果未知:不再提示「请重试」,而是回读 post/list 核对(详见下方 club-like-unknown 用例)
   h.page.onLikePost(likeEvent(5))
   byUrl(h.requests, '/api/club/post/like')[2].fail()
-  assert.equal(toasts.pop(), '网络异常，请重试')
+  assert.equal(toasts.pop(), '点赞结果未确认，正在核对')
+  byUrl(h.requests, '/api/club/post/list')[0].success({ code: '200', data: [{ id: 5, isLiked: false, likeCount: 0 }] })
+  assert.equal(toasts.pop(), '点赞没成功，可以再试一次')
 
   h.page.onLikePost(likeEvent(5))
   byUrl(h.requests, '/api/club/post/like')[3].success({ code: '200', data: { liked: true } })
-  assert.equal(byUrl(h.requests, '/api/club/post/list').length, 1)
+  assert.equal(byUrl(h.requests, '/api/club/post/list').length, 2)
 })
 
 test('同一条动态返回前重复点赞只发一次,不同动态互不影响', () => {
@@ -146,4 +150,89 @@ test('举报动态与举报评论网络失败有提示,成功沿用服务端 msg
   assert.equal(toasts.pop(), '网络异常，请重试')
   report.success({ code: '200', msg: '已举报,平台将尽快处理' })
   assert.equal(toasts.pop(), '已举报,平台将尽快处理')
+})
+
+// PRIVATE-GROUP-club-like-unknown:切换式点赞断网后结果未知——保持锁定、按严格布尔 isLiked 回读、
+// 与发起时的目标意图比对后才放行;锁按 owner+俱乐部隔离。目标状态幂等依赖后端,这里只验回读。
+test('点赞结果未知:锁不放,再点只回读不切换;回读与目标一致才算已生效', () => {
+  const h = createDetailHarness()
+  toasts.length = 0
+  h.page.data.posts = [{ id: 5, isLiked: false, likeCount: 2 }]
+  h.page.onLikePost(likeEvent(5))
+  byUrl(h.requests, '/api/club/post/like')[0].fail()
+  assert.equal(toasts.pop(), '点赞结果未确认，正在核对')
+  const reads = () => byUrl(h.requests, '/api/club/post/list')
+  assert.equal(reads().length, 1)
+  assert.deepEqual(JSON.parse(reads()[0].data), { id: '9', clubId: '9' })
+
+  // 回读在途:再点既不切换也不重复回读
+  h.page.onLikePost(likeEvent(5))
+  assert.equal(byUrl(h.requests, '/api/club/post/like').length, 1)
+  assert.equal(reads().length, 1)
+
+  // 回读失败:仍未知,锁不放
+  reads()[0].fail()
+  assert.equal(toasts.pop(), '点赞结果未确认，请稍后再点核对')
+  h.page.onLikePost(likeEvent(5))
+  assert.equal(byUrl(h.requests, '/api/club/post/like').length, 1)
+  assert.equal(reads().length, 2)
+
+  // 非严格布尔(如未登录时后端不标、字符串 "true")不算确认
+  reads()[1].success({ code: '200', data: [{ id: 5, isLiked: 'true', likeCount: 3 }] })
+  assert.equal(toasts.pop(), '点赞结果未确认，请稍后再点核对')
+  h.page.onLikePost(likeEvent(5))
+  assert.equal(byUrl(h.requests, '/api/club/post/like').length, 1)
+  // 帖子不在回读结果里也不算确认
+  reads()[2].success({ code: '200', data: [{ id: 6, isLiked: true }] })
+  h.page.onLikePost(likeEvent(5))
+  assert.equal(byUrl(h.requests, '/api/club/post/like').length, 1)
+
+  // 严格 true 且目标是点赞 → 已生效,回写这一条并放锁
+  reads()[3].success({ code: '200', data: [{ id: 5, isLiked: true, likeCount: 3 }] })
+  assert.equal(toasts.pop(), '已点赞')
+  assert.equal(h.page.data.posts[0].isLiked, true)
+  assert.equal(h.page.data.posts[0].likeCount, 3)
+  h.page.onLikePost(likeEvent(5))
+  assert.equal(byUrl(h.requests, '/api/club/post/like').length, 2)
+})
+
+test('目标意图取自发起时的 isLiked:已赞时未知回读到 false 才是「已取消」', () => {
+  const h = createDetailHarness()
+  toasts.length = 0
+  h.page.data.posts = [{ id: 5, isLiked: true, likeCount: 3 }]
+  h.page.onLikePost(likeEvent(5))
+  byUrl(h.requests, '/api/club/post/like')[0].fail()
+  byUrl(h.requests, '/api/club/post/list')[0].success({ code: '200', data: [{ id: 5, isLiked: false, likeCount: 2 }] })
+  assert.equal(toasts.pop(), '已取消点赞')
+  assert.equal(h.page.data.posts[0].isLiked, false)
+
+  h.page.onLikePost(likeEvent(5))
+  byUrl(h.requests, '/api/club/post/like')[1].fail()
+  byUrl(h.requests, '/api/club/post/list')[1].success({ code: '200', data: [{ id: 5, isLiked: false, likeCount: 2 }] })
+  assert.equal(toasts.pop(), '点赞没成功，可以再试一次')
+})
+
+test('未知锁按 owner+俱乐部隔离:换号后旧回读丢弃,新账号可直接点赞', () => {
+  const h = createDetailHarness()
+  let uid = '7'
+  h.page.data.posts = [{ id: 5, isLiked: false }]
+  const like = byUrl.bind(null, h.requests)
+  // 页面加载时已捕获 app;改 getUserID 即可模拟换号
+  h.appRef.getUserID = () => uid
+  h.page.onLikePost(likeEvent(5))
+  like('/api/club/post/like')[0].fail()
+  // A 的未知锁还在,换成 B
+  uid = '8'
+  h.page.onLikePost(likeEvent(5))
+  assert.equal(like('/api/club/post/like').length, 2)
+  // A 的迟到回读不能改 B 的页面
+  toasts.length = 0
+  like('/api/club/post/list')[0].success({ code: '200', data: [{ id: 5, isLiked: true, likeCount: 9 }] })
+  assert.equal(h.page.data.posts[0].isLiked, false)
+  assert.equal(toasts.length, 0)
+  // 换俱乐部同理:另一个俱乐部的同 id 帖子不受旧锁影响
+  uid = '7'
+  h.page.data.clubId = '10'
+  h.page.onLikePost(likeEvent(5))
+  assert.equal(like('/api/club/post/like').length, 3)
 })

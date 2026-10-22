@@ -15,7 +15,11 @@ import com.chengyinhub.business.domain.WxPaymentCallbackInbox;
  */
 public interface IWxPaymentCallbackInboxService {
 
-    /** 首次收到回调时登记(未登记过则插入 waiting 态,已登记返回 false 由调用方按幂等处理)。 */
+    /**
+     * 首次收到回调时登记(未登记过则插入 waiting 态,已登记返回 false 由调用方按幂等处理)。
+     * 已登记的 notify_hash 必须对应同一业务(bizType/bizId/eventType);不一致时告警并抛
+     * {@link IdentityConflictException},调用方回 FAIL,绝不按「重复成功」处理。
+     */
     boolean register(String notifyId, int bizType, Long bizId, String eventType);
 
     /** 该回调是否已登记过(用于快速幂等短路,不做业务判断)。 */
@@ -26,6 +30,15 @@ public interface IWxPaymentCallbackInboxService {
      * @return 是否成功推进(被别的 worker 抢占/已终态时返回 false)
      */
     boolean process(String notifyId, Mutation mutation);
+
+    /** 同一 notify_hash 已登记为另一笔业务:拒收,不得当作重复成功。 */
+    class IdentityConflictException extends RuntimeException {
+        private static final long serialVersionUID = 1L;
+
+        public IdentityConflictException(String message) {
+            super(message);
+        }
+    }
 
     interface Mutation {
         /** 在目标行已经 FOR UPDATE 后，确认当前业务单据状态仍适合应用本次回调。 */

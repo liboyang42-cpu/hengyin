@@ -23,7 +23,7 @@ function host(options={}) {
   function load(file) {
     let def;
     vm.runInNewContext(fs.readFileSync(path.join(ROOT,file+'.js'),'utf8'),{
-      Component:d=>{def=d;}, require:name=>name.includes('play-audio-level')?require('../../pages/play/utils/play-audio-level.js'):name.endsWith('/toast.js')?s=>messages.push(s):{haptic(){}},
+      Component:d=>{def=d;}, require:name=>name.includes('play-audio-level')?require('../../pages/play/utils/play-audio-level.js'):name.endsWith('/sensor-contract.js')?require('../../pages/play/utils/sensor-contract.js'):name.endsWith('/toast.js')?s=>messages.push(s):{haptic(){}},
       wx,Date:{now:()=>now},Math,Number,ArrayBuffer,Int16Array,
       setTimeout:(fn,ms)=>timer(fn,ms,false),clearTimeout:id=>tasks.delete(id),setInterval:(fn,ms)=>timer(fn,ms,true),clearInterval:id=>tasks.delete(id),
     },{filename:file});return def;
@@ -88,3 +88,16 @@ test('quiet one fresh frame cannot bypass required measured duration through fin
 test('quiet ambiguous device error mentioning permission is not authoritative denial',()=>{const h=host();h.c.onStart();h.emit('Error',{errMsg:'device busy; previous auth deny?'});assert.equal(count(h,'micdenied'),0);assert.ok(h.messages.length);});
 test('quiet duplicate start while waiting for native start or calibrating remains single-flight',()=>{const h=host();h.c.onStart();h.c.onStart();assert.equal(h.rec.startCalls,1);h.emit('Start');h.c.onStart();assert.equal(h.rec.startCalls,1);assert.equal(h.begins,1);});
 test('quiet malformed runtime frame breaks consecutive sample duration instead of bridging the gap',()=>{const h=host();h.run();h.frame(0);h.tick(100);h.frame(0);assert.ok(h.c._held>0);h.tick(100);h.raw(new ArrayBuffer(3));h.tick(100);h.frame(0);assert.equal(h.c._held,0);assert.equal(count(h,'submit'),0);});
+// C1:校准状态与相对阈值可见;只有开局后服务端新发的挑战身份才随成绩交
+test('quiet shows calibrating then calibrated relative threshold, never decibels',()=>{
+  const h=host();h.c.onStart();h.emit('Start');assert.equal(h.c.data.calibration,'calibrating');assert.equal(h.c.data.thresholdText,'');
+  h.frame(0);h.stage.onCalibrateTick();h.stage.onCalibrated();assert.equal(h.c.data.calibration,'calibrated');
+  assert.match(h.c.data.thresholdText,/相对.*不是分贝/);assert.doesNotMatch(h.c.data.thresholdText,/\bdB\b/);
+  h.interrupt('hide');assert.equal(h.c.data.calibration,'');assert.equal(h.c.data.thresholdText,'');
+});
+test('quiet submits the server attempt issued after this run started, never the one held at start',()=>{
+  const fresh=host({props:{attemptId:11}});fresh.run();fresh.c.data.attemptId=22;fresh.frame(0);for(let i=0;i<12&&fresh.c.data.running;i++){fresh.tick(100);fresh.frame(0);}
+  const sent=fresh.events.find(e=>e.name==='submit');assert.equal(sent.detail.attemptId,22);assert.equal(serverPayload('quiethold','submit',sent.detail).attemptId,22);
+  const stale=host({props:{attemptId:11}});stale.run();stale.frame(0);for(let i=0;i<12&&stale.c.data.running;i++){stale.tick(100);stale.frame(0);}
+  const legacy=stale.events.find(e=>e.name==='submit');assert.equal('attemptId' in legacy.detail,false);assert.equal('attemptId' in serverPayload('quiethold','submit',legacy.detail),false);
+});

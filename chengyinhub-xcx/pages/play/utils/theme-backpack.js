@@ -40,7 +40,9 @@ function present(view, nodes) {
       (Array.isArray(c.sources) ? c.sources : []).forEach(source => (Array.isArray(source.blocks) ? source.blocks : []).forEach(block => blocks.push({
         source: source.title || '', text: block.text || '', images: (Array.isArray(block.images) ? block.images : []).filter(Boolean),
       })));
-      return { id: c.id + ':' + (c.scope || ''), name: c.name || '线索', scopeText: c.scope === 'PUBLIC' ? '全场公开' : '本队线索', blocks };
+      // 没有可显示的内容块时只给中性说明，不推测来源、可见范围或撤回
+      const emptyText = blocks.some(block => block.text || block.images.length) ? '' : '暂无可显示的内容';
+      return { id: c.id + ':' + (c.scope || ''), name: c.name || '线索', scopeText: c.scope === 'PUBLIC' ? '全场公开' : '本队线索', blocks, emptyText };
     }));
   const valueRows = [];
   if (view.hpEnabled) valueRows.push({ key: 'hp', name: names.hp, value: view.hp, max: view.hpMax, zero: view.awaitingChallenge || view.zeroHp && view.zeroHp.phase !== 'HEALTHY' });
@@ -488,7 +490,10 @@ function methods(req) {
           this.setData({ themeBagUnknown: false });
           const result = team ? receipt.result && (receipt.result.result || receipt.result) || {} : receipt.settlement || {};
           const text = trade.recoveryText(result, gameplay.labels(view).hp);
+          const questText = gameplay.questReceiptText(input.operation, result, view);
           if (text) { toast(text); this.setData({ themeRecoveryText: text }); }
+          else if (questText) toast(questText);
+          if (input.operation.startsWith('QUEST_')) this.setData({ themeQuestReceiptText: questText });
           else if (input.operation === 'ITEM_RECEIVE') toast('待领奖励已领取');
           if (input.previewVersion) this.closeThemeRewardPreview();
           if (input.operation === 'ITEM_RECEIVE') this.setData({ themePendingClaim: null });

@@ -1,6 +1,7 @@
 package com.chengyinhub.business.service.impl;
 
 import com.chengyinhub.business.service.support.TemplateAuditSnapshot;
+import com.chengyinhub.business.service.support.TemplateLibraryRepublishReview;
 import com.chengyinhub.business.mapper.CmsTemplateLibraryMapper;
 import com.chengyinhub.business.mapper.AuditTaskMapper;
 
@@ -1124,6 +1125,13 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean updateTemplateLibraryStatus(Long memberTemplateId, Integer publishStatus, Long memberId) {
+        return updateTemplateLibraryStatus(memberTemplateId, publishStatus, memberId, null);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean updateTemplateLibraryStatus(Long memberTemplateId, Integer publishStatus, Long memberId,
+                                               TemplateLibraryRepublishReview review) {
         if (!Integer.valueOf(0).equals(publishStatus) && !Integer.valueOf(1).equals(publishStatus)) {
             throw new RuntimeException("发布状态仅支持 0 或 1");
         }
@@ -1143,6 +1151,18 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
         if (libraryTemplates == null || libraryTemplates.isEmpty()) {
             // M-06:业务拒绝用 ServiceException,controller 才透传原因,不会被吞成「请稍后重试」
             throw new ServiceException("该模板还没有提交到模板广场，审核通过后才能上架", HttpStatus.BAD_REQUEST);
+        }
+        // 上架必须带锁外复检快照，且与锁内投影批次完全一致；缺失或漂移一律拒绝(fail closed)。
+        if (Integer.valueOf(1).equals(publishStatus)) {
+            for (CmsTemplateLibrary projection : libraryTemplates) {
+                if (projection != null && Integer.valueOf(0).equals(projection.getDelFlag())
+                        && !Long.valueOf(1L).equals(projection.getStatus())) {
+                    throw new ServiceException("模板广场审核通过后才能上架", HttpStatus.BAD_REQUEST);
+                }
+            }
+            if (review == null || !review.matches(memberTemplateId, memberId, libraryTemplates)) {
+                throw new ServiceException("上架复检暂不可用，请刷新后重试", HttpStatus.BAD_REQUEST);
+            }
         }
         boolean hasActiveProjection = false;
         for (CmsTemplateLibrary libraryTemplate : libraryTemplates) {

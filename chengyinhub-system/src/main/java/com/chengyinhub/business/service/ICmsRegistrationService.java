@@ -203,6 +203,13 @@ public interface ICmsRegistrationService
      */
     public String handleWechatPayCallback(Map<String, String> resultMap);
 
+    /**
+     * 调用方已在自己的事务内向微信查单确认 SUCCESS 时的补记(不走回调 inbox,必须已有事务)。
+     * @param resultMap 查单结果(out_trade_no/transaction_id/trade_state/total)
+     * @return SUCCESS 或 FAIL
+     */
+    public String applyConfirmedWechatPaymentWithinTransaction(Map<String, String> resultMap);
+
     /** 零现金报名专用完成入口；不得伪造微信 SUCCESS 回调。 */
     public String completeZeroAmountPayment(String registrationNo);
 

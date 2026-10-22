@@ -12,7 +12,7 @@ function deriveCanSubmit(conditions) {
 // 前端这份只负责「当场说清哪一格错了」,真拦在校验位的一直是后端那一份 —— 两边算法不一致时,
 // 用户会看到「前端放行、后端报格式不正确」这种解释不了的失败,所以改一边必须改两边。
 const ID_CARD_WEIGHTS = [7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2]
-const ID_CARD_CHECK_CODES = '10X9876543'
+const ID_CARD_CHECK_CODES = '10X98765432'
 
 /** 去首尾与内部空白、末位 x 转大写。手写 X 几乎必然是小写,不归一化会把合法号判成非法。 */
 function normalizeIdCard(value) {

@@ -218,6 +218,13 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
       ③ 自由探索票必须能回读到至少一条未失效 entitlement，防止仅凭报名半态放出完整剧情。
       owner_type=2 的购票落在活动壳，通过 cms_activity 回溯源主题。
     -->
+    <!-- 帖子引用「我的游玩记录」的归属核验:与 my-joined 同口径(registration_status=2 报名成功)。 -->
+    <select id="countSucceededJoin" resultType="int">
+        select count(*) from cms_registration
+        where member_id = #{memberId} and owner_type = #{ownerType} and owner_id = #{ownerId}
+          and registration_status = 2
+    </select>
+
     <select id="hasActiveTopicStoryAccess" resultType="boolean">
         select exists(
             select 1
