@@ -2,7 +2,7 @@
 -- 只新建 6 张表，不改既有表、不回填数据；既有 cms_topic / cms_topic_chapter / merchant_chapter_offer /
 -- registration_entitlement / redemption 原样复用(本批只在其旁边记「每持有人每单位」账)。
 -- 【前置】无(不建外键；registration_id / chapter_id / offer_id 指向的既有表在 base schema 中)。
--- 【落库顺序】先手工执行本迁移(及 migration_doc2_f3_settlement_claim_unit_20261022.sql)，再部署新 jar，
+-- 【落库顺序】先手工执行本迁移，再部署新 jar，
 --   最后才按需打开 chengyin.free-explore.bundle.ledger-enabled；sale-enabled / reservation-enabled 默认关闭。
 -- 幂等：表不存在则建；已存在则逐表核对列 fingerprint 与唯一键 fingerprint，不一致时 guard 主键冲突让客户端报错，不改不删。
 -- 余额口径：持有人余额 = explore_bundle_unit 按 (registration_id, holder_member_id, chapter_id, grant_id) 计数，

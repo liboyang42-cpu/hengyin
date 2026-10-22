@@ -59,11 +59,11 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
- * DOC2 F3 Phase 1 真库验收:本批两条迁移 + 真 ExploreBundleMapper.xml + 真 SettlementClaimMapper.xml。
+ * DOC2 F3 Phase 1 真库验收:本批账本迁移 + 真 ExploreBundleMapper.xml + 真 SettlementClaimMapper.xml。
  *
  * <ul>
  *   <li>迁移可重跑;表形状被改动后重跑必须 guard 报错(负控)。</li>
- *   <li>settlement_claim 加单位维度后,存量 7 列键的唯一性不变,不同 unit_code 可并存。</li>
+ *   <li>Phase 1 不动资金表 settlement_claim:不加 unit_code,7 列经济键唯一闸原样(单位维度留待 Phase 2 资金审批)。</li>
  *   <li>A、B 买同一套票:A 核销只动 A 的单位,B 余额不变;同一 registration 只冻结一张单;
  *       改产品不改已售快照;同单位同时只许一条在约;月度豁免唯一。</li>
  * </ul>
@@ -72,7 +72,6 @@ import static org.mockito.Mockito.when;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class FreeExploreBundleLedgerMySqlIT {
     private static final String LEDGER = "sql/migration_doc2_f3_bundle_ledger_20261022.sql";
-    private static final String CLAIM_UNIT = "sql/migration_doc2_f3_settlement_claim_unit_20261022.sql";
     private static final long TOPIC = 70L;
     private static final long CH1 = 701L;
     private static final long CH2 = 702L;
@@ -113,8 +112,6 @@ class FreeExploreBundleLedgerMySqlIT {
         db.execute(createTable(read("../sql/base_schema_20260818.sql"), "settlement_claim"));
         apply(LEDGER);
         apply(LEDGER);
-        apply(CLAIM_UNIT);
-        apply(CLAIM_UNIT);
 
         SqlSessionFactoryBean factory = new SqlSessionFactoryBean();
         factory.setDataSource(source);
@@ -145,24 +142,14 @@ class FreeExploreBundleLedgerMySqlIT {
     }
 
     @Test
-    void settlementClaimKeepsLegacyUniquenessAndAcceptsDistinctUnits() {
-        SettlementClaim legacy = claim();
-        assertEquals(1, claimMapper.insertClaim(legacy), "现有 mapper 不写 unit_code 仍可插入(默认 '')");
+    void phase1LeavesSettlementClaimUntouched() {
+        assertEquals(0, count("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema=DATABASE()"
+                + " AND table_name='settlement_claim' AND column_name='unit_code'"), "Phase 1 不给资金表加 unit_code");
+        assertEquals(7, count("SELECT COUNT(*) FROM information_schema.statistics WHERE table_schema=DATABASE()"
+                + " AND table_name='settlement_claim' AND index_name='uk_settlement_claim_key'"), "唯一键仍是存量 7 列");
+        assertEquals(1, claimMapper.insertClaim(claim()));
         assertThrows(DataIntegrityViolationException.class, () -> claimMapper.insertClaim(claim()),
                 "存量 7 列经济键唯一性不变");
-        db.update("INSERT INTO settlement_claim(commercial_context_type,commercial_context_id,fulfillment_type,"
-                + "fulfillment_id,beneficiary_role,beneficiary_id,service_unit,settlement_route,source_contract_type,"
-                + "source_contract_id,status,create_time,unit_code) VALUES('ACTIVITY',1,'REDEMPTION',9,'MERCHANT',5,"
-                + "'CHAPTER_SUPPLY','NONE','MERCHANT_CHAPTER_OFFER',3,'ACTIVE',NOW(),'FXUNIT1')");
-        db.update("INSERT INTO settlement_claim(commercial_context_type,commercial_context_id,fulfillment_type,"
-                + "fulfillment_id,beneficiary_role,beneficiary_id,service_unit,settlement_route,source_contract_type,"
-                + "source_contract_id,status,create_time,unit_code) VALUES('ACTIVITY',1,'REDEMPTION',9,'MERCHANT',5,"
-                + "'CHAPTER_SUPPLY','NONE','MERCHANT_CHAPTER_OFFER',3,'ACTIVE',NOW(),'FXUNIT2')");
-        assertThrows(DataIntegrityViolationException.class, () -> db.update(
-                "INSERT INTO settlement_claim(commercial_context_type,commercial_context_id,fulfillment_type,"
-                + "fulfillment_id,beneficiary_role,beneficiary_id,service_unit,settlement_route,source_contract_type,"
-                + "source_contract_id,status,create_time,unit_code) VALUES('ACTIVITY',1,'REDEMPTION',9,'MERCHANT',5,"
-                + "'CHAPTER_SUPPLY','NONE','MERCHANT_CHAPTER_OFFER',3,'ACTIVE',NOW(),'FXUNIT2')"));
     }
 
     @Test

@@ -16,7 +16,7 @@
 | 权益 | `registration_entitlement`（每票每章一行） | 新增 `explore_bundle_grant` / `explore_bundle_unit`：按 (订单, 持有人, 项目, 发放) 记余额，每单位一码 |
 | 核销 | 商家扫玩家券：`/scan_qr_code_chapter` → `PerkLedgerServiceImpl.redeemChapter` → `redemption` | 插入核销流水之后、同一事务内调用 `onChapterRedeemed`，消耗该持有人的一个单位 |
 | 撤销 / 退款 | `reverseLockedRedemption`、`releaseOnRefund` | 调用 `onRedemptionReversed` / `onRegistrationRefunded` 处理对应单位 |
-| 计提 / 结算 | `MerchantPayableServiceImpl.accrueOnRedemption`、`settlement_claim` | 不改任何代码。只给 `settlement_claim` 加 `unit_code` 维度（DDL），留给 Phase 2 使用 |
+| 计提 / 结算 | `MerchantPayableServiceImpl.accrueOnRedemption`、`settlement_claim` | 不改任何代码，也不改 `settlement_claim` 表结构。`unit_code` 单位维度（含唯一键改动）推迟到 Phase 2，与计提代码一起另走资金审批 |
 | 风控 | `VerificationRiskService` | 不改。master 已对 FREE_EXPLORE 跳过 0.90 高核销率规则，保留 burst 检测（见 `VerificationRiskFreeExploreTest`） |
 
 扫码角色分开：
@@ -45,15 +45,13 @@
 - 列和唯一键各算一个 SHA-256 fingerprint 做比对，不一致时 guard 主键冲突，脚本报错退出。
 - `FreeExploreBundleLedgerMySqlIT` 在真 MySQL 上验证：迁移可以重跑；表形状被改过之后重跑会报错（负控）。
 
-### `migration_doc2_f3_settlement_claim_unit_20261022.sql`：给 `settlement_claim` 加单位维度
+### `settlement_claim` 单位维度：推迟到 Phase 2
 
-- 新列 `unit_code VARCHAR(32) NOT NULL DEFAULT ''`，唯一键扩成原 7 列加 `unit_code`。
-- 默认值用空串，不用 NULL。MySQL 唯一键里 NULL 互不相等，用 NULL 会让存量 7 列键失去唯一性。
-- 现有 `SettlementClaimMapper` 不引用这一列，所以 jar 部署在迁移之前或之后都能跑。
-- 脚本先判唯一键形状、再执行 DDL，形状不对就报错，不会半途停下。
-- 需要在低峰期执行：唯一索引会重建（INPLACE、LOCK=NONE）。
+- 原计划给资金表 `settlement_claim` 加 `unit_code` 并把唯一键 `uk_settlement_claim_key` 扩成 7 列 + `unit_code`（DROP+ADD）。
+- RV3 评审 B-527-1：Phase 1 没有任何消费者，而该改动会放宽结算 claim 的去重唯一闸，属于 Phase 2 资金范围。
+- 已从 Phase 1 移除：本批不改 `settlement_claim` 的列和唯一键。Phase 2 需与按单位计提代码一起另行取得资金审批，并走 chengyin-db-migrate 预检。
 
-两条迁移都已登记进 `ci/migration-dependencies.json`。
+本批唯一的迁移已登记进 `ci/migration-dependencies.json`。
 
 ## 3. 余额与快照
 
@@ -109,7 +107,7 @@
 | `chengyin.free-explore.bundle.sale-enabled` | 新的 ③ 报名单冻结快照并发放单位。必须同时开 ledger 才生效 |
 | `chengyin.free-explore.bundle.reservation-enabled` | 打开预约、取消、爽约、商家退出处置。必须同时开 ledger 才生效 |
 
-- **上线顺序**：执行两条迁移 → 部署 → 开 ledger → 评审第 7 节的冲突 → 再开 sale / reservation。
+- **上线顺序**：执行账本迁移 → 部署 → 开 ledger → 评审第 7 节的冲突 → 再开 sale / reservation。
 - **关闭顺序**：先关 sale；等在途套票单清零后，才能关 ledger。ledger 一关，核销就不再扣单位，余额会和真实核销脱节。
 
 ## 7. 与现有代码的冲突（按任务卡要求停下，给出选项，未替决策方选）
@@ -122,7 +120,7 @@
 | K4 | 单位价值的口径未定 | 按实付均分，余数落在最后一个单位，保证合计等于实付 | A：均分。B：按章节 `perk_min_value` 或人头费加权 |
 | K5 | 有效期来源 | 取活动 `end_date`；没有结束日期时拒绝冻结（仅在 sale 开启时生效）。主题直售路径（ownerType=1）在 API 层不可达 | A：沿用活动结束日。B：在 `settlement_rule.entitlement_days` 等处配置独立有效期 |
 | K6 | 商家退出的触发方式 | 由持有人拉起：门店确已不在营时，才允许处置。不挂钩既有的 offer 撤回流程，也不自动改单。`REFUND_PENDING` 的钱走既有人工退款 | A：持有人拉起。B：在撤回流程里自动开处置单（改既有路径） |
-| K7（=C5-2/C5-4） | `settlement_claim` 的单位维度 | 只做 DDL（默认 `''`），现有写入方不变；按单位写 claim 属于 Phase 2 计提 | Phase 2 决定 |
+| K7（=C5-2/C5-4） | `settlement_claim` 的单位维度 | Phase 1 不做（含 DDL）；列与唯一键改动和按单位写 claim 一起属于 Phase 2 计提，需第二次资金审批 | Phase 2 决定 |
 | K8 | 有效期到期后不会自动翻转状态 | 在读余额和核销时按时间判断 `expired`，不新增定时任务 | A：保持按时判断。B：加到期任务（要补 sys_job 注册 SQL） |
 
 ## 8. 验证

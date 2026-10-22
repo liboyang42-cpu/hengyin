@@ -121,7 +121,7 @@ MYBATIS_ITS=(
   MerchantReferralBountyDeadlockRetryMySqlIT
   # 2026-10-22 F2 RPG P0:属性定义老注册 upsert 保留扩展列、改 label 不改键名;角色卡台账只随更新的来源前移。
   ThemeCharacterMapperMyBatisIT
-  # 2026-10-22 DOC2 F3 Phase 1:套票两条迁移可重跑 + 形状负控、settlement_claim 单位维度不破存量唯一性、
+  # 2026-10-22 DOC2 F3 Phase 1:套票账本迁移可重跑 + 形状负控、Phase 1 不动 settlement_claim(7 列唯一键原样)、
   #   A/B 同买一套票余额互不影响、快照冻结、同单位唯一在约、月度豁免唯一 —— 真 DDL + 真 mapper 才验得动。
   FreeExploreBundleLedgerMySqlIT
   # 2026-10-22 O-14 city_code 回填(RV3 B-519-1):南京西路(上海)/北京路(广州)反例、人工值不覆盖、重跑零变更、
