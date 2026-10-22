@@ -385,11 +385,20 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
     @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
     public Map<String, Object> detail(Long viewerId, Long postId) {
         viewerId = viewerId == null || viewerId < 0 ? 0L : viewerId;
-        CommunityPost post = mapper.selectById(postId, viewerId);
-        // 降分发(LIMITED)只减分发不下架:开关打开时受众内读者仍可按直达链接查看,feed/搜索/推荐照旧不出。
-        if (post == null && postLimitEnabled && viewerId > 0) post = mapper.selectLimitedById(postId, viewerId);
+        CommunityPost post = readableById(postId, viewerId);
         if (post == null) throw error("帖文不存在或不可见", 404);
         return hydrate(post, viewerId);
+    }
+
+    /**
+     * 读者口径的单帖读取:先走既有 selectById;读不到再按直达口读 LIMITED(受众内、未拉黑/屏蔽的登录非作者)。
+     * 降分发(LIMITED)只减分发不下架,feed/搜索/推荐照旧不出。直达口不看开关(S532-3):LIMITED 行只可能在开关
+     * 打开期间产生,开关关回后这些帖仍须照常可读,不能一律 404;从未产生过 LIMITED 的库,这里只多一次查不到的查询。
+     */
+    private CommunityPost readableById(Long postId, Long viewerId) {
+        CommunityPost post = mapper.selectById(postId, viewerId);
+        if (post == null && viewerId != null && viewerId > 0) post = mapper.selectLimitedById(postId, viewerId);
+        return post;
     }
 
     @Override
@@ -915,7 +924,8 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
             if (memberId.equals(number(value(comment, "author_id")))) throw error("不能举报自己的评论", 400);
             request.setTargetType("COMMENT");
         } else {
-            if (!"CONTENT".equals(targetType) || mapper.selectById(request.getTargetId(), memberId) == null) {
+            // S532-1:看得到的 LIMITED 帖也必须能举报,口径与 detail 一致(互动/评论/分享仍按既有 selectById,待 owner 定)。
+            if (!"CONTENT".equals(targetType) || readableById(request.getTargetId(), memberId) == null) {
                 throw error("帖文不存在或不可见", 404);
             }
             request.setTargetType("CONTENT");
@@ -1587,12 +1597,18 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
 
     /**
      * O-05 #1:分发类处置(DOWNRANK / SEARCH_EXCLUDE)命中且帖子本该公开时落 LIMITED(降分发,作者仍可见);
-     * 处置失效后由上面的既有分支把 LIMITED 放回 PUBLISHED。开关关闭时原样返回。
+     * 处置失效后由上面的既有分支把 LIMITED 放回 PUBLISHED。
+     * S532-2:从 HIDDEN/REMOVED 恢复时取的是存下的 previous_lifecycle,可能是 LIMITED;此时分发处置若已不在生效
+     * (或开关已关),必须放回 PUBLISHED,不能停在没有任何处置支撑的 LIMITED。开关关闭且输入不是 LIMITED 时原样返回。
      */
     static String limitedLifecycle(String lifecycle, List<String> activeEnforcements, boolean enabled) {
-        if (!enabled || !CommunityPost.LIFECYCLE_PUBLISHED.equals(lifecycle) || activeEnforcements == null) return lifecycle;
-        return activeEnforcements.contains("DOWNRANK") || activeEnforcements.contains("SEARCH_EXCLUDE")
-                ? CommunityPost.LIFECYCLE_LIMITED : lifecycle;
+        boolean distribution = activeEnforcements != null
+                && (activeEnforcements.contains("DOWNRANK") || activeEnforcements.contains("SEARCH_EXCLUDE"));
+        if (CommunityPost.LIFECYCLE_LIMITED.equals(lifecycle)) {
+            return enabled && distribution ? lifecycle : CommunityPost.LIFECYCLE_PUBLISHED;
+        }
+        if (!enabled || !CommunityPost.LIFECYCLE_PUBLISHED.equals(lifecycle)) return lifecycle;
+        return distribution ? CommunityPost.LIFECYCLE_LIMITED : lifecycle;
     }
 
     private boolean sameCommentParent(Long storedParentId, Long requestedParentId) {
