@@ -173,6 +173,8 @@ jobs:
               - 'ci/test_community_legacy_comment_like_counts_mysql_integration.py'
               - 'ci/sql_splitter.py'
               - 'ci/migration-dependencies.json'
+              - 'ci/release_manifest.py'
+              - 'ci/test_release_manifest.py'
               - 'ci/classify-runtime.sh'
               - 'ci/classify-runtime-check.sh'
               - 'ci/ci-config-guard.sh'
@@ -787,6 +789,6 @@ jobs:
       - name: Install e2e chain test deps
         run: python3 -m pip install --quiet pymysql
       - name: Verify isolated candidate objects and packaged resource provenance
-        run: python3 -m unittest ci/test_shallow_source_custody.py ci/test_candidate_resource_manifest.py ci/test_prelaunch_business_seeds.py
+        run: python3 -m unittest ci/test_shallow_source_custody.py ci/test_candidate_resource_manifest.py ci/test_prelaunch_business_seeds.py ci/test_release_manifest.py
       - name: Run versioned migration runner unit and CI wiring contracts
         run: python3 -m unittest -v ci/test_run_migration.py ci/test_migration_runner_ci_contract.py ci/test_migration_h8_registration_columns.py ci/test_migration_h8_rate_scope.py ci/test_migration_h8_detail_move.py ci/test_mapper_h8_column_isolation.py ci/test_migration_h8_publisher_guard.py scripts/e2e/test_build_schema.py scripts/e2e/test_chain_lib.py scripts/e2e/test_chain_merchant_club.py scripts/e2e/test_chain_platform.py scripts/e2e/test_chain_sale_close.py
