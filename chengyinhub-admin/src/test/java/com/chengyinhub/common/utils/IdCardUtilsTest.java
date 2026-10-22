@@ -63,9 +63,41 @@ class IdCardUtilsTest {
         assertFalse(IdCardUtils.isValid("110105199902290011"));
     }
 
+    /**
+     * 加权和 %11 == 10 时国标校验位是 '2'。校验位表曾少这一项,这类号码直接数组越界(接口 500),
+     * 约 1/11 的真实号码永远登记不上。期望值按国标公式 (12 - sum%11) % 11 独立推出,不复用被测表。
+     */
+    @Test
+    void 校验位为2的号码合法且不越界() {
+        assertEquals(10, weightedSum("11010519900307009") % 11);
+        assertTrue(IdCardUtils.isValid("110105199003070092"));
+        // 同一前 17 位换任何别的末位都必须拒,而不是抛异常
+        assertFalse(IdCardUtils.isValid("110105199003070093"));
+        assertFalse(IdCardUtils.isValid("11010519900307009X"));
+    }
+
+    @Test
+    void 校验位表覆盖全部11种余数() {
+        for (int seq = 0; seq < 1000; seq++) {
+            String first17 = "11010519900307" + String.format("%03d", seq);
+            int code = (12 - weightedSum(first17) % 11) % 11;
+            String expected = first17 + (code == 10 ? "X" : String.valueOf(code));
+            assertTrue(IdCardUtils.isValid(expected), expected);
+        }
+    }
+
+    private static int weightedSum(String first17) {
+        int[] weights = {7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2};
+        int sum = 0;
+        for (int i = 0; i < 17; i++) {
+            sum += (first17.charAt(i) - '0') * weights[i];
+        }
+        return sum;
+    }
+
     private static String check(String first17) {
         int[] weights = {7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2};
-        char[] codes = {'1', '0', 'X', '9', '8', '7', '6', '5', '4', '3'};
+        char[] codes = {'1', '0', 'X', '9', '8', '7', '6', '5', '4', '3', '2'};
         int sum = 0;
         for (int i = 0; i < 17; i++) {
             sum += (first17.charAt(i) - '0') * weights[i];

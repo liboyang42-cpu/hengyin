@@ -108,8 +108,10 @@ function ymdOf(value) {
   return m ? m[1] : '';
 }
 
-function rowPrice(item) {
-  const raw = item && (item.minAmout != null ? item.minAmout : (item.minAmount != null ? item.minAmount : item.price));
+// 价格/上下限只认数字或非空数字串:Number(null)=0、Number('')=0、Number(true)=1 都不是用户给的值。
+function numericOrNull(raw) {
+  if (typeof raw === 'number') return Number.isFinite(raw) ? raw : null;
+  if (typeof raw !== 'string' || raw.trim() === '') return null;
   const n = Number(raw);
   return Number.isFinite(n) ? n : null;
 }
@@ -124,6 +126,12 @@ function matchesTemplateKeyword(item, keyword) {
   });
 }
 
+function rowPrice(item) {
+  const raw = item && (item.minAmout != null ? item.minAmout : (item.minAmount != null ? item.minAmount : item.price));
+  const n = numericOrNull(raw);
+  return n != null && n >= 0 ? n : null;
+}
+
 function matchesFilters(type, item, filters) {
   if (type === 'topicTemplate') return matchesTemplateKeyword(item, filters && filters.keyword);
   if (!filters || (type !== 'topic' && type !== 'activity')) return true;
@@ -134,14 +142,16 @@ function matchesFilters(type, item, filters) {
     if (startBound && rowDay < startBound) return false;
     if (endBound && rowDay > endBound) return false;
   }
-  const minP = Number(filters.minPrice);
-  const maxP = Number(filters.maxPrice);
-  const applyPrice = (Number.isFinite(minP) && minP > 0) || (Number.isFinite(maxP) && maxP < 1000);
-  if (applyPrice) {
+  // 结果页没收到 minPrice/maxPrice 时存的是 null:null/'' 视为不限,不能变成 0 元上限把有价行全滤掉。
+  const minP = numericOrNull(filters.minPrice);
+  const maxP = numericOrNull(filters.maxPrice);
+  const useMin = minP != null && minP > 0;
+  const useMax = maxP != null && maxP >= 0 && maxP < 1000;
+  if (useMin || useMax) {
     const price = rowPrice(item);
     if (price != null) {
-      if (Number.isFinite(minP) && minP > 0 && price < minP) return false;
-      if (Number.isFinite(maxP) && maxP < 1000 && price > maxP) return false;
+      if (useMin && price < minP) return false;
+      if (useMax && price > maxP) return false;
     }
   }
   return true;
@@ -192,6 +202,7 @@ module.exports = {
   rowsOf: rowsOf,
   decorateItem: decorateItem,
   filterRows: filterRows,
+  rowPrice: rowPrice,
   decorateRows: decorateRows,
   buildRequests: buildRequests,
   mapPointKind: mapPointKind,

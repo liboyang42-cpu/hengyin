@@ -98,4 +98,23 @@ class TopicRouteEngineTest {
         assertEquals("FALLBACK", decision.getReason());
         assertEquals(3L, decision.getState().getCurrentNodeId());
     }
+
+    @Test
+    void earnedClueEvidenceIsNotRevokedByLaterSetOrInc() throws Exception {
+        TopicRouteEngine engine = new TopicRouteEngine();
+        com.fasterxml.jackson.databind.ObjectMapper json = new com.fasterxml.jackson.databind.ObjectMapper();
+        TopicRouteEngine.State state = new TopicRouteEngine.State();
+        engine.applyEffects(json.readTree("[{\"op\":\"SET\",\"var\":\"clue.h_map\",\"value\":1}]"), state);
+        assertEquals(1, state.getVariables().get("clue.h_map").intValue());
+
+        engine.applyEffects(json.readTree("[{\"op\":\"SET\",\"var\":\"clue.h_map\",\"value\":0},"
+                + "{\"op\":\"INC\",\"var\":\"clue.h_map\",\"value\":-1}]"), state);
+        assertEquals(1, state.getVariables().get("clue.h_map").intValue());
+
+        // 未获得前仍可按配置写入；非线索变量照常可减。
+        engine.applyEffects(json.readTree("[{\"op\":\"SET\",\"var\":\"clue.h_key\",\"value\":0},"
+                + "{\"op\":\"SET\",\"var\":\"clues\",\"value\":2},{\"op\":\"INC\",\"var\":\"clues\",\"value\":-1}]"), state);
+        assertEquals(0, state.getVariables().get("clue.h_key").intValue());
+        assertEquals(1, state.getVariables().get("clues").intValue());
+    }
 }

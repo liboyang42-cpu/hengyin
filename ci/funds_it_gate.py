@@ -188,7 +188,8 @@ EXPECTED = {
     # 与上面 Explore 两套是同一个病。现门控已改回标准变量,并登记三侧:
     # EXPECTED(这里)+ SOURCE_FILES + ci/funds-mysql-it-gate.sh 的 -Dtest,
     # 少一侧当场红:漏 EXPECTED=回读没人管,漏 SOURCE_FILES=计数没人对,漏 -Dtest=压根不跑。
-    "WxPaymentCallbackFencingMySqlIT": 5,
+    # 2026-10-22 W3:+1 同 hash 换业务身份在真唯一键上拒收(6 条)。
+    "WxPaymentCallbackFencingMySqlIT": 6,
     # 2026-09-16 第二轮并入内容回调 fencing 真库 IT(3 条 @Test),与上面同病:
     # 自造门控变量 CHENGYIN_CONTENT_MYSQL_IT 且未登记 —— CI 里 3 条永远 skip 永远绿。
     # 现门控改标准 CHENGYIN_FUNDS_MYSQL_IT + MysqlIntegrationTestConfig 唯一临时 schema,

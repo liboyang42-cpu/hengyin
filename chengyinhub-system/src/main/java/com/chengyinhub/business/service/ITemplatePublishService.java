@@ -2,6 +2,7 @@ package com.chengyinhub.business.service;
 
 
 import com.chengyinhub.business.domain.dto.CmsTemplatePublishRequest;
+import com.chengyinhub.business.service.support.TemplateLibraryRepublishReview;
 import com.chengyinhub.business.domain.CmsMemberTemplate;
 import com.chengyinhub.business.domain.CmsTemplateLibrary;
 import com.chengyinhub.business.domain.vo.CategoryTemplatesVO;
@@ -69,6 +70,10 @@ public interface ITemplatePublishService {
      * @return 操作结果
      */
     public boolean updateTemplateLibraryStatus(Long memberTemplateId, Integer publishStatus, Long memberId);
+
+    /** 上架必须绑定锁外复检的完整不可变快照；下架无需复检。 */
+    boolean updateTemplateLibraryStatus(Long memberTemplateId, Integer publishStatus, Long memberId,
+                                        TemplateLibraryRepublishReview review);
 
 
     /**

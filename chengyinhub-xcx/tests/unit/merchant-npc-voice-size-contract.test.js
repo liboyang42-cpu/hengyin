@@ -64,6 +64,7 @@ function loadPage(options = {}) {
     if (id.endsWith('pixel-avatar-data.js')) return { AVATARS: { one: { name: 'one' } } }
     if (id.endsWith('pixel-portrait.js')) return {}
     if (id.endsWith('transport/upload-client.js')) return upload
+    if (id.endsWith('profile-review.js')) return require('../../utils/profile-review.js')
     throw new Error('unexpected require ' + id)
   }
   vm.runInNewContext(SOURCE, {

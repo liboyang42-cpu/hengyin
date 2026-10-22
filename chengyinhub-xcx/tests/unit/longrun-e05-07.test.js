@@ -41,7 +41,13 @@ for (const tab of ['posts', 'topics']) {
     h.requests[1].fail({}); h.requests[1].complete();
     h.requests[0].success({ code: 200, data: { rows: [{ id: 7 }] } }); h.requests[0].complete();
     assert.deepEqual(Array.from(h.list(), row => row.id), [7]);
-    h.unlike(); assert.equal(h.requests.length, 3);
+    // F-current-favorites-AI(PC-024):主题取消断网=结果未知,先经 like_list 回读确认没取消成功才允许重试
+    if (tab === 'topics') {
+      assert.equal(h.requests[2].url, '/api/topic/like_list');
+      h.requests[2].success({ code: 200, data: { rows: [{ id: 7 }] } });
+    }
+    h.unlike(); assert.equal(h.requests.length, tab === 'topics' ? 4 : 3);
+    assert.equal(h.requests.at(-1).url, tab === 'topics' ? '/api/topic/like' : h.requests[1].url);
   });
   test('E05-07 ' + tab + ' subsequent authoritative read may show newly favorited same ID', () => {
     const h = mount(tab); seed(h); h.unlike(); h.requests[0].success({ code: 200 }); h.requests[0].complete();
@@ -50,10 +56,13 @@ for (const tab of ['posts', 'topics']) {
   });
   test('E05-07 ' + tab + ' stale complete cannot release subsequent same-ID retry', () => {
     const h = mount(tab); seed(h); h.unlike(); const old = h.requests[0];
-    old.fail({}); old.complete(); h.unlike(); old.complete();
+    old.fail({}); old.complete();
+    // 主题取消断网=结果未知(PC-024):回读确认未生效后才放锁,随后的重试不能被旧 complete 释放
+    if (tab === 'topics') h.requests[1].success({ code: 200, data: { rows: [{ id: 7 }] } });
+    h.unlike(); old.complete();
     if (tab === 'posts') h.page.postUnlike({ detail: { index: 0 } });
     else h.page.topicUnlike({ currentTarget: { dataset: { id: 7 } } });
-    assert.equal(h.requests.length, 2);
+    assert.equal(h.requests.length, tab === 'topics' ? 3 : 2);
     if (tab === 'topics') assert.equal(h.prompts.length, 2);
   });
 }

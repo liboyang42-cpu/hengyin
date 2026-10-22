@@ -34,6 +34,7 @@ Component({
       value: false,
       observer: function (visible) {
         if (!visible) this._resetForClose();
+        else this._recoverPending();
       },
     },
     sessionId: { type: Number, value: 0 },
@@ -99,6 +100,9 @@ Component({
       const userMessage = retry ? this._retryMessage.userMessage : this._message('user', message);
       const messages = retry ? this.data.messages : this._capMessages((this.data.messages || []).concat(userMessage));
       this._retryMessage = { requestId, message, userMessage, bizId: this.properties.sessionId, scope: this.properties.scope };
+      // 结果未确认前一直留着:关掉再打开时按 requestId 只读回读,不重发(W10b #27)。
+      this._pendingRecovery = this._retryMessage;
+      this._retryMode = 'send';
       this.setData({
         messages: messages,
         input: '',
@@ -133,6 +137,8 @@ Component({
 
     onRetrySend: function () {
       if (!this._retryMessage || !this.data.retryAvailable) return;
+      // 回读恢复出来的待确认问题:「查询处理结果」只再读一次原请求,绝不重新提交。
+      if (this._retryMode === 'readback') { this._recoverPending(); return; }
       const draft = this.data.input;
       this.setData({ input: this._retryMessage.message });
       this._retryRequested = true;
@@ -251,22 +257,91 @@ Component({
       }
       if (res.code != 200 && res.code != '200') {
         this._trackComplete(payload);
+        this._pendingRecovery = null;
         this._appendAssistant(payload.safeText || '这次没有收到有效回答，请稍后再试。', 'FAILED');
         return;
       }
       this._trackComplete(payload);
       if (payload.outcomeStatus === 'SUCCEEDED' && payload.safetyDecision === 'PASS') {
         this._retryMessage = null;
+        this._pendingRecovery = null;
         this._retryCount = 0;
         this._startTypewriter(generation, payload.safeText || '', payload.audioUrl);
         return;
       }
       const state = this._stateOf(payload);
+      if (state !== 'CHECKING') this._pendingRecovery = null;
       this._appendAssistant(payload.safeText || '这次暂时无法回答，请稍后再试。', state);
       if (state === 'CHECKING' && (this._retryCount || 0) < 3) {
         this._retryCount = (this._retryCount || 0) + 1;
         this._retryTimer = setTimeout(() => { if (this._isCurrent(generation)) this.onRetrySend(); }, this._retryCount * 2000);
       }
+    },
+
+    /**
+     * 关闭/重开后恢复上一条未确认的问题:GET /api/ai/npc/chat/request 只读回读原请求(W10b #27)。
+     * 服务端不进模型、不扣额度;只有回读明确说「没有这条」时,才把「重新发送」交还给用户。
+     */
+    _recoverPending: function () {
+      const pending = this._pendingRecovery;
+      if (!pending || pending.bizId !== this.properties.sessionId || pending.scope !== this.properties.scope) return;
+      this._invalidate(false);
+      const generation = ++this._generation;
+      this._retryMessage = pending;
+      this._retryMode = 'readback';
+      const messages = (this.data.messages || []).some((item) => item.id === pending.userMessage.id)
+        ? this.data.messages : this._capMessages((this.data.messages || []).concat(pending.userMessage));
+      this.setData({
+        messages: messages, state: 'CHECKING', retryAvailable: false, isThinking: true,
+        scrollIntoView: 'npc-msg-' + pending.userMessage.id,
+      });
+      const control = getApp().sendRequest({
+        url: '/api/ai/npc/chat/request',
+        method: 'GET',
+        data: { requestId: pending.requestId, scope: pending.scope, bizId: pending.bizId },
+        hideLoading: true,
+        autoErrorToast: false,
+        success: (res) => this._onReadback(generation, pending, res),
+        fail: () => this._onReadbackUnavailable(generation),
+        successStatusAbnormal: () => this._onReadbackUnavailable(generation),
+      });
+      if (this._isCurrent(generation)) this._requestControl = control;
+    },
+
+    _onReadback: function (generation, pending, res) {
+      if (!this._isCurrent(generation)) return;
+      this._requestControl = null;
+      const payload = res && res.data;
+      if (!res || (res.code != 200 && res.code != '200') || !payload || payload.requestId !== pending.requestId) {
+        this._onReadbackUnavailable(generation);
+        return;
+      }
+      if (payload.outcomeStatus === 'SUCCEEDED' && payload.safetyDecision === 'PASS') {
+        this._pendingRecovery = null;
+        this._retryMessage = null;
+        this._startTypewriter(generation, payload.safeText || '', payload.audioUrl);
+        return;
+      }
+      if (payload.outcomeStatus === 'NOT_FOUND') {
+        // 服务端没收到这条:此时重新发送才是安全的(同一 requestId,服务端仍幂等)。
+        this._pendingRecovery = null;
+        this._retryMode = 'send';
+        this._appendAssistant(payload.safeText || '上一条问题没有送达，可以再发一次。', 'FAILED');
+        return;
+      }
+      const state = this._stateOf(payload);
+      if (state !== 'CHECKING') {
+        this._pendingRecovery = null;
+        this._retryMessage = null;
+      }
+      this._appendAssistant(payload.safeText || '上一条问题的结果还没确认，稍后再查看。', state);
+    },
+
+    _onReadbackUnavailable: function (generation) {
+      if (!this._isCurrent(generation)) return;
+      this._requestControl = null;
+      // 读不到 ≠ 没送达:保留待确认状态,只提供「查询处理结果」,不提供重发。
+      this._appendAssistant('暂时查不到上一条问题的结果，稍后再查看。', 'CHECKING');
     },
 
     _onNetworkFailure: function (generation) {
@@ -315,7 +390,8 @@ Component({
     _stateOf: function (payload) {
       if (payload.errorCode === 'RATE_LIMITED') return 'RATE_LIMITED';
       if (payload.errorCode === 'INPUT_BLOCK' || payload.errorCode === 'OUTPUT_BLOCK') return 'BLOCKED';
-      if (payload.errorCode === 'REQUEST_IN_PROGRESS' || payload.outcomeStatus === 'PROCESSING') return 'CHECKING';
+      if (payload.errorCode === 'REQUEST_IN_PROGRESS' || payload.errorCode === 'REQUEST_OUTCOME_UNKNOWN'
+        || payload.outcomeStatus === 'PROCESSING') return 'CHECKING';
       return 'FAILED';
     },
 
@@ -338,6 +414,7 @@ Component({
 
     _resetForClose: function () {
       this._invalidate(false);
+      // _pendingRecovery 刻意保留:重开时按 requestId 回读,而不是让用户再发一遍。
       this._retryMessage = null;
       this._retryCount = 0;
       this.onCloseExport();

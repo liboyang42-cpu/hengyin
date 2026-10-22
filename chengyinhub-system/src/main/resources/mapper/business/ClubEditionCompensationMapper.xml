@@ -107,6 +107,20 @@
         order by t.topic_id desc
     </select>
 
+    <!-- W10a #26:只解释 editions 为空的原因,不参与任何结算判定。 -->
+    <select id="countEffectiveOrganizerOrdersForClub" resultType="int">
+        select count(*)
+        from coop_order co
+        where co.to_type = 'club' and co.to_id = #{clubId}
+          and co.role_snapshot = 'ORGANIZER'
+          and co.status = 0 and co.del_flag = 0 and co.topic_id is not null
+          and not exists (
+              select 1 from coop_invite legacy_invite
+              where legacy_invite.id = co.invite_id
+                and legacy_invite.invite_type = 2
+          )
+    </select>
+
     <!-- 只在 terms 缺失的错误路径上查一次，用来区分「历史豁免」与「配置没落」。 -->
     <select id="countLegacyExemption" resultType="int">
         select count(*) from club_edition_legacy_exemption where topic_id = #{topicId}

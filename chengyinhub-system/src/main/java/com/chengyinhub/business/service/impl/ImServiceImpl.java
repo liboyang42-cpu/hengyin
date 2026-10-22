@@ -186,10 +186,7 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
         catch (RuntimeException ignored) { /* 无合法引用时只显示不可用。 */ }
         CmsTopic topic = topicId == null || topicId <= 0 ? null
                 : cmsTopicMapper.selectCmsTopicDetailById(topicId, viewerId);
-        boolean visible = topic != null && Integer.valueOf(1).equals(topic.getStatus())
-                && Integer.valueOf(1).equals(topic.getUserStatus())
-                && (topic.getDelFlag() == null || Integer.valueOf(0).equals(topic.getDelFlag()))
-                && !Integer.valueOf(1).equals(topic.getClubMemberOnly())
+        boolean visible = isPublicRouteTopic(topic)
                 && Integer.valueOf(ImMessage.STATUS_NORMAL).equals(source.getStatus());
         JSONObject safe = new JSONObject();
         safe.put("cardType", "route");
@@ -734,17 +731,30 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
         {
             throw new ServiceException("路线不存在");
         }
-        CmsTopic topic = cmsTopicMapper.selectCmsTopicById(topicId);
-        if (topic == null)
+        // F0412:发送资格 = 匿名口径的当前公开可见(未删、审核通过、已上架、非「仅俱乐部成员可见」),
+        // 这样任何收件人点开都看得到。不区分「不存在 / 已删 / 未过审 / 私密」:能猜 ID 不等于能确认对象存在。
+        CmsTopic topic = cmsTopicMapper.selectCmsTopicDetailById(topicId, null);
+        if (!isPublicRouteTopic(topic))
         {
-            throw new ServiceException("路线不存在");
-        }
-        if (topic.getUserStatus() == null || topic.getUserStatus() != 1)
-        {
-            throw new ServiceException("该路线未上架");
+            throw new ServiceException(ROUTE_CARD_UNAVAILABLE, 404);
         }
         out.put("topicId", topicId);
-        return new SafeCard(out.toJSONString(), "[路线] " + topic.getName());
+        // 落库摘要不写主题名:主题之后下架或转私密时摘要无法收回;展示由 projectRouteMessage 按 topicId 现拉。
+        return new SafeCard(out.toJSONString(), ROUTE_CARD_SUMMARY);
+    }
+
+    /** 路线卡的落库摘要。只说「这是一张路线卡」,不带主题名。 */
+    static final String ROUTE_CARD_SUMMARY = "[路线]";
+
+    /** 路线当前不能发送时的统一提示,不暗示下架/私密等具体原因。 */
+    static final String ROUTE_CARD_UNAVAILABLE = "该路线暂不可用";
+
+    private static boolean isPublicRouteTopic(CmsTopic topic)
+    {
+        return topic != null && Integer.valueOf(1).equals(topic.getStatus())
+                && Integer.valueOf(1).equals(topic.getUserStatus())
+                && (topic.getDelFlag() == null || Integer.valueOf(0).equals(topic.getDelFlag()))
+                && !Integer.valueOf(1).equals(topic.getClubMemberOnly());
     }
 
     @Override

@@ -128,7 +128,9 @@ function methods(req) {
       const send = () => this._sendThemePlan(action, payload);
       if (['PLAN_CHANGE', 'PLAN_WITHDRAW', 'PLAN_EXECUTE', 'PLAN_REJECT_ALL'].includes(action)) {
         modal.show({ title: { PLAN_CHANGE: '改案并重新签署', PLAN_WITHDRAW: '撤回本队提案', PLAN_EXECUTE: '执行已选方案', PLAN_REJECT_ALL: '拒绝全部剩余方案' }[action],
-          content: action === 'PLAN_EXECUTE' ? '操作通过后才会消耗已确认物资，结果以确认的操作记录为准。' : '这次操作会影响当前票轮与签名，请核对后确认。', confirmText: '确认', success: result => {
+          content: action === 'PLAN_EXECUTE' ? '操作通过后才会消耗已确认物资，结果以确认的操作记录为准。'
+            : action === 'PLAN_CHANGE' ? '改案只释放方案锁定的物资和本轮投票、签名；交易锁定的物资不会释放。请核对后确认。'
+              : '这次操作会影响当前票轮与签名，请核对后确认。', confirmText: '确认', success: result => {
             if (!result.confirm) return;
             if (revision !== this.data.themeBag.revision || epoch !== this.data.themeBag.authorityEpoch) { this.setData({ themePlanError: '状态已变化，请重新核对后确认' }); return; }
             if (this._canThemePlan(action, this._currentThemePlan())) send();

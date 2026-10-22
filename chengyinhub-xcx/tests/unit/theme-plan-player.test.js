@@ -181,3 +181,17 @@ test('读取本队已签接受清单，轮询保留未提交选择，换场/换�
   host.data.themePlanAcceptKeys=[]; host._themePlanAcceptanceDirty=true;
   host._applyThemeView({...view,sessionId:8,world:{...world,round:3}}); assert.deepEqual(host.data.themePlanAcceptKeys,['p1']);
 });
+test('方案锁定说明：锁定物资仍计入负重；改案只释放方案锁与投票，不承诺释放交易锁', async () => {
+  const fs = require('node:fs'); const path = require('node:path');
+  const wxml = fs.readFileSync(path.join(__dirname, '../../pages/play/theme-plan-list.wxml'), 'utf8');
+  assert.match(wxml, /锁定的物资（交易锁或方案锁）仍在背包里，照常计入负重/);
+  const shown = [];
+  global.getCurrentPages = () => [];
+  global.wx = { ...(global.wx || {}), showModal: options => shown.push(options) };
+  const { host, requests } = page();
+  assert.equal(await host.onThemePlanCommand(event({ action: 'PLAN_CHANGE' })), false);
+  assert.equal(requests.length, 0);
+  assert.equal(shown.length, 1);
+  assert.equal(shown[0].content, '改案只释放方案锁定的物资和本轮投票、签名；交易锁定的物资不会释放。请核对后确认。');
+  assert.doesNotMatch(shown[0].content, /全部|所有占用/);
+});

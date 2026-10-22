@@ -151,3 +151,35 @@ test('商家结果带 memberId 时可进主页,不被客户端丢弃', () => {
   assert.equal(cards.length, 1);
   assert.match(cards[0].path, /userId=99/);
 });
+
+test('结果页不带 maxPrice/minPrice 打开时不能变成 0 元上限(PC-289)', () => {
+  const rows = [
+    { id: 1, startDate: '2026-09-12', price: 20 },
+    { id: 2, startDate: '2026-09-12', minAmout: 0 },
+    { id: 3, startDate: '2026-09-12' },
+  ];
+  for (const empty of [null, undefined, '', '   ']) {
+    const kept = search.filterRows('topic', { rows }, { minPrice: empty, maxPrice: empty });
+    assert.deepEqual(kept.map((row) => row.id), [1, 2, 3], `maxPrice=${JSON.stringify(empty)}`);
+  }
+  // 用户真选了 0 元上限仍然生效;字符串数字也认
+  assert.deepEqual(search.filterRows('topic', { rows }, { maxPrice: 0 }).map((row) => row.id), [2, 3]);
+  assert.deepEqual(search.filterRows('activity', { rows }, { minPrice: '10', maxPrice: '30' }).map((row) => row.id), [1, 3]);
+  // 布尔不是价格边界
+  assert.deepEqual(search.filterRows('topic', { rows }, { maxPrice: false }).map((row) => row.id), [1, 2, 3]);
+});
+
+test('rowPrice 拒绝空白、布尔与负数,不伪造 0 元', () => {
+  assert.equal(search.rowPrice({ price: null }), null);
+  assert.equal(search.rowPrice({ price: '' }), null);
+  assert.equal(search.rowPrice({ price: '  ' }), null);
+  assert.equal(search.rowPrice({ price: true }), null);
+  assert.equal(search.rowPrice({ price: false }), null);
+  assert.equal(search.rowPrice({ price: -5 }), null);
+  assert.equal(search.rowPrice({ price: 'abc' }), null);
+  assert.equal(search.rowPrice({ price: 0 }), 0);
+  assert.equal(search.rowPrice({ price: '19.9' }), 19.9);
+  assert.equal(search.rowPrice({ minAmout: 50, price: 10 }), 50);
+  // minAmout 是 null 时退到下一个字段
+  assert.equal(search.rowPrice({ minAmout: null, minAmount: 30 }), 30);
+});

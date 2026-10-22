@@ -77,15 +77,19 @@
       </view>
 
       <view class="review-segments" aria-role="tablist">
+        <!-- W10a #20:管理态筛选由服务端做,数字是服务端全量计数(filterCounts);后端未给计数时不显示数字,
+             绝不拿已加载页去数。公开态仍只筛已加载评价,所以公开态不挂数字。 -->
         <view class="review-segment {{activeFilter === 'all' ? 'review-segment--active' : ''}}"
-              data-filter="all" bindtap="setReviewFilter" aria-role="tab" hover-class="cy-pressed" hover-stay-time="80">全部</view>
-        <!-- CU-M-12:「待回复」按 canReply 过滤,公开态 canReply 恒 false ⇒ 必空;只在管理态出现。 -->
+              data-filter="all" bindtap="setReviewFilter" aria-role="tab" aria-selected="{{activeFilter === 'all'}}" hover-class="cy-pressed" hover-stay-time="80">全部<block wx:if="{{mode === 'manage' && filterCounts}}"> {{filterCounts.all}}</block></view>
+        <!-- CU-M-12:「待回复」(公开且未回复)只在管理态出现。 -->
         <view wx:if="{{mode === 'manage'}}" class="review-segment {{activeFilter === 'pending' ? 'review-segment--active' : ''}}"
-              data-filter="pending" bindtap="setReviewFilter" aria-role="tab" hover-class="cy-pressed" hover-stay-time="80">待回复 {{pendingReplyCount}}</view>
+              data-filter="pending" bindtap="setReviewFilter" aria-role="tab" aria-selected="{{activeFilter === 'pending'}}" hover-class="cy-pressed" hover-stay-time="80">待回复 {{filterCounts ? filterCounts.pending : pendingReplyCount}}</view>
         <view class="review-segment {{activeFilter === 'low' ? 'review-segment--active' : ''}}"
-              data-filter="low" bindtap="setReviewFilter" aria-role="tab" hover-class="cy-pressed" hover-stay-time="80">低分</view>
+              data-filter="low" bindtap="setReviewFilter" aria-role="tab" aria-selected="{{activeFilter === 'low'}}" hover-class="cy-pressed" hover-stay-time="80">低分<block wx:if="{{mode === 'manage' && filterCounts}}"> {{filterCounts.low}}</block></view>
         <view class="review-segment {{activeFilter === 'photo' ? 'review-segment--active' : ''}}"
-              data-filter="photo" bindtap="setReviewFilter" aria-role="tab" hover-class="cy-pressed" hover-stay-time="80">有图</view>
+              data-filter="photo" bindtap="setReviewFilter" aria-role="tab" aria-selected="{{activeFilter === 'photo'}}" hover-class="cy-pressed" hover-stay-time="80">有图<block wx:if="{{mode === 'manage' && filterCounts}}"> {{filterCounts.photo}}</block></view>
+        <view wx:if="{{mode === 'manage'}}" class="review-segment {{activeFilter === 'platform' ? 'review-segment--active' : ''}}"
+              data-filter="platform" bindtap="setReviewFilter" aria-role="tab" aria-selected="{{activeFilter === 'platform'}}" hover-class="cy-pressed" hover-stay-time="80">平台复审中<block wx:if="{{filterCounts}}"> {{filterCounts.platform}}</block></view>
       </view>
 
       <view wx:if="{{mode === 'public' && eligibility.canCreate}}" class="review-compose">
@@ -132,7 +136,8 @@
         <text class="review-eligibility-sub">{{eligibility.reasonCode === 'AMBIGUOUS_LEGACY_MERCHANT_SCOPE' ? '历史核销尚未保存具体门店，平台不会替你猜测归属。' : '本人报名并在这家店完成核销后才能评价。'}}</text>
       </view>
 
-      <view wx:if="{{!filteredItems.length && items.length}}" class="review-filter-empty">
+      <cy-skeleton wx:if="{{mode === 'manage' && filterLoading}}" type="card" count="2" />
+      <view wx:elif="{{!filteredItems.length && (mode === 'manage' ? activeFilter !== 'all' : items.length)}}" class="review-filter-empty">
         还没有符合条件的评价
       </view>
 
@@ -158,6 +163,8 @@
               </view>
               <text class="review-time">{{item.createTimeText}}</text>
               <text wx:if="{{mode === 'manage'}}" class="review-status review-status--{{item.statusClass}}">{{item.statusText}}</text>
+              <!-- 待复核的评价状态标签已说明;这里只补「公开中但有举报在平台审核」的那一类。 -->
+              <text wx:if="{{mode === 'manage' && item.underPlatformReview && item.status !== 'PENDING_REVIEW'}}" class="review-status review-status--pending">平台复审中</text>
             </view>
           </view>
         </view>

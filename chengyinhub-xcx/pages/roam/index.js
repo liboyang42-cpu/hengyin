@@ -385,7 +385,7 @@ Page({
        time 带冒号不滚,由 _rollStat 原样透传。 */
     statsShown: { time: '00:00', shops: 0, explorePct: 0, distance: '0.0' },
     drawerModules: [
-      { key: 'task', label: '任务', value: '附近挑战' },
+      { key: 'task', label: '官方活动任务', value: '官方策展活动' },
       { key: 'medal', label: '勋章', value: '探索护照' },
       { key: 'reward', label: '奖励', value: '优惠券' },
       { key: 'record', label: '记录', value: '足迹卡' }

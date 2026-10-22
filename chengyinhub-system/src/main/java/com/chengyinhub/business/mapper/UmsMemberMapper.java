@@ -184,6 +184,16 @@ public interface UmsMemberMapper
     public int clearProfileMedia(@Param("id") Long id);
 
     /**
+     * 内容安全:按字段清违规资料图(头像/联系二维码置空;作品图写回去掉违规图后的剩余串)。
+     * 调用方须在回调事务锁住会员行后调用,且至少一个开关为 true。
+     */
+    public int clearRiskyProfileMedia(@Param("id") Long id,
+                                      @Param("clearAvatar") boolean clearAvatar,
+                                      @Param("clearWechat") boolean clearWechat,
+                                      @Param("rewriteCasePics") boolean rewriteCasePics,
+                                      @Param("casePics") String casePics);
+
+    /**
      * 获取用户积分排名信息
      * @param memberId 用户ID
      * @return 排名信息

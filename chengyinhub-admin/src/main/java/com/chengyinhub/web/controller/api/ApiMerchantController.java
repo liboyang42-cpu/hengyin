@@ -54,6 +54,7 @@ import com.chengyinhub.system.service.ISysCategoryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -100,6 +101,9 @@ public class ApiMerchantController extends BaseController {
 
     @Autowired
     private NpcProfileMapper npcProfileMapper;
+
+    @Autowired
+    private com.chengyinhub.business.service.impl.ProfileReviewService profileReviewService;
 
     @Autowired
     private VoiceCloneClient voiceCloneClient;
@@ -879,15 +883,41 @@ public class ApiMerchantController extends BaseController {
         }
 
         // 上传的照片要走异步内容安全;预设是内置资源,没有送检的意义。
-        if (!preset) {
+        // 送检对象必须是这一行 NPC(BIZ_TYPE_MERCHANT_NPC,bizId=npc_profile.id),不能借 MERCHANT_PROFILE
+        // (bizId=merchantId):那条回调核对的是商家 logo/封面/相册,头像哈希永远对不上,违规头像会被当旧媒体放过。
+        Long npcId = mine != null ? mine.getId() : save.getId();
+        if (!preset && npcId != null) {
             try {
                 // 单图走 submitMediaCheckOne:submitMediaCheck 是多图接口,返回不了单一 trace_id
                 wxContentSecurityService.submitMediaCheckOne(
-                        IWxContentSecurityService.BIZ_TYPE_MERCHANT_PROFILE, merchantId,
+                        IWxContentSecurityService.BIZ_TYPE_MERCHANT_NPC, npcId,
                         avatar, merchantOpenid(access.getOwnerMemberId()));
             } catch (Exception ignore) {}
         }
-        return AjaxResult.success("已保存");
+        AjaxResult ok = AjaxResult.success("已保存");
+        // #25:保存 ≠ 已上线。回执说明人设待审、玩家此刻能否看到、形象图复核到哪一步。
+        // 回执读失败不能把已经成功的保存变成报错:缺回执时客户端按「审核中」展示。
+        try {
+            List<NpcProfile> saved = npcProfileMapper.selectMerchantNpcList(merchantId, null);
+            ok.put("receipt", profileReviewService.merchantNpcReceipt(merchantId,
+                    saved == null || saved.isEmpty() ? null : saved.get(0)));
+        } catch (RuntimeException receiptUnavailable) {
+            logger.warn("[npc/save] 审核回执暂不可用 merchantId={}", merchantId);
+        }
+        return ok;
+    }
+
+    /** 门店 AI 形象审核回执(#25):只读,归属同 /npc/profile(当前账号所属商家 + PROFILE_WRITE)。 */
+    @GetMapping("/npc/review")
+    public AjaxResult npcReview() {
+        Long memberId;
+        try { memberId = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
+        if (memberId == null || memberId < 1) return error("请先登录");
+        MerchantAccessContext access = merchantAccessService.require(
+                memberId, MerchantPermission.PROFILE_WRITE);
+        List<NpcProfile> list = npcProfileMapper.selectMerchantNpcList(access.getMerchantId(), null);
+        return success(profileReviewService.merchantNpcReceipt(access.getMerchantId(),
+                list == null || list.isEmpty() ? null : list.get(0)));
     }
 
     // ===== 门店 AI 形象的声音 =====

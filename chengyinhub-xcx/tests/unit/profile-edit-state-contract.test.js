@@ -21,6 +21,7 @@ function applyPatch(target, patch) {
 function loadPage() {
   let definition
   const requests = []
+  const reviewReads = []
   const toasts = []
   const backs = []
   const timers = []
@@ -35,7 +36,8 @@ function loadPage() {
     setNickname(value) { session.nickname = value }, setAvatar(value) { session.avatar = value },
     tips() {},
     chooseImage(callback) { images.push(callback) },
-    sendRequest(options) { requests.push(options) },
+    // W10b #25 头像审核回执是独立的只读旁路,另记一处,不打乱资料读写请求的顺序断言。
+    sendRequest(options) { (options.url === '/api/user/profile/review' ? reviewReads : requests).push(options) },
   }
   vm.runInNewContext(read('pages/gerenziliao/gerenziliao.js'), {
     getApp: () => app,
@@ -46,6 +48,7 @@ function loadPage() {
       if (request === '../../utils/response-shape.js') return require('../../utils/response-shape.js')
       if (request === '../../utils/form-state.js') return require('../../utils/form-state.js')
       if (request === './nickname-check.js') return require('../../pages/gerenziliao/nickname-check.js')
+      if (request === '../../utils/profile-review.js') return require('../../utils/profile-review.js')
       throw new Error(`unexpected require: ${request}`)
     },
     wx: {
@@ -64,7 +67,7 @@ function loadPage() {
     applyPatch(this.data, patch)
     if (callback) callback()
   }
-  return { page, requests, toasts, backs, timers, clearedTimers, session, images, masks }
+  return { page, requests, reviewReads, toasts, backs, timers, clearedTimers, session, images, masks }
 }
 
 function assertStateContract(wxml, jsonText) {
@@ -475,3 +478,16 @@ for (const transition of ['owner', 'hide']) {
     }
   })
 }
+
+test('W10b #25:资料读成功后只读拉一次头像审核回执,按回执显示;换了未保存的新头像即撤掉旧回执', () => {
+  const h = loadPage()
+  h.page.onLoad()
+  h.requests[0].success({ code: 200, data: { name: 'owner-a', avatar: 'media-asset:9' } })
+  assert.equal(h.reviewReads.length, 1)
+  assert.equal(h.reviewReads[0].method, 'GET')
+  h.reviewReads[0].success({ code: 200, data: { available: true, avatar: { versionNo: 2, state: 'PENDING', live: true } } })
+  assert.match(h.page.data.avatarReviewText, /复核中/)
+  h.page.uploadPic()
+  h.images[0](['media-asset:10'])
+  assert.equal(h.page.data.avatarReviewText, '')
+})

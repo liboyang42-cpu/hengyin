@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.ClubCalendarMapper">
+
+    <!--
+      W10a #19 俱乐部月历:按月返回真实场次(日期 + updatedAt)。
+      公开视角与 CmsActivityMapper.selectPublicCmsActivityList 同口径:status=1 · publish_status=1 ·
+      未取消 · 父主题在架(status=1 · user_status=1 · 未删)。治理者视角只去掉这些可见性条件,
+      仍按 club_id 收窄、仍排除已删除。别名全小写:H2(DATABASE_TO_LOWER)与 MySQL 取键一致。
+      公开视角还要过 CmsTopicMapper.clubMemberOnlyGate(仅俱乐部成员可见的主题,非成员看不到它的场次),
+      判据与 /api/club/topics 共用同一段 SQL,别另写一套;子查询别名因此必须叫 cms_topic。
+    -->
+    <select id="selectClubSessionsInRange" resultType="java.util.LinkedHashMap">
+        select a.id as activity_id,
+               a.topic_id as topic_id,
+               a.name as name,
+               a.start_date as start_date,
+               a.end_date as end_date,
+               a.status as status,
+               a.publish_status as publish_status,
+               case when a.cancel_time is null then 0 else 1 end as cancelled,
+               coalesce(a.update_time, a.create_time) as updated_at
+        from cms_activity a
+        where a.club_id = #{clubId}
+          and a.del_flag = 0
+          and a.start_date &gt;= #{rangeStart}
+          and a.start_date &lt; #{rangeEnd}
+          <if test="!includeUnpublished">
+          and a.status = 1 and a.publish_status = 1 and a.cancel_time is null
+          and (a.topic_id is null or a.topic_id = 0 or exists (
+              select 1 from cms_topic cms_topic
+              where cms_topic.id = a.topic_id and cms_topic.del_flag = 0
+                and cms_topic.status = 1 and cms_topic.user_status = 1
+                and <include refid="com.chengyinhub.business.mapper.CmsTopicMapper.clubMemberOnlyGate"/>
+          ))
+          </if>
+        order by a.start_date asc, a.id asc
+        limit #{limit}
+    </select>
+</mapper>

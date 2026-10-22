@@ -59,10 +59,12 @@ test('数字位一律是数:null 指标写 0,不放横杠(2026-09-19 用户裁�
     '样本不足提示是本页唯一的「这不是零」出口,删掉它 0 就成了谎话');
 });
 
-test('店铺档案:未配置置顶引导,配置页复用装修域合作设置(不重复造表单)', () => {
-  assert.match(PAGE_JS, /PROFILE_SETUP_ROUTE = '\/pages\/merchant\/decor\/coop-setting\/index'/);
-  assert.match(PAGE_WXML, /profile && !profile\.configured/);
-  assert.match(PAGE_WXML, /先配置店铺档案/); // 2026-09-18 UI-11:引导收进 Hero 档案胶囊(稿 1:9)
+test('页头是问候区(Hi，店名 + 店铺头像),不再放店铺档案入口(2026-10-22 owner)', () => {
+  const visible = PAGE_WXML.replace(/<!--[\s\S]*?-->/g, '');
+  assert.doesNotMatch(visible, /先配置店铺档案|goProfileSetup/, '店铺档案配置留在装修域合作设置,本页不再放入口');
+  assert.doesNotMatch(PAGE_JS, /PROFILE_SETUP_ROUTE/);
+  assert.match(PAGE_JS, /storeName: String\(profile\.storeName \|\| ''\)\.trim\(\)/, '店名取后端实时 profile');
+  assert.match(visible, /<cy-avatar class="greet-avatar"/);
 });
 
 test('实体推荐:推荐主题去合作中心申请,推荐商家走 canonical 商家主页(merchantHomeUrl/memberId)', () => {

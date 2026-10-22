@@ -89,11 +89,15 @@ MYBATIS_ITS=(
   SchedulerSessionLockMySqlIT
   ClubGatherArrivalMySqlIT
   ClubAttendanceTimeMappingMyBatisIT
+  # 2026-10-22 W3 #334 F7:领队改集合时间/地点=单条「未售出才生效」条件 UPDATE;在途下单/修改在先两种交错都要真库。
+  ClubLeadOpsSoldLockMySqlIT
   VerificationRiskQueueMySqlIT
   AccountDeregistrationRaceMySqlIT
   # R12-E2E 旅程全链路:建局→到店→问问题→判错→检定→推进→阶段结算→结局全走真库真 mapper;
   #   并发 settle 幂等另有一条负控(测试内临时摘掉动作/回执两把唯一键,断言并发重放消失后再还原)。
   JourneyFullFlowMySqlIT
+  # Lane W10b:资料版本号递增 / 头像回执读 inbox / 分享版本 CAS 列与按令牌撤销,真迁移跑两遍证幂等。
+  LaneW10bReadbackMySqlIT
 )
 IFS=, ; IT_LIST="${MYBATIS_ITS[*]}" ; unset IFS
 # ⚠️ 必须带 -am:上面那句 `mvn clean test` 不 install 兄弟模块,

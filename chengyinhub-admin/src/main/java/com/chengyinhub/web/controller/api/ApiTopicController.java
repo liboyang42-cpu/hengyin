@@ -971,17 +971,19 @@ public class ApiTopicController extends BaseController {
     /**
      * 先发后审打标(2026-10-20 分级审核 P1):机审没给出结论的主题照常发布,在审核台留一张
      * BIZ_TOPIC 非阻断抽检单(source=post_review_flag,与活动 P0 同口径,不改主题状态),驳回即走既有下架。
-     * 跳过:草稿(未公开,且过审会把草稿直接上架);已有未结 BIZ_TOPIC 单(专业版组合审核已在人工队列)。
+     * 跳过建单:草稿(未公开,且过审会把草稿直接上架;只打 review_flag,发布草稿时补挂);
+     * 已有未结 BIZ_TOPIC 单(专业版组合审核已在人工队列)。
      * best-effort:失败只记日志,不影响已保存的主题。
      */
     private void flagForSpotCheck(Long topicId, Long ownerMemberId, String reason, String name) {
         if (topicId == null) return;
         logger.warn("主题先发后审打标待抽检 topicId={} reason={}", topicId, reason);
         try {
+            // AUDIT-INT-8:放行但进入抽检池(#377 cms_topic.review_flag);抽检通过由审核台清 0。
+            // #380:草稿也要打标(只跳过建单),publish-draft 据此不记 check_status=1 并补挂抽检单。
+            cmsTopicService.markReviewFlag(topicId, true);
             Integer isDraft = cmsTopicService.selectTopicIsDraft(topicId);
             if (isDraft != null && isDraft == 1) return;
-            // AUDIT-INT-8:放行但进入抽检池(#377 cms_topic.review_flag);抽检通过由审核台清 0。
-            cmsTopicService.markReviewFlag(topicId, true);
             com.chengyinhub.business.domain.AuditTask q = new com.chengyinhub.business.domain.AuditTask();
             q.setBizType(com.chengyinhub.business.domain.AuditTask.BIZ_TOPIC);
             q.setBizId(topicId);
