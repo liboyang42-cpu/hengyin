@@ -582,8 +582,7 @@ test('真实点击与组件事件合同分母分开，非 tap 不得伪装按钮
   // 2026-10-20 审核整合保留举报三入口、模板审核、项目审核、重试与申诉七个 tap，2090 → 2097。
   // 2026-10-20 用户要求删掉「我的纠错 / 纠错进度」两页、消息页改收件箱/发件箱(合并 master 584470ad 后按重建实测),2109 → 2101。
   // 首页来源说明、原票导航及三项本机草稿操作并集：本地 tap 2106。
-  // 2026-10-22 Lane W11:收藏页「收藏与推荐」说明 +1 tap(showRecommendNote),2106 → 2107(重建实测)。
-  assert.equal(local.filter((item) => item.interactionMode === 'tap').length, 2107)  /* 2026-10-07 动态绑定补齐4条tap。2026-09-22 现场感三件套 S1 新增 4 颗 tap(uploadPhotoFrame / clearPhotoFrame /
+  assert.equal(local.filter((item) => item.interactionMode === 'tap').length, 2106)  /* 2026-10-07 动态绑定补齐4条tap。2026-09-22 现场感三件套 S1 新增 4 颗 tap(uploadPhotoFrame / clearPhotoFrame /
      onFrameShutter / onFrameCancel),其中 uploadPhotoFrame 与 onFrameShutter 是
      actionClass=external(real-device-required)、不进 local 分母 ⇒ 进账的是
      onFrameCancel(玩家端「退出取景」)+ clearPhotoFrame(商家端删图),1787 → 1789(重建实测)。 */
@@ -1625,8 +1624,7 @@ test('合并后可达动作 variant 全部进入台账且 handler 真源可定�
     }
   }
   // 2026-10-21 移植分支(W4+W8)再并入 master：同上七个事件合同，tap 不变，4940 → 4947。
-  // 2026-10-22 Lane W11:收藏页「收藏与推荐」说明 +1 tap,4947 → 4948。
-  assert.equal(ledger.controlCount, 4948)
+  assert.equal(ledger.controlCount, 4947)
   // 搜索主题与其它结果拆成互斥点击 +1，合计 3268 → 3271（取动作账本重建实测）。
   // 合作页新增会话失效/无权限两个独立 cy-empty CTA，3271 → 3273。
   // 2026-09-02 俱乐部客户系统落地，3273 → 3295。
