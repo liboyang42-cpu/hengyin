@@ -113,7 +113,7 @@ public class MerchantReferralBountyService
      * <p><b>调用方必须包 try/catch</b> —— 本方法自己也全包了,但核销是核心路径,
      * 赏金是实验性的冷启动功能,<b>任何情况下都不能让它连累核销</b>。
      *
-     * <p>唯一例外是锁冲突(1213 死锁 / 1205 锁等待超时):1213 已经让 InnoDB 回滚了整笔核销事务,
+     * <p>唯一例外是让 savepoint 失效的锁冲突(1213 死锁;1205 只在回滚到 savepoint 失败时):1213 已经让 InnoDB 回滚了整笔核销事务,
      * 吞掉只会让后续语句在隐式新事务里半截提交。这类原样抛给外层 {@code @DeadlockRetry},整笔回滚重试。
      *
      * @param merchantMemberId 扫码核销的商家

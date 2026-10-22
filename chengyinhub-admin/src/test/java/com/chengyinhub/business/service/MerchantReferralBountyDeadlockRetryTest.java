@@ -115,16 +115,19 @@ class MerchantReferralBountyDeadlockRetryTest {
     }
 
     @Test
-    void lockWaitTimeoutInsideSavepointAlsoGoesToOuterRetry() {
+    void lockWaitTimeoutInsideSavepointIsSwallowedBecauseTheSavepointSurvives() {
+        // 1205(innodb_rollback_on_timeout=OFF):只回滚当前语句,savepoint 仍在 → 回滚到 savepoint,核销照常提交,不交外层重试。
         injectOnce.set(new CannotAcquireLockException("Lock wait timeout exceeded",
                 new SQLException("Lock wait timeout exceeded", "HY000", 1205)));
 
-        verifier.verify(9001L);
+        assertDoesNotThrow(() -> verifier.verify(9001L));
 
-        assertEquals(2, verifier.attempts());
-        assertEquals(1, count("verify_log"));
-        assertEquals(0, new BigDecimal("30.00").compareTo(balance()));
-        assertEquals(1, count("balance_detail"));
+        assertEquals(1, verifier.attempts(), "1205 不交外层重试");
+        assertEquals(1, count("verify_log"), "核销照常提交");
+        assertEquals(0, (int) jdbc.queryForObject("SELECT status FROM bounty WHERE id=?", Integer.class, BOUNTY_ID),
+                "savepoint 已回滚 CAS,留待下次核销再判");
+        assertEquals(0, BigDecimal.ZERO.compareTo(balance()), "savepoint 已回滚加余额");
+        assertEquals(0, count("balance_detail"));
     }
 
     @Test
@@ -174,8 +177,42 @@ class MerchantReferralBountyDeadlockRetryTest {
                 new RuntimeException(new SQLException("Deadlock found", "40001", 1213))));
         assertThrows(DeadlockLoserDataAccessException.class, () -> SavepointLockFailures.rethrowIfLockFailure(
                 new RuntimeException(new SQLException("serialization failure", "40001", 0))));
-        assertThrows(CannotAcquireLockException.class, () -> SavepointLockFailures.rethrowIfLockFailure(
+    }
+
+    @Test
+    void helperRethrowsDeadlockThatSpringTranslatedToCannotAcquireLock() {
+        // Spring 6 的 SQLExceptionSubclassTranslator 把 SQLState 40001 翻译成 CannotAcquireLockException。
+        CannotAcquireLockException deadlock = new CannotAcquireLockException("Deadlock found",
+                new SQLException("Deadlock found when trying to get lock", "40001", 1213));
+
+        assertSame(deadlock, assertThrows(CannotAcquireLockException.class,
+                () -> SavepointLockFailures.rethrowIfLockFailure(deadlock)));
+    }
+
+    @Test
+    void helperLeavesLockWaitTimeoutToTheCallerWhileTheSavepointSurvives() {
+        assertDoesNotThrow(() -> SavepointLockFailures.rethrowIfLockFailure(new CannotAcquireLockException(
+                "Lock wait timeout exceeded", new SQLException("Lock wait timeout exceeded", "HY000", 1205))));
+        assertDoesNotThrow(() -> SavepointLockFailures.rethrowIfLockFailure(
                 new RuntimeException(new SQLException("Lock wait timeout", "HY000", 1205))));
+    }
+
+    @Test
+    void helperRethrowsLockWaitTimeoutOnlyWhenTheSavepointIsGone() {
+        // innodb_rollback_on_timeout=ON:1205 回滚整笔事务,回滚到 savepoint 失败 → 必须交外层。
+        CannotAcquireLockException lockWait = new CannotAcquireLockException("Lock wait timeout exceeded",
+                new SQLException("Lock wait timeout exceeded", "HY000", 1205));
+        TransactionSystemException rollbackFailed = new TransactionSystemException("Could not roll back to JDBC savepoint",
+                new SQLException("SAVEPOINT SAVEPOINT_1 does not exist", "42000", 1305));
+        rollbackFailed.initApplicationException(lockWait);
+
+        assertSame(lockWait, assertThrows(CannotAcquireLockException.class,
+                () -> SavepointLockFailures.rethrowIfLockFailure(rollbackFailed)));
+
+        TransactionSystemException rawRollbackFailed = new TransactionSystemException("Could not roll back to JDBC savepoint",
+                new SQLException("SAVEPOINT SAVEPOINT_1 does not exist", "42000", 1305));
+        rawRollbackFailed.initApplicationException(new RuntimeException(new SQLException("Lock wait timeout", "HY000", 1205)));
+        assertThrows(CannotAcquireLockException.class, () -> SavepointLockFailures.rethrowIfLockFailure(rawRollbackFailed));
     }
 
     @Test
