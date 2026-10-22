@@ -83,6 +83,9 @@ class RegistrationAutoVerifyTaskTest {
         assertTrue(cas.contains("verification_status = 1"), "置位语义就是已核销");
         assertEquals(-1, cas.indexOf("verifier_id"), "autoVerifyExpiredSession 不许写 verifier_id");
         assertTrue(cas.contains("payment_status = 2") && cas.contains("registration_status = 2"));
+        // PR #8 回归:探店日票(purchase_kind=3)不进自动收口,扫描与条件置位两处都必须排除
+        assertTrue(scan.contains("r.purchase_kind is null or r.purchase_kind &lt;&gt; 3"), "扫描必须排除探店日票");
+        assertTrue(cas.contains("purchase_kind is null or purchase_kind &lt;&gt; 3"), "置位必须排除探店日票");
     }
 
     /** 取 <select|update id=...> 语句体(含注释),避免全文件 contains 误判到别的语句上。 */
