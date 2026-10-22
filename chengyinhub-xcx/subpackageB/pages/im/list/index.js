@@ -1,5 +1,6 @@
 const toast = require('../../../../utils/toast.js');
 const { isRecordList, isBizOk } = require('../../../../utils/response-shape.js');
+const { decodeDisplayText } = require('../../../../utils/display-text.js');
 const inboxPreview = require('../../../../utils/inbox-preview.js');
 const { normalizeMerchantAccess } = require('../../../../utils/merchant-access-policy.js');
 const { isLoginRequired, retryLogin } = require('../../../../utils/session/login-reload.js');
@@ -187,8 +188,11 @@ Page({
   // 返回 null = 不在小程序里展示。
   tabOf(c) {
     // 群聊(type=4)不在小程序露出:微信里已经有群,小程序内做群聊是和宿主抢用户,
-    // 且小程序切后台 5 秒断长连接,实时聊天先天残废。群留给原生 app。归类口径与工作台「我的消息」共用。
-    return inboxPreview.conversationTab(c); // 1 单聊 + 2 城瘾小助手 + 3 官方客服 → 'in';4 → null
+    // 且小程序切后台 5 秒断长连接,实时聊天先天残废。群留给原生 app —— 后端 getOrCreateClubGroup
+    // 等地基仍在,app 接手时直接调。这里必须显式排除,不能让它掉进 dm 兜底:
+    // 两端共用 /api/im/conversations,app 一旦真建了群,靠兜底会让群会话冒进「私信」里。
+    // 归类口径与商家工作台「我的消息」共用 utils/inbox-preview.js(1/2/3 → 'in';4 → null)。
+    return inboxPreview.conversationTab(c);
   },
 
   // 重算 tabs(含未读角标)与当前 tab 的可见列表
@@ -267,9 +271,15 @@ Page({
     if (tab === 'in' && !this._navigating) { this._navigating = true; wx.navigateTo({ url: '/pages/square/list/index', complete: () => { this._navigating = false; } }); }
   },
 
-  // 摘要/时间口径与商家工作台「我的消息」同源(utils/inbox-preview.js)
-  fmtPreview(c) { return inboxPreview.fmtPreview(c); },
+  fmtPreview(c) {
+    const t = c.lastMsgType;
+    if (t == 2) return '[图片]';
+    // 预览是纯文本:服务端过滤存下的 &lt; 等在这里解码一次
+    if (t == 3) return decodeDisplayText(String(c.lastMsgText || '[系统卡片]').replace(/[\r\n]+/g, ' '));
+    return decodeDisplayText(String(c.lastMsgText || '').replace(/[\r\n]+/g, ' '));
+  },
 
+  // 时间口径与商家工作台「我的消息」同源(utils/inbox-preview.js)
   fmtTime(v) { return inboxPreview.fmtTime(v); },
 
   // ===== 左滑 =====

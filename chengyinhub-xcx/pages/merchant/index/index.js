@@ -421,9 +421,12 @@ Page({
     });
   },
 
-  resetGameStationSummaries(renderCards = true, keepEntries = false) {
+  // 只作废在途请求;已确认的入口留到新一轮回来再替换(2026-10-22 owner 裁决:重载不变形)。
+  // clearEntries=true 才连同已确认入口一起清掉并重绘卡片。
+  resetGameStationSummaries(clearEntries = false) {
+    const renderCards = clearEntries === true;
     this._gameSummaryGeneration = (this._gameSummaryGeneration || 0) + 1;
-    if (!keepEntries) this._merchantGameEntries = [];
+    if (renderCards) this._merchantGameEntries = [];
     if (this._merchantGameEntryTask && typeof this._merchantGameEntryTask.abort === 'function') {
       this._merchantGameEntryTask.abort();
     }
@@ -624,7 +627,8 @@ Page({
     this._chapterJoinTopicIds = new Set();
     this._merchantGameEntries = [];
     this._inbox = null;
-    this.stopRevenueCount();
+    if (this._revenueCountStop) this._revenueCountStop();
+    this._revenueCountStop = null;
     this.setData({
       displayName: '商家',
       businessStatus: 1,
@@ -696,7 +700,7 @@ Page({
   onShow(options) {
     merchantTheme.merchantPageShow(); this._navigating = false;
     // 回到页面不剥掉已确认的游戏入口卡(否则项目列先缩后涨);换主体时 clearMerchantScopedData 才清。
-    this.resetGameStationSummaries(false, true);
+    this.resetGameStationSummaries();
     this._businessActionEpoch = (this._businessActionEpoch || 0) + 1;
     // 页面重新进入时作废离开前的写操作；页内下拉刷新只重读经营数据，
     // 不能让一笔仍在途的核销回执静默消失。
@@ -1537,7 +1541,8 @@ Page({
   },
 
   onUnload() {
-    this.stopRevenueCount();
+    if (this._revenueCountStop) this._revenueCountStop();
+    this._revenueCountStop = null;
     this._consoleVersion = (this._consoleVersion || 0) + 1;
     this._identityEpoch = (this._identityEpoch || 0) + 1;
     this._dataEpoch = (this._dataEpoch || 0) + 1;

@@ -87,10 +87,12 @@ function assertPartialStateUi(wxml, json) {
     '商家工作台必须注册局部错误组件')
   assert.match(wxml, /<cy-inline-error\b[^>]*wx:if="\{\{consoleError\}\}"[^>]*bind:action="reloadConsole"/,
     '身份/加载失败必须有页内重试出路')
-  assert.match(wxml, /dashboardLoading\s*&&\s*dashboardData\.revenue\s*==\s*null/,
-    '只有没有旧收入时才显示首载骨架')
-  assert.match(wxml, /dashboardLoading\s*&&\s*dashboardData\.revenue\s*!=\s*null/,
-    '已有收入刷新时必须留下正在更新提示')
+  // 2026-10-22 owner 裁决推翻「首载骨架 + 正在更新提示」:金额永远在位(首帧 ¥0.00),真值到了滚过去,
+  // 加载中不出任何 loading UI(不足 400ms 不画加载态)。
+  assert.match(wxml, /class="rv-revenue-amount"[^>]*>\{\{money\.amount2\(revenueShown\)\}\}</,
+    '收入金额永远在位,加载中显示当前值')
+  assert.doesNotMatch(wxml, /<cy-skeleton[^>]*type="amount"|正在更新经营数据/,
+    '收入区不得再出骨架或正在更新提示')
   assert.match(wxml, /<cy-inline-error\b[^>]*wx:if="\{\{dashboardError\}\}"[^>]*bind:action="reloadDashboard"/,
     '收入局部失败必须原位说明并只重试经营数据')
   assert.match(wxml, /!projectCards\.length\s*&&\s*\(joinLoading\s*\|\|\s*hostLoading\s*\|\|\s*todoLoading\s*\|\|\s*gameEntryLoading\)/,
@@ -345,11 +347,11 @@ test('负控：把收入和项目恢复为互斥整块 loading 时必须判红',
   const wxml = fs.readFileSync(WXML_PATH, 'utf8')
   const json = fs.readFileSync(JSON_PATH, 'utf8')
   const mutated = wxml
-    .replace(/dashboardLoading\s*&&\s*dashboardData\.revenue\s*==\s*null/, 'dashboardLoading')
+    .replace('{{money.amount2(revenueShown)}}', '<cy-skeleton wx:if="{{dashboardLoading}}" type="amount" />')
     .replace(/!projectCards\.length\s*&&\s*\(joinLoading\s*\|\|\s*hostLoading\s*\|\|\s*todoLoading\)/,
       'joinLoading || hostLoading || todoLoading')
   assert.notEqual(mutated, wxml, '负控锚点失效')
-  assert.throws(() => assertPartialStateUi(mutated, json), /只有没有旧收入时|项目骨架只能/)
+  assert.throws(() => assertPartialStateUi(mutated, json), /收入金额永远在位|收入区不得再出骨架|项目骨架只能/)
 })
 
 test('负控：把整屏身份闸加回工作台必须判红', () => {
