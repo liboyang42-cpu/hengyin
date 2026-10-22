@@ -248,6 +248,38 @@ class TemplateEditOwnershipTest {
         org.junit.jupiter.api.Assertions.assertFalse(json.readTree(json.writeValueAsString(entity)).has("clearFields"));
     }
 
+    /**
+     * 据点模板的 duration 是 Long，发布 DTO 是 Integer；BeanUtils 不转换，修复前新建与改写都落成 0。
+     */
+    @Test
+    void merchantNodeDurationSurvivesDtoCopy() {
+        CmsMemberTemplate created = new CmsMemberTemplate();
+        created.setTitle("新据点玩法"); created.setDuration(45L);
+        service.saveMerchantNodeTemplate(created, OWNER, "商家");
+        ArgumentCaptor<CmsMemberTemplate> inserted = ArgumentCaptor.forClass(CmsMemberTemplate.class);
+        verify(memberTemplateService).insertCmsMemberTemplate(inserted.capture());
+        assertEquals(45L, inserted.getValue().getDuration());
+
+        CmsMemberTemplate existing = existing(OWNER, 0); existing.setMerchantNodeEnabled(1);
+        existing.setDuration(30L);
+        when(memberTemplateService.selectCmsMemberTemplateById(TEMPLATE_ID)).thenReturn(existing);
+        CmsMemberTemplate edited = new CmsMemberTemplate(); edited.setId(TEMPLATE_ID);
+        edited.setTitle("改过的据点玩法"); edited.setDuration(60L);
+        service.saveMerchantNodeTemplate(edited, OWNER, "商家");
+        ArgumentCaptor<CmsMemberTemplate> updated = ArgumentCaptor.forClass(CmsMemberTemplate.class);
+        verify(memberTemplateService).updateCmsMemberTemplate(updated.capture());
+        assertEquals(60L, updated.getValue().getDuration());
+    }
+
+    @Test
+    void merchantNodeDurationOverflowIsRejectedNotTruncated() {
+        CmsMemberTemplate input = new CmsMemberTemplate();
+        input.setTitle("新据点玩法"); input.setDuration(Long.MAX_VALUE);
+        assertThrows(com.chengyinhub.common.exception.ServiceException.class,
+                () -> service.saveMerchantNodeTemplate(input, OWNER, "商家"));
+        verify(memberTemplateService, never()).insertCmsMemberTemplate(any());
+    }
+
     private CmsMemberTemplate existing(Long memberId, Integer delFlag) {
         CmsMemberTemplate existing = new CmsMemberTemplate();
         existing.setId(TEMPLATE_ID);
