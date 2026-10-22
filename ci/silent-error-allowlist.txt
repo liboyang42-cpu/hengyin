@@ -78,6 +78,7 @@ chengyinhub-xcx/pages/merchant/marketing/ai-insight/index.js 1  # AI 参谋整�
 chengyinhub-xcx/pages/merchant/marketing/index.js 1  # UNREVIEWED_BASELINE_20260818:1 存量未审查,禁止新增
 chengyinhub-xcx/pages/merchant/marketing/index.js 1  # 2026-08-26 营销页接回 access/me 权限真源新增一处:access/me 失败落 funnelError,由首屏错误态渲染并保留重试入口,关掉全局 toast 是为了不和页内错误双提示。(merchant/info 那处随该请求一并退役,额度已收回)
 chengyinhub-xcx/pages/merchant/relation/index.js 1  # UNREVIEWED_BASELINE_20260818:1 存量未审查,禁止新增
+chengyinhub-xcx/pages/merchant/relation/index.js 1  # 2026-10-22 帖子流 /api/club/post/feed:失败落页内 feedState=error/stale-error 并给重试按钮,不吞;通道 toast 会重复报错(同 talent/list 帖文 tab)
 chengyinhub-xcx/pages/play/index.js 1  # UNREVIEWED_BASELINE_20260818:1 存量未审查,禁止新增
 chengyinhub-xcx/pages/publish/fabu/index.js 0  # UNREVIEWED_BASELINE_20260818:2 2026-10-13 逐调用及回调审完，真实9处转下方实名理由；冻结2不变，零额收据保留
 chengyinhub-xcx/pages/publish/template-intro/index.js 1  # UNREVIEWED_BASELINE_20260818:1 存量未审查,禁止新增

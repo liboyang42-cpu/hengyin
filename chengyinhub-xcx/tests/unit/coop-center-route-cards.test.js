@@ -94,7 +94,7 @@ test('路线接口成功时渲染路线卡并收掉 loading（不得抛错卡在
 })
 
 // 稿 234:276:卡片有「已满」「已截止」两态 —— 要不要接这一站由商家判断,不替他藏
-test('已截止/已满照稿展示,不限名额不写余席;余席阈值 ≥2 绿 / 1 与 0 琥珀', () => {
+test('已截止的不展示(2026-10-22 owner 推翻「已截止也展示」);已满照稿展示,不限名额不写余席;余席阈值 ≥2 绿 / 1 与 0 琥珀', () => {
   const page = loadPage()
   page.loadRoutes()
 
@@ -111,12 +111,22 @@ test('已截止/已满照稿展示,不限名额不写余席;余席阈值 ≥2 �
 
   assert.equal(page.data.routesLoading, false)
   const byTitle = Object.fromEntries(page.data.routes.map((r) => [r.title, r]))
-  assert.equal(byTitle['已截止'].deadlineText, '已截止')
-  assert.deepEqual([byTitle['已截止'].seatText, byTitle['已截止'].seatTone], ['余 5 席', 'ok'])
+  assert.equal(byTitle['已截止'], undefined, '招商已截止的路线不得显示')
+  assert.equal(page.data.routes.length, 3)
   assert.deepEqual([byTitle['没名额'].seatText, byTitle['没名额'].seatTone], ['已满', 'tight'])
   assert.equal(byTitle['不限'].seatText, '', 'null = 不招商或不限名额,不得渲染成已满')
   assert.deepEqual([byTitle['最后一席'].seatText, byTitle['最后一席'].seatTone], ['余 1 席', 'tight'])
   assert.match(byTitle['最后一席'].deadlineText, /^招商截止 1月1日$/)
+})
+
+test('活动已结束(endDate 已过)的路线同样不展示', () => {
+  const page = loadPage()
+  page.loadRoutes()
+  requests[0].success(marketingHome([
+    { id: 1, name: '已结束', productType: 1, recruitDeadline: FUTURE_DEADLINE, endDate: '2020-01-01 00:00:00' },
+    { id: 2, name: '进行中', productType: 1, recruitDeadline: FUTURE_DEADLINE },
+  ]))
+  assert.deepEqual(page.data.routes.map((r) => r.title), ['进行中'])
 })
 
 test('结算方式行按章节档位与公示口径拼,混档只列档位', () => {
