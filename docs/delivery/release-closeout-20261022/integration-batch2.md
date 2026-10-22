@@ -108,4 +108,7 @@ owner 已于 2026-10-22 批准由集成方接管保留文件维护。下面每�
 
 - run `39777540687`（workflow_dispatch，head `b2624505`，前 9 个 PR）：30 个 job 全部 success。当时 PR base 不是 master，`pull_request` 触发器不派发，所以手动派发。
 - run `39783877003`（head `7b75669b`）：只有 Migration safety gate 的 [4/5] 迁移声明门是红，原因是 PR 描述缺少「## 影响分类 ③」。描述已补，随下一个提交重新派发。
-- 最终结果见 PR #486 的检查和描述。
+- head `2b089767`（13 个 PR 全部合入，含本记录首版）：35 个 check run，32 success，3 skipped（Admin UI 与 SBOM 按变更区域跳过），0 失败。
+  - GitHub CI run `39785313826`：Backend tests、Migration safety / layout gate（迁移声明门转绿）、20 个小程序 unit shard、Mini program static gates、Fast gates、gitleaks，全部 success。
+  - Funds MySQL IT run `39785313609`、Mini followup focused regression run `39785313522`、Isolated authenticated Redis recovery run `39785313756`：success。
+- 本记录更新后的最终 head 以 PR #486 的检查为准。
