@@ -1895,3 +1895,23 @@ test('截图录屏证据必须有真实媒体签名，文本改后缀不能通�
   ])
   assert.equal(isRecognizedMedia('truncated.png', truncated), false)
 })
+
+// gate-ledger-read-contract:/api/publish/home(发布广场首页聚合,只读)走精确读例外判读;
+// /publish/ 通用写规则不放宽 —— 同前缀/同动词的真实发布写口仍判写,没登记的 /api/publish/* 新端点也仍判写。
+test('GET /api/publish/home 是读;真实发布写端点仍是写', () => {
+  const { isWriteApi } = require('../../scripts/uiaudit/build-action-ledger.js')
+  assert.equal(isWriteApi('/api/publish/home'), false)
+  for (const api of ['/api/activity/publish', '/api/coupon/publish', '/api/template/publish',
+    '/api/v1/community/posts/{param}/publish', '/api/activity/update_publish_status', '/api/official/publish',
+    '/api/publish/submit', '/api/publish/home/save']) {
+    assert.equal(isWriteApi(api), true, `${api} 必须仍判写`)
+  }
+  const homeControls = ledger.controls.filter((item) => (item.targets?.primaryApis || []).includes('/api/publish/home'))
+  assert.ok(homeControls.length > 0, '台账里必须真有 /api/publish/home 的消费者,否则这条断言是空转')
+  for (const item of homeControls) {
+    assert.deepEqual(item.targets.writeApis.filter((api) => api === '/api/publish/home'), [])
+  }
+  const homeRequests = ledger.controls.flatMap((item) => item.requiredRequests || [])
+    .filter((request) => request.urlTemplate === '/api/publish/home')
+  assert.equal(homeRequests.some((request) => request.kind === 'write'), false)
+})
