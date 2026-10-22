@@ -273,6 +273,7 @@ public class TopicEditionReopenServiceImpl implements ITopicEditionReopenService
         role.setEntityType(target.getEntityType());
         role.setEntityId(target.getEntityId());
         role.setStatus(1);
+        ProductSlot.requireValid(role.getSlot());
         requireOne(productRoleMapper.insertProductRole(role), "新期 CONTENT 槽写入失败");
     }
 
