@@ -56,6 +56,10 @@ public interface CmsTemplateLibraryMapper
      */
     public int insertCmsTemplateLibrary(CmsTemplateLibrary cmsTemplateLibrary);
 
+    /** O5b-5:模板广场在架条目的 id/title(排除指定作者),按 id 倒序取前 limit 条,供标题相似度提示。 */
+    List<CmsTemplateLibrary> selectPublicTitlesForSimilarity(@Param("excludeMemberId") Long excludeMemberId,
+                                                             @Param("limit") int limit);
+
     /**
      * 修改模板库
      * 
