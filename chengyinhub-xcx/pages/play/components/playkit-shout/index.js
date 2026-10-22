@@ -3,6 +3,7 @@ const motion = require('../../../../utils/motion.js');
 const { readReducedMotion } = require('../../../../utils/motion-preference.js');
 const toast = require('../../../../utils/toast.js');
 const { baseline, thresholds, bandOf, peakOf } = require('../../utils/play-audio-level.js');
+const { withAttempt, freshAttempt, rewardNote } = require('../../utils/sensor-contract.js');
 const TICK_MS = 100;
 const FIRST_FRAME_MS = 3000;
 const GAP_MS = 500;
@@ -25,9 +26,13 @@ Component({
     show: { type: Boolean, value: false },
     kicker: { type: String, value: '喊出来' },
     seconds: { type: Number, value: 5 },
+    // C1:服务端开表发的挑战身份(0 = 没有)与奖励上限(空 = 服务端没说,什么都不承诺)
+    attemptId: { type: Number, value: 0 },
+    rewardCeiling: { type: String, value: '' },
   },
-  data: { left: '5.0', loud: false, running: false, preparing: false, hasFrame: false, levelPct: 0, stageKeys: [0] },
+  data: { left: '5.0', loud: false, running: false, preparing: false, hasFrame: false, levelPct: 0, stageKeys: [0], rewardNote: '' },
   observers: {
+    rewardCeiling(value) { this.setData({ rewardNote: rewardNote(value) }); },
     'show, seconds': function (show) {
       this._abort();
       this._closed = !show;
@@ -179,6 +184,8 @@ Component({
       if (!a || a.phase !== 'ready') return;
       if (a.frameAt === null || Date.now() - a.frameAt >= GAP_MS) { this._failure(a); return; }
       a.phase = 'running'; a.runAt = null; a.runLoud = false; a.samples = 0;
+      // 开局那一刻手里的号是上一次的;只有这一局开表后服务端新发的号才随成绩交
+      a.attemptAtRun = this.data.attemptId;
       this._held = 0; this._last = Date.now();
       this.setData({ preparing: false, running: true, left: this._total().toFixed(1), loud: false, hasFrame: false, levelPct: 0 });
       this.triggerEvent('start');
@@ -202,7 +209,7 @@ Component({
       a.stage.win('本机相对阈值持续过线 ' + this._total() + ' 秒');
       if (!this._current(a)) return;
       a.phase = 'finished';
-      this.triggerEvent('submit', { heldMs });
+      this.triggerEvent('submit', withAttempt({ heldMs }, { attemptId: freshAttempt(this.data.attemptId, a.attemptAtRun) }));
     },
     onVerdict(e) { const a = this._stageAttempt(e); if (a && a.phase === 'reporting') this.triggerEvent('verdict', e.detail); },
     onClose(e) {

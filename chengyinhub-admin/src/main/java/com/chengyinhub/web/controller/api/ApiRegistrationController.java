@@ -767,6 +767,9 @@ public class ApiRegistrationController extends BaseController {
         } catch (Exception e) {
             return error("请先登录");
         }
+        if (member_id == null || member_id <= 0) {
+            return error("请先登录");
+        }
 
         Long ownerType = Convert.toLong(owner_type, 0L);
         if (ownerType < 1) {
@@ -1045,6 +1048,9 @@ public class ApiRegistrationController extends BaseController {
         try {
             memberId = getAppUserId();
         } catch (Exception e) {
+            return error("请先登录");
+        }
+        if (memberId == null || memberId <= 0) {
             return error("请先登录");
         }
 

@@ -88,6 +88,9 @@
 
     <view id="fieldRuntimeState" class="node-card">
       <cy-inline-error load-failure wx:if="{{supportMatrixLoadError}}" title="{{supportMatrixLoadError}}" sub="仍可保存，支持情况以保存结果为准" action="重试" bind:action="retrySupportMatrix" />
+      <!-- PRIVATE-GROUP-game-support-copy:只说明来源与渠道,不改开关与能力 -->
+      <view class="node-card__row"><view class="node-card__main"><text class="node-card__title">玩法支持</text><text class="node-card__value">支持状态以玩法支持矩阵为准。反馈或工单是独立渠道，提交后不会改变支持状态。</text></view></view>
+      <view class="node-card__hr"></view>
       <view class="node-card__row"><view class="node-card__main"><text class="node-card__title">值域</text><text class="node-card__value">开局值在第一章「初始状态」配置</text></view></view>
       <view class="node-card__hr"></view>
       <view class="node-card__row"><view class="node-card__main"><text class="node-card__title">{{runtimeHpLabel}}</text><text class="node-card__value">{{runtimeHpEnabled ? '已启用 · 玩家可见 · 0 至 ' + runtimeHpMax : '未启用'}}</text></view><cy-switch checked="{{runtimeHpEnabled}}" data-stat="hp" bindchange="onRuntimeStatToggle" /><view class="node-pill" data-stat="hp" bindtap="editRuntimeStat" aria-role="button" aria-label="编辑{{runtimeHpLabel}}" hover-class="cy-pressed">编辑<cy-icon name="chevron-right" size="24" /></view></view>

@@ -54,12 +54,14 @@ Component({
       })
       app.sendRequest({
         url: '/api/official/my-events', method: 'GET', hideLoading: true, silentError: true,
-        success: (res) => { if (token !== this._loadToken) return; if (res && (res.code == 200 || res.code == '200') && Array.isArray(res.data) && res.data.every(isRecord)) mine = res.data.map((item) => this._decorate(item)); else failed = true; mineDone = true; finish() },
+        success: (res) => { if (token !== this._loadToken) return; if (res && (res.code == 200 || res.code == '200') && Array.isArray(res.data) && res.data.every(isRecord)) mine = res.data.map((item) => this._decorate(item, true)); else failed = true; mineDone = true; finish() },
         successStatusAbnormal: () => { if (token !== this._loadToken) return; failed = true; mineDone = true; finish() },
         fail: () => { if (token !== this._loadToken) return; failed = true; mineDone = true; finish() },
       })
     },
-    _decorate(item) {
+    // fromSignup:行来自 /api/official/my-events,只说明“你报过名”;报名记录不等于当前资格
+    // (资格要等 V2 participationState/eligible 字段),所以这里只标来源,不推断资格。
+    _decorate(item, fromSignup) {
       const meta = activityStatusMeta(item.status)
       const statusKnown = typeof item.status === 'number' && [0, 1, 2, 3, 4, 5, 6, 9].includes(item.status)
       const decorated = { ...item, _statusKnown: statusKnown, _statusText: statusKnown ? (meta.text || '尚未开放') : '状态待确认', _statusVariant: statusKnown ? meta.variant : 'done', _live: statusKnown && meta.live, _participantsText: countText(item.participants), _pct: item.collective && item.collective.enabled === true ? progressValue(item.collective.pct) : -1 }
@@ -70,6 +72,7 @@ Component({
       const coverImg = item.coverImg == null ? '' : String(item.coverImg).trim()
       decorated._coverStyle = coverImg ? "background-image:url('" + coverImg.replace(/'/g, '%27') + "')" : ''
       decorated._timeText = timeText(decorated)
+      decorated._sourceText = fromSignup === true ? '来自你的报名' : ''
       return decorated
     },
     _filter() {

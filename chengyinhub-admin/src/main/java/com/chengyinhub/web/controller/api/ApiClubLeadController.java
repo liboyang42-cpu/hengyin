@@ -257,14 +257,20 @@ public class ApiClubLeadController extends BaseController {
         // 当日备注是文字,按裁决仍可改。P1-2:待支付/支付中也算已售出(下单后改期同样是后门)。
         // 服务端为准,前端置灰只是体验。
         boolean touchesTimeOrPlace = addr != null || addrName != null || sd != null || ed != null;
-        if (touchesTimeOrPlace && cmsActivityService.countOpenSaleRegistrations(actId) > 0) {
-            return error("该场次已售出，集合时间与地点不能修改；当日备注仍可改");
+        // #334 F7:已售判断与写入是同一条条件 UPDATE,先数后写之间的下单窗口已关;零行 = 已售锁定。
+        int rows = cmsActivityService.updateLeadOpsUnlessSold(upd, touchesTimeOrPlace);
+        if (rows == 0 && touchesTimeOrPlace) {
+            return error("该场次已售出，集合时间与地点不能修改；当日备注仍可改")
+                    .put("errorCode", "CLUB_OPS_SOLD_LOCKED");
         }
-        cmsActivityService.updateCmsActivity(upd);
-        // 报备留痕(入日志)+ 记发起人;实时推送为 best-effort 后续。
+        if (rows == 0) return error("场次不存在");
+        // 报备只留痕(入日志)+ 记发起人;没有实时推送,响应如实回执,不声称已通知。
         logger.info("运营权委托·承接方改运营详情 actId={} 领队(承接主理人)={} 发起人={} 改动=[{}]",
                 actId, memberId, act.getMemberId(), chg.toString());
-        return AjaxResult.success("已更新并报备发起人");
+        java.util.Map<String, Object> receipt = new java.util.LinkedHashMap<>();
+        receipt.put("organizerNotified", false);
+        receipt.put("noticeReceipt", "LOGGED_ONLY");
+        return AjaxResult.success("已更新；已留痕，未推送通知发起人", receipt);
     }
 
     private java.util.Date parseOpsDate(Object o) {

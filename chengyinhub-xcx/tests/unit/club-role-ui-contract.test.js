@@ -90,6 +90,7 @@ function createDetailHarness(storage = {}) {
         // 因为「可对接的活动」那段就是要保证它按真整形渲染,桩会把问题遮住
         '../../../utils/coop-invite-view.js': require('../../utils/coop-invite-view.js'),
         '../utils/club-event-calendar.js': require('../../pages/club/utils/club-event-calendar.js'),
+        '../utils/edition-empty-reason.js': require('../../pages/club/utils/edition-empty-reason.js'),
         // 帖文卡的 variant 判定与广场共用一份,俱乐部页 require 的就是它
         '../../../utils/feed-play-card.js': require('../../utils/feed-play-card.js'),
         // CU-C-60:快捷扫码的写请求也要能在这层沙箱里跑起来

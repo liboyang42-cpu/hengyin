@@ -213,7 +213,8 @@ public class ApiMerchantNodeController extends BaseController {
 
         // 内容安全(免人工审的替代闸;未启用则放行)
         String secText = IWxContentSecurityService.joinText(body.getTitle(), body.getDescription(),
-                body.getQuestionName(), body.getQuestionAnswer(), body.getFeedbackText(), body.getPreferenceJson());
+                body.getQuestionName(), body.getQuestionAnswer(), body.getFeedbackText(), body.getPreferenceJson(),
+                body.getRuleInstructions());
         String openid = openidOf(principalMemberId);
         String secMsg = wxSec.checkText(secText, openid);
         if (secMsg != null) return error(secMsg);

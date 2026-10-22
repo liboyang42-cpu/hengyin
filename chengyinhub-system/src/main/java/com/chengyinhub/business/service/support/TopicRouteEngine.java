@@ -197,6 +197,12 @@ public class TopicRouteEngine {
             String var = effect.path("var").asText();
             if (var.isEmpty()) throw new IllegalArgumentException("effect 变量名不能为空");
             Number value = effect.path("value").numberValue();
+            Number held = state.variables.get(var);
+            // 已获得的线索证据（clue.h_*）只增不减：后续 SET/INC 不得撤回。
+            if (var.startsWith("clue.h_") && value != null && held != null && held.doubleValue() >= 1 && ("SET".equals(op) || "INC".equals(op))) {
+                double next = "SET".equals(op) ? value.doubleValue() : held.doubleValue() + value.doubleValue();
+                if (next < held.doubleValue()) continue;
+            }
             if ("SET".equals(op)) state.variables.put(var, value);
             else if ("INC".equals(op)) {
                 Number old = state.variables.get(var);

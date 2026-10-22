@@ -45,3 +45,19 @@ test('方案缺少公开线索时显示线索名称，不再只说前置未满�
   const met = plans.present({ ...view, interactionTools: [{ kind: 'PLAN', endingKey: 'x', conditionsMet: true }] }, []).planRows[0];
   assert.equal(met.conditionText, '前置条件已满足');
 });
+
+test('服务端线索没有内容块时显示中性空态，不声称未确认、被隐藏或被撤回', () => {
+  const fs = require('node:fs'); const path = require('node:path');
+  const view = { contents: [], events: [], scope: 'TEAM', teamId: 1, availableActions: [], clues: [
+    { id: 'clue.h_a', name: '空线索', scope: 'TEAM', sources: [] },
+    { id: 'clue.h_b', name: '空块', scope: 'PUBLIC', sources: [{ title: 'L1', blocks: [{ text: '', images: [] }] }] },
+    { id: 'clue.h_c', name: '有图', scope: 'TEAM', sources: [{ title: 'L2', blocks: [{ images: ['https://cdn.example/a.jpg'] }] }] },
+  ] };
+  const [empty, blank, image] = backpack.present(view, []).clues;
+  assert.equal(empty.emptyText, '暂无可显示的内容');
+  assert.equal(blank.emptyText, '暂无可显示的内容');
+  assert.equal(image.emptyText, '');
+  const wxml = fs.readFileSync(path.join(__dirname, '../../pages/play/theme-backpack.wxml'), 'utf8');
+  assert.match(wxml, /<text wx:if="\{\{item\.emptyText\}\}" class="tb-purpose">\{\{item\.emptyText\}\}<\/text>/);
+  assert.doesNotMatch(empty.emptyText, /未确认|隐藏|撤回|他队/);
+});

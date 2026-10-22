@@ -43,11 +43,15 @@ public interface MerchantReviewMapper {
 
     Map<String, Object> selectReviewStats(@Param("merchantRowId") Long merchantRowId);
 
-    long countManageReviews(@Param("merchantRowId") Long merchantRowId);
+    long countManageReviews(@Param("merchantRowId") Long merchantRowId,
+                            @Param("filter") String filter);
 
     List<MerchantReview> selectManageReviews(@Param("merchantRowId") Long merchantRowId,
+                                             @Param("filter") String filter,
                                              @Param("offset") int offset,
                                              @Param("limit") int limit);
+
+    Map<String, Object> selectManageFilterCounts(@Param("merchantRowId") Long merchantRowId);
 
     int replyCas(@Param("id") Long id,
                  @Param("merchantRowId") Long merchantRowId,

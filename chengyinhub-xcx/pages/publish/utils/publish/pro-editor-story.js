@@ -103,6 +103,13 @@ function normalizeDreamImages(images) {
   }).filter(function (item) { return !!item.url; });
 }
 
+// 图片的文字替代 / 音频的文字稿(#18):后端 ChapterBlockDTO.altText,仅媒体块,最多 2000 字。
+// 编辑中原样保留(不 trim,否则删到空会回弹);上送时纯空白视为没填,不带这个键。
+var MEDIA_ALT_TEXT_MAX = 2000;
+function mediaAltTextOf(block) {
+  return block && typeof block.altText === 'string' ? block.altText : '';
+}
+
 // 从地址末段取文件名:去掉 query/hash,再 decode。取不出来就返回空串,由调用方兜底。
 function fileNameOf(url) {
   var path = String(url || '').split('?')[0].split('#')[0];
@@ -299,6 +306,8 @@ function materializeChapter(source, makeKey) {
       // 空判用 .trim() 与 insertMediaAt / fillMedia / toPayloadChapter 三处对齐(纯空白 url 也算空)。
       if (!url.trim() && block.type !== 'audio') throw new Error('媒体块缺少地址');
       var media = { key: block.key || keyFactory(), type: block.type, url: url };
+      var altText = mediaAltTextOf(block);
+      if (altText) media.altText = altText;
       // 重开章节时 payload 里只剩 {type,url} —— 文件名从地址末段派生,至少不显示成"音频片段"。
       // 时长派生不出来,由页面拿播放器异步补(见 index.js#_fillStoryAudioMeta)。空占位块无 url,不派生。
       if (block.type === 'audio' && url.trim()) {
@@ -357,7 +366,11 @@ function toPayloadChapter(source) {
       return Object.assign({ type: block.type, key: block.key }, PLAIN_BLOCKS[block.type](block));
     }
     if (isMediaType(block.type)) {
-      return { key: block.key, type: block.type, url: String(block.url == null ? '' : block.url) };
+      var mediaPayload = { key: block.key, type: block.type, url: String(block.url == null ? '' : block.url) };
+      var payloadAlt = mediaAltTextOf(block).trim();
+      if (payloadAlt.length > MEDIA_ALT_TEXT_MAX) throw new Error((block.type === 'audio' ? '音频文字稿' : '图片说明') + '不能超过 ' + MEDIA_ALT_TEXT_MAX + ' 字');
+      if (payloadAlt) mediaPayload.altText = payloadAlt;
+      return mediaPayload;
     }
     throw new Error('节点块引用已失效');
   });
@@ -476,7 +489,7 @@ function applyStoryCommand(input, command) {
     // 人知道自己刚才做了什么。图片没有这一态,继续当场拒 —— 一个点不开的空图壳没有用。
     if (!mediaUrl && command.mediaType !== 'audio') throw new Error('媒体块缺少地址');
     // _name / _duration 只服务编辑器的显示(音频块要显示文件名与时长)。
-    // 下划线开头 = 本地字段:stripLocalFields 会剥掉,toPayloadChapter 也只重建 {type,url},
+    // 下划线开头 = 本地字段:stripLocalFields 会剥掉,toPayloadChapter 也只重建 {type,url,altText},
     // 所以它们进不了 payload,不必动后端的块形状。重开章节时由页面按 url 重新派生。
     var inserted = { key: command.blockKey, type: command.mediaType, url: mediaUrl };
     if (command.name) inserted._name = String(command.name);
@@ -597,6 +610,19 @@ function applyStoryCommand(input, command) {
     return { draft: draft };
   }
 
+  // 图片说明 / 音频文字稿:只改已有媒体块的 altText,不碰 url / 本地字段
+  if (command.type === 'editMediaAltText') {
+    var altBlock = draft.chapter.blocks.find(function (item) {
+      return item && item.key === command.blockKey && isMediaType(item.type);
+    });
+    if (!altBlock) throw new Error('未找到要编辑的媒体块');
+    var nextAlt = String(command.altText == null ? '' : command.altText);
+    if (nextAlt.trim().length > MEDIA_ALT_TEXT_MAX) throw new Error((altBlock.type === 'audio' ? '音频文字稿' : '图片说明') + '不能超过 ' + MEDIA_ALT_TEXT_MAX + ' 字');
+    if (nextAlt) altBlock.altText = nextAlt; else delete altBlock.altText;
+    synchronizeChapter(draft.chapter);
+    return { draft: draft };
+  }
+
   if (command.type === 'removeMedia') {
     var mediaIndex = draft.chapter.blocks.findIndex(function (item) {
       // 非文字 / 非节点的块都从这里删(氛围、伏笔、内心声音、异常以前漏了,点叉号只弹「未找到」)
@@ -697,4 +723,5 @@ module.exports = {
   insertVarAt: insertVarAt,
   varInsertIndex: varInsertIndex,
   DREAM_MAX_IMAGES: DREAM_MAX_IMAGES,
+  MEDIA_ALT_TEXT_MAX: MEDIA_ALT_TEXT_MAX,
 };

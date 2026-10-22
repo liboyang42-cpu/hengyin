@@ -4,7 +4,8 @@ function previewD20Result(kit) {
   const kept = kit.rollMode === 'disadvantage' ? Math.min(...values) : Math.max(...values);
   const total = kept + kit.modifier;
   const success = total >= kit.dc;
-  return { values, kept, total, success, text: success ? kit.successText : kit.failText };
+  // 沙盒：作者本地预览，不是正式判定；加值来自作者在模板中设定的固定值。
+  return { values, kept, total, success, text: success ? kit.successText : kit.failText, sandbox: true, modifierSource: 'TEMPLATE_FIXED' };
 }
 
 function applyPreviewAction(source, event, startedAt, now = Date.now()) {
