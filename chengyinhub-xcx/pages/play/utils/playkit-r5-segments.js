@@ -22,7 +22,7 @@ function canContinue(view) {
 function albumKit(seg) {
   const done = seg.done === true;
   return {
-    title: '相册', completionEnabled: true, done, uploaded: false,
+    title: '相册', completionEnabled: true, done, uploaded: false, uploadFailure: '',
     // 完成前的 images 是作者配图；完成回执才是服务器验证过的玩家证据。
     authorImages: done ? [] : (seg.images || []),
     images: done ? (seg.images || []).map(url => ({ url })) : [],
@@ -46,16 +46,31 @@ function submitAlbum(page, action, detail, toast) {
   if (game.data.acting || game.data.unknown) { toast('结果正在核对，请稍后再试'); return; }
   if (action === 'shoot') {
     if (!detail || !detail.tempFilePath) { toast('请先拍摄或选择照片'); return; }
-    page._submitKitPhoto(detail, {
+    // 网络/5xx 失败：保留这张已选照片，只重传同一张；上传成功后才提交一次。其他失败请玩家重新选图。
+    page._albumRetry = null;
+    page.setData({ 'playKit.kit.uploadFailure': '' });
+    const photo = { tempFilePath: detail.tempFilePath, size: detail.size };
+    page._submitKitPhoto(photo, {
       name: 'SUBMIT_ALBUM', payload: url => ({ imageUrls: [url] }),
       onUploaded(url) {
+        page._albumRetry = null;
         page._albumSubmission = { sessionId: kit.sessionId, version: kit.version, imageUrls: [url] };
-        page.setData({ 'playKit.kit.uploaded': true });
+        page.setData({ 'playKit.kit.uploaded': true, 'playKit.kit.uploadFailure': '' });
+      },
+      onUploadFailed(failure) {
+        const retry = failure && failure.retryable === true;
+        page._albumRetry = retry ? { sessionId: kit.sessionId, version: kit.version, photo } : null;
+        page.setData({ 'playKit.kit.uploadFailure': retry ? 'retry' : 'reselect' });
       },
     });
     return;
   }
   const evidence = page._albumSubmission;
+  const retry = page._albumRetry;
+  if ((!evidence || evidence.sessionId !== state.sessionId || evidence.version !== state.version)
+    && retry && retry.sessionId === state.sessionId && retry.version === state.version) {
+    submitAlbum(page, 'shoot', retry.photo, toast); return;
+  }
   if (!evidence || evidence.sessionId !== state.sessionId || evidence.version !== state.version) {
     toast('请先拍摄或选择照片'); return;
   }

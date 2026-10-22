@@ -51,3 +51,16 @@ test('资料预览全题必答，非法选项/超长输入/配置必填头像均
   kit.avatarUrl = 'wxfile://avatar';
   assert.equal(submit({ name: '小林', job: 'clerk' }).kit.done, true);
 });
+
+test('D20 作者预览标为沙盒，加值来源为模板固定值；正式玩法不自造加值来源', () => {
+  const fs = require('node:fs'); const path = require('node:path');
+  const { previewD20Result } = require('../../utils/game-preview-action.js');
+  const result = previewD20Result({ rollMode: 'normal', modifier: 3, dc: 10, successText: '成', failText: '败' });
+  assert.equal(result.sandbox, true);
+  assert.equal(result.modifierSource, 'TEMPLATE_FIXED');
+  const wxml = fs.readFileSync(path.join(__dirname, '../../pages/play/components/playkit-diceroll/index.wxml'), 'utf8');
+  assert.match(wxml, /wx:if="\{\{preview\}\}"[^>]*>\s*<text>沙盒预览 · 不计入正式判定<\/text>\s*<text>加值为作者在模板中设定的固定值<\/text>/);
+  const source = fs.readFileSync(path.join(__dirname, '../../pages/play/utils/playkit-view.js'), 'utf8');
+  assert.match(source, /modifier: seg\.modifier, rollMode: seg\.rollMode, preview: false,/);
+  assert.doesNotMatch(source, /modifierSource/);
+});
