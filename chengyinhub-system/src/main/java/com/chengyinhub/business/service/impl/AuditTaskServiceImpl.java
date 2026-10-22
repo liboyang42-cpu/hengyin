@@ -113,6 +113,16 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
     @Value("${chengyin.audit.deadline-hours.default:24}")
     private int defaultDeadlineHours = 24;
 
+    /**
+     * O-05 #2 风险随内容升级开关(默认关):新举报 / 重提换了快照 / 门禁再次进件时按内容重算开放单 risk_level,只升不降。
+     * 只改 risk_level 不改 deadline_at(处理时限口径另行处理)。
+     */
+    @Value("${chengyin.audit.risk-escalation.enabled:false}")
+    private boolean riskEscalationEnabled = false;
+    /** 同一内容开放审核单上的去重举报人数达到此值即升 HIGH。 */
+    @Value("${chengyin.audit.risk-escalation.report-threshold:3}")
+    private int riskEscalationReportThreshold = 3;
+
     @Autowired
     private AuditTaskMapper auditTaskMapper;
 
@@ -315,10 +325,12 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         }
         if (open != null) {
             requireRefreshableTask(open, sourceType);
+            boolean contentChanged = !java.util.Objects.equals(open.getSnapshotJson(), snapshotJson);
             if (auditTaskMapper.refreshOpenAuditSnapshot(open.getId(), bizType, refreshedSource(open, sourceType),
                     snapshotJson, submitterId, DateUtils.getNowDate()) != 1) {
                 throw new IllegalStateException("待审任务快照刷新失败");
             }
+            if (contentChanged) escalateOpenRisk(open.getId(), null);
             return open.getId();
         }
 
@@ -464,12 +476,14 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
             if (task == null || !bizType.equals(task.getBizType()) || !bizId.equals(task.getBizId())) {
                 throw new ServiceException("推文审核任务已变化，请重试", HttpStatus.CONFLICT);
             }
-            if (!java.util.Objects.equals(snapshotJson, task.getSnapshotJson())
+            boolean contentChanged = !java.util.Objects.equals(snapshotJson, task.getSnapshotJson());
+            if (contentChanged
                     && auditTaskMapper.refreshOpenAuditSnapshot(taskId, bizType, task.getSourceType(),
                             snapshotJson, task.getSubmitterId() == null ? submitterId : task.getSubmitterId(),
                             DateUtils.getNowDate()) != 1) {
                 throw new ServiceException("推文审核快照刷新失败，请重试", HttpStatus.CONFLICT);
             }
+            if (contentChanged) escalateOpenRisk(taskId, null);
         }
         return taskId;
     }
@@ -499,6 +513,7 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         if ((AuditTask.BIZ_HANGOUT.equals(bizType) || AuditTask.BIZ_TEAM.equals(bizType)) && recorded != 1) {
             throw new ServiceException("举报记录保存失败，请重试");
         }
+        escalateOpenRisk(taskId, null);
         return taskId;
     }
 
@@ -542,6 +557,8 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         boolean reportLane = SOURCE_REPORT.equals(sourceType);
         Long open = findOpenTaskId(bizType, bizId, reportLane);
         if (open != null) {
+            // 门禁再次进件(如检测异常给 HIGH)不能被已开着的低风险单吞掉;举报单在 reportContent 记录落地后再重算。
+            if (!reportLane) escalateOpenRisk(open, riskLevel);
             return open;
         }
         // 幂等命中(上面复用已有单)先于限频:重复举报同一目标不计入、不被限;
@@ -571,6 +588,27 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
             throw dup;
         }
         return task.getId();
+    }
+
+    /**
+     * O-05 #2:按内容重算开放单风险 —— 本次进件风险与「该内容开放单上的去重举报人数达阈值 → HIGH」取高,
+     * 只在严格高于当前档时写回(CAS 旧值,失败即让位并发写,不抛错)。开关关闭或单已结束时什么都不做。
+     */
+    private void escalateOpenRisk(Long taskId, String candidateRisk) {
+        if (!riskEscalationEnabled || taskId == null) return;
+        AuditTask task = auditTaskMapper.selectAuditTaskById(taskId);
+        if (task == null || !(AuditTask.STATUS_PENDING.equals(task.getStatus())
+                || AuditTask.STATUS_ESCALATED.equals(task.getStatus()))) {
+            return;
+        }
+        int reporters = auditTaskMapper.countOpenReportersByBiz(task.getBizType(), task.getBizId());
+        String target = com.chengyinhub.business.service.support.AuditRiskLevels.recompute(
+                task.getRiskLevel(), candidateRisk, reporters, riskEscalationReportThreshold);
+        if (java.util.Objects.equals(target, task.getRiskLevel())) return;
+        if (auditTaskMapper.escalateOpenRiskLevel(taskId, task.getRiskLevel(), target) == 1) {
+            logger.info("审核单风险升级 taskId={} bizType={} bizId={} {} -> {} reporters={}",
+                    taskId, task.getBizType(), task.getBizId(), task.getRiskLevel(), target, reporters);
+        }
     }
 
     /**

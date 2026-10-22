@@ -50,6 +50,13 @@ public interface AuditTaskMapper {
 
     AuditTask selectOpenAuditTaskForUpdate(@Param("bizType") String bizType, @Param("bizId") Long bizId);
 
+    /** O-05 #2:该内容所有开放审核单上的去重举报人数。 */
+    int countOpenReportersByBiz(@Param("bizType") String bizType, @Param("bizId") Long bizId);
+
+    /** O-05 #2:开放单 risk_level 按旧值 CAS 升级(只升不降由调用方保证),不改 version。 */
+    int escalateOpenRiskLevel(@Param("id") Long id, @Param("expectedRiskLevel") String expectedRiskLevel,
+                              @Param("riskLevel") String riskLevel);
+
     /** 改写审核单快照(不看状态);举报成立下架前把下架前公开态并入举报单快照(AUDIT-INT-4)。 */
     int updateTaskSnapshot(@Param("id") Long id, @Param("snapshotJson") String snapshotJson);
 
