@@ -3536,7 +3536,7 @@ Page({
           curOdd = previousOdd;
         }
         else if ((b.type === 'image' || b.type === 'audio') && b.url) {
-          items.push({ kind: b.type, text: '', url: String(b.url), mood: curMood, odd: curOdd });
+          items.push({ kind: b.type, text: '', url: String(b.url), altText: typeof b.altText === 'string' ? b.altText.trim() : '', mood: curMood, odd: curOdd }); // altText(#18):图片 aria-label / 音频文字稿
         } else if (b.type === 'dream') {
           /* 梦块(契约 §3.2):一组图 + 每张一句,一张张「穿过去」。
              ⚠️ 整块仍是**一个** .chfull__para —— measureChapter 用 selectAll('.chfull__para')
