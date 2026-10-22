@@ -410,6 +410,8 @@ function normalizeClubPost(p, clubOwnerId) {
   // 俱乐部这边不许再写第二套判据。refType 的编号就是广场的 dataType,所以直接喂进去。
   // 后端投影不出展示字段(被引对象已删/下架)时 sportName 是空,两个判定都会自然判假,
   // 卡片降级成普通图文帖 —— 不会渲染出一张标题空着的成绩卡。
+  // F0098:服务端判定被引对象当前不可见时回 refUnavailable=true,只显示中性的「引用不可用」,不猜原因。
+  const refUnavailable = p.refUnavailable === true && p.refType != null && p.refId != null;
   const ref = Object.assign({}, p, { dataType: p.refType, completed: true });
   // 正文按纯文本展示,编辑框也从这里回填:解码一次,重新提交的是用户原文,不会越存越长。
   const content = decodeDisplayText(p.content);
@@ -425,10 +427,18 @@ function normalizeClubPost(p, clubOwnerId) {
     noticeBadge: Number(p.type) === 2 ? (isPinned ? '公告 · 置顶' : '公告') : '',
     isPinned: isPinned,
     version: Number(p.version || 0),
-    isCompletionShare: isCompletedShare(ref),
-    hasPlayCover: hasFeedPlayCover(ref),
+    refUnavailable: refUnavailable,
+    isCompletionShare: !refUnavailable && isCompletedShare(ref),
+    hasPlayCover: !refUnavailable && hasFeedPlayCover(ref),
   });
 }
+
+// 发帖引用被服务端拒绝时的机器错误码 → 用户文案;未知码回落到服务端 msg。
+const POST_REF_ERROR_TEXT = {
+  CLUB_POST_REF_UNAVAILABLE: '引用的记录暂不可用，已取消引用',
+  CLUB_POST_REF_NOT_JOINED: '只能带上你自己参加过的记录，已取消引用',
+  CLUB_POST_REF_INVALID: '引用信息有误，已取消引用',
+};
 
 function enrichClub(club) {
   if (!club) return club;
@@ -1713,6 +1723,11 @@ Page({
         if (res.code == '200') {
           that.setData({ postText: '', postImages: [], postAsAnnouncement: false, postRef: null });
           that.loadPosts();
+        }
+        else if (res && POST_REF_ERROR_TEXT[res.errorCode]) {
+          // 正文与图片保留,只撤掉这条引用,用户可以直接再发
+          that.setData({ postRef: null });
+          cyToast(POST_REF_ERROR_TEXT[res.errorCode]);
         }
         else cyToast((res && res.msg) || '发布失败');
       },

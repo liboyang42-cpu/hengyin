@@ -44,6 +44,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.ArgumentCaptor.forClass;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -710,8 +711,7 @@ class ImServiceImplTest {
         topic.setName("外滩夜行");
         topic.setStatus(1);
         topic.setUserStatus(1);
-        when(cmsTopicMapper.selectCmsTopicById(7L)).thenReturn(topic);
-        when(cmsTopicMapper.selectCmsTopicDetailById(eq(7L), anyLong())).thenReturn(topic);
+        when(cmsTopicMapper.selectCmsTopicDetailById(eq(7L), isNull())).thenReturn(topic);
 
         ArgumentCaptor<ImMessage> cap = forClass(ImMessage.class);
         service.send(1L, 100L, null, ImMessage.MSG_CARD, "伪造摘要",
@@ -722,7 +722,8 @@ class ImServiceImplTest {
         assertTrue(extra.contains("\"topicId\":7"), "应保留 topicId");
         assertFalse(extra.contains("我是伪造的"), "客户端传的展示字段必须丢弃");
         assertFalse(extra.contains("action"), "action 是钓鱼载体,必须丢弃");
-        assertEquals("[路线] 外滩夜行", cap.getValue().getContent(), "content 必须服务端重建");
+        assertEquals("[路线]", cap.getValue().getContent(), "落库摘要只标路线卡,不写主题名");
+        verify(cmsTopicMapper).selectCmsTopicDetailById(7L, null);
     }
 
     @Test
@@ -731,14 +732,49 @@ class ImServiceImplTest {
         stubSendableConversation();
         CmsTopic topic = new CmsTopic();
         topic.setId(7L);
+        topic.setStatus(1);
         topic.setUserStatus(0); // 未上架
-        when(cmsTopicMapper.selectCmsTopicById(7L)).thenReturn(topic);
+        when(cmsTopicMapper.selectCmsTopicDetailById(eq(7L), isNull())).thenReturn(topic);
 
         RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> service.send(1L, 100L, null, ImMessage.MSG_CARD, "x",
                         "{\"cardType\":\"route\",\"topicId\":7}"));
 
-        assertEquals("该路线未上架", ex.getMessage());
+        assertEquals("该路线暂不可用", ex.getMessage());
+        verify(messageMapper, never()).insertImMessage(any(ImMessage.class));
+    }
+
+    @Test
+    void routeCardRejectsDeletedUnreviewedOrMembersOnlyTopicWithGenericMessage() {
+        ImServiceImpl service = service();
+        stubSendableConversation();
+        // 匿名口径查不到(已删 / 私密 / 不存在)与查到但未过审、仅成员可见,一律同一句泛称提示
+        when(cmsTopicMapper.selectCmsTopicDetailById(eq(7L), isNull())).thenReturn(null);
+        RuntimeException missing = assertThrows(RuntimeException.class,
+                () -> service.send(1L, 100L, null, ImMessage.MSG_CARD, "x",
+                        "{\"cardType\":\"route\",\"topicId\":7}"));
+        assertEquals("该路线暂不可用", missing.getMessage());
+
+        CmsTopic unreviewed = new CmsTopic();
+        unreviewed.setId(8L);
+        unreviewed.setStatus(0);
+        unreviewed.setUserStatus(1);
+        when(cmsTopicMapper.selectCmsTopicDetailById(eq(8L), isNull())).thenReturn(unreviewed);
+        RuntimeException pending = assertThrows(RuntimeException.class,
+                () -> service.send(1L, 100L, null, ImMessage.MSG_CARD, "x",
+                        "{\"cardType\":\"route\",\"topicId\":8}"));
+        assertEquals("该路线暂不可用", pending.getMessage());
+
+        CmsTopic membersOnly = new CmsTopic();
+        membersOnly.setId(9L);
+        membersOnly.setStatus(1);
+        membersOnly.setUserStatus(1);
+        membersOnly.setClubMemberOnly(1);
+        when(cmsTopicMapper.selectCmsTopicDetailById(eq(9L), isNull())).thenReturn(membersOnly);
+        RuntimeException privateTopic = assertThrows(RuntimeException.class,
+                () -> service.send(1L, 100L, null, ImMessage.MSG_CARD, "x",
+                        "{\"cardType\":\"route\",\"topicId\":9}"));
+        assertEquals("该路线暂不可用", privateTopic.getMessage());
         verify(messageMapper, never()).insertImMessage(any(ImMessage.class));
     }
 

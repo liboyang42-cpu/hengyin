@@ -471,3 +471,10 @@
   font-weight: 700;
   color: var(--cy-text-title);
 }
+
+/* F0258:合作者仅展示署名的说明 */
+.fabu .form .li .item-tip {
+  font-size: var(--cy-font-caption);
+  color: var(--cy-text-secondary);
+  margin-bottom: var(--cy-space-2);
+}

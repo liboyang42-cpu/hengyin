@@ -735,6 +735,16 @@ page { background: var(--cy-bg-page); }
 
 /* 评论 */
 .post-moderation { display: flex; flex-wrap: wrap; gap: var(--cy-space-3); }
+/* F0098:引用对象当前不可见时的中性标签 */
+.post-ref-unavailable {
+  align-self: flex-start;
+  margin-top: var(--cy-space-2);
+  padding: var(--cy-space-1) var(--cy-space-3);
+  border-radius: var(--cy-radius-sm);
+  background: var(--cy-bg-subtle);
+  color: var(--club-text-muted);
+  font-size: var(--cy-font-caption);
+}
 .post-moderation__action {
   min-height: var(--cy-btn-h);
   display: inline-flex;
