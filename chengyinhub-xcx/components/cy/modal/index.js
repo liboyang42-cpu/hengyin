@@ -23,6 +23,7 @@ Component({
     compact:     { type: Boolean, value: false },
   },
   methods: {
+    noop() {},   // catchtouchmove 吃掉遮罩下页面的滚动
     // 两道锁分开写:_closing 是退场期间拒绝重复触发(sheet-modal-exit-motion-contract 逐字断言这一行),
     // loading 是请求在途期间拒绝重复提交 —— 危险动作点两次会发两次删除请求。
     onConfirm() {
