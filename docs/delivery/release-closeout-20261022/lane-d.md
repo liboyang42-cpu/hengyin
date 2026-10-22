@@ -191,3 +191,5 @@
 逐项 JSON：`lane-d-shots/devtools-evidence.json` 中的 `d3-s16`、`d3-s02_03`、`d3-s10`。本轮在 8132 测试库新增测试草稿 990065、990066。
 
 **仍为后续项（本 PR 不改）**：F-1（发布阶段失败用回读版本覆盖发布在途期间的编辑，master 原有路径）、O-2（发布被拒时错误条「这次还没有保存」与「已存云端」口径冲突）、#6 模板绑定的真机核对、7.4 中的真机 / 双账号 / 双设备步骤。
+
+**CI（head `7179d151`，「GitHub CI」run `39767030388`）**：24 项通过，3 项失败，都属于需集成方再生成的项：unit shard 8 只有 `action-ledger.test.js:1672`；static gates 为 `ACTION-LEDGER FAIL`，以及 `UI-GATE-0: FAIL (24 violations)`，即 12 条 U4-DYNAMIC 在新行号 849…8601；static checks 汇总这两项。没有其它失败。
