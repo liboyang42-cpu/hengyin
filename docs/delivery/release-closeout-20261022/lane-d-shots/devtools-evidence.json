@@ -611,5 +611,144 @@
    }
   ],
   "base": "http://127.0.0.1:8132"
+ },
+ "d3-s02_03": {
+  "s02": {
+   "pass": true,
+   "typedMs": 5400,
+   "firstWriteAfterLastKeyMs": 2030,
+   "writesWhileTyping": 0,
+   "labels": [
+    "已存本机",
+    "保存中",
+    "已存云端"
+   ],
+   "requests": [
+    {
+     "dt": 0,
+     "m": "POST",
+     "url": "/api/topic/v2/create",
+     "st": 200,
+     "rid": "sqmvjfetvcbf…",
+     "name": "D2b自动保存核对主题AB",
+     "sd": 1,
+     "cv": "",
+     "ch": [],
+     "respTopic": 990066
+    },
+    {
+     "dt": 1286,
+     "m": "POST",
+     "url": "/api/topic/edit-detail",
+     "st": 200,
+     "id": 990066
+    }
+   ],
+   "loadings": [],
+   "toasts": [],
+   "state": {
+    "themeSaveState": "saved",
+    "themeSaveLabel": "已存云端",
+    "editingTopicId": "990066",
+    "editIsDraft": true,
+    "draftSaving": false,
+    "submitting": false,
+    "submitError": "",
+    "resultSheet.show": false,
+    "resultSheet.title": "",
+    "formData.name": "D2b自动保存核对主题AB",
+    "formData.configVersion": "1"
+   }
+  },
+  "s03": {
+   "pass": true,
+   "requestsIn10s": []
+  },
+  "topicId": "990066",
+  "base": "http://127.0.0.1:8132"
+ },
+ "d3-s10": {
+  "pass": true,
+  "loaded": {
+   "editingTopicId": "990054",
+   "editIsDraft": false,
+   "editLoaded": true,
+   "editLoadError": "",
+   "formData.name": "D2自动保存核对主题AB",
+   "themeSaveLabel": ""
+  },
+  "writes": [],
+  "draftButtonShown": false,
+  "state": {
+   "themeSaveLabel": "已存本机",
+   "formData.name": "D2-已发布主题改名",
+   "editIsDraft": false
+  },
+  "requests": [
+   {
+    "dt": 0,
+    "m": "GET",
+    "url": "/api/topic/state-keys",
+    "st": 200
+   },
+   {
+    "dt": 40,
+    "m": "POST",
+    "url": "/api/topic/edit-detail",
+    "st": 200,
+    "id": "990054",
+    "mock": "patch-isDraft-false"
+   }
+  ],
+  "base": "http://127.0.0.1:8132"
+ },
+ "d3-s16": {
+  "pass": true,
+  "topicId": "990065",
+  "localEnvelopesForTopicBeforeReopen": 0,
+  "idleLabels": [
+   "已存云端"
+  ],
+  "idleRequests": [
+   {
+    "dt": 0,
+    "m": "GET",
+    "url": "/api/topic/state-keys",
+    "st": 200
+   },
+   {
+    "dt": 43,
+    "m": "POST",
+    "url": "/api/topic/edit-detail",
+    "st": 200,
+    "id": "990065"
+   }
+  ],
+  "state": {
+   "editingTopicId": "990065",
+   "editIsDraft": true,
+   "formData.name": "D3-重开核对",
+   "themeSaveLabel": "已存云端"
+  },
+  "localDraftRestored": false,
+  "editLabels": [
+   "已存云端"
+  ],
+  "editWrites": [
+   {
+    "dt": 17812,
+    "m": "POST",
+    "url": "/api/topic/v2/update",
+    "st": 200,
+    "id": "990065",
+    "name": "D3-重开核对-改名",
+    "sd": 1,
+    "cv": "1",
+    "ch": [],
+    "respTopic": 990065
+   }
+  ],
+  "firstWriteAfterEditMs": 2025,
+  "base": "http://127.0.0.1:8132"
  }
 }

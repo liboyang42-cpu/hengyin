@@ -140,13 +140,13 @@
 | 12 | 手动「保存草稿」 | PASS | 点按钮：`cy-loading`「正在保存草稿」、结果面板「草稿已保存到云端」、胶囊「已存云端」；之后 8 秒 0 个请求。`12-manual-save-sheet.png` |
 | 13 | 本机存储写满 | SIMULATED-PASS | `wx.setStorageSync` 改成抛 quota 错误：胶囊「本机未存」，toast「本地草稿保存失败，请检查存储空间」只弹一次。恢复后云端保存照常（create 990063）。`13-storage-full.png` |
 | 14 | CAS 冲突 | SIMULATED-PASS | 已存云端后，下一次 `v2/update` 被模拟回 `{code:500,msg:'路线配置已更新，请刷新后重试'}`：胶囊「云端未存」，toast「自动保存未成功：路线配置已更新，请刷新后重试」只弹一次；继续编辑 6 秒 0 次写入（已暂停）；手动「保存草稿」立即发出真实 update，内容是最新输入 →「已存云端」。`14-cas-conflict.png` |
-| 7/3 补 | 重开已存云端的草稿，不改内容 | **FAIL（F-2）** | 打开 990057（未修改）后约 2 秒发出一次多余的 `v2/update`，内容与云端相同。在 990058 上复现：重开前本机已有该主题信封，页面 `_localDraftRestored=true` 且没有 `_cloudSavedKey`，没有任何编辑就排了自动保存。`15-reopen-cloud-draft.png` |
+| 7/3 补 | 重开已存云端的草稿，不改内容 | ~~FAIL（F-2）~~ → **FIXED（`bc42f3b1`，复验 PASS，见 7.6）** | 打开 990057（未修改）后约 2 秒发出一次多余的 `v2/update`，内容与云端相同。在 990058 上复现：重开前本机已有该主题信封，页面 `_localDraftRestored=true` 且没有 `_cloudSavedKey`，没有任何编辑就排了自动保存。`15-reopen-cloud-draft.png` |
 
 逐步 JSON 证据：`lane-d-shots/devtools-evidence.json`（时间为每步内的相对毫秒）。
 
 ### 7.3 发现
 
-**F-2（FAIL，PR #463 引入，需要修）：重开已存云端的草稿会无编辑地再上传一次**
+**F-2（已修复：`bc42f3b1`，复验见 7.6）：重开已存云端的草稿会无编辑地再上传一次**
 - 现象：草稿保存成功后关掉，再打开同一份草稿，页面先提示「已恢复上次本地草稿」，然后约 2 秒后自动发 `v2/update`。服务端每次 update 都物理重建站点并把 `configVersion` +1，所以每次打开都会换站点编号、推进版本。
 - 根因：真机 / DevTools 的 `setData` 回调是异步的。`_runServerDraft.onSuccess` 换上回读版本时，`applyEditingTopic` → `_finishEditingDraftBootstrap` 的 adopted 分支会**同步**把 `_draftAutosaveReady` 设回 true，并删掉本机恢复稿。之后才执行的那批 setData 回调看到 ready=true 且是草稿 patch，于是又写回一份与云端相同的本机信封（同一机制也让空白新稿一打开就显示「已存本机」）。下次 `loadEditingTopic` 读到这份信封，按「本机恢复稿」处理：`_localDraftRestored=true`，不标已存云端，`_onDraftEdited` 排队上传。单测里 mock 的 `setData` 回调是同步的，所以没有暴露。
 - 修复位置：`chengyinhub-xcx/pages/publish/fabu/index.js` 的 `_finishEditingDraftBootstrap` adopted 分支，把 `this._draftAutosaveReady = true;` 放进一个 `setData({}, cb)` 回调里，让换版本产生的回调先在 ready=false 下跑完，不再回写信封。新稿 `onLoad` 尾部的 `_draftAutosaveReady = true` 同理。作为兜底，`loadEditingTopic` 成功分支在本机恢复稿与云端回读的 `_cloudDraftKey()` 相同时，应按「已存云端」处理并不排队。再补一条单测：用延迟执行回调的 `setData` 走一遍「保存 → 重开」，断言没有写请求。
@@ -157,7 +157,7 @@
 - 修复位置：同文件 `_onServerDraftFailed` 的这个换版本分支，套用发布成功路径的 `draftRevision !== this._draftContentRevision()` 判断（`_runServerDraft` 已有 `draftRevision`）。有后续修改时不换版本，只接上版本号并保持「已存本机」。
 
 **观察（不判失败）**
-- O-1：空白新稿、刚打开的已发布主题，加载后胶囊显示「已存本机」（与 F-2 同一机制）。内容确实在本机，但对用户是噪音；修 F-2 后会消失。
+- O-1：刚打开的已发布主题，加载后胶囊显示「已存本机」（与 F-2 同一机制）。修 F-2 后复验：加载后胶囊为空（`d3-s10`），已消失。
 - O-2：发布被拒后，页内错误条标题是 master 原有文案「这次还没有保存」，同时胶囊显示「已存云端」（草稿确实已存），两者口径冲突。建议发布阶段失败时错误条标题改成「还没有发布」（`index.wxml` 的 `slopes-submit-error`）。
 
 ### 7.4 需要真机或第二个账号的手工步骤
@@ -168,4 +168,26 @@
 - **F-2 修复后复验**：保存成功后关掉、重开同一草稿，10 秒内不应有任何 create/update，胶囊直接是「已存云端」，也不应提示「已恢复上次本地草稿」。
 
 ### 7.5 结论
-本轮执行的 14 + 1 项中，13 项 PASS 或 SIMULATED-PASS，1 项 NEEDS_USER_REAL_DEVICE（#6），1 项 **FAIL**（F-2：重开已存云端的草稿会无编辑地重复上传）。F-2 修好前 PR #463 不建议合入；F-1 和 O-2 建议一并处理。
+本轮执行的 14 + 1 项中，13 项 PASS 或 SIMULATED-PASS，1 项 NEEDS_USER_REAL_DEVICE（#6），1 项 FAIL（F-2）。F-2 已在 `bc42f3b1` 修复并复验通过（见 7.6）。F-1 与 O-2 是 master 原有行为 / 文案，留作后续，本 PR 不改。
+
+### 7.6 F-2 修复与复验（本地，2026-10-22）
+
+**修复**（`bc42f3b1`，只改 `pages/publish/fabu/index.js` 与 `tests/unit/fabu-cloud-autosave.test.js`）
+- 根因修复：`_installDraftAutosave` 的 setData 包装改为在**发起 setData 的那一刻**判定是否算草稿编辑（`draftEdit = _draftAutosaveReady && _isDraftPatch(patch)`）。回调执行时只在 `draftEdit && _draftAutosaveReady` 时写本机并标脏。回填和换上回读版本都是在 `_draftAutosaveReady=false` 时发起的，它们的异步回调不再回写恢复稿，也不再把草稿标脏。旧本地版本原本就是这样判定的。
+- 配套：这些异步回调过去也会「顺带」把恢复稿排进自动保存，现在改为显式处理。新增 `_markRestoredDraft`：恢复稿内容与云端已确认的内容（`_cloudLoadedKey`，在换上恢复稿之前记下）相同时，只标「已存云端」；不同时标「已存本机」并置排队标记，定时器和其它编辑一样由 setData 包装接力。用在三处：`loadEditingTopic` 读到恢复稿、冲突弹窗选「使用本地草稿」、旧草稿入口确认。加载和重试读取本身不直接调用保存，所以 `retryLoadEditingTopic` 在台账里不会多出写接口。
+- 单测：新增「F-2：…重开不编辑零写入，之后一次编辑只存一次」（用延迟执行的 setData 回调模拟真机）和「F-2 配套：恢复稿与云端不同才上传一次，相同不发请求」。负控：只回退包装那一行，F-2 用例变红。`fabu-cloud-autosave` 19/19；fabu-* / b02 / pro-editor-* / publish-* 共 779 个全部通过；全量 13493 个中通过 13492，唯一失败仍是 `action-ledger.test.js:1672` byte-exact 台账。
+- 子门禁（单跑）：js-scope-lint、ds-hardcode-gate --ci、undefined-token、wxss-selector、wxml-conditional、wxml-handler、js-orphan-handler、setdata-dead-field、a11y-tappable-name、a11y-tap-target、component-attr、ui-theme-unit --theme、verify:wechat-release 全部 rc=0；ui-integrity 仍只有 12 条 U4-DYNAMIC 行号漂移（24 violations）。
+- 需集成方再生成的计数（更新）：`action-ledger.json` controlCount 4947 → 4947，`fabu/index.wxml` 236 个 id 重编，56 条 handler 行号移动，没有新增或删除 handler，也没有新增写接口；`ui-integrity-baseline.js` 的 `fabu/index.js` U4-DYNAMIC 行号：758→849、1010→1105、2698→2806、3758→3872、4139→4253、5202→5316、5461→5575、6117→6231、6127→6241、6180→6294、6521→6635、8419→8601。
+
+**DevTools 复验**：全新 `git archive HEAD`（`bc42f3b1`）临时副本，安全措施同 7.1：config 写死 `http://127.0.0.1:8132`，`urlCheck:false`，每步断言 siteBaseUrl，非回环请求一律拦截（0 次），后端横幅仍为 RuoYi v3.9.0，uid 990044，自动化端口 9474。没有动其它项目窗口，没有关闭 IDE，每步结束 disconnect。
+
+| 核对 | 结果 | 证据 |
+|---|---|---|
+| 重开已存云端的草稿，不编辑，等 10 秒 | **PASS** | 新建并自动保存 990065 →「已存云端」→ 重开前本机没有该主题的恢复稿（0 份）→ `?id=990065` 重开：10 秒内只有 `state-keys`、`edit-detail` 两个读请求，**0 次 create/update**；胶囊一直是「已存云端」，`_localDraftRestored=false`。`d3-16-reopen-no-edit.png` |
+| 重开后一次真实编辑 | **PASS** | 改名后 **2025 ms** 发出唯一一次 `v2/update`（id 990065，`configVersion:"1"`，回包 200）；之后 6 秒没有再写；最终「已存云端」，标题为新名 |
+| #2 / #3 连续输入与静置 | **PASS** | 最后一次按键后 2030 ms 发出唯一一次 create（990066），输入期间 0 次写入，胶囊 已存本机→保存中→已存云端；静置 10 秒 0 个请求。`d3-02-autosaved-cloud.png` |
+| #10 已发布主题（SIMULATED） | **SIMULATED-PASS** | `edit-detail` 回包改为 `isDraft:false` 打开 990054：加载后胶囊为空（O-1 已消失），改名后 6 秒 0 次写入，不显示「保存草稿」按钮。`d3-10-published-no-autosave.png` |
+
+逐项 JSON：`lane-d-shots/devtools-evidence.json` 中的 `d3-s16`、`d3-s02_03`、`d3-s10`。本轮在 8132 测试库新增测试草稿 990065、990066。
+
+**仍为后续项（本 PR 不改）**：F-1（发布阶段失败用回读版本覆盖发布在途期间的编辑，master 原有路径）、O-2（发布被拒时错误条「这次还没有保存」与「已存云端」口径冲突）、#6 模板绑定的真机核对、7.4 中的真机 / 双账号 / 双设备步骤。
