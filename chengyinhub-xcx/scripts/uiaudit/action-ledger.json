@@ -843995,7 +843995,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-compass/index.js:304"
+        "staticSource": "pages/play/components/playkit-compass/index.js:297"
       }
     },
     {
@@ -844118,7 +844118,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-compass/index.js:235"
+        "staticSource": "pages/play/components/playkit-compass/index.js:228"
       }
     },
     {
@@ -844242,7 +844242,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-compass/index.js:300"
+        "staticSource": "pages/play/components/playkit-compass/index.js:293"
       }
     },
     {
@@ -844365,7 +844365,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-compass/index.js:182"
+        "staticSource": "pages/play/components/playkit-compass/index.js:175"
       }
     },
     {
@@ -852080,11 +852080,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-photocheck/index.js:204"
+        "staticSource": "pages/play/components/playkit-photocheck/index.js:187"
       }
     },
     {
-      "id": "pages/play/components/playkit-photocheck/index.wxml:33:bindtap:onShoot:1",
+      "id": "pages/play/components/playkit-photocheck/index.wxml:31:bindtap:onShoot:1",
       "route": "component:pages/play/components/playkit-photocheck/index",
       "hostRoutes": [
         "pages/play/index",
@@ -852166,7 +852166,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onShoot",
-        "line": 33,
+        "line": 31,
         "selectorHint": ".g-btn",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -852218,11 +852218,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-photocheck/index.js:119"
+        "staticSource": "pages/play/components/playkit-photocheck/index.js:102"
       }
     },
     {
-      "id": "pages/play/components/playkit-photocheck/index.wxml:43:binderror:onFrameError:2",
+      "id": "pages/play/components/playkit-photocheck/index.wxml:41:binderror:onFrameError:2",
       "route": "component:pages/play/components/playkit-photocheck/index",
       "hostRoutes": [
         "pages/play/index",
@@ -852304,7 +852304,7 @@
         "tag": "camera",
         "event": "binderror",
         "handler": "onFrameError",
-        "line": 43,
+        "line": 41,
         "selectorHint": ".pcv__cam",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -852356,11 +852356,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-photocheck/index.js:189"
+        "staticSource": "pages/play/components/playkit-photocheck/index.js:172"
       }
     },
     {
-      "id": "pages/play/components/playkit-photocheck/index.wxml:46:binderror:onOutlineError:3",
+      "id": "pages/play/components/playkit-photocheck/index.wxml:44:binderror:onOutlineError:3",
       "route": "component:pages/play/components/playkit-photocheck/index",
       "hostRoutes": [
         "pages/play/index",
@@ -852439,7 +852439,7 @@
         "tag": "image",
         "event": "binderror",
         "handler": "onOutlineError",
-        "line": 46,
+        "line": 44,
         "selectorHint": ".pcv__outline",
         "visibleCondition": "{{!outlineFailed}}",
         "disabledCondition": null,
@@ -852479,11 +852479,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-photocheck/index.js:186"
+        "staticSource": "pages/play/components/playkit-photocheck/index.js:169"
       }
     },
     {
-      "id": "pages/play/components/playkit-photocheck/index.wxml:49:bindtap:onFrameShutter:4",
+      "id": "pages/play/components/playkit-photocheck/index.wxml:47:bindtap:onFrameShutter:4",
       "route": "component:pages/play/components/playkit-photocheck/index",
       "hostRoutes": [
         "pages/play/index",
@@ -852566,7 +852566,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onFrameShutter",
-        "line": 49,
+        "line": 47,
         "selectorHint": ".pcv__shutter",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -852621,11 +852621,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-photocheck/index.js:149"
+        "staticSource": "pages/play/components/playkit-photocheck/index.js:132"
       }
     },
     {
-      "id": "pages/play/components/playkit-photocheck/index.wxml:52:bindtap:onFrameCancel:5",
+      "id": "pages/play/components/playkit-photocheck/index.wxml:50:bindtap:onFrameCancel:5",
       "route": "component:pages/play/components/playkit-photocheck/index",
       "hostRoutes": [
         "pages/play/index",
@@ -852704,7 +852704,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onFrameCancel",
-        "line": 52,
+        "line": 50,
         "selectorHint": ".pcv__cancel",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -852744,7 +852744,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-photocheck/index.js:199"
+        "staticSource": "pages/play/components/playkit-photocheck/index.js:182"
       }
     },
     {
@@ -855517,7 +855517,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit-quiethold/index.wxml:20:bindtap:onStart:5",
+      "id": "pages/play/components/playkit-quiethold/index.wxml:17:bindtap:onStart:5",
       "route": "component:pages/play/components/playkit-quiethold/index",
       "hostRoutes": [
         "pages/play/index",
@@ -855596,7 +855596,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onStart",
-        "line": 20,
+        "line": 17,
         "selectorHint": ".qt__b",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -855646,7 +855646,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-quiethold/index.js:123"
+        "staticSource": "pages/play/components/playkit-quiethold/index.js:114"
       }
     },
     {
@@ -855769,7 +855769,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-quiethold/index.js:251"
+        "staticSource": "pages/play/components/playkit-quiethold/index.js:237"
       }
     },
     {
@@ -855902,7 +855902,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-quiethold/index.js:206"
+        "staticSource": "pages/play/components/playkit-quiethold/index.js:196"
       }
     },
     {
@@ -856026,7 +856026,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-quiethold/index.js:201"
+        "staticSource": "pages/play/components/playkit-quiethold/index.js:191"
       }
     },
     {
@@ -856159,7 +856159,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-quiethold/index.js:216"
+        "staticSource": "pages/play/components/playkit-quiethold/index.js:205"
       }
     },
     {
@@ -856283,7 +856283,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-quiethold/index.js:247"
+        "staticSource": "pages/play/components/playkit-quiethold/index.js:233"
       }
     },
     {
@@ -858620,7 +858620,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit-scan/index.wxml:105:bindtap:onArGiveUp:12",
+      "id": "pages/play/components/playkit-scan/index.wxml:102:bindtap:onArGiveUp:12",
       "route": "component:pages/play/components/playkit-scan/index",
       "hostRoutes": [
         "pages/play/index",
@@ -858699,7 +858699,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onArGiveUp",
-        "line": 105,
+        "line": 102,
         "selectorHint": ".sc__ar-giveup",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -858739,11 +858739,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-scan/index.js:199"
+        "staticSource": "pages/play/components/playkit-scan/index.js:196"
       }
     },
     {
-      "id": "pages/play/components/playkit-scan/index.wxml:17:bindtap:onScan:1",
+      "id": "pages/play/components/playkit-scan/index.wxml:15:bindtap:onScan:1",
       "route": "component:pages/play/components/playkit-scan/index",
       "hostRoutes": [
         "pages/play/index",
@@ -858825,7 +858825,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onScan",
-        "line": 17,
+        "line": 15,
         "selectorHint": ".sc__frame",
         "visibleCondition": "{{kindKey !== '显形'}}",
         "disabledCondition": null,
@@ -858877,11 +858877,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-scan/index.js:130"
+        "staticSource": "pages/play/components/playkit-scan/index.js:127"
       }
     },
     {
-      "id": "pages/play/components/playkit-scan/index.wxml:30:bindtap:onPlay:2",
+      "id": "pages/play/components/playkit-scan/index.wxml:28:bindtap:onPlay:2",
       "route": "component:pages/play/components/playkit-scan/index",
       "hostRoutes": [
         "pages/play/index",
@@ -858960,7 +858960,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onPlay",
-        "line": 30,
+        "line": 28,
         "selectorHint": ".sc__bub",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -859000,7 +859000,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-scan/index.js:228"
+        "staticSource": "pages/play/components/playkit-scan/index.js:225"
       }
     },
     {
@@ -859124,11 +859124,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-scan/index.js:232"
+        "staticSource": "pages/play/components/playkit-scan/index.js:229"
       }
     },
     {
-      "id": "pages/play/components/playkit-scan/index.wxml:55:binderror:onCamErr:4",
+      "id": "pages/play/components/playkit-scan/index.wxml:53:binderror:onCamErr:4",
       "route": "component:pages/play/components/playkit-scan/index",
       "hostRoutes": [
         "pages/play/index",
@@ -859207,7 +859207,7 @@
         "tag": "camera",
         "event": "binderror",
         "handler": "onCamErr",
-        "line": 55,
+        "line": 53,
         "selectorHint": ".sc__cam-el",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -859247,11 +859247,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-scan/index.js:221"
+        "staticSource": "pages/play/components/playkit-scan/index.js:218"
       }
     },
     {
-      "id": "pages/play/components/playkit-scan/index.wxml:55:bindscancode:onScanCode:3",
+      "id": "pages/play/components/playkit-scan/index.wxml:53:bindscancode:onScanCode:3",
       "route": "component:pages/play/components/playkit-scan/index",
       "hostRoutes": [
         "pages/play/index",
@@ -859330,7 +859330,7 @@
         "tag": "camera",
         "event": "bindscancode",
         "handler": "onScanCode",
-        "line": 55,
+        "line": 53,
         "selectorHint": ".sc__cam-el",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -859371,11 +859371,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-scan/index.js:147"
+        "staticSource": "pages/play/components/playkit-scan/index.js:144"
       }
     },
     {
-      "id": "pages/play/components/playkit-scan/index.wxml:82:bindtap:onOpenCamSetting:5",
+      "id": "pages/play/components/playkit-scan/index.wxml:79:bindtap:onOpenCamSetting:5",
       "route": "component:pages/play/components/playkit-scan/index",
       "hostRoutes": [
         "pages/play/index",
@@ -859457,7 +859457,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onOpenCamSetting",
-        "line": 82,
+        "line": 79,
         "selectorHint": ".sc__act",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -859507,11 +859507,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-scan/index.js:225"
+        "staticSource": "pages/play/components/playkit-scan/index.js:222"
       }
     },
     {
-      "id": "pages/play/components/playkit-scan/index.wxml:84:bindtap:onScan:6",
+      "id": "pages/play/components/playkit-scan/index.wxml:81:bindtap:onScan:6",
       "route": "component:pages/play/components/playkit-scan/index",
       "hostRoutes": [
         "pages/play/index",
@@ -859593,7 +859593,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onScan",
-        "line": 84,
+        "line": 81,
         "selectorHint": ".sc__act",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -859645,11 +859645,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-scan/index.js:130"
+        "staticSource": "pages/play/components/playkit-scan/index.js:127"
       }
     },
     {
-      "id": "pages/play/components/playkit-scan/index.wxml:97:bind:arerror:onArError:7",
+      "id": "pages/play/components/playkit-scan/index.wxml:94:bind:arerror:onArError:7",
       "route": "component:pages/play/components/playkit-scan/index",
       "hostRoutes": [
         "pages/play/index",
@@ -859728,7 +859728,7 @@
         "tag": "cy-scan-ar",
         "event": "bind:arerror",
         "handler": "onArError",
-        "line": 97,
+        "line": 94,
         "selectorHint": ".sc__ar",
         "visibleCondition": "{{arLive}}",
         "disabledCondition": null,
@@ -859768,11 +859768,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-scan/index.js:197"
+        "staticSource": "pages/play/components/playkit-scan/index.js:194"
       }
     },
     {
-      "id": "pages/play/components/playkit-scan/index.wxml:97:bind:found:onArFound:8",
+      "id": "pages/play/components/playkit-scan/index.wxml:94:bind:found:onArFound:8",
       "route": "component:pages/play/components/playkit-scan/index",
       "hostRoutes": [
         "pages/play/index",
@@ -859851,7 +859851,7 @@
         "tag": "cy-scan-ar",
         "event": "bind:found",
         "handler": "onArFound",
-        "line": 97,
+        "line": 94,
         "selectorHint": ".sc__ar",
         "visibleCondition": "{{arLive}}",
         "disabledCondition": null,
@@ -859891,11 +859891,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-scan/index.js:204"
+        "staticSource": "pages/play/components/playkit-scan/index.js:201"
       }
     },
     {
-      "id": "pages/play/components/playkit-scan/index.wxml:98:bind:landed:onArLanded:10",
+      "id": "pages/play/components/playkit-scan/index.wxml:95:bind:landed:onArLanded:10",
       "route": "component:pages/play/components/playkit-scan/index",
       "hostRoutes": [
         "pages/play/index",
@@ -859974,7 +859974,7 @@
         "tag": "cy-scan-ar",
         "event": "bind:landed",
         "handler": "onArLanded",
-        "line": 98,
+        "line": 95,
         "selectorHint": ".sc__ar",
         "visibleCondition": "{{arLive}}",
         "disabledCondition": null,
@@ -860015,11 +860015,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-scan/index.js:214"
+        "staticSource": "pages/play/components/playkit-scan/index.js:211"
       }
     },
     {
-      "id": "pages/play/components/playkit-scan/index.wxml:98:bind:placed:onArPlaced:9",
+      "id": "pages/play/components/playkit-scan/index.wxml:95:bind:placed:onArPlaced:9",
       "route": "component:pages/play/components/playkit-scan/index",
       "hostRoutes": [
         "pages/play/index",
@@ -860098,7 +860098,7 @@
         "tag": "cy-scan-ar",
         "event": "bind:placed",
         "handler": "onArPlaced",
-        "line": 98,
+        "line": 95,
         "selectorHint": ".sc__ar",
         "visibleCondition": "{{arLive}}",
         "disabledCondition": null,
@@ -860138,11 +860138,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-scan/index.js:209"
+        "staticSource": "pages/play/components/playkit-scan/index.js:206"
       }
     },
     {
-      "id": "pages/play/components/playkit-scan/index.wxml:98:bind:tracked:onArTracked:11",
+      "id": "pages/play/components/playkit-scan/index.wxml:95:bind:tracked:onArTracked:11",
       "route": "component:pages/play/components/playkit-scan/index",
       "hostRoutes": [
         "pages/play/index",
@@ -860221,7 +860221,7 @@
         "tag": "cy-scan-ar",
         "event": "bind:tracked",
         "handler": "onArTracked",
-        "line": 98,
+        "line": 95,
         "selectorHint": ".sc__ar",
         "visibleCondition": "{{arLive}}",
         "disabledCondition": null,
@@ -860261,11 +860261,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-scan/index.js:215"
+        "staticSource": "pages/play/components/playkit-scan/index.js:212"
       }
     },
     {
-      "id": "pages/play/components/playkit-shout/index.wxml:17:bindtap:onStart:5",
+      "id": "pages/play/components/playkit-shout/index.wxml:16:bindtap:onStart:5",
       "route": "component:pages/play/components/playkit-shout/index",
       "hostRoutes": [
         "pages/play/index",
@@ -860344,7 +860344,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onStart",
-        "line": 17,
+        "line": 16,
         "selectorHint": ".sh__b",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -860394,7 +860394,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-shout/index.js:110"
+        "staticSource": "pages/play/components/playkit-shout/index.js:105"
       }
     },
     {
@@ -860517,7 +860517,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-shout/index.js:215"
+        "staticSource": "pages/play/components/playkit-shout/index.js:208"
       }
     },
     {
@@ -860650,7 +860650,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-shout/index.js:175"
+        "staticSource": "pages/play/components/playkit-shout/index.js:170"
       }
     },
     {
@@ -860774,7 +860774,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-shout/index.js:170"
+        "staticSource": "pages/play/components/playkit-shout/index.js:165"
       }
     },
     {
@@ -860907,7 +860907,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-shout/index.js:182"
+        "staticSource": "pages/play/components/playkit-shout/index.js:177"
       }
     },
     {
@@ -861031,7 +861031,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-shout/index.js:214"
+        "staticSource": "pages/play/components/playkit-shout/index.js:207"
       }
     },
     {
@@ -862891,7 +862891,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit-stopwatch/index.wxml:30:bindtap:onStart:3",
+      "id": "pages/play/components/playkit-stopwatch/index.wxml:29:bindtap:onStart:3",
       "route": "component:pages/play/components/playkit-stopwatch/index",
       "hostRoutes": [
         "pages/play/index",
@@ -862970,7 +862970,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onStart",
-        "line": 30,
+        "line": 29,
         "selectorHint": ".sw__btn",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -863010,11 +863010,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-stopwatch/index.js:104"
+        "staticSource": "pages/play/components/playkit-stopwatch/index.js:97"
       }
     },
     {
-      "id": "pages/play/components/playkit-stopwatch/index.wxml:37:bindtap:onStop:4",
+      "id": "pages/play/components/playkit-stopwatch/index.wxml:36:bindtap:onStop:4",
       "route": "component:pages/play/components/playkit-stopwatch/index",
       "hostRoutes": [
         "pages/play/index",
@@ -863093,7 +863093,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onStop",
-        "line": 37,
+        "line": 36,
         "selectorHint": ".sw__mid",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -863133,11 +863133,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-stopwatch/index.js:147"
+        "staticSource": "pages/play/components/playkit-stopwatch/index.js:138"
       }
     },
     {
-      "id": "pages/play/components/playkit-stopwatch/index.wxml:62:bindtap:onStop:5",
+      "id": "pages/play/components/playkit-stopwatch/index.wxml:61:bindtap:onStop:5",
       "route": "component:pages/play/components/playkit-stopwatch/index",
       "hostRoutes": [
         "pages/play/index",
@@ -863216,7 +863216,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onStop",
-        "line": 62,
+        "line": 61,
         "selectorHint": ".sw__btn",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -863256,7 +863256,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-stopwatch/index.js:147"
+        "staticSource": "pages/play/components/playkit-stopwatch/index.js:138"
       }
     },
     {
@@ -863380,7 +863380,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-stopwatch/index.js:183"
+        "staticSource": "pages/play/components/playkit-stopwatch/index.js:173"
       }
     },
     {
@@ -863503,7 +863503,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-stopwatch/index.js:109"
+        "staticSource": "pages/play/components/playkit-stopwatch/index.js:102"
       }
     },
     {
@@ -863627,11 +863627,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-stopwatch/index.js:182"
+        "staticSource": "pages/play/components/playkit-stopwatch/index.js:172"
       }
     },
     {
-      "id": "pages/play/components/playkit-stopwatch/index.wxml:71:bindtap:onPause:6",
+      "id": "pages/play/components/playkit-stopwatch/index.wxml:70:bindtap:onPause:6",
       "route": "component:pages/play/components/playkit-stopwatch/index",
       "hostRoutes": [
         "pages/play/index",
@@ -863710,7 +863710,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onPause",
-        "line": 71,
+        "line": 70,
         "selectorHint": ".sw__ico",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -863750,7 +863750,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-stopwatch/index.js:133"
+        "staticSource": "pages/play/components/playkit-stopwatch/index.js:124"
       }
     },
     {
@@ -865851,7 +865851,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:104:bind:close:onClose:50",
+      "id": "pages/play/components/playkit/index.wxml:101:bind:close:onClose:50",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -865914,7 +865914,7 @@
         "tag": "cy-playkit-shout",
         "event": "bind:close",
         "handler": "onClose",
-        "line": 104,
+        "line": 101,
         "selectorHint": "cy-playkit-shout[bind:close]",
         "visibleCondition": "{{kit.type === 'shout'}}",
         "disabledCondition": null,
@@ -865959,7 +865959,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:104:bind:micdenied:onMicDenied:49",
+      "id": "pages/play/components/playkit/index.wxml:101:bind:micdenied:onMicDenied:49",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -866022,7 +866022,7 @@
         "tag": "cy-playkit-shout",
         "event": "bind:micdenied",
         "handler": "onMicDenied",
-        "line": 104,
+        "line": 101,
         "selectorHint": "cy-playkit-shout[bind:micdenied]",
         "visibleCondition": "{{kit.type === 'shout'}}",
         "disabledCondition": null,
@@ -866067,7 +866067,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:104:bind:start:onStart:46",
+      "id": "pages/play/components/playkit/index.wxml:101:bind:start:onStart:46",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -866130,7 +866130,7 @@
         "tag": "cy-playkit-shout",
         "event": "bind:start",
         "handler": "onStart",
-        "line": 104,
+        "line": 101,
         "selectorHint": "cy-playkit-shout[bind:start]",
         "visibleCondition": "{{kit.type === 'shout'}}",
         "disabledCondition": null,
@@ -866175,7 +866175,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:104:bind:submit:onSubmit:47",
+      "id": "pages/play/components/playkit/index.wxml:101:bind:submit:onSubmit:47",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -866238,7 +866238,7 @@
         "tag": "cy-playkit-shout",
         "event": "bind:submit",
         "handler": "onSubmit",
-        "line": 104,
+        "line": 101,
         "selectorHint": "cy-playkit-shout[bind:submit]",
         "visibleCondition": "{{kit.type === 'shout'}}",
         "disabledCondition": null,
@@ -866283,7 +866283,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:104:bind:verdict:onVerdict:48",
+      "id": "pages/play/components/playkit/index.wxml:101:bind:verdict:onVerdict:48",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -866346,7 +866346,7 @@
         "tag": "cy-playkit-shout",
         "event": "bind:verdict",
         "handler": "onVerdict",
-        "line": 104,
+        "line": 101,
         "selectorHint": "cy-playkit-shout[bind:verdict]",
         "visibleCondition": "{{kit.type === 'shout'}}",
         "disabledCondition": null,
@@ -866391,7 +866391,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:108:bind:close:onClose:53",
+      "id": "pages/play/components/playkit/index.wxml:105:bind:close:onClose:53",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -866454,7 +866454,7 @@
         "tag": "cy-playkit-countdown",
         "event": "bind:close",
         "handler": "onClose",
-        "line": 108,
+        "line": 105,
         "selectorHint": "cy-playkit-countdown[bind:close]",
         "visibleCondition": "{{kit.type === 'countdown'}}",
         "disabledCondition": null,
@@ -866499,7 +866499,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:108:bind:finish:onFinish:52",
+      "id": "pages/play/components/playkit/index.wxml:105:bind:finish:onFinish:52",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -866562,7 +866562,7 @@
         "tag": "cy-playkit-countdown",
         "event": "bind:finish",
         "handler": "onFinish",
-        "line": 108,
+        "line": 105,
         "selectorHint": "cy-playkit-countdown[bind:finish]",
         "visibleCondition": "{{kit.type === 'countdown'}}",
         "disabledCondition": null,
@@ -866607,7 +866607,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:108:bind:start:onStart:51",
+      "id": "pages/play/components/playkit/index.wxml:105:bind:start:onStart:51",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -866670,7 +866670,7 @@
         "tag": "cy-playkit-countdown",
         "event": "bind:start",
         "handler": "onStart",
-        "line": 108,
+        "line": 105,
         "selectorHint": "cy-playkit-countdown[bind:start]",
         "visibleCondition": "{{kit.type === 'countdown'}}",
         "disabledCondition": null,
@@ -866715,7 +866715,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:114:bind:close:onClose:57",
+      "id": "pages/play/components/playkit/index.wxml:110:bind:close:onClose:57",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -866778,7 +866778,7 @@
         "tag": "cy-playkit-stopwatch",
         "event": "bind:close",
         "handler": "onClose",
-        "line": 114,
+        "line": 110,
         "selectorHint": "cy-playkit-stopwatch[bind:close]",
         "visibleCondition": "{{kit.type === 'stopwatch'}}",
         "disabledCondition": null,
@@ -866823,7 +866823,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:114:bind:start:onStart:54",
+      "id": "pages/play/components/playkit/index.wxml:110:bind:start:onStart:54",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -866886,7 +866886,7 @@
         "tag": "cy-playkit-stopwatch",
         "event": "bind:start",
         "handler": "onStart",
-        "line": 114,
+        "line": 110,
         "selectorHint": "cy-playkit-stopwatch[bind:start]",
         "visibleCondition": "{{kit.type === 'stopwatch'}}",
         "disabledCondition": null,
@@ -866931,7 +866931,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:114:bind:submit:onSubmit:55",
+      "id": "pages/play/components/playkit/index.wxml:110:bind:submit:onSubmit:55",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -866994,7 +866994,7 @@
         "tag": "cy-playkit-stopwatch",
         "event": "bind:submit",
         "handler": "onSubmit",
-        "line": 114,
+        "line": 110,
         "selectorHint": "cy-playkit-stopwatch[bind:submit]",
         "visibleCondition": "{{kit.type === 'stopwatch'}}",
         "disabledCondition": null,
@@ -867039,7 +867039,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:114:bind:verdict:onVerdict:56",
+      "id": "pages/play/components/playkit/index.wxml:110:bind:verdict:onVerdict:56",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -867102,7 +867102,7 @@
         "tag": "cy-playkit-stopwatch",
         "event": "bind:verdict",
         "handler": "onVerdict",
-        "line": 114,
+        "line": 110,
         "selectorHint": "cy-playkit-stopwatch[bind:verdict]",
         "visibleCondition": "{{kit.type === 'stopwatch'}}",
         "disabledCondition": null,
@@ -867255,7 +867255,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:126:bind:audio:onAudio:60",
+      "id": "pages/play/components/playkit/index.wxml:122:bind:audio:onAudio:60",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -867318,7 +867318,7 @@
         "tag": "cy-playkit-qa",
         "event": "bind:audio",
         "handler": "onAudio",
-        "line": 126,
+        "line": 122,
         "selectorHint": "cy-playkit-qa[bind:audio]",
         "visibleCondition": "{{kit.type === 'qa'}}",
         "disabledCondition": null,
@@ -867363,7 +867363,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:126:bind:shoot:onShoot:59",
+      "id": "pages/play/components/playkit/index.wxml:122:bind:shoot:onShoot:59",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -867426,7 +867426,7 @@
         "tag": "cy-playkit-qa",
         "event": "bind:shoot",
         "handler": "onShoot",
-        "line": 126,
+        "line": 122,
         "selectorHint": "cy-playkit-qa[bind:shoot]",
         "visibleCondition": "{{kit.type === 'qa'}}",
         "disabledCondition": null,
@@ -867471,7 +867471,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:126:bind:submit:onSubmit:58",
+      "id": "pages/play/components/playkit/index.wxml:122:bind:submit:onSubmit:58",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -867534,7 +867534,7 @@
         "tag": "cy-playkit-qa",
         "event": "bind:submit",
         "handler": "onSubmit",
-        "line": 126,
+        "line": 122,
         "selectorHint": "cy-playkit-qa[bind:submit]",
         "visibleCondition": "{{kit.type === 'qa'}}",
         "disabledCondition": null,
@@ -867579,7 +867579,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:127:bind:continue:onContinue:61",
+      "id": "pages/play/components/playkit/index.wxml:123:bind:continue:onContinue:61",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -867642,7 +867642,7 @@
         "tag": "cy-playkit-qa",
         "event": "bind:continue",
         "handler": "onContinue",
-        "line": 127,
+        "line": 123,
         "selectorHint": "cy-playkit-qa[bind:continue]",
         "visibleCondition": "{{kit.type === 'qa'}}",
         "disabledCondition": null,
@@ -867687,7 +867687,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:128:bind:close:onClose:63",
+      "id": "pages/play/components/playkit/index.wxml:124:bind:close:onClose:63",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -867750,7 +867750,7 @@
         "tag": "cy-playkit-qa",
         "event": "bind:close",
         "handler": "onClose",
-        "line": 128,
+        "line": 124,
         "selectorHint": "cy-playkit-qa[bind:close]",
         "visibleCondition": "{{kit.type === 'qa'}}",
         "disabledCondition": null,
@@ -867795,7 +867795,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:128:bind:verdict:onVerdict:62",
+      "id": "pages/play/components/playkit/index.wxml:124:bind:verdict:onVerdict:62",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -867858,7 +867858,7 @@
         "tag": "cy-playkit-qa",
         "event": "bind:verdict",
         "handler": "onVerdict",
-        "line": 128,
+        "line": 124,
         "selectorHint": "cy-playkit-qa[bind:verdict]",
         "visibleCondition": "{{kit.type === 'qa'}}",
         "disabledCondition": null,
@@ -867903,7 +867903,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:133:bind:choose:onChoose:64",
+      "id": "pages/play/components/playkit/index.wxml:129:bind:choose:onChoose:64",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -867966,7 +867966,7 @@
         "tag": "cy-playkit-branch",
         "event": "bind:choose",
         "handler": "onChoose",
-        "line": 133,
+        "line": 129,
         "selectorHint": "cy-playkit-branch[bind:choose]",
         "visibleCondition": "{{kit.type === 'branch'}}",
         "disabledCondition": null,
@@ -868011,7 +868011,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:133:bind:close:onClose:66",
+      "id": "pages/play/components/playkit/index.wxml:129:bind:close:onClose:66",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -868074,7 +868074,7 @@
         "tag": "cy-playkit-branch",
         "event": "bind:close",
         "handler": "onClose",
-        "line": 133,
+        "line": 129,
         "selectorHint": "cy-playkit-branch[bind:close]",
         "visibleCondition": "{{kit.type === 'branch'}}",
         "disabledCondition": null,
@@ -868119,7 +868119,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:133:bind:verdict:onVerdict:65",
+      "id": "pages/play/components/playkit/index.wxml:129:bind:verdict:onVerdict:65",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -868182,7 +868182,7 @@
         "tag": "cy-playkit-branch",
         "event": "bind:verdict",
         "handler": "onVerdict",
-        "line": 133,
+        "line": 129,
         "selectorHint": "cy-playkit-branch[bind:verdict]",
         "visibleCondition": "{{kit.type === 'branch'}}",
         "disabledCondition": null,
@@ -868227,7 +868227,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:139:bind:close:onClose:69",
+      "id": "pages/play/components/playkit/index.wxml:135:bind:close:onClose:69",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -868290,7 +868290,7 @@
         "tag": "cy-playkit-estimate",
         "event": "bind:close",
         "handler": "onClose",
-        "line": 139,
+        "line": 135,
         "selectorHint": "cy-playkit-estimate[bind:close]",
         "visibleCondition": "{{kit.type === 'estimate'}}",
         "disabledCondition": null,
@@ -868335,7 +868335,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:139:bind:submit:onSubmit:67",
+      "id": "pages/play/components/playkit/index.wxml:135:bind:submit:onSubmit:67",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -868398,7 +868398,7 @@
         "tag": "cy-playkit-estimate",
         "event": "bind:submit",
         "handler": "onSubmit",
-        "line": 139,
+        "line": 135,
         "selectorHint": "cy-playkit-estimate[bind:submit]",
         "visibleCondition": "{{kit.type === 'estimate'}}",
         "disabledCondition": null,
@@ -868443,7 +868443,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:139:bind:verdict:onVerdict:68",
+      "id": "pages/play/components/playkit/index.wxml:135:bind:verdict:onVerdict:68",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -868506,7 +868506,7 @@
         "tag": "cy-playkit-estimate",
         "event": "bind:verdict",
         "handler": "onVerdict",
-        "line": 139,
+        "line": 135,
         "selectorHint": "cy-playkit-estimate[bind:verdict]",
         "visibleCondition": "{{kit.type === 'estimate'}}",
         "disabledCondition": null,
@@ -868551,7 +868551,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:144:bind:close:onClose:72",
+      "id": "pages/play/components/playkit/index.wxml:140:bind:close:onClose:72",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -868614,7 +868614,7 @@
         "tag": "cy-playkit-pricepair",
         "event": "bind:close",
         "handler": "onClose",
-        "line": 144,
+        "line": 140,
         "selectorHint": "cy-playkit-pricepair[bind:close]",
         "visibleCondition": "{{kit.type === 'pricepair'}}",
         "disabledCondition": null,
@@ -868659,7 +868659,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:144:bind:submit:onSubmit:70",
+      "id": "pages/play/components/playkit/index.wxml:140:bind:submit:onSubmit:70",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -868722,7 +868722,7 @@
         "tag": "cy-playkit-pricepair",
         "event": "bind:submit",
         "handler": "onSubmit",
-        "line": 144,
+        "line": 140,
         "selectorHint": "cy-playkit-pricepair[bind:submit]",
         "visibleCondition": "{{kit.type === 'pricepair'}}",
         "disabledCondition": null,
@@ -868767,7 +868767,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:144:bind:verdict:onVerdict:71",
+      "id": "pages/play/components/playkit/index.wxml:140:bind:verdict:onVerdict:71",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -868830,7 +868830,7 @@
         "tag": "cy-playkit-pricepair",
         "event": "bind:verdict",
         "handler": "onVerdict",
-        "line": 144,
+        "line": 140,
         "selectorHint": "cy-playkit-pricepair[bind:verdict]",
         "visibleCondition": "{{kit.type === 'pricepair'}}",
         "disabledCondition": null,
@@ -868875,7 +868875,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:150:bind:close:onClose:75",
+      "id": "pages/play/components/playkit/index.wxml:146:bind:close:onClose:75",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -868938,7 +868938,7 @@
         "tag": "cy-playkit-hidden",
         "event": "bind:close",
         "handler": "onClose",
-        "line": 150,
+        "line": 146,
         "selectorHint": "cy-playkit-hidden[bind:close]",
         "visibleCondition": "{{kit.type === 'hidden'}}",
         "disabledCondition": null,
@@ -868983,7 +868983,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:150:bind:submit:onSubmit:73",
+      "id": "pages/play/components/playkit/index.wxml:146:bind:submit:onSubmit:73",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -869046,7 +869046,7 @@
         "tag": "cy-playkit-hidden",
         "event": "bind:submit",
         "handler": "onSubmit",
-        "line": 150,
+        "line": 146,
         "selectorHint": "cy-playkit-hidden[bind:submit]",
         "visibleCondition": "{{kit.type === 'hidden'}}",
         "disabledCondition": null,
@@ -869091,7 +869091,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:150:bind:verdict:onVerdict:74",
+      "id": "pages/play/components/playkit/index.wxml:146:bind:verdict:onVerdict:74",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -869154,7 +869154,7 @@
         "tag": "cy-playkit-hidden",
         "event": "bind:verdict",
         "handler": "onVerdict",
-        "line": 150,
+        "line": 146,
         "selectorHint": "cy-playkit-hidden[bind:verdict]",
         "visibleCondition": "{{kit.type === 'hidden'}}",
         "disabledCondition": null,
@@ -869199,7 +869199,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:157:bind:close:onClose:77",
+      "id": "pages/play/components/playkit/index.wxml:153:bind:close:onClose:77",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -869262,7 +869262,7 @@
         "tag": "cy-playkit-predict",
         "event": "bind:close",
         "handler": "onClose",
-        "line": 157,
+        "line": 153,
         "selectorHint": "cy-playkit-predict[bind:close]",
         "visibleCondition": "{{kit.type === 'predict'}}",
         "disabledCondition": null,
@@ -869307,7 +869307,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:157:bind:submit:onSubmit:76",
+      "id": "pages/play/components/playkit/index.wxml:153:bind:submit:onSubmit:76",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -869370,7 +869370,7 @@
         "tag": "cy-playkit-predict",
         "event": "bind:submit",
         "handler": "onSubmit",
-        "line": 157,
+        "line": 153,
         "selectorHint": "cy-playkit-predict[bind:submit]",
         "visibleCondition": "{{kit.type === 'predict'}}",
         "disabledCondition": null,
@@ -869415,7 +869415,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:162:bind:close:onClose:80",
+      "id": "pages/play/components/playkit/index.wxml:158:bind:close:onClose:80",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -869478,7 +869478,7 @@
         "tag": "cy-playkit-random",
         "event": "bind:close",
         "handler": "onClose",
-        "line": 162,
+        "line": 158,
         "selectorHint": "cy-playkit-random[bind:close]",
         "visibleCondition": "{{kit.type === 'random'}}",
         "disabledCondition": null,
@@ -869523,7 +869523,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:162:bind:draw:onDraw:78",
+      "id": "pages/play/components/playkit/index.wxml:158:bind:draw:onDraw:78",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -869586,7 +869586,7 @@
         "tag": "cy-playkit-random",
         "event": "bind:draw",
         "handler": "onDraw",
-        "line": 162,
+        "line": 158,
         "selectorHint": "cy-playkit-random[bind:draw]",
         "visibleCondition": "{{kit.type === 'random'}}",
         "disabledCondition": null,
@@ -869631,7 +869631,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:162:bind:drawn:onDrawn:79",
+      "id": "pages/play/components/playkit/index.wxml:158:bind:drawn:onDrawn:79",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -869694,7 +869694,7 @@
         "tag": "cy-playkit-random",
         "event": "bind:drawn",
         "handler": "onDrawn",
-        "line": 162,
+        "line": 158,
         "selectorHint": "cy-playkit-random[bind:drawn]",
         "visibleCondition": "{{kit.type === 'random'}}",
         "disabledCondition": null,
@@ -869739,7 +869739,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:168:bind:close:onClose:82",
+      "id": "pages/play/components/playkit/index.wxml:164:bind:close:onClose:82",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -869802,7 +869802,7 @@
         "tag": "cy-playkit-bingo",
         "event": "bind:close",
         "handler": "onClose",
-        "line": 168,
+        "line": 164,
         "selectorHint": "cy-playkit-bingo[bind:close]",
         "visibleCondition": "{{kit.type === 'bingo'}}",
         "disabledCondition": null,
@@ -869847,7 +869847,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:168:bind:verdict:onVerdict:81",
+      "id": "pages/play/components/playkit/index.wxml:164:bind:verdict:onVerdict:81",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -869910,7 +869910,7 @@
         "tag": "cy-playkit-bingo",
         "event": "bind:verdict",
         "handler": "onVerdict",
-        "line": 168,
+        "line": 164,
         "selectorHint": "cy-playkit-bingo[bind:verdict]",
         "visibleCondition": "{{kit.type === 'bingo'}}",
         "disabledCondition": null,
@@ -869955,7 +869955,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:175:bind:audio:onAudio:84",
+      "id": "pages/play/components/playkit/index.wxml:171:bind:audio:onAudio:84",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -870018,7 +870018,7 @@
         "tag": "cy-playkit-scan",
         "event": "bind:audio",
         "handler": "onAudio",
-        "line": 175,
+        "line": 171,
         "selectorHint": "cy-playkit-scan[bind:audio]",
         "visibleCondition": "{{kit.type === 'scan'}}",
         "disabledCondition": null,
@@ -870063,7 +870063,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:175:bind:close:onClose:85",
+      "id": "pages/play/components/playkit/index.wxml:171:bind:close:onClose:85",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -870126,7 +870126,7 @@
         "tag": "cy-playkit-scan",
         "event": "bind:close",
         "handler": "onClose",
-        "line": 175,
+        "line": 171,
         "selectorHint": "cy-playkit-scan[bind:close]",
         "visibleCondition": "{{kit.type === 'scan'}}",
         "disabledCondition": null,
@@ -870171,7 +870171,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:175:bind:scanned:onScanned:83",
+      "id": "pages/play/components/playkit/index.wxml:171:bind:scanned:onScanned:83",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -870234,7 +870234,7 @@
         "tag": "cy-playkit-scan",
         "event": "bind:scanned",
         "handler": "onScanned",
-        "line": 175,
+        "line": 171,
         "selectorHint": "cy-playkit-scan[bind:scanned]",
         "visibleCondition": "{{kit.type === 'scan'}}",
         "disabledCondition": null,
@@ -870279,7 +870279,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:180:bind:claim:onClaim:88",
+      "id": "pages/play/components/playkit/index.wxml:176:bind:claim:onClaim:88",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -870342,7 +870342,7 @@
         "tag": "cy-playkit-walk",
         "event": "bind:claim",
         "handler": "onClaim",
-        "line": 180,
+        "line": 176,
         "selectorHint": "cy-playkit-walk[bind:claim]",
         "visibleCondition": "{{kit.type === 'walk'}}",
         "disabledCondition": null,
@@ -870387,7 +870387,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:180:bind:close:onClose:89",
+      "id": "pages/play/components/playkit/index.wxml:176:bind:close:onClose:89",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -870450,7 +870450,7 @@
         "tag": "cy-playkit-walk",
         "event": "bind:close",
         "handler": "onClose",
-        "line": 180,
+        "line": 176,
         "selectorHint": "cy-playkit-walk[bind:close]",
         "visibleCondition": "{{kit.type === 'walk'}}",
         "disabledCondition": null,
@@ -870495,7 +870495,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:180:bind:goalchange:onGoalChange:86",
+      "id": "pages/play/components/playkit/index.wxml:176:bind:goalchange:onGoalChange:86",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -870558,7 +870558,7 @@
         "tag": "cy-playkit-walk",
         "event": "bind:goalchange",
         "handler": "onGoalChange",
-        "line": 180,
+        "line": 176,
         "selectorHint": "cy-playkit-walk[bind:goalchange]",
         "visibleCondition": "{{kit.type === 'walk'}}",
         "disabledCondition": null,
@@ -870603,7 +870603,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:180:bind:sync:onSync:87",
+      "id": "pages/play/components/playkit/index.wxml:176:bind:sync:onSync:87",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -870666,7 +870666,7 @@
         "tag": "cy-playkit-walk",
         "event": "bind:sync",
         "handler": "onSync",
-        "line": 180,
+        "line": 176,
         "selectorHint": "cy-playkit-walk[bind:sync]",
         "visibleCondition": "{{kit.type === 'walk'}}",
         "disabledCondition": null,
@@ -870711,7 +870711,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:187:bind:avatar:onAvatar:91",
+      "id": "pages/play/components/playkit/index.wxml:183:bind:avatar:onAvatar:91",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -870774,7 +870774,7 @@
         "tag": "cy-playkit-profile",
         "event": "bind:avatar",
         "handler": "onAvatar",
-        "line": 187,
+        "line": 183,
         "selectorHint": "cy-playkit-profile[bind:avatar]",
         "visibleCondition": "{{kit.type === 'profile'}}",
         "disabledCondition": null,
@@ -870819,7 +870819,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:187:bind:close:onClose:92",
+      "id": "pages/play/components/playkit/index.wxml:183:bind:close:onClose:92",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -870882,7 +870882,7 @@
         "tag": "cy-playkit-profile",
         "event": "bind:close",
         "handler": "onClose",
-        "line": 187,
+        "line": 183,
         "selectorHint": "cy-playkit-profile[bind:close]",
         "visibleCondition": "{{kit.type === 'profile'}}",
         "disabledCondition": null,
@@ -870927,7 +870927,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:187:bind:submit:onSubmit:90",
+      "id": "pages/play/components/playkit/index.wxml:183:bind:submit:onSubmit:90",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -870990,7 +870990,7 @@
         "tag": "cy-playkit-profile",
         "event": "bind:submit",
         "handler": "onSubmit",
-        "line": 187,
+        "line": 183,
         "selectorHint": "cy-playkit-profile[bind:submit]",
         "visibleCondition": "{{kit.type === 'profile'}}",
         "disabledCondition": null,
@@ -871035,7 +871035,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:197:bind:close:onClose:94",
+      "id": "pages/play/components/playkit/index.wxml:193:bind:close:onClose:94",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -871098,7 +871098,7 @@
         "tag": "cy-playkit-objectcard",
         "event": "bind:close",
         "handler": "onClose",
-        "line": 197,
+        "line": 193,
         "selectorHint": "#objectCard",
         "visibleCondition": "{{kit.type === 'photocheck' && kit.mode === 'CARD' && !inline}}",
         "disabledCondition": null,
@@ -871143,7 +871143,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:197:bind:shoot:onShoot:93",
+      "id": "pages/play/components/playkit/index.wxml:193:bind:shoot:onShoot:93",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -871206,7 +871206,7 @@
         "tag": "cy-playkit-objectcard",
         "event": "bind:shoot",
         "handler": "onShoot",
-        "line": 197,
+        "line": 193,
         "selectorHint": "#objectCard",
         "visibleCondition": "{{kit.type === 'photocheck' && kit.mode === 'CARD' && !inline}}",
         "disabledCondition": null,
@@ -871575,7 +871575,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:207:bind:close:onClose:96",
+      "id": "pages/play/components/playkit/index.wxml:202:bind:close:onClose:96",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -871638,7 +871638,7 @@
         "tag": "cy-playkit-photocheck",
         "event": "bind:close",
         "handler": "onClose",
-        "line": 207,
+        "line": 202,
         "selectorHint": "cy-playkit-photocheck[bind:close]",
         "visibleCondition": "{{kit.type === 'photocheck'}}",
         "disabledCondition": null,
@@ -871683,7 +871683,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:207:bind:shoot:onShoot:95",
+      "id": "pages/play/components/playkit/index.wxml:202:bind:shoot:onShoot:95",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -871746,7 +871746,7 @@
         "tag": "cy-playkit-photocheck",
         "event": "bind:shoot",
         "handler": "onShoot",
-        "line": 207,
+        "line": 202,
         "selectorHint": "cy-playkit-photocheck[bind:shoot]",
         "visibleCondition": "{{kit.type === 'photocheck'}}",
         "disabledCondition": null,
@@ -871791,7 +871791,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:213:bind:close:onClose:98",
+      "id": "pages/play/components/playkit/index.wxml:208:bind:close:onClose:98",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -871854,7 +871854,7 @@
         "tag": "cy-playkit-note",
         "event": "bind:close",
         "handler": "onClose",
-        "line": 213,
+        "line": 208,
         "selectorHint": "cy-playkit-note[bind:close]",
         "visibleCondition": "{{kit.type === 'note'}}",
         "disabledCondition": null,
@@ -871899,7 +871899,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:213:bind:submit:onSubmit:97",
+      "id": "pages/play/components/playkit/index.wxml:208:bind:submit:onSubmit:97",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -871962,7 +871962,7 @@
         "tag": "cy-playkit-note",
         "event": "bind:submit",
         "handler": "onSubmit",
-        "line": 213,
+        "line": 208,
         "selectorHint": "cy-playkit-note[bind:submit]",
         "visibleCondition": "{{kit.type === 'note'}}",
         "disabledCondition": null,
@@ -872007,7 +872007,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:220:bind:close:onClose:102",
+      "id": "pages/play/components/playkit/index.wxml:215:bind:close:onClose:102",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -872070,7 +872070,7 @@
         "tag": "cy-playkit-typein",
         "event": "bind:close",
         "handler": "onClose",
-        "line": 220,
+        "line": 215,
         "selectorHint": "cy-playkit-typein[bind:close]",
         "visibleCondition": "{{kit.type === 'typein'}}",
         "disabledCondition": null,
@@ -872115,7 +872115,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:220:bind:refresh:onRefresh:101",
+      "id": "pages/play/components/playkit/index.wxml:215:bind:refresh:onRefresh:101",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -872178,7 +872178,7 @@
         "tag": "cy-playkit-typein",
         "event": "bind:refresh",
         "handler": "onRefresh",
-        "line": 220,
+        "line": 215,
         "selectorHint": "cy-playkit-typein[bind:refresh]",
         "visibleCondition": "{{kit.type === 'typein'}}",
         "disabledCondition": null,
@@ -872223,7 +872223,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:220:bind:start:onStart:99",
+      "id": "pages/play/components/playkit/index.wxml:215:bind:start:onStart:99",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -872286,7 +872286,7 @@
         "tag": "cy-playkit-typein",
         "event": "bind:start",
         "handler": "onStart",
-        "line": 220,
+        "line": 215,
         "selectorHint": "cy-playkit-typein[bind:start]",
         "visibleCondition": "{{kit.type === 'typein'}}",
         "disabledCondition": null,
@@ -872331,7 +872331,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:220:bind:submit:onSubmit:100",
+      "id": "pages/play/components/playkit/index.wxml:215:bind:submit:onSubmit:100",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -872394,7 +872394,7 @@
         "tag": "cy-playkit-typein",
         "event": "bind:submit",
         "handler": "onSubmit",
-        "line": 220,
+        "line": 215,
         "selectorHint": "cy-playkit-typein[bind:submit]",
         "visibleCondition": "{{kit.type === 'typein'}}",
         "disabledCondition": null,
@@ -872439,7 +872439,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:228:bind:close:onClose:104",
+      "id": "pages/play/components/playkit/index.wxml:223:bind:close:onClose:104",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -872502,7 +872502,7 @@
         "tag": "cy-playkit-sort",
         "event": "bind:close",
         "handler": "onClose",
-        "line": 228,
+        "line": 223,
         "selectorHint": "cy-playkit-sort[bind:close]",
         "visibleCondition": "{{kit.type === 'sort'}}",
         "disabledCondition": null,
@@ -872547,7 +872547,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:228:bind:submit:onSubmit:103",
+      "id": "pages/play/components/playkit/index.wxml:223:bind:submit:onSubmit:103",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -872610,7 +872610,7 @@
         "tag": "cy-playkit-sort",
         "event": "bind:submit",
         "handler": "onSubmit",
-        "line": 228,
+        "line": 223,
         "selectorHint": "cy-playkit-sort[bind:submit]",
         "visibleCondition": "{{kit.type === 'sort'}}",
         "disabledCondition": null,
@@ -872655,7 +872655,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:233:bind:close:onClose:106",
+      "id": "pages/play/components/playkit/index.wxml:228:bind:close:onClose:106",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -872718,7 +872718,7 @@
         "tag": "cy-playkit-match",
         "event": "bind:close",
         "handler": "onClose",
-        "line": 233,
+        "line": 228,
         "selectorHint": "cy-playkit-match[bind:close]",
         "visibleCondition": "{{kit.type === 'match'}}",
         "disabledCondition": null,
@@ -872763,7 +872763,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:233:bind:submit:onSubmit:105",
+      "id": "pages/play/components/playkit/index.wxml:228:bind:submit:onSubmit:105",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -872826,7 +872826,7 @@
         "tag": "cy-playkit-match",
         "event": "bind:submit",
         "handler": "onSubmit",
-        "line": 233,
+        "line": 228,
         "selectorHint": "cy-playkit-match[bind:submit]",
         "visibleCondition": "{{kit.type === 'match'}}",
         "disabledCondition": null,
@@ -872871,7 +872871,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:238:bind:close:onClose:108",
+      "id": "pages/play/components/playkit/index.wxml:233:bind:close:onClose:108",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -872934,7 +872934,7 @@
         "tag": "cy-playkit-classify",
         "event": "bind:close",
         "handler": "onClose",
-        "line": 238,
+        "line": 233,
         "selectorHint": "cy-playkit-classify[bind:close]",
         "visibleCondition": "{{kit.type === 'classify'}}",
         "disabledCondition": null,
@@ -872979,7 +872979,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:238:bind:submit:onSubmit:107",
+      "id": "pages/play/components/playkit/index.wxml:233:bind:submit:onSubmit:107",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -873042,7 +873042,7 @@
         "tag": "cy-playkit-classify",
         "event": "bind:submit",
         "handler": "onSubmit",
-        "line": 238,
+        "line": 233,
         "selectorHint": "cy-playkit-classify[bind:submit]",
         "visibleCondition": "{{kit.type === 'classify'}}",
         "disabledCondition": null,
@@ -873087,7 +873087,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:242:bind:close:onClose:111",
+      "id": "pages/play/components/playkit/index.wxml:237:bind:close:onClose:111",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -873150,7 +873150,7 @@
         "tag": "cy-playkit-album",
         "event": "bind:close",
         "handler": "onClose",
-        "line": 242,
+        "line": 237,
         "selectorHint": "cy-playkit-album[bind:close]",
         "visibleCondition": "{{kit.type === 'album'}}",
         "disabledCondition": null,
@@ -873195,7 +873195,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:242:bind:shoot:onShoot:109",
+      "id": "pages/play/components/playkit/index.wxml:237:bind:shoot:onShoot:109",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -873258,7 +873258,7 @@
         "tag": "cy-playkit-album",
         "event": "bind:shoot",
         "handler": "onShoot",
-        "line": 242,
+        "line": 237,
         "selectorHint": "cy-playkit-album[bind:shoot]",
         "visibleCondition": "{{kit.type === 'album'}}",
         "disabledCondition": null,
@@ -873303,7 +873303,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:242:bind:submit:onSubmit:110",
+      "id": "pages/play/components/playkit/index.wxml:237:bind:submit:onSubmit:110",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -873366,7 +873366,7 @@
         "tag": "cy-playkit-album",
         "event": "bind:submit",
         "handler": "onSubmit",
-        "line": 242,
+        "line": 237,
         "selectorHint": "cy-playkit-album[bind:submit]",
         "visibleCondition": "{{kit.type === 'album'}}",
         "disabledCondition": null,
@@ -877083,7 +877083,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:93:bind:close:onClose:42",
+      "id": "pages/play/components/playkit/index.wxml:92:bind:close:onClose:42",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -877146,7 +877146,7 @@
         "tag": "cy-playkit-quiethold",
         "event": "bind:close",
         "handler": "onClose",
-        "line": 93,
+        "line": 92,
         "selectorHint": "cy-playkit-quiethold[bind:close]",
         "visibleCondition": "{{kit.type === 'quiethold'}}",
         "disabledCondition": null,
@@ -877191,7 +877191,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:93:bind:micdenied:onMicDenied:41",
+      "id": "pages/play/components/playkit/index.wxml:92:bind:micdenied:onMicDenied:41",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -877254,7 +877254,7 @@
         "tag": "cy-playkit-quiethold",
         "event": "bind:micdenied",
         "handler": "onMicDenied",
-        "line": 93,
+        "line": 92,
         "selectorHint": "cy-playkit-quiethold[bind:micdenied]",
         "visibleCondition": "{{kit.type === 'quiethold'}}",
         "disabledCondition": null,
@@ -877299,7 +877299,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:93:bind:start:onStart:38",
+      "id": "pages/play/components/playkit/index.wxml:92:bind:start:onStart:38",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -877362,7 +877362,7 @@
         "tag": "cy-playkit-quiethold",
         "event": "bind:start",
         "handler": "onStart",
-        "line": 93,
+        "line": 92,
         "selectorHint": "cy-playkit-quiethold[bind:start]",
         "visibleCondition": "{{kit.type === 'quiethold'}}",
         "disabledCondition": null,
@@ -877407,7 +877407,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:93:bind:submit:onSubmit:39",
+      "id": "pages/play/components/playkit/index.wxml:92:bind:submit:onSubmit:39",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -877470,7 +877470,7 @@
         "tag": "cy-playkit-quiethold",
         "event": "bind:submit",
         "handler": "onSubmit",
-        "line": 93,
+        "line": 92,
         "selectorHint": "cy-playkit-quiethold[bind:submit]",
         "visibleCondition": "{{kit.type === 'quiethold'}}",
         "disabledCondition": null,
@@ -877515,7 +877515,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:93:bind:verdict:onVerdict:40",
+      "id": "pages/play/components/playkit/index.wxml:92:bind:verdict:onVerdict:40",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -877578,7 +877578,7 @@
         "tag": "cy-playkit-quiethold",
         "event": "bind:verdict",
         "handler": "onVerdict",
-        "line": 93,
+        "line": 92,
         "selectorHint": "cy-playkit-quiethold[bind:verdict]",
         "visibleCondition": "{{kit.type === 'quiethold'}}",
         "disabledCondition": null,
@@ -877623,7 +877623,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:99:bind:close:onClose:45",
+      "id": "pages/play/components/playkit/index.wxml:97:bind:close:onClose:45",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -877686,7 +877686,7 @@
         "tag": "cy-playkit-compass",
         "event": "bind:close",
         "handler": "onClose",
-        "line": 99,
+        "line": 97,
         "selectorHint": "cy-playkit-compass[bind:close]",
         "visibleCondition": "{{kit.type === 'compass'}}",
         "disabledCondition": null,
@@ -877731,7 +877731,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:99:bind:submit:onSubmit:43",
+      "id": "pages/play/components/playkit/index.wxml:97:bind:submit:onSubmit:43",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -877794,7 +877794,7 @@
         "tag": "cy-playkit-compass",
         "event": "bind:submit",
         "handler": "onSubmit",
-        "line": 99,
+        "line": 97,
         "selectorHint": "cy-playkit-compass[bind:submit]",
         "visibleCondition": "{{kit.type === 'compass'}}",
         "disabledCondition": null,
@@ -877839,7 +877839,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:99:bind:verdict:onVerdict:44",
+      "id": "pages/play/components/playkit/index.wxml:97:bind:verdict:onVerdict:44",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -877902,7 +877902,7 @@
         "tag": "cy-playkit-compass",
         "event": "bind:verdict",
         "handler": "onVerdict",
-        "line": 99,
+        "line": 97,
         "selectorHint": "cy-playkit-compass[bind:verdict]",
         "visibleCondition": "{{kit.type === 'compass'}}",
         "disabledCondition": null,
