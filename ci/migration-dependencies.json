@@ -3,7 +3,8 @@
   "dependencies": {
     "o14_cms_topic_city_code_20261022": [],
     "o14_cms_activity_city_code_20261022": [],
-    "o14_content_city_code_backfill_20261022": ["o14_cms_activity_city_code_20261022", "o14_cms_topic_city_code_20261022"],
+    "o14_city_code_backfill_log_20261022": [],
+    "o14_content_city_code_backfill_20261022": ["o14_city_code_backfill_log_20261022", "o14_cms_activity_city_code_20261022", "o14_cms_topic_city_code_20261022"],
     "o14_content_search_document_20261022": [],
     "o14_reco_search_jobs_20261022": ["o14_content_search_document_20261022", "p3_platform_foundation"],
     "roam_share_version_20261022": ["20260917_roam_share_snapshot"],
