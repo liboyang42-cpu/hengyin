@@ -585,7 +585,9 @@ test('真实点击与组件事件合同分母分开，非 tap 不得伪装按钮
   // 2026-10-22 W10a:口碑管理态「平台复审中」筛选 + 俱乐部月历场次「重试」两个 tap，2106 → 2108(重建实测)。
   // 2026-10-22 W9 帖子处置(F0521):设置入口 + 提交申诉/取消/提交/加载更多五个 tap,2108 → 2113(batch2 集成重建实测)。
   // 2026-10-22 Lane W11:收藏页「收藏与推荐」说明 +1 tap(showRecommendNote),2113 → 2114(batch2 集成重建实测)。
-  assert.equal(local.filter((item) => item.interactionMode === 'tap').length, 2114)  /* 2026-10-07 动态绑定补齐4条tap。2026-09-22 现场感三件套 S1 新增 4 颗 tap(uploadPhotoFrame / clearPhotoFrame /
+  // 2026-10-22 L21 B9:确认退款在同一手势内申请 refund/refundRejected 订阅,订单详情 cancelRegistration ×1 + 订单历史 cancelOrder ×2
+  //   带 requestSubscribeMessage 归 external(real-device-required),移出 local 分母;控件总数不变,2114 → 2111(batch3 集成重建实测)。
+  assert.equal(local.filter((item) => item.interactionMode === 'tap').length, 2111)  /* 2026-10-07 动态绑定补齐4条tap。2026-09-22 现场感三件套 S1 新增 4 颗 tap(uploadPhotoFrame / clearPhotoFrame /
      onFrameShutter / onFrameCancel),其中 uploadPhotoFrame 与 onFrameShutter 是
      actionClass=external(real-device-required)、不进 local 分母 ⇒ 进账的是
      onFrameCancel(玩家端「退出取景」)+ clearPhotoFrame(商家端删图),1787 → 1789(重建实测)。 */
