@@ -5,8 +5,8 @@
 ## 口径
 
 - `t0` 是成员第一次服务端确认的有效任务或有效服务完成时间。换队不重置 `t0`。棋盘和新人队列锁在这次完成上。
-- 分母 D 是满足 `t0 + H + L <= as_of` 的成员，去掉测试成员和已确认作弊。退出、低活跃不移出分母。
-- 分子 N 是 D 中在 `(t0, t0 + H]` 内又完成了另一个有效 `outing_id`，并且该完成不早于 `t0 + Δ` 的成员。
+- 分母 D 在本人接口里只评估服务器登录账号这一名成员。该成员满足 `t0 + H + L <= as_of`，且不是测试成员、没有已确认作弊时 D 为 1，否则 D 为空并报告 `NO_MATURE_SAMPLE`。退出、低活跃不移出这名成员。
+- 分子 N 只看这名成员是否在 `(t0, t0 + H]` 内又完成了另一个有效 `outing_id`，并且该完成不早于 `t0 + Δ`。D 为 1 且没有这次完成时 N 为 0。D 为空时 N 也为空。
 - D 为 0 时报告 `NO_MATURE_SAMPLE`。`matureCount` 和 `denominator` 保持空，不写成 0。
 - 事件按 `(source_ref, event_id)` 去重。相同内容重试不覆盖，内容不同是冲突。`event_id` 单独不跨来源唯一。
 - `known_at` 晚于 `as_of` 的事实不可见。撤销、确认作弊是新事实，不改已回读的查询。
@@ -14,11 +14,12 @@
 ## 可调用链
 
 1. `CityFairnessIngestionService.ingest(event)` 写入 `city_fairness_event`。身份是 `(source_ref, event_id)`。
-2. `CityFairnessReportService.read` 只读该账号、该范围、`known_at <= as_of` 的事件。范围缺项是 `MISSING`。没有该范围的 `APPROVED` 行是 `scope-rejected`。
+2. `CityFairnessReportService.read` 与 `outings` 只读该登录账号。取数 SQL 带 `actor_id = 服务器 accountId`，分子分母只用这些事件计算，明细再按同一账号过滤。范围缺项是 `MISSING`。没有该范围的 `APPROVED` 行是 `scope-rejected`。请求里没有 actor 参数。
 3. 参数必须带正数 Δ、H、L、`mergeWindowMillis`、`maxEvents`、`pageSize`，以及 `metricVersion` 和 `stateRule = member-cohort-v1`。缺任一项不可计算。
 4. 扫码、重开、重连、报名二报都不是新的有效出行。
 5. 正式报告是 `GET /api/city-game/fairness/report`。本包不提供 `GET /api/city-game/fairness`。
 6. `GET /api/city-game/fairness/outing` 只返回当前登录账号本人的出行依据。分页用已批准行的 `pageSize`。同一 `queryId` 与范围回读同一份快照。
+7. 跨人报告不在这条应用登录链上。已有 SYS 边界是管理端 `@PreAuthorize("@ss.hasPermi(...)")`。本包不新增公开跨人读，也不给 CITY scope 加成员门槛。
 
 ## 接口
 
@@ -28,7 +29,7 @@
 | --- | --- |
 | `queryId` | 1–64 位，字符集 `[A-Za-z0-9._-]`。空或非法是 HTTP 400，`data.errorCode` 为 `queryId` |
 | `asOf` | 毫秒。首次计算必填且 `>= 0`。回读可省略。与已存快照不一致是 HTTP 409，`data.errorCode` 为 `query-conflict` |
-| `cursor` | 上一页的 `nextCursor`。空表示从头。非十进制数字是 HTTP 400，`data.errorCode` 为 `cursor` |
+| `cursor` | 首屏不传，或传空。字面量 `0` 也视为首屏。下一页必须传上一页响应里的 `nextCursor`。`nil` 以及其他非十进制字符串是 HTTP 400，`data.errorCode` 为 `cursor` |
 | `boardId` | 已批准范围 |
 | `regionId` | 已批准范围 |
 | `seasonId` | 已批准范围 |
@@ -44,11 +45,39 @@
 | 403 | 403 | 该范围没有 `APPROVED` 行 | `data.errorCode` = `scope-rejected`。不落快照 |
 | 409 | 409 | 同一账号、同一 `queryId`、同一范围的 `asOf` 不同 | `data.errorCode` = `query-conflict` |
 | 422 | 422 | 不可计算 | `data.status` = `NOT_COMPUTABLE`，`msg` 为 `NOT_COMPUTABLE`。`data.errorCode` 不出现 |
-| 503 | 503 | 读 `city_fairness_parameter`、`city_fairness_event` 或 `city_fairness_read` 失败 | `data.errorCode` 为表名。不落快照 |
+| 503 | 503 | 读 `city_fairness_parameter` 或 `city_fairness_event` 失败 | `data.errorCode` 为表名。不落快照 |
+| 503 | 503 | 首次 `selectRead`，或主键冲突后的复读失败 | `data.errorCode` 为 `unavailable`，`data.missing` 为 `["city_fairness_read"]`，`data.status` 为 null。`matureCount` 与 `denominator` 为 null。不改已有快照，响应仍带回原 `queryId` |
 
 范围四项有空白时 HTTP 422，`data.missing` 含对应参数名，不落快照。缺 Δ、H、L、`mergeWindowMillis`、`stateRule`、`metricVersion`、`maxEvents`、`pageSize` 同样是 422，计数保持空。
 
 `/report` 按组分页。`/outing` 按本人出行分页。`cursor` 不写入快照，两个接口各自偏移。
+
+### 首屏游标
+
+原生首屏 `requestedCursor` 是 nil，也就是不传 `cursor`。响应里的首屏 `cursor` 同样是 null，不返回 `"0"`。有下一页时 `nextCursor` 是十进制偏移，从 `"1"` 起，不会是 `"0"`。没有下一页时 `nextCursor` 为 null。
+
+下一页请求把上一页的 `nextCursor` 原样放进 `cursor`。响应 `cursor` 等于这次请求的偏移；首屏响应不回写偏移。请求字面量 `"0"` 仍按首屏处理，响应 `cursor` 仍是 null。`queryId`、`asOf`、scope 和后续游标的校验保留。
+
+同一 `queryId` 先写报告再读出行时，出行第一页 `readBack` 为 true，它自己的 `cursor` 仍从 null 开始。
+
+样例在 `docs/contracts/w20-fairness-samples/`。
+
+### 覆盖缺口
+
+`data.coverageGaps` 来自快照，两个接口都返回。名字与 `CityFairnessOnsiteRelay.COVERAGE_GAPS` 中尚未在本次快照里出现的项一致。已出现的项从列表去掉。同一 `queryId` 回读保持写入时的列表。
+
+缺口对应的组字段在 JSON 里是 null，表示 unknown。不在缺口里的计数可以是 0，这是真实的零。`goalCompletions` 不在缺口列表里，没有目标完成时就是 0。`gpsFalseRejections` 在缺口里时是 null；快照里出现过 `GPS_FALSE_REJECTION` 时该名字不在 `coverageGaps`，计数值按事件计。
+
+| `coverageGaps` 名字 | 为 null 的组字段 |
+| --- | --- |
+| `join-time` | `joinTime` |
+| `headcount` | `teamSize` |
+| `novice-label` | `newcomer` |
+| `revenue` | `effectiveGain`、`topActorGain`、`totalGain` |
+| `gps-false-rejections` | `gpsFalseRejections` |
+| `safety-tickets` | `safetyTickets` |
+| `verification-latency` | `merchantVerifications`、`merchantVerificationMillis` |
+| `outing_id` | 无组字段。列表里有它时，这次快照没有出行身份 |
 
 ### `GET /api/city-game/fairness/report` 的 `data`
 
@@ -69,12 +98,13 @@
 | `status` | `COMPUTABLE` 或 `NOT_COMPUTABLE` |
 | `maturity` | `COUNTED`、`NO_MATURE_SAMPLE` 或 `MISSING` |
 | `missing` | string 数组 |
-| `groups` | 当前页的组 |
-| `members` | 范围内全部成员，与 `outingClasses` 同一数组 |
+| `coverageGaps` | string 数组。未知来源，见上 |
+| `groups` | 当前页的组。只含本人事件形成的组 |
+| `members` | 只含登录账号，与 `outingClasses` 同一数组 |
 | `outingClasses` | 与 `members` 相同 |
 | `secondOutings` | 计入分子的第二次出行 |
 | `lateEvents` | `occurred_at` 晚于 `t0 + H` 的事件 |
-| `cursor` | string 或 null |
+| `cursor` | string 或 null。首屏为 null |
 | `nextCursor` | string 或 null。没有下一页时为 null |
 | `readBack` | boolean。同一 `queryId` 再次读取已存快照时为 true |
 | `errorCode` | 仅在上面表格写明时出现 |
@@ -107,8 +137,9 @@
 | `maturity` | 本人的 `MATURE`、`IMMATURE` 或 `EXCLUDED`。本人没有分类时用报告的 `NO_MATURE_SAMPLE` 或 `MISSING` |
 | `t0` | number 或 null。本人第一次有效完成的 `occurred_at` |
 | `missing` | string 数组 |
+| `coverageGaps` | string 数组。与同一次快照的报告相同 |
 | `outings` | 当前页，只含本人 |
-| `cursor` | string 或 null |
+| `cursor` | string 或 null。首屏为 null |
 | `nextCursor` | string 或 null |
 | `readBack` | boolean |
 | `errorCode` | 仅在非成功且服务给出错误码时出现 |

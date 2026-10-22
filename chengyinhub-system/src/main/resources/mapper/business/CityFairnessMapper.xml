@@ -52,6 +52,7 @@
           and rules_version = #{rulesVersion}
           and known_at &lt;= #{asOfInclusive}
           and occurred_at &lt;= #{asOfInclusive}
+          and actor_id = #{actorId}
         order by known_at, occurred_at, source_ref, event_id
         limit #{limit}
     </select>

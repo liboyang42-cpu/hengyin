@@ -2,6 +2,7 @@ package com.chengyinhub.business.citygame.analytics.fairness;
 
 import com.chengyinhub.business.citygame.analytics.fairness.contract.FairnessFieldContract;
 import com.chengyinhub.business.citygame.analytics.fairness.mapper.CityFairnessMapper;
+import com.chengyinhub.business.citygame.analytics.fairness.source.CityFairnessOnsiteRelay;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 
@@ -46,8 +47,13 @@ public class CityFairnessReportService {
         if (!scopeMissing.isEmpty()) {
             return unanswered(accountId, queryId, asOf, boardId, regionId, seasonId, rulesVersion, scopeMissing);
         }
-        int offset = cursor == null || cursor.isBlank() ? 0 : Integer.parseInt(cursor);
-        CityFairnessReadRow stored = mapper.selectRead(accountId, queryId, boardId, regionId, seasonId, rulesVersion);
+        int offset = cursor == null || cursor.isBlank() || "0".equals(cursor) ? 0 : Integer.parseInt(cursor);
+        CityFairnessReadRow stored;
+        try {
+            stored = mapper.selectRead(accountId, queryId, boardId, regionId, seasonId, rulesVersion);
+        } catch (RuntimeException ex) {
+            return unavailable(accountId, queryId, asOf, boardId, regionId, seasonId, rulesVersion);
+        }
         if (stored != null) {
             if (asOf != null && !asOf.equals(stored.asOf)) return Page.reject(409, "query-conflict", asOf);
             return present(accountId, queryId, stored, offset, true, ownOutings);
@@ -65,7 +71,7 @@ public class CityFairnessReportService {
                     boardId, regionId, seasonId, rulesVersion);
         } catch (CityFairnessReader.FairnessReadException ex) {
             return persist(accountId, queryId, asOf, offset, boardId, regionId, seasonId, rulesVersion,
-                    CityFairnessReader.Result.notComputable(asOf, List.of(ex.missing)), 0, ownOutings);
+                    CityFairnessReader.Result.notComputable(asOf, List.of(ex.missing)), 0, ownOutings, sourceGaps());
         } catch (RuntimeException ex) {
             return Page.reject(503, "city_fairness_parameter", asOf);
         }
@@ -73,37 +79,44 @@ public class CityFairnessReportService {
         List<String> gaps = gaps(parameter);
         if (!gaps.isEmpty()) {
             return persist(accountId, queryId, asOf, offset, boardId, regionId, seasonId, rulesVersion,
-                    CityFairnessReader.Result.notComputable(asOf, gaps, parameter.metricVersion), 0, ownOutings);
+                    CityFairnessReader.Result.notComputable(asOf, gaps, parameter.metricVersion), 0, ownOutings, sourceGaps());
         }
         List<CityFairnessReader.EventRow> events;
         try {
-            events = mapper.selectEvents(boardId, regionId, seasonId, rulesVersion, asOf, parameter.maxEvents + 1);
+            events = mapper.selectEvents(boardId, regionId, seasonId, rulesVersion, accountId, asOf, parameter.maxEvents + 1);
         } catch (RuntimeException ex) {
             return Page.reject(503, "city_fairness_event", asOf);
         }
         if (events == null) events = List.of();
+        List<CityFairnessReader.EventRow> own = new ArrayList<>();
+        for (CityFairnessReader.EventRow event : events) {
+            if (event != null && event.actorId != null && event.actorId > 0 && event.actorId != accountId) continue;
+            own.add(event);
+        }
+        events = own;
+        List<String> coverage = coverageGaps(events);
         if (events.size() > parameter.maxEvents) {
             return persist(accountId, queryId, asOf, offset, boardId, regionId, seasonId, rulesVersion,
                     CityFairnessReader.Result.notComputable(asOf, List.of("event-bound"), parameter.metricVersion),
-                    parameter.pageSize, ownOutings);
+                    parameter.pageSize, ownOutings, coverage);
         }
         for (CityFairnessReader.EventRow event : events) {
-            if (event == null || event.actorId == null || event.actorId <= 0
+            if (event == null || event.actorId == null || event.actorId != accountId
                     || !boardId.equals(event.boardId) || !regionId.equals(event.regionId)
                     || !seasonId.equals(event.seasonId) || !rulesVersion.equals(event.rulesVersion)) {
                 return persist(accountId, queryId, asOf, offset, boardId, regionId, seasonId, rulesVersion,
                         CityFairnessReader.Result.notComputable(asOf, List.of("scope"), parameter.metricVersion),
-                        parameter.pageSize, ownOutings);
+                        parameter.pageSize, ownOutings, coverage);
             }
         }
         CityFairnessReader.Result result = reader.read(asOf, new Prefetched(parameter, events));
         return persist(accountId, queryId, asOf, offset, boardId, regionId, seasonId, rulesVersion, result,
-                parameter.pageSize, ownOutings);
+                parameter.pageSize, ownOutings, coverage);
     }
 
     private Page persist(long accountId, String queryId, long asOf, int offset, String boardId, String regionId,
                           String seasonId, String rulesVersion, CityFairnessReader.Result result, int pageSize,
-                          boolean ownOutings) {
+                          boolean ownOutings, List<String> coverageGaps) {
         CityFairnessReadRow row = new CityFairnessReadRow();
         row.accountId = accountId;
         row.queryId = queryId;
@@ -112,15 +125,20 @@ public class CityFairnessReportService {
         row.regionId = regionId;
         row.seasonId = seasonId;
         row.rulesVersion = rulesVersion;
-        row.payload = encode(result, pageSize);
+        row.payload = encode(result, pageSize, coverageGaps);
         try {
             mapper.insertRead(row);
         } catch (DuplicateKeyException duplicate) {
-            CityFairnessReadRow winner = mapper.selectRead(accountId, queryId, boardId, regionId, seasonId, rulesVersion);
+            CityFairnessReadRow winner;
+            try {
+                winner = mapper.selectRead(accountId, queryId, boardId, regionId, seasonId, rulesVersion);
+            } catch (RuntimeException ex) {
+                return unavailable(accountId, queryId, asOf, boardId, regionId, seasonId, rulesVersion);
+            }
             if (winner == null || !winner.asOf.equals(asOf)) return Page.reject(409, "query-conflict", asOf);
             return present(accountId, queryId, winner, offset, true, ownOutings);
         } catch (RuntimeException ex) {
-            return Page.reject(503, "city_fairness_read", asOf);
+            return unavailable(accountId, queryId, asOf, boardId, regionId, seasonId, rulesVersion);
         }
         return present(accountId, queryId, row, offset, false, ownOutings);
     }
@@ -137,7 +155,15 @@ public class CityFairnessReportService {
         sorted.sort(String::compareTo);
         return new Page(200, null, false, accountId, queryId, asOf, CityFairnessReader.NOT_COMPUTABLE, "MISSING",
                 null, null, null, FairnessFieldContract.FORMULA_ID, null, boardId, regionId, seasonId, rulesVersion,
-                sorted, List.of(), List.of(), List.of(), List.of(), "0", null, List.of(), null);
+                sorted, List.of(), List.of(), List.of(), List.of(), null, null, List.of(), null, sourceGaps());
+    }
+
+    private static Page unavailable(long accountId, String queryId, Long asOf, String boardId, String regionId,
+                                    String seasonId, String rulesVersion) {
+        return new Page(503, "unavailable", false, accountId, queryId, asOf, null, null,
+                null, null, null, null, null, boardId, regionId, seasonId, rulesVersion,
+                List.of("city_fairness_read"), List.of(), List.of(), List.of(), List.of(),
+                null, null, List.of(), null, sourceGaps());
     }
 
     private static List<String> gaps(CityFairnessReader.ParameterRow parameter) {
@@ -165,8 +191,9 @@ public class CityFairnessReportService {
         return new Page(200, null, readBack, accountId, queryId, row.asOf, decoded.status, decoded.maturity,
                 decoded.metricVersion, decoded.matureCount, decoded.denominator, decoded.formulaId, decoded.factRevision,
                 row.boardId, row.regionId, row.seasonId, row.rulesVersion, decoded.missing,
-                List.copyOf(decoded.groups.subList(from, to)), decoded.outingClasses, decoded.secondOutings,
-                decoded.lateEvents, Integer.toString(from), next, List.of(), null);
+                List.copyOf(decoded.groups.subList(from, to)), ownClasses(decoded.outingClasses, accountId),
+                ownSeconds(decoded.secondOutings, accountId), decoded.lateEvents, shownCursor(from), next, List.of(), null,
+                decoded.coverageGaps);
     }
 
     private static Page sliceOutings(long accountId, String queryId, CityFairnessReadRow row, int offset, boolean readBack) {
@@ -190,10 +217,73 @@ public class CityFairnessReportService {
         return new Page(200, null, readBack, accountId, queryId, row.asOf, decoded.status, maturity,
                 decoded.metricVersion, decoded.matureCount, decoded.denominator, decoded.formulaId, decoded.factRevision,
                 row.boardId, row.regionId, row.seasonId, row.rulesVersion, decoded.missing, List.of(), List.of(),
-                List.of(), List.of(), Integer.toString(from), next, List.copyOf(own.subList(from, to)), t0);
+                List.of(), List.of(), shownCursor(from), next, List.copyOf(own.subList(from, to)), t0,
+                decoded.coverageGaps);
     }
 
-    static String encode(CityFairnessReader.Result result, int pageSize) {
+    private static String shownCursor(int from) {
+        return from == 0 ? null : Integer.toString(from);
+    }
+
+    private static List<CityFairnessReader.OutingClass> ownClasses(List<CityFairnessReader.OutingClass> items, long accountId) {
+        List<CityFairnessReader.OutingClass> own = new ArrayList<>();
+        for (CityFairnessReader.OutingClass item : items) {
+            if (item.actorId == accountId) own.add(item);
+        }
+        return List.copyOf(own);
+    }
+
+    private static List<CityFairnessReader.SecondOuting> ownSeconds(List<CityFairnessReader.SecondOuting> items, long accountId) {
+        List<CityFairnessReader.SecondOuting> own = new ArrayList<>();
+        for (CityFairnessReader.SecondOuting item : items) {
+            if (item.actorId == accountId) own.add(item);
+        }
+        return List.copyOf(own);
+    }
+
+    private static List<String> sourceGaps() {
+        return List.copyOf(CityFairnessOnsiteRelay.COVERAGE_GAPS);
+    }
+
+    private static List<String> coverageGaps(List<CityFairnessReader.EventRow> events) {
+        boolean outing = false;
+        boolean novice = false;
+        boolean headcount = false;
+        boolean join = false;
+        boolean revenue = false;
+        boolean gps = false;
+        boolean safety = false;
+        boolean latency = false;
+        for (CityFairnessReader.EventRow event : events) {
+            if (event == null) continue;
+            if (event.outingId != null && !event.outingId.isBlank()) outing = true;
+            if (event.newcomer != null && !event.newcomer.isBlank()) novice = true;
+            if (event.teamSize != null) headcount = true;
+            if (event.joinTime != null) join = true;
+            if (GAIN.equals(event.kind) || event.gainAmount != null) revenue = true;
+            if (GPS_FALSE_REJECTION.equals(event.kind)) gps = true;
+            if (SAFETY_TICKET.equals(event.kind)) safety = true;
+            if (MERCHANT_VERIFICATION.equals(event.kind)) latency = true;
+        }
+        List<String> gaps = new ArrayList<>();
+        for (String gap : CityFairnessOnsiteRelay.COVERAGE_GAPS) {
+            boolean covered = switch (gap) {
+                case "outing_id" -> outing;
+                case "novice-label" -> novice;
+                case "headcount" -> headcount;
+                case "join-time" -> join;
+                case "revenue" -> revenue;
+                case "gps-false-rejections" -> gps;
+                case "safety-tickets" -> safety;
+                case "verification-latency" -> latency;
+                default -> false;
+            };
+            if (!covered) gaps.add(gap);
+        }
+        return List.copyOf(gaps);
+    }
+
+    static String encode(CityFairnessReader.Result result, int pageSize, List<String> coverageGaps) {
         StringBuilder out = new StringBuilder();
         out.append("v3\n").append(result.asOf).append('\n').append(result.status).append('\n').append(result.maturity())
                 .append('\n').append(pageSize).append('\n').append(cell(result.metricVersion)).append('\n')
@@ -229,6 +319,7 @@ public class CityFairnessReportService {
                     .append(cell(item.t0)).append('\t').append(item.valid).append('\t').append(item.reason).append('\t')
                     .append(item.inWindow).append('\t').append(item.maturity).append('\n');
         }
+        out.append("K\t").append(String.join("\u001f", coverageGaps == null ? List.of() : coverageGaps)).append('\n');
         return out.toString();
     }
 
@@ -277,6 +368,8 @@ public class CityFairnessReportService {
             } else if (field[0].equals("E")) {
                 evidence.add(new CityFairnessReader.OutingEvidence(Long.parseLong(field[1]), field[2], longOrNull(field[3]),
                         Boolean.parseBoolean(field[4]), field[5], Boolean.parseBoolean(field[6]), field[7]));
+            } else if (field[0].equals("K")) {
+                evidenceGaps(decoded, field);
             }
         }
         decoded.groups = groups;
@@ -285,6 +378,11 @@ public class CityFairnessReportService {
         decoded.lateEvents = List.copyOf(late);
         decoded.evidence = List.copyOf(evidence);
         return decoded;
+    }
+
+    private static void evidenceGaps(Decoded decoded, String[] field) {
+        if (field.length < 2 || field[1].isEmpty()) decoded.coverageGaps = List.of();
+        else decoded.coverageGaps = List.of(field[1].split("\u001f", -1));
     }
 
     private static String cell(Object value) { return value == null ? "-" : value.toString(); }
@@ -324,6 +422,7 @@ public class CityFairnessReportService {
         List<CityFairnessReader.SecondOuting> secondOutings = List.of();
         List<CityFairnessReader.LateEvent> lateEvents = List.of();
         List<CityFairnessReader.OutingEvidence> evidence = List.of();
+        List<String> coverageGaps = List.of();
     }
 
     public static final class Page {
@@ -353,13 +452,15 @@ public class CityFairnessReportService {
         public final String nextCursor;
         public final List<CityFairnessReader.OutingEvidence> outings;
         public final Long t0;
+        public final List<String> coverageGaps;
 
         Page(int httpStatus, String errorCode, boolean readBack, long accountId, String queryId, Long asOf,
              String status, String maturity, String metricVersion, Integer matureCount, Integer denominator,
              String formulaId, Long factRevision, String boardId, String regionId, String seasonId, String rulesVersion,
              List<String> missing, List<CityFairnessReader.Group> groups, List<CityFairnessReader.OutingClass> outingClasses,
              List<CityFairnessReader.SecondOuting> secondOutings, List<CityFairnessReader.LateEvent> lateEvents,
-             String cursor, String nextCursor, List<CityFairnessReader.OutingEvidence> outings, Long t0) {
+             String cursor, String nextCursor, List<CityFairnessReader.OutingEvidence> outings, Long t0,
+             List<String> coverageGaps) {
             this.httpStatus = httpStatus;
             this.errorCode = errorCode;
             this.readBack = readBack;
@@ -386,12 +487,13 @@ public class CityFairnessReportService {
             this.nextCursor = nextCursor;
             this.outings = outings;
             this.t0 = t0;
+            this.coverageGaps = coverageGaps == null ? List.of() : List.copyOf(coverageGaps);
         }
 
         static Page reject(int httpStatus, String errorCode, Long asOf) {
             return new Page(httpStatus, errorCode, false, 0, null, asOf, null, null, null, null, null,
                     null, null, null, null, null, null, List.of(), List.of(), List.of(), List.of(), List.of(), null, null,
-                    List.of(), null);
+                    List.of(), null, List.of());
         }
     }
 }

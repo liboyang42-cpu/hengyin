@@ -18,6 +18,7 @@ public interface CityFairnessMapper {
                                  @Param("regionId") String regionId,
                                  @Param("seasonId") String seasonId,
                                  @Param("rulesVersion") String rulesVersion,
+                                 @Param("actorId") Long actorId,
                                  @Param("asOfInclusive") long asOfInclusive,
                                  @Param("limit") int limit);
 

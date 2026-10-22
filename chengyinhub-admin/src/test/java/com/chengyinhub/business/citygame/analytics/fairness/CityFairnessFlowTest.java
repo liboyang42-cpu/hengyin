@@ -52,25 +52,31 @@ class CityFairnessFlowTest {
         CityFairnessReportService.Page first = scoped(reports, 7, "q1", 12_000L, null);
         assertEquals(CityFairnessReader.COMPUTABLE, first.status);
         assertEquals(FairnessFieldContract.COUNTED, first.maturity);
-        assertEquals(2, first.groups.size());
+        assertEquals(1, first.groups.size());
         assertEquals(2, first.groups.get(0).teamSize);
         assertEquals(6_000L, first.outingClasses.get(0).t0);
+        assertEquals(7L, first.outingClasses.get(0).actorId);
         assertEquals("metric-1", first.metricVersion);
         assertEquals(FairnessFieldContract.FORMULA_ID, first.formulaId);
         assertEquals(12_000L, first.asOf);
         assertEquals(0, first.matureCount);
-        assertEquals(2, first.denominator);
+        assertEquals(1, first.denominator);
+        assertNull(first.cursor);
         assertFalse(first.readBack);
         store.events.add(task("city-task", "later", "olater", 7, 6_500));
         CityFairnessReportService.Page retry = scoped(reports, 7, "q1", 12_000L, "0");
         assertTrue(retry.readBack);
-        assertEquals(2, retry.groups.size());
+        assertNull(retry.cursor);
+        assertEquals(1, retry.groups.size());
         assertEquals(0, retry.matureCount);
+        assertEquals(1, retry.denominator);
         assertEquals("query-conflict", scoped(reports, 7, "q1", 12_001L, null).errorCode);
         CityFairnessReportService.Page accountEight = scoped(reports, 8, "q1", 12_000L, null);
         assertFalse(accountEight.readBack);
-        assertEquals(1, accountEight.matureCount);
-        assertEquals(2, accountEight.denominator);
+        assertEquals(0, accountEight.matureCount);
+        assertEquals(1, accountEight.denominator);
+        assertEquals(8L, accountEight.outingClasses.get(0).actorId);
+        assertEquals(9, accountEight.groups.get(0).teamSize);
         CityFairnessReader.ParameterRow secondScope = approved();
         secondScope.boardId = "board-2";
         store.parameters.add(secondScope);
@@ -113,14 +119,16 @@ class CityFairnessFlowTest {
         ingestion.ingest(other);
         CityFairnessReportService reports = new CityFairnessReportService(store);
         CityFairnessReportService.Page page = scoped(reports, 7, "pages", 12_000L, null);
-        assertEquals("1", page.nextCursor);
+        assertNull(page.cursor);
+        assertNull(page.nextCursor);
         assertEquals(1, page.matureCount);
-        assertEquals(2, page.denominator);
-        CityFairnessReportService.Page next = scoped(reports, 7, "pages", 12_000L, "1");
-        assertTrue(next.readBack);
-        assertEquals(9, next.groups.get(0).teamSize);
-        assertEquals("oa2", next.secondOutings.get(0).outingId);
-        assertEquals(6_000L, next.outingClasses.get(1).t0);
+        assertEquals(1, page.denominator);
+        assertEquals(1, page.groups.size());
+        assertEquals(2, page.groups.get(0).teamSize);
+        assertEquals(1, page.outingClasses.size());
+        assertEquals(7L, page.outingClasses.get(0).actorId);
+        assertEquals("oa2", page.secondOutings.get(0).outingId);
+        assertEquals(6_000L, page.outingClasses.get(0).t0);
     }
 
     @Test void awaitingMaturityAndACloseSecondOutingDoNotInventARate() {
@@ -328,6 +336,139 @@ class CityFairnessFlowTest {
         assertEquals(422, gap.getStatusCode().value());
     }
 
+    @Test void selfPagesCoverageAndAReadFailureStayOnTheOriginalQuery() {
+        Store store = approvedStore();
+        store.parameter.pageSize = 1;
+        store.ignoreActor = true;
+        CityFairnessIngestionService ingestion = new CityFairnessIngestionService(store);
+        ingestion.ingest(task("city-task", "e1", "o1", 7, 6_000));
+        ingestion.ingest(task("city-task", "e2", "o2", 7, 6_200));
+        CityFairnessReader.EventRow stranger = task("city-task", "eb", "ob", 8, 6_000);
+        stranger.knownAt = 9_000L;
+        stranger.teamSize = 9;
+        ingestion.ingest(stranger);
+        CityFairnessReportService reports = new CityFairnessReportService(store);
+
+        CityFairnessReportService.Page report = scoped(reports, 7, "q-self", 12_000L, null);
+        assertNull(report.cursor);
+        assertNull(report.nextCursor);
+        assertEquals(1, report.matureCount);
+        assertEquals(1, report.denominator);
+        assertEquals(1, report.groups.size());
+        assertEquals(2, report.groups.get(0).teamSize);
+        assertEquals(0, report.groups.get(0).goalCompletions);
+        assertEquals(0, report.groups.get(0).gpsFalseRejections);
+        assertEquals(6_200L, report.factRevision);
+        assertEquals(1, report.outingClasses.size());
+        assertEquals(7L, report.outingClasses.get(0).actorId);
+        assertTrue(report.coverageGaps.contains("gps-false-rejections"));
+        assertTrue(report.coverageGaps.contains("revenue"));
+        assertFalse(report.coverageGaps.contains("headcount"));
+        assertNull(scoped(reports, 7, "q-self", 12_000L, "0").cursor);
+        assertTrue(scoped(reports, 7, "q-self", 12_000L, "0").readBack);
+        assertEquals(400, scoped(reports, 7, "q-self", 12_000L, "nil").httpStatus);
+        assertEquals("cursor", scoped(reports, 7, "q-self", 12_000L, "nil").errorCode);
+
+        CityFairnessReportService.Page first = outings(reports, 7, "q-self", 12_000L, null);
+        assertNull(first.cursor);
+        assertEquals("1", first.nextCursor);
+        assertEquals("o1", first.outings.get(0).outingId);
+        assertTrue(first.readBack);
+        CityFairnessReportService.Page next = outings(reports, 7, "q-self", 12_000L, first.nextCursor);
+        assertEquals("1", next.cursor);
+        assertNull(next.nextCursor);
+        assertTrue(next.readBack);
+        assertEquals("o2", next.outings.get(0).outingId);
+        assertTrue(next.outings.get(0).inWindow);
+
+        CityFairnessReportService.Page immature = scoped(reports, 7, "q-empty", 7_000L, null);
+        assertEquals(FairnessFieldContract.NO_MATURE_SAMPLE, immature.maturity);
+        assertNull(immature.matureCount);
+        assertNull(immature.denominator);
+        assertNull(immature.cursor);
+        assertEquals(0, immature.groups.get(0).goalCompletions);
+        assertTrue(immature.coverageGaps.contains("safety-tickets"));
+
+        ingestion.ingest(mark("city-task", "gps", "o1", GPS_FALSE_REJECTION, 7, 6_300));
+        CityFairnessReportService.Page same = scoped(reports, 7, "q-self", 12_000L, null);
+        assertTrue(same.readBack);
+        assertEquals(6_200L, same.factRevision);
+        assertTrue(same.coverageGaps.contains("gps-false-rejections"));
+        assertEquals(1, same.matureCount);
+        CityFairnessReportService.Page recounted = scoped(reports, 7, "q-later", 12_000L, null);
+        assertFalse(recounted.coverageGaps.contains("gps-false-rejections"));
+        assertEquals(1, recounted.groups.get(0).gpsFalseRejections);
+        assertEquals(0, recounted.groups.get(0).goalCompletions);
+
+        String payload = store.reads.get("7:q-self:board-1:region-1:season-1:rules-1").payload;
+        store.failReads = true;
+        CityFairnessReportService.Page down = scoped(reports, 7, "q-self", 12_000L, null);
+        assertEquals(503, down.httpStatus);
+        assertEquals("unavailable", down.errorCode);
+        assertEquals("q-self", down.queryId);
+        assertEquals(7L, down.accountId);
+        assertNull(down.status);
+        assertNull(down.matureCount);
+        assertEquals(payload, store.reads.get("7:q-self:board-1:region-1:season-1:rules-1").payload);
+        store.skipNextRead = true;
+        CityFairnessReportService.Page conflict = scoped(reports, 7, "q-self", 12_000L, null);
+        assertEquals(503, conflict.httpStatus);
+        assertEquals("unavailable", conflict.errorCode);
+        assertEquals(payload, store.reads.get("7:q-self:board-1:region-1:season-1:rules-1").payload);
+        store.failReads = false;
+        CityFairnessReportService.Page restored = scoped(reports, 7, "q-self", 12_000L, null);
+        assertTrue(restored.readBack);
+        assertEquals(1, restored.matureCount);
+        assertEquals(6_200L, restored.factRevision);
+
+        Store fresh = approvedStore();
+        fresh.failReads = true;
+        CityFairnessReportService.Page missingTable = scoped(new CityFairnessReportService(fresh), 7, "missing-table", 12_000L, null);
+        assertEquals(503, missingTable.httpStatus);
+        assertEquals("unavailable", missingTable.errorCode);
+        assertEquals("missing-table", missingTable.queryId);
+        assertNull(missingTable.status);
+        assertTrue(fresh.reads.isEmpty());
+
+        CityFairnessReportController owner = new CityFairnessReportController(reports) {
+            protected Long currentAccount() { return 7L; }
+        };
+        ResponseEntity<AjaxResult> firstPage = owner.report("q-self", 12_000L, null, "board-1", "region-1", "season-1", "rules-1");
+        assertEquals(200, firstPage.getStatusCode().value());
+        @SuppressWarnings("unchecked")
+        Map<String, Object> data = (Map<String, Object>) firstPage.getBody().get(AjaxResult.DATA_TAG);
+        assertNull(data.get("cursor"));
+        @SuppressWarnings("unchecked")
+        Map<String, Object> group = ((List<Map<String, Object>>) data.get("groups")).get(0);
+        assertEquals(0, group.get("goalCompletions"));
+        assertNull(group.get("gpsFalseRejections"));
+        assertNull(group.get("effectiveGain"));
+        assertEquals(2, group.get("teamSize"));
+        ResponseEntity<AjaxResult> outingPage = owner.outing("q-self", 12_000L, null, "board-1", "region-1", "season-1", "rules-1");
+        @SuppressWarnings("unchecked")
+        Map<String, Object> outing = (Map<String, Object>) outingPage.getBody().get(AjaxResult.DATA_TAG);
+        assertEquals("1", outing.get("nextCursor"));
+        assertNull(outing.get("cursor"));
+        ResponseEntity<AjaxResult> outingNext = owner.outing("q-self", 12_000L, "1", "board-1", "region-1", "season-1", "rules-1");
+        @SuppressWarnings("unchecked")
+        Map<String, Object> second = (Map<String, Object>) outingNext.getBody().get(AjaxResult.DATA_TAG);
+        assertEquals("1", second.get("cursor"));
+        assertEquals(Boolean.TRUE, second.get("readBack"));
+        @SuppressWarnings("unchecked")
+        Map<String, Object> row = ((List<Map<String, Object>>) second.get("outings")).get(0);
+        assertEquals("o2", row.get("outingId"));
+        store.failReads = true;
+        ResponseEntity<AjaxResult> failed = owner.report("q-self", 12_000L, null, "board-1", "region-1", "season-1", "rules-1");
+        assertEquals(503, failed.getStatusCode().value());
+        @SuppressWarnings("unchecked")
+        Map<String, Object> error = (Map<String, Object>) failed.getBody().get(AjaxResult.DATA_TAG);
+        assertEquals("unavailable", error.get("errorCode"));
+        assertEquals("q-self", error.get("queryId"));
+        assertNull(error.get("status"));
+        assertNull(error.get("matureCount"));
+        assertNull(error.get("denominator"));
+    }
+
     private static CityFairnessReportService.Page outings(CityFairnessReportService reports, long account, String query,
                                                            Long asOf, String cursor) {
         return reports.outings(account, query, asOf, cursor, "board-1", "region-1", "season-1", "rules-1");
@@ -392,6 +533,9 @@ class CityFairnessFlowTest {
     private static final class Store implements CityFairnessMapper {
         CityFairnessReader.ParameterRow parameter;
         boolean parametersDown;
+        boolean ignoreActor;
+        boolean failReads;
+        boolean skipNextRead;
         final List<CityFairnessReader.ParameterRow> parameters = new ArrayList<>();
         final List<CityFairnessReader.EventRow> events = new ArrayList<>();
         final Map<String, CityFairnessReadRow> reads = new LinkedHashMap<>();
@@ -407,9 +551,10 @@ class CityFairnessFlowTest {
         }
 
         public List<CityFairnessReader.EventRow> selectEvents(String boardId, String regionId, String seasonId,
-                                                               String rulesVersion, long asOf, int limit) {
+                                                               String rulesVersion, Long actorId, long asOf, int limit) {
             List<CityFairnessReader.EventRow> out = new ArrayList<>();
             for (CityFairnessReader.EventRow event : events) {
+                if (!ignoreActor && (actorId == null || !actorId.equals(event.actorId))) continue;
                 if (boardId.equals(event.boardId) && regionId.equals(event.regionId)
                         && seasonId.equals(event.seasonId) && rulesVersion.equals(event.rulesVersion)
                         && event.knownAt != null && event.knownAt <= asOf && event.occurredAt <= asOf) out.add(event);
@@ -460,6 +605,11 @@ class CityFairnessFlowTest {
 
         public CityFairnessReadRow selectRead(long accountId, String queryId, String boardId, String regionId,
                                                String seasonId, String rulesVersion) {
+            if (skipNextRead) {
+                skipNextRead = false;
+                return null;
+            }
+            if (failReads) throw new IllegalStateException("city_fairness_read");
             return reads.get(accountId + ":" + queryId + ":" + boardId + ":" + regionId + ":" + seasonId + ":" + rulesVersion);
         }
     }

@@ -324,25 +324,25 @@ class CityFairnessReaderTest {
     @Test void mapperFailuresStayNotComputable() {
         CityFairnessReader.Result thrown = reader.read(10_000, new MyBatisCityFairnessSource(new MapperStub() {
             public List<CityFairnessReader.ParameterRow> selectParameters(String boardId, String regionId, String seasonId, String rulesVersion) { throw new IllegalStateException("down"); }
-            public List<CityFairnessReader.EventRow> selectEvents(String boardId, String regionId, String seasonId, String rulesVersion, long asOf, int limit) { return List.of(); }
-        }, 10, "board-1", "region-1", "season-1", "rules-1"));
+            public List<CityFairnessReader.EventRow> selectEvents(String boardId, String regionId, String seasonId, String rulesVersion, Long actorId, long asOf, int limit) { return List.of(); }
+        }, 10, "board-1", "region-1", "season-1", "rules-1", 7L));
         assertTrue(thrown.missing.contains("city_fairness_parameter"));
         CityFairnessReader.ParameterRow row = approved();
         CityFairnessReader.Result ambiguous = reader.read(10_000, new MyBatisCityFairnessSource(new MapperStub() {
             public List<CityFairnessReader.ParameterRow> selectParameters(String boardId, String regionId, String seasonId, String rulesVersion) { return List.of(row, row); }
-            public List<CityFairnessReader.EventRow> selectEvents(String boardId, String regionId, String seasonId, String rulesVersion, long asOf, int limit) { return List.of(); }
-        }, 10, "board-1", "region-1", "season-1", "rules-1"));
+            public List<CityFairnessReader.EventRow> selectEvents(String boardId, String regionId, String seasonId, String rulesVersion, Long actorId, long asOf, int limit) { return List.of(); }
+        }, 10, "board-1", "region-1", "season-1", "rules-1", 7L));
         assertTrue(ambiguous.missing.contains("parameter-ambiguous"));
         CityFairnessReader.EventRow event = task("e1", "o1", 7, 6_000);
         CityFairnessReader.Result computed = reader.read(10_000, new MyBatisCityFairnessSource(new MapperStub() {
             public List<CityFairnessReader.ParameterRow> selectParameters(String boardId, String regionId, String seasonId, String rulesVersion) { return List.of(row); }
-            public List<CityFairnessReader.EventRow> selectEvents(String boardId, String regionId, String seasonId, String rulesVersion, long asOf, int limit) {
+            public List<CityFairnessReader.EventRow> selectEvents(String boardId, String regionId, String seasonId, String rulesVersion, Long actorId, long asOf, int limit) {
                 assertEquals("board-1", boardId);
                 assertEquals(10_000L, asOf);
                 assertEquals(11, limit);
                 return List.of(event);
             }
-        }, 10, "board-1", "region-1", "season-1", "rules-1"));
+        }, 10, "board-1", "region-1", "season-1", "rules-1", 7L));
         assertTrue(computed.computable());
         assertEquals(1, computed.groups.size());
     }
@@ -354,10 +354,10 @@ class CityFairnessReaderTest {
         CityFairnessReader.EventRow event = task("e1", "o1", 7, 6_000);
         CityFairnessReader.Result result = reader.read(10_000, new MyBatisCityFairnessSource(new MapperStub() {
             public List<CityFairnessReader.ParameterRow> selectParameters(String boardId, String regionId, String seasonId, String rulesVersion) { return List.of(draft, approved); }
-            public List<CityFairnessReader.EventRow> selectEvents(String boardId, String regionId, String seasonId, String rulesVersion, long asOf, int limit) {
+            public List<CityFairnessReader.EventRow> selectEvents(String boardId, String regionId, String seasonId, String rulesVersion, Long actorId, long asOf, int limit) {
                 return List.of(event);
             }
-        }, 10, "board-1", "region-1", "season-1", "rules-1"));
+        }, 10, "board-1", "region-1", "season-1", "rules-1", 7L));
         assertTrue(result.computable());
         assertEquals(1, result.groups.size());
         assertFalse(result.missing.contains("parameter-ambiguous"));
@@ -405,6 +405,17 @@ class CityFairnessReaderTest {
         String contract = Files.readString(Path.of("../docs/contracts/w20-city-fairness.md"));
         assertTrue(contract.contains("(source_ref, event_id)"));
         assertTrue(contract.contains("event_id"));
+        assertTrue(contract.contains("coverageGaps"));
+        assertTrue(contract.contains("unavailable"));
+        String firstPage = Files.readString(Path.of("../docs/contracts/w20-fairness-samples/report-first-page.json"));
+        assertTrue(firstPage.contains("\"cursor\": null"));
+        assertTrue(firstPage.contains("\"goalCompletions\": 0"));
+        assertTrue(firstPage.contains("\"gpsFalseRejections\": null"));
+        String next = Files.readString(Path.of("../docs/contracts/w20-fairness-samples/outing-next-page.json"));
+        assertTrue(next.contains("\"cursor\": \"1\""));
+        String down = Files.readString(Path.of("../docs/contracts/w20-fairness-samples/report-503.json"));
+        assertTrue(down.contains("\"errorCode\": \"unavailable\""));
+        assertTrue(down.contains("\"matureCount\": null"));
     }
 
     @Test void candidateSqlAndMapperDoNotInsertThresholds() throws Exception {
@@ -420,6 +431,7 @@ class CityFairnessReaderTest {
         assertTrue(xml.contains("known_at &lt;= #{asOfInclusive}"));
         assertFalse(xml.contains("windowStartExclusive"));
         assertTrue(xml.contains("board_id = #{boardId}"));
+        assertTrue(xml.contains("actor_id = #{actorId}"));
         String frozen = Files.readString(Path.of("../chengyinhub-system/src/main/java/com/chengyinhub/business/citygame/analytics/fairness/contract/FairnessFieldContract.java"));
         assertTrue(frozen.contains("city-fairness-cohort-v1"));
         assertTrue(frozen.contains("mergeWindowMillis"));
@@ -492,7 +504,7 @@ class CityFairnessReaderTest {
 
     private static class MapperStub implements CityFairnessMapper {
         public List<CityFairnessReader.ParameterRow> selectParameters(String boardId, String regionId, String seasonId, String rulesVersion) { return List.of(); }
-        public List<CityFairnessReader.EventRow> selectEvents(String boardId, String regionId, String seasonId, String rulesVersion, long asOf, int limit) { return List.of(); }
+        public List<CityFairnessReader.EventRow> selectEvents(String boardId, String regionId, String seasonId, String rulesVersion, Long actorId, long asOf, int limit) { return List.of(); }
         public CityFairnessReader.EventRow selectEvent(String source, String eventId) { return null; }
         public int insertEvent(CityFairnessReader.EventRow row) { return 0; }
         public int insertRead(CityFairnessReadRow row) { return 0; }

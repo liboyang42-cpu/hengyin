@@ -14,15 +14,18 @@ public final class MyBatisCityFairnessSource implements CityFairnessReader.Sourc
     private final String regionId;
     private final String seasonId;
     private final String rulesVersion;
+    private final long actorId;
 
     public MyBatisCityFairnessSource(CityFairnessMapper mapper, int maxEvents,
-                                      String boardId, String regionId, String seasonId, String rulesVersion) {
+                                      String boardId, String regionId, String seasonId, String rulesVersion,
+                                      long actorId) {
         this.mapper = mapper;
         this.maxEvents = maxEvents;
         this.boardId = boardId;
         this.regionId = regionId;
         this.seasonId = seasonId;
         this.rulesVersion = rulesVersion;
+        this.actorId = actorId;
     }
 
     public static CityFairnessReader.ParameterRow oneApproved(List<CityFairnessReader.ParameterRow> rows,
@@ -51,11 +54,11 @@ public final class MyBatisCityFairnessSource implements CityFairnessReader.Sourc
     public List<CityFairnessReader.EventRow> events(long asOfInclusive) {
         if (maxEvents <= 0) throw new CityFairnessReader.FairnessReadException("maxEvents");
         List<CityFairnessReader.EventRow> rows = mapper.selectEvents(boardId, regionId, seasonId, rulesVersion,
-                asOfInclusive, maxEvents + 1);
+                actorId, asOfInclusive, maxEvents + 1);
         if (rows == null) return List.of();
         if (rows.size() > maxEvents) throw new CityFairnessReader.FairnessReadException("event-bound");
         for (CityFairnessReader.EventRow row : rows) {
-            if (row == null || row.actorId == null || row.actorId <= 0
+            if (row == null || row.actorId == null || row.actorId != actorId
                     || !boardId.equals(row.boardId) || !regionId.equals(row.regionId)
                     || !seasonId.equals(row.seasonId) || !rulesVersion.equals(row.rulesVersion)) {
                 throw new CityFairnessReader.FairnessReadException("scope");

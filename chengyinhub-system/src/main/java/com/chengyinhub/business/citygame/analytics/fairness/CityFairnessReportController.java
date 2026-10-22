@@ -81,7 +81,8 @@ public class CityFairnessReportController extends BaseController {
         data.put("status", page.status);
         data.put("maturity", page.maturity);
         data.put("missing", page.missing);
-        data.put("groups", page.groups);
+        data.put("coverageGaps", page.coverageGaps);
+        data.put("groups", groupRows(page));
         data.put("members", page.outingClasses);
         data.put("outingClasses", page.outingClasses);
         data.put("secondOutings", page.secondOutings);
@@ -109,6 +110,7 @@ public class CityFairnessReportController extends BaseController {
         data.put("maturity", page.maturity);
         data.put("t0", page.t0);
         data.put("missing", page.missing);
+        data.put("coverageGaps", page.coverageGaps);
         List<Map<String, Object>> rows = new ArrayList<>();
         for (CityFairnessReader.OutingEvidence item : page.outings) {
             Map<String, Object> row = new LinkedHashMap<>();
@@ -128,6 +130,30 @@ public class CityFairnessReportController extends BaseController {
         data.put("readBack", page.readBack);
         if (page.errorCode != null) data.put("errorCode", page.errorCode);
         return data;
+    }
+
+    private static List<Map<String, Object>> groupRows(CityFairnessReportService.Page page) {
+        List<String> gaps = page.coverageGaps;
+        List<Map<String, Object>> rows = new ArrayList<>();
+        for (CityFairnessReader.Group group : page.groups) {
+            Map<String, Object> row = new LinkedHashMap<>();
+            row.put("joinTime", gaps.contains("join-time") ? null : group.joinTime);
+            row.put("teamSize", gaps.contains("headcount") ? null : group.teamSize);
+            row.put("actionCost", group.actionCost);
+            row.put("newcomer", gaps.contains("novice-label") ? null : group.newcomer);
+            row.put("goalCompletions", group.goalCompletions);
+            row.put("effectiveGain", gaps.contains("revenue") ? null : group.effectiveGain);
+            row.put("topActorGain", gaps.contains("revenue") ? null : group.topActorGain);
+            row.put("totalGain", gaps.contains("revenue") ? null : group.totalGain);
+            row.put("zeroPointBlocks", group.zeroPointBlocks);
+            row.put("challengeCompensationExits", group.challengeCompensationExits);
+            row.put("gpsFalseRejections", gaps.contains("gps-false-rejections") ? null : group.gpsFalseRejections);
+            row.put("safetyTickets", gaps.contains("safety-tickets") ? null : group.safetyTickets);
+            row.put("merchantVerifications", gaps.contains("verification-latency") ? null : group.merchantVerifications);
+            row.put("merchantVerificationMillis", gaps.contains("verification-latency") ? null : group.merchantVerificationMillis);
+            rows.add(row);
+        }
+        return rows;
     }
 
     private static ResponseEntity<AjaxResult> finish(CityFairnessReportService.Page page, Map<String, Object> data) {
