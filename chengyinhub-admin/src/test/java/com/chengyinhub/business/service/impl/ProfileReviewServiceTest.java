@@ -159,7 +159,8 @@ class ProfileReviewServiceTest {
 
         npc.setAuditStatus(1);
         npc.setAvatar(RAW_AVATAR);
-        when(inbox.selectLatestByTargetMedia(IWxContentSecurityService.BIZ_TYPE_MERCHANT_PROFILE, 7L,
+        npc.setId(91L);
+        when(inbox.selectLatestByTargetMedia(IWxContentSecurityService.BIZ_TYPE_MERCHANT_NPC, 91L,
                 WxContentCallbackInboxServiceImpl.sha256Hex(RAW_AVATAR))).thenReturn(row(null, WxContentCallbackInbox.STATE_WAITING));
         Map<String, Object> live = service.merchantNpcReceipt(7L, npc);
         assertEquals("APPROVED", live.get("review"));
@@ -172,5 +173,36 @@ class ProfileReviewServiceTest {
         assertEquals("REJECTED", rejected.get("review"));
         assertEquals("人设含广告", rejected.get("reviewReason"));
         assertEquals(false, service.merchantNpcReceipt(7L, null).get("hasProfile"));
+    }
+
+    /**
+     * Batch-2 S1:回执必须读送检路径真正写入的目标 —— (BIZ_TYPE_MERCHANT_NPC=18, npc_profile.id),
+     * 不是 (MERCHANT_PROFILE, merchantId)。走 未送检 → 送检待回调 → 回调通过 / 回调违规 全程。
+     */
+    @Test
+    void merchantNpcAvatarReceiptFollowsTheNpcSubmissionThroughPendingToApproved() {
+        NpcProfile npc = new NpcProfile();
+        npc.setId(91L);
+        npc.setAuditStatus(1);
+        npc.setEnabled(1);
+        npc.setAvatar(" " + RAW_AVATAR + " ");
+        String hash = WxContentCallbackInboxServiceImpl.sha256Hex(RAW_AVATAR);
+        // 商家 logo 恰好是同一张图且已过审:这条是 (6, merchantId),不能被门店分身头像回执读到
+        when(inbox.selectLatestByTargetMedia(IWxContentSecurityService.BIZ_TYPE_MERCHANT_PROFILE, 7L, hash))
+                .thenReturn(row(0, WxContentCallbackInbox.STATE_DONE));
+
+        assertEquals("NOT_SUBMITTED", service.merchantNpcReceipt(7L, npc).get("avatarReview"), "还没送检");
+
+        when(inbox.selectLatestByTargetMedia(IWxContentSecurityService.BIZ_TYPE_MERCHANT_NPC, 91L, hash))
+                .thenReturn(row(null, WxContentCallbackInbox.STATE_WAITING))
+                .thenReturn(row(0, WxContentCallbackInbox.STATE_DONE))
+                .thenReturn(row(1, WxContentCallbackInbox.STATE_DONE));
+        assertEquals("PENDING", service.merchantNpcReceipt(7L, npc).get("avatarReview"), "已送检、等回调");
+        assertEquals("APPROVED", service.merchantNpcReceipt(7L, npc).get("avatarReview"), "回调通过");
+        npc.setAuditStatus(2);
+        Map<String, Object> rejected = service.merchantNpcReceipt(7L, npc);
+        assertEquals("REJECTED", rejected.get("avatarReview"), "回调违规时回执如实显示驳回");
+        assertEquals(false, rejected.get("playerVisible"));
+        verify(inbox, never()).selectLatestByTargetMedia(IWxContentSecurityService.BIZ_TYPE_MERCHANT_PROFILE, 7L, hash);
     }
 }
