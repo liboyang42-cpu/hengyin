@@ -124,6 +124,9 @@ MYBATIS_ITS=(
   # 2026-10-22 DOC2 F3 Phase 1:套票两条迁移可重跑 + 形状负控、settlement_claim 单位维度不破存量唯一性、
   #   A/B 同买一套票余额互不影响、快照冻结、同单位唯一在约、月度豁免唯一 —— 真 DDL + 真 mapper 才验得动。
   FreeExploreBundleLedgerMySqlIT
+  # 2026-10-22 O-14 city_code 回填(RV3 B-519-1):南京西路(上海)/北京路(广州)反例、人工值不覆盖、重跑零变更、
+  #   修正重跑只改本回填写过的行、只读预览与真实执行逐行一致 —— 真迁移 + 真 MySQL 才验得动。
+  O14CityCodeBackfillMySqlIT
 )
 IFS=, ; IT_LIST="${MYBATIS_ITS[*]}" ; unset IFS
 # ⚠️ 必须带 -am:上面那句 `mvn clean test` 不 install 兄弟模块,

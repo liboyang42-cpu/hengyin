@@ -47,12 +47,39 @@ class O14MigrationContractTest {
     }
 
     @Test
-    void backfillOnlyFillsEmptyValues() throws Exception {
+    void backfillNeverMatchesFreeTextAddressesAndOnlyRewritesItsOwnRows() throws Exception {
         String sql = read("migration_o14_content_city_code_backfill_20261022.sql");
-        int updates = sql.split("(?m)^UPDATE ").length - 1;
-        assertEquals(3, updates);
-        assertEquals(3, sql.split("WHERE (t|a)\\.city_code IS NULL").length - 1,
-                "每条回填 UPDATE 都只能写 city_code IS NULL 的行");
-        assertTrue(sql.contains("HAVING COUNT(DISTINCT k.city_code) = 1"), "命中多个城市的地址不能猜");
+        String code = sql.replaceAll("(?m)^--.*$", "");
+        assertFalse(code.contains("address_name") || code.contains("address "), "地址自由文本不得参与匹配(南京西路→南京、北京路→北京)");
+        assertFalse(code.contains("LIKE"), "不得做子串匹配");
+        assertTrue(code.contains("k.keyword = TRIM(TRAILING '市' FROM TRIM(c.city)) COLLATE utf8mb4_general_ci"),
+                "只认俱乐部「所在城市」字段整串相等");
+        int updates = code.split("(?m)^UPDATE ").length - 1;
+        assertEquals(2, updates);
+        assertEquals(2, code.split("WHERE \\((t|a)\\.city_code IS NULL OR l\\.city_code = (t|a)\\.city_code\\)").length - 1,
+                "每条回填 UPDATE 只能写 city_code IS NULL 或本回填写过且未改动的行");
+        assertEquals(2, code.split("INSERT INTO o14_city_code_backfill_log").length - 1, "每次写入都要记来源标记");
+    }
+
+    @Test
+    void previewIsCommittedReadOnlyAndUsesTheSameCityWhitelist() throws Exception {
+        String preview = read("_precheck_o14_content_city_code_backfill_20261022.sql");
+        String code = preview.replaceAll("(?m)^--.*$", "").toUpperCase();
+        for (String write : new String[]{"INSERT ", "UPDATE ", "DELETE ", "CREATE ", "DROP ", "ALTER ", "REPLACE "}) {
+            assertFalse(code.contains(write), "预览必须只读: " + write.trim());
+        }
+        java.util.regex.Matcher pair = java.util.regex.Pattern.compile("'([^'\\d]+)','(\\d{6})'").matcher(
+                read("migration_o14_content_city_code_backfill_20261022.sql"));
+        java.util.List<String> cities = new java.util.ArrayList<>();
+        while (pair.find()) cities.add(pair.group(1) + "=" + pair.group(2));
+        assertEquals(15, cities.size());
+        java.util.regex.Matcher kw = java.util.regex.Pattern.compile("SELECT '([^']+)'(?: AS keyword)?, ?'(\\d{6})'").matcher(preview);
+        java.util.List<String> previewCities = new java.util.ArrayList<>();
+        while (kw.find()) previewCities.add(kw.group(1) + "=" + kw.group(2));
+        // 预览里白名单在三条语句各出现一次,逐份与迁移一致
+        assertEquals(3 * cities.size(), previewCities.size());
+        for (int i = 0; i < previewCities.size(); i++) {
+            assertEquals(cities.get(i % cities.size()), previewCities.get(i));
+        }
     }
 }
