@@ -89,6 +89,7 @@ function createDetailHarness() {
     '../../../utils/ticket-source.js': require('../../utils/ticket-source.js'),
     '../../../utils/topic-share.js': require('../../utils/topic-share.js'),
     '../utils/club-event-calendar.js': require('../../pages/club/utils/club-event-calendar.js'),
+    '../utils/edition-empty-reason.js': require('../../pages/club/utils/edition-empty-reason.js'),
   })
   page.data.clubId = '9'
   page.data.myMemberId = '7'
