@@ -111,7 +111,11 @@ class TandianriBatch0FundsMybatisIntegrationTest {
                 "CREATE TABLE cms_registration (id BIGINT PRIMARY KEY, owner_type BIGINT, owner_id BIGINT, member_id BIGINT, payable_amount DECIMAL(12,2), payment_status INT, registration_status INT, verification_status INT, purchase_kind INT, verification_time DATETIME, ticket_id BIGINT, refund_deadline DATETIME)",
                 "CREATE TABLE cms_registration_scan (id BIGINT PRIMARY KEY AUTO_INCREMENT, registration_id BIGINT, member_id BIGINT, registration_type INT, status INT DEFAULT 0, create_time DATETIME)",
                 "CREATE TABLE coop_group_member_verify (id BIGINT PRIMARY KEY AUTO_INCREMENT, registration_id BIGINT, topic_id BIGINT, activity_id BIGINT, verify_time DATETIME)",
-                "CREATE TABLE coop_group_verify (id BIGINT PRIMARY KEY AUTO_INCREMENT, topic_id BIGINT, activity_id BIGINT, coop_order_id BIGINT, merchant_member_id BIGINT, leader_member_id BIGINT, verify_time DATETIME)",
+                // 2026-10-22 TF1:与生产 DDL(sql/base_schema_20260818.sql、migration_coop_group_activity_settlement_20260722)
+                //   对齐 NOT NULL 与 uk_group_verify_activity_merchant。团码幂等靠这把唯一键 + INSERT IGNORE,
+                //   夹具缺键时生产会拒的重复接待行在这里照样写得进去,读口径的断言就可能在重复数据上假绿。
+                "CREATE TABLE coop_group_verify (id BIGINT PRIMARY KEY AUTO_INCREMENT, topic_id BIGINT NOT NULL, activity_id BIGINT DEFAULT NULL, coop_order_id BIGINT NOT NULL, merchant_member_id BIGINT NOT NULL, leader_member_id BIGINT NOT NULL, verify_time DATETIME NOT NULL, "
+                        + "UNIQUE KEY uk_group_verify_activity_merchant (activity_id, merchant_member_id), KEY idx_group_verify_topic (topic_id), KEY idx_group_verify_activity (activity_id))",
                 "INSERT INTO cms_topic(id,name,product_type,del_flag,status,is_settlement,end_date) VALUES (7001,'FREE_EXPLORE',2,0,1,0,DATE_SUB(NOW(),INTERVAL 1 DAY)),(7002,'经典定向',1,0,1,0,DATE_SUB(NOW(),INTERVAL 1 DAY)),(7003,'类型未决主题',NULL,0,1,0,DATE_SUB(NOW(),INTERVAL 1 DAY))",
                 // 2026-09-17 客诉期:活动结束满 7 天才入结算选单,活动夹具统一放在结束 8 天前。
                 "INSERT INTO cms_activity(id,topic_id,member_id,name,del_flag,status,is_settlement,end_date) VALUES (7101,7001,1,'FREE_EXPLORE壳',0,1,0,DATE_SUB(NOW(),INTERVAL 8 DAY)),(7102,7002,1,'经典活动',0,1,0,DATE_SUB(NOW(),INTERVAL 8 DAY)),(7103,NULL,1,'独立旧活动',0,1,0,DATE_SUB(NOW(),INTERVAL 8 DAY)),(7104,7003,1,'类型未决活动壳',0,1,0,DATE_SUB(NOW(),INTERVAL 8 DAY))",
@@ -119,6 +123,9 @@ class TandianriBatch0FundsMybatisIntegrationTest {
                 "INSERT INTO cms_registration_scan(registration_id,member_id,registration_type,create_time) VALUES (7301,7201,1,NOW()),(7302,7201,1,NOW())",
                 "INSERT INTO coop_group_member_verify(registration_id,topic_id,activity_id,verify_time) VALUES (7301,7001,7101,NOW()),(7302,7001,7101,NOW())",
                 "INSERT INTO coop_group_verify(topic_id,activity_id,coop_order_id,merchant_member_id,leader_member_id,verify_time) VALUES (7001,7101,7501,7201,7601,NOW())");
+        // 夹具负控:同场次同商家的第二条接待必须被唯一键吞掉,证明上面的 DDL 真的带着生产的键。
+        assertEquals(0, updateCount("INSERT IGNORE INTO coop_group_verify(topic_id,activity_id,coop_order_id,merchant_member_id,leader_member_id,verify_time) VALUES (7001,7101,7501,7201,7602,NOW())"));
+        assertEquals(1, scalarInt("SELECT COUNT(*) FROM coop_group_verify"));
     }
 
     @AfterAll
@@ -369,6 +376,12 @@ class TandianriBatch0FundsMybatisIntegrationTest {
             for (String item : sql) {
                 statement.execute(item);
             }
+        }
+    }
+
+    private int updateCount(String sql) throws Exception {
+        try (Connection connection = dataSource.getConnection(); Statement statement = connection.createStatement()) {
+            return statement.executeUpdate(sql);
         }
     }
 
