@@ -19,3 +19,5 @@
 .pg-form-actions { display: flex; justify-content: flex-end; gap: var(--cy-space-2); }
 .pg-more { margin-top: var(--cy-space-2); text-align: center; font-size: var(--cy-font-caption); color: var(--cy-text-secondary); padding: var(--cy-space-2) 0; }
 .pg-notice { display: block; margin-top: var(--cy-space-2); font-size: var(--cy-font-caption); }
+/* isolated 组件内全局 .cy-pressed 进不来,本地定义一份(同 privacy-sheet)。 */
+.cy-pressed { opacity: .88; }
