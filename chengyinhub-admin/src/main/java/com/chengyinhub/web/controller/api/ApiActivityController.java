@@ -73,6 +73,10 @@ public class ApiActivityController extends BaseController {
     @Autowired
     private ICmsActivityService cmsActivityService;
 
+    /** O5b-1 开关(默认关):编辑分级 —— 轻改不重审,实质改动重新进审核。 */
+    @org.springframework.beans.factory.annotation.Value("${chengyin.audit.o5b.light-edit.enabled:false}")
+    private boolean lightEditClassificationEnabled = false;
+
     @Autowired
     private ICmsTopicNodeService cmsTopicNodeService;
 
@@ -947,11 +951,32 @@ public class ApiActivityController extends BaseController {
             return error("系统繁忙，请稍后重试");
         }
 
+        // O5b-1(开关默认关):文本机审已明确通过时才分级 —— 未打标,且没有因内容留置
+        // (先审模式下活动必带报名,门禁一律回 HOLD/STRUCTURED_REVIEW,那是按模式的结构化复核,不是内容存疑)。
+        // 轻改(错别字/措辞)不退回待审;先发后审下的实质改动(内容/媒体/时间/地点)走抽检单重新进审核,内容保持在架。
+        // 已驳回/待审中的活动不受影响(service 里那两条分支不看 preReview)。
+        boolean reReview = preReview;
+        boolean substantiveSpotCheck = false;
+        boolean textCleared = !decision.isFlagged()
+                && (!decision.isHold() || "STRUCTURED_REVIEW".equals(decision.getReasonCode()));
+        if (lightEditClassificationEnabled && textCleared) {
+            com.chengyinhub.business.service.support.ContentEditClassifier.EditClass editClass =
+                    com.chengyinhub.business.service.support.ContentEditClassifier.classifyActivity(exist, request);
+            if (editClass == com.chengyinhub.business.service.support.ContentEditClassifier.EditClass.LIGHT) {
+                reReview = false;
+            } else if (editClass == com.chengyinhub.business.service.support.ContentEditClassifier.EditClass.SUBSTANTIVE
+                    && !preReview) {
+                substantiveSpotCheck = true;
+            }
+        }
+
         try {
             // SQL 的 where 带 member_id,传主体才写得动自家活动(员工只是操作人)。
-            cmsActivityService.updateActivityByOwner(request, publisher.ownerMemberId(), getAppUserName(), preReview);
+            cmsActivityService.updateActivityByOwner(request, publisher.ownerMemberId(), getAppUserName(), reReview);
             if (decision.isFlagged() && !preReview) {
                 flagForSpotCheck(cid, publisher.ownerMemberId(), decision.getFlagReason(), request, true);
+            } else if (substantiveSpotCheck) {
+                flagForSpotCheck(cid, publisher.ownerMemberId(), "SUBSTANTIVE_EDIT", request, true);
             }
             return success("活动已更新");
         } catch (ServiceException se) {
