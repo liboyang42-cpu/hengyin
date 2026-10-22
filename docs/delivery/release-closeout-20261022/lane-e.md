@@ -56,7 +56,12 @@ action-ledger、route-matrix、基线均未改动且无需重建（计数 old = 
 
 ## CI
 
-见 PR #456 的检查结果（结果回填于下方）。
+PR #456 head `2246753c`：
+- GitHub CI run `39756576123`：success —— Fast gates、Secret scan (gitleaks)、Detect changed areas、Mini program static gates、Mini program static checks（台账逐字节检查通过）、Mini program unit shard 1–20/20 全部 success；Backend/Migration/Admin UI/SBOM 等因无对应路径改动 skipped。
+- Funds MySQL IT run `39756575911`：success（2/2）。
+- 上一提交 `cea160c9` 的 run `39756506402` / `39756506458` 同样触发（已被新提交覆盖）。
+
+#412 原分支 head `28ee751a`：mergeable=true / clean（对 master `063a6c3c`），6 个 success、其余因路径 skipped —— 状态与之前一致。
 
 ## 未决 / 观察（未改，避免扩大范围）
 
