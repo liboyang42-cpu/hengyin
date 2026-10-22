@@ -7,6 +7,7 @@ Component({
     error: { type: String, value: '' },
   },
   data: {
+    visible: false,
     draft: hours.parse(''),
     hours: HOURS.map(pad2),
     minutes: MINUTES.map(pad2),
@@ -17,10 +18,13 @@ Component({
   },
   methods: {
     open() {
-      (Object.assign(this.data, {timePart: ''}), this.setData({draft: hours.parse(this.data.value), localError: ''}));
+      this.setData({ visible: true, timePart: '', draft: hours.parse(this.data.value), localError: '' });
+      this.triggerEvent('visible', { visible: true });
     },
     close() {
-      this.selectComponent('#hours-drop').close();
+      if (!this.data.visible) return;
+      this.setData({ visible: false, timePart: '' });
+      this.triggerEvent('visible', { visible: false });
     },
     toggleDay(e) {
       if (this.data.saving) return;
@@ -34,11 +38,13 @@ Component({
       this.openTime('end');
     },
     openTime(part) {
+      if (this.data.saving) return;
+      if (this.data.timePart === part) { this.setData({ timePart: '' }); return; }
       const values = this.data.draft[part].split(':');
-      (Object.assign(this.data, {timePart: part}), this.setData({hourIndex: Number(values[0]), minuteIndex: Number(values[1])}));
+      this.setData({ timePart: part, hourIndex: Number(values[0]), minuteIndex: Number(values[1]) });
     },
     pickHour(e) {
-      if (this.data.saving) return;
+      if (this.data.saving || !this.data.timePart) return;
       const hour = Number(e.currentTarget.dataset.index);
       this.setData({
         hourIndex: hour,
@@ -46,14 +52,14 @@ Component({
       });
     },
     pickMinute(e) {
-      if (this.data.saving) return;
+      if (this.data.saving || !this.data.timePart) return;
       const minute = Number(e.currentTarget.dataset.index);
       this.setData({
         minuteIndex: minute,
         ['draft.' + this.data.timePart]: pad2(this.data.hourIndex) + ':' + pad2(minute),
         localError: '',
+        timePart: '',
       });
-      this.selectComponent('#' + this.data.timePart + '-drop').close();
     },
     save() {
       if (this.data.saving) return;

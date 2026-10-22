@@ -596,6 +596,7 @@ class MerchantProfilePersistenceMybatisIntegrationTest {
 
     private static final String MERCHANT_DDL = "CREATE TABLE mms_merchant ("
             + "id BIGINT AUTO_INCREMENT PRIMARY KEY, member_id BIGINT UNIQUE, name VARCHAR(255), wechat VARCHAR(255),"
+            + "wechat_qrcode VARCHAR(512), category_ids VARCHAR(255),"
             + "category_id INT, logo VARCHAR(500), description TEXT, derivatives TEXT, derivative_benefits VARCHAR(100), website VARCHAR(255),"
             + "preference VARCHAR(255), phone VARCHAR(50), address VARCHAR(255), business_time VARCHAR(255),"
             + "business_license VARCHAR(255), status BIGINT DEFAULT 0, reson VARCHAR(255), disable_reason VARCHAR(500), account_status BIGINT DEFAULT 0,"
