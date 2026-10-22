@@ -88,7 +88,8 @@ class MerchantReferralBountyDeadlockRetryMySqlIT {
             String start = "CREATE TABLE `" + table + "` (";
             int from = snapshot.indexOf(start);
             int closing = snapshot.indexOf("\n) ENGINE", from);
-            int to = snapshot.indexOf(';', closing);
+            // Statement ends at the first ';' that closes the ENGINE line: table COMMENTs may contain ';'.
+            int to = snapshot.indexOf(";\n", closing);
             assertTrue(from >= 0 && closing > from && to > closing, "missing source DDL: " + table);
             db.execute(snapshot.substring(from, to + 1));
         }
@@ -96,7 +97,9 @@ class MerchantReferralBountyDeadlockRetryMySqlIT {
         // competing transaction heavier so InnoDB deterministically picks the verification as deadlock victim.
         db.execute("CREATE TABLE it_verify_log(id BIGINT PRIMARY KEY, verified INT NOT NULL) ENGINE=InnoDB");
         db.execute("CREATE TABLE it_ballast(id BIGINT PRIMARY KEY, v INT NOT NULL) ENGINE=InnoDB");
-        db.execute("INSERT INTO it_ballast(id, v) WITH RECURSIVE n(i) AS (SELECT 1 UNION ALL SELECT i + 1 FROM n WHERE i < 200) SELECT i, 0 FROM n");
+        java.util.List<Object[]> ballast = new java.util.ArrayList<>();
+        for (long id = 1; id <= 200; id++) ballast.add(new Object[] {id});
+        db.batchUpdate("INSERT INTO it_ballast(id, v) VALUES(?, 0)", ballast);
 
         SqlSessionFactoryBean factory = new SqlSessionFactoryBean();
         factory.setDataSource(source);
