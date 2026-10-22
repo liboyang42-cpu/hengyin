@@ -41,7 +41,7 @@ import static org.mockito.Mockito.when;
 class CommunityPostMediaCallbackVisibilityTest {
 
     private static final long POST_ID = 7L;
-    private static final String IMAGE = "https://cdn.example/community/image.jpg";
+    private static final String IMAGE = "upload/0123456789abcdef0123456789abcdef.jpg";
 
     private ICommunityPostService communityPostService;
     private WxContentCallbackInboxMapper inboxMapper;
@@ -51,7 +51,7 @@ class CommunityPostMediaCallbackVisibilityTest {
     @SuppressWarnings("unchecked")
     void setUp() {
         communityPostService = mock(ICommunityPostService.class);
-        when(communityPostService.activeMediaUrls(POST_ID)).thenReturn(Collections.singletonList(IMAGE));
+        when(communityPostService.activeMediaKeys(POST_ID)).thenReturn(Collections.singletonList(IMAGE));
         when(communityPostService.applyRiskyMediaResult(POST_ID)).thenReturn(true);
         ObjectProvider<ICommunityPostService> provider = mock(ObjectProvider.class);
         when(provider.getObject()).thenReturn(communityPostService);
@@ -91,8 +91,8 @@ class CommunityPostMediaCallbackVisibilityTest {
 
     @Test
     void staleVerdictOnARemovedImageChangesNothing() {
-        when(communityPostService.activeMediaUrls(POST_ID))
-                .thenReturn(Collections.singletonList("https://cdn.example/community/other.jpg"));
+        when(communityPostService.activeMediaKeys(POST_ID))
+                .thenReturn(Collections.singletonList("upload/ffffffffffffffffffffffffffffffff.jpg"));
 
         applyCallback("trace-post-stale", hashOf(IMAGE), true);
 
@@ -106,6 +106,23 @@ class CommunityPostMediaCallbackVisibilityTest {
 
         verify(inboxMapper).markDone(anyString(), anyString(), anyLong(), eq(0));
         verify(communityPostService, never()).applyRiskyMediaResult(anyLong());
+    }
+
+    /** 预签名 URL 只用于拉图;inbox 登记的是稳定对象 key,回调核对才对得上。 */
+    @Test
+    void presignedSubmissionRegistersTheObjectKeyNotTheExpiringUrl() {
+        String preview = "https://private-test.oss-cn-shanghai.aliyuncs.com/" + IMAGE + "?Expires=300&Signature=s";
+        IWxContentCallbackInboxService inbox = mock(IWxContentCallbackInboxService.class);
+        when(inbox.register(anyString(), anyInt(), anyLong(), anyString())).thenReturn(true);
+        ReflectionTestUtils.setField(service, "callbackInboxService", inbox);
+        WxContentSecurityServiceImpl spy = org.mockito.Mockito.spy(service);
+        org.mockito.Mockito.doReturn(true).when(spy).isEnabled();
+        org.mockito.Mockito.doReturn("trace-presigned").when(spy).checkMediaAsync(preview, "openid-9");
+
+        assertEquals("trace-presigned", spy.submitMediaCheckOne(
+                IWxContentSecurityService.BIZ_TYPE_COMMUNITY_POST, POST_ID, preview, IMAGE, "openid-9"));
+
+        verify(inbox).register("trace-presigned", IWxContentSecurityService.BIZ_TYPE_COMMUNITY_POST, POST_ID, IMAGE);
     }
 
     private void applyCallback(String traceId, String mediaHash, boolean risky) {
