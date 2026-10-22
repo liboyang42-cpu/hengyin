@@ -88,3 +88,50 @@ page { background: var(--cy-comp-sheet-player-page); }
 .mt-badge--ok { background: rgba(74,222,128,.18); color: #4ADE80; } /* ds-ok 稿 595:1022 */
 .mt-badge--wait { background: rgba(245,180,70,.18); color: #F5B446; } /* ds-ok 稿 595:1029 */
 .mt-badge--bad { background: rgba(248,113,113,.18); color: #F87171; } /* ds-ok 稿 595:1036 */
+
+/* ===== 2026-10-22 业主:筛选行(计数条下面)· 三类点位色 · 点位卡 ===== */
+.mt-filter { position: absolute; left: 0; right: 0; z-index: 19; white-space: nowrap; padding: 0 23rpx; box-sizing: border-box; }
+.mt-chip { display: inline-flex; align-items: center; gap: 10rpx; height: 64rpx; padding: 0 26rpx; margin-right: 14rpx; border-radius: 32rpx; vertical-align: top;
+  font-size: 25rpx; font-weight: 600; color: rgba(255,255,255,.78); background: rgba(28,28,30,.92); backdrop-filter: blur(24rpx); } /* ds-ok 与计数条同一玻璃 */
+.mt-chip.is-on { background: var(--cy-color-play-accent); color: var(--cy-color-play-ink); }
+.mt-chip__dot { width: 14rpx; height: 14rpx; border-radius: 50%; }
+.mt-chip__dot--team { background: #FFF0CF; } /* ds-ok MAP_AVATAR_COLORS.cream 队伍头像点 */
+.mt-chip__dot--place { background: #4ADE80; } /* ds-ok MAP_AVATAR_COLORS.cityRoute 地点 */
+.mt-chip__dot--shop { background: #E7A84B; } /* ds-ok MAP_AVATAR_COLORS.merchant 商家 */
+.mt-chip__caret { width: 0; height: 0; border-left: 8rpx solid transparent; border-right: 8rpx solid transparent; border-top: 10rpx solid currentColor; opacity: .7; }
+
+.pc { position: absolute; left: 23rpx; right: 23rpx; z-index: 40; height: 560rpx; transform: translateY(40rpx) scale(.72); transform-origin: 50% 100%; opacity: 0;
+  transition: transform .42s cubic-bezier(.2,.9,.25,1.08), opacity .25s ease; perspective: 2000rpx; }
+.pc.is-in { transform: none; opacity: 1; }
+.pc.is-x { height: auto; }
+.pc--reduced, .pc--reduced .pc__in { transition: none; }
+.pc__in { position: absolute; top: 0; left: 0; right: 0; bottom: 120rpx; transform-style: preserve-3d; transition: transform .6s cubic-bezier(.3,.7,.2,1); }
+.pc__in.is-flip { transform: rotateY(180deg); }
+.pc__f, .pc__b { position: absolute; top: 0; right: 0; bottom: 0; left: 0; border-radius: 40rpx; overflow: hidden; clip-path: inset(0 round 40rpx); backface-visibility: hidden; -webkit-backface-visibility: hidden;
+  background: var(--cy-comp-sheet-player-page); }
+.pc__b { transform: rotateY(180deg); padding: 40rpx; box-sizing: border-box; display: flex; flex-direction: column; gap: 20rpx; border: 1rpx solid var(--cy-color-play-line); }
+.pc__img, .pc__ph { position: absolute; top: 0; right: 0; bottom: 0; left: 0; width: 100%; height: 100%; }
+.pc__ph { display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,.5); } /* ds-ok */
+.pc__ph--place { background: linear-gradient(160deg, #1f4d33, #0d1f15); } /* ds-ok 地点无图底 */
+.pc__ph--shop { background: linear-gradient(160deg, #5a3d12, #1f150a); } /* ds-ok 商家无图底 */
+.pc__blur { position: absolute; left: 0; right: 0; bottom: 0; height: 60%; backdrop-filter: blur(24rpx); -webkit-backdrop-filter: blur(24rpx);
+  -webkit-mask-image: linear-gradient(transparent, #000 50%); mask-image: linear-gradient(transparent, #000 50%); } /* ds-ok 遮罩 alpha */
+.pc__sh { position: absolute; top: 0; right: 0; bottom: 0; left: 0; background: linear-gradient(rgba(0,0,0,0) 30%, rgba(0,0,0,.72)); } /* ds-ok 照片压暗 */
+.pc__hd { position: absolute; top: 28rpx; left: 28rpx; display: flex; gap: 12rpx; }
+.pc__tag { padding: 6rpx 18rpx; border-radius: 20rpx; font-size: 22rpx; font-weight: 700; color: #132A2E; } /* ds-ok 深色字压在点位色上 */
+.pc__tag--place { background: #4ADE80; } /* ds-ok */
+.pc__tag--shop { background: #E7A84B; } /* ds-ok */
+.pc__found { padding: 6rpx 18rpx; border-radius: 20rpx; font-size: 22rpx; color: #fff; background: rgba(255,255,255,.18); } /* ds-ok */
+.pc__tx { position: absolute; left: 32rpx; right: 32rpx; bottom: 28rpx; display: flex; flex-direction: column; gap: 8rpx; }
+.pc__t { font-size: 40rpx; font-weight: 700; color: #fff; } /* ds-ok 照片上白字 */
+.pc__s { font-size: 24rpx; color: rgba(255,255,255,.75); } /* ds-ok */
+.pc__tags { display: flex; flex-wrap: wrap; gap: 10rpx; margin-top: 6rpx; }
+.pc__chip { padding: 4rpx 14rpx; border-radius: 16rpx; font-size: 21rpx; color: #fff; background: rgba(255,255,255,.16); } /* ds-ok */
+.pc__bt { font-size: 36rpx; font-weight: 700; color: var(--cy-color-play-accent); }
+.pc__bx { flex: 1; min-height: 0; }
+.pc__d { font-size: 28rpx; line-height: 1.6; color: var(--cy-color-text-secondary); }
+.pc__x { position: absolute; top: 20rpx; right: 20rpx; z-index: 2; width: 64rpx; height: 64rpx; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,.4); } /* ds-ok */
+.pc__acts { position: absolute; left: 0; right: 0; bottom: 0; height: 96rpx; display: flex; gap: 16rpx; }
+.pc__btn { flex: 1; border-radius: 48rpx; display: flex; align-items: center; justify-content: center; font-size: 27rpx; font-weight: 600;
+  color: var(--cy-color-play-accent); background: rgba(28,28,30,.92); border: 1rpx solid var(--cy-color-play-line); } /* ds-ok 与角控件同一玻璃 */
+.pc__btn--w { background: var(--cy-color-play-accent); color: var(--cy-color-play-ink); border-color: transparent; }

@@ -81,8 +81,9 @@ test('legitimate empty results show zero only after HTTP200 and valid arrays; ne
   assert.equal(h.page.data.headerText, '附近的队伍');
   reply(h.requests[0], 200, { code: 200, data: [] }); reply(h.requests[1], 200, { code: 200, data: { items: [] } });
   assert.equal(h.page.data.headerText, '附近的队伍 · 0 支在招募'); assert.equal(h.page.data.loadError, false);
-  h.page.refresh(h.page.data.center); h.requests[2].fail({ errMsg: 'fixture network' });
-  reply(h.requests[3], 200, { code: 200, data: { items: [] } });
+  // 2026-10-22:每次 refresh 依次发 队伍 / 主题活动 / 地标商家 三个读取,第二轮从下标 3 开始
+  h.page.refresh(h.page.data.center); h.requests[3].fail({ errMsg: 'fixture network' });
+  reply(h.requests[4], 200, { code: 200, data: { items: [] } });
   assert.equal(h.page.data.headerText, '附近的队伍'); assert.equal(h.page.data.loadError, true); assert.equal(h.page.data.nearbyReadAccess, '');
 });
 
@@ -95,7 +96,7 @@ test('account and token changes clear old cards/markers and reject out-of-order 
   assert.equal(h.page.data.markers.length, 0); assert.equal(h.page.data.headerText, '附近的队伍');
   reply(old[0], 200, { code: 200, data: [team] }); reply(old[1], 403, { code: 403 });
   assert.equal(h.page._teams.length, 0); assert.equal(h.page.data.nearbyReadAccess, '');
-  const actor8 = h.requests.slice(2); reply(actor8[0], 200, { code: 200, data: [] }); reply(actor8[1], 200, { code: 200, data: { items: [] } });
+  const actor8 = h.requests.slice(3); // 旧账号那轮占 0–2(队伍 / 主题活动 / 地标商家) reply(actor8[0], 200, { code: 200, data: [] }); reply(actor8[1], 200, { code: 200, data: { items: [] } });
   h.actor('8', 'fixture-new-token'); h.page.onShow();
   reply(actor8[0], 200, { code: 200, data: [team] });
   assert.equal(h.page.data.headerText, '附近的队伍'); assert.equal(h.page._teams.length, 0);
@@ -106,9 +107,10 @@ test('successful automatic refresh uses a fresh read owner and does not adopt th
     wxLogin: async () => ({ code: 'fixture-code' }), exchangeCode: async () => ({ token: 'fixture-refreshed', data: { id: '7', userType: 1, role: 'player' } }),
   });
   h.page.refresh(h.page.data.center); reply(h.requests[0], 401, { code: 401 }); await settled();
-  assert.equal(h.requests.length, 3); reply(h.requests[2], 200, { code: 200, data: [team] });
-  assert.equal(h.page._teams.length, 0); assert.equal(h.requests.length, 5);
-  reply(h.requests[3], 200, { code: 200, data: [] }); reply(h.requests[4], 200, { code: 200, data: { items: [] } });
+  // 2026-10-22:首轮 0–2 = 队伍 / 主题活动 / 地标商家;3 = 换票后的自动重发;之后新一轮 4–6
+  assert.equal(h.requests.length, 4); reply(h.requests[3], 200, { code: 200, data: [team] });
+  assert.equal(h.page._teams.length, 0); assert.equal(h.requests.length, 7);
+  reply(h.requests[4], 200, { code: 200, data: [] }); reply(h.requests[5], 200, { code: 200, data: { items: [] } });
   assert.equal(h.page.data.headerText, '附近的队伍 · 0 支在招募'); assert.equal(h.page.data.nearbyReadAccess, '');
 });
 

@@ -11,6 +11,7 @@
     "cy-modal-host": "/components/cy/modal-host/index",
     "cy-error": "/components/cy/error/index",
     "cy-option-sheet": "/components/cy/option-sheet/index",
-    "cy-result-sheet": "/components/cy/result-sheet/index"
+    "cy-result-sheet": "/components/cy/result-sheet/index",
+    "cy-icon": "/components/cy/icon/index"
   }
 }

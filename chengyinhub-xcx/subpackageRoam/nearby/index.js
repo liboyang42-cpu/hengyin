@@ -10,7 +10,7 @@ const { getCurrentLocation } = require('../../utils/location/location-manager.js
 const lastLocation = require('../../utils/location/last-location.js');
 const { isRecordList } = require('../../utils/response-shape.js');
 const H = require('../../utils/roam-hangout.js');
-const T = require('../utils/map-team.js');
+const T = require('../utils/map-team.js'); const L = require('../utils/map-layers.js'); // L:2026-10-22 三类点位/筛选/边缘缩小
 const cyToast = require('../../utils/toast.js');
 const modal = require('../../utils/modal.js');
 const M = require('../../utils/roam-hangout-marker.js');
@@ -60,7 +60,7 @@ Page({
     rangeText: T.rangeText(DEFAULT_RADIUS),
     myTeamsText: T.myTeamsText(0),
     viewMode: 'map',        // map | list(2026-10-14 地图优化)
-    listRows: [],
+    listRows: [], layer: 'all', layerSub: '', layerSheet: '', layerItems: [], poiCard: null, poiCardIn: false, poiFlip: false, poiExpand: false, // 2026-10-22 筛选行与地标/商家点位卡
     myReadAccess: '', myReadError: false, myLoaded: false,
     rangeItems: RANGE_ITEMS,
     rangeIndex: T.RADII.indexOf(DEFAULT_RADIUS),
@@ -83,7 +83,7 @@ Page({
     this._openMineOnShow = options && options.sheet === 'mine';
     const requestedRadius = Number(options && options.radius); this._radius = T.RADII.indexOf(requestedRadius) >= 0 ? requestedRadius : DEFAULT_RADIUS; this._requestedTeamId = options && options.teamId;
     this._teams = [];        // /api/team/nearby 原始行(只在内存,视图走 T.decorateTeam 白名单)
-    this._items = [];        // 主题 / 活动点位
+    this._items = []; this._pois = [];        // 主题 / 活动点位;_pois = /api/roam/pois 地标与商家
     this._icons = {};
     this._far = {};
     this._iconFailed = {};
@@ -129,7 +129,7 @@ Page({
   refresh(center) {
     if (!this._prepareNearbyRead()) return;
     this.fetchTeams(center, this._radius);
-    this.fetchTopics(center, this._radius);
+    this.fetchTopics(center, this._radius); this.fetchPois(center, this._radius);
   },
 
   retryNearby() {
@@ -195,7 +195,7 @@ Page({
   },
 
   fetchTeams(center, radius) {
-    const that = this;
+    const that = this; this._lodCenter = center; this._lodRadius = radius; // 边缘缩小以这次查询的圆心/半径为准
     const owner = this._prepareNearbyRead();
     if (!owner) return;
     const seq = (this._teamSeq = (this._teamSeq || 0) + 1);
@@ -225,7 +225,7 @@ Page({
 
   /* 主题 / 活动点位沿用漫游附近接口;接口里存量的局(kind=hangout)不再画 —— 地图上不存在「局」了。 */
   fetchTopics(center, radius) {
-    const that = this;
+    const that = this; this._lodCenter = center; this._lodRadius = radius;
     const owner = this._prepareNearbyRead();
     if (!owner) return;
     const seq = (this._topicSeq = (this._topicSeq || 0) + 1);
@@ -268,11 +268,11 @@ Page({
   },
 
   _syncMarkers() {
-    const fallback = H.HANGOUT_FALLBACK_ICON;
+    const fallback = H.HANGOUT_FALLBACK_ICON; const f = this._layerFilter(); // 2026-10-22:按筛选取三类点位,再做边缘缩小 / 远处隐藏
     this.setData({
-      markers: H.buildHangoutMarkers(this._items, this._icons, this._far)
-        .concat(T.buildTeamMarkers(this._teams, this._icons, this._far[MAP_AVATAR_COLORS.cream] || fallback))
-        .concat(H.buildSelfMarker(this._me, this._selfIcon)),
+      markers: L.edgeLod(H.buildHangoutMarkers((this._items || []).filter((it) => L.keepItem(it, f)), this._icons, this._far)
+        .concat(L.keepTeam(f) ? T.buildTeamMarkers(this._teams, this._icons, this._far[MAP_AVATAR_COLORS.cream] || fallback) : [])
+        .concat(this._poiMarkers(f)).concat(H.buildSelfMarker(this._me, this._selfIcon)), this._lodCenter || this.data.center, this._lodRadius || this._radius),
     });
   },
 
@@ -401,7 +401,7 @@ Page({
   /* ---------- 地图 ---------- */
 
   onMarkerTap(e) {
-    const markerId = Number(e.detail && e.detail.markerId);
+    const markerId = Number(e.detail && e.detail.markerId); this._centerOnMarker(markerId); const poiHit = L.parsePoiMarkerId(markerId); if (poiHit) { this.openPoiCard(poiHit); return; }
     if (markerId % 10 === T.TEAM_MARKER_TAG) { this.openTeam(Math.floor(markerId / 10)); return; }
     const hit = H.parseMarkerId(markerId);
     if (!hit) return;
@@ -723,5 +723,96 @@ Page({
   openTopicPage() {
     const t = this.data.topic;
     if (this._navigating || !(t && t.id)) return; this._navigating = true; wx.navigateTo({ url: TOPIC_PAGE + '?id=' + encodeURIComponent(t.id), complete: () => { this._navigating = false; } });
+  },
+
+  /* ===== 2026-10-22 业主:三类点位 · 筛选行 · 点位卡(docs/design/动效界面落地_20261022 D 段) ===== */
+  /* 地标 / 商家点位:与队伍、主题活动并列的第三类。读不到只是少一层点,不影响队伍与主题。 */
+  fetchPois(center, radius) {
+    const that = this;
+    const seq = (this._poiSeq = (this._poiSeq || 0) + 1);
+    app.sendRequest({
+      url: '/api/roam/pois', method: 'GET', hideLoading: true, autoErrorToast: false,
+      data: { lat: center.lat, lng: center.lng, radius },
+      success(res) {
+        if (that._unloaded || seq !== that._poiSeq) return;
+        that._pois = res && res.code == 200 && isRecordList(res.data) ? res.data : [];
+        that._syncLayerOptions(); that._syncMarkers();
+        that._queueIcons(() => (!that._unloaded && seq === that._poiSeq) ? that._genPoiDots() : false).then((made) => { if (made && !that._unloaded) that._syncMarkers(); });
+      },
+      fail() { if (that._unloaded || seq !== that._poiSeq) return; that._pois = []; that._syncLayerOptions(); that._syncMarkers(); },
+    });
+  },
+
+  _poiColors() { return { place: MAP_AVATAR_COLORS.cityRoute, shop: MAP_AVATAR_COLORS.merchant, plateText: MAP_AVATAR_COLORS.panel }; },
+
+  _poiMarkers(f) {
+    return L.buildPoiMarkers((this._pois || []).filter((p) => L.keepPoi(p, f)), this._lodCenter || this.data.center, this._far, this._poiColors(), H.HANGOUT_FALLBACK_ICON);
+  },
+
+  async _genPoiDots() {
+    const c = this._poiColors();
+    const need = [c.place, c.shop].filter((color) => !this._far[color]);
+    if (!need.length) return false;
+    let made = 0;
+    try {
+      const cv = await this._canvas();
+      cv.width = 28; cv.height = 28;
+      const g = cv.getContext('2d');
+      for (const color of need) {
+        if (this._unloaded) return false;
+        try { M.drawFarDot(g, 28, color); this._far[color] = await this._save(cv); made++; } catch (e) { /* 兜底图 */ }
+      }
+    } catch (e) { /* canvas 拿不到:用兜底图 */ }
+    return made > 0;
+  },
+
+  _layerFilter() { return { layer: this.data.layer || 'all', sub: this.data.layerSub || '' }; },
+
+  _syncLayerOptions() { this._layerOptions = L.filterOptions(this._pois, this._items); },
+
+  /* 筛选行:全部 / 主题队伍 直接切;地点 / 商家 先弹下拉选子类 */
+  onLayerTap(e) {
+    const layer = e.currentTarget.dataset.layer;
+    if (layer === 'place' || layer === 'shop') {
+      this._syncLayerOptions();
+      this._pendingLayer = layer;
+      this.setData({ layerSheet: layer, layerItems: this._layerOptions[layer] });
+      return;
+    }
+    this.setData({ layer: layer === 'team' ? 'team' : 'all', layerSub: '' }, () => this._syncMarkers());
+  },
+  onLayerPick(e) {
+    const idx = Number(e.detail && e.detail.index);
+    const items = this.data.layerItems || [];
+    const layer = this._pendingLayer || 'place';
+    this.setData({ layer, layerSub: idx > 0 && items[idx] ? items[idx] : '', layerSheet: '' }, () => this._syncMarkers());
+  },
+  closeLayerSheet() { this.setData({ layerSheet: '' }); },
+
+  /* 点点位:地图先把它移到中心(卡片同时长出来) */
+  _centerOnMarker(markerId) {
+    const m = (this.data.markers || []).find((x) => x.id === markerId);
+    if (!m || markerId === 9) return;
+    this.setData({ center: { lat: m.latitude, lng: m.longitude } });
+  },
+
+  openPoiCard(hit) {
+    const p = (this._pois || []).find((x) => String(x.id) === String(hit.id));
+    if (!p) return;
+    if (this._poiInTimer) clearTimeout(this._poiInTimer);
+    this.setData({ poiCard: L.poiCard(p), poiCardIn: false, poiFlip: false, poiExpand: false, sheet: 'poi' });
+    this._poiInTimer = setTimeout(() => { if (!this._unloaded) this.setData({ poiCardIn: true }); }, 30);
+  },
+  onPoiFlip() { this.setData({ poiFlip: !this.data.poiFlip }); },
+  onPoiExpand() { this.setData({ poiExpand: !this.data.poiExpand }); },
+  closePoiCard() {
+    if (this._poiInTimer) { clearTimeout(this._poiInTimer); this._poiInTimer = null; }
+    this.setData({ poiCardIn: false, poiExpand: false });
+    this._poiInTimer = setTimeout(() => { if (!this._unloaded) this.setData({ poiCard: null, sheet: '' }); }, 260);
+  },
+  onPoiNavigate() {
+    const c = this.data.poiCard;
+    if (!c || c.lat == null || c.lng == null) return;
+    wx.openLocation({ latitude: c.lat, longitude: c.lng, name: c.title, address: c.address, scale: 17 });
   },
 });

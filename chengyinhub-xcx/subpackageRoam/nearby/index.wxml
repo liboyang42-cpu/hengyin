@@ -27,6 +27,15 @@
     </view>
   </view>
 
+  <!-- 2026-10-22 业主:计数条下面一行筛选 —— 全部 / 主题队伍 / 地点▾ / 商家▾。
+       地点、商家点开是下拉,选项只来自本屏真实数据(主题 / 活动、POI 标签),不预置分类。 -->
+  <scroll-view class="mt-filter" scroll-x enhanced show-scrollbar="{{false}}" wx:if="{{viewMode === 'map'}}" style="top:{{hudTop + 52}}px;">
+    <view class="mt-chip {{layer === 'all' ? 'is-on' : ''}}" data-layer="all" bindtap="onLayerTap" aria-role="button" aria-label="全部点位" hover-class="cy-pressed" hover-stay-time="80">全部</view>
+    <view class="mt-chip {{layer === 'team' ? 'is-on' : ''}}" data-layer="team" bindtap="onLayerTap" aria-role="button" aria-label="只看主题队伍" hover-class="cy-pressed" hover-stay-time="80"><view class="mt-chip__dot mt-chip__dot--team"></view>主题队伍</view>
+    <view class="mt-chip {{layer === 'place' ? 'is-on' : ''}}" data-layer="place" bindtap="onLayerTap" aria-role="button" aria-label="地点玩法{{layer === 'place' && layerSub ? '：' + layerSub : ''}}，展开选项" hover-class="cy-pressed" hover-stay-time="80"><view class="mt-chip__dot mt-chip__dot--place"></view>{{layer === 'place' && layerSub ? layerSub : '地点'}}<view class="mt-chip__caret"></view></view>
+    <view class="mt-chip {{layer === 'shop' ? 'is-on' : ''}}" data-layer="shop" bindtap="onLayerTap" aria-role="button" aria-label="商家{{layer === 'shop' && layerSub ? '：' + layerSub : ''}}，展开选项" hover-class="cy-pressed" hover-stay-time="80"><view class="mt-chip__dot mt-chip__dot--shop"></view>{{layer === 'shop' && layerSub ? layerSub : '商家'}}<view class="mt-chip__caret"></view></view>
+  </scroll-view>
+
   <!-- 列表模式:范围内全部队伍,点一行 = 点地图上的那支(同一张队伍卡) -->
   <scroll-view class="mt-list" scroll-y wx:if="{{viewMode === 'list'}}" style="top:{{hudTop + 56}}px;">
     <view class="mt-list__sec">{{rangeText}} 内 · {{listRows.length}} 支</view>
@@ -41,7 +50,7 @@
     <view class="mt-foot" wx:if="{{!listRows.length}}">这个范围内暂时没有队伍,放大范围再看看</view>
   </scroll-view>
 
-  <view class="nb-load-error" wx:if="{{nearbyReadAccess || loadError}}" style="top:{{hudTop + 56}}px;">
+  <view class="nb-load-error" wx:if="{{nearbyReadAccess || loadError}}" style="top:{{hudTop + (viewMode === 'map' ? 100 : 56)}}px;">
     <cy-error load-failure="{{!nearbyReadAccess}}" title="{{nearbyReadAccess === 'login' ? '登录后查看附近信息' : nearbyReadAccess === 'denied' ? '当前账号无法查看附近信息' : '附近信息没能读到'}}" sub="地图仍可查看，队伍或活动没有读到" retry="{{nearbyReadAccess === 'login' ? '去登录' : '重试'}}" bind:retry="retryNearby" />
   </view>
 
@@ -144,6 +153,36 @@
       <view class="btnrow">
         <view class="btn2 btn2--w" bindtap="openTopicPage" aria-role="button" aria-label="查看详情" hover-class="cy-pressed" hover-stay-time="80">查看详情</view>
       </view>
+    </view>
+  </view>
+  </block>
+
+  <cy-option-sheet show="{{layerSheet !== ''}}" title="{{layerSheet === 'shop' ? '商家' : '地点'}}" items="{{layerItems}}"
+    bind:select="onLayerPick" bind:cancel="closeLayerSheet" />
+
+  <!-- 2026-10-22 业主:点地标/商家 → 地图把它移到中心,卡片同时从底部长出来;可翻面看介绍、可展开(展开后顶在胶囊下面) -->
+  <block wx:if="{{sheet === 'poi' && poiCard}}">
+  <view class="pdim {{poiCardIn ? 'is-in' : ''}} {{reducedMotion ? 'is-reduced' : ''}}" bindtap="closePoiCard" aria-role="button" aria-label="关闭" hover-class="cy-pressed" hover-stay-time="80"></view>
+  <view class="pc {{poiCardIn ? 'is-in' : ''}} {{poiExpand ? 'is-x' : ''}} {{reducedMotion ? 'pc--reduced' : ''}}" style="{{poiExpand ? 'top:' + hudTop + 'px;' : ''}} bottom:{{safeBottom + 20}}px;">
+    <view class="pc__in {{poiFlip ? 'is-flip' : ''}}">
+      <view class="pc__f">
+        <image wx:if="{{poiCard.img}}" class="pc__img" src="{{poiCard.img}}" mode="aspectFill" />
+        <view class="pc__ph pc__ph--{{poiCard.kind}}" wx:else><cy-icon name="{{poiCard.kind === 'shop' ? 'poi-shop' : 'poi-landmark'}}" size="96" /></view>
+        <view class="pc__blur"></view><view class="pc__sh"></view>
+        <view class="pc__hd"><text class="pc__tag pc__tag--{{poiCard.kind}}">{{poiCard.tag}}</text><text class="pc__found" wx:if="{{poiCard.found}}">到过</text></view>
+        <view class="pc__tx"><text class="pc__t">{{poiCard.title}}</text><text class="pc__s" wx:if="{{poiCard.address}}">{{poiCard.address}}</text>
+          <view class="pc__tags" wx:if="{{poiCard.tags.length}}"><text class="pc__chip" wx:for="{{poiCard.tags}}" wx:key="*this">{{item}}</text></view></view>
+      </view>
+      <view class="pc__b">
+        <text class="pc__bt">{{poiCard.title}}</text>
+        <scroll-view scroll-y class="pc__bx"><text class="pc__d">{{poiCard.desc || '这里还没有介绍。到店看看吧。'}}</text></scroll-view>
+      </view>
+    </view>
+    <view class="pc__x" bindtap="closePoiCard" aria-role="button" aria-label="关闭" hover-class="cy-pressed" hover-stay-time="80"><view class="psheet__x-i"></view></view>
+    <view class="pc__acts">
+      <view class="pc__btn" bindtap="onPoiFlip" aria-role="button" aria-label="{{poiFlip ? '翻回正面' : '翻面看介绍'}}" hover-class="cy-pressed" hover-stay-time="80">{{poiFlip ? '翻回' : '介绍'}}</view>
+      <view class="pc__btn" bindtap="onPoiExpand" aria-role="button" aria-label="{{poiExpand ? '收起卡片' : '展开卡片'}}" hover-class="cy-pressed" hover-stay-time="80">{{poiExpand ? '收起' : '展开'}}</view>
+      <view class="pc__btn pc__btn--w" bindtap="onPoiNavigate" aria-role="button" aria-label="导航前往{{poiCard.title}}" hover-class="cy-pressed" hover-stay-time="80">导航前往</view>
     </view>
   </view>
   </block>

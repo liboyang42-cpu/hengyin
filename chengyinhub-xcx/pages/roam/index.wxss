@@ -854,3 +854,20 @@ cy-proto-cam{ position:fixed; left:0; right:0; top:0; bottom:0; z-index:58; poin
 /* BL-01 点位筛选(.psheet 内容) */
 .poi-filter{ display:flex; flex-direction:column; gap:var(--cy-space-3); margin-top:var(--cy-space-3); }
 .poi-filter__label{ font-size:var(--cy-type-caption); color:var(--cy-color-text-secondary); }
+
+/* 2026-10-22 护照方卡放大层:与方卡同色起步,放大后底部一层模糊渐变托住标题 */
+.pp-open { position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 900; pointer-events: none; }
+.pp-open__dim { position: absolute; top: 0; right: 0; bottom: 0; left: 0; background: rgba(0, 0, 0, .55); opacity: 0; transition: opacity .4s ease; } /* ds-ok 放大层压暗 */
+.pp-open.is-on .pp-open__dim { opacity: 1; }
+.pp-open__card { position: absolute; overflow: hidden; clip-path: inset(0 round 28px); background: var(--cy-color-action-primary-bg); color: var(--cy-color-action-primary-fg);
+  box-shadow: 0 24rpx 80rpx rgba(0, 0, 0, .5); } /* ds-ok 浮起投影 */
+.pp-open__ic { position: absolute; top: 0; left: 0; right: 0; bottom: 30%; display: flex; align-items: center; justify-content: center; transform: scale(.7); transition: transform .46s cubic-bezier(.2, .9, .25, 1); }
+.pp-open.is-on .pp-open__ic { transform: scale(1); }
+.pp-open__blur { position: absolute; left: 0; right: 0; bottom: 0; height: 48%; backdrop-filter: blur(24rpx); -webkit-backdrop-filter: blur(24rpx);
+  background: linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, .55)); /* ds-ok 底部模糊渐变 */
+  -webkit-mask-image: linear-gradient(transparent, #000 45%); mask-image: linear-gradient(transparent, #000 45%); } /* ds-ok 遮罩 alpha */
+.pp-open__tx { position: absolute; left: 40rpx; right: 40rpx; bottom: 44rpx; display: flex; flex-direction: column; gap: 8rpx; opacity: 0; transform: translateY(20rpx);
+  transition: opacity .3s ease .18s, transform .4s cubic-bezier(.2, .9, .25, 1) .18s; }
+.pp-open.is-on .pp-open__tx { opacity: 1; transform: none; }
+.pp-open__t { font-size: 48rpx; font-weight: 700; color: #fff; } /* ds-ok 渐变上的白字 */
+.pp-open__s { font-size: 26rpx; color: rgba(255, 255, 255, .78); } /* ds-ok */

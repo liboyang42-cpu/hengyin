@@ -112,7 +112,7 @@ function tapTeam(page, id) { page.onMarkerTap({ detail: { markerId: id * 10 + 4 
 
 test('nearby 回来:顶部条计数 + 点位;点开卡片 → 角控件收起(sheet 非空)', () => {
   const page = load()
-  feedTeams(page, [team(), team({ teamId: 8, latitude: 31.3 })])
+  feedTeams(page, [team(), team({ teamId: 8, latitude: 31.21 })]) // 2026-10-22:远于范围 1.2 倍的点不画(业主口述),第二支放进范围内
   assert.equal(page.data.headerText, '附近的队伍 · 2 支在招募')
   assert.equal(page.data.markers.filter((m) => m.id % 10 === 4).length, 2)
   assert.equal(page.data.sheet, '')
