@@ -3,13 +3,26 @@ const merchantTheme = require('../../../../utils/merchant-theme.js');
 const { merchantHomeUrl } = require('../../../../utils/merchant-home-link.js');
 const { toTimestamp, chinaParts } = require('../../../../utils/datetime.js');
 const { failureStatus, retryLogin, recoverReadSession } = require('../../../../utils/session/login-reload.js');
+const { readReducedMotion } = require('../../../../utils/motion-preference.js');
 
 // 推荐主题 / 空态引导都去合作中心申请承接。
 // 2026-09-18 UI-11:按用户稿删掉「建议活动」区块后,suggestion.type 路由表随之退场。
 const COOP_CENTER_ROUTE = '/pages/merchant/coop-center/index';
 
-// 店铺承接档案(容量/适合类型/诉求)的配置页 = 装修域现有「合作设置」页,不重复造表单
-const PROFILE_SETUP_ROUTE = '/pages/merchant/decor/coop-setting/index';
+// 2026-10-22 owner:主卡可切 近7天/近30天/近90天,默认近30天(与下方核销率等 facts 同窗)
+const TREND_WINDOWS = [7, 30, 90];
+const TREND_METRICS = [
+  { key: 'visitors', label: '到店', unit: '位玩家到店', short: '位' },
+  { key: 'checkins', label: '打卡', unit: '次打卡', short: '次' },
+  { key: 'redeems', label: '核销', unit: '单核销', short: '单' },
+];
+// 数字滚动:慢—快—慢(ease-in-out),与工作台累计收入同一手感
+const COUNT_MS = 900;
+const COUNT_STEPS = 24;
+// 卡片 → 底部弹层的形变时长,与 wxss .ts-ghost transition 对齐
+const MORPH_MS = 430;
+
+function easeInOut(t) { return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2; }
 
 function numberOrNull(value) {
   if (value === null || value === undefined || value === '') return null;
@@ -41,8 +54,8 @@ Page({
     ai: null,             // AI 解读(可为 null 的降级层)
     aiError: '',
     generatedAt: '',
-    profile: null,        // 店铺承接档案(configured=false 时置顶配置引导);后端永远实时读
-    profileText: '',      // 已配置时的摘要一行文案
+    profile: null,        // 后端实时读的店铺视图(storeName/logo + 承接档案字段),不走缓存
+    storeName: '',        // 页头问候「Hi，店名」;头像直接读 profile.logo
     factState: 'unknown', // unknown=字段缺失 | empty=服务端明确全零 | ready=有真实事实
     valueCard: null,      // 首屏归因价值卡:城瘾为你带来 N 位玩家/M 次打卡/K 单核销 + 核销进度 + 环比
     metricCards: [],      // 核销率 / 复购率两张小卡:比率 + 说明行 + 分段胶囊进度条
@@ -50,6 +63,19 @@ Page({
     recentVisitors: [],   // Blackbird 式单客行(后端已格式化)
     recTopics: [],        // 推荐主题(真实招商中主题,可点去申请;AI 挂时无理由兜底)
     recPartners: [],      // 推荐联动商家(真实附近商家,可点看店铺)
+    win: 30,              // 主卡时间窗
+    winIdx: 1,
+    metric: 'visitors',   // 主卡指标:到店/打卡/核销
+    hero: null,           // 主卡:大数字 + 环比 + 逐日格 + 三指标;无 trends(旧缓存)时退回 30 天归因三数
+    slots: null,          // 到店时段四柱(facts.checkin.slotBuckets)
+    sources: [],          // 客源主题排行(facts.sources)
+    grown: false,         // 柱子/进度条从 0 长到位的开关(数据落地后下一拍打开)
+    shown: false,         // 区块模糊入场的开关(类切换 + transition,不新增 @keyframes)
+    reducedMotion: false, // 「减少动态效果」:不滚数字、不形变,只保留淡入
+    scrimOn: false,
+    sheetTopic: null,     // 推荐主题详情弹层
+    sheetPhase: '',       // '' | measure | open | closing
+    ghostStyle: '',       // 卡片形变成弹层的过渡块
   },
 
   onLoad() {
@@ -65,6 +91,8 @@ Page({
 
   onShow() {
     this._hidden = false;
+    const reducedMotion = readReducedMotion();
+    if (this.data.reducedMotion !== reducedMotion) this.setData({ reducedMotion });
     merchantTheme.merchantPageShow();
     // 首次 onShow 紧跟 onLoad，不重复请求；以后每次返回都让服务端重新确认商家资格。
     const memberId = String(typeof app.getUserID === 'function' ? (app.getUserID() || '') : '');
@@ -80,9 +108,10 @@ Page({
     }
     this.load();
   },
-  onHide() { this._hidden = true; this._requestEpoch = (this._requestEpoch || 0) + 1; merchantTheme.merchantPageRestore(); },
+  onHide() { this._hidden = true; this._requestEpoch = (this._requestEpoch || 0) + 1; this._stopMotion(); merchantTheme.merchantPageRestore(); },
   onUnload() {
     this._unloaded = true;
+    this._stopMotion();
     this._requestEpoch = (this._requestEpoch || 0) + 1;
     merchantTheme.merchantPageRestore();
   },
@@ -146,14 +175,20 @@ Page({
           const factsKnown = attributionCounts.every(function (value) { return value !== null; });
           const factState = !factsKnown ? 'unknown'
             : (attributionCounts.some(function (value) { return value > 0; }) ? 'ready' : 'empty');
+          const profile = d.profile || {};
+          const firstPaint = !that.data.facts;
+          that._trends = that._indexTrends(d.trends);
           that.setData({
             facts: d.facts,
             ai: d.ai || null,
             aiError: d.ai ? '' : (d.aiError || '智能解读暂不可用'),
             generatedAt: d.generatedAt || '',
             profile: d.profile || null,
-            profileText: that._buildProfileText(d.profile),
+            storeName: String(profile.storeName || '').trim(),
             factState,
+            hero: that._buildHero(d.facts, that.data.win, that.data.metric, firstPaint),
+            slots: that._buildSlots(d.facts),
+            sources: that._buildSources(d.facts),
             valueCard: that._buildValueCard(d.facts),
             metricCards: that._buildMetricCards(d.facts),
             split: that._buildSplit(d.facts),
@@ -171,6 +206,8 @@ Page({
               });
             }),
           });
+          // 回到页面的静默刷新不重播:数字直接落位,只有首帧入场才滚动
+          if (firstPaint) that._playIn();
         } else if (res && res.code !== '200' && res.code !== 200) {
           that._clearSensitiveState(app.getRequestErrorMessage(res, '商家资格已失效'));
         } else {
@@ -191,7 +228,7 @@ Page({
       aiError: '',
       generatedAt: '',
       profile: null,
-      profileText: '',
+      storeName: '',
       factState: 'unknown',
       valueCard: null,
       metricCards: [],
@@ -199,7 +236,18 @@ Page({
       recentVisitors: [],
       recTopics: [],
       recPartners: [],
+      hero: null,
+      slots: null,
+      sources: [],
+      grown: false,
+      shown: false,
+      sheetTopic: null,
+      sheetPhase: '',
+      ghostStyle: '',
+      scrimOn: false,
     });
+    this._trends = null;
+    this._stopMotion();
   },
 
   retry() {
@@ -224,6 +272,12 @@ Page({
     return value === null ? '0' : String(value);
   },
 
+  // 小卡细进度条宽度(0–100);比率缺失按 0 宽,数字位另有「0%」与口径行说明
+  _fill(rate) {
+    const value = numberOrNull(rate);
+    return value === null ? 0 : Math.max(0, Math.min(100, Math.round(value * 100)));
+  },
+
   // 分段胶囊进度:10 枚,rate null(样本不足)→ 全空虚线胶囊,不冒充 0
   _segs(rate) {
     const value = numberOrNull(rate);
@@ -243,10 +297,10 @@ Page({
     const window = (facts && facts.window) || '近30天';
     const wait = numberOrNull(c.avgWaitMinutes);
     return [
-      { key: 'redeem', name: '核销率', num: this._pct(c.redeemRate), segs: this._segs(c.redeemRate),
+      { key: 'redeem', name: '核销率', num: this._pct(c.redeemRate), pct: this._fill(c.redeemRate),
         sub: this._countText(c.total) + ' 次打卡' + (wait === null ? '' : ' · 平均等待 ' + wait + ' 分钟'),
         scope: '口径：已核销报名数 ÷ ' + window + '内报名数' },
-      { key: 'repeat', name: '复购率', num: this._pct(c.repeatRate), segs: this._segs(c.repeatRate),
+      { key: 'repeat', name: '复购率', num: this._pct(c.repeatRate), pct: this._fill(c.repeatRate),
         sub: '基于 ' + this._countText(facts && facts.sampleMembers) + ' 位核销顾客',
         scope: '口径：核销≥2次的会员 ÷ ' + window + '内核销会员' },
     ];
@@ -291,16 +345,232 @@ Page({
     };
   },
 
-  _buildProfileText(profile) {
-    if (!profile || !profile.configured) return '';
-    const parts = [];
-    if (profile.capacity) parts.push('可容纳 ' + profile.capacity + ' 人');
-    if (profile.suitActivityTypes) parts.push('适合 ' + profile.suitActivityTypes);
-    return parts.join(' · ');
+  // ---- 主卡:时间窗 × 指标 ----
+
+  /** trends.windows → { 7: w, 30: w, 90: w };结构不对就当没有(退回 30 天归因三数,不画格子) */
+  _indexTrends(trends) {
+    const windows = trends && Array.isArray(trends.windows) ? trends.windows : [];
+    const out = {};
+    windows.forEach(function (w) {
+      if (!w || typeof w !== 'object' || !Array.isArray(w.daily)) return;
+      const days = numberOrNull(w.days);
+      if (TREND_WINDOWS.indexOf(days) !== -1 && w.daily.length === days) out[days] = w;
+    });
+    return Object.keys(out).length === TREND_WINDOWS.length ? out : null;
   },
 
-  // 配置页返回后 onShow 重拉,档案摘要即时刷新(后端 profile 不走缓存)
-  goProfileSetup() { wx.navigateTo({ url: PROFILE_SETUP_ROUTE }); },
+  _buildHero(facts, win, metric, fromZero) {
+    const trends = this._trends;
+    const w = trends ? trends[win] : null;
+    // 旧缓存/旧后端没有 trends:只有 30 天归因三数,窗口切换与逐日格都不出
+    const src = w || (facts && facts.attribution) || {};
+    const def = TREND_METRICS.filter(function (m) { return m.key === metric; })[0] || TREND_METRICS[0];
+    const prevKey = 'prev' + def.key.charAt(0).toUpperCase() + def.key.slice(1);
+    const cur = numberOrNull(src[def.key]);
+    const prev = numberOrNull(src[prevKey]);
+    // 上期为 0 或缺失不算百分比(没有基数 ≠ 涨了无穷大)
+    let deltaText = '';
+    let deltaDown = false;
+    if (cur !== null && prev !== null && prev > 0) {
+      const pct = Math.round((cur - prev) / prev * 100);
+      deltaDown = pct < 0;
+      deltaText = (pct < 0 ? '' : '+') + pct + '%';
+    }
+    const windowText = w ? '近' + win + '天' : ((facts && facts.window) || '近30天');
+    const nonce = (this._heatNonce = (this._heatNonce || 0) + 1);
+    let cells = [];
+    let cols = 15;
+    if (w) {
+      const values = w.daily.map(function (d) { return numberOrNull(d && d[def.key]) || 0; });
+      const max = Math.max.apply(null, values.concat([0]));
+      cols = win === 7 ? 7 : 15;
+      cells = values.map(function (v, i) {
+        const lv = v <= 0 || max <= 0 ? 0 : Math.min(3, Math.ceil(v / max * 3));
+        return {
+          k: nonce + '-' + i,
+          lv,
+          // 逐列波纹:同列自上而下、列与列之间错开
+          delay: (i % cols) * 22 + Math.floor(i / cols) * 40,
+          label: (w.daily[i].date || '') + ' ' + v + def.short,
+        };
+      });
+    }
+    const target = cur === null ? 0 : cur;
+    return {
+      hasTrend: !!w,
+      title: windowText + '，城瘾为你带来',
+      unit: def.unit,
+      target,
+      num: fromZero ? '0' : String(target),
+      deltaText,
+      deltaDown,
+      prevText: prev === null ? '' : '上期 ' + prev + def.short,
+      cells,
+      cols,
+      axisFrom: w && w.daily[0] ? w.daily[0].date : '',
+      trio: TREND_METRICS.map(function (m) {
+        return { key: m.key, label: m.label, num: String(numberOrNull(src[m.key]) || 0), on: m.key === def.key };
+      }),
+    };
+  },
+
+  onWinTap(e) {
+    const win = Number((e.currentTarget.dataset || {}).win);
+    if (TREND_WINDOWS.indexOf(win) === -1 || win === this.data.win || !this._trends) return;
+    this._switchHero(win, this.data.metric);
+  },
+
+  onMetricTap(e) {
+    const metric = String((e.currentTarget.dataset || {}).metric || '');
+    if (metric === this.data.metric || !TREND_METRICS.some(function (m) { return m.key === metric; })) return;
+    this._switchHero(this.data.win, metric);
+  },
+
+  _switchHero(win, metric) {
+    const hero = this._buildHero(this.data.facts, win, metric, true);
+    this.setData({ win, winIdx: TREND_WINDOWS.indexOf(win), metric, hero });
+    this._countTo(hero.target);
+  },
+
+  /** 大数字从 0 滚到目标值;切页/隐藏/清场都会停 */
+  _countTo(target) {
+    this._stopCount();
+    const to = numberOrNull(target) || 0;
+    if (typeof setTimeout !== 'function' || to === 0 || this.data.reducedMotion) { this.setData({ 'hero.num': String(to) }); return; }
+    let step = 0;
+    const tick = () => {
+      step++;
+      const v = step >= COUNT_STEPS ? to : Math.round(to * easeInOut(step / COUNT_STEPS));
+      this.setData({ 'hero.num': String(v) });
+      if (step < COUNT_STEPS) this._countTimer = setTimeout(tick, COUNT_MS / COUNT_STEPS);
+      else this._countTimer = null;
+    };
+    this._countTimer = setTimeout(tick, COUNT_MS / COUNT_STEPS);
+  },
+
+  _stopCount() {
+    if (this._countTimer) { clearTimeout(this._countTimer); this._countTimer = null; }
+  },
+
+  _stopMotion() {
+    this._stopCount();
+    if (this._growTimer) { clearTimeout(this._growTimer); this._growTimer = null; }
+    if (this._showTimer) { clearTimeout(this._showTimer); this._showTimer = null; }
+    if (this._sheetTimer) { clearTimeout(this._sheetTimer); this._sheetTimer = null; }
+  },
+
+  /** 首帧:区块模糊入场(wxss),下一拍柱子与进度条长出、大数字滚动 */
+  _playIn() {
+    if (typeof setTimeout !== 'function') { this.setData({ shown: true, grown: true }); return; }
+    if (this._growTimer) clearTimeout(this._growTimer);
+    if (this._showTimer) clearTimeout(this._showTimer);
+    this._showTimer = setTimeout(() => {
+      this._showTimer = null;
+      if (!this._hidden && !this._unloaded && this.data.facts) this.setData({ shown: true });
+    }, 30);
+    this._growTimer = setTimeout(() => {
+      this._growTimer = null;
+      if (this._hidden || this._unloaded || !this.data.facts) return;
+      this.setData({ grown: true });
+    }, 380);
+    this._countTo(this.data.hero && this.data.hero.target);
+  },
+
+  // ---- 到店时段 / 客源主题(都是已有 facts,原来页面没画) ----
+
+  _buildSlots(facts) {
+    const buckets = ((facts && facts.checkin) || {}).slotBuckets;
+    if (!Array.isArray(buckets) || !buckets.length) return null;
+    const counts = buckets.map(function (b) { return numberOrNull(b && b.count) || 0; });
+    const total = counts.reduce(function (a, b) { return a + b; }, 0);
+    if (total <= 0) return null;
+    const max = Math.max.apply(null, counts);
+    let peak = '';
+    const bars = buckets.map(function (b, i) {
+      const isMax = counts[i] === max;
+      if (isMax && !peak) peak = String(b.slot || '');
+      return {
+        slot: String(b.slot || ''),
+        count: counts[i],
+        pct: Math.round(counts[i] / total * 100) + '%',
+        // 最矮也留一截,零值柱不消失(和「没有这个时段」区分开)
+        h: Math.max(6, Math.round(counts[i] / max * 100)),
+        max: isMax,
+      };
+    });
+    return { bars, total, peakText: peak ? peak + '上到店最多' : '' };
+  },
+
+  _buildSources(facts) {
+    const list = facts && Array.isArray(facts.sources) ? facts.sources : [];
+    const rows = list.filter(function (r) { return r && r.name && numberOrNull(r.count) > 0; });
+    if (!rows.length) return [];
+    const total = rows.reduce(function (a, r) { return a + Number(r.count); }, 0);
+    const max = Number(rows[0].count);
+    return rows.slice(0, 5).map(function (r) {
+      const n = Number(r.count);
+      return {
+        name: String(r.name),
+        count: n,
+        initial: String(r.name).trim().charAt(0),
+        w: Math.round(n / max * 100),
+        pct: Math.round(n / total * 100) + '%',
+      };
+    });
+  },
+
+  // ---- 推荐主题:卡片原位形变成底部详情弹层,再去合作中心申请 ----
+
+  openTopic(e) {
+    const idx = Number((e.currentTarget.dataset || {}).idx);
+    const topic = this.data.recTopics[idx];
+    if (!topic || this.data.sheetPhase) return;
+    this.setData({ sheetTopic: topic, sheetPhase: 'measure', ghostStyle: '', scrimOn: false }, () => {
+      if (typeof wx.createSelectorQuery !== 'function' || this.data.reducedMotion) {
+        this.setData({ sheetPhase: 'open', scrimOn: true });
+        return;
+      }
+      const q = wx.createSelectorQuery().in(this);
+      q.select('#tc-' + idx).boundingClientRect();
+      q.select('#topic-sheet').boundingClientRect();
+      q.exec((rects) => {
+        const from = rects && rects[0];
+        const to = rects && rects[1];
+        if (!from || !to || this.data.sheetPhase !== 'measure') { this.setData({ sheetPhase: 'open', scrimOn: true }); return; }
+        // FLIP:ghost 落在弹层最终位置,先用 transform 缩回卡片处,再过渡到 none(只动合成层,不动布局)
+        const rect = 'left:' + to.left + 'px;top:' + to.top + 'px;width:' + to.width + 'px;height:' + to.height + 'px;';
+        const invert = 'transform:translate(' + (from.left - to.left) + 'px,' + (from.top - to.top) + 'px) scale('
+          + (from.width / to.width) + ',' + (from.height / to.height) + ');';
+        this.setData({ ghostStyle: rect + invert + 'border-radius:44rpx;transition:none;' }, () => {
+          this._sheetTimer = setTimeout(() => {
+            this.setData({ ghostStyle: rect + 'transform:none;border-radius:56rpx 56rpx 0 0;', scrimOn: true });
+            this._sheetTimer = setTimeout(() => {
+              this._sheetTimer = null;
+              if (this.data.sheetPhase === 'measure') this.setData({ sheetPhase: 'open', ghostStyle: '' });
+            }, MORPH_MS);
+          }, 20);
+        });
+      });
+    });
+  },
+
+  closeTopic() {
+    if (!this.data.sheetPhase || this.data.sheetPhase === 'closing') return;
+    if (this._sheetTimer) clearTimeout(this._sheetTimer);
+    this.setData({ sheetPhase: 'closing', ghostStyle: '', scrimOn: false });
+    this._sheetTimer = setTimeout(() => {
+      this._sheetTimer = null;
+      this.setData({ sheetPhase: '', sheetTopic: null });
+    }, 220);
+  },
+
+  /** 弹层主按钮:关弹层再带 topicId 去合作中心 */
+  applyTopic(e) {
+    this.closeTopic();
+    this.goRecTopic(e);
+  },
+
+  noop() {},
 
   // CU-M-85:同名主题(两期「探店日一期」)只靠名字分不出是哪一场。推荐池里的 cms_topic
   // 自带起止日期与主办方,合作广场的路线卡也是这么写的 —— 这里按同一写法补一行场次。

@@ -1,4 +1,4 @@
-<view class="page theme-merchant">
+<view class="page theme-merchant {{reducedMotion ? 'cy-motion-reduced' : ''}} {{shown ? 'mi-shown' : ''}}">
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
@@ -12,113 +12,163 @@
     <cy-error load-failure="{{!errorIsDenied}}" class="cy-fade-in" wx:elif="{{error && !facts}}" size="lg" fill title="{{errorNeedsLogin ? '请先登录' : errorIsDenied ? '当前账号没有查看权限' : '店铺数据加载失败'}}" sub="{{error}}" retry="{{errorNeedsLogin ? '重新登录' : '重新加载'}}" bind:retry="retry" auto-back="{{!errorIsDenied}}" />
   </block>
 
-  <block wx:else>
-    <!-- Hero(稿 1:3) -->
-    <view class="hero">
-      <text class="gen-at" wx:if="{{loading}}" aria-role="status">正在更新经营数据…</text>
-      <text class="gen-at" wx:elif="{{generatedAt}}">生成于 {{generatedAt}} · 次日更新</text>
-
-      <!-- 店铺档案胶囊(稿 1:9)。配置页 = 装修域现有「合作设置」,不重复造表单。
-           未配置也是这一枚胶囊,文案换成引导 —— 稿里没有独立的配置引导大卡。 -->
-      <view class="profile-row" bindtap="goProfileSetup" hover-class="cy-pressed" hover-stay-time="80"
-            aria-role="button" aria-label="{{profile && !profile.configured ? '去配置店铺档案' : '编辑店铺档案'}}">
-        <text class="profile-row-k">店铺档案</text>
-        <text class="profile-row-v" wx:if="{{profile && !profile.configured}}">先配置店铺档案，参谋才能推适合你的主题</text>
-        <text class="profile-row-v" wx:else>{{profileText || '去完善可容纳人数与适合的活动'}}</text>
-        <cy-icon class="profile-row-arrow" name="arrow-right" size="28" />
+  <view class="body" wx:else>
+    <!-- 2026-10-22 owner:页头 = 商家工作台同款问候区(Hi，店名 + 欢迎语 + 店铺头像),不放店铺档案 -->
+    <view class="greet mi-in" style="transition-delay: 0ms;">
+      <view class="greet-b">
+        <view class="greet-line"><text>Hi，</text><text>{{storeName || '店主'}}</text></view>
+        <text class="greet-tip">欢迎回来，看看城瘾这段时间为你带来了什么</text>
+        <text class="gen-at" wx:if="{{loading}}" aria-role="status">正在更新经营数据…</text>
+        <text class="gen-at" wx:elif="{{generatedAt}}">生成于 {{generatedAt}} · 次日更新</text>
       </view>
-
-      <!-- 价值卡(稿 1:13):城瘾为你带来了什么。字段缺失(unknown)不画卡,由正文给重试。 -->
-      <view class="value-card" wx:if="{{factState !== 'unknown'}}">
-        <text class="value-title">{{facts.window || '近30天'}}，城瘾为你带来</text>
-        <view class="value-row">
-          <view class="value-cell"><text class="value-num">{{valueCard.visitors}}</text><text class="value-lbl">位玩家到店</text></view>
-          <view class="value-divider"></view>
-          <view class="value-cell"><text class="value-num">{{valueCard.checkins}}</text><text class="value-lbl">次打卡</text></view>
-          <view class="value-divider"></view>
-          <view class="value-cell"><text class="value-num">{{valueCard.redeems}}</text><text class="value-lbl">单核销</text></view>
-        </view>
-        <view class="seg-row seg-row--value" aria-hidden="true">
-          <view class="seg {{seg.on ? 'seg--on' : ''}}" wx:for="{{valueCard.segs}}" wx:for-item="seg" wx:key="index"></view>
-        </view>
-        <text class="value-delta" wx:if="{{valueCard.deltaText}}">{{valueCard.deltaText}}</text>
-      </view>
+      <cy-avatar class="greet-avatar" size="112" bordered shape="circle" src="{{profile.logo || ''}}" name="{{storeName || '店'}}" />
     </view>
 
-    <view class="body">
-      <!-- 未知和明确为零是两件事：字段缺失只能重试，服务端明确全零才给业务空态。 -->
-      <cy-state-shell wx:if="{{factState === 'unknown'}}" kind="data"
-                      title="基础数据暂未完整返回"
-                      sub="不会用 0 代替缺失的到店、打卡或核销数据"
-                      primary="重新加载" bind:primary="retry" />
-      <cy-empty wx:elif="{{factState === 'empty'}}" kind="empty" title="还没有到店数据"
-                sub="先去合作中心承接一个主题，玩家到店打卡后这里就有数据了"
-                cta="去合作中心看看" bind:cta="goCoopCenter" />
-
-      <block wx:else>
-        <!-- 核销率 / 复购率两张小卡(稿 1:39) -->
-        <view class="metric-row">
-          <view class="metric" wx:for="{{metricCards}}" wx:key="key">
-            <text class="metric-name">{{item.name}}</text>
-            <text class="metric-num">{{item.num}}</text>
-            <text class="metric-sub">{{item.sub}}</text>
-            <!-- CU-M-46/M-84:分子分母与时间窗必须写在卡上,不然同一张屏上的两个比率
-                 会被读成互相矛盾(复购率 50% 与回头 0 位曾经同时成立)。 -->
-            <text class="metric-scope">{{item.scope}}</text>
-            <view class="seg-row seg-row--mini" aria-hidden="true">
-              <view class="seg {{seg.on ? 'seg--on' : ''}}" wx:for="{{item.segs}}" wx:for-item="seg" wx:key="index"></view>
-            </view>
-          </view>
+    <!-- 主卡:大数字 + 环比 + 时间窗 + 逐日格 + 三指标 + 淡紫核销进度(字段缺失 unknown 不画卡) -->
+    <!-- value-card 类名保留给截图夹具选择器;hero 未建(夹具只注入 valueCard)时数字退回 valueCard -->
+    <view class="hero value-card mi-in" style="transition-delay: 70ms;" wx:if="{{(hero || valueCard) && factState !== 'unknown'}}">
+      <view class="hero-top">
+        <view class="hero-main">
+          <text class="hero-k">{{hero ? hero.title : (facts.window || '近30天') + '，城瘾为你带来'}}</text>
+          <view class="hero-big"><text class="hero-num">{{hero ? hero.num : valueCard.visitors}}</text><text class="hero-unit">{{hero ? hero.unit : '位玩家到店'}}</text></view>
         </view>
+        <view class="hero-side" wx:if="{{hero}}">
+          <text class="delta {{hero.deltaDown ? 'delta--down' : ''}}" wx:if="{{hero.deltaText}}">{{hero.deltaText}}</text>
+          <text class="hero-prev" wx:if="{{hero.prevText}}">{{hero.prevText}}</text>
+        </view>
+      </view>
 
-        <!-- 新客 vs 回头客(稿 1:70) -->
-        <cy-card class="split" wx:if="{{split}}">
-          <view class="split-head">
-            <text class="split-k">新客 {{split.newVisitors}}</text>
-            <text class="split-k">回头客 {{split.returningVisitors}}</text>
-          </view>
-          <view class="split-bar">
-            <view class="split-seg split-seg--new" style="width: {{split.newPct || 0}}%"></view>
-            <view class="split-seg split-seg--ret"></view>
-          </view>
-          <!-- CU-M-46:回头客是跨窗口口径(窗口内到店 ∩ 窗口前也到过店),与复购率不同批人,这里说清。 -->
-          <text class="split-scope" wx:if="{{split.scope}}">{{split.scope}}</text>
-        </cy-card>
-
-        <!-- 最近到店玩家(稿 1:78) -->
-        <block wx:if="{{recentVisitors.length}}">
-          <view class="sec-head"><text class="sec-title">最近到店玩家</text></view>
-          <cy-card>
-            <view class="visitors">
-            <view class="visitor-row" wx:for="{{recentVisitors}}" wx:key="index">
-              <image class="visitor-avatar" src="{{item.avatar || '/images/d_profile.png'}}" mode="aspectFill" />
-              <view class="visitor-body">
-                <text class="visitor-name">{{item.nickname}}</text>
-                <text class="visitor-meta">第 {{item.visitCount || 1}} 次来 · 来自「{{item.topicName}}」</text>
-              </view>
-              <text class="visitor-time">{{item.lastAtText}}</text>
-            </view>
-            </view>
-          </cy-card>
-        </block>
+      <block wx:if="{{hero && hero.hasTrend}}">
+        <view class="seg" aria-role="tablist">
+          <view class="seg-thumb" style="transform: translateX({{winIdx * 100}}%);"></view>
+          <view class="seg-btn {{win === 7 ? 'seg-btn--on' : ''}}" data-win="7" bindtap="onWinTap" hover-class="cy-pressed" hover-stay-time="80" aria-role="tab" aria-selected="{{win === 7}}">近7天</view>
+          <view class="seg-btn {{win === 30 ? 'seg-btn--on' : ''}}" data-win="30" bindtap="onWinTap" hover-class="cy-pressed" hover-stay-time="80" aria-role="tab" aria-selected="{{win === 30}}">近30天</view>
+          <view class="seg-btn {{win === 90 ? 'seg-btn--on' : ''}}" data-win="90" bindtap="onWinTap" hover-class="cy-pressed" hover-stay-time="80" aria-role="tab" aria-selected="{{win === 90}}">近90天</view>
+        </view>
+        <view class="heat" style="grid-template-columns: repeat({{hero.cols}}, 1fr);" aria-hidden="true">
+          <view class="heat-cell heat-cell--l{{cell.lv}} cy-rise-in" wx:for="{{hero.cells}}" wx:for-item="cell" wx:key="k"
+                style="animation-delay: {{cell.delay}}ms;"></view>
+        </view>
+        <view class="heat-ax"><text>{{hero.axisFrom}}</text><text>今天</text></view>
       </block>
 
-      <!-- 为你推荐的主题(稿 2:2 / 2:5):两列卡,点卡去合作中心申请承接 -->
-      <block wx:if="{{recTopics.length}}">
-        <view class="sec-head">
-          <text class="sec-title">为你推荐的主题</text>
-          <view class="sec-link" bindtap="goCoopCenter" hover-class="cy-pressed" hover-stay-time="80"
-                aria-role="button" aria-label="查看全部招商主题">
-            <text>查看全部</text><cy-icon name="arrow-right" size="24" />
+      <view class="trio" wx:if="{{hero}}">
+        <view class="trio-cell {{item.on ? 'trio-cell--on' : ''}}" wx:for="{{hero.trio}}" wx:key="key"
+              data-metric="{{item.key}}" bindtap="onMetricTap" hover-class="cy-pressed" hover-stay-time="80"
+              aria-role="button" aria-label="看{{item.label}}">
+          <text class="trio-k">{{item.label}}</text>
+          <text class="trio-v">{{item.num}}</text>
+        </view>
+      </view>
+      <view class="trio" wx:else>
+        <view class="trio-cell"><text class="trio-k">到店</text><text class="trio-v">{{valueCard.visitors}}</text></view>
+        <view class="trio-cell"><text class="trio-k">打卡</text><text class="trio-v">{{valueCard.checkins}}</text></view>
+        <view class="trio-cell"><text class="trio-k">核销</text><text class="trio-v">{{valueCard.redeems}}</text></view>
+      </view>
+
+      <view class="seg-row seg-row--value" wx:if="{{valueCard}}" aria-hidden="true">
+        <view class="seg-pip {{seg.on ? 'seg-pip--on' : ''}}" wx:for="{{valueCard.segs}}" wx:for-item="seg" wx:key="index"
+              style="transition-delay: {{400 + index * 45}}ms;"></view>
+      </view>
+      <text class="value-delta" wx:if="{{valueCard && valueCard.deltaText}}">{{facts.window || '近30天'}}核销进度 · {{valueCard.deltaText}}</text>
+    </view>
+
+    <!-- 未知和明确为零是两件事：字段缺失只能重试，服务端明确全零才给业务空态。 -->
+    <cy-state-shell wx:if="{{factState === 'unknown'}}" kind="data"
+                    title="基础数据暂未完整返回"
+                    sub="不会用 0 代替缺失的到店、打卡或核销数据"
+                    primary="重新加载" bind:primary="retry" />
+    <cy-empty wx:elif="{{factState === 'empty'}}" kind="empty" title="还没有到店数据"
+              sub="先去合作中心承接一个主题，玩家到店打卡后这里就有数据了"
+              cta="去合作中心看看" bind:cta="goCoopCenter" />
+
+    <block wx:else>
+      <!-- 到店时段(facts.checkin.slotBuckets 早/午/晚/夜):柱子从底部长出,最高柱深色斜纹 -->
+      <block wx:if="{{slots}}">
+        <view class="sec-head mi-in" style="transition-delay: 140ms;"><text class="sec-title">到店时段</text></view>
+        <view class="card mi-in {{grown ? 'grown' : ''}}" style="transition-delay: 140ms;">
+          <view class="bars">
+            <view class="bar {{bar.max ? 'bar--max' : ''}}" wx:for="{{slots.bars}}" wx:for-item="bar" wx:key="slot"
+                  aria-label="{{bar.slot}} {{bar.count}} 次打卡">
+              <text class="bar-v">{{bar.pct}}</text>
+              <view class="bar-c" style="height: {{bar.h}}%;"></view>
+            </view>
+          </view>
+          <view class="bar-ax"><text wx:for="{{slots.bars}}" wx:for-item="bar" wx:key="slot">{{bar.slot}}</text></view>
+          <view class="card-foot"><text>{{slots.peakText}}</text><text>共 {{slots.total}} 次打卡</text></view>
+        </view>
+      </block>
+
+      <!-- 核销率 / 复购率两张小卡 -->
+      <view class="metric-row mi-in {{grown ? 'grown' : ''}}" style="transition-delay: 210ms;">
+        <view class="metric" wx:for="{{metricCards}}" wx:key="key">
+          <text class="metric-name">{{item.name}}</text>
+          <text class="metric-num">{{item.num}}</text>
+          <text class="metric-sub">{{item.sub}}</text>
+          <view class="track"><view class="track-fill" style="width: {{item.pct}}%;"></view></view>
+          <!-- CU-M-46/M-84:分子分母与时间窗必须写在卡上,不然同一张屏上的两个比率
+               会被读成互相矛盾(复购率 50% 与回头 0 位曾经同时成立)。 -->
+          <text class="metric-scope">{{item.scope}}</text>
+        </view>
+      </view>
+
+      <!-- 新客 vs 回头客 -->
+      <view class="card split mi-in {{grown ? 'grown' : ''}}" style="transition-delay: 280ms;" wx:if="{{split}}">
+        <view class="split-head">
+          <text class="split-k">新客 {{split.newVisitors}}</text>
+          <text class="split-k split-k--ret">回头客 {{split.returningVisitors}}</text>
+        </view>
+        <view class="split-bar">
+          <view class="split-seg--new" style="width: {{split.newPct || 0}}%"></view>
+        </view>
+        <!-- CU-M-46:回头客是跨窗口口径(窗口内到店 ∩ 窗口前也到过店),与复购率不同批人,这里说清。 -->
+        <text class="split-scope" wx:if="{{split.scope}}">{{split.scope}}</text>
+      </view>
+
+      <!-- 客源主题(facts.sources):玩家从哪个主题来 -->
+      <block wx:if="{{sources.length}}">
+        <view class="sec-head"><text class="sec-title">客源主题</text><text class="sec-note">{{facts.window || '近30天'}}</text></view>
+        <view class="card rows {{grown ? 'grown' : ''}}">
+          <view class="src-row" wx:for="{{sources}}" wx:key="name">
+            <view class="src-ico"><text>{{item.initial}}</text></view>
+            <view class="src-body">
+              <view class="src-top"><text class="src-name">{{item.name}}</text><text class="src-count">{{item.count}} 次</text></view>
+              <view class="track track--thin"><view class="track-fill" style="width: {{item.w}}%;"></view></view>
+              <text class="src-pct">{{item.pct}}</text>
+            </view>
           </view>
         </view>
-        <view class="tgrid">
-          <!-- CU-M-85:同名主题(两期「探店日一期」)光看名字分不出是哪一场 ⇒ 卡面补一行
-               场次/主办,点卡带着 topicId 进广场把对应条目定位出来。 -->
-          <view class="tcard" wx:for="{{recTopics}}" wx:key="topicId" bindtap="goRecTopic"
-                data-topic-id="{{item.topicId}}"
-                hover-class="cy-pressed" hover-stay-time="80"
-                aria-role="button" aria-label="申请承接主题{{item.name}} {{item.metaText}}">
+      </block>
+
+      <!-- 最近到店玩家:一人一张白卡,不加竖线(2026-10-22 owner) -->
+      <block wx:if="{{recentVisitors.length}}">
+        <view class="sec-head"><text class="sec-title">最近到店玩家</text></view>
+        <view class="visitor" wx:for="{{recentVisitors}}" wx:key="index">
+          <image class="visitor-avatar" src="{{item.avatar || '/images/d_profile.png'}}" mode="aspectFill" />
+          <view class="visitor-body">
+            <text class="visitor-name">{{item.nickname}}</text>
+            <text class="visitor-meta">第 {{item.visitCount || 1}} 次来 · 来自「{{item.topicName}}」</text>
+          </view>
+          <text class="visitor-time">{{item.lastAtText}}</text>
+        </view>
+      </block>
+    </block>
+
+    <!-- 为你推荐的主题:横滑卡,点卡原位展开详情弹层,弹层里再去合作中心申请承接 -->
+    <block wx:if="{{recTopics.length}}">
+      <view class="sec-head">
+        <text class="sec-title">为你推荐的主题</text>
+        <view class="sec-link" bindtap="goCoopCenter" hover-class="cy-pressed" hover-stay-time="80"
+              aria-role="button" aria-label="查看全部招商主题">
+          <text>查看全部</text><cy-icon name="arrow-right" size="24" />
+        </view>
+      </view>
+      <scroll-view class="tscroll" scroll-x enhanced show-scrollbar="{{false}}">
+        <view class="trow">
+          <!-- CU-M-85:同名主题(两期「探店日一期」)光看名字分不出是哪一场 ⇒ 卡面补一行场次/主办 -->
+          <view class="tcard" id="tc-{{index}}" wx:for="{{recTopics}}" wx:key="topicId" bindtap="openTopic"
+                data-idx="{{index}}" hover-class="cy-pressed" hover-stay-time="80"
+                aria-role="button" aria-label="查看主题{{item.name}} {{item.metaText}}">
             <view class="tcard-cover">
               <image class="tcard-img" wx:if="{{item.coverUrl}}" src="{{item.coverUrl}}" mode="aspectFill" />
               <view class="tcard-tag">招商中</view>
@@ -127,50 +177,79 @@
               <text class="tcard-meta" wx:if="{{item.metaText}}">{{item.metaText}}</text>
               <text class="tcard-name">{{item.name}}</text>
               <text class="tcard-reason">{{item.reason || '平台招商中的自由探索主题'}}</text>
-              <view class="tcard-cta">去申请承接</view>
+              <view class="tcard-foot"><view class="tcard-cta">看看</view></view>
             </view>
           </view>
         </view>
-      </block>
+      </scroll-view>
+    </block>
 
-      <!-- 推荐联动的商家(稿 3:3):圆形头像 + 名称/类目距离 + 理由 + 看店铺 -->
-      <block wx:if="{{recPartners.length}}">
-        <view class="sec-head"><text class="sec-title">推荐联动的商家</text></view>
-        <view class="pcard" wx:for="{{recPartners}}" wx:key="merchantId" bindtap="goRecPartner"
-              data-member-id="{{item.memberId}}" hover-class="cy-pressed" hover-stay-time="80"
-              aria-role="button" aria-label="查看商家{{item.name}}">
-          <image class="pcard-logo" wx:if="{{item.logo}}" src="{{item.logo}}" mode="aspectFill" />
-          <view class="pcard-logo pcard-logo--text" wx:else><text>{{item.initial}}</text></view>
-          <view class="pcard-body">
-            <view class="pcard-head">
-              <text class="pcard-name">{{item.name}}</text>
-              <text class="pcard-meta">{{item.metaText}}</text>
-            </view>
-            <text class="pcard-reason" wx:if="{{item.reason}}">{{item.reason}}</text>
-            <view class="pcard-link"><text>看店铺</text><cy-icon name="arrow-right" size="24" /></view>
+    <!-- 推荐联动的商家 -->
+    <block wx:if="{{recPartners.length}}">
+      <view class="sec-head"><text class="sec-title">推荐联动的商家</text></view>
+      <view class="pcard" wx:for="{{recPartners}}" wx:key="merchantId" bindtap="goRecPartner"
+            data-member-id="{{item.memberId}}" hover-class="cy-pressed" hover-stay-time="80"
+            aria-role="button" aria-label="查看商家{{item.name}}">
+        <image class="pcard-logo" wx:if="{{item.logo}}" src="{{item.logo}}" mode="aspectFill" />
+        <view class="pcard-logo pcard-logo--text" wx:else><text>{{item.initial}}</text></view>
+        <view class="pcard-body">
+          <view class="pcard-head">
+            <text class="pcard-name">{{item.name}}</text>
+            <text class="pcard-meta">{{item.metaText}}</text>
           </view>
+          <text class="pcard-reason" wx:if="{{item.reason}}">{{item.reason}}</text>
+          <view class="pcard-link"><text>看店铺</text><cy-icon name="arrow-right" size="24" /></view>
         </view>
-      </block>
+      </view>
+    </block>
 
-      <!-- 经营解读(稿 4:3;AI 可降级,数据区不连坐) -->
-      <view class="sec-head"><text class="sec-title">经营解读</text></view>
-      <cy-card wx:if="{{ai}}" class="ai-card">
-        <text class="ai-lowsample" wx:if="{{facts.lowSample}}">数据还少，以下解读仅供参考</text>
-        <text class="ai-summary">{{ai.summary}}</text>
-        <view class="ai-op" wx:if="{{ai.opportunity}}">
-          <cy-icon name="star" size="24" /><text class="ai-op-txt">机会：{{ai.opportunity}}</text>
+    <!-- 经营解读(AI 可降级,数据区不连坐) -->
+    <view class="sec-head"><text class="sec-title">经营解读</text></view>
+    <view wx:if="{{ai}}" class="ai-card">
+      <text class="ai-lowsample" wx:if="{{facts.lowSample}}">数据还少，以下解读仅供参考</text>
+      <text class="ai-summary">{{ai.summary}}</text>
+      <view class="ai-op" wx:if="{{ai.opportunity}}">
+        <text class="ai-op-k">机会</text><text class="ai-op-txt">{{ai.opportunity}}</text>
+      </view>
+      <view class="ai-op" wx:if="{{ai.problem}}">
+        <text class="ai-op-k">问题</text><text class="ai-op-txt">{{ai.problem}}</text>
+      </view>
+    </view>
+    <view wx:else class="ai-card ai-card--down">
+      <text class="ai-down-title">{{factState === 'unknown' ? '基础数据暂未完整返回' : '基础数据可用'}}</text>
+      <cy-inline-error load-failure class="ai-down-txt" kind="data"
+        title="智能解读暂不可用" sub="{{aiError || '请稍后重试'}}{{factState === 'unknown' ? '' : '，上方经营数据不受影响'}}" />
+      <view class="ai-down-action" bindtap="retry" hover-class="cy-pressed" hover-stay-time="80"
+            aria-role="button" aria-label="重新生成经营解读">重新生成解读</view>
+    </view>
+  </view>
+
+  <!-- 推荐主题详情弹层:卡片原位形变(ghost)→ 弹层;按钮带 topicId 去合作中心 -->
+  <block wx:if="{{sheetPhase}}">
+    <view class="ts-scrim {{scrimOn ? 'ts-scrim--on' : ''}}" bindtap="closeTopic" hover-class="ts-scrim--press" catchtouchmove="noop"></view>
+    <view class="ts-ghost" wx:if="{{ghostStyle}}" style="{{ghostStyle}}"></view>
+    <view id="topic-sheet" class="ts-sheet ts-sheet--{{sheetPhase}}" catchtouchmove="noop"
+          aria-role="dialog" aria-label="主题详情 {{sheetTopic.name}}">
+      <view class="ts-grab"></view>
+      <view class="ts-head">
+        <text class="ts-title">{{sheetTopic.name}}</text>
+        <view class="ts-close" bindtap="closeTopic" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="关闭">
+          <cy-icon name="close" size="28" />
         </view>
-        <view class="ai-op" wx:if="{{ai.problem}}">
-          <cy-icon name="warning" size="24" /><text class="ai-op-txt">问题：{{ai.problem}}</text>
-        </view>
-      </cy-card>
-      <cy-card wx:else class="ai-card ai-card--down">
-        <text class="ai-down-title">{{factState === 'unknown' ? '基础数据暂未完整返回' : '基础数据可用'}}</text>
-        <cy-inline-error load-failure class="ai-down-txt" kind="data"
-          title="智能解读暂不可用" sub="{{aiError || '请稍后重试'}}{{factState === 'unknown' ? '' : '，上方经营数据不受影响'}}" />
-        <view class="ai-down-action" bindtap="retry" hover-class="cy-pressed" hover-stay-time="80"
-              aria-role="button" aria-label="重新生成经营解读">重新生成解读</view>
-      </cy-card>
+      </view>
+      <view class="ts-cover">
+        <image class="tcard-img ts-img" wx:if="{{sheetTopic.coverUrl}}" src="{{sheetTopic.coverUrl}}" mode="aspectFill" />
+        <view class="tcard-tag">招商中</view>
+      </view>
+      <text class="ts-reason">{{sheetTopic.reason || '平台招商中的自由探索主题'}}</text>
+      <view class="ts-kv" wx:if="{{sheetTopic.metaText}}">
+        <text class="ts-k">场次 · 主办</text><text class="ts-v">{{sheetTopic.metaText}}</text>
+      </view>
+      <view class="ts-btns">
+        <view class="ts-btn ts-btn--ghost" bindtap="closeTopic" hover-class="cy-pressed" hover-stay-time="80" aria-role="button">先不用</view>
+        <view class="ts-btn" bindtap="applyTopic" data-topic-id="{{sheetTopic.topicId}}" hover-class="cy-pressed" hover-stay-time="80"
+              aria-role="button" aria-label="申请承接主题{{sheetTopic.name}}">去申请承接</view>
+      </view>
     </view>
   </block>
 </view>
