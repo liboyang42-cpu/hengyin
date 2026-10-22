@@ -97,7 +97,15 @@ PR base 不是 master，`ci.yml` 的 `pull_request` 触发器不会派发，所�
 
 | head | workflow | run | 结果 |
 |---|---|---|---|
-| `36ec0d6d` | GitHub CI | 39805162954 | 待补 |
-| `36ec0d6d` | Funds MySQL IT | 39805172323 | 待补 |
-| `36ec0d6d` | Mini followup focused regression | 39805152975 | 待补 |
-| `36ec0d6d` | Isolated authenticated Redis recovery | 39805153182 | 待补 |
+| `36ec0d6d` | GitHub CI | 39805162954 | 手动取消：本地全量单测发现 local tap 分母需要校准，修正后在新 head 上重新派发 |
+| `36ec0d6d` | Funds MySQL IT | 39805172323 | success |
+| `36ec0d6d` | Mini followup focused regression | 39805152975 | success |
+| `36ec0d6d` | Isolated authenticated Redis recovery | 39805153182 | success |
+| `5016e184` | GitHub CI | **39806526890** | **success**：31 个 job 全部 success。包括 Detect changed areas、Fast gates、Secret scan、Backend tests、Migration layout gate、Migration safety gate、SBOM + dependency scan、Admin UI build gate、Admin UI E2E contract gate、Mini program static gates、20 个 Mini program unit shard、Mini program static checks |
+| `5016e184` | Funds MySQL IT | **39806531604** | **success** |
+| `5016e184` | Mini followup focused regression | **39806524530** | **success** |
+| `5016e184` | Isolated authenticated Redis recovery | **39806524581** | **success** |
+
+- 必需 check 名核对：#505 合入后，GitHub CI 的全部 job 名都在 39806526890 中出现并通过，与 batch2 的 check 集合相同；batch2 有 3 个按变更区域跳过，本批这些 job 也都实际运行了。
+- 说明：由于是 workflow_dispatch，本 PR 无法实测 #505 新 filter 在 `pull_request` 事件下的路由结果。这一点由合同测试 `ci/test_ci_cost_contract.py`（PASS）覆盖。合入 master 后，第一个 PR 应复核一次 Detect changed areas 的输出。
+- 之后只追加本记录文件的提交（纯文档），最终 head 以 PR #512 的检查为准。
