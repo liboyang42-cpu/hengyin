@@ -118,3 +118,19 @@ owner 已于 2026-10-22 批准由集成方接管保留文件维护。下面每�
   - GitHub CI run `39785313826`：Backend tests、Migration safety / layout gate（迁移声明门转绿）、20 个小程序 unit shard、Mini program static gates、Fast gates、gitleaks，全部 success。
   - Funds MySQL IT run `39785313609`、Mini followup focused regression run `39785313522`、Isolated authenticated Redis recovery run `39785313756`：success。
 - 之后合入 #484 `ca8da72e` 与 #477 `84c33fea`，最终 head 以 PR #486 的检查为准。
+
+## 8 再并 master（#511 店铺参谋改版，PR 标记 ready 之后）
+
+PR 转为 ready 后，master 前移到 `c225b462`（#511），PR 变成 dirty。处理：用 merge commit 把 master 并入本分支，不做 rebase / force-push。
+
+- **文本冲突**
+  - `pages/merchant/marketing/ai-insight/index.wxml`：#511 重写了整页，W11（#482）在旧的解读卡里加了一行「解读依据 {{generatedAt}} …次日生效」。处理：取 #511 的新版结构，把 W11 的 `ai-source` 那一行放回新解读卡里 `ai.problem` 的后面。`index.wxss` 的 `.ai-source` 样式自动合并。
+  - `scripts/uiaudit/action-ledger.json`：丢弃双方版本，在合并树上重建，控件 4958 → **4967**（#511 +9：7 tap + 2 事件合同，和 #511 自报的 4947 → 4956 增量一致）。
+  - `tests/unit/action-ledger.test.js`：三处计数冲突。双方的注释都保留，数值取合并树重建实测：tap 2114 → 2121，事件合同 2467 → 2469，controlCount 4958 → 4967。
+- **语义冲突**（两侧单测各自通过，合并后变红）
+  - #511 的 `merchant-insight-redesign-20261022.test.js` 要求页面（去掉注释后）不再出现「店铺档案」。W11 那一行原文是「当时的**店铺**档案」。
+  - W11 的 `ai-insight-source-version-note.test.js` 按旧的 `<cy-card wx:if="{{ai}}">` 结构截取卡片。
+  - 处理：文案改为「解读依据 {{generatedAt}} 的经营数据与当时的档案；今天修改的档案次日生效」，与 #482 PR 描述里写的「依据 {generatedAt} 的数据与当时的档案；今天修改的档案次日生效」同义，W11「档案次日生效」这个如实说明保留。W11 的测试改按 #511 的 `view.ai-card` 结构定位，断言内容不放宽，并增加「结构必须可定位」的断言，防止空转。
+- **验证**
+  - 合并树全量单测：处理语义冲突前是 13692/13694，红的就是上面两条。处理后这两个文件 9/9 通过，`action-ledger.test.js` 连同店铺参谋相关测试 70/70 通过。
+  - `build-action-ledger --check`（4967）PASS，`build-route-matrix --check`（145/27，无差异）PASS，UI-GATE-0 PASS（U1 909/60/8；U3 62/62；U4 126/126，63/63；U5 37，基线未改），silent-error 与 api-existence 门禁 PASS。
