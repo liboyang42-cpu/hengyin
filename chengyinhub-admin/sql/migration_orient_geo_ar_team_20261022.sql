@@ -109,9 +109,9 @@ CREATE TABLE IF NOT EXISTS orient_safety_rule (
 
 -- 6) 开关:一律默认关(键缺失同样视为关);只在键缺失时插入,不覆盖运维已配置值。
 INSERT INTO sys_config (config_name, config_key, config_value, config_type, create_by, create_time, remark)
-SELECT '城市定向-WGS84 坐标归一', 'orient.geo.wgs84.enabled', 'false', 'N', 'admin', NOW(),
+SELECT '城市定向-WGS84 坐标归一', 'orient.geo.normalize.enabled', 'false', 'N', 'admin', NOW(),
        'true=开放节点坐标 WGS84 归一与脏值报告(Doc2 F1d)'
-FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM sys_config WHERE config_key = 'orient.geo.wgs84.enabled');
+FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM sys_config WHERE config_key = 'orient.geo.normalize.enabled');
 
 INSERT INTO sys_config (config_name, config_key, config_value, config_type, create_by, create_time, remark)
 SELECT '城市定向-AR 替代任务', 'orient.alt_task.enabled', 'false', 'N', 'admin', NOW(),
@@ -139,7 +139,7 @@ SELECT (SELECT COUNT(*) FROM information_schema.tables
          WHERE table_schema = DATABASE()
            AND table_name IN ('orient_node_geo', 'orient_task_alternative', 'orient_task_attempt',
                               'orient_task_completion', 'orient_safety_rule')) = 5
-   AND (SELECT SUM(config_key = 'orient.geo.wgs84.enabled') = 1
+   AND (SELECT SUM(config_key = 'orient.geo.normalize.enabled') = 1
            AND SUM(config_key = 'orient.alt_task.enabled') = 1
            AND SUM(config_key = 'orient.team.board.enabled') = 1
            AND SUM(config_key = 'orient.team.completion_ratio') = 1

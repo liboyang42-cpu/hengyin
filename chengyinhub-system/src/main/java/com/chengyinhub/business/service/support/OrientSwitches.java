@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class OrientSwitches {
 
-    public static final String KEY_GEO = "orient.geo.wgs84.enabled";
+    public static final String KEY_GEO = "orient.geo.normalize.enabled";
     public static final String KEY_ALT_TASK = "orient.alt_task.enabled";
     public static final String KEY_TEAM_BOARD = "orient.team.board.enabled";
     public static final String KEY_TEAM_RATIO = "orient.team.completion_ratio";
