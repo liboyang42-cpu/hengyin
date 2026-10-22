@@ -112,6 +112,7 @@ test('CL06 普通成员点击＋N展开已加载的完整名单，访客不能�
     page.data.club = { id: 7, memberCount: 5, isOwner: false };
     page.data.clubId = 7;
     page.data.canSeeMembers = true;
+    page.data.canSeeRoster = true;
     const members = Array.from({ length: 5 }, (_, index) => ({ id: index + 1, memberId: index + 10 }));
     routes['/api/club/members'] = (request) => request.success({ code: 200, data: members });
     page.loadMembers();
@@ -123,8 +124,10 @@ test('CL06 普通成员点击＋N展开已加载的完整名单，访客不能�
     assert.equal(requests.length, requestCount, '展开复用已加载名单，不发起业务写入');
     assert.equal(scrolls[0].selector, '#club-member-list');
 
+    // 拍板 2026-10-22:名单可见位改为 canSeeRoster(公开团访客也可见);需审核团的访客仍不能展开。
     const visitor = loadPage();
     visitor.data.canSeeMembers = false;
+    visitor.data.canSeeRoster = false;
     visitor.expandMembers();
     assert.equal(visitor.data.membersExpanded, false);
     assert.equal(scrolls.length, 1, '访客不能滚动进入成员名单');
@@ -455,7 +458,8 @@ test('CU-C-51 概况卡写明统计范围,「参与人次」改称「游玩人�
 test('CU-C-71 回归：审核中只显示等待态，加入按钮必须挂在 wx:else 上', () => {
   const wxml = readDetailWxml();
   const cta = wxml.slice(wxml.indexOf('<view class="profile-cta"'), wxml.indexOf('</view>', wxml.indexOf('bindtap="onJoin"')));
-  assert.match(cta, /wx:if="\{\{club\.myJoinStatus === 0\}\}"[^>]*>等待审核<\/view>\s*<view wx:else [^>]*bindtap="onJoin"/);
+  // 拍板 2026-10-22:待审态文案改为「等待主理人审核」(禁用态)。
+  assert.match(cta, /wx:if="\{\{club\.myJoinStatus === 0\}\}"[^>]*aria-disabled="true"[^>]*>等待主理人审核<\/view>\s*<view wx:else [^>]*bindtap="onJoin"/);
 });
 
 
