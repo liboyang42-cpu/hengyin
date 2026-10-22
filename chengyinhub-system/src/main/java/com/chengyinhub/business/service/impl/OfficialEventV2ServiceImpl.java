@@ -79,6 +79,8 @@ public class OfficialEventV2ServiceImpl implements IOfficialEventV2Service {
     private static final int GPS_TOLERANCE_M = 30;
     private static final int DEFAULT_MAX_ACCURACY_M = 80;
     private static final long ARRIVAL_MIN_INTERVAL_MILLIS = 30_000L;
+    /** 发布检查 WARN：报名期/距开场不足该时长时提示(不阻断)。 */
+    private static final long PUBLISH_WARN_LEAD_MILLIS = 24L * 3600_000L;
 
     @Autowired
     private OfficialEventMapper eventMapper;
@@ -335,7 +337,25 @@ public class OfficialEventV2ServiceImpl implements IOfficialEventV2Service {
         validateMissionBindingUniqueness(missions, check);
         validatePartyAvailability(parties, check);
         validateCoverage(event, requirements, parties, check);
+        if (publishCheckWarnEnabled()) {
+            check.enableTiers();
+            collectPublishWarnings(event, check, new Date());
+        }
         return check;
+    }
+
+    /** 发布前提示(WARN)：只提醒、不阻断；阻断项仍只由上面的 BLOCK 校验决定。 */
+    static void collectPublishWarnings(OfficialEvent event, OfficialEventV2PublishCheck check, Date now) {
+        if (StringUtils.isBlank(event.getCoverImg())) check.warn("未设置封面图，活动卡片将使用默认图");
+        if (StringUtils.isBlank(event.getStory())) check.warn("活动介绍为空，玩家可能不清楚玩法与规则");
+        if (event.getSignupStart() != null && event.getActivityStart() != null
+                && event.getActivityStart().getTime() - event.getSignupStart().getTime() < PUBLISH_WARN_LEAD_MILLIS) {
+            check.warn("报名期不足 24 小时，可能影响报名人数");
+        }
+        if (event.getActivityStart() != null && now != null
+                && event.getActivityStart().getTime() - now.getTime() < PUBLISH_WARN_LEAD_MILLIS) {
+            check.warn("距活动开始不足 24 小时，平台审核可能来不及完成");
+        }
     }
 
     @Override
@@ -2091,6 +2111,16 @@ public class OfficialEventV2ServiceImpl implements IOfficialEventV2Service {
             return configured != null && configured > 0 ? configured : DEFAULT_MAX_ACCURACY_M;
         } catch (Exception ex) {
             return DEFAULT_MAX_ACCURACY_M;
+        }
+    }
+
+    /** 发布检查 WARN 分级开关，默认关闭：关闭时发布检查响应与旧版一致。 */
+    private boolean publishCheckWarnEnabled() {
+        try {
+            return configService != null
+                    && "true".equalsIgnoreCase(configService.selectConfigByKey("official_event.publish_check_warn_enabled"));
+        } catch (Exception ex) {
+            return false;
         }
     }
 
