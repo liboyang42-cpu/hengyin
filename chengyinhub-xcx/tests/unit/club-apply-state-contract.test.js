@@ -400,6 +400,65 @@ test('删除失败资质图后仍有上传项不得提交', () => {
   assert.equal(h.requests.length, 0)
 })
 
+test('删除失败资质图后错误标记随索引重排贴到正确图片', () => {
+  const h = loadPage()
+  Object.assign(h.page.data, {
+    bootstrapState: 'ready', mode: 'form', step: 4,
+    certImages: ['/profile/upload/ok-a.jpg', 'wxfile://tmp/failed-b.jpg', '/profile/upload/ok-c.jpg', 'wxfile://tmp/failed-d.jpg'],
+    certErrorIndexes: [1, 3],
+  })
+  h.page.validate()
+  h.page.removeCert({ detail: { index: 1 } })
+
+  assert.deepEqual(h.page.data.certImages, ['/profile/upload/ok-a.jpg', '/profile/upload/ok-c.jpg', 'wxfile://tmp/failed-d.jpg'])
+  assert.deepEqual(h.page.data.certErrorIndexes, [2])
+  assert.equal(h.page.data.certImages[h.page.data.certErrorIndexes[0]], 'wxfile://tmp/failed-d.jpg')
+  assert.equal(h.page.data.canNext, false)
+})
+
+test('异常删除索引不删错资质图也不清错误标记', () => {
+  for (const index of [-1, 2, 9, 0.5, NaN, '0', '', null, undefined, true]) {
+    const h = loadPage()
+    const certImages = ['wxfile://tmp/first.jpg', 'wxfile://tmp/second-failed.jpg']
+    Object.assign(h.page.data, {
+      bootstrapState: 'ready', mode: 'form', step: 4,
+      certImages: certImages.slice(), certErrorIndexes: [1],
+    })
+    h.page.validate()
+    h.page.removeCert({ detail: { index } })
+    assert.deepEqual(h.page.data.certImages, certImages, String(index))
+    assert.deepEqual(h.page.data.certErrorIndexes, [1], String(index))
+    assert.equal(h.page.data.canNext, false, String(index))
+  }
+  const h = loadPage()
+  Object.assign(h.page.data, { step: 4, certImages: ['wxfile://tmp/only.jpg'], certErrorIndexes: [0] })
+  h.page.removeCert({})
+  h.page.removeCert(undefined)
+  assert.deepEqual(h.page.data.certImages, ['wxfile://tmp/only.jpg'])
+})
+
+test('真实页面 setData 回调延后执行时删除最后失败图后仍恢复提交', () => {
+  const h = loadPage()
+  const pending = []
+  // 真机 setData 回调在渲染层回包后才执行；回调前按钮仍应保持原态，回调后必须恢复。
+  h.page.setData = function (patch, done) {
+    Object.assign(this.data, patch)
+    if (done) pending.push(done)
+  }
+  Object.assign(h.page.data, {
+    bootstrapState: 'ready', mode: 'form', step: 4,
+    certImages: ['wxfile://tmp/failed-cert.jpg'], certErrorIndexes: [0], canNext: false,
+  })
+  h.page.removeCert({ detail: { index: 0 } })
+  assert.equal(h.page.data.certImages.length, 0)
+  assert.equal(h.page.data.canNext, false)
+  assert.equal(pending.length, 1, '删除后必须挂 validate 回调')
+  pending.shift().call(h.page)
+  assert.equal(h.page.data.canNext, true)
+  h.page.submit()
+  assert.equal(h.requests.length, 1)
+})
+
 test('资质图片上传失败或仍在上传时不得提交本机临时路径', () => {
   const h = loadPage()
   Object.assign(h.page.data, {

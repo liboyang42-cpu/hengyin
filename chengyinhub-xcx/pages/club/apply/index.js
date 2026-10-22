@@ -256,8 +256,8 @@ Page({
   },
 
   removeCert(e) {
-    var i = e.detail.index;
-    var arr = this.data.certImages.slice();
+    var i = e && e.detail ? e.detail.index : -1, arr = this.data.certImages.slice();
+    if (!Number.isInteger(i) || i < 0 || i >= arr.length) return; // 异常索引直接忽略：splice(-1/undefined) 会删错图
     arr.splice(i, 1);
     this.setData({
       certImages: arr,
