@@ -95,6 +95,11 @@
       <text wx:if="{{themeSaveLabel}}" class="pd-save-state {{themeSaveState === 'saved' ? 'pd-save-state--saved' : 'pd-save-state--unsaved'}}"
         aria-role="text" aria-label="{{themeSaveLabel}}">{{themeSaveLabel}}</text>
     </view>
+    <!-- 2026-10-22 业主裁决(L09):旧草稿归属待确认 = 内容流里的一条横幅(随内容滚动、只在创作页),
+         不再借底部固定的「这次还没有保存」错误卡 —— 那张卡盖住章节卡/地图,还和 toast 叠在一起。 -->
+    <cy-inline-error class="pd-legacy-banner" wx:if="{{editorPage === 1 && legacyScopePending}}" kind="data"
+      title="旧草稿还没恢复" sub="它没有记录商家或个人入口，确认属于当前入口后才恢复；原稿与上次发布状态均已保留。"
+      action="确认归属" bind:action="reopenLegacyDraftScope" />
     <!-- 主题详情:一个入口 → 一个弹窗,装除章节/玩法/票务外的全部主题内容。
          摘要要能一眼看出还差几项,否则用户不知道该不该点进去。
          ⚠️ 稿子(4028:13649)里它排在两格卡【之上】—— 主题详情是整个主题的必填集合,
@@ -1376,18 +1381,43 @@
   </view>
 
   <!-- 发布前检查弹层 -->
+  <!-- 2026-10-22 业主裁决(L09):撤掉右上角 ✕,退出走底部「返回修改」或点遮罩;遮罩同时锁住下层。 -->
+  <view class="pc-mask" wx:if="{{publishCheck.show}}" bindtap="closePublishCheck" catchtouchmove="noop" aria-role="button" aria-label="关闭发布确认" hover-class="cy-pressed" hover-stay-time="80"></view>
   <view class="pop-model pop-publish-check {{ publishCheck.show?'show':'' }}">
     <!-- 2026-09-05 用户拍板:点「发布」不直接发 —— 先自动检查,再让人过一遍眼,确认了才真发布。
          所以这一层不再只是「检查报告」,它就是那一页确认页:检查结果 + 玩家看到的样子 + 两颗底部动作。 -->
-    <!-- CU-C-156:退出从左上箭头改成右上角 ✕(同一个 closePublishCheck,
-         仍是「回编辑器改」)。底部那颗「返回修改」是发布前二选一的一半,原样保留。 -->
+    <!-- 标题居中:左右各留一个等宽空位(右上角 ✕ 已按 2026-10-22 业主裁决撤掉)。 -->
     <view class="pop-top flex-cb">
       <view class="pc-lead"></view>
       <view class="tit">发布确认</view>
-      <view class="pc-close" bindtap="closePublishCheck" aria-role="button" aria-label="关闭发布确认" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="44" /></view>
+      <view class="pc-lead"></view>
     </view>
     <view class="pop-cont pc-cont">
       <view class="pc-lede">确认后立即上架，平台将在发布后审核。</view>
+      <!-- 2026-10-22 业主裁决(L09):真正挡住发布的项排在最前,统一叫「需要先处理」,每条都带修复动作;
+           旧草稿没记录入口时也是一条阻断项(否则确认后会静默发不出去)。红字提示只在这组非空时出现。 -->
+      <block wx:if="{{publishCheck.blocking.length || !identityReady || legacyScopePending}}">
+        <view class="pc-section-tit pc-blocking">需要先处理</view>
+        <view class="pc-item pc-item-blocking" wx:if="{{legacyScopePending}}" bindtap="reopenLegacyDraftScope"
+              aria-role="button" aria-label="确认这份草稿属于{{operationScope === 'MERCHANT' ? '商家入口' : '个人入口'}}" hover-class="cy-pressed" hover-stay-time="80">
+          <text class="pc-dot pc-dot-red"></text>
+          <text class="pc-label">确认这份草稿属于{{operationScope === 'MERCHANT' ? '商家入口' : '个人入口'}}</text>
+          <view class="pc-arrow"><text>去确认</text><cy-icon name="arrow-right" size="24" /></view>
+        </view>
+        <view class="pc-item pc-item-blocking" wx:for="{{publishCheck.blocking}}" wx:key="index"
+              data-field="{{item.field}}" data-label="{{item.label}}" data-tab="{{item.tab}}" bindtap="locatePublishIssue" aria-role="button" aria-label="去填写 {{item.label}}" hover-class="cy-pressed" hover-stay-time="80">
+          <text class="pc-dot pc-dot-red"></text>
+          <text class="pc-label">{{item.label}}</text>
+          <view class="pc-arrow"><text>去填写</text><cy-icon name="arrow-right" size="24" /></view>
+        </view>
+        <!-- RUN-52 发布者实名:玩家没有向导,这一层就是最后一步,补全的控件就在下面,
+             所以这一条不带「去填写」——没有别处可去,指向本层下方那三格(不是死箭头)。 -->
+        <view class="pc-item pc-item-blocking" wx:if="{{!identityReady}}">
+          <text class="pc-dot pc-dot-red"></text>
+          <text class="pc-label">发布者实名未填写</text>
+          <view class="pc-arrow pc-arrow--static"><text>在下方填写</text></view>
+        </view>
+      </block>
       <view class="pc-section-tit">本次发布</view>
       <cy-card class="pc-summary">
         <view class="pc-summary__line" wx:for="{{publishCheck.summary}}" wx:key="*this">{{item}}</view>
@@ -1405,22 +1435,6 @@
             <text class="pc-label">{{item.label}}</text>
           </view>
         </cy-card>
-      </block>
-      <block wx:if="{{publishCheck.blocking.length || !identityReady}}">
-        <view class="pc-section-tit pc-blocking">必填项(需补全才能发布)</view>
-        <view class="pc-item pc-item-blocking" wx:for="{{publishCheck.blocking}}" wx:key="index"
-              data-field="{{item.field}}" data-label="{{item.label}}" data-tab="{{item.tab}}" bindtap="locatePublishIssue" aria-role="button" aria-label="去填写 {{item.label}}" hover-class="cy-pressed" hover-stay-time="80">
-          <text class="pc-dot pc-dot-red"></text>
-          <text class="pc-label">{{item.label}}</text>
-          <view class="pc-arrow"><text>去填写</text><cy-icon name="arrow-right" size="24" /></view>
-        </view>
-        <!-- RUN-52 发布者实名:玩家没有向导,这一层就是最后一步,补全的控件就在下面,
-             所以这一条不带「去填写」——没有别处可去,指向本层那三格(不是死箭头)。 -->
-        <view class="pc-item pc-item-blocking" wx:if="{{!identityReady}}">
-          <text class="pc-dot pc-dot-red"></text>
-          <text class="pc-label">发布者实名未填写</text>
-          <view class="pc-arrow pc-arrow--static"><text>在本层填写</text></view>
-        </view>
       </block>
       <block wx:if="{{publishCheck.advisory.length}}">
         <view class="pc-section-tit pc-advisory">建议完善(不影响发布)</view>
@@ -1487,11 +1501,11 @@
       </block>
       <!-- blocking 非空(内容安全/AI 判定为 error)时不给发布:按钮禁用,红字说明为什么点不动。 -->
       <view class="pc-actions">
-        <view wx:if="{{publishCheck.blocking.length || !identityReady}}" class="pc-blocked-tip">请先处理上方必填项后再发布</view>
+        <view wx:if="{{publishCheck.blocking.length || !identityReady || legacyScopePending}}" class="pc-blocked-tip">请先处理上方必填项后再发布</view>
         <view class="pc-actions__row">
           <cy-btn class="pc-actions__btn" variant="secondary" bindtap="closePublishCheck">返回修改</cy-btn>
-          <cy-btn class="pc-actions__btn" variant="primary" disabled="{{!!publishCheck.blocking.length || !identityReady}}"
-                  aria-disabled="{{!!publishCheck.blocking.length || !identityReady}}"
+          <cy-btn class="pc-actions__btn" variant="primary" disabled="{{!!publishCheck.blocking.length || !identityReady || legacyScopePending}}"
+                  aria-disabled="{{!!publishCheck.blocking.length || !identityReady || legacyScopePending}}"
                   bind:disabledtap="onPublishCheckDisabledTap"
                   bindtap="confirmPublishCheck">确认发布</cy-btn>
         </view>

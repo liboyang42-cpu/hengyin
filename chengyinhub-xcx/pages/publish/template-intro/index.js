@@ -31,6 +31,8 @@ Page({
   },
 
   onLoad(options) {
+    // 首帧就把原生导航/背景切到浅色,别等 onShow(从深色发布菜单进来时首帧会闪深色 chrome)。
+    applyTheme('light');
     this.setData({ operationScope: options && options.scope === 'MERCHANT' ? 'MERCHANT' : '' });
     this.loadCards();
   },

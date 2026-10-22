@@ -120,7 +120,8 @@ test('R5 跨日旧段只读展示全部后端字段，不能从新入口编辑�
   const wxml = read('pages/publish/temp/index.wxml'), config = cfg.defaultConfig(); config.slowTask.enabled = true; config.slowTask.title = '旧任务'; config.slowTask.unlockText = '旧解锁内容';
   const row = slowLegacy(config); assert.equal(row.readOnly, true); assert.deepEqual(missingSlowFields(row), []);
   assert.deepEqual(JSON.parse(row.displayValue), config.slowTask); assert.deepEqual(cfg.parse(cfg.serialize(config)).value.slowTask, config.slowTask);
-  assert.match(wxml, /r5Editor.legacyRows/); assert.match(wxml, /item.displayValue/);
+  // L09(2026-10-22):页面不再打印原始 JSON,只给一行摘要;原值仍在 row.value 里随保存保留
+  assert.match(wxml, /r5Editor.legacyRows/); assert.match(wxml, /r5Editor.legacySummary/); assert.doesNotMatch(wxml, /item.displayValue/);
   assert.doesNotMatch(wxml, /data-key="slowTask"|data-section="slowTask"/);
 });
 test('负控：旧跨日字段拼错会被完整字段保留断言抓到', () => {

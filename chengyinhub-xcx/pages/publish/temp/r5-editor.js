@@ -5,16 +5,24 @@ const matrix = require('../utils/publish/gameplay-support-matrix.js');
 const clone = value => JSON.parse(JSON.stringify(value));
 const PARTICIPATION = [{ key: 'direct', label: '直接参与', value: 0, sub: '直接开始', reason: '' }, { key: 'gps', label: '定位到达', value: 5, sub: '到达站点后开始', reason: '' }, { key: 'scan', label: '扫码参与', value: 4, sub: '扫现场码后开始', reason: '' }];
 const REMOVED = ['branch', 'silentOrder', 'diyName', 'musicCorner', 'slowTask', 'multiplayer'];
+// 旧段的中文名只用于页面上那一行摘要;原始值仍留在 value/displayValue 里供保存与校验。
+const REMOVED_NAMES = { branch: '分支', silentOrder: '沉默点单', diyName: '作品命名', musicCorner: '音乐角', slowTask: '跨日任务', multiplayer: '多人协作' };
 function legacyRows(config) {
   const rows = [];
-  const add = (path, label) => { const value = after.get(config, path); if (value != null) rows.push({ path, label, value: clone(value), displayValue: typeof value === 'object' ? JSON.stringify(value) : String(value), readOnly: true }); };
-  if (tools.selected(config).trade) add('interactionTools.allowTrade', '旧物资交换');
-  REMOVED.filter(key => config[key]?.enabled).forEach(key => add(key, '旧规则：' + key));
+  const add = (path, label, name) => { const value = after.get(config, path); if (value != null) rows.push({ path, label, name, value: clone(value), displayValue: typeof value === 'object' ? JSON.stringify(value) : String(value), readOnly: true }); };
+  if (tools.selected(config).trade) add('interactionTools.allowTrade', '旧物资交换', '物资交换');
+  REMOVED.filter(key => config[key]?.enabled).forEach(key => add(key, '旧规则：' + key, REMOVED_NAMES[key]));
   for (const path of ['ballShake.timed', 'ballShake.seconds', 'typeIn.seconds', 'sort.maxAttempts', 'qa.maxTries', 'photoCheck.maxTries', 'estimate.maxTries', 'pricePair.maxTries', 'hiddenObject.maxTries']) {
-    if (config[path.split('.')[0]]?.enabled) add(path, '旧参数：' + path);
+    if (config[path.split('.')[0]]?.enabled) add(path, '旧参数：' + path, '玩法参数');
   }
-  if (config.variants?.length) add('variants', '旧放宽条件');
+  if (config.variants?.length) add('variants', '旧放宽条件', '放宽条件');
   return rows;
+}
+// 2026-10-22 业主裁决(L09):旧设置不再把原始 JSON 打到页面上,只给一句人话摘要;保存仍原样保留。
+function legacySummary(rows) {
+  if (!rows || !rows.length) return '';
+  const names = rows.map(row => row.name).filter((name, index, all) => name && all.indexOf(name) === index);
+  return '包含 ' + rows.length + ' 条旧版' + (names.length ? names.join('、') : '') + '设置，保存时保留';
 }
 function view(config, validationMethod, support, context, category = '全部') {
   const selected = catalog.selection(catalog.detectGame(config));
@@ -36,7 +44,7 @@ function view(config, validationMethod, support, context, category = '全部') {
   // 选择玩法纵向列表：按分类分组（只含玩法），每项带不可选原因
   const gameGroups = catalog.CATEGORIES.filter(title => title !== '全部').map(title => ({ title, items: catalog.BASE_GAMES.filter(item => item.category === title).map(item => { const key = item.gameKey || item.forms?.[0].gameKey; return Object.assign({}, item, { pickKey: key, sub: item.sub || '', reason: item.reason || matrix.choice(support, key, config, context) }); }) })).filter(group => group.items.length);
   selected.forms = selected.forms.map(item => Object.assign({}, item, { sub: '', reason: matrix.choice(support, item.gameKey, config, context) }));
-  return Object.assign(selected, { toolRows, toolOptions, gameSummary: game ? game.label + ((selected.forms.find(item => item.key === selected.formKey)?.label) ? ' · ' + selected.forms.find(item => item.key === selected.formKey).label : '') + ' · ' + summary(config.outcomeRules?.pass) : '未选择玩法', scanSummary: config.scan?.kind === 'VOICE' ? '语音回复' : config.scan?.kind === 'IMAGE' ? '图片回复' : config.scan?.reply || '未配置扫码回复', participation, participationOptions: PARTICIPATION, category, categories: catalog.CATEGORIES, gameItems, gameGroups, afterRows: rows, valueSlots: tools.slotsOf(config).filter(slot => slot.kind === 'VALUE'), legacyRows: legacyRows(config), nextStepOptions, feedbackStepOptions: nextStepOptions.slice(1).map(({ key, label }) => ({ key, label })), nextDisabledReason: support?.outcomeRules?.nextStepId === 'SETTLED_FEEDBACK' ? '' : '暂未开放', error: '' });
+  return Object.assign(selected, { toolRows, toolOptions, gameSummary: game ? game.label + ((selected.forms.find(item => item.key === selected.formKey)?.label) ? ' · ' + selected.forms.find(item => item.key === selected.formKey).label : '') + ' · ' + summary(config.outcomeRules?.pass) : '未选择玩法', scanSummary: config.scan?.kind === 'VOICE' ? '语音回复' : config.scan?.kind === 'IMAGE' ? '图片回复' : config.scan?.reply || '未配置扫码回复', participation, participationOptions: PARTICIPATION, category, categories: catalog.CATEGORIES, gameItems, gameGroups, afterRows: rows, valueSlots: tools.slotsOf(config).filter(slot => slot.kind === 'VALUE'), legacyRows: legacyRows(config), legacySummary: legacySummary(legacyRows(config)), nextStepOptions, feedbackStepOptions: nextStepOptions.slice(1).map(({ key, label }) => ({ key, label })), nextDisabledReason: support?.outcomeRules?.nextStepId === 'SETTLED_FEEDBACK' ? '' : '暂未开放', error: '' });
 }
 function summary(row) { return !row ? '未配置' : [row.reply, (row.costs || []).length ? '消耗 ' + row.costs.length + ' 项' : '', (row.effects || []).length ? '效果 ' + row.effects.length + ' 项' : '', row.nextStepId ? '进入 ' + row.nextStepId : ''].filter(Boolean).join(' · ') || '无额外处理'; }
 const data = { gameConfigOpen: false, scanSheetOpen: false, toolSheetKey: '', afterOpOptions: [{ key: 'INC', label: '增加' }, { key: 'FLOOR', label: '恢复到至少' }], effectScopeOptions: [], r5Editor: view({}, 0), afterEditor: { show: false, path: '', draft: after.empty(), error: '' } };
@@ -50,6 +58,9 @@ const methods = {
   openScanSheet() { this._takeR5Snapshot('scan'); this.setData({ scanSheetOpen: true }); },
   closeScanSheet() { this._restoreR5Snapshot('scan'); this.setData({ scanSheetOpen: false }); },
   saveScanSheet() { const error = this._validateR5Panel(); if (error) { this.setData({ 'r5Editor.error': error }); return false; } delete this._r5Snapshot_scan; this.setData({ scanSheetOpen: false }); this._refreshR5Editor(); return true; },
+  // 2026-10-22 业主裁决(L09):参与方式 / 添加互动工具改走本页底部 pickerSheet,选中后仍落到原来的 pickParticipation / openR5ToolSheet。
+  openParticipationSheet() { const current = this.data.r5Editor.participation; this.setData({ pickerSheet: { open: true, key: 'participation', title: '玩家怎么参与', options: PARTICIPATION.map(item => ({ value: item.key, label: item.label, reason: item.reason || '', active: item.key === current })) } }); },
+  openR5ToolPicker() { this.setData({ pickerSheet: { open: true, key: 'r5Tool', title: '添加互动工具', options: this.data.r5Editor.toolOptions.map(item => ({ value: item.key, label: item.label, reason: item.reason || '', active: false })) } }); },
   addR5Tool(e) { const option = this.data.r5Editor.toolOptions[Number(e.detail.value)]; if (!option || option.reason) return; this.openR5ToolSheet({ currentTarget: { dataset: { key: option.key } } }); },
   openR5ToolSheet(e) {
     const key = e.currentTarget.dataset.key, option = this.data.r5Editor.toolOptions.find(item => item.key === key); if (!option || option.reason) return;
@@ -119,4 +130,4 @@ const methods = {
     config.interactionRules = Object.assign({}, config.interactionRules, { resourceSlots: slots }); this._setFormState({ advanced: config });
   },
 };
-module.exports = { data, methods, view, legacyRows, PARTICIPATION };
+module.exports = { data, methods, view, legacyRows, legacySummary, PARTICIPATION };

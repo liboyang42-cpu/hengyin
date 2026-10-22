@@ -299,6 +299,8 @@ Page({
     identityRegistered: false,
     identityRequired: true,
     identityReady: false,
+    // 旧草稿没记录商家/个人入口、用户还没确认归属:页内横幅 + 发布确认里的「需要先处理」都看它
+    legacyScopePending: false,
     identityRealName: '',
     identityIdCard: '',
     identityConsented: false,
@@ -982,19 +984,63 @@ Page({
     finish();
   },
 
+  // 2026-10-22 业主裁决(L09):原来每次进页都弹「确认旧草稿的发布入口」,并把提示塞进底部固定的
+  // 「这次还没有保存」错误卡 —— 盖住章节卡与地图、还和 toast 叠在一起。现在:
+  // ① 提示改成内容流里的横幅(legacyScopePending),不再借用 submitError;
+  // ② 选过「暂不恢复」就按草稿记下来,下次进来不再自动弹窗,横幅上的「确认归属」随时可再打开。
   _confirmLegacyDraftScope(envelope) {
+    this._draftScopeUnconfirmed = true;
+    this._legacyScopeEnvelope = envelope;
+    this.setData({ legacyScopePending: true });
+    if (this._legacyScopeDeferred()) return;
+    this._promptLegacyDraftScope();
+  },
+
+  _legacyScopeChoiceKey() {
+    const identity = this._draftIdentity();
+    const memberId = String(app.getUserID() || '');
+    if (!identity || !memberId) return '';
+    const draft = identity.topicId ? ('t' + identity.topicId) : ('d' + identity.draftUuid);
+    return 'cy_legacy_scope_later:' + memberId + ':' + (this.data.operationScope || '') + ':' + draft;
+  },
+
+  _legacyScopeDeferred() {
+    const key = this._legacyScopeChoiceKey();
+    try { return !!(key && wx.getStorageSync(key)); } catch (error) { return false; }
+  },
+
+  _rememberLegacyScopeChoice(deferred) {
+    const key = this._legacyScopeChoiceKey();
+    if (!key) return;
+    try {
+      if (deferred) wx.setStorageSync(key, 1);
+      else wx.removeStorageSync(key);
+    } catch (error) {}
+  },
+
+  // 横幅「确认归属」/ 发布确认「需要先处理」那一条:重新打开同一个确认弹窗
+  reopenLegacyDraftScope() {
+    if (!this._draftScopeUnconfirmed || !this._legacyScopeEnvelope) return;
+    if (this.data.publishCheck && this.data.publishCheck.show) this.closePublishCheck();
+    this._promptLegacyDraftScope();
+  },
+
+  _promptLegacyDraftScope() {
+    const envelope = this._legacyScopeEnvelope;
     const owner = String(app.getUserID() || '');
     const scope = this.data.operationScope;
-    this._draftScopeUnconfirmed = true;
-    this.setData({ submitError: '旧草稿未记录发布入口，请先确认归属；原稿与上次发布状态均已保留。' });
     modal.show({
       title: '确认旧草稿的发布入口',
       content: '这份旧草稿没有记录商家或个人入口。确认属于当前入口后才恢复；上次结果未知的发布仍会保留并先核对。',
       confirmText: '属于此入口', cancelText: '暂不恢复',
       success: (res) => {
-        if (!res.confirm || this._unloaded || owner !== String(app.getUserID() || '')
-            || scope !== this.data.operationScope) return;
+        if (this._unloaded || owner !== String(app.getUserID() || '')
+            || scope !== this.data.operationScope || !this._draftScopeUnconfirmed) return;
+        if (!res.confirm) { this._rememberLegacyScopeChoice(true); return; }
         this._draftScopeUnconfirmed = false;
+        this._legacyScopeEnvelope = null;
+        this._rememberLegacyScopeChoice(false);
+        this.setData({ legacyScopePending: false });
         this._applyDraftEnvelope(envelope);
         const stored = this._persistDraftEnvelope();
         this._draftAutosaveReady = true;
@@ -6561,6 +6607,7 @@ Page({
   confirmPublishCheck() {
     if (this._identityRegistering) return;
     this.syncIdentityReady();
+    if (this.data.legacyScopePending) return; // 旧草稿归属没确认:发出去也会被 sendData 静默拦下
     if (this.data.publishCheck.blocking.length || !this.data.identityReady) return;
     if (!this.data.identityRequired || this.data.identityRegistered) { this._publishAfterIdentity(); return; }
     // 先落实名、再落主题:后端两道闸就是这个顺序(/api/publisher/identity 先于 /api/topic/create
@@ -6600,6 +6647,10 @@ Page({
 
   // 发布弹层的「确认发布」被置灰时点它 —— 报第一条真缺项,不打空炮。
   onPublishCheckDisabledTap() {
+    if (this.data.legacyScopePending) {
+      cyToast('请先确认这份草稿的发布入口');
+      return;
+    }
     if (!this.data.identityReady) {
       const check = publisherIdentity.checkIdentityForm(this.identityForm());
       cyToast(check.ok ? '发布者实名还没登记' : check.message);

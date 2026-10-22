@@ -45,16 +45,13 @@ function assertContract(overrides = {}) {
   // host 文件里有一行注释正解释「原来 headerVariant=action 为什么废」,全文匹配会命中注释假红。
   assert.doesNotMatch(hostWxml, /<project-drawer[^>]*headerVariant="action"/, '承接商家必须回到默认标题头')
 
-  // CU-M-157:悬浮发布菜单原来只有底部「返回」,且玻璃层 inset:0 铺到状态栏,
-  // 把原页的导航标题与消息入口一起压暗。修好后必须同时满足两件事:
-  // ① 面板顶边(= 遮罩 top)从微信胶囊下方开始,由同一份实测几何下发,不是写死的 vh;
-  // ② 面板自己的右上角有一颗真 ✕(热区整档、读屏可念)。
-  assert.match(publishWxml, /class="ps__mask"[^>]*style="top:\{\{chrome\.contentTop\}\}px"/)
-  assert.match(publishWxml, /class="ps__close"[^>]*style="top:\{\{chrome\.contentTop\}\}px"[^>]*bindtap="onClose"[^>]*aria-role="button"[^>]*aria-label="关闭发布菜单"/)
-  assert.match(publishWxml, /class="ps__close"[\s\S]{0,300}?<cy-icon name="close-sm"/)
-  assert.match(source('components/cy/publish-sheet/index.js'), /resolveMenuChrome\(windowInfo, menuButtonInfo\)/, 'ps__close 的顶边没走胶囊实测几何')
-  assert.match(rule(publishWxss, '.ps__close'), /width:\s*var\(--cy-btn-h\)/, 'ps__close 热区宽度')
-  assert.match(rule(publishWxss, '.ps__close'), /height:\s*var\(--cy-btn-h\)/, 'ps__close 热区高度')
+  // CU-M-157:玻璃层原来 inset:0 铺到状态栏,把原页的导航标题与消息入口一起压暗。
+  // 面板顶边(= 遮罩 top)从微信胶囊下方开始,由同一份实测几何下发,不是写死的 vh。
+  // 2026-10-22 业主裁决(L09):右上角 ✕ 撤掉,退出只走首屏底部「返回」与点遮罩。
+  assert.match(publishWxml, /class="ps__mask"[^>]*style="top:\{\{chrome\.contentTop\}\}px"[^>]*bindtap="onMask"/)
+  assert.match(source('components/cy/publish-sheet/index.js'), /resolveMenuChrome\(windowInfo, menuButtonInfo\)/, '遮罩顶边没走胶囊实测几何')
+  assert.doesNotMatch(publishWxml, /class="ps__close"|name="close-sm"/, 'ps__close:发布菜单不该再有右上角 ✕(业主裁决 2026-10-22)')
+  assert.match(publishWxml, /ps__quick-action--return"[^>]*bindtap="onClose"[^>]*aria-label="返回"/, '首屏「返回」必须仍能关闭菜单')
 }
 
 test('复用弹层的返回/关闭/完成动作具有 44px 热区和按钮语义', () => {
@@ -98,9 +95,12 @@ const PUBLISH_WXML = 'components/cy/publish-sheet/index.wxml'
 const PUBLISH_WXSS = 'components/cy/publish-sheet/index.wxss'
 const PUBLISH_JS = 'components/cy/publish-sheet/index.js'
 
-test('负控：把发布菜单的右上角 ✕ 摘掉(退回只剩底部返回)会判红', () => {
-  const broken = read(PUBLISH_WXML).replace(/[ \t]*<view class="ps__close"[\s\S]*?<\/view>\n/, '')
-  assert.notEqual(broken, read(PUBLISH_WXML), '负控未命中 ps__close')
+test('负控：把右上角 ✕ 塞回发布菜单会判红(业主裁决 2026-10-22)', () => {
+  const broken = read(PUBLISH_WXML).replace(
+    '  <view class="ps__quick" catchtap',
+    '  <view class="ps__close" bindtap="onClose"><cy-icon name="close-sm" size="44" /></view>\n  <view class="ps__quick" catchtap',
+  )
+  assert.notEqual(broken, read(PUBLISH_WXML), '负控未命中 ps__quick 锚点')
   assert.throws(() => assertContract({ [PUBLISH_WXML]: broken }), /ps__close/)
 })
 
@@ -114,13 +114,4 @@ test('负控：胶囊几何退回写死兜底(不实测)会判红', () => {
   const broken = read(PUBLISH_JS).replace('this.setData({ chrome: resolveMenuChrome(windowInfo, menuButtonInfo) });', 'this.setData({ chrome: { contentTop: 56 } });')
   assert.notEqual(broken, read(PUBLISH_JS), '负控未命中 chrome 实测')
   assert.throws(() => assertContract({ [PUBLISH_JS]: broken }), /胶囊实测几何/)
-})
-
-test('负控：发布菜单 ✕ 热区缩回图标尺寸会判红', () => {
-  const broken = read(PUBLISH_WXSS).replace(
-    /\.ps__close \{[\s\S]*?\n\}/,
-    (m) => m.replace('width: var(--cy-btn-h);', 'width: 44rpx;').replace('height: var(--cy-btn-h);', 'height: 44rpx;'),
-  )
-  assert.notEqual(broken, read(PUBLISH_WXSS), '负控未命中 ps__close 热区')
-  assert.throws(() => assertContract({ [PUBLISH_WXSS]: broken }), /ps__close/)
 })

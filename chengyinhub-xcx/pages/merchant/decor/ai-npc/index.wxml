@@ -165,7 +165,7 @@
   </cy-sheet>
   <cy-sheet
     handle show="{{voiceVisible}}"
-    title="{{voiceFile ? '确认录音' : voiceStatus === 1 ? '声音生成中' : voiceStatus === 2 ? '声音可用' : '录制角色声音'}}"
+    title="{{!voiceFile && voiceStatus === 1 ? '声音生成中' : !voiceFile && voiceStatus === 2 ? '声音可用' : '录制角色声音'}}"
     bind:close="closeVoice"
     closable="{{!voiceBusy && !voiceSessionActive && !voiceFinalizing}}"
     mask-closable="{{!voiceBusy && !voiceSessionActive && !voiceFinalizing}}"
@@ -195,11 +195,14 @@
       </block>
       <block wx:else>
         <text wx:if="{{voiceStatus === 3}}" class="dc-error">声音生成失败，请重新录一段清晰的声音。</text>
-        <view wx:if="{{!voiceFile}}" class="npc-voice-mode {{voiceHolding ? 'npc-voice-mode--listening' : ''}}">
-          <text class="npc-voice-mode__title">Voice mode</text>
+        <!-- 2026-10-22 业主裁决(L09):录音只有一种版式 —— 「录制角色声音」面板里的同一张录音卡;
+             录完确认也留在这张卡里(进度全满),不再换成另一块无标题的内联版式,也不再改面板标题。 -->
+        <view class="npc-voice-mode {{voiceHolding ? 'npc-voice-mode--listening' : ''}}">
+          <text class="npc-voice-mode__title">录制声音</text>
           <view class="npc-voice-progress" aria-label="三句录音进度">
-            <view wx:for="{{voiceSentences}}" wx:key="*this" class="npc-voice-progress__step {{index < voiceSentenceConfirmed ? 'npc-voice-progress__step--done' : index === voiceSentenceIndex ? 'npc-voice-progress__step--active' : ''}}"></view>
+            <view wx:for="{{voiceSentences}}" wx:key="*this" class="npc-voice-progress__step {{voiceFile || index < voiceSentenceConfirmed ? 'npc-voice-progress__step--done' : index === voiceSentenceIndex ? 'npc-voice-progress__step--active' : ''}}"></view>
           </view>
+          <block wx:if="{{!voiceFile}}">
           <view class="npc-voice-stage">
             <text class="npc-voice-prompt">{{voiceSentenceText}}</text>
             <view class="npc-voice-ring npc-voice-ring--outer"></view>
@@ -216,11 +219,12 @@
           <button wx:else class="npc-voice-hold {{voiceHolding ? 'npc-voice-hold--active' : ''}}" hover-class="none" bindtouchstart="onVoiceHoldStart" bindtouchend="onVoiceHoldEnd" bindtouchcancel="onVoiceHoldEnd" aria-label="{{voiceHolding ? '松开结束' : '按住说话'}}">
             {{voiceHolding ? '松开结束' : '按住说话'}}
           </button>
-        </view>
-        <view wx:else class="npc-voice-complete">
-          <text class="npc-voice-complete__title">三句已录好</text>
-          <text class="dc-muted">{{voiceFile.duration || 0}} 秒 · 确认声音清晰、没有背景音乐</text>
-          <button class="npc-voice-hold" bindtap="playVoice" aria-label="{{voicePlaying ? '暂停试听录音' : '试听录音'}}">{{voicePlaying ? '暂停试听' : '试听录音'}}</button>
+          </block>
+          <view wx:else class="npc-voice-complete">
+            <text class="npc-voice-complete__title">三句已录好</text>
+            <text class="dc-muted">{{voiceFile.duration || 0}} 秒 · 确认声音清晰、没有背景音乐</text>
+          </view>
+          <button wx:if="{{voiceFile}}" class="npc-voice-hold" bindtap="playVoice" aria-label="{{voicePlaying ? '暂停试听录音' : '试听录音'}}">{{voicePlaying ? '暂停试听' : '试听录音'}}</button>
         </view>
         <view wx:if="{{voiceFile}}" class="dc-sheet-actions">
           <cy-btn variant="secondary" bindtap="resetVoiceRecording" disabled="{{voiceBusy || voiceUnknown}}">

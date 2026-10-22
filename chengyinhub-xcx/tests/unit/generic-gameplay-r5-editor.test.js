@@ -520,3 +520,20 @@ test('多选正确答案与服务端一致：就地提示、不替作者改答�
   const wxml = require('node:fs').readFileSync(require('node:path').join(__dirname, '../../pages/publish/temp/index.wxml'), 'utf8');
   assert.match(wxml, /wx:if="\{\{advanced.qa.judge !== false && qaAnswerError\}\}" title="\{\{qaAnswerError\}\}"/);
 });
+
+test('L09 参与方式与添加互动工具走底部选择面板，选中后落到原处理器；不可选项不关面板', () => {
+  const p = page(); const raw = base(); delete raw.outcomeRules; delete raw.interactionRules;
+  p.fillFormWithTemplateData({ title: '面板选择', validationMethod: 3, advancedConfigJson: JSON.stringify(raw) });
+  p._refreshSupportMatrix();
+  p.openParticipationSheet();
+  assert.equal(p.data.pickerSheet.open, true); assert.equal(p.data.pickerSheet.key, 'participation');
+  assert.deepEqual(p.data.pickerSheet.options.map(row => row.label), ['直接参与', '定位到达', '扫码参与']);
+  p.onPickerSheetSelect(event({ value: 'scan', label: '扫码参与', reason: '' }));
+  assert.equal(p.data.pickerSheet.open, false); assert.equal(p.data.advanced.scan.enabled, true);
+  p.openR5ToolPicker();
+  assert.equal(p.data.pickerSheet.key, 'r5Tool');
+  p.onPickerSheetSelect(event({ value: 'vote', label: '投票', reason: '暂不可用' }));
+  assert.equal(p.data.pickerSheet.open, true, '不可选项只提示原因');
+  p.onPickerSheetSelect(event({ value: 'vote', label: '投票', reason: '' }));
+  assert.equal(p.data.pickerSheet.open, false); assert.equal(p.data.toolSheetOpen, true);
+});

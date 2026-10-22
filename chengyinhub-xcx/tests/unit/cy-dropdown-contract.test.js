@@ -203,7 +203,12 @@ test('两列档无说明时用紧凑卡片；R5 编辑器下拉不显示灰色�
   assert.match(read('components/cy/dropdown/index.wxml'), /\{\{compact \? 'cdd__cell--compact' : ''\}\}/)
   assert.match(read('components/cy/dropdown/index.wxss'), /\.cdd__cell--compact\s*\{[^}]*min-height:\s*88rpx/)
   const temp = read('pages/publish/temp/index.wxml')
-  for (const key of ['r5Editor.participationOptions', 'r5Editor.toolOptions', 'r5Editor.forms']) {
+  // L09(2026-10-22):参与方式 / 添加互动工具改走底部 pickerSheet,下拉只剩「形式」;面板里同样只显示不可选原因
+  assert.doesNotMatch(temp, /range="\{\{r5Editor\.(participationOptions|toolOptions)\}\}"/, '参与方式/互动工具不再就地展开')
+  const r5 = read('pages/publish/temp/r5-editor.js')
+  assert.match(r5, /openR5ToolPicker\(\) \{[^\n]*reason: item\.reason \|\| ''/, '工具面板保留不可选原因')
+  assert.doesNotMatch(r5.match(/openR5ToolPicker\(\) \{[^\n]*/)[0], /\bsub\b/, '工具面板不显示灰色说明')
+  for (const key of ['r5Editor.forms']) {
     const tags = temp.match(new RegExp('<cy-dropdown[^>]*range="\\{\\{' + key.replace('.', '\\.') + '\\}\\}"[^>]*>', 'g')) || []
     assert.ok(tags.length > 0, key)
     for (const tag of tags) { assert.doesNotMatch(tag, /sub-key=/, key + ' 不显示灰色说明'); assert.match(tag, /reason-key="reason"/, key + ' 仍显示不可选原因') }
@@ -219,5 +224,5 @@ test('选择玩法：带分类标签的纵向列表，只列玩法（不含互�
   assert.match(sheet, /cg-edit-head__done[^>]*>完成<\/view>/)
   assert.doesNotMatch(sheet, /toolSelected|addR5Tool|toolOptions/, '玩法列表里没有互动工具')
   assert.doesNotMatch(temp, /range="\{\{r5Editor\.gameItems\}\}"/, '不再用两列下拉选玩法')
-  assert.match(temp, /range="\{\{r5Editor\.toolOptions\}\}"[^>]*bind:change="addR5Tool"/, '互动工具在选好玩法后单独添加')
+  assert.match(temp, /class="cg-adv-add" bindtap="openR5ToolPicker"/, '互动工具在选好玩法后单独添加(底部选择面板)')
 })

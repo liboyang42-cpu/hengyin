@@ -183,9 +183,8 @@
       <!-- R5：参与方式（扫码是参与方式，不是玩法）。与玩法互不占位。 -->
       <cy-card class="cg-mod cg-mod--plain" wx:if="{{ mod.key === 'finish' }}">
         <view class="cg-mod-body pad">
-          <cy-dropdown topic-editor columns="{{2}}" range="{{r5Editor.participationOptions}}" range-key="label" reason-key="reason" value="{{opt.idx(r5Editor.participationOptions, r5Editor.participation)}}" bind:change="pickParticipation">
-            <view class="cg-r5-row" aria-role="button" aria-label="选择参与方式"><view class="cg-r5-ico"><cy-icon name="{{r5Editor.participation === 'scan' ? 'qr-scan' : r5Editor.participation === 'gps' ? 'route' : 'check'}}" size="32" /></view><view class="cg-r5-row__main"><text class="cg-r5-row__title">玩家怎么参与</text><text class="cg-r5-row__sub">{{opt.label(r5Editor.participationOptions, r5Editor.participation)}}</text></view><view class="cg-r5-pill">选择<cy-icon name="chevron-right" size="24" /></view></view>
-          </cy-dropdown>
+          <!-- 2026-10-22 业主裁决(L09):参与方式改成底部选择面板(复用本页 pickerSheet),不再就地展开压住下方内容与底栏。 -->
+          <view class="cg-r5-row" bindtap="openParticipationSheet" aria-role="button" aria-label="选择参与方式" hover-class="cy-pressed" hover-stay-time="80"><view class="cg-r5-ico"><cy-icon name="{{r5Editor.participation === 'scan' ? 'qr-scan' : r5Editor.participation === 'gps' ? 'route' : 'check'}}" size="32" /></view><view class="cg-r5-row__main"><text class="cg-r5-row__title">玩家怎么参与</text><text class="cg-r5-row__sub">{{opt.label(r5Editor.participationOptions, r5Editor.participation)}}</text></view><view class="cg-r5-pill">选择<cy-icon name="chevron-right" size="24" /></view></view>
           <view class="cg-r5-row cg-r5-row--hr" wx:if="{{r5Editor.participation === 'scan'}}" bindtap="openScanSheet" aria-role="button" aria-label="配置扫完回复" hover-class="cy-pressed" hover-stay-time="80">
             <view class="cg-r5-row__main"><text class="cg-r5-row__title cg-r5-row__title--plain">扫完回复</text><text class="cg-r5-row__sub">{{r5Editor.scanSummary}}</text></view>
             <view class="cg-r5-pill">配置<cy-icon name="chevron-right" size="24" /></view>
@@ -1137,9 +1136,9 @@
       </view>
     </view>
 
+    <!-- 2026-10-22 业主裁决(L09):旧设置只给一行人话摘要,不再打印原始 JSON;保存时仍原样保留。 -->
     <view class="cg-gcfg" wx:if="{{r5Editor.legacyRows.length}}">
-      <view class="cg-r5-sec">旧设置（只读，保存时原样保留）</view>
-      <view class="cg-cfg-hint" wx:for="{{r5Editor.legacyRows}}" wx:key="path">{{item.label}}：{{item.displayValue}}</view>
+      <view class="cg-cfg-hint">{{r5Editor.legacySummary}}</view>
     </view>
             </view>
           </block>
@@ -1157,9 +1156,8 @@
             <view class="cg-r5-row__main"><text class="cg-r5-row__title">{{item.label}}<text wx:if="{{item.kind === 'addon'}}" class="cg-tag cg-tag--topic">附加</text></text><text class="cg-r5-row__sub">{{item.summary}}</text></view>
             <view class="cg-r5-pill">配置<cy-icon name="chevron-right" size="24" /></view>
           </view>
-          <cy-dropdown topic-editor columns="{{2}}" range="{{r5Editor.toolOptions}}" range-key="label" reason-key="reason" value="{{-1}}" bind:change="addR5Tool">
-            <view class="cg-adv-add" aria-role="button" aria-label="添加互动工具"><cy-icon name="plus" size="28" />添加互动工具</view>
-          </cy-dropdown>
+          <!-- L09:添加互动工具同样改成底部选择面板;不可选的项置灰并显示原因。 -->
+          <view class="cg-adv-add" bindtap="openR5ToolPicker" aria-role="button" aria-label="添加互动工具" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加互动工具</view>
         </view>
       </cy-card>
 
@@ -1789,10 +1787,10 @@
       <view class="cg-sheet-close" bindtap="closePickerSheet" aria-role="button" aria-label="关闭选择器" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="44" /></view>
     </view>
     <view class="cg-picker-list">
-      <view class="cg-picker-li {{ item.active ? 'on' : '' }}" wx:for="{{ pickerSheet.options }}" wx:key="value"
-        bindtap="onPickerSheetSelect" data-value="{{ item.value }}" data-label="{{ item.label }}" hover-class="cy-pressed" hover-stay-time="80"
-        aria-role="radio" aria-label="{{item.label}}" aria-checked="{{item.active}}">
-        <text class="cg-picker-label">{{ item.label }}</text><view class="cg-picker-tick" aria-hidden="true"></view>
+      <view class="cg-picker-li {{ item.active ? 'on' : '' }} {{ item.reason ? 'is-disabled' : '' }}" wx:for="{{ pickerSheet.options }}" wx:key="value"
+        bindtap="onPickerSheetSelect" data-value="{{ item.value }}" data-label="{{ item.label }}" data-reason="{{ item.reason || '' }}" hover-class="{{ item.reason ? 'none' : 'cy-pressed' }}" hover-stay-time="80"
+        aria-role="radio" aria-label="{{item.label}}" aria-checked="{{item.active}}" aria-disabled="{{!!item.reason}}">
+        <text class="cg-picker-label">{{ item.label }}</text><text class="cg-picker-reason" wx:if="{{ item.reason }}">{{ item.reason }}</text><view class="cg-picker-tick" aria-hidden="true"></view>
       </view>
     </view>
   </view>
