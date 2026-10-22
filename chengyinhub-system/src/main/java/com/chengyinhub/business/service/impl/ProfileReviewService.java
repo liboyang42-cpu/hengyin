@@ -150,13 +150,15 @@ public class ProfileReviewService
         {
             try
             {
-                avatarState = mediaState(IWxContentSecurityService.BIZ_TYPE_MERCHANT_PROFILE, merchantId,
+                // 门店分身头像按 (BIZ_TYPE_MERCHANT_NPC, npc_profile.id) 送检(#473);商家 logo/封面/相册才是
+                // (MERCHANT_PROFILE, merchantId)。按后者查,回执永远 NOT_SUBMITTED,同图时还会读到 logo 的结论。
+                avatarState = mediaState(IWxContentSecurityService.BIZ_TYPE_MERCHANT_NPC, npc.getId(),
                         WxContentCallbackInboxServiceImpl.sha256Hex(avatar.trim()));
             }
             catch (RuntimeException e)
             {
-                log.warn("[ProfileReview] merchant avatar receipt unavailable merchantId={} errorType={}", merchantId,
-                        e.getClass().getSimpleName());
+                log.warn("[ProfileReview] merchant avatar receipt unavailable merchantId={} npcId={} errorType={}", merchantId,
+                        npc.getId(), e.getClass().getSimpleName());
                 avatarState = null;
             }
         }

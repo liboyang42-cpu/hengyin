@@ -113,6 +113,18 @@ public interface IWxContentSecurityService
     int BIZ_TYPE_COMMUNITY_POST = 17;
 
     /**
+     * 门店分身 NPC 头像(npc_profile scope_type=2)。bizId = npc_profile.id。
+     *
+     * <p>此前门店头像借 {@link #BIZ_TYPE_MERCHANT_PROFILE}(bizId=merchantId)送检,回调核对的是商家
+     * logo/封面/相册,头像哈希永远对不上 ⇒ 违规头像被当「旧媒体」忽略。命中只把这一行打回驳回态
+     * (audit_status=2),玩家读闸 audit_status=1 立即失效。
+     *
+     * <p>⚠️ 取 18 而不是 17:旧携带分支(#334/#336)把门店分身记作 17,与上面的社区帖文撞号。
+     * 已有类型号一律不重排;新增类型取下一个未用号。
+     */
+    int BIZ_TYPE_MERCHANT_NPC = 18;
+
+    /**
      * 批量送检某条内容的图片（异步）。会拆分 imgArr（逗号/分号分隔），逐张调用 checkMediaAsync，
      * 并把 trace_id 与业务目标登记进 MySQL inbox；Redis 映射仅保留作迁移兼容与辅助清理。
      * best-effort：未启用 / 无图 / 送检失败均静默跳过，不阻断主流程。
