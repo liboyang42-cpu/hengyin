@@ -40,6 +40,9 @@ public interface ImConversationMemberMapper
     int markReadVisible(@Param("conversationId") Long conversationId, @Param("memberId") Long memberId,
                         @Param("lastReadMsgId") Long lastReadMsgId, @Param("visibleOrderAt") String visibleOrderAt);
 
+    /** 消息被屏蔽(delta=-1)/恢复(delta=+1)时修正仍把它计在未读里的读者;返回影响行数。 */
+    int adjustUnreadForModeratedMessage(@Param("messageId") Long messageId, @Param("delta") int delta);
+
     /** 未读总数 */
     public Integer sumUnread(@Param("memberId") Long memberId);
 

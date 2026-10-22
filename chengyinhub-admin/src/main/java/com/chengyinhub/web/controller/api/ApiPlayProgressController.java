@@ -3327,8 +3327,10 @@ public class ApiPlayProgressController extends BaseController
      * 活动排行榜(升级3):分队竞速/摄影任务/集章任务共用一个口径 ——
      * score=完成节点数(status=1),同数先完成者(最后完成时间早)靠前。
      * activityId 优先(同一活动=同一场比赛);仅 topicId=自玩跨场合计。
+     * D-13(N-02):分支/个人玩法主题改按「到达结局 → 结局总用时」排(见 LeaderboardRankPolicy);
+     * 排序键完全相同并列同名次。返回结构 {list, me} 不变,只追加字段。
      */
-    @Operation(summary = "活动排行榜(完成数降序,同数先完成者靠前)")
+    @Operation(summary = "活动排行榜(线性:完成数降序;分支:到达结局优先、用时短者靠前)")
     @GetMapping("/leaderboard")
     public AjaxResult leaderboard(String activityId, String topicId)
     {
@@ -3337,10 +3339,12 @@ public class ApiPlayProgressController extends BaseController
         Long actId = com.chengyinhub.common.core.text.Convert.toLong(activityId, 0L);
         Long tId = com.chengyinhub.common.core.text.Convert.toLong(topicId, 0L);
         if (actId <= 0 && tId <= 0) return error("参数有误");
+        Long boardTopicId = tId;
         if (actId > 0) {
             CmsActivity activity = cmsActivityService.selectCmsActivityById(actId);
             if (activity == null || activity.getTopicId() == null) return error("活动不存在");
             if (tId > 0 && !activity.getTopicId().equals(tId)) return error("活动与主题不匹配");
+            boardTopicId = activity.getTopicId();
             if (!isRegistered(memberId, actId)) return error("请先报名并完成支付");
             if (gameSessionRuntimeService != null && gameSessionRuntimeService.isRouteLeaderboardHidden(actId)) {
                 return error("主理人暂未开放本场排行榜");
@@ -3348,13 +3352,30 @@ public class ApiPlayProgressController extends BaseController
         } else if (validSelfPlayPass(memberId, tId) == null) {
             return new AjaxResult(402, "请先购买自玩通行证");
         }
-        List<LeaderboardItemVO> list = playerNodeProgressService.selectActivityLeaderboard(
-                actId > 0 ? actId : null, actId > 0 ? null : tId, 50);
+        com.chengyinhub.business.domain.CmsTopic boardTopic = cmsTopicService == null ? null
+                : cmsTopicService.selectCmsTopicById(boardTopicId);
+        boolean routeRanked = com.chengyinhub.business.service.support.LeaderboardRankPolicy.isRouteRanked(boardTopic);
+        Long boardActivityId = actId > 0 ? actId : 0L;
+        List<LeaderboardItemVO> list = routeRanked
+                ? playerNodeProgressService.selectRouteLeaderboard(boardActivityId, boardTopicId, 50)
+                : playerNodeProgressService.selectActivityLeaderboard(
+                        actId > 0 ? actId : null, actId > 0 ? null : tId, 50);
         if (list == null) list = new ArrayList<>();
+        com.chengyinhub.business.service.support.LeaderboardRankPolicy.assignRanks(list, routeRanked);
         LeaderboardItemVO me = null;
-        for (int i = 0; i < list.size(); i++) {
-            list.get(i).setRank(i + 1);
-            if (memberId.equals(list.get(i).getMemberId())) me = list.get(i);
+        for (LeaderboardItemVO row : list) {
+            if (memberId.equals(row.getMemberId())) me = row;
+        }
+        if (me == null && routeRanked) {
+            // 榜外:取本人最新一局的结局/用时,rank 留空(不猜名次);没开过局只回 0 分
+            me = playerNodeProgressService.selectRouteLeaderboardRow(boardActivityId, boardTopicId, memberId);
+            if (me == null) {
+                me = new LeaderboardItemVO();
+                me.setMemberId(memberId);
+                me.setScore(0L);
+                me.setReachedEnding(false);
+            }
+            me.setRank(null);
         }
         if (me == null) {
             // 榜外:补我的完成数,rank 留空(不猜名次)
@@ -3377,6 +3398,7 @@ public class ApiPlayProgressController extends BaseController
         Map<String, Object> data = new HashMap<>();
         data.put("list", list);
         data.put("me", me);
+        data.put("rankMode", routeRanked ? "ROUTE" : "LINEAR");
         return AjaxResult.success(data);
     }
 
