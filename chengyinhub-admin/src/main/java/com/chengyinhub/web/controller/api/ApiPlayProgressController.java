@@ -375,6 +375,11 @@ public class ApiPlayProgressController extends BaseController
             // 奖励、完成度、名额这些都挂在它身上,运营权不等于玩家领奖权。
             leadSpectator = !registered && clubId != null
                     && memberId.equals(clubEventLeadResolver.resolveLeaderMemberId(activity));
+            // O-08:未报名、非带队的旁人只能拿到对他公开可见主题的节点坐标/地址。草稿、下架、
+            // 仅俱乐部成员可见的主题按不存在处理(判据 = 主题详情同一条 SQL:在架+圈层闸或作者本人,且过成员闸)。
+            if (!registered && !leadSpectator && cmsTopicService.selectCmsTopicDetailById(tId, memberId) == null) {
+                return error("活动或主题不存在");
+            }
         } else {
             tId = topicId;
             progActId = 0L;

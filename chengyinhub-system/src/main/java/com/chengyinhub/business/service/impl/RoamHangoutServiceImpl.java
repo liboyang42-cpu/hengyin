@@ -46,7 +46,8 @@ public class RoamHangoutServiceImpl implements IRoamHangoutService {
         List<Map<String, Object>> items = new ArrayList<Map<String, Object>>();
         // 2026-09-15 裁决:搭子局(A)下架,地图不再返回 kind=hangout 图层(也不再按局数探半径)。
         // 存量局的 detail/leave/close 仍走本 service 的其它方法,读取不崩。
-        List<Map<String, Object>> acts = roamHangoutMapper.selectNearbyActivities(lat, lng, box[0], box[1], box[2], box[3], r, LIST_LIMIT, viewerId);
+        List<Map<String, Object>> acts = withoutMemberOnlyTopics(
+                roamHangoutMapper.selectNearbyActivities(lat, lng, box[0], box[1], box[2], box[3], r, LIST_LIMIT, viewerId), viewerId);
         if (acts != null) for (Map<String, Object> a : acts) { a.put("kind", "activity"); a.put("viewerHasTicket", ((Number) a.getOrDefault("viewerHasTicket", 0)).intValue() > 0); items.add(a); }
         // 用户 2026-09-06:这张图不只漫游的局,发布出去的城市定向 / 自由探索也要出现在上面
         List<Map<String, Object>> topics = cmsTopicMapper.selectNearbyTopics(lat, lng, box[0], box[1], box[2], box[3], r, LIST_LIMIT, viewerId);
@@ -55,6 +56,27 @@ public class RoamHangoutServiceImpl implements IRoamHangoutService {
         out.put("items", items);
         out.put("radius", r);
         return out;
+    }
+
+    /** O-08:「仅俱乐部成员可见」主题下的场次坐标不落到非成员地图上(判据与主题图层同一道 clubMemberOnlyGate)。 */
+    private List<Map<String, Object>> withoutMemberOnlyTopics(List<Map<String, Object>> acts, Long viewerId) {
+        if (acts == null || acts.isEmpty()) return acts;
+        List<Long> topicIds = new ArrayList<Long>();
+        for (Map<String, Object> a : acts) {
+            Object topicId = a.get("topicId");
+            if (topicId instanceof Number && ((Number) topicId).longValue() > 0
+                    && !topicIds.contains(((Number) topicId).longValue())) topicIds.add(((Number) topicId).longValue());
+        }
+        if (topicIds.isEmpty()) return acts;
+        List<Long> hidden = cmsTopicMapper.selectClubMemberOnlyHiddenTopicIds(topicIds, viewerId);
+        if (hidden == null || hidden.isEmpty()) return acts;
+        List<Map<String, Object>> visible = new ArrayList<Map<String, Object>>();
+        for (Map<String, Object> a : acts) {
+            Object topicId = a.get("topicId");
+            if (topicId instanceof Number && hidden.contains(((Number) topicId).longValue())) continue;
+            visible.add(a);
+        }
+        return visible;
     }
 
     static double[] bbox(double lat, double lng, double radiusM) {
