@@ -27,6 +27,8 @@ public final class StoryVocabulary {
     public static final String HAS_CONDITION = "HAS_CONDITION";
     public static final String ITEM_EQUIPPED = "ITEM_EQUIPPED";
     public static final String CHECK_RESULT = "CHECK_RESULT";
+    /** F6 T07:环境键条件 {key: weather|daypart|weekpart|season, values:[…]};值由服务端按主题城市与服务器时钟写入。 */
+    public static final String ENV_IN = "ENV_IN";
 
     public static final String ADD_ITEM = "ADD_ITEM";
     public static final String GRANT_BADGE = "GRANT_BADGE";
@@ -38,7 +40,7 @@ public final class StoryVocabulary {
     public static final String TICK_CLOCK = "TICK_CLOCK";
 
     public static final Set<String> CONDITION_OPS = set(AND, OR, NOT, VISIT_COUNT, ROLE_IN, HAS_CONDITION,
-            ITEM_EQUIPPED, CHECK_RESULT);
+            ITEM_EQUIPPED, CHECK_RESULT, ENV_IN);
     public static final Set<String> EFFECT_OPS = set(ADD_ITEM, GRANT_BADGE, GRANT_XP, ADD_CONDITION,
             REMOVE_CONDITION, EQUIP, UNEQUIP, TICK_CLOCK);
 
@@ -63,6 +65,7 @@ public final class StoryVocabulary {
     private static final Pattern BADGE = Pattern.compile("^[a-z][a-z0-9_]{0,47}$");
     private static final Pattern ROLE = Pattern.compile("^[A-Z][A-Z0-9_]{0,31}$");
     private static final Pattern GRANT_ID = Pattern.compile("^[A-Za-z0-9_-]{1,32}$");
+    private static final Pattern ENV_VALUE = Pattern.compile("^[a-z][a-z0-9_]{0,23}$");
     private static final Pattern CLOCK_VAR = Pattern.compile("^counter\\.[a-z][a-z0-9_]{0,47}$");
 
     private StoryVocabulary() {}
@@ -143,6 +146,23 @@ public final class StoryVocabulary {
                     throw fail(path, "CHECK_RESULT 的 result 只能是 PASS 或 FAIL");
                 }
                 return;
+            case ENV_IN: {
+                fields(condition, path, "op", "key", "values");
+                if (!JourneyRpg.ENV_KEYS.contains(condition.path("key").asText(""))) {
+                    throw fail(path, "ENV_IN 的 key 只能是 weather、daypart、weekpart 或 season");
+                }
+                JsonNode values = condition.get("values");
+                if (values == null || !values.isArray() || values.size() < 1 || values.size() > MAX_CHILDREN) {
+                    throw fail(path, "ENV_IN 的 values 须为 1 至 " + MAX_CHILDREN + " 个取值");
+                }
+                Set<String> seen = new LinkedHashSet<String>();
+                for (JsonNode value : values) {
+                    if (!value.isTextual() || !ENV_VALUE.matcher(value.asText()).matches() || !seen.add(value.asText())) {
+                        throw fail(path, "ENV_IN 的取值须为不重复的小写代码");
+                    }
+                }
+                return;
+            }
             default:
                 throw fail(path, "op 不支持:" + op);
         }
