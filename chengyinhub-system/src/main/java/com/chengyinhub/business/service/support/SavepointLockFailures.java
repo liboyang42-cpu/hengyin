@@ -20,8 +20,13 @@ import org.springframework.transaction.TransactionSystemException;
  * 这时 catch 一吞,外层 {@code @DeadlockRetry} 就看不到锁冲突、不会重试,后续语句落进 InnoDB 隐式开启的新事务并被提交
  * = 死锁前那部分写入丢了,接口却返回成功。
  *
- * <p>这里只认 {@code DeadlockRetryInterceptor} 会重试的两种:{@link DeadlockLoserDataAccessException}(1213 / SQLState 40001)
- * 与 {@link CannotAcquireLockException}(1205)。找到就原样抛出,让外层整笔回滚并重试;其它异常一概不管,由调用方照旧处理。
+ * <p>只在 savepoint 确已失效时抛出:死锁({@link DeadlockLoserDataAccessException} / 1213 / SQLState 40001,
+ * 含 Spring 把 40001 翻译成的 {@link CannotAcquireLockException}),或「回滚到 savepoint 失败」的
+ * {@link TransactionSystemException} 里挂着的任何锁失败。找到就抛出,让外层整笔回滚并由 {@code @DeadlockRetry} 重试。
+ *
+ * <p>1205 锁等待超时在 {@code innodb_rollback_on_timeout=OFF}(默认)下只回滚当前语句,savepoint 仍有效,
+ * 照旧由调用方吞掉、回滚到 savepoint 即可(多数调用方外层没有 {@code @DeadlockRetry},抛出会让整单失败);
+ * 只有它导致 savepoint 失效(回滚到 savepoint 失败)时才抛出。其它异常一概不管,由调用方照旧处理。
  */
 public final class SavepointLockFailures
 {
@@ -33,7 +38,7 @@ public final class SavepointLockFailures
     {
     }
 
-    /** 失败链里有锁冲突就抛出它(未经 Spring 翻译的 1213/40001/1205 先翻译成对应异常);否则什么都不做。 */
+    /** savepoint 已因锁冲突失效就抛出该锁失败(未经 Spring 翻译的 1213/40001 先翻译);否则什么都不做。 */
     public static void rethrowIfLockFailure(Throwable failure)
     {
         RuntimeException lockFailure = find(failure);
@@ -53,6 +58,8 @@ public final class SavepointLockFailures
         Set<Throwable> seen = Collections.newSetFromMap(new IdentityHashMap<>());
         Deque<Throwable> pending = new ArrayDeque<>();
         pending.add(failure);
+        // 回滚到 savepoint 失败:savepoint 已不存在,其中挂着的锁失败(含 1205)都必须交外层整笔重试。
+        boolean savepointGone = false;
         while (!pending.isEmpty())
         {
             Throwable current = pending.poll();
@@ -60,18 +67,22 @@ public final class SavepointLockFailures
             {
                 continue;
             }
-            if (current instanceof DeadlockLoserDataAccessException || current instanceof CannotAcquireLockException)
+            if (current instanceof DeadlockLoserDataAccessException)
+            {
+                return (RuntimeException) current;
+            }
+            if (current instanceof CannotAcquireLockException && (savepointGone || causedByDeadlock(current)))
             {
                 return (RuntimeException) current;
             }
             if (current instanceof SQLException)
             {
                 SQLException sql = (SQLException) current;
-                if (sql.getErrorCode() == MYSQL_DEADLOCK || SQLSTATE_SERIALIZATION_FAILURE.equals(sql.getSQLState()))
+                if (isDeadlock(sql))
                 {
                     return new DeadlockLoserDataAccessException(sql.getMessage(), sql);
                 }
-                if (sql.getErrorCode() == MYSQL_LOCK_WAIT_TIMEOUT)
+                if (savepointGone && sql.getErrorCode() == MYSQL_LOCK_WAIT_TIMEOUT)
                 {
                     return new CannotAcquireLockException(sql.getMessage(), sql);
                 }
@@ -79,6 +90,7 @@ public final class SavepointLockFailures
             if (current instanceof TransactionSystemException
                     && ((TransactionSystemException) current).getApplicationException() != null)
             {
+                savepointGone = true;
                 pending.add(((TransactionSystemException) current).getApplicationException());
             }
             if (current.getCause() != null)
@@ -87,5 +99,24 @@ public final class SavepointLockFailures
             }
         }
         return null;
+    }
+
+    private static boolean isDeadlock(SQLException sql)
+    {
+        return sql.getErrorCode() == MYSQL_DEADLOCK || SQLSTATE_SERIALIZATION_FAILURE.equals(sql.getSQLState());
+    }
+
+    /** Spring 6 会把 SQLState 40001 的回滚异常翻译成 CannotAcquireLockException,这里看底层 SQLException 区分死锁与 1205。 */
+    private static boolean causedByDeadlock(Throwable lockFailure)
+    {
+        Set<Throwable> seen = Collections.newSetFromMap(new IdentityHashMap<>());
+        for (Throwable t = lockFailure.getCause(); t != null && seen.add(t); t = t.getCause())
+        {
+            if (t instanceof SQLException && isDeadlock((SQLException) t))
+            {
+                return true;
+            }
+        }
+        return false;
     }
 }
