@@ -179,6 +179,10 @@ public class ApiPlayProgressController extends BaseController
     @Autowired
     private com.chengyinhub.business.service.IGrowthService growthService;
 
+    /** F1b 城市定向计分:只给排行榜附加 scoreCenti 展示字段;开关关闭/非定向主题时不做任何事。 */
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.IOrientScoringService orientScoringService;
+
     /** 宾果:主题级九宫格。⚠️ 只能旁路调用,见下方 refreshBingo 的注释 */
     @Autowired(required = false)
     private com.chengyinhub.business.service.IPlayBingoService playBingoService;
@@ -3403,6 +3407,14 @@ public class ApiPlayProgressController extends BaseController
             me = new LeaderboardItemVO();
             me.setMemberId(memberId);
             me.setScore(myDone);
+        }
+        if (orientScoringService != null) {
+            // 排序与名次已由 D-13 口径定完,这里只附加分数展示,不重排;附加失败不拖垮排行榜本身
+            try {
+                orientScoringService.decorateLeaderboard(boardTopic, boardActivityId, boardTopicId, list, me);
+            } catch (RuntimeException scoringUnavailable) {
+                logger.warn("城市定向计分附加失败 topicId={} activityId={}", boardTopicId, boardActivityId, scoringUnavailable);
+            }
         }
         Map<String, Object> data = new HashMap<>();
         data.put("list", list);
