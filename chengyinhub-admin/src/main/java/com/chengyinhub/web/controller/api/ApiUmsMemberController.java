@@ -709,9 +709,11 @@ public class ApiUmsMemberController extends BaseController {
             conflict.put("errorCode", NicknameSuggestionServiceImpl.ERROR_NICKNAME_TAKEN);
             return conflict;
         }
-        // 头像/案例图异步内容安全送检,违规经回调自动清除(BIZ_TYPE_MEMBER_PROFILE)
+        // 头像/作品图/联系二维码异步内容安全送检,违规经回调按字段清除(BIZ_TYPE_MEMBER_PROFILE)。
+        // 联系二维码此前不在送检组合里:能保存、能回显,违规也永远不会被清。
         String profileImgs = (StringUtils.isNotEmpty(request.getAvatar()) ? request.getAvatar() : "")
-                + ";" + (StringUtils.isNotEmpty(request.getCasePics()) ? request.getCasePics() : "");
+                + ";" + (StringUtils.isNotEmpty(request.getCasePics()) ? request.getCasePics() : "")
+                + ";" + (StringUtils.isNotEmpty(request.getWechat()) ? request.getWechat() : "");
         if (profileImgs.length() > 1) {
             try { wxContentSecurityService.submitMediaCheck(IWxContentSecurityService.BIZ_TYPE_MEMBER_PROFILE, member_id, profileImgs, openid); } catch (Exception ignore) {}
         }

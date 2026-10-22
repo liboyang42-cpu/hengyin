@@ -152,8 +152,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="useTime != null">use_time = #{useTime},</if>
             <if test="orderId != null">order_id = #{orderId},</if>
             <if test="orderSn != null">order_sn = #{orderSn},</if>
-            <if test="startTime != null">start_time = #{startTime},</if>
-            <if test="endTime != null">end_time = #{endTime},</if>
+            <if test="startTime != null">start_time = start_time,</if>
+            <if test="endTime != null">end_time = end_time,</if>
             <if test="note != null">note = #{note},</if>
             <if test="delFlag != null">del_flag = #{delFlag},</if>
             <if test="createBy != null">create_by = #{createBy},</if>
@@ -162,6 +162,11 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="updateTime != null">update_time = #{updateTime},</if>
         </trim>
         where id = #{id}
+        <!-- Issued validity is immutable. Supplied dates assert the existing snapshot,
+             including legacy NULL: a new non-NULL value cannot invent missing history.
+             Guard in this same UPDATE so concurrent callers cannot pass a stale pre-read. -->
+        <if test="startTime != null">and start_time = #{startTime}</if>
+        <if test="endTime != null">and end_time = #{endTime}</if>
     </update>
 
     <delete id="deleteSmsCouponHistoryById" parameterType="Long">

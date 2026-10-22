@@ -143,6 +143,8 @@ public class OpenAiCompatibleLlmClient implements LlmClient
                 ? "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions"
                 : baseUrl.replaceAll("/+$", "") + "/chat/completions";
 
+        int status = -1;
+        String phase = "transport";
         try (HttpResponse resp = HttpRequest.post(url)
                 .header("Authorization", "Bearer " + apiKey)
                 .header("Content-Type", "application/json")
@@ -150,22 +152,25 @@ public class OpenAiCompatibleLlmClient implements LlmClient
                 .timeout(timeoutMs)
                 .execute())
         {
+            status = resp.getStatus();
+            phase = "response";
             String result = resp.body();
             if (!resp.isOk())
             {
-                log.error("[LlmClient:{}] HTTP {} resp={}", name, resp.getStatus(), truncate(result, 500));
+                // Provider bodies can echo prompts, retrieved facts or credentials. Never log them.
                 throw new RuntimeException("AI 模型调用失败(" + resp.getStatus() + ")");
             }
+            phase = "parse";
             return responseText(result);
-        }
-        catch (RuntimeException e)
-        {
-            throw e;
         }
         catch (Exception e)
         {
-            log.error("[LlmClient:{}] 调用异常", name, e);
-            throw new RuntimeException("AI 模型调用异常:" + e.getMessage());
+            // Parser/transport exception messages and causes can contain response bytes or URLs.
+            // Keep bounded operational diagnostics only, including no raw throwable in the log.
+            String diagnosticName = name != null && name.matches("[A-Za-z0-9_-]{1,32}") ? name : "provider";
+            log.error("[LlmClient:{}] request-failed phase={} httpStatus={} errorType={}",
+                    diagnosticName, phase, status, e.getClass().getSimpleName());
+            throw new RuntimeException("AI 模型调用失败 (phase=" + phase + ", HTTP=" + status + ")");
         }
     }
 
