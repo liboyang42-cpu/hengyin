@@ -133,7 +133,7 @@ test('scope ID 也不得接受布尔、数组或对象，空列表不能绕过�
   }
 });
 
-test('合法原结算单号原样展示，缺失或非法单号不伪造也不丢合法账目', () => {
+test('合法内部记录编号原样展示，缺失或非法编号不伪造也不丢合法账目', () => {
   for (const claimId of [7788, '007788', Number.MAX_SAFE_INTEGER, String(Number.MAX_SAFE_INTEGER)]) {
     const row = { ...base, claimId };
     const club = ledgerView({ code: 200, data: [row] }, scope);
@@ -151,8 +151,11 @@ test('合法原结算单号原样展示，缺失或非法单号不伪造也不�
   const fs = require('node:fs');
   const path = require('node:path');
   const wxml = fs.readFileSync(path.join(__dirname, '../../components/cy/club-direct-ledger/index.wxml'), 'utf8');
-  assert.match(wxml, /wx:if="\{\{item\.claimNo\}\}"[^>]*>原结算单 #\{\{item\.claimNo\}\}/);
-  assert.doesNotMatch(wxml, /open-type="contact"|bindtap=.*pay|仲裁/);
+  // owner 选项 B：内部 SettlementClaim id 只作“记录编号”供联系客服，不称结算单/收据/平台单号。
+  assert.match(wxml, /wx:if="\{\{item\.claimNo\}\}"[^>]*>记录编号 \{\{item\.claimNo\}\}/);
+  assert.doesNotMatch(wxml, /结算单|收据|平台单号/);
+  assert.match(wxml, /class="direct-support"[^>]*wx:if="\{\{ledger\.rows\.length\}\}"[\s\S]*open-type="contact"[^>]*>联系客服</);
+  assert.doesNotMatch(wxml, /bindtap=.*pay|仲裁/);
 });
 
 test('负控：恢复旧强转校验，布尔 ID 会再次产出有效一元账目', () => {
@@ -172,7 +175,7 @@ test('负控：恢复旧强转校验，布尔 ID 会再次产出有效一元账�
 });
 
 
-test('原结算单展示接受精确Long字符串，仍拒绝溢出与不安全数字', () => {
+test('记录编号展示接受精确Long字符串，仍拒绝溢出与不安全数字', () => {
   for (const claimId of ['9007199254740992', '9007199254740993', '9223372036854775807', '009223372036854775807']) {
     const view = ledgerView({ code: 200, data: [{ ...base, claimId }] }, scope);
     assert.equal(view.rows[0].claimNo, claimId);
