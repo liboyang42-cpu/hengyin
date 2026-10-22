@@ -43,6 +43,12 @@ public interface ClubEventOpsMapper {
     int cancelFutureActivityCas(@Param("activityId") Long activityId, @Param("now") java.util.Date now,
                                 @Param("username") String username);
     int cancelOccurrenceCas(@Param("id") Long id, @Param("expectedVersion") Integer expectedVersion);
+    /** O5b-7:ACTIVE → CLOSED 终态 CAS(同俱乐部、同版本);不动场次、报名、票与资金。 */
+    int closeSeriesCas(@Param("seriesId") Long seriesId,
+                       @Param("clubId") Long clubId,
+                       @Param("expectedVersion") Integer expectedVersion,
+                       @Param("username") String username,
+                       @Param("now") java.util.Date now);
     int updateSeriesScheduleCas(@Param("seriesId") Long seriesId,
                                 @Param("expectedVersion") Integer expectedVersion,
                                 @Param("recurrenceType") String recurrenceType,

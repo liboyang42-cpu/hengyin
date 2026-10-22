@@ -137,6 +137,15 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
           and version = #{version}
     </update>
 
+    <!-- O5b-3:举报首响时钟带进处置单 —— 只收紧未结单的 deadline,不放宽、不改版本号 -->
+    <update id="tightenOpenDeadline">
+        update audit_task
+        set deadline_at = #{deadline}
+        where id = #{id}
+          and status in (0, 3)
+          and (deadline_at is null or deadline_at &gt; #{deadline})
+    </update>
+
     <!-- 认领:仅未被认领的待审单可认领,条件更新防并发双认领 -->
     <update id="claimAuditTask">
         update audit_task

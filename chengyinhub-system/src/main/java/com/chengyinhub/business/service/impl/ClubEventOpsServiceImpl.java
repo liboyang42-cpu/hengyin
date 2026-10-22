@@ -67,6 +67,10 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
     private final IClubRoleAssignmentService clubRoleAssignmentService;
     private final ITeamGroupService teamGroupService;
 
+    /** O5b-7 开关(默认关):系列 CLOSED 终态的关闭入口。 */
+    @org.springframework.beans.factory.annotation.Value("${chengyin.club.o5b.series-close.enabled:false}")
+    private boolean seriesCloseEnabled = false;
+
     public ClubEventOpsServiceImpl(IClubAccessService clubAccessService,
                                    ClubEventScheduleMaterializer scheduleMaterializer,
                                    IClubSessionService clubSessionService,
@@ -299,6 +303,43 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
 
     @Override
     @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
+    public ClubEventSeries closeSeries(Long actorMemberId, String username, ClubEventSeriesRequest request) {
+        if (!seriesCloseEnabled) {
+            throw new com.chengyinhub.common.exception.ServiceException("系列关闭功能未开放",
+                    com.chengyinhub.common.constant.HttpStatus.FORBIDDEN);
+        }
+        if (!positive(actorMemberId) || request == null || !positive(request.getSeriesId())
+                || !positive(request.getClubId())
+                || request.getExpectedVersion() == null || request.getExpectedVersion() < 0) {
+            throw badRequest("系列关闭参数不完整");
+        }
+        // 锁序与 updateFuture 一致:权限 → 系列行锁 → 俱乐部 owner 锁 → 锁后重验权限。
+        ClubAccessContext access = requireActivityManage(actorMemberId, request.getClubId());
+        ClubEventSeries series = clubEventOpsMapper.selectSeriesByIdForUpdate(request.getSeriesId());
+        Long lockedOwner = clubEventOpsMapper.selectClubOwnerForUpdate(request.getClubId());
+        access = requireActivityManage(actorMemberId, request.getClubId());
+        if (!positive(lockedOwner) || !lockedOwner.equals(access.getOwnerMemberId())) throw forbidden();
+        if (series == null || !request.getClubId().equals(series.getClubId())) {
+            throw conflict("系列不存在或范围不一致");
+        }
+        if (ClubEventSeries.STATUS_CLOSED.equals(series.getStatus())) {
+            return series;
+        }
+        if (!ClubEventSeries.STATUS_ACTIVE.equals(series.getStatus())
+                || !request.getExpectedVersion().equals(series.getVersion())) {
+            throw conflict("系列状态或版本已变化，请刷新");
+        }
+        if (clubEventOpsMapper.closeSeriesCas(series.getId(), series.getClubId(), series.getVersion(),
+                username, now()) != 1) {
+            throw conflict("系列状态或版本已变化，请刷新");
+        }
+        series.setStatus(ClubEventSeries.STATUS_CLOSED);
+        series.setVersion(series.getVersion() + 1);
+        return series;
+    }
+
+    @Override
+    @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public ClubEventSeries updateFuture(Long actorMemberId, String username, ClubEventSeriesRequest request) {
         if (!positive(actorMemberId) || request == null || !positive(request.getSeriesId())
                 || !positive(request.getClubId()) || !positive(request.getTopicId())
@@ -440,8 +481,9 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
             return replayCancellation(actorMemberId, request.getClubId(), request.getActivityId(),
                     registeredRequestId, waitlistRequestId, reason, waitlistContent);
         }
+        // S531-2:系列关闭(CLOSED)只停排新场次,已排场次仍须能从 event-ops 取消并收尾退款/候补/通知。
         if (!standalone && (!ClubEventOccurrence.STATUS_ACTIVE.equals(occurrence.getStatus())
-                || !ClubEventSeries.STATUS_ACTIVE.equals(series.getStatus()))) {
+                || !seriesServesScheduledOccurrences(series.getStatus()))) {
             throw conflict("场次已失效，无法取消");
         }
         if (teamGroupService == null) throw conflict("活动取消服务不可用");
@@ -902,9 +944,14 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
         return access;
     }
 
+    /** S531-2:ACTIVE 与 CLOSED 系列的已排场次都仍在服务(可读、可取消、候补可收尾);只有 ACTIVE 能排新场次。 */
+    static boolean seriesServesScheduledOccurrences(String status) {
+        return ClubEventSeries.STATUS_ACTIVE.equals(status) || ClubEventSeries.STATUS_CLOSED.equals(status);
+    }
+
     private void validateReadableSeries(ClubEventSeries series, Long clubId) {
         if (series == null || !positive(series.getId()) || !clubId.equals(series.getClubId())
-                || !positive(series.getTopicId()) || !ClubEventSeries.STATUS_ACTIVE.equals(series.getStatus())
+                || !positive(series.getTopicId()) || !seriesServesScheduledOccurrences(series.getStatus())
                 || series.getVersion() == null || series.getVersion() < 0
                 || !positive(series.getDefaultLeadMemberId()) || series.getWaitlistEnabled() == null
                 || series.getOfferMinutes() == null) {
