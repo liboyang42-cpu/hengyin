@@ -449,4 +449,15 @@
         update ums_member set avatar = null, case_pics = null where id = #{id}
     </update>
 
+    <!-- 按字段清违规图:二维码违规不连坐作品图;作品图只摘掉命中的那一张(由调用方算好剩余串)。 -->
+    <update id="clearRiskyProfileMedia">
+        update ums_member
+        <set>
+            <if test="clearAvatar">avatar = null,</if>
+            <if test="clearWechat">wechat = null,</if>
+            <if test="rewriteCasePics">case_pics = #{casePics},</if>
+        </set>
+        where id = #{id}
+    </update>
+
 </mapper>

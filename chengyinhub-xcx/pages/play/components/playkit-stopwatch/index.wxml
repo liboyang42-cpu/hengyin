@@ -23,6 +23,7 @@
           <view>本机测量读数，仅供娱乐参考。</view>
           <view>与目标相差不超过 {{tolText}} 秒算命中。</view>
           <view>切到后台会中断本机计时，返回后请重新开始。</view>
+          <view wx:if="{{rewardNote}}">{{rewardNote}}</view>
         </view>
       </view>
       <view class="sw__foot">

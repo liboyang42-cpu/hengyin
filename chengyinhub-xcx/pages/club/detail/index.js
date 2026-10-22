@@ -27,7 +27,8 @@ const ticketSource = require('../../../utils/ticket-source.js');
 // CU-C-38:主题分享卡的标题/封面口径与主题详情页共用一份实现
 const { buildTopicShare, resolveTopicCover } = require('../../../utils/topic-share.js');
 const { isRecord, bizFailureMessage } = require('../../../utils/response-shape.js');
-const { buildMonthCalendar, shiftMonth } = require('../utils/club-event-calendar.js');
+const { buildMonthCalendar, calendarNotice, shapeCalendarSessions, shiftMonth } = require('../utils/club-event-calendar.js');
+const { editionEmptyCopy, shapeEditionEmptyReason } = require('../utils/edition-empty-reason.js');
 // 帖文卡的 variant 判定与广场共用一份,别在这儿复制
 const { isCompletedShare, hasFeedPlayCover } = require('../../../utils/feed-play-card.js');
 const { decodeDisplayText, decodeDisplayFields } = require('../../../utils/display-text.js');
@@ -410,6 +411,8 @@ function normalizeClubPost(p, clubOwnerId) {
   // 俱乐部这边不许再写第二套判据。refType 的编号就是广场的 dataType,所以直接喂进去。
   // 后端投影不出展示字段(被引对象已删/下架)时 sportName 是空,两个判定都会自然判假,
   // 卡片降级成普通图文帖 —— 不会渲染出一张标题空着的成绩卡。
+  // F0098:服务端判定被引对象当前不可见时回 refUnavailable=true,只显示中性的「引用不可用」,不猜原因。
+  const refUnavailable = p.refUnavailable === true && p.refType != null && p.refId != null;
   const ref = Object.assign({}, p, { dataType: p.refType, completed: true });
   // 正文按纯文本展示,编辑框也从这里回填:解码一次,重新提交的是用户原文,不会越存越长。
   const content = decodeDisplayText(p.content);
@@ -425,10 +428,18 @@ function normalizeClubPost(p, clubOwnerId) {
     noticeBadge: Number(p.type) === 2 ? (isPinned ? '公告 · 置顶' : '公告') : '',
     isPinned: isPinned,
     version: Number(p.version || 0),
-    isCompletionShare: isCompletedShare(ref),
-    hasPlayCover: hasFeedPlayCover(ref),
+    refUnavailable: refUnavailable,
+    isCompletionShare: !refUnavailable && isCompletedShare(ref),
+    hasPlayCover: !refUnavailable && hasFeedPlayCover(ref),
   });
 }
+
+// 发帖引用被服务端拒绝时的机器错误码 → 用户文案;未知码回落到服务端 msg。
+const POST_REF_ERROR_TEXT = {
+  CLUB_POST_REF_UNAVAILABLE: '引用的记录暂不可用，已取消引用',
+  CLUB_POST_REF_NOT_JOINED: '只能带上你自己参加过的记录，已取消引用',
+  CLUB_POST_REF_INVALID: '引用信息有误，已取消引用',
+};
 
 function enrichClub(club) {
   if (!club) return club;
@@ -484,8 +495,17 @@ Page({
     eventCalendarTitle: '',
     eventCalendarCells: [],
     eventCalendarHasEvents: false,
+    // W10a #19:月历数据源。sessions = 本月真实场次(/api/club/calendar/sessions);
+    // 拿到之前/失败时退回已加载主题,并由 eventCalendarNotice 如实声明「月历仅展示已加载主题」。
+    eventCalendarSource: 'topics',
+    eventCalendarSessionState: 'idle',
+    eventCalendarNotice: '月历仅展示已加载主题',
     shareEditions: [],
     shareEditionState: 'idle',
+    // W10a #26:期次为空时的服务端原因(不从空数组猜)。
+    shareEditionEmptyTitle: '还没有可分享的自由探索期次',
+    shareEditionEmptySub: '',
+    shareEditionEmptyRetry: false,
     members: [],
     membersExpanded: false,
     membersState: 'idle', // idle | loading | ready | business-error | network-error
@@ -1168,7 +1188,9 @@ Page({
     if (!this.data.club || !this.data.club.isOwner || !this.data.clubId) return;
     const that = this;
     const clubId = this.data.clubId;
+    this._editionReasonSeq = (this._editionReasonSeq || 0) + 1;
     this.setData({ shareEditionState: 'loading', shareEditions: [] });
+    this.applyEditionEmptyReason('idle', '');
     app.sendRequest({
       hideLoading: true,
       url: '/api/club-compensation/editions',
@@ -1189,11 +1211,47 @@ Page({
           return Object.assign({}, item, { dateText: dateOf(item.startDate) });
         });
         that.setData({ shareEditionState: 'ready', shareEditions: rows });
+        if (!rows.length) that.loadShareEditionEmptyReason();
       },
       fail() {
         if (String(clubId) !== String(that.data.clubId)) return;
         that.setData({ shareEditionState: 'error', shareEditions: [] });
       },
+    });
+  },
+
+  // W10a #26:期次为空时向服务端要原因(未承接 / 已承接未开售 / 无权限);拿不到就只说「还没有」。
+  loadShareEditionEmptyReason() {
+    if (!this.data.clubId) return;
+    const that = this;
+    const clubId = this.data.clubId;
+    const seq = this._editionReasonSeq = (this._editionReasonSeq || 0) + 1;
+    this.applyEditionEmptyReason('loading', '');
+    app.sendRequest({
+      hideLoading: true,
+      silentError: true,
+      url: '/api/club-compensation/editions/empty-reason',
+      method: 'POST',
+      data: jsonBody({ clubId: clubId }),
+      header: jsonHeader(),
+      success(res) {
+        if (seq !== that._editionReasonSeq || String(clubId) !== String(that.data.clubId)) return;
+        const reason = isSuccess(res) ? shapeEditionEmptyReason(res.data, clubId) : null;
+        that.applyEditionEmptyReason(reason ? 'ready' : 'error', reason || '');
+      },
+      fail() {
+        if (seq !== that._editionReasonSeq || String(clubId) !== String(that.data.clubId)) return;
+        that.applyEditionEmptyReason('error', '');
+      },
+    });
+  },
+
+  applyEditionEmptyReason(state, reasonCode) {
+    const copy = editionEmptyCopy(state, reasonCode);
+    this.setData({
+      shareEditionEmptyTitle: copy.title,
+      shareEditionEmptySub: copy.sub,
+      shareEditionEmptyRetry: copy.retry,
     });
   },
 
@@ -1714,6 +1772,11 @@ Page({
           that.setData({ postText: '', postImages: [], postAsAnnouncement: false, postRef: null });
           that.loadPosts();
         }
+        else if (res && POST_REF_ERROR_TEXT[res.errorCode]) {
+          // 正文与图片保留,只撤掉这条引用,用户可以直接再发
+          that.setData({ postRef: null });
+          cyToast(POST_REF_ERROR_TEXT[res.errorCode]);
+        }
         else cyToast((res && res.msg) || '发布失败');
       },
       fail() { that.setData({ posting: false }); cyToast('网络异常，请重试'); },
@@ -2111,7 +2174,10 @@ Page({
     const view = (e.detail && e.detail.key) || (e.currentTarget && e.currentTarget.dataset.view);
     if (view !== 'list' && view !== 'calendar') return;
     this.setData({ eventView: view });
-    if (view === 'calendar') this.refreshEventCalendar();
+    if (view === 'calendar') {
+      this.refreshEventCalendar();
+      this.loadCalendarSessions();
+    }
   },
 
   onShiftEventMonth(e) {
@@ -2119,10 +2185,57 @@ Page({
     if (!Number.isInteger(delta) || !delta) return;
     this.setData({ eventCalendarMonth: shiftMonth(this.data.eventCalendarMonth, delta) });
     this.refreshEventCalendar();
+    this.loadCalendarSessions();
+  },
+
+  // W10a #19:按月读真实场次。切月即重读;响应必须回显本次 clubId + month 才采用。
+  loadCalendarSessions() {
+    const clubId = this.data.clubId;
+    const month = this.data.eventCalendarMonth;
+    const seq = this._calendarSessionSeq = (this._calendarSessionSeq || 0) + 1;
+    // 演示俱乐部没有后端场次:停在「仅已加载主题」,不发请求。
+    if (!clubId || isDemoClubId(clubId)) {
+      this._calendarSessions = null;
+      this.setData({ eventCalendarSessionState: 'idle' });
+      this.refreshEventCalendar();
+      return;
+    }
+    if (this._calendarSessions && this._calendarSessions.monthKey !== month) this._calendarSessions = null;
+    this.setData({ eventCalendarSessionState: 'loading' });
+    this.refreshEventCalendar();
+    const that = this;
+    app.sendRequest({
+      hideLoading: true,
+      silentError: true,
+      url: '/api/club/calendar/sessions',
+      method: 'POST',
+      data: jsonBody({ clubId: clubId, month: month }),
+      header: jsonHeader(),
+      success(res) {
+        if (seq !== that._calendarSessionSeq || String(clubId) !== String(that.data.clubId)
+            || month !== that.data.eventCalendarMonth) return;
+        const shaped = isSuccess(res) ? shapeCalendarSessions(res.data, clubId, month) : null;
+        that._calendarSessions = shaped;
+        that.setData({ eventCalendarSessionState: shaped ? 'ready' : 'error' });
+        that.refreshEventCalendar();
+      },
+      fail() {
+        if (seq !== that._calendarSessionSeq || String(clubId) !== String(that.data.clubId)
+            || month !== that.data.eventCalendarMonth) return;
+        that._calendarSessions = null;
+        that.setData({ eventCalendarSessionState: 'error' });
+        that.refreshEventCalendar();
+      },
+    });
   },
 
   refreshEventCalendar() {
-    const calendar = buildMonthCalendar(this.data.eventCalendarMonth, this._topics);
+    const month = this.data.eventCalendarMonth;
+    const sessions = this._calendarSessions && this._calendarSessions.monthKey === month
+      ? this._calendarSessions : null;
+    const state = sessions ? 'ready' : (this.data.eventCalendarSessionState === 'ready'
+      ? 'idle' : this.data.eventCalendarSessionState);
+    const calendar = buildMonthCalendar(month, sessions ? sessions.events : this._topics);
     const hasEvents = calendar.cells.some(function (cell) {
       return cell.inMonth && cell.events.length > 0;
     });
@@ -2130,6 +2243,8 @@ Page({
       eventCalendarTitle: calendar.title,
       eventCalendarCells: calendar.cells,
       eventCalendarHasEvents: hasEvents,
+      eventCalendarSource: sessions ? 'sessions' : 'topics',
+      eventCalendarNotice: calendarNotice(state, sessions),
     });
   },
 
@@ -2900,22 +3015,74 @@ Page({
 
   // 动态点赞/取消
   // BL-197:接口是切换式,同一条在返回前的重复点击忽略(否则先赞后取消);失败如实提示,成功只回读不乐观改数
+  // PRIVATE-GROUP-club-like-unknown:断网时结果未知——锁不放,按 post/list 的严格布尔 isLiked 回读,
+  // 与发起时的目标意图比对后才允许下一次切换;未知期间再点只回读不切换。锁/意图按 owner+俱乐部隔离。
+  // 后端 post/like 只是切换、没有目标状态幂等,迟到落库仍可能与回读交错——这是后端依赖,前端不假设。
   onLikePost(e) {
     const id = (e.detail && e.detail.postId) || e.currentTarget.dataset.id;
     if (!id) return;
-    const key = String(id);
+    const owner = String(app.getUserID && app.getUserID() || '');
+    const clubId = String(this.data.clubId);
+    const key = owner + '|' + clubId + '|' + String(id);
     const liking = this._likingPosts || (this._likingPosts = {});
-    if (liking[key]) return;
-    liking[key] = true;
+    const pending = liking[key];
+    if (pending) {
+      if (pending.unknown && !pending.reading) this.readbackPostLike(key);
+      return;
+    }
+    const post = (this.data.posts || []).find(function (p) { return String(p.id) === String(id); });
+    const entry = { postId: id, owner: owner, clubId: clubId, target: !(post && (post.isLiked === true || Number(post.isLiked) === 1)), unknown: false, reading: false };
+    liking[key] = entry;
     const that = this;
     app.sendRequest({
       url: '/api/club/post/like', method: 'POST', data: jsonBody({ postId: id }), header: jsonHeader(),
       success(res) {
+        if (liking[key] !== entry) return;
         delete liking[key];
         if (res && res.code == '200') that.loadPosts();
         else cyToast(bizFailureMessage(res, '点赞没成功'));
       },
-      fail() { delete liking[key]; cyToast('网络异常，请重试'); },
+      fail() {
+        if (liking[key] !== entry) return;
+        entry.unknown = true;
+        cyToast('点赞结果未确认，正在核对');
+        that.readbackPostLike(key);
+      },
+    });
+  },
+
+  // 回读只认 post/list 的严格布尔 isLiked:与目标一致=已生效,相反=未生效,可再点;
+  // 回读失败/找不到该帖/非布尔(未登录时后端不标)都保持未知锁,下次点击再回读。
+  readbackPostLike(key) {
+    const liking = this._likingPosts || {};
+    const entry = liking[key];
+    if (!entry || !entry.unknown || entry.reading) return;
+    entry.reading = true;
+    const that = this;
+    const stillMine = function () {
+      return liking[key] === entry && entry.clubId === String(that.data.clubId)
+        && entry.owner === String(app.getUserID && app.getUserID() || '');
+    };
+    app.sendRequest({
+      hideLoading: true, url: '/api/club/post/list', method: 'POST', data: jsonBody({ id: entry.clubId, clubId: entry.clubId }), header: jsonHeader(),
+      success(res) {
+        entry.reading = false;
+        if (!stillMine()) return;
+        const rows = res && res.code == '200' && Array.isArray(res.data) ? res.data : null;
+        const row = rows && rows.find(function (p) { return p && String(p.id) === String(entry.postId); });
+        if (!row || typeof row.isLiked !== 'boolean') { cyToast('点赞结果未确认，请稍后再点核对'); return; }
+        delete liking[key];
+        const posts = (that.data.posts || []).map(function (p) {
+          if (String(p.id) !== String(entry.postId)) return p;
+          return Object.assign({}, p, { isLiked: row.isLiked }, row.likeCount !== undefined ? { likeCount: row.likeCount } : {});
+        });
+        that.setData({ posts: posts });
+        cyToast(row.isLiked === entry.target ? (entry.target ? '已点赞' : '已取消点赞') : '点赞没成功，可以再试一次');
+      },
+      fail() {
+        entry.reading = false;
+        if (stillMine()) cyToast('点赞结果未确认，请稍后再点核对');
+      },
     });
   },
 

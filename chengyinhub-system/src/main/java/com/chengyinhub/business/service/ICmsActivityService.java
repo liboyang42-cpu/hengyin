@@ -63,6 +63,12 @@ public interface ICmsActivityService
     int countOpenSaleRegistrations(Long activityId);
 
     /**
+     * 承接方领队改运营字段。改集合时间/地点时走一条「仍未售出才生效」的条件 UPDATE,
+     * 返回 0 即已售出锁定(#334 F7);只改当日备注按裁决不受已售锁限制。
+     */
+    int updateLeadOpsUnlessSold(CmsActivity ops, boolean touchesTimeOrPlace);
+
+    /**
      * 已报名人数：cms_registration.owner_type=2 且 registration_status=2。
      *
      * <p>这是「报名数」这个词在本仓的唯一下发口径(活动详情 registrationCount、

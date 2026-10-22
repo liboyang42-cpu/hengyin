@@ -25,6 +25,7 @@ Page({
     showServiceSheet: false,
     submitError: '',
     failedAction: '',
+    roamCollectionText: '',
     pendingAuthorization: false,
     scrollInto: '',
     toc: [
@@ -40,6 +41,7 @@ Page({
   },
 
   onShow() {
+    this.syncRoamCollection();
     this._homeCityConsentEpoch = (this._homeCityConsentEpoch || 0) + 1;
     this.setData({ homeCityBusy: false, homeCityError: '' });
     this._mediaHidden = false;
@@ -367,6 +369,14 @@ Page({
       .finally(() => this.setData({ submitting: false }));
   },
 
+  // PC-168:只读本机按用途的持有状态(bg-tracker),不改撤回核心(#439)。
+  syncRoamCollection() {
+    const text = bgTracker.hasOwner('roam') ? '本机正在为漫游采集位置'
+      : bgTracker.isRunning() ? '漫游已停止采集；其他已开启的功能仍在使用定位'
+        : '本机未在为漫游采集位置';
+    this.setData({ roamCollectionText: text });
+  },
+
   withdrawRoamLocationConsent() {
     if (this.data.submitting) return;
     this.data.failedAction = '';
@@ -377,6 +387,7 @@ Page({
       && owner === String(app.getUserID ? app.getUserID() || '' : '');
     // 撤回先作用于本机用途；审计失败仍由 consent-client 保留原账号/requestId 补传。
     bgTracker.revoke('roam');
+    this.syncRoamCollection();
     let audit;
     try {
       audit = current() ? app.recordConsent({ docType: 'privacy_policy', scene: 'roam_location', eventType: 'REVOKE' })

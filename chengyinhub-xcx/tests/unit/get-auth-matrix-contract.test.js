@@ -157,6 +157,7 @@ const MATRIX = [
   ['pages/roam/index.js', "req('/api/official/active-for-roam'", 'required', 'member', 'global-authenticated-read'],
   ['subpackageB/pages/im/chat/index.js', 'url: `/api/audit/${auditTaskId}/detail`', 'required', 'member', 'self-account'],
   ['subpackageB/pages/im/chat/index.js', "url: '/api/v1/community/notifications'", 'required', 'member', 'self-account'],
+  ['pages/shezhi/components/post-governance/index.js', "url: '/api/v1/community/me/enforcements'", 'required', 'member', 'self-account'],
   ['subpackageMember/components/cy/merchant-correction-sheet/index.js', "url: '/api/community-trust/contributions/taxonomy'", 'required', 'member', 'global-authenticated-read'],
   ['subpackageMember/components/cy/profile/index.js', 'url: `/api/community-trust/safety/merchants/${id}`', 'required', 'member', 'global-authenticated-read'],
   ['subpackageMember/components/cy/profile/index.js', "url: '/api/city/nodes/merchant/' + id", 'required', 'member', 'global-authenticated-read'],
@@ -166,6 +167,13 @@ const MATRIX = [
   ['subpackageMember/report-mine/index.js', "url: '/api/community-trust/reports/mine'", 'required', 'member', 'self-account'],
   ['subpackageMember/report-mine/index.js', "url: '/api/community-trust/reports/taxonomy'", 'required', 'member', 'global-authenticated-read'],
 
+  // 2026-10-22 W10b #27:NPC 对话原请求只读回读,ApiAiNpcController.chatRequest 只按登录态 + 原会话 + requestId 读本人记录。
+  ['subpackageMember/components/cy/npc-chat/index.js', "url: '/api/ai/npc/chat/request'", 'required', 'member', 'self-account'],
+  // W10b #22:简易 AI 起草按 requestId 只读回读,ApiAiController.themeDraftRequest 键按登录会员隔离。
+  ['pages/publish/simple/index.js', "url: '/api/ai/theme/draft/request'", 'required', 'author', 'self-account'],
+  // W10b #25:本人资料审核回执(只取登录态)与门店 AI 形象审核回执(商家 PROFILE_WRITE,按登录商家派生)。
+  ['pages/gerenziliao/gerenziliao.js', "url: '/api/user/profile/review'", 'required', 'member', 'self-account'],
+  ['pages/merchant/decor/ai-npc/index.js', "url: '/api/merchant/npc/review'", 'required', 'merchant', 'self-merchant'],
 ];
 
 const VALID_SCOPES = new Set([
@@ -297,7 +305,9 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
   // 2026-10-19 移植共享基线(W2):认领状态、主题状态键、官方路线列表/详情四处直接 GET,38 → 42(权限档见 MATRIX 同日注释)。
   // 合并两线逐项新增：本线64 + 共享基线4 = 68，权限矩阵保留双方全部条目。
   // 2026-10-20 用户要求删掉「我的纠错 / 纠错进度」两页、消息页改收件箱/发件箱(合并 master 584470ad 后按重建实测):contributions/mine 1 处 + contributions/{id} 2 处退场,68 → 65;举报进度通知读取从消息列表移到城瘾小助手(同端点同权限档)。
-  assert.equal(directCount, 65, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
+  // 2026-10-22 W10b:NPC 原请求回读 / AI 起草回读 / 资料审核回执 / 门店形象审核回执四处直接 GET,65 → 69(权限档见 MATRIX 同日注释)。
+  // 2026-10-22 W9 帖子处置(F0521):设置页本人处置列表 GET /api/v1/community/me/enforcements(后端 withAuthenticatedPrincipal,按本人过滤),69 → 70(batch2 集成在 W10b 的 69 上叠加)。
+  assert.equal(directCount, 70, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
   // 2026-10-09 U04 只读主题请求增加6处，22 → 28。
   // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):漫游 BL-41 可参与官方活动 req 包装 GET +1(已入 MATRIX),28 → 29。
   assert.equal(wrapperCount, 29, 'req 包装 GET 数量变化时必须逐条复核权限并更新矩阵');

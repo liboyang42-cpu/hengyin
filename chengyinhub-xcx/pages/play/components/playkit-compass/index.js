@@ -12,6 +12,8 @@
 const motion = require('../../../../utils/motion.js');
 const { readReducedMotion } = require('../../../../utils/motion-preference.js');
 const cyToast = require('../../../../utils/toast.js');
+// C1:罗盘方位是本机自报,奖励上限只听服务端;有服务端发的挑战身份就随方位一起交
+const { withAttempt, rewardNote } = require('../../utils/sensor-contract.js');
 
 const TICK_MS = 100;
 const FIRST_FRAME_MS = 3000;
@@ -80,6 +82,9 @@ Component({
     holdSeconds: { type: Number, value: 3 },
     hint: { type: String, value: '' },
     done: { type: Boolean, value: false },     // 进来就对准过:只读状态,不再收
+    // C1:服务端发的挑战身份(0 = 没有,照旧只交方位)与奖励上限(空 = 服务端没说,不承诺)
+    attemptId: { type: Number, value: 0 },
+    rewardCeiling: { type: String, value: '' },
   },
   data: {
     stageKeys: [0],
@@ -98,8 +103,10 @@ Component({
     holdPct: 0,
     turnHint: '',
     lowAccuracy: false,
+    rewardNote: '',
   },
   observers: {
+    rewardCeiling(value) { this.setData({ rewardNote: rewardNote(value) }); },
     show(v) { if (!v) this._abort(); else this._closed = false; },
     done(v) { if (v) this._abort(); },
     tolerance(v) { this.setData({ zoneBars: zoneBars(v > 0 ? v : 15) }); },
@@ -287,7 +294,7 @@ Component({
       const stage = attempt.stage;
       if (stage) stage.win('对准了，保持了 ' + this._holdTotal() + ' 秒');
       attempt.phase = 'done';
-      if (this._current(attempt)) this.triggerEvent('submit', { bearing });
+      if (this._current(attempt)) this.triggerEvent('submit', withAttempt({ bearing }, { attemptId: this.data.attemptId }));
     },
 
     onVerdict(e) {

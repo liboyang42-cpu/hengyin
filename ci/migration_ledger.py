@@ -57,6 +57,9 @@ EXPLICIT_AUXILIARY_SQL = {
     "chengyinhub-admin/sql/seed_official_content_template.sql": "REFERENCE_ONLY",
     "chengyinhub-admin/src/test/resources/it-schema/cms-topic-it-schema.sql": "TEST_FIXTURE",
     "chengyinhub-admin/src/test/resources/it-schema/coop-it-schema.sql": "TEST_FIXTURE",
+    # #398 F1 移植:view_coupon_history 联表视图的测试建表资源(SELECT 照抄 base_schema_20260818),
+    # 只在 H2 内存库里执行,不进发布台账、不在生产跑。
+    "chengyinhub-admin/src/test/resources/reward/coupon-history-join-view.sql": "TEST_FIXTURE",
     # R11-A 新增(晚于 #732):两套探店日联盟 IT 收口到门禁唯一临时 schema 时用的建表资源。
     # 与上面两份同档 —— 它只被 ExploreItDatabase 在临时 schema 里执行,不进发布台账、不在生产跑。
     "chengyinhub-admin/src/test/resources/it-schema/explore-alliance-it-schema.sql": "TEST_FIXTURE",

@@ -40,6 +40,8 @@ public class ClubPost extends BaseEntity
     private String sportCover;
     private Long sportTopicId;
     private Boolean isTopicTemplate;
+    /** 非持久：帖子带引用、但被引对象当前已删/下架/转私密 ⇒ true。只给「引用已不可见」,不投影标题与封面。 */
+    private Boolean refUnavailable;
 
     /** 类型 0图文 1战报 2公告 */
     private Integer type;
@@ -112,6 +114,8 @@ public class ClubPost extends BaseEntity
     public void setSportTopicId(Long sportTopicId) { this.sportTopicId = sportTopicId; }
     public Boolean getIsTopicTemplate() { return isTopicTemplate; }
     public void setIsTopicTemplate(Boolean isTopicTemplate) { this.isTopicTemplate = isTopicTemplate; }
+    public Boolean getRefUnavailable() { return refUnavailable; }
+    public void setRefUnavailable(Boolean refUnavailable) { this.refUnavailable = refUnavailable; }
     public Integer getType() { return type; }
     public void setType(Integer type) { this.type = type; }
     public Integer getLikeCount() { return likeCount; }

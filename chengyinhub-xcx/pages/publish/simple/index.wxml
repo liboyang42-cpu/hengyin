@@ -92,8 +92,10 @@
       <view class="simple-ai__composer-spark"><cy-icon name="star" size="28" /></view>
       <text class="req" aria-hidden="true">*</text>
       <textarea class="simple-ai__input" value="{{aiIdea}}" bindinput="onAiIdeaInput" maxlength="300" auto-height="{{true}}" placeholder="描述你想做的路线" placeholder-class="simple-ai__placeholder" fixed="{{true}}" aria-label="路线灵感" />
-      <view class="simple-ai__send {{aiGenerating ? 'is-loading' : ''}} {{(aiQuotaLoaded && aiRemaining <= 0) ? 'is-exhausted' : ''}}" bindtap="generateAiPlan" aria-role="button" aria-label="生成主题草稿" aria-disabled="{{aiGenerating || (aiQuotaLoaded && aiRemaining <= 0)}}" hover-class="{{aiGenerating || (aiQuotaLoaded && aiRemaining <= 0) ? 'none' : 'cy-pressed'}}" hover-stay-time="80">
-        <text wx:if="{{aiGenerating}}">生成中…</text>
+      <!-- W10b #22:上一次起草结果未确认时,这颗键只回读那一次(查看结果),不另起一次,也不受额度置灰影响。 -->
+      <view class="simple-ai__send {{aiGenerating ? 'is-loading' : ''}} {{(!aiDraftPending && aiQuotaLoaded && aiRemaining <= 0) ? 'is-exhausted' : ''}}" bindtap="generateAiPlan" aria-role="button" aria-label="{{aiDraftPending ? '查看上一次起草结果' : '生成主题草稿'}}" aria-disabled="{{aiGenerating || (!aiDraftPending && aiQuotaLoaded && aiRemaining <= 0)}}" hover-class="{{aiGenerating || (!aiDraftPending && aiQuotaLoaded && aiRemaining <= 0) ? 'none' : 'cy-pressed'}}" hover-stay-time="80">
+        <text wx:if="{{aiGenerating}}">{{aiDraftPending ? '查询中…' : '生成中…'}}</text>
+        <text wx:elif="{{aiDraftPending}}">查看结果</text>
         <text wx:else>生成</text>
       </view>
     </view>

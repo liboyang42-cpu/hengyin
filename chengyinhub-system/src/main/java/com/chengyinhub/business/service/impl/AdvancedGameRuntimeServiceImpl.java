@@ -37,6 +37,7 @@ import com.chengyinhub.common.exception.ServiceException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.chengyinhub.common.constant.RewardPolicy;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.slf4j.Logger;
@@ -58,6 +59,7 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -83,6 +85,29 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
     private static final long MAX_SHAKE_HITS_PER_SECOND = 12L;
     /** 网络往返与两端时钟的宽容量。给太小会把正常玩家judged成作弊 */
     private static final long CLOCK_SLACK_MS = 1500L;
+    /** C1:一次挑战身份的有效期 = 配置时长 + 这段余量。过期的成绩不结算,只能重新开始 */
+    private static final long ATTEMPT_TTL_SLACK_MS = 10L * 60L * 1000L;
+    /** C1:挑战身份落在 JS 安全整数内,小程序按 Number 读不丢精度 */
+    private static final long JS_SAFE_INTEGER_MASK = (1L << 53) - 1L;
+    /** C1:带服务端挑战身份(attemptId)的提交动作 → 对应玩法段 */
+    private static final Map<String, String> ATTEMPT_BOUND_SUBMITS;
+    static {
+        Map<String, String> submits = new HashMap<>();
+        submits.put("SUBMIT_REACTION", "reaction");
+        submits.put("SUBMIT_BALL_SHAKE", "ballShake");
+        submits.put("SUBMIT_QUIET_HOLD", "quietHold");
+        submits.put("SUBMIT_SHOUT", "shout");
+        submits.put("SUBMIT_STOPWATCH", "stopwatch");
+        submits.put("SUBMIT_COMPASS", "compass");
+        ATTEMPT_BOUND_SUBMITS = Collections.unmodifiableMap(submits);
+    }
+    /**
+     * C1 传感器小游戏的可信边界。这六段的成绩全由本机传感器/时钟产出,服务端只能复核
+     * 「没超过真实用时」「方位在容差内」—— 证明不了真做到了,改客户端就能伪造。
+     * ⇒ 只算娱乐成绩:可以过关、发探索值与徽章,不许触发积分、券、掉落等资金权益(C1 选项 A)。
+     */
+    static final List<String> SELF_REPORTED_SECTIONS = Collections.unmodifiableList(
+            Arrays.asList("reaction", "ballShake", "quietHold", "shout", "stopwatch", "compass"));
     /** 订阅消息模板 id 的长度上限,与 AdvancedGameConfigValidator 里 subscribeTmplId 同一条口径 */
     private static final int MAX_SUBSCRIBE_TMPL_ID = 64;
     /** 拍照审核·取景轮廓不透明度:缺省 40，兜住 0–100(与 AdvancedGameConfigValidator 同一口径) */
@@ -171,6 +196,8 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
     private final AdvancedGameConfigValidator configValidator = new AdvancedGameConfigValidator();
     private AdvancedGameClock clock = Date::new;
     private AdvancedGameRandom random = new SecureRandom()::nextInt;
+    /** C1 挑战身份的随机源。测试可替换 */
+    private java.util.function.LongSupplier attemptIdSource = new SecureRandom()::nextLong;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -424,11 +451,17 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
             JsonNode start = state.path("zeroChallengeStarts").path(String.valueOf(memberId)).path(challengeGame);
             if (start.isNumber()) mechanic.put("startedAtMs", start.asLong()); else mechanic.remove("startedAtMs");
             mechanic.put("submitted", false);
+            // 归零挑战按成员各自开表:挑战身份也按成员各存一份,共享段上只摆本人那份
+            JsonNode ownAttempt = state.path("zeroChallengeAttempts").path(String.valueOf(memberId)).path(challengeGame);
+            if (ownAttempt.isObject()) mechanic.set("attempt", ownAttempt.deepCopy()); else mechanic.remove("attempt");
             if ("ballShake".equals(challengeGame) && config.path(challengeGame).path("timed").asBoolean() && start.isNumber()) {
                 long limit = config.path(challengeGame).path("seconds").asLong() * 1000L;
                 challengeTimedOut |= limit > 0 && clock.now().getTime() - start.asLong() > limit + CLOCK_SLACK_MS;
             }
         }
+        // C1:提交带了 attemptId 就必须是本人当前这一次开表(没用过、没过期)
+        String attemptGame = ATTEMPT_BOUND_SUBMITS.get(normalizedAction);
+        if (attemptGame != null && !challengeTimedOut) requireCurrentAttempt(state.path(attemptGame), safePayload, memberId);
         if (!challengeTimedOut) switch (normalizedAction) {
             case "DRAW":
                 draw(config, state);
@@ -497,8 +530,13 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
                 rollDice(config, state);
                 break;
             case "START_CHALLENGE":
-                startChallenge(config, state, safePayload);
-                if (zeroChallengeSession) state.with("zeroChallengeStarts").with(String.valueOf(memberId)).put(challengeKey(safePayload), clock.now().getTime());
+                startChallenge(config, state, safePayload, memberId);
+                if (zeroChallengeSession) {
+                    String startedGame = challengeKey(safePayload);
+                    state.with("zeroChallengeStarts").with(String.valueOf(memberId)).put(startedGame, clock.now().getTime());
+                    JsonNode issued = state.path(startedGame).path("attempt");
+                    if (issued.isObject()) state.with("zeroChallengeAttempts").with(String.valueOf(memberId)).set(startedGame, issued.deepCopy());
+                }
                 break;
             case "SUBMIT_REACTION":
                 submitReaction(config, state, safePayload);
@@ -560,6 +598,8 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
             default:
                 throw new IllegalArgumentException("高级玩法动作不支持");
         }
+        // 交过一次,这个挑战身份就作废(单次消费);还有次数的停表要重新开始拿新的
+        if (attemptGame != null && !challengeTimedOut) consumeAttempt(state.path(attemptGame));
 
         if (challengeObjectiveSubmission) for (String kind : Arrays.asList("qa", "sort", "match", "classify"))
             if (state.has(kind)) state.with("zeroChallengeObjectives").with(String.valueOf(memberId)).set(kind, state.get(kind).deepCopy());
@@ -576,6 +616,7 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
                     : topicRouteRuntimeService.recordZeroChallengeResult(memberId, session.getTopicId(), session.getActivityId(), session.getNodeId(), session.getPlayInstanceId(), idempotencyKey, passed, hits, retry);
             state.set("challenge", receipt.deepCopy());
             if (challengeGame != null) state.with("zeroChallengeStarts").with(String.valueOf(memberId)).remove(challengeGame);
+            if (challengeGame != null) state.with("zeroChallengeAttempts").with(String.valueOf(memberId)).remove(challengeGame);
             if (hits != null) state.with("ballShake").put("hits", receipt.path("progress").asLong()).put("submitted", receipt.path("success").asBoolean()).put("passed", receipt.path("success").asBoolean());
             if (receipt.path("success").asBoolean() || receipt.has("requiredCompletions") && receipt.path("gameCompleted").asBoolean()) session.setStatus(GameRuntimeSession.STATUS_COMPLETED);
             else if (retry) session.setStatus(GameRuntimeSession.STATUS_FAILED);
@@ -863,6 +904,40 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         }
         session.setVersion(oldVersion + 1);
         return terminalOutcome(snapshot, state);
+    }
+
+    /**
+     * 本局完成证据里不可信的那几条(空 = 都可信)。三类:
+     * 设备自报成绩;拍照没拿到视觉模型当场真判 PASS(降级/次数用尽兜底放行);
+     * 扫码玩法比对的是节点静态码 —— 只证明「码对得上」,不是有时效、一次消费的到场凭证。
+     */
+    static List<String> untrustedCompletionEvidence(JsonNode config, JsonNode state) {
+        List<String> reasons = new ArrayList<>();
+        if (config == null) return reasons;
+        for (String section : SELF_REPORTED_SECTIONS) {
+            if (config.path(section).path("enabled").asBoolean(false)) reasons.add(section + ":SELF_REPORTED");
+        }
+        if (config.path("photoCheck").path("enabled").asBoolean(false) && !photoVerified(state == null ? null : state.path("photoCheck"))) {
+            reasons.add("photoCheck:FALLBACK");
+        }
+        if (config.path("scan").path("enabled").asBoolean(false)) reasons.add("scan:TASK_CODE_MATCH");
+        return reasons;
+    }
+
+    /** 服务端 photoVerified:只有视觉模型当场真判 PASS 才算;降级与兜底放行都不算 */
+    private static boolean photoVerified(JsonNode photoState) {
+        return photoState != null && "PASS".equals(photoState.path("verdict").asText(""));
+    }
+
+    @Override
+    public boolean rewardCappedToXpBadge(Long memberId, Long activityId, Long topicId, Long nodeId) {
+        if (memberId == null || topicId == null || nodeId == null) return false;
+        CmsTopicNode node = nodeMapper.selectCmsTopicNodeById(nodeId);
+        if (node == null || !topicId.equals(node.getTopicId())) return false;
+        GameRuntimeSession session = existingSession(memberId, activityId == null ? 0L : activityId, topicId, nodeId);
+        if (session == null) return false;
+        JsonNode config = readJson(session.getConfigSnapshotJson(), "高级玩法配置不可用");
+        return !untrustedCompletionEvidence(config, objectState(session.getStateJson())).isEmpty();
     }
 
     /**
@@ -2959,13 +3034,70 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
        ★ 客户端报的毫秒数是**设备时钟**算的,而设备时钟玩家改得动。所以每一条成绩都要
        拿 START_CHALLENGE 记下的服务器时间复核一遍,对不上就拒。 */
 
-    private void startChallenge(JsonNode config, ObjectNode state, Map<String, Object> payload) {
+    private void startChallenge(JsonNode config, ObjectNode state, Map<String, Object> payload, Long memberId) {
         String game = challengeKey(payload);
         if (!enabled(config.path(game))) throw new IllegalArgumentException("该玩法未开启这一项");
         ObjectNode node = state.with(game);
         if (node.path("submitted").asBoolean(false)) throw new IllegalStateException("这一局已经交过了");
         node.put("startedAtMs", clock.now().getTime());
         node.put("attempts", node.path("attempts").asInt(0));
+        if (SELF_REPORTED_SECTIONS.contains(game)) issueAttempt(node, config.path(game), memberId);
+    }
+
+    /**
+     * C1:每次开表发一个服务端挑战身份,绑本人 + 本局(state 就在本局会话里)+ 本节点,单次消费、会过期。
+     * 重开就换新的 —— 后台切走/中断前那次的成绩不能拿来结算。
+     */
+    private void issueAttempt(ObjectNode node, JsonNode cfg, Long memberId) {
+        long now = clock.now().getTime();
+        long previous = node.path("attempt").path("id").asLong(0L);
+        long id = attemptIdSource.getAsLong() & JS_SAFE_INTEGER_MASK;
+        if (id == 0L || id == previous) id = previous % JS_SAFE_INTEGER_MASK + 1L;
+        double configuredSeconds = Math.max(cfg.path("seconds").asDouble(0d),
+                Math.max(cfg.path("targetSeconds").asDouble(0d), cfg.path("holdSeconds").asDouble(0d)));
+        ObjectNode attempt = node.putObject("attempt");
+        attempt.put("id", id);
+        attempt.put("memberId", memberId == null ? 0L : memberId);
+        attempt.put("issuedAtMs", now);
+        attempt.put("expiresAtMs", now + (long) Math.ceil(configuredSeconds * 1000d) + ATTEMPT_TTL_SLACK_MS);
+        attempt.put("used", false);
+    }
+
+    /**
+     * 提交带了 attemptId 就必须是本人当前这一次开表、没交过、没过期;对不上一律不结算。
+     * 没带(存量客户端)按原复核口径走 —— 奖励上限在完成关卡那一步统一封顶,不靠这里。
+     */
+    private void requireCurrentAttempt(JsonNode node, Map<String, Object> payload, Long memberId) {
+        Object raw = payload.get("attemptId");
+        if (raw == null || String.valueOf(raw).trim().isEmpty()) return;
+        long claimed;
+        try {
+            claimed = Long.parseLong(String.valueOf(raw).trim());
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("挑战身份不对，请重新开始");
+        }
+        JsonNode attempt = node.path("attempt");
+        if (!attempt.isObject() || claimed != attempt.path("id").asLong(0L)
+                || memberId == null || memberId.longValue() != attempt.path("memberId").asLong(0L)) {
+            throw new IllegalStateException("这一次挑战已经作废，请重新开始");
+        }
+        if (attempt.path("used").asBoolean(false)) throw new IllegalStateException("这一次挑战已经交过了，请重新开始");
+        if (clock.now().getTime() > attempt.path("expiresAtMs").asLong(0L)) throw new IllegalStateException("这一次挑战已经过期，请重新开始");
+    }
+
+    private void consumeAttempt(JsonNode node) {
+        JsonNode attempt = node.path("attempt");
+        if (attempt.isObject()) ((ObjectNode) attempt).put("used", true);
+    }
+
+    /** 本人、未用、未过期的挑战身份才下发;别人的(队伍共享局)、交过的、过期的一律不给 */
+    private void putAttempt(Map<String, Object> value, JsonNode st, Long actorMemberId) {
+        JsonNode attempt = st.path("attempt");
+        if (!attempt.isObject() || attempt.path("used").asBoolean(false) || actorMemberId == null
+                || actorMemberId.longValue() != attempt.path("memberId").asLong(0L)
+                || clock.now().getTime() > attempt.path("expiresAtMs").asLong(0L)) return;
+        value.put("attemptId", attempt.path("id").asLong());
+        value.put("attemptExpiresAtMs", attempt.path("expiresAtMs").asLong());
     }
 
     private String challengeKey(Map<String, Object> payload) {
@@ -2975,6 +3107,8 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
             // 喊一嗓子(现场感契约 §4):与 quietHold 同路,先开表再按服务器时间复核
             case "shout":
             case "countdown": case "stopwatch":
+            // 罗盘没有计时,开表只为领 C1 挑战身份;不开表的存量客户端照旧能交
+            case "compass":
             // 预制人生限时打字:和上面五个同路,先开表再提交
             case "typeIn":
                 return game;
@@ -3198,7 +3332,7 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
      * 各自的两个配置字段用参数带进来,不为五个一样的形状写五遍。
      */
     private void putChallenge(Map<String, Object> kit, JsonNode config, ObjectNode state,
-            String game, String fieldA, String fieldB) {
+            String game, String fieldA, String fieldB, Long actorMemberId) {
         JsonNode cfg = config.path(game);
         if (!enabled(cfg)) return;
         JsonNode st = state.path(game);
@@ -3220,6 +3354,11 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         if (st.has("heldMs")) value.put("heldMs", st.path("heldMs").asLong(0L));
         if (st.has("lastDiffMs")) value.put("lastDiffMs", st.path("lastDiffMs").asLong(0L));
         if (st.has("bestDiffMs")) value.put("bestDiffMs", st.path("bestDiffMs").asLong(0L));
+        // C1:服务端挑战身份 + 证据口径。设备自报那几段只算娱乐成绩,奖励上限由这里说了算,界面照着显示
+        putAttempt(value, st, actorMemberId);
+        boolean selfReported = SELF_REPORTED_SECTIONS.contains(game);
+        value.put("evidence", selfReported ? "SELF_REPORTED" : "SERVER_TIMED");
+        value.put("rewardCeiling", (selfReported ? RewardPolicy.XP_BADGE_ONLY : RewardPolicy.FULL).name());
         kit.put(game, value);
     }
 
@@ -3527,6 +3666,9 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
             value.put("xp", cfg.path("xp").asInt(0));
             boolean scanned = st.path("scanned").asBoolean(false);
             value.put("scanned", scanned);
+            // C1:比对的是节点静态码 —— 只证明「任务码匹配」,不是有时效、一次消费的到场凭证
+            value.put("evidence", "TASK_CODE_MATCH");
+            value.put("rewardCeiling", RewardPolicy.XP_BADGE_ONLY.name());
             if (scanned) {
                 putText(value, "reply", cfg);
                 putText(value, "audioUrl", cfg);
@@ -3792,6 +3934,15 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
             putText(value, "lastUrl", st);
             putText(value, "lastReason", st);
             value.put("lastConfidence", st.path("lastConfidence").asInt(0));
+            // C1:只有视觉模型当场真判 PASS 才算「照片已核验」;降级与次数用尽兜底放行不算。
+            // 没过之前不给 rewardCeiling —— 还没有结果,不承诺也不预判
+            String verdict = st.path("verdict").asText("");
+            if (!verdict.isEmpty()) value.put("verdict", verdict);
+            boolean verified = photoVerified(st);
+            value.put("photoVerified", verified);
+            if (st.path("passed").asBoolean(false)) {
+                value.put("rewardCeiling", (verified ? RewardPolicy.FULL : RewardPolicy.XP_BADGE_ONLY).name());
+            }
             kit.put("photoCheck", value);
         }
         /* 预制人生·留言:题面 + 后来的人留下的前几条(previous)+ 我自己那句(mine)。
@@ -3860,14 +4011,17 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
             putText(value, "hint", cfg);
             value.put("xp", cfg.path("xp").asInt(0));
             value.put("done", state.path("compass").path("done").asBoolean(false));
+            putAttempt(value, state.path("compass"), actorMemberId);
+            value.put("evidence", "SELF_REPORTED");
+            value.put("rewardCeiling", RewardPolicy.XP_BADGE_ONLY.name());
             kit.put("compass", value);
         }
-        putChallenge(kit, config, state, "reaction", "goalMs", "rounds");
-        putChallenge(kit, config, state, "ballShake", "goal", "seconds");
-        putChallenge(kit, config, state, "quietHold", "seconds", null);
-        putChallenge(kit, config, state, "shout", "seconds", null);
-        putChallenge(kit, config, state, "countdown", "seconds", "doneText");
-        putChallenge(kit, config, state, "stopwatch", "targetSeconds", "toleranceMs");
+        putChallenge(kit, config, state, "reaction", "goalMs", "rounds", actorMemberId);
+        putChallenge(kit, config, state, "ballShake", "goal", "seconds", actorMemberId);
+        putChallenge(kit, config, state, "quietHold", "seconds", null, actorMemberId);
+        putChallenge(kit, config, state, "shout", "seconds", null, actorMemberId);
+        putChallenge(kit, config, state, "countdown", "seconds", "doneText", actorMemberId);
+        putChallenge(kit, config, state, "stopwatch", "targetSeconds", "toleranceMs", actorMemberId);
         return kit;
     }
 
