@@ -1198,6 +1198,11 @@
     <text class="finsheet__game-ending-title">{{gameModule.story.ending.title}}</text>
     <text class="finsheet__game-ending-copy">{{gameModule.story.ending.summary}}</text>
   </view>
+  <view class="finsheet__game-ending" wx:if="{{stageEnd && !allDone}}">
+    <text class="finsheet__game-ending-k">这一章</text>
+    <text class="finsheet__game-ending-copy" wx:for="{{stageEnd.changed}}" wx:key="index">{{item}}</text>
+    <text class="finsheet__game-ending-title" wx:if="{{stageEnd.open}}">{{stageEnd.open}}</text>
+  </view>
   <view class="finish-milestone" wx:if="{{milestone}}">
     <view class="finish-milestone__head">
       <text>城市探索里程碑</text>
