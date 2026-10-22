@@ -119,7 +119,7 @@ owner 已于 2026-10-22 批准由集成方接管保留文件维护。下面每�
   - Funds MySQL IT run `39785313609`、Mini followup focused regression run `39785313522`、Isolated authenticated Redis recovery run `39785313756`：success。
 - 之后合入 #484 `ca8da72e` 与 #477 `84c33fea`，最终 head 以 PR #486 的检查为准。
 
-## 8 再并 master（#511 店铺参谋改版，PR 标记 ready 之后）
+## 8 master refresh（#511 店铺参谋改版，PR 标记 ready 之后）
 
 PR 转为 ready 后，master 前移到 `c225b462`（#511），PR 变成 dirty。处理：用 merge commit 把 master 并入本分支，不做 rebase / force-push。
 
@@ -134,3 +134,11 @@ PR 转为 ready 后，master 前移到 `c225b462`（#511），PR 变成 dirty。
 - **验证**
   - 合并树全量单测：处理语义冲突前是 13692/13694，红的就是上面两条。处理后这两个文件 9/9 通过，`action-ledger.test.js` 连同店铺参谋相关测试 70/70 通过。
   - `build-action-ledger --check`（4967）PASS，`build-route-matrix --check`（145/27，无差异）PASS，UI-GATE-0 PASS（U1 909/60/8；U3 62/62；U4 126/126，63/63；U5 37，基线未改），silent-error 与 api-existence 门禁 PASS。
+  - 定时复核会话在合并树 `cd94e872` 上独立重跑：小程序全量单测 13694/13694 通过；另外单独跑了 `ui-theme-unit-lint`（theme/units/selftest）、`ds-hardcode-gate.sh`、a11y、wxml/wxss、组件、setData 等静态子门禁，以及 `xcx-unit-manifest`、`lint:requestbody`、`js-scope-lint`，全部 PASS。没有跑 `ci/xcx-check.sh` 和 `ds-hardcode-gate-selftest.sh`。`tests/lint/ui-integrity-baseline.js` 没有重锚，也没有删条目，冻结值未变。
+  - 复核会话独立做的冲突处理和 `cd94e872` 只有两处不同：一是解读依据文案，复核方案写的是「店铺资料」，`cd94e872` 写的是「档案」；二是 `cd94e872` 多了一条「结构必须可定位」的断言，更严。因此保留 `cd94e872` 原样，没有另外推送。
+- **CI（head `cd94e872`）**：35 个 check run，32 success，3 skipped（Admin UI build / E2E 与 SBOM，按变更区域跳过），0 失败。
+  - GitHub CI run `39823707112`：Backend tests、Migration safety / layout gate、20 个小程序 unit shard、Mini program static gates、Fast gates，全部 success
+  - Funds MySQL IT run `39823707189`：success
+  - Mini followup focused regression run `39823707141`：success
+  - Isolated authenticated Redis recovery run `39823706968`：success
+- 本记录补充 CI 后的最终 head 以 PR #486 的检查为准。#512（batch 3）叠在本分支上，需要另行同步，本次没有改动它。
