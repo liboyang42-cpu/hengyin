@@ -109,3 +109,39 @@ PR base 不是 master，`ci.yml` 的 `pull_request` 触发器不会派发，所�
 - 必需 check 名核对：#505 合入后，GitHub CI 的全部 job 名都在 39806526890 中出现并通过，与 batch2 的 check 集合相同；batch2 有 3 个按变更区域跳过，本批这些 job 也都实际运行了。
 - 说明：由于是 workflow_dispatch，本 PR 无法实测 #505 新 filter 在 `pull_request` 事件下的路由结果。这一点由合同测试 `ci/test_ci_cost_contract.py`（PASS）覆盖。合入 master 后，第一个 PR 应复核一次 Detect changed areas 的输出。
 - 之后只追加本记录文件的提交（纯文档），最终 head 以 PR #512 的检查为准。
+
+## 8 master refresh（#486 合入后，2026-10-22）
+
+#486（batch2）已于 2026-10-22T17:45Z 合入 master（`38dc1bb7`，其中含 #511 店铺参谋改版）。本分支随即 `git merge --no-ff origin/master`，合并提交 `90bffc43`；PR #512 的 base 已从 `integrate/closeout-batch2-20261022` 改为 `master`，`ci.yml` 的 `pull_request` 触发器从此生效。
+
+### 冲突
+
+- 只有 `chengyinhub-xcx/tests/unit/action-ledger.test.js` 的 local tap 分母一处冲突：
+  - master 侧：batch2 再并 #511（+7 tap），2114 → 2121；
+  - 本分支：L21 B9 3 个控件归 external，2114 → 2111；
+  - 叠加为 **2121 − 3 = 2118**，与合并树重建实测一致。两侧注释全部保留，另补一行说明。
+- 其余文件自动合并：#511 的后端（`MerchantInsightServiceImpl` 等）、`ai-insight` 页面及其单测，`action-ledger.json`，`integration-batch2.md`。batch3 各 lane 的修复和测试都没有丢。
+
+### 再生成与计数（合并树上各做一次）
+
+| 产物 | 结果 |
+|---|---|
+| `action-ledger.json`（`build-action-ledger.js --write`） | 4967 控件。自动合并结果与 `--write` 输出逐字节一致，无额外提交；`--check` / `--selftest` PASS |
+| local tap 分母 | 2111 → **2118**（master 2121，叠加 L21 B9 −3） |
+| local 事件合同 | **2469**（master 值；batch3 没有增减） |
+| `controlCount` | **4967**（master 值；batch3 控件数不变） |
+| `route-matrix.json`（`--check`） | 145 路由 / 27 场景，无差异，不写回 |
+| `ui-integrity-baseline.js` | 未改；UI-GATE-0 PASS（没有新增违规，冻结值没有上调） |
+| L21 CY-HANDOFF | 唯一一条是「在合并树上重建台账」，已按上面重建落地，没有丢失 |
+
+### 本地验证（`90bffc43` 合并树）
+
+- `TZ=Asia/Shanghai node --test "tests/unit/**/*.test.js"`：**13725/13725** 通过（`action-ledger.test.js` 46/46）
+- `ui-integrity.js --warn-as-error`：UI-GATE-0 PASS；`ci/silent-error-gate.js`：通过；`ci/api-existence-gate.js`：rc=0
+- `ci/test_ci_cost_contract.py`：PASS；`ci/test_release_manifest.py`：OK
+- 后端本地离线 Maven 缺依赖，没能编译；Java 文件全部自动合并，以 CI 的 Backend tests 为准
+- 仍然没有运行 `ci/xcx-check.sh` 和 `ds-hardcode-gate-selftest.sh`
+
+### CI（base = master）
+
+见 PR #512 检查；结果在下方补记。
