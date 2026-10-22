@@ -142,6 +142,21 @@ PR base 不是 master，`ci.yml` 的 `pull_request` 触发器不会派发，所�
 - 后端本地离线 Maven 缺依赖，没能编译；Java 文件全部自动合并，以 CI 的 Backend tests 为准
 - 仍然没有运行 `ci/xcx-check.sh` 和 `ds-hardcode-gate-selftest.sh`
 
-### CI（base = master）
+### CI 修复
 
-见 PR #512 检查；结果在下方补记。
+- `90bffc43` / `4c6f901e` 上 GitHub CI run 39830163088 唯一的红：`Mini program unit shard (14/20)`，`p1-feedback-wiring-contract.test.js`「内容淡入确实铺开了」报 ENOENT，读的是 `tests/unit/__pickerview_negative_control__.wxml`。
+- 根因：`picker-unification-contract.test.js` 在仓内 `tests/unit/` 下临时建删负控 wxml，另一条契约遍历全仓 wxml 时先列后读。并入 master 后新增测试文件，分片平移，两者落进同一分片，于是并发撞上。这和 #500 AC3 修的 roam-comment-scan 是同一类问题，master 上本来就潜伏着。
+- 修复 `d98d7f7e`：负控夹具改写到系统临时目录，负控断言不变（系统 picker 仍要判红，picker-view 仍不许误伤）。没有跳过或放宽任何测试。
+
+### CI（base = master，`pull_request` 事件）
+
+| head | workflow | run | 结果 |
+|---|---|---|---|
+| `4c6f901e` | GitHub CI | 39830163088 | failure：shard 14/20 ENOENT（见上），其余 job 被新提交取消 |
+| `d98d7f7e` | GitHub CI | **39830569976** | **success**：31 个 job（与 batch2 / 本批 39806526890 的 check 名集合相同） |
+| `d98d7f7e` | Funds MySQL IT | **39830569923** | **success** |
+| `d98d7f7e` | Mini followup focused regression | **39830569868** | **success** |
+| `d98d7f7e` | Isolated authenticated Redis recovery | **39830570027** | **success** |
+
+- #505 新 filter 首次在 `pull_request` 事件下实测：Detect changed areas 让 backend、admin UI、migration、dependency、xcx 全部命中，所有必需 check 名都出现并通过；`ci/test_ci_cost_contract.py` PASS。
+- 之后只追加本记录文件的纯文档提交，最终 head 以 PR #512 的检查为准。
