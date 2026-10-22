@@ -90,6 +90,8 @@ final class GameSessionLedgerMySqlFixture {
     SqlSessionTemplate sql;
     GameSessionRuntimeMapper mapper;
     IGameSessionRuntimeService runtime;
+    /** 代理背后的真实现:导演台 IT 在它上面补装 topicMapper / imService(本夹具其余用法不需要)。 */
+    GameSessionRuntimeServiceImpl impl;
 
     void open(String suite) throws Exception {
         MysqlIntegrationTestConfig config = MysqlIntegrationTestConfig.fromEnvironment(suite);
@@ -129,7 +131,7 @@ final class GameSessionLedgerMySqlFixture {
         if (admin != null && database != null) admin.execute("drop database " + database);
     }
 
-    private static String statement(String script, String head) {
+    static String statement(String script, String head) {
         int start = script.indexOf(head);
         assertTrue(start >= 0, "真 DDL 里找不到:" + head);
         // 列注释里有分号(如 coop_order.invite_id),所以从表尾 ") ENGINE=" 之后找行末分号。
@@ -186,6 +188,7 @@ final class GameSessionLedgerMySqlFixture {
 
     IGameSessionRuntimeService service() {
         GameSessionRuntimeServiceImpl target = new GameSessionRuntimeServiceImpl();
+        impl = target;
         ReflectionTestUtils.setField(target, "runtimeMapper", mapper);
         ReflectionTestUtils.setField(target, "playTeamMapper", sql.getMapper(PlayTeamMapper.class));
         CmsActivityMapper activities = mock(CmsActivityMapper.class);
