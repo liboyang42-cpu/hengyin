@@ -286,6 +286,25 @@ class CashWithdrawStateMachineTest {
         verify(umsMemberService, never()).deductBalance(anyLong(), any());
     }
 
+    // PR #8 回归:抢占 0→3 成功,但 3→2 回补领取 CAS 落空(已被人工/并发处理)→ 不加余额、不告警、只写一次领取
+    @Test
+    void sync_fail_refundClaimLost_noBalanceNoAlarm() {
+        when(mapper.selectPendingForQuery(anyInt())).thenReturn(Collections.singletonList(pendingRecord()));
+        when(wechatPayService.queryTransferResult("CW1", "CD1")).thenReturn(qr("FAIL", "CLOSED"));
+        when(mapper.updateStatusIfProcessing(any())).thenReturn(1); // 抢占成功
+        when(mapper.updateStatusIfManual(any())).thenReturn(0);     // 回补领取输掉
+
+        svc.syncPendingWithdrawals(50);
+
+        verify(umsMemberService, never()).addBalance(anyLong(), any());
+        verify(umsMemberService, never()).deductBalance(anyLong(), any());
+        verify(alarmService, never()).alarm(anyString(), anyString());
+        verify(mapper, times(1)).updateStatusIfProcessing(any());
+        ArgumentCaptor<MemberCashWithdraw> fin = ArgumentCaptor.forClass(MemberCashWithdraw.class);
+        verify(mapper, times(1)).updateStatusIfManual(fin.capture());
+        assertEquals(MemberCashWithdraw.STATUS_FAILED_REFUNDED, fin.getValue().getStatus());
+    }
+
     // ⑧ 退款失败(addBalance 抛异常,真实语义)→ 保持待人工 + 告警
     @Test
     void sync_fail_refundThrows_manualAndAlarm() {

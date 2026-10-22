@@ -44,4 +44,8 @@ public interface ImMessageMapper
                                        @Param("afterId") Long afterId, @Param("size") Integer size);
 
     public int updateStatus(@Param("id") Long id, @Param("status") Integer status);
+
+    /** 条件迁移 status:仅当前为 fromStatus 时改成 toStatus;返回命中行数(0/1)。 */
+    int transitionStatus(@Param("id") Long id, @Param("fromStatus") Integer fromStatus,
+                         @Param("toStatus") Integer toStatus);
 }

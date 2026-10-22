@@ -33,6 +33,7 @@ on:
           - player
           - finance
           - post_deploy
+          - post_restart
       native_jar_run_id:
         description: 可选，复用冻结后端制品的同仓库运行ID；须同时提供SHA256
         required: false

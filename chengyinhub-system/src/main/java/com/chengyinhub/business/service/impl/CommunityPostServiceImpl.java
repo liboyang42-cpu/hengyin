@@ -1382,23 +1382,32 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
     }
 
     @Override
-    public List<String> activeMediaUrls(Long postId) {
-        List<String> urls = new ArrayList<>();
+    public List<String> activeMediaKeys(Long postId) {
+        List<String> keys = new ArrayList<>();
         for (Map<String, Object> row : mapper.selectMediaForSafety(postId)) {
-            Object url = value(row, "derived_object_key");
-            if (url != null && !blank(url.toString())) urls.add(url.toString());
+            Object stored = value(row, "derived_object_key");
+            if (stored == null || blank(stored.toString())) continue;
+            try {
+                keys.add(canonicalMediaKey(stored.toString()));
+            } catch (ServiceException notOurStorage) {
+                // 不是当前对象存储的媒体不可能是本链路送检的那张;跳过,让回调按「媒体已变」处理。
+            }
         }
-        return urls;
+        return keys;
     }
 
-    /** 直发且带图:图片送微信异步机审,命中由回调走 applyRiskyMediaResult。送检失败只告警,不回滚已发布内容(同附近的局)。 */
+    /**
+     * 直发且带图:图片送微信异步机审,命中由回调走 applyRiskyMediaResult。送检失败只告警,不回滚已发布内容(同附近的局)。
+     * 送检地址是 5 分钟预签名 URL(私有桶),inbox 按对象 key 登记,回调用 activeMediaKeys 核对。
+     */
     private void submitMediaForAsyncCheck(Long postId, String openid, List<String> mediaUrls) {
         if (mediaUrls.isEmpty() || wxContentSecurityProvider == null) return;
         IWxContentSecurityService wx = wxContentSecurityProvider.getIfAvailable();
         if (wx == null) return;
         for (String url : mediaUrls) {
             try {
-                wx.submitMediaCheckOne(IWxContentSecurityService.BIZ_TYPE_COMMUNITY_POST, postId, url, openid);
+                wx.submitMediaCheckOne(IWxContentSecurityService.BIZ_TYPE_COMMUNITY_POST, postId, url,
+                        canonicalMediaKey(url), openid);
             } catch (Exception e) {
                 log.error("[社区帖文] 图片送检异常,需人工复审: postId={}, exceptionType={}",
                         postId, e.getClass().getSimpleName());

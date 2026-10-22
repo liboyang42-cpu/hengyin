@@ -101,6 +101,11 @@ class NpcChatUserDataMyBatisIT {
             String ddl = new String(java.nio.file.Files.readAllBytes(migration), java.nio.charset.StandardCharsets.UTF_8);
             int begin = ddl.indexOf("CREATE TABLE IF NOT EXISTS npc_chat_request");
             st.execute(ddl.substring(begin, ddl.indexOf(';', begin)));
+            // 删除擦除语句同时清 audio_asset_id：按仓库迁移原样补列（与 A02NpcDeleteBarrierMySqlIT 同口径，迁移幂等）。
+            java.nio.file.Path mediaMigration = java.nio.file.Paths.get("chengyinhub-admin/sql/migration_20261012_npc_chat_media_asset.sql");
+            if (!java.nio.file.Files.exists(mediaMigration)) mediaMigration = java.nio.file.Paths.get("sql/migration_20261012_npc_chat_media_asset.sql");
+            org.springframework.jdbc.datasource.init.ScriptUtils.executeSqlScript(s.getConnection(),
+                    new org.springframework.core.io.FileSystemResource(mediaMigration.toFile()));
             st.execute("DELETE FROM npc_chat_request");
             return s;
         } catch (Throwable t) {

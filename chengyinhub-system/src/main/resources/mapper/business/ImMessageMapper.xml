@@ -114,6 +114,12 @@
         update im_message set status = #{status} where id = #{id}
     </update>
 
+    <!-- N-04 举报审核软封/恢复:只在 from→to 真实迁移时命中 1 行,调用方据此只调一次未读,
+         重复/并发的同向结论恒 0 行,不会把未读减两次。 -->
+    <update id="transitionStatus">
+        update im_message set status = #{toStatus} where id = #{id} and status = #{fromStatus}
+    </update>
+
     <update id="applyMediaCheckResult">
         update im_message msg
         left join im_conversation c on c.id = msg.conversation_id and c.status = 0
