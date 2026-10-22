@@ -18,6 +18,7 @@ import com.chengyinhub.business.mapper.MerchantReferralBountyMapper;
 import com.chengyinhub.business.mapper.UmsMemberBalanceDetailMapper;
 import com.chengyinhub.business.mapper.UmsMemberMapper;
 import com.chengyinhub.business.service.IUmsMemberService;
+import com.chengyinhub.business.service.support.SavepointLockFailures;
 
 /**
  * 拓展人激活赏金(冷启动)。
@@ -112,6 +113,9 @@ public class MerchantReferralBountyService
      * <p><b>调用方必须包 try/catch</b> —— 本方法自己也全包了,但核销是核心路径,
      * 赏金是实验性的冷启动功能,<b>任何情况下都不能让它连累核销</b>。
      *
+     * <p>唯一例外是锁冲突(1213 死锁 / 1205 锁等待超时):1213 已经让 InnoDB 回滚了整笔核销事务,
+     * 吞掉只会让后续语句在隐式新事务里半截提交。这类原样抛给外层 {@code @DeadlockRetry},整笔回滚重试。
+     *
      * @param merchantMemberId 扫码核销的商家
      */
     public void onVerification(Long merchantMemberId)
@@ -122,13 +126,15 @@ public class MerchantReferralBountyService
         }
         catch (RuntimeException e)
         {
+            SavepointLockFailures.rethrowIfLockFailure(e);
             // 赏金不该连累核销。这里吞掉并告警,由对账脚本兜底发现落差。
             log.error("[ReferralBounty] activate failed merchantMemberId={}", merchantMemberId, e);
         }
     }
 
     /** Savepoint retains outer verification visibility and isolates ordinary statement/business failures.
-     * Database deadlock/connection failure can still abort the physical outer transaction. */
+     * Database deadlock/connection failure can still abort the physical outer transaction; callers rethrow
+     * lock failures via {@link SavepointLockFailures} so the outer {@code @DeadlockRetry} retries the whole unit. */
     private void withInviterLock(Long merchantMemberId, boolean activate) {
         if (merchantMemberId == null) return;
         org.springframework.transaction.support.TransactionTemplate tx =
@@ -290,6 +296,7 @@ public class MerchantReferralBountyService
         }
         catch (RuntimeException e)
         {
+            SavepointLockFailures.rethrowIfLockFailure(e);
             log.error("[ReferralBounty] clawback failed merchantMemberId={}", merchantMemberId, e);
         }
     }
@@ -409,6 +416,8 @@ public class MerchantReferralBountyService
         }
         catch (RuntimeException e)
         {
+            // 死锁时 savepoint 已随整笔事务回滚,不能在隐式新事务里接着回读。
+            SavepointLockFailures.rethrowIfLockFailure(e);
             // uk_merchant 撞键 = 并发下别人已占位,不是错误。回读即可。
             return bountyMapper.selectByMerchantMemberIdForUpdate(merchantMemberId);
         }
