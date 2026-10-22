@@ -71,7 +71,18 @@
 
 ## 8. CI
 
-base 不是 master，所以完整 CI 不会因 PR 自动触发。按惯例在本分支用 `workflow_dispatch` 手动触发 `ci.yml` 与 `funds-mysql-it.yml`，run ID 与结果记在 PR 正文中。
+base 不是 master，所以完整 CI 不会因 PR 自动触发。按惯例在本分支用 `workflow_dispatch` 手动触发 `ci.yml` 与 `funds-mysql-it.yml`。
+
+head `34471364`（与合并树 `cc197b5d` 相比只多本文档），全部 success：
+
+| workflow | 事件 | run | 结果 |
+|---|---|---|---|
+| GitHub CI（31/31 job） | workflow_dispatch | 39873377707 | success |
+| Funds MySQL IT | workflow_dispatch | 39873380621 | success |
+| Mini followup focused regression | pull_request | 39873426452 | success |
+| Isolated authenticated Redis recovery | pull_request | 39873426501 | success |
+
+没有出现集成失败，也没有为 CI 做任何修复提交。
 
 ## 9. 需要 owner 裁决的事项（来自 RV4 #534 与 BF3 #535）
 
