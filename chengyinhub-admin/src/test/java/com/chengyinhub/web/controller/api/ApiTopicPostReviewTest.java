@@ -145,6 +145,8 @@ class ApiTopicPostReviewTest {
 
         assertEquals(200, result.get(AjaxResult.CODE_TAG));
         verify(auditTaskService, never()).submit(anyString(), anyLong(), anyLong(), anyString(), any());
+        // #380:草稿不建抽检单,但必须留下 review_flag,publish-draft 才不会把它记成机审通过
+        verify(topicService).markReviewFlag(TOPIC, true);
     }
 
     private CmsTopic saved() {

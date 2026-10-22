@@ -625,4 +625,82 @@ class GenericRouteRuntimeServiceTest {
         assertEquals(1,stored().path("themeRuntime").path("zeroChallenges").path("used").asInt());assertEquals(0,stored().path("completedNodeIds").size());
     }
 
+    private final long[] now = {System.currentTimeMillis()};
+    private GameCommandReceiptView runAction(String request, String action, Map<String, Object> payload) {
+        ReflectionTestUtils.setField(service, "clock", (AdvancedGameClock) () -> new Date(now[0]));
+        GameSessionCommand command=new GameSessionCommand();command.setActivityId(70L);command.setExpectedRevision(session.getRevision());command.setAuthorityEpoch(1);
+        command.setRequestId(request);command.setAction(action);command.getPayload().putAll(payload);command.getPayload().put("reason","现场处理");
+        return service.command(GameActorContext.club(9L),command);
+    }
+    private void zeroHp(String policy, ObjectNode config) throws Exception {
+        ObjectNode snapshot=(ObjectNode)json.readTree(session.getModuleConfigSnapshotJson());
+        ObjectNode survival=((ObjectNode)snapshot.path("themeConfig").path("gameplayRuntime")).putObject("survival").put("zeroHpPolicy",policy);
+        if(config!=null)survival.set("WAIT".equals(policy)?"zeroWait":"zeroChallenge",config);
+        session.setModuleConfigSnapshotJson(snapshot.toString());
+        TopicRouteEngine.State state=json.readValue(owner.getVariablesJson(),TopicRouteEngine.State.class);state.getVariables().put("sys.hp",0);
+        if(config!=null)new GameplaySurvivalEngine().syncZeroHp(snapshot,JourneyRules.parse(snapshot.path("journeyRules").toString()),state,now[0]);
+        owner.setVariablesJson(json.writeValueAsString(state));
+    }
+
+    @Test void runPauseFreezesZeroHpTimerAndResumeShiftsTheDeadline() throws Exception {
+        chapterGame(false);zeroHp("WAIT",json.createObjectNode().put("minutes",1).put("limit",1).put("restoreTo",5));
+        long deadline=stored().path("themeRuntime").path("zeroHp").path("deadlineAt").asLong();
+        now[0]+=10000;runAction("pause","RUN_PAUSE",Collections.emptyMap());
+        now[0]+=110000;
+        service.view(GameActorContext.player(7L),70L);
+        assertEquals(0,stored().path("variables").path("sys.hp").asInt());
+        assertFalse(stored().path("themeRuntime").path("zeroHp").path("resolved").asBoolean());
+        runAction("resume","RUN_RESUME",Collections.emptyMap());
+        assertEquals(deadline+110000,stored().path("themeRuntime").path("zeroHp").path("deadlineAt").asLong());
+        assertFalse(json.readTree(mapper.selectStoryState(50L,"RUN",50L).getVariablesJson()).has("pausedAt"));
+        now[0]+=60000;
+        service.view(GameActorContext.player(7L),70L);
+        assertEquals(5,stored().path("variables").path("sys.hp").asInt());
+    }
+
+    @Test void cancelAndStaffExitReleaseWithoutWritingHpOutcome() throws Exception {
+        chapterGame(false);zeroHp("THEME_FAIL",null);when(mapper.isActiveTeam(70L,90L)).thenReturn(1);
+        Map<String,Object> team=Collections.singletonMap("teamId",90L);
+        runAction("exit","STAFF_TEAM_EXIT",team);
+        assertFalse(stored().path("themeRuntime").has("result"));
+        assertEquals("GAME_STATE_CONFLICT",assertThrows(GameSessionException.class,()->runAction("exit-again","STAFF_TEAM_EXIT",team)).getErrorCode());
+        runAction("cancel","RUN_CANCEL",Collections.emptyMap());
+        assertFalse(stored().path("themeRuntime").has("result"));
+        assertEquals(0,stored().path("variables").path("sys.hp").asInt());
+    }
+
+    @Test void arrivalRevokeNeedsAnArrivalAndLeavesAnAuditRow() throws Exception {
+        chapterGame(false);when(mapper.isActiveTeam(70L,90L)).thenReturn(1);
+        Map<String,Object> target=new LinkedHashMap<>();target.put("teamId",90L);target.put("questKey","node_101");
+        assertEquals("GAME_STATE_CONFLICT",assertThrows(GameSessionException.class,()->runAction("revoke-none","ARRIVAL_REVOKE",target)).getErrorCode());
+        GameStoryState run=mapper.selectStoryState(50L,"RUN",50L);ObjectNode data=(ObjectNode)json.readTree(run.getVariablesJson());
+        String location=((ObjectNode)json.readTree(session.getModuleConfigSnapshotJson())).path("themeConfig").path("gameplayRuntime").path("quests").path(0).path("locationKey").asText();
+        data.with("arrivals").putObject("90:"+location).put("used",true);run.setVariablesJson(data.toString());
+        runAction("revoke","ARRIVAL_REVOKE",target);
+        JsonNode after=json.readTree(run.getVariablesJson());
+        assertFalse(after.path("arrivals").has("90:"+location));
+        JsonNode audit=after.path("arrivalRevocations").elements().next();
+        assertEquals(90,audit.path("teamId").asLong());assertEquals(9,audit.path("revokedBy").asLong());assertEquals("现场处理",audit.path("reason").asText());
+    }
+
+    @Test void sharedExportStripsOneTimeArrivalNonceFromManualSignatures() throws Exception {
+        chapterGame(false);
+        GameStoryState run=mapper.selectStoryState(50L,"RUN",50L);ObjectNode data=(ObjectNode)json.readTree(run.getVariablesJson());
+        data.with("manual").with("signatures").putObject("1").with("command").put("action","ARRIVAL_CONFIRM").with("payload").put("nonce","secret-nonce").put("teamId",90);
+        run.setVariablesJson(data.toString());
+        JsonNode exported=json.valueToTree(service.exportSharedRun(GameActorContext.club(9L),70L));
+        assertFalse(exported.toString().contains("secret-nonce"));
+        assertEquals(90,exported.path("manual").path("signatures").path("1").path("command").path("payload").path("teamId").asInt());
+        assertTrue(run.getVariablesJson().contains("secret-nonce"));
+    }
+
+    @Test void earnedClueWithValueAboveOneStaysInTheClueList() throws Exception {
+        chapterGame(false);
+        com.chengyinhub.business.mapper.ThemeStateKeyMapper keys=mock(com.chengyinhub.business.mapper.ThemeStateKeyMapper.class);ReflectionTestUtils.setField(service,"themeStateKeyMapper",keys);
+        com.chengyinhub.business.domain.ThemeStateKey key=new com.chengyinhub.business.domain.ThemeStateKey();key.setStateKey("clue.h_map");key.setLabel("地图");
+        when(keys.selectByTopicId(80L)).thenReturn(Collections.singletonList(key));
+        TopicRouteEngine.State state=json.readValue(owner.getVariablesJson(),TopicRouteEngine.State.class);state.getVariables().put("clue.h_map",2);owner.setVariablesJson(json.writeValueAsString(state));
+        JsonNode clues=json.valueToTree(service.view(GameActorContext.player(7L),70L).getPlayer().get("clues"));
+        assertEquals(1,clues.size());assertEquals("地图",clues.path(0).path("name").asText());
+    }
 }

@@ -685,3 +685,59 @@ test('详情同身份返回或刷新失败重试保留未提交理由，状态�
   e.page.load(); e.requests.at(-1).success(e.response);
   assert.equal(e.page.data.draft,'');
 });
+
+// PRIVATE-GROUP-coop-review:提交断网/响应不明时可能已落库,先回读 loadMyReview 再放开重试。
+test('评价断网不断言未提交:回读到评分即显示已评价,回读前不放开重试', () => {
+  const e = detailContextHarness();
+  e.page.reviewCoop(); e.page.onReviewSheetSelect({detail:{index:0}});
+  const save = e.requests.find(r => r.url === '/api/coop/review/save');
+  const summaries = () => e.requests.filter(r => r.url === '/api/coop/review/summary');
+  const before = summaries().length;
+  save.fail({ errMsg: 'request:fail timeout' });
+  assert.equal(summaries().length, before + 1, '结果不明时必须重跑 loadMyReview');
+  assert.equal(e.page.data.reviewVerifying, true);
+  assert.ok(e.toasts.every(t => !/没提交|未提交/.test(t)), '不能断言评价未提交');
+  e.page.reviewCoop();
+  assert.equal(e.page.data.reviewSheetShow, false, '回读完成前不放开重试');
+  summaries().at(-1).success({code:200,data:{reviews:[{fromId:1,topicId:8,rating:4}]}});
+  assert.equal(e.page.data.reviewVerifying, false);
+  assert.equal(e.page.data.myReviewStars, '★★★★');
+  assert.equal(e.page.data.actionReceipt, '评价已提交');
+});
+
+test('评价网关超时回读没有评分才允许重新评价;回读失败不放行成已提交', () => {
+  const e = detailContextHarness();
+  e.page.reviewCoop(); e.page.onReviewSheetSelect({detail:{index:0}});
+  e.requests.find(r => r.url === '/api/coop/review/save').fail({}, 504);
+  e.requests.filter(r => r.url === '/api/coop/review/summary').at(-1).success({code:200,data:{reviews:[]}});
+  assert.equal(e.page.data.myReviewStars, '');
+  assert.match(e.page.data.actionError, /没有查到这次评价/);
+  e.page.reviewCoop();
+  assert.equal(e.page.data.reviewSheetShow, true, '核对后可重试');
+
+  const f = detailContextHarness();
+  f.page.reviewCoop(); f.page.onReviewSheetSelect({detail:{index:0}});
+  f.requests.find(r => r.url === '/api/coop/review/save').fail();
+  f.requests.filter(r => r.url === '/api/coop/review/summary').at(-1).fail();
+  assert.equal(f.page.data.actionReceipt, '');
+  assert.match(f.page.data.actionError, /暂未确认/);
+
+  // 明确的 4xx 是确定失败,照旧提示,不进入核对
+  const g = detailContextHarness();
+  g.page.reviewCoop(); g.page.onReviewSheetSelect({detail:{index:0}});
+  const n = g.requests.length;
+  g.requests.find(r => r.url === '/api/coop/review/save').fail({ msg: '已评价过该合作' }, 400);
+  assert.equal(g.requests.length, n);
+  assert.deepEqual(g.toasts, ['已评价过该合作']);
+});
+
+test('评价结果核对期间换号或刷新,旧回读不写新页面', () => {
+  const e = detailContextHarness();
+  e.page.reviewCoop(); e.page.onReviewSheetSelect({detail:{index:0}});
+  e.requests.find(r => r.url === '/api/coop/review/save').fail();
+  const verify = e.requests.filter(r => r.url === '/api/coop/review/summary').at(-1);
+  e.page.load();
+  const before = JSON.stringify(e.page.data);
+  verify.success({code:200,data:{reviews:[{fromId:1,topicId:8,rating:5}]}});
+  assert.equal(JSON.stringify(e.page.data), before);
+});

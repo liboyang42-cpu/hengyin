@@ -90,6 +90,13 @@ public interface CmsActivityMapper
     int updateCmsActivityByOwner(CmsActivity cmsActivity);
 
     /**
+     * 承接方领队改集合时间/地点:「仍未售出」与写入是同一条条件 UPDATE(#334 F7)。
+     * 未售出 = 本场 cms_registration 没有 payment_status ∈ {0,1,2} 的单(与 countOpenSaleRegistrations 同口径)。
+     * 返回 0 = 已售出锁定(或场次不存在),调用方不得再补写。
+     */
+    int updateOpsFieldsIfUnsold(CmsActivity cmsActivity);
+
+    /**
      * 删除活动
      * 
      * @param id 活动主键

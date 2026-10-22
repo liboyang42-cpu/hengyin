@@ -38,6 +38,28 @@ const STEPS = [
     fields: ['ticket*'] },
 ]
 
+// 活动详情 collaboratorsList(PublicCollaboratorVO)→ 表单合作者行;按 memberId 去重,发起人行标 isOwner。
+function collaboratorsFromDetail(rows, ownerId) {
+  if (!Array.isArray(rows)) return []
+  const seen = {}
+  const list = []
+  rows.forEach((row) => {
+    const id = Number(row && row.memberId)
+    if (!Number.isSafeInteger(id) || id <= 0 || seen[id]) return
+    seen[id] = true
+    const nickname = String(row.memberNickname || row.memberRealName || '').trim() || '城瘾用户'
+    list.push({ id, name: nickname, nickname, avatar: row.memberAvatar || '', isOwner: id === Number(ownerId) ? 1 : 0 })
+  })
+  return list
+}
+
+// 发起人固定在首位;只替换发起人那一行,其余合作者原样保留。
+function mergeOwnerCollaborator(list, owner) {
+  const rows = Array.isArray(list) ? list : []
+  if (!owner) return rows.slice()
+  return [owner, ...rows.filter(item => item && Number(item.id) !== Number(owner.id))]
+}
+
 function coverReady(data) {
   return nonEmpty(data.formData.imgUrl)
     && !data.coverUploading
@@ -1197,6 +1219,10 @@ Page({
       : this.data.formData.tickets
     const startDate = this.normalizeActivityDate(detail.startDate)
     const endDate = this.normalizeActivityDate(detail.endDate)
+    // F0258:编辑态用服务端 collaboratorsList 回填合作者(仅展示署名),发起人仍固定在首位。
+    const ownerId = Number(detail.memberId) || memberId(app)
+    const collaboratorList = mergeOwnerCollaborator(
+      collaboratorsFromDetail(detail.collaboratorsList, ownerId), this._ownerCollaborator)
     this.setData({
       'formData.name': detail.name || '',
       'formData.description': detail.description || '',
@@ -1209,6 +1235,8 @@ Page({
       'formData.endDate': endDate,
       'formData.templateId': detail.templateId || 0,
       'formData.tickets': tickets,
+      'formData.collaboratorList': collaboratorList,
+      'formData.collaborators': collaboratorList.map(item => item.id),
       selectedTempId: detail.templateId || null,
       selectedCategoryIds,
       selectedCategoryNames,
@@ -1270,15 +1298,12 @@ Page({
             isOwner: 1
           }
 
-          let collaboratorList = [];
-          let collaborators = [];
-
-          collaboratorList = [...collaboratorList, userData];
-          collaborators = [...collaborators, ownerId];
-
+          // 只把发起人并到首位,不覆盖编辑态已回填的合作者(两次请求谁先回都一样)。
+          that._ownerCollaborator = userData
+          const collaboratorList = mergeOwnerCollaborator(that.data.formData.collaboratorList, userData)
           that.setData({
             'formData.collaboratorList': collaboratorList,
-            'formData.collaborators': collaborators,
+            'formData.collaborators': collaboratorList.map(item => item.id),
             ownerLoadError: ''
           })
         } else {

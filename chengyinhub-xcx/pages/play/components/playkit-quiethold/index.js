@@ -6,6 +6,8 @@ const reducedMotionBehavior = require('../../../../behaviors/reduced-motion.js')
 const motion = require('../../../../utils/motion.js');
 const cyToast = require('../../../../utils/toast.js');
 const { baseline, thresholds, bandOf, peakOf } = require('../../utils/play-audio-level.js');
+// C1:挑战身份与奖励上限只搬服务端的;阈值说的是相对振幅,不是分贝
+const { withAttempt, freshAttempt, rewardNote, relativeThresholdText } = require('../../utils/sensor-contract.js');
 
 function pcmPeak(buffer) {
   try {
@@ -26,9 +28,15 @@ Component({
     kicker: { type: String, value: '别出声' },
     sub: { type: String, value: '' },
     seconds: { type: Number, value: 15 },
+    // C1:服务端开表发的挑战身份(0 = 没有)与奖励上限(空 = 服务端没说,什么都不承诺)
+    attemptId: { type: Number, value: 0 },
+    rewardCeiling: { type: String, value: '' },
   },
-  data: { left: '15.0', band: 'ok', running: false, preparing: false, stageKeys: [0] },
+  data: { left: '15.0', band: 'ok', running: false, preparing: false, stageKeys: [0],
+    // calibration: '' 未校准 / 'calibrating' 正在听环境音 / 'calibrated' 已校准(切走、重开即作废)
+    calibration: '', thresholdText: '', rewardNote: '' },
   observers: {
+    rewardCeiling(value) { this.setData({ rewardNote: rewardNote(value) }); },
     'show, seconds': function (show, seconds) {
       this._abort();
       if (show) this._closed = false;
@@ -84,6 +92,7 @@ Component({
       this._retiredStage = stage;
       const key = this.data.stageKeys[0] + 1;
       this.setData({ running: false, preparing: false, band: 'ok', left: this._total().toFixed(1),
+        calibration: '', thresholdText: '',
         stageKeys: [key] }, () => { if (after && this.data.stageKeys[0] === key && !this._detached) after(); });
     },
     _micFailure(attempt, error) {
@@ -158,6 +167,7 @@ Component({
     _beginStage(attempt) {
       if (!this._current(attempt) || attempt.phase !== 'starting' || !attempt.started || !attempt.startReturned) return;
       attempt.phase = 'calibrating';
+      this.setData({ calibration: 'calibrating', thresholdText: '' });
       this._watch(attempt, attempt.lastFrame === null ? FIRST_FRAME_MS : FRAME_GAP_MS);
       attempt.stage.begin();
     },
@@ -201,12 +211,15 @@ Component({
       const t = thresholds(baseline(this._samples));
       this._mid = t.mid; this._hot = t.hot;
       attempt.phase = 'ready';
+      this.setData({ calibration: 'calibrated', thresholdText: relativeThresholdText(t.hot) });
     },
     onRun(e) {
       const attempt = this._eventAttempt(e);
       if (!attempt || attempt.phase !== 'ready') return;
       if (!this._fresh(attempt)) { this._micFailure(attempt); return; }
       attempt.phase = 'running'; attempt.runFrame = null;
+      // 开局那一刻手里的号是上一次的;只有这一局开表后服务端新发的号才随成绩交
+      attempt.attemptAtRun = this.data.attemptId;
       this._held = 0;
       this.setData({ running: true, preparing: false, left: this._total().toFixed(1), band: 'ok' });
       this.triggerEvent('start');
@@ -228,7 +241,8 @@ Component({
       attempt.reporting = true;
       if (won) attempt.stage.win('本机相对振幅保持了 ' + this._total() + ' 秒'); else attempt.stage.fail(false);
       attempt.reporting = false;
-      if (this._current(attempt)) this.triggerEvent('submit', { heldSeconds, passed: !!won });
+      if (this._current(attempt)) this.triggerEvent('submit', withAttempt({ heldSeconds, passed: !!won },
+        { attemptId: freshAttempt(this.data.attemptId, attempt.attemptAtRun) }));
     },
     onVerdict(e) {
       const attempt = this._eventAttempt(e);

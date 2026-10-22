@@ -35,7 +35,7 @@ const SCENES = {
   'points-tasks': { route: '/pages/member/index/index', title: '积分任务', theme: 'player', variant: 'half', maskClosable: true },
   // G01-G12 游戏内二级场景
   'play-activity-detail': { route: '/pages/activity/detail/index', title: '活动详情', theme: 'player', variant: 'full' },
-  'roam-task-list': { route: '/pages/activity/list/index', title: '官方活动', theme: 'player', variant: 'full' },
+  'roam-task-list': { route: '/pages/activity/list/index', title: '官方活动任务', theme: 'player', variant: 'full' },
   // 据点的最终宿主是薄深链壳,不是商家页:poiId 是 cityNodeId,与 merchantId 不是一个东西。
   // 这个 route 就是站外稳定深链,改它会让历史转发卡片/收藏落空(见设计文档 §3.9)。
   'roam-poi-detail': { route: '/subpackageRoam/poi-detail/index', title: '据点详情', theme: 'player', variant: 'full' },

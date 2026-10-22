@@ -129,6 +129,9 @@ public interface CmsTopicMapper
     /** 抽检池标记(#377 cms_topic.review_flag):1=先发后审放行但待抽检,0=抽检已通过/未打标。 */
     public int updateReviewFlag(@Param("id") Long id, @Param("reviewFlag") int reviewFlag);
 
+    /** 读抽检池标记:草稿期机审存疑也会打 1,publish-draft 据此不写 check_status=1 并挂抽检单。 */
+    public Integer selectReviewFlag(@Param("id") Long id);
+
     /** 上下架 CAS：只有当前值等于 expected 才翻转，禁止陈旧请求覆盖新状态(NULL 按 0 处理)。 */
     public int casUserStatus(@Param("id") Long id,
                              @Param("expected") Integer expected,

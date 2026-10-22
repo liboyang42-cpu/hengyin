@@ -430,6 +430,11 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
                     @Override
                     public boolean apply(WxContentCallbackInbox inbox, boolean callbackRisky)
                     {
+                        if (callbackRisky && Integer.valueOf(BIZ_TYPE_MEMBER_PROFILE).equals(inbox.getBizType()))
+                        {
+                            // 资料图按「哪张图违规清哪个字段」处理:二维码违规不连坐作品图,反之亦然。
+                            return clearRiskyMemberProfileMedia(inbox.getBizId(), inbox.getMediaHash());
+                        }
                         return processMediaCheckResult(inbox.getBizType(), inbox.getBizId(), traceId,
                                 callbackRisky);
                     }
@@ -721,6 +726,20 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
                 }
                 return confirmMutation(affected, "节点NPC头像违规已自动下架", bizId);
             }
+            else if (bizType == BIZ_TYPE_MERCHANT_NPC)
+            {
+                // bizId = npc_profile.id(scope_type=2)。只打回驳回态,不删图:玩家读闸 audit_status=1 立即失效,
+                // 商家端能看到驳回原因并换图重存。
+                int affected = npcProfileMapper.rejectMerchantNpcByContentSecurity(bizId);
+                if (affected <= 0)
+                {
+                    com.chengyinhub.business.domain.NpcProfile observed = npcProfileMapper.selectMerchantNpcById(bizId);
+                    return observed != null && Integer.valueOf(2).equals(observed.getAuditStatus())
+                            ? confirmAlreadyApplied("门店形象头像违规已打回", bizId)
+                            : confirmMutation(affected, "门店形象头像违规已打回", bizId);
+                }
+                return confirmMutation(affected, "门店形象头像违规已打回", bizId);
+            }
             else if (bizType == BIZ_TYPE_SQUARE)
             {
                 com.chengyinhub.business.domain.UmsCreativeSquare current =
@@ -920,6 +939,59 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
         }
     }
 
+    /**
+     * 用户资料违规图按字段清:头像命中清头像、联系二维码命中清二维码、作品图只摘掉命中的那一张。
+     * 调用前 inbox 事务已锁 ums_member 行并确认该哈希仍在当前资料里(isCurrentSubmittedMedia),
+     * 所以读改写不会和用户新保存交错;旧二维码的迟到回调在 isCurrent 一步就被判 stale,碰不到新图。
+     */
+    private boolean clearRiskyMemberProfileMedia(Long memberId, String mediaHash)
+    {
+        if (memberId == null || StringUtils.isEmpty(mediaHash))
+        {
+            return false;
+        }
+        UmsMember member = umsMemberMapper.selectUmsMemberById(memberId);
+        if (member == null)
+        {
+            return false;
+        }
+        boolean clearAvatar = containsMediaHash(mediaHash, member.getAvatar());
+        boolean clearWechat = containsMediaHash(mediaHash, member.getWechat());
+        boolean casePicsHit = containsMediaHash(mediaHash, member.getCasePics());
+        if (!clearAvatar && !clearWechat && !casePicsHit)
+        {
+            return false;
+        }
+        String remainingCasePics = casePicsHit ? withoutMediaHash(member.getCasePics(), mediaHash) : null;
+        int affected = umsMemberMapper.clearRiskyProfileMedia(memberId, clearAvatar, clearWechat,
+                casePicsHit, remainingCasePics);
+        return confirmMutation(affected, "用户资料违规图片已按字段清除", memberId);
+    }
+
+    /** 作品图串去掉命中哈希的那几张,其余原样保留(分号连接,与小程序写入口径一致);全去光返回 null。 */
+    private String withoutMediaHash(String casePics, String mediaHash)
+    {
+        if (StringUtils.isEmpty(casePics))
+        {
+            return null;
+        }
+        StringBuilder kept = new StringBuilder();
+        for (String part : casePics.split("[,;]"))
+        {
+            String url = part.trim();
+            if (url.isEmpty() || hashEquals(mediaHash, url))
+            {
+                continue;
+            }
+            if (kept.length() > 0)
+            {
+                kept.append(';');
+            }
+            kept.append(url);
+        }
+        return kept.length() == 0 ? null : kept.toString();
+    }
+
     private boolean confirmMutation(int affected, String action, Long bizId)
     {
         if (affected <= 0)
@@ -1052,7 +1124,8 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
                 return post != null && containsMediaHash(hash, post.getImages());
             case BIZ_TYPE_MEMBER_PROFILE:
                 UmsMember member = umsMemberMapper.selectUmsMemberById(id);
-                return member != null && containsMediaHash(hash, member.getAvatar(), member.getCasePics());
+                return member != null && containsMediaHash(hash, member.getAvatar(), member.getCasePics(),
+                        member.getWechat());
             case BIZ_TYPE_CLUB_PROFILE:
                 Club club = clubMapper.selectClubById(id);
                 return club != null && containsMediaHash(hash, club.getLogo(), club.getCover(), club.getCaseImages());
@@ -1063,6 +1136,9 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
             case BIZ_TYPE_NODE_NPC:
                 com.chengyinhub.business.domain.NpcProfile nodeNpc = npcProfileMapper.selectNodeNpcById(id);
                 return nodeNpc != null && containsMediaHash(hash, nodeNpc.getAvatar());
+            case BIZ_TYPE_MERCHANT_NPC:
+                com.chengyinhub.business.domain.NpcProfile merchantNpc = npcProfileMapper.selectMerchantNpcById(id);
+                return merchantNpc != null && containsMediaHash(hash, merchantNpc.getAvatar());
             case BIZ_TYPE_SQUARE:
                 UmsCreativeSquare square = umsCreativeSquareService.selectUmsCreativeSquareById(id);
                 return square != null && containsMediaHash(hash,

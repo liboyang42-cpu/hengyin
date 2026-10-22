@@ -20,6 +20,7 @@
 .task-card__title-row { display: flex; align-items: flex-start; gap: var(--cy-space-2); }
 .task-card__title { flex: 1; min-width: 0; color: var(--cy-color-text-primary); font-size: var(--cy-type-card-title); font-weight: 700; }
 .task-card__sub, .task-card__meta, .task-card__progress-text { display: block; margin-top: var(--cy-space-1); color: var(--cy-color-text-secondary); font-size: var(--cy-type-caption); }
+.task-card__source { display: block; margin-top: var(--cy-space-1); color: var(--cy-color-text-tertiary, var(--cy-color-text-secondary)); font-size: var(--cy-type-caption); }
 .task-card__progress { margin-top: var(--cy-space-2); }
 .task-card__bar { height: var(--cy-space-1); overflow: hidden; border-radius: var(--cy-radius-pill); background: var(--cy-color-border-subtle); }
 .task-card__bar-fill { height: 100%; border-radius: inherit; background: var(--cy-color-text-primary); }

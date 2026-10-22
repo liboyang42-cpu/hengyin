@@ -134,7 +134,8 @@ function createUploadClient(deps) {
       record.watchdog = schedule(function () {
         var task = record.task;
         record.task = null;
-        settle(index, { status: 'unknown', msg: '上传超时，请重试此文件' });
+        // retryable：网络/超时/HTTP 5xx，原文件可原样重传；其余失败由调用方让用户换文件。
+        settle(index, { status: 'unknown', retryable: true, msg: '上传超时，请重试此文件' });
         try { if (task && typeof task.abort === 'function') task.abort(); } catch (e) {}
       }, perFileTimeoutMs);
 
@@ -192,6 +193,11 @@ function createUploadClient(deps) {
         success: function (res) {
           if (!isCurrentOwner()) return;
           if (res.statusCode == 426) { settle(index, { status: 'failed', reason: 'upgradeRequired', msg: '当前版本需要更新，请先保存内容并重新打开小程序' }); return; }
+          if (Number(res.statusCode) >= 500) {
+            var body = null;
+            try { body = JSON.parse(res.data); } catch (e) {}
+            settle(index, { status: 'failed', retryable: true, msg: safeUserMessage(body, '服务暂时不可用，请重试此文件') }); return;
+          }
           var data;
           try { data = JSON.parse(res.data); }
           catch (e) { settle(index, { status: 'failed', msg: '上传结果解析失败' }); return; }
@@ -199,7 +205,7 @@ function createUploadClient(deps) {
           accept(data);
         },
         fail: function (res) {
-          settle(index, { status: 'failed', msg: safeUserMessage(res, '上传失败') });
+          settle(index, { status: 'failed', retryable: true, msg: safeUserMessage(res, '上传失败') });
         }
       });
       if (active[index] === record) record.task = task || null;
@@ -223,7 +229,7 @@ function createUploadClient(deps) {
       for (var i = 0; i < total; i++) {
         if (!settled[i]) {
           settled[i] = true;
-          failures.push({ index: i, filePath: filePaths[i], status: 'unknown', msg: '上传结果未知，请重试此文件' });
+          failures.push({ index: i, filePath: filePaths[i], status: 'unknown', retryable: true, msg: '上传结果未知，请重试此文件' });
         }
       }
       settledCount = total;

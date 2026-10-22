@@ -187,6 +187,25 @@ public class ApiAiNpcController extends BaseController
     }
 
     /**
+     * 按 requestId 只读回读一条 NPC 对话原请求的状态与回复(关闭/重开后恢复,不重发)。
+     *
+     * <p>不挂 chatOn()/shopChatOn()/merchantChatOn():开关只拦新提问;回读只返回本人已落库的那一条,
+     * 不进模型、不扣额度。归属在 Service 里按 本人 + 原会话/原店 + 原 requestId 限定,
+     * 任一不符一律 INVALID_REQUEST,不区分「不存在」与「不是你的」。
+     *
+     * @param scope roam | merchant | shop,与发起时的端点一一对应
+     */
+    @Operation(summary = "NPC对话原请求回读")
+    @RateLimiter(time = 60, count = 60, limitType = LimitType.MEMBER)
+    @GetMapping("/chat/request")
+    public AjaxResult chatRequest(@RequestParam(required = false) String requestId,
+                                  @RequestParam(required = false) String scope,
+                                  @RequestParam(required = false) Long bizId)
+    {
+        return success(npcChatService.readOriginalRequest(scope, bizId, requestId, getAppUserId()));
+    }
+
+    /**
      * 门店分身自由追问(自由探索:卡片详情 → 店铺卡 → 对话)。
      *
      * <p>与 /chat 的分工:那条是全局 NPC 聊漫游进度,这条是**这一家店的分身**聊这家店。

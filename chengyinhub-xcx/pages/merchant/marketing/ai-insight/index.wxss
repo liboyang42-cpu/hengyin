@@ -393,6 +393,7 @@
 }
 .ai-op-k { flex: none; font-size: var(--cy-font-caption); font-weight: 700; color: var(--cy-text-title); }
 .ai-op-txt { flex: 1; font-size: var(--cy-font-caption); line-height: 1.6; color: var(--cy-text-secondary); }
+.ai-source { display: block; margin-top: var(--cy-space-2-5); font-size: var(--cy-font-caption); line-height: 1.5; color: var(--cy-text-secondary); }
 .ai-card--down { text-align: center; }
 .ai-down-title { display: block; font-size: var(--cy-font-body); font-weight: 700; color: var(--cy-text-title); }
 .ai-down-txt { font-size: var(--cy-font-label); color: var(--cy-text-secondary); }

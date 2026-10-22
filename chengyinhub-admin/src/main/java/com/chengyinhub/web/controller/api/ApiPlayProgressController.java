@@ -2962,6 +2962,13 @@ public class ApiPlayProgressController extends BaseController
         if(topicRouteRuntimeService!=null && topicRouteRuntimeService.genericPlayer(memberId,node.getTopicId(),actId))throw new ServiceException("通用个人任务请使用任务结算，不能领取旧节点奖励",409);
         String advancedOutcomeCode = advancedGameRuntimeService == null ? null
                 : advancedGameRuntimeService.completeGate(memberId, actId, node.getTopicId(), node.getId());
+        // C1 传感器可信边界(选项 A):设备自报成绩(反应毫秒/撞击数/heldMs/停表/方位)、拍照兜底放行、
+        // 静态节点码匹配都证明不了「真做到了」⇒ 本节点只发探索值与徽章,不发积分/券/掉落。
+        // 主题通关奖与碎片文不在这一刀里(仍按调用方原口径)。
+        RewardPolicy topicRewardPolicy = rewardPolicy;
+        boolean rewardCapped = rewardPolicy == RewardPolicy.FULL && advancedGameRuntimeService != null
+                && advancedGameRuntimeService.rewardCappedToXpBadge(memberId, actId, node.getTopicId(), node.getId());
+        if (rewardCapped) rewardPolicy = RewardPolicy.XP_BADGE_ONLY;
         Map<String, Object> conditionalReward = null;
         // ③ 与 ①② 在本方法里有两处分歧(首完判据 + 发奖范围),求一次共用,免得两处各判各的再漂开。
         boolean shopDay = resolveMode(actId, node.getTopicId()) == PlayMode.FREE_COLLECT;
@@ -3049,7 +3056,7 @@ public class ApiPlayProgressController extends BaseController
                     advancedOutcomeCode != null ? advancedOutcomeCode : trustedOutcomeCode,
                     shopDay, rewardPolicy, picUrl);
             // FE-01:完成节点若有碎片文,持久化到 member 级收集(幂等,供成就大屏聚合)
-            if (rewardPolicy == RewardPolicy.FULL && StringUtils.isNotBlank(node.getFragmentText())) {
+            if (topicRewardPolicy == RewardPolicy.FULL && StringUtils.isNotBlank(node.getFragmentText())) {
                 collect(memberId, com.chengyinhub.business.domain.MemberCollectible.TYPE_FRAGMENT,
                         node.getTopicId(), node.getId(), node.getFragmentText());
             }
@@ -3127,9 +3134,9 @@ public class ApiPlayProgressController extends BaseController
         if (routeState != null && routeState.getOpening() != null
                 && !Boolean.TRUE.equals(routeState.getOpening().get("complete"))) completed = false;
         if (completed) {
-            com.chengyinhub.business.domain.vo.TopicCompletionAwardVO award = rewardPolicy == RewardPolicy.FULL
+            com.chengyinhub.business.domain.vo.TopicCompletionAwardVO award = topicRewardPolicy == RewardPolicy.FULL
                     ? topicCompletionAwardService.grantOnce(memberId, node.getTopicId(), actId, null)
-                    : topicCompletionAwardService.grantOnce(memberId, node.getTopicId(), actId, null, rewardPolicy);
+                    : topicCompletionAwardService.grantOnce(memberId, node.getTopicId(), actId, null, topicRewardPolicy);
             newBadges.addAll(award.getBadges());
             earnedXp += award.getEarnedXp();
         }
@@ -3146,6 +3153,8 @@ public class ApiPlayProgressController extends BaseController
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("nodeId", node.getId());
         data.put("firstTime", firstTime);
+        // 界面据此说清「这一站只记探索值与徽章」,不自行补发或换旧路径领奖
+        if (rewardCapped) data.put("rewardCeiling", RewardPolicy.XP_BADGE_ONLY.name());
         data.put("done", done);
         data.put("total", total);
         data.put("completed", completed);

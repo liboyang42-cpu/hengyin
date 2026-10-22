@@ -49,6 +49,7 @@
 
     <!-- 安全提示钉在首屏:这玩法要人举着手机原地转,别让人边走边玩 -->
     <view wx:if="{{phase === 'idle' && !done}}" class="cp__safe">找个能站稳的地方再开始</view>
+    <view wx:if="{{rewardNote}}" class="cp__safe">{{rewardNote}}</view>
   </view>
 </cy-play-stage>
 
