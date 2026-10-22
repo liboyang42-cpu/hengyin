@@ -73,6 +73,9 @@ MYBATIS_ITS=(
   #   FINISH 后复盘=结果行、订单/库存/权益/奖励=实际履约、二次 FINISH 不改任何行。真库真 mapper 才验得动。
   GameSessionScanLegalMySqlIT
   GameSessionCityEndMySqlIT
+  # 2026-10-22 发布验收 P1(导演台/商家城市节点/玩家城市局):准备→商家就绪→名单→开局、并发准备、
+  #   全员/定向广播与存活范围、同 requestId 只补发失败投递、单站暂停/恢复与玩家读回、队伍/账号隔离。
+  CityDirectorConsoleMySqlIT
   HangoutAuditLockMyBatisIT
   ImSendIdempotencyMybatisIntegrationTest
   # R9-02 迟到下注竞态:两个真事务交错(结算等锁定读、锁定读拒已结算),Mock 单测测不到
