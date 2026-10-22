@@ -471,6 +471,11 @@ public class JourneyStoryValidator {
             }
             return;
         }
+        if (StoryVocabulary.isCondition(op)) {
+            StoryVocabulary.validateCondition(condition, path, ctx.nodeIds,
+                    (childPath, child) -> requireCondition(child, childPath, ctx));
+            return;
+        }
         if (!COMPARE_OPS.contains(op)) {
             throw new IllegalArgumentException(path + ".op 不支持:" + op);
         }

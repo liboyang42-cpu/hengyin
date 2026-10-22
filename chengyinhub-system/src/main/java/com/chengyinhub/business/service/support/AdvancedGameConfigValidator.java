@@ -1872,6 +1872,10 @@ public class AdvancedGameConfigValidator {
             requireStateTag(item, label);
             return;
         }
+        if (StoryVocabulary.isCondition(op)) {
+            StoryVocabulary.validateCondition(item, label, null, (path, child) -> validateCondition(child, path));
+            return;
+        }
         if (!COMPARISON_OPS.contains(op)) {
             throw new IllegalArgumentException(label + " 的 op 只能是 "
                     + "EQ、NE、GT、GTE、LT、LTE、HAS_TAG 或 NODE_COMPLETED");
@@ -1929,6 +1933,10 @@ public class AdvancedGameConfigValidator {
             }
             if ("ADD_TAG".equals(op)) {
                 requireStateTag(item, label);
+                continue;
+            }
+            if (StoryVocabulary.isEffect(op)) {
+                StoryVocabulary.validateEffect(item, label);
                 continue;
             }
             if (!EFFECT_OPS.contains(op)) {
