@@ -32,7 +32,18 @@
 | AuditTaskImModerationUnreadTest(新) | 3/3 通过 |
 | ImMessageReviewVisibilityMyBatisTest | 3/3 通过 |
 
-CI:见 PR #458 checks(run ID 与结果见 PR 的 checks 页;本文件写于 CI 跑完前)。
+CI(PR #458,head `c41fb60`,35 个 check 全部 success / 按改动范围 skipped,0 failure):
+
+| Workflow run | 关键 job | 结果 |
+|---|---|---|
+| 39757240789(ci.yml) | Backend tests(job 119753103271,真 MySQL 8.0.45,含全部 *MyBatisTest) | success |
+| 39757240789 | Mini program static gates / static checks / unit shard 1–20 / Migration safety & layout / Secret scan / Fast gates | success |
+| 39757240900 | Funds MySQL IT + gate self-test | success |
+| 39757240957 | Followup 39 selected backend cases | success |
+| 39757240761 | isolated-authenticated-redis-recovery | success |
+
+注:旧 head `27bd696` 上的 "Mini program static checks" 红是因为推送 docs 提交后 unit/static 子 job 被 cancelled(汇总 job 判 cancelled≠success),非真实失败;新 head 已绿。
+本地全量 `mvn test -pl chengyinhub-system,chengyinhub-admin`:12956 个用例,Failures 0;25 个 Error 全部是 `business.it.*` 真库测试在沙箱无 MySQL 时的 `Connection refused`(fail-closed 设计),CI 有 MySQL 已全绿。
 
 ## 验收清单
 - [x] 先写测试证明各完成方式写 progress;不写的(个人玩法)先修口径
