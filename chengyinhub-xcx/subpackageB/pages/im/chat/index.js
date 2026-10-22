@@ -458,7 +458,7 @@ Page({
         success(res) {
           if (!current() || topicEpoch !== (that._topicEpoch || 0)) return;
           const d = (res && res.code == 200) ? res.data : null;
-          // 拉不到/已下架 → 记 null,渲染层出降级态「该路线已下架」
+          // 拉不到 → 记 null,渲染层出泛称降级态「暂不可用」:网络失败同样是 null,不能说成已下架/不公开
           that.setData({ ['topicCache.' + id]: d || null });
         },
         fail() { if (current() && topicEpoch === (that._topicEpoch || 0)) that.setData({ ['topicCache.' + id]: null }); },
@@ -1023,7 +1023,7 @@ Page({
     const id = e.currentTarget.dataset.topicid;
     if (!id || this._navigating) return; // 跳转中不响应连点
     // 只在「确认下架」(null)时拦;加载中(undefined)放行 —— 详情页自己会加载
-    if (this.data.topicCache[id] === null || this.data.topicCache[id] && this.data.topicCache[id].name === '路线已不可用') { app.tips && app.tips('该路线已下架'); return; }
+    if (this.data.topicCache[id] === null || this.data.topicCache[id] && this.data.topicCache[id].name === '路线已不可用') { app.tips && app.tips('该路线暂不可用'); return; }
     this._navigating = true; wx.navigateTo({ url: '/pages/topic/index/index?id=' + id, complete: () => { this._navigating = false; } });
   },
 
