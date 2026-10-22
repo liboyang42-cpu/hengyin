@@ -148,6 +148,8 @@
             accessibility-label="查看{{item.memberNickname || '城瘾玩家'}}的动态"
             bind:detail="onPostDetail" bind:user="onPostUser" bind:preview="onPreviewImage"
             bind:like="onLikePost" bind:comment="onToggleComments" bind:playdetail="onPostReference" bind:play="onPostReferencePlay">
+            <!-- F0098:被引对象当前不可见 ⇒ 只给中性标签,不显示标题封面,也不猜是删了还是转私密 -->
+            <view slot="special" class="post-ref-unavailable" wx:if="{{item.refUnavailable}}">引用不可用</view>
             <view slot="moderation" class="post-moderation">
               <view class="post-moderation__action" wx:if="{{item.authorMemberId == myMemberId || (canModerateContent && item.type == 2)}}" catchtap="onEditPost" data-id="{{item.id}}" aria-role="button" aria-label="编辑动态" hover-class="cy-pressed" hover-stay-time="80">编辑</view>
               <view class="post-moderation__action" wx:if="{{canModerateContent && item.type == 2}}" catchtap="onTogglePin" data-id="{{item.id}}" aria-role="button" aria-label="{{item.isPinned ? '取消置顶公告' : '置顶公告'}}" hover-class="cy-pressed" hover-stay-time="80">{{item.isPinned ? '取消置顶' : '置顶'}}</view>
@@ -255,6 +257,12 @@
           <view class="event-calendar-title">{{eventCalendarTitle}}</view>
           <view class="event-calendar-shift" data-delta="1" catchtap="onShiftEventMonth" aria-role="button" aria-label="下一个月" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="arrow-right" size="28" /></view>
         </view>
+        <!-- W10a #19:说明当前月历数据口径。只有拿到本月真实场次才说「按场次」,否则声明仅已加载主题。 -->
+        <view class="event-calendar-notice" aria-live="polite">
+          <text>{{eventCalendarNotice}}</text>
+          <text wx:if="{{eventCalendarSessionState === 'error'}}" class="event-calendar-retry" catchtap="loadCalendarSessions"
+                aria-role="button" aria-label="重新加载本月场次" hover-class="cy-pressed" hover-stay-time="80">重试</text>
+        </view>
         <view class="event-calendar-week">
           <text wx:for="{{eventWeekdays}}" wx:key="*this">{{item}}</text>
         </view>
@@ -262,14 +270,15 @@
           <view class="event-calendar-day {{day.inMonth ? '' : 'is-outside'}} {{day.events.length ? 'has-event' : ''}}"
             wx:for="{{eventCalendarCells}}" wx:for-item="day" wx:key="key">
             <text class="event-calendar-number">{{day.day}}</text>
-            <view class="event-calendar-item" wx:for="{{day.events}}" wx:for-item="event" wx:key="id"
+            <view class="event-calendar-item" wx:for="{{day.events}}" wx:for-item="event" wx:key="calendarKey"
               bindtap="goTopic" data-id="{{event.id}}" aria-role="button" aria-label="打开活动 {{event.name || '未命名活动'}}" hover-class="cy-pressed" hover-stay-time="80">
               {{event.name || '活动'}}
             </view>
           </view>
         </view>
         <cy-error wx:if="{{topicState === 'error'}}" load-failure="{{true}}" />
-        <cy-empty wx:elif="{{topicsLoaded && !eventCalendarHasEvents}}" size="sm" title="本月暂无活动" sub="左右切换查看其他月份" />
+        <cy-empty wx:elif="{{eventCalendarSource === 'sessions' && !eventCalendarHasEvents}}" size="sm" title="本月暂无场次" sub="左右切换查看其他月份" />
+        <cy-empty wx:elif="{{topicsLoaded && !eventCalendarHasEvents}}" size="sm" title="已加载主题中本月暂无活动" sub="这不代表本月没有排期" />
       </view>
     </view>
 
@@ -551,7 +560,10 @@
               catchtap="stopShareBubble">带票分享</button>
           </view>
         </view>
-        <cy-empty wx:else title="还没有可分享的自由探索期次" sub="期次开售并绑定本俱乐部后会出现在这里" />
+        <!-- W10a #26:空态原因只来自服务端 reasonCode(未承接 / 已承接未开售 / 无权限),不从空数组猜。 -->
+        <cy-empty wx:elif="{{shareEditionEmptyRetry}}" title="{{shareEditionEmptyTitle}}" sub="{{shareEditionEmptySub}}"
+                  cta="重新加载" bind:cta="loadShareEditions" />
+        <cy-empty wx:else title="{{shareEditionEmptyTitle}}" sub="{{shareEditionEmptySub}}" />
         </view>
       </view>
 

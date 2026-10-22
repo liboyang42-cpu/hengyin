@@ -1,10 +1,13 @@
 package com.chengyinhub.business.service.impl;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -51,13 +54,67 @@ class WxPaymentCallbackInboxServiceImplTest
         WxPaymentCallbackInboxServiceImpl service = new WxPaymentCallbackInboxServiceImpl();
         ReflectionTestUtils.setField(service, "mapper", mapper);
 
+        when(mapper.selectByNotifyHash(WxPaymentCallbackInboxServiceImpl.sha256Hex("wx-notify-1")))
+                .thenReturn(original(WxPaymentCallbackInbox.BIZ_TYPE_PAYMENT, 7L, "SUCCESS"));
+        AlarmService alarm = mock(AlarmService.class);
+        ReflectionTestUtils.setField(service, "alarmService", alarm);
+
         assertTrue(service.register("wx-notify-1", WxPaymentCallbackInbox.BIZ_TYPE_PAYMENT, 7L, "SUCCESS"));
         assertFalse(service.register("wx-notify-1", WxPaymentCallbackInbox.BIZ_TYPE_PAYMENT, 7L, "SUCCESS"));
 
         // 唯一键兜底「只落一行」由 MySQL IT 证明(见 WxPaymentCallbackFencingMySqlIT);
-        // 这里证明重复投递仍走幂等 insert,不会走第二条写入路径。
+        // 这里证明重复投递仍走幂等 insert,不会走第二条写入路径;同一业务的重投不告警。
         verify(mapper, times(2)).insertIgnore(any(WxPaymentCallbackInbox.class));
         verify(mapper, never()).selectForUpdate(anyString());
+        verifyNoInteractions(alarm);
+    }
+
+    @Test
+    void sameNotifyHashForDifferentBusinessIsRejectedAndAlarmedNotTreatedAsDuplicate()
+    {
+        WxPaymentCallbackInbox[] originals = {
+                original(WxPaymentCallbackInbox.BIZ_TYPE_PAYMENT, 8L, "SUCCESS"),
+                original(WxPaymentCallbackInbox.BIZ_TYPE_REFUND, 7L, "SUCCESS"),
+                original(WxPaymentCallbackInbox.BIZ_TYPE_PAYMENT, 7L, "REFUND"),
+                null };
+        for (WxPaymentCallbackInbox stored : originals)
+        {
+            WxPaymentCallbackInboxMapper mapper = mock(WxPaymentCallbackInboxMapper.class);
+            when(mapper.insertIgnore(any(WxPaymentCallbackInbox.class))).thenReturn(0);
+            when(mapper.selectByNotifyHash(WxPaymentCallbackInboxServiceImpl.sha256Hex("wx-notify-raw")))
+                    .thenReturn(stored);
+            AlarmService alarm = mock(AlarmService.class);
+            WxPaymentCallbackInboxServiceImpl service = new WxPaymentCallbackInboxServiceImpl();
+            ReflectionTestUtils.setField(service, "mapper", mapper);
+            ReflectionTestUtils.setField(service, "alarmService", alarm);
+
+            assertThrows(IWxPaymentCallbackInboxService.IdentityConflictException.class,
+                    () -> service.register("wx-notify-raw", WxPaymentCallbackInbox.BIZ_TYPE_PAYMENT, 7L, "SUCCESS"));
+
+            verify(alarm).alarmThrottled(eq("payment.callback.inbox_identity_conflict"), anyString(),
+                    argThat(detail -> detail.contains("bizId=7") && !detail.contains("wx-notify-raw")));
+            verify(mapper, never()).claim(anyString(), anyString());
+            verify(mapper, never()).markDone(anyString(), anyString(), anyLong());
+        }
+    }
+
+    @Test
+    void identityConflictDoesNotMarkSurroundingTransactionRollbackOnly() throws Exception
+    {
+        org.springframework.transaction.annotation.Transactional tx = WxPaymentCallbackInboxServiceImpl.class
+                .getMethod("register", String.class, int.class, Long.class, String.class)
+                .getAnnotation(org.springframework.transaction.annotation.Transactional.class);
+        assertTrue(java.util.Arrays.asList(tx.noRollbackFor())
+                .contains(IWxPaymentCallbackInboxService.IdentityConflictException.class));
+    }
+
+    private static WxPaymentCallbackInbox original(int bizType, long bizId, String eventType)
+    {
+        WxPaymentCallbackInbox row = new WxPaymentCallbackInbox();
+        row.setBizType(bizType);
+        row.setBizId(bizId);
+        row.setEventType(eventType);
+        return row;
     }
 
     @Test

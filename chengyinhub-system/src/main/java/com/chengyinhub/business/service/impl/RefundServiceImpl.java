@@ -395,9 +395,14 @@ public class RefundServiceImpl implements IRefundService {
         }
         // P1:回调先落 inbox 去重(表 wx_payment_callback_inbox,notify_hash 唯一键);
         // 重投只多一次 insert ignore,不影响下方 ACK 与状态推进语义。
-        wxPaymentCallbackInboxService.register(
-                "REFUND:" + outRefundNo + ":" + (refundStatus == null ? "" : refundStatus),
-                WxPaymentCallbackInbox.BIZ_TYPE_REFUND, refund.getId(), refundStatus);
+        // 同一 notify 已登记为另一笔业务 = 身份冲突(register 内已告警):回 FAIL,不推进状态。
+        try {
+            wxPaymentCallbackInboxService.register(
+                    "REFUND:" + outRefundNo + ":" + (refundStatus == null ? "" : refundStatus),
+                    WxPaymentCallbackInbox.BIZ_TYPE_REFUND, refund.getId(), refundStatus);
+        } catch (IWxPaymentCallbackInboxService.IdentityConflictException conflict) {
+            return false;
+        }
         // updatePayoutResult 的 WHERE 只允许从待派发/处理中/待人工(5/0/2)置位,
         // 不会覆盖人工已处理(3/4)的成果
         if ("SUCCESS".equalsIgnoreCase(refundStatus)) {

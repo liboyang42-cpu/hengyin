@@ -4,8 +4,10 @@ import com.chengyinhub.business.domain.AgreementDocument;
 import com.chengyinhub.business.service.IAgreementDocumentService;
 import com.chengyinhub.business.service.IConsentRecordService;
 import com.chengyinhub.common.annotation.Anonymous;
+import com.chengyinhub.common.constant.HttpStatus;
 import com.chengyinhub.common.core.controller.BaseController;
 import com.chengyinhub.common.core.domain.AjaxResult;
+import com.chengyinhub.common.exception.ServiceException;
 import com.chengyinhub.common.utils.StringUtils;
 import com.chengyinhub.common.utils.ip.IpUtils;
 import io.swagger.v3.oas.annotations.Operation;
@@ -25,6 +27,8 @@ import java.util.Map;
 @Tag(name = "协议文档")
 @RequestMapping("/api/agreement")
 public class ApiAgreementController extends BaseController {
+    static final String CONSENT_REQUEST_CONFLICT = "CONSENT_REQUEST_CONFLICT";
+
     @Autowired
     private IAgreementDocumentService agreementDocumentService;
 
@@ -70,8 +74,16 @@ public class ApiAgreementController extends BaseController {
         if (document == null) {
             return error("协议暂未发布");
         }
-        consentRecordService.record(memberId, type, document.getVersion(), "app_launch", "AGREE", requestId,
-                IpUtils.getIpAddr(request));
+        try {
+            consentRecordService.record(memberId, type, document.getVersion(), "app_launch", "AGREE", requestId,
+                    IpUtils.getIpAddr(request));
+        } catch (ServiceException e) {
+            // 同一 requestId 已属于其他同意事件（含其他账号）：不得回成功，也不回显原事件。
+            if (e.getCode() == null || e.getCode() != HttpStatus.CONFLICT) throw e;
+            AjaxResult conflict = AjaxResult.error(HttpStatus.CONFLICT, e.getMessage());
+            conflict.put("errorCode", CONSENT_REQUEST_CONFLICT);
+            return conflict;
+        }
         return success();
     }
 

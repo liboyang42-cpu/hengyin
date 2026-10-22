@@ -7,7 +7,7 @@ function positiveId(value) {
   if (typeof value !== 'number' && (typeof value !== 'string' || !/^\d+$/.test(value))) return false;
   return Number.isSafeInteger(Number(value)) && Number(value) > 0;
 }
-// 原单号仅展示：字符串保留 Java Long 的精度，不能经 Number 转换。
+// 内部记录编号（SettlementClaim 行 id）仅供联系客服核对，不是收据或结算单号；字符串保留 Java Long 的精度，不能经 Number 转换。
 function claimNumber(value) {
   if (typeof value === 'number') return positiveId(value) ? String(value) : '';
   if (typeof value !== 'string' || !/^\d+$/.test(value)) return '';

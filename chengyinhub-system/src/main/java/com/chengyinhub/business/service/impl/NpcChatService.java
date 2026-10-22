@@ -64,6 +64,9 @@ public class NpcChatService
     private static final String SAFE_IN_PROGRESS = "上一条问题还在处理中，请稍后再试。";
     private static final String SAFE_REQUEST_TIMEOUT = "本次请求等待超时，请重新发送。";
     private static final String SAFE_SHOP_NO_PROFILE = "这家店的分身还没上线，去店里问问店主吧。";
+    private static final String SAFE_REQUEST_NOT_FOUND = "原问题没有送达，可以再发一次。";
+    /** 回读专用：服务端没有这条 requestId 的记录（从未送达或已过保留期）。不是请求终态。 */
+    public static final String STATUS_NOT_FOUND = "NOT_FOUND";
 
     @Autowired
     private AiGatewayService aiGatewayService;
@@ -616,6 +619,52 @@ public class NpcChatService
             if(!Long.valueOf(-nodeId).equals(stored.getSessionId())) return requestScopeMismatch(requestId);
             return fromStored(stored);
         } catch(RuntimeException unavailable) { return unavailableOutcome(requestId, true); }
+    }
+
+    /**
+     * 按 requestId 只读回读原请求（关闭/重开后恢复待回答问题，不重发）。
+     * 不进模型、不扣额度、不重新判资格或开关；严格限定本人 + 原会话/原店 + 原 requestId。
+     * scope: roam → bizId 为漫游会话；merchant → bizId 为商家；shop → bizId 为节点。
+     */
+    public NpcChatResp readOriginalRequest(String scope, Long bizId, String requestId, Long userId)
+    {
+        String rid = requestId == null ? null : requestId.trim();
+        if (userId == null || userId <= 0)
+        {
+            return response(rid, NpcChatRequest.STATUS_FAILED, "NOT_RUN", "UNAUTHENTICATED", null,
+                    false, true, "请重新登录后再试。");
+        }
+        Long sessionKey = readbackSessionKey(scope, bizId);
+        if (sessionKey == null || !nonBlank(rid) || rid.length() > REQUEST_ID_MAX || !UUID_PATTERN.matcher(rid).matches())
+        {
+            return requestScopeMismatch(rid);
+        }
+        NpcChatRequest stored;
+        try
+        {
+            stored = npcChatWriteService.read(userId, rid);
+        }
+        catch (RuntimeException e)
+        {
+            log.error("[NpcChat] readback lookup failed userId={} requestId={}", userId, rid, e);
+            return unavailableOutcome(rid, true);
+        }
+        if (stored == null)
+        {
+            return response(rid, STATUS_NOT_FOUND, "NOT_RUN", "REQUEST_NOT_FOUND", null,
+                    true, false, SAFE_REQUEST_NOT_FOUND);
+        }
+        if (!sessionKey.equals(stored.getSessionId())) return requestScopeMismatch(rid);
+        return fromStored(stored);
+    }
+
+    private static Long readbackSessionKey(String scope, Long bizId)
+    {
+        if (bizId == null || bizId <= 0 || bizId > MAX_CHAT_ENTITY_ID) return null;
+        if ("roam".equals(scope)) return bizId;
+        if ("merchant".equals(scope)) return -(MAX_CHAT_ENTITY_ID + bizId);
+        if ("shop".equals(scope)) return -bizId;
+        return null;
     }
 
     private NpcChatResp requestScopeMismatch(String requestId) {

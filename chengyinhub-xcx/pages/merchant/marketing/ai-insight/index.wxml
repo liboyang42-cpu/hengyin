@@ -214,6 +214,8 @@
       <view class="ai-op" wx:if="{{ai.problem}}">
         <text class="ai-op-k">问题</text><text class="ai-op-txt">{{ai.problem}}</text>
       </view>
+      <!-- PC-233:智能解读与当日缓存同版——喂 AI 的是生成时的经营数据与档案,今天改档案对解读次日生效 -->
+      <text class="ai-source" wx:if="{{generatedAt}}">解读依据 {{generatedAt}} 的经营数据与当时的档案；今天修改的档案次日生效</text>
     </view>
     <view wx:else class="ai-card ai-card--down">
       <text class="ai-down-title">{{factState === 'unknown' ? '基础数据暂未完整返回' : '基础数据可用'}}</text>

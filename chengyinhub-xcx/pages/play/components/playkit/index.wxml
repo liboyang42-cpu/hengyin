@@ -89,15 +89,18 @@
 
 <cy-playkit-quiethold wx:elif="{{kit.type === 'quiethold'}}"
   show="{{show}}" kicker="{{kit.kicker}}" sub="{{kit.sub}}" seconds="{{kit.seconds}}"
+  attempt-id="{{kit.attemptId}}" reward-ceiling="{{kit.rewardCeiling}}"
   bind:start="onStart" bind:submit="onSubmit" bind:verdict="onVerdict" bind:micdenied="onMicDenied" bind:close="onClose" />
 
 <cy-playkit-compass wx:elif="{{kit.type === 'compass'}}"
   show="{{show}}" kicker="{{kit.kicker}}" target="{{kit.bearing}}" tolerance="{{kit.tolerance}}"
   hold-seconds="{{kit.holdSeconds}}" hint="{{kit.hint}}" done="{{kit.done}}"
+  attempt-id="{{kit.attemptId}}" reward-ceiling="{{kit.rewardCeiling}}"
   bind:submit="onSubmit" bind:verdict="onVerdict" bind:close="onClose" />
 
 <cy-playkit-shout wx:elif="{{kit.type === 'shout'}}"
   show="{{show}}" kicker="{{kit.kicker}}" seconds="{{kit.seconds}}"
+  attempt-id="{{kit.attemptId}}" reward-ceiling="{{kit.rewardCeiling}}"
   bind:start="onStart" bind:submit="onSubmit" bind:verdict="onVerdict" bind:micdenied="onMicDenied" bind:close="onClose" />
 
 <cy-playkit-countdown wx:elif="{{kit.type === 'countdown'}}"
@@ -107,6 +110,7 @@
 <cy-playkit-stopwatch wx:elif="{{kit.type === 'stopwatch'}}"
   show="{{show}}" kicker="{{kit.kicker}}" target-seconds="{{kit.targetSeconds}}"
   tolerance-ms="{{kit.toleranceMs}}" tries="{{kit.tries}}"
+  attempt-id="{{kit.attemptId}}" reward-ceiling="{{kit.rewardCeiling}}"
   bind:start="onStart" bind:submit="onSubmit" bind:verdict="onVerdict" bind:close="onClose" />
 
 <cy-playkit-qa wx:elif="{{kit.type === 'qa'}}"
@@ -198,6 +202,7 @@
   fallback="{{kit.fallback}}" tries="{{kit.tries}}" passed="{{kit.passed}}"
   flagged="{{kit.flagged}}" degraded="{{kit.degraded}}" last-reason="{{kit.lastReason}}"
   last-url="{{kit.lastUrl}}" card="{{kit.card}}"
+  photo-verified="{{kit.photoVerified}}" reward-ceiling="{{kit.rewardCeiling}}"
   frame-url="{{kit.frameUrl}}" frame-opacity="{{kit.frameOpacity}}" inline="{{inline}}"
   bind:shoot="onShoot" bind:close="onClose" />
 
@@ -233,5 +238,5 @@
   bind:submit="onSubmit" bind:close="onClose" />
 
 <cy-playkit-album wx:if="{{kit.type === 'album'}}" show="{{show}}" title="{{kit.title}}" images="{{kit.images}}"
-  completion-enabled="{{kit.completionEnabled}}" done="{{kit.done}}" uploaded="{{kit.uploaded}}"
+  completion-enabled="{{kit.completionEnabled}}" done="{{kit.done}}" uploaded="{{kit.uploaded}}" upload-failure="{{kit.uploadFailure}}"
   bind:shoot="onShoot" bind:submit="onSubmit" bind:close="onClose" />

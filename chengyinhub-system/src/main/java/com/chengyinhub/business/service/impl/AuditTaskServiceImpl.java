@@ -77,6 +77,7 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
     public static final String ERROR_REVERT_EXPIRED = "REVERT_EXPIRED";
     public static final String ERROR_REVIEW_KEY_REUSED = "AUDIT_REVIEW_IDEMPOTENCY_KEY_REUSED";
     public static final String ERROR_REVIEW_FORBIDDEN = "AUDIT_REVIEW_REPLAY_FORBIDDEN";
+    public static final String ERROR_REVIEW_STALE_LEVEL = "AUDIT_REVIEW_STALE_LEVEL";
     public static final String ERROR_APPEAL_BAD_REQUEST = "APPEAL_BAD_REQUEST";
     public static final String ERROR_APPEAL_FORBIDDEN = "APPEAL_FORBIDDEN";
     public static final String ERROR_APPEAL_NOT_ELIGIBLE = "APPEAL_NOT_ELIGIBLE";
@@ -757,6 +758,13 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         }
         if (versionedReview && !request.getExpectedVersion().equals(task.getVersion())) {
             throw new ServiceException("审核内容已变化，请刷新后重试", HttpStatus.CONFLICT);
+        }
+        // #334 F10:非版本化类型也不允许升级前那一级的迟到决定裁决已升级(ESCALATED)的单 ——
+        // 裁决升级单必须带上看到的版本,且须是升级之后的版本(升级 CAS 会把 version+1)。
+        if (!versionedReview && AuditTask.STATUS_ESCALATED.equals(task.getStatus())
+                && !task.getVersion().equals(request.getExpectedVersion())) {
+            throw governanceError(ERROR_REVIEW_STALE_LEVEL, "该审核单已升级处理，请刷新后按升级后的内容审核",
+                    HttpStatus.CONFLICT);
         }
         if (appeal != null && !com.chengyinhub.business.domain.AuditAppeal.STATE_SUBMITTED.equals(appeal.getState())
                 && !com.chengyinhub.business.domain.AuditAppeal.STATE_REVIEWING.equals(appeal.getState())) {

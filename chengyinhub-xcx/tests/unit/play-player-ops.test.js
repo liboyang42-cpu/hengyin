@@ -107,3 +107,17 @@ test('unknown → 匹配 APPLIED receipt 只读确认凭证，解锁一次且不
   let command;const {host,calls}=page((url,body)=>{if(url.endsWith('/command')){command=body;return{netFail:true};}return receipt(command,{nonce:'a'.repeat(43),expiresAt:1791586800000,teamId:8,locationKey:'gather',version:2});});
   host.openPlayerOperation(event({action:'ARRIVAL_ISSUE'}));assert.equal(await host.submitPlayerOperation(),true);assert.equal(host._playerOpsPending,null);assert.equal(host._themeSending,false);assert.equal(host.data.playerOperationUnknown,false);assert.equal(host.data.playerArrivalProof.stationName,'集合站');assert.equal(calls.filter(row=>row.method==='POST').length,1);
 });
+
+test('玩家侧运营状态只说明实际后果：暂停只读，中断/取消只读并结束进行中的任务，不承诺冻结或退款', () => {
+  const fs = require('node:fs'); const path = require('node:path');
+  const team = run => ({ scope: 'TEAM', teamId: 1, run });
+  assert.equal(ops.runText(team({ operationStatus: 'PAUSED', authorityMode: 'ONLINE' })), '主持人已暂停本局：暂停期间只能查看，不能提交操作');
+  assert.equal(ops.runText(team({ operationStatus: 'INTERRUPTED', authorityMode: 'ONLINE' })), '主持人已中断本局：只能查看，进行中的任务已结束');
+  assert.equal(ops.runText(team({ operationStatus: 'CANCELLED', authorityMode: 'ONLINE' })), '主持人已取消本局：只能查看，进行中的任务已结束');
+  assert.equal(ops.runText(team({ operationStatus: 'RUNNING', authorityMode: 'ONLINE' })), '');
+  assert.equal(ops.runText({ scope: 'PERSONAL', run: { operationStatus: 'PAUSED', authorityMode: 'ONLINE' } }), '');
+  for (const status of ['PAUSED', 'INTERRUPTED', 'CANCELLED']) assert.doesNotMatch(ops.runText(team({ operationStatus: status, authorityMode: 'ONLINE' })), /冻结|顺延|延长|退款|不计|生命|倒计时/);
+  const sheet = fs.readFileSync(path.join(__dirname, '../../pages/play/theme-player-ops.wxml'), 'utf8');
+  assert.match(sheet, /wx:if="\{\{playerRunText\}\}" aria-live="polite">\{\{playerRunText\}\}/);
+  assert.match(fs.readFileSync(path.join(__dirname, '../../pages/play/theme-player-ops-entry.wxml'), 'utf8'), /playerRunText \|\| playerExitText/);
+});

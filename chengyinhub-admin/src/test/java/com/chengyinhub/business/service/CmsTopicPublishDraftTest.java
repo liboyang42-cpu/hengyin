@@ -164,6 +164,44 @@ class CmsTopicPublishDraftTest {
         verify(topicCommercialReviewService, never()).submitProjectReview(anyLong(), anyLong(), any());
     }
 
+    /** #380:草稿期机审存疑(review_flag=1)→ 发布不得写 check_status=1,改挂 post_review_flag 抽检单。 */
+    @Test
+    void draftSimpleWithReviewFlag_publishesAsPostReview_andQueuesSpotCheck() {
+        when(cmsTopicMapper.clearDraftIfDraft(1L)).thenReturn(1);
+        when(cmsTopicMapper.selectReviewFlag(1L)).thenReturn(1);
+        CmsTopic t = new CmsTopic();
+        t.setId(1L); t.setPublishMode("simple"); t.setMemberId(100L);
+        t.setName("夜跑"); t.setImgUrl("media-asset:901");
+        when(cmsTopicMapper.selectCmsTopicById(1L)).thenReturn(t);
+
+        assertTrue(svc.publishDraft(1L));
+
+        ArgumentCaptor<CmsTopic> cap = ArgumentCaptor.forClass(CmsTopic.class);
+        verify(cmsTopicMapper).updateCmsTopic(cap.capture());
+        assertEquals(Integer.valueOf(1), cap.getValue().getStatus(), "先发后审:照常上架");
+        assertEquals(Integer.valueOf(0), cap.getValue().getCheckStatus(), "机审存疑不得记成机审通过(1)");
+        verify(auditTaskService).submit(eq(com.chengyinhub.business.domain.AuditTask.BIZ_TOPIC), eq(1L), eq(100L),
+                eq("post_review_flag"), org.mockito.ArgumentMatchers.contains("draft_review_flag"));
+    }
+
+    @Test
+    void draftSimpleWithReviewFlag_doesNotDuplicateOpenSpotCheck() {
+        when(cmsTopicMapper.clearDraftIfDraft(1L)).thenReturn(1);
+        when(cmsTopicMapper.selectReviewFlag(1L)).thenReturn(1);
+        CmsTopic t = new CmsTopic();
+        t.setId(1L); t.setPublishMode("simple"); t.setMemberId(100L);
+        t.setName("夜跑"); t.setImgUrl("media-asset:901");
+        when(cmsTopicMapper.selectCmsTopicById(1L)).thenReturn(t);
+        com.chengyinhub.business.domain.AuditTask open = new com.chengyinhub.business.domain.AuditTask();
+        open.setStatus(com.chengyinhub.business.domain.AuditTask.STATUS_PENDING);
+        open.setSourceType("post_review_flag");
+        when(auditTaskService.selectAuditTaskList(any())).thenReturn(Collections.singletonList(open));
+
+        assertTrue(svc.publishDraft(1L));
+
+        verify(auditTaskService, never()).submit(anyString(), any(), any(), anyString(), anyString());
+    }
+
     @Test
     void draftFreeExploreWithRecruitDeadline_submitsProjectReview() {
         when(cmsTopicMapper.clearDraftIfDraft(8L)).thenReturn(1);
