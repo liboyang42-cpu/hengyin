@@ -1,0 +1,139 @@
+/* cy-tag-sheet · Figma「Edit Interests」(375pt 帧,px × 2 = rpx)。
+ * 颜色全是 Figma 定值,不读语义 token —— 商家白底档,手机深色模式下不翻。 */
+.ts {
+  /* cy-sheet 的角色档钉成商家白:页面在系统深色下会把 role 档切到玩家深玻璃,
+     这些变量从这里继承进 isolated 的 cy-sheet,把它拉回白底 */
+  --cy-comp-sheet-role-glass: #FFFFFF;
+  --cy-comp-sheet-role-page: #FFFFFF;
+  --cy-comp-sheet-role-surface: #FFFFFF;
+  --cy-comp-sheet-role-card: #FFFFFF;
+  --cy-comp-sheet-role-elevated: #FFFFFF;
+  --cy-comp-sheet-role-text: #151B23;
+  --cy-comp-sheet-role-text-secondary: #777777;
+  --cy-comp-sheet-role-muted: #777777;
+  --cy-comp-sheet-role-divider: #EBEBEB;
+  --cy-comp-sheet-role-border-strong: #EBEBEB;
+  --cy-comp-sheet-handle-bg: #DBDBDB;
+  --cy-page-x: 40rpx;   /* Figma 左右 20px */
+}
+
+.ts__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 16rpx 0 24rpx;
+}
+.ts__title {
+  font-size: 32rpx;     /* Figma 16px / 900 */
+  font-weight: 900;
+  line-height: 1.3;
+  color: #151B23;
+}
+.ts__count {
+  font-size: var(--cy-font-caption, 24rpx);
+  color: #777777;
+}
+.ts__hint {
+  display: block;
+  margin: -12rpx 0 24rpx;
+  font-size: var(--cy-font-caption, 24rpx);
+  color: #777777;
+}
+.ts__state {
+  min-height: 240rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16rpx;
+  font-size: 28rpx;
+  color: #777777;
+}
+.ts__retry {
+  padding: 12rpx 32rpx;
+  border: 1px solid #EBEBEB;
+  border-radius: 60rpx;
+  color: #131313;
+}
+
+.ts__swiper { width: 100%; }
+.ts__grid {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  column-gap: 34rpx;    /* Figma 17px */
+  row-gap: 20rpx;       /* Figma 10px */
+}
+.ts__tag {
+  position: relative;
+  box-sizing: border-box;
+  width: calc((100% - 34rpx) / 2);   /* (面板宽 - 2×20px - 17px)/2 = Figma 158.5px @375 */
+  height: 94rpx;        /* 47px */
+  border-radius: 60rpx; /* 30px */
+  border: 1px solid #EBEBEB;
+  background: #FFFFFF;
+  display: flex;
+  align-items: center;
+  padding: 0 64rpx 0 93rpx;   /* 文字起点 46.4px;右侧给勾留位 */
+}
+.ts__tag--on { background: #D9D9D9; }
+.ts__icon {
+  position: absolute;
+  left: 32rpx;          /* 15.85px */
+  top: 50%;
+  width: 43rpx;         /* 21.5 × 19.9px */
+  height: 40rpx;
+  margin-top: -20rpx;
+  opacity: .58;         /* 未选:#131313 × 58% 叠白 ≈ #767676,对上稿里的 #777 */
+}
+.ts__tag--on .ts__icon { opacity: 1; }
+.ts__label {
+  flex: 1;
+  min-width: 0;
+  font-size: 28rpx;     /* 14px regular */
+  font-weight: 400;
+  color: #777777;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ts__tag--on .ts__label { color: #131313; }
+.ts__check {
+  position: absolute;
+  right: 36rpx;         /* ~18px */
+  top: 50%;
+  width: 17rpx;         /* 8.66 × 6.3px */
+  height: 13rpx;
+  margin-top: -6rpx;
+}
+
+.ts__dots {
+  display: flex;
+  justify-content: center;
+  gap: 12rpx;
+  padding-top: 24rpx;
+}
+.ts__dot {
+  width: 12rpx;         /* 6px */
+  height: 12rpx;
+  border-radius: 50%;
+  background: #D9D9D9;
+}
+.ts__dot--on { background: #131313; }
+
+.ts__footer { padding-top: 16rpx; }
+.ts__save {
+  height: 96rpx;        /* 48px */
+  border-radius: 32rpx; /* 16px */
+  background: #070005;
+  color: #FFFFFF;
+  font-size: 28rpx;     /* 14px semibold */
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.ts__save--busy { opacity: .5; }
+
+/* isolated 下全局 .cy-pressed 进不来,本地一份;只减淡不位移(同 cy-sheet 的做法) */
+.ts--pressed { opacity: .72; }
