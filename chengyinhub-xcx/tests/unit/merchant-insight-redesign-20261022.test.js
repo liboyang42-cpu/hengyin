@@ -108,10 +108,10 @@ test('切窗口/切指标重建主卡;无 trends 时窗口点击不动', () => {
   assert.equal(page.data.winIdx, 0);
   assert.equal(page.data.hero.num, '5');
   page.onMetricTap({ currentTarget: { dataset: { metric: 'checkins' } } });
-  assert.equal(page.data.metric, 'checkins');
+  assert.equal(page._metric, 'checkins');
   assert.equal(page.data.hero.num, '9');
   page.onMetricTap({ currentTarget: { dataset: { metric: 'bogus' } } });
-  assert.equal(page.data.metric, 'checkins');
+  assert.equal(page._metric, 'checkins');
   page._trends = null;
   page.onWinTap({ currentTarget: { dataset: { win: '90' } } });
   assert.equal(page.data.win, 7);

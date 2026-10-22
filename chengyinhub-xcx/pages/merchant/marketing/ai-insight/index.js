@@ -65,7 +65,6 @@ Page({
     recPartners: [],      // 推荐联动商家(真实附近商家,可点看店铺)
     win: 30,              // 主卡时间窗
     winIdx: 1,
-    metric: 'visitors',   // 主卡指标:到店/打卡/核销
     hero: null,           // 主卡:大数字 + 环比 + 逐日格 + 三指标;无 trends(旧缓存)时退回 30 天归因三数
     slots: null,          // 到店时段四柱(facts.checkin.slotBuckets)
     sources: [],          // 客源主题排行(facts.sources)
@@ -186,7 +185,7 @@ Page({
             profile: d.profile || null,
             storeName: String(profile.storeName || '').trim(),
             factState,
-            hero: that._buildHero(d.facts, that.data.win, that.data.metric, firstPaint),
+            hero: that._buildHero(d.facts, that.data.win, that._metric || 'visitors', firstPaint),
             slots: that._buildSlots(d.facts),
             sources: that._buildSources(d.facts),
             valueCard: that._buildValueCard(d.facts),
@@ -247,6 +246,7 @@ Page({
       scrimOn: false,
     });
     this._trends = null;
+    this._metric = null;
     this._stopMotion();
   },
 
@@ -417,18 +417,20 @@ Page({
   onWinTap(e) {
     const win = Number((e.currentTarget.dataset || {}).win);
     if (TREND_WINDOWS.indexOf(win) === -1 || win === this.data.win || !this._trends) return;
-    this._switchHero(win, this.data.metric);
+    this._switchHero(win, this._metric || 'visitors');
   },
 
   onMetricTap(e) {
     const metric = String((e.currentTarget.dataset || {}).metric || '');
-    if (metric === this.data.metric || !TREND_METRICS.some(function (m) { return m.key === metric; })) return;
+    if (metric === (this._metric || 'visitors') || !TREND_METRICS.some(function (m) { return m.key === metric; })) return;
     this._switchHero(this.data.win, metric);
   },
 
   _switchHero(win, metric) {
+    // 指标只是内部状态:WXML 读的是 hero.trio[].on,不走 setData
+    this._metric = metric;
     const hero = this._buildHero(this.data.facts, win, metric, true);
-    this.setData({ win, winIdx: TREND_WINDOWS.indexOf(win), metric, hero });
+    this.setData({ win, winIdx: TREND_WINDOWS.indexOf(win), hero });
     this._countTo(hero.target);
   },
 

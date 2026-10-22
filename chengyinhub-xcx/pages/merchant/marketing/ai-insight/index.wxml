@@ -40,7 +40,7 @@
 
       <block wx:if="{{hero && hero.hasTrend}}">
         <view class="seg" aria-role="tablist">
-          <view class="seg-thumb" style="transform: translateX({{winIdx * 100}}%);"></view>
+          <view class="seg-thumb" style="transform: translateX({{(winIdx || 0) * 100}}%);"></view>
           <view class="seg-btn {{win === 7 ? 'seg-btn--on' : ''}}" data-win="7" bindtap="onWinTap" hover-class="cy-pressed" hover-stay-time="80" aria-role="tab" aria-selected="{{win === 7}}">近7天</view>
           <view class="seg-btn {{win === 30 ? 'seg-btn--on' : ''}}" data-win="30" bindtap="onWinTap" hover-class="cy-pressed" hover-stay-time="80" aria-role="tab" aria-selected="{{win === 30}}">近30天</view>
           <view class="seg-btn {{win === 90 ? 'seg-btn--on' : ''}}" data-win="90" bindtap="onWinTap" hover-class="cy-pressed" hover-stay-time="80" aria-role="tab" aria-selected="{{win === 90}}">近90天</view>
@@ -89,13 +89,13 @@
         <view class="card mi-in {{grown ? 'grown' : ''}}" style="transition-delay: 140ms;">
           <view class="bars">
             <view class="bar {{bar.max ? 'bar--max' : ''}}" wx:for="{{slots.bars}}" wx:for-item="bar" wx:key="slot"
-                  aria-label="{{bar.slot}} {{bar.count}} 次打卡">
+                  aria-label="{{bar.slot}} {{bar.count || 0}} 次打卡">
               <text class="bar-v">{{bar.pct}}</text>
-              <view class="bar-c" style="height: {{bar.h}}%;"></view>
+              <view class="bar-c" style="height: {{bar.h || 0}}%;"></view>
             </view>
           </view>
           <view class="bar-ax"><text wx:for="{{slots.bars}}" wx:for-item="bar" wx:key="slot">{{bar.slot}}</text></view>
-          <view class="card-foot"><text>{{slots.peakText}}</text><text>共 {{slots.total}} 次打卡</text></view>
+          <view class="card-foot"><text>{{slots.peakText}}</text><text>共 {{slots.total || 0}} 次打卡</text></view>
         </view>
       </block>
 
@@ -105,7 +105,7 @@
           <text class="metric-name">{{item.name}}</text>
           <text class="metric-num">{{item.num}}</text>
           <text class="metric-sub">{{item.sub}}</text>
-          <view class="track"><view class="track-fill" style="width: {{item.pct}}%;"></view></view>
+          <view class="track"><view class="track-fill" style="width: {{item.pct || 0}}%;"></view></view>
           <!-- CU-M-46/M-84:分子分母与时间窗必须写在卡上,不然同一张屏上的两个比率
                会被读成互相矛盾(复购率 50% 与回头 0 位曾经同时成立)。 -->
           <text class="metric-scope">{{item.scope}}</text>
@@ -132,8 +132,8 @@
           <view class="src-row" wx:for="{{sources}}" wx:key="name">
             <view class="src-ico"><text>{{item.initial}}</text></view>
             <view class="src-body">
-              <view class="src-top"><text class="src-name">{{item.name}}</text><text class="src-count">{{item.count}} 次</text></view>
-              <view class="track track--thin"><view class="track-fill" style="width: {{item.w}}%;"></view></view>
+              <view class="src-top"><text class="src-name">{{item.name}}</text><text class="src-count">{{item.count || 0}} 次</text></view>
+              <view class="track track--thin"><view class="track-fill" style="width: {{item.w || 0}}%;"></view></view>
               <text class="src-pct">{{item.pct}}</text>
             </view>
           </view>

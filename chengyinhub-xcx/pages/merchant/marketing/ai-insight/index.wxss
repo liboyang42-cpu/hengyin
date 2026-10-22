@@ -133,7 +133,7 @@
 .heat { display: grid; gap: 8rpx; }
 .heat-cell {
   aspect-ratio: 1;
-  border-radius: 8rpx;
+  border-radius: var(--cy-radius-sm);
   background: var(--mi-off);
 }
 .heat-cell--l1 { background: var(--mi-grey-1); }
@@ -431,7 +431,7 @@
   position: fixed; left: 0; right: 0; bottom: 0;
   z-index: 902;
   padding: var(--cy-space-2) var(--cy-space-4) calc(var(--cy-space-6) + env(safe-area-inset-bottom));
-  border-radius: 56rpx 56rpx 0 0;
+  border-radius: var(--cy-radius-2xl) var(--cy-radius-2xl) 0 0;
   background: var(--cy-bg-card);
   box-sizing: border-box;
 }
@@ -445,6 +445,7 @@
 .ts-head { display: flex; align-items: center; justify-content: space-between; gap: var(--cy-space-2); }
 .ts-title { flex: 1; min-width: 0; font-size: var(--cy-font-subtitle); font-weight: 700; color: var(--cy-text-title); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ts-close {
+  position: relative;
   flex: none;
   width: 64rpx; height: 64rpx;
   display: flex; align-items: center; justify-content: center;
@@ -452,6 +453,8 @@
   background: var(--cy-bg-page);
   color: var(--cy-text-title);
 }
+/* 64rpx 圆钮,透明 ::after 把命中区撑到 88rpx(44px) */
+.ts-close::after { content: ''; position: absolute; left: -12rpx; top: -12rpx; width: 88rpx; height: 88rpx; }
 .ts-cover { position: relative; height: 300rpx; margin: var(--cy-space-3) 0; border-radius: var(--cy-radius-lg); overflow: hidden; background: var(--mi-grey-1); }
 .ts-img { position: absolute; left: 0; top: 0; }
 .ts-reason { display: block; font-size: var(--cy-font-label); line-height: 1.55; color: var(--cy-text-title); }
