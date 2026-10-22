@@ -1,0 +1,33 @@
+<view class="pg">
+  <text class="pg-intro">这里列出你的帖子与账号受到的处置。处置生效中或申诉处理中都不是最终结论；复核后会显示“维持处置”或“已撤销处置”。</text>
+  <view class="pg-loading" wx:if="{{state === 'loading'}}">正在加载…</view>
+  <view class="pg-empty" wx:elif="{{state === 'login'}}">登录后可查看你的处置记录。</view>
+  <cy-inline-error wx:elif="{{state === 'error'}}" load-failure kind="network" title="处置记录暂未取回" sub="{{error}}" action="重试" bind:action="retry" />
+  <view class="pg-empty" wx:elif="{{state === 'empty'}}">暂无处置记录。</view>
+  <view class="pg-list" wx:else>
+    <view class="pg-item" wx:for="{{rows}}" wx:key="id">
+      <view class="pg-head">
+        <text class="pg-type">{{item.typeText}}</text>
+        <text class="pg-state pg-state--{{item.stateKey}}">{{item.stateLabel}}</text>
+      </view>
+      <text class="pg-meta">{{item.targetText}}{{item.timeText ? ' · ' + item.timeText : ''}}{{item.endText ? ' · 至 ' + item.endText : ''}}</text>
+      <text class="pg-meta" wx:if="{{item.stateNote}}">{{item.stateNote}}</text>
+      <text class="pg-meta" wx:if="{{item.decisionReason}}">复核说明：{{item.decisionReason}}</text>
+      <text class="pg-meta pg-warn" wx:if="{{item.pendingUnknown}}">上次申诉的提交结果未确认，可以再次提交（不会重复提交）</text>
+      <block wx:if="{{item.canAppeal}}">
+        <view wx:if="{{editingId !== item.id}}" class="pg-action" data-id="{{item.id}}" bindtap="startAppeal" aria-role="button" aria-label="对这条处置提交申诉" hover-class="cy-pressed" hover-stay-time="80">提交申诉</view>
+        <view wx:else class="pg-form">
+          <textarea class="pg-input" value="{{reason}}" maxlength="{{reasonMax}}" placeholder="写下申诉理由（仅文字）" disabled="{{submitting}}" bindinput="onReasonInput" />
+          <text class="pg-count">{{reason.length}}/{{reasonMax}}</text>
+          <view class="pg-form-actions">
+            <view class="pg-action pg-action--plain" bindtap="cancelAppeal" aria-role="button" aria-label="取消申诉" hover-class="cy-pressed" hover-stay-time="80">取消</view>
+            <view class="pg-action {{submitting ? 'pg-action--busy' : ''}}" bindtap="submitAppeal" aria-role="button" aria-label="提交申诉" hover-class="cy-pressed" hover-stay-time="80">{{submitting ? '提交中…' : '提交'}}</view>
+          </view>
+        </view>
+      </block>
+    </view>
+    <view class="pg-more" wx:if="{{nextCursor}}" bindtap="loadMore" aria-role="button" aria-label="加载更多处置记录" hover-class="cy-pressed" hover-stay-time="80">{{loadingMore ? '加载中…' : '加载更多'}}</view>
+  </view>
+  <text class="pg-notice" wx:if="{{notice}}" aria-role="alert">{{notice}}</text>
+  <text class="pg-notice" wx:if="{{error && state === 'ready'}}" aria-role="alert">{{error}}</text>
+</view>

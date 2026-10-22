@@ -22,6 +22,8 @@
     <cy-cell id="settings-privacy" tint="{{isMerchantView ? '' : 'mono'}}" icon="/pages/shezhi/images/icon_privacy.svg" title="隐私与定位" bind:tap="goPrivacy" />
     <cy-cell id="settings-marketing-consent" tint="{{isMerchantView ? '' : 'mono'}}" icon="/pages/shezhi/images/icon_privacy.svg"
              title="营销消息与优惠券" bind:tap="openMarketingConsent" />
+    <cy-cell id="settings-post-governance" tint="{{isMerchantView ? '' : 'mono'}}" icon="/pages/shezhi/images/icon_agreement.svg"
+             title="帖子处置与申诉" description="查看处置记录，提交文字申诉" bind:tap="openPostGovernance" />
     <cy-cell id="settings-service-agreement" tint="{{isMerchantView ? '' : 'mono'}}" icon="/pages/shezhi/images/icon_agreement.svg" title="用户服务协议" bind:tap="goUserAgreement" />
     <cy-cell id="settings-deregister" tint="{{isMerchantView ? '' : 'mono'}}" icon="/pages/shezhi/images/icon_deregister.svg" title="账号注销" bind:tap="goDeregister" />
     <cy-cell id="settings-about" tint="{{isMerchantView ? '' : 'mono'}}" icon="/pages/shezhi/images/icon_info_circle.svg" title="关于" bind:tap="goAbout" />
@@ -67,6 +69,9 @@
   <cy-privacy-sheet show="{{showPrivacySheet}}" theme="{{settingsTheme}}" bind:close="closePrivacySheet" />
   <cy-sheet show="{{showMarketingConsent}}" title="营销消息与优惠券" style="--cy-sheet-heading-size: var(--cy-comp-sheet-title-size);" bind:close="closeMarketingConsent">
     <cy-marketing-consent show="{{showMarketingConsent}}" />
+  </cy-sheet>
+  <cy-sheet show="{{showPostGovernance}}" title="帖子处置与申诉" style="--cy-sheet-heading-size: var(--cy-comp-sheet-title-size);" bind:close="closePostGovernance">
+    <cy-post-governance show="{{showPostGovernance}}" />
   </cy-sheet>
 
   <!-- 选择注册身份 sheet(Figma 3625-11444) -->
