@@ -161,6 +161,10 @@ public class JourneyRulesValidator {
         }
         out.put("fumbleExtraDamage", fumbleExtraDamage);
         out.put("modCap", modCap);
+        // F2 T04:只在作者显式配置时输出 —— 缺省的老主题规范化结果一字不变(冻结快照与摘要稳定)。
+        if (root.has("natAuto") && !root.get("natAuto").isNull()) {
+            out.put("natAuto", boolField(root, "natAuto", true));
+        }
         if (root.has("statLinks")) {
             try {
                 com.chengyinhub.business.domain.JourneyRules rules = objectMapper.treeToValue(out,

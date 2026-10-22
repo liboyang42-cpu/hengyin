@@ -306,4 +306,14 @@ class JourneyRulesValidatorTest {
         assertEquals("afternoon", rules.getThoughts().get(0).path("key").asText());
         assertEquals(120, rules.getThoughts().get(0).path("need").asInt());
     }
+
+    /** F2 T04:natAuto 只在作者显式配置时进规范化结果;老配置的规范化 JSON 一字不变。 */
+    @Test
+    void natAutoIsOnlyEmittedWhenExplicitlyConfigured() throws Exception {
+        String legacy = validator.validateAndNormalize(config(""));
+        assertFalse(objectMapper.readTree(legacy).has("natAuto"), legacy);
+        String off = validator.validateAndNormalize(config(",\"natAuto\":false"));
+        assertFalse(objectMapper.readTree(off).path("natAuto").asBoolean(true), off);
+        assertTrue(rejected(config(",\"natAuto\":\"no\"")).getMessage().contains("natAuto"));
+    }
 }

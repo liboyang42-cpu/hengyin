@@ -1478,4 +1478,22 @@ class AdvancedGameConfigValidatorTest {
         assertThrows(IllegalArgumentException.class, () -> validator.validateAndNormalize(qaWith("", "[\"http://insecure/1.jpg\"]", true)));
         assertThrows(IllegalArgumentException.class, () -> validator.validateAndNormalize(qaWith("", "\"https://a/1.jpg\"", true)));
     }
+
+    /** F2 T03:mods[].var 读 counter.* 属性,与静态 value 二选一。 */
+    @Test
+    void journeyCheckAcceptsCounterVarModsAndRejectsMixedOrForeignVars() {
+        validator.validateAndNormalize(journey("check",
+                "{\"enabled\":true,\"checkId\":\"lift\",\"tier\":\"medium\",\"skill\":\"counter.str\","
+                        + "\"mods\":[{\"when\":{\"op\":\"HAS_TAG\",\"value\":\"tag.ready\"},\"var\":\"counter.focus\"}]}"));
+        IllegalArgumentException mixed = assertThrows(IllegalArgumentException.class,
+                () -> validator.validateAndNormalize(journey("check",
+                        "{\"enabled\":true,\"checkId\":\"lift\",\"tier\":\"easy\","
+                                + "\"mods\":[{\"when\":{\"op\":\"HAS_TAG\",\"value\":\"tag.ready\"},\"var\":\"counter.focus\",\"value\":1}]}")));
+        assertTrue(mixed.getMessage().contains("var"), mixed.getMessage());
+        IllegalArgumentException foreign = assertThrows(IllegalArgumentException.class,
+                () -> validator.validateAndNormalize(journey("check",
+                        "{\"enabled\":true,\"checkId\":\"lift\",\"tier\":\"easy\","
+                                + "\"mods\":[{\"when\":{\"op\":\"HAS_TAG\",\"value\":\"tag.ready\"},\"var\":\"sys.luck\"}]}")));
+        assertTrue(foreign.getMessage().contains("counter."), foreign.getMessage());
+    }
 }

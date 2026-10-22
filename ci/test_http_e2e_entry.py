@@ -16,7 +16,7 @@ import xml.etree.ElementTree as ET
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 TOOLS = ROOT / 'chengyinhub-admin/src/test/tools'
-EXPECTED = {'GenericGameplayHttpE2eIT': 25, 'FreezeGameHttpE2eIT': 8,
+EXPECTED = {'GenericGameplayHttpE2eIT': 26, 'FreezeGameHttpE2eIT': 8,
             'FreezeReuseThemeHttpE2eIT': 2}
 PACKAGE = 'com.chengyinhub.business.it.'
 FIXED_HTTP_MESSAGE_SOURCES = {
@@ -106,7 +106,7 @@ def selection(value):
 def reviewed_case_identities(simple):
     source = (ROOT / 'chengyinhub-admin/src/test/java/com/chengyinhub/business/it' / (simple + '.java')).read_text()
     plain = re.findall(r'(?m)^\s*@Test(?:\s+@Order\([1-9][0-9]*\))?\s+void\s+([A-Za-z_$][A-Za-z0-9_$]*)\s*\(\s*\)', source)
-    plain_count = {'GenericGameplayHttpE2eIT': 14, 'FreezeGameHttpE2eIT': 8, 'FreezeReuseThemeHttpE2eIT': 2}
+    plain_count = {'GenericGameplayHttpE2eIT': 15, 'FreezeGameHttpE2eIT': 8, 'FreezeReuseThemeHttpE2eIT': 2}
     if len(plain) != plain_count[simple] or len(set(plain)) != len(plain):
         raise ValueError('Reviewed ordinary HTTP test declarations changed')
     aliases = {name: name for name in plain}
@@ -193,7 +193,7 @@ def summarize(paths, source):
     if sorted(seen) != sorted(EXPECTED):
         raise ValueError('All three classes exactly once are required')
     return {'sourceSha': source, 'state': 'PASS_HTTP_FIXTURE_ONLY', 'classes': EXPECTED,
-            'tests': 35, 'failures': 0, 'errors': 0, 'skipped': 0,
+            'tests': 36, 'failures': 0, 'errors': 0, 'skipped': 0,
             'cleanupAllVerified': True, 'businessAccepted': False, 'migrationAccepted': False}
 
 
@@ -414,10 +414,10 @@ class HttpReceiptTest(unittest.TestCase):
             p = pathlib.Path(d) / 'test.xml'; ET.ElementTree(root).write(p)
             return verified_xml(p, simple)
 
-    def test_reviewed_ordinary_and_value_source_expansion_is_25_8_2(self):
-        self.assertEqual({'GenericGameplayHttpE2eIT': 25, 'FreezeGameHttpE2eIT': 8,
+    def test_reviewed_ordinary_and_value_source_expansion_is_26_8_2(self):
+        self.assertEqual({'GenericGameplayHttpE2eIT': 26, 'FreezeGameHttpE2eIT': 8,
                           'FreezeReuseThemeHttpE2eIT': 2}, EXPECTED)
-        self.assertEqual(35, sum(EXPECTED.values()))
+        self.assertEqual(36, sum(EXPECTED.values()))
         for simple, count in EXPECTED.items():
             aliases = reviewed_case_identities(simple)
             self.assertEqual(count, len(set(aliases.values())))
@@ -505,7 +505,7 @@ class HttpReceiptTest(unittest.TestCase):
             paths=[]
             for n, count in EXPECTED.items():
                 p=pathlib.Path(d)/(n+'.json'); p.write_text(json.dumps({'profile':'github-hosted','database':'cy_e2e_w1_http_123_456','fixtureReportVerified':True,'sourceSha':'a'*40,'classes':[n],'state':'PASS','javaExit':0,'tests':count,'xmlVerified':True,'cleanup':{'mysqlAbsent':True,'redisStoppedAndPortFree':True}}));paths.append(p)
-            self.assertEqual(35,summarize(paths,'a'*40)['tests'])
+            self.assertEqual(36,summarize(paths,'a'*40)['tests'])
             for bad in [paths[:-1],paths+[paths[0]]]:
                 with self.assertRaises(ValueError):summarize(bad,'a'*40)
             with self.assertRaises(ValueError):summarize(paths,'b'*40)
@@ -704,7 +704,7 @@ class FailureDiagnosticTest(unittest.TestCase):
             files = [{'path': 'fixture_' + str(i)} for i in range(101)]
             schema.write_text(json.dumps({'mode': 'SUCCEEDED', 'database': database, 'files': files,
                                           'completed': [f['path'] for f in files]}))
-            xml = ET.Element('testsuite', name=PACKAGE + simple, tests='25', failures='1', errors='0', skipped='0')
+            xml = ET.Element('testsuite', name=PACKAGE + simple, tests='26', failures='1', errors='0', skipped='0')
             props = ET.SubElement(xml, 'properties'); ET.SubElement(props, 'property', name='password', value=marker)
             ET.SubElement(xml, 'system-out').text = marker
             ordered_cases = [known_method] + [name for name in known_cases if name != known_method]
@@ -720,11 +720,11 @@ class FailureDiagnosticTest(unittest.TestCase):
             run = subprocess.run(args, env=env, text=True, capture_output=True, timeout=10)
             self.assertNotEqual(0, run.returncode)
             failure = json.loads((public / 'xml-failure.json').read_text())
-            self.assertEqual({'class': simple, 'state': 'FAILED_VERIFICATION', 'tests': 25, 'failures': 1,
+            self.assertEqual({'class': simple, 'state': 'FAILED_VERIFICATION', 'tests': 26, 'failures': 1,
                               'errors': 0, 'skipped': 0, 'failedMethods': [known_method],
                               'sourceFrame': 'GenericGameplayHttpE2eIT.java:123', 'callerFrame': 'GenericGameplayHttpE2eIT.java:124',
                               'caseSourceFrames': {known_method: ['GenericGameplayHttpE2eIT.java:123', 'GenericGameplayHttpE2eIT.java:124']},
-                              'testcaseCount': 25, 'uniqueMethodCount': 25, 'failureNodeCount': 1,
+                              'testcaseCount': 26, 'uniqueMethodCount': 26, 'failureNodeCount': 1,
                               'errorNodeCount': 0, 'retryNodeCount': 0, 'responseCodes': [403, 500],
                               'messageCategories': ['UNKNOWN'], 'caseMessageCategories': {known_method: ['UNKNOWN']}}, failure)
             self.assertNotIn(marker, json.dumps(failure) + run.stdout + run.stderr)
@@ -796,8 +796,8 @@ class FailureDiagnosticTest(unittest.TestCase):
                     self.assertNotIn('callerFrame', json.loads(safe))
                     self.assertEqual({}, json.loads(safe)['caseSourceFrames'])
                 if mutation == 'duplicateCase':
-                    self.assertEqual(26, json.loads(safe)['testcaseCount'])
-                    self.assertEqual(25, json.loads(safe)['uniqueMethodCount'])
+                    self.assertEqual(27, json.loads(safe)['testcaseCount'])
+                    self.assertEqual(26, json.loads(safe)['uniqueMethodCount'])
                     self.assertEqual(2, json.loads(safe)['failureNodeCount'])
             path.unlink()
             run = subprocess.run(args, env=env, text=True, capture_output=True, timeout=10)

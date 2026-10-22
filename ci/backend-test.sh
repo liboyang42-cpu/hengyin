@@ -119,6 +119,8 @@ MYBATIS_ITS=(
   PrivacyVisibilityExportMySqlIT
   # Lane DL1:赏金 NESTED savepoint 内真 1213 死锁必须抛给外层 @DeadlockRetry 整笔重试;两笔并发核销赏金只入账一次。
   MerchantReferralBountyDeadlockRetryMySqlIT
+  # 2026-10-22 F2 RPG P0:属性定义老注册 upsert 保留扩展列、改 label 不改键名;角色卡台账只随更新的来源前移。
+  ThemeCharacterMapperMyBatisIT
 )
 IFS=, ; IT_LIST="${MYBATIS_ITS[*]}" ; unset IFS
 # ⚠️ 必须带 -am:上面那句 `mvn clean test` 不 install 兄弟模块,

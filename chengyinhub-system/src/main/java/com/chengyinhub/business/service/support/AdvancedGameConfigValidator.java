@@ -2113,7 +2113,7 @@ public class AdvancedGameConfigValidator {
         checkFailCostTag(check);
     }
 
-    /** mods:条件修正,when 条件 + 必带整数 value,label 是给玩家看的一句人话。 */
+    /** mods:条件修正,when 条件 + 整数 value(或 F2 的 counter.* var),label 是给玩家看的一句人话。 */
     private void validateMods(JsonNode mods) {
         if (mods == null || mods.isNull()) return;
         if (!mods.isArray()) throw new IllegalArgumentException("check 的 mods 必须是数组");
@@ -2127,7 +2127,18 @@ public class AdvancedGameConfigValidator {
                 throw new IllegalArgumentException("check 的 mods 必须带 when 条件");
             }
             validateCondition(when, "check 的 mods 的 when");
-            requireStateValue(mod, "check 的 mods");
+            // F2 T03:var = 从局状态读修正值(counter.* 属性),与静态 value 二选一。
+            JsonNode var = mod.get("var");
+            if (var != null && !var.isNull()) {
+                if (!var.isTextual() || !STATE_VAR.matcher(var.asText()).matches() || !var.asText().startsWith("counter.")) {
+                    throw new IllegalArgumentException("check 的 mods 的 var 必须是 counter. 开头的状态键");
+                }
+                if (mod.has("value") && !mod.get("value").isNull()) {
+                    throw new IllegalArgumentException("check 的 mods 不能同时配置 var 与 value");
+                }
+            } else {
+                requireStateValue(mod, "check 的 mods");
+            }
             optionalText(mod, "label", MAX_CHECK_TEXT, "check 的 mods 的 label 不能超过 "
                     + MAX_CHECK_TEXT + " 字");
         }
