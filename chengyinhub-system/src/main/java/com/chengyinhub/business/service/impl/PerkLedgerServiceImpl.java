@@ -1,5 +1,7 @@
 package com.chengyinhub.business.service.impl;
 
+import com.chengyinhub.common.annotation.CriticalPath;
+import com.chengyinhub.common.observability.CriticalPathCode;
 import com.chengyinhub.business.domain.BusinessAuditEvent;
 import com.chengyinhub.business.domain.CmsRegistration;
 import com.chengyinhub.business.mapper.CmsActivityMapper;
@@ -375,6 +377,7 @@ public class PerkLedgerServiceImpl implements IPerkLedgerService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CriticalPath(value = CriticalPathCode.CP_REDEMPTION_FAILED, op = "chapter")
     public Long redeemChapter(Long registrationId, Long chapterId, Long merchantId, Long operatorId) {
         // ⓪ 请求级幂等:同一(票,章,商家)之前已成功核销过 ⇒ 直接返回原 redemptionId。
         //

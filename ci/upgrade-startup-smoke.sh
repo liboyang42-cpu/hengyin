@@ -163,7 +163,7 @@ start_traced_application() {
     -Dlogging.config=/fixture/logback.xml -Dlogback.configurationFile=/fixture/logback.xml \
     -jar /application.jar --spring.config.location=file:/fixture/application.properties \
     "--spring.datasource.druid.master.url=jdbc:mysql://$MYSQL_IP:3306/upgrade_startup_probe?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC" \
-    "--spring.data.redis.host=$REDIS_IP" >/dev/null
+    "--spring.data.redis.host=$REDIS_IP" "${POOL_PROFILE[@]}" >/dev/null
 }
 
 case "$(uname -s)" in
@@ -197,6 +197,13 @@ command -v docker >/dev/null
 command -v strace >/dev/null
 command -v python3 >/dev/null
 docker info >/dev/null
+# Pool fault scenario is opt-in for the exact isolated hosted workflow only.
+POOL_PROFILE=()
+if [ "${CHENGYIN_CI_POOL_RECOVERY:-false}" = true ]; then
+  python3 -I "$ROOT/ci/pool_recovery_probe.py" --check-execution-only
+  test "$(command docker context inspect --format '{{.Endpoints.docker.Host}}')" = unix:///var/run/docker.sock
+  POOL_PROFILE=(--spring.datasource.druid.maxActive=20 --spring.datasource.druid.maxWait=5000 --spring.datasource.druid.socketTimeout=60000)
+fi
 RUN_NAME="cy-startup-$$-$RANDOM"
 OUT=$(mktemp -d "${TMPDIR:-/tmp}/cy-startup.XXXXXXXX")
 chmod 755 "$OUT"
@@ -266,6 +273,12 @@ case "$APP_PID" in
 esac
 docker exec "$RUN_NAME-app" java /fixture/HealthProbe.java "$APP_PID" > "$OUT/health.log"
 cat "$OUT/health.log"
+if [ "${CHENGYIN_CI_POOL_RECOVERY:-false}" = true ]; then
+  python3 -I "$ROOT/ci/pool_recovery_probe.py" "$RUN_NAME" "$OUT"
+  # Recovery uses the same existing in-container health probe after the lock is gone.
+  docker exec "$RUN_NAME-app" java /fixture/HealthProbe.java "$APP_PID" > "$OUT/pool-recovery-health.log"
+  cat "$OUT/pool-recovery-health.log"
+fi
 test "$(docker exec "$RUN_NAME-app" curl --noproxy '*' -s -o /tmp/auth-response -w '%{http_code}' http://127.0.0.1:8080/api/city/nodes)" = 401
 test "$(docker exec "$RUN_NAME-app" curl --noproxy '*' -s -X POST -o /tmp/auth-response -w '%{http_code}' http://127.0.0.1:8080/api/official/events)" = 401
 docker exec "$RUN_NAME-redis" redis-cli --raw GET sys_config:startup.synthetic.probe > "$OUT/config-cache"
