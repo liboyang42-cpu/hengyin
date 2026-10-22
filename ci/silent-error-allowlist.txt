@@ -205,6 +205,7 @@ chengyinhub-xcx/utils/community-post-api.js 1  # canonical 社区内部 call 的
 chengyinhub-xcx/app.js 1  # /api/config/features 背景读取失败finish(null)，社区读写旗保持false；owner/token/epoch校验淘汰旧回包，不伪造功能已启用
 chengyinhub-xcx/pages/privacy/index.js 1  # requestOwnMedia统一入口：401/403清自有媒体并显示权限反馈，其他错误传done或mediaError；epoch/owner/token隔离，重试写失败不会假报成功
 chengyinhub-xcx/pages/publish/fabu/index.js 8  # edit-detail按作者/seq恢复权限；adopt-draft明确失败/unknown toast防重建；采用后myinfo不能绑有提示；选模板myinfo有token及toast；copy前myinfo与draft失败落nodeCopyError且unknown锁；节点myinfo失败落nodeBindingError；public homeData失败保留空列表不伪造模板。另1处既有precheck显式skip标签保持原记录
+chengyinhub-xcx/pages/publish/fabu/index.js 1  # 2026-10-22 L21 BL-185 发布前 /api/topic/publish-check 只读试检查：error 经 onFail 落「草稿已保存、还没发布」结果面板写明原因，warn 走确认弹窗；拿不到结果按可用性放行由 publish-draft 服务端照样拦，通用 toast 会与结果面板双弹
 chengyinhub-xcx/pages/shezhi/shezhi.js 1  # user/info真实401/403显示WXML错误标题并清账号资料，500留旧资料或留白；该处仅读取，club/my路由判据失败toast已记原1处
 chengyinhub-xcx/subpackageB/pages/im/chat/index.js 1  # 解除拉黑失败由当前会话tips或dc.failed明确显示；epoch/账号/会话隔离迟到回包，不静默写失败、不污染新页面
 chengyinhub-xcx/subpackageMember/complaint/index.js 2  # mine读取401/403/参数错误落WXML且owner/seq/hidden隔离；report真实写失败落submitError并保持可重试，不报成功；主题读取另记1处
