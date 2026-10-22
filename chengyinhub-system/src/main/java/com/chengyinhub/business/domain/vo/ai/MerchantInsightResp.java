@@ -53,6 +53,15 @@ public class MerchantInsightResp
     public java.util.List<RecentVisitor> getRecentVisitors() { return recentVisitors; }
     public void setRecentVisitors(java.util.List<RecentVisitor> recentVisitors) { this.recentVisitors = recentVisitors; }
 
+    /**
+     * 主卡走势 {windows:[{days,visitors,checkins,redeems,prevVisitors,prevCheckins,prevRedeems,
+     * daily:[{date,visitors,checkins,redeems}]}]},days ∈ 7/30/90;只做页面展示,不进 facts、不进 AI prompt
+     */
+    private JSONObject trends;
+
+    public JSONObject getTrends() { return trends; }
+    public void setTrends(JSONObject trends) { this.trends = trends; }
+
     /** 单客行:头像 + 第几次来 + 来自哪个主题 + 最近时间 */
     public static class RecentVisitor
     {
