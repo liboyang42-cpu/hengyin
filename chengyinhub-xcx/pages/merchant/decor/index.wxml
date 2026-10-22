@@ -462,38 +462,25 @@
       <cy-btn loading="{{saving}}" bindtap="confirmField">{{saveError ? '重试保存' : '保存'}}</cy-btn>
     </view>
   </cy-sheet>
-  <!-- 经营类目 / 行业类型:底部 sheet + 胶囊多选(owner 2026-10-22,替代原文本框与下拉列表) -->
-  <cy-sheet
+  <!-- 经营类目 / 行业类型:底部 sheet + 胶囊多选(owner 2026-10-22,替代原文本框与下拉列表)。
+       L11:换成 Figma「Edit Interests」胶囊半屏弹窗,标签横向翻页;数据模型与保存链路沿用 chipSheet -->
+  <cy-tag-sheet
     show="{{chipSheet.show}}"
     title="{{chipSheet.title}}"
+    items="{{chipSheet.options}}"
+    value="{{chipSheet.value}}"
+    max="{{chipSheet.kind === 'category' ? 5 : 0}}"
+    hint="{{saveError ? saveError : (chipSheet.kind === 'category' ? '可多选，最多 5 个，第一个作为主行业' : '可多选')}}"
+    hint-error="{{!!saveError}}"
+    loading="{{chipSheet.loading}}"
+    error="{{chipSheet.error}}"
+    saving="{{saving || refreshing}}"
+    confirm-text="{{saveError ? '重试保存' : '保存'}}"
+    bind:change="onChipSheetChange"
+    bind:confirm="saveChipSheet"
     bind:close="closeChipSheet"
-    mask-closable="{{!saving}}"
-    closable="{{!saving}}"
-  >
-    <view class="dc-sheet-content">
-      <text class="dc-muted">{{chipSheet.kind === 'category' ? '可多选，最多 5 个，第一个作为主行业' : '可多选'}}</text>
-      <text wx:if="{{chipSheet.loading}}" class="dc-muted">正在载入行业…</text>
-      <cy-inline-error load-failure kind="error" wx:if="{{chipSheet.error}}" title="行业列表暂未加载" sub="{{chipSheet.error}}" action="重试" bind:action="retryChipSheet" />
-      <view class="dc-tags">
-        <view
-          wx:for="{{chipSheet.options}}"
-          wx:key="key"
-          class="dc-tag dc-chip {{item.checked ? 'dc-selected' : ''}}"
-          bindtap="toggleChip"
-          data-key="{{item.key}}"
-          aria-role="checkbox"
-          aria-checked="{{item.checked}}"
-          aria-label="{{item.label}}"
-          hover-class="cy-pressed"
-        >
-          <cy-icon wx:if="{{item.icon}}" name="{{item.icon}}" size="28" />
-          <text>{{item.label}}</text>
-        </view>
-      </view>
-      <cy-inline-error kind="error" wx:if="{{saveError}}" title="暂未完成" sub="{{saveError}}" />
-      <cy-btn loading="{{saving}}" bindtap="saveChipSheet" disabled="{{!chipSheet.options.length || refreshing}}">{{saveError ? '重试保存' : '保存'}}</cy-btn>
-    </view>
-  </cy-sheet>
+    bind:retry="retryChipSheet"
+  />
   <!-- 经营时间:组件挂在 scroll-view 外的页面根,底部 sheet 不被滚动容器裁切 -->
   <decor-hours
     wx:if="{{view === 'basic' && m}}"

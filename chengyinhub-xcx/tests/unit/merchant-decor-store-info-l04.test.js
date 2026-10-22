@@ -142,7 +142,8 @@ test('(c) 行业类型:常见行业短表映射到真实分类记录,多选带�
   const options = h.page.data.chipSheet.options
   assert.deepEqual(plain(options.map(o => o.label)), ['餐饮美食', '运动健身', '冷门旧类目'],
     '只出短表里认领到的行业 + 已选的旧类目,不平铺整张分类表')
-  assert.ok(options.every(o => o.icon), '每个胶囊都带图标')
+  // L11:图标改用 cy-tag-sheet 的 Figma 图标表,映射不到的(冷门旧类目)按 owner 口径留空
+  assert.deepEqual(plain(options.map(o => o.icon)), ['noodles', 'sport', ''])
   assert.equal(options.filter(o => o.checked).map(o => o.key).join(), '42')
   h.page.toggleChip({ currentTarget: { dataset: { key: '11' } } })
   h.page.saveChipSheet()

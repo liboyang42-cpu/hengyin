@@ -13,7 +13,8 @@ const { createCheckoutWorkflow, hasCompletePaymentParams } = require('../../../u
 const { createPaymentVerifier } = require('../../../utils/checkout/payment-verifier.js');
 const { inactiveAccess, normalizeMerchantAccess } = require('../../../utils/merchant-access-policy.js');
 const { buildActiveSubscriptions } = require('../utils/merchant-subscription-view.js');
-const { resolveCategoryIcon } = require('../../../utils/category-icon.js');
+// 胶囊图标走 cy-tag-sheet 的 Figma 图标表(文件名),不再用 cy-icon 的分类图标名(L11)
+const { tagIconName } = require('../components/cy/tag-sheet/model.js');
 const { isValidMobile } = require('../../../utils/form-state.js');
 
 // 单字段编辑 sheet 的字段表(§〇.2:单字段/短选择 → 半屏 sheet,正文不留内联 input)。
@@ -53,6 +54,11 @@ const INDUSTRY_OPTIONS = [
 ];
 const MAX_INDUSTRIES = 5;
 
+/** 胶囊选项里勾选中的 key(按选项顺序,第一个仍是主行业)。 */
+function checkedKeys(options) {
+  return (options || []).filter(o => o && o.checked).map(o => String(o.key));
+}
+
 function parsePreference(value) {
   return String(value == null ? '' : value).split(PREFERENCE_SPLIT)
     .map(x => x.trim()).filter((x, i, all) => x && all.indexOf(x) === i);
@@ -82,18 +88,18 @@ function buildIndustryOptions(rows, selectedIds) {
     const hit = list.filter(r => !used[r.id] && def.match.test(String(r.categoryName)))[0];
     if (!hit) return;
     used[hit.id] = true;
-    out.push({ key: String(hit.id), label: def.label, name: String(hit.categoryName), icon: resolveCategoryIcon(hit.categoryName) });
+    out.push({ key: String(hit.id), label: def.label, name: String(hit.categoryName), icon: tagIconName(def.label) });
   });
   if (!out.length) {
     list.slice(0, 10).forEach(r => {
       used[r.id] = true;
-      out.push({ key: String(r.id), label: String(r.categoryName), name: String(r.categoryName), icon: resolveCategoryIcon(r.categoryName) });
+      out.push({ key: String(r.id), label: String(r.categoryName), name: String(r.categoryName), icon: tagIconName(r.categoryName) });
     });
   }
   (selectedIds || []).forEach(id => {
     if (out.some(o => o.key === String(id))) return;
     const row = list.filter(r => String(r.id) === String(id))[0];
-    if (row) out.push({ key: String(row.id), label: String(row.categoryName), name: String(row.categoryName), icon: resolveCategoryIcon(row.categoryName) });
+    if (row) out.push({ key: String(row.id), label: String(row.categoryName), name: String(row.categoryName), icon: tagIconName(row.categoryName) });
   });
   return out.map(o => Object.assign(o, { checked: (selectedIds || []).indexOf(o.key) >= 0 }));
 }
@@ -154,7 +160,7 @@ Page({
     imageEditor: null, discardVisible: false, backGuardOff: false, brandImages: [],
     categoryOptions: [], categoryDraft: [], categoryError: '',
     // 经营类目/行业类型共用的胶囊多选底部 sheet(owner 2026-10-22)
-    chipSheet: { show: false, kind: '', title: '', options: [], loading: false, error: '' },
+    chipSheet: { show: false, kind: '', title: '', options: [], value: [], loading: false, error: '' },
     imagePicking: false,
     hoursOpen: false,
     wechatId: '', wechatQr: '',
@@ -1083,17 +1089,18 @@ Page({
     if (this.data.saving || this.data.refreshing) return;
     const current = parsePreference(this.data.m && this.data.m.preference);
     const options = PREFERENCE_OPTIONS.concat(current.filter(x => PREFERENCE_OPTIONS.indexOf(x) < 0))
-      .map(label => ({ key: label, label, icon: '', checked: current.indexOf(label) >= 0 }));
+      .map(label => ({ key: label, label, icon: tagIconName(label), checked: current.indexOf(label) >= 0 }));
     this.setData({ saveError: '', saveErrorKind: '',
-      chipSheet: { show: true, kind: 'preference', title: '经营类目', options, loading: false, error: '' } });
+      chipSheet: { show: true, kind: 'preference', title: '经营类目', options, value: checkedKeys(options), loading: false, error: '' } });
   },
   goCategory() {
     if (this.data.saving || this.data.refreshing) return;
     const ids = selectedCategoryIds(this.data.m);
     const cached = this._categoryRows;
+    const initial = cached ? buildIndustryOptions(cached, ids) : [];
     this.setData({ saveError: '', saveErrorKind: '', chipSheet: {
       show: true, kind: 'category', title: '行业类型',
-      options: cached ? buildIndustryOptions(cached, ids) : [], loading: false, error: '' } });
+      options: initial, value: checkedKeys(initial), loading: false, error: '' } });
     if (cached) return;
     // 不闪:400ms 内回来就直接出胶囊,超过才显示「正在载入」
     if (this._categoryLoadingTimer) clearTimeout(this._categoryLoadingTimer);
@@ -1106,7 +1113,7 @@ Page({
       if (this._categoryLoadingTimer) { clearTimeout(this._categoryLoadingTimer); this._categoryLoadingTimer = null; }
       if (this._destroyed || this.data.chipSheet.kind !== 'category') return;
       if (error) this.setData({ 'chipSheet.loading': false, 'chipSheet.error': error });
-      else this.setData({ 'chipSheet.loading': false, 'chipSheet.error': '', 'chipSheet.options': options });
+      else this.setData({ 'chipSheet.loading': false, 'chipSheet.error': '', 'chipSheet.options': options, 'chipSheet.value': checkedKeys(options) });
     };
     app.sendRequest({hideLoading:true, url:'/api/category/list', method:'POST', data:{type:1,parentid:0},
       success: res => {
@@ -1126,7 +1133,15 @@ Page({
     if (!target) return;
     if (!target.checked && this.data.chipSheet.kind === 'category'
         && options.filter(o => o.checked).length >= MAX_INDUSTRIES) return toast('最多选 ' + MAX_INDUSTRIES + ' 个');
-    this.setData({ 'chipSheet.options': options.map(o => o.key === key ? Object.assign({}, o, { checked: !o.checked }) : o) });
+    const next = options.map(o => o.key === key ? Object.assign({}, o, { checked: !o.checked }) : o);
+    this.setData({ 'chipSheet.options': next, 'chipSheet.value': checkedKeys(next) });
+  },
+  /** cy-tag-sheet 点选回传整份选中 key(上限由组件按 max 拦并 toast),落回 options.checked,保存链路不变。 */
+  onChipSheetChange(e) {
+    if (this.data.saving) return;
+    const value = ((e && e.detail && e.detail.value) || []).map(String);
+    const next = this.data.chipSheet.options.map(o => Object.assign({}, o, { checked: value.indexOf(o.key) >= 0 }));
+    this.setData({ 'chipSheet.options': next, 'chipSheet.value': checkedKeys(next) });
   },
   closeChipSheet() {
     if (this.data.saving) return;
