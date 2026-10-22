@@ -130,6 +130,7 @@ test('门店信息:经营类目 / 行业类型改挂 cy-tag-sheet,沿用 chipShe
   assert.match(block, /bind:change="onChipSheetChange"/)
   assert.match(block, /bind:confirm="saveChipSheet"/)
   assert.match(block, /bind:close="closeChipSheet"/)
+  assert.match(block, /hint-error="\{\{!!saveError\}\}"/, '保存失败回显标红,不和普通提示一样灰')
   assert.doesNotMatch(wxml, /dc-chip/)
   const json = JSON.parse(read('pages/merchant/decor/index.json'))
   assert.equal(json.usingComponents['cy-tag-sheet'], '/pages/merchant/components/cy/tag-sheet/index')

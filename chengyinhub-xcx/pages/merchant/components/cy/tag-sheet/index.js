@@ -24,6 +24,7 @@ Component({
     pageRows: { type: Number, value: 4 },
     pageCols: { type: Number, value: 2 },
     hint: { type: String, value: '' },      // 标题下一行灰字(可选)
+    hintError: { type: Boolean, value: false }, // hint 是失败文案时标红(保存失败回显)
     loading: { type: Boolean, value: false },
     error: { type: String, value: '' },     // 载入失败文案,配「重试」发 retry
     saving: { type: Boolean, value: false },

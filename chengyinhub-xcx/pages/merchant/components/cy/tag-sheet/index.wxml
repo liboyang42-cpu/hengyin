@@ -5,7 +5,7 @@
       <text class="ts__title">{{title}}</text>
       <text class="ts__count">已选 {{_sel.length}}</text>
     </view>
-    <text wx:if="{{hint}}" class="ts__hint">{{hint}}</text>
+    <text wx:if="{{hint}}" class="ts__hint {{hintError ? 'ts__hint--error' : ''}}" aria-role="{{hintError ? 'alert' : ''}}">{{hint}}</text>
     <view wx:if="{{loading && !_pages.length}}" class="ts__state">正在载入…</view>
     <view wx:elif="{{error}}" class="ts__state">
       <text>{{error}}</text>

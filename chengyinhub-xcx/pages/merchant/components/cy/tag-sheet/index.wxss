@@ -39,6 +39,7 @@
   font-size: var(--cy-font-caption, 24rpx);
   color: #777777;
 }
+.ts__hint--error { color: #E5484D; }   /* 保存失败回显:不能和普通提示一样灰 */
 .ts__state {
   min-height: 240rpx;
   display: flex;
