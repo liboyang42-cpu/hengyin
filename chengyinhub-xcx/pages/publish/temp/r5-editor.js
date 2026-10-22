@@ -135,6 +135,7 @@ const methods = {
     if (this.data.gameSheetOpen) this.closeR5GameSheet();
   },
   _measureGameStrip() {
+    if (typeof this.createSelectorQuery !== 'function') return;
     const query = this.createSelectorQuery();
     query.select('.cg-tstrip').boundingClientRect();
     query.selectAll('.cg-tblock').boundingClientRect();
