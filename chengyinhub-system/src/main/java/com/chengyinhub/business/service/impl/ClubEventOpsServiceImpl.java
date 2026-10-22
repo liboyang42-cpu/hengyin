@@ -481,8 +481,9 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
             return replayCancellation(actorMemberId, request.getClubId(), request.getActivityId(),
                     registeredRequestId, waitlistRequestId, reason, waitlistContent);
         }
+        // S531-2:系列关闭(CLOSED)只停排新场次,已排场次仍须能从 event-ops 取消并收尾退款/候补/通知。
         if (!standalone && (!ClubEventOccurrence.STATUS_ACTIVE.equals(occurrence.getStatus())
-                || !ClubEventSeries.STATUS_ACTIVE.equals(series.getStatus()))) {
+                || !seriesServesScheduledOccurrences(series.getStatus()))) {
             throw conflict("场次已失效，无法取消");
         }
         if (teamGroupService == null) throw conflict("活动取消服务不可用");
@@ -943,9 +944,14 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
         return access;
     }
 
+    /** S531-2:ACTIVE 与 CLOSED 系列的已排场次都仍在服务(可读、可取消、候补可收尾);只有 ACTIVE 能排新场次。 */
+    static boolean seriesServesScheduledOccurrences(String status) {
+        return ClubEventSeries.STATUS_ACTIVE.equals(status) || ClubEventSeries.STATUS_CLOSED.equals(status);
+    }
+
     private void validateReadableSeries(ClubEventSeries series, Long clubId) {
         if (series == null || !positive(series.getId()) || !clubId.equals(series.getClubId())
-                || !positive(series.getTopicId()) || !ClubEventSeries.STATUS_ACTIVE.equals(series.getStatus())
+                || !positive(series.getTopicId()) || !seriesServesScheduledOccurrences(series.getStatus())
                 || series.getVersion() == null || series.getVersion() < 0
                 || !positive(series.getDefaultLeadMemberId()) || series.getWaitlistEnabled() == null
                 || series.getOfferMinutes() == null) {

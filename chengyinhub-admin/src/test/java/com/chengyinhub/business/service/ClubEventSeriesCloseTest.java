@@ -164,7 +164,7 @@ class ClubEventSeriesCloseTest {
         verify(mapper, never()).insertOccurrence(any());
     }
 
-    /** 读/写/候补推进所有入口都以 status='ACTIVE' 过滤;CAS 只认 ACTIVE→CLOSED。 */
+    /** 排新场次的写入口只认 ACTIVE;CAS 只认 ACTIVE→CLOSED(已排场次的读/取消/候补收尾另见 S531-2)。 */
     @Test
     void mapperClosesOnlyActiveSeriesAndScheduleCasStillRequiresActive() throws Exception {
         Path xml = Paths.get("..", "chengyinhub-system", "src", "main", "resources", "mapper", "business",
