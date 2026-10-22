@@ -17,5 +17,7 @@
     "cy-cell": "/components/cy/cell/index",
     "cy-dropdown": "/components/cy/dropdown/index",
     "cy-sheet": "/components/cy/sheet/index"
-  }
+  },
+  "backgroundColorTop": "#F3F4F4",
+  "backgroundColorBottom": "#F3F4F4"
 }

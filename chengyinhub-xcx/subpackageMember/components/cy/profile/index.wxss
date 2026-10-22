@@ -915,3 +915,22 @@
 .cy-pressed { opacity: .88; }
 
 .scene-host { --cy-comp-sheet-border-width: 0px; }
+
+/* 2026-10-22 owner:商家态主页整页恒浅(L01-d)。
+ * 宿主页根挂 theme-dark、page{} 底为黑,商家态只靠 .pc-page 自己的底色撑满不够:
+ * 内容不足一屏或下拉回弹时会露出黑底(半浅半黑)。用负 z-index 的固定浅底垫在整屏之下;
+ * 文字色全部显式指回商家 token(--cy-color-*),不吃宿主页的深色继承。 */
+.pc-merchant::before {
+  content: '';
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  z-index: -1;
+  background: var(--cy-color-bg-page);
+}
+.pc-merchant .pc-sec-tit,
+.pc-merchant .pc-gamer-name { color: var(--cy-color-text-primary); }
+.pc-merchant .pc-gamer-lv,
+.pc-merchant .pc-sec-link { color: var(--cy-color-text-secondary); }
+.pc-merchant .pc-sec-link { color: var(--cy-color-text-primary); }
+/* 末张卡(经营团队)被自定义 tabBar 盖住:在原底距上再加一段并计安全区,保证滚到底能完整露出 */
+.pc-merchant .pc-body { padding-bottom: calc(var(--cy-space-8) + var(--cy-tabbar-h)); }
+.pc-merchant .pc-team-entry { margin-bottom: var(--cy-space-4); }

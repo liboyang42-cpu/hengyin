@@ -18,5 +18,7 @@
     "cy-consent-check": "/components/cy/consent-check/index",
     "cy-privacy-gate": "/components/cy/privacy-gate/index",
     "cy-inline-error": "/components/cy/inline-error/index"
-  }
+  },
+  "backgroundColorTop": "#F3F4F4",
+  "backgroundColorBottom": "#F3F4F4"
 }

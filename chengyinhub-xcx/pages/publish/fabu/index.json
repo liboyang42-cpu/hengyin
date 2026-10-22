@@ -26,5 +26,8 @@
     "topic-state-keys": "/pages/publish/components/topic-state-keys/index"
   },
   "navigationStyle": "custom",
-  "navigationBarTextStyle": "black"
+  "navigationBarTextStyle": "black",
+  "backgroundColor": "#FFFFFF",
+  "backgroundColorTop": "#FFFFFF",
+  "backgroundColorBottom": "#FFFFFF"
 }
