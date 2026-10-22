@@ -1400,7 +1400,7 @@ Page({
       if (nodeGameCatalog.findGame(options.game)) {
         that.pickGame({ currentTarget: { dataset: { key: options.game } } });
         if (options.sample === '1') that.previewGameFromSheet({ currentTarget: { dataset: { key: options.game } } });
-      }
+      } else { that.setData({ scrollIntoView: 'sec-game' }); that.openR5GameSheet(); } // 2026-10-22 主人:新建不先起名,直接停在玩法并打开选择玩法(名字默认取玩法名)
     }
   },
 

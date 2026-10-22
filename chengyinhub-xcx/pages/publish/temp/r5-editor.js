@@ -11,7 +11,8 @@ function legacyRows(config) {
   if (tools.selected(config).trade) add('interactionTools.allowTrade', '旧物资交换');
   REMOVED.filter(key => config[key]?.enabled).forEach(key => add(key, '旧规则：' + key));
   for (const path of ['ballShake.timed', 'ballShake.seconds', 'typeIn.seconds', 'sort.maxAttempts', 'qa.maxTries', 'photoCheck.maxTries', 'estimate.maxTries', 'pricePair.maxTries', 'hiddenObject.maxTries']) {
-    if (config[path.split('.')[0]]?.enabled) add(path, '旧参数：' + path);
+    const value = after.get(config, path);
+    if (config[path.split('.')[0]]?.enabled && value !== 0 && value !== '' && value !== false && !(path === 'qa.maxTries' && config.qa.mode === 'PICK')) add(path, '旧参数：' + path);
   }
   if (config.variants?.length) add('variants', '旧放宽条件');
   return rows;
@@ -127,6 +128,8 @@ const methods = {
     if (item.reason) { require('../../../utils/toast.js')(item.reason); return; }
     if (item.key === this.data.r5Editor.baseKey) { this.closeR5GameSheet(); return; }
     this.pickR5GameFromSheet({ currentTarget: { dataset: { key: item.key } } });
+    // 新建时名字还空着就先用玩法名,作者随时可改
+    if (!String(this.data.formData.title || '').trim() && this.data.gameKey) this._setFormState({ 'formData.title': (this.data.gameCurrent && this.data.gameCurrent.label) || item.label });
     if (this.data.gameSheetOpen) this.closeR5GameSheet();
   },
   _measureGameStrip() {

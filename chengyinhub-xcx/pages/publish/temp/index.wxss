@@ -1616,3 +1616,13 @@ page {
 .cg-tsheet__name { margin-right: var(--cy-space-2); font-weight: 600; color: var(--cy-color-text-primary); }
 /* 标签条左右两端按透明度渐隐,提示还能往旁边滑 */
 .cg-tstrip { -webkit-mask-image: linear-gradient(to right, transparent 0, black 24rpx, black calc(100% - 48rpx), transparent 100%); mask-image: linear-gradient(to right, transparent 0, black 24rpx, black calc(100% - 48rpx), transparent 100%); }
+
+/* 2026-10-22 开发者工具实拍后补:玩法设置里的分区小标题去掉竖条;扫完回复、三步说明下留出间距;
+   编辑浮层里不再灰框套白输入框(和页面一样:白底 + 浅灰输入框);标签条首列让开渐隐区 */
+.cg-inline-cfg .cg-qa-sec::before { display: none; }
+.cg-scan-reply { padding-top: var(--cy-space-3); }
+.cg-fb-steps + .cg-line { margin-top: var(--cy-space-4); }
+.cg-edit-sheet .cg-gcfg { background: transparent; border: 0; padding: 0; }
+.cg-edit-sheet .cg-gcfg .cg-input, .cg-edit-sheet .cg-gcfg .cg-cfg-input, .cg-edit-sheet .cg-gcfg .cg-textarea,
+.cg-edit-sheet .cg-gcfg .cg-cfg-textarea, .cg-edit-sheet .cg-gcfg .cg-pick { background: var(--cy-bg-card-2); border-color: transparent; }
+.cg-tstrip__in { padding-left: var(--cy-space-4); padding-right: var(--cy-space-6); }

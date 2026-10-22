@@ -139,7 +139,8 @@
   --cy-color-state-pressed: rgba(0,0,0,.06); /* ds-ok: tokens.wxss 的创作域按压色同值 */
   --cy-type-body: calc(28rpx * var(--cy-type-scale, 1));
   --cy-font-body: var(--cy-type-body);
-  --cy-comp-card-shadow-day: 0 0 0 0 transparent;
+  /* 2026-10-22 实拍:创作域面板既无描边又无投影,单列菜单和下面的白卡糊成一片 —— 给一层浮起投影 */
+  --cy-comp-card-shadow-day: 0 12rpx 40rpx rgba(0,0,0,.14); /* ds-ok: 菜单浮层投影,与商家档同族 */
 }
 .cdd__layer.theme-topic-editor .cdd__panel { border: 0; }
 
