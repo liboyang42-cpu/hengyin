@@ -14,8 +14,12 @@ const read = (p) => fs.readFileSync(path.join(ROOT, p), 'utf8');
 
 test('智能解读卡标注生成时间对应的数据/档案版本,仅在有生成时间且有解读时出现', () => {
   const wxml = read('pages/merchant/marketing/ai-insight/index.wxml');
-  const aiCard = wxml.slice(wxml.indexOf('<cy-card wx:if="{{ai}}"'), wxml.indexOf('<cy-card wx:else class="ai-card ai-card--down"'));
-  assert.match(aiCard, /<text class="ai-source" wx:if="\{\{generatedAt\}\}">解读依据 \{\{generatedAt\}\} 的经营数据与当时的店铺档案；今天修改的档案次日生效<\/text>/);
+  // 2026-10-22 batch2 集成:#511 店铺参谋改版把解读卡改为 view.ai-card,且页内不再出现「店铺档案」字样,按新结构取卡片区间。
+  const start = wxml.indexOf('<view wx:if="{{ai}}" class="ai-card">');
+  const end = wxml.indexOf('<view wx:else class="ai-card ai-card--down">');
+  assert.ok(start >= 0 && end > start, '解读卡结构必须可定位');
+  const aiCard = wxml.slice(start, end);
+  assert.match(aiCard, /<text class="ai-source" wx:if="\{\{generatedAt\}\}">解读依据 \{\{generatedAt\}\} 的经营数据与当时的档案；今天修改的档案次日生效<\/text>/);
   assert.match(read('pages/merchant/marketing/ai-insight/index.wxss'), /\.ai-source \{/);
   // 后端合同:档案改动对 AI 次日生效的前提仍在
   const service = fs.readFileSync(path.join(ROOT, '../chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantInsightServiceImpl.java'), 'utf8');
