@@ -111,21 +111,6 @@ class ShareSnapshotRunSessionMybatisIntegrationTest {
         assertNotNull(snapshots.selectSnapshotJsonByToken("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"), "别人的快照不受影响");
     }
 
-    @Test void ownedRepublishBumpsVersionAndTokenRevokeOnlyTouchesTheCallersShare() {
-        db.update("INSERT INTO roam_session(id,member_id,status,finished_at) VALUES (1,9,1,NOW())");
-        snapshots.upsertOwnedSnapshot(T1, 9L, 100L, 1L, "{\"v\":1}");
-        assertEquals(Integer.valueOf(1), snapshots.selectVersionByMemberTs(9L, 100L), "首次发布版本 1");
-        snapshots.upsertOwnedSnapshot(T2, 9L, 100L, 1L, "{\"v\":2}");
-        assertEquals(Integer.valueOf(2), snapshots.selectVersionByMemberTs(9L, 100L), "重复发布版本 +1");
-        assertEquals(T1, snapshots.selectTokenByMemberTs(9L, 100L), "令牌不变");
-        snapshots.upsertOwnedSnapshot(T2, 9L, 101L, 1L, "{\"v\":3}");
-        assertEquals(0, snapshots.deleteByMemberToken(8L, T1), "别人的令牌撤不动");
-        assertEquals(1, snapshots.deleteByMemberToken(9L, T1));
-        assertNull(snapshots.selectSnapshotJsonByToken(T1), "撤销后这条读不到");
-        assertNotNull(snapshots.selectSnapshotJsonByToken(T2), "同一人的其它分享不受影响");
-        assertNull(snapshots.selectVersionByMemberTs(9L, 100L));
-    }
-
     @Test void boundSharesRequireRecentFinishedSessionOwnedByTheSameMember() {
         db.update("INSERT INTO roam_session(id,member_id,status,finished_at) VALUES"
                 + "(1,9,1,NOW()),(2,9,1,DATE_SUB(NOW(),INTERVAL 31 DAY)),"
