@@ -46,6 +46,9 @@
               </view>
               <text class="v3-hero-mem-txt">玩家</text>
               <text wx:if="{{city}}" class="v3-hero-mem-loc">· {{city}}</text>
+              <picker wx:if="{{cityManual && !city}}" mode="region" bindchange="onManualCityChange">
+                <text class="v3-hero-mem-loc">· 选择城市</text>
+              </picker>
             </view>
           </view>
         </view>
