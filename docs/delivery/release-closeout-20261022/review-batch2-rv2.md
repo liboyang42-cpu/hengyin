@@ -66,6 +66,7 @@
 
 - **N6 [nit]** `integration-batch2.md` 的 #484 段写的是「本集成分支的分片组合在 CI 上全绿」，依据是旧 head `2b089767` 的 run。文中记录的 `roam-comment-scan.test.js` 与 `subscribe-recipient-contract.test.js` 的临时目录竞态是 master 上原有的问题，在 #486 的新 head 上同样可能让 unit shard 13 偶发失败。如果出现，应按这个已知竞态处理（跑一次重跑确认），不要当成新回归。建议按文中的方案另开修复：把临时目录放到系统 tmp，或在遍历时跳过 `scan-comment-test-*`。
 - **N7 [nit]** #486 的 PR 描述，在「纳入」列表和「落地的 CY-HANDOFF 行」两节里还没有加上 #484 `ca8da72e`、#477 `84c33fea` 的更新 head，也没有写 get-auth-matrix 的冲突怎么解决的。这些只记在 `integration-batch2.md` 第 16/17 行里。合并前建议把描述同步一下，只影响文档。
+  - **已解决（15:26 UTC 复核）**：#486 描述现在已列出 `#484 ca8da72e · #477 84c33fea`，并写明了 W10b get-auth-matrix 交接的处理方式和 `94e19fd1` 的 CI 终态。
 
 RV1 的 S2（活动合作者可写入任意会员）、N1–N5，以及第 3 节的 owner 待决事项，本轮都没有改动，状态不变。
 
