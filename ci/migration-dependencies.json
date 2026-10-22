@@ -7,6 +7,7 @@
     "member_visited_poi_poi_key_20261022": ["member_visited_poi"],
     "member_visited_poi_poi_key_backfill_20261022": ["member_visited_poi_poi_key_20261022", "roam"],
     "20261022_location_guard_switch_seed": [],
+    "orient_geo_ar_team_20261022": [],
     "roam_share_version_20261022": ["20260917_roam_share_snapshot"],
     "member_profile_version_20261022": [],
     "topic_completion_coupon_history_receipt_20261016": ["topic_completion_coupon_20260722"],
