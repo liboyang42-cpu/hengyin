@@ -1,6 +1,11 @@
 {
   "schemaVersion": 1,
   "dependencies": {
+    "o14_cms_topic_city_code_20261022": [],
+    "o14_cms_activity_city_code_20261022": [],
+    "o14_content_city_code_backfill_20261022": ["o14_cms_activity_city_code_20261022", "o14_cms_topic_city_code_20261022"],
+    "o14_content_search_document_20261022": [],
+    "o14_reco_search_jobs_20261022": ["o14_content_search_document_20261022", "p3_platform_foundation"],
     "topic_completion_coupon_history_receipt_20261016": ["topic_completion_coupon_20260722"],
     "audit_followup_20261020": ["community_post_platform_20260909", "p3_platform_foundation"],
     "audit_level_20261020": ["community_post_platform_20260909"],
