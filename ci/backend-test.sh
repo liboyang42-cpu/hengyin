@@ -102,6 +102,10 @@ MYBATIS_ITS=(
   # R12-E2E 旅程全链路:建局→到店→问问题→判错→检定→推进→阶段结算→结局全走真库真 mapper;
   #   并发 settle 幂等另有一条负控(测试内临时摘掉动作/回执两把唯一键,断言并发重放消失后再还原)。
   JourneyFullFlowMySqlIT
+  # 2026-10-22 发布验收 P1 玩家念头(领取/步数基线/达成加运气上限仅一次)与隐私(按用途撤回、到访头像窗口、
+  #   导出不跨账号且外人游标被拒、注销申请幂等与仅本人可撤)。
+  JourneyThoughtProgressMySqlIT
+  PrivacyVisibilityExportMySqlIT
 )
 IFS=, ; IT_LIST="${MYBATIS_ITS[*]}" ; unset IFS
 # ⚠️ 必须带 -am:上面那句 `mvn clean test` 不 install 兄弟模块,
