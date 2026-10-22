@@ -8,7 +8,7 @@
 
   <update id="redactChatRequestsByUserId">
     update npc_chat_request
-    set safe_text = null, retryable = 0, lease_token = null, lease_until = null, active_slot = null,
+    set safe_text = null, audio_asset_id = null, retryable = 0, lease_token = null, lease_until = null, active_slot = null,
         safety_decision = case when status = 'PROCESSING' then 'UNKNOWN' else safety_decision end,
         error_code = case when status = 'PROCESSING' then 'REQUEST_OUTCOME_UNKNOWN' else error_code end,
         update_time = now()
@@ -48,7 +48,7 @@
   <update id="bindApprovedTextAudio">
     update npc_chat_request set audio_asset_id=#{assetId},update_time=now()
     where user_id=#{userId} and request_id=#{requestId} and status='SUCCEEDED' and safety_decision='PASS'
-      and audio_asset_id is null
+      and safe_text is not null and audio_asset_id is null
   </update>
 
   <insert id="insertNpcChatRequest" parameterType="com.chengyinhub.business.domain.NpcChatRequest"
