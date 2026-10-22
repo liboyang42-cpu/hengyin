@@ -7,11 +7,12 @@
 --   3. 活动自身无法判定时，继承父主题已有的 city_code(父主题须先回填，所以放在主题之后)。
 --   4. 城市码为 adcode 城市级(直辖市取 xx0100)，与小程序 cityCode 口径一致。
 -- 幂等：所有 UPDATE 都带 city_code IS NULL；重跑只会补上新命中的行，不改已有值。
+-- 排序规则：address_name 是 utf8mb4_general_ci,临时表与 LIKE 都显式钉成同一排序规则，避免 1267 Illegal mix of collations。
 DROP TEMPORARY TABLE IF EXISTS o14_city_keyword;
 CREATE TEMPORARY TABLE o14_city_keyword(
   keyword VARCHAR(16) NOT NULL PRIMARY KEY,
   city_code VARCHAR(32) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 INSERT INTO o14_city_keyword(keyword, city_code) VALUES
   ('北京','110100'),('天津','120100'),('上海','310100'),('重庆','500100'),
@@ -23,7 +24,8 @@ UPDATE cms_topic t
 JOIN (
   SELECT src.id, MIN(k.city_code) AS city_code
   FROM cms_topic src
-  JOIN o14_city_keyword k ON src.address_name LIKE CONCAT('%', k.keyword, '%')
+  JOIN o14_city_keyword k
+    ON src.address_name LIKE CONCAT('%', k.keyword, '%') COLLATE utf8mb4_general_ci
   WHERE src.city_code IS NULL AND src.address_name IS NOT NULL AND src.address_name <> ''
   GROUP BY src.id
   HAVING COUNT(DISTINCT k.city_code) = 1
@@ -35,7 +37,8 @@ UPDATE cms_activity a
 JOIN (
   SELECT src.id, MIN(k.city_code) AS city_code
   FROM cms_activity src
-  JOIN o14_city_keyword k ON src.address_name LIKE CONCAT('%', k.keyword, '%')
+  JOIN o14_city_keyword k
+    ON src.address_name LIKE CONCAT('%', k.keyword, '%') COLLATE utf8mb4_general_ci
   WHERE src.city_code IS NULL AND src.address_name IS NOT NULL AND src.address_name <> ''
   GROUP BY src.id
   HAVING COUNT(DISTINCT k.city_code) = 1
