@@ -4,6 +4,10 @@ import com.chengyinhub.business.domain.ConsentRecord;
 import com.chengyinhub.business.mapper.ConsentRecordMapper;
 import com.chengyinhub.business.service.IConsentRecordService;
 import com.chengyinhub.common.utils.StringUtils;
+import com.chengyinhub.common.constant.HttpStatus;
+import com.chengyinhub.common.exception.ServiceException;
+import org.springframework.transaction.annotation.Transactional;
+import java.util.Objects;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
@@ -12,10 +16,13 @@ import java.util.Date;
 
 @Service
 public class ConsentRecordServiceImpl implements IConsentRecordService {
+    public static final String REQUEST_ID_CONFLICT_MESSAGE = "请求标识已用于其他同意事件";
+
     @Autowired
     private ConsentRecordMapper consentRecordMapper;
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public int record(Long memberId, String docType, String docVersion, String scene,
                       String eventType, String requestId, String ipAddress) {
         return record(memberId, docType, docVersion, scene, null, null,
@@ -23,6 +30,7 @@ public class ConsentRecordServiceImpl implements IConsentRecordService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public int record(Long memberId, String docType, String docVersion, String scene,
                       String scopeType, Long scopeId, String eventType, String requestId, String ipAddress) {
         if (memberId == null || memberId <= 0 || StringUtils.isEmpty(docType) || StringUtils.isEmpty(docVersion)
@@ -48,7 +56,18 @@ public class ConsentRecordServiceImpl implements IConsentRecordService {
         record.setCreateTime(now);
         try {
             return consentRecordMapper.insertConsentRecord(record);
-        } catch (DuplicateKeyException ignored) {
+        } catch (DuplicateKeyException duplicate) {
+            // 事件只追加；共享当前读既避开旧快照，也无需将重复插入的共享锁升级。
+            ConsentRecord original = consentRecordMapper.selectByRequestIdForShare(requestId);
+            if (original == null || !Objects.equals(original.getMemberId(), record.getMemberId())
+                    || !Objects.equals(original.getDocType(), record.getDocType())
+                    || !Objects.equals(original.getDocVersion(), record.getDocVersion())
+                    || !Objects.equals(original.getScene(), record.getScene())
+                    || !Objects.equals(original.getScopeType(), record.getScopeType())
+                    || !Objects.equals(original.getScopeId(), record.getScopeId())
+                    || !Objects.equals(original.getEventType(), record.getEventType())) {
+                throw new ServiceException(REQUEST_ID_CONFLICT_MESSAGE, HttpStatus.CONFLICT);
+            }
             return 0;
         }
     }
