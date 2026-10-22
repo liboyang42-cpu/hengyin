@@ -334,6 +334,20 @@ class ClubSessionServiceImplTest {
         verify(activityService, never()).insertCmsActivity(any());
     }
 
+    /** 旧PR#29 E01-12 交接：直接开团入口也不得把 24:00 静默归一成当天 00:00(退款钟锚点会提前一整天)。 */
+    @Test
+    void openWithHourTwentyFourIsRejectedInsteadOfMidnight() {
+        ClubSessionOpenRequest request = request();
+        request.setSessionTime("24:00");
+
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
+                () -> service.open(request, OWNER_ID, "主理人"));
+
+        assertTrue(error.getMessage().contains("HH:mm"),
+                "拒绝原因必须给出可用的格式,实际:" + error.getMessage());
+        verify(activityService, never()).insertCmsActivity(any());
+    }
+
     /** 存量口径显式传入 00:00 时仍落当天 00:00 —— 改造只强制入参带时刻,不改这个值本身的含义。 */
     @Test
     void openedSessionWithExplicitMidnightTimeStaysMidnight() {
