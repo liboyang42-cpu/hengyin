@@ -129,8 +129,10 @@ function assertLegacyMerchantHero(wxml, wxss) {
   assert.doesNotMatch(wxml, /merchantInfo\.logo\s*\|\|(?!\s*'')/,
     '商家没配 logo 时是空位,不能兜底到个人头像或玩家默认头像');
   assert.match(wxml, /class="rv-revenue-amount"[^>]*>[\s\S]*dashboardData\.revenue/);
-  assert.match(wxml, /<cy-skeleton[^>]*wx:if="\{\{dashboardLoading && dashboardData\.revenue == null\}\}"[^>]*type="amount"/,
-    '只有未知收入的首载才显示 amount 骨架');
+  // 2026-10-22 owner 裁决推翻「首载 amount 骨架」:金额永远在位(首帧 ¥0.00),真值到了滚过去。
+  const revenueZone = wxml.slice(wxml.indexOf('class="rv-revenue-zone"'), wxml.indexOf('<!-- 快捷操作 -->'));
+  assert.match(revenueZone, /class="rv-revenue-amount"[^>]*>\{\{money\.amount2\(revenueShown\)\}\}</, '金额永远渲染屏上当前显示值');
+  assert.doesNotMatch(revenueZone, /<cy-skeleton|rv-revenue-unknown|rv-revenue-sync/, '收入区不再骨架/暂未取到/正在更新三态轮换');
   assert.match(wxml, /class="rv-actions"/);
   [
     ['goScanQR', '扫码'],

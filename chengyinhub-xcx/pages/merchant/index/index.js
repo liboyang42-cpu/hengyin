@@ -48,6 +48,14 @@ const { resolveApplicationResponse, decorateApplication } = require('../../../ut
 const { offerVerificationReadback } = require('../../../utils/verification-readback.js');
 const { createGameSessionClient } = require('../../../utils/game-session-client.js');
 const { attachMerchantGameEntries } = require('../utils/game-session-merchant.js');
+const motion = require('../../../utils/motion.js');
+const { readReducedMotion } = require('../../../utils/motion-preference.js');
+const { buildInboxPreview } = require('../../../utils/inbox-preview.js');
+const { decorate: decorateInvites } = require('../../../utils/coop-invite-view.js');
+
+// 累计收入滚动(2026-10-22 owner 裁决):慢-快-慢,约 1.3s、60fps;帧内金额没变就不 setData。
+const REVENUE_COUNT_MS = 1300;
+const REVENUE_COUNT_FPS = 60;
 
 Page({
   data: {
@@ -77,6 +85,9 @@ Page({
     },
     dashboardLoading: true,
     dashboardError: '',
+    // 屏上正在显示的累计收入(两位小数字符串):首帧 0.00,真值到了从当前显示值滚过去;
+    // 返回页面不归零,出错保留上次显示值。只在换商家主体时归零。
+    revenueShown: '0.00',
     // 默认 fail closed，避免首帧把上一商家或假零报表先露出来。
     merchantAccess: inactiveAccess(),
     // 身份/加载没能确认时的页内错误(cy-inline-error 承接),不再是整屏身份闸。
@@ -87,6 +98,11 @@ Page({
     // 参与项目真实总数(卡片只铺前几条,空态文案不能拿截断列表报数)
     joinTotal: 0,
     notifications: [],
+    // 「我的消息」:站内会话 + 收到的协作邀请 + 经营动态合并后的前 3 条(utils/inbox-preview.js)。
+    // inboxLoaded=false 时只占一行高度不画内容,避免加载中冒充「还没有消息」。
+    inboxItems: [],
+    inboxLoaded: false,
+    inboxError: false,
     // BL-85 开通前置检查未完成项(只读;全部完成/无数据/失败时为空,不展示)
     prerequisites: [],
     todo: { biddingTopics: 0, pendingVerify: 0, verifiedCount: 0, pendingScanConfirm: 0, pendingOrders: 0, refundCount: 0 },
@@ -405,9 +421,9 @@ Page({
     });
   },
 
-  resetGameStationSummaries(renderCards = true) {
+  resetGameStationSummaries(renderCards = true, keepEntries = false) {
     this._gameSummaryGeneration = (this._gameSummaryGeneration || 0) + 1;
-    this._merchantGameEntries = [];
+    if (!keepEntries) this._merchantGameEntries = [];
     if (this._merchantGameEntryTask && typeof this._merchantGameEntryTask.abort === 'function') {
       this._merchantGameEntryTask.abort();
     }
@@ -428,13 +444,85 @@ Page({
       retry: 2,
       success(res) {
         if (!that.isCurrentDataEpoch(dataEpoch)) return;
-        const data = ((res.code === '200' || res.code === 200) && res.data) ? res.data : [];
+        const ok = (res.code === '200' || res.code === 200) && Array.isArray(res.data);
+        const data = ok ? res.data : [];
         that.setData({
           notifications: data.length
             ? data.map((e, i) => Object.assign({ id: i }, e))
             : [],
         });
         that.refreshProjectCards();
+        that.settleInboxSource(dataEpoch, 'events', ok ? data : null);
+      },
+      fail() {
+        if (!that.isCurrentDataEpoch(dataEpoch)) return;
+        that.settleInboxSource(dataEpoch, 'events', null);
+      },
+    });
+  },
+
+  // 「我的消息」三路来源(会话 / 收到的邀请 / 经营动态)全部落定后一次性合并渲染:
+  // 逐路渲染会让列表在加载中来回重排。返回页面时旧列表留在屏上,直到新一轮合并完成。
+  startInbox(dataEpoch, access) {
+    const sources = ['conversations'];
+    if (access.canManageCoop) sources.push('invites');
+    if (access.canReadFinance || access.canReadVerifyRecords) sources.push('events');
+    this._inbox = { epoch: dataEpoch, pending: new Set(sources), total: sources.length, failed: 0,
+      rows: { conversations: [], invites: [], events: [] } };
+    this.loadInboxConversations(dataEpoch);
+    if (access.canManageCoop) this.loadInboxInvites(dataEpoch);
+  },
+
+  settleInboxSource(dataEpoch, source, rows) {
+    const box = this._inbox;
+    if (!box || box.epoch !== dataEpoch || !box.pending.has(source)) return;
+    box.pending.delete(source);
+    if (rows) box.rows[source] = rows;
+    else box.failed += 1;
+    if (box.pending.size) return;
+    const items = buildInboxPreview(box.rows, { limit: 3 });
+    // 全部来源都失败:保留上次确认的列表,没有就如实说没读到(不冒充「还没有消息」)。
+    if (box.failed === box.total) {
+      this.setData({ inboxLoaded: true, inboxError: !this.data.inboxItems.length });
+      return;
+    }
+    this.setData({ inboxItems: items, inboxLoaded: true, inboxError: false });
+  },
+
+  // 与 subpackageB/pages/im/list 同一请求(/api/im/conversations)
+  loadInboxConversations(dataEpoch) {
+    const that = this;
+    app.sendRequest({
+      url: '/api/im/conversations', method: 'POST', hideLoading: true, silentError: true,
+      success(res) {
+        if (!that.isCurrentDataEpoch(dataEpoch)) return;
+        that.settleInboxSource(dataEpoch, 'conversations',
+          res && res.code == 200 && isRecordList(res.data) ? res.data : null);
+      },
+      fail() {
+        if (!that.isCurrentDataEpoch(dataEpoch)) return;
+        that.settleInboxSource(dataEpoch, 'conversations', null);
+      },
+    });
+  },
+
+  // 与 subpackageB/pages/im/list 同一请求与投影(/api/coop/list → decorateInvites),只取收到的
+  loadInboxInvites(dataEpoch) {
+    const that = this;
+    app.sendRequest({
+      url: '/api/coop/list', method: 'POST',
+      data: JSON.stringify({}), header: { 'Content-Type': 'application/json' },
+      hideLoading: true, silentError: true,
+      success(res) {
+        if (!that.isCurrentDataEpoch(dataEpoch)) return;
+        const d = res && res.code == 200 ? res.data : null;
+        const ok = d && isRecordList(d.received);
+        that.settleInboxSource(dataEpoch, 'invites',
+          ok ? decorateInvites(d.received, d.slots).filter((it) => it.inviteId) : null);
+      },
+      fail() {
+        if (!that.isCurrentDataEpoch(dataEpoch)) return;
+        that.settleInboxSource(dataEpoch, 'invites', null);
       },
     });
   },
@@ -484,6 +572,7 @@ Page({
         todoError: true,
       });
     }
+    this.startInbox(dataEpoch, currentAccess);
     if (currentAccess.canReadFinance || currentAccess.canReadVerifyRecords) {
       this.loadEvents(dataEpoch);
     } else {
@@ -533,6 +622,9 @@ Page({
     this._legacyJoinTopicIds = new Set();
     this._chapterProjectList = [];
     this._chapterJoinTopicIds = new Set();
+    this._merchantGameEntries = [];
+    this._inbox = null;
+    this.stopRevenueCount();
     this.setData({
       displayName: '商家',
       businessStatus: 1,
@@ -540,6 +632,7 @@ Page({
       dashboardData: { revenue: null, pendingOrders: null },
       dashboardLoading: true,
       dashboardError: '',
+      revenueShown: '0.00',
       revBars: [],
       projectList: [],
       joinTotal: 0,
@@ -554,6 +647,9 @@ Page({
       todoError: false,
       projectCards: [],
       notifications: [],
+      inboxItems: [],
+      inboxLoaded: false,
+      inboxError: false,
       prerequisites: [],
       chapterSheet: { show: false, code: '', items: [] },
       stationSheet: { show: false, code: '', items: [] },
@@ -599,7 +695,8 @@ Page({
 
   onShow(options) {
     merchantTheme.merchantPageShow(); this._navigating = false;
-    this.resetGameStationSummaries();
+    // 回到页面不剥掉已确认的游戏入口卡(否则项目列先缩后涨);换主体时 clearMerchantScopedData 才清。
+    this.resetGameStationSummaries(false, true);
     this._businessActionEpoch = (this._businessActionEpoch || 0) + 1;
     // 页面重新进入时作废离开前的写操作；页内下拉刷新只重读经营数据，
     // 不能让一笔仍在途的核销回执静默消失。
@@ -621,6 +718,7 @@ Page({
       if (this._merchantScopeKey) this.clearMerchantScopedData();
       this._merchantScopeKey = '';
       this._dataMemberId = '';
+      this._accessMemberId = '';
       this.closeScene();
       this.setData({ consoleError: '', consoleStatus: null, merchantAccess: inactiveAccess() });
       // 静默登录:成功自动继续加载;失败只留页内错误,由 reloadConsole 重试。
@@ -637,7 +735,14 @@ Page({
     const dataEpoch = (this._dataEpoch || 0) + 1;
     this._dataEpoch = dataEpoch;
     this._dataMemberId = identityMemberId;
-    this.setData({ consoleError: '', consoleStatus: null, merchantAccess: inactiveAccess() });
+    // 同一账号回到页面:重新确认期间保留上次确认的岗位权限与入驻状态,收入区/快捷钮不先消失再出现
+    // (2026-10-22 owner 裁决:页面重载不得变形)。换账号才先 fail closed。
+    if (this._accessMemberId === identityMemberId) {
+      this.setData({ consoleError: '' });
+    } else {
+      this._accessMemberId = '';
+      this.setData({ consoleError: '', consoleStatus: null, merchantAccess: inactiveAccess() });
+    }
     this.loadConsoleAccess(dataEpoch, version, identityMemberId, authRetryUsed === true);
   },
 
@@ -649,6 +754,7 @@ Page({
     this._merchantScopeKey = '';
     this._dataMemberId = '';
     this._dataEpoch = (this._dataEpoch || 0) + 1;
+    this._accessMemberId = '';
     this.closeScene();
     this.setData({ consoleStatus: null, merchantAccess: inactiveAccess() });
     if (authRetryUsed) {
@@ -692,13 +798,16 @@ Page({
         }
         const access = normalizeMerchantAccess(res.data);
         if (access.invalid) {
+          this._accessMemberId = '';
           this.setData({ consoleError: '经营身份没能确认，请重新检查', consoleStatus: null, merchantAccess: inactiveAccess() });
           return;
         }
         if (!access.active) {
           if (this._merchantScopeKey) this.clearMerchantScopedData();
           this._merchantScopeKey = '';
-          this.setData({ consoleError: '', consoleStatus: null, merchantAccess: access });
+          this._accessMemberId = identityMemberId;
+          const keepStatus = !!(this.data.consoleStatus && access.applicationState && access.applicationState !== 'NONE');
+          this.setData({ consoleError: '', consoleStatus: keepStatus ? this.data.consoleStatus : null, merchantAccess: access });
           // 入驻申请审核中/未通过/停用:页内显示当前状态 + 查看申请进度,不把人静默丢回会员中心
           // (2026-09-17 拍板 #24)。access/me 只给状态枚举、不给驳回/停用原因,所以原因另行回读
           // /api/merchant/info —— 与入驻申请页同一真源、同一投影(decorateApplication)。
@@ -711,6 +820,7 @@ Page({
           return;
         }
         this.syncMerchantScope(access);
+        this._accessMemberId = identityMemberId;
         const merchantInfo = Object.assign({}, this.data.merchantInfo, access.merchant);
         this.setData({ consoleError: '', consoleStatus: null, merchantAccess: access, merchantInfo });
         this.refreshProfileHeader(merchantInfo, this._userInfo);
@@ -867,6 +977,7 @@ Page({
             },
             revBars: revBars,
           });
+          if (expectsRevenue) that.countRevenueTo(revenue);
         } else {
           that.setData({ dashboardError: app.getRequestErrorMessage(res, '经营数据加载失败') });
         }
@@ -884,6 +995,29 @@ Page({
 
   // 组件事件会作为第一个参数传入；不能直接把 bind:action 绑到带 epoch 参数的方法。
   reloadDashboard() { this.loadDashboard(); },
+
+  // 累计收入从「屏上当前显示值」滚到新值(慢-快-慢);减少动态效果时直接落定。
+  countRevenueTo(target) {
+    this.stopRevenueCount();
+    const from = Number(this.data.revenueShown) || 0;
+    const to = Number(target) || 0;
+    this._revenueCountStop = motion.countUp(from, to, (value) => {
+      const text = value.toFixed(2);
+      if (text !== this.data.revenueShown) this.setData({ revenueShown: text });
+    }, {
+      duration: REVENUE_COUNT_MS,
+      fps: REVENUE_COUNT_FPS,
+      decimals: 2,
+      ease: motion.easeInOutCubic,
+      reducedMotion: readReducedMotion(),
+      onDone: () => { this._revenueCountStop = null; },
+    });
+  },
+
+  stopRevenueCount() {
+    if (this._revenueCountStop) this._revenueCountStop();
+    this._revenueCountStop = null;
+  },
 
   loadJoinList(dataEpoch = this._dataEpoch || 0) {
     const that = this;
@@ -1081,6 +1215,31 @@ Page({
   goEvent(e) {
     const type = e && e.currentTarget && e.currentTarget.dataset.type;
     if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/merchant/ledger/index?view=' + (type === 'income' ? 'settlement' : 'redemptions'), complete: () => { this._navigating = false; } });
+  },
+
+  // 「我的消息」的「全部」= 站内消息收件箱(会话 + 收到的邀请)
+  goInbox() {
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageB/pages/im/list/index', complete: () => { this._navigating = false; } });
+  },
+
+  // 点一条消息:会话进聊天、邀请进邀约详情(与 im/list 同一路由),经营动态仍走 goEvent。
+  openInboxItem(e) {
+    const key = String(((e && e.currentTarget && e.currentTarget.dataset) || {}).key || '');
+    const item = (this.data.inboxItems || []).find((row) => row.key === key);
+    if (!item) return;
+    if (item.kind === 'event') { this.goEvent({ currentTarget: { dataset: { type: item.type } } }); return; }
+    if (this._navigating) return;
+    let url = '';
+    if (item.kind === 'conversation') {
+      url = '/subpackageB/pages/im/chat/index?conversationId=' + item.conversationId
+        + '&name=' + encodeURIComponent(item.name || '')
+        + '&avatar=' + encodeURIComponent(item.avatar || '')
+        + '&type=' + (item.type || 1);
+    } else if (item.kind === 'invite') {
+      url = '/pages/coop/invite-detail/index?inviteId=' + item.inviteId + '&box=received';
+    }
+    if (!url) return;
+    this._navigating = true; wx.navigateTo({ url, complete: () => { this._navigating = false; } });
   },
 
   goSearch() {
@@ -1378,6 +1537,7 @@ Page({
   },
 
   onUnload() {
+    this.stopRevenueCount();
     this._consoleVersion = (this._consoleVersion || 0) + 1;
     this._identityEpoch = (this._identityEpoch || 0) + 1;
     this._dataEpoch = (this._dataEpoch || 0) + 1;
