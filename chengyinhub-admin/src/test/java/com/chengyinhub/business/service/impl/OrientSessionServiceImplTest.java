@@ -297,6 +297,16 @@ class OrientSessionServiceImplTest {
         when(routeRuntime.state(eq(MEMBER), eq(TOPIC), eq(0L)))
                 .thenThrow(new com.chengyinhub.common.exception.ServiceException("请先报名", 403));
         assertErr("ORIENT_ACCESS_DENIED", () -> service.prepare(MEMBER, TOPIC, 0L, "key-prepare-1"));
+        // 首次开赛同样复核可玩性(如报名已退款),不凭 prepare 时的结论起表。
+        assertErr("ORIENT_ACCESS_DENIED", () -> service.start(MEMBER, SESSION, CONFIG_VERSION, "key-start-1"));
+        assertNull(orientMapper.clocks.get(SESSION));
+    }
+
+    @Test
+    void notPlayableRouteIsReportedWithItsOwnCode() {
+        when(routeRuntime.state(eq(MEMBER), eq(TOPIC), eq(0L))).thenThrow(new IllegalStateException("请先购买自玩通行证"));
+        OrientSessionException e = assertErr("ORIENT_NOT_PLAYABLE", () -> service.prepare(MEMBER, TOPIC, 0L, "key-prepare-1"));
+        assertEquals("请先购买自玩通行证", e.getMessage());
     }
 
     @Test

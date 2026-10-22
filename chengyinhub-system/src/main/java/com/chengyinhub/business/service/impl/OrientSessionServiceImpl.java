@@ -99,13 +99,7 @@ public class OrientSessionServiceImpl implements IOrientSessionService {
         if (!positive(memberId) || !positive(topicId) || (activityId != null && activityId < 0)) throw badRequest("参数有误");
         long act = activityId == null ? 0L : activityId;
         requireOrienteeringTopic(topicId);
-        try {
-            routeRuntime.state(memberId, topicId, act);
-        } catch (ServiceException e) {
-            throw new OrientSessionException("ORIENT_ACCESS_DENIED", e.getCode() == null ? 403 : e.getCode(), e.getMessage());
-        } catch (IllegalArgumentException | IllegalStateException e) {
-            throw new OrientSessionException("ORIENT_ROUTE_UNAVAILABLE", 400, e.getMessage());
-        }
+        requirePlayable(memberId, topicId, act);
         String instance = routeRuntime.playInstance(memberId, topicId, act);
         if (instance != null && instance.startsWith("game:")) {
             throw new OrientSessionException("ORIENT_TEAM_UNSUPPORTED", 409, "组队定向暂不支持该流程");
@@ -148,6 +142,7 @@ public class OrientSessionServiceImpl implements IOrientSessionService {
         boolean resumed = sessionClock != null;
         if (!resumed) {
             // 只有首次开赛要求确认本局规则版本;重进直接续上已有计时,不重置。
+            requirePlayable(memberId, row.getTopicId(), row.getActivityId());
             if (ackConfigVersion == null || !ackConfigVersion.equals(row.getConfigVersion())) {
                 Map<String, Object> data = new LinkedHashMap<String, Object>();
                 data.put("sessionId", row.getId());
@@ -395,6 +390,17 @@ public class OrientSessionServiceImpl implements IOrientSessionService {
         OrientSessionRow row = orientMapper.selectSession(sessionId, memberId);
         if (row == null) throw new OrientSessionException("ORIENT_SESSION_NOT_FOUND", 404, "本局不存在或无权查看");
         return row;
+    }
+
+    /** 报名/场次/路线发布等可玩性校验沿用既有路线运行时(state 内的 requireScope),不在这里另判。 */
+    private void requirePlayable(Long memberId, Long topicId, Long activityId) {
+        try {
+            routeRuntime.state(memberId, topicId, activityId);
+        } catch (ServiceException e) {
+            throw new OrientSessionException("ORIENT_ACCESS_DENIED", e.getCode() == null ? 403 : e.getCode(), e.getMessage());
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            throw new OrientSessionException("ORIENT_NOT_PLAYABLE", 400, e.getMessage());
+        }
     }
 
     private void requireEnabled() {
