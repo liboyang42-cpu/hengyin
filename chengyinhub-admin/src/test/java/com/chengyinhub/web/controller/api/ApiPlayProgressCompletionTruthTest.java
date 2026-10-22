@@ -683,6 +683,81 @@ class ApiPlayProgressCompletionTruthTest
         AjaxResult pick=controller.answer(String.valueOf(ACTIVITY),String.valueOf(NODE),"c",null,"pick-proof",3);assertEquals(200,pick.get("code"));verify(runtime).recordPlayerArrival(PLAYER,TOPIC,ACTIVITY,NODE,"pick-proof",3,"ANSWER");verify(progressService,never()).insertPlayerNodeProgress(any());verify(pointsAwardService,never()).award(anyLong(),anyLong(),anyLong(),any());
     }
 
+    // ---------- N-02 排行榜前置证明:每种完成方式都落 player_node_progress(status=1) ----------
+    // 线性排行榜按 status=1 行计分。下面四条逐一钉住扫码/拍照/答题/高级玩法门四种完成入口
+    // 都写出同一形状的完成行;个人玩法(genericPlayer)的扫码/答题只落 status=0 到店凭证
+    // (见 genericPlayerScanRecordsCurrentRunArrivalWithoutLegacyAwards),其完成事实在
+    // topic_route_session,排行榜对这类主题改读会话(LeaderboardRankPolicy)。
+
+    private PlayerNodeProgress onlyInsertedProgressRow() {
+        org.mockito.ArgumentCaptor<PlayerNodeProgress> inserted =
+                org.mockito.ArgumentCaptor.forClass(PlayerNodeProgress.class);
+        verify(progressService).insertPlayerNodeProgress(inserted.capture());
+        PlayerNodeProgress row = inserted.getValue();
+        assertEquals(PLAYER, row.getMemberId());
+        assertEquals(ACTIVITY, row.getActivityId());
+        assertEquals(TOPIC, row.getTopicId());
+        assertEquals(NODE, row.getNodeId());
+        assertEquals(Integer.valueOf(1), row.getStatus(), "完成行必须 status=1,排行榜才计分");
+        org.junit.jupiter.api.Assertions.assertNotNull(row.getCheckinTime(), "完成时间是同分先完成者的裁判");
+        return row;
+    }
+
+    @Test
+    void leaderboardProofScanCompletionWritesCompletedProgressRow() {
+        topic.setProductType(ProductType.ORIENTEERING);
+
+        assertEquals(200, controller.checkin(String.valueOf(ACTIVITY), CODE, null).get("code"));
+
+        org.junit.jupiter.api.Assertions.assertNull(onlyInsertedProgressRow().getPicUrl());
+    }
+
+    @Test
+    void leaderboardProofPhotoCompletionWritesCompletedProgressRow() {
+        topic.setProductType(ProductType.ORIENTEERING);
+        node.setTemplateId(77L);
+        CmsMemberTemplate tpl = new CmsMemberTemplate();
+        tpl.setValidationMethod(com.chengyinhub.common.constant.ValidationMethod.PHOTO);
+        when(templateService.selectCmsMemberTemplateById(77L)).thenReturn(tpl);
+        when(progressService.selectPlayerNodeProgressList(any())).thenReturn(Collections.emptyList());
+
+        assertEquals(200, controller.photo(String.valueOf(ACTIVITY), String.valueOf(NODE), "photo.jpg", null).get("code"));
+
+        assertEquals("photo.jpg", onlyInsertedProgressRow().getPicUrl());
+    }
+
+    @Test
+    void leaderboardProofAnswerCompletionWritesCompletedProgressRow() {
+        topic.setProductType(ProductType.ORIENTEERING);
+        node.setTemplateId(78L);
+        CmsMemberTemplate tpl = new CmsMemberTemplate();
+        tpl.setValidationMethod(1);
+        tpl.setQuestionAnswer("暗号");
+        when(templateService.selectCmsMemberTemplateById(78L)).thenReturn(tpl);
+        com.chengyinhub.business.service.IPuzzlePlayService puzzles =
+                mock(com.chengyinhub.business.service.IPuzzlePlayService.class);
+        when(puzzles.solvedScore(PLAYER, TOPIC, NODE, ACTIVITY)).thenReturn(100);
+        ReflectionTestUtils.setField(controller, "puzzlePlayService", puzzles);
+
+        assertEquals(200, controller.answer(String.valueOf(ACTIVITY), String.valueOf(NODE), "暗号", null).get("code"));
+
+        onlyInsertedProgressRow();
+    }
+
+    @Test
+    void leaderboardProofAdvancedGameplayCompletionWritesCompletedProgressRow() {
+        topic.setProductType(ProductType.ORIENTEERING);
+        com.chengyinhub.business.service.IAdvancedGameRuntimeService advanced =
+                mock(com.chengyinhub.business.service.IAdvancedGameRuntimeService.class);
+        when(advanced.completeGate(PLAYER, ACTIVITY, TOPIC, NODE)).thenReturn("PASS");
+        ReflectionTestUtils.setField(controller, "advancedGameRuntimeService", advanced);
+
+        assertEquals(200, controller.checkin(String.valueOf(ACTIVITY), CODE, null).get("code"));
+
+        verify(advanced).completeGate(PLAYER, ACTIVITY, TOPIC, NODE);
+        onlyInsertedProgressRow();
+    }
+
     /** 失败/越权路径对订单只允许 C 包当前资格的两种读(列表、按原ID锁读)；任何写入或其他调用都判红。 */
     private void verifyOnlyEligibilityReads() {
         java.util.List<String> allowed = java.util.Arrays.asList("selectCmsRegistrationList", "selectCmsRegistrationByIdForUpdate");
