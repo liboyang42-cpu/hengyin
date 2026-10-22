@@ -41,6 +41,14 @@
 
 本地证据：一次性容器 `mysql:8.0.45`，JDK 21。13/13 通过，skipped=0。JVM 时区 UTC 和 Asia/Shanghai 两档都跑过；`ci/assert_it_ran.py` 回读为“5 套均真跑、skipped=0”。`ci/test_real_storage_it.py` 共 44 条通过，`real_storage_it.precheck` 对 5 个类的条数、门控和 @Nested 都没有报问题。
 
+### CI 实测（PR #497，head `b237a17a`）
+
+- **BT**：ci.yml “Backend tests” job 119834006934 通过。5 个类各自 `Tests run: 2/3/1/2/5, Failures: 0, Errors: 0, Skipped: 0`；`assert_it_ran.py` 输出“真库 IT 观测通过:52 套均真跑、skipped=0、无错无失败”。
+- **RS**：`real-storage-it.yml` 批次 `p0-acceptance-ac1`，source `14e6a1b6`：
+  - UTC：run 39781558716，5/5 类通过，Batch summary 通过。
+  - Asia/Shanghai：run 39781573198，5/5 类通过，Batch summary 通过。
+- **FG**：Funds MySQL IT（50/9/30）通过，计数未变。PR 上其余 required checks 也全部通过。
+
 ## 3. 场景 → 测试 → CI → 状态
 
 状态说明：
