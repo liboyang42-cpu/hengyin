@@ -9,10 +9,10 @@ public interface IClubCalendarService {
 
     /**
      * 返回某俱乐部某月(yyyy-MM)的真实场次。可见性由调用方判定后传入:
-     * includeUnpublished=true 仅限俱乐部治理者。
+     * includeUnpublished=true 仅限俱乐部治理者;公开视角按 viewerMemberId 过「仅俱乐部成员可见」主题闸。
      *
      * @return {clubId, month, sessions[], truncated, updatedAt}
      * @throws IllegalArgumentException clubId 缺失或 month 不是 yyyy-MM
      */
-    Map<String, Object> monthSessions(Long clubId, String month, boolean includeUnpublished);
+    Map<String, Object> monthSessions(Long clubId, String month, boolean includeUnpublished, Long viewerMemberId);
 }

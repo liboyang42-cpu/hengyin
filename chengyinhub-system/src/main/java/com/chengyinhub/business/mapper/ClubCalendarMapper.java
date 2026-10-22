@@ -18,11 +18,13 @@ public interface ClubCalendarMapper {
      *
      * @param includeUnpublished false ⇒ 只回公开可见场次(已过审已发布、未取消、父主题在架);
      *                           true ⇒ 治理者视角,未删除的全部场次(含待审/已取消)
+     * @param viewerMemberId     看的人;公开视角据此过 clubMemberOnlyGate,为空 ⇒ 仅成员主题的场次一律不回
      * @param limit              最多返回条数;调用方多取一条判断是否截断
      */
     List<Map<String, Object>> selectClubSessionsInRange(@Param("clubId") Long clubId,
                                                         @Param("rangeStart") LocalDateTime rangeStart,
                                                         @Param("rangeEnd") LocalDateTime rangeEnd,
                                                         @Param("includeUnpublished") boolean includeUnpublished,
+                                                        @Param("viewerMemberId") Long viewerMemberId,
                                                         @Param("limit") int limit);
 }

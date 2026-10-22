@@ -63,7 +63,7 @@ public class ApiClubCalendarController extends BaseController {
         boolean governor = clubMemberService.canGovernClub(club, viewer);
         String month = body.get("month") == null ? null : String.valueOf(body.get("month"));
         try {
-            return success(calendarService.monthSessions(clubId, month, governor));
+            return success(calendarService.monthSessions(clubId, month, governor, viewer));
         } catch (IllegalArgumentException e) {
             return error(e.getMessage());
         }
