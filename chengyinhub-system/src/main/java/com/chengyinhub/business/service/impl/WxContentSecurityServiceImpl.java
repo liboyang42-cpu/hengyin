@@ -358,18 +358,24 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
     @Override
     public String submitMediaCheckOne(int bizType, Long bizId, String imgUrl, String openid)
     {
-        if (!isEnabled() || bizId == null || StringUtils.isEmpty(imgUrl))
+        return submitMediaCheckOne(bizType, bizId, imgUrl, imgUrl, openid);
+    }
+
+    @Override
+    public String submitMediaCheckOne(int bizType, Long bizId, String fetchUrl, String identity, String openid)
+    {
+        if (!isEnabled() || bizId == null || StringUtils.isEmpty(fetchUrl) || StringUtils.isEmpty(identity))
         {
             return null;
         }
-        String img = imgUrl.trim();
+        String img = fetchUrl.trim();
         try
         {
             String traceId = checkMediaAsync(img, openid);
             if (StringUtils.isNotEmpty(traceId))
             {
                 // MySQL inbox 是回调业务 mutation 的幂等/fencing 权威。登记失败不能只写 Redis 假装可处理。
-                if (!callbackInboxService.register(traceId, bizType, bizId, img))
+                if (!callbackInboxService.register(traceId, bizType, bizId, identity.trim()))
                 {
                     log.error("[内容安全] 图片送检 inbox 登记失败，拒绝返回 trace: bizType={}, bizId={}", bizType, bizId);
                     return null;
@@ -1079,7 +1085,7 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
                 return hangout != null && containsMediaHash(hash, hangout.getCoverUrl());
             case BIZ_TYPE_COMMUNITY_POST:
                 return containsMediaHash(hash,
-                        communityPostServiceProvider.getObject().activeMediaUrls(id).toArray(new String[0]));
+                        communityPostServiceProvider.getObject().activeMediaKeys(id).toArray(new String[0]));
             case BIZ_TYPE_OFFICIAL_EVENT:
                 // 官方活动只送检封面(ApiOfficialEventController 发布口)。
                 com.chengyinhub.business.domain.OfficialEvent event = officialEventMapper.selectOfficialEventById(id);
