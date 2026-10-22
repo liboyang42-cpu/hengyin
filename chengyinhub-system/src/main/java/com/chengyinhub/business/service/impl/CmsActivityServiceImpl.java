@@ -555,7 +555,18 @@ public class CmsActivityServiceImpl implements ICmsActivityService
     @Override
     public CmsActivity selectCmsActivityDetailById(Long id, Long viewerMemberId)
     {
-        return cmsActivityMapper.selectCmsActivityDetailById(id, viewerMemberId);
+        CmsActivity activity = cmsActivityMapper.selectCmsActivityDetailById(id, viewerMemberId);
+        // O-08:挂在「仅俱乐部成员可见」主题下、但场次本身没有 club_id 的场次(控制器的社群门卡只看场次 club_id,
+        // 管不到它),非成员读详情按不存在处理,坐标/地址不外泄;场次作者本人照常。有 club_id 的仍走既有门卡。
+        if (activity != null && (activity.getClubId() == null || activity.getClubId() <= 0)
+                && activity.getTopicId() != null && activity.getTopicId() > 0
+                && !(viewerMemberId != null && viewerMemberId.equals(activity.getMemberId()))
+                && !cmsTopicMapper.selectClubMemberOnlyHiddenTopicIds(
+                        java.util.Collections.singletonList(activity.getTopicId()), viewerMemberId).isEmpty())
+        {
+            return null;
+        }
+        return activity;
     }
 
     @Override

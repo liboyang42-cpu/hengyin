@@ -1090,7 +1090,8 @@ public class ApiClubController extends BaseController {
         discoverQuery.setStatus(1L);
         List<Club> nearby = new java.util.ArrayList<>();
         for (Club c : clubService.selectClubList(discoverQuery)) {
-            if (c.getId() != null && !mine.contains(c.getId())) {
+            // O-08:关了「公开可见」的俱乐部只给主理人/成员看 —— 发现列表下发的是整行(含地点),必须过同一道 canViewClub。
+            if (c.getId() != null && !mine.contains(c.getId()) && canViewClub(c)) {
                 attachClubDisplay(c);
                 c.setMemberCount(effectiveMemberCount(c));
                 nearby.add(c);
