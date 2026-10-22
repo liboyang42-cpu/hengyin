@@ -76,3 +76,26 @@ page {
   padding: 0;
   overflow: hidden;
 }
+
+/* 素材署名(CC BY 3.0 要求):关于页底部,小号次要文字 */
+.sz-attribution {
+  margin: var(--cy-space-6, 48rpx) 0 var(--cy-space-4);
+  padding: 0 var(--cy-space-2);
+}
+.sz-attribution__title {
+  margin-bottom: var(--cy-space-3);
+  color: var(--cy-color-text-primary);
+  font-size: var(--cy-type-label);
+  font-weight: 600;
+}
+.sz-attribution__name,
+.sz-attribution__body,
+.sz-attribution__link {
+  font-size: var(--cy-type-label);
+  line-height: var(--cy-leading-normal);
+}
+.sz-attribution__name { color: var(--cy-color-text-primary); }
+.sz-attribution__body { margin-top: var(--cy-space-1); color: var(--cy-color-text-secondary); }
+.sz-attribution__link { margin-top: var(--cy-space-2); color: var(--cy-color-text-secondary); text-decoration: underline; }
+.sz-attribution__divider { height: 1rpx; margin: var(--cy-space-3) 0; background: var(--cy-color-border-subtle); }
+

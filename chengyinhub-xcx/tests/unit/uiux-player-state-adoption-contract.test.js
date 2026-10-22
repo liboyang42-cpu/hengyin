@@ -142,14 +142,15 @@ test('搜索同关键词重试保留旧结果，部分失败只显示局部错�
   const { page, requests } = loadSearchResultPage();
   page.setData({ keyword: '咖啡' });
   page.runSearch();
-  resolveSearchBatch(requests.slice(0, 4));
-  assert.equal(page.data.visibleResults.length, 4);
+  // 六路请求;主题模板在客户端按关键词过滤,夹具名称不含关键词 ⇒ 5 条可见
+  resolveSearchBatch(requests.slice(0, 6));
+  assert.equal(page.data.visibleResults.length, 5);
 
   page.runSearch();
-  assert.equal(page.data.visibleResults.length, 4, '同关键词刷新开始时不能清空旧结果');
-  resolveSearchBatch(requests.slice(4, 8), new Set([1, 2, 3]));
+  assert.equal(page.data.visibleResults.length, 5, '同关键词刷新开始时不能清空旧结果');
+  resolveSearchBatch(requests.slice(6, 12), new Set([1, 2, 3]));
 
-  assert.equal(page.data.visibleResults.length, 4, '失败分类继续展示上一次成功内容');
+  assert.equal(page.data.visibleResults.length, 5, '失败分类继续展示上一次成功内容');
   assert.equal(page.data.searchError, '');
 });
 
@@ -171,7 +172,7 @@ test('搜索当前 tab 恰好为空时，仍按全部分组判断是否存在旧
   const { page, requests } = loadSearchResultPage();
   page.setData({ keyword: '咖啡' });
   page.runSearch();
-  resolveSearchBatch(requests.slice(0, 4));
+  resolveSearchBatch(requests.slice(0, 6));
   const previousGroups = page.data.resultGroups;
   page.setData({ activeResultType: 'missing-type', visibleResults: [] });
 
@@ -185,15 +186,15 @@ test('搜索新关键词用 epoch 拒绝旧请求迟到回写', () => {
   const { page, requests } = loadSearchResultPage();
   page.setData({ keyword: '旧词' });
   page.runSearch();
-  const oldBatch = requests.slice(0, 4);
+  const oldBatch = requests.slice(0, 6);
 
   page.setData({ keyword: '新词' });
   page.runSearch();
-  const freshBatch = requests.slice(4, 8);
+  const freshBatch = requests.slice(6, 12);
   freshBatch.forEach((request, index) => request.success({ code: 200, data: { rows: [{ id: index + 20, name: '新结果-' + index }] } }));
   oldBatch.forEach((request, index) => request.success({ code: 200, data: { rows: [{ id: index + 40, name: '旧结果-' + index }] } }));
 
-  assert.deepEqual(page.data.visibleResults.map(item => item.title), ['新结果-0', '新结果-1', '新结果-2', '新结果-3']);
+  assert.deepEqual(page.data.visibleResults.map(item => item.title), ['新结果-0', '新结果-1', '新结果-2', '新结果-3', '新结果-5']);
 });
 
 test('搜索有旧结果时用局部错误而不是整页替换', () => {

@@ -1146,18 +1146,13 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <if test="excludeId != null and excludeId > 0"> and id != #{excludeId} </if>
     </select>
 
+    <!-- 2026-10-22 owner 裁决:货架展示所有已发布模板,不再要求 cms_topic_template_meta=VERIFIED
+         (没有任何代码写该行,导致货架恒空)。VERIFIED 只用于 recommendedOnly=1 的推荐口径(service 层过滤)。 -->
     <sql id="publicTopicTemplateEligibility">
         del_flag = 0 and is_template = 1 and status = 1 and user_status = 1
-          and exists (
-              select 1
-                from cms_topic_template_meta tm
-               where tm.topic_id = cms_topic.id
-                 and tm.del_flag = 0
-                 and tm.template_status = 'VERIFIED'
-          )
     </sql>
 
-    <!-- T7 公共模板库:只有已审核、在架、已验证模板可见。 -->
+    <!-- T7 公共模板库:已审核、在架的模板均可见(含未验证)。 -->
     <select id="selectTopicTemplateList" resultMap="CmsTopicResult">
         <include refid="selectCmsTopicVo"/>
         where <include refid="publicTopicTemplateEligibility"/>
@@ -1170,7 +1165,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         where id = #{id} and <include refid="publicTopicTemplateEligibility"/>
     </select>
 
-    <!-- T7 /info /use 门禁与公共货架同口径：必须已审核、是模板且成熟度 VERIFIED。 -->
+    <!-- T7 /info /use 门禁与公共货架同口径：必须已审核、在架且是模板(不再要求 VERIFIED)。 -->
     <select id="selectTopicIsTemplate" resultType="Integer">
         select is_template
           from cms_topic

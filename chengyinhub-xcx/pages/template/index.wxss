@@ -97,10 +97,20 @@ page { background: var(--cy-color-bg-page) !important; }
 }
 
 .tpl-search {
+  display: flex; align-items: center;
+  flex: 1; min-width: 0;
+  /* 触控区仍是整行 88rpx;可见的药丸是内层 .tpl-search-pill(64rpx) */
+  min-height: var(--cy-btn-h);
+  box-sizing: border-box;
+  /* 在黑色顶行内垂直居中,与下方紫面板之间留出间隙(tab 行 align-items:flex-end 会把搜索框压到紫面板上) */
+  align-self: center;
+  margin-bottom: var(--cy-space-2);
+}
+.tpl-search-pill {
   display: flex; align-items: center; gap: var(--cy-space-2);
   flex: 1; min-width: 0;
-  padding: var(--cy-space-2) var(--cy-space-3);
-  min-height: var(--cy-btn-h);
+  height: 64rpx;
+  padding: 0 var(--cy-space-3);
   box-sizing: border-box;
   border-radius: var(--cy-radius-pill);
   background: var(--cy-bg-card-2);

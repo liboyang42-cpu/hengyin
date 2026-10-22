@@ -284,21 +284,8 @@ Page({
   /* CU-M-64:入口现在只搜模板。原来这里 (以及死代码 searchClick) 只是跳到通用搜索
      /pages/search2 —— 那里搜的是主题/活动/俱乐部/商家四类,一类都不是「节点玩法」,
      而入口写着「搜索节点玩法与主题」:按承诺搜的人走错搜索范围,还搜不到。 */
-  goSearch() {
-    modal.show({
-      title: '搜索模板',
-      editable: true,
-      placeholderText: '输入主题或玩法名称',
-      confirmText: '搜索',
-      validate: (content) => String(content || '').trim() ? '' : '请输入要搜索的名称',
-      success: (res) => {
-        if (!res || !res.confirm) return;
-        const keyword = String(res.content || '').trim();
-        if (!keyword) { cyToast('请输入要搜索的名称'); return; }
-        this.startTemplateSearch(keyword);
-      },
-    });
-  },
+  // 2026-10-22 owner 裁决:模板页搜索入口统一走通用搜索(pages/search2),模板作为结果类型出现在那里。
+  goSearch() { wx.navigateTo({ url: '/pages/search2/index' }); },
   goInbox() { wx.navigateTo({ url: '/subpackageB/pages/im/list/index' }); },
 
   // ===== 模板内搜索(2026-09-24 裁决 CU-M-64) =====

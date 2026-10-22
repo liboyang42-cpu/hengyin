@@ -110,7 +110,7 @@ test('twelve PNGs are complete decodable 192px RGBA images; corrupt and truncate
 });
 
 test('the existing offline credit area retains old notices and adds no new action', () => {
-  const wxml = read('chengyinhub-xcx/pages/shezhi/shezhi.wxml').toString();
+  const wxml = read('chengyinhub-xcx/pages/shezhi/about/index.wxml').toString();
   assert.match(wxml, /game-icons\.net 游戏图标/);
   assert.match(wxml, /像素城市场景 · Luis Zuno/);
   const lucide = wxml.match(/<view class="sz-attribution__name">Lucide 图标[\s\S]*?来源：lucide\.dev · 许可：lucide\.dev\/license<\/view>/);

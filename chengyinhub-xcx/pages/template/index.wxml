@@ -26,8 +26,10 @@
   <view class="tpl-toprow">
     <cy-tabs class="tpl-l1" variant="attached" tabs="{{ tabItems }}" active="{{ tab }}" bind:change="switchTab" />
     <view class="tpl-search" bindtap="goSearch" aria-role="button" aria-label="搜索模板主题与玩法" hover-class="cy-pressed" hover-stay-time="80">
-      <image class="tpl-search-ico" src="/images/icon_search.svg" mode="aspectFit" />
-      <text class="tpl-search-ph">搜索主题与玩法模板</text>
+      <view class="tpl-search-pill">
+        <image class="tpl-search-ico" src="/images/icon_search.svg" mode="aspectFit" />
+        <text class="tpl-search-ph">搜索主题与玩法模板</text>
+      </view>
     </view>
   </view>
   <view class="merchant-readonly-note"
@@ -60,7 +62,7 @@
     <!-- 空态把 banner 计入:单条数据时 banner 吃掉唯一内容、两个列表全空,
          只看列表会让空态与 banner 大卡同屏 -->
     <cy-empty class="fill-slot" wx:elif="{{ listLoaded && !banner.id && !topList.length && !tailList.length }}" fill="{{true}}" size="lg" kind="empty"
-      title="{{ emptyTitle }}" sub="{{ emptySub }}" cta="刷新试试" bindcta="retryTemplateLoad" />
+      title="{{ emptyTitle }}" sub="{{ emptySub }}" />
     <view wx:if="{{ loading && listLoaded }}" class="tpl-refreshing" aria-role="status" aria-live="polite">正在同步最新内容…</view>
 
     <!-- ====== Banner:一张头牌,带扫光描边 ====== -->
