@@ -3,6 +3,7 @@
 -- 写入只由服务端在建新一局时从该玩家最近一局的权威状态结转,(source_session_id, source_version) 单调递增保证幂等。
 -- 没有行 = 还没建过角色,接口返回模板(各属性初值)。
 -- 依赖:migration_theme_state_key_20260916.sql、migration_20261022_theme_state_key_attribute_def.sql(读 persist_scope)。
+-- 部署顺序:先完成本迁移与 migration_20261022_theme_state_key_attribute_def.sql 的验收,再部署读这张表的 jar。
 -- 生产执行须走 chengyin-db-migrate 只读预检并取得用户确认;本文件不连接生产数据库。
 
 CREATE TABLE IF NOT EXISTS theme_character (
