@@ -279,6 +279,8 @@ public class ClubMembershipServiceImpl implements IClubMembershipService {
         // 已取得的预支付参数只能复用，不能为同一 outTradeNo 再生成另一组本地状态；
         // 每次恢复仍先查微信真相，微信明确 CLOSED 时会释放本地 one-PAYING 约束。
         if (!blank(invoice.getPayParamsJson())) return result;
+        // D-12：会费开关关闭时只拦新的微信预下单；上面的查单对账仍照常执行。
+        featureGate.requireEnabled();
         Map<String, String> payParams;
         String payJson;
         try {
@@ -340,7 +342,8 @@ public class ClubMembershipServiceImpl implements IClubMembershipService {
 
     @Override
     public ClubMembershipInvoice invoice(Long principalMemberId, Long clubId, Long invoiceId) {
-        requireMember(principalMemberId, clubId);
+        // D-12：开关关闭时既有账单仍可查询，只做成员与归属校验。
+        resolveMember(principalMemberId, clubId);
         ClubMembershipInvoice row = clubMembershipMapper.selectInvoiceById(invoiceId);
         validateOwnedInvoice(row, clubId, principalMemberId);
         row.setIdempotencyKey(null);
@@ -538,6 +541,10 @@ public class ClubMembershipServiceImpl implements IClubMembershipService {
 
     private ClubAccessContext requireMember(Long principalMemberId, Long clubId) {
         featureGate.requireEnabled();
+        return resolveMember(principalMemberId, clubId);
+    }
+
+    private ClubAccessContext resolveMember(Long principalMemberId, Long clubId) {
         if (!positive(principalMemberId) || !positive(clubId)) forbidden();
         ClubAccessContext access = clubAccessService.resolve(principalMemberId, clubId, null);
         if (access == null || !principalMemberId.equals(access.getPrincipalMemberId())
@@ -574,8 +581,8 @@ public class ClubMembershipServiceImpl implements IClubMembershipService {
         return access;
     }
 
+    /** D-12：财务对账读不受会费开关影响，开关关闭后既有账单仍需可对账。 */
     private ClubAccessContext requireFinance(Long principalMemberId, Long clubId) {
-        featureGate.requireEnabled();
         return clubAccessService.require(principalMemberId, clubId, null, ClubPermission.FINANCE_READ);
     }
 
@@ -902,7 +909,7 @@ public class ClubMembershipServiceImpl implements IClubMembershipService {
 
     private InvoiceActionIntent prepareCloseIntent(Long principalMemberId,
                                                     ClubMembershipActionRequest request) {
-        featureGate.requireEnabled();
+        // D-12：关单不受会费开关影响，开关关闭后仍须能关闭既有待支付账单。
         ClubMembershipInvoice preview = clubMembershipMapper.selectInvoiceById(request.getId());
         validateOwnedInvoice(preview, request.getClubId(), principalMemberId);
         Club lockedClub = clubMapper.selectClubByIdForUpdate(request.getClubId());
