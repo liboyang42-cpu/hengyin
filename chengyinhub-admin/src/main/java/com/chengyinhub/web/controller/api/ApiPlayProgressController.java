@@ -1,5 +1,6 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.utils.GeoDistanceUtils;
 import com.chengyinhub.common.annotation.DeadlockRetry;
 import com.chengyinhub.common.annotation.RateLimiter;
 import com.chengyinhub.common.enums.LimitType;
@@ -170,6 +171,9 @@ public class ApiPlayProgressController extends BaseController
     private com.chengyinhub.business.mapper.ClubLeadMapper clubLeadMapper;
     @Autowired
     private com.chengyinhub.business.service.IGameSessionRuntimeService gameSessionRuntimeService;
+    /** O-01 /arrive 位置守卫(第 4–7 层)与空精度开关;两个开关默认 = 现行行为,未注入时同样按现行行为 */
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.support.ArriveLocationGuard arriveLocationGuard;
 
     // 拍板6:节点模板券发给玩家时留核销审计(操作人=玩家,归属=出券商家)
     @Autowired
@@ -2052,18 +2056,37 @@ public class ApiPlayProgressController extends BaseController
             Double nodeLat = parseGeoCoordinate(targetLatitude, -90d, 90d);
             Double nodeLng = parseGeoCoordinate(targetLongitude, -180d, 180d);
             if (playerLat == null || playerLng == null || nodeLat == null || nodeLng == null) return error("定位无效");
-            double dist = haversine(playerLat, playerLng, nodeLat, nodeLng);
+            double dist = GeoDistanceUtils.haversineMeters(playerLat, playerLng, nodeLat, nodeLng);
             if (!Double.isFinite(dist)) return error("定位无效");
             // B1:定位精度闸(仅坐标判定路径)。accuracy 为端上 wx.getLocation 的水平精度(米);
             // 空白=旧版小程序未上报,放行并留痕;非有限/负数=定位无效;>80m 要求去开阔处或扫码,先于距离判断。
+            // O-01:空精度放行仍是默认;只有 owner 定下最低小程序版本后打开 play.arrive.require_accuracy 才拒。
+            Double acc = null;
             if (StringUtils.isBlank(accuracy)) {
+                if (arriveLocationGuard != null && arriveLocationGuard.requireAccuracy()) {
+                    return error("当前版本未上报定位精度，请更新小程序后重试或扫码完成")
+                            .put("errorCode", com.chengyinhub.business.service.support.ArriveLocationGuard.ACCURACY_MISSING);
+                }
                 logger.info("arrive 未上报定位精度 memberId={} nodeId={}", memberId, nId);
             } else {
-                Double acc = parseGeoCoordinate(accuracy, 0d, Double.MAX_VALUE);
+                acc = parseGeoCoordinate(accuracy, 0d, Double.MAX_VALUE);
                 if (acc == null) return error("定位无效");
                 if (acc > GEOFENCE_ACCURACY_METERS) return error("定位精度不足，请到开阔处或扫码完成");
             }
             if (dist > GEOFENCE_METERS) return error("还没到这一站附近");
+            // O-01 第 4–7 层(节流/速度/窗口位移/不确定性扣减):开关 off 时不读不写,行为与改动前一致。
+            if (arriveLocationGuard != null) {
+                com.chengyinhub.business.service.support.ArriveLocationGuard.Result guard =
+                        arriveLocationGuard.check(memberId, actId, ctx.topicId, nId, nodeLat, nodeLng, acc);
+                if (guard.rejected()) {
+                    AjaxResult rejected = error(guard.message()).put("errorCode", guard.errorCode())
+                            .put("appealable", guard.appealable());
+                    if (guard.guardLogId() != null) rejected.put("guardLogId", guard.guardLogId());
+                    if (guard.appealable()) rejected.put("appealBizType",
+                            com.chengyinhub.business.service.support.ArriveLocationGuard.APPEAL_BIZ_TYPE);
+                    return rejected;
+                }
+            }
         }
 
         if(personalArrival || sharedArrival!=null) {PlayerNodeProgress proof=shopDayProofService.markArrived(memberId,actId,node);Map<String,Object> data=shopDayProofData(node,proof);
@@ -2438,18 +2461,6 @@ public class ApiPlayProgressController extends BaseController
         return prev != null && StringUtils.isNotBlank(prev.getName())
                 ? "先完成「" + prev.getName() + "」才能解锁本关"
                 : "本关尚未解锁,先完成前置关卡";
-    }
-
-    /** 两坐标球面距离（米，Haversine） */
-    private double haversine(double lat1, double lng1, double lat2, double lng2)
-    {
-        double R = 6371000d;
-        double dLat = Math.toRadians(lat2 - lat1);
-        double dLng = Math.toRadians(lng2 - lng1);
-        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
-                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
-                * Math.sin(dLng / 2) * Math.sin(dLng / 2);
-        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     }
 
     /**

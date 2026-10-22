@@ -291,6 +291,73 @@ class ApiPlayGpsGeofenceValidationTest
     }
 
     @Test
+    void blankAccuracyStillAllowedWhenGuardInstalledWithDefaultSwitches()
+    {
+        com.chengyinhub.business.service.support.ArriveLocationGuard guard =
+                mock(com.chengyinhub.business.service.support.ArriveLocationGuard.class);
+        when(guard.check(any(), any(), any(), any(), org.mockito.ArgumentMatchers.anyDouble(),
+                org.mockito.ArgumentMatchers.anyDouble(), any()))
+                .thenReturn(new com.chengyinhub.business.service.support.ArriveLocationGuard.Result(null, null, null, false));
+        ReflectionTestUtils.setField(controller, "arriveLocationGuard", guard);
+
+        assertEquals(200, arriveWithAccuracy(null).get("code"), "require_accuracy 默认 false:旧版小程序照常放行");
+        verify(progressionService).onNodeDone(PLAYER);
+    }
+
+    @Test
+    void blankAccuracyRejectedOnlyWhenRequireAccuracySwitchOn()
+    {
+        com.chengyinhub.business.service.support.ArriveLocationGuard guard =
+                mock(com.chengyinhub.business.service.support.ArriveLocationGuard.class);
+        when(guard.requireAccuracy()).thenReturn(true);
+        ReflectionTestUtils.setField(controller, "arriveLocationGuard", guard);
+
+        AjaxResult result = arriveWithAccuracy(null);
+        assertNotEquals(200, result.get("code"));
+        assertEquals("ARRIVE_ACCURACY_MISSING", result.get("errorCode"));
+        verifyNoProgressAndNoReward();
+        // 报了精度的新版不受该开关影响
+        when(guard.check(any(), any(), any(), any(), org.mockito.ArgumentMatchers.anyDouble(),
+                org.mockito.ArgumentMatchers.anyDouble(), any()))
+                .thenReturn(new com.chengyinhub.business.service.support.ArriveLocationGuard.Result(null, null, null, false));
+        assertEquals(200, arriveWithAccuracy("30").get("code"));
+    }
+
+    @Test
+    void guardRejectionReturnsAppealReferenceWithoutProgressOrReward()
+    {
+        com.chengyinhub.business.service.support.ArriveLocationGuard guard =
+                mock(com.chengyinhub.business.service.support.ArriveLocationGuard.class);
+        when(guard.check(any(), any(), any(), any(), org.mockito.ArgumentMatchers.anyDouble(),
+                org.mockito.ArgumentMatchers.anyDouble(), any()))
+                .thenReturn(new com.chengyinhub.business.service.support.ArriveLocationGuard.Result(
+                        "ARRIVE_GUARD_SPEED", "移动速度异常，本次到达未记录；如有误判可申诉", 9001L, true));
+        ReflectionTestUtils.setField(controller, "arriveLocationGuard", guard);
+
+        AjaxResult result = arriveWithAccuracy("20");
+        assertNotEquals(200, result.get("code"));
+        assertEquals("ARRIVE_GUARD_SPEED", result.get("errorCode"));
+        assertEquals(9001L, result.get("guardLogId"));
+        assertEquals(Boolean.TRUE, result.get("appealable"));
+        assertEquals("play_arrive_guard", result.get("appealBizType"));
+        verify(guard).check(PLAYER, ACTIVITY, TOPIC, NODE, Double.parseDouble(NODE_LAT), Double.parseDouble(NODE_LNG), 20d);
+        verifyNoProgressAndNoReward();
+    }
+
+    @Test
+    void guardIsNotConsultedWhenGeofenceAlreadyRejects()
+    {
+        com.chengyinhub.business.service.support.ArriveLocationGuard guard =
+                mock(com.chengyinhub.business.service.support.ArriveLocationGuard.class);
+        ReflectionTestUtils.setField(controller, "arriveLocationGuard", guard);
+
+        assertEquals("还没到这一站附近", arrive("121.6", "31.4").get("msg"));
+        assertEquals("请开启定位", arrive(null, null).get("msg"));
+        verify(guard, never()).check(any(), any(), any(), any(), org.mockito.ArgumentMatchers.anyDouble(),
+                org.mockito.ArgumentMatchers.anyDouble(), any());
+    }
+
+    @Test
     void accuracyWithinLimitStillAdvances()
     {
         assertEquals(200, arriveWithAccuracy("30").get("code"));
