@@ -157,6 +157,7 @@ const MATRIX = [
   ['pages/roam/index.js', "req('/api/official/active-for-roam'", 'required', 'member', 'global-authenticated-read'],
   ['subpackageB/pages/im/chat/index.js', 'url: `/api/audit/${auditTaskId}/detail`', 'required', 'member', 'self-account'],
   ['subpackageB/pages/im/chat/index.js', "url: '/api/v1/community/notifications'", 'required', 'member', 'self-account'],
+  ['pages/shezhi/components/post-governance/index.js', "url: '/api/v1/community/me/enforcements'", 'required', 'member', 'self-account'],
   ['subpackageMember/components/cy/merchant-correction-sheet/index.js', "url: '/api/community-trust/contributions/taxonomy'", 'required', 'member', 'global-authenticated-read'],
   ['subpackageMember/components/cy/profile/index.js', 'url: `/api/community-trust/safety/merchants/${id}`', 'required', 'member', 'global-authenticated-read'],
   ['subpackageMember/components/cy/profile/index.js', "url: '/api/city/nodes/merchant/' + id", 'required', 'member', 'global-authenticated-read'],
@@ -305,7 +306,8 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
   // 合并两线逐项新增：本线64 + 共享基线4 = 68，权限矩阵保留双方全部条目。
   // 2026-10-20 用户要求删掉「我的纠错 / 纠错进度」两页、消息页改收件箱/发件箱(合并 master 584470ad 后按重建实测):contributions/mine 1 处 + contributions/{id} 2 处退场,68 → 65;举报进度通知读取从消息列表移到城瘾小助手(同端点同权限档)。
   // 2026-10-22 W10b:NPC 原请求回读 / AI 起草回读 / 资料审核回执 / 门店形象审核回执四处直接 GET,65 → 69(权限档见 MATRIX 同日注释)。
-  assert.equal(directCount, 69, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
+  // 2026-10-22 W9 帖子处置(F0521):设置页本人处置列表 GET /api/v1/community/me/enforcements(后端 withAuthenticatedPrincipal,按本人过滤),69 → 70(batch2 集成在 W10b 的 69 上叠加)。
+  assert.equal(directCount, 70, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
   // 2026-10-09 U04 只读主题请求增加6处，22 → 28。
   // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):漫游 BL-41 可参与官方活动 req 包装 GET +1(已入 MATRIX),28 → 29。
   assert.equal(wrapperCount, 29, 'req 包装 GET 数量变化时必须逐条复核权限并更新矩阵');
