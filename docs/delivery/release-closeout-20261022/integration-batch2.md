@@ -29,6 +29,8 @@
 | 13 | #480 | W9 | `9c67529d` | 搜索 ¥0 上限与前端收尾 |
 | 14 | #484 | W10a | `c2f30832` | 俱乐部月历场次、口碑服务端筛选、期次空态原因 |
 | 15 | #470 | W1 | `69a9c6b4` | 小型正确性修复。源码指纹更新带 owner 批准说明，PR 自身 CI 绿后合入 |
+| 16 | #484 | W10a | `ca8da72e` | 更新 head（只改后端）：俱乐部月历的公开视角复用仅成员可见的主题闸 |
+| 17 | #477 | W10b | `84c33fea` | 更新 head：门店 AI 形象头像审核回执改读 MERCHANT_NPC/npcId 送检目标；get-auth-matrix 还原后改为 CY-HANDOFF |
 
 ### 纳入依据（各 PR 自身 CI）
 
@@ -36,6 +38,9 @@
 - 仅剩台账过期：#474、#477、#476、#481（`eeef56dc`）。
 - 仅剩台账过期加待落地的 CY-HANDOFF（get-auth-matrix）：#480（`9c67529d`）。这个 head 已修好之前的 U6 RAW_ERROR_TEXT 真失败（`fda37f43`）。
 - #470：先前唯一的红是 Migration safety gate 的源码指纹，在 `69a9c6b4` 更新后转绿。
+
+- #484 `ca8da72e`：PR 自身 CI 只有 Mini program unit shard (13/20) 一项红（run 39788518561），这个 head 只改后端，Backend tests 通过。本地复现：在 master `f0b43d62` 合并 W10a 后单跑该分片，`subscribe-recipient-contract.test.js` 报 `ENOENT …/subpackageRoam/scan-comment-test-XXXX/regex.js`，每次失败的用例不固定。原因是 master 上的 `roam-comment-scan.test.js` 在仓内建临时目录，和遍历源码树的 `subscribe-recipient-contract` 在同一分片里并发时会撞上。这是测试之间的竞态，问题早已存在，不是 W10a 引入的，单跑这两个文件都通过。本集成分支的分片组合在 CI 上全绿，本地全量 13686/13686 通过。建议另开修复：给扫描测试的临时目录换到系统 tmp，或让遍历跳过 `scan-comment-test-*`。
+- #477 `84c33fea`：PR 自身 CI 的红是 unit shard 5（get-auth-matrix 69≠65，待落地的 CY-HANDOFF）、shard 8 和 static gates（台账过期），都属于可接受类，Backend tests 通过。
 
 ### 排除
 
@@ -81,6 +86,7 @@ owner 已于 2026-10-22 批准由集成方接管保留文件维护。下面每�
 | #481 W10c | `tests/unit/action-ledger.test.js` | 交接 diff 中的 `test('GET /api/publish/home 是读;真实发布写端点仍是写', …)` 整段原样追加在 `isRecognizedMedia('truncated.png', truncated)` 用例之后（只增加断言） |
 | #474 W6 | `scripts/uiaudit/action-ledger.json` | 「合并 W6 后用 build-action-ledger.js 重建」，已在合并树上一次完成 |
 | #477 W10b | `scripts/uiaudit/action-ledger.json` | 「action-ledger 重建（C00）」，已完成。交接块中的 #23 客户端与部署顺序两条不涉及保留文件，转记在第 5 节和 PR 描述中 |
+| #477 W10b（`db4f3850` 之后） | `tests/unit/get-auth-matrix-contract.test.js` | 交接要求 MATRIX 加 `npc-chat` `/api/ai/npc/chat/request`、`publish/simple` `/api/ai/theme/draft/request`、`gerenziliao` `/api/user/profile/review`、`merchant/decor/ai-npc` `/api/merchant/npc/review` 四行，并把 directCount 改为 69。这四行和 69 已经在本分支上（来自 W10b 早先的 head），合入新 head 时保留集成分支版本，叠加 W9 后为 70 |
 | #479 W3 | — | 交接内容是 `pages/club/topic-detail/index.js` 的 `confirmOpsTime` 文案和 `CLUB_OPS_SOLD_LOCKED` 映射，属于 club topic-detail owner 的代码工作，不是保留文件行。**本集成未实施**，留给对应 owner |
 | #484 W10a | `tests/unit/action-ledger.test.js` | 不是交接块：W10a 分支自带了计数改动（2108 / 2465 / 4950）和注释，随合并进入，最终值见上面几行 |
 
@@ -111,4 +117,4 @@ owner 已于 2026-10-22 批准由集成方接管保留文件维护。下面每�
 - head `2b089767`（13 个 PR 全部合入，含本记录首版）：35 个 check run，32 success，3 skipped（Admin UI 与 SBOM 按变更区域跳过），0 失败。
   - GitHub CI run `39785313826`：Backend tests、Migration safety / layout gate（迁移声明门转绿）、20 个小程序 unit shard、Mini program static gates、Fast gates、gitleaks，全部 success。
   - Funds MySQL IT run `39785313609`、Mini followup focused regression run `39785313522`、Isolated authenticated Redis recovery run `39785313756`：success。
-- 本记录更新后的最终 head 以 PR #486 的检查为准。
+- 之后合入 #484 `ca8da72e` 与 #477 `84c33fea`，最终 head 以 PR #486 的检查为准。
