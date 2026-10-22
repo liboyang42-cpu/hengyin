@@ -1,0 +1,24 @@
+/* 完成页勋章堆:与主题详情的徽章同一套金属六边形,叠放、切换只用 transform 过渡 */
+.ms { margin: var(--cy-space-6) 0 var(--cy-space-2); display: flex; flex-direction: column; align-items: center; }
+.ms__k { font-size: var(--cy-type-label); color: var(--cy-color-play-story-muted); }
+.ms__deck { position: relative; width: 360rpx; height: 420rpx; margin-top: var(--cy-space-4); }
+.ms__card { position: absolute; left: 0; top: 0; width: 360rpx; height: 400rpx; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10rpx;
+  border-radius: 40rpx; background: var(--cy-color-play-elevated); box-shadow: 0 18rpx 48rpx rgba(0, 0, 0, .45); /* ds-ok 叠放投影 */
+  transition: transform .42s cubic-bezier(.2, .9, .25, 1.1), opacity .3s ease; transform-origin: 50% 80%; }
+.ms-pressed { opacity: .92; }
+.ms--reduced .ms__card { transition: none; }
+.ms__hex { position: relative; width: 200rpx; height: 228rpx; overflow: hidden; clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+  background:
+    conic-gradient(from 20deg at 50% 55%, #7d5e22, #f7e7a8, #a98232, #fff6cf, #8a6a2a, #ecd28a, #9c742c, #f7e7a8, #7d5e22),
+    repeating-linear-gradient(100deg, rgba(255, 255, 255, .07) 0 2rpx, rgba(0, 0, 0, .06) 2rpx 6rpx); /* ds-ok 金属色带是材质 */
+  background-blend-mode: normal, overlay; }
+.ms__img { position: absolute; left: 12%; top: 12%; width: 76%; height: 76%; mix-blend-mode: multiply; opacity: .92;
+  clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); }
+.ms__glyph { position: absolute; top: 0; right: 0; bottom: 0; left: 0; display: flex; align-items: center; justify-content: center; color: rgba(58, 42, 8, .85); } /* ds-ok 刻在金属上的字形 */
+.ms__shine { position: absolute; top: 0; right: 0; bottom: 0; left: 0;
+  background: linear-gradient(115deg, rgba(255, 255, 255, 0) 30%, rgba(255, 255, 255, .5) 48%, rgba(255, 255, 255, 0) 62%); } /* ds-ok 金属高光 */
+.ms__n { margin-top: 12rpx; max-width: 300rpx; font-size: 32rpx; font-weight: 700; color: var(--cy-color-play-story-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ms__s { font-size: var(--cy-type-label); color: var(--cy-color-play-story-muted); }
+.ms__dots { display: flex; gap: 10rpx; margin-top: var(--cy-space-3); }
+.ms__dot { width: 12rpx; height: 12rpx; border-radius: 6rpx; background: var(--cy-color-play-story-muted); opacity: .4; transition: transform .3s ease, opacity .3s ease; }
+.ms__dot.is-on { transform: scaleX(2.4); margin: 0 10rpx; opacity: 1; background: var(--cy-color-play-story-text); }

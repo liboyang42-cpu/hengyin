@@ -856,7 +856,7 @@ cy-proto-cam{ position:fixed; left:0; right:0; top:0; bottom:0; z-index:58; poin
 .poi-filter__label{ font-size:var(--cy-type-caption); color:var(--cy-color-text-secondary); }
 
 /* 2026-10-22 护照方卡放大层:与方卡同色起步,放大后底部一层模糊渐变托住标题 */
-.pp-open { position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 900; pointer-events: none; }
+.pp-open { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 900; pointer-events: none; }
 .pp-open__dim { position: absolute; top: 0; right: 0; bottom: 0; left: 0; background: rgba(0, 0, 0, .55); opacity: 0; transition: opacity .4s ease; } /* ds-ok 放大层压暗 */
 .pp-open.is-on .pp-open__dim { opacity: 1; }
 .pp-open__card { position: absolute; overflow: hidden; clip-path: inset(0 round 28px); background: var(--cy-color-action-primary-bg); color: var(--cy-color-action-primary-fg);

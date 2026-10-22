@@ -49,7 +49,7 @@ const { getScene } = require('../../utils/scene-registry.js');
 const { resolveOpenState } = require('./utils/play-open-state.js');
 const { pushScene, popScene, currentScene, exitDecision } = require('../../utils/scene-stack.js');
 const finishRouteRecommendation = require('./finish-route-recommendation.js');
-const { buildPlayRecap } = require('./recap.js');
+const { buildPlayRecap } = require('./recap.js'); const { buildFinishMedals } = require('./utils/finish-medals.js'); // 2026-10-22 完成页勋章堆
 const { summarizePuzzleScores } = require('./utils/play-puzzle-summary.js');
 const { normalizeAtmosphere, atmosphereClass, PRESETS: CHAPTER_ATMOSPHERES } = require('../../utils/chapter-atmosphere.js');
 const CHAPTER_ATMOSPHERE_VALUES = CHAPTER_ATMOSPHERES.map((item) => item.value);
@@ -491,7 +491,7 @@ Page({
     nightHint: false,
     // 通关
     showFinish: false, celebrationEvent: '', finishScore: 0, finishPuzzleScore: 0, finishPuzzleCount: 0, finishPuzzleBest: 0,
-    finishMedals: 0, finishSnap: '', finishSnapError: false, finishPhotos: [], canReplayJournal: false,
+    finishMedals: 0, finishMedalList: [], finishSnap: '', finishSnapError: false, finishPhotos: [], canReplayJournal: false,
     branchPath: [],
     finishRouteRecommendation: null,
     voucher: { show: false },
@@ -6161,7 +6161,7 @@ Page({
       if (hasMedalArt && (medalRank || previewMedal)) {
         // 模板勋章弹层;关闭时若已通关由 closeMedal 触发通关卡
         this._medalCompletionContext = effectContext;
-        this.setData({ medal: { show: true, name: node.medalName || '专属徽章', shortName: (node.medalName || '徽章').slice(0, 2), img: node.medalImg, style: node.medalStyle || 'glow', coupon: node.couponId ? '到店出示核销' : '' } });
+        this.setData({ medal: { show: true, name: node.medalName || '专属徽章', shortName: (node.medalName || '徽章').slice(0, 2), img: node.medalImg, style: node.medalStyle || 'glow', coupon: node.couponId ? '到店出示核销' : '' } }); if (medalRank) (this._wonMedals = this._wonMedals || []).push({ nodeId: node.nodeId, name: node.medalName || '专属徽章', img: node.medalImg || '', rank: medalRank }); // 完成页勋章堆只收真夺到的
       } else {
         if (hasMedalArt) this.diegetic('这个节点的名次奖牌已经发完，完成记录已保存');
         if (node.couponId) this.showCoupon('到店出示核销');
@@ -7374,7 +7374,7 @@ Page({
     const finishStamps = isShopDay
       ? this.data.nodes.filter((n) => n.done).map((n) => ({ nodeId: n.nodeId, name: n.name })) : [];
     const puzzleSummary = summarizePuzzleScores(this.data.nodes);
-    this._finishMedals = this.data.nodes.filter((n) => n.medalName || n.medalImg).length;
+    this._finishMedals = this.data.nodes.filter((n) => n.medalName || n.medalImg).length; this.setData({ finishMedalList: buildFinishMedals({ allDone: !!this.data.allDone && !isShopDay, reward: this._themeReward, won: this._wonMedals, nodes: this.data.nodes }) });
     // ⚠️ 别在这里加「通关奖励已发放」行:后端对 FREE_COLLECT 不下发 themeReward(B5 剥离),
     //    前端拿不到真数据,写了就是恒空的死 UI。奖励到账明细归修C后端(grantOnce 结果上凭证面)。
     const earnedXp = (this.data.nodes || []).reduce(function (sum, node) {

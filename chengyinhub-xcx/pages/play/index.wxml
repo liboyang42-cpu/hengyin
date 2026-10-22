@@ -1198,6 +1198,7 @@
     <text class="finsheet__game-ending-title">{{gameModule.story.ending.title}}</text>
     <text class="finsheet__game-ending-copy">{{gameModule.story.ending.summary}}</text>
   </view>
+  <cy-finish-medals items="{{finishMedalList}}" reduced-motion="{{reducedMotion}}" /><!-- 2026-10-22 业主:多枚勋章叠放、可切换 -->
   <view class="finish-milestone" wx:if="{{milestone}}">
     <view class="finish-milestone__head">
       <text>城市探索里程碑</text>
@@ -1222,13 +1223,13 @@
   </view>
   <!-- mode2:探索值/徽章数是经典定向的读数(且 total×12 写死),探店日只报真事实 —— 核销与集章 -->
   <view class="finsheet__grid" wx:if="{{mode!=2}}">
-    <view class="fst"><text class="fst__v">{{doneCount}}</text><text class="fst__l">点亮坐标</text></view>
-    <view class="fst"><text class="fst__v">{{finishPuzzleScore}}</text><text class="fst__l">本次解谜分{{finishPuzzleCount ? ' · ' + finishPuzzleCount + '题' : ''}}</text><text class="fst__sub" wx:if="{{finishPuzzleBest > 0}}">个人最佳 {{finishPuzzleBest}}</text></view>
-    <view class="fst"><text class="fst__v">{{finishScore}}</text><text class="fst__l">探索值</text></view>
+    <view class="fst"><cy-icon class="fst__ic" name="pin-solid" size="36" /><text class="fst__v">{{doneCount}}</text><text class="fst__l">点亮坐标</text></view>
+    <view class="fst"><cy-icon class="fst__ic" name="star" size="36" /><text class="fst__v">{{finishPuzzleScore}}</text><text class="fst__l">本次解谜分{{finishPuzzleCount ? ' · ' + finishPuzzleCount + '题' : ''}}</text><text class="fst__sub" wx:if="{{finishPuzzleBest > 0}}">个人最佳 {{finishPuzzleBest}}</text></view>
+    <view class="fst"><cy-icon class="fst__ic" name="route" size="36" /><text class="fst__v">{{finishScore}}</text><text class="fst__l">探索值</text></view>
   </view>
   <view class="finsheet__grid" wx:if="{{mode==2}}">
-    <view class="fst"><text class="fst__v">{{doneCount}}/{{total}}</text><text class="fst__l">玩法完成</text></view>
-    <view class="fst"><text class="fst__v">{{finishStamps.length}}</text><text class="fst__l">本期足迹</text></view>
+    <view class="fst"><cy-icon class="fst__ic" name="check" size="36" /><text class="fst__v">{{doneCount}}/{{total}}</text><text class="fst__l">玩法完成</text></view>
+    <view class="fst"><cy-icon class="fst__ic" name="walk" size="36" /><text class="fst__v">{{finishStamps.length}}</text><text class="fst__l">本期足迹</text></view>
   </view>
   <!-- 站末分支图(契约 §3.3):只画「你走过的路」,别人的比例不做。没有走向记录时整块不渲染。 -->
   <view class="branchpath" wx:if="{{branchPath.length}}">
