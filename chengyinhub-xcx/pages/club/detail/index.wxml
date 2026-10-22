@@ -148,6 +148,8 @@
             accessibility-label="查看{{item.memberNickname || '城瘾玩家'}}的动态"
             bind:detail="onPostDetail" bind:user="onPostUser" bind:preview="onPreviewImage"
             bind:like="onLikePost" bind:comment="onToggleComments" bind:playdetail="onPostReference" bind:play="onPostReferencePlay">
+            <!-- F0098:被引对象当前不可见 ⇒ 只给中性标签,不显示标题封面,也不猜是删了还是转私密 -->
+            <view slot="special" class="post-ref-unavailable" wx:if="{{item.refUnavailable}}">引用不可用</view>
             <view slot="moderation" class="post-moderation">
               <view class="post-moderation__action" wx:if="{{item.authorMemberId == myMemberId || (canModerateContent && item.type == 2)}}" catchtap="onEditPost" data-id="{{item.id}}" aria-role="button" aria-label="编辑动态" hover-class="cy-pressed" hover-stay-time="80">编辑</view>
               <view class="post-moderation__action" wx:if="{{canModerateContent && item.type == 2}}" catchtap="onTogglePin" data-id="{{item.id}}" aria-role="button" aria-label="{{item.isPinned ? '取消置顶公告' : '置顶公告'}}" hover-class="cy-pressed" hover-stay-time="80">{{item.isPinned ? '取消置顶' : '置顶'}}</view>
