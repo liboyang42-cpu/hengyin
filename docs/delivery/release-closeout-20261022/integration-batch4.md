@@ -50,7 +50,7 @@
 
 ## 3 迁移（只入库，不执行）
 
-本批新增 23 个迁移，加 1 个只读预检脚本 `_precheck_orient_node_geo_dirty_20261022.sql`。文件名两两不同，与既有迁移也不重名。**没有改名任何迁移。**
+本批新增 23 个迁移，加 2 个只读预检脚本：`_precheck_orient_node_geo_dirty_20261022.sql`、`_precheck_o14_content_city_code_backfill_20261022.sql`。数量的变化见第 9 节：评审修复删掉 F3 一个、新增 O14 一个，总数不变。文件名两两不同，与既有迁移也不重名。**没有改名任何迁移。**
 
 跨 lane 的写入目标只有 `sys_config`。F1b、F1c、F1d、F4 四个 lane 的开关种子键名各不相同，种子都只在键缺失时插入。除此之外，没有两个 lane 建同名表，也没有两个 lane 改同一张业务表。
 
@@ -66,14 +66,14 @@
 | `20261022_location_guard_switch_seed` | — | F1c |
 | `orient_geo_ar_team_20261022` | —（先跑只读预检 `_precheck_orient_node_geo_dirty_20261022.sql`） | F1d |
 | `o14_cms_topic_city_code_20261022` / `o14_cms_activity_city_code_20261022` | — | O14 |
-| `o14_content_city_code_backfill_20261022` | 上面两条 | O14 |
+| `o14_city_code_backfill_log_20261022` | — | O14（评审修复新增） |
+| `o14_content_city_code_backfill_20261022` | 上面三条；执行前先跑只读预览 `_precheck_o14_content_city_code_backfill_20261022.sql` | O14 |
 | `o14_content_search_document_20261022` | — | O14 |
 | `o14_reco_search_jobs_20261022` | `o14_content_search_document_20261022`、`p3_platform_foundation` | O14 |
 | `20261022_theme_state_key_attribute_def` | `theme_state_key_20260916` | F2 |
 | `20261022_theme_character` | `theme_state_key_20260916`、`20261022_theme_state_key_attribute_def` | F2 |
 | `20261022_f7_user_invoice` / `20261022_f7_minor_guardian` | — | F7 |
 | `doc2_f3_bundle_ledger_20261022` | — | F3 |
-| `doc2_f3_settlement_claim_unit_20261022` | `settlement_claim_20260811` | F3 |
 | `merchant_desk_receipt_20261022` / `merchant_redemption_anchor_20261022` / `pms_sku_booking_20261022` / `verification_review_evidence_20261022` / `20261022_merchant_desk_switch_seed` | — | F4 |
 
 DL1、O15、O3/O9、F5、O11/O17、O8/O10 没有新增迁移。所有迁移都要在**新 jar 之前**手动落库：先做 chengyin-db-migrate 只读预检，用户确认后执行。
@@ -117,13 +117,15 @@ DL1、O15、O3/O9、F5、O11/O17、O8/O10 没有新增迁移。所有迁移都�
 ## 6 需要 owner 审阅的资金相关项
 
 - **#513 DL1（资金路径，PR 自述 owner 已于 2026-10-22 批准方向）**：
-  - 赏金等 NESTED savepoint 的 catch 现在会把 1213 / 40001 / 1205 锁失败原样抛给外层，由 `@DeadlockRetry` 整笔重试，不再吞掉后在隐式新事务里继续提交。
+  - 赏金等 NESTED savepoint 的 catch 现在只把 1213 / 40001 死锁，以及「回滚到 savepoint 失败」原样抛给外层，由 `@DeadlockRetry` 整笔重试，不再吞掉后在隐式新事务里继续提交。
+  - 评审修复 `ab60b971`（RV3 S-513-1）：1205 锁等待超时不再上抛。原因是 1205 只回滚单条语句，savepoint 仍然有效，而多数调用方外层没有 `@DeadlockRetry`。
   - 金额、路由、幂等键、CAS 语义都没有改。
   - 与 F3 都改了 `CmsRegistrationServiceImpl`，与 F1c 都改了 `OfficialEventV2ServiceImpl`，均自动合并，改动区域不重叠。合并前请复核这两处。
 - **#527 F3 Phase 1（funds-adjacent）**：
   - 在既有链路上挂了 4 个同事务钩子，开关关闭时全部空转。
   - 待 owner 裁决 K1–K8。其中 K3 最关键：罚没不会置位 `verification_status`，所以整单原路全退可以绕过罚没。**K3 解决前不要开 `reservation-enabled`。**
   - K2 部分退到平台余额，需要新的资金路由。
+  - 评审修复 `182faa85`（RV3 B-527-1）：删除了 `migration_doc2_f3_settlement_claim_unit_20261022.sql`。Phase 1 不再改动资金表 `settlement_claim` 的唯一键，IT 改为断言该表不变。单位维度（K7）移到 Phase 2，届时另走资金审批。
 - **#518 O15（funds-adjacent，只做写入校验）**：
   - slot 只接受四个封闭取值，否则拒绝，错误码 `PRODUCT_ROLE_SLOT_INVALID`。
   - `revenue_share` 的口径（A/B/C/D）待 owner 决定。本 PR 没有加数值校验。
@@ -174,3 +176,25 @@ DL1、O15、O3/O9、F5、O11/O17、O8/O10 没有新增迁移。所有迁移都�
 - 首轮 head `e2f3df5a` 上的 Funds MySQL IT 39834729553 也是 success。
 - 本节之后只追加了纯文档提交，以 `5c9e7139` 的检查为准。
 - #512 合入 master、本 PR base 改为 master 后，`pull_request` 事件会自动重跑全部必需 check。
+
+## 9 集成后并入的评审修复（另一会话推送）
+
+RV3 评审（#529）之后，各 lane 修复了评审发现，另一集成会话把修复并入本分支：
+
+| 合并提交 | lane 修复 | 内容 |
+|---|---|---|
+| `943cd6c4` | #513 DL1 `ab60b971` | 1205 锁等待超时不再上抛；只有死锁，或 savepoint 已失效时才交给 `@DeadlockRetry` |
+| `cad50eec` | #519 O14 `e08ba609` | city_code 回填只认 `club.city` 和父主题继承，不再对地址做子串匹配；新增回填日志表、只读预览和 `O14CityCodeBackfillMySqlIT` |
+| `cb793e71` | #527 F3 `182faa85` | 删除 settlement_claim 唯一键迁移；Phase 1 不再动资金表 |
+
+修复后 head `cb793e71` 的 CI 全部 success：
+
+| workflow | 事件 | run |
+|---|---|---|
+| GitHub CI | workflow_dispatch | 39866446843 |
+| Funds MySQL IT | workflow_dispatch | 39866450110 |
+| Mini followup focused regression | pull_request | 39866418956 |
+| Isolated pool recovery | pull_request | 39866418846 |
+| Isolated authenticated Redis recovery | pull_request | 39866418838 |
+
+第 3、6 节已按修复后的状态更新：迁移表、DL1 和 F3 的说明。开关清单不变，全部默认关闭。
