@@ -5,10 +5,12 @@ import com.chengyinhub.business.domain.ClubEventDelivery;
 import com.chengyinhub.business.domain.ClubEventSeries;
 import com.chengyinhub.business.domain.ClubWaitlistClaim;
 import com.chengyinhub.business.domain.ClubWaitlistEntry;
+import com.chengyinhub.business.domain.MemberCapability;
 import com.chengyinhub.business.domain.OmsTicket;
 import com.chengyinhub.business.domain.dto.RegistrationRequest;
 import com.chengyinhub.business.mapper.ClubEventOpsMapper;
 import com.chengyinhub.business.mapper.OmsTicketMapper;
+import com.chengyinhub.business.service.ICapabilityService;
 import com.chengyinhub.business.service.IClubParticipationGuard;
 import com.chengyinhub.business.service.IClubWaitlistOrderBridge;
 import com.chengyinhub.business.service.IClubWaitlistService;
@@ -39,6 +41,9 @@ public class ClubWaitlistServiceImpl implements IClubWaitlistService, IClubWaitl
     private final IClubParticipationGuard participationGuard;
     private final ClubWaitlistTokenCodec tokenCodec;
     private final PlatformTransactionManager transactionManager;
+    /** 拍板 2026-10-22:商家可入团、不可报名俱乐部活动;候补是报名的前一步,同一把闸。 */
+    @Autowired(required = false)
+    private ICapabilityService capabilityService;
 
     @Autowired
     public ClubWaitlistServiceImpl(ClubEventOpsMapper mapper, OmsTicketMapper ticketMapper,
@@ -67,6 +72,9 @@ public class ClubWaitlistServiceImpl implements IClubWaitlistService, IClubWaitl
         participationGuard.requireAllowed(policy.getClubId(), memberId);
         if (mapper.isActiveParticipant(policy.getClubId(), memberId) != 1) {
             throw forbidden("仅俱乐部正常成员可候补");
+        }
+        if (capabilityService != null && capabilityService.hasCapability(memberId, MemberCapability.CAP_MERCHANT)) {
+            throw forbidden(RegistrationOrderCreateGateImpl.MERCHANT_CLUB_SIGNUP_MESSAGE);
         }
         OmsTicket ticket = requireScopedTicket(
                 ticketMapper.selectOmsTicketByIdForUpdate(ticketId), activityId, ticketId);

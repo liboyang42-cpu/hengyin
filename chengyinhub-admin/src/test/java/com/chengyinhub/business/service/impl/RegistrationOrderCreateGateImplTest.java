@@ -1,8 +1,12 @@
 package com.chengyinhub.business.service.impl;
 
+import com.chengyinhub.business.domain.CmsActivity;
 import com.chengyinhub.business.domain.CmsTopic;
+import com.chengyinhub.business.domain.MemberCapability;
 import com.chengyinhub.business.domain.dto.RegistrationQuoteResult;
 import com.chengyinhub.business.domain.dto.RegistrationRequest;
+import com.chengyinhub.business.service.ICapabilityService;
+import com.chengyinhub.business.service.ICmsActivityService;
 import com.chengyinhub.business.service.ICmsRegistrationService;
 import com.chengyinhub.business.service.ICmsTopicService;
 import com.chengyinhub.business.service.IMerchantBusinessStatusService;
@@ -37,6 +41,8 @@ class RegistrationOrderCreateGateImplTest {
     private final IWechatPayService wechatPayService = mock(IWechatPayService.class);
     private final IMerchantBusinessStatusService merchantBusinessStatusService =
             mock(IMerchantBusinessStatusService.class);
+    private final ICmsActivityService activityService = mock(ICmsActivityService.class);
+    private final ICapabilityService capabilityService = mock(ICapabilityService.class);
 
     private RegistrationOrderCreateGateImpl gate() {
         RegistrationOrderCreateGateImpl gate = new RegistrationOrderCreateGateImpl();
@@ -44,6 +50,8 @@ class RegistrationOrderCreateGateImplTest {
         ReflectionTestUtils.setField(gate, "topicService", topicService);
         ReflectionTestUtils.setField(gate, "wechatPayService", wechatPayService);
         ReflectionTestUtils.setField(gate, "merchantBusinessStatusService", merchantBusinessStatusService);
+        ReflectionTestUtils.setField(gate, "activityService", activityService);
+        ReflectionTestUtils.setField(gate, "capabilityService", capabilityService);
         return gate;
     }
 
@@ -205,5 +213,37 @@ class RegistrationOrderCreateGateImplTest {
 
         assertDoesNotThrow(() -> gate().validate(7L, activityRequest("MATCH")));
         verify(wechatPayService, never()).isReady();
+    }
+
+    /** 拍板 2026-10-22:商家可以入团,但不能报名俱乐部活动(主题/活动归属俱乐部即拦)。 */
+    @Test
+    void merchantCannotSignUpForClubActivityOrClubTopic() {
+        when(capabilityService.hasCapability(7L, MemberCapability.CAP_MERCHANT)).thenReturn(true);
+        CmsActivity clubActivity = new CmsActivity();
+        clubActivity.setClubId(21L);
+        when(activityService.selectCmsActivityById(500L)).thenReturn(clubActivity);
+        RegistrationCheckoutException refused = assertThrows(RegistrationCheckoutException.class,
+                () -> gate().validate(7L, activityRequest("sig")));
+        assertEquals(403, refused.getCode());
+        assertEquals("商家不能报名俱乐部活动", refused.getMessage());
+        verify(registrationService, never()).quoteRegistration(any(), any(), any(), any(), any(), any());
+
+        CmsTopic clubTopic = topicWithPrice(BigDecimal.ZERO);
+        clubTopic.setClubId(21L);
+        when(topicService.selectCmsTopicById(300L)).thenReturn(clubTopic);
+        assertThrows(RegistrationCheckoutException.class, () -> gate().validate(7L, topicRequest(300L)));
+    }
+
+    @Test
+    void merchantMaySignUpOutsideClubsAndPlayersMaySignUpForClubActivities() {
+        when(capabilityService.hasCapability(7L, MemberCapability.CAP_MERCHANT)).thenReturn(true);
+        when(topicService.selectCmsTopicById(301L)).thenReturn(topicWithPrice(BigDecimal.ZERO));
+        assertDoesNotThrow(() -> gate().validate(7L, topicRequest(301L)));
+
+        CmsTopic clubTopic = topicWithPrice(BigDecimal.ZERO);
+        clubTopic.setClubId(21L);
+        when(topicService.selectCmsTopicById(302L)).thenReturn(clubTopic);
+        when(capabilityService.hasCapability(8L, MemberCapability.CAP_MERCHANT)).thenReturn(false);
+        assertDoesNotThrow(() -> gate().validate(8L, topicRequest(302L)));
     }
 }

@@ -588,4 +588,16 @@ class ClubWaitlistServiceImplTest {
         request.setWaitlistOfferToken(token);
         return request;
     }
+
+    /** 拍板 2026-10-22:商家可以是俱乐部成员,但不能报名(含候补)俱乐部活动。 */
+    @Test
+    void merchantMemberCannotJoinClubActivityWaitlist() {
+        ICapabilityService capabilityService = mock(ICapabilityService.class);
+        when(capabilityService.hasCapability(MEMBER, com.chengyinhub.business.domain.MemberCapability.CAP_MERCHANT))
+                .thenReturn(true);
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "capabilityService", capabilityService);
+        ServiceException refused = assertThrows(ServiceException.class, () -> service.join(MEMBER, ACTIVITY, TICKET));
+        assertEquals("商家不能报名俱乐部活动", refused.getMessage());
+        verify(mapper, never()).selectActiveWaitlist(anyLong(), anyLong(), anyLong());
+    }
 }
