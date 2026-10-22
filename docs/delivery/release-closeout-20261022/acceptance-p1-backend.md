@@ -168,6 +168,14 @@ CI job 缩写：
 - PR05 导出文件在真机上的下载 / 保存与注销流程的短信、客服环节。
 - 所有付费前置（报名支付）都按规则不在本车道触发。
 
-## CI
+## CI 回执
 
-见 PR 描述与下方回执（PR 打开后更新）。
+- PR：https://github.com/liboyang42-cpu/hengyin/pull/499（DRAFT）
+- head `3776d81d`。34 个检查全部完成：31 个成功，3 个按路径跳过（Admin UI build / Admin UI E2E / SBOM），没有失败。
+- **Backend tests**（job 119837526214，run 39782591862）成功。日志里五个新类逐个实跑：
+  - `CityDirectorConsoleMySqlIT`：Tests run: 6, Failures: 0, Errors: 0, Skipped: 0
+  - `ClubJoinGovernanceMySqlIT`：Tests run: 9, Failures: 0, Errors: 0, Skipped: 0
+  - `FreeExploreNodeSupplyMySqlIT`：Tests run: 8, Failures: 0, Errors: 0, Skipped: 0
+  - `JourneyThoughtProgressMySqlIT`：Tests run: 3, Failures: 0, Errors: 0, Skipped: 0
+  - `PrivacyVisibilityExportMySqlIT`：Tests run: 4, Failures: 0, Errors: 0, Skipped: 0
+- **Funds MySQL IT (50/9/30, skipped=0, fail-closed)** 成功；P8、PR03 等既有 FUNDS 覆盖仍为绿。
