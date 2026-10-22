@@ -54,6 +54,7 @@ import com.chengyinhub.system.service.ISysCategoryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -100,6 +101,9 @@ public class ApiMerchantController extends BaseController {
 
     @Autowired
     private NpcProfileMapper npcProfileMapper;
+
+    @Autowired
+    private com.chengyinhub.business.service.impl.ProfileReviewService profileReviewService;
 
     @Autowired
     private VoiceCloneClient voiceCloneClient;
@@ -850,7 +854,30 @@ public class ApiMerchantController extends BaseController {
                         avatar, merchantOpenid(access.getOwnerMemberId()));
             } catch (Exception ignore) {}
         }
-        return AjaxResult.success("已保存");
+        AjaxResult ok = AjaxResult.success("已保存");
+        // #25:保存 ≠ 已上线。回执说明人设待审、玩家此刻能否看到、形象图复核到哪一步。
+        // 回执读失败不能把已经成功的保存变成报错:缺回执时客户端按「审核中」展示。
+        try {
+            List<NpcProfile> saved = npcProfileMapper.selectMerchantNpcList(merchantId, null);
+            ok.put("receipt", profileReviewService.merchantNpcReceipt(merchantId,
+                    saved == null || saved.isEmpty() ? null : saved.get(0)));
+        } catch (RuntimeException receiptUnavailable) {
+            logger.warn("[npc/save] 审核回执暂不可用 merchantId={}", merchantId);
+        }
+        return ok;
+    }
+
+    /** 门店 AI 形象审核回执(#25):只读,归属同 /npc/profile(当前账号所属商家 + PROFILE_WRITE)。 */
+    @GetMapping("/npc/review")
+    public AjaxResult npcReview() {
+        Long memberId;
+        try { memberId = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
+        if (memberId == null || memberId < 1) return error("请先登录");
+        MerchantAccessContext access = merchantAccessService.require(
+                memberId, MerchantPermission.PROFILE_WRITE);
+        List<NpcProfile> list = npcProfileMapper.selectMerchantNpcList(access.getMerchantId(), null);
+        return success(profileReviewService.merchantNpcReceipt(access.getMerchantId(),
+                list == null || list.isEmpty() ? null : list.get(0)));
     }
 
     // ===== 门店 AI 形象的声音 =====

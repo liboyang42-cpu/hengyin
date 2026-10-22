@@ -69,6 +69,8 @@ class RoamShareSnapshotConcurrencyMySqlIT {
         db.execute(new String(Files.readAllBytes(Paths.get("sql/migration_20260917_roam_share_snapshot.sql")),
                 StandardCharsets.UTF_8));
         db.execute("alter table roam_share_snapshot add session_id bigint null");
+        new org.springframework.jdbc.datasource.init.ResourceDatabasePopulator(new org.springframework.core.io.FileSystemResource(
+                "sql/migration_roam_share_version_20261022.sql")).execute(source);
         db.execute("create table roam_session(id bigint primary key, member_id bigint, status int, finished_at datetime) engine=InnoDB");
         db.update("insert into roam_session values(12,9,1,now())");
         db.execute("create table ums_member(id bigint primary key) engine=InnoDB");

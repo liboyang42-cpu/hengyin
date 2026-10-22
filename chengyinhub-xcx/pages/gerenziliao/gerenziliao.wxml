@@ -19,6 +19,7 @@
       <cy-avatar src="{{userInfo.avatar || '/images/d_profile.png'}}" size="170" />
       <image lazy-load="true" class="dbj" src="/pages/gerenziliao/images/d_bianji2.png" mode="widthFix" />
   </view>
+  <text wx:if="{{avatarReviewText}}" class="profile-avatar-review" aria-role="status">{{avatarReviewText}}</text>
 </view>
 <view class="shzlbox">
   <view class="shzlbox_li">

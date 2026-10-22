@@ -28,6 +28,7 @@
               variant="{{auditStatus === 1 ? 'success' : (auditStatus === 2 ? 'warning' : 'neutral')}}"
               label="{{auditStatus === 1 ? '已上线' : (auditStatus === 2 ? '已驳回' : '审核中')}}" />
             <text class="dc-muted" wx:if="{{auditStatus === 2 && auditReason}}">驳回理由：{{auditReason}}</text>
+            <text class="dc-muted" wx:if="{{reviewText}}" aria-role="status">{{reviewText}}</text>
           </view>
         </block>
         <block wx:else>

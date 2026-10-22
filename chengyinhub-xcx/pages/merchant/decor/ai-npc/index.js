@@ -11,6 +11,7 @@ const toast = require('../../../../utils/toast.js');
 const modal = require('../../../../utils/modal.js');
 const merchantTheme = require('../../../../utils/merchant-theme.js');
 const pixelAvatar = require('../../../../utils/pixel-avatar.js');
+const profileReview = require('../../../../utils/profile-review.js');
 const pixelPortrait = require('../../../../utils/pixel-portrait.js');
 // 单文件限额与共享上传入口同一真源(生产 application.yml 10MB),避免页面自定 20MB 与服务端脱节。
 const { MAX_UPLOAD_FILE_SIZE } = require('../../../../utils/transport/upload-client.js');
@@ -63,6 +64,8 @@ Page({
     knowledge: '',
     auditStatus: null,
     auditReason: '',
+    // W10b #25:服务端审核回执翻成的一句话(人设审核 / 玩家能否看到 / 形象图复核);读不到为空,不编造。
+    reviewText: '',
     savedAvatar: '',
     hasProfile: false,
     presetVisible: false,
@@ -169,11 +172,29 @@ Page({
         this._saved = { avatar, name: d.name || '', greeting: d.greeting || '', persona: d.persona || '', knowledge: d.knowledge || '' };
         (Object.assign(this.data, {hasProfile: !!avatar, savedAvatar: avatar}), this.setData({loading: false, name: this._saved.name, greeting: this._saved.greeting, persona: this._saved.persona, knowledge: this._saved.knowledge, auditStatus: d.auditStatus == null ? null : Number(d.auditStatus), auditReason: d.auditReason || '', voiceStatus: Number(d.voiceStatus) || 0}, () => this.restoreAvatar()));
         this.refreshVoice();
+        this._loadReview();
       })
       .catch((e) => {
         if (current()) this.setData({ loading: false, loadError: e.message });
       });
     this._loadStorePoint();
+  },
+  _loadReview() {
+    const memberId = String(app.getUserID() || '');
+    const seq = (this._reviewSeq || 0) + 1;
+    this._reviewSeq = seq;
+    const current = () => !this._destroyed && seq === this._reviewSeq && String(app.getUserID() || '') === memberId;
+    app.sendRequest({
+      url: '/api/merchant/npc/review',
+      method: 'GET',
+      hideLoading: true,
+      autoErrorToast: false,
+      success: (res) => {
+        if (!current()) return;
+        this.setData({ reviewText: res && String(res.code) === '200' ? profileReview.merchantNpcText(res.data) : '' });
+      },
+      fail: () => { if (current()) this.setData({ reviewText: '' }); },
+    });
   },
 
   /**
@@ -552,13 +573,18 @@ Page({
     if (this.data.saving) return;
     this.setData({ saving: true, saveError: '' });
     return this._request('/api/merchant/npc/save', payload)
-      .then(() => {
+      .then((res) => {
         if (!current()) return;
+        const receipt = res && res.receipt;
         this._saved = Object.assign({}, payload);
         this._portrait = null;
         (Object.assign(this.data, {hasProfile: true, savedAvatar: payload.avatar, dirty: false}), this.setData({saving: false, name: payload.name, greeting: payload.greeting, persona: payload.persona || '', knowledge: payload.knowledge || '', auditStatus: 0, auditReason: ''}));
+        this._reviewSeq = (this._reviewSeq || 0) + 1;
+        this.setData({ reviewText: profileReview.merchantNpcText(receipt) });
+        if (!receipt) this._loadReview();
         if (onSuccess) onSuccess();
-        toast.success('角色已更新');
+        // 保存 ≠ 上线:改动会回到待审,审核通过前玩家看不到。
+        toast.success(receipt && receipt.review === 'APPROVED' ? '角色已更新' : '已提交审核');
       })
       .catch((e) => {
         if (current()) this.setData({ saving: false, saveError: e.message });

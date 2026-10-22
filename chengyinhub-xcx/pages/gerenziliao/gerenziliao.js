@@ -4,6 +4,7 @@ const app = getApp();
 const { isRecordList } = require('../../utils/response-shape.js');
 const { isValidMobile } = require('../../utils/form-state.js');
 const nicknameCheck = require('./nickname-check.js');
+const profileReview = require('../../utils/profile-review.js');
 
 // 输入停顿多久再问后端:太短每个字都打一枪,太长用户等不到反馈。
 const NICKNAME_CHECK_DEBOUNCE_MS = 400;
@@ -55,6 +56,7 @@ Page({
       phone: ''
     },
     phoneMasked: '',
+    avatarReviewText: '',
     casePicsList: [], // 个人项目图片数组
     tempCasePics: [], // 临时个人项目图片数组（编辑时使用）
     tempCaseIntroducton: '', // 临时个人项目描述
@@ -635,6 +637,7 @@ Page({
             loadError: '',
             loadErrorSub: ''
           }, () => that.refreshSaveState());
+          that.loadProfileReview(context);
 
           if (isRecordList(res.data.sysCategoryList) && res.data.sysCategoryList.length > 0) {
             const selectedIds = res.data.sysCategoryList.map(item => item.id);
@@ -671,6 +674,28 @@ Page({
         });
       }
     })
+  },
+
+  /** W10b #25:头像审核回执只读服务端回执;读不到就不显示,不编造「审核中/已通过」。 */
+  loadProfileReview: function (context) {
+    const that = this;
+    const seq = (this._profileReviewSeq || 0) + 1;
+    this._profileReviewSeq = seq;
+    app.sendRequest({
+      hideLoading: true,
+      autoErrorToast: false,
+      url: '/api/user/profile/review',
+      method: 'GET',
+      success: function (res) {
+        if (!that.currentProfileContext(context) || seq !== that._profileReviewSeq) return;
+        const receipt = res && res.code == '200' ? res.data : null;
+        that.setData({ avatarReviewText: profileReview.memberAvatarText(receipt) });
+      },
+      fail: function () {
+        if (!that.currentProfileContext(context) || seq !== that._profileReviewSeq) return;
+        that.setData({ avatarReviewText: '' });
+      }
+    });
   },
 
   saveInfo: function () {
@@ -756,7 +781,8 @@ Page({
     const context = this.profileContext();
     app.chooseImage(function (res) {
       that.applyProfileResult(context, () => {
-        that.setData({ 'userInfo.avatar': res[0] });
+        // 换了还没保存的新头像:旧头像的审核回执不再对应屏幕上这张,先不显示。
+        that.setData({ 'userInfo.avatar': res[0], avatarReviewText: '' });
       });
     }, 1, { crop: true, cropScale: '1:1' });
   },

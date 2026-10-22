@@ -37,6 +37,8 @@ class ApiUmsMemberPartialUpdateTest {
         ReflectionTestUtils.setField(controller, "mediaReferences", media);
         ReflectionTestUtils.setField(controller, "nicknameSuggestionService", nicknames);
         ReflectionTestUtils.setField(controller, "wxContentSecurityService", mock(IWxContentSecurityService.class));
+        ReflectionTestUtils.setField(controller, "profileReviewService",
+                mock(com.chengyinhub.business.service.impl.ProfileReviewService.class));
         when(members.updateUmsMember(any())).thenReturn(1);
         NicknameCheckVO invalid = new NicknameCheckVO();
         invalid.setAvailable(false);
