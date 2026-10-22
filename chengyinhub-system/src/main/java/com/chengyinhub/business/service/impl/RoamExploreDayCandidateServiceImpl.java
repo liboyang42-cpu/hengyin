@@ -1,5 +1,6 @@
 package com.chengyinhub.business.service.impl;
 
+import com.chengyinhub.common.utils.GeoDistanceUtils;
 import com.chengyinhub.business.domain.CmsTopic;
 import com.chengyinhub.business.domain.OmsTicket;
 import com.chengyinhub.business.domain.RoamExploreDayCandidate;
@@ -101,7 +102,7 @@ public class RoamExploreDayCandidateServiceImpl implements IRoamExploreDayCandid
         } catch (RuntimeException rejected) {
             return Double.MAX_VALUE;
         }
-        double distance = haversineM(lat, lng, row.getGatherLat().doubleValue(), row.getGatherLng().doubleValue());
+        double distance = GeoDistanceUtils.haversineMeters(lat, lng, row.getGatherLat().doubleValue(), row.getGatherLng().doubleValue());
         return Double.isFinite(distance) ? distance : Double.MAX_VALUE;
     }
 
@@ -156,14 +157,5 @@ public class RoamExploreDayCandidateServiceImpl implements IRoamExploreDayCandid
 
     private static boolean validCoordinate(double lat, double lng) {
         return Double.isFinite(lat) && Double.isFinite(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
-    }
-
-    private static double haversineM(double lat1, double lng1, double lat2, double lng2) {
-        double dLat = Math.toRadians(lat2 - lat1);
-        double dLng = Math.toRadians(lng2 - lng1);
-        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
-                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
-                * Math.sin(dLng / 2) * Math.sin(dLng / 2);
-        return 2 * 6371000d * Math.asin(Math.sqrt(a));
     }
 }
