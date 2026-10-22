@@ -163,6 +163,87 @@ class ApiPlayLeaderboardTest {
         assertEquals(0L, captor.getValue().getActivityId(),
                 "自玩榜外回读必须与榜单一样限定 activity_id=0");
     }
+    // ---------- D-13(N-02):分支主题按「到达结局 → 用时」排,线性不变 ----------
+
+    private void topicWithGraph(String graphJson) {
+        com.chengyinhub.business.service.ICmsTopicService topics =
+                mock(com.chengyinhub.business.service.ICmsTopicService.class);
+        com.chengyinhub.business.domain.CmsTopic topic = new com.chengyinhub.business.domain.CmsTopic();
+        topic.setId(300L);
+        topic.setPublishedRouteGraphJson(graphJson);
+        when(topics.selectCmsTopicById(300L)).thenReturn(topic);
+        ReflectionTestUtils.setField(controller, "cmsTopicService", topics);
+    }
+
+    private static LeaderboardItemVO ended(Long memberId, long elapsed, long score) {
+        LeaderboardItemVO r = row(memberId, score);
+        r.setReachedEnding(true);
+        r.setElapsedSeconds(elapsed);
+        return r;
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void branchingTopicRanksByEndingThenElapsedAndTiesShareRank() {
+        topicWithGraph("{\"runtimeSnapshotVersion\":1,\"routeMode\":\"BRANCH_GRAPH\"}");
+        LeaderboardItemVO unfinished = row(9L, 6L);
+        unfinished.setReachedEnding(false);
+        when(progressService.selectRouteLeaderboard(ACT, 300L, 50))
+                .thenReturn(Arrays.asList(ended(7L, 600L, 1L), ended(ME, 600L, 3L), unfinished));
+
+        Map<String, Object> data = callOk("500", null);
+
+        List<LeaderboardItemVO> list = (List<LeaderboardItemVO>) data.get("list");
+        assertEquals(Arrays.asList(1, 1, 3), Arrays.asList(list.get(0).getRank(), list.get(1).getRank(),
+                list.get(2).getRank()), "同用时并列,未到结局者即便节点更多也在后");
+        assertEquals(ME, ((LeaderboardItemVO) data.get("me")).getMemberId());
+        assertEquals(Integer.valueOf(1), ((LeaderboardItemVO) data.get("me")).getRank());
+        assertEquals("ROUTE", data.get("rankMode"));
+        verify(progressService, org.mockito.Mockito.never()).selectActivityLeaderboard(any(), any(), anyInt());
+    }
+
+    @Test
+    void branchingTopicOffListMeReadsOwnLatestRunWithoutGuessingRank() {
+        topicWithGraph("{\"runtimeSnapshotVersion\":1,\"routeMode\":\"BRANCH_GRAPH\"}");
+        when(progressService.selectRouteLeaderboard(0L, 300L, 50))
+                .thenReturn(Collections.singletonList(ended(7L, 600L, 1L)));
+        LeaderboardItemVO mine = ended(ME, 900L, 2L);
+        mine.setRank(5);
+        when(progressService.selectRouteLeaderboardRow(0L, 300L, ME)).thenReturn(mine);
+        // 自玩榜需要有效通行证
+        CmsRegistration pass = new CmsRegistration();
+        pass.setId(1L);
+        pass.setOwnerType(1L);
+        pass.setOwnerId(300L);
+        pass.setRegistrationStatus(2);
+        pass.setPurchaseKind(com.chengyinhub.common.constant.PurchaseKind.SELF_PLAY_PASS);
+        pass.setExpiresAt(new java.util.Date(System.currentTimeMillis() + 86_400_000L));
+        when(registrationService.selectCmsRegistrationList(any(CmsRegistration.class)))
+                .thenReturn(Collections.singletonList(pass));
+
+        AjaxResult res = controller.leaderboard(null, "300");
+        assertEquals(200, res.get(AjaxResult.CODE_TAG), String.valueOf(res.get(AjaxResult.MSG_TAG)));
+        @SuppressWarnings("unchecked")
+        Map<String, Object> data = (Map<String, Object>) res.get(AjaxResult.DATA_TAG);
+
+        LeaderboardItemVO me = (LeaderboardItemVO) data.get("me");
+        assertEquals(Long.valueOf(900L), me.getElapsedSeconds());
+        assertNull(me.getRank(), "榜外不猜名次");
+        verify(progressService, org.mockito.Mockito.never()).selectPlayerNodeProgressList(any());
+    }
+
+    @Test
+    void linearTopicKeepsNodeCountBoard() {
+        topicWithGraph("{\"runtimeSnapshotVersion\":1,\"routeMode\":\"LINEAR\"}");
+        when(progressService.selectActivityLeaderboard(eq(ACT), isNull(), anyInt()))
+                .thenReturn(Arrays.asList(row(7L, 4L), row(ME, 3L)));
+
+        Map<String, Object> data = callOk("500", null);
+
+        assertEquals("LINEAR", data.get("rankMode"));
+        verify(progressService, org.mockito.Mockito.never()).selectRouteLeaderboard(any(), any(), anyInt());
+    }
+
     @Test
     void hiddenRouteLeaderboardDoesNotReturnPlayerRankings() {
         com.chengyinhub.business.service.IGameSessionRuntimeService runtime = mock(
