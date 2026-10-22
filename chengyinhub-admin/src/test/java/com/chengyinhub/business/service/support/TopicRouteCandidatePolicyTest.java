@@ -107,6 +107,31 @@ class TopicRouteCandidatePolicyTest {
     }
 
     @Test
+    void overnightBusinessHoursWithNextDayMarkerParse() {
+        String requirement = "{\"nodeId\":2,\"requireOpen\":true}";
+        CmsTopicNode current = node(1L, null, null, null);
+        // 2026-08-23 00:30 Asia/Shanghai(周日凌晨,属于周六的营业日)
+        Clock afterMidnight = Clock.fixed(Instant.parse("2026-08-22T16:30:00Z"), ZoneId.of("Asia/Shanghai"));
+        TopicRouteCandidatePolicy night = new TopicRouteCandidatePolicy(afterMidnight, RouteReachabilityProvider.UNKNOWN);
+        TopicRouteCandidatePolicy noon = new TopicRouteCandidatePolicy(NOON, RouteReachabilityProvider.UNKNOWN);
+
+        for (String hours : Arrays.asList("22:00-次日02:00", "22:00 - 次日 02:00", "周六 22:00至次日02:00")) {
+            assertEquals(TopicRouteCandidatePolicy.Status.AVAILABLE,
+                    night.evaluate(graph(requirement), facts(7L, 1, true, null), 5L, current,
+                            Collections.singletonList(node(2L, null, null, hours))).getNodeStatuses().get(2L), hours);
+        }
+        assertEquals(TopicRouteCandidatePolicy.Status.UNAVAILABLE,
+                noon.evaluate(graph(requirement), facts(7L, 1, true, null), 5L, current,
+                        Collections.singletonList(node(2L, null, null, "22:00-次日02:00"))).getNodeStatuses().get(2L));
+        // 「次日」却不早于开始时间是自相矛盾的录入,不能按当日营业放行
+        TopicRouteCandidatePolicy.Evaluation contradictory = noon.evaluate(graph(requirement),
+                facts(7L, 1, true, null), 5L, current,
+                Collections.singletonList(node(2L, null, null, "09:00-次日18:00")));
+        assertEquals(TopicRouteCandidatePolicy.Status.UNKNOWN, contradictory.getNodeStatuses().get(2L));
+        assertTrue(contradictory.getReasonCodes().get(2L).contains("BUSINESS_TIME_UNKNOWN"));
+    }
+
+    @Test
     void businessHoursHonorWeekdayPrefixAndUnknownWeekdayTextFailsClosed() {
         String requirement = "{\"nodeId\":2,\"requireOpen\":true}";
         TopicRouteCandidatePolicy policy = new TopicRouteCandidatePolicy(NOON, RouteReachabilityProvider.UNKNOWN);
