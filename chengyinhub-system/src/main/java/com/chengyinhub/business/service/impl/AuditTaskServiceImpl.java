@@ -1474,6 +1474,20 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
     @Autowired
     private com.chengyinhub.business.service.support.AppMediaPublicationGuard mediaPublicationGuard;
 
+    /**
+     * N-04:IM 消息软封/恢复同步修正未读。只有 正常→屏蔽 / 屏蔽→正常 的真实迁移才调未读
+     * (条件更新命中 1 行),重复结论不会减两次;其余起点(如已撤回)保持原来的无条件写状态。
+     */
+    private void applyImModeration(Long messageId, boolean down) {
+        int from = down ? ImMessage.STATUS_NORMAL : ImMessage.STATUS_BLOCKED;
+        int to = down ? ImMessage.STATUS_BLOCKED : ImMessage.STATUS_NORMAL;
+        if (imMessageMapper.transitionStatus(messageId, from, to) == 1) {
+            imConversationMemberMapper.adjustUnreadForModeratedMessage(messageId, down ? -1 : 1);
+            return;
+        }
+        imMessageMapper.updateStatus(messageId, to);
+    }
+
     private void applyModeration(AuditTask task, Integer decision, String reasonText) {
         String bizType = task.getBizType();
         Long bizId = task.getBizId();
@@ -1546,7 +1560,7 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
                 playTeamMapper.hideFromPublic(bizId);
                 playTeamMapper.expirePendingApplications(bizId);
             } else if (AuditTask.BIZ_IM.equals(bizType)) {
-                imMessageMapper.updateStatus(bizId, down ? ImMessage.STATUS_BLOCKED : ImMessage.STATUS_NORMAL);
+                applyImModeration(bizId, down);
             } else if (AuditTask.BIZ_TOPIC.equals(bizType)) {
                 // AUDIT-G2-2:举报不成立 = 内容维持原状(不重发、不进 Beta)。
                 // AUDIT-INT-5:举报单已在独立槽,不再与复核上架单合并 ⇒ 举报不成立也不能解除内容安全留置
