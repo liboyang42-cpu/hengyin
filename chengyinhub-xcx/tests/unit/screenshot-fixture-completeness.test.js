@@ -247,9 +247,10 @@ const CONTRACTS = {
   C01: {
     sources: ['pages/merchant/index/index.js', 'pages/merchant/index/index.wxml'],
     // 2026-09-16 去闸:consoleState 身份状态机已删除,失败态改由 consoleError 页内表达。
-    // 2026-10-22 owner 裁决 L03:「我的消息」改渲 inboxItems(会话+邀请+经营动态合并),不再直接渲 notifications;
+    // 2026-10-22 owner 裁决 L03:收入区不再有加载态,dashboardLoading 退役(fixture 里的 false 只是无害冗余,equals 仍校验)。
+    // 「我的消息」改渲 inboxItems(会话+邀请+经营动态合并),不再直接渲 notifications;
     // fixture(scripts/fixtures.json,C00 保留文件)补 inboxItems/revenueShown 见 L03 PR 的 CY-HANDOFF。
-    paths: ['merchantAccess.canReadFinance', 'merchantAccess.canManageProjects', 'dashboardLoading', 'dashboardError', 'dashboardData.revenue', 'joinLoading', 'hostLoading', 'todoLoading', 'gameEntryLoading', 'projectCards[].title'],
+    paths: ['merchantAccess.canReadFinance', 'merchantAccess.canManageProjects', 'dashboardError', 'dashboardData.revenue', 'joinLoading', 'hostLoading', 'todoLoading', 'gameEntryLoading', 'projectCards[].title'],
     equals: {
       'merchantAccess.active': true,
       'merchantAccess.canReadFinance': true,
@@ -264,7 +265,7 @@ const CONTRACTS = {
   },
   C02: {
     sources: ['pages/merchant/index/index.js', 'pages/merchant/index/index.wxml'],
-    paths: ['merchantAccess.canManageProjects', 'dashboardLoading', 'joinLoading', 'hostLoading', 'todoLoading', 'gameEntryLoading', 'projectCards'],
+    paths: ['merchantAccess.canManageProjects', 'joinLoading', 'hostLoading', 'todoLoading', 'gameEntryLoading', 'projectCards'],
     arrays: ['projectCards'],
     equals: {
       'merchantAccess.active': true,

@@ -83,7 +83,6 @@ Page({
       revenue: null,
       pendingOrders: null,
     },
-    dashboardLoading: true,
     dashboardError: '',
     // 屏上正在显示的累计收入(两位小数字符串):首帧 0.00,真值到了从当前显示值滚过去;
     // 返回页面不归零,出错保留上次显示值。只在换商家主体时归零。
@@ -97,7 +96,6 @@ Page({
     consoleStatus: null,
     // 参与项目真实总数(卡片只铺前几条,空态文案不能拿截断列表报数)
     joinTotal: 0,
-    notifications: [],
     // 「我的消息」:站内会话 + 收到的协作邀请 + 经营动态合并后的前 3 条(utils/inbox-preview.js)。
     // inboxLoaded=false 时只占一行高度不画内容,避免加载中冒充「还没有消息」。
     inboxItems: [],
@@ -368,7 +366,7 @@ Page({
       joinList: (this.data.projectList || []).concat(chapterProjects),
       hostList: this.data.hostProjectList,
       todoByProject: this.data.todo.byProject,
-      events: this.data.notifications,
+      events: this._notifications || [],
       todoError: this.data.todoError,
     }).filter((card) => card.statusLabel !== '已结束');
     this.refreshGameStationSummaries(projectCards);
@@ -449,11 +447,8 @@ Page({
         if (!that.isCurrentDataEpoch(dataEpoch)) return;
         const ok = (res.code === '200' || res.code === 200) && Array.isArray(res.data);
         const data = ok ? res.data : [];
-        that.setData({
-          notifications: data.length
-            ? data.map((e, i) => Object.assign({ id: i }, e))
-            : [],
-        });
+        // 经营动态只喂项目卡铃铛与「我的消息」合并,不直接上屏 ⇒ 放实例属性,不走 setData(U4 死字段门禁)。
+        that._notifications = data.map((e, i) => Object.assign({ id: i }, e));
         that.refreshProjectCards();
         that.settleInboxSource(dataEpoch, 'events', ok ? data : null);
       },
@@ -549,7 +544,6 @@ Page({
     } else {
       this.setData({
         dashboardData: { revenue: null, pendingOrders: null },
-        dashboardLoading: false,
         dashboardError: '',
         revBars: [],
       });
@@ -579,7 +573,7 @@ Page({
     if (currentAccess.canReadFinance || currentAccess.canReadVerifyRecords) {
       this.loadEvents(dataEpoch);
     } else {
-      this.setData({ notifications: [] });
+      this._notifications = [];
     }
     if (currentAccess.canManageProjects) {
       this.loadJoinList(dataEpoch);
@@ -626,6 +620,7 @@ Page({
     this._chapterProjectList = [];
     this._chapterJoinTopicIds = new Set();
     this._merchantGameEntries = [];
+    this._notifications = [];
     this._inbox = null;
     if (this._revenueCountStop) this._revenueCountStop();
     this._revenueCountStop = null;
@@ -634,7 +629,6 @@ Page({
       businessStatus: 1,
       merchantInfo: {},
       dashboardData: { revenue: null, pendingOrders: null },
-      dashboardLoading: true,
       dashboardError: '',
       revenueShown: '0.00',
       revBars: [],
@@ -650,7 +644,6 @@ Page({
       todoLoading: true,
       todoError: false,
       projectCards: [],
-      notifications: [],
       inboxItems: [],
       inboxLoaded: false,
       inboxError: false,
@@ -923,7 +916,7 @@ Page({
       },
       fail(res) {
         if (!that.isCurrentDataEpoch(dataEpoch)) return;
-        that.setData({ dashboardLoading: false, dashboardError: app.getRequestErrorMessage(res, '经营数据加载失败') });
+        that.setData({ dashboardError: app.getRequestErrorMessage(res, '经营数据加载失败') });
       },
     });
   },
@@ -949,10 +942,8 @@ Page({
 
   loadDashboard(dataEpoch = this._dataEpoch || 0) {
     const that = this;
-    that.setData({
-      dashboardLoading: true,
-      dashboardError: '',
-    });
+    // 2026-10-22 owner 裁决:收入区没有任何加载态 UI(金额永远在位、到值就滚),不再维护 dashboardLoading。
+    that.setData({ dashboardError: '' });
     app.sendRequest({
       hideLoading: true,
       url: '/api/merchant/dashboard',
@@ -989,10 +980,6 @@ Page({
       fail(res) {
         if (!that.isCurrentDataEpoch(dataEpoch)) return;
         that.setData({ dashboardError: app.getRequestErrorMessage(res, '经营数据加载失败') });
-      },
-      complete() {
-        if (!that.isCurrentDataEpoch(dataEpoch)) return;
-        that.setData({ dashboardLoading: false });
       },
     });
   },

@@ -116,9 +116,8 @@ test('收入局部重试通过无参 wrapper，组件 event 不会被误当成 d
   const request = requests.find((item) => item.url === '/api/merchant/dashboard')
   assert.ok(request)
   request.success({ code: 200, data: { revenue: 66, pendingOrders: 1 } })
-  request.complete()
   assert.equal(page.data.dashboardData.revenue, '66.00')
-  assert.equal(page.data.dashboardLoading, false)
+  assert.equal('dashboardLoading' in page.data, false, '2026-10-22 owner 裁决:收入区无加载态 UI,dashboardLoading 已退役')
 })
 
 test('商家身份请求 pending 时 fail closed，过期回调不能覆盖新一轮结果', () => {
@@ -169,7 +168,6 @@ test('账号在请求途中变化时，旧身份与旧经营回调都不得写�
   const dashboardA = requests.find((item) => item.url === '/api/merchant/dashboard')
   userId = 10
   dashboardA.success({ code: 200, data: { revenue: 999, pendingOrders: 1 } })
-  dashboardA.complete()
   merchantInfoA.success({ code: 200, data: { id: 3, name: 'A店迟到' } })
 
   assert.equal(dataPending.data.displayName, 'A店', '旧子请求不得覆盖已确认身份头之外的后续视图')
@@ -230,10 +228,10 @@ test('登出或切换商家后，旧主体的子请求不能回填品牌、金�
   const staleDashboard = requests.find((item) => item.url === '/api/merchant/dashboard')
   if (staleDashboard) {
     staleDashboard.success({ code: 200, data: { revenue: 888, pendingOrders: 2 } })
-    staleDashboard.complete()
   }
   assert.equal(page.data.displayName, '商家')
   assert.equal(page.data.dashboardData.revenue, null)
+  assert.equal(page.data.revenueShown, '0.00', '旧主体迟到的金额不得滚上屏')
   assert.equal(page.data.todo.pendingVerify, 0)
 
   userId = 10
@@ -255,11 +253,9 @@ test('经营数据刷新失败保留最后一次已确认金额，未知值仍�
   const request = requests.find((item) => item.url === '/api/merchant/dashboard')
   assert.ok(request)
   request.fail({ msg: '网络连接失败' })
-  request.complete()
 
   assert.deepEqual(page.data.dashboardData, { revenue: '128.50', pendingOrders: 2 })
   assert.equal(page.data.dashboardError, '网络连接失败')
-  assert.equal(page.data.dashboardLoading, false)
 })
 
 test('连续整台刷新只接受最后一轮响应，旧经营快照不得倒灌', () => {

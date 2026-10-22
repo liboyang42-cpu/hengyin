@@ -134,7 +134,6 @@ test('(b) 累计收入首帧 ¥0.00,真值到了缓入缓出滚到位;返回页�
   last('/api/merchant/access/me').success(accessReply())
   const dash = last('/api/merchant/dashboard')
   dash.fail({ errMsg: 'timeout' })
-  dash.complete && dash.complete()
   mock.timers.tick(2000)
   assert.equal(page.data.revenueShown, '1200.00')
   assert.ok(page.data.dashboardError)

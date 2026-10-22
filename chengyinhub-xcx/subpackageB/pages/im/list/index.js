@@ -1,7 +1,7 @@
 const toast = require('../../../../utils/toast.js');
+const { toTimestamp, chinaDateKey, chinaParts } = require('../../../../utils/datetime');
 const { isRecordList, isBizOk } = require('../../../../utils/response-shape.js');
 const { decodeDisplayText } = require('../../../../utils/display-text.js');
-const inboxPreview = require('../../../../utils/inbox-preview.js');
 const { normalizeMerchantAccess } = require('../../../../utils/merchant-access-policy.js');
 const { isLoginRequired, retryLogin } = require('../../../../utils/session/login-reload.js');
 const { decorate: decorateInvites } = require('../../../../utils/coop-invite-view.js');
@@ -187,12 +187,13 @@ Page({
   // 会话归类:全部会话(单聊、城瘾小助手、官方客服)都在收件箱;发件箱只放我发出的邀请。
   // 返回 null = 不在小程序里展示。
   tabOf(c) {
+    const t = parseInt(c.type) || 1;
     // 群聊(type=4)不在小程序露出:微信里已经有群,小程序内做群聊是和宿主抢用户,
     // 且小程序切后台 5 秒断长连接,实时聊天先天残废。群留给原生 app —— 后端 getOrCreateClubGroup
     // 等地基仍在,app 接手时直接调。这里必须显式排除,不能让它掉进 dm 兜底:
     // 两端共用 /api/im/conversations,app 一旦真建了群,靠兜底会让群会话冒进「私信」里。
-    // 归类口径与商家工作台「我的消息」共用 utils/inbox-preview.js(1/2/3 → 'in';4 → null)。
-    return inboxPreview.conversationTab(c);
+    if (t === 4) return null;
+    return 'in'; // 1 单聊 + 2 城瘾小助手 + 3 官方客服
   },
 
   // 重算 tabs(含未读角标)与当前 tab 的可见列表
@@ -279,8 +280,23 @@ Page({
     return decodeDisplayText(String(c.lastMsgText || '').replace(/[\r\n]+/g, ' '));
   },
 
-  // 时间口径与商家工作台「我的消息」同源(utils/inbox-preview.js)
-  fmtTime(v) { return inboxPreview.fmtTime(v); },
+  fmtTime(v) {
+    if (!v) return '';
+    // 时刻锚定 +08:00,日历判断与显示字段一律走中国时区,不用本地 getHours/toDateString——
+    // 手机时区非 UTC+8 时,本地方法会把中国的"今天 14:30"显示成别的日期/时刻。
+    const ts = toTimestamp(v);
+    if (isNaN(ts)) return '';
+    const nowTs = Date.now();
+    const diff = (nowTs - ts) / 1000;
+    if (diff < 60) return '刚刚';
+    if (diff < 3600) return Math.floor(diff / 60) + '分钟前';
+    const parts = chinaParts(ts);
+    const pad = function (n) { return n < 10 ? '0' + n : '' + n; };
+    if (chinaDateKey(ts) === chinaDateKey(nowTs)) return pad(parts.hours) + ':' + pad(parts.minutes);
+    if (chinaDateKey(ts) === chinaDateKey(nowTs - 86400000)) return '昨天';
+    if (diff < 7 * 86400) return ['周日', '周一', '周二', '周三', '周四', '周五', '周六'][parts.weekday];
+    return parts.month + '月' + parts.day + '日';
+  },
 
   // ===== 左滑 =====
   onTouchStart(e) {

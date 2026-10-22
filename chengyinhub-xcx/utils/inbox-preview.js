@@ -2,9 +2,10 @@
 /**
  * 站内消息的「会话 / 收到的邀请」归一与预览合并(2026-10-22 owner 裁决 L03)。
  *
- * 从 subpackageB/pages/im/list 抽出:收件箱页与商家工作台「我的消息」读的是同一份
+ * 收件箱页(subpackageB/pages/im/list)与商家工作台「我的消息」读的是同一份
  * /api/im/conversations + /api/coop/list,时间/摘要/归类口径必须一致,所以 fmtTime /
- * fmtPreview / conversationTab 是 im/list 原实现原样搬来(im/list 改为委托这里,行为不变)。
+ * fmtPreview / conversationTab 逐字照 im/list 的实现。im/list 本轮不改(它的动态 setData
+ * 按行号登记在 UI-GATE-0 基线里,动它就得重生成冻结基线);后续可让 im/list 委托这里。
  *
  * buildInboxPreview 把会话、收到的邀请、经营动态(/api/merchant/events)合成一列,
  * 新的在前,只取前 limit 条。纯函数,不碰 setData / 计时器,便于单测。
