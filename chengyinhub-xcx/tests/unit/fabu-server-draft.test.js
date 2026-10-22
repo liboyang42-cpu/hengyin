@@ -71,7 +71,11 @@ function loadPage(stored = {}) {
     showToast() {}, showLoading() {}, hideLoading() {}, getSystemInfoSync() { return {}; }, getWindowInfo() { return {}; },
   };
   global.getCurrentPages = () => [];
-  global.getApp = () => ({ globalData: {}, getUserID: () => currentMember, getRequestErrorMessage: (r, d) => d, sendRequest: opts => sent.push(opts) });
+  // L21 BL-185:发布前试检查是独立一步(见 l21-bl-185-topic-publish-check.test.js);本文件只验存/回读/发布,
+  // 试检查按「无问题」原地放行,也不占 sent 的下标。
+  const answerPublishCheck = opts => { opts.success({ code: 200, data: [] }); if (opts.complete) opts.complete(); };
+  global.getApp = () => ({ globalData: {}, getUserID: () => currentMember, getRequestErrorMessage: (r, d) => d,
+    sendRequest: opts => (opts.url === '/api/topic/publish-check' ? answerPublishCheck(opts) : sent.push(opts)) });
   let page; global.Page = value => { page = value; };
   delete require.cache[require.resolve('../../pages/publish/fabu/index')];
   require('../../pages/publish/fabu/index');

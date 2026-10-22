@@ -501,7 +501,7 @@ Page({
     reviewElapsed: '', reviewDistance: '', reviewEmpty: true,
     // C 结束分享:主视觉徽章 + 里程碑轴。两者都可能为 null,对应「没拿到徽章」「累计数取不到」,
     // 此时各自整块不渲染 —— 不摆假数据(任务书硬要求)。
-    finishBadge: null, milestone: null,
+    finishBadge: null, milestone: null, stageEnd: null,
     // 终章结局信(mode2)
     ending: { show: false, opener: '', fragments: [] }, endingError: false,
     // 音频播放
@@ -7402,7 +7402,7 @@ Page({
       this.paintRouteThumb();   // finish-map 盒内=路线缩略图(全卡仅保存时生成,避免和 HTML 数字行重复)
       this.buildReview();       // B:轨迹回顾层(渐进描线 + 成就气泡 + 用时/距离)
     });
-    this.loadMilestone();
+    this.loadMilestone(); this.loadStageEnd(); // BL-186 本章结算与里程碑并列读,不挡完成页
     this.loadFinishRouteRecommendation();
   },
   closeFinish() {
@@ -7699,6 +7699,34 @@ Page({
         });
         this.setData({ milestone: buildMilestone(Object.keys(ids).length) });
       },
+    });
+  },
+
+  /**
+   * BL-186 章节阶段结算:本章(未通关)的结算半屏补上作者写的「这一章改变了什么 / 接下来打开什么」。
+   * 取数与降级照 _loadLifeEnding 的 /journey/ending:只给故事流真玩家;没配阶段 / 拿不到 → 整块不渲染,不挡路。
+   */
+  loadStageEnd() {
+    const sequence = this._stageEndReadSequence = (this._stageEndReadSequence || 0) + 1;
+    if (this.data.stageEnd) this.setData({ stageEnd: null });
+    const chapter = this.data.chapter || {};
+    const chapterId = Number(chapter.chapterId || chapter.id);
+    if (!this._isPlayAccountCurrent() || this.data.allDone || this.data.isPreview || this.data.isMock
+        || this.data.mode === 2 || chapter.ending || !Array.isArray(chapter.blocks)
+        || !Number.isSafeInteger(chapterId) || chapterId <= 0) return;
+    const params = { topicId: this.data.topicId, activityId: this.data.activityId || 0, chapterId };
+    const routeSessionId = String((this._routeState || {}).sessionId || '');
+    const isCurrent = () => this._isPlayAccountCurrent() && sequence === this._stageEndReadSequence
+      && this.data.showFinish && params.topicId === this.data.topicId
+      && routeSessionId === String((this._routeState || {}).sessionId || '');
+    req('/api/play/journey/stage-end', 'GET', params, undefined, true).then((res) => {
+      if (!isCurrent()) return;
+      const d = res && (res.code == 200 || res.code == '200') ? res.data : null;
+      const changed = d && Array.isArray(d.changed)
+        ? d.changed.filter((text) => typeof text === 'string' && text.trim() !== '') : [];
+      const open = d && typeof d.open === 'string' ? d.open.trim() : '';
+      if (!changed.length && !open) return;
+      this.setData({ stageEnd: { changed, open } });
     });
   },
 
