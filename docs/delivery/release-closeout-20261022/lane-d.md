@@ -102,3 +102,10 @@
 - 真机与跨进程持久化验收（§9）不由源码测试覆盖，按上面的 DevTools 和真机清单执行。
 - `action-ledger.json` 和 `ui-integrity-baseline.js` 需集成方在合并候选上统一再生成。
 - 两个 topic-name token 是否应用到标题字号，待设计决定。
+
+## 6 CI（GitHub-hosted，PR #463，head `c8edb347`）
+- 「GitHub CI」run `39758725261`：24 项通过，3 项失败。3 项失败都来自上面「需集成方统一再生成」的两个文件，没有其它失败：
+  - `Mini program unit shard (8/20)`：只有 `action-ledger.test.js:1672`（台账 byte-exact 新鲜度）失败
+  - `Mini program static gates`：`ACTION-LEDGER FAIL`（同一原因）；`UI-GATE-0: FAIL (24 violations)` = `fabu/index.js` 12 条 U4-DYNAMIC 行号漂移（`动态 setData 63/51 已登记` 中多出的 12 条就是这 12 条换了行号），其它子门禁通过（Legacy error 0）
+  - `Mini program static checks`：汇总上面两项（UNIT_RESULT / STATIC_RESULT = failure）
+- 「Funds MySQL IT」run `39758725221`：通过
