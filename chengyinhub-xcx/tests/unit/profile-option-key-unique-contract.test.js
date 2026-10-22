@@ -178,7 +178,9 @@ test('成功页人数不重字:「1-3人」不再印成「1-3人 人玩法」', 
 
 test('故事玩法不出「模板信息」卡(公共玩法库字段)', () => {
   const wxml = require('fs').readFileSync(path.resolve(__dirname, '../../pages/publish/temp/index.wxml'), 'utf8')
-  assert.match(wxml, /<cy-card class="cg-card" id="sec-basic" wx:if="\{\{from !== 'fabu'\}\}">/)
+  // 2026-10-22 起分区标题在卡外:标题与卡片都挂同一个条件
+  assert.match(wxml, /<view class="cg-sec" id="sec-basic" wx:if="\{\{from !== 'fabu'\}\}">/)
+  assert.match(wxml, /<cy-card class="cg-card" wx:if="\{\{from !== 'fabu'\}\}">/)
 })
 
 test('故事玩法的预览不从「你已抵达」开始(无需到达地点);公共玩法库照旧有到达这一步', () => {

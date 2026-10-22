@@ -8,7 +8,7 @@
 </view>
 <view class="tb-pills"><view wx:for="{{themeBagTabs}}" wx:key="key" class="tb-pill {{themeBackpackTab === item.key ? 'is-selected' : ''}}" data-key="{{item.key}}" bindtap="changeThemeBackpackTab" aria-label="{{item.label}}" hover-class="cy-pressed" hover-stay-time="80" aria-role="button">{{item.label}}</view></view>
 <text class="tb-purpose" wx:if="{{themeBag.claimOnly}}">本局已结束，仅可领取待领奖励</text>
-<view class="tb-group" wx:if="{{r5OutcomeReply}}" aria-live="polite"><text class="tb-heading">{{r5OutcomeReply.statusText}}</text><text class="tb-clue-copy" wx:if="{{r5OutcomeReply.settled && r5OutcomeReply.reply}}">{{r5OutcomeReply.reply}}</text></view>
+<view class="tb-group" wx:if="{{r5OutcomeReply}}" aria-live="polite"><text class="tb-heading">{{r5OutcomeReply.statusText}}</text><text class="tb-clue-copy" wx:if="{{r5OutcomeReply.settled && r5OutcomeReply.reply}}">{{r5OutcomeReply.reply}}</text><view class="tb-outcome-imgs" wx:if="{{r5OutcomeReply.settled && r5OutcomeReply.images.length}}"><image class="tb-outcome-img" wx:for="{{r5OutcomeReply.images}}" wx:key="*this" src="{{item}}" mode="aspectFill" aria-label="结果配图 {{index + 1}}" /></view></view>
 <cy-inline-error wx:if="{{themeBagError}}" title="{{themeBagError}}" action="核对重试" bind:action="retryThemeBagAction" />
 <view class="tb-group tb-challenge" wx:if="{{zeroHpView}}">
  <text class="tb-section">{{zeroHpView.title}}</text><text class="tb-heading">{{themeBag.names.hp}}已归零</text>

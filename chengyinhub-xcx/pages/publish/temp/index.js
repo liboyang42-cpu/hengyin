@@ -88,11 +88,11 @@ function isTemplateDetailPayload(value) {
 // 模块定义(常量,顺序即展示顺序)
 // 提示(hint)已并入「完成方式」,不再是独立模块
 const MODULE_DEFS = [
-  { key: 'finish', name: '完成方式', desc: '玩家用什么方式通过这一关', iconName: 'check', tag: '核心', tagClass: 'cg-tag--core' },
-  { key: 'reward', name: '完成奖励', desc: '优惠券 / 文字反馈 / 勋章', iconName: 'gift', tag: '推荐', tagClass: 'cg-tag--rec' },
+  { key: 'finish', name: '玩法', desc: '玩家用什么方式通过这一关', iconName: 'check', tag: '', tagClass: '' },
+  { key: 'reward', name: '完成奖励', desc: '优惠券 / 勋章', iconName: 'gift', tag: '', tagClass: '' },
   { key: 'story', name: '剧情故事', desc: '到达时的时间流叙事 · 逐节展开', iconName: 'edit', tag: '', tagClass: '' },
   { key: 'voice', name: '语音讲解', desc: '上传一段音频导览', iconName: 'play', tag: '', tagClass: '' },
-];
+]; const ADDABLE_MODULES = ['finish', 'reward']; // 2026-10-22:添加模块只出玩法与完成奖励(剧情不再新增,语音讲解在互动工具里)
 
 // 完成方式 tile(value 对应 validationMethod 映射)
 const METHOD_TILES = [
@@ -176,7 +176,7 @@ function nextProfileOptionKeys(questions, count) {
 /* 试玩出不来时说实话:检定是旅程里的一次掷骰,不是一屏玩法(C-04);其余才是真没填完。 */
 function noPreviewTip(section) {
   if (section === 'album') return '请先为相册添加照片';
-  return section === 'check' ? '技能检定在旅程里掷骰，编辑页演不了' : '这个玩法还要再填一点才能试玩';
+  return section === 'check' ? 'D20 在旅程里掷骰，编辑页演不了' : '这个玩法还要再填一点才能试玩';
 }
 
 Page({
@@ -2194,7 +2194,7 @@ Page({
     if (!def) return;
     const patch = {
       moduleList: [...this.data.moduleList, { key: key, name: def.name }],
-      availableModules: this.data.availableModules.filter(d => d.key !== key),
+      availableModules: this.data.availableModules.filter(d => d.key !== key && ADDABLE_MODULES.includes(d.key)),
       showAddSheet: false
     };
     if (key === 'finish') {
@@ -2233,7 +2233,7 @@ Page({
       voice: { 'formData.audioUrl': '', 'formData.audioDuration': '', 'formData.audioFileName': '', 'formData.audioFormat': '' }
     };
     const order = this.MODULE_DEFS.map(d => d.key);
-    const newAvailable = [...this.data.availableModules, this._availItem(def)]
+    const newAvailable = [...this.data.availableModules, this._availItem(def)].filter(d => ADDABLE_MODULES.includes(d.key))
       .sort((a, b) => order.indexOf(a.key) - order.indexOf(b.key));
     this._setFormState({
       moduleList: this.data.moduleList.filter(m => m.key !== key),
@@ -2261,7 +2261,7 @@ Page({
 
     this._setFormState({
       moduleList: this.MODULE_DEFS.filter(d => keys.includes(d.key)).map(d => ({ key: d.key, name: d.name })),
-      availableModules: this.MODULE_DEFS.filter(d => !keys.includes(d.key)).map(d => this._availItem(d)),
+      availableModules: this.MODULE_DEFS.filter(d => !keys.includes(d.key) && ADDABLE_MODULES.includes(d.key)).map(d => this._availItem(d)),
       methodSupportsHint: HINT_METHODS.includes(f.validationMethod),
       hintEnabled: !!(f.hint1 || f.hint2 || f.answerReveal),
       rwCoupon: f.couponId > 0,
