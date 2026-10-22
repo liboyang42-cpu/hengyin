@@ -791,13 +791,24 @@ page{ background:var(--cy-color-bg-page); }
   background:linear-gradient(90deg,var(--roam-home-bg) 0%,rgba(17,17,17,.7) 8%,transparent 26%,transparent 74%,rgba(17,17,17,.7) 92%,var(--roam-home-bg) 100%), /* ds-ok 漫游首页定稿值(用户裁决不改) */
     linear-gradient(180deg,var(--roam-home-bg) 0%,transparent 25%,transparent 80%,rgba(17,17,17,.45) 100%); } /* ds-ok 漫游首页定稿值(用户裁决不改) */
 .intro-cards{ position:relative; z-index:3; flex:none; width:100%; height:192rpx; }
-.intro-card{ height:100%; margin-right:23rpx; box-sizing:border-box; display:flex; align-items:center; gap:19rpx; padding:27rpx 31rpx;
-  border-radius:19rpx; background:var(--cy-color-action-primary-bg); color:var(--cy-color-action-primary-fg); } /* ds-ok 漫游首页定稿值(用户裁决不改) */
-.intro-card__ic{ flex:none; width:119rpx; height:119rpx; overflow:hidden; border-radius:19rpx; background:#F2F2F2; display:flex; align-items:center; justify-content:center; color:var(--cy-color-action-primary-fg); } /* ds-ok 漫游首页定稿值(用户裁决不改) */
-.intro-card__img{ display:block; width:100%; height:100%; }
-.intro-card__copy{ flex:1; min-width:0; display:flex; flex-direction:column; }
-.intro-card__title{ font-size:29rpx; font-weight:700; line-height:38rpx; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } /* ds-ok 漫游首页定稿值(用户裁决不改) */
-.intro-card__sub{ margin-top:6rpx; font-size:25rpx; line-height:36rpx; color:#6B6B6B; display:-webkit-box; overflow:hidden; -webkit-box-orient:vertical; -webkit-line-clamp:2; } /* ds-ok 漫游首页定稿值(用户裁决不改) */
+/* 2026-10-22 业主裁决(方案 A 票根)取代此前「用户裁决不改」:占位尺寸不变(swiper 192rpx / 左 46 右 85 / 卡间距 23),只换卡面。 */
+.intro-card{ height:100%; margin-right:23rpx; box-sizing:border-box; display:flex; align-items:stretch; border-radius:28rpx; background:#F6F4EF; color:#141414; overflow:hidden; /* ds-ok 票根卡面纸色(业主 2026-10-22 裁决) */
+  -webkit-mask:radial-gradient(circle 16rpx at 192rpx 0,transparent 15.5rpx,#000 16rpx) top/100% 51% no-repeat,radial-gradient(circle 16rpx at 192rpx 100%,transparent 15.5rpx,#000 16rpx) bottom/100% 51% no-repeat;
+  mask:radial-gradient(circle 16rpx at 192rpx 0,transparent 15.5rpx,#000 16rpx) top/100% 51% no-repeat,radial-gradient(circle 16rpx at 192rpx 100%,transparent 15.5rpx,#000 16rpx) bottom/100% 51% no-repeat; } /* mask 不支持时退化为无缺口的整卡 */
+.intro-card__stub{ position:relative; flex:none; width:192rpx; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10rpx;
+  background-image:repeating-linear-gradient(135deg,rgba(0,0,0,.035) 0,rgba(0,0,0,.035) 2rpx,transparent 2rpx,transparent 10rpx); } /* ds-ok 票根左联 */
+.intro-card__ic{ width:88rpx; height:88rpx; border-radius:50%; background:rgba(0,0,0,.08); display:flex; align-items:center; justify-content:center; }
+.intro-card__img{ display:block; width:52rpx; height:52rpx; }
+.intro-card__code{ font-size:20rpx; line-height:24rpx; letter-spacing:3rpx; opacity:.7; font-family:Menlo,Consolas,monospace; }
+.intro-card__tear{ flex:none; width:0; margin:24rpx 0; border-left:4rpx dotted rgba(0,0,0,.22); }
+.intro-card__body{ flex:1; min-width:0; box-sizing:border-box; padding:24rpx 24rpx 24rpx 28rpx; display:flex; flex-direction:column; justify-content:space-between; }
+.intro-card__row{ display:flex; align-items:center; justify-content:space-between; gap:12rpx; }
+.intro-card__title{ flex:1; min-width:0; font-size:36rpx; font-weight:800; line-height:44rpx; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.intro-card__pill{ flex:none; font-size:24rpx; font-weight:700; line-height:30rpx; padding:6rpx 20rpx; border-radius:22rpx; background:#141414; color:#F6F4EF; }
+.intro-card__sub{ font-size:25rpx; line-height:32rpx; color:#5A5650; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.intro-card__live{ display:flex; align-items:center; gap:10rpx; min-width:0; }
+.intro-card__dot{ flex:none; width:12rpx; height:12rpx; border-radius:50%; box-shadow:0 0 0 2rpx rgba(0,0,0,.25); }
+.intro-card__livetx{ flex:1; min-width:0; font-size:21rpx; line-height:28rpx; color:#7A756C; font-family:Menlo,Consolas,monospace; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .intro-dots{ position:relative; z-index:3; flex:none; height:54rpx; box-sizing:border-box; display:flex; gap:12rpx; align-items:flex-start; justify-content:center; padding-top:19rpx; }
 .intro-dot{ width:12rpx; height:12rpx; border-radius:var(--cy-radius-pill); background:var(--cy-color-border-strong); }
 .intro-dot.is-on{ width:35rpx; background:var(--cy-color-text-primary); }
