@@ -173,7 +173,7 @@ class OrientScoringServiceImplTest {
         when(members.lockMemberById(7L)).thenReturn(7L);
         when(members.selectPointsForUpdate(7L)).thenReturn(5L);
         when(members.addPoints(7L, 28)).thenReturn(1);
-        when(pointsDetails.insertUmsMemberPointsDetailWithBusinessKey(any())).thenReturn(1);
+        when(pointsDetails.insertOrientSettlementPointsDetail(any())).thenReturn(1);
 
         Map<String, Object> first = service.settle(7L, 10L, "s-1");
         // 两个任务各 100 分 + 谜题 80 分 = 280 分 = 28000 centi
@@ -189,7 +189,7 @@ class OrientScoringServiceImplTest {
         verify(members, times(1)).addPoints(7L, 28);
         verify(growth, times(1)).addExp(eq(7L), eq(280), anyString());
         ArgumentCaptor<UmsMemberPointsDetail> detail = ArgumentCaptor.forClass(UmsMemberPointsDetail.class);
-        verify(pointsDetails).insertUmsMemberPointsDetailWithBusinessKey(detail.capture());
+        verify(pointsDetails).insertOrientSettlementPointsDetail(detail.capture());
         assertEquals("orient-settlement:10", detail.getValue().getRewardBusinessKey());
         assertEquals(Long.valueOf(21L), detail.getValue().getEventType());
 

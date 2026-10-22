@@ -454,7 +454,7 @@ public class OrientScoringServiceImpl implements IOrientScoringService {
         detail.setCreateTime(new Date());
         // 投影行已用 uk(session_id) 保证本局只走到这里一次;uk_member_reward_business 是第二道防线,
         // 撞键说明投影与积分流水不一致,fail closed 回滚整笔结算而不是静默跳过
-        if (pointsDetailMapper.insertUmsMemberPointsDetailWithBusinessKey(detail) != 1) {
+        if (pointsDetailMapper.insertOrientSettlementPointsDetail(detail) != 1) {
             throw new IllegalStateException("结算积分流水写入失败 session=" + session.getId());
         }
         if (umsMemberMapper.addPoints(memberId, points) != 1) {
