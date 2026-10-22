@@ -843,6 +843,9 @@ page {
 }
 .cg-picker-li.on { color: var(--cy-brand); font-weight: 600; }
 .cg-picker-label { flex: 1; min-width: 0; margin-right: var(--cy-space-2); }
+/* L09:底部选择面板里不可选的项(如「请先选择玩法」):置灰,原因写在右侧 */
+.cg-picker-li.is-disabled { color: var(--cy-color-text-tertiary); }
+.cg-picker-reason { flex: none; margin-right: var(--cy-space-2); font-size: var(--cy-font-caption); color: var(--cy-color-text-tertiary); }
 .cg-picker-tick {
   flex: none; width: 40rpx; height: 40rpx; box-sizing: border-box;
   display: flex; align-items: center; justify-content: center;

@@ -1640,6 +1640,9 @@ Page({
     const key = this.data.pickerSheet.key;
     const patch = { 'pickerSheet.open': false };
     if (key === 'qaFbImg') { this.setData({ 'pickerSheet.open': false }); this._onQaFbImgAction(value); return; }
+    if (e.currentTarget.dataset.reason) { toast(e.currentTarget.dataset.reason); return; } // 不可选项:面板不关,说清原因
+    if (key === 'participation') { this.setData({ 'pickerSheet.open': false }); this.pickParticipation({ currentTarget: { dataset: { key: value } } }); return; }
+    if (key === 'r5Tool') { this.setData({ 'pickerSheet.open': false }); this.openR5ToolSheet({ currentTarget: { dataset: { key: value } } }); return; }
     if (key === 'difficulty') {
       patch['formData.difficulty'] = value;
       patch['difficultyLabel'] = label;
