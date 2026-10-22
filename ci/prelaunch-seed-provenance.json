@@ -120,7 +120,7 @@
     "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/ClubRunController.java": "f40553d6f39eb21772a7471b0b709deb67c2f00caba061747cf1228ae5f53028",
     "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/AiGenerationLogController.java": "56c049dc3397525ca851abdfaee914002b70cd1750bd1414e514953b258ff263",
     "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/MerchantChapterOfferController.java": "b44d40251020bb29981ce81db07461728bc4256a6e936b18d6d500b203802df9",
-    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/UserPermissionController.java": "0702438c6d3d8ffd59c5194e689d9e7a390b2da615e56228ef5ddd077062407d",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/UserPermissionController.java": "e01323276670d30daf478f91c3df5471a3fbd9c026ff804f39573e9c4a3a1912",
     "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/SettlementRuleController.java": "7b20c8c455071f0747f5d1f93bc602576f600e0766ed719a116857f5d5f84b37",
     "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/RefundController.java": "a599fdb594a288251e5c80d19ad34c553d6dc8b068c80debbd5e1657cfc094bf",
     "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/VerificationReviewController.java": "ec1b06ae9da93eef90d424abf930cfa003c0460fa2da3ea5e5c137bbd791cdf3",

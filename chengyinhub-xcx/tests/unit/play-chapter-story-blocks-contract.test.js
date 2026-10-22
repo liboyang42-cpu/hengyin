@@ -1518,3 +1518,19 @@ test('挑战失败只显示服务端许可的明确重试；次数用完仍不�
     assert.equal(page.data.playKit.readyForBase,false);
   }
 });
+
+// #18:图片/音频块的 altText 要带进条目并做无障碍呈现 —— 图片 aria-label,音频可见且读屏可读的文字稿。
+test('媒体块 altText 带进章节条目:图片做 aria-label,音频给出可见文字稿', () => {
+  const page = makePage({ blocks: [
+    { type: 'image', url: 'https://cdn.example/a.jpg', altText: ' 桥洞下的旧船 ' },
+    { type: 'audio', url: 'https://cdn.example/b.mp3', altText: '“别回头。”' },
+    { type: 'image', url: 'https://cdn.example/c.jpg' },
+  ] }, [])
+  page.openChapterFull()
+  const media = page.data.chapterParas.filter(p => p.kind === 'image' || p.kind === 'audio')
+  assert.deepEqual(media.map(p => [p.kind, p.altText]), [['image', '桥洞下的旧船'], ['audio', '“别回头。”'], ['image', '']])
+  assert.equal(media.some(p => p.text), false, 'altText 不能当正文打出来')
+  const wxml = read('pages/play/index.wxml')
+  assert.match(wxml, /class="chfull__img"[^>]*aria-label="\{\{item\.altText \|\| '章节配图'\}\}"/)
+  assert.match(wxml, /<text wx:if="\{\{item\.altText\}\}" class="chfull__audio-transcript"[^>]*aria-label="音频文字稿：\{\{item\.altText\}\}">文字稿：\{\{item\.altText\}\}<\/text>/)
+})

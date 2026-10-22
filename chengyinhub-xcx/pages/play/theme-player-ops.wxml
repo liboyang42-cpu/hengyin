@@ -3,10 +3,11 @@
   <view class="tb-close" bindtap="closePlayerOperations" aria-role="button" aria-label="收起站点操作" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="32" /></view>
   <text class="tb-title">{{playerOperationForm ? playerOperationForm.title : '站点与本队'}}</text>
   <cy-inline-error class="tb-purpose tb-warning" wx:if="{{playerOperationError}}" aria-live="polite" kind="error" title="{{playerOperationError}}" />
+  <text class="tb-purpose" wx:if="{{playerRunText}}" aria-live="polite">{{playerRunText}}</text>
   <text class="tb-purpose" wx:if="{{playerExitText}}">{{playerExitText}}</text>
   <block wx:if="{{!playerOperationForm}}">
     <view class="tb-group"><view class="tb-row" wx:for="{{playerOperationRows}}" wx:key="action" data-action="{{item.action}}" bindtap="openPlayerOperation" aria-role="button" aria-label="{{item.title}}" hover-class="cy-pressed" hover-stay-time="80"><view class="tb-avatar"><cy-icon name="{{item.icon}}" size="48" /></view><view class="tb-copy"><text class="tb-name">{{item.title}}</text><text class="tb-purpose">{{item.summary}}</text></view><cy-icon name="chevron-right" size="32" /></view></view>
-    <text class="tb-purpose" wx:if="{{!playerOperationRows.length && !playerExitText}}">暂无可用操作，请核对队长身份与本站状态</text>
+    <text class="tb-purpose" wx:if="{{!playerOperationRows.length && !playerExitText && !playerRunText}}">暂无可用操作，请核对队长身份与本站状态</text>
     <view class="tb-group tb-details" wx:if="{{playerArrivalProof}}"><text class="tb-heading">{{playerArrivalProof.stationName}} · 到场凭证</text><text class="tb-purpose">交给本站工作人员核验，仅本次到场有效。</text><text class="po-proof" selectable="{{true}}">{{playerArrivalProof.nonce}}</text><view class="tb-detail-row"><text>有效至</text><text>{{playerArrivalProof.expiresText}}</text></view><view class="tb-button tb-button--muted" bindtap="copyPlayerArrivalProof" aria-role="button" aria-label="复制到场凭证" hover-class="cy-pressed" hover-stay-time="80">复制给本站工作人员</view></view>
     <text class="tb-section" wx:if="{{playerManualRows.length}}">本人现场记录</text><view class="tb-group"><view class="tb-row" wx:for="{{playerManualRows}}" wx:key="signatureId"><view class="tb-avatar"><cy-icon name="check" size="48" /></view><view class="tb-copy"><text class="tb-name">{{item.title}}</text><text class="tb-purpose" wx:if="{{item.reason}}">{{item.reason}}</text></view><text class="tb-value">{{item.statusText}}</text></view></view>
   </block>

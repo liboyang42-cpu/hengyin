@@ -98,6 +98,15 @@ public interface CmsRegistrationMapper
     public boolean hasActiveTopicStoryAccess(@Param("topicId") Long topicId,
                                              @Param("memberId") Long memberId);
 
+    /**
+     * 本人对某个主题(ownerType=1)/活动(ownerType=2)是否有报名成功的记录。
+     * 判据与「带上一次游玩记录」选择器的数据源(/api/registration/my-joined:registration_status=2)同口径,
+     * 用来拒绝伪造他人游玩记录的帖子引用。
+     */
+    public int countSucceededJoin(@Param("memberId") Long memberId,
+                                  @Param("ownerType") Long ownerType,
+                                  @Param("ownerId") Long ownerId);
+
     /** 一账号一票的全入口串行点；返回空即源 topic 不存在。 */
     public Long lockExploreTopicForUpdate(@Param("topicId") Long topicId);
 

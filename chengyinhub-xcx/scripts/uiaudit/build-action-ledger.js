@@ -82,7 +82,11 @@ const EXPLICIT_WRITE_APIS = new Set([
   '/api/club/lead/edit-ops',
   '/api/club/lead/arrive',
 ])
-const isWriteApi = (api) => API_WRITE_RE.test(api) || EXPLICIT_WRITE_APIS.has(api)
+// 精确读例外:路径段命中通用写动词、但后端只读的端点。只按完整路径逐个登记,不放宽 API_WRITE_RE。
+// /api/publish/home(ApiPublishController#home)是发布广场首页聚合(能力 + 额度 + 项目摘要),只查不写;
+// 同前缀的真实发布写口(/api/activity/publish、/api/coupon/publish、/api/template/publish 等)仍判写。
+const EXPLICIT_READ_APIS = new Set(['/api/publish/home'])
+const isWriteApi = (api) => !EXPLICIT_READ_APIS.has(api) && (API_WRITE_RE.test(api) || EXPLICIT_WRITE_APIS.has(api))
 const TAP_EVENTS = new Set(['bindtap', 'catchtap', 'bind:tap', 'catch:tap'])
 const AUXILIARY_APIS = new Set(['/api/login/code', '/api/role/info', '/api/analytics/events/batch'])
 const SELF_ONLY_WRITE_APIS = new Set([
@@ -3343,6 +3347,7 @@ module.exports = {
   communityAliasesForSource,
   communityRequestPlan,
   isSelfOnlyWriteApi,
+  isWriteApi,
   extractTargets,
   sourceFilesFor,
   sourceDigestFor,

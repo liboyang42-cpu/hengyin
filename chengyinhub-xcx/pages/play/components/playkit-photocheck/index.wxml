@@ -14,6 +14,8 @@
 
     <view class="pc__verdict pk-in pc__verdict--{{verdictKind}}" wx:if="{{verdict}}">{{verdict}}</view>
     <view class="pc__reason pk-in pk-in--2" wx:if="{{reason}}">{{reason}}</view>
+    <view class="pc__tries" wx:if="{{verifiedNote}}">{{verifiedNote}}</view>
+    <view class="pc__tries" wx:if="{{rewardNote}}">{{rewardNote}}</view>
     <view class="pc__tries" wx:if="{{triesLabel && !verdict && !reason}}">{{triesLabel}}</view>
 
     <!-- 拍物成卡:判过当场就看到这张卡(照片卡,3D 转台由后台补,见施工文档 §3.3)。

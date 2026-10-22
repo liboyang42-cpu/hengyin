@@ -74,6 +74,7 @@ function loadClubDetail() {
     '../../../utils/response-shape.js': require('../../utils/response-shape.js'),
     '../../../utils/coop-invite-view.js': require('../../utils/coop-invite-view.js'),
     '../utils/club-event-calendar.js': require('../../pages/club/utils/club-event-calendar.js'),
+    '../utils/edition-empty-reason.js': require('../../pages/club/utils/edition-empty-reason.js'),
     '../../../utils/feed-play-card.js': require('../../utils/feed-play-card.js'),
   });
 }

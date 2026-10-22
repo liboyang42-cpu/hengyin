@@ -42,6 +42,28 @@ test('form-state: 手机号校验与表单完成态派生只有一个公共真�
   assert.equal(deriveCanSubmit([true, false, true]), false)
 })
 
+function gbCheckCode(first17) {
+  const weights = [7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2]
+  let sum = 0
+  for (let i = 0; i < 17; i += 1) sum += Number(first17.charAt(i)) * weights[i]
+  const code = (12 - (sum % 11)) % 11
+  return code === 10 ? 'X' : String(code)
+}
+
+test('form-state: 身份证校验位为 2 的合法号码必须放行（校验位表 11 项，与后端 IdCardUtils 同口径）', () => {
+  const { isValidIdCard } = loadFormState()
+  assert.equal(gbCheckCode('11010519900307009'), '2')
+  assert.equal(isValidIdCard('110105199003070092'), true)
+  assert.equal(isValidIdCard('110105199003070093'), false)
+  assert.equal(isValidIdCard('11010519900307009X'), false)
+  assert.equal(isValidIdCard('110105199003070017'), true)
+  assert.equal(isValidIdCard('31010119750101001x'), true)
+  for (let seq = 0; seq < 1000; seq += 1) {
+    const first17 = `11010519900307${String(seq).padStart(3, '0')}`
+    assert.equal(isValidIdCard(first17 + gbCheckCode(first17)), true, first17)
+  }
+})
+
 test('form-state: 全仓不得遗留手机号正则拷贝', () => {
   assert.deepEqual(findCopiedMobileRegexes(), [])
 })

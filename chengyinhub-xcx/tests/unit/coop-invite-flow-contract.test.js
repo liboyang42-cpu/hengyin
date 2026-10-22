@@ -258,11 +258,13 @@ test('type2 的 tab、节点 UI、请求与 payload 分支全部撤销，预置�
   assert.doesNotMatch(wxml, /<cy-tabs\b/)
 })
 
-test('发送确认半屏同时回显已锁定邀请对象与合作条款', () => {
+test('发送确认半屏回显已锁定邀请对象与拟议条款(条款在对方接受并成单后才冻结)', () => {
   const wxml = WXML()
   const js = JS()
   assert.match(wxml, /邀请对象 · 已锁定/)
-  assert.match(wxml, /合作条款 · 已锁定/)
+  // CoopInviteServiceImpl 在对方接受、生成合作单时才冻结条款快照,发送时只是拟议条款
+  assert.match(wxml, /拟议条款 · 对方接受并成单后冻结/)
+  assert.doesNotMatch(wxml, /合作条款 · 已锁定|发送确认时锁定/)
   assert.match(wxml, /inviteModal\.targetLogo/)
   assert.match(wxml, /inviteModal\.termsText/)
   assert.match(js, /termsText\s*=\s*this\.data\.shareMode === 2/)

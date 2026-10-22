@@ -23,7 +23,7 @@ import java.util.regex.Pattern;
 public class TopicRouteCandidatePolicy {
     private static final ObjectMapper JSON = new ObjectMapper();
     private static final Pattern BUSINESS_TIME = Pattern.compile(
-            "^(.*?)\\s*(\\d{1,2}):(\\d{2})\\s*[-~—至]\\s*(\\d{1,2}):(\\d{2})$");
+            "^(.*?)\\s*(\\d{1,2}):(\\d{2})\\s*[-~—至]\\s*(次日)?\\s*(\\d{1,2}):(\\d{2})$");
     private static final Pattern WEEK_RANGE = Pattern.compile("^周([一二三四五六日天])至周?([一二三四五六日天])$");
     private static final Pattern WEEK_LIST = Pattern.compile("^周([一二三四五六日天](?:[、,，]周?[一二三四五六日天])*)$");
     private static final double EARTH_RADIUS_METERS = 6371008.8D;
@@ -133,8 +133,10 @@ public class TopicRouteCandidatePolicy {
         Matcher matcher = BUSINESS_TIME.matcher(raw.trim());
         if (!matcher.matches()) return null;
         Integer start = minute(matcher.group(2), matcher.group(3));
-        Integer end = minute(matcher.group(4), matcher.group(5));
+        Integer end = minute(matcher.group(5), matcher.group(6));
         if (start == null || end == null) return null;
+        // 商家经营时间编辑器会显式写「次日」标记跨夜;旧值可省略,但矛盾标记(次日却不早于开始)不能当成当日营业。
+        if (matcher.group(4) != null && end >= start) return null;
         int now = LocalTime.now(clock).getHour() * 60 + LocalTime.now(clock).getMinute();
         LocalDate businessDate = LocalDate.now(clock);
         if (end < start && now <= end) businessDate = businessDate.minusDays(1L);

@@ -2973,6 +2973,9 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         }
         // AUDIT-G2-1:内容安全下架留置中的草稿,发布只保存内容并送人工复核,不回到在架。
         boolean contentSafetyHeld = com.chengyinhub.business.util.TopicContentSafetyHold.isHeld(topic);
+        // #380 草稿缺口:草稿期机审存疑(review_flag=1)的文本发布时不能记成「机审通过」,改走人工抽检。
+        boolean draftReviewFlagged = simple && !contentSafetyHeld
+                && Integer.valueOf(1).equals(cmsTopicMapper.selectReviewFlag(id));
         CmsTopic upd = new CmsTopic();
         upd.setId(id);
         if (!StringUtils.isEmpty(topic.getCircleThemeCode())) {
@@ -2985,7 +2988,8 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
             upd.setStatus(1);      // 简易版免审直发
             if (!contentSafetyHeld) {
                 upd.setUserStatus(1);
-                upd.setCheckStatus(1); // 机审通过/免审,与后审中的 0 区分(见 createTopic 同口径)
+                // 机审通过/免审,与后审中的 0 区分(见 createTopic 同口径);草稿期机审存疑的记 0 = 后审中
+                upd.setCheckStatus(draftReviewFlagged ? 0 : 1);
             }
         }
         if ((simple || upd.getCircleReviewedAt() != null) && cmsTopicMapper.updateCmsTopic(upd) != 1) {
@@ -3010,7 +3014,28 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
             return held;
         }
         if (simple) ensureSelfHostActivityShell(id);
+        if (draftReviewFlagged) submitDraftSpotCheck(topic);
         return reviewResult != null ? reviewResult : noBundleReview(id, "NOT_REQUIRED");
+    }
+
+    /**
+     * 草稿发布时补挂先发后审抽检单(与 ApiTopicController.flagForSpotCheck 同口径:BIZ_TOPIC post_review_flag,
+     * 已有未结非举报单则不重复挂)。与发布同事务:抽检单挂不上就不发布,不能静默变成「机审通过」。
+     */
+    private void submitDraftSpotCheck(CmsTopic topic) {
+        AuditTask q = new AuditTask();
+        q.setBizType(AuditTask.BIZ_TOPIC);
+        q.setBizId(topic.getId());
+        for (AuditTask t : nullToEmpty(auditTaskService.selectAuditTaskList(q))) {
+            if ((AuditTask.STATUS_PENDING.equals(t.getStatus()) || AuditTask.STATUS_ESCALATED.equals(t.getStatus()))
+                    && !t.isOpenReport()) {
+                return;
+            }
+        }
+        String name = topic.getName() == null ? "" : topic.getName().replace("\"", "'");
+        String snap = "{\"bizType\":\"TOPIC\",\"bizId\":" + topic.getId()
+                + ",\"flagReason\":\"draft_review_flag\",\"name\":\"" + name + "\"}";
+        auditTaskService.submit(AuditTask.BIZ_TOPIC, topic.getId(), topic.getMemberId(), "post_review_flag", snap);
     }
 
     /**

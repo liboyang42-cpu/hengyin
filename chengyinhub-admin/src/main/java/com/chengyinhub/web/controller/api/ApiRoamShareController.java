@@ -53,9 +53,9 @@ public class ApiRoamShareController extends BaseController {
         try { return getAppUserId(); } catch (Exception e) { return 0L; }
     }
 
-    @Operation(summary = "发布足迹分享快照(同一条足迹复用令牌)")
+    @Operation(summary = "发布足迹分享快照(同一条足迹复用令牌;带 expectedVersion 时做版本 CAS)")
     @PostMapping("/snapshot")
-    public AjaxResult publish(Long clientTs, Long sessionId, String snapshot) {
+    public AjaxResult publish(Long clientTs, Long sessionId, String snapshot, Integer expectedVersion) {
         Long memberId = uid();
         if (memberId == null || memberId <= 0) return error("请先登录");
         if (clientTs == null || clientTs <= 0) return error("足迹记录无效");
@@ -73,12 +73,22 @@ public class ApiRoamShareController extends BaseController {
             if (risk != null) return error(risk);
         }
         String normalized = normalizedJson.toJSONString();
-        String token;
-        try { token = snapshotService.publish(memberId, clientTs, sessionId, normalized); }
+        RoamShareSnapshotService.Published published;
+        try { published = snapshotService.publish(memberId, clientTs, sessionId, normalized, expectedVersion); }
+        catch (RoamShareSnapshotService.VersionConflictException conflict) {
+            AjaxResult result = new AjaxResult(com.chengyinhub.common.constant.HttpStatus.CONFLICT, conflict.getMessage());
+            result.put("errorCode", "SHARE_VERSION_CONFLICT");
+            return result;
+        }
         catch (IllegalStateException unavailable) { return error(unavailable.getMessage()); }
-        if (token == null) return error("足迹分享暂时不可用，请重试");
-        return success(Collections.singletonMap("token", token));
+        if (published == null || published.getToken() == null) return error("足迹分享暂时不可用，请重试");
+        java.util.Map<String, Object> data = new java.util.LinkedHashMap<String, Object>();
+        data.put("token", published.getToken());
+        data.put("version", published.getVersion());
+        return success(data);
     }
+
+    public AjaxResult publish(Long clientTs, Long sessionId, String snapshot) { return publish(clientTs, sessionId, snapshot, null); }
 
     public AjaxResult publish(Long clientTs, String snapshot) { return publish(clientTs, null, snapshot); }
 
@@ -103,6 +113,23 @@ public class ApiRoamShareController extends BaseController {
         Long memberId = uid();
         if (memberId == null || memberId <= 0) return error("请先登录");
         return success(Collections.singletonMap("revoked", snapshotMapper.deleteByMember(memberId)));
+    }
+
+    /**
+     * 按令牌撤销本人的一条分享(/revoke 仍是「作废本人全部」,语义不变)。
+     * 令牌不存在、已撤销、或不是本人的,一律 revoked=0 —— 不区分,免得变成探测别人令牌的口子。
+     */
+    @Operation(summary = "按令牌撤销本人的一条足迹分享")
+    @PostMapping("/revoke-token")
+    public AjaxResult revokeToken(String token) {
+        Long memberId = uid();
+        if (memberId == null || memberId <= 0) return error("请先登录");
+        if (token == null || !TOKEN.matcher(token).matches()) {
+            AjaxResult result = new AjaxResult(com.chengyinhub.common.constant.HttpStatus.BAD_REQUEST, "分享链接无效");
+            result.put("errorCode", "SHARE_TOKEN_INVALID");
+            return result;
+        }
+        return success(Collections.singletonMap("revoked", snapshotMapper.deleteByMemberToken(memberId, token)));
     }
 
     @Operation(summary = "读取足迹分享快照(未登录可读)")

@@ -58,7 +58,7 @@ def all_required_clean(directory):
     write_report(directory, "PlayTeamMybatisIntegrationTest", 21)
     write_report(directory, "PlayTeamNearbyMybatisIntegrationTest", 4)
     # 2026-09-16:支付回调 fencing IT 入闸(5 条);fixture 必须跟着 EXPECTED 走。
-    write_report(directory, "WxPaymentCallbackFencingMySqlIT", 5)
+    write_report(directory, "WxPaymentCallbackFencingMySqlIT", 6)
     # 2026-09-16 第二轮:内容回调 fencing IT 入闸(3 条),与上面同病同修。
     write_report(directory, "WxContentCallbackFencingMySqlIT", 3)
     # 2026-09-16 晚:暗测试 23 套(197 条)首跑判绿后入闸;计数与 EXPECTED/SOURCE_FILES 同源。

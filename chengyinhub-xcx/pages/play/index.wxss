@@ -1048,6 +1048,8 @@ page { background: var(--cy-color-bg-page); }
 .chfull__audio{ min-height:var(--cy-btn-h); box-sizing:border-box; display:flex; align-items:center; gap:15rpx; padding:23rpx 38rpx;
   border-radius:var(--cy-radius-pill); background:var(--cy-color-play-story-accent); color:var(--cy-color-play-story-cta-fg); }
 .chfull__audio-label{ font-size:31rpx; } /* ds-ok 与 .chstat__v 同一档字号(Figma 实测) */
+.chfull__audio-transcript{ display:block; margin-top:var(--cy-space-2); font-size:var(--cy-font-caption); line-height:1.6;
+  color:var(--cy-color-text-secondary); white-space:pre-wrap; }
 
 /* 站末分支图(契约 §3.3):一行一步,只列本次真实走过的走向。
    颜色走 .finsheet 内已重映射的 play-story 语义 token,不引第二套皮肤。 */

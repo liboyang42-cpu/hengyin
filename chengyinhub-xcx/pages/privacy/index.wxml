@@ -37,7 +37,11 @@
           <cy-btn variant="secondary" size="sm" loading="{{submitting}}" disabled="{{submitting}}" aria-disabled="{{submitting}}" bindtap="disablePresenceSharing">关闭</cy-btn>
         </view>
         <view class="privacy-row">
-          <text class="privacy-row__title">漫游定位</text>
+          <!-- PC-168:按用途显示本机采集状态;撤回只停漫游这一用途,别的已获准用途可能仍在定位 -->
+          <view class="privacy-row__main">
+            <text class="privacy-row__title">漫游定位</text>
+            <text class="privacy-row__sub" aria-role="status">{{roamCollectionText}}</text>
+          </view>
           <cy-btn variant="secondary" size="sm" loading="{{submitting}}" disabled="{{submitting}}" aria-disabled="{{submitting}}" bindtap="withdrawRoamLocationConsent">撤回</cy-btn>
         </view>
         <view class="privacy-row" bindtap="toggleMediaPanel" aria-role="button" aria-label="{{mediaOpen ? '收起我的待审媒体' : '查看我的待审媒体'}}" hover-class="cy-pressed" hover-stay-time="80">

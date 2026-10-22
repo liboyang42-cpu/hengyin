@@ -309,7 +309,9 @@ public class AuditWorkbenchController extends BaseController {
             return badRequest;
         } catch (ServiceException e) {
             AjaxResult error = new AjaxResult(e.getCode() == null ? HttpStatus.ERROR : e.getCode(), e.getMessage());
-            error.put("errorCode", e.getCode() != null && e.getCode() == HttpStatus.CONFLICT
+            error.put("errorCode", AuditTaskServiceImpl.ERROR_REVIEW_STALE_LEVEL.equals(e.getDetailMessage())
+                    ? AuditTaskServiceImpl.ERROR_REVIEW_STALE_LEVEL
+                    : e.getCode() != null && e.getCode() == HttpStatus.CONFLICT
                     ? "AUDIT_SNAPSHOT_STALE" : "AUDIT_REVIEW_FAILED");
             return error;
         }

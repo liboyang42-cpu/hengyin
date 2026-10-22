@@ -11,7 +11,15 @@ public interface IMerchantReviewService {
     MerchantReviewPageVO publicList(Long viewerMemberId, Long merchantRowId,
                                     Integer pageNum, Integer pageSize);
 
-    MerchantReviewPageVO manageList(Long principalMemberId, Integer pageNum, Integer pageSize);
+    default MerchantReviewPageVO manageList(Long principalMemberId, Integer pageNum, Integer pageSize) {
+        return manageList(principalMemberId, null, pageNum, pageSize);
+    }
+
+    /**
+     * 商家管理列表(服务端筛选)。filter 取 all/pending/low/photo/platform,null 或空串按 all;
+     * 其余值 400。total/hasMore 按筛选后的全量计算,filterCounts 恒为本店全量计数。
+     */
+    MerchantReviewPageVO manageList(Long principalMemberId, String filter, Integer pageNum, Integer pageSize);
 
     /** 创建后为 PENDING_REVIEW；统一 AuditTask 通过后才进入公开 VISIBLE。 */
     MerchantReviewWriteResultVO create(Long authorMemberId, MerchantReviewCreateRequest request);
