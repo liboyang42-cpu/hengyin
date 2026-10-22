@@ -21,7 +21,7 @@ import static org.mockito.Mockito.when;
 
 /** #23:按令牌撤销单条 + 发布版本 CAS;/revoke(撤销全部)不变。 */
 class ApiRoamShareVersionTest {
-    private static final String TOKEN = "0123456789abcdef0123456789abcdef";
+    private static final String TOKEN = "0123456789abcdef0123456789abcdef"; // gitleaks:allow 固定的假分享令牌(32 位十六进制),不是密钥
     private static final String SNAPSHOT = "{\"routeName\":\"外滩足迹\",\"track\":[{\"lat\":31.23,\"lng\":121.47}],\"pois\":[]}";
 
     private static class AsMember extends ApiRoamShareController {
