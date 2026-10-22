@@ -3,9 +3,9 @@ const test = require('node:test');
 const search = require('../../utils/discover-search.js');
 const { buildContinueExplore, buildContinueGame } = require('../../utils/index/continue-explore.js');
 
-test('四类搜索请求走现有公开接口，俱乐部与商家使用 RequestBody', () => {
+test('六类搜索请求走现有公开接口，俱乐部与商家使用 RequestBody', () => {
   const requests = search.buildRequests('外滩', 8);
-  assert.equal(requests.length, 4);
+  assert.equal(requests.length, 6);
   assert.deepEqual(requests[0].data, { keyword: '外滩', pageNum: 1, pageSize: 12, category_id: 8 });
   assert.equal(requests[2].url, '/api/club/list');
   // CU-M-62:类别必须一并进 club/merchant 的 JSON body,否则结果页只有两类被筛
@@ -124,4 +124,30 @@ test('拍板22 继续游戏卡:自玩按 topicId 直达游玩页,作用域非法
   assert.equal(buildContinueGame([{ activityId: 0, topicId: 0 }]), null);
   assert.equal(buildContinueGame([]), null);
   assert.equal(buildContinueGame(null), null);
+});
+
+test('模板作为结果类型:主题模板客户端按名称过滤,玩法模板服务端 keyword', () => {
+  const requests = search.buildRequests('暗号', null);
+  const topicReq = requests.find((r) => r.type === 'topicTemplate');
+  const gameReq = requests.find((r) => r.type === 'gameTemplate');
+  assert.equal(topicReq.url, '/api/template/topic-template/list');
+  assert.equal(gameReq.url, '/api/template/list');
+  assert.equal(gameReq.data.keyword, '暗号');
+
+  const topics = [{ id: 1, name: '暗号之夜', subtitle: '' }, { id: 2, name: '城市漫游', description: '无关' }];
+  const cards = search.decorateRows('topicTemplate', topics, { keyword: '暗号' });
+  assert.deepEqual(cards.map((c) => c.id), [1]);
+  assert.equal(cards[0].typeLabel, '主题模板');
+  assert.equal(cards[0].path, '/pages/topic/index/index?id=1');
+
+  const games = search.decorateRows('gameTemplate', { rows: [{ id: 7, title: '解谜', imgUrl: 'a.png' }] }, { keyword: '暗号' });
+  assert.equal(games[0].title, '解谜');
+  assert.equal(games[0].typeLabel, '玩法模板');
+  assert.equal(games[0].path, '/pages/templatedetail/templatedetail?id=7');
+});
+
+test('商家结果带 memberId 时可进主页,不被客户端丢弃', () => {
+  const cards = search.decorateRows('merchant', [{ id: 3, memberId: 99, name: '咖啡店' }], {});
+  assert.equal(cards.length, 1);
+  assert.match(cards[0].path, /userId=99/);
 });

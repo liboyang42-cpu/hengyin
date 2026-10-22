@@ -67,7 +67,7 @@ function assertThemePlumbing(source) {
     '城瘾玩法消费旧颜色别名，商家浅色必须桥接 alias')
   assert.match(source.likes.wxss, /merchant-light-scope\.wxss/,
     '我的喜欢消费旧颜色别名，商家浅色必须桥接 alias')
-  assert.match(source.about.wxml, /tint="\{\{isMerchantView \? '' : 'mono'\}\}"/,
+  assert.match(source.about.wxml, /tint="\{\{isMerchantView \? 'ink' : 'mono'\}\}"/,
     '关于页图标染色必须随商家浅色/玩家深色切换')
   assert.match(source.about.wxml, /<cy-agreement-sheet[^>]*theme="\{\{isMerchantView \? 'merchant' : 'player'\}\}"/,
     '关于页里的协议也必须继承当前视角')
