@@ -132,9 +132,9 @@ function isCurrentLocationRequest(page, scope) {
     && scope.authorization === ((app.globalData || {}).authorization || '');
 }
 
-function showHomeCityLocationError(page, scope) {
-  hideLocationLoading(page, scope);
-  if (isCurrentLocationRequest(page, scope)) cyToast('暂时无法定位城市，可继续浏览');
+const homeCity = require('../../utils/index/home-city-location.js');
+function showHomeCityLocationError(page, scope, kind) {
+  hideLocationLoading(page, scope); if (isCurrentLocationRequest(page, scope)) cyToast(homeCity.message(kind));
 }
 
 function hideLocationLoading(page, scope) {
@@ -208,7 +208,7 @@ Page({
     // 身份分流：商户在首页 tab 渲染前直接跳商户首页，避免玩家首页闪一帧
     // debug_user_view='user' 强制使用普通用户视角（调试用）
     _needsRedirect: isMerchantView(),
-    city: '',
+    city: '', cityManual: false, manualCityOptions: homeCity.CITY_OPTIONS,
     isAppReady: false,
     isLoading: true,
     userInfo: {
@@ -1505,7 +1505,7 @@ loadBottomActivityList: function(pageNo, isRefresh = false) {
     const scope = captureLocationRequest(this);
     if (!(Number(scope.memberId) > 0) || !scope.authorization || scope.authorization === 'dev-token') return;
     const that = this;
-    this.setData({ city: '' });
+    this.setData({ city: '', cityManual: false });
     app.sendRequest({
       url: '/api/compliance/consents/latest',
       method: 'POST',
@@ -1515,7 +1515,7 @@ loadBottomActivityList: function(pageNo, isRefresh = false) {
       autoErrorToast: false,
       success(res) {
         if (!isCurrentLocationRequest(that, scope)) return;
-        if (!res || Number(res.code) !== 200) { showHomeCityLocationError(that, scope); return; }
+        if (!res || Number(res.code) !== 200) { showHomeCityLocationError(that, scope, 'consent'); return; }
         const previous = res.data;
         if (previous && previous.docType === 'privacy_policy' && previous.scene === 'home_city_location'
             && previous.eventType === 'REVOKE') return;
@@ -1526,8 +1526,8 @@ loadBottomActivityList: function(pageNo, isRefresh = false) {
           that.requestHomeCityConsent(scope);
         }
       },
-      successStatusAbnormal() { showHomeCityLocationError(that, scope); },
-      fail() { showHomeCityLocationError(that, scope); }
+      successStatusAbnormal() { showHomeCityLocationError(that, scope, 'consent'); },
+      fail() { showHomeCityLocationError(that, scope, 'consent'); }
     });
   },
 
@@ -1562,7 +1562,7 @@ loadBottomActivityList: function(pageNo, isRefresh = false) {
 
   executeHomeCityLocation(scope) {
     if (!isCurrentLocationRequest(this, scope) || !scope.consentRequestId) return;
-    if (typeof wx.getLocation !== 'function') { showHomeCityLocationError(this, scope); return; }
+    if (typeof wx.getLocation !== 'function') { showHomeCityLocationError(this, scope, 'device'); return; }
     const that = this;
     cyLoading.show('确定城市中...');
     this._locationLoadingEpoch = scope.epoch;
@@ -1575,11 +1575,15 @@ loadBottomActivityList: function(pageNo, isRefresh = false) {
         const longitude = res && res.longitude;
         if (!Number.isFinite(latitude) || !Number.isFinite(longitude)
             || Math.abs(latitude) > 90 || Math.abs(longitude) > 180) {
-          showHomeCityLocationError(that, scope); return;
+          showHomeCityLocationError(that, scope, 'device'); return;
         }
         that.reverseGeocode(latitude, longitude, scope);
       },
-      fail() { showHomeCityLocationError(that, scope); }
+      fail(err) {
+        const msg = String((err && err.errMsg) || '');
+        if (/auth deny|authorize|permission|system permission|location service|频繁/i.test(msg)) offerLocationSettings(that, scope);
+        else showHomeCityLocationError(that, scope, 'device');
+      }
     });
   },
 
@@ -1594,12 +1598,52 @@ loadBottomActivityList: function(pageNo, isRefresh = false) {
       data: { latitude: latitude, longitude: longitude },
       success(res) {
         if (!isCurrentLocationRequest(that, scope)) return;
-        const city = res && Number(res.code) === 200 && res.data && res.data.city;
-        if (typeof city === 'string' && city.trim()) that.setData({ city: city.trim() });
-        else showHomeCityLocationError(that, scope);
+        const data = res && Number(res.code) === 200 && res.data;
+        const city = data && data.city;
+        if (typeof city === 'string' && city.trim()) { that.setData({ city: city.trim(), cityManual: false }); return; }
+        if (data && data.manualInputRequired) { offerManualCity(that, scope, data.reason); return; }
+        showHomeCityLocationError(that, scope, 'empty');
       },
-      successStatusAbnormal() { showHomeCityLocationError(that, scope); },
-      fail() { showHomeCityLocationError(that, scope); }
+      successStatusAbnormal() { showHomeCityLocationError(that, scope, 'network'); },
+      fail() { showHomeCityLocationError(that, scope, 'network'); }
     });
   },
+
+  // 手动选择城市:仅本地展示,不上传位置、不写同意记录。
+  onManualCityChange(e) {
+    const idx = Number(e && e.detail && e.detail.value);
+    const city = String(homeCity.CITY_OPTIONS[idx] || '').trim();
+    if (city) this.setData({ city: city, cityManual: false });
+  },
 })
+
+// 服务端 MAP_UNAVAILABLE / MAP_RATE_LIMITED:不再死胡同,露出手动选城市入口。
+function offerManualCity(page, scope, reason) {
+  hideLocationLoading(page, scope);
+  if (!isCurrentLocationRequest(page, scope)) return;
+  page.setData({ cityManual: true });
+  cyToast(reason === 'MAP_RATE_LIMITED' ? '定位请求较频繁，请手动选择城市' : '暂时无法自动识别城市，请手动选择');
+}
+
+// 权限被拒/系统定位关闭:只引导打开设置一次(本页面实例内)。
+function offerLocationSettings(page, scope) {
+  hideLocationLoading(page, scope);
+  if (!isCurrentLocationRequest(page, scope)) return;
+  if (page._locationSettingsOffered) { cyToast(homeCity.message('device')); return; }
+  page._locationSettingsOffered = true;
+  modal.show({
+    title: '需要定位权限',
+    content: '无法获取位置。请确认已开启手机定位，并在设置中允许小程序使用位置信息。',
+    confirmText: '去设置',
+    cancelText: '暂不',
+    success(result) {
+      if (!result.confirm || !isCurrentLocationRequest(page, scope) || typeof wx.openSetting !== 'function') return;
+      wx.openSetting({
+        success(setting) {
+          const granted = setting && setting.authSetting && setting.authSetting['scope.userLocation'];
+          if (granted && isCurrentLocationRequest(page, scope)) page.getHomeCityLocation();
+        }
+      });
+    }
+  });
+}
