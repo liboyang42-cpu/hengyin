@@ -62,7 +62,7 @@ function loadPage(options = {}) {
   page.applied = [];
   page.applyEditingTopic = function (d) {
     this.applied.push(d);
-    this.setData({ editIsDraft: d.isDraft === true, editLoaded: true, 'formData.configVersion': d.topic.configVersion,
+    this.setData({ editIsDraft: d.isDraft === true, editLoaded: true, 'formData.name': d.topic.name, 'formData.configVersion': d.topic.configVersion,
       'formData.chapters': d.chapters.map(c => ({ id: c.id, name: c.name, nodes: c.cmsTopicNodeList.map(n => ({ id: n.id, name: n.name, templateId: n.templateId })) })) });
     this._finishEditingDraftBootstrap(d);
     return true;
@@ -391,4 +391,68 @@ test('saver：hasChanges 只作用于保存草稿；发布路径仍按 master �
   calls[2]({ ok: true, data: { topicId: 501 } });
   calls[3]({ ok: true, data: detailFor(sent) });
   assert.equal(calls.length, 5, '发布不受 hasChanges 拦截');
+});
+
+test('F-2：真机 setData 回调异步时，保存换版与重开都不把草稿标脏；重开不编辑零写入，之后一次编辑只存一次', (t) => {
+  const first = loadPage();
+  first.page.deferCallbacks = true;
+  first.page.type('重开核对');
+  first.page.flush();
+  t.mock.timers.tick(2000);
+  first.answer(first.writes()[0], { configVersion: 2 });
+  first.page.flush();
+  t.mock.timers.tick(10000);
+  assert.equal(first.writes().length, 1);
+  assert.equal(first.envelope({ topicId: '501' }).status, 'missing', '换上回读版本后不再回写一份与云端相同的本机恢复稿');
+  assert.equal(first.envelope().status, 'missing');
+
+  // 重开同一份已存云端的草稿(共享同一份本机存储)
+  const second = loadPage({ stored: first.stored });
+  const { page, sent, writes } = second;
+  page.deferCallbacks = true;
+  Object.assign(page.data, { editingTopicId: '501', draftUuid: '', draftMemberId: '' });
+  page._draftAutosaveReady = false;
+  page.loadEditingTopic('501');
+  const load = sent.find(r => r.url === '/api/topic/edit-detail');
+  load.success({ code: 200, data: detailFor({ name: '重开核对', chapters: [{ name: '第一章', nodes: [{ name: '甲', templateId: 3 }] }] }, { configVersion: 2 }) });
+  page.flush();
+  t.mock.timers.tick(10000);
+  page.flush();
+  assert.equal(writes().length, 0, '重开不编辑不发任何写请求');
+  assert.equal(page.data.themeSaveLabel, '已存云端');
+  assert.equal(second.envelope({ topicId: '501' }).status, 'missing', '重开本身不制造本机恢复稿');
+
+  page.type('重开后改名');
+  page.flush();
+  assert.equal(page.data.themeSaveLabel, '已存本机');
+  t.mock.timers.tick(2000);
+  assert.equal(writes().length, 1, '真实编辑后 2 秒只存一次');
+  assert.equal(writes()[0].url, '/api/topic/v2/update');
+  assert.equal(JSON.parse(writes()[0].data).name, '重开后改名');
+});
+
+test('F-2 配套：重开时本机恢复稿与云端不同才上传一次；与云端相同只标已存云端不发请求', (t) => {
+  const cloud = { name: '恢复稿核对', chapters: [{ name: '第一章', nodes: [{ name: '甲', templateId: 3 }] }] };
+  const run = (localName) => {
+    const ctx = loadPage();
+    proEditorDraft.saveDraft(wx, { memberId: 7, operationScope: '', topicId: '501', baseRevision: '2026-10-22 10:00:00',
+      formData: Object.assign({}, ctx.page.data.formData, { name: localName, configVersion: 2 }), pendingMaterials: [], editorMeta: {} });
+    ctx.page.deferCallbacks = true;
+    Object.assign(ctx.page.data, { editingTopicId: '501', draftUuid: '', draftMemberId: '' });
+    ctx.page._draftAutosaveReady = false;
+    ctx.page.loadEditingTopic('501');
+    ctx.sent.find(r => r.url === '/api/topic/edit-detail').success({ code: 200, data: detailFor(cloud, { configVersion: 2 }) });
+    ctx.page.flush();
+    t.mock.timers.tick(2000);
+    ctx.page.flush();
+    t.mock.timers.tick(8000);
+    return ctx;
+  };
+  const differs = run('本机改过的名字');
+  assert.equal(differs.page.data.formData.name, '本机改过的名字');
+  assert.equal(differs.writes().length, 1, '恢复稿与云端不同:上传一次');
+  assert.equal(JSON.parse(differs.writes()[0].data).name, '本机改过的名字');
+  const same = run('恢复稿核对');
+  assert.equal(same.writes().length, 0, '恢复稿与云端相同:不发请求');
+  assert.equal(same.page.data.themeSaveLabel, '已存云端');
 });

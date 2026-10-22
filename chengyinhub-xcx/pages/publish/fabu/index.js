@@ -665,9 +665,12 @@ Page({
     this._draftSetDataInstalled = true;
     const nativeSetData = this.setData;
     this.setData = (patch, callback) => {
+      // 是否算一次草稿编辑按「发起 setData 的那一刻」判定:真机回调是异步的,回填/换上回读版本时
+      // (_draftAutosaveReady=false)发起的 patch,回调可能在 ready 复位后才执行,不能再回写恢复稿、把草稿标脏。
+      const draftEdit = this._draftAutosaveReady && this._isDraftPatch(patch);
       nativeSetData.call(this, patch, () => {
         const finish = () => {
-          if (this._draftAutosaveReady && this._isDraftPatch(patch)) {
+          if (draftEdit && this._draftAutosaveReady) {
             this._onDraftEdited(this._persistDraftEnvelope());
           } else if (this._cloudAutosaveQueued && !this._cloudAutosaveTimer && !this._cloudDraftEditorOpen()) {
             // 弹窗关闭、在途保存结束后接力排队;排队条件不满足时 _queueCloudDraftAutosave 自己会放弃
@@ -711,6 +714,15 @@ Page({
     this._cloudAutosaveQueued = true;
     this._setSaveState(stored ? 'local' : 'localFailed');
     this._queueCloudDraftAutosave();
+  },
+
+  // 换上本机恢复稿后:与云端已确认的内容相同就标已存云端;不同才按一次编辑排队
+  // (与其它编辑一样,定时器由 setData 包装在回调里接力,加载/重试读取本身不直接调用保存)
+  _markRestoredDraft(stored) {
+    if (this._unloaded) return;
+    if (this._cloudSavedKey && this._cloudDraftKey() === this._cloudSavedKey) { this._setSaveState('saved'); return; }
+    this._cloudAutosaveQueued = true;
+    this._setSaveState(stored ? 'local' : 'localFailed');
   },
 
   // 云端要保存的那份内容(与「保存草稿」同一个 payload builder);组装不出来返回 ''
@@ -936,6 +948,8 @@ Page({
       && result.envelope.publishAttempt.status === 'UNKNOWN'
       && !!this.data.editingTopicId
       && String(result.envelope.publishAttempt.topicId || '') === String(this.data.editingTopicId);
+    // 换上本机恢复稿之前记下云端版本的内容,用来判断恢复稿是否真的需要再上云
+    this._cloudLoadedKey = this._cloudDraftKey();
     if (result.status === 'ready' && !unknownExistingWrite) {
       this._applyDraftEnvelope(result.envelope);
       finish();
@@ -960,6 +974,7 @@ Page({
             this._persistDraftEnvelope();
           }
           finish();
+          if (res.confirm && isCurrent()) this._markRestoredDraft(true); // 用本机稿覆盖:按一次编辑排自动保存
         },
       });
       return;
@@ -981,8 +996,9 @@ Page({
             || scope !== this.data.operationScope) return;
         this._draftScopeUnconfirmed = false;
         this._applyDraftEnvelope(envelope);
-        this._persistDraftEnvelope();
+        const stored = this._persistDraftEnvelope();
         this._draftAutosaveReady = true;
+        this._markRestoredDraft(stored);
       }
     });
   },
@@ -2618,6 +2634,10 @@ Page({
         if (res.data.isDraft === true && !that._localDraftRestored) {
           that._cloudSavedKey = that._cloudDraftKey();
           that._setSaveState('saved');
+        } else if (res.data.isDraft === true && that._cloudLoadedKey) {
+          // 换上了本机恢复稿:与云端相同则自动保存时直接标已存云端,不同才上传
+          that._cloudSavedKey = that._cloudLoadedKey;
+          that._markRestoredDraft(true);
         }
       },
       fail(res, status) {
