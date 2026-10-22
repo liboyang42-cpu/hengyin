@@ -1,5 +1,6 @@
 package com.chengyinhub.business.service.support;
 
+import com.chengyinhub.common.utils.GeoDistanceUtils;
 import com.chengyinhub.business.domain.CmsActivity;
 import org.springframework.stereotype.Component;
 
@@ -20,11 +21,7 @@ public class ClubGatherArrivalPolicy {
         if (targetLat == null || targetLng == null) return "集合点未配置，请联系领队";
         if (!valid(latitude, 90) || !valid(longitude, 180)) return "当前位置无效，请重新定位";
         // 发现列表的距离工具会按10米舍入；签到硬边界必须使用未舍入的米数。
-        double latDelta = Math.toRadians(latitude - targetLat);
-        double lngDelta = Math.toRadians(longitude - targetLng);
-        double a = Math.pow(Math.sin(latDelta / 2), 2) + Math.cos(Math.toRadians(targetLat))
-                * Math.cos(Math.toRadians(latitude)) * Math.pow(Math.sin(lngDelta / 2), 2);
-        double meters = 6371000D * 2D * Math.asin(Math.sqrt(Math.min(1D, Math.max(0D, a))));
+        double meters = GeoDistanceUtils.haversineMeters(latitude, longitude, targetLat, targetLng);
         return meters <= 500D ? null : "请到集合点500米内签到";
     }
 

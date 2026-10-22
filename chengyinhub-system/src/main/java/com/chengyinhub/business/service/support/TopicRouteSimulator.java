@@ -1,5 +1,6 @@
 package com.chengyinhub.business.service.support;
 
+import com.chengyinhub.common.utils.GeoDistanceUtils;
 import com.chengyinhub.business.domain.route.NodeOutcome;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -65,12 +66,7 @@ public class TopicRouteSimulator {
     }
 
     private double distance(Coordinate a, Coordinate b) {
-        double lat = Math.toRadians(b.latitude - a.latitude);
-        double lng = Math.toRadians(b.longitude - a.longitude);
-        double value = Math.sin(lat / 2) * Math.sin(lat / 2)
-                + Math.cos(Math.toRadians(a.latitude)) * Math.cos(Math.toRadians(b.latitude))
-                * Math.sin(lng / 2) * Math.sin(lng / 2);
-        return 6371000D * 2D * Math.atan2(Math.sqrt(value), Math.sqrt(1D - value));
+        return GeoDistanceUtils.haversineMeters(a.latitude, a.longitude, b.latitude, b.longitude);
     }
 
     public static final class Coordinate {
