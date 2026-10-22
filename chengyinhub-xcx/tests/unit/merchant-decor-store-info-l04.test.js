@@ -119,8 +119,10 @@ test('(c) 经营类目:固定词库胶囊多选,保留已有自定义值,以「�
   h.page.openPreference()
   const sheet = h.page.data.chipSheet
   assert.equal(sheet.show, true)
+  // 2026-10-22 owner 第二轮:词库扩到 28 个(饮食类紧挨在一起)
+  assert.equal(sheet.options.filter(o => o.label !== '老街小馆').length, 28)
   assert.deepEqual(plain(sheet.options.slice(0, 10).map(o => o.label)),
-    ['城市运动', '户外活动', '健康生活', '美食', '咖啡', '手作', '亲子', '夜生活', '文化艺术', '宠物友好'])
+    ['城市运动', '户外活动', '健康生活', '美食', '咖啡', '茶饮', '烘焙甜品', '酒吧小酌', '手作', '亲子'])
   assert.deepEqual(plain(sheet.options.filter(o => o.checked).map(o => o.label)), ['美食', '老街小馆'])
   h.page.toggleChip({ currentTarget: { dataset: { key: '咖啡' } } })
   h.page.saveChipSheet()

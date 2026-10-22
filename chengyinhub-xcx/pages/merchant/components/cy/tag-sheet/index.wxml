@@ -6,34 +6,30 @@
       <text class="ts__count">已选 {{_sel.length}}</text>
     </view>
     <text wx:if="{{hint}}" class="ts__hint {{hintError ? 'ts__hint--error' : ''}}" aria-role="{{hintError ? 'alert' : ''}}">{{hint}}</text>
-    <view wx:if="{{loading && !_pages.length}}" class="ts__state">正在载入…</view>
+    <view wx:if="{{loading && !_rows.length}}" class="ts__state">正在载入…</view>
     <cy-inline-error wx:elif="{{error}}" load-failure kind="error" title="列表暂未加载" sub="{{error}}" action="重试" bind:action="onRetry" />
-    <block wx:else>
-      <swiper class="ts__swiper" style="height: {{_swiperH}}rpx" current="{{_current}}" bindchange="onSwipe">
-        <swiper-item wx:for="{{_pages}}" wx:for-item="page" wx:for-index="p" wx:key="p">
-          <view class="ts__grid">
-            <view
-              wx:for="{{page}}"
-              wx:key="key"
-              class="ts__tag {{item.checked ? 'ts__tag--on' : ''}}"
-              bindtap="onTap"
-              data-key="{{item.key}}"
-              aria-role="checkbox"
-              aria-checked="{{item.checked}}"
-              aria-label="{{item.label}}"
-              hover-class="ts--pressed"
-            >
-              <image wx:if="{{item.iconSrc}}" class="ts__icon" src="{{item.iconSrc}}" mode="aspectFit" />
-              <text class="ts__label">{{item.label}}</text>
-              <image wx:if="{{item.checked && _checkSrc}}" class="ts__check" src="{{_checkSrc}}" mode="aspectFit" />
-            </view>
+    <!-- 2026-10-22 owner:不分页,整片错落胶囊直接左右滑(自由滚动,无页码点) -->
+    <scroll-view wx:else class="ts__scroll" scroll-x enhanced show-scrollbar="{{false}}" scroll-left="{{_scrollLeft}}">
+      <view class="ts__rows">
+        <view wx:for="{{_rows}}" wx:for-item="row" wx:for-index="r" wx:key="r" class="ts__row">
+          <view
+            wx:for="{{row}}"
+            wx:key="key"
+            class="ts__tag {{item.checked ? 'ts__tag--on' : ''}}"
+            bindtap="onTap"
+            data-key="{{item.key}}"
+            aria-role="checkbox"
+            aria-checked="{{item.checked}}"
+            aria-label="{{item.label}}"
+            hover-class="ts--pressed"
+          >
+            <image wx:if="{{item.iconSrc}}" class="ts__icon" src="{{item.iconSrc}}" mode="aspectFit" />
+            <text class="ts__label">{{item.label}}</text>
+            <image wx:if="{{item.checked && _checkSrc}}" class="ts__check" src="{{_checkSrc}}" mode="aspectFit" />
           </view>
-        </swiper-item>
-      </swiper>
-      <view wx:if="{{_pages.length > 1}}" class="ts__dots">
-        <view wx:for="{{_pages}}" wx:key="index" class="ts__dot {{index === _current ? 'ts__dot--on' : ''}}"></view>
+        </view>
       </view>
-    </block>
+    </scroll-view>
     <view slot="footer" class="ts__footer">
       <view class="ts__save {{(saving || loading) ? 'ts__save--busy' : ''}}" bindtap="onConfirm" aria-role="button" hover-class="ts--pressed">{{saving ? '保存中…' : confirmText}}</view>
     </view>

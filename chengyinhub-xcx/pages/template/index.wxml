@@ -61,7 +61,7 @@
       title="{{ errorMsg }}" sub="" bindretry="retryTemplateLoad" />
     <!-- 空态把 banner 计入:单条数据时 banner 吃掉唯一内容、两个列表全空,
          只看列表会让空态与 banner 大卡同屏 -->
-    <cy-empty class="fill-slot" wx:elif="{{ listLoaded && !banner.id && !topList.length && !tailList.length }}" fill="{{true}}" size="lg" kind="empty"
+    <cy-empty class="fill-slot" wx:elif="{{ listLoaded && !banner.id && !topList.length && !tailList.length && !themeCards.length && !gameBelow.length }}" fill="{{true}}" size="lg" kind="empty"
       title="{{ emptyTitle }}" sub="{{ emptySub }}" />
     <view wx:if="{{ loading && listLoaded }}" class="tpl-refreshing" aria-role="status" aria-live="polite">正在同步最新内容…</view>
 
@@ -93,6 +93,52 @@
     </block>
 
     <cy-inline-error wx:if="{{ttUseError}}" title="模板未能生成草稿" sub="{{ttUseError}}" action="重试" bind:action="retryUseTt" />
+
+    <!-- ====== 主题 tab(2026-10-22 owner):上半「主题模板」大横卡横滑,下半「玩法模板」列表 ====== -->
+    <block wx:if="{{ tab === 'topic' }}">
+      <view class="sec-hd sec-hd-top" wx:if="{{ themeCards.length }}">
+        <text class="sec-title">主题模板</text>
+        <text class="sec-sub">{{ themeCards.length }} 个</text>
+      </view>
+      <scroll-view class="tt-rail" scroll-x enhanced show-scrollbar="{{false}}" wx:if="{{ themeCards.length }}">
+        <view class="tt-rail-inner">
+          <view class="tt-card" wx:for="{{ themeCards }}" wx:key="id" data-item="{{ item }}" bindtap="jumpDetail"
+            hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="主题模板：{{ item._title }}">
+            <image wx:if="{{ item.imgUrl && !item._coverFail }}" lazy-load="true" class="tt-img" src="{{ item.imgUrl }}"
+              mode="aspectFill" data-list="themeCards" data-idx="{{ index }}" data-key="{{ item.id }}" binderror="onCoverError" />
+            <view class="tt-shade"></view>
+            <view class="tt-chip" wx:if="{{ item._metaText }}">{{ item._metaText }}</view>
+            <view class="tt-text">
+              <text class="tt-title ep1">{{ item._title }}</text>
+              <text class="tt-sub ep1" wx:if="{{ item._subText || item._statusText }}">{{ item._subText || item._statusText }}</text>
+            </view>
+          </view>
+        </view>
+      </scroll-view>
+      <view class="sec-hd" wx:if="{{ gameBelow.length }}">
+        <text class="sec-title">玩法模板</text>
+        <text class="sec-sub">{{ gameBelow.length }} 个</text>
+      </view>
+      <view class="cml-list cy-fade-in" wx:if="{{ gameBelow.length }}">
+        <view class="cml-card" wx:for="{{ gameBelow }}" wx:key="id" data-item="{{ item }}" bindtap="jumpDetail" hover-class="cy-pressed" hover-stay-time="80">
+          <image wx:if="{{ item._iconUrl }}" class="cml-pic cml-pic--art" src="{{ item._iconUrl }}" mode="aspectFit" aria-hidden="true" />
+          <image wx:elif="{{ item.imgUrl && !item._coverFail }}" lazy-load="true" class="cml-pic" src="{{ item.imgUrl }}"
+            mode="aspectFill" data-list="gameBelow" data-idx="{{ index }}" data-key="{{ item.id }}" binderror="onCoverError" />
+          <view wx:else class="cml-pic cover-error" aria-role="img" aria-label="{{ item._title }} 的封面未能加载">
+            <image class="cover-error-icon" src="{{ coverErrorSrc }}" mode="aspectFit" />
+            <text class="cover-error-text">封面暂不可用</text>
+          </view>
+          <view class="cml-info">
+            <text class="cml-name ep1">{{ item._title }}</text>
+            <view class="cml-meta">
+              <text>{{ item._metaText }}</text>
+              <text class="cml-dot" wx:if="{{ item._statusText }}">·</text>
+              <text wx:if="{{ item._statusText }}">{{ item._statusText }}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </block>
 
     <!-- ====== 一个列表:选中品类置顶,其余不筛掉继续显示 ======
          库存少的时候筛选要退化成排序:约 27 个玩法 ÷ 9 个品类 ≈ 每类 3 个,

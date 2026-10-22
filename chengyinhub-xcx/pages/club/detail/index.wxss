@@ -40,7 +40,8 @@ page { background: var(--cy-bg-page); }
   position: absolute;
   inset: 0;
   z-index: 2;
-  background: linear-gradient(180deg, rgba(0,0,0,0.12) 0%, rgba(0,0,0,0.62) 100%);
+  /* 拍板 2026-10-22:封面下半段渐变到页底色(完全不透明),logo+名字浮在接缝上 */
+  background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 38%, rgba(0,0,0,0.55) 68%, var(--cy-bg-page) 100%); /* ds-ok: owner 10-22 封面下沿压黑渐变到页底 */
   pointer-events: none;
 }
 .cover-img {
@@ -93,7 +94,8 @@ page { background: var(--cy-bg-page); }
 /* —— 资料区 —— */
 .profile {
   position: relative;
-  z-index: 2;
+  /* 高于 .cover-wrap(3):身份行上移压在封面下沿,必须盖在封面之上 */
+  z-index: 4;
   /* 名字挪到 logo 右侧后,顶部只需让开 logo 露出的 48rpx 一点点;
      左侧让开 logo 宽 96 + 间距 20 = 116rpx。 */
   /* Figma 93:19 Identity:px14 pt8 pb4 —— 名字的绝对左边距要落在 84px(= 页边 14 + pl 70) */
@@ -118,6 +120,11 @@ page { background: var(--cy-bg-page); }
   align-items: center;
   gap: var(--cy-space-2-5);
   min-height: 112rpx; /* ds-ok: = logo 112,名字按 logo 中线居中 */
+  /* 拍板 2026-10-22:logo + 名字悬浮在封面与下方文字之间 —— 身份行中线落在封面下沿。
+     用 top 上移 + 等量负 margin-bottom,不动 .profile 自身盒子(避免外边距折叠把背景带上去)。 */
+  position: relative;
+  top: calc(-56rpx - var(--cy-space-2)); /* ds-ok: logo 112 的一半 + .profile 顶部内边距 */
+  margin-bottom: calc(-56rpx - var(--cy-space-2));
 }
 .profile-id-main { flex: 1; min-width: 0; }
 .profile-links {
@@ -1122,7 +1129,9 @@ page { background: var(--cy-bg-page); }
   margin: 0 var(--cy-page-x) var(--cy-space-4);
 }
 .ov-strip-item {
-  flex: 1;
+  /* 拍板 2026-10-22:成员从左往右排,不再 flex:1 撑满(只有 1 人时会被挤到正中) */
+  flex: none;
+  width: 120rpx; /* ds-ok: 头像 64 + 名字留白 */
   min-width: 0;
   display: flex;
   flex-direction: column;

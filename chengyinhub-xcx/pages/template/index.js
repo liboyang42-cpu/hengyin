@@ -66,7 +66,7 @@ Page({
     listLoaded: false,        // 任一 tab 拿到过数据 —— 四态里区分「首次加载」与「已有内容」
     banner: {},
     topList: [],
-    tailList: [],
+    tailList: [], themeCards: [], gameBelow: [],   // 2026-10-22 owner:主题 tab 上半主题模板大横卡 / 下半玩法模板列表
     bannerTitle: '推荐',
     topTitle: '全部主题',
     emptyTitle: '',
@@ -238,7 +238,7 @@ Page({
   // ===== 封面兜底 =====
   // 封面 URL 拉不动(404 / 域名不可达 / 空文件)时,固定显示仓库已有的设计资产。
   // 这是渲染失败态,不伪造内容图,也不使用主题首字作为视觉占位。
-  COVER_LISTS: ['topList', 'tailList'],
+  COVER_LISTS: ['topList', 'tailList', 'themeCards', 'gameBelow'],
 
   // 白名单列表取数组;不在白名单、或取出来不是数组,一律给 null
   coverListOf(list) {
@@ -297,7 +297,7 @@ Page({
     this.setData({ searchKeyword: keyword });
     this._topicLoaded = false;
     this._gameLoaded = false;
-    this.setData({ listLoaded: false, errorMsg: '', banner: {}, topList: [], tailList: [] });
+    this.setData({ listLoaded: false, errorMsg: '', banner: {}, topList: [], tailList: [], themeCards: [], gameBelow: [] });
     this.loadTab(this.data.tab);
   },
   clearTemplateSearch() {
@@ -436,7 +436,25 @@ Page({
     // 横幅 + 列表各出现一次,同一张卡同屏两遍。横幅只认分类命中的首项,列表一律去重。
     const banner = top[0] || {};
     const searching = !!keyword;
+    // 2026-10-22 owner:主题 tab = 上半「主题模板」大横卡横滑 + 下半「玩法模板」列表。
+    // 两段都按同一套品类置顶 / 关键词硬筛;游戏 tab 维持原「头牌 + 列表」。
+    if (isTopic) {
+      const games = { top: [], tail: [] };
+      (this._gameRows || []).forEach(function (item) {
+        if (!matched(item)) return;
+        (that.hitCategory(item, cat) ? games.top : games.tail).push(item);
+      });
+      this.setData({
+        banner: {}, topList: [], tailList: [],
+        themeCards: top.concat(tail),
+        gameBelow: games.top.concat(games.tail),
+        emptyTitle: searching ? '没有找到相关模板' : '还没有可复用的模板',
+        emptySub: searching ? '换个名称试试，或点上面的「清除」看全部模板' : '新的主题或玩法模板开放后会出现在这里'
+      });
+      return;
+    }
     this.setData({
+      themeCards: [], gameBelow: [],
       banner: banner,
       // activeCat=0 走运营编排,所以叫「推荐」不叫「全部」—— 叫全部会让用户
       // 以为看到了所有模板,找不到的东西会被当成不存在。
@@ -487,7 +505,7 @@ Page({
     } else {
       this.setData({
         tab: tab, activeCat: 0, errorMsg: '', listLoaded: false,
-        banner: {}, topList: [], tailList: []
+        banner: {}, topList: [], tailList: [], themeCards: [], gameBelow: []
       });
       this.loadTab(tab);
     }
@@ -503,8 +521,11 @@ Page({
   },
 
   loadTab(tab) {
-    if (tab === 'topic') this.getTopicTemplates();
-    else this.getGameRows();
+    if (tab === 'topic') {
+      this.getTopicTemplates();
+      // 主题 tab 下半段要列玩法模板;已加载过就复用缓存
+      if (!this._gameLoaded) this.getGameRows();
+    } else this.getGameRows();
   },
 
   // 分类行的数据源仍走 homeData(它同时下发 categoryList),但只取 categoryList:
@@ -565,6 +586,9 @@ Page({
           // 否则会把还没加载的主题 tab 标成已加载,空缓存渲染成假空态。
           if (that.data.tab === 'game') {
             that.setData({ listLoaded: true, errorMsg: '' });
+            that.rebuildLists();
+          } else if (that._topicLoaded) {
+            // 主题 tab 下半段也列玩法模板:主题已到就直接重排
             that.rebuildLists();
           }
         } else if (that.data.tab === 'game') {

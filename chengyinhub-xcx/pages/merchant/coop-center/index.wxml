@@ -22,27 +22,31 @@
       <view wx:else class="cc-list">
         <view class="cc-refreshing" wx:if="{{routesLoading && routes.length}}" aria-role="status" aria-live="polite">正在刷新开放承接路线…</view>
         <!-- CU-M-85:id 供参谋页带 ?topicId= 进来时定位;focus 只标命中那一条。 -->
-        <view class="cc-route {{item.focus ? 'cc-route--focus' : ''}}" id="cc-route-{{item.id}}" wx:for="{{routes}}" wx:key="key">
-          <view class="cc-route-top">
-            <text class="cc-mode" wx:if="{{item.modeText}}">{{item.modeText}}</text>
-            <text class="cc-seat cc-seat--{{item.seatTone}}" wx:if="{{item.seatText}}">{{item.seatText}}</text>
-          </view>
-          <view class="cc-route-main">
-            <view class="cc-route-cover"><image class="cc-route-cover__img" wx:if="{{item.cover && !item._coverFailed}}" src="{{item.cover}}" mode="aspectFill"
-              data-index="{{index}}" data-id="{{item.id}}" binderror="onRouteCoverError" /></view>
+        <!-- 2026-10-22 owner:广场卡重做 —— 大封面 + 下沿黑色渐变,类型/余席浮在图上、标题档期压在渐变上;
+             下方一条信息栏(站点 / 招商截止 / 分成)+ 黑色「看详情」。 -->
+        <view class="cc-route {{item.focus ? 'cc-route--focus' : ''}}" id="cc-route-{{item.id}}" wx:for="{{routes}}" wx:key="key"
+          data-id="{{item.id}}" bindtap="openTopic" aria-role="button" aria-label="看详情：{{item.title}}" hover-class="cy-pressed" hover-stay-time="80">
+          <view class="cc-route-cover cc-route-cover--{{item.modeText === '自由探索' ? 'free' : 'orient'}}">
+            <image class="cc-route-cover__img" wx:if="{{item.cover && !item._coverFailed}}" src="{{item.cover}}" mode="aspectFill"
+              data-index="{{index}}" data-id="{{item.id}}" binderror="onRouteCoverError" />
+            <view class="cc-route-shade"></view>
+            <view class="cc-route-top">
+              <text class="cc-mode" wx:if="{{item.modeText}}">{{item.modeText}}</text>
+              <text class="cc-seat cc-seat--{{item.seatTone}}" wx:if="{{item.seatText}}">{{item.seatText}}</text>
+            </view>
+            <!-- 第二轮(owner 参考图):文字全部写在图上,底部黑色渐变托字,不要白色信息栏 -->
             <view class="cc-route-info">
-              <text class="cc-route-date" wx:if="{{item.dateText}}">{{item.dateText}}</text>
               <text class="cc-route-title">{{item.title}}</text>
-              <text class="cc-route-meta" wx:if="{{item.metaText}}">◎  {{item.metaText}}</text>
+              <text class="cc-route-date" wx:if="{{item.dateText || item.cityText}}">{{item.cityText ? item.cityText + ' · ' : ''}}{{item.dateText}}{{item.termsText ? ' · ' + item.termsText : ''}}</text>
+              <view class="cc-route-foot">
+                <view class="cc-route-terms">
+                  <view class="cc-fact" wx:if="{{item.stationText}}"><cy-icon name="route" size="30" /><text class="cc-fact-tx">{{item.stationText}}</text></view>
+                  <view class="cc-fact-sep" wx:if="{{item.stationText && item.deadlineShort}}"></view>
+                  <view class="cc-fact" wx:if="{{item.deadlineShort}}"><cy-icon name="clock" size="30" /><text class="cc-fact-tx">{{item.deadlineShort}}</text></view>
+                </view>
+                <view class="cc-detail" aria-hidden="true">看详情</view>
+              </view>
             </view>
-          </view>
-          <view class="cc-route-foot">
-            <view class="cc-route-terms">
-              <text class="cc-route-settle" wx:if="{{item.termsText}}">{{item.termsText}}</text>
-              <text class="cc-route-deadline" wx:if="{{item.deadlineText}}">{{item.deadlineText}}</text>
-            </view>
-            <view class="cc-detail" data-id="{{item.id}}" bindtap="openTopic" aria-role="button" aria-label="看详情：{{item.title}}"
-              hover-class="cy-pressed" hover-stay-time="80">看详情</view>
           </view>
         </view>
         <view class="cc-list-scope" wx:if="{{routeScopeText}}" aria-role="status">{{routeScopeText}}</view>

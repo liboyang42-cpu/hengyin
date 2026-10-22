@@ -224,10 +224,11 @@ test('命名页进入编辑器后返回可再次确认，在途连点仍只导�
 test('创建流程原生状态栏跟随浅色编辑与深色玩法预览，关闭后恢复', () => {
   const themes = []
   const wx = { onTheme(theme) { themes.push(theme) } }
-  for (const file of ['pages/publish/template-intro/index.js', 'pages/publish/templateadd/templateadd.js']) {
-    loadPage(file, wx).onShow()
-    assert.equal(themes.at(-1), 'light')
-  }
+  // 2026-10-22 owner 定稿:引导页改深底(漂浮圆圈),命名页仍浅色
+  loadPage('pages/publish/template-intro/index.js', wx).onShow()
+  assert.equal(themes.at(-1), 'dark')
+  loadPage('pages/publish/templateadd/templateadd.js', wx).onShow()
+  assert.equal(themes.at(-1), 'light')
   const page = loadPage('pages/publish/temp/index.js', wx)
   page.onShow()
   assert.equal(themes.at(-1), 'light')

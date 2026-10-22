@@ -11,20 +11,20 @@
          `shezhi?scene=settings-profile` 弹窗入口 —— 那是 scene-route-content 的通用表单,
          只有昵称+邮箱两个字段,比 pages/gerenziliao 这个 390 行的真页少一大截。
          这里接回真页,goUserInfo 本来就指着它,缺的只是列表里的这一行。 -->
-    <cy-cell id="settings-profile" tint="{{isMerchantView ? 'ink' : 'mono'}}" icon="/pages/topic/images/icon_qa_person.svg" title="{{settingsAuthRequired ? '登录后查看账号信息' : (settingsAccessDenied ? '当前账号无法查看账号信息' : (isMerchantView ? '品牌中心' : '个人资料'))}}" description="{{settingsAuthRequired ? '点击登录，协议与隐私说明仍可查看' : (settingsAccessDenied ? '点击刷新并确认当前账号权限' : '')}}" bind:tap="goUserInfo" />
+    <cy-cell id="settings-profile" tint="{{isMerchantView ? 'ink' : 'mono'}}" icon="{{isMerchantView ? '/pages/shezhi/images/icon_lc_store.svg' : '/pages/topic/images/icon_qa_person.svg'}}" title="{{settingsAuthRequired ? '登录后查看账号信息' : (settingsAccessDenied ? '当前账号无法查看账号信息' : (isMerchantView ? '品牌中心' : '个人资料'))}}" description="{{settingsAuthRequired ? '点击登录，协议与隐私说明仍可查看' : (settingsAccessDenied ? '点击刷新并确认当前账号权限' : '')}}" bind:tap="goUserInfo" />
     <!-- 成为主理人 / 成为商家 直接摆出来(2026-08-08 用户提「设置之前的成为主理人/商家没了」)。
          原来收成一个「申请身份」cell + 一层选择弹窗:入口是在的,但要多点一次才看得见,
          用户读到的就是「没了」。两个 handler 原样复用,只是不再经过中间那层。 -->
     <cy-cell id="settings-club-apply" wx:if="{{!isMerchantView && !isClubView}}" tint="{{isMerchantView ? 'ink' : 'mono'}}" icon="/pages/shezhi/images/icon_flag_blue.svg" title="成为俱乐部主理人" bind:tap="pickClub" />
     <cy-cell id="settings-merchant-apply" wx:if="{{!isMerchantView && !isClubView}}" tint="{{isMerchantView ? 'ink' : 'mono'}}" icon="/images/icon_shop.svg" title="成为商家" bind:tap="pickMerchant" />
-    <cy-cell id="settings-how-to-play" tint="{{isMerchantView ? 'ink' : 'mono'}}" icon="/pages/shezhi/images/icon_globe.svg" title="城瘾玩法" bind:tap="goInfomation" />
+    <cy-cell id="settings-how-to-play" tint="{{isMerchantView ? 'ink' : 'mono'}}" icon="/pages/shezhi/images/icon_lc_compass.svg" title="城瘾玩法" bind:tap="goInfomation" />
     <cy-cell id="settings-likes" tint="{{isMerchantView ? 'ink' : 'mono'}}" icon="/pages/shezhi/images/icon_heart.svg" title="我的收藏" description="{{communityPostRead ? '收藏的帖文与主题' : '收藏的主题'}}" bind:tap="goMylike" />
-    <cy-cell id="settings-privacy" tint="{{isMerchantView ? 'ink' : 'mono'}}" icon="/pages/shezhi/images/icon_privacy.svg" title="隐私与定位" bind:tap="goPrivacy" />
-    <cy-cell id="settings-marketing-consent" tint="{{isMerchantView ? 'ink' : 'mono'}}" icon="/pages/shezhi/images/icon_privacy.svg"
+    <cy-cell id="settings-privacy" tint="{{isMerchantView ? 'ink' : 'mono'}}" icon="/pages/shezhi/images/icon_lc_lock-keyhole.svg" title="隐私与定位" bind:tap="goPrivacy" />
+    <cy-cell id="settings-marketing-consent" tint="{{isMerchantView ? 'ink' : 'mono'}}" icon="/pages/shezhi/images/icon_lc_ticket.svg"
              title="营销消息与优惠券" bind:tap="openMarketingConsent" />
-    <cy-cell id="settings-service-agreement" tint="{{isMerchantView ? 'ink' : 'mono'}}" icon="/pages/shezhi/images/icon_agreement.svg" title="用户服务协议" bind:tap="goUserAgreement" />
-    <cy-cell id="settings-deregister" tint="{{isMerchantView ? 'ink' : 'mono'}}" icon="/pages/shezhi/images/icon_deregister.svg" title="账号注销" bind:tap="goDeregister" />
-    <cy-cell id="settings-about" tint="{{isMerchantView ? 'ink' : 'mono'}}" icon="/pages/shezhi/images/icon_info_circle.svg" title="关于" bind:tap="goAbout" />
+    <cy-cell id="settings-service-agreement" tint="{{isMerchantView ? 'ink' : 'mono'}}" icon="/pages/shezhi/images/icon_lc_scroll-text.svg" title="用户服务协议" bind:tap="goUserAgreement" />
+    <cy-cell id="settings-deregister" tint="{{isMerchantView ? 'ink' : 'mono'}}" icon="/pages/shezhi/images/icon_lc_user-round-x.svg" title="账号注销" bind:tap="goDeregister" />
+    <cy-cell id="settings-about" tint="{{isMerchantView ? 'ink' : 'mono'}}" icon="/pages/shezhi/images/icon_lc_info.svg" title="关于" bind:tap="goAbout" />
   </view>
 
   <!-- 退出账号 = **可逆**操作(随时可重新登录)⇒ 中性动作语义,不用红。

@@ -52,70 +52,59 @@
   color: #777777;   /* ds-ok: Figma Edit Interests 定值,商家白底不随深色翻 */
 }
 
-.ts__swiper { width: 100%; }
-.ts__grid {
+/* 2026-10-22 owner:不翻页 —— 整片错落胶囊横向自由滚动。滚动区出血到面板两侧边缘,
+   内容左右各留 40rpx 页边;三行按序号错开起点,形成不规则的左右滑动感。 */
+.ts__scroll {
+  margin: 0 -40rpx;
+  width: calc(100% + 80rpx);
+  white-space: nowrap;
+}
+.ts__rows {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 16rpx;           /* 与行内间距一致 */
+  padding: 4rpx 40rpx 8rpx;
+}
+/* 第二轮(owner):胶囊缩小一档;每行左边对齐(不再错开起点),行内/行间距统一 16rpx。
+   字数不同所以每行右侧长短不一,这是正常的。 */
+.ts__row {
   display: flex;
-  flex-wrap: wrap;
-  align-content: flex-start;
-  column-gap: 34rpx;    /* Figma 17px */
-  row-gap: 20rpx;       /* Figma 10px */
+  gap: 16rpx;
 }
 .ts__tag {
-  position: relative;
+  flex: none;
   box-sizing: border-box;
-  width: calc((100% - 34rpx) / 2);   /* (面板宽 - 2×20px - 17px)/2 = Figma 158.5px @375 */
-  height: 94rpx;        /* 47px */
-  border-radius: var(--cy-radius-pill);   /* Figma 30px 大于半高 23.5px,视觉即全圆 */
+  height: 68rpx;        /* 34px:比 Figma 47px 小一档 */
+  border-radius: var(--cy-radius-pill);
   border: 1px solid #EBEBEB;   /* ds-ok: Figma Edit Interests 定值,商家白底不随深色翻 */
   background: #FFFFFF;   /* ds-ok: Figma Edit Interests 定值,商家白底不随深色翻 */
   display: flex;
   align-items: center;
-  padding: 0 64rpx 0 93rpx;   /* 文字起点 46.4px;右侧给勾留位 */
+  gap: 12rpx;
+  padding: 0 26rpx 0 22rpx;   /* 宽度随文字 */
 }
 .ts__tag--on { background: #D9D9D9; }   /* ds-ok: Figma Edit Interests 定值,商家白底不随深色翻 */
 .ts__icon {
-  position: absolute;
-  left: 32rpx;          /* 15.85px */
-  top: 50%;
-  width: 43rpx;         /* 21.5 × 19.9px */
-  height: 40rpx;
-  margin-top: -20rpx;
+  flex: none;
+  width: 32rpx;         /* 16 × 15px,保持 Figma 21.5:19.9 比例 */
+  height: 30rpx;
   opacity: .58;         /* 未选:#131313 × 58% 叠白 ≈ #767676,对上稿里的 #777 */
 }
 .ts__tag--on .ts__icon { opacity: 1; }
 .ts__label {
-  flex: 1;
-  min-width: 0;
-  font-size: var(--cy-font-body);   /* 28rpx = 14px regular */
+  flex: none;
+  font-size: var(--cy-font-label, 26rpx);   /* 13px regular */
   font-weight: 400;
   color: #777777;   /* ds-ok: Figma Edit Interests 定值,商家白底不随深色翻 */
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 .ts__tag--on .ts__label { color: #131313; }   /* ds-ok: Figma Edit Interests 定值,商家白底不随深色翻 */
 .ts__check {
-  position: absolute;
-  right: 36rpx;         /* ~18px */
-  top: 50%;
-  width: 17rpx;         /* 8.66 × 6.3px */
-  height: 13rpx;
-  margin-top: -6rpx;
+  flex: none;
+  margin-left: 2rpx;
+  width: 15rpx;
+  height: 11rpx;
 }
-
-.ts__dots {
-  display: flex;
-  justify-content: center;
-  gap: 12rpx;
-  padding-top: 24rpx;
-}
-.ts__dot {
-  width: 12rpx;         /* 6px */
-  height: 12rpx;
-  border-radius: 50%;
-  background: #D9D9D9;   /* ds-ok: Figma Edit Interests 定值,商家白底不随深色翻 */
-}
-.ts__dot--on { background: #131313; }   /* ds-ok: Figma Edit Interests 定值,商家白底不随深色翻 */
 
 .ts__footer { padding-top: 16rpx; }
 .ts__save {

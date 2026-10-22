@@ -63,6 +63,10 @@ function routeCards(items) {
       cover: item.imgUrl || '',
       modeText: PRODUCT_TYPE_TEXT[item.productType] || '',
       dateText: start && end && start !== end ? start + ' – ' + end : start,
+      // 卡片底行的短统计(图上空间有限):城市放进档期行,这里只留站数 / 截止日
+      cityText: item.cityKeyword || '',
+      stationText: item.locationCount ? item.locationCount + ' 站' : '',
+      deadlineShort: deadline && deadline > now ? '截止 ' + monthDay(deadline) : '',
       metaText: meta.join(' · '),
       termsText: termsLine(item),
       deadlineText: deadline ? '招商截止 ' + monthDay(deadline) : '',

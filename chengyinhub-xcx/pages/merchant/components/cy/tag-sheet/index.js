@@ -1,7 +1,10 @@
 // cy-tag-sheet · 胶囊标签多选半屏弹窗(owner 2026-10-22 · L11,Figma「Edit Interests」)
 //
-// 形态:cy-sheet 底部变体 + 抓手;正文是横向翻页的原生 <swiper>,每页 pageRows × pageCols 个胶囊,
-// 页数 = ceil(items / (pageRows × pageCols)),下面一排页码点;底部整宽黑色「保存」按钮。
+// 形态:cy-sheet 底部变体 + 抓手;正文是一整片横向自由滚动的错落胶囊(默认 3 行,不分页、
+// 无页码点 —— 2026-10-22 owner:「不是翻页,是直接左右滑」);底部整宽黑色「保存」按钮。
+//
+// 排行只在 items 变化 / 弹窗打开时算一次(_layout 记每行的 key),点选只改勾选态,
+// 胶囊不会因为多出一个勾而在行间跳动。
 //
 // 选中态归本组件持有(_sel),外部 value 变化时同步进来 —— 父页面不回写 value 也能正常多选。
 //   change  每次点选后发 { value: 选中 key 数组 }
@@ -12,7 +15,7 @@
 // 商家白底档:颜色是 Figma 定值,不读随系统深色翻转的语义 token;cy-sheet 的角色档在根节点钉成
 // 商家白(变量继承穿过 isolated 边界),手机深色模式下外观不变。
 const toast = require('../../../../../utils/toast.js');
-const { buildPages, toggleValue, tagIconSrc } = require('./model.js');
+const { buildRows, toggleValue, tagIconSrc } = require('./model.js');
 
 Component({
   properties: {
@@ -21,8 +24,7 @@ Component({
     items: { type: Array, value: [] },      // [{ key, label, icon }]
     value: { type: Array, value: [] },      // 选中的 key
     max: { type: Number, value: 0 },        // 0 = 不限
-    pageRows: { type: Number, value: 4 },
-    pageCols: { type: Number, value: 2 },
+    rows: { type: Number, value: 3 },       // 错落行数
     hint: { type: String, value: '' },      // 标题下一行灰字(可选)
     hintError: { type: Boolean, value: false }, // hint 是失败文案时标红(保存失败回显)
     loading: { type: Boolean, value: false },
@@ -32,34 +34,36 @@ Component({
   },
   data: {
     _sel: [],
-    _pages: [],
-    _current: 0,
-    _swiperH: 0,
+    _rows: [],
+    _scrollLeft: 0,
     _checkSrc: tagIconSrc('check'),   // 选中勾(Figma check.svg);未入库时不画
   },
   observers: {
     value(v) {
       this.setData({ _sel: (v || []).map(String) });
-      this._rebuild();
+      this._paint();
     },
-    'items, pageRows, pageCols'() {
-      this._rebuild();
+    'items, rows'() {
+      this._layoutRows();
     },
     show(v) {
-      if (v) this.setData({ _current: 0 });
+      if (v) { this._layoutRows(); this.setData({ _scrollLeft: 0 }); }
     },
   },
   methods: {
-    _rebuild() {
+    // 排行(只在列表变化 / 打开时)
+    _layoutRows() {
       const d = this.data;
-      const pages = buildPages(d.items, d._sel, d.pageRows, d.pageCols);
-      const rows = Math.max(1, Number(d.pageRows) || 4);
-      this.setData({
-        _pages: pages,
-        // 胶囊 94rpx(47px)+ 行距 20rpx(10px),swiper 高按满页算,翻到不满的末页也不跳高
-        _swiperH: rows * 94 + (rows - 1) * 20,
-        _current: Math.min(d._current, Math.max(0, pages.length - 1)),
-      });
+      const rows = buildRows(d.items, d._sel, d.rows);
+      this._layout = rows.map(r => r.map(t => t.key));
+      this.setData({ _rows: rows });
+    },
+    // 只刷新勾选态,不重新排行
+    _paint() {
+      if (!this._layout) { this._layoutRows(); return; }
+      const sel = this.data._sel;
+      const rows = this.data._rows.map(r => r.map(t => Object.assign({}, t, { checked: sel.indexOf(t.key) >= 0 })));
+      this.setData({ _rows: rows });
     },
     onTap(e) {
       if (this.data.saving) return;
@@ -67,11 +71,8 @@ Component({
       const next = toggleValue(this.data._sel, key, this.data.max);
       if (!next) { toast('最多选 ' + this.data.max + ' 个'); return; }
       this.setData({ _sel: next });
-      this._rebuild();
+      this._paint();
       this.triggerEvent('change', { value: next.slice() });
-    },
-    onSwipe(e) {
-      this.setData({ _current: e.detail.current });
     },
     onConfirm() {
       if (this.data.saving || this.data.loading) return;

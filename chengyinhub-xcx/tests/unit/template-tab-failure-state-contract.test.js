@@ -63,7 +63,8 @@ test('主题 tab 成功后切游戏 tab 请求失败:错误态必须可见,主�
   const h = mountTemplatePage();
   loadTopics(h, TWO_TOPICS);
   assert.equal(h.page.data.listLoaded, true);
-  assert.equal(h.page.data.banner.id, 11);
+  // 2026-10-22 owner:主题 tab 上半是主题模板大横卡(themeCards),没有头牌 banner
+  assert.equal(h.page.data.themeCards[0].id, 11);
 
   h.page.switchTab({ detail: { key: 'game' } });
   const gameReq = lastRequest(h, GAME_URL);
@@ -79,6 +80,7 @@ test('主题 tab 成功后切游戏 tab 请求失败:错误态必须可见,主�
   assert.equal(h.page.data.topList.length, 0, '主题列表不得留在屏上冒充游戏 tab');
   assert.equal(h.page.data.tailList.length, 0, '主题列表不得留在屏上冒充游戏 tab');
   assert.ok(!h.page.data.banner.id, '主题 banner 不得留在屏上冒充游戏 tab');
+  assert.equal(h.page.data.themeCards.length, 0, '主题大横卡不得留在屏上冒充游戏 tab');
 });
 
 test('失败后切回主题 tab:缓存内容即刻恢复,错误清空', () => {
@@ -92,7 +94,7 @@ test('失败后切回主题 tab:缓存内容即刻恢复,错误清空', () => {
   h.page.switchTab({ detail: { key: 'topic' } });
   assert.equal(h.page.data.errorMsg, '');
   assert.equal(h.page.data.listLoaded, true);
-  assert.equal(h.page.data.banner.id, 11, '已加载 tab 的缓存必须原样回来');
+  assert.equal(h.page.data.themeCards[0].id, 11, '已加载 tab 的缓存必须原样回来');
 });
 
 test('迟到的游戏响应落在主题 tab 上:只进缓存,不得把未加载的主题 tab 标成已加载', () => {
@@ -144,17 +146,20 @@ function assertEmptyStateCountsBanner(wxml) {
     '空态条件必须包含 !banner.id —— 单条数据时 banner 占用了唯一内容、两个列表全空,只看列表会让 cy-empty 与 banner 大卡同屏');
 }
 
-test('单条数据时 banner 有值、两个列表全空:空态判定必须把 banner 计入', () => {
+test('单条数据时只有一张主题大横卡、其余列表全空:空态判定必须把 banner 与大横卡都计入', () => {
   const h = mountTemplatePage();
   loadTopics(h, [{ id: 31, name: '唯一主题', templateStatus: 'VERIFIED' }]);
-  // 数据形态:banner 吃掉唯一一条,topList/tailList 全空 —— 同屏风险的前提成立
-  assert.equal(h.page.data.banner.id, 31);
+  // 2026-10-22 owner:主题 tab 唯一一条进了大横卡,其余列表全空 —— 同屏风险的前提成立
+  assert.equal(h.page.data.themeCards.length, 1);
+  assert.equal(h.page.data.themeCards[0].id, 31);
   assert.equal(h.page.data.topList.length, 0);
   assert.equal(h.page.data.tailList.length, 0);
   assert.equal(h.page.data.listLoaded, true);
 
   const wxml = fs.readFileSync(PAGE_WXML, 'utf8');
   assertEmptyStateCountsBanner(wxml);
+  assert.match(wxml.match(/<cy-empty[^>]*wx:elif="\{\{([^}]*)\}\}"/)[1], /!\s*themeCards\.length/,
+    '空态条件必须包含 !themeCards.length,否则唯一一张主题大横卡会和空态同屏');
 
   // 负控:把 !banner.id 摘掉,检查器必须真的判红
   const mutant = wxml.replace(/!banner\.id\s*&&\s*/, '');

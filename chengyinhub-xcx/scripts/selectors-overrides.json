@@ -566,7 +566,7 @@
     ]
   },
   "B45": {
-    "selector": ".ti-card",
+    "selector": ".ti-field",
     "min": 1
   },
   "B46": {

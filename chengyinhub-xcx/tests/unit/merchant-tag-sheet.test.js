@@ -39,26 +39,28 @@ function create(properties) {
 
 const tap = (c, key) => c.onTap({ currentTarget: { dataset: { key } } })
 
-test('页数 = ceil(items / (pageRows × pageCols)),默认 4 行 2 列一页 8 个', () => {
-  assert.equal(model.buildPages(items(0), [], 4, 2).length, 0)
-  assert.equal(model.buildPages(items(8), [], 4, 2).length, 1)
-  assert.equal(model.buildPages(items(9), [], 4, 2).length, 2)
-  assert.equal(model.buildPages(items(17), [], 4, 2).length, 3)
-  assert.equal(model.buildPages(items(9), [], 2, 2).length, 3)
-  const pages = model.buildPages(items(10), ['k9'], 4, 2)
-  assert.deepEqual(pages.map(p => p.length), [8, 2])
-  assert.equal(pages[1][1].checked, true)
+// 2026-10-22 owner 第二、三轮:不翻页,整片胶囊排成 3 行左右自由滑;每行左边对齐、间距统一,行长大致相等。
+test('排行:默认 3 行,按原顺序放进当前最短的一行,行长大致相等', () => {
+  assert.deepEqual(model.buildRows(items(0), [], 3), [])
+  assert.equal(model.buildRows(items(2), [], 3).length, 2, '不足 3 个时不留空行')
+  const rows = model.buildRows(items(28), ['k27'], 3)
+  assert.equal(rows.length, 3)
+  assert.equal(rows.flat().length, 28, '一个不丢')
+  const widths = rows.map(r => r.reduce((s, t) => s + model.estimateWidth(t) + 16, 0))
+  assert.ok(Math.max(...widths) - Math.min(...widths) < 260, '行长差不超过一个长胶囊')
+  assert.equal(rows.flat().find(t => t.key === 'k27').checked, true)
   const c = create({ items: items(10) })
-  assert.equal(c.data._pages.length, 2)
-  assert.equal(c.data._swiperH, 4 * 94 + 3 * 20, 'swiper 高按满页 4 行算')
+  assert.equal(c.data._rows.length, 3)
 })
 
-test('点选切换:选中 → 再点取消,每次发 change(detail.value)', () => {
+test('点选切换:选中 → 再点取消,每次发 change(detail.value);只刷勾选,不重新排行', () => {
   const c = create({ items: items(3) })
+  const layout = JSON.stringify(c.data._rows.map(r => r.map(t => t.key)))
   tap(c, 'k1')
   tap(c, 'k2')
   assert.deepEqual(c.data._sel, ['k1', 'k2'])
-  assert.equal(c.data._pages[0][1].checked, true)
+  assert.equal(c.data._rows.flat().find(t => t.key === 'k1').checked, true)
+  assert.equal(JSON.stringify(c.data._rows.map(r => r.map(t => t.key))), layout, '点选不让胶囊换行跳位')
   tap(c, 'k1')
   assert.deepEqual(c.data._sel, ['k2'])
   assert.deepEqual(c.events.map(e => e.name), ['change', 'change', 'change'])
@@ -92,12 +94,15 @@ test('confirm 带当前选中;close 发 close;saving 期间点选/保存/关闭�
 })
 
 test('图标映射:owner 给的行业 / 经营类目对照;未入库的图标不出路径', () => {
+  // 2026-10-22 owner 第二轮:经营类目扩到 28 个,补 Lucide 同风格图标,更具体的词优先
   const pairs = {
-    餐饮美食: 'noodles', 咖啡茶饮: 'goblet-full', 酒吧: 'goblet-full', 运动健身: 'sport', 瑜伽: 'viencharts',
+    餐饮美食: 'noodles', 咖啡茶饮: 'coffee', 酒吧: 'wine', 运动健身: 'sport', 瑜伽: 'viencharts',
     球类: 'tennis', 户外出行: 'outdoor', 极限运动: 'parachute', 水上运动: 'ripple', KTV: 'voice',
     音乐演出: 'music', 文化艺术: 'platte', 娱乐休闲: 'game-handle', 摄影: 'camera', 零售购物: 'weixin-market',
-    城市运动: 'sport', 户外活动: 'outdoor', 健康生活: 'viencharts', 美食: 'noodles', 咖啡: 'goblet-full',
-    手作: 'platte', 亲子: 'game-handle', 夜生活: 'music', 宠物友好: '',
+    城市运动: 'sport', 户外活动: 'outdoor', 健康生活: 'heart-pulse', 美食: 'noodles', 咖啡: 'coffee',
+    茶饮: 'cup-soda', 烘焙甜品: 'croissant', 手作: 'brush', 亲子: 'baby', 夜生活: 'moon', 宠物友好: 'paw-print',
+    露营: 'tent', 骑行: 'bike', 城市漫步: 'footprints', 书店阅读: 'book-open', 展览: 'frame', 剧本密室: 'drama',
+    桌游: 'dices', 花艺: 'flower-2', 美容美发: 'scissors', 没有对应: '',
   }
   Object.entries(pairs).forEach(([label, icon]) => assert.equal(model.tagIconName(label), icon, label))
   assert.equal(model.tagIconSrc('not-shipped-name'), '')
@@ -106,12 +111,13 @@ test('图标映射:owner 给的行业 / 经营类目对照;未入库的图标不
   })
 })
 
-test('模板:原生横向 swiper + 页码点 + 底部保存;只用 cy-sheet,不进主包', () => {
+test('模板:横向自由滚动(不分页、无页码点)+ 底部保存;只用 cy-sheet,不进主包', () => {
   const wxml = read(DIR + '/index.wxml')
   assert.match(wxml, /<cy-sheet[^>]*\bhandle\b[^>]*\bfooter\b/)
-  assert.match(wxml, /<swiper[^>]*bindchange="onSwipe"/)
-  assert.doesNotMatch(wxml, /<swiper[^>]*vertical/)
-  assert.match(wxml, /ts__dot/)
+  assert.match(wxml, /<scroll-view[^>]*\bscroll-x\b/)
+  assert.doesNotMatch(wxml, /<swiper|ts__dot/, '不翻页')
+  assert.match(wxml, /wx:for="\{\{_rows\}\}"/)
+  assert.doesNotMatch(wxml, /ts__row--/, '每行左边对齐,不再错开起点')
   assert.match(wxml, /slot="footer"[\s\S]*bindtap="onConfirm"/)
   assert.match(wxml, /已选 \{\{_sel\.length\}\}/)
   const json = JSON.parse(read(DIR + '/index.json'))

@@ -33,8 +33,11 @@ test('主题列表由 topicRows 驱动,货架卡只保留 jumpDetail 查看入�
   assert.match(wxml, /wx:for="\{\{ tailList \}\}"/, '其余列表必须由 tailList 驱动');
   // 2026-08-28 用户裁决撤掉货架按钮:banner / 置顶 / 其余卡面只负责查看,
   // 配置/使用留给详情页;本页不得再把卡片点击直连写入口。
-  assert.equal((wxml.match(/(?:data-item="\{\{ (?:banner|item) \}\}"[^>]*?)bindtap="jumpDetail"/g) || []).length, 3,
-    '三种卡面必须统一绑定 jumpDetail');
+  // 2026-10-22 owner:主题 tab 改成上半主题大横卡(themeCards)+ 下半玩法列表(gameBelow),共五种卡面
+  assert.match(wxml, /wx:for="\{\{ themeCards \}\}"/, '主题 tab 上半必须由 themeCards 驱动');
+  assert.match(wxml, /wx:for="\{\{ gameBelow \}\}"/, '主题 tab 下半必须由 gameBelow 驱动');
+  assert.equal((wxml.match(/(?:data-item="\{\{ (?:banner|item) \}\}"[^>]*?)bindtap="jumpDetail"/g) || []).length, 5,
+    '五种卡面必须统一绑定 jumpDetail');
   assert.doesNotMatch(wxml, /(?:bindtap|catchtap)="(?:primaryAction|useTt|goTopicConfig|goGameConfig)"/,
     '货架卡不得重新暴露配置或整包复制按钮');
 });

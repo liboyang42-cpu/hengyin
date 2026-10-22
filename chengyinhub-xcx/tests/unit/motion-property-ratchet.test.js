@@ -69,7 +69,8 @@ const LAYOUT_ANIMATION_CEILING = 12
    ⚠️ 为什么不能用 transition:这几块都由 wx:if 新建,新节点没有「前一个值」,
    transition 根本不播 —— 实测写过一版,是死的,已撤。入场只能靠关键帧。
    打错抖台面没有占额度:调的是 cy-play-stage 现成的 nudge()。 */
-const KEYFRAMES_CEILING = 148
+// 2026-10-22 148 → 146:创建引导页三张扇形卡的三条入场关键帧随卡片撤掉,换成整屏画布一条淡入。
+const KEYFRAMES_CEILING = 146
 
 /* 逐条豁免。**不是预算额度** —— 想加一组就得在这里写清楚为什么它不属于本门禁要防的场景,
    由 review 逐条看,而不是把上限往上抬一格了事。抬上限会让棘轮退化成台账:

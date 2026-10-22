@@ -132,14 +132,12 @@
   width: 88rpx;
 }
 
-/* 可承接主题卡:白底 r16 p14 行距 14,无阴影 */
+/* 广场卡 v3(owner 参考图):整卡就是封面,文字全写在图上,底部黑色渐变托字;无白色描边/信息栏 */
 .cc-route {
-  background: var(--cy-color-bg-surface);
-  border-radius: var(--cy-radius-lg);
+  border-radius: 40rpx; /* ds-ok: 参考图大圆角 */
   display: flex;
   flex-direction: column;
-  gap: 28rpx;
-  padding: 28rpx;
+  overflow: hidden;
 }
 
 /* CU-M-85:从参谋页带 topicId 进来时,命中那条加一圈描边 —— 滚过去之后还得看得出来是哪条。 */
@@ -147,107 +145,123 @@
   box-shadow: 0 0 0 2rpx var(--cy-color-action-primary-bg);
 }
 
-.cc-route-top,
-.cc-route-foot {
+/* 封面:16:9,无图时按玩法给一块深色渐变底(城市定向偏蓝绿 / 自由探索偏暖),不出现灰色空框 */
+.cc-route-cover {
+  position: relative;
+  height: 520rpx; /* ds-ok: 广场封面卡高(文字压在图上) */
+  background: linear-gradient(135deg, #2F4A58 0%, #16222A 100%); /* ds-ok: 无封面时的城市定向底色 */
+}
+.cc-route-cover--free { background: linear-gradient(135deg, #6B4A33 0%, #2A1E17 100%); } /* ds-ok: 无封面时的自由探索底色 */
+.cc-route-cover__img {
+  display: block;
+  height: 100%;
+  left: 0;
+  position: absolute;
+  top: 0;
+  width: 100%;
+}
+.cc-route-shade {
+  background: linear-gradient(180deg, rgba(0,0,0,.12) 0%, rgba(0,0,0,0) 22%, rgba(0,0,0,0) 38%, rgba(48,48,48,.5) 62%, rgba(58,58,58,.82) 100%); /* ds-ok: 参考图下半段压成深灰(不是纯黑),黑色按钮才立得住 */
+  inset: 0;
+  position: absolute;
+}
+
+.cc-route-top {
   align-items: center;
   display: flex;
   gap: var(--cy-space-2);
   justify-content: space-between;
+  left: 24rpx;
+  position: absolute;
+  right: 24rpx;
+  top: 24rpx;
 }
 
-.cc-mode {
-  background: var(--cy-color-bg-surface-subtle);
-  border-radius: var(--cy-radius-sm);
-  color: var(--cy-color-text-secondary);
-  font-size: var(--cy-type-caption);
-  font-weight: 600;
-  line-height: 42rpx;
-  padding: 0 16rpx;
-}
-
+.cc-mode,
 .cc-seat {
-  font-size: var(--cy-type-label);
-  font-weight: 600;
-}
-
-.cc-seat--ok { color: var(--cy-color-status-success); }
-.cc-seat--tight { color: var(--cy-color-status-warning); }
-
-.cc-route-main {
-  align-items: center;
-  display: flex;
-  gap: var(--cy-space-3);
-}
-
-.cc-route-cover {
-  background: var(--cy-color-bg-surface-subtle);
-  border-radius: var(--cy-radius-md);
-  flex: none;
-  height: 144rpx;
-  overflow: hidden;
-  width: 200rpx;
-}
-
-/* 纯色占位常驻作底,封面可用时铺满盖住;空 URL / 加载失败时 image 不渲染,露出占位(稿 234:276) */
-.cc-route-cover__img {
-  display: block;
-  height: 100%;
-  width: 100%;
-}
-
-.cc-route-info,
-.cc-route-terms {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  gap: 10rpx;
-  min-width: 0;
-}
-
-.cc-route-terms { gap: 6rpx; }
-
-.cc-route-date,
-.cc-route-meta,
-.cc-route-deadline {
-  color: var(--cy-color-text-tertiary);
+  background: rgba(255,255,255,.92); /* ds-ok: 照片上的浅色章 */
+  border-radius: var(--cy-radius-pill);
+  color: #141414; /* ds-ok: 照片上的浅色章 */
   font-size: var(--cy-type-caption);
+  font-weight: 700;
+  line-height: 44rpx;
+  padding: 0 18rpx;
 }
+.cc-seat--tight { color: #B5621C; } /* ds-ok: 余席紧张提示(浅色章上) */
 
-.cc-route-date,
-.cc-route-meta { font-weight: 500; }
+.cc-route-info {
+  bottom: 32rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+  left: 36rpx;
+  position: absolute;
+  right: 32rpx;
+}
 
 .cc-route-title {
-  color: var(--cy-color-text-primary);
-  font-size: var(--cy-type-card-title);
-  font-weight: 600;
+  color: #FFFFFF; /* ds-ok: 照片上的白色标题 */
+  font-size: 44rpx; /* ds-ok: 参考图图上大标题 22px */
+  font-weight: 800;
+  letter-spacing: -0.5rpx;
+  line-height: 1.25;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.cc-route-foot {
-  border-top: 1rpx solid var(--cy-color-border-subtle);
-  padding-top: 28rpx;
-}
-
-.cc-route-settle {
-  color: var(--cy-color-text-secondary);
+.cc-route-date {
+  color: rgba(255,255,255,.72); /* ds-ok: 照片上的次级白 */
   font-size: var(--cy-type-label);
   font-weight: 500;
+  line-height: 1.5;
 }
 
-/* 黑色胶囊「看详情」:视觉 32px,命中区外扩到 44pt */
+/* 底行(参考图):左侧统计(图标 + 数字,竖线分隔),右侧黑色胶囊「看详情」 */
+.cc-route-foot {
+  align-items: center;
+  display: flex;
+  gap: var(--cy-space-3);
+  justify-content: space-between;
+  margin-top: 20rpx;
+}
+
+.cc-route-terms {
+  align-items: center;
+  display: flex;
+  flex: 1;
+  gap: 20rpx;
+  min-width: 0;
+}
+
+.cc-fact {
+  align-items: center;
+  color: #FFFFFF; /* ds-ok: 照片上的白色统计 */
+  display: flex;
+  gap: 10rpx;
+  min-width: 0;
+}
+.cc-fact-tx {
+  font-size: var(--cy-type-body);
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cc-fact-sep { flex: none; width: 2rpx; height: 32rpx; background: rgba(255,255,255,.3); } /* ds-ok: 统计竖线 */
+
+/* 黑色胶囊「看详情」(参考图 Follow 钮) */
 .cc-detail {
   align-items: center;
-  background: var(--cy-btn-solid-bg);
-  border-radius: var(--cy-radius-lg);
-  color: var(--cy-btn-solid-fg);
+  background: #141414; /* ds-ok: 照片上的黑色胶囊 */
+  border-radius: var(--cy-radius-pill);
+  color: #FFFFFF; /* ds-ok: 照片上的黑色胶囊 */
   display: flex;
   flex: none;
   font-size: var(--cy-type-body);
-  font-weight: 600;
-  height: 64rpx;
-  padding: 0 32rpx;
+  font-weight: 700;
+  height: 80rpx;
+  padding: 0 40rpx;
   position: relative;
 }
 
