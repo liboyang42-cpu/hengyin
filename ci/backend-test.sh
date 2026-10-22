@@ -94,6 +94,13 @@ MYBATIS_ITS=(
   # R12-E2E 旅程全链路:建局→到店→问问题→判错→检定→推进→阶段结算→结局全走真库真 mapper;
   #   并发 settle 幂等另有一条负控(测试内临时摘掉动作/回执两把唯一键,断言并发重放消失后再还原)。
   JourneyFullFlowMySqlIT
+  # 2026-10-22 AC1 发布验收 P0 链(docs/delivery/release-closeout-20261022/acceptance-p0-backend.md):
+  #   核销(扫码/团码/撤销/双店员竞态)、跨账号、城市跑恢复竞态与冻结、自由探索供给闸、注销清理范围。
+  P0RedemptionChainMySqlIT
+  P0CrossAccountMySqlIT
+  P0CityRunChainMySqlIT
+  P0FreeExploreSupplyGateMySqlIT
+  P0DeregistrationMySqlIT
 )
 IFS=, ; IT_LIST="${MYBATIS_ITS[*]}" ; unset IFS
 # ⚠️ 必须带 -am:上面那句 `mvn clean test` 不 install 兄弟模块,
