@@ -123,6 +123,12 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
     @Value("${chengyin.audit.risk-escalation.report-threshold:3}")
     private int riskEscalationReportThreshold = 3;
 
+    /** O-05 #4 逐项驳回原因开关(默认关):主题/玩法驳回可附逐项问题,落 audit_problem,作者时间线可读。 */
+    @Value("${chengyin.audit.item-problems.enabled:false}")
+    private boolean itemProblemsEnabled = false;
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.support.AuditProblemService auditProblemService;
+
     @Autowired
     private AuditTaskMapper auditTaskMapper;
 
@@ -832,6 +838,8 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
                 && (appeal == null || appealAccepted)) {
             assertTemplateReviewCurrent(templateLock, request);
         }
+        // O-05 #4:逐项问题先整单校验(非法即 400,不落任何状态),驳回记录写入后再落库。
+        List<com.chengyinhub.business.domain.AuditProblem> problems = itemProblems(task, appeal, request);
         Date now = DateUtils.getNowDate();
         int rows = auditTaskMapper.updateAuditTaskReviewCas(taskId, task.getStatus(), request.getStatus(),
                 operatorId, task.getVersion(), now);
@@ -866,6 +874,10 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         if (auditRecordMapper.insertAuditRecord(record) != 1) {
             throw new ServiceException("审批时间线写入失败", HttpStatus.ERROR);
         }
+        if (!problems.isEmpty()) {
+            ContentState owner = contentState(task.getBizType(), task.getBizId());
+            auditProblemService.record(problems, record.getId(), owner == null ? null : owner.ownerId, now);
+        }
 
         applyCommercialReviewLifecycle(task, request.getStatus());
 
@@ -883,6 +895,19 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         }
         appendDecisionAudit(task, operatorId, request, record, now);
         return rows;
+    }
+
+    /** 开关关闭 / 非驳回 / 未附逐项问题时返回空表(请求里的 problems 被忽略,与旧版一致)。 */
+    private List<com.chengyinhub.business.domain.AuditProblem> itemProblems(
+            AuditTask task, com.chengyinhub.business.domain.AuditAppeal appeal, AuditReviewDTO request) {
+        if (!itemProblemsEnabled || auditProblemService == null
+                || request.getProblems() == null || request.getProblems().isEmpty()) {
+            return Collections.emptyList();
+        }
+        if (!AuditTask.STATUS_REJECTED.equals(request.getStatus()) || appeal != null) {
+            throw new IllegalArgumentException("仅内容驳回可附逐项问题");
+        }
+        return auditProblemService.prepare(task, request.getProblems());
     }
 
     private boolean isTemplateTask(AuditTask task) {
@@ -1349,6 +1374,9 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
                 round.put("kind", SOURCE_APPEAL.equals(task.getSourceType()) ? "APPEAL"
                         : SOURCE_REPORT.equals(task.getSourceType()) ? "REPORT" : "SUBMIT");
                 round.put("timeline", timeline);
+                if (itemProblemsEnabled && auditProblemService != null) {
+                    round.put("problems", auditProblemService.listForOwner(task.getId(), memberId));
+                }
                 rounds.add(round);
             }
         }
