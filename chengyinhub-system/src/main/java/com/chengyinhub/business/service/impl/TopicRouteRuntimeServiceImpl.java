@@ -44,6 +44,7 @@ import com.chengyinhub.business.service.support.JourneyInitialState;
 import com.chengyinhub.business.service.support.TopicCompletionPolicy;
 import com.chengyinhub.business.service.support.TopicCompletionRulePolicy;
 import com.chengyinhub.business.service.support.SensorChallengePolicy;
+import com.chengyinhub.business.service.support.StoryVocabulary;
 import com.chengyinhub.common.constant.RewardPolicy;
 import com.chengyinhub.business.service.support.TopicRouteCandidatePolicy;
 import com.chengyinhub.business.service.support.TopicRouteConfigValidator;
@@ -670,6 +671,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         // 且在 action 行插入**之前** —— 拒绝不能留下任何可重放的回执。
         JsonNode blockConfig = nodeBlockConfig(session, completedNode);
         TopicRouteEngine.State state = readEngineState(session.getStateJson());
+        bindStoryContext(session, scope, blockConfig, outcome.getNodeId(), state);
         JsonNode requires = blockConfig == null ? null : blockConfig.get("requires");
         if (requires != null && requires.isArray() && requires.size() > 0
                 && !engine.conditionsPass(requires, state)) {
@@ -2487,6 +2489,37 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
             throw new IllegalStateException("路线尚未发布");
         }
         return new Scope(memberId, actId, topic, currentRegistrations);
+    }
+
+    /**
+     * F5:把只在内存里成立的两条本局上下文挂到 state 上(不落库,JsonIgnore):
+     * ROLE_IN 读的本场角色 —— 配置里没写 ROLE_IN 就不查角色表,存量主题零额外查询;
+     * 奖励上限 —— 本站是自报传感 / 滤镜完成时,故事效果只放行 XP 与徽章(与开局通关发奖同一口径)。
+     */
+    private void bindStoryContext(TopicRouteSession session, Scope scope, JsonNode blockConfig, Long nodeId,
+                                  TopicRouteEngine.State state) {
+        String snapshot = session.getConfigSnapshotJson();
+        String block = blockConfig == null ? "" : blockConfig.toString();
+        if (usesOp(snapshot, block, StoryVocabulary.ROLE_IN) && scope.activityId > 0L && playerRoleMapper != null) {
+            try {
+                PlayerActivityRole role = playerRoleMapper.selectByActivityAndMember(scope.activityId, scope.memberId);
+                state.setActorRoleCode(role == null ? null : role.getRoleCode());
+            } catch (RuntimeException unavailableRoleSource) {
+                state.setActorRoleCode(null);   // 角色源不可用 = ROLE_IN 不成立(fail-closed)
+            }
+        }
+        // 只有会发物资的配置才需要上限;不写 ADD_ITEM 的主题不多解析一次快照。
+        JsonNode answer = usesOp(snapshot, block, StoryVocabulary.ADD_ITEM) ? NodeJourneySnapshot.answer(snapshot, nodeId) : null;
+        if (answer != null) {
+            int method = answer.path("validationMethod").asInt();
+            state.setRewardCeilingXpBadgeOnly(SensorChallengePolicy.isAppSensor(method)
+                    || SensorChallengePolicy.isPhotoFilter(method, answer.path("sensorType").asText()));
+        }
+    }
+
+    private static boolean usesOp(String snapshot, String block, String op) {
+        String marker = "\"" + op + "\"";
+        return (snapshot != null && snapshot.contains(marker)) || block.contains(marker);
     }
 
     private TopicRouteCandidatePolicy.Facts policyFacts(Scope scope) {
