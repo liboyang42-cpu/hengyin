@@ -109,3 +109,63 @@
   - `Mini program static gates`：`ACTION-LEDGER FAIL`（同一原因）；`UI-GATE-0: FAIL (24 violations)` = `fabu/index.js` 12 条 U4-DYNAMIC 行号漂移（`动态 setData 63/51 已登记` 中多出的 12 条就是这 12 条换了行号），其它子门禁通过（Legacy error 0）
   - `Mini program static checks`：汇总上面两项（UNIT_RESULT / STATIC_RESULT = failure）
 - 「Funds MySQL IT」run `39758725221`：通过
+
+## 7 DevTools 核对结果（本地，2026-10-22）
+
+### 7.1 环境与安全回读
+- 被测源码：`git archive HEAD chengyinhub-xcx`（HEAD `3176489c`）解到 `$TMPDIR/laned2/` 的临时副本。DevTools 没有打开本 worktree，也没有打开 `~/Downloads/hengyin`。
+- 副本里 `utils/config.js` 的 `API_BASE_URL` 和 develop `apiBaseUrl` 都写死为 `http://127.0.0.1:8132`，`project.config` / `project.private.config` 设 `urlCheck:false`。每步前断言 `getApp().globalData.siteBaseUrl === 'http://127.0.0.1:8132'`，全部通过。
+- 后端回读：`GET http://127.0.0.1:8132/` 返回「欢迎使用RuoYi后台管理框架，当前版本：v3.9.0」。这是经 SSH 转发的测试 VPS 迁移预览构建，不是生产。8099 未开，未使用。`actuator/info` 等版本端点需要登录（401），没有更细的构建号可读。
+- 账号：测试玩家 uid **990044**（role=player），走 `/api/login/code` 登录。没有发生任何支付、手机号绑定或资金操作。
+- 网络观测：在 app service 里用 `Object.defineProperty(wx,'request')` 包一层（原函数保存后在每步结束时恢复），逐条记录 url / method / body 键 / 回包码，且**拦截任何非 127.0.0.1:8132 的请求**。全部步骤 0 条被拦截，即没有任何请求发往非回环地址。注：`mockWxMethod('request')` 的回调会丢掉 `res.data.data`（登录因此报 noData），所以没有使用它。
+- 定时器：全部用真实时间，**没有用假定时器**。
+- 自动化：DevTools CLI `auto --auto-port 9473`，`miniprogram-automator` 0.12.1。每个脚本结束都 disconnect。没有关闭 IDE，也没有动其它项目窗口。
+- 测试数据：在 8132 测试库为 990044 建了草稿 990054–990064（每次一份，`/api/project/my` 回读确认没有重复草稿），没有发布成功的主题。
+
+### 7.2 逐步结果
+
+| # | 核对项 | 结果 | 证据 |
+|---|---|---|---|
+| 1 | 未命名时编辑 | PASS | 5.5 秒内没有 create/update，没有 toast；胶囊「已存本机」。`01-unnamed-local-only.png` |
+| 2 | 连续输入只保存一次 | PASS | 12 次输入，间隔 450 ms；输入期间 0 次写入；最后一次按键后 **2029 ms** 发出唯一一次 `v2/create`（`saveDraft:1`，带 requestId），随后一次 `edit-detail`；胶囊 已存本机→保存中→已存云端；没有结果面板，`cy-loading` 0 次。`02-autosaved-cloud.png` |
+| 3 | 不改动 10 秒 | PASS | 10 秒内 0 个请求 |
+| 4 | 回读在途时继续编辑 | SIMULATED-PASS | 回读人为延迟 3 秒（代替 Network throttling）。顺序为 create →（延迟）edit-detail → **一次** `v2/update`，`id=990056`，`configVersion:"1"` 来自服务端，回包 200，没有「路线配置已更新」；最终标题是第二版，回读后 configVersion=2，「已存云端」。`04-edit-during-save.png` |
+| 5 | 弹窗未提交内容 | PASS | 章节弹窗开着 5.5 秒：0 次写入，弹窗字段保持「D2弹窗内未提交章节」；点完成后只有一次 create，章节随之保存，回读后章节保留。`05-dialog-open-no-save.png` |
+| 6 | 保存在途时换绑玩法模板 | NEEDS_USER_REAL_DEVICE | 990044 在 8132 上没有任何可绑的玩法模板（`tempList`、`publicTempList` 都为空），无法真实绑定；伪造回读需要构造完整 `savedContentIssue` 合同，不算真实复现。逻辑已由单测「保存在途时改了模板绑定」覆盖。手工步骤见 7.4 |
+| 7 | 断网 / 结果不明 / 重开 | SIMULATED-PASS | 首次 create **真实到达服务端**（建出 990060），但客户端拿到的是失败（模拟丢回包）。胶囊 →「待确认」；本机信封里有该稿；6 秒内不自动重试。用 reLaunch 代替杀进程重开：恢复同一 draftUuid 和标题，随后 create **沿用同一 requestId**，服务端回 `recovered:true`、topicId 990060，接着 update + 回读 →「已存云端」，没有建出第二份。`07-offline-pending.png` |
+| 8 | 隐藏 / 返回 | PASS | 编辑后 400 ms 跳到隐私页（真实 onHide）：离开 4.5 秒 0 次写入，本机信封在；返回后（真实 onShow）保存一次 →「已存云端」 |
+| 9 | 保存与发布竞争 | PASS（附发现 F-1） | 自动保存回读在途时调 `submitForm`：toast「正在保存草稿，保存完成后再发布」，写入仍只有 1 次。保存完成后发布，顺序为 `v2/update` → `edit-detail` → `publish-draft`；publish-draft 在途时编辑没有触发自动保存。服务端拒绝发布（「专业主题至少需要一个章节和一个节点」，空主题预期如此），页面显示「草稿已保存，但还没有发布」。`09-publish-while-saving.png`、`09-publish-result.png` |
+| 10 | 已发布主题 | SIMULATED-PASS | 测试库里没有 990044 已发布的主题，把真实 `edit-detail` 回包改成 `isDraft:false` 打开 990054：改名后 6 秒 0 次 create/update，「保存草稿」按钮不显示，胶囊「已存本机」。`10-published-no-autosave.png` |
+| 11 | A 号切到 B 号 | SIMULATED-PASS | 编辑后 600 ms 把 `getApp().getUserID` 改为返回 990045：5 秒内 0 次写入，A 页不标已存云端；以 B 身份重开新稿，标题为空，`draftMemberId` 为 990045，没有任何写入。结束后恢复 990044。没有第二个真实账号，token 仍是 A 的，所以只验证了客户端守卫 |
+| 12 | 手动「保存草稿」 | PASS | 点按钮：`cy-loading`「正在保存草稿」、结果面板「草稿已保存到云端」、胶囊「已存云端」；之后 8 秒 0 个请求。`12-manual-save-sheet.png` |
+| 13 | 本机存储写满 | SIMULATED-PASS | `wx.setStorageSync` 改成抛 quota 错误：胶囊「本机未存」，toast「本地草稿保存失败，请检查存储空间」只弹一次。恢复后云端保存照常（create 990063）。`13-storage-full.png` |
+| 14 | CAS 冲突 | SIMULATED-PASS | 已存云端后，下一次 `v2/update` 被模拟回 `{code:500,msg:'路线配置已更新，请刷新后重试'}`：胶囊「云端未存」，toast「自动保存未成功：路线配置已更新，请刷新后重试」只弹一次；继续编辑 6 秒 0 次写入（已暂停）；手动「保存草稿」立即发出真实 update，内容是最新输入 →「已存云端」。`14-cas-conflict.png` |
+| 7/3 补 | 重开已存云端的草稿，不改内容 | **FAIL（F-2）** | 打开 990057（未修改）后约 2 秒发出一次多余的 `v2/update`，内容与云端相同。在 990058 上复现：重开前本机已有该主题信封，页面 `_localDraftRestored=true` 且没有 `_cloudSavedKey`，没有任何编辑就排了自动保存。`15-reopen-cloud-draft.png` |
+
+逐步 JSON 证据：`lane-d-shots/devtools-evidence.json`（时间为每步内的相对毫秒）。
+
+### 7.3 发现
+
+**F-2（FAIL，PR #463 引入，需要修）：重开已存云端的草稿会无编辑地再上传一次**
+- 现象：草稿保存成功后关掉，再打开同一份草稿，页面先提示「已恢复上次本地草稿」，然后约 2 秒后自动发 `v2/update`。服务端每次 update 都物理重建站点并把 `configVersion` +1，所以每次打开都会换站点编号、推进版本。
+- 根因：真机 / DevTools 的 `setData` 回调是异步的。`_runServerDraft.onSuccess` 换上回读版本时，`applyEditingTopic` → `_finishEditingDraftBootstrap` 的 adopted 分支会**同步**把 `_draftAutosaveReady` 设回 true，并删掉本机恢复稿。之后才执行的那批 setData 回调看到 ready=true 且是草稿 patch，于是又写回一份与云端相同的本机信封（同一机制也让空白新稿一打开就显示「已存本机」）。下次 `loadEditingTopic` 读到这份信封，按「本机恢复稿」处理：`_localDraftRestored=true`，不标已存云端，`_onDraftEdited` 排队上传。单测里 mock 的 `setData` 回调是同步的，所以没有暴露。
+- 修复位置：`chengyinhub-xcx/pages/publish/fabu/index.js` 的 `_finishEditingDraftBootstrap` adopted 分支，把 `this._draftAutosaveReady = true;` 放进一个 `setData({}, cb)` 回调里，让换版本产生的回调先在 ready=false 下跑完，不再回写信封。新稿 `onLoad` 尾部的 `_draftAutosaveReady = true` 同理。作为兜底，`loadEditingTopic` 成功分支在本机恢复稿与云端回读的 `_cloudDraftKey()` 相同时，应按「已存云端」处理并不排队。再补一条单测：用延迟执行回调的 `setData` 走一遍「保存 → 重开」，断言没有写请求。
+
+**F-1（PASS 附注，master 原有路径）：发布阶段失败会用回读版本覆盖发布在途期间的编辑**
+- 现象：publish-draft 在途时（DevTools 自动化绕过遮罩）把标题改成「…-发布中再改」，发布被服务端拒绝后，`_onServerDraftFailed` 的 `res.stage==='publish' && res.detail && res.unknown===false` 分支 `applyEditingTopic(res.detail)`，标题被换回「D2-保存发布竞争」，胶囊显示「已存云端」。
+- 真实界面里，发布期间有全屏 `cy-loading`「正在保存并发布」遮罩（已记录），用户基本无法在这时输入，所以风险低；但它与 §5.1 第 4 步「旧响应不得覆盖」口径不一致。
+- 修复位置：同文件 `_onServerDraftFailed` 的这个换版本分支，套用发布成功路径的 `draftRevision !== this._draftContentRevision()` 判断（`_runServerDraft` 已有 `draftRevision`）。有后续修改时不换版本，只接上版本号并保持「已存本机」。
+
+**观察（不判失败）**
+- O-1：空白新稿、刚打开的已发布主题，加载后胶囊显示「已存本机」（与 F-2 同一机制）。内容确实在本机，但对用户是噪音；修 F-2 后会消失。
+- O-2：发布被拒后，页内错误条标题是 master 原有文案「这次还没有保存」，同时胶囊显示「已存云端」（草稿确实已存），两者口径冲突。建议发布阶段失败时错误条标题改成「还没有发布」（`index.wxml` 的 `slopes-submit-error`）。
+
+### 7.4 需要真机或第二个账号的手工步骤
+- **#6 模板绑定不回退（NEEDS_USER_REAL_DEVICE）**：用一个至少有一个玩法模板的作者账号（测试库）。新建主题 → 加一章一个站点 → 站点绑模板 X → 等「已存云端」→ 开慢网（DevTools Network: Slow 3G 或真机弱网）→ 把站点换绑模板 Y，并在「保存中」期间再换回 Z → 等「已存云端」。核对：站点最终是 Z；最后一次 update 的 `chapters[].nodes[].templateId` 是 Z；重开后仍是 Z。
+- **#11 真实双账号**：真机账号 A 编辑后 1 秒内退出登录、用 B 登录。核对 A 的保存没有发出（抓包或后台），B 打开编辑页看不到 A 的稿件或状态。
+- **#7 真杀进程**：真机编辑 → 飞行模式 → 从多任务里划掉小程序 → 关飞行模式重开。核对恢复同一草稿、`requestId` 相同、「我的项目」只有一份。
+- **#14 真并发**：两台设备打开同一草稿，先后改动，核对后保存的一端只提示一次「自动保存未成功：…」，之后编辑不再自动发请求，手动保存可用。
+- **F-2 修复后复验**：保存成功后关掉、重开同一草稿，10 秒内不应有任何 create/update，胶囊直接是「已存云端」，也不应提示「已恢复上次本地草稿」。
+
+### 7.5 结论
+本轮执行的 14 + 1 项中，13 项 PASS 或 SIMULATED-PASS，1 项 NEEDS_USER_REAL_DEVICE（#6），1 项 **FAIL**（F-2：重开已存云端的草稿会无编辑地重复上传）。F-2 修好前 PR #463 不建议合入；F-1 和 O-2 建议一并处理。
