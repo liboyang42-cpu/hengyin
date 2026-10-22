@@ -6,6 +6,10 @@ const reducedMotionBehavior = require('../../../behaviors/reduced-motion.js');
 
 Component({
   behaviors: [reducedMotionBehavior],
+  properties: {
+    // 遮罩立刻挡触摸,但超过这么久才显出来(ms);快请求不闪。
+    delay: { type: Number, value: 400 },
+  },
   data: { visible: false, entered: false, title: '' },
   lifetimes: { detached() { this._depth = 0; if (this._enterTimer) clearTimeout(this._enterTimer); if (this._exitTimer) clearTimeout(this._exitTimer); } },
   methods: {
@@ -14,18 +18,26 @@ Component({
       const opts = options || {};
       this._depth = (this._depth || 0) + 1;
       if (this._exitTimer) { clearTimeout(this._exitTimer); this._exitTimer = null; }
-      if (this.data.visible || this.data.reducedMotion) {
-        this.setData({ visible: true, entered: true, title: String(opts.title || '加载中') });
+      const title = String(opts.title || '加载中');
+      if (this.data.visible) {
+        // 嵌套 show:只换文案,是否已显出由第一次 show 的延时决定
+        // 退场淡出期间又 show:撤掉退场,直接回到已显出
+        const reviving = !this.data.entered && !this._enterTimer;
+        this.setData(reviving ? { title, entered: true } : { title });
         return;
       }
-      this.setData({ visible: true, entered: false, title: String(opts.title || '加载中') });
-      this._enterTimer = setTimeout(() => { this._enterTimer = null; this.setData({ entered: true }); }, 20);
+      // 先挂上(透明,吃触摸),延时到了再显出
+      this.setData({ visible: true, entered: false, title });
+      const delay = Number(this.data.delay);
+      if (!(delay > 0)) { this.setData({ entered: true }); return; }
+      this._enterTimer = setTimeout(() => { this._enterTimer = null; this.setData({ entered: true }); }, delay);
     },
     hide(force) {
       this._depth = force ? 0 : Math.max(0, (this._depth || 0) - 1);
       if (this._depth !== 0 || !this.data.visible) return;
+      const pending = !!this._enterTimer;   // 还没显出来:直接撤掉,不留淡出
       if (this._enterTimer) { clearTimeout(this._enterTimer); this._enterTimer = null; }
-      if (this.data.reducedMotion) { this.setData({ visible: false, entered: false }); return; }
+      if (pending || this.data.reducedMotion) { this.setData({ visible: false, entered: false }); return; }
       this.setData({ entered: false });
       // 140ms = --cy-motion-fast 的 JS 镜像,与 .lm 的 transition 时长一致
       this._exitTimer = setTimeout(() => { this._exitTimer = null; this.setData({ visible: false }); }, 140);

@@ -1,3 +1,4 @@
+<block wx:if="{{ready}}">
 <!-- 首页/广场 Feed:封面、标题、摘要和标签位与最终卡片同构。 -->
 <view wx:if="{{type === 'feed-card'}}" class="sk sk-feed {{reducedMotion ? 'sk--static' : ''}}"
       aria-role="status" aria-live="polite" aria-label="{{loadingLabel}}">
@@ -140,3 +141,4 @@
     </view>
   </view>
 </view>
+</block>

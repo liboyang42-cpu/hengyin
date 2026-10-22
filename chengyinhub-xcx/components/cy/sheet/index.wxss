@@ -400,3 +400,15 @@
 }
 
 .sh--stacked .sh__panel{transform:translateY(-22rpx) scale(.96);transform-origin:bottom center;filter:brightness(.76);pointer-events:none}
+
+/* 底部变体:面板固定头/脚,只让 .sh__body(scroll-view)滚动;长内容不再带着整块面板滚,
+ * 也不会在滚到头时把手势交给底下的页面。has-footer 的同款规则在上面,这里补无 footer 的情形。 */
+.sh--bottom .sh__panel {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.sh--bottom .sh__body {
+  flex: 1 1 auto;
+  min-height: 0;
+}
