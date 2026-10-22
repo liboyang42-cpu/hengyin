@@ -23,7 +23,8 @@ class O14MigrationContractTest {
         assertEquals(3, inserts.length, "恰好两条登记");
         for (String target : new String[]{"recommendationScoreDailyTask.run()", "contentSearchProjectionTask.refresh()"}) {
             String insert = null;
-            for (int i = 1; i < inserts.length; i++) {
+            // 取第一个命中的块：最后一块尾部还带着 runner 断言，也会提到同一个 invoke_target
+            for (int i = 1; i < inserts.length && insert == null; i++) {
                 if (inserts[i].contains("'" + target + "'")) insert = inserts[i];
             }
             assertTrue(insert != null, target);
