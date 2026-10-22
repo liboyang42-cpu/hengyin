@@ -366,16 +366,12 @@ public class MerchantAggregateReadServiceImpl implements IMerchantAggregateReadS
         /* CU-M-132/133:招商已截止的项目过去既计入「N 个开放商机」,又占掉首屏 10 席 ——
            商家看到 15 个开放商机,点进广场却是一屏「已截止」,真正还能接的反而看不见。
            这里只改**计数口径**与**排列先后**,不改任何可见性闸(上面那四行 query 一个没动):
-           已截止的路线仍然下发、仍然按「已截止」显示(2026-09-06 裁决:决定权在商家,不替他藏),
-           只是不再冒充"开放",也不再挤掉未截止的。判据与小程序 routeCards 同一套。 */
+           2026-10-22 owner 裁决推翻 09-06:已截止/已结束的路线不再下发,广场不展示。判据与小程序 routeCards 同一套。 */
         Date recruitNow = new Date();
         List<CmsTopic> ordered = new ArrayList<>();
         int openRecruitCount = 0;
         for (CmsTopic topic : topics) {
-            if (isRecruitOpenAt(topic, recruitNow)) { ordered.add(topic); openRecruitCount += 1; }
-        }
-        for (CmsTopic topic : topics) {
-            if (!isRecruitOpenAt(topic, recruitNow)) ordered.add(topic);
+            if (isRecruitOpenAt(topic, recruitNow) && !isEndedAt(topic, recruitNow)) { ordered.add(topic); openRecruitCount += 1; }
         }
         List<Map<String, Object>> items = new ArrayList<>();
         for (CmsTopic topic : ordered) {
@@ -432,6 +428,12 @@ public class MerchantAggregateReadServiceImpl implements IMerchantAggregateReadS
     }
 
     /** 招商是否还开着:没有截止日 = 长期开放,有截止日 = 还没到点。 */
+    /** 2026-10-22 owner:活动已结束的路线不再下发(与招商截止同口径,广场不展示已过期项) */
+    private static boolean isEndedAt(CmsTopic topic, Date now) {
+        Date end = topic == null ? null : topic.getEndDate();
+        return end != null && !end.after(now);
+    }
+
     private static boolean isRecruitOpenAt(CmsTopic topic, Date now) {
         Date deadline = topic == null ? null : topic.getMerchantSignUpEndDate();
         return deadline == null || deadline.after(now);

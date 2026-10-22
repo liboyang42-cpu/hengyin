@@ -120,8 +120,8 @@ test('合作页商家卡:品类名从后端 sysCategoryList 取出并喂给卡�
   assert.equal(plain.categoryName, '', '后端没给品类就交空串,由组件退回中性店铺图标');
 });
 
-test('合作页模板:卡片收到 category-name', () => {
-  assert.match(read(RELATION_WXML), /category-name="\{\{item\.categoryName\}\}"/);
+test('合作页模板:2026-10-22 起不再渲染商家卡(商家看不到其他商家)', () => {
+  assert.doesNotMatch(read(RELATION_WXML), /<cy-merchant-card/);
 });
 
 test('负控:合作页退回读 item.categoryName 时,书店卡必须变回空品类', () => {

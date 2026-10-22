@@ -324,7 +324,7 @@ const CONTRACTS = {
   },
   C14: {
     sources: ['pages/merchant/relation/index.js', 'pages/merchant/relation/index.wxml'],
-    paths: ['pageState', 'error', 'activeTab', 'merchants[].displayName', 'clubs[].displayName'],
+    paths: ['pageState', 'error', 'activeTab', 'clubs[].displayName'],
     equals: { pageState: 'ready', error: '' },
   },
   C19: {

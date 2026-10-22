@@ -92,9 +92,12 @@ function marketingHome(items) {
 }
 
 /** 走查里的两条:同名、不同日期。 */
+// 2026-10-22 owner:已结束的路线广场不再显示,夹具日期必须相对"现在"取未来,不能写死。
+const DAY = 86400000;
+const stamp = (offsetDays) => new Date(Date.now() + offsetDays * DAY + 8 * 3600000).toISOString().slice(0, 19).replace('T', ' ');
 const SAME_NAME_SESSIONS = [
-  { id: 21, name: 'E2E 探店日一期', imgUrl: '', productType: 1, startDate: '2026-09-01 00:00:00', endDate: '2026-09-02 00:00:00' },
-  { id: 22, name: 'E2E 探店日一期', imgUrl: '', productType: 1, startDate: '2026-09-20 00:00:00', endDate: '2026-09-21 00:00:00' },
+  { id: 21, name: 'E2E 探店日一期', imgUrl: '', productType: 1, startDate: stamp(10), endDate: stamp(11) },
+  { id: 22, name: 'E2E 探店日一期', imgUrl: '', productType: 1, startDate: stamp(20), endDate: stamp(21) },
 ];
 
 function openPlaza(options) {

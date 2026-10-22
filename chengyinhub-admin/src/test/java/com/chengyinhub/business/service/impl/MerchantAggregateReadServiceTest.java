@@ -578,13 +578,15 @@ class MerchantAggregateReadServiceTest {
      * 已截止的可以整段挤掉还没截止的。两条都在 recruiting() 的口径与排列上,可见性闸不变。
      */
     @Test
-    void recruitingCountsOnlyOpenRoutesAndListsThemFirst() {
+    void recruitingDropsExpiredRoutesAndCountsOnlyOpenOnes() {
         long day = 86400000L;
         CmsTopic closedFirst = recruitingTopic(103L, "已截止", new Date(System.currentTimeMillis() - day));
         CmsTopic open = recruitingTopic(101L, "没有截止日", null);
         CmsTopic closingSoon = recruitingTopic(102L, "三天后截止", new Date(System.currentTimeMillis() + 3 * day));
+        CmsTopic ended = recruitingTopic(104L, "活动已结束", new Date(System.currentTimeMillis() + 3 * day));
+        ended.setEndDate(new Date(System.currentTimeMillis() - day));
         ICmsTopicService topics = mock(ICmsTopicService.class);
-        when(topics.selectCmsTopicList(any())).thenReturn(Arrays.asList(closedFirst, open, closingSoon));
+        when(topics.selectCmsTopicList(any())).thenReturn(Arrays.asList(closedFirst, open, closingSoon, ended));
         MerchantAggregateReadServiceImpl service = new MerchantAggregateReadServiceImpl(
                 mock(IMmsMerchantService.class), mock(IClubService.class), mock(IClubMemberService.class), mock(CoopInviteMapper.class),
                 topics, mock(ISmsCouponService.class), mock(ICmsActivityService.class),
@@ -594,12 +596,12 @@ class MerchantAggregateReadServiceTest {
 
         assertEquals(2, recruiting.get("count"), "开放商机只数还没截止的两条");
         assertEquals(2, recruiting.get("openCount"));
-        assertEquals(3, recruiting.get("shownCount"), "已截止的仍下发,由卡面标「已截止」");
+        assertEquals(2, recruiting.get("shownCount"), "2026-10-22 owner:已截止/已结束的不再下发");
         assertEquals(false, recruiting.get("hasMoreOpen"));
-        assertEquals(Arrays.asList(101L, 102L, 103L),
+        assertEquals(Arrays.asList(101L, 102L),
                 castList(recruiting.get("items")).stream().map(item -> item.get("id"))
                         .collect(java.util.stream.Collectors.toList()),
-                "未截止的排在前,已截止的沉底但不藏");
+                "只剩未截止且未结束的");
         // 负控:计数口径退回「查询命中数」时,这条断言变红
         assertFalse(Integer.valueOf(3).equals(recruiting.get("count")),
                 "把已截止的算进「开放商机」正是 CU-M-132 的现场");

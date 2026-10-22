@@ -470,6 +470,36 @@
   background: var(--cy-color-bg-surface-subtle);
 }
 
+/* 我的订单卡 v2(2026-10-22 owner):封面 + 状态章 + 标题/档期/票数 + 下一步按钮。全走语义 token,
+   玩家深色 / 商家浅色(theme-merchant)自动跟随,不写字面色。 */
+.pc-ord-card {
+  display: inline-flex; flex-direction: column; flex-shrink: 0; width: 520rpx; box-sizing: border-box; /* ds-ok: 520rpx 订单卡宽,露出下一张提示可滑 */
+  vertical-align: top; white-space: normal; overflow: hidden;
+  border-radius: var(--cy-radius-md);
+  background: var(--cy-color-bg-surface); border: 2rpx solid var(--cy-color-border-subtle);
+}
+.pc-ord-cover { position: relative; width: 100%; height: 240rpx; background: var(--cy-color-bg-surface-subtle); /* ds-ok: 240rpx 封面高 */ }
+.pc-ord-cover__img { width: 100%; height: 100%; display: block; }
+.pc-ord-tag {
+  position: absolute; left: var(--cy-space-2); top: var(--cy-space-2);
+  padding: var(--cy-space-1) var(--cy-space-2); border-radius: var(--cy-radius-sm);
+  font-size: var(--cy-type-caption); font-weight: 700; line-height: 1.5;
+  background: var(--cy-color-bg-surface); color: var(--cy-color-text-primary);
+}
+.pc-ord-body { padding: var(--cy-space-3); display: flex; flex-direction: column; gap: var(--cy-space-1); }
+.pc-ord-title {
+  font-size: var(--cy-type-body); font-weight: 700; color: var(--cy-color-text-primary); line-height: 1.35;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.pc-ord-meta { font-size: var(--cy-type-caption); color: var(--cy-color-text-tertiary); line-height: 1.45; }
+.pc-ord-btn {
+  margin-top: var(--cy-space-2); height: 72rpx; line-height: 72rpx; text-align: center; /* ds-ok: 72rpx 按钮高 */
+  border-radius: var(--cy-radius-md); font-size: var(--cy-type-body); font-weight: 700;
+  border: 2rpx solid var(--cy-color-border-subtle); color: var(--cy-color-text-primary);
+  background: var(--cy-color-bg-surface-subtle);
+}
+.pc-ord-btn--verify { background: var(--cy-color-text-primary); color: var(--cy-color-bg-surface); border-color: transparent; }
+
 /* 我的项目复用订单横滑轨道，下一张卡露出一部分以提示可滑动。 */
 /* 2026-08-20 项目卡 v2(用户定):G 积分/浏览量/时间百分比对商家无决策价值,整排删掉;
    只留 封面/名称/档期/状态章。改白卡承托 —— 原先内容裸排在封面渐变图层上,

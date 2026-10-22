@@ -10,7 +10,7 @@
   <!-- 稿 234:276:tab 左对齐(官方活动 / 广场),同一行右侧铃铛进协作邀请(收到的 / 我发出的) -->
   <view class="cc-tabbar">
     <cy-tabs class="cc-tabs" tabs="{{tabs}}" active="{{activeTab}}" bind:change="onTabChange" />
-    <view class="cc-bell" bindtap="goInbox" aria-role="button" aria-label="协作邀请：收到的与我发出的"
+    <view class="cc-bell" bindtap="goInbox" aria-role="button" aria-label="收件箱与发件箱"
       hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="bell" size="48" /></view>
   </view>
 

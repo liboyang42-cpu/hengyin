@@ -57,12 +57,12 @@ test('合作中心首屏只读两个发现来源,不再自己拉邀约', () => {
   assert.equal(page.data.activeTab, 'plaza');
 });
 
-test('铃铛进协作邀请页,看详情进主题承接页(申请承接在那里)', () => {
+test('铃铛进消息页(收件箱/发件箱,2026-10-22 owner 裁决),看详情进主题承接页(申请承接在那里)', () => {
   const { page, navigations } = loadPage();
   page.goInbox();
   page.openTopic({ currentTarget: { dataset: { id: 71 } } });
   assert.deepEqual(navigations, [
-    '/pages/coop/list/index',
+    '/subpackageB/pages/im/list/index',
     '/pages/topic/merchantinfo/merchantinfo?id=71&scope=MERCHANT',
   ]);
   const detail = fs.readFileSync(path.join(ROOT, 'pages/topic/merchantinfo/merchantinfo.js'), 'utf8');

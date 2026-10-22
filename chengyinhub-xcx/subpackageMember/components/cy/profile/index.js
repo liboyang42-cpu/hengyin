@@ -26,6 +26,7 @@ const { isRecord, isRecordList } = require('../../../../utils/response-shape.js'
 const { inactiveAccess, normalizeMerchantAccess } = require('../../../../utils/merchant-access-policy.js');
 const { isEndedProject, statusLabelOf } = require('../../../../utils/merchant-workbench.js');
 const mediaPreview = require('../../../../utils/media-preview.js');
+const { buildOrderPreviewList } = require('./order-preview.js');
 const { shapeMerchantSafety } = require('./merchant-safety-summary.js');
 const { shapeMerchantNode, readFavoriteToggle } = require('./merchant-node-favorite.js');
 const THEME_EMOJI = ['🍜', '❤️', '📚', '☕', '🌸', '🎮', '📷', '🏯'];
@@ -1379,7 +1380,10 @@ Component({
       pageNum: 1,
       pageSize: 8,
       owner_type: 3,
-      status: '0'
+      // 2026-10-22 owner:只要还要用的单。status '2' = 已付款未核销(后端 registrationStatus=2 且未完成),
+      // is_online=1 = 未结束;退款/过期等再由 buildOrderPreviewList 按订单页同一读模型筛掉。
+      status: '2',
+      is_online: 1
     }).then(function (res) {
       if (!that._currentProfileRead(read, res)) return;
       if (that._profileAttached === false || requestId !== that._orderPreviewRequestId
@@ -1394,13 +1398,7 @@ Component({
         that.setData({ orderErr: true, orderAuthError: false });
         return;
       }
-      var list = rows.slice(0, 8).map(function (item) {
-        var topic = item.cmsActivity || item.cmsTopic || {};
-        var pics = topic.pics ? String(topic.pics).split(';').filter(function (u) { return u.trim(); }) : [];
-        var title = topic.name || item.topicName || '探索订单';
-        var sub = item.createTime ? String(item.createTime).slice(0, 16).replace('T', ' ') : '报名订单';
-        return { id: item.id, title: title, sub: sub, cover: topic.imgUrl || pics[0] || '' };
-      });
+      var list = buildOrderPreviewList(rows, function (u) { return u && typeof app.getImgUrl === 'function' ? app.getImgUrl(u) : u; }, Date.now(), 8);
       that.setData({ orderLoaded: true, orderErr: false, orderAuthError: false, orderPreviewList: list });
     });
   },
