@@ -106,7 +106,29 @@ public class ThemeCharacterService {
         card.put("created", Boolean.valueOf(character != null || latest != null));
         card.put("running", Boolean.valueOf(running));
         card.put("attributes", rows);
+        // F6 T12:主题开了 journeyRules.rpg 才多一个 rpg 块(动量 / 侧面 / 特质 / 进度钟);老主题响应不变。
+        JourneyRules rpgRules = rpgRules(topic.getJourneyRulesJson());
+        if (rpgRules != null) card.put("rpg", JourneyRpg.view(rpgRules, running ? engineState(latest.getStateJson()) : null));
         return card;
+    }
+
+    private static JourneyRules rpgRules(String journeyRulesJson) {
+        if (StringUtils.isBlank(journeyRulesJson)) return null;
+        try {
+            JourneyRules rules = JourneyRules.parse(journeyRulesJson);
+            return rules.getRpg() == null ? null : rules;
+        } catch (IllegalArgumentException unusable) {
+            return null;     // 与 journeyAttributes 同口径:规则坏掉不替发布闸报错
+        }
+    }
+
+    private static TopicRouteEngine.State engineState(String stateJson) {
+        if (StringUtils.isBlank(stateJson)) return null;
+        try {
+            return JSON.readValue(stateJson, TopicRouteEngine.State.class);
+        } catch (Exception unusable) {
+            return null;
+        }
     }
 
     /**

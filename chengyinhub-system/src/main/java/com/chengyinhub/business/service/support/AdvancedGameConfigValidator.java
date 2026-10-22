@@ -1906,7 +1906,9 @@ public class AdvancedGameConfigValidator {
     private boolean isReadableSysVar(String var) {
         // 阶段 3:sys.exhausted 开放为只读 —— 创作者可以写「力竭时这一站更难 / 直接锁住」。
         // 它只由服务端在 HP 归零时写,效果侧一个都不放行(与 sys.hp 同口径)。
+        // F6 T10:sys.momentum 只读(只由服务端结算 / 花动量写)。
         return "sys.hp".equals(var) || "sys.luck".equals(var) || "sys.exhausted".equals(var)
+                || JourneyRpg.SYS_MOMENTUM.equals(var)
                 || SYS_ASKED_VAR.matcher(var).matches() || SYS_NODE_VAR.matcher(var).matches();
     }
 
@@ -2119,6 +2121,51 @@ public class AdvancedGameConfigValidator {
         validateEffects(check.get("fumbleEffects"), "check 的 fumbleEffects");
         validateMods(check.get("mods"));
         checkFailCostTag(check);
+        validateBargain(check.get("bargain"));
+    }
+
+    /** F6 T09 魔鬼交易单次加值上限:与 modCap 分开计,不让一笔交易压过三档难度的间距。 */
+    private static final int MAX_BARGAIN_BONUS = 3;
+    private static final int MAX_BARGAIN_EFFECTS = 4;
+    /** 交易的代价只能是「给自己添麻烦」:写状态、贴标签、挂状态、推进钟;任何发放类效果一律拒。 */
+    private static final Set<String> BARGAIN_EFFECT_OPS = new HashSet<String>(Arrays.asList(
+            "SET", "INC", "ADD_TAG", StoryVocabulary.ADD_CONDITION, StoryVocabulary.TICK_CLOCK));
+
+    /**
+     * F6 T09 check.bargain:{label, bonus 1..3, effects[1..4]}。只有主题 journeyRules.rpg.bargain 开启时
+     * 运行期才会提供这笔交易;这里只管形状。代价不得触碰 sys.*,也不得是物品 / 徽章 / XP 等发放。
+     */
+    private void validateBargain(JsonNode bargain) {
+        if (bargain == null || bargain.isNull()) return;
+        requireObject(bargain, "check 的 bargain 格式不正确");
+        bargain.fieldNames().forEachRemaining(name -> {
+            if (!"label".equals(name) && !"bonus".equals(name) && !"effects".equals(name)) {
+                throw new IllegalArgumentException("check 的 bargain 不支持的字段:" + name);
+            }
+        });
+        String label = bargain.path("label").asText("").trim();
+        if (label.isEmpty() || label.length() > MAX_CHECK_TEXT) {
+            throw new IllegalArgumentException("check 的 bargain 要写明代价(label),且不超过 " + MAX_CHECK_TEXT + " 字");
+        }
+        JsonNode bonus = bargain.get("bonus");
+        if (bonus == null || !bonus.isIntegralNumber() || !bonus.canConvertToInt()
+                || bonus.asInt() < 1 || bonus.asInt() > MAX_BARGAIN_BONUS) {
+            throw new IllegalArgumentException("check 的 bargain 的 bonus 须为 1 至 " + MAX_BARGAIN_BONUS + " 的整数");
+        }
+        JsonNode effects = bargain.get("effects");
+        if (!(effects instanceof ArrayNode) || effects.size() < 1 || effects.size() > MAX_BARGAIN_EFFECTS) {
+            throw new IllegalArgumentException("check 的 bargain 的 effects 须为 1 至 " + MAX_BARGAIN_EFFECTS + " 条代价");
+        }
+        for (JsonNode effect : effects) {
+            String op = effect.path("op").asText("");
+            if (!BARGAIN_EFFECT_OPS.contains(op)) {
+                throw new IllegalArgumentException("check 的 bargain 的代价只能是 SET、INC、ADD_TAG、ADD_CONDITION 或 TICK_CLOCK");
+            }
+            if (effect.path("var").asText("").trim().startsWith("sys.")) {
+                throw new IllegalArgumentException("check 的 bargain 的代价不能写系统变量");
+            }
+        }
+        validateEffects(effects, "check 的 bargain 的 effects");
     }
 
     /** mods:条件修正,when 条件 + 整数 value(或 F2 的 counter.* var),label 是给玩家看的一句人话。 */

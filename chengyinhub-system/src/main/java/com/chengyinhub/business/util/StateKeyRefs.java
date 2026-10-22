@@ -131,6 +131,9 @@ public final class StateKeyRefs {
             // R14 大成功 / 大失败的额外效果:与 successEffects / failEffects 同一道闸。
             collectEffects(check.get("critEffects"), keys);
             collectEffects(check.get("fumbleEffects"), keys);
+            // F6 T09:魔鬼交易的代价也是写入,引用的键同样要注册。
+            JsonNode bargain = check.get("bargain");
+            if (bargain != null && bargain.isObject()) collectEffects(bargain.get("effects"), keys);
             JsonNode failCostTag = check.get("failCostTag");
             if (failCostTag != null && failCostTag.isTextual()) {
                 add(keys, failCostTag.asText());

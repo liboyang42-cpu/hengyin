@@ -62,6 +62,13 @@ public class JourneyRules {
     private boolean natAuto = true;
 
     /**
+     * F6 RPG P1 灰度块(环境键 / 进度钟 / 魔鬼交易 / 动量 / 特质),形状见 {@code JourneyRpg}。
+     * 没配 = null = 全部关闭;序列化时 null 不输出,老主题冻结快照一字不变。
+     */
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    private com.fasterxml.jackson.databind.node.ObjectNode rpg;
+
+    /**
      * 归一化解析:空/缺省返回 {@code checkEnabled=false} 的默认对象;非法配置抛
      * {@link IllegalArgumentException}(中文人话,与保存端同一套校验)。
      */
@@ -103,6 +110,9 @@ public class JourneyRules {
 
     public boolean isNatAuto() { return natAuto; }
     public void setNatAuto(boolean natAuto) { this.natAuto = natAuto; }
+
+    public com.fasterxml.jackson.databind.node.ObjectNode getRpg() { return rpg; }
+    public void setRpg(com.fasterxml.jackson.databind.node.ObjectNode rpg) { this.rpg = rpg; }
 
     /** 生命值规则;{@code enabled=false} 时检定失败不扣血。 */
     public static class Hp {

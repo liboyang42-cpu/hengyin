@@ -512,6 +512,13 @@ public final class AdvancedGamePublicProjection {
             safeMod.put("value", mod.path("value").asInt(0));
             putIfText(safeMod, "label", mod);
         }
+        // F6 T09:魔鬼交易只下发「代价一句话 + 加值」,代价效果本身不下发;没配就不出现这个字段。
+        JsonNode bargain = source.path("bargain");
+        if (bargain.isObject()) {
+            ObjectNode offer = value.putObject("bargain");
+            putIfText(offer, "label", bargain);
+            offer.put("bonus", bargain.path("bonus").asInt(0));
+        }
     }
 
     private static void copyPredict(ObjectNode target, JsonNode source) {
