@@ -676,7 +676,8 @@
 <view class="psheet psheet--half is-in {{reducedMotion ? 'is-reduced' : ''}}" catchtap="noop">
   <view class="psheet__grab"></view>
   <text class="ph1">清空本机缓存</text>
-  <text class="roam-rules__lede">会清掉本机的迷雾和足迹，分享出去的足迹链接也会失效。</text>
+  <!-- PC-392:与 roam-player-memory.clearLocal 实际清除的四样逐条对齐(迷雾/足迹/漫游记录/找回记录),服务端记录不动 -->
+  <text class="roam-rules__lede">会清掉这台手机上的迷雾、足迹、漫游记录，以及还没结束那次漫游的找回记录；分享出去的足迹链接也会失效。已上传到城瘾的记录不受影响。</text>
   <view class="btnrow">
     <view class="btn2 btn2--w" bindtap="cancelClearRoamLocal" aria-role="button" aria-label="不清空" hover-class="cy-pressed" hover-stay-time="80">先不清</view>
     <view class="btn2 btn2--d" bindtap="confirmClearRoamLocal" aria-role="button" aria-label="确认清空本机缓存" hover-class="cy-pressed" hover-stay-time="80">清空</view>

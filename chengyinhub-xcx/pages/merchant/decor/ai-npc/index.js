@@ -154,8 +154,9 @@ Page({
           if (res && String(res.code) === '200') resolve(res);
           else reject(Error((res && res.msg) || '请求失败，请重试'));
         },
-        successStatusAbnormal: (res) => reject(Error((res && res.msg) || '请求失败，请重试')),
-        fail: () => reject(Error('网络异常，请稍后重试')),
+        // transport=true:没拿到业务回执,写请求可能已在服务端生效(H 原音色:只有这类才进入 UNKNOWN)
+        successStatusAbnormal: (res) => reject(Object.assign(Error((res && res.msg) || '请求失败，请重试'), { transport: true })),
+        fail: () => reject(Object.assign(Error('网络异常，请稍后重试'), { transport: true })),
       })
     );
   },
@@ -660,14 +661,14 @@ Page({
         const value = res.data || res,
           status = Number(value.voiceStatus);
         if (![0, 1, 2, 3].includes(status)) throw Error('声音状态暂时无法确认');
-        const confirmed =
-          (status === 1 || status === 2) &&
-          this.data.voiceFile &&
-          value.voiceSample === this.data.voiceFile.url;
+        // PRIVATE-GROUP-H-voice-original-result:UNKNOWN 只能由「服务端样本 = 原录音」解除;
+        // 状态有效但样本还是旧的,说明原提交没确认,继续锁住重录/上传,等再次查询。
+        const original = !!(this.data.voiceFile && this.data.voiceFile.url) && value.voiceSample === this.data.voiceFile.url;
+        const confirmed = (status === 1 || status === 2) && original;
         this.setData({
           voiceStatus: status,
           voiceSample: value.voiceSample || '',
-          voiceUnknown: false,
+          voiceUnknown: this.data.voiceUnknown && !original,
           voiceFile: confirmed ? null : this.data.voiceFile,
         });
         if (status === 1) this._voiceTimer = setTimeout(() => { if (current()) this.refreshVoice(); }, 5000);
@@ -957,9 +958,15 @@ Page({
       .then((res) => {
         if (!current()) return;
         const d = res.data || res;
+        // enroll 成功只会回 1(生成中)/2(已就绪);类型不对就当结果未知,保留原录音去回读
+        if (!(d.voiceStatus === 1 || d.voiceStatus === 2)) {
+          this.setData({ voiceBusy: false, voiceError: '声音结果待确认，请查询生成状态', voiceUnknown: true });
+          this.refreshVoice();
+          return;
+        }
         this.setData({
           voiceBusy: false,
-          voiceStatus: Number(d.voiceStatus),
+          voiceStatus: d.voiceStatus,
           voiceFile: null,
           voiceUnknown: false,
         });
@@ -967,9 +974,12 @@ Page({
       })
       .catch((e) => {
         if (!current()) return;
-        this.setData({ voiceBusy: false, voiceError: e.message, voiceUnknown: !!this._voiceSubmitted });
+        // 只有已发出 enroll 且没拿到明确业务回执(断网/HTTP 异常/后端「结果待确认」)才是 UNKNOWN;
+        // 明确的业务拒绝(未开通、上游拒绝等)是确定失败,保留录音可直接重试。
+        const unknown = !!this._voiceSubmitted && (e.transport === true || e.message === '声音结果待确认，请稍后查询状态');
+        this.setData({ voiceBusy: false, voiceError: e.message, voiceUnknown: unknown });
         // 可能已经提交成功，先查状态再允许重试，避免重复生成。
-        if (this._voiceSubmitted) this.refreshVoice();
+        if (unknown) this.refreshVoice();
       })
       .finally(() => {
         if (current()) this._voiceSubmitted = false;

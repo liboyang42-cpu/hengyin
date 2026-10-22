@@ -163,6 +163,8 @@
         <view class="ai-op" wx:if="{{ai.problem}}">
           <cy-icon name="warning" size="24" /><text class="ai-op-txt">问题：{{ai.problem}}</text>
         </view>
+        <!-- PC-233:智能解读与当日缓存同版——喂 AI 的是生成时的经营数据与店铺档案;上方档案胶囊是实时读的,今天改档案对解读次日生效 -->
+        <text class="ai-source" wx:if="{{generatedAt}}">解读依据 {{generatedAt}} 的经营数据与当时的店铺档案；今天修改的档案次日生效</text>
       </cy-card>
       <cy-card wx:else class="ai-card ai-card--down">
         <text class="ai-down-title">{{factState === 'unknown' ? '基础数据暂未完整返回' : '基础数据可用'}}</text>
