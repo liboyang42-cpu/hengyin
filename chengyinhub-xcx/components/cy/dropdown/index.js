@@ -19,12 +19,13 @@ const exitMotion = require('../../../behaviors/exit-motion.js');
 // 面板每项高度(rpx)与最大可见项数。露出半项是给用户「还能往下滚」的暗示。
 const ITEM_H_RPX = 88;
 const MAX_VISIBLE = 5.5;
-// 两列卡片档(2026-10-10 主人：下拉弹层一行两项):每格约 136rpx,最多露出 4 行半。
-const CELL_H_RPX = 136;
-// 全部卡片只有名称(无说明/原因)时用紧凑高度:88rpx 卡片 + 16rpx 间距
-const CELL_H_COMPACT_RPX = 104;
+// 说明档(原两列卡片档;2026-10-22 起单列菜单):带说明的行约 120rpx,无说明与普通行同高。
+const CELL_H_RPX = 120;
+const CELL_H_COMPACT_RPX = ITEM_H_RPX;
 const HEADER_H_RPX = 84;
-const MAX_ROWS = 4.5;
+const MAX_ROWS = 5.5;
+// 单列菜单贴着字段弹出;字段太窄时至少给这么宽,免得名称被挤成两行。
+const MIN_PANEL_W_PX = 200;
 
 Component({
   options: { multipleSlots: true, addGlobalClass: true },
@@ -118,15 +119,15 @@ Component({
         var pxPerRpx = (win.windowWidth || 375) / 750;
         var grid = that.data.columns > 1;
         var panelH = that.data.customPanel ? that.data.panelHeight
-          : grid ? (Math.min(Math.ceil(that.data.labels.length / that.data.columns), MAX_ROWS) * (that.data.compact ? CELL_H_COMPACT_RPX : CELL_H_RPX) + (that.data.header ? HEADER_H_RPX : 0)) * pxPerRpx + 24
+          : grid ? (Math.min(that.data.labels.length, MAX_ROWS) * (that.data.compact ? CELL_H_COMPACT_RPX : CELL_H_RPX) + (that.data.header ? HEADER_H_RPX : 0)) * pxPerRpx + 16
           : Math.min(that.data.labels.length, MAX_VISIBLE) * ITEM_H_RPX * pxPerRpx + 16;
         // 下方放不下就朝上开 —— 否则面板会被挤出屏幕底部。
         var dropUp = !that.data.below && rect.bottom + panelH > winH - 12 && rect.top - panelH > 12;
         var top = dropUp ? rect.top - panelH - that.data.gap : rect.bottom + that.data.gap;
         panelH = Math.max(44, Math.min(panelH, winH - top - 16));
         if (that.data.customPanel) that.triggerEvent('open');
-        // 两列档默认铺满屏宽(左右各留 12px),否则卡片会挤进触发器那一小截宽度。
-        var width = that.data.panelWidth || (grid ? (win.windowWidth || 375) - 24 : rect.width);
+        // 说明档与普通档一样贴着字段;字段太窄时给到最小宽度,并且不超出屏幕。
+        var width = that.data.panelWidth || (grid ? Math.min((win.windowWidth || 375) - 24, Math.max(rect.width, MIN_PANEL_W_PX)) : rect.width);
         var left = Math.max(12, rect.right - width);
         that.setData({
           show: true,
