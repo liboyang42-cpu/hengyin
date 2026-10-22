@@ -129,6 +129,10 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     @Autowired
     private com.chengyinhub.business.service.IPerkLedgerService perkLedgerService;
 
+    /** DOC2 F3 Phase 1 套票账本(开关默认关)。 */
+    @Autowired
+    private com.chengyinhub.business.service.IFreeExploreBundleService freeExploreBundleService;
+
     @Autowired
     @Lazy
     private com.chengyinhub.business.service.ITopicCompletionAwardService topicCompletionAwardService;
@@ -612,6 +616,11 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         // 容量按行/按票算,不按钱算,整单再调一次 = 重复预占。
         if (PurchaseKind.EXPLORE_PASS == registration.getPurchaseKind() && sellerTopic != null) {
             perkLedgerService.reserveEntitlements(registration.getId(), sellerTopic.getId());
+            // DOC2 F3 Phase 1:③ 套票冻结快照并按持有人发放单位。sale 开关默认关 ⇒ 空转零写入;
+            // 同事务,任一步抛出整单回滚(与上面的权益预占同一条纪律)。
+            if (freeExploreBundleService != null) {
+                freeExploreBundleService.freezeOnOrderCreated(registration, sellerTopic, registrationActivity);
+            }
         }
 
         //11-12. 扣用户积分 + 记流水

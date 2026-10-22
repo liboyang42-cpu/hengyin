@@ -1,0 +1,296 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.ExploreBundleMapper">
+
+    <resultMap id="ExploreBundleOrderResult" type="ExploreBundleOrder">
+        <result property="id" column="id"/>
+        <result property="registrationId" column="registration_id"/>
+        <result property="holderMemberId" column="holder_member_id"/>
+        <result property="topicId" column="topic_id"/>
+        <result property="activityId" column="activity_id"/>
+        <result property="productVersion" column="product_version"/>
+        <result property="quotaVersion" column="quota_version"/>
+        <result property="policyVersion" column="policy_version"/>
+        <result property="contractVersion" column="contract_version"/>
+        <result property="settlementRuleVersion" column="settlement_rule_version"/>
+        <result property="snapshotJson" column="snapshot_json"/>
+        <result property="paidAmount" column="paid_amount"/>
+        <result property="validFrom" column="valid_from"/>
+        <result property="validTo" column="valid_to"/>
+        <result property="idempotencyKey" column="idempotency_key"/>
+        <result property="requestFingerprint" column="request_fingerprint"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <resultMap id="ExploreBundleGrantResult" type="ExploreBundleGrant">
+        <result property="id" column="id"/>
+        <result property="bundleOrderId" column="bundle_order_id"/>
+        <result property="registrationId" column="registration_id"/>
+        <result property="holderMemberId" column="holder_member_id"/>
+        <result property="topicId" column="topic_id"/>
+        <result property="chapterId" column="chapter_id"/>
+        <result property="grantNo" column="grant_no"/>
+        <result property="grantType" column="grant_type"/>
+        <result property="sourceGrantId" column="source_grant_id"/>
+        <result property="unitsTotal" column="units_total"/>
+        <result property="validFrom" column="valid_from"/>
+        <result property="validTo" column="valid_to"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <resultMap id="ExploreBundleUnitResult" type="ExploreBundleUnit">
+        <result property="id" column="id"/>
+        <result property="grantId" column="grant_id"/>
+        <result property="registrationId" column="registration_id"/>
+        <result property="holderMemberId" column="holder_member_id"/>
+        <result property="chapterId" column="chapter_id"/>
+        <result property="unitSeq" column="unit_seq"/>
+        <result property="unitCode" column="unit_code"/>
+        <result property="unitValue" column="unit_value"/>
+        <result property="status" column="status"/>
+        <result property="redemptionId" column="redemption_id"/>
+        <result property="reservationId" column="reservation_id"/>
+        <result property="statusReason" column="status_reason"/>
+        <result property="version" column="version"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+        <result property="grantNo" column="grant_no"/>
+        <result property="validFrom" column="valid_from"/>
+        <result property="validTo" column="valid_to"/>
+    </resultMap>
+
+    <resultMap id="ExploreBundleReservationResult" type="ExploreBundleReservation">
+        <result property="id" column="id"/>
+        <result property="unitId" column="unit_id"/>
+        <result property="registrationId" column="registration_id"/>
+        <result property="holderMemberId" column="holder_member_id"/>
+        <result property="chapterId" column="chapter_id"/>
+        <result property="offerId" column="offer_id"/>
+        <result property="merchantId" column="merchant_id"/>
+        <result property="startAt" column="start_at"/>
+        <result property="status" column="status"/>
+        <result property="idempotencyKey" column="idempotency_key"/>
+        <result property="requestFingerprint" column="request_fingerprint"/>
+        <result property="closedAt" column="closed_at"/>
+        <result property="version" column="version"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <resultMap id="ExploreBundleExitCaseResult" type="ExploreBundleExitCase">
+        <result property="id" column="id"/>
+        <result property="unitId" column="unit_id"/>
+        <result property="registrationId" column="registration_id"/>
+        <result property="holderMemberId" column="holder_member_id"/>
+        <result property="exitedOfferId" column="exited_offer_id"/>
+        <result property="reservationId" column="reservation_id"/>
+        <result property="decision" column="decision"/>
+        <result property="targetOfferId" column="target_offer_id"/>
+        <result property="idempotencyKey" column="idempotency_key"/>
+        <result property="requestFingerprint" column="request_fingerprint"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <!-- ============================================================ 订单快照:只插不改 -->
+
+    <insert id="insertOrder" parameterType="ExploreBundleOrder" useGeneratedKeys="true" keyProperty="id">
+        insert into explore_bundle_order
+            (registration_id, holder_member_id, topic_id, activity_id, product_version, quota_version,
+             policy_version, contract_version, settlement_rule_version, snapshot_json, paid_amount,
+             valid_from, valid_to, idempotency_key, request_fingerprint, create_time)
+        values
+            (#{registrationId}, #{holderMemberId}, #{topicId}, #{activityId}, #{productVersion}, #{quotaVersion},
+             #{policyVersion}, #{contractVersion}, #{settlementRuleVersion}, #{snapshotJson}, #{paidAmount},
+             #{validFrom}, #{validTo}, #{idempotencyKey}, #{requestFingerprint}, #{createTime})
+    </insert>
+
+    <select id="selectOrderByRegistration" resultMap="ExploreBundleOrderResult">
+        select id, registration_id, holder_member_id, topic_id, activity_id, product_version, quota_version,
+               policy_version, contract_version, settlement_rule_version, snapshot_json, paid_amount,
+               valid_from, valid_to, idempotency_key, request_fingerprint, create_time
+        from explore_bundle_order
+        where registration_id = #{registrationId}
+    </select>
+
+    <!-- ============================================================ 发放 / 单位 -->
+
+    <insert id="insertGrant" parameterType="ExploreBundleGrant" useGeneratedKeys="true" keyProperty="id">
+        insert into explore_bundle_grant
+            (bundle_order_id, registration_id, holder_member_id, topic_id, chapter_id, grant_no, grant_type,
+             source_grant_id, units_total, valid_from, valid_to, create_time)
+        values
+            (#{bundleOrderId}, #{registrationId}, #{holderMemberId}, #{topicId}, #{chapterId}, #{grantNo}, #{grantType},
+             #{sourceGrantId}, #{unitsTotal}, #{validFrom}, #{validTo}, #{createTime})
+    </insert>
+
+    <select id="selectGrantsByRegistration" resultMap="ExploreBundleGrantResult">
+        select id, bundle_order_id, registration_id, holder_member_id, topic_id, chapter_id, grant_no, grant_type,
+               source_grant_id, units_total, valid_from, valid_to, create_time
+        from explore_bundle_grant
+        where registration_id = #{registrationId}
+        order by chapter_id asc, grant_no asc
+    </select>
+
+    <insert id="insertUnit" parameterType="ExploreBundleUnit" useGeneratedKeys="true" keyProperty="id">
+        insert into explore_bundle_unit
+            (grant_id, registration_id, holder_member_id, chapter_id, unit_seq, unit_code, unit_value,
+             status, version, create_time)
+        values
+            (#{grantId}, #{registrationId}, #{holderMemberId}, #{chapterId}, #{unitSeq}, #{unitCode}, #{unitValue},
+             'AVAILABLE', 0, #{createTime})
+    </insert>
+
+    <sql id="selectUnitVo">
+        select u.id, u.grant_id, u.registration_id, u.holder_member_id, u.chapter_id, u.unit_seq, u.unit_code,
+               u.unit_value, u.status, u.redemption_id, u.reservation_id, u.status_reason, u.version,
+               u.create_time, u.update_time, g.grant_no, g.valid_from, g.valid_to
+        from explore_bundle_unit u
+        join explore_bundle_grant g on g.id = u.grant_id
+    </sql>
+
+    <select id="selectUnitsByRegistration" resultMap="ExploreBundleUnitResult">
+        <include refid="selectUnitVo"/>
+        where u.registration_id = #{registrationId}
+        order by u.chapter_id asc, g.grant_no asc, u.unit_seq asc
+    </select>
+
+    <!-- 余额键 (registration, holder, chapter) 下的单位当前读;持有人条件写进 SQL,
+         A 的核销永远锁不到、改不到 B 的单位。 -->
+    <select id="selectUnitsForUpdate" resultMap="ExploreBundleUnitResult">
+        <include refid="selectUnitVo"/>
+        where u.registration_id = #{registrationId}
+          and u.holder_member_id = #{holderMemberId}
+          and u.chapter_id = #{chapterId}
+        order by g.grant_no asc, u.unit_seq asc
+        for update
+    </select>
+
+    <select id="selectUnitByIdForUpdate" resultMap="ExploreBundleUnitResult">
+        <include refid="selectUnitVo"/>
+        where u.id = #{id}
+        for update
+    </select>
+
+    <select id="selectUnitByRedemptionForUpdate" resultMap="ExploreBundleUnitResult">
+        <include refid="selectUnitVo"/>
+        where u.redemption_id = #{redemptionId}
+        for update
+    </select>
+
+    <update id="casUnitStatus">
+        update explore_bundle_unit
+        set status = #{toStatus},
+            redemption_id = #{redemptionId},
+            reservation_id = coalesce(#{reservationId}, reservation_id),
+            status_reason = #{reason},
+            version = version + 1,
+            update_time = now()
+        where id = #{id}
+          and version = #{version}
+          and status = #{fromStatus}
+    </update>
+
+    <update id="refundOpenUnits">
+        update explore_bundle_unit
+        set status = 'REFUNDED', status_reason = 'REFUND', version = version + 1, update_time = now()
+        where registration_id = #{registrationId}
+          and status in ('AVAILABLE', 'RESERVED', 'HELD')
+    </update>
+
+    <!-- ============================================================ 预约 -->
+
+    <insert id="insertReservation" parameterType="ExploreBundleReservation" useGeneratedKeys="true" keyProperty="id">
+        insert into explore_bundle_reservation
+            (unit_id, registration_id, holder_member_id, chapter_id, offer_id, merchant_id, start_at, status,
+             idempotency_key, request_fingerprint, version, create_time)
+        values
+            (#{unitId}, #{registrationId}, #{holderMemberId}, #{chapterId}, #{offerId}, #{merchantId}, #{startAt}, 'BOOKED',
+             #{idempotencyKey}, #{requestFingerprint}, 0, #{createTime})
+    </insert>
+
+    <sql id="selectReservationVo">
+        select id, unit_id, registration_id, holder_member_id, chapter_id, offer_id, merchant_id, start_at, status,
+               idempotency_key, request_fingerprint, closed_at, version, create_time, update_time
+        from explore_bundle_reservation
+    </sql>
+
+    <select id="selectReservationById" resultMap="ExploreBundleReservationResult">
+        <include refid="selectReservationVo"/>
+        where id = #{id}
+    </select>
+
+    <select id="selectReservationByIdForUpdate" resultMap="ExploreBundleReservationResult">
+        <include refid="selectReservationVo"/>
+        where id = #{id}
+        for update
+    </select>
+
+    <select id="selectReservationByIdempotencyKey" resultMap="ExploreBundleReservationResult">
+        <include refid="selectReservationVo"/>
+        where holder_member_id = #{holderMemberId}
+          and idempotency_key = #{idempotencyKey}
+    </select>
+
+    <select id="selectReservationsByRegistration" resultMap="ExploreBundleReservationResult">
+        <include refid="selectReservationVo"/>
+        where registration_id = #{registrationId}
+        order by id asc
+    </select>
+
+    <select id="selectMerchantReservations" resultMap="ExploreBundleReservationResult">
+        <include refid="selectReservationVo"/>
+        where merchant_id = #{merchantId}
+          and start_at &gt;= #{from}
+          and start_at &lt; #{to}
+        order by start_at asc, id asc
+    </select>
+
+    <update id="casReservationStatus">
+        update explore_bundle_reservation
+        set status = #{toStatus}, closed_at = now(), version = version + 1, update_time = now()
+        where id = #{id}
+          and version = #{version}
+          and status = #{fromStatus}
+    </update>
+
+    <update id="cancelBookedByRegistration">
+        update explore_bundle_reservation
+        set status = 'CANCELLED', closed_at = now(), version = version + 1, update_time = now()
+        where registration_id = #{registrationId}
+          and status = 'BOOKED'
+    </update>
+
+    <!-- ============================================================ 月度豁免 / 商家退出 -->
+
+    <insert id="insertWaiverIgnore">
+        insert ignore into explore_bundle_waiver (member_id, waiver_month, reservation_id, create_time)
+        values (#{memberId}, #{waiverMonth}, #{reservationId}, now())
+    </insert>
+
+    <insert id="insertExitCase" parameterType="ExploreBundleExitCase" useGeneratedKeys="true" keyProperty="id">
+        insert into explore_bundle_exit_case
+            (unit_id, registration_id, holder_member_id, exited_offer_id, reservation_id, decision, target_offer_id,
+             idempotency_key, request_fingerprint, create_time)
+        values
+            (#{unitId}, #{registrationId}, #{holderMemberId}, #{exitedOfferId}, #{reservationId}, #{decision},
+             #{targetOfferId}, #{idempotencyKey}, #{requestFingerprint}, #{createTime})
+    </insert>
+
+    <sql id="selectExitCaseVo">
+        select id, unit_id, registration_id, holder_member_id, exited_offer_id, reservation_id, decision,
+               target_offer_id, idempotency_key, request_fingerprint, create_time
+        from explore_bundle_exit_case
+    </sql>
+
+    <select id="selectExitCaseByIdempotencyKey" resultMap="ExploreBundleExitCaseResult">
+        <include refid="selectExitCaseVo"/>
+        where holder_member_id = #{holderMemberId}
+          and idempotency_key = #{idempotencyKey}
+    </select>
+
+    <select id="selectExitCasesByRegistration" resultMap="ExploreBundleExitCaseResult">
+        <include refid="selectExitCaseVo"/>
+        where registration_id = #{registrationId}
+        order by id asc
+    </select>
+</mapper>
