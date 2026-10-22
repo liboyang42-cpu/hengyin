@@ -827,7 +827,7 @@
     "20261017_job_dictionary_missing_seed": [],
     "20261018_infomation_change_audit": [],
     "20261022_theme_state_key_attribute_def": ["theme_state_key_20260916"],
-    "20261022_theme_character": ["theme_state_key_20260916", "20261022_theme_state_key_attribute_def"]
+    "20261022_theme_character": ["theme_state_key_20260916", "20261022_theme_state_key_attribute_def"],
     "20261022_f7_user_invoice": [],
     "20261022_f7_minor_guardian": []
   }
