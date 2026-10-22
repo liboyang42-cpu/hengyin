@@ -6,10 +6,12 @@
   min-height: 100vh;
   background: var(--cy-bg-page);
 
-  --mi-hero-bg:     var(--cy-color-action-primary-bg);
-  --mi-on-hero:     #FFFFFF;                  /* ds-ok 黑 Hero 上的白字(稿 1:6) */
-  --mi-on-hero-dim: rgba(255, 255, 255, .6);  /* ds-ok 稿 1:8 */
-  --mi-hero-pill:   rgba(255, 255, 255, .12); /* ds-ok 稿 1:9 档案胶囊底 */
+  /* 2026-10-22 owner:商家侧恒浅 —— Hero 改浅底深字(原黑 Hero 在日间 token 下被解析成浅色,
+     白字落在浅底上读不出「生成于…」与「店铺档案」)。 */
+  --mi-hero-bg:     var(--cy-bg-card);
+  --mi-on-hero:     var(--cy-text-title);
+  --mi-on-hero-dim: var(--cy-text-secondary);
+  --mi-hero-pill:   var(--cy-bg-page);
   --mi-ink:         #2A2A47; /* ds-ok 稿 深靛:小卡进度/新客段/主题 CTA */
   --mi-lavender:    #A5A6E8; /* ds-ok 稿 淡紫:价值卡进度/回头客段 */
   --mi-delta:       #6B6EBF; /* ds-ok 稿 1:38 环比字色 */
@@ -57,7 +59,7 @@
   gap: var(--cy-space-3-5);
   padding: 36rpx;
   border-radius: var(--cy-radius-xl);
-  background: var(--cy-bg-card);
+  background: var(--cy-bg-page);
 }
 .value-title { font-size: var(--cy-font-label); color: var(--cy-text-secondary); }
 .value-row { display: flex; align-items: center; }

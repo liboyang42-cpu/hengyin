@@ -15,8 +15,8 @@ const strip = (css) => css.replace(/\/\*[\s\S]*?\*\//g, ' ')
 
 test('暗端:空态比填写态亮(不是反过来)', () => {
   const t = strip(read('style/tokens.wxss'))
-  const dm = strip(read('style/dark-mode.wxss'))
-  for (const [name, src] of [['tokens.wxss', t], ['dark-mode.wxss', dm]]) {
+  // 2026-10-22:系统深色镜像已移除,暗端只剩 tokens.wxss
+  for (const [name, src] of [['tokens.wxss', t]]) {
     const idle = src.match(/--cy-color-input-idle-bg:\s*(#[0-9A-Fa-f]{6})/)
     const filled = src.match(/--cy-color-input-filled-bg:\s*(#[0-9A-Fa-f]{6})/)
     assert.ok(idle && filled, `${name} 里读不到暗端的 input idle/filled`)

@@ -212,9 +212,9 @@ test('负控:改回 --cy-color-brand 或在深色档覆盖它,都必须判红', 
   assert.notEqual(mutated, SHEET_WXSS, '负控变异注入失败')
   assert.throws(() => assert.match(mutated, /border-top-color:\s*var\(--cy-comp-result-spinner\)/))
 
-  const overridden = DARK.replace(/@media \(prefers-color-scheme: dark\) \{/,
-    '@media (prefers-color-scheme: dark) {\n    --cy-comp-result-spinner: #FFFFFF;')
-  const decls = declarationsOf('--cy-comp-result-spinner', [TOKENS, overridden, MERCHANT])
+  // 系统深色块已移除(2026-10-22):改为在 merchant 样式里多塞一处覆盖
+  const overridden = MERCHANT + '\npage {\n  --cy-comp-result-spinner: #FFFFFF;\n}'
+  const decls = declarationsOf('--cy-comp-result-spinner', [TOKENS, DARK, overridden])
   assert.equal(decls.length, 2, '负控变异注入失败')
   assert.throws(() => assert.deepEqual(decls, ['var(--cy-ref-violet-500)']))
 })

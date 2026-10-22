@@ -54,8 +54,8 @@ test('② 原因条 / 标题 / 徽章 i 字形按稿', () => {
 test('③ 抓手实色在全部主题作用域重声明', () => {
   const decl = (src) => (strip(src).match(/--cy-color-sheet-handle:\s*([^;]+);/g) || []).length
   assert.equal(decl(TOKENS), 4, 'page / theme-merchant / theme-topic-editor / theme-dark')
-  assert.equal(decl(MERCHANT), 2, 'merchant-light 浅色块 + 自己的深色块')
-  assert.equal(decl(DARK), 1, 'dark-mode 媒体查询')
+  assert.equal(decl(MERCHANT), 1, 'merchant-light 浅色块(系统深色块已于 2026-10-22 移除)')
+  assert.equal(decl(DARK), 0, 'dark-mode 媒体查询已移除')
 })
 
 test('④ cy-sheet 钩子都带回退,回退值就是改前的值', () => {
