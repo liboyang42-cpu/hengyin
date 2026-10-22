@@ -75,6 +75,12 @@ CI job 缩写：
 - 未发现新缺陷。
 - #312 和 #306 当时记为 todo 的缺陷（SC-PRIV-04 回退路由、SC-PRIV-05 留痕前结算、CX-12 A/B/C）在当前 master 上已经没有 todo：`v4-priv-*` 共 0 todo，v6b 两个文件全部通过。
 
+### CI 分片竞态（测试隔离问题，本 PR 已修复测试侧）
+
+- **现象**：新增一个测试文件后，CI 分片的成员跟着平移。`roam-comment-scan.test.js` 与 `subscribe-recipient-contract.test.js` 始终落在同一分片（两者文件序号差 180，是 20 的倍数）。新分片 14 里的文件组合改变了并发时序，本机 3 次中有 2 次复现失败：`subscribe-recipient-contract.test.js:225`「负控:删掉结算到账授权入口时…」报 ENOENT，指向 `subpackageRoam/scan-comment-test-*/regex.js`。master 的分片 13 同样跑 3 次，全部通过。
+- **根因**：`roam-comment-scan.test.js` 在 `subpackageRoam/` 下临时建、再删 `scan-comment-test-*` 夹具目录；`subscribe-recipient-contract.test.js` 的 `walkJs` 扫描整棵源码树，先列出文件、后读取，两步之间夹具可能已被删掉。
+- **修复**：`walkJs` 跳过 `scan-comment-test-*` 临时目录，与已有的 `tests/`、`node_modules` 排除同理。被跳过的只有别的测试的临时夹具，不是产品源码，门禁口径不变。修复后分片 14 连跑 5 次全部通过。
+
 ## 仍需真机 / 人工的检查
 
 | 卡 | 真机项 |
