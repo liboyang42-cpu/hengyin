@@ -13,6 +13,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -53,7 +54,7 @@ class ApiClubCalendarControllerTest {
         club.setId(CLUB);
         club.setMemberId(OWNER);
         when(clubService.selectClubById(CLUB)).thenReturn(club);
-        when(calendarService.monthSessions(anyLong(), anyString(), anyBoolean()))
+        when(calendarService.monthSessions(anyLong(), anyString(), anyBoolean(), any()))
                 .thenReturn(new LinkedHashMap<String, Object>());
     }
 
@@ -70,21 +71,22 @@ class ApiClubCalendarControllerTest {
     @Test
     void publicClubGivesOutsidersOnlyThePublicScope() {
         assertEquals(200, controller.sessions(body(CLUB, "2028-02")).get(AjaxResult.CODE_TAG));
-        verify(calendarService).monthSessions(CLUB, "2028-02", false);
+        // 看的人必须一路传到 SQL:仅成员主题闸按它判定,丢了就等于把场次公开给非成员
+        verify(calendarService).monthSessions(CLUB, "2028-02", false, OUTSIDER);
     }
 
     @Test
     void privateClubIsClosedToOutsidersButOpenToActiveMembers() {
         club.setPublicVisible(0);
         assertEquals(500, controller.sessions(body(CLUB, "2028-02")).get(AjaxResult.CODE_TAG));
-        verify(calendarService, never()).monthSessions(anyLong(), anyString(), anyBoolean());
+        verify(calendarService, never()).monthSessions(anyLong(), anyString(), anyBoolean(), any());
 
         loggedInMember = MEMBER;
         ClubMember active = new ClubMember();
         active.setStatus(1);
         when(clubMemberService.selectMembershipRecord(CLUB, MEMBER)).thenReturn(active);
         assertEquals(200, controller.sessions(body(CLUB, "2028-02")).get(AjaxResult.CODE_TAG));
-        verify(calendarService).monthSessions(CLUB, "2028-02", false);
+        verify(calendarService).monthSessions(CLUB, "2028-02", false, MEMBER);
     }
 
     @Test
@@ -92,12 +94,12 @@ class ApiClubCalendarControllerTest {
         loggedInMember = OWNER;
         when(clubMemberService.canGovernClub(club, OWNER)).thenReturn(true);
         controller.sessions(body(CLUB, "2028-02"));
-        verify(calendarService).monthSessions(CLUB, "2028-02", true);
+        verify(calendarService).monthSessions(CLUB, "2028-02", true, OWNER);
     }
 
     @Test
     void badMonthComesBackAsReadableError() {
-        when(calendarService.monthSessions(CLUB, "bad", false)).thenThrow(new IllegalArgumentException("月份格式不合法"));
+        when(calendarService.monthSessions(CLUB, "bad", false, OUTSIDER)).thenThrow(new IllegalArgumentException("月份格式不合法"));
         AjaxResult result = controller.sessions(body(CLUB, "bad"));
         assertEquals(500, result.get(AjaxResult.CODE_TAG));
         assertEquals("月份格式不合法", result.get(AjaxResult.MSG_TAG));

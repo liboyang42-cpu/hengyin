@@ -37,13 +37,13 @@ public class ClubCalendarServiceImpl implements IClubCalendarService {
 
     @Override
     @Transactional(readOnly = true)
-    public Map<String, Object> monthSessions(Long clubId, String month, boolean includeUnpublished) {
+    public Map<String, Object> monthSessions(Long clubId, String month, boolean includeUnpublished, Long viewerMemberId) {
         if (clubId == null || clubId <= 0) throw new IllegalArgumentException("缺少俱乐部ID");
         YearMonth yearMonth = parseMonth(month);
         LocalDateTime rangeStart = yearMonth.atDay(1).atStartOfDay();
         LocalDateTime rangeEnd = yearMonth.plusMonths(1).atDay(1).atStartOfDay();
         List<Map<String, Object>> rows = mapper.selectClubSessionsInRange(
-                clubId, rangeStart, rangeEnd, includeUnpublished, MAX_SESSIONS_PER_MONTH + 1);
+                clubId, rangeStart, rangeEnd, includeUnpublished, viewerMemberId, MAX_SESSIONS_PER_MONTH + 1);
         boolean truncated = rows != null && rows.size() > MAX_SESSIONS_PER_MONTH;
         List<Map<String, Object>> sessions = new ArrayList<Map<String, Object>>();
         LocalDateTime latest = null;
