@@ -97,6 +97,30 @@ public class ApiClubCompensationController extends BaseController {
         return success(compensationService.editionsForExecutingClub(clubId));
     }
 
+    /**
+     * W10a #26:解释 {@code /editions} 为什么是空数组。
+     *
+     * <p>{@code /editions} 本身保持数组合同不变(旧客户端仍在读它);空时前端再打这一条拿原因,
+     * 不从空数组猜。登录态照旧必需;非归属人<b>不报错</b>而是得到 NO_PERMISSION —— 只回一个原因码,
+     * 不读、不回任何承接数据,所以不会把别人俱乐部有没有承接泄露出去。
+     */
+    @PostMapping("/editions/empty-reason")
+    public AjaxResult editionsEmptyReason(@RequestBody Map<String, Object> body) {
+        Long memberId;
+        try {
+            memberId = getAppUserId();
+        } catch (Exception notLoggedIn) {
+            return error("请先登录");
+        }
+        Long clubId = longOf(body, "clubId");
+        Map<String, Object> data = new LinkedHashMap<String, Object>();
+        data.put("clubId", clubId);
+        data.put("reasonCode", belongsToClub(clubId, memberId)
+                ? compensationService.editionsEmptyReason(clubId)
+                : IClubEditionCompensationService.EDITIONS_REASON_NO_PERMISSION);
+        return success(data);
+    }
+
     // 2026-09-10 用户裁决:探店日不再交质量证据,整条链路删除。
     // 原来这里是 /quality/evidence —— 俱乐部上传一个 SHA-256 摘要,再回读核对。
     // 平台在后台 business:clubquality:confirm 上照常人工判 Q,只是不再要这份附件。

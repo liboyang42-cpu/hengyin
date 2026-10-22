@@ -163,7 +163,7 @@ class MerchantReviewServiceImplTest {
 
     @Test
     void manageListUsesMarketingReadInsteadOfAftercarePermission() {
-        when(mapper.countManageReviews(MERCHANT_ROW)).thenReturn(0L);
+        when(mapper.countManageReviews(MERCHANT_ROW, "all")).thenReturn(0L);
 
         assertEquals("manage", service.manageList(PRINCIPAL, 1, 20).getMode());
 
@@ -175,16 +175,16 @@ class MerchantReviewServiceImplTest {
     void managerCanListExactStoreReviews() {
         when(accessService.require(OPERATOR_PRINCIPAL, MerchantPermission.MARKETING_READ))
                 .thenReturn(manager());
-        when(mapper.countManageReviews(MERCHANT_ROW)).thenReturn(0L);
+        when(mapper.countManageReviews(MERCHANT_ROW, "all")).thenReturn(0L);
 
         assertEquals("manage", service.manageList(OPERATOR_PRINCIPAL, 1, 20).getMode());
 
-        verify(mapper).countManageReviews(MERCHANT_ROW);
+        verify(mapper).countManageReviews(MERCHANT_ROW, "all");
     }
 
     @Test
     void manageListStatsReturnZeroWhenStoreHasNoReviews() {
-        when(mapper.countManageReviews(MERCHANT_ROW)).thenReturn(0L);
+        when(mapper.countManageReviews(MERCHANT_ROW, "all")).thenReturn(0L);
         when(mapper.selectReviewStats(MERCHANT_ROW)).thenReturn(reviewStats(0, 0, 0));
 
         com.chengyinhub.business.domain.vo.MerchantReviewPageVO out =
@@ -203,8 +203,8 @@ class MerchantReviewServiceImplTest {
         MerchantReview second = review(MERCHANT_OWNER, 1, MerchantReview.STATUS_VISIBLE);
         second.setId(REVIEW + 1);
         second.setReplyContent("欢迎再来");
-        when(mapper.countManageReviews(MERCHANT_ROW)).thenReturn(2L);
-        when(mapper.selectManageReviews(MERCHANT_ROW, 0, 20))
+        when(mapper.countManageReviews(MERCHANT_ROW, "all")).thenReturn(2L);
+        when(mapper.selectManageReviews(MERCHANT_ROW, "all", 0, 20))
                 .thenReturn(Arrays.asList(first, second));
         when(mapper.selectReviewStats(MERCHANT_ROW)).thenReturn(reviewStats(0, 2, 100));
 
@@ -220,8 +220,8 @@ class MerchantReviewServiceImplTest {
     @Test
     void manageListStatsAreFullStoreCountsNotCurrentPageCountsWhenAllReviewsAreUnreplied() {
         MerchantReview currentPageOnly = review(MERCHANT_OWNER, 1, MerchantReview.STATUS_VISIBLE);
-        when(mapper.countManageReviews(MERCHANT_ROW)).thenReturn(2L);
-        when(mapper.selectManageReviews(MERCHANT_ROW, 0, 1))
+        when(mapper.countManageReviews(MERCHANT_ROW, "all")).thenReturn(2L);
+        when(mapper.selectManageReviews(MERCHANT_ROW, "all", 0, 1))
                 .thenReturn(Collections.singletonList(currentPageOnly));
         when(mapper.selectReviewStats(MERCHANT_ROW)).thenReturn(reviewStats(2, 2, 0));
 
@@ -233,6 +233,76 @@ class MerchantReviewServiceImplTest {
         assertEquals(2, out.getMonthNewCount());
         assertEquals(0, out.getReplyRatePct());
         assertTrue(out.isHasMore());
+    }
+
+    @Test
+    void manageListPassesServerFilterAndReturnsFullStoreFilterCounts() {
+        MerchantReview reported = review(MERCHANT_OWNER, 1, MerchantReview.STATUS_VISIBLE);
+        reported.setUnderPlatformReview(1);
+        when(mapper.countManageReviews(MERCHANT_ROW, "platform")).thenReturn(3L);
+        when(mapper.selectManageReviews(MERCHANT_ROW, "platform", 0, 1))
+                .thenReturn(Collections.singletonList(reported));
+        Map<String, Object> counts = new HashMap<>();
+        counts.put("all_count", 12L);
+        counts.put("pending_count", 4L);
+        counts.put("low_count", 2L);
+        counts.put("photo_count", 5L);
+        counts.put("platform_count", 3L);
+        when(mapper.selectManageFilterCounts(MERCHANT_ROW)).thenReturn(counts);
+
+        com.chengyinhub.business.domain.vo.MerchantReviewPageVO out =
+                service.manageList(PRINCIPAL, "platform", 1, 1);
+
+        assertEquals("platform", out.getFilter());
+        assertEquals(3L, out.getTotal(), "total 必须是筛选后的全量,不是当前页条数");
+        assertTrue(out.isHasMore());
+        assertEquals(Integer.valueOf(12), out.getFilterCounts().get("all"));
+        assertEquals(Integer.valueOf(4), out.getFilterCounts().get("pending"));
+        assertEquals(Integer.valueOf(2), out.getFilterCounts().get("low"));
+        assertEquals(Integer.valueOf(5), out.getFilterCounts().get("photo"));
+        assertEquals(Integer.valueOf(3), out.getFilterCounts().get("platform"));
+        assertTrue(out.getItems().get(0).isUnderPlatformReview());
+        verify(mapper).countManageReviews(MERCHANT_ROW, "platform");
+        verify(mapper).selectManageFilterCounts(MERCHANT_ROW);
+    }
+
+    @Test
+    void manageListBlankFilterMeansAllAndUnknownFilterIsRejectedBeforeAnyRead() {
+        when(mapper.countManageReviews(MERCHANT_ROW, "all")).thenReturn(0L);
+        assertEquals("all", service.manageList(PRINCIPAL, " ", 1, 20).getFilter());
+        assertEquals("all", service.manageList(PRINCIPAL, null, 1, 20).getFilter());
+
+        ServiceException error = assertThrows(ServiceException.class,
+                () -> service.manageList(PRINCIPAL, "hidden' or 1=1", 1, 20));
+        assertEquals(400, error.getCode());
+        verify(mapper, never()).countManageReviews(MERCHANT_ROW, "hidden' or 1=1");
+    }
+
+    @Test
+    void manageListFilterStaysInsideAccessScopeAndNeedsMarketingRead() {
+        when(accessService.require(AUTHOR, MerchantPermission.MARKETING_READ))
+                .thenThrow(new ServiceException("无权访问", 403));
+
+        ServiceException error = assertThrows(ServiceException.class,
+                () -> service.manageList(AUTHOR, "pending", 1, 20));
+
+        assertEquals(403, error.getCode());
+        verify(mapper, never()).selectManageFilterCounts(any());
+    }
+
+    @Test
+    void publicListNeverMarksPlatformReviewOrCarriesManageCounts() {
+        MerchantReview row = review(MERCHANT_OWNER, 1, MerchantReview.STATUS_VISIBLE);
+        row.setUnderPlatformReview(1);
+        when(mapper.countPublicReviews(MERCHANT_ROW)).thenReturn(1L);
+        when(mapper.selectPublicReviews(MERCHANT_ROW, 0, 20)).thenReturn(Collections.singletonList(row));
+
+        com.chengyinhub.business.domain.vo.MerchantReviewPageVO out =
+                service.publicList(null, MERCHANT_ROW, 1, 20);
+
+        assertFalse(out.getItems().get(0).isUnderPlatformReview());
+        assertNull(out.getFilterCounts());
+        assertNull(out.getFilter());
     }
 
     @Test

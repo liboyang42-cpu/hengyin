@@ -27,7 +27,8 @@ const ticketSource = require('../../../utils/ticket-source.js');
 // CU-C-38:主题分享卡的标题/封面口径与主题详情页共用一份实现
 const { buildTopicShare, resolveTopicCover } = require('../../../utils/topic-share.js');
 const { isRecord, bizFailureMessage } = require('../../../utils/response-shape.js');
-const { buildMonthCalendar, shiftMonth } = require('../utils/club-event-calendar.js');
+const { buildMonthCalendar, calendarNotice, shapeCalendarSessions, shiftMonth } = require('../utils/club-event-calendar.js');
+const { editionEmptyCopy, shapeEditionEmptyReason } = require('../utils/edition-empty-reason.js');
 // 帖文卡的 variant 判定与广场共用一份,别在这儿复制
 const { isCompletedShare, hasFeedPlayCover } = require('../../../utils/feed-play-card.js');
 const { decodeDisplayText, decodeDisplayFields } = require('../../../utils/display-text.js');
@@ -494,8 +495,17 @@ Page({
     eventCalendarTitle: '',
     eventCalendarCells: [],
     eventCalendarHasEvents: false,
+    // W10a #19:月历数据源。sessions = 本月真实场次(/api/club/calendar/sessions);
+    // 拿到之前/失败时退回已加载主题,并由 eventCalendarNotice 如实声明「月历仅展示已加载主题」。
+    eventCalendarSource: 'topics',
+    eventCalendarSessionState: 'idle',
+    eventCalendarNotice: '月历仅展示已加载主题',
     shareEditions: [],
     shareEditionState: 'idle',
+    // W10a #26:期次为空时的服务端原因(不从空数组猜)。
+    shareEditionEmptyTitle: '还没有可分享的自由探索期次',
+    shareEditionEmptySub: '',
+    shareEditionEmptyRetry: false,
     members: [],
     membersExpanded: false,
     membersState: 'idle', // idle | loading | ready | business-error | network-error
@@ -1178,7 +1188,9 @@ Page({
     if (!this.data.club || !this.data.club.isOwner || !this.data.clubId) return;
     const that = this;
     const clubId = this.data.clubId;
+    this._editionReasonSeq = (this._editionReasonSeq || 0) + 1;
     this.setData({ shareEditionState: 'loading', shareEditions: [] });
+    this.applyEditionEmptyReason('idle', '');
     app.sendRequest({
       hideLoading: true,
       url: '/api/club-compensation/editions',
@@ -1199,11 +1211,47 @@ Page({
           return Object.assign({}, item, { dateText: dateOf(item.startDate) });
         });
         that.setData({ shareEditionState: 'ready', shareEditions: rows });
+        if (!rows.length) that.loadShareEditionEmptyReason();
       },
       fail() {
         if (String(clubId) !== String(that.data.clubId)) return;
         that.setData({ shareEditionState: 'error', shareEditions: [] });
       },
+    });
+  },
+
+  // W10a #26:期次为空时向服务端要原因(未承接 / 已承接未开售 / 无权限);拿不到就只说「还没有」。
+  loadShareEditionEmptyReason() {
+    if (!this.data.clubId) return;
+    const that = this;
+    const clubId = this.data.clubId;
+    const seq = this._editionReasonSeq = (this._editionReasonSeq || 0) + 1;
+    this.applyEditionEmptyReason('loading', '');
+    app.sendRequest({
+      hideLoading: true,
+      silentError: true,
+      url: '/api/club-compensation/editions/empty-reason',
+      method: 'POST',
+      data: jsonBody({ clubId: clubId }),
+      header: jsonHeader(),
+      success(res) {
+        if (seq !== that._editionReasonSeq || String(clubId) !== String(that.data.clubId)) return;
+        const reason = isSuccess(res) ? shapeEditionEmptyReason(res.data, clubId) : null;
+        that.applyEditionEmptyReason(reason ? 'ready' : 'error', reason || '');
+      },
+      fail() {
+        if (seq !== that._editionReasonSeq || String(clubId) !== String(that.data.clubId)) return;
+        that.applyEditionEmptyReason('error', '');
+      },
+    });
+  },
+
+  applyEditionEmptyReason(state, reasonCode) {
+    const copy = editionEmptyCopy(state, reasonCode);
+    this.setData({
+      shareEditionEmptyTitle: copy.title,
+      shareEditionEmptySub: copy.sub,
+      shareEditionEmptyRetry: copy.retry,
     });
   },
 
@@ -2126,7 +2174,10 @@ Page({
     const view = (e.detail && e.detail.key) || (e.currentTarget && e.currentTarget.dataset.view);
     if (view !== 'list' && view !== 'calendar') return;
     this.setData({ eventView: view });
-    if (view === 'calendar') this.refreshEventCalendar();
+    if (view === 'calendar') {
+      this.refreshEventCalendar();
+      this.loadCalendarSessions();
+    }
   },
 
   onShiftEventMonth(e) {
@@ -2134,10 +2185,57 @@ Page({
     if (!Number.isInteger(delta) || !delta) return;
     this.setData({ eventCalendarMonth: shiftMonth(this.data.eventCalendarMonth, delta) });
     this.refreshEventCalendar();
+    this.loadCalendarSessions();
+  },
+
+  // W10a #19:按月读真实场次。切月即重读;响应必须回显本次 clubId + month 才采用。
+  loadCalendarSessions() {
+    const clubId = this.data.clubId;
+    const month = this.data.eventCalendarMonth;
+    const seq = this._calendarSessionSeq = (this._calendarSessionSeq || 0) + 1;
+    // 演示俱乐部没有后端场次:停在「仅已加载主题」,不发请求。
+    if (!clubId || isDemoClubId(clubId)) {
+      this._calendarSessions = null;
+      this.setData({ eventCalendarSessionState: 'idle' });
+      this.refreshEventCalendar();
+      return;
+    }
+    if (this._calendarSessions && this._calendarSessions.monthKey !== month) this._calendarSessions = null;
+    this.setData({ eventCalendarSessionState: 'loading' });
+    this.refreshEventCalendar();
+    const that = this;
+    app.sendRequest({
+      hideLoading: true,
+      silentError: true,
+      url: '/api/club/calendar/sessions',
+      method: 'POST',
+      data: jsonBody({ clubId: clubId, month: month }),
+      header: jsonHeader(),
+      success(res) {
+        if (seq !== that._calendarSessionSeq || String(clubId) !== String(that.data.clubId)
+            || month !== that.data.eventCalendarMonth) return;
+        const shaped = isSuccess(res) ? shapeCalendarSessions(res.data, clubId, month) : null;
+        that._calendarSessions = shaped;
+        that.setData({ eventCalendarSessionState: shaped ? 'ready' : 'error' });
+        that.refreshEventCalendar();
+      },
+      fail() {
+        if (seq !== that._calendarSessionSeq || String(clubId) !== String(that.data.clubId)
+            || month !== that.data.eventCalendarMonth) return;
+        that._calendarSessions = null;
+        that.setData({ eventCalendarSessionState: 'error' });
+        that.refreshEventCalendar();
+      },
+    });
   },
 
   refreshEventCalendar() {
-    const calendar = buildMonthCalendar(this.data.eventCalendarMonth, this._topics);
+    const month = this.data.eventCalendarMonth;
+    const sessions = this._calendarSessions && this._calendarSessions.monthKey === month
+      ? this._calendarSessions : null;
+    const state = sessions ? 'ready' : (this.data.eventCalendarSessionState === 'ready'
+      ? 'idle' : this.data.eventCalendarSessionState);
+    const calendar = buildMonthCalendar(month, sessions ? sessions.events : this._topics);
     const hasEvents = calendar.cells.some(function (cell) {
       return cell.inMonth && cell.events.length > 0;
     });
@@ -2145,6 +2243,8 @@ Page({
       eventCalendarTitle: calendar.title,
       eventCalendarCells: calendar.cells,
       eventCalendarHasEvents: hasEvents,
+      eventCalendarSource: sessions ? 'sessions' : 'topics',
+      eventCalendarNotice: calendarNotice(state, sessions),
     });
   },
 

@@ -118,8 +118,9 @@ test('评价分页元数据与每一行必须完整匹配请求，畸形 200 整
   });
 
   const js = read('pages/merchant/reviews/index.js');
-  assert.match(js, /shapePage\(res\.data,\s*mode,\s*pageNum,\s*20\)/,
-    '页面必须把本次请求页码和页大小交给 shape 层核对');
+  // W10a #20:管理态额外把本次筛选交给 shape 层核对服务端回显。
+  assert.match(js, /shapePage\(res\.data,\s*mode,\s*pageNum,\s*20,\s*mode === 'manage' \? filter : undefined\)/,
+    '页面必须把本次请求页码、页大小与筛选交给 shape 层核对');
 });
 
 test('merchant reputation redesign keeps backend stats visible instead of deriving them from current page', () => {
@@ -131,11 +132,13 @@ test('merchant reputation redesign keeps backend stats visible instead of derivi
   assert.match(wxml, /pendingReplyCount/);
   assert.match(wxml, /monthNewCount/);
   assert.match(wxml, /replyRatePct/);
-  assert.match(wxml, /待回复 \{\{pendingReplyCount\}\}/);
+  // W10a #20:待回复数优先用服务端全量 filterCounts,老后端缺字段时退回同为全量的 pendingReplyCount。
+  assert.match(wxml, /待回复 \{\{filterCounts \? filterCounts\.pending : pendingReplyCount\}\}/);
   assert.match(wxml, /data-filter="low"/);
   assert.match(wxml, /data-filter="photo"/);
   assert.match(wxml, /wx:for="\{\{filteredItems\}\}"/);
-  assert.match(js, /filteredItems:\s*filterReviewItems\(items,\s*this\.data\.activeFilter\)/);
+  // 管理态列表已由服务端筛选;公开态仍只在已加载页里筛。
+  assert.match(js, /filteredItems:\s*mode === 'manage' \? items : filterReviewItems\(items,\s*this\.data\.activeFilter\)/);
   assert.doesNotMatch(js, /pendingReplyCount:\s*items\.filter/);
   assert.match(wxss, /\.review-stats-grid\s*\{/);
 });

@@ -30,7 +30,7 @@ class MerchantReviewMerchantRowMyBatisTest {
             MerchantReviewMapper mapper = session.getMapper(MerchantReviewMapper.class);
 
             assertEquals(1L, mapper.countPublicReviews(7L));
-            assertEquals(1L, mapper.countManageReviews(7L));
+            assertEquals(1L, mapper.countManageReviews(7L, "all"));
             List<Long> publicIds = mapper.selectPublicReviews(7L, 0, 20).stream()
                     .map(MerchantReview::getId).collect(Collectors.toList());
             assertEquals(java.util.Collections.singletonList(501L), publicIds,

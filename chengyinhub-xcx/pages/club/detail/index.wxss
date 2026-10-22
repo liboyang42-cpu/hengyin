@@ -374,6 +374,11 @@ page { background: var(--cy-bg-page); }
   border-radius: var(--cy-radius-pill); background: var(--club-surface); color: var(--club-text);
   font-size: var(--cy-font-title);
 }
+.event-calendar-notice {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--cy-space-2);
+  padding: var(--cy-space-1) 0; color: var(--club-text-muted); font-size: var(--cy-font-caption);
+}
+.event-calendar-retry { flex-shrink: 0; color: var(--club-text); font-weight: 600; }
 .event-calendar-week, .event-calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
 .event-calendar-week { padding: var(--cy-space-1) 0; color: var(--club-text-muted); font-size: var(--cy-font-caption); text-align: center; }
 .event-calendar-day {
