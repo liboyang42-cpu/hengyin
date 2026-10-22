@@ -27,11 +27,20 @@
 - [x] 开关开/关两态下财务列表正常，仍需 `FINANCE_READ` —— `financeListWorksWithFlagOffAndOnButStillRequiresFinanceRead`
 - [x] 其余写入口仍受闸 —— `flagOffStillBlocksRenewAndOtherWriteEntries`（renew / cancelTerm / savePlan 均返回 404）
 - [x] 本地验证：`mvn -pl chengyinhub-admin -am test -Dtest=ClubMembershipServiceImplTest,ClubMembershipFeatureGateTest,ClubMembershipExitCallbackTransactionBoundaryTest` → 共 73 个，0 失败。反证：只回退 service 改动时，7 个新测试失败。
-- [ ] CI 相关 Java job 全绿 —— 见下节
+- [x] CI 相关 Java job 全绿 —— 见下节
 
-## CI
+## CI（head `fcff7509`，即代码提交 `12adbe95` + 本文档）
 
-见下方「CI 结果」（推送后更新）。
+| Workflow | Run ID | 结果 |
+|---|---|---|
+| GitHub CI（Backend tests / Migration safety / Migration layout / Mini program static + unit shards / gitleaks） | 39755573203 | success |
+| Funds MySQL IT | 39755573102 | success |
+| Isolated authenticated Redis recovery | 39755573083 | success |
+| Mini followup focused regression | 39755573157 | success |
+
+代码提交 `12adbe95` 上的首轮 run（39755477001 等）因推送本文档被 concurrency 取消，属于取消，不是失败。
+「Mini program static checks」汇总那一行显示的 failure 只是 `UNIT_RESULT/STATIC_RESULT=cancelled` 造成的，与本改动无关。
+本文档本次更新的推送会再触发一轮 CI；以 PR 上最新 head 的结果为准。
 
 ## 待 owner 决策 / 开放项
 
