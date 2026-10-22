@@ -625,9 +625,9 @@
     <view class="dcopy"><text class="dt">附近正在走的人</text><text class="ds">{{more.runnerText}}</text></view>
     <view class="darr"></view>
   </view>
-  <view class="drow" bindtap="openRoamTasks" aria-role="button" aria-label="任务" hover-class="cy-pressed" hover-stay-time="80">
+  <view class="drow" bindtap="openRoamTasks" aria-role="button" aria-label="官方活动任务" hover-class="cy-pressed" hover-stay-time="80">
     <view class="dic pic pic--flagtask"></view>
-    <view class="dcopy"><text class="dt">任务</text><text class="ds">附近挑战</text></view>
+    <view class="dcopy"><text class="dt">官方活动任务</text><text class="ds">官方策展活动</text></view>
     <view class="darr"></view>
   </view>
   <view class="drow" bindtap="openRoamPassport" aria-role="button" aria-label="勋章" hover-class="cy-pressed" hover-stay-time="80">
