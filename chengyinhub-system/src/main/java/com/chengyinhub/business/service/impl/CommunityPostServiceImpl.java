@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -64,6 +65,10 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
     private static final int AUDIT_LEVEL_MACHINE = 1;
     private static final int AUDIT_LEVEL_HUMAN = 2;
     private static final Logger log = LoggerFactory.getLogger(CommunityPostServiceImpl.class);
+
+    /** O-05 #1 降分发开关(默认关):分发类处置把公开帖落 LIMITED,受众内读者可直达查看。 */
+    @Value("${chengyin.community.post-limit.enabled:false}")
+    private boolean postLimitEnabled;
 
     private final CommunityPostMapper mapper;
     private final CommunityPostLifecyclePolicy policy;
@@ -381,6 +386,8 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
     public Map<String, Object> detail(Long viewerId, Long postId) {
         viewerId = viewerId == null || viewerId < 0 ? 0L : viewerId;
         CommunityPost post = mapper.selectById(postId, viewerId);
+        // 降分发(LIMITED)只减分发不下架:开关打开时受众内读者仍可按直达链接查看,feed/搜索/推荐照旧不出。
+        if (post == null && postLimitEnabled && viewerId > 0) post = mapper.selectLimitedById(postId, viewerId);
         if (post == null) throw error("帖文不存在或不可见", 404);
         return hydrate(post, viewerId);
     }
@@ -1568,6 +1575,7 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
                     ? defaultIfBlank(mapper.selectEnforcementRestoreLifecycle(postId), post.getLifecycle())
                     : CommunityPost.LIFECYCLE_LIMITED.equals(post.getLifecycle())
                     ? CommunityPost.LIFECYCLE_PUBLISHED : post.getLifecycle();
+        lifecycle = limitedLifecycle(lifecycle, active, postLimitEnabled);
         int recommendation = active.contains("DOWNRANK") || active.contains("HIDE_PENDING_REVIEW") || active.contains("REMOVE") ? 0 : 1;
         int search = active.contains("SEARCH_EXCLUDE") || active.contains("HIDE_PENDING_REVIEW") || active.contains("REMOVE") ? 0 : 1;
         int interaction = active.contains("INTERACTION_LIMIT") || active.contains("REMOVE") ? 0 : 1;
@@ -1575,6 +1583,16 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
                 recommendation, search, interaction, now) != 1) stale();
         mapper.upsertSearchDocument(postId, search == 1 && CommunityPost.LIFECYCLE_PUBLISHED.equals(lifecycle) ? "VISIBLE" : "HIDDEN", now);
         outbox(postId, "POST_ENFORCEMENT_RECONCILED", payload("postId", postId), now);
+    }
+
+    /**
+     * O-05 #1:分发类处置(DOWNRANK / SEARCH_EXCLUDE)命中且帖子本该公开时落 LIMITED(降分发,作者仍可见);
+     * 处置失效后由上面的既有分支把 LIMITED 放回 PUBLISHED。开关关闭时原样返回。
+     */
+    static String limitedLifecycle(String lifecycle, List<String> activeEnforcements, boolean enabled) {
+        if (!enabled || !CommunityPost.LIFECYCLE_PUBLISHED.equals(lifecycle) || activeEnforcements == null) return lifecycle;
+        return activeEnforcements.contains("DOWNRANK") || activeEnforcements.contains("SEARCH_EXCLUDE")
+                ? CommunityPost.LIFECYCLE_LIMITED : lifecycle;
     }
 
     private boolean sameCommentParent(Long storedParentId, Long requestedParentId) {

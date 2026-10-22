@@ -21,6 +21,8 @@ public interface CommunityPostMapper {
                     @Param("contentHash") String contentHash, @Param("uploadReceiptHash") String uploadReceiptHash,
                     @Param("now") Date now);
     CommunityPost selectById(@Param("id") Long id, @Param("viewerId") Long viewerId);
+    /** O-05 #1:降分发(LIMITED)帖的直达读取;非作者、受众内、未拉黑/屏蔽才返回。 */
+    CommunityPost selectLimitedById(@Param("id") Long id, @Param("viewerId") Long viewerId);
     CommunityPost selectByIdForUpdate(Long id);
     CommunityPost selectByAuthorRequest(@Param("authorId") Long authorId,
                                         @Param("clientRequestId") String clientRequestId);
