@@ -91,6 +91,10 @@ public class PerkLedgerServiceImpl implements IPerkLedgerService {
     @Autowired
     private RedemptionRewardClawbackService redemptionRewardClawbackService;
 
+    /** DOC2 F3 Phase 1 套票账本:核销/撤销/退款同事务记单位账;ledger 开关默认关 ⇒ 空转。 */
+    @Autowired
+    private com.chengyinhub.business.service.IFreeExploreBundleService freeExploreBundleService;
+
     // ------------------------------------------------------------ 容量
 
     /**
@@ -283,7 +287,11 @@ public class PerkLedgerServiceImpl implements IPerkLedgerService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public int releaseOnRefund(Long registrationId, String reason) {
-        return entitlementMapper.invalidateByRegistration(registrationId, reason);
+        int released = entitlementMapper.invalidateByRegistration(registrationId, reason);
+        if (freeExploreBundleService != null) {
+            freeExploreBundleService.onRegistrationRefunded(registrationId);
+        }
+        return released;
     }
 
     // ------------------------------------------------------------ 核销
@@ -461,6 +469,12 @@ public class PerkLedgerServiceImpl implements IPerkLedgerService {
         r.setIdempotencyKey(idemKey);   // 与 ⓪ 查的是同一个键,别在这里重算(改一处漏一处 = 幂等静默失效)
         r.setCreateTime(new Date());
         redemptionMapper.insertRedemption(r);
+
+        // ④ DOC2 F3 套票:消耗该持有人本章的一个单位(余额不足/过期/已约他店 ⇒ 抛出,①②③ 一并回滚)。
+        //    放在插流水之后:单位要记下真实 redemptionId(ck_bundle_unit_redeemed 要求二者同在)。
+        if (freeExploreBundleService != null) {
+            freeExploreBundleService.onChapterRedeemed(registrationId, chapterId, merchantId, r.getId());
+        }
         return r.getId();
     }
 
@@ -588,6 +602,10 @@ public class PerkLedgerServiceImpl implements IPerkLedgerService {
         if (r.getChapterId() != null && r.getChapterId() != 0L) {
             // 权益退回「应得」态,玩家可重新核销(uk 不含 status,失效行永久占坑 ⇒ 只能 UPDATE 不能 INSERT)
             entitlementMapper.restoreToPending(r.getRegistrationId(), r.getChapterId());
+        }
+        // DOC2 F3 套票:与上面 restoreToPending 成对,单位退回(票已退款则置 REFUNDED)。
+        if (freeExploreBundleService != null) {
+            freeExploreBundleService.onRedemptionReversed(redemptionId);
         }
 
         // ★ 与「首次核销就置 verification_status」成对:撤销到**一笔 ACTIVE 核销都不剩**时,清回未核销态。
