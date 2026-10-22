@@ -1,6 +1,11 @@
 {
   "schemaVersion": 1,
   "dependencies": {
+    "merchant_desk_receipt_20261022": [],
+    "merchant_redemption_anchor_20261022": [],
+    "pms_sku_booking_20261022": [],
+    "verification_review_evidence_20261022": [],
+    "20261022_merchant_desk_switch_seed": [],
     "roam_share_version_20261022": ["20260917_roam_share_snapshot"],
     "member_profile_version_20261022": [],
     "topic_completion_coupon_history_receipt_20261016": ["topic_completion_coupon_20260722"],
