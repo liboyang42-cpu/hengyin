@@ -92,6 +92,9 @@ MYBATIS_ITS=(
   SchedulerSessionLockMySqlIT
   # 2026-10-22 发布验收 P1 俱乐部:入会通过/驳回、封禁/解封、举报工单在真库上的归属与幂等(真服务+真 mapper)。
   ClubJoinGovernanceMySqlIT
+  # 2026-10-22 发布验收 P1 商家自由探索:节点编辑只改本行且审核痕迹真重置、非法提交零写入、
+  #   入驻服务端定字段+唯一键挡重复、撤回只动自己的供给、邀约收发两侧条款一致。
+  FreeExploreNodeSupplyMySqlIT
   ClubGatherArrivalMySqlIT
   ClubAttendanceTimeMappingMyBatisIT
   VerificationRiskQueueMySqlIT
