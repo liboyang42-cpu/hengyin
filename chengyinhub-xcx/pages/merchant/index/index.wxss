@@ -156,14 +156,6 @@ page {
   justify-content: center;
 }
 
-.rv-revenue-unknown {
-  margin-top: var(--cy-space-2);
-  text-align: center;
-  color: var(--cy-text-secondary);
-  font-size: var(--cy-type-section-title);
-  font-weight: 600;
-}
-
 .rv-revenue-feedback {
   /* 同步/报错提示贴收入区底部(按钮正上方)，不占居中留白，数字才真正居中 */
   position: absolute;
@@ -174,13 +166,6 @@ page {
   display: flex;
   flex-direction: column;
   justify-content: center;
-}
-
-.rv-revenue-sync,
-.rv-project-sync {
-  text-align: center;
-  color: var(--cy-text-secondary);
-  font-size: var(--cy-type-caption);
 }
 
 /* ===== 快捷操作：灰色透明蒙版 ===== */
@@ -433,10 +418,6 @@ page {
   margin-left: auto;
   font-size: var(--cy-font-caption);
   color: var(--cy-text-secondary);
-}
-
-.rv-project-state {
-  margin: var(--cy-space-3) var(--cy-page-x) 0;
 }
 
 .rv-loading,
@@ -717,3 +698,6 @@ page {
 .rv-project-act-arrow { flex-shrink: 0; }
 
 .scene-host { --cy-comp-sheet-border-width: 0px; }
+
+/* 「我的消息」首载未落定:占住一行(与 72rpx 图标圈同高),不画加载 UI,落定后不跳 */
+.rv-msg-item--pending { min-height: 72rpx; }

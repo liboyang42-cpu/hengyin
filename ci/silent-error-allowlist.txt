@@ -227,6 +227,7 @@ chengyinhub-xcx/pages/roam/index.js 1  # BL-41 护照「官方活动」大卡读
 chengyinhub-xcx/pages/club/topic-detail/index.js 1  # BL-98 报名人数按日趋势:失败落 trendState=error,后端原因(如 403 无权查看)原样回显在趋势区块;seq 只认最后一次回包,关全局 toast 免双弹
 chengyinhub-xcx/pages/merchant/decor/index.js 1  # BL-141 营业状态写后回读:回读不到或与提交值不一致都按保存失败处理,由 _startSave 回滚开关并给重试提示;关全局 toast 免双弹
 chengyinhub-xcx/pages/merchant/index/index.js 1  # BL-141 营业状态写后回读:回读不到或不一致明确 toast「状态未同步…」并以回读值为准;关全局 toast 免双弹
+chengyinhub-xcx/pages/merchant/index/index.js 2  # 2026-10-22 L03 工作台「我的消息」预览读会话(/api/im/conversations)与收到的邀请(/api/coop/list):只读附加区块,失败保留上次列表或页内写「消息暂时没读到」(可点进站内消息),每次回到工作台都弹 toast 是噪音
 chengyinhub-xcx/subpackageMember/components/cy/profile/index.js 2  # BL-69 商家主页在架据点读取失败即不展示收藏按钮(只读附加块,不打扰主页);收藏切换失败用 cyToast 明确提示且不改本地态,以接口返回的 favorited 为准
 chengyinhub-xcx/components/cy/scene-share-invite/index.js 1  # 个人码签发失败落 qrState=code-error 并显示 qrErrorText(含后端原因)供重试,epoch 丢弃迟到回包;关全局 toast 免双弹
 chengyinhub-xcx/subpackageMember/components/cy/merchant-correction-sheet/index.js 2  # BL-67 商家纠错半屏:读纠错类型失败落 loadfail 结果态(带重试),提交失败落 fail/unknown 结果态(含后端原因,同键可重试);关全局 toast 免双弹

@@ -53,6 +53,8 @@ test('M-07:更多里的协作邀请 = 合作中心铃铛页;「我的消息」�
   // CU-M-150:这一页只有「收到的 / 我发出的」协作记录,入口不得再自称覆盖全部消息。
   assert.doesNotMatch(wxml, /<text class="rv-more-label">消息中心<\/text>/, '「消息中心」留给真正的消息聚合,否则商家找一般消息会走错');
   assert.doesNotMatch(js, /ledger\/index\?tab=1/, '不得再跳到空的「消息与动态」兼容页');
-  assert.match(wxml, /bindtap="goEvent" data-type="\{\{item\.type\}\}"/);
+  // 2026-10-22 owner 裁决:「我的消息」合并站内会话/邀请/经营动态,行统一走 openInboxItem,经营动态仍委托 goEvent。
+  assert.match(wxml, /bindtap="openInboxItem" data-key="\{\{item\.key\}\}"/);
+  assert.match(js, /openInboxItem\(e\)[\s\S]*?item\.kind === 'event'\) \{ this\.goEvent\(\{ currentTarget: \{ dataset: \{ type: item\.type \} \} \}\)/);
   assert.match(js, /type === 'income' \? 'settlement' : 'redemptions'/);
 });

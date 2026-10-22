@@ -428,7 +428,6 @@ test('核销员按权限只请求待办与动态，不请求看板，也不制�
     '核销员有 VERIFY_RECORD_READ，待办接口已按权限放开')
   assert.equal(urls.filter((url) => url === '/api/merchant/events').length, 1,
     '核销员有 VERIFY_RECORD_READ，动态接口已按权限放开')
-  assert.equal(page.data.dashboardLoading, false)
   assert.equal(page.data.dashboardError, '')
   assert.equal(page.data.todoLoading, true, '待办请求在途,loading 保持')
   assert.equal(page.data.todoError, false, '请求尚未失败,不许先造错误态')

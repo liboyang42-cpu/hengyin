@@ -401,7 +401,7 @@ test('项目卡按 (ownerType,ownerId) 拿各自的待办与动态，活动和�
     // 活动 id 故意和主题 id 撞号:两套 id 各自编号，只用 id 当键会串号
     { id: 77, bizType: 'activity', titleText: '夏夜市集', startDateStr: '周日 8月11日' },
   ];
-  page.data.notifications = [
+  page._notifications = [
     { id: 0, ownerType: 1, ownerId: 77, label: '核销' },
     { id: 1, ownerType: 1, ownerId: 77, label: '收入到账' },
     { id: 2, ownerType: 2, ownerId: 77, label: '活动分润' },

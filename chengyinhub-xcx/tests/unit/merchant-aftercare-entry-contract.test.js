@@ -28,7 +28,7 @@ test('商家工作台从更多菜单提供权限收口的退款售后入口', ()
   const js = read('pages/merchant/index/index.js');
 
   assert.match(wxml, /wx:if="\{\{merchantAccess\.canReadAftercare\}\}"[^>]*data-action="aftercare"/);
-  assert.match(wxml, /class="rv-aftercare-alert"[^>]*wx:if="\{\{merchantAccess\.canReadAftercare && !todoLoading && todo\.refundCount > 0\}\}"[^>]*bindtap="goAftercare"/,
+  assert.match(wxml, /class="rv-aftercare-alert"[^>]*wx:if="\{\{merchantAccess\.canReadAftercare && todo\.refundCount > 0\}\}"[^>]*bindtap="goAftercare"/,
     '有真实待回应售后时，必须在四个快捷操作下方直接显示高频待办');
   assert.match(wxml, /有 \{\{todo\.refundCount \|\| 0\}\} 笔售后待回应/);
   assert.match(js, /action === 'aftercare'[^\n]*goAftercare/);
