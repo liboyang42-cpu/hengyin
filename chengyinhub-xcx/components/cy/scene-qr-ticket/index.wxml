@@ -27,7 +27,7 @@
     </view>
   </block>
 
-  <view class="bigqr-mask" wx:if="{{bigQr}}" bindtap="closeBigQr" aria-role="button" aria-label="关闭二维码" hover-class="cy-pressed" hover-stay-time="80"></view>
+  <view class="bigqr-mask" catchtouchmove="noop" wx:if="{{bigQr}}" bindtap="closeBigQr" aria-role="button" aria-label="关闭二维码" hover-class="cy-pressed" hover-stay-time="80"></view>
   <view class="bigqr-under" wx:if="{{bigQr}}"></view>
   <view class="bigqr" wx:if="{{bigQr}}">
     <view class="bigqr__head">

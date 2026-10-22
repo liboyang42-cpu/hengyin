@@ -3897,4 +3897,7 @@ Page({
     this.setData({ editorLoading: false, loadError: '' });
     return true;
   },
+
+  // 遮罩 catchtouchmove 吃掉滑动,半屏打开时底下页面不跟着滚
+  noop: function () {},
 });

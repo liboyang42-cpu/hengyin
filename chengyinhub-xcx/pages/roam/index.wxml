@@ -18,7 +18,7 @@
 
 <!-- 地图入口弹层只服务开始前浏览态；开始后的 psheet 与 HUD 保持原样。 -->
 <view class="roam-scene-host" wx:if="{{screen=='entry-map' && entrySheet}}" catchtouchmove="blockSceneTouch">
-  <view class="pdim {{entrySheetIn?'is-in':''}} entry-sheet__mask" bindtap="closeEntrySheet" aria-role="button" aria-label="关闭弹窗" hover-class="cy-pressed" hover-stay-time="80"></view>
+  <view class="pdim {{entrySheetIn?'is-in':''}} entry-sheet__mask" catchtouchmove="noop" bindtap="closeEntrySheet" aria-role="button" aria-label="关闭弹窗" hover-class="cy-pressed" hover-stay-time="80"></view>
   <view class="psheet {{entrySheetIn?'is-in':''}} entry-sheet">
     <view class="psheet__grab"></view>
     <view class="entry-sheet__head">

@@ -57,7 +57,7 @@
 
     <!-- B5 收窄(2026-08-15 裁决):扫码进店后的体验层。配了答题模板 → 游戏卡;没配 → 任务卡。
          通关判据不在这里 —— 仍是商家扫核销码(三步条第 3 步)。 -->
-    <view class="mp-mask" wx:if="{{game.show || task.show}}" bindtap="closeSheets" aria-role="button" aria-label="关闭面板" hover-class="cy-pressed" hover-stay-time="80"></view>
+    <view class="mp-mask" catchtouchmove="noop" wx:if="{{game.show || task.show}}" bindtap="closeSheets" aria-role="button" aria-label="关闭面板" hover-class="cy-pressed" hover-stay-time="80"></view>
     <view class="mp-sheet" wx:if="{{game.show}}" style="--cy-comp-sheet-max-h: calc(100vh - {{chrome.sheetTop}}px)" aria-role="dialog" aria-modal="true" aria-label="本站任务">
       <view class="mp-sheet__k">{{node.gameTitle || '本站任务'}}</view>
       <view class="mp-sheet__q">{{node.question}}</view>

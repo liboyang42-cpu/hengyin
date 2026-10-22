@@ -420,7 +420,7 @@
        ⚠️ 节点块【不做拖拽手柄】—— 稿子里画了,但 8-10 用户裁决「拖拽小程序实现比较困难
        就暂时先不做」。这是有意省略,不是漏做,别照稿补回来(见 vault《章节内容块化》§6.4)。 -->
   <view class="story-editor {{popChapter ? 'is-stacked' : ''}}" wx:if="{{storyEditor.show && !runtimeEditor.show}}" catchtouchmove="noop">
-    <view class="story-editor__backdrop" bindtap="closeStoryEditor" aria-role="button" aria-label="关闭故事编辑器" hover-class="cy-pressed" hover-stay-time="80"></view>
+    <view class="story-editor__backdrop" catchtouchmove="noop" bindtap="closeStoryEditor" aria-role="button" aria-label="关闭故事编辑器" hover-class="cy-pressed" hover-stay-time="80"></view>
     <view class="story-editor__sheet" style="top: {{chrome.sheetTop}}px">
     <view class="story-editor__grabber"></view>
     <view class="story-editor__header">
@@ -776,7 +776,7 @@
   </view>
 
   <!-- 多选弹框 -->
-  <view class="modal-mask" wx:if="{{showMultiSelectModal}}" bindtap="hideMultiSelectModal" aria-role="button" aria-label="关闭多选面板" hover-class="cy-pressed" hover-stay-time="80"></view>
+  <view class="modal-mask" catchtouchmove="noop" wx:if="{{showMultiSelectModal}}" bindtap="hideMultiSelectModal" aria-role="button" aria-label="关闭多选面板" hover-class="cy-pressed" hover-stay-time="80"></view>
   <view class="multi-select-modal" wx:if="{{showMultiSelectModal}}">
     <view class="modal-header">
       <view class="modal-title">选择主题类别</view>

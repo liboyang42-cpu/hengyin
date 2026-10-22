@@ -514,7 +514,7 @@
     </view>
   </cy-sheet>
   <view wx:if="{{imageEditor && !discardVisible}}" class="dc-image-layer">
-    <view aria-label="关闭图片编辑" class="dc-image-mask" bindtap="closeImage" hover-class="dc-mask-pressed" />
+    <view aria-label="关闭图片编辑" class="dc-image-mask" catchtouchmove="noop" bindtap="closeImage" hover-class="dc-mask-pressed" />
     <!-- 顶边复查(2026-09-18):面板在幕布里垂直居中 ⇒ 可用高度要两头都让开胶囊行(2×sheetTop) -->
     <view class="dc-image-panel" style="max-height:calc(100vh - {{chrome.sheetTop * 2}}px)">
       <view class="dc-heading">
