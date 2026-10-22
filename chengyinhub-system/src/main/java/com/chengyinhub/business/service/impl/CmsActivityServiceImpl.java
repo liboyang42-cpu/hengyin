@@ -36,6 +36,7 @@ import com.chengyinhub.business.mapper.CmsActivityMapper;
 import com.chengyinhub.business.domain.CmsActivity;
 import com.chengyinhub.business.domain.enums.PublicActivityScope;
 import com.chengyinhub.business.service.ICmsActivityService;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -713,6 +714,19 @@ public class CmsActivityServiceImpl implements ICmsActivityService
     {
         cmsActivity.setUpdateTime(DateUtils.getNowDate());
         return cmsActivityMapper.updateCmsActivity(cmsActivity);
+    }
+
+    @Override
+    // 条件 UPDATE 的「未售出」子查询在 RR 下是加锁读(锁住在途下单/间隙);显式钉 RR,不随连接默认隔离级漂移。
+    @Transactional(isolation = Isolation.REPEATABLE_READ, rollbackFor = Exception.class)
+    public int updateLeadOpsUnlessSold(CmsActivity ops, boolean touchesTimeOrPlace)
+    {
+        if (ops == null || ops.getId() == null) {
+            return 0;
+        }
+        ops.setUpdateTime(DateUtils.getNowDate());
+        return touchesTimeOrPlace ? cmsActivityMapper.updateOpsFieldsIfUnsold(ops)
+                : cmsActivityMapper.updateCmsActivity(ops);
     }
 
     @Override

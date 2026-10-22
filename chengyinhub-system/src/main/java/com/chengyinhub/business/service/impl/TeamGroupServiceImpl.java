@@ -881,7 +881,8 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
         // 这样「事务回滚了但微信单已关」的夹层就只剩「closeOrder 自身失败」这一种。
         for (PayingPlan plan : plans) {
             if (plan.action == PayingAction.APPLY_PAYMENT
-                    && !"SUCCESS".equalsIgnoreCase(cmsRegistrationService.handleWechatPayCallback(plan.wxOrder))) {
+                    && !"SUCCESS".equalsIgnoreCase(
+                            cmsRegistrationService.applyConfirmedWechatPaymentWithinTransaction(plan.wxOrder))) {
                 throw retryLater();
             }
         }

@@ -553,7 +553,7 @@ class WechatPayCallbackForgedSignatureTest {
             ReflectionTestUtils.setField(registrationService, "cmsRegistrationMapper", mapper);
             ReflectionTestUtils.setField(registrationService, "alarmService", alarm);
             ReflectionTestUtils.setField(registrationService, "wxPaymentCallbackInboxService",
-                    mock(IWxPaymentCallbackInboxService.class));
+                    com.chengyinhub.business.service.PaymentCallbackInboxStubs.passThrough());
             when(mapper.selectByRegistrationNo(order)).thenReturn(registration);
             wireParser(service, buildParser(keys.getPublic()), registrationService,
                     mock(ICoopInviteService.class), mock(IRefundService.class));

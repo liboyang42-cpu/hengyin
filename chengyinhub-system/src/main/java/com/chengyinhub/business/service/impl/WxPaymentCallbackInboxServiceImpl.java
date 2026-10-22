@@ -2,6 +2,7 @@ package com.chengyinhub.business.service.impl;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.util.Objects;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,9 +41,11 @@ public class WxPaymentCallbackInboxServiceImpl implements IWxPaymentCallbackInbo
     private WxPaymentCallbackClaimService claimService;
     @Autowired
     private WxPaymentCallbackMutationService mutationService;
+    @Autowired
+    private AlarmService alarmService;
 
     @Override
-    @Transactional
+    @Transactional(noRollbackFor = IdentityConflictException.class)
     public boolean register(String notifyId, int bizType, Long bizId, String eventType)
     {
         if (StringUtils.isEmpty(notifyId) || bizId == null || bizId <= 0 || bizType <= 0)
@@ -55,7 +58,28 @@ public class WxPaymentCallbackInboxServiceImpl implements IWxPaymentCallbackInbo
         candidate.setBizId(bizId);
         candidate.setEventType(truncateEventType(eventType));
         candidate.setState(WxPaymentCallbackInbox.STATE_WAITING);
-        return mapper.insertIgnore(candidate) == 1;
+        if (mapper.insertIgnore(candidate) == 1)
+        {
+            return true;
+        }
+        // 重复投递只认同一笔业务;同 hash 换了业务身份是冲突,拒收并告警,不能当作重复成功。
+        WxPaymentCallbackInbox original = mapper.selectByNotifyHash(candidate.getNotifyHash());
+        if (original == null || !Objects.equals(original.getBizType(), candidate.getBizType())
+                || !Objects.equals(original.getBizId(), candidate.getBizId())
+                || !Objects.equals(original.getEventType(), candidate.getEventType()))
+        {
+            // 只记 hash 前缀与业务 id,不记 notifyId 原文。
+            String detail = "hash=" + candidate.getNotifyHash().substring(0, 12)
+                    + " bizType=" + bizType + " bizId=" + bizId
+                    + " original=" + (original == null ? "missing"
+                            : original.getBizType() + "/" + original.getBizId())
+                    + " result=FAIL";
+            log.error("[支付回调] inbox 业务身份冲突 {}", detail);
+            alarmService.alarmThrottled("payment.callback.inbox_identity_conflict",
+                    "支付回调幂等键业务身份冲突", detail);
+            throw new IdentityConflictException("支付回调幂等键对应的原业务身份冲突");
+        }
+        return false;
     }
 
     @Override

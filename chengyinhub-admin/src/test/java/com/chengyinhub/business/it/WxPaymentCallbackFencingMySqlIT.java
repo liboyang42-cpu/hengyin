@@ -135,6 +135,38 @@ class WxPaymentCallbackFencingMySqlIT
     }
 
     @Test
+    void sameNotifyHashForAnotherBusinessIsRejectedOnRealUniqueKey() throws Exception
+    {
+        try (SqlSession session = factory.openSession(true))
+        {
+            WxPaymentCallbackInboxMapper mapper = session.getMapper(WxPaymentCallbackInboxMapper.class);
+            WxPaymentCallbackInboxServiceImpl service = new WxPaymentCallbackInboxServiceImpl();
+            ReflectionTestUtils.setField(service, "mapper", mapper);
+            com.chengyinhub.business.service.impl.AlarmService alarm =
+                    org.mockito.Mockito.mock(com.chengyinhub.business.service.impl.AlarmService.class);
+            ReflectionTestUtils.setField(service, "alarmService", alarm);
+
+            assertTrue(service.register("wx-notify-it-1", WxPaymentCallbackInbox.BIZ_TYPE_PAYMENT, 7L, "SUCCESS"));
+            // 同一业务重投 = 幂等;同 hash 换了业务 id / 类型 / 事件 = 冲突拒收,原行不被改写。
+            assertFalse(service.register("wx-notify-it-1", WxPaymentCallbackInbox.BIZ_TYPE_PAYMENT, 7L, "SUCCESS"));
+            org.junit.jupiter.api.Assertions.assertThrows(
+                    com.chengyinhub.business.service.IWxPaymentCallbackInboxService.IdentityConflictException.class,
+                    () -> service.register("wx-notify-it-1", WxPaymentCallbackInbox.BIZ_TYPE_PAYMENT, 8L, "SUCCESS"));
+            org.junit.jupiter.api.Assertions.assertThrows(
+                    com.chengyinhub.business.service.IWxPaymentCallbackInboxService.IdentityConflictException.class,
+                    () -> service.register("wx-notify-it-1", WxPaymentCallbackInbox.BIZ_TYPE_REFUND, 7L, "SUCCESS"));
+
+            assertEquals(1, count("wx_payment_callback_inbox"));
+            WxPaymentCallbackInbox stored = mapper.selectByNotifyHash(NOTIFY_HASH);
+            assertEquals(Long.valueOf(7L), stored.getBizId());
+            assertEquals(Integer.valueOf(WxPaymentCallbackInbox.STATE_WAITING), stored.getState());
+            org.mockito.Mockito.verify(alarm, org.mockito.Mockito.times(2)).alarmThrottled(
+                    org.mockito.ArgumentMatchers.eq("payment.callback.inbox_identity_conflict"),
+                    org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString());
+        }
+    }
+
+    @Test
     void expiredLeaseTakeoverFencesOldOwnerFromDoneAndRelease() throws Exception
     {
         seedProcessing(OWNER_A, 1, -1);

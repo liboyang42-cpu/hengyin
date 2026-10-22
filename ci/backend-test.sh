@@ -89,6 +89,8 @@ MYBATIS_ITS=(
   SchedulerSessionLockMySqlIT
   ClubGatherArrivalMySqlIT
   ClubAttendanceTimeMappingMyBatisIT
+  # 2026-10-22 W3 #334 F7:领队改集合时间/地点=单条「未售出才生效」条件 UPDATE;在途下单/修改在先两种交错都要真库。
+  ClubLeadOpsSoldLockMySqlIT
   VerificationRiskQueueMySqlIT
   AccountDeregistrationRaceMySqlIT
   # R12-E2E 旅程全链路:建局→到店→问问题→判错→检定→推进→阶段结算→结局全走真库真 mapper;
