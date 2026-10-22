@@ -48,7 +48,17 @@
 - 本 lane 在分支头 `9cad792e` 上派发了两个批次：`port-community-e02` 和 `port-b05-visibility`。结果见下方 CI 表。
 
 ## CI
-（运行 ID 和结论在下方「CI 结果」一节补全。）
+| 运行 | 对象 | 结论 |
+|---|---|---|
+| GitHub CI 39756401531 | PR 头 b8448277（Backend tests 带 MySQL 跑全量、Mini program static checks/unit 20 分片、gitleaks、migration gates） | success |
+| Funds MySQL IT 39756401488 | b8448277 | success |
+| Isolated authenticated Redis recovery 39756401442 | b8448277 | success |
+| Mini followup focused regression 39756401706 | b8448277 | success |
+| Real Storage IT 39756295000，批次 `port-community-e02` | 9cad792e | success：E02_01/06/11/22Test、E02_25MySqlIT 各自通过，汇总 CLEAN |
+| Real Storage IT 39756298926，批次 `port-b05-visibility` | 9cad792e | success：B05CommunityVisibilityMySqlIT 通过 |
+
+- 9cad792e 上的 GitHub CI 39756286081 显示 cancelled，Mini program static checks 也标为失败。原因是 docs 提交 b8448277 推上去后，旧运行被并发规则取消（UNIT/STATIC=cancelled），不是真实失败。
+- 9cad792e 与 b8448277 之间只差本文档。
 
 ## 未解决的阻塞 / 后续
 - 已知限制（与 #377 相同）：预签名 URL 5 分钟后过期。微信如果超过 5 分钟才来拉图会拉取失败，表现为收不到回调。
