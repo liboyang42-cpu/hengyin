@@ -67,6 +67,10 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
     private final IClubRoleAssignmentService clubRoleAssignmentService;
     private final ITeamGroupService teamGroupService;
 
+    /** O5b-7 开关(默认关):系列 CLOSED 终态的关闭入口。 */
+    @org.springframework.beans.factory.annotation.Value("${chengyin.club.o5b.series-close.enabled:false}")
+    private boolean seriesCloseEnabled = false;
+
     public ClubEventOpsServiceImpl(IClubAccessService clubAccessService,
                                    ClubEventScheduleMaterializer scheduleMaterializer,
                                    IClubSessionService clubSessionService,
@@ -295,6 +299,43 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
             throw conflict("requestId 已用于不同系列配置");
         }
         return replay;
+    }
+
+    @Override
+    @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
+    public ClubEventSeries closeSeries(Long actorMemberId, String username, ClubEventSeriesRequest request) {
+        if (!seriesCloseEnabled) {
+            throw new com.chengyinhub.common.exception.ServiceException("系列关闭功能未开放",
+                    com.chengyinhub.common.constant.HttpStatus.FORBIDDEN);
+        }
+        if (!positive(actorMemberId) || request == null || !positive(request.getSeriesId())
+                || !positive(request.getClubId())
+                || request.getExpectedVersion() == null || request.getExpectedVersion() < 0) {
+            throw badRequest("系列关闭参数不完整");
+        }
+        // 锁序与 updateFuture 一致:权限 → 系列行锁 → 俱乐部 owner 锁 → 锁后重验权限。
+        ClubAccessContext access = requireActivityManage(actorMemberId, request.getClubId());
+        ClubEventSeries series = clubEventOpsMapper.selectSeriesByIdForUpdate(request.getSeriesId());
+        Long lockedOwner = clubEventOpsMapper.selectClubOwnerForUpdate(request.getClubId());
+        access = requireActivityManage(actorMemberId, request.getClubId());
+        if (!positive(lockedOwner) || !lockedOwner.equals(access.getOwnerMemberId())) throw forbidden();
+        if (series == null || !request.getClubId().equals(series.getClubId())) {
+            throw conflict("系列不存在或范围不一致");
+        }
+        if (ClubEventSeries.STATUS_CLOSED.equals(series.getStatus())) {
+            return series;
+        }
+        if (!ClubEventSeries.STATUS_ACTIVE.equals(series.getStatus())
+                || !request.getExpectedVersion().equals(series.getVersion())) {
+            throw conflict("系列状态或版本已变化，请刷新");
+        }
+        if (clubEventOpsMapper.closeSeriesCas(series.getId(), series.getClubId(), series.getVersion(),
+                username, now()) != 1) {
+            throw conflict("系列状态或版本已变化，请刷新");
+        }
+        series.setStatus(ClubEventSeries.STATUS_CLOSED);
+        series.setVersion(series.getVersion() + 1);
+        return series;
     }
 
     @Override

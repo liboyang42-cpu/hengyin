@@ -218,6 +218,15 @@
         where id = #{id} and status = 'ACTIVE' and version = #{expectedVersion}
     </update>
 
+    <!-- O5b-7:CLOSED 是终态(schema CHECK 已含 CLOSED);只翻系列状态,已排场次/已付报名原样保留 -->
+    <update id="closeSeriesCas">
+        update club_event_series
+        set status = 'CLOSED', version = version + 1,
+            update_by = #{username}, update_time = #{now}
+        where id = #{seriesId} and club_id = #{clubId}
+          and status = 'ACTIVE' and version = #{expectedVersion}
+    </update>
+
     <update id="updateSeriesScheduleCas">
         update club_event_series
         set recurrence_type = #{recurrenceType}, version = version + 1,
