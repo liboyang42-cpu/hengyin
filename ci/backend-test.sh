@@ -98,7 +98,7 @@ MYBATIS_ITS=(
   JourneyFullFlowMySqlIT
   # Lane W10b:资料版本号递增 / 头像回执读 inbox / 分享版本 CAS 列与按令牌撤销,真迁移跑两遍证幂等。
   LaneW10bReadbackMySqlIT
-  # 2026-10-22 DOC2 F3 Phase 1:套票两条迁移可重跑 + 形状负控、settlement_claim 单位维度不破存量唯一性、
+  # 2026-10-22 DOC2 F3 Phase 1:套票账本迁移可重跑 + 形状负控、Phase 1 不动 settlement_claim(7 列唯一键原样)、
   #   A/B 同买一套票余额互不影响、快照冻结、同单位唯一在约、月度豁免唯一 —— 真 DDL + 真 mapper 才验得动。
   FreeExploreBundleLedgerMySqlIT
 )
