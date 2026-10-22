@@ -118,6 +118,8 @@ const INTENTIONAL_COLORED_VALUES = new Map([
     '#825cff', '#4c2abe', '#6940dd', '#087b9e', '#25c7ee', '#128fb7',
     '#ff4d5f', '#ffd84a', '#45a8ff',
     'rgba(95,53,190,.34)',
+    // 2026-10-22 业主裁决:首页三张票根卡左联的模式色(开始漫游/打开地图/我的队伍),只在 .intro-card__stub / __dot 上
+    '#C8F36A', '#9CC8FF', '#FFC47A',
   ])],
 ])
 

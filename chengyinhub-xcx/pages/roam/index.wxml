@@ -103,7 +103,7 @@
     <swiper class="intro-cards" previous-margin="46rpx" next-margin="85rpx" current="{{introCardIdx}}" bindchange="onIntroCardSwipe">
       <swiper-item>
         <view class="intro-card" bindtap="goStart" aria-role="button" aria-label="开始漫游" hover-class="cy-pressed" hover-stay-time="80">
-          <view class="intro-card__stub" style="background-color:#C8F36A;">
+          <view class="intro-card__stub is-roam">
             <view class="intro-card__ic"><image class="intro-card__img" src="/images/roam/intro-ticket-route.svg" mode="aspectFit" /></view>
             <text class="intro-card__code">R-01</text>
           </view>
@@ -111,13 +111,13 @@
           <view class="intro-card__body">
             <view class="intro-card__row"><text class="intro-card__title">{{introCards[0].title}}</text><text class="intro-card__pill">出发</text></view>
             <text class="intro-card__sub">{{introCards[0].sub}}</text>
-            <view class="intro-card__live" wx:if="{{introLive[0]}}"><view class="intro-card__dot" style="background-color:#C8F36A;"></view><text class="intro-card__livetx">{{introLive[0]}}</text></view>
+            <view class="intro-card__live" wx:if="{{introLive[0]}}"><view class="intro-card__dot is-roam"></view><text class="intro-card__livetx">{{introLive[0]}}</text></view>
           </view>
         </view>
       </swiper-item>
       <swiper-item>
         <view class="intro-card" bindtap="openNearbyMap" aria-role="button" aria-label="打开地图，寻找组队" hover-class="cy-pressed" hover-stay-time="80">
-          <view class="intro-card__stub" style="background-color:#9CC8FF;">
+          <view class="intro-card__stub is-map">
             <view class="intro-card__ic"><image class="intro-card__img" src="/images/roam/intro-ticket-map.svg" mode="aspectFit" /></view>
             <text class="intro-card__code">M-02</text>
           </view>
@@ -125,13 +125,13 @@
           <view class="intro-card__body">
             <view class="intro-card__row"><text class="intro-card__title">{{introCards[1].title}}</text><text class="intro-card__pill">看看</text></view>
             <text class="intro-card__sub">{{introCards[1].sub}}</text>
-            <view class="intro-card__live" wx:if="{{introLive[1]}}"><view class="intro-card__dot" style="background-color:#9CC8FF;"></view><text class="intro-card__livetx">{{introLive[1]}}</text></view>
+            <view class="intro-card__live" wx:if="{{introLive[1]}}"><view class="intro-card__dot is-map"></view><text class="intro-card__livetx">{{introLive[1]}}</text></view>
           </view>
         </view>
       </swiper-item>
       <swiper-item>
         <view class="intro-card" bindtap="openMyTeams" aria-role="button" aria-label="我的队伍" hover-class="cy-pressed" hover-stay-time="80">
-          <view class="intro-card__stub" style="background-color:#FFC47A;">
+          <view class="intro-card__stub is-team">
             <view class="intro-card__ic"><image class="intro-card__img" src="/images/roam/intro-ticket-team.svg" mode="aspectFit" /></view>
             <text class="intro-card__code">T-03</text>
           </view>
@@ -139,7 +139,7 @@
           <view class="intro-card__body">
             <view class="intro-card__row"><text class="intro-card__title">{{introCards[2].title}}</text><text class="intro-card__pill">查看</text></view>
             <text class="intro-card__sub">{{introCards[2].sub}}</text>
-            <view class="intro-card__live" wx:if="{{introLive[2]}}"><view class="intro-card__dot" style="background-color:#FFC47A;"></view><text class="intro-card__livetx">{{introLive[2]}}</text></view>
+            <view class="intro-card__live" wx:if="{{introLive[2]}}"><view class="intro-card__dot is-team"></view><text class="intro-card__livetx">{{introLive[2]}}</text></view>
           </view>
         </view>
       </swiper-item>
