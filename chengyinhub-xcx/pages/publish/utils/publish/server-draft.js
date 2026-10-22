@@ -12,6 +12,7 @@
 //
 // handlers:onSaved(topicId) 服务端已接受(拿到主题号,后续保存走 update,避免重复建题);
 //           onSuccess({ topicId, detail, published? }) / onFail({ stage, topicId?, detail?, msg?, networkError?, unknown? })。
+//           hasChanges()(可选,仅保存草稿):回读确认后若返回 true,改报 onFail({ stage: 'readback', localChanges: true, detail })。
 //
 // 结果不确定(网络中断/回包丢失)与确定失败要分开:
 //  - 首次建草稿丢回包:页面用同一个意图键重试,服务端认出已建的那份并回 recovered;这里随即用最新内容再存一次;
@@ -331,6 +332,11 @@ function createServerDraftSaver(deps) {
           return;
         }
         if (!publish) {
+          // 保存在途时本机又改过:云端存的是上一版,不能拿回读版本覆盖编辑器,也不能报「已保存」
+          if (typeof handlers.hasChanges === 'function' && handlers.hasChanges()) {
+            finish(handlers.onFail, { stage: 'readback', topicId, detail: back.data, localChanges: true, unknown: false });
+            return;
+          }
           finish(handlers.onSuccess, { topicId, detail: back.data });
           return;
         }

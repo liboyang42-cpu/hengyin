@@ -197,6 +197,10 @@ const AI_BLIND_ISSUE_TYPES = ['missing_cover'];
    保存成功后要跳走,面板时长与跳转延时必须是同一个数 —— 分开写会漂成
    「面板还在播就被顶掉」或者「收完了还空等一截」。 */
 const RESULT_SHEET_MS = 2000;
+// 云端草稿自动保存:每次编辑先落本机,停手 2 秒后合并成一次云端保存(连续输入不逐键发请求)。
+const CLOUD_AUTOSAVE_MS = 2000;
+// 标题旁状态胶囊:本机、上云中、云端已确认、失败、结果待确认必须分开说,不能把本机写入说成已保存。
+const SAVE_STATE_LABELS = { local: '已存本机', localFailed: '本机未存', saving: '保存中', saved: '已存云端', failed: '云端未存', unknown: '待确认' };
 
 const runtimeEditor = require('./theme-runtime.js');
 const structure = require('./theme-runtime-structure.js'); // structure
@@ -242,6 +246,8 @@ Page({
     // 正在编辑的是服务端草稿(is_draft=1):底栏给「保存草稿」,发布走「先存后发」publish-draft
     editIsDraft: false,
     draftSaving: false,
+    themeSaveState: '',  // SAVE_STATE_LABELS 的键;空 = 不显示(已发布主题、空白新稿)
+    themeSaveLabel: '',
     publicTempState: 'loading',
     // 能不能开商家池(只有俱乐部主理人可以)。初值 true = 「还没判出来」,与
     // _syncMerchantPoolEligibility 的「快照不可靠时不压值」同一口径:宁可多显示一个开关,
@@ -648,6 +654,7 @@ Page({
     this._resultSheetNext = '';
     const reason = '本次提交的结果已确认，但当前修改未能保存到本机。请勿退出，腾出存储空间后继续编辑以重试保存。';
     this.setData({ submitting: false, draftSaving: false, editIsDraft: false, submitError: reason,
+      themeSaveState: 'localFailed', themeSaveLabel: SAVE_STATE_LABELS.localFailed,
       resultSheet: { show: true, kind: 'fail', title: rejected ? '审核未通过，修改尚未保存' : '后续修改尚未保存',
         sub: '内容暂留在本页，请勿关闭或退出。', meta: '当前修改尚未保存',
         why: reason, duration: RESULT_SHEET_MS } });
@@ -661,7 +668,10 @@ Page({
       nativeSetData.call(this, patch, () => {
         const finish = () => {
           if (this._draftAutosaveReady && this._isDraftPatch(patch)) {
-            this._persistDraftEnvelope();
+            this._onDraftEdited(this._persistDraftEnvelope());
+          } else if (this._cloudAutosaveQueued && !this._cloudAutosaveTimer && !this._cloudDraftEditorOpen()) {
+            // 弹窗关闭、在途保存结束后接力排队;排队条件不满足时 _queueCloudDraftAutosave 自己会放弃
+            this._queueCloudDraftAutosave();
           }
           if (callback) callback();
         };
@@ -686,6 +696,75 @@ Page({
         }
       });
     };
+  },
+
+  _setSaveState(state) {
+    if (this._unloaded) return;
+    this.setData({ themeSaveState: state, themeSaveLabel: SAVE_STATE_LABELS[state] || '' });
+  },
+
+  // 每次草稿内容变化:本机已写入后才排云端保存;本机没写进去要如实标出来
+  _onDraftEdited(stored) {
+    if (this._unloaded) return;
+    // 回读换版本、模板详情补全等不改变云端内容的回写,不把「已存云端」打回去
+    if (this.data.themeSaveState === 'saved' && this._cloudSavedKey && this._cloudDraftKey() === this._cloudSavedKey) return;
+    this._cloudAutosaveQueued = true;
+    this._setSaveState(stored ? 'local' : 'localFailed');
+    this._queueCloudDraftAutosave();
+  },
+
+  // 云端要保存的那份内容(与「保存草稿」同一个 payload builder);组装不出来返回 ''
+  _cloudDraftKey() {
+    try {
+      const payload = this._buildSubmitPayload({ draft: true, quiet: true });
+      return payload ? JSON.stringify(payload) : '';
+    } catch (error) { return ''; }
+  },
+
+  _cancelCloudDraftAutosave() {
+    if (this._cloudAutosaveTimer) clearTimeout(this._cloudAutosaveTimer);
+    this._cloudAutosaveTimer = null;
+  },
+
+  // 编辑弹窗里的内容还没提交;此时保存并换上回读版本会打断弹窗,等关掉再存
+  _cloudDraftEditorOpen() {
+    const d = this.data;
+    const open = key => !!(d[key] && d[key].show);
+    return !!(d.popChapter || d.popChapterNodes || d.topicDetailShow || d.showTicketEditor
+      || d.routeMappingShow || d.modePickerShow || d.categorySheetVisible
+      || ['storyEditor', 'storyVarSheet', 'runtimeEditor', 'runtimeZeroEditor', 'survivalEditor', 'structureEditor',
+        'valueEditor', 'initialStateEditor', 'thoughtsEditor', 'publishCheck', 'chapterPreview',
+        'startTimePicker', 'endTimePicker', 'ticketTimePicker'].some(open));
+  },
+
+  // 自动保存只替当前账号、当前入口、仍是草稿(或尚未建题)且已命名的稿子工作;
+  // 发布结果待确认、本机存储不可用、旧稿归属未确认、确定失败后都停下,等用户明确操作。
+  _cloudAutosaveBlocked() {
+    const owner = String(app.getUserID() || '');
+    return !this._cloudAutosaveEnabled || this._hidden || this._unloaded || !this._draftAutosaveReady
+      || this._draftStorageUnavailable || this._draftScopeUnconfirmed || this._cloudAutosavePaused
+      || !!this._publishAttempt || this.data.creatorLoginRequired || !owner
+      || String(this.data.draftMemberId || owner) !== owner
+      || !!(this.data.editingTopicId && (!this.data.editLoaded || !this.data.editIsDraft))
+      || !String((this.data.formData || {}).name || '').trim();
+  },
+
+  _queueCloudDraftAutosave() {
+    this._cancelCloudDraftAutosave();
+    if (!this._cloudAutosaveQueued || this._cloudAutosaveBlocked()) return;
+    const owner = String(app.getUserID() || '');
+    const scope = this.data.operationScope;
+    // 连续输入合并为一次保存，避免每次按键重建章节、换号或触发接口限流。
+    this._cloudAutosaveTimer = setTimeout(() => {
+      this._cloudAutosaveTimer = null;
+      if (owner !== String(app.getUserID() || '') || scope !== this.data.operationScope) {
+        this._cloudAutosaveQueued = false;
+        return;
+      }
+      // 在途保存/发布或弹窗未关:保留排队,结束或关闭时由 setData 接力
+      if (this._serverDraftBusy() || this.data.submitting || this._cloudDraftEditorOpen()) return;
+      this.saveServerDraft({ automatic: true });
+    }, CLOUD_AUTOSAVE_MS);
   },
 
   _isDraftPatch(patch) {
@@ -2401,6 +2480,7 @@ Page({
       return;
     }
     this._creatorOwner = memberId(app);
+    this._cloudAutosaveEnabled = true;
     this.setData({ creatorLoginRequired: false });
     options = options || {};
     this._loadSupportMatrix();
@@ -2477,7 +2557,10 @@ Page({
       this._draftAutosaveReady = true;
       // AI 草稿在 onLoad 内会被消费；这里立刻把当前完整页面快照接力到专业草稿信封，
       // 避免用户尚未触发下一次输入就杀进程时丢失已消费内容。
-      this._persistDraftEnvelope();
+      const storedLocally = this._persistDraftEnvelope();
+      // 恢复出的本机稿可能还没上过云:按一次编辑处理(标本机状态并排自动保存);
+      // 仅带入口参数打开、用户还没动过的新稿不自动建云端主题
+      if (restoredLocalDraft) this._onDraftEdited(storedLocally);
       if (options.clubId && !restoredLocalDraft && this.isBlankCreationCanvas()) {
         setTimeout(() => this.startClubPlaceCapture(), 0);
       }
@@ -2531,6 +2614,11 @@ Page({
         that._draftAutosaveReady = false;
         that.applyEditingTopic(res.data);
         that.setData({ editLoading: false, editLoadError: '' });
+        // 刚读回的云端草稿且没有换上本机恢复稿:当前内容就是云端版本
+        if (res.data.isDraft === true && !that._localDraftRestored) {
+          that._cloudSavedKey = that._cloudDraftKey();
+          that._setSaveState('saved');
+        }
       },
       fail(res, status) {
         if (recover(res, status)) return;
@@ -2926,10 +3014,16 @@ Page({
   },
 
   // 页面销毁:让在途发布回调失效,避免 setData / redirect after unload
-  onHide() { this._hidden = true; },
+  onHide() {
+    this._hidden = true;
+    // 每次编辑已先落本机;离开前不承诺一定存上云,只取消过时调度,回来(onShow)再接力
+    this._cancelCloudDraftAutosave();
+  },
 
   onUnload() {
     this._unloaded = true;
+    this._cloudAutosaveEnabled = false;
+    this._cancelCloudDraftAutosave();
     this._destroyChapterDurationAudio();
     this._destroyStoryDurationProbes();
     this.destroyPreviewAudio();
@@ -6897,7 +6991,8 @@ Page({
     const precheckAcked = this._precheckAcked;
     this._precheckAcked = false;
 
-    if (this.data.submitting || this._serverDraftBusy()) return;
+    if (this.data.submitting) return;
+    if (this._serverDraftBusy()) { cyToast('正在保存草稿，保存完成后再发布'); return; }
     // 编辑态回填没到位就保存 = 拿空表单去重建,原主题的章节与票会被删光
     if (this.data.editingTopicId && !this.data.editLoaded) {
       cyToast('主题还在加载，稍等一下');
@@ -6984,7 +7079,8 @@ Page({
       chapters = this._buildSubmitChapters(productType);
     } catch (error) {
       // 组装章节 payload 抛错(节点引用失效等)时点「确认发布」原来是静默无反应 —— 兜住给提示。
-      cyToast(app.getRequestErrorMessage(error, '故事流内容不完整，请检查后重试'));
+      // quiet:自动保存不弹提示(未完成的输入每 2 秒弹一次是骚扰),等用户明确保存/发布时再说
+      if (!(options && options.quiet)) cyToast(app.getRequestErrorMessage(error, '故事流内容不完整，请检查后重试'));
       return null;
     }
 
@@ -7085,6 +7181,10 @@ Page({
   },
 
   _doSubmit() {
+    // 预检弹层期间可能刚起了一次自动保存:三者串行,不并发写同一份草稿
+    if (this.data.submitting) return;
+    if (this._serverDraftBusy()) { cyToast('正在保存草稿，保存完成后再发布'); return; }
+    this._cancelCloudDraftAutosave();
     const apiData = this._buildSubmitPayload();
     if (!apiData) return;
     // 服务端草稿:先把最新内容存回这份草稿并回读确认,再发布它;存失败就不发(不会发出旧版本)
@@ -7366,24 +7466,34 @@ Page({
   },
 
   // 「保存草稿」:存进服务端但不发布、不送审、不占在架额度;存好并回读确认后留在编辑页
-  saveServerDraft() {
+  // options.automatic:两秒防抖触发的自动保存 —— 不弹提示、不盖加载层、不弹结果面板,只更新标题旁状态
+  saveServerDraft(options) {
+    const automatic = !!(options && options.automatic === true); // bindtap 传进来的是事件对象
     if (this.data.submitting || this._serverDraftBusy()) return;
     // 已发布的主题不走草稿(编辑窗口与下架规则不变);回填没到位也不存,免得拿空表单覆盖
     if (this.data.editingTopicId && (!this.data.editLoaded || !this.data.editIsDraft)) return;
     if (!String(this.data.formData.name || '').trim()) {
-      cyToast('先给主题起个名字，再保存草稿');
+      if (!automatic) cyToast('先给主题起个名字，再保存草稿');
       return;
     }
-    const apiData = this._buildSubmitPayload({ draft: true });
+    if (automatic && this._cloudAutosaveBlocked()) return;
+    this._cancelCloudDraftAutosave();
+    if (!automatic) this._cloudAutosavePaused = false; // 用户明确保存 = 重新放行自动保存
+    const apiData = this._buildSubmitPayload(automatic ? { draft: true, quiet: true } : { draft: true });
     if (!apiData) return;
-    this._runServerDraft(apiData, false);
+    if (automatic && this._cloudSavedKey && JSON.stringify(apiData) === this._cloudSavedKey) {
+      this._cloudAutosaveQueued = false;
+      this._setSaveState('saved');
+      return;
+    }
+    this._runServerDraft(apiData, false, automatic);
   },
 
   _publishServerDraft(apiData) {
     this._runServerDraft(apiData, true);
   },
 
-  _runServerDraft(apiData, publish) {
+  _runServerDraft(apiData, publish, automatic) {
     if (this._draftStorageUnavailable || this._draftScopeUnconfirmed) return;
     if (this._unloaded || !app.getUserID() || (this.data.draftMemberId
         && String(this.data.draftMemberId) !== String(app.getUserID()))) return;
@@ -7400,11 +7510,17 @@ Page({
       && scope === this.data.operationScope && draftUuid === this.data.draftUuid
       && baseRevision === this.data.baseRevision && editLoadToken === this._editLoadToken
       && activeTopicId === String(this.data.editingTopicId || '');
+    const submittedKey = JSON.stringify(apiData);
     const saver = this.getServerDraftSaver();
-    this.setData({ draftSaving: !publish, submitting: publish, submitError: '' });
-    cyLoading.show(publish ? '正在保存并发布' : '正在保存草稿');
+    this._cancelCloudDraftAutosave();
+    this._cloudAutosaveQueued = false; // 这次请求已带上排队中的修改;之后的编辑会重新排队
+    this.setData({ draftSaving: !publish, submitting: publish, submitError: '',
+      themeSaveState: 'saving', themeSaveLabel: SAVE_STATE_LABELS.saving });
+    if (!automatic) cyLoading.show(publish ? '正在保存并发布' : '正在保存草稿');
     const handlers = {
       isCurrent: current,
+      // 只用于保存草稿:回读确认时本机内容已和提交的不一样,就不换上回读版本
+      hasChanges: publish ? undefined : () => this._cloudDraftKey() !== submittedKey,
       onSaved: (topicId) => {
         activeTopicId = String(topicId);
         if (String(this.data.editingTopicId) === activeTopicId) return;
@@ -7415,7 +7531,7 @@ Page({
         this._persistDraftEnvelope();
       },
       onSuccess: (result) => {
-        cyLoading.hide();
+        if (!automatic) cyLoading.hide();
         // 发布,或上次发布结果不确定、这次查到其实已发布:都按已发布收口
         if (publish || result.published) {
           this._onServerDraftPublished(Object.assign({}, result, {
@@ -7427,28 +7543,53 @@ Page({
         this._adoptServerDraft = { previous, memberId };
         this._draftAutosaveReady = false;
         this.applyEditingTopic(result.detail);
+        // 「已存云端」只在语义回读通过、且换上回读版本后才标;记下此刻内容,之后没改就不再重复上传
+        this._cloudSavedKey = this._cloudDraftKey();
+        this.setData({ draftSaving: false, submitError: '',
+          themeSaveState: 'saved', themeSaveLabel: SAVE_STATE_LABELS.saved });
+        if (automatic) return;
         this._resultSheetNext = '';
         this.setData({
-          draftSaving: false,
-          submitError: '',
           resultSheet: { show: true, kind: 'success', title: '草稿已保存到云端',
             sub: '还没有发布，玩家看不到；可以继续编辑，也能从「我的项目」重新打开。', meta: '',
             why: '', duration: RESULT_SHEET_MS }
         });
       },
       onFail: (res) => {
-        cyLoading.hide();
-        this._onServerDraftFailed(res || {}, publish, memberId);
+        if (!automatic) cyLoading.hide();
+        if (res && res.localChanges) {
+          this._onServerDraftSuperseded(res, previous, automatic);
+          return;
+        }
+        this._onServerDraftFailed(res || {}, publish, memberId, automatic);
       }
     };
     const started = publish ? saver.saveAndPublish(apiData, handlers) : saver.save(apiData, handlers);
     if (!started) {
-      cyLoading.hide();
+      if (!automatic) cyLoading.hide();
       this.setData({ draftSaving: false, submitting: false });
+      this._setSaveState('local');
     }
   },
 
-  _onServerDraftFailed(res, publish, memberId) {
+  // 保存在途时又改了内容:云端已确认的是上一版。不换回读版本(保住新编辑、弹窗内容与模板绑定),
+  // 只接上服务端为这次写入推进的版本号,下一次自动保存才不会被自己的上一版当成 CAS 冲突。
+  _onServerDraftSuperseded(res, previous, automatic) {
+    const topic = (res.detail && res.detail.topic) || {};
+    this.setData({ draftSaving: false, submitting: false, submitError: '',
+      'formData.configVersion': topicRouteGraph.normalizeTopicRoute(topic).configVersion || this.data.formData.configVersion,
+      baseRevision: topic.updateTime || topic.createTime || this.data.baseRevision });
+    // 新内容已按主题号落本机后,首建时那份按 draftUuid 存的旧恢复稿才可以清
+    if (this._persistDraftEnvelope() && previous && previous.draftUuid && this.data.editingTopicId) {
+      try { proEditorDraft.removeDraft(wx, previous, { memberId: this.data.draftMemberId || app.getUserID(), operationScope: this.data.operationScope }); } catch (error) {}
+    }
+    if (!automatic) cyToast('已存上一版，后续修改会自动保存');
+    this._cloudAutosaveQueued = true;
+    this._setSaveState('local');
+    this._queueCloudDraftAutosave();
+  },
+
+  _onServerDraftFailed(res, publish, memberId, automatic) {
     const creating = !this.data.editingTopicId;
     const reason = res.unknown
       ? (res.stage === 'publish'
@@ -7464,9 +7605,26 @@ Page({
       this._draftAutosaveReady = false;
       this.applyEditingTopic(res.detail);
     }
+    // 发布阶段失败但草稿已确认存入(上面换上了回读版本)才算已存云端;结果不明确时标待确认
+    const savedToCloud = res.stage === 'publish' && res.detail && res.unknown === false;
+    const saveState = savedToCloud ? 'saved'
+      : (res.unknown || res.stage === 'readback' && res.networkError) ? 'unknown' : 'failed';
+    if (savedToCloud) this._cloudSavedKey = this._cloudDraftKey();
+    if (automatic) {
+      // 自动保存失败不弹面板、不占用「重试=发布」的页内错误条。确定失败(校验 / CAS / 回读不一致)
+      // 暂停自动保存并只提示一次,等用户明确保存;网络失败或结果不明在下次编辑后用同一身份再存。
+      this.setData({ draftSaving: false, submitting: false });
+      this._setSaveState(saveState);
+      if (!res.unknown && !res.networkError) {
+        this._cloudAutosavePaused = true;
+        cyToast('自动保存未成功：' + reason);
+      }
+      return;
+    }
     const issue = res.stage === 'save' && !res.networkError && publishIssueTarget.fromMessage(reason,
       this.data.formData.chapters, this._templateDetailsById);
-    this.setData({ draftSaving: false, submitting: false, submitError: reason });
+    this.setData({ draftSaving: false, submitting: false, submitError: reason,
+      themeSaveState: saveState, themeSaveLabel: SAVE_STATE_LABELS[saveState] });
     if (issue) {
       this._showBackendPublishIssue(issue);
       return;
@@ -7515,8 +7673,10 @@ Page({
     });
     this._resultSheetNext = rejected ? '' : '/pages/topic/merchantinfo/merchantinfo?topicId=' + topicId
       + (this.data.operationScope ? '&scope=MERCHANT' : '');
+    if (!keepDraft) this._cloudSavedKey = '';
     this.setData({
       submitting: false, submitError: '', editIsDraft: false,
+      themeSaveState: keepDraft ? 'local' : '', themeSaveLabel: keepDraft ? SAVE_STATE_LABELS.local : '',
       resultSheet: { show: true, kind: rejected ? 'fail' : 'success',
         title: rejected ? '审核未通过' : pendingReview ? '已提交审核' : '城市路线已发布',
         sub: rejected ? '内容仍保留，可以修改后重新提交。'
@@ -7554,6 +7714,7 @@ Page({
    */
   onShow() {
     this._hidden = false;
+    this._cancelCloudDraftAutosave();
     if (this._readSessionChanged && this.data.editingTopicId) { this._readSessionChanged = false; this.loadEditingTopic(this.data.editingTopicId); return; }
     if (this._creatorOwnerChanged() || this.data.creatorLoginRequired) return;
     //this.updateStatistics();
@@ -7562,6 +7723,7 @@ Page({
       this._loadNodeTemplateDetail(this.data.nodesForm);
       this._editingBoundTemplateId = 0;
     }
+    this._queueCloudDraftAutosave();
   },
 
   /**
