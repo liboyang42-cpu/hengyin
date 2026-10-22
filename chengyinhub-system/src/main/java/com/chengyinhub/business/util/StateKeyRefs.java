@@ -111,7 +111,15 @@ public final class StateKeyRefs {
         if (check != null && check.isObject()) {
             JsonNode mods = check.get("mods");
             if (mods != null && mods.isArray()) {
-                for (JsonNode mod : mods) collectCondition(mod == null ? null : mod.get("when"), keys);
+                for (JsonNode mod : mods) {
+                    collectCondition(mod == null ? null : mod.get("when"), keys);
+                    // F2 T03:mods[].var 与绑定属性的 check.skill 同样是状态键引用,必须已注册。
+                    if (mod != null && mod.path("var").isTextual()) add(keys, mod.path("var").asText());
+                }
+            }
+            JsonNode skill = check.get("skill");
+            if (skill != null && skill.isTextual() && skill.asText().trim().startsWith("counter.")) {
+                add(keys, skill.asText().trim());
             }
             collectConditions(check.get("advantageIf"), keys);
             collectConditions(check.get("disadvantageIf"), keys);

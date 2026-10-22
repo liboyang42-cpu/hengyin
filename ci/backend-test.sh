@@ -98,6 +98,8 @@ MYBATIS_ITS=(
   JourneyFullFlowMySqlIT
   # Lane W10b:资料版本号递增 / 头像回执读 inbox / 分享版本 CAS 列与按令牌撤销,真迁移跑两遍证幂等。
   LaneW10bReadbackMySqlIT
+  # 2026-10-22 F2 RPG P0:属性定义老注册 upsert 保留扩展列、改 label 不改键名;角色卡台账只随更新的来源前移。
+  ThemeCharacterMapperMyBatisIT
 )
 IFS=, ; IT_LIST="${MYBATIS_ITS[*]}" ; unset IFS
 # ⚠️ 必须带 -am:上面那句 `mvn clean test` 不 install 兄弟模块,

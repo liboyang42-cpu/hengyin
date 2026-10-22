@@ -55,6 +55,13 @@ public class JourneyRules {
     private int modCap = 6;
 
     /**
+     * F2 T04:自然 20 必成 / 自然 1 必败开关。配置里没有这个字段 = 老主题,按原口径开启
+     * (见 {@link JourneyRulesValidator}:只在作者显式配置时才写进规范化 JSON);
+     * 显式 false = 关闭,自然骰只按 total 与 dc 比,也不再产生 CRIT / FUMBLE。
+     */
+    private boolean natAuto = true;
+
+    /**
      * 归一化解析:空/缺省返回 {@code checkEnabled=false} 的默认对象;非法配置抛
      * {@link IllegalArgumentException}(中文人话,与保存端同一套校验)。
      */
@@ -93,6 +100,9 @@ public class JourneyRules {
 
     public int getModCap() { return modCap; }
     public void setModCap(int modCap) { this.modCap = modCap; }
+
+    public boolean isNatAuto() { return natAuto; }
+    public void setNatAuto(boolean natAuto) { this.natAuto = natAuto; }
 
     /** 生命值规则;{@code enabled=false} 时检定失败不扣血。 */
     public static class Hp {

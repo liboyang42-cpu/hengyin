@@ -94,7 +94,7 @@ class A03EndingSnapshotMySqlIT {
             ItSchema.apply(c, "it-schema/cms-topic-it-schema.sql");
             ItSchema.apply(c, "it-schema/journey-full-flow-it-schema.sql");
             ItSchema.apply(c, "it-schema/merchant-chapter-offer-it-schema.sql");
-            ItSchema.applyMigrations(c, "sql/migration_theme_state_key_20260916.sql",
+            ItSchema.applyMigrations(c, "sql/migration_theme_state_key_20260916.sql", "sql/migration_20261022_theme_state_key_attribute_def.sql",
                     "sql/migration_20260823_topic_route_graph.sql",
                     "sql/migration_20260930_registration_first_successful_scan.sql",
                     "sql/migration_ordinary_chapter_offer_withdraw_20261003.sql",

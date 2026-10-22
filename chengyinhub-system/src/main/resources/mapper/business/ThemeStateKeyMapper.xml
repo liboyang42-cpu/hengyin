@@ -12,12 +12,23 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="scope"        column="scope"         />
         <result property="label"        column="label"         />
         <result property="initialValue" column="initial_value" />
+        <result property="minValue"     column="min_value"     />
+        <result property="maxValue"     column="max_value"     />
+        <result property="displayType"  column="display_type"  />
+        <result property="color"        column="color"         />
+        <result property="icon"         column="icon"          />
+        <result property="sortOrder"    column="sort_order"    />
+        <result property="visible"      column="visible"       />
+        <result property="persistScope" column="persist_scope" />
+        <result property="rulesJson"    column="rules_json"    />
         <result property="createTime"   column="create_time"   />
         <result property="updateTime"   column="update_time"   />
     </resultMap>
 
     <sql id="selectThemeStateKeyVo">
-        select id, topic_id, state_key, key_type, scope, label, initial_value, create_time, update_time
+        select id, topic_id, state_key, key_type, scope, label, initial_value,
+               min_value, max_value, display_type, color, icon, sort_order, visible, persist_scope, rules_json,
+               create_time, update_time
         from theme_state_key
     </sql>
 
@@ -29,14 +40,50 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 
     <insert id="upsertThemeStateKey" parameterType="ThemeStateKey" useGeneratedKeys="true" keyProperty="id">
         insert into theme_state_key
-            (topic_id, state_key, key_type, scope, label, initial_value, create_time, update_time)
+            (topic_id, state_key, key_type, scope, label, initial_value,
+             min_value, max_value, display_type, color, icon, sort_order, visible, persist_scope, rules_json,
+             create_time, update_time)
         values
-            (#{topicId}, #{stateKey}, #{keyType}, #{scope}, #{label}, #{initialValue}, #{createTime}, #{updateTime})
+            (#{topicId}, #{stateKey}, #{keyType}, #{scope}, #{label}, #{initialValue},
+             #{minValue}, #{maxValue}, #{displayType}, #{color}, #{icon}, #{sortOrder}, #{visible}, #{persistScope}, #{rulesJson},
+             #{createTime}, #{updateTime})
         on duplicate key update
             label = values(label),
             initial_value = values(initial_value),
+            min_value = coalesce(values(min_value), min_value),
+            max_value = coalesce(values(max_value), max_value),
+            display_type = coalesce(values(display_type), display_type),
+            color = coalesce(values(color), color),
+            icon = coalesce(values(icon), icon),
+            sort_order = coalesce(values(sort_order), sort_order),
+            visible = coalesce(values(visible), visible),
+            persist_scope = coalesce(values(persist_scope), persist_scope),
+            rules_json = coalesce(values(rules_json), rules_json),
             update_time = values(update_time)
     </insert>
+
+    <select id="selectByTopicIdAndStateKey" resultMap="ThemeStateKeyResult">
+        <include refid="selectThemeStateKeyVo"/>
+        where topic_id = #{topicId} and state_key = #{stateKey}
+    </select>
+
+    <!-- 只改定义元数据;state_key / key_type / scope 不在 SET 里,改 label 永不改键名。 -->
+    <update id="updateDefinition" parameterType="ThemeStateKey">
+        update theme_state_key
+        set label = #{label},
+            initial_value = #{initialValue},
+            min_value = #{minValue},
+            max_value = #{maxValue},
+            display_type = #{displayType},
+            color = #{color},
+            icon = #{icon},
+            sort_order = #{sortOrder},
+            visible = #{visible},
+            persist_scope = #{persistScope},
+            rules_json = #{rulesJson},
+            update_time = #{updateTime}
+        where topic_id = #{topicId} and state_key = #{stateKey}
+    </update>
 
     <delete id="deleteByTopicIdAndStateKey">
         delete from theme_state_key
