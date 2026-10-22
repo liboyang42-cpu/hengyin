@@ -117,6 +117,8 @@ MYBATIS_ITS=(
   #   导出不跨账号且外人游标被拒、注销申请幂等与仅本人可撤)。
   JourneyThoughtProgressMySqlIT
   PrivacyVisibilityExportMySqlIT
+  # Lane DL1:赏金 NESTED savepoint 内真 1213 死锁必须抛给外层 @DeadlockRetry 整笔重试;两笔并发核销赏金只入账一次。
+  MerchantReferralBountyDeadlockRetryMySqlIT
 )
 IFS=, ; IT_LIST="${MYBATIS_ITS[*]}" ; unset IFS
 # ⚠️ 必须带 -am:上面那句 `mvn clean test` 不 install 兄弟模块,

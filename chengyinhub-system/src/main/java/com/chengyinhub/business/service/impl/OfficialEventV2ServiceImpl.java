@@ -1315,6 +1315,8 @@ public class OfficialEventV2ServiceImpl implements IOfficialEventV2Service {
             try {
                 if (settlementHelper.issue(issuance, couponId, xp, badge, collectiveCouponId, collectiveReached)) issued++;
             } catch (Exception ex) {
+                // 锁冲突时 savepoint 已随整笔事务回滚，不能在隐式新事务里接着落 FAILED。
+                com.chengyinhub.business.service.support.SavepointLockFailures.rethrowIfLockFailure(ex);
                 // Helper 的独立事务已回滚 ISSUED → PENDING；这里落可读失败态，下次结算会重新置 PENDING 重试。
                 v2Mapper.updateRewardIssuanceStatus(issuance.getId(), OfficialEventRewardIssuance.FAILED, safeMessage(ex));
             }

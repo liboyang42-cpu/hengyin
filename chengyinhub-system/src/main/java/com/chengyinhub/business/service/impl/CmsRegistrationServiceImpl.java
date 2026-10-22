@@ -3207,6 +3207,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         // 放在 if 外面:tryActivate 每次都从库里重新数人头、且有 CAS 兜底,重复触发无害;
         // 而放进 if 里会让「台账已存在但赏金那次没算成」的情况永远补不回来。
         // onVerification 自己吞异常:核销是收钱路径,赏金是实验性冷启动功能,任何情况下都不能连累它。
+        // 只有锁冲突例外:它原样抛出,交给外层 @DeadlockRetry 整笔回滚重试(见 SavepointLockFailures)。
         merchantReferralBountyService.onVerification(verifierId);
         try {
             verificationRiskService.inspectAndQueue(verifierId, registrationId);
