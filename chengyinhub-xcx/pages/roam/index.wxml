@@ -111,7 +111,7 @@
           <view class="intro-card__body">
             <view class="intro-card__row"><text class="intro-card__title">{{introCards[0].title}}</text><text class="intro-card__pill">出发</text></view>
             <text class="intro-card__sub">{{introCards[0].sub}}</text>
-            <view class="intro-card__live" wx:if="{{introLive[0]}}"><view class="intro-card__dot is-roam"></view><text class="intro-card__livetx">{{introLive[0]}}</text></view>
+            <view class="intro-card__live" wx:if="{{introStartLive}}"><view class="intro-card__dot is-roam"></view><text class="intro-card__livetx">{{introStartLive}}</text></view>
           </view>
         </view>
       </swiper-item>
@@ -125,7 +125,7 @@
           <view class="intro-card__body">
             <view class="intro-card__row"><text class="intro-card__title">{{introCards[1].title}}</text><text class="intro-card__pill">看看</text></view>
             <text class="intro-card__sub">{{introCards[1].sub}}</text>
-            <view class="intro-card__live" wx:if="{{introLive[1]}}"><view class="intro-card__dot is-map"></view><text class="intro-card__livetx">{{introLive[1]}}</text></view>
+            <view class="intro-card__live" wx:if="{{introTeamsLive}}"><view class="intro-card__dot is-map"></view><text class="intro-card__livetx">{{introTeamsLive}}</text></view>
           </view>
         </view>
       </swiper-item>
@@ -139,7 +139,7 @@
           <view class="intro-card__body">
             <view class="intro-card__row"><text class="intro-card__title">{{introCards[2].title}}</text><text class="intro-card__pill">查看</text></view>
             <text class="intro-card__sub">{{introCards[2].sub}}</text>
-            <view class="intro-card__live" wx:if="{{introLive[2]}}"><view class="intro-card__dot is-team"></view><text class="intro-card__livetx">{{introLive[2]}}</text></view>
+            <view class="intro-card__live"><view class="intro-card__dot is-team"></view><text class="intro-card__livetx">查看已加入和申请中的队伍</text></view>
           </view>
         </view>
       </swiper-item>
