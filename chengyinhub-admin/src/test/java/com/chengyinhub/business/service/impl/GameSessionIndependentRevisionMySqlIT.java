@@ -71,7 +71,9 @@ class GameSessionIndependentRevisionMySqlIT {
         db.update("insert into play_team_member(team_id,member_id,status) values(90,7,1),(99,9,1)");
         db.update("insert into cms_registration(member_id,owner_type,owner_id,topic_id,payment_status,registration_status) values(7,2,70,80,2,2),(9,2,70,80,2,2)");
         db.update("insert into game_session(id,activity_id,topic_id,club_id,module_config_snapshot_json,status,current_chapter_id,revision,prepared_by,create_time,update_time) values(50,70,80,40,?,'RUNNING',1,10,88,now(),now())",CONFIG);
-        db.update("insert into game_station_run(id,game_session_id,activity_id,node_id,node_name,station_code,merchant_member_id,source_type,source_id,status,revision,service_start_at,service_end_at,create_time,update_time) values(60,50,70,11,'旧钟楼','CLOCK_TOWER',310,'CHAPTER_NODE',11,'ACTIVE',0,date_sub(now(),interval 1 hour),date_add(now(),interval 1 hour),now(),now())");
+        db.update("insert into game_station_run(id,game_session_id,activity_id,node_id,node_name,station_code,merchant_member_id,source_type,source_id,status,revision,service_start_at,service_end_at,create_time,update_time) values(60,50,70,11,'旧钟楼','CLOCK_TOWER',310,'CHAPTER_NODE',11,'ACTIVE',0,?,?,now(),now())",
+                // 服务窗口按 JVM 时钟写(与被测 clock=Date::new 同源),不用 MySQL now():两边时区不同时会误判窗口外。
+                new java.sql.Timestamp(System.currentTimeMillis()-3600000),new java.sql.Timestamp(System.currentTimeMillis()+3600000));
         db.update("insert into game_team_role_assignment(game_session_id,team_id,member_id,role_code,role_name,status,assigned_by,revision,create_time,update_time) values(50,90,7,'DETECTIVE','侦探','CONFIRMED',88,0,now(),now()),(50,99,9,'DETECTIVE','侦探','CONFIRMED',88,0,now(),now())");
         runtime=service(mapper);
     }
