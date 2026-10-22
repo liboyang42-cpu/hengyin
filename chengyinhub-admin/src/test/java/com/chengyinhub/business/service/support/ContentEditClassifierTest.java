@@ -91,4 +91,37 @@ class ContentEditClassifierTest {
         assertEquals(EditClass.SUBSTANTIVE, ContentEditClassifier.classifyText("有内容", ""));
         assertEquals(EditClass.SUBSTANTIVE, ContentEditClassifier.classifyText(null, "新内容"));
     }
+
+    /** S531-1:数字间的小数点/冒号不能被当标点抹掉;金额、日期、时间的任何数字变化都是实质改动。 */
+    @Test
+    void anyNumberChangeIsSubstantive() {
+        assertEquals(EditClass.SUBSTANTIVE, ContentEditClassifier.classifyText("费用10.00元，含饮料", "费用1000元，含饮料"));
+        assertEquals(EditClass.SUBSTANTIVE, ContentEditClassifier.classifyText("晚上8:30集合", "晚上830集合"));
+        assertEquals(EditClass.SUBSTANTIVE, ContentEditClassifier.classifyText("报名费50元，名额20人", "报名费80元，名额20人"));
+        assertEquals(EditClass.SUBSTANTIVE, ContentEditClassifier.classifyText("10月1日开始报名", "10月7日开始报名"));
+        assertEquals(EditClass.SUBSTANTIVE, ContentEditClassifier.classifyText("沿江跑五公里", "沿江跑八公里"));
+        assertEquals(EditClass.SUBSTANTIVE, ContentEditClassifier.classifyText("费用１０元", "费用１００元"));
+        assertEquals(EditClass.SUBSTANTIVE,
+                ContentEditClassifier.classifyActivity(before(), withDescription("周六晚上九点在滨江公园集合，沿江跑五公里，结束后一起吃宵夜。")));
+        // 数字不变、只改数字外的标点仍是轻改
+        assertEquals(EditClass.LIGHT, ContentEditClassifier.classifyText("费用10.00元,含饮料", "费用10.00元，含饮料！"));
+    }
+
+    /** S531-1:增删否定词(可退款 → 不可退款)哪怕只差一个字也是实质改动。 */
+    @Test
+    void addingOrRemovingNegationIsSubstantive() {
+        assertEquals(EditClass.SUBSTANTIVE, ContentEditClassifier.classifyText("报名后可退款", "报名后不可退款"));
+        assertEquals(EditClass.SUBSTANTIVE, ContentEditClassifier.classifyText("报名后不可退款", "报名后可退款"));
+        assertEquals(EditClass.SUBSTANTIVE, ContentEditClassifier.classifyText("现场允许携带宠物", "现场禁止携带宠物"));
+        assertEquals(EditClass.SUBSTANTIVE, ContentEditClassifier.classifyText("活动有饮料供应", "活动无饮料供应"));
+        assertEquals(EditClass.SUBSTANTIVE, ContentEditClassifier.classifyText("Pets are allowed here", "Pets are not allowed here"));
+        assertEquals(EditClass.SUBSTANTIVE,
+                ContentEditClassifier.classifyActivity(before(), withDescription("周六晚上八点在滨江公园集合，沿江跑五公里，结束后不吃宵夜。")));
+    }
+
+    private static CmsActivityPublishRequest withDescription(String description) {
+        CmsActivityPublishRequest r = new CmsActivityPublishRequest();
+        r.setDescription(description);
+        return r;
+    }
 }

@@ -187,4 +187,26 @@ class ActivityUpdateLightEditTest {
 
         verify(cmsActivityService).updateActivityByOwner(any(), eq(MEMBER_ID), anyString(), eq(true));
     }
+
+    /** S531-1:先审模式下改金额(10.00 → 1000)或加否定词(可退款 → 不可退款)不是轻改,必须退回人工复审。 */
+    @Test
+    void switchOnAmountOrNegationEditStillReentersPreReview() {
+        ReflectionTestUtils.setField(controller, "lightEditClassificationEnabled", true);
+        preReviewAll();
+        exist.setDescription("周六晚上八点集合，费用10.00元，报名后可退款。");
+
+        CmsActivityPublishRequest amount = new CmsActivityPublishRequest();
+        amount.setId(ACTIVITY);
+        amount.setDescription("周六晚上八点集合，费用1000元，报名后可退款。");
+        controller.update(amount);
+
+        CmsActivityPublishRequest negation = new CmsActivityPublishRequest();
+        negation.setId(ACTIVITY);
+        negation.setDescription("周六晚上八点集合，费用10.00元，报名后不可退款。");
+        controller.update(negation);
+
+        verify(cmsActivityService, org.mockito.Mockito.times(2))
+                .updateActivityByOwner(any(), eq(MEMBER_ID), anyString(), eq(true));
+        verify(cmsActivityService, never()).updateActivityByOwner(any(), eq(MEMBER_ID), anyString(), eq(false));
+    }
 }
