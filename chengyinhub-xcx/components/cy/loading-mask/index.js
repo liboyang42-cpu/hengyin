@@ -23,7 +23,8 @@ Component({
         // 嵌套 show:只换文案,是否已显出由第一次 show 的延时决定
         // 退场淡出期间又 show:撤掉退场,直接回到已显出
         const reviving = !this.data.entered && !this._enterTimer;
-        this.setData(reviving ? { title, entered: true } : { title });
+        if (reviving) this.setData({ title, entered: true });
+        else this.setData({ title });
         return;
       }
       // 先挂上(透明,吃触摸),延时到了再显出
