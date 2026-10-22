@@ -1,0 +1,58 @@
+/* 城市定向蓝、自由探索绿(业主 2026-10-22 定的类型色);填充色在走的过程中由浅变深。 */
+.rp { --rp-light: #BFE0FF; --rp-deep: #1F6FD1; /* ds-ok 城市定向类型色 */
+  background: var(--cy-bg-card); border-radius: var(--cy-radius-xl); padding: 28rpx 28rpx 24rpx; margin-bottom: var(--cy-space-4); position: relative; overflow: hidden; }
+.rp--free { --rp-light: #C8F7D5; --rp-deep: #14864A; } /* ds-ok 自由探索类型色 */
+.rp__hd { display: flex; justify-content: space-between; align-items: baseline; }
+.rp__t { font-size: var(--cy-font-body); font-weight: 600; color: var(--cy-color-text-primary); }
+.rp__n { font-size: var(--cy-font-body); font-weight: 700; font-variant-numeric: tabular-nums; color: var(--cy-color-text-primary); }
+.rp__msg { display: block; margin-top: 4rpx; font-size: var(--cy-type-caption); color: var(--cy-color-text-secondary); transition: color .3s; }
+.rp.is-win .rp__msg { color: var(--cy-color-status-warning); }
+.rp__track { position: relative; height: 112rpx; margin: 24rpx 28rpx 0 8rpx; }
+.rp__rail { position: absolute; left: 0; right: 0; top: 50rpx; height: 12rpx; border-radius: 6rpx; background: var(--cy-color-bg-surface-strong); }
+.rp__fill { position: absolute; left: 0; top: 50rpx; height: 12rpx; border-radius: 6rpx; width: 100%; transform-origin: 0 50%; background-color: var(--rp-light);
+  transition: transform 2.2s cubic-bezier(.22, .61, .36, 1), background-color 2.2s linear, box-shadow 2.2s linear; }
+.rp.is-run .rp__fill, .rp.is-win .rp__fill { background-color: var(--rp-deep); box-shadow: 0 0 24rpx var(--rp-deep); }
+.rp__fill::after { content: ''; position: absolute; top: 0; right: 0; bottom: 0; left: 0; border-radius: inherit;
+  background: linear-gradient(90deg, rgba(255, 255, 255, .5), rgba(255, 255, 255, 0)); } /* ds-ok 起点更浅 */
+.rp__fill--still { transition: none; }
+.rp__m { position: absolute; top: 36rpx; width: 40rpx; height: 40rpx; margin-left: -20rpx; border-radius: 50%;
+  background: var(--cy-bg-card); box-shadow: inset 0 0 0 4rpx var(--cy-color-bg-surface-strong); display: flex; align-items: center; justify-content: center;
+  transition: background-color .2s, box-shadow .2s; }
+.rp__m.is-lit { background: var(--rp-deep); box-shadow: 0 0 0 8rpx rgba(255, 255, 255, .08), 0 0 28rpx var(--rp-deep); animation: rp-pop .5s cubic-bezier(.34, 1.32, .64, 1); } /* ds-ok 点亮光晕 */
+.rp__ck { width: 16rpx; height: 9rpx; border-left: 4rpx solid var(--cy-color-text-primary); border-bottom: 4rpx solid var(--cy-color-text-primary);
+  transform: rotate(-45deg) translate(1rpx, -2rpx); opacity: 0; transition: opacity .2s; }
+.rp__m.is-lit .rp__ck { opacity: 1; }
+@keyframes rp-pop { 0% { transform: scale(.6); } 60% { transform: scale(1.35); } 100% { transform: scale(1); } }
+.rp__lb { position: absolute; top: 88rpx; transform: translateX(-50%); font-size: 20rpx; color: var(--cy-color-text-secondary); white-space: nowrap; }
+.rp__plus { position: absolute; top: -4rpx; transform: translateX(-50%); font-size: 22rpx; font-weight: 700; color: var(--cy-color-text-primary);
+  animation: rp-plus .9s ease-out both; white-space: nowrap; }
+@keyframes rp-plus { 0% { opacity: 0; transform: translate(-50%, 12rpx); } 30% { opacity: 1; transform: translate(-50%, -12rpx); } 100% { opacity: 0; transform: translate(-50%, -36rpx); } }
+/* 宝箱:箱体 + 盖子,完成时盖子翻开、发光、弹一下 */
+.rp__chest { position: absolute; right: -28rpx; top: 8rpx; width: 80rpx; height: 80rpx; }
+.rp__glow { position: absolute; left: 4rpx; top: 0; width: 72rpx; height: 72rpx; border-radius: 50%; background: rgba(245, 179, 1, .35); opacity: 0; transition: opacity .3s; } /* ds-ok 宝箱金 */
+.rp__box { position: absolute; left: 12rpx; bottom: 12rpx; width: 56rpx; height: 32rpx; border-radius: 6rpx; background: #B8741A; /* ds-ok 宝箱木色 */
+  box-shadow: inset 0 8rpx 0 #8A5310; } /* ds-ok */
+.rp__box::after { content: ''; position: absolute; left: 24rpx; top: 4rpx; width: 8rpx; height: 14rpx; border-radius: 2rpx; background: #FFD25E; } /* ds-ok 锁扣 */
+.rp__lid { position: absolute; left: 12rpx; bottom: 42rpx; width: 56rpx; height: 18rpx; border-radius: 16rpx 16rpx 2rpx 2rpx; background: #D9921F; /* ds-ok 箱盖 */
+  transform-origin: 6rpx 18rpx; transition: transform .5s cubic-bezier(.34, 1.32, .64, 1); }
+.rp.is-win .rp__lid { transform: rotate(-28deg) translate(-2rpx, -6rpx); }
+.rp.is-win .rp__glow { opacity: 1; }
+.rp.is-win .rp__chest { animation: rp-bump .6s cubic-bezier(.34, 1.32, .64, 1); }
+@keyframes rp-bump { 40% { transform: scale(1.25) rotate(-6deg); } 100% { transform: none; } }
+.rp__conf { position: absolute; right: 12rpx; top: 30rpx; width: 0; height: 0; }
+.rp__c { position: absolute; width: 10rpx; height: 18rpx; border-radius: 3rpx; animation: rp-conf 1.5s cubic-bezier(.2, .7, .4, 1) forwards; opacity: 0; }
+.rp__c--0, .rp__c--6, .rp__c--12 { background: #F5B301; } /* ds-ok 彩纸 */
+.rp__c--1, .rp__c--7, .rp__c--13 { background: #FF8A3D; } /* ds-ok 彩纸 */
+.rp__c--2, .rp__c--8, .rp__c--14 { background: #7CF0A0; } /* ds-ok 彩纸 */
+.rp__c--3, .rp__c--9, .rp__c--15 { background: #7DB7FF; } /* ds-ok 彩纸 */
+.rp__c--4, .rp__c--10 { background: #FF375F; } /* ds-ok 彩纸 */
+.rp__c--5, .rp__c--11 { background: #FFFFFF; } /* ds-ok 彩纸 */
+.rp__c--0 { --dx: -120rpx; --dy: -60rpx; } .rp__c--1 { --dx: -80rpx; --dy: -110rpx; } .rp__c--2 { --dx: -30rpx; --dy: -130rpx; }
+.rp__c--3 { --dx: 20rpx; --dy: -120rpx; } .rp__c--4 { --dx: -150rpx; --dy: -20rpx; } .rp__c--5 { --dx: -100rpx; --dy: 40rpx; }
+.rp__c--6 { --dx: -60rpx; --dy: -150rpx; } .rp__c--7 { --dx: -170rpx; --dy: -90rpx; } .rp__c--8 { --dx: -20rpx; --dy: -70rpx; }
+.rp__c--9 { --dx: -130rpx; --dy: -140rpx; } .rp__c--10 { --dx: 10rpx; --dy: -150rpx; } .rp__c--11 { --dx: -190rpx; --dy: -40rpx; }
+.rp__c--12 { --dx: -70rpx; --dy: 20rpx; } .rp__c--13 { --dx: -110rpx; --dy: -170rpx; } .rp__c--14 { --dx: -40rpx; --dy: -180rpx; } .rp__c--15 { --dx: -160rpx; --dy: 10rpx; }
+@keyframes rp-conf { 0% { opacity: 1; transform: translate(0, 0) rotate(0); } 100% { opacity: 0; transform: translate(var(--dx), calc(var(--dy) + 140rpx)) rotate(540deg); } }
+
+/* 减少动态效果:圆点直接点亮、宝箱直接打开,不弹跳不撒花 */
+.rp--reduced .rp__m, .rp--reduced .rp__plus, .rp--reduced .rp__chest, .rp--reduced .rp__c { animation: none; }

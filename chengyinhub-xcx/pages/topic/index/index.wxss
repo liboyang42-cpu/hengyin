@@ -1795,3 +1795,115 @@ button::after {
   color: var(--cy-color-text-secondary);
 }
 .statbar__stars { display: flex; gap: 4rpx; color: var(--cy-color-text-primary); }
+
+/* ===== 2026-10-22 业主动效落地(docs/design/动效界面落地_20261022)===== */
+/* A1 封面:多张照片各自慢推,交叉淡入淡出 */
+.topic .slide1 .kb { position: absolute; inset: 0; overflow: hidden; }
+.topic .slide1 .kb__im { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; will-change: transform, opacity;
+  transition: opacity 1.2s ease, transform 9s ease-out; }
+.topic .slide1 .kb__im.is-on { opacity: 1; }
+/* 两种推法交替:A 由近推远、B 由远拉近;换张时旧图边淡出边慢慢回位 */
+.kb__im--a { transform: scale(1.02); }
+.kb__im--a.is-on { transform: scale(1.14) translate(-2%, -1.5%); }
+.kb__im--b { transform: scale(1.12) translate(2%, 1%); }
+.kb__im--b.is-on { transform: scale(1.02); }
+/* 点「查看详情与报名」:封面文字下沉淡出 → 第二屏头图回落、信息逐行上浮(点按转场,不是滚动) */
+.topic .slide1 .slide-txt { transition: transform .28s cubic-bezier(.4,0,1,1), opacity .28s ease; }
+.topic .slide1 .slide-txt--leave { transform: translateY(40rpx); opacity: 0; }
+.slide2--enter .det1 { animation: hero-drop .7s cubic-bezier(.16,1,.3,1) both; }
+.slide2--enter .hero-by, .slide2--enter .hero-title, .slide2--enter .hero-acts, .slide2--enter .statbar { animation: hero-up .6s cubic-bezier(.16,1,.3,1) both; }
+.slide2--enter .hero-title { animation-delay: .06s; }
+.slide2--enter .hero-acts { animation-delay: .12s; }
+.slide2--enter .statbar { animation-delay: .18s; }
+@keyframes hero-drop { from { transform: scale(1.08); opacity: .4; } to { transform: none; opacity: 1; } }
+@keyframes hero-up { from { transform: translateY(36rpx); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* A3–A5 标题区:发布者 / 标题 / 价格按钮 + 收藏 + 类型文字 */
+.hero-info { padding: var(--cy-space-5) var(--cy-space-6) var(--cy-space-4); background: var(--cy-color-play-surface-solid); }
+.hero-by { display: flex; align-items: center; gap: 12rpx; margin-bottom: 12rpx; }
+.hero-by__n { font-size: var(--cy-type-caption); font-weight: 600; color: var(--cy-color-text-primary); }
+.hero-by__k { font-size: var(--cy-type-caption); color: var(--cy-color-text-secondary); }
+.hero-title { font-size: var(--cy-type-page-title); font-weight: 700; line-height: var(--cy-leading-tight); color: var(--cy-color-text-primary); }
+.hero-acts { display: flex; align-items: center; gap: 20rpx; margin-top: var(--cy-space-4); min-height: 88rpx; }
+.hero-cta { flex: none; height: 88rpx; padding: 0 40rpx; border-radius: 999rpx; display: flex; align-items: center; justify-content: center;
+  font-size: var(--cy-font-body); font-weight: 600; color: var(--cy-color-action-primary-fg); background: var(--cy-color-action-primary-bg); }
+.hero-fav { flex: none; width: 88rpx; height: 88rpx; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  color: var(--cy-color-text-primary); border: 1rpx solid var(--cy-color-play-line); background: var(--cy-color-bg-surface-subtle); }
+.hero-fav.is-on, .dock-fav.is-on { color: var(--cy-color-status-danger); }
+/* 停靠期间原位留空(占位不塌),由停靠层在顶层飞行 */
+.hero-cta.is-away, .hero-fav.is-away { visibility: hidden; }
+.hero-type { font-size: var(--cy-font-body); font-weight: 600; }
+.hero-type--city { color: #4D9BFF; } /* ds-ok:业主定 城市定向=蓝;暗底上可读的蓝,设计系统无此语义色 */
+.hero-type--free { color: #2FD27A; } /* ds-ok:业主定 自由探索=绿;暗底上可读的绿 */
+
+/* 停靠层:价格按钮在右下角,收藏在顶栏胶囊左侧(带胶囊同款描边) */
+.dock-cta { position: fixed; z-index: 60; box-sizing: border-box; border-radius: 999rpx; display: flex; align-items: center; justify-content: center; padding: 0 32rpx;
+  font-size: var(--cy-font-body); font-weight: 600; color: var(--cy-color-action-primary-fg); background: var(--cy-color-action-primary-bg);
+  box-shadow: 0 12rpx 40rpx rgba(0, 0, 0, .45); /* ds-ok:浮层投影 */ }
+.dock-fav { position: fixed; z-index: 120; box-sizing: border-box; border-radius: 999rpx; display: flex; align-items: center; justify-content: center;
+  color: var(--cy-color-text-primary); background: rgba(0, 0, 0, .25); /* ds-ok:与微信胶囊同款半透明底 */
+  border: 1rpx solid rgba(255, 255, 255, .25); /* ds-ok:微信胶囊描边 */ }
+
+/* A6 数据条首格徽章后的分隔线沿用 .statbar__sep */
+
+/* A12 / A7 参与商家与组队 */
+.topic-shops { padding: 0 var(--cy-space-6) var(--cy-space-6); }
+.topic-teams { padding: var(--cy-space-6) var(--cy-space-6) 0; }
+.topic-teams__card { border-radius: var(--cy-radius-xl); background: var(--cy-color-play-surface-solid); border: 1rpx solid var(--cy-color-play-line); padding: 8rpx 28rpx; }
+.topic-teams__hd { display: flex; align-items: baseline; justify-content: space-between; padding: 20rpx 0 12rpx; }
+.topic-teams__n { font-size: var(--cy-font-body); font-weight: 600; color: var(--cy-color-text-primary); }
+.topic-teams__need { font-size: var(--cy-type-caption); color: var(--cy-color-status-warning); }
+.topic-teams__row { display: flex; align-items: center; gap: 20rpx; padding: 20rpx 0; border-top: 1rpx solid var(--cy-color-play-line); }
+.topic-teams__av { flex: none; display: flex; }
+.topic-teams__av cy-avatar + cy-avatar { margin-left: -16rpx; }
+.topic-teams__tx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4rpx; }
+.topic-teams__t { font-size: var(--cy-font-body); color: var(--cy-color-text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.topic-teams__s { font-size: var(--cy-type-caption); color: var(--cy-color-text-secondary); }
+.topic-teams__cnt { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 4rpx; }
+.topic-teams__c { font-size: var(--cy-font-body); font-weight: 600; color: var(--cy-color-text-primary); }
+.topic-teams__m { font-size: var(--cy-type-caption); color: var(--cy-color-status-warning); }
+.topic-teams__ft { padding: 16rpx 0 20rpx; border-top: 1rpx solid var(--cy-color-play-line); font-size: var(--cy-type-caption); color: var(--cy-color-text-secondary); }
+
+/* A9 故事标签:扇形下面的标题 + A10 章节卡(整图 + 底部模糊渐变,点开展开) */
+.story-head { padding: 8rpx var(--cy-space-6) var(--cy-space-4); display: flex; flex-direction: column; gap: 8rpx; }
+.story-head__t { font-size: var(--cy-type-page-title); font-weight: 700; color: var(--cy-color-text-primary); }
+.story-head__s { font-size: var(--cy-type-caption); color: var(--cy-color-text-secondary); }
+.story-cards { padding: 0 var(--cy-space-6) var(--cy-space-6); display: flex; flex-direction: column; gap: 20rpx; }
+.story-cc { position: relative; height: 200rpx; border-radius: var(--cy-radius-xl); overflow: hidden; clip-path: inset(0 round var(--cy-radius-xl));
+  background: var(--cy-color-play-surface-solid); transition: height .45s cubic-bezier(.16,1,.3,1); }
+.story-cc.is-open { height: 520rpx; }
+.story-cc__img { position: absolute; inset: 0; width: 100%; height: 100%; }
+.story-cc__blur { position: absolute; left: 0; right: 0; bottom: 0; height: 70%; backdrop-filter: blur(24rpx); -webkit-backdrop-filter: blur(24rpx);
+  -webkit-mask-image: linear-gradient(transparent, #000 55%); mask-image: linear-gradient(transparent, #000 55%); /* ds-ok:遮罩 alpha */ }
+.story-cc__sh { position: absolute; inset: 0; background: linear-gradient(rgba(0,0,0,.05), rgba(0,0,0,.72)); /* ds-ok:照片压暗渐变 */ }
+.story-cc__hd { position: absolute; left: 28rpx; right: 80rpx; bottom: 24rpx; display: flex; flex-direction: column; gap: 4rpx; transition: transform .45s cubic-bezier(.16,1,.3,1); }
+.story-cc.is-open .story-cc__hd { transform: translateY(-276rpx); }
+.story-cc__k { font-size: var(--cy-type-caption); color: rgba(255,255,255,.75); /* ds-ok:照片上的次级白字 */ }
+.story-cc__t { font-size: var(--cy-font-subtitle); font-weight: 700; color: #fff; /* ds-ok:照片上的白字 */ }
+.story-cc__chev { position: absolute; right: 24rpx; bottom: 28rpx; color: #fff; /* ds-ok */ transform: rotate(90deg); transition: transform .35s ease; }
+.story-cc.is-open .story-cc__chev { transform: rotate(-90deg); }
+.story-cc__in { position: absolute; left: 28rpx; right: 28rpx; bottom: 28rpx; height: 250rpx; opacity: 0; transform: translateY(24rpx); transition: opacity .3s ease, transform .4s cubic-bezier(.16,1,.3,1);
+  display: flex; flex-direction: column; gap: 12rpx; overflow: hidden; }
+.story-cc.is-open .story-cc__in { opacity: 1; transform: none; transition-delay: .12s; }
+.story-cc__x { font-size: var(--cy-font-body); line-height: var(--cy-leading-normal); color: rgba(255,255,255,.92); /* ds-ok */ }
+.story-cc__meta { font-size: var(--cy-type-caption); color: rgba(255,255,255,.7); /* ds-ok */ }
+
+/* 故事扇收进顶栏:胶囊左侧的小卡堆 */
+.story-mini { position: fixed; z-index: 120; width: 72rpx; pointer-events: none; animation: hero-up .3s ease both; }
+.story-mini__c { position: absolute; top: 0; left: 0; width: 44rpx; height: 100%; border-radius: 8rpx; background: var(--cy-color-bg-surface-strong);
+  box-shadow: 0 4rpx 12rpx rgba(0,0,0,.4); /* ds-ok */ }
+.story-mini__c--0 { transform: translateX(24rpx) rotate(8deg); z-index: 3; }
+.story-mini__c--1 { transform: translateX(12rpx) rotate(0deg); z-index: 2; }
+.story-mini__c--2 { transform: rotate(-8deg); z-index: 1; }
+
+/* A11 路线/地点:进度条 + 路线说明 */
+.route-top { padding-top: var(--cy-space-5); padding-bottom: var(--cy-space-4); }
+.route-note { display: flex; align-items: center; gap: 16rpx; margin: 8rpx 0 var(--cy-space-5); font-size: var(--cy-type-caption); }
+.route-note__k { flex: none; padding: 4rpx 16rpx; border-radius: 999rpx; font-weight: 600; }
+.route-note--city .route-note__k { color: #4D9BFF; background: rgba(77,155,255,.14); } /* ds-ok:城市定向=蓝 */
+.route-note--free .route-note__k { color: #2FD27A; background: rgba(47,210,122,.14); } /* ds-ok:自由探索=绿 */
+.route-note__v { color: var(--cy-color-text-secondary); }
+
+/* 减少动态效果:封面不推、不转场浮入,顶栏小卡堆直接出现 */
+.topic--reduced .kb__im { transition: opacity 1.2s ease; }
+.topic--reduced .det1, .topic--reduced .hero-by, .topic--reduced .hero-title, .topic--reduced .hero-acts, .topic--reduced .statbar, .topic--reduced .story-mini { animation: none; }

@@ -149,10 +149,12 @@ test('零元通行证仍直接进入游玩，付费单仍拉起微信支付', ()
   /* 2026-09-05:购买成功的落点从 toast 换成了 cy-result-sheet(_goSelfPlay 是三个
      调用点共用的漏斗,只改这一处)。被保护的事实不变 —— 零元单也要照常走「购买成功」
      这个落点,不能因为不用付款就悄悄跳过反馈。断言随之改钉面板。 */
-  assert.deepEqual(free.toasts, [], '不再额外弹 toast,结果由面板承担');
-  assert.equal(free.vm.data.resultSheet.kind, 'success');
-  assert.equal(free.vm.data.resultSheet.title, '购买成功', '零元单照常走购买成功落点');
-  assert.ok(free.vm.data.resultSheet.show, '面板必须真的弹出来');
+  /* 2026-10-22 业主:购买成功的落点再换成「通行证已到账」动效层(cy-pass-reveal),
+     买完先看到通行证,再由「放进票夹 / 开始游戏」决定去向;可选的商家营销同意行改在动效收尾时
+     走原结果面板。被保护的事实仍不变 —— 零元单同样要走这个成功落点,不能悄悄跳过反馈。 */
+  assert.deepEqual(free.toasts, [], '不再额外弹 toast,结果由到账层承担');
+  assert.ok(free.vm.data.reveal.show, '零元单照常走购买成功落点:到账层必须真的弹出来');
+  assert.equal(free.vm._revealRegId, 1002, '「开始游戏」要能带着这张票直接开局');
   assert.equal(free.payments.length, 0);
   assert.equal(free.requests.length, 1, '零元单不该再去取支付参数');
 });
