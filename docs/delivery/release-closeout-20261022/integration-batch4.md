@@ -149,4 +149,18 @@ DL1、O15、O3/O9、F5、O11/O17、O8/O10 没有新增迁移。所有迁移都�
 
 ## 8 本 PR 的 CI
 
+说明：`ci.yml` 和 `funds-mysql-it.yml` 的 `pull_request` 触发只认 base=master 等固定分支。本 PR 的 base 是 batch3 集成分支，所以这两个 workflow 在本分支上改用 `workflow_dispatch` 手动触发。
+
+### 首轮（head `e2f3df5a`）
+
+- GitHub CI run 39834725556：31 个 job 中 30 个 success，1 个 failure（`Backend tests`）。
+- 失败原因是跨批语义冲突，不是 flake：
+  - batch3 #499 AC2 的 `JourneyThoughtProgressMySqlIT` 自建 schema 时只套了 `migration_theme_state_key_20260916.sql`。
+  - batch4 #524 F2 让 `ThemeStateKeyMapper.xml` 改为查询扩展列，3 条用例报 `Unknown column 'min_value'`。
+  - F2 自己已经在 `JourneyFullFlowMySqlIT`、`GameplayReskinMySqlIT`、`A03EndingSnapshotMySqlIT` 中追加了 `migration_20261022_theme_state_key_attribute_def.sql`。AC2 的这条 IT 是 F2 分支之后才进 batch3 的，所以没有覆盖到。
+- 修复：在该 IT 的 `applyMigrations` 中按同样写法紧跟追加 F2 迁移。断言不变，没有跳过或放宽任何用例。
+- 全仓复查：套用 `migration_theme_state_key_20260916.sql` 却没有追加 F2 迁移的 IT，只有这一个。
+
+### 修复后
+
 （推送后补记）
