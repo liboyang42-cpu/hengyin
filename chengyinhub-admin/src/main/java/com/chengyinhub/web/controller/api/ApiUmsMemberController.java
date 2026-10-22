@@ -20,6 +20,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -113,6 +114,9 @@ public class ApiUmsMemberController extends BaseController {
 
     @Autowired
     private INicknameSuggestionService nicknameSuggestionService;
+
+    @Autowired
+    private com.chengyinhub.business.service.impl.ProfileReviewService profileReviewService;
 
     @Autowired
     private IPlayerProgressionService playerProgressionService;
@@ -716,10 +720,41 @@ public class ApiUmsMemberController extends BaseController {
             try { wxContentSecurityService.submitMediaCheck(IWxContentSecurityService.BIZ_TYPE_MEMBER_PROFILE, member_id, profileImgs, openid); } catch (Exception ignore) {}
         }
         if (rows > 0) {
-            return success("更新成功");
+            // #25:记一版资料提交;头像复核结论另由 /profile/review 按送检记录实时回读,这里不假定已通过。
+            Integer version = profileReviewService.recordMemberSubmission(member_id, changedProfileFields(request),
+                    umsMember.getAvatar(), StringUtils.isNotEmpty(request.getAvatar()) ? request.getAvatar() : null);
+            AjaxResult ok = success("更新成功");
+            ok.put("profileVersion", version);
+            return ok;
         } else {
             return error("更新失败");
         }
+    }
+
+    private static java.util.List<String> changedProfileFields(UmsMemberUpdateDTO request) {
+        java.util.List<String> fields = new java.util.ArrayList<String>();
+        if (request.getName() != null) fields.add("name");
+        if (request.getAvatar() != null) fields.add("avatar");
+        if (request.getWechat() != null) fields.add("wechat");
+        if (request.getCasePics() != null) fields.add("casePics");
+        if (request.getIntroduction() != null) fields.add("introduction");
+        if (request.getCaseIntroducton() != null) fields.add("caseIntroducton");
+        if (request.getWebsite() != null) fields.add("website");
+        if (request.getWorkAddress() != null) fields.add("workAddress");
+        if (request.getTagIds() != null) fields.add("tagIds");
+        return fields;
+    }
+
+    /**
+     * 本人资料审核回执(#25):当前资料版本 + 最近一次头像提交的图片安全复核状态(PENDING/APPROVED/REJECTED/NOT_SUBMITTED)
+     * 与它此刻是否就是对外展示的那张。身份只取登录态,不收任何会员 id 入参。
+     */
+    @Operation(summary = "个人资料审核回执")
+    @GetMapping("/profile/review")
+    public AjaxResult profileReview() {
+        Long memberId = optionalMemberId();
+        if (memberId == null) return error("请先登录");
+        return success(profileReviewService.memberReceipt(memberId));
     }
 
     private Long optionalMemberId() {

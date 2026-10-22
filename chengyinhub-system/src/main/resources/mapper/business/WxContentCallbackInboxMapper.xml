@@ -72,6 +72,13 @@
         where biz_type = #{bizType} and biz_id = #{bizId} and verdict = 1
     </select>
 
+    <!-- 只读审核回执:某目标某张媒体最近一次送检的回调状态。 -->
+    <select id="selectLatestByTargetMedia" resultMap="InboxResult">
+        select <include refid="columns"/> from wx_content_callback_inbox
+        where biz_type = #{bizType} and biz_id = #{bizId} and media_hash = UNHEX(#{mediaHash})
+        order by id desc limit 1
+    </select>
+
     <!-- 固定表名 choose，禁止把用户输入拼进 SQL。返回 null 代表目标不存在。 -->
     <select id="lockBusinessTarget" resultType="long">
         <choose>

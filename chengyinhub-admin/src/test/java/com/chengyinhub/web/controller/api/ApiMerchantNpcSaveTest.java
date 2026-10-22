@@ -84,6 +84,8 @@ class ApiMerchantNpcSaveTest {
         when(umsMemberService.selectUmsMemberById(MEMBER_ID)).thenReturn(owner);
         ReflectionTestUtils.setField(controller, "umsMemberService", umsMemberService);
         ReflectionTestUtils.setField(controller, "merchantAccessService", accessService);
+        ReflectionTestUtils.setField(controller, "profileReviewService",
+                mock(com.chengyinhub.business.service.impl.ProfileReviewService.class));
     }
 
     @Test
