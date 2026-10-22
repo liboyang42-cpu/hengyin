@@ -182,6 +182,8 @@ class MerchantReferralBountyDeadlockRetryMySqlIT {
     @Test
     void deadlockInsideBountySavepointRetriesWholeVerificationAndPaysExactlyOnce() throws Exception {
         CountDownLatch competitorHoldsInviter = new CountDownLatch(1);
+        CountDownLatch verificationHoldsRow = new CountDownLatch(1);
+        verifier.signalRowLocked(verificationHoldsRow);
         Future<String> competitor = pool.submit(() -> {
             try (Connection c = source.getConnection(); Statement st = c.createStatement()) {
                 c.setAutoCommit(false);
@@ -189,8 +191,11 @@ class MerchantReferralBountyDeadlockRetryMySqlIT {
                     st.executeUpdate("UPDATE it_ballast SET v = v + 1");          // heavier trx ⇒ not the victim
                     st.executeQuery("SELECT balance FROM ums_member WHERE id=" + INVITER + " FOR UPDATE").close();
                     competitorHoldsInviter.countDown();
-                    awaitVerificationBlockedOnLock();
-                    // Closes the cycle: verification holds it_verify_log#1 and waits for the inviter row we hold.
+                    // Once verification holds it_verify_log#1 and we hold the inviter row, the cycle forms whichever
+                    // of the two cross requests comes second; InnoDB then rolls back the lighter verification.
+                    if (!verificationHoldsRow.await(20, TimeUnit.SECONDS)) {
+                        throw new IllegalStateException("verification never locked its row");
+                    }
                     st.executeQuery("SELECT verified FROM it_verify_log WHERE id=1 FOR UPDATE").close();
                     return "acquired";
                 } catch (SQLException failure) {
@@ -236,22 +241,12 @@ class MerchantReferralBountyDeadlockRetryMySqlIT {
         assertEquals(1, (int) db.queryForObject("SELECT COUNT(*) FROM ums_member_balance_detail", Integer.class));
     }
 
-    private void awaitVerificationBlockedOnLock() throws InterruptedException {
-        long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(20);
-        while (System.nanoTime() < deadline) {
-            Integer waiting = db.queryForObject(
-                    "SELECT COUNT(*) FROM information_schema.innodb_trx WHERE trx_state='LOCK WAIT'", Integer.class);
-            if (waiting != null && waiting > 0) return;
-            Thread.sleep(20);
-        }
-        throw new IllegalStateException("verification never blocked on the inviter lock");
-    }
-
     /** 代替核销收口 redeemExploreChapterAndRecord:同样的 @DeadlockRetry + @Transactional 外层边界。 */
     static class Verifier {
         private final AtomicInteger attempts = new AtomicInteger();
         private JdbcTemplate jdbc;
         private MerchantReferralBountyService bounty;
+        private volatile CountDownLatch rowLocked;
 
         public void use(JdbcTemplate jdbc, MerchantReferralBountyService bounty) {
             this.jdbc = jdbc;
@@ -260,6 +255,11 @@ class MerchantReferralBountyDeadlockRetryMySqlIT {
 
         public void reset() {
             attempts.set(0);
+            rowLocked = null;
+        }
+
+        public void signalRowLocked(CountDownLatch latch) {
+            rowLocked = latch;
         }
 
         public int attempts() {
@@ -271,6 +271,8 @@ class MerchantReferralBountyDeadlockRetryMySqlIT {
         public void verify(long verificationId) {
             attempts.incrementAndGet();
             assertEquals(1, jdbc.update("UPDATE it_verify_log SET verified = verified + 1 WHERE id=?", verificationId));
+            CountDownLatch latch = rowLocked;
+            if (latch != null) latch.countDown();
             bounty.onVerification(MERCHANT);
         }
     }
