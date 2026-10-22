@@ -588,6 +588,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+          # 2026-10-22 O-16:GitHub-hosted 每次是全新 VM,npm ci 要重下全部包。
+          # 只缓存 ~/.npm 下载缓存(按 lockfile 定键),npm ci 仍从 lockfile 全量重装 node_modules,
+          # 安装结果与不缓存完全一致,门禁口径不变。
+          cache: npm
+          cache-dependency-path: chengyinhub-ui/package-lock.json
       # 跑的就是部署链路那一份 ci/ui-build.sh:门禁绿 = 部署那条路能构建出产物。
       - name: Build admin UI
         run: bash ci/ui-build.sh "${{ github.sha }}"
@@ -612,6 +617,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+          # 同 admin_ui:只缓存 ~/.npm,npm ci 照旧全量安装。
+          cache: npm
+          cache-dependency-path: chengyinhub-ui/package-lock.json
       # 这些合约测试当前只用 node 内置模块 + tests/e2e 下的本地 helper/fixture,
       # 不依赖任何三方包;仍然装依赖,是为了跟本机 `npm run test:e2e:contract` 完全同路径 ——
       # 以后有合约引入三方包时不会因为 CI 少装依赖而变成 MODULE_NOT_FOUND 型迷惑失败。
