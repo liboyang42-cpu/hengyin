@@ -26,6 +26,9 @@ public interface AuditTaskMapper {
 
     int insertAuditTask(AuditTask auditTask);
 
+    /** O5b-3:未结单(PENDING/ESCALATED)的 deadline 只收紧到 #{deadline},已更早或已结单不动。 */
+    int tightenOpenDeadline(@Param("id") Long id, @Param("deadline") java.util.Date deadline);
+
     int updateAuditTaskReviewCas(@Param("id") Long id,
                                  @Param("expectedStatus") Integer expectedStatus,
                                  @Param("status") Integer status,

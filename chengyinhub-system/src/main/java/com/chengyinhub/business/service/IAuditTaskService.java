@@ -79,6 +79,19 @@ public interface IAuditTaskService {
     com.chengyinhub.business.domain.AuditAppeal submitAppeal(String bizType, Long bizId, Long memberId,
                                                              String reason, String evidenceJson);
 
+    /**
+     * O5b-2:同上,另带申诉附件(媒体引用,须本人上传且已过内容安全)。开关关闭时带附件会被拒。
+     * 默认实现只在不带附件时委托旧方法,避免旧实现静默丢附件。
+     */
+    default com.chengyinhub.business.domain.AuditAppeal submitAppeal(String bizType, Long bizId, Long memberId,
+                                                                     String reason, String evidenceJson,
+                                                                     java.util.List<String> attachments) {
+        if (attachments != null && attachments.stream().anyMatch(a -> a != null && !a.trim().isEmpty())) {
+            throw new UnsupportedOperationException("申诉附件未实现");
+        }
+        return submitAppeal(bizType, bizId, memberId, reason, evidenceJson);
+    }
+
     /** 作者只读：自己内容的审核轮次与时间线、申诉状态、是否可申诉。非作者抛 403。 */
     java.util.Map<String, Object> contentTimeline(String bizType, Long bizId, Long memberId);
 }
