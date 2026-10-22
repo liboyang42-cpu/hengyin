@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
-  "controlCount": 4954,
+  "controlCount": 4947,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -82779,15 +82779,6 @@
           "segments": [
             {
               "selector": "#settings-merchant-apply",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/shezhi/shezhi",
-          "segments": [
-            {
-              "selector": "#settings-post-governance",
               "index": 0
             }
           ]
@@ -174201,32 +174192,6 @@
           "segments": [
             {
               "selector": "cy-marketing-consent",
-              "index": 0
-            },
-            {
-              "selector": "cy-inline-error",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/shezhi/shezhi",
-          "segments": [
-            {
-              "selector": "cy-post-governance",
-              "index": 0
-            },
-            {
-              "selector": "cy-inline-error.pg-notice",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/shezhi/shezhi",
-          "segments": [
-            {
-              "selector": "cy-post-governance",
               "index": 0
             },
             {
@@ -334888,7 +334853,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/scene-roam-task-list/index.js:88"
+        "staticSource": "components/cy/scene-roam-task-list/index.js:85"
       }
     },
     {
@@ -335006,7 +334971,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/scene-roam-task-list/index.js:90"
+        "staticSource": "components/cy/scene-roam-task-list/index.js:87"
       }
     },
     {
@@ -335123,7 +335088,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/scene-roam-task-list/index.js:87"
+        "staticSource": "components/cy/scene-roam-task-list/index.js:84"
       }
     },
     {
@@ -335240,7 +335205,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/scene-roam-task-list/index.js:86"
+        "staticSource": "components/cy/scene-roam-task-list/index.js:83"
       }
     },
     {
@@ -387617,24 +387582,6 @@
           ]
         },
         {
-          "route": "pages/shezhi/shezhi",
-          "segments": [
-            {
-              "selector": "cy-sheet",
-              "index": 2
-            }
-          ]
-        },
-        {
-          "route": "pages/shezhi/shezhi",
-          "segments": [
-            {
-              "selector": "cy-sheet",
-              "index": 3
-            }
-          ]
-        },
-        {
           "route": "pages/square/detail/index",
           "segments": [
             {
@@ -425112,24 +425059,6 @@
             {
               "selector": "cy-sheet",
               "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/shezhi/shezhi",
-          "segments": [
-            {
-              "selector": "cy-sheet",
-              "index": 2
-            }
-          ]
-        },
-        {
-          "route": "pages/shezhi/shezhi",
-          "segments": [
-            {
-              "selector": "cy-sheet",
-              "index": 3
             }
           ]
         },
@@ -462615,24 +462544,6 @@
           ]
         },
         {
-          "route": "pages/shezhi/shezhi",
-          "segments": [
-            {
-              "selector": "cy-sheet",
-              "index": 2
-            }
-          ]
-        },
-        {
-          "route": "pages/shezhi/shezhi",
-          "segments": [
-            {
-              "selector": "cy-sheet",
-              "index": 3
-            }
-          ]
-        },
-        {
           "route": "pages/square/detail/index",
           "segments": [
             {
@@ -500114,24 +500025,6 @@
           ]
         },
         {
-          "route": "pages/shezhi/shezhi",
-          "segments": [
-            {
-              "selector": "cy-sheet",
-              "index": 2
-            }
-          ]
-        },
-        {
-          "route": "pages/shezhi/shezhi",
-          "segments": [
-            {
-              "selector": "cy-sheet",
-              "index": 3
-            }
-          ]
-        },
-        {
           "route": "pages/square/detail/index",
           "segments": [
             {
@@ -537609,24 +537502,6 @@
             {
               "selector": "cy-sheet",
               "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/shezhi/shezhi",
-          "segments": [
-            {
-              "selector": "cy-sheet",
-              "index": 2
-            }
-          ]
-        },
-        {
-          "route": "pages/shezhi/shezhi",
-          "segments": [
-            {
-              "selector": "cy-sheet",
-              "index": 3
             }
           ]
         },
@@ -575113,24 +574988,6 @@
           ]
         },
         {
-          "route": "pages/shezhi/shezhi",
-          "segments": [
-            {
-              "selector": "cy-sheet",
-              "index": 2
-            }
-          ]
-        },
-        {
-          "route": "pages/shezhi/shezhi",
-          "segments": [
-            {
-              "selector": "cy-sheet",
-              "index": 3
-            }
-          ]
-        },
-        {
           "route": "pages/square/detail/index",
           "segments": [
             {
@@ -612609,24 +612466,6 @@
             {
               "selector": "cy-sheet",
               "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/shezhi/shezhi",
-          "segments": [
-            {
-              "selector": "cy-sheet",
-              "index": 2
-            }
-          ]
-        },
-        {
-          "route": "pages/shezhi/shezhi",
-          "segments": [
-            {
-              "selector": "cy-sheet",
-              "index": 3
             }
           ]
         },
@@ -650113,24 +649952,6 @@
           ]
         },
         {
-          "route": "pages/shezhi/shezhi",
-          "segments": [
-            {
-              "selector": "cy-sheet",
-              "index": 2
-            }
-          ]
-        },
-        {
-          "route": "pages/shezhi/shezhi",
-          "segments": [
-            {
-              "selector": "cy-sheet",
-              "index": 3
-            }
-          ]
-        },
-        {
           "route": "pages/square/detail/index",
           "segments": [
             {
@@ -687609,24 +687430,6 @@
             {
               "selector": "cy-sheet",
               "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/shezhi/shezhi",
-          "segments": [
-            {
-              "selector": "cy-sheet",
-              "index": 2
-            }
-          ]
-        },
-        {
-          "route": "pages/shezhi/shezhi",
-          "segments": [
-            {
-              "selector": "cy-sheet",
-              "index": 3
             }
           ]
         },
@@ -761694,7 +761497,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:280"
+        "staticSource": "pages/coop/invite-detail/index.js:271"
       }
     },
     {
@@ -761764,7 +761567,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:373"
+        "staticSource": "pages/coop/invite-detail/index.js:364"
       }
     },
     {
@@ -761875,7 +761678,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:390"
+        "staticSource": "pages/coop/invite-detail/index.js:381"
       }
     },
     {
@@ -761992,7 +761795,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:450"
+        "staticSource": "pages/coop/invite-detail/index.js:441"
       }
     },
     {
@@ -762028,7 +761831,7 @@
         "ariaRole": "button",
         "ariaRoleExpression": null,
         "ariaDisabled": null,
-        "ariaDisabledExpression": "{{reviewVerifying}}",
+        "ariaDisabledExpression": null,
         "ariaExpanded": null,
         "ariaExpandedExpression": null,
         "ariaChecked": null,
@@ -762059,11 +761862,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:544"
+        "staticSource": "pages/coop/invite-detail/index.js:535"
       }
     },
     {
-      "id": "pages/coop/invite-detail/index.wxml:145:bindtap:cancelAccepted:10",
+      "id": "pages/coop/invite-detail/index.wxml:144:bindtap:cancelAccepted:10",
       "route": "pages/coop/invite-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -762086,7 +761889,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "cancelAccepted",
-        "line": 145,
+        "line": 144,
         "selectorHint": ".op",
         "visibleCondition": "{{!invite.termsFrozen}}",
         "disabledCondition": null,
@@ -762194,11 +761997,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:421"
+        "staticSource": "pages/coop/invite-detail/index.js:412"
       }
     },
     {
-      "id": "pages/coop/invite-detail/index.wxml:149:bindtap:explainCancelLocked:11",
+      "id": "pages/coop/invite-detail/index.wxml:148:bindtap:explainCancelLocked:11",
       "route": "pages/coop/invite-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -762221,7 +762024,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "explainCancelLocked",
-        "line": 149,
+        "line": 148,
         "selectorHint": ".op",
         "visibleCondition": "{{invite.termsFrozen}}",
         "disabledCondition": null,
@@ -762261,11 +762064,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:445"
+        "staticSource": "pages/coop/invite-detail/index.js:436"
       }
     },
     {
-      "id": "pages/coop/invite-detail/index.wxml:162:bindtap:reject:12",
+      "id": "pages/coop/invite-detail/index.wxml:161:bindtap:reject:12",
       "route": "pages/coop/invite-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -762288,7 +762091,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "reject",
-        "line": 162,
+        "line": 161,
         "selectorHint": ".act",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -762396,11 +762199,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:300"
+        "staticSource": "pages/coop/invite-detail/index.js:291"
       }
     },
     {
-      "id": "pages/coop/invite-detail/index.wxml:164:bindtap:accept:13",
+      "id": "pages/coop/invite-detail/index.wxml:163:bindtap:accept:13",
       "route": "pages/coop/invite-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -762423,7 +762226,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "accept",
-        "line": 164,
+        "line": 163,
         "selectorHint": ".act",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -762530,11 +762333,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:299"
+        "staticSource": "pages/coop/invite-detail/index.js:290"
       }
     },
     {
-      "id": "pages/coop/invite-detail/index.wxml:168:bindtap:withdraw:14",
+      "id": "pages/coop/invite-detail/index.wxml:167:bindtap:withdraw:14",
       "route": "pages/coop/invite-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -762557,7 +762360,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "withdraw",
-        "line": 168,
+        "line": 167,
         "selectorHint": ".act",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -762665,11 +762468,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:310"
+        "staticSource": "pages/coop/invite-detail/index.js:301"
       }
     },
     {
-      "id": "pages/coop/invite-detail/index.wxml:172:bindtap:goDeposit:15",
+      "id": "pages/coop/invite-detail/index.wxml:171:bindtap:goDeposit:15",
       "route": "pages/coop/invite-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -762692,7 +762495,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goDeposit",
-        "line": 172,
+        "line": 171,
         "selectorHint": ".act",
         "visibleCondition": "{{depositActionVisible}}",
         "disabledCondition": null,
@@ -762736,11 +762539,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:609"
+        "staticSource": "pages/coop/invite-detail/index.js:580"
       }
     },
     {
-      "id": "pages/coop/invite-detail/index.wxml:183:bind:close:closePerkPick:16",
+      "id": "pages/coop/invite-detail/index.wxml:182:bind:close:closePerkPick:16",
       "route": "pages/coop/invite-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -762763,7 +762566,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "closePerkPick",
-        "line": 183,
+        "line": 182,
         "selectorHint": ".theme-merchant",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -762803,11 +762606,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:500"
+        "staticSource": "pages/coop/invite-detail/index.js:491"
       }
     },
     {
-      "id": "pages/coop/invite-detail/index.wxml:188:catchtap:togglePerk:18",
+      "id": "pages/coop/invite-detail/index.wxml:187:catchtap:togglePerk:18",
       "route": "pages/coop/invite-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -762830,7 +762633,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "togglePerk",
-        "line": 188,
+        "line": 187,
         "selectorHint": ".pk-item",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -762870,11 +762673,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:507"
+        "staticSource": "pages/coop/invite-detail/index.js:498"
       }
     },
     {
-      "id": "pages/coop/invite-detail/index.wxml:197:catchtap:submitPerks:19",
+      "id": "pages/coop/invite-detail/index.wxml:196:catchtap:submitPerks:19",
       "route": "pages/coop/invite-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -762897,7 +762700,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "submitPerks",
-        "line": 197,
+        "line": 196,
         "selectorHint": ".pk-save",
         "visibleCondition": "{{perkState === 'ready'}}",
         "disabledCondition": null,
@@ -762980,11 +762783,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:512"
+        "staticSource": "pages/coop/invite-detail/index.js:503"
       }
     },
     {
-      "id": "pages/coop/invite-detail/index.wxml:200:bind:cancel:onReviewSheetCancel:21",
+      "id": "pages/coop/invite-detail/index.wxml:199:bind:cancel:onReviewSheetCancel:21",
       "route": "pages/coop/invite-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -763007,7 +762810,7 @@
         "tag": "cy-option-sheet",
         "event": "bind:cancel",
         "handler": "onReviewSheetCancel",
-        "line": 200,
+        "line": 199,
         "selectorHint": "cy-option-sheet[bind:cancel]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -763047,11 +762850,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:555"
+        "staticSource": "pages/coop/invite-detail/index.js:546"
       }
     },
     {
-      "id": "pages/coop/invite-detail/index.wxml:200:bind:select:onReviewSheetSelect:20",
+      "id": "pages/coop/invite-detail/index.wxml:199:bind:select:onReviewSheetSelect:20",
       "route": "pages/coop/invite-detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -763074,7 +762877,7 @@
         "tag": "cy-option-sheet",
         "event": "bind:select",
         "handler": "onReviewSheetSelect",
-        "line": 200,
+        "line": 199,
         "selectorHint": "cy-option-sheet[bind:select]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -763106,14 +762909,12 @@
         "apis": [
           "/api/config/features",
           "/api/coop/review/save",
-          "/api/coop/review/summary",
           "/api/login/code",
           "/api/role/info"
         ],
         "primaryApis": [
           "/api/config/features",
-          "/api/coop/review/save",
-          "/api/coop/review/summary"
+          "/api/coop/review/save"
         ],
         "auxiliaryApis": [
           "/api/login/code",
@@ -763128,12 +762929,6 @@
           },
           {
             "url": "/api/coop/review/save",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/coop/review/summary",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -763167,7 +762962,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:559"
+        "staticSource": "pages/coop/invite-detail/index.js:550"
       }
     },
     {
@@ -763237,7 +763032,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:618"
+        "staticSource": "pages/coop/invite-detail/index.js:589"
       }
     },
     {
@@ -763314,7 +763109,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/coop/invite-detail/index.js:282"
+        "staticSource": "pages/coop/invite-detail/index.js:273"
       }
     },
     {
@@ -966040,89 +965835,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/topic-detail-sheet.wxml:100:bindtap:openZeroHpEditor:16",
-      "route": "pages/publish/fabu/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "pages/publish/fabu/topic-detail-sheet.wxml",
-        "js": "pages/publish/fabu/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "openZeroHpEditor",
-        "line": 100,
-        "selectorHint": ".rt-field",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": "设置{{runtimeHpLabel}}归零后",
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "read",
-      "interactionMode": "tap",
-      "baseActionClass": "read",
-      "effectClasses": [
-        "read",
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [
-          "/api/play/theme/support-matrix"
-        ],
-        "primaryApis": [
-          "/api/play/theme/support-matrix"
-        ],
-        "auxiliaryApis": [],
-        "apiContracts": [
-          {
-            "url": "/api/play/theme/support-matrix",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
-        "writeApis": []
-      },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/publish/fabu/theme-runtime-zero-hp.js:96"
-      }
-    },
-    {
-      "id": "pages/publish/fabu/topic-detail-sheet.wxml:103:bindchange:onRuntimeStatToggle:17",
+      "id": "pages/publish/fabu/topic-detail-sheet.wxml:100:bindchange:onRuntimeStatToggle:17",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -966145,7 +965858,7 @@
         "tag": "cy-switch",
         "event": "bindchange",
         "handler": "onRuntimeStatToggle",
-        "line": 103,
+        "line": 100,
         "selectorHint": "cy-switch[bindchange]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -966204,7 +965917,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/topic-detail-sheet.wxml:103:bindtap:editRuntimeStat:18",
+      "id": "pages/publish/fabu/topic-detail-sheet.wxml:100:bindtap:editRuntimeStat:18",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -966227,7 +965940,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "editRuntimeStat",
-        "line": 103,
+        "line": 100,
         "selectorHint": ".node-pill",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -966271,7 +965984,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/topic-detail-sheet.wxml:104:bindinput:onRuntimeName:19",
+      "id": "pages/publish/fabu/topic-detail-sheet.wxml:101:bindinput:onRuntimeName:19",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -966294,7 +966007,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onRuntimeName",
-        "line": 104,
+        "line": 101,
         "selectorHint": "input[bindinput]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -966353,7 +966066,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/topic-detail-sheet.wxml:105:bindinput:onRuntimeStatMax:20",
+      "id": "pages/publish/fabu/topic-detail-sheet.wxml:102:bindinput:onRuntimeStatMax:20",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -966376,7 +966089,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onRuntimeStatMax",
-        "line": 105,
+        "line": 102,
         "selectorHint": "input[bindinput]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -966435,7 +966148,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/topic-detail-sheet.wxml:107:bindchange:onRuntimeActionToggle:21",
+      "id": "pages/publish/fabu/topic-detail-sheet.wxml:104:bindchange:onRuntimeActionToggle:21",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -966458,7 +966171,7 @@
         "tag": "cy-switch",
         "event": "bindchange",
         "handler": "onRuntimeActionToggle",
-        "line": 107,
+        "line": 104,
         "selectorHint": "cy-switch[bindchange]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -966517,7 +966230,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/topic-detail-sheet.wxml:107:bindtap:editRuntimeStat:22",
+      "id": "pages/publish/fabu/topic-detail-sheet.wxml:104:bindtap:editRuntimeStat:22",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -966540,7 +966253,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "editRuntimeStat",
-        "line": 107,
+        "line": 104,
         "selectorHint": ".node-pill",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -966584,7 +966297,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/topic-detail-sheet.wxml:108:bindinput:onRuntimeName:23",
+      "id": "pages/publish/fabu/topic-detail-sheet.wxml:105:bindinput:onRuntimeName:23",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -966607,7 +966320,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onRuntimeName",
-        "line": 108,
+        "line": 105,
         "selectorHint": "input[bindinput]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -966666,7 +966379,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/topic-detail-sheet.wxml:109:bindinput:onRuntimeActionLimit:24",
+      "id": "pages/publish/fabu/topic-detail-sheet.wxml:106:bindinput:onRuntimeActionLimit:24",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -966689,7 +966402,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onRuntimeActionLimit",
-        "line": 109,
+        "line": 106,
         "selectorHint": "input[bindinput]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -966748,7 +966461,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/topic-detail-sheet.wxml:113:bindchange:onValueEnabled:25",
+      "id": "pages/publish/fabu/topic-detail-sheet.wxml:110:bindchange:onValueEnabled:25",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -966771,7 +966484,7 @@
         "tag": "cy-switch",
         "event": "bindchange",
         "handler": "onValueEnabled",
-        "line": 113,
+        "line": 110,
         "selectorHint": "cy-switch[bindchange]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -966830,7 +966543,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/topic-detail-sheet.wxml:114:bindtap:openValueEditor:26",
+      "id": "pages/publish/fabu/topic-detail-sheet.wxml:111:bindtap:openValueEditor:26",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -966853,7 +966566,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openValueEditor",
-        "line": 114,
+        "line": 111,
         "selectorHint": ".node-pill",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -966897,7 +966610,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/topic-detail-sheet.wxml:116:bindtap:openValueEditor:27",
+      "id": "pages/publish/fabu/topic-detail-sheet.wxml:113:bindtap:openValueEditor:27",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -966920,7 +966633,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openValueEditor",
-        "line": 116,
+        "line": 113,
         "selectorHint": ".node-pill",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -966964,7 +966677,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/topic-detail-sheet.wxml:121:bindchange:onThemeConsumeOnNoEffect:28",
+      "id": "pages/publish/fabu/topic-detail-sheet.wxml:118:bindchange:onThemeConsumeOnNoEffect:28",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -966987,7 +966700,7 @@
         "tag": "cy-switch",
         "event": "bindchange",
         "handler": "onThemeConsumeOnNoEffect",
-        "line": 121,
+        "line": 118,
         "selectorHint": "cy-switch[bindchange]",
         "visibleCondition": null,
         "disabledCondition": "{{!!runtimeConsumeOnNoEffectDisabledReason}}",
@@ -967031,7 +966744,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/topic-detail-sheet.wxml:128:bindtap:openStructure:29",
+      "id": "pages/publish/fabu/topic-detail-sheet.wxml:125:bindtap:openStructure:29",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -967054,7 +966767,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openStructure",
-        "line": 128,
+        "line": 125,
         "selectorHint": ".node-card__row",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -967098,7 +966811,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/topic-detail-sheet.wxml:138:bindchange:onThemeAllowTrade:30",
+      "id": "pages/publish/fabu/topic-detail-sheet.wxml:135:bindchange:onThemeAllowTrade:30",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -967121,7 +966834,7 @@
         "tag": "cy-switch",
         "event": "bindchange",
         "handler": "onThemeAllowTrade",
-        "line": 138,
+        "line": 135,
         "selectorHint": "cy-switch[bindchange]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -967162,6 +966875,73 @@
       "evidence": {
         "status": "pending",
         "staticSource": "pages/publish/fabu/theme-ownership.js:94"
+      }
+    },
+    {
+      "id": "pages/publish/fabu/topic-detail-sheet.wxml:138:bind:change:onThemeVotePolicy:31",
+      "route": "pages/publish/fabu/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/publish/fabu/topic-detail-sheet.wxml",
+        "js": "pages/publish/fabu/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-dropdown",
+        "event": "bind:change",
+        "handler": "onThemeVotePolicy",
+        "line": 138,
+        "selectorHint": "cy-dropdown[bind:change]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/publish/fabu/theme-ownership.js:101"
       }
     },
     {
@@ -967232,7 +967012,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/topic-detail-sheet.wxml:141:bind:change:onThemeVotePolicy:31",
+      "id": "pages/publish/fabu/topic-detail-sheet.wxml:147:bindtap:openSurvivalEditor:32",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -967252,16 +967032,16 @@
       "requestMode": "ordered",
       "confirmationMode": null,
       "control": {
-        "tag": "cy-dropdown",
-        "event": "bind:change",
-        "handler": "onThemeVotePolicy",
-        "line": 141,
-        "selectorHint": "cy-dropdown[bind:change]",
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "openSurvivalEditor",
+        "line": 147,
+        "selectorHint": ".node-card__row",
         "visibleCondition": null,
         "disabledCondition": null,
-        "ariaLabel": null,
+        "ariaLabel": "设置结果卡",
         "ariaLabelExpression": null,
-        "ariaRole": null,
+        "ariaRole": "button",
         "ariaRoleExpression": null,
         "ariaDisabled": null,
         "ariaDisabledExpression": null,
@@ -967271,7 +967051,7 @@
         "ariaCheckedExpression": null
       },
       "actionClass": "state",
-      "interactionMode": "event-contract",
+      "interactionMode": "tap",
       "baseActionClass": "state",
       "effectClasses": [
         "state"
@@ -967295,7 +967075,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/theme-ownership.js:101"
+        "staticSource": "pages/publish/fabu/theme-runtime-survival.js:105"
       }
     },
     {
@@ -967366,74 +967146,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/topic-detail-sheet.wxml:150:bindtap:openSurvivalEditor:32",
-      "route": "pages/publish/fabu/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "pages/publish/fabu/topic-detail-sheet.wxml",
-        "js": "pages/publish/fabu/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "openSurvivalEditor",
-        "line": 150,
-        "selectorHint": ".node-card__row",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": "设置结果卡",
-        "ariaLabelExpression": null,
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/publish/fabu/theme-runtime-survival.js:105"
-      }
-    },
-    {
-      "id": "pages/publish/fabu/topic-detail-sheet.wxml:159:bindchange:toggleThemeReplay:33",
+      "id": "pages/publish/fabu/topic-detail-sheet.wxml:156:bindchange:toggleThemeReplay:33",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -967456,7 +967169,7 @@
         "tag": "cy-switch",
         "event": "bindchange",
         "handler": "toggleThemeReplay",
-        "line": 159,
+        "line": 156,
         "selectorHint": "cy-switch[bindchange]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -967500,7 +967213,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/topic-detail-sheet.wxml:171:bindtap:openThemeRewards:34",
+      "id": "pages/publish/fabu/topic-detail-sheet.wxml:168:bindtap:openThemeRewards:34",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -967523,7 +967236,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openThemeRewards",
-        "line": 171,
+        "line": 168,
         "selectorHint": "#fieldCompleteReward",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -967567,7 +967280,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/topic-detail-sheet.wxml:179:bindchange:onCompletionRuleToggle:35",
+      "id": "pages/publish/fabu/topic-detail-sheet.wxml:176:bindchange:onCompletionRuleToggle:35",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -967590,7 +967303,7 @@
         "tag": "cy-switch",
         "event": "bindchange",
         "handler": "onCompletionRuleToggle",
-        "line": 179,
+        "line": 176,
         "selectorHint": "cy-switch[bindchange]",
         "visibleCondition": "{{formData.productType === 1}}",
         "disabledCondition": null,
@@ -967657,7 +967370,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/topic-detail-sheet.wxml:185:bindinput:onCompletionRequiredCountInput:36",
+      "id": "pages/publish/fabu/topic-detail-sheet.wxml:182:bindinput:onCompletionRequiredCountInput:36",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -967680,7 +967393,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onCompletionRequiredCountInput",
-        "line": 185,
+        "line": 182,
         "selectorHint": ".pd-completion-rule__input",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -967747,7 +967460,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/topic-detail-sheet.wxml:192:bindtap:openThemeBingo:37",
+      "id": "pages/publish/fabu/topic-detail-sheet.wxml:189:bindtap:openThemeBingo:37",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -967770,7 +967483,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openThemeBingo",
-        "line": 192,
+        "line": 189,
         "selectorHint": "#fieldBingo",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -967814,7 +967527,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/topic-detail-sheet.wxml:202:bindchange:onPublishToCreativeChange:38",
+      "id": "pages/publish/fabu/topic-detail-sheet.wxml:199:bindchange:onPublishToCreativeChange:38",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -967837,7 +967550,7 @@
         "tag": "cy-switch",
         "event": "bindchange",
         "handler": "onPublishToCreativeChange",
-        "line": 202,
+        "line": 199,
         "selectorHint": "cy-switch[bindchange]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -967881,7 +967594,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/topic-detail-sheet.wxml:206:bind:change:onClubChange:39",
+      "id": "pages/publish/fabu/topic-detail-sheet.wxml:203:bind:change:onClubChange:39",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -967904,7 +967617,7 @@
         "tag": "cy-dropdown",
         "event": "bind:change",
         "handler": "onClubChange",
-        "line": 206,
+        "line": 203,
         "selectorHint": "cy-dropdown[bind:change]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -968105,7 +967818,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/topic-detail-sheet.wxml:228:bindtap:clearLocalDraft:40",
+      "id": "pages/publish/fabu/topic-detail-sheet.wxml:225:bindtap:clearLocalDraft:40",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -968128,7 +967841,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "clearLocalDraft",
-        "line": 228,
+        "line": 225,
         "selectorHint": ".node-card",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -968804,7 +968517,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/topic-detail-sheet.wxml:96:bindchange:onRuntimeStatToggle:12",
+      "id": "pages/publish/fabu/topic-detail-sheet.wxml:93:bindchange:onRuntimeStatToggle:12",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -968827,7 +968540,7 @@
         "tag": "cy-switch",
         "event": "bindchange",
         "handler": "onRuntimeStatToggle",
-        "line": 96,
+        "line": 93,
         "selectorHint": "cy-switch[bindchange]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -968886,7 +968599,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/topic-detail-sheet.wxml:96:bindtap:editRuntimeStat:13",
+      "id": "pages/publish/fabu/topic-detail-sheet.wxml:93:bindtap:editRuntimeStat:13",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -968909,7 +968622,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "editRuntimeStat",
-        "line": 96,
+        "line": 93,
         "selectorHint": ".node-pill",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -968953,7 +968666,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/topic-detail-sheet.wxml:98:bindinput:onRuntimeName:14",
+      "id": "pages/publish/fabu/topic-detail-sheet.wxml:95:bindinput:onRuntimeName:14",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -968976,7 +968689,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onRuntimeName",
-        "line": 98,
+        "line": 95,
         "selectorHint": "input[bindinput]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -969035,7 +968748,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/topic-detail-sheet.wxml:99:bindinput:onRuntimeStatMax:15",
+      "id": "pages/publish/fabu/topic-detail-sheet.wxml:96:bindinput:onRuntimeStatMax:15",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -969058,7 +968771,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onRuntimeStatMax",
-        "line": 99,
+        "line": 96,
         "selectorHint": "input[bindinput]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -969114,6 +968827,88 @@
       "evidence": {
         "status": "pending",
         "staticSource": "pages/publish/fabu/theme-runtime.js:613"
+      }
+    },
+    {
+      "id": "pages/publish/fabu/topic-detail-sheet.wxml:97:bindtap:openZeroHpEditor:16",
+      "route": "pages/publish/fabu/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/publish/fabu/topic-detail-sheet.wxml",
+        "js": "pages/publish/fabu/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "openZeroHpEditor",
+        "line": 97,
+        "selectorHint": ".rt-field",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "设置{{runtimeHpLabel}}归零后",
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "read",
+      "interactionMode": "tap",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [
+          "/api/play/theme/support-matrix"
+        ],
+        "primaryApis": [
+          "/api/play/theme/support-matrix"
+        ],
+        "auxiliaryApis": [],
+        "apiContracts": [
+          {
+            "url": "/api/play/theme/support-matrix",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/publish/fabu/theme-runtime-zero-hp.js:96"
       }
     },
     {
@@ -1023499,7 +1023294,7 @@
         "selectorHint": ".drow",
         "visibleCondition": null,
         "disabledCondition": null,
-        "ariaLabel": "官方活动任务",
+        "ariaLabel": "任务",
         "ariaLabelExpression": null,
         "ariaRole": "button",
         "ariaRoleExpression": null,
@@ -1039632,494 +1039427,6 @@
       }
     },
     {
-      "id": "pages/shezhi/components/post-governance/index.wxml:18:bindtap:startAppeal:1",
-      "route": "component:pages/shezhi/components/post-governance/index",
-      "hostRoutes": [
-        "pages/shezhi/shezhi"
-      ],
-      "hostComponentPaths": [
-        {
-          "route": "pages/shezhi/shezhi",
-          "segments": [
-            {
-              "selector": "cy-post-governance",
-              "index": 0
-            }
-          ]
-        }
-      ],
-      "role": "inherited",
-      "entry": {
-        "wxml": "pages/shezhi/components/post-governance/index.wxml",
-        "js": "pages/shezhi/components/post-governance/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "startAppeal",
-        "line": 18,
-        "selectorHint": ".pg-action",
-        "visibleCondition": "{{editingId !== item.id}}",
-        "disabledCondition": null,
-        "ariaLabel": "对这条处置提交申诉",
-        "ariaLabelExpression": null,
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/shezhi/components/post-governance/index.js:93"
-      }
-    },
-    {
-      "id": "pages/shezhi/components/post-governance/index.wxml:20:bindinput:onReasonInput:2",
-      "route": "component:pages/shezhi/components/post-governance/index",
-      "hostRoutes": [
-        "pages/shezhi/shezhi"
-      ],
-      "hostComponentPaths": [
-        {
-          "route": "pages/shezhi/shezhi",
-          "segments": [
-            {
-              "selector": "cy-post-governance",
-              "index": 0
-            }
-          ]
-        }
-      ],
-      "role": "inherited",
-      "entry": {
-        "wxml": "pages/shezhi/components/post-governance/index.wxml",
-        "js": "pages/shezhi/components/post-governance/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "textarea",
-        "event": "bindinput",
-        "handler": "onReasonInput",
-        "line": 20,
-        "selectorHint": ".pg-input",
-        "visibleCondition": null,
-        "disabledCondition": "{{submitting}}",
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "event-contract",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/shezhi/components/post-governance/index.js:99"
-      }
-    },
-    {
-      "id": "pages/shezhi/components/post-governance/index.wxml:23:bindtap:cancelAppeal:3",
-      "route": "component:pages/shezhi/components/post-governance/index",
-      "hostRoutes": [
-        "pages/shezhi/shezhi"
-      ],
-      "hostComponentPaths": [
-        {
-          "route": "pages/shezhi/shezhi",
-          "segments": [
-            {
-              "selector": "cy-post-governance",
-              "index": 0
-            }
-          ]
-        }
-      ],
-      "role": "inherited",
-      "entry": {
-        "wxml": "pages/shezhi/components/post-governance/index.wxml",
-        "js": "pages/shezhi/components/post-governance/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "cancelAppeal",
-        "line": 23,
-        "selectorHint": ".pg-action",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": "取消申诉",
-        "ariaLabelExpression": null,
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/shezhi/components/post-governance/index.js:98"
-      }
-    },
-    {
-      "id": "pages/shezhi/components/post-governance/index.wxml:24:bindtap:submitAppeal:4",
-      "route": "component:pages/shezhi/components/post-governance/index",
-      "hostRoutes": [
-        "pages/shezhi/shezhi"
-      ],
-      "hostComponentPaths": [
-        {
-          "route": "pages/shezhi/shezhi",
-          "segments": [
-            {
-              "selector": "cy-post-governance",
-              "index": 0
-            }
-          ]
-        }
-      ],
-      "role": "inherited",
-      "entry": {
-        "wxml": "pages/shezhi/components/post-governance/index.wxml",
-        "js": "pages/shezhi/components/post-governance/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "submitAppeal",
-        "line": 24,
-        "selectorHint": ".pg-action",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": "提交申诉",
-        "ariaLabelExpression": null,
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "write",
-      "interactionMode": "tap",
-      "baseActionClass": "write",
-      "effectClasses": [
-        "write",
-        "state"
-      ],
-      "accessBoundary": "owned-resource",
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/privacy/index"
-        ],
-        "apis": [
-          "/api/config/features",
-          "/api/login/code",
-          "/api/role/info",
-          "/api/v1/community/appeals",
-          "/api/v1/community/me/enforcements"
-        ],
-        "primaryApis": [
-          "/api/config/features",
-          "/api/v1/community/appeals",
-          "/api/v1/community/me/enforcements"
-        ],
-        "auxiliaryApis": [
-          "/api/login/code",
-          "/api/role/info"
-        ],
-        "apiContracts": [
-          {
-            "url": "/api/config/features",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/login/code",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/role/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/v1/community/appeals",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/v1/community/me/enforcements",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
-        "writeApis": []
-      },
-      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger",
-        "forbidden-owner"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/shezhi/components/post-governance/index.js:101"
-      }
-    },
-    {
-      "id": "pages/shezhi/components/post-governance/index.wxml:29:bindtap:loadMore:5",
-      "route": "component:pages/shezhi/components/post-governance/index",
-      "hostRoutes": [
-        "pages/shezhi/shezhi"
-      ],
-      "hostComponentPaths": [
-        {
-          "route": "pages/shezhi/shezhi",
-          "segments": [
-            {
-              "selector": "cy-post-governance",
-              "index": 0
-            }
-          ]
-        }
-      ],
-      "role": "inherited",
-      "entry": {
-        "wxml": "pages/shezhi/components/post-governance/index.wxml",
-        "js": "pages/shezhi/components/post-governance/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "loadMore",
-        "line": 29,
-        "selectorHint": ".pg-more",
-        "visibleCondition": "{{nextCursor}}",
-        "disabledCondition": null,
-        "ariaLabel": "加载更多处置记录",
-        "ariaLabelExpression": null,
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "read",
-      "interactionMode": "tap",
-      "baseActionClass": "read",
-      "effectClasses": [
-        "read",
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/privacy/index"
-        ],
-        "apis": [
-          "/api/config/features",
-          "/api/login/code",
-          "/api/role/info",
-          "/api/v1/community/me/enforcements"
-        ],
-        "primaryApis": [
-          "/api/config/features",
-          "/api/v1/community/me/enforcements"
-        ],
-        "auxiliaryApis": [
-          "/api/login/code",
-          "/api/role/info"
-        ],
-        "apiContracts": [
-          {
-            "url": "/api/config/features",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/login/code",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/role/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/v1/community/me/enforcements",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
-        "writeApis": []
-      },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/shezhi/components/post-governance/index.js:90"
-      }
-    },
-    {
       "id": "pages/shezhi/components/privacy-sheet/index.wxml:11:bindtap:disablePresenceSharing:3",
       "route": "component:pages/shezhi/components/privacy-sheet/index",
       "hostRoutes": [
@@ -1040750,558 +1040057,7 @@
       }
     },
     {
-      "id": "pages/shezhi/shezhi.wxml:101:catchtouchmove:blockSceneTouch:23",
-      "route": "pages/shezhi/shezhi",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/shezhi/shezhi.wxml",
-        "js": "pages/shezhi/shezhi.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "catchtouchmove",
-        "handler": "blockSceneTouch",
-        "line": 101,
-        "selectorHint": ".settings-scene-host",
-        "visibleCondition": "{{sceneCurrent && sceneCurrent.id !== 'settings-identity-picker'}}",
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "other",
-      "interactionMode": "event-contract",
-      "baseActionClass": "other",
-      "effectClasses": [
-        "other"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
-      "requiredBranches": [
-        "success",
-        "error"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/shezhi/shezhi.js:299"
-      }
-    },
-    {
-      "id": "pages/shezhi/shezhi.wxml:102:bind:back:backScene:25",
-      "route": "pages/shezhi/shezhi",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/shezhi/shezhi.wxml",
-        "js": "pages/shezhi/shezhi.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-scene-sheet",
-        "event": "bind:back",
-        "handler": "backScene",
-        "line": 102,
-        "selectorHint": "cy-scene-sheet[bind:back]",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "event-contract",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/shezhi/shezhi.js:254"
-      }
-    },
-    {
-      "id": "pages/shezhi/shezhi.wxml:102:bind:requestclose:requestSceneClose:24",
-      "route": "pages/shezhi/shezhi",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/shezhi/shezhi.wxml",
-        "js": "pages/shezhi/shezhi.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-scene-sheet",
-        "event": "bind:requestclose",
-        "handler": "requestSceneClose",
-        "line": 102,
-        "selectorHint": "cy-scene-sheet[bind:requestclose]",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "event-contract",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/shezhi/shezhi.js:263"
-      }
-    },
-    {
-      "id": "pages/shezhi/shezhi.wxml:103:bind:back:backScene:27",
-      "route": "pages/shezhi/shezhi",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/shezhi/shezhi.wxml",
-        "js": "pages/shezhi/shezhi.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-scene-route-content",
-        "event": "bind:back",
-        "handler": "backScene",
-        "line": 103,
-        "selectorHint": "#sceneRouteContent",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "event-contract",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/shezhi/shezhi.js:254"
-      }
-    },
-    {
-      "id": "pages/shezhi/shezhi.wxml:103:bind:close:closeScene:28",
-      "route": "pages/shezhi/shezhi",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/shezhi/shezhi.wxml",
-        "js": "pages/shezhi/shezhi.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-scene-route-content",
-        "event": "bind:close",
-        "handler": "closeScene",
-        "line": 103,
-        "selectorHint": "#sceneRouteContent",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "event-contract",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/shezhi/shezhi.js:262"
-      }
-    },
-    {
-      "id": "pages/shezhi/shezhi.wxml:103:bind:dirtychange:onSceneDirtyChange:29",
-      "route": "pages/shezhi/shezhi",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/shezhi/shezhi.wxml",
-        "js": "pages/shezhi/shezhi.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-scene-route-content",
-        "event": "bind:dirtychange",
-        "handler": "onSceneDirtyChange",
-        "line": 103,
-        "selectorHint": "#sceneRouteContent",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "event-contract",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/shezhi/shezhi.js:290"
-      }
-    },
-    {
-      "id": "pages/shezhi/shezhi.wxml:103:bind:open:openChildScene:26",
-      "route": "pages/shezhi/shezhi",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/shezhi/shezhi.wxml",
-        "js": "pages/shezhi/shezhi.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-scene-route-content",
-        "event": "bind:open",
-        "handler": "openChildScene",
-        "line": 103,
-        "selectorHint": "#sceneRouteContent",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "read",
-      "interactionMode": "event-contract",
-      "baseActionClass": "read",
-      "effectClasses": [
-        "read",
-        "navigation",
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/activity/detail/index",
-          "pages/activity/list/index",
-          "pages/club/apply/index",
-          "pages/club/create/index",
-          "pages/club/detail/index",
-          "pages/club/edit/index",
-          "pages/club/group-code/index",
-          "pages/coop/finance/index",
-          "pages/deregister/index",
-          "pages/gerenziliao/gerenziliao",
-          "pages/member/index/index",
-          "pages/merchant/apply/index",
-          "pages/merchant/citynode/index",
-          "pages/merchant/decor/index",
-          "pages/merchant/index/index",
-          "pages/mylike/mylike",
-          "pages/play/index",
-          "pages/privacy/index",
-          "pages/roam/index",
-          "pages/shezhi/shezhi",
-          "subpackageA/pages/assetcenter/earnings/index",
-          "subpackageA/pages/assetcenter/income-detail/income-detail",
-          "subpackageA/pages/infomation/infomation",
-          "subpackageA/pages/infomationdetail/infomationdetail",
-          "subpackageMember/complaint/index",
-          "subpackageMember/coupon-qr/index",
-          "subpackageMember/coupon-wallet/index",
-          "subpackageMember/mycanyu/mycanyu",
-          "subpackageMember/mycanyuinfo/mycanyuinfo",
-          "subpackageMember/myinvite/myinvite",
-          "subpackageMember/order/order",
-          "subpackageMember/orderinfo/orderinfo",
-          "subpackageMember/tixian/tixian",
-          "subpackageMember/tixianjilu/tixianjilu",
-          "subpackageP3/pages/stamp-album/index/index",
-          "subpackageRoam/citynode-code/index",
-          "subpackageRoam/history/index",
-          "subpackageRoam/poi-detail/index",
-          "subpackageRoam/session/index"
-        ],
-        "apis": [
-          "/api/config/features",
-          "/api/login/code",
-          "/api/role/info",
-          "/api/user/info"
-        ],
-        "primaryApis": [
-          "/api/config/features",
-          "/api/user/info"
-        ],
-        "auxiliaryApis": [
-          "/api/login/code",
-          "/api/role/info"
-        ],
-        "apiContracts": [
-          {
-            "url": "/api/config/features",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/login/code",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/role/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/user/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
-        "writeApis": []
-      },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/shezhi/shezhi.js:291"
-      }
-    },
-    {
-      "id": "pages/shezhi/shezhi.wxml:105:bindtap:submitSceneForm:30",
+      "id": "pages/shezhi/shezhi.wxml:100:bindtap:submitSceneForm:28",
       "route": "pages/shezhi/shezhi",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1041324,7 +1040080,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "submitSceneForm",
-        "line": 105,
+        "line": 100,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1041365,11 +1040121,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/shezhi/shezhi.js:295"
+        "staticSource": "pages/shezhi/shezhi.js:286"
       }
     },
     {
-      "id": "pages/shezhi/shezhi.wxml:109:bind:cancel:cancelSceneDiscard:32",
+      "id": "pages/shezhi/shezhi.wxml:104:bind:cancel:cancelSceneDiscard:30",
       "route": "pages/shezhi/shezhi",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1041392,7 +1040148,7 @@
         "tag": "cy-modal",
         "event": "bind:cancel",
         "handler": "cancelSceneDiscard",
-        "line": 109,
+        "line": 104,
         "selectorHint": ".{{isMerchantView",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1041432,11 +1040188,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/shezhi/shezhi.js:283"
+        "staticSource": "pages/shezhi/shezhi.js:274"
       }
     },
     {
-      "id": "pages/shezhi/shezhi.wxml:109:bind:confirm:confirmSceneDiscard:31",
+      "id": "pages/shezhi/shezhi.wxml:104:bind:confirm:confirmSceneDiscard:29",
       "route": "pages/shezhi/shezhi",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1041459,7 +1040215,7 @@
         "tag": "cy-modal",
         "event": "bind:confirm",
         "handler": "confirmSceneDiscard",
-        "line": 109,
+        "line": 104,
         "selectorHint": ".{{isMerchantView",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1041499,11 +1040255,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/shezhi/shezhi.js:270"
+        "staticSource": "pages/shezhi/shezhi.js:261"
       }
     },
     {
-      "id": "pages/shezhi/shezhi.wxml:112:bind:settled:onPrivacyGateSettled:33",
+      "id": "pages/shezhi/shezhi.wxml:107:bind:settled:onPrivacyGateSettled:31",
       "route": "pages/shezhi/shezhi",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1041526,7 +1040282,7 @@
         "tag": "cy-privacy-gate",
         "event": "bind:settled",
         "handler": "onPrivacyGateSettled",
-        "line": 112,
+        "line": 107,
         "selectorHint": "cy-privacy-gate[bind:settled]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1041566,11 +1040322,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/shezhi/shezhi.js:38"
+        "staticSource": "pages/shezhi/shezhi.js:37"
       }
     },
     {
-      "id": "pages/shezhi/shezhi.wxml:114:bind:confirm:onDangerConfirm:34",
+      "id": "pages/shezhi/shezhi.wxml:109:bind:confirm:onDangerConfirm:32",
       "route": "pages/shezhi/shezhi",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1041593,7 +1040349,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:confirm",
         "handler": "onDangerConfirm",
-        "line": 114,
+        "line": 109,
         "selectorHint": "#dc",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1041676,7 +1040432,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/shezhi/shezhi.js:307"
+        "staticSource": "pages/shezhi/shezhi.js:298"
       }
     },
     {
@@ -1041788,7 +1040544,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/shezhi/shezhi.js:155"
+        "staticSource": "pages/shezhi/shezhi.js:154"
       }
     },
     {
@@ -1041901,7 +1040657,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/shezhi/shezhi.js:108"
+        "staticSource": "pages/shezhi/shezhi.js:107"
       }
     },
     {
@@ -1041972,7 +1040728,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/shezhi/shezhi.js:142"
+        "staticSource": "pages/shezhi/shezhi.js:141"
       }
     },
     {
@@ -1042042,7 +1040798,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/shezhi/shezhi.js:149"
+        "staticSource": "pages/shezhi/shezhi.js:148"
       }
     },
     {
@@ -1042112,7 +1040868,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/shezhi/shezhi.js:175"
+        "staticSource": "pages/shezhi/shezhi.js:174"
       }
     },
     {
@@ -1042179,7 +1040935,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/shezhi/shezhi.js:181"
+        "staticSource": "pages/shezhi/shezhi.js:180"
       }
     },
     {
@@ -1042246,78 +1041002,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/shezhi/shezhi.js:189"
+        "staticSource": "pages/shezhi/shezhi.js:188"
       }
     },
     {
-      "id": "pages/shezhi/shezhi.wxml:26:bind:tap:openPostGovernance:8",
-      "route": "pages/shezhi/shezhi",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/shezhi/shezhi.wxml",
-        "js": "pages/shezhi/shezhi.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-cell",
-        "event": "bind:tap",
-        "handler": "openPostGovernance",
-        "line": 26,
-        "selectorHint": "#settings-post-governance",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/shezhi/shezhi.js:197"
-      }
-    },
-    {
-      "id": "pages/shezhi/shezhi.wxml:27:bind:tap:goUserAgreement:9",
+      "id": "pages/shezhi/shezhi.wxml:25:bind:tap:goUserAgreement:8",
       "route": "pages/shezhi/shezhi",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1042340,7 +1041029,7 @@
         "tag": "cy-cell",
         "event": "bind:tap",
         "handler": "goUserAgreement",
-        "line": 27,
+        "line": 25,
         "selectorHint": "#settings-service-agreement",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1042380,11 +1041069,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/shezhi/shezhi.js:205"
+        "staticSource": "pages/shezhi/shezhi.js:196"
       }
     },
     {
-      "id": "pages/shezhi/shezhi.wxml:28:bind:tap:goDeregister:10",
+      "id": "pages/shezhi/shezhi.wxml:26:bind:tap:goDeregister:9",
       "route": "pages/shezhi/shezhi",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1042407,7 +1041096,7 @@
         "tag": "cy-cell",
         "event": "bind:tap",
         "handler": "goDeregister",
-        "line": 28,
+        "line": 26,
         "selectorHint": "#settings-deregister",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1042528,11 +1041217,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/shezhi/shezhi.js:213"
+        "staticSource": "pages/shezhi/shezhi.js:204"
       }
     },
     {
-      "id": "pages/shezhi/shezhi.wxml:29:bind:tap:goAbout:11",
+      "id": "pages/shezhi/shezhi.wxml:27:bind:tap:goAbout:10",
       "route": "pages/shezhi/shezhi",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1042555,7 +1041244,7 @@
         "tag": "cy-cell",
         "event": "bind:tap",
         "handler": "goAbout",
-        "line": 29,
+        "line": 27,
         "selectorHint": "#settings-about",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1042598,11 +1041287,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/shezhi/shezhi.js:217"
+        "staticSource": "pages/shezhi/shezhi.js:208"
       }
     },
     {
-      "id": "pages/shezhi/shezhi.wxml:37:bindtap:logout:12",
+      "id": "pages/shezhi/shezhi.wxml:35:bindtap:logout:11",
       "route": "pages/shezhi/shezhi",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1042625,7 +1041314,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "logout",
-        "line": 37,
+        "line": 35,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1042667,7 +1041356,84 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/shezhi/shezhi.js:301"
+        "staticSource": "pages/shezhi/shezhi.js:292"
+      }
+    },
+    {
+      "id": "pages/shezhi/shezhi.wxml:48:bindtap:copyAttributionLink:12",
+      "route": "pages/shezhi/shezhi",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/shezhi/shezhi.wxml",
+        "js": "pages/shezhi/shezhi.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "copyAttributionLink",
+        "line": 48,
+        "selectorHint": ".sz-attribution__link",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "复制 game-icons.net 来源地址",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "external",
+      "interactionMode": "tap",
+      "baseActionClass": "other",
+      "effectClasses": [
+        "other"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [
+        "setClipboardData"
+      ],
+      "successCapabilities": [
+        "setClipboardData"
+      ],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/shezhi/shezhi.js:212"
       }
     },
     {
@@ -1042737,11 +1041503,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/shezhi/shezhi.js:96"
+        "staticSource": "pages/shezhi/shezhi.js:95"
       }
     },
     {
-      "id": "pages/shezhi/shezhi.wxml:50:bindtap:copyAttributionLink:13",
+      "id": "pages/shezhi/shezhi.wxml:54:bindtap:copyAttributionLink:13",
       "route": "pages/shezhi/shezhi",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1042764,84 +1041530,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "copyAttributionLink",
-        "line": 50,
-        "selectorHint": ".sz-attribution__link",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": "复制 game-icons.net 来源地址",
-        "ariaLabelExpression": null,
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "external",
-      "interactionMode": "tap",
-      "baseActionClass": "other",
-      "effectClasses": [
-        "other"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [
-        "setClipboardData"
-      ],
-      "successCapabilities": [
-        "setClipboardData"
-      ],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
-      "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger"
-      ],
-      "requiredPlatforms": [
-        "ios",
-        "android"
-      ],
-      "externalGate": "real-device-required",
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/shezhi/shezhi.js:221"
-      }
-    },
-    {
-      "id": "pages/shezhi/shezhi.wxml:56:bindtap:copyAttributionLink:14",
-      "route": "pages/shezhi/shezhi",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/shezhi/shezhi.wxml",
-        "js": "pages/shezhi/shezhi.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "copyAttributionLink",
-        "line": 56,
+        "line": 54,
         "selectorHint": ".sz-attribution__link",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1042891,11 +1041580,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/shezhi/shezhi.js:221"
+        "staticSource": "pages/shezhi/shezhi.js:212"
       }
     },
     {
-      "id": "pages/shezhi/shezhi.wxml:67:bind:close:closeAgreementSheet:15",
+      "id": "pages/shezhi/shezhi.wxml:65:bind:close:closeAgreementSheet:14",
       "route": "pages/shezhi/shezhi",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1042918,7 +1041607,7 @@
         "tag": "cy-agreement-sheet",
         "event": "bind:close",
         "handler": "closeAgreementSheet",
-        "line": 67,
+        "line": 65,
         "selectorHint": "cy-agreement-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1042958,11 +1041647,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/shezhi/shezhi.js:209"
+        "staticSource": "pages/shezhi/shezhi.js:200"
       }
     },
     {
-      "id": "pages/shezhi/shezhi.wxml:69:bind:close:closePrivacySheet:16",
+      "id": "pages/shezhi/shezhi.wxml:67:bind:close:closePrivacySheet:15",
       "route": "pages/shezhi/shezhi",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1042985,7 +1041674,7 @@
         "tag": "cy-privacy-sheet",
         "event": "bind:close",
         "handler": "closePrivacySheet",
-        "line": 69,
+        "line": 67,
         "selectorHint": "cy-privacy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1043025,11 +1041714,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/shezhi/shezhi.js:185"
+        "staticSource": "pages/shezhi/shezhi.js:184"
       }
     },
     {
-      "id": "pages/shezhi/shezhi.wxml:70:bind:close:closeMarketingConsent:17",
+      "id": "pages/shezhi/shezhi.wxml:68:bind:close:closeMarketingConsent:16",
       "route": "pages/shezhi/shezhi",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1043052,7 +1041741,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "closeMarketingConsent",
-        "line": 70,
+        "line": 68,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1043092,78 +1041781,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/shezhi/shezhi.js:193"
+        "staticSource": "pages/shezhi/shezhi.js:192"
       }
     },
     {
-      "id": "pages/shezhi/shezhi.wxml:73:bind:close:closePostGovernance:18",
-      "route": "pages/shezhi/shezhi",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/shezhi/shezhi.wxml",
-        "js": "pages/shezhi/shezhi.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-sheet",
-        "event": "bind:close",
-        "handler": "closePostGovernance",
-        "line": 73,
-        "selectorHint": "cy-sheet[bind:close]",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "event-contract",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/shezhi/shezhi.js:201"
-      }
-    },
-    {
-      "id": "pages/shezhi/shezhi.wxml:78:catchtouchmove:blockSceneTouch:19",
+      "id": "pages/shezhi/shezhi.wxml:73:catchtouchmove:blockSceneTouch:17",
       "route": "pages/shezhi/shezhi",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1043186,7 +1041808,7 @@
         "tag": "view",
         "event": "catchtouchmove",
         "handler": "blockSceneTouch",
-        "line": 78,
+        "line": 73,
         "selectorHint": ".scene-host",
         "visibleCondition": "{{sceneCurrent && sceneCurrent.id === 'settings-identity-picker'}}",
         "disabledCondition": null,
@@ -1043227,11 +1041849,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/shezhi/shezhi.js:299"
+        "staticSource": "pages/shezhi/shezhi.js:290"
       }
     },
     {
-      "id": "pages/shezhi/shezhi.wxml:79:bind:requestclose:closeRegPicker:20",
+      "id": "pages/shezhi/shezhi.wxml:74:bind:requestclose:closeRegPicker:18",
       "route": "pages/shezhi/shezhi",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1043254,7 +1041876,7 @@
         "tag": "cy-scene-sheet",
         "event": "bind:requestclose",
         "handler": "closeRegPicker",
-        "line": 79,
+        "line": 74,
         "selectorHint": "cy-scene-sheet[bind:requestclose]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1043294,11 +1041916,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/shezhi/shezhi.js:107"
+        "staticSource": "pages/shezhi/shezhi.js:106"
       }
     },
     {
-      "id": "pages/shezhi/shezhi.wxml:80:bindtap:pickClub:21",
+      "id": "pages/shezhi/shezhi.wxml:75:bindtap:pickClub:19",
       "route": "pages/shezhi/shezhi",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1043321,7 +1041943,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "pickClub",
-        "line": 80,
+        "line": 75,
         "selectorHint": ".reg-opt",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1043407,11 +1042029,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/shezhi/shezhi.js:108"
+        "staticSource": "pages/shezhi/shezhi.js:107"
       }
     },
     {
-      "id": "pages/shezhi/shezhi.wxml:88:bindtap:pickMerchant:22",
+      "id": "pages/shezhi/shezhi.wxml:83:bindtap:pickMerchant:20",
       "route": "pages/shezhi/shezhi",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1043434,7 +1042056,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "pickMerchant",
-        "line": 88,
+        "line": 83,
         "selectorHint": ".reg-opt",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1043478,7 +1042100,558 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/shezhi/shezhi.js:142"
+        "staticSource": "pages/shezhi/shezhi.js:141"
+      }
+    },
+    {
+      "id": "pages/shezhi/shezhi.wxml:96:catchtouchmove:blockSceneTouch:21",
+      "route": "pages/shezhi/shezhi",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/shezhi/shezhi.wxml",
+        "js": "pages/shezhi/shezhi.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "catchtouchmove",
+        "handler": "blockSceneTouch",
+        "line": 96,
+        "selectorHint": ".settings-scene-host",
+        "visibleCondition": "{{sceneCurrent && sceneCurrent.id !== 'settings-identity-picker'}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "other",
+      "interactionMode": "event-contract",
+      "baseActionClass": "other",
+      "effectClasses": [
+        "other"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/shezhi/shezhi.js:290"
+      }
+    },
+    {
+      "id": "pages/shezhi/shezhi.wxml:97:bind:back:backScene:23",
+      "route": "pages/shezhi/shezhi",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/shezhi/shezhi.wxml",
+        "js": "pages/shezhi/shezhi.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-scene-sheet",
+        "event": "bind:back",
+        "handler": "backScene",
+        "line": 97,
+        "selectorHint": "cy-scene-sheet[bind:back]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/shezhi/shezhi.js:245"
+      }
+    },
+    {
+      "id": "pages/shezhi/shezhi.wxml:97:bind:requestclose:requestSceneClose:22",
+      "route": "pages/shezhi/shezhi",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/shezhi/shezhi.wxml",
+        "js": "pages/shezhi/shezhi.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-scene-sheet",
+        "event": "bind:requestclose",
+        "handler": "requestSceneClose",
+        "line": 97,
+        "selectorHint": "cy-scene-sheet[bind:requestclose]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/shezhi/shezhi.js:254"
+      }
+    },
+    {
+      "id": "pages/shezhi/shezhi.wxml:98:bind:back:backScene:25",
+      "route": "pages/shezhi/shezhi",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/shezhi/shezhi.wxml",
+        "js": "pages/shezhi/shezhi.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-scene-route-content",
+        "event": "bind:back",
+        "handler": "backScene",
+        "line": 98,
+        "selectorHint": "#sceneRouteContent",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/shezhi/shezhi.js:245"
+      }
+    },
+    {
+      "id": "pages/shezhi/shezhi.wxml:98:bind:close:closeScene:26",
+      "route": "pages/shezhi/shezhi",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/shezhi/shezhi.wxml",
+        "js": "pages/shezhi/shezhi.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-scene-route-content",
+        "event": "bind:close",
+        "handler": "closeScene",
+        "line": 98,
+        "selectorHint": "#sceneRouteContent",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/shezhi/shezhi.js:253"
+      }
+    },
+    {
+      "id": "pages/shezhi/shezhi.wxml:98:bind:dirtychange:onSceneDirtyChange:27",
+      "route": "pages/shezhi/shezhi",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/shezhi/shezhi.wxml",
+        "js": "pages/shezhi/shezhi.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-scene-route-content",
+        "event": "bind:dirtychange",
+        "handler": "onSceneDirtyChange",
+        "line": 98,
+        "selectorHint": "#sceneRouteContent",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/shezhi/shezhi.js:281"
+      }
+    },
+    {
+      "id": "pages/shezhi/shezhi.wxml:98:bind:open:openChildScene:24",
+      "route": "pages/shezhi/shezhi",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/shezhi/shezhi.wxml",
+        "js": "pages/shezhi/shezhi.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-scene-route-content",
+        "event": "bind:open",
+        "handler": "openChildScene",
+        "line": 98,
+        "selectorHint": "#sceneRouteContent",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "read",
+      "interactionMode": "event-contract",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "navigation",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/activity/detail/index",
+          "pages/activity/list/index",
+          "pages/club/apply/index",
+          "pages/club/create/index",
+          "pages/club/detail/index",
+          "pages/club/edit/index",
+          "pages/club/group-code/index",
+          "pages/coop/finance/index",
+          "pages/deregister/index",
+          "pages/gerenziliao/gerenziliao",
+          "pages/member/index/index",
+          "pages/merchant/apply/index",
+          "pages/merchant/citynode/index",
+          "pages/merchant/decor/index",
+          "pages/merchant/index/index",
+          "pages/mylike/mylike",
+          "pages/play/index",
+          "pages/privacy/index",
+          "pages/roam/index",
+          "pages/shezhi/shezhi",
+          "subpackageA/pages/assetcenter/earnings/index",
+          "subpackageA/pages/assetcenter/income-detail/income-detail",
+          "subpackageA/pages/infomation/infomation",
+          "subpackageA/pages/infomationdetail/infomationdetail",
+          "subpackageMember/complaint/index",
+          "subpackageMember/coupon-qr/index",
+          "subpackageMember/coupon-wallet/index",
+          "subpackageMember/mycanyu/mycanyu",
+          "subpackageMember/mycanyuinfo/mycanyuinfo",
+          "subpackageMember/myinvite/myinvite",
+          "subpackageMember/order/order",
+          "subpackageMember/orderinfo/orderinfo",
+          "subpackageMember/tixian/tixian",
+          "subpackageMember/tixianjilu/tixianjilu",
+          "subpackageP3/pages/stamp-album/index/index",
+          "subpackageRoam/citynode-code/index",
+          "subpackageRoam/history/index",
+          "subpackageRoam/poi-detail/index",
+          "subpackageRoam/session/index"
+        ],
+        "apis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info",
+          "/api/user/info"
+        ],
+        "primaryApis": [
+          "/api/config/features",
+          "/api/user/info"
+        ],
+        "auxiliaryApis": [
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/user/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/shezhi/shezhi.js:282"
       }
     },
     {
