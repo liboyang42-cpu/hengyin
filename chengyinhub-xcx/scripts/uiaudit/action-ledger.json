@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
-  "controlCount": 4947,
+  "controlCount": 4950,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -140018,6 +140018,24 @@
             {
               "selector": "cy-empty",
               "index": 17
+            }
+          ]
+        },
+        {
+          "route": "pages/club/detail/index",
+          "segments": [
+            {
+              "selector": "cy-empty",
+              "index": 18
+            }
+          ]
+        },
+        {
+          "route": "pages/club/detail/index",
+          "segments": [
+            {
+              "selector": "cy-empty",
+              "index": 19
             }
           ]
         },
@@ -730761,11 +730779,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1648"
+        "staticSource": "pages/club/detail/index.js:1696"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1007:catchtap:onClubAiCopy:139",
+      "id": "pages/club/detail/index.wxml:1017:catchtap:onClubAiCopy:141",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -730788,7 +730806,7 @@
         "tag": "text",
         "event": "catchtap",
         "handler": "onClubAiCopy",
-        "line": 1007,
+        "line": 1017,
         "selectorHint": ".ai-plan-copy",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -730838,11 +730856,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1473"
+        "staticSource": "pages/club/detail/index.js:1521"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1012:catchtap:onClubAiAdopt:140",
+      "id": "pages/club/detail/index.wxml:1022:catchtap:onClubAiAdopt:142",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -730865,7 +730883,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onClubAiAdopt",
-        "line": 1012,
+        "line": 1022,
         "selectorHint": ".ai-plan-adopt",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -730909,11 +730927,78 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1480"
+        "staticSource": "pages/club/detail/index.js:1528"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1020:bind:close:onCloseGroupCode:141",
+      "id": "pages/club/detail/index.wxml:103:bindtap:openComposer:7",
+      "route": "pages/club/detail/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "club",
+      "entry": {
+        "wxml": "pages/club/detail/index.wxml",
+        "js": "pages/club/detail/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "openComposer",
+        "line": 103,
+        "selectorHint": ".post-composer-collapsed",
+        "visibleCondition": "{{canSeeMembers && (club.memberPostAllowed != 0 || club.isOwner || club.viewerIsAdmin || canModerateContent) && !composerOpen}}",
+        "disabledCondition": null,
+        "ariaLabel": "发布俱乐部动态",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/club/detail/index.js:1705"
+      }
+    },
+    {
+      "id": "pages/club/detail/index.wxml:1030:bind:close:onCloseGroupCode:143",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -730936,7 +731021,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "onCloseGroupCode",
-        "line": 1020,
+        "line": 1030,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -730976,11 +731061,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2896"
+        "staticSource": "pages/club/detail/index.js:2996"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1022:bindtap:onGroupCodeSelectActivity:142",
+      "id": "pages/club/detail/index.wxml:1032:bindtap:onGroupCodeSelectActivity:144",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -731003,7 +731088,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onGroupCodeSelectActivity",
-        "line": 1022,
+        "line": 1032,
         "selectorHint": ".gc-item",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -731088,11 +731173,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2824"
+        "staticSource": "pages/club/detail/index.js:2924"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1026:bind:close:closeDirectorActivityPicker:143",
+      "id": "pages/club/detail/index.wxml:1036:bind:close:closeDirectorActivityPicker:145",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -731115,7 +731200,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "closeDirectorActivityPicker",
-        "line": 1026,
+        "line": 1036,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -731155,11 +731240,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2752"
+        "staticSource": "pages/club/detail/index.js:2852"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1029:bindtap:onDirectorActivitySelect:144",
+      "id": "pages/club/detail/index.wxml:1039:bindtap:onDirectorActivitySelect:146",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -731182,7 +731267,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onDirectorActivitySelect",
-        "line": 1029,
+        "line": 1039,
         "selectorHint": ".gc-item",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -731226,78 +731311,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2756"
+        "staticSource": "pages/club/detail/index.js:2856"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:103:bindtap:openComposer:7",
-      "route": "pages/club/detail/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "club",
-      "entry": {
-        "wxml": "pages/club/detail/index.wxml",
-        "js": "pages/club/detail/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "openComposer",
-        "line": 103,
-        "selectorHint": ".post-composer-collapsed",
-        "visibleCondition": "{{canSeeMembers && (club.memberPostAllowed != 0 || club.isOwner || club.viewerIsAdmin || canModerateContent) && !composerOpen}}",
-        "disabledCondition": null,
-        "ariaLabel": "发布俱乐部动态",
-        "ariaLabelExpression": null,
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1657"
-      }
-    },
-    {
-      "id": "pages/club/detail/index.wxml:1033:bind:close:closeChoiceSheet:145",
+      "id": "pages/club/detail/index.wxml:1043:bind:close:closeChoiceSheet:147",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -731320,7 +731338,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "closeChoiceSheet",
-        "line": 1033,
+        "line": 1043,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -731360,11 +731378,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2733"
+        "staticSource": "pages/club/detail/index.js:2833"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1036:bindtap:onChoiceSheetSelect:146",
+      "id": "pages/club/detail/index.wxml:1046:bindtap:onChoiceSheetSelect:148",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -731387,7 +731405,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onChoiceSheetSelect",
-        "line": 1036,
+        "line": 1046,
         "selectorHint": ".gc-item",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -731427,11 +731445,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2743"
+        "staticSource": "pages/club/detail/index.js:2843"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1052:bind:close:onCloseGroupCode:147",
+      "id": "pages/club/detail/index.wxml:1062:bind:close:onCloseGroupCode:149",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -731454,7 +731472,7 @@
         "tag": "cy-qr-voucher",
         "event": "bind:close",
         "handler": "onCloseGroupCode",
-        "line": 1052,
+        "line": 1062,
         "selectorHint": "cy-qr-voucher[bind:close]",
         "visibleCondition": "{{groupCodeVisible && groupCodeState !== 'selecting'}}",
         "disabledCondition": null,
@@ -731494,11 +731512,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2896"
+        "staticSource": "pages/club/detail/index.js:2996"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1053:bind:retry:onGroupCodeRetry:148",
+      "id": "pages/club/detail/index.wxml:1063:bind:retry:onGroupCodeRetry:150",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -731521,7 +731539,7 @@
         "tag": "cy-qr-voucher",
         "event": "bind:retry",
         "handler": "onGroupCodeRetry",
-        "line": 1053,
+        "line": 1063,
         "selectorHint": "cy-qr-voucher[bind:retry]",
         "visibleCondition": "{{groupCodeVisible && groupCodeState !== 'selecting'}}",
         "disabledCondition": null,
@@ -731614,11 +731632,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2891"
+        "staticSource": "pages/club/detail/index.js:2991"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1064:bind:afterleave:onSceneNativeBackGuard:149",
+      "id": "pages/club/detail/index.wxml:1074:bind:afterleave:onSceneNativeBackGuard:151",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -731641,7 +731659,7 @@
         "tag": "page-container",
         "event": "bind:afterleave",
         "handler": "onSceneNativeBackGuard",
-        "line": 1064,
+        "line": 1074,
         "selectorHint": "page-container[bind:afterleave]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -731681,11 +731699,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:660"
+        "staticSource": "pages/club/detail/index.js:670"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1066:catchtouchmove:blockSceneTouch:150",
+      "id": "pages/club/detail/index.wxml:1076:catchtouchmove:blockSceneTouch:152",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -731708,7 +731726,7 @@
         "tag": "view",
         "event": "catchtouchmove",
         "handler": "blockSceneTouch",
-        "line": 1066,
+        "line": 1076,
         "selectorHint": ".club-scene-host",
         "visibleCondition": "{{sceneCurrent && sceneCurrent.id === 'club-edit'}}",
         "disabledCondition": null,
@@ -731749,11 +731767,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:639"
+        "staticSource": "pages/club/detail/index.js:649"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1067:bind:back:requestSceneClose:152",
+      "id": "pages/club/detail/index.wxml:1077:bind:back:requestSceneClose:154",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -731776,7 +731794,7 @@
         "tag": "cy-scene-sheet",
         "event": "bind:back",
         "handler": "requestSceneClose",
-        "line": 1067,
+        "line": 1077,
         "selectorHint": "cy-scene-sheet[bind:back]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -731816,11 +731834,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:643"
+        "staticSource": "pages/club/detail/index.js:653"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1067:bind:requestclose:requestSceneClose:151",
+      "id": "pages/club/detail/index.wxml:1077:bind:requestclose:requestSceneClose:153",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -731843,7 +731861,7 @@
         "tag": "cy-scene-sheet",
         "event": "bind:requestclose",
         "handler": "requestSceneClose",
-        "line": 1067,
+        "line": 1077,
         "selectorHint": "cy-scene-sheet[bind:requestclose]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -731883,11 +731901,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:643"
+        "staticSource": "pages/club/detail/index.js:653"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1068:bind:back:closeScene:153",
+      "id": "pages/club/detail/index.wxml:1078:bind:back:closeScene:155",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -731910,75 +731928,8 @@
         "tag": "cy-scene-club-edit",
         "event": "bind:back",
         "handler": "closeScene",
-        "line": 1068,
+        "line": 1078,
         "selectorHint": "cy-scene-club-edit[bind:back]",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "event-contract",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/club/detail/index.js:640"
-      }
-    },
-    {
-      "id": "pages/club/detail/index.wxml:1068:bind:dirtychange:onSceneDirtyChange:157",
-      "route": "pages/club/detail/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "club",
-      "entry": {
-        "wxml": "pages/club/detail/index.wxml",
-        "js": "pages/club/detail/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-scene-club-edit",
-        "event": "bind:dirtychange",
-        "handler": "onSceneDirtyChange",
-        "line": 1068,
-        "selectorHint": "cy-scene-club-edit[bind:dirtychange]",
         "visibleCondition": null,
         "disabledCondition": null,
         "ariaLabel": null,
@@ -732021,7 +731972,74 @@
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1068:bind:dissolved:onClubDissolved:155",
+      "id": "pages/club/detail/index.wxml:1078:bind:dirtychange:onSceneDirtyChange:159",
+      "route": "pages/club/detail/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "club",
+      "entry": {
+        "wxml": "pages/club/detail/index.wxml",
+        "js": "pages/club/detail/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-scene-club-edit",
+        "event": "bind:dirtychange",
+        "handler": "onSceneDirtyChange",
+        "line": 1078,
+        "selectorHint": "cy-scene-club-edit[bind:dirtychange]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/club/detail/index.js:660"
+      }
+    },
+    {
+      "id": "pages/club/detail/index.wxml:1078:bind:dissolved:onClubDissolved:157",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -732044,7 +732062,7 @@
         "tag": "cy-scene-club-edit",
         "event": "bind:dissolved",
         "handler": "onClubDissolved",
-        "line": 1068,
+        "line": 1078,
         "selectorHint": "cy-scene-club-edit[bind:dissolved]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -732088,11 +732106,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:674"
+        "staticSource": "pages/club/detail/index.js:684"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1068:bind:saved:onClubEdited:154",
+      "id": "pages/club/detail/index.wxml:1078:bind:saved:onClubEdited:156",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -732115,7 +732133,7 @@
         "tag": "cy-scene-club-edit",
         "event": "bind:saved",
         "handler": "onClubEdited",
-        "line": 1068,
+        "line": 1078,
         "selectorHint": "cy-scene-club-edit[bind:saved]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -732229,11 +732247,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:669"
+        "staticSource": "pages/club/detail/index.js:679"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1068:bind:transferowner:goClubGovernance:156",
+      "id": "pages/club/detail/index.wxml:1078:bind:transferowner:goClubGovernance:158",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -732256,7 +732274,7 @@
         "tag": "cy-scene-club-edit",
         "event": "bind:transferowner",
         "handler": "goClubGovernance",
-        "line": 1068,
+        "line": 1078,
         "selectorHint": "cy-scene-club-edit[bind:transferowner]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -732300,11 +732318,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2418"
+        "staticSource": "pages/club/detail/index.js:2518"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1071:bind:cancel:cancelSceneDiscard:159",
+      "id": "pages/club/detail/index.wxml:1081:bind:cancel:cancelSceneDiscard:161",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -732327,7 +732345,7 @@
         "tag": "cy-modal",
         "event": "bind:cancel",
         "handler": "cancelSceneDiscard",
-        "line": 1071,
+        "line": 1081,
         "selectorHint": "cy-modal[bind:cancel]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -732367,11 +732385,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:656"
+        "staticSource": "pages/club/detail/index.js:666"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1071:bind:confirm:confirmSceneDiscard:158",
+      "id": "pages/club/detail/index.wxml:1081:bind:confirm:confirmSceneDiscard:160",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -732394,7 +732412,7 @@
         "tag": "cy-modal",
         "event": "bind:confirm",
         "handler": "confirmSceneDiscard",
-        "line": 1071,
+        "line": 1081,
         "selectorHint": "cy-modal[bind:confirm]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -732434,11 +732452,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:653"
+        "staticSource": "pages/club/detail/index.js:663"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1076:bind:settled:onPrivacyGateSettled:160",
+      "id": "pages/club/detail/index.wxml:1086:bind:settled:onPrivacyGateSettled:162",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -732461,7 +732479,7 @@
         "tag": "cy-privacy-gate",
         "event": "bind:settled",
         "handler": "onPrivacyGateSettled",
-        "line": 1076,
+        "line": 1086,
         "selectorHint": "cy-privacy-gate[bind:settled]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -732501,11 +732519,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:803"
+        "staticSource": "pages/club/detail/index.js:813"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1079:bind:confirm:onConfirmDeletePost:161",
+      "id": "pages/club/detail/index.wxml:1089:bind:confirm:onConfirmDeletePost:163",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -732528,7 +732546,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:confirm",
         "handler": "onConfirmDeletePost",
-        "line": 1079,
+        "line": 1089,
         "selectorHint": "#dcPost",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -732621,11 +732639,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3006"
+        "staticSource": "pages/club/detail/index.js:3106"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1080:bind:confirm:onConfirmDeleteComment:162",
+      "id": "pages/club/detail/index.wxml:1090:bind:confirm:onConfirmDeleteComment:164",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -732648,7 +732666,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:confirm",
         "handler": "onConfirmDeleteComment",
-        "line": 1080,
+        "line": 1090,
         "selectorHint": "#dcComment",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -732749,11 +732767,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3007"
+        "staticSource": "pages/club/detail/index.js:3107"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1081:bind:alt:onQuitAlt:164",
+      "id": "pages/club/detail/index.wxml:1091:bind:alt:onQuitAlt:166",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -732776,7 +732794,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:alt",
         "handler": "onQuitAlt",
-        "line": 1081,
+        "line": 1091,
         "selectorHint": "#dcQuit",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -732817,11 +732835,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3012"
+        "staticSource": "pages/club/detail/index.js:3112"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1081:bind:confirm:onConfirmQuit:163",
+      "id": "pages/club/detail/index.wxml:1091:bind:confirm:onConfirmQuit:165",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -732844,7 +732862,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:confirm",
         "handler": "onConfirmQuit",
-        "line": 1081,
+        "line": 1091,
         "selectorHint": "#dcQuit",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -732969,11 +732987,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3008"
+        "staticSource": "pages/club/detail/index.js:3108"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1082:bind:confirm:onConfirmRemoveMember:165",
+      "id": "pages/club/detail/index.wxml:1092:bind:confirm:onConfirmRemoveMember:167",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -732996,7 +733014,7 @@
         "tag": "cy-danger-confirm",
         "event": "bind:confirm",
         "handler": "onConfirmRemoveMember",
-        "line": 1082,
+        "line": 1092,
         "selectorHint": "#dcMember",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -733119,11 +733137,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3009"
+        "staticSource": "pages/club/detail/index.js:3109"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1085:bindtap:goClubCoop:166",
+      "id": "pages/club/detail/index.wxml:1095:bindtap:goClubCoop:168",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -733146,7 +733164,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goClubCoop",
-        "line": 1085,
+        "line": 1095,
         "selectorHint": ".join-btn",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -733197,11 +733215,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1511"
+        "staticSource": "pages/club/detail/index.js:1559"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1086:bind:close:closeCoopInvite:167",
+      "id": "pages/club/detail/index.wxml:1096:bind:close:closeCoopInvite:169",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -733224,7 +733242,7 @@
         "tag": "cy-coop-invite-sheet",
         "event": "bind:close",
         "handler": "closeCoopInvite",
-        "line": 1086,
+        "line": 1096,
         "selectorHint": "#coop-invite",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -733264,11 +733282,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1515"
+        "staticSource": "pages/club/detail/index.js:1563"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:1086:bind:sent:onCoopInviteSent:168",
+      "id": "pages/club/detail/index.wxml:1096:bind:sent:onCoopInviteSent:170",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -733291,7 +733309,7 @@
         "tag": "cy-coop-invite-sheet",
         "event": "bind:sent",
         "handler": "onCoopInviteSent",
-        "line": 1086,
+        "line": 1096,
         "selectorHint": "#coop-invite",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -733333,7 +733351,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1516"
+        "staticSource": "pages/club/detail/index.js:1564"
       }
     },
     {
@@ -733400,7 +733418,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1667"
+        "staticSource": "pages/club/detail/index.js:1715"
       }
     },
     {
@@ -733467,7 +733485,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1683"
+        "staticSource": "pages/club/detail/index.js:1731"
       }
     },
     {
@@ -733588,7 +733606,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1674"
+        "staticSource": "pages/club/detail/index.js:1722"
       }
     },
     {
@@ -733655,7 +733673,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1665"
+        "staticSource": "pages/club/detail/index.js:1713"
       }
     },
     {
@@ -733775,7 +733793,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1690"
+        "staticSource": "pages/club/detail/index.js:1738"
       }
     },
     {
@@ -733842,7 +733860,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1734"
+        "staticSource": "pages/club/detail/index.js:1782"
       }
     },
     {
@@ -733951,7 +733969,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1729"
+        "staticSource": "pages/club/detail/index.js:1777"
       }
     },
     {
@@ -734018,7 +734036,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1669"
+        "staticSource": "pages/club/detail/index.js:1717"
       }
     },
     {
@@ -734127,7 +734145,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2585"
+        "staticSource": "pages/club/detail/index.js:2685"
       }
     },
     {
@@ -734204,7 +734222,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2577"
+        "staticSource": "pages/club/detail/index.js:2677"
       }
     },
     {
@@ -734274,7 +734292,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2609"
+        "staticSource": "pages/club/detail/index.js:2709"
       }
     },
     {
@@ -734384,7 +734402,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2923"
+        "staticSource": "pages/club/detail/index.js:3023"
       }
     },
     {
@@ -734503,7 +734521,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2903"
+        "staticSource": "pages/club/detail/index.js:3003"
       }
     },
     {
@@ -734614,7 +734632,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2595"
+        "staticSource": "pages/club/detail/index.js:2695"
       }
     },
     {
@@ -734725,7 +734743,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2602"
+        "staticSource": "pages/club/detail/index.js:2702"
       }
     },
     {
@@ -734792,7 +734810,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1766"
+        "staticSource": "pages/club/detail/index.js:1814"
       }
     },
     {
@@ -734910,7 +734928,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1859"
+        "staticSource": "pages/club/detail/index.js:1907"
       }
     },
     {
@@ -735019,7 +735037,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1898"
+        "staticSource": "pages/club/detail/index.js:1946"
       }
     },
     {
@@ -735088,7 +735106,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1592"
+        "staticSource": "pages/club/detail/index.js:1640"
       }
     },
     {
@@ -735201,7 +735219,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1610"
+        "staticSource": "pages/club/detail/index.js:1658"
       }
     },
     {
@@ -735319,7 +735337,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3095"
+        "staticSource": "pages/club/detail/index.js:3195"
       }
     },
     {
@@ -735388,7 +735406,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2615"
+        "staticSource": "pages/club/detail/index.js:2715"
       }
     },
     {
@@ -735501,7 +735519,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2631"
+        "staticSource": "pages/club/detail/index.js:2731"
       }
     },
     {
@@ -735610,7 +735628,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2951"
+        "staticSource": "pages/club/detail/index.js:3051"
       }
     },
     {
@@ -735738,7 +735756,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2960"
+        "staticSource": "pages/club/detail/index.js:3060"
       }
     },
     {
@@ -735805,7 +735823,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2958"
+        "staticSource": "pages/club/detail/index.js:3058"
       }
     },
     {
@@ -735933,7 +735951,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2960"
+        "staticSource": "pages/club/detail/index.js:3060"
       }
     },
     {
@@ -735975,32 +735993,74 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "state",
+      "actionClass": "read",
       "interactionMode": "event-contract",
-      "baseActionClass": "state",
+      "baseActionClass": "read",
       "effectClasses": [
+        "read",
         "state"
       ],
       "accessBoundary": null,
       "externalCapabilities": [],
       "successCapabilities": [],
       "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/club/calendar/sessions",
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "primaryApis": [
+          "/api/club/calendar/sessions",
+          "/api/config/features"
+        ],
+        "auxiliaryApis": [
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/club/calendar/sessions",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
         "writeApis": []
       },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
-        "success"
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2110"
+        "staticSource": "pages/club/detail/index.js:2158"
       }
     },
     {
@@ -736071,7 +736131,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2648"
+        "staticSource": "pages/club/detail/index.js:2748"
       }
     },
     {
@@ -736191,7 +736251,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2769"
+        "staticSource": "pages/club/detail/index.js:2869"
       }
     },
     {
@@ -736303,7 +736363,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2460"
+        "staticSource": "pages/club/detail/index.js:2560"
       }
     },
     {
@@ -736374,7 +736434,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2520"
+        "staticSource": "pages/club/detail/index.js:2620"
       }
     },
     {
@@ -736445,7 +736505,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2520"
+        "staticSource": "pages/club/detail/index.js:2620"
       }
     },
     {
@@ -736487,32 +736547,74 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "state",
+      "actionClass": "read",
       "interactionMode": "tap",
-      "baseActionClass": "state",
+      "baseActionClass": "read",
       "effectClasses": [
+        "read",
         "state"
       ],
       "accessBoundary": null,
       "externalCapabilities": [],
       "successCapabilities": [],
       "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/club/calendar/sessions",
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "primaryApis": [
+          "/api/club/calendar/sessions",
+          "/api/config/features"
+        ],
+        "auxiliaryApis": [
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/club/calendar/sessions",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
         "writeApis": []
       },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
-        "success"
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2117"
+        "staticSource": "pages/club/detail/index.js:2168"
       }
     },
     {
@@ -736554,36 +736656,78 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "state",
+      "actionClass": "read",
       "interactionMode": "tap",
-      "baseActionClass": "state",
+      "baseActionClass": "read",
       "effectClasses": [
+        "read",
         "state"
       ],
       "accessBoundary": null,
       "externalCapabilities": [],
       "successCapabilities": [],
       "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/club/calendar/sessions",
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "primaryApis": [
+          "/api/club/calendar/sessions",
+          "/api/config/features"
+        ],
+        "auxiliaryApis": [
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/club/calendar/sessions",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
         "writeApis": []
       },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
-        "success"
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2117"
+        "staticSource": "pages/club/detail/index.js:2168"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:266:bindtap:goTopic:44",
+      "id": "pages/club/detail/index.wxml:261:catchtap:loadCalendarSessions:44",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -736603,15 +736747,15 @@
       "requestMode": "ordered",
       "confirmationMode": null,
       "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "goTopic",
-        "line": 266,
-        "selectorHint": ".event-calendar-item",
-        "visibleCondition": null,
+        "tag": "text",
+        "event": "catchtap",
+        "handler": "loadCalendarSessions",
+        "line": 261,
+        "selectorHint": ".event-calendar-retry",
+        "visibleCondition": "{{eventCalendarSessionState === 'error'}}",
         "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": "打开活动 {{event.name || '未命名活动'}}",
+        "ariaLabel": "重新加载本月场次",
+        "ariaLabelExpression": null,
         "ariaRole": "button",
         "ariaRoleExpression": null,
         "ariaDisabled": null,
@@ -736621,36 +736765,74 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "navigation",
+      "actionClass": "read",
       "interactionMode": "tap",
-      "baseActionClass": "navigation",
+      "baseActionClass": "read",
       "effectClasses": [
-        "navigation"
+        "read",
+        "state"
       ],
       "accessBoundary": null,
       "externalCapabilities": [],
       "successCapabilities": [],
       "targets": {
         "routes": [
-          "pages/club/topic-detail/index?topicId=",
-          "pages/topic/index/index?id="
+          "pages/privacy/index"
         ],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
+        "apis": [
+          "/api/club/calendar/sessions",
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "primaryApis": [
+          "/api/club/calendar/sessions",
+          "/api/config/features"
+        ],
+        "auxiliaryApis": [
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/club/calendar/sessions",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
         "writeApis": []
       },
-      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
         "success",
-        "error"
+        "error",
+        "timeout",
+        "duplicate-trigger"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2648"
+        "staticSource": "pages/club/detail/index.js:2177"
       }
     },
     {
@@ -736710,6 +736892,7 @@
         ],
         "apis": [
           "/api/club-compensation/editions",
+          "/api/club-compensation/editions/empty-reason",
           "/api/club/access/me",
           "/api/club/detail",
           "/api/club/leaderboard",
@@ -736729,6 +736912,7 @@
         ],
         "primaryApis": [
           "/api/club-compensation/editions",
+          "/api/club-compensation/editions/empty-reason",
           "/api/club/access/me",
           "/api/club/detail",
           "/api/club/leaderboard",
@@ -736751,6 +736935,12 @@
         "apiContracts": [
           {
             "url": "/api/club-compensation/editions",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/club-compensation/editions/empty-reason",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -736865,11 +737055,82 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:766"
+        "staticSource": "pages/club/detail/index.js:776"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:301:catchtap:goClubBadges:45",
+      "id": "pages/club/detail/index.wxml:272:bindtap:goTopic:45",
+      "route": "pages/club/detail/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "club",
+      "entry": {
+        "wxml": "pages/club/detail/index.wxml",
+        "js": "pages/club/detail/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "goTopic",
+        "line": 272,
+        "selectorHint": ".event-calendar-item",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "打开活动 {{event.name || '未命名活动'}}",
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "tap",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/club/topic-detail/index?topicId=",
+          "pages/topic/index/index?id="
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/club/detail/index.js:2748"
+      }
+    },
+    {
+      "id": "pages/club/detail/index.wxml:308:catchtap:goClubBadges:46",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -736892,7 +737153,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "goClubBadges",
-        "line": 301,
+        "line": 308,
         "selectorHint": ".ov-badge-entry",
         "visibleCondition": "{{club.isOwner || club.isJoined}}",
         "disabledCondition": null,
@@ -736935,11 +737196,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2395"
+        "staticSource": "pages/club/detail/index.js:2495"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:322:catchtap:expandMembers:46",
+      "id": "pages/club/detail/index.wxml:329:catchtap:expandMembers:47",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -736962,7 +737223,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "expandMembers",
-        "line": 322,
+        "line": 329,
         "selectorHint": ".ov-strip-item",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -737002,11 +737263,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2291"
+        "staticSource": "pages/club/detail/index.js:2391"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:322:catchtap:goMemberProfile:46",
+      "id": "pages/club/detail/index.wxml:329:catchtap:goMemberProfile:47",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -737029,7 +737290,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "goMemberProfile",
-        "line": 322,
+        "line": 329,
         "selectorHint": ".ov-strip-item",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -737074,11 +737335,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2304"
+        "staticSource": "pages/club/detail/index.js:2404"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:348:catchtap:goMemberProfile:49",
+      "id": "pages/club/detail/index.wxml:355:catchtap:goMemberProfile:50",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -737101,7 +737362,7 @@
         "tag": "cy-avatar",
         "event": "catchtap",
         "handler": "goMemberProfile",
-        "line": 348,
+        "line": 355,
         "selectorHint": ".member-avatar",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -737146,11 +737407,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2304"
+        "staticSource": "pages/club/detail/index.js:2404"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:349:catchtap:goMemberProfile:50",
+      "id": "pages/club/detail/index.wxml:356:catchtap:goMemberProfile:51",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -737173,7 +737434,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "goMemberProfile",
-        "line": 349,
+        "line": 356,
         "selectorHint": ".member-info",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -737218,11 +737479,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2304"
+        "staticSource": "pages/club/detail/index.js:2404"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:353:catchtap:reportClubMember:51",
+      "id": "pages/club/detail/index.wxml:360:catchtap:reportClubMember:52",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -737245,7 +737506,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "reportClubMember",
-        "line": 353,
+        "line": 360,
         "selectorHint": ".member-report",
         "visibleCondition": "{{item.memberId != myMemberId}}",
         "disabledCondition": null,
@@ -737288,11 +737549,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2434"
+        "staticSource": "pages/club/detail/index.js:2534"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:365:catchtap:onRankSortTap:52",
+      "id": "pages/club/detail/index.wxml:372:catchtap:onRankSortTap:53",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -737315,7 +737576,7 @@
         "tag": "text",
         "event": "catchtap",
         "handler": "onRankSortTap",
-        "line": 365,
+        "line": 372,
         "selectorHint": ".ov-head-link",
         "visibleCondition": "{{canSeeMembers}}",
         "disabledCondition": null,
@@ -737397,11 +737658,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1575"
+        "staticSource": "pages/club/detail/index.js:1623"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:373:catchtap:goMemberProfile:53",
+      "id": "pages/club/detail/index.wxml:380:catchtap:goMemberProfile:54",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -737424,7 +737685,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "goMemberProfile",
-        "line": 373,
+        "line": 380,
         "selectorHint": ".ov-lb-row",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -737469,11 +737730,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2304"
+        "staticSource": "pages/club/detail/index.js:2404"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:406:bindtap:goClubAppeal:55",
+      "id": "pages/club/detail/index.wxml:413:bindtap:goClubAppeal:56",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -737496,7 +737757,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goClubAppeal",
-        "line": 406,
+        "line": 413,
         "selectorHint": ".governance-action",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -737539,11 +737800,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2513"
+        "staticSource": "pages/club/detail/index.js:2613"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:407:catchtap:reportClub:56",
+      "id": "pages/club/detail/index.wxml:414:catchtap:reportClub:57",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -737566,7 +737827,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "reportClub",
-        "line": 407,
+        "line": 414,
         "selectorHint": ".governance-action",
         "visibleCondition": "{{canSeeMembers}}",
         "disabledCondition": null,
@@ -737609,11 +737870,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2449"
+        "staticSource": "pages/club/detail/index.js:2549"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:422:catchtap:onClubScan:57",
+      "id": "pages/club/detail/index.wxml:429:catchtap:onClubScan:58",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -737639,7 +737900,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onClubScan",
-        "line": 422,
+        "line": 429,
         "selectorHint": ".quick-act",
         "visibleCondition": "{{club.isOwner || club.viewerIsAdmin || canManageActivities}}",
         "disabledCondition": null,
@@ -737783,11 +738044,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:896"
+        "staticSource": "pages/club/detail/index.js:906"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:427:catchtap:onClubGroupCode:58",
+      "id": "pages/club/detail/index.wxml:434:catchtap:onClubGroupCode:59",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -737810,7 +738071,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onClubGroupCode",
-        "line": 427,
+        "line": 434,
         "selectorHint": ".quick-act",
         "visibleCondition": "{{club.isOwner || club.viewerIsAdmin || canCheckInEvents}}",
         "disabledCondition": null,
@@ -737903,11 +738164,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:980"
+        "staticSource": "pages/club/detail/index.js:990"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:436:catchtap:goClubFinance:59",
+      "id": "pages/club/detail/index.wxml:443:catchtap:goClubFinance:60",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -737930,7 +738191,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "goClubFinance",
-        "line": 436,
+        "line": 443,
         "selectorHint": ".quick-act",
         "visibleCondition": "{{club.isOwner}}",
         "disabledCondition": null,
@@ -737973,11 +738234,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:969"
+        "staticSource": "pages/club/detail/index.js:979"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:443:catchtap:onSettings:60",
+      "id": "pages/club/detail/index.wxml:450:catchtap:onSettings:61",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -738000,7 +738261,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onSettings",
-        "line": 443,
+        "line": 450,
         "selectorHint": ".quick-act",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -738091,11 +738352,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3095"
+        "staticSource": "pages/club/detail/index.js:3195"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:463:bind:toggle:onLeadTimelineToggle:61",
+      "id": "pages/club/detail/index.wxml:470:bind:toggle:onLeadTimelineToggle:62",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -738118,7 +738379,7 @@
         "tag": "cy-timeline",
         "event": "bind:toggle",
         "handler": "onLeadTimelineToggle",
-        "line": 463,
+        "line": 470,
         "selectorHint": ".manage-now-timeline",
         "visibleCondition": "{{leadTimelineNodes.length}}",
         "disabledCondition": null,
@@ -738158,11 +738419,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1368"
+        "staticSource": "pages/club/detail/index.js:1416"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:467:bindtap:onOwnerPrimary:62",
+      "id": "pages/club/detail/index.wxml:474:bindtap:onOwnerPrimary:63",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -738185,7 +738446,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onOwnerPrimary",
-        "line": 467,
+        "line": 474,
         "selectorHint": ".manage-now-btn",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -738219,6 +738480,7 @@
         ],
         "apis": [
           "/api/club-compensation/editions",
+          "/api/club-compensation/editions/empty-reason",
           "/api/club/topics",
           "/api/config/features",
           "/api/coop/list",
@@ -738228,6 +738490,7 @@
         ],
         "primaryApis": [
           "/api/club-compensation/editions",
+          "/api/club-compensation/editions/empty-reason",
           "/api/club/topics",
           "/api/config/features",
           "/api/coop/list",
@@ -738240,6 +738503,12 @@
         "apiContracts": [
           {
             "url": "/api/club-compensation/editions",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/club-compensation/editions/empty-reason",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -738294,11 +738563,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1372"
+        "staticSource": "pages/club/detail/index.js:1420"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:470:bindtap:onOpenClubSession:63",
+      "id": "pages/club/detail/index.wxml:477:bindtap:onOpenClubSession:64",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -738321,7 +738590,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onOpenClubSession",
-        "line": 470,
+        "line": 477,
         "selectorHint": ".manage-now-btn",
         "visibleCondition": "{{club.isOwner}}",
         "disabledCondition": null,
@@ -738364,11 +738633,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2538"
+        "staticSource": "pages/club/detail/index.js:2638"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:505:bindtap:goManageTopic:66",
+      "id": "pages/club/detail/index.wxml:512:bindtap:goManageTopic:67",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -738391,7 +738660,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goManageTopic",
-        "line": 505,
+        "line": 512,
         "selectorHint": ".manage-project",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -738478,11 +738747,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2667"
+        "staticSource": "pages/club/detail/index.js:2767"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:514:catchtap:goGameDirector:67",
+      "id": "pages/club/detail/index.wxml:521:catchtap:goGameDirector:68",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -738505,7 +738774,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "goGameDirector",
-        "line": 514,
+        "line": 521,
         "selectorHint": ".manage-project-director",
         "visibleCondition": "{{club.isOwner && item.id && item.gameModuleEnabled}}",
         "disabledCondition": null,
@@ -738589,11 +738858,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2679"
+        "staticSource": "pages/club/detail/index.js:2779"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:516:catchtap:goGameDirector:68",
+      "id": "pages/club/detail/index.wxml:523:catchtap:goGameDirector:69",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -738616,7 +738885,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "goGameDirector",
-        "line": 516,
+        "line": 523,
         "selectorHint": ".manage-project-director",
         "visibleCondition": "{{club.viewerIsAdmin && item.id && item.gameModuleEnabled}}",
         "disabledCondition": null,
@@ -738700,11 +738969,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2679"
+        "staticSource": "pages/club/detail/index.js:2779"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:518:catchtap:openActivityTools:69",
+      "id": "pages/club/detail/index.wxml:525:catchtap:openActivityTools:70",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -738727,7 +738996,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "openActivityTools",
-        "line": 518,
+        "line": 525,
         "selectorHint": ".manage-project-director",
         "visibleCondition": "{{club.isOwner || club.viewerIsAdmin || canManageActivities || canOperateEvents || hasEventScope}}",
         "disabledCondition": null,
@@ -738813,11 +739082,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1012"
+        "staticSource": "pages/club/detail/index.js:1022"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:523:bind:cta:onCreateTeam:70",
+      "id": "pages/club/detail/index.wxml:530:bind:cta:onCreateTeam:71",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -738840,7 +739109,7 @@
         "tag": "cy-empty",
         "event": "bind:cta",
         "handler": "onCreateTeam",
-        "line": 523,
+        "line": 530,
         "selectorHint": "cy-empty[bind:cta]",
         "visibleCondition": "{{club.isOwner || canManageActivities}}",
         "disabledCondition": null,
@@ -738884,11 +739153,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2520"
+        "staticSource": "pages/club/detail/index.js:2620"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:525:catchtap:onCreateTeam:71",
+      "id": "pages/club/detail/index.wxml:532:catchtap:onCreateTeam:72",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -738911,7 +739180,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onCreateTeam",
-        "line": 525,
+        "line": 532,
         "selectorHint": ".manage-add-row",
         "visibleCondition": "{{club.isOwner || canManageActivities}}",
         "disabledCondition": null,
@@ -738955,11 +739224,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2520"
+        "staticSource": "pages/club/detail/index.js:2620"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:532:catchtap:toggleManageSection:72",
+      "id": "pages/club/detail/index.wxml:539:catchtap:toggleManageSection:73",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -738982,7 +739251,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "toggleManageSection",
-        "line": 532,
+        "line": 539,
         "selectorHint": ".manage-fold-row",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -739065,11 +739334,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3241"
+        "staticSource": "pages/club/detail/index.js:3341"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:551:catchtap:stopShareBubble:74",
+      "id": "pages/club/detail/index.wxml:558:catchtap:stopShareBubble:75",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -739092,7 +739361,7 @@
         "tag": "button",
         "event": "catchtap",
         "handler": "stopShareBubble",
-        "line": 551,
+        "line": 558,
         "selectorHint": ".manage-project-share",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -739133,11 +739402,128 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3091"
+        "staticSource": "pages/club/detail/index.js:3191"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:559:catchtap:toggleManageSection:75",
+      "id": "pages/club/detail/index.wxml:563:bind:cta:loadShareEditions:76",
+      "route": "pages/club/detail/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "club",
+      "entry": {
+        "wxml": "pages/club/detail/index.wxml",
+        "js": "pages/club/detail/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-empty",
+        "event": "bind:cta",
+        "handler": "loadShareEditions",
+        "line": 563,
+        "selectorHint": "cy-empty[bind:cta]",
+        "visibleCondition": "{{shareEditionEmptyRetry}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "read",
+      "interactionMode": "event-contract",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/club-compensation/editions",
+          "/api/club-compensation/editions/empty-reason",
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "primaryApis": [
+          "/api/club-compensation/editions",
+          "/api/club-compensation/editions/empty-reason",
+          "/api/config/features"
+        ],
+        "auxiliaryApis": [
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/club-compensation/editions",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/club-compensation/editions/empty-reason",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/club/detail/index.js:1177"
+      }
+    },
+    {
+      "id": "pages/club/detail/index.wxml:569:catchtap:toggleManageSection:77",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -739160,7 +739546,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "toggleManageSection",
-        "line": 559,
+        "line": 569,
         "selectorHint": ".manage-fold-row",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -739243,11 +739629,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3241"
+        "staticSource": "pages/club/detail/index.js:3341"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:569:catchtap:goCoopList:76",
+      "id": "pages/club/detail/index.wxml:579:catchtap:goCoopList:78",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -739270,7 +739656,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "goCoopList",
-        "line": 569,
+        "line": 579,
         "selectorHint": ".cset-panel-act",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -739313,11 +739699,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:869"
+        "staticSource": "pages/club/detail/index.js:879"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:570:bind:input:onMerchantKeyword:77",
+      "id": "pages/club/detail/index.wxml:580:bind:input:onMerchantKeyword:79",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -739340,7 +739726,7 @@
         "tag": "cy-search",
         "event": "bind:input",
         "handler": "onMerchantKeyword",
-        "line": 570,
+        "line": 580,
         "selectorHint": ".merchant-search",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -739380,11 +739766,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:855"
+        "staticSource": "pages/club/detail/index.js:865"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:579:bind:tap:goMerchantProfile:78",
+      "id": "pages/club/detail/index.wxml:589:bind:tap:goMerchantProfile:80",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -739407,7 +739793,7 @@
         "tag": "cy-merchant-card",
         "event": "bind:tap",
         "handler": "goMerchantProfile",
-        "line": 579,
+        "line": 589,
         "selectorHint": ".mcard",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -739450,11 +739836,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1523"
+        "staticSource": "pages/club/detail/index.js:1571"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:602:catchtap:toggleManageSection:80",
+      "id": "pages/club/detail/index.wxml:612:catchtap:toggleManageSection:82",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -739477,7 +739863,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "toggleManageSection",
-        "line": 602,
+        "line": 612,
         "selectorHint": ".manage-fold-row",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -739560,11 +739946,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3241"
+        "staticSource": "pages/club/detail/index.js:3341"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:630:catchtap:applyCoopPool:82",
+      "id": "pages/club/detail/index.wxml:640:catchtap:applyCoopPool:84",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -739587,7 +739973,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "applyCoopPool",
-        "line": 630,
+        "line": 640,
         "selectorHint": ".pool-card-cta",
         "visibleCondition": "{{item.canApply}}",
         "disabledCondition": null,
@@ -739681,11 +740067,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3282"
+        "staticSource": "pages/club/detail/index.js:3382"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:636:catchtap:goCoopSent:83",
+      "id": "pages/club/detail/index.wxml:646:catchtap:goCoopSent:85",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -739708,7 +740094,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "goCoopSent",
-        "line": 636,
+        "line": 646,
         "selectorHint": ".pool-card-cta",
         "visibleCondition": "{{item.applyId}}",
         "disabledCondition": null,
@@ -739751,11 +740137,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3321"
+        "staticSource": "pages/club/detail/index.js:3421"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:647:catchtap:toggleManageSection:84",
+      "id": "pages/club/detail/index.wxml:657:catchtap:toggleManageSection:86",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -739778,7 +740164,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "toggleManageSection",
-        "line": 647,
+        "line": 657,
         "selectorHint": ".manage-fold-row",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -739861,11 +740247,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3241"
+        "staticSource": "pages/club/detail/index.js:3341"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:663:catchtap:goCoopList:86",
+      "id": "pages/club/detail/index.wxml:673:catchtap:goCoopList:88",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -739888,7 +740274,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "goCoopList",
-        "line": 663,
+        "line": 673,
         "selectorHint": ".manage-message",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -739931,11 +740317,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:869"
+        "staticSource": "pages/club/detail/index.js:879"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:676:catchtap:toggleManageSection:87",
+      "id": "pages/club/detail/index.wxml:686:catchtap:toggleManageSection:89",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -739958,7 +740344,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "toggleManageSection",
-        "line": 676,
+        "line": 686,
         "selectorHint": ".manage-fold-row",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -740041,11 +740427,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3241"
+        "staticSource": "pages/club/detail/index.js:3341"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:689:bindtap:goCooperation:89",
+      "id": "pages/club/detail/index.wxml:699:bindtap:goCooperation:91",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -740068,7 +740454,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goCooperation",
-        "line": 689,
+        "line": 699,
         "selectorHint": ".manage-invite",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -740111,11 +740497,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:870"
+        "staticSource": "pages/club/detail/index.js:880"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:710:bind:close:closePostRefPicker:90",
+      "id": "pages/club/detail/index.wxml:720:bind:close:closePostRefPicker:92",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -740138,7 +740524,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "closePostRefPicker",
-        "line": 710,
+        "line": 720,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -740178,11 +740564,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1733"
+        "staticSource": "pages/club/detail/index.js:1781"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:716:catchtap:onPickPostRef:92",
+      "id": "pages/club/detail/index.wxml:726:catchtap:onPickPostRef:94",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -740205,7 +740591,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onPickPostRef",
-        "line": 716,
+        "line": 726,
         "selectorHint": ".post-ref-opt",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -740245,11 +740631,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1754"
+        "staticSource": "pages/club/detail/index.js:1802"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:729:bind:close:closeSettings:93",
+      "id": "pages/club/detail/index.wxml:739:bind:close:closeSettings:95",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -740272,7 +740658,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "closeSettings",
-        "line": 729,
+        "line": 739,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -740312,11 +740698,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3140"
+        "staticSource": "pages/club/detail/index.js:3240"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:732:catchtap:goCustomers:94",
+      "id": "pages/club/detail/index.wxml:742:catchtap:goCustomers:96",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -740339,7 +740725,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "goCustomers",
-        "line": 732,
+        "line": 742,
         "selectorHint": ".cset-row",
         "visibleCondition": "{{club.isOwner || club.viewerIsAdmin}}",
         "disabledCondition": null,
@@ -740382,77 +740768,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:873"
-      }
-    },
-    {
-      "id": "pages/club/detail/index.wxml:743:catchtap:goEnroll:95",
-      "route": "pages/club/detail/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "club",
-      "entry": {
-        "wxml": "pages/club/detail/index.wxml",
-        "js": "pages/club/detail/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "catchtap",
-        "handler": "goEnroll",
-        "line": 743,
-        "selectorHint": ".cset-row",
-        "visibleCondition": "{{club.isOwner || club.viewerIsAdmin}}",
-        "disabledCondition": null,
-        "ariaLabel": "报名名册",
-        "ariaLabelExpression": null,
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "navigation",
-      "interactionMode": "tap",
-      "baseActionClass": "navigation",
-      "effectClasses": [
-        "navigation"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/club/enroll/index?clubId="
-        ],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
-      "requiredBranches": [
-        "success",
-        "error"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/club/detail/index.js:879"
+        "staticSource": "pages/club/detail/index.js:883"
       }
     },
     {
@@ -740604,11 +740920,81 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2332"
+        "staticSource": "pages/club/detail/index.js:2432"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:756:bindtap:goEventOps:96",
+      "id": "pages/club/detail/index.wxml:753:catchtap:goEnroll:97",
+      "route": "pages/club/detail/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "club",
+      "entry": {
+        "wxml": "pages/club/detail/index.wxml",
+        "js": "pages/club/detail/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "catchtap",
+        "handler": "goEnroll",
+        "line": 753,
+        "selectorHint": ".cset-row",
+        "visibleCondition": "{{club.isOwner || club.viewerIsAdmin}}",
+        "disabledCondition": null,
+        "ariaLabel": "报名名册",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "tap",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/club/enroll/index?clubId="
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/club/detail/index.js:889"
+      }
+    },
+    {
+      "id": "pages/club/detail/index.wxml:766:bindtap:goEventOps:98",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -740631,7 +741017,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goEventOps",
-        "line": 756,
+        "line": 766,
         "selectorHint": ".cset-row",
         "visibleCondition": "{{club.isOwner || canManageActivities}}",
         "disabledCondition": null,
@@ -740674,11 +741060,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:885"
+        "staticSource": "pages/club/detail/index.js:895"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:761:catchtap:toggleSettingsPanel:97",
+      "id": "pages/club/detail/index.wxml:771:catchtap:toggleSettingsPanel:99",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -740701,7 +741087,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "toggleSettingsPanel",
-        "line": 761,
+        "line": 771,
         "selectorHint": ".cset-row",
         "visibleCondition": "{{club.isOwner || club.viewerIsAdmin || canManageActivities || canOperateEvents || hasEventScope}}",
         "disabledCondition": null,
@@ -740741,11 +741127,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3229"
+        "staticSource": "pages/club/detail/index.js:3329"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:771:catchtap:onCreateTeam:98",
+      "id": "pages/club/detail/index.wxml:781:catchtap:onCreateTeam:100",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -740768,7 +741154,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onCreateTeam",
-        "line": 771,
+        "line": 781,
         "selectorHint": ".manage-tool",
         "visibleCondition": "{{club.isOwner}}",
         "disabledCondition": null,
@@ -740812,11 +741198,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2520"
+        "staticSource": "pages/club/detail/index.js:2620"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:772:catchtap:onOpenClubSession:99",
+      "id": "pages/club/detail/index.wxml:782:catchtap:onOpenClubSession:101",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -740839,7 +741225,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onOpenClubSession",
-        "line": 772,
+        "line": 782,
         "selectorHint": ".manage-tool",
         "visibleCondition": "{{club.isOwner}}",
         "disabledCondition": null,
@@ -740882,11 +741268,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2538"
+        "staticSource": "pages/club/detail/index.js:2638"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:777:catchtap:onClubAiOpen:100",
+      "id": "pages/club/detail/index.wxml:787:catchtap:onClubAiOpen:102",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -740909,7 +741295,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onClubAiOpen",
-        "line": 777,
+        "line": 787,
         "selectorHint": ".manage-tool",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -740949,11 +741335,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1400"
+        "staticSource": "pages/club/detail/index.js:1448"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:781:catchtap:goJoinRequests:101",
+      "id": "pages/club/detail/index.wxml:791:catchtap:goJoinRequests:103",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -740976,7 +741362,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "goJoinRequests",
-        "line": 781,
+        "line": 791,
         "selectorHint": ".cset-row",
         "visibleCondition": "{{club.isOwner || canApproveMembers}}",
         "disabledCondition": null,
@@ -741092,74 +741478,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2381"
-      }
-    },
-    {
-      "id": "pages/club/detail/index.wxml:796:catchtap:toggleSettingsPanel:102",
-      "route": "pages/club/detail/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "club",
-      "entry": {
-        "wxml": "pages/club/detail/index.wxml",
-        "js": "pages/club/detail/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "catchtap",
-        "handler": "toggleSettingsPanel",
-        "line": 796,
-        "selectorHint": ".cset-row",
-        "visibleCondition": "{{club.isOwner || canReadMembers || canManageMembers || canManageRoles}}",
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": "{{club.isOwner || club.viewerIsAdmin || canManageMembers || canManageRoles ? '成员管理' : '查看成员'}}",
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": "{{settingsPanel === 'members'}}",
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3229"
+        "staticSource": "pages/club/detail/index.js:2481"
       }
     },
     {
@@ -741229,11 +741548,78 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3016"
+        "staticSource": "pages/club/detail/index.js:3116"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:811:catchtap:goMemberProfile:105",
+      "id": "pages/club/detail/index.wxml:806:catchtap:toggleSettingsPanel:104",
+      "route": "pages/club/detail/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "club",
+      "entry": {
+        "wxml": "pages/club/detail/index.wxml",
+        "js": "pages/club/detail/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "catchtap",
+        "handler": "toggleSettingsPanel",
+        "line": 806,
+        "selectorHint": ".cset-row",
+        "visibleCondition": "{{club.isOwner || canReadMembers || canManageMembers || canManageRoles}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "{{club.isOwner || club.viewerIsAdmin || canManageMembers || canManageRoles ? '成员管理' : '查看成员'}}",
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": "{{settingsPanel === 'members'}}",
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/club/detail/index.js:3329"
+      }
+    },
+    {
+      "id": "pages/club/detail/index.wxml:821:catchtap:goMemberProfile:107",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -741256,7 +741642,7 @@
         "tag": "cy-avatar",
         "event": "catchtap",
         "handler": "goMemberProfile",
-        "line": 811,
+        "line": 821,
         "selectorHint": ".member-avatar",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -741301,11 +741687,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2304"
+        "staticSource": "pages/club/detail/index.js:2404"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:812:catchtap:goMemberProfile:106",
+      "id": "pages/club/detail/index.wxml:822:catchtap:goMemberProfile:108",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -741328,7 +741714,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "goMemberProfile",
-        "line": 812,
+        "line": 822,
         "selectorHint": ".member-info",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -741373,11 +741759,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2304"
+        "staticSource": "pages/club/detail/index.js:2404"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:817:catchtap:goMemberRoles:107",
+      "id": "pages/club/detail/index.wxml:827:catchtap:goMemberRoles:109",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -741400,7 +741786,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "goMemberRoles",
-        "line": 817,
+        "line": 827,
         "selectorHint": ".member-role-btn",
         "visibleCondition": "{{club.isOwner || canManageRoles}}",
         "disabledCondition": null,
@@ -741443,11 +741829,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2409"
+        "staticSource": "pages/club/detail/index.js:2509"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:818:catchtap:goMemberGovernance:108",
+      "id": "pages/club/detail/index.wxml:828:catchtap:goMemberGovernance:110",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -741470,7 +741856,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "goMemberGovernance",
-        "line": 818,
+        "line": 828,
         "selectorHint": ".member-governance-btn",
         "visibleCondition": "{{club.isOwner || club.viewerIsAdmin || canManageMembers}}",
         "disabledCondition": null,
@@ -741513,11 +741899,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2425"
+        "staticSource": "pages/club/detail/index.js:2525"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:819:catchtap:removeMember:109",
+      "id": "pages/club/detail/index.wxml:829:catchtap:removeMember:111",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -741540,7 +741926,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "removeMember",
-        "line": 819,
+        "line": 829,
         "selectorHint": ".member-remove",
         "visibleCondition": "{{(club.isOwner || canManageMembers || (club.viewerIsAdmin && item.role != 1)) && item.memberId !== club.memberId}}",
         "disabledCondition": null,
@@ -741582,11 +741968,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2982"
+        "staticSource": "pages/club/detail/index.js:3082"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:828:bindtap:goClubRoles:110",
+      "id": "pages/club/detail/index.wxml:838:bindtap:goClubRoles:112",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -741609,7 +741995,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goClubRoles",
-        "line": 828,
+        "line": 838,
         "selectorHint": ".cset-row",
         "visibleCondition": "{{club.isOwner || canManageRoles}}",
         "disabledCondition": null,
@@ -741652,11 +742038,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2403"
+        "staticSource": "pages/club/detail/index.js:2503"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:838:catchtap:goClubGovernance:111",
+      "id": "pages/club/detail/index.wxml:848:catchtap:goClubGovernance:113",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -741679,7 +742065,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "goClubGovernance",
-        "line": 838,
+        "line": 848,
         "selectorHint": ".cset-row",
         "visibleCondition": "{{club.isOwner || club.viewerIsAdmin || canManageMembers}}",
         "disabledCondition": null,
@@ -741723,11 +742109,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2418"
+        "staticSource": "pages/club/detail/index.js:2518"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:842:catchtap:goClubNotify:112",
+      "id": "pages/club/detail/index.wxml:852:catchtap:goClubNotify:114",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -741750,7 +742136,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "goClubNotify",
-        "line": 842,
+        "line": 852,
         "selectorHint": ".cset-row",
         "visibleCondition": "{{club.isOwner || canSendNotify}}",
         "disabledCondition": null,
@@ -741793,11 +742179,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1005"
+        "staticSource": "pages/club/detail/index.js:1015"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:848:catchtap:goClubBadges:113",
+      "id": "pages/club/detail/index.wxml:858:catchtap:goClubBadges:115",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -741820,7 +742206,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "goClubBadges",
-        "line": 848,
+        "line": 858,
         "selectorHint": ".cset-row",
         "visibleCondition": "{{club.isOwner}}",
         "disabledCondition": null,
@@ -741863,11 +742249,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2395"
+        "staticSource": "pages/club/detail/index.js:2495"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:857:catchtap:togglePublicVisible:114",
+      "id": "pages/club/detail/index.wxml:867:catchtap:togglePublicVisible:116",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -741890,7 +742276,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "togglePublicVisible",
-        "line": 857,
+        "line": 867,
         "selectorHint": ".cset-row",
         "visibleCondition": "{{club.isOwner}}",
         "disabledCondition": null,
@@ -741973,11 +742359,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3149"
+        "staticSource": "pages/club/detail/index.js:3249"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:866:bind:action:togglePublicVisible:115",
+      "id": "pages/club/detail/index.wxml:876:bind:action:togglePublicVisible:117",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -742000,7 +742386,7 @@
         "tag": "cy-inline-error",
         "event": "bind:action",
         "handler": "togglePublicVisible",
-        "line": 866,
+        "line": 876,
         "selectorHint": ".cset-inline-error",
         "visibleCondition": "{{openSettingErrorKey === 'publicVisible'}}",
         "disabledCondition": null,
@@ -742083,11 +742469,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3149"
+        "staticSource": "pages/club/detail/index.js:3249"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:868:catchtap:toggleMerchantCoop:116",
+      "id": "pages/club/detail/index.wxml:878:catchtap:toggleMerchantCoop:118",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -742110,7 +742496,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "toggleMerchantCoop",
-        "line": 868,
+        "line": 878,
         "selectorHint": ".cset-row",
         "visibleCondition": "{{club.isOwner}}",
         "disabledCondition": null,
@@ -742193,11 +742579,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3203"
+        "staticSource": "pages/club/detail/index.js:3303"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:877:bind:action:toggleMerchantCoop:117",
+      "id": "pages/club/detail/index.wxml:887:bind:action:toggleMerchantCoop:119",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -742220,7 +742606,7 @@
         "tag": "cy-inline-error",
         "event": "bind:action",
         "handler": "toggleMerchantCoop",
-        "line": 877,
+        "line": 887,
         "selectorHint": ".cset-inline-error",
         "visibleCondition": "{{openSettingErrorKey === 'merchantCoop'}}",
         "disabledCondition": null,
@@ -742303,11 +742689,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3203"
+        "staticSource": "pages/club/detail/index.js:3303"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:879:catchtap:toggleMemberPost:118",
+      "id": "pages/club/detail/index.wxml:889:catchtap:toggleMemberPost:120",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -742330,7 +742716,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "toggleMemberPost",
-        "line": 879,
+        "line": 889,
         "selectorHint": ".cset-row",
         "visibleCondition": "{{club.isOwner}}",
         "disabledCondition": null,
@@ -742413,11 +742799,80 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3176"
+        "staticSource": "pages/club/detail/index.js:3276"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:888:bind:action:toggleMemberPost:119",
+      "id": "pages/club/detail/index.wxml:89:bindtap:onQuit:4",
+      "route": "pages/club/detail/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "club",
+      "entry": {
+        "wxml": "pages/club/detail/index.wxml",
+        "js": "pages/club/detail/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": "cy-danger-confirm",
+      "control": {
+        "tag": "text",
+        "event": "bindtap",
+        "handler": "onQuit",
+        "line": 89,
+        "selectorHint": ".profile-link",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "退出俱乐部",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "other",
+      "interactionMode": "tap",
+      "baseActionClass": "other",
+      "effectClasses": [
+        "other"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
+      "requiredBranches": [
+        "success",
+        "error",
+        "modal-cancelled"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/club/detail/index.js:2648"
+      }
+    },
+    {
+      "id": "pages/club/detail/index.wxml:898:bind:action:toggleMemberPost:121",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -742440,7 +742895,7 @@
         "tag": "cy-inline-error",
         "event": "bind:action",
         "handler": "toggleMemberPost",
-        "line": 888,
+        "line": 898,
         "selectorHint": ".cset-inline-error",
         "visibleCondition": "{{openSettingErrorKey === 'memberPost'}}",
         "disabledCondition": null,
@@ -742523,80 +742978,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3176"
+        "staticSource": "pages/club/detail/index.js:3276"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:89:bindtap:onQuit:4",
-      "route": "pages/club/detail/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "club",
-      "entry": {
-        "wxml": "pages/club/detail/index.wxml",
-        "js": "pages/club/detail/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": "cy-danger-confirm",
-      "control": {
-        "tag": "text",
-        "event": "bindtap",
-        "handler": "onQuit",
-        "line": 89,
-        "selectorHint": ".profile-link",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": "退出俱乐部",
-        "ariaLabelExpression": null,
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "other",
-      "interactionMode": "tap",
-      "baseActionClass": "other",
-      "effectClasses": [
-        "other"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
-      "requiredBranches": [
-        "success",
-        "error",
-        "modal-cancelled"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2548"
-      }
-    },
-    {
-      "id": "pages/club/detail/index.wxml:891:catchtap:goClubFinance:120",
+      "id": "pages/club/detail/index.wxml:901:catchtap:goClubFinance:122",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -742619,7 +743005,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "goClubFinance",
-        "line": 891,
+        "line": 901,
         "selectorHint": ".cset-row",
         "visibleCondition": "{{club.isOwner}}",
         "disabledCondition": null,
@@ -742662,11 +743048,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:969"
+        "staticSource": "pages/club/detail/index.js:979"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:903:catchtap:openClubEdit:121",
+      "id": "pages/club/detail/index.wxml:913:catchtap:openClubEdit:123",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -742689,7 +743075,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "openClubEdit",
-        "line": 903,
+        "line": 913,
         "selectorHint": ".cset-row",
         "visibleCondition": "{{club.isOwner || club.viewerIsAdmin}}",
         "disabledCondition": null,
@@ -742768,11 +743154,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3234"
+        "staticSource": "pages/club/detail/index.js:3334"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:915:bind:close:closeOwnerPicker:122",
+      "id": "pages/club/detail/index.wxml:925:bind:close:closeOwnerPicker:124",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -742795,7 +743181,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "closeOwnerPicker",
-        "line": 915,
+        "line": 925,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -742839,11 +743225,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:779"
+        "staticSource": "pages/club/detail/index.js:789"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:916:catchtap:onPickOwnerClub:123",
+      "id": "pages/club/detail/index.wxml:926:catchtap:onPickOwnerClub:125",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -742866,7 +743252,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onPickOwnerClub",
-        "line": 916,
+        "line": 926,
         "selectorHint": ".owner-picker-item",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -742897,6 +743283,7 @@
         ],
         "apis": [
           "/api/club-compensation/editions",
+          "/api/club-compensation/editions/empty-reason",
           "/api/club/access/me",
           "/api/club/detail",
           "/api/club/leaderboard",
@@ -742915,6 +743302,7 @@
         ],
         "primaryApis": [
           "/api/club-compensation/editions",
+          "/api/club-compensation/editions/empty-reason",
           "/api/club/access/me",
           "/api/club/detail",
           "/api/club/leaderboard",
@@ -742936,6 +743324,12 @@
         "apiContracts": [
           {
             "url": "/api/club-compensation/editions",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/club-compensation/editions/empty-reason",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
@@ -743044,11 +743438,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:773"
+        "staticSource": "pages/club/detail/index.js:783"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:921:bind:close:closePostEdit:124",
+      "id": "pages/club/detail/index.wxml:931:bind:close:closePostEdit:126",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -743071,7 +743465,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "closePostEdit",
-        "line": 921,
+        "line": 931,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -743111,11 +743505,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1790"
+        "staticSource": "pages/club/detail/index.js:1838"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:921:bind:requestclose:requestClosePostEdit:125",
+      "id": "pages/club/detail/index.wxml:931:bind:requestclose:requestClosePostEdit:127",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -743138,7 +743532,7 @@
         "tag": "cy-sheet",
         "event": "bind:requestclose",
         "handler": "requestClosePostEdit",
-        "line": 921,
+        "line": 931,
         "selectorHint": "cy-sheet[bind:requestclose]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -743178,11 +743572,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1801"
+        "staticSource": "pages/club/detail/index.js:1849"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:923:bindinput:onPostEditText:126",
+      "id": "pages/club/detail/index.wxml:933:bindinput:onPostEditText:128",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -743205,7 +743599,7 @@
         "tag": "textarea",
         "event": "bindinput",
         "handler": "onPostEditText",
-        "line": 923,
+        "line": 933,
         "selectorHint": ".post-edit-input",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -743245,11 +743639,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1784"
+        "staticSource": "pages/club/detail/index.js:1832"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:926:bindtap:submitPostEdit:127",
+      "id": "pages/club/detail/index.wxml:936:bindtap:submitPostEdit:129",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -743272,7 +743666,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "submitPostEdit",
-        "line": 926,
+        "line": 936,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -743365,11 +743759,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1810"
+        "staticSource": "pages/club/detail/index.js:1858"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:928:bind:cancel:cancelDiscardPostEdit:129",
+      "id": "pages/club/detail/index.wxml:938:bind:cancel:cancelDiscardPostEdit:131",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -743392,7 +743786,7 @@
         "tag": "cy-modal",
         "event": "bind:cancel",
         "handler": "cancelDiscardPostEdit",
-        "line": 928,
+        "line": 938,
         "selectorHint": "cy-modal[bind:cancel]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -743432,11 +743826,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1808"
+        "staticSource": "pages/club/detail/index.js:1856"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:928:bind:confirm:confirmDiscardPostEdit:128",
+      "id": "pages/club/detail/index.wxml:938:bind:confirm:confirmDiscardPostEdit:130",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -743459,7 +743853,7 @@
         "tag": "cy-modal",
         "event": "bind:confirm",
         "handler": "confirmDiscardPostEdit",
-        "line": 928,
+        "line": 938,
         "selectorHint": "cy-modal[bind:confirm]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -743499,74 +743893,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1807"
-      }
-    },
-    {
-      "id": "pages/club/detail/index.wxml:930:bind:close:closePostHistory:130",
-      "route": "pages/club/detail/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "club",
-      "entry": {
-        "wxml": "pages/club/detail/index.wxml",
-        "js": "pages/club/detail/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-sheet",
-        "event": "bind:close",
-        "handler": "closePostHistory",
-        "line": 930,
-        "selectorHint": "cy-sheet[bind:close]",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "event-contract",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1924"
+        "staticSource": "pages/club/detail/index.js:1855"
       }
     },
     {
@@ -743633,11 +743960,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3038"
+        "staticSource": "pages/club/detail/index.js:3138"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:943:bind:close:onClubAiClose:131",
+      "id": "pages/club/detail/index.wxml:940:bind:close:closePostHistory:132",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -743659,8 +743986,8 @@
       "control": {
         "tag": "cy-sheet",
         "event": "bind:close",
-        "handler": "onClubAiClose",
-        "line": 943,
+        "handler": "closePostHistory",
+        "line": 940,
         "selectorHint": "cy-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -743700,11 +744027,78 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1405"
+        "staticSource": "pages/club/detail/index.js:1972"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:947:catchtap:onClubAiChip:132",
+      "id": "pages/club/detail/index.wxml:953:bind:close:onClubAiClose:133",
+      "route": "pages/club/detail/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "club",
+      "entry": {
+        "wxml": "pages/club/detail/index.wxml",
+        "js": "pages/club/detail/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-sheet",
+        "event": "bind:close",
+        "handler": "onClubAiClose",
+        "line": 953,
+        "selectorHint": "cy-sheet[bind:close]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/club/detail/index.js:1453"
+      }
+    },
+    {
+      "id": "pages/club/detail/index.wxml:957:catchtap:onClubAiChip:134",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -743727,7 +744121,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onClubAiChip",
-        "line": 947,
+        "line": 957,
         "selectorHint": ".ai-plan-chip",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -743767,11 +744161,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1412"
+        "staticSource": "pages/club/detail/index.js:1460"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:950:bindinput:onClubAiIdea:133",
+      "id": "pages/club/detail/index.wxml:960:bindinput:onClubAiIdea:135",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -743794,7 +744188,7 @@
         "tag": "textarea",
         "event": "bindinput",
         "handler": "onClubAiIdea",
-        "line": 950,
+        "line": 960,
         "selectorHint": ".ai-plan-idea",
         "visibleCondition": null,
         "disabledCondition": "{{aiState === 'generating'}}",
@@ -743834,11 +744228,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1409"
+        "staticSource": "pages/club/detail/index.js:1457"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:955:bindinput:onClubAiStyle:134",
+      "id": "pages/club/detail/index.wxml:965:bindinput:onClubAiStyle:136",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -743861,7 +744255,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onClubAiStyle",
-        "line": 955,
+        "line": 965,
         "selectorHint": ".ai-plan-input",
         "visibleCondition": null,
         "disabledCondition": "{{aiState === 'generating'}}",
@@ -743901,11 +744295,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1410"
+        "staticSource": "pages/club/detail/index.js:1458"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:958:bindinput:onClubAiDuration:135",
+      "id": "pages/club/detail/index.wxml:968:bindinput:onClubAiDuration:137",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -743928,7 +744322,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onClubAiDuration",
-        "line": 958,
+        "line": 968,
         "selectorHint": ".ai-plan-input",
         "visibleCondition": null,
         "disabledCondition": "{{aiState === 'generating'}}",
@@ -743968,11 +744362,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1411"
+        "staticSource": "pages/club/detail/index.js:1459"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:967:catchtap:onClubAiCancel:136",
+      "id": "pages/club/detail/index.wxml:977:catchtap:onClubAiCancel:138",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -743995,7 +744389,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onClubAiCancel",
-        "line": 967,
+        "line": 977,
         "selectorHint": ".ai-plan-ghost",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -744035,11 +744429,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1468"
+        "staticSource": "pages/club/detail/index.js:1516"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:970:catchtap:onClubAiGenerate:137",
+      "id": "pages/club/detail/index.wxml:980:catchtap:onClubAiGenerate:139",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -744062,7 +744456,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onClubAiGenerate",
-        "line": 970,
+        "line": 980,
         "selectorHint": ".ai-plan-gen",
         "visibleCondition": "{{aiCanRetry}}",
         "disabledCondition": null,
@@ -744147,11 +744541,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1414"
+        "staticSource": "pages/club/detail/index.js:1462"
       }
     },
     {
-      "id": "pages/club/detail/index.wxml:973:catchtap:onClubAiGenerate:138",
+      "id": "pages/club/detail/index.wxml:983:catchtap:onClubAiGenerate:140",
       "route": "pages/club/detail/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -744174,7 +744568,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onClubAiGenerate",
-        "line": 973,
+        "line": 983,
         "selectorHint": ".ai-plan-gen",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -744259,7 +744653,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1414"
+        "staticSource": "pages/club/detail/index.js:1462"
       }
     },
     {
@@ -816807,11 +817201,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/reviews/index.js:146"
+        "staticSource": "pages/merchant/reviews/index.js:151"
       }
     },
     {
-      "id": "pages/merchant/reviews/index.wxml:101:bindtap:selectRating:12",
+      "id": "pages/merchant/reviews/index.wxml:105:bindtap:selectRating:13",
       "route": "pages/merchant/reviews/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -816834,7 +817228,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "selectRating",
-        "line": 101,
+        "line": 105,
         "selectorHint": ".review-star-hit",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -816877,11 +817271,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/reviews/index.js:283"
+        "staticSource": "pages/merchant/reviews/index.js:312"
       }
     },
     {
-      "id": "pages/merchant/reviews/index.wxml:109:bindinput:inputContent:13",
+      "id": "pages/merchant/reviews/index.wxml:113:bindinput:inputContent:14",
       "route": "pages/merchant/reviews/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -816904,7 +817298,7 @@
         "tag": "textarea",
         "event": "bindinput",
         "handler": "inputContent",
-        "line": 109,
+        "line": 113,
         "selectorHint": ".review-textarea",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -816947,11 +817341,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/reviews/index.js:290"
+        "staticSource": "pages/merchant/reviews/index.js:319"
       }
     },
     {
-      "id": "pages/merchant/reviews/index.wxml:113:catchtap:removeImage:14",
+      "id": "pages/merchant/reviews/index.wxml:117:catchtap:removeImage:15",
       "route": "pages/merchant/reviews/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -816974,7 +817368,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "removeImage",
-        "line": 113,
+        "line": 117,
         "selectorHint": ".review-image-remove",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -817017,11 +817411,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/reviews/index.js:305"
+        "staticSource": "pages/merchant/reviews/index.js:334"
       }
     },
     {
-      "id": "pages/merchant/reviews/index.wxml:115:bindtap:chooseImages:15",
+      "id": "pages/merchant/reviews/index.wxml:119:bindtap:chooseImages:16",
       "route": "pages/merchant/reviews/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -817047,7 +817441,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "chooseImages",
-        "line": 115,
+        "line": 119,
         "selectorHint": ".review-image-add",
         "visibleCondition": "{{images.length < 9}}",
         "disabledCondition": null,
@@ -817140,11 +817534,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/reviews/index.js:295"
+        "staticSource": "pages/merchant/reviews/index.js:324"
       }
     },
     {
-      "id": "pages/merchant/reviews/index.wxml:122:bindtap:submitReview:16",
+      "id": "pages/merchant/reviews/index.wxml:126:bindtap:submitReview:17",
       "route": "pages/merchant/reviews/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -817167,7 +817561,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "submitReview",
-        "line": 122,
+        "line": 126,
         "selectorHint": ".review-submit",
         "visibleCondition": null,
         "disabledCondition": "{{!canSubmit || submitting}}",
@@ -817270,7 +817664,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/reviews/index.js:331"
+        "staticSource": "pages/merchant/reviews/index.js:360"
       }
     },
     {
@@ -817389,11 +817783,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/reviews/index.js:163"
+        "staticSource": "pages/merchant/reviews/index.js:168"
       }
     },
     {
-      "id": "pages/merchant/reviews/index.wxml:169:bindtap:previewImage:17",
+      "id": "pages/merchant/reviews/index.wxml:176:bindtap:previewImage:18",
       "route": "pages/merchant/reviews/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -817416,7 +817810,7 @@
         "tag": "image",
         "event": "bindtap",
         "handler": "previewImage",
-        "line": 169,
+        "line": 176,
         "selectorHint": ".review-photo",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -817466,74 +817860,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/reviews/index.js:315"
-      }
-    },
-    {
-      "id": "pages/merchant/reviews/index.wxml:178:bindinput:inputReply:18",
-      "route": "pages/merchant/reviews/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/merchant/reviews/index.wxml",
-        "js": "pages/merchant/reviews/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "input",
-        "event": "bindinput",
-        "handler": "inputReply",
-        "line": 178,
-        "selectorHint": ".review-reply-input",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "event-contract",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/merchant/reviews/index.js:457"
+        "staticSource": "pages/merchant/reviews/index.js:344"
       }
     },
     {
@@ -817652,11 +817979,78 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/reviews/index.js:159"
+        "staticSource": "pages/merchant/reviews/index.js:164"
       }
     },
     {
-      "id": "pages/merchant/reviews/index.wxml:180:bindtap:cancelEditReply:19",
+      "id": "pages/merchant/reviews/index.wxml:185:bindinput:inputReply:19",
+      "route": "pages/merchant/reviews/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/merchant/reviews/index.wxml",
+        "js": "pages/merchant/reviews/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "input",
+        "event": "bindinput",
+        "handler": "inputReply",
+        "line": 185,
+        "selectorHint": ".review-reply-input",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/merchant/reviews/index.js:486"
+      }
+    },
+    {
+      "id": "pages/merchant/reviews/index.wxml:187:bindtap:cancelEditReply:20",
       "route": "pages/merchant/reviews/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -817679,7 +818073,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "cancelEditReply",
-        "line": 180,
+        "line": 187,
         "selectorHint": ".review-reply-cancel",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -817719,11 +818113,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/reviews/index.js:399"
+        "staticSource": "pages/merchant/reviews/index.js:428"
       }
     },
     {
-      "id": "pages/merchant/reviews/index.wxml:183:bindtap:tapReplySend:20",
+      "id": "pages/merchant/reviews/index.wxml:190:bindtap:tapReplySend:21",
       "route": "pages/merchant/reviews/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -817746,7 +818140,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "tapReplySend",
-        "line": 183,
+        "line": 190,
         "selectorHint": ".review-reply-send",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -817857,11 +818251,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/reviews/index.js:447"
+        "staticSource": "pages/merchant/reviews/index.js:476"
       }
     },
     {
-      "id": "pages/merchant/reviews/index.wxml:195:bindtap:openEditReply:21",
+      "id": "pages/merchant/reviews/index.wxml:202:bindtap:openEditReply:22",
       "route": "pages/merchant/reviews/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -817884,7 +818278,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openEditReply",
-        "line": 195,
+        "line": 202,
         "selectorHint": ".review-action",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -817927,11 +818321,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/reviews/index.js:383"
+        "staticSource": "pages/merchant/reviews/index.js:412"
       }
     },
     {
-      "id": "pages/merchant/reviews/index.wxml:197:bindtap:askDeleteReply:22",
+      "id": "pages/merchant/reviews/index.wxml:204:bindtap:askDeleteReply:23",
       "route": "pages/merchant/reviews/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -817954,7 +818348,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "askDeleteReply",
-        "line": 197,
+        "line": 204,
         "selectorHint": ".review-action",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -817999,11 +818393,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/reviews/index.js:405"
+        "staticSource": "pages/merchant/reviews/index.js:434"
       }
     },
     {
-      "id": "pages/merchant/reviews/index.wxml:206:bindinput:inputReply:23",
+      "id": "pages/merchant/reviews/index.wxml:213:bindinput:inputReply:24",
       "route": "pages/merchant/reviews/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -818026,7 +818420,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "inputReply",
-        "line": 206,
+        "line": 213,
         "selectorHint": ".review-reply-input",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -818066,11 +818460,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/reviews/index.js:457"
+        "staticSource": "pages/merchant/reviews/index.js:486"
       }
     },
     {
-      "id": "pages/merchant/reviews/index.wxml:208:bindtap:openReply:24",
+      "id": "pages/merchant/reviews/index.wxml:215:bindtap:openReply:25",
       "route": "pages/merchant/reviews/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -818093,7 +818487,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openReply",
-        "line": 208,
+        "line": 215,
         "selectorHint": ".review-reply-input-shell",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -818136,11 +818530,82 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/reviews/index.js:374"
+        "staticSource": "pages/merchant/reviews/index.js:403"
       }
     },
     {
-      "id": "pages/merchant/reviews/index.wxml:213:bindtap:tapReplySend:25",
+      "id": "pages/merchant/reviews/index.wxml:22:bind:cta:onNavBack:5",
+      "route": "pages/merchant/reviews/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/merchant/reviews/index.wxml",
+        "js": "pages/merchant/reviews/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-empty",
+        "event": "bind:cta",
+        "handler": "onNavBack",
+        "line": 22,
+        "selectorHint": "cy-empty[bind:cta]",
+        "visibleCondition": "{{pageState === 'missing'}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "event-contract",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/index/index",
+          "pages/merchant/index/index"
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/merchant/reviews/index.js:151"
+      }
+    },
+    {
+      "id": "pages/merchant/reviews/index.wxml:220:bindtap:tapReplySend:26",
       "route": "pages/merchant/reviews/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -818163,7 +818628,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "tapReplySend",
-        "line": 213,
+        "line": 220,
         "selectorHint": ".review-reply-send",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -818274,82 +818739,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/reviews/index.js:447"
+        "staticSource": "pages/merchant/reviews/index.js:476"
       }
     },
     {
-      "id": "pages/merchant/reviews/index.wxml:22:bind:cta:onNavBack:5",
-      "route": "pages/merchant/reviews/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/merchant/reviews/index.wxml",
-        "js": "pages/merchant/reviews/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-empty",
-        "event": "bind:cta",
-        "handler": "onNavBack",
-        "line": 22,
-        "selectorHint": "cy-empty[bind:cta]",
-        "visibleCondition": "{{pageState === 'missing'}}",
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "navigation",
-      "interactionMode": "event-contract",
-      "baseActionClass": "navigation",
-      "effectClasses": [
-        "navigation"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/index/index",
-          "pages/merchant/index/index"
-        ],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
-      "requiredBranches": [
-        "success",
-        "error"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/merchant/reviews/index.js:146"
-      }
-    },
-    {
-      "id": "pages/merchant/reviews/index.wxml:223:bindtap:openReport:26",
+      "id": "pages/merchant/reviews/index.wxml:230:bindtap:openReport:27",
       "route": "pages/merchant/reviews/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -818372,7 +818766,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openReport",
-        "line": 223,
+        "line": 230,
         "selectorHint": ".review-action",
         "visibleCondition": "{{item.canReport}}",
         "disabledCondition": null,
@@ -818415,11 +818809,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/reviews/index.js:493"
+        "staticSource": "pages/merchant/reviews/index.js:522"
       }
     },
     {
-      "id": "pages/merchant/reviews/index.wxml:230:bindinput:inputReport:27",
+      "id": "pages/merchant/reviews/index.wxml:237:bindinput:inputReport:28",
       "route": "pages/merchant/reviews/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -818442,7 +818836,7 @@
         "tag": "textarea",
         "event": "bindinput",
         "handler": "inputReport",
-        "line": 230,
+        "line": 237,
         "selectorHint": ".review-textarea",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -818482,11 +818876,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/reviews/index.js:502"
+        "staticSource": "pages/merchant/reviews/index.js:531"
       }
     },
     {
-      "id": "pages/merchant/reviews/index.wxml:234:bindtap:cancelReport:28",
+      "id": "pages/merchant/reviews/index.wxml:241:bindtap:cancelReport:29",
       "route": "pages/merchant/reviews/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -818509,7 +818903,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "cancelReport",
-        "line": 234,
+        "line": 241,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{reportSubmitting}}",
@@ -818549,11 +818943,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/reviews/index.js:506"
+        "staticSource": "pages/merchant/reviews/index.js:535"
       }
     },
     {
-      "id": "pages/merchant/reviews/index.wxml:236:bindtap:submitReport:29:variant:manage",
+      "id": "pages/merchant/reviews/index.wxml:243:bindtap:submitReport:30:variant:manage",
       "route": "pages/merchant/reviews/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -818590,7 +818984,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "submitReport",
-        "line": 236,
+        "line": 243,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{reportSubmitting || !reportReason}}",
@@ -818651,11 +819045,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/reviews/index.js:511"
+        "staticSource": "pages/merchant/reviews/index.js:540"
       }
     },
     {
-      "id": "pages/merchant/reviews/index.wxml:236:bindtap:submitReport:29:variant:public",
+      "id": "pages/merchant/reviews/index.wxml:243:bindtap:submitReport:30:variant:public",
       "route": "pages/merchant/reviews/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -818694,7 +819088,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "submitReport",
-        "line": 236,
+        "line": 243,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": "{{reportSubmitting || !reportReason}}",
@@ -818755,11 +819149,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/reviews/index.js:511"
+        "staticSource": "pages/merchant/reviews/index.js:540"
       }
     },
     {
-      "id": "pages/merchant/reviews/index.wxml:242:bindtap:loadMore:30",
+      "id": "pages/merchant/reviews/index.wxml:249:bindtap:loadMore:31",
       "route": "pages/merchant/reviews/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -818782,7 +819176,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "loadMore",
-        "line": 242,
+        "line": 249,
         "selectorHint": ".review-load-more",
         "visibleCondition": "{{hasMore}}",
         "disabledCondition": null,
@@ -818874,7 +819268,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/reviews/index.js:268"
+        "staticSource": "pages/merchant/reviews/index.js:285"
       }
     },
     {
@@ -818993,7 +819387,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/reviews/index.js:163"
+        "staticSource": "pages/merchant/reviews/index.js:168"
       }
     },
     {
@@ -819112,7 +819506,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/reviews/index.js:268"
+        "staticSource": "pages/merchant/reviews/index.js:285"
       }
     },
     {
@@ -819242,11 +819636,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/reviews/index.js:416"
+        "staticSource": "pages/merchant/reviews/index.js:445"
       }
     },
     {
-      "id": "pages/merchant/reviews/index.wxml:81:bindtap:setReviewFilter:8",
+      "id": "pages/merchant/reviews/index.wxml:83:bindtap:setReviewFilter:8",
       "route": "pages/merchant/reviews/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -819269,7 +819663,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "setReviewFilter",
-        "line": 81,
+        "line": 83,
         "selectorHint": ".review-segment",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -819284,103 +819678,89 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "state",
+      "actionClass": "write",
       "interactionMode": "tap",
-      "baseActionClass": "state",
+      "baseActionClass": "write",
       "effectClasses": [
+        "write",
         "state"
       ],
-      "accessBoundary": null,
+      "accessBoundary": "owned-resource",
       "externalCapabilities": [],
       "successCapabilities": [],
       "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
+        "routes": [
+          "pages/index/index",
+          "pages/merchant/index/index",
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/merchant/reviews/manage",
+          "/api/merchant/reviews/public",
+          "/api/role/info"
+        ],
+        "primaryApis": [
+          "/api/config/features",
+          "/api/merchant/reviews/manage",
+          "/api/merchant/reviews/public"
+        ],
+        "auxiliaryApis": [
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/merchant/reviews/manage",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/merchant/reviews/public",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
         "writeApis": []
       },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
-        "success"
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger",
+        "forbidden-owner"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/reviews/index.js:270"
+        "staticSource": "pages/merchant/reviews/index.js:287"
       }
     },
     {
-      "id": "pages/merchant/reviews/index.wxml:84:bindtap:setReviewFilter:9",
-      "route": "pages/merchant/reviews/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "merchant",
-      "entry": {
-        "wxml": "pages/merchant/reviews/index.wxml",
-        "js": "pages/merchant/reviews/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "setReviewFilter",
-        "line": 84,
-        "selectorHint": ".review-segment",
-        "visibleCondition": "{{mode === 'manage'}}",
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": "tab",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/merchant/reviews/index.js:270"
-      }
-    },
-    {
-      "id": "pages/merchant/reviews/index.wxml:86:bindtap:setReviewFilter:10",
+      "id": "pages/merchant/reviews/index.wxml:86:bindtap:setReviewFilter:9",
       "route": "pages/merchant/reviews/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -819405,7 +819785,7 @@
         "handler": "setReviewFilter",
         "line": 86,
         "selectorHint": ".review-segment",
-        "visibleCondition": null,
+        "visibleCondition": "{{mode === 'manage'}}",
         "disabledCondition": null,
         "ariaLabel": null,
         "ariaLabelExpression": null,
@@ -819418,36 +819798,89 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "state",
+      "actionClass": "write",
       "interactionMode": "tap",
-      "baseActionClass": "state",
+      "baseActionClass": "write",
       "effectClasses": [
+        "write",
         "state"
       ],
-      "accessBoundary": null,
+      "accessBoundary": "owned-resource",
       "externalCapabilities": [],
       "successCapabilities": [],
       "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
+        "routes": [
+          "pages/index/index",
+          "pages/merchant/index/index",
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/merchant/reviews/manage",
+          "/api/merchant/reviews/public",
+          "/api/role/info"
+        ],
+        "primaryApis": [
+          "/api/config/features",
+          "/api/merchant/reviews/manage",
+          "/api/merchant/reviews/public"
+        ],
+        "auxiliaryApis": [
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/merchant/reviews/manage",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/merchant/reviews/public",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
         "writeApis": []
       },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
-        "success"
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger",
+        "forbidden-owner"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/reviews/index.js:270"
+        "staticSource": "pages/merchant/reviews/index.js:287"
       }
     },
     {
-      "id": "pages/merchant/reviews/index.wxml:88:bindtap:setReviewFilter:11",
+      "id": "pages/merchant/reviews/index.wxml:88:bindtap:setReviewFilter:10",
       "route": "pages/merchant/reviews/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -819485,32 +819918,325 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "state",
+      "actionClass": "write",
       "interactionMode": "tap",
-      "baseActionClass": "state",
+      "baseActionClass": "write",
       "effectClasses": [
+        "write",
         "state"
       ],
-      "accessBoundary": null,
+      "accessBoundary": "owned-resource",
       "externalCapabilities": [],
       "successCapabilities": [],
       "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
+        "routes": [
+          "pages/index/index",
+          "pages/merchant/index/index",
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/merchant/reviews/manage",
+          "/api/merchant/reviews/public",
+          "/api/role/info"
+        ],
+        "primaryApis": [
+          "/api/config/features",
+          "/api/merchant/reviews/manage",
+          "/api/merchant/reviews/public"
+        ],
+        "auxiliaryApis": [
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/merchant/reviews/manage",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/merchant/reviews/public",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
         "writeApis": []
       },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
-        "success"
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger",
+        "forbidden-owner"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/merchant/reviews/index.js:270"
+        "staticSource": "pages/merchant/reviews/index.js:287"
+      }
+    },
+    {
+      "id": "pages/merchant/reviews/index.wxml:90:bindtap:setReviewFilter:11",
+      "route": "pages/merchant/reviews/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/merchant/reviews/index.wxml",
+        "js": "pages/merchant/reviews/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "setReviewFilter",
+        "line": 90,
+        "selectorHint": ".review-segment",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": "tab",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "write",
+      "interactionMode": "tap",
+      "baseActionClass": "write",
+      "effectClasses": [
+        "write",
+        "state"
+      ],
+      "accessBoundary": "owned-resource",
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/index/index",
+          "pages/merchant/index/index",
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/merchant/reviews/manage",
+          "/api/merchant/reviews/public",
+          "/api/role/info"
+        ],
+        "primaryApis": [
+          "/api/config/features",
+          "/api/merchant/reviews/manage",
+          "/api/merchant/reviews/public"
+        ],
+        "auxiliaryApis": [
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/merchant/reviews/manage",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/merchant/reviews/public",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger",
+        "forbidden-owner"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/merchant/reviews/index.js:287"
+      }
+    },
+    {
+      "id": "pages/merchant/reviews/index.wxml:92:bindtap:setReviewFilter:12",
+      "route": "pages/merchant/reviews/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/merchant/reviews/index.wxml",
+        "js": "pages/merchant/reviews/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "setReviewFilter",
+        "line": 92,
+        "selectorHint": ".review-segment",
+        "visibleCondition": "{{mode === 'manage'}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": "tab",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "write",
+      "interactionMode": "tap",
+      "baseActionClass": "write",
+      "effectClasses": [
+        "write",
+        "state"
+      ],
+      "accessBoundary": "owned-resource",
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/index/index",
+          "pages/merchant/index/index",
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/merchant/reviews/manage",
+          "/api/merchant/reviews/public",
+          "/api/role/info"
+        ],
+        "primaryApis": [
+          "/api/config/features",
+          "/api/merchant/reviews/manage",
+          "/api/merchant/reviews/public"
+        ],
+        "auxiliaryApis": [
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/merchant/reviews/manage",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/merchant/reviews/public",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger",
+        "forbidden-owner"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/merchant/reviews/index.js:287"
       }
     },
     {

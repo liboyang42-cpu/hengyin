@@ -35,6 +35,8 @@ public class MerchantReview {
     /** 仅查询投影；不落入评价表，也不向 API 暴露会员 ID。 */
     private String authorNickname;
     private String authorAvatar;
+    /** 仅管理列表投影:新评价待复核,或举报对应的平台审核任务仍未结案。 */
+    private Integer underPlatformReview;
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -86,4 +88,6 @@ public class MerchantReview {
     public void setAuthorNickname(String authorNickname) { this.authorNickname = authorNickname; }
     public String getAuthorAvatar() { return authorAvatar; }
     public void setAuthorAvatar(String authorAvatar) { this.authorAvatar = authorAvatar; }
+    public Integer getUnderPlatformReview() { return underPlatformReview; }
+    public void setUnderPlatformReview(Integer underPlatformReview) { this.underPlatformReview = underPlatformReview; }
 }
