@@ -233,5 +233,5 @@
   bind:submit="onSubmit" bind:close="onClose" />
 
 <cy-playkit-album wx:if="{{kit.type === 'album'}}" show="{{show}}" title="{{kit.title}}" images="{{kit.images}}"
-  completion-enabled="{{kit.completionEnabled}}" done="{{kit.done}}" uploaded="{{kit.uploaded}}"
+  completion-enabled="{{kit.completionEnabled}}" done="{{kit.done}}" uploaded="{{kit.uploaded}}" upload-failure="{{kit.uploadFailure}}"
   bind:shoot="onShoot" bind:submit="onSubmit" bind:close="onClose" />

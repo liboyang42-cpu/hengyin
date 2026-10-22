@@ -95,6 +95,7 @@ function actionRows(view, nodes) {
       choices: personal ? [...new Set(available.filter(action => action.contentId === key && ['QUEST_RESOLVE', 'GAMEPLAY_PREVIEW'].includes(action.operation) && action.choiceKey).map(action => action.choiceKey))].map((choiceKey, index) => ({ choiceKey, label: '方案 ' + (index + 1) })) : (quest.choices || []).map((choice, index) => ({ choiceKey: choice.choiceKey, label: choice.label || choice.title || '方案 ' + (index + 1) })),
       disabledText: proofPending ? '待审核 / 凭证未通过，请打开原任务核对' : status.disabledText || (ended ? '本局已结束，仅可领取待领奖励' : ''),
       frozenText: active && costOptions[frozenQuest] ? costOptions[frozenQuest].label + ' · ' + costOptions[frozenQuest].amountText : '',
+      chargeNote: !ended && active ? '任务进行中不扣费用，结算时才按实际扣除' : '',
       cancelable: !ended && active && !!allowed('QUEST_CANCEL', key) });
   }
   const tools = personal ? view.tools || [] : (view.interactionTools || []).filter(tool => tool.kind === 'FACILITY');
@@ -131,6 +132,18 @@ function actionRows(view, nodes) {
   return rows;
 }
 
+// 任务回执：开始任务不预留、不扣费；只有 QUEST_RESOLVE 真实结算（未被拦截）后，才按结算输出列出已扣数额。
+function questReceiptText(operation, result, view) {
+  result = result || {};
+  if (operation === 'QUEST_CANCEL') return result.cancelledQuest ? '任务已取消，未扣除任何费用' : '';
+  if (operation !== 'QUEST_RESOLVE' || result.settled === false || result.status === 'BLOCKED_COST' || result.competitionLost === true
+    || typeof result.settlementKey !== 'string' || !result.settlementKey.startsWith('quest:')) return '';
+  const parts = [];
+  for (const [key, delta] of Object.entries(result.statDeltas || {})) if (Number.isSafeInteger(delta) && delta < 0) parts.push(valueName(key, view) + ' ' + -delta);
+  for (const [key, quantity] of Object.entries(result.resourceCosts || {})) if (Number.isSafeInteger(quantity) && quantity > 0) parts.push(valueName(key, view) + ' ×' + quantity);
+  return parts.length ? '任务已结算，本次实际扣除：' + parts.join(' · ') : '';
+}
+
 function participantChoice(view, input) {
   const row = (view.actionRows || []).find(row => row.kind === 'FACILITY' && row.key === input.contentId);
   if (view.scope !== 'TEAM' || input.operation !== 'FACILITY_USE' || !row || row.targetScope !== 'PARTICIPANTS') return {};
@@ -145,4 +158,4 @@ function participantChoice(view, input) {
   return { rows, participants: ids, payerRequired: row.payerRequired, error };
 }
 
-module.exports = { labels, valueName, amounts, options, toolStatus, actionRows, participantChoice };
+module.exports = { labels, valueName, amounts, options, toolStatus, actionRows, participantChoice, questReceiptText };

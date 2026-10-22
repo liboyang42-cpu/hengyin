@@ -8,6 +8,14 @@ const definitions = [
 const actionNames = { QUEST_START: '开始任务', QUEST_RESOLVE: '结算任务', QUEST_CANCEL: '取消任务', OPERATION_START: '开始操作任务', OPERATION_CANCEL: '取消操作任务', RECOVER: '使用恢复方式', VOTE_CAST: '签署首选票', ACCEPT_SET: '签署接受清单', CONSENSUS_CAST: '签署共识票' };
 function rows(view) { return view.scope === 'TEAM' ? definitions.filter(row => (view.availableActions || []).includes(row.action)) : []; }
 function exitText(view) { return view.run && view.run.exitedTeams && Object.prototype.hasOwnProperty.call(view.run.exitedTeams, String(view.teamId)) ? '本队已退出本局' : ''; }
+// 主持人运营状态：只说明服务端实际执行的后果（暂停期间只读；中断/取消后只读、进行中的任务结束），不承诺冻结、顺延或费用处理。
+function runText(view) {
+  const run = view.scope === 'TEAM' && view.run || {};
+  if (run.operationStatus === 'PAUSED' && run.authorityMode === 'ONLINE') return '主持人已暂停本局：暂停期间只能查看，不能提交操作';
+  if (run.operationStatus === 'INTERRUPTED') return '主持人已中断本局：只能查看，进行中的任务已结束';
+  if (run.operationStatus === 'CANCELLED') return '主持人已取消本局：只能查看，进行中的任务已结束';
+  return '';
+}
 function manualRows(manual) { return (manual && manual.signatures || []).map(row => ({ ...row, title: actionNames[row.action] || '现场操作', statusText: { PENDING: '待核验', VERIFIED: '已核验', REJECTED: '未通过' }[row.status] || '状态尚未更新' })); }
 function arrivalTargets(view, nodes) {
   const label = id => ((nodes || []).find(row => String(row.nodeId) === String(id)) || {}).name || '站点资料尚未加载';
@@ -42,7 +50,7 @@ function methods(req) {
   const client = () => sessionClient.createGameSessionClient({ sendRequest(options) { req(options.url, options.method, options.data, options.header, true).then(res => res.netFail ? options.fail() : options.success(res), options.fail); } });
   const handlers = {
     _applyPlayerOpsView(view) {
-      this.setData({ playerOperationRows: rows(view), playerManualRows: manualRows(view.run && view.run.manual), playerExitText: exitText(view), playerOperationAvailable: !!this.data.playerOperationForm && rows(view).some(row => row.action === this.data.playerOperationForm.action) });
+      this.setData({ playerOperationRows: rows(view), playerManualRows: manualRows(view.run && view.run.manual), playerExitText: exitText(view), playerRunText: runText(view), playerOperationAvailable: !!this.data.playerOperationForm && rows(view).some(row => row.action === this.data.playerOperationForm.action) });
       if (this.data.playerArrivalProof && this.data.playerArrivalProof.sessionId !== view.sessionId) this.setData({ playerArrivalProof: null });
       if (this._playerOpsPending && this._playerOpsPendingSessionId !== view.sessionId) this.setData({ playerOperationForm: null, playerOperationUnknown: true, playerOperationError: '上一局操作尚未确认，请先核对原操作结果' });
     },
@@ -139,5 +147,5 @@ function methods(req) {
   };
   return handlers;
 }
-module.exports = { rows, exitText, manualRows, arrivalTargets, manualCommands, occurredAt, methods,
-  data: { playerOperationsOpen: false, playerOperationAvailable: false, playerOperationRows: [], playerManualRows: [], playerExitText: '', playerOperationForm: null, playerExitConfirm: false, playerOperationError: '', playerOperationUnknown: false, playerArrivalProof: null } };
+module.exports = { rows, exitText, runText, manualRows, arrivalTargets, manualCommands, occurredAt, methods,
+  data: { playerOperationsOpen: false, playerOperationAvailable: false, playerOperationRows: [], playerManualRows: [], playerExitText: '', playerRunText: '', playerOperationForm: null, playerExitConfirm: false, playerOperationError: '', playerOperationUnknown: false, playerArrivalProof: null } };
