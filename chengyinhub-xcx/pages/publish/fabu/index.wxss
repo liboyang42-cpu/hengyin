@@ -880,18 +880,17 @@ page{background: var(--cy-bg-card);}
 .pc-arrow--static { color: var(--cy-text-secondary); }
 
 /* —— 发布确认页(2026-09-05):检查结果 + 玩家看到的样子 —— */
-/* CU-C-156:退出钮挪到右上角,标题保持居中 ⇒ 左端留一个等宽空位 */
+/* 标题居中:左右各一个等宽空位(右上角 ✕ 按 2026-10-22 业主裁决撤掉) */
 .pc-lead {
   width: 80rpx;
   height: var(--cy-btn-h);
 }
-.pc-close {
-  width: 80rpx;
-  height: var(--cy-btn-h);
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  color: var(--cy-color-text-secondary);
+/* 发布确认的遮罩:点它 = 返回修改;catchtouchmove 锁住下层编辑器。层级紧贴 .pop-model(333)之下。 */
+.pc-mask {
+  position: fixed;
+  inset: 0;
+  z-index: 332;
+  background: var(--cy-color-overlay);
 }
 .pc-lede {
   margin-bottom: var(--cy-space-1);
@@ -2654,6 +2653,12 @@ page { background: var(--cy-btn-solid-bg); }
    --cy-comp-card-pad 叠加成双层内边距。 */
 /* 卡间距 24rpx → 32rpx(用户 2026-09-05:「主题详情下面卡片上下间距也松一点」)。
    下面的 .pd-modecards 用同一个值,两处必须一起改,不然卡列的节奏会一段紧一段松。 */
+/* 旧草稿归属待确认横幅:内容流里,不浮在章节卡/地图之上(L09) */
+.pd-legacy-banner {
+  display: block;
+  margin: 0 var(--cy-page-x) var(--cy-space-4);
+}
+
 .pd-entry-card {
   --cy-comp-card-pad: var(--cy-space-3) var(--cy-space-3-5);
   margin: 0 var(--cy-page-x) var(--cy-space-4);
