@@ -20,7 +20,7 @@ import com.chengyinhub.business.mapper.CmsTopicMapper;
 import com.chengyinhub.business.mapper.ExploreBundleMapper;
 import com.chengyinhub.business.mapper.MerchantChapterOfferMapper;
 import com.chengyinhub.business.service.IFreeExploreBundleService;
-import com.chengyinhub.business.service.ISettlementRuleService;
+import com.chengyinhub.business.mapper.SettlementRuleMapper;
 import com.chengyinhub.business.service.support.FreeExploreBundlePolicy;
 import com.chengyinhub.business.service.support.FreeExploreBundleSwitches;
 import com.chengyinhub.common.constant.ProductType;
@@ -60,7 +60,7 @@ public class FreeExploreBundleServiceImpl implements IFreeExploreBundleService {
     @Autowired private CmsTopicMapper topicMapper;
     @Autowired private CmsTopicChapterMapper chapterMapper;
     @Autowired private MerchantChapterOfferMapper offerMapper;
-    @Autowired private ISettlementRuleService settlementRuleService;
+    @Autowired private SettlementRuleMapper settlementRuleMapper;
     @Autowired private FreeExploreBundleSwitches switches;
 
     /** 测试注入时钟用;生产恒为系统时间。 */
@@ -202,7 +202,7 @@ public class FreeExploreBundleServiceImpl implements IFreeExploreBundleService {
     }
 
     private String settlementRuleVersion() {
-        SettlementRule rule = settlementRuleService.getActiveRule(0L, "topic");
+        SettlementRule rule = settlementRuleMapper.selectActiveRule(0L, "topic");
         if (rule == null || rule.getId() == null) return "rule:none";
         Date stamp = rule.getUpdateTime() != null ? rule.getUpdateTime() : rule.getCreateTime();
         return "rule:" + rule.getId() + "@" + (stamp == null ? 0L : stamp.getTime());

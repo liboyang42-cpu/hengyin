@@ -15,7 +15,7 @@ import com.chengyinhub.business.mapper.CmsTopicChapterMapper;
 import com.chengyinhub.business.mapper.CmsTopicMapper;
 import com.chengyinhub.business.mapper.ExploreBundleMapper;
 import com.chengyinhub.business.mapper.MerchantChapterOfferMapper;
-import com.chengyinhub.business.service.ISettlementRuleService;
+import com.chengyinhub.business.mapper.SettlementRuleMapper;
 import com.chengyinhub.business.service.support.FreeExploreBundlePolicy;
 import com.chengyinhub.business.service.support.FreeExploreBundleSwitches;
 import com.chengyinhub.common.constant.ProductType;
@@ -66,7 +66,7 @@ class FreeExploreBundleServiceTest {
     private CmsTopicMapper topicMapper;
     private CmsTopicChapterMapper chapterMapper;
     private MerchantChapterOfferMapper offerMapper;
-    private ISettlementRuleService rules;
+    private SettlementRuleMapper rules;
 
     @BeforeEach
     void setUp() {
@@ -75,7 +75,7 @@ class FreeExploreBundleServiceTest {
         topicMapper = mock(CmsTopicMapper.class);
         chapterMapper = mock(CmsTopicChapterMapper.class);
         offerMapper = mock(MerchantChapterOfferMapper.class);
-        rules = mock(ISettlementRuleService.class);
+        rules = mock(SettlementRuleMapper.class);
     }
 
     private FreeExploreBundleServiceImpl service(boolean ledger, boolean sale, boolean reservation) {
@@ -85,7 +85,7 @@ class FreeExploreBundleServiceTest {
         ReflectionTestUtils.setField(impl, "topicMapper", topicMapper);
         ReflectionTestUtils.setField(impl, "chapterMapper", chapterMapper);
         ReflectionTestUtils.setField(impl, "offerMapper", offerMapper);
-        ReflectionTestUtils.setField(impl, "settlementRuleService", rules);
+        ReflectionTestUtils.setField(impl, "settlementRuleMapper", rules);
         ReflectionTestUtils.setField(impl, "switches", new FreeExploreBundleSwitches(ledger, sale, reservation));
         impl.clock = () -> now;
         return impl;

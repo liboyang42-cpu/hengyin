@@ -16,7 +16,7 @@ import com.chengyinhub.business.mapper.CmsTopicMapper;
 import com.chengyinhub.business.mapper.ExploreBundleMapper;
 import com.chengyinhub.business.mapper.MerchantChapterOfferMapper;
 import com.chengyinhub.business.mapper.SettlementClaimMapper;
-import com.chengyinhub.business.service.ISettlementRuleService;
+import com.chengyinhub.business.mapper.SettlementRuleMapper;
 import com.chengyinhub.business.service.MysqlIntegrationTestConfig;
 import com.chengyinhub.business.service.support.FreeExploreBundleSwitches;
 import com.chengyinhub.common.constant.ProductType;
@@ -255,8 +255,8 @@ class FreeExploreBundleLedgerMySqlIT {
         when(offerMapper.selectByTopic(TOPIC)).thenReturn(offers);
         when(offerMapper.selectById(OFFER1)).thenReturn(offers.get(0));
         when(offerMapper.selectById(OFFER2)).thenReturn(offers.get(1));
-        ISettlementRuleService rules = mock(ISettlementRuleService.class);
-        when(rules.getActiveRule(eq(0L), any())).thenReturn(null);
+        SettlementRuleMapper rules = mock(SettlementRuleMapper.class);
+        when(rules.selectActiveRule(eq(0L), any())).thenReturn(null);
         when(registrationMapper.selectCmsRegistrationById(anyLong()))
                 .thenAnswer(inv -> registrations.get(inv.<Long>getArgument(0)));
         FreeExploreBundleServiceImpl impl = new FreeExploreBundleServiceImpl();
@@ -265,7 +265,7 @@ class FreeExploreBundleLedgerMySqlIT {
         ReflectionTestUtils.setField(impl, "topicMapper", topicMapper);
         ReflectionTestUtils.setField(impl, "chapterMapper", chapterMapper);
         ReflectionTestUtils.setField(impl, "offerMapper", offerMapper);
-        ReflectionTestUtils.setField(impl, "settlementRuleService", rules);
+        ReflectionTestUtils.setField(impl, "settlementRuleMapper", rules);
         ReflectionTestUtils.setField(impl, "switches", new FreeExploreBundleSwitches(true, true, true));
         impl.clock = () -> now;
         return impl;
