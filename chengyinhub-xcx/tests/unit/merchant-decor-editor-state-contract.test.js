@@ -639,8 +639,9 @@ test('店铺装修入口状态、即时回执及交互满足 88rpx 与 aria 契�
   assert.match(wxml, /loadState === 'permission'[\s\S]*kind="no-permission"/)
   assert.doesNotMatch(wxml, /<cy-inline-error[^>]*loadError/)
   assert.match(wxml, /saveError[\s\S]*bind:action="retrySave"/)
-  assert.match(wxml, /class="dc-save-receipt"[^>]*aria-role="status"[^>]*aria-live="polite"/)
-  assert.match(wxml, /class="dc-refreshing"[^>]*aria-role="status"[^>]*aria-live="polite"/)
+  // owner 2026-10-22:返回页面不闪 —— 「正在刷新」与「已保存」横幅不再插进标题上方的文档流,保存回执改走 toast
+  assert.doesNotMatch(wxml, /class="dc-save-receipt"/)
+  assert.doesNotMatch(wxml, /class="dc-refreshing"/)
   assert.match(wxml, /<cy-cell[^>]*bind:tap="goSection"/)
   assert.match(wxml, /class="dc-tag[^>]*aria-role="checkbox"[^>]*aria-checked=/)
   assert.match(wxml, /class="dc-input"[^>]*aria-label="\{\{fieldSheet\.label\}\}"/)

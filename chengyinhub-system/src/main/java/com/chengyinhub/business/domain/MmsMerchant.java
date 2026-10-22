@@ -33,9 +33,17 @@ public class MmsMerchant extends BaseEntity
     @Excel(name = "商家名称")
     private String name;
 
+    /** 门店微信号(商家手填的微信 ID;2026-10-22 起不再存二维码 URL) */
     private String wechat;
 
+    /** 门店微信二维码图片 URL(migration_merchant_wechat_qrcode_20261022) */
+    private String wechatQrcode;
+
+    /** 主行业类型;多选时为 categoryIds 的第一个,供只认单类目的旧读者使用 */
     private Integer categoryId;
+
+    /** 行业类型多选(逗号分隔的 sys_category.id,migration_merchant_category_ids_20261022) */
+    private String categoryIds;
 
     /** 商家LOGO */
     @Excel(name = "商家LOGO")
@@ -168,6 +176,22 @@ public class MmsMerchant extends BaseEntity
 
     public void setWechat(String wechat) {
         this.wechat = wechat;
+    }
+
+    public String getWechatQrcode() {
+        return wechatQrcode;
+    }
+
+    public void setWechatQrcode(String wechatQrcode) {
+        this.wechatQrcode = wechatQrcode;
+    }
+
+    public String getCategoryIds() {
+        return categoryIds;
+    }
+
+    public void setCategoryIds(String categoryIds) {
+        this.categoryIds = categoryIds;
     }
 
     public Integer getCategoryId() {

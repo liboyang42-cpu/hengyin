@@ -1,6 +1,8 @@
 {
   "schemaVersion": 1,
   "dependencies": {
+    "merchant_wechat_qrcode_20261022": [],
+    "merchant_category_ids_20261022": [],
     "topic_completion_coupon_history_receipt_20261016": ["topic_completion_coupon_20260722"],
     "audit_followup_20261020": ["community_post_platform_20260909", "p3_platform_foundation"],
     "audit_level_20261020": ["community_post_platform_20260909"],
