@@ -197,15 +197,15 @@ CHAIN_BY_NAME = {chain["name"]: chain for chain in CHAINS}
 def plan(source_sha, through, fail_path, native_jar_run_id="", native_jar_sha256=""):
     if not SHA_RE.fullmatch(source_sha or ""):
         raise GateError("source_sha 必须是完整 40 位小写 commit SHA: %r" % source_sha)
-    if through not in CHAIN_NAMES + ("post_deploy",):
+    if through not in CHAIN_NAMES + ("post_deploy", "post_restart"):
         raise GateError("through 必须是 %s 之一: %r" % (list(CHAIN_NAMES), through))
     fail_path = (fail_path or "").strip()
     if fail_path and not FAIL_PATH_RE.fullmatch(fail_path):
         raise GateError("fail_path 只接受 /api/... 或 /business/... 的路径段: %r" % fail_path)
-    if through == "post_deploy" and fail_path:
+    if through in ("post_deploy", "post_restart") and fail_path:
         raise GateError("post_deploy-only does not execute gameplay fault probes")
     # 后续链路都依赖 platform 建出的 topicId，所以子集只能是从头开始的前缀。
-    chains = [] if through == "post_deploy" else list(CHAIN_NAMES[:CHAIN_NAMES.index(through) + 1])
+    chains = [] if through in ("post_deploy", "post_restart") else list(CHAIN_NAMES[:CHAIN_NAMES.index(through) + 1])
     native = None
     if native_jar_run_id or native_jar_sha256:
         if (not re.fullmatch(r"[1-9][0-9]{0,18}", native_jar_run_id or "") or
@@ -442,17 +442,19 @@ def verify_redis_shim(bin_dir, environ):
 
 # ---------------------------------------------------------------- SQL
 
-def connect():
+def connect(database=SCHEMA):
+    if database not in (SCHEMA, "mysql"):
+        raise GateError("SQL 回读禁止其他schema")
     import pymysql
-    connection = pymysql.connect(host=DB_HOST, port=DB_PORT, user="root", password="", database=SCHEMA,
+    connection = pymysql.connect(host=DB_HOST, port=DB_PORT, user="root", password="", database=database,
                                  autocommit=True, charset="utf8mb4")
     cursor = connection.cursor()
     cursor.execute("SELECT DATABASE()")
     actual = cursor.fetchone()[0]
     cursor.close()
-    if actual != SCHEMA:
+    if actual != database:
         connection.close()
-        raise GateError("SQL 回读串库: %s != %s" % (actual, SCHEMA))
+        raise GateError("SQL 回读串库: %s != %s" % (actual, database))
     return connection
 
 
@@ -761,9 +763,9 @@ def java_command(app_dir, fail_path, config=FIXTURE_CONFIG, logback=FIXTURE_LOGB
     return command
 
 
-def start_app(app_dir, work_dir, out_dir, fail_path, environ):
+def start_app(app_dir, work_dir, out_dir, fail_path, environ, config=FIXTURE_CONFIG):
     log = open(Path(out_dir) / "application.log", "wb")
-    command = java_command(app_dir, fail_path)
+    command = java_command(app_dir, fail_path, config=config)
     env = app_env(environ, work_dir)
     process = subprocess.Popen(command, cwd=str(work_dir), env=env, stdout=log, stderr=subprocess.STDOUT,
                                start_new_session=True)
@@ -787,8 +789,11 @@ def start_app(app_dir, work_dir, out_dir, fail_path, environ):
     return process, facts
 
 
-def stop_app(process):
-    if process.poll() is None:
+def stop_app(process, require_alive=False):
+    alive = process.poll()
+    if require_alive and alive is not None:
+        raise GateError("application exited before controlled stop")
+    if alive is None:
         process.terminate()
         try:
             process.wait(timeout=30)
@@ -798,19 +803,29 @@ def stop_app(process):
     return process.returncode
 
 
-def postdeploy_http(path, token=None, password=None):
+def postdeploy_http(path, token=None, password=None, job=None):
     """Only fixed loopback Actuator reads or normal admin login; never persist full beans or credentials."""
     if path not in ("/login", "/getInfo", "/getRouters", "/actuator/info",
-                    "/actuator/health/isolatedStartup", "/actuator/beans"):
+                    "/actuator/health/isolatedStartup", "/actuator/beans",
+                    "/monitor/job/run", "/monitor/job/changeStatus"):
         raise GateError("postdeploy HTTP path outside fixed allowlist")
     class NoRedirect(urllib.request.HTTPRedirectHandler):
         def redirect_request(self, *args, **kwargs):
             return None
     data = json.dumps({"username": "admin", "password": password}).encode() if path == "/login" else None
+    if path.startswith("/monitor/job/"):
+        if (not isinstance(job, dict) or type(job.get("jobId")) is not int or job["jobId"] <= 0
+                or set(job) != ({"jobId"} if path.endswith("/run") else {"jobId", "status"})
+                or (path.endswith("/changeStatus") and job["status"] not in ("0", "1")) or not token):
+            raise GateError("restart job request outside exact fixture contract")
+        data = json.dumps(job).encode()
+    elif job is not None:
+        raise GateError("restart job payload on another path")
     headers = {"Content-Type": "application/json"}
     if token:
         headers["Authorization"] = "Bearer " + token
-    request = urllib.request.Request(APP_BASE + path, data=data, headers=headers)
+    request = urllib.request.Request(APP_BASE + path, data=data, headers=headers,
+                                     method="PUT" if path.startswith("/monitor/job/") else None)
     try:
         opener = urllib.request.build_opener(urllib.request.ProxyHandler({}), NoRedirect())
         with opener.open(request, timeout=15) as response:
@@ -871,12 +886,12 @@ def app_process_identity(process, command):
         raise GateError("original application process identity unavailable") from None
 
 
-def observe_postdeploy(args, planned, process):
+def observe_postdeploy(args, planned, process, config=FIXTURE_CONFIG):
     expected = read_receipt(args.out)["stages"]["explode"]["jar_sha256"]
     binding = verify_candidate_jar(args.jar, planned)
     if binding["jar_sha256"] != expected:
         raise GateError("original candidate JAR changed since explode")
-    command = java_command(args.app, planned["fail_path"])
+    command = java_command(args.app, planned["fail_path"], config=config)
     before = app_process_identity(process, command)
     login = postdeploy_http("/login", password=fixture_admin_password(args.gate))
     token = login.get("token")
@@ -893,7 +908,10 @@ def observe_postdeploy(args, planned, process):
         raise GateError("candidate PID or original JAR changed during observation")
     return dict(observation, admin=admin, process=before, jar_sha256=expected, schema=SCHEMA,
                 server_uuid=database["server_uuid"], observed_at=time.time(),
-                boundary="same exploded candidate JVM; external-provider stubs unchanged; no task invoked")
+                boundary=("same exploded candidate JVM; reviewed four builtin plans may run; "
+                          "sys_job checked separately: JVM1 zero, JVM2 six initially paused; offline provider stubs unchanged"
+                          if planned["through"] == post.RESTART_MODE else
+                          "same exploded candidate JVM; external-provider stubs unchanged; no task invoked"))
 
 
 # ---------------------------------------------------------------- 子命令
@@ -1018,8 +1036,26 @@ def cmd_storage_start(args, environ):
     return 0
 
 
+def restart_seed_clock():
+    connection = connect("mysql")
+    try:
+        cursor = connection.cursor()
+        try:
+            cursor.execute("SELECT @@server_uuid,DATE_FORMAT(NOW(),'%Y-%m-%d %H:%i:%s'),"
+                           "@@session.time_zone,@@system_time_zone")
+            row = cursor.fetchone()
+            post.require(row is not None and len(row) == 4, "restart_seed_clock_shape")
+            return dict(zip(("server_uuid", "datetime", "session_timezone", "system_timezone"), row))
+        finally:
+            cursor.close()
+    finally:
+        connection.close()
+
+
 def cmd_schema(args, environ):
     require_stage(args.out, "storage")
+    restart = read_receipt(args.out)["plan"]["through"] == post.RESTART_MODE
+    preparation_before = restart_seed_clock() if restart else None
     env = {key: value for key, value in environ.items() if not key.startswith("CHENGYIN_")}
     env["PYTHONIOENCODING"] = "utf-8"
     build = subprocess.run([sys.executable, "scripts/e2e/build_schema.py", "--schema", SCHEMA, "--drop",
@@ -1064,6 +1100,12 @@ def cmd_schema(args, environ):
                 problems.append("夹具回读 %s=%s，期望 %s" % (label, value, want))
         if readback.get("tables", 0) < 100:
             problems.append("建库后表数异常: %s" % readback.get("tables"))
+    if not problems and restart:
+        fresh = {"build_exit": build.returncode, "seed_exit": seed_code,
+                 "source_sha": read_receipt(args.out)["plan"]["source_sha"],
+                 "clock_before": preparation_before, "clock_after": restart_seed_clock(),
+                 "containers": read_receipt(args.out)["stages"]["storage"]["containers"]}
+        readback["restart_seed"] = post.prepare_restart_seed(connect, fresh)
     status = "PASS" if not problems else "FAIL"
     stage(args.out, "schema", status, readback=readback, problems=problems,
           logs=["build_schema.log", "seed_fixtures.log"])
@@ -1071,22 +1113,300 @@ def cmd_schema(args, environ):
     return 0 if status == "PASS" else 1
 
 
+
+RESTART_BACKGROUND_SOURCE = {
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/job/LeaderScheduledJobsConfig.java": (
+        "8d8def82330fd7210739ea1d71c042d57e3ba5366ef9903be4174e5233c1f61e"
+    ),
+    "chengyinhub-framework/src/main/java/com/chengyinhub/framework/config/BackgroundSchedulingConfig.java": (
+        "1185826cb7125edbd8045f827541a70fd785c103e615c699c334c6d33bb7b9cf"
+    ),
+    "chengyinhub-quartz/src/main/java/com/chengyinhub/quartz/config/DisabledJobsQuartzConfig.java": (
+        "0a2227ec1dbadb85c1fba9359e30d06c9774bc56241eddc9f2b77acd614babca"
+    ),
+    "chengyinhub-quartz/src/main/java/com/chengyinhub/quartz/service/MySqlSchedulerCoordinator.java": (
+        "a419e344dd6513ed7cbc562dff608172e5a1989abd298e4d403c9f5b61d3b6d1"
+    ),
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/runner/WithdrawalPiiBackfillRunner.java": (
+        "b9d6388011f517553001712b38deae698f589569999784cde9220de1dce66ef2"
+    ),
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/runner/MemberLegacyPasswordHashRunner.java": (
+        "8bf398d4259259cd8ecf3e427bc9fbe11d7ecd0f4ae6026ed169773db32331c0"
+    ),
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ServiceStatusFeedServiceImpl.java": (
+        "3d11a154c84fa3ebbe818c90a70c54981491331ca9575e66cdeda950668c74d6"
+    ),
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantCrmExportServiceImpl.java": (
+        "143a64f0b984bb1b89fec775b56c4059251bc6ed62afa2eabdb53508f8d37268"
+    ),
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AccountDeregistrationServiceImpl.java": (
+        "61d263d1feb69e1baeb9dc1f22f232b3cef10cc9f4802dcca8f909f92969e2d9"
+    ),
+}
+
+
+def restart_local_files(work):
+    root = Path(work).resolve()
+    paths = [root / "upload", root / "upload-private", root / "upload-private/merchant-crm-export"]
+    if any(path.is_symlink() for path in paths):
+        raise GateError("restart private export path aliases another resource")
+    crm = paths[-1]
+    if crm.exists() and (not crm.is_dir() or any(crm.iterdir())):
+        raise GateError("restart private export directory is not empty")
+    return {"crm_export_directory": "EMPTY_TASK_OWNED"}
+
+
+def restart_config(args):
+    # The only automatic plans admitted here are the reviewed four builtins; their queues must stay empty.
+    for name, digest in RESTART_BACKGROUND_SOURCE.items():
+        if sha256_file(Path(args.source) / name) != digest:
+            raise GateError("restart background source needs review")
+    for module in ("chengyinhub-admin", "chengyinhub-system", "chengyinhub-quartz", "chengyinhub-framework", "chengyinhub-common"):
+        for path in (Path(args.source) / module / "src/main/java").rglob("*.java"):
+            text = re.sub(r"/\*.*?\*/|//[^\n]*", "", path.read_text(), flags=re.S)
+            if re.search(r"@Scheduled\s*\(", text):
+                raise GateError("restart unreviewed scheduled annotation")
+            if re.search(r"\.register(?:Cron|FixedDelay)\s*\(", text) and path.name != "LeaderScheduledJobsConfig.java":
+                raise GateError("restart unreviewed automatic plan")
+    restart_local_files(args.work)
+    root = Path(args.work).resolve()
+    root.mkdir(parents=True, exist_ok=True)
+    feed = root / "restart-status" / "chengyin-status.json"
+    target = root / "application-post-restart.properties"
+    if target.exists() or feed.parent.is_symlink():
+        raise GateError("restart fixture configuration already exists")
+    values = {"chengyin.jobs.enabled": "true", "withdrawal.pii.backfill-limit": "0",
+              "member.password.legacy-hash-limit": "0", "alarm.webhook": "", "alarm.failure-webhook": "",
+              "chengyin.status.feed-file": str(feed)}
+    with target.open("x") as handle:
+        handle.write(FIXTURE_CONFIG.read_text() + "\n" + "\n".join(k + "=" + v for k, v in values.items()) + "\n")
+    target.chmod(0o600)
+    return target
+
+
+def restart_alarm(raw_value, raw_ttl):
+    try:
+        value = json.loads(raw_value)
+    except (TypeError, ValueError):
+        raise post.PostDeployError("restart_monitor_attempt_malformed_json")
+    post.require(type(value) is str and value == "1", "restart_monitor_attempt_wrong_value")
+    post.require(isinstance(raw_ttl, str) and re.fullmatch(r"[0-9]{1,6}", raw_ttl) and
+                 0 < int(raw_ttl) <= 600000, "restart_monitor_attempt_invalid_ttl")
+    return {"value": value, "ttl_ms": int(raw_ttl)}
+
+
+def run_post_restart(args, environ, planned, first_proof, first_process, config):
+    result = {"status": "FAIL", "schema": SCHEMA, "effects": [], "jvm1_stopped": first_process.poll() is not None,
+              "recovery": "UNKNOWN_KEEP_ORIGINAL_COMMAND_IDENTITY_NO_RETRY"}
+    post.require(result["jvm1_stopped"], "restart_original_jvm_not_stopped")
+    server = first_proof["server_uuid"]
+    result["server_uuid"] = server
+    stage(args.out, "post_restart", "RUNNING", result=result, server_uuid=server, fixture_id=post.FIXTURE_ID)
+    process = None
+    failure = None
+    try:
+        result["local_files"] = restart_local_files(args.work)
+        fixture = post.prepare_restart_effects(connect, server)
+        result["fixture"] = fixture
+        folder = Path(args.out) / "post_restart"
+        folder.mkdir()
+        result["clock"] = {"before_start": post.restart_clock(connect, server)}
+        started = result["clock"]["before_start"]["epoch"]
+        process, facts = start_app(args.app, args.work, folder, "", environ, config=config)
+        proof = observe_postdeploy(args, planned, process, config=config)
+        post.require(proof["server_uuid"] == server and proof["process"] != first_proof["process"] and
+                     proof["process"]["pid"] != first_proof["process"]["pid"], "restart_jvm_identity_not_new")
+        result["clock"]["after_live"] = post.restart_clock(connect, server)
+        result.update(proof=proof, jvm2_new_identity=True, jvm2_started_database_epoch=started)
+        token = postdeploy_http("/login", password=fixture_admin_password(args.gate)).get("token")
+        post.require(isinstance(token, str) and bool(token), "restart_admin_login_failed")
+        beans = postdeploy_http("/actuator/beans", token)
+        entries = [context.get("beans", {}) for context in beans.get("contexts", {}).values()]
+        providers = [entry for context in entries for name, entry in context.items() if name == "e2eWechatPayStub"]
+        tasks = [entry for context in entries for name, entry in context.items() if name == "merchantCommerceReconcileTask"]
+        services = [entry for context in entries for name, entry in context.items() if name == "merchantCommerceService"]
+        stub_sha = sha256_file(Path(args.gate) / "scripts/e2e/E2eWechatPayStub.java.stub")
+        post.require(len(providers) == len(tasks) == len(services) == 1 and
+                     re.fullmatch(r"com\.chengyinhub\.e2e\.E2eWechatPayStub(?:\$\$SpringCGLIB\$\$[A-Za-z0-9_]+)?", providers[0].get("type", "")) and
+                     "e2eWechatPayStub" in tasks[0].get("dependencies", []) and
+                     "e2eWechatPayStub" in services[0].get("dependencies", []) and
+                     stub_sha == "62daf04bc0e6aac703e7536fe17b79999b86d92ddec722cfb88c59cadba87161",
+                     "restart_offline_payment_stub_not_wired")
+        result["payment_stub_binding"] = {"task": True, "service": True, "type": providers[0]["type"],
+                                           "source_sha256": stub_sha}  # Source hash is not a compiled-class hash.
+        jobs = {row[3]: row for row in fixture["jobs"]}
+        names = read_receipt(args.out)["stages"]["storage"]["containers"]
+        command = java_command(args.app, "", config=config)
+        roam_status = "1"
+
+        def live():
+            post.require(app_process_identity(process, command) == proof["process"] and
+                         sha256_file(args.jar) == proof["jar_sha256"], "restart_live_identity_changed")
+            current = post.restart_rows(connect, server, post.ALL_JOBS)
+            post.verify_restart_jobs(fixture["jobs"], current, roam_status)
+
+        def put(path, payload):
+            nonlocal roam_status
+            live()
+            value = postdeploy_http(path, token, job=payload)  # No retry: this endpoint has no request-id receipt.
+            post.require(value.get("code") == 200, "restart_manual_request_not_accepted")
+            if path == "/monitor/job/changeStatus":
+                post.require(payload["jobId"] == jobs[post.ROAM_TARGET][0], "restart_only_roam_status_may_change")
+                roam_status = payload["status"]
+            live()
+
+        def alarm(key):
+            value = docker("exec", names["redis"], "redis-cli", "-n", str(REDIS_DB), "GET", key).strip()
+            ttl = docker("exec", names["redis"], "redis-cli", "-n", str(REDIS_DB), "PTTL", key).strip()
+            return restart_alarm(value, ttl)
+
+        def invoke(target, automatic=False, settlement_negative=False):
+            live()
+            job = jobs[target]
+            baseline = post.restart_rows(connect, server,
+                "SELECT COALESCE(MAX(job_log_id),0) FROM sys_job_log WHERE "
+                "CAST(invoke_target AS BINARY)=CAST(%s AS BINARY) AND job_name=%s AND job_group=%s",
+                (target, job[1], job[2]))[0][0]
+            before = post.restart_effect_state(connect, server)
+            log_offset = (folder / "application.log").stat().st_size if target == post.COMMERCE else None
+            if automatic:
+                put("/monitor/job/changeStatus", {"jobId": job[0], "status": "0"})
+            else:
+                put("/monitor/job/run", {"jobId": job[0]})
+            deadline = time.monotonic() + 90
+            actual = None
+            while time.monotonic() < deadline:
+                live()
+                actual = post.restart_log(connect, server, job, baseline, started)
+                if actual is not None:
+                    break
+                time.sleep(0.25)
+            post.require(actual is not None, "restart_async_job_outcome_unknown")
+            if automatic:
+                put("/monitor/job/changeStatus", {"jobId": job[0], "status": "1"})
+                post.require(post.restart_rows(connect, server,
+                             "SELECT status FROM sys_job WHERE job_id=%s AND invoke_target=%s", (job[0], target)) == [["1"]],
+                             "restart_roam_pause_not_persisted")
+            after = post.restart_effect_state(connect, server)
+            evidence = {"target": target, "job_id": job[0], "baseline_log_id": baseline,
+                        "new_jvm_start_database_epoch": started, "log": actual, "before": before, "after": after,
+                        "invocation": "ORIGINAL_MINUTE_CRON" if automatic else "SINGLE_NORMAL_ADMIN_PUT"}
+            if target == post.COMMERCE:
+                post.require(actual[3] == "COMMERCE_AGGREGATE_FAILURE", "restart_commerce_wrapper_not_observed")
+                evidence["specific_cause"] = post.commerce_cause(folder / "application.log", log_offset, actual[0])
+                actual[3] = "COMMERCE_UNKNOWN"  # Only the independently observed specific cause permits this classification.
+            events = {"auditBacklogMonitorTask.run()": "monitor.audit.backlog",
+                      "withdrawReconciliationTask.run()": "monitor.withdraw.manual"}
+            if target in events:
+                evidence["alarm"] = alarm("alarm:attempt:" + events[target])
+            if settlement_negative:
+                evidence["alarm"] = alarm("alarm:attempt:monitor.settlement.mismatch")
+                post.require(actual[1] == "1" and actual[3] == "SETTLEMENT_MISMATCH" and before == after and
+                             evidence["alarm"]["value"] == "1" and evidence["alarm"]["ttl_ms"] > 0,
+                             "restart_wrong_settlement_rejection")
+            else:
+                post.validate_restart_effect(target, actual, before, after, evidence.get("alarm"))
+            return evidence
+
+        result["effects"].append(invoke(post.ROAM_TARGET, automatic=True))
+        result["automatic_roam_observed"] = True
+        result["roam_repeat"] = invoke(post.ROAM_TARGET)
+        # Both metric samples must fall in one actual five-minute natural-key window.
+        remaining = 300 - int(time.time()) % 300
+        if remaining < 30:
+            time.sleep(remaining + 1)
+        result["effects"].append(invoke("metricsProbeTask.run()"))
+        result["metrics_repeat"] = invoke("metricsProbeTask.run()")
+        original_keys = [r[:4] for r in result["effects"][-1]["after"]["metrics"]]
+        post.require([r[:4] for r in result["metrics_repeat"]["after"]["metrics"]] == original_keys,
+                     "restart_metrics_repeat_changed_natural_keys")
+        for target in ("auditBacklogMonitorTask.run()", "withdrawReconciliationTask.run()",
+                       "settlementReconciliationTask.run()", post.COMMERCE):
+            result["effects"].append(invoke(target))
+        result["audit_repeat"] = invoke("auditBacklogMonitorTask.run()")
+        first_alarm = next(e["alarm"] for e in result["effects"] if e["target"] == "auditBacklogMonitorTask.run()")
+        post.require(result["audit_repeat"]["alarm"]["ttl_ms"] <= first_alarm["ttl_ms"], "restart_alarm_lease_refreshed")
+        post.fixture_write(connect, server, [("UPDATE settlement_batch SET total_amount=2 WHERE id=%s AND total_amount=1", (post.FIXTURE_ID,))])
+        result["settlement_rejection"] = invoke("settlementReconciliationTask.run()", settlement_negative=True)
+        result["final_readback"] = post.restart_effect_state(connect, server)
+        result["final_jobs"] = post.restart_rows(connect, server, post.ALL_JOBS)
+        result["passive_queues"] = post.passive_queues(connect, server)
+        result["local_files"] = restart_local_files(args.work)
+    except Exception as error:
+        failure = type(error).__name__
+        if isinstance(error, post.PostDeployError):
+            result["error_code"] = error.code
+    finally:
+        if process is not None:
+            try:
+                result["clock"]["before_stop"] = post.restart_clock(connect, server)
+                post.require(app_process_identity(process, java_command(args.app, "", config=config)) == proof["process"],
+                             "restart_process_not_live_at_controlled_stop")
+                result["stop_precondition"] = proof["process"]
+                stop_app(process, require_alive=True)
+                result["controlled_stop"] = True
+            except Exception as error:
+                failure = "PRESTOP_UNKNOWN_" + type(error).__name__
+            try:
+                stop_app(process)  # Exact owned Popen cleanup still runs after a failed controlled-stop precondition.
+                post.require(process.poll() is not None, "restart_stop_unknown")
+                try:
+                    app_process_identity(process, java_command(args.app, "", config=config))
+                except GateError:
+                    pass
+                else:
+                    raise GateError("restart_listener_process_still_alive")
+                result["jvm2_stopped"] = True
+                result["jvm2_exit_code"] = process.poll()
+            except Exception as error:
+                failure = "STOP_UNKNOWN_" + type(error).__name__
+        if result.get("jvm2_stopped"):
+            # A write timeout is observed only after the exact JVM has stopped; never resubmit it.
+            try:
+                leader_key = "cy:leader:" + hashlib.sha256((SCHEMA + "\nall").encode()).hexdigest()[:48]
+                post.require(post.restart_rows(connect, server, "SELECT IS_USED_LOCK(%s)", (leader_key,)) == [[None]],
+                             "restart_leader_session_still_owned")
+                result["after_stop_readback"] = post.restart_effect_state(connect, server)
+                result["after_stop_jobs"] = post.restart_rows(connect, server, post.ALL_JOBS)
+                result["after_stop_local_files"] = restart_local_files(args.work)
+            except Exception as error:
+                failure = "READBACK_UNKNOWN_" + type(error).__name__
+        if failure:
+            result["error_type"] = failure
+        else:
+            result["status"] = "PASS"
+            try:
+                post.validate_restart_result(result)
+            except Exception as error:
+                result.update(status="FAIL", error_type=type(error).__name__)
+        stage(args.out, "post_restart", result["status"], result=result)
+    if result["status"] != "PASS":
+        raise GateError("post_restart evidence incomplete; original command identities retained")
+
+
 def cmd_run(args, environ):
     require_stage(args.out, "schema")
     planned = read_receipt(args.out)["plan"]
-    process, facts = start_app(args.app, args.work, args.out, planned["fail_path"], environ)
+    restart = planned["through"] == post.RESTART_MODE
+    config = restart_config(args) if restart else FIXTURE_CONFIG
+    if restart:
+        post.require(post.restart_rows(connect, read_receipt(args.out)["stages"]["schema"]["readback"]["restart_seed"]["server_uuid"], post.ALL_JOBS) == [],
+                     "restart_jvm1_has_unknown_jobs")
+    process, facts = (start_app(args.app, args.work, args.out, planned["fail_path"], environ, config=config)
+                      if restart else start_app(args.app, args.work, args.out, planned["fail_path"], environ))
     proof = None
     try:
-        if planned["through"] != "post_deploy":
+        if planned["through"] not in ("post_deploy", post.RESTART_MODE):
             target = planned["fail_path"] or DEFAULT_FAULT_PROBE_PATH
             token = probe_token(target, args.gate, Path(args.work) / "bin", environ)
             facts["fault_injection"] = fault_probe(planned["fail_path"], token)
         stage(args.out, "app", "PASS", **facts)
         results = (run_chains(planned["chains"], args.gate, chain_env(environ, Path(args.work) / "bin"), args.out)
-                   if planned["through"] != "post_deploy" else [])
+                   if planned["through"] not in ("post_deploy", post.RESTART_MODE) else [])
         if all(result["verdict"] == "PASS" for result in results):
             post.prepared_sql(args.source)
-            proof = observe_postdeploy(args, planned, process)
+            proof = (observe_postdeploy(args, planned, process, config=config) if restart
+                     else observe_postdeploy(args, planned, process))
         else:
             stage(args.out, "postdeploy", "FAIL", reason="prerequisite_chain_failed", sql_started=False)
     except Exception as error:
@@ -1136,6 +1456,8 @@ def cmd_run(args, environ):
                 stage(args.out, "postdeploy_commerce_rejection", "FAIL", result=error.evidence)
                 raise GateError("commerce incompatible operator control failed") from None
             stage(args.out, "postdeploy_commerce_rejection", "PASS", result=rejection)
+    if restart and proof is not None:
+        run_post_restart(args, environ, planned, proof, process, config)
     for result in results:
         print("chain %-14s %s %s" % (result["chain"], result["verdict"], "; ".join(result.get("problems", []))))
     return 0 if all(result["verdict"] == "PASS" for result in results) else 1
@@ -1171,7 +1493,7 @@ def summarize(out_dir):
     receipt = read_receipt(out_dir)
     planned = (receipt.get("plan") or {}).get("chains") or []
     problems = []
-    post_only = (receipt.get("plan") or {}).get("through") == "post_deploy"
+    post_only = (receipt.get("plan") or {}).get("through") in ("post_deploy", post.RESTART_MODE)
     if not SHA_RE.fullmatch((receipt.get("plan") or {}).get("source_sha") or ""):
         problems.append("缺完整候选 source_sha")
     if not planned and not post_only:
@@ -1190,7 +1512,7 @@ def summarize(out_dir):
             raise post.PostDeployError("post_stop_proof_missing")
         post.validate_result(result, proof, (receipt.get("plan") or {}).get("source_sha"),
                              stages.get("explode", {}).get("jar_sha256"))
-        if post_only:
+        if (receipt.get("plan") or {}).get("through") == "post_deploy":
             admin = proof.get("admin") or {}
             post.require(admin.get("status") == "PASS_FIXTURE_SUPERADMIN_HTTP_SQL_ONLY" and
                          admin.get("userId") == 1 and admin.get("roleKeys") == ["admin"] and
@@ -1231,6 +1553,20 @@ def summarize(out_dir):
                                                "ok": item["ok"]} for item in data.get("terminal_readbacks", [])]})
         if data.get("verdict") != "PASS":
             problems.append("链路 %s: %s" % (name, data.get("verdict")))
+    if (receipt.get("plan") or {}).get("through") == post.RESTART_MODE:
+        extra = stages.get("post_restart", {})
+        try:
+            if extra.get("status") != "PASS":
+                raise post.PostDeployError("restart_stage_missing")
+            value = extra["result"]
+            post.validate_restart_result(value)
+            post.require(value["server_uuid"] == proof["server_uuid"], "restart_original_database_changed")
+            post.validate_result(result, value["proof"], receipt["plan"]["source_sha"],
+                                 stages["explode"]["jar_sha256"])
+            if value["proof"]["process"]["pid"] == proof["process"]["pid"]:
+                raise post.PostDeployError("restart_same_pid")
+        except Exception:
+            problems.append("post_restart 缺真实新JVM/六任务效果及停机后完整回读")
     plan_facts = receipt.get("plan") or {}
     summary = {
         "schema": SUMMARY_SCHEMA, "source_sha": plan_facts.get("source_sha"), "through": plan_facts.get("through"),
@@ -1239,6 +1575,7 @@ def summarize(out_dir):
         "harness_drift": (stages.get("precheck", {}).get("harness") or {}).get("drift"),
         "chains": chains, "problems": problems, "not_covered": receipt.get("not_covered", NOT_COVERED),
         "postdeploy": stages.get("postdeploy", {}),
+        "post_restart": stages.get("post_restart", {}),
         "postdeploy_commerce_rejection": stages.get("postdeploy_commerce_rejection", {}),
         "verdict": "PASS" if not problems else "FAIL",
     }
@@ -1255,6 +1592,10 @@ def summary_markdown(summary):
               "Registration only; scheduled execution and live JAR rollback are not covered." % (
                   post_facts.get("status", "MISSING"), post_facts.get("stopped_before_sql", False),
                   post_result.get("statement_count", 0), post_result.get("scalar_count", 0)), ""]
+    if summary["through"] == post.RESTART_MODE:
+        lines += ["- POST_RESTART: `%s`; same candidate, new JVM; five local task effects and commerce UNKNOWN rejection. "
+                  "Alarm attempt is not delivery; real provider, live rollback and production remain unverified." %
+                  summary.get("post_restart", {}).get("status", "MISSING"), ""]
     if summary["through"] == "post_deploy":
         lines += ["- Scenario: `EXISTING_OPERATOR_ROWS`; commerce incompatible configuration: `%s`. "
                   "Expected original SQL rejection is a negative-control result, not migration PASS; "

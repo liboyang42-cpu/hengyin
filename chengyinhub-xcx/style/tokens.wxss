@@ -1199,6 +1199,12 @@ page.theme-light,
  * 根节点挂 .theme-topic-editor；新页面/组件只读语义 token。 */
 page.theme-topic-editor,
 .theme-topic-editor {
+  --cy-topic-name-size: calc(48rpx * var(--cy-type-scale));
+  --cy-topic-name-tracking: -1.5rpx;
+  --cy-topic-save-saved-bg: #E8EAEA;
+  --cy-topic-save-saved-text: #666666;
+  --cy-topic-save-unsaved-bg: rgba(255,196,0,.16);
+  --cy-topic-save-unsaved-text: #8A6100;
   /* 导航钩子(同 theme-light,2026-07-29 导航统一)。读语义真值层
      --cy-color-bg-page(本块下方就近定义为 #FFFFFF),不写字面值——否则本块
      一旦调深浅两色就会跟顶栏脱钩,静默出现顶栏/正文不同底的色带。 */

@@ -91,6 +91,9 @@
         placeholder="未命名主题"
         placeholder-class="pd-title-input__ph"
         maxlength="30" />
+      <!-- 保存状态:已存本机 / 保存中 / 已存云端(语义回读通过后才显示) / 云端未存 / 待确认 / 本机未存 -->
+      <text wx:if="{{themeSaveLabel}}" class="pd-save-state {{themeSaveState === 'saved' ? 'pd-save-state--saved' : 'pd-save-state--unsaved'}}"
+        aria-role="text" aria-label="{{themeSaveLabel}}">{{themeSaveLabel}}</text>
     </view>
     <!-- 主题详情:一个入口 → 一个弹窗,装除章节/玩法/票务外的全部主题内容。
          摘要要能一眼看出还差几项,否则用户不知道该不该点进去。

@@ -4836,3 +4836,21 @@ page { background: var(--cy-btn-solid-bg); }
   font-size: var(--cy-font-caption);
 }
 .story-node-role.is-on { background: var(--cy-color-action-primary-bg); color: var(--cy-color-action-primary-fg); font-weight: 700; }
+
+/* 标题旁保存状态胶囊(云端草稿自动保存):已存云端用中性灰,其余(本机/保存中/失败/待确认)用提示黄。 */
+.pd-save-state {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: var(--cy-space-2);
+  padding: var(--cy-space-1) var(--cy-space-2-5);
+  min-height: var(--cy-space-6);
+  box-sizing: border-box;
+  border-radius: var(--cy-radius-pill);
+  font-size: var(--cy-type-caption);
+  line-height: 1.2;
+  white-space: nowrap;
+}
+.pd-save-state--saved { background: var(--cy-topic-save-saved-bg); color: var(--cy-topic-save-saved-text); }
+.pd-save-state--unsaved { background: var(--cy-topic-save-unsaved-bg); color: var(--cy-topic-save-unsaved-text); }

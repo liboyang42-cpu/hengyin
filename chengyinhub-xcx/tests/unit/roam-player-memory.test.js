@@ -197,3 +197,27 @@ test('删除本地账号键失败时返回失败且绝不删除漫游桶', () =>
   assert.equal(values['roam_memory_v1:101:recovery'], recovery)
   assert.equal(clearCalls, 0)
 })
+
+test('退出只保留严格账号同意台账，不保留全局选择、重试键或伪前缀', () => {
+  const completed = { versions: { privacy_policy: 'v2.1', user_service_agreement: 'v2.2' }, pending: {} }
+  const pending = { versions: completed.versions, pending: { privacy_policy: { docVersion: 'v2.1', requestId: 'original-consent' } } }
+  const rejected = ['cy_usage_choice_v1', 'cy_consent_retry:7|privacy_policy|app_launch|AGREE||',
+    'cy_consent_retry:7|photo|third_party|AGREE||', 'cy_usage_pending_v1:', 'cy_usage_pending_v1:0',
+    'cy_usage_pending_v1:-7', 'cy_usage_pending_v1:07', 'cy_usage_pending_v1:7e0',
+    'cy_usage_pending_v1:7extra', 'cy_usage_pending_v1:7:other', 'cy_usage_pending_v1:7\n']
+  rejected.push(...[10, 13, 8232, 8233].map(code => 'cy_usage_pending_v1:7' + String.fromCharCode(code)))
+  rejected.push('cy_usage_pending_v1:7' + String.fromCharCode(13, 10))
+  const storage = memoryStorage(Object.fromEntries(rejected.map(key => [key, 'must-delete'])))
+  storage.setStorageSync('cy_usage_pending_v1:7', completed)
+  storage.setStorageSync('cy_usage_pending_v1:8', pending)
+  assert.equal(clearStoragePreservingPlayerRoamMemory(storage), true)
+  assert.equal(storage.getStorageSync('cy_usage_pending_v1:7'), completed)
+  assert.equal(storage.getStorageSync('cy_usage_pending_v1:8'), pending)
+  for (const key of rejected) assert.equal(storage.getStorageSync(key), undefined, key)
+  const nonStringKeys = [null, 7, {}, true], removed = []
+  assert.equal(clearStoragePreservingPlayerRoamMemory({
+    getStorageInfoSync: () => ({ keys: nonStringKeys }),
+    removeStorageSync: key => removed.push(key),
+  }), true)
+  assert.deepEqual(removed, nonStringKeys)
+})

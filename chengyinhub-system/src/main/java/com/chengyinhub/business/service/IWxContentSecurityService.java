@@ -134,6 +134,16 @@ public interface IWxContentSecurityService
     String submitMediaCheckOne(int bizType, Long bizId, String imgUrl, String openid);
 
     /**
+     * 同 {@link #submitMediaCheckOne(int, Long, String, String)},但送检地址与 inbox 媒体身份分开:
+     * 私有桶媒体送的是短时预签名 URL(每次签名都不同),inbox 必须按稳定的对象 key 登记,
+     * 回调时才能核对「仍是当初送检的那张」。
+     *
+     * @param fetchUrl 微信拉取用的地址
+     * @param identity 登记进 inbox 的稳定媒体身份(如 OSS 对象 key)
+     */
+    String submitMediaCheckOne(int bizType, Long bizId, String fetchUrl, String identity, String openid);
+
+    /**
      * 处理微信「消息推送」回调的图片检测结果：按 trace_id 找回内容，命中违规则自动下架。
      *
      * @param traceId 送检时微信返回的 trace_id

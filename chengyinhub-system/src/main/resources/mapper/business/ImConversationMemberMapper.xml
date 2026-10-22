@@ -104,6 +104,25 @@
                       and date_format(coalesce(cutoff.visible_at, cutoff.create_time), '%Y-%m-%d %H:%i:%s.%f') = #{visibleOrderAt}))
     </update>
 
+    <!-- N-04 消息被审核屏蔽(delta=-1)/恢复(delta=+1)时修正各读者未读,不等下一次 markRead 才重算。
+         只动「这条消息当前计在其未读里」的读者,判据与 markRead 的重算同口径:
+         非发送者、对读者可见类型(非图片或图片已过审)、位于读者已存已读位之后(可见序 visible_at,id)、
+         且晚于读者入会(新入群成员的未读不含入会前历史)。下限 0,不出现负数角标。 -->
+    <update id="adjustUnreadForModeratedMessage">
+        update im_conversation_member m
+        set m.unread_count = greatest(m.unread_count + #{delta}, 0)
+        where m.conversation_id = (select x.conversation_id from im_message x where x.id = #{messageId})
+          <if test="delta &lt; 0">and m.unread_count &gt; 0</if>
+          and exists (select 1 from im_message msg
+                where msg.id = #{messageId} and msg.conversation_id = m.conversation_id
+                  and msg.sender_id != m.member_id
+                  and (msg.msg_type != 2 or msg.check_status = 1)
+                  and coalesce(msg.visible_at, msg.create_time) &gt;= m.create_time
+                  and (coalesce(msg.visible_at, msg.create_time) &gt; coalesce(m.last_read_visible_at, '1970-01-01 00:00:00.000000')
+                       or (coalesce(msg.visible_at, msg.create_time) = coalesce(m.last_read_visible_at, '1970-01-01 00:00:00.000000')
+                           and msg.id &gt; m.last_read_msg_id)))
+    </update>
+
     <select id="sumUnread" resultType="java.lang.Integer">
         select coalesce(sum(m.unread_count), 0)
         from im_conversation_member m

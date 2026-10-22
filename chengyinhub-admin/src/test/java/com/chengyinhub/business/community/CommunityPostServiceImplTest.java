@@ -34,6 +34,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -1281,6 +1282,32 @@ class CommunityPostServiceImplTest {
         assertEquals(Collections.singletonList(normalRoot), page.get("items"));
         assertEquals(false, page.get("hasMore"));
         assertEquals(20L, page.get("nextCursor"));
+    }
+
+    @Test
+    void commentLookaheadDropsOnlyExtraRootWithItsWholeThread() {
+        when(mapper.selectById(7L, 9L)).thenReturn(draft(7L, 9L, 3));
+        Map<String, Object> root30 = threadRow(30L, null);
+        Map<String, Object> reply31 = threadRow(31L, 30L); reply31.put("root_id", 30L);
+        Map<String, Object> reply32 = threadRow(32L, 31L); reply32.put("root_id", 30L);
+        Map<String, Object> root20 = threadRow(20L, null);
+        Map<String, Object> reply21 = threadRow(21L, 20L); reply21.put("root_id", 20L);
+        when(mapper.selectComments(7L, 9L, null, 2))
+                .thenReturn(Arrays.asList(root30, reply31, reply32, root20, reply21));
+        Map<String, Object> first = service.comments(9L, 7L, null, 1);
+        assertEquals(Arrays.asList(root30, reply31, reply32), first.get("items"));
+        assertEquals(true, first.get("hasMore"));
+        assertEquals(30L, first.get("nextCursor"));
+        when(mapper.selectComments(7L, 9L, 30L, 2)).thenReturn(Arrays.asList(root20, reply21));
+        Map<String, Object> last = service.comments(9L, 7L, 30L, 1);
+        assertEquals(Arrays.asList(root20, reply21), last.get("items"));
+        assertEquals(false, last.get("hasMore"));
+        assertEquals(20L, last.get("nextCursor"));
+        when(mapper.selectComments(7L, 9L, 20L, 2)).thenReturn(Collections.emptyList());
+        Map<String, Object> empty = service.comments(9L, 7L, 20L, 1);
+        assertEquals(Collections.emptyList(), empty.get("items"));
+        assertEquals(false, empty.get("hasMore"));
+        assertNull(empty.get("nextCursor"));
     }
 
     private Map<String, Object> deletedThreadRow(Long id, Long parentId, Long rootId) {

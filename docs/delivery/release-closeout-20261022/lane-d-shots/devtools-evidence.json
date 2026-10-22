@@ -1,0 +1,754 @@
+{
+ "s01": {
+  "pass": true,
+  "labels": [
+   "已存本机"
+  ],
+  "writes": [],
+  "toasts": [],
+  "state": {
+   "themeSaveState": "local",
+   "themeSaveLabel": "已存本机",
+   "editingTopicId": "",
+   "editIsDraft": false,
+   "draftSaving": false,
+   "submitting": false,
+   "submitError": "",
+   "resultSheet.show": false,
+   "resultSheet.title": "",
+   "formData.name": "",
+   "formData.configVersion": ""
+  },
+  "base": "http://127.0.0.1:8132"
+ },
+ "s02_03": {
+  "s02": {
+   "pass": true,
+   "typedMs": 5400,
+   "firstWriteAfterLastKeyMs": 2029,
+   "writesWhileTyping": 0,
+   "labels": [
+    "已存本机",
+    "保存中",
+    "已存云端"
+   ],
+   "requests": [
+    {
+     "dt": 0,
+     "m": "POST",
+     "url": "/api/topic/v2/create",
+     "st": 200,
+     "rid": "sqmvjed9syim…",
+     "name": "D2b自动保存核对主题AB",
+     "sd": 1,
+     "cv": "",
+     "ch": []
+    },
+    {
+     "dt": 1585,
+     "m": "POST",
+     "url": "/api/topic/edit-detail",
+     "st": 200,
+     "id": 990055
+    }
+   ],
+   "loadings": [],
+   "toasts": [],
+   "state": {
+    "themeSaveState": "saved",
+    "themeSaveLabel": "已存云端",
+    "editingTopicId": "990055",
+    "editIsDraft": true,
+    "draftSaving": false,
+    "submitting": false,
+    "submitError": "",
+    "resultSheet.show": false,
+    "resultSheet.title": "",
+    "formData.name": "D2b自动保存核对主题AB",
+    "formData.configVersion": "1"
+   }
+  },
+  "s03": {
+   "pass": true,
+   "requestsIn10s": []
+  },
+  "topicId": "990055",
+  "base": "http://127.0.0.1:8132"
+ },
+ "s04": {
+  "pass": true,
+  "labels": [
+   "保存中",
+   "已存本机",
+   "保存中",
+   "已存云端"
+  ],
+  "requests": [
+   {
+    "dt": 0,
+    "m": "POST",
+    "url": "/api/topic/v2/create",
+    "st": 200,
+    "rid": "sqmvjeeghqzm…",
+    "name": "D2-慢网第一版",
+    "sd": 1,
+    "cv": "",
+    "ch": []
+   },
+   {
+    "dt": 1392,
+    "m": "POST",
+    "url": "/api/topic/edit-detail",
+    "st": 200,
+    "id": 990056,
+    "mock": "delay3000"
+   },
+   {
+    "dt": 6849,
+    "m": "POST",
+    "url": "/api/topic/v2/update",
+    "st": 200,
+    "id": "990056",
+    "name": "D2-慢网第二版",
+    "sd": 1,
+    "cv": "1",
+    "ch": []
+   },
+   {
+    "dt": 8653,
+    "m": "POST",
+    "url": "/api/topic/edit-detail",
+    "st": 200,
+    "id": 990056
+   }
+  ],
+  "state": {
+   "themeSaveState": "saved",
+   "themeSaveLabel": "已存云端",
+   "editingTopicId": "990056",
+   "editIsDraft": true,
+   "draftSaving": false,
+   "submitting": false,
+   "submitError": "",
+   "resultSheet.show": false,
+   "resultSheet.title": "",
+   "formData.name": "D2-慢网第二版",
+   "formData.configVersion": "2"
+  },
+  "toasts": [],
+  "base": "http://127.0.0.1:8132"
+ },
+ "s05": {
+  "pass": true,
+  "writesWhileDialogOpen": 0,
+  "dialogFieldAfter5s": "D2弹窗内未提交章节",
+  "labels": [
+   "已存本机",
+   "保存中",
+   "已存云端"
+  ],
+  "requests": [
+   {
+    "dt": 0,
+    "m": "POST",
+    "url": "/api/topic/v2/create",
+    "st": 200,
+    "rid": "sqmvjef8jtca…",
+    "name": "D2-弹窗",
+    "sd": 1,
+    "cv": "",
+    "ch": [
+     "D2弹窗内未提交章节:"
+    ]
+   },
+   {
+    "dt": 1264,
+    "m": "POST",
+    "url": "/api/topic/edit-detail",
+    "st": 200,
+    "id": 990057
+   }
+  ],
+  "chaptersAfter": [
+   "D2弹窗内未提交章节"
+  ],
+  "popChapter": false,
+  "base": "http://127.0.0.1:8132"
+ },
+ "s07": {
+  "pass": true,
+  "labels1": [
+   "已存本机",
+   "保存中",
+   "待确认"
+  ],
+  "localEnvelope": {
+   "key": true,
+   "name": "D2-断网"
+  },
+  "noAutoRetryAfterUnknown": true,
+  "restored": {
+   "draftUuid": "mvjehde8-4zk9eo",
+   "formData.name": "D2-断网",
+   "themeSaveLabel": "已存云端"
+  },
+  "labels2": [
+   "已存云端"
+  ],
+  "requests": [
+   {
+    "dt": 0,
+    "m": "POST",
+    "url": "/api/topic/v2/create",
+    "st": 200,
+    "rid": "sqmvjehknwep…",
+    "name": "D2-断网",
+    "sd": 1,
+    "cv": "",
+    "ch": [],
+    "mock": "drop-response",
+    "srvTopic": 990060
+   },
+   {
+    "dt": 12001,
+    "m": "POST",
+    "url": "/api/topic/v2/create",
+    "st": 200,
+    "rid": "sqmvjehknwep…",
+    "name": "D2-断网",
+    "sd": 1,
+    "cv": "",
+    "ch": [],
+    "rec": true,
+    "respTopic": 990060
+   },
+   {
+    "dt": 13286,
+    "m": "POST",
+    "url": "/api/topic/v2/update",
+    "st": 200,
+    "id": "990060",
+    "name": "D2-断网",
+    "sd": 1,
+    "cv": "",
+    "ch": [],
+    "respTopic": 990060
+   },
+   {
+    "dt": 14098,
+    "m": "POST",
+    "url": "/api/topic/edit-detail",
+    "st": 200,
+    "id": 990060
+   }
+  ],
+  "state": {
+   "themeSaveState": "saved",
+   "themeSaveLabel": "已存云端",
+   "editingTopicId": "990060",
+   "editIsDraft": true,
+   "draftSaving": false,
+   "submitting": false,
+   "submitError": "",
+   "resultSheet.show": false,
+   "resultSheet.title": "",
+   "formData.name": "D2-断网",
+   "formData.configVersion": "2"
+  },
+  "base": "http://127.0.0.1:8132"
+ },
+ "s08": {
+  "pass": true,
+  "awayRoute": "pages/privacy/index",
+  "writesWhileHidden": 0,
+  "localEnvelopes": 9,
+  "labels": [
+   "保存中",
+   "已存云端"
+  ],
+  "requests": [
+   {
+    "dt": 0,
+    "m": "POST",
+    "url": "/api/topic/v2/create",
+    "st": 200,
+    "rid": "sqmvjefq05o7…",
+    "name": "D2-隐藏前",
+    "sd": 1,
+    "cv": "",
+    "ch": []
+   },
+   {
+    "dt": 1675,
+    "m": "POST",
+    "url": "/api/topic/edit-detail",
+    "st": 200,
+    "id": 990058
+   }
+  ],
+  "base": "http://127.0.0.1:8132"
+ },
+ "s09-run1": {
+  "pass": true,
+  "busyToasts": [
+   "正在保存草稿，保存完成后再发布"
+  ],
+  "writesAfterBusyTap": 1,
+  "publishSequence": [
+   "v2/update",
+   "edit-detail",
+   "publish-draft"
+  ],
+  "publishResult": {
+   "status": 500,
+   "msg": "专业主题至少需要一个章节和一个节点"
+  },
+  "requests": [
+   {
+    "dt": 0,
+    "m": "POST",
+    "url": "/api/topic/v2/update",
+    "st": 200,
+    "id": "990061",
+    "name": "D2-保存发布竞争",
+    "sd": 1,
+    "cv": "1",
+    "ch": [],
+    "respTopic": 990061
+   },
+   {
+    "dt": 1282,
+    "m": "POST",
+    "url": "/api/topic/edit-detail",
+    "st": 200,
+    "id": 990061
+   },
+   {
+    "dt": 1678,
+    "m": "POST",
+    "url": "/api/topic/publish-draft",
+    "st": 500,
+    "id": 990061,
+    "mock": "delay3000",
+    "msg": "专业主题至少需要一个章节和一个节点"
+   }
+  ],
+  "state": {
+   "themeSaveState": "saved",
+   "themeSaveLabel": "已存云端",
+   "editingTopicId": "990061",
+   "editIsDraft": true,
+   "draftSaving": false,
+   "submitting": false,
+   "submitError": "专业主题至少需要一个章节和一个节点",
+   "resultSheet.show": false,
+   "resultSheet.title": "草稿已保存，但还没有发布",
+   "formData.name": "D2-保存发布竞争",
+   "formData.configVersion": "2"
+  },
+  "toasts": [],
+  "base": "http://127.0.0.1:8132"
+ },
+ "s09": {
+  "pass": true,
+  "busyToasts": [
+   "正在保存草稿，保存完成后再发布"
+  ],
+  "writesAfterBusyTap": 1,
+  "maskDuringPublish": [
+   "正在保存并发布"
+  ],
+  "nameRightAfterTyping": "D2-保存发布竞争-发布中再改",
+  "nameAfterPublishFailed": "D2-保存发布竞争",
+  "publishSequence": [
+   "v2/update",
+   "edit-detail",
+   "publish-draft"
+  ],
+  "publishResult": {
+   "status": 500,
+   "msg": "专业主题至少需要一个章节和一个节点"
+  },
+  "requests": [
+   {
+    "dt": 0,
+    "m": "POST",
+    "url": "/api/topic/v2/update",
+    "st": 200,
+    "id": "990062",
+    "name": "D2-保存发布竞争",
+    "sd": 1,
+    "cv": "1",
+    "ch": [],
+    "respTopic": 990062
+   },
+   {
+    "dt": 1395,
+    "m": "POST",
+    "url": "/api/topic/edit-detail",
+    "st": 200,
+    "id": 990062
+   },
+   {
+    "dt": 1791,
+    "m": "POST",
+    "url": "/api/topic/publish-draft",
+    "st": 500,
+    "id": 990062,
+    "mock": "delay3000",
+    "msg": "专业主题至少需要一个章节和一个节点"
+   }
+  ],
+  "state": {
+   "themeSaveState": "saved",
+   "themeSaveLabel": "已存云端",
+   "editingTopicId": "990062",
+   "editIsDraft": true,
+   "draftSaving": false,
+   "submitting": false,
+   "submitError": "专业主题至少需要一个章节和一个节点",
+   "resultSheet.show": false,
+   "resultSheet.title": "草稿已保存，但还没有发布",
+   "formData.name": "D2-保存发布竞争",
+   "formData.configVersion": "2"
+  },
+  "toasts": [],
+  "base": "http://127.0.0.1:8132"
+ },
+ "s10": {
+  "pass": true,
+  "loaded": {
+   "editingTopicId": "990054",
+   "editIsDraft": false,
+   "editLoaded": true,
+   "editLoadError": "",
+   "formData.name": "D2自动保存核对主题AB",
+   "themeSaveLabel": "已存本机"
+  },
+  "writes": [],
+  "draftButtonShown": false,
+  "state": {
+   "themeSaveLabel": "已存本机",
+   "formData.name": "D2-已发布主题改名",
+   "editIsDraft": false
+  },
+  "requests": [
+   {
+    "dt": 0,
+    "m": "GET",
+    "url": "/api/topic/state-keys",
+    "st": 200
+   },
+   {
+    "dt": 37,
+    "m": "POST",
+    "url": "/api/topic/edit-detail",
+    "st": 200,
+    "id": "990054",
+    "mock": "patch-isDraft-false"
+   }
+  ],
+  "base": "http://127.0.0.1:8132"
+ },
+ "s11": {
+  "pass": true,
+  "writesAfterSwitch": 0,
+  "aPageState": {
+   "themeSaveState": "local",
+   "themeSaveLabel": "已存本机",
+   "editingTopicId": "",
+   "editIsDraft": false,
+   "draftSaving": false,
+   "submitting": false,
+   "submitError": "",
+   "resultSheet.show": false,
+   "resultSheet.title": "",
+   "formData.name": "D2-A号的稿",
+   "formData.configVersion": ""
+  },
+  "bView": {
+   "formData.name": "",
+   "draftMemberId": 990045,
+   "themeSaveLabel": "已存本机",
+   "draftUuid": "mvjelrnv-1d4jtfu"
+  },
+  "bWrites": 0,
+  "uidRestored": 990044,
+  "base": "http://127.0.0.1:8132"
+ },
+ "s12": {
+  "pass": true,
+  "loadings": [
+   {
+    "t": 0,
+    "title": "正在保存草稿"
+   }
+  ],
+  "sheet": {
+   "show": true,
+   "title": "草稿已保存到云端"
+  },
+  "labels": [
+   "保存中",
+   "已存云端"
+  ],
+  "requestsAfter8s": [],
+  "base": "http://127.0.0.1:8132"
+ },
+ "s13": {
+  "pass": true,
+  "label": "本机未存",
+  "toasts": [
+   "本地草稿保存失败，请检查存储空间"
+  ],
+  "afterRestoreRequests": [
+   {
+    "dt": 0,
+    "m": "POST",
+    "url": "/api/topic/v2/create",
+    "st": 200,
+    "rid": "sqmvjem72py3…",
+    "name": "D2-存储满2",
+    "sd": 1,
+    "cv": "",
+    "ch": [],
+    "respTopic": 990063
+   },
+   {
+    "dt": 1520,
+    "m": "POST",
+    "url": "/api/topic/edit-detail",
+    "st": 200,
+    "id": 990063
+   }
+  ],
+  "base": "http://127.0.0.1:8132"
+ },
+ "s14": {
+  "pass": true,
+  "labels": [
+   "已存云端",
+   "已存本机",
+   "云端未存"
+  ],
+  "toasts": [
+   "自动保存未成功：路线配置已更新，请刷新后重试"
+  ],
+  "requests": [
+   {
+    "dt": 0,
+    "m": "POST",
+    "url": "/api/topic/v2/update",
+    "id": "990064",
+    "name": "D2-冲突-另一端也改了",
+    "sd": 1,
+    "cv": "1",
+    "ch": [],
+    "mock": "respond"
+   },
+   {
+    "dt": 7266,
+    "m": "POST",
+    "url": "/api/topic/v2/update",
+    "st": 200,
+    "id": "990064",
+    "name": "D2-冲突-继续改",
+    "sd": 1,
+    "cv": "1",
+    "ch": [],
+    "respTopic": 990064
+   },
+   {
+    "dt": 9507,
+    "m": "POST",
+    "url": "/api/topic/edit-detail",
+    "st": 200,
+    "id": 990064
+   }
+  ],
+  "state": {
+   "themeSaveState": "saved",
+   "themeSaveLabel": "已存云端",
+   "editingTopicId": "990064",
+   "editIsDraft": true,
+   "draftSaving": false,
+   "submitting": false,
+   "submitError": "",
+   "resultSheet.show": true,
+   "resultSheet.title": "草稿已保存到云端",
+   "formData.name": "D2-冲突-继续改",
+   "formData.configVersion": "2"
+  },
+  "base": "http://127.0.0.1:8132"
+ },
+ "s15": {
+  "pass": false,
+  "labels": [
+   "已存云端"
+  ],
+  "state": {
+   "editIsDraft": true,
+   "formData.name": "D2-弹窗",
+   "themeSaveLabel": "已存云端"
+  },
+  "chapters": [
+   "D2弹窗内未提交章节"
+  ],
+  "writes": [
+   {
+    "dt": 0,
+    "m": "POST",
+    "url": "/api/topic/v2/update",
+    "st": 200,
+    "id": "990057",
+    "name": "D2-弹窗",
+    "sd": 1,
+    "cv": "1",
+    "ch": [
+     "D2弹窗内未提交章节:"
+    ],
+    "respTopic": 990057
+   }
+  ],
+  "base": "http://127.0.0.1:8132"
+ },
+ "d3-s02_03": {
+  "s02": {
+   "pass": true,
+   "typedMs": 5400,
+   "firstWriteAfterLastKeyMs": 2030,
+   "writesWhileTyping": 0,
+   "labels": [
+    "已存本机",
+    "保存中",
+    "已存云端"
+   ],
+   "requests": [
+    {
+     "dt": 0,
+     "m": "POST",
+     "url": "/api/topic/v2/create",
+     "st": 200,
+     "rid": "sqmvjfetvcbf…",
+     "name": "D2b自动保存核对主题AB",
+     "sd": 1,
+     "cv": "",
+     "ch": [],
+     "respTopic": 990066
+    },
+    {
+     "dt": 1286,
+     "m": "POST",
+     "url": "/api/topic/edit-detail",
+     "st": 200,
+     "id": 990066
+    }
+   ],
+   "loadings": [],
+   "toasts": [],
+   "state": {
+    "themeSaveState": "saved",
+    "themeSaveLabel": "已存云端",
+    "editingTopicId": "990066",
+    "editIsDraft": true,
+    "draftSaving": false,
+    "submitting": false,
+    "submitError": "",
+    "resultSheet.show": false,
+    "resultSheet.title": "",
+    "formData.name": "D2b自动保存核对主题AB",
+    "formData.configVersion": "1"
+   }
+  },
+  "s03": {
+   "pass": true,
+   "requestsIn10s": []
+  },
+  "topicId": "990066",
+  "base": "http://127.0.0.1:8132"
+ },
+ "d3-s10": {
+  "pass": true,
+  "loaded": {
+   "editingTopicId": "990054",
+   "editIsDraft": false,
+   "editLoaded": true,
+   "editLoadError": "",
+   "formData.name": "D2自动保存核对主题AB",
+   "themeSaveLabel": ""
+  },
+  "writes": [],
+  "draftButtonShown": false,
+  "state": {
+   "themeSaveLabel": "已存本机",
+   "formData.name": "D2-已发布主题改名",
+   "editIsDraft": false
+  },
+  "requests": [
+   {
+    "dt": 0,
+    "m": "GET",
+    "url": "/api/topic/state-keys",
+    "st": 200
+   },
+   {
+    "dt": 40,
+    "m": "POST",
+    "url": "/api/topic/edit-detail",
+    "st": 200,
+    "id": "990054",
+    "mock": "patch-isDraft-false"
+   }
+  ],
+  "base": "http://127.0.0.1:8132"
+ },
+ "d3-s16": {
+  "pass": true,
+  "topicId": "990065",
+  "localEnvelopesForTopicBeforeReopen": 0,
+  "idleLabels": [
+   "已存云端"
+  ],
+  "idleRequests": [
+   {
+    "dt": 0,
+    "m": "GET",
+    "url": "/api/topic/state-keys",
+    "st": 200
+   },
+   {
+    "dt": 43,
+    "m": "POST",
+    "url": "/api/topic/edit-detail",
+    "st": 200,
+    "id": "990065"
+   }
+  ],
+  "state": {
+   "editingTopicId": "990065",
+   "editIsDraft": true,
+   "formData.name": "D3-重开核对",
+   "themeSaveLabel": "已存云端"
+  },
+  "localDraftRestored": false,
+  "editLabels": [
+   "已存云端"
+  ],
+  "editWrites": [
+   {
+    "dt": 17812,
+    "m": "POST",
+    "url": "/api/topic/v2/update",
+    "st": 200,
+    "id": "990065",
+    "name": "D3-重开核对-改名",
+    "sd": 1,
+    "cv": "1",
+    "ch": [],
+    "respTopic": 990065
+   }
+  ],
+  "firstWriteAfterEditMs": 2025,
+  "base": "http://127.0.0.1:8132"
+ }
+}
