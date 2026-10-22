@@ -29,5 +29,5 @@
     <view class="pg-more" wx:if="{{nextCursor}}" bindtap="loadMore" aria-role="button" aria-label="加载更多处置记录" hover-class="cy-pressed" hover-stay-time="80">{{loadingMore ? '加载中…' : '加载更多'}}</view>
   </view>
   <text class="pg-notice" wx:if="{{notice}}" aria-role="alert">{{notice}}</text>
-  <text class="pg-notice" wx:if="{{error && state === 'ready'}}" aria-role="alert">{{error}}</text>
+  <cy-inline-error class="pg-notice" wx:if="{{error && state === 'ready'}}" kind="data" title="更多处置记录暂未取回" sub="{{error}}" />
 </view>

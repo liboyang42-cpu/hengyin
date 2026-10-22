@@ -50,9 +50,8 @@ Component({
       const current = () => epoch === this._epoch && owner === this._owner();
       return new Promise((resolve) => {
         const failed = (res) => {
-          if (!current()) return resolve(null);
-          if (more) this.setData({ loadingMore: false, error: requestError(res, '更多处置记录暂未取回') });
-          else this.setData({ state: 'error', rows: [], nextCursor: null, error: requestError(res, '处置记录暂未取回') });
+          if (current() && more) this.setData({ loadingMore: false, error: requestError(res, '更多处置记录暂未取回') });
+          else if (current()) this.setData({ state: 'error', rows: [], nextCursor: null, error: requestError(res, '处置记录暂未取回') });
           resolve(null);
         };
         app.sendRequest({
@@ -71,8 +70,12 @@ Component({
               nextCursor: page.length && (typeof cursor === 'number' || typeof cursor === 'string') ? cursor : null });
             resolve(rows);
           },
-          successStatusAbnormal: failed,
-          fail: failed,
+          successStatusAbnormal: (res) => failed(res),
+          fail: (res) => {
+            if (current() && more) this.setData({ loadingMore: false, error: requestError(res, '更多处置记录暂未取回') });
+            else if (current()) this.setData({ state: 'error', rows: [], nextCursor: null, error: requestError(res, '处置记录暂未取回') });
+            resolve(null);
+          },
         });
       });
     },
@@ -106,7 +109,11 @@ Component({
       const started = intent.begin(wx, { scope, memberId: owner, payload: [enforcementId, reason] });
       this.setData({ submitting: true, notice: '' });
       const sameOwner = () => owner === this._owner();
-      const done = (patch) => { if (sameOwner()) this.setData(Object.assign({ submitting: false }, patch)); };
+      const done = (notice, close) => {
+        if (!sameOwner()) return;
+        if (close) this.setData({ submitting: false, editingId: null, reason: '', notice: '' });
+        else this.setData({ submitting: false, notice });
+      };
       // 断网或响应不明:先回读处置列表核对,读到申诉才算已提交;否则保留同一 requestId 供重试。
       const unknown = () => {
         intent.settle(wx, scope, owner, started.key, 'unknown');
@@ -114,8 +121,8 @@ Component({
         this.setData({ notice: '提交结果未确认，正在核对…' });
         this.load().then((rows) => {
           const row = (rows || []).find((item) => item.id === enforcementId);
-          if (row && !row.canAppeal) done({ editingId: null, reason: '', notice: '' });
-          else done({ notice: rows ? '没有查到这条申诉，可以再次提交（不会重复提交）' : '提交结果暂未确认，请稍后刷新核对' });
+          if (row && !row.canAppeal) done('', true);
+          else done(rows ? '没有查到这条申诉，可以再次提交（不会重复提交）' : '提交结果暂未确认，请稍后刷新核对');
         });
       };
       app.sendRequest({
@@ -127,7 +134,7 @@ Component({
           if (ok(res)) {
             intent.settle(wx, scope, owner, started.key, 'success');
             if (!sameOwner()) return;
-            done({ editingId: null, reason: '' });
+            done('', true);
             toast.success('申诉已提交');
             this.load();
             return;
@@ -135,12 +142,12 @@ Component({
           // 409 = 该处置已有进行中的申诉(含同一 requestId 已落库),回读核对即可
           if (Number(res && res.code) === 409) { unknown(); return; }
           intent.settle(wx, scope, owner, started.key, 'rejected');
-          done({ notice: requestError(res, '申诉未提交') });
+          done(requestError(res, '申诉未提交'));
         },
         successStatusAbnormal: (res, status) => {
           if (Number(status) >= 400 && Number(status) < 500 && Number(status) !== 408 && Number(status) !== 409) {
             intent.settle(wx, scope, owner, started.key, 'rejected');
-            done({ notice: requestError(res, '申诉未提交') });
+            done(requestError(res, '申诉未提交'));
           } else unknown();
         },
         fail: () => unknown(),

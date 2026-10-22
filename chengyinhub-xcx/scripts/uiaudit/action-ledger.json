@@ -174217,6 +174217,19 @@
               "index": 0
             },
             {
+              "selector": "cy-inline-error.pg-notice",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/shezhi/shezhi",
+          "segments": [
+            {
+              "selector": "cy-post-governance",
+              "index": 0
+            },
+            {
               "selector": "cy-inline-error",
               "index": 0
             }
@@ -1039694,7 +1039707,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/shezhi/components/post-governance/index.js:90"
+        "staticSource": "pages/shezhi/components/post-governance/index.js:93"
       }
     },
     {
@@ -1039773,7 +1039786,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/shezhi/components/post-governance/index.js:96"
+        "staticSource": "pages/shezhi/components/post-governance/index.js:99"
       }
     },
     {
@@ -1039852,7 +1039865,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/shezhi/components/post-governance/index.js:95"
+        "staticSource": "pages/shezhi/components/post-governance/index.js:98"
       }
     },
     {
@@ -1039982,7 +1039995,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/shezhi/components/post-governance/index.js:98"
+        "staticSource": "pages/shezhi/components/post-governance/index.js:101"
       }
     },
     {
@@ -1040103,7 +1040116,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/shezhi/components/post-governance/index.js:87"
+        "staticSource": "pages/shezhi/components/post-governance/index.js:90"
       }
     },
     {
