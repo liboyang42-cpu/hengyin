@@ -46,7 +46,7 @@
   - 本地已跑通 `ci/api-existence-gate.js`、`ci/silent-error-gate.js`、`lint:requestbody`。按要求没有运行 `ci/xcx-check.sh` 和 `ds-hardcode-gate-selftest.sh`。
 
 ## 发现（已有缺陷，未在本 lane 修复）
-1. **门店 AI 形象的违规照片不会被撤下**（已从代码确认）。`npcSave` 用 `BIZ_TYPE_MERCHANT_PROFILE` + merchantId 送检。但回调时 `isCurrentSubmittedMedia` 只核对 logo、cover、gallery，处置动作 `clearProfileMedia` 也只清这三项。结果是 NPC 头像即使收到“违规”结论，也只会落成 IGNORED_STALE，头像不会被撤下。现在的回执会如实显示“形象图片未通过安全复核”，但图仍在线。修复需要改内容安全核心（对应 Ask first 类），建议由内容安全 owner 处理。
+1. **门店 AI 形象的违规照片不会被撤下**（已从代码确认；修复在 #473，本分支已对齐）。在 master 上，`npcSave` 用 `BIZ_TYPE_MERCHANT_PROFILE` + merchantId 送检，而回调只核对和清除 logo、cover、gallery 三项。结果是 NPC 头像即使收到“违规”结论，也只会落成 IGNORED_STALE，头像不会被撤下。#473 把送检改成 `BIZ_TYPE_MERCHANT_NPC(18)`、bizId 用 npc_profile.id；本分支的 55ab4f37 已让回执按 (18, npcId, 哈希) 读取。注意：#473 合入之前，门店形象图的回执读不到送检记录（NOT_SUBMITTED），所以页面不显示形象图的复核结论，只显示人设审核与玩家可见性。
 2. **个人头像同样可能被判过期**（可能存在，需 owner 核实）。`/api/user/update` 用原始头像 URL 送检，但库里保存的是 `media-asset:<id>` 引用。两者不一致时，回调的 current 核对会把结论判为过期，违规头像同样不会被清除。图片在上传时已有同步审核兜底，所以这是第二层防线失效。
 
 <!-- CY-HANDOFF -->
