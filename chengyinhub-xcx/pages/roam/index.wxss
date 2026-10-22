@@ -794,7 +794,7 @@ page{ background:var(--cy-color-bg-page); }
 /* 2026-10-22 业主裁决(方案 A 票根)取代此前「用户裁决不改」:占位尺寸不变(swiper 192rpx / 左 46 右 85 / 卡间距 23),只换卡面。 */
 .intro-card{ height:100%; margin-right:23rpx; box-sizing:border-box; display:flex; align-items:stretch; border-radius:28rpx; background:#F6F4EF; color:#141414; overflow:hidden; /* ds-ok 票根卡面纸色(业主 2026-10-22 裁决) */
   -webkit-mask:radial-gradient(circle 16rpx at 192rpx 0,transparent 15.5rpx,#000 16rpx) top/100% 51% no-repeat,radial-gradient(circle 16rpx at 192rpx 100%,transparent 15.5rpx,#000 16rpx) bottom/100% 51% no-repeat; /* ds-ok 票根卡面(业主 2026-10-22 裁决) */
-  mask:radial-gradient(circle 16rpx at 192rpx 0,transparent 15.5rpx,#000 16rpx) top/100% 51% no-repeat,radial-gradient(circle 16rpx at 192rpx 100%,transparent 15.5rpx,#000 16rpx) bottom/100% 51% no-repeat; } /* mask 不支持时退化为无缺口的整卡 */
+  mask:radial-gradient(circle 16rpx at 192rpx 0,transparent 15.5rpx,#000 16rpx) top/100% 51% no-repeat,radial-gradient(circle 16rpx at 192rpx 100%,transparent 15.5rpx,#000 16rpx) bottom/100% 51% no-repeat; } /* ds-ok mask 不支持时退化为无缺口的整卡 */
 .intro-card__stub{ position:relative; flex:none; width:192rpx; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10rpx; /* ds-ok 票根卡面(业主 2026-10-22 裁决) */
   background-image:repeating-linear-gradient(135deg,rgba(0,0,0,.035) 0,rgba(0,0,0,.035) 2rpx,transparent 2rpx,transparent 10rpx); } /* ds-ok 票根左联 */
 .intro-card__stub.is-roam,.intro-card__dot.is-roam{ background-color:#C8F36A; } /* ds-ok 票根卡面(业主 2026-10-22 裁决) */
