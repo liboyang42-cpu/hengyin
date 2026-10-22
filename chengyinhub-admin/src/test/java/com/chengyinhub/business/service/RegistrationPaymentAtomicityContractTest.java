@@ -27,14 +27,23 @@ class RegistrationPaymentAtomicityContractTest {
         String mapper = source("chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CmsRegistrationMapper.java");
         String xml = source("chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMapper.xml");
 
+        String mutation = source("chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxPaymentCallbackMutationService.java");
         int method = service.indexOf("String handleWechatPayCallback");
-        int claim = service.indexOf("claimPaymentSuccess", method);
-        int settlement = service.indexOf("settlementEntryService.recordOnPayment", method);
-        int reward = service.indexOf("umsMemberMapper.addPoints", method);
+        int register = service.indexOf("wxPaymentCallbackInboxService.register(", method);
+        int fence = service.indexOf("wxPaymentCallbackInboxService.process(", method);
+        int apply = service.indexOf("applyWechatPayCallback(registration, resultMap)", method);
+        int machine = service.indexOf("private String applyWechatPayCallback");
+        int claim = service.indexOf("claimPaymentSuccess", machine);
+        int settlement = service.indexOf("settlementEntryService.recordOnPayment", machine);
+        int reward = service.indexOf("umsMemberMapper.addPoints", machine);
 
         assertTrue(method > 0, "支付回调必须保留在公开 Service interface");
-        assertTrue(service.substring(Math.max(0, method - 160), method)
-                .contains("@Transactional(rollbackFor = Exception.class)"), "支付回调整链必须在事务内");
+        // 2026-10-22 W3:回调整链改由 inbox fence 的事务承载(业务推进与 inbox DONE 同一事务提交)。
+        assertTrue(register > method && fence > register && apply > fence,
+                "支付回调必须先登记 inbox,再经 process fence 领取处理权后才推进业务");
+        assertTrue(machine > 0, "支付状态机必须只在 fence/调用方事务内执行");
+        assertTrue(mutation.contains("@Transactional\n    public boolean apply("),
+                "fence 的业务 mutation 必须在事务内");
         assertTrue(mapper.contains("int claimPaymentSuccess("), "Mapper 必须暴露条件置位 CAS");
         assertTrue(xml.contains("<update id=\"claimPaymentSuccess\">"), "MyBatis XML 必须实现支付 CAS");
         assertTrue(xml.contains("payment_status in (0, 1)"), "CAS 只能从待支付/支付中过渡");
