@@ -117,8 +117,50 @@ jobs:
               - '.github/workflows/ci.yml'
               - 'ci/ui-build.sh'
             xcx:
+              # 2026-10-22(O16b):去掉原来的 `'!chengyinhub-xcx/docs/**'`。默认 predicate-quantifier
+              #   是 some,否定规则的含义是「任一文件不在 chengyinhub-xcx/docs 下」⇒ 几乎所有 PR 恒为 true
+              #   (#483 纯 docs PR 也跑了 static + 20 分片)。而且 chengyinhub-xcx/docs 本身也被读:
+              #   xcx-check.sh 的 JSON 可解析扫描、ui-governance-docs-contract 都读它,排除它反而是假绿。
+              # ★ 下面整张表是**正向**清单:小程序单测/静态门禁实际读到的全部路径(strace 全量回放 +
+              #   静态 grep 双向盘点,明细见 PR 与 ci/test_ci_cost_contract.py 的 XCX_READ_SET)。
+              #   新增一条读仓外文件的小程序测试时,必须把它读的路径加到这里,否则就是假绿。
               - 'chengyinhub-xcx/**'
-              - '!chengyinhub-xcx/docs/**'
+              # ui-integrity / backend-miniprogram-route-exists / build-action-ledger / roam-redline
+              # 扫整棵后端 src(ui-integrity 还按「仓库根每个目录/src/main/java」枚举新模块)与后台 UI src。
+              - 'chengyinhub-admin/**'
+              - 'chengyinhub-system/**'
+              - 'chengyinhub-common/**'
+              - 'chengyinhub-framework/**'
+              - 'chengyinhub-quartz/**'
+              - 'chengyinhub-generator/**'
+              - '*/src/main/java/**'
+              - 'chengyinhub-ui/**'
+              # page-cleanup-audit(tests/tools/audit-page-cleanup.js)对 `git ls-files` 全仓逐个
+              # readFileSync 这些扩展名;git grep '*.wxml' 也是全仓。根目录 *.py 会被 cwd=仓库根的
+              # python3 -m unittest 当模块优先导入。
+              - '**/*.{js,json,wxml,vue,html,java,xml,sql,yml,yaml,properties,ts}'
+              - '**/*.wxss'
+              - '*.py'
+              # rg / git ls-files --exclude-standard / git diff 的行为受根目录这些文件影响。
+              - '.gitignore'
+              - '.gitattributes'
+              - '.gitmodules'
+              - '.mailmap'
+              - '.ignore'
+              - '.rgignore'
+              - '.npmrc'
+              # 门禁脚本、工作流与 SQL 目录整体纳入(改门禁的 PR 恰恰最需要跑一次)。
+              - 'ci/**'
+              - 'scripts/**'
+              - 'sql/**'
+              - '.github/**'
+              # 小程序单测直接读的仓外资源/文档(逐条对应 XCX_READ_SET)。
+              - 'assets/covers/**'
+              - 'design/icons/lucide/**'
+              - 'docs/assets/template-covers/**'
+              - 'docs/delivery/gg-r5-zeroview-fixtures/**'
+              - 'docs/design/miniprogram-page-cleanup-1009.md'
+              - 'docs/城瘾小程序_设计系统权威基准_20260801.md'
               # 跨栈埋点白名单合同直接读该服务端文件。
               - 'chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAnalyticsController.java'
               # 漫游红线门禁(scripts/roam-redline-gate.js)直接读这四个后端文件:
