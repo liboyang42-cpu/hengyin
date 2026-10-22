@@ -71,14 +71,22 @@ RV1 的 S2（活动合作者可写入任意会员）、N1–N5，以及第 3 节
 
 ### 3 CI（#486 @ `94e19fd1`）
 
-查询时间 2026-10-22 约 14:27 UTC，通过 GitHub check-runs API 查询（本环境没有 `gh` CLI）。
+最终状态通过 GitHub check-runs API 查询（本环境没有 `gh` CLI），查询时间 2026-10-22 约 14:45 UTC。
 
-- 共 33 个 check run：7 success、1 skipped、25 个还在排队或运行，**0 失败**。
-  - success 7 个：gitleaks、isolated-authenticated-redis-recovery，以及 unit shard 1、12、15、18、20。
-  - skipped 1 个：Admin UI E2E，按变更区域跳过。
-- Backend tests、Funds MySQL IT、Migration safety / layout gate、其余 shard、static gates、Fast gates 都还没出结果。
-- **最终 CI 状态未定。** 合并前必须确认全部转绿。
+- 共 35 个 check run：**32 个 success、3 个 skipped、0 个失败**。3 个 skipped 是 Admin UI build、Admin UI E2E、SBOM，都是按变更区域跳过的。
+- 关键检查全部 success：
+  - Backend tests（run `39794837029`）
+  - Funds MySQL IT 50/9/30（run `39794837131`）
+  - Funds IT gate self-test
+  - Followup 39 selected backend cases（run `39794837110`）
+  - Migration safety gate、Migration layout gate
+  - 20/20 个小程序 unit shard（含 shard 13，N6 所说的竞态这次没有触发）
+  - Mini program static gates / static checks
+  - Fast gates
+  - gitleaks
+  - isolated-authenticated-redis-recovery（run `39794837143`）
+- **CI 全绿。**
 
 ### 4 建议
 
-B1、S1 都已修复，并有会在回退实现时失败的测试；增量里没有新的阻断项。**等 #486 当前 head 的 CI 全绿后可以合并**，前提是 owner 已对 RV1 第 3 节的待决事项（以及 S2 的口径）拍板。
+B1、S1 都已修复，并有会在回退实现时失败的测试；增量里没有新的阻断项。**#486 当前 head 的 CI 已全绿，可以合并**，前提是 owner 已对 RV1 第 3 节的待决事项（以及 S2 的口径）拍板。
