@@ -90,6 +90,8 @@ MYBATIS_ITS=(
   CityNodePendingVisibilityMySqlIT
   # MySQL leader session, failover fence, strict Druid wall and transactional duplicate definitions.
   SchedulerSessionLockMySqlIT
+  # 2026-10-22 发布验收 P1 俱乐部:入会通过/驳回、封禁/解封、举报工单在真库上的归属与幂等(真服务+真 mapper)。
+  ClubJoinGovernanceMySqlIT
   ClubGatherArrivalMySqlIT
   ClubAttendanceTimeMappingMyBatisIT
   VerificationRiskQueueMySqlIT
