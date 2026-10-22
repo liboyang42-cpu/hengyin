@@ -7,10 +7,7 @@
     </view>
     <text wx:if="{{hint}}" class="ts__hint {{hintError ? 'ts__hint--error' : ''}}" aria-role="{{hintError ? 'alert' : ''}}">{{hint}}</text>
     <view wx:if="{{loading && !_pages.length}}" class="ts__state">正在载入…</view>
-    <view wx:elif="{{error}}" class="ts__state">
-      <text>{{error}}</text>
-      <view class="ts__retry" bindtap="onRetry" aria-role="button" hover-class="ts--pressed">重试</view>
-    </view>
+    <cy-inline-error wx:elif="{{error}}" load-failure kind="error" title="列表暂未加载" sub="{{error}}" action="重试" bind:action="onRetry" />
     <block wx:else>
       <swiper class="ts__swiper" style="height: {{_swiperH}}rpx" current="{{_current}}" bindchange="onSwipe">
         <swiper-item wx:for="{{_pages}}" wx:for-item="page" wx:for-index="p" wx:key="p">

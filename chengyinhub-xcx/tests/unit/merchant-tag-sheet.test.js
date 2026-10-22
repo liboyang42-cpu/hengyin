@@ -118,7 +118,8 @@ test('模板:原生横向 swiper + 页码点 + 底部保存;只用 cy-sheet,不�
   assert.equal(json.usingComponents['cy-sheet'], '/components/cy/sheet/index')
   const wxss = read(DIR + '/index.wxss')
   assert.doesNotMatch(wxss, /prefers-color-scheme/, '商家白底档,不跟系统深色')
-  assert.match(wxss, /--cy-comp-sheet-role-glass: #FFFFFF/)
+  assert.match(wxss, /--cy-comp-sheet-role-glass: var\(--cy-comp-sheet-merchant-glass\)/, '角色档钉到商家常量')
+  assert.match(wxml, /<cy-inline-error wx:elif="\{\{error\}\}"[^>]*bind:action="onRetry"/, '载入失败走统一错误组件(U6)')
 })
 
 test('门店信息:经营类目 / 行业类型改挂 cy-tag-sheet,沿用 chipSheet 数据与保存', () => {
