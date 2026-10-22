@@ -41,6 +41,7 @@
 - 真库 IT：`LaneW10bReadbackMySqlIT` 已加入 `ci/backend-test.sh` 的 MYBATIS_ITS。它把真实迁移跑两遍来证明幂等，并验证版本号 insert…select 自增、inbox 按媒体哈希读、版本 +1、按令牌撤销只动本人那一条。第一次推送时 CI 的 Backend tests 已通过。本地没有 Docker daemon，所以没在本地跑。
 - 资金 IT 门禁：`funds_it_gate` 固定了各类的 @Test 数量。新加用例的那个类，新增用例已撤回（覆盖已移到上面的 IT），`python3 -m unittest ci/test_funds_it_gate.py` 本地 45/45 通过。
 - 小程序：本地全量 `node --test "tests/unit/**/*.test.js"` 结果 **13490/13491**。唯一失败是 `action-ledger.test.js` 的“release 前重建 inventory”，原因见下方 CY-HANDOFF。
+  - db4f3850 还原权限矩阵之后，`get-auth-matrix-contract` 也会因 `69 !== 65` 失败，补登记的行见 CY-HANDOFF。
   - 新增测试 3 个文件共 16 条全部通过：npc-chat-readback 6、simple-ai-request-state 6、profile-review-receipt 4。
   - 本地已跑通 `ci/api-existence-gate.js`、`ci/silent-error-gate.js`、`lint:requestbody`。按要求没有运行 `ci/xcx-check.sh` 和 `ds-hardcode-gate-selftest.sh`。
 
@@ -51,6 +52,14 @@
 <!-- CY-HANDOFF -->
 ## CY-HANDOFF（需要 C00 / 其他 owner 处理）
 - **action-ledger 重建（C00）**：`scripts/uiaudit/action-ledger.json` 因为本 PR 改了 3 个页面的 wxml/js 而失效。我在本地 `audit:actions:update` 一次后计数，然后已还原文件，未提交。漂移规模：66 个控件 id 只是行号变化（gerenziliao 30、merchant/decor/ai-npc 35、publish/simple 1），新增 0、删除 0，另有对应的源码 digest 变化。所以 CI 的小程序单测里，`action-ledger.test.js` 那一片会红，需要 C00 重建台账。
+- **GET 权限矩阵登记（保留契约 `tests/unit/get-auth-matrix-contract.test.js`）**：这个文件已被另一个会话按保留契约还原到合并基线（db4f3850），所以这里不再改它。在 owner 补登记之前，单测分片会因 `69 !== 65` 变红。请在 `MATRIX` 里加入以下 4 行，并把 `assert.equal(directCount, 65, …)` 改成 69：
+  ```js
+  ['subpackageMember/components/cy/npc-chat/index.js', "url: '/api/ai/npc/chat/request'", 'required', 'member', 'self-account'],
+  ['pages/publish/simple/index.js', "url: '/api/ai/theme/draft/request'", 'required', 'author', 'self-account'],
+  ['pages/gerenziliao/gerenziliao.js', "url: '/api/user/profile/review'", 'required', 'member', 'self-account'],
+  ['pages/merchant/decor/ai-npc/index.js', "url: '/api/merchant/npc/review'", 'required', 'merchant', 'self-merchant'],
+  ```
+  依据：4 个端点都不在 SecurityConfig 的 permitAll 里，所以都是 required。`ApiAiNpcController.chatRequest`、`ApiAiController.themeDraftRequest`、`ApiUmsMemberController.profileReview` 都只按登录态读本人记录；`ApiMerchantController.npcReview` 走 `merchantAccessService.require(PROFILE_WRITE)`，按登录商家派生。
 - **#23 客户端（roam / privacy-sheet owner）**：后端已提供 `POST /api/roam/share/revoke-token`（form 参数 `token`），以及发布时的 `expectedVersion` 参数、返回的 `version`。现在可以提供“撤销这条分享”了：撤销成功或 `revoked=0` 都表示这条已不再公开；409 `SHARE_VERSION_CONFLICT` 时应刷新，不要重试写入。本 lane 没有改 roam 页面。
 - **部署顺序**：两个迁移都要**先于新 jar** 落库（chengyin-db-migrate 只读预检 + 用户确认）。新 jar 的发布 SQL 会写 `roam_share_snapshot.version`，迁移没落库时足迹分享发布会失败。
 
