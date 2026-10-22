@@ -941,7 +941,7 @@ Page({
     const now = Date.now();
     const scope = this._runSessionScope();
     // 第二轮拍板 22:同一份再写服务端,换手机登录同账号能续。写失败本机那份仍在,不影响本机恢复。
-    this._queueRunSync(() => saveServerPausedRun(req, scope, elapsed, now));
+    this._queueRunSync(() => saveServerPausedRun(req, scope, elapsed, now, wx));
     return writePausedRun(wx, scope, elapsed, now);
   },
   /** 本机快照作废 + 服务端留结束墓碑:只清本机的话,换台设备又会把已结束的一局恢复回来。
