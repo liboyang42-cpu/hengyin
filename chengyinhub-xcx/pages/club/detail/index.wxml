@@ -39,47 +39,44 @@
           <image class="cover-fallback-art" src="/pages/club/images/club_cover_default.png" mode="aspectFill" lazy-load="true" />
         </view>
       </view>
-      <view class="profile-logo-wrap">
-        <image class="profile-logo" src="{{club.logo || '/images/d_logo.png'}}" mode="aspectFit" lazy-load="true" />
-      </view>
     </view>
 
     <!-- 俱乐部资料区。2026-08-26 压缩:名字与元信息并成一栏、挪到 logo 右侧,
          主按钮收进同一行 —— Hero 从 400rpx 降到 240rpx,首屏多露一条帖子。 -->
     <view class="profile">
+      <!-- 拍板 2026-10-22:logo 在左、名字在右并与 logo 垂直居中;元信息固定两行 ——
+           第一行「类型 · N 名成员」,第二行入会方式(公开加入 / 需审核加入)。图标样式沿用原 chip。 -->
       <view class="profile-id">
+        <view class="profile-logo-wrap">
+          <image class="profile-logo" src="{{club.logo || '/images/d_logo.png'}}" mode="aspectFit" lazy-load="true" />
+        </view>
         <view class="profile-id-main">
           <view class="profile-name">{{club.name}}</view>
-          <view class="profile-meta">
-            <view class="profile-meta-chip">
-              <cy-icon class="profile-meta-ico" name="tab-explore" size="38" />
-              <text class="profile-meta-text">{{club.clubTypeText}}</text>
-            </view>
-            <view class="profile-meta-chip">
-              <cy-icon class="profile-meta-ico" name="tab-club" size="38" />
-              <text class="profile-meta-text">{{club.memberCountText}}</text>
-            </view>
-            <view class="profile-meta-chip">
-              <cy-icon class="profile-meta-ico" name="{{club.joinPolicy == 1 ? 'lock' : 'check'}}" size="38" />
-              <text class="profile-meta-text">{{club.joinPolicyText}}加入</text>
-            </view>
-          </view>
         </view>
 
         <!-- 身份行右侧唯一主按钮。★ owner 这里**不再放经营动作**:
              邀约标的永远是某一个项目,俱乐部有多个活动时头部按钮说不清邀的是哪个。
              阶段式 primary(ownerPrimaryLabel/onOwnerPrimary)整体挪进「管理」tab 的
              NOW 卡 —— 卡片能带阶段上下文(见 CU-C-89:承接阶段不点名单个项目,只说全团)。 -->
-        <view class="profile-cta" wx:if="{{!club.isJoined && !club.isOwner && !isMerchantViewer}}">
-          <view wx:if="{{club.myJoinStatus === 0}}" class="join-btn join-btn--pending">等待审核</view>
+        <!-- 拍板 2026-10-22:商家也可以加入俱乐部(不能报名俱乐部活动),入会按钮不再对商家隐藏。 -->
+        <view class="profile-cta" wx:if="{{!club.isJoined && !club.isOwner}}">
+          <view wx:if="{{club.myJoinStatus === 0}}" class="join-btn join-btn--pending" aria-role="button" aria-disabled="true">等待主理人审核</view>
           <view wx:else class="join-btn cy-btn cy-btn--primary" bindtap="onJoin" hover-class="cy-pressed" hover-stay-time="80">{{club.joinPolicy == 1 && club.myJoinStatus === 2 ? '重新申请加入' : '加入俱乐部'}}</view>
         </view>
-        <text wx:if="{{!club.isJoined && !club.isOwner && club.myJoinStatus === 2 && club.myJoinReviewReason}}" class="join-review-reason">申请未通过：{{club.myJoinReviewReason}}</text>
-        <!-- 2026-09-09 按稿删「进入群聊」:稿 N1b 47:2 / N3 20:137 的头部到 meta 行就结束。
-             群聊本身没删,IM 页在会话列表、名片、合作列表三处仍有入口。 -->
-        <!-- 商家看俱乐部主页 → 发起俱乐部合作(§17.2,coop/invite 类型1) -->
-
       </view>
+      <view class="profile-meta">
+        <view class="profile-meta-chip">
+          <cy-icon class="profile-meta-ico" name="tab-club" size="38" />
+          <text class="profile-meta-text">{{club.metaLine}}</text>
+        </view>
+        <view class="profile-meta-chip">
+          <cy-icon class="profile-meta-ico" name="{{club.joinPolicy == 1 ? 'lock' : 'check'}}" size="38" />
+          <text class="profile-meta-text">{{club.joinPolicyText}}加入</text>
+        </view>
+      </view>
+      <text wx:if="{{!club.isJoined && !club.isOwner && club.myJoinStatus === 2 && club.myJoinReviewReason}}" class="join-review-reason">申请未通过：{{club.myJoinReviewReason}}</text>
+      <!-- 2026-09-09 按稿删「进入群聊」:稿 N1b 47:2 / N3 20:137 的头部到 meta 行就结束。
+           群聊本身没删,IM 页在会话列表、名片、合作列表三处仍有入口。 -->
 
       <!-- 2026-09-09 按稿删:头部原来还挂着「邀请成员」「管理项目」两条文字链,
            稿 N1b 47:2 / N3 20:137 都没有,而且两条都是重复的 ——
@@ -212,6 +209,8 @@
               </view>
             </view>
             <view class="ev-acts">
+              <!-- 拍板 2026-10-22:商家可以入团,但不能报名俱乐部活动(后端报名/候补同闸)。 -->
+              <text wx:if="{{merchantNoSignup}}" class="ev-no-signup">商家不能报名</text>
               <view wx:if="{{canManage}}" class="event-group-code" catchtap="showGroupCode" data-id="{{item.id}}" data-name="{{item.name}}" aria-role="button" aria-label="出示 {{item.name}} 团码" hover-class="cy-pressed" hover-stay-time="80" hover-stop-propagation="true">出示团码</view>
               <!-- CU-C-149:本人创建的项目不给「举报活动」—— 举报走完全程只会给自己开一张无意义工单。
                    动态行 :160、成员行 :337 早就有这个作者闸,只有这一行漏了。后端同判据兜直调。 -->
@@ -232,7 +231,7 @@
         </view>
         <block wx:if="{{upcomingTopics.length}}">
           <template wx:for="{{upcomingTopics}}" wx:key="id" is="clubEventCard"
-            data="{{item: item, canManage: club.isOwner || club.viewerIsAdmin || canCheckInEvents, canReport: canSeeMembers && item.memberId != myMemberId}}" />
+            data="{{item: item, canManage: club.isOwner || club.viewerIsAdmin || canCheckInEvents, canReport: canSeeMembers && item.memberId != myMemberId, merchantNoSignup: isMerchantViewer}}" />
         </block>
         <!-- 空态(282:478):卡容器内标题 + 说明 + 主按钮 + 归属提示 -->
         <cy-empty wx:else class="ev-empty" title="还没有城市路线" sub="{{club.isOwner || canManageActivities ? '发布城市定向或自由探索，让成员开始报名。发布后会自动绑定「' + club.name + '」，成员在这里报名。' : '主理人还没发布城市路线，发布后会显示在这里。'}}" cta="{{club.isOwner || canManageActivities ? '发布主题' : ''}}" bind:cta="onCreateTeam" />
@@ -315,7 +314,7 @@
           aria-label="邀请成员" hover-class="cy-pressed" hover-stay-time="80">邀请成员<cy-icon class="ov-head-link-ico" name="slide-arrow" size="22" /></button>
       </view>
 
-      <block wx:if="{{canSeeMembers}}">
+      <block wx:if="{{canSeeRoster}}">
         <!-- 横向头像条(23:18):4 位真人 + 第 5 位「+N」溢出位 -->
         <view class="ov-strip" wx:if="{{memberStrip.length}}">
           <view class="ov-strip-item" wx:for="{{memberStrip}}" wx:key="key"
@@ -332,14 +331,14 @@
       </block>
       <!-- Locked(25:2):未加入时成员名单不铺开 -->
       <view wx:else class="ov-locked">
-        <text class="ov-locked-tit">加入后可看成员名单</text>
-        <text class="ov-locked-sub">{{club.joinPolicy == 1 ? '主理人开启了入会审批，通过后即可查看。' : '加入俱乐部后即可查看。'}}</text>
+        <text class="ov-locked-tit">{{club.joinPolicy == 1 ? '通过审核后可看成员名单' : '加入后可看成员名单'}}</text>
+        <text class="ov-locked-sub">{{club.joinPolicy == 1 ? (club.myJoinStatus === 0 ? '申请已提交，主理人通过后即可查看。' : '写一句申请留言，主理人通过后即可查看。') : '加入俱乐部后即可查看。'}}</text>
       </view>
 
       <!-- 成员管理列表:Figma 没画,但逐人举报 / 角色 / 团码入口都挂在这里,保留。 -->
       <view class="overview-section" id="club-member-list" wx:if="{{membersExpanded || club.isOwner || canManageActivities || canOperateEvents || canCheckInEvents || canManageRoles || hasEventScope}}">
         <view wx:if="{{club.viewerIdentityUnavailable}}" class="admin-tools-notice">成员身份暂时无法确认，管理员工具暂不可用。</view>
-        <block wx:if="{{canSeeMembers}}">
+        <block wx:if="{{canSeeRoster}}">
           <cy-skeleton wx:if="{{membersState === 'loading'}}" type="list" count="2" />
           <cy-error load-failure class="cy-fade-in" wx:elif="{{membersState === 'business-error'}}" title="成员列表加载失败" sub="俱乐部成员数据暂时不可用" retry="重新加载" bind:retry="loadMembers" />
           <cy-error load-failure wx:elif="{{membersState === 'network-error'}}" title="网络连接失败" sub="检查网络后重新加载成员列表" retry="重新加载" bind:retry="loadMembers" />
@@ -350,7 +349,7 @@
                 <view class="member-name">{{item.nickname || '城瘾玩家'}}<text wx:if="{{item.isOwner}}" class="member-owner">群主</text><text wx:elif="{{item.role == 1}}" class="member-admin">管理员</text></view>
                 <view class="member-meta"><text wx:if="{{item.levelId != null && item.levelId > 0}}">Lv.{{item.levelId}} · </text><text>公开资料</text><cy-icon class="member-meta-arrow" name="arrow-right" size="20" /><text wx:if="{{item.isOwner}}"> · 创建俱乐部</text><text wx:elif="{{item.joinTime}}"> · 加入 {{item.joinTime}}</text></view>
               </view>
-              <view class="member-report" wx:if="{{item.memberId != myMemberId}}" catchtap="reportClubMember" data-member-id="{{item.memberId}}" data-nickname="{{item.nickname || ''}}" aria-role="button" aria-label="向平台举报 {{item.nickname || '该成员'}}" hover-class="cy-pressed" hover-stay-time="80">举报</view>
+              <view class="member-report" wx:if="{{canSeeMembers && item.memberId != myMemberId}}" catchtap="reportClubMember" data-member-id="{{item.memberId}}" data-nickname="{{item.nickname || ''}}" aria-role="button" aria-label="向平台举报 {{item.nickname || '该成员'}}" hover-class="cy-pressed" hover-stay-time="80">举报</view>
             </view>
             <cy-empty wx:if="{{members.length === 0}}" size="sm" title="暂无成员" />
           </block>
@@ -362,11 +361,11 @@
       <view class="ov-head">
         <text class="ov-head-tit">本团贡献榜 · 本周</text>
         <view class="ov-head-rule"></view>
-        <text wx:if="{{canSeeMembers}}" class="ov-head-link" catchtap="onRankSortTap"
+        <text wx:if="{{canSeeRoster}}" class="ov-head-link" catchtap="onRankSortTap"
           aria-role="button" aria-label="切换榜单排序，当前 {{leaderboardSortLabel}}" hover-class="cy-pressed" hover-stay-time="80">{{leaderboardSortLabel}}<cy-icon class="ov-head-caret" name="slide-arrow" size="22" /></text>
       </view>
 
-      <block wx:if="{{canSeeMembers}}">
+      <block wx:if="{{canSeeRoster}}">
         <view class="ov-lb" wx:if="{{leaderboard.length}}">
           <block wx:for="{{leaderboard}}" wx:key="memberId">
             <view class="ov-lb-gap" wx:if="{{item.gap}}">⋯ 中间 {{item.hiddenCount || 0}} 人</view>
@@ -394,7 +393,7 @@
       </block>
       <!-- Locked(25:5) -->
       <view wx:else class="ov-locked">
-        <text class="ov-locked-tit">加入后可看贡献榜</text>
+        <text class="ov-locked-tit">{{club.joinPolicy == 1 ? '通过审核后可看贡献榜' : '加入后可看贡献榜'}}</text>
         <text class="ov-locked-sub">看看自己在这一团里排第几。</text>
       </view>
 
@@ -1081,8 +1080,3 @@
 <cy-danger-confirm id="dcQuit" bind:confirm="onConfirmQuit" bind:alt="onQuitAlt" />
 <cy-danger-confirm id="dcMember" bind:confirm="onConfirmRemoveMember" />
 
-<view class="theme-dark">
-<view wx:if="{{club && canInviteCoop && !club.isOwner}}" class="club-coop-floating"><view class="join-btn cy-btn cy-btn--primary" bindtap="goClubCoop" aria-role="button" aria-label="向该俱乐部发起合作" hover-class="cy-pressed">发起合作</view></view>
-<cy-coop-invite-sheet id="coop-invite" show="{{coopInviteShow}}" target-id="{{clubId}}" target-name="{{(club && club.name) || ''}}" invite-type="{{1}}" topic-id="{{topicId}}" chapter-id="{{chapterId}}" topic-name="{{topicName || ''}}" operation-scope="{{coopInviteScope || ''}}" bind:close="closeCoopInvite" bind:sent="onCoopInviteSent" />
-
-</view>

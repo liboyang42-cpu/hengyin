@@ -1,5 +1,3 @@
-const { readPublisherAccess } = require('../../../utils/coop-publisher-access.js');
-const { returnToCoopOrigin } = require('../../../utils/coop-invite-return.js');
 const modal = require('../../../utils/modal.js');
 const mediaPreview = require('../../../utils/media-preview.js');
 const clubPinnedNotice = require('../utils/club-pinned-notice.js');
@@ -440,7 +438,9 @@ function enrichClub(club) {
   // 稿 N1b 47:2 / N3 20:137 写的是「42 名成员」,不是光秃秃一个数字
   club.memberCountText = formatMemberCount(club.memberCount);
   club.clubTypeText = club.clubType || club.city || '城市探索';
-  club.joinPolicyText = Number(club.joinPolicy) === 1 ? '需审批' : '公开';
+  club.joinPolicyText = Number(club.joinPolicy) === 1 ? '需审核' : '公开';
+  // 拍板 2026-10-22:元信息两行 —— 第一行「类型 · N 名成员」,第二行入会方式。
+  club.metaLine = club.clubTypeText + ' · ' + club.memberCountText;
   if (club.logo && app.getImgUrl) club.logo = app.getImgUrl(club.logo);
   if (club.cover && app.getImgUrl) club.cover = app.getImgUrl(club.cover);
   const descLine = club.description ? String(club.description).split('\n')[0].trim() : '';
@@ -448,6 +448,31 @@ function enrichClub(club) {
     || (descLine && descLine.length <= 24 ? descLine : '')
     || (club.leaderName ? club.leaderName + ' 主理' : '城瘾玩家俱乐部');
   return club;
+}
+
+const JOIN_MESSAGE_MAX = 60;
+// 需审核团的申请留言:必填、60 字内(按字符数,与后端 codePoint 计数一致)。
+function joinMessageError(raw) {
+  const message = String(raw || '').trim();
+  if (!message) return '请先写一句申请留言';
+  if (Array.from(message).length > JOIN_MESSAGE_MAX) return '申请留言最多 ' + JOIN_MESSAGE_MAX + ' 字';
+  return '';
+}
+
+// 同一个俱乐部再次进入(新页面实例)时沿用上次停留的 tab,不回落默认 tab 再跳。只存内存,不落盘。
+const lastTabByClub = {};
+function rememberClubTab(clubId, tab) {
+  if (clubId && tab) lastTabByClub[String(clubId)] = tab;
+}
+
+// 拍板 2026-10-22:公开加入(joinPolicy 0)的团,访客也能看成员名单与贡献榜(后端 /members、/leaderboard 同口径);
+// 需审核(joinPolicy 1)的团通过审核后才看。
+function canSeeClubRoster(club) {
+  if (!club) return false;
+  if (club.isOwner || club.isJoined) return true;
+  // 只认详情明确下发的 0(后端列未落库时也回 0);字段缺失按不可见处理,宁可少给。
+  return club.joinPolicy !== undefined && club.joinPolicy !== null && club.joinPolicy !== ''
+    && Number(club.joinPolicy) === 0;
 }
 
 function isDemoClubId(id) {
@@ -490,6 +515,8 @@ Page({
     membersExpanded: false,
     membersState: 'idle', // idle | loading | ready | business-error | network-error
     canSeeMembers: false,
+    // 成员名单/贡献榜的可见位:成员 + 公开加入团的访客(拍板 2026-10-22)。发帖/评论/举报仍看 canSeeMembers。
+    canSeeRoster: false,
     posts: [],
     pinnedNotices: [],
     postsLoaded: false,
@@ -591,7 +618,6 @@ Page({
     ownerClubs: [],
     ownerPickerShow: false,
     isMerchantViewer: false,
-    canInviteCoop: false,
     canModerateContent: false,
     canReadMembers: false,
     canApproveMembers: false,
@@ -606,7 +632,9 @@ Page({
     canUseManageTab: false,
     statusBarHeight: app.globalData.statusBarHeight,
     navBarHeight: app.globalData.navBarHeight,
-    activeTab: 'posts',        // posts | events | overview | manage(owner only)
+    // 拍板 2026-10-22「页面不闪」:初值为空 —— 详情回来、按身份/上次停留定好 tab 之前不渲染任何 tab 内容,
+    // 否则先出「帖子」再跳到「概览」就是一次闪屏。取值 posts | events | overview | manage(owner only)。
+    activeTab: '',
     clubTabs: PUBLIC_TABS,
     tabInitialized: false,
     // 管理 tab 的经营区块一次只展开一条('' 为全收起);治理项不在这里,在齿轮弹窗。
@@ -692,13 +720,10 @@ Page({
     this._requestedPostId = opt && opt.postId ? String(opt.postId) : '';
     this.setData({
       myMemberId: app.getUserID && app.getUserID(),
-      canInviteCoop: false,
       isMerchantViewer: this._operationScope === 'MERCHANT'
         || (app.getUserRole && app.getUserRole()) === 'merchant',
       // 从项目详情 → 找俱乐部 → 这里,主题一路带过来
       topicId: (opt && opt.topicId) || '',
-      chapterId: String(opt && opt.chapterId || ''),
-      topicName: (opt && opt.topicName) ? decodeURIComponent(opt.topicName) : '',
     });
     if (id) { this.setData({ clubId: id }); this.loadAll(); return; }
     // owner 入口(承接原 club/index 管理台):无 id → 解析我拥有的俱乐部
@@ -708,7 +733,7 @@ Page({
 
   // 首展由 onLoad 负责，避免双请求；从发布/邀请/主办视图返回后重拉阶段真源。
   onShow() {
-    this._navigating = false; this.refreshCoopPublisherAccess();
+    this._navigating = false;
     const reducedMotion = readReducedMotion();
     if (this.data.reducedMotion !== reducedMotion) this.setData({ reducedMotion });
     const myAvatar = app.getAvatar() || '';
@@ -788,7 +813,6 @@ Page({
     this._scanDisposed = true; this._scanGeneration = (this._scanGeneration || 0) + 1;
     if (this._scanWorkflow) { this._scanWorkflow.destroy(); this._scanWorkflow = null; loading.hide(); }
     this._sceneGuardDestroyed = true;
-    this._coopAccessEpoch = (this._coopAccessEpoch || 0) + 1;
     this._clubAiToken = (this._clubAiToken || 0) + 1;
     this._detailRequestSeq = (this._detailRequestSeq || 0) + 1;
     this._memberRequestSeq = (this._memberRequestSeq || 0) + 1;
@@ -1494,29 +1518,8 @@ Page({
     });
   },
 
-  // §17.2 商家看俱乐部主页 → 发起俱乐部合作(coop/invite 类型1,含选主题+条款)。
-  // 从本俱乐部主页发起,目标已明确 ⇒ 带上 clubId/name,coop/invite 收到 presetTarget 后
-  // 跳过类型切换 + 「选择俱乐部」列表,直接进条款+发送(第8批 UI 修改:去掉多余的选择步骤)。
-  refreshCoopPublisherAccess() {
-    const epoch = this._coopAccessEpoch = (this._coopAccessEpoch || 0) + 1;
-    this.setData({ canInviteCoop: false });
-    if (!this.data.club || this.data.club.isOwner) return;
-    const memberId = String(app.getUserID() || '');
-    readPublisherAccess(app, { topicId: this.data.topicId, operationScope: this._operationScope || '' }, allowed => {
-      if (epoch !== this._coopAccessEpoch) return;
-      this._coopPublisherMemberId = allowed ? memberId : '';
-      this.setData({ canInviteCoop: allowed });
-    });
-  },
-  goClubCoop() {
-    if (!this.data.canInviteCoop || this._coopPublisherMemberId !== String(app.getUserID() || '')) return;
-    this.setData({ coopInviteShow: true, coopInviteScope: this._operationScope || '' });
-  },
-  closeCoopInvite() { this.setData({ coopInviteShow: false }); },
-  onCoopInviteSent(e) {
-    this.closeCoopInvite();
-    returnToCoopOrigin(e.detail.topicId);
-  },
+  // 拍板 2026-10-22:合作邀约不放在俱乐部主页(原底部「发起合作」浮条 + 邀约弹层已撤),
+  // 商家发起合作走协作邀请 / 商家主页 / 项目内入口。
 
   // 点商家卡 → 统一主页的「关于」。名单行本来就带 memberId(发邀请那条也用它),
   // 不必再拿 merchantId 多绕一次解析。
@@ -1539,7 +1542,11 @@ Page({
       hideLoading: true, url: '/api/club/leaderboard', method: 'POST',
       data: jsonBody({ id: this.data.clubId, sortBy }), header: jsonHeader(),
       success(res) {
-        const list = (res.code == '200' && res.data) || [];
+        if (res.code != '200') {
+          that.setData({ leaderboard: [], leaderboardLoaded: true, leaderboardError: (res && res.msg) || '榜单没能加载出来' });
+          return;
+        }
+        const list = res.data || [];
         that.setData({ leaderboard: foldLeaderboard(list.map((it) => that.decorateRank(it, sortBy)), that.data.myMemberId), leaderboardLoaded: true, leaderboardError: '', leaderboardEmptyTitle: leaderboardEmptyTitle(sortBy) });
       },
       // E-09(2026-09-16):失败渲染成「还没有人通关」= 把不知道说成没有。留错误态+重试。
@@ -1959,10 +1966,10 @@ Page({
       const immediateCanUseManageTab = legacyCanGovern || (sameClub && that.data.canUseManageTab);
       const canKeepTab = that.data.tabInitialized && (immediateCanUseManageTab || that.data.activeTab !== 'manage');
       const requestedTab = that._requestedTab === 'manage' && legacyCanGovern ? 'manage' : '';
-      const initialTab = canKeepTab ? that.data.activeTab : (requestedTab || that.defaultTabForClub(club));
+      const initialTab = canKeepTab && that.data.activeTab ? that.data.activeTab : (requestedTab || that.rememberedTabForClub(club, immediateCanUseManageTab) || that.defaultTabForClub(club));
+      if (club) rememberClubTab(club.id, initialTab);
       if (requestedTab) that._requestedTab = '';
       that.setData({ club: club, canSeeMembers: false, canUseManageTab: immediateCanUseManageTab, detailLoaded: true, notFound: false, activeTab: initialTab, clubTabs: that.tabsForClub(club, immediateCanUseManageTab), tabInitialized: true });
-      that.refreshCoopPublisherAccess();
       cb && cb();
       return;
     }
@@ -1972,17 +1979,20 @@ Page({
         if (!isCurrent()) return;
         const club = enrichClub((res.code == '200' && res.data) || null);
         const canSee = !!(club && (club.isOwner || club.isJoined));
+        const canSeeRoster = canSeeClubRoster(club);
         const legacyCanGovern = that.canGovern(club);
         const sameClub = !!club && that.data.club && String(that.data.club.id) === String(club.id);
         const immediateCanUseManageTab = legacyCanGovern || (sameClub && that.data.canUseManageTab);
         const canKeepTab = !!club && that.data.tabInitialized && (immediateCanUseManageTab || that.data.activeTab !== 'manage');
         const requestedTab = that._requestedTab === 'manage' && legacyCanGovern ? 'manage' : '';
-        const initialTab = canKeepTab ? that.data.activeTab : (requestedTab || that.defaultTabForClub(club));
+        const initialTab = canKeepTab && that.data.activeTab ? that.data.activeTab : (requestedTab || that.rememberedTabForClub(club, immediateCanUseManageTab) || that.defaultTabForClub(club));
+        if (club) rememberClubTab(club.id, initialTab);
         if (requestedTab) that._requestedTab = '';
-        if (!canSee) that._memberRequestSeq = (that._memberRequestSeq || 0) + 1;
+        if (!canSeeRoster) that._memberRequestSeq = (that._memberRequestSeq || 0) + 1;
         that.setData({
           club: club,
           canSeeMembers: canSee,
+          canSeeRoster: canSeeRoster,
           canUseManageTab: immediateCanUseManageTab,
           detailLoaded: true,
           notFound: false,
@@ -1991,14 +2001,14 @@ Page({
           activeTab: initialTab,
           clubTabs: that.tabsForClub(club, immediateCanUseManageTab),
           tabInitialized: that.data.tabInitialized || !!club,
-          members: canSee ? that.data.members : [],
-          membersState: canSee ? that.data.membersState : 'idle',
-          memberStrip: canSee ? that.data.memberStrip : [],
-          membersExpanded: canSee ? that.data.membersExpanded : false,
+          members: canSeeRoster ? that.data.members : [],
+          membersState: canSeeRoster ? that.data.membersState : 'idle',
+          memberStrip: canSeeRoster ? that.data.memberStrip : [],
+          membersExpanded: canSeeRoster ? that.data.membersExpanded : false,
         });
         that.applyClubOwnerBadge();  // CU-C-108:club 到了,把早到的帖子徽标补上
+        if (canSeeRoster) that.loadMembers();
         if (canSee) {
-          that.loadMembers();
           that.loadClubAccess();
         } else {
           that.revokeClubAccess('idle');
@@ -2289,7 +2299,7 @@ Page({
   },
 
   expandMembers() {
-    if (!this.data.canSeeMembers) return;
+    if (!this.data.canSeeRoster) return;
     this.setData({ membersExpanded: true }, () => {
       wx.pageScrollTo({ selector: '#club-member-list', duration: 200 });
     });
@@ -2339,11 +2349,16 @@ Page({
     // 公开直进的团点了就是成员,没人会去读那句话。
     const club = this.data.club || {};
     if (Number(club.joinPolicy) === 1) {
+      // 拍板 2026-10-22:需审核的团留言必填、最多 60 字(后端同闸)。空着点提交不发请求,重新弹出。
       modal.show({
-        title: '申请加入', content: '给主理人说一句吧，比如你是谁、想跟哪种局。',
-        editable: true, placeholderText: '朋友推荐来的，想跟一次夜行（选填）',
+        title: '申请加入', content: '给主理人说一句吧，比如你是谁、想跟哪种局（必填，60 字内）。',
+        editable: true, placeholderText: '朋友推荐来的，想跟一次夜行',
         confirmText: '提交申请',
-        success(r) { if (r && r.confirm) that.submitJoin(String(r.content || '').slice(0, 60)); },
+        validate: joinMessageError,
+        success(r) {
+          if (!r || !r.confirm || joinMessageError(r.content)) return;
+          that.submitJoin(String(r.content).trim());
+        },
       });
       return;
     }
@@ -3015,6 +3030,12 @@ Page({
 
   goBack() { wx.navigateBack({ delta: 1, fail() { wx.switchTab({ url: '/pages/talent/list/index' }); } }); },
 
+  rememberedTabForClub(club, canUseManageTab) {
+    const tab = club && lastTabByClub[String(club.id)];
+    if (!tab) return '';
+    return this.tabsForClub(club, canUseManageTab).some(function (t) { return t.key === tab; }) ? tab : '';
+  },
+
   defaultTabForClub(club) {
     // 双身份时以当前俱乐部内的 owner/member 关系优先；只有纯访客才默认概览。
     return club && (club.isOwner || club.isJoined) ? 'posts' : 'overview';
@@ -3040,6 +3061,7 @@ Page({
     if (!tab) return;
     if (tab === 'manage' && !(this.canGovern() || this.data.canUseManageTab)) return;
     if (this.data.activeTab === tab) return;
+    rememberClubTab(this.data.clubId, tab);
     this.setData({ activeTab: tab, openCommentPost: null });
   },
 

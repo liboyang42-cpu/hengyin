@@ -16,6 +16,7 @@ function loadDetail() {
   const navigations = []
   const requests = []
   const scrolls = []
+  const modals = []
   const app = {
     globalData: {},
     sendRequest(request) { requests.push(request) },
@@ -67,7 +68,7 @@ function loadDetail() {
       navigateTo(options) { navigations.push(options.url); if (options.complete) options.complete() },
       pageScrollTo(options) { scrolls.push(options) },
       showToast() {},
-      showModal() {},
+      showModal(options) { modals.push(options) },
       showShareMenu() {},
       setStorageSync() {},
     },
@@ -76,7 +77,7 @@ function loadDetail() {
     data: JSON.parse(JSON.stringify(definition.data)),
     setData(patch, callback) { Object.assign(this.data, patch); if (callback) callback.call(this) },
   })
-  return { page, navigations, requests, scrolls }
+  return { page, navigations, requests, scrolls, modals }
 }
 
 test('进入成员治理时收起设置，转让后返回不残留空白抽屉', () => {
@@ -617,4 +618,94 @@ test('公开帖子的游客空态只限制发布，不得误写为不可查看',
   const view = read(DETAIL_WXML)
   assert.match(view, /加入俱乐部后可发布/)
   assert.doesNotMatch(view, /加入俱乐部后可查看与发布/)
+})
+
+// —— L06 拍板 2026-10-22 ——
+test('L06(a):详情回来前不渲染任何 tab 内容；同一俱乐部再次进入沿用上次停留的 tab，不先闪帖子', () => {
+  const { page, requests } = loadDetail()
+  const initialData = JSON.parse(JSON.stringify(page.data))
+  assert.equal(page.data.activeTab, '', '初值为空:不能先渲染「帖子」')
+  const view = read(DETAIL_WXML)
+  assert.match(view, /wx:if="\{\{activeTab === 'posts'\}\}"/, '帖子 tab 只在明确选中时渲染')
+  Object.assign(page.data, { clubId: 31 })
+  page.loadDetail()
+  requests.find(r => r.url === '/api/club/detail').success({ code: '200', data: { id: 31, isOwner: false, isJoined: false, joinPolicy: 0 } })
+  assert.equal(page.data.activeTab, 'overview', '访客默认概览')
+  page.switchTab({ detail: { key: 'events' } })
+
+  // 小程序里页面模块只执行一次,再次 navigateTo 是同一份定义的新实例 —— 这里同样复用同一个沙箱。
+  const seen = []
+  const again = Object.assign({}, page, {
+    data: Object.assign(JSON.parse(JSON.stringify(initialData)), { clubId: 31 }),
+    setData(patch, cb) { if ('activeTab' in patch) seen.push(patch.activeTab); Object.assign(this.data, patch); if (cb) cb.call(this) },
+  })
+  requests.length = 0
+  again.loadDetail()
+  requests.find(r => r.url === '/api/club/detail').success({ code: '200', data: { id: 31, isOwner: false, isJoined: false, joinPolicy: 0 } })
+  assert.ok(seen.length > 0)
+  assert.deepEqual(seen.filter(tab => tab !== 'events'), [], '再次进入同一俱乐部直接落在上次的 tab,中途不出现别的 tab')
+})
+
+test('L06(c):公开加入团的访客能看成员名单与贡献榜，需审核团锁到通过审核', () => {
+  const pub = loadDetail()
+  Object.assign(pub.page.data, { clubId: 32 })
+  pub.page.loadDetail()
+  pub.requests.find(r => r.url === '/api/club/detail').success({ code: '200', data: { id: 32, isOwner: false, isJoined: false, joinPolicy: 0 } })
+  assert.equal(pub.page.data.canSeeRoster, true)
+  assert.equal(pub.page.data.canSeeMembers, false, '发帖/评论/举报仍要成员身份')
+  assert.ok(pub.requests.some(r => r.url === '/api/club/members'), '公开团访客要拉成员名单')
+
+  const gated = loadDetail()
+  Object.assign(gated.page.data, { clubId: 33 })
+  gated.page.loadDetail()
+  gated.requests.find(r => r.url === '/api/club/detail').success({ code: '200', data: { id: 33, isOwner: false, isJoined: false, joinPolicy: 1, myJoinStatus: 0 } })
+  assert.equal(gated.page.data.canSeeRoster, false)
+  assert.equal(gated.requests.some(r => r.url === '/api/club/members'), false)
+
+  const view = read(DETAIL_WXML)
+  assert.match(view, /通过审核后可看成员名单/)
+  assert.match(view, /通过审核后可看贡献榜/)
+  assert.match(view, /<block wx:if="\{\{canSeeRoster\}\}">\s*<view class="ov-lb"/)
+  assert.match(view, /class="member-report" wx:if="\{\{canSeeMembers && /, '访客看名单但不能逐人举报')
+})
+
+test('L06(c):需审核团申请留言必填、60 字内；公开团一键加入', () => {
+  const { page, requests, modals } = loadDetail()
+  Object.assign(page.data, { clubId: 34, club: { id: 34, joinPolicy: 1 } })
+  page.onJoin()
+  assert.equal(modals.length, 1)
+  assert.equal(modals[0].editable, true)
+  assert.doesNotMatch(modals[0].placeholderText, /选填/)
+  assert.equal(typeof modals[0].validate, 'function')
+  assert.equal(modals[0].validate('   '), '请先写一句申请留言')
+  assert.equal(modals[0].validate('长'.repeat(61)), '申请留言最多 60 字')
+  assert.equal(modals[0].validate('长'.repeat(60)), '')
+  modals[0].success({ confirm: true, content: '  朋友推荐来的  ' })
+  const join = requests.find(r => r.url === '/api/club/join')
+  assert.equal(JSON.parse(join.data).joinMessage, '朋友推荐来的')
+
+  const open = loadDetail()
+  Object.assign(open.page.data, { clubId: 35, club: { id: 35, joinPolicy: 0 } })
+  open.page.onJoin()
+  assert.equal(open.modals.length, 0, '公开团不问留言')
+  assert.ok(open.requests.some(r => r.url === '/api/club/join'))
+
+  const view = read(DETAIL_WXML)
+  assert.match(view, /aria-disabled="true">等待主理人审核<\/view>/)
+})
+
+test('L06(b/d/e):头部两行元信息；商家可加入、活动卡写「商家不能报名」；俱乐部页无邀约浮条', () => {
+  const { page, requests } = loadDetail()
+  Object.assign(page.data, { clubId: 36 })
+  page.loadDetail()
+  requests.find(r => r.url === '/api/club/detail').success({ code: '200', data: { id: 36, clubType: '旅行组织', memberCount: 1, joinPolicy: 0 } })
+  assert.equal(page.data.club.metaLine, '旅行组织 · 1 名成员')
+  assert.equal(page.data.club.joinPolicyText + '加入', '公开加入')
+
+  const view = read(DETAIL_WXML)
+  assert.match(view, /<view class="profile-cta" wx:if="\{\{!club\.isJoined && !club\.isOwner\}\}">/, '商家不再被挡在加入按钮外')
+  assert.match(view, /wx:if="\{\{merchantNoSignup\}\}" class="ev-no-signup">商家不能报名</)
+  assert.match(view, /upcomingTopics[^\n]*\n[^\n]*merchantNoSignup: isMerchantViewer/)
+  assert.doesNotMatch(view, /club-coop-floating|cy-coop-invite-sheet|goClubCoop/)
+  assert.doesNotMatch(read('pages/club/detail/index.json'), /coop-invite-sheet/)
 })

@@ -11,7 +11,8 @@ test('俱乐部详情读取真实入会策略，并仅向主理人或获授权�
   const js = read('pages/club/detail/index.js')
   const wxml = read('pages/club/detail/index.wxml')
 
-  assert.match(js, /joinPolicyText\s*=\s*Number\(club\.joinPolicy\)\s*===\s*1\s*\?\s*'需审批'\s*:\s*'公开'/)
+  // 拍板 2026-10-22:入会方式文案为「公开加入 / 需审核加入」(wxml 拼「加入」)。
+  assert.match(js, /joinPolicyText\s*=\s*Number\(club\.joinPolicy\)\s*===\s*1\s*\?\s*'需审核'\s*:\s*'公开'/)
   assert.match(wxml, /\{\{club\.joinPolicyText\}\}/)
   // 2026-08-26 管理 tab 收敛:入会申请 / 成员管理 / 报名名册 / 项目工具 / 解散
   // 从管理 tab 整体搬进右上角齿轮的「俱乐部设置」弹窗；细粒度审批角色也按 access/me 开门。
@@ -48,8 +49,9 @@ test('审批制加入停在待审态，不误导进入群聊', () => {
   assert.match(js, /等待审核/)
   assert.doesNotMatch(js, /等待主理人审核/)
   assert.match(wxml, /club\.myJoinStatus\s*===\s*0/)
-  assert.match(wxml, /等待审核/)
-  assert.doesNotMatch(wxml, /等待主理人审核/)
+  // 拍板 2026-10-22(业主覆盖 CU-C-133 的头部按钮文案):待审按钮写「等待主理人审核」且禁用;
+  // 提交回执(js)仍只说「等待审核」,不钉死谁在审。
+  assert.match(wxml, /aria-disabled="true">等待主理人审核</)
 })
 
 test('旧 role 数字不能绕过后端，但 detail 权威管理员与新权限都保持可治理且 fail-closed', () => {

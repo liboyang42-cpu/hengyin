@@ -8,6 +8,19 @@ function cards(rows, imageField) {
     cover: t[imageField] ? app.getImgUrl(String(t[imageField]).split(/[;,]/)[0]) : '',
   }));
 }
+function ymd(date) {
+  const pad = n => String(n).padStart(2, '0');
+  return date.getFullYear() + '-' + pad(date.getMonth() + 1) + '-' + pad(date.getDate());
+}
+// 拍板 2026-10-22:邀约只能挑还在卖的主题 —— 已结束(endDate 早于今天)或已下架/未过审的不出现在列表里。
+// 字段缺省(旧回包没带)按可用处理,不凭空吞掉主题。
+function isInvitableTopic(t, today) {
+  if (!t) return false;
+  if (t.status != null && Number(t.status) !== 1) return false;
+  if (t.userStatus != null && Number(t.userStatus) !== 1) return false;
+  const end = t.endDate ? String(t.endDate).slice(0, 10) : '';
+  return !end || end >= today;
+}
 Component({
   options: { styleIsolation: 'apply-shared' },
   properties: {
@@ -46,10 +59,14 @@ Component({
           if (!this.current(epoch)) return;
           if (res && res.code == 200 && res.data && Array.isArray(res.data.rows)) {
             const seen = new Set(this.data.topics.map(t => String(t.id)));
-            const added = cards(res.data.rows, 'imgUrl').filter(t => !seen.has(String(t.id)));
+            const today = ymd(new Date());
+            const live = res.data.rows.filter(t => isInvitableTopic(t, today));
+            const added = cards(live, 'imgUrl').filter(t => !seen.has(String(t.id)));
             this._page = page;
             this._hasMore = page * 20 < Number(res.data.total || 0);
             this.setData({ topics: this.data.topics.concat(added), loading: false });
+            // 整页都被过滤掉时接着翻下一页,别让「还有更多」藏在一页过期主题后面
+            if (!added.length && this._hasMore) this.loadTopics();
           } else this.setData({ loading: false, error: (res && res.msg) || '主题没加载出来，请重试' });
         },
         fail: () => { if (this.current(epoch)) this.setData({ loading: false, error: '主题没加载出来，请重试' }); },

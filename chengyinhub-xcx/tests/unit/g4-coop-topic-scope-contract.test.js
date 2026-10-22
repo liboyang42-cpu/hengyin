@@ -97,22 +97,11 @@ test('RUN-010:先浏览俱乐部资料再邀约也保留商家范围，普通入
       const club = makePage(loadPage('pages/club/detail/index.js'));
       club.loadAll = () => {};
       club.onLoad(input);
-      assert.equal(club.data.isMerchantViewer, expected === 'MERCHANT', '商家上下文应保留商家观看视角，邀约另核对发布者事实');
-      club.data.club = { id: 7, name: '俱乐部', isOwner: false };
-      club.goClubCoop();
-      assert.notEqual(club.data.coopInviteShow, true, '角色或 MERCHANT 上下文不能代替发布者事实');
-      club.refreshCoopPublisherAccess();
-      const publisherReq = requests.at(-1);
-      assert.equal(publisherReq.url, '/api/topic/list');
-      assert.deepEqual(publisherReq.data, { is_my: 1, scope: expected || '', pageNum: 1, pageSize: 1 });
-      publisherReq.success({ code: 403, data: { rows: [{ id: 301 }] } });
-      club.goClubCoop();
-      assert.notEqual(club.data.coopInviteShow, true, '失败回包不得开放邀约');
-      club.refreshCoopPublisherAccess();
-      requests.at(-1).success({ code: 200, data: { rows: [{ id: 301 }] } });
-      club.goClubCoop();
-      assert.equal(club.data.coopInviteShow, true);
-      assert.equal(club.data.coopInviteScope, expected || '');
+      assert.equal(club.data.isMerchantViewer, expected === 'MERCHANT', '商家上下文应保留商家观看视角');
+      // 拍板 2026-10-22:俱乐部主页不再承载邀约,也不为邀约去读发布者授权。
+      assert.equal(typeof club.refreshCoopPublisherAccess, 'undefined');
+      assert.equal(typeof club.goClubCoop, 'undefined');
+      assert.equal(requests.some((r) => r.url === '/api/topic/list'), false);
     }
   } finally { global.getApp = previousApp; }
 });
