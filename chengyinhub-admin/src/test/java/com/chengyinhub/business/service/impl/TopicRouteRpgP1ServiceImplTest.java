@@ -186,6 +186,34 @@ class TopicRouteRpgP1ServiceImplTest {
         assertEquals("RPG_BARGAIN_AFTER_ROLL", refused.getDetailMessage());
     }
 
+    /** RV4 S533-1:前置条件没满足时接受交易 —— 拒绝,且代价一分不扣、不 CAS、不登记动作。 */
+    @Test
+    void bargainWithUnmetRequiresIsRefusedBeforePayingCost() throws Exception {
+        topic.setJourneyRulesJson(rules("{\"bargain\":{\"enabled\":true}}"));
+        String withCheck = check("medium", "{\"label\":\"惊动了巡夜人\",\"bonus\":2,"
+                + "\"effects\":[{\"op\":\"TICK_CLOCK\",\"var\":\"counter.alarm\",\"value\":1,\"max\":4},"
+                + "{\"op\":\"ADD_TAG\",\"value\":\"tag.noticed\"}]}");
+        template("{\"requires\":[{\"var\":\"clue.missing\",\"op\":\"GTE\",\"value\":1}],"
+                + withCheck.substring(1));
+        String before = session.getStateJson();
+        IllegalStateException refused = assertThrows(IllegalStateException.class,
+                () -> runtime.bargain(MEMBER, TOPIC, 0L, NODE, CHECK_ID));
+        assertEquals("本站前置条件未满足", refused.getMessage());
+        assertEquals(before, session.getStateJson(), "代价没有写进本局");
+        assertTrue(actions.isEmpty(), "不登记交易动作");
+        org.mockito.Mockito.verify(routeMapper, org.mockito.Mockito.never()).updateStateCas(any(TopicRouteSession.class));
+        org.mockito.Mockito.verify(routeMapper, org.mockito.Mockito.never()).insertAction(any(TopicRouteAction.class));
+    }
+
+    /** RV4 S533-3:节点投影是否下发报价,读的是本局规则(与 bargain() 同源)。 */
+    @Test
+    void bargainOfferedFollowsSessionRules() {
+        assertFalse(runtime.bargainOffered(MEMBER, TOPIC, 0L), "没开 rpg.bargain 不下发报价");
+        topic.setJourneyRulesJson(rules("{\"bargain\":{\"enabled\":true}}"));
+        assertTrue(runtime.bargainOffered(MEMBER, TOPIC, 0L));
+        assertFalse(runtime.bargainOffered(MEMBER + 1, TOPIC, 0L), "不是本人的局不算");
+    }
+
     @Test
     void bargainSwitchOnButCheckWithoutOfferIsRefused() {
         topic.setJourneyRulesJson(rules("{\"bargain\":{\"enabled\":true}}"));

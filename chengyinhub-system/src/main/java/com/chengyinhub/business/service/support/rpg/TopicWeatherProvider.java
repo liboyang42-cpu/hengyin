@@ -9,6 +9,11 @@ package com.chengyinhub.business.service.support.rpg;
  * <p>实现约定:返回 {@link TopicEnvironmentService#WEATHER_VALUES} 之一,查不到返回 null;
  * 可以抛异常 —— 调用方一律 fail-open(按 unknown 处理,玩法照常)。实现不得引入付费源密钥到代码里,
  * 需要外部源时另写实现类、密钥走配置中心,并替换默认 {@link FixedTopicWeatherProvider}。
+ *
+ * <p><strong>超时约定(RV4 S533-2)</strong>:本方法会在检定 / 推进的写事务期间被调用。
+ * {@link TopicEnvironmentService} 只等 {@code chengyin.rpg.weather.timeout-ms}(默认 800ms),
+ * 在有界线程池里执行;超时后结果被丢弃、任务被中断(cancel(true)),本次按 unknown 处理并缓存。
+ * 联网实现必须自己再设更短的连接 / 读超时并响应中断,不得无限阻塞;调用方可能直接拒绝排不上队的请求。
  */
 public interface TopicWeatherProvider {
 

@@ -108,6 +108,12 @@ public interface ITopicRouteRuntimeService {
         throw new IllegalStateException("本主题未开启动量");
     }
 
+    /**
+     * RV4 S533-3:本人本局适用规则(冻结优先)是否开启魔鬼交易;没有进行中的局 / 读不到规则一律 false。
+     * 只读,供节点投影决定是否下发 check.bargain 报价。
+     */
+    default boolean bargainOffered(Long memberId, Long topicId, Long activityId) { return false; }
+
     /** F6 T13 状态栏只读数据:hp / luck / 属性 + rpg(动量 / 进度钟 / 特质 / 环境)。 */
     default java.util.Map<String, Object> rpgStatus(Long memberId, Long topicId, Long activityId) {
         throw new IllegalStateException("状态栏不可用");

@@ -442,6 +442,9 @@ public class ApiPlayProgressController extends BaseController
         com.chengyinhub.business.domain.CmsTopic routeTopic = cmsTopicService.selectCmsTopicById(tId);
         boolean hasJourneyState = routeTopic != null
                 && com.chengyinhub.business.domain.JourneyRules.parse(routeTopic.getJourneyRulesJson()).hasRuntimeState();
+        // RV4 S533-3:check.bargain 报价只在本局规则开了魔鬼交易时下发;老主题(无旅程状态)不多查库。
+        boolean bargainOffered = hasJourneyState && topicRouteRuntimeService != null
+                && topicRouteRuntimeService.bargainOffered(memberId, tId, progActId);
         if (registered && topicRouteRuntimeService != null
                 && (playMode == PlayMode.LINEAR_ORIENTEERING || hasJourneyState)) {
             try {
@@ -708,7 +711,8 @@ public class ApiPlayProgressController extends BaseController
                     m.put("couponId", tpl.getCouponId());
                     com.fasterxml.jackson.databind.JsonNode themeNodeConfig=topicRouteRuntimeService==null?null:topicRouteRuntimeService.nodeRuntimeConfig(memberId,n.getTopicId(),n.getId(),progActId);
                     m.put("advancedConfigJson", com.chengyinhub.business.util.AdvancedGamePublicProjection
-                            .safeConfigJson(themeNodeConfig==null?tpl.getAdvancedConfigJson():themeNodeConfig.toString()));
+                            .safeConfigJson(themeNodeConfig==null?tpl.getAdvancedConfigJson():themeNodeConfig.toString(),
+                                    bargainOffered));
                     if (validationMethod != null && (validationMethod == ValidationMethod.APP_SENSOR
                             || SensorChallengePolicy.isPlayablePhotoFilter(validationMethod,
                             tpl.getSensorType(), tpl.getSensorConfig()))) {

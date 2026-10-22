@@ -51,7 +51,18 @@ public final class AdvancedGamePublicProjection {
         return safe;
     }
 
+    /**
+     * 无主题规则上下文的投影(模板库 / 商家视角 / 报名等):check.bargain 一律不下发(RV4 S533-3,默认关)。
+     */
     public static String safeConfigJson(String source) {
+        return safeConfigJson(source, false);
+    }
+
+    /**
+     * @param bargainEnabled 主题 journeyRules.rpg.bargain 是否开启(调用方按 {@code JourneyRpg.bargainEnabled} 判);
+     *                       false 时即使节点配了 check.bargain 也不下发报价 —— 点了只会被服务端拒绝。
+     */
+    public static String safeConfigJson(String source, boolean bargainEnabled) {
         if (StringUtils.isBlank(source)) return null;
         try {
             JsonNode config = MAPPER.readTree(source);
@@ -112,7 +123,7 @@ public final class AdvancedGamePublicProjection {
             // 非条件字段。条件键名(clue. / relation. / tag. / counter. / sys.)是剧透;
             // 客户端不做条件判定,locked / missingKeys / held / advantage 由 Encounter
             // 接口按本局状态给出。**仍然逐字段 copy**保证「没写进 copyXxx 的字段一律不下发」。
-            copyCheck(safe, config.path("check"));
+            copyCheck(safe, config.path("check"), bargainEnabled);
             // R22-SEC C2:模板上的老叙事段(enter / outcome / deliver / unlock / revisit / brief / route)
             // 不再投影 —— R18 后叙事真源是章节故事流,投影它们等于继续推销一份运行期没人读的死配置,
             // 还会误导「模板详情 = 叙事真源」。故事流叙事由 Encounter 按本局状态下发。
@@ -498,7 +509,7 @@ public final class AdvancedGamePublicProjection {
      * <p>★ successText / failText / successEffects / failEffects 同样不下发 ——
      * 那是判定之后才该知道的结果,结算后由服务端回执给出。
      */
-    private static void copyCheck(ObjectNode target, JsonNode source) {
+    private static void copyCheck(ObjectNode target, JsonNode source, boolean bargainEnabled) {
         ObjectNode value = target.putObject("check");
         boolean on = source.path("enabled").asBoolean(false);
         value.put("enabled", on);
@@ -513,8 +524,9 @@ public final class AdvancedGamePublicProjection {
             putIfText(safeMod, "label", mod);
         }
         // F6 T09:魔鬼交易只下发「代价一句话 + 加值」,代价效果本身不下发;没配就不出现这个字段。
+        // RV4 S533-3:主题没开 rpg.bargain 时也不出现 —— 不展示一个点了必被拒的报价。
         JsonNode bargain = source.path("bargain");
-        if (bargain.isObject()) {
+        if (bargainEnabled && bargain.isObject()) {
             ObjectNode offer = value.putObject("bargain");
             putIfText(offer, "label", bargain);
             offer.put("bonus", bargain.path("bonus").asInt(0));

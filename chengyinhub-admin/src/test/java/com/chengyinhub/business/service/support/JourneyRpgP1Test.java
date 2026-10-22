@@ -192,7 +192,7 @@ class JourneyRpgP1Test {
                 + "{\"op\":\"TICK_CLOCK\",\"var\":\"counter.alarm\",\"value\":1,\"max\":4},"
                 + "{\"op\":\"ADD_CONDITION\",\"value\":\"noticed\"}]}");
         String normalized = validator.validateAndNormalize(ok);
-        String safe = AdvancedGamePublicProjection.safeConfigJson(normalized);
+        String safe = AdvancedGamePublicProjection.safeConfigJson(normalized, true);
         assertTrue(safe.contains("\"bargain\":{\"label\":\"惊动了巡夜人\",\"bonus\":2}"), safe);
         assertFalse(safe.contains("TICK_CLOCK"), "代价效果不下发");
         assertTrue(StateKeyRefs.collect(normalized).contains("counter.alarm"), "代价写的键要进发布闸");
@@ -210,6 +210,43 @@ class JourneyRpgP1Test {
         validator.validateAndNormalize("{\"schemaVersion\":1,\"requires\":[{\"var\":\"sys.momentum\",\"op\":\"GTE\",\"value\":2}]}");
         assertThrows(IllegalArgumentException.class, () -> validator.validateAndNormalize(
                 "{\"schemaVersion\":1,\"effects\":[{\"op\":\"INC\",\"var\":\"sys.momentum\",\"value\":1}]}"));
+    }
+
+    /** RV4 S533-3:主题没开 rpg.bargain(或无规则上下文)时,节点配了 check.bargain 也不下发报价。 */
+    @Test
+    void bargainOfferIsProjectedOnlyWhenThemeBargainEnabled() throws Exception {
+        String normalized = new AdvancedGameConfigValidator().validateAndNormalize(block(
+                "{\"label\":\"惊动了巡夜人\",\"bonus\":2,\"effects\":[{\"op\":\"ADD_TAG\",\"value\":\"tag.a\"}]}"));
+        JsonNode off = JSON.readTree(AdvancedGamePublicProjection.safeConfigJson(normalized, false));
+        assertFalse(off.path("check").has("bargain"), off.toString());
+        assertEquals("c1", off.path("check").path("checkId").asText(), "其余 check 公开面不变");
+        JsonNode noContext = JSON.readTree(AdvancedGamePublicProjection.safeConfigJson(normalized));
+        assertFalse(noContext.path("check").has("bargain"), "无主题规则上下文(模板库 / 商家视角)一律不下发");
+        assertEquals(off, noContext);
+        JsonNode on = JSON.readTree(AdvancedGamePublicProjection.safeConfigJson(normalized, true));
+        assertEquals("惊动了巡夜人", on.path("check").path("bargain").path("label").asText());
+        assertEquals(2, on.path("check").path("bargain").path("bonus").asInt());
+        assertFalse(on.path("check").path("bargain").has("effects"));
+    }
+
+    /** RV4 S533-2:天气源卡住时,在有界时间内回落 unknown,不拖住写事务。 */
+    @Test
+    void slowWeatherProviderTimesOutToUnknownWithinBound() {
+        TopicEnvironmentService service = new TopicEnvironmentService(city -> {
+            try { Thread.sleep(3000L); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
+            return "rain";
+        }, Clock.fixed(Instant.parse("2026-10-22T06:00:00Z"), ZoneOffset.UTC), 100L);
+        JourneyRules rules = JourneyRules.parse("{\"schemaVersion\":1,\"checkEnabled\":true,\"rpg\":{\"environment\":{\"enabled\":true}}}");
+        com.chengyinhub.business.domain.CmsTopic topic = new com.chengyinhub.business.domain.CmsTopic();
+        topic.setAddressName("苏州");
+        TopicRouteEngine.State state = new TopicRouteEngine.State();
+        long started = System.nanoTime();
+        service.refresh(topic, rules, state);
+        long elapsedMillis = (System.nanoTime() - started) / 1_000_000L;
+        assertEquals("unknown", state.getEnvironment().get("weather"));
+        assertEquals("afternoon", state.getEnvironment().get("daypart"), "其余环境键照常");
+        assertTrue(elapsedMillis < 2000L, "有界等待,实际 " + elapsedMillis + "ms");
+        assertEquals(800L, TopicEnvironmentService.DEFAULT_WEATHER_TIMEOUT_MILLIS);
     }
 
     private static String block(String bargain) {

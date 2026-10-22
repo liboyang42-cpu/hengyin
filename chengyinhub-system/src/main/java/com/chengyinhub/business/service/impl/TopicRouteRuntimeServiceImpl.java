@@ -3342,6 +3342,12 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
             throw new IllegalStateException("请先扫码确认到店");
         }
         if (isExhausted(context.state)) throw new IllegalStateException("力竭了，先找地方休整");
+        // RV4 S533-1:与 roll() 同一前置条件校验,且必须在付代价之前 —— 前置不满足时什么都不扣、不写。
+        JsonNode requires = context.blockConfig == null ? null : context.blockConfig.get("requires");
+        if (requires != null && requires.isArray() && requires.size() > 0
+                && !engine.conditionsPass(requires, context.state)) {
+            throw new IllegalStateException("本站前置条件未满足");
+        }
         applyJourneyEffects(offer.path("effects"), context.rules, context.state);
         PlayCheckReceipt receipt = new PlayCheckReceipt();
         receipt.setCheckId(context.check.path("checkId").asText(""));
@@ -3408,6 +3414,20 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         view.put("value", Integer.valueOf(value));
         view.put("max", Integer.valueOf(JourneyRpg.momentum(rules).path("max").asInt(0)));
         return view;
+    }
+
+    /** RV4 S533-3:与 bargain() 同一规则来源(本局冻结优先,老局回退实时主题);无局 / 规则不可用 → false。 */
+    @Override
+    @Transactional(readOnly = true)
+    public boolean bargainOffered(Long memberId, Long topicId, Long activityId) {
+        if (memberId == null || memberId <= 0L || topicId == null || topicId <= 0L) return false;
+        TopicRouteSession session = currentScopedSession(memberId, topicId, activityId);
+        if (session == null || !memberId.equals(session.getMemberId())) return false;
+        try {
+            return JourneyRpg.bargainEnabled(journeyRules(session, topicMapper.selectCmsTopicById(topicId)));
+        } catch (RuntimeException unusableRules) {
+            return false;
+        }
     }
 
     /** F6 T13 状态栏:本人本局的 hp / luck + P1 视图(动量 / 进度钟 / 特质 / 环境)。只读,不写库。 */
