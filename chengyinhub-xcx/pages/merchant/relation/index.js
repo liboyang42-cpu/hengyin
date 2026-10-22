@@ -324,7 +324,7 @@ Page({
     }
     if (accessFailure === 'denied') {
       this._hasLoaded = false;
-      this.setData({ clubs: [], merchantError: '', clubError: '' });
+      this.setData({ clubs: [], clubError: '' });
       // 没有商家身份的账号本没有合作入口;深链误入就静默回会员中心,不摆整屏闸。
       wx.switchTab({ url: '/pages/member/index/index' });
       return;

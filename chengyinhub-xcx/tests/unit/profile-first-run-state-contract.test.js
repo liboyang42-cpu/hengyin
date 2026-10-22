@@ -224,7 +224,6 @@ for (const outcome of ['rows', 'empty', 'business-failure', 'network', 'malforme
       : { code: 200, data: { rows: outcome === 'rows' ? [{ id: 88, registrationStatus: 2, paymentStatus: 2 }] : outcome === 'empty' ? [] : {} } })
     await old
     assert.deepEqual(component.data.orderPreviewList.map(row => row.id), [99])
-    assert.equal(component.data.orderLoaded, true)
     assert.equal(component.data.orderErr, false)
     assert.equal(component.data.orderAuthError, false)
   } finally { app.getUserID = originalGetUserID }
@@ -272,13 +271,10 @@ test('订单预览换号发起新读取时清除旧订单，当前失败保持�
     memberId = '43'
     const current = component.loadOrderPreview()
     const startList = structuredClone(component.data.orderPreviewList)
-    const startLoaded = component.data.orderLoaded
     requests.at(-1).fail({ errMsg: 'current timeout' })
     await current
     assert.deepEqual(startList, [])
-    assert.equal(startLoaded, false)
     assert.equal(component.data.orderErr, true)
-    assert.equal(component.data.orderLoaded, false)
   } finally { app.getUserID = originalGetUserID }
 })
 
@@ -755,17 +751,14 @@ test('负控：把 ready 分支的真实 0 改成占位符时，契约必须精�
 
 test('订单预览失败保持未加载，重试成功才允许显示真实空态，再次失败保留失败标记', async () => {
   const component = loadProfile()
-  assert.equal(component.data.orderLoaded, false)
   let pending = component.loadOrderPreview()
   respond('/api/registration/list', 'fail')
   await pending
-  assert.equal(component.data.orderLoaded, false)
   assert.equal(component.data.orderErr, true)
   requests = []
   pending = component.loadOrderPreview()
   respond('/api/registration/list', { code: 200, data: { rows: [] } })
   await pending
-  assert.equal(component.data.orderLoaded, true)
   assert.equal(component.data.orderErr, false)
   assert.deepEqual(component.data.orderPreviewList, [])
   requests = []

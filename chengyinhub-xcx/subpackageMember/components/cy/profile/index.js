@@ -454,7 +454,6 @@ Component({
     // 订单未加载时不展示内容；只有成功返回空列表才显示暂无订单。
     orderErr: false,
     orderAuthError: false,
-    orderLoaded: false,
     projectErr: false,
     projectAuthError: false,
     feedErr: false,
@@ -574,7 +573,7 @@ Component({
         pointsStat: { weekPoints: 0, rankPercentage: 0 }, rankDisplay: { no: 0, delta: '' },
         identityCard: { shops: 0, themes: 0, routes: 0, km: '0', medals: 0, cities: 1 },
         exploreStat: { shops: 0, weekExp: 0 }, themeProgress: [], medals: [], medalCount: 0,
-        orderPreviewList: [], projectPreviewList: [], projectPendingCount: 0, orderLoaded: false,
+        orderPreviewList: [], projectPreviewList: [], projectPendingCount: 0,
         orderErr: false, orderAuthError: false, projectErr: false, projectAuthError: false, medalErr: false, medalAuthError: false,
         list: [], page_no: 1, hasMore: false, nodata: false, feedErr: false, feedAuthError: false,
         pointsSheet: { show: false, loading: false, loaded: false, failed: false, tasks: [] },
@@ -1373,7 +1372,7 @@ Component({
     var requestId = that._orderPreviewRequestId = (that._orderPreviewRequestId || 0) + 1;
     var profileEpoch = that._followEpoch || 0;
     if (that._orderPreviewMemberId !== undefined && that._orderPreviewMemberId !== memberId) {
-      that.setData({ orderPreviewList: [], orderLoaded: false, orderErr: false, orderAuthError: false });
+      that.setData({ orderPreviewList: [], orderErr: false, orderAuthError: false });
     }
     that._orderPreviewMemberId = memberId;
     return req('/api/registration/list', {
@@ -1399,7 +1398,7 @@ Component({
         return;
       }
       var list = buildOrderPreviewList(rows, function (u) { return u && typeof app.getImgUrl === 'function' ? app.getImgUrl(u) : u; }, Date.now(), 8);
-      that.setData({ orderLoaded: true, orderErr: false, orderAuthError: false, orderPreviewList: list });
+      that.setData({ orderErr: false, orderAuthError: false, orderPreviewList: list });
     });
   },
 
