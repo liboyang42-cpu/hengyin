@@ -6914,8 +6914,7 @@ Page({
         }
         if (!url) {
           fail((r && r.failures && r.failures[0] && r.failures[0].msg) || '照片没传上去');
-          if (option.onUploadFailed) option.onUploadFailed((r && r.failures && r.failures[0]) || {});
-          return;
+          return void (option.onUploadFailed && option.onUploadFailed((r && r.failures && r.failures[0]) || {}));
         }
         // advanced-game 正在 acting/unknown 时会静默 no-op:这里不装成功,给一句可恢复的实话。
         if (currentGame.data.acting || currentGame.data.unknown) {
