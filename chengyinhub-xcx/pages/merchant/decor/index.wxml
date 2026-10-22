@@ -491,7 +491,7 @@
         </view>
       </view>
       <cy-inline-error kind="error" wx:if="{{saveError}}" title="暂未完成" sub="{{saveError}}" />
-      <cy-btn loading="{{saving}}" bindtap="saveChipSheet" disabled="{{!chipSheet.options.length}}">{{saveError ? '重试保存' : '保存'}}</cy-btn>
+      <cy-btn loading="{{saving}}" bindtap="saveChipSheet" disabled="{{!chipSheet.options.length || refreshing}}">{{saveError ? '重试保存' : '保存'}}</cy-btn>
     </view>
   </cy-sheet>
   <!-- 经营时间:组件挂在 scroll-view 外的页面根,底部 sheet 不被滚动容器裁切 -->
