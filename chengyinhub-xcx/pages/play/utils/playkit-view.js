@@ -15,6 +15,7 @@
 const { stepsA11yLabel } = require('./playkit-steps.js');
 const { toCard } = require('../../../utils/object-card.js');
 const { isR5, feedbackBranch, albumKit } = require('./playkit-r5-segments.js');
+const sensorContract = require('./sensor-contract.js');
 
 const KIT_PRIORITY = [
   /* 节点玩法模板那批排在最前:它们是这个节点的**主玩法**,没做完就不该先弹别的。
@@ -274,6 +275,9 @@ function buildPhotoCheck(seg, receipt, placeName) {
     degraded: !!seg.degraded,
     lastReason: seg.lastReason || '',
     lastUrl: seg.lastUrl || '',
+    // C1:服务端 photoVerified / rewardCeiling 原样搬,缺失即 false / 空串(不说已核验、不承诺)
+    photoVerified: seg.photoVerified === true,
+    rewardCeiling: sensorContract.kitFields(seg).rewardCeiling,
     /* 取景轮廓(S1):这两个键**恒产出** —— 分发器绑了 kit.frameUrl，playkit-view-contract
        那条「绑了必须有人产出」的门禁不容忍条件产出；没配时给空串，组件据此走原来的 chooseMedia。
        ⚠️ 「商家没配 = 玩家行为逐字相同」钉在组件的取景分支入口上，不是钉在键的存在与否上。 */
@@ -741,7 +745,7 @@ function pickPlayKit(view, now) {
       kicker: seg.kicker || '',
       sub: seg.sub || '',
       seconds: seg.seconds || 0,
-    });
+    }, sensorContract.kitFields(seg));
   }
   /* 罗盘指向:bearing/tolerance/holdSeconds 全是题面(服务端开局就下发),
      对准与保持由组件现场判,提交只报「对准时的方位角」给服务端复核容差。 */
@@ -753,14 +757,14 @@ function pickPlayKit(view, now) {
       holdSeconds: seg.holdSeconds || 3,
       hint: seg.hint || '',
       done: !!seg.done,
-    });
+    }, sensorContract.kitFields(seg));
   }
   /* 喊一嗓子:下发要喊满的秒数与标题。阈值不下发,由组件开局现场校准(与 quietHold 同一把尺)。 */
   if (name === 'shout') {
     return Object.assign(base, {
       kicker: seg.kicker || '',
       seconds: seg.seconds || 0,
-    });
+    }, sensorContract.kitFields(seg));
   }
   if (name === 'countdown') {
     return Object.assign(base, {
@@ -775,7 +779,7 @@ function pickPlayKit(view, now) {
       targetSeconds: seg.targetSeconds || 0,
       toleranceMs: seg.toleranceMs || 0,
       tries: seg.tries || 0,
-    });
+    }, sensorContract.kitFields(seg));
   }
   /* 推理类三玩法:答案字段(answerOrder/pairs/answer)服务端不投影,这里也没有。
      排序的 items 与连线的 right 到这一步已被服务端打乱 —— 原样搬运,不重排。 */
@@ -963,12 +967,13 @@ function serverPayload(type, action, detail) {
     case 'reaction:submit': return { roundsMs: d.times || [] };
     case 'ballshake:submit': return { hits: d.hits };
     // 组件按玩家读的单位报(秒),服务端按判定的单位收(毫秒)
-    case 'quiethold:submit': return { heldMs: Math.round((d.heldSeconds || 0) * 1000) };
+    // C1:四个设备自报玩法带上服务端发的挑战身份(组件没给就不带,服务端照旧复核)
+    case 'quiethold:submit': return sensorContract.withAttempt({ heldMs: Math.round((d.heldSeconds || 0) * 1000) }, d);
     // 罗盘:组件报「对准那一刻读到的方位角」,服务端拿它和配置目标绕 360 取最小差复核
-    case 'compass:submit': return { bearing: Math.round(d.bearing || 0) };
+    case 'compass:submit': return sensorContract.withAttempt({ bearing: Math.round(d.bearing || 0) }, d);
     // 喊一嗓子:组件交的就是毫秒(内部按帧累计),这里只兜一层非数
-    case 'shout:submit': return { heldMs: Math.round(d.heldMs || 0) };
-    case 'stopwatch:submit': return { stoppedMs: d.elapsedMs };
+    case 'shout:submit': return sensorContract.withAttempt({ heldMs: Math.round(d.heldMs || 0) }, d);
+    case 'stopwatch:submit': return sensorContract.withAttempt({ stoppedMs: d.elapsedMs }, d);
     // 抛硬币 / 掷骰子 / 倒计时到点:结果由服务端算,客户端不带参数
     case 'coinflip:flip':
     case 'diceroll:roll':
