@@ -51,10 +51,36 @@ Base: `2ec68899099a1e250df0949a8383bf85b5d3ffe0` (`origin/master`)
 - 未用成长个人榜充当赛事榜
 - 真实 MySQL / Boot 启动 / HTTP 为 NOT_RUN（本车道只做隔离单测）
 
-## 5. 验证
+## 5. 验证（已跑）
+
+命令：
 
 ```
-mvn -q -pl chengyinhub-admin -Dtest=com.chengyinhub.business.service.orienteering.** test
+mvn -pl chengyinhub-admin -am -Dtest=com.chengyinhub.business.service.orienteering.*Test -Dsurefire.failIfNoSpecifiedTests=false test
 ```
 
-隔离 JUnit only。编译 + 上述测试必须绿。
+结果：`BUILD SUCCESS`。chengyinhub-admin 隔离单测 **15 run, 0 fail, 0 error, 0 skip**。
+
+| 测试类 | run |
+|---|---|
+| OrdinaryCityTeamEventJourneyTest | 1 |
+| EventScoreVersioningTest | 3 |
+| PublishedRuleSelectorTest | 3 |
+| TeamClubEligibilityAuthorityTest | 4 |
+| EventResultDisputeTest | 1 |
+| OrdinaryCityTimezoneQualifierTest | 3 |
+
+静态检查/编译：通过（test-compile + 上述 surefire）。DB/HTTP/App/CI：NOT_RUN。
+
+Head（本车道）：`58113ef7c3818671ac31aa2c394562715b3c1087`（报告本次提交会再前进一格）。
+
+## 6. 文件 SHA256（提交前快照）
+
+| SHA256 | bytes | path |
+|---|---|---|
+| b20c62935a54aef6be24ef19478933296c87dc120793ef42a39f45e46332b263 | 2189 | OrienteeringEventException.java |
+| ac2502818e0d264934f03f1e6cd75efe2bb547bd45668b683b712a96b6238ff8 | 5023 | PublishedRuleSelector.java |
+| 30544c404e0bf6ff7626eca0806583558c54e52217e9cf7d5e85c208c6df1d2e | 6501 | OrdinaryCityTimezoneQualifier.java |
+| 78921f6b32b4df8b8fa0bbedcb74e11cb1afd9acfb152c12ba37c5348c5442de | 9333 | TeamClubEligibilityAuthority.java |
+| fab552aa09d16086fffbd33be181e574f713f6ffc35fa1bdcafc0d34118af728 | 17341 | EventScoreVersioning.java |
+| 62abc03dab0b4b6ec097c93b65ee56e8164552664db7a3f517323c548c09b5c2 | 6941 | EventResultDispute.java |
