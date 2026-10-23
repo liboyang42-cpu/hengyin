@@ -214,6 +214,28 @@
         WHERE p.id=#{id}<include refid="visibilityPolicy"/>
     </select>
 
+    <!-- O-05 #1 降分发(LIMITED):不进任何 feed/搜索/推荐,只按直达链接对受众内、未拉黑/屏蔽的读者可见;作者本人走 selectById。 -->
+    <select id="selectLimitedById" resultMap="CommunityPostResult">
+        SELECT <include refid="publicColumns"/>,
+        NULL client_request_id, NULL approximate_geohash,
+        <include refid="personalColumns"/>, 'DETAIL' feed_source, 'DIRECT_LIMITED' reason_code
+        FROM community_post p LEFT JOIN ums_member m ON m.id=p.author_id
+        WHERE p.id=#{id} AND p.lifecycle='LIMITED' AND p.author_id&lt;&gt;#{viewerId}
+          AND (
+            p.audience='PUBLIC'
+            OR (p.audience='FOLLOWERS' AND EXISTS(
+              SELECT 1 FROM ums_member_follow f WHERE f.member_id=#{viewerId} AND f.follow_member_id=p.author_id))
+            OR (p.audience='COMMUNITY' AND EXISTS(
+              SELECT 1 FROM club_member cm WHERE cm.member_id=#{viewerId} AND cm.club_id=p.community_id
+                AND cm.status=1 AND cm.del_flag=0))
+          )
+          AND NOT EXISTS(SELECT 1 FROM im_block b
+                         WHERE (b.member_id=#{viewerId} AND b.blocked_member_id=p.author_id)
+                            OR (b.member_id=p.author_id AND b.blocked_member_id=#{viewerId}))
+          AND NOT EXISTS(SELECT 1 FROM community_member_mute mu
+                         WHERE mu.member_id=#{viewerId} AND mu.muted_member_id=p.author_id)
+    </select>
+
     <select id="selectByIdForUpdate" parameterType="long" resultMap="CommunityPostResult">
         SELECT p.* FROM community_post p WHERE p.id=#{id} FOR UPDATE
     </select>

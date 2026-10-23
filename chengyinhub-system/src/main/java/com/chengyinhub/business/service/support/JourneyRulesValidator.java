@@ -165,6 +165,10 @@ public class JourneyRulesValidator {
         if (root.has("natAuto") && !root.get("natAuto").isNull()) {
             out.put("natAuto", boolField(root, "natAuto", true));
         }
+        // F6 RPG P1:同 natAuto,只在作者显式配置时输出;缺省老主题规范化结果一字不变。
+        com.fasterxml.jackson.databind.node.ObjectNode rpg = JourneyRpg.normalize(root.get("rpg"), checkEnabled,
+                root.has("stateEnabled") && boolField(root, "stateEnabled", false));
+        if (rpg != null) out.set("rpg", rpg);
         if (root.has("statLinks")) {
             try {
                 com.chengyinhub.business.domain.JourneyRules rules = objectMapper.treeToValue(out,

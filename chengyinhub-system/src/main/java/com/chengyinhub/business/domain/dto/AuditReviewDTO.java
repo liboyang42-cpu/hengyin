@@ -16,6 +16,8 @@ public class AuditReviewDTO {
     private String requestId;
     /** 仅由已鉴权 controller 覆盖写入，不信任请求体。 */
     private String actorRoleCode;
+    /** O-05 #4 可选:主题/玩法驳回时的逐项问题(开关 chengyin.audit.item-problems.enabled 关闭时忽略)。 */
+    private java.util.List<ProblemItem> problems;
 
     public Long getTaskId() { return taskId; }
     public void setTaskId(Long taskId) { this.taskId = taskId; }
@@ -33,4 +35,23 @@ public class AuditReviewDTO {
     public void setRequestId(String requestId) { this.requestId = requestId; }
     public String getActorRoleCode() { return actorRoleCode; }
     public void setActorRoleCode(String actorRoleCode) { this.actorRoleCode = actorRoleCode; }
+    public java.util.List<ProblemItem> getProblems() { return problems; }
+    public void setProblems(java.util.List<ProblemItem> problems) { this.problems = problems; }
+
+    /** 一条逐项问题:itemType=TOPIC/CHAPTER/NODE/TEMPLATE,itemId 为空表示针对整个审核对象。 */
+    public static class ProblemItem {
+        private String itemType;
+        private Long itemId;
+        private String reasonCode;
+        private String reasonText;
+
+        public String getItemType() { return itemType; }
+        public void setItemType(String itemType) { this.itemType = itemType; }
+        public Long getItemId() { return itemId; }
+        public void setItemId(Long itemId) { this.itemId = itemId; }
+        public String getReasonCode() { return reasonCode; }
+        public void setReasonCode(String reasonCode) { this.reasonCode = reasonCode; }
+        public String getReasonText() { return reasonText; }
+        public void setReasonText(String reasonText) { this.reasonText = reasonText; }
+    }
 }

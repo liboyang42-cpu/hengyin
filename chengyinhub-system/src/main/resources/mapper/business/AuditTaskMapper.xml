@@ -137,6 +137,15 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
           and version = #{version}
     </update>
 
+    <!-- O5b-3:举报首响时钟带进处置单 —— 只收紧未结单的 deadline,不放宽、不改版本号 -->
+    <update id="tightenOpenDeadline">
+        update audit_task
+        set deadline_at = #{deadline}
+        where id = #{id}
+          and status in (0, 3)
+          and (deadline_at is null or deadline_at &gt; #{deadline})
+    </update>
+
     <!-- 认领:仅未被认领的待审单可认领,条件更新防并发双认领 -->
     <update id="claimAuditTask">
         update audit_task
@@ -221,4 +230,17 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
           and source_type = 'report'
           and submitted_at &gt;= #{since}
     </select>
+
+    <!-- O-05 #2:该内容所有开放审核单(含举报槽)上的去重举报人数,供风险重算。 -->
+    <select id="countOpenReportersByBiz" resultType="int">
+        select count(distinct r.operator_id)
+        from audit_record r join audit_task t on t.id = r.task_id
+        where t.biz_type = #{bizType} and t.biz_id = #{bizId} and t.status in (0, 3) and r.action = 'REPORT'
+    </select>
+
+    <!-- O-05 #2:开放单风险只升不降;按读到的旧值 CAS,不动 version(不打断审核员手上的版本化裁决)。 -->
+    <update id="escalateOpenRiskLevel">
+        update audit_task set risk_level = #{riskLevel}, update_time = now()
+        where id = #{id} and status in (0, 3) and risk_level &lt;=&gt; #{expectedRiskLevel}
+    </update>
 </mapper>

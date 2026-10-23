@@ -97,6 +97,27 @@ public interface ITopicRouteRuntimeService {
         return rest(memberId, topicId, null, nodeId);
     }
     PlayCheckReceipt rest(Long memberId, Long topicId, Long activityId, Long nodeId);
+
+    /** F6 T09 魔鬼交易:掷骰前接受代价换加值(主题 journeyRules.rpg.bargain 开启且检定配了 bargain 才成立)。 */
+    default PlayCheckReceipt bargain(Long memberId, Long topicId, Long activityId, Long nodeId, String checkId) {
+        throw new IllegalStateException("本主题未开启魔鬼交易");
+    }
+
+    /** F6 T10 动量:掷骰后、结算前花动量补足差距(主题 journeyRules.rpg.momentum 开启才成立)。 */
+    default PlayCheckReceipt spendMomentum(Long memberId, Long topicId, Long activityId, Long nodeId, String checkId) {
+        throw new IllegalStateException("本主题未开启动量");
+    }
+
+    /**
+     * RV4 S533-3:本人本局适用规则(冻结优先)是否开启魔鬼交易;没有进行中的局 / 读不到规则一律 false。
+     * 只读,供节点投影决定是否下发 check.bargain 报价。
+     */
+    default boolean bargainOffered(Long memberId, Long topicId, Long activityId) { return false; }
+
+    /** F6 T13 状态栏只读数据:hp / luck / 属性 + rpg(动量 / 进度钟 / 特质 / 环境)。 */
+    default java.util.Map<String, Object> rpgStatus(Long memberId, Long topicId, Long activityId) {
+        throw new IllegalStateException("状态栏不可用");
+    }
     Map<String, Integer> sessionStatuses(List<TopicRouteSession> scopes);
     Set<Long> participantMemberIds(Long topicId);
     Set<Long> completedMemberIds(Long topicId);

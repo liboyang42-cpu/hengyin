@@ -84,17 +84,22 @@
         limit 1 for update
     </select>
 
+    <!-- S531-2:已关闭(CLOSED)但仍有未取消未来场次的系列继续展示,主理人才能看到并取消这些场次 -->
     <select id="selectActiveSeriesByClub" resultMap="seriesResult">
         select <include refid="seriesColumns"/>
         from club_event_series
-        where club_id = #{clubId} and status = 'ACTIVE'
+        where club_id = #{clubId}
+          and (status = 'ACTIVE'
+            or status = 'CLOSED' and exists (
+              select 1 from club_event_occurrence fo
+              where fo.series_id = club_event_series.id and fo.status = 'ACTIVE' and fo.occurrence_at &gt;= now()))
         order by update_time desc, id desc
     </select>
 
     <select id="selectActiveSeriesByIdAndClub" resultMap="seriesResult">
         select <include refid="seriesColumns"/>
         from club_event_series
-        where id = #{seriesId} and club_id = #{clubId} and status = 'ACTIVE'
+        where id = #{seriesId} and club_id = #{clubId} and status in ('ACTIVE', 'CLOSED')
         limit 1
     </select>
 
@@ -103,7 +108,7 @@
                o.default_lead_member_id, o.status, o.version, o.create_time
         from club_event_occurrence o
         inner join club_event_series s on s.id = o.series_id and s.club_id = #{clubId}
-          and s.status = 'ACTIVE'
+          and s.status in ('ACTIVE', 'CLOSED')
         inner join cms_activity a on a.id = o.activity_id and a.club_id = #{clubId}
           and a.del_flag = 0 and a.start_date &gt;= #{now} and o.occurrence_at &gt;= #{now}
         where o.series_id = #{seriesId} and o.status = 'ACTIVE'
@@ -218,6 +223,15 @@
         where id = #{id} and status = 'ACTIVE' and version = #{expectedVersion}
     </update>
 
+    <!-- O5b-7:CLOSED 是终态(schema CHECK 已含 CLOSED);只翻系列状态,已排场次/已付报名原样保留 -->
+    <update id="closeSeriesCas">
+        update club_event_series
+        set status = 'CLOSED', version = version + 1,
+            update_by = #{username}, update_time = #{now}
+        where id = #{seriesId} and club_id = #{clubId}
+          and status = 'ACTIVE' and version = #{expectedVersion}
+    </update>
+
     <update id="updateSeriesScheduleCas">
         update club_event_series
         set recurrence_type = #{recurrenceType}, version = version + 1,
@@ -235,7 +249,7 @@
           and o.activity_id = #{activityId} and o.status = 'ACTIVE'
         inner join cms_activity a on a.id = o.activity_id
           and a.club_id = s.club_id and a.del_flag = 0
-        where s.status = 'ACTIVE'
+        where s.status in ('ACTIVE', 'CLOSED')
     </sql>
 
     <!-- activity_id + active occurrence + cms_activity.club_id 必须与 series.club_id 同时成立。 -->
@@ -455,7 +469,7 @@
                 from club_event_waitlist w
                 inner join club_event_occurrence o on o.activity_id = w.activity_id and o.status = 'ACTIVE'
                 inner join club_event_series s on s.id = o.series_id and s.club_id = w.club_id
-                  and s.status = 'ACTIVE' and s.waitlist_enabled = 1
+                  and s.status in ('ACTIVE', 'CLOSED') and s.waitlist_enabled = 1
                 inner join cms_activity a on a.id = w.activity_id and a.club_id = w.club_id
                   and a.status = 1 and a.publish_status = 1 and a.del_flag = 0 and a.end_date &gt; #{now}
                 inner join oms_ticket t on t.id = w.ticket_id and t.owner_type = 2
@@ -528,7 +542,7 @@
         from club_event_waitlist w
         inner join club_event_occurrence o on o.activity_id = w.activity_id and o.status = 'ACTIVE'
         inner join club_event_series s on s.id = o.series_id and s.club_id = w.club_id
-          and s.status = 'ACTIVE' and s.waitlist_enabled = 1
+          and s.status in ('ACTIVE', 'CLOSED') and s.waitlist_enabled = 1
         inner join cms_activity a on a.id = w.activity_id and a.club_id = w.club_id
           and a.status = 1 and a.publish_status = 1 and a.del_flag = 0 and a.end_date &gt; #{now}
         inner join oms_ticket t on t.id = w.ticket_id and t.owner_type = 2

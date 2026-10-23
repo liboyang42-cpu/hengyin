@@ -167,6 +167,17 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         mt.create_time DESC
     </select>
     
+    <!-- O5b-5:标题相似度提示的比对池 —— 只读在架(未删、已上架、已过审)条目的 id/title,不含本人 -->
+    <select id="selectPublicTitlesForSimilarity" resultMap="CmsTemplateLibraryResult">
+        select id, member_id, title
+        from cms_template_library
+        where del_flag = 0 and publish_status = 1 and status = 1
+          and title is not null and title != ''
+          <if test="excludeMemberId != null">and member_id != #{excludeMemberId}</if>
+        order by id desc
+        limit #{limit}
+    </select>
+
     <select id="selectCmsTemplateLibraryById" parameterType="Long" resultMap="CmsTemplateLibraryResult">
         <include refid="selectCmsTemplateLibraryVo"/>
         where id = #{id}

@@ -42,6 +42,13 @@ public final class GameplayCheckEngine {
   if(!rules.getLuck().isEnabled() || JourneyInitialState.numericValue(state,"sys.luck")<=0)throw new IllegalStateException("幸运值不足");
  }
  public static PlayCheckReceipt roll(JsonNode check,JourneyRules rules,TopicRouteEngine.State state,IntSupplier random,boolean rerolled) {
+  return roll(check,rules,state,random,rerolled,0);
+ }
+ /**
+  * F6 T09:bargainBonus = 本次检定已接受的魔鬼交易加值(0 = 没接受,口径与老入口逐字相同)。
+  * 它与角色属性一样单独计入 total,不受 modCap 约束;只有 >0 时明细里才多一个 bargain 字段。
+  */
+ public static PlayCheckReceipt roll(JsonNode check,JourneyRules rules,TopicRouteEngine.State state,IntSupplier random,boolean rerolled,int bargainBonus) {
         String tierName = check.path("tier").asText("");
         JourneyRules.Tier tier = tierOf(rules, tierName);
         if (tier == null) throw new IllegalStateException("检定难度档位无效");
@@ -82,7 +89,7 @@ public final class GameplayCheckEngine {
         Map<String, Object> skill = skill(check.path("skill").asText(null), rules, state);
         int skillValue = skill == null ? 0 : ((Integer) skill.get("value")).intValue();
         if (skill != null && skill.containsKey("hidden")) skill.remove("value");
-        int total = kept + skillValue + mod;
+        int total = kept + skillValue + mod + Math.max(0, bargainBonus);
         // F2 T04:natAuto=false 时自然骰不再必成 / 必败,也不产生 CRIT / FUMBLE(大成功/大失败效果随之不触发)。
         String nat = !rules.isNatAuto() ? null : kept == 20 ? PlayCheckReceipt.NAT_CRIT
                 : kept == 1 ? PlayCheckReceipt.NAT_FUMBLE : null;
@@ -111,6 +118,7 @@ public final class GameplayCheckEngine {
         breakdown.put("die", kept);
         breakdown.put("skill", skill);
         breakdown.put("situational", situational);
+        if (bargainBonus > 0) breakdown.put("bargain", bargainBonus);
         breakdown.put("total", total);
         breakdown.put("dc", tier.getDc());
         breakdown.put("natAuto", rules.isNatAuto());

@@ -97,6 +97,26 @@ class ThemeCharacterServiceTest {
     }
 
     @Test
+    void legacyCardHasNoRpgBlockAndRpgTopicAddsFacetsMomentumAndActiveAspects() {
+        assertTrue(!service.card(MEMBER, TOPIC).containsKey("rpg"), "F6:没配 rpg 的主题角色卡响应不变");
+        String rpgRules = RULES.substring(0, RULES.length() - 1) + ",\"checkEnabled\":true,\"rpg\":{"
+                + "\"momentum\":{\"enabled\":true,\"max\":5,\"init\":1},"
+                + "\"aspects\":[{\"key\":\"night_owl\",\"label\":\"夜猫子\",\"kind\":\"facet\"},"
+                + "{\"key\":\"soaked\",\"label\":\"浑身湿透\"}]}}";
+        topics.selectCmsTopicById(TOPIC).setJourneyRulesJson(rpgRules);
+        Map<?, ?> template = (Map<?, ?>) service.card(MEMBER, TOPIC).get("rpg");
+        assertEquals(1, ((Map<?, ?>) template.get("momentum")).get("value"), "没建局:动量显示初值");
+        assertEquals(1, ((List<?>) template.get("facets")).size(), "侧面常驻");
+        assertEquals(0, ((List<?>) template.get("aspects")).size(), "特质只在本局挂着时出现");
+        when(sessions.selectHistoryPage(eq(MEMBER), eq(TOPIC), isNull(), eq(1)))
+                .thenReturn(Collections.singletonList(session(42L, 3, TopicRouteSession.STATUS_RUNNING,
+                        "{\"variables\":{\"sys.momentum\":4},\"statusConditions\":[\"night_owl\",\"soaked\"]}")));
+        Map<?, ?> live = (Map<?, ?>) service.card(MEMBER, TOPIC).get("rpg");
+        assertEquals(4, ((Map<?, ?>) live.get("momentum")).get("value"));
+        assertEquals("soaked", ((Map<?, ?>) ((List<?>) live.get("aspects")).get(0)).get("key"));
+    }
+
+    @Test
     void topicScopedValueSurvivesIntoTheNextRunWhileRunScopedValueResets() {
         when(sessions.selectHistoryPage(eq(MEMBER), eq(TOPIC), isNull(), eq(1)))
                 .thenReturn(Collections.singletonList(session(41L, 6, TopicRouteSession.STATUS_COMPLETED,

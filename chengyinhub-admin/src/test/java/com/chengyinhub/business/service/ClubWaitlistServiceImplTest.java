@@ -588,4 +588,105 @@ class ClubWaitlistServiceImplTest {
         request.setWaitlistOfferToken(token);
         return request;
     }
+
+    private ClubEventSeries closedPolicy() {
+        ClubEventSeries policy = policy(true);
+        policy.setStatus(ClubEventSeries.STATUS_CLOSED);
+        return policy;
+    }
+
+    /** S531-2:系列关闭后不再接受新候补,票与库存一律不碰。 */
+    @Test
+    void closedSeriesRejectsNewWaitlistJoin() {
+        when(mapper.selectSeriesPolicyByActivityForUpdate(ACTIVITY)).thenReturn(closedPolicy());
+
+        ServiceException denied = assertThrows(ServiceException.class, () -> service.join(MEMBER, ACTIVITY, TICKET));
+
+        assertEquals(Integer.valueOf(409), denied.getCode());
+        verify(ticketMapper, never()).selectOmsTicketByIdForUpdate(anyLong());
+        verify(mapper, never()).insertWaitlist(any());
+    }
+
+    /** S531-2:系列关闭后,已拿到 OFFERED 的成员仍可报价与认领(否则名额被 hold 住、没人能用)。 */
+    @Test
+    void closedSeriesOfferedEntryCanStillBeQuotedAndClaimed() {
+        when(mapper.selectSeriesPolicyByActivityForUpdate(ACTIVITY)).thenReturn(closedPolicy());
+        when(mapper.selectSeriesPolicyByActivity(ACTIVITY)).thenReturn(closedPolicy());
+        Date expires = new Date(NOW.getTime() + 20 * 60_000L);
+        ClubWaitlistEntry offered = entry(61L, ClubWaitlistEntry.OFFERED, 1, expires);
+        String raw = tokenCodec.token(offered);
+        offered.setOfferTokenHash(tokenCodec.hash(raw));
+        when(mapper.selectWaitlistById(61L)).thenReturn(offered);
+        when(mapper.selectWaitlistByIdForUpdate(61L)).thenReturn(offered);
+        when(mapper.claimOfferCas(61L, 1, MEMBER, ACTIVITY, TICKET, NOW)).thenReturn(1);
+
+        assertNotNull(service.validateForQuote(MEMBER, request(61L, raw, ACTIVITY, TICKET), NOW));
+        ClubWaitlistClaim claim = service.claimForOrder(MEMBER, request(61L, raw, ACTIVITY, TICKET), NOW);
+
+        assertEquals(Long.valueOf(61L), claim.getOfferId());
+        verify(mapper).claimOfferCas(61L, 1, MEMBER, ACTIVITY, TICKET, NOW);
+    }
+
+    /** S531-2:系列关闭后,队列里的成员仍可主动退出候补;OFFERED 退出时归还 hold 并递补下一位。 */
+    @Test
+    void closedSeriesWaitlistCancelAndPromotionStillWork() {
+        when(mapper.selectSeriesPolicyByActivityForUpdate(ACTIVITY)).thenReturn(closedPolicy());
+        when(ticketMapper.selectOmsTicketByIdForUpdate(TICKET)).thenReturn(ticket(1L));
+        ClubWaitlistEntry offered = entry(61L, ClubWaitlistEntry.OFFERED, 1, new Date(NOW.getTime() + 60_000L));
+        when(mapper.selectActiveWaitlistForUpdate(MEMBER, ACTIVITY, TICKET)).thenReturn(offered);
+        when(mapper.cancelActiveWaitlistCas(61L, 1, ClubWaitlistEntry.OFFERED, MEMBER, ACTIVITY, TICKET)).thenReturn(1);
+        when(ticketMapper.restoreInventory(TICKET, 1L)).thenReturn(1);
+        ClubWaitlistEntry next = entry(62L, ClubWaitlistEntry.WAITING, 0, null);
+        when(mapper.selectFirstWaitingForUpdate(ACTIVITY, TICKET)).thenReturn(next);
+        when(ticketMapper.deductInventory(TICKET, 1L)).thenReturn(1);
+        when(mapper.offerWaitingCas(eq(62L), eq(0), any(), eq(NOW), any())).thenReturn(1);
+
+        assertTrue(service.cancel(MEMBER, ACTIVITY, TICKET, NOW));
+
+        verify(ticketMapper).restoreInventory(TICKET, 1L);
+        verify(mapper).offerWaitingCas(eq(62L), eq(0), any(), eq(NOW), any());
+    }
+
+    /** S531-2:系列关闭后,状态页不再允许加入,但队列里的 OFFERED 仍下发认领 token。 */
+    @Test
+    void closedSeriesStatusBlocksJoinButKeepsOfferTokenForQueuedMember() {
+        when(mapper.selectSeriesPolicyByActivity(ACTIVITY)).thenReturn(closedPolicy());
+        when(mapper.selectLatestWaitlist(MEMBER, ACTIVITY, TICKET)).thenReturn(null);
+
+        ClubWaitlistEntry empty = service.myStatus(MEMBER, ACTIVITY, TICKET);
+        assertEquals(ClubWaitlistEntry.ELIGIBILITY_CLOSED, empty.getEligibilityState());
+        org.junit.jupiter.api.Assertions.assertFalse(empty.getWaitlistJoinAllowed());
+
+        ClubWaitlistEntry offered = entry(61L, ClubWaitlistEntry.OFFERED, 1,
+                new Date(System.currentTimeMillis() + 3_600_000L));
+        offered.setOfferTokenHash(tokenCodec.hash(tokenCodec.token(offered)));
+        when(mapper.selectLatestWaitlist(MEMBER, ACTIVITY, TICKET)).thenReturn(offered);
+
+        ClubWaitlistEntry status = service.myStatus(MEMBER, ACTIVITY, TICKET);
+        assertEquals(ClubWaitlistEntry.OFFERED, status.getState());
+        assertEquals(ClubWaitlistEntry.ELIGIBILITY_ELIGIBLE, status.getEligibilityState());
+        org.junit.jupiter.api.Assertions.assertFalse(status.getWaitlistJoinAllowed());
+        assertNotNull(status.getOfferToken());
+    }
+
+    /**
+     * S531-2:候补策略读口、维护扫描(递补)与运营列表/详情的 SQL 必须同时认 ACTIVE 与 CLOSED,
+     * 否则关闭后 OFFERED 过期不递补、WAITING 永不结束、主理人看不到要取消的场次。
+     */
+    @Test
+    void waitlistAndOpsReadSqlAcceptClosedSeries() throws Exception {
+        java.nio.file.Path xml = java.nio.file.Paths.get("..", "chengyinhub-system", "src", "main", "resources",
+                "mapper", "business", "ClubEventOpsMapper.xml");
+        String text = new String(java.nio.file.Files.readAllBytes(xml), java.nio.charset.StandardCharsets.UTF_8)
+                .replaceAll("\\s+", " ");
+        assertTrue(text.matches(".*<sql id=\"seriesPolicyByActivity\">[^<]*where s.status in \\('ACTIVE', 'CLOSED'\\) </sql>.*"));
+        assertTrue(text.matches(".*<select id=\"selectPromotableWaitlistScopes\"[^<]*"
+                + "s.status in \\('ACTIVE', 'CLOSED'\\) and s.waitlist_enabled = 1.*"));
+        assertTrue(text.matches(".*<when test=\"kind == 3\">[^<]*s.status in \\('ACTIVE', 'CLOSED'\\) and s.waitlist_enabled = 1.*"));
+        assertTrue(text.matches(".*<select id=\"selectActiveSeriesByIdAndClub\"[^<]*<include refid=\"seriesColumns\"/>[^<]*status in \\('ACTIVE', 'CLOSED'\\).*"));
+        assertTrue(text.matches(".*<select id=\"selectFutureOccurrences\"[^<]*s.status in \\('ACTIVE', 'CLOSED'\\).*"));
+        assertTrue(text.matches(".*<select id=\"selectActiveSeriesByClub\"[^<]*<include refid=\"seriesColumns\"/>[^<]*status = 'CLOSED' and exists.*"));
+        // 排新场次的 CAS 仍只认 ACTIVE
+        assertTrue(text.matches(".*<update id=\"updateSeriesScheduleCas\">[^<]*status = 'ACTIVE'[^<]*</update>.*"));
+    }
 }

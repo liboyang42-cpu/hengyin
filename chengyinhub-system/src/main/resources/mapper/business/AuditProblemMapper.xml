@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.AuditProblemMapper">
+
+    <resultMap type="com.chengyinhub.business.domain.AuditProblem" id="AuditProblemResult">
+        <result property="id" column="id" />
+        <result property="taskId" column="task_id" />
+        <result property="recordId" column="record_id" />
+        <result property="bizType" column="biz_type" />
+        <result property="bizId" column="biz_id" />
+        <result property="ownerMemberId" column="owner_member_id" />
+        <result property="itemType" column="item_type" />
+        <result property="itemId" column="item_id" />
+        <result property="reasonCode" column="reason_code" />
+        <result property="reasonText" column="reason_text" />
+        <result property="createTime" column="create_time" />
+    </resultMap>
+
+    <insert id="insertAuditProblem" parameterType="com.chengyinhub.business.domain.AuditProblem"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into audit_problem (task_id, record_id, biz_type, biz_id, owner_member_id,
+            item_type, item_id, reason_code, reason_text, create_time)
+        values (#{taskId}, #{recordId}, #{bizType}, #{bizId}, #{ownerMemberId},
+            #{itemType}, #{itemId}, #{reasonCode}, #{reasonText}, #{createTime})
+    </insert>
+
+    <select id="selectByTaskForOwner" resultMap="AuditProblemResult">
+        select id, task_id, record_id, biz_type, biz_id, owner_member_id, item_type, item_id,
+               reason_code, reason_text, create_time
+        from audit_problem
+        where task_id = #{taskId} and owner_member_id = #{ownerMemberId}
+        order by id
+    </select>
+</mapper>

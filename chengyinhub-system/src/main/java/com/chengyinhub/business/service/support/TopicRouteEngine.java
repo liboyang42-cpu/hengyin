@@ -206,6 +206,13 @@ public class TopicRouteEngine {
             if (StoryVocabulary.CHECK_FAIL.equals(result)) return passed != null && passed.intValue() == 0;
             throw new IllegalArgumentException("不支持的检定结果:" + result);
         }
+        if (StoryVocabulary.ENV_IN.equals(op)) {
+            // F6:环境快照由服务端写入;没开环境键 / 天气源失败时取 unknown(fail-open:不报错,按「未知」判)。
+            String value = state.environment.get(condition.path("key").asText());
+            if (value == null || value.isEmpty()) value = JourneyRpg.ENV_UNKNOWN;
+            for (JsonNode allowed : condition.path("values")) if (value.equals(allowed.asText())) return true;
+            return false;
+        }
         return legacyConditionPasses(condition, state);
     }
 
@@ -508,6 +515,8 @@ public class TopicRouteEngine {
         private Map<String, String> equipped = new LinkedHashMap<String, String>();
         /** F5:本局 XP / 徽章发放台账,键 = 种类:节点:代码,存在即不再记(重放幂等)。 */
         private Map<String, Map<String, Object>> storyGrants = new LinkedHashMap<String, Map<String, Object>>();
+        /** F6:环境键快照(weather / daypart / weekpart / season → 取值);只在主题开了环境键时写,空不序列化。 */
+        private Map<String, String> environment = new LinkedHashMap<String, String>();
         /** 调用方注入的本局角色(ROLE_IN 读);不落库,未注入时 ROLE_IN 一律不成立。 */
         private String actorRoleCode;
         /** 调用方注入的奖励上限:true = 只放行 XP / 徽章(自报传感完成)。不落库。 */
@@ -526,6 +535,7 @@ public class TopicRouteEngine {
             for (Map.Entry<String, Map<String, Object>> grant : storyGrants.entrySet()) {
                 out.storyGrants.put(grant.getKey(), new LinkedHashMap<String, Object>(grant.getValue()));
             }
+            out.environment.putAll(environment);
             out.actorRoleCode = actorRoleCode; out.rewardCeilingXpBadgeOnly = rewardCeilingXpBadgeOnly;
             return out;
         }
@@ -563,6 +573,9 @@ public class TopicRouteEngine {
         @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY)
         public Map<String, Map<String, Object>> getStoryGrants() { return storyGrants; }
         public void setStoryGrants(Map<String, Map<String, Object>> value) { storyGrants = value == null ? new LinkedHashMap<String, Map<String, Object>>() : new LinkedHashMap<String, Map<String, Object>>(value); }
+        @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY)
+        public Map<String, String> getEnvironment() { return environment; }
+        public void setEnvironment(Map<String, String> value) { environment = value == null ? new LinkedHashMap<String, String>() : new LinkedHashMap<String, String>(value); }
         @com.fasterxml.jackson.annotation.JsonIgnore
         public String getActorRoleCode() { return actorRoleCode; }
         @com.fasterxml.jackson.annotation.JsonIgnore

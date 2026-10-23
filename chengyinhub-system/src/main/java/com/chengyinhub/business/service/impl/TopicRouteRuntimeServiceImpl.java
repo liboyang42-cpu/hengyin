@@ -41,6 +41,7 @@ import com.chengyinhub.business.service.support.NodeJourneySnapshot;
 import com.chengyinhub.business.service.support.TrustedNodeEffects;
 import com.chengyinhub.business.service.support.RouteReachabilityProvider;
 import com.chengyinhub.business.service.support.JourneyInitialState;
+import com.chengyinhub.business.service.support.JourneyRpg;
 import com.chengyinhub.business.service.support.TopicCompletionPolicy;
 import com.chengyinhub.business.service.support.TopicCompletionRulePolicy;
 import com.chengyinhub.business.service.support.SensorChallengePolicy;
@@ -135,6 +136,10 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
     /** 节点叙事配置的 id 形状(契约 v4:enter.questions / call.options 的 id)。 */
     private static final Pattern NARRATIVE_ID = Pattern.compile("[A-Za-z0-9_-]{1,32}");
     private static final String STEP_REROLL = "reroll";
+    /** F6 T09 魔鬼交易:掷骰前接受,加值进本次检定、代价当场写进本局(步骤名 ≤6 字,保持动作 id 上限 97)。 */
+    private static final String STEP_BARGAIN = "deal";
+    /** F6 T10 动量:掷骰后、结算前花动量补足差距。 */
+    private static final String STEP_MOMENTUM = "push";
 
     private final TopicRouteSessionMapper routeMapper;
     private final CmsTopicMapper topicMapper;
@@ -176,6 +181,10 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
     /** F2 T02 跨局角色属性;手工 new 的单测不注入 = 不结转(与老行为一致)。 */
     @Autowired(required = false)
     private com.chengyinhub.business.service.support.ThemeCharacterService themeCharacterService;
+
+    /** F6 T06 环境键;缺省(单测 / 未装配)= 不写环境快照,ENV_IN 一律按 unknown 判。 */
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.support.rpg.TopicEnvironmentService topicEnvironmentService;
 
     /**
      * R18:故事流章节读侧。节点叙事段已迁往章节 blocks,建局冻结从这里按站点取。
@@ -709,6 +718,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         // 本站效果先写进同一个 state:与 engine.advance 一起走同一次 updateStateCas,
         // 同一个版本、同一个 routeActionId;重放走上面的回执分支,不会二次写入。
         JourneyRules rules = journeyRules(session, scope.topic);
+        refreshEnvironment(scope.topic, rules, state);
         JsonNode effects = blockConfig == null ? null : blockConfig.get("effects");
         applyJourneyEffects(effects, rules, state);
         // 站末恢复也先落进同一个 state:本节点真扣过血才回,封顶由数值规则管。
@@ -923,6 +933,10 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         if (findCheckAction(session, memberId, nodeId, checkId, JourneyCheckActionId.STEP_SETTLE) != null) {
             throw new IllegalStateException("该检定已结算");
         }
+        if (JourneyRpg.momentumEnabled(context.rules)
+                && findCheckAction(session, memberId, nodeId, checkId, STEP_MOMENTUM) != null) {
+            throw rpgRefusal("已用动量补足，不能再重掷", "RPG_MOMENTUM_USED");
+        }
         if (!context.rules.getLuck().isEnabled()) throw new IllegalStateException("本主题未启用幸运重掷");
         int luck = luckOf(context.state, context.rules);
         if (luck <= 0) throw new IllegalStateException("幸运值不足");
@@ -947,7 +961,11 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         TopicRouteAction rollAction = findCheckAction(session, memberId, nodeId, checkId, STEP_ROLL);
         if (rollAction == null) throw new IllegalStateException("请先掷骰");
         TopicRouteAction rerollAction = findCheckAction(session, memberId, nodeId, checkId, STEP_REROLL);
-        PlayCheckReceipt last = readReceipt(rerollAction != null ? rerollAction : rollAction);
+        // F6 T10:花过动量就以补足后的那份为准;没开动量的主题不多查这一次。
+        TopicRouteAction momentumAction = JourneyRpg.momentumEnabled(context.rules)
+                ? findCheckAction(session, memberId, nodeId, checkId, STEP_MOMENTUM) : null;
+        PlayCheckReceipt last = readReceipt(momentumAction != null ? momentumAction
+                : rerollAction != null ? rerollAction : rollAction);
         boolean success = Boolean.TRUE.equals(last.getSuccess());
         // 检定也是判定型玩法:成败同样落成可引用事实 sys.passed.{nodeId},与结算同一次 CAS。
         context.state.getVariables().put(SYS_PASSED_PREFIX + nodeId, Integer.valueOf(success ? 1 : 0));
@@ -999,6 +1017,14 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         receipt.setSettled(true);
         receipt.setText(success ? textField(context.check, "successText") : textField(context.check, "failText"));
         receipt.setFailCostLabel(failCostLabel);
+        if (JourneyRpg.momentumEnabled(context.rules)) {
+            // F6 T10:失败也有收获(fail forward)—— 结算时按成败攒动量,封顶 max;与结算同一次 CAS。
+            JsonNode momentumRules = JourneyRpg.momentum(context.rules);
+            int gain = success ? momentumRules.path("gainOnSuccess").asInt(0) : momentumRules.path("gainOnFail").asInt(0);
+            int before = JourneyRpg.momentumOf(context.state);
+            int after = JourneyRpg.setMomentum(context.rules, context.state, before + gain);
+            receipt.setMomentum(momentumView(context.rules, after, "gained", after - before));
+        }
         applyVitals(context.state, context.rules, receipt);
         return commitCheck(context.session, nodeId, actionId, "CHECK_SETTLE", receipt, context.state);
     }
@@ -2062,7 +2088,10 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
      * 只动已由 journeyRules 初始化的变量;主题没有 topic 作用域键时什么都不改(老主题行为不变)。
      */
     private void seedCharacter(Long memberId, Long topicId, JourneyRules rules, TopicRouteEngine.State state) {
-        if (themeCharacterService == null || !rules.hasRuntimeState()) return;
+        if (!rules.hasRuntimeState()) return;
+        // F6:动量初值 / 常驻侧面。没开 rpg 的主题什么都不写。
+        JourneyRpg.seedRun(rules, state);
+        if (themeCharacterService == null) return;
         themeCharacterService.seedRun(memberId, topicId, rules, state);
     }
 
@@ -2232,6 +2261,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         }
 
         JourneyRules rules = journeyRules(session, scope.topic);
+        refreshEnvironment(scope.topic, rules, state);
         JsonNode effects = blockConfig == null ? null : blockConfig.get("effects");
         applyJourneyEffects(effects, rules, state);
         // 站末恢复:本节点真扣过血才回;线性局同样在同一次 CAS 内落 state。
@@ -3234,6 +3264,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         context.session = session; context.node = node; context.blockConfig = blockConfig;
         context.check = check; context.rules = rules;
         context.state = readEngineState(session.getStateJson());
+        refreshEnvironment(scope.topic, rules, context.state);
         return context;
     }
 
@@ -3262,8 +3293,169 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
      * nat 20 必成、nat 1 必败,其余比 total >= dc。mod 之和封顶 modCap。
      */
     private PlayCheckReceipt rollDice(CheckContext context, boolean rerolled) {
-        return com.chengyinhub.business.service.support.GameplayCheckEngine.roll(context.check,context.rules,context.state,d20,rerolled);
+        return com.chengyinhub.business.service.support.GameplayCheckEngine.roll(context.check,context.rules,context.state,d20,rerolled,
+                bargainBonus(context));
     }
+
+    /**
+     * F6 T09:本次检定已接受的魔鬼交易加值。没开开关 / 检定没配 bargain → 0,且不多查一次库(老主题零变化)。
+     */
+    private int bargainBonus(CheckContext context) {
+        JsonNode offer = context.check.get("bargain");
+        if (!JourneyRpg.bargainEnabled(context.rules) || offer == null || !offer.isObject()) return 0;
+        TopicRouteAction accepted = findCheckAction(context.session, context.session.getMemberId(), context.node.getId(),
+                context.check.path("checkId").asText(""), STEP_BARGAIN);
+        return accepted == null ? 0 : Math.max(0, offer.path("bonus").asInt(0));
+    }
+
+    private void refreshEnvironment(CmsTopic topic, JourneyRules rules, TopicRouteEngine.State state) {
+        if (topicEnvironmentService != null) topicEnvironmentService.refresh(topic, rules, state);
+    }
+
+    private static ServiceException rpgRefusal(String message, String code) {
+        return new ServiceException(message, HttpStatus.CONFLICT).setDetailMessage(code);
+    }
+
+    /**
+     * F6 T09 魔鬼交易:掷骰前接受「代价换加值」。代价(bargain.effects)当场写进本局,与动作登记同一次 CAS;
+     * 加值由随后的掷骰 / 重掷读取。同 id 重放返回同一回执,不二次付代价。
+     */
+    @Override
+    @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
+    public PlayCheckReceipt bargain(Long memberId, Long topicId, Long activityId, Long nodeId, String checkId) {
+        String actionId = checkActionId(nodeId, checkId, STEP_BARGAIN);
+        TopicRouteSession session = requireCheckSession(memberId, topicId, activityId);
+        PlayCheckReceipt replayed = replayCheck(session, memberId, actionId);
+        if (replayed != null) return replayed;
+        CheckContext context = checkContext(memberId, topicId, session, nodeId, checkId);
+        if (!JourneyRpg.bargainEnabled(context.rules)) throw rpgRefusal("本主题未开启魔鬼交易", "RPG_BARGAIN_DISABLED");
+        JsonNode offer = context.check.get("bargain");
+        if (offer == null || !offer.isObject()) throw rpgRefusal("该检定没有可接受的交易", "RPG_BARGAIN_NOT_OFFERED");
+        if (findCheckAction(session, memberId, nodeId, checkId, JourneyCheckActionId.STEP_SETTLE) != null) {
+            throw new IllegalStateException("该检定已结算");
+        }
+        if (findCheckAction(session, memberId, nodeId, checkId, STEP_ROLL) != null) {
+            throw rpgRefusal("已经掷过骰，不能再接受交易", "RPG_BARGAIN_AFTER_ROLL");
+        }
+        if (shopDayProofService == null
+                || !shopDayProofService.hasArrived(memberId, session.getActivityId(), nodeId)) {
+            throw new IllegalStateException("请先扫码确认到店");
+        }
+        if (isExhausted(context.state)) throw new IllegalStateException("力竭了，先找地方休整");
+        // RV4 S533-1:与 roll() 同一前置条件校验,且必须在付代价之前 —— 前置不满足时什么都不扣、不写。
+        JsonNode requires = context.blockConfig == null ? null : context.blockConfig.get("requires");
+        if (requires != null && requires.isArray() && requires.size() > 0
+                && !engine.conditionsPass(requires, context.state)) {
+            throw new IllegalStateException("本站前置条件未满足");
+        }
+        applyJourneyEffects(offer.path("effects"), context.rules, context.state);
+        PlayCheckReceipt receipt = new PlayCheckReceipt();
+        receipt.setCheckId(context.check.path("checkId").asText(""));
+        receipt.setTier(context.check.path("tier").asText(""));
+        Map<String, Object> deal = new LinkedHashMap<String, Object>();
+        deal.put("label", offer.path("label").asText(""));
+        deal.put("bonus", Integer.valueOf(offer.path("bonus").asInt(0)));
+        deal.put("accepted", Boolean.TRUE);
+        receipt.setBargain(deal);
+        applyVitals(context.state, context.rules, receipt);
+        return commitCheck(session, nodeId, actionId, "CHECK_BARGAIN", receipt, context.state);
+    }
+
+    /**
+     * F6 T10 动量:掷骰后、结算前,花动量把失败补成成功(只补差距,单次不超过 maxSpend)。
+     * 大失败(natAuto 下的自然 1)不能挽回;补过之后不能再重掷。同 id 重放不二次扣动量。
+     */
+    @Override
+    @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
+    public PlayCheckReceipt spendMomentum(Long memberId, Long topicId, Long activityId, Long nodeId, String checkId) {
+        String actionId = checkActionId(nodeId, checkId, STEP_MOMENTUM);
+        TopicRouteSession session = requireCheckSession(memberId, topicId, activityId);
+        PlayCheckReceipt replayed = replayCheck(session, memberId, actionId);
+        if (replayed != null) return replayed;
+        CheckContext context = checkContext(memberId, topicId, session, nodeId, checkId);
+        if (!JourneyRpg.momentumEnabled(context.rules)) throw rpgRefusal("本主题未开启动量", "RPG_MOMENTUM_DISABLED");
+        TopicRouteAction rollAction = findCheckAction(session, memberId, nodeId, checkId, STEP_ROLL);
+        if (rollAction == null) throw new IllegalStateException("请先掷骰");
+        if (findCheckAction(session, memberId, nodeId, checkId, JourneyCheckActionId.STEP_SETTLE) != null) {
+            throw new IllegalStateException("该检定已结算");
+        }
+        TopicRouteAction rerollAction = findCheckAction(session, memberId, nodeId, checkId, STEP_REROLL);
+        PlayCheckReceipt last = readReceipt(rerollAction != null ? rerollAction : rollAction);
+        if (Boolean.TRUE.equals(last.getSuccess())) throw rpgRefusal("本次检定已成功，无需动量", "RPG_MOMENTUM_NOT_NEEDED");
+        if (PlayCheckReceipt.NAT_FUMBLE.equals(last.getNat())) throw rpgRefusal("大失败不能用动量挽回", "RPG_MOMENTUM_FUMBLE");
+        int dc = last.getDc() == null ? 0 : last.getDc();
+        int total = last.getTotal() == null ? 0 : last.getTotal();
+        int need = Math.max(1, dc - total);
+        JsonNode momentumRules = JourneyRpg.momentum(context.rules);
+        if (need > momentumRules.path("maxSpend").asInt(0)) {
+            throw rpgRefusal("差距超过单次可用动量", "RPG_MOMENTUM_GAP_TOO_LARGE");
+        }
+        int have = JourneyRpg.momentumOf(context.state);
+        if (have < need) throw rpgRefusal("动量不足", "RPG_MOMENTUM_INSUFFICIENT");
+        int after = JourneyRpg.setMomentum(context.rules, context.state, have - need);
+        PlayCheckReceipt receipt = JSON.convertValue(JSON.valueToTree(last), PlayCheckReceipt.class);
+        receipt.setEncounter(null);
+        receipt.setSettled(false);
+        receipt.setTotal(total + need);
+        receipt.setSuccess(Boolean.TRUE);
+        Map<String, Object> breakdown = receipt.getBreakdown() == null ? new LinkedHashMap<String, Object>()
+                : new LinkedHashMap<String, Object>(receipt.getBreakdown());
+        breakdown.put("momentum", Integer.valueOf(need));
+        breakdown.put("total", Integer.valueOf(total + need));
+        receipt.setBreakdown(breakdown);
+        receipt.setMomentum(momentumView(context.rules, after, "spent", need));
+        applyVitals(context.state, context.rules, receipt);
+        return commitCheck(session, nodeId, actionId, "CHECK_MOMENTUM", receipt, context.state);
+    }
+
+    private static Map<String, Object> momentumView(JourneyRules rules, int value, String deltaKey, int delta) {
+        Map<String, Object> view = new LinkedHashMap<String, Object>();
+        view.put(deltaKey, Integer.valueOf(delta));
+        view.put("value", Integer.valueOf(value));
+        view.put("max", Integer.valueOf(JourneyRpg.momentum(rules).path("max").asInt(0)));
+        return view;
+    }
+
+    /** RV4 S533-3:与 bargain() 同一规则来源(本局冻结优先,老局回退实时主题);无局 / 规则不可用 → false。 */
+    @Override
+    @Transactional(readOnly = true)
+    public boolean bargainOffered(Long memberId, Long topicId, Long activityId) {
+        if (memberId == null || memberId <= 0L || topicId == null || topicId <= 0L) return false;
+        TopicRouteSession session = currentScopedSession(memberId, topicId, activityId);
+        if (session == null || !memberId.equals(session.getMemberId())) return false;
+        try {
+            return JourneyRpg.bargainEnabled(journeyRules(session, topicMapper.selectCmsTopicById(topicId)));
+        } catch (RuntimeException unusableRules) {
+            return false;
+        }
+    }
+
+    /** F6 T13 状态栏:本人本局的 hp / luck + P1 视图(动量 / 进度钟 / 特质 / 环境)。只读,不写库。 */
+    @Override
+    @Transactional(readOnly = true)
+    public Map<String, Object> rpgStatus(Long memberId, Long topicId, Long activityId) {
+        if (memberId == null || memberId <= 0L || topicId == null || topicId <= 0L) {
+            throw new IllegalArgumentException("参数有误");
+        }
+        Map<String, Object> view = new LinkedHashMap<String, Object>();
+        view.put("topicId", topicId);
+        TopicRouteSession session = currentScopedSession(memberId, topicId, activityId);
+        boolean running = session != null && memberId.equals(session.getMemberId())
+                && (session.getStatus() == null || Integer.valueOf(TopicRouteSession.STATUS_RUNNING).equals(session.getStatus()));
+        view.put("running", Boolean.valueOf(running));
+        if (!running) return view;
+        TopicRouteEngine.State state = readEngineState(session.getStateJson());
+        JourneyRules rules = sessionRules(session);
+        // 环境键在只读副本上现算,让状态栏显示「此刻」;副本不落库。
+        TopicRouteEngine.State preview = state.copy();
+        refreshEnvironment(topicMapper.selectCmsTopicById(topicId), rules, preview);
+        view.put("stateVersion", session.getVersion());
+        view.putAll(vitalsView(session, state));
+        view.put("attributes", JourneyInitialState.playerView(rules, state));
+        view.put("rpg", JourneyRpg.view(rules, preview));
+        return view;
+    }
+
 
     /** 回执写入与状态 CAS 一次完成;action 行先插入,丢失 CAS 时整个事务回滚。 */
     private PlayCheckReceipt commitCheck(TopicRouteSession session, Long nodeId, String actionId,

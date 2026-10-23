@@ -50,6 +50,12 @@ public class PlayCheckReceipt {
      */
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private Map<String, Object> breakdown;
+    /** F6 T09 魔鬼交易回执:{label, bonus, accepted}。只出现在接受交易那一步与其后的掷骰明细里;老回执为 null。 */
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    private Map<String, Object> bargain;
+    /** F6 T10 动量:{spent?, gained?, value, max}。只在开了动量的主题出现;老回执为 null。 */
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    private Map<String, Object> momentum;
 
     public String getCheckId() { return checkId; }
     public void setCheckId(String checkId) { this.checkId = checkId; }
@@ -91,6 +97,10 @@ public class PlayCheckReceipt {
     public void setStateVersion(Integer stateVersion) { this.stateVersion = stateVersion; }
     public Map<String, Object> getBreakdown() { return breakdown; }
     public void setBreakdown(Map<String, Object> breakdown) { this.breakdown = breakdown; }
+    public Map<String, Object> getBargain() { return bargain; }
+    public void setBargain(Map<String, Object> bargain) { this.bargain = bargain; }
+    public Map<String, Object> getMomentum() { return momentum; }
+    public void setMomentum(Map<String, Object> momentum) { this.momentum = momentum; }
     public Map<String, Object> getEncounter() { return encounter; }
     public void setEncounter(Map<String, Object> encounter) { this.encounter = encounter; }
 

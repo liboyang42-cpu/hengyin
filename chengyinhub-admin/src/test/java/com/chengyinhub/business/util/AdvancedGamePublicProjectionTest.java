@@ -90,7 +90,7 @@ class AdvancedGamePublicProjectionTest {
                 "web", "controller", "api", "ApiPlayProgressController.java")), StandardCharsets.UTF_8)
                 .replaceAll("\\s+", " ");
 
-        assertTrue(source.contains("AdvancedGamePublicProjection .safeConfigJson(themeNodeConfig==null?tpl.getAdvancedConfigJson():themeNodeConfig.toString())"));
+        assertTrue(source.contains("AdvancedGamePublicProjection .safeConfigJson(themeNodeConfig==null?tpl.getAdvancedConfigJson():themeNodeConfig.toString(), bargainOffered)"));
         assertFalse(source.contains("m.put(\"advancedConfigJson\", tpl.getAdvancedConfigJson())"));
         assertFalse(source.contains("m.put(\"advancedConfigJson\", themeNodeConfig.toString())"));
     }
