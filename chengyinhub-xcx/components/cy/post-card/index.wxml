@@ -3,7 +3,7 @@
      picList 有图 → Image(头像 44) · 都没有 → Text(头像 44)
      2026-10-22 新稿(俱乐部页重做 211:271 / 211:326 / 211:354):头像只在头部那一行,正文、图、模板封面、
      动作行都占满整宽(不再缩进到头像右侧);Roam 的点赞头像组与评论预览排在动作行之后。 -->
-<view class="post-card {{light ? 'post-card--light' : ''}} {{post.isCompletionShare || post.hasPlayCover ? 'post-card--compact' : ''}} {{post.isCompletionShare ? 'post-card--roam' : ''}}" bindtap="emitDetail" aria-role="button" aria-label="{{accessibilityLabel}}" hover-class="cy-pressed" hover-stay-time="80">
+<view class="post-card {{reducedMotion ? 'post-card--reduced' : ''}} {{light ? 'post-card--light' : ''}} {{post.isCompletionShare || post.hasPlayCover ? 'post-card--compact' : ''}} {{post.isCompletionShare ? 'post-card--roam' : ''}}" bindtap="emitDetail" aria-role="button" aria-label="{{accessibilityLabel}}" hover-class="cy-pressed" hover-stay-time="80">
   <view class="post-card__avatar">
       <image class="post-card__avatar-img" wx:if="{{interactiveUser}}" lazy-load="true" catchtap="emitUser" aria-role="button" aria-label="打开用户主页"
              src="{{post.memberAvatar || '/images/d_profile.png'}}" mode="aspectFill" hover-class="cy-pressed" hover-stay-time="80" hover-stop-propagation="true" />
@@ -105,7 +105,7 @@
 
     <view class="post-card__actions">
       <view class="post-card__actions-left">
-      <view wx:if="{{interactiveActions}}" class="post-card__action post-card__action--like {{post.isLiked == 1 ? 'is-on' : ''}}"
+      <view wx:if="{{interactiveActions}}" class="post-card__action post-card__action--like {{post.isLiked == 1 ? 'is-on' : ''}} {{likePop ? 'is-pop' : ''}}"
             catchtap="emitLike" aria-role="button" aria-label="{{post.isLiked == 1 ? '取消点赞' : '点赞'}}，当前 {{post.likeCount || 0}}" aria-pressed="{{post.isLiked == 1}}" hover-class="cy-pressed" hover-stay-time="80" hover-stop-propagation="true">
         <cy-icon class="post-card__heart" wx:if="{{post.isLiked == 1}}" name="heart-filled" size="44" /><cy-icon class="post-card__heart" wx:else name="heart" size="44" /><text class="post-card__action-text">{{post.likeCount || 0}}</text>
       </view>

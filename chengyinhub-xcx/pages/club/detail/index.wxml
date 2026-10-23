@@ -6,13 +6,8 @@
   <!-- 2026-09-18 ✕统一裁决:团核销码弹层显示时整条导航(返回+分享+设置)退场,
        它们本就被弹层遮罩压住,留着就是与✕并存的双出口 -->
   <cy-nav-bar custom-back bind:back="goBack" wx:if="{{!(groupCodeVisible && groupCodeState !== 'selecting')}}">
-    <!-- 分享从资料区那条整宽按钮收成导航图标(2026-08-26):它是一次性动作,不值一整行。 -->
+    <!-- 2026-10-22 owner:分享不放导航栏(挤在胶囊左边、悬在顶部中间很怪),挪到俱乐部名字那一行右端(见 .profile-share)。 -->
     <view slot="actions" class="cover-nav-acts">
-      <!-- CU-C-61:分享只能走原生 <button open-type="share"> —— view + bindtap 打不开转发面板,
-           只会 toast 一句「点右上角分享给好友」,用户点了也只是被指回胶囊,等于没有分享。 -->
-      <button class="cover-nav-act" open-type="share" aria-label="分享俱乐部" wx:if="{{club}}" hover-class="cy-pressed" hover-stay-time="80">
-        <cy-icon class="cover-nav-ico" name="share" size="36" />
-      </button>
       <view class="cover-nav-act" bindtap="onSettings" aria-role="button" aria-label="打开设置" wx:if="{{club && (club.isOwner || canUseManageTab)}}" hover-class="cy-pressed" hover-stay-time="80">
         <cy-icon class="cover-nav-ico" name="settings" size="36" />
       </view>
@@ -43,7 +38,8 @@
 
     <!-- 俱乐部资料区。2026-08-26 压缩:名字与元信息并成一栏、挪到 logo 右侧,
          主按钮收进同一行 —— Hero 从 400rpx 降到 240rpx,首屏多露一条帖子。 -->
-    <view class="profile">
+    <!-- 2026-10-22 owner:要有简单必要的动效 —— 资料区打开时轻轻升起;切 tab 时内容升起;帖子逐张飞入;加入按钮从底部滑上来 -->
+    <view class="profile cy-rise-in">
       <!-- 拍板 2026-10-22:logo 在左、名字在右并与 logo 垂直居中;元信息固定两行 ——
            第一行「类型 · N 名成员」,第二行入会方式(公开加入 / 需审核加入)。图标样式沿用原 chip。 -->
       <view class="profile-id">
@@ -53,6 +49,11 @@
         <view class="profile-id-main">
           <view class="profile-name">{{club.name}}</view>
         </view>
+        <!-- 2026-10-22 owner:分享挪到名字行右端(加入按钮已改成底部悬浮,这一格空出来了)。
+             CU-C-61:分享只能走原生 <button open-type="share"> —— view + bindtap 打不开转发面板。 -->
+        <button class="profile-share" open-type="share" aria-label="分享俱乐部" wx:if="{{club}}" hover-class="cy-pressed" hover-stay-time="80">
+          <cy-icon name="share" size="36" />
+        </button>
 
         <!-- 身份行右侧唯一主按钮。★ owner 这里**不再放经营动作**:
              邀约标的永远是某一个项目,俱乐部有多个活动时头部按钮说不清邀的是哪个。
@@ -90,7 +91,7 @@
     <view class="feed-divider"></view>
 
     <!-- 帖子流(默认展示) -->
-    <view class="feed feed--plain" wx:if="{{activeTab === 'posts'}}">
+    <view class="feed feed--plain cy-rise-in" wx:if="{{activeTab === 'posts'}}">
       <cy-club-pinned-notice notices="{{pinnedNotices}}" bind:open="onPinnedNoticeOpen" />
       <!-- 收起态:一条 pill,点开才展开输入区。原来 textarea + 图片行常驻,
            没发帖的人也要为它让出约 340rpx —— 首屏第一条帖子被挤到折线以下。 -->
@@ -137,7 +138,7 @@
       </view>
 
       <block wx:if="{{posts.length}}">
-        <view id="club-post-{{item.id}}" class="club-post-anchor" wx:for="{{posts}}" wx:key="id">
+        <view id="club-post-{{item.id}}" class="club-post-anchor cy-fly-in" style="animation-delay: {{index < 5 ? index * 40 : 200}}ms" wx:for="{{posts}}" wx:key="id">
           <cy-post-card expandable-text post="{{item}}" index="{{index}}" interactive-actions interactive-user interactive-media show-share
             accessibility-label="查看{{item.memberNickname || '城瘾玩家'}}的动态"
             bind:detail="onPostDetail" bind:user="onPostUser" bind:preview="onPreviewImage"
@@ -179,7 +180,7 @@
     </view>
 
     <!-- 活动(城市路线) -->
-    <view class="feed feed--plain" wx:elif="{{activeTab === 'events'}}">
+    <view class="feed feed--plain cy-rise-in" wx:elif="{{activeTab === 'events'}}">
       <cy-tabs class="event-view-tabs" variant="fill" wide="{{true}}" tabs="{{eventViewTabs}}" active="{{eventView}}" bind:change="onEventViewChange" />
       <block wx:if="{{eventView === 'list'}}">
       <!-- 活动卡 / Event card(Figma 281:360):343×123,封面 91×99 r12 左右 pad12,
@@ -283,7 +284,7 @@
          页边 16 · 区块 16 · 简介直接铺开(全局规约:标题下不要小标题,原「俱乐部简介」小标题已撤)。
          N3(主理人/管理员) MembersHead 多一个「邀请成员 ›」;N5(普通会员)只有标题+分隔线;
          N6(未加入)成员条与榜单整块换成 Locked 卡 —— 三态靠角色分,不是逐像素抄同一版。 -->
-    <view class="feed feed--plain ov" wx:elif="{{activeTab === 'overview'}}">
+    <view class="feed feed--plain ov cy-rise-in" wx:elif="{{activeTab === 'overview'}}">
       <text class="ov-intro">{{club.description || '暂无简介'}}</text>
 
       <!-- Facts 三宫格(23:4):主理人 / 等级 / 所在城市 —— 原来是三个上下堆叠的 label+text 区块 -->
@@ -416,7 +417,7 @@
     </view>
 
     <!-- 管理保持「现在要做 / 项目 / 经营折叠」三块；授权角色复用同一 IA。 -->
-    <view class="feed feed--plain manage-feed" wx:elif="{{activeTab === 'manage' && (club.isOwner || canUseManageTab)}}">
+    <view class="feed feed--plain manage-feed cy-rise-in" wx:elif="{{activeTab === 'manage' && (club.isOwner || canUseManageTab)}}">
       <!-- 快捷动作行(Figma 78:5423):五个高频动作提到 tab 顶,不用先翻到齿轮弹窗。
            ⚠️ 图层名与可见文案不一致(如 action/编辑俱乐部详情 显示「出示二维码」),以可见文案为准。
            必须留在 owner-cta 区之外:那一段有「同一时刻恰好一个 primary」的契约。 -->

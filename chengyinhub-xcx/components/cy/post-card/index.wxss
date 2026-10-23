@@ -209,6 +209,15 @@
  * (由 .post-card__action--like.is-on 上色 --cy-color-status-danger,计数文字同色)。
  * 原先是一张自带红的位图 SVG,靠去色滤镜压成「灰实心心」,读起来像已赞,已废弃。 */
 .post-card__heart { flex: none; color: currentColor; }
+/* 2026-10-22 owner「简单必要的动效」:点亮那一下心形弹起再落位(过冲弹性);进页时已赞的不播 */
+.post-card__action--like.is-pop .post-card__heart { animation: pc-like-pop 420ms var(--cy-ease-spring) both; }
+@keyframes pc-like-pop {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.32); }
+  100% { transform: scale(1); }
+}
+.post-card--reduced .post-card__heart { animation: none; }
+@media (prefers-reduced-motion: reduce) { .post-card__action--like.is-pop .post-card__heart { animation: none; } }
 .post-card__action-text { font-size: var(--cy-font-body); font-weight: 500; color: currentColor; }   /* 28rpx = 14pt Medium */
 /* 矢量图标随 currentColor 走,不再需要 brightness/invert 兜暗端 —— 同 .post-card__share-icon。 */
 .post-card__comment-icon { color: currentColor; }

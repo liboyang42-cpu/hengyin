@@ -127,6 +127,25 @@ page { background: var(--cy-bg-page); }
   margin-bottom: calc(-56rpx - var(--cy-space-2));
 }
 .profile-id-main { flex: 1; min-width: 0; }
+/* 2026-10-22 owner:分享挪到名字行右端,圆钮;触控 88rpx(44pt 无障碍下限)。原生 button 盒模型清零同 .cover-nav-act。
+   ⚠️ 必须两级选择器:微信内置 wx-button:not([size=mini]) { width:184px } 的优先级(0,1,1)高过单个类,
+   单写 .profile-share 时宽度被它顶成 184px 的椭圆、把俱乐部名挤成「城市…」(DevTools 实测)。 */
+.profile-id .profile-share {
+  flex: none;
+  width: var(--cy-btn-h);
+  height: var(--cy-btn-h);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  line-height: normal;
+  border-radius: 50%;
+  background: var(--cy-color-bg-surface-subtle);
+  color: var(--cy-color-text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.profile-id .profile-share::after { border: 0; }
 .profile-links {
   display: flex;
   gap: var(--cy-space-4);
@@ -185,7 +204,10 @@ page { background: var(--cy-bg-page); }
   padding: var(--cy-space-4) var(--cy-page-x) calc(var(--cy-space-3) + env(safe-area-inset-bottom));
   background: linear-gradient(180deg, transparent 0%, var(--cy-bg-page) 40%);
   pointer-events: none;
+  /* 打开页面时从底部滑上来(复用全站 cy-rise,不新增关键帧),稍等资料区先出 */
+  animation: cy-rise var(--cy-motion-slow) var(--cy-ease-emphasized-decelerate) 160ms both;
 }
+@media (prefers-reduced-motion: reduce) { .join-float { animation: none; } }
 .join-float__btn { width: 100%; pointer-events: auto; box-sizing: border-box; font-size: var(--cy-font-body); }
 .join-float-space { height: calc(var(--cy-btn-h) + var(--cy-space-7) + env(safe-area-inset-bottom)); }
 /* join-btn 收编至 .cy-btn（primary 反色中性白/secondary/ghost）;此处仅留行内布局 */

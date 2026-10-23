@@ -175,7 +175,9 @@ test('quick action 与四个真 tab 分离，管理仅 owner 可见且已选 tab
   // 2026-08-26:分享从资料区那条整宽按钮收成导航栏图标。契约不变 ——
   // 分享仍是独立入口、不混进 tab;只是不再占一整行。
   // 2026-09-24 CU-C-61:分享改成原生 <button open-type="share">(view+bindtap 打不开转发面板)。
-  assert.match(view, /class="cover-nav-act"[^>]*open-type="share"/)
+  // 2026-10-22 owner:分享从导航栏挪到俱乐部名字行右端(.profile-share),仍是原生 share 按钮。
+  assert.match(view, /class="profile-share"[^>]*open-type="share"/)
+  assert.doesNotMatch(view, /class="cover-nav-act"[^>]*open-type="share"/, '导航栏不再放分享')
   assert.doesNotMatch(view, /class="club-share"/, '分享不得再回到整宽按钮')
   assert.match(view, /<cy-tabs\b[^>]*class="club-view-tabs"[^>]*tabs="\{\{clubTabs\}\}"[^>]*active="\{\{activeTab\}\}"[^>]*bind:change="switchTab"/)
   assert.doesNotMatch(view, />群组<\/text>/)
