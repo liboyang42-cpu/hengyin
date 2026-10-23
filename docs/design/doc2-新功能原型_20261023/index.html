@@ -1,0 +1,1963 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Doc2 新功能原型</title>
+<style>
+/* ===== 外框（评审台）===== */
+:root{--desk:#0E0E10;--desk2:#17171A;--desk3:#232327;--deskT:#F2F2F7;--deskT2:#A1A1A8;--deskLine:rgba(255,255,255,.08);--deskAcc:#FFFFFF}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{background:var(--desk);color:var(--deskT);font:14px/1.45 -apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue","Microsoft YaHei",sans-serif;overflow:hidden}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+input,textarea,select{font:inherit;color:inherit}
+.desk{display:grid;grid-template-columns:232px 1fr 340px;height:100vh;height:100dvh}
+.rail{background:var(--desk2);border-right:1px solid var(--deskLine);overflow:auto;padding:18px 12px 24px}
+.rail h1{font-size:17px;font-weight:800;letter-spacing:-.2px;padding:0 8px 2px}
+.rail .sub{font-size:12px;color:var(--deskT2);padding:0 8px 14px}
+.rail .fk{display:flex;gap:10px;align-items:flex-start;width:100%;text-align:left;padding:9px 8px;border-radius:10px}
+.rail .fk:hover{background:var(--desk3)}
+.rail .fk.on{background:#fff;color:#000}
+.rail .fk .tag{flex:none;width:30px;height:22px;border-radius:6px;background:var(--desk3);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.rail .fk.on .tag{background:#000;color:#fff}
+.rail .fk b{display:block;font-size:13px}
+.rail .fk small{display:block;font-size:11px;color:var(--deskT2);margin-top:1px}
+.rail .fk.on small{color:#555}
+.rail .sec{font-size:11px;color:var(--deskT2);padding:14px 8px 6px;letter-spacing:.5px}
+.rail .scr{display:block;width:100%;text-align:left;padding:5px 8px 5px 48px;font-size:12px;color:var(--deskT2);border-radius:8px}
+.rail .scr:hover{color:var(--deskT);background:var(--desk3)}
+.rail .scr.on{color:#fff;font-weight:700}
+.stage{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.stage .scaler{transform-origin:center center;flex:none}
+.panel{background:var(--desk2);border-left:1px solid var(--deskLine);overflow:auto;padding:18px 16px 30px}
+.panel h2{font-size:16px;font-weight:800}
+.panel .ph{font-size:12px;color:var(--deskT2);margin:2px 0 14px}
+.panel h3{font-size:12px;color:var(--deskT2);font-weight:600;margin:18px 0 8px;letter-spacing:.4px}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{padding:5px 10px;border-radius:999px;background:var(--desk3);font-size:12px}
+.seg button.on{background:#fff;color:#000;font-weight:700}
+.tg{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid var(--deskLine);font-size:12px}
+.tg code{font-size:11px;color:var(--deskT2);display:block;word-break:break-all}
+.sw{flex:none;width:38px;height:22px;border-radius:11px;background:#3A3A3C;position:relative;transition:.2s}
+.sw:after{content:"";position:absolute;left:2px;top:2px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.2s}
+.sw.on{background:#30D158}.sw.on:after{left:18px}
+.ep{font:11px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;padding:6px 8px;border-radius:8px;background:var(--desk);margin-bottom:5px;word-break:break-all;color:var(--deskT2)}
+.ep b{color:#fff;font-weight:700;margin-right:4px}
+.ep.hot{outline:1px solid #fff;color:#fff}
+.ep i{display:block;font-style:normal;font-family:-apple-system,"PingFang SC",sans-serif;color:var(--deskT2);font-size:11px}
+.ep.gap{border:1px dashed #FF9F0A}
+.ep.gap b{color:#FF9F0A}
+.qq{font-size:12px;padding:8px 10px;border-radius:8px;background:var(--desk);margin-bottom:6px;line-height:1.5}
+.qq b{display:inline-block;font-size:10px;padding:1px 6px;border-radius:4px;background:#FF9F0A;color:#000;margin-right:6px}
+.note{font-size:12px;color:var(--deskT2);line-height:1.55}
+.fab{display:none}
+
+/* ===== 手机 ===== */
+.phone{width:390px;height:844px;border-radius:54px;background:#000;padding:0;position:relative;box-shadow:0 0 0 11px #1d1d20,0 0 0 12px #333,0 30px 80px rgba(0,0,0,.6);overflow:hidden}
+.app{position:absolute;inset:0;overflow:hidden;background:var(--bg);color:var(--t1);font-size:15px}
+.theme-dark{--bg:#000;--s1:#1C1C1E;--s2:#2C2C2E;--s3:#3A3A3C;--t1:#fff;--t2:rgba(235,235,245,.6);--t3:rgba(235,235,245,.3);--sep:rgba(84,84,88,.55);--pri:#fff;--priT:#000;--sec:#2C2C2E;--secT:#fff;--ok:#30D158;--warn:#FF9F0A;--bad:#FF453A;--okS:rgba(48,209,88,.16);--warnS:rgba(255,159,10,.16);--badS:rgba(255,69,58,.16);--cap:rgba(0,0,0,.55);--capB:rgba(255,255,255,.22);--mask:rgba(0,0,0,.6);--field:#2C2C2E}
+.theme-light{--bg:#F3F4F4;--s1:#FFFFFF;--s2:#EEEEEE;--s3:#E4E4E4;--t1:#000;--t2:#6B6B6B;--t3:#9A9A9A;--sep:#E8E8E8;--pri:#000;--priT:#fff;--sec:#EEEEEE;--secT:#000;--ok:#12B886;--warn:#D58300;--bad:#E5484D;--okS:rgba(18,184,134,.12);--warnS:rgba(213,131,0,.12);--badS:rgba(229,72,77,.1);--cap:rgba(255,255,255,.75);--capB:rgba(0,0,0,.12);--mask:rgba(0,0,0,.4);--field:#F3F4F4}
+.sbar{position:absolute;left:0;right:0;top:0;height:47px;z-index:30;display:flex;align-items:center;justify-content:space-between;padding:14px 30px 0 36px;font-size:16px;font-weight:600;pointer-events:none}
+.sbar .ic{display:flex;gap:6px;align-items:center}
+.sbar .bat{width:25px;height:12px;border:1.5px solid currentColor;border-radius:4px;opacity:.9;position:relative}
+.sbar .bat:after{content:"";position:absolute;inset:1.5px;right:5px;background:currentColor;border-radius:1.5px}
+.nav{position:absolute;top:47px;left:0;right:0;height:44px;z-index:20;display:flex;align-items:center;background:var(--bg)}
+.nav.ov{background:transparent}
+.nav .back{width:44px;height:44px;display:flex;align-items:center;justify-content:center}
+.nav .back svg{width:24px;height:24px}
+.nav .tt{position:absolute;left:100px;right:100px;text-align:center;font-size:17px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:opacity .2s}
+.cap{position:absolute;right:7px;top:53px;width:87px;height:32px;border-radius:16px;background:var(--cap);border:.5px solid var(--capB);display:flex;align-items:center;z-index:25}
+.cap span{flex:1;display:flex;align-items:center;justify-content:center;height:100%}
+.cap i{width:.5px;height:18px;background:var(--capB)}
+.cap .dots{display:flex;gap:3px}.cap .dots b{width:5px;height:5px;border-radius:50%;background:var(--t1)}
+.cap .ring{flex:none;width:17px;height:17px;border-radius:50%;border:2px solid var(--t1);position:relative}
+.cap .ring:after{content:"";position:absolute;inset:3px;border-radius:50%;background:var(--t1)}
+.pages{position:absolute;inset:0}
+.page{position:absolute;inset:0;background:var(--bg);display:flex;flex-direction:column}
+.page .scroll{position:absolute;top:91px;left:0;right:0;bottom:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:none}
+.page .scroll::-webkit-scrollbar{display:none}
+.page.hasfoot .scroll{bottom:0;padding-bottom:120px}
+.page.under{transform:translateX(-28%);filter:brightness(.55)}
+.page.top.push{animation:pin .32s cubic-bezier(.2,.8,.2,1)}
+.page.under.push{animation:uout .32s cubic-bezier(.2,.8,.2,1)}
+.page.top.pop{animation:pout .28s cubic-bezier(.4,0,1,1) forwards}
+.page.under.pop{animation:uin .28s cubic-bezier(.4,0,1,1) forwards}
+@keyframes pin{from{transform:translateX(100%)}to{transform:none}}
+@keyframes uout{from{transform:none;filter:none}to{transform:translateX(-28%);filter:brightness(.55)}}
+@keyframes pout{from{transform:none}to{transform:translateX(100%)}}
+@keyframes uin{from{transform:translateX(-28%);filter:brightness(.55)}to{transform:none;filter:none}}
+.page.top{box-shadow:-12px 0 30px rgba(0,0,0,.35)}
+.home-ind{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:134px;height:5px;border-radius:3px;background:var(--t1);opacity:.85;z-index:60;pointer-events:none}
+
+/* 大标题 cy-page-title */
+.lt{padding:24px 16px 8px;font-size:29px;font-weight:800;line-height:1.22;letter-spacing:-.4px}
+.lt-sub{padding:0 16px 8px;font-size:14px;color:var(--t2)}
+/* 分组卡片 */
+.gt{display:flex;justify-content:space-between;align-items:baseline;padding:22px 16px 8px;font-size:18px;font-weight:700}
+.gt small{font-size:13px;font-weight:400;color:var(--t2)}
+.group{margin:0 16px;background:var(--s1);border-radius:16px;overflow:hidden}
+.theme-light .group{box-shadow:0 2px 8px rgba(0,0,0,.04)}
+.group+.group{margin-top:12px}
+.row{display:flex;align-items:center;gap:12px;padding:14px 16px;position:relative;min-height:52px}
+.row+.row:before{content:"";position:absolute;left:16px;right:0;top:0;height:.5px;background:var(--sep)}
+.row.tap{cursor:pointer}.row.tap:active{background:var(--s2)}
+.row .ico{flex:none;width:36px;height:36px;border-radius:50%;background:var(--s2);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700}
+.row .m{flex:1;min-width:0}
+.row .m b{display:block;font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .m small{display:block;font-size:13px;color:var(--t2);margin-top:2px}
+.row .v{font-size:15px;color:var(--t2);text-align:right;white-space:nowrap}
+.row .v.b{color:var(--t1);font-weight:700}
+.chev{width:8px;height:8px;border-right:2px solid var(--t3);border-top:2px solid var(--t3);transform:rotate(45deg);flex:none;margin-left:2px}
+.kv{display:flex;justify-content:space-between;gap:16px;padding:12px 16px;font-size:14px}
+.kv span{color:var(--t2)}.kv b{font-weight:600;text-align:right}
+.kv+.kv{border-top:.5px solid var(--sep)}
+/* 按钮 */
+.pill{display:flex;align-items:center;justify-content:center;gap:6px;height:50px;border-radius:25px;background:var(--pri);color:var(--priT);font-size:17px;font-weight:700;width:100%}
+.spill{display:flex;align-items:center;justify-content:center;gap:6px;height:50px;border-radius:25px;background:var(--sec);color:var(--secT);font-size:17px;font-weight:600;width:100%}
+.pill.sm,.spill.sm{height:34px;border-radius:17px;font-size:14px;width:auto;padding:0 16px;display:inline-flex}
+.pill[disabled],.pill.dis{opacity:.35;pointer-events:none}
+.danger{color:var(--bad)!important}
+.btns{display:flex;gap:10px}
+.btns>*{flex:1}
+.foot{position:absolute;left:0;right:0;bottom:0;padding:12px 16px 34px;background:var(--bg);z-index:10}
+.foot:before{content:"";position:absolute;left:0;right:0;top:-24px;height:24px;background:linear-gradient(transparent,var(--bg));pointer-events:none}
+.foot .hint{font-size:12px;color:var(--t2);text-align:center;margin-bottom:8px}
+/* 标签 */
+.chip{display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 9px;border-radius:12px;background:var(--s2);font-size:12px;font-weight:600;white-space:nowrap}
+.chip.ok{background:var(--okS);color:var(--ok)}.chip.warn{background:var(--warnS);color:var(--warn)}.chip.bad{background:var(--badS);color:var(--bad)}
+.chip.inv{background:var(--pri);color:var(--priT)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--t3);flex:none}
+.dot.ok{background:var(--ok)}.dot.warn{background:var(--warn)}.dot.bad{background:var(--bad)}
+/* Nike 风大数字 + 统计格 */
+.huge{font-style:italic;font-weight:900;font-size:76px;line-height:.95;letter-spacing:-3px;font-variant-numeric:tabular-nums}
+.huge.m{font-size:54px;letter-spacing:-2px}
+.huge small{font-size:22px;letter-spacing:0;margin-left:4px;font-weight:800}
+.hero{padding:16px 16px 4px}
+.hero .lab{font-size:13px;color:var(--t2);margin-top:6px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--sep);margin:0 16px;border-radius:16px;overflow:hidden}
+.stats.two{grid-template-columns:repeat(2,1fr)}
+.stats>div{background:var(--s1);padding:14px 12px}
+.stats b{display:block;font-style:italic;font-weight:900;font-size:26px;letter-spacing:-1px;font-variant-numeric:tabular-nums}
+.stats span{font-size:12px;color:var(--t2)}
+/* 六边形奖章 */
+.hex{width:88px;height:100px;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);display:flex;align-items:center;justify-content:center;flex-direction:column;color:#000;font-weight:900;font-style:italic}
+.hex.bronze{background:linear-gradient(150deg,#F4C9A0,#A8653A)}
+.hex.silver{background:linear-gradient(150deg,#F5F5F7,#8E8E93)}
+.hex.gold{background:linear-gradient(150deg,#FFE9A3,#C99A1A)}
+.hex.dim{background:var(--s2);color:var(--t3)}
+.hex b{font-size:26px;line-height:1}.hex small{font-size:10px;font-style:normal;font-weight:700}
+/* 封面占位 */
+.cover{border-radius:16px;position:relative;overflow:hidden;background:linear-gradient(135deg,#3a2f5b,#0f2a3d 55%,#1d4d3a)}
+.cover.c2{background:linear-gradient(135deg,#5b2f2f,#2a1c0f 60%,#4d3a1d)}
+.cover.c3{background:linear-gradient(135deg,#1f3b5b,#0f1f2a 60%,#2a4d5d)}
+.cover.c4{background:linear-gradient(135deg,#d9d4cc,#a99f92)}
+.cover .shade{position:absolute;inset:0;background:linear-gradient(transparent 40%,rgba(0,0,0,.75))}
+.cover .ct{position:absolute;left:14px;right:14px;bottom:12px;color:#fff}
+.cover .ct b{display:block;font-size:20px;font-weight:800}
+.cover .ct small{font-size:12px;opacity:.8}
+.thumb{width:56px;height:56px;border-radius:12px;flex:none}
+/* 横幅 */
+.banner{margin:8px 16px 0;padding:12px 14px;border-radius:14px;background:var(--s1);display:flex;gap:10px;align-items:flex-start;font-size:13px;line-height:1.5}
+.banner.ok{background:var(--okS)}.banner.warn{background:var(--warnS)}.banner.bad{background:var(--badS)}
+.banner b{display:block;font-size:14px}
+.banner .dot{margin-top:6px}
+.code{font:600 12px ui-monospace,Menlo,monospace;color:var(--t2)}
+/* 表单 */
+.field{display:flex;align-items:center;gap:12px;padding:12px 16px;position:relative}
+.field+.field:before{content:"";position:absolute;left:16px;right:0;top:0;height:.5px;background:var(--sep)}
+.field label{width:76px;flex:none;font-size:15px}
+.field input,.field textarea,.field select{flex:1;min-width:0;border:0;outline:0;background:transparent;font-size:15px;text-align:right}
+.field textarea{text-align:left;height:72px;resize:none;background:var(--field);border-radius:10px;padding:10px}
+.field input::placeholder,.field textarea::placeholder{color:var(--t3)}
+.opt{display:flex;gap:8px;flex-wrap:wrap}
+.opt button{padding:8px 14px;border-radius:18px;background:var(--s2);font-size:14px}
+.opt button.on{background:var(--pri);color:var(--priT);font-weight:700}
+.radio{width:22px;height:22px;border-radius:50%;border:2px solid var(--t3);flex:none;position:relative}
+.radio.on{border-color:var(--t1);background:var(--t1)}
+.radio.on:after{content:"";position:absolute;left:6px;top:2px;width:5px;height:10px;border:solid var(--bg);border-width:0 2px 2px 0;transform:rotate(45deg)}
+/* 底部弹层 */
+.mask{position:absolute;inset:0;background:var(--mask);z-index:40;animation:fade .2s}
+.sheet{position:absolute;left:0;right:0;bottom:0;z-index:41;background:var(--s1);border-radius:16px 16px 0 0;max-height:86%;display:flex;flex-direction:column;animation:up .3s cubic-bezier(.2,.8,.2,1)}
+.theme-dark .sheet{background:#1C1C1E}
+.sheet.closing{animation:down .22s forwards}.mask.closing{animation:fadeo .22s forwards}
+.grab{width:36px;height:5px;border-radius:3px;background:var(--t3);margin:8px auto 4px;flex:none}
+.sh{display:flex;align-items:center;justify-content:space-between;padding:6px 16px 10px}
+.sh b{font-size:20px;font-weight:800}
+.sh .x{width:30px;height:30px;border-radius:50%;background:var(--s2);display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--t2)}
+.sb{overflow:auto;padding:0 0 8px;flex:1}
+.sb .group{margin:0 16px;background:var(--s2)}
+.theme-light .sb .group{background:var(--bg);box-shadow:none}
+.sf{padding:10px 16px 34px}
+@keyframes up{from{transform:translateY(100%)}to{transform:none}}
+@keyframes down{to{transform:translateY(100%)}}
+@keyframes fade{from{opacity:0}}@keyframes fadeo{to{opacity:0}}
+/* 确认框（wx.showModal 样式） */
+.modal{position:absolute;left:44px;right:44px;top:50%;transform:translateY(-50%);z-index:51;background:var(--s1);border-radius:14px;overflow:hidden;text-align:center;animation:pop .2s}
+.theme-dark .modal{background:#2C2C2E}
+.modal h4{font-size:17px;font-weight:700;padding:22px 18px 6px}
+.modal p{font-size:14px;color:var(--t2);padding:0 18px 20px;line-height:1.5}
+.modal .mb{display:flex;border-top:.5px solid var(--sep)}
+.modal .mb button{flex:1;height:50px;font-size:17px}
+.modal .mb button+button{border-left:.5px solid var(--sep);font-weight:700}
+.mask.m2{z-index:50}
+@keyframes pop{from{transform:translateY(-50%) scale(1.1);opacity:0}}
+/* toast */
+.toast{position:absolute;left:50%;bottom:120px;transform:translateX(-50%);z-index:70;background:rgba(40,40,42,.96);color:#fff;padding:10px 16px;border-radius:12px;font-size:14px;max-width:300px;text-align:center;animation:fade .2s;pointer-events:none}
+.theme-light .toast{background:rgba(0,0,0,.82)}
+/* 状态 */
+.stv{display:flex;flex-direction:column;align-items:center;text-align:center;padding:90px 36px 0;gap:10px}
+.stv .big{width:72px;height:72px;border-radius:50%;background:var(--s1);display:flex;align-items:center;justify-content:center;font-size:30px}
+.stv b{font-size:18px}.stv p{font-size:14px;color:var(--t2);line-height:1.5}
+.stv .pill{width:auto;padding:0 26px;margin-top:8px}
+.sk{background:linear-gradient(90deg,var(--s1) 25%,var(--s2) 50%,var(--s1) 75%);background-size:300% 100%;animation:sk 1.2s infinite;border-radius:14px}
+@keyframes sk{from{background-position:100% 0}to{background-position:0 0}}
+.spin{width:28px;height:28px;border-radius:50%;border:3px solid var(--s2);border-top-color:var(--t1);animation:rot .8s linear infinite}
+@keyframes rot{to{transform:rotate(360deg)}}
+/* 进度钟 / 骰子 / 属性条 */
+.bar{height:6px;border-radius:3px;background:var(--s2);overflow:hidden}
+.bar i{display:block;height:100%;border-radius:3px;background:var(--t1)}
+.d20{width:120px;height:120px;margin:0 auto;clip-path:polygon(50% 0,93% 25%,93% 75%,50% 100%,7% 75%,7% 25%);background:linear-gradient(160deg,#fff,#9a9aa0);color:#000;display:flex;align-items:center;justify-content:center;font-style:italic;font-weight:900;font-size:52px;letter-spacing:-2px}
+.d20.rolling{animation:shake .12s infinite}
+.d20.crit{background:linear-gradient(160deg,#FFE9A3,#C99A1A)}
+.d20.fum{background:linear-gradient(160deg,#ff9a93,#8f1f1a);color:#fff}
+@keyframes shake{0%{transform:rotate(-8deg)}50%{transform:rotate(8deg)}100%{transform:rotate(-8deg)}}
+.pips{display:flex;gap:5px}.pips i{width:16px;height:16px;border-radius:50%;border:2px solid var(--t2)}.pips i.on{background:var(--t1);border-color:var(--t1)}
+.stars{letter-spacing:2px;color:var(--t1)}.stars em{font-style:normal;color:var(--t3)}
+/* 票券（白色入场码）*/
+.ticket{margin:8px auto 0;width:300px;background:#fff;color:#0A0A0A;border-radius:22px;overflow:hidden;text-align:center}
+.ticket .tt1{font-size:30px;font-weight:800;padding:22px 0 10px}
+.ticket .qr{width:150px;height:150px;margin:0 auto 18px;border-radius:12px;background:
+ conic-gradient(#000 25%,#fff 0 50%,#000 0 75%,#fff 0) 0 0/18px 18px;position:relative}
+.ticket .qr:after{content:"";position:absolute;inset:55px;background:#fff;border-radius:8px;box-shadow:inset 0 0 0 6px #000}
+.ticket .notch{background:#000;color:#fff;font:700 20px ui-monospace,Menlo,monospace;padding:14px 0;letter-spacing:1px}
+.ticket .tf{padding:14px 18px 20px;font-size:13px;color:#6A7282}
+.ticket .tf b{display:block;color:#0A0A0A;font-size:17px;margin-top:4px}
+/* 定向 HUD */
+.hud{margin:6px 16px 0;padding:16px;border-radius:20px;background:var(--s1)}
+.timeline{margin:0 16px}
+.tl{display:flex;gap:12px;padding:10px 0;position:relative}
+.tl .d{width:10px;height:10px;border-radius:50%;background:var(--t1);margin-top:6px;flex:none}
+.tl:not(:last-child):after{content:"";position:absolute;left:4.5px;top:22px;bottom:-6px;width:1px;background:var(--sep)}
+.tl .m{flex:1}.tl .m b{font-size:14px}.tl .m small{display:block;font-size:12px;color:var(--t2)}
+.tl .p{font-weight:800;font-style:italic;font-variant-numeric:tabular-nums}
+.tl.rev .m b,.tl.rev .p{text-decoration:line-through;color:var(--t3)}
+.tl.neg .p{color:var(--bad)}
+/* 商家（浅色）工作台 */
+.mhero{margin:4px 16px 0;padding:18px;border-radius:16px;background:var(--s1);box-shadow:0 2px 8px rgba(0,0,0,.04)}
+.mhero .amt{font-size:40px;font-weight:700;letter-spacing:-1px;font-variant-numeric:tabular-nums}
+.acts{display:flex;justify-content:space-between;padding:18px 24px 4px}
+.acts button{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:12px;color:var(--t2)}
+.acts button i{width:56px;height:56px;border-radius:50%;background:var(--s1);display:flex;align-items:center;justify-content:center;font-style:normal;font-size:20px;color:var(--t1);box-shadow:0 2px 8px rgba(0,0,0,.05)}
+.slots{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:12px 16px}
+.slots div{background:var(--s2);border-radius:10px;padding:8px 6px;text-align:center;font-size:12px}
+.slots div b{display:block;font-size:13px}
+.slots div.full{background:var(--badS);color:var(--bad)}
+.slots div.on{background:var(--pri);color:var(--priT)}
+.keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:0 16px}
+.keypad button{height:52px;border-radius:12px;background:var(--s1);font-size:22px;font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.codebox{margin:6px 16px 14px;height:64px;border-radius:16px;background:var(--s1);display:flex;align-items:center;justify-content:center;font:700 28px ui-monospace,Menlo,monospace;letter-spacing:4px}
+.seg2{display:flex;margin:4px 16px 0;background:var(--s2);border-radius:10px;padding:2px}
+.seg2 button{flex:1;height:32px;border-radius:8px;font-size:14px;color:var(--t2)}
+.seg2 button.on{background:var(--s1);color:var(--t1);font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.theme-dark .seg2 button.on{background:#636366}
+.tabs{display:flex;gap:22px;padding:6px 16px 0;border-bottom:.5px solid var(--sep)}
+.tabs button{padding:10px 0;font-size:15px;color:var(--t2);position:relative}
+.tabs button.on{color:var(--t1);font-weight:700}
+.tabs button.on:after{content:"";position:absolute;left:0;right:0;bottom:-.5px;height:2px;background:var(--t1);border-radius:1px}
+.pad{padding:0 16px}
+.mt8{margin-top:8px}.mt12{margin-top:12px}.mt16{margin-top:16px}.mt24{margin-top:24px}
+.c2{color:var(--t2)}.fs12{font-size:12px}.fs13{font-size:13px}
+.center{text-align:center}
+.spacer{height:24px}
+
+/* ===== 后台（RuoYi-Vue 桌面）===== */
+.adm{width:1180px;height:740px;border-radius:12px;overflow:hidden;background:#fff;color:#303133;display:grid;grid-template-columns:200px 1fr;box-shadow:0 30px 80px rgba(0,0,0,.6);font-size:13px;position:relative}
+.adm .side{background:#304156;color:#bfcbd9;overflow:auto}
+.adm .logo{height:50px;display:flex;align-items:center;padding:0 18px;color:#fff;font-weight:700;font-size:14px;background:#2b2f3a}
+.adm .mi{display:block;width:100%;text-align:left;padding:0 20px;height:46px;line-height:46px;color:#bfcbd9;font-size:13px}
+.adm .mi.grp{color:#8d9db1;font-size:12px;height:34px;line-height:34px;margin-top:6px}
+.adm .mi.on{color:#409EFF;background:#263445}
+.adm .mi:hover{background:#263445}
+.adm .main{display:flex;flex-direction:column;background:#f0f2f5;min-width:0;position:relative}
+.adm .hd{height:50px;background:#fff;box-shadow:0 1px 4px rgba(0,21,41,.08);display:flex;align-items:center;padding:0 16px;gap:10px;color:#97a8be;flex:none}
+.adm .hd b{color:#303133;font-weight:400}
+.adm .hd .usr{margin-left:auto;display:flex;gap:8px;align-items:center;color:#606266}
+.adm .hd .av{width:28px;height:28px;border-radius:6px;background:linear-gradient(135deg,#409EFF,#1f6fbf)}
+.adm .tags{height:34px;background:#fff;border-bottom:1px solid #d8dce5;display:flex;align-items:center;gap:5px;padding:0 10px;flex:none}
+.adm .tags span{height:24px;line-height:22px;border:1px solid #d8dce5;padding:0 8px;font-size:12px;color:#495060}
+.adm .tags span.on{background:#409EFF;border-color:#409EFF;color:#fff}
+.adm .body{flex:1;overflow:auto;padding:16px}
+.adm .card{background:#fff;border-radius:4px;padding:16px;margin-bottom:12px}
+.adm .q{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;margin-bottom:12px}
+.adm .q label{color:#606266;font-weight:700}
+.adm .ip{height:30px;border:1px solid #dcdfe6;border-radius:4px;padding:0 10px;width:160px;display:inline-flex;align-items:center;color:#606266;background:#fff}
+.adm .eb{height:28px;padding:0 12px;border-radius:3px;border:1px solid #dcdfe6;background:#fff;color:#606266;font-size:12px;display:inline-flex;align-items:center}
+.adm .eb.p{background:#409EFF;border-color:#409EFF;color:#fff}
+.adm .eb.s{background:#67C23A;border-color:#67C23A;color:#fff}
+.adm .eb.d{background:#F56C6C;border-color:#F56C6C;color:#fff}
+.adm .eb.w{background:#E6A23C;border-color:#E6A23C;color:#fff}
+.adm .eb.pl{background:#ecf5ff;border-color:#b3d8ff;color:#409EFF}
+.adm .eb.txt{border:0;color:#409EFF;padding:0 4px;background:none}
+.adm .eb[disabled]{opacity:.45;pointer-events:none}
+.adm table{width:100%;border-collapse:collapse}
+.adm th{background:#f8f8f9;color:#515a6e;font-weight:700;height:40px;text-align:left;padding:0 10px;border-bottom:1px solid #dfe6ec;white-space:nowrap}
+.adm td{padding:10px;border-bottom:1px solid #dfe6ec;color:#606266;vertical-align:middle}
+.adm tr:hover td{background:#f5f7fa}
+.adm .et{display:inline-block;height:22px;line-height:20px;padding:0 7px;font-size:12px;border-radius:4px;border:1px solid #d9ecff;background:#ecf5ff;color:#409EFF}
+.adm .et.s{background:#f0f9eb;border-color:#e1f3d8;color:#67C23A}
+.adm .et.w{background:#fdf6ec;border-color:#faecd8;color:#E6A23C}
+.adm .et.d{background:#fef0f0;border-color:#fde2e2;color:#F56C6C}
+.adm .et.i{background:#f4f4f5;border-color:#e9e9eb;color:#909399}
+.adm .tabs2{display:flex;gap:0;border-bottom:2px solid #e4e7ed;margin-bottom:12px}
+.adm .tabs2 button{padding:0 18px;height:38px;color:#303133}
+.adm .tabs2 button.on{color:#409EFF;box-shadow:inset 0 -2px #409EFF}
+.adm .warnbox{background:#fdf6ec;color:#E6A23C;border-radius:4px;padding:8px 14px;margin-bottom:12px;font-size:12px;line-height:1.6}
+.adm .infobox{background:#f4f4f5;color:#909399;border-radius:4px;padding:8px 14px;margin-bottom:12px;font-size:12px;line-height:1.6}
+.adm .okbox{background:#f0f9eb;color:#67C23A;border-radius:4px;padding:8px 14px;margin-bottom:12px;font-size:12px}
+.adm .dmask{position:absolute;inset:0;background:rgba(0,0,0,.5);z-index:40;animation:fade .2s}
+.adm .dlg{position:absolute;left:50%;top:70px;transform:translateX(-50%);width:560px;background:#fff;border-radius:4px;z-index:41;box-shadow:0 2px 12px rgba(0,0,0,.2)}
+.adm .dlg h4,.adm .drw h4{font-size:16px;font-weight:400;padding:18px 20px 10px;color:#303133;display:flex;justify-content:space-between}
+.adm .dlg .db{padding:10px 20px}
+.adm .dlg .df{padding:10px 20px 18px;text-align:right;display:flex;gap:8px;justify-content:flex-end}
+.adm .fr{display:flex;align-items:center;margin-bottom:16px}
+.adm .fr>label{width:100px;text-align:right;padding-right:12px;color:#606266;font-weight:700;flex:none}
+.adm .fr input,.adm .fr textarea{flex:1;border:1px solid #dcdfe6;border-radius:4px;height:32px;padding:0 10px;color:#606266;outline:0}
+.adm .fr textarea{height:70px;padding:6px 10px;resize:none}
+.adm .drw{position:absolute;right:0;top:0;bottom:0;width:520px;background:#fff;z-index:41;box-shadow:-2px 0 12px rgba(0,0,0,.15);display:flex;flex-direction:column;animation:drw .25s}
+.adm .drw .db{flex:1;overflow:auto;padding:4px 20px 20px}
+@keyframes drw{from{transform:translateX(100%)}}
+.adm .tlr{display:flex;gap:12px;padding:10px 0;border-bottom:1px dashed #ebeef5;font-size:12px}
+.adm .tlr .t{width:130px;color:#909399;flex:none}
+.adm .desc{display:grid;grid-template-columns:120px 1fr 120px 1fr;border:1px solid #ebeef5;margin-bottom:12px}
+.adm .desc>*{padding:9px 10px;border-bottom:1px solid #ebeef5}
+.adm .desc>span{background:#fafafa;color:#909399}
+.adm .toastA{position:absolute;left:50%;top:20px;transform:translateX(-50%);z-index:60;background:#f0f9eb;border:1px solid #e1f3d8;color:#67C23A;padding:10px 18px;border-radius:4px;animation:fade .2s}
+.adm .pager{display:flex;justify-content:flex-end;gap:6px;margin-top:12px;color:#606266;align-items:center;font-size:12px}
+.adm .pager b{display:inline-block;min-width:26px;height:26px;line-height:26px;text-align:center;background:#409EFF;color:#fff;border-radius:2px}
+.adm .stv{color:#909399}.adm .stv .big{background:#f4f4f5}
+
+/* 首页总览 */
+.ov{width:min(980px,92%);max-height:92%;overflow:auto;padding:4px}
+.ov h1{font-size:30px;font-weight:900;letter-spacing:-.6px}
+.ov p.l{color:var(--deskT2);margin:6px 0 18px;max-width:720px}
+.ov .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px}
+.ov .fc{background:var(--desk2);border:1px solid var(--deskLine);border-radius:18px;padding:16px;text-align:left;display:flex;flex-direction:column;gap:6px;min-height:150px}
+.ov .fc:hover{border-color:#555}
+.ov .fc .k{font-size:12px;color:var(--deskT2);display:flex;gap:6px;align-items:center}
+.ov .fc .k i{font-style:normal;padding:1px 6px;border-radius:5px;background:#fff;color:#000;font-weight:800}
+.ov .fc .k i.l{background:#F3F4F4}
+.ov .fc b{font-size:18px}
+.ov .fc small{color:var(--deskT2);font-size:12px;line-height:1.5}
+.ov .fc .n{margin-top:auto;font-size:12px;color:#fff}
+.ov .legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:18px;font-size:12px;color:var(--deskT2)}
+
+/* 窄屏：手机全屏，面板收进抽屉 */
+@media (max-width:820px){
+ .desk{display:block}
+ .rail,.panel{position:fixed;top:0;bottom:0;z-index:200;width:min(340px,88vw);transform:translateX(-105%);transition:transform .25s;box-shadow:0 0 40px rgba(0,0,0,.6)}
+ .panel{right:0;left:auto;transform:translateX(105%)}
+ .rail{left:0}
+ body.dr-l .rail,body.dr-r .panel{transform:none}
+ .stage{position:fixed;inset:0}
+ .stage.isphone .scaler{transform:none!important;width:100vw;height:100vh;height:100dvh}
+ .stage.isphone .phone{width:100vw;height:100vh;height:100dvh;border-radius:0;box-shadow:none}
+ .fab{display:flex;position:fixed;z-index:150;bottom:110px;height:30px;padding:0 10px;align-items:center;justify-content:center;background:rgba(255,255,255,.78);color:#000;font-weight:800;font-size:12px;white-space:nowrap}
+ .fab.l{left:0;border-radius:0 15px 15px 0}.fab.r{right:0;border-radius:15px 0 0 15px}
+ .scrim{position:fixed;inset:0;z-index:190;background:rgba(0,0,0,.5);display:none}
+ body.dr-l .scrim,body.dr-r .scrim{display:block}
+ .stage.isadm{overflow:auto;display:block}
+ .stage.isadm .scaler{transform:none!important}
+ .ov{width:100%;max-height:none;padding:20px 40px 40px}
+ .stage.isov{overflow:auto;display:block}
+}
+</style>
+</head>
+<body>
+<div class="desk">
+  <nav class="rail" id="rail"></nav>
+  <main class="stage" id="stage"><div class="scaler" id="scaler"></div></main>
+  <aside class="panel" id="panel"></aside>
+</div>
+<button class="fab l" data-dr="l">目录</button>
+<button class="fab r" data-dr="r">面板</button>
+<div class="scrim" data-dr="x"></div>
+<script>
+/* ================= 核心：注册表 / 状态 / 渲染 / 交互 ================= */
+'use strict';
+const SC = {};   // 屏：id -> {f,t,lt,parent,ep[],theme,render(p),foot(p),gate}
+const SH = {};   // 底部弹层：id -> {t,render(p),foot(p)}
+const ADLG = {}; // 后台对话框 / 抽屉
+const A = {};    // 交互动作
+const FEATS = [];
+const S = { feat: 'home', stacks: {}, st: 'ok', flags: {}, sheet: null, modal: null, adlg: null, anim: null, form: {}, d: {} };
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const F = k => !!S.flags[k];
+const feat = k => FEATS.find(f => f.k === k);
+const stack = () => S.stacks[S.feat] || [];
+const curE = () => { const s = stack(); return s[s.length - 1]; };
+const yuan = c => '¥' + (c / 100).toFixed(2);
+const pts = c => (c / 100).toFixed(c % 100 ? 1 : 0);
+const rid = p => (p || 'req') + '_' + Math.random().toString(36).slice(2, 10);
+const chev = '<i class="chev"></i>';
+
+/* ---------- 导航 ---------- */
+function pathOf(id) { const p = []; while (id) { p.unshift(id); id = SC[id] && SC[id].parent; } return p; }
+function openFeat(k, id) {
+  S.feat = k; S.sheet = null; S.modal = null; S.adlg = null; S.st = 'ok'; S.anim = null;
+  const f = feat(k);
+  if (f) S.stacks[k] = pathOf(id || f.root).map(x => ({ id: x, p: {} }));
+  closeDrawers(); render();
+}
+function push(id, p) { if (!SC[id]) return toast('原型未包含该页'); stack().push({ id, p: p || {} }); S.st = 'ok'; S.anim = 'push'; render(); S.anim = null; }
+function pop() {
+  if (stack().length <= 1) return toast('已是本功能首页');
+  S.anim = 'pop'; render();
+  setTimeout(() => { stack().pop(); S.anim = null; S.st = 'ok'; render(); }, 270);
+}
+function replaceTop(id, p) { const s = stack(); s[s.length - 1] = { id, p: p || {} }; render(); }
+function openSheet(id, p) { S.sheet = { id, p: p || {} }; render(); }
+function closeSheet(cb) {
+  const sh = document.querySelector('.sheet'), m = document.querySelector('.mask.ms');
+  if (sh) sh.classList.add('closing'); if (m) m.classList.add('closing');
+  setTimeout(() => { S.sheet = null; render(); cb && cb(); }, 200);
+}
+function confirmBox(o) { S.modal = o; render(); }
+let toastT;
+function toast(msg) {
+  const host = document.querySelector('.app') || document.querySelector('.adm');
+  if (!host) return;
+  host.querySelectorAll('.toast,.toastA').forEach(e => e.remove());
+  const t = document.createElement('div'); t.className = host.classList.contains('adm') ? 'toastA' : 'toast'; t.textContent = msg;
+  host.appendChild(t); clearTimeout(toastT); toastT = setTimeout(() => t.remove(), 1900);
+}
+function later(ms, fn) { setTimeout(fn, ms); }
+/* 模拟一次请求：先 loading 再回调 */
+function req(fn, ms) {
+  const host = document.querySelector('.app');
+  if (host) { const l = document.createElement('div'); l.className = 'mask m2'; l.style.background = 'transparent'; l.innerHTML = '<div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:rgba(40,40,42,.92);border-radius:14px;padding:18px"><div class="spin" style="border-color:#555;border-top-color:#fff"></div></div>'; host.appendChild(l); }
+  setTimeout(fn, ms || 550);
+}
+
+/* ---------- 渲染 ---------- */
+function render() {
+  const sc = document.querySelector('.page.top .scroll');
+  const keep = sc && !S.anim ? sc.scrollTop : 0;
+  renderRail(); renderPanel(); renderStage();
+  if (keep) { const n = document.querySelector('.page.top .scroll'); if (n) n.scrollTop = keep; }
+  fit();
+}
+const SBAR = '<div class="sbar"><span>9:41</span><span class="ic"><svg width="18" height="11" viewBox="0 0 18 11"><rect x="0" y="7" width="3" height="4" rx="1" fill="currentColor"/><rect x="5" y="5" width="3" height="6" rx="1" fill="currentColor"/><rect x="10" y="2.5" width="3" height="8.5" rx="1" fill="currentColor"/><rect x="15" y="0" width="3" height="11" rx="1" fill="currentColor"/></svg><svg width="16" height="11" viewBox="0 0 16 11"><path d="M8 2.2c2.3 0 4.4.9 6 2.4l1.1-1.1A10 10 0 0 0 8 .6 10 10 0 0 0 .9 3.5L2 4.6a8.4 8.4 0 0 1 6-2.4zm0 3.2c1.4 0 2.7.5 3.7 1.4l1.1-1.1A7 7 0 0 0 8 3.8a7 7 0 0 0-4.8 1.9l1.1 1.1c1-.9 2.3-1.4 3.7-1.4zm0 3.2c.6 0 1.1.2 1.5.6L8 10.7 6.5 9.2c.4-.4.9-.6 1.5-.6z" fill="currentColor"/></svg><span class="bat"></span></span></div>';
+const CAP = '<div class="cap"><span><span class="dots"><b></b><b></b><b></b></span></span><i></i><span><span class="ring"></span></span></div>';
+const BACK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>';
+
+function renderStage() {
+  const stg = $('#stage'), host = $('#scaler');
+  stg.classList.remove('isphone', 'isadm', 'isov');
+  if (S.feat === 'home') { stg.classList.add('isov'); host.innerHTML = overview(); return; }
+  const f = feat(S.feat);
+  if (f.admin) { stg.classList.add('isadm'); host.innerHTML = adminHtml(); return; }
+  stg.classList.add('isphone');
+  const st = stack(), n = st.length, tsc = SC[st[n - 1].id];
+  const theme = tsc.theme || f.theme;
+  let h = `<div class="phone"><div class="app theme-${theme}">${SBAR}<div class="pages">`;
+  for (let i = Math.max(0, n - 2); i < n; i++) h += pageHtml(st[i], i === n - 1 ? 'top' : 'under', i);
+  h += '</div>' + CAP + sheetHtml() + modalHtml() + '<div class="home-ind"></div></div></div>';
+  host.innerHTML = h;
+}
+function pageHtml(e, pos, idx) {
+  const sc = SC[e.id], p = e.p || {};
+  const live = pos === 'top' && S.st !== 'ok' && S.st !== 'recovered';
+  let body;
+  try { body = live ? stateView(sc) : sc.render(p); } catch (err) { body = `<div class="stv"><b>渲染出错</b><p>${esc(err.message)}</p></div>`; console.error(err); }
+  if (pos === 'top' && S.st === 'recovered') body = `<div class="banner ok"><span class="dot ok"></span><div><b>已恢复</b>网络恢复后重新拉取了本页数据（同一 requestId / idempotencyKey 可安全重放）。</div></div>` + body;
+  const foot = !live && sc.foot ? sc.foot(p) : '';
+  const cls = ['page', pos, S.anim || '', foot ? 'hasfoot' : ''].join(' ');
+  const title = sc.lt ? '' : (typeof sc.t === 'function' ? sc.t(p) : sc.t);
+  const navCls = sc.navOv ? 'nav ov' : 'nav';
+  return `<section class="${cls}"><div class="${navCls}">${idx > 0 ? `<button class="back" data-a="back">${BACK}</button>` : ''}<div class="tt">${esc(title || '')}</div></div><div class="scroll">${sc.lt && !live ? `<div class="lt">${esc(typeof sc.lt === 'function' ? sc.lt(p) : sc.lt)}</div>` : ''}${sc.lt && live ? `<div class="lt">${esc(typeof sc.lt === 'function' ? sc.lt(p) : sc.lt)}</div>` : ''}${body}<div class="spacer"></div></div>${foot ? `<div class="foot">${foot}</div>` : ''}</section>`;
+}
+function stateView(sc) {
+  const f = feat(sc.f);
+  const g = sc.gate || f.gate;
+  switch (S.st) {
+    case 'loading': return `<div class="pad mt8"><div class="sk" style="height:150px"></div><div class="sk mt16" style="height:22px;width:40%"></div><div class="sk mt12" style="height:64px"></div><div class="sk mt12" style="height:64px"></div><div class="sk mt12" style="height:64px"></div></div>`;
+    case 'empty': return `<div class="stv"><div class="big">∅</div><b>${esc(sc.empty || '暂无内容')}</b><p>${esc(sc.emptyHint || '接口返回空列表时展示；不造假数据。')}</p></div>`;
+    case 'error': return `<div class="stv"><div class="big">!</div><b>加载失败</b><p>网络异常或服务暂不可用。请求未确认时，写操作用原 requestId 查回执，不重复提交。</p><button class="pill" data-a="retry">重试</button></div>`;
+    case 'noperm': return `<div class="stv"><div class="big">⊘</div><b>${esc(sc.nopermT || '没有权限')}</b><p>${esc(sc.noperm || '后端返回 403：当前账号无权查看此内容。')}</p><button class="spill" style="width:auto;padding:0 24px" data-a="back">返回</button></div>`;
+    case 'off': return `<div class="stv"><div class="big">◌</div><b>${esc(g.msg)}</b><p>开关 <span class="code">${esc(g.flag)}</span> 关闭，接口返回 <span class="code">${esc(g.code)}</span>。页面只展示「暂未开放」，不降级成假数据。</p></div>`;
+  }
+  return '';
+}
+function sheetHtml() {
+  if (!S.sheet) return '';
+  const d = SH[S.sheet.id], p = S.sheet.p;
+  const t = typeof d.t === 'function' ? d.t(p) : d.t;
+  return `<div class="mask ms" data-a="closeSheet"></div><div class="sheet"><div class="grab"></div><div class="sh"><b>${esc(t)}</b><button class="x" data-a="closeSheet">✕</button></div><div class="sb">${d.render(p)}</div>${d.foot ? `<div class="sf">${d.foot(p)}</div>` : '<div style="height:30px"></div>'}</div>`;
+}
+function modalHtml() {
+  const m = S.modal; if (!m) return '';
+  return `<div class="mask m2"></div><div class="modal"><h4>${esc(m.t)}</h4><p>${m.m}</p><div class="mb">${m.cancel === false ? '' : `<button data-a="mCancel">${esc(m.cancel || '取消')}</button>`}<button data-a="mOk" class="${m.danger ? 'danger' : ''}">${esc(m.ok || '确定')}</button></div></div>`;
+}
+
+/* ---------- 侧栏：目录 ---------- */
+function renderRail() {
+  let h = `<h1>Doc 2 新功能原型</h1><div class="sub">2026-10-23 · 后端已在 master（线上开关默认关；原型里演示开关默认开）</div>`;
+  h += `<button class="fk ${S.feat === 'home' ? 'on' : ''}" data-feat="home"><span class="tag">≡</span><span><b>总览</b><small>全部功能入口</small></span></button>`;
+  let lastGroup = '';
+  FEATS.forEach(f => {
+    if (f.group !== lastGroup) { h += `<div class="sec">${f.group}</div>`; lastGroup = f.group; }
+    h += `<button class="fk ${S.feat === f.k ? 'on' : ''}" data-feat="${f.k}"><span class="tag">${f.tag}</span><span><b>${f.name}</b><small>${f.sub}</small></span></button>`;
+    if (S.feat === f.k) {
+      const cur = curE() && curE().id;
+      Object.keys(SC).filter(id => SC[id].f === f.k).forEach(id => {
+        const t = SC[id].nm || (typeof SC[id].t === 'function' ? SC[id].t({}) : SC[id].t) || SC[id].lt;
+        h += `<button class="scr ${cur === id ? 'on' : ''}" data-jump="${id}">${esc(t)}</button>`;
+      });
+    }
+  });
+  $('#rail').innerHTML = h;
+}
+/* ---------- 侧栏：面板 ---------- */
+const STATES = [['ok', '正常'], ['loading', '加载中'], ['empty', '空'], ['error', '出错'], ['noperm', '无权限'], ['off', '开关关闭'], ['recovered', '已恢复']];
+function epHtml(e, hot) {
+  const gap = e.startsWith('!');
+  const s = gap ? e.slice(1) : e;
+  const [api, note] = s.split(' | ');
+  const sp = api.indexOf(' ');
+  return `<div class="ep ${hot ? 'hot' : ''} ${gap ? 'gap' : ''}"><b>${esc(api.slice(0, sp))}</b>${esc(api.slice(sp + 1))}${note ? `<i>${esc(note)}</i>` : ''}</div>`;
+}
+function renderPanel() {
+  const P = $('#panel');
+  if (S.feat === 'home') {
+    P.innerHTML = `<h2>怎么看这份原型</h2><div class="ph">左侧选功能 → 中间点手机走流程 → 右侧看接口与待决问题</div>
+    <h3>交互</h3><div class="note">· 真实点按：页面压栈 / 返回、底部弹层（顶部有拖拽条）、确认框、toast。<br>· 每个功能右侧「页面状态」可切 加载中 / 空 / 出错 / 无权限 / 开关关闭 / 已恢复。<br>· 「演示开关」对应后端真实开关名，关掉会走后端真实的拒绝码。<br>· 橙色虚线框的接口 = 后端<b>没有</b>，原型里是提议，需要先决定。</div>
+    <h3>视觉</h3><div class="note">玩家端一律深色，商家端一律浅色。组件沿用漫游原型语言（--bg #000 / --s1 #1C1C1E / --s2 #2C2C2E、分组卡片、白色主胶囊 + 灰色次胶囊、斜体大数字、六边形奖章）。新页面结构照抄现有小程序页面（结算页照 pages/activity/baoming、订单照 scene-member-order-history、票照 scene-qr-ticket、商家照 merchant-finance）。</div>
+    <h3>不包含</h3><div class="note">不改任何小程序 / 后台 / 后端代码；图片全部用 CSS 渐变占位；没有真实域名和密钥。</div>`;
+    return;
+  }
+  const f = feat(S.feat), cur = curE(), sc = SC[cur.id];
+  const hot = new Set(sc.ep || []);
+  let h = `<h2>${f.tag} · ${f.name}</h2><div class="ph">当前页：${esc(sc.nm || (typeof sc.t === 'function' ? sc.t(cur.p) : sc.t) || sc.lt)}${f.admin ? '' : (f.theme === 'light' ? ' · 浅色（商家）' : ' · 深色（玩家）')}</div>`;
+  h += `<h3>页面状态</h3><div class="seg">${STATES.map(([k, l]) => `<button class="${S.st === k ? 'on' : ''}" data-st="${k}">${l}</button>`).join('')}</div>`;
+  if (f.toggles && f.toggles.length) {
+    h += `<h3>演示开关（后端真实开关名）</h3>`;
+    h += f.toggles.map(t => `<div class="tg"><div>${esc(t.l)}<code>${esc(t.k)}</code></div><button class="sw ${F(t.id) ? 'on' : ''}" data-flag="${t.id}"></button></div>`).join('');
+  }
+  if (sc.ep && sc.ep.length) h += `<h3>本页接口</h3>` + sc.ep.map(e => epHtml(e, true)).join('');
+  h += `<h3>本功能全部接口</h3>` + f.eps.filter(e => !hot.has(e)).map(e => epHtml(e, false)).join('');
+  h += `<h3>待 owner 决定</h3>` + f.qs.map(q => `<div class="qq"><b>${esc(q[0])}</b>${esc(q[1])}</div>`).join('');
+  if (f.src) h += `<h3>依据</h3><div class="note">${f.src}</div>`;
+  P.innerHTML = h;
+}
+/* ---------- 总览 ---------- */
+function overview() {
+  return `<div class="ov"><h1>Doc 2 新功能 · 一次看完</h1><p class="l">F1 城市定向、F2/F6 RPG、F3 自由探索套票、F4 商家台、F7 发票与未成年模式，以及配套的后台页。每个手机屏都对应 master 上已经存在的接口与字段（开关全部默认关）。先在这里把流程和问题定下来，再写页面代码。</p>
+  <div class="grid">${FEATS.map(f => `<button class="fc" data-feat="${f.k}"><span class="k"><i class="${f.theme === 'light' || f.admin ? 'l' : ''}">${f.tag}</i>${f.admin ? '后台 · 桌面' : f.theme === 'light' ? '商家端 · 浅色' : '玩家端 · 深色'}</span><b>${f.name}</b><small>${f.sub}</small><span class="n">${Object.keys(SC).filter(id => SC[id].f === f.k).length} 个页面 · ${f.eps.length} 个接口 · ${f.qs.length} 个待决问题 →</span></button>`).join('')}</div>
+  <div class="legend"><span>窄屏（手机浏览器）打开时：手机全屏，左右边缘的「目录 / 面板」按钮拉出侧栏。</span></div></div>`;
+}
+/* ---------- 后台外壳 ---------- */
+function adminHtml() {
+  const f = feat(S.feat), cur = curE(), sc = SC[cur.id];
+  const live = S.st !== 'ok' && S.st !== 'recovered';
+  const menu = Object.keys(SC).filter(id => SC[id].f === f.k);
+  let side = `<div class="logo">城瘾管理后台</div>`;
+  let lastG = '';
+  menu.forEach(id => { const s = SC[id]; if (s.hidden) return; if (s.grp !== lastG) { side += `<div class="mi grp">${s.grp}</div>`; lastG = s.grp; } side += `<button class="mi ${pathOf(cur.id)[0] === id || cur.id === id ? 'on' : ''}" data-jump="${id}">${esc(s.nm || s.t)}</button>`; });
+  let body = live ? stateView(sc) : sc.render(cur.p || {});
+  if (S.st === 'recovered') body = `<div class="okbox">已恢复：重新请求成功。</div>` + body;
+  const crumbs = pathOf(cur.id).map(id => SC[id].grp + ' / ' + (SC[id].nm || SC[id].t));
+  return `<div class="adm">${'<div class="side">' + side + '</div>'}<div class="main"><div class="hd">☰ <span>首页 / ${esc(crumbs[crumbs.length - 1])}</span><span class="usr"><span>admin</span><span class="av"></span></span></div><div class="tags"><span>首页</span><span class="on">${esc(sc.nm || sc.t)} ×</span></div><div class="body">${body}</div>${admDlgHtml()}</div></div>`;
+}
+function admDlgHtml() {
+  if (!S.adlg) return '';
+  const d = ADLG[S.adlg.id], p = S.adlg.p;
+  const t = typeof d.t === 'function' ? d.t(p) : d.t;
+  if (d.drawer) return `<div class="dmask" data-a="admClose"></div><div class="drw"><h4>${esc(t)}<button data-a="admClose">✕</button></h4><div class="db">${d.render(p)}</div></div>`;
+  return `<div class="dmask" data-a="admClose"></div><div class="dlg"><h4>${esc(t)}<button data-a="admClose">✕</button></h4><div class="db">${d.render(p)}</div><div class="df">${d.foot ? d.foot(p) : ''}</div></div>`;
+}
+function admOpen(id, p) { S.adlg = { id, p: p || {} }; render(); }
+function admClose() { S.adlg = null; render(); }
+
+/* ---------- 缩放 ---------- */
+function fit() {
+  const stg = $('#stage'), sc = $('#scaler');
+  const narrow = window.innerWidth <= 820;
+  if (S.feat === 'home') { sc.style.transform = ''; return; }
+  const f = feat(S.feat);
+  const W = f.admin ? 1180 : 414, H = f.admin ? 740 : 868;
+  const r = stg.getBoundingClientRect();
+  if (narrow && !f.admin) { sc.style.transform = ''; return; }
+  const s = Math.min(1, (r.width - 24) / W, (r.height - 24) / H);
+  sc.style.transform = `scale(${s})`;
+}
+window.addEventListener('resize', fit);
+
+/* ---------- 事件 ---------- */
+function closeDrawers() { document.body.classList.remove('dr-l', 'dr-r'); }
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-a],[data-go],[data-feat],[data-jump],[data-st],[data-flag],[data-dr],[data-sheet]');
+  if (!t) return;
+  const ds = t.dataset;
+  if (ds.dr) { document.body.classList.remove('dr-l', 'dr-r'); if (ds.dr !== 'x') document.body.classList.add('dr-' + ds.dr); return; }
+  if (ds.feat) return openFeat(ds.feat);
+  if (ds.jump) return openFeat(SC[ds.jump].f, ds.jump);
+  if (ds.st) { S.st = ds.st; render(); if (ds.st === 'recovered') toast('已重新加载'); return; }
+  if (ds.flag) { S.flags[ds.flag] = !S.flags[ds.flag]; render(); return; }
+  if (ds.go) return push(ds.go, Object.assign({}, ds));
+  if (ds.sheet) return openSheet(ds.sheet, Object.assign({}, ds));
+  if (ds.a && A[ds.a]) A[ds.a](t, ds, e);
+});
+document.addEventListener('input', e => { const n = e.target.name; if (n) S.form[n] = e.target.value; });
+A.back = () => pop();
+A.closeSheet = () => closeSheet();
+A.mCancel = () => { const m = S.modal; S.modal = null; render(); m && m.onCancel && m.onCancel(); };
+A.mOk = () => { const m = S.modal; S.modal = null; render(); m && m.onOk && m.onOk(); };
+A.retry = () => { S.st = 'loading'; render(); later(800, () => { S.st = 'recovered'; render(); toast('已重新加载'); }); };
+A.admClose = () => admClose();
+A.toast = (t, ds) => toast(ds.msg);
+A.opt = (t, ds) => { S.form[ds.k] = ds.v; render(); };
+const fv = (k, d) => S.form[k] != null ? S.form[k] : d;
+const optRow = (k, list, d) => `<div class="opt">${list.map(([v, l]) => `<button class="${fv(k, d) == v ? 'on' : ''}" data-a="opt" data-k="${k}" data-v="${v}">${l}</button>`).join('')}</div>`;
+/* ================= F1 城市定向运行时 ================= */
+FEATS.push({
+  k: 'f1', tag: 'F1', group: '玩家端（深色）', name: '城市定向', sub: '开局·计分·到达守卫·AR 替代·队伍看板', theme: 'dark', root: 'f1-home',
+  gate: { flag: 'feature.flag.orientSession', code: 'ORIENT_SESSION_DISABLED', msg: '城市定向新流程暂未开放' },
+  toggles: [
+    { id: 'orientSession', k: 'feature.flag.orientSession', l: '会话生命周期 F1a' },
+    { id: 'scoring', k: 'orient.scoring.enabled', l: '计分 F1b' },
+    { id: 'guardEnforce', k: 'play.arrive.location_guard.mode = enforce（关=off）', l: '到达位置守卫 F1c' },
+    { id: 'guardShadow', k: 'play.arrive.location_guard.mode = shadow', l: '守卫只记不拦' },
+    { id: 'requireAcc', k: 'play.arrive.require_accuracy', l: '必须上报定位精度' },
+    { id: 'altTask', k: 'orient.alt_task.enabled', l: 'AR 替代任务 F1d' },
+    { id: 'teamBoard', k: 'orient.team.board.enabled', l: '队伍看板 F1d' },
+    { id: 'safety', k: 'orient.safety.enabled', l: '开局安全检查 F1d' },
+  ],
+  eps: [
+    'POST /api/play/orient/session/prepare | topicId, activityId, idempotencyKey → view + ackConfigVersion',
+    'POST /api/play/orient/session/start | sessionId, ackConfigVersion, idempotencyKey → view + resumed',
+    'POST /api/play/orient/session/abandon | sessionId, idempotencyKey → ABANDONED（终态，幂等）',
+    'POST /api/play/orient/session/task/{taskId}/result | alternativeTaskType SCAN/PHOTO/QUIZ → receiptId, elapsedMs, phase',
+    'GET /api/play/orient/session | sessionId → phase, status, configVersion, startedAt, elapsedMs, serverNow',
+    'GET /api/play/orient/session/receipt | sessionId, idempotencyKey → 原回执 + replayed',
+    'POST /api/orient/safety/check | topicId, activityId → allowed, blockers, night, insuranceRequired, sosAvailable',
+    'POST /api/play/arrive | longitude, latitude, accuracy … → 拒绝时 errorCode, appealable, guardLogId, appealBizType',
+    '!POST （audit_appeal 提交入口） | bizType=play_arrive_guard，bizId=guardLogId；本批没有新增控制器，需确认走哪个现有申诉接口',
+    'GET /api/orient/task/state | taskId → completed, completedVia, photoPendingReview, alternatives[]',
+    'POST /api/orient/task/alternative/submit | alternativeTaskType, code/answer/picUrl, lng/lat, idempotencyKey → outcome, geo{distanceM,nodeGeoStatus}',
+    'GET /api/orient/team/detail | teamId → team, threshold, tasks[], members[], summary',
+    'GET /api/orient/team/ranking | ownerType, ownerId → rank, teamDoneCount, totalTasks, mine',
+    'GET /api/orient/scoring/session/{sessionId} | totalCenti, byDimension, timeline[], disputeWindowDeadline, appeals[], disputes[]',
+    'POST /api/orient/scoring/session/{id}/sync | → added, totalCenti',
+    'POST /api/orient/scoring/session/{id}/settle | idempotencyKey → 终局投影 settlementId, totalCenti, pointsAwarded, xpAwarded…',
+    'POST /api/orient/scoring/appeal | sessionId, entryId, nodeId, reason, idempotencyKey',
+    'POST /api/orient/scoring/dispute | sessionId, reason, idempotencyKey',
+    'GET /api/orient/scoring/receipt | kind SETTLE/APPEAL/DISPUTE → state PENDING/ACCEPTED/REJECTED',
+  ],
+  qs: [
+    ['F1a', '会话处于 PREPARED（已准备未开始）时，现有推进入口（/arrive 等）要不要拒绝？原型里「稍后再开始」会留在 PREPARED。'],
+    ['F1a', '没有「完成本局」接口：FINISHED 由现有推进流程走到最后一站产生。最后一站完成后是否自动结算，还是让玩家点「结算成绩」？原型按自动结算画。'],
+    ['F1a', 'ORIENT_TEAM_UNSUPPORTED：会话目前不支持组队局。队伍看板（F1d）与会话（F1a）如何合并？'],
+    ['F1b', '存量 product_type=1 主题是否随全局开关一起开始计分？'],
+    ['F1b', '分数单位：后端以 centi（1/100 分）记账，前台显示整数分还是一位小数？原型显示整数，冲正后可能出现小数。'],
+    ['F1b', '后台 business:orientScoring:* 权限给哪些角色？现在只有超管。'],
+    ['F1c', 'require_accuracy 要等最低小程序版本定下来才能开；版本号是多少？'],
+    ['F1c', '到达被拦后的申诉走哪个入口（audit_appeal 已有表，但没有新控制器）？'],
+    ['F1d', '开 safety 后没有未成年监护数据源会直接拦未成年人（与 F7 监护授权如何打通）。'],
+    ['F1d', '照片替代任务进入人工复核（PENDING_REVIEW）期间，计时是否暂停、能否继续下一站？'],
+  ],
+  src: 'integration-batch4.md §1/§4/§6 · ApiOrientSessionController · ApiOrientScoringController · ApiPlayProgressController#arrive · ApiOrientController',
+});
+function f1Init() {
+  S.d.f1 = {
+    phase: 'NONE', cfg: 7, sessionId: 90213, startedAt: 0, cur: 0, settled: null, guardLog: 551820,
+    tasks: [
+      { id: 301, name: '钟楼旧址', addr: '中山路 12 号', q: '钟楼哪一年建成？', a: '1927', done: false, via: '' },
+      { id: 302, name: '老邮局拱门', addr: '解放街 3 号', q: '拱门上有几颗星？', a: '5', done: false, via: '' },
+      { id: 303, name: '江堤石狮', addr: '滨江东路', q: '石狮左爪下压着什么？', a: '绣球', done: false, via: '' },
+      { id: 304, name: '书院后巷', addr: '学前巷 8 号', q: '巷口门牌是几号？', a: '8', done: false, via: '' },
+      { id: 305, name: '终点 · 码头', addr: '老码头 1 号', q: '码头编号？', a: '1', done: false, via: '' },
+    ],
+    ledger: [], appeals: [], disputes: [],
+  };
+}
+const f1 = () => S.d.f1;
+const f1Total = () => f1().ledger.reduce((s, e) => s + e.delta, 0);
+function f1Add(dim, delta, reason, src, nodeId, rev) {
+  const L = f1().ledger; const id = 7000 + L.length + 1;
+  L.push({ entryId: id, at: clockNow(), dim, delta, reason, src, nodeId, rev: rev || null });
+  return id;
+}
+function clockNow() { const d = new Date(); return d.toTimeString().slice(0, 5); }
+function elapsed() { const s = f1().startedAt ? Math.floor((Date.now() - f1().startedAt) / 1000) + 1260 : 0; const m = Math.floor(s / 60), ss = s % 60; return `${String(m).padStart(2, '0')}:${String(ss).padStart(2, '0')}`; }
+setInterval(() => { const el = document.getElementById('f1clock'); if (el) el.textContent = elapsed(); }, 1000);
+const dimL = { TASK: '任务', PUZZLE: '解谜', BONUS: '奖励', PENALTY: '扣分', ADJUSTMENT: '调整' };
+const phaseChip = ph => ({ NONE: '<span class="chip">未开局</span>', PREPARED: '<span class="chip warn">PREPARED · 已准备</span>', RUNNING: '<span class="chip ok">RUNNING · 进行中</span>', FINISHED: '<span class="chip inv">FINISHED · 已完赛</span>', ABANDONED: '<span class="chip bad">ABANDONED · 已放弃</span>' }[ph]);
+
+SC['f1-home'] = {
+  f: 'f1', nm: '活动入口 · 开局前', t: '城市定向', lt: '夜巡老城',
+  ep: ['POST /api/orient/safety/check | topicId, activityId → allowed, blockers, night, insuranceRequired, sosAvailable', 'POST /api/play/orient/session/prepare | topicId, activityId, idempotencyKey → view + ackConfigVersion'],
+  render() {
+    const d = f1();
+    return `<div class="lt-sub">城市定向 · 5 站 · 单人局</div>
+    <div class="pad mt8"><div class="cover" style="height:180px"><div class="shade"></div><div class="ct"><b>老城夜巡定向赛</b><small>中山路集合 · 预计 90 分钟</small></div></div></div>
+    <div class="stats mt16"><div><b>5</b><span>站点</span></div><div><b>3.2<small style="font-size:13px">km</small></b><span>全程</span></div><div><b>90'</b><span>预计用时</span></div></div>
+    <div class="gt">本局状态</div>
+    <div class="group"><div class="row"><div class="m"><b>会话</b><small>sessionId ${d.phase === 'NONE' ? '—' : d.sessionId} · 规则版本 v${d.cfg}</small></div>${phaseChip(d.phase)}</div>
+    ${d.phase !== 'NONE' && d.phase !== 'PREPARED' ? `<div class="row tap" data-go="${d.phase === 'RUNNING' ? 'f1-run' : 'f1-result'}"><div class="m"><b>${d.phase === 'RUNNING' ? '回到对局' : '查看成绩'}</b></div>${chev}</div>` : ''}</div>
+    <div class="gt">开局前安全检查<small>${F('safety') ? 'orient.safety.enabled' : '开关关闭 · 不检查'}</small></div>
+    <div class="group">${F('safety') ? `
+      <div class="row"><span class="dot ok"></span><div class="m"><b>天气</b><small>无天气封禁</small></div><span class="v">通过</span></div>
+      <div class="row"><span class="dot ok"></span><div class="m"><b>夜间时段</b><small>night=false · 21:00–06:00 为夜间</small></div><span class="v">白天</span></div>
+      <div class="row"><span class="dot ${S.form.f1minor ? 'bad' : 'ok'}"></span><div class="m"><b>年龄与监护</b><small>${S.form.f1minor ? 'GUARDIAN_REQUIRED · 需要监护人授权' : '已成年'}</small></div><span class="v">${S.form.f1minor ? '<span class="chip bad">拦截</span>' : '通过'}</span></div>
+      <div class="row"><span class="dot"></span><div class="m"><b>保险</b><small>insuranceRequired=false · sosAvailable=true</small></div><span class="v">可选</span></div>
+      <div class="row tap" data-a="f1Minor"><div class="m"><small>演示：切换为未成年账号（看拦截态）</small></div>${chev}</div>` :
+      `<div class="row"><div class="m"><small>未开启 orient.safety.enabled 时不调用 /safety/check，直接可以开局。</small></div></div>`}</div>
+    <div class="gt">规则摘要</div>
+    <div class="group"><div class="kv"><span>计时</span><b>服务端计时，从「开始」起算</b></div><div class="kv"><span>到达</span><b>到站 50 米内点「我到了」</b></div><div class="kv"><span>替代任务</span><b>设备不支持 AR 时可扫码 / 拍照 / 答题</b></div><div class="kv"><span>申诉</span><b>结束后 24 小时内</b></div></div>`;
+  },
+  foot() {
+    const d = f1();
+    if (d.phase === 'RUNNING') return `<button class="pill" data-go="f1-run">回到对局</button>`;
+    if (d.phase === 'FINISHED') return `<button class="pill" data-go="f1-result">查看成绩</button>`;
+    if (d.phase === 'ABANDONED') return `<div class="hint">本局已放弃（终态）。重新报名后才能再开一局。</div><button class="pill dis">本局已结束</button>`;
+    const blocked = F('safety') && S.form.f1minor;
+    return `${blocked ? '<div class="hint">ORIENT_SAFETY_BLOCKED · 未成年人需监护人授权后才能开局</div>' : ''}<button class="pill ${blocked ? 'dis' : ''}" data-a="f1Prepare">${d.phase === 'PREPARED' ? '确认规则并开始' : '准备开局'}</button>`;
+  },
+};
+A.f1Minor = () => { S.form.f1minor = !S.form.f1minor; render(); };
+A.f1Prepare = () => {
+  if (!F('orientSession')) return confirmBox({ t: '城市定向新流程暂未开放', m: '<span class="code">ORIENT_SESSION_DISABLED</span><br>开关 feature.flag.orientSession 未开启，接口直接 404。', cancel: false, ok: '知道了' });
+  req(() => { if (f1().phase === 'NONE') f1().phase = 'PREPARED'; openSheet('f1-ack'); });
+};
+SH['f1-ack'] = {
+  t: '确认本局规则',
+  render() {
+    return `<div class="pad c2 fs13" style="padding-bottom:10px">规则版本 <b style="color:var(--t1)">v${f1().cfg}</b>（ackConfigVersion）。开始后服务端开始计时，规则如有更新需要重新确认。</div>
+    <div class="group"><div class="row"><span class="ico">1</span><div class="m"><b>按顺序到达 5 站</b><small>到站 50 米内点「我到了」</small></div></div>
+    <div class="row"><span class="ico">2</span><div class="m"><b>每站完成一个任务</b><small>AR 不可用时可用扫码 / 拍照 / 答题替代</small></div></div>
+    <div class="row"><span class="ico">3</span><div class="m"><b>异常移动不计到达</b><small>速度 &gt; 8 m/s 或 60 分钟内移动 &gt; 40 km</small></div></div>
+    <div class="row"><span class="ico">4</span><div class="m"><b>成绩可申诉</b><small>结束后 24 小时内，单条记录或总成绩</small></div></div></div>`;
+  },
+  foot() { return `<div class="btns"><button class="spill" data-a="f1Later">稍后</button><button class="pill" data-a="f1Start">确认并开始</button></div>`; },
+};
+A.f1Later = () => closeSheet(() => toast('已准备（PREPARED），可稍后开始'));
+A.f1Start = () => closeSheet(() => req(() => { const d = f1(); d.phase = 'RUNNING'; d.startedAt = Date.now(); toast('已开始 · 服务端计时'); push('f1-run'); }));
+
+SC['f1-run'] = {
+  f: 'f1', parent: 'f1-home', nm: '对局中（HUD）', t: '对局中',
+  ep: ['GET /api/play/orient/session | sessionId → phase, elapsedMs, serverNow', 'GET /api/orient/scoring/session/{sessionId} | totalCenti, byDimension, timeline[]'],
+  render() {
+    const d = f1(), done = d.tasks.filter(t => t.done).length;
+    return `<div class="hud"><div class="c2 fs12">用时 · 服务端时钟</div><div class="huge" id="f1clock">${elapsed()}</div>
+      <div class="stats two mt12" style="margin:12px 0 0;background:var(--s2)"><div style="background:var(--s2)"><b>${done}/5</b><span>已完成站点</span></div><div style="background:var(--s2)"><b>${F('scoring') ? pts(f1Total()) : '—'}</b><span>${F('scoring') ? '当前得分' : '计分未开启'}</span></div></div></div>
+    <div class="gt">站点<small>按顺序</small></div>
+    <div class="group">${d.tasks.map((t, i) => `<div class="row tap" ${i <= d.cur ? `data-go="f1-task" data-i="${i}"` : 'data-a="toast" data-msg="请先完成前一站"'}><span class="ico" style="${t.done ? 'background:var(--ok);color:#000' : i === d.cur ? 'background:#fff;color:#000' : ''}">${t.done ? '✓' : i + 1}</span><div class="m"><b>${t.name}</b><small>${t.done ? '已完成 · ' + ({ SCAN: '扫码', PHOTO: '拍照', QUIZ: '答题', AR: 'AR' }[t.via] || t.via) : t.pending ? '照片审核中' : t.addr}</small></div>${t.pending ? '<span class="chip warn">待复核</span>' : i === d.cur && !t.done ? '<span class="chip inv">当前</span>' : ''}${chev}</div>`).join('')}</div>
+    <div class="gt">更多</div>
+    <div class="group">
+      <div class="row tap" data-a="f1Team"><div class="m"><b>队伍看板</b><small>${F('teamBoard') ? '队伍完成度与排名' : '开关关闭'}</small></div>${chev}</div>
+      <div class="row tap" data-go="f1-score"><div class="m"><b>本局计分明细</b><small>只追加的流水 · 冲正可见</small></div>${chev}</div>
+      <div class="row tap" data-a="f1Abandon"><div class="m"><b class="danger">放弃本局</b><small>放弃后不可恢复</small></div></div>
+    </div>`;
+  },
+  foot() {
+    const d = f1();
+    if (d.tasks.every(t => t.done)) return `<button class="pill" data-a="f1Finish">完赛 · 查看成绩</button>`;
+    const t = d.tasks[d.cur];
+    return `<div class="btns"><button class="spill" style="flex:.6" data-go="f1-task" data-i="${d.cur}">任务</button><button class="pill" data-sheet="f1-arrive">我到了 · ${t.name}</button></div>`;
+  },
+};
+A.f1Team = () => F('teamBoard') ? push('f1-team') : toast('该功能暂未开放（ORIENT_DISABLED）');
+A.f1Abandon = () => confirmBox({ t: '放弃本局？', m: '放弃后本局进入终态 ABANDONED，成绩不再结算，也不能继续。', ok: '放弃', danger: true, onOk: () => req(() => { f1().phase = 'ABANDONED'; S.stacks.f1 = [{ id: 'f1-home', p: {} }, { id: 'f1-ended', p: {} }]; render(); toast('已放弃'); }) });
+A.f1Finish = () => req(() => {
+  const d = f1(); d.phase = 'FINISHED';
+  if (F('scoring')) { d.settled = { settlementId: 'ST-20261023-0091', totalCenti: f1Total(), entryCount: d.ledger.length, ledgerWatermarkId: 7000 + d.ledger.length, pointsAwarded: Math.round(f1Total() / 100), xpAwarded: Math.round(f1Total() / 50), settledAt: clockNow() }; }
+  S.stacks.f1 = [{ id: 'f1-home', p: {} }]; push('f1-result');
+}, 800);
+SC['f1-ended'] = {
+  f: 'f1', parent: 'f1-home', nm: '已放弃（终态）', t: '本局已结束',
+  ep: ['POST /api/play/orient/session/abandon | sessionId, idempotencyKey → ABANDONED（终态，幂等）'],
+  render() { return `<div class="stv"><div class="big">⏹</div><b>本局已结束</b><p>phase = ABANDONED。再次调用任何写接口都会返回 <span class="code">ORIENT_SESSION_TERMINAL</span>「本局已结束」，并带回当前状态。</p></div>`; },
+};
+SH['f1-arrive'] = {
+  t: '我到了',
+  render() {
+    const t = f1().tasks[f1().cur];
+    const sc = fv('f1sc', 'ok');
+    const L = [['ok', '正常到达', '距离 18 米 · 精度 12 米'], ['far', '离站点太远', '距离 260 米'], ['speed', '移动速度异常', '与上次位置相比 > 8 m/s'], ['window', '短时间移动过远', '60 分钟内 > 40 km'], ['acc', '没有上报定位精度', '旧版本小程序'], ['throttle', '点得太频繁', '5 秒内重复提交']];
+    return `<div class="pad c2 fs13" style="padding-bottom:10px">第 ${f1().cur + 1} 站 · ${t.name}。原型里选一种「模拟定位」，看服务端会怎么回。</div>
+    <div class="group">${L.map(([k, a, b]) => `<div class="row tap" data-a="opt" data-k="f1sc" data-v="${k}"><span class="radio ${sc === k ? 'on' : ''}"></span><div class="m"><b>${a}</b><small>${b}</small></div></div>`).join('')}</div>
+    <div class="pad fs12 c2 mt12">守卫模式：${F('guardEnforce') ? 'enforce（拦截）' : F('guardShadow') ? 'shadow（只记录）' : 'off（不检查）'} · require_accuracy=${F('requireAcc')}</div>`;
+  },
+  foot() { return `<button class="pill" data-a="f1Arrive">提交到达</button>`; },
+};
+A.f1Arrive = () => {
+  const sc = fv('f1sc', 'ok'), d = f1(), t = d.tasks[d.cur];
+  closeSheet(() => req(() => {
+    if (sc === 'far') return toast('还没到这一站附近');
+    if (sc === 'throttle') return toast('操作太频繁，请稍等几秒再试');
+    if (sc === 'acc' && F('requireAcc')) return openSheet('f1-guard', { code: 'ARRIVE_ACCURACY_MISSING', msg: '当前版本未上报定位精度，请更新小程序后重试或扫码完成', appealable: false });
+    if ((sc === 'speed' || sc === 'window') && F('guardEnforce')) return openSheet('f1-guard', { code: sc === 'speed' ? 'ARRIVE_GUARD_SPEED' : 'ARRIVE_GUARD_WINDOW_DISTANCE', msg: sc === 'speed' ? '移动速度异常，本次到达未记录；如有误判可申诉' : '短时间内移动距离异常，本次到达未记录；如有误判可申诉', appealable: true });
+    if ((sc === 'speed' || sc === 'window') && F('guardShadow')) toast('已到达（守卫 shadow：只记录 SHADOW，不拦）');
+    else toast('已到达 · ' + t.name);
+    t.arrived = true; push('f1-task', { i: d.cur });
+  }));
+};
+SH['f1-guard'] = {
+  t: p => p.appealable ? '这次到达没有记录' : '无法记录到达',
+  render(p) {
+    return `<div class="pad"><div class="banner bad" style="margin:0"><span class="dot bad"></span><div><b>${esc(p.msg)}</b><span class="code">${p.code}</span></div></div></div>
+    <div class="group mt12">${p.appealable ? `<div class="kv"><span>记录编号</span><b>guardLogId ${f1().guardLog}</b></div><div class="kv"><span>申诉类型</span><b>play_arrive_guard</b></div>` : ''}<div class="kv"><span>可申诉</span><b>${p.appealable ? '是' : '否'}</b></div></div>
+    <div class="pad fs12 c2 mt12">不扣分，只是这次「到达」没有算。可以换个位置重试、改用扫码完成，或者申诉。</div>`;
+  },
+  foot(p) { return `<div class="btns"><button class="spill" data-a="f1Scan">改用扫码</button>${p.appealable ? '<button class="pill" data-a="f1GAppeal">申诉</button>' : '<button class="pill" data-a="closeSheet">知道了</button>'}</div>`; },
+};
+A.f1Scan = () => closeSheet(() => push('f1-task', { i: f1().cur, prefer: 'SCAN' }));
+A.f1GAppeal = () => closeSheet(() => push('f1-gappeal'));
+SC['f1-gappeal'] = {
+  f: 'f1', parent: 'f1-run', nm: '到达申诉', t: '到达申诉',
+  ep: ['!POST （audit_appeal 提交入口） | bizType=play_arrive_guard，bizId=guardLogId；本批没有新增控制器，需确认走哪个现有申诉接口'],
+  render() {
+    return `<div class="lt">申诉这次到达</div><div class="lt-sub">记录编号 ${f1().guardLog} · 进入后台审核工作台（bizType play_arrive_guard）</div>
+    <div class="gt">原因</div><div class="pad">${optRow('f1ar', [['gps', '定位漂移'], ['car', '刚下车'], ['other', '其他']], 'gps')}</div>
+    <div class="gt">说明</div><div class="group"><div class="field"><textarea name="f1arn" placeholder="补充说明（选填）">${esc(fv('f1arn', ''))}</textarea></div></div>
+    <div class="gt">现场照片<small>选填</small></div><div class="pad"><div class="cover c3" style="height:96px;width:96px;display:flex;align-items:center;justify-content:center;font-size:28px;color:#fff">＋</div></div>`;
+  },
+  foot() { return `<button class="pill" data-a="f1GAppealSubmit">提交申诉</button>`; },
+};
+A.f1GAppealSubmit = () => req(() => { pop(); later(300, () => toast('已提交，审核结果会通知你')); });
+
+SC['f1-task'] = {
+  f: 'f1', parent: 'f1-run', nm: '站点任务 · AR 替代', t: p => `第 ${(+p.i || 0) + 1} 站`,
+  ep: ['GET /api/orient/task/state | taskId → completed, completedVia, photoPendingReview, alternatives[]', 'POST /api/orient/task/alternative/submit | alternativeTaskType, code/answer/picUrl, lng/lat, idempotencyKey → outcome, geo{distanceM,nodeGeoStatus}', 'POST /api/play/orient/session/task/{taskId}/result | alternativeTaskType SCAN/PHOTO/QUIZ → receiptId, elapsedMs, phase'],
+  render(p) {
+    const t = f1().tasks[+p.i || 0];
+    return `<div class="pad mt8"><div class="cover c2" style="height:150px"><div class="shade"></div><div class="ct"><b>${t.name}</b><small>${t.addr}</small></div></div></div>
+    <div class="group mt16" style="background:#111318;border-radius:24px"><div style="padding:20px"><div class="c2 fs12">任务</div><div style="font-size:20px;font-weight:800;margin-top:4px">${t.q}</div>
+    <div class="fs13 c2 mt8">原任务：用 AR 扫描钟楼立面找到年份。</div></div></div>
+    ${t.done ? `<div class="banner ok"><span class="dot ok"></span><div><b>已完成</b>completedVia = ${t.via}</div></div>` : t.pending ? `<div class="banner warn"><span class="dot warn"></span><div><b>照片已提交，等待发布者复核</b>outcome = PENDING_REVIEW · photoPendingReview=true</div></div>` : ''}
+    <div class="banner"><span class="dot warn"></span><div><b>此设备不支持 AR</b>可以改用下面的替代方式完成，分数相同。</div></div>
+    <div class="gt">替代方式<small>alternatives[]</small></div>
+    ${F('altTask') ? `<div class="group">
+      ${[['QUIZ', '答题', '回答题目'], ['SCAN', '扫码', '扫站点贴纸上的码'], ['PHOTO', '拍照', '拍下立面，由发布者复核']].map(([k, a, b]) => `<div class="row tap" data-sheet="f1-alt" data-type="${k}" data-i="${p.i || 0}"><span class="ico">${a[0]}</span><div class="m"><b>${a}</b><small>${b}</small></div>${chev}</div>`).join('')}
+    </div>` : `<div class="group"><div class="row"><div class="m"><b>替代任务暂未开放</b><small>orient.alt_task.enabled 关闭 · ORIENT_DISABLED</small></div></div></div>`}`;
+  },
+};
+SH['f1-alt'] = {
+  t: p => ({ QUIZ: '答题', SCAN: '扫码', PHOTO: '拍照' }[p.type]),
+  render(p) {
+    const t = f1().tasks[+p.i];
+    if (p.type === 'QUIZ') return `<div class="pad c2 fs13" style="padding-bottom:8px">${t.q}（原型答案：${t.a}）</div><div class="group"><div class="field"><label>答案</label><input name="f1ans" value="${esc(fv('f1ans', ''))}" placeholder="输入答案"></div></div>`;
+    if (p.type === 'SCAN') return `<div class="pad"><div class="cover c3" style="height:220px;display:flex;align-items:center;justify-content:center"><div style="width:150px;height:150px;border:3px solid #fff;border-radius:18px"></div></div><div class="fs13 c2 mt12">对准站点贴纸上的二维码（原型直接视为扫到正确码）。</div></div>`;
+    return `<div class="pad"><div class="cover c2" style="height:220px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:15px">相机取景（占位）</div><div class="fs13 c2 mt12">照片会进入发布者复核（PENDING_REVIEW）。</div></div>`;
+  },
+  foot(p) { return `<button class="pill" data-a="f1AltSubmit" data-type="${p.type}" data-i="${p.i}">${p.type === 'PHOTO' ? '拍照并提交' : '提交'}</button>`; },
+};
+A.f1AltSubmit = (el, ds) => {
+  const d = f1(), i = +ds.i, t = d.tasks[i];
+  if (ds.type === 'QUIZ' && String(fv('f1ans', '')).trim() !== t.a) return toast('答案或扫码内容不正确');
+  closeSheet(() => req(() => {
+    if (ds.type === 'PHOTO') { t.pending = true; render(); toast('已提交 · 等待复核'); later(2200, () => { t.pending = false; f1Complete(i, 'PHOTO'); toast('照片已通过复核'); }); return; }
+    f1Complete(i, ds.type); toast('完成 · 距离 18 米 · CLEAN');
+  }));
+};
+function f1Complete(i, via) {
+  const d = f1(), t = d.tasks[i]; if (t.done) return;
+  t.done = true; t.via = via; S.form.f1ans = '';
+  if (F('scoring')) f1Add('TASK', 10000, 'TASK_CLEARED', 'PROGRESS', t.id);
+  if (i === d.cur && d.cur < d.tasks.length - 1) d.cur++;
+  render();
+}
+SC['f1-team'] = {
+  f: 'f1', parent: 'f1-run', nm: '队伍看板', t: '队伍看板', gate: { flag: 'orient.team.board.enabled', code: 'ORIENT_DISABLED', msg: '该功能暂未开放' },
+  ep: ['GET /api/orient/team/detail | teamId → team, threshold, tasks[], members[], summary', 'GET /api/orient/team/ranking | ownerType, ownerId → rank, teamDoneCount, totalTasks, mine'],
+  render() {
+    const tab = fv('f1tt', 'me');
+    const mem = [['夜行者', [301, 302, 303]], ['阿青', [301, 302]], ['老周', [301]], ['你', f1().tasks.filter(t => t.done).map(t => t.id)]];
+    return `<div class="lt">北门小分队</div><div class="lt-sub">4 人 · 达标比例 75%（需 3 人完成一站才算队伍完成）</div>
+    <div class="seg2">${[['me', '本队'], ['rank', '排名']].map(([k, l]) => `<button class="${tab === k ? 'on' : ''}" data-a="opt" data-k="f1tt" data-v="${k}">${l}</button>`).join('')}</div>
+    ${tab === 'me' ? `<div class="stats mt16"><div><b>2/5</b><span>队伍完成</span></div><div><b>3</b><span>需要人数</span></div><div><b>4</b><span>活跃成员</span></div></div>
+    <div class="gt">站点</div><div class="group">${f1().tasks.map((t, i) => { const c = mem.filter(m => m[1].includes(t.id)).length; return `<div class="row"><div class="m"><b>${t.name}</b><div class="bar mt8"><i style="width:${c / 4 * 100}%"></i></div></div><span class="v">${c}/4 ${c >= 3 ? '<span class="chip ok">完成</span>' : ''}</span></div>`; }).join('')}</div>
+    <div class="gt">成员</div><div class="group">${mem.map(([n, ids], k) => `<div class="row"><span class="ico">${n[0]}</span><div class="m"><b>${n}${k === 0 ? ' · 队长' : ''}</b><small>完成 ${ids.length} 站</small></div></div>`).join('')}</div>` :
+    `<div class="group mt16">${[['北门小分队', 2, 1], ['江堤夜跑', 4, 0], ['书院派', 3, 0], ['码头帮', 1, 0]].sort((a, b) => b[1] - a[1]).map((r, i) => `<div class="row"><span class="huge m" style="font-size:28px;width:34px">${i + 1}</span><div class="m"><b>${r[0]}${r[2] ? ' · 我的队' : ''}</b><small>队伍完成 ${r[1]}/5</small></div></div>`).join('')}</div>`}`;
+  },
+};
+function ledgerHtml(withAppeal) {
+  const L = f1().ledger;
+  if (!L.length) return `<div class="group"><div class="row"><div class="m"><small>还没有计分记录。完成站点后由服务端追加 TASK_CLEARED。</small></div></div></div>`;
+  const reversed = new Set(L.filter(e => e.rev).map(e => e.rev));
+  return `<div class="group" style="padding:4px 16px">${L.slice().reverse().map(e => `<div class="tl ${reversed.has(e.entryId) ? 'rev' : ''} ${e.delta < 0 ? 'neg' : ''}"><span class="d"></span><div class="m"><b>${dimL[e.dim]} · ${({ TASK_CLEARED: '完成站点', PUZZLE_SCORE: '解谜', APPEAL_ACCEPTED: '申诉通过', REVERSAL: '冲正' })[e.reason] || e.reason}</b><small>#${e.entryId} · ${e.at} · ${e.src}${e.rev ? ' · 冲正 #' + e.rev : ''}</small>${withAppeal && !e.rev && !reversed.has(e.entryId) ? `<small><a data-sheet="f1-appeal" data-entry="${e.entryId}" style="color:var(--t1);text-decoration:underline">对这条申诉</a></small>` : ''}</div><span class="p">${e.delta > 0 ? '+' : ''}${pts(e.delta)}</span></div>`).join('')}</div>`;
+}
+SC['f1-score'] = {
+  f: 'f1', parent: 'f1-run', nm: '计分明细（追加式流水）', t: '本局计分', gate: { flag: 'orient.scoring.enabled', code: 'ORIENT_SCORING_DISABLED', msg: '城市定向计分暂未开放' },
+  ep: ['GET /api/orient/scoring/session/{sessionId} | totalCenti, byDimension, timeline[], disputeWindowDeadline, appeals[], disputes[]', 'POST /api/orient/scoring/session/{id}/sync | → added, totalCenti'],
+  render() {
+    if (!F('scoring')) return `<div class="stv"><div class="big">◌</div><b>城市定向计分暂未开放</b><p><span class="code">ORIENT_SCORING_DISABLED</span> · 开关 orient.scoring.enabled 关闭时只计时、不计分。</p></div>`;
+    const by = {}; f1().ledger.forEach(e => by[e.dim] = (by[e.dim] || 0) + e.delta);
+    return `<div class="hero"><div class="huge">${pts(f1Total())}<small>分</small></div><div class="lab">当前得分 · totalCenti ${f1Total()}</div></div>
+    <div class="stats mt12">${['TASK', 'PUZZLE', 'BONUS', 'PENALTY', 'ADJUSTMENT'].slice(0, 3).map(k => `<div><b>${pts(by[k] || 0)}</b><span>${dimL[k]}</span></div>`).join('')}</div>
+    <div class="gt">流水<small>只追加 · 更正用冲正条目</small></div>${ledgerHtml(false)}
+    <div class="pad mt16"><button class="spill" data-a="f1Sync">同步计分</button></div>`;
+  },
+};
+A.f1Sync = () => req(() => toast('已同步 · added 0'));
+SC['f1-result'] = {
+  f: 'f1', parent: 'f1-home', nm: '完赛 · 终局成绩', t: '完赛', lt: '完赛',
+  ep: ['POST /api/orient/scoring/session/{id}/settle | idempotencyKey → 终局投影 settlementId, totalCenti, pointsAwarded, xpAwarded…', 'GET /api/orient/scoring/session/{sessionId} | totalCenti, byDimension, timeline[], disputeWindowDeadline, appeals[], disputes[]'],
+  render() {
+    const d = f1(), s = d.settled;
+    const medal = !s ? 'dim' : s.totalCenti >= 50000 ? 'gold' : s.totalCenti >= 30000 ? 'silver' : 'bronze';
+    return `<div class="lt-sub">老城夜巡定向赛 · 用时 ${elapsed()}</div>
+    <div class="hero" style="display:flex;align-items:center;gap:18px"><div class="hex ${medal}"><b>${d.tasks.filter(t => t.done).length}</b><small>/5 站</small></div><div><div class="huge">${s ? pts(s.totalCenti) : '—'}<small>分</small></div><div class="lab">${s ? '终局成绩（一次性投影）' : '计分未开启 · 只记录完赛'}</div></div></div>
+    ${s ? `<div class="stats mt16"><div><b>+${s.pointsAwarded}</b><span>积分</span></div><div><b>+${s.xpAwarded}</b><span>经验</span></div><div><b>${s.entryCount}</b><span>计分条目</span></div></div>
+    <div class="group mt12"><div class="kv"><span>结算号</span><b>${s.settlementId}</b></div><div class="kv"><span>结算时间</span><b>今天 ${s.settledAt}</b></div><div class="kv"><span>申诉截止</span><b>明天 ${s.settledAt}（24 小时）</b></div></div>
+    <div class="gt">计分流水<small>可对单条申诉</small></div>${ledgerHtml(true)}
+    <div class="gt">申诉</div><div class="group"><div class="row tap" data-sheet="f1-dispute"><div class="m"><b>对总成绩有异议</b><small>成绩争议 · 每局一次待处理</small></div>${chev}</div><div class="row tap" data-go="f1-appeals"><div class="m"><b>我的申诉与争议</b><small>${d.appeals.length + d.disputes.length} 条</small></div>${chev}</div></div>` : ''}`;
+  },
+  foot() { return `<button class="pill" data-a="toast" data-msg="已生成分享图（原型）">分享成绩</button>`; },
+};
+SH['f1-appeal'] = {
+  t: '申诉这条记录',
+  render(p) { return `<div class="pad c2 fs13" style="padding-bottom:8px">条目 #${p.entry}。审核通过后，后台会追加一条冲正 / 调整，原记录保留。</div><div class="group"><div class="field"><textarea name="f1apr" placeholder="说明原因，例如：这一站实际完成了解谜">${esc(fv('f1apr', ''))}</textarea></div></div>`; },
+  foot(p) { return `<button class="pill" data-a="f1Appeal" data-entry="${p.entry}">提交申诉</button>`; },
+};
+A.f1Appeal = (el, ds) => {
+  const d = f1();
+  if (d.appeals.find(a => a.entryId == ds.entry && a.status === 'PENDING')) return toast('该条目已有待处理的申诉');
+  closeSheet(() => req(() => { d.appeals.push({ id: 880 + d.appeals.length, entryId: +ds.entry, reason: fv('f1apr', '') || '实际完成了解谜', status: 'PENDING', at: clockNow() }); S.form.f1apr = ''; toast('已提交申诉'); render(); }));
+};
+SH['f1-dispute'] = {
+  t: '成绩争议',
+  render() { return `<div class="pad c2 fs13" style="padding-bottom:8px">针对整局成绩。对局结束后 24 小时内可提，同一局只能有一条待处理。</div><div class="group"><div class="field"><textarea name="f1dsr" placeholder="说明原因">${esc(fv('f1dsr', ''))}</textarea></div></div>`; },
+  foot() { return `<button class="pill" data-a="f1Dispute">提交</button>`; },
+};
+A.f1Dispute = () => {
+  const d = f1();
+  if (d.disputes.find(a => a.status === 'PENDING')) return toast('本局已有待处理的成绩争议');
+  closeSheet(() => req(() => { d.disputes.push({ id: 120 + d.disputes.length, reason: fv('f1dsr', '') || '用时不对', status: 'PENDING', at: clockNow() }); toast('已提交'); render(); }));
+};
+SC['f1-appeals'] = {
+  f: 'f1', parent: 'f1-result', nm: '我的申诉与争议', t: '申诉与争议', empty: '还没有申诉',
+  ep: ['GET /api/orient/scoring/receipt | kind SETTLE/APPEAL/DISPUTE → state PENDING/ACCEPTED/REJECTED', 'POST /api/orient/scoring/appeal | sessionId, entryId, nodeId, reason, idempotencyKey', 'POST /api/orient/scoring/dispute | sessionId, reason, idempotencyKey'],
+  render() {
+    const d = f1(); const all = d.appeals.map(a => ({ ...a, k: '单条申诉 · #' + a.entryId })).concat(d.disputes.map(a => ({ ...a, k: '成绩争议' })));
+    if (!all.length) return `<div class="stv"><div class="big">∅</div><b>还没有申诉</b><p>在成绩页的流水里点「对这条申诉」，或提交整局成绩争议。</p></div>`;
+    const ch = { PENDING: '<span class="chip warn">待处理</span>', ACCEPTED: '<span class="chip ok">已通过</span>', REJECTED: '<span class="chip bad">未通过</span>' };
+    return `<div class="group mt8">${all.map(a => `<div class="row"><div class="m"><b>${a.k}</b><small>${esc(a.reason)} · ${a.at}${a.note ? ' · 回复：' + esc(a.note) : ''}</small></div>${ch[a.status]}</div>`).join('')}</div>
+    <div class="pad fs12 c2 mt12">原型：后台「F1 成绩申诉」里处理后，这里的状态会同步变化（同一份演示数据）。</div>`;
+  },
+};
+
+/* ================= F2 RPG P0 + F6 RPG P1 ================= */
+FEATS.push({
+  k: 'f2', tag: 'F2', group: '玩家端（深色）', name: 'RPG P0 · 角色卡与检定', sub: '动态属性卡 · 属性绑定检定 · 服务端掷骰', theme: 'dark', root: 'f2-card',
+  gate: { flag: '（F2 无开关：新列可空）', code: 'CHARACTER_TOPIC_NOT_FOUND', msg: '本主题未配置属性' },
+  toggles: [
+    { id: 'f2created', k: '演示：character.created', l: '已经生成角色卡' },
+    { id: 'natAuto', k: 'journeyRules.natAuto', l: '天然 20 / 天然 1 自动成败' },
+    { id: 'forceFail', k: '演示：服务端掷出失败', l: '下一次掷骰失败' },
+    { id: 'forceCrit', k: '演示：服务端掷出 20', l: '下一次掷出天然 20' },
+  ],
+  eps: [
+    'GET /api/play/character | topicId → created, running, attributes[]{stateKey,label,value,min,max,displayType,color,icon,persistScope,rules}, rpg?',
+    'POST /api/play/check/roll | topicId, activityId, nodeId, checkId → dice[], kept, total, dc, success, nat, breakdown',
+    'POST /api/play/check/reroll | 花 1 点幸运（sys.luck）重掷',
+    'POST /api/play/check/settle | 结算：text、failCostLabel 只在这里出现，同时返回 hp/luck',
+    'POST /api/play/check/rest | 力竭（exhausted）时休息',
+  ],
+  qs: [
+    ['F2', '属性范围的唯一真源：theme_state_key.min/max 与 journeyRules.attributes[].min/max 现在取交集，以哪个为准？'],
+    ['C4-1', '技能绑定属性的命名空间：counter.* 还是 stat.*？属性存 theme_character（跨局）还是只存本局（目前只实现了 run）？'],
+    ['C4-2', '情境修正 modCap 只有上限没有下限，是否改成 [-cap, cap]？'],
+    ['C4-3', '两个掷骰入口（roll 与 rollAttempt）是否合并？'],
+    ['F2', '结果只有成功 / 失败 + 天然 20/1，没有「部分成功」档；文案是否需要第三档？'],
+    ['F2', '角色卡 displayType（数字 / 条 / 星）由发布者选，还是统一一种？'],
+  ],
+  src: 'integration-batch4.md · ApiPlayCharacterController · ApiPlayCheckController · ThemeCharacterService · GameplayCheckEngine',
+});
+FEATS.push({
+  k: 'f6', tag: 'F6', group: '玩家端（深色）', name: 'RPG P1 · 状态与交易', sub: '状态栏·进度钟·魔鬼交易·动量·特质', theme: 'dark', root: 'f6-hud',
+  gate: { flag: 'journeyRules.rpg（未配置 = 全关）', code: '—', msg: '本局未开启 RPG 扩展' },
+  toggles: [
+    { id: 'bargain', k: 'journeyRules.rpg.bargain.enabled', l: '魔鬼交易' },
+    { id: 'momentum', k: 'journeyRules.rpg.momentum.enabled', l: '动量' },
+    { id: 'env', k: 'journeyRules.rpg.environment.enabled', l: '环境（天气 / 时段）' },
+    { id: 'forceFail', k: '演示：服务端掷出失败', l: '下一次掷骰失败' },
+  ],
+  eps: [
+    'GET /api/play/rpg/status | topicId, activityId → running, hp, luck, attributes[]{key,…}, rpg{clocks,momentum,facets,aspects,environment}',
+    'GET /api/play/nodes | 节点 advancedConfigJson 里的 check.bargain = {label, bonus}（代价不下发）',
+    'POST /api/play/check/bargain | 掷骰前接受交易 → bargain{label,bonus,accepted}, hp, luck',
+    'POST /api/play/check/roll | 不接受交易 = 直接掷骰（没有拒绝接口）',
+    'POST /api/play/check/momentum | 掷骰后、结算前花动量补差 → momentum{spent,value,max}',
+    'POST /api/play/check/settle | 结算；交易代价（SET/INC/ADD_TAG/ADD_CONDITION/TICK_CLOCK）在这里生效',
+  ],
+  qs: [
+    ['C-F6-1', '进度钟段数有两个来源（clock 配置 segments 与变量定义），以哪个为准？'],
+    ['C-F6-2', 'ENV_IN（天气 / 时段条件）用在路线边条件上会被发布闸拒绝（fail-closed）。要不要放开？'],
+    ['C-F6-3', '交易 / 动量没有接到 attempt 路径（只在 check 路径），玩法屏里的检定要不要也支持？'],
+    ['C-F6-4', '动量规则是简化版（失败 +1、补差最多 3）。是否需要更完整的规则？'],
+    ['C-F6-5', '天气城市来源用的是 address_name，应在 O-14 之后改为 city_code；地址外发（N533-5）也属这一项。'],
+    ['F6', '没有本局规则上下文的投影（模板库、商家 / 报名视角、info-to-user）一律不下发 check.bargain，预览里看不到交易，是否接受？'],
+    ['F6', '交易代价对玩家完全隐藏（只给 label），还是给一句模糊提示？原型写「代价会在结算时揭晓」。'],
+  ],
+  src: 'integration-batch5.md §5/§9 · ApiPlayRpgController · ApiPlayCheckController · JourneyRpg · TopicRouteRuntimeServiceImpl',
+});
+function rpgInit() {
+  S.d.rpg = {
+    hp: 8, hpMax: 10, luck: 2,
+    attrs: [
+      { stateKey: 'stat.str', label: '力量', value: 14, min: 0, max: 20, displayType: 'bar', persistScope: 'topic' },
+      { stateKey: 'stat.wit', label: '智识', value: 11, min: 0, max: 20, displayType: 'number', persistScope: 'topic' },
+      { stateKey: 'stat.charm', label: '魅力', value: 3, min: 0, max: 5, displayType: 'stars', persistScope: 'run' },
+      { stateKey: 'stat.stealth', label: '潜行', value: 9, min: 0, max: 20, displayType: 'bar', persistScope: 'run' },
+    ],
+    momentum: { value: 2, max: 6, maxSpend: 3 },
+    clocks: [{ var: 'counter.alarm', label: '守夜人警觉', kind: 'danger', value: 2, segments: 6 }, { var: 'counter.ritual', label: '钟楼仪式', kind: 'progress', value: 3, segments: 4 }],
+    facets: [{ key: 'night_owl', label: '夜猫子', desc: '夜间检定 +1' }],
+    aspects: [{ key: 'soaked', label: '浑身湿透', desc: '下雨时潜行 -1' }],
+    env: { weather: 'rain', daypart: 'evening', weekpart: 'weekend', season: 'autumn' },
+    chk: null,
+  };
+}
+const R = () => S.d.rpg;
+const envL = { rain: '小雨', clear: '晴', cloudy: '多云', snow: '雪', fog: '雾', wind: '大风', storm: '雷暴', evening: '傍晚', night: '夜晚', morning: '上午', afternoon: '下午', dawn: '清晨', weekend: '周末', weekday: '工作日', autumn: '秋', spring: '春', summer: '夏', winter: '冬', unknown: '未知' };
+function attrVal(a) {
+  if (a.displayType === 'stars') return `<span class="stars">${'★'.repeat(a.value)}<em>${'★'.repeat(a.max - a.value)}</em></span>`;
+  if (a.displayType === 'bar') return `<div style="width:120px"><div class="bar"><i style="width:${(a.value - a.min) / (a.max - a.min) * 100}%"></i></div><div class="fs12 c2" style="text-align:right;margin-top:3px">${a.value}/${a.max}</div></div>`;
+  return `<span class="huge m" style="font-size:30px">${a.value}</span>`;
+}
+function clockSvg(c, size) {
+  size = size || 64; const r = size / 2 - 4, cx = size / 2, n = c.segments; let p = '';
+  for (let i = 0; i < n; i++) {
+    const a0 = (i / n) * 2 * Math.PI - Math.PI / 2, a1 = ((i + 1) / n) * 2 * Math.PI - Math.PI / 2;
+    const x0 = cx + r * Math.cos(a0), y0 = cx + r * Math.sin(a0), x1 = cx + r * Math.cos(a1), y1 = cx + r * Math.sin(a1);
+    const on = i < c.value;
+    p += `<path d="M${cx},${cx} L${x0.toFixed(1)},${y0.toFixed(1)} A${r},${r} 0 0 1 ${x1.toFixed(1)},${y1.toFixed(1)} Z" fill="${on ? (c.kind === 'danger' ? '#FF453A' : '#fff') : '#2C2C2E'}" stroke="#000" stroke-width="2"/>`;
+  }
+  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">${p}</svg>`;
+}
+SC['f2-card'] = {
+  f: 'f2', nm: '角色卡', t: '角色卡', lt: '我的角色',
+  ep: ['GET /api/play/character | topicId → created, running, attributes[]{stateKey,label,value,min,max,displayType,color,icon,persistScope,rules}, rpg?'],
+  render() {
+    const r = R();
+    return `<div class="lt-sub">钟楼疑案 · ${F('f2created') ? '角色已生成' : 'created=false（还没开局，展示模板初始值）'}</div>
+    <div class="pad mt8"><div class="cover c3" style="height:160px"><div class="shade"></div><div class="ct" style="display:flex;align-items:flex-end;justify-content:space-between"><div><b>守夜学徒</b><small>第 2 局 · 进行中</small></div><div class="hex silver" style="width:56px;height:64px"><b style="font-size:18px">Lv3</b></div></div></div></div>
+    <div class="stats mt16"><div><b>${r.hp}/${r.hpMax}</b><span>生命</span></div><div><b>${r.luck}</b><span>幸运</span></div><div><b>${r.attrs.length}</b><span>属性</span></div></div>
+    <div class="gt">属性<small>displayType 由主题配置</small></div>
+    <div class="group">${r.attrs.map(a => `<div class="row"><div class="m"><b>${a.label}</b><small>${a.stateKey} · ${a.persistScope === 'topic' ? '跨局保留' : '仅本局'}</small></div>${attrVal(a)}</div>`).join('')}</div>
+    <div class="gt">检定示例</div>
+    <div class="group"><div class="row tap" data-go="f2-check"><span class="ico">D20</span><div class="m"><b>撬开钟楼侧门</b><small>力量检定 · 困难 DC 16</small></div>${chev}</div></div>`;
+  },
+};
+function chkNew() { return { tier: 'hard', dc: 16, skill: { statKey: 'stat.str', label: '力量', value: 3 }, mods: [{ label: '撬棍', value: 2, applied: true }, { label: '雨天湿滑', value: -1, applied: true }, { label: '同伴协助', value: 2, applied: false }], dice: null, kept: null, total: null, success: null, nat: null, rerolled: false, settled: false, bargain: null, momentum: null, rolling: false }; }
+function checkHtml(rpg) {
+  const r = R(); const c = r.chk || (r.chk = chkNew());
+  const modSum = c.mods.filter(m => m.applied).reduce((s, m) => s + m.value, 0);
+  const tierL = { easy: '简单 DC 10', medium: '中等 DC 13', hard: '困难 DC 16' }[c.tier];
+  let die = c.rolling ? `<div class="d20 rolling" id="d20">?</div>` : c.dice ? `<div class="d20 ${c.nat === 'CRIT' ? 'crit' : c.nat === 'FUMBLE' ? 'fum' : ''}">${c.kept}</div>` : `<div class="d20" style="opacity:.5">20</div>`;
+  let h = `<div class="pad mt8"><div class="group" style="margin:0;background:#111318;border-radius:24px;padding:18px"><div class="c2 fs12">钟楼疑案 · 第 3 节点</div><div style="font-size:20px;font-weight:800;margin-top:4px">撬开钟楼侧门</div><div class="fs13 c2 mt8">门锁锈死了。雨水顺着门缝流下来，守夜人随时会回来。</div><div class="chips mt12"><span class="chip">力量检定</span><span class="chip">${tierL}</span>${rpg && F('env') ? `<span class="chip">${envL[r.env.weather]} · ${envL[r.env.daypart]}</span>` : ''}</div></div></div>`;
+  if (rpg && F('bargain') && !c.dice && !c.bargain) h += `<div class="pad mt12"><div class="group" style="margin:0;border:1px solid rgba(255,159,10,.5);background:rgba(255,159,10,.08)"><div style="padding:16px"><div class="fs12" style="color:var(--warn);font-weight:700">魔鬼交易</div><div style="font-size:17px;font-weight:800;margin-top:4px">借用守夜人的备用钥匙</div><div class="fs13 c2 mt8">本次检定 +2。代价会在结算时揭晓。</div><div class="btns mt12"><button class="spill sm" data-a="chkNoBargain">不用</button><button class="pill sm" data-sheet="f6-bargain">看看交易</button></div></div></div></div>`;
+  if (c.bargain) h += `<div class="banner warn"><span class="dot warn"></span><div><b>已接受交易：${c.bargain.label} +${c.bargain.bonus}</b>代价在结算时生效。</div></div>`;
+  h += `<div class="mt24">${die}</div><div class="center mt12">${c.dice ? `<div class="huge m">${c.total}<small>/ DC ${c.dc}</small></div><div class="mt8">${c.success ? '<span class="chip ok">成功</span>' : '<span class="chip bad">失败</span>'} ${c.nat === 'CRIT' ? '<span class="chip inv">天然 20</span>' : ''}${c.nat === 'FUMBLE' ? '<span class="chip bad">天然 1</span>' : ''} ${c.rerolled ? '<span class="chip">已重掷</span>' : ''}</div>` : '<div class="c2 fs13">骰子由服务端掷出，前端只播放动画</div>'}</div>`;
+  h += `<div class="gt">构成<small>breakdown</small></div><div class="group">
+    <div class="kv"><span>骰子 d20${c.dice && c.dice.length > 1 ? '（优势取高）' : ''}</span><b>${c.dice ? c.dice.join(' / ') : '—'}</b></div>
+    <div class="kv"><span>力量加值（属性绑定）</span><b>+${c.skill.value}</b></div>
+    ${c.mods.map(m => `<div class="kv"><span>${m.label}${m.applied ? '' : '（未满足条件）'}</span><b style="${m.applied ? '' : 'color:var(--t3)'}">${m.value > 0 ? '+' : ''}${m.value}</b></div>`).join('')}
+    <div class="kv"><span>情境修正合计（上限 6）</span><b>${modSum > 0 ? '+' : ''}${Math.min(modSum, 6)}</b></div>
+    ${c.bargain ? `<div class="kv"><span>交易加值</span><b>+${c.bargain.bonus}</b></div>` : ''}
+    ${c.momentum ? `<div class="kv"><span>动量补差</span><b>+${c.momentum.spent}</b></div>` : ''}
+    <div class="kv"><span>合计 / 目标</span><b>${c.total == null ? '—' : c.total} / ${c.dc}</b></div></div>`;
+  if (rpg && F('momentum') && c.dice && !c.success && !c.settled && c.nat !== 'FUMBLE') {
+    const gap = Math.max(1, c.dc - c.total); const ok = gap <= r.momentum.maxSpend && gap <= r.momentum.value;
+    h += `<div class="pad mt12"><div class="group" style="margin:0"><div style="padding:16px"><div style="display:flex;justify-content:space-between;align-items:center"><b>动量</b><span class="pips">${Array.from({ length: r.momentum.max }, (_, i) => `<i class="${i < r.momentum.value ? 'on' : ''}"></i>`).join('')}</span></div><div class="fs13 c2 mt8">${ok ? `差 ${gap} 点。花 ${gap} 点动量把这次失败变成成功。` : gap > r.momentum.maxSpend ? `差 ${gap} 点，超过单次上限 ${r.momentum.maxSpend}（RPG_MOMENTUM_GAP_TOO_LARGE）` : `动量不足（RPG_MOMENTUM_INSUFFICIENT）`}</div>${ok ? `<button class="pill sm mt12" data-a="chkMomentum">花 ${gap} 点动量</button>` : ''}</div></div></div>`;
+  }
+  if (c.settled) h += `<div class="banner ${c.success ? 'ok' : 'bad'}"><span class="dot ${c.success ? 'ok' : 'bad'}"></span><div><b>${c.success ? '门开了。' : '锁纹丝不动，你划伤了手。'}</b>${c.success ? '' : 'failCostLabel：生命 -1'}${c.bargain ? '<br>交易代价：守夜人警觉 +2（TICK_CLOCK）' : ''}${rpg && F('momentum') && !c.success ? '<br>失败获得 1 点动量' : ''}</div></div>`;
+  return h;
+}
+function checkFoot() {
+  const r = R(), c = r.chk || chkNew();
+  if (c.rolling) return `<button class="pill dis">掷骰中…</button>`;
+  if (!c.dice) return `<button class="pill" data-a="chkRoll">掷骰</button>`;
+  if (!c.settled) return `<div class="btns">${!c.rerolled && r.luck > 0 && !c.success ? `<button class="spill" data-a="chkReroll">重掷（幸运 ${r.luck}）</button>` : ''}<button class="pill" data-a="chkSettle">结算</button></div>`;
+  return `<div class="btns"><button class="spill" data-a="chkReset">再来一次</button><button class="pill" data-a="back">继续</button></div>`;
+}
+function rollServer(c, again) {
+  const bonus = c.bargain ? c.bargain.bonus : 0;
+  const modSum = Math.min(c.mods.filter(m => m.applied).reduce((s, m) => s + m.value, 0), 6);
+  let die = F('forceCrit') ? 20 : F('forceFail') ? 9 : 13 + Math.floor(Math.random() * 6);
+  if (again) die = Math.min(20, die + 3);
+  c.dice = [die]; c.kept = die; c.total = die + c.skill.value + modSum + bonus;
+  c.nat = F('natAuto') ? (die === 20 ? 'CRIT' : die === 1 ? 'FUMBLE' : null) : null;
+  c.success = c.nat === 'CRIT' ? true : c.nat === 'FUMBLE' ? false : c.total >= c.dc;
+  S.flags.forceCrit = false;
+}
+A.chkRoll = () => { const c = R().chk; c.rolling = true; render(); const t = setInterval(() => { const e = document.getElementById('d20'); if (e) e.textContent = 1 + Math.floor(Math.random() * 20); }, 70); later(900, () => { clearInterval(t); c.rolling = false; rollServer(c); render(); }); };
+A.chkReroll = () => { const r = R(), c = r.chk; r.luck--; c.rerolled = true; c.rolling = true; render(); later(800, () => { c.rolling = false; rollServer(c, true); render(); toast('花了 1 点幸运'); }); };
+A.chkSettle = () => req(() => { const r = R(), c = r.chk; c.settled = true; if (!c.success) { r.hp = Math.max(0, r.hp - 1); if (F('momentum')) r.momentum.value = Math.min(r.momentum.max, r.momentum.value + 1); } if (c.bargain) r.clocks[0].value = Math.min(r.clocks[0].segments, r.clocks[0].value + 2); render(); });
+A.chkReset = () => { R().chk = chkNew(); render(); };
+A.chkNoBargain = () => { toast('不接受交易，直接掷骰'); A.chkRoll(); };
+A.chkMomentum = () => req(() => { const r = R(), c = r.chk; const gap = Math.max(1, c.dc - c.total); r.momentum.value -= gap; c.momentum = { spent: gap }; c.total += gap; c.success = true; render(); toast(`花了 ${gap} 点动量`); });
+SC['f2-check'] = {
+  f: 'f2', parent: 'f2-card', nm: '属性检定（服务端掷骰）', t: '检定',
+  ep: ['POST /api/play/check/roll | topicId, activityId, nodeId, checkId → dice[], kept, total, dc, success, nat, breakdown', 'POST /api/play/check/reroll | 花 1 点幸运（sys.luck）重掷', 'POST /api/play/check/settle | 结算：text、failCostLabel 只在这里出现，同时返回 hp/luck'],
+  render() { return checkHtml(false); }, foot: () => checkFoot(),
+};
+SC['f6-hud'] = {
+  f: 'f6', nm: '玩法页状态栏', t: '', navOv: true,
+  ep: ['GET /api/play/rpg/status | topicId, activityId → running, hp, luck, attributes[]{key,…}, rpg{clocks,momentum,facets,aspects,environment}'],
+  render() {
+    const r = R();
+    return `<div style="position:absolute;left:0;right:0;top:0;height:760px;background:radial-gradient(circle at 30% 40%,#1f3b5b,#0b0f14 60%)"><div style="position:absolute;left:40%;top:46%;width:14px;height:14px;border-radius:50%;background:#fff;box-shadow:0 0 0 8px rgba(255,255,255,.2)"></div></div><div style="position:relative">
+    <div style="margin:4px 16px 0;padding:12px 14px;border-radius:18px;background:rgba(10,10,10,.82);border:1px solid rgba(255,255,255,.18)" data-sheet="f6-status">
+      <div style="display:flex;align-items:center;gap:12px"><div><div class="fs12 c2">生命</div><b style="font-size:18px;font-style:italic">${r.hp}/${r.hpMax}</b></div><div><div class="fs12 c2">幸运</div><b style="font-size:18px;font-style:italic">${r.luck}</b></div>${F('momentum') ? `<div><div class="fs12 c2">动量</div><span class="pips" style="margin-top:4px">${Array.from({ length: r.momentum.max }, (_, i) => `<i class="${i < r.momentum.value ? 'on' : ''}" style="width:10px;height:10px"></i>`).join('')}</span></div>` : ''}<div style="margin-left:auto;display:flex;gap:6px">${r.clocks.map(c => clockSvg(c, 34)).join('')}</div></div>
+      <div class="chips mt8">${F('env') ? `<span class="chip">${envL[r.env.weather]}</span><span class="chip">${envL[r.env.daypart]}</span>` : ''}${r.facets.map(f => `<span class="chip">${f.label}</span>`).join('')}${r.aspects.map(f => `<span class="chip warn">${f.label}</span>`).join('')}</div>
+    </div>
+    <div class="center fs12 c2 mt8">点状态栏展开详情</div>
+    <div style="height:300px"></div>
+    <div style="margin:0 12px;background:#000;border-radius:24px;padding:8px 0 16px"><div class="grab"></div><div style="padding:8px 16px"><span class="chip">第 3 站</span><div style="font-size:22px;font-weight:800;margin-top:8px">钟楼侧门</div><div class="fs13 c2 mt8">门锁锈死了，守夜人随时会回来。</div><button class="pill mt12" data-go="f6-check">开始检定</button></div></div></div>`;
+  },
+};
+SH['f6-status'] = {
+  t: '状态',
+  render() {
+    const r = R();
+    return `<div class="stats" style="margin:0 16px"><div style="background:var(--s2)"><b>${r.hp}/${r.hpMax}</b><span>生命</span></div><div style="background:var(--s2)"><b>${r.luck}</b><span>幸运</span></div><div style="background:var(--s2)"><b>${F('momentum') ? r.momentum.value + '/' + r.momentum.max : '—'}</b><span>动量</span></div></div>
+    <div class="gt" style="font-size:15px">进度钟</div><div class="group">${r.clocks.map(c => `<div class="row">${clockSvg(c, 48)}<div class="m"><b>${c.label}</b><small>${c.kind === 'danger' ? '危险钟 · 填满触发后果' : '进度钟 · 填满达成目标'} · ${c.value}/${c.segments}</small></div>${c.value >= c.segments ? '<span class="chip bad">已满</span>' : ''}</div>`).join('')}</div>
+    <div class="gt" style="font-size:15px">属性</div><div class="group">${r.attrs.map(a => `<div class="row"><div class="m"><b>${a.label}</b></div>${attrVal(a)}</div>`).join('')}</div>
+    <div class="gt" style="font-size:15px">特质与状态</div><div class="group">${r.facets.map(f => `<div class="row"><span class="ico">特</span><div class="m"><b>${f.label}</b><small>永久特质 · ${f.desc}</small></div></div>`).join('')}${r.aspects.map(f => `<div class="row"><span class="ico" style="background:var(--warnS);color:var(--warn)">状</span><div class="m"><b>${f.label}</b><small>临时状态 · ${f.desc}</small></div></div>`).join('')}</div>
+    ${F('env') ? `<div class="gt" style="font-size:15px">环境</div><div class="group"><div class="kv"><span>天气</span><b>${envL[r.env.weather]}</b></div><div class="kv"><span>时段</span><b>${envL[r.env.daypart]}</b></div><div class="kv"><span>星期</span><b>${envL[r.env.weekpart]}</b></div><div class="kv"><span>季节</span><b>${envL[r.env.season]}</b></div></div>` : ''}`;
+  },
+};
+SH['f6-bargain'] = {
+  t: '魔鬼交易',
+  render() {
+    return `<div class="pad"><div class="hex gold" style="margin:4px auto 0;width:76px;height:86px"><b>+2</b></div><div class="center mt12" style="font-size:20px;font-weight:800">借用守夜人的备用钥匙</div><div class="center c2 fs13 mt8">接受后本次检定 +2。<br>代价不会提前告诉你，会在结算时揭晓。</div></div>
+    <div class="group mt16"><div class="kv"><span>只能在掷骰前接受</span><b>掷骰后：RPG_BARGAIN_AFTER_ROLL</b></div><div class="kv"><span>不接受</span><b>直接掷骰（没有拒绝接口）</b></div></div>`;
+  },
+  foot() { return `<div class="btns"><button class="spill" data-a="bgNo">不接受</button><button class="pill" data-a="bgYes">接受交易</button></div>`; },
+};
+A.bgYes = () => closeSheet(() => req(() => { R().chk.bargain = { label: '借用守夜人的备用钥匙', bonus: 2, accepted: true }; render(); toast('已接受 · +2'); }));
+A.bgNo = () => closeSheet(() => A.chkNoBargain());
+SC['f6-check'] = {
+  f: 'f6', parent: 'f6-hud', nm: '检定 + 交易 + 动量', t: '检定',
+  ep: ['GET /api/play/nodes | 节点 advancedConfigJson 里的 check.bargain = {label, bonus}（代价不下发）', 'POST /api/play/check/bargain | 掷骰前接受交易 → bargain{label,bonus,accepted}, hp, luck', 'POST /api/play/check/momentum | 掷骰后、结算前花动量补差 → momentum{spent,value,max}', 'POST /api/play/check/settle | 结算；交易代价（SET/INC/ADD_TAG/ADD_CONDITION/TICK_CLOCK）在这里生效'],
+  render() { return checkHtml(true); }, foot: () => checkFoot(),
+};
+/* ================= F3 自由探索套票 Phase 1 ================= */
+FEATS.push({
+  k: 'f3', tag: 'F3', group: '玩家端（深色）', name: '自由探索套票', sub: '未开售态·套票钱包·券码·预约（默认关）', theme: 'dark', root: 'f3-catalog',
+  gate: { flag: 'chengyin.free-explore.bundle.ledger-enabled', code: 'BUNDLE_LEDGER_OFF', msg: '自由探索套票暂未开放' },
+  toggles: [
+    { id: 'ledger', k: 'chengyin.free-explore.bundle.ledger-enabled', l: '套票台账' },
+    { id: 'sale', k: 'chengyin.free-explore.bundle.sale-enabled', l: '开售（= 台账 且 开售）' },
+    { id: 'reservation', k: 'chengyin.free-explore.bundle.reservation-enabled', l: '预约（K3 未定前保持关）' },
+  ],
+  eps: [
+    'GET /api/free-explore/bundle/catalog | topicId → items[]{chapterId,name,termsMode,unitsPerHolder,stores[]{offerId,merchantName,validEnd}}, policy, saleEnabled, reservationEnabled',
+    'POST /api/registration（现有） | 购票仍走现有报名下单；开售关闭时不建台账（静默返回）',
+    'GET /api/free-explore/bundle/order | registrationId → bundle{order, balances[], units[], reservations[], exitCases[], policy}',
+    'GET /api/free-explore/bundle/order/receipt | requestId → 下单结果未知时查回',
+    'GET /api/free-explore/bundle/order/refund-quote | registrationId → 只读试算 totalValue, remainingValue, remainingRatio',
+    'POST /api/free-explore/bundle/reservation | registrationId, unitId, offerId, startAt, idempotencyKey → status BOOKED',
+    'GET /api/free-explore/bundle/reservation/receipt | idempotencyKey',
+    'POST /api/free-explore/bundle/reservation/{reservationId}/cancel | {useWaiver} → CANCELLED / LATE_CANCELLED / WAIVED',
+    'POST /api/free-explore/bundle/exit-decision | unitId, decision SWAP_CONSENTED/REFUND_UNFULFILLED, targetOfferId, idempotencyKey',
+  ],
+  qs: [
+    ['K1', '每章只给 1 张券（UNITS_PER_CHAPTER=1）。要不要一章多张？需要改核销唯一键。'],
+    ['K2', '部分退款退到「平台余额」还没有资金路由，所以现在只能试算、不能提交。'],
+    ['K3', '最关键：罚没（FORFEITED）不会置位 verification_status，整单原路全退可以绕过罚没。K3 解决前不要开 reservation-enabled。'],
+    ['K4', '单券价值怎么算：现在是实付平均分、尾差给最后一张；还是按章节加权？'],
+    ['K5', '有效期来源：现在取活动 end_date（没有就拒绝冻结）；还是单独配置？'],
+    ['K6', '商家退出后由持券人发起改换 / 退款；还是在商家退出流程里自动开单？'],
+    ['K7', 'settlement_claim 的按券维度推迟到 Phase 2，需要第二次资金审批。'],
+    ['K8', '过期不会自动改状态，只在读的时候算 expired；要不要加过期任务？'],
+    ['F3', '开售关闭时购票不报错、只是不建台账（没有 BUNDLE_SALE_OFF 码）。前台是否需要明确的「暂未开售」拦截？原型按目录页 saleEnabled=false 直接置灰。'],
+  ],
+  src: 'docs/delivery/doc2-f3-phase1-20261022/design.md · ApiFreeExploreBundleController · FreeExploreBundleServiceImpl',
+});
+function f3Init() {
+  S.d.f3 = {
+    paid: false, waiversLeft: 1,
+    chapters: [
+      { chapterId: 11, name: '咖啡章 · 老街烘焙', offers: [{ offerId: 501, merchantName: '旧时光咖啡' }, { offerId: 502, merchantName: '巷口手冲' }] },
+      { chapterId: 12, name: '书店章 · 独立书店', offers: [{ offerId: 511, merchantName: '半山书房' }] },
+      { chapterId: 13, name: '甜品章 · 糖水铺', offers: [{ offerId: 521, merchantName: '阿婆糖水' }, { offerId: 522, merchantName: '南门甜品' }] },
+    ],
+    units: [
+      { unitId: 9001, chapterId: 11, code: 'FE7Q2K91', status: 'AVAILABLE', res: null },
+      { unitId: 9002, chapterId: 12, code: 'FE3M8X40', status: 'AVAILABLE', res: null, exited: true },
+      { unitId: 9003, chapterId: 13, code: 'FE5T1C77', status: 'REDEEMED', res: null },
+    ],
+  };
+}
+const f3 = () => S.d.f3;
+const chap = id => f3().chapters.find(c => c.chapterId === id);
+const unitChip = s => ({ AVAILABLE: '<span class="chip ok">可用</span>', RESERVED: '<span class="chip inv">已预约</span>', REDEEMED: '<span class="chip">已核销</span>', FORFEITED: '<span class="chip bad">已罚没</span>', HELD: '<span class="chip warn">冻结中</span>', REFUND_PENDING: '<span class="chip warn">退款中</span>', REFUNDED: '<span class="chip">已退款</span>' }[s]);
+SC['f3-catalog'] = {
+  f: 'f3', nm: '套票目录（含未开售态）', t: '自由探索', lt: '城市漫游套票',
+  ep: ['GET /api/free-explore/bundle/catalog | topicId → items[]{chapterId,name,termsMode,unitsPerHolder,stores[]{offerId,merchantName,validEnd}}, policy, saleEnabled, reservationEnabled'],
+  render() {
+    const on = F('ledger') && F('sale');
+    return `<div class="lt-sub">3 个章节 · 每章 1 张券 · 有效期至 12 月 31 日</div>
+    <div class="pad mt8"><div class="cover c2" style="height:170px"><div class="shade"></div><div class="ct"><b>老城慢逛 · 三店联票</b><small>自由探索 · 不限顺序</small></div></div></div>
+    ${on ? '' : `<div class="banner warn"><span class="dot warn"></span><div><b>暂未开售</b>${F('ledger') ? 'saleEnabled=false' : 'BUNDLE_LEDGER_OFF'} · 目录可看，不能下单。</div></div>`}
+    <div class="gt">章节<small>items[]</small></div>
+    <div class="group">${f3().chapters.map((c, i) => `<div class="row"><div class="cover ${['c2', 'c3', ''][i]} thumb"></div><div class="m"><b>${c.name}</b><small>${c.offers.map(o => o.merchantName).join(' · ')} · 1 张</small></div></div>`).join('')}</div>
+    <div class="gt">规则<small>policy</small></div>
+    <div class="group"><div class="kv"><span>免费取消</span><b>到店前 24 小时</b></div><div class="kv"><span>每月主动豁免</span><b>1 次</b></div><div class="kv"><span>部分退款</span><b>剩余价值 ≥ 30% 可试算</b></div><div class="kv"><span>预约</span><b>${F('ledger') && F('reservation') ? '可预约到店时间' : '暂未开放 · 直接到店'}</b></div></div>
+    ${f3().paid ? `<div class="gt">已购</div><div class="group"><div class="row tap" data-go="f3-wallet"><div class="m"><b>我的套票</b><small>3 张券</small></div>${chev}</div></div>` : ''}`;
+  },
+  foot() {
+    const on = F('ledger') && F('sale');
+    if (f3().paid) return `<button class="pill" data-go="f3-wallet">查看我的套票</button>`;
+    return on ? `<button class="pill" data-go="f3-checkout">¥168 · 购买套票</button>` : `<div class="hint">该主题暂未开售</div><button class="pill dis">暂未开售</button>`;
+  },
+};
+SC['f3-checkout'] = {
+  f: 'f3', parent: 'f3-catalog', nm: '结算（照 baoming）', t: '结算',
+  ep: ['POST /api/registration（现有） | 购票仍走现有报名下单；开售关闭时不建台账（静默返回）', 'GET /api/free-explore/bundle/order/receipt | requestId → 下单结果未知时查回'],
+  render() {
+    return `<div class="row tap" style="padding:18px 16px"><div class="m"><b style="font-size:18px">参与人信息</b><small>林** · 138****2201</small></div>${chev}</div>
+    <div class="gt" style="padding-top:28px">活动信息</div>
+    <div class="row"><div class="cover c2" style="width:80px;height:60px;border-radius:8px;flex:none"></div><div class="m"><b>老城慢逛 · 三店联票</b><small>有效期至 2026-12-31</small><small>📍 老城片区 3 家门店</small></div></div>
+    <div class="gt" style="padding-top:28px">费用明细</div>
+    <div class="pad"><div class="kv" style="padding:12px 0"><span>票种</span><b>三店联票 × 1</b></div><div class="kv" style="padding:12px 0;border:0"><span>订单金额</span><b>¥168.00</b></div><div class="kv" style="padding:12px 0;border:0"><span>积分抵扣</span><b>−¥0.00</b></div>
+    <div style="padding:14px 0"><div class="fs12 c2">总计</div><div style="font-size:28px;font-weight:800">¥168.00</div></div></div>`;
+  },
+  foot() { return `<div style="display:flex;gap:8px;align-items:center;font-size:12px;color:var(--t2);margin-bottom:10px" data-a="opt" data-k="f3agree" data-v="${fv('f3agree', '') ? '' : '1'}"><span class="radio ${fv('f3agree', '') ? 'on' : ''}" style="width:18px;height:18px"></span>我已阅读并同意《套票使用与退改规则》</div><button class="pill" data-a="f3Pay">付款</button>`; },
+};
+A.f3Pay = () => { if (!fv('f3agree', '')) return toast('请先勾选同意规则'); req(() => { f3().paid = true; S.stacks.f3 = [{ id: 'f3-catalog', p: {} }]; push('f3-wallet'); toast('支付成功 · 已冻结 3 张券'); }, 900); };
+SC['f3-wallet'] = {
+  f: 'f3', parent: 'f3-catalog', nm: '套票钱包', t: '我的套票', lt: '我的套票', empty: '还没有套票',
+  ep: ['GET /api/free-explore/bundle/order | registrationId → bundle{order, balances[], units[], reservations[], exitCases[], policy}'],
+  render() {
+    const d = f3();
+    if (!d.paid) return `<div class="stv"><div class="big">∅</div><b>还没有套票</b><p>购买后，每个章节会生成一张带券码的券。</p></div>`;
+    const avail = d.units.filter(u => u.status === 'AVAILABLE' || u.status === 'RESERVED').length;
+    return `<div class="lt-sub">老城慢逛 · 三店联票 · 订单 RG20261023001</div>
+    <div class="hero"><div class="huge">${avail}<small>/ 3 张可用</small></div><div class="lab">有效期至 2026-12-31 · 已支付</div></div>
+    <div class="gt">券<small>units[]</small></div>
+    <div class="group">${d.units.map(u => `<div class="row tap" data-go="f3-unit" data-id="${u.unitId}"><div class="m"><b>${chap(u.chapterId).name}</b><small>券码 ${u.code.slice(0, 2)}••••${u.code.slice(-2)}${u.res ? ' · ' + u.res.storeName + ' ' + u.res.when : ''}${u.exited ? ' · 商家已退出' : ''}</small></div>${u.exited && u.status === 'AVAILABLE' ? '<span class="chip warn">需处理</span>' : unitChip(u.status)}${chev}</div>`).join('')}</div>
+    <div class="gt">退改</div>
+    <div class="group"><div class="row tap" data-go="f3-refund"><div class="m"><b>退款试算</b><small>只读，不会发起退款</small></div>${chev}</div><div class="row"><div class="m"><b>本月主动豁免</b><small>迟取消时可用 1 次</small></div><span class="v">剩 ${d.waiversLeft} 次</span></div></div>`;
+  },
+};
+SC['f3-unit'] = {
+  f: 'f3', parent: 'f3-wallet', nm: '券码 · 预约', t: '使用券',
+  ep: ['POST /api/free-explore/bundle/reservation | registrationId, unitId, offerId, startAt, idempotencyKey → status BOOKED', 'POST /api/free-explore/bundle/reservation/{reservationId}/cancel | {useWaiver} → CANCELLED / LATE_CANCELLED / WAIVED'],
+  render(p) {
+    const u = f3().units.find(x => x.unitId == p.id) || f3().units[0], c = chap(u.chapterId);
+    return `<div class="ticket"><div class="tt1">入场券</div><div class="qr"></div><div class="notch">Code : ${u.code.slice(0, 4)} ${u.code.slice(4)}</div><div class="tf">有效期至 2026-12-31<b>${c.name}</b>${c.offers.map(o => o.merchantName).join(' / ')}</div></div>
+    <div class="center mt12">${unitChip(u.status)}</div>
+    ${u.exited && u.status === 'AVAILABLE' ? `<div class="banner warn"><span class="dot warn"></span><div><b>${c.offers[0].merchantName} 已退出合作</b>可以换到同章节其他门店，或申请这张券的退款。<br><a data-go="f3-exit" data-id="${u.unitId}" style="text-decoration:underline">去处理</a></div></div>` : ''}
+    ${u.res ? `<div class="gt">预约</div><div class="group"><div class="kv"><span>门店</span><b>${u.res.storeName}</b></div><div class="kv"><span>时间</span><b>${u.res.when}</b></div><div class="kv"><span>状态</span><b>BOOKED · 已预约</b></div></div>` : ''}
+    <div class="pad fs12 c2 mt16">到店出示券码，由商家在核销台核销（REDEEMED）。${F('reservation') ? '' : '预约暂未开放（BUNDLE_RESERVATION_OFF），直接到店即可。'}</div>`;
+  },
+  foot(p) {
+    const u = f3().units.find(x => x.unitId == p.id) || f3().units[0];
+    if (u.status === 'REDEEMED') return `<button class="pill dis">已核销</button>`;
+    if (u.status === 'RESERVED') return `<div class="btns"><button class="spill" data-sheet="f3-cancel" data-id="${u.unitId}">取消预约</button><button class="pill" data-a="toast" data-msg="已放大券码">出示券码</button></div>`;
+    return F('ledger') && F('reservation') ? `<div class="btns"><button class="spill" data-a="toast" data-msg="已放大券码">出示券码</button><button class="pill" data-sheet="f3-reserve" data-id="${u.unitId}">预约到店</button></div>` : `<button class="pill" data-a="toast" data-msg="已放大券码">出示券码</button>`;
+  },
+};
+SH['f3-reserve'] = {
+  t: '预约到店',
+  render(p) {
+    const u = f3().units.find(x => x.unitId == p.id), c = chap(u.chapterId);
+    const days = ['10/24 周六', '10/25 周日', '10/26 周一'], times = ['10:00', '11:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00'];
+    return `<div class="gt" style="padding-top:4px;font-size:15px">门店</div><div class="group">${c.offers.map((o, i) => `<div class="row tap" data-a="opt" data-k="f3store" data-v="${o.offerId}"><span class="radio ${fv('f3store', c.offers[0].offerId) == o.offerId ? 'on' : ''}"></span><div class="m"><b>${o.merchantName}</b><small>offerId ${o.offerId}</small></div></div>`).join('')}</div>
+    <div class="gt" style="font-size:15px">日期</div><div class="pad">${optRow('f3day', days.map(d => [d, d]), days[0])}</div>
+    <div class="gt" style="font-size:15px">时间</div><div class="slots" style="padding-top:0">${times.map((t, i) => `<div class="${i === 2 ? 'full' : fv('f3time', '15:00') === t ? 'on' : ''}" data-a="${i === 2 ? 'toast' : 'opt'}" data-msg="该时段已满" data-k="f3time" data-v="${t}"><b>${t}</b>${i === 2 ? '已满' : '可约'}</div>`).join('')}</div>`;
+  },
+  foot(p) { return `<button class="pill" data-a="f3Reserve" data-id="${p.id}">确认预约</button>`; },
+};
+A.f3Reserve = (el, ds) => {
+  const u = f3().units.find(x => x.unitId == ds.id), c = chap(u.chapterId);
+  const o = c.offers.find(x => x.offerId == fv('f3store', c.offers[0].offerId)) || c.offers[0];
+  closeSheet(() => req(() => { u.status = 'RESERVED'; u.res = { id: 7701, storeName: o.merchantName, when: fv('f3day', '10/24 周六') + ' ' + fv('f3time', '15:00') }; render(); toast('已预约'); }));
+};
+SH['f3-cancel'] = {
+  t: '取消预约',
+  render(p) {
+    return `<div class="pad c2 fs13" style="padding-bottom:10px">距到店不足 24 小时，属于迟取消。迟取消这张券会被罚没（FORFEITED），可以用本月的主动豁免避免罚没。</div>
+    <div class="group"><div class="row tap" data-a="opt" data-k="f3w" data-v="1"><span class="radio ${fv('f3w', '1') === '1' ? 'on' : ''}"></span><div class="m"><b>使用豁免</b><small>本月剩 ${f3().waiversLeft} 次 · 结果 WAIVED，券恢复可用</small></div></div><div class="row tap" data-a="opt" data-k="f3w" data-v="0"><span class="radio ${fv('f3w', '1') === '0' ? 'on' : ''}"></span><div class="m"><b>不使用</b><small>结果 LATE_CANCELLED，券罚没</small></div></div></div>`;
+  },
+  foot(p) { return `<button class="pill" data-a="f3Cancel" data-id="${p.id}">确认取消</button>`; },
+};
+A.f3Cancel = (el, ds) => {
+  const u = f3().units.find(x => x.unitId == ds.id), w = fv('f3w', '1') === '1';
+  if (w && f3().waiversLeft <= 0) return toast('本月主动豁免次数已用完');
+  closeSheet(() => req(() => { u.res = null; if (w) { f3().waiversLeft--; u.status = 'AVAILABLE'; toast('已取消 · 已用豁免'); } else { u.status = 'FORFEITED'; toast('已取消 · 券已罚没'); } render(); }));
+};
+SC['f3-refund'] = {
+  f: 'f3', parent: 'f3-wallet', nm: '退款试算（只读）', t: '退款试算',
+  ep: ['GET /api/free-explore/bundle/order/refund-quote | registrationId → 只读试算 totalValue, remainingValue, remainingRatio'],
+  render() {
+    const left = f3().units.filter(u => u.status === 'AVAILABLE').length;
+    const rem = Math.round(16800 * left / 3);
+    return `<div class="hero"><div class="huge">${yuan(rem).slice(1)}<small>元</small></div><div class="lab">剩余价值 · 占比 ${Math.round(left / 3 * 100)}%</div></div>
+    <div class="group mt12"><div class="kv"><span>套票总价值</span><b>¥168.00</b></div><div class="kv"><span>每张券价值</span><b>¥56.00（平均分，尾差在最后一张）</b></div><div class="kv"><span>未使用券</span><b>${left} 张</b></div><div class="kv"><span>最低退款比例</span><b>30%</b></div></div>
+    <div class="banner"><span class="dot warn"></span><div><b>这里只是试算</b>部分退款的资金路由还没有（K2），现在不能提交退款。整单未使用可走原有退款。</div></div>`;
+  },
+};
+SC['f3-exit'] = {
+  f: 'f3', parent: 'f3-unit', nm: '商家退出 · 改换或退款', t: '商家已退出',
+  ep: ['POST /api/free-explore/bundle/exit-decision | unitId, decision SWAP_CONSENTED/REFUND_UNFULFILLED, targetOfferId, idempotencyKey'],
+  render(p) {
+    const d = fv('f3dec', 'SWAP');
+    return `<div class="lt">半山书房已退出</div><div class="lt-sub">书店章的这张券还没用。选择怎么处理：</div>
+    <div class="group mt8"><div class="row tap" data-a="opt" data-k="f3dec" data-v="SWAP"><span class="radio ${d === 'SWAP' ? 'on' : ''}"></span><div class="m"><b>换到其他门店</b><small>SWAP_CONSENTED · 有效期不变</small></div></div><div class="row tap" data-a="opt" data-k="f3dec" data-v="REFUND"><span class="radio ${d === 'REFUND' ? 'on' : ''}"></span><div class="m"><b>退这张券的钱</b><small>REFUND_UNFULFILLED · ¥56.00 原路退回</small></div></div></div>
+    ${d === 'SWAP' ? `<div class="gt">换到</div><div class="group"><div class="row"><span class="radio on"></span><div class="m"><b>转角书屋</b><small>同章节替补门店 · 不会缩短有效期</small></div></div></div>` : ''}
+    <div class="pad fs12 c2 mt16">如果替补门店的有效期更短，会被拒绝（BUNDLE_SWAP_SHORTENS_VALIDITY）。</div>`;
+  },
+  foot(p) { return `<button class="pill" data-a="f3Exit" data-id="${p.id}">确认</button>`; },
+};
+A.f3Exit = (el, ds) => req(() => { const u = f3().units.find(x => x.unitId == ds.id); u.exited = false; if (fv('f3dec', 'SWAP') === 'REFUND') u.status = 'REFUND_PENDING'; else chap(u.chapterId).offers = [{ offerId: 513, merchantName: '转角书屋' }]; pop(); later(300, () => { pop(); toast('已处理'); }); });
+
+/* ================= F7 合规：发票 + 未成年模式 ================= */
+FEATS.push({
+  k: 'f7', tag: 'F7', group: '玩家端（深色）', name: '发票与未成年模式', sub: '发票抬头·合并开票·年龄段·监护授权·宵禁', theme: 'dark', root: 'f7-home',
+  gate: { flag: 'feature.flag.userInvoice', code: 'INVOICE_FEATURE_OFF', msg: '发票功能暂未开放' },
+  toggles: [
+    { id: 'userInvoice', k: 'feature.flag.userInvoice', l: '用户发票' },
+    { id: 'minorMode', k: 'feature.flag.minorMode', l: '未成年模式' },
+    { id: 'minorPaymentGate', k: 'feature.flag.minorPaymentGate', l: '未成年支付拦截' },
+    { id: 'minorOrienteeringGate', k: 'feature.flag.minorOrienteeringGate', l: '未成年定向拦截（无调用方）' },
+  ],
+  eps: [
+    'POST /api/invoice/titles | → [{id,titleType,titleName,taxNoMasked,isDefault}]',
+    'POST /api/invoice/titles/save | id?, titleType PERSONAL/COMPANY, titleName, taxNo, isDefault',
+    'POST /api/invoice/titles/delete | id',
+    'POST /api/invoice/orders/eligible | → 已支付、未退款、未开票的订单（最多 100）',
+    'POST /api/invoice/apply | requestId, titleId, orderIds[]（最多 50）→ 申请 + replayed',
+    'POST /api/invoice/list | → 申请列表',
+    'POST /api/invoice/detail | id → applicationNo, status, taxNoMasked, totalAmount, invoiceNo, rejectReason, orders[]',
+    'POST /api/invoice/cancel | id → 撤回未开具的申请，订单释放',
+    'POST /api/minor/policy | → policyVersion, daytimeStart 08:00, daytimeEnd 18:00, maxValidDays, inviteTtlHours, purposes, relations',
+    'POST /api/minor/status | → ageBand, guardianRequired, paymentGateOn, orienteeringGateOn',
+    'POST /api/minor/guardian/invite | requestId, purpose, relation, policyVersion, validDays → inviteToken, inviteExpiresAt',
+    'POST /api/minor/guardian/accept | inviteToken, policyVersion',
+    'POST /api/minor/guardian/revoke | id',
+    'POST /api/minor/guardian/list | → [{role, purpose, relation, status, validFrom, validUntil…}]',
+  ],
+  qs: [
+    ['F7', '开 minorMode 之前必须改用户协议第十条（现在写「暂不面向未成年人…未满十八周岁请勿注册」），release-legal-gate.js 也要同步改。'],
+    ['C7-1', '未成年策略：A 维持「不面向未成年」+ 注册时 18 岁确认；B 按本原型开放未成年模式。'],
+    ['C7-2', '是否接电子发票服务？现在 provider=MANUAL：后台手工开、只回填发票号，没有可下载的文件。'],
+    ['F7', '后台没有处理用户发票的接口（markIssued / markRejected 存在但没有控制器调用），后台页面是提议。'],
+    ['F7', '年龄段来自出生日期：个人资料里还没有出生日期填写入口（MINOR_AGE_UNKNOWN 会让用户去填）。入口放哪？'],
+    ['F7', '定向拦截 enforceOrienteeringIfEnabled 没有调用方；F1d 的 safety/check 是否改为调用它？'],
+    ['F7', '监护关系只用「双方账号互相确认」（MUTUAL_ACCOUNT_CONFIRM）作证据，是否足够？'],
+  ],
+  src: 'integration-batch4.md §4/§6 · ApiUserInvoiceController · ApiMinorGuardianController · MinorProtectionServiceImpl · survey.md §7',
+});
+function f7Init() {
+  S.d.f7 = {
+    titles: [{ id: 1, titleType: 'PERSONAL', titleName: '林小满', taxNo: '', isDefault: true }, { id: 2, titleType: 'COMPANY', titleName: '某某文化传播有限公司', taxNo: '91310000MA1K4XXXX8', isDefault: false }],
+    orders: [{ orderId: 4101, t: '老城夜巡定向赛', tk: '单人票', amt: 6800, at: '10-18' }, { orderId: 4102, t: '钟楼疑案 · RPG', tk: '双人票', amt: 12800, at: '10-12' }, { orderId: 4103, t: '老城慢逛 · 三店联票', tk: '联票', amt: 16800, at: '10-05' }, { orderId: 4104, t: '江边夜跑', tk: '单人票', amt: 3900, at: '09-28' }],
+    apps: [{ id: 31, no: 'INV20260920001', status: 'ISSUED', titleId: 1, orderIds: [4090], amt: 9900, invoiceNo: '26312000000012345678', at: '09-20' }, { id: 32, no: 'INV20260901007', status: 'REJECTED', titleId: 2, orderIds: [4011], amt: 5800, reason: '抬头与税号不一致', at: '09-01' }],
+    age: 'AGE_16_17', guardians: [{ id: 61, purpose: 'PURCHASE', relation: 'PARENT', status: 'ACTIVE', until: '2027-10-01', name: '林** · 父亲' }],
+  };
+}
+const f7 = () => S.d.f7;
+const maskTax = t => !t ? '' : t.length <= 6 ? '******' : t.slice(0, 2) + '******' + t.slice(-4);
+const invChip = s => ({ SUBMITTED: '<span class="chip warn">待开票</span>', ISSUED: '<span class="chip ok">已开票</span>', REJECTED: '<span class="chip bad">已驳回</span>', CANCELLED: '<span class="chip">已撤回</span>' }[s]);
+const ageL = { UNDER_8: '未满 8 岁', AGE_8_15: '8–15 岁', AGE_16_17: '16–17 岁', ADULT: '已成年', UNKNOWN: '未填写出生日期' };
+const purL = { PURCHASE: '购买', INFO_PROCESS: '个人信息处理', SOLO_DAYTIME_PLAY: '白天单独游玩' };
+SC['f7-home'] = {
+  f: 'f7', nm: '设置入口', t: '设置', lt: '账号与合规', gate: null,
+  render() {
+    return `<div class="group mt8"><div class="row tap" data-go="f7-inv"><span class="ico">票</span><div class="m"><b>发票</b><small>开票申请、抬头管理</small></div>${F('userInvoice') ? '' : '<span class="chip">未开放</span>'}${chev}</div>
+    <div class="row tap" data-go="f7-minor"><span class="ico">护</span><div class="m"><b>未成年模式</b><small>年龄段、监护授权、可玩时段</small></div>${F('minorMode') ? '' : '<span class="chip">未开放</span>'}${chev}</div></div>
+    <div class="group mt12"><div class="row tap" data-go="f7-gate"><span class="ico">!</span><div class="m"><b>拦截示例</b><small>未成年人下单 / 开局会看到什么</small></div>${chev}</div><div class="row tap" data-go="f7-accept"><span class="ico">✓</span><div class="m"><b>监护人视角</b><small>收到授权邀请后的确认页</small></div>${chev}</div></div>`;
+  },
+};
+SC['f7-inv'] = {
+  f: 'f7', parent: 'f7-home', nm: '发票列表', t: '发票', lt: '发票', empty: '还没有开票申请',
+  ep: ['POST /api/invoice/list | → 申请列表'],
+  render() {
+    if (!F('userInvoice')) return stateOff('发票功能暂未开放', 'feature.flag.userInvoice', 'INVOICE_FEATURE_OFF');
+    return `<div class="group mt8"><div class="row tap" data-go="f7-apply"><span class="ico">＋</span><div class="m"><b>申请开票</b><small>可开 ${f7().orders.length} 单 · 多单可合并</small></div>${chev}</div><div class="row tap" data-go="f7-titles"><span class="ico">抬</span><div class="m"><b>发票抬头</b><small>${f7().titles.length} 个</small></div>${chev}</div></div>
+    <div class="gt">申请记录</div>
+    <div class="group">${f7().apps.slice().reverse().map(a => `<div class="row tap" data-go="f7-inv-detail" data-id="${a.id}"><div class="m"><b>${yuan(a.amt)} · ${a.orderIds.length} 单</b><small>${a.no} · ${a.at}</small></div>${invChip(a.status)}${chev}</div>`).join('')}</div>`;
+  },
+};
+function stateOff(msg, flag, code) { return `<div class="stv"><div class="big">◌</div><b>${msg}</b><p>开关 <span class="code">${flag}</span> 关闭 · <span class="code">${code}</span></p></div>`; }
+SC['f7-inv-detail'] = {
+  f: 'f7', parent: 'f7-inv', nm: '发票详情', t: '开票详情',
+  ep: ['POST /api/invoice/detail | id → applicationNo, status, taxNoMasked, totalAmount, invoiceNo, rejectReason, orders[]', 'POST /api/invoice/cancel | id → 撤回未开具的申请，订单释放'],
+  render(p) {
+    const a = f7().apps.find(x => x.id == p.id) || f7().apps[0], t = f7().titles.find(x => x.id === a.titleId) || f7().titles[0];
+    return `<div class="hero"><div class="huge m">${yuan(a.amt).slice(1)}<small>元</small></div><div class="mt8">${invChip(a.status)}</div></div>
+    ${a.status === 'REJECTED' ? `<div class="banner bad"><span class="dot bad"></span><div><b>驳回原因</b>${a.reason}</div></div>` : ''}
+    <div class="gt">开票信息</div><div class="group"><div class="kv"><span>申请号</span><b>${a.no}</b></div><div class="kv"><span>抬头类型</span><b>${t.titleType === 'COMPANY' ? '单位' : '个人'}</b></div><div class="kv"><span>抬头</span><b>${t.titleName}</b></div>${t.titleType === 'COMPANY' ? `<div class="kv"><span>税号</span><b>${maskTax(t.taxNo)}</b></div>` : ''}<div class="kv"><span>开票方式</span><b>MANUAL · 人工开具</b></div>${a.invoiceNo ? `<div class="kv"><span>发票号码</span><b>${a.invoiceNo}</b></div>` : ''}<div class="kv"><span>申请时间</span><b>${a.at}</b></div></div>
+    <div class="gt">包含订单<small>${a.orderIds.length} 单</small></div><div class="group">${a.orderIds.map(id => { const o = f7().orders.find(x => x.orderId === id) || { t: '历史订单', tk: '单人票', amt: a.amt, at: a.at }; return `<div class="row"><div class="m"><b>${o.t}</b><small>${o.tk} · 支付于 ${o.at} · registration</small></div><span class="v">${yuan(o.amt)}</span></div>`; }).join('')}</div>`;
+  },
+  foot(p) {
+    const a = f7().apps.find(x => x.id == p.id) || f7().apps[0];
+    if (a.status === 'SUBMITTED') return `<button class="spill" data-a="f7Cancel" data-id="${a.id}">撤回申请</button>`;
+    if (a.status === 'REJECTED') return `<button class="pill" data-go="f7-apply">重新申请</button>`;
+    return '';
+  },
+};
+A.f7Cancel = (el, ds) => confirmBox({ t: '撤回开票申请？', m: '撤回后订单会释放，可以重新申请。', ok: '撤回', danger: true, onOk: () => req(() => { const a = f7().apps.find(x => x.id == ds.id); a.status = 'CANCELLED'; render(); toast('已撤回'); }) });
+SC['f7-titles'] = {
+  f: 'f7', parent: 'f7-inv', nm: '发票抬头管理', t: '发票抬头', lt: '发票抬头', empty: '还没有抬头',
+  ep: ['POST /api/invoice/titles | → [{id,titleType,titleName,taxNoMasked,isDefault}]', 'POST /api/invoice/titles/save | id?, titleType PERSONAL/COMPANY, titleName, taxNo, isDefault', 'POST /api/invoice/titles/delete | id'],
+  render() {
+    return `<div class="lt-sub">最多 20 个 · 税号只显示首 2 位和末 4 位</div><div class="group mt8">${f7().titles.map(t => `<div class="row tap" data-sheet="f7-title" data-id="${t.id}"><div class="m"><b>${esc(t.titleName)}</b><small>${t.titleType === 'COMPANY' ? '单位 · 税号 ' + maskTax(t.taxNo) : '个人'}</small></div>${t.isDefault ? '<span class="chip inv">默认</span>' : ''}${chev}</div>`).join('')}</div>`;
+  },
+  foot() { return `<button class="pill" data-sheet="f7-title" data-id="">添加抬头</button>`; },
+};
+SH['f7-title'] = {
+  t: p => p.id ? '编辑抬头' : '添加抬头',
+  render(p) {
+    const t = f7().titles.find(x => x.id == p.id) || { titleType: 'PERSONAL', titleName: '', taxNo: '' };
+    if (S.form._tid !== p.id) { S.form._tid = p.id; S.form.f7tt = t.titleType; S.form.f7tn = t.titleName; S.form.f7tx = ''; S.form.f7td = t.isDefault ? '1' : ''; }
+    const ty = fv('f7tt', 'PERSONAL');
+    return `<div class="pad" style="padding-bottom:12px">${optRow('f7tt', [['PERSONAL', '个人'], ['COMPANY', '单位']], 'PERSONAL')}</div>
+    <div class="group"><div class="field"><label>抬头</label><input name="f7tn" value="${esc(fv('f7tn', ''))}" placeholder="${ty === 'COMPANY' ? '单位全称' : '姓名'}"></div>${ty === 'COMPANY' ? `<div class="field"><label>税号</label><input name="f7tx" value="${esc(fv('f7tx', ''))}" placeholder="${p.id && t.taxNo ? maskTax(t.taxNo) + '（不改可留空）' : '15–20 位数字或大写字母'}"></div>` : ''}
+    <div class="row tap" data-a="opt" data-k="f7td" data-v="${fv('f7td', '') ? '' : '1'}"><div class="m"><b>设为默认</b></div><span class="sw ${fv('f7td', '') ? 'on' : ''}"></span></div></div>
+    <div class="pad fs12 c2 mt12">税号和抬头加密保存（AES-GCM），读取时只返回脱敏后的税号。</div>`;
+  },
+  foot(p) { return `<div class="btns">${p.id ? `<button class="spill danger" data-a="f7TitleDel" data-id="${p.id}">删除</button>` : ''}<button class="pill" data-a="f7TitleSave" data-id="${p.id}">保存</button></div>`; },
+};
+A.f7TitleSave = (el, ds) => {
+  const ty = fv('f7tt', 'PERSONAL'), name = String(fv('f7tn', '')).trim(), tax = String(fv('f7tx', '')).trim();
+  if (!name) return toast('请填写抬头');
+  const old = f7().titles.find(x => x.id == ds.id);
+  if (ty === 'COMPANY' && (tax || !old || !old.taxNo) && !/^[0-9A-Z]{15,20}$/.test(tax)) return toast('税号格式不正确（INVOICE_TAX_NO_INVALID）');
+  closeSheet(() => req(() => {
+    const isDef = !!fv('f7td', '');
+    if (isDef) f7().titles.forEach(t => t.isDefault = false);
+    if (old) Object.assign(old, { titleType: ty, titleName: name, taxNo: tax || old.taxNo, isDefault: isDef });
+    else f7().titles.push({ id: Date.now() % 100000, titleType: ty, titleName: name, taxNo: tax, isDefault: isDef });
+    S.form._tid = null; render(); toast('已保存');
+  }));
+};
+A.f7TitleDel = (el, ds) => { S.sheet = null; confirmBox({ t: '删除这个抬头？', m: '已提交的开票申请不受影响。', ok: '删除', danger: true, onOk: () => req(() => { f7().titles = f7().titles.filter(t => t.id != ds.id); render(); toast('已删除'); }) }); };
+SC['f7-apply'] = {
+  f: 'f7', parent: 'f7-inv', nm: '申请开票（合并订单）', t: '申请开票', empty: '没有可开票的订单', emptyHint: '只有已支付、未退款、未开票的订单可以开票。',
+  ep: ['POST /api/invoice/orders/eligible | → 已支付、未退款、未开票的订单（最多 100）', 'POST /api/invoice/apply | requestId, titleId, orderIds[]（最多 50）→ 申请 + replayed'],
+  render() {
+    const sel = (fv('f7sel', '4101,4102')).split(',').filter(Boolean);
+    const t = f7().titles.find(x => x.id == fv('f7title', (f7().titles.find(x => x.isDefault) || f7().titles[0] || {}).id));
+    return `<div class="gt" style="padding-top:12px">选择订单<small>可多选合并 · 最多 50 单</small></div>
+    <div class="group">${f7().orders.map(o => `<div class="row tap" data-a="f7Sel" data-id="${o.orderId}"><span class="radio ${sel.includes(String(o.orderId)) ? 'on' : ''}"></span><div class="m"><b>${o.t}</b><small>${o.tk} · 支付于 ${o.at}</small></div><span class="v b">${yuan(o.amt)}</span></div>`).join('')}</div>
+    <div class="gt">抬头</div><div class="group"><div class="row tap" data-sheet="f7-pick"><div class="m"><b>${t ? esc(t.titleName) : '请选择抬头'}</b><small>${t ? (t.titleType === 'COMPANY' ? '单位 · ' + maskTax(t.taxNo) : '个人') : ''}</small></div>${chev}</div></div>
+    <div class="gt">开票方式</div><div class="group"><div class="kv"><span>类型</span><b>人工开具（MANUAL）</b></div><div class="kv"><span>预计</span><b>5 个工作日内回填发票号</b></div></div>`;
+  },
+  foot() {
+    const sel = fv('f7sel', '4101,4102').split(',').filter(Boolean);
+    const amt = f7().orders.filter(o => sel.includes(String(o.orderId))).reduce((s, o) => s + o.amt, 0);
+    return `<button class="pill ${sel.length ? '' : 'dis'}" data-a="f7Apply">提交 · ${sel.length} 单 ${yuan(amt)}</button>`;
+  },
+};
+A.f7Sel = (el, ds) => { let s = fv('f7sel', '4101,4102').split(',').filter(Boolean); s = s.includes(ds.id) ? s.filter(x => x !== ds.id) : s.concat(ds.id); S.form.f7sel = s.join(','); render(); };
+SH['f7-pick'] = {
+  t: '选择抬头',
+  render() { return `<div class="group">${f7().titles.map(t => `<div class="row tap" data-a="f7Pick" data-id="${t.id}"><span class="radio ${fv('f7title', (f7().titles.find(x => x.isDefault) || {}).id) == t.id ? 'on' : ''}"></span><div class="m"><b>${esc(t.titleName)}</b><small>${t.titleType === 'COMPANY' ? '单位 · ' + maskTax(t.taxNo) : '个人'}</small></div></div>`).join('')}</div>`; },
+  foot() { return `<button class="spill" data-a="f7PickNew">管理抬头</button>`; },
+};
+A.f7Pick = (el, ds) => { S.form.f7title = ds.id; closeSheet(); };
+A.f7PickNew = () => closeSheet(() => push('f7-titles'));
+A.f7Apply = () => {
+  const sel = fv('f7sel', '4101,4102').split(',').filter(Boolean).map(Number);
+  const tid = +fv('f7title', (f7().titles.find(x => x.isDefault) || f7().titles[0] || {}).id);
+  if (!tid) return toast('请选择抬头');
+  req(() => {
+    const amt = f7().orders.filter(o => sel.includes(o.orderId)).reduce((s, o) => s + o.amt, 0);
+    const id = 40 + f7().apps.length; f7().apps.push({ id, no: 'INV20261023' + String(id).padStart(3, '0'), status: 'SUBMITTED', titleId: tid, orderIds: sel, amt, at: '10-23' });
+    f7().orders = f7().orders.filter(o => !sel.includes(o.orderId)); S.form.f7sel = '';
+    stack().pop(); push('f7-inv-detail', { id }); toast('已提交 · requestId ' + rid('inv').slice(0, 12));
+  }, 800);
+};
+SC['f7-minor'] = {
+  f: 'f7', parent: 'f7-home', nm: '未成年模式', t: '未成年模式', lt: '未成年模式', gate: { flag: 'feature.flag.minorMode', code: 'MINOR_FEATURE_OFF', msg: '未成年模式暂未开放' },
+  ep: ['POST /api/minor/status | → ageBand, guardianRequired, paymentGateOn, orienteeringGateOn', 'POST /api/minor/policy | → policyVersion, daytimeStart 08:00, daytimeEnd 18:00, maxValidDays, inviteTtlHours, purposes, relations', 'POST /api/minor/guardian/list | → [{role, purpose, relation, status, validFrom, validUntil…}]', 'POST /api/minor/guardian/revoke | id'],
+  render() {
+    if (!F('minorMode')) return stateOff('未成年模式暂未开放', 'feature.flag.minorMode', 'MINOR_FEATURE_OFF');
+    const d = f7(), age = fv('f7age', d.age);
+    const gl = { ACTIVE: '<span class="chip ok">生效中</span>', PENDING: '<span class="chip warn">等待确认</span>', REVOKED: '<span class="chip">已撤销</span>', SUPERSEDED: '<span class="chip">已替换</span>' };
+    return `<div class="lt-sub">根据出生日期自动判断，不能手动关闭</div>
+    <div class="hero"><div class="huge m">${ageL[age]}</div><div class="lab">ageBand = ${age}${age !== 'ADULT' && age !== 'UNKNOWN' ? ' · 需要监护人授权' : ''}</div></div>
+    <div class="pad mt8 fs12 c2">演示：切换年龄段</div><div class="pad mt8">${optRow('f7age', Object.keys(ageL).map(k => [k, ageL[k]]), d.age)}</div>
+    <div class="gt">保护规则<small>policy minor-2026-10-22</small></div>
+    <div class="group"><div class="kv"><span>可玩时段</span><b>08:00–18:00（北京时间）</b></div><div class="kv"><span>线路</span><b>仅低风险线路</b></div><div class="kv"><span>购买</span><b>${age === 'UNDER_8' ? '不能自行购买，由监护人购买并陪同' : '需监护人「购买」授权'}</b></div><div class="kv"><span>组队</span><b>${age === 'AGE_16_17' ? '单独游玩需「白天单独游玩」授权' : '未满 16 岁需监护人同队'}</b></div><div class="kv"><span>支付拦截</span><b>${F('minorPaymentGate') ? '已开启' : '未开启'}</b></div></div>
+    <div class="gt">监护授权</div>
+    <div class="group">${d.guardians.map(g => `<div class="row tap" data-a="f7Revoke" data-id="${g.id}"><span class="ico">${g.relation === 'PARENT' ? '父' : '监'}</span><div class="m"><b>${g.name}</b><small>${purL[g.purpose]} · 至 ${g.until}</small></div>${gl[g.status]}</div>`).join('')}
+    <div class="row tap" data-go="f7-invite"><span class="ico">＋</span><div class="m"><b>邀请监护人授权</b><small>发给监护人的微信，24 小时内有效</small></div>${chev}</div></div>`;
+  },
+};
+A.f7Revoke = (el, ds) => { const g = f7().guardians.find(x => x.id == ds.id); if (g.status !== 'ACTIVE' && g.status !== 'PENDING') return; confirmBox({ t: '撤销这项授权？', m: `撤销后「${purL[g.purpose]}」需要重新授权。`, ok: '撤销', danger: true, onOk: () => req(() => { g.status = 'REVOKED'; render(); toast('已撤销'); }) }); };
+SC['f7-invite'] = {
+  f: 'f7', parent: 'f7-minor', nm: '邀请监护人', t: '邀请监护人',
+  ep: ['POST /api/minor/guardian/invite | requestId, purpose, relation, policyVersion, validDays → inviteToken, inviteExpiresAt'],
+  render() {
+    return `<div class="lt">请监护人授权</div><div class="lt-sub">监护人在自己的微信里确认后生效</div>
+    <div class="gt">授权内容</div><div class="group">${Object.keys(purL).map(k => `<div class="row tap" data-a="opt" data-k="f7pur" data-v="${k}"><span class="radio ${fv('f7pur', 'PURCHASE') === k ? 'on' : ''}"></span><div class="m"><b>${purL[k]}</b><small>${{ PURCHASE: '允许你购买活动门票', INFO_PROCESS: '同意处理你的个人信息', SOLO_DAYTIME_PLAY: '16–17 岁白天单独参加' }[k]}</small></div></div>`).join('')}</div>
+    <div class="gt">关系</div><div class="pad">${optRow('f7rel', [['PARENT', '父母'], ['GUARDIAN', '其他监护人']], 'PARENT')}</div>
+    <div class="gt">有效期</div><div class="pad">${optRow('f7days', [['30', '30 天'], ['90', '90 天'], ['365', '1 年（最长）']], '365')}</div>`;
+  },
+  foot() { return `<button class="pill" data-a="f7Invite">生成邀请</button>`; },
+};
+A.f7Invite = () => req(() => { f7().guardians.push({ id: 70 + f7().guardians.length, purpose: fv('f7pur', 'PURCHASE'), relation: fv('f7rel', 'PARENT'), status: 'PENDING', until: '待确认', name: '待监护人确认' }); openSheet('f7-share'); });
+SH['f7-share'] = {
+  t: '发给监护人',
+  render() { return `<div class="pad"><div class="group" style="margin:0;background:var(--s2)"><div style="padding:16px;display:flex;gap:12px;align-items:center"><div class="cover c3" style="width:64px;height:64px;border-radius:12px"></div><div><b>林小满 请你确认监护授权</b><div class="fs12 c2 mt8">${purL[fv('f7pur', 'PURCHASE')]} · ${fv('f7days', '365')} 天 · 24 小时内有效</div></div></div></div><div class="fs12 c2 mt12">邀请码只能用一次（inviteToken），过期后重新生成。监护人必须已成年（GUARDIAN_NOT_ADULT）。</div></div>`; },
+  foot() { return `<div class="btns"><button class="spill" data-a="closeSheet">稍后</button><button class="pill" data-a="f7Shared">发给微信好友</button></div>`; },
+};
+A.f7Shared = () => closeSheet(() => { pop(); later(300, () => toast('已发送，等待监护人确认')); });
+SC['f7-accept'] = {
+  f: 'f7', parent: 'f7-home', nm: '监护人确认页', t: '监护授权',
+  ep: ['POST /api/minor/guardian/accept | inviteToken, policyVersion'],
+  render() {
+    return `<div class="lt">确认监护授权</div><div class="lt-sub">林小满（16–17 岁）邀请你授权</div>
+    <div class="group mt8"><div class="kv"><span>授权内容</span><b>购买活动门票</b></div><div class="kv"><span>你的身份</span><b>父母</b></div><div class="kv"><span>有效期</span><b>365 天，可随时撤销</b></div><div class="kv"><span>规则版本</span><b>minor-2026-10-22</b></div></div>
+    <div class="pad fs13 c2 mt16" style="line-height:1.6">同意后，TA 在白天（08:00–18:00）可以购买低风险线路的门票。你可以在「未成年模式」里随时撤销。</div>
+    <div class="pad mt12 fs12 c2">演示：<a data-a="f7NotAdult" style="text-decoration:underline">用未成年账号打开</a></div>`;
+  },
+  foot() { return `<button class="pill" data-a="f7Accept">同意授权</button>`; },
+};
+A.f7Accept = () => req(() => { const g = f7().guardians.find(x => x.status === 'PENDING'); if (g) { g.status = 'ACTIVE'; g.until = '2027-10-23'; g.name = '林** · 父亲'; } toast('已授权'); });
+A.f7NotAdult = () => confirmBox({ t: '无法授权', m: '监护人必须已成年。<br><span class="code">GUARDIAN_NOT_ADULT</span>', cancel: false, ok: '知道了' });
+SC['f7-gate'] = {
+  f: 'f7', parent: 'f7-home', nm: '支付 / 开局拦截示例', t: '拦截示例',
+  ep: ['POST /api/minor/status | → ageBand, guardianRequired, paymentGateOn, orienteeringGateOn', '!（定向拦截 enforceOrienteeringIfEnabled 没有调用方） | 只有支付拦截接在 RegistrationCheckoutServiceImpl（403 + errorCode）'],
+  render() {
+    const L = [
+      ['MINOR_AGE_UNKNOWN', '请先在个人资料中填写出生日期', '去填写', '结算页'],
+      ['MINOR_UNDER_8_GUARDIAN_PURCHASE', '未满 8 周岁不能自行购买，请由监护人购买并陪同参与', '知道了', '结算页'],
+      ['MINOR_GUARDIAN_PURCHASE_CONSENT_REQUIRED', '未成年人购买需监护人授权', '邀请监护人', '结算页'],
+      ['MINOR_CURFEW', '未成年人仅可在白天时段参与', '知道了', '结算页 / 开局'],
+      ['MINOR_ROUTE_NOT_LOW_RISK', '未成年人仅可参与低风险线路', '看看别的', '结算页 / 开局'],
+      ['MINOR_SOLO_AUTHORIZATION_REQUIRED', '16–17 岁单独参加需要监护人授权', '邀请监护人', '开局'],
+      ['MINOR_GUARDIAN_IN_TEAM_REQUIRED', '未满 16 岁需要监护人在同一队伍', '知道了', '开局'],
+    ];
+    return `<div class="lt-sub" style="padding-top:12px">点一行，看用户在结算页点「付款」后收到的提示（后端 403 + errorCode）。</div>
+    <div class="group mt8">${L.map(l => `<div class="row tap" data-a="f7Gate" data-c="${l[0]}" data-m="${l[1]}" data-b="${l[2]}"><div class="m"><b>${l[1]}</b><small class="code">${l[0]} · ${l[3]}</small></div>${chev}</div>`).join('')}</div>
+    <div class="pad fs12 c2 mt12">支付拦截需要 minorMode 与 minorPaymentGate 同时开启。定向拦截目前没有调用方。</div>`;
+  },
+};
+A.f7Gate = (el, ds) => confirmBox({ t: ds.b === '知道了' || ds.b === '看看别的' ? '暂时不能参加' : '还差一步', m: esc(ds.m) + '<br><span class="code">' + ds.c + '</span>', cancel: ds.b === '知道了' ? false : '取消', ok: ds.b, onOk: () => { if (ds.b === '邀请监护人') { S.form.f7age = 'AGE_16_17'; push('f7-invite'); } else if (ds.b === '去填写') toast('跳转个人资料 · 出生日期（入口待定）'); } });
+/* ================= F4 商家台（浅色） ================= */
+FEATS.push({
+  k: 'f4', tag: 'F4', group: '商家端（浅色）', name: '商家台', sub: '门店·锚点·SKU 容量·核销台·复核补材料·只读对账', theme: 'light', root: 'f4-home',
+  gate: { flag: 'merchant.desk.f4.enabled', code: 'F4_DISABLED', msg: '该功能暂未开放' },
+  toggles: [{ id: 'f4', k: 'merchant.desk.f4.enabled', l: '商家台 F4（关闭时全部 404）' }],
+  eps: [
+    'POST /api/merchant/desk/stores | → storeId, name, address, businessHours{raw,parsed[]}, locationVerified, anchorConfigured, editEndpoints',
+    'POST /api/merchant/desk/anchor | → configured, anchorLat, anchorLng, radiusM, wifiCount, version, enforced=false',
+    'POST /api/merchant/desk/anchor/save | requestId, anchorLat, anchorLng, radiusM 30–500, wifiBssids[], expectedVersion',
+    'POST /api/merchant/desk/anchor/check | lat, lng, accuracyM, bssid → location IN_RANGE/OUT_OF_RANGE/LOCATION_UNKNOWN, wifi WIFI_MATCH/…',
+    'POST /api/merchant/desk/products | → productId, productName, publishStatus（0=待审核）, price, stock',
+    'POST /api/merchant/desk/products/detail | productId → 商品 + skus[] + editable',
+    'POST /api/merchant/desk/products/save | requestId, productName, pic, price, stock… → 回到待审核',
+    'POST /api/merchant/desk/products/delist | requestId, productId',
+    'POST /api/merchant/desk/products/sku/save | requestId, skuName, bookable, slotMinutes（15 的倍数）, capacityPerSlot 0–1000, ruleVersion',
+    'POST /api/merchant/desk/products/sku/slots | skuId, fromDate, days ≤14 → 只读 slotStart, capacityTotal, capacityReserved, status',
+    'POST /api/merchant/desk/arrivals/today | → redeemed[], redeemedCount, openByChapter[]',
+    'POST /api/merchant/desk/redeem/resolve | code, mode SCAN/MANUAL/OCR → kind, accepted, errorCode, redirectPath, form{fields[]}（不核销）',
+    'POST /api/merchant/desk/redeem/ocr-candidates | text → candidates[{code,masked}]（≤5）',
+    'POST /api/merchant/desk/verdicts | status 0/1/2 → reviewId, riskType, verificationRate, oneMinuteCount, evidenceCount, verdict',
+    'POST /api/merchant/desk/verdicts/detail | reviewId → evidence[], canSubmitEvidence',
+    'POST /api/merchant/desk/verdicts/evidence | requestId, reviewId, note ≤500, media[]（每单最多 10 次）',
+    'POST /api/merchant/desk/reconciliation | → readOnly, bases[4]{route,claimCount,byStatus}, outsideFourBases[]',
+    'POST /api/merchant/desk/reconciliation/claims | route, pageNum, pageSize ≤50 → rows[]',
+    'POST /api/merchant/desk/frozen | → batchId, periodYm, amountTotal, holdState=FROZEN, frozenReason',
+    'POST /api/merchant/desk/receipt | requestId → state APPLIED/NOT_FOUND（结果未知时查回）',
+  ],
+  qs: [
+    ['C-F4-1', '一个商家多门店？现在只返回 1 个门店；方案 B 是新建 mms_store 表。'],
+    ['C-F4-2', '服务商品复用积分商城表 pms_product，还是另建服务商品表？'],
+    ['C-F4-3', '到店统计只到章节粒度，等预约模型（C5-1）定了再细化。'],
+    ['C-F4-4', 'CLUB_DIRECT（俱乐部直收）要不要成为第五种结算基础？'],
+    ['C-F4-5', '没有 claim 的应付行怎么展示 / 处理？'],
+    ['C-F4-6', '到店锚点现在只是配置（enforced=false）。要不要接到核销拦截（先 shadow 再 enforce）？'],
+    ['F4', '还没做：预约占用 / 释放、时段自动生成、打款与应付计提、发票上传、CSV 导出。时段页只读、可能为空。'],
+    ['F4', '核销台只「识别」不「核销」：识别后跳到现有核销页面（redirectPath）。是否要在同一页完成？'],
+  ],
+  src: 'docs/delivery/doc2-f4-merchant-20261022/f4-backend.md · ApiMerchantDeskController · MerchantDeskServiceImpl',
+});
+function f4Init() {
+  S.d.f4 = {
+    anchor: { configured: true, radiusM: 80, wifi: ['旧时光-5G', '旧时光-guest'], version: 3 },
+    products: [
+      { productId: 801, productName: '手冲体验课', publishStatus: 1, price: 680, stock: 40, skus: [{ skuId: 8011, skuName: '周末下午场', bookable: true, slotMinutes: 60, capacityPerSlot: 6 }, { skuId: 8012, skuName: '工作日晚场', bookable: true, slotMinutes: 90, capacityPerSlot: 8 }] },
+      { productId: 802, productName: '联票专享 · 拿铁', publishStatus: 0, price: 0, stock: 200, skus: [{ skuId: 8021, skuName: '默认', bookable: false, slotMinutes: 0, capacityPerSlot: 0 }] },
+    ],
+    verdicts: [
+      { reviewId: 3301, topic: '老城夜巡定向赛', riskType: '一分钟内集中核销', rate: 96, paid: 50, verified: 48, oneMin: 21, status: 0, evidence: [] },
+      { reviewId: 3290, topic: '老城慢逛 · 三店联票', riskType: '核销率异常', rate: 100, paid: 12, verified: 12, oneMin: 3, status: 1, evidence: [{ note: '周末团建，统一到店', at: '10-15 14:02' }] },
+    ],
+    redeemed: 14,
+  };
+}
+const f4 = () => S.d.f4;
+SC['f4-home'] = {
+  f: 'f4', nm: '工作台 · 门店台入口', t: '',
+  ep: ['POST /api/merchant/desk/stores | → storeId, name, address, businessHours{raw,parsed[]}, locationVerified, anchorConfigured, editEndpoints', 'POST /api/merchant/desk/arrivals/today | → redeemed[], redeemedCount, openByChapter[]'],
+  render() {
+    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:16px 16px 0"><div><div style="font-size:26px;font-weight:800">Hi，旧时光咖啡</div><span class="chip ok mt8">营业中</span></div><div class="cover c4" style="width:56px;height:56px;border-radius:50%"></div></div>
+    <div class="pad mt16"><div class="fs12 c2">今日到店核销</div><div style="font-size:44px;font-weight:400;letter-spacing:-1px">${f4().redeemed}<span class="fs13 c2"> 单</span></div></div>
+    <div class="acts">${[['核销台', '扫', 'f4-desk'], ['商品', '品', 'f4-products'], ['复核', '审', 'f4-verdicts'], ['对账', '账', 'f4-recon']].map(a => `<button data-go="${a[2]}"><i>${a[1]}</i>${a[0]}</button>`).join('')}</div>
+    <div class="gt">门店<small>当前只返回 1 个</small></div>
+    <div class="group"><div class="row tap" data-go="f4-store"><div class="cover c4 thumb"></div><div class="m"><b>旧时光咖啡（老街店）</b><small>中山路 18 号 · 10:00–22:00</small></div>${chev}</div></div>
+    <div class="gt">需要处理</div>
+    <div class="group"><div class="row tap" data-go="f4-verdict" data-id="3301"><span class="dot warn"></span><div class="m"><b>1 单核销待复核</b><small>一分钟内集中核销 21 单 · 可补充材料</small></div>${chev}</div><div class="row tap" data-go="f4-product" data-id="802"><span class="dot"></span><div class="m"><b>联票专享 · 拿铁 审核中</b><small>publishStatus=0</small></div>${chev}</div></div>`;
+  },
+};
+SC['f4-store'] = {
+  f: 'f4', parent: 'f4-home', nm: '门店', t: '门店',
+  ep: ['POST /api/merchant/desk/stores | → storeId, name, address, businessHours{raw,parsed[]}, locationVerified, anchorConfigured, editEndpoints'],
+  render() {
+    return `<div class="pad mt8"><div class="cover c4" style="height:140px"></div></div>
+    <div class="lt" style="padding-top:16px">旧时光咖啡（老街店）</div><div class="lt-sub">中山路 18 号</div>
+    <div class="group mt8"><div class="kv"><span>营业状态</span><b>营业中</b></div><div class="kv"><span>账号状态</span><b>正常</b></div><div class="kv"><span>位置</span><b>已校验 ✓</b></div></div>
+    <div class="gt">营业时间<small>businessHours.parsed</small></div>
+    <div class="group"><div class="kv"><span>周一至周五</span><b>10:00–22:00</b></div><div class="kv"><span>周六、周日</span><b>09:00–次日 01:00（跨夜）</b></div></div>
+    <div class="gt">到店锚点</div>
+    <div class="group"><div class="row tap" data-go="f4-anchor"><div class="m"><b>半径 ${f4().anchor.radiusM} 米 · ${f4().anchor.wifi.length} 个 Wi-Fi</b><small>只配置，暂不拦截核销</small></div>${chev}</div></div>
+    <div class="pad fs12 c2 mt12">地图点位、营业时间仍在现有「店铺装修 / 资料」里修改（editEndpoints）。</div>`;
+  },
+};
+SC['f4-anchor'] = {
+  f: 'f4', parent: 'f4-store', nm: '到店锚点', t: '到店锚点',
+  ep: ['POST /api/merchant/desk/anchor | → configured, anchorLat, anchorLng, radiusM, wifiCount, version, enforced=false', 'POST /api/merchant/desk/anchor/save | requestId, anchorLat, anchorLng, radiusM 30–500, wifiBssids[], expectedVersion', 'POST /api/merchant/desk/anchor/check | lat, lng, accuracyM, bssid → location IN_RANGE/OUT_OF_RANGE/LOCATION_UNKNOWN, wifi WIFI_MATCH/…'],
+  render() {
+    const a = f4().anchor, r = +fv('f4r', a.radiusM);
+    return `<div class="banner"><span class="dot"></span><div><b>暂不拦截</b>enforced=false：配置后只用于自检，核销不会因为位置被拒（C-F4-6）。</div></div>
+    <div class="pad mt12"><div class="cover c4" style="height:180px;display:flex;align-items:center;justify-content:center"><div style="width:${Math.min(170, r / 3 + 30)}px;height:${Math.min(170, r / 3 + 30)}px;border-radius:50%;background:rgba(0,0,0,.12);border:2px solid #000;display:flex;align-items:center;justify-content:center"><span style="width:12px;height:12px;border-radius:50%;background:#000"></span></div></div></div>
+    <div class="gt">半径<small>30–500 米</small></div><div class="pad">${optRow('f4r', [['50', '50 米'], ['80', '80 米'], ['150', '150 米'], ['300', '300 米']], a.radiusM)}</div>
+    <div class="gt">店内 Wi-Fi<small>只存 BSSID</small></div><div class="group">${a.wifi.map(w => `<div class="row"><div class="m"><b>${w}</b><small>bssid ••:••:3f:9a</small></div></div>`).join('')}<div class="row tap" data-a="toast" data-msg="已添加当前连接的 Wi-Fi"><div class="m"><b>＋ 添加当前 Wi-Fi</b></div></div></div>
+    <div class="pad fs12 c2 mt12">版本 v${a.version}。两个人同时改会提示「已被他人修改」（F4_VERSION_CONFLICT）；离店太远保存会被拒（F4_ANCHOR_TOO_FAR）。</div>`;
+  },
+  foot() { return `<div class="btns"><button class="spill" data-a="f4Check">现场自检</button><button class="pill" data-a="f4AnchorSave">保存</button></div>`; },
+};
+A.f4AnchorSave = () => req(() => { const a = f4().anchor; a.radiusM = +fv('f4r', a.radiusM); a.version++; render(); toast('已保存 · v' + a.version); });
+A.f4Check = () => req(() => confirmBox({ t: '自检结果', m: '位置：IN_RANGE（距锚点 12 米）<br>Wi-Fi：WIFI_MATCH<br><span class="c2">只是自检，不影响核销</span>', cancel: false, ok: '好的' }));
+SC['f4-products'] = {
+  f: 'f4', parent: 'f4-home', nm: '服务商品', t: '服务商品', lt: '服务商品', empty: '还没有商品',
+  ep: ['POST /api/merchant/desk/products | → productId, productName, publishStatus（0=待审核）, price, stock'],
+  render() {
+    return `<div class="group mt8">${f4().products.map(p => `<div class="row tap" data-go="f4-product" data-id="${p.productId}"><div class="cover c4 thumb"></div><div class="m"><b>${p.productName}</b><small>${p.price ? p.price + ' 积分' : '联票内含'} · 库存 ${p.stock} · ${p.skus.length} 个规格</small></div>${p.publishStatus === 0 ? '<span class="chip warn">审核中</span>' : '<span class="chip ok">已上架</span>'}${chev}</div>`).join('')}</div>
+    <div class="pad fs12 c2 mt12">保存后商品回到待审核（publishStatus=0）。已上架商品部分字段锁定（F4_PRODUCT_LIVE_LOCKED）。</div>`;
+  },
+  foot() { return `<button class="pill" data-a="toast" data-msg="新建商品（表单同详情页）">新建商品</button>`; },
+};
+SC['f4-product'] = {
+  f: 'f4', parent: 'f4-products', nm: '商品 · SKU 容量', t: '商品详情',
+  ep: ['POST /api/merchant/desk/products/detail | productId → 商品 + skus[] + editable', 'POST /api/merchant/desk/products/sku/save | requestId, skuName, bookable, slotMinutes（15 的倍数）, capacityPerSlot 0–1000, ruleVersion', 'POST /api/merchant/desk/products/delist | requestId, productId'],
+  render(p) {
+    const pr = f4().products.find(x => x.productId == p.id) || f4().products[0];
+    return `<div class="pad mt8"><div class="cover c4" style="height:160px"></div></div>
+    <div class="lt" style="padding-top:16px">${pr.productName}</div><div class="lt-sub">${pr.publishStatus === 0 ? '审核中 · 暂不可售' : '已上架'}</div>
+    <div class="group mt8"><div class="kv"><span>价格</span><b>${pr.price ? pr.price + ' 积分' : '联票内含'}</b></div><div class="kv"><span>库存</span><b>${pr.stock}</b></div></div>
+    <div class="gt">规格与容量<small>skus[]</small></div>
+    <div class="group">${pr.skus.map(s => `<div class="row tap" data-sheet="f4-sku" data-pid="${pr.productId}" data-sid="${s.skuId}"><div class="m"><b>${s.skuName}</b><small>${s.bookable ? `可预约 · 每场 ${s.slotMinutes} 分钟 · 每场 ${s.capacityPerSlot} 人` : '不需预约'}</small></div>${chev}</div>`).join('')}</div>
+    ${pr.skus.some(s => s.bookable) ? `<div class="group mt12"><div class="row tap" data-go="f4-slots" data-sid="${pr.skus[0].skuId}"><div class="m"><b>查看时段容量</b><small>只读 · 未来 14 天</small></div>${chev}</div></div>` : ''}`;
+  },
+  foot(p) { return `<div class="btns"><button class="spill" data-a="f4Delist">下架</button><button class="pill" data-a="toast" data-msg="编辑后重新提交审核">编辑</button></div>`; },
+};
+A.f4Delist = () => confirmBox({ t: '下架这个商品？', m: '下架后用户不能再购买，已售订单不受影响。', ok: '下架', danger: true, onOk: () => req(() => toast('已下架')) });
+SH['f4-sku'] = {
+  t: '规格容量',
+  render(p) {
+    const s = f4().products.find(x => x.productId == p.pid).skus.find(x => x.skuId == p.sid);
+    if (S.form._sku !== p.sid) { S.form._sku = p.sid; S.form.f4bk = s.bookable ? '1' : ''; S.form.f4sm = String(s.slotMinutes || 60); S.form.f4cap = String(s.capacityPerSlot); }
+    return `<div class="group"><div class="field"><label>名称</label><input name="f4sn" value="${esc(fv('f4sn', s.skuName))}"></div><div class="row tap" data-a="opt" data-k="f4bk" data-v="${fv('f4bk', '') ? '' : '1'}"><div class="m"><b>需要预约</b></div><span class="sw ${fv('f4bk', '') ? 'on' : ''}"></span></div></div>
+    ${fv('f4bk', '') ? `<div class="gt" style="font-size:15px">每场时长<small>15 的倍数，15–480</small></div><div class="pad">${optRow('f4sm', [['30', '30 分钟'], ['60', '60 分钟'], ['90', '90 分钟'], ['120', '120 分钟']], '60')}</div>
+    <div class="gt" style="font-size:15px">每场人数<small>0–1000</small></div><div class="group"><div class="field"><label>人数</label><input name="f4cap" inputmode="numeric" value="${esc(fv('f4cap', '6'))}"></div></div>` : ''}`;
+  },
+  foot(p) { return `<button class="pill" data-a="f4SkuSave" data-pid="${p.pid}" data-sid="${p.sid}">保存</button>`; },
+};
+A.f4SkuSave = (el, ds) => {
+  const cap = +fv('f4cap', 0); if (fv('f4bk', '') && !(cap >= 0 && cap <= 1000)) return toast('每场人数 0–1000');
+  const s = f4().products.find(x => x.productId == ds.pid).skus.find(x => x.skuId == ds.sid);
+  closeSheet(() => req(() => { s.skuName = fv('f4sn', s.skuName); s.bookable = !!fv('f4bk', ''); s.slotMinutes = +fv('f4sm', 60); s.capacityPerSlot = cap; S.form._sku = null; render(); toast('已保存 · 规则版本 +1'); }));
+};
+SC['f4-slots'] = {
+  f: 'f4', parent: 'f4-product', nm: '时段容量（只读）', t: '时段容量', empty: '还没有生成时段', emptyHint: '时段自动生成还没做（F4 未完成项），所以这里可能为空。',
+  ep: ['POST /api/merchant/desk/products/sku/slots | skuId, fromDate, days ≤14 → 只读 slotStart, capacityTotal, capacityReserved, status'],
+  render() {
+    const day = fv('f4d', '10/24');
+    const sl = [['13:00', 6, 6], ['14:00', 6, 4], ['15:00', 6, 1], ['16:00', 6, 0], ['17:00', 6, 2], ['18:00', 6, 0], ['19:00', 6, 5], ['20:00', 6, 0]];
+    return `<div class="pad mt8">${optRow('f4d', [['10/24', '10/24 六'], ['10/25', '10/25 日'], ['10/26', '10/26 一']], '10/24')}</div>
+    <div class="slots">${sl.map(s => `<div class="${s[2] >= s[1] ? 'full' : ''}"><b>${s[0]}</b>${s[2]}/${s[1]}</div>`).join('')}</div>
+    <div class="pad fs12 c2">已约 / 容量。只读：预约占用与释放还没接（F4 未完成项）。</div>`;
+  },
+};
+SC['f4-desk'] = {
+  f: 'f4', parent: 'f4-home', nm: '核销台', t: '核销台', lt: '核销台',
+  ep: ['POST /api/merchant/desk/arrivals/today | → redeemed[], redeemedCount, openByChapter[]', 'POST /api/merchant/desk/redeem/resolve | code, mode SCAN/MANUAL/OCR → kind, accepted, errorCode, redirectPath, form{fields[]}（不核销）', 'POST /api/merchant/desk/redeem/ocr-candidates | text → candidates[{code,masked}]（≤5）'],
+  render() {
+    const m = fv('f4m', 'MANUAL'), code = fv('f4code', '');
+    let mid = '';
+    if (m === 'MANUAL') mid = `<div class="codebox">${esc(code) || '<span style="color:var(--t3);font-size:18px;letter-spacing:0">输入券码</span>'}</div><div class="keypad">${['1', '2', '3', '4', '5', '6', '7', '8', '9', 'FE', '0', '⌫'].map(k => `<button data-a="f4Key" data-k="${k}">${k}</button>`).join('')}</div>`;
+    else if (m === 'SCAN') mid = `<div class="pad mt12"><div class="cover" style="height:250px;background:#111;display:flex;align-items:center;justify-content:center"><div style="width:180px;height:180px;border:3px solid #fff;border-radius:20px"></div></div><button class="spill mt12" data-a="f4Resolve" data-code="FE7Q2K91">模拟扫到券码</button></div>`;
+    else mid = `<div class="pad mt12"><div class="cover c4" style="height:150px;display:flex;align-items:center;justify-content:center;color:#333">拍照识别券码（占位）</div></div><div class="gt" style="font-size:15px">识别到的候选<small>最多 5 个</small></div><div class="group">${[['FE7Q2K91', 'FE7Q••91'], ['FE3M8X40', 'FE3M••40']].map(c => `<div class="row tap" data-a="f4Resolve" data-code="${c[0]}"><div class="m"><b>${c[1]}</b><small>候选券码</small></div>${chev}</div>`).join('')}</div><div class="pad fs12 c2 mt8">玩法节点的任务码会被排除（excludedNodeTaskCodes）。</div>`;
+    return `<div class="stats two mt8"><div><b>${f4().redeemed}</b><span>今日已核销</span></div><div><b>2</b><span>可核销章节</span></div></div>
+    <div class="seg2 mt16">${[['SCAN', '扫码'], ['MANUAL', '手输'], ['OCR', '拍照识别']].map(([k, l]) => `<button class="${m === k ? 'on' : ''}" data-a="opt" data-k="f4m" data-v="${k}">${l}</button>`).join('')}</div>${mid}
+    <div class="gt">今日到店<small>按章节</small></div><div class="group"><div class="row"><div class="m"><b>咖啡章 · 老街烘焙</b><small>三店联票 · 已用 12/40</small></div></div><div class="row"><div class="m"><b>城市节点券</b><small>夜巡定向赛 · 已用 2/20</small></div></div></div>
+    <div class="pad fs12 c2 mt12">演示码：FE7Q2K91 联票券 · 0000 无效 · 7777 不属于本店</div>`;
+  },
+  foot() { return fv('f4m', 'MANUAL') === 'MANUAL' ? `<button class="pill ${fv('f4code', '').length >= 4 ? '' : 'dis'}" data-a="f4Resolve">识别</button>` : ''; },
+};
+A.f4Key = (el, ds) => { let c = fv('f4code', ''); c = ds.k === '⌫' ? c.slice(0, -1) : (c + ds.k).slice(0, 10); S.form.f4code = c; render(); };
+A.f4Resolve = (el, ds) => {
+  const code = ds.code || fv('f4code', '');
+  req(() => {
+    if (/^0+$/.test(code)) return openSheet('f4-resolve', { kind: 'INVALID', err: 'F4_CODE_INVALID', msg: '券码无效，请核对后重试' });
+    if (code === '7777') return openSheet('f4-resolve', { kind: 'COUPON', err: 'F4_WRONG_DESK', msg: '这张券不属于本店' });
+    openSheet('f4-resolve', { kind: 'CITY_NODE_VOUCHER', code });
+  });
+};
+SH['f4-resolve'] = {
+  t: p => p.err ? '无法核销' : '识别结果',
+  render(p) {
+    if (p.err) return `<div class="pad"><div class="banner bad" style="margin:0"><span class="dot bad"></span><div><b>${p.msg}</b><span class="code">kind=${p.kind} · ${p.err}</span></div></div></div>`;
+    return `<div class="group"><div class="kv"><span>券类型</span><b>${p.kind}</b></div><div class="kv"><span>券码</span><b>${String(p.code).slice(0, 4)}••${String(p.code).slice(-2)}</b></div><div class="kv"><span>内容</span><b>老城慢逛 · 咖啡章</b></div><div class="kv"><span>持券人</span><b>林**</b></div><div class="kv"><span>有效期</span><b>至 2026-12-31</b></div></div>
+    <div class="gt" style="font-size:15px">核销表单<small>form.fields[]</small></div><div class="group"><div class="field"><label>核销数量</label><input value="1" readonly></div><div class="field"><label>备注</label><input placeholder="选填"></div></div>
+    <div class="pad fs12 c2 mt12">这一步只识别，不核销。确认后交给现有核销接口（redirectPath / form.submitEndpoint）。</div>`;
+  },
+  foot(p) { return p.err ? `<button class="pill" data-a="closeSheet">知道了</button>` : `<button class="pill" data-a="f4Redeem">确认核销</button>`; },
+};
+A.f4Redeem = () => closeSheet(() => req(() => { f4().redeemed++; S.form.f4code = ''; render(); toast('核销成功'); }));
+const vStat = s => ['<span class="chip warn">待复核</span>', '<span class="chip ok">确认正常</span>', '<span class="chip bad">确认异常</span>'][s];
+SC['f4-verdicts'] = {
+  f: 'f4', parent: 'f4-home', nm: '核销复核列表', t: '核销复核', lt: '核销复核', empty: '没有复核单',
+  ep: ['POST /api/merchant/desk/verdicts | status 0/1/2 → reviewId, riskType, verificationRate, oneMinuteCount, evidenceCount, verdict'],
+  render() {
+    const st = +fv('f4vs', 0);
+    const L = f4().verdicts.filter(v => v.status === st);
+    return `<div class="tabs">${[['0', '待复核'], ['1', '正常'], ['2', '异常']].map(([k, l]) => `<button class="${st == k ? 'on' : ''}" data-a="opt" data-k="f4vs" data-v="${k}">${l}</button>`).join('')}</div>
+    ${L.length ? `<div class="group mt16">${L.map(v => `<div class="row tap" data-go="f4-verdict" data-id="${v.reviewId}"><div class="m"><b>${v.topic}</b><small>${v.riskType} · 核销率 ${v.rate}% · 材料 ${v.evidence.length}</small></div>${vStat(v.status)}${chev}</div>`).join('')}</div>` : `<div class="stv" style="padding-top:60px"><b>没有记录</b></div>`}
+    <div class="pad fs12 c2 mt12">平台复核核销异常时，商家可以补充说明和图片。结论由平台在后台给出。</div>`;
+  },
+};
+SC['f4-verdict'] = {
+  f: 'f4', parent: 'f4-verdicts', nm: '复核详情 · 补充材料', t: '复核详情',
+  ep: ['POST /api/merchant/desk/verdicts/detail | reviewId → evidence[], canSubmitEvidence', 'POST /api/merchant/desk/verdicts/evidence | requestId, reviewId, note ≤500, media[]（每单最多 10 次）'],
+  render(p) {
+    const v = f4().verdicts.find(x => x.reviewId == p.id) || f4().verdicts[0];
+    return `<div class="mhero"><div class="fs12 c2">${v.topic}</div><div class="amt">${v.rate}%</div><div class="fs13 c2">核销率 · ${vStat(v.status)}</div></div>
+    <div class="group mt12"><div class="kv"><span>风险类型</span><b>${v.riskType}</b></div><div class="kv"><span>已支付</span><b>${v.paid}</b></div><div class="kv"><span>已核销</span><b>${v.verified}</b></div><div class="kv"><span>一分钟内核销</span><b>${v.oneMin}</b></div></div>
+    <div class="gt">我提交的材料<small>${v.evidence.length}/10</small></div>
+    <div class="group">${v.evidence.length ? v.evidence.map(e => `<div class="row"><div class="m"><b style="white-space:normal">${esc(e.note)}</b><small>${e.at}${e.img ? ' · 1 张图片' : ''}</small></div></div>`).join('') : '<div class="row"><div class="m"><small>还没有补充材料</small></div></div>'}</div>`;
+  },
+  foot(p) { const v = f4().verdicts.find(x => x.reviewId == p.id) || f4().verdicts[0]; return v.status === 0 ? `<button class="pill" data-sheet="f4-evidence" data-id="${v.reviewId}">补充材料</button>` : `<div class="hint">已有结论，不能再补充（F4_REVIEW_CLOSED）</div>`; },
+};
+SH['f4-evidence'] = {
+  t: '补充材料',
+  render() { return `<div class="group"><div class="field"><textarea name="f4ev" maxlength="500" placeholder="说明情况，例如：周末团建，统一到店核销（最多 500 字）">${esc(fv('f4ev', ''))}</textarea></div></div><div class="pad mt12" style="display:flex;gap:8px"><div class="cover c4" style="width:72px;height:72px;border-radius:10px"></div><div style="width:72px;height:72px;border-radius:10px;border:1.5px dashed var(--t3);display:flex;align-items:center;justify-content:center;font-size:24px;color:var(--t3)">＋</div></div>`; },
+  foot(p) { return `<button class="pill" data-a="f4Ev" data-id="${p.id}">提交</button>`; },
+};
+A.f4Ev = (el, ds) => { const v = f4().verdicts.find(x => x.reviewId == ds.id); if (!String(fv('f4ev', '')).trim()) return toast('请填写说明'); if (v.evidence.length >= 10) return toast('补充次数已达上限（F4_EVIDENCE_LIMIT）'); closeSheet(() => req(() => { v.evidence.push({ note: fv('f4ev', ''), at: '10-23 ' + clockNow(), img: true }); S.form.f4ev = ''; render(); toast('已提交'); })); };
+const BASES = [['CHAPTER_OFFER', '章节券', 128, { PENDING: 12, CONFIRMED: 104, PAID: 12 }], ['COOP_ORDER', '合作订单', 36, { PENDING: 4, CONFIRMED: 32 }], ['REGISTRATION_SPLIT', '报名分账', 58, { PENDING: 8, CONFIRMED: 50 }], ['NONE', '未归类', 0, {}]];
+SC['f4-recon'] = {
+  f: 'f4', parent: 'f4-home', nm: '对账（只读）', t: '对账', lt: '对账',
+  ep: ['POST /api/merchant/desk/reconciliation | → readOnly, bases[4]{route,claimCount,byStatus}, outsideFourBases[]', 'POST /api/merchant/desk/frozen | → batchId, periodYm, amountTotal, holdState=FROZEN, frozenReason'],
+  render() {
+    return `<div class="lt-sub">只读 · 不能在这里发起结算或打款</div>
+    <div class="mhero mt8"><div class="fs12 c2">章节券 · 有 claim 的应付净额</div><div class="amt">¥3,240.00</div><div class="fs13 c2">另有 3 行应付没有 claim（¥168.00），见 C-F4-5</div></div>
+    <div class="gt">四种结算基础<small>bases[4]</small></div>
+    <div class="group">${BASES.map(b => `<div class="row tap" data-go="f4-claims" data-route="${b[0]}"><span class="dot ${b[2] ? 'ok' : ''}"></span><div class="m"><b>${b[1]}</b><small>${b[0]} · ${Object.entries(b[3]).map(([k, v]) => k + ' ' + v).join(' · ') || '无记录'}</small></div><span class="v b">${b[2]}</span>${chev}</div>`).join('')}</div>
+    <div class="gt">四种之外<small>outsideFourBases</small></div><div class="group"><div class="row"><div class="m"><b>俱乐部直收 CLUB_DIRECT</b><small>是否成为第五种待定（C-F4-4）</small></div><span class="v">7</span></div></div>
+    <div class="gt">冻结中</div><div class="group"><div class="row"><span class="dot bad"></span><div class="m"><b>2026-09 批次 ¥1,280.00</b><small>FROZEN · 资质待补 · 发票未开</small></div></div></div>`;
+  },
+};
+SC['f4-claims'] = {
+  f: 'f4', parent: 'f4-recon', nm: '结算明细', t: p => (BASES.find(b => b[0] === p.route) || BASES[0])[1], empty: '这一类没有记录',
+  ep: ['POST /api/merchant/desk/reconciliation/claims | route, pageNum, pageSize ≤50 → rows[]'],
+  render(p) {
+    const b = BASES.find(x => x[0] === p.route) || BASES[0];
+    if (!b[2]) return `<div class="stv"><div class="big">∅</div><b>这一类没有记录</b></div>`;
+    const st = ['CONFIRMED', 'CONFIRMED', 'PENDING', 'PAID', 'CONFIRMED', 'PENDING'];
+    return `<div class="group mt8">${st.map((s, i) => `<div class="row"><span class="dot ${s === 'PENDING' ? 'warn' : 'ok'}"></span><div class="m"><b>#${55120 - i} · ${b[0] === 'CHAPTER_OFFER' ? '核销 1 张章节券' : '订单履约'}</b><small>${s} · 10-${22 - i} 15:0${i}</small></div></div>`).join('')}</div>
+    <div class="pad mt12"><button class="spill" data-a="toast" data-msg="已加载下一页（pageSize 20）">加载更多</button></div>`;
+  },
+};
+
+/* ================= 后台（RuoYi-Vue） ================= */
+FEATS.push({
+  k: 'adm', tag: '后台', group: '后台（桌面）', name: '管理后台', sub: '成绩申诉·到达申诉·核销复核·用户发票·统一留痕', admin: true, root: 'adm-appeals',
+  gate: { flag: '各功能开关', code: 'AUDIT_TRAIL_DISABLED 等', msg: '功能未开启' },
+  toggles: [{ id: 'trail', k: 'chengyin.audit.o5c.unified-trail.enabled', l: '统一留痕 O5c' }, { id: 'itemProblems', k: 'chengyin.audit.item-problems.enabled', l: '审核逐项问题 O5a' }],
+  eps: [
+    'GET /business/orient/scoring/appeals | status, limit · business:orientScoring:list',
+    'GET /business/orient/scoring/disputes | status, limit',
+    'GET /business/orient/scoring/session/{id} | 对局流水 breakdown',
+    'GET /business/orient/scoring/session/{id}/verify | ledgerTotalCenti, projectionTotalCenti, postSettlementDeltaCenti, consistent',
+    'POST /business/orient/scoring/appeals/{id}/resolve | accept, adjustCenti, note · business:orientScoring:review',
+    'POST /business/orient/scoring/disputes/{id}/resolve | accept, note',
+    'POST /business/orient/scoring/entries/{id}/reverse | reasonCode, idempotencyKey',
+    'GET /business/audit/list | 审核工作台（到达申诉 bizType=play_arrive_guard）',
+    'POST /business/audit/{id}/claim | 认领',
+    'GET /business/audit/{id}/detail | appealAttachments …',
+    'POST /business/audit/review | taskId, expectedVersion, status, reasonCode, problems[]',
+    'GET /business/verificationReview/list | status, topicId, verifierMemberId',
+    'POST /business/verificationReview/handle | id, status 1|2（只处理 status=0）',
+    '!GET （商家补充材料） | verification_review_evidence 后台没有读取接口；提议新增',
+    '!POST （用户发票开具 / 驳回） | IUserInvoiceService.markIssued / markRejected 没有控制器；提议新增',
+    'GET /business/audit-trail | bizType, bizId → source, action, operatorType, reasonCode, eventTime（每源 ≤200、总 ≤500）',
+  ],
+  qs: [
+    ['后台', 'F1 成绩申诉、用户发票、统一留痕都没有现成的 Vue 页面；本原型按 RuoYi 列表 + 弹窗画，是否放在「业务管理」菜单下？'],
+    ['F1b', 'business:orientScoring:list / review 分给哪些角色？'],
+    ['F4', '后台看不到商家补充的复核材料（只有商家端读写 verification_review_evidence），是否新增后台读取接口？'],
+    ['F7', '用户发票后台处理接口需要新增（markIssued / markRejected 已有服务方法）。'],
+    ['O5c', '「完整留痕」做成审核详情里的抽屉（原型做法），还是单独页面？'],
+    ['O5b', '审核状态的唯一真源用哪张表；审核报表读 A 还是 B；P2 开关粒度；D-7 下架原因码取值。'],
+    ['O5a', 'beta_flag 由谁设置：A 首次发布即进 Beta / B 首次人工过审进 Beta / C 退役 Beta。'],
+  ],
+  src: 'OrientScoringAdminController · AuditWorkbenchController · VerificationReviewController · AuditTrailController · doc2-o5b-audit-truth.md · doc2-o5c.md',
+});
+function admSeed() {
+  const d = f1();
+  if (!d.appeals.find(a => a.seed)) {
+    d.appeals.unshift({ id: 871, entryId: 7003, reason: '第三站实际完成了解谜，没给分', status: 'PENDING', at: '10-22 21:14', seed: true, member: '夜行者' });
+    d.disputes.unshift({ id: 115, reason: '用时比实际多算了 10 分钟', status: 'PENDING', at: '10-22 22:40', seed: true, member: '阿青' });
+  }
+}
+const aTag = s => ({ PENDING: '<span class="et w">待处理</span>', ACCEPTED: '<span class="et s">已通过</span>', REJECTED: '<span class="et d">已驳回</span>' }[s]);
+SC['adm-appeals'] = {
+  f: 'adm', grp: 'F1 城市定向', nm: '成绩申诉', t: '成绩申诉',
+  ep: ['GET /business/orient/scoring/appeals | status, limit · business:orientScoring:list', 'GET /business/orient/scoring/disputes | status, limit', 'POST /business/orient/scoring/appeals/{id}/resolve | accept, adjustCenti, note · business:orientScoring:review', 'POST /business/orient/scoring/disputes/{id}/resolve | accept, note'],
+  render() {
+    admSeed();
+    const tab = fv('admT', 'ap'), d = f1();
+    const rows = tab === 'ap' ? d.appeals : d.disputes;
+    return `<div class="card"><div class="q"><label>状态</label><span class="ip">全部 ▾</span><label>对局</label><span class="ip">sessionId</span><button class="eb p">搜索</button><button class="eb">重置</button></div>
+    <div class="tabs2"><button class="${tab === 'ap' ? 'on' : ''}" data-a="opt" data-k="admT" data-v="ap">单条申诉（${d.appeals.length}）</button><button class="${tab === 'ds' ? 'on' : ''}" data-a="opt" data-k="admT" data-v="ds">成绩争议（${d.disputes.length}）</button></div>
+    <table><tr><th>编号</th><th>对局</th><th>玩家</th>${tab === 'ap' ? '<th>条目</th>' : ''}<th>理由</th><th>提交时间</th><th>截止</th><th>状态</th><th>操作</th></tr>
+    ${rows.map(a => `<tr><td>${a.id}</td><td>${d.sessionId}</td><td>${a.member || '林小满'}</td>${tab === 'ap' ? `<td>#${a.entryId}</td>` : ''}<td>${esc(a.reason)}</td><td>${a.at}</td><td>结束后 24h</td><td>${aTag(a.status)}</td><td>${a.status === 'PENDING' ? `<button class="eb txt" data-a="admResolve" data-id="${a.id}" data-kind="${tab}">处理</button>` : ''}<button class="eb txt" data-go="adm-session">对局流水</button></td></tr>`).join('')}</table>
+    <div class="pager">共 ${rows.length} 条 <b>1</b></div></div>`;
+  },
+};
+A.admResolve = (el, ds) => admOpen('adm-resolve', ds);
+ADLG['adm-resolve'] = {
+  t: p => p.kind === 'ap' ? '处理成绩申诉' : '处理成绩争议',
+  render(p) {
+    const a = (p.kind === 'ap' ? f1().appeals : f1().disputes).find(x => x.id == p.id);
+    return `<div class="desc"><span>编号</span><div>${a.id}</div><span>对局</span><div>${f1().sessionId}</div><span>理由</span><div style="grid-column:span 3">${esc(a.reason)}</div></div>
+    <div class="fr"><label>结论</label><div style="display:flex;gap:16px"><label><input type="radio" name="admAcc" ${fv('admAcc', '1') === '1' ? 'checked' : ''} data-a="opt" data-k="admAcc" data-v="1"> 通过</label><label><input type="radio" name="admAcc" ${fv('admAcc', '1') === '0' ? 'checked' : ''} data-a="opt" data-k="admAcc" data-v="0"> 驳回</label></div></div>
+    ${p.kind === 'ap' && fv('admAcc', '1') === '1' ? `<div class="fr"><label>调整分（centi）</label><input name="admAdj" value="${esc(fv('admAdj', '5000'))}"></div>` : ''}
+    <div class="fr"><label>回复玩家</label><textarea name="admNote">${esc(fv('admNote', ''))}</textarea></div>
+    <div class="infobox">通过时追加一条 ADJUSTMENT（来源 APPEAL），原流水不改；已结算的对局会在核对里显示 postSettlementDelta。</div>`;
+  },
+  foot(p) { return `<button class="eb" data-a="admClose">取 消</button><button class="eb p" data-a="admResolveOk" data-id="${p.id}" data-kind="${p.kind}">确 定</button>`; },
+};
+A.admResolveOk = (el, ds) => {
+  const a = (ds.kind === 'ap' ? f1().appeals : f1().disputes).find(x => x.id == ds.id);
+  const acc = fv('admAcc', '1') === '1';
+  a.status = acc ? 'ACCEPTED' : 'REJECTED'; a.note = fv('admNote', '') || (acc ? '已核实，补分' : '记录无误');
+  if (acc && ds.kind === 'ap') f1Add('ADJUSTMENT', +fv('admAdj', 5000), 'APPEAL_ACCEPTED', 'APPEAL', null);
+  S.adlg = null; render(); toast('处理成功');
+};
+SC['adm-session'] = {
+  f: 'adm', grp: 'F1 城市定向', nm: '对局流水', t: '对局流水', parent: 'adm-appeals', hidden: true,
+  ep: ['GET /business/orient/scoring/session/{id} | 对局流水 breakdown', 'GET /business/orient/scoring/session/{id}/verify | ledgerTotalCenti, projectionTotalCenti, postSettlementDeltaCenti, consistent', 'POST /business/orient/scoring/entries/{id}/reverse | reasonCode, idempotencyKey'],
+  render() {
+    const d = f1(); const L = d.ledger.length ? d.ledger : [];
+    const total = f1Total(), proj = d.settled ? d.settled.totalCenti : null;
+    const reversed = new Set(L.filter(e => e.rev).map(e => e.rev));
+    return `<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><b style="font-size:15px">对局 ${d.sessionId} · 老城夜巡定向赛</b><span><button class="eb" data-a="back">返回</button> <button class="eb pl" data-a="admTrail" data-biz="orient_session" data-id="${d.sessionId}">完整留痕</button></span></div>
+    <div class="desc"><span>流水合计</span><div>${total} centi</div><span>终局投影</span><div>${proj == null ? '未结算' : proj + ' centi'}</div><span>结算后变动</span><div>${proj == null ? '—' : total - proj}</div><span>一致性</span><div>${proj == null || proj === total ? '<span class="et s">consistent</span>' : '<span class="et w">有结算后调整</span>'}</div></div>
+    ${L.length ? '' : '<div class="infobox">还没有流水：在手机端「F1 城市定向」里完成几站（开启计分开关）后再来看。</div>'}
+    <table><tr><th>条目</th><th>时间</th><th>维度</th><th>分值</th><th>原因</th><th>来源</th><th>冲正</th><th>操作</th></tr>
+    ${L.map(e => `<tr><td>#${e.entryId}</td><td>${e.at}</td><td>${e.dim}</td><td>${e.delta}</td><td>${e.reason}</td><td>${e.src}</td><td>${e.rev ? '冲正 #' + e.rev : reversed.has(e.entryId) ? '<span class="et i">已被冲正</span>' : ''}</td><td>${!e.rev && !reversed.has(e.entryId) ? `<button class="eb txt" data-a="admReverse" data-id="${e.entryId}">冲正</button>` : ''}</td></tr>`).join('')}</table></div>`;
+  },
+};
+A.admReverse = (el, ds) => { const e = f1().ledger.find(x => x.entryId == ds.id); f1Add(e.dim, -e.delta, 'REVERSAL', 'ADMIN', e.nodeId, e.entryId); render(); toast('已追加冲正条目'); };
+const GUARD = [{ id: 9101, member: '林小满', code: 'ARRIVE_GUARD_SPEED', log: 551820, reason: '定位漂移', at: '10-23 19:42', status: 'PENDING' }, { id: 9087, member: '老周', code: 'ARRIVE_GUARD_WINDOW_DISTANCE', log: 551604, reason: '刚下高铁', at: '10-22 16:10', status: 'APPROVED' }];
+SC['adm-guard'] = {
+  f: 'adm', grp: '审核工作台', nm: '到达申诉', t: '到达申诉',
+  ep: ['GET /business/audit/list | 审核工作台（到达申诉 bizType=play_arrive_guard）', 'POST /business/audit/{id}/claim | 认领', 'GET /business/audit/{id}/detail | appealAttachments …', 'POST /business/audit/review | taskId, expectedVersion, status, reasonCode, problems[]'],
+  render() {
+    return `<div class="card"><div class="warnbox">玩家端提交申诉的接口本批没有新增（见 F1 待决问题）；这里假设进入现有审核工作台，bizType = play_arrive_guard，bizId = guardLogId。</div>
+    <div class="q"><label>业务类型</label><span class="ip">到达守卫 play_arrive_guard ▾</span><label>状态</label><span class="ip">待审核 ▾</span><button class="eb p">搜索</button></div>
+    <table><tr><th>任务</th><th>玩家</th><th>拦截码</th><th>守卫记录</th><th>申诉理由</th><th>时间</th><th>状态</th><th>操作</th></tr>
+    ${GUARD.map(g => `<tr><td>${g.id}</td><td>${g.member}</td><td>${g.code}</td><td>${g.log}</td><td>${g.reason}</td><td>${g.at}</td><td>${g.status === 'PENDING' ? '<span class="et w">待审核</span>' : g.status === 'APPROVED' ? '<span class="et s">已通过</span>' : '<span class="et d">已驳回</span>'}</td><td>${g.status === 'PENDING' ? `<button class="eb txt" data-a="admGuard" data-id="${g.id}">认领并审核</button>` : ''}<button class="eb txt" data-a="admTrail" data-biz="play_arrive_guard" data-id="${g.log}">完整留痕</button></td></tr>`).join('')}</table></div>`;
+  },
+};
+A.admGuard = (el, ds) => admOpen('adm-guard-review', ds);
+ADLG['adm-guard-review'] = {
+  t: '到达申诉审核',
+  render(p) {
+    const g = GUARD.find(x => x.id == p.id);
+    return `<div class="desc"><span>拦截码</span><div>${g.code}</div><span>守卫记录</span><div>${g.log}</div><span>上一位置</span><div>中山路 · 19:38</div><span>本次位置</span><div>钟楼旧址 · 19:41（2.1 km / 3 分钟）</div><span>申诉理由</span><div style="grid-column:span 3">${g.reason}</div></div>
+    <div class="fr"><label>结论</label><div style="display:flex;gap:16px"><label><input type="radio" name="gr" checked> 通过（补记到达）</label><label><input type="radio" name="gr"> 驳回</label></div></div>
+    <div class="fr"><label>原因码</label><input value="GPS_DRIFT"></div>
+    ${F('itemProblems') ? '<div class="infobox">审核逐项问题已开启：驳回时可以逐项记录 problems[]（写入 audit_problem）。</div>' : ''}`;
+  },
+  foot(p) { return `<button class="eb" data-a="admClose">取 消</button><button class="eb p" data-a="admGuardOk" data-id="${p.id}">提 交</button>`; },
+};
+A.admGuardOk = (el, ds) => { GUARD.find(x => x.id == ds.id).status = 'APPROVED'; S.adlg = null; render(); toast('审核完成'); };
+SC['adm-verify'] = {
+  f: 'adm', grp: 'F4 商家', nm: '核销异常复核', t: '核销异常复核',
+  ep: ['GET /business/verificationReview/list | status, topicId, verifierMemberId', 'POST /business/verificationReview/handle | id, status 1|2（只处理 status=0）', '!GET （商家补充材料） | verification_review_evidence 后台没有读取接口；提议新增'],
+  render() {
+    return `<div class="card"><div class="q"><label>状态</label><span class="ip">待复核 ▾</span><label>主题</label><span class="ip">topicId</span><button class="eb p">搜索</button></div>
+    <table><tr><th>复核单</th><th>主题</th><th>风险</th><th>核销率</th><th>一分钟内</th><th>商家补充材料</th><th>状态</th><th>操作</th></tr>
+    ${f4().verdicts.map(v => `<tr><td>${v.reviewId}</td><td>${v.topic}</td><td>${v.riskType}</td><td>${v.rate}%</td><td>${v.oneMin}</td><td><span style="border:1px dashed #E6A23C;padding:2px 6px;border-radius:3px;color:#E6A23C">${v.evidence.length} 条（提议）</span></td><td>${['<span class="et w">待复核</span>', '<span class="et s">正常</span>', '<span class="et d">异常</span>'][v.status]}</td><td>${v.status === 0 ? `<button class="eb txt" data-a="admVerify" data-id="${v.reviewId}" data-s="1">确认正常</button><button class="eb txt" style="color:#F56C6C" data-a="admVerify" data-id="${v.reviewId}" data-s="2">确认异常</button>` : ''}</td></tr>`).join('')}</table>
+    <div class="warnbox" style="margin:12px 0 0">「商家补充材料」列是提议：现在后台读不到 verification_review_evidence，只有商家端能看。</div></div>`;
+  },
+};
+A.admVerify = (el, ds) => confirmAdm(`确认将复核单 ${ds.id} 标记为「${ds.s === '1' ? '正常' : '异常'}」？`, () => { f4().verdicts.find(x => x.reviewId == ds.id).status = +ds.s; render(); toast('已处理（记入操作日志）'); });
+function confirmAdm(msg, ok) { admOpen('adm-confirm', { msg }); A._admOk = ok; }
+ADLG['adm-confirm'] = { t: '系统提示', render: p => `<div style="padding:6px 0 10px">⚠️ ${esc(p.msg)}</div>`, foot: () => `<button class="eb" data-a="admClose">取 消</button><button class="eb p" data-a="admConfirmOk">确 定</button>` };
+A.admConfirmOk = () => { S.adlg = null; A._admOk && A._admOk(); };
+SC['adm-invoice'] = {
+  f: 'adm', grp: 'F7 合规', nm: '用户发票', t: '用户发票',
+  ep: ['!POST （用户发票开具 / 驳回） | IUserInvoiceService.markIssued / markRejected 没有控制器；提议新增'],
+  render() {
+    const st = { SUBMITTED: '<span class="et w">待开票</span>', ISSUED: '<span class="et s">已开票</span>', REJECTED: '<span class="et d">已驳回</span>', CANCELLED: '<span class="et i">已撤回</span>' };
+    return `<div class="card"><div class="warnbox">整页是提议：后端只有玩家端 /api/invoice/*，后台还没有用户发票的列表 / 开具 / 驳回接口。现有「应付批次」里的发票是对公结算发票，不是这个。</div>
+    <div class="q"><label>状态</label><span class="ip">待开票 ▾</span><label>申请号</label><span class="ip">INV…</span><button class="eb p">搜索</button></div>
+    <table><tr><th>申请号</th><th>抬头</th><th>税号</th><th>订单数</th><th>金额</th><th>申请时间</th><th>状态</th><th>发票号</th><th>操作</th></tr>
+    ${f7().apps.slice().reverse().map(a => { const t = f7().titles.find(x => x.id === a.titleId) || { titleName: '（已删除）', titleType: 'PERSONAL' }; return `<tr><td>${a.no}</td><td>${esc(t.titleName)}</td><td>${t.titleType === 'COMPANY' ? maskTax(t.taxNo) : '—'}</td><td>${a.orderIds.length}</td><td>${yuan(a.amt)}</td><td>${a.at}</td><td>${st[a.status]}</td><td>${a.invoiceNo || ''}</td><td>${a.status === 'SUBMITTED' ? `<button class="eb txt" data-a="admInv" data-id="${a.id}" data-m="issue">开具</button><button class="eb txt" style="color:#F56C6C" data-a="admInv" data-id="${a.id}" data-m="reject">驳回</button>` : ''}</td></tr>`; }).join('')}</table>
+    <div class="infobox" style="margin:12px 0 0">后台查看税号也只给脱敏值；明文只在开票时由有权限的人单独解密查看（待定）。</div></div>`;
+  },
+};
+A.admInv = (el, ds) => admOpen('adm-inv', ds);
+ADLG['adm-inv'] = {
+  t: p => p.m === 'issue' ? '回填发票号（人工开具）' : '驳回开票申请',
+  render(p) { return p.m === 'issue' ? `<div class="fr"><label>发票号码</label><input name="admInvNo" value="${esc(fv('admInvNo', '26312000000098765432'))}"></div>` : `<div class="fr"><label>驳回原因</label><textarea name="admInvR">${esc(fv('admInvR', '抬头与税号不一致'))}</textarea></div>`; },
+  foot(p) { return `<button class="eb" data-a="admClose">取 消</button><button class="eb p" data-a="admInvOk" data-id="${p.id}" data-m="${p.m}">确 定</button>`; },
+};
+A.admInvOk = (el, ds) => { const a = f7().apps.find(x => x.id == ds.id); if (ds.m === 'issue') { a.status = 'ISSUED'; a.invoiceNo = fv('admInvNo', '26312000000098765432'); } else { a.status = 'REJECTED'; a.reason = fv('admInvR', '抬头与税号不一致'); } S.adlg = null; render(); toast('已更新（玩家端同步可见）'); };
+const TRAIL = [['10-23 19:41:06', 'BUSINESS_AUDIT_EVENT', 'ARRIVE_REJECTED', 'SYSTEM', 'ARRIVE_GUARD_SPEED', '速度 11.6 m/s'], ['10-23 19:44:30', 'AUDIT_RECORD', 'APPEAL_SUBMITTED', 'MEMBER', '', '定位漂移'], ['10-23 20:02:11', 'AUDIT_RECORD', 'CLAIMED', 'ADMIN', '', 'admin'], ['10-23 20:05:48', 'AUDIT_RECORD', 'APPROVED', 'ADMIN', 'GPS_DRIFT', '补记到达'], ['10-23 20:05:49', 'BUSINESS_AUDIT_EVENT', 'ARRIVE_BACKFILLED', 'SYSTEM', '', '']];
+function trailTable() { return `<table><tr><th>时间</th><th>来源</th><th>动作</th><th>操作方</th><th>原因码</th><th>说明</th></tr>${TRAIL.map(r => `<tr>${r.map(c => `<td>${c}</td>`).join('')}</tr>`).join('')}</table>`; }
+SC['adm-trail'] = {
+  f: 'adm', grp: '审计', nm: '统一留痕', t: '统一留痕', gate: { flag: 'chengyin.audit.o5c.unified-trail.enabled', code: 'AUDIT_TRAIL_DISABLED', msg: '统一留痕未开启' },
+  ep: ['GET /business/audit-trail | bizType, bizId → source, action, operatorType, reasonCode, eventTime（每源 ≤200、总 ≤500）'],
+  render() {
+    if (!F('trail')) return `<div class="card"><div class="warnbox">AUDIT_TRAIL_DISABLED：开关 chengyin.audit.o5c.unified-trail.enabled 关闭，接口 404。</div></div>`;
+    return `<div class="card"><div class="q"><label>业务类型</label><span class="ip">play_arrive_guard</span><label>业务 ID</label><span class="ip">551820</span><button class="eb p">查询</button></div>
+    <div class="infobox">合并 5 个来源：AUDIT_RECORD、BUSINESS_AUDIT_EVENT、POST_ENFORCEMENT、REPORT_TIMELINE、OFFICIAL_EVENT_AUDIT_LOG，按时间排序。</div>${trailTable()}</div>`;
+  },
+};
+A.admTrail = (el, ds) => F('trail') ? admOpen('adm-trail-drw', ds) : toast('统一留痕未开启（AUDIT_TRAIL_DISABLED）');
+ADLG['adm-trail-drw'] = { drawer: true, t: p => `完整留痕 · ${p.biz} #${p.id}`, render: () => `<div class="infobox">GET /business/audit-trail?bizType=…&bizId=…</div>${TRAIL.map(r => `<div class="tlr"><span class="t">${r[0]}</span><div><b>${r[2]}</b> · ${r[3]}${r[4] ? ' · ' + r[4] : ''}<div style="color:#909399">${r[1]}${r[5] ? ' · ' + r[5] : ''}</div></div></div>`).join('')}` };
+
+/* ================= 启动 ================= */
+const _push = push;
+push = function (id, p) { if (id === 'f2-check' || id === 'f6-check') R().chk = chkNew(); return _push(id, p); };
+const _openFeat = openFeat;
+openFeat = function (k, id) { if (S.d.rpg && (id === 'f2-check' || id === 'f6-check' || k === 'f2' || k === 'f6')) R().chk = chkNew(); return _openFeat(k, id); };
+(function boot() {
+  f1Init(); rpgInit(); f3Init(); f7Init(); f4Init();
+  FEATS.forEach(f => (f.toggles || []).forEach(t => { S.flags[t.id] = !['guardShadow', 'requireAcc', 'forceFail', 'forceCrit', 'minorOrienteeringGate'].includes(t.id); }));
+  FEATS.forEach(f => S.stacks[f.k] = pathOf(f.root).map(id => ({ id, p: {} })));
+  const h = decodeURIComponent(location.hash.slice(1));
+  if (h && SC[h]) openFeat(SC[h].f, h); else if (h && feat(h)) openFeat(h); else render();
+  window.addEventListener('hashchange', () => { const x = decodeURIComponent(location.hash.slice(1)); if (SC[x]) openFeat(SC[x].f, x); else if (feat(x) || x === 'home') openFeat(x); });
+})();
+</script>
+</body>
+</html>
