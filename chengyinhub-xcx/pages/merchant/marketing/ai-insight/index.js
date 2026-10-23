@@ -363,7 +363,7 @@ Page({
     const caption = (facts && facts.window) || '近30天';
     return Object.assign(base, {
       segs: this._segs(rate),
-      caption: rate === null ? caption + '暂无核销' : caption + '核销率 ' + this._pct(rate),
+      caption: rate === null ? '' : caption + '核销率 ' + this._pct(rate), // 业主 10-23:没有就不显示(不出「暂无核销」提示,也不拿 0% 冒充)
     });
   },
 

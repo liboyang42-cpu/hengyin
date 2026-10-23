@@ -206,7 +206,7 @@ test('核销进度 10 格:每次打开先整排点亮再退回真实格数,零�
 test('进度条下一行只说核销率(不重复玩家环比,不随主卡窗口说错);环比 0 写持平', () => {
   const page = loadPage();
   assert.equal(page._buildValueCard({ window: '近30天', checkin: { redeemRate: 0.38 } }).caption, '近30天核销率 38%');
-  assert.equal(page._buildValueCard({ window: '近30天', checkin: { redeemRate: null } }).caption, '近30天暂无核销');
+  assert.equal(page._buildValueCard({ window: '近30天', checkin: { redeemRate: null } }).caption, ''); // 业主 10-23:缺失就不显示
   assert.doesNotMatch(PAGE_WXML, /核销进度 · /, '旧的「核销进度 · 比上期 +N 位玩家」不再出现');
   page._trends = page._indexTrends({ windows: TRENDS.windows.map((w) => Object.assign({}, w, { prevVisitors: w.visitors })) });
   assert.equal(page._buildHero(FACTS, 7, 'visitors', false).deltaText, '持平');
