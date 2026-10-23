@@ -122,9 +122,12 @@ public final class RewardAcceptLedger {
     }
 
     public Decision recover(String originalRequestId) {
+        if (originalRequestId == null || originalRequestId.isBlank()) {
+            return toDecision(unknown(null, "originalRequestId missing"));
+        }
         Entry entry = existing(originalRequestId);
         if (entry == null) {
-            return markUnknown(originalRequestId, "no original accept receipt");
+            return toDecision(unknown(originalRequestId, "no original accept receipt"));
         }
         Map<String, Object> out = copy(entry.result);
         out.put("originalRequestId", entry.requestId);
@@ -138,22 +141,27 @@ public final class RewardAcceptLedger {
         return toDecision(out);
     }
 
+    /**
+     * Record UNKNOWN for an already-bound id. A never-seen id must not occupy
+     * the ledger, or a later unique accept becomes a replay of minted UNKNOWN.
+     * APPLIED / REPLAY / WAITING_SOURCE / REJECTED original outcomes are not clobbered.
+     */
     public Decision markUnknown(String originalRequestId, String reason) {
         if (originalRequestId == null || originalRequestId.isBlank()) {
             return toDecision(unknown(null, "originalRequestId missing"));
         }
         Entry entry = byRequestId.get(originalRequestId);
-        if (entry != null && (APPLIED.equals(entry.status) || REPLAY.equals(entry.status))) {
+        if (entry == null) {
+            return toDecision(unknown(originalRequestId, reason == null ? UNKNOWN : reason));
+        }
+        if (APPLIED.equals(entry.status) || REPLAY.equals(entry.status)
+                || WAITING_SOURCE.equals(entry.status) || REJECTED.equals(entry.status)) {
             Map<String, Object> kept = copy(entry.result);
             kept.put("clearedOriginalIntent", Boolean.FALSE);
             kept.put("mintedNewRequestId", Boolean.FALSE);
             kept.put("projectionTakenAsSuccess", Boolean.FALSE);
             kept.put("reason", "UNKNOWN must not clear original accept");
             return toDecision(kept);
-        }
-        if (entry == null) {
-            entry = new Entry(originalRequestId);
-            byRequestId.put(originalRequestId, entry);
         }
         Map<String, Object> stored = unknown(originalRequestId, reason == null ? UNKNOWN : reason);
         entry.status = UNKNOWN;

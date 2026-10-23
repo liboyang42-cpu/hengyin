@@ -8,11 +8,12 @@ Base：`origin/master` `2ec68899099a1e250df0949a8383bf85b5d3ffe0`
 
 ## 1. 白名单
 
-- `RewardAcceptLedger.java` `304e8e70b584bcfad9a63119ca5538eb68126720e5fd19023f6620918b17ff59`
+- `RewardAcceptLedger.java` `45436447dab222d9f4a817ba8b312ac8f085f544b9de5dc9218985c8ccc5856f`
 - `TriggerActorProjection.java` `1bac6b87e2a3da0db243bd948fbb67c7bebd6e1459e9d89dfc26e7f3917165fc`
 - 测试：`RewardAcceptLedgerTest` / `TriggerActorProjectionTest` / `C03RewardAcceptJourneyIsolationTest`
 
 未改：`TopicRouteRuntimeServiceImpl`、`RouteEffects`、钱包、骰子、公共 Controller / Mapper。无生产 DDL。
+不要对未见过的 requestId 做 `recover`/`markUnknown` 时 `put` 进账本；未见过只回 UNKNOWN 且 `existing==null`。
 
 ## 2. 首个隔离旅程
 

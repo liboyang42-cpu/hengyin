@@ -77,4 +77,27 @@ class C03AccountSwitchRestartIsolationTest {
         assertNull(recoveredMissing.originalRequestId());
         assertEquals(RewardAcceptLedger.Outcome.UNKNOWN, recoveredMissing.outcome());
     }
+
+    @Test
+    void recoverOfNeverSeenIdDoesNotOccupyLedgerThenAcceptApplies() {
+        RewardAcceptLedger ledger = new RewardAcceptLedger();
+        RewardAcceptLedger.Decision marked = ledger.markUnknown("c03-rew-never-seen", "server receipt UNKNOWN");
+        assertEquals("c03-rew-never-seen", marked.originalRequestId());
+        assertEquals(RewardAcceptLedger.Outcome.UNKNOWN, marked.outcome());
+        assertFalse(marked.mintedNewRequestId());
+        assertNull(ledger.existing("c03-rew-never-seen"));
+
+        RewardAcceptLedger.Decision recovered = ledger.recover("c03-rew-never-seen");
+        assertEquals("c03-rew-never-seen", recovered.originalRequestId());
+        assertEquals(RewardAcceptLedger.Outcome.UNKNOWN, recovered.outcome());
+        assertFalse(recovered.mintedNewRequestId());
+        assertNull(ledger.existing("c03-rew-never-seen"));
+
+        RewardAcceptLedger.Decision firstWrite = ledger.accept(new RewardAcceptLedger.AcceptFact(
+                "c03-rew-never-seen", "player-7", "badge", "frozen-grant-hash", 0L, true));
+        assertEquals(RewardAcceptLedger.Outcome.ACCEPTED, firstWrite.outcome());
+        assertEquals("c03-rew-never-seen", firstWrite.originalRequestId());
+        assertFalse(firstWrite.secondEffect());
+        assertEquals(RewardAcceptLedger.APPLIED, ledger.existing("c03-rew-never-seen").status());
+    }
 }
