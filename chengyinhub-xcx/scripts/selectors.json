@@ -105,10 +105,6 @@
   "selector": "cy-skeleton",
   "min": 1
  },
- "B46": {
-  "selector": ".fbox_sr",
-  "min": 1
- },
  "B48": {
   "selector": ".pd-ai-topic__plan, .pd-field",
   "min": 1

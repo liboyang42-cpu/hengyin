@@ -148,7 +148,6 @@ const PUBLISH_FORM_ROUTES = [
   ['pages/publish/activity/index.wxml', 'canContinue'],
   ['pages/publish/fabu/index.wxml', 'canPublish'],
   ['pages/publish/fabu/step3.wxml', 'canSaveTicket'],
-  ['pages/publish/templateadd/templateadd.wxml', 'canSubmit'],
   ['pages/publish/temp/index.wxml', 'canOpenPreview'],
   ['pages/publish/temp/index.wxml', 'canPublishGame'],
   ['pages/publish/simple/index.wxml', 'canEnterAiEditor'],
@@ -222,12 +221,12 @@ test('负控：商家据点把始终可见的玩法配置升级为 primary 必�
   assert.equal((broken.match(/variant="primary"/g) || []).length, 3)
 })
 
-test('玩法模板命名：确认按钮不在 WXML 计算 trim，只读 canSubmit', () => {
-  const js = read('pages/publish/templateadd/templateadd.js')
-  const wxml = read('pages/publish/templateadd/templateadd.wxml')
-  assertDisabledReadsField(wxml, '确认', 'canSubmit')
-  assert.match(js, /canSubmit:\s*false/)
-  assert.doesNotMatch(wxml, /\.trim\(\)/)
+// 2026-10-23 业主第四轮去掉「起名字」一步:引导页「开始创建」直接进 temp 编辑器,起名页 templateadd 整页删除。
+test('玩法模板起名页已退役删除:不得注册、不得残留页面文件', () => {
+  const app = JSON.parse(read('app.json'))
+  const routes = app.pages.concat((app.subPackages || []).flatMap((sp) => sp.pages.map((p) => sp.root.replace(/\/$/, '') + '/' + p)))
+  assert.equal(routes.includes('pages/publish/templateadd/templateadd'), false, 'templateadd 不得再注册')
+  assert.equal(fs.existsSync(path.join(ROOT, 'pages/publish/templateadd/templateadd.wxml')), false, 'templateadd 页面文件必须删除')
 })
 
 const SIMPLE_FORM_ROUTES = [

@@ -240,7 +240,7 @@ const CONSUMER_FILES = [
   'pages/publish/temp/index.wxss',
   'pages/publish/simple/index.wxss',
   'pages/publish/topicadd/topicadd.wxss',
-  'pages/publish/templateadd/templateadd.wxss',
+  // 2026-10-23 templateadd 退役删除,不再是消费方
 ];
 const readConsumers = () => Object.fromEntries(
   CONSUMER_FILES.map((f) => [f, fs.readFileSync(path.join(XCX, f), 'utf8')])
