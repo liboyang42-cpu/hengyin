@@ -106,4 +106,33 @@ class C06AccountSwitchRestartIsolationTest {
         assertEquals(ReviewStatus.REJECTED, isolation.reviewStatusForRequest("c06-review-never-seen", true));
         assertEquals(ReviewStatus.REJECTED, isolation.reviewStatusForRequest("c06-review-never-seen", true));
     }
+
+    @Test
+    void requeryPublishedOfNeverSeenIdDoesNotOccupyLedgerThenUniquePublishIsFirstWrite() {
+        InMemoryNpcFixtures fx = InMemoryNpcFixtures.synthetic();
+        InMemoryNpcFixtures.RecordingPublisher publisher = new InMemoryNpcFixtures.RecordingPublisher();
+        MerchantNpcDraftApprovalGate gate = new MerchantNpcDraftApprovalGate(
+                fx.scope(), publisher, fx.isolation(), fx.qualification(), fx::scope);
+        String unseen = fx.requestId();
+        assertNull(gate.requeryPublished(null));
+        assertNull(gate.requeryPublished(""));
+        assertNull(gate.requeryPublished("   "));
+        assertNull(gate.requeryPublished(unseen));
+        assertNull(gate.requeryPublished("c06-pub-never-seen"));
+        assertNull(fx.isolation().reviewStatusForRequest(unseen, true));
+
+        gate.ingestAiDraft(fx.draft());
+        gate.verifyByAuthorizer(fx.authorizer());
+        assertNull(gate.requeryPublished(unseen), "审核票不是 published 账");
+        gate.submitOriginalReview(unseen);
+        assertNull(gate.requeryPublished(unseen), "提交审核不得占 published 账");
+        assertNull(gate.requeryPublished("c06-pub-never-seen"));
+
+        PublishedRevision published = gate.publishApproved();
+        assertEquals(unseen, published.requestId());
+        assertEquals(published.factsHash(), gate.requeryPublished(unseen).factsHash());
+        assertNull(gate.requeryPublished("c06-pub-never-seen"), "另一未见 id 仍不得占账");
+        assertEquals(ReviewStatus.APPROVED, fx.isolation().reviewStatusForRequest(unseen, true));
+        assertNull(fx.isolation().reviewStatusForRequest("c06-pub-never-seen", true));
+    }
 }
