@@ -704,7 +704,9 @@ test('L06(b/d/e):头部两行元信息；商家可加入、活动卡写「商家
   assert.equal(page.data.club.joinPolicyText + '加入', '公开加入')
 
   const view = read(DETAIL_WXML)
-  assert.match(view, /<view class="profile-cta" wx:if="\{\{!club\.isJoined && !club\.isOwner\}\}">/, '商家不再被挡在加入按钮外')
+  // 2026-10-22 owner:俱乐部谁都能进来看,加入按钮改成底部悬浮;条件里仍不挡商家
+  assert.match(view, /<block wx:if="\{\{detailLoaded && !club\.isJoined && !club\.isOwner[^"]*\}\}">\s*<view class="join-float-space"><\/view>\s*<view class="join-float">/, '商家不再被挡在加入按钮外')
+  assert.doesNotMatch(view, /class="profile-cta"/, '头部不再放加入按钮')
   assert.match(view, /wx:if="\{\{merchantNoSignup\}\}" class="ev-no-signup">商家不能报名</)
   assert.match(view, /upcomingTopics[^\n]*\n[^\n]*merchantNoSignup: isMerchantViewer/)
   assert.doesNotMatch(view, /club-coop-floating|cy-coop-invite-sheet|goClubCoop/)

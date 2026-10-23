@@ -38,23 +38,21 @@
   color: var(--cy-color-text-primary);
 }
 
-/* —— MedalPill:三枚 14×14pt 奖牌 + 数字,间距 4pt —— */
+/* —— MedalPill(新稿 211:271):深色胶囊,左 10 / 右 12 / 上下 6pt,三枚 14×14pt 奖牌原图 + 数字,间距 6pt —— */
 .completion-share-card__medals {
   flex: none;
   display: flex;
   align-items: center;
-  gap: var(--cy-space-1);
+  gap: var(--cy-space-1-5);               /* 6pt */
+  padding: var(--cy-space-1-5) var(--cy-space-3) var(--cy-space-1-5) var(--cy-space-2-5);
+  border-radius: var(--cy-radius-pill);
+  background: var(--cy-color-bg-surface-subtle);
 }
-.completion-share-card__medal { flex: none; }
-/* 金/银/铜是【名次】不是状态,所以绑 --cy-color-medal-*,不借 status-warning(那是警告)
-   也不借 --cy-color-rare(那是稀有度)。三档同色 = 这个 pill 等于没做。 */
-.completion-share-card__medal--gold   { color: var(--cy-color-medal-gold); }
-.completion-share-card__medal--silver { color: var(--cy-color-medal-silver); }
-.completion-share-card__medal--bronze { color: var(--cy-color-medal-bronze); }
+.completion-share-card__medal { flex: none; width: 28rpx; height: 28rpx; display: block; }   /* 14pt,与 svg 原始尺寸同比 */
 .completion-share-card__medal-count {
-  font-size: var(--cy-font-label);        /* 24rpx = 12pt */
-  font-weight: 500;                       /* 稿 Medium */
-  color: var(--cy-color-text-secondary);
+  font-size: 26rpx;                       /* ds-ok: 新稿 13pt Semi Bold */
+  font-weight: 600;
+  color: var(--cy-color-text-primary);
 }
 
 /* —— Stats:三栏等分,每栏竖间距 4pt —— */

@@ -15,9 +15,10 @@
          ⚠️ 与 feed-play-card 的 __trophy(star + nodeTotal「通关节点数」)不是一回事:
             那个是「走完了几个点」,这里是「在几个点上拿到了第 1/2/3 名」。 -->
     <view class="completion-share-card__medals" wx:if="{{medalGold > 0 || medalSilver > 0 || medalBronze > 0}}">
-      <cy-icon class="completion-share-card__medal completion-share-card__medal--gold" wx:if="{{medalGold > 0}}" name="star" size="28" />
-      <cy-icon class="completion-share-card__medal completion-share-card__medal--silver" wx:if="{{medalSilver > 0}}" name="star" size="28" />
-      <cy-icon class="completion-share-card__medal completion-share-card__medal--bronze" wx:if="{{medalBronze > 0}}" name="star" size="28" />
+      <!-- 2026-10-22 新稿 211:271:三枚奖牌用稿上的原图(金/银/铜实心圆,14pt),装在深色胶囊里 -->
+      <image class="completion-share-card__medal" wx:if="{{medalGold > 0}}" src="./medal-gold.svg" aria-label="金牌" />
+      <image class="completion-share-card__medal" wx:if="{{medalSilver > 0}}" src="./medal-silver.svg" aria-label="银牌" />
+      <image class="completion-share-card__medal" wx:if="{{medalBronze > 0}}" src="./medal-bronze.svg" aria-label="铜牌" />
       <text class="completion-share-card__medal-count">{{medalGold + medalSilver + medalBronze}}</text>
     </view>
   </view>
@@ -49,7 +50,7 @@
   <image wx:if="{{cover}}" class="completion-share-card__cover" src="{{cover}}" mode="{{roamResult ? 'aspectFit' : 'aspectFill'}}" lazy-load="true" />
 
   <!-- Kudos:点赞头像组(最多三枚,叠 8pt ⇒ 组宽正好 56pt)+ 文案,间距 8pt -->
-  <view class="completion-share-card__kudos" wx:if="{{kudosAvatars.length > 0 || kudosText}}">
+  <view class="completion-share-card__kudos" wx:if="{{tail && (kudosAvatars.length > 0 || kudosText)}}">
     <view class="completion-share-card__kudos-avatars" wx:if="{{kudosAvatars.length > 0}}">
       <!-- 头像 URL 可能重复(都用默认头像时),不能拿 *this 当 key;沿用 post-card 图廊的 for-index 写法。 -->
       <block wx:for="{{kudosAvatars}}" wx:for-index="kudosIndex" wx:key="kudosIndex">
@@ -60,7 +61,7 @@
   </view>
 
   <!-- CommentPreview:一条评论 + 「查看全部 N 条」 -->
-  <view class="completion-share-card__comment" wx:if="{{commentText || commentCount > 0}}">
+  <view class="completion-share-card__comment" wx:if="{{tail && (commentText || commentCount > 0)}}">
     <view class="completion-share-card__comment-line" wx:if="{{commentText}}">
       <text class="completion-share-card__comment-nick" wx:if="{{commentNick}}">{{commentNick}}</text>
       <text class="completion-share-card__comment-text">{{commentText}}</text>

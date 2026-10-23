@@ -174,8 +174,20 @@ page { background: var(--cy-bg-page); }
   white-space: nowrap;
 }
 
-/* 主按钮已收进身份行右侧,不再整宽 */
-.profile-cta { flex-shrink: 0; }
+/* 2026-10-22 owner:「加入俱乐部」改为底部悬浮整宽按钮(未加入时出现),头部身份行不再放。
+   底部一层渐隐到页面底色,按钮浮在内容上方;页尾 .join-float-space 留出同高空位。 */
+.join-float {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 40;
+  padding: var(--cy-space-4) var(--cy-page-x) calc(var(--cy-space-3) + env(safe-area-inset-bottom));
+  background: linear-gradient(180deg, transparent 0%, var(--cy-bg-page) 40%);
+  pointer-events: none;
+}
+.join-float__btn { width: 100%; pointer-events: auto; box-sizing: border-box; font-size: var(--cy-font-body); }
+.join-float-space { height: calc(var(--cy-btn-h) + var(--cy-space-7) + env(safe-area-inset-bottom)); }
 /* join-btn 收编至 .cy-btn（primary 反色中性白/secondary/ghost）;此处仅留行内布局 */
 .join-btn {
   display: flex;

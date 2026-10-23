@@ -58,11 +58,8 @@
              邀约标的永远是某一个项目,俱乐部有多个活动时头部按钮说不清邀的是哪个。
              阶段式 primary(ownerPrimaryLabel/onOwnerPrimary)整体挪进「管理」tab 的
              NOW 卡 —— 卡片能带阶段上下文(见 CU-C-89:承接阶段不点名单个项目,只说全团)。 -->
-        <!-- 拍板 2026-10-22:商家也可以加入俱乐部(不能报名俱乐部活动),入会按钮不再对商家隐藏。 -->
-        <view class="profile-cta" wx:if="{{!club.isJoined && !club.isOwner}}">
-          <view wx:if="{{club.myJoinStatus === 0}}" class="join-btn join-btn--pending" aria-role="button" aria-disabled="true">等待主理人审核</view>
-          <view wx:else class="join-btn cy-btn cy-btn--primary" bindtap="onJoin" hover-class="cy-pressed" hover-stay-time="80">{{club.joinPolicy == 1 && club.myJoinStatus === 2 ? '重新申请加入' : '加入俱乐部'}}</view>
-        </view>
+        <!-- 拍板 2026-10-22:商家也可以加入俱乐部(不能报名俱乐部活动),入会按钮不再对商家隐藏。
+             2026-10-22 owner:俱乐部对所有人开放浏览,「加入俱乐部」改成底部悬浮按钮(见页尾 .join-float),头部不再放。 -->
       </view>
       <view class="profile-meta">
         <view class="profile-meta-chip">
@@ -1065,6 +1062,14 @@
   />
 
   <view class="safe-bottom"></view>
+  <!-- 2026-10-22 owner:俱乐部谁都能进来看,未加入时底部悬浮「加入俱乐部」;页尾留出同高空位,最后一条内容不被盖住 -->
+  <block wx:if="{{detailLoaded && !club.isJoined && !club.isOwner && !(sceneCurrent && sceneCurrent.id === 'club-edit')}}">
+    <view class="join-float-space"></view>
+    <view class="join-float">
+      <view wx:if="{{club.myJoinStatus === 0}}" class="join-btn join-btn--pending join-float__btn" aria-role="button" aria-disabled="true">等待主理人审核</view>
+      <view wx:else class="join-btn cy-btn cy-btn--primary join-float__btn" bindtap="onJoin" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">{{club.joinPolicy == 1 && club.myJoinStatus === 2 ? '重新申请加入' : '加入俱乐部'}}</view>
+    </view>
+  </block>
 </view>
 
 <!-- BL-18 物理返回/侧滑守卫:资料编辑弹窗里有未保存修改时,返回先走 dirty 闸,不直接退出详情页 -->
