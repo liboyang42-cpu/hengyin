@@ -322,21 +322,16 @@ Page({
   // 首屏归因价值卡(调研共性规律#1:面板第一职责是「平台为你带来了什么」)
   _buildValueCard(facts) {
     const a = (facts && facts.attribution) || {};
-    const cur = numberOrNull(a.visitors);
-    const prev = numberOrNull(a.prevVisitors);
-    let deltaText = '';
-    if (prev !== null && cur !== null && prev > 0 && cur !== prev) {
-      const d = cur - prev;
-      deltaText = '比上期' + (d > 0 ? ' +' : ' ') + d + ' 位玩家';
-    }
-    // 上期无数据不显示环比(没有值 ≠ 值是 0)
+    const rate = numberOrNull(((facts && facts.checkin) || {}).redeemRate);
+    // 进度条下只说核销率本身:玩家环比已在主卡角标,且主卡会切 7/90 天,这行固定是 facts 窗口
+    const caption = (facts && facts.window) || '近30天';
     return {
       visitors: this._countText(a.visitors),
       checkins: this._countText(a.checkins),
       redeems: this._countText(a.redeems),
       // 稿 1:27 价值卡进度 = 核销占打卡的比例(34/42 ≈ 8 格)
-      segs: this._segs(((facts && facts.checkin) || {}).redeemRate),
-      deltaText,
+      segs: this._segs(rate),
+      caption: rate === null ? caption + '暂无核销' : caption + '核销率 ' + this._pct(rate),
     };
   },
 
@@ -387,7 +382,7 @@ Page({
     if (cur !== null && prev !== null && prev > 0) {
       const pct = Math.round((cur - prev) / prev * 100);
       deltaDown = pct < 0;
-      deltaText = (pct < 0 ? '' : '+') + pct + '%';
+      deltaText = pct === 0 ? '持平' : (pct < 0 ? '' : '+') + pct + '%';
     }
     const windowText = w ? '近' + win + '天' : ((facts && facts.window) || '近30天');
     const nonce = (this._heatNonce = (this._heatNonce || 0) + 1);

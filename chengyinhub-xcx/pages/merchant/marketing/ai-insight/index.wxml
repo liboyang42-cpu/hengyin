@@ -70,7 +70,7 @@
         <view class="seg-pip {{seg.on || pipSweep ? 'seg-pip--on' : ''}}" wx:for="{{valueCard.segs}}" wx:for-item="seg" wx:key="index"
               style="transition-delay: {{(pipSweep ? 400 : 0) + index * 45}}ms;"></view>
       </view>
-      <text class="value-delta" wx:if="{{valueCard && valueCard.deltaText}}">{{facts.window || '近30天'}}核销进度 · {{valueCard.deltaText}}</text>
+      <text class="value-delta" wx:if="{{valueCard && valueCard.caption}}">{{valueCard.caption}}</text>
     </view>
 
     <!-- 未知和明确为零是两件事：字段缺失只能重试，服务端明确全零才给业务空态。 -->
