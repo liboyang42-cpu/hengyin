@@ -665,8 +665,12 @@ page {
 .rv-msg-time { flex-shrink: 0; font-size: var(--cy-font-caption); color: var(--cy-color-text-tertiary); }
 
 /* 2026-10-23 业主:我的消息像券包/票夹一样分层叠放、点开展开;卡片一律白底、不分色(同日业主二次裁决)。
-   叠放:首张完整,后两张缩小上移只露上沿(白卡 + 投影分层);点首张展开成独立卡片列(cy-fly-in 逐张飞入),回到页面重新叠起。 */
-.rv-msg-card.rv-msg-stack { position: relative; padding-top: 40rpx; background: transparent; box-shadow: none; overflow: visible; }
+   业主三次反馈「太浅、没层次」⇒ 按 iOS 通知中心 / Wallet 的叠法重做:后面的卡从首张**下沿**露出,
+   每层露 20rpx、宽度逐层收窄(以底边为原点缩放)、逐层变淡,首张投影加深,一眼看出下面还压着几张。
+   点首张展开成独立卡片列(cy-fly-in 逐张飞入),回到页面重新叠起。 */
+.rv-msg-card.rv-msg-stack { position: relative; background: transparent; box-shadow: none; overflow: visible; }
+.rv-msg-card.rv-msg-stack--n2 { padding-bottom: 24rpx; }
+.rv-msg-card.rv-msg-stack--n3 { padding-bottom: 48rpx; }
 .rv-msg-stack .rv-msg-item {
   position: relative;
   background: var(--cy-bg-card);
@@ -674,16 +678,24 @@ page {
   box-shadow: 0 4rpx 10rpx rgba(0, 0, 0, 0.06); /* ds-ok: 与同页项目卡同一投影 */
 }
 .rv-msg-stack .rv-msg-item + .rv-msg-item { border-top: 0; }
-.rv-msg-stack:not(.rv-msg-stack--open) .rv-msg-item:first-child { z-index: 3; }
+.rv-msg-stack:not(.rv-msg-stack--open) .rv-msg-item:first-child {
+  z-index: 3;
+  padding-top: 36rpx; padding-bottom: 36rpx;
+  box-shadow: 0 10rpx 28rpx rgba(0, 0, 0, 0.10), 0 2rpx 6rpx rgba(0, 0, 0, 0.05); /* ds-ok: 叠放首张的浮起投影 */
+}
 .rv-msg-stack:not(.rv-msg-stack--open) .rv-msg-item:nth-child(n+2) {
-  position: absolute; left: 0; right: 0; top: 40rpx; bottom: 0;
+  position: absolute; left: 0; right: 0; top: 0;
+  transform-origin: center bottom;
+  box-shadow: 0 8rpx 20rpx rgba(0, 0, 0, 0.10), 0 1rpx 3rpx rgba(0, 0, 0, 0.06); /* ds-ok: 下层卡投影:白卡不透明、靠投影分层(降透明度会跟灰底糊成一片) */
   transition: transform var(--cy-motion-standard) var(--cy-ease-standard);
 }
+.rv-msg-stack--n2:not(.rv-msg-stack--open) .rv-msg-item:nth-child(n+2) { bottom: 24rpx; }
+.rv-msg-stack--n3:not(.rv-msg-stack--open) .rv-msg-item:nth-child(n+2) { bottom: 48rpx; }
 .rv-msg-stack:not(.rv-msg-stack--open) .rv-msg-item:nth-child(n+2) > view,
 .rv-msg-stack:not(.rv-msg-stack--open) .rv-msg-item:nth-child(n+2) > text { visibility: hidden; }
-.rv-msg-stack:not(.rv-msg-stack--open) .rv-msg-item:nth-child(2) { z-index: 2; transform: translateY(-20rpx) scale(.95); }
-.rv-msg-stack:not(.rv-msg-stack--open) .rv-msg-item:nth-child(3) { z-index: 1; transform: translateY(-40rpx) scale(.9); }
-.rv-msg-stack--open { padding-top: 0; }
+.rv-msg-stack:not(.rv-msg-stack--open) .rv-msg-item:nth-child(2) { z-index: 2; transform: translateY(24rpx) scale(.94); }
+.rv-msg-stack:not(.rv-msg-stack--open) .rv-msg-item:nth-child(3) { z-index: 1; transform: translateY(48rpx) scale(.88); }
+.rv-msg-stack--open { padding-top: 0; padding-bottom: 0; }
 .rv-msg-stack--open .rv-msg-item + .rv-msg-item { margin-top: var(--cy-space-2); }
 
 
