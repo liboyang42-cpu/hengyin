@@ -83,7 +83,10 @@ public class ApiMedalController extends BaseController {
 
         // R8 合并成就徽章(player_badge:首步/连击/里程/通关/漫游里程碑),此前已发放却不在墙上展示。
         // 注:部分成就徽章图标(BADGE_META)暂为空,待设计补齐;前端对空 medalImg 用默认徽章底图。
+        // 同一 badge_code 可按来源(如每个主题一枚 TOPIC_CLEAR)多次发放,墙上按 code 只展示一枚,与徽章墙 v2 同口径。
+        java.util.Set<String> shownBadgeCodes = new java.util.HashSet<>();
         for (com.chengyinhub.business.domain.PlayerBadge b : playerBadgeMapper.selectListByMember(memberId)) {
+            if (b.getBadgeCode() != null && !shownBadgeCodes.add(b.getBadgeCode())) continue;
             Map<String, Object> m = new LinkedHashMap<>();
             m.put("badgeCode", b.getBadgeCode());
             m.put("medalName", b.getBadgeName());

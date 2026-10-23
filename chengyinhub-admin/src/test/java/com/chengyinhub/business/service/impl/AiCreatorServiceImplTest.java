@@ -218,7 +218,9 @@ class AiCreatorServiceImplTest {
     @Test
     @SuppressWarnings("unchecked")
     void playerThemeDraftCountsOnlyCompleteRealDraft() {
-        LocalDateTime before = LocalDateTime.now();
+        // 额度按北京时间换日:TTL 期望值也按北京时间算,不随运行测试的 JVM 默认时区变。
+        java.time.ZoneId beijing = java.time.ZoneId.of("Asia/Shanghai");
+        LocalDateTime before = LocalDateTime.now(beijing);
         redisTemplate = mock(RedisTemplate.class);
         valueOperations = mock(ValueOperations.class);
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
@@ -236,7 +238,7 @@ class AiCreatorServiceImplTest {
         assertNotNull(resp.getDraft());
         assertEquals(1, reserved.size());
         assertEquals(0, refunded.size());
-        LocalDateTime after = LocalDateTime.now();
+        LocalDateTime after = LocalDateTime.now(beijing);
         long ttl = reserveTtls.get(0).longValue();
         if (before.toLocalDate().equals(after.toLocalDate())) {
             long minExpected = Duration.between(after, after.toLocalDate().plusDays(1).atStartOfDay()).getSeconds();
@@ -320,12 +322,31 @@ class AiCreatorServiceImplTest {
         when(valueOperations.get(anyString())).thenReturn(2L);
         ReflectionTestUtils.setField(service, "redisTemplate", redisTemplate);
         when(roleService.resolveRole(any(UmsMember.class))).thenReturn("player");
+        when(gateway.remainingQuota(MEMBER_ID, "theme_draft")).thenReturn(20);
 
         com.chengyinhub.business.domain.vo.ai.AiThemeDraftQuotaResp resp = service.themeDraftQuota(MEMBER_ID);
 
         assertTrue(resp.isLimited());
         assertEquals(Integer.valueOf(3), resp.getLimit());
         assertEquals(Integer.valueOf(1), resp.getRemaining());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void playerThemeDraftQuotaReportsZeroWhenSharedGatewayPoolIsExhausted() {
+        redisTemplate = mock(RedisTemplate.class);
+        valueOperations = mock(ValueOperations.class);
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(valueOperations.get(anyString())).thenReturn(0L);
+        ReflectionTestUtils.setField(service, "redisTemplate", redisTemplate);
+        when(roleService.resolveRole(any(UmsMember.class))).thenReturn("player");
+        when(gateway.remainingQuota(MEMBER_ID, "theme_draft")).thenReturn(0);
+
+        com.chengyinhub.business.domain.vo.ai.AiThemeDraftQuotaResp resp = service.themeDraftQuota(MEMBER_ID);
+
+        assertTrue(resp.isLimited());
+        assertEquals(Integer.valueOf(3), resp.getLimit());
+        assertEquals(Integer.valueOf(0), resp.getRemaining());
     }
 
     // ---- nodeGenerate ----

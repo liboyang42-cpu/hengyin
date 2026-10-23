@@ -842,7 +842,9 @@ public class NpcChatService
 
     private int secondsUntilTomorrow()
     {
-        long seconds = Duration.between(LocalDateTime.now(), LocalDate.now().plusDays(1).atStartOfDay()).getSeconds();
+        // 额度按北京时间换日(与 AiGatewayServiceImpl 的日键同口径)，不依赖 JVM 默认时区。
+        java.time.ZoneId zone = java.time.ZoneId.of("Asia/Shanghai");
+        long seconds = Duration.between(LocalDateTime.now(zone), LocalDate.now(zone).plusDays(1).atStartOfDay()).getSeconds();
         return (int) Math.max(1L, Math.min(86400L, seconds));
     }
 }

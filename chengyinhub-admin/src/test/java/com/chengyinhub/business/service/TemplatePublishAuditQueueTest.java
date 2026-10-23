@@ -334,6 +334,7 @@ class TemplatePublishAuditQueueTest {
         edit.setId(191L);
         edit.setMemberTemplateId(91L);
         edit.setTitle("新标题");
+        edit.setUseNum(999);
         when(libraryService.selectCmsTemplateLibraryById(191L)).thenReturn(persistedProjection);
         when(libraryService.selectCmsTemplateLibraryList(any())).thenReturn(java.util.Collections.singletonList(persistedProjection));
         when(memberService.selectCmsMemberTemplateById(91L)).thenReturn(canonical);
@@ -348,7 +349,8 @@ class TemplatePublishAuditQueueTest {
         assertEquals(1, service.updateTemplateFromLibraryProjection(edit, "operator"));
         verify(memberService, org.mockito.Mockito.never()).updateCmsMemberTemplate(any());
         verify(libraryService).updateCmsTemplateLibrary(argThat(row -> Long.valueOf(191L).equals(row.getId())
-                && Long.valueOf(0L).equals(row.getStatus()) && Long.valueOf(0L).equals(row.getPublishStatus())));
+                && Long.valueOf(0L).equals(row.getStatus()) && Long.valueOf(0L).equals(row.getPublishStatus())
+                && row.getUseNum() == null));
         verify(auditService).submitOrRefreshTemplateLibrary(eq(191L), eq(7L), contains("新标题"));
     }
 
