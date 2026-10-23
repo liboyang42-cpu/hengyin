@@ -117,6 +117,8 @@ MYBATIS_ITS=(
   #   导出不跨账号且外人游标被拒、注销申请幂等与仅本人可撤)。
   JourneyThoughtProgressMySqlIT
   PrivacyVisibilityExportMySqlIT
+  # DOC2 O5c-(a):统一留痕只读投影(五张留痕表分查 + 合并)。
+  AuditTrailProjectionMySqlIT
 )
 IFS=, ; IT_LIST="${MYBATIS_ITS[*]}" ; unset IFS
 # ⚠️ 必须带 -am:上面那句 `mvn clean test` 不 install 兄弟模块,
