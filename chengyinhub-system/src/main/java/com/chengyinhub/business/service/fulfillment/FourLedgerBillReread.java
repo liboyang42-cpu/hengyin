@@ -79,8 +79,11 @@ public final class FourLedgerBillReread {
      * stay UNKNOWN.
      */
     public View reread(String originalRequestId, List<BillFact> facts) {
-        String requestId = FulfillmentEvidence.requireRequestId(originalRequestId);
+        String requestId = FulfillmentEvidence.blankToNull(originalRequestId);
         Map<Dimension, Outcome> outcomes = emptyUnknown();
+        if (requestId == null) {
+            return new View(null, outcomes, false, false);
+        }
         if (facts == null || facts.isEmpty()) {
             return new View(requestId, outcomes, false, false);
         }

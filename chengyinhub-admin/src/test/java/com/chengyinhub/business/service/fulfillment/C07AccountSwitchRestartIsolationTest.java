@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.math.BigDecimal;
@@ -97,12 +96,18 @@ class C07AccountSwitchRestartIsolationTest {
         assertFalse(transfer.grantsTransfer());
         assertFalse(transfer.usedSmsIdentityAsPolicy());
 
-        assertThrows(IllegalArgumentException.class,
-                () -> new FourLedgerBillReread().reread(null, List.of()));
-        assertThrows(IllegalArgumentException.class,
-                () -> new FourLedgerBillReread().reread("  ", List.of()));
-        assertThrows(IllegalArgumentException.class,
-                () -> new FulfillmentEvidence().recordJourney(null, new FulfillmentEvidence.JourneyFacts(
-                        false, false, null, null, null)));
+        View bills = new FourLedgerBillReread().reread(null, List.of());
+        assertNull(bills.originalRequestId());
+        assertEquals(FourLedgerBillReread.Outcome.UNKNOWN, bills.outcome(Dimension.WECHAT_TRADE));
+        assertFalse(bills.startedNewReconcile());
+        View blankBills = new FourLedgerBillReread().reread("  ", List.of());
+        assertNull(blankBills.originalRequestId());
+
+        List<FulfillmentEvidence.ChainStep> missing = new FulfillmentEvidence().recordJourney(
+                null, new FulfillmentEvidence.JourneyFacts(false, false, null, null, null));
+        assertEquals(1, missing.size());
+        assertNull(missing.get(0).originalRequestId());
+        assertEquals(FulfillmentEvidence.Outcome.UNKNOWN, missing.get(0).outcome());
+        assertEquals(FulfillmentEvidence.Stage.ORDER_ISSUE, missing.get(0).stage());
     }
 }

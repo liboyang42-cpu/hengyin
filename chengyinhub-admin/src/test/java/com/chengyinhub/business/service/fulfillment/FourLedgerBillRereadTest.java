@@ -62,4 +62,14 @@ class FourLedgerBillRereadTest {
         assertFalse(view.startedNewReconcile());
         assertFalse(view.currentProjectionReplacesOriginal());
     }
+
+    @Test
+    void missingRequestIdStaysNullUnknownAndDoesNotStartANewReconcile() {
+        View view = reread.reread(null, List.of());
+        assertNull(view.originalRequestId());
+        assertEquals(Outcome.UNKNOWN, view.outcome(Dimension.WECHAT_TRADE));
+        assertFalse(view.startedNewReconcile());
+        View blank = reread.reread("  ", List.of());
+        assertNull(blank.originalRequestId());
+    }
 }

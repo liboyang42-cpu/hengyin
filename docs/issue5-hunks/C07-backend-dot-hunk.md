@@ -26,7 +26,7 @@ Head：见本文件 SHA256 提交。隔离测试，不真实支付 / 退款 / �
 - `InvoiceHistoryUnknownTest.java`
 - `FourLedgerBillRereadTest.java`
 - `C07FirstJourneyIsolationTest.java`
-- `C07AccountSwitchRestartIsolationTest.java`（商家切换不改写原 requestId；进程内重启 requery 保持 UNKNOWN；缺 requestId 保持 Java null）
+- `C07AccountSwitchRestartIsolationTest.java`（商家切换不改写原 requestId；进程内重启 requery 保持 UNKNOWN；缺 requestId 保持 Java null / UNKNOWN，不抛成空串）
 
 未改：`TopicRouteRuntimeServiceImpl`、`CmsTopicServiceImpl`、13 Authority、17 phoneidentity、`BundleBookingService` / Mapper、36/37/38 既有原生生产候选、商业 Core、资金原 writer、公共 Controller / Mapper / migration、小程序、旧 `chengyin` 仓。无生产 DDL。无共享文件 hunk（dot 接线见 §7）。
 
@@ -81,11 +81,11 @@ BUILD SUCCESS
 SHA256（生产 6 类）：
 
 - `MerchantSupplyDryRun.java` `27134fa2adad6c3d7d8ba8e995ce55bdd612eee6bf49ac732fb8ec898dfa5a7a`
-- `FulfillmentEvidence.java` `ee84e6f46cf7bee0a88b2f47000479f027578162c94747b41f771e5bd6da1714`
+- `FulfillmentEvidence.java` `48f70cc5f36dc2e98a69e96de1bc2b1331626b49651f9df3e0ef50ce472c9f7c`
 - `EntitlementHoldProjection.java` `34c12ec3703541a4d17f82c4088f2e88bf4d7c90e6d47cd1745101ca110622d4`
 - `TransferSoldPolicyGate.java` `b258252b200a09be7d31cfdb0aca99ea7f01a2216aa130db68f04029c709b5a2`
 - `InvoiceHistoryUnknown.java` `e04506004ec02599cc87d8f4dd2ef30ea52157042b615c0640b26dbc235d8df5`
-- `FourLedgerBillReread.java` `98f027fa691896b2fe43d43d5fc3d8ec565dcff8b5ebf386e9fee1ac84410f38`
+- `FourLedgerBillReread.java` `65313f6984f866a881bc68452d23b1f0b9d0beeed29d5fa0fe6a440cee6cdf80`
 
 ## 4. WAITING_SOURCE / 未宣称完成
 

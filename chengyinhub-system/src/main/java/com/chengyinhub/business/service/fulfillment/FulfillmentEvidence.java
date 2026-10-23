@@ -89,7 +89,10 @@ public final class FulfillmentEvidence {
      * id. In-store redeem / refund / aftercare are evidence only.
      */
     public List<ChainStep> recordJourney(String originalRequestId, JourneyFacts facts) {
-        String requestId = requireRequestId(originalRequestId);
+        String requestId = blankToNull(originalRequestId);
+        if (requestId == null) {
+            return List.of(unknown(Stage.ORDER_ISSUE, null, "originalRequestId missing"));
+        }
         Objects.requireNonNull(facts, "facts");
         List<ChainStep> steps = new ArrayList<ChainStep>();
         steps.add(facts.orderIssued
