@@ -1,0 +1,876 @@
+{
+  "module_edges": [
+    [
+      "chengyinhub-admin",
+      "chengyinhub-common"
+    ],
+    [
+      "chengyinhub-admin",
+      "chengyinhub-framework"
+    ],
+    [
+      "chengyinhub-admin",
+      "chengyinhub-generator"
+    ],
+    [
+      "chengyinhub-admin",
+      "chengyinhub-quartz"
+    ],
+    [
+      "chengyinhub-admin",
+      "chengyinhub-system"
+    ],
+    [
+      "chengyinhub-framework",
+      "chengyinhub-common"
+    ],
+    [
+      "chengyinhub-framework",
+      "chengyinhub-system"
+    ],
+    [
+      "chengyinhub-generator",
+      "chengyinhub-common"
+    ],
+    [
+      "chengyinhub-quartz",
+      "chengyinhub-common"
+    ],
+    [
+      "chengyinhub-system",
+      "chengyinhub-common"
+    ]
+  ],
+  "modules": [
+    "chengyinhub-admin",
+    "chengyinhub-common",
+    "chengyinhub-framework",
+    "chengyinhub-generator",
+    "chengyinhub-quartz",
+    "chengyinhub-system"
+  ],
+  "package_owners": {
+    "com.chengyinhub": [
+      "chengyinhub-admin"
+    ],
+    "com.chengyinhub.business.access.club": [
+      "chengyinhub-system"
+    ],
+    "com.chengyinhub.business.access.merchant": [
+      "chengyinhub-system"
+    ],
+    "com.chengyinhub.business.badge": [
+      "chengyinhub-system"
+    ],
+    "com.chengyinhub.business.domain": [
+      "chengyinhub-system"
+    ],
+    "com.chengyinhub.business.domain.community": [
+      "chengyinhub-system"
+    ],
+    "com.chengyinhub.business.domain.dto": [
+      "chengyinhub-system"
+    ],
+    "com.chengyinhub.business.domain.dto.ai": [
+      "chengyinhub-system"
+    ],
+    "com.chengyinhub.business.domain.enums": [
+      "chengyinhub-system"
+    ],
+    "com.chengyinhub.business.domain.route": [
+      "chengyinhub-system"
+    ],
+    "com.chengyinhub.business.domain.snapshot": [
+      "chengyinhub-system"
+    ],
+    "com.chengyinhub.business.domain.vo": [
+      "chengyinhub-system"
+    ],
+    "com.chengyinhub.business.domain.vo.ai": [
+      "chengyinhub-system"
+    ],
+    "com.chengyinhub.business.exception": [
+      "chengyinhub-system"
+    ],
+    "com.chengyinhub.business.mapper": [
+      "chengyinhub-system"
+    ],
+    "com.chengyinhub.business.metrics": [
+      "chengyinhub-system"
+    ],
+    "com.chengyinhub.business.notify": [
+      "chengyinhub-system"
+    ],
+    "com.chengyinhub.business.security": [
+      "chengyinhub-system"
+    ],
+    "com.chengyinhub.business.service": [
+      "chengyinhub-system"
+    ],
+    "com.chengyinhub.business.service.ai": [
+      "chengyinhub-system"
+    ],
+    "com.chengyinhub.business.service.ai.impl": [
+      "chengyinhub-system"
+    ],
+    "com.chengyinhub.business.service.compliance": [
+      "chengyinhub-system"
+    ],
+    "com.chengyinhub.business.service.impl": [
+      "chengyinhub-system"
+    ],
+    "com.chengyinhub.business.service.invoice": [
+      "chengyinhub-system"
+    ],
+    "com.chengyinhub.business.service.minor": [
+      "chengyinhub-system"
+    ],
+    "com.chengyinhub.business.service.support": [
+      "chengyinhub-system"
+    ],
+    "com.chengyinhub.business.service.support.rpg": [
+      "chengyinhub-system"
+    ],
+    "com.chengyinhub.business.support": [
+      "chengyinhub-system"
+    ],
+    "com.chengyinhub.business.task": [
+      "chengyinhub-system"
+    ],
+    "com.chengyinhub.business.util": [
+      "chengyinhub-admin",
+      "chengyinhub-system"
+    ],
+    "com.chengyinhub.common.annotation": [
+      "chengyinhub-common"
+    ],
+    "com.chengyinhub.common.config": [
+      "chengyinhub-common"
+    ],
+    "com.chengyinhub.common.config.serializer": [
+      "chengyinhub-common"
+    ],
+    "com.chengyinhub.common.constant": [
+      "chengyinhub-common"
+    ],
+    "com.chengyinhub.common.core.controller": [
+      "chengyinhub-common"
+    ],
+    "com.chengyinhub.common.core.domain": [
+      "chengyinhub-common"
+    ],
+    "com.chengyinhub.common.core.domain.entity": [
+      "chengyinhub-common"
+    ],
+    "com.chengyinhub.common.core.domain.model": [
+      "chengyinhub-common"
+    ],
+    "com.chengyinhub.common.core.page": [
+      "chengyinhub-common"
+    ],
+    "com.chengyinhub.common.core.redis": [
+      "chengyinhub-common"
+    ],
+    "com.chengyinhub.common.core.text": [
+      "chengyinhub-common"
+    ],
+    "com.chengyinhub.common.enums": [
+      "chengyinhub-common"
+    ],
+    "com.chengyinhub.common.exception": [
+      "chengyinhub-common"
+    ],
+    "com.chengyinhub.common.exception.base": [
+      "chengyinhub-common"
+    ],
+    "com.chengyinhub.common.exception.file": [
+      "chengyinhub-common"
+    ],
+    "com.chengyinhub.common.exception.job": [
+      "chengyinhub-common"
+    ],
+    "com.chengyinhub.common.exception.user": [
+      "chengyinhub-common"
+    ],
+    "com.chengyinhub.common.filter": [
+      "chengyinhub-common"
+    ],
+    "com.chengyinhub.common.observability": [
+      "chengyinhub-common"
+    ],
+    "com.chengyinhub.common.utils": [
+      "chengyinhub-common"
+    ],
+    "com.chengyinhub.common.utils.apple": [
+      "chengyinhub-common"
+    ],
+    "com.chengyinhub.common.utils.bean": [
+      "chengyinhub-common"
+    ],
+    "com.chengyinhub.common.utils.file": [
+      "chengyinhub-common"
+    ],
+    "com.chengyinhub.common.utils.geo": [
+      "chengyinhub-common"
+    ],
+    "com.chengyinhub.common.utils.html": [
+      "chengyinhub-common"
+    ],
+    "com.chengyinhub.common.utils.http": [
+      "chengyinhub-common"
+    ],
+    "com.chengyinhub.common.utils.ip": [
+      "chengyinhub-common"
+    ],
+    "com.chengyinhub.common.utils.poi": [
+      "chengyinhub-common"
+    ],
+    "com.chengyinhub.common.utils.reflect": [
+      "chengyinhub-common"
+    ],
+    "com.chengyinhub.common.utils.sign": [
+      "chengyinhub-common"
+    ],
+    "com.chengyinhub.common.utils.sms": [
+      "chengyinhub-common"
+    ],
+    "com.chengyinhub.common.utils.spring": [
+      "chengyinhub-common"
+    ],
+    "com.chengyinhub.common.utils.uuid": [
+      "chengyinhub-common"
+    ],
+    "com.chengyinhub.common.xss": [
+      "chengyinhub-common"
+    ],
+    "com.chengyinhub.framework.aspectj": [
+      "chengyinhub-framework"
+    ],
+    "com.chengyinhub.framework.config": [
+      "chengyinhub-framework"
+    ],
+    "com.chengyinhub.framework.config.properties": [
+      "chengyinhub-framework"
+    ],
+    "com.chengyinhub.framework.datasource": [
+      "chengyinhub-framework"
+    ],
+    "com.chengyinhub.framework.interceptor": [
+      "chengyinhub-framework"
+    ],
+    "com.chengyinhub.framework.interceptor.impl": [
+      "chengyinhub-framework"
+    ],
+    "com.chengyinhub.framework.manager": [
+      "chengyinhub-framework"
+    ],
+    "com.chengyinhub.framework.manager.factory": [
+      "chengyinhub-framework"
+    ],
+    "com.chengyinhub.framework.security.context": [
+      "chengyinhub-framework"
+    ],
+    "com.chengyinhub.framework.security.filter": [
+      "chengyinhub-framework"
+    ],
+    "com.chengyinhub.framework.security.handle": [
+      "chengyinhub-framework"
+    ],
+    "com.chengyinhub.framework.security.matcher": [
+      "chengyinhub-framework"
+    ],
+    "com.chengyinhub.framework.web.domain": [
+      "chengyinhub-framework"
+    ],
+    "com.chengyinhub.framework.web.domain.server": [
+      "chengyinhub-framework"
+    ],
+    "com.chengyinhub.framework.web.exception": [
+      "chengyinhub-framework"
+    ],
+    "com.chengyinhub.framework.web.service": [
+      "chengyinhub-framework"
+    ],
+    "com.chengyinhub.framework.web.trace": [
+      "chengyinhub-framework"
+    ],
+    "com.chengyinhub.generator.config": [
+      "chengyinhub-generator"
+    ],
+    "com.chengyinhub.generator.controller": [
+      "chengyinhub-generator"
+    ],
+    "com.chengyinhub.generator.domain": [
+      "chengyinhub-generator"
+    ],
+    "com.chengyinhub.generator.mapper": [
+      "chengyinhub-generator"
+    ],
+    "com.chengyinhub.generator.service": [
+      "chengyinhub-generator"
+    ],
+    "com.chengyinhub.generator.util": [
+      "chengyinhub-generator"
+    ],
+    "com.chengyinhub.quartz.config": [
+      "chengyinhub-quartz"
+    ],
+    "com.chengyinhub.quartz.controller": [
+      "chengyinhub-quartz"
+    ],
+    "com.chengyinhub.quartz.domain": [
+      "chengyinhub-quartz"
+    ],
+    "com.chengyinhub.quartz.mapper": [
+      "chengyinhub-quartz"
+    ],
+    "com.chengyinhub.quartz.service": [
+      "chengyinhub-quartz"
+    ],
+    "com.chengyinhub.quartz.service.impl": [
+      "chengyinhub-quartz"
+    ],
+    "com.chengyinhub.quartz.task": [
+      "chengyinhub-quartz"
+    ],
+    "com.chengyinhub.quartz.util": [
+      "chengyinhub-quartz"
+    ],
+    "com.chengyinhub.system.domain": [
+      "chengyinhub-system"
+    ],
+    "com.chengyinhub.system.domain.vo": [
+      "chengyinhub-system"
+    ],
+    "com.chengyinhub.system.mapper": [
+      "chengyinhub-system"
+    ],
+    "com.chengyinhub.system.service": [
+      "chengyinhub-system"
+    ],
+    "com.chengyinhub.system.service.impl": [
+      "chengyinhub-system"
+    ],
+    "com.chengyinhub.web.controller.api": [
+      "chengyinhub-admin"
+    ],
+    "com.chengyinhub.web.controller.business": [
+      "chengyinhub-admin"
+    ],
+    "com.chengyinhub.web.controller.common": [
+      "chengyinhub-admin"
+    ],
+    "com.chengyinhub.web.controller.monitor": [
+      "chengyinhub-admin"
+    ],
+    "com.chengyinhub.web.controller.system": [
+      "chengyinhub-admin"
+    ],
+    "com.chengyinhub.web.core.config": [
+      "chengyinhub-admin"
+    ],
+    "com.chengyinhub.web.health": [
+      "chengyinhub-admin"
+    ],
+    "com.chengyinhub.web.interceptor": [
+      "chengyinhub-admin"
+    ],
+    "com.chengyinhub.web.job": [
+      "chengyinhub-admin"
+    ],
+    "com.chengyinhub.web.runner": [
+      "chengyinhub-admin"
+    ],
+    "com.chengyinhub.web.service": [
+      "chengyinhub-admin"
+    ],
+    "com.chengyinhub.web.task": [
+      "chengyinhub-admin"
+    ],
+    "com.chengyinhub.web.task.metrics": [
+      "chengyinhub-admin"
+    ]
+  },
+  "private_imports": {
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiActivityController.java#type:com.chengyinhub.business.mapper.CmsActivityLikeMapper": {
+      "import_kind": "type",
+      "resolved_type": "com.chengyinhub.business.mapper.CmsActivityLikeMapper",
+      "sha256": "6f7ab24d98410e735d7bd81c7f1bee3413a51dc2da9d0a823555afe72a188b06",
+      "source": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiActivityController.java",
+      "source_owner": "chengyinhub-admin",
+      "target": "com.chengyinhub.business.mapper.CmsActivityLikeMapper",
+      "target_owner": "chengyinhub-system"
+    },
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiActivityController.java#type:com.chengyinhub.business.mapper.CmsRegistrationStatisticsMapper": {
+      "import_kind": "type",
+      "resolved_type": "com.chengyinhub.business.mapper.CmsRegistrationStatisticsMapper",
+      "sha256": "6a4e3a9444dee3cc00985997b53f8c04db1f892c320be5477f5f87668d380b4c",
+      "source": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiActivityController.java",
+      "source_owner": "chengyinhub-admin",
+      "target": "com.chengyinhub.business.mapper.CmsRegistrationStatisticsMapper",
+      "target_owner": "chengyinhub-system"
+    },
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiActivityController.java#type:com.chengyinhub.business.mapper.OmsTicketMapper": {
+      "import_kind": "type",
+      "resolved_type": "com.chengyinhub.business.mapper.OmsTicketMapper",
+      "sha256": "67ff41c9906109f580d24e6a2c86a889e1a8e8ea385526fd402a26b3c78cd0f9",
+      "source": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiActivityController.java",
+      "source_owner": "chengyinhub-admin",
+      "target": "com.chengyinhub.business.mapper.OmsTicketMapper",
+      "target_owner": "chengyinhub-system"
+    },
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiActivityController.java#type:com.chengyinhub.business.mapper.TmsBrowseRecordMapper": {
+      "import_kind": "type",
+      "resolved_type": "com.chengyinhub.business.mapper.TmsBrowseRecordMapper",
+      "sha256": "abded81a65507ff708184a20803bc5f77fd82051965ee02a89b1756932635019",
+      "source": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiActivityController.java",
+      "source_owner": "chengyinhub-admin",
+      "target": "com.chengyinhub.business.mapper.TmsBrowseRecordMapper",
+      "target_owner": "chengyinhub-system"
+    },
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiActivityController.java#type:com.chengyinhub.business.mapper.UmsCommentMapper": {
+      "import_kind": "type",
+      "resolved_type": "com.chengyinhub.business.mapper.UmsCommentMapper",
+      "sha256": "02add6391e795b326124fec8a397dac1215cafc5130f9957d4a90b8073a8af7b",
+      "source": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiActivityController.java",
+      "source_owner": "chengyinhub-admin",
+      "target": "com.chengyinhub.business.mapper.UmsCommentMapper",
+      "target_owner": "chengyinhub-system"
+    },
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiActivityController.java#type:com.chengyinhub.business.mapper.UmsMemberFollowMapper": {
+      "import_kind": "type",
+      "resolved_type": "com.chengyinhub.business.mapper.UmsMemberFollowMapper",
+      "sha256": "637b6f8d302575dbd97286a6d2915f3fc6096df6b3b011a10b1636d0df8e2bed",
+      "source": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiActivityController.java",
+      "source_owner": "chengyinhub-admin",
+      "target": "com.chengyinhub.business.mapper.UmsMemberFollowMapper",
+      "target_owner": "chengyinhub-system"
+    },
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAiNpcController.java#type:com.chengyinhub.business.mapper.PlayTeamMapper": {
+      "import_kind": "type",
+      "resolved_type": "com.chengyinhub.business.mapper.PlayTeamMapper",
+      "sha256": "cf2b93e2a6689efbbb67443d072523dcb8684c82863eeeb8311b40f171679730",
+      "source": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAiNpcController.java",
+      "source_owner": "chengyinhub-admin",
+      "target": "com.chengyinhub.business.mapper.PlayTeamMapper",
+      "target_owner": "chengyinhub-system"
+    },
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiChapterMerchantNodeController.java#type:com.chengyinhub.business.mapper.GameSessionRuntimeMapper": {
+      "import_kind": "type",
+      "resolved_type": "com.chengyinhub.business.mapper.GameSessionRuntimeMapper",
+      "sha256": "7016048ab8908641ffc3e8b6e64d3101851e5d442c06db10cd3431ea42d479f9",
+      "source": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiChapterMerchantNodeController.java",
+      "source_owner": "chengyinhub-admin",
+      "target": "com.chengyinhub.business.mapper.GameSessionRuntimeMapper",
+      "target_owner": "chengyinhub-system"
+    },
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCityNodeController.java#type:com.chengyinhub.business.mapper.MemberCollectibleMapper": {
+      "import_kind": "type",
+      "resolved_type": "com.chengyinhub.business.mapper.MemberCollectibleMapper",
+      "sha256": "e214165b770796a1cd59216b9f303f205434a6b6b24ccd8dcce22dff85b1e912",
+      "source": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCityNodeController.java",
+      "source_owner": "chengyinhub-admin",
+      "target": "com.chengyinhub.business.mapper.MemberCollectibleMapper",
+      "target_owner": "chengyinhub-system"
+    },
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCityNodeController.java#type:com.chengyinhub.business.mapper.RoamMapper": {
+      "import_kind": "type",
+      "resolved_type": "com.chengyinhub.business.mapper.RoamMapper",
+      "sha256": "53bdf38f744d30f1946f65028effbc79dcc1a2029ede0e9bfbd862e2f159940e",
+      "source": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCityNodeController.java",
+      "source_owner": "chengyinhub-admin",
+      "target": "com.chengyinhub.business.mapper.RoamMapper",
+      "target_owner": "chengyinhub-system"
+    },
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubLeadController.java#type:com.chengyinhub.business.mapper.ClubEventOpsMapper": {
+      "import_kind": "type",
+      "resolved_type": "com.chengyinhub.business.mapper.ClubEventOpsMapper",
+      "sha256": "8eff190200472dcd2a575d2fb7711c2ff07d767fc025185197599f06f324f064",
+      "source": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubLeadController.java",
+      "source_owner": "chengyinhub-admin",
+      "target": "com.chengyinhub.business.mapper.ClubEventOpsMapper",
+      "target_owner": "chengyinhub-system"
+    },
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubLeadController.java#type:com.chengyinhub.business.mapper.ClubLeadMapper": {
+      "import_kind": "type",
+      "resolved_type": "com.chengyinhub.business.mapper.ClubLeadMapper",
+      "sha256": "aafce019d433772f14deb567004b89459116f5f296879563ff1c5e2258ba9394",
+      "source": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubLeadController.java",
+      "source_owner": "chengyinhub-admin",
+      "target": "com.chengyinhub.business.mapper.ClubLeadMapper",
+      "target_owner": "chengyinhub-system"
+    },
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubLeadController.java#type:com.chengyinhub.business.mapper.ClubRoleAssignmentMapper": {
+      "import_kind": "type",
+      "resolved_type": "com.chengyinhub.business.mapper.ClubRoleAssignmentMapper",
+      "sha256": "81c7532cf486b00e431e07ec345852feb81c4e1f9a0416a0dde5fdb3da242300",
+      "source": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubLeadController.java",
+      "source_owner": "chengyinhub-admin",
+      "target": "com.chengyinhub.business.mapper.ClubRoleAssignmentMapper",
+      "target_owner": "chengyinhub-system"
+    },
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubLeadController.java#type:com.chengyinhub.business.mapper.CmsActivityMapper": {
+      "import_kind": "type",
+      "resolved_type": "com.chengyinhub.business.mapper.CmsActivityMapper",
+      "sha256": "39a2444fbe2a173e3f3053ac92433384969c507366823b4f3109f37fc330aa31",
+      "source": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubLeadController.java",
+      "source_owner": "chengyinhub-admin",
+      "target": "com.chengyinhub.business.mapper.CmsActivityMapper",
+      "target_owner": "chengyinhub-system"
+    },
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubSettlementController.java#type:com.chengyinhub.business.mapper.CoopSettlementMapper": {
+      "import_kind": "type",
+      "resolved_type": "com.chengyinhub.business.mapper.CoopSettlementMapper",
+      "sha256": "1372df91720f3e989734d589da30ce3a62530948eca4830d8bc55d0ff4783bc1",
+      "source": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubSettlementController.java",
+      "source_owner": "chengyinhub-admin",
+      "target": "com.chengyinhub.business.mapper.CoopSettlementMapper",
+      "target_owner": "chengyinhub-system"
+    },
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiMerchantController.java#type:com.chengyinhub.business.mapper.MerchantAftercareMapper": {
+      "import_kind": "type",
+      "resolved_type": "com.chengyinhub.business.mapper.MerchantAftercareMapper",
+      "sha256": "7b13a90861aff206b9717a1a6f3fa0486780a939073833e3a9f616bcee9bd917",
+      "source": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiMerchantController.java",
+      "source_owner": "chengyinhub-admin",
+      "target": "com.chengyinhub.business.mapper.MerchantAftercareMapper",
+      "target_owner": "chengyinhub-system"
+    },
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiMerchantController.java#type:com.chengyinhub.business.mapper.MerchantOperatorMapper": {
+      "import_kind": "type",
+      "resolved_type": "com.chengyinhub.business.mapper.MerchantOperatorMapper",
+      "sha256": "50c6e7a8d4f18d8423e5950835332251b49295f29ed46474904029e6dd08380e",
+      "source": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiMerchantController.java",
+      "source_owner": "chengyinhub-admin",
+      "target": "com.chengyinhub.business.mapper.MerchantOperatorMapper",
+      "target_owner": "chengyinhub-system"
+    },
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiMerchantController.java#type:com.chengyinhub.business.mapper.MerchantSubscriptionMapper": {
+      "import_kind": "type",
+      "resolved_type": "com.chengyinhub.business.mapper.MerchantSubscriptionMapper",
+      "sha256": "0177ff6db7fd960fd2e2d655ab78d444b115c1ae43e8c2ba7b2093bbda5f41f9",
+      "source": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiMerchantController.java",
+      "source_owner": "chengyinhub-admin",
+      "target": "com.chengyinhub.business.mapper.MerchantSubscriptionMapper",
+      "target_owner": "chengyinhub-system"
+    },
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiMerchantController.java#type:com.chengyinhub.business.mapper.NpcProfileMapper": {
+      "import_kind": "type",
+      "resolved_type": "com.chengyinhub.business.mapper.NpcProfileMapper",
+      "sha256": "092a3302fd629929951c658224d5cae19b8ebecbfa4a85a32e0468b3e6964142",
+      "source": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiMerchantController.java",
+      "source_owner": "chengyinhub-admin",
+      "target": "com.chengyinhub.business.mapper.NpcProfileMapper",
+      "target_owner": "chengyinhub-system"
+    },
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiMerchantController.java#type:com.chengyinhub.business.mapper.OmsOrderMapper": {
+      "import_kind": "type",
+      "resolved_type": "com.chengyinhub.business.mapper.OmsOrderMapper",
+      "sha256": "43e0d18c037afdeeedcffc9545cb9ce1f01856ef4161a9ec4cf7855d09412aac",
+      "source": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiMerchantController.java",
+      "source_owner": "chengyinhub-admin",
+      "target": "com.chengyinhub.business.mapper.OmsOrderMapper",
+      "target_owner": "chengyinhub-system"
+    },
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiMerchantController.java#type:com.chengyinhub.business.mapper.UmsMemberMapper": {
+      "import_kind": "type",
+      "resolved_type": "com.chengyinhub.business.mapper.UmsMemberMapper",
+      "sha256": "010e1798e71980185d9a34cdc7344d1d81a7b693a177c1cced3fc766db09d940",
+      "source": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiMerchantController.java",
+      "source_owner": "chengyinhub-admin",
+      "target": "com.chengyinhub.business.mapper.UmsMemberMapper",
+      "target_owner": "chengyinhub-system"
+    },
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiMerchantNodeController.java#type:com.chengyinhub.business.mapper.RoamMapper": {
+      "import_kind": "type",
+      "resolved_type": "com.chengyinhub.business.mapper.RoamMapper",
+      "sha256": "53bdf38f744d30f1946f65028effbc79dcc1a2029ede0e9bfbd862e2f159940e",
+      "source": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiMerchantNodeController.java",
+      "source_owner": "chengyinhub-admin",
+      "target": "com.chengyinhub.business.mapper.RoamMapper",
+      "target_owner": "chengyinhub-system"
+    },
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayRunSessionController.java#type:com.chengyinhub.business.mapper.PlayerRunSessionMapper": {
+      "import_kind": "type",
+      "resolved_type": "com.chengyinhub.business.mapper.PlayerRunSessionMapper",
+      "sha256": "6cfd371524f729210e71a627f90087098682bb7dc5507d4019be11ba057be12a",
+      "source": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayRunSessionController.java",
+      "source_owner": "chengyinhub-admin",
+      "target": "com.chengyinhub.business.mapper.PlayerRunSessionMapper",
+      "target_owner": "chengyinhub-system"
+    },
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationMerchantController.java#type:com.chengyinhub.business.mapper.ViewRegistrationMerchantMapper": {
+      "import_kind": "type",
+      "resolved_type": "com.chengyinhub.business.mapper.ViewRegistrationMerchantMapper",
+      "sha256": "04024f3b345f620db21e963ea44d9f8f8c2c2cb9d787c8edc46cdeb7351d2a94",
+      "source": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationMerchantController.java",
+      "source_owner": "chengyinhub-admin",
+      "target": "com.chengyinhub.business.mapper.ViewRegistrationMerchantMapper",
+      "target_owner": "chengyinhub-system"
+    },
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRoamController.java#type:com.chengyinhub.business.mapper.CmsRegistrationMerchantMapper": {
+      "import_kind": "type",
+      "resolved_type": "com.chengyinhub.business.mapper.CmsRegistrationMerchantMapper",
+      "sha256": "822c6c7e7ccefc014bf998014312260a907badce87921f4618dc1f35b5c73427",
+      "source": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRoamController.java",
+      "source_owner": "chengyinhub-admin",
+      "target": "com.chengyinhub.business.mapper.CmsRegistrationMerchantMapper",
+      "target_owner": "chengyinhub-system"
+    },
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRoamController.java#type:com.chengyinhub.business.mapper.GrowthBadgeMapper": {
+      "import_kind": "type",
+      "resolved_type": "com.chengyinhub.business.mapper.GrowthBadgeMapper",
+      "sha256": "66103ba0f1c4e7e261929260ec46277f24ab6e343694927e29ef44d1c3053dd5",
+      "source": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRoamController.java",
+      "source_owner": "chengyinhub-admin",
+      "target": "com.chengyinhub.business.mapper.GrowthBadgeMapper",
+      "target_owner": "chengyinhub-system"
+    },
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRoamController.java#type:com.chengyinhub.business.mapper.MemberVisitedPoiMapper": {
+      "import_kind": "type",
+      "resolved_type": "com.chengyinhub.business.mapper.MemberVisitedPoiMapper",
+      "sha256": "fd60345a1fdb24e8ae7bf7f8e829e3b3d0c9b600d728e556dc24cf7c45e3c9fe",
+      "source": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRoamController.java",
+      "source_owner": "chengyinhub-admin",
+      "target": "com.chengyinhub.business.mapper.MemberVisitedPoiMapper",
+      "target_owner": "chengyinhub-system"
+    },
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRoamController.java#type:com.chengyinhub.business.mapper.PlayerBadgeMapper": {
+      "import_kind": "type",
+      "resolved_type": "com.chengyinhub.business.mapper.PlayerBadgeMapper",
+      "sha256": "18d0aa99b1f11f9abd74357c5b2560fc0088bd8e0ba0b05218b1cfdd45ee866e",
+      "source": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRoamController.java",
+      "source_owner": "chengyinhub-admin",
+      "target": "com.chengyinhub.business.mapper.PlayerBadgeMapper",
+      "target_owner": "chengyinhub-system"
+    },
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRoamController.java#type:com.chengyinhub.business.mapper.RoamMapper": {
+      "import_kind": "type",
+      "resolved_type": "com.chengyinhub.business.mapper.RoamMapper",
+      "sha256": "53bdf38f744d30f1946f65028effbc79dcc1a2029ede0e9bfbd862e2f159940e",
+      "source": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRoamController.java",
+      "source_owner": "chengyinhub-admin",
+      "target": "com.chengyinhub.business.mapper.RoamMapper",
+      "target_owner": "chengyinhub-system"
+    },
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRoamShareController.java#type:com.chengyinhub.business.mapper.RoamShareSnapshotMapper": {
+      "import_kind": "type",
+      "resolved_type": "com.chengyinhub.business.mapper.RoamShareSnapshotMapper",
+      "sha256": "c46d917b0658ad55f35289b7d56138029baf0c534d97af979cc1bc50f1302468",
+      "source": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRoamShareController.java",
+      "source_owner": "chengyinhub-admin",
+      "target": "com.chengyinhub.business.mapper.RoamShareSnapshotMapper",
+      "target_owner": "chengyinhub-system"
+    },
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRoamStampController.java#type:com.chengyinhub.business.mapper.RoamStampMapper": {
+      "import_kind": "type",
+      "resolved_type": "com.chengyinhub.business.mapper.RoamStampMapper",
+      "sha256": "32dc32d076441a7742dde82fa1d931b3bad40f17bed6dc8452ce26b3b398fe58",
+      "source": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRoamStampController.java",
+      "source_owner": "chengyinhub-admin",
+      "target": "com.chengyinhub.business.mapper.RoamStampMapper",
+      "target_owner": "chengyinhub-system"
+    },
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java#type:com.chengyinhub.business.mapper.CmsRegistrationMapper": {
+      "import_kind": "type",
+      "resolved_type": "com.chengyinhub.business.mapper.CmsRegistrationMapper",
+      "sha256": "c052c0026fb393307b59d16bf5b9bedd14736f9a68186da9fa8e6f4760312ff9",
+      "source": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java",
+      "source_owner": "chengyinhub-admin",
+      "target": "com.chengyinhub.business.mapper.CmsRegistrationMapper",
+      "target_owner": "chengyinhub-system"
+    },
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java#type:com.chengyinhub.business.mapper.CmsRegistrationStatisticsMapper": {
+      "import_kind": "type",
+      "resolved_type": "com.chengyinhub.business.mapper.CmsRegistrationStatisticsMapper",
+      "sha256": "6a4e3a9444dee3cc00985997b53f8c04db1f892c320be5477f5f87668d380b4c",
+      "source": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java",
+      "source_owner": "chengyinhub-admin",
+      "target": "com.chengyinhub.business.mapper.CmsRegistrationStatisticsMapper",
+      "target_owner": "chengyinhub-system"
+    },
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java#type:com.chengyinhub.business.mapper.CmsTopicLikeMapper": {
+      "import_kind": "type",
+      "resolved_type": "com.chengyinhub.business.mapper.CmsTopicLikeMapper",
+      "sha256": "0c9c12fdc6003feaae500165fed6238d408306434879a6aa4f5520faa38314f1",
+      "source": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java",
+      "source_owner": "chengyinhub-admin",
+      "target": "com.chengyinhub.business.mapper.CmsTopicLikeMapper",
+      "target_owner": "chengyinhub-system"
+    },
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java#type:com.chengyinhub.business.mapper.OmsTicketMapper": {
+      "import_kind": "type",
+      "resolved_type": "com.chengyinhub.business.mapper.OmsTicketMapper",
+      "sha256": "67ff41c9906109f580d24e6a2c86a889e1a8e8ea385526fd402a26b3c78cd0f9",
+      "source": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java",
+      "source_owner": "chengyinhub-admin",
+      "target": "com.chengyinhub.business.mapper.OmsTicketMapper",
+      "target_owner": "chengyinhub-system"
+    },
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java#type:com.chengyinhub.business.mapper.TmsBrowseRecordMapper": {
+      "import_kind": "type",
+      "resolved_type": "com.chengyinhub.business.mapper.TmsBrowseRecordMapper",
+      "sha256": "abded81a65507ff708184a20803bc5f77fd82051965ee02a89b1756932635019",
+      "source": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java",
+      "source_owner": "chengyinhub-admin",
+      "target": "com.chengyinhub.business.mapper.TmsBrowseRecordMapper",
+      "target_owner": "chengyinhub-system"
+    },
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java#type:com.chengyinhub.business.mapper.UmsCommentMapper": {
+      "import_kind": "type",
+      "resolved_type": "com.chengyinhub.business.mapper.UmsCommentMapper",
+      "sha256": "02add6391e795b326124fec8a397dac1215cafc5130f9957d4a90b8073a8af7b",
+      "source": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java",
+      "source_owner": "chengyinhub-admin",
+      "target": "com.chengyinhub.business.mapper.UmsCommentMapper",
+      "target_owner": "chengyinhub-system"
+    },
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java#type:com.chengyinhub.business.mapper.UmsMemberFollowMapper": {
+      "import_kind": "type",
+      "resolved_type": "com.chengyinhub.business.mapper.UmsMemberFollowMapper",
+      "sha256": "637b6f8d302575dbd97286a6d2915f3fc6096df6b3b011a10b1636d0df8e2bed",
+      "source": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java",
+      "source_owner": "chengyinhub-admin",
+      "target": "com.chengyinhub.business.mapper.UmsMemberFollowMapper",
+      "target_owner": "chengyinhub-system"
+    },
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTrackController.java#type:com.chengyinhub.business.mapper.TrackDraftMapper": {
+      "import_kind": "type",
+      "resolved_type": "com.chengyinhub.business.mapper.TrackDraftMapper",
+      "sha256": "730cbb1db399ffcfaa917f9c038b64d7826ef76b5e90b29f42743e1c1dde4d7b",
+      "source": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTrackController.java",
+      "source_owner": "chengyinhub-admin",
+      "target": "com.chengyinhub.business.mapper.TrackDraftMapper",
+      "target_owner": "chengyinhub-system"
+    },
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiVerifyController.java#type:com.chengyinhub.business.mapper.BusinessAuditEventMapper": {
+      "import_kind": "type",
+      "resolved_type": "com.chengyinhub.business.mapper.BusinessAuditEventMapper",
+      "sha256": "e66ac195e96a60e4372fb9788ed84f4d966d16330ec2d3cde6371debf11e7842",
+      "source": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiVerifyController.java",
+      "source_owner": "chengyinhub-admin",
+      "target": "com.chengyinhub.business.mapper.BusinessAuditEventMapper",
+      "target_owner": "chengyinhub-system"
+    },
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiVerifyController.java#type:com.chengyinhub.business.mapper.RoamMapper": {
+      "import_kind": "type",
+      "resolved_type": "com.chengyinhub.business.mapper.RoamMapper",
+      "sha256": "53bdf38f744d30f1946f65028effbc79dcc1a2029ede0e9bfbd862e2f159940e",
+      "source": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiVerifyController.java",
+      "source_owner": "chengyinhub-admin",
+      "target": "com.chengyinhub.business.mapper.RoamMapper",
+      "target_owner": "chengyinhub-system"
+    },
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/AnalyticsController.java#type:com.chengyinhub.business.mapper.BizFunnelDailyMapper": {
+      "import_kind": "type",
+      "resolved_type": "com.chengyinhub.business.mapper.BizFunnelDailyMapper",
+      "sha256": "51c528e85afc40f40bcdb99c412cac7ccfe93317f8eb1e1c9eefe89b29d93d36",
+      "source": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/AnalyticsController.java",
+      "source_owner": "chengyinhub-admin",
+      "target": "com.chengyinhub.business.mapper.BizFunnelDailyMapper",
+      "target_owner": "chengyinhub-system"
+    },
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/ClubRunController.java#type:com.chengyinhub.business.mapper.ClubLeadMapper": {
+      "import_kind": "type",
+      "resolved_type": "com.chengyinhub.business.mapper.ClubLeadMapper",
+      "sha256": "aafce019d433772f14deb567004b89459116f5f296879563ff1c5e2258ba9394",
+      "source": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/ClubRunController.java",
+      "source_owner": "chengyinhub-admin",
+      "target": "com.chengyinhub.business.mapper.ClubLeadMapper",
+      "target_owner": "chengyinhub-system"
+    },
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsMerchantNpcController.java#type:com.chengyinhub.business.mapper.NpcProfileMapper": {
+      "import_kind": "type",
+      "resolved_type": "com.chengyinhub.business.mapper.NpcProfileMapper",
+      "sha256": "092a3302fd629929951c658224d5cae19b8ebecbfa4a85a32e0468b3e6964142",
+      "source": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsMerchantNpcController.java",
+      "source_owner": "chengyinhub-admin",
+      "target": "com.chengyinhub.business.mapper.NpcProfileMapper",
+      "target_owner": "chengyinhub-system"
+    },
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsTopicController.java#type:com.chengyinhub.business.mapper.ClubLeadMapper": {
+      "import_kind": "type",
+      "resolved_type": "com.chengyinhub.business.mapper.ClubLeadMapper",
+      "sha256": "aafce019d433772f14deb567004b89459116f5f296879563ff1c5e2258ba9394",
+      "source": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsTopicController.java",
+      "source_owner": "chengyinhub-admin",
+      "target": "com.chengyinhub.business.mapper.ClubLeadMapper",
+      "target_owner": "chengyinhub-system"
+    },
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsTopicController.java#type:com.chengyinhub.business.mapper.RoamMapper": {
+      "import_kind": "type",
+      "resolved_type": "com.chengyinhub.business.mapper.RoamMapper",
+      "sha256": "53bdf38f744d30f1946f65028effbc79dcc1a2029ede0e9bfbd862e2f159940e",
+      "source": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsTopicController.java",
+      "source_owner": "chengyinhub-admin",
+      "target": "com.chengyinhub.business.mapper.RoamMapper",
+      "target_owner": "chengyinhub-system"
+    },
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/RecommendationController.java#type:com.chengyinhub.business.mapper.RecommendationScoreDailyMapper": {
+      "import_kind": "type",
+      "resolved_type": "com.chengyinhub.business.mapper.RecommendationScoreDailyMapper",
+      "sha256": "b54d5ddf26759df82f77dc16f1218b42a203b2ebd6b3f4e2966ad098d7145d97",
+      "source": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/RecommendationController.java",
+      "source_owner": "chengyinhub-admin",
+      "target": "com.chengyinhub.business.mapper.RecommendationScoreDailyMapper",
+      "target_owner": "chengyinhub-system"
+    },
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/RoamPoiAdminController.java#type:com.chengyinhub.business.mapper.RoamMapper": {
+      "import_kind": "type",
+      "resolved_type": "com.chengyinhub.business.mapper.RoamMapper",
+      "sha256": "53bdf38f744d30f1946f65028effbc79dcc1a2029ede0e9bfbd862e2f159940e",
+      "source": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/RoamPoiAdminController.java",
+      "source_owner": "chengyinhub-admin",
+      "target": "com.chengyinhub.business.mapper.RoamMapper",
+      "target_owner": "chengyinhub-system"
+    },
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/VerificationReviewController.java#type:com.chengyinhub.business.mapper.VerificationReviewMapper": {
+      "import_kind": "type",
+      "resolved_type": "com.chengyinhub.business.mapper.VerificationReviewMapper",
+      "sha256": "980efecc620d543491977ba109bba312381010f2fd81c8b8666002549a6c10d8",
+      "source": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/VerificationReviewController.java",
+      "source_owner": "chengyinhub-admin",
+      "target": "com.chengyinhub.business.mapper.VerificationReviewMapper",
+      "target_owner": "chengyinhub-system"
+    },
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/VerifyEvidenceController.java#type:com.chengyinhub.business.mapper.CoopGroupVerifyMapper": {
+      "import_kind": "type",
+      "resolved_type": "com.chengyinhub.business.mapper.CoopGroupVerifyMapper",
+      "sha256": "c70d9b2c0547d2a20925134588480a0276eb83b3962e405bac2396dab7736a02",
+      "source": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/VerifyEvidenceController.java",
+      "source_owner": "chengyinhub-admin",
+      "target": "com.chengyinhub.business.mapper.CoopGroupVerifyMapper",
+      "target_owner": "chengyinhub-system"
+    },
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/task/MonitorJobRegistrationCheck.java#type:com.chengyinhub.quartz.mapper.SysJobMapper": {
+      "import_kind": "type",
+      "resolved_type": "com.chengyinhub.quartz.mapper.SysJobMapper",
+      "sha256": "beca678f0aff5c262908885b444fc6bfc7ebbd54b11d2ca9e0d4414b2fd5af49",
+      "source": "chengyinhub-admin/src/main/java/com/chengyinhub/web/task/MonitorJobRegistrationCheck.java",
+      "source_owner": "chengyinhub-admin",
+      "target": "com.chengyinhub.quartz.mapper.SysJobMapper",
+      "target_owner": "chengyinhub-quartz"
+    },
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/task/metrics/VerificationRiskMetricsProbe.java#type:com.chengyinhub.business.mapper.VerificationReviewMapper": {
+      "import_kind": "type",
+      "resolved_type": "com.chengyinhub.business.mapper.VerificationReviewMapper",
+      "sha256": "980efecc620d543491977ba109bba312381010f2fd81c8b8666002549a6c10d8",
+      "source": "chengyinhub-admin/src/main/java/com/chengyinhub/web/task/metrics/VerificationRiskMetricsProbe.java",
+      "source_owner": "chengyinhub-admin",
+      "target": "com.chengyinhub.business.mapper.VerificationReviewMapper",
+      "target_owner": "chengyinhub-system"
+    },
+    "chengyinhub-framework/src/main/java/com/chengyinhub/framework/web/service/AppLoginService.java#type:com.chengyinhub.business.mapper.UmsMemberMapper": {
+      "import_kind": "type",
+      "resolved_type": "com.chengyinhub.business.mapper.UmsMemberMapper",
+      "sha256": "010e1798e71980185d9a34cdc7344d1d81a7b693a177c1cced3fc766db09d940",
+      "source": "chengyinhub-framework/src/main/java/com/chengyinhub/framework/web/service/AppLoginService.java",
+      "source_owner": "chengyinhub-framework",
+      "target": "com.chengyinhub.business.mapper.UmsMemberMapper",
+      "target_owner": "chengyinhub-system"
+    }
+  },
+  "scc": [],
+  "schema": 1,
+  "source_sha": "527adf3fe003b6e9022c255f9e7a3716a9aabe95"
+}

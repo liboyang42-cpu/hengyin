@@ -1,0 +1,46 @@
+{
+  "comparison_sha": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+  "findings": [],
+  "graph_complete": false,
+  "kind": "READ_ONLY_SOURCE_DIAGNOSTIC_NOT_CI_GATE",
+  "not_proven": [
+    "all bytecode/runtime dependencies",
+    "intra-system business-domain ownership",
+    "additional top-level types not matching source filenames",
+    "effective/inherited/profile Maven dependencies",
+    "implicit same-package cross-module usage",
+    "reflection, generated code, XML wiring and inherited/transitive member dependencies"
+  ],
+  "review_items": [
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubLeadController.java",
+      "reason": "FULLY_QUALIFIED_USAGE_NOT_RESOLVED"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubLeadController.java",
+      "reason": "UNRESOLVED_LOCAL_IMPORT",
+      "target": "com.chengyinhub.common.core.text.Convert"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java",
+      "reason": "FULLY_QUALIFIED_USAGE_NOT_RESOLVED"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/PhotoCheckVisionService.java",
+      "reason": "FULLY_QUALIFIED_USAGE_NOT_RESOLVED"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CashWithdrawServiceImpl.java",
+      "reason": "FULLY_QUALIFIED_USAGE_NOT_RESOLVED"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java",
+      "reason": "FULLY_QUALIFIED_USAGE_NOT_RESOLVED"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/WithdrawalBalanceAdmissionService.java",
+      "reason": "FULLY_QUALIFIED_USAGE_NOT_RESOLVED"
+    }
+  ],
+  "source_sha": "089790aaf3254f62ebbc79394b8aaf5fa66cb2b5"
+}
