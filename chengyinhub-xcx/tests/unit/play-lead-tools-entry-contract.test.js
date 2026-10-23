@@ -52,7 +52,10 @@ function loadPage() {
   const original = { getApp: global.getApp, Page: global.Page, wx: global.wx }
   let definition
   const requests = []
+  const disk = new Map()
   const platform = {
+    getStorageSync: key => disk.get(key),
+    setStorageSync: (key, value) => disk.set(key, value),
     scans: [], modals: [], loadings: [], hiddenLoadings: 0, toasts: [],
     scanCode(options) { this.scans.push(options) },
     showModal(options) { this.modals.push(options) },
@@ -61,11 +64,13 @@ function loadPage() {
     showToast(options) { this.toasts.push(options) },
   }
   const app = {
+    getUserID: () => '7', getAuthorization: () => 'unit-session',
     sendRequest(options) { requests.push(options) },
   }
   global.getApp = () => app
   global.Page = (value) => { definition = value }
   global.wx = platform
+  delete require.cache[require.resolve('../../pages/play/utils/play-route-state')]
   delete require.cache[require.resolve(PAGE_JS)]
   require(PAGE_JS)
   delete require.cache[require.resolve(PAGE_JS)]
@@ -78,7 +83,7 @@ function loadPage() {
 function createPageContext(definition, lead = { exists: true, isLeader: true }) {
   const context = {
     ...definition,
-    data: { ...definition.data, activityId: '7', lead, sessionToolsOpen: true },
+    data: { ...definition.data, activityId: '7', lead: { currentChapterId: 10, nextChapterId: 20, ...lead }, sessionToolsOpen: true },
     setData(patch, callback) {
       Object.entries(patch).forEach(([key, value]) => {
         if (!key.includes('.')) this.data[key] = value
@@ -200,7 +205,7 @@ test('整团码场景以状态变化覆盖等待、成功、失败与关闭取�
   succeeded.context.clearTimer()
 })
 
-test('解锁下一章节的等待、成功、失败与取消都产生可观察反馈', async () => {
+test('解锁下一章节的等待、成功、失败、取消与未知查询都有可观察状态', async () => {
   const harness = loadPage()
   try {
     const context = createPageContext(harness.definition)
@@ -208,35 +213,44 @@ test('解锁下一章节的等待、成功、失败与取消都产生可观察�
     context.loadTeamProgress = () => { progressLoads += 1 }
     context.leadUnlock()
     harness.platform.modals.pop().success({ confirm: false })
-    assert.equal(harness.platform.toasts.length, 1)
+    assert.equal(harness.requests.length, 0)
 
     context.leadUnlock()
     harness.platform.modals.pop().success({ confirm: true })
-    assert.equal(harness.platform.loadings.length, 1)
-    harness.requests.pop().success({ code: 200 })
+    assert.equal(context.data.leadUnlockChecking, true)
+    const first = harness.requests.pop()
+    assert.equal(first.data.expectedChapterId, 10)
+    assert.equal(first.data.targetChapterId, 20)
+    assert.ok(first.data.commandId)
+    first.success({ code: 200, msg: '已开启', data: first.data })
     await settlePromiseQueue()
-    assert.equal(harness.platform.hiddenLoadings, 1)
-    assert.equal(harness.platform.toasts.length, 2)
+    assert.equal(context.data.leadUnlockChecking, false)
     assert.equal(progressLoads, 1)
 
     context.leadUnlock()
     harness.platform.modals.pop().success({ confirm: true })
-    harness.requests.pop().success({ code: 500 })
+    harness.requests.pop().success({ code: 500, msg: '未执行' })
     await settlePromiseQueue()
-    assert.equal(harness.platform.hiddenLoadings, 2)
-    assert.equal(harness.platform.toasts.length, 3)
-    assert.equal(progressLoads, 1)
+    assert.equal(context.data.leadUnlockChecking, false)
+    assert.equal(progressLoads, 2)
 
     context.leadUnlock()
     harness.platform.modals.pop().success({ confirm: true })
-    harness.requests.pop().fail()
+    const unknown = harness.requests.pop()
+    unknown.fail()
     await settlePromiseQueue()
-    assert.equal(harness.platform.hiddenLoadings, 3)
-    assert.equal(harness.platform.toasts.length, 4)
-    assert.equal(progressLoads, 1)
-  } finally {
-    harness.restore()
-  }
+    assert.equal(context.data.leadUnlockChecking, true)
+    assert.equal(progressLoads, 2)
+    context.leadUnlock()
+    const read = harness.requests.pop()
+    assert.equal(read.method, 'GET')
+    assert.equal(read.url, '/api/club/lead/unlock-chapter-receipt')
+    assert.equal(read.data.commandId, unknown.data.commandId)
+    read.success({ code: 520 })
+    await settlePromiseQueue()
+    assert.equal(context.data.leadUnlockChecking, true)
+    assert.equal(progressLoads, 2)
+  } finally { harness.restore() }
 })
 
 test('整团结算的等待、成功、失败与取消都产生可观察反馈', async () => {

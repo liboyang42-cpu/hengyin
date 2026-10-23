@@ -1,0 +1,46 @@
+TAP version 13
+# Subtest: F08/F10/F16 主包资源与自定义组件 WXSS 合同已收口
+ok 1 - F08/F10/F16 主包资源与自定义组件 WXSS 合同已收口
+  ---
+  duration_ms: 2.490886
+  type: 'test'
+  ...
+# Subtest: F03 两个上传入口保留失败缩略图并提供原图重试
+ok 2 - F03 两个上传入口保留失败缩略图并提供原图重试
+  ---
+  duration_ms: 1.074536
+  type: 'test'
+  ...
+# Subtest: F11/F12 角色卡用玩家语言且会话未准备时不给确认入口
+ok 3 - F11/F12 角色卡用玩家语言且会话未准备时不给确认入口
+  ---
+  duration_ms: 2.779403
+  type: 'test'
+  ...
+# Subtest: F13 已确认的工程术语不再出现在用户可见文案
+ok 4 - F13 已确认的工程术语不再出现在用户可见文案
+  ---
+  duration_ms: 143.225774
+  type: 'test'
+  ...
+# Subtest: F14 票夹四类状态恢复为可见文字，不只藏在 aria-label
+ok 5 - F14 票夹四类状态恢复为可见文字，不只藏在 aria-label
+  ---
+  duration_ms: 0.49424
+  type: 'test'
+  ...
+# Subtest: F17 共享活动详情的可空头像在传入 cy-avatar 前归一为空串
+ok 6 - F17 共享活动详情的可空头像在传入 cy-avatar 前归一为空串
+  ---
+  duration_ms: 0.285831
+  type: 'test'
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 170.963579

@@ -17,13 +17,17 @@ Date.now = () => ${NOW}
 const actions = []
 let modal = null
 global.wx = { showModal(v) { modal = v }, showToast() {} }
+global.getApp = () => ({ getUserID: () => '7', getAuthorization: () => 'unit-session' })
 const { DIRECTOR_METHODS } = require(DIRECTOR_PATH)
 const ctx = {
+  ...DIRECTOR_METHODS,
+  _activityId: 55,
   data: { writeLocked: false, incidentSelectedKey: 'backlog:8', incidentMode: 'pause',
     incidentRows: [{ id: 'backlog:8', key: 'backlog:8', kind: 'BACKLOG', nodeId: 8, planOptions: [] }] },
   setData(patch) { Object.assign(this.data, patch) },
   executeAction(action, payload, nodeId) { actions.push({ action, payload, nodeId }) },
 }
+global.getCurrentPages = () => [ctx]
 DIRECTOR_METHODS.submitIncident.call(ctx)
 modal.success({ confirm: true, content: '设备故障' })
 process.stdout.write(JSON.stringify(actions))

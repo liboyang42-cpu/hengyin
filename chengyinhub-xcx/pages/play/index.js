@@ -226,7 +226,9 @@ function req(url, method, data, header, silentError) {
       const fields = Object.assign({}, context, { expectedRouteVersion: data.expectedRouteVersion == null ? context.expectedRouteVersion : data.expectedRouteVersion });
       if (typeof data._bindRouteContext !== 'function') return { code: 520, httpFail: true, msg: '原命令身份未保存，请重新进入确认结果' };
       try { data._bindRouteContext(fields); } catch (error) { return { code: 520, httpFail: true, msg: error.message }; }
-      return req(url, method, data, header, silentError);
+      if (url === '/api/play/answer') return req('/api/play/answer', 'POST', data, header, silentError);
+      if (url === '/api/play/checkin') return req('/api/play/checkin', 'POST', data, header, silentError);
+      return req('/api/play/arrive', 'POST', data, header, silentError);
     });
   }
   if (basic && data && data._intentOwner != null && data._intentOwner !== String((app.getUserID && app.getUserID()) || '')) return Promise.resolve({ obsolete: true });
@@ -234,7 +236,7 @@ function req(url, method, data, header, silentError) {
     const settle = response => {
       if (basic && !response.intentTerminal && !response.intentNotExecuted && !response.obsolete) {
         response = Object.assign({}, response, { code: 520, httpFail: true, intentUnknown: true,
-          msg: response.msg || '原命令尚无可核对的终态回执' });
+          msg: response.msg || '结果还没确认，请稍后再查看' });
       }
       if (basic && data && typeof data._markIntentUnknown === 'function'
           && (response.netFail || response.httpFail || Number(response.code) === 520)) {
@@ -748,7 +750,10 @@ Page({
   },
   _sendBasicRouteIntent(url, payload) {
     if (!this._isPlayAccountCurrent()) return Promise.resolve({ obsolete: true });
-    return req(url, 'POST', payload);
+    if (url === '/api/play/answer') return req('/api/play/answer', 'POST', payload);
+    if (url === '/api/play/checkin') return req('/api/play/checkin', 'POST', payload);
+    if (url === '/api/play/arrive') return req('/api/play/arrive', 'POST', payload);
+    return Promise.resolve({ code: 500, msg: '无法确认本次操作，请重新进入' });
   },
   _readBasicRouteIntent(kind, nodeId) {
     if (!this._isPlayAccountCurrent()) return Promise.resolve({ obsolete: true });
@@ -4866,7 +4871,9 @@ Page({
     this.openScene('qr-group-code', { activityId: this.data.activityId, name: '本场次' });
   },
   leadUnlock() {
-    if (!this._isPlayAccountCurrent() || !this._canUseLeadTools() || !this.data.activityId || this._leadUnlockInFlight) return;
+    if (!this._isPlayAccountCurrent() || !this._canUseLeadTools() || !this.data.activityId) return;
+    if (this._leadUnlockIntent && this._leadUnlockIntent.inFlight
+      && this._isLeadOperationContextCurrent(this._leadUnlockIntent.context, true)) return;
     const context = this._leadOperationContext();
     const store = scopedRouteActionStore([context.owner, context.sessionKey, 'lead-chapter'], wx);
     const lead = this.data.lead || {};
@@ -4875,9 +4882,12 @@ Page({
     let body;
     try { body = store.payload('unlock', context.activityId, {}, original); }
     catch (error) { this.diegetic(error.message); return; }
-    const current = () => this._isLeadOperationContextCurrent(context, true);
+    const intent = { context, body };
+    this._leadUnlockIntent = intent;
+    const current = () => this._leadUnlockIntent === intent && this._isLeadOperationContextCurrent(context, true);
     const submit = () => {
       if (!current()) return;
+      intent.inFlight = true;
       this._leadUnlockInFlight = true;
       this.setData({ leadUnlockChecking: true });
       const input = Object.assign({}, body, { commandId: body.routeActionId });
@@ -4885,12 +4895,14 @@ Page({
         ? req('/api/club/lead/unlock-chapter-receipt', 'GET', { activityId: body.activityId, commandId: body.routeActionId }, undefined, true)
         : req('/api/club/lead/unlock-chapter', 'POST', input);
       request.then(response => {
-        if (!current()) return;
         const validReceipt = Number(response.code) === 200 && response.data
           && response.data.commandId === body.routeActionId
           && Number(response.data.expectedChapterId) === Number(body.expectedChapterId)
           && Number(response.data.targetChapterId) === Number(body.targetChapterId);
         const unknown = response.netFail || response.httpFail || Number(response.code) === 520 || Number(response.code) === 200 && !validReceipt;
+        // 原请求的未知事实属于原账号/场次，即使页面已换场也必须保留；不写当前页状态。
+        if (unknown && typeof body._markIntentUnknown === 'function') body._markIntentUnknown();
+        if (!current()) return;
         if (unknown) {
           // 队伍当前章发生变化不能证明“本命令”执行过；只保留原身份查回执。
           body.receiptOnly = true;
@@ -4907,7 +4919,12 @@ Page({
         this.diegetic(response.msg || '请核对本场章节');
         this.loadTeamProgress();
       }).catch(() => { if (current()) this.diegetic('章节放行结果待确认，再点放行只查询原命令'); })
-        .finally(() => { this._leadUnlockInFlight = false; if (current()) this.setData({ leadUnlockChecking: !!this._leadUnlockUnknown }); });
+        .finally(() => {
+          intent.inFlight = false;
+          if (this._leadUnlockIntent !== intent) return;
+          this._leadUnlockInFlight = false;
+          if (current()) this.setData({ leadUnlockChecking: !!this._leadUnlockUnknown });
+        });
     };
     if (body.receiptOnly) { submit(); return; }
     if (!body.targetChapterId) { store.resolve('unlock', context.activityId); this.diegetic('本场没有可放行的下一章'); return; }

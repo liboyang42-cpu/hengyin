@@ -1,0 +1,28 @@
+TAP version 13
+# Subtest: old unlock confirmation cannot send to a later activity
+ok 1 - old unlock confirmation cannot send to a later activity
+  ---
+  duration_ms: 28.882807
+  type: 'test'
+  ...
+# Subtest: late unknown result retains the original activity intent without touching the newer one
+ok 2 - late unknown result retains the original activity intent without touching the newer one
+  ---
+  duration_ms: 6.182127
+  type: 'test'
+  ...
+# Subtest: cancelling the replacement activity confirmation cannot inherit another activity in-flight lock
+ok 3 - cancelling the replacement activity confirmation cannot inherit another activity in-flight lock
+  ---
+  duration_ms: 4.680213
+  type: 'test'
+  ...
+1..3
+# tests 3
+# suites 0
+# pass 3
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 49.627831

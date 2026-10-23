@@ -1,0 +1,139 @@
+{
+  "node": "24.19.0",
+  "command": "node --test --test-isolation=none --test-reporter=tap <each file separately>",
+  "reason": "Keep actual test-case counts visible; default process isolation in the managed sandbox reports file totals. Timezone child-process test used an approved sandbox escalation.",
+  "files": [
+    {
+      "file": "club-gather-arrival.test.js",
+      "tests": 27,
+      "pass": 27,
+      "fail": 0,
+      "skipped": 0
+    },
+    {
+      "file": "play-location-sharing-lifecycle.test.js",
+      "tests": 2,
+      "pass": 2,
+      "fail": 0,
+      "skipped": 0
+    },
+    {
+      "file": "roam-revocation-evidence.test.js",
+      "tests": 19,
+      "pass": 19,
+      "fail": 0,
+      "skipped": 0
+    },
+    {
+      "file": "mini-verify-v1-cl20-director-broadcast-draft.test.js",
+      "tests": 2,
+      "pass": 2,
+      "fail": 0,
+      "skipped": 0
+    },
+    {
+      "file": "club-director-pause-optional-fallback.test.js",
+      "tests": 3,
+      "pass": 3,
+      "fail": 0,
+      "skipped": 0
+    },
+    {
+      "file": "theme-plan-fallback.test.js",
+      "tests": 7,
+      "pass": 7,
+      "fail": 0,
+      "skipped": 0
+    },
+    {
+      "file": "get-auth-matrix-contract.test.js",
+      "tests": 29,
+      "pass": 29,
+      "fail": 0,
+      "skipped": 0
+    },
+    {
+      "file": "play-journey-request.test.js",
+      "tests": 11,
+      "pass": 11,
+      "fail": 0,
+      "skipped": 0
+    },
+    {
+      "file": "longrun-own-c01-23.test.js",
+      "tests": 3,
+      "pass": 3,
+      "fail": 0,
+      "skipped": 0
+    },
+    {
+      "file": "longrun-own-c01-36.test.js",
+      "tests": 2,
+      "pass": 2,
+      "fail": 0,
+      "skipped": 0
+    },
+    {
+      "file": "play-lead-tools-entry-contract.test.js",
+      "tests": 8,
+      "pass": 8,
+      "fail": 0,
+      "skipped": 0
+    },
+    {
+      "file": "architecture-day-c-intent.test.js",
+      "tests": 7,
+      "pass": 7,
+      "fail": 0,
+      "skipped": 0
+    },
+    {
+      "file": "architecture-day-c-director-isolation.test.js",
+      "tests": 5,
+      "pass": 5,
+      "fail": 0,
+      "skipped": 0
+    },
+    {
+      "file": "play-route-state.test.js",
+      "tests": 10,
+      "pass": 10,
+      "fail": 0,
+      "skipped": 0
+    },
+    {
+      "file": "play-request-recovery.test.js",
+      "tests": 30,
+      "pass": 30,
+      "fail": 0,
+      "skipped": 0
+    },
+    {
+      "file": "audit-f01-f17-contract.test.js",
+      "tests": 6,
+      "pass": 6,
+      "fail": 0,
+      "skipped": 0
+    },
+    {
+      "file": "advanced-game-receipt-contract.test.js",
+      "tests": 50,
+      "pass": 50,
+      "fail": 0,
+      "skipped": 0
+    },
+    {
+      "file": "v6b-director-resume-eta-timezone.test.js",
+      "tests": 1,
+      "pass": 1,
+      "fail": 0,
+      "skipped": 0
+    }
+  ],
+  "totals": {
+    "tests": 222,
+    "pass": 222,
+    "fail": 0,
+    "skipped": 0
+  }
+}

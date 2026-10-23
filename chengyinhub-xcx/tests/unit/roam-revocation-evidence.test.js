@@ -66,7 +66,7 @@ function harness(noBackground) {
   h.play = { data: { topicId: 31, gpsOk: false, nav: { active: false }, nodes: [], nextNode: null },
     setData: h.roam.setData, rebuild() {} }
   h.play._trackKey = vm.runInNewContext('({' + playSource.match(/  _trackKey\(\) \{[^\n]*\},/)[0] + '})', context)._trackKey
-  for (const name of ['_playMember', '_boundPlayOwner', '_isPlayAccountCurrent', '_sessionParams', '_sessionKey', 'requestPlayLocation', 'watchLocation', '_noteLocAccuracy']) {
+  for (const name of ['_playMember', '_capturePlayLoginContext', '_boundPlayOwner', '_isPlayAccountCurrent', '_sessionParams', '_sessionKey', 'requestPlayLocation', 'watchLocation', '_noteLocAccuracy']) {
     const start = playSource.indexOf('  ' + name + '('); const end = playSource.indexOf('\n  },', start)
     h.play[name] = vm.runInNewContext('({' + playSource.slice(start, end + 4).trim() + '})', context)[name]
   }

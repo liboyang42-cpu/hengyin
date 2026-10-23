@@ -8,6 +8,7 @@ const path = require('node:path')
 const DIRECTOR_PATH = path.resolve(__dirname, '../../pages/club/topic-detail/director.js')
 
 function setup(planOptions) {
+  global.getApp = () => ({ getUserID: () => '7', getAuthorization: () => 'unit-session' })
   const calls = { modal: null, toasts: [], actions: [] }
   global.wx = {
     showModal(value) { calls.modal = value },
@@ -16,6 +17,8 @@ function setup(planOptions) {
   delete require.cache[DIRECTOR_PATH]
   const { DIRECTOR_METHODS } = require(DIRECTOR_PATH)
   const ctx = {
+    ...DIRECTOR_METHODS,
+    _activityId: 55,
     data: {
       writeLocked: false,
       // id = 组件/onIncidentSelect 实际写入 incidentSelectedKey 的那个键(见 5-01 行投影)
@@ -26,6 +29,7 @@ function setup(planOptions) {
     setData(patch) { Object.assign(this.data, patch) },
     executeAction(action, payload, nodeId) { calls.actions.push({ action, payload, nodeId }) },
   }
+  global.getCurrentPages = () => [ctx]
   DIRECTOR_METHODS.submitIncident.call(ctx)
   return calls
 }

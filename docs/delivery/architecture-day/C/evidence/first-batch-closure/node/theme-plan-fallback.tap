@@ -1,0 +1,52 @@
+TAP version 13
+# Subtest: W2 shared/control WORLD_SHARED 回读可用且可写；旧服无字段不显示入口
+ok 1 - W2 shared/control WORLD_SHARED 回读可用且可写；旧服无字段不显示入口
+  ---
+  duration_ms: 1.155405
+  type: 'test'
+  ...
+# Subtest: 原因必填 1–500 字；必须二次确认后才走原导演命令
+ok 2 - 原因必填 1–500 字；必须二次确认后才走原导演命令
+  ---
+  duration_ms: 1.439224
+  type: 'test'
+  ...
+# Subtest: 确认期间纪元变化不写，锁定与不可用状态不允许打开
+ok 3 - 确认期间纪元变化不写，锁定与不可用状态不允许打开
+  ---
+  duration_ms: 0.174047
+  type: 'test'
+  ...
+# Subtest: 读取真实 shared/control，切活动或 revision 的迟到响应不污染当前页
+ok 4 - 读取真实 shared/control，切活动或 revision 的迟到响应不污染当前页
+  ---
+  duration_ms: 0.427681
+  type: 'test'
+  ...
+# Subtest: 默认只读适配固定 shared/control 路径并保留回调与 app 接收者
+ok 5 - 默认只读适配固定 shared/control 路径并保留回调与 app 接收者
+  ---
+  duration_ms: 262.882864
+  type: 'test'
+  ...
+# Subtest: 兜底未知结果只能核对原回执，不重发 PLAN_FALLBACK
+ok 6 - 兜底未知结果只能核对原回执，不重发 PLAN_FALLBACK
+  ---
+  duration_ms: 0.437586
+  type: 'test'
+  ...
+# Subtest: 兜底回执只接受匹配的 APPLIED fallback 结局，收尾原因保留
+ok 7 - 兜底回执只接受匹配的 APPLIED fallback 结局，收尾原因保留
+  ---
+  duration_ms: 0.464856
+  type: 'test'
+  ...
+1..7
+# tests 7
+# suites 0
+# pass 7
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 297.581697

@@ -1,0 +1,172 @@
+TAP version 13
+# Subtest: 集合按钮单独说明用途，明确同意后才采本次GCJ02坐标并提交
+ok 1 - 集合按钮单独说明用途，明确同意后才采本次GCJ02坐标并提交
+  ---
+  duration_ms: 41.592062
+  type: 'test'
+  ...
+# Subtest: 取消说明、拒定位和SDK缺失均不提交签到
+ok 2 - 取消说明、拒定位和SDK缺失均不提交签到
+  ---
+  duration_ms: 14.317852
+  type: 'test'
+  ...
+# Subtest: 非法SDK坐标不POST：null/null
+ok 3 - 非法SDK坐标不POST：null/null
+  ---
+  duration_ms: 8.973447
+  type: 'test'
+  ...
+# Subtest: 非法SDK坐标不POST：NaN/121
+ok 4 - 非法SDK坐标不POST：NaN/121
+  ---
+  duration_ms: 3.415349
+  type: 'test'
+  ...
+# Subtest: 非法SDK坐标不POST：31/Infinity
+ok 5 - 非法SDK坐标不POST：31/Infinity
+  ---
+  duration_ms: 3.563618
+  type: 'test'
+  ...
+# Subtest: 非法SDK坐标不POST：91/121
+ok 6 - 非法SDK坐标不POST：91/121
+  ---
+  duration_ms: 4.768496
+  type: 'test'
+  ...
+# Subtest: 非法SDK坐标不POST：31/181
+ok 7 - 非法SDK坐标不POST：31/181
+  ---
+  duration_ms: 4.551436
+  type: 'test'
+  ...
+# Subtest: 非法SDK坐标不POST：31/121
+ok 8 - 非法SDK坐标不POST：31/121
+  ---
+  duration_ms: 5.734682
+  type: 'test'
+  ...
+# Subtest: dialog晚回包在member后不能提交或刷新旧场次
+ok 9 - dialog晚回包在member后不能提交或刷新旧场次
+  ---
+  duration_ms: 4.803418
+  type: 'test'
+  ...
+# Subtest: dialog晚回包在token后不能提交或刷新旧场次
+ok 10 - dialog晚回包在token后不能提交或刷新旧场次
+  ---
+  duration_ms: 4.621629
+  type: 'test'
+  ...
+# Subtest: dialog晚回包在activity后不能提交或刷新旧场次
+ok 11 - dialog晚回包在activity后不能提交或刷新旧场次
+  ---
+  duration_ms: 7.263438
+  type: 'test'
+  ...
+# Subtest: dialog晚回包在hide后不能提交或刷新旧场次
+ok 12 - dialog晚回包在hide后不能提交或刷新旧场次
+  ---
+  duration_ms: 4.475554
+  type: 'test'
+  ...
+# Subtest: dialog晚回包在unload后不能提交或刷新旧场次
+ok 13 - dialog晚回包在unload后不能提交或刷新旧场次
+  ---
+  duration_ms: 4.367224
+  type: 'test'
+  ...
+# Subtest: location晚回包在member后不能提交或刷新旧场次
+ok 14 - location晚回包在member后不能提交或刷新旧场次
+  ---
+  duration_ms: 4.049134
+  type: 'test'
+  ...
+# Subtest: location晚回包在token后不能提交或刷新旧场次
+ok 15 - location晚回包在token后不能提交或刷新旧场次
+  ---
+  duration_ms: 4.291373
+  type: 'test'
+  ...
+# Subtest: location晚回包在activity后不能提交或刷新旧场次
+ok 16 - location晚回包在activity后不能提交或刷新旧场次
+  ---
+  duration_ms: 4.523274
+  type: 'test'
+  ...
+# Subtest: location晚回包在hide后不能提交或刷新旧场次
+ok 17 - location晚回包在hide后不能提交或刷新旧场次
+  ---
+  duration_ms: 4.515412
+  type: 'test'
+  ...
+# Subtest: location晚回包在unload后不能提交或刷新旧场次
+ok 18 - location晚回包在unload后不能提交或刷新旧场次
+  ---
+  duration_ms: 4.432751
+  type: 'test'
+  ...
+# Subtest: response晚回包在member后不能提交或刷新旧场次
+ok 19 - response晚回包在member后不能提交或刷新旧场次
+  ---
+  duration_ms: 12.197748
+  type: 'test'
+  ...
+# Subtest: response晚回包在token后不能提交或刷新旧场次
+ok 20 - response晚回包在token后不能提交或刷新旧场次
+  ---
+  duration_ms: 8.193485
+  type: 'test'
+  ...
+# Subtest: response晚回包在activity后不能提交或刷新旧场次
+ok 21 - response晚回包在activity后不能提交或刷新旧场次
+  ---
+  duration_ms: 2.951044
+  type: 'test'
+  ...
+# Subtest: response晚回包在hide后不能提交或刷新旧场次
+ok 22 - response晚回包在hide后不能提交或刷新旧场次
+  ---
+  duration_ms: 2.725181
+  type: 'test'
+  ...
+# Subtest: response晚回包在unload后不能提交或刷新旧场次
+ok 23 - response晚回包在unload后不能提交或刷新旧场次
+  ---
+  duration_ms: 3.432585
+  type: 'test'
+  ...
+# Subtest: 重复点击只产生一个在途用途确认，业务拒绝不可显示成功或刷新到场事实
+ok 24 - 重复点击只产生一个在途用途确认，业务拒绝不可显示成功或刷新到场事实
+  ---
+  duration_ms: 3.149798
+  type: 'test'
+  ...
+# Subtest: 网络失败明确结束在途状态，不伪造成功
+ok 25 - 网络失败明确结束在途状态，不伪造成功
+  ---
+  duration_ms: 2.774404
+  type: 'test'
+  ...
+# Subtest: 访客、演示身份、预览、mock和未指定场次不启动定位
+ok 26 - 访客、演示身份、预览、mock和未指定场次不启动定位
+  ---
+  duration_ms: 13.45916
+  type: 'test'
+  ...
+# Subtest: 已绑定A的旧游玩页切为B，点击集合签到也不能启动用途说明或定位
+ok 27 - 已绑定A的旧游玩页切为B，点击集合签到也不能启动用途说明或定位
+  ---
+  duration_ms: 7.659872
+  type: 'test'
+  ...
+1..27
+# tests 27
+# suites 0
+# pass 27
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 211.906969

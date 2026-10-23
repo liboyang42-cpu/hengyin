@@ -1,0 +1,70 @@
+TAP version 13
+# Subtest: LINEAR 保持按 sortId 选择第一未完成节点
+ok 1 - LINEAR 保持按 sortId 选择第一未完成节点
+  ---
+  duration_ms: 1.09753
+  type: 'test'
+  ...
+# Subtest: BRANCH_GRAPH 只认服务端当前节点，不能被更小 sortId 覆盖
+ok 2 - BRANCH_GRAPH 只认服务端当前节点，不能被更小 sortId 覆盖
+  ---
+  duration_ms: 0.951564
+  type: 'test'
+  ...
+# Subtest: BRANCH_GRAPH 缺失或非法节点状态时 fail closed，不回退本地排序
+ok 3 - BRANCH_GRAPH 缺失或非法节点状态时 fail closed，不回退本地排序
+  ---
+  duration_ms: 0.188668
+  type: 'test'
+  ...
+# Subtest: 节点完成回执已确认但新 routeState 尚未读回时，不把旧 currentNode 再推荐一次
+ok 4 - 节点完成回执已确认但新 routeState 尚未读回时，不把旧 currentNode 再推荐一次
+  ---
+  duration_ms: 0.331549
+  type: 'test'
+  ...
+# Subtest: 手记和进行中路线按 decisionLog 的真实选择排序且不泄露未选支线
+ok 5 - 手记和进行中路线按 decisionLog 的真实选择排序且不泄露未选支线
+  ---
+  duration_ms: 0.353782
+  type: 'test'
+  ...
+# Subtest: 完成动作超时重试复用 routeActionId，并且上下文无法携带客户端目标
+ok 6 - 完成动作超时重试复用 routeActionId，并且上下文无法携带客户端目标
+  ---
+  duration_ms: 0.393982
+  type: 'test'
+  ...
+# Subtest: 版本冲突识别同时兼容 HTTP envelope 与 AjaxResult code/message
+ok 7 - 版本冲突识别同时兼容 HTTP envelope 与 AjaxResult code/message
+  ---
+  duration_ms: 0.299532
+  type: 'test'
+  ...
+# Subtest: 念头进度要带到页面上 —— 归一化是白名单,漏登记就等于服务端没下发
+ok 8 - 念头进度要带到页面上 —— 归一化是白名单,漏登记就等于服务端没下发
+  ---
+  duration_ms: 0.231892
+  type: 'test'
+  ...
+# Subtest: 畸形念头项直接丢掉,不让它把菜单渲染成空白行
+ok 9 - 畸形念头项直接丢掉,不让它把菜单渲染成空白行
+  ---
+  duration_ms: 0.178444
+  type: 'test'
+  ...
+# Subtest: 没有念头时给空数组,页面不用到处判 null
+ok 10 - 没有念头时给空数组,页面不用到处判 null
+  ---
+  duration_ms: 0.173085
+  type: 'test'
+  ...
+1..10
+# tests 10
+# suites 0
+# pass 10
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 24.089612

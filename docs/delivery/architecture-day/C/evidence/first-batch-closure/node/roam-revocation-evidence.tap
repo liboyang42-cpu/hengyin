@@ -1,0 +1,124 @@
+TAP version 13
+# Subtest: 真实caller/runtime回读形态可通过固定合同：cold
+ok 1 - 真实caller/runtime回读形态可通过固定合同：cold
+  ---
+  duration_ms: 40.278863
+  type: 'test'
+  ...
+# Subtest: 真实caller/runtime回读形态可通过固定合同：stopped
+ok 2 - 真实caller/runtime回读形态可通过固定合同：stopped
+  ---
+  duration_ms: 11.90586
+  type: 'test'
+  ...
+# Subtest: 真实caller/runtime回读形态可通过固定合同：already-stopped
+ok 3 - 真实caller/runtime回读形态可通过固定合同：already-stopped
+  ---
+  duration_ms: 7.81269
+  type: 'test'
+  ...
+# Subtest: 真实caller/runtime回读形态可通过固定合同：inflight-success
+ok 4 - 真实caller/runtime回读形态可通过固定合同：inflight-success
+  ---
+  duration_ms: 7.572956
+  type: 'test'
+  ...
+# Subtest: 真实caller/runtime回读形态可通过固定合同：inflight-denied
+ok 5 - 真实caller/runtime回读形态可通过固定合同：inflight-denied
+  ---
+  duration_ms: 8.589856
+  type: 'test'
+  ...
+# Subtest: 真实caller/runtime回读形态可通过固定合同：prior-stop
+ok 6 - 真实caller/runtime回读形态可通过固定合同：prior-stop
+  ---
+  duration_ms: 7.817787
+  type: 'test'
+  ...
+# Subtest: 真实caller/runtime回读形态可通过固定合同：retained
+ok 7 - 真实caller/runtime回读形态可通过固定合同：retained
+  ---
+  duration_ms: 8.325867
+  type: 'test'
+  ...
+# Subtest: 真实caller/runtime回读形态可通过固定合同：bg-restart
+ok 8 - 真实caller/runtime回读形态可通过固定合同：bg-restart
+  ---
+  duration_ms: 9.226867
+  type: 'test'
+  ...
+# Subtest: 真实caller/runtime回读形态可通过固定合同：fg-restart
+ok 9 - 真实caller/runtime回读形态可通过固定合同：fg-restart
+  ---
+  duration_ms: 7.700245
+  type: 'test'
+  ...
+# Subtest: 真实BG拒绝→FG成功和两者都拒绝匹配各自capability错误枝
+ok 10 - 真实BG拒绝→FG成功和两者都拒绝匹配各自capability错误枝
+  ---
+  duration_ms: 18.298855
+  type: 'test'
+  ...
+# Subtest: 真实record未确认也必须撤回本机用途，不能冒充审计成功
+ok 11 - 真实record未确认也必须撤回本机用途，不能冒充审计成功
+  ---
+  duration_ms: 11.549033
+  type: 'test'
+  ...
+# Subtest: 审计未确认时独立play的真实许可和持有仍必须保留
+ok 12 - 审计未确认时独立play的真实许可和持有仍必须保留
+  ---
+  duration_ms: 10.20468
+  type: 'test'
+  ...
+# Subtest: 缺来源、SDK未知、latest错请求或旧owner/listener/epoch一律UNVERIFIED
+ok 13 - 缺来源、SDK未知、latest错请求或旧owner/listener/epoch一律UNVERIFIED
+  ---
+  duration_ms: 14.203301
+  type: 'test'
+  ...
+# Subtest: GPS成功坐标门保留：stop无坐标合法，BG/FG缺坐标和伪造拒绝为成功判红
+ok 14 - GPS成功坐标门保留：stop无坐标合法，BG/FG缺坐标和伪造拒绝为成功判红
+  ---
+  duration_ms: 31.898887
+  type: 'test'
+  ...
+# Subtest: 缺固定合同不能沿旧三SDK全成功或全空数组跳过用途回读
+ok 15 - 缺固定合同不能沿旧三SDK全成功或全空数组跳过用途回读
+  ---
+  duration_ms: 7.262718
+  type: 'test'
+  ...
+# Subtest: 独立play许可/owner原始capture缺失或GPS在SDK终态之前都不能冒充恢复
+ok 16 - 独立play许可/owner原始capture缺失或GPS在SDK终态之前都不能冒充恢复
+  ---
+  duration_ms: 32.17858
+  type: 'test'
+  ...
+# Subtest: 删掉撤回前在途SDK历史不能用stop后的false快照冒充终态
+ok 17 - 删掉撤回前在途SDK历史不能用stop后的false快照冒充终态
+  ---
+  duration_ms: 6.066303
+  type: 'test'
+  ...
+# Subtest: peer实证FG-only和获独立许可的旧pending代际正常保留，不伪造BG拒绝/补停
+ok 18 - peer实证FG-only和获独立许可的旧pending代际正常保留，不伪造BG拒绝/补停
+  ---
+  duration_ms: 39.245469
+  type: 'test'
+  ...
+# Subtest: 本次actual consent-client请求是new，但latest/proof/echo都old REVOKE仍必须判红
+ok 19 - 本次actual consent-client请求是new，但latest/proof/echo都old REVOKE仍必须判红
+  ---
+  duration_ms: 7.089763
+  type: 'test'
+  ...
+1..19
+# tests 19
+# suites 0
+# pass 19
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 312.521924

@@ -26,6 +26,11 @@ const PLAY_PROGRESS_CONTROLLER = path.resolve(
 // optional = 后端允许匿名，但登录时会按 uid 返回个人态，所以仍使用默认认证；
 // required = 后端 anyRequest().authenticated()，绝不能 auth:false。
 const MATRIX = [
+  // C 动作命令：当前会员的已支付场次/自玩归属先于上下文和回执读取。
+  ['pages/play/index.js', "req('/api/play/action-receipt', 'GET', data", 'required', 'member', 'current-session'],
+  ['pages/play/index.js', "req('/api/play/action-context'", 'required', 'member', 'current-session'],
+  ['pages/play/index.js', "req('/api/play/action-receipt', 'GET', body", 'required', 'member', 'current-session'],
+  ['pages/play/index.js', "req('/api/club/lead/unlock-chapter-receipt'", 'required', 'leader', 'current-session'],
   // 实际作者页面的受控requestOwnMedia不属于req简写；五个caller逐个归真实本人资产。
   ['pages/privacy/index.js', "this.requestOwnMedia('/api/media/asset/list', 'GET'", 'required', 'author', 'owned-media-asset'],
   ['pages/privacy/index.js', 'loadOlderMedia() {', 'required', 'author', 'owned-media-asset'],
@@ -325,7 +330,7 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
   // 2026-10-09 U04 只读主题请求增加6处，22 → 28。
   // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):漫游 BL-41 可参与官方活动 req 包装 GET +1(已入 MATRIX),28 → 29。
   // 2026-10-22 L21 BL-186:pages/play 本章结算 GET /api/play/journey/stage-end(与 /ending 同档),29 → 30。
-  assert.equal(wrapperCount, 30, 'req 包装 GET 数量变化时必须逐条复核权限并更新矩阵');
+  assert.equal(wrapperCount, 34, 'req 包装 GET 数量变化时必须逐条复核权限并更新矩阵');
   assert.equal(ownMediaWrapperCount, 5, '作者媒体实际GET调用点变化需显式复核');
   assert.equal(MATRIX.length, directCount + wrapperCount + ownMediaWrapperCount);
 

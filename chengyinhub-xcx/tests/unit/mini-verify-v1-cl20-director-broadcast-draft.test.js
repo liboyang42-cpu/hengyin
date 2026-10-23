@@ -15,7 +15,6 @@ function setup(submit) {
   const storage = {};
   const toasts = [];
   global.getApp = () => ({ getUserID: () => '7', globalData: {} });
-  global.getCurrentPages = () => [];
   global.wx = {
     getStorageSync: (k) => storage[k],
     setStorageSync: (k, v) => { storage[k] = v; },
@@ -36,6 +35,7 @@ function setup(submit) {
     loadProjection() {},
     fetchDetail() {},
   });
+  global.getCurrentPages = () => [ctx];
   return { ctx, toasts, storage };
 }
 

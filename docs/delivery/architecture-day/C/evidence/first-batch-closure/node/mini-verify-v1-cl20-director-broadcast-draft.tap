@@ -1,0 +1,22 @@
+TAP version 13
+# Subtest: CL-20 广播请求断网(结果待核对):草稿原文保留,解锁后重开半屏仍带回
+ok 1 - CL-20 广播请求断网(结果待核对):草稿原文保留,解锁后重开半屏仍带回
+  ---
+  duration_ms: 14.198994
+  type: 'test'
+  ...
+# Subtest: CL-20 广播被后端驳回:草稿保留;写成功才清空(正控)
+ok 2 - CL-20 广播被后端驳回:草稿保留;写成功才清空(正控)
+  ---
+  duration_ms: 3.645591
+  type: 'test'
+  ...
+1..2
+# tests 2
+# suites 0
+# pass 2
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 30.258686
