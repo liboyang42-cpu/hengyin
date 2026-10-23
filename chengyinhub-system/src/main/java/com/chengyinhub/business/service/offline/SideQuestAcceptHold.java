@@ -58,6 +58,9 @@ public final class SideQuestAcceptHold {
     }
 
     public void discover(Place next) {
+        if (original != null) {
+            throw fail(Failure.ALREADY_TERMINAL);
+        }
         if (!next.compliant) {
             throw fail(Failure.NOT_COMPLIANT);
         }

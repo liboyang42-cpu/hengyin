@@ -50,6 +50,10 @@ class C05AccountSwitchRestartIsolationTest {
                         .code);
         assertEquals("sq-req-1", quest.original().originalRequestId);
         assertNotEquals("sq-req-other", quest.original().originalRequestId);
+        assertEquals(SideQuestAcceptHold.Failure.ALREADY_TERMINAL,
+                assertThrows(SideQuestAcceptHold.SideQuestException.class,
+                        () -> quest.discover(new SideQuestAcceptHold.Place(8, 3, true, 4, false))).code);
+        assertEquals("sq-req-1", quest.original().originalRequestId);
     }
 
     @Test
@@ -96,5 +100,37 @@ class C05AccountSwitchRestartIsolationTest {
                         () -> quest.acceptHold("hold-1", "  ", 1)).code);
         assertNull(quest.original());
         assertNull(quest.hold());
+    }
+
+    @Test
+    void recoverOriginalOfNeverSeenIdDoesNotOccupyLedgerThenUniqueHoldApplies() {
+        SideQuestAcceptHold quest = new SideQuestAcceptHold();
+        assertEquals(SideQuestAcceptHold.Failure.ORIGINAL_RECORD_UNKNOWN,
+                assertThrows(SideQuestAcceptHold.SideQuestException.class, () -> quest.recoverOriginal("sq-orig-unk"))
+                        .code);
+        assertNull(quest.original());
+        assertNull(quest.hold());
+        assertEquals(SideQuestAcceptHold.Phase.IDLE, quest.phase());
+
+        quest.discover(new SideQuestAcceptHold.Place(8, 3, true, 4, false));
+        assertEquals(SideQuestAcceptHold.Failure.ORIGINAL_RECORD_UNKNOWN,
+                assertThrows(SideQuestAcceptHold.SideQuestException.class, () -> quest.recoverOriginal("sq-orig-unk"))
+                        .code);
+        assertNull(quest.original());
+        assertNull(quest.hold());
+        assertEquals(SideQuestAcceptHold.Phase.DISCOVERED, quest.phase());
+
+        quest.acceptHold("hold-unk", "sq-orig-unk", 1);
+        assertEquals("sq-orig-unk", quest.hold().originalRequestId);
+        quest.submitProof(SideQuestAcceptHold.Proof.create(SideQuestAcceptHold.ProofKind.QR, true, false, null));
+        quest.complete();
+        SideQuestAcceptHold.OriginalRecord recovered = quest.recoverOriginal("sq-orig-unk");
+        assertEquals("sq-orig-unk", recovered.originalRequestId);
+        assertEquals(SideQuestAcceptHold.Terminal.COMPLETED, recovered.terminal);
+        assertEquals(SideQuestAcceptHold.Phase.RECOVERED, quest.phase());
+        assertEquals(SideQuestAcceptHold.Failure.ALREADY_TERMINAL,
+                assertThrows(SideQuestAcceptHold.SideQuestException.class,
+                        () -> quest.discover(new SideQuestAcceptHold.Place(8, 3, true, 4, false))).code);
+        assertEquals("sq-orig-unk", quest.original().originalRequestId);
     }
 }
