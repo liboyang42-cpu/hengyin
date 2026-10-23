@@ -1,0 +1,141 @@
+{
+  "repository": "liboyang42-cpu/hengyin",
+  "A": {
+    "candidate": "de31f95da65921101b61a88c6b536cfb57ca0478",
+    "tree": "0996558bee360b3ae07d03efd614c64dc1537a7c",
+    "parent": "6788c741c43d9516aa7c691ca93110677c7e1acb",
+    "delta": [
+      {
+        "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsRegistrationController.java",
+        "sha": "29806316c297d6f74766788173adb9b16d0ae26d",
+        "status": "modified"
+      },
+      {
+        "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsRegistrationMerchantController.java",
+        "sha": "9c63eef0757b7754d3dd2d6a2715258188507cb6",
+        "status": "modified"
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/MerchantRegistrationCancellationMySqlIT.java",
+        "sha": "e4e377ddc62721a6cafc015c6876583be8fd448b",
+        "status": "modified"
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationFundsMybatisIntegrationTest.java",
+        "sha": "deafd09fb0ecb612b050893a9549502c99445c5f",
+        "status": "modified"
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/business/CmsRegistrationControllerSafetyTest.java",
+        "sha": "e7ccf4e70dd16e0da6e315cdc8e81e6470504b18",
+        "status": "modified"
+      },
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CmsRegistrationMerchantMapper.java",
+        "sha": "bcd0002d75206e443dc68713fb8cd8ad69d7c436",
+        "status": "modified"
+      },
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ICmsRegistrationMerchantService.java",
+        "sha": "e9c32970c6ea29beb5f8bac15c505f888d517899",
+        "status": "modified"
+      },
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationMerchantServiceImpl.java",
+        "sha": "2b7789bf33a34fcb0484f67cb8679a9a8b369cb8",
+        "status": "modified"
+      },
+      {
+        "path": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMerchantMapper.xml",
+        "sha": "4d821845d16abe00aaa835cc6134bab8ee9cc1da",
+        "status": "modified"
+      },
+      {
+        "path": "docs/delivery/architecture-day/A-registration-write/README.md",
+        "sha": "beb969a6034639e600ec77fb1b7f1e7a36e793c0",
+        "status": "added"
+      },
+      {
+        "path": "docs/delivery/architecture-day/A-registration-write/SHA256SUMS",
+        "sha": "97982ddd6b55c65ca6fb0e0f2c2db01e2ed27dde",
+        "status": "added"
+      },
+      {
+        "path": "docs/delivery/architecture-day/A-registration-write/callers.txt",
+        "sha": "aecca046290ddaa146f773a566223483f6b44311",
+        "status": "added"
+      },
+      {
+        "path": "docs/delivery/architecture-day/A-registration-write/source-checks.json",
+        "sha": "bc625292a6612efad11635448ffdcbf34e91fffd",
+        "status": "added"
+      },
+      {
+        "path": "docs/delivery/architecture-day/A-registration-write/verification.json",
+        "sha": "4031846476a5b76370476422f03cfdf32ee30344",
+        "status": "added"
+      },
+      {
+        "path": "docs/delivery/architecture-day/A-registration-write/verify_static.py",
+        "sha": "4e13c24665b01bd08beab252f5b93434d268824b",
+        "status": "added"
+      }
+    ],
+    "production_java_xml_files_all_verified": 2720,
+    "production_files_changed_from_public_base": 56,
+    "removed_production_paths": [],
+    "source_snapshot": "public base plus exact candidate production blobs, all caller searches on this view"
+  },
+  "C": {
+    "candidate": "1ebfbf6f6303e0d71bcd787be9e958266e5689b6",
+    "parent": "09b1c1ad317c0f1449aef0ec378f48665638cb82",
+    "files_read": [
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/ThemeRuntimeMySqlIT.java",
+        "sha": "773c1c9916840113b0787e669f40883ea78fb634"
+      },
+      {
+        "path": "chengyinhub-xcx/pages/play/index.js",
+        "sha": "0cc202e2842040e4d3df26ee86d842c9a78088e9"
+      },
+      {
+        "path": "chengyinhub-xcx/tests/lint/ui-integrity-baseline.js",
+        "sha": "164e870fbee9574332d3e21f84deb6dcd4fd5719"
+      },
+      {
+        "path": "chengyinhub-xcx/tests/unit/advanced-game-receipt-contract.test.js",
+        "sha": "43453fbe33279891846baffcc7fb16f68e7ee34c"
+      },
+      {
+        "path": "chengyinhub-xcx/tests/unit/play-qa-photo-upload-contract.test.js",
+        "sha": "8d7cbc7a74adca7b2c0ded40abcebec7116a1dd5"
+      },
+      {
+        "path": "chengyinhub-xcx/tests/unit/play-qa-recovery-contract.test.js",
+        "sha": "091aa5aa7d8890e6badf477d293736c742013a78"
+      },
+      {
+        "path": "chengyinhub-xcx/tests/unit/separate-consent-feature.test.js",
+        "sha": "c1d7eeb35976ac1a702cfaf707dde2ce77c2dea0"
+      },
+      {
+        "path": "docs/delivery/architecture-day/C/evidence/late-consent-closure/node-summary.json",
+        "sha": "385c99ea5879592f13ef97f98153e745f7e632fe"
+      },
+      {
+        "path": "docs/delivery/architecture-day/C/late-consent-closure.md",
+        "sha": "1075e0c550d7f73d9d14ab62e864fde8ebea4ce8"
+      }
+    ],
+    "original_H_counterexample_used_unchanged": true
+  },
+  "governance": {
+    "public_ref": "4a6e3cf",
+    "path": "docs/delivery/architecture-day/COORDINATOR/governance-scope.md",
+    "blob": "083ffae0db6c6c02d019de1b1766e786a2a9af4a"
+  },
+  "initial_H_head": "c99d095ca9e03c2a3820778478c6eb9c6cf5dec6",
+  "java_executed_by_H": 0,
+  "mysql_executed_by_H": 0,
+  "no_dispatch": true
+}

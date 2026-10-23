@@ -1,0 +1,38 @@
+[
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationFundsMybatisIntegrationTest.java",
+    "old": 92,
+    "new": 94,
+    "old_test_bodies_changed_or_removed": [],
+    "added": [
+      "adminEditOfPrepaidPointOrderReturnsOnlyTheOriginalDeductionOnMemberCancellation",
+      "adminEditOfZeroPointOrderCannotMintPointsOrMoveInventoryOnMemberCancellation"
+    ]
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/MerchantRegistrationCancellationMySqlIT.java",
+    "old": 8,
+    "new": 15,
+    "old_test_bodies_changed_or_removed": [],
+    "added": [
+      "adminDeleteCannotEraseWinnerCommittedAfterItsPrecheck",
+      "currentLockReadSeesWinnerCommittedAfterAnOlderRepeatableReadSnapshot",
+      "currentTopicScopeIsRecheckedAfterControllerSnapshot",
+      "legitimateBatchLocksUniqueIdsInAscendingOrderAndDeletesOnlyThoseRows",
+      "missingTargetAndDirectSingleWinnerDeletionBothRejectWithoutChanges",
+      "partialSqlDeleteThenCountMismatchRollsBackTheWholeBatch",
+      "winnerCommittedBetweenBatchPrecheckAndLocksPreservesEveryOriginalRow"
+    ]
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/business/CmsRegistrationControllerSafetyTest.java",
+    "old": 10,
+    "new": 13,
+    "old_test_bodies_changed_or_removed": [],
+    "added": [
+      "genericEditCannotRewriteOriginalPointsInventoryOrBeneficiary",
+      "genericEditDoesNotCopyOriginalIdentityContextOrAuditFacts",
+      "genericEditRequiresAnOriginalIdBeforeCallingWriter"
+    ]
+  }
+]

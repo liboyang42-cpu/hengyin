@@ -1,0 +1,267 @@
+COMMAND node tests/unit/advanced-game-receipt-contract.test.js
+✔ 失败玩法重新进入只恢复结果；明确重试走现有带版本幂等动作 (7.430872ms)
+✔ 非队长、缺服务端重试授权、运行中和未知结果均不能重试 (0.34512ms)
+✔ 重试撞到队长或版本变化，只读权威状态，不自动换版本再次重开 (0.569741ms)
+✔ 多人角色读取权威分配：队长显示标签，队员不可把隐藏角色误写成待分配 (1.913406ms)
+✔ 权威会话的呈现方式和可收尾状态完整递交页面，内嵌不会变成默认全屏 (0.256669ms)
+✔ 提交成功：hydrate 权威状态，不进 unknown (0.340954ms)
+✔ ★负控：响应丢失 ⇒ unknown，不得写成失败，也不得放行重复提交 (0.734184ms)
+✔ unknown 回读发现 version 已前进 ⇒ 判定已落地，清锁且不重发 (0.425208ms)
+✔ ★多人局:version 前进也不算证据 —— 队友的写入同样推高它,不许判成我方已落地 (0.427491ms)
+✔ unknown 回读发现 version 未变 ⇒ 说清没提交成功，才放行重试 (0.346441ms)
+✔ 回读本身也失败 ⇒ 保持 unknown 锁定，不猜结论 (0.46058ms)
+✔ ★同一 version 上重试复用同一幂等键 —— 服务端 replay 才能生效 (0.777307ms)
+✔ 服务端说「状态已更新」⇒ 自动回读权威状态，不让用户拿旧 version 反复重发 (2.000865ms)
+✔ state 缺 version ⇒ 拒发写请求，不拿空幂等键去撞服务端 (0.247766ms)
+✔ ★C-25 榜单请求失败:落「榜单暂时读不到」行内态,不再 unhandled rejection (0.292041ms)
+✔ C-25 榜单成功清掉失败态;业务错也落失败态而不是静默 (0.403897ms)
+✔ 草稿建档走本地kit，提交和重新打开都不请求正式会话 (0.623781ms)
+✔ 限时打字开始业务拒绝发送失败出口，并携带当次局标识 (0.863405ms)
+✔ 限时打字响应丢失按服务器started回读；版本增长不冒充开表事实 (0.65722ms)
+✔ 打字回读缺started事实保持unknown，禁止重复开表直到能核对 (0.557003ms)
+✔ 切换到另一局后旧开表响应不覆盖新局或弹旧失败出口 (0.195528ms)
+✔ CAS二阶段权威回读迟到不能覆盖同节点新局或解除其写锁 (0.516493ms)
+✔ 独立refreshState的迟到响应、返回异局身份、节点上下文变化均不hydrate (0.414693ms)
+✔ unknown权威读返回异局事实时保留锁，不再次写入 (0.178072ms)
+✔ 真实静默重登失败清身份后 start 的旧success回包不改变原组件 (10.689905ms)
+✔ 真实静默重登失败清身份后 start 的旧fail回包不改变原组件 (0.619625ms)
+✔ 真实静默重登失败清身份后 action 的旧success回包不改变原组件 (0.797067ms)
+✔ 真实静默重登失败清身份后 action 的旧fail回包不改变原组件 (0.566166ms)
+✔ 真实静默重登失败清身份后 resolveUnknown 的旧success回包不改变原组件 (0.487159ms)
+✔ 真实静默重登失败清身份后 resolveUnknown 的旧fail回包不改变原组件 (0.49463ms)
+✔ 真实静默重登失败清身份后 loadLeaderboard 的旧success回包不改变原组件 (0.515622ms)
+✔ 真实静默重登失败清身份后 loadLeaderboard 的旧fail回包不改变原组件 (0.462653ms)
+✔ 真实静默重登失败清身份后 refreshState 的旧success回包不改变原组件 (1.07024ms)
+✔ 真实静默重登失败清身份后 refreshState 的旧fail回包不改变原组件 (0.768444ms)
+✔ 同一账号正常续期保留在途回读；身份清空后重新start不永久卡住 (0.301835ms)
+✔ 正常卸载仍按epoch拒绝旧回读，预览启动不新增网络或身份要求 (0.208338ms)
+✔ 同局旧回读不能覆盖新动作或 RUNNING 状态 (0.363437ms)
+✔ 同局旧回读不能覆盖新动作或 COMPLETED 状态 (0.088541ms)
+✔ 同局旧回读不能覆盖新动作或 FAILED 状态 (0.94192ms)
+✔ 同局旧回读不能覆盖新动作或 EXPIRED 状态 (0.086919ms)
+✔ 旧unknown读不以本地高版本猜本人成功，保留锁并允许再次权威核对 (0.215167ms)
+✔ CAS拒绝后的旧回读不倒退视图，仍按拒绝释放锁与抛失败出口 (0.369616ms)
+✔ 同局等版本仍可接受，新局低版本不能被旧局高版本挡住 (0.325691ms)
+✔ 团队挑战不看 config.multiplayer：原命令同键重放核对，不能借队友版本增长判成功 (0.657551ms)
+✔ 团队挑战原键被明确拒绝后读取新状态，保留失败提示，不把版本推进当回执 (0.337348ms)
+✔ 共享挑战旧原键回执迟到不能覆盖新局或解除新局写锁 (0.41311ms)
+✔ 零血恢复必须明确重试，接受同属新会话并解除提交锁 (0.18973ms)
+✔ 零血重试丢失响应后个人局也按原键核对新会话，不能猜版本成功 (0.239714ms)
+✔ 新挑战回执必须属于原会话、原成员和原节点，普通动作不能接受换局 (0.143923ms)
+✔ 已完成一次但恢复次数不足的零血挑战仍需明确继续，普通完成局不允许重试 (0.143512ms)
+✔ Photo 520 保留原 key/输入/expected；个人局回读原动作，版本变化不推断成功 (0.999526ms)
+✔ Photo 已保存原结果但玩法冲突，不清 pending、不换版本重发 (0.308125ms)
+✔ Photo 重启先读取原 session，用户核对才重放原命令，不自动启动另一局 (0.436315ms)
+✔ Photo A UNKNOWN 切 B retry 与 A→B→A 同页迟到均不再发 A 命令 (0.233765ms)
+✔ Photo A 迟到成功仅清 A 原键，不清 B pending，不改变 B UI (0.632043ms)
+✔ Photo 仅显式 intentNotExecuted 释放原记录，缺媒体或存储失败零发送 (0.694265ms)
+✔ Photo 存储写入无异常但无法读回时明确拒绝，不发送原动作 (0.269317ms)
+✔ Photo A→B→A 的旧成功不改新登录代次 UI，原终态只清原存储键 (0.230691ms)
+✔ Photo 在途时调用者改 payload，原发送、原存储和原重试仍冻结首次输入 (0.436926ms)
+✔ 共享高级动作 A UNKNOWN 切 B 及 A→B→A 不得用当前 token 重发旧命令 (0.346832ms)
+ℹ tests 60
+ℹ suites 0
+ℹ pass 60
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 58.897272
+
+COMMAND node tests/unit/play-qa-recovery-contract.test.js
+✔ 真实生命周期:start→emitSession→页面 kit 携带 sessionId/version,拍照链不被误关 (40.426492ms)
+✔ 负控:生命周期视图缺 sessionId/version 时失败关闭并明确提示,不上传 (5.024138ms)
+✔ SUBMIT_QA 未提交网络失败:不重复发、不假完成、基础路线可继续 (6.459849ms)
+✔ SUBMIT_QA 已提交但丢回包:回读判 landed,不重复算完成 (7.243891ms)
+✔ unknown 回读失败后再次恢复(点再核对一次),期间不得提交 (6.024906ms)
+✔ unknown 回读失败后恢复为未提交:可重拍并只成功一次 (4.900085ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 76.052413
+
+COMMAND node tests/unit/separate-consent-feature.test.js
+✔ photo: separate refusal affects only that invocation; acceptance must persist exact scoped document (17.136188ms)
+✔ voice: separate refusal affects only that invocation; acceptance must persist exact scoped document (1.383222ms)
+✔ failed consent persistence and obsolete actor/token/page modal callbacks never authorize provider work (4.471242ms)
+✔ actual play photo handler waits for separate consent and genuine readback before upload and runtime action (28.179099ms)
+✔ actual photo upload without an asset identity never reaches the runtime action (7.35483ms)
+✔ actual photo consent persistence failure sends neither upload nor runtime action (7.322071ms)
+✔ actual play refuse keeps photo private and sends no runtime action (7.126414ms)
+✔ actual play question keeps photo private and sends no runtime action (5.146268ms)
+✔ actual play leave keeps photo private and sends no runtime action (5.303561ms)
+✔ late photo consent fulfilled after aba-rebind cannot affect current card or send work (6.6701ms)
+✔ late photo consent fulfilled after page-epoch cannot affect current card or send work (7.982686ms)
+✔ late photo consent fulfilled after node cannot affect current card or send work (6.447921ms)
+✔ late photo consent fulfilled after page-node cannot affect current card or send work (5.751603ms)
+✔ late photo consent fulfilled after scene cannot affect current card or send work (8.223037ms)
+✔ late photo consent fulfilled after session cannot affect current card or send work (5.738463ms)
+✔ late photo consent fulfilled after version cannot affect current card or send work (5.629343ms)
+✔ late photo consent fulfilled after new-intent cannot affect current card or send work (5.659827ms)
+✔ late photo consent rejected after aba-rebind cannot affect current card or send work (7.053415ms)
+✔ late photo consent rejected after page-epoch cannot affect current card or send work (6.974528ms)
+✔ late photo consent rejected after node cannot affect current card or send work (6.972244ms)
+✔ late photo consent rejected after page-node cannot affect current card or send work (10.778786ms)
+✔ late photo consent rejected after scene cannot affect current card or send work (8.176242ms)
+✔ late photo consent rejected after session cannot affect current card or send work (5.882255ms)
+✔ late photo consent rejected after version cannot affect current card or send work (7.193782ms)
+✔ late photo consent rejected after new-intent cannot affect current card or send work (5.718303ms)
+ℹ tests 25
+ℹ suites 0
+ℹ pass 25
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 205.481008
+
+COMMAND node tests/unit/play-qa-photo-upload-contract.test.js
+✔ 合法 5MiB:真实链上传一次并提交 SUBMIT_QA (36.435951ms)
+✔ 已知 15MiB:共享预检拒绝,不发网络,可操作文案,绝不提交 (4.962247ms)
+✔ 上传在途切到 B 会话:旧回包不得提交到新题,可重新拍 (4.444031ms)
+✔ 同会话版本前进:旧回包同样不得提交 (5.58675ms)
+✔ 非 qa kit 的 shoot 不得上传/提交 (5.451279ms)
+✔ 双击:上传在途时只起一次请求,不静默丢第二张 (4.258408ms)
+✔ advanced-game acting/unknown 时不装成功,给可恢复提示 (4.023ms)
+✔ 未知 size(旧组件):照常上传;失败不提交,换图可重试 (4.619821ms)
+✔ 上传中离页 abort:迟到的成功不得提交 (4.031042ms)
+✔ Photo 上传保留受管 assetId，动作只携带 canonical media 引用 (8.186328ms)
+✔ Photo 上传缺 assetId 时拒绝动作，不回退为 URL 身份 (7.243795ms)
+✔ H-C9: A→B→A 同意记录迟到拒绝不得修改新登录 UI (4.57872ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 12
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 98.664195
+
+COMMAND node tests/unit/advanced-game-object-card-relay.test.js
+✔ ★判过的回包带着卡:session 事件把 objectCard 原样抛给页面 (2.397951ms)
+✔ 回包没带卡(老模板 / 没判过 / 回读):objectCard 为 null,不是 undefined (0.37934ms)
+✔ ★提交被服务端拒(非 200):抛 actionfail,带上动作名 (1.83558ms)
+✔ 状态已更新:回读完也抛 actionfail(这一步没提交) (3.126616ms)
+✔ 响应丢失后回读:明确未执行才 actionfail；回读失败继续保留原照片命令 (2.592368ms)
+✔ 负控:响应丢失但回读证明已写进去 → 不抛 actionfail(那是成功) (0.476804ms)
+✔ 迟到成功动作回执不回退快照，保留有效成功及当次卡片 (3.545836ms)
+✔ 迟到成功动作回执不回退快照，保留有效成功且不制造卡片 (0.303578ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 29.967805
+
+COMMAND node tests/unit/playkit-photocheck-server-judge-contract.test.js
+✔ ★本地算分那套整段删除:不再读像素、不再有 scoreOf / readPixels (1.100515ms)
+✔ ★shoot 事件只给临时路径与大小,不带任何分数 (6.082981ms)
+✔ ★不过时必须把服务端的 lastReason 渲染出来,不能只说「再拍一张」 (0.595529ms)
+✔ 负控:把 reason 的 wxml 节点摘掉,上一条必须红 (0.294024ms)
+✔ ★分发器把 degraded / lastReason 传给组件 —— 少一个绑定,降级与理由都到不了这一屏 (0.586766ms)
+✔ ★降级(degraded)只说「没能审」,不许出现通过 / 不通过这类假结论 (0.570051ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 15.670188
+
+COMMAND node tests/unit/playkit-photocheck-frame-contract.test.js
+✔ ★配了取景轮廓就透传到玩家端视图，不透明度缺省四成 (7.000077ms)
+✔ ★不透明度越界夹回 0 至 100，与后端同一口径 (0.341524ms)
+✔ ★两个键恒产出 —— 分发器绑了 kit.frameUrl，缺一个就是那行绑定静默失效 (0.206856ms)
+✔ ★没配 frameUrl 时点快门还是走 wx.chooseMedia，一条没变 (3.84655ms)
+✔ ★配了 frameUrl 时点快门进取景层，且不去调 chooseMedia (1.643507ms)
+✔ ★取景层按快门 → takePhoto → 抛给页面的仍是 tempFilePath (0.720264ms)
+✔ ★取景器起不来（相机被拒 / 设备不支持）：立刻回落 chooseMedia，玩法照常能完成 (2.104437ms)
+✔ ★轮廓图自己加载失败：只藏掉那条线，取景与快门照常 (0.3318ms)
+✔ ★过了 / 定局之后不再进取景层 (0.739572ms)
+✔ ★取景层与 cy-play-stage 平级，camera 挂 binderror (0.439199ms)
+✔ ★分发器把 frame-url / frame-opacity 喂给组件 (0.221617ms)
+✔ ★客户端不算对齐度：取景不引入任何本地图案判定，shoot 也不带分数 (0.353442ms)
+✔ ★商家端没配轮廓时，编辑页存的配置里不出现空 frameUrl (3.2174ms)
+✔ 负控：把 frameUrl 透传那一行删掉，透传断言必须红 (3.149786ms)
+✔ 负控：去掉不透明度的夹紧，越界值必须能原样漏出去 (3.104965ms)
+✔ 负控：把取景分支的入口条件拆掉，「配了轮廓进取景层」必须红 (0.26429ms)
+✔ ★内嵌呈现下不进取景层 —— 故事流段落会把 fixed 的取景器圈进 190rpx 里 (0.484966ms)
+✔ ★分发器把 inline 传给拍照审核 —— 不传的话上面那条判据永远是 false (0.25755ms)
+✔ ★快门在途点「退出取景」不生效 —— 否则照片照样提交、白吃一次机会 (0.588969ms)
+✔ ★快门连着失败两次就回落选图 —— binderror 不响的那些机型只能靠这条 (1.275694ms)
+ℹ tests 20
+ℹ suites 0
+ℹ pass 20
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 41.525459
+
+COMMAND node tests/unit/object-card-page-lifecycle.test.js
+✔ 藏品册隐藏后迟到图片不重启动画，卸载后列表不更新页面 (3.378218ms)
+✔ 藏品册同页分类后发成功先到时，旧成功不得覆盖最新列表、堆与详情 (4.486083ms)
+✔ 藏品册同页新分类仍在加载时，旧失败不得退回筛选、结束 loading 或改详情 (1.34773ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 15.474398
+
+COMMAND node tests/unit/advanced-game-variants-recovery.test.js
+✔ variants拒绝畸形when而不是只检查存在 (10.658508ms)
+✔ 已支持条件DSL全部正常放行，不新增条件业务规则 (18.559985ms)
+✔ timer量程越界本地拒绝，validate与serialize均生效 (1.441238ms)
+✔ first-match逐条模拟，两条各自合法不能累加误杀 (1.109328ms)
+✔ current-N与=0合法边界保留，越下界与越次数上界拒绝 (1.30028ms)
+✔ 同条多字段作用后统一校验，判定误差允许小数底值 (1.505624ms)
+✔ 全部次数容错字段统一遵守既有0至10合同，=0不会误作负值或收紧 (6.336016ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 47.388863
+
+COMMAND node tests/unit/advanced-game-draw-audio.test.js
+✔ tapping a drawn rhythm toggles its original audio without starting another round (4.895909ms)
+✔ legacy /audio/merchant-games url from server config maps into the subpackage path (0.596751ms)
+✔ packaged component dependency lists every dynamically configured merchant asset (0.685992ms)
+✔ page hide stops rhythm playback instead of leaking audio into the next page (0.40611ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 12.559805
+
+COMMAND node tests/unit/architecture-day-c-intent.test.js
+✔ 同一意图冻结原输入与期望版本，明确完成后相同答案产生新 attempt (2.031389ms)
+✔ 进程恢复只恢复脱敏回执身份，账号与局隔离，存储失败不得发送 (0.814382ms)
+✔ 显式重试不能把原 expectedRouteVersion 换成最新值 (29.623551ms)
+✔ 提交后断网保留原身份，换页面/重启只查询原命令，实体变新版本不改原期望 (10.963588ms)
+✔ A 的预检完成前切到 B，不把 A 的命令用 B token 发出 (9.679628ms)
+✔ 预检发现另一运行时直接阻止写入，不自动绑定新局 (3.327553ms)
+✔ A→B→A 后原登录代次的预检回调不能继续发写 (4.201408ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 66.637745

@@ -1,0 +1,20 @@
+✔ 合法 5MiB:真实链上传一次并提交 SUBMIT_QA (38.303126ms)
+✔ 已知 15MiB:共享预检拒绝,不发网络,可操作文案,绝不提交 (4.690906ms)
+✔ 上传在途切到 B 会话:旧回包不得提交到新题,可重新拍 (4.572011ms)
+✔ 同会话版本前进:旧回包同样不得提交 (5.423619ms)
+✔ 非 qa kit 的 shoot 不得上传/提交 (5.189923ms)
+✔ 双击:上传在途时只起一次请求,不静默丢第二张 (3.666244ms)
+✔ advanced-game acting/unknown 时不装成功,给可恢复提示 (3.928381ms)
+✔ 未知 size(旧组件):照常上传;失败不提交,换图可重试 (3.897445ms)
+✔ 上传中离页 abort:迟到的成功不得提交 (3.814321ms)
+✔ Photo 上传保留受管 assetId，动作只携带 canonical media 引用 (8.177655ms)
+✔ Photo 上传缺 assetId 时拒绝动作，不回退为 URL 身份 (6.551535ms)
+✔ H-C9: A→B→A 同意记录迟到拒绝不得修改新登录 UI (5.16111ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 12
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 98.422746

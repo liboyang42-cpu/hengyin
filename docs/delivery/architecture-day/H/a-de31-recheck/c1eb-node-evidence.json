@@ -1,0 +1,144 @@
+{
+  "candidate": "1ebfbf6f6303e0d71bcd787be9e958266e5689b6",
+  "node": "v24.19.0",
+  "commands": "node each original test file directly; real node:test case summaries",
+  "files": [
+    {
+      "tests": 60,
+      "pass": 60,
+      "fail": 0,
+      "skipped": 0,
+      "file": "advanced-game-receipt-contract.test.js",
+      "exit": 0,
+      "log": "advanced-game-receipt-contract.log"
+    },
+    {
+      "tests": 6,
+      "pass": 6,
+      "fail": 0,
+      "skipped": 0,
+      "file": "play-qa-recovery-contract.test.js",
+      "exit": 0,
+      "log": "play-qa-recovery-contract.log"
+    },
+    {
+      "tests": 25,
+      "pass": 25,
+      "fail": 0,
+      "skipped": 0,
+      "file": "separate-consent-feature.test.js",
+      "exit": 0,
+      "log": "separate-consent-feature.log"
+    },
+    {
+      "tests": 12,
+      "pass": 12,
+      "fail": 0,
+      "skipped": 0,
+      "file": "play-qa-photo-upload-contract.test.js",
+      "exit": 0,
+      "log": "play-qa-photo-upload-contract.log"
+    },
+    {
+      "tests": 8,
+      "pass": 8,
+      "fail": 0,
+      "skipped": 0,
+      "file": "advanced-game-object-card-relay.test.js",
+      "exit": 0,
+      "log": "advanced-game-object-card-relay.log"
+    },
+    {
+      "tests": 6,
+      "pass": 6,
+      "fail": 0,
+      "skipped": 0,
+      "file": "playkit-photocheck-server-judge-contract.test.js",
+      "exit": 0,
+      "log": "playkit-photocheck-server-judge-contract.log"
+    },
+    {
+      "tests": 20,
+      "pass": 20,
+      "fail": 0,
+      "skipped": 0,
+      "file": "playkit-photocheck-frame-contract.test.js",
+      "exit": 0,
+      "log": "playkit-photocheck-frame-contract.log"
+    },
+    {
+      "tests": 3,
+      "pass": 3,
+      "fail": 0,
+      "skipped": 0,
+      "file": "object-card-page-lifecycle.test.js",
+      "exit": 0,
+      "log": "object-card-page-lifecycle.log"
+    },
+    {
+      "tests": 7,
+      "pass": 7,
+      "fail": 0,
+      "skipped": 0,
+      "file": "advanced-game-variants-recovery.test.js",
+      "exit": 0,
+      "log": "advanced-game-variants-recovery.log"
+    },
+    {
+      "tests": 4,
+      "pass": 4,
+      "fail": 0,
+      "skipped": 0,
+      "file": "advanced-game-draw-audio.test.js",
+      "exit": 0,
+      "log": "advanced-game-draw-audio.log"
+    },
+    {
+      "tests": 7,
+      "pass": 7,
+      "fail": 0,
+      "skipped": 0,
+      "file": "architecture-day-c-intent.test.js",
+      "exit": 0,
+      "log": "architecture-day-c-intent.log"
+    }
+  ],
+  "totals": {
+    "tests": 158,
+    "pass": 158,
+    "fail": 0,
+    "skipped": 0
+  },
+  "unchanged_H_original_counterexample": {
+    "tests": 12,
+    "pass": 12,
+    "fail": 0,
+    "skipped": 0,
+    "overlaps_current_158": true,
+    "original_fixture_and_test_body_unchanged": true,
+    "compiled_current_page_and_actual_helpers": true
+  },
+  "new_consent_matrix": {
+    "tests": 25,
+    "old_tests": 9,
+    "added_cases": 16,
+    "scope": "fulfilled/rejected x eight stale captured contexts; current error feedback retained"
+  },
+  "not_claimed": [
+    "whole miniprogram",
+    "backend Java/MySQL",
+    "final integrated source",
+    "WeChat simulator/device",
+    "real provider"
+  ],
+  "evidence_files": [
+    {
+      "path": "c1eb-h-original-consent.txt",
+      "sha256": "7eae93d13e2e159afe63580c88cab44ce4c478c6c68c33dc07c9fd4717884635"
+    },
+    {
+      "path": "c1eb-node-158.txt",
+      "sha256": "8a82e891d4841e9e22ec3d9703fcc6551f5767bce5db3999ffc966d257992924"
+    }
+  ]
+}

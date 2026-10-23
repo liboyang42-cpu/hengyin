@@ -1,0 +1,37 @@
+{
+  "layer": "STATIC_SOURCE_ONLY",
+  "put_new_instance_copy_fields": [
+    "Id",
+    "ActivityTitle",
+    "TicketName",
+    "RealName",
+    "Phone",
+    "Email",
+    "Address",
+    "AddressId"
+  ],
+  "controller_annotation_comparisons": [
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsRegistrationController.java",
+      "count": 21,
+      "annotations_unchanged_from_public_base": true,
+      "sha256": "16767b31b2d6d5ba48e0a6aa2795ab0fa5860f10f88efb4ded20b3d76c18b002"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsRegistrationMerchantController.java",
+      "count": 23,
+      "annotations_unchanged_from_public_base": true,
+      "sha256": "7e3997f7a17c50a759cf87a7488d411379a640fac15deb9c09fddfb922a5739e"
+    }
+  ],
+  "delete_all_sorted_locks_precede_current_scope_and_audit_validation": true,
+  "delete_count_mismatch_throws": true,
+  "new_lock_query_cache_flags_and_FOR_UPDATE_verified": true,
+  "no_main_production_caller_uses_raw_single_mapper_delete": true,
+  "raw_admin_POST_is_still_direct_unvalidated_insert": true,
+  "open_new_finding": "H-ADE31-01",
+  "H_A136_01_and_02": "source mechanisms repaired; Java/MySQL validation pending",
+  "java_executed": 0,
+  "mysql_executed": 0,
+  "patch_apply_check": "PASS on exact de31 class; new POST test uncompiled/unrun"
+}

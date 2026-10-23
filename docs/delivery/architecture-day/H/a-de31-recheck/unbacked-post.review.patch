@@ -1,0 +1,60 @@
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationFundsMybatisIntegrationTest.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationFundsMybatisIntegrationTest.java
+@@ -362,6 +362,57 @@
+     }
+
+     @Test
++    void bareAdminPostCannotCreateUnbackedPointsOrInventoryToRelease() throws Exception {
++        execute("UPDATE oms_ticket SET remaining_inventory=10,start_time=DATE_ADD(NOW(),INTERVAL 10 DAY),"
++                        + "end_time=DATE_ADD(NOW(),INTERVAL 11 DAY) WHERE id=9",
++                "UPDATE cms_activity SET start_date=DATE_ADD(NOW(),INTERVAL 10 DAY),"
++                        + "end_date=DATE_ADD(NOW(),INTERVAL 11 DAY) WHERE id=55",
++                "INSERT INTO ums_member(id,status,point,del_flag) VALUES (8,1,37,0)");
++        // A genuine zero-point order reserves one seat, leaving room below the restoration cap.
++        CmsRegistration genuine = registrationService.createRegistration(7L, 2, 55L, 9L, 0,
++                "real reservation", "fixture-contact", null, null, 1, null, null, null);
++        assertNotNull(genuine.getId());
++        assertEquals(9, number("SELECT remaining_inventory FROM oms_ticket WHERE id=9"));
++        long flowsBefore = number("SELECT COUNT(*) FROM ums_member_points_detail");
++        CmsRegistration forged = new CmsRegistration();
++        forged.setRegistrationNo("H-ADMIN-UNBACKED-POST");
++        forged.setOwnerType(2L); forged.setOwnerId(55L); forged.setTicketId(9L);
++        forged.setTicketPrice(new BigDecimal("10.00")); forged.setMemberId(8L); forged.setOrderNum(1L);
++        forged.setOriginalAmount(new BigDecimal("10.00"));
++        forged.setTotalAmount(new BigDecimal("10.00")); forged.setPayableAmount(new BigDecimal("10.00"));
++        forged.setPointUsed(1000L); forged.setPointsReturned(0);
++        forged.setPaymentStatus(0); forged.setRegistrationStatus(1); forged.setVerificationStatus(0);
++        forged.setPayExpireTime(new java.util.Date(System.currentTimeMillis() + 600_000L));
++        com.chengyinhub.web.controller.business.CmsRegistrationController handler =
++                new com.chengyinhub.web.controller.business.CmsRegistrationController();
++        ReflectionTestUtils.setField(handler, "cmsRegistrationService", registrationService);
++        com.chengyinhub.common.core.domain.entity.SysUser admin =
++                new com.chengyinhub.common.core.domain.entity.SysUser(); admin.setUserId(1L);
++        com.chengyinhub.common.core.domain.model.LoginUser login =
++                new com.chengyinhub.common.core.domain.model.LoginUser(1L, null, admin,
++                        java.util.Set.of("business:registration:add"));
++        org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(
++                new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
++                        login, null, java.util.Collections.emptyList()));
++        com.chengyinhub.common.core.domain.AjaxResult result;
++        try { result = handler.add(forged); }
++        finally { org.springframework.security.core.context.SecurityContextHolder.clearContext(); }
++        if (Integer.valueOf(200).equals(result.get("code"))) {
++            // The current bare POST echoes no order identity in its transport body; generated key is on the DTO.
++            assertNotNull(forged.getId(), "accepted registration must expose a stable original identity");
++            assertTrue(registrationService.cancelRegistration(forged.getId(), 8L, "original-member"));
++        } else {
++            assertEquals(0, number("SELECT COUNT(*) FROM cms_registration WHERE registration_no='H-ADMIN-UNBACKED-POST'"));
++        }
++        assertEquals(37, number("SELECT point FROM ums_member WHERE id=8"),
++                "a bare admin-created row must not invent 1000 refundable points");
++        assertEquals(100, number("SELECT point FROM ums_member WHERE id=7"));
++        assertEquals(9, number("SELECT remaining_inventory FROM oms_ticket WHERE id=9"),
++                "the genuine reservation still owns its seat; POST never reserved another seat");
++        assertEquals(flowsBefore, number("SELECT COUNT(*) FROM ums_member_points_detail"));
++    }
++
++    @Test
+     void adminEditOfZeroPointOrderCannotMintPointsOrMoveInventoryOnMemberCancellation() throws Exception {
+         assertAdminEditCannotRewriteCancellationBasis(0, 0L);
+     }
