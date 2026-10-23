@@ -133,4 +133,29 @@ class C02AccountSwitchRestartIsolationTest {
         assertNull(unwritten.get("requestId"));
         assertFalse(run.getThemeRuntime().path("sources").has("story:1:clue_page"));
     }
+
+    @Test
+    void readCardOfNeverSeenIdDoesNotOccupyGrowthResetThenUniqueResetApplies() {
+        TopicRouteEngine.State run = state();
+        enableInventory(run);
+        CharacterGrowthSourceAdapter adapter = new CharacterGrowthSourceAdapter();
+        RpgAdapterContext unseen = recoveryContext(run, "c02-growth-never", 7L);
+        Map<String, Object> card = adapter.readCard(unseen);
+        assertEquals("c02-growth-never", card.get("requestId"));
+        assertEquals(Boolean.FALSE, card.get("replay"));
+        assertFalse(run.getThemeRuntime().path("sources").has("growth-reset:c02-growth-never"));
+        assertEquals(7, run.getVariables().get("counter.temp_buff").intValue(), "未见 id 回读不得归零");
+        assertEquals(2, run.getVariables().get("sys.hp").intValue());
+
+        Map<String, Object> first = adapter.resetIfRecovery(unseen);
+        assertEquals(Boolean.TRUE, first.get("applied"));
+        assertEquals("c02-growth-never", first.get("requestId"));
+        assertTrue(run.getThemeRuntime().path("sources").path("growth-reset:c02-growth-never").asBoolean());
+
+        Map<String, Object> replay = adapter.resetIfRecovery(unseen);
+        assertEquals(Boolean.FALSE, replay.get("applied"));
+        assertEquals(Boolean.TRUE, replay.get("replay"));
+        assertEquals("c02-growth-never", replay.get("requestId"));
+        assertEquals(1, run.getThemeRuntime().path("sources").size());
+    }
 }
