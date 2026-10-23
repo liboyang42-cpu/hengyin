@@ -256,6 +256,16 @@
         "com.chengyinhub.business.it.P0FreeExploreSupplyGateMySqlIT",
         "com.chengyinhub.business.it.P0DeregistrationMySqlIT"
       ]
+    },
+    "architecture-day-batch1": {
+      "lineage": "Public2ec architecture day A/C/D isolated assembled candidate",
+      "registered_source": "6b641ad1046e1736aa6d5d4988a55d325926b4bf",
+      "note": "Declaration inventory from assembled source; subsequent coordinator harness env/cleanup and registry-only wiring recorded separately. Receipts must bind actual dispatched source_sha. Original classes/counts unchanged.",
+      "classes": [
+        "com.chengyinhub.business.service.impl.CashWithdrawFundEvidenceMySqlIT",
+        "com.chengyinhub.business.service.impl.OfficialBroadcastDeliveryMySqlIT",
+        "com.chengyinhub.business.it.ClubLeadChapterIntentMySqlIT"
+      ]
     }
   },
   "classes": {
@@ -602,6 +612,31 @@
       "tests": 1,
       "storage": ["mysql"],
       "gates": {}
+    },
+    "com.chengyinhub.business.service.impl.CashWithdrawFundEvidenceMySqlIT": {
+      "tests": 19,
+      "storage": [
+        "mysql"
+      ],
+      "gates": {},
+      "database_base": "architecture_a",
+      "note": "Architecture day A: actual source declares19 tests. Original debit/submit intent/refund evidence and transaction races; provider is a stub."
+    },
+    "com.chengyinhub.business.service.impl.OfficialBroadcastDeliveryMySqlIT": {
+      "tests": 7,
+      "storage": [
+        "mysql"
+      ],
+      "gates": {},
+      "note": "Architecture day D: explicit class selection and required MyBatis connection env; actual IM Mapper/transaction with stub WeChat. No extra unregistered gate."
+    },
+    "com.chengyinhub.business.it.ClubLeadChapterIntentMySqlIT": {
+      "tests": 3,
+      "storage": [
+        "mysql"
+      ],
+      "gates": {},
+      "note": "Architecture day C: explicit isolated connection env, atomic chapter/receipt, concurrent handover; exact owned schema cleanup."
     }
   }
 }

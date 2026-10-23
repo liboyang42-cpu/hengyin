@@ -508,6 +508,27 @@ jobs:
           CHENGYIN_TEST_MYSQL_PORT: ${{ env.IT_PORT }}
           CHENGYIN_TEST_MYSQL_USER: root
           CHENGYIN_TEST_MYSQL_PASSWORD: root
+      - name: Record backend test report identity
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import hashlib, json, os, pathlib, subprocess
+          reports = sorted(pathlib.Path('.').glob('chengyinhub-*/target/surefire-reports/TEST-*.xml'))
+          identity = {'source_sha': subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
+                      'run_id': os.environ['GITHUB_RUN_ID'], 'run_attempt': os.environ['GITHUB_RUN_ATTEMPT'],
+                      'reports_sha256': {p.as_posix(): hashlib.sha256(p.read_bytes()).hexdigest() for p in reports}}
+          pathlib.Path('backend-test-identity.json').write_text(json.dumps(identity, indent=2) + '\n')
+          PY
+      - name: Preserve backend test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-reports-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            chengyinhub-*/target/surefire-reports/TEST-*.xml
+            backend-test-identity.json
+          retention-days: 1
+          if-no-files-found: error
       - name: Verify isolated full application startup
         run: |
           python3 -I ci/test_upgrade_startup_network.py

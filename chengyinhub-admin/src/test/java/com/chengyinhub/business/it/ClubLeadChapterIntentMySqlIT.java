@@ -25,6 +25,8 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 import java.io.InputStream;
 import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.Statement;
 import java.util.*;
 import java.util.concurrent.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -37,11 +39,17 @@ class ClubLeadChapterIntentMySqlIT {
     private static SqlSessionTemplate sql;
     private static DataSourceTransactionManager transactions;
     private static JdbcTemplate jdbc;
+    private static String ownedSchema;
     private ApiClubLeadController controller;
 
     @BeforeAll static void schema() throws Exception {
+        for (String key : new String[]{"HOST", "PORT", "USER", "PASSWORD", "DB_SUFFIX"}) {
+            assertNotNull(System.getenv("CHENGYIN_MYBATIS_IT_" + key), "Explicit isolated MySQL binding required: " + key);
+        }
+        assertTrue(System.getenv("CHENGYIN_MYBATIS_IT_DB_SUFFIX").matches("_[a-z0-9_]+"));
         assertEquals("127.0.0.1", MybatisItDatabase.host());
         ds = new PooledDataSource("com.mysql.cj.jdbc.Driver", MybatisItDatabase.url("c_chapter_intent"), MybatisItDatabase.user(), MybatisItDatabase.password());
+        ownedSchema = MybatisItDatabase.databaseName("c_chapter_intent");
         try (Connection connection = ds.getConnection()) {
             ItSchema.apply(connection, "it-schema/run41-prod-ddl.sql");
             ItSchema.applyMigrations(connection, "sql/migration_club_lead.sql", "sql/migration_club_role_assignment_20260823.sql", "sql/migration_20260823_game_session_runtime.sql");
@@ -56,6 +64,17 @@ class ClubLeadChapterIntentMySqlIT {
         }
         SqlSessionFactoryBean factory = new SqlSessionFactoryBean(); factory.setDataSource(ds); factory.setConfiguration(config);
         sql = new SqlSessionTemplate(factory.getObject()); transactions = new DataSourceTransactionManager(ds); jdbc = new JdbcTemplate(ds);
+    }
+
+    @AfterAll static void cleanupOwnedSchema() throws Exception {
+        if (ds != null) ds.forceCloseAll();
+        if (ownedSchema == null) return;
+        assertTrue(ownedSchema.matches("chengyin_mybatis_c_chapter_intent_[a-z0-9_]+"));
+        try (Connection connection = DriverManager.getConnection("jdbc:mysql://127.0.0.1:" + MybatisItDatabase.port()
+                + "/?useSSL=false&allowPublicKeyRetrieval=true", MybatisItDatabase.user(), MybatisItDatabase.password());
+             Statement statement = connection.createStatement()) {
+            statement.executeUpdate("DROP DATABASE `" + ownedSchema + "`");
+        }
     }
 
     @BeforeEach void seed() {

@@ -62,7 +62,6 @@ class OfficialBroadcastDeliveryMySqlIT {
 
     @BeforeAll
     void setup() throws Exception {
-        assertEquals("1", required("CHENGYIN_BROADCAST_MYSQL_IT"), "explicit execution gate required");
         int port = Integer.parseInt(required("CHENGYIN_MYBATIS_IT_PORT"));
         assertTrue(port > 0 && port <= 65535);
         String user = required("CHENGYIN_MYBATIS_IT_USER");
