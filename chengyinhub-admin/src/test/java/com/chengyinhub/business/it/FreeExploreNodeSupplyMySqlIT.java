@@ -68,7 +68,9 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.ArgumentMatchers.*;
 
 /**
  * 自由探索商家验收卡的**真库**一截:SC-FREE-NODE-EDIT(M1/M2)、SC-FREE-SUPPLY(M3)、SC-FREE-TERMS(M4)。
@@ -552,6 +554,14 @@ class FreeExploreNodeSupplyMySqlIT {
         ReflectionTestUtils.setField(offers, "registrationEntitlementMapper", entitlements);
         ReflectionTestUtils.setField(offers, "businessNotice", notice);
         ReflectionTestUtils.setField(offers, "notifyService", notify);
+        com.chengyinhub.business.service.ISystemNotificationIntentService ownerIntents =
+                mock(com.chengyinhub.business.service.ISystemNotificationIntentService.class);
+        when(ownerIntents.findIntentId(anyString())).thenReturn(null);
+        when(ownerIntents.enqueue(anyLong(), anyInt(), anyString(), nullable(String.class), anyString())).thenReturn(9001L);
+        ReflectionTestUtils.setField(offers, "systemNotificationIntents", ownerIntents);
+        ReflectionTestUtils.setField(offers, "imService", mock(com.chengyinhub.business.service.IImService.class));
+        ReflectionTestUtils.setField(offers, "ownerNoticeWxChannel", mock(com.chengyinhub.business.notify.WxSubscribeChannel.class));
+        ReflectionTestUtils.setField(offers, "ownerNoticeExecutor", mock(java.util.concurrent.ScheduledExecutorService.class));
         ReflectionTestUtils.setField(offers, "applicationMapper", applicationMapper);
         ReflectionTestUtils.setField(offers, "cmsTopicService", topicService);
         ReflectionTestUtils.setField(offers, "chapterMapper", chapterMapper);
