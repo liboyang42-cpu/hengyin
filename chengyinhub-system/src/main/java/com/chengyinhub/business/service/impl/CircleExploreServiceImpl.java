@@ -31,6 +31,7 @@ import java.util.Set;
 /** 跨天、任意顺序的玩家自助记录；不写任何商家履约事实。 */
 @Service
 public class CircleExploreServiceImpl implements ICircleExploreService {
+    private static final int INVITE_CODE_ATTEMPTS = 3;
     @Autowired private CircleExploreMapper exploreMapper;
     @Autowired private CmsTopicMapper topicMapper;
     @Autowired private ICircleThemeSupplyService supplyService;
@@ -56,14 +57,26 @@ public class CircleExploreServiceImpl implements ICircleExploreService {
         CircleExploreSession session = new CircleExploreSession();
         session.setTopicId(topicId);
         session.setOwnerMemberId(memberId);
-        session.setInviteCode(UUID.randomUUID().toString().replace("-", "")
-                .substring(0, 8).toUpperCase());
         session.setStatus("ACTIVE");
-        if (exploreMapper.insertSession(session) != 1 || session.getId() == null) {
-            throw new IllegalStateException("创建探索会话失败");
-        }
+        insertSessionWithFreshInviteCode(session);
         exploreMapper.insertMember(session.getId(), memberId);
         return session;
+    }
+
+    /** 邀请码有唯一键；撞码换一个重试，不把偶发撞码变成「创建失败」。 */
+    private void insertSessionWithFreshInviteCode(CircleExploreSession session) {
+        for (int attempt = 1; ; attempt++) {
+            session.setInviteCode(UUID.randomUUID().toString().replace("-", "")
+                    .substring(0, 8).toUpperCase());
+            try {
+                if (exploreMapper.insertSession(session) != 1 || session.getId() == null) {
+                    throw new IllegalStateException("创建探索会话失败");
+                }
+                return;
+            } catch (DuplicateKeyException duplicate) {
+                if (attempt >= INVITE_CODE_ATTEMPTS) throw new IllegalStateException("创建探索会话失败，请重试");
+            }
+        }
     }
 
     @Override
