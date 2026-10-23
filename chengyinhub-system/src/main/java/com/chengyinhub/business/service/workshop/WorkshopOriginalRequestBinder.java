@@ -97,7 +97,9 @@ public final class WorkshopOriginalRequestBinder {
 
     /**
      * Record UNKNOWN for an already-bound id. Does not clear original intent
-     * and does not allocate a new requestId.
+     * and does not allocate a new requestId. A never-seen id must not occupy
+     * the ledger, or a later unique writer becomes a replay of minted UNKNOWN.
+     * APPLIED / WAITING_SOURCE / REJECTED original outcomes are not clobbered.
      */
     public Map<String, Object> markUnknown(String requestId, String reason) {
         if (requestId == null || requestId.isBlank()) {
@@ -105,8 +107,16 @@ public final class WorkshopOriginalRequestBinder {
         }
         Entry entry = byRequestId.get(requestId);
         if (entry == null) {
-            entry = new Entry(requestId, "recover");
-            byRequestId.put(requestId, entry);
+            return unknown(requestId, null, reason == null ? UNKNOWN : reason);
+        }
+        if (APPLIED.equals(entry.status) || WAITING_SOURCE.equals(entry.status) || REJECTED.equals(entry.status)) {
+            Map<String, Object> kept = copy(entry.result);
+            kept.put("originalRequestId", entry.requestId);
+            kept.put("status", entry.status);
+            kept.put("clearedOriginalIntent", Boolean.FALSE);
+            kept.put("mintedNewRequestId", Boolean.FALSE);
+            kept.put("projectionTakenAsSuccess", Boolean.FALSE);
+            return kept;
         }
         Map<String, Object> stored = entry.result == null ? new LinkedHashMap<>() : copy(entry.result);
         stored.put("originalRequestId", requestId);

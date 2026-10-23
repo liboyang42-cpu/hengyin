@@ -150,6 +150,30 @@ class C10AccountSwitchRestartIsolationTest {
         assertFalse(js.projectionTakenAsSuccess());
     }
 
+    @Test
+    void markUnknownOfNeverSeenIdDoesNotOccupyLedgerThenImportApplies() {
+        WorkshopOriginalRequestBinder ledger = new WorkshopOriginalRequestBinder();
+        Map<String, Object> marked = ledger.markUnknown("c10-mark-never-seen", "server receipt UNKNOWN");
+        assertEquals("c10-mark-never-seen", marked.get("originalRequestId"));
+        assertEquals(WorkshopOriginalRequestBinder.UNKNOWN, marked.get("status"));
+        assertFalse(Boolean.TRUE.equals(marked.get("mintedNewRequestId")));
+        assertNull(ledger.existing("c10-mark-never-seen"));
+
+        WorkshopRunServerVerification verify = new WorkshopRunServerVerification(ledger);
+        WorkshopRunServerVerification.Decision recovered = verify.recoverUnknown("c10-mark-never-seen");
+        assertEquals("c10-mark-never-seen", recovered.originalRequestId());
+        assertEquals(WorkshopRunServerVerification.Outcome.UNKNOWN, recovered.outcome());
+        assertFalse(recovered.mintedNewRequestId());
+        assertNull(ledger.existing("c10-mark-never-seen"));
+
+        WorkshopModuleImportGate later = new WorkshopModuleImportGate(ledger);
+        WorkshopModuleImportGate.Decision firstWrite = later.importPreview(qmod("c10-mark-never-seen", "mod-later"));
+        assertEquals(WorkshopModuleImportGate.Outcome.WAITING_SOURCE, firstWrite.outcome());
+        assertEquals("c10-mark-never-seen", firstWrite.originalRequestId());
+        assertEquals(WorkshopOriginalRequestBinder.WAITING_SOURCE, ledger.existing("c10-mark-never-seen").status());
+        assertFalse(Boolean.TRUE.equals(ledger.existing("c10-mark-never-seen").result().get("replay")));
+    }
+
     private static WorkshopModuleImportGate.Manifest qmod(String originalRequestId, String moduleId) {
         return new WorkshopModuleImportGate.Manifest(
                 originalRequestId, moduleId, "1.0.0", CONTENT, 1, "qmod",

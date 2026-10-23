@@ -10,7 +10,7 @@ Base：`origin/master` `2ec68899099a1e250df0949a8383bf85b5d3ffe0`
 
 生产（仅新目录 `chengyinhub-system/.../service/workshop/`）：
 
-- `WorkshopOriginalRequestBinder.java` `ccc0d447bbc143feebd684af3644ef38bec0c4dfad7186b34eefc31866b0e0c3`
+- `WorkshopOriginalRequestBinder.java` `69c64c095d4d2508a04e08142023a148ec666ba16ac4a5c7a78497329cbada2c`
 - `WorkshopModuleImportGate.java` `6d2f9aa265f0be3465b4f9a107ef857e96601cc4a775724aa6be29640c385e1d`
 - `WorkshopPackageVersionPublish.java` `b2bba3df5de1292b307e09297c62160c95686d4b245963c97869fca79a2b2701`
 - `WorkshopInstallUpgradeRollback.java` `d838164d2c58bccfcd33e899e7af4319b299b1f8947ec67263e613c5bcd979ac`
@@ -99,6 +99,7 @@ BUILD SUCCESS
 - 生产接线：import / freeze / install / verify 尚未挂 Mapper（禁止本组改 Mapper）。
 - qmod / H5 SDK 原文未签收前，导入与安装不得变绿。
 - iOS 独占投影另开 C10-ios 云端线，不在本 PR。
+- 不要对未见过的 requestId 做 `markUnknown`/`recover` 时 `put` 进账本；未见过只回 UNKNOWN 且 `existing==null`。
 
 ## 7. Needed hook（do not apply here）
 
