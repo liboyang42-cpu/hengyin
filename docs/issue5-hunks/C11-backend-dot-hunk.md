@@ -24,7 +24,7 @@ Head：`628996ae99e921c81285b2e144956f25042e3aa7`（本文件若再提交会前�
 - `VersionedLocaleDisplayTest.java`
 - `ReviewResultVisibilityAdapterTest.java`
 - `C11FirstJourneyIsolationTest.java`
-- `C11AccountSwitchRestartIsolationTest.java`（换 request 不改写原 UNKNOWN；缺 requestId 保持 Java null）
+- `C11AccountSwitchRestartIsolationTest.java`（换 request 不改写原 UNKNOWN；缺 requestId 保持 Java null；recoverOriginal 未见 id 不占账再唯一写入）
 - `InMemoryOriginalEventSource.java`（隔离夹具，只装原 `BusinessAuditEvent`）
 
 未改：JWT / RBAC / 政策、生产配置、Controller / Mapper / migration、`TopicRouteRuntimeServiceImpl`、`CmsTopicServiceImpl`、`RouteEffects`、小程序、旧 `chengyin` 仓。无生产 DDL。无共享文件 hunk。
@@ -111,3 +111,17 @@ SHA256（生产 5 类）：
 - 生产接线：`OriginalEventSource` / `FrozenTermsSource` 尚未挂到 Mapper（禁止本组改 Mapper）。
 - 支持台 UI / Controller 未做（禁止本组加公共 Controller）。
 - 真实 App / 商店 / 备案旅程属 C12 与运营门禁，本组未跑。
+
+## 7. Parent addendum 2026-10-23 16:58 America/Los_Angeles
+
+`C11AccountSwitchRestartIsolationTest.recoverOriginalOfNeverSeenIdDoesNotOccupyThenUniqueWriteApplies`：未见 `c11-never-seen` 抛 `IllegalStateException` 且 `findByRequestId` 仍空；后续唯一 `add` 才是第一笔写入。保留 throw。
+
+父进程独立 surefire（`/tmp/hengyin-c11`，HEAD `f893e3e80`，2026-10-23T23:58:38Z）：
+
+```
+Tests run: 4, Failures: 0, Errors: 0, Skipped: 0 -- C11AccountSwitchRestartIsolationTest
+Tests run: 22, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS
+```
+
+App / HTTP / MySQL / CI = NOT_RUN。不是 100%。
