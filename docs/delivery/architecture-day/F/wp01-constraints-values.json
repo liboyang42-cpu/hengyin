@@ -1,0 +1,440 @@
+{
+  "frozen_dependency_baseline_sha256": "8368e2a85a5f9f561f202f6831591cf44e3bb77e5d5961b34ee1802fff1e7a3b",
+  "kind": "READ_ONLY_SOURCE_VALUES_NOT_CI_OR_BYTECODE_PROOF",
+  "values": {
+    "2ec68899099a1e250df0949a8383bf85b5d3ffe0": {
+      "cross_module_imports": 3508,
+      "edge_witnesses": [
+        {
+          "source_owner": "chengyinhub-admin",
+          "target_owner": "chengyinhub-common",
+          "witness": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/AdminFileUploadService.java#type:com.chengyinhub.common.config.RuoYiConfig"
+        },
+        {
+          "source_owner": "chengyinhub-admin",
+          "target_owner": "chengyinhub-framework",
+          "witness": "chengyinhub-admin/pom.xml#chengyinhub-framework"
+        },
+        {
+          "source_owner": "chengyinhub-admin",
+          "target_owner": "chengyinhub-generator",
+          "witness": "chengyinhub-admin/pom.xml#chengyinhub-generator"
+        },
+        {
+          "source_owner": "chengyinhub-admin",
+          "target_owner": "chengyinhub-quartz",
+          "witness": "chengyinhub-admin/pom.xml#chengyinhub-quartz"
+        },
+        {
+          "source_owner": "chengyinhub-admin",
+          "target_owner": "chengyinhub-system",
+          "witness": "chengyinhub-admin/src/main/java/com/chengyinhub/business/util/PlayNarrativeSupport.java#type:com.chengyinhub.business.domain.CmsTopicNode"
+        },
+        {
+          "source_owner": "chengyinhub-framework",
+          "target_owner": "chengyinhub-common",
+          "witness": "chengyinhub-framework/src/main/java/com/chengyinhub/framework/aspectj/CriticalPathInterceptor.java#type:com.chengyinhub.common.annotation.CriticalPath"
+        },
+        {
+          "source_owner": "chengyinhub-framework",
+          "target_owner": "chengyinhub-system",
+          "witness": "chengyinhub-framework/pom.xml#chengyinhub-system"
+        },
+        {
+          "source_owner": "chengyinhub-generator",
+          "target_owner": "chengyinhub-common",
+          "witness": "chengyinhub-generator/pom.xml#chengyinhub-common"
+        },
+        {
+          "source_owner": "chengyinhub-quartz",
+          "target_owner": "chengyinhub-common",
+          "witness": "chengyinhub-quartz/pom.xml#chengyinhub-common"
+        },
+        {
+          "source_owner": "chengyinhub-system",
+          "target_owner": "chengyinhub-common",
+          "witness": "chengyinhub-system/pom.xml#chengyinhub-common"
+        }
+      ],
+      "exact_private_imports": 53,
+      "graph_complete": false,
+      "modules": [
+        "chengyinhub-admin",
+        "chengyinhub-common",
+        "chengyinhub-framework",
+        "chengyinhub-generator",
+        "chengyinhub-quartz",
+        "chengyinhub-system"
+      ],
+      "resolved_module_edges": [
+        [
+          "chengyinhub-admin",
+          "chengyinhub-common"
+        ],
+        [
+          "chengyinhub-admin",
+          "chengyinhub-framework"
+        ],
+        [
+          "chengyinhub-admin",
+          "chengyinhub-generator"
+        ],
+        [
+          "chengyinhub-admin",
+          "chengyinhub-quartz"
+        ],
+        [
+          "chengyinhub-admin",
+          "chengyinhub-system"
+        ],
+        [
+          "chengyinhub-framework",
+          "chengyinhub-common"
+        ],
+        [
+          "chengyinhub-framework",
+          "chengyinhub-system"
+        ],
+        [
+          "chengyinhub-generator",
+          "chengyinhub-common"
+        ],
+        [
+          "chengyinhub-quartz",
+          "chengyinhub-common"
+        ],
+        [
+          "chengyinhub-system",
+          "chengyinhub-common"
+        ]
+      ],
+      "resolved_scc": [],
+      "shared_packages": {
+        "com.chengyinhub.business.util": [
+          "chengyinhub-admin",
+          "chengyinhub-system"
+        ]
+      },
+      "source_units_by_physical_module": {
+        "chengyinhub-admin": 280,
+        "chengyinhub-common": 151,
+        "chengyinhub-framework": 60,
+        "chengyinhub-generator": 13,
+        "chengyinhub-quartz": 23,
+        "chengyinhub-system": 1900
+      },
+      "unknown": {
+        "FULLY_QUALIFIED_USAGE_NOT_RESOLVED": 178,
+        "JAVA_TEXT_BLOCK_OR_UNICODE_ESCAPE": 13,
+        "SHARED_PACKAGE_IMPLICIT_TYPE_USAGE_NOT_RESOLVED": 21,
+        "UNRESOLVED_LOCAL_IMPORT": 88,
+        "WILDCARD_IMPORT": 92
+      }
+    },
+    "527adf3fe003b6e9022c255f9e7a3716a9aabe95": {
+      "cross_module_imports": 3508,
+      "edge_witnesses": [
+        {
+          "source_owner": "chengyinhub-admin",
+          "target_owner": "chengyinhub-common",
+          "witness": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/AdminFileUploadService.java#type:com.chengyinhub.common.config.RuoYiConfig"
+        },
+        {
+          "source_owner": "chengyinhub-admin",
+          "target_owner": "chengyinhub-framework",
+          "witness": "chengyinhub-admin/pom.xml#chengyinhub-framework"
+        },
+        {
+          "source_owner": "chengyinhub-admin",
+          "target_owner": "chengyinhub-generator",
+          "witness": "chengyinhub-admin/pom.xml#chengyinhub-generator"
+        },
+        {
+          "source_owner": "chengyinhub-admin",
+          "target_owner": "chengyinhub-quartz",
+          "witness": "chengyinhub-admin/pom.xml#chengyinhub-quartz"
+        },
+        {
+          "source_owner": "chengyinhub-admin",
+          "target_owner": "chengyinhub-system",
+          "witness": "chengyinhub-admin/src/main/java/com/chengyinhub/business/util/PlayNarrativeSupport.java#type:com.chengyinhub.business.domain.CmsTopicNode"
+        },
+        {
+          "source_owner": "chengyinhub-framework",
+          "target_owner": "chengyinhub-common",
+          "witness": "chengyinhub-framework/src/main/java/com/chengyinhub/framework/aspectj/CriticalPathInterceptor.java#type:com.chengyinhub.common.annotation.CriticalPath"
+        },
+        {
+          "source_owner": "chengyinhub-framework",
+          "target_owner": "chengyinhub-system",
+          "witness": "chengyinhub-framework/pom.xml#chengyinhub-system"
+        },
+        {
+          "source_owner": "chengyinhub-generator",
+          "target_owner": "chengyinhub-common",
+          "witness": "chengyinhub-generator/pom.xml#chengyinhub-common"
+        },
+        {
+          "source_owner": "chengyinhub-quartz",
+          "target_owner": "chengyinhub-common",
+          "witness": "chengyinhub-quartz/pom.xml#chengyinhub-common"
+        },
+        {
+          "source_owner": "chengyinhub-system",
+          "target_owner": "chengyinhub-common",
+          "witness": "chengyinhub-system/pom.xml#chengyinhub-common"
+        }
+      ],
+      "exact_private_imports": 53,
+      "graph_complete": false,
+      "modules": [
+        "chengyinhub-admin",
+        "chengyinhub-common",
+        "chengyinhub-framework",
+        "chengyinhub-generator",
+        "chengyinhub-quartz",
+        "chengyinhub-system"
+      ],
+      "resolved_module_edges": [
+        [
+          "chengyinhub-admin",
+          "chengyinhub-common"
+        ],
+        [
+          "chengyinhub-admin",
+          "chengyinhub-framework"
+        ],
+        [
+          "chengyinhub-admin",
+          "chengyinhub-generator"
+        ],
+        [
+          "chengyinhub-admin",
+          "chengyinhub-quartz"
+        ],
+        [
+          "chengyinhub-admin",
+          "chengyinhub-system"
+        ],
+        [
+          "chengyinhub-framework",
+          "chengyinhub-common"
+        ],
+        [
+          "chengyinhub-framework",
+          "chengyinhub-system"
+        ],
+        [
+          "chengyinhub-generator",
+          "chengyinhub-common"
+        ],
+        [
+          "chengyinhub-quartz",
+          "chengyinhub-common"
+        ],
+        [
+          "chengyinhub-system",
+          "chengyinhub-common"
+        ]
+      ],
+      "resolved_scc": [],
+      "shared_packages": {
+        "com.chengyinhub.business.util": [
+          "chengyinhub-admin",
+          "chengyinhub-system"
+        ]
+      },
+      "source_units_by_physical_module": {
+        "chengyinhub-admin": 280,
+        "chengyinhub-common": 151,
+        "chengyinhub-framework": 60,
+        "chengyinhub-generator": 13,
+        "chengyinhub-quartz": 23,
+        "chengyinhub-system": 1900
+      },
+      "unknown": {
+        "FULLY_QUALIFIED_USAGE_NOT_RESOLVED": 178,
+        "JAVA_TEXT_BLOCK_OR_UNICODE_ESCAPE": 13,
+        "SHARED_PACKAGE_IMPLICIT_TYPE_USAGE_NOT_RESOLVED": 21,
+        "UNRESOLVED_LOCAL_IMPORT": 88,
+        "WILDCARD_IMPORT": 92
+      }
+    },
+    "765ea0366f43029b6fbd33df777e3f86e19c74e7": {
+      "cross_module_imports": 3509,
+      "edge_witnesses": [
+        {
+          "source_owner": "chengyinhub-admin",
+          "target_owner": "chengyinhub-common",
+          "witness": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/AdminFileUploadService.java#type:com.chengyinhub.common.config.RuoYiConfig"
+        },
+        {
+          "source_owner": "chengyinhub-admin",
+          "target_owner": "chengyinhub-framework",
+          "witness": "chengyinhub-admin/pom.xml#chengyinhub-framework"
+        },
+        {
+          "source_owner": "chengyinhub-admin",
+          "target_owner": "chengyinhub-generator",
+          "witness": "chengyinhub-admin/pom.xml#chengyinhub-generator"
+        },
+        {
+          "source_owner": "chengyinhub-admin",
+          "target_owner": "chengyinhub-quartz",
+          "witness": "chengyinhub-admin/pom.xml#chengyinhub-quartz"
+        },
+        {
+          "source_owner": "chengyinhub-admin",
+          "target_owner": "chengyinhub-system",
+          "witness": "chengyinhub-admin/src/main/java/com/chengyinhub/business/util/PlayNarrativeSupport.java#type:com.chengyinhub.business.domain.CmsTopicNode"
+        },
+        {
+          "source_owner": "chengyinhub-framework",
+          "target_owner": "chengyinhub-common",
+          "witness": "chengyinhub-framework/src/main/java/com/chengyinhub/framework/aspectj/CriticalPathInterceptor.java#type:com.chengyinhub.common.annotation.CriticalPath"
+        },
+        {
+          "source_owner": "chengyinhub-framework",
+          "target_owner": "chengyinhub-system",
+          "witness": "chengyinhub-framework/pom.xml#chengyinhub-system"
+        },
+        {
+          "source_owner": "chengyinhub-generator",
+          "target_owner": "chengyinhub-common",
+          "witness": "chengyinhub-generator/pom.xml#chengyinhub-common"
+        },
+        {
+          "source_owner": "chengyinhub-quartz",
+          "target_owner": "chengyinhub-common",
+          "witness": "chengyinhub-quartz/pom.xml#chengyinhub-common"
+        },
+        {
+          "source_owner": "chengyinhub-system",
+          "target_owner": "chengyinhub-common",
+          "witness": "chengyinhub-system/pom.xml#chengyinhub-common"
+        }
+      ],
+      "exact_private_imports": 53,
+      "graph_complete": false,
+      "modules": [
+        "chengyinhub-admin",
+        "chengyinhub-common",
+        "chengyinhub-framework",
+        "chengyinhub-generator",
+        "chengyinhub-quartz",
+        "chengyinhub-system"
+      ],
+      "resolved_module_edges": [
+        [
+          "chengyinhub-admin",
+          "chengyinhub-common"
+        ],
+        [
+          "chengyinhub-admin",
+          "chengyinhub-framework"
+        ],
+        [
+          "chengyinhub-admin",
+          "chengyinhub-generator"
+        ],
+        [
+          "chengyinhub-admin",
+          "chengyinhub-quartz"
+        ],
+        [
+          "chengyinhub-admin",
+          "chengyinhub-system"
+        ],
+        [
+          "chengyinhub-framework",
+          "chengyinhub-common"
+        ],
+        [
+          "chengyinhub-framework",
+          "chengyinhub-system"
+        ],
+        [
+          "chengyinhub-generator",
+          "chengyinhub-common"
+        ],
+        [
+          "chengyinhub-quartz",
+          "chengyinhub-common"
+        ],
+        [
+          "chengyinhub-system",
+          "chengyinhub-common"
+        ]
+      ],
+      "resolved_scc": [],
+      "shared_packages": {
+        "com.chengyinhub.business.util": [
+          "chengyinhub-admin",
+          "chengyinhub-system"
+        ]
+      },
+      "source_units_by_physical_module": {
+        "chengyinhub-admin": 280,
+        "chengyinhub-common": 151,
+        "chengyinhub-framework": 60,
+        "chengyinhub-generator": 13,
+        "chengyinhub-quartz": 23,
+        "chengyinhub-system": 1901
+      },
+      "unknown": {
+        "FULLY_QUALIFIED_USAGE_NOT_RESOLVED": 178,
+        "JAVA_TEXT_BLOCK_OR_UNICODE_ESCAPE": 13,
+        "SHARED_PACKAGE_IMPLICIT_TYPE_USAGE_NOT_RESOLVED": 21,
+        "UNRESOLVED_LOCAL_IMPORT": 88,
+        "WILDCARD_IMPORT": 92
+      }
+    }
+  },
+  "verifier_sha": "cae548ab7fa486998421e0f3815cae5d29111705",
+  "wave2_diagnostic": {
+    "candidate_sha": "765ea0366f43029b6fbd33df777e3f86e19c74e7",
+    "comparison_sha": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+    "findings": [],
+    "graph_complete": false,
+    "review_items": [
+      {
+        "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubLeadController.java",
+        "reason": "FULLY_QUALIFIED_USAGE_NOT_RESOLVED"
+      },
+      {
+        "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubLeadController.java",
+        "reason": "UNRESOLVED_LOCAL_IMPORT",
+        "target": "com.chengyinhub.common.core.text.Convert"
+      },
+      {
+        "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java",
+        "reason": "FULLY_QUALIFIED_USAGE_NOT_RESOLVED"
+      },
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/PhotoCheckVisionService.java",
+        "reason": "FULLY_QUALIFIED_USAGE_NOT_RESOLVED"
+      },
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CashWithdrawServiceImpl.java",
+        "reason": "FULLY_QUALIFIED_USAGE_NOT_RESOLVED"
+      },
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ImServiceImpl.java",
+        "reason": "FULLY_QUALIFIED_USAGE_NOT_RESOLVED"
+      },
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ImServiceImpl.java",
+        "reason": "UNRESOLVED_LOCAL_IMPORT",
+        "target": "com.chengyinhub.business.service.support.CanonicalDigest"
+      },
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicRouteRuntimeServiceImpl.java",
+        "reason": "FULLY_QUALIFIED_USAGE_NOT_RESOLVED"
+      },
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/WithdrawalBalanceAdmissionService.java",
+        "reason": "FULLY_QUALIFIED_USAGE_NOT_RESOLVED"
+      }
+    ]
+  }
+}

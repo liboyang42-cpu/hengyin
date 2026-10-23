@@ -1,0 +1,49 @@
+{
+  "ci_cost_exit_code": 0,
+  "evidence": [
+    {
+      "path": "wp01-constraints-values.json",
+      "sha256": "521199272eae1e6c1faa851d652fac9d102c085274e8b2cc43ce11466c93f65c"
+    },
+    {
+      "path": "wp01-compiled-input-availability.json",
+      "sha256": "442d5a1db491c90b670a88711982085fb7b50147430e34817ccf1cd6b16f0c9c"
+    },
+    {
+      "path": "wp01-constraints-selftests.txt",
+      "sha256": "b84783474b1783184368432aa1bb693ac161a3c47a14674b3118e0d01b019532"
+    },
+    {
+      "path": "wp01-constraints-all-selftests.txt",
+      "sha256": "dc07bff6b67bb6a00054c5fc9a78a480ce2bb793bcd9be1f17099b1311e36f67"
+    },
+    {
+      "path": "wp01-constraints-ci-cost.txt",
+      "sha256": "c2b47836e684d07c67a70e10a79e609b73ad4783ed0a47c89f8eafac43e270f4"
+    }
+  ],
+  "kind": "GOVERNANCE_PLAN_SOURCE_VALUES_AND_REGRESSION_TESTS_ONLY",
+  "not_implemented": [
+    "compiled owner/class index collector",
+    "jdeps output reader/frozen bytecode baseline",
+    "intra-System business-domain owner rules",
+    "root workflow wiring"
+  ],
+  "not_run": [
+    "Java compilation/tests",
+    "jdeps",
+    "ArchUnit",
+    "MySQL/Redis",
+    "Docker/SSH/VPS",
+    "GitHub workflow dispatch",
+    "deployment"
+  ],
+  "observed_wave2_sha": "765ea0366f43029b6fbd33df777e3f86e19c74e7",
+  "parent_sha": "cae548ab7fa486998421e0f3815cae5d29111705",
+  "rule_implementation_and_baselines_unchanged": true,
+  "tests": {
+    "all_architecture": 85,
+    "dependency": 28,
+    "exit_code": 0
+  }
+}

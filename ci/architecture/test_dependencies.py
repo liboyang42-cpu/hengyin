@@ -85,6 +85,48 @@ class DependencyTest(unittest.TestCase):
         self.java(ADMIN, "com.chengyinhub.web.OtherController", "com.chengyinhub.business.mapper.OrderMapper")
         self.assertTrue(self.delta(accepted)["findings"])
 
+    def test_removed_legacy_private_import_cannot_be_reintroduced_as_old_debt(self):
+        target = "com.chengyinhub.business.mapper.OrderMapper"
+        self.java(ADMIN, "com.chengyinhub.web.Controller", target)
+        legacy = dep.inventory(self.root, self.commit())
+        frozen_debt = dep.shared.encode(dep.snapshot(legacy))
+        self.java(ADMIN, "com.chengyinhub.web.Controller", "com.chengyinhub.business.api.OrdersApi")
+        self.assertEqual([], self.delta(legacy)["findings"])
+        cleared = dep.inventory(self.root, self.git("rev-parse", "HEAD"))
+        self.java(ADMIN, "com.chengyinhub.web.Controller", target)
+        result = self.delta(cleared)
+        self.assertIn("NEW_CROSS_MODULE_PRIVATE_IMPORT", {row["rule"] for row in result["findings"]})
+        self.assertEqual(frozen_debt, dep.shared.encode(dep.snapshot(legacy)))
+
+    def test_old_cycle_allows_body_edit_but_removed_cycle_reintroduction_is_red(self):
+        name = "com.chengyinhub.common.BackEdge"
+        target = "com.chengyinhub.business.api.OrdersApi"
+        self.java(COMMON, name, target)
+        legacy = dep.inventory(self.root, self.commit())
+        self.java(COMMON, name, target, "int ordinaryChange=1;")
+        self.assertEqual([], self.delta(legacy)["findings"])
+        self.java(COMMON, name, "", "int ordinaryChange=1;")
+        self.assertEqual([], self.delta(legacy)["findings"])
+        cleared = dep.inventory(self.root, self.git("rev-parse", "HEAD"))
+        self.assertEqual([], cleared["scc"])
+        self.java(COMMON, name, target, "int ordinaryChange=1;")
+        result = self.delta(cleared)
+        self.assertIn("NEW_OR_EXPANDED_MODULE_SCC", {row["rule"] for row in result["findings"]})
+
+    def test_merging_two_old_sccs_is_red_with_both_new_edge_witnesses(self):
+        nodes = ("a", "b", "c", "d")
+        edges = {("a", "b"): "old-ab", ("b", "a"): "old-ba",
+                 ("c", "d"): "old-cd", ("d", "c"): "old-dc"}
+        before = {"references": {}, "edge_witnesses": edges, "scc": dep.components(nodes, edges), "unknown": []}
+        combined = {**edges, ("b", "c"): "new-bc", ("d", "a"): "new-da"}
+        after = {**before, "edge_witnesses": combined, "scc": dep.components(nodes, combined)}
+        self.assertEqual([("a", "b"), ("c", "d")], before["scc"])
+        findings = dep.delta(before, after, set())["findings"]
+        self.assertEqual(1, len(findings))
+        self.assertEqual("NEW_OR_EXPANDED_MODULE_SCC", findings[0]["rule"])
+        self.assertEqual(tuple(nodes), findings[0]["modules"])
+        self.assertEqual({"new-bc", "new-da"}, set(findings[0]["new_edge_witnesses"]))
+
     def test_closing_cycle_is_red_with_source_witness(self):
         self.java(COMMON, "com.chengyinhub.common.BackEdge", "com.chengyinhub.business.api.OrdersApi")
         findings = self.delta()["findings"]

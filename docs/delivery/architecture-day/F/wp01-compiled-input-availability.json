@@ -1,0 +1,68 @@
+{
+  "kind": "READ_ONLY_GITHUB_METADATA_NOT_BACKEND_ACCEPTANCE",
+  "run_id": 40016642215,
+  "source_sha": "089790aaf3254f62ebbc79394b8aaf5fa66cb2b5",
+  "artifacts": [
+    {
+      "id": 12528722267,
+      "name": "chengyin-admin-ui-089790aaf3254f62ebbc79394b8aaf5fa66cb2b5",
+      "digest": "sha256:28b5a0fe6803ef4f50b5b0529b8baf313cf01c677b034a3f73e3ea66d1ff3472",
+      "expired": false,
+      "size_in_bytes": 4058495
+    },
+    {
+      "id": 12528668063,
+      "name": "backend-test-reports-40016642215-1",
+      "digest": "sha256:39e734bd4e1c70cdd2462c5cec3daaecbd7826614f632544bbeb6a5415fc3bdf",
+      "expired": false,
+      "size_in_bytes": 11278291
+    },
+    {
+      "id": 12528587937,
+      "name": "chengyin-dependency-scan-1",
+      "digest": "sha256:eb3fd63f2bcbc3f59037601ba993515d9e3c63e431aac5b6727ef5b13850c5ad",
+      "expired": false,
+      "size_in_bytes": 3892
+    },
+    {
+      "id": 12528382882,
+      "name": "chengyin-sbom.spdx.json",
+      "digest": "sha256:234abce66b94caa753f5079fcfa391bdd219b2b9513a758489cbeb60a9bb4ce0",
+      "expired": false,
+      "size_in_bytes": 75217
+    },
+    {
+      "id": 12528279024,
+      "name": "architecture-findings-40016642215-1",
+      "digest": "sha256:2e74c1abc756ca694fc86ab2f27b2ce01d2c9db254c3a205a326ff9dce7aa221",
+      "expired": false,
+      "size_in_bytes": 2622
+    }
+  ],
+  "tested_boot_jar_available": false,
+  "backend": {
+    "id": 120630505611,
+    "status": "completed",
+    "conclusion": "failure",
+    "steps": [
+      {
+        "name": "Build and test backend",
+        "status": "completed",
+        "conclusion": "failure",
+        "number": 6
+      },
+      {
+        "name": "Describe the tested Boot Jar",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 18
+      },
+      {
+        "name": "Preserve tested Boot Jar for test VPS UAT",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 19
+      }
+    ]
+  }
+}
