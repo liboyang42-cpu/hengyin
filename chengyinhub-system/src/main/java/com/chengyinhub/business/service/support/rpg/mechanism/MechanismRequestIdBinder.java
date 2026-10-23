@@ -167,7 +167,8 @@ public final class MechanismRequestIdBinder {
 
     /**
      * UNKNOWN 恢复:只读原 requestId。已有 APPLIED 结果或原 {@link TopicRouteAction} 则回放;
-     * 仍未知则保持 UNKNOWN。禁止 mint 新请求。
+     * 仍未知则保持 UNKNOWN。禁止 mint 新请求。未见过的 id 不得 {@code put} 进账本,
+     * 否则后续同一 id 的唯一写入会变成对 mint 出的 UNKNOWN 的 recover。
      */
     public Map<String, Object> recoverUnknown(Play play) {
         String id = requireRequestId(play == null ? null : play.getOriginalRequestId());
@@ -177,18 +178,21 @@ public final class MechanismRequestIdBinder {
         }
         LedgerEntry entry = byRequestId.get(id);
         if (entry == null) {
-            entry = bind(id, null, null);
-            entry.status = UNKNOWN;
+            if (play.getOriginalAction() != null) {
+                LedgerEntry restoredEntry = new LedgerEntry();
+                restoredEntry.requestId = id;
+                Map<String, Object> restored = restoreFromOriginalAction(play, restoredEntry);
+                if (restored != null) {
+                    byRequestId.put(id, restoredEntry);
+                    return restored;
+                }
+            }
+            return unknownMap(id);
         }
         Map<String, Object> restored = restoreFromOriginalAction(play, entry);
         if (restored != null) return restored;
         if (APPLIED.equals(entry.status) && entry.result != null) return replay(entry);
-        Map<String, Object> unknown = new LinkedHashMap<String, Object>();
-        unknown.put("requestId", id);
-        unknown.put("status", UNKNOWN);
-        unknown.put("replay", Boolean.FALSE);
-        unknown.put("mintedNewRequest", Boolean.FALSE);
-        return unknown;
+        return unknownMap(id);
     }
 
     public Map<String, Object> readback(String requestId) {
@@ -304,6 +308,15 @@ public final class MechanismRequestIdBinder {
     private static String choiceOf(Map<String, Object> result) {
         Object value = result == null ? null : result.get("choice");
         return value == null ? null : String.valueOf(value);
+    }
+
+    private static Map<String, Object> unknownMap(String id) {
+        Map<String, Object> unknown = new LinkedHashMap<String, Object>();
+        unknown.put("requestId", id);
+        unknown.put("status", UNKNOWN);
+        unknown.put("replay", Boolean.FALSE);
+        unknown.put("mintedNewRequest", Boolean.FALSE);
+        return unknown;
     }
 
     private static Map<String, Object> copy(Map<String, Object> source) {

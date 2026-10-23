@@ -138,3 +138,4 @@ DB / HTTP / App / CI = **NOT_RUN**。Head：`df16aa70c`（本文件再提交会�
 - 不要新表、新钱包、新 request 唯一键、新 Controller。
 - 不要把未启用机制做成「按钮 / port / 默认拒绝冒充完成」；未启用是作者没选，启用后必须真写效果。
 - 不要把 UNKNOWN 投影成 APPLIED，也不要为恢复 mint 新 requestId。
+- 不要对未见过的 requestId 做 `recoverUnknown` 时 `bind`/`put` 进账本；那会让后续唯一写入变成对 mint 出的 UNKNOWN 的 recover。未见过的 id 只回 UNKNOWN 且 `existing==null`。

@@ -107,4 +107,31 @@ class C03MechanismAccountSwitchRestartIsolationTest {
         assertNull(binder.existing("  "));
         assertNull(binder.existing(REQUEST));
     }
+
+    @Test
+    void recoverUnknownOfNeverSeenIdDoesNotOccupyLedgerThenOneShotApplies() throws Exception {
+        MechanismRequestIdBinder binder = new MechanismRequestIdBinder();
+        ProgressClockConsumer clocks = new ProgressClockConsumer(binder);
+        MechanismRequestIdBinder.Play unseen = play(binder);
+        unseen.setOriginalRequestId("c03-never-seen");
+        unseen.setOriginalAction(null);
+        Map<String, Object> recovered = binder.recoverUnknown(unseen);
+        assertEquals("c03-never-seen", recovered.get("requestId"));
+        assertEquals(MechanismRequestIdBinder.UNKNOWN, recovered.get("status"));
+        assertEquals(Boolean.FALSE, recovered.get("mintedNewRequest"));
+        assertEquals(Boolean.FALSE, recovered.get("replay"));
+        assertNull(binder.existing("c03-never-seen"));
+
+        ObjectNode tick = choice(MechanismRequestIdBinder.MECH_PROGRESS_CLOCK, ProgressClockConsumer.ACTION_TICK);
+        tick.put("var", "counter.alarm");
+        unseen.setPlayerChoice(tick);
+        Map<String, Object> applied = clocks.apply(unseen);
+        assertEquals("c03-never-seen", applied.get("requestId"));
+        assertEquals(MechanismRequestIdBinder.APPLIED, applied.get("status"));
+        assertEquals(Boolean.FALSE, applied.get("replay"));
+        assertEquals(Boolean.FALSE, applied.get("mintedNewRequest"));
+        assertEquals(1, ((Number) applied.get("value")).intValue());
+        assertEquals(MechanismRequestIdBinder.APPLIED, binder.existing("c03-never-seen").getStatus());
+        assertEquals("c03-never-seen", binder.existing("c03-never-seen").getRequestId());
+    }
 }
