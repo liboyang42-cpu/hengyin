@@ -9,6 +9,7 @@ from zipfile import ZipFile
 ROOT = Path(__file__).resolve().parents[4]
 BASE = "2ec68899099a1e250df0949a8383bf85b5d3ffe0"
 ALLOWED = {
+    "chengyinhub-admin/sql/migration_20261023_wx_pay_order_intent.sql",
     *[f"chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/{name}.java" for name in (
         "WechatPayServiceImpl", "MerchantCommerceService", "ClubMembershipServiceImpl", "RegistrationCheckoutServiceImpl")],
     "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCoopController.java",
@@ -88,7 +89,7 @@ for path in sorted(ALLOWED):
     print("Working file SHA256:", hashlib.sha256((ROOT / path).read_bytes()).hexdigest(), path)
 for name in ("WechatPayTransferClassificationTest", "WechatPayCallbackFactsTest", "WechatPayCallbackForgedSignatureTest", "WechatPayOrderQueryTest", "WechatPaymentIntentLockTest", "WechatPaymentIntentMySqlIT"):
     path = ROOT / f"chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/{name}.java"
-    print(name, "source @Test methods:", path.read_text().count("@Test"), "executed: 0")
+    print(name, "source @Test methods:", path.read_text().count("@Test"), "local execution: 0; remote CI results tracked separately")
 
 if len(sys.argv) != 2:
     raise SystemExit("Pass the approved existing wechatpay-java 0.2.15 JAR path; do not download credentials.")
@@ -106,4 +107,4 @@ with ZipFile(sys.argv[1]) as sdk:
         available = methods(sdk.read(f"com/wechat/pay/java/service/{name}.class"))
         assert expected <= available, (name, expected - available)
         print("SDK symbols: PASS", name)
-print("Java compile/JUnit/MySQL/Redis/real payment: NOT RUN")
+print("Local Java/JUnit/MySQL/Redis/real payment: NOT RUN; see CI evidence for actual remote results")

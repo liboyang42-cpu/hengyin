@@ -1,6 +1,6 @@
 # B 支付网关 v4 候选交付
 
-结论：已用具体持久实现替换旧 all-reject Source，完成四路统一事实核验、永久支付意图/首次渠道锁定、CLOSED 后新尝试与原号保留，并修复商家建单事务边界及转账 UNKNOWN 分类。当前仅静态验证通过；Java/JUnit/MySQL 未执行，不可集成或发布。新表为提案，未执行 DDL。
+结论：已用具体持久实现替换旧 all-reject Source，完成四路统一事实核验、永久支付意图/首次渠道锁定、CLOSED 后新尝试与原号保留，并修复商家建单事务边界及转账 UNKNOWN 分类。静态验证与 efa5c06f 的 Java 21 编译已通过；既有精选39项通过但未覆盖 B 新增支付用例，B 相关测试仍待主 CI 结果，不可集成或发布。新表为提案，未执行 DDL。
 
 ## 基线、隔离、候选身份
 
@@ -8,7 +8,7 @@
 - 原 `/workspace/hengyin`、分支 `work` 保持原状；B 独立工作树 `/workspace/architecture-day-b`、分支 `codex/architecture-day-b-pay-gateway`，历史 HEAD `3bca5e05328ded4dc47fddd4614f30eff13a28fa`。
 - 历史转账 `090291402461c91377f5a494e92f01cf0887746a`、旧错误 Source 候选 `4f270d0451cc5f13737d0be2b40819fc3629445a` 均保留、不重写。不要直接集成历史 HEAD。
 - 此前未编译测试即提交，是我的执行失误，环境受限不能替代提交门禁。用户后续明确批准“审查/秘密扫描后的独立 codex CI 候选可先 commit/push”例外；本轮仅按该例外发布隔离候选，编译测试通过才可正式集成。不合并、不部署。
-- 最新完整补丁、拆分补丁及 SHA256 见 `artifact-sha256-v4.txt`；旧 v1/v2/v3 工件保留。`files-v4.txt` 列出精确 Java 文件。
+- 最新完整补丁、拆分补丁及 SHA256 见 `artifact-sha256-v5.txt`；旧 v1/v2/v3 工件保留。`files-v4.txt` 列出精确 Java 文件。
 
 ## 已授权的精确领域方法与实际修改
 
@@ -20,7 +20,7 @@
 | ApiCoopController.depositCreate、depositStatus | 缺 openid 也会先置保证金支付中；状态入口只读本地漏单无法恢复 | 先确认 openid 再 prepareDeposit；事务外统一查单，仅核验 SUCCESS 后调用已有三参数 markDepositPaid，保留领域金额/交易号/CAS |
 | ApiCoopController.depositCreateApp | 已无外层事务、prepareDeposit 返回后才 SDK | 只核对，未改 |
 
-未改非支付业务/权限/G 结算；没有改 mapper、接口签名、根 pom、CI 或依赖。没有新增 Agent、后端实例、数据库或生产操作。
+未改非支付业务/权限/G 结算；没有改 mapper、接口签名、根 pom、CI 或依赖；新增迁移仅登记于规范目录，未运行。没有新增 Agent、后端实例、数据库或生产操作。
 
 ## 四域创建、永久事实、确认路径
 
@@ -66,7 +66,7 @@ Map 签名保持不变。明确发送前本地拒绝显式 ok=false,ambiguous=fa
 
 测试源码：转账8、回调矩阵9（四路正确/错误/缺失 appid/mchid/currency/amount/订单/交易号/渠道、查询错事实、重复乱序、冻结错配、关闭解锁、新别名路由）、签名测试31、主动查询5、意图锁6、真实 MySQL 意图 IT5；另补商家事务提交/NOT_FOUND、会员非CLOSED不释放、DEP主动补记与未知不改、退款别名测试，并更新报名原号晚到成功的真实存储用例。未执行修复前红测，不声称 red/green。
 
-Java 编译/JUnit、MySQL/Redis/HTTP完整链路、查询应答验签负控、真微信及生产：本次全部未运行。MySQL IT 用真实 JdbcTemplate/DataSourceTransactionManager/两连接观察/并发；其领域表是最小 SQL 夹具，仅证明网关/意图表合同，不冒充四域全链路。
+GitHub-hosted 的精选回归已在 efa5c06f 实际编译后端及全部测试源码，39项执行且无失败/错误/跳过；该套不覆盖 B 新增支付用例。B 相关 JUnit、新意图表 MySQL IT/四域完整链路、查询应答验签负控、真微信及生产仍未通过或未执行。MySQL IT 用真实 JdbcTemplate/DataSourceTransactionManager/两连接观察/并发；其领域表是最小 SQL 夹具，仅证明网关/意图表合同，不冒充四域全链路。
 
 获准 CI 点名测试建议（检查每个 admin 测试实际存在、skip=0）：
 
@@ -78,10 +78,12 @@ mvn -B -pl chengyinhub-admin -am -Dsurefire.failIfNoSpecifiedTests=false -Dtest=
 
 ## 迁移/预检/回退与阻塞
 
-DDL 仅 `proposals/migration_20261023_wx_pay_order_intent.sql`，从未运行。必须先获批并核对 MySQL 8 实际结构、ascii_bin、generated unique/null、金额分精度、字段长度、业务号唯一性，按四域扫描所有活跃支付；上线前停止旧 writer 并核对未知/历史请求。新代码查表异常不会降级放行，不能在缺表时先上线。
+DDL 仅 `chengyinhub-admin/sql/migration_20261023_wx_pay_order_intent.sql`，从未运行。必须先获批并核对 MySQL 8 实际结构、ascii_bin、generated unique/null、金额分精度、字段长度、业务号唯一性，按四域扫描所有活跃支付；上线前停止旧 writer 并核对未知/历史请求。新代码查表异常不会降级放行，不能在缺表时先上线。
 
 历史有微信原单但无本地冻结参数时，回调/查单继续按真实原单核验；新预下单会在首次冻结前查证，并拒绝覆盖已存在的原单。不得拿新 appid 猜历史参数或直接补写请求指纹。历史 CLOSED 无快照的同业务再次发起目前保守阻塞，需按官方原单与保留参数逐笔审核后迁移，不能自动伪造 backfill。历史活跃但微信仍 NOT_FOUND 的 UNKNOWN 必须在迁移预检中单独隔离、保留原号，不能作为无历史的新单放行；这仍是迁移验收阻塞，不能靠没有小程序用户跳过资金记录盘点。
 
 回退先停止新预支付，保留新增表/所有原号/参数/回执/账本/审计，不 DROP/DELETE，不退回会改号/UNKNOWN 回补的旧逻辑；若已使用 WXP 别名，必须保留映射读取能力，否则回调/退款无法正确归属。故不是删表/回滚 jar 即可的可逆上线。
 
 仍阻塞：受控 Java 编译和相关单测；新表执行审批与真实 MySQL 并发/提交/回滚证据；历史活跃 UNKNOWN 预检/原参数补证；四域真实端到端金额/交易绑定与到账后乱序验收。现有报名 mutation+DONE 原子提交保留，不声称其他三路已迁入 inbox。
+
+首次 CI（efa5c06f）完整 gitleaks 通过；迁移布局/清单门禁因 SQL 放在 docs/proposals 失败，已移至规范 chengyinhub-admin/sql 并补 PR 影响分类。保留原候选提交与所有原始证据。后端编译/单测结果另见 CI 回读文件。

@@ -42,7 +42,7 @@ class WechatPaymentIntentMySqlIT {
         database = MybatisItDatabase.databaseName(suite);
         jdbc = new JdbcTemplate(source);
         assertEquals(database, jdbc.queryForObject("SELECT DATABASE()", String.class));
-        Path proposal = Path.of("docs/delivery/architecture-day/B/proposals/migration_20261023_wx_pay_order_intent.sql");
+        Path proposal = Path.of("chengyinhub-admin/sql/migration_20261023_wx_pay_order_intent.sql");
         if (!Files.exists(proposal)) proposal = Path.of("..").resolve(proposal);
         String ddl = Files.readString(proposal);
         int start = ddl.indexOf("CREATE TABLE wx_pay_order_intent");
