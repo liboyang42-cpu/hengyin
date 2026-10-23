@@ -1,0 +1,14 @@
+{
+  "scope": "doc-only; no production/test/schema/CI changes",
+  "fixed_git_object_text_checks": "PASS",
+  "secret_file_gate": "PASS",
+  "new_files_secret_markers": "PASS",
+  "limited_credential_patterns": "PASS",
+  "diff_check": "PASS",
+  "java": "NOT_RUN",
+  "mysql": "NOT_RUN",
+  "ddl": "NOT_RUN",
+  "sql_witnesses": "NOT_RUN",
+  "ci_dispatches": 0,
+  "late_success_reachability": "UNPROVEN"
+}
