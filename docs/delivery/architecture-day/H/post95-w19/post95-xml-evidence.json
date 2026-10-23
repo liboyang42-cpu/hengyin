@@ -1,0 +1,430 @@
+{
+  "zip_sha256": "ddbc366c530008f9f0b1f9ec7d1a826f492af2e57a09b397da644c284fd80d52",
+  "source": "2a2f37e8a7e7c357be390b586d889ec7535a1937",
+  "receipt_sha256": "13529f029f70ed297b1f43a00382515a2b3ab9f7df1ad6876c0366653f4de383",
+  "executed": {
+    "tests": 95,
+    "passed": 94,
+    "failures": 1,
+    "errors": 0,
+    "skipped": 0
+  },
+  "cleanup": {
+    "mysql_leftover_schemas": [],
+    "mysql_schemas_after": [
+      "information_schema",
+      "mysql",
+      "performance_schema",
+      "sys"
+    ],
+    "status": "CLEAN"
+  },
+  "run": "40040570934",
+  "xml": [
+    {
+      "path": "surefire-reports/TEST-com.chengyinhub.business.service.RegistrationFundsMybatisIntegrationTest.xml",
+      "sha256": "8cb98b184d1bfeb03f06214dc2f285de7952f7c95aa14e6d3c45059eea75cefd",
+      "suite": {
+        "name": "com.chengyinhub.business.service.RegistrationFundsMybatisIntegrationTest",
+        "tests": "95",
+        "failures": "1",
+        "errors": "0",
+        "skipped": "0"
+      },
+      "failures": [
+        {
+          "test": "bareAdminPostCannotCreateUnbackedPointsOrInventoryToRelease",
+          "message": "a bare admin-created row must not invent 1000 refundable points ==> expected: <37> but was: <1037>",
+          "stack": [
+            "org.opentest4j.AssertionFailedError: a bare admin-created row must not invent 1000 refundable points ==> expected: <37> but was: <1037>",
+            "\tat org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:158)",
+            "\tat org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:139)",
+            "\tat org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:201)"
+          ]
+        }
+      ],
+      "testcases": [
+        {
+          "name": "forgedClubMarkerFromPublicCreateCannotSurviveIntoPaymentFreeze",
+          "failed": false
+        },
+        {
+          "name": "sameRequestIdWithDifferentOwnerTicketOrAmountFingerprintIsRejected",
+          "failed": false
+        },
+        {
+          "name": "activityCancelWithPayingOrderQueryFailureRejectsCancellation",
+          "failed": false
+        },
+        {
+          "name": "zeroCashCompletionFailureIsRecoveredBySameRequestIdReplay",
+          "failed": false
+        },
+        {
+          "name": "expiredShopDayClubMarkerFreezesAsPlatform",
+          "failed": false
+        },
+        {
+          "name": "migrationAllowsMultipleNullRequestIds",
+          "failed": false
+        },
+        {
+          "name": "activityCancelWechatCloseFailureAlarmsOperations",
+          "failed": false
+        },
+        {
+          "name": "cashCallbackRepairsOnlyMatchingHistoricalPaidHalfState",
+          "failed": false
+        },
+        {
+          "name": "checkoutReplayBypassesLiveQuoteAndWechatReadinessWithoutRepeatingDeductions",
+          "failed": false
+        },
+        {
+          "name": "manualRefundCreationAndRedemptionGateSerializeOnRegistrationRow",
+          "failed": false
+        },
+        {
+          "name": "expiredPayingOrderQueryFailureLeavesOrderUntouchedAndAlarms",
+          "failed": false
+        },
+        {
+          "name": "activityCancelWithPayingOrderUnpaidOnWechatClosesItFirst",
+          "failed": false
+        },
+        {
+          "name": "missingTicketFactNeverFabricatesClubAttribution",
+          "failed": false
+        },
+        {
+          "name": "migrationFailsClosedWhenHistoricalInviteRewardCannotResolveInvitee",
+          "failed": false
+        },
+        {
+          "name": "migrationFailsClosedOnRequestIdLongerThanSchemaContract",
+          "failed": false
+        },
+        {
+          "name": "expiredPayingOrderWechatCloseFailureMustNotCloseLocally",
+          "failed": false
+        },
+        {
+          "name": "retryPaymentKeepsBusinessNumberAndRejectsExpiredOrder",
+          "failed": false
+        },
+        {
+          "name": "restartResetsCursorButNeverDoubleClosesOrDoubleReleases",
+          "failed": false
+        },
+        {
+          "name": "migrationBackfillsHistoricalRewardsWithStableMemberAndInviteeSemantics",
+          "failed": false
+        },
+        {
+          "name": "requestReplayFailsClosedWhenLegacyDataContainsMultipleMatches",
+          "failed": false
+        },
+        {
+          "name": "durablePayingClaimBlocksCancellationAndLateSuccessRecoversAutomatically",
+          "failed": false
+        },
+        {
+          "name": "adminEditOfZeroPointOrderCannotMintPointsOrMoveInventoryOnMemberCancellation",
+          "failed": false
+        },
+        {
+          "name": "downstreamDatabaseFailureRollsBackClaimAndRewards",
+          "failed": false
+        },
+        {
+          "name": "platformShopDayPaymentKeepsSourceFromFrozenExecutingClub",
+          "failed": false
+        },
+        {
+          "name": "migrationFailsClosedWhenHistoricalInviteeBelongsToAnotherInviter",
+          "failed": false
+        },
+        {
+          "name": "activityCancelRejectsBeforeClosingAnyWechatOrderWhenAnotherQueryFails",
+          "failed": false
+        },
+        {
+          "name": "duplicateShopDayPaymentKeepsOriginalFrozenSource",
+          "failed": false
+        },
+        {
+          "name": "stuckPayingOrdersDoNotStarveLaterExpiredOrders",
+          "failed": false
+        },
+        {
+          "name": "reconcileStopsAtScanLimitAndResumesFromCursorNextRound",
+          "failed": false
+        },
+        {
+          "name": "concurrentCancellationReturnsPointsAndInventoryExactlyOnce",
+          "failed": false
+        },
+        {
+          "name": "bareAdminPostCannotCreateUnbackedPointsOrInventoryToRelease",
+          "failed": true
+        },
+        {
+          "name": "activityCancelStampsCancelSourceEvenWhenNoPointsWereUsed",
+          "failed": false
+        },
+        {
+          "name": "expiredPayingOrderPayErrorClosesWechatOrderBeforeLocalClose",
+          "failed": false
+        },
+        {
+          "name": "migrationFailsClosedOnFingerprintWithoutRequestId",
+          "failed": false
+        },
+        {
+          "name": "migrationRepairsWrongIndexesThatAlreadyUseTheRequiredNames",
+          "failed": false
+        },
+        {
+          "name": "validRetryReturnsSameBusinessNumberEvenWhenReservedInventoryIsZero",
+          "failed": false
+        },
+        {
+          "name": "concurrentRefundCallbacksReturnDeductedPointsExactlyOnce",
+          "failed": false
+        },
+        {
+          "name": "activityCancelWithOrderNotExistWithinGraceTellsOrganizerWhenToRetry",
+          "failed": false
+        },
+        {
+          "name": "payParamsAreReturnedOnlyAfterPayingIsDurableSoConcurrentCancelCannotWin",
+          "failed": false
+        },
+        {
+          "name": "migrationResumesAfterUniqueKeyWasBuiltButOldIndexStillExists",
+          "failed": false
+        },
+        {
+          "name": "zeroCashCompletionUsesDedicatedEntryAndExternalSuccessCannotForgeIt",
+          "failed": false
+        },
+        {
+          "name": "migrationFailsBeforeBackfillingProjectedDuplicateHistoricalRewards",
+          "failed": false
+        },
+        {
+          "name": "independentActivityOrderFreezesPlatformFeeAtCreation",
+          "failed": false
+        },
+        {
+          "name": "expiredOrderRejectionClosesTheOrderAndReleasesHeldResources",
+          "failed": false
+        },
+        {
+          "name": "migrationCanRunTwiceWithoutChangingTheBusinessKeyContract",
+          "failed": false
+        },
+        {
+          "name": "uncertainWechatPreorderFailureKeepsPayingForLateSuccessRecovery",
+          "failed": false
+        },
+        {
+          "name": "ambiguousShopDayClubMarkerNeverFabricatesClubAttribution",
+          "failed": false
+        },
+        {
+          "name": "concurrentSuccessCallbacksAwardAndTransitionOnlyOnce",
+          "failed": false
+        },
+        {
+          "name": "requestReplayReturnsTheOnlyMatchingWinner",
+          "failed": false
+        },
+        {
+          "name": "conflictingDuplicateRewardKeyFailsClosedAndRollsBackAllRewards",
+          "failed": false
+        },
+        {
+          "name": "migrationFailsClosedOnRequestIdWithOuterWhitespace",
+          "failed": false
+        },
+        {
+          "name": "activityCancelAppliesPaymentsBeforeAnyIrreversibleWechatClose",
+          "failed": false
+        },
+        {
+          "name": "cashSuccessRejectsAnyCentMismatchAgainstFrozenWechatAmount",
+          "failed": false
+        },
+        {
+          "name": "duplicateSuccessRepairsHistoricalUnpaidSibling",
+          "failed": false
+        },
+        {
+          "name": "expiredMultiTicketPayingOrderIsNotSplitByUnpaidCloseTask",
+          "failed": false
+        },
+        {
+          "name": "duplicateSuccessRepairsHistoricalPaidOrderMissingRewards",
+          "failed": false
+        },
+        {
+          "name": "pendingManualRefundCaseFreezesVerificationUntilNoRefundDecision",
+          "failed": false
+        },
+        {
+          "name": "paidOrderReplayCannotChangeOriginalTicketSourceMarker",
+          "failed": false
+        },
+        {
+          "name": "applicationServiceOwnsQuoteCreateReplayPreorderAndResponseMapping",
+          "failed": false
+        },
+        {
+          "name": "expiredCloseRollsBackWhenPointReturnUpdatesNoMember",
+          "failed": false
+        },
+        {
+          "name": "overlongRequestIdFailsBeforeAnyOrderIsInserted",
+          "failed": false
+        },
+        {
+          "name": "activityCancelWithMultiTicketPayingOrderUnpaidEndsCancelledNotExpired",
+          "failed": false
+        },
+        {
+          "name": "expiredPayingOrderNotExistOnWechatBeyondGraceIsClosedAndReleased",
+          "failed": false
+        },
+        {
+          "name": "migrationCreatesBothBusinessKeysWithoutAssumingLegacyIndexExists",
+          "failed": false
+        },
+        {
+          "name": "concurrentCreateOrReplayReturnsOneWinnerForTheSameRequestId",
+          "failed": false
+        },
+        {
+          "name": "shopDayPaymentFreezesValidClubSourceAtSuccess",
+          "failed": false
+        },
+        {
+          "name": "legacyNullFingerprintBindsOnlyAfterPersistentOrderProof",
+          "failed": false
+        },
+        {
+          "name": "blankAndNullRequestIdsAreRejectedBeforeAnyOrderIsInserted",
+          "failed": false
+        },
+        {
+          "name": "definiteLocalPreorderFailureReleasesPayingForSafeRetry",
+          "failed": false
+        },
+        {
+          "name": "unexpiredOrderKeepsPayingWindowAndIsNotClosed",
+          "failed": false
+        },
+        {
+          "name": "successAndFailureCallbacksNeverOverwriteOneAnotherWithStaleRows",
+          "failed": false
+        },
+        {
+          "name": "autoVerifyExpiredSessions_scansOnlyEligibleAndCasGuardsRace",
+          "failed": false
+        },
+        {
+          "name": "requestIdUniqueKeyAllowsOnlyOneConcurrentMainOrder",
+          "failed": false
+        },
+        {
+          "name": "publicOrderCreationRefusesClientClaimedTicketSourceClubAndKeepsOnlyTheAuditCode",
+          "failed": false
+        },
+        {
+          "name": "closedCallbackCannotOverwriteCompletedPaymentOrReturnItsPoints",
+          "failed": false
+        },
+        {
+          "name": "expiredMultiTicketPayingOrderNotPayClosesWholeParentOrder",
+          "failed": false
+        },
+        {
+          "name": "expiredPayingOrderQueryNotPayClosesOrderAndReleasesHeldResources",
+          "failed": false
+        },
+        {
+          "name": "paymentCreatesScansOnlyFromActivityAuthoritativeTopic",
+          "failed": false
+        },
+        {
+          "name": "crossDomainEventTupleDoesNotSuppressRegistrationReward",
+          "failed": false
+        },
+        {
+          "name": "expiredPayingOrderNotExistWithinGraceIsLeftUntouched",
+          "failed": false
+        },
+        {
+          "name": "activityCancelWithOrderNotExistAndNoExpireTimeIsRejected",
+          "failed": false
+        },
+        {
+          "name": "activityCancelWithPayingOrderPaidOnWechatAppliesPaymentThenRefunds",
+          "failed": false
+        },
+        {
+          "name": "shopDayPaymentWithoutClubMarkerFreezesPlatformAttribution",
+          "failed": false
+        },
+        {
+          "name": "activityCancelWithOrderNotExistBeyondGraceClosesLocallyAndCancels",
+          "failed": false
+        },
+        {
+          "name": "concurrentRefundClawbacksSerializeBalanceAndFlowsWithoutGoingNegative",
+          "failed": false
+        },
+        {
+          "name": "expiredPayingOrderPayErrorWithCloseFailureMustNotCloseLocally",
+          "failed": false
+        },
+        {
+          "name": "adminEditOfPrepaidPointOrderReturnsOnlyTheOriginalDeductionOnMemberCancellation",
+          "failed": false
+        },
+        {
+          "name": "migrationFailsClosedOnBlankRequestId",
+          "failed": false
+        },
+        {
+          "name": "migrationKeepsLegacyEventUniquenessForWritersWithoutBusinessKeys",
+          "failed": false
+        },
+        {
+          "name": "mysqlServerVersionMustBeOracle8045",
+          "failed": false
+        },
+        {
+          "name": "migrationFailsClosedOnDuplicateNamespacedRewardKey",
+          "failed": false
+        },
+        {
+          "name": "expiredPayingOrderNotExistIsLeftUntouchedWhilePrepayIdCanStillBeUsed",
+          "failed": false
+        },
+        {
+          "name": "firstRegistrationRewardUsesStableMemberBusinessKey",
+          "failed": false
+        },
+        {
+          "name": "expiredPayingOrderQuerySuccessIsAppliedAsPaymentCallback",
+          "failed": false
+        },
+        {
+          "name": "activityCancelQueryFailureAlarmsOperations",
+          "failed": false
+        }
+      ]
+    }
+  ]
+}

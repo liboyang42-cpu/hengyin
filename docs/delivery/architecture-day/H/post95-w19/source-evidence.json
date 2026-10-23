@@ -1,0 +1,57 @@
+{
+  "repository": "liboyang42-cpu/hengyin",
+  "baseline": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+  "post95": {
+    "source": "2a2f37e8a7e7c357be390b586d889ec7535a1937",
+    "run": 40040570934,
+    "artifact_id": 12538832468,
+    "test_source_blob": "be4ef7aa9a8c55efc938a546328889410faeec81",
+    "method_body_equal_to_original_H_patch": true,
+    "all_prior_94_case_names_passed": true,
+    "executed_failure_line": 407,
+    "observed_points": {
+      "expected": 37,
+      "actual": 1037
+    },
+    "inventory_and_ledger_assertions_after_failure_executed": false
+  },
+  "w19": {
+    "core_source": "08b3feaea460533112da40991254b7777bf19bd3",
+    "core_parent": "b453b6e1b41e59b365255a05c318cd305fd1c054",
+    "core_tree": "94041440d08fb16fab97057c2ad9a46b6a8fcf24",
+    "runtime_source": "05f4aa69e61752dcafb0bec73ca9ae9b2ff7a7f5",
+    "runtime_parent": "08b3feaea460533112da40991254b7777bf19bd3",
+    "runtime_tree": "ebf16ae3db2baae0e52e76f30c9cda9ab2e6c7de",
+    "harness_only_child": true,
+    "run": 40038698400,
+    "complete_public_tree_truncated": false,
+    "java_xml_production_blobs": 2721,
+    "only_production_delta_from_verified_b453": "MerchantOfferServiceImpl.java",
+    "class_body_preserved_outside_owner_notice_call_dependencies_helpers": true,
+    "files": [
+      {
+        "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantOfferServiceImpl.java",
+        "sha": "caf0ac05ac8ef129711df70ea5d6eff1a30ffab3"
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/MerchantOfferOwnerNoticeIntentMySqlIT.java",
+        "sha": "213ac3626842d97166cbd2f802d2b3c4ae92c0c9"
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/MerchantOfferOwnerNoticeIntentTest.java",
+        "sha": "67dae7128110bbde1672a9831fb2bf39e2696802"
+      }
+    ]
+  },
+  "H": {
+    "start_HEAD": "0f4b9a235bda0a530e821a70d0181d21e6e2cd61",
+    "branch": "codex/architecture-day-h-review",
+    "worktree": "/workspace/hengyin-h-review",
+    "java_executed_locally": false,
+    "backend_started": false,
+    "provider_called": false,
+    "ci_dispatched": false,
+    "owner_production_modified": false,
+    "new_agents": 0
+  }
+}

@@ -1,0 +1,111 @@
+[
+  {
+    "artifact_id": 12538546609,
+    "zip_sha256": "d8e7e0d0dcdae1d77759fd867120f118d65f8b2bd679d9f16e46581d1d45b5f7",
+    "source": "05f4aa69e61752dcafb0bec73ca9ae9b2ff7a7f5",
+    "receipt_sha256": "dec2baeec43dbbfe41897eaad9beb546da28bec97f5c8a7c150444e7dde010cf",
+    "executed": {
+      "tests": 21,
+      "passed": 21,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "cleanup": {
+      "mysql_leftover_schemas": [],
+      "mysql_schemas_after": [
+        "information_schema",
+        "mysql",
+        "performance_schema",
+        "sys"
+      ],
+      "status": "CLEAN"
+    },
+    "run": "40038698400",
+    "maven_exit": 0,
+    "xml": [
+      {
+        "path": "surefire-reports/TEST-com.chengyinhub.business.service.impl.MerchantOfferOwnerNoticeIntentMySqlIT.xml",
+        "sha256": "81f333039a18a0b4cf82e07d961eb2a965db32bf45c6857d4b4ca485ddc08023",
+        "suite": {
+          "name": "com.chengyinhub.business.service.impl.MerchantOfferOwnerNoticeIntentMySqlIT",
+          "tests": "21",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        "testcases": [
+          "rejectedImQueueKeepsPendingAndOriginalTaskRecoversIt",
+          "repeatedExitKeepsOriginalReasonAndCannotRegisterAnotherWake",
+          "liveOwnerAndTopicChangesCannotRebuildOriginalRecipientOrPayload",
+          "lostDeliveryCommitAcknowledgementReadsOriginalReceiptInsteadOfSendingAgain",
+          "unauthorizedExitLeavesBusinessIntentMessagesAndWakeUntouched",
+          "lostExitCommitAcknowledgementReplaysWithoutNewIntentOrWxAttempt",
+          "lostWakeRecoversOriginalIdAndLateWakeCannotDuplicateMessageOrUnread",
+          "existingOriginalIntentOnWinnerIsReusedWithoutLiveRebuildOrNewWx",
+          "losingOfferCasCannotEnqueueIntentOrRetireApproval",
+          "intentFailureAlsoRollsBackRequiredChapterPauseWithoutChangingFrozenTerms",
+          "sameEventDifferentRecipientOrContentIsRejectedWithoutChangingOriginal",
+          "messageUnreadAndReceiptFailureRollBackTogetherAndPendingCanRecover",
+          "originalExitAndPendingIntentExistBeforeCommitButNeitherChannelRuns",
+          "wxUnknownIsOneOutsideTransactionAttemptAndImRecoveryNeverResendsIt",
+          "invalidOriginalOwnerRollsBackExitAndApprovalWithoutIntentOrExternalAction",
+          "historicalExitWithOriginalPendingIsRecoveredWithoutAnotherProducerOrWx",
+          "concurrentExitRequestsOnlyLetOneWinnerProduceIntentAndChannelAttempts",
+          "rollbackRestoresExitAndApprovalWithZeroIntentOrWake",
+          "historicalExitWithoutOriginalIntentNeverBackfillsOne",
+          "twoWorkersReadOneOriginalMessageAndIncrementUnreadOnce",
+          "intentInsertThenFailureRollsBackOriginalBusinessAndIntentTogether"
+        ]
+      }
+    ]
+  },
+  {
+    "artifact_id": 12537613682,
+    "zip_sha256": "612c39987066fef57a18b17bf3e0c1b19949d98f6de62eb407806632fd991979",
+    "source": "05f4aa69e61752dcafb0bec73ca9ae9b2ff7a7f5",
+    "receipt_sha256": "bd23f4d30b0b5565e97ebfd7471671d9439beaef531f4b095ce6980f1a03e980",
+    "executed": {
+      "tests": 8,
+      "passed": 8,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "cleanup": {
+      "mysql_leftover_schemas": [],
+      "mysql_schemas_after": [
+        "information_schema",
+        "mysql",
+        "performance_schema",
+        "sys"
+      ],
+      "status": "CLEAN"
+    },
+    "run": "40038698400",
+    "maven_exit": 0,
+    "xml": [
+      {
+        "path": "surefire-reports/TEST-com.chengyinhub.business.it.FreeExploreNodeSupplyMySqlIT.xml",
+        "sha256": "cea6a24f7a41e64d039ed5b03ca31431602480b39ba6727401c13248d03cb761",
+        "suite": {
+          "name": "com.chengyinhub.business.it.FreeExploreNodeSupplyMySqlIT",
+          "tests": "8",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        "testcases": [
+          "m4_sameInvite_sentAndReceivedProjectionCarryIdenticalTerms_strangerSeesNone",
+          "m3_withdraw_touchesOnlyCallersOwnOffer",
+          "m3_withdrawSomeoneElsesOffer_rejected_nothingChanges",
+          "m2_invalidCoordinates_rejected_nodeTableUnchanged",
+          "m1_editApprovedNode_updatesOnlyMyRow_resetsAuditTraceInDb_neighboursByteIdentical",
+          "m2_blankAddress_rejected_nodeTableUnchanged",
+          "m3_duplicateEnroll_rejectedByUniqueKey_noSecondRow",
+          "m3_enroll_persistsServerResolvedFields_andFreezesChapterTerms"
+        ]
+      }
+    ]
+  }
+]
