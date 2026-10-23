@@ -277,6 +277,15 @@
         "com.chengyinhub.business.service.impl.ImConversationBatchReadMySqlIT",
         "com.chengyinhub.business.service.impl.ImConversationQueryScopeMySqlIT"
       ]
+    },
+    "architecture-day-photo": {
+      "lineage": "Public2ec C advanced fingerprint + root prepared vision adapter + E durable Photo intent; isolated validation only",
+      "registered_source": "fa7a9492033e30a9d15cf2ac5e3ec487c6d3d4e6",
+      "note": "Runtime source identity must come from actual dispatch. This is not the C runtime provider-outside-transaction end-to-end acceptance.",
+      "classes": [
+        "com.chengyinhub.business.it.AdvancedCommandFingerprintMySqlIT",
+        "com.chengyinhub.business.service.ai.PhotoCheckIntentMySqlIT"
+      ]
     }
   },
   "classes": {
@@ -656,6 +665,22 @@
       ],
       "gates": {},
       "note": "Real IM storage with explicit mocked cross-domain guards; exact result sets, read-only/query count and SHA-bound EXPLAIN observation; not load or real cross-domain authorization acceptance."
+    },
+    "com.chengyinhub.business.it.AdvancedCommandFingerprintMySqlIT": {
+      "tests": 5,
+      "storage": [
+        "mysql"
+      ],
+      "gates": {},
+      "note": "Real original migration twice, mapper fingerprint roundtrip and unique receipt/local effect atomicity; exact UUID suffix and schema cleanup."
+    },
+    "com.chengyinhub.business.service.ai.PhotoCheckIntentMySqlIT": {
+      "tests": 10,
+      "storage": [
+        "mysql"
+      ],
+      "gates": {},
+      "note": "E original intent/nonce claim, independent result commit, owner/fingerprint receipt binding and application rollback; controlled provider mock; not C runtime HTTP closure."
     },
     "com.chengyinhub.business.it.ClubLeadChapterIntentMySqlIT": {
       "tests": 3,
