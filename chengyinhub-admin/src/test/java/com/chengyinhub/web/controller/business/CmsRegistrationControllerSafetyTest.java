@@ -153,6 +153,79 @@ class CmsRegistrationControllerSafetyTest {
         verifyNoInteractions(perkLedgerService);
     }
 
+    @Test
+    void genericEditCannotRewriteOriginalPointsInventoryOrBeneficiary() {
+        loginWith("business:registration:pii");
+        CmsRegistration request = new CmsRegistration();
+        request.setId(5L);
+        request.setPointUsed(1000L);
+        request.setPointsReturned(0);
+        request.setOrderNum(100L);
+        request.setTicketId(200L);
+        request.setMemberId(300L);
+        request.setTicketName("ordinary editable label");
+        controller.edit(request);
+        org.mockito.ArgumentCaptor<CmsRegistration> writes =
+                org.mockito.ArgumentCaptor.forClass(CmsRegistration.class);
+        verify(registrationService).updateCmsRegistration(writes.capture());
+        CmsRegistration write = writes.getValue();
+        assertNull(write.getPointUsed(), "generic edits must not invent points to refund");
+        assertNull(write.getPointsReturned(), "generic edits must not release a consumed refund identity");
+        assertNull(write.getOrderNum(), "inventory release must use the original reservation quantity");
+        assertNull(write.getTicketId(), "inventory release must use the original ticket identity");
+        assertNull(write.getMemberId(), "generic edits must not change the economic beneficiary");
+        assertEquals("ordinary editable label", write.getTicketName());
+    }
+
+    @Test
+    void genericEditDoesNotCopyOriginalIdentityContextOrAuditFacts() throws Exception {
+        loginWith("business:registration:pii");
+        CmsRegistration request = new CmsRegistration();
+        // Poison every scalar property, including inherited create/update metadata.
+        for (java.beans.PropertyDescriptor property : java.beans.Introspector
+                .getBeanInfo(CmsRegistration.class).getPropertyDescriptors()) {
+            if (property.getWriteMethod() == null) continue;
+            Class<?> type = property.getPropertyType();
+            Object value = null;
+            if (type == String.class) value = "untrusted";
+            else if (type == Long.class) value = 99L;
+            else if (type == Integer.class) value = 99;
+            else if (type == BigDecimal.class) value = new BigDecimal("99.99");
+            else if (type == Date.class) value = new Date();
+            if (value != null) property.getWriteMethod().invoke(request, value);
+        }
+        controller.edit(request);
+        org.mockito.ArgumentCaptor<CmsRegistration> writes =
+                org.mockito.ArgumentCaptor.forClass(CmsRegistration.class);
+        verify(registrationService).updateCmsRegistration(writes.capture());
+        CmsRegistration write = writes.getValue();
+        for (String protectedProperty : new String[]{"registrationNo", "parentOrderNo", "requestId",
+                "requestFingerprint", "ownerType", "ownerId", "topicId", "memberId", "ticketId",
+                "orderNum", "participateDate", "purchaseKind", "ticketPrice", "originalAmount",
+                "discountAmount", "pointUsed", "pointsReturned", "pointDeductAmount", "pointDeductRate",
+                "maxPointDeduct", "feePlatformRate", "sourceClubId", "sourceFrozenAt", "sourceChannelCode",
+                "refundPolicyCode", "refundPolicyVersion", "refundDeadline", "expiresAt", "payExpireTime",
+                "firstSuccessfulScanAt", "qrcodeUrl", "createBy", "createTime", "updateBy", "updateTime"}) {
+            assertNull(org.springframework.beans.BeanUtils.getPropertyDescriptor(
+                    CmsRegistration.class, protectedProperty).getReadMethod().invoke(write), protectedProperty);
+        }
+        assertEquals(99L, write.getId());
+        assertEquals("untrusted", write.getActivityTitle());
+        assertEquals("untrusted", write.getTicketName());
+        assertEquals("untrusted", write.getRealName());
+        assertEquals("untrusted", write.getPhone());
+        assertEquals("untrusted", write.getEmail());
+        assertEquals("untrusted", write.getAddress());
+        assertEquals(99L, write.getAddressId());
+    }
+
+    @Test
+    void genericEditRequiresAnOriginalIdBeforeCallingWriter() {
+        assertEquals(500, controller.edit(null).get(AjaxResult.CODE_TAG));
+        assertEquals(500, controller.edit(new CmsRegistration()).get(AjaxResult.CODE_TAG));
+        verifyNoInteractions(registrationService);
+    }
+
     // ------------------------------------------- 错核撤销入口(平台后台唯一入口)
 
     /**

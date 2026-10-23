@@ -67,7 +67,8 @@ public interface ICmsRegistrationMerchantService
     public int updateSharingRates(MerchantSharingRateDTO sharingRateDTO);
 
     /**
-     * 批量删除商家主题报名
+     * 后台批量删除商家主题报名；同事务按主键升序锁定当前行并复验现有 topic scope/中标态。
+     * 任一记录缺失、越范围、中标或删除行数失配时整批回滚。
      * 
      * @param ids 需要删除的商家主题报名主键集合
      * @return 结果
@@ -75,7 +76,7 @@ public interface ICmsRegistrationMerchantService
     public int deleteCmsRegistrationMerchantByIds(Long[] ids);
 
     /**
-     * 删除商家主题报名信息
+     * 删除商家主题报名信息；与批量入口使用相同事务和当前状态校验。
      * 
      * @param id 商家主题报名主键
      * @return 结果

@@ -361,6 +361,98 @@ class RegistrationFundsMybatisIntegrationTest {
                 "Funds MySQL IT 必须运行在 Oracle MySQL 8.0.45，实际为 " + version);
     }
 
+    @Test
+    void adminEditOfZeroPointOrderCannotMintPointsOrMoveInventoryOnMemberCancellation() throws Exception {
+        assertAdminEditCannotRewriteCancellationBasis(0, 0L);
+    }
+
+    @Test
+    void adminEditOfPrepaidPointOrderReturnsOnlyTheOriginalDeductionOnMemberCancellation() throws Exception {
+        assertAdminEditCannotRewriteCancellationBasis(1, 100L);
+    }
+
+    private void assertAdminEditCannotRewriteCancellationBasis(int usePoints, long expectedDeduction) throws Exception {
+        execute("UPDATE oms_ticket SET remaining_inventory=10,start_time=DATE_ADD(NOW(),INTERVAL 10 DAY),"
+                        + "end_time=DATE_ADD(NOW(),INTERVAL 11 DAY) WHERE id=9",
+                "UPDATE cms_activity SET start_date=DATE_ADD(NOW(),INTERVAL 10 DAY),"
+                        + "end_date=DATE_ADD(NOW(),INTERVAL 11 DAY) WHERE id=55",
+                "INSERT INTO ums_member(id,status,point,del_flag) VALUES (8,1,37,0)",
+                "INSERT INTO oms_ticket(id,owner_type,owner_id,name,price,total_inventory,remaining_inventory,del_flag) "
+                        + "VALUES (10,2,55,'另一张票',10,4,3,0)");
+        // Real transactional creation: reserve two units and debit/log the original points, no staged fake debit.
+        CmsRegistration original = registrationService.createRegistration(7L, 2, 55L, 9L, usePoints,
+                "资金边界测试", "fixture-contact", null, null, 2, null, null, null);
+        long id = original.getId();
+        assertEquals(expectedDeduction, number("SELECT point_used FROM cms_registration WHERE id=" + id));
+        assertEquals(100 - expectedDeduction, number("SELECT point FROM ums_member WHERE id=7"));
+        assertEquals(8, number("SELECT remaining_inventory FROM oms_ticket WHERE id=9"));
+        assertEquals(expectedDeduction == 0 ? 0 : 1,
+                number("SELECT COUNT(*) FROM ums_member_points_detail WHERE member_id=7 AND event_id=" + id));
+        long pointsFlowsBeforeEdit = number("SELECT COUNT(*) FROM ums_member_points_detail");
+        String originalNo = text("SELECT registration_no FROM cms_registration WHERE id=" + id);
+        Map<String, Object> before = new JdbcTemplate(dataSource).queryForMap(
+                "SELECT * FROM cms_registration WHERE id=?", id);
+
+        com.chengyinhub.web.controller.business.CmsRegistrationController controller =
+                new com.chengyinhub.web.controller.business.CmsRegistrationController();
+        ReflectionTestUtils.setField(controller, "cmsRegistrationService", registrationService);
+        com.chengyinhub.common.core.domain.entity.SysUser admin =
+                new com.chengyinhub.common.core.domain.entity.SysUser();
+        admin.setUserId(1L);
+        com.chengyinhub.common.core.domain.model.LoginUser login =
+                new com.chengyinhub.common.core.domain.model.LoginUser(1L, null, admin,
+                        new java.util.HashSet<>(java.util.Arrays.asList("business:registration:edit", "business:registration:pii")));
+        org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(
+                new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+                        login, null, java.util.Collections.emptyList()));
+        try {
+            CmsRegistration submitted = new CmsRegistration();
+            submitted.setId(id);
+            submitted.setPointUsed(1000L);
+            submitted.setPointsReturned(0);
+            submitted.setMemberId(8L);
+            submitted.setTicketId(10L);
+            submitted.setOrderNum(100L);
+            submitted.setRegistrationNo("REPLACED-NUMBER");
+            submitted.setParentOrderNo("REPLACED-PARENT");
+            submitted.setRequestFingerprint("f".repeat(64));
+            submitted.setOwnerType(1L);
+            submitted.setOwnerId(999L);
+            submitted.setTicketName("正常标签编辑仍生效");
+            assertEquals(200, controller.edit(submitted).get("code"));
+        } finally {
+            org.springframework.security.core.context.SecurityContextHolder.clearContext();
+        }
+        Map<String, Object> afterEdit = new JdbcTemplate(dataSource).queryForMap(
+                "SELECT * FROM cms_registration WHERE id=?", id);
+        for (String column : before.keySet()) {
+            if (!"ticket_name".equalsIgnoreCase(column) && !"update_time".equalsIgnoreCase(column)) {
+                assertEquals(before.get(column), afterEdit.get(column), "protected original column: " + column);
+            }
+        }
+        assertEquals("正常标签编辑仍生效", afterEdit.get("ticket_name"));
+        assertEquals(pointsFlowsBeforeEdit, number("SELECT COUNT(*) FROM ums_member_points_detail"));
+        assertTrue(registrationService.cancelRegistration(id, 7L, "original-member"));
+        assertEquals(100, number("SELECT point FROM ums_member WHERE id=7"));
+        assertEquals(37, number("SELECT point FROM ums_member WHERE id=8"));
+        assertEquals(10, number("SELECT remaining_inventory FROM oms_ticket WHERE id=9"));
+        assertEquals(3, number("SELECT remaining_inventory FROM oms_ticket WHERE id=10"));
+        assertEquals(3, number("SELECT registration_status FROM cms_registration WHERE id=" + id));
+        assertEquals(originalNo, text("SELECT registration_no FROM cms_registration WHERE id=" + id));
+        assertEquals(expectedDeduction, number("SELECT point_used FROM cms_registration WHERE id=" + id));
+        assertEquals(1, number("SELECT points_returned FROM cms_registration WHERE id=" + id));
+        // Cancellation currently returns points without creating a new points ledger row: preserve/read that contract.
+        assertEquals(pointsFlowsBeforeEdit, number("SELECT COUNT(*) FROM ums_member_points_detail"));
+        if (expectedDeduction > 0) {
+            assertEquals(expectedDeduction, number("SELECT SUM(change_points) FROM ums_member_points_detail WHERE member_id=7 AND event_id=" + id));
+            assertEquals(2, number("SELECT change_type FROM ums_member_points_detail WHERE member_id=7 AND event_id=" + id));
+        }
+        assertTrue(registrationService.cancelRegistration(id, 7L, "same-original-replay"));
+        assertEquals(100, number("SELECT point FROM ums_member WHERE id=7"));
+        assertEquals(10, number("SELECT remaining_inventory FROM oms_ticket WHERE id=9"));
+        assertEquals(pointsFlowsBeforeEdit, number("SELECT COUNT(*) FROM ums_member_points_detail"));
+    }
+
     /**
      * RUN-01 到期自动核销:扫描口径(只活动单、end_date+7天缓冲、排除在途退款与缺锚点)
      * 与条件置位的当前读闸,都在真库上跑出来,不接受口头等价。

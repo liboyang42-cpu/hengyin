@@ -294,6 +294,11 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         where id = #{id}
     </update>
 
+    <select id="selectForDeletionByIdForUpdate" resultMap="CmsRegistrationMerchantResult" useCache="false" flushCache="true">
+        <include refid="selectCmsRegistrationMerchantVo"/>
+        where id = #{id} for update
+    </select>
+
     <delete id="deleteCmsRegistrationMerchantById" parameterType="Long">
         delete from cms_registration_merchant where id = #{id}
     </delete>

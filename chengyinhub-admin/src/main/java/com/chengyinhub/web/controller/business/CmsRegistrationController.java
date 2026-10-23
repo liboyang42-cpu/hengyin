@@ -228,9 +228,11 @@ public class CmsRegistrationController extends BaseController
     @PutMapping
     public AjaxResult edit(@RequestBody CmsRegistration cmsRegistration)
     {
-        // 支付/报名/核销是交易事实,通用 PUT 不得绕过支付、取消或过期命令修改生命周期。
-        // 一律置 null 让 update 的动态 <if> 跳过这些列 —— 对所有人(含超管)生效的止血本体,合法业务字段不受影响。
-        stripImmutablePaymentFacts(cmsRegistration);
+        if (cmsRegistration == null || cmsRegistration.getId() == null) {
+            return error("报名ID不能为空");
+        }
+        // 只接受普通展示/联系信息；原身份、资金、库存和权益依据不从通用请求复制。
+        cmsRegistration = editableRegistrationFields(cmsRegistration);
         if (!canViewPii())
         {
             // 这些人看到的是脱敏值,提交回来的也只能是脱敏值。置 null 让 update 的动态 <if> 跳过这几列,
@@ -241,25 +243,20 @@ public class CmsRegistrationController extends BaseController
     }
 
     /**
-     * 剥离支付/报名/核销事实字段,使其无法经通用 PUT 被后台篡改。
-     * 置 null 后 CmsRegistrationMapper 的动态 &lt;if test="xxx != null"&gt; 会跳过这些列,保留库中真值。
-     * 这些字段只应由支付、取消、过期或核销流程写入,后台编辑表单只允许改非交易业务字段。
+     * 后台通用编辑的明确白名单。新增领域字段默认不可写；内部支付/汇总 Mapper 能力不受影响。
      */
-    private static void stripImmutablePaymentFacts(CmsRegistration r)
+    private static CmsRegistration editableRegistrationFields(CmsRegistration request)
     {
-        r.setTotalAmount(null);
-        r.setPayableAmount(null);
-        r.setPaymentStatus(null);
-        r.setRegistrationStatus(null);
-        r.setPaymentType(null);
-        r.setPaymentTime(null);
-        r.setTransactionId(null);
-        r.setPointPaymentAmount(null);
-        r.setWechatPaymentAmount(null);
-        r.setVerificationCode(null);
-        r.setVerificationStatus(null);
-        r.setVerificationTime(null);
-        r.setVerifierId(null);
+        CmsRegistration editable = new CmsRegistration();
+        editable.setId(request.getId());
+        editable.setActivityTitle(request.getActivityTitle());
+        editable.setTicketName(request.getTicketName());
+        editable.setRealName(request.getRealName());
+        editable.setPhone(request.getPhone());
+        editable.setEmail(request.getEmail());
+        editable.setAddress(request.getAddress());
+        editable.setAddressId(request.getAddressId());
+        return editable;
     }
 
     /**
