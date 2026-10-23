@@ -1,0 +1,7 @@
+git diff --check: PASS
+node --check on every changed tracked JavaScript file: PASS
+ClubLeadMapper.xml ElementTree parse: PASS (not MyBatis or SQL execution)
+Java compile: NOT RUN
+Java unit tests: NOT RUN
+MySQL integration tests: NOT RUN
+WeChat simulator/device: NOT RUN

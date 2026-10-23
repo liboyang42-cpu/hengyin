@@ -14,6 +14,17 @@ import java.util.List;
 public interface ClubLeadMapper {
     ClubLeadState selectByActivity(@Param("activityId") Long activityId);
 
+    ClubLeadState selectByActivityForUpdate(@Param("activityId") Long activityId);
+
+    /** 与领队委派/交接使用相同的 club 行锁，不能使用旧 state 的缓存领队授权。 */
+    Long lockClubOwner(@Param("clubId") Long clubId);
+
+    int unlockChapterCas(@Param("activityId") Long activityId,
+                         @Param("storedLeaderId") Long storedLeaderId,
+                         @Param("leaderId") Long leaderId,
+                         @Param("expectedChapterId") Long expectedChapterId,
+                         @Param("targetChapterId") Long targetChapterId);
+
     int insertClubLeadState(ClubLeadState state);
 
     /** 按 id 更新(leaderMemberId/currentChapterId/broadcast/status,<if> 空不覆盖) */

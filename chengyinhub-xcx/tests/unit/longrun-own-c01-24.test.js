@@ -2,12 +2,12 @@
 const { test } = require('node:test'); const assert = require('node:assert/strict'); const path = require('node:path');
 function load() {
   let definition, member = '11'; const requests = [], completed = [], payloads = [];
-  global.getApp = () => ({ globalData: {}, getUserID: () => member, sendRequest: r => requests.push(r) }); global.Page = v => { definition = v; }; global.wx = { showToast() {} };
+  global.getApp = () => ({ globalData: {}, getUserID: () => member, sendRequest: r => requests.push(r) }); global.Page = v => { definition = v; }; global.wx = { showToast() {}, getStorageSync() {}, setStorageSync() {} };
   const file = path.resolve(__dirname, '../../pages/play/index.js'); delete require.cache[file]; require(file);
   const page = Object.assign({}, definition, { data: { activityId: 9, topicId: 8, regId: 71, mode: 1 },
     _routeState: { sessionId: 'route-session-9', version: 4 }, _routeActions: {},
     _routeWritePayload(kind, nodeId, extra) { const body = Object.assign({ activityId: this.data.activityId,
-      routeActionId: 'fixture-action-' + payloads.length, expectedRouteVersion: this._routeState.version }, extra); payloads.push(body); return body; },
+      routeSessionId: 9, routeActionId: 'fixture-action-' + payloads.length, expectedRouteVersion: this._routeState.version }, extra); payloads.push(body); return body; },
     _resolveRouteAction() {}, onComplete: nodeId => completed.push(nodeId) });
   return { page, requests, completed, payloads, account: v => { member = v; } };
 }
@@ -28,15 +28,15 @@ test('thought sync keeps the original action ID and registration while using cur
   await new Promise(done => setImmediate(done));
   assert.equal(h.payloads.length, 1); assert.equal(h.requests[0].data.routeActionId, h.payloads[0].routeActionId);
   assert.equal(h.requests[0].data.registrationId, 71); assert.equal(h.requests[0].data.expectedRouteVersion, 5);
-  h.requests[0].success({ code: 200, data: { nodeId: 31 } }); await new Promise(done => setImmediate(done));
+  h.requests[0].success({ code: 200, intentTerminal: true, data: { nodeId: 31 } }); await new Promise(done => setImmediate(done));
   assert.deepEqual(h.completed, [31]);
 });
 test('old arrival callback cannot clear the replacement arrival lock or complete its old node', async () => {
   const h = load(); h.page.arrive(31, 'fixture'); h.page.data.activityId = 19;
   h.page._arrivalWriteInFlight = false; h.page.arrive(32, 'fixture');
   const current = h.page._arrivalWriteIntent;
-  h.requests[0].success({ code: 200, data: {} }); await new Promise(done => setImmediate(done));
+  h.requests[0].success({ code: 200, intentTerminal: true, data: {} }); await new Promise(done => setImmediate(done));
   assert.equal(h.page._arrivalWriteIntent, current); assert.equal(h.page._arrivalWriteInFlight, true); assert.deepEqual(h.completed, []);
-  h.requests[1].success({ code: 200, data: {} }); await new Promise(done => setImmediate(done));
+  h.requests[1].success({ code: 200, intentTerminal: true, data: {} }); await new Promise(done => setImmediate(done));
   assert.deepEqual(h.completed, [32]);
 });

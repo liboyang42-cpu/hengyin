@@ -1,0 +1,13 @@
+✔ A 的成功迟到后不能删除 B 的 pending，也不能清理 A 的未知身份 (3.964937ms)
+✔ A UNKNOWN 后切 B，retry 不复制 A 命令到 B key、不以 B token 发送 (0.867399ms)
+✔ A→B→A 的新登录代次拒绝原请求迟到；同页重初始化也隔离旧命令 (0.443213ms)
+✔ 页面移出栈后忽略原写回调，保留原回执索引 (0.648066ms)
+✔ A 打开的确认弹窗在 B 登录后不能执行旧操作 (0.736086ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 13.25688

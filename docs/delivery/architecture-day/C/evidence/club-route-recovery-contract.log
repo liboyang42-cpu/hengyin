@@ -1,0 +1,12 @@
+✔ workbench 跳转失败退出 loading，持久提供原目标重试与返回 (2.574609ms)
+✔ 团码缺参只提供返回与管理入口，不渲染无效出码重试 (2.814783ms)
+✔ 团码出码使用 epoch，旧请求回包不能覆盖新场次码 (1.00327ms)
+✔ negative control：摘掉出码成功回调的 epoch 守卫必须判红 (2.567779ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 15.942464

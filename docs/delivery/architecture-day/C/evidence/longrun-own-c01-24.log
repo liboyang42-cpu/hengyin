@@ -1,0 +1,12 @@
+✔ thought wait cannot send old arrive under a new activity (39.110797ms)
+✔ thought wait cannot send old checkin under a new activity (3.996106ms)
+✔ thought sync keeps the original action ID and registration while using current same-session version (4.884969ms)
+✔ old arrival callback cannot clear the replacement arrival lock or complete its old node (4.325652ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 57.788156
