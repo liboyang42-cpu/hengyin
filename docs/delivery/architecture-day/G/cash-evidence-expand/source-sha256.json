@@ -1,0 +1,16 @@
+{
+  "parent": "5e2803424f4954d48efa07a7176176a289476d30",
+  "files": {
+    "chengyinhub-admin/sql/_deploy_g_cash_evidence_empty_rollback_20261023.sql": "5bb139cfbcd5d96fd84f00b0e0e099311f885d42e96f177d02acf516a9c6ea14",
+    "chengyinhub-admin/sql/_precheck_g_cash_evidence_20261023.sql": "1ee8da37ad28839709c700d1015cc751d510c27f49be967eee8f351c506819d7",
+    "chengyinhub-admin/sql/migration_20261023_g_cash_evidence_expand.sql": "d0e32334f08f4085d4fa4f1adc48ebeb183814fc51096687511cfaf9b2e476f9",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/Wp04CashEvidenceExpandMySqlIT.java": "f7f7c821ddc6392a8986282a6813bff7b503edc5ef31c4f75b9c1a02d8b7fb14",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/CoopSettlementCashClose.java": "3922c7b4c21f33c931eb58ff943f9fede2f36415c9bdede8d30d4f7b3122a592",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/CoopSettlementCashContribution.java": "9ae95a204eb2c6952372c3c1cb2a67bcc563c8191e603e69e736c823bfdb6cd1",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/CoopSettlementCashEvent.java": "c80c2a23f20a1733bad4deef2fafbd001aeb43f1feb459c0c9ba71119acfc190",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CoopSettlementCashEvidenceMapper.java": "4866f0534fe71399d8a7df2377bbb6bd2eb2c6d659e5596c32c8f649286f2954",
+    "chengyinhub-system/src/main/resources/mapper/business/CoopSettlementCashEvidenceMapper.xml": "2fbb68d714c98bfc530211b439d607e59b0cad556d1b57ba39882a65bab7cb08",
+    "docs/delivery/architecture-day/G/cash-evidence-expand/CHECKPOINT.md": "619678413182218e615f375c88a5718b1227012e681371e97dff1f0eab8708d6",
+    "docs/delivery/architecture-day/G/cash-evidence-expand/static-checks.txt": "c4c800d19cd7d26ecf44490a41cad6dd8e1b75e4fa6d672a6de3cc73902e002c"
+  }
+}
