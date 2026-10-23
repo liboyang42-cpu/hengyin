@@ -31,6 +31,21 @@ class C09AccountSwitchRestartIsolationTest {
         assertNull(store.find(null));
         assertThrows(IllegalArgumentException.class, () -> producer.recover(null, null));
         assertThrows(IllegalArgumentException.class, () -> producer.offlineReopen("  ", null));
+        ImmutableReceiptProducer.OriginalReceipt missing = producer.unknownRecover("  ", null);
+        assertNull(missing.requestId);
+        assertEquals(ImmutableReceiptProducer.OUTCOME_UNKNOWN, missing.outcome);
+        assertEquals(ImmutableReceiptProducer.UNKNOWN_NOT_RECOVERED, missing.recoveryNote);
+        assertNull(missing.asRequeryableView().get("requestId"));
+        assertEquals(0, store.size());
+        ImmutableReceiptProducer.OriginalReceipt neverSeen = producer.unknownRecover("evt-never-c09", null);
+        assertEquals("evt-never-c09", neverSeen.requestId);
+        assertEquals(ImmutableReceiptProducer.OUTCOME_UNKNOWN, neverSeen.outcome);
+        assertNull(store.find("evt-never-c09"));
+        ImmutableReceiptProducer.OriginalReceipt first = producer.accept(
+                new ImmutableReceiptProducer.OriginalRequest("evt-never-c09", ImmutableReceiptProducer.Kind.PIN,
+                        "{\"op\":\"pin\"}", ImmutableReceiptProducer.OUTCOME_ACCEPTED));
+        assertEquals(ImmutableReceiptProducer.OUTCOME_ACCEPTED, first.outcome);
+        assertEquals(1, store.size());
     }
 
     @Test

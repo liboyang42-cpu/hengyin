@@ -79,6 +79,30 @@ public final class DevicePushRegistrationLifecycle {
         return false;
     }
 
+    public boolean treatsAppliedProjectionAsOriginalProof(String appliedProjection) {
+        return false;
+    }
+
+    /**
+     * Missing deviceId stays Java {@code null} / UNKNOWN and does not occupy the ledger.
+     * Never-seen ids return UNKNOWN without insert, so a later register is still the unique original.
+     */
+    public Registration recoverOriginal(String originalRequestId, String appliedProjection) {
+        return recoverUnknown(originalRequestId, appliedProjection);
+    }
+
+    public Registration recoverUnknown(String originalRequestId, String appliedProjection) {
+        String id = parseDeviceId(originalRequestId);
+        if (id == null) {
+            return unknownRegistration(null);
+        }
+        Registration original = store.find(id);
+        if (original != null) {
+            return original;
+        }
+        return unknownRegistration(id);
+    }
+
     private Registration require(String deviceId) {
         String id = requireDeviceId(deviceId);
         Registration original = store.find(id);
@@ -86,6 +110,17 @@ public final class DevicePushRegistrationLifecycle {
             throw new IllegalStateException("原设备注册不存在 deviceId=" + id);
         }
         return original;
+    }
+
+    static String parseDeviceId(String deviceId) {
+        if (isBlank(deviceId)) {
+            return null;
+        }
+        String id = deviceId.trim();
+        if (id.length() > 128) {
+            return null;
+        }
+        return id;
     }
 
     static String requireDeviceId(String deviceId) {
@@ -97,6 +132,10 @@ public final class DevicePushRegistrationLifecycle {
             throw new IllegalArgumentException("deviceId 过长");
         }
         return id;
+    }
+
+    static Registration unknownRegistration(String deviceId) {
+        return new Registration(deviceId, null, false, null, "UNKNOWN");
     }
 
     static String requireEnvironment(String environment) {

@@ -67,11 +67,22 @@ public final class ImmutableReceiptProducer {
      * 也不把 APPLIED 投影当成原成功。
      */
     public OriginalReceipt unknownRecover(String requestId, AppliedProjection projection) {
-        OriginalReceipt original = recover(requestId, projection);
-        if (OUTCOME_UNKNOWN.equals(original.outcome) || isBlank(original.outcome)) {
-            return original.withNoted(UNKNOWN_NOT_RECOVERED);
+        String id = parseRequestId(requestId);
+        if (id == null) {
+            return unknownReceipt(null, projection);
         }
-        return original;
+        OriginalReceipt original = store.find(id);
+        if (original == null) {
+            return unknownReceipt(id, projection);
+        }
+        boolean projectionClaimsApplied = projection != null
+                && id.equals(projection.requestId)
+                && PROJECTION_APPLIED.equals(projection.appliedState);
+        OriginalReceipt recovered = original.withProjectionClaim(projectionClaimsApplied);
+        if (OUTCOME_UNKNOWN.equals(recovered.outcome) || isBlank(recovered.outcome)) {
+            return recovered.withNoted(UNKNOWN_NOT_RECOVERED);
+        }
+        return recovered;
     }
 
     public OriginalReceipt recover(String requestId, AppliedProjection projection) {
@@ -103,6 +114,17 @@ public final class ImmutableReceiptProducer {
         return new OriginalRequest(request.requestId.trim(), request.kind, request.body, outcome);
     }
 
+    static String parseRequestId(String requestId) {
+        if (isBlank(requestId)) {
+            return null;
+        }
+        String id = requestId.trim();
+        if (id.length() > 64) {
+            return null;
+        }
+        return id;
+    }
+
     static String requireRequestId(String requestId) {
         if (isBlank(requestId)) {
             throw new IllegalArgumentException("requestId 不能为空");
@@ -112,6 +134,11 @@ public final class ImmutableReceiptProducer {
             throw new IllegalArgumentException("requestId 长度不能超过 64");
         }
         return id;
+    }
+
+    static OriginalReceipt unknownReceipt(String requestId, AppliedProjection projection) {
+        boolean claimed = projection != null && PROJECTION_APPLIED.equals(projection.appliedState);
+        return new OriginalReceipt(requestId, null, null, OUTCOME_UNKNOWN, null, claimed, UNKNOWN_NOT_RECOVERED);
     }
 
     static String fingerprint(OriginalRequest request) {
@@ -212,7 +239,7 @@ public final class ImmutableReceiptProducer {
         public Map<String, Object> asRequeryableView() {
             Map<String, Object> view = new LinkedHashMap<String, Object>();
             view.put("requestId", requestId);
-            view.put("kind", kind.name());
+            view.put("kind", kind == null ? null : kind.name());
             view.put("payloadHash", payloadHash);
             view.put("outcome", outcome);
             view.put("usedCurrentProjectionAsSuccess", Boolean.FALSE);
