@@ -1,0 +1,115 @@
+{
+  "repository": "liboyang42-cpu/hengyin",
+  "base": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+  "candidate": "1364aee323c6684e5ad97e3fe4264900866775c6",
+  "candidate_tree": "ac25d358df9551f5e0710ad5f2655d9d01bfef7b",
+  "parent": "dee20f264de16d7b155c414cd5ebcfffff82908d",
+  "branch": "codex/architecture-day-a-merchant-cancel",
+  "integration": "dde91d5c03a85c769e17c2a8c6e88364f4b0d27c",
+  "integration_tree": "2df014c5cf40a2d61ac2aa50e79c5aed74ed9b56",
+  "integration_tree_not_truncated": true,
+  "files": [
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsRegistrationController.java",
+      "aBlob": "c824a38adc2bf9cab14d66adc63af6c7ebcf173d",
+      "rootBlob": "c824a38adc2bf9cab14d66adc63af6c7ebcf173d",
+      "match": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/MerchantRegistrationCancellationMySqlIT.java",
+      "aBlob": "6b64706afeb6a6edf9972039fc50b6b5b4c3b554",
+      "rootBlob": "6b64706afeb6a6edf9972039fc50b6b5b4c3b554",
+      "match": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/MerchantCancelAuditGateTest.java",
+      "aBlob": "9a2643524346f6f7a3e22d54e1909b8885bfca00",
+      "rootBlob": "9a2643524346f6f7a3e22d54e1909b8885bfca00",
+      "match": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/business/CmsRegistrationControllerSafetyTest.java",
+      "aBlob": "cee0f5d5dce90ebb083d7a775d54d5e91d0f2901",
+      "rootBlob": "cee0f5d5dce90ebb083d7a775d54d5e91d0f2901",
+      "match": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CmsRegistrationMerchantMapper.java",
+      "aBlob": "d8b1f49768c50d00f426d6c6ecca39d8dd46bf3b",
+      "rootBlob": "d8b1f49768c50d00f426d6c6ecca39d8dd46bf3b",
+      "match": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationMerchantServiceImpl.java",
+      "aBlob": "3174d9bf230cb37d5e9aa0addf13ed8418afe031",
+      "rootBlob": "3174d9bf230cb37d5e9aa0addf13ed8418afe031",
+      "match": true
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMerchantMapper.xml",
+      "aBlob": "db84d32e59a468ab785e9a0e75682844f0b5325f",
+      "rootBlob": "db84d32e59a468ab785e9a0e75682844f0b5325f",
+      "match": true
+    },
+    {
+      "path": "docs/delivery/architecture-day/A-WP12/README.md",
+      "aBlob": "553adb15fbf8e8e0fab3f7a0951851d4a13d433b",
+      "rootBlob": "553adb15fbf8e8e0fab3f7a0951851d4a13d433b",
+      "match": true
+    },
+    {
+      "path": "docs/delivery/architecture-day/A-WP12/audit_static.py",
+      "aBlob": "1c8ba7e6d2aaa3ea1c2aa9374da48fd3b9664816",
+      "rootBlob": "1c8ba7e6d2aaa3ea1c2aa9374da48fd3b9664816",
+      "match": true
+    },
+    {
+      "path": "docs/delivery/architecture-day/A-WP12/candidate-files.json",
+      "aBlob": "f1f2bffe79c2eb95b14e72de954cba654d8d3ae0",
+      "rootBlob": "f1f2bffe79c2eb95b14e72de954cba654d8d3ae0",
+      "match": true
+    },
+    {
+      "path": "docs/delivery/architecture-day/A-WP12/state-write-inventory.json",
+      "aBlob": "fa354c666d8d574de1bd28f2b4f7e351d2b06344",
+      "rootBlob": "fa354c666d8d574de1bd28f2b4f7e351d2b06344",
+      "match": true
+    },
+    {
+      "path": "docs/delivery/architecture-day/A-WP12/test-inventory.json",
+      "aBlob": "1cf0d71189b4b3816678ecb065ba324c4bb9f26a",
+      "rootBlob": "1cf0d71189b4b3816678ecb065ba324c4bb9f26a",
+      "match": true
+    },
+    {
+      "path": "docs/delivery/architecture-day/A-WP12/verification.txt",
+      "aBlob": "53296d7ec1ef3152b2c49298c051e568e65a2d3e",
+      "rootBlob": "53296d7ec1ef3152b2c49298c051e568e65a2d3e",
+      "match": true
+    },
+    {
+      "path": "docs/delivery/architecture-day/A-merchant-cancel/README.md",
+      "aBlob": "bd668bbf5d57d86c62d27a352479867d0228f187",
+      "rootBlob": "bd668bbf5d57d86c62d27a352479867d0228f187",
+      "match": true
+    },
+    {
+      "path": "docs/delivery/architecture-day/A-merchant-cancel/candidate-files.json",
+      "aBlob": "97dc6fb7d99eb868110e7d07b3b311659c0ccf37",
+      "rootBlob": "97dc6fb7d99eb868110e7d07b3b311659c0ccf37",
+      "match": true
+    },
+    {
+      "path": "docs/delivery/architecture-day/A-merchant-cancel/verification.txt",
+      "aBlob": "7031ef3744ab45909489ccab8556764402e84452",
+      "rootBlob": "7031ef3744ab45909489ccab8556764402e84452",
+      "match": true
+    },
+    {
+      "path": "docs/delivery/architecture-day/A-merchant-cancel/verify-static.py",
+      "aBlob": "40d415bddf4ca6a265f4ba20819767d495fa673b",
+      "rootBlob": "40d415bddf4ca6a265f4ba20819767d495fa673b",
+      "match": true
+    }
+  ]
+}

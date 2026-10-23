@@ -1,0 +1,21 @@
+{
+  "layer": "STATIC_SOURCE_ONLY",
+  "java_executed_by_H": false,
+  "mysql_executed_by_H": false,
+  "candidate_changed_blobs_verified": 17,
+  "candidate_blobs_equal_integration": 17,
+  "status_strip_present": true,
+  "generic_put_retains_economic_basis": [
+    "pointUsed",
+    "pointsReturned",
+    "orderNum",
+    "ticketId",
+    "memberId"
+  ],
+  "cancel_uses_current_stored_point_used_for_member_credit": true,
+  "merchant_cancel_and_winner_sql_both_check_current_del_flag": true,
+  "merchant_admin_delete_sql_has_no_audit_predicate": true,
+  "review_patch_apply_check": "PASS against exact A136 files",
+  "review_java_tests": "NOT_RUN; no claimed red/green",
+  "runtime_acceptance": "NOT_ACCEPTED"
+}

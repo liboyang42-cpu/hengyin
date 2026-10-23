@@ -1,0 +1,49 @@
+{
+  "source_sha": "dde91d5c03a85c769e17c2a8c6e88364f4b0d27c",
+  "registered_source": "931bfbc5bc0f30f8a52b64b777224b7a0c97e3e8",
+  "registered_source_match": false,
+  "expected_tests": 8,
+  "executed": {
+    "classes": [
+      "com.chengyinhub.business.it.MerchantRegistrationCancellationMySqlIT"
+    ],
+    "errors": 1,
+    "failures": 0,
+    "passed": 0,
+    "skipped": 0,
+    "testcases": [
+      {
+        "classname": "com.chengyinhub.business.it.MerchantRegistrationCancellationMySqlIT",
+        "name": "",
+        "status": "error",
+        "time": "1.191"
+      }
+    ],
+    "tests": 1
+  },
+  "problems": [
+    "run: 1 条 error",
+    "run: 实跑 1 条，登记 8 条",
+    "run: mvn 退出码 1"
+  ],
+  "run_id": 40029223893,
+  "run_attempt": 1,
+  "job_id": 120673135037,
+  "artifact_id": 12533678636,
+  "zip_sha256": "8aa2c61641c9845cfac3899503df31fbe3d5db85a251455942335ebc41233427",
+  "xml_path": "surefire-reports/TEST-com.chengyinhub.business.it.MerchantRegistrationCancellationMySqlIT.xml",
+  "xml_sha256": "2d044e087faa444516076175ddc286e7fef806c1c45edf0aa8d8257c23b0cc34",
+  "xml_counts": {
+    "tests": "1",
+    "errors": "1",
+    "failures": "0",
+    "skipped": "0"
+  },
+  "initialization_error": "java.io.IOException: Failed to parse mapping resource: 'class path resource [mapper/business/CmsRegistrationMerchant.xml]'\n\tat org.mybatis.spring.SqlSessionFactoryBean.buildSqlSessionFactory(SqlSessionFactoryBean.java:695)\n\tat org.mybatis.spring.SqlSessionFactoryBean.afterPropertiesSet(SqlSessionFactoryBean.java:572)\n\tat org.mybatis.spring.SqlSessionFactoryBean.getObject(SqlSessionFactoryBean.java:712)\n\tat com.chengyinhub.business.it.P0AcceptanceSchema.sql(P0AcceptanceSchema.java:85)\n\tat com.chengyinhub.business.it.MerchantRegistrationCancellationMySqlIT.database(MerchantRegistrationCancellationMySqlIT.java:50)\nCaused by: java.io.FileNotFoundException: class path resource [mapper/business/CmsRegistrationMerchant.xml] cannot be opened because it does not exist\n\tat org.springframework.core.io.ClassPathResource.getInputStream(ClassPathResource.java:212)\n\tat org.mybatis.spring.SqlSessionFactoryBean.buildSqlSessionFactory(SqlSessionFactoryBean.java:691)\n\t... 4 more\n",
+  "storage": {
+    "version": "8.0.45",
+    "transaction_isolation": "REPEATABLE-READ",
+    "sql_mode": "ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION"
+  },
+  "cleanup_status": "CLEAN"
+}

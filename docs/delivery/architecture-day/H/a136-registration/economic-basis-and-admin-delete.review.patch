@@ -1,0 +1,64 @@
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/business/CmsRegistrationControllerSafetyTest.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/business/CmsRegistrationControllerSafetyTest.java
+@@ -153,6 +153,30 @@
+         verifyNoInteractions(perkLedgerService);
+     }
+
++    @Test
++    void genericEditCannotRewriteOriginalPointsInventoryOrBeneficiary() {
++        loginWith("business:registration:pii");
++        CmsRegistration request = new CmsRegistration();
++        request.setId(5L);
++        request.setPointUsed(1000L);
++        request.setPointsReturned(0);
++        request.setOrderNum(100L);
++        request.setTicketId(200L);
++        request.setMemberId(300L);
++        request.setTicketName("ordinary editable label");
++        controller.edit(request);
++        org.mockito.ArgumentCaptor<CmsRegistration> writes =
++                org.mockito.ArgumentCaptor.forClass(CmsRegistration.class);
++        verify(registrationService).updateCmsRegistration(writes.capture());
++        CmsRegistration write = writes.getValue();
++        assertNull(write.getPointUsed(), "generic edits must not invent points to refund");
++        assertNull(write.getPointsReturned(), "generic edits must not release a consumed refund identity");
++        assertNull(write.getOrderNum(), "inventory release must use the original reservation quantity");
++        assertNull(write.getTicketId(), "inventory release must use the original ticket identity");
++        assertNull(write.getMemberId(), "generic edits must not change the economic beneficiary");
++        assertEquals("ordinary editable label", write.getTicketName());
++    }
++
+     // ------------------------------------------- 错核撤销入口(平台后台唯一入口)
+
+     /**
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/it/MerchantRegistrationCancellationMySqlIT.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/it/MerchantRegistrationCancellationMySqlIT.java
+@@ -79,6 +79,28 @@
+         catch (InterruptedException e) { Thread.currentThread().interrupt(); throw new AssertionError(e); }
+     }
+
++    @Test void adminDeleteCannotEraseWinnerCommittedAfterItsPrecheck() {
++        Long id = original(0L, 0);
++        CmsRegistrationMerchantMapper delayed = spy(mapper);
++        doAnswer(i -> {
++            CmsRegistrationMerchant stale = mapper.selectCmsRegistrationMerchantById(id);
++            assertEquals(1, mapper.confirmWinnerIfPending(id));
++            return stale;
++        }).when(delayed).selectCmsRegistrationMerchantById(id);
++        com.chengyinhub.web.controller.business.CmsRegistrationMerchantController controller =
++                new com.chengyinhub.web.controller.business.CmsRegistrationMerchantController();
++        com.chengyinhub.business.service.ITopicOperationsScopeAuthorizer scope =
++                mock(com.chengyinhub.business.service.ITopicOperationsScopeAuthorizer.class);
++        when(scope.canViewTopic(77L)).thenReturn(true);
++        ReflectionTestUtils.setField(controller, "cmsRegistrationMerchantService", withMapper(delayed));
++        ReflectionTestUtils.setField(controller, "topicOperationsScopeAuthorizer", scope);
++        com.chengyinhub.common.core.domain.AjaxResult result = controller.remove(new Long[]{id});
++        assertEquals(1, db.queryForObject(
++                "SELECT COUNT(*) FROM cms_registration_merchant WHERE id=? AND audit_status=1 AND del_flag=0",
++                Integer.class, id), "a stale admin precheck must not delete the newly selected winner");
++        assertNotEquals(200, result.get("code"));
++    }
++
+     @Test void cancelledCandidateCannotBeSelectedEvenWhenDispatcherReadItEarlier() {
+         Long id = original(0L, 0);
+         assertTrue(service.cancelByMerchant(id, OWNER, "merchant"));
