@@ -129,6 +129,9 @@ MYBATIS_ITS=(
   O14CityCodeBackfillMySqlIT
   # DOC2 O5c-(a):统一留痕只读投影(五张留痕表分查 + 合并)。
   AuditTrailProjectionMySqlIT
+  # 2026-10-23 DOC2 O-06 part 1 券库存守恒:N 个并发领取打在库存 K 上恰好 K 个成功(按 id 发券 / 按来源发券且重放不占库存 /
+  #   后台补录),负控=旧的无条件 +1 在同样并发下真超发。行锁串行化只有真 InnoDB 验得动。
+  CouponStockConservationMySqlIT
   # Lane BF4(W48R SHOULD-FIX 1):同意记录 requestId 去重 —— 并发同号重放只落一行、不一致重放 409、
   #   RR 旧快照下必须当前读到原记录。类上门控 CHENGYIN_CONSENT_IDEMPOTENCY_MYSQL_IT=1,下面 mvn 行显式打开。
   ConsentRecordIdempotencyMySqlIT
