@@ -430,11 +430,16 @@
           FROM roam_poi p WHERE p.status=1 AND p.city_code IS NOT NULL AND p.city_code&lt;&gt;''
           ORDER BY p.id DESC LIMIT #{limit}
         </when>
-        <when test="referenceType == 'MEMBER'">
-          SELECT m.id,m.nickname name,'' subtitle
-          FROM ums_member_follow f JOIN ums_member m ON m.id=f.follow_member_id
-          WHERE f.member_id=#{memberId}
-          ORDER BY m.id DESC LIMIT #{limit}
+        <!-- P0-24:与 countReferenceTarget / selectReferenceSnapshot 同口径(club.status=1 未删);
+             只列本人创建或已通过的俱乐部。原 MEMBER 分支已移除:发帖白名单不收 MEMBER,选了必 400。 -->
+        <when test="referenceType == 'CLUB'">
+          SELECT c.id,c.name,COALESCE(c.city,'') subtitle
+          FROM club c
+          WHERE c.status=1 AND COALESCE(c.del_flag,0)=0
+            AND (c.member_id=#{memberId} OR EXISTS(
+              SELECT 1 FROM club_member cm
+              WHERE cm.club_id=c.id AND cm.member_id=#{memberId} AND cm.status=1 AND COALESCE(cm.del_flag,0)=0))
+          ORDER BY c.id DESC LIMIT #{limit}
         </when>
         <otherwise>SELECT NULL id,NULL name,NULL subtitle WHERE 1=0</otherwise>
       </choose>

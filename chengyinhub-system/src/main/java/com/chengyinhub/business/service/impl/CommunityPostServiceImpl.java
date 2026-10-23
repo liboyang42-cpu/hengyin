@@ -435,7 +435,8 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
     public List<Map<String, Object>> referenceOptions(Long memberId, String referenceType, Integer limit) {
         requirePrincipal(memberId);
         String type = upper(referenceType);
-        if (!Arrays.asList("ACTIVITY", "TOPIC", "ROUTE", "POI", "MEMBER").contains(type)) {
+        // P0-24:可选项白名单必须与发帖校验(REFERENCE_TYPES)同一份,否则选得出、发不出(400)。
+        if (!REFERENCE_TYPES.contains(type)) {
             throw error("不支持的关联类型", 400);
         }
         return mapper.selectReferenceOptions(type, memberId, boundedLimit(limit));
