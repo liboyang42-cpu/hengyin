@@ -42,7 +42,15 @@ class ImRouteProjectionTest {
         member.setConversationId(100L); member.setMemberId(1L); member.setDeleted(0);
         when(members.selectByConvAndMember(eq(100L), anyLong())).thenReturn(member);
         when(members.selectByConvAndMemberForUpdate(eq(100L), anyLong())).thenReturn(member);
-        when(members.selectMyConversations(anyLong())).thenReturn(Collections.singletonList(member));
+        when(members.selectMyConversationSummaries(anyLong())).thenAnswer(call -> {
+            com.chengyinhub.business.mapper.ImConversationMemberMapper.ConversationSummary row =
+                    new com.chengyinhub.business.mapper.ImConversationMemberMapper.ConversationSummary();
+            org.springframework.beans.BeanUtils.copyProperties(member, row);
+            row.setConversation(conversation);
+            List<ImMessage> visible = messages.selectVisiblePage(100L, call.getArgument(0), null, 1);
+            row.setLatest(visible == null || visible.isEmpty() ? null : visible.get(0));
+            return Collections.singletonList(row);
+        });
         when(members.selectByConversation(100L)).thenReturn(Collections.emptyList());
         original = new ImMessage(); original.setId(8L); original.setConversationId(100L);
         original.setSenderId(0L); original.setStatus(ImMessage.STATUS_NORMAL); original.setMsgType(ImMessage.MSG_CARD);

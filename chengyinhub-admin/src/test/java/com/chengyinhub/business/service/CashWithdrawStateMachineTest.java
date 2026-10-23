@@ -214,7 +214,7 @@ class CashWithdrawStateMachineTest {
         when(wechatPayService.queryTransferResult("CW1", "CD1")).thenReturn(qr("SUCCESS", "FINISHED"));
         when(mapper.updateStatusIfProcessing(any())).thenAnswer(evidence::processing);
 
-        evidence.seedDebit(1L);
+        evidence.seedSubmissionIntent(1L);
         svc.syncPendingWithdrawals(50);
 
         ArgumentCaptor<MemberCashWithdraw> cap = ArgumentCaptor.forClass(MemberCashWithdraw.class);
@@ -232,7 +232,7 @@ class CashWithdrawStateMachineTest {
         when(wechatPayService.queryTransferResult("CW1", "CD1")).thenReturn(q);
         when(mapper.updateStatusIfProcessing(any())).thenAnswer(evidence::processing);
 
-        evidence.seedDebit(1L);
+        evidence.seedSubmissionIntent(1L);
         svc.syncPendingWithdrawals(50);
 
         ArgumentCaptor<MemberCashWithdraw> cap = ArgumentCaptor.forClass(MemberCashWithdraw.class);
@@ -248,7 +248,7 @@ class CashWithdrawStateMachineTest {
         when(mapper.updateStatusIfProcessing(any())).thenAnswer(evidence::processing); // 抢占成功
         // addBalance 成功(不抛异常)
 
-        evidence.seedDebit(1L);
+        evidence.seedSubmissionIntent(1L);
         svc.syncPendingWithdrawals(50);
 
         verify(umsMemberService, times(1)).addBalance(9L, TEN);
@@ -273,7 +273,7 @@ class CashWithdrawStateMachineTest {
         when(wechatPayService.queryTransferResult("CW1", "CD1")).thenReturn(q);
         when(mapper.updateStatusIfProcessing(any())).thenAnswer(evidence::processing); // 抢占成功
 
-        evidence.seedDebit(1L);
+        evidence.seedSubmissionIntent(1L);
         svc.syncPendingWithdrawals(50);
 
         ArgumentCaptor<MemberCashWithdraw> claim = ArgumentCaptor.forClass(MemberCashWithdraw.class);
@@ -289,7 +289,7 @@ class CashWithdrawStateMachineTest {
         when(wechatPayService.queryTransferResult("CW1", "CD1")).thenReturn(qr("FAIL", "CLOSED"));
         when(mapper.updateStatusIfProcessing(any())).thenReturn(0); // 抢占失败:别人已处理
 
-        evidence.seedDebit(1L);
+        evidence.seedSubmissionIntent(1L);
         svc.syncPendingWithdrawals(50);
 
         verify(umsMemberService, never()).addBalance(anyLong(), any()); // ★杜绝重复退款
@@ -304,7 +304,7 @@ class CashWithdrawStateMachineTest {
         when(mapper.updateStatusIfProcessing(any())).thenAnswer(evidence::processing); // 抢占成功
         when(mapper.updateStatusIfManual(any())).thenReturn(0);     // 回补领取输掉
 
-        evidence.seedDebit(1L);
+        evidence.seedSubmissionIntent(1L);
         svc.syncPendingWithdrawals(50);
 
         verify(umsMemberService, never()).addBalance(anyLong(), any());
@@ -324,7 +324,7 @@ class CashWithdrawStateMachineTest {
         when(mapper.updateStatusIfProcessing(any())).thenAnswer(evidence::processing); // 抢占成功
         doThrow(new RuntimeException("增加余额失败")).when(umsMemberService).addBalance(eq(9L), any());
 
-        evidence.seedDebit(1L);
+        evidence.seedSubmissionIntent(1L);
         svc.syncPendingWithdrawals(50);
 
         verify(alarmService, times(1)).alarm(anyString(), anyString());
@@ -340,7 +340,7 @@ class CashWithdrawStateMachineTest {
         when(mapper.selectPendingForQuery(anyInt())).thenReturn(Collections.singletonList(pendingRecord()));
         when(wechatPayService.queryTransferResult("CW1", "CD1")).thenReturn(qr("UNKNOWN", null));
 
-        evidence.seedDebit(1L);
+        evidence.seedSubmissionIntent(1L);
         svc.syncPendingWithdrawals(50);
 
         verify(umsMemberService, never()).addBalance(anyLong(), any());
@@ -355,10 +355,11 @@ class CashWithdrawStateMachineTest {
         old.setSubmitTime(new Date(System.currentTimeMillis() - 7L * 3600_000L)); // 7h 前
         old.setCreateTime(old.getSubmitTime());
         when(mapper.selectPendingForQuery(anyInt())).thenReturn(Collections.singletonList(old));
+        when(mapper.selectById(1L)).thenReturn(old); // Recovery reloads the current persisted receipt under its lock.
         when(wechatPayService.queryTransferResult("CW1", "CD1")).thenReturn(qr("UNKNOWN", null));
         when(mapper.updateStatusIfProcessing(any())).thenAnswer(evidence::processing);
 
-        evidence.seedDebit(1L);
+        evidence.seedSubmissionIntent(1L);
         svc.syncPendingWithdrawals(50);
 
         ArgumentCaptor<MemberCashWithdraw> cap = ArgumentCaptor.forClass(MemberCashWithdraw.class);

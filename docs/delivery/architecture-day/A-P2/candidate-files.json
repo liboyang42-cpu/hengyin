@@ -1,0 +1,39 @@
+{
+  "base": "3bc4bb08caaba4cc300f2df25f90c4a070033bfc",
+  "branch": "codex/architecture-day-a-p2-recovery",
+  "excluded_self": "docs/delivery/architecture-day/A-P2/candidate-files.json",
+  "files": [
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CashWithdrawStateMachineTest.java",
+      "sha256": "6a327a93be43dc86aa8754e5737098cdf734d0df4c38b868a4e8fb7f90f846a5"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CashWithdrawEvidenceFixture.java",
+      "sha256": "fd09e27ba36416f465bee32bc03ad334de101c1f14ed6af139f3deab30a27d12"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CashWithdrawFundEvidenceMySqlIT.java",
+      "sha256": "6739dbe03368969da263e84398155626c7f2d36c36237a017f82c424ee269653"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CashWithdrawFundEvidenceTest.java",
+      "sha256": "351e8d88f6aab256cdf9a8ab92b231a26da3bd8069b829a3a181eb9663df8482"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CashWithdrawServiceImpl.java",
+      "sha256": "0f282ecbd792dcae148e04742902dda6e5dea8a0439c85aaee93690b5c28601b"
+    },
+    {
+      "path": "docs/delivery/architecture-day/A-P2/README.md",
+      "sha256": "8d6549fb7ce968e63eae5e400f61bf95700ff0565163f685f0738c9692df8f44"
+    },
+    {
+      "path": "docs/delivery/architecture-day/A-P2/verification.txt",
+      "sha256": "cae772d9cc465f3ee532f96ea6c18126d2aa7ecbcd8ef841b5e0814434d81c06"
+    },
+    {
+      "path": "docs/delivery/architecture-day/A-P2/verify-static.py",
+      "sha256": "0890cf43f98410908401089912d5dd57211b8e3e80b0bcbe3b2cbe8a92fc54e7"
+    }
+  ]
+}

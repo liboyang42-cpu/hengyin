@@ -68,4 +68,12 @@ public final class CashWithdrawEvidenceFixture {
         f.setBalanceAfter(f.getBalanceBefore().subtract(w.getAmount()));
         w.setBalanceDeductId(f.getId()); facts.computeIfAbsent(id, k -> new ArrayList<>()).add(f);
     }
+    /** Channel-query scenarios must explicitly include a committed original submission intent. */
+    public void seedSubmissionIntent(Long id) {
+        seedDebit(id);
+        List<CashWithdrawFundFact> history = facts.get(id);
+        if (history.stream().anyMatch(f -> CashWithdrawFundFact.SUBMIT_INTENT.equals(f.getKind()))) return;
+        CashWithdrawFundFact intent = CashWithdrawFundFact.of(row(id), CashWithdrawFundFact.SUBMIT_INTENT);
+        intent.setId(++nextFact); history.add(intent);
+    }
 }

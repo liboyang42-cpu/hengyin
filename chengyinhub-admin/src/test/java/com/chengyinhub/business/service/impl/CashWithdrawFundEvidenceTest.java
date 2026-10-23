@@ -53,6 +53,7 @@ class CashWithdrawFundEvidenceTest {
             CashWithdrawFundFact fact = i.getArgument(0); fact.setId(100L + facts.size()); facts.add(fact); return 1;
         });
         when(mapper.updateStatusIfManual(any())).thenAnswer(i -> apply(i.getArgument(0)));
+        when(mapper.updateStatusIfProcessing(any())).thenAnswer(i -> apply(i.getArgument(0)));
         when(mapper.updateStatusIfRefundReview(any())).thenAnswer(i -> apply(i.getArgument(0)));
         when(mapper.confirmChannelSuccess(any())).thenAnswer(i -> apply(i.getArgument(0)));
         when(members.addBalance(9L, original.getAmount())).thenReturn(true);
@@ -106,6 +107,41 @@ class CashWithdrawFundEvidenceTest {
         verify(members, times(1)).addBalance(9L, new BigDecimal("30.00"));
         assertEquals(2, original.getStatus()); assertNotNull(original.getBalanceRefundId());
         assertEquals(1, facts.stream().filter(f -> "REFUND".equals(f.getKind())).count());
+    }
+    @Test void debitOnlyCrashRecoveryNeverQueriesOrPoisonsTwoPersonRefundEvidence() {
+        fact("DEBIT"); original.setStatus(0);
+        when(mapper.selectPendingForQuery(10)).thenReturn(List.of(original));
+        assertEquals(1, service.syncPendingWithdrawals(10));
+        assertEquals(3, original.getStatus()); assertEquals(1, facts.size());
+        verifyNoInteractions(channel); verify(members, never()).addBalance(any(), any());
+        assertNull(ReflectionTestUtils.invokeMethod(service, "recordSubmissionIntent", 81L));
+        assertTrue(service.manualRefund(81L, "maker", "未提交待复核", 3));
+        service.requery(81L);
+        assertEquals(4, original.getStatus()); assertEquals(1, facts.size());
+        assertThrows(IllegalStateException.class, () -> service.manualRefund(81L, "maker", "同人", 4));
+        assertTrue(service.manualRefund(81L, "checker", "原扣款复核", 4));
+        service.requery(81L);
+        assertFalse(service.manualRefund(81L, "other", "重复", 4));
+        assertEquals("CW81", original.getOutBatchNo()); assertEquals("CD81", original.getOutDetailNo());
+        assertEquals(2, facts.size()); verifyNoInteractions(channel);
+        verify(members, times(1)).addBalance(9L, new BigDecimal("30.00"));
+    }
+    @Test void oldUnknownWithoutIntentIsNotReclassifiedAsNeverSubmitted() {
+        fact("DEBIT"); fact("UNKNOWN");
+        when(channel.queryTransferResult("CW81", "CD81")).thenReturn(Map.of("result", "UNKNOWN"));
+        service.requery(81L);
+        assertThrows(IllegalStateException.class, () -> service.manualRefund(81L, "maker", "旧未知", 3));
+        assertEquals(2, facts.size());
+        verify(channel).queryTransferResult("CW81", "CD81");
+        verify(members, never()).addBalance(any(), any());
+    }
+    @Test void frozenDebitOnlySnapshotIsNotRecoveredOrQueried() {
+        fact("DEBIT"); original.setStatus(0); original.setFrozen(1);
+        when(mapper.selectPendingForQuery(10)).thenReturn(List.of(original));
+        assertEquals(1, service.syncPendingWithdrawals(10));
+        assertEquals(0, original.getStatus()); assertEquals(1, facts.size());
+        verify(mapper, never()).updateStatusIfProcessing(any());
+        verifyNoInteractions(channel); verifyNoInteractions(members);
     }
     @Test void definiteNonAcceptanceAllowsFirstRefund() {
         fact("DEBIT"); fact("SUBMIT_INTENT"); fact("NOT_ACCEPTED");

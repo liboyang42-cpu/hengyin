@@ -5,6 +5,7 @@ import com.chengyinhub.business.domain.OfficialBroadcastLog;
 import com.chengyinhub.business.mapper.OfficialAudienceMapper;
 import com.chengyinhub.business.mapper.OfficialBroadcastLogMapper;
 import com.chengyinhub.business.mapper.OfficialBroadcastMapper;
+import com.chengyinhub.business.mapper.UmsMemberMapper;
 import com.chengyinhub.business.service.IImService;
 import com.chengyinhub.business.service.IWxSubscribeMsgService;
 import org.junit.jupiter.api.Test;
@@ -30,6 +31,7 @@ class OfficialBroadcastDeliveryTest {
         final OfficialAudienceMapper audience = mock(OfficialAudienceMapper.class);
         final OfficialBroadcastLogMapper logs = mock(OfficialBroadcastLogMapper.class);
         final OfficialBroadcastMapper broadcasts = mock(OfficialBroadcastMapper.class);
+        final UmsMemberMapper members = mock(UmsMemberMapper.class);
         final IImService im = mock(IImService.class);
         final IWxSubscribeMsgService wx = mock(IWxSubscribeMsgService.class);
         final PlatformTransactionManager transactions = mock(PlatformTransactionManager.class);
@@ -80,6 +82,7 @@ class OfficialBroadcastDeliveryTest {
                 return 1;
             });
             when(audience.selectPlayerIds(any())).thenReturn(Collections.singletonList(10L));
+            when(members.lockMemberById(anyLong())).thenAnswer(call -> call.getArgument(0));
             when(im.sendSystem(anyLong(), anyInt(), anyString(), anyString())).thenReturn(501L);
             when(wx.notifyOfficialBroadcast(anyLong(), anyString(), anyString())).thenReturn(true);
             restart();
@@ -94,6 +97,7 @@ class OfficialBroadcastDeliveryTest {
             ReflectionTestUtils.setField(service, "broadcastMapper", broadcasts);
             ReflectionTestUtils.setField(service, "logMapper", logs);
             ReflectionTestUtils.setField(service, "audienceMapper", audience);
+            ReflectionTestUtils.setField(service, "memberMapper", members);
             ReflectionTestUtils.setField(service, "imService", im);
             ReflectionTestUtils.setField(service, "wxSubscribeMsgService", wx);
             ReflectionTestUtils.setField(service, "transactionManager", transactions);
@@ -113,6 +117,46 @@ class OfficialBroadcastDeliveryTest {
         bc.setAudience("player");
         bc.setChannels(channels);
         return bc;
+    }
+
+    @Test
+    void stalePrecheckCannotSendSixthInappAndKeepsOriginalPendingIdentity() {
+        Fixture f = new Fixture(broadcast("inapp"));
+        // Another broadcast commits the fifth receipt after this dispatch's advisory precheck.
+        when(f.logs.countRecentByMember(10L, 60)).thenReturn(4, 5);
+        assertEquals(0, f.service.dispatch(f.broadcast));
+        Long originalId = f.row("inapp").getId();
+        assertEquals(OfficialBroadcastLog.PENDING, f.row("inapp").getDeliveryState());
+        assertEquals(OfficialBroadcast.ST_PENDING, f.broadcast.getStatus());
+        verifyNoInteractions(f.im, f.wx);
+        when(f.logs.countRecentByMember(10L, 60)).thenReturn(0);
+        assertEquals(1, f.restart().dispatch(f.broadcast));
+        assertEquals(originalId, f.row("inapp").getId());
+        verify(f.im, times(1)).sendSystem(anyLong(), anyInt(), anyString(), anyString());
+    }
+
+    @Test
+    void memberLockPrecedesDeliveryLockFrequencyReadMessageAndSuccess() {
+        Fixture f = new Fixture(broadcast("inapp"));
+        when(f.logs.countRecentByMember(10L, 60)).thenReturn(4);
+        assertEquals(1, f.service.dispatch(f.broadcast));
+        org.mockito.InOrder ordered = inOrder(f.members, f.logs, f.im);
+        ordered.verify(f.members).lockMemberById(10L);
+        ordered.verify(f.logs).lockDelivery(f.row("inapp").getId());
+        ordered.verify(f.logs).countRecentByMember(10L, 60);
+        ordered.verify(f.im).sendSystem(eq(10L), anyInt(), anyString(), anyString());
+        ordered.verify(f.logs).transition(f.row("inapp").getId(), OfficialBroadcastLog.PENDING,
+                OfficialBroadcastLog.SUCCESS, null, 501L);
+    }
+
+    @Test
+    void missingMemberCannotAcquireDeliveryOrWriteMessageOrSuccess() {
+        Fixture f = new Fixture(broadcast("inapp"));
+        when(f.members.lockMemberById(10L)).thenReturn(null);
+        assertEquals(0, f.service.dispatch(f.broadcast));
+        assertEquals(OfficialBroadcastLog.PENDING, f.row("inapp").getDeliveryState());
+        verify(f.logs, never()).lockDelivery(anyLong());
+        verifyNoInteractions(f.im, f.wx);
     }
 
     @Test

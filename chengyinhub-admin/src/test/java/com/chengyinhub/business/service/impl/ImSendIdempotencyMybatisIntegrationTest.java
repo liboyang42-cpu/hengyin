@@ -58,6 +58,8 @@ class ImSendIdempotencyMybatisIntegrationTest {
         new ResourceDatabasePopulator(new FileSystemResource(sql.resolve("migration_im.sql").toFile()),
                 new FileSystemResource(sql.resolve("migration_im_send_idempotency_20260913.sql").toFile()),
                 new FileSystemResource(sql.resolve("migration_20261012_im_media_visibility.sql").toFile())).execute(source);
+        // 批量列表只读取公开展示字段；缺失的对方资料仍保留原 member identity。
+        db.execute("create table ums_member(id bigint primary key,name varchar(64),nickname varchar(64),avatar varchar(255))");
         SqlSessionFactoryBean factory = new SqlSessionFactoryBean();
         factory.setDataSource(source);
         factory.setTypeAliasesPackage("com.chengyinhub.business.domain");
