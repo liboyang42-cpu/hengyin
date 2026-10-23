@@ -40,6 +40,11 @@
   <view wx:if="{{merchant}}" class="poi-section"><text class="poi-section__title">基本信息</text><view class="poi-group"><view class="poi-row"><text>商家名称</text><text class="poi-row__value">{{merchant.displayName}}</text></view><view wx:if="{{merchant.catNames}}" class="poi-row"><text>品类</text><text class="poi-row__value">{{merchant.catNames}}</text></view><view class="poi-row"><text>收费方式</text><text class="poi-row__value">{{merchant.chargeText}}</text></view><view class="poi-row"><text>营业状态</text><text class="poi-row__value">{{merchant.businessStatusText}}</text></view><view wx:if="{{merchant.address && hasLocation}}" class="poi-row" bindtap="openLocation" aria-role="button" aria-label="导航到{{merchant.address}}" hover-class="cy-pressed" hover-stay-time="80"><text>门店地址</text><text class="poi-row__value poi-row__link">{{merchant.address}}</text></view><view wx:elif="{{merchant.address}}" class="poi-row"><text>门店地址</text><text class="poi-row__value">{{merchant.address}}</text></view></view></view>
   <cy-option-sheet checkmark="{{true}}" show="{{choiceSheetShow}}" title="选择答案" items="{{choiceSheetItems}}" confirm-text="提交"
                    bind:select="onChoiceSheetSelect" bind:cancel="onChoiceSheetCancel" />
+  <!-- 物理返回 / iOS 侧滑:0 尺寸 page-container 守卫先关答题半屏(等同点取消),不把整页弹出去。
+       选中提交时 choiceSheetShow 已先置 false,onChoiceSheetCancel 的守卫会忽略随后的 afterleave。 -->
+  <page-container show="{{choiceSheetShow}}" duration="{{0}}" overlay="{{false}}"
+    custom-style="width:0;height:0;background:transparent;pointer-events:none"
+    bind:afterleave="onChoiceSheetCancel" />
 </view>
 <cy-error load-failure wx:else fill title="页面暂时无法显示" sub="页面状态异常，请重新加载。" retry="重试" bind:retry="retry" />
     <view wx:if="{{interactionState !== 'idle'}}" class="poi-recovery"><cy-error title="{{interactionTitle}}" sub="{{interactionText}}" retry="{{interactionActionText}}" bind:retry="recoverInteraction" /></view>
