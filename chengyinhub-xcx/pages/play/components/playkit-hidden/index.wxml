@@ -2,9 +2,9 @@
                limit-seconds="{{limitSeconds}}" tries="{{maxTries}}"
                bind:back="onClose" bind:verdict="onVerdict">
   <view class="g-col hd {{reducedMotion ? 'hd--reduced' : ''}}">
-    <view class="hd__q">{{title}}</view>
+    <view class="hd__q pe pe--blur" style="--pe-d:.05s">{{title}}</view>
 
-    <view class="hd__scene" bindtap="onTapScene"
+    <view class="hd__scene pe pe--zoom" style="--pe-d:.15s" bindtap="onTapScene"
           hover-class="hd__scene--press" hover-stay-time="60"
           aria-role="button" aria-label="在图上点中藏起来的目标">
       <image class="hd__img" wx:if="{{imageUrl}}" src="{{imageUrl}}" mode="aspectFill" />
@@ -24,9 +24,9 @@
 
     <!-- 待找清单:玩家要知道自己在找什么。label 是有意下发的,坐标不是 -->
     <view class="hd__chips">
-      <view class="hd__chip {{item.found ? 'is-found' : ''}}" wx:for="{{targets}}" wx:key="id">{{item.label}}</view>
+      <view class="hd__chip {{item.found ? 'is-found' : ''}} pe pe--pop" style="--pe-d:1s;--pe-i:{{index}}" wx:for="{{targets}}" wx:key="id">{{item.label}}</view>
     </view>
-    <view class="hd__prog">{{foundCount}} / {{total}}</view>
-    <view class="hd__foot">点一下你觉得藏着的地方。</view>
+    <view class="hd__prog pe pe--up" style="--pe-d:1.2s">{{foundCount}} / {{total}}</view>
+    <view class="hd__foot pe pe--up" style="--pe-d:1.3s">点一下你觉得藏着的地方。</view>
   </view>
 </cy-play-stage>

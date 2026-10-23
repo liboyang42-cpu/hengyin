@@ -2072,20 +2072,22 @@ public class ApiPlayProgressController extends BaseController
             double dist = GeoDistanceUtils.haversineMeters(playerLat, playerLng, nodeLat, nodeLng);
             if (!Double.isFinite(dist)) return error("定位无效");
             // B1:定位精度闸(仅坐标判定路径)。accuracy 为端上 wx.getLocation 的水平精度(米);
-            // 空白=旧版小程序未上报,放行并留痕;非有限/负数=定位无效;>80m 要求去开阔处或扫码,先于距离判断。
-            // O-01:空精度放行仍是默认;只有 owner 定下最低小程序版本后打开 play.arrive.require_accuracy 才拒。
-            Double acc = null;
+            // 空白=未上报,拒(ARRIVE_ACCURACY_MISSING);非有限/负数/坏文本=定位无效(ARRIVE_ACCURACY_INVALID);
+            // >80m 要求去开阔处或扫码,先于距离判断。
+            // O-01(owner 2026-10-23 拍板:尚无真实用户,不设过渡期):原「空精度放行」与开关
+            // play.arrive.require_accuracy 已删除。这两种拒绝不是作弊判定,不入守卫表、不可申诉,重新定位或扫码即可。
             if (StringUtils.isBlank(accuracy)) {
-                if (arriveLocationGuard != null && arriveLocationGuard.requireAccuracy()) {
-                    return error("当前版本未上报定位精度，请更新小程序后重试或扫码完成")
-                            .put("errorCode", com.chengyinhub.business.service.support.ArriveLocationGuard.ACCURACY_MISSING);
-                }
-                logger.info("arrive 未上报定位精度 memberId={} nodeId={}", memberId, nId);
-            } else {
-                acc = parseGeoCoordinate(accuracy, 0d, Double.MAX_VALUE);
-                if (acc == null) return error("定位无效");
-                if (acc > GEOFENCE_ACCURACY_METERS) return error("定位精度不足，请到开阔处或扫码完成");
+                return error("未获取到定位精度，请重新定位后重试或扫码完成")
+                        .put("errorCode", com.chengyinhub.business.service.support.ArriveLocationGuard.ACCURACY_MISSING)
+                        .put("appealable", false);
             }
+            Double acc = parseGeoCoordinate(accuracy, 0d, Double.MAX_VALUE);
+            if (acc == null) {
+                return error("定位无效")
+                        .put("errorCode", com.chengyinhub.business.service.support.ArriveLocationGuard.ACCURACY_INVALID)
+                        .put("appealable", false);
+            }
+            if (acc > GEOFENCE_ACCURACY_METERS) return error("定位精度不足，请到开阔处或扫码完成");
             if (dist > GEOFENCE_METERS) return error("还没到这一站附近");
             // O-01 第 4–7 层(节流/速度/窗口位移/不确定性扣减):开关 off 时不读不写,行为与改动前一致。
             if (arriveLocationGuard != null) {
@@ -2983,7 +2985,7 @@ public class ApiPlayProgressController extends BaseController
                 : advancedGameRuntimeService.completeGate(memberId, actId, node.getTopicId(), node.getId());
         // C1 传感器可信边界(选项 A):设备自报成绩(反应毫秒/撞击数/heldMs/停表/方位)、拍照兜底放行、
         // 静态节点码匹配都证明不了「真做到了」⇒ 本节点只发探索值与徽章,不发积分/券/掉落。
-        // 主题通关奖与碎片文不在这一刀里(仍按调用方原口径)。
+        // 碎片文不在这一刀里(仍按调用方原口径);主题通关奖在下面通关处按全部已完成节点再判一次(#478-3)。
         RewardPolicy topicRewardPolicy = rewardPolicy;
         boolean rewardCapped = rewardPolicy == RewardPolicy.FULL && advancedGameRuntimeService != null
                 && advancedGameRuntimeService.rewardCappedToXpBadge(memberId, actId, node.getTopicId(), node.getId());
@@ -3125,11 +3127,15 @@ public class ApiPlayProgressController extends BaseController
             doneProbe.setTopicId(node.getTopicId());
         }
         int done = 0;
+        List<Long> doneNodeIds = new ArrayList<>();
         for (PlayerNodeProgress doneRow : playerNodeProgressService.selectPlayerNodeProgressList(doneProbe)) {
             // F1:完成事实只认 status==1。mode2 自由收集的到店/凭证行 status=0(由 markGameDone 0→1),
             // 按行数全算会让「只到店没玩」的节点凑满 total ⇒ 提前判通关发奖。
             // 口径与 /nodes completedNodeIds、TopicRouteRuntimeServiceImpl.completed() 一致。
-            if (doneRow.getStatus() != null && doneRow.getStatus() == 1) done++;
+            if (doneRow.getStatus() != null && doneRow.getStatus() == 1) {
+                done++;
+                doneNodeIds.add(doneRow.getNodeId());
+            }
         }
 
         TopicRouteState routeState = null;
@@ -3152,10 +3158,19 @@ public class ApiPlayProgressController extends BaseController
                 : isTopicCompleted(memberId, actId, node.getTopicId(), total, done);
         if (routeState != null && routeState.getOpening() != null
                 && !Boolean.TRUE.equals(routeState.getOpening().get("complete"))) completed = false;
+        boolean topicRewardCapped = false;
         if (completed) {
-            com.chengyinhub.business.domain.vo.TopicCompletionAwardVO award = topicRewardPolicy == RewardPolicy.FULL
+            // #478-3:任一已完成节点靠设备自报/拍照兜底/静态码完成 ⇒ 通关奖同样只发探索值、徽章与通关勋章,
+            // 不发通关积分与通关券。③ 自由收集的通关认核销(商家扫码,服务端可证),不在此列,
+            // 与 CmsRegistrationServiceImpl 核销侧发的通关奖同口径,免得谁最后到谁决定发多少。
+            topicRewardCapped = topicRewardPolicy == RewardPolicy.FULL && !shopDay
+                    && (rewardCapped || (advancedGameRuntimeService != null
+                        && advancedGameRuntimeService.anyNodeRewardCappedToXpBadge(memberId, actId,
+                                node.getTopicId(), doneNodeIds)));
+            RewardPolicy completionPolicy = topicRewardCapped ? RewardPolicy.XP_BADGE_ONLY : topicRewardPolicy;
+            com.chengyinhub.business.domain.vo.TopicCompletionAwardVO award = completionPolicy == RewardPolicy.FULL
                     ? topicCompletionAwardService.grantOnce(memberId, node.getTopicId(), actId, null)
-                    : topicCompletionAwardService.grantOnce(memberId, node.getTopicId(), actId, null, topicRewardPolicy);
+                    : topicCompletionAwardService.grantOnce(memberId, node.getTopicId(), actId, null, completionPolicy);
             newBadges.addAll(award.getBadges());
             earnedXp += award.getEarnedXp();
         }
@@ -3174,6 +3189,7 @@ public class ApiPlayProgressController extends BaseController
         data.put("firstTime", firstTime);
         // 界面据此说清「这一站只记探索值与徽章」,不自行补发或换旧路径领奖
         if (rewardCapped) data.put("rewardCeiling", RewardPolicy.XP_BADGE_ONLY.name());
+        if (topicRewardCapped) data.put("topicRewardCeiling", RewardPolicy.XP_BADGE_ONLY.name());
         data.put("done", done);
         data.put("total", total);
         data.put("completed", completed);

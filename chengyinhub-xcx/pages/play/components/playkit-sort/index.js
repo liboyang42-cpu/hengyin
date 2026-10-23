@@ -53,13 +53,15 @@ Component({
     // ⚠️ 派生行换键名(rows),别写回被监听的 items —— 那会自触发死循环(见 playkit-observer-selfloop)
     rows: [],
     dragging: -1,
+    dragOffset: 0,      // 正在拖那一行相对它当前格子的偏移(px),跟手
+    picked: -1,         // 点选对调:先点的那一行
     verdict: '',        // '' 未判 / 'ok' 通过 / 'no' 判错
   },
   observers: {
     'show, items': function (show, items) {
       if (!show) return;
       this._dragTo = -1;
-      this.setData({ rows: paint(items), dragging: -1, verdict: '' });
+      this.setData({ rows: paint(items), dragging: -1, dragOffset: 0, picked: -1, verdict: '' });
       const stage = this.selectComponent('#cy-play-stage');
       if (stage) stage.begin();
     },
@@ -68,6 +70,8 @@ Component({
       if (!(attempts > 0)) return;
       const verdict = passed ? 'ok' : 'no';
       if (verdict !== this.data.verdict) this.setData({ verdict });
+      // 判错整列抖一下(原型 .phone.shake);不逐行标红 —— 服务端只给整体对错
+      if (!passed) { const stage = this.selectComponent('#cy-play-stage'); if (stage && stage.nudge) stage.nudge(); }
     },
   },
   methods: {
@@ -75,57 +79,68 @@ Component({
     _moveRow: moveRow,
     _canSubmit: canSubmit,
 
-    /** 拖拽:按下时量一次行高,移动时按「走了几行」算落点,松手才真正搬。
-     *  不用 setData 逐帧重排 —— 那是每帧一次列表重建,八行就开始掉帧。 */
+    /** 拖拽:按下时量一次行高(含行间距),移动时那一行跟手;越过半行就和邻居换位,
+     *  换完把偏移扣掉一行,手指下面始终是同一行。 */
     onDragStart(e) {
       if (this.data.verdict === 'ok') return;   // 过了就别再动;判错还要重排再交
       const i = Number(e.currentTarget.dataset.i);
       this._dragFrom = i;
+      this._dragAt = i;
       this._dragY = (e.touches && e.touches[0]) ? e.touches[0].clientY : 0;
+      this._moved = false;
       this._dragTo = i;
       wx.createSelectorQuery().in(this).select('.so__list').boundingClientRect((rect) => {
         const n = this.data.rows.length;
         this._rowH = (rect && rect.height > 0 && n > 0) ? rect.height / n : 0;
       }).exec();
-      motion.haptic({ reducedMotion: this.data.reducedMotion, type: 'light' });
-      this.setData({ dragging: i });
     },
     onDragMove(e) {
       if (this._dragFrom == null || !(this._rowH > 0)) return;
       const y = (e.touches && e.touches[0]) ? e.touches[0].clientY : this._dragY;
-      const steps = Math.round((y - this._dragY) / this._rowH);
-      // 落点是纯计算(没渲染),放实例字段 —— 进 data 就是死数据字段
-      this._dragTo = Math.max(0, Math.min(this.data.rows.length - 1, this._dragFrom + steps));
+      const dy = y - this._dragY;
+      if (!this._moved) {
+        if (Math.abs(dy) < 8) return;
+        this._moved = true;
+        motion.haptic({ reducedMotion: this.data.reducedMotion, type: 'light' });
+      }
+      const n = this.data.rows.length;
+      const target = Math.max(0, Math.min(n - 1, this._dragFrom + Math.round(dy / this._rowH)));
+      this._dragTo = target;
+      const dragOffset = Math.round(dy - (target - this._dragFrom) * this._rowH);
+      if (target === this._dragAt) { this.setData({ dragging: target, dragOffset, picked: -1 }); return; }
+      const rows = moveRow(this.data.rows, this._dragAt, target);
+      this._dragAt = target;
+      motion.haptic({ reducedMotion: this.data.reducedMotion, type: 'light' });
+      this.setData({ rows, dragging: target, dragOffset, picked: -1, verdict: '' });
     },
     onDragEnd() {
-      const from = this._dragFrom;
-      const to = this._dragTo;
+      const moved = this._moved;
       this._dragFrom = null;
       this._rowH = 0;
       this._dragTo = -1;
-      if (from != null && from >= 0 && to >= 0 && from !== to) {
-        this._applyMove(from, to);
-        return;
-      }
-      this.setData({ dragging: -1 });
+      if (moved) this._releasedAt = Date.now();   // 紧跟着的那次 tap 不算点选
+      if (this.data.dragging >= 0 || this.data.dragOffset) this.setData({ dragging: -1, dragOffset: 0 });
+    },
+    /** 点选对调:先点一行(描边),再点另一行两行对调;点同一行取消 */
+    onTapRow(e) {
+      if (this.data.verdict === 'ok') return;
+      if (this._releasedAt && Date.now() - this._releasedAt < 400) return;
+      const i = Number(e.currentTarget.dataset.i);
+      const p = this.data.picked;
+      if (p < 0) { motion.haptic({ reducedMotion: this.data.reducedMotion, type: 'light' }); this.setData({ picked: i }); return; }
+      if (p === i) { this.setData({ picked: -1 }); return; }
+      const rows = this.data.rows.slice();
+      const t = rows[p]; rows[p] = rows[i]; rows[i] = t;
+      motion.haptic({ reducedMotion: this.data.reducedMotion, type: 'medium' });
+      this.setData({ rows, picked: -1, verdict: '' });
     },
 
-    /** 上移 / 下移:读屏器与手抖玩家的那条路 */
-    onUp(e) { this._moveBy(Number(e.currentTarget.dataset.i), -1); },
-    onDown(e) { this._moveBy(Number(e.currentTarget.dataset.i), 1); },
-    _moveBy(i, delta) {
-      if (this.data.verdict === 'ok') return;
-      const to = i + delta;
-      if (i < 0 || i >= this.data.rows.length || to < 0 || to >= this.data.rows.length) return;
-      motion.haptic({ reducedMotion: this.data.reducedMotion, type: 'light' });
-      this._applyMove(i, to);
-    },
     _applyMove(from, to) {
       const rows = moveRow(this.data.rows, from, to);
       if (rows === this.data.rows) return;
       // 动过了就是新的一版:上一次的判定标记全部撤掉
       this._dragTo = -1;
-      this.setData({ rows, dragging: -1, verdict: '' });
+      this.setData({ rows, dragging: -1, picked: -1, verdict: '' });
     },
 
     onSubmit() {

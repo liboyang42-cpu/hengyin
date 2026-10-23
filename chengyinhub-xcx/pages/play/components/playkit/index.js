@@ -18,6 +18,8 @@ const KIT_TYPES = [
   /* 计步单独一个 'walk':已有的 'steps' 是 v5.1 那批半屏 sheet 的壳,
      与这一批整屏的不是一套东西。同名会让人以为换个 kit 就能切,实际两套壳。 */
   'walk',
+  /* 不在这里登记的一支:D20 三档检定卡(kit.type 为 journeycheck)。玩家页在故事流里直挂检定卡,
+     不经 cy-playkit;只有编辑页试玩从这里进(跨分包直挂它会在分包没下完时卡在占位态,2026-10-23 复查实测)。 */
   /* 《预制人生》四个新段(契约 §2)。photoCheck 与 qa 拍照题一样是两步,
      它的 shoot 也走 onShoot;profile 多一个头像上传动作。
      ⚠️ §2.3 的 check 段已作废 —— master 上的 R14 检定走 JOURNEY_SEGMENTS,不在这份分发器里。 */
@@ -50,6 +52,7 @@ Component({
     },
 
     onSubscribe() { this._emit('subscribe'); },
+    onCheckAction(e) { this._emit((e.detail && e.detail.action) || ''); },   // 检定卡:roll / reroll / settle
     onOpen() { this._emit('open'); },
     onContinue() { this._emit('continue'); },
     onAnswer(e) { this._emit('answer', e.detail); },

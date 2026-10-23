@@ -87,7 +87,7 @@ DL1、O15、O3/O9、F5、O11/O17、O8/O10 没有新增迁移。所有迁移都�
 | `feature.flag.orientSession` | sys_config（只有严格等于 `true` 才开，不写种子） | 关 | F1a |
 | `orient.scoring.enabled` | sys_config 种子 `false` | 关 | F1b |
 | `play.arrive.location_guard.mode` | sys_config 种子 `off` | off | F1c |
-| `play.arrive.require_accuracy` | sys_config 种子 `false` | 关 | F1c |
+| `play.arrive.require_accuracy` | sys_config 种子 `false`（**2026-10-23 FXB 已废弃**：代码不再读取，空精度一律拒，见 `docs/delivery/doc2-1023/FXB.md`） | — | F1c |
 | `roam.visited_poi.stable_identity` | sys_config 种子 `false` | 关 | F1c |
 | `orient.geo.normalize.enabled`、`orient.alt_task.enabled`、`orient.team.board.enabled`、`orient.safety.enabled` | sys_config 种子 `false`；键缺失也按关处理 | 关 | F1d |
 | `chengyin.search.unified.enabled` | `@Value` 缺省 `false`；两个 Quartz 任务以暂停态登记 | 关 | O14 |
@@ -132,7 +132,7 @@ DL1、O15、O3/O9、F5、O11/O17、O8/O10 没有新增迁移。所有迁移都�
 - 其它在各 PR 正文里标注待 owner 决定的事项，集成没有改变结论：
   - F1a：PREPARED 阶段既有推进入口是否拒绝；
   - F1b：存量 product_type=1 主题是否随全局开关一起生效；
-  - F1c：`require_accuracy` 要等最低小程序版本定下来才能开；
+  - F1c：~~`require_accuracy` 要等最低小程序版本定下来才能开~~（2026-10-23 owner 拍板无过渡期，FXB 已删除空精度放行与该开关）；
   - F1d：未成年监护数据源缺失，开 safety 后未成年人会被拦；
   - F2：属性范围唯一真源；
   - F7：开 `minorMode` 前须先改用户协议第十条和 `release-legal-gate.js`。

@@ -76,6 +76,8 @@ function createD20Renderer(canvas, width, height, count, pixelRatio, onDone, onE
   let targets = poses;
   let selected = -1;
   let focus = 0;
+  let charge = 0;      // 按住摇骰的蓄力(0–1):越满转得越快、抖得越凶
+  let gold = false;    // 天然 20 落定后整颗镀金;只是演出,成败仍按点数判
   const light = unit([-1, 2, 3]);
 
   function draw(lift) {
@@ -111,8 +113,9 @@ function createD20Renderer(canvas, width, height, count, pixelRatio, onDone, onE
         ctx.moveTo(points[0][0], points[0][1]);
         points.slice(1).forEach((p) => ctx.lineTo(p[0], p[1]));
         ctx.closePath();
-        // ds-ok: native canvas material follows the player's neutral palette.
-        ctx.fillStyle = 'rgb(' + shade + ',' + shade + ',' + (shade + 3) + ')';
+        // ds-ok: native canvas material follows the player's neutral palette; natural 20 turns it gold.
+        ctx.fillStyle = gold ? 'rgb(' + Math.min(255, shade + 30) + ',' + Math.min(255, shade + 8) + ',' + Math.max(0, shade - 70) + ')'
+          : 'rgb(' + shade + ',' + shade + ',' + (shade + 3) + ')';
         ctx.fill();
         ctx.strokeStyle = 'rgba(255,255,255,.28)';
         ctx.lineWidth = .8;
@@ -162,6 +165,10 @@ function createD20Renderer(canvas, width, height, count, pixelRatio, onDone, onE
       focus = progress * progress * (3 - 2 * progress);
       draw(0);
       if (progress === 1) { stop(); onDone(); return; }
+    } else if (phase === 'charge') {
+      // 蓄力:转速随蓄力涨,骰子离地越来越高、左右发颤;不设超时,松手由调用方接 roll()
+      poses = poses.map((q, i) => multiply(axisAngle([1, 1.6, .4 + i], .03 + charge * .38), q));
+      draw(.06 + charge * .18 + Math.sin(elapsed / 60) * .02 * charge);
     } else {
       poses = from.map((q, i) => multiply(axisAngle([1, 1.6, .4 + i], elapsed / 140), q));
       draw(Math.abs(Math.sin(elapsed / 220)) * .25);
@@ -172,8 +179,15 @@ function createD20Renderer(canvas, width, height, count, pixelRatio, onDone, onE
   }
   draw(0);
   return {
+    /** 按住摇骰:level 0–1。第一次调用起动画,之后只改蓄力;减少动态时不转 */
+    charge(level, reducedMotion) {
+      charge = Math.max(0, Math.min(1, Number(level) || 0));
+      if (reducedMotion || phase === 'charge') return;
+      stop(); selected = -1; focus = 0; gold = false; started = Date.now(); phase = 'charge'; tick();
+    },
+    setGold(on) { gold = !!on; if (!phase) draw(0); },
     roll(reducedMotion) {
-      stop(); selected = -1; focus = 0; draw(0); from = poses; started = Date.now(); phase = 'roll';
+      stop(); selected = -1; focus = 0; charge = 0; gold = false; draw(0); from = poses; started = Date.now(); phase = 'roll';
       if (!reducedMotion) tick();
     },
     settle(values, kept, immediate) {

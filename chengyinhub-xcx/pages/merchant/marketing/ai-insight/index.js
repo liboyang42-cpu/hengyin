@@ -19,6 +19,10 @@ const TREND_METRICS = [
 // 数字滚动:慢—快—慢(ease-in-out),与工作台累计收入同一手感
 const COUNT_MS = 900;
 const COUNT_STEPS = 24;
+// 进度格点亮:首格延迟 400ms(等卡片模糊入场)+ 每格 45ms + 300ms 过渡 ≈ 1105ms 亮满,再停一拍退回
+const PIP_SWEEP_HOLD_MS = 1300;
+// 入场期长度:最后一张主题卡 600ms 延迟 + 750ms 飞入,之后撤掉飞入过渡
+const LANDING_MS = 1500;
 // 卡片 → 底部弹层的形变时长,与 wxss .ts-ghost transition 对齐
 const MORPH_MS = 430;
 
@@ -35,6 +39,13 @@ function monthDay(value) {
   const timestamp = toTimestamp(value);
   const parts = timestamp ? chinaParts(timestamp) : null;
   return parts ? parts.month + '月' + parts.day + '日' : '';
+}
+
+// 主题卡底栏用短日期「10/20」,给主办方名留位置
+function slashDay(value) {
+  const timestamp = toTimestamp(value);
+  const parts = timestamp ? chinaParts(timestamp) : null;
+  return parts ? parts.month + '/' + parts.day : '';
 }
 
 function isAccessDenied(res) {
@@ -70,6 +81,9 @@ Page({
     sources: [],          // 客源主题排行(facts.sources)
     grown: false,         // 柱子/进度条从 0 长到位的开关(数据落地后下一拍打开)
     shown: false,         // 区块模糊入场的开关(类切换 + transition,不新增 @keyframes)
+    pipSweep: false,      // 核销进度 10 格:每次打开先整排点亮一遍,再退回真实格数(零也要有这一下)
+    landing: false,       // 入场期:主题卡/商家卡只在这段时间带飞入过渡,结束后按压反馈不受延迟拖累
+    replay: false,        // 重播入场的复位帧:先无过渡回到隐藏态,下一拍再飞入
     reducedMotion: false, // 「减少动态效果」:不滚数字、不形变,只保留淡入
     scrimOn: false,
     sheetTopic: null,     // 推荐主题详情弹层
@@ -105,9 +119,18 @@ Page({
       this._skipNextShowReload = false;
       return;
     }
+    // owner 2026-10-23:每次打开都要有入场(卡片飞入),不只首次;旧数据先播,新数据回来再静默更新
+    this._replayIn();
     this.load();
   },
-  onHide() { this._hidden = true; this._requestEpoch = (this._requestEpoch || 0) + 1; this._stopMotion(); merchantTheme.merchantPageRestore(); },
+  onHide() {
+    this._hidden = true;
+    this._requestEpoch = (this._requestEpoch || 0) + 1;
+    this._stopMotion();
+    // 扫到一半离开:下次回来从真实格数重新扫,不停在整排点亮(卸载时不再写页)
+    if (this.data.pipSweep) this.setData({ pipSweep: false });
+    merchantTheme.merchantPageRestore();
+  },
   onUnload() {
     this._unloaded = true;
     this._stopMotion();
@@ -176,7 +199,10 @@ Page({
             : (attributionCounts.some(function (value) { return value > 0; }) ? 'ready' : 'empty');
           const profile = d.profile || {};
           const firstPaint = !that.data.facts;
+          // 返回页面重播入场时,新数据若在数字滚完前就到,接着从 0 滚到新值,不直接跳数
+          const replaying = !firstPaint && that._replayAt > 0 && Date.now() - that._replayAt < 1500;
           that._trends = that._indexTrends(d.trends);
+          const hero = that._buildHero(d.facts, that.data.win, that._metric || 'visitors', firstPaint || replaying);
           that.setData({
             facts: d.facts,
             ai: d.ai || null,
@@ -185,10 +211,10 @@ Page({
             profile: d.profile || null,
             storeName: String(profile.storeName || '').trim(),
             factState,
-            hero: that._buildHero(d.facts, that.data.win, that._metric || 'visitors', firstPaint),
+            hero,
             slots: that._buildSlots(d.facts),
             sources: that._buildSources(d.facts),
-            valueCard: that._buildValueCard(d.facts),
+            valueCard: that._buildValueCard(d.facts, that.data.win),
             metricCards: that._buildMetricCards(d.facts),
             split: that._buildSplit(d.facts),
             recentVisitors: Array.isArray(d.recentVisitors) ? d.recentVisitors : [],
@@ -207,6 +233,9 @@ Page({
           });
           // 回到页面的静默刷新不重播:数字直接落位,只有首帧入场才滚动
           if (firstPaint) that._playIn();
+          else if (replaying) that._countTo(hero.target);
+          // owner 2026-10-23:核销进度条每次打开都扫一遍,不因暂无核销就一动不动
+          that._sweepPips();
         } else if (res && res.code !== '200' && res.code !== 200) {
           that._clearSensitiveState(app.getRequestErrorMessage(res, '商家资格已失效'));
         } else {
@@ -240,6 +269,9 @@ Page({
       sources: [],
       grown: false,
       shown: false,
+      pipSweep: false,
+      landing: false,
+      replay: false,
       sheetTopic: null,
       sheetPhase: '',
       ghostStyle: '',
@@ -307,24 +339,32 @@ Page({
   },
 
   // 首屏归因价值卡(调研共性规律#1:面板第一职责是「平台为你带来了什么」)
-  _buildValueCard(facts) {
+  _buildValueCard(facts, win) {
     const a = (facts && facts.attribution) || {};
-    const cur = numberOrNull(a.visitors);
-    const prev = numberOrNull(a.prevVisitors);
-    let deltaText = '';
-    if (prev !== null && cur !== null && prev > 0 && cur !== prev) {
-      const d = cur - prev;
-      deltaText = '比上期' + (d > 0 ? ' +' : ' ') + d + ' 位玩家';
-    }
-    // 上期无数据不显示环比(没有值 ≠ 值是 0)
-    return {
+    const base = {
       visitors: this._countText(a.visitors),
       checkins: this._countText(a.checkins),
       redeems: this._countText(a.redeems),
-      // 稿 1:27 价值卡进度 = 核销占打卡的比例(34/42 ≈ 8 格)
-      segs: this._segs(((facts && facts.checkin) || {}).redeemRate),
-      deltaText,
     };
+    // 有 trends:进度条跟主卡所选 7/30/90 天走,= 该窗口核销次数 ÷ 打卡次数(只核销没打卡的封顶满格),
+    // 下行直接写这两个数,不另起一个和下方「核销率」卡口径不同的百分比。
+    const w = this._trends && this._trends[win];
+    if (w) {
+      const checkins = numberOrNull(w.checkins) || 0;
+      const redeems = numberOrNull(w.redeems) || 0;
+      const label = '近' + win + '天';
+      return Object.assign(base, {
+        segs: this._segs(checkins > 0 ? Math.min(1, redeems / checkins) : (redeems > 0 ? 1 : null)),
+        caption: checkins + redeems === 0 ? label + '暂无打卡核销' : label + '打卡 ' + checkins + ' 次 · 核销 ' + redeems + ' 次',
+      });
+    }
+    // 旧缓存没有 trends:沿用 facts 窗口的核销率
+    const rate = numberOrNull(((facts && facts.checkin) || {}).redeemRate);
+    const caption = (facts && facts.window) || '近30天';
+    return Object.assign(base, {
+      segs: this._segs(rate),
+      caption: rate === null ? caption + '暂无核销' : caption + '核销率 ' + this._pct(rate),
+    });
   },
 
   // 新客 vs 回头客双段横条(Square loyalty vs non-loyalty 的内部对比版)
@@ -374,7 +414,7 @@ Page({
     if (cur !== null && prev !== null && prev > 0) {
       const pct = Math.round((cur - prev) / prev * 100);
       deltaDown = pct < 0;
-      deltaText = (pct < 0 ? '' : '+') + pct + '%';
+      deltaText = pct === 0 ? '持平' : (pct < 0 ? '' : '+') + pct + '%';
     }
     const windowText = w ? '近' + win + '天' : ((facts && facts.window) || '近30天');
     const nonce = (this._heatNonce = (this._heatNonce || 0) + 1);
@@ -430,8 +470,13 @@ Page({
     // 指标只是内部状态:WXML 读的是 hero.trio[].on,不走 setData
     this._metric = metric;
     const hero = this._buildHero(this.data.facts, win, metric, true);
-    this.setData({ win, winIdx: TREND_WINDOWS.indexOf(win), hero });
+    const winChanged = win !== this.data.win;
+    const winIdx = TREND_WINDOWS.indexOf(win);
+    if (winChanged) this.setData({ win, winIdx, hero, valueCard: this._buildValueCard(this.data.facts, win) });
+    else this.setData({ win, winIdx, hero });
     this._countTo(hero.target);
+    // 切时间窗:进度条跟着换窗口数,并重扫一遍(和打开页面同一套)
+    if (winChanged) this._sweepPips();
   },
 
   /** 大数字从 0 滚到目标值;切页/隐藏/清场都会停 */
@@ -459,6 +504,36 @@ Page({
     if (this._growTimer) { clearTimeout(this._growTimer); this._growTimer = null; }
     if (this._showTimer) { clearTimeout(this._showTimer); this._showTimer = null; }
     if (this._sheetTimer) { clearTimeout(this._sheetTimer); this._sheetTimer = null; }
+    if (this._pipTimer) { clearTimeout(this._pipTimer); this._pipTimer = null; }
+    if (this._landTimer) { clearTimeout(this._landTimer); this._landTimer = null; }
+    if (this._replayTimer) { clearTimeout(this._replayTimer); this._replayTimer = null; }
+  },
+
+  /** 返回页面:先无过渡复位到隐藏态(区块、柱子、卡片、数字归 0),下一拍整套入场再播一遍 */
+  _replayIn() {
+    if (!this.data.facts || typeof setTimeout !== 'function') return;
+    this._stopMotion();
+    this._replayAt = Date.now();
+    if (this.data.hero) this.setData({ replay: true, shown: false, grown: false, landing: false, 'hero.num': '0' });
+    else this.setData({ replay: true, shown: false, grown: false, landing: false });
+    this._replayTimer = setTimeout(() => {
+      this._replayTimer = null;
+      if (this._hidden || this._unloaded) return;
+      this.setData({ replay: false });
+      this._playIn();
+    }, 50);
+  },
+
+  /** 核销进度:10 格自左向右整排点亮,停一拍,再自左向右退回真实格数(可能全空)。减少动态效果时不扫。 */
+  _sweepPips() {
+    if (this._pipTimer) { clearTimeout(this._pipTimer); this._pipTimer = null; }
+    if (typeof setTimeout !== 'function' || this.data.reducedMotion || !this.data.valueCard) return;
+    this.setData({ pipSweep: true });
+    this._pipTimer = setTimeout(() => {
+      this._pipTimer = null;
+      if (this._hidden || this._unloaded) return;
+      this.setData({ pipSweep: false });
+    }, PIP_SWEEP_HOLD_MS);
   },
 
   /** 首帧:区块模糊入场(wxss),下一拍柱子与进度条长出、大数字滚动 */
@@ -466,6 +541,12 @@ Page({
     if (typeof setTimeout !== 'function') { this.setData({ shown: true, grown: true }); return; }
     if (this._growTimer) clearTimeout(this._growTimer);
     if (this._showTimer) clearTimeout(this._showTimer);
+    if (this._landTimer) clearTimeout(this._landTimer);
+    this.setData({ landing: true });
+    this._landTimer = setTimeout(() => {
+      this._landTimer = null;
+      if (!this._hidden && !this._unloaded) this.setData({ landing: false });
+    }, LANDING_MS);
     this._showTimer = setTimeout(() => {
       this._showTimer = null;
       if (!this._hidden && !this._unloaded && this.data.facts) this.setData({ shown: true });
@@ -584,6 +665,12 @@ Page({
       const hostText = item.hostName ? '主办 ' + item.hostName : '';
       return Object.assign({}, item, {
         metaText: [dateText, hostText].filter(Boolean).join(' · '),
+        // 卡面底栏:日期与主办分两枚图标位
+        dateText: (function () {
+          const a = slashDay(item.startDate);
+          const b = slashDay(item.endDate);
+          return a && b && a !== b ? a + '–' + b : a;
+        })(),
       });
     });
   },

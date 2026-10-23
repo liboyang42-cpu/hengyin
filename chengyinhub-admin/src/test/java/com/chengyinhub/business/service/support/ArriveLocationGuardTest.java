@@ -80,15 +80,12 @@ class ArriveLocationGuardTest
     @Test
     void defaultsKeepCurrentBehaviourWithoutTouchingTheGuardTable()
     {
-        // 键缺失 = off / false
+        // 键缺失 = off
         assertSame(ArriveLocationGuard.PASS, check());
-        assertFalse(guard.requireAccuracy());
         verifyNoInteractions(mapper);
 
         when(config.selectConfigByKey(ArriveLocationGuard.CONFIG_MODE)).thenReturn("off");
-        when(config.selectConfigByKey(ArriveLocationGuard.CONFIG_REQUIRE_ACCURACY)).thenReturn("false");
         assertSame(ArriveLocationGuard.PASS, check());
-        assertFalse(guard.requireAccuracy());
         verifyNoInteractions(mapper);
     }
 
@@ -99,17 +96,7 @@ class ArriveLocationGuardTest
         assertSame(ArriveLocationGuard.PASS, check());
         when(config.selectConfigByKey(any())).thenThrow(new IllegalStateException("redis down"));
         assertSame(ArriveLocationGuard.PASS, check());
-        assertFalse(guard.requireAccuracy());
         verifyNoInteractions(mapper);
-    }
-
-    @Test
-    void requireAccuracyOnlyWhenStrictlyTrue()
-    {
-        when(config.selectConfigByKey(ArriveLocationGuard.CONFIG_REQUIRE_ACCURACY)).thenReturn(" TRUE ");
-        assertTrue(guard.requireAccuracy());
-        when(config.selectConfigByKey(ArriveLocationGuard.CONFIG_REQUIRE_ACCURACY)).thenReturn("yes");
-        assertFalse(guard.requireAccuracy());
     }
 
     @Test

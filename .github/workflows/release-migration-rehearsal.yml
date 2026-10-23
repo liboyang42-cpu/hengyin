@@ -1,0 +1,76 @@
+name: Release migration rehearsal
+
+# 发布迁移包（docs/delivery/release-closeout-20261022/release-migration-pack.*）的演练：
+# 在 GitHub 托管 runner 上起一次性、钉 digest 的 MySQL 8.0.45，从 base schema 建库，
+# 按序执行本次发布的全部迁移，再原样重跑一遍证明零变更，并回读只读预检脚本。
+# 不连任何真实主机；库、容器、口令都只活在这一个 job 里。
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/release-migration-rehearsal.yml'
+      - 'ci/release_migration_rehearsal.py'
+      - 'ci/test_release_migration_rehearsal.py'
+      - 'docs/delivery/release-closeout-20261022/release-migration-pack.json'
+      - 'docs/delivery/release-closeout-20261022/release-migration-precheck.sql'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  rehearsal:
+    if: github.repository == 'liboyang42-cpu/hengyin'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      REHEARSAL_PORT: '33081'
+      TZ: Asia/Shanghai
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # release_manifest.migration_diff 需要读取生产基线提交的 git 对象。
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Static pack contract (no database)
+        run: python3 -B ci/test_release_migration_rehearsal.py -v
+      - name: Install existing pinned schema client
+        run: python3 -m pip install --disable-pip-version-check PyMySQL==1.1.1
+      - name: Start pinned disposable MySQL 8.0.45 on loopback
+        run: |
+          password="$(openssl rand -hex 24)"
+          echo "::add-mask::$password"
+          echo "CHENGYIN_REHEARSAL_MYSQL_PASSWORD=$password" >> "$GITHUB_ENV"
+          export CHENGYIN_REHEARSAL_MYSQL_PASSWORD="$password"
+          name="cy-release-rehearsal-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          echo "REHEARSAL_MYSQL_CONTAINER=$name" >> "$GITHUB_ENV"
+          docker run -d --name "$name" --label "chengyin.rehearsal.run=$GITHUB_RUN_ID" \
+            -e MYSQL_ROOT_PASSWORD="$password" -p "127.0.0.1:${REHEARSAL_PORT}:3306" \
+            mysql:8.0.45@sha256:4af1f8815716546f5b12410f7621f37f93db8dd11a184706ef59111930b8c2ff \
+            --default-time-zone=+08:00 --default-authentication-plugin=mysql_native_password
+          for attempt in $(seq 1 90); do
+            if python3 -c "import os, pymysql; c = pymysql.connect(host='127.0.0.1', port=int(os.environ['REHEARSAL_PORT']), user='root', password=os.environ['CHENGYIN_REHEARSAL_MYSQL_PASSWORD'], connect_timeout=2); v = c.get_server_info(); c.close(); raise SystemExit(0 if v.startswith('8.0.45') else 1)" 2>/dev/null; then
+              echo "mysql 8.0.45 ready after ${attempt} tries"; exit 0
+            fi
+            sleep 2
+          done
+          docker logs --tail 40 "$name"; exit 1
+      - name: Apply release set, re-run for zero changes, read back precheck
+        run: |
+          python3 -B ci/release_migration_rehearsal.py \
+            --schema cy_e2e_release_rehearsal --host 127.0.0.1 --port "$REHEARSAL_PORT" --user root \
+            --report "$RUNNER_TEMP/release-migration-rehearsal/report.json"
+      - name: Remove only this owned MySQL container
+        if: always()
+        run: |
+          if [[ -n "${REHEARSAL_MYSQL_CONTAINER:-}" ]] && docker inspect "$REHEARSAL_MYSQL_CONTAINER" >/dev/null 2>&1; then
+            test "$(docker inspect -f '{{index .Config.Labels "chengyin.rehearsal.run"}}' "$REHEARSAL_MYSQL_CONTAINER")" = "$GITHUB_RUN_ID"
+            docker rm -f "$REHEARSAL_MYSQL_CONTAINER"
+          fi
+      - name: Upload rehearsal report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-migration-rehearsal-${{ github.run_id }}-a${{ github.run_attempt }}
+          path: ${{ runner.temp }}/release-migration-rehearsal/
+          if-no-files-found: warn
+          retention-days: 14

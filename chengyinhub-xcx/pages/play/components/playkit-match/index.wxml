@@ -1,39 +1,49 @@
+<!-- 连线 · 2026-10-23 主人定稿(城瘾 排序连线分类试玩原型):先点左边一项,再点右边对应那一项,
+     两项之间画出一条线,每一对一个颜色,两张卡上的圆点也染同一色;再点已连好的一项就解开。 -->
 <cy-play-stage id="cy-play-stage" skin="qadark" show="{{show}}" back-label="退出"
                bind:back="onClose">
   <view class="g-col ma {{reducedMotion ? 'ma--reduced' : ''}}">
-    <view class="ma__prompt">{{prompt}}</view>
+    <view class="ma__prompt pe pe--blur" style="--pe-d:.05s">{{prompt}}</view>
+    <view class="ma__hint pe pe--blur" style="--pe-d:.15s" wx:if="{{verdict !== 'ok'}}">{{selected ? '再点右边对应的那一项' : '先点左边一项，再点右边对应的那一项'}}</view>
 
-    <!-- 不画线:点左边一张再点右边一张,两张卡各出现同一个序号角标 -->
     <view class="ma__cols">
       <view class="ma__col">
-        <view class="ma__card {{selected === item.id ? 'is-sel' : ''}}"
+        <view class="ma__card {{selected === item.id ? 'is-sel' : ''}} {{item.badge ? 'is-paired' : ''}} pe pe--left"
+              style="--pe-d:.25s;--pe-s:.09s;--pe-i:{{index}}"
               wx:for="{{leftRows}}" wx:key="id" data-id="{{item.id}}" bindtap="onTapLeft"
-              aria-role="button" aria-label="左侧条目:{{item.label}}"
+              aria-role="button" aria-label="左侧条目:{{item.label}}{{item.badge ? '，已连第 ' + item.badge + ' 条，点一下解开' : ''}}"
               hover-class="ma__press" hover-stay-time="80">
           <view class="ma__t">{{item.label}}</view>
           <!-- 整体通过才变绿(那意味着每条都在答案里);判错不逐条标红 —— 服务端不给逐条对错 -->
-          <view class="ma__badge {{verdict === 'ok' ? 'is-right' : ''}}" wx:if="{{item.badge}}">{{item.badge}}</view>
+          <view class="ma__dot {{item.badge ? 'ma__c' + ((item.badge - 1) % 6) : ''}} {{verdict === 'ok' && item.badge ? 'is-right' : ''}}">{{item.badge || ''}}</view>
         </view>
       </view>
+      <!-- 中缝:连线画在这里,长短和角度由行号算出来 -->
+      <view class="ma__gutter" style="height:{{gutterH}}rpx" aria-hidden="true">
+        <view class="ma__line ma__c{{item.c}} {{verdict === 'ok' ? 'is-right' : ''}} {{item.fresh ? 'is-new' : ''}}"
+              wx:for="{{lines}}" wx:key="key"
+              style="top:{{item.y - 3}}rpx;width:{{item.len}}rpx;transform:rotate({{item.deg}}deg) scaleX({{item.fresh ? 0 : 1}})"></view>
+      </view>
       <view class="ma__col">
-        <view class="ma__card {{selected === item.id ? 'is-sel' : ''}}"
+        <view class="ma__card ma__card--r {{selected === item.id ? 'is-sel' : ''}} {{item.badge ? 'is-paired' : ''}} pe pe--right"
+              style="--pe-d:.31s;--pe-s:.09s;--pe-i:{{index}}"
               wx:for="{{rightRows}}" wx:key="id" data-id="{{item.id}}" bindtap="onTapRight"
-              aria-role="button" aria-label="右侧条目:{{item.label}}"
+              aria-role="button" aria-label="右侧条目:{{item.label}}{{item.badge ? '，已连第 ' + item.badge + ' 条，点一下解开' : ''}}"
               hover-class="ma__press" hover-stay-time="80">
+          <view class="ma__dot {{item.badge ? 'ma__c' + ((item.badge - 1) % 6) : ''}} {{verdict === 'ok' && item.badge ? 'is-right' : ''}}">{{item.badge || ''}}</view>
           <view class="ma__t">{{item.label}}</view>
-          <view class="ma__badge {{verdict === 'ok' ? 'is-right' : ''}}" wx:if="{{item.badge}}">{{item.badge}}</view>
         </view>
       </view>
     </view>
 
     <!-- 反馈条:判错也要说清楚「这一次不扣生命」,而且不许逐条标红 -->
     <view class="ma__fb {{verdict === 'ok' ? 'is-ok' : 'is-no'}}" wx:if="{{verdict}}">
-      {{verdict === 'ok' ? '连好了 · 这一题过了' : '还有没连对的地方 · 这次不扣生命'}}
+      {{verdict === 'ok' ? '连好了 · 这一题过了' : '还有没连对的地方 · 点一下连错的那项解开重连'}}
     </view>
   </view>
 
-  <view class="g-btn {{pairedCount >= total && total > 0 ? '' : 'g-btn--disabled'}}" bindtap="onSubmit"
+  <view class="g-btn {{pairedCount >= total && total > 0 ? '' : 'g-btn--disabled'}} pe pe--up" style="--pe-d:.8s" bindtap="onSubmit"
         aria-role="button" aria-label="提交连好的线" hover-class="g-btn--press" hover-stay-time="80">
-    提交
+    连好了
   </view>
 </cy-play-stage>

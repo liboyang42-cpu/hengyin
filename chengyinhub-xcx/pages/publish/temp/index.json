@@ -14,6 +14,7 @@
     "cy-error": "/components/cy/error/index",
     "cy-inline-error": "/components/cy/inline-error/index",
     "cy-playkit": "/pages/play/components/playkit/index",
+    "cy-play-verdict": "/pages/play/components/play-verdict/index",
     "cy-toast": "/components/cy/toast/index",
     "cy-loading-mask": "/components/cy/loading-mask/index",
     "cy-modal-host": "/components/cy/modal-host/index",
@@ -21,7 +22,8 @@
     "cy-result-sheet": "/components/cy/result-sheet/index"
   },
   "componentPlaceholder": {
-    "cy-playkit": "view"
+    "cy-playkit": "view",
+    "cy-play-verdict": "view"
   },
   "navigationStyle": "custom",
   "navigationBarTextStyle": "black"

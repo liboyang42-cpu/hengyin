@@ -9,8 +9,8 @@
 <cy-play-stage wx:if="{{mode === 'd20'}}" id="cy-play-stage" skin="qadark" show="{{show}}" back-label="退出" bind:back="onClose">
   <view class="g-col d20">
     <view class="d20__content">
-      <view class="d20__title">{{kicker || 'D20 检定'}}</view>
-      <view class="d20__meta">
+      <view class="d20__title pe pe--blur" style="--pe-d:.05s">{{kicker || 'D20 检定'}}</view>
+      <view class="d20__meta pe pe--fade" style="--pe-d:.3s">
         <text>{{rollMode === 'advantage' ? '优势 · 取高' : (rollMode === 'disadvantage' ? '劣势 · 取低' : '普通')}}</text>
         <text>DC {{dc}}</text>
         <text>加值 {{modifier >= 0 ? '+' : ''}}{{modifier}}</text>
@@ -19,7 +19,7 @@
         <text>沙盒预览 · 不计入正式判定</text>
         <text>加值为作者在模板中设定的固定值</text>
       </view>
-      <view class="d20__stage" aria-label="{{d20Rolling ? '二十面骰旋转中' : (result ? '本次骰点：' + result.values : '立体二十面骰')}}">
+      <view class="d20__stage pe pe--drop" style="--pe-d:.35s" aria-label="{{d20Rolling ? '二十面骰旋转中' : (result ? '本次骰点：' + result.values : '立体二十面骰')}}">
         <canvas type="2d" id="d20Canvas" class="d20__canvas" binderror="onD20CanvasError" />
       </view>
       <view class="d20__error" wx:if="{{d20Error}}">骰子暂时无法显示。
@@ -39,9 +39,9 @@
 <block wx:else>
 <cy-play-stage wx:if="{{inline}}" id="cy-play-stage" show="{{show}}" back-label="退出" bind:back="onClose">
   <view class="dzi {{rolling ? 'dzi--rolling' : ''}} {{reducedMotion ? 'dzi--reduced' : ''}}">
-    <view class="dzi__k">{{kicker}}</view>
+    <view class="dzi__k pe pe--blur" style="--pe-d:.05s">{{kicker}}</view>
     <view class="dzi__dice">
-      <view class="dzi__die" wx:for="{{dice}}" wx:key="i">
+      <view class="dzi__die pe pe--tumble" style="--pe-d:.2s;--pe-s:.15s;--pe-i:{{index}}" wx:for="{{dice}}" wx:key="i">
         <view class="dzi__pip" wx:for="{{item.pips}}" wx:for-item="on" wx:key="*this"
               style="visibility:{{on ? 'visible' : 'hidden'}}"></view>
       </view>

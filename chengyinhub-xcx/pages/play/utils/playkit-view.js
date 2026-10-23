@@ -728,7 +728,7 @@ function pickPlayKit(view, now) {
       kicker: seg.kicker || '',
       rounds: seg.rounds || 0,
       goalMs: seg.goalMs || 0,
-    });
+    }, sensorContract.kitFields(seg));
   }
   if (name === 'ballShake') {
     return Object.assign(base, {
@@ -738,7 +738,7 @@ function pickPlayKit(view, now) {
       goal: seg.goal || 0,
       timed: !!seg.timed,
       seconds: seg.seconds || 0,
-    });
+    }, sensorContract.kitFields(seg));
   }
   if (name === 'quietHold') {
     return Object.assign(base, {
@@ -866,11 +866,13 @@ const ACTION_OF = {
   'shout:start': 'START_CHALLENGE',
   'countdown:start': 'START_CHALLENGE',
   'stopwatch:start': 'START_CHALLENGE',
+  /* 罗盘不计时,开表只为领 C1 挑战身份(服务端 challengeKey 认 compass);不开表的存量客户端照旧能交 */
+  'compass:start': 'START_CHALLENGE',
   'reaction:submit': 'SUBMIT_REACTION',
   'ballshake:submit': 'SUBMIT_BALL_SHAKE',
   'quiethold:submit': 'SUBMIT_QUIET_HOLD',
-  /* 罗盘指向不开表:它没有「用时」要按服务器时间复核 —— 服务端只复核报来的
-     方位在不在容差内(防误发),所以做完那一下直接 SUBMIT_COMPASS 一步到位。 */
+  /* 罗盘指向没有「用时」要按服务器时间复核 —— 服务端只复核报来的方位在不在容差内(防误发);
+     上面那条开表只为领挑战身份,做完那一下 SUBMIT_COMPASS 带上它。 */
   'compass:submit': 'SUBMIT_COMPASS',
   'shout:submit': 'SUBMIT_SHOUT',
   'countdown:finish': 'SUBMIT_COUNTDOWN',
@@ -905,7 +907,7 @@ function ratioOf(percent) {
   return Math.min(1, Math.max(0, Number((n / 100).toFixed(4))));
 }
 
-/** 挑战类玩法 → START_CHALLENGE 的 game 值。服务端只认这七个驼峰名。 */
+/** 挑战类玩法 → START_CHALLENGE 的 game 值。服务端只认这八个驼峰名(罗盘开表只为领挑战身份)。 */
 const CHALLENGE_GAME = {
   reaction: 'reaction',
   ballshake: 'ballShake',
@@ -913,6 +915,7 @@ const CHALLENGE_GAME = {
   shout: 'shout',
   countdown: 'countdown',
   stopwatch: 'stopwatch',
+  compass: 'compass',
   typein: 'typeIn',
 };
 
@@ -964,8 +967,9 @@ function serverPayload(type, action, detail) {
     case 'dailysign:accept': return { text: d.text || '', photoUrl: d.photoUrl || '' };
     // 抽卡不带参数:抽哪一件由服务端按权重定,客户端说了不算
     case 'random:draw': return {};
-    case 'reaction:submit': return { roundsMs: d.times || [] };
-    case 'ballshake:submit': return { hits: d.hits };
+    // C1:设备自报玩法带上服务端发的挑战身份(组件没给就不带,服务端照旧复核)
+    case 'reaction:submit': return sensorContract.withAttempt({ roundsMs: d.times || [] }, d);
+    case 'ballshake:submit': return sensorContract.withAttempt({ hits: d.hits }, d);
     // 组件按玩家读的单位报(秒),服务端按判定的单位收(毫秒)
     // C1:四个设备自报玩法带上服务端发的挑战身份(组件没给就不带,服务端照旧复核)
     case 'quiethold:submit': return sensorContract.withAttempt({ heldMs: Math.round((d.heldSeconds || 0) * 1000) }, d);

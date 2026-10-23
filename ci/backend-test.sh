@@ -124,11 +124,20 @@ MYBATIS_ITS=(
   # 2026-10-22 DOC2 F3 Phase 1:套票账本迁移可重跑 + 形状负控、Phase 1 不动 settlement_claim(7 列唯一键原样)、
   #   A/B 同买一套票余额互不影响、快照冻结、同单位唯一在约、月度豁免唯一 —— 真 DDL + 真 mapper 才验得动。
   FreeExploreBundleLedgerMySqlIT
+  # 2026-10-23 DOC2 FXE(O-07/F3 Phase 2 只设计):只钉 master 资金链现状 —— claim 先于自营闸、应付表写不进非核销事件、
+  #   撤销后 claim 仍 ACTIVE、退款不触达应付、负额批次卡死不结转、倒扣改冻结额;并逐条在真 DDL 上执行只读对账 SQL。
+  FundsChainO07PinMySqlIT
   # 2026-10-22 O-14 city_code 回填(RV3 B-519-1):南京西路(上海)/北京路(广州)反例、人工值不覆盖、重跑零变更、
   #   修正重跑只改本回填写过的行、只读预览与真实执行逐行一致 —— 真迁移 + 真 MySQL 才验得动。
   O14CityCodeBackfillMySqlIT
   # DOC2 O5c-(a):统一留痕只读投影(五张留痕表分查 + 合并)。
   AuditTrailProjectionMySqlIT
+  # 2026-10-23 DOC2 O-06 part 1 券库存守恒:N 个并发领取打在库存 K 上恰好 K 个成功(按 id 发券 / 按来源发券且重放不占库存 /
+  #   后台补录),负控=旧的无条件 +1 在同样并发下真超发。行锁串行化只有真 InnoDB 验得动。
+  CouponStockConservationMySqlIT
+  # DOC2 FXA(#478-3):主题通关奖封顶判据读真 game_runtime_session JSON 快照 —— 任一已完成站自报/兜底 ⇒ 封顶,
+  #   别人的局、别的场次不算,视觉复核改判 PASS 后解除。
+  ThemeCompletionRewardCapMySqlIT
   # Lane BF4(W48R SHOULD-FIX 1):同意记录 requestId 去重 —— 并发同号重放只落一行、不一致重放 409、
   #   RR 旧快照下必须当前读到原记录。类上门控 CHENGYIN_CONSENT_IDEMPOTENCY_MYSQL_IT=1,下面 mvn 行显式打开。
   ConsentRecordIdempotencyMySqlIT

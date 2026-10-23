@@ -12,16 +12,16 @@ const ROOT = path.resolve(__dirname, '../..');
 const PAGE_JS_PATH = 'pages/merchant/marketing/ai-insight/index.js';
 const PAGE_WXML = fs.readFileSync(path.join(ROOT, 'pages/merchant/marketing/ai-insight/index.wxml'), 'utf8');
 
-function loadPage() {
+function loadPage(extraGlobals) {
   let definition = null;
   const file = path.join(ROOT, PAGE_JS_PATH);
-  vm.runInNewContext(fs.readFileSync(file, 'utf8'), {
+  vm.runInNewContext(fs.readFileSync(file, 'utf8'), Object.assign({
     Page: (value) => { definition = value; },
     getApp: () => ({ globalData: {}, getUserID: () => 'merchant-a', sendRequest() {}, getRequestErrorMessage: () => '' }),
     wx: { getSystemInfoSync: () => ({ statusBarHeight: 44 }), setNavigationBarColor() {} },
     console,
     require: (id) => require(path.resolve(path.dirname(file), id)),
-  });
+  }, extraGlobals));
   const page = Object.assign({}, definition, { data: JSON.parse(JSON.stringify(definition.data)) });
   page.setData = function (patch) {
     Object.keys(patch).forEach((key) => {
@@ -95,7 +95,7 @@ test('旧缓存没有 trends:退回 30 天归因三数,不出窗口切换与格�
   assert.equal(h.num, '21');
   assert.equal(h.title, '近30天，城瘾为你带来');
   assert.equal(h.cells.length, 0);
-  assert.match(PAGE_WXML, /<block wx:if="\{\{hero && hero\.hasTrend\}\}">[\s\S]*class="seg"[\s\S]*class="heat"/);
+  assert.match(PAGE_WXML, /<block wx:if="\{\{hero && hero\.hasTrend\}\}">[\s\S]*class="seg"[\s\S]*class="heat[ "]/);
 });
 
 test('切窗口/切指标重建主卡;无 trends 时窗口点击不动', () => {
@@ -166,4 +166,124 @@ test('页头是问候区 + 店铺头像,不再有店铺档案入口;最近到店
   const wxss = fs.readFileSync(path.join(ROOT, 'pages/merchant/marketing/ai-insight/index.wxss'), 'utf8');
   assert.doesNotMatch(wxss, /\.visitor[^{]*::?before/, '最近到店玩家卡不加竖线');
   assert.doesNotMatch(fs.readFileSync(path.join(ROOT, PAGE_JS_PATH), 'utf8'), /vibrate/, 'owner:不震动');
+});
+
+test('核销进度 10 格:每次打开先整排点亮再退回真实格数,零核销也扫;减少动态效果不扫', () => {
+  assert.match(PAGE_WXML, /class="seg-pip \{\{seg\.on \|\| pipSweep \? 'seg-pip--on' : ''\}\}"/);
+  const timers = [];
+  const page = loadPage({
+    setTimeout: (fn, ms) => { timers.push({ fn, ms }); return timers.length; },
+    clearTimeout() {},
+  });
+  page.data.valueCard = { segs: Array.from({ length: 10 }, () => ({ on: false })) };
+  {
+    page._sweepPips();
+    assert.equal(page.data.pipSweep, true, '零核销也整排点亮');
+    assert.equal(timers.length, 1);
+    assert.ok(timers[0].ms >= 400 + 9 * 45 + 300, '亮满之后才退回');
+    timers[0].fn();
+    assert.equal(page.data.pipSweep, false, '退回真实格数');
+
+    page._sweepPips();
+    // onHide 里 merchant-theme 还原导航色要用全局 getApp/wx
+    const saved = { getApp: global.getApp, wx: global.wx };
+    global.getApp = () => ({ globalData: {} });
+    global.wx = { setNavigationBarColor() {}, setBackgroundColor() {}, setBackgroundTextStyle() {} };
+    try { page.onHide(); } finally {
+      ['getApp', 'wx'].forEach((k) => { if (saved[k] === undefined) delete global[k]; else global[k] = saved[k]; });
+    }
+    assert.equal(page.data.pipSweep, false, '离开页面时不留在点亮态');
+    page._hidden = false;
+
+    page.data.reducedMotion = true;
+    page._sweepPips();
+    assert.equal(page.data.pipSweep, false);
+  }
+  const js = fs.readFileSync(path.join(ROOT, PAGE_JS_PATH), 'utf8');
+  assert.match(js, /if \(firstPaint\) that\._playIn\(\);\s*\n\s*else if \(replaying\) that\._countTo\(hero\.target\);\s*\/\/[^\n]*\n\s*that\._sweepPips\(\);/, '每次加载成功都扫,不只首帧');
+});
+
+test('进度条下一行只说核销率(不重复玩家环比,不随主卡窗口说错);环比 0 写持平', () => {
+  const page = loadPage();
+  assert.equal(page._buildValueCard({ window: '近30天', checkin: { redeemRate: 0.38 } }).caption, '近30天核销率 38%');
+  assert.equal(page._buildValueCard({ window: '近30天', checkin: { redeemRate: null } }).caption, '近30天暂无核销');
+  assert.doesNotMatch(PAGE_WXML, /核销进度 · /, '旧的「核销进度 · 比上期 +N 位玩家」不再出现');
+  page._trends = page._indexTrends({ windows: TRENDS.windows.map((w) => Object.assign({}, w, { prevVisitors: w.visitors })) });
+  assert.equal(page._buildHero(FACTS, 7, 'visitors', false).deltaText, '持平');
+  assert.equal(page._buildHero(FACTS, 7, 'visitors', false).deltaDown, false);
+});
+
+test('切 7/30/90 天:进度条换成该窗口的打卡/核销并重扫;切指标不重扫', () => {
+  const timers = [];
+  const page = loadPage({ setTimeout: (fn, ms) => { timers.push({ fn, ms }); return timers.length; }, clearTimeout() {} });
+  page._trends = page._indexTrends(TRENDS);
+  page.data.facts = FACTS;
+  page._countTo = function () {};
+  page.data.valueCard = page._buildValueCard(FACTS, 30);
+  assert.equal(page.data.valueCard.caption, '近30天打卡 40 次 · 核销 12 次');
+  assert.equal(page.data.valueCard.segs.filter((s) => s.on).length, 3, '12/40 → 3 格');
+
+  page.onWinTap({ currentTarget: { dataset: { win: '7' } } });
+  assert.equal(page.data.valueCard.caption, '近7天打卡 9 次 · 核销 3 次');
+  assert.equal(page.data.valueCard.segs.filter((s) => s.on).length, 3, '3/9 → 3 格');
+  assert.equal(page.data.pipSweep, true, '切窗口重扫');
+  timers.pop().fn();
+  assert.equal(page.data.pipSweep, false);
+
+  page.onWinTap({ currentTarget: { dataset: { win: '90' } } });
+  assert.equal(page.data.valueCard.caption, '近90天打卡 99 次 · 核销 30 次');
+  assert.equal(page.data.pipSweep, true);
+  timers.pop().fn();
+
+  page.onMetricTap({ currentTarget: { dataset: { metric: 'checkins' } } });
+  assert.equal(page.data.pipSweep, false, '切指标不动进度条');
+  assert.equal(page.data.valueCard.caption, '近90天打卡 99 次 · 核销 30 次');
+
+  const empty = JSON.parse(JSON.stringify(TRENDS));
+  empty.windows.forEach((w) => { w.checkins = 0; w.redeems = 0; });
+  page._trends = page._indexTrends(empty);
+  const card = page._buildValueCard(FACTS, 7);
+  assert.equal(card.caption, '近7天暂无打卡核销');
+  assert.equal(card.segs.filter((s) => s.on).length, 0);
+});
+
+test('7 天格子与 30/90 天同大;推荐主题卡是整卡封面 + 底部渐暗,底栏短日期与主办', () => {
+  const wxss = fs.readFileSync(path.join(ROOT, 'pages/merchant/marketing/ai-insight/index.wxss'), 'utf8');
+  assert.match(PAGE_WXML, /class="heat \{\{hero\.cols === 7 \? 'heat--week' : ''\}\}"/);
+  assert.match(wxss, /\.heat--week \.heat-cell \{ width: calc\(\(100% - 112rpx\) \/ 15\); \}/, '15 列格宽,gap 8rpx × 14');
+  assert.match(PAGE_WXML, /<view class="tcard-cover">[\s\S]*?<view class="tcard-shade"><\/view>[\s\S]*?<view class="tcard-over">[\s\S]*?class="tcard-cta">看看</);
+  assert.match(wxss, /--mi-shade:\s*linear-gradient\(180deg/);
+  const page = loadPage();
+  const [t] = page._decorateTopics([{ topicId: 1, name: 'a', startDate: '2026-10-20', endDate: '2026-11-30', hostName: '城市乐居人' }]);
+  assert.equal(t.dateText, '10/20–11/30');
+  assert.equal(t.metaText, '10月20日 – 11月30日 · 主办 城市乐居人', '弹层与读屏仍用完整写法');
+});
+
+test('每次打开都重播入场:返回页面先无过渡复位再飞入,数字从 0 滚;卡片只在入场期带飞入过渡', () => {
+  const timers = [];
+  const page = loadPage({ setTimeout: (fn, ms) => { timers.push({ fn, ms }); return timers.length; }, clearTimeout() {} });
+  page._countTo = function (t) { this._counted = t; };
+  page.data.facts = FACTS;
+  page.data.hero = { num: '21', target: 21 };
+  Object.assign(page.data, { shown: true, grown: true });
+  page._replayIn();
+  assert.deepEqual([page.data.replay, page.data.shown, page.data.grown, page.data.hero.num], [true, false, false, '0'], '复位帧');
+  timers.shift().fn();
+  assert.equal(page.data.replay, false);
+  assert.equal(page.data.landing, true, '入场期开始');
+  assert.equal(page._counted, 21, '大数字从 0 重滚');
+  const land = timers.find((t) => t.ms >= 1300);
+  const show = timers.find((t) => t.ms === 30);
+  show.fn();
+  assert.equal(page.data.shown, true);
+  land.fn();
+  assert.equal(page.data.landing, false, '入场结束撤掉飞入过渡,按压不被延迟');
+
+  const js = fs.readFileSync(path.join(ROOT, PAGE_JS_PATH), 'utf8');
+  assert.match(js, /this\._replayIn\(\);\s*\n\s*this\.load\(\);\s*\n\s*\},/, 'onShow 返回路径重播');
+  assert.match(PAGE_WXML, /\{\{shown \? 'mi-shown' : 'mi-pre'\}\} \{\{landing \? 'mi-landing' : ''\}\} \{\{replay \? 'mi-replay' : ''\}\}/);
+  const wxss = fs.readFileSync(path.join(ROOT, 'pages/merchant/marketing/ai-insight/index.wxss'), 'utf8');
+  assert.match(wxss, /\.mi-pre \.tcard \{ opacity: 0; transform: translateX/);
+  assert.doesNotMatch(wxss, /\.mi-shown \.tcard/, '入场后不覆盖 transform,cy-pressed 缩放照常');
+  assert.match(wxss, /\.cy-motion-reduced \.mi-in, \.cy-motion-reduced\.mi-pre \.tcard/);
 });

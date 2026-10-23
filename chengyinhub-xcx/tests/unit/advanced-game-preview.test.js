@@ -85,10 +85,13 @@ test('★每个转换器产出的 type 都要在分发器白名单里,否则预�
   const dispatcher = fs.readFileSync(
     path.resolve(__dirname, '../../pages/play/components/playkit/index.js'), 'utf8')
   const listed = (dispatcher.match(/const KIT_TYPES = \[([\s\S]*?)\];/) || [])[1] || ''
+  const dispatcherWxml = fs.readFileSync(path.resolve(__dirname, '../../pages/play/components/playkit/index.wxml'), 'utf8')
   const known = new Set([...listed.matchAll(/'([^']+)'/g)].map((m) => m[1]))
   const c = base()
   for (const key of Object.keys(pv._builders)) {
     const kit = pv._builders[key](key === 'album' ? {images: [{url: 'https://example.com/a.jpg'}]} : {})
+    // D20 三档:分发器里有 journeycheck 这一支(编辑页试玩专用),但玩家页不经 cy-playkit,所以不进 KIT_TYPES
+    if (kit.type === 'journeycheck') { assert.match(dispatcherWxml, /kit\.type === 'journeycheck'/); continue }
     assert.ok(known.has(kit.type),
       key + ' 产出的 type=' + kit.type + ' 不在 cy-playkit 的 KIT_TYPES 里')
   }

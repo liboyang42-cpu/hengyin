@@ -27,7 +27,7 @@ function host(options = {}) {
   function load(file) {
     let def;
     vm.runInNewContext(fs.readFileSync(path.join(ROOT, file + '.js'), 'utf8'), {
-      Component: x => { def = x; }, require: name => name.endsWith('/toast.js') ? title => toasts.push({title}) : ({ haptic() {} }), wx,
+      Component: x => { def = x; }, require: name => name.endsWith('/sensor-contract.js') ? require('../../pages/play/utils/sensor-contract.js') : name.endsWith('/toast.js') ? title => toasts.push({title}) : ({ haptic() {} }), wx,
       Date: { now: () => now }, Math, Number,
       setTimeout: (fn, ms) => timer(fn, ms, false), clearTimeout: id => tasks.delete(id),
       setInterval: (fn, ms) => timer(fn, ms, true), clearInterval: id => tasks.delete(id),
@@ -295,4 +295,22 @@ for (const mode of ['manual-before-first-frame', 'three-second-deadline-before-f
   assert.equal(h.listeners.size,0);
   assert.equal(h.tasks.size,0);
   assert.equal(h.toasts.length,1);
+});
+
+// DOC2 FXA:弹球同口径 —— 开表后服务端新发的号随撞击数交,旧号/没有号就不带。
+const { serverPayload } = require('../../pages/play/utils/playkit-view.js');
+const plain = x => JSON.parse(JSON.stringify(x)); // vm 里造的对象跨 realm,按值比
+test('ballshake submits the attemptId issued after this run started, never the stale one', () => {
+  const h = host({props:{goal:1,attemptId:11}}); h.run(); h.sample({x:0,y:0});
+  assert.equal(h.events.filter(e=>e.name==='start').length,1);
+  h.ball.data.attemptId = 33;                    // START_CHALLENGE 回包刷新 kit.attemptId
+  h.ball._x = 0; h.ball._step();
+  const detail = h.events.find(e=>e.name==='submit').detail;
+  assert.equal(detail.attemptId,33);
+  assert.deepEqual(plain(serverPayload('ballshake','submit',detail)),{hits:1,attemptId:33});
+  const stale = host({props:{goal:1,attemptId:11}}); stale.run(); stale.sample({x:0,y:0});
+  stale.ball._x = 0; stale.ball._step();
+  const legacy = stale.events.find(e=>e.name==='submit').detail;
+  assert.deepEqual(Object.keys(legacy).sort(),['hits','passed']);
+  assert.deepEqual(plain(serverPayload('ballshake','submit',legacy)),{hits:1});
 });

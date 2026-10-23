@@ -69,6 +69,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -177,6 +178,14 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
 
     @Autowired(required = false)
     private ITopicCompletionAwardService topicCompletionAwardService;
+
+    /**
+     * #478-3 开局通关奖封顶的判据来源。高级玩法运行时反向依赖本类,故 @Lazy 打破循环;
+     * 手工 new 的单测不注入 = 不按节点封顶(与老行为一致)。
+     */
+    @Autowired(required = false)
+    @Lazy
+    private com.chengyinhub.business.service.IAdvancedGameRuntimeService advancedGameRuntimeService;
 
     /** F2 T02 跨局角色属性;手工 new 的单测不注入 = 不结转(与老行为一致)。 */
     @Autowired(required = false)
@@ -306,7 +315,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         }
         TopicRouteState view = TopicRouteState.BRANCH_GRAPH.equals(routeMode(scope))
                 ? toAvailableView(session, nodes(topicId)) : toLinearView(session, scope, nodes(topicId));
-        grantOpeningAward(memberId, topicId, scope.activityId, view);
+        grantOpeningAward(memberId, topicId, scope.activityId, view, state.getCompletedNodeIds());
         return view;
     }
 
@@ -315,13 +324,17 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
      * completeOpening 的调用方都该拿到奖励,二是奖励异常要穿出本方法的事务一起回滚
      * (controller 不能自己开事务再捕获业务异常,否则提交期会退化成 UnexpectedRollbackException)。
      */
-    private void grantOpeningAward(Long memberId, Long topicId, Long activityId, TopicRouteState view) {
+    private void grantOpeningAward(Long memberId, Long topicId, Long activityId, TopicRouteState view,
+                                   java.util.Collection<Long> completedNodeIds) {
         Map<String, Object> opening = view.getOpening();
         if (topicCompletionAwardService == null || opening == null
                 || !Boolean.TRUE.equals(opening.get("themeComplete"))) {
             return;
         }
-        if (RewardPolicy.XP_BADGE_ONLY.name().equals(opening.get("rewardPolicy"))) {
+        // #478-3:与节点完成那条通关链同口径 —— 任一已完成节点靠自报/兜底/静态码完成 ⇒ 通关奖只发探索值与徽章。
+        boolean nodeCapped = advancedGameRuntimeService != null
+                && advancedGameRuntimeService.anyNodeRewardCappedToXpBadge(memberId, activityId, topicId, completedNodeIds);
+        if (nodeCapped || RewardPolicy.XP_BADGE_ONLY.name().equals(opening.get("rewardPolicy"))) {
             topicCompletionAwardService.grantOnce(memberId, topicId, activityId, null, RewardPolicy.XP_BADGE_ONLY);
         } else {
             topicCompletionAwardService.grantOnce(memberId, topicId, activityId, null);

@@ -16,7 +16,7 @@ const GROUPS = [
     title: '问答类',
     items: [
       { key: 'qaText', icon: 'edit', label: '文字问答', sub: '出一道题,玩家打字作答', section: 'qa', mode: 'TYPE', validationMethod: 0 },
-      { key: 'qaPick', icon: 'check', label: '选项问答', sub: '2-4 个选项里选一个 · 闭眼盲品也是这套', section: 'qa', mode: 'PICK', validationMethod: 0 },
+      { key: 'qaPick', icon: 'check', label: '选项问答', sub: '2-4 个选项里选一个', section: 'qa', mode: 'PICK', validationMethod: 0 },
       { key: 'qaShot', icon: 'camera', label: '拍照打卡', sub: '给一句提示词,玩家拍一张交上来', section: 'qa', mode: 'SHOT', validationMethod: 2 },
       { key: 'branch', icon: 'switch-chapter', label: '分支剧情', sub: '界面和问答一样,只是选项决定下一段', section: 'branch', validationMethod: 0 },
     ],
@@ -227,6 +227,19 @@ const DEMO = {
     { id: 'item_3', label: '彩蛋卡', weight: 1, content: '跟店员说「今天的天气」,看他回你什么。' },
   ] },
   steps: { eyebrow: '低碳行动 · 今日步数', goal: 6000 },
+  // 2026-10-23 补:这几个玩法试玩时一直是空行,看不出长什么样
+  sort: { prompt: '按开业年份从早到晚排', items: [
+    { id: 'item_1', label: '老城茶馆 · 1912' }, { id: 'item_2', label: '巷口书店 · 1958' }, { id: 'item_3', label: '街角花店 · 2003' }] },
+  match: { prompt: '把店和它的招牌连起来',
+    left: [{ id: 'left_1', label: '老张咖啡' }, { id: 'left_2', label: '深夜面馆' }],
+    right: [{ id: 'right_1', label: '手冲耶加' }, { id: 'right_2', label: '红油抄手' }] },
+  classify: { prompt: '这些东西在哪家店能买到?',
+    bins: [{ id: 'bin_1', label: '茶馆' }, { id: 'bin_2', label: '书店' }],
+    items: [{ id: 'item_1', label: '冻顶乌龙' }, { id: 'item_2', label: '旧版地图' }] },
+  blindTaste: { title: '闭上眼，尝一口，猜猜是哪一种', answerKey: 'B',
+    options: [{ key: 'A', label: '桂花乌龙' }, { key: 'B', label: '冻顶乌龙' }, { key: 'C', label: '茉莉绿茶' }] },
+  dailySign: { poems: [['今日宜慢行', '巷口有风，茶正好']] },
+  check: { skill: '观察', successText: '锁舌“咔”地弹开，地窖里有股陈年茶香。', failText: '锁纹丝不动。去问问掌柜，钥匙也许在柜台下。' },
   react: { kicker: '屏幕一变色就点' },
   shake: { kicker: '倾斜手机,让球撞够边缘' },
   quiet: { kicker: '安静挑战', sub: '一直安静到时间到' },

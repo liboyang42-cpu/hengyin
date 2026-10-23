@@ -64,7 +64,8 @@ function inlineSheets() {
 
 /** 现有 7 个半屏玩法屏。**它们不是违规**(fullscreen=不内嵌,半屏满足),
  *  登记在这里只为一件事:新玩法屏悄悄变成第八个半屏时有人知道。 */
-const SHEET_KITS = ['blindtaste', 'diyname', 'musiccorner', 'silentorder', 'slowtask', 'steps', 'timewindow']
+// 2026-10-23 闭眼盲品按主人定稿改套 cy-play-stage(整屏),从半屏名单移出
+const SHEET_KITS = ['diyname', 'musiccorner', 'silentorder', 'slowtask', 'steps', 'timewindow']
 
 test('扫描分母正常:两端都读得到(否则下面全是空转)', () => {
   assert.ok(presentList('PRESENT_FULLSCREEN_ONLY').length >= 5, '只能全屏名单读空了')
@@ -120,9 +121,11 @@ test('negative control:「声明整屏 + 半屏」不许被误判成违规(第�
 })
 
 test('negative control:段名与目录名的大小写换算必须真的对上', () => {
-  assert.equal(dirOf('blindTaste'), 'blindtaste')
-  assert.ok(shells().has(dirOf('blindTaste')), '驼峰段名换算不到组件目录 —— 判据会静默放过所有段')
-  assert.equal(shells().get(dirOf('blindTaste')), 'sheet', 'blindTaste 的实际外壳读错了')
+  // 盲品 2026-10-23 改成整屏,负控换成仍是半屏的驼峰段名 silentOrder
+  assert.equal(dirOf('silentOrder'), 'silentorder')
+  assert.ok(shells().has(dirOf('silentOrder')), '驼峰段名换算不到组件目录 —— 判据会静默放过所有段')
+  assert.equal(shells().get(dirOf('silentOrder')), 'sheet', 'silentOrder 的实际外壳读错了')
+  assert.equal(shells().get(dirOf('blindTaste')), 'stage', '盲品已经套上 cy-play-stage')
 })
 
 test('negative control:名单读不到时必须抛,不能当成「没有违规」', () => {

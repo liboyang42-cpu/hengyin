@@ -6,11 +6,11 @@
     <view class="dk__wipe" style="background:{{wipeCol}};opacity:{{wipeOn ? 1 : 0}};clip-path:ellipse({{wipeP}}% 132% at 50% 50%);transition:{{wipeTr}}"></view>
 
     <view class="dk__stage">
-      <view class="dk__deckname">{{deckName}}</view>
+      <view class="dk__deckname pe pe--blur" style="--pe-d:.35s">{{deckName}}</view>
 
       <!-- 一副牌摊成扇形。左滑换一张、右滑翻开 —— 手势是这个玩法的操作方式,
            不是锦上添花:一副牌就该是甩出去的 -->
-      <view class="dk__deck" bindtouchstart="onStart" bindtouchmove="onMove"
+      <view class="dk__deck pe pe--up" style="--pe-d:.15s;--pe-dur:.8s" bindtouchstart="onStart" bindtouchmove="onMove"
             bindtouchend="onEnd" bindtouchcancel="onEnd">
         <view class="dk__card {{item.cls}}" wx:for="{{deck}}" wx:key="id"
               style="{{item.style}}">
@@ -37,7 +37,7 @@
     </view>
   </view>
 
-  <view class="dk__act" wx:if="{{!detailOn}}">
+  <view class="dk__act pe pe--up" style="--pe-d:.85s" wx:if="{{!detailOn}}">
     <!-- 手势提示做进按钮本身:「换一张」在左、「就这张」在右 —— 按钮的位置就在说往哪儿滑。
          方向用图标不用字符箭头(‹ › 是伪图标,门禁不收,读屏器也读不出方向) -->
     <view class="dk__actbtn dk__actbtn--l" bindtap="onNext" aria-role="button" aria-label="换一张"

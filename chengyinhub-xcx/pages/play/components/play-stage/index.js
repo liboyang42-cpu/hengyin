@@ -60,8 +60,20 @@ Component({
     shaking: false,
     verdictText: '',
     timedOut: false,
+    // 入场(2026-10-23 主人定稿「玩法入场动效」):每次打开 0 → 1,各玩法屏的 .pe 零件按它过渡。
+    // peOn 只在入场那两秒为 1,之后各零件的延时归零,别的交互不再被拖慢。
+    peGo: 1,
+    peOn: 0,
   },
   observers: {
+    show: function (show) {
+      this._clearEnter();
+      if (!show || this.data.reducedMotion) { if (this.data.peGo !== 1 || this.data.peOn) this.setData({ peGo: 1, peOn: 0 }); return; }
+      this.setData({ peGo: 0, peOn: 1 });
+      // 先让「起点」那一帧落地,再翻到 1 —— 同一帧里设的话过渡没有起点
+      this._peT1 = setTimeout(() => this.setData({ peGo: 1 }), 60);
+      this._peT2 = setTimeout(() => this.setData({ peOn: 0 }), 2800);
+    },
     'show, deadlineAt': function (show, deadlineAt) {
       if (!show) { this._stopServerDeadline(); return; }
       if (deadlineAt > 0) this._syncServerDeadline(); else this._stopServerDeadline();
@@ -95,11 +107,12 @@ Component({
         }
       } catch (e) { /* 读不到就用默认 44,不让一次读取失败把整屏顶掉 */ }
     },
-    detached() { this._stopAll(); this._stopServerDeadline(); },
+    detached() { this._stopAll(); this._stopServerDeadline(); this._clearEnter(); },
   },
   pageLifetimes: { hide() { this._stopTick(); this._stopServerDeadline(); },
     show() { if (this.data.show && this.data.deadlineAt > 0) this._syncServerDeadline(); } },
   methods: {
+    _clearEnter() { clearTimeout(this._peT1); clearTimeout(this._peT2); },
     /* 顶上那两行谁在、谁不在,决定内容从哪儿开始。
        ⚠️ 不能写死:2026-09-16 之前限时条从来喂不到值、永远不显示,于是写死的
        `topPad + 62` 一直看着没问题;接通那天起它就正好压在题干上。 */

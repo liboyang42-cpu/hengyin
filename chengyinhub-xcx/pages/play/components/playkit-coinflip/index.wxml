@@ -2,9 +2,9 @@
   <view class="cf {{reducedMotion ? 'cf--reduced' : ''}}" bindtap="onFlip"
         aria-role="button" aria-label="摇一摇手机，或点屏幕抛一次"
         hover-class="cf--press" hover-stay-time="60">
-    <view class="cf__k">{{kicker}}</view>
+    <view class="cf__k pe pe--blur" style="--pe-d:.05s">{{kicker}}</view>
 
-    <view class="cf__stage">
+    <view class="cf__stage pe pe--coin" style="--pe-d:.15s">
       <view class="cf__coin {{idle ? 'cf__coin--idle' : ''}}" style="{{coinStyle}}">
         <!-- 面是 SVG 压出来的:小程序没有 <svg> 标签,同一段 SVG 走 data URI 当图用 -->
         <view class="cf__face cf__face--a"><image class="cf__svg" src="{{faceA}}" mode="aspectFit" /></view>
@@ -14,9 +14,9 @@
       </view>
     </view>
 
-    <view class="cf__big">{{big}}</view>
-    <view class="cf__lab">{{lab}}</view>
-    <view class="cf__hint"><view class="cf__hint-i"></view><text>{{hint}}</text></view>
+    <view class="cf__big pe pe--blur" style="--pe-d:1.25s">{{big}}</view>
+    <view class="cf__lab pe pe--blur" style="--pe-d:1.35s">{{lab}}</view>
+    <view class="cf__hint pe pe--up" style="--pe-d:1.45s"><view class="cf__hint-i"></view><text>{{hint}}</text></view>
 
     <!-- 落面那一下撒一把彩片。用仓里的 cy-celebrate,不自己写 canvas 粒子 ——
          那会是第二套平行实现,而且要自己处理减动效 -->

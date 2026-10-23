@@ -332,7 +332,7 @@ const themeTrade = require('./utils/theme-trade.js');
 const themePlans = require('./utils/theme-plans.js');
 const playerOps = require('./utils/theme-player-ops.js');
 Page({
-  ...r5PlayerRuntime.methods(),
+  ...r5PlayerRuntime.methods(), closeR5Verdict() { this.setData({ 'r5Verdict.show': false }); },  // 结果反馈判定屏「继续」(状态见 r5-player-runtime)
   ...themeBackpack.methods(req),
   ...themeRecords.methods(req, true),
   openThemeRecordCard(e) { return this.openThemeResultCard({ currentTarget: { dataset: e.detail } }); },
@@ -4563,7 +4563,7 @@ Page({
             // 仅"到点即完成(vm0)/GPS到达(vm5)"节点自动到达;答题/拍照/选项/扫码(1/2/3/4)须玩家手动完成,
             // 否则后端 arrive 闸会拒绝并在每次定位回调刷 toast。
             // 精度 > 80m 后端必拒(定位精度不足),不发,免得每次定位回调都弹一次拒绝
-            if (d <= 50 && !node.done && (node.vm === 0 || node.vm === 5) && !playAccuracy.isLowAccuracy(loc.accuracy)) that.arrive(node.nodeId, 'gps');
+            if (d <= 50 && !node.done && (node.vm === 0 || node.vm === 5) && playAccuracy.canAutoArrive(loc.accuracy)) that.arrive(node.nodeId, 'gps');
           }
         };
         wx.onLocationChange(that._playLocationHandler);
