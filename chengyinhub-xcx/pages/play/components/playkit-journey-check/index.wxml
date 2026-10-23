@@ -6,7 +6,7 @@
   <view class="jc g-col {{reducedMotion ? 'pk--reduced' : ''}} {{_motionReset ? 'pk--reset' : ''}}">
     <view class="g-kicker pe pe--blur" style="--pe-d:.05s">{{skill ? '检定 · ' + skill : '检定'}}</view>
     <!-- 难度三档:作者选的那一档亮着。具体难度线主题可改,掷出来以回执的 dc 为准 -->
-    <view class="jc__tiers" aria-label="难度 {{tierLabel || '标准'}}">
+    <view class="jc__tiers" aria-label="难度 {{tier === 'easy' ? '简单' : (tier === 'hard' ? '困难' : '标准')}}">
       <text class="jc__tier {{tier === 'easy' ? 'is-on' : ''}} pe pe--pop" style="--pe-d:.2s;--pe-i:0">简单</text>
       <text class="jc__tier {{tier === 'medium' || !tier ? 'is-on' : ''}} pe pe--pop" style="--pe-d:.2s;--pe-i:1">标准</text>
       <text class="jc__tier {{tier === 'hard' ? 'is-on' : ''}} pe pe--pop" style="--pe-d:.2s;--pe-i:2">困难</text>

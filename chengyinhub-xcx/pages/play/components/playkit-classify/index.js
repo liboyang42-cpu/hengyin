@@ -55,8 +55,6 @@ Component({
     lastCorrect: { type: Boolean, value: false },
   },
   data: {
-    // ⚠️ 派生行换键名(rows),别写回被监听的 items —— 那会自触发死循环
-    rows: [],
     total: 0,
     placed: 0,
     verdict: '',          // '' 未判 / 'ok' 通过 / 'no' 判错
@@ -68,7 +66,9 @@ Component({
     'show, items, bins': function (show, items) {
       if (!show) return;
       const rows = paint(items);
-      this.setData({ rows: rows, total: rows.length, placed: 0, verdict: '', ghost: null, stack: stackOf(rows), binRows: binView(this.data.bins, rows) });
+      // 逐条归属只喂逻辑(牌堆 / 分类箱由它派生),不直接渲染:放实例字段,不进 data
+      this._rows = rows;
+      this.setData({ total: rows.length, placed: 0, verdict: '', ghost: null, stack: stackOf(rows), binRows: binView(this.data.bins, rows) });
       const stage = this.selectComponent('#cy-play-stage');
       if (stage) stage.begin();
     },
@@ -106,20 +106,22 @@ Component({
     /** 点分类箱里的小标签:拿回牌堆 */
     onTakeBack(e) {
       const i = Number(e.currentTarget.dataset.i);
-      if (!(i >= 0) || i >= this.data.rows.length) return;
+      if (!(i >= 0) || i >= (this._rows || []).length) return;
       motion.haptic({ reducedMotion: this.data.reducedMotion, type: 'light' });
-      const rows = this.data.rows.map((r, at) => (at === i ? Object.assign({}, r, { bin: '' }) : r));
-      this.setData({ rows, placed: placedCount(rows), verdict: '', stack: stackOf(rows), binRows: binView(this.data.bins, rows) });
+      const rows = (this._rows || []).map((r, at) => (at === i ? Object.assign({}, r, { bin: '' }) : r));
+      this._rows = rows;
+      this.setData({ placed: placedCount(rows), verdict: '', stack: stackOf(rows), binRows: binView(this.data.bins, rows) });
     },
 
     onPickBin(e) {
       const i = Number(e.currentTarget.dataset.i);
       const bin = e.currentTarget.dataset.b || '';
-      if (i < 0 || i >= this.data.rows.length || !bin) return;
+      if (i < 0 || i >= (this._rows || []).length || !bin) return;
       motion.haptic({ reducedMotion: this.data.reducedMotion, type: 'light' });
-      const rows = this.data.rows.map((r, at) => (at === i ? Object.assign({}, r, { bin: bin }) : r));
+      const rows = (this._rows || []).map((r, at) => (at === i ? Object.assign({}, r, { bin: bin }) : r));
       // 改过了就是新的一版:上一次的判定标记撤掉
-      this.setData({ rows: rows, placed: placedCount(rows), verdict: '', stack: stackOf(rows), binRows: binView(this.data.bins, rows) });
+      this._rows = rows;
+      this.setData({ placed: placedCount(rows), verdict: '', stack: stackOf(rows), binRows: binView(this.data.bins, rows) });
     },
 
     onSubmit() {
@@ -127,7 +129,7 @@ Component({
       motion.haptic({ reducedMotion: this.data.reducedMotion, type: 'medium' });
       // ★ 只报放法,不报对错 —— 对错在服务端
       const placement = {};
-      this.data.rows.forEach((r) => { if (r.bin) placement[r.id] = r.bin; });
+      (this._rows || []).forEach((r) => { if (r.bin) placement[r.id] = r.bin; });
       this.triggerEvent('submit', { placement: placement });
     },
     onClose() { this.triggerEvent('close'); },

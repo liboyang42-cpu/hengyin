@@ -34,7 +34,7 @@
   width: 240rpx;
   padding: 18rpx 24rpx;
   box-sizing: border-box;
-  border-radius: 24rpx;
+  border-radius: 24rpx;   /* ds-ok 玩法屏装饰细节圆角,照原型 */
   background: #E6E3E4;                        /* ds-ok 同卡面 */
   color: #111114;                             /* ds-ok 同上 */
   font-size: var(--cy-type-label);

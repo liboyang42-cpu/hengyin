@@ -34,7 +34,7 @@
   position: relative; width: 104rpx; height: 128rpx; overflow: hidden;
   box-sizing: border-box;
   border: 3rpx solid rgba(255, 255, 255, .35); border-top: 0;   /* ds-ok 暗台面上的玻璃杯描边 */
-  border-radius: 0 0 28rpx 28rpx;
+  border-radius: 0 0 28rpx 28rpx;   /* ds-ok 玩法屏装饰细节圆角,照原型 */
 }
 .bt__tea { position: absolute; left: 0; right: 0; bottom: 0; height: 62%; background: linear-gradient(#c8a25e, #8a6326); opacity: .9; } /* ds-ok 茶汤色,只用在杯子里 */
 .bt__cup-k { font-family: var(--cy-font-numeric); font-size: var(--cy-type-section-title); font-style: italic; font-weight: 800; color: var(--sub); }

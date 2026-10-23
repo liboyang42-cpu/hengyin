@@ -11,8 +11,6 @@ const replayMotionBehavior = require('../../../../behaviors/replay-motion.js');
 const motion = require('../../../../utils/motion.js');
 const { createD20Renderer } = require('../../utils/d20-renderer.js');
 
-/** 难度档码 → 中文。服务端只给 easy/medium/hard(禁止任意 DC 数字)。 */
-const TIER_LABEL = { easy: '简单', medium: '标准', hard: '困难' };
 
 /** 重掷条件:掷过、没结算、没重掷过,且幸运还有剩。回执里 luck 缺省时不猜。 */
 function canReroll(receipt) {
@@ -56,7 +54,6 @@ Component({
   data: {
     rollVisible: true,
     settleVisible: true,
-    tierLabel: '',
     rerollVisible: false,
     verdictText: '',
     marginText: '',
@@ -90,7 +87,6 @@ Component({
       const fresh = !!r && !r.settled && r !== prev && !(prev && prev.dice && r.dice && prev.dice.join() === r.dice.join() && prev.rerolled === r.rerolled);
       this._seenReceipt = r;
       this.setData({
-        tierLabel: TIER_LABEL[String(tier || '').toLowerCase()] || (tier || ''),
         rerollVisible: canReroll(r),
         verdictText: r ? (r.success ? '过线了' : '没过线') : '',
         marginText: marginText(r),

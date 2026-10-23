@@ -50,7 +50,7 @@
   position: absolute;
   left: 0;
   height: 6rpx;
-  border-radius: 3rpx;
+  border-radius: 3rpx;   /* ds-ok 玩法屏装饰细节圆角,照原型 */
   transform-origin: 0 50%;
   transition: transform .45s cubic-bezier(.2, .8, .2, 1), background .3s ease;
 }

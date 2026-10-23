@@ -29,10 +29,10 @@
 
 /* 难度线:1–20 一条,竖线是这一档的线,白条涨到点数那里;过线绿、差一点红 */
 .jc__track { width: 100%; margin-top: var(--cy-space-6); }
-.jc__bar { position: relative; height: 20rpx; border-radius: 10rpx; background: var(--soft); }
+.jc__bar { position: relative; height: 20rpx; border-radius: 10rpx; background: var(--soft); }   /* ds-ok 玩法屏装饰细节圆角,照原型 */
 .jc__fill {
   position: absolute; left: 0; top: 0; bottom: 0; width: 100%;
-  border-radius: 10rpx;
+  border-radius: 10rpx;   /* ds-ok 玩法屏装饰细节圆角,照原型 */
   background: var(--ink);
   transform-origin: 0 50%;
   transition: transform .9s cubic-bezier(.2, .8, .2, 1), background .3s ease;

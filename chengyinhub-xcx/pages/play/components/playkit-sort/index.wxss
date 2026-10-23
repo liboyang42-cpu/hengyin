@@ -42,7 +42,7 @@
 }
 /* 把手:三道细杠,整行都能拖,这里只是告诉人「能拖」 */
 .so__grip { flex: none; width: 36rpx; display: flex; flex-direction: column; gap: 6rpx; opacity: .5; }
-.so__grip-i { height: 4rpx; border-radius: 2rpx; background: var(--ink); }
+.so__grip-i { height: 4rpx; border-radius: 2rpx; background: var(--ink); }   /* ds-ok 玩法屏装饰细节圆角,照原型 */
 .so__press { opacity: .88; }
 .g-btn--press { opacity: .88; }
 /* 点选:描一圈白边,序号亮起来 */
