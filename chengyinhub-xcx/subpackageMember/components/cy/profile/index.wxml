@@ -153,7 +153,7 @@
         </view>
         <scroll-view wx:if="{{orderPreviewList.length}}" class="pc-hscroll" scroll-x enhanced show-scrollbar="{{false}}">
           <view class="pc-hscroll-inner">
-            <view class="pc-ord-card {{ordFly}}" style="animation-delay: {{index < 4 ? index * 90 : 360}}ms" wx:for="{{orderPreviewList}}" wx:key="id" bindtap="onOrderPreviewTap" data-id="{{item.id}}" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="{{item.statusText}}：{{item.title}}">
+            <view class="pc-ord-card {{ordFly}}" style="animation-delay: {{index < 5 ? index * 40 : 200}}ms" wx:for="{{orderPreviewList}}" wx:key="id" bindtap="onOrderPreviewTap" data-id="{{item.id}}" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="{{item.statusText}}：{{item.title}}">
               <!-- 2026-10-22 owner 参考图:整卡封面铺满,下半段黑色渐变压暗,文字与按钮叠在渐变上 -->
               <image wx:if="{{item.cover}}" class="pc-ord-cover__img" src="{{item.cover}}" mode="aspectFill" lazy-load="true" />
               <view class="pc-ord-shade"></view>

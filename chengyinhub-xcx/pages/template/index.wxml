@@ -101,7 +101,7 @@
       <text class="sec-title">{{ topTitle }}</text>
     </view>
     <view class="cml-list cy-fade-in" wx:if="{{ topList.length }}">
-      <view class="cml-card {{ flyClass }}" style="animation-delay: {{ index < 8 ? (index + 1) * 60 : 540 }}ms" wx:for="{{ topList }}" wx:key="id" data-item="{{ item }}" bindtap="jumpDetail" hover-class="cy-pressed" hover-stay-time="80">
+      <view class="cml-card {{ flyClass }}" style="animation-delay: {{ index < 4 ? (index + 1) * 40 : 200 }}ms" wx:for="{{ topList }}" wx:key="id" data-item="{{ item }}" bindtap="jumpDetail" hover-class="cy-pressed" hover-stay-time="80">
         <image wx:if="{{ item._iconUrl }}" class="cml-pic cml-pic--art" src="{{ item._iconUrl }}" mode="aspectFit" aria-hidden="true" />
         <image wx:elif="{{ item.imgUrl && !item._coverFail }}" lazy-load="true" class="cml-pic" src="{{ item.imgUrl }}"
           mode="aspectFill" data-list="topList" data-idx="{{ index }}" data-key="{{ item.id }}" binderror="onCoverError" />
@@ -125,7 +125,7 @@
       <text class="sec-sub">不筛掉，继续显示</text>
     </view>
     <view class="cml-list cy-fade-in" wx:if="{{ tailList.length }}">
-      <view class="cml-card {{ flyClass }}" style="animation-delay: {{ index < 8 ? (index + 4) * 60 : 720 }}ms" wx:for="{{ tailList }}" wx:key="id" data-item="{{ item }}" bindtap="jumpDetail" hover-class="cy-pressed" hover-stay-time="80">
+      <view class="cml-card {{ flyClass }}" style="animation-delay: {{ index < 5 ? index * 40 : 200 }}ms" wx:for="{{ tailList }}" wx:key="id" data-item="{{ item }}" bindtap="jumpDetail" hover-class="cy-pressed" hover-stay-time="80">
         <image wx:if="{{ item._iconUrl }}" class="cml-pic cml-pic--art" src="{{ item._iconUrl }}" mode="aspectFit" aria-hidden="true" />
         <image wx:elif="{{ item.imgUrl && !item._coverFail }}" lazy-load="true" class="cml-pic" src="{{ item.imgUrl }}"
           mode="aspectFill" data-list="tailList" data-idx="{{ index }}" data-key="{{ item.id }}" binderror="onCoverError" />
