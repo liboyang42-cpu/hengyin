@@ -1,0 +1,6 @@
+<!-- v13 路线小地图:深色底 + 真实站点坐标连线(城市定向橙色实线编号,自由探索绿色虚线白圈),线条一笔画出来。
+     底图街道是示意纹理(不写任何路名);点一下打开真实地图。 -->
+<view class="rs" bindtap="onTap" aria-role="button" aria-label="查看真实地图" hover-class="rs-pressed" hover-stay-time="80">
+  <canvas type="2d" id="rscv" class="rs__cv"></canvas>
+  <text class="rs__tip">点开看真实地图</text>
+</view>

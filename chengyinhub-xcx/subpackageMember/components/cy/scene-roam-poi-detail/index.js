@@ -1,6 +1,6 @@
 'use strict'
 
-const modal = require('../../../../utils/modal.js');
+const modal = require('../../../../utils/modal.js'); const pageMotion = require('../../../../utils/page-motion.js');
 const toast = require('../../../../utils/toast.js');
 const app = getApp()
 const { isRecord, isRecordList, bizFailureMessage } = require('../../../../utils/response-shape.js')
@@ -169,7 +169,7 @@ Component({
             vmLabel: validationMethodLabel(method, '核验方式待确认'),
             canInteract: rawNode.status === 1 && VALIDATION_METHODS.includes(method),
           }
-          this.setData({ node, state: 'ready', hasLocation: !!this._coordinates(node, null) })
+          if (this.data.state !== 'ready') pageMotion.enter(this, 'pmPage'); this.setData({ node, state: 'ready', hasLocation: !!this._coordinates(node, null) })
           if (pending && typeof node.completed === 'boolean' && typeof node.needRedeem === 'boolean' && node.completed !== node.needRedeem) {
             try {
               if (clearPending(context, pending)) {
@@ -235,7 +235,7 @@ Component({
             imageUrl: nonEmptyString(rawFeatured.imgUrl) || nonEmptyString(rawFeatured.coverImg) || nonEmptyString(rawFeatured.img),
             actionable: (featuredType === 1 && !!rawFeatured.featuredId) || featuredType === 2,
           } : null
-          this.setData({ merchant, merchantError: '', gallery, tags, featured, hasLocation: !!this._coordinates(this.data.node, merchant), state: 'ready' })
+          if (this.data.state !== 'ready') pageMotion.enter(this, 'pmPage'); this.setData({ merchant, merchantError: '', gallery, tags, featured, hasLocation: !!this._coordinates(this.data.node, merchant), state: 'ready' })
         },
         fail: () => { if (isCurrent()) this._merchantLoadFailed('网络异常，这次没有读到商家信息。') },
         successStatusAbnormal: () => { if (isCurrent()) this._merchantLoadFailed('这次没有读到商家信息，请稍后重试。') },

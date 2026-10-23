@@ -4,7 +4,7 @@
 const app = getApp()
 const { recoverReadSession } = require('../../../../utils/session/login-reload.js')
 const { buildGrowthOverview } = require('../../../utils/growth-overview.js')
-const { chinaParts } = require('../../../../utils/datetime.js')
+const { chinaParts } = require('../../../../utils/datetime.js'); const pageMotion = require('../../../../utils/page-motion.js')
 
 function fmt(n) {
   // UI-04(2026-09-18):数字统计没取到显示 0,不再显示横杠
@@ -398,6 +398,7 @@ Page({
         avatarUrl: profile.avatarUrl
       }
     }
+    if (!this._scoreCounted) { this._scoreCounted = true; pageMotion.countIn(this, 'gsK') } // 2026-10-23:积分第一次到达时从 0 数上去
     this.setData({ unit, me, scoreText: fmt(data.me.score), profile })
   },
 
@@ -487,6 +488,7 @@ Page({
         overviewError: allSuccess ? '' : (hadOverview ? '足迹更新没有完成，现有数据仍可查看' : '部分成长数据暂时不可用'),
         badgeLoadError: !hasBadgeSource
       })
+      if (!this.data.overviewLoaded) { pageMotion.enter(this, 'pmPage'); pageMotion.countIn(this, 'gcK') } // 2026-10-23:足迹与徽章行依次浮上来
       this.setData({
         overview,
         overviewAvailable: hadOverview && !allSuccess ? this.data.overviewAvailable : {

@@ -1,4 +1,4 @@
-const modal = require('../../../utils/modal.js');
+const modal = require('../../../utils/modal.js'); const pageMotion = require('../../../utils/page-motion.js');
 const cyToast = require('../../../utils/toast.js');
 const { activityStatusMeta, activityStatusText } = require('../../../utils/activity-status');
 const officialChannel = require('../../../utils/merchant-official-channel.js');
@@ -336,7 +336,7 @@ Page({
       emptySub = c[1];
       emptyKind = c[2];
     }
-    this.setData(Object.assign({
+    pageMotion.enter(this, 'pmList'); this.setData(Object.assign({
       events: list, summary, emptyTitle, emptySub, emptyKind,
       curError: d.tab === 3 ? this._mineError === true : this._loadError === true,
       loading: d.tab === 3 ? this._mineLoading === true : this._publicLoading === true,

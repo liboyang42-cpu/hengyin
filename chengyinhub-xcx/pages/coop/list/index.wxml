@@ -53,7 +53,7 @@
     </view>
     <view class="inv {{item.status>=3 ? 'is-dim' : ''}}" wx:for="{{received}}" wx:key="rowKey"
       bindtap="goInviteDetail" data-id="{{item.inviteId}}" data-box="received" aria-role="button"
-      aria-label="查看 {{item.topicText || '这条邀约'}} 的协作详情" hover-class="cy-pressed" hover-stay-time="80">
+      aria-label="查看 {{item.topicText || '这条邀约'}} 的协作详情" hover-class="cy-pressed" hover-stay-time="80" style="{{pmList === 1 ? '--pm-l:1;' : (pmList === 2 ? '--pm-l-d:.32s;--pm-l-s:1;' : '')}}">
       <cy-error wx:if="{{item.identityError}}" class="inv-identity-error" title="邀约标识待确认"
         sub="{{item.identityError}}" retry="刷新邀约" bind:retry="load" />
       <view class="inv-top">
@@ -126,7 +126,7 @@
     <view class="inline-state inline-state--error" wx:if="{{receivedRegErrorText}}" aria-role="alert" aria-live="assertive">
       {{receivedRegErrorText}}<text class="inline-retry" bindtap="loadReceivedRegs" aria-role="button" aria-label="重试加载承接报名" hover-class="cy-pressed" hover-stay-time="80">重试</text>
     </view>
-    <view class="inv {{item.dim ? 'is-dim' : ''}}" wx:for="{{receivedRegs}}" wx:key="rowKey">
+    <view class="inv {{item.dim ? 'is-dim' : ''}}" wx:for="{{receivedRegs}}" wx:key="rowKey" style="{{pmList === 1 ? '--pm-l:1;' : (pmList === 2 ? '--pm-l-d:.32s;--pm-l-s:1;' : '')}}">
       <view class="inv-top">
         <view class="inv-badge inv-badge--{{item.badgeTone}}"><cy-icon name="{{item.badgeIcon}}" size="24" /><text>{{item.auditText}}</text></view>
         <text class="inv-peer">{{item.topicTitle}}</text>
@@ -146,7 +146,7 @@
       </view>
     </view>
     <!-- 官方邀约(平台→商家),原合作中心「邀约我的」tab 收编至此 -->
-    <view class="inv {{item.status!==0 ? 'is-dim' : ''}}" wx:for="{{officialInvites}}" wx:key="rowKey">
+    <view class="inv {{item.status!==0 ? 'is-dim' : ''}}" wx:for="{{officialInvites}}" wx:key="rowKey" style="{{pmList === 1 ? '--pm-l:1;' : (pmList === 2 ? '--pm-l-d:.32s;--pm-l-s:1;' : '')}}">
       <view class="inv-top">
         <view class="inv-badge inv-badge--{{item.badgeTone}}"><cy-icon name="{{item.badgeIcon}}" size="24" /><text>{{item.statusText}}</text></view>
         <text class="inv-peer">来自 平台</text>
@@ -189,7 +189,7 @@
     </view>
     <view class="inv {{item.status>=3 ? 'is-dim' : ''}}" wx:for="{{sent}}" wx:key="rowKey"
       bindtap="goInviteDetail" data-id="{{item.inviteId}}" data-box="sent" aria-role="button"
-      aria-label="查看 {{item.topicText || '这条邀约'}} 的协作详情" hover-class="cy-pressed" hover-stay-time="80">
+      aria-label="查看 {{item.topicText || '这条邀约'}} 的协作详情" hover-class="cy-pressed" hover-stay-time="80" style="{{pmList === 1 ? '--pm-l:1;' : (pmList === 2 ? '--pm-l-d:.32s;--pm-l-s:1;' : '')}}">
       <cy-error wx:if="{{item.identityError}}" class="inv-identity-error" title="邀约标识待确认"
         sub="{{item.identityError}}" retry="刷新邀约" bind:retry="load" />
       <view class="inv-top">
@@ -232,7 +232,7 @@
         <view class="inv-btn inv-btn--secondary" catchtap="retryDepositRefund" data-id="{{item.id}}" aria-role="button" aria-label="重试保证金退款" aria-disabled="{{!!actionPendingKey}}" hover-class="{{!!actionPendingKey ? 'none' : 'cy-pressed'}}" hover-stay-time="80">{{actionPendingKey === 'refund:' + item.id ? '退款重试中…' : '重试保证金退款'}}</view>
       </view>
     </view>
-    <view class="inv {{item.status===1 || item.status===2 ? 'is-dim' : ''}}" wx:for="{{sentApplies}}" wx:key="rowKey">
+    <view class="inv {{item.status===1 || item.status===2 ? 'is-dim' : ''}}" wx:for="{{sentApplies}}" wx:key="rowKey" style="{{pmList === 1 ? '--pm-l:1;' : (pmList === 2 ? '--pm-l-d:.32s;--pm-l-s:1;' : '')}}">
       <view class="inv-top">
         <view class="inv-badge inv-badge--{{item.badgeTone}}"><cy-icon name="{{item.badgeIcon}}" size="24" /><text>{{item.statusText}}</text></view>
         <text class="inv-peer" wx:if="{{item.peerText}}">{{item.peerText}}</text>

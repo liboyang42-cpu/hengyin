@@ -24,7 +24,7 @@
         <view class="fin-row ccl-row" wx:for="{{items}}" wx:key="id"
               data-id="{{item.id}}" bindtap="openDetail"
               hover-class="cy-pressed" hover-stay-time="80" aria-role="button"
-              aria-label="{{item.titleText}}，{{item.statusText}}，{{item.summaryText}}，查看逐人结果">
+              aria-label="{{item.titleText}}，{{item.statusText}}，{{item.summaryText}}，查看逐人结果" style="{{pmList === 1 ? '--pm-l:1;' : (pmList === 2 ? '--pm-l-d:.32s;--pm-l-s:1;' : '')}}">
           <view class="fin-row__main">
             <text class="fin-row__t1">{{item.titleText}}</text>
             <view class="fin-row__t2">

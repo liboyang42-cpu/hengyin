@@ -298,9 +298,12 @@ test('票夹保持原有状态文案与指定报名单入口', () => {
   const mod = { exports: {} }
   new Function('module', wxml().match(/<wxs module="tk">([\s\S]*?)<\/wxs>/)[1])(mod)
   assert.equal(mod.exports.label(page.data.ticketList[0]), '待使用')
-  assert.equal(mod.exports.cta(page.data.ticketList[0]), '进入游玩')
+  assert.equal(mod.exports.cta(page.data.ticketList[0]), '开始游戏')
   assert.equal(mod.exports.label(page.data.ticketList[1]), '待使用')
-  assert.equal(mod.exports.label(page.data.ticketList[3]), '已取消')
+  // v13 底部「可用 / 已用 / 已过期」:已取消的单归在「已过期」那一栏
+  assert.equal(JSON.stringify(page.data.tabCount), '[3,0,1]')
+  const cancelled = page._activity.list[3]
+  assert.equal(mod.exports.label(cancelled), '已取消')
   page.goTicket({ currentTarget: { dataset: { index: 0 } } })
   assert.match(sandbox.navigations[0].url, /activityId=930007&registrationId=990058&entry=ticket/)
 })

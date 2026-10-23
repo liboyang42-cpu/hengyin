@@ -1,5 +1,5 @@
 <wxs src="../../../../utils/wxs/money.wxs" module="money" />
-<wxs src="../../../../utils/wxs/img.wxs" module="img" />
+<wxs src="../../../../utils/wxs/img.wxs" module="img" /><wxs src="../../../../utils/wxs/count.wxs" module="cnt" />
 <view class="detail theme-dark">
 
   <cy-empty class="order-load-loading" wx:if="{{loadState==='loading'}}" kind="loading" title="订单详情加载中" />
@@ -15,18 +15,18 @@
        路线名(18px)、场次时间(12px)、一颗状态药丸 —— 原来这里印的是
        「已报名 / 请完成支付后使用票夹」,一句状态加一句提示,金额反而要翻到下面才看得到。
        ⚠️ 提示语没有删,它跟着退款状态卡一起说(见下)。 -->
-  <view class="hero">
+  <view class="hero" style="{{pmPage === 1 ? '--pm-a:1;' : (pmPage === 2 ? '--pm-a-d:.32s;--pm-a-s:1;' : '')}}">
     <image class="hero-img" lazy-load="true" src="{{heroImage}}" mode="aspectFill" />
     <view class="hero-mask"></view>
     <view class="hero-text">
-      <view class="hero-amt">{{money.amount(info.actualPaidAmount)}}</view>
+      <view class="hero-amt">{{money.amount(cnt.f(info.actualPaidAmount, odK))}}</view>
       <view class="hero-title ep1">{{productTitle}}</view>
       <view class="hero-when" wx:if="{{whenText}}">{{whenText}}</view>
       <view class="hero-pill hero-pill--{{statusTone}}" wx:if="{{info.statusText}}">{{info.statusText}}</view>
     </view>
   </view>
 
-  <view class="body">
+  <view class="body" style="{{pmPage === 1 ? '--pm-a:1;' : (pmPage === 2 ? '--pm-a-d:.32s;--pm-a-s:1;' : '')}}">
 
     <!-- 稿 578:2313 那张卡:标题 / 一句话 / 右上角状态词。
          2026-09-11 用户定「是退款、还是已完成、未开始,要有不同状态的」⇒

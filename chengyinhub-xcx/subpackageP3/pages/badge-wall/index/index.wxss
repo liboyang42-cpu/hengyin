@@ -189,3 +189,18 @@ page { background: var(--cy-color-bg-page); }
 
 /* 玩法侧跳进来的回读结论条:压在 canvas 之上,所以必须是 cover-view。 */
 .bw-focus{display:inline-flex;align-items:center;margin-top:14rpx;padding:10rpx 22rpx;border-radius:var(--cy-radius-pill);background:rgba(255,255,255,.10);color:rgba(255,255,255,.92);font-size:var(--cy-font-caption);line-height:1.4}
+
+/* 2026-10-23 页面动效(utils/page-motion.js):容器 --pm-* 置 1 时先隐着,再依次浮上来;静止时无过渡,按压反馈不受影响;减少动态效果时从不触发 */
+.bw-list-row { filter: opacity(calc(1 - var(--pm-b, 0))); translate: 0 calc(var(--pm-b, 0) * 31rpx); transition: filter var(--pm-b-d, 0s) ease, translate var(--pm-b-d, 0s) cubic-bezier(.2,.82,.2,1), transform var(--cy-motion-press) var(--cy-ease-out), opacity var(--cy-motion-press) var(--cy-ease-out); transition-delay: calc(var(--pm-b-s, 0) * 0ms), calc(var(--pm-b-s, 0) * 0ms), 0s, 0s; }
+.bw-list-row:nth-child(2) { transition-delay: calc(var(--pm-b-s, 0) * 30ms), calc(var(--pm-b-s, 0) * 30ms), 0s, 0s; }
+.bw-list-row:nth-child(3) { transition-delay: calc(var(--pm-b-s, 0) * 60ms), calc(var(--pm-b-s, 0) * 60ms), 0s, 0s; }
+.bw-list-row:nth-child(4) { transition-delay: calc(var(--pm-b-s, 0) * 90ms), calc(var(--pm-b-s, 0) * 90ms), 0s, 0s; }
+.bw-list-row:nth-child(5) { transition-delay: calc(var(--pm-b-s, 0) * 120ms), calc(var(--pm-b-s, 0) * 120ms), 0s, 0s; }
+.bw-list-row:nth-child(6) { transition-delay: calc(var(--pm-b-s, 0) * 150ms), calc(var(--pm-b-s, 0) * 150ms), 0s, 0s; }
+.bw-list-row:nth-child(7) { transition-delay: calc(var(--pm-b-s, 0) * 180ms), calc(var(--pm-b-s, 0) * 180ms), 0s, 0s; }
+.bw-list-row:nth-child(8) { transition-delay: calc(var(--pm-b-s, 0) * 210ms), calc(var(--pm-b-s, 0) * 210ms), 0s, 0s; }
+.bw-list-row:nth-child(9) { transition-delay: calc(var(--pm-b-s, 0) * 240ms), calc(var(--pm-b-s, 0) * 240ms), 0s, 0s; }
+.bw-list-row:nth-child(10) { transition-delay: calc(var(--pm-b-s, 0) * 270ms), calc(var(--pm-b-s, 0) * 270ms), 0s, 0s; }
+.bw-list-row:nth-child(n+11) { transition-delay: calc(var(--pm-b-s, 0) * 300ms), calc(var(--pm-b-s, 0) * 300ms), 0s, 0s; }
+/* 已点亮的徽记在行落定后轻轻弹出(柔和回弹,不旋转不发光) */
+.bw-list-mark:not(.is-locked) { scale: calc(1 - var(--pm-b, 0) * .45); transition: scale var(--pm-b-d, 0s) cubic-bezier(.34,1.56,.64,1); transition-delay: calc(var(--pm-b-s, 0) * (107ms + min(var(--pmi, 0), 10) * 30ms)); }

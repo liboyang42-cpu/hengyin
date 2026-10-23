@@ -123,7 +123,8 @@ test('真实详情请求→章节整形→地图投影保留分章来源与直�
     assert.equal(page.data.routePolyline[0].dottedLine, false); assert.equal(page.data.routePolyline[1].dottedLine, true);
     assert.match(page.data.routeSourceText, /道路.*节点直线.*章间未规划/);
     const chapters = page.data.info.chaptersList;
-    assert.equal(chapters[1].nodes[0].walkText, ''); assert.match(chapters[0].nodes[1].walkText, /^直线约 /);
+    // 2026-10-23 v13:站间步行线跨章接上(原型每章标题下也有一段),仍只写直线距离
+    assert.match(chapters[1].nodes[0].walkText, /^直线约 /); assert.equal(chapters[0].nodes[0].walkText, ''); assert.match(chapters[0].nodes[1].walkText, /^直线约 /);
     assert.doesNotMatch(chapters[0].nodes[1].walkText, /\d+\s*(?:min|分钟)/);
   } finally {
     global.getApp = previous.getApp; global.wx = previous.wx; global.Page = previous.Page; delete require.cache[entry];

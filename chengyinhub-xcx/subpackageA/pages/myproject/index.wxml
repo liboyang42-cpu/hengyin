@@ -31,7 +31,7 @@
     <!-- 上下架 / 删除按稿撤出卡面后,长按是它们唯一的入口 —— 藏起来的入口要写出来,
          否则一条已下架的路线就再也回不到上架。列表里一张卡都不可操作时不出这行。 -->
     <view class="mp-longtip" wx:if="{{projectState === 'ready' && list.length > 0 && hasRowOps}}">长按卡片可上下架 / 删除</view>
-    <view class="mp-list" wx:if="{{projectState === 'ready'}}">
+    <view class="mp-list" wx:if="{{projectState === 'ready'}}" style="{{pmList === 1 ? '--pm-l:1;' : (pmList === 2 ? '--pm-l-d:.32s;--pm-l-s:1;' : '')}}">
       <!-- 稿 260:277 的裁决(节点 260:369):「单列列表的行**整行可点,不放按钮**(连箭头都不放)。
            每张卡的下一步动作不同(去核销 / 承接进度 / 去管理),进项目页再做」。
            所以卡面上原来那排 候选池 / 上下架 / 删除 / 「继续编辑」药丸全部撤掉:

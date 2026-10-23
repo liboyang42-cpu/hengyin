@@ -58,7 +58,7 @@
 
   <scroll-view wx:else scroll-y class="cu-scroll cy-fade-in" enhanced show-scrollbar="{{false}}" bindscrolltolower="loadMore">
     <text class="cu-sync" wx:if="{{loading && rows.length}}" aria-role="status">正在更新客户名单…</text>
-    <view class="cu-list">
+    <view class="cu-list" style="{{pmList === 1 ? '--pm-l:1;' : (pmList === 2 ? '--pm-l-d:.32s;--pm-l-s:1;' : '')}}">
     <view class="cu-row" wx:for="{{rows}}" wx:key="memberId"
           data-memberid="{{item.memberId}}" bindtap="openCustomer"
           aria-role="button" aria-label="查看客户 {{item.displayName}} 详情" hover-class="cy-pressed" hover-stay-time="80">

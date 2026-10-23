@@ -1822,3 +1822,6 @@ page { background: var(--cy-color-bg-page); }
   background:#1C1C1E; color:#FFFFFF; font-size:27rpx; font-weight:600; } /* ds-ok 白底上的深色主按钮(反色中性) */
 
 .finsheet__records{display:flex;flex-direction:column;gap:var(--cy-space-3);padding:var(--cy-space-4);margin:var(--cy-space-4) 0;background:var(--cy-comp-sheet-player-surface);border-radius:var(--cy-radius-xl);font-size:var(--cy-type-body)}
+
+/* 2026-10-22 业主:完成页统计用字形图标(不用圆章) */
+.fst__ic { color: var(--cy-color-play-story-muted); }

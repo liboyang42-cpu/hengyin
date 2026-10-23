@@ -21,7 +21,7 @@ function loadMerchantProfit(mutate) {
   let definition
   vm.runInNewContext(source, {
     getApp: () => ({ getUserID:()=>7, sendRequest: (o) => requests.push(o) }),
-    require: p => p.includes('login-reload') ? require('../../utils/session/login-reload.js') : ({}),
+    require: p => p.includes('login-reload') ? require('../../utils/session/login-reload.js') : (p.includes('page-motion') ? require('../../utils/page-motion.js') : ({})),
     Component: (v) => { definition = v },
     wx: { navigateTo() {} },
   })

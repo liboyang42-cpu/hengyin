@@ -88,7 +88,7 @@ test('P0 页面必须使用正文强锚点，弱页面壳不得作为通过条�
   assert.equal(fixture('A42').target, '#profile', 'A42 生成后的 fixture 必须保留组件作用域')
   assert.equal(SELECTORS.A42.selector, '.pc-page')
   assert.equal(SELECTORS.A42.weak, undefined)
-  assert.match(SELECTORS.C23.selector, /topic-hero-meta/)
+  assert.match(SELECTORS.C23.selector, /hero-info/) // v13 头图正文锚点
   assert.equal(SELECTORS.C23.weak, undefined)
   assert.match(SELECTORS.C24.selector, /chart-tit/)
   assert.match(SELECTORS.C24.selector, /topic-list \.li/)

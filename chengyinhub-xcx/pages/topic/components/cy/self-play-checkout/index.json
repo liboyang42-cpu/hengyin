@@ -1,0 +1,8 @@
+{
+  "component": true,
+  "styleIsolation": "isolated",
+  "usingComponents": {
+    "cy-consent-check": "/components/cy/consent-check/index",
+    "cy-icon": "/components/cy/icon/index"
+  }
+}

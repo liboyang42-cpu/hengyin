@@ -1,4 +1,4 @@
-const reportSheet = require('../utils/community-report-sheet.js');
+const reportSheet = require('../utils/community-report-sheet.js'); const pageMotion = require('../../../utils/page-motion.js');
 const modal = require('../../../utils/modal.js');
 const toast = require('../../../utils/toast.js');
 const { toTimestamp } = require('../../../utils/datetime');
@@ -1265,7 +1265,7 @@ Page({
           }
 
           if (isRefresh || pageNum === 1) {
-            that.setData({
+            pageMotion.enter(that, 'pmList'); that.setData({
               list: newlist,
               page_no: pageNum,
               hasMore: res.data.hasMore === true,
