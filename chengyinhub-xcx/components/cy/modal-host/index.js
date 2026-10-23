@@ -52,7 +52,8 @@ Component({
         multiline: !!opts.editable && !!opts.multiline,
         placeholderText: opts.placeholderText || '',
         maxlength: Number(opts.maxlength) > 0 ? Number(opts.maxlength) : 0,
-        inputValue: '',
+        // 2026-10-22:可选 value 预填(改已有内容,如俱乐部入会欢迎语);不传仍是空框,既有调用不变
+        inputValue: opts.editable && typeof opts.value === 'string' ? opts.value : '',
         inputError: '',
       });
     },

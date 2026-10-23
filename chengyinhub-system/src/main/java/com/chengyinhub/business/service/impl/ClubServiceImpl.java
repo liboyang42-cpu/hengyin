@@ -458,6 +458,41 @@ public class ClubServiceImpl implements IClubService
     }
 
     @Override
+    public String selectWelcomeNote(Long clubId)
+    {
+        if (clubId == null) return null;
+        try
+        {
+            return clubMapper.selectWelcomeNote(clubId);
+        }
+        catch (RuntimeException e)
+        {
+            // 迁移未落库(列不存在)或读失败:按「没写欢迎语」处理,不能让俱乐部详情跟着报错。
+            log.warn("读取入会欢迎语失败，按未设置处理，clubId={}", clubId, e);
+            return null;
+        }
+    }
+
+    @Override
+    public void updateWelcomeNote(Long clubId, Long ownerId, String note)
+    {
+        Club club = requireOwnedForOpenSettings(clubId, ownerId);
+        int updated;
+        try
+        {
+            updated = clubMapper.updateWelcomeNote(club.getId(), note == null ? "" : note);
+        }
+        catch (RuntimeException e)
+        {
+            log.warn("保存入会欢迎语失败，clubId={}", clubId, e);
+            throw new IllegalStateException("欢迎语暂时没法保存，请稍后再试");
+        }
+        if (updated < 1) {
+            throw new IllegalStateException("欢迎语没有保存成功，请重试");
+        }
+    }
+
+    @Override
     public void updatePublicVisible(Long clubId, Long ownerId, boolean enabled)
     {
         Club club = requireOwnedForOpenSettings(clubId, ownerId);

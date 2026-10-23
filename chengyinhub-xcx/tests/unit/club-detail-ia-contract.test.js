@@ -737,3 +737,67 @@ test('加入俱乐部悬浮按钮:往下滑收起、往上滑/回顶再出现', 
   page.onPageScroll({ scrollTop: 10 })
   assert.equal(page.data.joinHidden, false, '回到顶部一定出现')
 })
+
+// 2026-10-22 业主:加入后弹「在这个俱乐部你可以做什么」,内容按本团真实设置拼;主理人可自定欢迎语
+test('欢迎层按本团设置拼条目:发帖开关、商家不能报名、成员优先/成员价', () => {
+  const { page } = loadDetail()
+  const open = page.buildWelcomeItems({ id: 1, memberPostAllowed: 1, prioritySignupEnabled: 1, memberDiscountPrice: 39 })
+  assert.equal(JSON.stringify(open.map(i => i.key)), JSON.stringify(['posts', 'events', 'overview']))
+  assert.match(open[0].title, /发帖/)
+  assert.match(open[1].sub, /成员优先报名、成员价 ¥39/)
+  const closed = page.buildWelcomeItems({ id: 1, memberPostAllowed: 0 })
+  assert.doesNotMatch(closed[0].title, /发帖/, '成员不能发帖的团不能说「发帖」')
+  page.data.isMerchantViewer = true
+  assert.match(page.buildWelcomeItems({ id: 1 })[1].sub, /商家身份不能报名/)
+})
+
+test('加入成功:按钮先变绿打勾,动效后才弹欢迎层;待审只回执不弹', () => {
+  const { page, requests, modals } = loadDetail()
+  Object.assign(page.data, { clubId: 36, club: { id: 36, name: '城市乐居人', joinPolicy: 0 }, reducedMotion: true })
+  const fx = []
+  const setData = page.setData
+  page.setData = function (patch, cb) {
+    if ('joinFx' in patch) fx.push(patch.joinFx)
+    if (patch.welcomeShow) fx.push('welcome')
+    return setData.call(this, patch, cb)
+  }
+  page.onJoin()
+  assert.equal(page.data.joinFx, 'busy')
+  page.onJoin()
+  assert.equal(requests.filter(r => r.url === '/api/club/join').length, 1, '请求中不重复提交')
+  requests.find(r => r.url === '/api/club/join').success({ code: '200', data: { state: 'joined' } })
+  // 沙箱里没有 setTimeout,动效后的那一步立即执行;顺序必须是 请求中 → 变绿打勾 → 弹欢迎层 → 复位
+  assert.equal(JSON.stringify(fx), JSON.stringify(['busy', 'done', 'welcome', '']), '成功先变绿打勾,再弹欢迎层')
+  assert.equal(page.data.welcomeShow, true)
+
+  const pending = loadDetail()
+  Object.assign(pending.page.data, { clubId: 37, club: { id: 37, joinPolicy: 1 } })
+  pending.page.submitJoin('想一起夜行')
+  pending.requests.find(r => r.url === '/api/club/join').success({ code: '200', data: { state: 'pending' } })
+  assert.equal(pending.page.data.joinFx, '')
+  assert.equal(pending.page.data.welcomeShow, false, '待审不弹欢迎层')
+  assert.ok(pending.modals.some(m => /申请已提交/.test(m.title)))
+  void modals
+})
+
+test('主理人保存入会欢迎语:走开放设置接口,回读值才落到页面', () => {
+  const { page, requests } = loadDetail()
+  Object.assign(page.data, { clubId: 38, club: { id: 38, isOwner: true, welcomeNote: '' } })
+  page.saveWelcomeNote('欢迎！周六晚上一起夜行')
+  const req = requests.find(r => r.url === '/api/club/open-settings/welcome-note')
+  assert.ok(req)
+  assert.equal(JSON.parse(req.data).welcomeNote, '欢迎！周六晚上一起夜行')
+  assert.equal(page.data.openSettingSaving, 'welcomeNote')
+  req.success({ code: 200, data: { welcomeNote: '欢迎！周六晚上一起夜行' } })
+  // 桩 setData 不展开路径键('club.welcomeNote' 原样落在 data 上),真机会展开;两处都认
+  const noteOf = () => page.data['club.welcomeNote'] !== undefined ? page.data['club.welcomeNote'] : page.data.club.welcomeNote
+  assert.equal(noteOf(), '欢迎！周六晚上一起夜行')
+  assert.equal(page.data.openSettingSaving, '')
+
+  page.saveWelcomeNote('x')
+  requests[requests.length - 1].success({ code: 500, msg: '内容含违规信息' })
+  assert.equal(page.data.openSettingErrorKey, 'welcomeNote')
+  assert.equal(noteOf(), '欢迎！周六晚上一起夜行', '失败不改页面上的值')
+  const view = read(DETAIL_WXML)
+  assert.match(view, /wx:if="\{\{club\.welcomeNote\}\}"[\s\S]{0,200}\{\{club\.welcomeNote\}\}/, '欢迎层最上面显示主理人欢迎语')
+})

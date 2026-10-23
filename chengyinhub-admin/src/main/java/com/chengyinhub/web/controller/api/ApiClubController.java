@@ -643,6 +643,8 @@ public class ApiClubController extends BaseController {
                         club.getId(), memberId, e);
             }
         } catch (Exception ignore) { }
+        // 2026-10-22 业主:入会欢迎语(主理人自定),新成员加入后的欢迎弹层最上面显示。单独读,读不到当没写。
+        club.setWelcomeNote(clubService.selectWelcomeNote(club.getId()));
         return AjaxResult.success(PublicClubVO.from(club));
     }
 
@@ -795,6 +797,35 @@ public class ApiClubController extends BaseController {
         Club saved = clubService.selectClubById(body.getId());
         Map<String, Object> data = new HashMap<>();
         data.put("memberPostAllowed", saved == null ? null : saved.getMemberPostAllowed());
+        return AjaxResult.success("已保存", data);
+    }
+
+    private static final int WELCOME_NOTE_MAX = 200;
+
+    @Operation(summary = "开放设置:入会欢迎语")
+    @PostMapping("/open-settings/welcome-note")
+    public AjaxResult updateWelcomeNote(@RequestBody Club body) {
+        Long memberId;
+        try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
+        if (body == null || body.getId() == null) return error("缺少俱乐部ID");
+        String note = body.getWelcomeNote() == null ? "" : body.getWelcomeNote().trim();
+        if (note.codePointCount(0, note.length()) > WELCOME_NOTE_MAX) {
+            return error("欢迎语最多 " + WELCOME_NOTE_MAX + " 字");
+        }
+        // 欢迎语会展示给所有新成员,写入前送检(清空不用检)。
+        if (!note.isEmpty()) {
+            String risk = wxContentSecurityService.checkText(note, openidOf(memberId));
+            if (risk != null) return error(risk);
+        }
+        try {
+            clubService.updateWelcomeNote(body.getId(), memberId, note);
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            return error(e.getMessage());
+        }
+        // 回读再下发:前端渲染库里的事实。
+        String saved = clubService.selectWelcomeNote(body.getId());
+        Map<String, Object> data = new HashMap<>();
+        data.put("welcomeNote", saved == null ? "" : saved);
         return AjaxResult.success("已保存", data);
     }
 

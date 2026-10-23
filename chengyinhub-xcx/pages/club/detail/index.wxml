@@ -896,6 +896,18 @@
       <cy-inline-error wx:if="{{openSettingErrorKey === 'memberPost'}}" class="cset-inline-error" kind="data"
                        title="开关没有保存成功" sub="{{openSettingErrorText}}" action="重试" bind:action="toggleMemberPost" />
 
+      <!-- 2026-10-22 业主:主理人自己写入会欢迎语,新成员加入后的欢迎弹层最上面显示 -->
+      <view class="cset-row" wx:if="{{club.isOwner}}" catchtap="editWelcomeNote" aria-role="button" aria-label="编辑入会欢迎语"
+            aria-disabled="{{openSettingSaving ? true : false}}" hover-class="{{openSettingSaving ? 'none' : 'cy-pressed'}}" hover-stay-time="80">
+        <view class="cset-main">
+          <text class="cset-title">入会欢迎语</text>
+          <text class="cset-sub ep1">{{club.welcomeNote || '新成员加入后看到的第一段话，未设置'}}</text>
+        </view>
+        <text class="cset-switch">{{openSettingSaving === 'welcomeNote' ? '保存中…' : (club.welcomeNote ? '修改' : '去写')}}</text>
+      </view>
+      <cy-inline-error wx:if="{{openSettingErrorKey === 'welcomeNote'}}" class="cset-inline-error" kind="data"
+                       title="欢迎语没有保存成功" sub="{{openSettingErrorText}}" action="重试" bind:action="editWelcomeNote" />
+
       <text class="cset-group" wx:if="{{club.isOwner}}">经营</text>
       <view class="cset-row" wx:if="{{club.isOwner}}" catchtap="goClubFinance" aria-role="button" aria-label="俱乐部分润" hover-class="cy-pressed" hover-stay-time="80">
         <view class="cset-main">

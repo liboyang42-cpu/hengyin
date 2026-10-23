@@ -2507,12 +2507,14 @@ Page({
           // 2026-10-22 owner:点了加入,按钮先变绿再打勾;动效走完再弹「在这里你可以做什么」,同时刷新成员视图。
           // 群聊入口 2026-09-09 按稿从俱乐部页撤掉,这里也不再引导进群。
           that.setData({ joinFx: 'done' });
-          clearTimeout(that._joinFxTimer);
-          that._joinFxTimer = setTimeout(function () {
+          const afterFx = function () {
             that.openWelcome(that.data.club);
             that.setData({ joinFx: '' });
             that.loadDetail();
-          }, that.data.reducedMotion ? 0 : 900);
+          };
+          if (typeof setTimeout !== 'function') { afterFx(); return; }
+          if (typeof clearTimeout === 'function') clearTimeout(that._joinFxTimer);
+          that._joinFxTimer = setTimeout(afterFx, that.data.reducedMotion ? 0 : 900);
         } else {
           that.setData({ joinFx: '' });
           cyToast((res && res.msg) || '加入失败');
@@ -3440,6 +3442,48 @@ Page({
       fail() {
         that.setData({ openSettingSaving: '', openSettingErrorKey: 'memberPost',
           openSettingErrorText: '网络异常，开关没有保存' });
+      },
+    });
+  },
+
+  // 2026-10-22 业主:主理人自定入会欢迎语(200 字内,可清空)。后端送检后保存,回读值才落到页面。
+  editWelcomeNote() {
+    const that = this;
+    const club = this.data.club;
+    if (!club || !club.isOwner || this.data.openSettingSaving) return;
+    modal.show({
+      title: '入会欢迎语',
+      editable: true, multiline: true, maxlength: 200,
+      value: club.welcomeNote || '',
+      placeholderText: '比如：欢迎！我们每周六晚上夜行，第一次来先看「活动」报个名',
+      confirmText: '保存',
+      success(r) {
+        if (!r || !r.confirm) return;
+        that.saveWelcomeNote(String(r.content || '').trim());
+      },
+    });
+  },
+  saveWelcomeNote(note) {
+    const that = this;
+    const club = this.data.club;
+    if (!club) return;
+    this.setData({ openSettingSaving: 'welcomeNote', openSettingErrorKey: '', openSettingErrorText: '' });
+    app.sendRequest({
+      hideLoading: true, silentError: true,
+      url: '/api/club/open-settings/welcome-note', method: 'POST',
+      data: jsonBody({ id: club.id || this.data.clubId, welcomeNote: note }), header: jsonHeader(),
+      success(res) {
+        const saved = isSuccess(res) && isRecord(res.data) && typeof res.data.welcomeNote === 'string' ? res.data.welcomeNote : null;
+        if (saved === null) {
+          that.setData({ openSettingSaving: '', openSettingErrorKey: 'welcomeNote',
+            openSettingErrorText: bizFailureMessage(res, '没有确认欢迎语是否保存，请重试') });
+          return;
+        }
+        that.setData({ openSettingSaving: '', openSettingErrorKey: '', openSettingErrorText: '', 'club.welcomeNote': saved });
+        cyToast(saved ? '欢迎语已保存' : '已清空欢迎语');
+      },
+      fail() {
+        that.setData({ openSettingSaving: '', openSettingErrorKey: 'welcomeNote', openSettingErrorText: '网络异常，欢迎语没有保存' });
       },
     });
   },
