@@ -105,8 +105,23 @@ mvn -pl chengyinhub-system,chengyinhub-admin -am test \
   -Dsurefire.failIfNoSpecifiedTests=false
 ```
 
-环境：OpenJDK 21 · Maven 3.8.7 · 隔离内存夹具 · 无 MySQL / HTTP / 生产库。  
-DB / HTTP / App / CI = **NOT_RUN**。
+环境：OpenJDK 21.0.12.1 · Maven 3.8.7 · 隔离内存夹具 · 无 MySQL / HTTP / 生产库。  
+真实结果（2026-10-23T20:13:52Z，`BUILD SUCCESS`）：
+
+```
+Tests run: 2, Failures: 0, Errors: 0, Skipped: 0 -- C03FirstJourneyIsolationTest
+Tests run: 4, Failures: 0, Errors: 0, Skipped: 0 -- TradeBargainConsumerTest
+Tests run: 2, Failures: 0, Errors: 0, Skipped: 0 -- ProgressClockConsumerTest
+Tests run: 3, Failures: 0, Errors: 0, Skipped: 0 -- OracleBountyConsumerTest
+Tests run: 3, Failures: 0, Errors: 0, Skipped: 0 -- OathFlashbackConsumerTest
+Tests run: 3, Failures: 0, Errors: 0, Skipped: 0 -- RouteCommunityDayConsumerTest
+Tests run: 3, Failures: 0, Errors: 0, Skipped: 0 -- ClueSecretGoalConsumerTest
+Tests run: 3, Failures: 0, Errors: 0, Skipped: 0 -- MechanismRequestIdBinderTest
+Tests run: 23, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS
+```
+
+DB / HTTP / App / CI = **NOT_RUN**。Head：`df16aa70c`（本文件再提交会前进）。
 
 ## 5. 未确认决策（不编造标准答案或经济值）
 
