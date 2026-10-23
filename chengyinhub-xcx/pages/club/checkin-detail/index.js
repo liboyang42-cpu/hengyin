@@ -15,7 +15,7 @@ const cancellationFeedback = require('../../../utils/cancellation-feedback.js');
 const modal = require('../../../utils/modal.js');
 // 「回执未知 ≠ 失败」这几条判据与报名名册共用,别在这儿复制一份
 const {
-  isUnknownHttpStatus, isPermissionFailure, identityKey,
+  isUnknownHttpStatus, isPermissionFailure, permissionFailureCode, identityKey,
 } = require('../utils/owner-action-guard.js');
 
 const jsonHeader = () => ({ 'Content-Type': 'application/json' });
@@ -92,11 +92,29 @@ Page({
           }
         }
       },
-      fail() {
+      // 没挂 successStatusAbnormal:HTTP 4xx/5xx 与重登失败都落到这里,带着状态码。
+      fail(value, statusCode) {
         done();
-        that.setData({ state: 'error', errorText: '网络不稳定，请检查连接后重试' });
+        that.loadFailed(value, statusCode);
       },
     });
+  },
+
+  // 403 = 岗位没权限;401/登录失效 = 该重新登录,不是网络问题。两种都清掉已渲染的客户信息。
+  loadFailed(value, statusCode) {
+    if (isPermissionFailure(value, statusCode)) {
+      const code = permissionFailureCode(value, statusCode);
+      const msg = (value && (value.msg || value.message)) || '';
+      const forbidden = code === 403 || /没有权限|无权|仅(?:俱乐部)?主理人/.test(msg);
+      this.setData({
+        state: forbidden ? 'denied' : 'error',
+        errorText: forbidden ? (msg || '当前岗位没有核销查看权限，请联系主理人')
+          : '登录已过期，请重新进入核销详情',
+        detail: null,
+      });
+      return;
+    }
+    this.setData({ state: 'error', errorText: '网络不稳定，请检查连接后重试' });
   },
 
   buildRail(step) {
