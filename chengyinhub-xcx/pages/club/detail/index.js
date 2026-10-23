@@ -538,6 +538,9 @@ Page({
     // 成员名单/贡献榜的可见位:成员 + 公开加入团的访客(拍板 2026-10-22)。发帖/评论/举报仍看 canSeeMembers。
     canSeeRoster: false,
     joinHidden: false,   // 2026-10-22 owner:往下滑时收起底部「加入俱乐部」
+    joinFx: '',          // 加入按钮动效:'' | 'busy'(请求中)| 'done'(变绿 + 打勾)
+    welcomeShow: false,  // 加入后「在这个俱乐部你可以做什么」弹层
+    welcomeItems: [],
     posts: [],
     pinnedNotices: [],
     postsLoaded: false,
@@ -2070,6 +2073,8 @@ Page({
           memberStrip: canSeeRoster ? that.data.memberStrip : [],
           membersExpanded: canSeeRoster ? that.data.membersExpanded : false,
         });
+        // 2026-10-22 owner:审核团通过后第一次进来,补弹「在这里你可以做什么」(已看过不弹)
+        if (!that.data.joinFx) that.maybeWelcome(club);
         that.applyClubOwnerBadge();  // CU-C-108:club 到了,把早到的帖子徽标补上
         if (canSeeRoster) that.loadMembers();
         if (canSee) {
@@ -2457,6 +2462,7 @@ Page({
   // 加入俱乐部：公开团即时加入，审批团只进入待审态。
   onJoin() {
     const that = this;
+    if (this.data.joinFx) return;   // 请求中 / 已加入动效进行中,不重复提交
     if (isDemoClubId(this.data.clubId)) {
       cyToast('演示俱乐部，加入功能仅供预览');
       return;
@@ -2483,30 +2489,79 @@ Page({
 
   submitJoin(joinMessage) {
     const that = this;
+    this.setData({ joinFx: 'busy' });
     app.sendRequest({
       url: '/api/club/join', method: 'POST',
       data: jsonBody({ id: this.data.clubId, joinMessage: joinMessage || '' }), header: jsonHeader(),
       success(res) {
         if (res.code == '200') {
-          that.loadDetail();
           if (res.data && res.data.state === 'pending') {
+            that.setData({ joinFx: '' });
+            that.loadDetail();
             modal.show({
               title: '申请已提交', content: '等待审核。通过后才能查看成员名单和使用成员功能。',
               showCancel: false,
             });
             return;
           }
-          // 群聊入口 2026-09-09 按稿从俱乐部页撤掉,这里也不再引导进群
-          modal.show({
-            title: '已加入俱乐部', content: '欢迎！去「活动」看看最近有什么局。',
-            showCancel: false,
-          });
+          // 2026-10-22 owner:点了加入,按钮先变绿再打勾;动效走完再弹「在这里你可以做什么」,同时刷新成员视图。
+          // 群聊入口 2026-09-09 按稿从俱乐部页撤掉,这里也不再引导进群。
+          that.setData({ joinFx: 'done' });
+          clearTimeout(that._joinFxTimer);
+          that._joinFxTimer = setTimeout(function () {
+            that.openWelcome(that.data.club);
+            that.setData({ joinFx: '' });
+            that.loadDetail();
+          }, that.data.reducedMotion ? 0 : 900);
         } else {
+          that.setData({ joinFx: '' });
           cyToast((res && res.msg) || '加入失败');
         }
       },
-      fail() { cyToast('加入失败'); },
+      fail() { that.setData({ joinFx: '' }); cyToast('加入失败'); },
     });
+  },
+
+  // ===== 加入后的欢迎弹层(2026-10-22 owner):告诉新成员在这个俱乐部能做什么 =====
+  // 内容按本团真实设置拼:能不能发帖、能不能报名(商家不能)、成员优先报名/成员价、名单与贡献榜在哪看;
+  // 主理人写了欢迎语(welcomeNote)就放在最上面。每人每团只主动弹一次(审核团在通过后第一次进来时弹)。
+  welcomeSeenKey(clubId) {
+    return 'club_welcome_seen_' + (app.getUserID ? app.getUserID() || '' : '') + '_' + clubId;
+  },
+  buildWelcomeItems(club) {
+    const c = club || {};
+    const items = [];
+    items.push(Number(c.memberPostAllowed) === 0
+      ? { key: 'posts', icon: 'comment', title: '看大家的动态', sub: '在「帖子」看主理人和成员发的内容，可以点亮、评论' }
+      : { key: 'posts', icon: 'comment', title: '发帖和大家聊', sub: '在「帖子」发动态、带上你的漫游成绩，大家都能点亮和评论' });
+    if (this.data.isMerchantViewer) {
+      items.push({ key: 'events', icon: 'calendar', title: '看看俱乐部的局', sub: '可以浏览俱乐部活动；商家身份不能报名' });
+    } else {
+      const perks = [];
+      if (Number(c.prioritySignupEnabled) === 1) perks.push('成员优先报名');
+      if (Number(c.memberDiscountPrice) > 0) perks.push('成员价 ¥' + Number(c.memberDiscountPrice));
+      items.push({ key: 'events', icon: 'calendar', title: '报名俱乐部的局', sub: '在「活动」报名最近的局' + (perks.length ? '，' + perks.join('、') : '') });
+    }
+    items.push({ key: 'overview', icon: 'tab-club', title: '认识成员、攒贡献', sub: '在「概览」看成员和本周贡献榜，参加活动就会攒贡献分' });
+    return items;
+  },
+  openWelcome(club) {
+    const c = club || this.data.club;
+    if (!c || !c.id) return;
+    try { wx.setStorageSync(this.welcomeSeenKey(c.id), 1); } catch (e) { /* 存不下就下次再弹,不影响使用 */ }
+    this.setData({ welcomeShow: true, welcomeItems: this.buildWelcomeItems(c) });
+  },
+  // 审核团:通过后第一次进来补弹一次;公开团在加入那一下已经弹过并记过。
+  maybeWelcome(club) {
+    if (!club || !club.isJoined || club.isOwner || this.data.welcomeShow) return;
+    let seen = false;
+    try { seen = !!wx.getStorageSync(this.welcomeSeenKey(club.id)); } catch (e) { seen = true; }
+    if (!seen) this.openWelcome(club);
+  },
+  closeWelcome() { this.setData({ welcomeShow: false }); },
+  welcomeGoEvents() {
+    this.setData({ welcomeShow: false });
+    this.switchTab({ detail: { key: 'events' } });
   },
 
   goJoinRequests() {

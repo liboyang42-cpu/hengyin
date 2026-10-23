@@ -172,8 +172,10 @@ test('CU-C-71 审批团(joinPolicy=1)保留「重新申请并等主理人通过�
 
 test('CU-C-71 加入按钮只在审批团被拒后才说「重新申请加入」', () => {
   const wxml = readDetailWxml();
-  assert.match(wxml, /club\.joinPolicy == 1 && club\.myJoinStatus === 2 \? '重新申请加入' : '加入俱乐部'/,
-    '公开团的按钮不能再叫「重新申请加入」—— 它点了就是立即成为成员');
+  // 2026-10-22 owner:按钮做成右下角小胶囊,文案缩短(加入 / 申请加入 / 重新申请);不变量照旧 ——
+  // 「重新申请」只出现在审批团(joinPolicy 1)被拒(myJoinStatus 2)之后,公开团点了就是成员。
+  assert.match(wxml, /club\.joinPolicy == 1 \? \(club\.myJoinStatus === 2 \? '重新申请' : '申请加入'\) : '加入'/,
+    '公开团的按钮不能再叫「重新申请」—— 它点了就是立即成为成员');
 });
 
 /* ——— CU-C-83(9-25 裁决:加「客户档案」直达):点成员行不许由前端按权限悄悄改道 ——— */

@@ -710,7 +710,7 @@ test('L06(b/d/e):头部两行元信息；商家可加入、活动卡写「商家
   const view = read(DETAIL_WXML)
   // 2026-10-22 owner:俱乐部谁都能进来看,加入按钮改成底部悬浮;条件里仍不挡商家
   // 2026-10-22 owner:加入按钮只在「概览」出现,往下滑收起(join-float--hidden)
-  assert.match(view, /<block wx:if="\{\{detailLoaded && activeTab === 'overview' && !club\.isJoined && !club\.isOwner[^"]*\}\}">\s*<view class="join-float-space"><\/view>\s*<view class="join-float \{\{joinHidden \? 'join-float--hidden' : ''\}\}">/, '商家不再被挡在加入按钮外')
+  assert.match(view, /<block wx:if="\{\{detailLoaded && activeTab === 'overview' && !club\.isJoined && !club\.isOwner[^"]*\}\}">\s*<view class="join-float-space"><\/view>\s*<view class="join-float \{\{joinHidden && !joinFx \? 'join-float--hidden' : ''\}\}">/, '商家不再被挡在加入按钮外')
   assert.doesNotMatch(view, /class="profile-cta"/, '头部不再放加入按钮')
   assert.match(view, /wx:if="\{\{merchantNoSignup\}\}" class="ev-no-signup">商家不能报名</)
   assert.match(view, /upcomingTopics[^\n]*\n[^\n]*merchantNoSignup: isMerchantViewer/)

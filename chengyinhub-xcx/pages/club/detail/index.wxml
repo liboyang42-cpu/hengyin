@@ -1063,15 +1063,39 @@
   />
 
   <view class="safe-bottom"></view>
-  <!-- 2026-10-22 owner:俱乐部谁都能进来看,未加入时底部悬浮「加入俱乐部」—— 只在「概览」出现(帖子/活动不出),
-       小号居中胶囊;往下滑收起、往上滑或回到顶部再出来。页尾留出同高空位,最后一条内容不被盖住 -->
+  <!-- 2026-10-22 owner:俱乐部谁都能进来看,未加入时右下角一枚小「加入」胶囊 —— 只在「概览」出现(帖子/活动不出);
+       往下滑收起、往上滑或回到顶部再出来。点了先变灰(请求中)→ 成功变绿并打勾 → 弹「在这里你可以做什么」。 -->
   <block wx:if="{{detailLoaded && activeTab === 'overview' && !club.isJoined && !club.isOwner && !(sceneCurrent && sceneCurrent.id === 'club-edit')}}">
     <view class="join-float-space"></view>
-    <view class="join-float {{joinHidden ? 'join-float--hidden' : ''}}">
+    <view class="join-float {{joinHidden && !joinFx ? 'join-float--hidden' : ''}}">
       <view wx:if="{{club.myJoinStatus === 0}}" class="join-btn join-btn--pending join-float__btn" aria-role="button" aria-disabled="true">等待主理人审核</view>
-      <view wx:else class="join-btn cy-btn cy-btn--primary join-float__btn" bindtap="onJoin" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">{{club.joinPolicy == 1 && club.myJoinStatus === 2 ? '重新申请加入' : '加入俱乐部'}}</view>
+      <view wx:else class="join-btn cy-btn cy-btn--primary join-float__btn {{joinFx ? 'join-float__btn--' + joinFx : ''}}" bindtap="onJoin" aria-role="button" aria-label="{{joinFx === 'done' ? '已加入' : '加入俱乐部'}}" hover-class="cy-pressed" hover-stay-time="80">
+        <view class="join-float__check" aria-hidden="true"><cy-icon name="check" size="32" /></view>
+        <text>{{joinFx === 'done' ? '已加入' : (club.joinPolicy == 1 ? (club.myJoinStatus === 2 ? '重新申请' : '申请加入') : '加入')}}</text>
+      </view>
     </view>
   </block>
+
+  <!-- 2026-10-22 owner:加入后弹「在这个俱乐部你可以做什么」;主理人写了欢迎语就放在最上面 -->
+  <cy-sheet show="{{welcomeShow}}" title="欢迎加入{{club.name ? '「' + club.name + '」' : '俱乐部'}}" handle closable maskClosable footer bind:close="closeWelcome">
+    <view class="welcome">
+      <view class="welcome-note" wx:if="{{club.welcomeNote}}">
+        <text class="welcome-note__from">主理人说</text>
+        <text class="welcome-note__text">{{club.welcomeNote}}</text>
+      </view>
+      <view class="welcome-item cy-fly-in" wx:for="{{welcomeItems}}" wx:key="key" style="animation-delay: {{index * 60}}ms">
+        <view class="welcome-item__ico"><cy-icon name="{{item.icon}}" size="36" /></view>
+        <view class="welcome-item__main">
+          <text class="welcome-item__title">{{item.title}}</text>
+          <text class="welcome-item__sub">{{item.sub}}</text>
+        </view>
+      </view>
+    </view>
+    <view slot="footer" class="welcome-actions">
+      <view class="cy-btn cy-btn--secondary welcome-actions__btn" bindtap="closeWelcome" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">知道了</view>
+      <view class="cy-btn cy-btn--primary welcome-actions__btn" bindtap="welcomeGoEvents" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">去看活动</view>
+    </view>
+  </cy-sheet>
 </view>
 
 <!-- BL-18 物理返回/侧滑守卫:资料编辑弹窗里有未保存修改时,返回先走 dirty 闸,不直接退出详情页 -->

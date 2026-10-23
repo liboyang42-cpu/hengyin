@@ -193,34 +193,75 @@ page { background: var(--cy-bg-page); }
   white-space: nowrap;
 }
 
-/* 2026-10-22 owner:「加入俱乐部」底部悬浮,只在「概览」出现;不要太大 —— 居中的小号胶囊(按字宽,不再整宽),
-   不铺底部渐隐带;往下滑收起、往上滑再出来。
+/* 2026-10-22 owner:「加入」悬浮在右下角,只在「概览」出现;做小 —— 视觉 68rpx 高的小胶囊,
+   触控区用 ::after 撑回 88rpx(44pt 无障碍下限)。往下滑收起、往上滑再出来。
+   点击:请求中变淡 → 成功变绿、左侧勾从 0 宽展开(transition,不新增关键帧)→ 弹欢迎层。
    ⚠️ 进场动画(cy-rise,fill both 会一直占着 transform)挂在里层按钮上,收起用外层容器的 transition,两者不打架。 */
 .join-float {
   position: fixed;
-  left: 0;
-  right: 0;
+  right: var(--cy-page-x);
   bottom: calc(var(--cy-space-4) + env(safe-area-inset-bottom));
   z-index: 40;
   display: flex;
-  justify-content: center;
   pointer-events: none;
   transition: transform var(--cy-motion-standard) var(--cy-ease-out), opacity var(--cy-motion-standard) var(--cy-ease-out);
 }
 .join-float--hidden { transform: translateY(calc(100% + var(--cy-space-6))); opacity: 0; }
 .join-float--hidden .join-float__btn { pointer-events: none; }
-.join-float__btn {
+.join-float .join-float__btn {
+  position: relative;
   pointer-events: auto;
   box-sizing: border-box;
-  padding: 0 var(--cy-space-6);
+  height: 68rpx;                        /* ds-ok: 业主要小号胶囊;触控区由 ::after 撑回 88rpx */
+  padding: 0 var(--cy-space-4);
   font-size: var(--cy-font-label);
   box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, .28); /* ds-ok: 悬浮胶囊浮在内容上方的投影 */
+  transition: background-color var(--cy-motion-standard) var(--cy-ease-out), color var(--cy-motion-standard) var(--cy-ease-out), opacity var(--cy-motion-standard) var(--cy-ease-out);
   /* 打开页面时从下方滑上来(复用全站 cy-rise,不新增关键帧),稍等资料区先出 */
   animation: cy-rise var(--cy-motion-slow) var(--cy-ease-emphasized-decelerate) 160ms both;
 }
+.join-float .join-float__btn::after { content: ''; position: absolute; left: 0; right: 0; top: -10rpx; bottom: -10rpx; }
+/* 勾:未完成时不占位(display:none);变绿那一下出现并从 0 放大到 1 带过冲(只动 transform,合成层动画) */
+.join-float__check { display: none; align-items: center; margin-right: var(--cy-space-1); }
+.join-float__check > cy-icon { display: block; transform: scale(0) rotate(-30deg); transition: transform var(--cy-motion-slow) var(--cy-ease-spring); }
+.join-float .join-float__btn--busy { opacity: .6; }
+.join-float .join-float__btn--done { background: var(--cy-color-status-success); color: #FFFFFF; } /* ds-ok: 绿底上恒用白字白勾 */
+.join-float__btn--done .join-float__check { display: flex; }
+.join-float__btn--done .join-float__check > cy-icon { transform: scale(1) rotate(0); }
 .cy-motion-reduced .join-float__btn, .join-float__btn--reduced { animation: none; }
 @media (prefers-reduced-motion: reduce) { .join-float__btn { animation: none; } .join-float { transition: none; } }
-.join-float-space { height: calc(var(--cy-btn-h) + var(--cy-space-6) + env(safe-area-inset-bottom)); }
+.join-float-space { height: calc(var(--cy-btn-h) + var(--cy-space-4) + env(safe-area-inset-bottom)); }
+
+/* 加入后的欢迎层:在这个俱乐部你可以做什么(条目逐条飞入) */
+.welcome { padding: var(--cy-space-1) 0 var(--cy-space-3); }
+.welcome-note {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cy-space-1);
+  margin-bottom: var(--cy-space-4);
+  padding: var(--cy-space-3) var(--cy-space-3-5);
+  border-radius: var(--cy-radius-lg);
+  background: var(--cy-color-bg-surface-subtle);
+}
+.welcome-note__from { font-size: var(--cy-font-label); color: var(--cy-color-text-tertiary); }
+.welcome-note__text { font-size: var(--cy-font-body); line-height: var(--cy-leading-loose); color: var(--cy-color-text-primary); white-space: pre-wrap; }
+.welcome-item { display: flex; align-items: flex-start; gap: var(--cy-space-3); padding: var(--cy-space-2-5) 0; }
+.welcome-item__ico {
+  flex: none;
+  width: 72rpx;                         /* ds-ok: 条目图标圆底 36pt */
+  height: 72rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--cy-color-bg-surface-subtle);
+  color: var(--cy-color-text-primary);
+}
+.welcome-item__main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4rpx; }
+.welcome-item__title { font-size: var(--cy-font-body); font-weight: 700; color: var(--cy-color-text-primary); }
+.welcome-item__sub { font-size: var(--cy-font-label); line-height: var(--cy-leading-normal); color: var(--cy-color-text-secondary); }
+.welcome-actions { display: flex; gap: var(--cy-space-2-5); }
+.welcome-actions .welcome-actions__btn { flex: 1; }
 /* join-btn 收编至 .cy-btn（primary 反色中性白/secondary/ghost）;此处仅留行内布局 */
 .join-btn {
   display: flex;
