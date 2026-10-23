@@ -11,6 +11,21 @@ import com.chengyinhub.business.domain.CmsTopic;
 import com.chengyinhub.business.domain.CoopInvite;
 import com.chengyinhub.business.domain.CoopOrder;
 import com.chengyinhub.business.domain.CoopSettlement;
+import com.chengyinhub.business.domain.CoopSettlementDetail;
+import com.chengyinhub.business.domain.OmsTicket;
+import com.chengyinhub.business.domain.dto.CoopSettlementCandidate;
+import com.chengyinhub.business.mapper.CoopSettlementEvidenceMapper;
+import com.chengyinhub.business.mapper.CoopSettlementDetailMapper;
+import com.chengyinhub.business.mapper.CoopSettlementAdjustmentMapper;
+import com.chengyinhub.business.mapper.SettlementClaimMapper;
+import com.chengyinhub.business.mapper.CmsTopicNodeMapper;
+import com.chengyinhub.business.mapper.OmsTicketMapper;
+import com.chengyinhub.business.service.impl.FrozenCoopOrderSettlementSnapshotReader;
+import com.chengyinhub.business.service.impl.SnapshotFulfillmentWindowResolver;
+import com.chengyinhub.business.service.impl.TopicSettlementEvidenceService;
+import com.chengyinhub.business.service.impl.CoopSettlementClaimServiceImpl;
+import com.chengyinhub.business.service.impl.SettlementClaimServiceImpl;
+import com.chengyinhub.business.service.support.FailClosedCoopOrderLineupSource;
 import com.chengyinhub.business.domain.SettlementClaim;
 import com.chengyinhub.business.domain.SettlementDetail;
 import com.chengyinhub.business.domain.SettlementRule;
@@ -55,13 +70,19 @@ import org.springframework.transaction.TransactionStatus;
 
 import java.math.BigDecimal;
 import java.util.Collections;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.atLeast;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -102,6 +123,12 @@ class DoublePaymentReproductionTest {
     private IPointsAwardService topicPointsAwardService;
     private CmsTopicServiceImpl topicService;
     private ApiRegistrationController controller;
+    private CoopSettlementEvidenceMapper evidenceMapper;
+    private CoopSettlementDetailMapper coopDetailMapper;
+    private SettlementClaimMapper claimMapper;
+    private IUmsMemberService topicMemberService;
+    private CmsRegistrationScan originalScan;
+    private OmsTicket frozenTicket;
 
     @BeforeEach
     void setUp() {
@@ -120,13 +147,22 @@ class DoublePaymentReproductionTest {
         when(registrationMapper.selectByverificationCode(CODE)).thenReturn(registration);
         // A包核销在原事务内按原ID锁读当前订单(requireCurrentUsableRegistration)；同一已付原行。
         when(registrationMapper.selectCmsRegistrationByIdForUpdate(REGISTRATION)).thenReturn(registration);
-        when(registrationMapper.verifyIfNotVerified(REGISTRATION, MERCHANT)).thenReturn(1);
+        when(registrationMapper.verifyIfNotVerified(REGISTRATION, MERCHANT)).thenAnswer(call -> {
+            registration.setVerificationStatus(1);
+            return 1;
+        });
+        when(scanMapper.insertCmsRegistrationScan(any())).thenAnswer(call -> {
+            originalScan = call.getArgument(0);
+            originalScan.setId("91");
+            registration.setVerificationTime(originalScan.getCreateTime());
+            return 1;
+        });
         when(scanMapper.selectCmsRegistrationScanList(any()))
                 .thenReturn(Collections.<CmsRegistrationScan>emptyList());
         when(settlementDetailMapper.insertAdjustment(any(SettlementDetail.class))).thenReturn(1);
         when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(topic);
         when(topicMapper.selectTopicsForSettlement()).thenReturn(Collections.singletonList(topic));
-        when(topicMapper.claimTopicForSettlement(TOPIC)).thenReturn(1);
+        when(topicMapper.claimTopicForSettlement(TOPIC)).thenReturn(1, 0);
         when(registrationMapper.selectTotalSalesByTopicId(TOPIC)).thenReturn(new BigDecimal("100.00"));
         when(registrationMapper.selectVerifiedHeadsByTopicId(TOPIC)).thenReturn(1);
         when(registrationMapper.selectVerifiedSalesByTopicId(TOPIC)).thenReturn(new BigDecimal("100.00"));
@@ -189,7 +225,8 @@ class DoublePaymentReproductionTest {
         ReflectionTestUtils.setField(topicService, "coopOrderMapper", coopOrderMapper);
         ReflectionTestUtils.setField(topicService, "coopSettlementMapper", coopSettlementMapper);
         ReflectionTestUtils.setField(topicService, "pricingService", new PricingServiceImpl());
-        ReflectionTestUtils.setField(topicService, "umsMemberService", mock(IUmsMemberService.class));
+        topicMemberService = mock(IUmsMemberService.class);
+        ReflectionTestUtils.setField(topicService, "umsMemberService", topicMemberService);
         ReflectionTestUtils.setField(topicService, "umsMemberBalanceDetailService",
                 mock(IUmsMemberBalanceDetailService.class));
         ReflectionTestUtils.setField(topicService, "clubService",
@@ -201,6 +238,7 @@ class DoublePaymentReproductionTest {
         // 不装这件,主题结算会以 NPE 被 per-topic catch 吞掉 —— 那是装配缺件,不是被测行为。
         topicPointsAwardService = mock(IPointsAwardService.class);
         ReflectionTestUtils.setField(topicService, "pointsAwardService", topicPointsAwardService);
+        installOriginalCoopEvidence(registration, topicMapper, coopOrderMapper, coopInviteMapper);
 
         ICmsRegistrationMerchantService merchantService = mock(ICmsRegistrationMerchantService.class);
         CmsRegistrationMerchant winner = new CmsRegistrationMerchant();
@@ -250,6 +288,15 @@ class DoublePaymentReproductionTest {
     void topicWithCoopOrder_paysMerchantOnlyThroughCoopLedger() {
         AjaxResult verification = controller.scanQrCode("topic", CODE);
         assertEquals("核销成功", verification.get("msg"));
+        // 本单测在 Mapper 边界装入已封窗的票证据；不调用票务写侧，不模拟真实数据库时间旅行。
+        assertNotNull(originalScan);
+        long until = System.nanoTime() + java.util.concurrent.TimeUnit.MILLISECONDS.toNanos(100);
+        while (System.currentTimeMillis() <= originalScan.getCreateTime().getTime() && System.nanoTime() < until) {
+            Thread.onSpinWait();
+        }
+        Date end = new Date();
+        assertTrue(originalScan.getCreateTime().before(end), "原扫码先于结算封窗");
+        frozenTicket.setEndTime(end);
         assertEquals(1, topicService.executeTopicSettlement());
 
         SettlementDetail detail = merchantSettlementDetail();
@@ -269,6 +316,25 @@ class DoublePaymentReproductionTest {
         // H8:发布者的对价是 event15 积分,不是现金 —— 两头都要断言,只断一头把闸拆了也不会红。
         assertEquals(Collections.<SettlementDetail>emptyList(), capturedSettlementDetails(),
                 "有生效合作单时核销一行 settlement_detail 都不许写 —— 含发布者(creator)那一行");
+        ArgumentCaptor<CoopSettlementDetail> origin = ArgumentCaptor.forClass(CoopSettlementDetail.class);
+        verify(coopDetailMapper).insertIgnoreDetail(origin.capture());
+        assertEquals(REGISTRATION, origin.getValue().getRegistrationId());
+        assertMoney("30.00", origin.getValue().getOriginAmount(), "唯一 coop 明细保留非零原始金额");
+        ArgumentCaptor<SettlementClaim> claim = ArgumentCaptor.forClass(SettlementClaim.class);
+        verify(claimMapper).insertClaim(claim.capture());
+        assertEquals("TOPIC_EDITION", claim.getValue().getCommercialContextType());
+        assertEquals(TOPIC, claim.getValue().getCommercialContextId());
+        assertEquals("REGISTRATION", claim.getValue().getFulfillmentType());
+        assertEquals(REGISTRATION, claim.getValue().getFulfillmentId(), "经济身份必须是原报名，不能拿扫码 ID");
+        assertEquals("COOP_ORDER", claim.getValue().getSettlementRoute());
+        assertEquals(COOP_ORDER, claim.getValue().getSourceContractId());
+        assertEquals(0, topicService.executeTopicSettlement(), "重复结算 CAS 未领取，原金额/claim/明细零新增");
+        verify(coopSettlementMapper, times(4)).insertCoopSettlement(any());
+        verify(coopDetailMapper, times(1)).insertIgnoreDetail(any());
+        verify(claimMapper, times(1)).insertClaim(any());
+        verify(topicMemberService, never()).addBalance(any(), any());
+        assertEquals(Collections.<SettlementDetail>emptyList(), capturedSettlementDetails());
+        verify(evidenceMapper).selectCashBasisBlockingRefundIdsForUpdate(TOPIC);
         verify(topicPointsAwardService, times(1)).awardPublisherSettlement(PUBLISHER, TOPIC);
     }
 
@@ -282,6 +348,9 @@ class DoublePaymentReproductionTest {
         registration.setRegistrationStatus(2); // 已付订单的真实状态即报名成功
         registration.setPayableAmount(new BigDecimal("100.00"));
         registration.setFeePlatformRate(new BigDecimal("0.10"));
+        registration.setTicketId(801L);
+        registration.setOrderNum(1L);
+        registration.setPurchaseKind(1);
         return registration;
     }
 
@@ -290,6 +359,9 @@ class DoublePaymentReproductionTest {
         topic.setId(TOPIC);
         topic.setMemberId(PUBLISHER);
         topic.setProductType(ProductType.ORIENTEERING);
+        topic.setDelFlag(0);
+        topic.setLifecycle(3);
+        topic.setSellingStartedAt(new Date(0));
         topic.setFeePlatformRate(new BigDecimal("0.10"));
         topic.setFeeGuaranteeBaseRate(new BigDecimal("0.05"));
         topic.setFeeGuaranteeStepRate(new BigDecimal("0.02"));
@@ -300,11 +372,79 @@ class DoublePaymentReproductionTest {
     private CoopOrder merchantOrder() {
         CoopOrder order = new CoopOrder();
         order.setId(COOP_ORDER);
+        order.setTopicId(TOPIC);
+        order.setFromId(PUBLISHER);
+        order.setStatus(0);
+        order.setDelFlag(0);
+        order.setTermsVersion("v1");
+        order.setRoleSnapshot("SUPPLY");
+        order.setScopeTypeSnapshot("TOPIC");
+        order.setScopeIdSnapshot(TOPIC);
+        order.setEligiblePurchaseKindsSnapshot("GUIDED_TICKET");
+        order.setFulfillmentEvidenceRuleSnapshot("REGISTRATION_SCAN");
+        order.setTermsSnapshot("{\"shareMode\":1,\"compensationMode\":\"SALES_PERCENT\",\"shareRate\":30}");
         order.setToType("merchant");
         order.setToId(MERCHANT);
         order.setShareMode(1);
         order.setShareRate(new BigDecimal("30"));
         return order;
+    }
+
+    /** Real reader/evidence/claim services; only persistence boundaries use controlled fixture rows. */
+    private void installOriginalCoopEvidence(CmsRegistration registration,
+            CmsTopicMapper topics, CoopOrderMapper orders, CoopInviteMapper invites) {
+        evidenceMapper = mock(CoopSettlementEvidenceMapper.class);
+        when(evidenceMapper.countPaidActivityRegistrations(TOPIC)).thenReturn(0);
+        when(evidenceMapper.selectCashBasisBlockingRefundIdsForUpdate(TOPIC)).thenReturn(Collections.emptyList());
+        CmsActivityMapper activities = mock(CmsActivityMapper.class);
+        when(activities.selectActiveActivityIdsByTopicId(TOPIC)).thenReturn(Collections.emptyList());
+        frozenTicket = new OmsTicket(); frozenTicket.setId(registration.getTicketId());
+        frozenTicket.setOwnerType(1L); frozenTicket.setOwnerId(TOPIC); frozenTicket.setDelFlag(0);
+        frozenTicket.setMode(1); frozenTicket.setSubType("guided"); frozenTicket.setStartTime(new Date(0));
+        OmsTicketMapper tickets = mock(OmsTicketMapper.class);
+        when(tickets.selectOmsTicketList(any())).thenReturn(List.of(frozenTicket));
+        when(evidenceMapper.selectTopicEvidenceCandidatesForUpdate(any(), any(), any())).thenAnswer(call -> {
+            assertNotNull(originalScan, "没有实际核销原回执就没有正向结算证据");
+            CoopSettlementCandidate candidate = new CoopSettlementCandidate();
+            candidate.setRegistrationId(originalScan.getRegistrationId());
+            candidate.setOwnerType(registration.getOwnerType()); candidate.setOwnerId(registration.getOwnerId());
+            candidate.setSourceTopicId(TOPIC); candidate.setOrderQuantity(registration.getOrderNum());
+            candidate.setRegistrationStatus(registration.getRegistrationStatus());
+            candidate.setPaymentStatus(registration.getPaymentStatus());
+            candidate.setVerificationStatus(registration.getVerificationStatus()); candidate.setPurchaseKind("GUIDED_TICKET");
+            candidate.setEligibleSalesSnapshot(registration.getPayableAmount()); candidate.setScopeCovered(true);
+            candidate.setTicketOwnerMatches(true); candidate.setFulfillmentStartInclusive(frozenTicket.getStartTime());
+            candidate.setFulfillmentEndExclusive(frozenTicket.getEndTime());
+            candidate.setMerchantScanPresent(MERCHANT.equals(originalScan.getMemberId())
+                    && Integer.valueOf(1).equals(originalScan.getRegistrationType()));
+            candidate.setMerchantScanTime(originalScan.getCreateTime());
+            candidate.setVerificationTime(registration.getVerificationTime()); return List.of(candidate);
+        });
+        FrozenCoopOrderSettlementSnapshotReader reader = new FrozenCoopOrderSettlementSnapshotReader(
+                new FailClosedCoopOrderLineupSource(orders, invites), topics, mock(CmsTopicNodeMapper.class), tickets);
+        TopicSettlementEvidenceService evidence = new TopicSettlementEvidenceService(activities, registrationMapper,
+                mock(com.chengyinhub.business.mapper.CoopGroupVerifyMapper.class), evidenceMapper);
+        claimMapper = mock(SettlementClaimMapper.class);
+        Map<String,SettlementClaim> claims = new HashMap<>();
+        when(claimMapper.insertClaim(any())).thenAnswer(call -> {
+            SettlementClaim requested = call.getArgument(0);
+            if (claims.containsKey(requested.economicKey())) throw new org.springframework.dao.DuplicateKeyException("economic key");
+            requested.setId(9001L); claims.put(requested.economicKey(), requested); return 1;
+        });
+        when(claimMapper.selectByEconomicKeyForUpdate(any())).thenAnswer(call -> claims.get(call.<SettlementClaim>getArgument(0).economicKey()));
+        coopDetailMapper = mock(CoopSettlementDetailMapper.class);
+        when(coopDetailMapper.insertIgnoreDetail(any())).thenReturn(1);
+        when(coopDetailMapper.refreshOriginAggregate(any())).thenReturn(1);
+        List<CoopSettlement> heads = new ArrayList<>();
+        when(coopSettlementMapper.selectByTopicId(TOPIC)).thenAnswer(call -> new ArrayList<>(heads));
+        when(coopSettlementMapper.insertCoopSettlement(any())).thenAnswer(call -> {
+            CoopSettlement head = call.getArgument(0); head.setId(8000L + heads.size()); heads.add(head); return 1;
+        });
+        CoopSettlementClaimServiceImpl settlement = new CoopSettlementClaimServiceImpl(reader,
+                new SnapshotFulfillmentWindowResolver(), evidence, new SettlementClaimServiceImpl(claimMapper),
+                coopSettlementMapper, coopDetailMapper, mock(CoopSettlementAdjustmentMapper.class));
+        ReflectionTestUtils.setField(topicService, "coopSettlementEvidenceMapper", evidenceMapper);
+        ReflectionTestUtils.setField(topicService, "coopSettlementClaimService", settlement);
     }
 
     private SettlementRule entryRule() {

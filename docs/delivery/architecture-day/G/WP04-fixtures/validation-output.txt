@@ -1,0 +1,18 @@
+{
+  "kind": "STATIC_ONLY",
+  "source_sha256": "5804413b9346d506273ca65161495c4583da72d307b8ac69af298f6b9c48daa6",
+  "production_files_changed": 0,
+  "fixtures": {
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/DoublePaymentReproductionTest.java": {
+      "original_tests": 1,
+      "original_assertions_retained": 13
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/SettlementRateConvergenceTest.java": {
+      "original_tests": 22,
+      "original_assertions_retained": 34
+    }
+  },
+  "java": "NOT_RUN",
+  "mysql": "NOT_RUN"
+}
+SECRET-FILE-GATE PASS: 当前 Git tree 无密钥/证书文件或私钥正文
