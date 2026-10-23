@@ -18,15 +18,14 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * O-01 /api/play/arrive 位置守卫(第 4–7 层,判定见 {@link ArriveLocationGuardPolicy})与空精度开关。
+ * O-01 /api/play/arrive 位置守卫(第 4–7 层,判定见 {@link ArriveLocationGuardPolicy})。
  *
- * <p>两个 sys_config 开关,默认值 = 现行行为(键缺失、读取异常同样按默认):
- * <ul>
- *   <li>{@value #CONFIG_MODE}:off(默认,不读不写守卫表,与改动前逐字等价)/
- *       shadow(照常放行,只把「本应拒绝」记成 SHADOW 供评估误伤)/ enforce(拒绝并记 REJECT)。</li>
- *   <li>{@value #CONFIG_REQUIRE_ACCURACY}:false(默认,旧版小程序不报精度照常放行并留痕)/
- *       true(空精度拒绝,提示更新小程序或扫码)。owner 定下小程序最低版本前不要打开。</li>
- * </ul>
+ * <p>sys_config 开关 {@value #CONFIG_MODE}(键缺失、读取异常按 off):off(默认,不读不写守卫表,
+ * 与改动前逐字等价)/ shadow(照常放行,只把「本应拒绝」记成 SHADOW 供评估误伤)/ enforce(拒绝并记 REJECT)。
+ *
+ * <p>空精度:原「空精度放行」与开关 play.arrive.require_accuracy 已删除(owner 2026-10-23 拍板,
+ * 尚无真实用户,不设过渡期)。控制器对未上报 / 非法精度一律拒绝({@link #ACCURACY_MISSING} /
+ * {@link #ACCURACY_INVALID}),不进入本守卫。
  *
  * <p>守卫表不可用(迁移未落库、库抖动)时一律按放行处理并打 error 日志:新闸的故障不能把
  * 全部 GPS 到达拦死。被拒行的 id 作为申诉引用号返回给端上。
@@ -35,9 +34,10 @@ import java.util.Locale;
 public class ArriveLocationGuard
 {
     public static final String CONFIG_MODE = "play.arrive.location_guard.mode";
-    public static final String CONFIG_REQUIRE_ACCURACY = "play.arrive.require_accuracy";
-    /** 空精度被开关拒绝时的错误码(不是作弊判定,不可申诉,升级或扫码即可) */
+    /** 未上报精度被拒时的错误码(不是作弊判定,不可申诉,重新定位或扫码即可) */
     public static final String ACCURACY_MISSING = "ARRIVE_ACCURACY_MISSING";
+    /** 上报精度非有限 / 负数 / 坏文本被拒时的错误码(同上,不可申诉) */
+    public static final String ACCURACY_INVALID = "ARRIVE_ACCURACY_INVALID";
     /** 申诉流引用:audit_appeal.biz_type 取此值,biz_id 取 play_arrive_guard_log.id */
     public static final String APPEAL_BIZ_TYPE = "play_arrive_guard";
 
@@ -68,18 +68,6 @@ public class ArriveLocationGuard
     @Autowired
     private PlayArriveGuardLogMapper guardLogMapper;
 
-    /** 空精度是否拒绝。默认 false(现行:放行并留痕)。 */
-    public boolean requireAccuracy()
-    {
-        try {
-            String value = configService.selectConfigByKey(CONFIG_REQUIRE_ACCURACY);
-            return value != null && "true".equalsIgnoreCase(value.trim());
-        } catch (RuntimeException e) {
-            logger.error("arrive 空精度开关读取失败,按默认放行", e);
-            return false;
-        }
-    }
-
     Mode mode()
     {
         try {
@@ -103,7 +91,7 @@ public class ArriveLocationGuard
 
     /**
      * 第 1–3 层(坐标、精度、围栏)已通过后调用。nodeLat/nodeLng 为本次判定用的站点坐标,
-     * accuracyM 为已校验过的上报精度(未上报为 null)。
+     * accuracyM 为已校验过的上报精度(控制器已拒绝空精度;历史行可能为 null)。
      */
     public Result check(Long memberId, Long activityId, Long topicId, Long nodeId,
                         double nodeLat, double nodeLng, Double accuracyM)

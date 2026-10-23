@@ -117,12 +117,30 @@ test('仅定位到达:扫码/答题等需核验节点(vm1-4)走到点旁也不�
       const page = createContext(harness.definition, { nodes: [node], nextNode: { nodeId: 501 } })
       page.watchLocation()
       assert.equal(harness.platform.locationHandlers.length, 1, 'vm' + vm + ' 必须注册定位监听')
-      harness.platform.locationHandlers[0]({ latitude: 31.3, longitude: 120.7 })
+      harness.platform.locationHandlers[0]({ latitude: 31.3, longitude: 120.7, accuracy: 15 })
       await settle()
       assert.deepEqual(harness.requests.map((r) => r.url), [], 'vm' + vm + ' 定位不能替代核验')
       assert.equal(harness.platform.scans.length, 0)
     } finally {
       harness.restore()
+    }
+  }
+})
+
+// O-01(2026-10-23 删空精度放行):定位回调没给精度时后端必拒 ARRIVE_ACCURACY_MISSING,自动到达不发请求
+test('仅定位到达:vm0/vm5 节点定位回调缺精度/精度非法时不自动发 /api/play/arrive', async () => {
+  for (const vm of [0, 5]) {
+    for (const accuracy of [undefined, NaN, -1, 81]) {
+      const harness = loadPage()
+      try {
+        const page = createContext(harness.definition, { nodes: [NODE(vm)], nextNode: { nodeId: 501 } })
+        page.watchLocation()
+        harness.platform.locationHandlers[0]({ latitude: 31.3, longitude: 120.7, accuracy })
+        await settle()
+        assert.deepEqual(harness.requests.map((r) => r.url), [], 'vm' + vm + ' accuracy=' + accuracy)
+      } finally {
+        harness.restore()
+      }
     }
   }
 })
@@ -136,7 +154,7 @@ test('仅定位到达:vm0/vm5 节点只调用到达接口 /api/play/arrive,不�
       const node = NODE(vm)
       const page = createContext(harness.definition, { nodes: [node], nextNode: { nodeId: 501 } })
       page.watchLocation()
-      harness.platform.locationHandlers[0]({ latitude: 31.3, longitude: 120.7 })
+      harness.platform.locationHandlers[0]({ latitude: 31.3, longitude: 120.7, accuracy: 15 })
       await settle()
       const urls = harness.requests.map((r) => r.url)
       assert.deepEqual(urls, ['/api/play/arrive'], 'vm' + vm)
