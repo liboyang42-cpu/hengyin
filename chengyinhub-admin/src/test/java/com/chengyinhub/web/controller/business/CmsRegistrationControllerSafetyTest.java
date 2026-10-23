@@ -23,6 +23,7 @@ import java.util.HashSet;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -37,8 +38,8 @@ import static org.mockito.Mockito.when;
 /**
  * A3-1(P0):报名通用写端点封口。
  *
- * <p>报名承载支付/核销事实(金额/交易号/核销码/核销状态)。原先通用 PUT 可裸改这些事实、
- * 通用 DELETE 可删掉整条支付记录。本测试钉住:remove 一律 FORBIDDEN;edit 把支付/核销字段
+ * <p>报名承载支付、报名生命周期及核销事实。原先通用 PUT 可裸改这些事实、
+ * 通用 DELETE 可删掉整条支付记录。本测试钉住:remove 一律 FORBIDDEN;edit 把交易事实字段
  * 剥成 null(对所有人含超管生效),合法业务字段照常提交。
  */
 class CmsRegistrationControllerSafetyTest {
@@ -98,6 +99,7 @@ class CmsRegistrationControllerSafetyTest {
         submitted.setTotalAmount(new BigDecimal("999"));
         submitted.setPayableAmount(new BigDecimal("999"));
         submitted.setPaymentStatus(1);
+        submitted.setRegistrationStatus(3);
         submitted.setPaymentType(2);
         submitted.setPaymentTime(new Date());
         submitted.setTransactionId("HACK-TXN");
@@ -110,12 +112,13 @@ class CmsRegistrationControllerSafetyTest {
 
         controller.edit(submitted);
 
-        // 10 个支付/核销事实字段全部被剥成 null → mapper 动态 <if> 跳过 → 库中真值不动;
+        // 支付/报名/核销事实字段全部被剥成 null → mapper 动态 <if> 跳过 → 库中真值不动;
         // 业务字段 ticketName 与主键 id 必须保留,否则封口顺手废掉了编辑功能。
         verify(registrationService).updateCmsRegistration(argThat(r ->
                 r.getTotalAmount() == null
                         && r.getPayableAmount() == null
                         && r.getPaymentStatus() == null
+                        && r.getRegistrationStatus() == null
                         && r.getPaymentType() == null
                         && r.getPaymentTime() == null
                         && r.getTransactionId() == null
@@ -127,6 +130,27 @@ class CmsRegistrationControllerSafetyTest {
                         && r.getVerifierId() == null
                         && "普通业务字段".equals(r.getTicketName())
                         && Long.valueOf(5L).equals(r.getId())));
+    }
+
+    @Test
+    void genericEditCannotCancelExpireOrResurrectRegistrationLifecycle() {
+        loginWith("business:registration:pii");
+        when(registrationService.updateCmsRegistration(org.mockito.ArgumentMatchers.any())).thenReturn(1);
+        for (int target : new int[] {1, 2, 3, 4}) {
+            CmsRegistration request = new CmsRegistration();
+            request.setId(5L);
+            request.setRegistrationStatus(target);
+            request.setTicketName("保留正常编辑");
+            assertEquals(200, controller.edit(request).get(AjaxResult.CODE_TAG));
+        }
+        org.mockito.ArgumentCaptor<CmsRegistration> writes = org.mockito.ArgumentCaptor.forClass(CmsRegistration.class);
+        verify(registrationService, org.mockito.Mockito.times(4)).updateCmsRegistration(writes.capture());
+        for (CmsRegistration write : writes.getAllValues()) {
+            assertNull(write.getRegistrationStatus(), "生命周期只能经已有支付/取消/过期命令迁移");
+            assertEquals(Long.valueOf(5L), write.getId());
+            assertEquals("保留正常编辑", write.getTicketName());
+        }
+        verifyNoInteractions(perkLedgerService);
     }
 
     // ------------------------------------------- 错核撤销入口(平台后台唯一入口)
