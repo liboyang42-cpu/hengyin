@@ -1,6 +1,11 @@
 package com.chengyinhub.business.service.impl;
 
 import com.chengyinhub.business.domain.PlayAttemptLog;
+import com.chengyinhub.common.core.domain.AjaxResult;
+import com.chengyinhub.common.exception.ServiceException;
+import com.chengyinhub.framework.web.exception.GlobalExceptionHandler;
+import org.junit.jupiter.api.function.Executable;
+import org.springframework.mock.web.MockHttpServletRequest;
 import com.chengyinhub.business.mapper.GameRuntimeSessionMapper;
 import com.chengyinhub.business.mapper.PlayAttemptLogMapper;
 import com.chengyinhub.business.service.ai.*;
@@ -15,12 +20,26 @@ import java.util.Map;
 import java.util.function.Supplier;
 import java.util.function.Function;
 
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 /** Unit-only transaction markers and explicit stored photo responses; no database/rollback claim. */
 public final class AdvancedActionTestFixtures {
     private AdvancedActionTestFixtures() { }
+
+    /** Check the exact fresh-refusal contract through the production exception response mapper. */
+    public static void assertPhotoNotExecuted(Executable command, String message) {
+        ServiceException refusal = assertThrowsExactly(ServiceException.class, command);
+        assertEquals(Integer.valueOf(400), refusal.getCode());
+        assertEquals(message, refusal.getMessage());
+        assertEquals(Map.of("intentNotExecuted", true), refusal.getData());
+        AjaxResult response = new GlobalExceptionHandler().handleServiceException(refusal,
+                new MockHttpServletRequest("POST", "/api/play/advanced/action"));
+        assertEquals(400, response.get("code"));
+        assertEquals(message, response.get("msg"));
+        assertEquals(Map.of("intentNotExecuted", true), response.get("data"));
+    }
 
     public static void transactions(AdvancedGameRuntimeServiceImpl service) {
         ReflectionTestUtils.setField(service, "transactionManager", new AbstractPlatformTransactionManager() {
