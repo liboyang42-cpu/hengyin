@@ -130,3 +130,11 @@ HEAD `e3ffe4afa`。`readCard` of never-seen `c02-growth-never` does not occupy `
 命令：`mvn -pl chengyinhub-admin -am -Dtest=com.chengyinhub.business.service.support.rpg.adapter.*Test -Dsurefire.failIfNoSpecifiedTests=false test`
 
 结果：`BUILD SUCCESS` **20/0** 2026-10-23T23:25:49Z。`C02AccountSwitchRestartIsolationTest` 4/0。Runtime still unwired. App / XCTest / MySQL / HTTP / CI = NOT_RUN。不声称 100%。
+
+## Addendum 2026-10-23 16:44 America/Los_Angeles
+
+HEAD `09515c68b`。`writeOriginal` of present never-seen `c02-resource-never` with empty effects does not occupy `story:1:clue_page`; later unique ADD_ITEM `writeOriginal` is the first write (`sourcesDelta` 1 then 0). Did not invent `recoverOriginal`. Missing requestId still WAITING_SOURCE + Java null.
+
+命令：`mvn -pl chengyinhub-admin -am -Dtest=com.chengyinhub.business.service.support.rpg.adapter.*Test -Dsurefire.failIfNoSpecifiedTests=false test`
+
+结果：`BUILD SUCCESS` **21/0** 2026-10-23T23:44:26Z。`C02AccountSwitchRestartIsolationTest` 5/0。Runtime still unwired. App / XCTest / MySQL / HTTP / CI = NOT_RUN。不声称 100%。
