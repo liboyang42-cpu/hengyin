@@ -52,6 +52,10 @@ final class InMemoryNotifyFixtures {
         public void insert(ImmutableReceiptProducer.OriginalReceipt receipt) {
             rows.put(receipt.requestId, receipt);
         }
+
+        int size() {
+            return rows.size();
+        }
     }
 
     static final class MemoryReviewStore implements AttachmentReviewProducer.ReviewReceiptStore {
@@ -91,6 +95,10 @@ final class InMemoryNotifyFixtures {
         @Override
         public void replaceSameIdentity(DevicePushRegistrationLifecycle.Registration registration) {
             rows.put(registration.deviceId, registration);
+        }
+
+        int size() {
+            return rows.size();
         }
     }
 

@@ -20,6 +20,7 @@ Head：`cf81c5a9ec774e870c7fceeb094e1b24c6fd0407`（本文件若再提交会前�
 测试（`chengyinhub-admin/src/test/java/.../service/notify/`）：
 
 - `C09FirstJourneyIsolationTest.java`
+- `C09AccountSwitchRestartIsolationTest.java`（缺 requestId 不落空串回执；撤权设备不改写另一台；UNKNOWN 恢复不是 APPLIED）
 - `ImmutableReceiptProducerTest.java`
 - `AttachmentReviewProducerTest.java`
 - `DevicePushRegistrationLifecycleTest.java`
