@@ -21,10 +21,12 @@
     "architecture_selftest_failures": 0,
     "ci_cost_contract": "PASS",
     "new_paused_migration": "run_migration --dry-run accepted10 statements/6 assertions; no DB connection or execution",
-    "ui_gate_merged_source": "PASS, no old baseline keys/ratchet growth"
+    "ui_gate_merged_source": "PASS, no old baseline keys/ratchet growth",
+    "action_ledger_node_tests": 68,
+    "action_ledger_failures": 0,
+    "action_ledger_skipped": 0
   },
   "pending_checks": [
-    "Node68 after regenerated ledger",
     "all Java compile/unit",
     "C Photo actual SQL",
     "E1/G4/G7 real SQL",

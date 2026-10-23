@@ -138,8 +138,8 @@
       "classes": [
         "com.chengyinhub.business.service.ai.impl.AiQuotaReservationRedisIT",
         "com.chengyinhub.business.service.ai.AiQuotaRecoveryMySqlRedisIT"
-        ]
-      },
+      ]
+    },
     "port-f3-growth": {
       "lineage": "port/f3-be-20261019 (F3 + #294 deadlock retry on master, merged with integrate/master-port-20261019 a53883f1)",
       "registered_source": "89e874250182d079a0a4642a3f2205c0020b4fc1",
@@ -314,351 +314,594 @@
         "com.chengyinhub.business.service.impl.SignupNoticeAfterCommitPersistenceMySqlIT",
         "com.chengyinhub.business.it.MerchantRegistrationCancellationMySqlIT"
       ]
+    },
+    "architecture-day-runtime-governance": {
+      "lineage": "Public2ec C971 Photo orchestration, E87 lock cache, G ee71 current cash and27a paused task admission",
+      "registered_source": "abf93ce43771bce59ba304d04a9a008a4ed794ad",
+      "note": "36 exact ordinary@Test cases: Photo existing17+lock1, settlement evidence7+current cash4, delivery jobs7. C Photo parameterized ThemeRuntime tests run in existing full backend CI; no expansion of this narrow harness to unsupported parameterized counts. Actual source/cleanup receipts govern acceptance.",
+      "classes": [
+        "com.chengyinhub.business.service.ai.PhotoCheckIntentMySqlIT",
+        "com.chengyinhub.business.service.ai.PhotoCheckIntentRecoveryMySqlIT",
+        "com.chengyinhub.business.service.ai.PhotoCheckIntentFreshReadMySqlIT",
+        "com.chengyinhub.business.service.ai.PhotoCheckIntentLockReadMySqlIT",
+        "com.chengyinhub.business.it.Wp04CoopSettlementEvidenceMySqlIT",
+        "com.chengyinhub.business.it.Wp04CurrentCashBasisMySqlIT",
+        "com.chengyinhub.business.it.Wp08DeliveryJobsMySqlIT"
+      ]
     }
   },
   "classes": {
     "com.chengyinhub.business.longrun.E04_13Test": {
       "tests": 2,
-      "storage": ["mysql"],
-      "gates": {"CHENGYIN_FUNDS_MYSQL_IT": "1"},
+      "storage": [
+        "mysql"
+      ],
+      "gates": {
+        "CHENGYIN_FUNDS_MYSQL_IT": "1"
+      },
       "database_base": "e04_scratch"
     },
     "com.chengyinhub.business.longrun.OWN_C04_19Test": {
       "tests": 4,
-      "storage": ["mysql"],
-      "gates": {"CHENGYIN_RUN_SESSION_ORDER_IT": "1"}
+      "storage": [
+        "mysql"
+      ],
+      "gates": {
+        "CHENGYIN_RUN_SESSION_ORDER_IT": "1"
+      }
     },
     "com.chengyinhub.business.longrun.OWN_C04_20MySqlIT": {
       "tests": 2,
-      "storage": ["mysql"],
-      "gates": {"CHENGYIN_FUNDS_MYSQL_IT": "1"}
+      "storage": [
+        "mysql"
+      ],
+      "gates": {
+        "CHENGYIN_FUNDS_MYSQL_IT": "1"
+      }
     },
     "com.chengyinhub.business.longrun.OWN_C04_21MySqlIT": {
       "tests": 3,
-      "storage": ["mysql"],
-      "gates": {"CHENGYIN_FUNDS_MYSQL_IT": "1"}
+      "storage": [
+        "mysql"
+      ],
+      "gates": {
+        "CHENGYIN_FUNDS_MYSQL_IT": "1"
+      }
     },
     "com.chengyinhub.business.longrun.OWN_C05_25MySqlIT": {
       "tests": 4,
-      "storage": ["mysql"],
-      "gates": {"CHENGYIN_FUNDS_MYSQL_IT": "1"},
+      "storage": [
+        "mysql"
+      ],
+      "gates": {
+        "CHENGYIN_FUNDS_MYSQL_IT": "1"
+      },
       "note": "RedisCache is a Mockito mock in this class; it is not real Redis evidence."
     },
     "com.chengyinhub.business.longrun.OWN_C06_10Test": {
       "tests": 2,
-      "storage": ["mysql"],
-      "gates": {"CHENGYIN_FUNDS_MYSQL_IT": "1"}
+      "storage": [
+        "mysql"
+      ],
+      "gates": {
+        "CHENGYIN_FUNDS_MYSQL_IT": "1"
+      }
     },
     "com.chengyinhub.business.longrun.OWN_C06_30Test": {
       "tests": 5,
-      "storage": ["mysql"],
-      "gates": {"CHENGYIN_FUNDS_MYSQL_IT": "1"}
+      "storage": [
+        "mysql"
+      ],
+      "gates": {
+        "CHENGYIN_FUNDS_MYSQL_IT": "1"
+      }
     },
     "com.chengyinhub.business.service.impl.OWN_C01_51Test": {
       "tests": 5,
-      "storage": ["mysql"],
-      "gates": {"CHENGYIN_RUN_OWN_C01_51_MYSQL": "true"},
-      "nested": ["RealMysqlRepeatableRead"],
+      "storage": [
+        "mysql"
+      ],
+      "gates": {
+        "CHENGYIN_RUN_OWN_C01_51_MYSQL": "true"
+      },
+      "nested": [
+        "RealMysqlRepeatableRead"
+      ],
       "note": "4 outer unit methods plus 1 nested real MySQL method. Surefire drops nested methods unless the nested class is selected explicitly."
     },
     "com.chengyinhub.business.service.ai.impl.AiQuotaReservationRedisIT": {
       "tests": 15,
-      "storage": ["redis"],
-      "gates": {"CHENGYIN_AI_RESERVATION_REDIS_IT": "1"}
+      "storage": [
+        "redis"
+      ],
+      "gates": {
+        "CHENGYIN_AI_RESERVATION_REDIS_IT": "1"
+      }
     },
     "com.chengyinhub.business.service.ai.AiQuotaRecoveryMySqlRedisIT": {
       "tests": 7,
-      "storage": ["mysql", "redis"],
-      "gates": {"CHENGYIN_AI_RECOVERY_IT": "1"}
+      "storage": [
+        "mysql",
+        "redis"
+      ],
+      "gates": {
+        "CHENGYIN_AI_RECOVERY_IT": "1"
+      }
     },
     "com.chengyinhub.business.longrun.E04_07MySqlIT": {
       "tests": 5,
-      "storage": ["mysql"],
+      "storage": [
+        "mysql"
+      ],
       "gates": {},
       "database_base": "e04_scratch",
       "note": "No class gate: *IT is only run when selected by name, then missing configuration must fail."
     },
     "com.chengyinhub.business.it.RedemptionRewardClawbackMyBatisTest": {
       "tests": 5,
-      "storage": ["mysql"],
+      "storage": [
+        "mysql"
+      ],
       "gates": {}
     },
     "com.chengyinhub.business.longrun.E02_22Test": {
       "tests": 9,
-      "storage": ["mysql"],
-      "gates": {"CHENGYIN_E02_22_MYSQL_IT": "1"}
+      "storage": [
+        "mysql"
+      ],
+      "gates": {
+        "CHENGYIN_E02_22_MYSQL_IT": "1"
+      }
     },
     "com.chengyinhub.business.longrun.E02_25MySqlIT": {
       "tests": 2,
-      "storage": ["mysql"],
-      "gates": {"CHENGYIN_E02_25_MYSQL_IT": "1"}
+      "storage": [
+        "mysql"
+      ],
+      "gates": {
+        "CHENGYIN_E02_25_MYSQL_IT": "1"
+      }
     },
     "com.chengyinhub.business.longrun.E02_01Test": {
       "tests": 1,
-      "storage": ["mysql"],
-      "gates": {"CHENGYIN_E02_01_MYSQL_IT": "1"}
+      "storage": [
+        "mysql"
+      ],
+      "gates": {
+        "CHENGYIN_E02_01_MYSQL_IT": "1"
+      }
     },
     "com.chengyinhub.business.longrun.E02_06Test": {
       "tests": 1,
-      "storage": ["mysql"],
-      "gates": {"CHENGYIN_E02_06_MYSQL_IT": "1"}
+      "storage": [
+        "mysql"
+      ],
+      "gates": {
+        "CHENGYIN_E02_06_MYSQL_IT": "1"
+      }
     },
     "com.chengyinhub.business.longrun.E02_11Test": {
       "tests": 1,
-      "storage": ["mysql"],
-      "gates": {"CHENGYIN_E02_11_MYSQL_IT": "1"}
+      "storage": [
+        "mysql"
+      ],
+      "gates": {
+        "CHENGYIN_E02_11_MYSQL_IT": "1"
+      }
     },
     "com.chengyinhub.business.service.B05CommunityVisibilityMySqlIT": {
       "tests": 3,
-      "storage": ["mysql"],
-      "gates": {"CHENGYIN_B05_MYSQL_IT": "1"}
+      "storage": [
+        "mysql"
+      ],
+      "gates": {
+        "CHENGYIN_B05_MYSQL_IT": "1"
+      }
     },
     "com.chengyinhub.business.forward20261015.PlayerGrowthConcurrencyMySqlIT": {
       "tests": 12,
-      "storage": ["mysql"],
-      "gates": {"CHENGYIN_FUNDS_MYSQL_IT": "1"}
+      "storage": [
+        "mysql"
+      ],
+      "gates": {
+        "CHENGYIN_FUNDS_MYSQL_IT": "1"
+      }
     },
     "com.chengyinhub.business.it.RedeemExploreReadViewMySqlIT": {
       "tests": 4,
-      "storage": ["mysql"],
-      "gates": {"CHENGYIN_FUNDS_MYSQL_IT": "1"}
+      "storage": [
+        "mysql"
+      ],
+      "gates": {
+        "CHENGYIN_FUNDS_MYSQL_IT": "1"
+      }
     },
     "com.chengyinhub.business.longrun.E01_06Test": {
       "tests": 2,
-      "storage": ["mysql"],
-      "gates": {"CHENGYIN_FUNDS_MYSQL_IT": "1"},
+      "storage": [
+        "mysql"
+      ],
+      "gates": {
+        "CHENGYIN_FUNDS_MYSQL_IT": "1"
+      },
       "note": "Observes LOCK WAIT through information_schema.innodb_trx; the scratch root account has PROCESS."
     },
     "com.chengyinhub.business.longrun.E01_09Test": {
       "tests": 2,
-      "storage": ["mysql"],
-      "gates": {"CHENGYIN_FUNDS_MYSQL_IT": "1"}
+      "storage": [
+        "mysql"
+      ],
+      "gates": {
+        "CHENGYIN_FUNDS_MYSQL_IT": "1"
+      }
     },
     "com.chengyinhub.business.longrun.E01_10Test": {
       "tests": 3,
-      "storage": ["mysql"],
-      "gates": {"CHENGYIN_FUNDS_MYSQL_IT": "1"}
+      "storage": [
+        "mysql"
+      ],
+      "gates": {
+        "CHENGYIN_FUNDS_MYSQL_IT": "1"
+      }
     },
     "com.chengyinhub.business.longrun.E01_18Test": {
       "tests": 5,
-      "storage": ["mysql"],
-      "gates": {"CHENGYIN_FUNDS_MYSQL_IT": "1"}
+      "storage": [
+        "mysql"
+      ],
+      "gates": {
+        "CHENGYIN_FUNDS_MYSQL_IT": "1"
+      }
     },
     "com.chengyinhub.business.longrun.E04_06Test": {
       "tests": 2,
-      "storage": ["mysql"],
-      "gates": {"CHENGYIN_FUNDS_MYSQL_IT": "1"},
+      "storage": [
+        "mysql"
+      ],
+      "gates": {
+        "CHENGYIN_FUNDS_MYSQL_IT": "1"
+      },
       "database_base": "e04_scratch"
     },
     "com.chengyinhub.business.longrun.E04_10Test": {
       "tests": 3,
-      "storage": ["mysql"],
-      "gates": {"CHENGYIN_FUNDS_MYSQL_IT": "1"},
+      "storage": [
+        "mysql"
+      ],
+      "gates": {
+        "CHENGYIN_FUNDS_MYSQL_IT": "1"
+      },
       "database_base": "e04_scratch"
     },
     "com.chengyinhub.business.longrun.E04_14Test": {
       "tests": 2,
-      "storage": ["mysql"],
-      "gates": {"CHENGYIN_FUNDS_MYSQL_IT": "1"},
+      "storage": [
+        "mysql"
+      ],
+      "gates": {
+        "CHENGYIN_FUNDS_MYSQL_IT": "1"
+      },
       "database_base": "e04_scratch"
     },
     "com.chengyinhub.business.longrun.E02_10Test": {
       "tests": 1,
-      "storage": ["mysql"],
-      "gates": {"CHENGYIN_E02_10_MYSQL_IT": "1"}
+      "storage": [
+        "mysql"
+      ],
+      "gates": {
+        "CHENGYIN_E02_10_MYSQL_IT": "1"
+      }
     },
     "com.chengyinhub.business.longrun.E02_15Test": {
       "tests": 4,
-      "storage": ["mysql"],
-      "gates": {"CHENGYIN_E02_15_MYSQL_IT": "1"}
+      "storage": [
+        "mysql"
+      ],
+      "gates": {
+        "CHENGYIN_E02_15_MYSQL_IT": "1"
+      }
     },
     "com.chengyinhub.business.longrun.E02_16Test": {
       "tests": 3,
-      "storage": ["mysql"],
-      "gates": {"CHENGYIN_E02_16_MYSQL_IT": "1"}
+      "storage": [
+        "mysql"
+      ],
+      "gates": {
+        "CHENGYIN_E02_16_MYSQL_IT": "1"
+      }
     },
     "com.chengyinhub.business.longrun.E02_18Test": {
       "tests": 1,
-      "storage": ["mysql"],
-      "gates": {"CHENGYIN_E02_18_MYSQL_IT": "1"}
+      "storage": [
+        "mysql"
+      ],
+      "gates": {
+        "CHENGYIN_E02_18_MYSQL_IT": "1"
+      }
     },
     "com.chengyinhub.business.longrun.E02_20Test": {
       "tests": 4,
-      "storage": ["mysql"],
-      "gates": {"CHENGYIN_E02_20_MYSQL_IT": "1"}
+      "storage": [
+        "mysql"
+      ],
+      "gates": {
+        "CHENGYIN_E02_20_MYSQL_IT": "1"
+      }
     },
     "com.chengyinhub.business.service.A03EndingSnapshotMySqlIT": {
       "tests": 3,
-      "storage": ["mysql"],
-      "gates": {"CHENGYIN_ENDING_MYSQL_IT": "1"},
+      "storage": [
+        "mysql"
+      ],
+      "gates": {
+        "CHENGYIN_ENDING_MYSQL_IT": "1"
+      },
       "note": "Requires MySQL 8.0 and CHENGYIN_MYBATIS_IT_DB_SUFFIX matching _[a-z0-9_]{1,24}."
     },
     "com.chengyinhub.business.service.B03CouponLifecycleMySqlIT": {
       "tests": 4,
-      "storage": ["mysql"],
-      "gates": {"CHENGYIN_FUNDS_MYSQL_IT": "1"},
+      "storage": [
+        "mysql"
+      ],
+      "gates": {
+        "CHENGYIN_FUNDS_MYSQL_IT": "1"
+      },
       "database_base": "e04_scratch"
     },
     "com.chengyinhub.business.service.B04ScheduleReadbackMySqlIT": {
       "tests": 5,
-      "storage": ["mysql"],
-      "gates": {"CHENGYIN_FUNDS_MYSQL_IT": "1"}
+      "storage": [
+        "mysql"
+      ],
+      "gates": {
+        "CHENGYIN_FUNDS_MYSQL_IT": "1"
+      }
     },
     "com.chengyinhub.business.service.ClubWaitlistTokenMybatisIntegrationTest": {
       "tests": 7,
-      "storage": ["mysql"],
-      "gates": {"CHENGYIN_FUNDS_MYSQL_IT": "1"}
+      "storage": [
+        "mysql"
+      ],
+      "gates": {
+        "CHENGYIN_FUNDS_MYSQL_IT": "1"
+      }
     },
     "com.chengyinhub.business.service.CouponLifecycleMybatisIntegrationTest": {
       "tests": 16,
-      "storage": ["mysql"],
-      "gates": {"CHENGYIN_FUNDS_MYSQL_IT": "1"},
+      "storage": [
+        "mysql"
+      ],
+      "gates": {
+        "CHENGYIN_FUNDS_MYSQL_IT": "1"
+      },
       "note": "12 at the EXTRA lineage; master has 16. Running a master-based source needs a reviewed count change."
     },
     "com.chengyinhub.business.it.JourneyFullFlowMySqlIT": {
       "tests": 4,
-      "storage": ["mysql"],
+      "storage": [
+        "mysql"
+      ],
       "gates": {}
     },
     "com.chengyinhub.web.controller.api.RoamShareSnapshotConcurrencyMySqlIT": {
       "tests": 3,
-      "storage": ["mysql"],
-      "gates": {"CHENGYIN_FUNDS_MYSQL_IT": "1"},
+      "storage": [
+        "mysql"
+      ],
+      "gates": {
+        "CHENGYIN_FUNDS_MYSQL_IT": "1"
+      },
       "note": "Asserts the server version is exactly 8.0.45."
     },
     "com.chengyinhub.business.service.B03AssetMybatisIntegrationTest": {
       "tests": 7,
-      "storage": ["mysql"],
-      "gates": {"CHENGYIN_FUNDS_MYSQL_IT": "1"},
+      "storage": [
+        "mysql"
+      ],
+      "gates": {
+        "CHENGYIN_FUNDS_MYSQL_IT": "1"
+      },
       "database_base": "cyit"
     },
     "com.chengyinhub.business.service.OfficialV1CapacityMySqlTest": {
       "tests": 2,
-      "storage": ["mysql"],
-      "gates": {"CHENGYIN_FUNDS_MYSQL_IT": "1"},
+      "storage": [
+        "mysql"
+      ],
+      "gates": {
+        "CHENGYIN_FUNDS_MYSQL_IT": "1"
+      },
       "database_base": "cyit"
     },
     "com.chengyinhub.business.service.impl.ImFoundationBMybatisIntegrationTest": {
       "tests": 4,
-      "storage": ["mysql"],
-      "gates": {"CHENGYIN_IM_FOUNDATION_B_MYSQL_IT": "1"},
+      "storage": [
+        "mysql"
+      ],
+      "gates": {
+        "CHENGYIN_IM_FOUNDATION_B_MYSQL_IT": "1"
+      },
       "database_base": "cyit"
     },
     "com.chengyinhub.business.it.FreeSelfPlayCreateRealDbIT": {
       "tests": 1,
-      "storage": ["mysql"],
-      "gates": {"CHENGYIN_SELFCREATE_IT_MYSQL": "1"},
+      "storage": [
+        "mysql"
+      ],
+      "gates": {
+        "CHENGYIN_SELFCREATE_IT_MYSQL": "1"
+      },
       "database_base": "cyit"
     },
     "com.chengyinhub.business.service.impl.ImLegacyReadLockMySqlIT": {
       "tests": 5,
-      "storage": ["mysql"],
-      "gates": {"CHENGYIN_IM_LEGACY_LOCK_MYSQL_IT": "1"},
+      "storage": [
+        "mysql"
+      ],
+      "gates": {
+        "CHENGYIN_IM_LEGACY_LOCK_MYSQL_IT": "1"
+      },
       "database_base": "cyit"
     },
     "com.chengyinhub.business.it.CoopClubApplyInboxMySqlIT": {
       "tests": 1,
-      "storage": ["mysql"],
+      "storage": [
+        "mysql"
+      ],
       "gates": {},
       "database_base": "cyit"
     },
     "com.chengyinhub.business.it.CoopServiceRealDbIT": {
       "tests": 1,
-      "storage": ["mysql"],
+      "storage": [
+        "mysql"
+      ],
       "gates": {},
       "database_base": "cyit"
     },
     "com.chengyinhub.business.it.TemplateAdoptionRoundTripMySqlIT": {
       "tests": 4,
-      "storage": ["mysql"],
+      "storage": [
+        "mysql"
+      ],
       "gates": {},
       "database_base": "cyit"
     },
     "com.chengyinhub.business.mapper.ActivityCancelPlayerProjectionMyBatisIT": {
       "tests": 1,
-      "storage": ["mysql"],
+      "storage": [
+        "mysql"
+      ],
       "gates": {},
       "database_base": "cyit"
     },
     "com.chengyinhub.business.service.TemplateClearFieldsMySqlIT": {
       "tests": 3,
-      "storage": ["mysql"],
+      "storage": [
+        "mysql"
+      ],
       "gates": {},
       "database_base": "cyit"
     },
     "com.chengyinhub.business.service.impl.GameplayReskinMySqlIT": {
       "tests": 1,
-      "storage": ["mysql"],
+      "storage": [
+        "mysql"
+      ],
       "gates": {},
       "database_base": "cyit"
     },
     "com.chengyinhub.business.it.UmsMemberRankMySqlIT": {
       "tests": 1,
-      "storage": ["mysql"],
-      "gates": {"CHENGYIN_FUNDS_MYSQL_IT": "1"},
+      "storage": [
+        "mysql"
+      ],
+      "gates": {
+        "CHENGYIN_FUNDS_MYSQL_IT": "1"
+      },
       "database_base": "cyit"
     },
     "com.chengyinhub.business.service.PersonalExplorationGoalMySqlIT": {
       "tests": 8,
-      "storage": ["mysql"],
-      "gates": {"CHENGYIN_TEN_FEATURES_MYSQL_IT": "1"},
+      "storage": [
+        "mysql"
+      ],
+      "gates": {
+        "CHENGYIN_TEN_FEATURES_MYSQL_IT": "1"
+      },
       "database_base": "cy_cloudten_it"
     },
     "com.chengyinhub.business.service.ExplorationAnniversaryMySqlIT": {
       "tests": 9,
-      "storage": ["mysql"],
-      "gates": {"CHENGYIN_TEN_FEATURES_MYSQL_IT": "1"},
+      "storage": [
+        "mysql"
+      ],
+      "gates": {
+        "CHENGYIN_TEN_FEATURES_MYSQL_IT": "1"
+      },
       "database_base": "cy_cloudten_it"
     },
     "com.chengyinhub.web.controller.api.PersonalExplorationExportMySqlIT": {
       "tests": 7,
-      "storage": ["mysql"],
-      "gates": {"CHENGYIN_TEN_FEATURES_MYSQL_IT": "1"},
+      "storage": [
+        "mysql"
+      ],
+      "gates": {
+        "CHENGYIN_TEN_FEATURES_MYSQL_IT": "1"
+      },
       "database_base": "cy_cloudten_it"
     },
     "com.chengyinhub.business.it.FunnelMaxDateMySqlIT": {
       "tests": 4,
-      "storage": ["mysql"],
-      "gates": {"CHENGYIN_FUNDS_MYSQL_IT": "1"}
+      "storage": [
+        "mysql"
+      ],
+      "gates": {
+        "CHENGYIN_FUNDS_MYSQL_IT": "1"
+      }
     },
     "com.chengyinhub.business.service.RefundNotificationMybatisIntegrationTest": {
       "tests": 9,
-      "storage": ["mysql"],
-      "gates": {"CHENGYIN_FUNDS_MYSQL_IT": "1"}
+      "storage": [
+        "mysql"
+      ],
+      "gates": {
+        "CHENGYIN_FUNDS_MYSQL_IT": "1"
+      }
     },
     "com.chengyinhub.business.service.impl.RefundRetryAndRemainderMySqlIT": {
       "tests": 5,
-      "storage": ["mysql"],
-      "gates": {"CHENGYIN_FUNDS_MYSQL_IT": "1"}
+      "storage": [
+        "mysql"
+      ],
+      "gates": {
+        "CHENGYIN_FUNDS_MYSQL_IT": "1"
+      }
     },
     "com.chengyinhub.web.controller.api.RoamLocationRetentionMySqlIT": {
       "tests": 21,
-      "storage": ["mysql"],
-      "gates": {"CHENGYIN_FUNDS_MYSQL_IT": "1"}
+      "storage": [
+        "mysql"
+      ],
+      "gates": {
+        "CHENGYIN_FUNDS_MYSQL_IT": "1"
+      }
     },
     "com.chengyinhub.business.it.P0RedemptionChainMySqlIT": {
       "tests": 5,
-      "storage": ["mysql"],
+      "storage": [
+        "mysql"
+      ],
       "gates": {}
     },
     "com.chengyinhub.business.it.P0CrossAccountMySqlIT": {
       "tests": 3,
-      "storage": ["mysql"],
+      "storage": [
+        "mysql"
+      ],
       "gates": {}
     },
     "com.chengyinhub.business.service.impl.P0CityRunChainMySqlIT": {
       "tests": 2,
-      "storage": ["mysql"],
-      "gates": {"CHENGYIN_FUNDS_MYSQL_IT": "1"}
+      "storage": [
+        "mysql"
+      ],
+      "gates": {
+        "CHENGYIN_FUNDS_MYSQL_IT": "1"
+      }
     },
     "com.chengyinhub.business.it.P0FreeExploreSupplyGateMySqlIT": {
       "tests": 2,
-      "storage": ["mysql"],
+      "storage": [
+        "mysql"
+      ],
       "gates": {}
     },
     "com.chengyinhub.business.it.P0DeregistrationMySqlIT": {
       "tests": 1,
-      "storage": ["mysql"],
+      "storage": [
+        "mysql"
+      ],
       "gates": {}
     },
     "com.chengyinhub.business.service.impl.CashWithdrawFundEvidenceMySqlIT": {
@@ -759,6 +1002,30 @@
       ],
       "gates": {},
       "note": "Architecture day C: explicit isolated connection env, atomic chapter/receipt, concurrent handover; exact owned schema cleanup."
+    },
+    "com.chengyinhub.business.service.ai.PhotoCheckIntentLockReadMySqlIT": {
+      "tests": 1,
+      "storage": [
+        "mysql"
+      ],
+      "gates": {},
+      "note": "Same actual RC transaction/SqlSession cached-null after independent commit; not full RR correctness"
+    },
+    "com.chengyinhub.business.it.Wp04CurrentCashBasisMySqlIT": {
+      "tests": 4,
+      "storage": [
+        "mysql"
+      ],
+      "gates": {},
+      "note": "Real baseline rows/current read under RR, deleted activity shell cash, local cache and registration writer lock; not full late payment/refund/payout closure"
+    },
+    "com.chengyinhub.business.it.Wp08DeliveryJobsMySqlIT": {
+      "tests": 7,
+      "storage": [
+        "mysql"
+      ],
+      "gates": {},
+      "note": "Default paused exact task seeds, preserved existing definitions, real original IM/XP/badge effects and MySQL task fence; no real cron/operator/provider claim"
     }
   }
 }
