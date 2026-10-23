@@ -61,8 +61,14 @@
   /* 用户 2026-08-10 定:弹窗顶统一贴到「胶囊底下 5px」。调用方拿不到胶囊坐标的场合
      仍退回 70vh(2026-08-05 拍板值),所以这里是带兜底的变量而不是改死值 ——
      全站 63 处调用一个都不受影响,只有显式传 --cy-comp-sheet-max-h 的才变。 */
-  max-height: var(--cy-comp-sheet-max-h, 70vh);
-  overflow-y: auto;
+  /* 2026-10-23 业主(实机反馈):弹窗高度跟内容走 —— 内容短就短(底下不留空),内容长就一直长到胶囊底下(近全屏),
+     不再卡在 70vh 把下半截截掉。上限一律按胶囊实测(index.js attached 下发到根节点),拿不到才退 token。
+     ⚠️ 面板自己不再滚动(overflow 在 view 上 + 整层 catchtouchmove = 实机上「弹窗滑不动、底下的页面反而在动」):
+     面板是纵向 flex,只有 .sh__body(scroll-view)一个滚动区,头部 / 抓手 / 底部按钮固定不动。 */
+  max-height: var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-max-height));
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   /* 2026-09-06 用户裁决:升起与落下都要「慢快慢」,改读 --cy-ease-standard。
      此前是稿 40:3 裁的 decelerate(0,0,.2,1)= 一上来最快再减速;用户看过实机后改了口径。
      时长仍是稿裁的 sheet-in(300)/sheet-out(250),只换曲线不换档。
@@ -165,7 +171,15 @@
 .sh__body {
   margin: 0 var(--cy-sheet-body-margin-x, 0px);
   padding: 8rpx var(--cy-sheet-body-pad-x, 0px);
+  /* 面板里唯一的滚动区:内容短就按内容高,内容长就被面板上限收住、在这里面滚;
+     滚到头不把手势传给底下的页面(overscroll-behavior),页面在弹窗打开时纹丝不动。 */
+  flex: 0 1 auto;
+  min-height: 0;
+  box-sizing: border-box;
+  overscroll-behavior: contain;
 }
+/* 抓手 / 头部 / 底部按钮:固定,不随正文滚,也不被压缩 */
+.sh__grip, .sh__head, .sh__footer { flex: none; }
 @keyframes sh-up {
   from { transform: translateY(100%); }
   to   { transform: translateY(0); }

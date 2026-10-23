@@ -328,8 +328,9 @@ function assertFullVariantGeometry(overrides = {}) {
     '(b) ✕ 不许再用 padding-right 往左躲胶囊 —— 那会让右上角关闭停在面板中部偏右,和 bottom 档不一致')
   assert.doesNotMatch(wxml, /class="sh__nav"[^>]*padding-top/,
     '(b) 顶边让开以后 .sh__nav 也不再吃状态栏 padding-top,否则整行白往下掉一截')
-  assert.match(wxml, /style="\{\{_dragStyle\}\}\{\{variant === 'full' \? fullMaxH : ''\}\}"/,
-    '(c) 面板顶只在 full 档下发:bottom 档的 70vh 是独立设计档位,不能被顺手抬成近全屏')
+  // 2026-10-23 业主:bottom 档也按胶囊实测封顶(高度跟内容走,长内容到胶囊底下),不再是独立的 70vh 档位
+  assert.match(wxml, /style="\{\{_dragStyle\}\}\{\{fullMaxH\}\}"/,
+    '(c) 胶囊实测上限对所有档位下发')
   assert.match(wxss, new RegExp(`\\.sh--full \\.sh__panel \\{[\\s\\S]*?\\n\\s*height:\\s*var\\(${SAFE_H},\\s*var\\(${SAFE}\\)\\)`),
     `(c) wxss 必须「实测通道优先、${SAFE} 兜底」,拿不到胶囊信息时仍退回安全区 token`)
 }
@@ -355,7 +356,8 @@ test('负控:⑦ 面板顶退回 env() 算不出来的字面数必须判红', ()
 
 test('负控:⑦ 顶边通道整条摘掉(退回只吃 token)必须判红', () => {
   const wxss = read(SHEET_WXSS)
-  const mutated = wxss.replace(`height: var(${SAFE_H}, var(${SAFE}));`, `height: var(${SAFE});`)
+  // 锚到行首的 `  height:`(full 档那条);2026-10-23 起面板基础规则多了一条同表达式的 max-height,不能误伤它
+  const mutated = wxss.replace(`\n  height: var(${SAFE_H}, var(${SAFE}));`, `\n  height: var(${SAFE});`)
   assert.notEqual(mutated, wxss, '负控变异注入失败:面板高度锚点要先同步')
   assert.throws(() => assertFullVariantGeometry({ [SHEET_WXSS]: mutated }), /\(c\) wxss/)
 })
