@@ -93,8 +93,9 @@ class ApiRecommendationControllerTest {
 
         service.updateProfileFromEvent(event);
 
+        // owner 2026-10-23 D2(P0-33/P0-77):payment_success 权重 8 → 1
         verify(profileMapper).incrementMemberCategoryWeight(
-                eq(1001L), eq("310000"), eq("$.activity"), eq(8),
+                eq(1001L), eq("310000"), eq("$.activity"), eq(1),
                 any(Date.class), any(Date.class), any(Date.class));
     }
 
