@@ -99,7 +99,8 @@ class RegistryContractTest(unittest.TestCase):
                     "funnel-max-date": 4, "port-prelaunch-69": 35,
                     "p0-acceptance-ac1": 13, "architecture-day-batch1": 36,
                     "architecture-day-wave2": 44, "architecture-day-photo": 15,
-                    "architecture-day-broadcast-migration": 10, "architecture-day-settlement": 7}
+                    "architecture-day-broadcast-migration": 10, "architecture-day-settlement": 7,
+                    "architecture-day-state-recovery": 43}
         reg = registry()
         totals = {name: sum(reg["classes"][fqcn]["tests"] for fqcn in batch["classes"])
                   for name, batch in reg["batches"].items()}

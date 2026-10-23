@@ -1,0 +1,23 @@
+{
+  "base": "b6267613693d0c067040002c3df431ac39b35feb",
+  "branch": "codex/architecture-day-a-signup-fixture",
+  "excluded_self": "docs/delivery/architecture-day/A-signup-fixture/candidate-files.json",
+  "files": [
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationFundsMybatisIntegrationTest.java",
+      "sha256": "1534ade03a4f849cb37a8575d1612a71917ef532d1d480c61e54fd115f7ab1ac"
+    },
+    {
+      "path": "docs/delivery/architecture-day/A-signup-fixture/README.md",
+      "sha256": "90d59e6ebd150f87518f701b7051507234adb78b1e36e0051bef0d40b819b03a"
+    },
+    {
+      "path": "docs/delivery/architecture-day/A-signup-fixture/verification.txt",
+      "sha256": "0231b125df30230088516cbd2395fd118ee16b0e3ebe96780886b5771d1cdf3d"
+    },
+    {
+      "path": "docs/delivery/architecture-day/A-signup-fixture/verify-static.py",
+      "sha256": "a11dcd6868379875d7b29062fbee3b88890c1d7faaa73a133ebe288849990b6e"
+    }
+  ]
+}

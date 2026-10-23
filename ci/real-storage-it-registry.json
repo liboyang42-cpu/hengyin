@@ -302,6 +302,18 @@
       "classes": [
         "com.chengyinhub.business.it.Wp04CoopSettlementEvidenceMySqlIT"
       ]
+    },
+    "architecture-day-state-recovery": {
+      "lineage": "Public2ec E91 fresh/original-key reads + D b626 signup producer + A136 cancellation CAS",
+      "registered_source": "931bfbc5bc0f30f8a52b64b777224b7a0c97e3e8",
+      "note": "43 exact cases: Photo original10+recovery4+fresh3, signup18, merchant cancellation8. Source/cleanup receipts govern runtime claims.",
+      "classes": [
+        "com.chengyinhub.business.service.ai.PhotoCheckIntentMySqlIT",
+        "com.chengyinhub.business.service.ai.PhotoCheckIntentRecoveryMySqlIT",
+        "com.chengyinhub.business.service.ai.PhotoCheckIntentFreshReadMySqlIT",
+        "com.chengyinhub.business.service.impl.SignupNoticeAfterCommitPersistenceMySqlIT",
+        "com.chengyinhub.business.it.MerchantRegistrationCancellationMySqlIT"
+      ]
     }
   },
   "classes": {
@@ -705,6 +717,40 @@
       ],
       "gates": {},
       "note": "Real baseline DDL/MyBatis association and fulfillment evidence; explicit isolated env and exact own UUID schema cleanup. Does not prove final settlement amount/write transaction."
+    },
+    "com.chengyinhub.business.service.ai.PhotoCheckIntentRecoveryMySqlIT": {
+      "tests": 4,
+      "storage": [
+        "mysql"
+      ],
+      "gates": {},
+      "note": "Current locked original-key recovery; exact no-row/hash conflict/owner refusal, cached-null and RR committed-original observations; composes owned Photo fixture."
+    },
+    "com.chengyinhub.business.service.ai.PhotoCheckIntentFreshReadMySqlIT": {
+      "tests": 3,
+      "storage": [
+        "mysql"
+      ],
+      "gates": {},
+      "note": "NEVER empty synchronization across REQUIRES_NEW; independent DB read before API, provider exactly once/original nonce, lock not held at provider entry."
+    },
+    "com.chengyinhub.business.service.impl.SignupNoticeAfterCommitPersistenceMySqlIT": {
+      "tests": 18,
+      "storage": [
+        "mysql"
+      ],
+      "gates": {
+        "CHENGYIN_FUNDS_MYSQL_IT": "1"
+      },
+      "note": "Real IM intents/messages and transactions with explicit JDBC registration fact adapter; fresh payment winner, original identity and late wake/recovery. Not full monetary mapper or process-kill acceptance."
+    },
+    "com.chengyinhub.business.it.MerchantRegistrationCancellationMySqlIT": {
+      "tests": 8,
+      "storage": [
+        "mysql"
+      ],
+      "gates": {},
+      "note": "Real production mapper/base DDL on own UUID database; owner/current deletion and cancel-vs-selection races. No HTTP/RBAC claim."
     },
     "com.chengyinhub.business.it.ClubLeadChapterIntentMySqlIT": {
       "tests": 3,
