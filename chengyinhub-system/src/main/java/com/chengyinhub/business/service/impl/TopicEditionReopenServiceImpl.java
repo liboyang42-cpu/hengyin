@@ -273,6 +273,7 @@ public class TopicEditionReopenServiceImpl implements ITopicEditionReopenService
         role.setEntityType(target.getEntityType());
         role.setEntityId(target.getEntityId());
         role.setStatus(1);
+        ProductSlot.requireValid(role.getSlot());
         requireOne(productRoleMapper.insertProductRole(role), "新期 CONTENT 槽写入失败");
     }
 
@@ -404,7 +405,11 @@ public class TopicEditionReopenServiceImpl implements ITopicEditionReopenService
             return mapped;
         }
         CmsMemberTemplate source = templateMapper.selectCmsMemberTemplateById(templateId);
-        if (source == null || !NarrativeNpcRefs.hasNpcRefs(source.getAdvancedConfigJson())) {
+        if (source == null) {
+            // 读不到来源模板就无从判断它是否引用 NPC;按「无引用」共享会让新期节点挂一个不存在的模板。
+            throw new IllegalStateException("新期节点来源模板不存在: templateId=" + templateId);
+        }
+        if (!NarrativeNpcRefs.hasNpcRefs(source.getAdvancedConfigJson())) {
             editionTemplateIds.put(templateId, templateId);
             return templateId;
         }

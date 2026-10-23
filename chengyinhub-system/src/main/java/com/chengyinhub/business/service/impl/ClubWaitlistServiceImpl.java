@@ -64,6 +64,8 @@ public class ClubWaitlistServiceImpl implements IClubWaitlistService, IClubWaitl
     public ClubWaitlistEntry join(Long memberId, Long activityId, Long ticketId) {
         requirePositive(memberId, activityId, ticketId);
         ClubEventSeries policy = requirePolicy(activityId, true);
+        // S531-2:关闭的系列不再接新候补;已在队列里的条目照常认领/递补/过期收尾。
+        if (!ClubEventSeries.STATUS_ACTIVE.equals(policy.getStatus())) throw conflict("系列已关闭，不再接受候补");
         participationGuard.requireAllowed(policy.getClubId(), memberId);
         if (mapper.isActiveParticipant(policy.getClubId(), memberId) != 1) {
             throw forbidden("仅俱乐部正常成员可候补");
@@ -109,10 +111,11 @@ public class ClubWaitlistServiceImpl implements IClubWaitlistService, IClubWaitl
         requirePositive(memberId, activityId, ticketId);
         ClubEventSeries policy = mapper.selectSeriesPolicyByActivity(activityId);
         if (policy == null || policy.getId() == null || policy.getClubId() == null
-                || !ClubEventSeries.STATUS_ACTIVE.equals(policy.getStatus())) {
+                || !servesScheduledOccurrences(policy.getStatus())) {
             return statusView(null, memberId, activityId, ticketId, null,
                     ClubWaitlistEntry.ELIGIBILITY_NO_SERIES, false);
         }
+        boolean seriesClosed = ClubEventSeries.STATUS_CLOSED.equals(policy.getStatus());
         if (!Boolean.TRUE.equals(policy.getWaitlistEnabled())) {
             ClubWaitlistEntry latest = mapper.selectLatestWaitlist(memberId, activityId, ticketId);
             latest = expireStaleOfferForStatus(latest, memberId, activityId, ticketId, new Date());
@@ -135,8 +138,16 @@ public class ClubWaitlistServiceImpl implements IClubWaitlistService, IClubWaitl
             return statusView(entry, memberId, activityId, ticketId, policy.getClubId(),
                     ClubWaitlistEntry.ELIGIBILITY_REGISTERED, false);
         }
-        entry = statusView(entry, memberId, activityId, ticketId, policy.getClubId(),
-                ClubWaitlistEntry.ELIGIBILITY_ELIGIBLE, true);
+        if (seriesClosed) {
+            // 关闭的系列:不再允许加入;已 WAITING/OFFERED 的条目照常展示(OFFERED 仍下发 token 以便认领)。
+            boolean inQueue = entry != null && (ClubWaitlistEntry.WAITING.equals(entry.getState())
+                    || ClubWaitlistEntry.OFFERED.equals(entry.getState()));
+            entry = statusView(entry, memberId, activityId, ticketId, policy.getClubId(),
+                    inQueue ? ClubWaitlistEntry.ELIGIBILITY_ELIGIBLE : ClubWaitlistEntry.ELIGIBILITY_CLOSED, false);
+        } else {
+            entry = statusView(entry, memberId, activityId, ticketId, policy.getClubId(),
+                    ClubWaitlistEntry.ELIGIBILITY_ELIGIBLE, true);
+        }
         if (ClubWaitlistEntry.OFFERED.equals(entry.getState())) {
             String raw = tokenCodec.token(entry);
             if (!tokenCodec.hash(raw).equals(entry.getOfferTokenHash())) {
@@ -530,7 +541,7 @@ public class ClubWaitlistServiceImpl implements IClubWaitlistService, IClubWaitl
     private ClubEventSeries requirePolicy(Long activityId, boolean requireEnabled) {
         ClubEventSeries policy = mapper.selectSeriesPolicyByActivityForUpdate(activityId);
         if (policy == null || policy.getId() == null || policy.getClubId() == null
-                || !ClubEventSeries.STATUS_ACTIVE.equals(policy.getStatus())) {
+                || !servesScheduledOccurrences(policy.getStatus())) {
             throw conflict("场次候补策略不存在");
         }
         if (requireEnabled && !Boolean.TRUE.equals(policy.getWaitlistEnabled())) {
@@ -542,11 +553,19 @@ public class ClubWaitlistServiceImpl implements IClubWaitlistService, IClubWaitl
     private ClubEventSeries requirePolicyForQuote(Long activityId) {
         ClubEventSeries policy = mapper.selectSeriesPolicyByActivity(activityId);
         if (policy == null || policy.getId() == null || policy.getClubId() == null
-                || !ClubEventSeries.STATUS_ACTIVE.equals(policy.getStatus())
+                || !servesScheduledOccurrences(policy.getStatus())
                 || !Boolean.TRUE.equals(policy.getWaitlistEnabled())) {
             throw conflict("场次候补策略不存在或已关闭");
         }
         return policy;
+    }
+
+    /**
+     * S531-2:系列关闭(CLOSED)只停排新场次;已排场次照常售卖,其候补队列也必须能认领、递补、过期收尾,
+     * 否则 OFFERED 占着库存、WAITING 永不结束。新加入候补仍只认 ACTIVE(见 join)。
+     */
+    private static boolean servesScheduledOccurrences(String status) {
+        return ClubEventSeries.STATUS_ACTIVE.equals(status) || ClubEventSeries.STATUS_CLOSED.equals(status);
     }
 
     private OmsTicket requireScopedTicket(OmsTicket ticket, Long activityId, Long ticketId) {

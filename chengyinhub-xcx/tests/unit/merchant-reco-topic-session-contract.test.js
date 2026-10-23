@@ -184,7 +184,9 @@ test('推荐卡本体、卡面场次行、「查看全部」三者都对上', ()
   // 2026-10-22 owner:点卡先展开详情弹层,弹层主按钮再带 topicId 去合作中心
   assert.match(wxml, /class="tcard" id="tc-\{\{index\}\}" wx:for="\{\{recTopics\}\}" wx:key="topicId" bindtap="openTopic"\s+data-idx="\{\{index\}\}"/);
   assert.match(wxml, /bindtap="applyTopic" data-topic-id="\{\{sheetTopic\.topicId\}\}"/, '弹层「去申请承接」必须带上这张卡的 topicId');
-  assert.match(wxml, /<text class="tcard-meta" wx:if="\{\{item\.metaText\}\}">\{\{item\.metaText\}\}<\/text>/);
+  // 2026-10-23 owner 改整卡封面:场次/主办拆成底栏两枚图标位(短日期 + 主办方),同名主题仍分得开
+  assert.match(wxml, /<view class="tcard-stat" wx:if="\{\{item\.dateText\}\}">[\s\S]*?\{\{item\.dateText\}\}/);
+  assert.match(wxml, /wx:if="\{\{item\.hostName\}\}">[\s\S]*?\{\{item\.hostName\}\}/);
   assert.match(wxml, /class="sec-link" bindtap="goCoopCenter"/, '「查看全部」仍去完整列表');
 });
 

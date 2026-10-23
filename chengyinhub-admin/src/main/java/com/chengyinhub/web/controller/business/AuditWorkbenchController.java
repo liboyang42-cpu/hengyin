@@ -147,8 +147,54 @@ public class AuditWorkbenchController extends BaseController {
             ajax.put("mediaPreviewUrl",appMediaAssetService.reviewerPreview(task.getBizId()));
             ajax.put("mediaType",com.alibaba.fastjson2.JSON.parseObject(task.getSnapshotJson()).getString("mediaType"));
         }
+        appendAppealAttachments(ajax, task, records);
         appendJourneyReviewTexts(ajax, task);
         return ajax;
+    }
+
+    /**
+     * S531-3:申诉单的附件(media-asset:{id})解析成 5 分钟预览地址,审核员不必拿编号去媒体审核页手查。
+     * 只在申诉单且确有附件时追加;预览地址另需媒体审核读取权限,没有权限只给编号。单个附件失败不影响详情。
+     */
+    private void appendAppealAttachments(AjaxResult ajax, AuditTask task, List<AuditRecord> records) {
+        if (!com.chengyinhub.business.service.impl.AuditTaskServiceImpl.SOURCE_APPEAL.equals(task.getSourceType())
+                || records == null) {
+            return;
+        }
+        java.util.Set<Long> assetIds = new java.util.LinkedHashSet<>();
+        for (AuditRecord record : records) {
+            if (record != null && AuditRecord.ACTION_SUBMIT.equals(record.getAction())) {
+                assetIds.addAll(com.chengyinhub.business.service.support.AppealAttachmentRefs
+                        .fromSubmitSnapshot(record.getSnapshotJson()));
+            }
+        }
+        if (assetIds.isEmpty()) return;
+        boolean canPreview;
+        try {
+            canPreview = com.chengyinhub.common.utils.SecurityUtils.hasPermi("business:mediaReview:query");
+        } catch (Exception noLogin) {
+            canPreview = false;
+        }
+        List<java.util.Map<String, Object>> items = new java.util.ArrayList<>();
+        for (Long assetId : assetIds) {
+            java.util.Map<String, Object> item = null;
+            if (canPreview) {
+                try {
+                    item = appMediaAssetService.reviewerAttachmentPreview(assetId);
+                } catch (Exception previewFailure) {
+                    logger.warn("申诉附件预览签名失败 taskId={} assetId={}", task.getId(), assetId, previewFailure);
+                }
+            }
+            if (item == null) {
+                item = new java.util.LinkedHashMap<>();
+                item.put("assetId", assetId);
+                item.put("mediaType", null);
+                item.put("previewUrl", null);
+            }
+            items.add(item);
+        }
+        ajax.put("appealAttachments", items);
+        ajax.put("appealAttachmentsPreviewDenied", !canPreview);
     }
 
     @org.springframework.beans.factory.annotation.Autowired
@@ -309,7 +355,9 @@ public class AuditWorkbenchController extends BaseController {
             return badRequest;
         } catch (ServiceException e) {
             AjaxResult error = new AjaxResult(e.getCode() == null ? HttpStatus.ERROR : e.getCode(), e.getMessage());
-            error.put("errorCode", e.getCode() != null && e.getCode() == HttpStatus.CONFLICT
+            error.put("errorCode", AuditTaskServiceImpl.ERROR_REVIEW_STALE_LEVEL.equals(e.getDetailMessage())
+                    ? AuditTaskServiceImpl.ERROR_REVIEW_STALE_LEVEL
+                    : e.getCode() != null && e.getCode() == HttpStatus.CONFLICT
                     ? "AUDIT_SNAPSHOT_STALE" : "AUDIT_REVIEW_FAILED");
             return error;
         }

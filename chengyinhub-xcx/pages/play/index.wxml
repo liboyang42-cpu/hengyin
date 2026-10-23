@@ -277,7 +277,8 @@
       <view wx:for="{{chapterParas}}" wx:key="i" id="{{item.nodeId ? 'chapter-game-' + item.nodeId : 'chapter-block-' + item.i}}" class="chfull__para st-line {{item.kind !== 'text' ? 'chfull__para--wide' : ''}} {{item.in ? 'is-in' : ''}} {{item.dir === 'down' ? 'from-top' : ''}} {{item.odd ? 'odd' + item.odd : ''}} {{oddFlick === item.i ? 'is-flick' : ''}}"
             style="--d:{{item.d}}s">
         <image wx:if="{{item.kind === 'cover'}}" class="chfull__cover" src="{{item.url}}" mode="aspectFit" />
-        <image wx:elif="{{item.kind === 'image'}}" class="chfull__img" src="{{item.url}}" mode="widthFix" lazy-load="true" />
+        <image wx:elif="{{item.kind === 'image'}}" class="chfull__img" src="{{item.url}}" mode="widthFix" lazy-load="true"
+               aria-role="img" aria-label="{{item.altText || '章节配图'}}" />
         <!-- 相册(块类型 dream;2026-09-24 用户):故事流里一条圆角照片带,一直匀速往前滚,下面带镜面倒影;点一下打开白底全屏(下方 .album)。
              连续滚动用 swiper 线性缓动 + 时长等于间隔做,不加 keyframes(门禁只减不增)。
              ⚠️ 整块必须仍是一个 .chfull__para —— measureChapter 用 selectAll('.chfull__para') 按下标对齐 chapterParas。 -->
@@ -296,10 +297,14 @@
           </swiper>
           <text class="chfull__album-k">{{item.title || '相册'}} · {{item.images.length}} 张 · 点开看</text>
         </view>
-        <view wx:elif="{{item.kind === 'audio'}}" class="chfull__audio" data-i="{{item.i}}" bindtap="toggleChapterAudio"
-              aria-role="button" aria-label="{{audioNodeId === item.audioKey && audioPlaying ? '暂停本段音频' : '播放本段音频'}}" hover-class="cy-pressed" hover-stay-time="80">
-          <text class="chfull__audio-label">{{audioNodeId === item.audioKey && audioPlaying ? '暂停' : '播放这段音频'}}</text>
-        </view>
+        <!-- 音频文字稿(#18,altText):播放按钮下方可见、读屏可读;仍在同一个 .chfull__para 里 -->
+        <block wx:elif="{{item.kind === 'audio'}}">
+          <view class="chfull__audio" data-i="{{item.i}}" bindtap="toggleChapterAudio"
+                aria-role="button" aria-label="{{audioNodeId === item.audioKey && audioPlaying ? '暂停本段音频' : '播放本段音频'}}" hover-class="cy-pressed" hover-stay-time="80">
+            <text class="chfull__audio-label">{{audioNodeId === item.audioKey && audioPlaying ? '暂停' : '播放这段音频'}}</text>
+          </view>
+          <text wx:if="{{item.altText}}" class="chfull__audio-transcript" user-select aria-role="text" aria-label="音频文字稿：{{item.altText}}">文字稿：{{item.altText}}</text>
+        </block>
         <!-- 内嵌玩法(契约 §1.5):一块一个 .chfull__para(整块玩法都在这一层里,
              ⚠️ 里面再多元素也不进 measureChapter 的 selectAll 选择器,但外层少一个就整屏错位)。
              kit 直接绑页面上的 playKit.kit:作答/提交后 setData 更新它,这一块就地跟着变,
@@ -1197,6 +1202,11 @@
     <text class="finsheet__game-ending-k">本局结局</text>
     <text class="finsheet__game-ending-title">{{gameModule.story.ending.title}}</text>
     <text class="finsheet__game-ending-copy">{{gameModule.story.ending.summary}}</text>
+  </view>
+  <view class="finsheet__game-ending" wx:if="{{stageEnd && !allDone}}">
+    <text class="finsheet__game-ending-k">这一章</text>
+    <text class="finsheet__game-ending-copy" wx:for="{{stageEnd.changed}}" wx:key="index">{{item}}</text>
+    <text class="finsheet__game-ending-title" wx:if="{{stageEnd.open}}">{{stageEnd.open}}</text>
   </view>
   <cy-finish-medals items="{{finishMedalList}}" reduced-motion="{{reducedMotion}}" /><!-- 2026-10-22 业主:多枚勋章叠放、可切换 -->
   <view class="finish-milestone" wx:if="{{milestone}}">

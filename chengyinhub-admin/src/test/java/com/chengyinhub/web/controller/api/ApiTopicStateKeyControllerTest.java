@@ -3,6 +3,7 @@ package com.chengyinhub.web.controller.api;
 import com.chengyinhub.business.domain.CmsTopic;
 import com.chengyinhub.business.domain.ThemeStateKey;
 import com.chengyinhub.business.domain.dto.TopicStateKeyRegisterDTO;
+import com.chengyinhub.business.domain.dto.TopicStateKeyUpdateDTO;
 import com.chengyinhub.business.service.ICmsTopicService;
 import com.chengyinhub.business.service.support.ThemeStateKeyService;
 import com.chengyinhub.business.service.support.TopicPublishCheckService;
@@ -281,6 +282,76 @@ class ApiTopicStateKeyControllerTest {
         TopicStateKeyRegisterDTO dto = new TopicStateKeyRegisterDTO();
         dto.setTopicId(TOPIC_ID);
         dto.setKeys(Collections.singletonList(key));
+        return dto;
+    }
+
+    /** F2 T01:PUT 只改自己的主题;越权不进服务层。 */
+    @Test
+    void updateRejectsOtherMembersTopic() {
+        when(topicService.selectCmsTopicById(TOPIC_ID)).thenReturn(topic(999L));
+
+        AjaxResult result = controller.updateStateKey("counter.str", updateDto());
+
+        assertEquals("无权操作该主题", result.get(AjaxResult.MSG_TAG));
+        verify(keyService, never()).updateDefinition(anyLong(), any(), any());
+    }
+
+    /** 服务层带码异常原样转成 code=400 + errorCode,客户端按码提示。 */
+    @Test
+    void updateMapsOutOfRangeToBadRequestWithErrorCode() {
+        when(topicService.selectCmsTopicById(TOPIC_ID)).thenReturn(topic(CALLER));
+        when(keyService.updateDefinition(eq(TOPIC_ID), eq("counter.str"), any())).thenThrow(
+                new ServiceException("状态键初值 120 超出范围 0..100:counter.str", 400)
+                        .setDetailMessage(ThemeStateKeyService.ERR_RANGE));
+
+        AjaxResult result = controller.updateStateKey("counter.str", updateDto());
+
+        assertEquals(400, result.get(AjaxResult.CODE_TAG));
+        assertEquals(ThemeStateKeyService.ERR_RANGE, result.get("errorCode"));
+    }
+
+    @Test
+    void updateDelegatesWithThePathKey() {
+        when(topicService.selectCmsTopicById(TOPIC_ID)).thenReturn(topic(CALLER));
+        TopicStateKeyUpdateDTO dto = updateDto();
+
+        AjaxResult result = controller.updateStateKey("counter.str", dto);
+
+        assertEquals(200, result.get(AjaxResult.CODE_TAG), result.toString());
+        verify(keyService).updateDefinition(TOPIC_ID, "counter.str", dto.getKey());
+    }
+
+    /** 试校验只读:问题列表 → 400 + problems;不写库。 */
+    @Test
+    void validateReportsProblemsAsBadRequest() {
+        when(topicService.selectCmsTopicById(TOPIC_ID)).thenReturn(topic(CALLER));
+        when(keyService.check(any())).thenReturn(Arrays.asList("状态键初值 120 超出范围 0..100:counter.str"));
+
+        AjaxResult result = controller.validateStateKeys(registerDto());
+
+        assertEquals(400, result.get(AjaxResult.CODE_TAG));
+        assertEquals(ThemeStateKeyService.ERR_INVALID, result.get("errorCode"));
+        assertEquals(1, ((List<?>) result.get("problems")).size());
+        verify(keyService, never()).register(anyLong(), any());
+    }
+
+    @Test
+    void validatePassesAndRejectsForeignTopic() {
+        when(topicService.selectCmsTopicById(TOPIC_ID)).thenReturn(topic(CALLER));
+        when(keyService.check(any())).thenReturn(Collections.<String>emptyList());
+        assertEquals(200, controller.validateStateKeys(registerDto()).get(AjaxResult.CODE_TAG));
+
+        when(topicService.selectCmsTopicById(TOPIC_ID)).thenReturn(topic(999L));
+        assertEquals("无权操作该主题", controller.validateStateKeys(registerDto()).get(AjaxResult.MSG_TAG));
+    }
+
+    private static TopicStateKeyUpdateDTO updateDto() {
+        TopicStateKeyUpdateDTO dto = new TopicStateKeyUpdateDTO();
+        dto.setTopicId(TOPIC_ID);
+        ThemeStateKey key = new ThemeStateKey();
+        key.setLabel("力量");
+        key.setInitialValue(3);
+        dto.setKey(key);
         return dto;
     }
 }

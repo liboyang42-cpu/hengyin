@@ -57,3 +57,12 @@ d417bb12a173c528bcb5595203552cf9efc33373:chengyinhub-xcx/tests/unit/safe-user-me
 
 # 精确忽略 EXTRA E06-17 回归测试的 32 位十六进制占位分享令牌（非密钥；当前源码已改为拼接构造）。随本分支变基时须同步该提交号。
 62a95c3de52ada6862a6a3671a40edc92bf10c9b:chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E06_17Test.java:generic-api-key:28
+
+# W10b #23:分享令牌单测里的固定假令牌(32 位十六进制);源码行另有 gitleaks:allow。
+784c169222c3efce201427f68902436b5d6b0eb2:chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiRoamShareVersionTest.java:generic-api-key:24
+
+# Doc2 F1d 首个提交里 sys_config 开关键名 orient.geo.wgs84.enabled 被 generic-api-key 误判(键名不是密钥);
+# 后续提交已改名为 orient.geo.normalize.enabled,当前源码不再命中。只精确忽略该历史提交的三处指纹。
+6f74b609af105b3139d0de2edc3d31bee764c6a8:chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/OrientSwitches.java:generic-api-key:14
+6f74b609af105b3139d0de2edc3d31bee764c6a8:chengyinhub-admin/sql/migration_orient_geo_ar_team_20261022.sql:generic-api-key:114
+6f74b609af105b3139d0de2edc3d31bee764c6a8:chengyinhub-admin/sql/migration_orient_geo_ar_team_20261022.sql:generic-api-key:142

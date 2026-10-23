@@ -15,6 +15,12 @@ public interface IClubEventOpsService {
     ClubEventSeriesView getSeries(Long actorMemberId, Long clubId, Long seriesId);
     ClubEventSeries createSeries(Long actorMemberId, String username, ClubEventSeriesRequest request);
     ClubEventSeries updateFuture(Long actorMemberId, String username, ClubEventSeriesRequest request);
+
+    /**
+     * O5b-7(开关默认关):关闭系列 → CLOSED 终态。关闭后不再往该系列排新场次(update-future 拒),
+     * 系列从列表/详情消失;已排场次、已付报名、票与资金一律不动。重复关闭同一系列幂等返回。
+     */
+    ClubEventSeries closeSeries(Long actorMemberId, String username, ClubEventSeriesRequest request);
     ClubEventCancellationResult cancelOccurrence(Long actorMemberId, String username,
                                                   ClubEventCancellationRequest request);
 

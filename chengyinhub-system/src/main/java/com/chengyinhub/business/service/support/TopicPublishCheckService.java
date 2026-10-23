@@ -9,6 +9,7 @@ import com.chengyinhub.business.mapper.CmsMemberTemplateMapper;
 import com.chengyinhub.business.mapper.CmsTopicNodeMapper;
 import com.chengyinhub.business.util.StateKeyRefs;
 import com.chengyinhub.common.utils.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -44,6 +45,8 @@ public class TopicPublishCheckService {
     private final ThemeStateKeyService themeStateKeyService;
     private final TopicStateKeyRefService topicStateKeyRefService;
     private final TopicBundleReviewService topicBundleReviewService;
+    /** O5c:可选注入,未注入(老测试直接 new)时等同开关关闭。 */
+    private TopicAiPrecheckService topicAiPrecheckService;
     /** 与 TemplatePublishServiceImpl 同一用法:无状态,直接 new。 */
     private final AdvancedGameConfigValidator advancedGameConfigValidator = new AdvancedGameConfigValidator();
 
@@ -57,6 +60,11 @@ public class TopicPublishCheckService {
         this.themeStateKeyService = themeStateKeyService;
         this.topicStateKeyRefService = topicStateKeyRefService;
         this.topicBundleReviewService = topicBundleReviewService;
+    }
+
+    @Autowired(required = false)
+    public void setTopicAiPrecheckService(TopicAiPrecheckService topicAiPrecheckService) {
+        this.topicAiPrecheckService = topicAiPrecheckService;
     }
 
     /** 试检查:error = 发布会被拦,warn = 不拦但有话要说。主题为空返回空列表。 */
@@ -111,6 +119,10 @@ public class TopicPublishCheckService {
             issues.add(PublishCheckIssue.warn(CODE_LINEAR_JOURNEY_SESSION, null,
                     "该主题是线性模式且已用到旅程配置:玩家开始即建局,进度与 hp/luck 存进本局 state_json"
                             + "(与分支主题同一套);老线性主题不建局,行为不变"));
+        }
+        // O5c:AI 安全预检(开关默认关;关时不追加任何项、不调外部服务)。
+        if (topicAiPrecheckService != null && topicAiPrecheckService.isEnabled()) {
+            issues.addAll(topicAiPrecheckService.check(topic, nodes));
         }
         return issues;
     }

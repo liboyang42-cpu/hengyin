@@ -186,7 +186,40 @@ public class TopicRouteConfigValidator {
 
     private void remapConditionKeys(JsonNode raw, Map<String, Long> ids) {
         if (!raw.isArray()) return;
-        for (JsonNode item : raw) replaceKey(object(item, "condition 必须是对象"), "nodeKey", "nodeId", ids);
+        for (JsonNode item : raw) {
+            ObjectNode condition = object(item, "condition 必须是对象");
+            replaceKey(condition, "nodeKey", "nodeId", ids);
+            for (ObjectNode nested : nestedConditions(condition)) replaceKey(nested, "nodeKey", "nodeId", ids);
+        }
+    }
+
+    /** AND / OR / NOT 内层的全部条件对象(不含自身),供 nodeKey / nodeId 重映射递归使用。 */
+    private List<ObjectNode> nestedConditions(JsonNode condition) {
+        List<ObjectNode> out = new ArrayList<ObjectNode>();
+        collectNested(condition, out, 0);
+        return out;
+    }
+
+    private void collectNested(JsonNode condition, List<ObjectNode> out, int depth) {
+        if (depth > StoryVocabulary.MAX_CONDITION_DEPTH) return;
+        String op = condition.path("op").asText();
+        List<JsonNode> children = new ArrayList<JsonNode>();
+        if (StoryVocabulary.NOT.equals(op)) children.add(condition.path("condition"));
+        else if ((StoryVocabulary.AND.equals(op) || StoryVocabulary.OR.equals(op)) && condition.path("conditions").isArray()) {
+            for (JsonNode child : condition.path("conditions")) children.add(child);
+        }
+        for (JsonNode child : children) {
+            if (!child.isObject()) continue;
+            out.add((ObjectNode) child);
+            collectNested(child, out, depth + 1);
+        }
+    }
+
+    /** 条件里携带节点引用的 op:随整主题复制重映射、随发布收成数值。 */
+    private boolean referencesNode(JsonNode condition) {
+        String op = condition.path("op").asText();
+        return "NODE_COMPLETED".equals(op) || StoryVocabulary.VISIT_COUNT.equals(op)
+                || StoryVocabulary.CHECK_RESULT.equals(op);
     }
 
     private void remapConditionIds(JsonNode raw, Map<Long, Long> ids) {
@@ -195,6 +228,10 @@ public class TopicRouteConfigValidator {
             ObjectNode condition = object(item, "condition 必须是对象");
             String op = condition.path("op").asText(condition.path("type").asText());
             if ("NODE_COMPLETED".equals(op)) replaceId(condition, "nodeId", ids);
+            else if (referencesNode(condition)) replaceId(condition, "nodeId", ids);
+            for (ObjectNode nested : nestedConditions(condition)) {
+                if (referencesNode(nested)) replaceId(nested, "nodeId", ids);
+            }
         }
     }
 
@@ -237,6 +274,11 @@ public class TopicRouteConfigValidator {
             for (JsonNode condition : conditions) {
                 if (condition.isObject() && "NODE_COMPLETED".equals(condition.path("op").asText())) {
                     canonicalizeId((ObjectNode) condition, "nodeId");
+                } else if (condition.isObject() && referencesNode(condition)) {
+                    canonicalizeId((ObjectNode) condition, "nodeId");
+                }
+                for (ObjectNode nested : nestedConditions(condition)) {
+                    if (referencesNode(nested)) canonicalizeId(nested, "nodeId");
                 }
             }
         }
@@ -290,24 +332,35 @@ public class TopicRouteConfigValidator {
     private void validateConditions(JsonNode raw, String edgeId, Set<Long> topicNodeIds, JsonNode variables) {
         if (raw.isMissingNode()) return;
         ArrayNode conditions = array(raw, edgeId + ".conditions");
-        for (JsonNode item : conditions) {
-            ObjectNode condition = object(item, edgeId + ".condition 无效");
-            String op = text(condition, "op", 32);
-            if (OPS.contains(op)) {
-                String var = text(condition, "var", 64);
-                if (!variables.isObject() || !variables.has(var)) {
-                    throw fail(edgeId, "condition 使用未声明变量:" + var);
-                }
-                if (!condition.path("value").isNumber()) throw fail(edgeId, "condition.value 必须是数值");
-            } else if ("ITEM_HELD".equals(op) || "ITEM_ACQUIRED".equals(op)) {
-                if (!condition.path("itemId").asText().matches("[a-z][a-z0-9_]{0,31}") || !condition.path("quantity").isIntegralNumber()
-                    || condition.path("quantity").asLong() < 1 || condition.path("quantity").asLong() > 999) throw fail(edgeId,"物资条件不合法");
-            } else if ("NODE_COMPLETED".equals(op)) {
-                long nodeId = positive(condition, "nodeId");
-                requireNode(topicNodeIds, nodeId, edgeId + ".condition.nodeId");
-            } else if ("HAS_TAG".equals(op)) text(condition, "value", 64);
-            else throw fail(edgeId, "condition.op 不支持");
+        for (JsonNode item : conditions) validateCondition(item, edgeId, topicNodeIds, variables);
+    }
+
+    private void validateCondition(JsonNode item, String edgeId, Set<Long> topicNodeIds, JsonNode variables) {
+        ObjectNode condition = object(item, edgeId + ".condition 无效");
+        String op = text(condition, "op", 32);
+        if (OPS.contains(op)) {
+            String var = text(condition, "var", 64);
+            if (!variables.isObject() || !variables.has(var)) {
+                throw fail(edgeId, "condition 使用未声明变量:" + var);
+            }
+            if (!condition.path("value").isNumber()) throw fail(edgeId, "condition.value 必须是数值");
+        } else if ("ITEM_HELD".equals(op) || "ITEM_ACQUIRED".equals(op)) {
+            if (!condition.path("itemId").asText().matches("[a-z][a-z0-9_]{0,31}") || !condition.path("quantity").isIntegralNumber()
+                || condition.path("quantity").asLong() < 1 || condition.path("quantity").asLong() > 999) throw fail(edgeId,"物资条件不合法");
+        } else if ("NODE_COMPLETED".equals(op)) {
+            long nodeId = positive(condition, "nodeId");
+            requireNode(topicNodeIds, nodeId, edgeId + ".condition.nodeId");
+        } else if ("HAS_TAG".equals(op)) text(condition, "value", 64);
+        else if (StoryVocabulary.isCondition(op)) {
+            try {
+                StoryVocabulary.validateCondition(condition, edgeId + ".condition", topicNodeIds,
+                        (path, child) -> validateCondition(child, edgeId, topicNodeIds, variables));
+            } catch (IllegalArgumentException invalid) {
+                if (invalid.getMessage() != null && invalid.getMessage().startsWith(edgeId + ":")) throw invalid;
+                throw fail(edgeId, invalid.getMessage());
+            }
         }
+        else throw fail(edgeId, "condition.op 不支持");
     }
 
     private void validateEffects(JsonNode raw, String edgeId, JsonNode variables) {
@@ -316,6 +369,15 @@ public class TopicRouteConfigValidator {
         for (JsonNode item : effects) {
             ObjectNode effect = object(item, edgeId + ".effect 无效");
             String op = text(effect, "op", 32);
+            if (StoryVocabulary.isEffect(op)) {
+                try { StoryVocabulary.validateEffect(effect, edgeId + ".effect"); }
+                catch (IllegalArgumentException invalid) { throw fail(edgeId, invalid.getMessage()); }
+                String var = effect.path("var").asText();
+                if (StoryVocabulary.TICK_CLOCK.equals(op) && (!variables.isObject() || !variables.has(var))) {
+                    throw fail(edgeId, "effect 使用未声明变量:" + var);
+                }
+                continue;
+            }
             if (!EFFECTS.contains(op)) throw fail(edgeId, "effect.op 不支持");
             if ("ADD_TAG".equals(op)) text(effect, "value", 64);
             else {

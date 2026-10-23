@@ -2140,7 +2140,7 @@ button::after {
 .btotal__k { font-size: 25rpx; color: #8E8E93; } /* ds-ok */
 .btotal__v { font-size: 54rpx; font-weight: 800; font-style: italic; }
 .bsheet__go { height: 96rpx; border-radius: 48rpx; display: flex; align-items: center; justify-content: center; background: #fff; color: #000; font-size: 31rpx; font-weight: 600; } /* ds-ok */
-.det6-link { margin-top: 8rpx; font-size: 23rpx; color: #0A84FF; } /* ds-ok v13 链接蓝 */
+.det6-rule { margin-top: 19rpx; font-size: 21rpx; line-height: 1.5; color: #8E8E93; } /* ds-ok 积分口径小字 */
 /* v13 路线站点:全局 style/common.wxss 里旧时间轴(竖线 / 灰圈编号 / 左缩进)选择器更具体,这里按同级再压一层 */
 .topic .topic-list .davidxfxi .list { margin-top: 0; overflow: visible; }
 .topic .topic-list .davidxfxi .list::before, .topic .topic-list .davidxfxi .list::after { display: none; }

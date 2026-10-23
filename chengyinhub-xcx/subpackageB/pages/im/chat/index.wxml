@@ -81,11 +81,11 @@
                   <view class="rcard-sub">{{topicCache[item.card.topicId].totalMileage || 0}} km · {{ topicCache[item.card.topicId].locationCount || 0 }} 个点</view>
                 </view>
               </block>
-              <!-- 降级态:主题已下架/已删(现拉的必付代价)。只认 === null,不能与「加载中」混为一谈 -->
+              <!-- 降级态:拉不到(下架/私密/网络失败都可能)。只认 === null,文案一律泛称「暂不可用」,不能与「加载中」混为一谈 -->
               <block wx:elif="{{topicCache[item.card.topicId] === null}}">
                 <view class="rcard-img rcard-img--ph"></view>
                 <view class="rcard-tt">
-                  <view class="rcard-sub">{{item.card.cardType === 'signup' ? '该活动已下架' : '该路线已下架'}}</view>
+                  <view class="rcard-sub">{{item.card.cardType === 'signup' ? '活动暂不可用' : '路线暂不可用'}}</view>
                 </view>
               </block>
               <!-- 加载中(undefined,尚未 fetch 回来):骨架占位,shimmer 本身即为「加载中」语义(DS §5:禁裸文字) -->

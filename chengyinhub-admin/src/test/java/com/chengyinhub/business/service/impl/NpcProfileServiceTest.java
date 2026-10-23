@@ -31,6 +31,7 @@ class NpcProfileServiceTest {
 
     private static final Long NODE = 31L;
     private static final Long MERCHANT = 501L;
+    private static final Long MEMBER = 50L;
 
     private NpcProfileMapper mapper;
     private NpcProfileService service;
@@ -39,6 +40,13 @@ class NpcProfileServiceTest {
     void setUp() {
         mapper = mock(NpcProfileMapper.class);
         service = new NpcProfileService();
+        com.chengyinhub.business.mapper.MmsMerchantMapper merchants = mock(com.chengyinhub.business.mapper.MmsMerchantMapper.class);
+        com.chengyinhub.business.domain.MmsMerchant merchant = new com.chengyinhub.business.domain.MmsMerchant();
+        merchant.setId(MERCHANT); merchant.setMemberId(MEMBER); merchant.setStatus(1L);
+        merchant.setAccountStatus(1L); merchant.setDelFlag(0);
+        when(merchants.selectMmsMerchantList(any())).thenReturn(Collections.singletonList(merchant));
+        ReflectionTestUtils.setField(service, "merchantNpcIdentityDirectory",
+                new com.chengyinhub.business.service.support.MerchantNpcIdentityDirectory(merchants));
         ReflectionTestUtils.setField(service, "npcProfileMapper", mapper);
     }
 
@@ -73,7 +81,7 @@ class NpcProfileServiceTest {
         when(mapper.selectEnabledByScope(4, NODE)).thenReturn(Collections.singletonList(
                 row(77L, 4, NODE, "阿福")));
 
-        NpcProfileVO vo = service.resolveForNodeOrMerchant(NODE, MERCHANT);
+        NpcProfileVO vo = service.resolveForNodeOrMerchant(NODE, MEMBER);
 
         assertEquals("阿福", vo.getName());
         verify(mapper, never()).selectEnabledByScope(eq(2), anyLong());
@@ -85,17 +93,18 @@ class NpcProfileServiceTest {
         when(mapper.selectEnabledByScope(2, MERCHANT)).thenReturn(List.of(
                 row(88L, 2, MERCHANT, "店小二")));
 
-        NpcProfileVO vo = service.resolveForNodeOrMerchant(NODE, MERCHANT);
+        NpcProfileVO vo = service.resolveForNodeOrMerchant(NODE, MEMBER);
 
         assertEquals("店小二", vo.getName(), "存量点位没有节点 NPC 时,店分身照旧出场");
         verify(mapper).selectEnabledByScope(4, NODE);
         verify(mapper).selectEnabledByScope(2, MERCHANT);
+        verify(mapper, never()).selectEnabledByScope(2, MEMBER);
     }
 
     @Test
     void resolveForNodeOrMerchant_returnsNullWhenNeitherExists() {
         when(mapper.selectEnabledByScope(any(Integer.class), anyLong())).thenReturn(Collections.emptyList());
-        assertNull(service.resolveForNodeOrMerchant(NODE, MERCHANT));
+        assertNull(service.resolveForNodeOrMerchant(NODE, MEMBER));
         assertNull(service.resolveForNodeOrMerchant(NODE, null), "没挂商家的节点也不该 NPE");
     }
 }

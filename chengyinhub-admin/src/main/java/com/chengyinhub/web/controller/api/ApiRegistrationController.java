@@ -214,7 +214,7 @@ public class ApiRegistrationController extends BaseController {
                     member_id, param == null ? null : param.getOwnerType(),
                     param == null ? null : param.getOwnerId(), param == null ? null : param.getTicketId(),
                     param == null ? null : param.getRequestId(), e.getCode(), e.getMessage());
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return checkoutError(e);
         } catch (Exception e) {
             // [RUN-51] 这里曾是把 e.getMessage() 直接掩成「系统繁忙」却零日志的黑洞：
             // AjaxResult.error 走 UserSafeMessage 脱敏，技术异常(如 NPE 的 null message)在线上完全不可诊断。
@@ -259,7 +259,7 @@ public class ApiRegistrationController extends BaseController {
             // 不能靠匹配文案。410 与漫游下线/券码失效同一语义约定(业务 code,HTTP 仍是 200)。
             return new AjaxResult(410, e.getMessage());
         } catch (RegistrationCheckoutException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return checkoutError(e);
         } catch (Exception e) {
             return AjaxResult.error(e.getMessage());
         }
@@ -293,7 +293,7 @@ public class ApiRegistrationController extends BaseController {
             // 与 /pay 同一口径:过期单给机器可识别的 410,App 端同样能自动换键重建。
             return new AjaxResult(410, e.getMessage());
         } catch (RegistrationCheckoutException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return checkoutError(e);
         } catch (Exception e) {
             return AjaxResult.error(e.getMessage());
         }
@@ -767,6 +767,9 @@ public class ApiRegistrationController extends BaseController {
         } catch (Exception e) {
             return error("请先登录");
         }
+        if (member_id == null || member_id <= 0) {
+            return error("请先登录");
+        }
 
         Long ownerType = Convert.toLong(owner_type, 0L);
         if (ownerType < 1) {
@@ -868,6 +871,13 @@ public class ApiRegistrationController extends BaseController {
         data.put("cashRefundStatus", "MANUAL_REVIEW");
         data.put("cashRefundAmount", null);
         return AjaxResult.success(message, data);
+    }
+
+    /** 结算拒绝原样映射 code/msg；带机器码的（DOC2 F7 未成年挂点 MINOR_*）再附 errorCode。 */
+    private AjaxResult checkoutError(RegistrationCheckoutException e) {
+        AjaxResult result = new AjaxResult(e.getCode(), e.getMessage());
+        if (e.getErrorCode() != null) result.put("errorCode", e.getErrorCode());
+        return result;
     }
 
     private AjaxResult cancellationFeedback(Long registrationId) {
@@ -1045,6 +1055,9 @@ public class ApiRegistrationController extends BaseController {
         try {
             memberId = getAppUserId();
         } catch (Exception e) {
+            return error("请先登录");
+        }
+        if (memberId == null || memberId <= 0) {
             return error("请先登录");
         }
 

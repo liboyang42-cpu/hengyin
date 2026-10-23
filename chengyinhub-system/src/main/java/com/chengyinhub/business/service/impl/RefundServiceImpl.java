@@ -1,5 +1,7 @@
 package com.chengyinhub.business.service.impl;
 
+import com.chengyinhub.common.annotation.CriticalPath;
+import com.chengyinhub.common.observability.CriticalPathCode;
 import com.chengyinhub.business.domain.CmsRegistration;
 import com.chengyinhub.business.domain.CmsActivity;
 import com.chengyinhub.business.domain.CmsTopic;
@@ -169,6 +171,7 @@ public class RefundServiceImpl implements IRefundService {
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
+    @CriticalPath(value = CriticalPathCode.CP_REFUND_FAILED, op = "payout_result")
     public void markPayoutResult(Long refundId, String leaseToken, boolean wxAccepted, String remark) {
         if (refundId == null || leaseToken == null || leaseToken.trim().isEmpty()) {
             throw new IllegalArgumentException("退款派发结果缺少 lease fence");
@@ -370,6 +373,7 @@ public class RefundServiceImpl implements IRefundService {
     }
 
     @Override
+    @CriticalPath(value = CriticalPathCode.CP_REFUND_FAILED, op = "notify")
     public boolean handleRefundNotify(Map<String, String> facts) {
         if (facts == null) {
             return false;
@@ -391,9 +395,14 @@ public class RefundServiceImpl implements IRefundService {
         }
         // P1:回调先落 inbox 去重(表 wx_payment_callback_inbox,notify_hash 唯一键);
         // 重投只多一次 insert ignore,不影响下方 ACK 与状态推进语义。
-        wxPaymentCallbackInboxService.register(
-                "REFUND:" + outRefundNo + ":" + (refundStatus == null ? "" : refundStatus),
-                WxPaymentCallbackInbox.BIZ_TYPE_REFUND, refund.getId(), refundStatus);
+        // 同一 notify 已登记为另一笔业务 = 身份冲突(register 内已告警):回 FAIL,不推进状态。
+        try {
+            wxPaymentCallbackInboxService.register(
+                    "REFUND:" + outRefundNo + ":" + (refundStatus == null ? "" : refundStatus),
+                    WxPaymentCallbackInbox.BIZ_TYPE_REFUND, refund.getId(), refundStatus);
+        } catch (IWxPaymentCallbackInboxService.IdentityConflictException conflict) {
+            return false;
+        }
         // updatePayoutResult 的 WHERE 只允许从待派发/处理中/待人工(5/0/2)置位,
         // 不会覆盖人工已处理(3/4)的成果
         if ("SUCCESS".equalsIgnoreCase(refundStatus)) {
@@ -569,6 +578,7 @@ public class RefundServiceImpl implements IRefundService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CriticalPath(value = CriticalPathCode.CP_REFUND_FAILED, op = "review")
     public int reviewRefund(RefundReviewDTO request, Long operatorId) {
         if (request == null || request.getId() == null) {
             throw new IllegalArgumentException("refund id is required");

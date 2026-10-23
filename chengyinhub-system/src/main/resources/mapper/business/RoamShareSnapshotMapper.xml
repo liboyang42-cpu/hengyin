@@ -13,8 +13,13 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <insert id="upsertOwnedSnapshot">
         insert into roam_share_snapshot (share_token, member_id, client_ts, session_id, snapshot_json, create_time, update_time)
         values (#{shareToken}, #{memberId}, #{clientTs}, #{sessionId}, #{snapshotJson}, now(), now())
-        on duplicate key update session_id = values(session_id), snapshot_json = values(snapshot_json), update_time = values(update_time)
+        on duplicate key update session_id = values(session_id), snapshot_json = values(snapshot_json), update_time = values(update_time),
+            version = version + 1
     </insert>
+
+    <select id="selectVersionByMemberTs" resultType="java.lang.Integer">
+        select version from roam_share_snapshot where member_id = #{memberId} and client_ts = #{clientTs}
+    </select>
 
     <select id="selectTokenByMemberTs" resultType="java.lang.String">
         select share_token from roam_share_snapshot where member_id = #{memberId} and client_ts = #{clientTs}
@@ -35,6 +40,11 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
           and ((p.session_id is null and p.create_time &gt; date_sub(now(), interval 30 day))
             or (p.session_id is not null and s.status = 1 and s.finished_at &gt; date_sub(now(), interval 30 day)))
     </select>
+
+    <!-- 按令牌撤销单条:必须带 member_id,别人的令牌在这里恒为 0 行。 -->
+    <delete id="deleteByMemberToken">
+        delete from roam_share_snapshot where member_id = #{memberId} and share_token = #{shareToken}
+    </delete>
 
     <delete id="deleteByMember">
         delete from roam_share_snapshot where member_id = #{memberId}

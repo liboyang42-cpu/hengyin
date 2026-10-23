@@ -349,6 +349,26 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
          </trim>
     </insert>
 
+    <!-- #334 F7:已售判断与写入合成一条语句。子查询在 UPDATE 内是加锁读(共享 next-key 锁),
+         并发下单要么先提交被这里看见(0 行),要么排在本次修改之后;不再有「先数后写」的窗口。 -->
+    <update id="updateOpsFieldsIfUnsold" parameterType="CmsActivity">
+        update cms_activity
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="addressName != null">address_name = #{addressName},</if>
+            <if test="address != null">address = #{address},</if>
+            <if test="startDate != null">start_date = #{startDate},</if>
+            <if test="endDate != null">end_date = #{endDate},</if>
+            <if test="dayNote != null">day_note = #{dayNote},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+          and not exists (
+              select 1 from cms_registration sold
+              where sold.owner_type = 2 and sold.owner_id = #{id}
+                and sold.payment_status in (0, 1, 2)
+          )
+    </update>
+
     <update id="updateCmsActivity" parameterType="CmsActivity">
         update cms_activity
         <trim prefix="SET" suffixOverrides=",">

@@ -1,5 +1,7 @@
 package com.chengyinhub.business.service.impl;
 
+import com.chengyinhub.common.annotation.CriticalPath;
+import com.chengyinhub.common.observability.CriticalPathCode;
 import com.chengyinhub.common.utils.StringUtils;
 
 import java.math.BigDecimal;
@@ -48,6 +50,7 @@ public class RefundPayoutServiceImpl implements IRefundPayoutService {
     private IWechatPayService wechatPayService;
 
     @Override
+    @CriticalPath(value = CriticalPathCode.CP_REFUND_FAILED, op = "payout")
     public void payoutAfterReview(Long refundId) {
         if (refundId == null) {
             return;

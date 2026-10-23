@@ -1,0 +1,288 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+  Doc2 F4 商家工作台。每条语句的 WHERE 都绑定 merchantId(mms_merchant.id)或 ownerMemberId(Owner memberId),
+  没有只按主键的读写;MerchantDeskMapperSqlTest 逐条钉住。
+  写语句只落四张 F4 新表 + pms_product / pms_sku(商家自有、非上架态);不碰任何资金表。
+-->
+<mapper namespace="com.chengyinhub.business.mapper.MerchantDeskMapper">
+
+    <!-- ================= 回执 ================= -->
+    <select id="selectReceipt" resultType="java.util.LinkedHashMap">
+        select id, request_id as requestId, action, fingerprint, target_type as targetType, target_id as targetId,
+               actor_member_id as actorMemberId, created_at as createdAt
+        from merchant_desk_receipt
+        where owner_member_id = #{ownerMemberId} and request_id = #{requestId}
+    </select>
+
+    <insert id="insertReceipt" parameterType="java.util.Map" useGeneratedKeys="true" keyProperty="id">
+        insert into merchant_desk_receipt
+            (owner_member_id, request_id, action, fingerprint, target_type, target_id, actor_member_id, created_at)
+        values (#{ownerMemberId}, #{requestId}, #{action}, #{fingerprint}, #{targetType}, #{targetId},
+                #{actorMemberId}, #{createdAt})
+    </insert>
+
+    <!-- ================= 门店 ================= -->
+    <select id="selectStore" resultType="java.util.LinkedHashMap">
+        select id as storeId, name, logo, address, location_lat as locationLat, location_lng as locationLng,
+               location_verified as locationVerified, business_time as businessTime,
+               business_status as businessStatus, status, account_status as accountStatus
+        from mms_merchant
+        where id = #{merchantId} and del_flag = 0
+    </select>
+
+    <select id="selectAnchor" resultType="java.util.LinkedHashMap">
+        select id, merchant_id as storeId, anchor_lat as anchorLat, anchor_lng as anchorLng, radius_m as radiusM,
+               wifi_bssid_hashes as wifiBssidHashes, version, updated_at as updatedAt
+        from merchant_redemption_anchor
+        where merchant_id = #{merchantId}
+    </select>
+
+    <insert id="insertAnchor" parameterType="java.util.Map" useGeneratedKeys="true" keyProperty="id">
+        insert into merchant_redemption_anchor
+            (merchant_id, owner_member_id, anchor_lat, anchor_lng, radius_m, wifi_bssid_hashes, version,
+             updated_by, created_at, updated_at)
+        values (#{merchantId}, #{ownerMemberId}, #{anchorLat}, #{anchorLng}, #{radiusM}, #{wifiBssidHashes}, 1,
+                #{updatedBy}, #{now}, #{now})
+    </insert>
+
+    <update id="updateAnchor" parameterType="java.util.Map">
+        update merchant_redemption_anchor
+        set anchor_lat = #{anchorLat}, anchor_lng = #{anchorLng}, radius_m = #{radiusM},
+            wifi_bssid_hashes = #{wifiBssidHashes}, owner_member_id = #{ownerMemberId},
+            version = version + 1, updated_by = #{updatedBy}, updated_at = #{now}
+        where merchant_id = #{merchantId} and version = #{expectedVersion}
+    </update>
+
+    <!-- ================= 商品 / SKU / 容量 ================= -->
+    <select id="selectProducts" resultType="java.util.LinkedHashMap">
+        select id as productId, product_name as productName, pic, album_pics as albumPics,
+               publish_status as publishStatus, price, original_price as originalPrice, stock, unit,
+               update_time as updateTime
+        from pms_product
+        where merchant_id = #{merchantId} and (del_flag is null or del_flag = 0)
+        order by id desc
+        limit 200
+    </select>
+
+    <select id="selectProduct" resultType="java.util.LinkedHashMap">
+        select id as productId, product_name as productName, pic, album_pics as albumPics,
+               publish_status as publishStatus, price, original_price as originalPrice, stock, unit,
+               update_time as updateTime
+        from pms_product
+        where id = #{productId} and merchant_id = #{merchantId} and (del_flag is null or del_flag = 0)
+    </select>
+
+    <select id="selectProductForUpdate" resultType="java.util.LinkedHashMap">
+        select id as productId, product_name as productName, pic, album_pics as albumPics,
+               publish_status as publishStatus, price, original_price as originalPrice, stock, unit
+        from pms_product
+        where id = #{productId} and merchant_id = #{merchantId} and (del_flag is null or del_flag = 0)
+        for update
+    </select>
+
+    <insert id="insertProduct" parameterType="java.util.Map" useGeneratedKeys="true" keyProperty="id">
+        insert into pms_product
+            (merchant_id, product_name, pic, album_pics, publish_status, sort_id, price, original_price, stock,
+             unit, del_flag, create_by, create_time, update_by, update_time)
+        values (#{merchantId}, #{productName}, #{pic}, #{albumPics}, 0, 0, #{price}, #{originalPrice}, #{stock},
+                #{unit}, 0, #{actor}, #{now}, #{actor}, #{now})
+    </insert>
+
+    <!-- 上架中(publish_status=1)的商品不允许商家直接改:先下架,改完回到 0 待审核,由后台审核再上架。 -->
+    <update id="updateProduct" parameterType="java.util.Map">
+        update pms_product
+        set product_name = #{productName}, pic = #{pic}, album_pics = #{albumPics}, price = #{price},
+            original_price = #{originalPrice}, stock = #{stock}, unit = #{unit}, publish_status = 0,
+            update_by = #{actor}, update_time = #{now}
+        where id = #{productId} and merchant_id = #{merchantId} and publish_status &lt;&gt; 1
+          and (del_flag is null or del_flag = 0)
+    </update>
+
+    <update id="delistProduct">
+        update pms_product
+        set publish_status = 2, update_by = #{updateBy}, update_time = #{updateTime}
+        where id = #{productId} and merchant_id = #{merchantId} and publish_status = 1
+          and (del_flag is null or del_flag = 0)
+    </update>
+
+    <select id="selectSkus" resultType="java.util.LinkedHashMap">
+        select s.id as skuId, s.product_id as productId, s.sku_name as skuName, s.price, s.original_price as originalPrice,
+               s.stock, s.pic, r.bookable, r.slot_minutes as slotMinutes, r.capacity_per_slot as capacityPerSlot,
+               r.version as ruleVersion
+        from pms_sku s
+        join pms_product p on p.id = s.product_id
+        left join pms_sku_booking_rule r on r.sku_id = s.id and r.merchant_id = p.merchant_id
+        where s.product_id = #{productId} and p.merchant_id = #{merchantId} and (p.del_flag is null or p.del_flag = 0)
+        order by s.id
+    </select>
+
+    <select id="selectSkuForUpdate" resultType="java.util.LinkedHashMap">
+        select s.id as skuId, s.product_id as productId, p.publish_status as publishStatus
+        from pms_sku s
+        join pms_product p on p.id = s.product_id
+        where s.id = #{skuId} and p.merchant_id = #{merchantId} and (p.del_flag is null or p.del_flag = 0)
+        for update
+    </select>
+
+    <insert id="insertSku" parameterType="java.util.Map" useGeneratedKeys="true" keyProperty="id">
+        insert into pms_sku (product_id, sku_name, price, original_price, pic, stock, create_by, create_time, update_by, update_time)
+        select p.id, #{skuName}, #{price}, #{originalPrice}, #{pic}, #{stock}, #{actor}, #{now}, #{actor}, #{now}
+        from pms_product p
+        where p.id = #{productId} and p.merchant_id = #{merchantId} and p.publish_status &lt;&gt; 1
+          and (p.del_flag is null or p.del_flag = 0)
+    </insert>
+
+    <update id="updateSku" parameterType="java.util.Map">
+        update pms_sku s
+        join pms_product p on p.id = s.product_id
+        set s.sku_name = #{skuName}, s.price = #{price}, s.original_price = #{originalPrice}, s.pic = #{pic},
+            s.stock = #{stock}, s.update_by = #{actor}, s.update_time = #{now}
+        where s.id = #{skuId} and s.product_id = #{productId} and p.merchant_id = #{merchantId}
+          and p.publish_status &lt;&gt; 1 and (p.del_flag is null or p.del_flag = 0)
+    </update>
+
+    <select id="selectBookingRule" resultType="java.util.LinkedHashMap">
+        select id, sku_id as skuId, product_id as productId, bookable, slot_minutes as slotMinutes,
+               capacity_per_slot as capacityPerSlot, version
+        from pms_sku_booking_rule
+        where sku_id = #{skuId} and merchant_id = #{merchantId}
+    </select>
+
+    <insert id="insertBookingRule" parameterType="java.util.Map" useGeneratedKeys="true" keyProperty="id">
+        insert into pms_sku_booking_rule
+            (sku_id, product_id, merchant_id, bookable, slot_minutes, capacity_per_slot, version, updated_by,
+             created_at, updated_at)
+        values (#{skuId}, #{productId}, #{merchantId}, #{bookable}, #{slotMinutes}, #{capacityPerSlot}, 1,
+                #{updatedBy}, #{now}, #{now})
+    </insert>
+
+    <update id="updateBookingRule" parameterType="java.util.Map">
+        update pms_sku_booking_rule
+        set bookable = #{bookable}, slot_minutes = #{slotMinutes}, capacity_per_slot = #{capacityPerSlot},
+            version = version + 1, updated_by = #{updatedBy}, updated_at = #{now}
+        where sku_id = #{skuId} and merchant_id = #{merchantId} and version = #{expectedVersion}
+    </update>
+
+    <select id="selectCapacitySlots" resultType="java.util.LinkedHashMap">
+        select id as slotId, sku_id as skuId, slot_start as slotStart, slot_end as slotEnd,
+               capacity_total as capacityTotal, capacity_reserved as capacityReserved, status,
+               source_batch as sourceBatch
+        from pms_sku_capacity_slot
+        where merchant_id = #{merchantId} and sku_id = #{skuId}
+          and slot_start &gt;= #{from} and slot_start &lt; #{to}
+        order by slot_start
+        limit 500
+    </select>
+
+    <!-- ================= 今日到店 ================= -->
+    <select id="selectRedeemedBetween" resultType="java.util.LinkedHashMap">
+        select r.id as redemptionId, r.registration_id as registrationId, r.topic_id as topicId,
+               r.chapter_id as chapterId, c.name as chapterName, r.create_time as redeemedAt
+        from redemption r
+        left join cms_topic_chapter c on c.id = r.chapter_id
+        where r.merchant_id = #{ownerMemberId} and r.status = 'ACTIVE'
+          and r.create_time &gt;= #{from} and r.create_time &lt; #{to}
+        order by r.create_time desc
+        limit 200
+    </select>
+
+    <!-- 「可能到店」:我生效供给所在章节上仍未核销的权益数。一章可能有多家商家承接,所以只给章节级计数,不给到人。 -->
+    <select id="selectOpenEntitlementsByLiveOffer" resultType="java.util.LinkedHashMap">
+        select o.id as offerId, o.topic_id as topicId, o.chapter_id as chapterId, c.name as chapterName,
+               o.quota_total as quotaTotal, o.quota_used as quotaUsed, o.valid_end as validEnd,
+               (select count(*) from registration_entitlement e where e.chapter_id = o.chapter_id and e.status = 0)
+                   as openEntitlements
+        from merchant_chapter_offer o
+        left join cms_topic_chapter c on c.id = o.chapter_id
+        where o.merchant_id = #{ownerMemberId} and o.status = 1 and (o.valid_end is null or o.valid_end &gt; now())
+        order by o.id desc
+        limit 100
+    </select>
+
+    <!-- ================= 复核结论 / 补充材料 ================= -->
+    <select id="selectReviews" resultType="java.util.LinkedHashMap">
+        select v.id as reviewId, v.topic_id as topicId, v.risk_type as riskType,
+               v.verification_rate as verificationRate, v.paid_count as paidCount, v.verified_count as verifiedCount,
+               v.one_minute_count as oneMinuteCount, v.status, v.create_time as createTime, v.update_time as updateTime,
+               (select count(*) from verification_review_evidence e
+                 where e.review_id = v.id and e.owner_member_id = v.verifier_member_id) as evidenceCount
+        from verification_review v
+        where v.verifier_member_id = #{ownerMemberId}
+        <if test="status != null"> and v.status = #{status}</if>
+        order by v.id desc
+        limit 50
+    </select>
+
+    <select id="selectReview" resultType="java.util.LinkedHashMap">
+        select v.id as reviewId, v.topic_id as topicId, v.risk_type as riskType,
+               v.verification_rate as verificationRate, v.paid_count as paidCount, v.verified_count as verifiedCount,
+               v.one_minute_count as oneMinuteCount, v.status, v.create_time as createTime, v.update_time as updateTime
+        from verification_review v
+        where v.id = #{reviewId} and v.verifier_member_id = #{ownerMemberId}
+    </select>
+
+    <select id="selectReviewForUpdate" resultType="java.util.LinkedHashMap">
+        select v.id as reviewId, v.status
+        from verification_review v
+        where v.id = #{reviewId} and v.verifier_member_id = #{ownerMemberId}
+        for update
+    </select>
+
+    <select id="selectEvidence" resultType="java.util.LinkedHashMap">
+        select id as evidenceId, actor_member_id as actorMemberId, note, media_refs as mediaRefs,
+               created_at as createdAt
+        from verification_review_evidence
+        where review_id = #{reviewId} and owner_member_id = #{ownerMemberId}
+        order by id
+    </select>
+
+    <insert id="insertEvidence" parameterType="java.util.Map" useGeneratedKeys="true" keyProperty="id">
+        insert into verification_review_evidence
+            (review_id, owner_member_id, actor_member_id, note, media_refs, request_id, created_at)
+        select v.id, #{ownerMemberId}, #{actorMemberId}, #{note}, #{mediaRefs}, #{requestId}, #{now}
+        from verification_review v
+        where v.id = #{reviewId} and v.verifier_member_id = #{ownerMemberId} and v.status = 0
+    </insert>
+
+    <!-- ================= 对账(只读) ================= -->
+    <select id="selectClaimSummary" resultType="java.util.LinkedHashMap">
+        select settlement_route as route, status, count(*) as claimCount, max(create_time) as lastClaimAt
+        from settlement_claim
+        where beneficiary_role = 'MERCHANT' and beneficiary_id = #{ownerMemberId}
+        group by settlement_route, status
+    </select>
+
+    <select id="selectClaims" resultType="java.util.LinkedHashMap">
+        select id as claimId, commercial_context_type as contextType, commercial_context_id as contextId,
+               fulfillment_type as fulfillmentType, fulfillment_id as fulfillmentId, service_unit as serviceUnit,
+               settlement_route as route, source_contract_type as sourceContractType,
+               source_contract_id as sourceContractId, status, create_time as createTime
+        from settlement_claim
+        where beneficiary_role = 'MERCHANT' and beneficiary_id = #{ownerMemberId} and settlement_route = #{route}
+        order by id desc
+        limit #{offset}, #{limit}
+    </select>
+
+    <!-- CHAPTER_OFFER 口径的金额只在 merchant_payable:按带不带 claim_id 拆开,未挂 claim 的存量行单列出来供对账。 -->
+    <select id="selectPayableClaimCoverage" resultType="java.util.LinkedHashMap">
+        select coalesce(sum(case when claim_id is not null then
+                   (case entry_type when 'REVERSAL' then -amount else amount end) else 0 end), 0) as claimedNet,
+               coalesce(sum(case when claim_id is null then 1 else 0 end), 0) as unclaimedRows,
+               coalesce(sum(case when claim_id is null then
+                   (case entry_type when 'REVERSAL' then -amount else amount end) else 0 end), 0) as unclaimedNet
+        from merchant_payable
+        where merchant_member_id = #{ownerMemberId}
+    </select>
+
+    <select id="selectFrozenBatches" resultType="java.util.LinkedHashMap">
+        select id as batchId, period_ym as periodYm, amount_total as amountTotal, status,
+               invoice_status as invoiceStatus, frozen_reason as frozenReason, frozen_at as frozenAt
+        from merchant_payable_batch
+        where merchant_member_id = #{ownerMemberId} and frozen = 1
+        order by period_ym desc
+        limit 24
+    </select>
+</mapper>

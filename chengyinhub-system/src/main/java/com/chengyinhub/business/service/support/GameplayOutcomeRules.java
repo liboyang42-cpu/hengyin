@@ -129,7 +129,8 @@ public final class GameplayOutcomeRules {
     }
 
     private static void after(JsonNode row, Map<String, String> kinds) {
-        ThemeRuntimeConfig.fields(row, ThemeRuntimeConfig.set("reply", "costs", "effects", "nextStepId"));
+        ThemeRuntimeConfig.fields(row, ThemeRuntimeConfig.set("reply", "images", "costs", "effects", "nextStepId"));
+        images(row);
         for (String text : Arrays.asList("reply", "nextStepId")) if (row.has(text)) {
             if (!row.path(text).isTextual() || row.path(text).asText().length() > ("reply".equals(text) ? 2000 : 64)) fail(text + " 文本不合法");
         }
@@ -145,6 +146,18 @@ public final class GameplayOutcomeRules {
             target(effect.path("var"), kinds); ThemeRuntimeConfig.enumeration(effect, "op", "INC", "FLOOR");
             ThemeRuntimeConfig.integer(effect, "value", 1, 999);
             if ("sys.luck".equals(effect.path("var").asText()) && (!"INC".equals(effect.path("op").asText()) || effect.path("value").asInt() > 3)) fail("幸运仅支持 INC 1至3");
+        }
+    }
+
+    /** 成功/失败反馈配图：最多 3 张，https、站内路径或 media-asset 引用，与其它玩法配图同一口径。 */
+    private static void images(JsonNode row) {
+        if (!row.has("images")) return;
+        JsonNode images = row.get("images");
+        if (!images.isArray() || images.size() > 3) fail("反馈图片最多 3 张");
+        for (JsonNode image : images) {
+            String value = image.isTextual() ? image.asText().trim() : "";
+            boolean localPath = value.startsWith("/") && !value.startsWith("//") && value.indexOf('\\') < 0;
+            if (value.isEmpty() || value.length() > 512 || (!localPath && !value.startsWith("https://") && !value.matches("media-asset:[1-9][0-9]{0,18}"))) fail("反馈图片地址必须是 https 链接或站内路径");
         }
     }
 

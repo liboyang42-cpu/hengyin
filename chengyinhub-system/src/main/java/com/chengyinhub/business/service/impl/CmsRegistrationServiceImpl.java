@@ -45,6 +45,7 @@ import com.chengyinhub.business.service.IRegistrationCreationTransaction;
 import com.chengyinhub.business.service.RegistrationOrderExpiredException;
 import com.chengyinhub.business.service.IClubWaitlistOrderBridge;
 import com.chengyinhub.business.service.RegistrationRequestConflictException;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
@@ -127,6 +128,10 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     /** [P0-15] ③ 购票预占权益容量。跨 bean 注入 ⇒ 走代理 ⇒ 它的 @Transactional(REQUIRED) 并入本事务。 */
     @Autowired
     private com.chengyinhub.business.service.IPerkLedgerService perkLedgerService;
+
+    /** DOC2 F3 Phase 1 套票账本(开关默认关)。 */
+    @Autowired
+    private com.chengyinhub.business.service.IFreeExploreBundleService freeExploreBundleService;
 
     @Autowired
     @Lazy
@@ -611,6 +616,11 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         // 容量按行/按票算,不按钱算,整单再调一次 = 重复预占。
         if (PurchaseKind.EXPLORE_PASS == registration.getPurchaseKind() && sellerTopic != null) {
             perkLedgerService.reserveEntitlements(registration.getId(), sellerTopic.getId());
+            // DOC2 F3 Phase 1:③ 套票冻结快照并按持有人发放单位。sale 开关默认关 ⇒ 空转零写入;
+            // 同事务,任一步抛出整单回滚(与上面的权益预占同一条纪律)。
+            if (freeExploreBundleService != null) {
+                freeExploreBundleService.freezeOnOrderCreated(registration, sellerTopic, registrationActivity);
+            }
         }
 
         //11-12. 扣用户积分 + 记流水
@@ -2070,9 +2080,13 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
 
     /**
      * 处理微信支付回调
+     *
+     * <p>与退款/内容回调同一道 inbox fence:先 register(独立提交,同 hash 换业务即冲突拒收),
+     * 再 {@code process} 领取处理权,业务状态推进与 inbox DONE 在同一事务内提交。
+     * 因 claim 是 REQUIRES_NEW,本方法不能在外层未提交事务里调用(会读不到/锁死自己刚登记的行);
+     * 已在事务内确认支付的调用方用 {@link #applyConfirmedWechatPaymentWithinTransaction}。</p>
      */
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public String handleWechatPayCallback(Map<String, String> resultMap) {
         if (resultMap == null) {
             return registrationPaymentCallbackFailure(null, "payload_missing");
@@ -2085,9 +2099,12 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
                 || tradeState == null || tradeState.trim().isEmpty()) {
             return registrationPaymentCallbackFailure(outTradeNo, "required_field_missing");
         }
+        if (TransactionSynchronizationManager.isActualTransactionActive()) {
+            return registrationPaymentCallbackFailure(outTradeNo, "callback_inside_transaction");
+        }
 
         // 查询报名记录
-        CmsRegistration registration = getByRegistrationNo(outTradeNo);
+        final CmsRegistration registration = getByRegistrationNo(outTradeNo);
         if (registration == null) {
             String reference = outTradeNo.matches("[A-Za-z0-9_-]{1,64}") ? outTradeNo : "INVALID_FORMAT";
             logger.error("Verified payment references missing registration order={}", reference);
@@ -2095,13 +2112,76 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
                     "order=" + reference + " registration=missing result=FAIL");
             return "FAIL";
         }
+        // 金额在登记前核对:同一笔回调换了金额不会进 inbox,更不会被当作重复成功。
+        if ("SUCCESS".equals(tradeState) && !matchesFrozenWechatAmount(registration, resultMap.get("total"))) {
+            return registrationPaymentCallbackFailure(outTradeNo, "amount_mismatch");
+        }
 
         // P1:回调先落 inbox 去重(表 wx_payment_callback_inbox,notify_hash 唯一键)。
-        // 同一个 notify 重投时 insert ignore 返回 false,不改变下方 ACK 与状态推进语义。
-        wxPaymentCallbackInboxService.register(
-                "PAY:" + (StringUtils.isNotEmpty(transactionId) ? transactionId : outTradeNo)
-                        + ":" + tradeState,
-                WxPaymentCallbackInbox.BIZ_TYPE_PAYMENT, registration.getId(), tradeState);
+        final String notifyId = "PAY:" + (StringUtils.isNotEmpty(transactionId) ? transactionId : outTradeNo)
+                + ":" + tradeState;
+        try {
+            wxPaymentCallbackInboxService.register(notifyId,
+                    WxPaymentCallbackInbox.BIZ_TYPE_PAYMENT, registration.getId(), tradeState);
+        } catch (IWxPaymentCallbackInboxService.IdentityConflictException conflict) {
+            return registrationPaymentCallbackFailure(outTradeNo, "inbox_identity_conflict");
+        }
+        final String[] outcome = new String[1];
+        boolean completed = wxPaymentCallbackInboxService.process(notifyId,
+                new IWxPaymentCallbackInboxService.Mutation() {
+                    @Override
+                    public boolean isCurrent(WxPaymentCallbackInbox inbox) {
+                        if (!registration.getId().equals(inbox.getBizId())
+                                || !Integer.valueOf(WxPaymentCallbackInbox.BIZ_TYPE_PAYMENT).equals(inbox.getBizType())
+                                || !tradeState.equals(inbox.getEventType())) {
+                            throw new IWxPaymentCallbackInboxService.IdentityConflictException(
+                                    "支付回调 inbox 行与本次业务身份不一致");
+                        }
+                        // 迟到/冲突的资金事件交给下方状态机判定,不标 STALE 假 ACK。
+                        return true;
+                    }
+
+                    @Override
+                    public boolean apply(WxPaymentCallbackInbox inbox) {
+                        outcome[0] = applyWechatPayCallback(registration, resultMap);
+                        return "SUCCESS".equalsIgnoreCase(outcome[0]);
+                    }
+                });
+        if (completed) {
+            return "SUCCESS";
+        }
+        // 业务判定失败时 applyWechatPayCallback 已按原因告警,事务回滚、inbox 释放待微信重投。
+        return outcome[0] != null && !"SUCCESS".equalsIgnoreCase(outcome[0]) ? outcome[0]
+                : registrationPaymentCallbackFailure(outTradeNo, "callback_not_completed");
+    }
+
+    /**
+     * 已在调用方事务内向微信查单确认 SUCCESS 的补记(如取消场次前把已付 PAYING 单补成已支付)。
+     * 不走 inbox:那道 fence 的领取需独立提交;这里由调用方事务的行锁 + 支付 CAS 保证只补一次。
+     */
+    @Override
+    @Transactional(propagation = Propagation.MANDATORY, rollbackFor = Exception.class)
+    public String applyConfirmedWechatPaymentWithinTransaction(Map<String, String> resultMap) {
+        if (resultMap == null || !"SUCCESS".equals(resultMap.get("trade_state"))
+                || StringUtils.isBlank(resultMap.get("out_trade_no"))) {
+            return registrationPaymentCallbackFailure(resultMap == null ? null : resultMap.get("out_trade_no"),
+                    "required_field_missing");
+        }
+        CmsRegistration registration = getByRegistrationNo(resultMap.get("out_trade_no"));
+        if (registration == null) {
+            return registrationPaymentCallbackFailure(resultMap.get("out_trade_no"), "order_disappeared");
+        }
+        if (!matchesFrozenWechatAmount(registration, resultMap.get("total"))) {
+            return registrationPaymentCallbackFailure(resultMap.get("out_trade_no"), "amount_mismatch");
+        }
+        return applyWechatPayCallback(registration, resultMap);
+    }
+
+    /** 支付回调的业务状态机;只在 inbox fence 的事务或调用方已开启的事务内执行。 */
+    private String applyWechatPayCallback(CmsRegistration registration, Map<String, String> resultMap) {
+        String outTradeNo = resultMap.get("out_trade_no");
+        String transactionId = resultMap.get("transaction_id");
+        String tradeState = resultMap.get("trade_state");
 
         // 根据交易状态处理不同的业务逻辑
         switch (tradeState) {
@@ -3136,6 +3216,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         // 放在 if 外面:tryActivate 每次都从库里重新数人头、且有 CAS 兜底,重复触发无害;
         // 而放进 if 里会让「台账已存在但赏金那次没算成」的情况永远补不回来。
         // onVerification 自己吞异常:核销是收钱路径,赏金是实验性冷启动功能,任何情况下都不能连累它。
+        // 只有锁冲突例外:它原样抛出,交给外层 @DeadlockRetry 整笔回滚重试(见 SavepointLockFailures)。
         merchantReferralBountyService.onVerification(verifierId);
         try {
             verificationRiskService.inspectAndQueue(verifierId, registrationId);

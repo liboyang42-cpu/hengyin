@@ -62,6 +62,7 @@ if (!RoleEntityType.isContentOwner(entityType)) {
         role.setEntityType(entityType);
         role.setEntityId(entityId);
         role.setStatus(1);
+        ProductSlot.requireValid(role.getSlot());
         try {
             productRoleMapper.insertProductRole(role);
         } catch (Exception e) {
@@ -137,6 +138,7 @@ if (!RoleEntityType.isContentOwner(entityType)) {
         write.setEntityId(null);
         write.setStatus(1);
         write.setDeclaredBy(operatorId);
+        ProductSlot.requireValid(write.getSlot());
         if (productRoleMapper.insertProductRole(write) != 1) {
             throw new IllegalStateException("SALE_ORGANIZER_INSERT_FAILED");
         }
@@ -175,6 +177,7 @@ if (!RoleEntityType.isContentOwner(entityType)) {
         write.setEntityId(clubId);
         write.setStatus(1);
         write.setDeclaredBy(operatorId);
+        ProductSlot.requireValid(write.getSlot());
         if (productRoleMapper.insertProductRole(write) != 1) {
             throw new IllegalStateException("SALE_DISTRIBUTION_INSERT_FAILED");
         }
@@ -251,6 +254,7 @@ if (!RoleEntityType.isContentOwner(entityType)) {
         role.setEntityType(entityType);
         role.setEntityId(entityId);
         role.setStatus(1);
+        ProductSlot.requireValid(role.getSlot());
         if (productRoleMapper.insertProductRole(role) != 1) {
             throw new IllegalStateException("内容主体保存失败，请刷新后重试");
         }

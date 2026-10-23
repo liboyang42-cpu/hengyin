@@ -692,6 +692,29 @@ class ClubEditionCompensationServiceTest {
         assertTrue(service.editionsForExecutingClub(CLUB).isEmpty());
     }
 
+    /** W10a #26:空原因只从服务端真源推出 —— 有期次 / 已承接未开售 / 未承接,三种互斥。 */
+    @Test
+    void editionsEmptyReasonDistinguishesNotUndertakenFromNotOnSale() {
+        when(mapper.selectEditionsForExecutingClub(CLUB)).thenReturn(Arrays.asList(editionRow(TOPIC, CLUB)));
+        assertEquals(IClubEditionCompensationService.EDITIONS_REASON_HAS_EDITIONS, service.editionsEmptyReason(CLUB));
+        verify(mapper, never()).countEffectiveOrganizerOrdersForClub(CLUB);
+
+        when(mapper.selectEditionsForExecutingClub(CLUB)).thenReturn(new ArrayList<java.util.Map<String, Object>>());
+        when(mapper.countEffectiveOrganizerOrdersForClub(CLUB)).thenReturn(2);
+        assertEquals(IClubEditionCompensationService.EDITIONS_REASON_UNDERTAKEN_NOT_ON_SALE,
+                service.editionsEmptyReason(CLUB));
+
+        when(mapper.countEffectiveOrganizerOrdersForClub(CLUB)).thenReturn(0);
+        assertEquals(IClubEditionCompensationService.EDITIONS_REASON_NOT_UNDERTAKEN, service.editionsEmptyReason(CLUB));
+    }
+
+    @Test
+    void editionsEmptyReasonStillFailsClosedOnScopeLeak() {
+        when(mapper.selectEditionsForExecutingClub(CLUB)).thenReturn(Arrays.asList(editionRow(TOPIC, CLUB + 99)));
+        assertEquals("EDITION_CLUB_SCOPE_LEAK", assertThrows(IllegalStateException.class,
+                () -> service.editionsEmptyReason(CLUB)).getMessage());
+    }
+
     private static java.util.Map<String, Object> editionRow(long topicId, long executingClubId) {
         java.util.Map<String, Object> row = new java.util.LinkedHashMap<String, Object>();
         row.put("topicId", topicId);

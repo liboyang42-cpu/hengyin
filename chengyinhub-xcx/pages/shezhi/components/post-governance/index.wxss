@@ -1,0 +1,23 @@
+.pg { padding: 0 var(--cy-page-x) calc(env(safe-area-inset-bottom) + var(--cy-space-4)); }
+.pg-intro, .pg-loading, .pg-empty { display: block; font-size: var(--cy-font-label); line-height: 1.6; color: var(--cy-text-secondary); }
+.pg-loading, .pg-empty { margin-top: var(--cy-space-3); }
+.pg-list { display: flex; flex-direction: column; gap: var(--cy-space-3); margin-top: var(--cy-space-3); }
+.pg-item { padding: var(--cy-space-3); border-radius: var(--cy-radius-lg); background: var(--cy-bg-elevated); }
+.pg-head { display: flex; align-items: center; justify-content: space-between; gap: var(--cy-space-2); }
+.pg-type { font-size: var(--cy-font-body); font-weight: 700; color: var(--cy-text-title); }
+.pg-state { flex: none; font-size: var(--cy-font-caption); color: var(--cy-text-secondary); }
+.pg-state--reversed { color: var(--cy-color-status-success, var(--cy-text-title)); }
+.pg-state--upheld, .pg-state--active { color: var(--cy-text-title); }
+.pg-meta { display: block; margin-top: var(--cy-space-1); font-size: var(--cy-font-caption); line-height: 1.5; color: var(--cy-text-secondary); overflow-wrap: anywhere; }
+.pg-warn, .pg-notice { color: var(--cy-color-status-danger); }
+.pg-action { display: inline-flex; align-items: center; justify-content: center; margin-top: var(--cy-space-2); min-height: var(--cy-btn-h-sm); padding: 0 var(--cy-space-3); border-radius: var(--cy-radius-pill); border: 2rpx solid var(--cy-border-card); font-size: var(--cy-font-caption); color: var(--cy-text-title); }
+.pg-action--plain { border-color: transparent; color: var(--cy-text-secondary); }
+.pg-action--busy { opacity: 0.6; }
+.pg-form { margin-top: var(--cy-space-2); }
+.pg-input { box-sizing: border-box; width: 100%; height: 200rpx; padding: var(--cy-space-2); border-radius: var(--cy-radius-md); border: 2rpx solid var(--cy-border-card); font-size: var(--cy-font-label); color: var(--cy-text-title); }
+.pg-count { display: block; margin-top: var(--cy-space-1); text-align: right; font-size: var(--cy-font-caption); color: var(--cy-text-secondary); }
+.pg-form-actions { display: flex; justify-content: flex-end; gap: var(--cy-space-2); }
+.pg-more { margin-top: var(--cy-space-2); text-align: center; font-size: var(--cy-font-caption); color: var(--cy-text-secondary); padding: var(--cy-space-2) 0; }
+.pg-notice { display: block; margin-top: var(--cy-space-2); font-size: var(--cy-font-caption); }
+/* isolated 组件内全局 .cy-pressed 进不来,本地定义一份(同 privacy-sheet)。 */
+.cy-pressed { opacity: .88; }

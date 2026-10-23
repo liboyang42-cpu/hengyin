@@ -125,7 +125,10 @@ public class SignupNoticeAfterCommitPersistenceMySqlIT {
         ReflectionTestUtils.setField(target, "cmsRegistrationMapper", registrations);
         ReflectionTestUtils.setField(target, "imService", im);
         ReflectionTestUtils.setField(target, "committedBusinessNotice", notices);
-        ReflectionTestUtils.setField(target, "wxPaymentCallbackInboxService", mock(IWxPaymentCallbackInboxService.class));
+        // W3:回调入口走 inbox fence(业务在 fence 自己的事务里提交),这里用直通桩;
+        // 「支付事务提交后才投递」的边界由下方 payInsideTransaction 经同一状态机在调用方事务内验证。
+        ReflectionTestUtils.setField(target, "wxPaymentCallbackInboxService",
+                com.chengyinhub.business.service.PaymentCallbackInboxStubs.passThrough(manager));
         ReflectionTestUtils.setField(target, "settlementEntryService", mock(ISettlementEntryService.class));
         ReflectionTestUtils.setField(target, "umsMemberMapper", mock(UmsMemberMapper.class));
         ReflectionTestUtils.setField(target, "cmsPointsSettingService", mock(ICmsPointsSettingService.class));
@@ -225,7 +228,8 @@ public class SignupNoticeAfterCommitPersistenceMySqlIT {
 
     private void payInsideTransaction(boolean rollback) {
         transaction.execute(status -> {
-            assertEquals("SUCCESS", registrationService.handleWechatPayCallback(callback()));
+            // 回调入口不允许在外层未提交事务内领取 inbox;同一支付状态机的事务内入口是它。
+            assertEquals("SUCCESS", registrationService.applyConfirmedWechatPaymentWithinTransaction(callback()));
             assertTrue(queued.isEmpty(), "external delivery must not enqueue while payment can still roll back");
             assertEquals(0, messages());
             if (rollback) throw new IllegalStateException("fixture payment rollback");

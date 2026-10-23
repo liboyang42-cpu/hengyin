@@ -49,7 +49,8 @@ public class AdvancedGameConfigValidator {
     /** 问答三种模式。三种差的只是中间那一块,所以是一段带 mode,不是三段 */
     private static final Set<String> QA_MODES = new HashSet<>(Arrays.asList("TYPE", "PICK", "SHOT"));
     /** 扫码回什么。OVERLAY 是第四档:页内取景扫中后把图叠在镜头里(AR 契约 §2.2) */
-    private static final Set<String> SCAN_KINDS = new HashSet<>(Arrays.asList("TEXT", "VOICE", "IMAGE", "OVERLAY"));
+    // NONE = 只扫码进场、不回任何内容(2026-10-22 主人:扫码参与可以不回复)。
+    private static final Set<String> SCAN_KINDS = new HashSet<>(Arrays.asList("TEXT", "VOICE", "IMAGE", "OVERLAY", "NONE"));
     /** 显形档的真 AR(2026-09-22 用户定):不开 / 平面放置 / 图像识别。xr-frame 不支持运行中切换模式,所以是配置期二选一。 */
     private static final Set<String> SCAN_AR_MODES = new HashSet<>(Arrays.asList("NONE", "PLANE", "MARKER"));
     /** 找东西:3 个起(少于 3 个没有"还差几样"的张力),5 个封顶(商家标不动,玩家也找烦了) */
@@ -327,6 +328,7 @@ public class AdvancedGameConfigValidator {
         validateSilentOrder(root.get("silentOrder"));
         validateDiyName(root.get("diyName"));
         validateMusicCorner(root.get("musicCorner"));
+        validateBackgroundMusic(root.get("backgroundMusic"));
         validateSteps(root.get("steps"));
         validateDailySign(root.get("dailySign"));
         validateSlowTask(root.get("slowTask"));
@@ -875,6 +877,25 @@ public class AdvancedGameConfigValidator {
     }
 
     /**
+     * 背景音乐(互动工具):玩这一站时播放的一段音乐。只是氛围件,不参与判定。
+     * 有这一段就算开着,**不带 enabled**:带了的话支持矩阵会把它当成第二个玩法。
+     */
+    private void validateBackgroundMusic(JsonNode music) {
+        if (music == null || music.isNull()) return;
+        requireObject(music, "背景音乐配置格式不正确");
+        if (music.has("enabled")) throw new IllegalArgumentException("背景音乐不使用 enabled 字段");
+        optionalText(music, "title", 40, "背景音乐名称不能超过 40 字");
+        if (!music.path("audioUrl").isTextual() || music.path("audioUrl").asText("").trim().isEmpty()) {
+            throw new IllegalArgumentException("请上传背景音乐");
+        }
+        optionalMediaUrl(music, "audioUrl", 512,
+                "背景音乐地址不能超过 512 字", "背景音乐地址必须是 https 链接或站内路径");
+        if (music.has("loop") && !music.get("loop").isBoolean()) {
+            throw new IllegalArgumentException("背景音乐循环设置格式不正确");
+        }
+    }
+
+    /**
      * 计步挑战:目标步数。真实步数只能由服务端解密微信运动拿到(见 WeRunDecryptor),
      * 配置里不放任何客户端可自证的字段。
      */
@@ -1284,7 +1305,7 @@ public class AdvancedGameConfigValidator {
         if (!enabled(scan)) return;
         requireObject(scan, "扫码配置格式不正确");
         String kind = scan.path("kind").asText("");
-        if (!SCAN_KINDS.contains(kind)) throw new IllegalArgumentException("扫码回复只能是文字、语音、图片或显形");
+        if (!SCAN_KINDS.contains(kind)) throw new IllegalArgumentException("扫码回复只能是文字、语音、图片、显形或不回复");
         optionalText(scan, "reply", 200, "扫码回复不能超过 200 字");
         // 同上(C-01);显形图 / 识别图 / 3D 模型同理 —— 不配 AR 的扫码段也会带着空串来
         dropBlankText((ObjectNode) scan, "audioUrl", "imageUrl", "overlayUrl", "markerUrl", "modelUrl");
@@ -1872,6 +1893,10 @@ public class AdvancedGameConfigValidator {
             requireStateTag(item, label);
             return;
         }
+        if (StoryVocabulary.isCondition(op)) {
+            StoryVocabulary.validateCondition(item, label, null, (path, child) -> validateCondition(child, path));
+            return;
+        }
         if (!COMPARISON_OPS.contains(op)) {
             throw new IllegalArgumentException(label + " 的 op 只能是 "
                     + "EQ、NE、GT、GTE、LT、LTE、HAS_TAG 或 NODE_COMPLETED");
@@ -1902,7 +1927,9 @@ public class AdvancedGameConfigValidator {
     private boolean isReadableSysVar(String var) {
         // 阶段 3:sys.exhausted 开放为只读 —— 创作者可以写「力竭时这一站更难 / 直接锁住」。
         // 它只由服务端在 HP 归零时写,效果侧一个都不放行(与 sys.hp 同口径)。
+        // F6 T10:sys.momentum 只读(只由服务端结算 / 花动量写)。
         return "sys.hp".equals(var) || "sys.luck".equals(var) || "sys.exhausted".equals(var)
+                || JourneyRpg.SYS_MOMENTUM.equals(var)
                 || SYS_ASKED_VAR.matcher(var).matches() || SYS_NODE_VAR.matcher(var).matches();
     }
 
@@ -1929,6 +1956,10 @@ public class AdvancedGameConfigValidator {
             }
             if ("ADD_TAG".equals(op)) {
                 requireStateTag(item, label);
+                continue;
+            }
+            if (StoryVocabulary.isEffect(op)) {
+                StoryVocabulary.validateEffect(item, label);
                 continue;
             }
             if (!EFFECT_OPS.contains(op)) {
@@ -2111,9 +2142,54 @@ public class AdvancedGameConfigValidator {
         validateEffects(check.get("fumbleEffects"), "check 的 fumbleEffects");
         validateMods(check.get("mods"));
         checkFailCostTag(check);
+        validateBargain(check.get("bargain"));
     }
 
-    /** mods:条件修正,when 条件 + 必带整数 value,label 是给玩家看的一句人话。 */
+    /** F6 T09 魔鬼交易单次加值上限:与 modCap 分开计,不让一笔交易压过三档难度的间距。 */
+    private static final int MAX_BARGAIN_BONUS = 3;
+    private static final int MAX_BARGAIN_EFFECTS = 4;
+    /** 交易的代价只能是「给自己添麻烦」:写状态、贴标签、挂状态、推进钟;任何发放类效果一律拒。 */
+    private static final Set<String> BARGAIN_EFFECT_OPS = new HashSet<String>(Arrays.asList(
+            "SET", "INC", "ADD_TAG", StoryVocabulary.ADD_CONDITION, StoryVocabulary.TICK_CLOCK));
+
+    /**
+     * F6 T09 check.bargain:{label, bonus 1..3, effects[1..4]}。只有主题 journeyRules.rpg.bargain 开启时
+     * 运行期才会提供这笔交易;这里只管形状。代价不得触碰 sys.*,也不得是物品 / 徽章 / XP 等发放。
+     */
+    private void validateBargain(JsonNode bargain) {
+        if (bargain == null || bargain.isNull()) return;
+        requireObject(bargain, "check 的 bargain 格式不正确");
+        bargain.fieldNames().forEachRemaining(name -> {
+            if (!"label".equals(name) && !"bonus".equals(name) && !"effects".equals(name)) {
+                throw new IllegalArgumentException("check 的 bargain 不支持的字段:" + name);
+            }
+        });
+        String label = bargain.path("label").asText("").trim();
+        if (label.isEmpty() || label.length() > MAX_CHECK_TEXT) {
+            throw new IllegalArgumentException("check 的 bargain 要写明代价(label),且不超过 " + MAX_CHECK_TEXT + " 字");
+        }
+        JsonNode bonus = bargain.get("bonus");
+        if (bonus == null || !bonus.isIntegralNumber() || !bonus.canConvertToInt()
+                || bonus.asInt() < 1 || bonus.asInt() > MAX_BARGAIN_BONUS) {
+            throw new IllegalArgumentException("check 的 bargain 的 bonus 须为 1 至 " + MAX_BARGAIN_BONUS + " 的整数");
+        }
+        JsonNode effects = bargain.get("effects");
+        if (!(effects instanceof ArrayNode) || effects.size() < 1 || effects.size() > MAX_BARGAIN_EFFECTS) {
+            throw new IllegalArgumentException("check 的 bargain 的 effects 须为 1 至 " + MAX_BARGAIN_EFFECTS + " 条代价");
+        }
+        for (JsonNode effect : effects) {
+            String op = effect.path("op").asText("");
+            if (!BARGAIN_EFFECT_OPS.contains(op)) {
+                throw new IllegalArgumentException("check 的 bargain 的代价只能是 SET、INC、ADD_TAG、ADD_CONDITION 或 TICK_CLOCK");
+            }
+            if (effect.path("var").asText("").trim().startsWith("sys.")) {
+                throw new IllegalArgumentException("check 的 bargain 的代价不能写系统变量");
+            }
+        }
+        validateEffects(effects, "check 的 bargain 的 effects");
+    }
+
+    /** mods:条件修正,when 条件 + 整数 value(或 F2 的 counter.* var),label 是给玩家看的一句人话。 */
     private void validateMods(JsonNode mods) {
         if (mods == null || mods.isNull()) return;
         if (!mods.isArray()) throw new IllegalArgumentException("check 的 mods 必须是数组");
@@ -2127,7 +2203,18 @@ public class AdvancedGameConfigValidator {
                 throw new IllegalArgumentException("check 的 mods 必须带 when 条件");
             }
             validateCondition(when, "check 的 mods 的 when");
-            requireStateValue(mod, "check 的 mods");
+            // F2 T03:var = 从局状态读修正值(counter.* 属性),与静态 value 二选一。
+            JsonNode var = mod.get("var");
+            if (var != null && !var.isNull()) {
+                if (!var.isTextual() || !STATE_VAR.matcher(var.asText()).matches() || !var.asText().startsWith("counter.")) {
+                    throw new IllegalArgumentException("check 的 mods 的 var 必须是 counter. 开头的状态键");
+                }
+                if (mod.has("value") && !mod.get("value").isNull()) {
+                    throw new IllegalArgumentException("check 的 mods 不能同时配置 var 与 value");
+                }
+            } else {
+                requireStateValue(mod, "check 的 mods");
+            }
             optionalText(mod, "label", MAX_CHECK_TEXT, "check 的 mods 的 label 不能超过 "
                     + MAX_CHECK_TEXT + " 字");
         }

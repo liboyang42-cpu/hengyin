@@ -22,6 +22,19 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class AdvancedGamePublicProjectionTest {
 
     @Test
+    void backgroundMusicReachesPlayersOnlyWithItsPublicFields() throws Exception {
+        String raw = "{\"schemaVersion\":1,\"backgroundMusic\":{\"title\":\"老城茶馆\","
+                + "\"audioUrl\":\"https://cdn.example.com/tea.mp3\",\"loop\":false}}";
+        com.fasterxml.jackson.databind.JsonNode music = new com.fasterxml.jackson.databind.ObjectMapper()
+                .readTree(AdvancedGamePublicProjection.safeConfigJson(raw)).path("backgroundMusic");
+        assertEquals("老城茶馆", music.path("title").asText());
+        assertEquals("https://cdn.example.com/tea.mp3", music.path("audioUrl").asText());
+        assertFalse(music.path("loop").asBoolean());
+        String none = AdvancedGamePublicProjection.safeConfigJson("{\"schemaVersion\":1}");
+        assertFalse(none.contains("backgroundMusic"));
+    }
+
+    @Test
     void profileProjectionExposesMandatoryQuestionsWithoutRevealingEffects() throws Exception {
         String raw = "{\"schemaVersion\":1,\"profile\":{\"enabled\":true,"
                 + "\"avatar\":{\"enabled\":true,\"required\":false},\"questions\":["
@@ -77,7 +90,7 @@ class AdvancedGamePublicProjectionTest {
                 "web", "controller", "api", "ApiPlayProgressController.java")), StandardCharsets.UTF_8)
                 .replaceAll("\\s+", " ");
 
-        assertTrue(source.contains("AdvancedGamePublicProjection .safeConfigJson(themeNodeConfig==null?tpl.getAdvancedConfigJson():themeNodeConfig.toString())"));
+        assertTrue(source.contains("AdvancedGamePublicProjection .safeConfigJson(themeNodeConfig==null?tpl.getAdvancedConfigJson():themeNodeConfig.toString(), bargainOffered)"));
         assertFalse(source.contains("m.put(\"advancedConfigJson\", tpl.getAdvancedConfigJson())"));
         assertFalse(source.contains("m.put(\"advancedConfigJson\", themeNodeConfig.toString())"));
     }

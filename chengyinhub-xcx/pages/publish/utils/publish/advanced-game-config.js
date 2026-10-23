@@ -1196,7 +1196,7 @@ function normalize(model) {
   const scan = out.scan;
   if (scan && scan.enabled) {
     // OVERLAY 认不出就会被整段压回 TEXT —— 商家配的显形图会跟着「没填」一起消失
-    scan.kind = ['TEXT', 'VOICE', 'IMAGE', 'OVERLAY'].indexOf(scan.kind) >= 0 ? scan.kind : 'TEXT';
+    scan.kind = ['TEXT', 'VOICE', 'IMAGE', 'OVERLAY', 'NONE'].indexOf(scan.kind) >= 0 ? scan.kind : 'TEXT';
     scan.reply = text(scan.reply);
     scan.xp = num(scan.xp, 0);
     // 清空按默认 60(Number('') 是 0,不先判空会被当成 0 占比)
@@ -1787,7 +1787,7 @@ function validateNormalized(model, opts) {
   const scan = model.scan || {};
   if (scan.enabled) {
     // 文案与服务端 AdvancedGameConfigValidator.validateScan 逐字一致 —— 两处不一致时商家会看到两套说法
-    if (['TEXT', 'VOICE', 'IMAGE', 'OVERLAY'].indexOf(scan.kind) < 0) return '扫码回复只能是文字、语音、图片或显形';
+    if (['TEXT', 'VOICE', 'IMAGE', 'OVERLAY', 'NONE'].indexOf(scan.kind) < 0) return '扫码回复只能是文字、语音、图片、显形或不回复';
     const reply = text(scan.reply);
     if (reply.length > 200) return '扫码回复不能超过 200 字';
     if (scan.kind === 'TEXT' && !reply) return '扫码回文字就得写一句话';

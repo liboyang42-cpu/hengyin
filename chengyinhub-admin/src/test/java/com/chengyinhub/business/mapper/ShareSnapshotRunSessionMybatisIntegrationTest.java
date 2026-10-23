@@ -56,6 +56,8 @@ class ShareSnapshotRunSessionMybatisIntegrationTest {
         db.execute(migration("migration_20260917_roam_share_snapshot.sql"));
         new ResourceDatabasePopulator(new FileSystemResource(
                 "sql/migration_20261012_roam_share_retention.sql")).execute(source);
+        new ResourceDatabasePopulator(new FileSystemResource(
+                "sql/migration_roam_share_version_20261022.sql")).execute(source);
         db.execute(migration("migration_20260917_player_run_session.sql"));
         db.execute("CREATE TABLE cms_topic(id BIGINT PRIMARY KEY, name VARCHAR(100), img_url VARCHAR(255), del_flag INT)");
         db.execute("CREATE TABLE cms_activity(id BIGINT PRIMARY KEY, topic_id BIGINT, name VARCHAR(100), img_url VARCHAR(255),"

@@ -60,7 +60,8 @@ public class ApiAuditController extends BaseController {
         if (request == null) return new AjaxResult(HttpStatus.BAD_REQUEST, "申诉参数不完整");
         try {
             AuditAppeal appeal = auditTaskService.submitAppeal(request.getBizType(), request.getBizId(), memberId,
-                    request.getReason(), request.getEvidence() == null ? null : request.getEvidence().toString());
+                    request.getReason(), request.getEvidence() == null ? null : request.getEvidence().toString(),
+                    request.getAttachments());
             AjaxResult ajax = success();
             ajax.put("appealId", appeal.getId());
             ajax.put("taskId", appeal.getTaskId());

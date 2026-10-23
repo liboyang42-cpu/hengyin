@@ -450,4 +450,56 @@ class ClubOccurrenceCancellationServiceTest {
         request.setRequestId(requestId);
         return request;
     }
+
+    /** S531-2:系列关闭(CLOSED)后,已排场次仍须能从 event-ops 取消:退款 + 场次 CAS + 候补终止 + 通知照常收尾。 */
+    @Test
+    void scheduledOccurrenceOfClosedSeriesCanStillBeCancelled() {
+        ClubEventSeries closed = series();
+        closed.setStatus(ClubEventSeries.STATUS_CLOSED);
+        when(mapper.selectSeriesByActivityAnyStatusForUpdate(ACTIVITY)).thenReturn(closed);
+        when(mapper.selectRegisteredRecipients(CLUB, ACTIVITY)).thenReturn(Collections.singletonList(101L));
+        when(mapper.selectWaitlistRecipients(CLUB, ACTIVITY)).thenReturn(Collections.singletonList(201L));
+        when(teamGroupService.cancelActivityByClubOperator(ACTIVITY, OWNER, ACTOR, REASON))
+                .thenReturn(new ActivityCancelResult(1, 0, 0));
+        when(mapper.cancelOccurrenceCas(81L, 0)).thenReturn(1);
+        ClubWaitlistEntry offered = waitlist(92L, 201L, 302L, ClubWaitlistEntry.OFFERED, null);
+        when(mapper.selectActiveWaitlistsForUpdate(CLUB, ACTIVITY)).thenReturn(Collections.singletonList(offered));
+        when(mapper.cancelActiveWaitlistCas(anyLong(), eq(0), anyString(), anyLong(),
+                eq(ACTIVITY), anyLong())).thenReturn(1);
+        when(mapper.restoreWaitlistHold(302L, ACTIVITY)).thenReturn(1);
+        AtomicLong ids = new AtomicLong(900L);
+        when(mapper.insertCampaign(any(ClubEventCampaign.class))).thenAnswer(call -> {
+            call.getArgument(0, ClubEventCampaign.class).setId(ids.incrementAndGet());
+            return 1;
+        });
+        when(mapper.insertDelivery(any(ClubEventDelivery.class))).thenAnswer(call -> {
+            call.getArgument(0, ClubEventDelivery.class).setId(ids.incrementAndGet());
+            return 1;
+        });
+        when(mapper.insertOutbox(anyLong(), any(Date.class))).thenReturn(1);
+
+        ClubEventCancellationResult result = service.cancelOccurrence(
+                ACTOR, "co-owner", request("cancel-closed", REASON));
+
+        assertEquals(ClubEventOccurrence.STATUS_CANCELLED, result.getOccurrenceStatus());
+        assertEquals("REFUND_REQUESTED", result.getRefundStatus());
+        verify(teamGroupService).cancelActivityByClubOperator(ACTIVITY, OWNER, ACTOR, REASON);
+        verify(mapper).cancelOccurrenceCas(81L, 0);
+        verify(mapper).restoreWaitlistHold(302L, ACTIVITY);
+        verify(mapper, times(2)).insertCampaign(any(ClubEventCampaign.class));
+    }
+
+    /** S531-2 负控:放开的只有 CLOSED;其他非 ACTIVE 状态的系列仍然 409,退款链一步不走。 */
+    @Test
+    void occurrenceOfUnknownSeriesStatusIsStillRejectedBeforeRefund() {
+        ClubEventSeries odd = series();
+        odd.setStatus("ARCHIVED");
+        when(mapper.selectSeriesByActivityAnyStatusForUpdate(ACTIVITY)).thenReturn(odd);
+
+        ServiceException error = assertThrows(ServiceException.class,
+                () -> service.cancelOccurrence(ACTOR, "co-owner", request("cancel-odd", REASON)));
+
+        assertEquals(Integer.valueOf(409), error.getCode());
+        verify(teamGroupService, never()).cancelActivityByClubOperator(anyLong(), anyLong(), anyLong(), anyString());
+    }
 }

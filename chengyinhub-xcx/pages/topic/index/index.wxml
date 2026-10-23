@@ -340,7 +340,6 @@
           <view class="det6-empty" wx:if="{{!info.commentCount}}" bindtap="voteClick" aria-role="button" aria-label="成为第一个评价的人" hover-class="cy-pressed" hover-stay-time="80">
             <text class="det6-empty-t">还没有评价</text>
             <text class="det6-empty-s">未参与也可以评价。已支付或已核销报名后的首条评价可按当前规则获得积分，以实际积分记录为准。</text>
-            <text class="det6-link" catchtap="goPoint" aria-role="link" aria-label="查看积分规则" hover-class="cy-pressed" hover-stay-time="80">查看积分规则</text>
           </view>
           <block wx:else>
             <view class="row1 flex-cb">
@@ -370,6 +369,8 @@
               </view>
             </view>
           </block>
+          <!-- 积分口径(合规文案,原 det7 那条):评价下面常驻一行,点进积分规则 -->
+          <view class="det6-rule" bindtap="goPoint" aria-role="link" aria-label="查看积分规则" hover-class="cy-pressed" hover-stay-time="80">评论积分须符合参与及首评条件，以实际积分记录为准</view>
         </view>
         <!-- 业主 2026-10-22:详情页没有底栏(v13);价格按钮滚出顶栏后停到右下角。
              自玩主题另有拼场场次时,留一行进场次选择,不让这条路断掉。 -->

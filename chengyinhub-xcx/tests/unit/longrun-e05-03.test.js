@@ -1,5 +1,6 @@
 'use strict';
-// Lifecycle regression extracted from public PR #33; subscriptions stay disabled.
+// Lifecycle regression extracted from public PR #33. B9(L21):已付退款确认时在同一手势内申请 refund/refundRejected 订阅;
+// 失效的确认(换号/detach/旧弹窗)既不写也不申请。
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -79,7 +80,7 @@ test('E05-03 old modal completion cannot unlock a new modal', () => {
   h.account('22'); h.tap(); old.complete(); old.fail({}); h.confirm(old);
   assert.equal(h.page._cancelPromptOpen, true); assert.equal(h.requests.length, 0);
   h.confirm(); assert.equal(h.requests.length, 1);
-  assert.deepEqual(h.subscriptions, []);
+  assert.deepEqual(h.subscriptions, [['refund', 'refundRejected']]);
   h.requests[0].complete();
 });
 test('E05-03 confirmation rejection prevents writes; refund proceeds without subscription opt-in', () => {

@@ -1,5 +1,7 @@
 package com.chengyinhub.business.service.impl;
 
+import com.chengyinhub.common.annotation.CriticalPath;
+import com.chengyinhub.common.observability.CriticalPathCode;
 import com.chengyinhub.common.constant.PurchaseKind;
 import com.chengyinhub.business.domain.CmsActivity;
 import com.chengyinhub.business.domain.CmsRegistration;
@@ -54,6 +56,7 @@ public class SettlementEntryServiceImpl implements ISettlementEntryService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CriticalPath(value = CriticalPathCode.CP_SETTLEMENT_ACCRUAL_FAILED, op = "payment")
     public int recordOnPayment(CmsRegistration registration) {
         if (registration == null || registration.getId() == null) {
             return 0;
@@ -90,6 +93,7 @@ public class SettlementEntryServiceImpl implements ISettlementEntryService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CriticalPath(value = CriticalPathCode.CP_SETTLEMENT_ACCRUAL_FAILED, op = "paid_registration")
     public int recordPaidRegistration(CmsRegistration registration, Long merchantId) {
         return recordPaidRegistration(registration, merchantId, null);
     }
@@ -180,6 +184,7 @@ public class SettlementEntryServiceImpl implements ISettlementEntryService {
     }
 
     @Override
+    @CriticalPath(value = CriticalPathCode.CP_SETTLEMENT_ACCRUAL_FAILED, op = "coupon_verification")
     public int recordCouponVerification(SmsCouponHistory history, SmsCoupon coupon) {
         if (history == null || history.getId() == null || coupon == null) {
             return 0;

@@ -16,6 +16,9 @@ public interface RoamShareSnapshotMapper {
 
     String selectTokenByMemberTs(@Param("memberId") Long memberId, @Param("clientTs") Long clientTs);
 
+    /** 发布 CAS 读当前版本;行不存在返回 null。 */
+    Integer selectVersionByMemberTs(@Param("memberId") Long memberId, @Param("clientTs") Long clientTs);
+
     int countByMember(@Param("memberId") Long memberId);
 
     /** 超出单人上限时删最旧的若干条(本机足迹也只留最近 50 条)。 */
@@ -27,4 +30,7 @@ public interface RoamShareSnapshotMapper {
     int deleteExpiredUnbound(@Param("cutoff") java.util.Date cutoff, @Param("limit") int limit);
 
     int deleteByMember(@Param("memberId") Long memberId);
+
+    /** 撤销本人的一条分享;令牌不属于本人时影响 0 行。 */
+    int deleteByMemberToken(@Param("memberId") Long memberId, @Param("shareToken") String shareToken);
 }

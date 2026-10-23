@@ -1,5 +1,7 @@
 package com.chengyinhub.business.service.impl;
 
+import com.chengyinhub.common.annotation.CriticalPath;
+import com.chengyinhub.common.observability.CriticalPathCode;
 import com.chengyinhub.business.domain.CmsMemberTemplate;
 import com.chengyinhub.business.domain.CmsTemplateLibrary;
 import com.chengyinhub.business.mapper.CmsMemberTemplateMapper;
@@ -75,12 +77,18 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
     public static final String ERROR_REVERT_EXPIRED = "REVERT_EXPIRED";
     public static final String ERROR_REVIEW_KEY_REUSED = "AUDIT_REVIEW_IDEMPOTENCY_KEY_REUSED";
     public static final String ERROR_REVIEW_FORBIDDEN = "AUDIT_REVIEW_REPLAY_FORBIDDEN";
+    public static final String ERROR_REVIEW_STALE_LEVEL = "AUDIT_REVIEW_STALE_LEVEL";
     public static final String ERROR_APPEAL_BAD_REQUEST = "APPEAL_BAD_REQUEST";
     public static final String ERROR_APPEAL_FORBIDDEN = "APPEAL_FORBIDDEN";
     public static final String ERROR_APPEAL_NOT_ELIGIBLE = "APPEAL_NOT_ELIGIBLE";
     public static final String ERROR_APPEAL_DUPLICATE = "APPEAL_DUPLICATE";
     public static final String ERROR_APPEAL_STALE = "APPEAL_STALE";
     public static final String ERROR_CONTENT_SAFETY_HOLD = "CONTENT_SAFETY_HOLD";
+    /** O5b-2:申诉附件开关关闭时带了附件。 */
+    public static final String ERROR_APPEAL_ATTACHMENTS_DISABLED = "APPEAL_ATTACHMENTS_DISABLED";
+    /** O5b-2:申诉附件不是本人上传、或尚未通过内容安全审核。 */
+    public static final String ERROR_APPEAL_ATTACHMENT_INVALID = "APPEAL_ATTACHMENT_INVALID";
+    static final int MAX_APPEAL_ATTACHMENTS = 6;
     /** 作者申诉生成的审核任务来源；裁决 ACCEPTED 走既有通过路径恢复内容。 */
     public static final String SOURCE_APPEAL = "appeal";
     private static final int MAX_APPEAL_REASON_LENGTH = 500;
@@ -111,6 +119,30 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
     private int activityTopicDeadlineHours = 48;
     @Value("${chengyin.audit.deadline-hours.default:24}")
     private int defaultDeadlineHours = 24;
+
+    /**
+     * O-05 #2 风险随内容升级开关(默认关):新举报 / 重提换了快照 / 门禁再次进件时按内容重算开放单 risk_level,只升不降。
+     * 只改 risk_level 不改 deadline_at(处理时限口径另行处理)。
+     */
+    @Value("${chengyin.audit.risk-escalation.enabled:false}")
+    private boolean riskEscalationEnabled = false;
+    /** 同一内容开放审核单上的去重举报人数达到此值即升 HIGH。 */
+    @Value("${chengyin.audit.risk-escalation.report-threshold:3}")
+    private int riskEscalationReportThreshold = 3;
+
+    /** O-05 #4 逐项驳回原因开关(默认关):主题/玩法驳回可附逐项问题,落 audit_problem,作者时间线可读。 */
+    @Value("${chengyin.audit.item-problems.enabled:false}")
+    private boolean itemProblemsEnabled = false;
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.support.AuditProblemService auditProblemService;
+
+    /** O5b-2 开关(默认关):申诉可附证据图片(复用 OSS 上传 + 媒体审核管线,附件须本人上传且已过内容安全)。 */
+    @Value("${chengyin.audit.o5b.appeal-attachments.enabled:false}")
+    private boolean appealAttachmentsEnabled = false;
+
+    /** O5b-3 开关(默认关):举报的首响时钟(举报时刻 + 原因首响时限)带进处置它的审核单,只收紧不放宽。 */
+    @Value("${chengyin.audit.o5b.report-sla-inherit.enabled:false}")
+    private boolean reportSlaInheritEnabled = false;
 
     @Autowired
     private AuditTaskMapper auditTaskMapper;
@@ -314,10 +346,12 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         }
         if (open != null) {
             requireRefreshableTask(open, sourceType);
+            boolean contentChanged = !java.util.Objects.equals(open.getSnapshotJson(), snapshotJson);
             if (auditTaskMapper.refreshOpenAuditSnapshot(open.getId(), bizType, refreshedSource(open, sourceType),
                     snapshotJson, submitterId, DateUtils.getNowDate()) != 1) {
                 throw new IllegalStateException("待审任务快照刷新失败");
             }
+            if (contentChanged) escalateOpenRisk(open.getId(), null);
             return open.getId();
         }
 
@@ -463,12 +497,14 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
             if (task == null || !bizType.equals(task.getBizType()) || !bizId.equals(task.getBizId())) {
                 throw new ServiceException("推文审核任务已变化，请重试", HttpStatus.CONFLICT);
             }
-            if (!java.util.Objects.equals(snapshotJson, task.getSnapshotJson())
+            boolean contentChanged = !java.util.Objects.equals(snapshotJson, task.getSnapshotJson());
+            if (contentChanged
                     && auditTaskMapper.refreshOpenAuditSnapshot(taskId, bizType, task.getSourceType(),
                             snapshotJson, task.getSubmitterId() == null ? submitterId : task.getSubmitterId(),
                             DateUtils.getNowDate()) != 1) {
                 throw new ServiceException("推文审核快照刷新失败，请重试", HttpStatus.CONFLICT);
             }
+            if (contentChanged) escalateOpenRisk(taskId, null);
         }
         return taskId;
     }
@@ -487,6 +523,7 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
                 throw new ServiceException("该轮举报已处理，请重新提交举报");
             }
         }
+        inheritReportFirstResponseDeadline(taskId, reasonText);
         AuditRecord record = new AuditRecord();
         record.setTaskId(taskId);
         record.setAction("REPORT");
@@ -498,7 +535,37 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         if ((AuditTask.BIZ_HANGOUT.equals(bizType) || AuditTask.BIZ_TEAM.equals(bizType)) && recorded != 1) {
             throw new ServiceException("举报记录保存失败，请重试");
         }
+        escalateOpenRisk(taskId, null);
         return taskId;
+    }
+
+    /**
+     * O5b-3:举报原因命中社区举报政策(编码或标签)时,处置它的那张审核单 deadline 不晚于
+     * 「举报时刻 + 该原因首响时限」—— 不论是新建的举报单还是汇入的已开着的单。只收紧不放宽;
+     * 升级(ESCALATED)不改 deadline_at,时钟随单走。未命中政策的自由文本原因不动。
+     */
+    private void inheritReportFirstResponseDeadline(Long taskId, String reasonText) {
+        if (!reportSlaInheritEnabled || taskId == null) return;
+        com.chengyinhub.business.service.support.CommunityReportPolicy.Reason reason = reportPolicyReason(reasonText);
+        if (reason == null) return;
+        Date reportedAt = DateUtils.getNowDate();
+        Date firstResponseDue = new Date(reportedAt.getTime() + reason.getFirstResponseMinutes() * 60_000L);
+        auditTaskMapper.tightenOpenDeadline(taskId, firstResponseDue);
+    }
+
+    /** 举报原因 → 社区举报政策原因:先按编码(大小写不敏感),再按中文标签全等。 */
+    static com.chengyinhub.business.service.support.CommunityReportPolicy.Reason reportPolicyReason(String reasonText) {
+        if (reasonText == null || reasonText.trim().isEmpty()) return null;
+        String text = reasonText.trim();
+        com.chengyinhub.business.service.support.CommunityReportPolicy.Reason byCode =
+                com.chengyinhub.business.service.support.CommunityReportPolicy.find(text.toUpperCase(java.util.Locale.ROOT));
+        if (byCode != null) return byCode;
+        for (String code : com.chengyinhub.business.service.support.CommunityReportPolicy.orderedCodes()) {
+            com.chengyinhub.business.service.support.CommunityReportPolicy.Reason reason =
+                    com.chengyinhub.business.service.support.CommunityReportPolicy.find(code);
+            if (reason != null && text.equals(reason.getLabel())) return reason;
+        }
+        return null;
     }
 
     /** 用户端举报原因长度上限(与广场举报同口径) */
@@ -541,6 +608,8 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         boolean reportLane = SOURCE_REPORT.equals(sourceType);
         Long open = findOpenTaskId(bizType, bizId, reportLane);
         if (open != null) {
+            // 门禁再次进件(如检测异常给 HIGH)不能被已开着的低风险单吞掉;举报单在 reportContent 记录落地后再重算。
+            if (!reportLane) escalateOpenRisk(open, riskLevel);
             return open;
         }
         // 幂等命中(上面复用已有单)先于限频:重复举报同一目标不计入、不被限;
@@ -570,6 +639,27 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
             throw dup;
         }
         return task.getId();
+    }
+
+    /**
+     * O-05 #2:按内容重算开放单风险 —— 本次进件风险与「该内容开放单上的去重举报人数达阈值 → HIGH」取高,
+     * 只在严格高于当前档时写回(CAS 旧值,失败即让位并发写,不抛错)。开关关闭或单已结束时什么都不做。
+     */
+    private void escalateOpenRisk(Long taskId, String candidateRisk) {
+        if (!riskEscalationEnabled || taskId == null) return;
+        AuditTask task = auditTaskMapper.selectAuditTaskById(taskId);
+        if (task == null || !(AuditTask.STATUS_PENDING.equals(task.getStatus())
+                || AuditTask.STATUS_ESCALATED.equals(task.getStatus()))) {
+            return;
+        }
+        int reporters = auditTaskMapper.countOpenReportersByBiz(task.getBizType(), task.getBizId());
+        String target = com.chengyinhub.business.service.support.AuditRiskLevels.recompute(
+                task.getRiskLevel(), candidateRisk, reporters, riskEscalationReportThreshold);
+        if (java.util.Objects.equals(target, task.getRiskLevel())) return;
+        if (auditTaskMapper.escalateOpenRiskLevel(taskId, task.getRiskLevel(), target) == 1) {
+            logger.info("审核单风险升级 taskId={} bizType={} bizId={} {} -> {} reporters={}",
+                    taskId, task.getBizType(), task.getBizId(), task.getRiskLevel(), target, reporters);
+        }
     }
 
     /**
@@ -689,6 +779,7 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CriticalPath(value = CriticalPathCode.CP_AUDIT_DECISION_FAILED, op = "review")
     public int review(Long taskId, Long operatorId, AuditReviewDTO request) {
         if (taskId == null || request == null || request.getStatus() == null) {
             throw new IllegalArgumentException("审核参数不完整");
@@ -755,6 +846,13 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         if (versionedReview && !request.getExpectedVersion().equals(task.getVersion())) {
             throw new ServiceException("审核内容已变化，请刷新后重试", HttpStatus.CONFLICT);
         }
+        // #334 F10:非版本化类型也不允许升级前那一级的迟到决定裁决已升级(ESCALATED)的单 ——
+        // 裁决升级单必须带上看到的版本,且须是升级之后的版本(升级 CAS 会把 version+1)。
+        if (!versionedReview && AuditTask.STATUS_ESCALATED.equals(task.getStatus())
+                && !task.getVersion().equals(request.getExpectedVersion())) {
+            throw governanceError(ERROR_REVIEW_STALE_LEVEL, "该审核单已升级处理，请刷新后按升级后的内容审核",
+                    HttpStatus.CONFLICT);
+        }
         if (appeal != null && !com.chengyinhub.business.domain.AuditAppeal.STATE_SUBMITTED.equals(appeal.getState())
                 && !com.chengyinhub.business.domain.AuditAppeal.STATE_REVIEWING.equals(appeal.getState())) {
             throw governanceError(ERROR_APPEAL_STALE, "申诉已处理，请刷新后重试", HttpStatus.CONFLICT);
@@ -786,6 +884,8 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
                 && (appeal == null || appealAccepted)) {
             assertTemplateReviewCurrent(templateLock, request);
         }
+        // O-05 #4:逐项问题先整单校验(非法即 400,不落任何状态),驳回记录写入后再落库。
+        List<com.chengyinhub.business.domain.AuditProblem> problems = itemProblems(task, appeal, request);
         Date now = DateUtils.getNowDate();
         int rows = auditTaskMapper.updateAuditTaskReviewCas(taskId, task.getStatus(), request.getStatus(),
                 operatorId, task.getVersion(), now);
@@ -820,6 +920,10 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         if (auditRecordMapper.insertAuditRecord(record) != 1) {
             throw new ServiceException("审批时间线写入失败", HttpStatus.ERROR);
         }
+        if (!problems.isEmpty()) {
+            ContentState owner = contentState(task.getBizType(), task.getBizId());
+            auditProblemService.record(problems, record.getId(), owner == null ? null : owner.ownerId, now);
+        }
 
         applyCommercialReviewLifecycle(task, request.getStatus());
 
@@ -837,6 +941,19 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         }
         appendDecisionAudit(task, operatorId, request, record, now);
         return rows;
+    }
+
+    /** 开关关闭 / 非驳回 / 未附逐项问题时返回空表(请求里的 problems 被忽略,与旧版一致)。 */
+    private List<com.chengyinhub.business.domain.AuditProblem> itemProblems(
+            AuditTask task, com.chengyinhub.business.domain.AuditAppeal appeal, AuditReviewDTO request) {
+        if (!itemProblemsEnabled || auditProblemService == null
+                || request.getProblems() == null || request.getProblems().isEmpty()) {
+            return Collections.emptyList();
+        }
+        if (!AuditTask.STATUS_REJECTED.equals(request.getStatus()) || appeal != null) {
+            throw new IllegalArgumentException("仅内容驳回可附逐项问题");
+        }
+        return auditProblemService.prepare(task, request.getProblems());
     }
 
     private boolean isTemplateTask(AuditTask task) {
@@ -1050,6 +1167,7 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CriticalPath(value = CriticalPathCode.CP_AUDIT_DECISION_FAILED, op = "revert")
     public AuditRevertResultVO revert(Long taskId, Long operatorId, boolean platformAdmin, AuditRevertDTO request) {
         if (taskId == null || operatorId == null || request == null || request.getExpectedVersion() == null) {
             throw governanceError(ERROR_REVERT_BAD_REQUEST, "撤销参数不完整", HttpStatus.BAD_REQUEST);
@@ -1182,6 +1300,14 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
     @Transactional(rollbackFor = Exception.class)
     public com.chengyinhub.business.domain.AuditAppeal submitAppeal(String bizType, Long bizId, Long memberId,
                                                                     String reason, String evidenceJson) {
+        return submitAppeal(bizType, bizId, memberId, reason, evidenceJson, null);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public com.chengyinhub.business.domain.AuditAppeal submitAppeal(String bizType, Long bizId, Long memberId,
+                                                                    String reason, String evidenceJson,
+                                                                    List<String> attachments) {
         if (!isContentDecisionType(bizType) || bizId == null || bizId <= 0L || memberId == null || memberId <= 0L) {
             throw governanceError(ERROR_APPEAL_BAD_REQUEST, "申诉参数不完整", HttpStatus.BAD_REQUEST);
         }
@@ -1193,6 +1319,8 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
             throw governanceError(ERROR_APPEAL_BAD_REQUEST, "申诉理由不能超过 500 字", HttpStatus.BAD_REQUEST);
         }
         String evidence = normalizeEvidence(evidenceJson);
+        List<String> attachmentRefs = normalizeAppealAttachments(memberId, attachments);
+        if (!attachmentRefs.isEmpty()) evidence = mergeAttachments(evidence, attachmentRefs);
         ContentState content = contentState(bizType, bizId);
         if (content == null || content.deleted) {
             throw governanceError(ERROR_APPEAL_BAD_REQUEST, "内容不存在", HttpStatus.NOT_FOUND);
@@ -1303,6 +1431,9 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
                 round.put("kind", SOURCE_APPEAL.equals(task.getSourceType()) ? "APPEAL"
                         : SOURCE_REPORT.equals(task.getSourceType()) ? "REPORT" : "SUBMIT");
                 round.put("timeline", timeline);
+                if (itemProblemsEnabled && auditProblemService != null) {
+                    round.put("problems", auditProblemService.listForOwner(task.getId(), memberId));
+                }
                 rounds.add(round);
             }
         }
@@ -1356,6 +1487,65 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
             }
         }
         return new Date(now.getTime() + minutes * 60_000L);
+    }
+
+    /**
+     * O5b-2:申诉附件走既有媒体管线 —— 只收 OSS 上传登记过的媒体(media-asset / 本站上传路径),
+     * 必须是申诉人本人上传、且已通过内容安全审核(APPROVED);统一落成 media-asset:{id}。
+     * 开关关闭时带附件直接拒,不静默丢弃。
+     */
+    private List<String> normalizeAppealAttachments(Long memberId, List<String> attachments) {
+        List<String> safe = new ArrayList<>();
+        if (attachments == null) return safe;
+        java.util.Set<String> requested = new java.util.LinkedHashSet<>();
+        for (String item : attachments) {
+            if (item != null && !item.trim().isEmpty()) requested.add(item.trim());
+        }
+        if (requested.isEmpty()) return safe;
+        if (!appealAttachmentsEnabled || appealMediaReferenceGuard == null || appMediaAssetMapper == null) {
+            throw governanceError(ERROR_APPEAL_ATTACHMENTS_DISABLED, "暂不支持上传申诉附件", HttpStatus.BAD_REQUEST);
+        }
+        if (requested.size() > MAX_APPEAL_ATTACHMENTS) {
+            throw governanceError(ERROR_APPEAL_BAD_REQUEST, "申诉附件最多 " + MAX_APPEAL_ATTACHMENTS + " 个",
+                    HttpStatus.BAD_REQUEST);
+        }
+        for (String reference : requested) {
+            String ref;
+            try {
+                ref = appealMediaReferenceGuard.requireAttachment(memberId, reference, true);
+            } catch (ServiceException rejected) {
+                throw governanceError(ERROR_APPEAL_ATTACHMENT_INVALID,
+                        "申诉附件须为本人上传且已通过内容安全审核的图片", HttpStatus.BAD_REQUEST);
+            }
+            java.util.Map<String, Object> asset = ref == null || !ref.startsWith("media-asset:") ? null
+                    : appMediaAssetMapper.select(Long.valueOf(ref.substring("media-asset:".length())));
+            if (asset == null || !"APP".equals(asset.get("ownerType")) || !(asset.get("memberId") instanceof Number)
+                    || ((Number) asset.get("memberId")).longValue() != memberId.longValue()
+                    || !"APPROVED".equals(asset.get("reviewState"))) {
+                throw governanceError(ERROR_APPEAL_ATTACHMENT_INVALID,
+                        "申诉附件须为本人上传且已通过内容安全审核的图片", HttpStatus.BAD_REQUEST);
+            }
+            if (!safe.contains(ref)) safe.add(ref);
+        }
+        return safe;
+    }
+
+    /** 附件并入补充材料:{"evidence":原补充材料,"attachments":[media-asset:id...]},总长仍受上限约束。 */
+    private String mergeAttachments(String evidence, List<String> attachmentRefs) {
+        com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+        com.fasterxml.jackson.databind.node.ObjectNode merged = mapper.createObjectNode();
+        try {
+            merged.set("evidence", evidence == null ? mapper.nullNode() : mapper.readTree(evidence));
+        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+            throw governanceError(ERROR_APPEAL_BAD_REQUEST, "补充材料格式不正确", HttpStatus.BAD_REQUEST);
+        }
+        com.fasterxml.jackson.databind.node.ArrayNode refs = merged.putArray("attachments");
+        for (String ref : attachmentRefs) refs.add(ref);
+        String json = merged.toString();
+        if (json.length() > MAX_APPEAL_EVIDENCE_LENGTH) {
+            throw governanceError(ERROR_APPEAL_BAD_REQUEST, "补充材料过长", HttpStatus.BAD_REQUEST);
+        }
+        return json;
     }
 
     private String normalizeEvidence(String evidenceJson) {
@@ -1473,6 +1663,12 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
 
     @Autowired
     private com.chengyinhub.business.service.support.AppMediaPublicationGuard mediaPublicationGuard;
+
+    /** O5b-2:申诉附件解析与归属/审核状态核对(与发布期媒体同一套守卫)。 */
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.support.AppMediaReferenceGuard appealMediaReferenceGuard;
+    @Autowired(required = false)
+    private com.chengyinhub.business.mapper.AppMediaAssetMapper appMediaAssetMapper;
 
     /**
      * N-04:IM 消息软封/恢复同步修正未读。只有 正常→屏蔽 / 屏蔽→正常 的真实迁移才调未读

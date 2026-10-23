@@ -38,11 +38,11 @@ Component({
   observers: {
     'show,node.nodeId': function (show, nodeId) {
       if (show && nodeId) this.start();
-      if (!show) { this._requestEpoch = (this._requestEpoch || 0) + 1; this.stopTimer(); this.stopDrawAudio(); }
+      if (!show) { this._requestEpoch = (this._requestEpoch || 0) + 1; this.stopTimer(); this.stopDrawAudio(); this.stopBackgroundMusic(); }
     }
   },
-  lifetimes: { detached() { this._requestEpoch = (this._requestEpoch || 0) + 1; this.stopTimer(); this.destroyDrawAudio(); } },
-  pageLifetimes: { hide() { this.stopDrawAudio(); } },
+  lifetimes: { detached() { this._requestEpoch = (this._requestEpoch || 0) + 1; this.stopTimer(); this.destroyDrawAudio(); this.stopBackgroundMusic(); } },
+  pageLifetimes: { hide() { this.stopDrawAudio(); this.stopBackgroundMusic(); } },
   methods: {
     sessionRequestContext() {
       return { memberId: String(app.getUserID() || ''),
@@ -186,6 +186,7 @@ Component({
       });
       this.setData({ state, currentStep, members, error: '' }, () => {
         this.syncTimer();
+        this.syncBackgroundMusic(config.backgroundMusic);
         if (config.leaderboard && config.leaderboard.enabled) this.loadLeaderboard();
       });
       this.emitSession(state);
@@ -418,6 +419,26 @@ Component({
       if (!this._drawAudio) return;
       this._drawAudio.stop();
       this.setData({ playingDrawId: '' });
+    },
+    /* 背景音乐(模板互动工具,2026-10-22):玩这一关时播放,离开 / 收起 / 切后台就停。
+       跟随静音键 —— 它是氛围音,不是玩家主动点开的内容。 */
+    syncBackgroundMusic(music) {
+      const src = music && typeof music.audioUrl === 'string' ? music.audioUrl : '';
+      if (!src || !this.data.show) { this.stopBackgroundMusic(); return; }
+      if (this._bgm && this._bgmSrc === src) return;
+      this.stopBackgroundMusic();
+      const audio = wx.createInnerAudioContext();
+      audio.obeyMuteSwitch = true;
+      audio.loop = music.loop !== false;
+      audio.src = src;
+      audio.onError(() => this.stopBackgroundMusic());
+      audio.play();
+      this._bgm = audio; this._bgmSrc = src;
+    },
+    stopBackgroundMusic() {
+      if (!this._bgm) return;
+      try { this._bgm.stop(); this._bgm.destroy(); } catch (e) { /* 已销毁 */ }
+      this._bgm = null; this._bgmSrc = '';
     },
     destroyDrawAudio() {
       if (!this._drawAudio) return;

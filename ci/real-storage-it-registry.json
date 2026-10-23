@@ -244,6 +244,18 @@
         "com.chengyinhub.business.service.impl.RefundRetryAndRemainderMySqlIT",
         "com.chengyinhub.web.controller.api.RoamLocationRetentionMySqlIT"
       ]
+    },
+    "p0-acceptance-ac1": {
+      "lineage": "AC1 feature/lane-ac1-p0-chains-20261022 (release closeout 2026-10-22, P0 acceptance cards)",
+      "registered_source": "14e6a1b6db55ab275335264f60169555b2b829c5",
+      "note": "Backend half of the 实施文档一 §9.1 P0 cards: redemption (scan/group code, wrong/cancelled/reversed, two-staff race), cross-account, city-run resume race and FINISH freeze, free-exploration supply gate, deregistration scope/finance retention/re-registration. Schema comes only from sql/base_schema_20260818.sql and existing migration files. Map: docs/delivery/release-closeout-20261022/acceptance-p0-backend.md.",
+      "classes": [
+        "com.chengyinhub.business.it.P0RedemptionChainMySqlIT",
+        "com.chengyinhub.business.it.P0CrossAccountMySqlIT",
+        "com.chengyinhub.business.service.impl.P0CityRunChainMySqlIT",
+        "com.chengyinhub.business.it.P0FreeExploreSupplyGateMySqlIT",
+        "com.chengyinhub.business.it.P0DeregistrationMySqlIT"
+      ]
     }
   },
   "classes": {
@@ -565,6 +577,31 @@
       "tests": 21,
       "storage": ["mysql"],
       "gates": {"CHENGYIN_FUNDS_MYSQL_IT": "1"}
+    },
+    "com.chengyinhub.business.it.P0RedemptionChainMySqlIT": {
+      "tests": 5,
+      "storage": ["mysql"],
+      "gates": {}
+    },
+    "com.chengyinhub.business.it.P0CrossAccountMySqlIT": {
+      "tests": 3,
+      "storage": ["mysql"],
+      "gates": {}
+    },
+    "com.chengyinhub.business.service.impl.P0CityRunChainMySqlIT": {
+      "tests": 2,
+      "storage": ["mysql"],
+      "gates": {"CHENGYIN_FUNDS_MYSQL_IT": "1"}
+    },
+    "com.chengyinhub.business.it.P0FreeExploreSupplyGateMySqlIT": {
+      "tests": 2,
+      "storage": ["mysql"],
+      "gates": {}
+    },
+    "com.chengyinhub.business.it.P0DeregistrationMySqlIT": {
+      "tests": 1,
+      "storage": ["mysql"],
+      "gates": {}
     }
   }
 }

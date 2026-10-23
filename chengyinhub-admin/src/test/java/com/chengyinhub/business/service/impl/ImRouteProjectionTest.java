@@ -135,15 +135,16 @@ class ImRouteProjectionTest {
     }
     @Test
     void sendSuccessProjectsWithoutChangingInsertedContentOrDigest() {
+        // F0412:发送按匿名口径校验公开可见;发送后回读按读者当前投影(此处模拟回读时已转仅成员可见)。
         CmsTopic privateTopic = listed(); privateTopic.setClubMemberOnly(1);
-        when(topics.selectCmsTopicById(7L)).thenReturn(privateTopic);
+        when(topics.selectCmsTopicDetailById(eq(7L), isNull())).thenReturn(listed());
         when(topics.selectCmsTopicDetailById(7L, 1L)).thenReturn(privateTopic);
         when(messages.insertImMessage(any())).thenAnswer(inv -> { ((ImMessage) inv.getArgument(0)).setId(9L); return 1; });
         ImMessage result = service.send(1L, 100L, null, ImMessage.MSG_CARD, "send", "{\"cardType\":\"route\",\"topicId\":7}", "request0123456789");
         assertEquals("路线已不可用", result.getContent());
         org.mockito.ArgumentCaptor<ImMessage> inserted = org.mockito.ArgumentCaptor.forClass(ImMessage.class);
         verify(messages).insertImMessage(inserted.capture());
-        assertEquals("[路线] 当前公开名", inserted.getValue().getContent());
+        assertEquals("[路线]", inserted.getValue().getContent(), "落库摘要不写主题名");
         assertEquals(inserted.getValue().getRequestHash(), result.getRequestHash());
         assertNotSame(inserted.getValue(), result);
     }

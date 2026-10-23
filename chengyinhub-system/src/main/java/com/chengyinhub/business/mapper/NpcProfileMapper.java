@@ -60,6 +60,9 @@ public interface NpcProfileMapper
     /** 后台只审核待审记录。 */
     int auditMerchantNpc(NpcProfile profile);
 
+    /** 内容安全回调判门店分身头像违规:打回驳回态(不删图),玩家读闸 audit_status=1 立即失效。 */
+    int rejectMerchantNpcByContentSecurity(@Param("id") Long id);
+
     // ===== 主题节点 NPC(scope_type=4,挂 cms_topic_node.id,一节点一条)=====
     // 五条语句都写死 scope_type = 4,碰不到剧本角色(1)/门店分身(2)/全局(3)。
     // ⚠️ 写入恒带 active_slot = 1,吃 uk_active_scope(scope_type,scope_id,active_slot)
