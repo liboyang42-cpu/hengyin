@@ -109,5 +109,108 @@ class C07AccountSwitchRestartIsolationTest {
         assertNull(missing.get(0).originalRequestId());
         assertEquals(FulfillmentEvidence.Outcome.UNKNOWN, missing.get(0).outcome());
         assertEquals(FulfillmentEvidence.Stage.ORDER_ISSUE, missing.get(0).stage());
+
+        EntitlementHoldProjection holdLedger = new EntitlementHoldProjection();
+        assertNull(holdLedger.recoverOriginal(null).originalRequestId());
+        assertEquals(Outcome.UNKNOWN, holdLedger.recoverOriginal(null).outcome());
+        assertEquals(0, holdLedger.occupyCount(null));
+        assertNull(new FourLedgerBillReread().recoverOriginal(null).originalRequestId());
+        assertNull(new InvoiceHistoryUnknown().recoverOriginal("").originalRequestId());
+        assertNull(new MerchantSupplyDryRun().recoverOriginal(null).originalRequestId());
+        assertNull(new TransferSoldPolicyGate().recoverOriginal(null).originalRequestId());
+        assertNull(new FulfillmentEvidence().recoverOriginal(null).get(0).originalRequestId());
+    }
+
+    @Test
+    void recoverOriginalOfNeverSeenIdDoesNotOccupyLedgerThenUniqueWriteApplies() {
+        EntitlementHoldProjection holds = new EntitlementHoldProjection();
+        HoldView neverHold = holds.recoverOriginal("c07-hold-never-seen");
+        assertEquals("c07-hold-never-seen", neverHold.originalRequestId());
+        assertEquals(Outcome.UNKNOWN, neverHold.outcome());
+        assertEquals(0, holds.occupyCount("c07-hold-never-seen"));
+        HoldView unknownHold = holds.project(
+                new HoldFact("c07-hold-never-seen", 78L, 124L, 9L, null, END, ""), NOW);
+        assertEquals(Outcome.UNKNOWN, unknownHold.outcome());
+        assertEquals(0, holds.occupyCount("c07-hold-never-seen"));
+        HoldView held = holds.project(
+                new HoldFact("c07-hold-never-seen", 78L, 124L, 9L,
+                        EntitlementHoldProjection.STATUS_HELD, END, ""), NOW);
+        assertEquals(Outcome.HELD, held.outcome());
+        assertEquals(1, holds.occupyCount("c07-hold-never-seen"));
+        assertEquals(Outcome.HELD, holds.recoverOriginal("c07-hold-never-seen").outcome());
+        HoldView steal = holds.project(
+                new HoldFact("c07-hold-never-seen", 99L, 1L, 2L,
+                        EntitlementHoldProjection.STATUS_REDEEMED, END, ""), NOW);
+        assertEquals(Outcome.HELD, steal.outcome());
+        assertEquals(1, holds.occupyCount("c07-hold-never-seen"));
+
+        FourLedgerBillReread bills = new FourLedgerBillReread();
+        View neverBill = bills.recoverOriginal("c07-bill-never-seen");
+        assertEquals("c07-bill-never-seen", neverBill.originalRequestId());
+        assertEquals(FourLedgerBillReread.Outcome.UNKNOWN, neverBill.outcome(Dimension.WECHAT_TRADE));
+        View unknownBill = bills.reread("c07-bill-never-seen", List.of(
+                new BillFact("c07-bill-never-seen", Dimension.WECHAT_TRADE,
+                        new BigDecimal("69.00"), BigDecimal.ZERO, false, "")));
+        assertEquals(FourLedgerBillReread.Outcome.UNKNOWN, unknownBill.outcome(Dimension.WECHAT_TRADE));
+        assertEquals(FourLedgerBillReread.Outcome.UNKNOWN,
+                bills.recoverOriginal("c07-bill-never-seen").outcome(Dimension.WECHAT_TRADE));
+        View matched = bills.reread("c07-bill-never-seen", List.of(
+                new BillFact("c07-bill-never-seen", Dimension.WECHAT_TRADE,
+                        new BigDecimal("69.00"), new BigDecimal("69.00"), true, "wx-hash")));
+        assertEquals(FourLedgerBillReread.Outcome.MATCHED, matched.outcome(Dimension.WECHAT_TRADE));
+        assertEquals(FourLedgerBillReread.Outcome.MATCHED,
+                bills.recoverOriginal("c07-bill-never-seen").outcome(Dimension.WECHAT_TRADE));
+
+        InvoiceHistoryUnknown invoices = new InvoiceHistoryUnknown();
+        assertEquals(InvoiceHistoryUnknown.FileStatus.UNKNOWN,
+                invoices.recoverOriginal("c07-inv-never-seen").fileStatus());
+        assertEquals("c07-inv-never-seen", invoices.recoverOriginal("c07-inv-never-seen").originalRequestId());
+        invoices.reread(new ApplicationFact("c07-inv-never-seen", "SUBMITTED", "", "", "MANUAL"));
+        assertEquals(InvoiceHistoryUnknown.FileStatus.UNKNOWN,
+                invoices.recoverOriginal("c07-inv-never-seen").fileStatus());
+        invoices.reread(new ApplicationFact("c07-inv-never-seen",
+                com.chengyinhub.business.domain.UserInvoiceApplication.STATUS_ISSUED,
+                "INV-9", "file://x", "OTHER"));
+        assertEquals(InvoiceHistoryUnknown.FileStatus.PRESENT,
+                invoices.recoverOriginal("c07-inv-never-seen").fileStatus());
+
+        MerchantSupplyDryRun supply = new MerchantSupplyDryRun();
+        Decision neverSupply = supply.recoverOriginal("c07-supply-never-seen");
+        assertEquals(MerchantSupplyDryRun.Outcome.UNKNOWN, neverSupply.outcome());
+        assertEquals("c07-supply-never-seen", neverSupply.originalRequestId());
+        assertEquals(0, supply.holdCount("c07-supply-never-seen"));
+        supply.evaluate(new SkuSupplyFact(8L, 3L, null, false, 60, 0, null, null,
+                START, END, null, null, "c07-supply-never-seen"), NOW, 1);
+        assertEquals(0, supply.holdCount("c07-supply-never-seen"));
+        Decision accepted = supply.evaluate(new SkuSupplyFact(8L, 3L, 10L, false, 60, 0, null, null,
+                START, END, null, null, "c07-supply-never-seen"), NOW, 1);
+        assertEquals(MerchantSupplyDryRun.Outcome.ACCEPT, accepted.outcome());
+        assertEquals(1, supply.holdCount("c07-supply-never-seen"));
+        assertEquals(MerchantSupplyDryRun.Outcome.ACCEPT,
+                supply.recoverOriginal("c07-supply-never-seen").outcome());
+
+        FulfillmentEvidence evidence = new FulfillmentEvidence();
+        assertEquals(FulfillmentEvidence.Outcome.UNKNOWN,
+                evidence.recoverOriginal("c07-ev-never-seen").get(0).outcome());
+        assertEquals(1, evidence.recoverOriginal("c07-ev-never-seen").size());
+        List<FulfillmentEvidence.ChainStep> firstJourney = evidence.recordJourney(
+                "c07-ev-never-seen",
+                new FulfillmentEvidence.JourneyFacts(true, true, null, null, null));
+        assertEquals(FulfillmentEvidence.Outcome.RECORDED, firstJourney.get(0).outcome());
+        assertEquals(firstJourney.size(), evidence.recoverOriginal("c07-ev-never-seen").size());
+        assertEquals("c07-ev-never-seen",
+                evidence.recoverOriginal("c07-ev-never-seen").get(0).originalRequestId());
+
+        TransferSoldPolicyGate transfer = new TransferSoldPolicyGate();
+        TransferSoldPolicyGate.Decision neverTransfer = transfer.recoverOriginal("c07-xfer-never-seen");
+        assertEquals(TransferSoldPolicyGate.Outcome.WAITING_SOURCE, neverTransfer.outcome());
+        assertEquals("c07-xfer-never-seen", neverTransfer.originalRequestId());
+        TransferSoldPolicyGate.Decision firstWrite = transfer.evaluate(
+                new TransferFact("c07-xfer-never-seen", "", 88L, true, true));
+        assertEquals(TransferSoldPolicyGate.Outcome.WAITING_SOURCE, firstWrite.outcome());
+        assertEquals("c07-xfer-never-seen",
+                transfer.recoverOriginal("c07-xfer-never-seen").originalRequestId());
+        assertEquals(TransferSoldPolicyGate.Outcome.WAITING_SOURCE,
+                transfer.recoverOriginal("c07-xfer-never-seen").outcome());
     }
 }

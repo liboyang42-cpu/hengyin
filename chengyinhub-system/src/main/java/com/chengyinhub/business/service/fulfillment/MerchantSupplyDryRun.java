@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * C07 exclusive adapter: SKU / validity / hours-capacity dry-run.
@@ -68,11 +69,23 @@ public final class MerchantSupplyDryRun {
         }
     }
 
+    private final ConcurrentHashMap<String, Decision> originalIntentByRequestId =
+            new ConcurrentHashMap<String, Decision>();
+    private final ConcurrentHashMap<String, Integer> holdCountByRequestId =
+            new ConcurrentHashMap<String, Integer>();
+
     /**
      * Dry-run only. {@code requestedQty} is how many units the original request
      * asked to hold; this method never deducts them.
+     * Non-UNKNOWN original is unique; UNKNOWN observation does not occupy.
      */
     public Decision evaluate(SkuSupplyFact fact, Instant serverNow, int requestedQty) {
+        Decision decision = compute(fact, serverNow, requestedQty);
+        rememberOriginal(decision);
+        return decision;
+    }
+
+    private Decision compute(SkuSupplyFact fact, Instant serverNow, int requestedQty) {
         Objects.requireNonNull(serverNow, "serverNow");
         if (fact == null) {
             return unknown(null, "supply fact missing");
@@ -107,6 +120,34 @@ public final class MerchantSupplyDryRun {
             }
         }
         return accept(requestId, remaining(fact));
+    }
+
+    public Decision recoverOriginal(String originalRequestId) {
+        String id = FulfillmentEvidence.blankToNull(originalRequestId);
+        if (id == null) {
+            return unknown(null, "original intent unknown");
+        }
+        Decision original = originalIntentByRequestId.get(id);
+        return original == null ? unknown(id, "original intent unknown") : original;
+    }
+
+    public int holdCount(String originalRequestId) {
+        String id = FulfillmentEvidence.blankToNull(originalRequestId);
+        if (id == null) {
+            return 0;
+        }
+        Integer count = holdCountByRequestId.get(id);
+        return count == null ? 0 : count;
+    }
+
+    private void rememberOriginal(Decision decision) {
+        if (decision.originalRequestId() == null || decision.outcome() == Outcome.UNKNOWN) {
+            return;
+        }
+        originalIntentByRequestId.putIfAbsent(decision.originalRequestId(), decision);
+        if (decision.outcome() == Outcome.ACCEPT) {
+            holdCountByRequestId.putIfAbsent(decision.originalRequestId(), 1);
+        }
     }
 
     private Decision evaluateBooking(SkuSupplyFact fact, Instant serverNow, int requestedQty, String requestId) {

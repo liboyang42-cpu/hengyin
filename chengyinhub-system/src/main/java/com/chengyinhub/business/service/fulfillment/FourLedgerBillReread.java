@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.chengyinhub.business.domain.LedgerDiscrepancy;
 
@@ -73,12 +74,36 @@ public final class FourLedgerBillReread {
         }
     }
 
+    private final ConcurrentHashMap<String, View> originalByRequestId = new ConcurrentHashMap<String, View>();
+
     /**
      * Reread bills already attributed to {@code originalRequestId}. Facts for a
      * different id are ignored (do not start a new request). Missing dimensions
-     * stay UNKNOWN.
+     * stay UNKNOWN. MATCHED/DIVERGED original is unique; all-UNKNOWN does not occupy.
      */
     public View reread(String originalRequestId, List<BillFact> facts) {
+        View view = compute(originalRequestId, facts);
+        if (view.originalRequestId() != null && originalByRequestId.get(view.originalRequestId()) == null
+                && hasMatchedOrDiverged(view)) {
+            originalByRequestId.putIfAbsent(view.originalRequestId(), view);
+        }
+        return view;
+    }
+
+    public View requery(String originalRequestId, List<BillFact> facts) {
+        return reread(originalRequestId, facts);
+    }
+
+    public View recoverOriginal(String originalRequestId) {
+        String id = FulfillmentEvidence.blankToNull(originalRequestId);
+        if (id == null) {
+            return new View(null, emptyUnknown(), false, false);
+        }
+        View original = originalByRequestId.get(id);
+        return original == null ? new View(id, emptyUnknown(), false, false) : original;
+    }
+
+    private static View compute(String originalRequestId, List<BillFact> facts) {
         String requestId = FulfillmentEvidence.blankToNull(originalRequestId);
         Map<Dimension, Outcome> outcomes = emptyUnknown();
         if (requestId == null) {
@@ -96,8 +121,13 @@ public final class FourLedgerBillReread {
         return new View(requestId, outcomes, false, false);
     }
 
-    public View requery(String originalRequestId, List<BillFact> facts) {
-        return reread(originalRequestId, facts);
+    private static boolean hasMatchedOrDiverged(View view) {
+        for (Outcome outcome : view.outcomes.values()) {
+            if (outcome == Outcome.MATCHED || outcome == Outcome.DIVERGED) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

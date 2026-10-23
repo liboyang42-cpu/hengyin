@@ -2,6 +2,7 @@ package com.chengyinhub.business.service.fulfillment;
 
 import java.time.Instant;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.chengyinhub.common.constant.EntitlementInvalidReason;
 
@@ -60,12 +61,57 @@ public final class EntitlementHoldProjection {
         }
     }
 
+    private final ConcurrentHashMap<String, HoldView> originalIntentByRequestId =
+            new ConcurrentHashMap<String, HoldView>();
+    private final ConcurrentHashMap<String, Integer> occupyCountByRequestId =
+            new ConcurrentHashMap<String, Integer>();
+
     /**
      * Project the hold that already belongs to {@code originalRequestId}.
      * Missing source is UNKNOWN and does not mint a new request.
+     * Non-UNKNOWN original is unique; UNKNOWN observation does not occupy.
      */
     public HoldView project(HoldFact fact, Instant serverNow) {
         Objects.requireNonNull(serverNow, "serverNow");
+        if (fact != null && fact.originalRequestId() != null) {
+            HoldView original = originalIntentByRequestId.get(fact.originalRequestId());
+            if (original != null) {
+                return original;
+            }
+        }
+        HoldView view = compute(fact, serverNow);
+        if (view.originalRequestId() != null && view.outcome() != Outcome.UNKNOWN) {
+            originalIntentByRequestId.putIfAbsent(view.originalRequestId(), view);
+            if (view.occupiesCapacity()) {
+                occupyCountByRequestId.putIfAbsent(view.originalRequestId(), 1);
+            }
+        }
+        return view;
+    }
+
+    public HoldView requery(HoldFact fact, Instant serverNow) {
+        return project(fact, serverNow);
+    }
+
+    public HoldView recoverOriginal(String originalRequestId) {
+        String id = FulfillmentEvidence.blankToNull(originalRequestId);
+        if (id == null) {
+            return unknown(null);
+        }
+        HoldView original = originalIntentByRequestId.get(id);
+        return original == null ? unknown(id) : original;
+    }
+
+    public int occupyCount(String originalRequestId) {
+        String id = FulfillmentEvidence.blankToNull(originalRequestId);
+        if (id == null) {
+            return 0;
+        }
+        Integer count = occupyCountByRequestId.get(id);
+        return count == null ? 0 : count;
+    }
+
+    private static HoldView compute(HoldFact fact, Instant serverNow) {
         if (fact == null) {
             return unknown(null);
         }
@@ -101,10 +147,6 @@ public final class EntitlementHoldProjection {
             return new HoldView(requestId, Outcome.INVALID, false, false, false, false);
         }
         return new HoldView(requestId, Outcome.HELD, true, false, false, false);
-    }
-
-    public HoldView requery(HoldFact fact, Instant serverNow) {
-        return project(fact, serverNow);
     }
 
     private static HoldView unknown(String requestId) {

@@ -1,5 +1,7 @@
 package com.chengyinhub.business.service.fulfillment;
 
+import java.util.concurrent.ConcurrentHashMap;
+
 import com.chengyinhub.business.domain.UserInvoiceApplication;
 import com.chengyinhub.business.service.invoice.ManualInvoiceIssuer;
 
@@ -50,11 +52,35 @@ public final class InvoiceHistoryUnknown {
         }
     }
 
+    private final ConcurrentHashMap<String, View> originalByRequestId = new ConcurrentHashMap<String, View>();
+
     /**
      * Reread the original invoice request. Application history (SUBMITTED /
      * ISSUED / invoiceNo) is not a file. Manual provider never yields PRESENT.
+     * PRESENT original is unique; UNKNOWN observation does not occupy.
      */
     public View reread(ApplicationFact fact) {
+        View view = compute(fact);
+        if (view.originalRequestId() != null && view.fileStatus() == FileStatus.PRESENT) {
+            originalByRequestId.putIfAbsent(view.originalRequestId(), view);
+        }
+        return view;
+    }
+
+    public View requery(ApplicationFact fact) {
+        return reread(fact);
+    }
+
+    public View recoverOriginal(String originalRequestId) {
+        String id = FulfillmentEvidence.blankToNull(originalRequestId);
+        if (id == null) {
+            return unknown(null, "");
+        }
+        View original = originalByRequestId.get(id);
+        return original == null ? unknown(id, "") : original;
+    }
+
+    private static View compute(ApplicationFact fact) {
         if (fact == null) {
             return unknown(null, "");
         }
@@ -69,10 +95,6 @@ public final class InvoiceHistoryUnknown {
             return new View(requestId, FileStatus.PRESENT, false, fact.status(), true);
         }
         return new View(requestId, FileStatus.UNKNOWN, false, fact.status(), true);
-    }
-
-    public View requery(ApplicationFact fact) {
-        return reread(fact);
     }
 
     private static View unknown(String requestId, String status) {

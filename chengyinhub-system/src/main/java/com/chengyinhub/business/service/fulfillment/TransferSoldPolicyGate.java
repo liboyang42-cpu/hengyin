@@ -1,5 +1,7 @@
 package com.chengyinhub.business.service.fulfillment;
 
+import java.util.concurrent.ConcurrentHashMap;
+
 /**
  * C07 exclusive adapter: transfer of an already-sold entitlement.
  *
@@ -62,11 +64,33 @@ public final class TransferSoldPolicyGate {
         }
     }
 
+    private final ConcurrentHashMap<String, Decision> originalByRequestId =
+            new ConcurrentHashMap<String, Decision>();
+
     /**
      * Evaluate transfer of a sold entitlement. SMS identity never satisfies
      * policy even when {@code smsIdentityVerified} is true.
+     * First write with a requestId occupies, including WAITING_SOURCE.
+     * recoverOriginal of a never-seen id does not occupy.
      */
     public Decision evaluate(TransferFact fact) {
+        Decision decision = compute(fact);
+        if (decision.originalRequestId() != null) {
+            originalByRequestId.putIfAbsent(decision.originalRequestId(), decision);
+        }
+        return decision;
+    }
+
+    public Decision recoverOriginal(String originalRequestId) {
+        String id = FulfillmentEvidence.blankToNull(originalRequestId);
+        if (id == null) {
+            return waiting(null, false, "original intent unknown");
+        }
+        Decision original = originalByRequestId.get(id);
+        return original == null ? waiting(id, false, "original intent unknown") : original;
+    }
+
+    private static Decision compute(TransferFact fact) {
         if (fact == null) {
             return waiting(null, false, "transfer fact missing");
         }

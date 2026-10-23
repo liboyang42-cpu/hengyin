@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.chengyinhub.business.util.RefundPolicy;
 
@@ -84,12 +85,22 @@ public final class FulfillmentEvidence {
             AftercareFact aftercare) {
     }
 
+    private final ConcurrentHashMap<String, List<ChainStep>> originalStepsByRequestId =
+            new ConcurrentHashMap<String, List<ChainStep>>();
+
     /**
      * Walk the exclusive chain for one original requestId. Reschedule keeps that
      * id. In-store redeem / refund / aftercare are evidence only.
+     * RECORDED original is unique; all-UNKNOWN does not occupy.
      */
     public List<ChainStep> recordJourney(String originalRequestId, JourneyFacts facts) {
         String requestId = blankToNull(originalRequestId);
+        if (requestId != null) {
+            List<ChainStep> original = originalStepsByRequestId.get(requestId);
+            if (original != null) {
+                return original;
+            }
+        }
         if (requestId == null) {
             return List.of(unknown(Stage.ORDER_ISSUE, null, "originalRequestId missing"));
         }
@@ -126,11 +137,33 @@ public final class FulfillmentEvidence {
         } else {
             steps.add(recorded(Stage.AFTERCARE, requestId, "aftercare open; no respond writer"));
         }
-        return Collections.unmodifiableList(steps);
+        List<ChainStep> frozen = Collections.unmodifiableList(steps);
+        if (hasRecorded(frozen)) {
+            originalStepsByRequestId.putIfAbsent(requestId, frozen);
+        }
+        return frozen;
     }
 
     public List<ChainStep> requery(String originalRequestId, JourneyFacts facts) {
         return recordJourney(originalRequestId, facts);
+    }
+
+    public List<ChainStep> recoverOriginal(String originalRequestId) {
+        String id = blankToNull(originalRequestId);
+        if (id == null) {
+            return List.of(unknown(Stage.ORDER_ISSUE, null, "original intent unknown"));
+        }
+        List<ChainStep> original = originalStepsByRequestId.get(id);
+        return original == null ? List.of(unknown(Stage.ORDER_ISSUE, id, "original intent unknown")) : original;
+    }
+
+    private static boolean hasRecorded(List<ChainStep> steps) {
+        for (ChainStep step : steps) {
+            if (step.outcome() == Outcome.RECORDED) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static ChainStep refundEstimate(String requestId, RefundEstimateFact refund) {
