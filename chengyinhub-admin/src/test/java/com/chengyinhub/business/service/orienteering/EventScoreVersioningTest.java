@@ -1,0 +1,126 @@
+package com.chengyinhub.business.service.orienteering;
+
+import com.chengyinhub.business.domain.CmsTopic;
+import com.chengyinhub.business.service.IClubMemberService;
+import com.chengyinhub.business.service.IClubParticipationGuard;
+import com.chengyinhub.business.service.IClubService;
+import com.chengyinhub.business.service.orienteering.EventScoreVersioning.ResultVersion;
+import com.chengyinhub.business.service.orienteering.OrdinaryCityTimezoneQualifier.SafetyConfirmation;
+import com.chengyinhub.business.service.orienteering.PublishedRuleSelector.FrozenPublishedRule;
+import com.chengyinhub.business.service.orienteering.TeamClubEligibilityAuthority.Registration;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.util.Date;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+class EventScoreVersioningTest {
+
+    private PublishedRuleSelector selector;
+    private OrdinaryCityTimezoneQualifier qualifier;
+    private TeamClubEligibilityAuthority authority;
+    private EventScoreVersioning scores;
+    private CmsTopic course;
+    private FrozenPublishedRule frozen;
+    private Registration registration;
+    private SafetyConfirmation safety;
+
+    @BeforeEach
+    void setUp() {
+        selector = new PublishedRuleSelector();
+        qualifier = new OrdinaryCityTimezoneQualifier();
+        IClubService clubs = mock(IClubService.class);
+        IClubMemberService members = mock(IClubMemberService.class);
+        IClubParticipationGuard guard = mock(IClubParticipationGuard.class);
+        when(clubs.selectClubById(11L)).thenReturn(TeamClubEligibilityAuthorityTest.club(11L, 501L));
+        when(members.selectByClubAndMember(11L, 501L)).thenReturn(null);
+        when(members.selectByClubAndMember(11L, 502L)).thenReturn(TeamClubEligibilityAuthorityTest.member(11L, 502L));
+        authority = new TeamClubEligibilityAuthority(clubs, members, guard);
+        scores = new EventScoreVersioning();
+        course = PublishedRuleSelectorTest.publishedCity(7L, 9L);
+        frozen = selector.select(course);
+        registration = authority.register(course, TeamClubEligibilityAuthority.EntryMode.TEAM,
+                List.of(501L, 502L), List.of(11L), "reg-score01");
+        Date start = OrdinaryCityTimezoneQualifierTest.at(2026, 10, 24, 10, 0);
+        safety = qualifier.confirm(frozen, OrdinaryCityTimezoneQualifier.CITY_ZONE,
+                OrdinaryCityTimezoneQualifierTest.adultDayItems(), null, start,
+                OrdinaryCityTimezoneQualifierTest.at(2026, 10, 24, 15, 0), start,
+                OrdinaryCityTimezoneQualifierTest.at(1990, 1, 1, 0, 0), false);
+    }
+
+    @Test
+    void startUsesFrozenPublishedVersionAndFinishReadbackIsTheOriginalRequest() {
+        EventScoreVersioning.EventRun run = scores.start(registration, frozen, safety, 7L, "start-sc-01");
+        assertEquals(7L, run.frozen.publishedConfigVersion);
+        assertEquals(frozen.digest, run.frozen.digest);
+        scores.recordEvidence(run.id, 31L, "SCAN", "task:31:scan:receipt-a", "evd-sc-01");
+        scores.appendScore(run.id, 10000, "TASK", "TASK_DONE", "scr-sc-01");
+        scores.appendScore(run.id, -1500, "PENALTY", "HINT_USED", "scr-sc-02");
+        ResultVersion finished = scores.finish(run.id, "fin-sc-01");
+        assertEquals(1, finished.version);
+        assertEquals(8500, finished.scoreCenti);
+        assertEquals(8500, finished.originalRewardCenti);
+        assertEquals(EventScoreVersioning.REWARD_KIND, finished.rewardKind);
+        assertEquals("fin-sc-01", finished.requestId);
+        assertSame(finished, scores.readback("fin-sc-01"));
+        assertSame(finished, scores.finish(run.id, "fin-sc-01"));
+        assertEquals(OrienteeringEventException.NOT_FOUND,
+                assertThrows(OrienteeringEventException.class, () -> scores.readback("fin-missing")).getErrorCode());
+        assertEquals(OrienteeringEventException.IDEMPOTENCY_CONFLICT,
+                assertThrows(OrienteeringEventException.class, () -> scores.finish(run.id, "fin-sc-02")).getErrorCode());
+    }
+
+    @Test
+    void gpsEvidenceAndGrowthLeaderboardAreRejected() {
+        EventScoreVersioning.EventRun run = scores.start(registration, frozen, safety, 7L, "start-sc-02");
+        assertEquals(OrienteeringEventException.GPS_FORBIDDEN,
+                assertThrows(OrienteeringEventException.class,
+                        () -> scores.recordEvidence(run.id, 31L, "GPS", "lat=31.2,lng=121.4", "evd-gps-01")).getErrorCode());
+        assertEquals(OrienteeringEventException.GPS_FORBIDDEN,
+                assertThrows(OrienteeringEventException.class,
+                        () -> scores.recordEvidence(run.id, 31L, "SCAN", "{\"lat\":31.2,\"lng\":121.4}", "evd-gps-02")).getErrorCode());
+        assertEquals(OrienteeringEventException.GROWTH_LEADERBOARD_FORBIDDEN,
+                assertThrows(OrienteeringEventException.class, scores::rejectGrowthSubstitution).getErrorCode());
+        assertEquals(OrienteeringEventException.RULE_VERSION_MISMATCH,
+                assertThrows(OrienteeringEventException.class,
+                        () -> scores.start(registration, frozen, safety, 9L, "start-sc-03")).getErrorCode());
+    }
+
+    @Test
+    void pendingBlocksFinishWhileDnfAndDqCanSealAndTiesShareRank() {
+        EventScoreVersioning.EventRun pending = scores.start(registration, frozen, safety, 7L, "start-pd-01");
+        scores.markOutcome(pending.id, EventScoreVersioning.OUTCOME_PENDING, "mark-pd-01");
+        assertEquals(OrienteeringEventException.PENDING_REVIEW,
+                assertThrows(OrienteeringEventException.class, () -> scores.finish(pending.id, "fin-pd-01")).getErrorCode());
+        scores.markOutcome(pending.id, EventScoreVersioning.OUTCOME_RUNNING, "mark-pd-02");
+        scores.appendScore(pending.id, 5000, "TASK", "TASK_DONE", "scr-pd-01");
+        ResultVersion a = scores.finish(pending.id, "fin-pd-02");
+        assertEquals(EventScoreVersioning.OUTCOME_FINISHED, a.outcome);
+
+        Registration other = authority.register(course, TeamClubEligibilityAuthority.EntryMode.TEAM,
+                List.of(501L, 502L), List.of(11L), "reg-score02");
+        EventScoreVersioning.EventRun dnf = scores.start(other, frozen, safety, 7L, "start-dnf01");
+        scores.appendScore(dnf.id, 2000, "TASK", "TASK_DONE", "scr-dnf-01");
+        scores.markOutcome(dnf.id, EventScoreVersioning.OUTCOME_DNF, "mark-dnf01");
+        ResultVersion dnfResult = scores.finish(dnf.id, "fin-dnf-01");
+        assertEquals(EventScoreVersioning.OUTCOME_DNF, dnfResult.outcome);
+
+        Registration third = authority.register(course, TeamClubEligibilityAuthority.EntryMode.TEAM,
+                List.of(501L, 502L), List.of(11L), "reg-score03");
+        EventScoreVersioning.EventRun tie = scores.start(third, frozen, safety, 7L, "start-tie01");
+        scores.appendScore(tie.id, 5000, "TASK", "TASK_DONE", "scr-tie-01");
+        scores.finish(tie.id, "fin-tie-01");
+
+        List<EventScoreVersioning.RankedEntry> ranked = scores.rank(course.getId());
+        assertEquals(2, ranked.size());
+        assertEquals(1, ranked.get(0).rank);
+        assertEquals(1, ranked.get(1).rank);
+        assertEquals(5000, ranked.get(0).result.scoreCenti);
+    }
+}
