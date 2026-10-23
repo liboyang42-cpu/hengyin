@@ -1,0 +1,15 @@
+{
+  "source_assembly": "be00cb35689ef76bf7c06489bf23de10391f032e",
+  "base": "765ea0366f43029b6fbd33df777e3f86e19c74e7",
+  "G_source": "65780b036d9e44e3ab8705bb8c244558a09213af",
+  "status": "ISOLATED_NOT_ACCEPTED",
+  "harness_changes": "WP04 IT explicit env guard, exact created UUID schema cleanup; seven business assertions retained",
+  "storage_tests": 7,
+  "known_open": [
+    "G completion SQL facts not yet wired by C; original fallback negative may remain red",
+    "G new27 unit tests and actual financial write/readback unverified",
+    "Multi-ticket fixed fee policy pending; unsupported money routes stay refused",
+    "B guarantee method remains original G exclusion; payment followup not integrated",
+    "No production DDL/merge/deployment"
+  ]
+}

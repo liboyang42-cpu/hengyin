@@ -45,6 +45,7 @@ on:
           - p0-acceptance-ac1
           - architecture-day-batch1
           - architecture-day-wave2
+          - architecture-day-settlement
       classes:
         description: 可选，只跑批次内这些类（逗号分隔的简单类名），用于失败后定点复跑
         required: false

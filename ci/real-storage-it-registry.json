@@ -277,6 +277,14 @@
         "com.chengyinhub.business.service.impl.ImConversationBatchReadMySqlIT",
         "com.chengyinhub.business.service.impl.ImConversationQueryScopeMySqlIT"
       ]
+    },
+    "architecture-day-settlement": {
+      "lineage": "Public2ec G frozen settlement/evidence isolated test; no monetary policy defaults",
+      "registered_source": "be00cb35689ef76bf7c06489bf23de10391f032e",
+      "note": "WP04 SQL evidence tests only; 27 unit scenarios, economic write/readback and completion consumer wiring remain separately unverified.",
+      "classes": [
+        "com.chengyinhub.business.it.Wp04CoopSettlementEvidenceMySqlIT"
+      ]
     }
   },
   "classes": {
@@ -656,6 +664,14 @@
       ],
       "gates": {},
       "note": "Real IM storage with explicit mocked cross-domain guards; exact result sets, read-only/query count and SHA-bound EXPLAIN observation; not load or real cross-domain authorization acceptance."
+    },
+    "com.chengyinhub.business.it.Wp04CoopSettlementEvidenceMySqlIT": {
+      "tests": 7,
+      "storage": [
+        "mysql"
+      ],
+      "gates": {},
+      "note": "Real baseline DDL/MyBatis association and fulfillment evidence; explicit isolated env and exact own UUID schema cleanup. Does not prove final settlement amount/write transaction."
     },
     "com.chengyinhub.business.it.ClubLeadChapterIntentMySqlIT": {
       "tests": 3,
