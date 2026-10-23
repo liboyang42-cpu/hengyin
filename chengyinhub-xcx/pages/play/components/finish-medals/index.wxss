@@ -17,8 +17,8 @@
 .ms__glyph { position: absolute; top: 0; right: 0; bottom: 0; left: 0; display: flex; align-items: center; justify-content: center; color: rgba(58, 42, 8, .85); } /* ds-ok 刻在金属上的字形 */
 .ms__shine { position: absolute; top: 0; right: 0; bottom: 0; left: 0;
   background: linear-gradient(115deg, rgba(255, 255, 255, 0) 30%, rgba(255, 255, 255, .5) 48%, rgba(255, 255, 255, 0) 62%); } /* ds-ok 金属高光 */
-.ms__n { margin-top: 12rpx; max-width: 300rpx; font-size: 32rpx; font-weight: 700; color: var(--cy-color-play-story-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ms__s { font-size: var(--cy-type-label); color: var(--cy-color-play-story-muted); }
+.ms__n { margin-top: 12rpx; max-width: 300rpx; font-size: 32rpx; font-weight: 700; color: #FFFFFF; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } /* ds-ok 黑卡上的字;完成面板是浅色,主题 token 会被换成深色或品牌蓝 */
+.ms__s { font-size: var(--cy-type-label); color: var(--cy-color-play-ink-muted); }
 .ms__dots { display: flex; gap: 10rpx; margin-top: var(--cy-space-3); }
 .ms__dot { width: 12rpx; height: 12rpx; border-radius: 6rpx; background: var(--cy-color-play-story-muted); opacity: .4; transition: transform .3s ease, opacity .3s ease; }
 .ms__dot.is-on { transform: scaleX(2.4); margin: 0 10rpx; opacity: 1; background: var(--cy-color-play-story-text); }

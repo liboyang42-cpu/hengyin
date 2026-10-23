@@ -107,6 +107,7 @@ module.exports = { state: state, label: label, cta: cta };
             </swiper-item>
           </block>
         </swiper>
+        <view wx:if="{{liftImg}}" class="deck-lift" style="{{liftBox}}{{liftStyle}}" aria-hidden="true"><view class="tk"><view class="tk-face"><image src="{{liftImg}}" mode="aspectFill" /></view></view></view>
       </view>
     </view>
 

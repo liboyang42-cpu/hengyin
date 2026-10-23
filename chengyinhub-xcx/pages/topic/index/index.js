@@ -564,29 +564,29 @@ Page({
     this._docking = true;
     const q = wx.createSelectorQuery().in(this);
     q.select('.hero-cta').boundingClientRect();
-    q.select('.hero-fav').boundingClientRect();
+    q.select('.hero-fav').boundingClientRect(); q.select('.bm-main').boundingClientRect();
     q.exec((r) => {
-      const cta = r && r[0], fav = r && r[1];
+      const cta = r && r[0], fav = r && r[1], bar = String(this.data.activeTab) === '0' && r && r[2];
       const win = this._windowSize(), cap = this._capsule || { top: 48, left: win.w - 95, height: 32 };
       const box = (x, y, w, h) => 'left:' + x + 'px;top:' + y + 'px;width:' + w + 'px;height:' + h + 'px;';
       const ctaW = cta ? Math.max(cta.width, 150) : 150;
       const ctaAt = cta ? box(cta.left, cta.top, cta.width, cta.height) : '';
-      const ctaDock = box(win.w - 16 - ctaW, win.h - 34 - 48 - win.safeBottom, ctaW, 48);
+      const ctaDock = bar ? box(bar.left, bar.top, bar.width, bar.height) : box(win.w - 16 - ctaW, win.h - 34 - 48 - win.safeBottom, ctaW, 48); // 详情页有底栏:落进底栏主按钮并合为一颗
       const favAt = fav ? box(fav.left, fav.top, fav.width, fav.height) : '';
       const favDock = box(cap.left - 8 - cap.height, cap.top, cap.height, cap.height);
       const ease = 'transition:left ' + DOCK_MS + 'ms cubic-bezier(.65,0,.35,1),top ' + DOCK_MS + 'ms cubic-bezier(.65,0,.35,1),width ' + DOCK_MS + 'ms cubic-bezier(.65,0,.35,1),height ' + DOCK_MS + 'ms cubic-bezier(.65,0,.35,1);';
       const still = 'transition:none;';
       if (this.data.reducedMotion) {
-        this.setData({ docked: on, dockCtaStyle: ctaDock + still, dockFavStyle: favDock + still });
+        this.setData({ docked: on, dockMerged: on, dockCtaStyle: ctaDock + still, dockFavStyle: favDock + still });
         this._docking = false;
         return;
       }
       if (on) {
         this.setData({ docked: true, dockCtaStyle: ctaAt + still, dockFavStyle: favAt + still });
         this._later(30, () => this.setData({ dockCtaStyle: ctaDock + ease, dockFavStyle: favDock + ease }));
-        this._later(DOCK_MS + 40, () => { this._docking = false; });
+        this._later(DOCK_MS + 40, () => { this._docking = false; this.setData({ dockMerged: true }); });
       } else {
-        this.setData({ dockCtaStyle: ctaAt + ease, dockFavStyle: favAt + ease });
+        this.setData({ dockMerged: false, dockCtaStyle: ctaAt + ease, dockFavStyle: favAt + ease });
         this._later(DOCK_MS, () => { this.setData({ docked: false }); this._docking = false; });
       }
     });

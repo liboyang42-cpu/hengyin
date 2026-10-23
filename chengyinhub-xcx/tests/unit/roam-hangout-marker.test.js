@@ -47,7 +47,7 @@ test('主题 = 照片瓦片 + 描边色(定向绿 / 探索蓝),不带铭牌 —�
   assert.equal(m2.badge, '');
   const { g, log } = fakeCtx();
   M.drawMarker(g, 108, m1, null);
-  assert.ok(log.some((l) => l[0] === 'fill' && l[1] === C.cityRoute), '瓦片描边取绿');
+  assert.ok(log.some((l) => l[0] === 'fill' && l[1] === C.cityRoute), '瓦片描边取蓝');
   assert.ok(!log.some((l) => l[0] === 'fillText' && (l[1] === '定向' || l[1] === '探索')), '不许再画铭牌');
 });
 

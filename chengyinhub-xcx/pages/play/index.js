@@ -4335,7 +4335,7 @@ Page({
     }));
     const ringSegs = this._ringSegs(doneCount, nodes.length);
     // 顶部输入地址只搜这一局里的地点(§6.1「只显示这一个主题里的地点」);
-    // 针的颜色按玩法给 —— 城市定向绿 / 自由探索蓝。
+    // 针的颜色按玩法给 —— 城市定向蓝 / 自由探索绿。
     const searchPlaces = visibleNodes.filter((x) => x.lat && x.lng).map((x) => ({
       id: String(x.nodeId), name: x.name || '未命名地点', address: x.address || '',
       kind: mode === 2 ? 'free' : 'city', lat: x.lat, lng: x.lng, nodeId: x.nodeId,

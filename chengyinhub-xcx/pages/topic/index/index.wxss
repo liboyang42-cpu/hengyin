@@ -1840,6 +1840,7 @@ button::after {
 .dock-cta { position: fixed; z-index: 60; box-sizing: border-box; border-radius: 999rpx; display: flex; align-items: center; justify-content: center; padding: 0 32rpx;
   font-size: var(--cy-font-body); font-weight: 600; color: var(--cy-color-action-primary-fg); background: var(--cy-color-action-primary-bg);
   box-shadow: 0 12rpx 40rpx rgba(0, 0, 0, .45); /* ds-ok:浮层投影 */ }
+.dock-cta.is-merged { opacity: 0; pointer-events: none; } /* 落进详情底栏主按钮后让位给它 */
 .dock-fav { position: fixed; z-index: 120; box-sizing: border-box; border-radius: 999rpx; display: flex; align-items: center; justify-content: center;
   color: var(--cy-color-text-primary); background: rgba(0, 0, 0, .25); /* ds-ok:与微信胶囊同款半透明底 */
   border: 1rpx solid rgba(255, 255, 255, .25); /* ds-ok:微信胶囊描边 */ }

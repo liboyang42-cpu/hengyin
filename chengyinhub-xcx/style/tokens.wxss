@@ -247,13 +247,13 @@ page {
   --cy-play-role-event-soft:    rgba(244,91,117,.16);
   --cy-play-role-cream:         #FFF0CF;
   --cy-play-role-dim:           #5A6A6C;
-  /* 2026-09-09 主题按**玩法**分色(不再按发布者身份):城市定向绿 · 自由探索蓝。
+  /* 2026-09-09 主题按**玩法**分色(不再按发布者身份):城市定向绿 · 自由探索蓝;2026-10-22 业主改为 城市定向蓝 · 自由探索绿。
      地图描边、主题标签底色、搜索结果的针共用这两个值;
      canvas 侧同值在 MAP_AVATAR_COLORS.cityRoute / .freeExplore,两处必须一致 */
-  --cy-play-role-city:          #4ADE80;
-  --cy-play-role-city-soft:     rgba(74,222,128,.16);
-  --cy-play-role-free:          #5A90D6;
-  --cy-play-role-free-soft:     rgba(90,144,214,.16);
+  --cy-play-role-city:          #5A90D6;
+  --cy-play-role-city-soft:     rgba(90,144,214,.16);
+  --cy-play-role-free:          #4ADE80;
+  --cy-play-role-free-soft:     rgba(74,222,128,.16);
   /* 星星 = 这家有玩法,仅此一义(同值 MAP_AVATAR_COLORS.gameStar) */
   --cy-play-role-gamestar:      #F5B301;
 

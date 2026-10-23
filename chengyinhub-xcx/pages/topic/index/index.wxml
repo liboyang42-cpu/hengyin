@@ -419,18 +419,18 @@
           <!-- M2 自玩票双 SKU:开放自玩→主按钮买通行证「¥X 随时开玩」+ 次按钮「查看场次」;否则走下面的报名主按钮 -->
           <block wx:elif="{{info.selfPlay==1}}">
             <cy-btn variant="secondary" style="flex:1;margin-right:16rpx" bindtap="bmClick">查看场次</cy-btn>
-            <cy-btn id="topic-self-play-buy" variant="primary" style="flex:1" bindtap="selfPlayBuy">{{money.amount(info.selfPlayPrice)}} 随时开玩</cy-btn>
+            <cy-btn id="topic-self-play-buy" class="bm-main" variant="primary" style="flex:1" bindtap="selfPlayBuy">{{money.amount(info.selfPlayPrice)}} 随时开玩</cy-btn>
           </block>
           <!-- 稿 214:384 / 214:689 的底栏主动作是「立即报名」。2026-09-06 起点这里就在
                主题页内开选场次弹层、选完直接进结算,「报名」这一步确实是从这颗按钮开始的;
                「去参加」既没说清点下去会发生什么,也和稿对不上。 -->
-          <cy-btn wx:else variant="primary" style="width:100%" bindtap="bmClick">立即报名</cy-btn>
+          <cy-btn wx:else class="bm-main" variant="primary" style="width:100%" bindtap="bmClick">立即报名</cy-btn>
         </view>
         <view class="bm-btn btn1 flex-cb" wx:elif="{{is_join==1}}">
           <!-- 裁决 H3=B(2026-09-03):已购底栏回票夹 subpackageMember/signup,不进 play。
                落点一直就是票夹(goJoinedPlay),错的是标签 ——「开始玩」许诺的是进游戏,
                点下去却到了票列表。按裁决原文改成「去票夹 · 查看我的票」。 -->
-          <cy-btn variant="primary" style="width:100%" bindtap="goJoinedPlay">去票夹 · 查看我的票</cy-btn>
+          <cy-btn class="bm-main" variant="primary" style="width:100%" bindtap="goJoinedPlay">去票夹 · 查看我的票</cy-btn>
         </view>
       </view>
 
@@ -689,7 +689,7 @@
     bind:wallet="onRevealWallet" bind:play="onRevealPlay" />
 
   <!-- 2026-10-22 停靠层:价格按钮/收藏滚出顶栏后飞到这里(右下角 / 顶栏胶囊左侧);故事扇收成顶栏小卡堆 -->
-  <view wx:if="{{docked && heroCta.text}}" class="dock-cta" style="{{dockCtaStyle}}" bindtap="onHeroCta" aria-role="button" aria-label="{{heroCta.text}}" hover-class="cy-pressed" hover-stay-time="80">{{heroCta.text}}</view>
+  <view wx:if="{{docked && heroCta.text}}" class="dock-cta {{dockMerged && activeTab == '0' ? 'is-merged' : ''}}" style="{{dockCtaStyle}}" bindtap="onHeroCta" aria-role="button" aria-label="{{heroCta.text}}" hover-class="cy-pressed" hover-stay-time="80">{{heroCta.text}}</view>
   <view wx:if="{{docked}}" class="dock-fav {{faved ? 'is-on' : ''}}" style="{{dockFavStyle}}" bindtap="toggleFav" aria-role="button" aria-label="{{faved ? '取消收藏' : '收藏主题'}}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="{{faved ? 'heart-filled' : 'heart'}}" size="32" /></view>
   <view wx:if="{{storyDocked && activeTab == '1' && storyCards.length}}" class="story-mini" style="{{storyMiniStyle}}" aria-hidden="true">
     <image wx:for="{{storyCards}}" wx:key="index" wx:if="{{index < 3}}" class="story-mini__c story-mini__c--{{index}}" src="{{item.img}}" mode="aspectFill" />

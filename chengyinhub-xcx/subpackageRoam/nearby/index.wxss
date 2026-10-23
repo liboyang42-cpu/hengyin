@@ -96,7 +96,7 @@ page { background: var(--cy-comp-sheet-player-page); }
 .mt-chip.is-on { background: var(--cy-color-play-accent); color: var(--cy-color-play-ink); }
 .mt-chip__dot { width: 14rpx; height: 14rpx; border-radius: 50%; }
 .mt-chip__dot--team { background: #FFF0CF; } /* ds-ok MAP_AVATAR_COLORS.cream 队伍头像点 */
-.mt-chip__dot--place { background: #4ADE80; } /* ds-ok MAP_AVATAR_COLORS.cityRoute 地点 */
+.mt-chip__dot--place { background: #4ADE80; } /* ds-ok MAP_AVATAR_COLORS.freeExplore 地点 */
 .mt-chip__dot--shop { background: #E7A84B; } /* ds-ok MAP_AVATAR_COLORS.merchant 商家 */
 .mt-chip__caret { width: 0; height: 0; border-left: 8rpx solid transparent; border-right: 8rpx solid transparent; border-top: 10rpx solid currentColor; opacity: .7; }
 

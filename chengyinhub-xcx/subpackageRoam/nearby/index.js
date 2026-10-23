@@ -718,7 +718,7 @@ Page({
         desc: row.description || (free ? '不规定顺序、不要求一天跑完，只用一家也成立。' : '按顺序一站站走完。'),
         pics: [app.getImgUrl(row.picUrl || '')].filter(Boolean),
       },
-    }, () => this._openSheet('topic'));
+    }, () => { this._openSheet('topic'); this._placeStrip(); });
   },
   openTopicPage() {
     const t = this.data.topic;
@@ -743,7 +743,7 @@ Page({
     });
   },
 
-  _poiColors() { return { place: MAP_AVATAR_COLORS.cityRoute, shop: MAP_AVATAR_COLORS.merchant, plateText: MAP_AVATAR_COLORS.panel }; },
+  _poiColors() { return { place: MAP_AVATAR_COLORS.freeExplore, shop: MAP_AVATAR_COLORS.merchant, plateText: MAP_AVATAR_COLORS.panel }; },
 
   _poiMarkers(f) {
     return L.buildPoiMarkers((this._pois || []).filter((p) => L.keepPoi(p, f)), this._lodCenter || this.data.center, this._far, this._poiColors(), H.HANGOUT_FALLBACK_ICON);
@@ -814,5 +814,19 @@ Page({
     const c = this.data.poiCard;
     if (!c || c.lat == null || c.lng == null) return;
     wx.openLocation({ latitude: c.lat, longitude: c.lng, name: c.title, address: c.address, scale: 17 });
+  },
+
+  /* 主题照片条贴在半屏上沿:本页半屏高随内容走,共用样式里按 70vh 算的位置会飘到筛选行上 */
+  _placeStrip() {
+    if (typeof wx.createSelectorQuery !== 'function') return;
+    setTimeout(() => {
+      if (this._unloaded) return;
+      try {
+        wx.createSelectorQuery().in(this).select('.psheet--half').boundingClientRect((r) => {
+          if (!r || this._unloaded) return;
+          this.setData({ tstripStyle: 'bottom:' + Math.round(r.height + 10) + 'px;' }); // 半屏贴底,用高度不受滑入动画影响
+        }).exec();
+      } catch (e) { /* 量不到就用共用样式的位置 */ }
+    }, 60);
   },
 });

@@ -151,7 +151,7 @@
 /* UI-17 返修(2026-09-18):卡面就是一张完整票图 —— 上段票面 + 打孔虚线 + 下段票根(含
    票名/状态/入口文字)整体撤掉,不再叠任何可见文字。整卡点击由 swiper-item 的 goTicket 承接,
    票名与状态只留在 aria-label(读屏可达)。路线票与场次票仍是同一外形,由 aspectFill 统一裁切。 */
-.tk{ width: 100%; height: 100%; position: relative; overflow: hidden; border-radius: var(--cy-radius-lg); }
+.tk{ width: 100%; height: 100%; position: relative; overflow: hidden; border-radius: var(--cy-radius-lg); clip-path: inset(0 round var(--cy-radius-lg)); } /* 拖动旋转时 overflow 圆角会漏成直角,用 clip-path 兜住 */
 .tk-face{ position: relative; width: 100%; height: 100%; overflow: hidden; }
 
 .signup .slides image {
@@ -277,3 +277,7 @@
   font-size: var(--cy-font-caption);
   color: var(--cy-text-muted);
 }
+
+/* 2026-10-22 拖动/落入时浮在 swiper 上面的那张卡(不吃触摸,手势仍落在下面的卡堆上) */
+.deck-lift { position: fixed; z-index: 20; pointer-events: none; }
+.deck-lift image { display: block; width: 100%; height: 100%; }
