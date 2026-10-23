@@ -218,6 +218,14 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         where id = #{id} and publish_count is not null and publish_count &gt; 0 and ifnull(receive_count, 0) &lt; publish_count
     </update>
 
+    <!-- O-06 后台手工补录:只做库存守恒(限量券 receive_count < publish_count 才 +1,不限量照常 +1),
+         不加发放期/状态闸(补录是对既成事实的登记);0 行 = 券不存在或已抢光,调用方须拒绝写领取记录。 -->
+    <update id="tryIncrementReceiveCountWithinStock">
+        update sms_coupon set receive_count = ifnull(receive_count, 0) + 1, update_time = now()
+        where id = #{id}
+        and (publish_count is null or publish_count &lt;= 0 or ifnull(receive_count, 0) &lt; publish_count)
+    </update>
+
     <!-- 正常发券：限量和不限量都在同一条 UPDATE 核验当前有效期，避免预读后过期仍发放。 -->
     <update id="tryIncrementIssuableReceiveCount">
         update sms_coupon set receive_count = ifnull(receive_count, 0) + 1, update_time = now()

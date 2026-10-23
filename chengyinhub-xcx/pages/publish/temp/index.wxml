@@ -204,7 +204,7 @@
         </block>
       </cy-card>
       <!-- 玩法:标题在卡外(不标星、不挂「核心」),卡里只放所选玩法与形式/怎么出现;玩法自己的设置拆成下面几张卡 -->
-      <view class="cg-sec" id="sec-game" wx:if="{{ mod.key === 'finish' }}"><text class="cg-sec__t">玩法</text><view class="cg-sec__act" bindtap="removeModule" data-key="finish" aria-role="button" aria-label="移除玩法模块" hover-class="cy-pressed" hover-stay-time="80">移除</view></view>
+      <view class="cg-sec" id="sec-game" wx:if="{{ mod.key === 'finish' }}"><text class="cg-sec__t">玩法</text><view class="cg-sec__act" bindtap="confirmRemoveModule" data-key="finish" aria-role="button" aria-label="移除玩法模块" hover-class="cy-pressed" hover-stay-time="80">移除</view></view>
       <cy-card class="cg-card" wx:if="{{ mod.key === 'finish' }}">
           <!-- 2026-10-22 主人定稿 HTML 原型：选择玩法改为半屏标签弹层，左右滑动 -->
           <view wx:if="{{!gameKey}}" class="cg-r5-row" bindtap="openR5GameSheet" aria-role="button" aria-label="选择玩法" hover-class="cy-pressed" hover-stay-time="80"><view class="cg-r5-row__main"><text class="cg-r5-row__title">选择玩法</text><cy-inline-error wx:if="{{errors.finish}}" class="cg-r5-row__sub is-err" kind="error" title="{{errors.finish}}" /></view><view class="cg-r5-pill">选择<cy-icon name="chevron-right" size="24" /></view></view>
@@ -1178,7 +1178,7 @@
 
 
       <!-- ======= 完成奖励 ======= -->
-      <view class="cg-sec" id="sec-reward" wx:if="{{ mod.key === 'reward' && gameKey !== 'album' }}"><text class="cg-sec__t">完成奖励</text><view class="cg-sec__act" bindtap="removeModule" data-key="reward" aria-role="button" aria-label="移除完成奖励" hover-class="cy-pressed" hover-stay-time="80">移除</view></view>
+      <view class="cg-sec" id="sec-reward" wx:if="{{ mod.key === 'reward' && gameKey !== 'album' }}"><text class="cg-sec__t">完成奖励</text><view class="cg-sec__act" bindtap="confirmRemoveModule" data-key="reward" aria-role="button" aria-label="移除完成奖励" hover-class="cy-pressed" hover-stay-time="80">移除</view></view>
       <cy-card class="cg-card" wx:if="{{ mod.key === 'reward' && gameKey !== 'album' }}">
           <!-- 优惠券:从我已发布的券里选 -->
           <view class="cg-rw-row">
@@ -1481,7 +1481,6 @@
     <view class="cg-edit-head"><view class="cg-edit-head__exit" bindtap="closeAddSheet" aria-role="button" aria-label="退出添加模块" hover-class="cy-pressed" hover-stay-time="80">退出</view><view class="cg-edit-head__title">添加模块</view><view class="cg-edit-head__done" bindtap="closeAddSheet" aria-role="button" aria-label="完成添加模块" hover-class="cy-pressed" hover-stay-time="80">完成</view></view>
     <view class="cg-sheet-list">
       <view class="cg-sheet-card" wx:for="{{ availableModules }}" wx:key="key" hover-class="cg-sheet-card--pressed" hover-stay-time="80" bindtap="addModule" data-key="{{ item.key }}">
-        <view class="cg-sheet-ico"><cy-icon name="{{item.iconName}}" size="40" /></view>
         <view class="cg-sheet-meta">
           <view class="cg-sheet-name">{{ item.name }}<text class="cg-tag {{ item.tagClass }}" wx:if="{{ item.tag }}">{{ item.tag }}</text></view>
           <view class="cg-sheet-desc">{{ item.desc }}</view>
@@ -1694,7 +1693,7 @@
   <!-- ============ R5 结果之后（回复 / 消耗 / 效果 / 反馈下一段） ============ -->
   <view class="cg-mask cg-mask--top" wx:if="{{afterEditor.show}}" bindtap="closeAfterSheet" aria-role="button" aria-label="退出结果之后" hover-class="cy-pressed" hover-stay-time="80"></view>
   <view class="cg-sheet cg-edit-sheet cg-edit-sheet--top" style="--cy-comp-sheet-max-h:calc(100vh - {{sheetTop}}px);" wx:if="{{afterEditor.show}}">
-    <view class="cg-edit-head"><view class="cg-edit-head__exit" bindtap="closeAfterSheet" aria-role="button" aria-label="退出结果之后" hover-class="cy-pressed" hover-stay-time="80">退出</view><view class="cg-edit-head__title">{{afterEditor.inline ? '消耗与效果' : opt.label(r5Editor.afterRows, afterEditor.path, 'path')}}</view><view class="cg-edit-head__done" bindtap="saveAfterSheet" aria-role="button" aria-label="完成结果之后" hover-class="cy-pressed" hover-stay-time="80">完成</view></view>
+    <view class="cg-edit-head"><view class="cg-edit-head__exit" bindtap="closeAfterSheet" aria-role="button" aria-label="退出结果之后" hover-class="cy-pressed" hover-stay-time="80">退出</view><view class="cg-edit-head__title">{{afterEditor.inline ? '消耗与效果' : opt.label(r5Editor.optionAfterRows, afterEditor.path, 'path')}}</view><view class="cg-edit-head__done" bindtap="saveAfterSheet" aria-role="button" aria-label="完成结果之后" hover-class="cy-pressed" hover-stay-time="80">完成</view></view>
     <view class="cg-gcfg" wx:if="{{!afterEditor.inline}}">
       <view class="cg-cfg-label">回复一句</view>
       <input class="cg-cfg-input" value="{{afterEditor.draft.reply}}" maxlength="2000" placeholder="例如 你稳住了呼吸" placeholder-class="cg-ph" bindinput="inputAfterReply" />
@@ -1729,7 +1728,7 @@
       <input class="cg-cfg-input" placeholder="输入名称后确认，例如 体温" placeholder-class="cg-ph" confirm-type="done" bindconfirm="declareAfterValueSlot" />
 
     </view>
-    <view class="cg-gcfg"><view class="cg-cfg-label">进入下一段</view><cy-dropdown topic-editor columns="{{2}}" range="{{r5Editor.nextStepOptions}}" range-key="label" reason-key="reason" value="{{opt.idx(r5Editor.nextStepOptions, afterEditor.draft.next)}}" disabled="{{!!r5Editor.nextDisabledReason}}" bind:change="pickAfterNextStep"><view class="cg-pick">{{opt.label(r5Editor.nextStepOptions, afterEditor.draft.next)}}<cy-icon name="back" size="28" /></view></cy-dropdown><view wx:if="{{r5Editor.nextDisabledReason}}" class="cg-cfg-hint">{{r5Editor.nextDisabledReason}}</view></view>
+    <view class="cg-gcfg"><view class="cg-cfg-label">进入下一段</view><cy-dropdown topic-editor columns="{{2}}" range="{{r5Editor.nextStepOptions}}" range-key="label" reason-key="reason" value="{{opt.idx(r5Editor.nextStepOptions, afterEditor.draft.next)}}" disabled="{{!!r5Editor.nextDisabledReason}}" bind:change="pickAfterNextStep"><view class="cg-pick">{{opt.label(r5Editor.nextStepOptions, afterEditor.draft.next)}}<view class="cg-caret"><cy-icon name="back" size="28" /></view></view></cy-dropdown><view wx:if="{{r5Editor.nextDisabledReason}}" class="cg-cfg-hint">{{r5Editor.nextDisabledReason}}</view></view>
     <cy-inline-error class="cg-inline-error" wx:if="{{afterEditor.error}}" title="{{afterEditor.error}}" />
   </view>
 

@@ -1,5 +1,6 @@
 package com.chengyinhub.business.service;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -29,6 +30,19 @@ public interface IAdvancedGameRuntimeService {
      * 为 true 时节点奖励只许探索值与徽章(不发积分、券、掉落)。只读,按 memberId 取本人局。
      */
     default boolean rewardCappedToXpBadge(Long memberId, Long activityId, Long topicId, Long nodeId) {
+        return false;
+    }
+
+    /**
+     * #478-3 主题通关奖同口径封顶:已完成节点里只要有一站按 {@link #rewardCappedToXpBadge} 封顶,
+     * 整部主题的通关奖也只发探索值、徽章与通关勋章(不发通关积分、通关券)。只读。
+     */
+    default boolean anyNodeRewardCappedToXpBadge(Long memberId, Long activityId, Long topicId,
+            Collection<Long> completedNodeIds) {
+        if (completedNodeIds == null) return false;
+        for (Long nodeId : completedNodeIds) {
+            if (nodeId != null && rewardCappedToXpBadge(memberId, activityId, topicId, nodeId)) return true;
+        }
         return false;
     }
 }

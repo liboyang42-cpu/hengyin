@@ -13,7 +13,7 @@ const motion = require('../../../../utils/motion.js');
 const { readReducedMotion } = require('../../../../utils/motion-preference.js');
 const cyToast = require('../../../../utils/toast.js');
 // C1:罗盘方位是本机自报,奖励上限只听服务端;有服务端发的挑战身份就随方位一起交
-const { withAttempt, rewardNote } = require('../../utils/sensor-contract.js');
+const { withAttempt, freshAttempt, rewardNote } = require('../../utils/sensor-contract.js');
 
 const TICK_MS = 100;
 const FIRST_FRAME_MS = 3000;
@@ -239,6 +239,9 @@ Component({
       this.setData({ phase: 'run', aligned: false, noData: false, holdLeft: this._holdTotal().toFixed(1),
         hasHeading: false, roseDeg: 0, holdPct: 0, turnHint: '', lowAccuracy: false });
       this._timer = setInterval(() => { if (this._current(attempt)) this._tick(); }, TICK_MS);
+      // 罗盘不计时,开表只为领服务端这一次的挑战身份;开表那一刻手里的号是上一次的,不算
+      attempt.attemptAtRun = this.data.attemptId;
+      this.triggerEvent('start');
     },
     _tolerance() {
       const t = this.data.tolerance;
@@ -294,7 +297,8 @@ Component({
       const stage = attempt.stage;
       if (stage) stage.win('对准了，保持了 ' + this._holdTotal() + ' 秒');
       attempt.phase = 'done';
-      if (this._current(attempt)) this.triggerEvent('submit', withAttempt({ bearing }, { attemptId: this.data.attemptId }));
+      if (this._current(attempt)) this.triggerEvent('submit', withAttempt({ bearing },
+        { attemptId: freshAttempt(this.data.attemptId, attempt.attemptAtRun) }));
     },
 
     onVerdict(e) {
