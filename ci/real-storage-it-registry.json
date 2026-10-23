@@ -332,7 +332,7 @@
     "architecture-day-registration-write": {
       "lineage": "Public2ec root A de31 registration whitelist/delete and C1eb H APPLIED assembly",
       "registered_source": "0de20ce8398a00b9bca6b83ccaccea270da66de7",
-      "note": "109 ordinary@Test cases: original92+2 funds and original8+7 merchant cancellation. Actual dispatched source/zero-skip XML/cleanup govern acceptance. Historic43/8 runs retain their old-source counts.",
+      "note": "Isolated negative-evidence branch has95 funds+15 merchant=110 declarations, only funds95 dispatched. Not a fix/merge/deploy candidate. Baseline integration remains separate.",
       "classes": [
         "com.chengyinhub.business.service.RegistrationFundsMybatisIntegrationTest",
         "com.chengyinhub.business.it.MerchantRegistrationCancellationMySqlIT"
@@ -1064,14 +1064,14 @@
       "note": "Default paused exact task seeds, preserved existing definitions, real original IM/XP/badge effects and MySQL task fence; no real cron/operator/provider claim"
     },
     "com.chengyinhub.business.service.RegistrationFundsMybatisIntegrationTest": {
-      "tests": 94,
+      "tests": 95,
       "storage": [
         "mysql"
       ],
       "gates": {
         "CHENGYIN_FUNDS_MYSQL_IT": "1"
       },
-      "note": "Original92 funds cases byte-preserved plus2 real admin economic identity mutation negative controls. Dedicated scratch MySQL; external providers mocked, not settlement/refund cross-domain acceptance."
+      "note": "Isolated unbacked-admin-POST negative-evidence branch: original94 byte-preserved plus H/A95. Expected to expose current unsafe source; not a remediation or acceptance candidate. Raw real95 result required."
     },
     "com.chengyinhub.business.service.impl.ImActivityTeamRevocationMySqlIT": {
       "tests": 2,

@@ -1,0 +1,17 @@
+{
+  "tracked_source_files": [
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationFundsMybatisIntegrationTest.java"
+  ],
+  "untracked_files_all_in_own_delivery_directory": true,
+  "all_production_sources_unchanged": true,
+  "merchant_it_matches_root_9b92_exactly": true,
+  "secret_file_gate": "PASS",
+  "changed_and_new_file_secret_markers": "PASS",
+  "limited_credential_patterns": "PASS",
+  "diff_check": "PASS",
+  "java_compile": "NOT_RUN",
+  "java_tests_executed": 0,
+  "mysql_tests_executed": 0,
+  "ci_dispatches": 0,
+  "production_fix": "PENDING_USER_BUSINESS_CHOICE"
+}

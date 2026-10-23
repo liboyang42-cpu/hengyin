@@ -1,0 +1,9 @@
+chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CmsRegistrationMapper.java:129:    public int insertCmsRegistration(CmsRegistration cmsRegistration);
+chengyinhub-ui/src/api/business/registration.js:21:export function addRegistration(data) {
+chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsRegistrationController.java:220:        return toAjax(cmsRegistrationService.insertCmsRegistration(cmsRegistration));
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:243:    public int insertCmsRegistration(CmsRegistration cmsRegistration) {
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:245:        return cmsRegistrationMapper.insertCmsRegistration(cmsRegistration);
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:574:        cmsRegistrationMapper.insertCmsRegistration(registration);
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java:894:        if (cmsRegistrationMapper.insertCmsRegistration(r) != 1 || r.getId() == null) {
+chengyinhub-ui/src/views/business/registration/index.vue:845:            addRegistration(this.form).then(response => {
+chengyinhub-system/src/main/java/com/chengyinhub/business/service/ICmsRegistrationService.java:50:    public int insertCmsRegistration(CmsRegistration cmsRegistration);

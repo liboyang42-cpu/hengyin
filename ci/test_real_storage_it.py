@@ -102,7 +102,7 @@ class RegistryContractTest(unittest.TestCase):
                     "architecture-day-broadcast-migration": 10, "architecture-day-settlement": 7,
                     "architecture-day-state-recovery": 50,
                     "architecture-day-runtime-governance": 36,
-                    "architecture-day-registration-write": 109,
+                    "architecture-day-registration-write": 110,
                     "architecture-day-im-revocation": 2,
                     "architecture-day-w19-owner-notice": 29,
                     "architecture-day-play-scheduler": 16}
@@ -138,7 +138,7 @@ class RegistryContractTest(unittest.TestCase):
     def test_registration_and_revocation_batches_require_current_counts_and_real_gates(self):
         reg = registry()
         expected = {
-            "com.chengyinhub.business.service.RegistrationFundsMybatisIntegrationTest": (94, {"CHENGYIN_FUNDS_MYSQL_IT": "1"}),
+            "com.chengyinhub.business.service.RegistrationFundsMybatisIntegrationTest": (95, {"CHENGYIN_FUNDS_MYSQL_IT": "1"}),
             "com.chengyinhub.business.it.MerchantRegistrationCancellationMySqlIT": (15, {}),
         }
         self.assertEqual(list(expected), reg["batches"]["architecture-day-registration-write"]["classes"])

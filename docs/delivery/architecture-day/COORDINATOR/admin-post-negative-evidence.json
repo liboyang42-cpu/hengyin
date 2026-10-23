@@ -1,0 +1,14 @@
+{
+  "purpose": "Isolated read-only business contract counterexample test, not application remediation",
+  "base": "deb2f19ffd1f60b061234a5366038ead5c7dafba",
+  "A_source": "7e1fc9c26c9e0ce29c2489833bbefd121fbaf4b4",
+  "ordinary_tests": 95,
+  "original94_test_bodies": "BYTE_PRESERVED",
+  "production_source_changed": false,
+  "expected_case": "bareAdminPostCannotCreateUnbackedPointsOrInventoryToRelease",
+  "known_source_risk": "generic admin add raw economic row can be cancelled without original reservation/debit",
+  "runtime_proof": "NOT_YET_RUN",
+  "product_policy": "AWAITING_USER; no admin add/remediation implemented",
+  "must_not_merge_or_deploy": true,
+  "main_integration_branch": "codex/architecture-day-ci-integration2-20261023"
+}
