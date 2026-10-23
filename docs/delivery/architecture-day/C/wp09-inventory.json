@@ -1,0 +1,2109 @@
+{
+  "status": "DOC_ONLY_PROPOSAL_V1_PENDING_ROOT_CONFIRMATION",
+  "repository": "https://github.com/liboyang42-cpu/hengyin",
+  "planningHead": "1ebfbf6f6303e0d71bcd787be9e958266e5689b6",
+  "branch": "codex/architecture-day-c-play-command",
+  "controller": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java",
+  "controllerBlob": "ad6a86d75fc1f2e056810c245ea1dd605f75e371",
+  "specCommit": "4a6e3cf423594f4e4dc4b30aa769a90048f6aa6e",
+  "counts": {
+    "mappedEndpoints": 25,
+    "privateImplementations": 68,
+    "uniquePrivateNames": 58,
+    "directMapperFields": 18,
+    "controllerReferenceJavaTests": 55,
+    "rawControllerConstructorJavaTests": 41,
+    "puzzleConstructorJavaTests": 4
+  },
+  "limitations": [
+    "source inventory, not semantic AST/SQL/transaction proof",
+    "overloaded helper closure is a conservative possible union; unlock path manually traced",
+    "no Java/MySQL tests run for this doc-only plan"
+  ],
+  "endpoints": [
+    {
+      "method": "GET",
+      "path": "/api/play/nodes",
+      "symbol": "nodes",
+      "line": 356,
+      "controllerTransaction": "no controller transaction annotation",
+      "deadlockRetry": false,
+      "directPrivateCalls": [
+        "activityTimeError",
+        "currentMemberId",
+        "exploreRegistration",
+        "hintUnlockCost",
+        "historyReadableNode",
+        "isPureOnlineNode",
+        "isRegistered",
+        "resolveCoupon",
+        "resolveMode",
+        "topicHistoryBlocked",
+        "validSelfPlayPass",
+        "visibleBranchNodes"
+      ],
+      "possiblePrivateClosure": [
+        "activityTimeError",
+        "currentMemberId",
+        "exploreRegistration",
+        "firstTicketMode",
+        "hintUnlockCost",
+        "historyReadableNode",
+        "isPureOnlineNode",
+        "isRegistered",
+        "resolveCoupon",
+        "resolveMode",
+        "topicHistoryBlocked",
+        "validSelfPlayPass",
+        "visibleBranchNodes"
+      ],
+      "directMapperCalls": {
+        "topicOnsiteMetricsMapper": [
+          "selectInStoreLoads"
+        ],
+        "merchantChapterOfferMapper": [
+          "selectLiveByChapterIds"
+        ],
+        "coopPerkMapper": [
+          "selectById"
+        ],
+        "topicTemplateMetaMapper": [
+          "selectChapterMetaByTopicId"
+        ],
+        "gameRuntimeSessionMapper": [
+          "selectPlayerSessionsByTopic",
+          "selectStateJsonsByTopic"
+        ]
+      },
+      "mapperFieldsViaHelperClosure": [
+        "cmsRegistrationMapper",
+        "coopPerkMapper",
+        "currentPlayActivityMapper",
+        "gameRuntimeSessionMapper",
+        "merchantChapterOfferMapper",
+        "topicOnsiteMetricsMapper",
+        "topicTemplateMetaMapper",
+        "wxContentCallbackInboxMapper"
+      ],
+      "firstBatch": "retain HTTP/use-case body; only shared helper delegates may change"
+    },
+    {
+      "method": "GET",
+      "path": "/api/play/route-state",
+      "symbol": "routeState",
+      "line": 1051,
+      "controllerTransaction": "no controller transaction annotation",
+      "deadlockRetry": false,
+      "directPrivateCalls": [
+        "currentMemberId"
+      ],
+      "possiblePrivateClosure": [
+        "currentMemberId"
+      ],
+      "directMapperCalls": {},
+      "mapperFieldsViaHelperClosure": [],
+      "firstBatch": "retain HTTP/use-case body; only shared helper delegates may change"
+    },
+    {
+      "method": "GET",
+      "path": "/api/play/ending",
+      "symbol": "ending",
+      "line": 1079,
+      "controllerTransaction": "no controller transaction annotation",
+      "deadlockRetry": false,
+      "directPrivateCalls": [
+        "currentMemberId",
+        "hasSelfPlayRegistration",
+        "historyReadableNode",
+        "isRegistered",
+        "topicHistoryBlocked"
+      ],
+      "possiblePrivateClosure": [
+        "currentMemberId",
+        "hasSelfPlayRegistration",
+        "historyReadableNode",
+        "isRegistered",
+        "topicHistoryBlocked"
+      ],
+      "directMapperCalls": {},
+      "mapperFieldsViaHelperClosure": [
+        "wxContentCallbackInboxMapper"
+      ],
+      "firstBatch": "retain HTTP/use-case body; only shared helper delegates may change"
+    },
+    {
+      "method": "GET",
+      "path": "/api/play/companionLine",
+      "symbol": "companionLine",
+      "line": 1258,
+      "controllerTransaction": "no controller transaction annotation",
+      "deadlockRetry": false,
+      "directPrivateCalls": [
+        "currentMemberId",
+        "defaultCompanionLine"
+      ],
+      "possiblePrivateClosure": [
+        "currentMemberId",
+        "defaultCompanionLine"
+      ],
+      "directMapperCalls": {
+        "npcProfileMapper": [
+          "selectEnabledByScope",
+          "selectGlobalNpc"
+        ],
+        "npcLineCacheMapper": [
+          "selectByProfileAndEvent"
+        ]
+      },
+      "mapperFieldsViaHelperClosure": [
+        "npcLineCacheMapper",
+        "npcProfileMapper"
+      ],
+      "firstBatch": "retain HTTP/use-case body; only shared helper delegates may change"
+    },
+    {
+      "method": "GET",
+      "path": "/api/play/action-context",
+      "symbol": "basicActionContext",
+      "line": 1389,
+      "controllerTransaction": "readOnly=true; REQUIRED; DEFAULT",
+      "deadlockRetry": false,
+      "directPrivateCalls": [
+        "basicActionContext",
+        "basicIntentScope",
+        "currentMemberId"
+      ],
+      "possiblePrivateClosure": [
+        "basicActionContext",
+        "basicIntentScope",
+        "currentMemberId"
+      ],
+      "directMapperCalls": {},
+      "mapperFieldsViaHelperClosure": [
+        "playCommandReceiptMapper",
+        "playCommandRouteMapper"
+      ],
+      "firstBatch": "retain HTTP/use-case body; only shared helper delegates may change"
+    },
+    {
+      "method": "GET",
+      "path": "/api/play/action-receipt",
+      "symbol": "basicActionReceipt",
+      "line": 1417,
+      "controllerTransaction": "readOnly=true; REQUIRED; DEFAULT",
+      "deadlockRetry": false,
+      "directPrivateCalls": [
+        "basicIntentScope",
+        "basicReplay",
+        "basicRequestId",
+        "currentMemberId"
+      ],
+      "possiblePrivateClosure": [
+        "basicHash",
+        "basicIntentScope",
+        "basicReplay",
+        "basicRequestId",
+        "currentMemberId"
+      ],
+      "directMapperCalls": {
+        "playCommandReceiptMapper": [
+          "selectReceipt"
+        ]
+      },
+      "mapperFieldsViaHelperClosure": [
+        "playCommandReceiptMapper"
+      ],
+      "firstBatch": "retain HTTP/use-case body; only shared helper delegates may change"
+    },
+    {
+      "method": "POST",
+      "path": "/api/play/checkin",
+      "symbol": "checkin",
+      "line": 1505,
+      "controllerTransaction": "READ_COMMITTED; REQUIRED; rollbackFor=Exception",
+      "deadlockRetry": true,
+      "directPrivateCalls": [
+        "checkinOnce",
+        "executeBasicIntent"
+      ],
+      "possiblePrivateClosure": [
+        "activityTimeError",
+        "advanceProgress",
+        "basicActionContext",
+        "basicHash",
+        "basicIntentScope",
+        "basicJson",
+        "basicReplay",
+        "basicRequestId",
+        "checkinOnce",
+        "collect",
+        "currentMemberId",
+        "effectiveTemplate",
+        "executeBasicIntent",
+        "exploreRegistration",
+        "findNodeProgressRow",
+        "firstTicketMode",
+        "frozenAnswer",
+        "frozenTemplateView",
+        "grantConditionalReward",
+        "grantCouponById",
+        "grantTemplateCoupon",
+        "hasCompletedNodeFact",
+        "isAppSensorNode",
+        "isDelistedNode",
+        "isExploreChapterRedeemed",
+        "isNightNow",
+        "isPhotoFilterNode",
+        "isPrevDone",
+        "isTopicCompleted",
+        "isTopicCompletedFor",
+        "leadGateError",
+        "logAttempt",
+        "recordFirstSuccessfulScan",
+        "refreshBingo",
+        "resolveCtx",
+        "resolveMode",
+        "routeAccessError",
+        "shopDayProofData",
+        "unlockGateError"
+      ],
+      "directMapperCalls": {},
+      "mapperFieldsViaHelperClosure": [
+        "businessAuditEventMapper",
+        "clubLeadMapper",
+        "cmsRegistrationMapper",
+        "currentPlayActivityMapper",
+        "memberCollectibleMapper",
+        "playAttemptLogMapper",
+        "playCommandReceiptMapper",
+        "playCommandRouteMapper"
+      ],
+      "firstBatch": "retain HTTP/use-case body; only shared helper delegates may change"
+    },
+    {
+      "method": "POST",
+      "path": "/api/play/scan-entry",
+      "symbol": "scanEntry",
+      "line": 1654,
+      "controllerTransaction": "no controller transaction annotation",
+      "deadlockRetry": false,
+      "directPrivateCalls": [
+        "currentMemberId"
+      ],
+      "possiblePrivateClosure": [
+        "currentMemberId"
+      ],
+      "directMapperCalls": {},
+      "mapperFieldsViaHelperClosure": [],
+      "firstBatch": "retain HTTP/use-case body; only shared helper delegates may change"
+    },
+    {
+      "method": "POST",
+      "path": "/api/play/answer",
+      "symbol": "answer",
+      "line": 1680,
+      "controllerTransaction": "READ_COMMITTED; REQUIRED; rollbackFor=Exception",
+      "deadlockRetry": true,
+      "directPrivateCalls": [
+        "answerOnce",
+        "executeBasicIntent"
+      ],
+      "possiblePrivateClosure": [
+        "activityTimeError",
+        "advanceProgress",
+        "answerOnce",
+        "basicActionContext",
+        "basicHash",
+        "basicIntentScope",
+        "basicJson",
+        "basicReplay",
+        "basicRequestId",
+        "collect",
+        "currentMemberId",
+        "executeBasicIntent",
+        "exploreRegistration",
+        "findNodeProgressRow",
+        "firstTicketMode",
+        "frozenAnswer",
+        "grantConditionalReward",
+        "grantCouponById",
+        "grantTemplateCoupon",
+        "hasCompletedNodeFact",
+        "isDelistedNode",
+        "isNightNow",
+        "isPrevDone",
+        "isPureOnlineNode",
+        "isTopicCompleted",
+        "isTopicCompletedFor",
+        "leadGateError",
+        "logAttempt",
+        "normalizeAnswer",
+        "refreshBingo",
+        "resolveCtx",
+        "resolveMode",
+        "routeAccessError",
+        "shopDayProofData",
+        "unlockGateError"
+      ],
+      "directMapperCalls": {},
+      "mapperFieldsViaHelperClosure": [
+        "businessAuditEventMapper",
+        "clubLeadMapper",
+        "cmsRegistrationMapper",
+        "currentPlayActivityMapper",
+        "memberCollectibleMapper",
+        "playAttemptLogMapper",
+        "playCommandReceiptMapper",
+        "playCommandRouteMapper"
+      ],
+      "firstBatch": "retain HTTP/use-case body; only shared helper delegates may change"
+    },
+    {
+      "method": "POST",
+      "path": "/api/play/puzzle/reveal",
+      "symbol": "revealPuzzle",
+      "line": 1813,
+      "controllerTransaction": "READ_COMMITTED; REQUIRED; rollbackFor=Exception",
+      "deadlockRetry": true,
+      "directPrivateCalls": [
+        "advanceProgress",
+        "currentMemberId",
+        "frozenAnswer",
+        "frozenTemplateView",
+        "leadGateError",
+        "resolveCtx",
+        "resolveMode",
+        "routeAccessError"
+      ],
+      "possiblePrivateClosure": [
+        "activityTimeError",
+        "advanceProgress",
+        "collect",
+        "currentMemberId",
+        "exploreRegistration",
+        "findNodeProgressRow",
+        "firstTicketMode",
+        "frozenAnswer",
+        "frozenTemplateView",
+        "grantConditionalReward",
+        "grantCouponById",
+        "grantTemplateCoupon",
+        "hasCompletedNodeFact",
+        "isDelistedNode",
+        "isNightNow",
+        "isPrevDone",
+        "isTopicCompleted",
+        "isTopicCompletedFor",
+        "leadGateError",
+        "refreshBingo",
+        "resolveCtx",
+        "resolveMode",
+        "routeAccessError",
+        "unlockGateError"
+      ],
+      "directMapperCalls": {},
+      "mapperFieldsViaHelperClosure": [
+        "businessAuditEventMapper",
+        "clubLeadMapper",
+        "cmsRegistrationMapper",
+        "currentPlayActivityMapper",
+        "memberCollectibleMapper"
+      ],
+      "firstBatch": "retain HTTP/use-case body; only shared helper delegates may change"
+    },
+    {
+      "method": "POST",
+      "path": "/api/play/puzzle/hint",
+      "symbol": "puzzleHint",
+      "line": 1874,
+      "controllerTransaction": "READ_COMMITTED; REQUIRED; rollbackFor=Exception",
+      "deadlockRetry": false,
+      "directPrivateCalls": [
+        "currentMemberId",
+        "leadGateError",
+        "resolveCtx",
+        "resolveMode",
+        "routeAccessError"
+      ],
+      "possiblePrivateClosure": [
+        "activityTimeError",
+        "currentMemberId",
+        "findNodeProgressRow",
+        "firstTicketMode",
+        "hasCompletedNodeFact",
+        "isDelistedNode",
+        "isNightNow",
+        "isPrevDone",
+        "leadGateError",
+        "resolveCtx",
+        "resolveMode",
+        "routeAccessError",
+        "unlockGateError"
+      ],
+      "directMapperCalls": {},
+      "mapperFieldsViaHelperClosure": [
+        "clubLeadMapper",
+        "cmsRegistrationMapper",
+        "currentPlayActivityMapper"
+      ],
+      "firstBatch": "retain HTTP/use-case body; only shared helper delegates may change"
+    },
+    {
+      "method": "GET",
+      "path": "/api/play/preference/{nodeId}",
+      "symbol": "preference",
+      "line": 1914,
+      "controllerTransaction": "no controller transaction annotation",
+      "deadlockRetry": false,
+      "directPrivateCalls": [
+        "currentMemberId",
+        "resolvePreferencePlayCtx"
+      ],
+      "possiblePrivateClosure": [
+        "activityTimeError",
+        "currentMemberId",
+        "findNodeProgressRow",
+        "firstTicketMode",
+        "frozenAnswer",
+        "frozenTemplateView",
+        "hasCompletedNodeFact",
+        "isDelistedNode",
+        "isNightNow",
+        "isPrevDone",
+        "isPureOnlineNode",
+        "leadGateError",
+        "resolveCtx",
+        "resolveMode",
+        "resolvePreferencePlayCtx",
+        "routeAccessError",
+        "unlockGateError"
+      ],
+      "directMapperCalls": {},
+      "mapperFieldsViaHelperClosure": [
+        "clubLeadMapper",
+        "cmsRegistrationMapper",
+        "currentPlayActivityMapper"
+      ],
+      "firstBatch": "retain HTTP/use-case body; only shared helper delegates may change"
+    },
+    {
+      "method": "POST",
+      "path": "/api/play/preference/{nodeId}/submit",
+      "symbol": "submitPreference",
+      "line": 1929,
+      "controllerTransaction": "no controller transaction annotation",
+      "deadlockRetry": false,
+      "directPrivateCalls": [
+        "advanceProgress",
+        "currentMemberId",
+        "hasCompletedNodeFact",
+        "isDelistedNode",
+        "resolvePreferencePlayCtx"
+      ],
+      "possiblePrivateClosure": [
+        "activityTimeError",
+        "advanceProgress",
+        "collect",
+        "currentMemberId",
+        "exploreRegistration",
+        "findNodeProgressRow",
+        "firstTicketMode",
+        "frozenAnswer",
+        "frozenTemplateView",
+        "grantConditionalReward",
+        "grantCouponById",
+        "grantTemplateCoupon",
+        "hasCompletedNodeFact",
+        "isDelistedNode",
+        "isNightNow",
+        "isPrevDone",
+        "isPureOnlineNode",
+        "isTopicCompleted",
+        "isTopicCompletedFor",
+        "leadGateError",
+        "refreshBingo",
+        "resolveCtx",
+        "resolveMode",
+        "resolvePreferencePlayCtx",
+        "routeAccessError",
+        "unlockGateError"
+      ],
+      "directMapperCalls": {},
+      "mapperFieldsViaHelperClosure": [
+        "businessAuditEventMapper",
+        "clubLeadMapper",
+        "cmsRegistrationMapper",
+        "currentPlayActivityMapper",
+        "memberCollectibleMapper"
+      ],
+      "firstBatch": "retain HTTP/use-case body; only shared helper delegates may change"
+    },
+    {
+      "method": "POST",
+      "path": "/api/play/tag/{tagId}/confirm",
+      "symbol": "confirmPreferenceTag",
+      "line": 1958,
+      "controllerTransaction": "no controller transaction annotation",
+      "deadlockRetry": false,
+      "directPrivateCalls": [
+        "currentMemberId"
+      ],
+      "possiblePrivateClosure": [
+        "currentMemberId"
+      ],
+      "directMapperCalls": {},
+      "mapperFieldsViaHelperClosure": [],
+      "firstBatch": "retain HTTP/use-case body; only shared helper delegates may change"
+    },
+    {
+      "method": "POST",
+      "path": "/api/play/tag/{tagId}/revoke",
+      "symbol": "revokePreferenceTag",
+      "line": 1969,
+      "controllerTransaction": "no controller transaction annotation",
+      "deadlockRetry": false,
+      "directPrivateCalls": [
+        "currentMemberId"
+      ],
+      "possiblePrivateClosure": [
+        "currentMemberId"
+      ],
+      "directMapperCalls": {},
+      "mapperFieldsViaHelperClosure": [],
+      "firstBatch": "retain HTTP/use-case body; only shared helper delegates may change"
+    },
+    {
+      "method": "POST",
+      "path": "/api/play/tag/{tagId}/correct",
+      "symbol": "correctPreferenceTag",
+      "line": 1980,
+      "controllerTransaction": "no controller transaction annotation",
+      "deadlockRetry": false,
+      "directPrivateCalls": [
+        "currentMemberId"
+      ],
+      "possiblePrivateClosure": [
+        "currentMemberId"
+      ],
+      "directMapperCalls": {},
+      "mapperFieldsViaHelperClosure": [],
+      "firstBatch": "retain HTTP/use-case body; only shared helper delegates may change"
+    },
+    {
+      "method": "GET",
+      "path": "/api/play/os/{topicId}",
+      "symbol": "newLifeOperatingSystem",
+      "line": 1992,
+      "controllerTransaction": "no controller transaction annotation",
+      "deadlockRetry": false,
+      "directPrivateCalls": [
+        "currentMemberId"
+      ],
+      "possiblePrivateClosure": [
+        "currentMemberId"
+      ],
+      "directMapperCalls": {},
+      "mapperFieldsViaHelperClosure": [],
+      "firstBatch": "retain HTTP/use-case body; only shared helper delegates may change"
+    },
+    {
+      "method": "POST",
+      "path": "/api/play/sensor-result",
+      "symbol": "sensorResult",
+      "line": 2114,
+      "controllerTransaction": "READ_COMMITTED; REQUIRED; rollbackFor=Exception",
+      "deadlockRetry": true,
+      "directPrivateCalls": [
+        "advanceProgress",
+        "currentMemberId",
+        "frozenAnswer",
+        "frozenTemplateView",
+        "hasCompletedNodeFact",
+        "isDelistedNode",
+        "isPureOnlineNode",
+        "leadGateError",
+        "resolveCtx",
+        "resolveMode",
+        "routeAccessError"
+      ],
+      "possiblePrivateClosure": [
+        "activityTimeError",
+        "advanceProgress",
+        "collect",
+        "currentMemberId",
+        "exploreRegistration",
+        "findNodeProgressRow",
+        "firstTicketMode",
+        "frozenAnswer",
+        "frozenTemplateView",
+        "grantConditionalReward",
+        "grantCouponById",
+        "grantTemplateCoupon",
+        "hasCompletedNodeFact",
+        "isDelistedNode",
+        "isNightNow",
+        "isPrevDone",
+        "isPureOnlineNode",
+        "isTopicCompleted",
+        "isTopicCompletedFor",
+        "leadGateError",
+        "refreshBingo",
+        "resolveCtx",
+        "resolveMode",
+        "routeAccessError",
+        "unlockGateError"
+      ],
+      "directMapperCalls": {},
+      "mapperFieldsViaHelperClosure": [
+        "businessAuditEventMapper",
+        "clubLeadMapper",
+        "cmsRegistrationMapper",
+        "currentPlayActivityMapper",
+        "memberCollectibleMapper"
+      ],
+      "firstBatch": "retain HTTP/use-case body; only shared helper delegates may change"
+    },
+    {
+      "method": "POST",
+      "path": "/api/play/arrive",
+      "symbol": "arrive",
+      "line": 2170,
+      "controllerTransaction": "READ_COMMITTED; REQUIRED; rollbackFor=Exception",
+      "deadlockRetry": true,
+      "directPrivateCalls": [
+        "arriveOnce",
+        "executeBasicIntent"
+      ],
+      "possiblePrivateClosure": [
+        "activityTimeError",
+        "advanceProgress",
+        "arriveOnce",
+        "basicActionContext",
+        "basicHash",
+        "basicIntentScope",
+        "basicJson",
+        "basicReplay",
+        "basicRequestId",
+        "collect",
+        "currentMemberId",
+        "effectiveTemplate",
+        "executeBasicIntent",
+        "exploreRegistration",
+        "findNodeProgressRow",
+        "firstTicketMode",
+        "frozenAnswer",
+        "frozenTemplateView",
+        "grantConditionalReward",
+        "grantCouponById",
+        "grantTemplateCoupon",
+        "hasCompletedNodeFact",
+        "isDelistedNode",
+        "isExploreChapterRedeemed",
+        "isNightNow",
+        "isPrevDone",
+        "isPureOnlineNode",
+        "isTopicCompleted",
+        "isTopicCompletedFor",
+        "leadGateError",
+        "logAttempt",
+        "parseGeoCoordinate",
+        "recordFirstSuccessfulScan",
+        "refreshBingo",
+        "resolveCtx",
+        "resolveMode",
+        "routeAccessError",
+        "shopDayProofData",
+        "unlockGateError"
+      ],
+      "directMapperCalls": {},
+      "mapperFieldsViaHelperClosure": [
+        "businessAuditEventMapper",
+        "clubLeadMapper",
+        "cmsRegistrationMapper",
+        "currentPlayActivityMapper",
+        "memberCollectibleMapper",
+        "playAttemptLogMapper",
+        "playCommandReceiptMapper",
+        "playCommandRouteMapper"
+      ],
+      "firstBatch": "retain HTTP/use-case body; only shared helper delegates may change"
+    },
+    {
+      "method": "POST",
+      "path": "/api/play/photo",
+      "symbol": "photo",
+      "line": 2388,
+      "controllerTransaction": "READ_COMMITTED; REQUIRED; rollbackFor=Exception",
+      "deadlockRetry": true,
+      "directPrivateCalls": [
+        "advanceProgress",
+        "currentMemberId",
+        "effectiveTemplate",
+        "findNodeProgressRow",
+        "hasCompletedNodeFact",
+        "isAppSensorNode",
+        "isDelistedNode",
+        "isExploreChapterRedeemed",
+        "leadGateError",
+        "logAttempt",
+        "resolveCtx",
+        "resolveMode",
+        "routeAccessError",
+        "shopDayProofData",
+        "unlockGateError",
+        "verifyPhotoUploadFactOrError"
+      ],
+      "possiblePrivateClosure": [
+        "activityTimeError",
+        "advanceProgress",
+        "collect",
+        "currentMemberId",
+        "effectiveTemplate",
+        "exploreRegistration",
+        "findNodeProgressRow",
+        "firstTicketMode",
+        "frozenAnswer",
+        "frozenTemplateView",
+        "grantConditionalReward",
+        "grantCouponById",
+        "grantTemplateCoupon",
+        "hasCompletedNodeFact",
+        "isAppSensorNode",
+        "isDelistedNode",
+        "isExploreChapterRedeemed",
+        "isNightNow",
+        "isPrevDone",
+        "isTopicCompleted",
+        "isTopicCompletedFor",
+        "leadGateError",
+        "logAttempt",
+        "refreshBingo",
+        "resolveCtx",
+        "resolveMode",
+        "routeAccessError",
+        "shopDayProofData",
+        "unlockGateError",
+        "verifyPhotoUploadFactOrError"
+      ],
+      "directMapperCalls": {},
+      "mapperFieldsViaHelperClosure": [
+        "businessAuditEventMapper",
+        "clubLeadMapper",
+        "cmsRegistrationMapper",
+        "currentPlayActivityMapper",
+        "memberCollectibleMapper",
+        "playAttemptLogMapper"
+      ],
+      "firstBatch": "retain HTTP/use-case body; only shared helper delegates may change"
+    },
+    {
+      "method": "POST",
+      "path": "/api/play/my-completed",
+      "symbol": "myCompleted",
+      "line": 3455,
+      "controllerTransaction": "no controller transaction annotation",
+      "deadlockRetry": false,
+      "directPrivateCalls": [
+        "currentMemberId"
+      ],
+      "possiblePrivateClosure": [
+        "currentMemberId"
+      ],
+      "directMapperCalls": {},
+      "mapperFieldsViaHelperClosure": [],
+      "firstBatch": "retain HTTP/use-case body; only shared helper delegates may change"
+    },
+    {
+      "method": "GET",
+      "path": "/api/play/leaderboard",
+      "symbol": "leaderboard",
+      "line": 3653,
+      "controllerTransaction": "no controller transaction annotation",
+      "deadlockRetry": false,
+      "directPrivateCalls": [
+        "currentMemberId",
+        "isRegistered",
+        "validSelfPlayPass"
+      ],
+      "possiblePrivateClosure": [
+        "currentMemberId",
+        "isRegistered",
+        "validSelfPlayPass"
+      ],
+      "directMapperCalls": {},
+      "mapperFieldsViaHelperClosure": [],
+      "firstBatch": "retain HTTP/use-case body; only shared helper delegates may change"
+    },
+    {
+      "method": "POST",
+      "path": "/api/play/growth",
+      "symbol": "growth",
+      "line": 3736,
+      "controllerTransaction": "no controller transaction annotation",
+      "deadlockRetry": false,
+      "directPrivateCalls": [
+        "currentMemberId"
+      ],
+      "possiblePrivateClosure": [
+        "currentMemberId"
+      ],
+      "directMapperCalls": {},
+      "mapperFieldsViaHelperClosure": [],
+      "firstBatch": "retain HTTP/use-case body; only shared helper delegates may change"
+    },
+    {
+      "method": "POST",
+      "path": "/api/play/achievements",
+      "symbol": "achievements",
+      "line": 3757,
+      "controllerTransaction": "no controller transaction annotation",
+      "deadlockRetry": false,
+      "directPrivateCalls": [
+        "currentMemberId"
+      ],
+      "possiblePrivateClosure": [
+        "currentMemberId"
+      ],
+      "directMapperCalls": {
+        "memberCollectibleMapper": [
+          "selectListByMember"
+        ]
+      },
+      "mapperFieldsViaHelperClosure": [
+        "memberCollectibleMapper"
+      ],
+      "firstBatch": "retain HTTP/use-case body; only shared helper delegates may change"
+    },
+    {
+      "method": "POST",
+      "path": "/api/play/hint/unlock",
+      "symbol": "unlockHint",
+      "line": 3787,
+      "controllerTransaction": "DEFAULT; REQUIRED; rollbackFor=Exception",
+      "deadlockRetry": false,
+      "directPrivateCalls": [
+        "currentMemberId",
+        "hintUnlockCost",
+        "leadGateError",
+        "resolveCtx",
+        "routeAccessError"
+      ],
+      "possiblePrivateClosure": [
+        "activityTimeError",
+        "currentMemberId",
+        "findNodeProgressRow",
+        "firstTicketMode",
+        "hasCompletedNodeFact",
+        "hintUnlockCost",
+        "isDelistedNode",
+        "isNightNow",
+        "isPrevDone",
+        "leadGateError",
+        "resolveCtx",
+        "resolveMode",
+        "routeAccessError",
+        "unlockGateError"
+      ],
+      "directMapperCalls": {},
+      "mapperFieldsViaHelperClosure": [
+        "clubLeadMapper",
+        "cmsRegistrationMapper",
+        "currentPlayActivityMapper"
+      ],
+      "firstBatch": "MOVE_COMPLETE_USE_CASE_TO_IPuzzlePlayService.unlockNodeHint"
+    }
+  ],
+  "mapperFields": [
+    {
+      "type": "WxContentCallbackInboxMapper",
+      "field": "wxContentCallbackInboxMapper",
+      "directMethods": [
+        "countRiskyCallback"
+      ],
+      "referencingSymbols": [
+        "topicHistoryBlocked"
+      ],
+      "note": ""
+    },
+    {
+      "type": "PlayAttemptLogMapper",
+      "field": "playAttemptLogMapper",
+      "directMethods": [
+        "insertPlayAttemptLog"
+      ],
+      "referencingSymbols": [
+        "logAttempt"
+      ],
+      "note": ""
+    },
+    {
+      "type": "NpcProfileMapper",
+      "field": "npcProfileMapper",
+      "directMethods": [
+        "selectEnabledByScope",
+        "selectGlobalNpc"
+      ],
+      "referencingSymbols": [
+        "companionLine"
+      ],
+      "note": ""
+    },
+    {
+      "type": "NpcLineCacheMapper",
+      "field": "npcLineCacheMapper",
+      "directMethods": [
+        "selectByProfileAndEvent"
+      ],
+      "referencingSymbols": [
+        "companionLine"
+      ],
+      "note": ""
+    },
+    {
+      "type": "ClubLeadMapper",
+      "field": "clubLeadMapper",
+      "directMethods": [
+        "selectByActivity"
+      ],
+      "referencingSymbols": [
+        "leadGateError"
+      ],
+      "note": ""
+    },
+    {
+      "type": "GameSessionRuntimeMapper",
+      "field": "playCommandReceiptMapper",
+      "directMethods": [
+        "completeReceipt",
+        "insertReceiptClaim",
+        "selectReceipt",
+        "selectReceiptForUpdate",
+        "selectSessionByActivity",
+        "selectSessionByActivityForUpdate"
+      ],
+      "referencingSymbols": [
+        "basicActionContext",
+        "basicActionReceipt",
+        "executeBasicIntent"
+      ],
+      "note": ""
+    },
+    {
+      "type": "TopicRouteSessionMapper",
+      "field": "playCommandRouteMapper",
+      "directMethods": [
+        "selectAccessibleByIdForUpdate",
+        "selectByOwner",
+        "selectCurrentByOwner"
+      ],
+      "referencingSymbols": [
+        "basicActionContext",
+        "executeBasicIntent"
+      ],
+      "note": ""
+    },
+    {
+      "type": "BusinessAuditEventMapper",
+      "field": "businessAuditEventMapper",
+      "directMethods": [
+        "insertBusinessAuditEvent"
+      ],
+      "referencingSymbols": [
+        "grantTemplateCoupon"
+      ],
+      "note": ""
+    },
+    {
+      "type": "PlayerBadgeMapper",
+      "field": "playerBadgeMapper",
+      "directMethods": [],
+      "referencingSymbols": [],
+      "note": "injected but no method-body reference found"
+    },
+    {
+      "type": "CmsRegistrationMapper",
+      "field": "cmsRegistrationMapper",
+      "directMethods": [
+        "markFirstSuccessfulScan",
+        "selectCmsRegistrationByIdForUpdate"
+      ],
+      "referencingSymbols": [
+        "nodes",
+        "recordFirstSuccessfulScan",
+        "resolveCtx"
+      ],
+      "note": ""
+    },
+    {
+      "type": "CmsActivityMapper",
+      "field": "currentPlayActivityMapper",
+      "directMethods": [
+        "selectCmsActivityByIdForUpdate"
+      ],
+      "referencingSymbols": [
+        "nodes",
+        "resolveCtx"
+      ],
+      "note": ""
+    },
+    {
+      "type": "TopicOnsiteMetricsMapper",
+      "field": "topicOnsiteMetricsMapper",
+      "directMethods": [
+        "selectInStoreLoads"
+      ],
+      "referencingSymbols": [
+        "nodes"
+      ],
+      "note": ""
+    },
+    {
+      "type": "MerchantChapterOfferMapper",
+      "field": "merchantChapterOfferMapper",
+      "directMethods": [
+        "selectLiveByChapterIds"
+      ],
+      "referencingSymbols": [
+        "nodes"
+      ],
+      "note": ""
+    },
+    {
+      "type": "CoopPerkMapper",
+      "field": "coopPerkMapper",
+      "directMethods": [
+        "selectById"
+      ],
+      "referencingSymbols": [
+        "nodes"
+      ],
+      "note": ""
+    },
+    {
+      "type": "CmsTopicTemplateMetaMapper",
+      "field": "topicTemplateMetaMapper",
+      "directMethods": [
+        "selectChapterMetaByTopicId"
+      ],
+      "referencingSymbols": [
+        "nodes"
+      ],
+      "note": ""
+    },
+    {
+      "type": "GameRuntimeSessionMapper",
+      "field": "gameRuntimeSessionMapper",
+      "directMethods": [
+        "selectPlayerSessionsByTopic",
+        "selectStateJsonsByTopic"
+      ],
+      "referencingSymbols": [
+        "nodes"
+      ],
+      "note": ""
+    },
+    {
+      "type": "MemberCollectibleMapper",
+      "field": "memberCollectibleMapper",
+      "directMethods": [
+        "countOne",
+        "insertMemberCollectible",
+        "selectListByMember"
+      ],
+      "referencingSymbols": [
+        "achievements",
+        "collect"
+      ],
+      "note": ""
+    },
+    {
+      "type": "NodeMedalClaimMapper",
+      "field": "nodeMedalClaimMapper",
+      "directMethods": [],
+      "referencingSymbols": [],
+      "note": "injected but no method-body reference found"
+    }
+  ],
+  "privateHelpers": [
+    {
+      "symbol": "resolveCoupon",
+      "signature": "private com.chengyinhub.business.domain.SmsCoupon resolveCoupon(Long couponId)",
+      "line": 210,
+      "bodySha256": "df7134bd23dec4203dbd624ef9712fa2f5520708b062b19b46b4c2edfdeb9fa0",
+      "directPrivateCalls": [],
+      "directMapperCalls": {},
+      "mapperReferences": [],
+      "plannedOwner": "retain Controller in first batch"
+    },
+    {
+      "symbol": "collect",
+      "signature": "private void collect(Long memberId, int type, Long topicId, Long refId, String content)",
+      "line": 337,
+      "bodySha256": "0e238f5a21ce08d4a7017797cfcab7a1308ca9d073e601150ee32aa0c52e4624",
+      "directPrivateCalls": [],
+      "directMapperCalls": {
+        "memberCollectibleMapper": [
+          "countOne",
+          "insertMemberCollectible"
+        ]
+      },
+      "mapperReferences": [
+        "memberCollectibleMapper"
+      ],
+      "plannedOwner": "retain Controller in first batch"
+    },
+    {
+      "symbol": "visibleBranchNodes",
+      "signature": "private List<CmsTopicNode> visibleBranchNodes(List<CmsTopicNode> source, TopicRouteState routeState)",
+      "line": 1031,
+      "bodySha256": "7b0d15d8f9ea55fdc003b912b635f881924e40f52a73728851dcafbd10bb78b9",
+      "directPrivateCalls": [],
+      "directMapperCalls": {},
+      "mapperReferences": [],
+      "plannedOwner": "retain Controller in first batch"
+    },
+    {
+      "symbol": "historyReadableNode",
+      "signature": "private CmsTopicNode historyReadableNode(Long nodeId, com.chengyinhub.business.domain.CmsTopic topic)",
+      "line": 1153,
+      "bodySha256": "14b51eabd3d1041b125a7c46ee042c3cb7bb621bf60948586b1c84bda439c3b9",
+      "directPrivateCalls": [
+        "topicHistoryBlocked"
+      ],
+      "directMapperCalls": {},
+      "mapperReferences": [],
+      "plannedOwner": "retain Controller in first batch"
+    },
+    {
+      "symbol": "topicHistoryBlocked",
+      "signature": "private boolean topicHistoryBlocked(com.chengyinhub.business.domain.CmsTopic topic)",
+      "line": 1177,
+      "bodySha256": "2663e0017c0d19627288bac34563766e5ce60c4c5e7b0cede32088cf23ec008d",
+      "directPrivateCalls": [],
+      "directMapperCalls": {
+        "wxContentCallbackInboxMapper": [
+          "countRiskyCallback"
+        ]
+      },
+      "mapperReferences": [
+        "wxContentCallbackInboxMapper"
+      ],
+      "plannedOwner": "retain Controller in first batch"
+    },
+    {
+      "symbol": "isDelistedNode",
+      "signature": "private boolean isDelistedNode(CmsTopicNode node)",
+      "line": 1205,
+      "bodySha256": "283f1a534522d92cc18a57d497b095b01810754fa5904b9e7e1db47015e9f934",
+      "directPrivateCalls": [],
+      "directMapperCalls": {},
+      "mapperReferences": [],
+      "plannedOwner": "PlayNodeAccessService (new concrete play application support; one canonical body, controller wrappers only)"
+    },
+    {
+      "symbol": "hasCompletedNodeFact",
+      "signature": "private boolean hasCompletedNodeFact(Long memberId, String activityId, CmsTopicNode node)",
+      "line": 1215,
+      "bodySha256": "a17f8f9dcb9e5dda9a2859b83ac831ab198c8101b14b6160e35f4a46c340b6fe",
+      "directPrivateCalls": [
+        "hasCompletedNodeFact"
+      ],
+      "directMapperCalls": {},
+      "mapperReferences": [],
+      "plannedOwner": "PlayNodeAccessService (new concrete play application support; one canonical body, controller wrappers only)"
+    },
+    {
+      "symbol": "hasCompletedNodeFact",
+      "signature": "private boolean hasCompletedNodeFact(Long memberId, Long actId, CmsTopicNode node)",
+      "line": 1226,
+      "bodySha256": "7bc4025c8bbf38d43c694e48c8b2feb99817df59fab2cc7822025d560ff26132",
+      "directPrivateCalls": [
+        "findNodeProgressRow"
+      ],
+      "directMapperCalls": {},
+      "mapperReferences": [],
+      "plannedOwner": "PlayNodeAccessService (new concrete play application support; one canonical body, controller wrappers only)"
+    },
+    {
+      "symbol": "hasSelfPlayRegistration",
+      "signature": "private boolean hasSelfPlayRegistration(Long memberId, Long topicId)",
+      "line": 1238,
+      "bodySha256": "68c43c2bd5ea0f5f989255acd1e620eb31eed3f970d12b219b9f847abb1400da",
+      "directPrivateCalls": [],
+      "directMapperCalls": {},
+      "mapperReferences": [],
+      "plannedOwner": "retain Controller in first batch"
+    },
+    {
+      "symbol": "defaultCompanionLine",
+      "signature": "private String defaultCompanionLine(String slot)",
+      "line": 1339,
+      "bodySha256": "41383033590e03fd1626890e7e6e0820283e8d3314f9b7b7212206410be40054",
+      "directPrivateCalls": [],
+      "directMapperCalls": {},
+      "mapperReferences": [],
+      "plannedOwner": "retain Controller in first batch"
+    },
+    {
+      "symbol": "basicIntentScope",
+      "signature": "private BasicIntentScope basicIntentScope(Long memberId, String activityId, String topicId, String nodeId)",
+      "line": 1354,
+      "bodySha256": "beabe66856c92c2743d2fa32b74cfde82102a14d79ab601e8781abe2840066e9",
+      "directPrivateCalls": [],
+      "directMapperCalls": {},
+      "mapperReferences": [],
+      "plannedOwner": "retain Controller in first batch"
+    },
+    {
+      "symbol": "basicActionContext",
+      "signature": "private Map<String, Object> basicActionContext(Long memberId, BasicIntentScope scope)",
+      "line": 1396,
+      "bodySha256": "1a1e42a42ccd8b0e7c23e5b171f4e3dae0af11b30e563ad7bd5bc70196947dad",
+      "directPrivateCalls": [],
+      "directMapperCalls": {
+        "playCommandReceiptMapper": [
+          "selectSessionByActivity"
+        ],
+        "playCommandRouteMapper": [
+          "selectByOwner",
+          "selectCurrentByOwner"
+        ]
+      },
+      "mapperReferences": [
+        "playCommandReceiptMapper",
+        "playCommandRouteMapper"
+      ],
+      "plannedOwner": "retain Controller in first batch"
+    },
+    {
+      "symbol": "executeBasicIntent",
+      "signature": "private AjaxResult executeBasicIntent(String kind, String activityId, String topicId, String nodeId, String actionId, Integer expectedVersion, Long registrationId, Long routeSessionId, String runtimeInstance, Integer authorityEpoch, List<?> input, java.util.function.Supplier<AjaxResult> execute)",
+      "line": 1429,
+      "bodySha256": "56613d808a837c20dabcca2b2b03ef5c9096f173ed01845a7af0702ba9fe068b",
+      "directPrivateCalls": [
+        "basicActionContext",
+        "basicHash",
+        "basicIntentScope",
+        "basicJson",
+        "basicReplay",
+        "basicRequestId",
+        "currentMemberId"
+      ],
+      "directMapperCalls": {
+        "playCommandReceiptMapper": [
+          "completeReceipt",
+          "insertReceiptClaim",
+          "selectReceiptForUpdate",
+          "selectSessionByActivityForUpdate"
+        ],
+        "playCommandRouteMapper": [
+          "selectAccessibleByIdForUpdate",
+          "selectByOwner",
+          "selectCurrentByOwner"
+        ]
+      },
+      "mapperReferences": [
+        "playCommandReceiptMapper",
+        "playCommandRouteMapper"
+      ],
+      "plannedOwner": "retain Controller in first batch"
+    },
+    {
+      "symbol": "basicReplay",
+      "signature": "private AjaxResult basicReplay(com.chengyinhub.business.domain.GameCommandReceipt receipt, String hash)",
+      "line": 1475,
+      "bodySha256": "a4dd0e6c125638554d8aa86171ad58720aa5f3a97209f983c1453bb279598883",
+      "directPrivateCalls": [
+        "basicReplay"
+      ],
+      "directMapperCalls": {},
+      "mapperReferences": [],
+      "plannedOwner": "retain Controller in first batch"
+    },
+    {
+      "symbol": "basicReplay",
+      "signature": "private AjaxResult basicReplay(com.chengyinhub.business.domain.GameCommandReceipt receipt)",
+      "line": 1481,
+      "bodySha256": "de001e67fe2fbd1d5a588b5c8e6bc23d4b545bf0fbd49aa02de1f6c9ebe618da",
+      "directPrivateCalls": [],
+      "directMapperCalls": {},
+      "mapperReferences": [],
+      "plannedOwner": "retain Controller in first batch"
+    },
+    {
+      "symbol": "basicJson",
+      "signature": "private String basicJson(Object value)",
+      "line": 1487,
+      "bodySha256": "93d98d793969ebea0726339f9eacef8b92618892deac3002be289f7ad156706d",
+      "directPrivateCalls": [],
+      "directMapperCalls": {},
+      "mapperReferences": [],
+      "plannedOwner": "retain Controller in first batch"
+    },
+    {
+      "symbol": "basicHash",
+      "signature": "private String basicHash(String value)",
+      "line": 1492,
+      "bodySha256": "de47243f60c24242acf2523bfe1e3669f13612e11f3ee7c8b56431a3b1f8dadf",
+      "directPrivateCalls": [],
+      "directMapperCalls": {},
+      "mapperReferences": [],
+      "plannedOwner": "retain Controller in first batch"
+    },
+    {
+      "symbol": "basicRequestId",
+      "signature": "private String basicRequestId(String actionId)",
+      "line": 1497,
+      "bodySha256": "be66c32c6077ec2291ca0a3f6f71c2c9dbc0779f2c4b828a651a5881eb82ccd2",
+      "directPrivateCalls": [
+        "basicHash"
+      ],
+      "directMapperCalls": {},
+      "mapperReferences": [],
+      "plannedOwner": "retain Controller in first batch"
+    },
+    {
+      "symbol": "checkinOnce",
+      "signature": "private AjaxResult checkinOnce(String activityId, String code, String topicId, String routeActionId, Integer expectedRouteVersion, Long registrationId, String intendedNodeId, String runtimeInstance, Integer authorityEpoch)",
+      "line": 1519,
+      "bodySha256": "d6703a39fe05f274902bc8bf83e4fdbd17ca8ce2c004e609bb8d2dd507205716",
+      "directPrivateCalls": [
+        "advanceProgress",
+        "currentMemberId",
+        "effectiveTemplate",
+        "hasCompletedNodeFact",
+        "isAppSensorNode",
+        "isDelistedNode",
+        "isExploreChapterRedeemed",
+        "isPhotoFilterNode",
+        "leadGateError",
+        "logAttempt",
+        "recordFirstSuccessfulScan",
+        "resolveCtx",
+        "resolveMode",
+        "routeAccessError",
+        "shopDayProofData"
+      ],
+      "directMapperCalls": {},
+      "mapperReferences": [],
+      "plannedOwner": "retain Controller in first batch"
+    },
+    {
+      "symbol": "recordFirstSuccessfulScan",
+      "signature": "private void recordFirstSuccessfulScan(Long memberId, PlayCtx ctx)",
+      "line": 1626,
+      "bodySha256": "46f84f86811ea4a1e17839739d90663cce231a66c2c48e1dc98c7d4890c53bb3",
+      "directPrivateCalls": [],
+      "directMapperCalls": {
+        "cmsRegistrationMapper": [
+          "markFirstSuccessfulScan",
+          "selectCmsRegistrationByIdForUpdate"
+        ]
+      },
+      "mapperReferences": [
+        "cmsRegistrationMapper"
+      ],
+      "plannedOwner": "retain Controller in first batch"
+    },
+    {
+      "symbol": "answerOnce",
+      "signature": "private AjaxResult answerOnce(String activityId, String nodeId, String answer, String topicId, String routeActionId, Integer expectedRouteVersion, String runtimeInstance, Integer authorityEpoch)",
+      "line": 1693,
+      "bodySha256": "f79e474152dd5703aed41b886c964b842244a4f905aac88f4e5fd5c75572d790",
+      "directPrivateCalls": [
+        "advanceProgress",
+        "currentMemberId",
+        "frozenAnswer",
+        "hasCompletedNodeFact",
+        "isDelistedNode",
+        "isPureOnlineNode",
+        "leadGateError",
+        "logAttempt",
+        "normalizeAnswer",
+        "resolveCtx",
+        "resolveMode",
+        "routeAccessError",
+        "shopDayProofData"
+      ],
+      "directMapperCalls": {},
+      "mapperReferences": [],
+      "plannedOwner": "retain Controller in first batch"
+    },
+    {
+      "symbol": "resolvePreferencePlayCtx",
+      "signature": "private PreferencePlayCtx resolvePreferencePlayCtx(Long memberId, Long nodeId, String activityId, String topicId, String routeActionId)",
+      "line": 2000,
+      "bodySha256": "2495ca331232e94608506232246b8e88fa6ac9c1697862633dc76637771e9d82",
+      "directPrivateCalls": [
+        "frozenAnswer",
+        "frozenTemplateView",
+        "isPureOnlineNode",
+        "leadGateError",
+        "resolveCtx",
+        "resolveMode",
+        "routeAccessError",
+        "unlockGateError"
+      ],
+      "directMapperCalls": {},
+      "mapperReferences": [],
+      "plannedOwner": "retain Controller in first batch"
+    },
+    {
+      "symbol": "normalizeAnswer",
+      "signature": "private String normalizeAnswer(String s)",
+      "line": 2048,
+      "bodySha256": "c132517d4ff29484df94503dec53374bff6ce6a6161235736a769d7ee002035a",
+      "directPrivateCalls": [],
+      "directMapperCalls": {},
+      "mapperReferences": [],
+      "plannedOwner": "retain Controller in first batch"
+    },
+    {
+      "symbol": "frozenAnswer",
+      "signature": "private com.fasterxml.jackson.databind.JsonNode frozenAnswer(Long memberId, Long topicId, Long activityId, Long nodeId)",
+      "line": 2066,
+      "bodySha256": "b8f804afac9664a7845eddfd4227bf7135ebd24b8cb5e672e9ebb3b08f3d6dba",
+      "directPrivateCalls": [],
+      "directMapperCalls": {},
+      "mapperReferences": [],
+      "plannedOwner": "retain Controller in first batch"
+    },
+    {
+      "symbol": "frozenTemplateView",
+      "signature": "private CmsMemberTemplate frozenTemplateView(CmsTopicNode node, com.fasterxml.jackson.databind.JsonNode frozenAnswer)",
+      "line": 2076,
+      "bodySha256": "5aa4d8904f5befc60213ce881ce9ca32de8ede5564ccee1823cf3d2df0fa9f1b",
+      "directPrivateCalls": [],
+      "directMapperCalls": {},
+      "mapperReferences": [],
+      "plannedOwner": "retain Controller in first batch"
+    },
+    {
+      "symbol": "effectiveTemplate",
+      "signature": "private CmsMemberTemplate effectiveTemplate(Long memberId, Long topicId, Long activityId, CmsTopicNode node)",
+      "line": 2101,
+      "bodySha256": "744830f21e8fec053e4d1ae743d3f00a348359022def693be32e5728112f0603",
+      "directPrivateCalls": [
+        "frozenAnswer",
+        "frozenTemplateView"
+      ],
+      "directMapperCalls": {},
+      "mapperReferences": [],
+      "plannedOwner": "retain Controller in first batch"
+    },
+    {
+      "symbol": "arriveOnce",
+      "signature": "private AjaxResult arriveOnce(String activityId, String nodeId, String longitude, String latitude, String topicId, String routeActionId, Integer expectedRouteVersion, String accuracy, String runtimeInstance, Integer authorityEpoch)",
+      "line": 2184,
+      "bodySha256": "09c32e42f897f28546f19d386c0df0731531deaccda7588b2653ee2968e59cc0",
+      "directPrivateCalls": [
+        "advanceProgress",
+        "currentMemberId",
+        "effectiveTemplate",
+        "hasCompletedNodeFact",
+        "isDelistedNode",
+        "isExploreChapterRedeemed",
+        "isPureOnlineNode",
+        "leadGateError",
+        "logAttempt",
+        "parseGeoCoordinate",
+        "recordFirstSuccessfulScan",
+        "resolveCtx",
+        "resolveMode",
+        "routeAccessError",
+        "shopDayProofData"
+      ],
+      "directMapperCalls": {},
+      "mapperReferences": [],
+      "plannedOwner": "retain Controller in first batch"
+    },
+    {
+      "symbol": "verifyPhotoUploadFactOrError",
+      "signature": "private AjaxResult verifyPhotoUploadFactOrError(String picUrl, Long memberId)",
+      "line": 2341,
+      "bodySha256": "16871c06943016369339663544135e7f32f05d7382d4b6e75b1c841cbd985329",
+      "directPrivateCalls": [],
+      "directMapperCalls": {},
+      "mapperReferences": [],
+      "plannedOwner": "retain Controller in first batch"
+    },
+    {
+      "symbol": "findNodeProgressRow",
+      "signature": "private PlayerNodeProgress findNodeProgressRow(Long memberId, Long actId, Long topicId, Long nodeId)",
+      "line": 2366,
+      "bodySha256": "3233dbcf565e381be257bbac2c5083335f54ff29c439472c965ba6f281d4ec22",
+      "directPrivateCalls": [],
+      "directMapperCalls": {},
+      "mapperReferences": [],
+      "plannedOwner": "PlayNodeAccessService (new concrete play application support; one canonical body, controller wrappers only)"
+    },
+    {
+      "symbol": "shopDayProofData",
+      "signature": "private Map<String, Object> shopDayProofData(CmsTopicNode node, PlayerNodeProgress proof)",
+      "line": 2503,
+      "bodySha256": "b4a530c0b35708d5d7fcb53351ed13e8c504f9ba06c15507610e85c61b4a1db1",
+      "directPrivateCalls": [],
+      "directMapperCalls": {},
+      "mapperReferences": [],
+      "plannedOwner": "retain Controller in first batch"
+    },
+    {
+      "symbol": "isPureOnlineNode",
+      "signature": "private boolean isPureOnlineNode(CmsTopicNode node)",
+      "line": 2565,
+      "bodySha256": "3619bdf8ec40f7ff118c590acd77b79d198ab1e7ad66f44a98257be0d4f7cf80",
+      "directPrivateCalls": [],
+      "directMapperCalls": {},
+      "mapperReferences": [],
+      "plannedOwner": "retain Controller in first batch"
+    },
+    {
+      "symbol": "isExploreChapterRedeemed",
+      "signature": "private boolean isExploreChapterRedeemed(Long memberId, Long activityId, Long chapterId)",
+      "line": 2571,
+      "bodySha256": "1b1a7a8025f725d5b498f81856434602386c25bc76d716ca2b8c43de7d9b3c6f",
+      "directPrivateCalls": [
+        "exploreRegistration",
+        "isExploreChapterRedeemed"
+      ],
+      "directMapperCalls": {},
+      "mapperReferences": [],
+      "plannedOwner": "retain Controller in first batch"
+    },
+    {
+      "symbol": "isExploreChapterRedeemed",
+      "signature": "private boolean isExploreChapterRedeemed(CmsRegistration registration, Long chapterId)",
+      "line": 2576,
+      "bodySha256": "63a444b5c97e78e890fff81372cb9b47be5512dd5298db4a6bc9530eddf37040",
+      "directPrivateCalls": [],
+      "directMapperCalls": {},
+      "mapperReferences": [],
+      "plannedOwner": "retain Controller in first batch"
+    },
+    {
+      "symbol": "isAppSensorNode",
+      "signature": "private boolean isAppSensorNode(CmsTopicNode node, CmsMemberTemplate template)",
+      "line": 2588,
+      "bodySha256": "e8063014e9c92cbaa37a24a3c5a0b1945437ab5569db4c4aa1d80e216654cdc8",
+      "directPrivateCalls": [],
+      "directMapperCalls": {},
+      "mapperReferences": [],
+      "plannedOwner": "retain Controller in first batch"
+    },
+    {
+      "symbol": "isPhotoFilterNode",
+      "signature": "private boolean isPhotoFilterNode(CmsTopicNode node, CmsMemberTemplate template)",
+      "line": 2594,
+      "bodySha256": "6fe17d40bf8ebf5e508cd621b54f00d33a50e8a7349ee8f0f8b078c780f09a99",
+      "directPrivateCalls": [],
+      "directMapperCalls": {},
+      "mapperReferences": [],
+      "plannedOwner": "retain Controller in first batch"
+    },
+    {
+      "symbol": "isPrevDone",
+      "signature": "private boolean isPrevDone(Long memberId, Long actId, CmsTopicNode node)",
+      "line": 2622,
+      "bodySha256": "286253648e3da2013d04733d11d5b53e2953ff10bdb252b2b2324c991022f5f3",
+      "directPrivateCalls": [],
+      "directMapperCalls": {},
+      "mapperReferences": [],
+      "plannedOwner": "PlayNodeAccessService (new concrete play application support; one canonical body, controller wrappers only)"
+    },
+    {
+      "symbol": "routeAccessError",
+      "signature": "private String routeAccessError(Long memberId, Long actId, Long topicId, CmsTopicNode node, String routeActionId)",
+      "line": 2648,
+      "bodySha256": "a4f0a25fba32e56ff57382af23d61d12a3f4c78e03dc38fa7aafdd5ed9855a4b",
+      "directPrivateCalls": [
+        "hasCompletedNodeFact",
+        "isDelistedNode",
+        "isPrevDone",
+        "resolveMode",
+        "unlockGateError"
+      ],
+      "directMapperCalls": {},
+      "mapperReferences": [],
+      "plannedOwner": "PlayNodeAccessService (new concrete play application support; one canonical body, controller wrappers only)"
+    },
+    {
+      "symbol": "unlockGateError",
+      "signature": "private String unlockGateError(Long memberId, Long actId, CmsTopicNode node)",
+      "line": 2671,
+      "bodySha256": "295ab416e646c11985a964f0c0140c3b6774c9f552c6eb4a902c2bd67fb9fd9a",
+      "directPrivateCalls": [],
+      "directMapperCalls": {},
+      "mapperReferences": [],
+      "plannedOwner": "PlayNodeAccessService (new concrete play application support; one canonical body, controller wrappers only)"
+    },
+    {
+      "symbol": "parseGeoCoordinate",
+      "signature": "private static Double parseGeoCoordinate(String value, double min, double max)",
+      "line": 2692,
+      "bodySha256": "aed1aac0b553b4bf961562b24dd039cc68ec57712be306b349d3b4b624d0552b",
+      "directPrivateCalls": [],
+      "directMapperCalls": {},
+      "mapperReferences": [],
+      "plannedOwner": "retain Controller in first batch"
+    },
+    {
+      "symbol": "activityTimeError",
+      "signature": "private String activityTimeError(CmsActivity activity)",
+      "line": 2705,
+      "bodySha256": "6fedc380940028b8c6fc477dcecdecb5360f1bb910177bf5e66fe5810b6dc714",
+      "directPrivateCalls": [],
+      "directMapperCalls": {},
+      "mapperReferences": [],
+      "plannedOwner": "PlayNodeAccessService (new concrete play application support; one canonical body, controller wrappers only)"
+    },
+    {
+      "symbol": "resolveMode",
+      "signature": "private int resolveMode(Long activityId, Long topicId)",
+      "line": 2723,
+      "bodySha256": "3fa3f4538f241a87812087135243e04247d0110456a75489e51e69b581a4cb29",
+      "directPrivateCalls": [
+        "firstTicketMode"
+      ],
+      "directMapperCalls": {},
+      "mapperReferences": [],
+      "plannedOwner": "PlayNodeAccessService (new concrete play application support; one canonical body, controller wrappers only)"
+    },
+    {
+      "symbol": "firstTicketMode",
+      "signature": "private Integer firstTicketMode(Long ownerType, Long ownerId)",
+      "line": 2737,
+      "bodySha256": "e7df6905f3e415345688768a3d3d10caad647a335e7b60c7c6e25bdd19141cdd",
+      "directPrivateCalls": [],
+      "directMapperCalls": {},
+      "mapperReferences": [],
+      "plannedOwner": "PlayNodeAccessService (new concrete play application support; one canonical body, controller wrappers only)"
+    },
+    {
+      "symbol": "isTopicCompleted",
+      "signature": "private boolean isTopicCompleted(Long memberId, Long actId, Long topicId, int total, int done)",
+      "line": 2768,
+      "bodySha256": "21eb9b7d11141db849ceb97a84d299a20536435aa732059ea9055f4b517ea17f",
+      "directPrivateCalls": [
+        "exploreRegistration",
+        "isTopicCompletedFor",
+        "resolveMode"
+      ],
+      "directMapperCalls": {},
+      "mapperReferences": [],
+      "plannedOwner": "retain Controller in first batch"
+    },
+    {
+      "symbol": "isTopicCompletedFor",
+      "signature": "private boolean isTopicCompletedFor(CmsRegistration explore, Long topicId, int total, int done)",
+      "line": 2792,
+      "bodySha256": "bc19c0e435c4226008bae5a87ce5b317b3ba63c73c26b028c9121b3444c4779f",
+      "directPrivateCalls": [],
+      "directMapperCalls": {},
+      "mapperReferences": [],
+      "plannedOwner": "retain Controller in first batch"
+    },
+    {
+      "symbol": "isCompletedCompletionFact",
+      "signature": "private boolean isCompletedCompletionFact(com.chengyinhub.business.domain.CmsTopic topic, Integer routeStatus, List<CmsRegistration> explores, Long topicId, int total, int done)",
+      "line": 2807,
+      "bodySha256": "4caa36ca2ac122c369fccdb1e1150588cc93ad7397b21f2f51716bb91d8867dd",
+      "directPrivateCalls": [
+        "isTopicCompletedFor",
+        "topicHistoryBlocked"
+      ],
+      "directMapperCalls": {},
+      "mapperReferences": [],
+      "plannedOwner": "retain Controller in first batch"
+    },
+    {
+      "symbol": "completedExplorePassOwnedBy",
+      "signature": "private boolean completedExplorePassOwnedBy(Long memberId, Long activityId, CmsRegistration registration)",
+      "line": 2835,
+      "bodySha256": "f781eaab9af4274197c88e26f9ec18b6d107dd8e2c6ad82f06c8c4c9514d89b4",
+      "directPrivateCalls": [],
+      "directMapperCalls": {},
+      "mapperReferences": [],
+      "plannedOwner": "retain Controller in first batch"
+    },
+    {
+      "symbol": "exploreRegistration",
+      "signature": "private CmsRegistration exploreRegistration(Long memberId, Long actId)",
+      "line": 2868,
+      "bodySha256": "3699187b870dc13e03dac7f261895bdab3fce1842c3e83d8a9789b6323811104",
+      "directPrivateCalls": [],
+      "directMapperCalls": {},
+      "mapperReferences": [],
+      "plannedOwner": "retain Controller in first batch"
+    },
+    {
+      "symbol": "isRegistered",
+      "signature": "private boolean isRegistered(Long memberId, Long actId)",
+      "line": 2891,
+      "bodySha256": "d2e06d590788a7811bf04ee25fb9d95d020662560ad79560ec7f11f000470676",
+      "directPrivateCalls": [],
+      "directMapperCalls": {},
+      "mapperReferences": [],
+      "plannedOwner": "retain Controller in first batch"
+    },
+    {
+      "symbol": "activityRegistration",
+      "signature": "private CmsRegistration activityRegistration(Long memberId, Long actId, Long registrationId)",
+      "line": 2903,
+      "bodySha256": "0e7536bc505cdc9852e517c0878da8bcc9be63f9490af398a3fc325f750efe47",
+      "directPrivateCalls": [],
+      "directMapperCalls": {},
+      "mapperReferences": [],
+      "plannedOwner": "retain Controller in first batch"
+    },
+    {
+      "symbol": "validSelfPlayPass",
+      "signature": "private CmsRegistration validSelfPlayPass(Long memberId, Long topicId)",
+      "line": 2921,
+      "bodySha256": "fc1d884aa064aa34cc8f92dea1a796a0b547ce293d650cace9f6df44d03ac436",
+      "directPrivateCalls": [
+        "validSelfPlayPass"
+      ],
+      "directMapperCalls": {},
+      "mapperReferences": [],
+      "plannedOwner": "retain Controller in first batch"
+    },
+    {
+      "symbol": "validSelfPlayPass",
+      "signature": "private CmsRegistration validSelfPlayPass(Long memberId, Long topicId, Long registrationId)",
+      "line": 2926,
+      "bodySha256": "80b5b54e4f1664be36e15206a3444e7fc57e5137321d2c06942eb744ac5e772a",
+      "directPrivateCalls": [],
+      "directMapperCalls": {},
+      "mapperReferences": [],
+      "plannedOwner": "retain Controller in first batch"
+    },
+    {
+      "symbol": "isNightNow",
+      "signature": "private boolean isNightNow()",
+      "line": 2945,
+      "bodySha256": "85dd261a1f5e39524dd5649b75309ed14ec19b727bf5a6d1afce229f35f4f0c9",
+      "directPrivateCalls": [],
+      "directMapperCalls": {},
+      "mapperReferences": [],
+      "plannedOwner": "PlayNodeAccessService (new concrete play application support; one canonical body, controller wrappers only)"
+    },
+    {
+      "symbol": "resolveCtx",
+      "signature": "private PlayCtx resolveCtx(Long memberId, String activityId, String topicId, CmsTopicNode node)",
+      "line": 2967,
+      "bodySha256": "ca68ebac9aad72b29f794b260e649c917ee2832a9681f59ceaf763a133253cdc",
+      "directPrivateCalls": [
+        "resolveCtx"
+      ],
+      "directMapperCalls": {},
+      "mapperReferences": [],
+      "plannedOwner": "PlayNodeAccessService (new concrete play application support; one canonical body, controller wrappers only)"
+    },
+    {
+      "symbol": "resolveCtx",
+      "signature": "private PlayCtx resolveCtx(Long memberId, String activityId, String topicId, CmsTopicNode node, Long registrationId)",
+      "line": 2972,
+      "bodySha256": "ec6c9299800fcf32d91ca4ea47a455c3f969fed7e933708d8227196b60ba1319",
+      "directPrivateCalls": [
+        "activityTimeError",
+        "isNightNow"
+      ],
+      "directMapperCalls": {
+        "currentPlayActivityMapper": [
+          "selectCmsActivityByIdForUpdate"
+        ]
+      },
+      "mapperReferences": [
+        "cmsRegistrationMapper",
+        "currentPlayActivityMapper"
+      ],
+      "plannedOwner": "PlayNodeAccessService (new concrete play application support; one canonical body, controller wrappers only)"
+    },
+    {
+      "symbol": "leadGateError",
+      "signature": "private String leadGateError(Long actId, CmsTopicNode node)",
+      "line": 3034,
+      "bodySha256": "41053d87a52b6a45684ab7a550816aed7ce15cd73c73557005c97c06f88297d2",
+      "directPrivateCalls": [],
+      "directMapperCalls": {
+        "clubLeadMapper": [
+          "selectByActivity"
+        ]
+      },
+      "mapperReferences": [
+        "clubLeadMapper"
+      ],
+      "plannedOwner": "PlayNodeAccessService (new concrete play application support; one canonical body, controller wrappers only)"
+    },
+    {
+      "symbol": "logAttempt",
+      "signature": "private void logAttempt(Long memberId, CmsTopicNode node, Long actId, int attemptType, int result, String wrongAnswer)",
+      "line": 3054,
+      "bodySha256": "bbd2048e9d0ea67d5401c53dddead275fac218aa9036e5d6ae33ecf8e6fcb78d",
+      "directPrivateCalls": [],
+      "directMapperCalls": {
+        "playAttemptLogMapper": [
+          "insertPlayAttemptLog"
+        ]
+      },
+      "mapperReferences": [
+        "playAttemptLogMapper"
+      ],
+      "plannedOwner": "retain Controller in first batch"
+    },
+    {
+      "symbol": "advanceProgress",
+      "signature": "private Map<String, Object> advanceProgress(Long memberId, CmsTopicNode node, Long actId)",
+      "line": 3167,
+      "bodySha256": "b1ecc33157c86dac02aaf6849a6e0e5bd99eb3806d91c0037707d384465d02a3",
+      "directPrivateCalls": [
+        "advanceProgress"
+      ],
+      "directMapperCalls": {},
+      "mapperReferences": [],
+      "plannedOwner": "retain Controller in first batch"
+    },
+    {
+      "symbol": "advanceProgress",
+      "signature": "private Map<String, Object> advanceProgress(Long memberId, CmsTopicNode node, Long actId, String picUrl)",
+      "line": 3175,
+      "bodySha256": "2f6af9a15083bf5f4702266e3f40dbb45554c55f396310d1810e5f4d47df3f84",
+      "directPrivateCalls": [
+        "advanceProgress"
+      ],
+      "directMapperCalls": {},
+      "mapperReferences": [],
+      "plannedOwner": "retain Controller in first batch"
+    },
+    {
+      "symbol": "advanceProgress",
+      "signature": "private Map<String, Object> advanceProgress(Long memberId, CmsTopicNode node, Long actId, String picUrl, Integer puzzleScore, String completionMode)",
+      "line": 3181,
+      "bodySha256": "0ad59a3ece3cfc4747b199f79f977bb55684c9b6addbad794bd05eecabcf5359",
+      "directPrivateCalls": [
+        "advanceProgress"
+      ],
+      "directMapperCalls": {},
+      "mapperReferences": [],
+      "plannedOwner": "retain Controller in first batch"
+    },
+    {
+      "symbol": "advanceProgress",
+      "signature": "private Map<String, Object> advanceProgress(Long memberId, CmsTopicNode node, Long actId, String picUrl, Integer puzzleScore, String completionMode, RewardPolicy rewardPolicy)",
+      "line": 3187,
+      "bodySha256": "f1c514f49779d809390d7db4fce1e439f8b41e0c1b54ff7df677c08991004e23",
+      "directPrivateCalls": [
+        "advanceProgress"
+      ],
+      "directMapperCalls": {},
+      "mapperReferences": [],
+      "plannedOwner": "retain Controller in first batch"
+    },
+    {
+      "symbol": "advanceProgress",
+      "signature": "private Map<String, Object> advanceProgress(Long memberId, CmsTopicNode node, Long actId, String picUrl, Integer puzzleScore, String completionMode, RewardPolicy rewardPolicy, String routeActionId, Integer expectedRouteVersion, String trustedOutcomeCode)",
+      "line": 3194,
+      "bodySha256": "5efba99550f80c1dd69a5d07991fa391adddcb7b7d39dfc10a4bad6a96210cd6",
+      "directPrivateCalls": [
+        "advanceProgress"
+      ],
+      "directMapperCalls": {},
+      "mapperReferences": [],
+      "plannedOwner": "retain Controller in first batch"
+    },
+    {
+      "symbol": "advanceProgress",
+      "signature": "private Map<String, Object> advanceProgress(Long memberId, CmsTopicNode node, Long actId, String picUrl, Integer puzzleScore, String completionMode, RewardPolicy rewardPolicy, String routeActionId, Integer expectedRouteVersion, String trustedOutcomeCode, Long approvedProgressId)",
+      "line": 3207,
+      "bodySha256": "bb9bfc8f9b53436fc70b27136ff90a71b615cb7052516f73dffab66d6639b734",
+      "directPrivateCalls": [
+        "collect",
+        "grantConditionalReward",
+        "grantCouponById",
+        "grantTemplateCoupon",
+        "isTopicCompleted",
+        "refreshBingo",
+        "resolveMode"
+      ],
+      "directMapperCalls": {},
+      "mapperReferences": [],
+      "plannedOwner": "retain Controller in first batch"
+    },
+    {
+      "symbol": "hintUnlockCost",
+      "signature": "private int hintUnlockCost()",
+      "line": 3875,
+      "bodySha256": "323996a32bb0d3c2ed7011d1c54b6df11b3361df421dd4c5fc86a1bf636828cd",
+      "directPrivateCalls": [],
+      "directMapperCalls": {},
+      "mapperReferences": [],
+      "plannedOwner": "PuzzlePlayServiceImpl.hintUnlockCost (existing domain service; nodes and unlock share it)"
+    },
+    {
+      "symbol": "refreshBingo",
+      "signature": "private void refreshBingo(Long memberId, Long topicId, Map<String, Object> data)",
+      "line": 3905,
+      "bodySha256": "fcfd8313b6a92b5d309855022b37803ecb8887909830edb2551958146c675aaa",
+      "directPrivateCalls": [],
+      "directMapperCalls": {},
+      "mapperReferences": [],
+      "plannedOwner": "retain Controller in first batch"
+    },
+    {
+      "symbol": "grantConditionalReward",
+      "signature": "private Map<String, Object> grantConditionalReward(Long memberId, CmsTopicNode node, String outcomeCode, boolean shopDay, RewardPolicy rewardPolicy, String picUrl)",
+      "line": 3931,
+      "bodySha256": "bc086e42ba2317f4f986f8142be08b1bb81f5cd791cb60576a32c4735ec575c7",
+      "directPrivateCalls": [
+        "grantCouponById"
+      ],
+      "directMapperCalls": {},
+      "mapperReferences": [],
+      "plannedOwner": "retain Controller in first batch"
+    },
+    {
+      "symbol": "grantTemplateCoupon",
+      "signature": "private void grantTemplateCoupon(Long memberId, CmsTopicNode node, Long actId)",
+      "line": 3969,
+      "bodySha256": "1af9af09cb2038ee3a191562eaaf72b7abb7c255ecb1da58e3f203da723f46ee",
+      "directPrivateCalls": [
+        "grantCouponById"
+      ],
+      "directMapperCalls": {
+        "businessAuditEventMapper": [
+          "insertBusinessAuditEvent"
+        ]
+      },
+      "mapperReferences": [
+        "businessAuditEventMapper"
+      ],
+      "plannedOwner": "retain Controller in first batch"
+    },
+    {
+      "symbol": "grantCouponById",
+      "signature": "private boolean grantCouponById(Long memberId, Long couponId)",
+      "line": 4020,
+      "bodySha256": "24c9f817f0c32969b2efcd706e9ecbec1ac64d23b75d6fdbaaee309ab27b5bb0",
+      "directPrivateCalls": [],
+      "directMapperCalls": {},
+      "mapperReferences": [],
+      "plannedOwner": "retain Controller in first batch"
+    },
+    {
+      "symbol": "currentMemberId",
+      "signature": "private Long currentMemberId()",
+      "line": 4040,
+      "bodySha256": "37e203a18d71ff63b7cf76b1531b03c36b8b1fc649da925d82cbdf88f9895956",
+      "directPrivateCalls": [],
+      "directMapperCalls": {},
+      "mapperReferences": [],
+      "plannedOwner": "retain Controller in first batch"
+    }
+  ],
+  "controllerReferenceJavaTests": [
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/ComplaintPickerOwnerType3RealDbIT.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ShopDayGameThenPhotoH2Test.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/SpoilerIsNotAnswerGateTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowWriteServiceTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PlayKitBingoRuntimeTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/util/AdvancedGamePublicProjectionTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/util/ChapterAtmospherePresetTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/common/utils/GeoDistanceUtilsTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/framework/aspectj/DeadlockRetryEntryPointContractTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayBranchNodeVisibilityTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayCheckinDuplicateCodeTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayCheckinLiveCodeTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayCompletedRouteSourcesTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayCurrentUseBoundaryTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayDelistedCompletedRetryContractTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayEndingCompanionFactTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayGpsGeofenceValidationTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayHintUnlockTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayHistoryFulfillmentAccessTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayHistoryNodesContractTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayHistoryNodesOldEntryContractTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayLeadSpectatorGateTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayLeaderboardTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayMyCompletedSelfPlayContractTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayNodeNpcPreferenceTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayPhotoRetryAndFailureContractTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayProgressCompletionTruthTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayProgressCouponGrantFailureTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayProgressIdempotencyTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayPuzzleHintTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayRouteConflictHttpContractTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayRouteContractTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlaySelfPlayPassGateTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlaySensorResultTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayUnlockGateTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayVitalsOnTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/BasicPlayCommandFixtures.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/CityStationOrderAcceptanceTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ClubLeadGateTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/CollectIdempotencyTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/CurrentPlayControllerFixtures.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/FreeOrderCancelEntryGateAcceptanceTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/GameplayControllerProtectionTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/JourneyPublishFreezeTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/LogAttemptFailureTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/NodeMedalClaimTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/O08PrivateLocationReadPathTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/PhotoOwnerBindingContractTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/PhotoReviewRewardContractTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/PlayCommandIntentTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/PlayProgressVarsTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/PlayResolveModeTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/PlaySelfPlayCompletionTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ShopDayExperienceLayerContractTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/TopicRouteFrozenSessionReadSideTest.java"
+  ],
+  "rawControllerConstructorJavaTests": [
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowWriteServiceTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayBranchNodeVisibilityTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayCheckinDuplicateCodeTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayCheckinLiveCodeTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayCompletedRouteSourcesTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayCurrentUseBoundaryTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayDelistedCompletedRetryContractTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayEndingCompanionFactTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayGpsGeofenceValidationTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayHintUnlockTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayHistoryFulfillmentAccessTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayHistoryNodesContractTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayHistoryNodesOldEntryContractTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayLeadSpectatorGateTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayLeaderboardTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayMyCompletedSelfPlayContractTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayNodeNpcPreferenceTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayPhotoRetryAndFailureContractTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayProgressCompletionTruthTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayProgressCouponGrantFailureTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayProgressIdempotencyTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayPuzzleHintTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlaySelfPlayPassGateTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlaySensorResultTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayUnlockGateTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/CityStationOrderAcceptanceTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ClubLeadGateTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/CollectIdempotencyTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/FreeOrderCancelEntryGateAcceptanceTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/JourneyPublishFreezeTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/LogAttemptFailureTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/NodeMedalClaimTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/O08PrivateLocationReadPathTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/PhotoOwnerBindingContractTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/PhotoReviewRewardContractTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/PlayCommandIntentTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/PlayProgressVarsTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/PlayResolveModeTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/PlaySelfPlayCompletionTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ShopDayExperienceLayerContractTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/TopicRouteFrozenSessionReadSideTest.java"
+  ],
+  "puzzleConstructorJavaTests": [
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PuzzlePlayServiceImplTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PuzzleRevealArrivalFactTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayPuzzleHintTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/JourneyPublishFreezeTest.java"
+  ]
+}
