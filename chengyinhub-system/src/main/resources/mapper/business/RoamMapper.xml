@@ -108,6 +108,13 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
           and <include refid="cityNodeContentApproved" />
           and p.lat between #{minLat} and #{maxLat}
           and p.lng between #{minLng} and #{maxLng}
+        <!-- 包围盒最大 20km:按离盒心(=玩家定位)由近到远取前 200 个,不再整盒无序全量下发。
+             经度差乘 cos(纬度) 折成等距,与控制器算 dLng 的口径一致;id 兜底保证排序稳定。 -->
+        order by (p.lat - (#{minLat} + #{maxLat}) / 2) * (p.lat - (#{minLat} + #{maxLat}) / 2)
+               + (p.lng - (#{minLng} + #{maxLng}) / 2) * (p.lng - (#{minLng} + #{maxLng}) / 2)
+                 * cos(radians((#{minLat} + #{maxLat}) / 2)) * cos(radians((#{minLat} + #{maxLat}) / 2)),
+                 p.id
+        limit 200
     </select>
 
     <select id="selectPoisByIds" resultMap="RoamPoiResult">
