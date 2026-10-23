@@ -115,6 +115,9 @@ public class ApiRoamController extends BaseController {
         try { return getAppUserId(); } catch (Exception e) { return 0L; }
     }
 
+    /** /pois 单次最多返回的点数(由近到远截断);地图一屏画不下更多,也不做整城导出口。 */
+    static final int POIS_NEAR_LIMIT = 500;
+
     @Operation(summary = "附近 POI(经纬度包围盒粗筛)")
     @GetMapping("/pois")
     public AjaxResult pois(Double lat, Double lng, Integer radius) {
@@ -124,7 +127,7 @@ public class ApiRoamController extends BaseController {
         double dLat = r / 111320.0;
         double dLng = r / (111320.0 * Math.max(0.2, Math.cos(Math.toRadians(lat))));
         // C-13:found 是「这个账号已发现过」的服务端事实(按会员投影),换设备/清缓存不再回到迷雾。
-        List<RoamPoi> list = roamMapper.selectPoisNear(lat - dLat, lat + dLat, lng - dLng, lng + dLng, uid());
+        List<RoamPoi> list = roamMapper.selectPoisNear(lat - dLat, lat + dLat, lng - dLng, lng + dLng, uid(), POIS_NEAR_LIMIT);
         return success(list);
     }
 
@@ -532,7 +535,18 @@ public class ApiRoamController extends BaseController {
         if (clientSessionKey != null && !clientSessionKey.equals(session.getClientSessionKey()))
             return error("会话关联不一致");
         if (!Integer.valueOf(0).equals(session.getStatus())) return error("本次漫游已结算");
-        int newly = roamMapper.batchInsertTile(memberId, sid, tileList, new Date());
+        // P0-23:格子是客户端上报的,服务端至少按会话时长封顶 —— 不能一次请求就把全城点亮刷里程碑勋章。
+        //   超出预算的部分直接丢弃(不报错):报错会让客户端待传队列卡死、连带结算排不空。
+        Date now = new Date();
+        int remaining = revealTileBudget(session.getStartedAt(), now.getTime()) - roamMapper.countTilesBySession(sid);
+        if (remaining <= 0) {
+            logger.warn("漫游点亮超出会话时长预算,本批丢弃 member={} session={} tiles={}", memberId, sid, tileList.size());
+            tileList = java.util.Collections.emptyList();
+        } else if (tileList.size() > remaining) {
+            logger.warn("漫游点亮超出会话时长预算,截断 member={} session={} tiles={} kept={}", memberId, sid, tileList.size(), remaining);
+            tileList = tileList.subList(0, remaining);
+        }
+        int newly = tileList.isEmpty() ? 0 : roamMapper.batchInsertTile(memberId, sid, tileList, now);
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("sessionId", clientSessionKey == null ? sid : String.valueOf(sid));
         data.put("newlyRevealed", Math.max(0, newly));
@@ -765,7 +779,8 @@ public class ApiRoamController extends BaseController {
         // ③ 先用 status=0→1 的 CAS 抢结算权。先读后判挡不住两个并发请求同时读到 status=0;
         //    CAS 失败的请求必须在任何 XP/勋章写入前退出。
         session.setFinishedAt(new Date());
-        session.setDistanceM(clampDistanceM(distanceM, session.getStartedAt(), session.getFinishedAt().getTime()));
+        // P0-23:里程是客户端自报的展示值(会出现在社区帖的路线引用里),按会话时长与格子数封顶后再落库。
+        session.setDistanceM(clampClientDistance(distanceM, session.getStartedAt(), session.getFinishedAt(), sessionTiles));
         session.setTilesRevealed(sessionTiles);
         session.setPoisFound(newPois);
         session.setXpAwarded(totalXp);
@@ -905,17 +920,6 @@ public class ApiRoamController extends BaseController {
         return Math.max(0, cappedNow - cappedPrior);
     }
 
-    /**
-     * 结算里程:客户端上报的 distanceM 只在「会话开始至今 × MAX_MOVE_SPEED_MPS」之内采信,
-     * 超出按上限记;缺开始时间则不采信(记 0)。里程会进广场分享卡副标题,不能任由客户端填。
-     */
-    static int clampDistanceM(Integer distanceM, Date startedAt, long nowMs) {
-        if (distanceM == null || distanceM <= 0 || startedAt == null) return 0;
-        long elapsedSec = Math.max(0L, (nowMs - startedAt.getTime()) / 1000L);
-        long cap = (long) Math.floor(elapsedSec * MAX_MOVE_SPEED_MPS);
-        return (int) Math.min(distanceM.longValue(), cap);
-    }
-
     /** 从 priorEver 到 nowEver 跨过的最高里程碑阈值;没跨返回 0。 */
     static int crossedMilestone(int priorEver, int nowEver, int[] thresholds) {
         int best = 0;
@@ -943,12 +947,49 @@ public class ApiRoamController extends BaseController {
         return best;
     }
 
+    /** 会话首批格子的基础额度(与每日探索值上限同量级),之后按时长增长。 */
+    static final int REVEAL_TILE_BASE = 200;
+    /** 时长预算按「最高速度每走 100 米一格」放宽(geohash7 边长约 150 米,斜穿也不会更密)。 */
+    static final double REVEAL_TILE_EDGE_M = 100.0;
+    /** 单次漫游里程上限(米),防自报一个天文数字。 */
+    static final int ROAM_MAX_DISTANCE_M = 200_000;
+    /** 里程按格子数的额外放宽(米/格):会话可能晚于实际出发才建(离线先走),格子能证明走过。 */
+    static final int DISTANCE_PER_TILE_ALLOWANCE_M = 300;
+
+    /** 本会话最多可点亮的新格子数:基础额度 + 会话时长 × 最高速度 / 每格距离。 */
+    static int revealTileBudget(Date startedAt, long nowMs) {
+        long elapsedSec = startedAt == null ? 0L : Math.max(0L, (nowMs - startedAt.getTime()) / 1000L);
+        double byTime = elapsedSec * MAX_MOVE_SPEED_MPS / REVEAL_TILE_EDGE_M;
+        return (int) Math.min(Integer.MAX_VALUE, REVEAL_TILE_BASE + (long) Math.ceil(byTime));
+    }
+
+    /** 客户端自报里程的服务端上界:min(总上限, 时长×最高速度 + 格子×放宽);负数/空按 0。 */
+    static int clampClientDistance(Integer distanceM, Date startedAt, Date finishedAt, int sessionTiles) {
+        if (distanceM == null || distanceM <= 0) return 0;
+        long elapsedSec = startedAt == null || finishedAt == null ? 0L
+                : Math.max(0L, (finishedAt.getTime() - startedAt.getTime()) / 1000L);
+        long bound = (long) Math.ceil(elapsedSec * MAX_MOVE_SPEED_MPS)
+                + (long) Math.max(0, sessionTiles) * DISTANCE_PER_TILE_ALLOWANCE_M;
+        return (int) Math.min(distanceM, Math.min(bound, ROAM_MAX_DISTANCE_M));
+    }
+
+    private static final String GEOHASH32 = "0123456789bcdefghjkmnpqrstuvwxyz";
+
+    /** 迷雾格只认 7 位 geohash(与小程序 utils/roam-geo.js geohash7 同字母表);其它长度/字符一律丢弃。 */
+    static boolean isGeohash7(String t) {
+        if (t == null || t.length() != 7) return false;
+        for (int i = 0; i < t.length(); i++) {
+            if (GEOHASH32.indexOf(t.charAt(i)) < 0) return false;
+        }
+        return true;
+    }
+
     private static List<String> splitTiles(String csv, int cap) {
         List<String> out = new ArrayList<>();
         if (csv == null) return out;
         for (String s : csv.split(",")) {
             String t = s.trim();
-            if (!t.isEmpty() && t.length() <= 12) out.add(t);
+            if (isGeohash7(t)) out.add(t);
             if (out.size() >= cap) break;
         }
         return out;

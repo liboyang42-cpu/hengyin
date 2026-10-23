@@ -44,8 +44,8 @@ const { fromHttpStatusAbnormal } = require('../../utils/transport/failure-envelo
 const { resolveMenuChrome } = require('../../utils/nav-safe-area.js');
 const { bindPlayerRoamMemory } = require('../../utils/roam-player-memory.js');
 const { syncRoamTileMemory } = require('../../utils/roam-tile-memory-sync.js');
+const { ALBUM_SAVE, classifyAlbumSaveError, normalizeAlbumOutcome } = require('../../utils/album-save-outcome.js');
 const MOCK_IMG = '/images/index-figma/nearby-card.jpg';
-
 const { onRoamCacheInvalidated } = require('../../utils/roam-cache-epoch.js');
 function roamMemory(page) {
   const memory = bindPlayerRoamMemory(page, getApp(), wx);
@@ -1390,7 +1390,7 @@ Page({
   // _initWorld 的 13 家演示商家(转角奶茶/深夜食堂…)—— 用户分不出真假,会走过去打卡。
   // 演示种子仅在开发版且显式打开 roamDemoPois 时注入；网络失败仍需显示离线状态。
   _fetchRoamPois(c) {
-    const current = this._roamReadScope();
+    const scope = this._roamReadScope(), seq = this._roamPoiSeq = (this._roamPoiSeq || 0) + 1, current = () => scope() && seq === this._roamPoiSeq; // 连续重拉只认最后一次,旧回包晚到不覆盖新结果
     // 等待附近商家加载完成再拉 POI,避免并发修改 this._pois 丢数据
     const nearbyDone = this._nearbyReady || Promise.resolve();
     return nearbyDone.then(() => {
@@ -4973,7 +4973,7 @@ Page({
     if (ch === '广场') return this._shareToSquare();
     if (ch === '保存') {
       return this._exportAndSave('生成卡片', () => this._drawShareCard(this.data.share.idx), this._shareScope())
-        .then((r) => ({ ok: r.saved, channel: ch, saved: r.saved, posted: false }));
+        .then((r) => ({ ok: r.saved, channel: ch, saved: r.saved, posted: false, cancelled: r.outcome === ALBUM_SAVE.CANCELLED }));
     }
     return this._shareToAlbumGuide(ch);
   },
@@ -4987,7 +4987,7 @@ Page({
     const current = this._shareScope();
     const copy = this._shareCopy();
     return this._exportAndSave('生成卡片', () => this._drawShareCard(this.data.share.idx), current).then((r) => {
-      if (!current() || !r.saved) return { ok: false, channel: ch, saved: false, posted: false };
+      if (!current() || !r.saved) return { ok: false, channel: ch, saved: false, posted: false, cancelled: r.outcome === ALBUM_SAVE.CANCELLED };
       cyModal.show({
         title: '去' + ch + '发布',
         content: '足迹卡已存到相册,打开' + ch + '选它就行。文案参考(可长按复制):\n' + copy,
@@ -5148,7 +5148,7 @@ Page({
     return Promise.resolve().then(drawFn).then((path) => {
       releaseLoading();
       if (!current()) return { path: null, saved: false };
-      return this._saveToAlbum(path, current).then((saved) => ({ path, saved: current() && saved }));
+      return this._saveToAlbum(path, current).then((r) => { const outcome = current() ? normalizeAlbumOutcome(r) : ALBUM_SAVE.FAILED; return { path, saved: outcome === ALBUM_SAVE.SAVED, outcome }; });
     }).catch((err) => {
       releaseLoading();
       if (!current()) return { path: null, saved: false };
@@ -5184,23 +5184,23 @@ Page({
 
   _saveToAlbum(path, current = this._roamReadScope()) {
     return new Promise((resolve) => {
-      if (!current()) { resolve(false); return; }
+      if (!current()) { resolve(ALBUM_SAVE.FAILED); return; }
       wx.saveImageToPhotosAlbum({
         filePath: path,
-        success: () => { if (!current()) { resolve(false); return; } cyToast('已保存到相册'); resolve(true); },
+        success: () => { if (!current()) { resolve(ALBUM_SAVE.FAILED); return; } cyToast('已保存到相册'); resolve(ALBUM_SAVE.SAVED); },
         fail: (e) => {
-          if (!current()) { resolve(false); return; }
-          const msg = (e && e.errMsg) || '';
-          if (/auth|deny/i.test(msg)) {
+          if (!current()) { resolve(ALBUM_SAVE.FAILED); return; }
+          const outcome = classifyAlbumSaveError(e);
+          if (outcome === ALBUM_SAVE.DENIED) {
             cyModal.show({
               title: '需要相册权限', content: '在设置里允许保存到相册后重试。',
               confirmText: '去设置', cancelText: '取消',
               success: (m) => { if (m.confirm && current()) wx.openSetting({}); },
             });
-          } else if (!/cancel/i.test(msg)) {
+          } else if (outcome === ALBUM_SAVE.FAILED) {
             cyToast('保存失败');
           }
-          resolve(false);
+          resolve(outcome);
         },
       });
     });
