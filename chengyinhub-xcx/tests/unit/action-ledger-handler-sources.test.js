@@ -389,3 +389,18 @@ test('PlayKit parent delegates real advanced retry and scopes photo consent to i
   // A changed delegate or consent guard must turn this proof red rather than retaining a hand-written plan.
   assert.throws(() => assert.match(child.replace("this.action('RETRY', {})", "this.start()"), /retry\(\)[\s\S]{0,420}return this\.action\('RETRY', \{\}\)/));
 });
+
+
+test('真实 roleGuard.clear 只清缓存；load 仍保留 Controller POST，未知别名不裁剪', () => {
+  const { namespaceDependencySource, extractTargets } = require('../../scripts/uiaudit/build-action-ledger')
+  const file = pathFor('utils/roleGuard.js')
+  const clear = namespaceDependencySource(file, ['roleGuard'], 'roleGuard.clear()')
+  assert.match(clear, /removeStorageSync/)
+  assert.deepEqual(extractTargets(clear).apiContracts, [])
+  const load = namespaceDependencySource(file, ['roleGuard'], 'roleGuard.load(callback)')
+  assert.ok(extractTargets(load).apiContracts.some(api => api.url === '/api/role/info' && api.method === 'POST'))
+  for (const source of ['const alias = roleGuard; alias.clear()', 'roleGuard[method]()', 'roleGuard.unknown()']) {
+    const conservative = namespaceDependencySource(file, ['roleGuard'], source)
+    assert.ok(extractTargets(conservative).apis.includes('/api/role/info'), source)
+  }
+})

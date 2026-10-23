@@ -134,10 +134,13 @@ class TimeWindowSubscribeRuntimeTest {
 
     @Test
     void 幂等键重放不再推进版本() {
-        session(WINDOW_CONFIG, "{}");
+        GameRuntimeSession original = session(WINDOW_CONFIG, "{}");
         PlayAttemptLog logged = new PlayAttemptLog();
         logged.setMemberId(MEMBER_ID);
         logged.setAttemptType(8);
+        logged.setIdempotencyKey("sub-1");
+        logged.setRequestFingerprint(ReflectionTestUtils.invokeMethod(service, "commandFingerprint", original,
+                MEMBER_ID, original.getVersion(), "sub-1", "SUBSCRIBE_TIME_WINDOW", tmpl(TMPL_ID)));
         logged.setResultJson("{\"sessionId\":" + SESSION_ID + ",\"version\":1}");
         when(attemptMapper.selectByIdempotencyKey("sub-1")).thenReturn(logged);
 

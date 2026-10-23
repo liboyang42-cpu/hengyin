@@ -1,0 +1,13 @@
+{
+  "parent": "65780b036d9e44e3ab8705bb8c244558a09213af",
+  "branch": "codex/architecture-day-g-wp04-fixtures",
+  "source_sha256": "5804413b9346d506273ca65161495c4583da72d307b8ac69af298f6b9c48daa6",
+  "files": {
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/DoublePaymentReproductionTest.java": "f32933bd62ab3376f28c38e6df391aebbaa502a94e09201496a85a7b8cb0cbcb",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/SettlementRateConvergenceTest.java": "8fce95f46f571fb311dc5fc3b9dbe4eb023f5e88cdefda54874316e9802a60a0"
+  },
+  "java": "NOT_RUN",
+  "mysql": "NOT_RUN",
+  "root_it_harness_touched": false,
+  "production_files_changed": 0
+}

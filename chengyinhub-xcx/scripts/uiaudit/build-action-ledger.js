@@ -1551,6 +1551,12 @@ function namespaceDependencySource(file, aliases, source, inlineExports) {
   }
   const bodies = moduleFunctionBodies(file)
   const functions = new Set()
+  const declarations = []
+  // This actual module has primitive cache state; retain its declarations when following clear/load.
+  // Other modules and executable/unresolved initializers keep the conservative whole-module path.
+  const roleCache = file === path.join(ROOT, 'utils/roleGuard.js')
+  const primitive = node => node && (node.type === 'Literal'
+    || node.type === 'BinaryExpression' && primitive(node.left) && primitive(node.right))
   let exportsObject
   for (const statement of ast.body) {
     if (statement.type === 'FunctionDeclaration' && statement.id) {
@@ -1561,6 +1567,11 @@ function namespaceDependencySource(file, aliases, source, inlineExports) {
     if (statement.type === 'VariableDeclaration' && statement.declarations.every(({ id, init }) =>
       id.type === 'Identifier' && init && init.type === 'CallExpression' && init.callee.name === 'require'
       && init.arguments.length === 1 && typeof init.arguments[0].value === 'string')) continue
+    if (roleCache && statement.type === 'VariableDeclaration' && statement.declarations.every(({ id, init }) =>
+      id.type === 'Identifier' && primitive(init))) {
+      declarations.push(full.slice(statement.start, statement.end))
+      continue
+    }
     const expression = statement.type === 'ExpressionStatement' && statement.expression
     if (expression && expression.type === 'Literal' && expression.value === 'use strict') continue
     if (!exportsObject && expression && expression.type === 'AssignmentExpression' && expression.operator === '='
@@ -1578,7 +1589,7 @@ function namespaceDependencySource(file, aliases, source, inlineExports) {
       || !functions.has(property.value.name))) return full
   const exported = new Set(exportsObject.properties.map(property => property.key.name))
   if ([...called].some(name => !exported.has(name))) return full
-  const selected = [...called].map(name => expandModuleFunction(file, name)).join('\n')
+  const selected = declarations.concat([...called].map(name => expandModuleFunction(file, name))).join('\n')
   const selectedCode = maskNonCodeSafely(selected)
   // Passing a local helper as a callback/alias is not a proven direct-call closure.
   for (const name of functions) {
@@ -3339,6 +3350,7 @@ function main() {
 if (require.main === module) process.exitCode = main()
 
 module.exports = {
+  namespaceDependencySource,
   eventHandlerNames,
   loadFailureEventVisibility,
   inferActionClass,

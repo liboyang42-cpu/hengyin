@@ -1,0 +1,23 @@
+{
+  "C_delta": "a480e4083618120332539d0ac49c7e51e9db6839",
+  "G_fixture_delta": "a42172dc6e1565fa06b81c294de137c74f5fd979",
+  "source_test_run": "root-c53-closure-after-ledger.tap",
+  "node": {
+    "tests": 68,
+    "pass": 68,
+    "failure": 0,
+    "skipped": 0,
+    "tap_sha256": "fd8306022fbb6c92fef289dd5b456018b7aac9eb01c6d8fa71ccf6d85d5650ee"
+  },
+  "ledger": {
+    "controls": 5105,
+    "added_ids": 0,
+    "removed_ids": 0,
+    "sha256": "24d2c60417f5c7810b26bf89ba8d7b1a1eed0ddd190431281d3c2e639ef1af18",
+    "static_check": "PASS",
+    "dynamic_evidence": 0
+  },
+  "omitted_redundant_C_inventory_patch": "Generated from root actual merged source; C exact-base large patch not imported",
+  "java_verification": "PENDING_CANDIDATE_CI",
+  "production_actions": 0
+}

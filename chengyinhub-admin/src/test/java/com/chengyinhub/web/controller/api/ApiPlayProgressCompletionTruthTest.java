@@ -64,10 +64,10 @@ class ApiPlayProgressCompletionTruthTest
         pass.setPurchaseKind(PurchaseKind.EXPLORE_PASS);
         when(perkLedgerService.isExploreCompleted(REGISTRATION, TOPIC)).thenReturn(true);
         assertEquals(true, ReflectionTestUtils.invokeMethod(controller, "isCompletedCompletionFact",
-                topic, 0, pass, TOPIC, 2, 1));
+                topic, 0, Collections.singletonList(pass), TOPIC, 2, 1));
         when(perkLedgerService.isExploreCompleted(REGISTRATION, TOPIC)).thenReturn(false);
         assertEquals(false, ReflectionTestUtils.invokeMethod(controller, "isCompletedCompletionFact",
-                topic, 1, pass, TOPIC, 2, 2));
+                topic, 1, Collections.singletonList(pass), TOPIC, 2, 2));
     }
 
     private static final Long PLAYER = 41L;
@@ -348,8 +348,9 @@ class ApiPlayProgressCompletionTruthTest
         when(runtime.nodeAnswers(PLAYER,TOPIC,ACTIVITY,NODE)).thenReturn(json.readTree("{\"validationMethod\":5}"));when(runtime.canPlay(eq(PLAYER),eq(TOPIC),eq(ACTIVITY),eq(NODE),anyString())).thenReturn(true);when(runtime.genericPlayer(PLAYER,TOPIC,ACTIVITY)).thenReturn(true);
         when(runtime.nodeArrivalConfig(PLAYER,TOPIC,ACTIVITY,NODE)).thenReturn(json.readTree("{\"longitude\":\"121.47\",\"latitude\":\"31.23\"}"));when(runtime.recordPlayerArrival(eq(PLAYER),eq(TOPIC),eq(ACTIVITY),eq(NODE),anyString(),eq(0),eq("GPS"))).thenReturn(Collections.singletonMap("version",1));
         assertEquals(500,BasicPlayCommandFixtures.arrive(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), "NaN", "31.23", null, null, null, "10").get("code"));assertEquals(500,BasicPlayCommandFixtures.arrive(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), "120", "30", null, null, null, "10").get("code"));
-        AjaxResult result=BasicPlayCommandFixtures.arrive(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), "121.47", "31.23", null, null, null, "10");assertEquals(200,result.get("code"));assertEquals(Boolean.FALSE,((Map<?,?>)result.get("data")).get("done"));
-        verify(runtime).recordPlayerArrival(PLAYER,TOPIC,ACTIVITY,NODE,null,null,"GPS");verify(progressService,never()).insertPlayerNodeProgress(any());verify(pointsAwardService,never()).award(anyLong(),anyLong(),anyLong(),any());
+        Map<String,Object> command=Map.of("routeActionId","gps-current-proof","expectedRouteVersion",0);
+        AjaxResult result=BasicPlayCommandFixtures.arrive(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), "121.47", "31.23", null, (String)command.get("routeActionId"), (Integer)command.get("expectedRouteVersion"), "10");assertEquals(200,result.get("code"));assertEquals(Boolean.FALSE,((Map<?,?>)result.get("data")).get("done"));
+        verify(runtime).recordPlayerArrival(PLAYER,TOPIC,ACTIVITY,NODE,(String)command.get("routeActionId"),(Integer)command.get("expectedRouteVersion"),"GPS");verify(progressService,never()).insertPlayerNodeProgress(any());verify(pointsAwardService,never()).award(anyLong(),anyLong(),anyLong(),any());
     }
 
     @Test
@@ -360,9 +361,10 @@ class ApiPlayProgressCompletionTruthTest
         when(runtime.canPlay(eq(PLAYER),eq(TOPIC),eq(ACTIVITY),eq(NODE),anyString())).thenReturn(true);
         when(runtime.genericPlayer(PLAYER,TOPIC,ACTIVITY)).thenReturn(true);
         when(runtime.recordPlayerArrival(eq(PLAYER),eq(TOPIC),eq(ACTIVITY),eq(NODE),anyString(),eq(0))).thenReturn(Collections.singletonMap("version",1));
-        AjaxResult result=BasicPlayCommandFixtures.checkin(controller, String.valueOf(ACTIVITY), CODE, null, null, null, null, String.valueOf(NODE));
+        Map<String,Object> command=Map.of("routeActionId","scan-current-proof","expectedRouteVersion",0);
+        AjaxResult result=BasicPlayCommandFixtures.checkin(controller, String.valueOf(ACTIVITY), CODE, null, (String)command.get("routeActionId"), (Integer)command.get("expectedRouteVersion"), null, String.valueOf(NODE));
         assertEquals(200,result.get("code"));assertEquals(Boolean.FALSE,((Map<?,?>)result.get("data")).get("done"));
-        verify(runtime).recordPlayerArrival(PLAYER,TOPIC,ACTIVITY,NODE,null,null);
+        verify(runtime).recordPlayerArrival(PLAYER,TOPIC,ACTIVITY,NODE,(String)command.get("routeActionId"),(Integer)command.get("expectedRouteVersion"));
         verify(progressService,never()).insertPlayerNodeProgress(any());
         verify(pointsAwardService,never()).award(anyLong(),anyLong(),anyLong(),any());
         verify(completionAwardService,never()).grantOnce(anyLong(),anyLong(),anyLong(),any());
@@ -680,7 +682,8 @@ class ApiPlayProgressCompletionTruthTest
         when(runtime.nodeAnswers(PLAYER,TOPIC,ACTIVITY,NODE)).thenReturn(json.readTree("{\"validationMethod\":1,\"questionAnswer\":\"Ａ B\"}"));
         PlayerNodeProgress proof=new PlayerNodeProgress();proof.setStatus(0);when(proofService.markArrived(PLAYER,ACTIVITY,node)).thenReturn(proof);
         AjaxResult wrong=BasicPlayCommandFixtures.answer(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), "changed", null);assertEquals(500,wrong.get("code"));verify(runtime,never()).recordPlayerArrival(anyLong(),anyLong(),anyLong(),anyLong(),any(),any(),anyString());
-        AjaxResult text=BasicPlayCommandFixtures.answer(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), "ab", null);assertEquals(200,text.get("code"));verify(runtime).recordPlayerArrival(PLAYER,TOPIC,ACTIVITY,NODE,null,null,"ANSWER");
+        Map<String,Object> command=Map.of("routeActionId","answer-current-proof","expectedRouteVersion",0);
+        AjaxResult text=BasicPlayCommandFixtures.answer(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), "ab", null, (String)command.get("routeActionId"), (Integer)command.get("expectedRouteVersion"));assertEquals(200,text.get("code"));verify(runtime).recordPlayerArrival(PLAYER,TOPIC,ACTIVITY,NODE,(String)command.get("routeActionId"),(Integer)command.get("expectedRouteVersion"),"ANSWER");
         when(runtime.nodeAnswers(PLAYER,TOPIC,ACTIVITY,NODE)).thenReturn(json.readTree("{\"validationMethod\":3,\"correctAnswer\":\"C\"}"));
         when(runtime.canPlay(PLAYER,TOPIC,ACTIVITY,NODE,"pick-proof")).thenReturn(true);
         BasicPlayCommandFixtures.routeVersion(controller, ACTIVITY, TOPIC, 3);
