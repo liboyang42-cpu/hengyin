@@ -34,7 +34,7 @@ class AdvancedPhotoOrchestrationTest {
     private PhotoCheckVisionResult providerResult;
     private AbstractPlatformTransactionManager transactions;
     private int providerCalls;
-    private boolean casFails, logFails;
+    private boolean casFails, logFails, markFails;
     private Runnable duringProvider;
     private String initialState;
 
@@ -53,15 +53,15 @@ class AdvancedPhotoOrchestrationTest {
         s.setConfigSnapshotJson("{\"schemaVersion\":1,\"photoCheck\":{\"enabled\":true,\"fallback\":\"pass\",\"maxTries\":3,\"xp\":5}}");
         initialState = "{}";
         row.set(s); receipts.clear(); original = null; intent = null; providerCalls = 0;
-        casFails = logFails = false; duringProvider = () -> {};
+        casFails = logFails = markFails = false; duringProvider = () -> {};
         providerResult = PhotoCheckVisionResult.concluded(true, 99, "original result");
         transactions = new AbstractPlatformTransactionManager() {
-            protected Object doGetTransaction() { return new Snapshot(copy(row.get()), new HashMap<>(receipts)); }
+            protected Object doGetTransaction() { return new Snapshot(copy(row.get()), new HashMap<>(receipts), intent); }
             protected void doBegin(Object tx, TransactionDefinition def) { }
             protected void doCommit(DefaultTransactionStatus status) { }
             protected void doRollback(DefaultTransactionStatus status) {
                 Snapshot before = (Snapshot) status.getTransaction();
-                row.set(before.row()); receipts.clear(); receipts.putAll(before.receipts());
+                row.set(before.row()); receipts.clear(); receipts.putAll(before.receipts()); intent = before.intent();
             }
         };
         ReflectionTestUtils.setField(service, "transactionManager", transactions);
@@ -99,11 +99,13 @@ class AdvancedPhotoOrchestrationTest {
         });
         doAnswer(i -> {
             assertTx(); assertEquals(Long.valueOf(91L), i.<Long>getArgument(2)); assertEquals(1, receipts.size());
-            intent = view(PhotoCheckIntentState.APPLIED, intent.result(), intent.providerState()); return null;
+            intent = view(PhotoCheckIntentState.APPLIED, intent.result(), intent.providerState());
+            if (markFails) throw new IllegalStateException("intent write failed after APPLIED");
+            return null;
         }).when(intents).markApplied(eq(81L), anyString(), eq(91L));
     }
 
-    private record Snapshot(GameRuntimeSession row, Map<String, PlayAttemptLog> receipts) { }
+    private record Snapshot(GameRuntimeSession row, Map<String, PlayAttemptLog> receipts, PhotoCheckIntentView intent) { }
     private void assertTx() {
         assertTrue(TransactionSynchronizationManager.isActualTransactionActive());
         assertFalse(TransactionSynchronizationManager.isCurrentTransactionReadOnly());
@@ -144,6 +146,22 @@ class AdvancedPhotoOrchestrationTest {
         assertEquals(PhotoCheckIntentState.RESULT_READY, intent.state()); assertTrue(receipts.isEmpty());
         verify(intents, never()).markApplied(anyLong(), anyString(), anyLong());
         logFails = false; act(); assertEquals(1, providerCalls);
+    }
+
+    @Test void appliedWriteFailureRollsBackLocalReceiptAndGrantButRetainsFirstProviderResult() {
+        markFails = true;
+        assertThrowsExactly(AiProviderOutcomeUnknownException.class, this::act);
+        assertEquals(0, row.get().getVersion()); assertEquals(0, row.get().getScore());
+        assertEquals(initialState, row.get().getStateJson()); assertTrue(receipts.isEmpty());
+        assertEquals(PhotoCheckIntentState.RESULT_READY, intent.state());
+        assertEquals(providerResult, intent.result()); assertEquals("RECEIVED", intent.providerState());
+        assertEquals(1, providerCalls);
+        verify(intents).markApplied(81L, original.requestFingerprint(), 91L);
+        markFails = false;
+        act();
+        assertEquals(1, providerCalls); assertEquals(1, row.get().getVersion());
+        assertEquals(5, row.get().getScore()); assertEquals(1, receipts.size());
+        assertEquals(PhotoCheckIntentState.APPLIED, intent.state());
     }
 
     @Test void inFlightAndUnknownNeverSynthesizeDegradedOrExecuteAgain() {
@@ -245,7 +263,11 @@ class AdvancedPhotoOrchestrationTest {
 
     @Test void newAttemptWithSameRejectedPhotoCountsAgainButOriginalReplayDoesNot() throws Exception {
         java.util.concurrent.atomic.AtomicInteger reviews=new java.util.concurrent.atomic.AtomicInteger();
-        AdvancedActionTestFixtures.photos(service,()->{reviews.incrementAndGet();return PhotoCheckVisionResult.concluded(false,99,"retake");});
+        // Re-stubbing invokes the previous strict locking-read answer. Keep that setup read in a real test transaction.
+        new TransactionTemplate(transactions).execute(status -> {
+            assertTx();
+            return AdvancedActionTestFixtures.photos(service,()->{reviews.incrementAndGet();return PhotoCheckVisionResult.concluded(false,99,"retake");});
+        });
         Map<String,Object> image=Map.of("imageUrl","media-asset:701");
         service.act(7L,51L,0,"photo-try-1","SUBMIT_PHOTO_CHECK",image);
         service.act(7L,51L,0,"photo-try-1","SUBMIT_PHOTO_CHECK",image);
