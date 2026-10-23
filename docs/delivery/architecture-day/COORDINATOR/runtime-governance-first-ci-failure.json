@@ -1,0 +1,27 @@
+{
+  "source_sha": "07172e6fddf28f99ea4ad214b5c92cfe7608e441",
+  "storage_run": 40033332570,
+  "full_ci_run": 40033336984,
+  "verdict": "FAILED_NOT_ACCEPTED",
+  "storage": {
+    "expected": 36,
+    "business_executed": 0,
+    "reason": "shared admin testCompile ambiguous regex/Quartz Matcher in Wp08DeliveryJobsMySqlIT:79",
+    "cleanup": "pending independent receipts"
+  },
+  "backend_and_sbom": "same one test compilation error; production compilation is not whole-candidate test acceptance",
+  "node": {
+    "shard": "16/20",
+    "failures": 6,
+    "files": [
+      "play-qa-recovery-contract.test.js",
+      "separate-consent-feature.test.js"
+    ],
+    "owner": "C",
+    "reason": "under investigation; cannot assume fixture-only or relax canonical asset/consent/pending safety"
+  },
+  "other_gates": "Fast/architecture and migration/static success statuses require raw artifact scope readback; not complete architecture acceptance",
+  "root_followup": "only qualify java.util.regex.Matcher for actual Pattern.matcher result; no SQL/target/auth/amount/assertion changes",
+  "next": "rerun storage36 after compile fix, full CI after C contract fix",
+  "production_actions": 0
+}

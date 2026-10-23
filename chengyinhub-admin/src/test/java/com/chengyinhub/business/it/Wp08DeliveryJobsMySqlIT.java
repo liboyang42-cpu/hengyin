@@ -76,7 +76,7 @@ class Wp08DeliveryJobsMySqlIT {
         Path root = Files.isRegularFile(Path.of("sql/base_schema_20260818.sql"))?Path.of(""):Path.of("..");
         sql = root.resolve("chengyinhub-admin/sql"); String base = Files.readString(root.resolve("sql/base_schema_20260818.sql"));
         for (String table : BASE_TABLES) {
-            Matcher ddl = Pattern.compile("(?s)CREATE TABLE `"+table+"` \\(.*?\\) ENGINE=.*?;").matcher(base);
+            java.util.regex.Matcher ddl = Pattern.compile("(?s)CREATE TABLE `"+table+"` \\(.*?\\) ENGINE=.*?;").matcher(base);
             assertTrue(ddl.find(),table); db.execute(ddl.group());
         }
         createTablesFrom("migration_20261013_b_im_notification_intent.sql");
