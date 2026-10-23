@@ -38,3 +38,11 @@ iOS exclusive already on chengyin-ios#64 (`013a717c`). This package is the match
 ## 3. 首个隔离旅程
 
 规则同意 publishedVersion=3 → MEMBER 读写授权 → 频道 grant 不能 START 好友会话 / 不能当备注或私聊 → leave 后旧 pageLease 写请求 `ISOLATED_LATE_REQUEST`；历史投票只读 ALLOWED、写票 DENIED。
+
+## Addendum 2026-10-23 16:48 America/Los_Angeles
+
+HEAD `7e77514e9`。cataloged / consent / invite / member-role 观察不得占用 `grant()`；随后唯一 `authorizeReadWrite` 才是第一次写入。Did not invent `recoverOriginal`。
+
+命令：`mvn -pl chengyinhub-admin -am test -Dtest=com.chengyinhub.business.service.channel.*Test -Dsurefire.failIfNoSpecifiedTests=false`
+
+结果：`BUILD SUCCESS` **14/0** 2026-10-23T23:48:32Z。`C08AccountSwitchRestartIsolationTest` 4/0。IM send/receipt still not owned. App / XCTest / MySQL / HTTP / CI = NOT_RUN。不声称 100%。
