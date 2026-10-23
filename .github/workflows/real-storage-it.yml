@@ -44,6 +44,7 @@ on:
           - port-prelaunch-69
           - p0-acceptance-ac1
           - architecture-day-batch1
+          - architecture-day-wave2
       classes:
         description: 可选，只跑批次内这些类（逗号分隔的简单类名），用于失败后定点复跑
         required: false
@@ -108,6 +109,7 @@ jobs:
     env:
       TEST_CLASS: ${{ matrix.class }}
       SOURCE_SHA: ${{ inputs.source_sha }}
+      VALIDATED_SOURCE_SHA: ${{ inputs.source_sha }}
       BATCH: ${{ inputs.batch }}
       TIMEZONE: ${{ inputs.timezone }}
     steps:
@@ -138,6 +140,17 @@ jobs:
       - name: Remove scratch containers
         if: always()
         run: python3 gate/ci/real_storage_it.py storage-stop
+      - name: Preserve query plan observation when produced
+        if: always()
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import shutil
+          report = Path('candidate/chengyinhub-admin/target/surefire-reports/ImConversationQueryScopeMySqlIT-explain.json')
+          if report.is_file():
+              Path('out').mkdir(exist_ok=True)
+              shutil.copyfile(report, 'out/im-query-plan-observation.json')
+          PY
       - name: Upload class receipt
         if: always()
         uses: actions/upload-artifact@v4

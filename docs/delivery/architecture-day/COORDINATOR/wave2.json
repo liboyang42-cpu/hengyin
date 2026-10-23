@@ -1,0 +1,30 @@
+{
+  "status": "ISOLATED_CI_CANDIDATE_NOT_ACCEPTED",
+  "source_assembly": "2b8cbefa2f478002164e8b976c1cf1ab5edc1402",
+  "base": "089790aaf3254f62ebbc79394b8aaf5fa66cb2b5",
+  "components": {
+    "A_delta": "3bc4bb08..2d9da065",
+    "D_delta": "e71777f3..db5db8b2",
+    "E_IM": "2ec68899..7093c906",
+    "E_cache_wiring": "a3d6ba28..12f1a310"
+  },
+  "registered_storage_tests": {
+    "A": 23,
+    "D": 8,
+    "IM_batch": 4,
+    "IM_scope": 7
+  },
+  "harness_changes": [
+    "remove unregistered redundant IM opt-in hard assert; explicit -Dtest and required isolated connection retained",
+    "bind VALIDATED_SOURCE_SHA to dispatched inputs.source_sha for git HEAD readback",
+    "update declaration counts to actual new source; past immutable run receipts unchanged"
+  ],
+  "known_open": [
+    "C basic P1 cached-empty query and original fixture migrations not included",
+    "D controller operator regression pending",
+    "F canonical new-migration moves/custody pending",
+    "B payment and G settlement original environment pending",
+    "Photo E intent/C orchestration pending",
+    "Complete WP/Q/G acceptance incomplete"
+  ]
+}

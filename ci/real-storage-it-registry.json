@@ -266,6 +266,17 @@
         "com.chengyinhub.business.service.impl.OfficialBroadcastDeliveryMySqlIT",
         "com.chengyinhub.business.it.ClubLeadChapterIntentMySqlIT"
       ]
+    },
+    "architecture-day-wave2": {
+      "lineage": "Public2ec architecture day second isolated verification; not formal integration",
+      "registered_source": "2b8cbefa2f478002164e8b976c1cf1ab5edc1402",
+      "note": "Actual runtime source_sha must match fresh receipts; source assembly contains A23/D8/IM4+7. No skip-based or production provider acceptance.",
+      "classes": [
+        "com.chengyinhub.business.service.impl.CashWithdrawFundEvidenceMySqlIT",
+        "com.chengyinhub.business.service.impl.OfficialBroadcastDeliveryMySqlIT",
+        "com.chengyinhub.business.service.impl.ImConversationBatchReadMySqlIT",
+        "com.chengyinhub.business.service.impl.ImConversationQueryScopeMySqlIT"
+      ]
     }
   },
   "classes": {
@@ -614,21 +625,37 @@
       "gates": {}
     },
     "com.chengyinhub.business.service.impl.CashWithdrawFundEvidenceMySqlIT": {
-      "tests": 19,
+      "tests": 23,
       "storage": [
         "mysql"
       ],
       "gates": {},
       "database_base": "architecture_a",
-      "note": "Architecture day A: actual source declares19 tests. Original debit/submit intent/refund evidence and transaction races; provider is a stub."
+      "note": "Architecture day A: source now declares23 tests including four never-submitted recovery/race regressions. Original debit/submit intent/refund evidence and transaction races; provider is a stub."
     },
     "com.chengyinhub.business.service.impl.OfficialBroadcastDeliveryMySqlIT": {
-      "tests": 7,
+      "tests": 8,
       "storage": [
         "mysql"
       ],
       "gates": {},
       "note": "Architecture day D: explicit class selection and required MyBatis connection env; actual IM Mapper/transaction with stub WeChat. No extra unregistered gate."
+    },
+    "com.chengyinhub.business.service.impl.ImConversationBatchReadMySqlIT": {
+      "tests": 4,
+      "storage": [
+        "mysql"
+      ],
+      "gates": {},
+      "note": "Explicit selected IT and required isolated connection variables; compares real MyBatis query output/statement count to legacy selectors; exact created UUID schema cleanup."
+    },
+    "com.chengyinhub.business.service.impl.ImConversationQueryScopeMySqlIT": {
+      "tests": 7,
+      "storage": [
+        "mysql"
+      ],
+      "gates": {},
+      "note": "Real IM storage with explicit mocked cross-domain guards; exact result sets, read-only/query count and SHA-bound EXPLAIN observation; not load or real cross-domain authorization acceptance."
     },
     "com.chengyinhub.business.it.ClubLeadChapterIntentMySqlIT": {
       "tests": 3,
