@@ -211,9 +211,13 @@ test('native share keeps existing analytics and route without a silent canonical
     const validate=value=>assert.ok(!value.includes('community.share('));
     validate(source);
     assert.ok(source.includes("analytics.track('content_share'"));
-    assert.ok(source.includes('/pages/square/detail/index?id='));
+    // U-050:转发卡统一由 utils/square-share.js 生成(公开帖才指向详情)
+    assert.ok(source.includes('buildSquareShare('));
     assert.throws(()=>validate('community.share(56);'+source));
   }
+  const shareSource=fs.readFileSync(path.join(__dirname,'../../utils/square-share.js'),'utf8');
+  assert.ok(shareSource.includes('/pages/square/detail/index?id='));
+  assert.ok(!shareSource.includes('community.share('));
 });
 
 test('GET first page omits empty cursor in real query serialization for all shared pagination routes', async () => {

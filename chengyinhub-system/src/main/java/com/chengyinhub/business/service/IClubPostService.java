@@ -17,6 +17,12 @@ public interface IClubPostService
 
     public List<ClubPost> selectClubPostList(ClubPost clubPost);
 
+    /**
+     * 俱乐部动态流一页:首页(beforeId 为空)= 置顶帖 + 最新 limit 条非置顶帖;
+     * 翻页 = beforeId 之前的 limit 条非置顶帖。limit 由调用方限幅。
+     */
+    List<ClubPost> selectClubPostPage(Long clubId, Long beforeId, int limit);
+
     public int insertClubPost(ClubPost clubPost);
 
     /**

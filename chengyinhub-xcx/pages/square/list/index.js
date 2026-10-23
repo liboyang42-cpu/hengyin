@@ -1118,21 +1118,21 @@ Page({
     if (res.from === 'button') {
       const dataset = res.target.dataset;
       const id = dataset.id;
-      let path = `/pages/square/detail/index?id=${id}`;
+      // U-050:转发卡只给公开且已发布的帖子带正文摘要/封面/详情链接;
+      // 私密/仅关注者/未发布的帖子退回广场通用卡,卡片上不带正文与图片。
+      const post = (this.data.list || []).find(function (row) { return row && String(row.id) === String(id); });
       analytics.track('content_share', {
         bizType: 'square',
         bizId: id
       });
-      return {
-        title: '城瘾Hub',
-        path: path,
+      return Object.assign(require('../../../utils/square-share.js').buildSquareShare(post), {
         success: function (res) {
           toast.success('分享成功');
         },
         fail: function (res) {
           toast('分享取消');
         }
-      };
+      });
     }
 
     // 默认分享（非按钮触发）
