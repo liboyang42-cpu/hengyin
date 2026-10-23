@@ -73,6 +73,7 @@ class WechatPayReadinessTest {
         RefundService refundAdapter = mock(RefundService.class);
         when(refundAdapter.create(any())).thenThrow(new RuntimeException("response lost"));
         WechatPayServiceImpl service = new WechatPayServiceImpl();
+        WechatPaymentIntentTestSupport.install(service, java.util.Map.of());
         ReflectionTestUtils.setField(service, "wxPayConfig", config);
         ReflectionTestUtils.setField(service, "refundService", refundAdapter);
 

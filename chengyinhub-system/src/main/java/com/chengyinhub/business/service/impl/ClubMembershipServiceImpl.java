@@ -1047,7 +1047,7 @@ public class ClubMembershipServiceImpl implements IClubMembershipService {
     }
 
     /**
-     * 以微信查单为真源：SUCCESS 复用回调状态机补齐权益；CLOSED/REVOKED/PAYERROR
+     * 以微信查单为真源：SUCCESS 复用回调状态机补齐权益；仅 CLOSED
      * 只有在订单号与金额读回一致后才把本地 PAYING 前向关闭。查询未知时不改本地资金状态。
      */
     private ClubMembershipRenewalVO reconcileWechatInvoice(ClubMembershipInvoice invoice,
@@ -1076,8 +1076,7 @@ public class ClubMembershipServiceImpl implements IClubMembershipService {
                 || !Long.valueOf(amountFen.longValue()).equals(invoice.getAmountFen())) {
             throw new ServiceException("微信支付账单对账不一致，未变更本地账单", HttpStatus.CONFLICT);
         }
-        if ("CLOSED".equalsIgnoreCase(tradeState) || "REVOKED".equalsIgnoreCase(tradeState)
-                || "PAYERROR".equalsIgnoreCase(tradeState)) {
+        if ("CLOSED".equalsIgnoreCase(tradeState)) {
             return transaction().execute(status -> closeObservedInvoice(
                     invoice, access, requestId, tradeState.toUpperCase()));
         }

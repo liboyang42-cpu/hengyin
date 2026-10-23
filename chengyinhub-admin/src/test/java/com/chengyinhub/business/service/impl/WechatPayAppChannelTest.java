@@ -81,6 +81,7 @@ class WechatPayAppChannelTest {
         WxPayConfig config = mock(WxPayConfig.class);
         when(config.isWechatPayEnabled()).thenReturn(true);
         when(config.getAppAppid()).thenReturn("wx_native_app");
+        when(config.getMerchantId()).thenReturn("1900000109");
         when(config.getNotifyUrl()).thenReturn("https://example.test/pay/notify");
         WechatPayServiceImpl service = new WechatPayServiceImpl();
         ReflectionTestUtils.setField(service, "wxPayConfig", config);
@@ -221,8 +222,10 @@ class WechatPayAppChannelTest {
      * 单独判它非空的原因:只看 isReady() 会让 App 通道在未初始化时空指针。
      */
     private void markServiceReady(WechatPayServiceImpl service) {
+        WechatPaymentIntentTestSupport.install(service, java.util.Map.of(
+                "DEP19T1000", new BigDecimal("50.00"), "R-APP-0001", new BigDecimal("69.00")));
         ReflectionTestUtils.setField(service, "jsapiService",
-                mock(com.wechat.pay.java.service.payments.jsapi.JsapiService.class));
+                WechatPaymentIntentTestSupport.absentOrderSdk());
         ReflectionTestUtils.setField(service, "jsapiServiceExtension",
                 mock(com.wechat.pay.java.service.payments.jsapi.JsapiServiceExtension.class));
         ReflectionTestUtils.setField(service, "refundService",

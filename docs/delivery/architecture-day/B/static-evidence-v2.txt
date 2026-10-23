@@ -1,0 +1,21 @@
+Baseline: 2ec68899099a1e250df0949a8383bf85b5d3ffe0
+Historical HEAD (new candidate is uncommitted): 3bca5e05328ded4dc47fddd4614f30eff13a28fa
+Branch: codex/architecture-day-b-pay-gateway
+Scope check: PASS
+git diff --check baseline: PASS (no output)
+Working file SHA256: c3def7bfee3bc8afcffd7afe834d808bc49fe7da45da819073e141d6abc501d1 chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPayCallbackFactsTest.java
+Working file SHA256: a8c89f9168ea4bcc59dc415309fe5658db5c9fd8c4aee144e60d32516a8d9460 chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPayCallbackForgedSignatureTest.java
+Working file SHA256: 6ab8fe1699909796d69468f05591f89090f0c66c6321347914e40220bf0e7612 chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPayOrderQueryTest.java
+Working file SHA256: 9d1a7d313527dd75673626e2ece497752564602883583857f716502a27f2971d chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPayTransferClassificationTest.java
+Working file SHA256: ac80d4c48e8a291f0fcdb24548ed339ea464601ca62489f2ecb4423977ae2f9f chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPayServiceImpl.java
+WechatPayTransferClassificationTest source @Test methods: 8 executed: 0
+WechatPayCallbackFactsTest source @Test methods: 5 executed: 0
+WechatPayCallbackForgedSignatureTest source @Test methods: 31 executed: 0
+WechatPayOrderQueryTest source @Test methods: 5 executed: 0
+SDK symbols: PASS payments/jsapi/JsapiService
+SDK symbols: PASS transferbatch/model/InitiateBatchTransferResponse
+SDK symbols: PASS transferbatch/model/TransferBatchGet
+SDK symbols: PASS transferbatch/model/TransferDetailEntity
+SDK symbols: PASS payments/model/Transaction
+SDK symbols: PASS payments/model/TransactionAmount
+Java compile/JUnit/MySQL/Redis/real payment: NOT RUN

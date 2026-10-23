@@ -181,6 +181,20 @@ class ClubMembershipServiceImplTest {
     }
 
     @Test
+    void payErrorOrRevokedCannotReleaseOriginalInvoiceWithoutClosedProof() {
+        for (String state : new String[]{"PAYERROR", "REVOKED"}) {
+            ClubMembershipInvoice invoice = validPayingInvoice();
+            invoice.setVersion(1);
+            when(mapper.selectInvoiceById(invoice.getId())).thenReturn(invoice);
+            when(pay.queryOrderStatus(invoice.getOutTradeNo())).thenReturn(wxOrder(invoice, state));
+            org.mockito.Mockito.doThrow(new RuntimeException("close unknown")).when(pay).closeOrder(invoice.getOutTradeNo());
+            assertThrows(ServiceException.class,
+                    () -> service.closeInvoice(MEMBER, action(invoice.getId(), "close-" + state)));
+            verify(mapper, never()).markInvoiceClosedCas(any(), anyInt(), any());
+        }
+    }
+
+    @Test
     void flagOnResumeChecksGateAfterReconcileThenCreatesPrepay() {
         ClubMembershipInvoice invoice = resumableInvoiceWithoutParams();
         when(pay.queryOrderStatus(invoice.getOutTradeNo())).thenReturn(wxOrder(invoice, "NOTPAY"));

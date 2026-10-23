@@ -1,0 +1,4 @@
+Patch apply + exact bytes: PASS /workspace/B-transfer-v2-from-public-base.patch
+Patch apply + exact bytes: PASS /workspace/B-transfer-v2-from-public-base.patch then /workspace/B-callback-v4-after-transfer-v2.patch
+Patch apply + exact bytes: PASS /workspace/B-pay-gateway-v4-from-public-base.patch
+No Java code or test was executed.
