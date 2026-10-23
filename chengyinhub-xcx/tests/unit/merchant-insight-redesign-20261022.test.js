@@ -12,16 +12,16 @@ const ROOT = path.resolve(__dirname, '../..');
 const PAGE_JS_PATH = 'pages/merchant/marketing/ai-insight/index.js';
 const PAGE_WXML = fs.readFileSync(path.join(ROOT, 'pages/merchant/marketing/ai-insight/index.wxml'), 'utf8');
 
-function loadPage() {
+function loadPage(extraGlobals) {
   let definition = null;
   const file = path.join(ROOT, PAGE_JS_PATH);
-  vm.runInNewContext(fs.readFileSync(file, 'utf8'), {
+  vm.runInNewContext(fs.readFileSync(file, 'utf8'), Object.assign({
     Page: (value) => { definition = value; },
     getApp: () => ({ globalData: {}, getUserID: () => 'merchant-a', sendRequest() {}, getRequestErrorMessage: () => '' }),
     wx: { getSystemInfoSync: () => ({ statusBarHeight: 44 }), setNavigationBarColor() {} },
     console,
     require: (id) => require(path.resolve(path.dirname(file), id)),
-  });
+  }, extraGlobals));
   const page = Object.assign({}, definition, { data: JSON.parse(JSON.stringify(definition.data)) });
   page.setData = function (patch) {
     Object.keys(patch).forEach((key) => {
@@ -166,4 +166,39 @@ test('页头是问候区 + 店铺头像,不再有店铺档案入口;最近到店
   const wxss = fs.readFileSync(path.join(ROOT, 'pages/merchant/marketing/ai-insight/index.wxss'), 'utf8');
   assert.doesNotMatch(wxss, /\.visitor[^{]*::?before/, '最近到店玩家卡不加竖线');
   assert.doesNotMatch(fs.readFileSync(path.join(ROOT, PAGE_JS_PATH), 'utf8'), /vibrate/, 'owner:不震动');
+});
+
+test('核销进度 10 格:每次打开先整排点亮再退回真实格数,零核销也扫;减少动态效果不扫', () => {
+  assert.match(PAGE_WXML, /class="seg-pip \{\{seg\.on \|\| pipSweep \? 'seg-pip--on' : ''\}\}"/);
+  const timers = [];
+  const page = loadPage({
+    setTimeout: (fn, ms) => { timers.push({ fn, ms }); return timers.length; },
+    clearTimeout() {},
+  });
+  page.data.valueCard = { segs: Array.from({ length: 10 }, () => ({ on: false })) };
+  {
+    page._sweepPips();
+    assert.equal(page.data.pipSweep, true, '零核销也整排点亮');
+    assert.equal(timers.length, 1);
+    assert.ok(timers[0].ms >= 400 + 9 * 45 + 300, '亮满之后才退回');
+    timers[0].fn();
+    assert.equal(page.data.pipSweep, false, '退回真实格数');
+
+    page._sweepPips();
+    // onHide 里 merchant-theme 还原导航色要用全局 getApp/wx
+    const saved = { getApp: global.getApp, wx: global.wx };
+    global.getApp = () => ({ globalData: {} });
+    global.wx = { setNavigationBarColor() {}, setBackgroundColor() {}, setBackgroundTextStyle() {} };
+    try { page.onHide(); } finally {
+      ['getApp', 'wx'].forEach((k) => { if (saved[k] === undefined) delete global[k]; else global[k] = saved[k]; });
+    }
+    assert.equal(page.data.pipSweep, false, '离开页面时不留在点亮态');
+    page._hidden = false;
+
+    page.data.reducedMotion = true;
+    page._sweepPips();
+    assert.equal(page.data.pipSweep, false);
+  }
+  const js = fs.readFileSync(path.join(ROOT, PAGE_JS_PATH), 'utf8');
+  assert.match(js, /if \(firstPaint\) that\._playIn\(\);\s*\/\/[^\n]*\n\s*that\._sweepPips\(\);/, '每次加载成功都扫,不只首帧');
 });

@@ -19,6 +19,8 @@ const TREND_METRICS = [
 // 数字滚动:慢—快—慢(ease-in-out),与工作台累计收入同一手感
 const COUNT_MS = 900;
 const COUNT_STEPS = 24;
+// 进度格点亮:首格延迟 400ms(等卡片模糊入场)+ 每格 45ms + 300ms 过渡 ≈ 1105ms 亮满,再停一拍退回
+const PIP_SWEEP_HOLD_MS = 1300;
 // 卡片 → 底部弹层的形变时长,与 wxss .ts-ghost transition 对齐
 const MORPH_MS = 430;
 
@@ -70,6 +72,7 @@ Page({
     sources: [],          // 客源主题排行(facts.sources)
     grown: false,         // 柱子/进度条从 0 长到位的开关(数据落地后下一拍打开)
     shown: false,         // 区块模糊入场的开关(类切换 + transition,不新增 @keyframes)
+    pipSweep: false,      // 核销进度 10 格:每次打开先整排点亮一遍,再退回真实格数(零也要有这一下)
     reducedMotion: false, // 「减少动态效果」:不滚数字、不形变,只保留淡入
     scrimOn: false,
     sheetTopic: null,     // 推荐主题详情弹层
@@ -107,7 +110,14 @@ Page({
     }
     this.load();
   },
-  onHide() { this._hidden = true; this._requestEpoch = (this._requestEpoch || 0) + 1; this._stopMotion(); merchantTheme.merchantPageRestore(); },
+  onHide() {
+    this._hidden = true;
+    this._requestEpoch = (this._requestEpoch || 0) + 1;
+    this._stopMotion();
+    // 扫到一半离开:下次回来从真实格数重新扫,不停在整排点亮(卸载时不再写页)
+    if (this.data.pipSweep) this.setData({ pipSweep: false });
+    merchantTheme.merchantPageRestore();
+  },
   onUnload() {
     this._unloaded = true;
     this._stopMotion();
@@ -207,6 +217,8 @@ Page({
           });
           // 回到页面的静默刷新不重播:数字直接落位,只有首帧入场才滚动
           if (firstPaint) that._playIn();
+          // owner 2026-10-23:核销进度条每次打开都扫一遍,不因暂无核销就一动不动
+          that._sweepPips();
         } else if (res && res.code !== '200' && res.code !== 200) {
           that._clearSensitiveState(app.getRequestErrorMessage(res, '商家资格已失效'));
         } else {
@@ -240,6 +252,7 @@ Page({
       sources: [],
       grown: false,
       shown: false,
+      pipSweep: false,
       sheetTopic: null,
       sheetPhase: '',
       ghostStyle: '',
@@ -459,6 +472,19 @@ Page({
     if (this._growTimer) { clearTimeout(this._growTimer); this._growTimer = null; }
     if (this._showTimer) { clearTimeout(this._showTimer); this._showTimer = null; }
     if (this._sheetTimer) { clearTimeout(this._sheetTimer); this._sheetTimer = null; }
+    if (this._pipTimer) { clearTimeout(this._pipTimer); this._pipTimer = null; }
+  },
+
+  /** 核销进度:10 格自左向右整排点亮,停一拍,再自左向右退回真实格数(可能全空)。减少动态效果时不扫。 */
+  _sweepPips() {
+    if (this._pipTimer) { clearTimeout(this._pipTimer); this._pipTimer = null; }
+    if (typeof setTimeout !== 'function' || this.data.reducedMotion || !this.data.valueCard) return;
+    this.setData({ pipSweep: true });
+    this._pipTimer = setTimeout(() => {
+      this._pipTimer = null;
+      if (this._hidden || this._unloaded) return;
+      this.setData({ pipSweep: false });
+    }, PIP_SWEEP_HOLD_MS);
   },
 
   /** 首帧:区块模糊入场(wxss),下一拍柱子与进度条长出、大数字滚动 */

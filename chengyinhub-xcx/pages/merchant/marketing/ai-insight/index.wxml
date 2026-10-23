@@ -67,8 +67,8 @@
       </view>
 
       <view class="seg-row seg-row--value" wx:if="{{valueCard}}" aria-hidden="true">
-        <view class="seg-pip {{seg.on ? 'seg-pip--on' : ''}}" wx:for="{{valueCard.segs}}" wx:for-item="seg" wx:key="index"
-              style="transition-delay: {{400 + index * 45}}ms;"></view>
+        <view class="seg-pip {{seg.on || pipSweep ? 'seg-pip--on' : ''}}" wx:for="{{valueCard.segs}}" wx:for-item="seg" wx:key="index"
+              style="transition-delay: {{(pipSweep ? 400 : 0) + index * 45}}ms;"></view>
       </view>
       <text class="value-delta" wx:if="{{valueCard && valueCard.deltaText}}">{{facts.window || '近30天'}}核销进度 · {{valueCard.deltaText}}</text>
     </view>
