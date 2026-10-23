@@ -1,0 +1,53 @@
+✔ 合法 5MiB:真实链上传一次并提交 SUBMIT_QA (35.807299ms)
+✔ 已知 15MiB:共享预检拒绝,不发网络,可操作文案,绝不提交 (5.107043ms)
+✔ 上传在途切到 B 会话:旧回包不得提交到新题,可重新拍 (4.552033ms)
+✔ 同会话版本前进:旧回包同样不得提交 (4.997971ms)
+✔ 非 qa kit 的 shoot 不得上传/提交 (7.698442ms)
+✔ 双击:上传在途时只起一次请求,不静默丢第二张 (3.336088ms)
+✔ advanced-game acting/unknown 时不装成功,给可恢复提示 (3.56153ms)
+✔ 未知 size(旧组件):照常上传;失败不提交,换图可重试 (4.214505ms)
+✔ 上传中离页 abort:迟到的成功不得提交 (3.616071ms)
+✔ Photo 上传保留受管 assetId，动作只携带 canonical media 引用 (7.425598ms)
+✔ Photo 上传缺 assetId 时拒绝动作，不回退为 URL 身份 (6.675521ms)
+✖ H-C9: A→B→A 同意记录迟到拒绝不得修改新登录 UI (6.868294ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 11
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 99.363641
+
+✖ failing tests:
+
+test at tests/unit/h-review-c9-photo-consent.test.js:340:1
+✖ H-C9: A→B→A 同意记录迟到拒绝不得修改新登录 UI (6.868294ms)
+  AssertionError [ERR_ASSERTION]: old consent rejection must not reset the active card panel
+  + actual - expected
+  ... Skipped lines
+
+    {
+      activityId: '',
+      advancedPlay: {
+        node: null,
+        show: false
+  ...
+          mode: 'CARD',
+  +       photoFailSeq: 1,
+          sessionId: 'session-A',
+          type: 'photocheck',
+          version: 4
+        },
+        show: true
+
+      at TestContext.<anonymous> (tests/unit/h-review-c9-photo-consent.test.js:375:10)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: [Object],
+    expected: [Object],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }

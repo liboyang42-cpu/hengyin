@@ -1,0 +1,317 @@
+{
+  "repository": "liboyang42-cpu/hengyin",
+  "base": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+  "candidate": "9da43f76ddd54bfdf0b24a538a1b80d47c5384bd",
+  "tree": "81663088ecf52cd15b2dee55cb7560d51ada9a23",
+  "parent": "a480e4083618120332539d0ac49c7e51e9db6839",
+  "branch": "codex/architecture-day-c-play-command",
+  "base_changed_files": 207,
+  "delta_files": 59,
+  "exact_tree_reconstruction": true,
+  "all_206_text_blobs_verified": true,
+  "binary_archive_blob": "c9ca32d63a9d45cd431386b1f81f81b137b8e34d",
+  "delta": [
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAdvancedPlayController.java",
+      "blob": "e86afcf9befdc4836be50d76d6b609b7e01aa711",
+      "status": "modified"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/AdvancedGameRuntimeMySqlIT.java",
+      "blob": "0800d7b11a15c21102b31551f9e111b6b123567b",
+      "status": "modified"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/AdvancedPhotoMySqlFixture.java",
+      "blob": "f145ce6d713fec674497afd696c62623d1a6ed8e",
+      "status": "added"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/PredictLateBetRaceMySqlIT.java",
+      "blob": "4ca8baac58f21eb445fc485cca30439a7593f127",
+      "status": "modified"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/ThemeRuntimeMySqlIT.java",
+      "blob": "584d62d157d8ccfc6617aee075be14a140e9124e",
+      "status": "modified"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/PlayLockReadCacheContractTest.java",
+      "blob": "f760fafe21556305186fe3229ef06e73fd0b71ff",
+      "status": "added"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PlayKitPresentConfigTest.java",
+      "blob": "685416583f737e8f3589d884559e55bdd58f2db1",
+      "status": "modified"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/AdvancedActionTestFixtures.java",
+      "blob": "4106c5b188f1d8bbe7f914d30937807803296b12",
+      "status": "added"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/AdvancedCommandFingerprintTest.java",
+      "blob": "f2fe2551b2a8f4f99473a80bcc59a0880589625e",
+      "status": "modified"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/AdvancedGameChoiceHookTest.java",
+      "blob": "835cef62d889ecae2b21dcb5b83bf6b7f32ef3f8",
+      "status": "modified"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/AdvancedGameFactsHookTest.java",
+      "blob": "cf2e9af5b3335e70ea4de023dabba3e0f36456a2",
+      "status": "modified"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/AdvancedGameMistakeHookTest.java",
+      "blob": "f3d4c2c83b7df177cebd8baa916cc9f75a9b03e1",
+      "status": "modified"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/AdvancedGamePassedHookTest.java",
+      "blob": "02299349a81f426927634480b25c861d2deabf3b",
+      "status": "modified"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/AdvancedGameRelaxTest.java",
+      "blob": "a2640d232812a2fc3fd594d9147c89055b54865a",
+      "status": "modified"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/AdvancedGameRuntimeServiceImplTest.java",
+      "blob": "94f89104e6a196c8873013c447c2043aaf2f9ec6",
+      "status": "modified"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/AdvancedPhotoOrchestrationTest.java",
+      "blob": "378b1f9db0f84ea9688542e633db17365aca3537",
+      "status": "added"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/LegacyChoiceCompletionRollbackAcceptanceTest.java",
+      "blob": "4c341517cadbe0fe026e782e46909c737018d663",
+      "status": "modified"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PlayKitBingoRuntimeTest.java",
+      "blob": "71b4f7aeeb03be226e24537b4450ea02ef60a484",
+      "status": "modified"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PlayKitNoteRuntimeTest.java",
+      "blob": "23663d88c75b743dcf2bc93cec86dcd1a7b36d80",
+      "status": "modified"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PlayKitProfileRuntimeTest.java",
+      "blob": "efd2cde7184180adb12c3ac7bf3887270d063285",
+      "status": "modified"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PlayKitRuntimeBranchRandomPredictTest.java",
+      "blob": "31785bc1e4ab6f987b21ef3d834fd0cfd17d7cb8",
+      "status": "modified"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PlayKitTypeInRuntimeTest.java",
+      "blob": "a7e5886a2bbbf98233849ad75856e0d29f9d9e32",
+      "status": "modified"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PlayKitV51RuntimeTest.java",
+      "blob": "db2d768beb484ea5d6b11a19d846b4a465bded4e",
+      "status": "modified"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PlaykitActionPayloadContractTest.java",
+      "blob": "63db1a9b598c81d5f90f6c55d326d587af600a9b",
+      "status": "modified"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PredictBetAfterSettleGuardTest.java",
+      "blob": "13b128ca54eb29d209b142b8043a7981170c6ec1",
+      "status": "modified"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/SensorAttemptMemberSlotTest.java",
+      "blob": "68a75a3794949cada7384b5cd452f74442d8130b",
+      "status": "modified"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/SensorGameTrustBoundaryTest.java",
+      "blob": "f61c14fb119374c92e1f24ca9d68530cf69e2b38",
+      "status": "modified"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/SlowTaskRuntimeTest.java",
+      "blob": "d6b1fba555a2d999977d17b2dfc7826e03af66c0",
+      "status": "modified"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TimeWindowSubscribeRuntimeTest.java",
+      "blob": "99102feea1c1813589b463ed13dc18fc488b9b8b",
+      "status": "modified"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ZeroChallengeReentryTimeoutV2Test.java",
+      "blob": "20d77208901bd91488c6db51f4862a3f31df5685",
+      "status": "modified"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiAdvancedPlayControllerTest.java",
+      "blob": "0cf6e3023e8bee472f65cdd807cdc897dfa15b3f",
+      "status": "modified"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/GameRuntimeSessionMapper.java",
+      "blob": "d449379f2153af6be20093741d4075e7d7fd3614",
+      "status": "modified"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/PlayAttemptLogMapper.java",
+      "blob": "8247166316dbaf02aff3b476f81ff0ccb3164731",
+      "status": "modified"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AdvancedGameRuntimeServiceImpl.java",
+      "blob": "a657dd8c6cdc0301ef81a2b22fbf53e74ac207e0",
+      "status": "modified"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/ClubLeadMapper.xml",
+      "blob": "12aa00d3fd685ed3bd13f06c7951ec3395922dd0",
+      "status": "modified"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/GameRuntimeSessionMapper.xml",
+      "blob": "6a1d299960ffac918507bec562035b1f6d9bc795",
+      "status": "modified"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/PlayAttemptLogMapper.xml",
+      "blob": "f1c54470852affdd24cdb3773b12e693c8f25cac",
+      "status": "modified"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/TopicRouteSessionMapper.xml",
+      "blob": "768bcbd3cbe132aca673ab8b56c9f70c4156b7a4",
+      "status": "modified"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/components/advanced-game/index.js",
+      "blob": "ef23d7dc80d66a130fc269bdde362b062d23fdde",
+      "status": "modified"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/index.js",
+      "blob": "e0fc49c48d6d98b5bab85ff9bc560d8b9a531b14",
+      "status": "modified"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/play/utils/advanced-photo-pending.js",
+      "blob": "123cba18b4f20730feabc14bda73cc367b77d381",
+      "status": "added"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/advanced-game-object-card-relay.test.js",
+      "blob": "de9d583e77c9d49122b9427664590c5b41a2ddf6",
+      "status": "modified"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/advanced-game-receipt-contract.test.js",
+      "blob": "31fdd7342ca561fb72064c4ddf3a94df870d2f7e",
+      "status": "modified"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/play-qa-photo-upload-contract.test.js",
+      "blob": "96546a27c1f297e67b75e084440ac39f31b5f5cc",
+      "status": "modified"
+    },
+    {
+      "path": "docs/delivery/architecture-day/C/evidence/photo-orchestration/advanced-game-draw-audio.tap",
+      "blob": "2971f17f4c22a341a97851a67fd3faff6804a6b3",
+      "status": "added"
+    },
+    {
+      "path": "docs/delivery/architecture-day/C/evidence/photo-orchestration/advanced-game-object-card-relay.tap",
+      "blob": "2fe27faf11501f0cc34c346a713b8913c7f61785",
+      "status": "added"
+    },
+    {
+      "path": "docs/delivery/architecture-day/C/evidence/photo-orchestration/advanced-game-receipt-contract.tap",
+      "blob": "a85747a3d72b464755efcc4687e354cb3fb7fb2a",
+      "status": "added"
+    },
+    {
+      "path": "docs/delivery/architecture-day/C/evidence/photo-orchestration/advanced-game-variants-recovery.tap",
+      "blob": "8b1e81325c51a06c72d85577f6a2cda07832987a",
+      "status": "added"
+    },
+    {
+      "path": "docs/delivery/architecture-day/C/evidence/photo-orchestration/architecture-day-c-intent.tap",
+      "blob": "1c48701951d949657c3c80fe0dd6c564bdaaafe2",
+      "status": "added"
+    },
+    {
+      "path": "docs/delivery/architecture-day/C/evidence/photo-orchestration/baseline-red.tap",
+      "blob": "ac219f32ce805a343b6c063efa4a99c1970bec68",
+      "status": "added"
+    },
+    {
+      "path": "docs/delivery/architecture-day/C/evidence/photo-orchestration/candidate-files.json",
+      "blob": "e3aa3c59188000e2b970c0b197422876f0fb39dc",
+      "status": "added"
+    },
+    {
+      "path": "docs/delivery/architecture-day/C/evidence/photo-orchestration/node-summary.json",
+      "blob": "d4c609f013df132ce1ac7f881e04eb33942d8c4f",
+      "status": "added"
+    },
+    {
+      "path": "docs/delivery/architecture-day/C/evidence/photo-orchestration/object-card-page-lifecycle.tap",
+      "blob": "4598c348bd9e106501ff01ba977d8fabab51ae4c",
+      "status": "added"
+    },
+    {
+      "path": "docs/delivery/architecture-day/C/evidence/photo-orchestration/play-qa-photo-upload-contract.tap",
+      "blob": "fd8138c1e6fe7e82a8f3dcb57b224a44609298c2",
+      "status": "added"
+    },
+    {
+      "path": "docs/delivery/architecture-day/C/evidence/photo-orchestration/playkit-photocheck-frame-contract.tap",
+      "blob": "211192bee4d0032546e96062b7e2a2254291e3d8",
+      "status": "added"
+    },
+    {
+      "path": "docs/delivery/architecture-day/C/evidence/photo-orchestration/playkit-photocheck-server-judge-contract.tap",
+      "blob": "36a0610207c79ba51f9706646eca4c19182f5cad",
+      "status": "added"
+    },
+    {
+      "path": "docs/delivery/architecture-day/C/evidence/photo-orchestration/root-owned-legacy-fixture.patch",
+      "blob": "4ab9e7e1e64aa094274e4e3a686c182a248765ba",
+      "status": "added"
+    },
+    {
+      "path": "docs/delivery/architecture-day/C/evidence/photo-orchestration/static-checks.json",
+      "blob": "09f98b3d9155e8a187a21fa8a2e930bcfe158817",
+      "status": "added"
+    },
+    {
+      "path": "docs/delivery/architecture-day/C/photo-orchestration-implementation.md",
+      "blob": "eb8d547f737be532c154a7309d8622e968e202b3",
+      "status": "added"
+    }
+  ],
+  "shared_dependency": {
+    "E": "91e78c448f69b2e3e3407acc111ff460c4a37ebb",
+    "original_key_recovery": "ffc2e7159846892b530edb17bbb5e411471da8f4",
+    "integration_candidate_not_provided": true
+  },
+  "initial_H_head": "d8cd0dd6f049157289c03f0aa7b2394b55cfbe68",
+  "review_scope": "Only H reports, evidence and unapplied review test patches"
+}

@@ -1,0 +1,260 @@
+✔ 失败玩法重新进入只恢复结果；明确重试走现有带版本幂等动作 (3.81678ms)
+✔ 非队长、缺服务端重试授权、运行中和未知结果均不能重试 (0.258802ms)
+✔ 重试撞到队长或版本变化，只读权威状态，不自动换版本再次重开 (0.414903ms)
+✔ 多人角色读取权威分配：队长显示标签，队员不可把隐藏角色误写成待分配 (1.098643ms)
+✔ 权威会话的呈现方式和可收尾状态完整递交页面，内嵌不会变成默认全屏 (0.227687ms)
+✔ 提交成功：hydrate 权威状态，不进 unknown (0.25071ms)
+✔ ★负控：响应丢失 ⇒ unknown，不得写成失败，也不得放行重复提交 (0.513709ms)
+✔ unknown 回读发现 version 已前进 ⇒ 判定已落地，清锁且不重发 (0.371609ms)
+✔ ★多人局:version 前进也不算证据 —— 队友的写入同样推高它,不许判成我方已落地 (0.390627ms)
+✔ unknown 回读发现 version 未变 ⇒ 说清没提交成功，才放行重试 (0.327233ms)
+✔ 回读本身也失败 ⇒ 保持 unknown 锁定，不猜结论 (0.286573ms)
+✔ ★同一 version 上重试复用同一幂等键 —— 服务端 replay 才能生效 (0.470065ms)
+✔ 服务端说「状态已更新」⇒ 自动回读权威状态，不让用户拿旧 version 反复重发 (1.244709ms)
+✔ state 缺 version ⇒ 拒发写请求，不拿空幂等键去撞服务端 (0.131925ms)
+✔ ★C-25 榜单请求失败:落「榜单暂时读不到」行内态,不再 unhandled rejection (0.313183ms)
+✔ C-25 榜单成功清掉失败态;业务错也落失败态而不是静默 (0.301455ms)
+✔ 草稿建档走本地kit，提交和重新打开都不请求正式会话 (0.535661ms)
+✔ 限时打字开始业务拒绝发送失败出口，并携带当次局标识 (0.702779ms)
+✔ 限时打字响应丢失按服务器started回读；版本增长不冒充开表事实 (0.430576ms)
+✔ 打字回读缺started事实保持unknown，禁止重复开表直到能核对 (0.416716ms)
+✔ 切换到另一局后旧开表响应不覆盖新局或弹旧失败出口 (0.177623ms)
+✔ CAS二阶段权威回读迟到不能覆盖同节点新局或解除其写锁 (0.43323ms)
+✔ 独立refreshState的迟到响应、返回异局身份、节点上下文变化均不hydrate (0.232935ms)
+✔ unknown权威读返回异局事实时保留锁，不再次写入 (0.232975ms)
+✔ 真实静默重登失败清身份后 start 的旧success回包不改变原组件 (8.008104ms)
+✔ 真实静默重登失败清身份后 start 的旧fail回包不改变原组件 (0.580397ms)
+✔ 真实静默重登失败清身份后 action 的旧success回包不改变原组件 (0.450556ms)
+✔ 真实静默重登失败清身份后 action 的旧fail回包不改变原组件 (0.495101ms)
+✔ 真实静默重登失败清身份后 resolveUnknown 的旧success回包不改变原组件 (0.45314ms)
+✔ 真实静默重登失败清身份后 resolveUnknown 的旧fail回包不改变原组件 (0.402464ms)
+✔ 真实静默重登失败清身份后 loadLeaderboard 的旧success回包不改变原组件 (0.432979ms)
+✔ 真实静默重登失败清身份后 loadLeaderboard 的旧fail回包不改变原组件 (0.551165ms)
+✔ 真实静默重登失败清身份后 refreshState 的旧success回包不改变原组件 (0.987439ms)
+✔ 真实静默重登失败清身份后 refreshState 的旧fail回包不改变原组件 (0.54147ms)
+✔ 同一账号正常续期保留在途回读；身份清空后重新start不永久卡住 (0.291591ms)
+✔ 正常卸载仍按epoch拒绝旧回读，预览启动不新增网络或身份要求 (0.226265ms)
+✔ 同局旧回读不能覆盖新动作或 RUNNING 状态 (0.244081ms)
+✔ 同局旧回读不能覆盖新动作或 COMPLETED 状态 (0.087549ms)
+✔ 同局旧回读不能覆盖新动作或 FAILED 状态 (0.07493ms)
+✔ 同局旧回读不能覆盖新动作或 EXPIRED 状态 (0.070344ms)
+✔ 旧unknown读不以本地高版本猜本人成功，保留锁并允许再次权威核对 (0.229199ms)
+✔ CAS拒绝后的旧回读不倒退视图，仍按拒绝释放锁与抛失败出口 (0.255047ms)
+✔ 同局等版本仍可接受，新局低版本不能被旧局高版本挡住 (0.204542ms)
+✔ 团队挑战不看 config.multiplayer：原命令同键重放核对，不能借队友版本增长判成功 (0.48748ms)
+✔ 团队挑战原键被明确拒绝后读取新状态，保留失败提示，不把版本推进当回执 (0.281275ms)
+✔ 共享挑战旧原键回执迟到不能覆盖新局或解除新局写锁 (0.153777ms)
+✔ 零血恢复必须明确重试，接受同属新会话并解除提交锁 (0.170272ms)
+✔ 零血重试丢失响应后个人局也按原键核对新会话，不能猜版本成功 (0.262227ms)
+✔ 新挑战回执必须属于原会话、原成员和原节点，普通动作不能接受换局 (0.213525ms)
+✔ 已完成一次但恢复次数不足的零血挑战仍需明确继续，普通完成局不允许重试 (0.220175ms)
+✖ Photo 520 保留原 key/输入/expected；个人局回读原动作，版本变化不推断成功 (1.029542ms)
+✖ Photo 已保存原结果但玩法冲突，不清 pending、不换版本重发 (0.33864ms)
+✖ Photo 重启先读取原 session，用户核对才重放原命令，不自动启动另一局 (0.452549ms)
+✖ Photo A UNKNOWN 切 B retry 与 A→B→A 同页迟到均不再发 A 命令 (0.325291ms)
+✖ Photo A 迟到成功仅清 A 原键，不清 B pending，不改变 B UI (3.398552ms)
+✖ Photo 仅显式 intentNotExecuted 释放原记录，缺媒体或存储失败零发送 (0.546778ms)
+✖ Photo A→B→A 的旧成功不改新登录代次 UI，原终态只清原存储键 (0.991495ms)
+✖ Photo 在途时调用者改 payload，原发送、原存储和原重试仍冻结首次输入 (0.906149ms)
+✖ 共享高级动作 A UNKNOWN 切 B 及 A→B→A 不得用当前 token 重发旧命令 (0.383547ms)
+ℹ tests 59
+ℹ suites 0
+ℹ pass 50
+ℹ fail 9
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 49.064414
+
+✖ failing tests:
+
+test at tests/unit/advanced-game-receipt-contract.test.js:705:1
+✖ Photo 520 保留原 key/输入/expected；个人局回读原动作，版本变化不推断成功 (1.029542ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  false !== true
+
+      at TestContext.<anonymous> (tests/unit/advanced-game-receipt-contract.test.js:709:10)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/unit/advanced-game-receipt-contract.test.js:718:1
+✖ Photo 已保存原结果但玩法冲突，不清 pending、不换版本重发 (0.33864ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  false !== true
+
+      at TestContext.<anonymous> (tests/unit/advanced-game-receipt-contract.test.js:722:10)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/unit/advanced-game-receipt-contract.test.js:726:1
+✖ Photo 重启先读取原 session，用户核对才重放原命令，不自动启动另一局 (0.452549ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  'POST' !== 'GET'
+
+      at TestContext.<anonymous> (tests/unit/advanced-game-receipt-contract.test.js:732:51)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'POST',
+    expected: 'GET',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/unit/advanced-game-receipt-contract.test.js:740:1
+✖ Photo A UNKNOWN 切 B retry 与 A→B→A 同页迟到均不再发 A 命令 (0.325291ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+
+  + undefined
+  - false
+
+      at TestContext.<anonymous> (tests/unit/advanced-game-receipt-contract.test.js:747:12)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/unit/advanced-game-receipt-contract.test.js:753:1
+✖ Photo A 迟到成功仅清 A 原键，不清 B pending，不改变 B UI (3.398552ms)
+  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+
+    assert.ok(bKeys.length > 0)
+
+      at TestContext.<anonymous> (tests/unit/advanced-game-receipt-contract.test.js:765:46)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/unit/advanced-game-receipt-contract.test.js:770:1
+✖ Photo 仅显式 intentNotExecuted 释放原记录，缺媒体或存储失败零发送 (0.546778ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  2 !== 0
+
+      at TestContext.<anonymous> (tests/unit/advanced-game-receipt-contract.test.js:776:10)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 2,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/unit/advanced-game-receipt-contract.test.js:781:1
+✖ Photo A→B→A 的旧成功不改新登录代次 UI，原终态只清原存储键 (0.991495ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  ... Skipped lines
+
+    {
+  +   acting: false,
+  -   acting: true,
+      currentStep: null,
+      error: '',
+      leaderboard: [],
+      leaderboardError: false,
+      leaderboardLoading: false,
+  ...
+          random: {
+  +         drawCount: 0,
+  +         enabled: false,
+  -         drawCount: 3,
+  -         enabled: true,
+            items: []
+          },
+          timer: {
+            enabled: false
+          }
+  ...
+          members: [],
+  -       roles: {},
+          turnIndex: 0
+        },
+        sessionId: 42,
+        status: 'RUNNING',
+  +     version: 4
+  -     version: 3
+      },
+      unknown: false,
+      unknownText: ''
+    }
+
+      at TestContext.<anonymous> (tests/unit/advanced-game-receipt-contract.test.js:791:12)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [Object],
+    expected: [Object],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at tests/unit/advanced-game-receipt-contract.test.js:795:1
+✖ Photo 在途时调用者改 payload，原发送、原存储和原重试仍冻结首次输入 (0.906149ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+
+  + 'media-asset:702'
+  - 'media-asset:701'
+                   ^
+
+      at TestContext.<anonymous> (tests/unit/advanced-game-receipt-contract.test.js:804:10)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'media-asset:702',
+    expected: 'media-asset:701',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/unit/advanced-game-receipt-contract.test.js:809:1
+✖ 共享高级动作 A UNKNOWN 切 B 及 A→B→A 不得用当前 token 重发旧命令 (0.383547ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  3 !== 2
+
+      at TestContext.<anonymous> (tests/unit/advanced-game-receipt-contract.test.js:816:62)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 3,
+    expected: 2,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

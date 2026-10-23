@@ -1,0 +1,214 @@
+FILE advanced-game-draw-audio; COMMAND node tests/unit/advanced-game-draw-audio.test.js
+✔ tapping a drawn rhythm toggles its original audio without starting another round (5.115565ms)
+✔ legacy /audio/merchant-games url from server config maps into the subpackage path (0.522341ms)
+✔ packaged component dependency lists every dynamically configured merchant asset (0.839079ms)
+✔ page hide stops rhythm playback instead of leaking audio into the next page (0.484585ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 13.386154
+
+FILE advanced-game-object-card-relay; COMMAND node tests/unit/advanced-game-object-card-relay.test.js
+✔ ★判过的回包带着卡:session 事件把 objectCard 原样抛给页面 (2.481573ms)
+✔ 回包没带卡(老模板 / 没判过 / 回读):objectCard 为 null,不是 undefined (0.489903ms)
+✔ ★提交被服务端拒(非 200):抛 actionfail,带上动作名 (1.627983ms)
+✔ 状态已更新:回读完也抛 actionfail(这一步没提交) (3.29894ms)
+✔ 响应丢失后回读:明确未执行才 actionfail；回读失败继续保留原照片命令 (0.968569ms)
+✔ 负控:响应丢失但回读证明已写进去 → 不抛 actionfail(那是成功) (0.434261ms)
+✔ 迟到成功动作回执不回退快照，保留有效成功及当次卡片 (2.950485ms)
+✔ 迟到成功动作回执不回退快照，保留有效成功且不制造卡片 (0.516773ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 18.04736
+
+FILE advanced-game-receipt-contract; COMMAND node tests/unit/advanced-game-receipt-contract.test.js
+✔ 失败玩法重新进入只恢复结果；明确重试走现有带版本幂等动作 (6.181685ms)
+✔ 非队长、缺服务端重试授权、运行中和未知结果均不能重试 (0.256909ms)
+✔ 重试撞到队长或版本变化，只读权威状态，不自动换版本再次重开 (0.353472ms)
+✔ 多人角色读取权威分配：队长显示标签，队员不可把隐藏角色误写成待分配 (1.304075ms)
+✔ 权威会话的呈现方式和可收尾状态完整递交页面，内嵌不会变成默认全屏 (0.221767ms)
+✔ 提交成功：hydrate 权威状态，不进 unknown (0.261636ms)
+✔ ★负控：响应丢失 ⇒ unknown，不得写成失败，也不得放行重复提交 (0.699061ms)
+✔ unknown 回读发现 version 已前进 ⇒ 判定已落地，清锁且不重发 (0.375785ms)
+✔ ★多人局:version 前进也不算证据 —— 队友的写入同样推高它,不许判成我方已落地 (0.520999ms)
+✔ unknown 回读发现 version 未变 ⇒ 说清没提交成功，才放行重试 (3.558953ms)
+✔ 回读本身也失败 ⇒ 保持 unknown 锁定，不猜结论 (0.491606ms)
+✔ ★同一 version 上重试复用同一幂等键 —— 服务端 replay 才能生效 (0.502602ms)
+✔ 服务端说「状态已更新」⇒ 自动回读权威状态，不让用户拿旧 version 反复重发 (1.326228ms)
+✔ state 缺 version ⇒ 拒发写请求，不拿空幂等键去撞服务端 (0.123483ms)
+✔ ★C-25 榜单请求失败:落「榜单暂时读不到」行内态,不再 unhandled rejection (0.32555ms)
+✔ C-25 榜单成功清掉失败态;业务错也落失败态而不是静默 (0.325922ms)
+✔ 草稿建档走本地kit，提交和重新打开都不请求正式会话 (0.746952ms)
+✔ 限时打字开始业务拒绝发送失败出口，并携带当次局标识 (0.671461ms)
+✔ 限时打字响应丢失按服务器started回读；版本增长不冒充开表事实 (0.650259ms)
+✔ 打字回读缺started事实保持unknown，禁止重复开表直到能核对 (0.30479ms)
+✔ 切换到另一局后旧开表响应不覆盖新局或弹旧失败出口 (0.262578ms)
+✔ CAS二阶段权威回读迟到不能覆盖同节点新局或解除其写锁 (0.423625ms)
+✔ 独立refreshState的迟到响应、返回异局身份、节点上下文变化均不hydrate (0.234195ms)
+✔ unknown权威读返回异局事实时保留锁，不再次写入 (0.20351ms)
+✔ 真实静默重登失败清身份后 start 的旧success回包不改变原组件 (9.071381ms)
+✔ 真实静默重登失败清身份后 start 的旧fail回包不改变原组件 (0.564163ms)
+✔ 真实静默重登失败清身份后 action 的旧success回包不改变原组件 (0.481972ms)
+✔ 真实静默重登失败清身份后 action 的旧fail回包不改变原组件 (0.462182ms)
+✔ 真实静默重登失败清身份后 resolveUnknown 的旧success回包不改变原组件 (0.558154ms)
+✔ 真实静默重登失败清身份后 resolveUnknown 的旧fail回包不改变原组件 (0.464115ms)
+✔ 真实静默重登失败清身份后 loadLeaderboard 的旧success回包不改变原组件 (0.702987ms)
+✔ 真实静默重登失败清身份后 loadLeaderboard 的旧fail回包不改变原组件 (0.519617ms)
+✔ 真实静默重登失败清身份后 refreshState 的旧success回包不改变原组件 (1.084751ms)
+✔ 真实静默重登失败清身份后 refreshState 的旧fail回包不改变原组件 (0.672833ms)
+✔ 同一账号正常续期保留在途回读；身份清空后重新start不永久卡住 (0.311921ms)
+✔ 正常卸载仍按epoch拒绝旧回读，预览启动不新增网络或身份要求 (0.351369ms)
+✔ 同局旧回读不能覆盖新动作或 RUNNING 状态 (0.272873ms)
+✔ 同局旧回读不能覆盖新动作或 COMPLETED 状态 (0.102902ms)
+✔ 同局旧回读不能覆盖新动作或 FAILED 状态 (0.114249ms)
+✔ 同局旧回读不能覆盖新动作或 EXPIRED 状态 (0.092937ms)
+✔ 旧unknown读不以本地高版本猜本人成功，保留锁并允许再次权威核对 (0.27102ms)
+✔ CAS拒绝后的旧回读不倒退视图，仍按拒绝释放锁与抛失败出口 (0.339321ms)
+✔ 同局等版本仍可接受，新局低版本不能被旧局高版本挡住 (0.231372ms)
+✔ 团队挑战不看 config.multiplayer：原命令同键重放核对，不能借队友版本增长判成功 (0.482052ms)
+✔ 团队挑战原键被明确拒绝后读取新状态，保留失败提示，不把版本推进当回执 (0.294745ms)
+✔ 共享挑战旧原键回执迟到不能覆盖新局或解除新局写锁 (0.170141ms)
+✔ 零血恢复必须明确重试，接受同属新会话并解除提交锁 (0.179435ms)
+✔ 零血重试丢失响应后个人局也按原键核对新会话，不能猜版本成功 (0.271521ms)
+✔ 新挑战回执必须属于原会话、原成员和原节点，普通动作不能接受换局 (0.146897ms)
+✔ 已完成一次但恢复次数不足的零血挑战仍需明确继续，普通完成局不允许重试 (0.150032ms)
+✔ Photo 520 保留原 key/输入/expected；个人局回读原动作，版本变化不推断成功 (0.505346ms)
+✔ Photo 已保存原结果但玩法冲突，不清 pending、不换版本重发 (0.23741ms)
+✔ Photo 重启先读取原 session，用户核对才重放原命令，不自动启动另一局 (0.446268ms)
+✔ Photo A UNKNOWN 切 B retry 与 A→B→A 同页迟到均不再发 A 命令 (0.225462ms)
+✔ Photo A 迟到成功仅清 A 原键，不清 B pending，不改变 B UI (0.39255ms)
+✔ Photo 仅显式 intentNotExecuted 释放原记录，缺媒体或存储失败零发送 (0.409865ms)
+✔ Photo A→B→A 的旧成功不改新登录代次 UI，原终态只清原存储键 (0.327844ms)
+✔ Photo 在途时调用者改 payload，原发送、原存储和原重试仍冻结首次输入 (0.312782ms)
+✔ 共享高级动作 A UNKNOWN 切 B 及 A→B→A 不得用当前 token 重发旧命令 (0.222398ms)
+ℹ tests 59
+ℹ suites 0
+ℹ pass 59
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 52.153999
+
+FILE advanced-game-variants-recovery; COMMAND node tests/unit/advanced-game-variants-recovery.test.js
+✔ variants拒绝畸形when而不是只检查存在 (9.081554ms)
+✔ 已支持条件DSL全部正常放行，不新增条件业务规则 (15.767004ms)
+✔ timer量程越界本地拒绝，validate与serialize均生效 (1.354779ms)
+✔ first-match逐条模拟，两条各自合法不能累加误杀 (0.779531ms)
+✔ current-N与=0合法边界保留，越下界与越次数上界拒绝 (1.282523ms)
+✔ 同条多字段作用后统一校验，判定误差允许小数底值 (1.037281ms)
+✔ 全部次数容错字段统一遵守既有0至10合同，=0不会误作负值或收紧 (5.317789ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 40.538428
+
+FILE architecture-day-c-intent; COMMAND node tests/unit/architecture-day-c-intent.test.js
+✔ 同一意图冻结原输入与期望版本，明确完成后相同答案产生新 attempt (1.76764ms)
+✔ 进程恢复只恢复脱敏回执身份，账号与局隔离，存储失败不得发送 (0.818428ms)
+✔ 显式重试不能把原 expectedRouteVersion 换成最新值 (27.059112ms)
+✔ 提交后断网保留原身份，换页面/重启只查询原命令，实体变新版本不改原期望 (11.474888ms)
+✔ A 的预检完成前切到 B，不把 A 的命令用 B token 发出 (8.255035ms)
+✔ 预检发现另一运行时直接阻止写入，不自动绑定新局 (2.908413ms)
+✔ A→B→A 后原登录代次的预检回调不能继续发写 (3.074219ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 61.277762
+
+FILE object-card-page-lifecycle; COMMAND node tests/unit/object-card-page-lifecycle.test.js
+✔ 藏品册隐藏后迟到图片不重启动画，卸载后列表不更新页面 (2.738472ms)
+✔ 藏品册同页分类后发成功先到时，旧成功不得覆盖最新列表、堆与详情 (3.507838ms)
+✔ 藏品册同页新分类仍在加载时，旧失败不得退回筛选、结束 loading 或改详情 (1.303474ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 13.460469
+
+FILE play-qa-photo-upload-contract; COMMAND node tests/unit/play-qa-photo-upload-contract.test.js
+✔ 合法 5MiB:真实链上传一次并提交 SUBMIT_QA (36.756897ms)
+✔ 已知 15MiB:共享预检拒绝,不发网络,可操作文案,绝不提交 (5.760994ms)
+✔ 上传在途切到 B 会话:旧回包不得提交到新题,可重新拍 (4.752385ms)
+✔ 同会话版本前进:旧回包同样不得提交 (5.738841ms)
+✔ 非 qa kit 的 shoot 不得上传/提交 (5.860391ms)
+✔ 双击:上传在途时只起一次请求,不静默丢第二张 (4.739606ms)
+✔ advanced-game acting/unknown 时不装成功,给可恢复提示 (3.587105ms)
+✔ 未知 size(旧组件):照常上传;失败不提交,换图可重试 (4.182313ms)
+✔ 上传中离页 abort:迟到的成功不得提交 (4.245626ms)
+✔ Photo 上传保留受管 assetId，动作只携带 canonical media 引用 (11.760225ms)
+✔ Photo 上传缺 assetId 时拒绝动作，不回退为 URL 身份 (144.09014ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 236.942293
+
+FILE playkit-photocheck-frame-contract; COMMAND node tests/unit/playkit-photocheck-frame-contract.test.js
+✔ ★配了取景轮廓就透传到玩家端视图，不透明度缺省四成 (5.076142ms)
+✔ ★不透明度越界夹回 0 至 100，与后端同一口径 (0.408743ms)
+✔ ★两个键恒产出 —— 分发器绑了 kit.frameUrl，缺一个就是那行绑定静默失效 (0.288186ms)
+✔ ★没配 frameUrl 时点快门还是走 wx.chooseMedia，一条没变 (4.075636ms)
+✔ ★配了 frameUrl 时点快门进取景层，且不去调 chooseMedia (0.35215ms)
+✔ ★取景层按快门 → takePhoto → 抛给页面的仍是 tempFilePath (0.579204ms)
+✔ ★取景器起不来（相机被拒 / 设备不支持）：立刻回落 chooseMedia，玩法照常能完成 (1.567144ms)
+✔ ★轮廓图自己加载失败：只藏掉那条线，取景与快门照常 (0.339311ms)
+✔ ★过了 / 定局之后不再进取景层 (0.518446ms)
+✔ ★取景层与 cy-play-stage 平级，camera 挂 binderror (0.435293ms)
+✔ ★分发器把 frame-url / frame-opacity 喂给组件 (0.224201ms)
+✔ ★客户端不算对齐度：取景不引入任何本地图案判定，shoot 也不带分数 (3.424144ms)
+✔ ★商家端没配轮廓时，编辑页存的配置里不出现空 frameUrl (2.739733ms)
+✔ 负控：把 frameUrl 透传那一行删掉，透传断言必须红 (2.923585ms)
+✔ 负控：去掉不透明度的夹紧，越界值必须能原样漏出去 (2.630933ms)
+✔ 负控：把取景分支的入口条件拆掉，「配了轮廓进取景层」必须红 (0.301205ms)
+✔ ★内嵌呈现下不进取景层 —— 故事流段落会把 fixed 的取景器圈进 190rpx 里 (0.419079ms)
+✔ ★分发器把 inline 传给拍照审核 —— 不传的话上面那条判据永远是 false (0.170832ms)
+✔ ★快门在途点「退出取景」不生效 —— 否则照片照样提交、白吃一次机会 (0.61689ms)
+✔ ★快门连着失败两次就回落选图 —— binderror 不响的那些机型只能靠这条 (0.903534ms)
+ℹ tests 20
+ℹ suites 0
+ℹ pass 20
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 35.545088
+
+FILE playkit-photocheck-server-judge-contract; COMMAND node tests/unit/playkit-photocheck-server-judge-contract.test.js
+✔ ★本地算分那套整段删除:不再读像素、不再有 scoreOf / readPixels (0.91483ms)
+✔ ★shoot 事件只给临时路径与大小,不带任何分数 (4.881346ms)
+✔ ★不过时必须把服务端的 lastReason 渲染出来,不能只说「再拍一张」 (0.618233ms)
+✔ 负控:把 reason 的 wxml 节点摘掉,上一条必须红 (0.236519ms)
+✔ ★分发器把 degraded / lastReason 传给组件 —— 少一个绑定,降级与理由都到不了这一屏 (0.326993ms)
+✔ ★降级(degraded)只说「没能审」,不许出现通过 / 不通过这类假结论 (0.417306ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 13.829714

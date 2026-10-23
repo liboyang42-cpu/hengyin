@@ -1,0 +1,158 @@
+{
+  "candidate": "9da43f76ddd54bfdf0b24a538a1b80d47c5384bd",
+  "node": "v24.19.0",
+  "execution": "node each original test file directly; node:test actual case summaries",
+  "files": [
+    {
+      "tests": 4,
+      "pass": 4,
+      "fail": 0,
+      "skipped": 0,
+      "file": "advanced-game-draw-audio",
+      "exit": 0,
+      "sha256": "627c7b1e6da7857ac09c206aa66b0326b3db9bbf1a975124d2c0cbdd804e1870"
+    },
+    {
+      "tests": 8,
+      "pass": 8,
+      "fail": 0,
+      "skipped": 0,
+      "file": "advanced-game-object-card-relay",
+      "exit": 0,
+      "sha256": "68d55953e06deb8b4e68ac12b5ee8d423a17919735324c461dc6b038d9d06e84"
+    },
+    {
+      "tests": 59,
+      "pass": 59,
+      "fail": 0,
+      "skipped": 0,
+      "file": "advanced-game-receipt-contract",
+      "exit": 0,
+      "sha256": "c02c7432a535a92d1d163090fa243d29a3314267fd939e7b008f1d4bf9bdfa7b"
+    },
+    {
+      "tests": 7,
+      "pass": 7,
+      "fail": 0,
+      "skipped": 0,
+      "file": "advanced-game-variants-recovery",
+      "exit": 0,
+      "sha256": "8a101dd3c37b27d60a2c3d33eb617492f3e92b1256c3b40bdcd4920410ee5a05"
+    },
+    {
+      "tests": 7,
+      "pass": 7,
+      "fail": 0,
+      "skipped": 0,
+      "file": "architecture-day-c-intent",
+      "exit": 0,
+      "sha256": "545546e4259f0050468c4296eb6807dce9367adbb4267400b3ca903e6819f65e"
+    },
+    {
+      "tests": 3,
+      "pass": 3,
+      "fail": 0,
+      "skipped": 0,
+      "file": "object-card-page-lifecycle",
+      "exit": 0,
+      "sha256": "33909e1a2db68775a08e4f2020d594d4b130f2ac3b178d7795e6367db42bc1b7"
+    },
+    {
+      "tests": 11,
+      "pass": 11,
+      "fail": 0,
+      "skipped": 0,
+      "file": "play-qa-photo-upload-contract",
+      "exit": 0,
+      "sha256": "b3e69bc78b91006ae858f76ed3e3431ef50923537b97fdb2be3023a0ea235ea0"
+    },
+    {
+      "tests": 20,
+      "pass": 20,
+      "fail": 0,
+      "skipped": 0,
+      "file": "playkit-photocheck-frame-contract",
+      "exit": 0,
+      "sha256": "53db59db2ada2b58faa782b01b7421c033466b7ce61b318057b56156a614303a"
+    },
+    {
+      "tests": 6,
+      "pass": 6,
+      "fail": 0,
+      "skipped": 0,
+      "file": "playkit-photocheck-server-judge-contract",
+      "exit": 0,
+      "sha256": "5b83f4945428d41dd0533b9b682ca917c9a3e86c6e6aff59428f35979a7f6519"
+    }
+  ],
+  "totals": {
+    "tests": 125,
+    "pass": 125,
+    "fail": 0,
+    "skipped": 0
+  },
+  "parent_component_counterfactual": {
+    "parent": "a480e4083618120332539d0ac49c7e51e9db6839",
+    "exact_component_blob": "3deb4f8afae73a31a50a8dde100d6d7d76ec8200",
+    "counts": {
+      "tests": 59,
+      "pass": 50,
+      "fail": 9,
+      "skipped": 0
+    },
+    "only_component_source_replaced": true,
+    "not_a_backend_or_whole_old_tree_run": true
+  },
+  "H_consent_counterexample": {
+    "counts": {
+      "tests": 12,
+      "pass": 11,
+      "fail": 1,
+      "skipped": 0
+    },
+    "original_11_cases_overlap_original_125": true,
+    "real_page_consent_and_lifecycle_helpers": true,
+    "outbound_uploads": 0,
+    "game_actions": 0
+  },
+  "guard_counterfactual": {
+    "counts": {
+      "tests": 12,
+      "pass": 12,
+      "fail": 0,
+      "skipped": 0
+    },
+    "production_file_modified": false,
+    "mechanism": "in-memory Module compilation replacement adds owned guard to catch; diagnostic only"
+  },
+  "excluded_probe": {
+    "command": "node --test original-nine-files",
+    "reported_file_level_tests": 9,
+    "used_as_business_case_evidence": false
+  },
+  "java_executed": 0,
+  "mysql_executed": 0,
+  "new_java_patch": "NOT_RUN",
+  "log_normalization": [
+    "review temp absolute paths replaced in diagnostic copies",
+    "trailing whitespace stripped only"
+  ],
+  "evidence_files": [
+    {
+      "file": "consent-guard-counterfactual.txt",
+      "sha256": "68f0ec95c636b899e5207915ea621322228b1612302920dca053d9a9a3d80895"
+    },
+    {
+      "file": "consent-red.txt",
+      "sha256": "724dbe1d2efe8d9c1a6f818443222e4016c2a754bb8dd0e1fe0523d85e33e544"
+    },
+    {
+      "file": "node-direct-125.txt",
+      "sha256": "fa3532e3a049490b39ecab3b3331d3074c037d9ab51a3c561419a1b4a52b4212"
+    },
+    {
+      "file": "parent-component-counterfactual.txt",
+      "sha256": "001c20bb920af320adad1f945715ca856ccf0cb8374ab9684b84ef618e58bf60"
+    }
+  ]
+}
