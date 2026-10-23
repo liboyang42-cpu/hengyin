@@ -90,10 +90,15 @@ class PhotoCheckIntentMySqlIT {
         gateway=mock(AiGatewayService.class); vision=mock(PhotoCheckVisionService.class);
         consent=mock(ConsentGuard.class); media=mock(AppMediaReferenceGuard.class);
         context=new AnnotationConfigApplicationContext(); context.register(TxConfiguration.class);
-        context.registerBean("transactionManager",DataSourceTransactionManager.class,()->manager);
-        context.registerBean(PhotoCheckIntentMapper.class,()->mapper); context.registerBean(AiGatewayService.class,()->gateway);
-        context.registerBean(PhotoCheckVisionService.class,()->vision); context.registerBean(ConsentGuard.class,()->consent);
-        context.registerBean(AppMediaReferenceGuard.class,()->media); context.registerBean(PhotoCheckIntentService.class);
+        // These dependencies are already built. In particular, Spring must not populate
+        // @Autowired fields inherited by the concrete Mockito Vision/Media mocks.
+        context.getBeanFactory().registerSingleton("transactionManager",manager);
+        context.getBeanFactory().registerSingleton(PhotoCheckIntentMapper.class.getName(),mapper);
+        context.getBeanFactory().registerSingleton(AiGatewayService.class.getName(),gateway);
+        context.getBeanFactory().registerSingleton(PhotoCheckVisionService.class.getName(),vision);
+        context.getBeanFactory().registerSingleton(ConsentGuard.class.getName(),consent);
+        context.getBeanFactory().registerSingleton(AppMediaReferenceGuard.class.getName(),media);
+        context.registerBean(PhotoCheckIntentService.class);
         context.refresh(); service=context.getBean(PhotoCheckIntentService.class);
     }
     @BeforeEach void cleanOwnedScratchAndStub() {
