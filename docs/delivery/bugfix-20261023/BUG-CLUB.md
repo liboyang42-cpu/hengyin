@@ -33,7 +33,11 @@
 
 ## CI
 
-见 PR 的检查结果（run ID 在 PR 正文更新）。
+提交 `0c1ecb77` 上的 CI（PR #558）：
+- GitHub CI run 39957816704：35 个检查中 29 个成功、3 个跳过、3 个失败。失败的是 `Mini program unit shard (10/20)`、`Mini program static gates`、`Mini program static checks`（汇总），三个都只是因为动作台账漂移（`action-ledger.test.js`「release 前重建 inventory」与 `build-action-ledger.js --check`）。按规则这里不提交重建的台账，交 C00 统一重建。后端测试与其余小程序分片全部通过
+- Funds MySQL IT run 39957816746：通过
+- Mini followup focused regression run 39957816846：通过
+- Isolated authenticated Redis recovery run 39957816961：通过
 
 <!-- CY-HANDOFF -->
 - C00：合并后统一重建 `scripts/uiaudit/action-ledger.json`（`npm run audit:actions:update`）。漂移只涉及 checkin-detail / event-ops 两页的 30 个控件摘要，控件数不变（5009）
