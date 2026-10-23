@@ -138,7 +138,7 @@
       </view>
 
       <block wx:if="{{posts.length}}">
-        <view id="club-post-{{item.id}}" class="club-post-anchor cy-fly-in" style="animation-delay: {{index < 5 ? index * 40 : 200}}ms" wx:for="{{posts}}" wx:key="id">
+        <view id="club-post-{{item.id}}" class="club-post-anchor" wx:for="{{posts}}" wx:key="id" style="{{pmPosts === 1 ? '--pm-p:1;' : (pmPosts === 2 ? '--pm-p-d:.32s;--pm-p-s:1;' : '')}}">
           <cy-post-card expandable-text post="{{item}}" index="{{index}}" interactive-actions interactive-user interactive-media show-share
             accessibility-label="查看{{item.memberNickname || '城瘾玩家'}}的动态"
             bind:detail="onPostDetail" bind:user="onPostUser" bind:preview="onPreviewImage"

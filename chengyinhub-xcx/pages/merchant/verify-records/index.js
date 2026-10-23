@@ -1,7 +1,7 @@
 // BL-76 商家核销记录(只读)。结构照 pages/merchant/aftercare:access/me 判权 → 列表四态。
 // 接口 POST /api/merchant/verification-records 要 VERIFY_RECORD_READ(核销员也有),一次全量、不分页。
 const app = getApp();
-const toast = require('../../../utils/toast.js');
+const toast = require('../../../utils/toast.js'); const pageMotion = require('../../../utils/page-motion.js');
 const merchantTheme = require('../../../utils/merchant-theme.js');
 const { inactiveAccess, normalizeMerchantAccess } = require('../../../utils/merchant-access-policy.js');
 const {
@@ -128,7 +128,7 @@ Page({
     const groups = groupRecords(items, bucket);
     // 全量行只给分段切换用,不上屏,不走 setData(U4)
     this._items = items;
-    this.setData({
+    pageMotion.enter(this, 'pmList'); this.setData({
       bucket,
       tabs: STATUS_TABS.map(tab => ({ key: tab.key, label: `${tab.label} ${counts[tab.key] || 0}` })),
       groups,

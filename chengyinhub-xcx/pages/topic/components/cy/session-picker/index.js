@@ -49,6 +49,7 @@ Component({
     show: { type: Boolean, value: false },
     // 宿主传 info.activityList(该主题已上架、未结束的场次)
     activities: { type: Array, value: [] },
+    preferName: { type: String, value: '' }, // 购买半屏里选的票种名称:票读出来后预选同名的那张
   },
   data: {
     days: [],
@@ -173,6 +174,8 @@ Component({
             ticketsState: rows.length ? 'ready' : 'empty',
             ticketsError: '',
           });
+          const prefer = rows.filter((t) => that.data.preferName && String(t.name).trim() === that.data.preferName)[0];
+          if (prefer) that.onPickTicket({ currentTarget: { dataset: { id: prefer.id } } });
         },
         fail(res) {
           if (that._ticketRequestId !== requestId || that.data.pickedActivityId !== activityId) return;

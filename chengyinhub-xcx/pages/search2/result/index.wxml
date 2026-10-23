@@ -2,7 +2,7 @@
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
-<view class="search2-result">
+<view class="search2-result" style="{{pmList === 1 ? '--pm-l:1;' : (pmList === 2 ? '--pm-l-d:.32s;--pm-l-s:1;' : '')}}">
   <cy-nav-bar />
   <view class="result-nav-spacer" style="height: {{statusBarHeight + navBarHeight}}px;"></view>
   <view class="result-search">

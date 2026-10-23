@@ -1,4 +1,4 @@
-const toast = require('../../../utils/toast.js');
+const toast = require('../../../utils/toast.js'); const pageMotion = require('../../../utils/page-motion.js');
 const roleGuard = require('../../../utils/roleGuard.js');
 const app = getApp();
 const merchantTheme = require('../../../utils/merchant-theme.js');
@@ -344,7 +344,7 @@ Page({
     const empty = tab === 'activity' && this.data.canPublishActivity
       ? { tit: '还没有活动', sub: '在这里发布你的第一场单场活动' }
       : (TYPE_EMPTY[tab] || TYPE_EMPTY.topic);
-    this.setData({
+    pageMotion.enter(this, 'pmList'); this.setData({
       list: rows,
       // 长按提示只在真有卡能操作时出 —— 全是「进行中且不可删」的列表写这句是骗人
       hasRowOps: rows.some(function (p) { return p._canToggle || p._canDelete || p._canViewApplies; }),

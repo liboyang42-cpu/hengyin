@@ -1,5 +1,5 @@
 const { readReducedMotion } = require('../../utils/motion-preference.js');
-const modal = require('../../utils/modal.js');
+const modal = require('../../utils/modal.js'); const pageMotion = require('../../utils/page-motion.js');
 const cyToast = require('../../utils/toast.js');
 const { readPageStyle } = require('../../utils/font-scale.js');
 const app = getApp();
@@ -66,7 +66,7 @@ Page({
     listLoaded: false,        // 任一 tab 拿到过数据 —— 四态里区分「首次加载」与「已有内容」
     banner: {},
     topList: [],
-    tailList: [], flyClass: '',   // owner 10-22:每次打开页面卡片飞入(onShow 飞入、onHide 先藏好等下次重播)
+    tailList: [],   // 卡片入场改由 master 的 page-motion(pmList)负责,flyClass 已撤
     bannerTitle: '推荐',
     topTitle: '全部主题',
     emptyTitle: '',
@@ -139,7 +139,7 @@ Page({
 
   onShow() {
     this.setData({ reducedMotion: readReducedMotion() });
-    this.setData({ flyClass: this.data.reducedMotion ? '' : 'cy-fly-in' });   // 卡片飞入
+    // 卡片入场:合并 master 后由 page-motion(pmList)负责,不再另设 flyClass
     this.setData({ pageMetaStyle: readPageStyle() });
     wx.hideTabBar();
     // 收敛:商家玩家共用发布广场,底部 tabBar 按本地身份立即渲染(避免等 /api/publish/home 异步返回时闪 consumer)
@@ -353,7 +353,7 @@ Page({
   onHide() {
     merchantTheme.merchantPageRestore();
     // 离开时先把卡片藏好(cy-fly-wait 透明),下次回到本页 onShow 再飞进来,不会先闪一帧旧卡
-    this.setData({ flyClass: this.data.reducedMotion ? '' : 'cy-fly-wait' });
+    // (onHide 不再藏卡:入场由 page-motion 负责)
   },
 
   // 主题模板走 name 字段(主题推荐/最新主题走 title),两边共用同一套真实图标映射
@@ -437,7 +437,7 @@ Page({
     // 同时 `topList: cat ? top : top.slice(1)` 只在不选分类时把横幅项摘掉,选了分类就
     // 横幅 + 列表各出现一次,同一张卡同屏两遍。横幅只认分类命中的首项,列表一律去重。
     const banner = top[0] || {};
-    const searching = !!keyword;
+    const searching = !!keyword; pageMotion.enter(this, 'pmList'); // 2026-10-23:换品类 / 标签 / 搜索后卡片依次浮上来
     this.setData({
       banner: banner,
       // activeCat=0 走运营编排,所以叫「推荐」不叫「全部」—— 叫全部会让用户

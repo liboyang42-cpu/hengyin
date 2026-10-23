@@ -26,6 +26,9 @@ const { decodeDisplayText } = require('../../../utils/display-text.js');
 const contentReport = require('../../../utils/content-report.js');
 const reportSheet = require('../../../utils/community-report-sheet.js');
 const mediaPreview = require('../../../utils/media-preview.js');
+const motion = require('../utils/topic-motion.js');
+const KB_MS = 3600;          // 封面每张停留时长
+const DOCK_MS = 620;         // 价格/收藏停靠动画时长(慢-快-慢)
 
 // 只接受真实数值/十进制数字串；先验类型，不能把布尔、数组或空值强转为坐标。
 function routeCoordinate(value, limit) {
@@ -108,7 +111,17 @@ Page({
     // cy-tabs 的数据源。2026-08-05 从手抄组件类名(<view class="cy-tabs cy-tabs--fill
     // cy-tabs--wide">)改成真的用组件 —— 手抄的那份还硬编码了 --cy-tabs-accent:#028707
     // (纯绿 hue 122°，和状态成功色的 161° 不是一档，属页面自选强调色)。
-    topicTabs: [{ key: '0', label: '详情' }, { key: '1', label: '路线节点' }, { key: '2', label: '路线' }],
+    // 2026-10-22 业主:三个标签 = 详情 / 故事 / 路线(自由探索没有固定路线,第三个叫「地点」)
+    topicTabs: [{ key: '0', label: '详情' }, { key: '1', label: '故事' }, { key: '2', label: '路线' }],
+    // ===== 2026-10-22 动效与新增块(docs/design/动效界面落地_20261022) =====
+    coverImages: [], kbIdx: 0, coverLeaving: false, detailEnter: false, heroIdx: 0, navSolid: false, storyChars: [], routeNote: '', sketchPoints: [], routeReal: false, tabPre: false, buyOpts: [], buySel: 0, sessionPreferName: '',
+    publisher: { name: '', avatar: '' }, heroCta: { kind: '', text: '' }, faved: false,
+    docked: false, dockCtaStyle: '', dockFavStyle: '',
+    merchantCards: [], storyCards: [], storyMeta: '', openChapter: -1, storyDocked: false,
+    teams: { rows: [], need: 0 },
+    progress: { total: 0, done: 0, labels: [] },
+    selfPlayValidText: '可玩至购买后 90 天', selfPlayCheckoutShow: false, checkout: { cover: '', validText: '', placeText: '', priceText: '', free: false, profileName: '', profilePhone: '' },
+    reveal: { show: false, cover: '', name: '', kindText: '', untilText: '', daysText: '', line: '' },
     id: 0,
     is_join: 0,
     // 自玩通行证购买确认(P1–P6 弹层,替代 wx.showModal);报名信息单独同意必须在建单前落库
@@ -295,6 +308,8 @@ Page({
       }
     }
 
+    this._checkDock(scrollTop); this._checkNav(scrollTop);
+
     // 吸顶逻辑
     const { tabSectionTop, topBarHeight, tabHeight } = this.data;
 
@@ -322,6 +337,8 @@ Page({
   onShow() {
     const reducedMotion = readReducedMotion();
     if (this.data.reducedMotion !== reducedMotion) this.setData({ reducedMotion }); this._navigating = false; // 返回时兜底清跳转锁
+    this._startKenBurns();
+    if (this.data.selfPlayCheckoutShow && !this._signupProfile) this._fillCheckoutProfile(); // 从个人资料补全回来
     const that = this;
     
     // 重新获取所有位置信息
@@ -341,6 +358,7 @@ Page({
    * 页面隐藏时
    */
   onHide() {
+    this._stopKenBurns();
     this.pauseTopicAudio();
     this.setData({
       isTabSticky: false,
@@ -356,6 +374,8 @@ Page({
     this._themeRecordsDisposed = true;
     this._themeRecordsEpoch = (this._themeRecordsEpoch || 0) + 1;
     this.destroyTopicAudio();
+    this._stopKenBurns();
+    (this._motionTimers || []).forEach(clearTimeout);
     if (this._workflow) this._workflow.destroy();
     if (this._scrollTimer) {
       clearTimeout(this._scrollTimer);
@@ -410,12 +430,30 @@ Page({
     // cy-tabs 通过 detail.key 传当前项;保留 dataset 兼容旧调用点(若还有)
     const index = (e.detail && e.detail.key) !== undefined ? e.detail.key : e.currentTarget.dataset.index;
     this.setData({
-      activeTab: index
-    }, () => {
+      activeTab: index, tabPre: !this.data.reducedMotion // v13:切标签时各块从下方依次浮上来
+    }, () => { if (this.data.tabPre) this._later(30, () => this.setData({ tabPre: false })); });
+    if (String(index) === '2') this._loadProgress();
+    if (String(index) === '1') { this.setData({ openChapter: -1 }); this._later(900, () => { if (String(this.data.activeTab) === '1') this.setData({ openChapter: 0 }); }); } // v13:进故事标签后第一章自己展开
+  },
+
+  /* 2026-10-22 业主:点「查看详情与报名」是点按转场,不是往下滑 ——
+     封面文字先退场,再瞬时换到第二屏,第二屏头图回落、标题与按钮逐行上浮。 */
+  scrollToSecond() {
+    if (this.data.isScrolling) return;
+    if (this.data.reducedMotion) return this._scrollToSecondPlain();
+    this.setData({ isScrolling: true, coverLeaving: true });
+    this._later(280, () => {
+      const go = () => wx.pageScrollTo({ scrollTop: this.data.screen2Top, duration: 0,
+        complete: () => {
+          this.setData({ currentScreen: 1, isScrolling: false, detailEnter: true, coverLeaving: false });
+          this._later(1100, () => this.setData({ detailEnter: false }));
+          this._measureHero();
+        } });
+      if (this.data.screen2Top <= 0) { this.calculateScreenHeights(); this._later(200, go); } else go();
     });
   },
 
-  scrollToSecond() {
+  _scrollToSecondPlain() {
     if (this.data.isScrolling) return;
 
     this.setData({
@@ -449,6 +487,337 @@ Page({
     }
   },
   
+  /* ===== 2026-10-22 动效与新增块(docs/design/动效界面落地_20261022) ===== */
+  _later(ms, fn) { const t = setTimeout(fn, ms); (this._motionTimers = this._motionTimers || []).push(t); return t; },
+
+  _applyMotionData(data) {
+    const merchantCards = motion.buildMerchantCards(data.chaptersList);
+    const price = data.selfPlayPrice;
+    const priceText = (price === undefined || price === null || price === '') ? '' : '¥' + price;
+    this.setData({
+      coverImages: motion.buildCoverImages(data), kbIdx: 0,
+      publisher: motion.buildPublisher(data),
+      heroCta: motion.buildHeroCta(data, { isJoin: this.data.is_join, merchantClosed: data.merchantClosed === true, priceText }),
+      merchantCards,
+      storyCards: motion.buildStoryCards(data, merchantCards),
+      storyMeta: motion.storyMeta(data),
+      'topicTabs[2].label': Number(data.productType) === 2 ? '地点' : '路线',
+      routeNote: motion.routeNote(data, merchantCards.length), heroIdx: 0, routeReal: false,
+      sketchPoints: [].concat(...(data.chaptersList || []).map((c) => (c && c.nodes) || [])).map(routePoint).filter(Boolean).map((p) => ({ lat: p.latitude, lng: p.longitude })),
+    });
+    this._progressLoaded = false;
+    this._startKenBurns();
+    this._loadTeams(data);
+    this._loadFav(data.id);
+    this._loadChars(data);
+  },
+
+  // 封面轮换:只在停留第一屏时换图,离屏/隐藏/减少动效时不跑
+  _startKenBurns() {
+    this._stopKenBurns();
+    if (this.data.reducedMotion || (this.data.coverImages || []).length < 2) return;
+    this._kbTimer = setInterval(() => {
+      if (this.data.currentScreen !== 0) return;
+      this.setData({ kbIdx: (this.data.kbIdx + 1) % this.data.coverImages.length });
+    }, KB_MS);
+  },
+  _stopKenBurns() { if (this._kbTimer) { clearInterval(this._kbTimer); this._kbTimer = null; } },
+
+  _windowSize() {
+    try { const w = wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync(); return { w: w.windowWidth || 375, h: w.windowHeight || 667, safeBottom: w.safeArea ? Math.max(0, (w.screenHeight || w.windowHeight) - w.safeArea.bottom) : 0 }; }
+    catch (e) { return { w: 375, h: 667, safeBottom: 0 }; }
+  },
+
+  _measureHero() {
+    if (typeof wx === 'undefined' || typeof wx.createSelectorQuery !== 'function') return;
+    try { this._measureHeroNow(); } catch (e) { /* 量不到就不停靠,按钮留在原位 */ }
+  },
+
+  _measureHeroNow() {
+    if (!this._capsule) { try { this._capsule = wx.getMenuButtonBoundingClientRect(); } catch (e) { this._capsule = null; } }
+    // 这里只预取胶囊位置给停靠动画用;
+    // 故事扇形卡收拢后的迷你卡叠已移进顶栏(v13),
+    // 跟在返回键后面自然排布,
+    // 不再按胶囊量位置。
+    // (保留同样行数,行号基线不挪)
+    const q = wx.createSelectorQuery().in(this);
+    q.select('#heroActs').boundingClientRect();
+    q.selectViewport().scrollOffset();
+    q.exec((r) => {
+      const rect = r && r[0], vp = r && r[1];
+      if (!rect || !vp) return;
+      this._heroTop = rect.top + vp.scrollTop;
+      this._heroH = rect.height;
+    });
+  },
+
+  /* 业主:价格按钮和收藏**被滚出顶栏之后**才离开原位,一起走;回到原位才回来。 */
+  _checkDock(scrollTop) {
+    if (this._heroTop == null || this._docking) return;
+    const nav = (this.data.statusBarHeight || 0) + (this.data.navBarHeight || 44);
+    const bottomOnScreen = this._heroTop + this._heroH - scrollTop;
+    const want = this.data.docked ? bottomOnScreen < nav + 12 : bottomOnScreen < nav;
+    if (want !== this.data.docked) this._animDock(want);
+  },
+
+  /* 停靠动画:各自从原位直线飞到停靠位(价格 → 右下角,收藏 → 顶栏胶囊左侧),
+     自己的节奏(620ms,慢-快-慢),不跟滚动速度走。 */
+  _animDock(on) {
+    if (typeof wx.createSelectorQuery !== 'function') return;
+    this._docking = true;
+    const q = wx.createSelectorQuery().in(this);
+    q.select('.hero-cta').boundingClientRect();
+    q.select('.hero-fav').boundingClientRect(); q.select('.bm-main').boundingClientRect();
+    q.exec((r) => {
+      const cta = r && r[0], fav = r && r[1], bar = null; // v13 没有底栏:价格按钮一律停到右下角
+      const win = this._windowSize(), cap = this._capsule || { top: 48, left: win.w - 95, height: 32 };
+      const box = (x, y, w, h) => 'left:' + x + 'px;top:' + y + 'px;width:' + w + 'px;height:' + h + 'px;';
+      const ctaW = cta ? Math.max(cta.width, 150) : 150;
+      const ctaAt = cta ? box(cta.left, cta.top, cta.width, cta.height) : '';
+      const ctaDock = bar ? box(bar.left, bar.top, bar.width, bar.height) : box(win.w - 16 - ctaW, win.h - 16 - 50 - win.safeBottom, ctaW, 50);
+      const favAt = fav ? box(fav.left, fav.top, fav.width, fav.height) : '';
+      const favDock = box(cap.left - 8 - cap.height, cap.top, cap.height, cap.height);
+      const ease = 'transition:left ' + DOCK_MS + 'ms cubic-bezier(.65,0,.35,1),top ' + DOCK_MS + 'ms cubic-bezier(.65,0,.35,1),width ' + DOCK_MS + 'ms cubic-bezier(.65,0,.35,1),height ' + DOCK_MS + 'ms cubic-bezier(.65,0,.35,1);';
+      const still = 'transition:none;';
+      if (this.data.reducedMotion) {
+        this.setData({ docked: on, dockCtaStyle: ctaDock + still, dockFavStyle: favDock + still });
+        this._docking = false;
+        return;
+      }
+      if (on) {
+        this.setData({ docked: true, dockCtaStyle: ctaAt + still, dockFavStyle: favAt + still });
+        this._later(30, () => this.setData({ dockCtaStyle: ctaDock + ease, dockFavStyle: favDock + ease }));
+        this._later(DOCK_MS + 40, () => { this._docking = false; });
+      } else {
+        this.setData({ dockCtaStyle: ctaAt + ease, dockFavStyle: favAt + ease });
+        this._later(DOCK_MS, () => { this.setData({ docked: false }); this._docking = false; });
+      }
+    });
+  },
+
+  onHeroSwipe(e) { this.setData({ heroIdx: (e && e.detail && e.detail.current) || 0 }); },
+  noop() {},
+  onRouteReal() { this.setData({ routeReal: true }); },
+  onBuyPick(e) { this.setData({ buySel: Number(e.currentTarget.dataset.i) || 0 }); },
+  /* 去结算:自玩通行证进确认订单;发布者的票种绑在场次上,进选场次弹层并预选同名票种 */
+  onBuyGo() {
+    const opt = (this.data.buyOpts || [])[this.data.buySel];
+    if (!opt || opt.kind === 'pass') return this.onSelfPlayGoCheckout();
+    this.setData({ selfPlayConfirmShow: false, buyIn: false, sessionPreferName: opt.name });
+    this.bmClick({ currentTarget: { dataset: {} } });
+  },
+
+  /* v13 顶栏:详情顶部照片滚过一半后,顶栏压黑并写主题名 */
+  _checkNav(scrollTop) {
+    const top = this.data.screen2Top || 0;
+    const want = top > 0 && scrollTop > top + this._windowSize().h * 0.5;
+    if (want !== this.data.navSolid) this.setData({ navSolid: want });
+  },
+
+  /* 主要角色:商家站点的出场 NPC,最多问 4 个站点;没有就整块不出 */
+  _loadChars(data) {
+    if (!this._loggedIn()) return;
+    const asks = [];
+    for (const c of (data && data.chaptersList) || []) {
+      for (const n of (c && c.nodes) || []) {
+        if (n && n.id && (n.registrationMerchantList || []).length && asks.length < 4) asks.push({ nodeId: n.id, place: nodeText(n.name) });
+      }
+    }
+    if (!asks.length) return;
+    const rows = [];
+    let left = asks.length;
+    const done = () => { left -= 1; if (!left && !this._unloaded) this.setData({ storyChars: motion.buildChars(rows) }); };
+    asks.forEach((a) => app.sendRequest({ url: '/api/ai/npc/profile', method: 'GET', hideLoading: true, autoErrorToast: false,
+      data: { scope: 'node', nodeId: a.nodeId },
+      success: (res) => { const list = res && String(res.code) === '200' && res.data && res.data.npcs; if (Array.isArray(list)) list.forEach((npc) => rows.push({ npc, place: a.place })); done(); },
+      fail: done,
+    }));
+  },
+
+  onHeroCta() {
+    const kind = this.data.heroCta && this.data.heroCta.kind;
+    if (kind === 'locked') return this.lockedTip();
+    if (kind === 'joined') return this.goJoinedPlay();
+    if (kind === 'selfplay') return this.selfPlayBuy();
+    if (kind === 'signup') return this.bmClick({ currentTarget: { dataset: {} } });
+  },
+
+  // 收藏 = 既有的主题「喜欢」(我的-喜欢 同一个接口);进页读一次当前状态
+  _loggedIn() { return typeof app.getUserID === 'function' && !!app.getUserID(); },
+
+  _loadFav(topicId) {
+    if (!topicId || !this._loggedIn()) return;
+    app.sendRequest({ url: '/api/topic/like_list', method: 'POST', hideLoading: true, autoErrorToast: false,
+      data: { pageNum: 1, pageSize: 200 },
+      success: (res) => {
+        if (this._unloaded || !res || String(res.code) !== '200' || !res.data) return;
+        const rows = Array.isArray(res.data.rows) ? res.data.rows : [];
+        this.setData({ faved: rows.some((t) => t && String(t.id) === String(topicId)) });
+      },
+      fail: () => {},
+    });
+  },
+
+  toggleFav() {
+    const id = (this.data.info && this.data.info.id) || this.data.id;
+    if (!id || this._favBusy) return;
+    const next = !this.data.faved;
+    this._favBusy = true;
+    this.setData({ faved: next });
+    app.sendRequest({ url: '/api/topic/like', method: 'POST', hideLoading: true, autoErrorToast: false,
+      data: { id: id, type: next ? 1 : 0 },
+      success: (res) => {
+        this._favBusy = false;
+        if (!res || String(res.code) !== '200') { this.setData({ faved: !next }); toast((res && res.msg) || '收藏没有保存，请重试'); return; }
+        toast(next ? '已收藏' : '已取消收藏');
+      },
+      fail: () => { this._favBusy = false; this.setData({ faved: !next }); toast('网络异常，收藏没有保存'); },
+    });
+  },
+
+  // 组队块:以第一个有坐标的站点为圆心读附近队伍,只留本主题的;读不到整块不出
+  _loadTeams(data) {
+    let lat = null, lng = null;
+    for (const c of (data && data.chaptersList) || []) {
+      for (const n of (c && c.nodes) || []) {
+        const p = routePoint(n);
+        if (p) { lat = p.latitude; lng = p.longitude; break; }
+      }
+      if (lat !== null) break;
+    }
+    if (lat === null || !this._loggedIn()) return;
+    app.sendRequest({ url: '/api/team/nearby', method: 'GET', hideLoading: true, autoErrorToast: false,
+      data: { lat: lat, lng: lng, radius: 20000 },
+      success: (res) => {
+        if (this._unloaded || !res || String(res.code) !== '200') return;
+        this.setData({ teams: motion.buildTeams(res.data, data.id) });
+      },
+      fail: () => {},
+    });
+  },
+
+  onMerchantOpen(e) {
+    const id = e && e.detail && e.detail.id;
+    this.onLineupTap({ currentTarget: { dataset: { kind: 'merchant', id: id } } });
+  },
+
+  onStoryDock(e) { this.setData({ storyDocked: !!(e && e.detail && e.detail.docked) }); },
+
+  onChapterCard(e) {
+    const i = Number(e.currentTarget.dataset.i);
+    this.setData({ openChapter: this.data.openChapter === i ? -1 : i });
+  },
+
+  // 路线进度:已购才读本人进度(/api/play/nodes 的 total/doneCount);未购就是 0,不演示假进度
+  _loadProgress() {
+    if (this._progressLoaded) return;
+    this._progressLoaded = true;
+    const info = this.data.info || {};
+    const nodes = [];
+    (info.chaptersList || []).forEach((c) => (c.nodes || []).forEach((n) => nodes.push(n)));
+    const labels = (n) => Array.from({ length: n }, (_, i) => (Number(info.productType) === 2 ? '第 ' + (i + 1) + ' 家' : '第' + (i + 1) + '站')); // v13:自由探索按「家」数
+    const fallback = () => { if (!this._unloaded) this.setData({ progress: { total: nodes.length, done: 0, labels: labels(nodes.length) } }); };
+    if (Number(this.data.is_join) !== 1 || !this._loggedIn()) return fallback();
+    app.sendRequest({ url: '/api/play/nodes', method: 'GET', hideLoading: true, autoErrorToast: false,
+      data: { topicId: info.id || this.data.id },
+      success: (res) => {
+        const d = res && String(res.code) === '200' && res.data;
+        const total = d ? Number(d.total) : 0;
+        if (this._unloaded) return;
+        if (!(total > 0)) return fallback();
+        this.setData({ progress: { total: total, done: Math.min(total, Math.max(0, Number(d.doneCount) || 0)), labels: labels(total) } });
+      },
+      fail: fallback,
+    });
+  },
+
+  /* 自玩:弹层只说清买的是什么,按钮「去结算」进确认订单页(业主:随时开玩不直接付款) */
+  onSelfPlayGoCheckout() {
+    if (this.lockedTip()) return;
+    const info = this.data.info || {};
+    const win = motion.passWindow({ topicEnd: info.endDate });
+    const p = this._signupProfile || {};
+    const phone = String(p.phone || '');
+    const price = Number(info.selfPlayPrice);
+    this.setData({
+      selfPlayConfirmShow: false,
+      selfPlayCheckoutShow: true,
+      selfPlayConsentHint: '',
+      selfPlayConsentError: '',
+      checkout: {
+        cover: (this.data.coverImages && this.data.coverImages[0]) || info.imgUrl || '',
+        validText: win.line.split(' · ')[0],
+        placeText: (info.venue && info.venue.name) || '',
+        priceText: (info.selfPlayPrice === undefined || info.selfPlayPrice === null || info.selfPlayPrice === '') ? '—' : '¥' + info.selfPlayPrice,
+        free: !(price > 0),
+        profileName: p.realName || '',
+        profilePhone: phone.length >= 7 ? phone.slice(0, 3) + '****' + phone.slice(-4) : phone,
+      },
+    });
+  },
+
+  onCheckoutBack() {
+    if (this.data.selfPlayConfirmLoading || this._selfPlaySubmitting) return;
+    this.setData({ selfPlayCheckoutShow: false });
+  },
+
+  onCheckoutProfile() {
+    if (this._navigating) return; this._navigating = true;
+    wx.navigateTo({ url: '/pages/gerenziliao/gerenziliao', complete: () => { this._navigating = false; } });
+  },
+
+  /* 付款成功 → 通行证到账动效。可选的商家营销同意行(拍板第 40 条 A)照旧要给:
+     动效收尾时有同意可选才弹原结果面板,否则直接去票夹/开局。 */
+  _showPassReveal(topicId, registrationId) {
+    const info = this.data.info || {};
+    const win = motion.passWindow({ topicEnd: info.endDate });
+    this._revealTopicId = topicId;
+    this._revealRegId = registrationId || 0;
+    const price = info.selfPlayPrice;
+    const priceText = (price === undefined || price === null || price === '') ? '' : '¥' + price;
+    this.setData({
+      is_join: 1,
+      heroCta: motion.buildHeroCta(info, { isJoin: 1, merchantClosed: false, priceText }),
+      reveal: {
+        show: true,
+        cover: (this.data.coverImages && this.data.coverImages[0]) || info.imgUrl || '',
+        name: info.name || '',
+        kindText: '城瘾 · ' + (Number(info.productType) === 2 ? '自由探索' : '城市定向') + '通行证',
+        untilText: win.untilText, daysText: win.daysText, line: win.line,
+      },
+    });
+    // 期限口径同后端建单(CmsRegistrationServiceImpl:购买后 90 天,主题先结束则以主题为准),本地即可算准
+    this._pendingOffer = null;
+    marketingConsent.loadOffer(app, info.memberId || 0, (offer) => { if (offer) this._pendingOffer = offer; });
+  },
+
+  onRevealWallet() { this._finishReveal('wallet'); },
+  onRevealPlay() { this._finishReveal('play'); },
+
+  _finishReveal(kind) {
+    this.setData({ 'reveal.show': false, selfPlayCheckoutShow: false });
+    const hasOffer = !!this._pendingOffer;
+    this._pendingOffer = null;
+    if (hasOffer) {
+      // 商家营销同意(拍板第 40 条 A)仍走原结果面板那一行;面板收起后再去票夹/开局
+      this._revealNext = kind;
+      this._goSelfPlay(this._revealTopicId);
+      return;
+    }
+    this._goAfterReveal(kind);
+  },
+
+  _goAfterReveal(kind) {
+    const topicId = this._revealTopicId || (this.data.info && this.data.info.id) || this.data.id;
+    const regId = this._revealRegId;
+    if (kind === 'play' && regId && topicId) {
+      const name = this.data.info && this.data.info.name ? '&topicName=' + encodeURIComponent(this.data.info.name) : '';
+      wx.navigateTo({ url: '/pages/play/index?topicId=' + topicId + '&registrationId=' + regId + '&entry=ticket' + name });
+      return;
+    }
+    wx.navigateTo({ url: '/subpackageMember/signup/index?stype=0&arrive=1' });
+  },
+
   goTemplateDetail(e) {
     let id = e.currentTarget.dataset.id;
     if (this._navigating) return; this._navigating = true; wx.navigateTo({ complete: () => { this._navigating = false; },
@@ -814,7 +1183,7 @@ Page({
     this.setData({ sessionPicker: { show: true } });
   },
 
-  closeSessionPicker() { this.setData({ 'sessionPicker.show': false }); },
+  closeSessionPicker() { this.setData({ 'sessionPicker.show': false, sessionPreferName: '' }); },
 
   // 选完场次与票种 → 结算。参数形状与活动详情页那条入口一致,后端一处都不用改。
   onSessionPicked(e) {
@@ -1050,12 +1419,15 @@ Page({
     if (that.lockedTip()) return;
     that._selfPlayTopicId = topicId;
     that.setData({
-      selfPlayConfirmShow: true,
+      selfPlayConfirmShow: true, buyIn: false, buyOpts: motion.buyOptions(info), buySel: 0,
+      buyChips: motion.buyChips(info, that.data.storyMeta),
+      selfPlayValidText: motion.passWindow({ topicEnd: info.endDate }).line.split(' · ')[0],
       selfPlayConsentChecked: !!that._hostShareConsentReady,
       selfPlayConsentError: '',
       selfPlayConsentHint: '',
       selfPlayConfirmLoading: false
     });
+    that._later(30, () => { if (that.data.selfPlayConfirmShow) that.setData({ buyIn: true }); });
   },
 
   onSelfPlayConsentChange(e) {
@@ -1065,8 +1437,10 @@ Page({
   },
 
   onSelfPlayCancel() {
-    if (this.data.selfPlayConfirmLoading) return;
-    this.setData({ selfPlayConfirmShow: false });
+    if (this.data.selfPlayConfirmLoading || !this.data.selfPlayConfirmShow) return;
+    if (this.data.reducedMotion) { this.setData({ selfPlayConfirmShow: false, buyIn: false }); return; }
+    this.setData({ buyIn: false });
+    this._later(320, () => { if (!this.data.buyIn) this.setData({ selfPlayConfirmShow: false }); });
   },
 
   // 后端 /api/registration/create 与 /pay 硬校验「报名信息单独同意」已落库(activity_host_data_sharing /
@@ -1194,7 +1568,7 @@ Page({
       onFreeSuccess: function (data) {
         that._selfPlaySubmitting = false;
         that._selfPlayReqId = null;
-        that._goSelfPlay(topicId);
+        that._onSelfPlayPaid(topicId, data);
       },
       onPayVerifying: function (data) {
         loading.show('确认支付结果...');
@@ -1203,7 +1577,7 @@ Page({
         that._selfPlaySubmitting = false;
         that._selfPlayReqId = null;
         loading.hide();
-        that._goSelfPlay(topicId);
+        that._onSelfPlayPaid(topicId, data);
       },
       onPayCancel: function () {
         that._selfPlaySubmitting = false;
@@ -1270,7 +1644,7 @@ Page({
           // 走 order 路径的重新支付
           that._workflow.submit({ id: registrationId }, {
             onOrderFail: function () { toast('支付信息不完整，请重试'); },
-            onPaySuccess: function () { that._goSelfPlay(topicId); },
+            onPaySuccess: function () { that._onSelfPlayPaid(topicId, { id: registrationId }); },
             onPayCancel: function () { toast('已取消支付'); },
             onPayFail: function (res) { toast('支付失败'); }
           });
@@ -1286,6 +1660,12 @@ Page({
 
   /* 自玩票买完的唯一落点(三个调用点都走这儿)。原来是 toast + 800ms 硬等,
      现在换成结果面板:跳转挂在面板收掉之后,时长只此一处,不再两个数字各说各话。 */
+  /* 2026-10-22 业主:付完先播「通行证已到账」,再由动效里的「放进票夹 / 开始游戏」决定去向 */
+  _onSelfPlayPaid(topicId, data) {
+    const regId = data && (data.registrationId || data.id);
+    this._showPassReveal(topicId, Number(regId) > 0 ? regId : 0);
+  },
+
   _goSelfPlay(topicId) {
     this.setData({
       resultSheet: {
@@ -1357,6 +1737,7 @@ Page({
 
   onResultSheetClose() {
     this.setData({ 'resultSheet.show': false });
+    if (this._revealNext) { const kind = this._revealNext; this._revealNext = ''; this._goAfterReveal(kind); return; }
     wx.navigateTo({ url: '/subpackageMember/signup/index' });
   },
 
@@ -1720,10 +2101,12 @@ Page({
             loadErrorSub: '',
           });
 
+          that._applyMotionData(res.data);
           // 数据加载完成后重新计算位置
           setTimeout(() => {
             that.getTabSectionPosition();
             that.getTabHeight();
+            that._measureHero();
           }, 300);
         } else {
           that.setData({
@@ -1823,6 +2206,7 @@ Page({
    */
   processChaptersList(chaptersList) {
     if (!chaptersList || !Array.isArray(chaptersList)) return chaptersList;
+    let seq = 0, prevNode = null; // v13 路线:站号全主题连续编号;站间步行线跨章接上(原型每章标题下也有一段)
 
     for (let j = 0; j < chaptersList.length; j++) {
       const chapter = chaptersList[j];
@@ -1840,6 +2224,7 @@ Page({
       chaptersList[j].metaPlace = nodeCount > 0 ? nodeCount + ' 个节点' : '';
       chaptersList[j].metaPlay = Number(chapter.templateCount) > 0 ? chapter.templateCount + ' 个玩法' : '';
       chaptersList[j].hasMeta = !!(chaptersList[j].metaTime || chaptersList[j].metaPlace || chaptersList[j].metaPlay);
+      chaptersList[j].chapLabel = motion.chapterLabel(j, chaptersList.length) + (chapter.name ? ' · ' + chapter.name : '');
       // 站间只写坐标直线距离；第一站没有上一站，不跨章计算。
       const ns = chapter.nodes || [];
       for (let n = 0; n < ns.length; n++) {
@@ -1852,7 +2237,9 @@ Page({
         if (firstMerchant && firstMerchant.mmsMerchant) {
           firstMerchant.mmsMerchant.name = nodeText(firstMerchant.mmsMerchant.name);
         }
-        ns[n].walkText = n === 0 ? '' : walkText(ns[n - 1], ns[n]);
+        ns[n].walkText = prevNode ? walkText(prevNode, ns[n]) : '';
+        seq += 1; ns[n].seq = seq; prevNode = ns[n];
+        ns[n].giftText = firstMerchant && firstMerchant.mmsMerchant ? nodeText(firstMerchant.mmsMerchant.derivativeBenefits) : '';
       }
     }
     for (let j = 0; j < chaptersList.length; j++) {

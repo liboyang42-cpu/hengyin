@@ -12,7 +12,7 @@
       <block wx:else>
         <cy-tabs variant="chip" tabs="{{filters}}" active="{{filter}}" bind:change="onFilter" />
         <cy-empty wx:if="{{filterEmpty}}" kind="empty" title="{{filter === 'income' ? '还没有获得积分的记录' : '还没有使用积分的记录'}}" sub="切到「全部」可查看所有积分变动" />
-        <view class="ph-group" wx:for="{{groups}}" wx:for-item="group" wx:key="key">
+        <view class="ph-group" wx:for="{{groups}}" wx:for-item="group" wx:key="key" style="{{pmList === 1 ? '--pm-l:1;' : (pmList === 2 ? '--pm-l-d:.32s;--pm-l-s:1;' : '')}}">
           <text class="ph-group__title">{{group.label}}</text>
           <view class="ph-row" wx:for="{{group.rows}}" wx:key="id">
             <view class="ph-row__main">

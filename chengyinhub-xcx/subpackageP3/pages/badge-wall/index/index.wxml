@@ -27,10 +27,10 @@
     </scroll-view>
   </block>
 
-  <scroll-view class="bw-list" scroll-y wx:if="{{viewMode === 'list' && badges.length && !loadFail && !partialFail}}">
+  <scroll-view class="bw-list" scroll-y wx:if="{{viewMode === 'list' && badges.length && !loadFail && !partialFail}}" style="{{pmList === 1 ? '--pm-b:1;' : (pmList === 2 ? '--pm-b-d:.32s;--pm-b-s:1;' : '')}}">
     <block wx:for="{{badgeGroups}}" wx:for-item="group" wx:key="key">
       <text class="bw-list-h" wx:if="{{group.title}}">{{group.title}}</text>
-      <view class="bw-list-row" wx:for="{{group.items}}" wx:for-item="item" wx:key="_idx" bindtap="onFbTap" data-idx="{{item._idx}}" hover-class="cy-pressed" hover-stay-time="80">
+      <view class="bw-list-row" wx:for="{{group.items}}" wx:for-item="item" wx:key="_idx" bindtap="onFbTap" data-idx="{{item._idx}}" hover-class="cy-pressed" hover-stay-time="80" style="--pmi:{{item._idx}};">
         <view class="bw-list-mark {{item.locked ? 'is-locked' : ''}}">
           <image wx:if="{{item.iconUrl}}" src="{{item.iconUrl}}" mode="aspectFit" />
           <cy-icon wx:else name="star" size="36" />

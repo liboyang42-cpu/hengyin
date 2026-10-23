@@ -1,0 +1,63 @@
+/* v13 通关勋章页 · 尺寸按原型 390 宽换算成 rpx;颜色照原型取值 */
+/* ds-ok: 本组件颜色逐项照 v13 原型取值 */
+.md { position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 300; overflow: hidden; background: #0c0b0a; color: #fff; --ray: rgba(255,140,60,.10); } /* ds-ok */
+.md__rays { position: absolute; left: 50%; top: 442rpx; width: 1731rpx; height: 1731rpx; margin: -865rpx 0 0 -865rpx; border-radius: 50%; opacity: 0; transition: opacity .8s;
+  background: repeating-conic-gradient(from 0deg, var(--ray) 0deg 9deg, rgba(0,0,0,0) 9deg 22.5deg); animation: md-rot 40s linear infinite; /* ds-ok */
+  -webkit-mask: radial-gradient(circle, #000 0, rgba(0,0,0,.6) 28%, rgba(0,0,0,0) 62%); mask: radial-gradient(circle, #000 0, rgba(0,0,0,.6) 28%, rgba(0,0,0,0) 62%); } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
+.md.on .md__rays { opacity: 1; }
+@keyframes md-rot { to { transform: rotate(360deg); } }
+.md__back { position: absolute; left: 31rpx; z-index: 5; width: 77rpx; height: 77rpx; border-radius: 50%; background: rgba(28,28,30,.72); display: flex; align-items: center; justify-content: center; } /* ds-ok */
+.md__chev { width: 18rpx; height: 18rpx; border-left: 4rpx solid #fff; border-bottom: 4rpx solid #fff; transform: translateX(3rpx) rotate(45deg); } /* ds-ok */
+.spark { position: absolute; z-index: 3; opacity: 0; pointer-events: none; animation: md-tw 2.4s ease-in-out infinite; }
+@keyframes md-tw { 0%, 100% { opacity: .15; transform: scale(.6); } 50% { opacity: 1; transform: scale(1); } }
+.mstack { position: absolute; left: 50%; top: 288rpx; width: 288rpx; height: 323rpx; margin-left: -144rpx; z-index: 2; }
+.hexw { position: absolute; top: 0; right: 0; bottom: 0; left: 0; transition: transform .55s cubic-bezier(.34,1.32,.64,1), filter .4s, opacity .3s; }
+.hex { position: absolute; top: 0; right: 0; bottom: 0; left: 0; display: flex; align-items: center; justify-content: center;
+  clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); background: linear-gradient(160deg, var(--h1), var(--h2) 55%, var(--h3));
+  opacity: 0; transform: translateY(-308rpx) scale(.3) rotateY(-540deg); transition: transform .9s cubic-bezier(.2,.8,.2,1.25), opacity .5s; }
+.md.dropped .hex { opacity: 1; transform: none; }
+.hex--0 { --h1: #FFB067; --h2: #E8590C; --h3: #B8400B; } /* ds-ok v13 勋章橙 */
+.hex--1 { --h1: #9BE7A8; --h2: #22A55A; --h3: #137A3E; } /* ds-ok v13 勋章绿 */
+.hex--2 { --h1: #9FC2FF; --h2: #3B6FE0; --h3: #1E3F9C; } /* ds-ok v13 勋章蓝 */
+.hex--3 { --h1: #E7C6FF; --h2: #9B6BFF; --h3: #5B2BC4; } /* ds-ok v13 勋章紫 */
+.hex__in { position: absolute; top: 23rpx; right: 21rpx; bottom: 23rpx; left: 21rpx; clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); background: linear-gradient(160deg, var(--h2), var(--h3)); }
+.hex__ic { position: relative; z-index: 1; width: 123rpx; height: 123rpx; }
+.hex__img { position: absolute; top: 23rpx; right: 21rpx; bottom: 23rpx; left: 21rpx; width: auto; height: auto; clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); }
+.hex__shine { position: absolute; top: 0; right: 0; bottom: 0; left: 0; background: linear-gradient(115deg, rgba(255,255,255,0) 30%, rgba(255,255,255,.45) 45%, rgba(255,255,255,0) 60%); background-size: 250% 100%; background-position: 120% 0; animation: md-shine 3.6s ease-in-out 1.2s infinite; } /* ds-ok */
+@keyframes md-shine { 0% { background-position: 120% 0; } 45%, 100% { background-position: -60% 0; } }
+.mname { position: absolute; left: 0; right: 0; top: 646rpx; z-index: 3; display: flex; flex-direction: column; align-items: center; text-align: center; }
+.mname__b { font-size: 29rpx; font-weight: 700; } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
+.mname__s { margin-top: 6rpx; font-size: 23rpx; color: #8E8E93; } /* ds-ok */
+.mdots { display: flex; justify-content: center; gap: 10rpx; margin-top: 15rpx; }
+.mdot { width: 27rpx; height: 10rpx; border-radius: 6rpx; background: rgba(255,255,255,.3); transform: scaleX(.37); transition: transform .3s, background .3s; } /* ds-ok */
+.mdot.on { transform: none; background: #fff; } /* ds-ok */
+.mdots { gap: 0; }
+.md__txt { position: absolute; left: 38rpx; right: 38rpx; top: 777rpx; display: flex; flex-direction: column; align-items: center; text-align: center; }
+.md__h { font-size: 50rpx; font-weight: 700; } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
+.md__p { margin-top: 12rpx; font-size: 25rpx; color: #8E8E93; } /* ds-ok */
+.md__body { position: absolute; left: 31rpx; right: 31rpx; top: 919rpx; bottom: 185rpx; overflow: hidden; }
+.mg { display: grid; grid-template-columns: 1fr 1fr; gap: 19rpx; }
+.mg__c { display: flex; align-items: center; gap: 19rpx; padding: 27rpx 27rpx 27rpx 23rpx; border-radius: 35rpx; background: #161616; } /* ds-ok */
+.mg__ic { flex: none; width: 58rpx; height: 58rpx; }
+.mg__k { display: block; font-size: 23rpx; color: #8E8E93; } /* ds-ok */
+.mg__v { display: block; margin-top: 4rpx; font-size: 42rpx; font-weight: 600; font-variant-numeric: tabular-nums; } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
+.mrec { position: relative; margin-top: 19rpx; min-height: 165rpx; padding: 27rpx; border-radius: 35rpx; background: #161616; overflow: hidden; } /* ds-ok */
+.mrec__h { display: flex; align-items: center; gap: 12rpx; font-size: 27rpx; font-weight: 600; } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
+.mrec__ic { width: 35rpx; height: 35rpx; }
+.mrec__s { display: block; margin-top: 19rpx; font-size: 23rpx; color: #8E8E93; } /* ds-ok */
+.mrec__b { display: block; margin-top: 6rpx; font-size: 29rpx; font-weight: 600; } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
+.mrec__stk { position: absolute; right: 23rpx; bottom: 12rpx; width: 150rpx; height: 150rpx; transform: rotate(-8deg); display: flex; flex-direction: column; align-items: center; justify-content: center;
+  clip-path: polygon(50% 4%, 92% 28%, 92% 72%, 50% 96%, 8% 72%, 8% 28%); background: #E8590C; } /* ds-ok v13 新纪录角标 */
+.mrec__stk1 { font-size: 25rpx; font-weight: 900; color: #fff; } /* ds-ok */
+.mrec__stk2 { font-size: 19rpx; font-weight: 800; color: #FFE3C2; } /* ds-ok */
+.md__btns { position: absolute; left: 31rpx; right: 31rpx; bottom: calc(58rpx + env(safe-area-inset-bottom)); display: flex; gap: 19rpx; }
+.pill { flex: 1; height: 96rpx; border-radius: 48rpx; display: flex; align-items: center; justify-content: center; font-size: 31rpx; font-weight: 600; } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
+.pill--w { background: #fff; color: #000; } /* ds-ok */
+.pill--s { background: #2C2C2E; color: #fff; } /* ds-ok */
+.md-pressed { opacity: .8; }
+.fade { opacity: 0; transform: translateY(27rpx); transition: opacity .5s, transform .6s cubic-bezier(.2,.82,.2,1); }
+.md.on .fade { opacity: 1; transform: none; }
+.md--reduced .hex { transition: none; }
+.md--reduced .md__rays, .md--reduced .spark, .md--reduced .hex__shine { animation: none; }
+
+.md__back::after { content: ""; position: absolute; left: 50%; top: 50%; width: 88rpx; height: 88rpx; transform: translate(-50%, -50%); } /* 透明热区撑到 44px,视觉尺寸按原型不变 */

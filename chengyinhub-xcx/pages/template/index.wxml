@@ -70,7 +70,7 @@
       <view class="sec-hd sec-hd-top">
         <text class="sec-title">{{ bannerTitle }}</text>
       </view>
-      <view class="feat-slide {{ flyClass }}">
+      <view class="feat-slide" style="{{pmList === 1 ? '--pm-t:1;' : (pmList === 2 ? '--pm-t-d:.32s;--pm-t-s:1;' : '')}}">
         <view class="feat-glow">
           <view class="feat-glow__sweep" aria-hidden="true"></view>
           <view class="feat-glow__face feat-media" data-item="{{ banner }}" bindtap="jumpDetail" hover-class="cy-pressed" hover-stay-time="80">
@@ -100,8 +100,8 @@
     <view class="sec-hd" wx:if="{{ topList.length }}">
       <text class="sec-title">{{ topTitle }}</text>
     </view>
-    <view class="cml-list cy-fade-in" wx:if="{{ topList.length }}">
-      <view class="cml-card {{ flyClass }}" style="animation-delay: {{ index < 4 ? (index + 1) * 40 : 200 }}ms" wx:for="{{ topList }}" wx:key="id" data-item="{{ item }}" bindtap="jumpDetail" hover-class="cy-pressed" hover-stay-time="80">
+    <view class="cml-list cy-fade-in" wx:if="{{ topList.length }}" style="{{pmList === 1 ? '--pm-t:1;' : (pmList === 2 ? '--pm-t-d:.32s;--pm-t-s:1;' : '')}}">
+      <view class="cml-card" wx:for="{{ topList }}" wx:key="id" data-item="{{ item }}" bindtap="jumpDetail" hover-class="cy-pressed" hover-stay-time="80">
         <image wx:if="{{ item._iconUrl }}" class="cml-pic cml-pic--art" src="{{ item._iconUrl }}" mode="aspectFit" aria-hidden="true" />
         <image wx:elif="{{ item.imgUrl && !item._coverFail }}" lazy-load="true" class="cml-pic" src="{{ item.imgUrl }}"
           mode="aspectFill" data-list="topList" data-idx="{{ index }}" data-key="{{ item.id }}" binderror="onCoverError" />
@@ -124,8 +124,8 @@
       <text class="sec-title">其他模板</text>
       <text class="sec-sub">不筛掉，继续显示</text>
     </view>
-    <view class="cml-list cy-fade-in" wx:if="{{ tailList.length }}">
-      <view class="cml-card {{ flyClass }}" style="animation-delay: {{ index < 5 ? index * 40 : 200 }}ms" wx:for="{{ tailList }}" wx:key="id" data-item="{{ item }}" bindtap="jumpDetail" hover-class="cy-pressed" hover-stay-time="80">
+    <view class="cml-list cy-fade-in" wx:if="{{ tailList.length }}" style="{{pmList === 1 ? '--pm-t:1;' : (pmList === 2 ? '--pm-t-d:.32s;--pm-t-s:1;' : '')}}">
+      <view class="cml-card" wx:for="{{ tailList }}" wx:key="id" data-item="{{ item }}" bindtap="jumpDetail" hover-class="cy-pressed" hover-stay-time="80">
         <image wx:if="{{ item._iconUrl }}" class="cml-pic cml-pic--art" src="{{ item._iconUrl }}" mode="aspectFit" aria-hidden="true" />
         <image wx:elif="{{ item.imgUrl && !item._coverFail }}" lazy-load="true" class="cml-pic" src="{{ item.imgUrl }}"
           mode="aspectFill" data-list="tailList" data-idx="{{ index }}" data-key="{{ item.id }}" binderror="onCoverError" />

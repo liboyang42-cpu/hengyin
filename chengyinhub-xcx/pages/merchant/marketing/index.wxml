@@ -1,3 +1,4 @@
+<wxs src="../../../utils/wxs/count.wxs" module="cnt" />
 <view class="page theme-merchant m-flush-nav" style="padding-top:{{statusBarHeight + navBarHeight}}px">
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
@@ -7,7 +8,7 @@
          nav-page-title-spacing-contract 锁着它 —— 这一页单独走自绘会成孤例。 -->
   <cy-nav-bar title="营销" back="{{false}}" />
 
-  <view class="body">
+  <view class="body" style="{{pmPage === 1 ? '--pm-k:1;' : (pmPage === 2 ? '--pm-k-d:.32s;--pm-k-s:1;' : '')}}">
     <!-- 未登录不再整屏拦:静默登录(见 index.js 的 enterMarketing),登录/身份确认失败
          只在页内挂一条内联错误 + 重试。岗位没有营销权限也从整屏态改成页内说明。 -->
     <cy-inline-error load-failure class="m-inline-error" wx:if="{{entryError}}" kind="data"
@@ -46,7 +47,7 @@
     </view>
     <view class="hero" wx:else aria-role="text" aria-label="{{hero.ariaLabel}}">
       <text class="hero-label">{{hero.label}}</text>
-      <text class="hero-value">{{hero.value}}</text>
+      <text class="hero-value">{{cnt.f(hero.value, mkK)}}</text>
       <text class="hero-sub">{{hero.sub}}</text>
     </view>
 
@@ -87,7 +88,7 @@
             bindtap="goMyContent" data-key="{{item.key}}" data-count="{{item.count}}"
             hover-class="mine-tap" hover-stay-time="80"
             aria-role="button" aria-label="{{item.ariaLabel}}">
-        <text class="mine-num">{{item.countText}}</text>
+        <text class="mine-num">{{cnt.f(item.countText, mkK)}}</text>
         <text class="mine-label">{{item.title}}</text>
       </view>
     </view>

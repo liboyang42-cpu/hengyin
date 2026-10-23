@@ -97,7 +97,7 @@ function ruleColorVar(tokens, wxss, selector) {
 test('T03 数据条按稿,评分不回退图片星标也不被取整', () => {
   const wxml = stripWxmlComments(read('pages/topic/index/index.wxml'))
   const wxss = read('pages/topic/index/index.wxss')
-  const bar = section(wxml, '<scroll-view scroll-x class="statbar"', '<view class="det4" id="tab-section">')
+  const bar = section(wxml, '<scroll-view scroll-x class="statbar"', '<view class="det4" id="tab-section"')
 
   assert.match(bar, /class="statbar__value"[^>]*>\{\{item\.value\}\}/)
   assert.match(bar, /class="statbar__stars"[^>]*wx:if="\{\{item\.starList\.length\}\}"/)
@@ -112,36 +112,18 @@ test('T03 数据条按稿,评分不回退图片星标也不被取整', () => {
   assert.match(rule(wxss, '.statbar__row'), /display:\s*flex\s*;/)
 })
 
-test('T03 封面元信息把类别 chips 与发起人/俱乐部分组，并治理换行和截断', () => {
+/* 2026-10-22 业主「和 HTML 一模一样」(v13):头图上只压「发布者(头像 + 名字 + 发布)/ 大标题 / 一段介绍 / 按钮行」,
+   类别 chips 与「承接俱乐部」玻璃条不再出现在头图上(俱乐部在「参与品牌」里)。
+   2026-09-05 那条裁决仍然有效:不许拿 collaboratorsList[0] 冒充发起人 —— 发布者取 contentPublisherName。 */
+test('T03 头图只写发布者与标题,不拿合作者冒充发起人', () => {
   const wxml = stripWxmlComments(read('pages/topic/index/index.wxml'))
-  const wxss = read('pages/topic/index/index.wxss')
-  const hero = section(wxml, '<view class="cont topic-hero-meta">', '<view wx:if="{{info.isOwner==1}}"')
-  const categoryEnd = hero.indexOf('<view class="topic-attribution"')
-
-  assert.ok(categoryEnd > 0, '作者信息行必须独立于类别 chips')
-  assert.match(hero.slice(0, categoryEnd), /class="topic-category-list"[\s\S]*class="topic-category-chip"[^>]*wx:for="\{\{ info\.sysCategoryList \}\}"/, '类别只在 chip 组内循环')
-  assert.doesNotMatch(hero.slice(0, categoryEnd), /collaboratorsList|clubName/, '人物与组织不得混进类别 chip 组')
-  // 2026-09-05 用户裁决删掉「合作者」:人物那半一并删。它显示的其实是 collaboratorsList[0],
-  // 而发布者从来不会被写进 cms_collaborators(saveCollaborators 只写 dto.collaboratorIds)——
-  // 那半一直是「把第一个合作者标成发起人」。所以这条改成**反向钉**:不许再拿合作者冒充发起人。
-  assert.doesNotMatch(hero.slice(categoryEnd), /collaboratorsList/,
-    '不得再拿 collaboratorsList 当发起人显示 —— 发布者不在这张表里')
-  assert.match(hero.slice(categoryEnd), /topic-attribution__item--club[\s\S]*clubName/, '俱乐部要有独立组织块')
-
-  assert.match(rule(wxss, '.topic-category-list'), /flex-wrap:\s*wrap\s*;/, '类别 chips 必须允许换行')
-  const chip = rule(wxss, '.topic-category-chip')
-  assert.match(chip, /border-radius:\s*var\(--cy-radius-pill\)\s*;/, 'chip 必须有明确圆角，不能像骨架条')
-  assert.match(chip, /max-width:\s*[^;]+;/, 'chip 必须限制最大宽度')
-  assert.match(chip, /overflow:\s*hidden\s*;/)
-  assert.match(chip, /text-overflow:\s*ellipsis\s*;/)
-  assert.match(chip, /white-space:\s*nowrap\s*;/)
-
-  assert.match(rule(wxss, '.topic-attribution'), /flex-wrap:\s*wrap\s*;/, '作者/组织信息行必须允许窄屏换行')
-  assert.match(rule(wxss, '.topic-attribution__item'), /max-width:\s*[^;]+;/, '每个作者/组织块必须限制最大宽度')
-  const value = rule(wxss, '.topic-attribution__value')
-  assert.match(value, /overflow:\s*hidden\s*;/)
-  assert.match(value, /text-overflow:\s*ellipsis\s*;/)
-  assert.match(value, /white-space:\s*nowrap\s*;/)
+  const hero = section(wxml, '<view class="hero-info dt__txt">', '<view class="hero-acts" id="heroActs">')
+  assert.match(hero, /class="hero-by" wx:if="\{\{publisher\.name\}\}"/, '发布者行只在有名字时出')
+  assert.match(hero, /class="hero-title">\{\{info\.name\}\}/)
+  assert.doesNotMatch(hero, /collaboratorsList/, '不得再拿 collaboratorsList 当发起人显示 —— 发布者不在这张表里')
+  assert.doesNotMatch(hero, /sysCategoryList|topic-category-chip/, 'v13 头图上不放类别 chips')
+  const motion = read('pages/topic/utils/topic-motion.js')
+  assert.match(motion, /text\(d\.contentPublisherName\) \|\| text\(d\.clubName\)/, '发布者取内容主体公开名,没有再退到承接俱乐部名')
 })
 
 // 2026-09-06:本测试原来的名字与判据都建立在一个错前提上 —— 它把
@@ -160,8 +142,9 @@ test('T03 章节标题下的统计只读本章数据，不印主题合计', () =
 
   for (const [field, icon, visibleMeaning] of contracts) {
     // 路线节点 tab(稿 181:715)与行程 tab 各一处,两处都得是本章的数
+    // 2026-10-22 v13:路线 tab 的章节标题行只写「第几章 · 章名」,章节统计行随原型去掉;要写就只能写本章的数
     const bodies = metricBodies(wxml, `chapter.${field}`)
-    assert.equal(bodies.length, 2, `chapter.${field} 必须在路线节点 tab 与行程 tab 各出现一次`)
+    assert.ok(bodies.length <= 2, `chapter.${field} 最多在两个 tab 各出现一次`)
     for (const body of bodies) {
       assert.match(body, new RegExp(`<cy-icon\\b[^>]*\\bname="${icon}"[^>]*\\bsize="24"[^>]*\\/>`), `chapter.${field} 必须有匹配语义的矢量图标`)
       assert.match(body, visibleMeaning, `chapter.${field} 不能退回无标签裸数字`)

@@ -84,8 +84,12 @@
   <view class="intro-head" style="padding-top:{{chrome.actionTop}}px;">
     <view class="intro-ava-hit" bindtap="goProfile" aria-role="button" aria-label="打开我的" hover-class="cy-pressed" hover-stay-time="80"><image class="intro-ava" src="{{avatar || '/images/d_profile.png'}}" mode="aspectFill" /></view>
   </view>
-  <view class="intro-top"><view class="intro-title">漫游</view></view>
-  <view class="intro-nav"><cy-tabs plain tabs="{{introTabs}}" active="{{introTab}}" bind:change="switchIntroTab" /></view>
+  <view class="intro-top" style="top:{{chrome.actionTop}}px;"><view class="intro-title">漫游</view></view>
+  <!-- v13:标签下面一根白色短线,跟着选中项滑动 -->
+  <view class="intro-nav rh-tabs" style="margin-top:{{chrome.actionTop + 50}}px;" aria-role="tablist">
+    <view wx:for="{{introTabs}}" wx:key="key" class="rh-tabs__b {{introTab === item.key ? 'on' : ''}}" data-tab="{{item.key}}" bindtap="switchIntroTab" aria-role="tab" aria-selected="{{introTab === item.key}}" aria-label="{{item.label}}" hover-class="cy-pressed" hover-stay-time="80">{{item.label}}</view>
+    <view class="rh-tabs__u {{introTab === 'passport' ? 'is-2' : ''}}"></view>
+  </view>
   <cy-state-shell class="intro-permission" wx:if="{{introError}}" kind="no-permission"
                   title="需要定位才能开始漫游" sub="{{introError}}"
                   primary="去设置" bind:primary="openRoamLocationSetting" />
@@ -160,7 +164,7 @@
         <image wx:if="{{item.cover}}" class="entry-card__cover" src="{{item.cover}}" mode="aspectFill" />
         <view wx:else class="entry-card__cover entry-card__cover--empty"><cy-icon name="image" size="48" /></view>
         <view class="entry-card__shade"></view>
-        <view class="entry-card__copy"><text class="entry-card__tag">{{item.tag}}</text><text class="entry-card__title">{{item.title}}</text><text class="entry-card__meta">{{item.meta || item.address || '查看活动详情'}}</text></view>
+        <view class="entry-card__copy"><text class="entry-card__tag entry-card__tag--{{item.tag === '自由探索' ? 'free' : 'city'}}">{{item.tag}}</text><text class="entry-card__title">{{item.title}}</text><text class="entry-card__meta">{{item.meta || item.address || '查看活动详情'}}</text></view>
       </view>
     </view></scroll-view>
     <view wx:else class="entry-peek__state"><text>附近暂无活动</text><text>打开地图寻找附近活动</text></view>
@@ -1112,3 +1116,13 @@
 
 <!-- 隐私授权闸(真弹窗):页内组件,不压页面栈。app.js 在需要授权时调本页 showPrivacyGate()。 -->
 <cy-privacy-gate show="{{privacyGateShow}}" bind:settled="onPrivacyGateSettled" />
+
+<!-- 2026-10-22 业主:护照方卡点开时放大成的大卡(纯动画层,放大到位后照原样执行方卡动作) -->
+<view wx:if="{{ppOpen.show}}" class="pp-open {{ppOpen.on ? 'is-on' : ''}}" aria-hidden="true">
+  <view class="pp-open__dim"></view>
+  <view class="pp-open__card" style="{{ppOpen.style}}">
+    <view class="pp-open__ic"><cy-icon name="{{ppOpen.icon}}" size="220" /></view>
+    <view class="pp-open__blur"></view>
+    <view class="pp-open__tx"><text class="pp-open__t">{{ppOpen.title}}</text><text class="pp-open__s">{{ppOpen.value}}</text></view>
+  </view>
+</view>

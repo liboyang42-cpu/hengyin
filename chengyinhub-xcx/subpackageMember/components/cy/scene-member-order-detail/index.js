@@ -1,4 +1,4 @@
-const modal = require('../../../../utils/modal.js');
+const modal = require('../../../../utils/modal.js'); const pageMotion = require('../../../../utils/page-motion.js');
 const cyLoading = require('../../../../utils/loading.js');
 const toast = require('../../../../utils/toast.js');
 const app = getApp();
@@ -956,7 +956,7 @@ Component({
             const ticketWalletAvailable = Number(info.registrationStatus) === 2;
             const primaryCta = resolvePrimaryCta(info.orderStateKey, ticketWalletAvailable);
 
-            that.setData({
+            pageMotion.enter(that, 'pmPage'); pageMotion.countIn(that, 'odK'); that.setData({
               /* 稿 578:2298(D07)「大金额与状态先行」——头图上第一眼是实付金额,
                  然后才是路线名、场次时间、一颗状态药丸。
                  ⚠️ 时间这一行头图与「订单明细」里的「日期与时间」是同一个事实,

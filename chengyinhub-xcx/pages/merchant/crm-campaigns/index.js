@@ -2,7 +2,7 @@
 // 列表 GET /api/merchant/crm/campaigns、详情 GET /api/merchant/crm/campaigns/{id},都要 MARKETING_READ。
 // 不做创建/投递/重试(POST /campaigns、/dispatch、/retry)。
 const app = getApp();
-const toast = require('../../../utils/toast.js');
+const toast = require('../../../utils/toast.js'); const pageMotion = require('../../../utils/page-motion.js');
 const merchantTheme = require('../../../utils/merchant-theme.js');
 const { inactiveAccess, normalizeMerchantAccess } = require('../../../utils/merchant-access-policy.js');
 const { shapeCampaignList, shapeCampaignDetail } = require('./view-model.js');
@@ -105,7 +105,7 @@ Page({
           else this.setData({ pageState: 'error', errorMessage: errorText(res, '触达记录加载失败') });
           return;
         }
-        this.setData({ items, pageState: items.length ? 'ready' : 'empty', errorMessage: '' });
+        pageMotion.enter(this, 'pmList'); this.setData({ items, pageState: items.length ? 'ready' : 'empty', errorMessage: '' });
       },
       fail: () => {
         if (!settle()) return;

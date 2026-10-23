@@ -309,7 +309,7 @@ Page({
     introTabs: [{ key: 'start', label: '开始漫游' }, { key: 'passport', label: '漫游护照' }],
     avatar: '',
     // 护照 tab 的读数全部来自本机 roam_sessions,拿不到就是空态,不摆假卡
-    passport: { tiles: [], trips: [] },
+    passport: { tiles: [], trips: [] }, ppOpen: { show: false, on: false, icon: '', title: '', value: '', style: '' }, // ppOpen:护照方卡放大层
     introCardIdx: 0,
     introCards: [
       { key: 'start', icon: 'route', title: '开始漫游', sub: '走到哪，雾散到哪' },
@@ -758,7 +758,7 @@ Page({
     });
   },
   onPassportTileTap(e) {
-    const key = e.currentTarget.dataset.key;
+    const key = e.currentTarget.dataset.key; if (!e.ppExpanded && this._ppExpand(key)) return; // 2026-10-22:先放大成大卡再执行原动作
     if (key === 'history') this.openRoamHistory();
     else if (key === 'stamp') this.goStampAlbum();
     // ⚠️ 勋章墙只能走页面:它是 <canvas type="webgl">,旧式原生组件不支持同层渲染,
@@ -5802,6 +5802,36 @@ Page({
       this.setData({ center });
       this._loadEntryMap(center);
     }, 600);
+  },
+
+
+  /* ===== 2026-10-22 业主:护照方卡点开 —— 方卡原地放大成一张大卡(整面渐变 + 底部模糊),
+     放大到位后照原样执行这张卡的动作;只加动画,不改版式、不加步骤。减少动态效果时直接执行。 */
+  _ppExpand(key) {
+    if (this.data.reducedMotion || this._ppBusy || typeof wx.createSelectorQuery !== 'function') return false;
+    const tile = ((this.data.passport && this.data.passport.tiles) || []).find((t) => t.key === key);
+    if (!tile) return false;
+    this._ppBusy = true;
+    const idx = this.data.passport.tiles.indexOf(tile);
+    wx.createSelectorQuery().in(this).selectAll('.pp-tile__box').boundingClientRect().exec((res) => {
+      const r = res && res[0] && res[0][idx];
+      if (!r || this._hidden) { this._ppBusy = false; this.onPassportTileTap({ ppExpanded: true, currentTarget: { dataset: { key } } }); return; }
+      let win = { windowWidth: 375, windowHeight: 667 }, cap = null;
+      try { win = wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync(); } catch (err) {}
+      try { cap = wx.getMenuButtonBoundingClientRect(); } catch (err) {}
+      const top = cap && cap.bottom ? cap.bottom + 12 : 96;
+      const w = win.windowWidth - 32;
+      const h = Math.min(win.windowHeight - top - 40, w * 1.25);
+      const box = (x, y, bw, bh, rad) => 'left:' + x + 'px;top:' + y + 'px;width:' + bw + 'px;height:' + bh + 'px;border-radius:' + rad + 'px;';
+      const ease = 'transition:left .46s cubic-bezier(.2,.9,.25,1),top .46s cubic-bezier(.2,.9,.25,1),width .46s cubic-bezier(.2,.9,.25,1),height .46s cubic-bezier(.2,.9,.25,1),border-radius .46s ease;';
+      this.setData({ ppOpen: { show: true, on: false, icon: tile.icon, title: tile.title, value: tile.value, style: box(r.left, r.top, r.width, r.height, 14) + 'transition:none;' } });
+      setTimeout(() => this.setData({ 'ppOpen.on': true, 'ppOpen.style': box(16, top, w, h, 28) + ease }), 30);
+      setTimeout(() => {
+        this.onPassportTileTap({ ppExpanded: true, currentTarget: { dataset: { key } } });
+        setTimeout(() => { this.setData({ 'ppOpen.show': false, 'ppOpen.on': false }); this._ppBusy = false; }, 380);
+      }, 560);
+    });
+    return true;
   },
 
 });

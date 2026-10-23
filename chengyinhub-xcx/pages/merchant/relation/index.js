@@ -1,3 +1,4 @@
+const toast = require('../../../utils/toast.js'); const pageMotion = require('../../../utils/page-motion.js');
 const app = getApp();
 const merchantTheme = require('../../../utils/merchant-theme.js');
 const { normalizeRelationHome } = require('../utils/merchant-aggregate.js');
@@ -165,7 +166,7 @@ Page({
     const key = e.detail && e.detail.key;
     if (key !== 'feed' && key !== 'club') return;
     if (key === this.data.activeTab) return;
-    this.setData({ activeTab: key });
+    pageMotion.enter(this, 'pmList'); this.setData({ activeTab: key }); // 2026-10-23:切标签卡片依次浮上来(master 动效并入)
     if (key === 'feed' && this.data.feedState === 'idle') this.loadFeed();
   },
 
@@ -196,7 +197,7 @@ Page({
           return;
         }
         const clubResult = normalizeDiscoveryList(home.clubs, '俱乐部');
-        that._hasLoaded = true;
+        that._hasLoaded = true; pageMotion.enter(that, 'pmList');
         that.setData({
           clubs: clubResult.rows,
           clubError: clubResult.error,

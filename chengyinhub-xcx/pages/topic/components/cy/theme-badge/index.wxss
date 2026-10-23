@@ -1,0 +1,53 @@
+/* 与数据条 .statbar__cell 同一版式:小标题在上,内容在下(业主:徽章文字放上面)。 */
+.tb-cell { width: 208rpx; display: flex; flex-direction: column; align-items: center; gap: 8rpx; }
+.tb-pressed { opacity: .7; }
+.tb-label { font-size: var(--cy-type-caption); letter-spacing: .44rpx; color: var(--cy-color-text-secondary); }
+.tb-hex { position: relative; width: 58rpx; height: 66rpx; overflow: hidden;
+  clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+  filter: drop-shadow(0 6rpx 10rpx rgba(0, 0, 0, .6)); } /* ds-ok 徽章投影 */
+.tb-img { position: absolute; left: 10%; top: 10%; width: 80%; height: 80%; mix-blend-mode: multiply; opacity: .9;
+  clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); }
+
+/* 金属着色:一束高光(位置跟倾斜走)+ 锥形渐变的金属带 + 细拉丝。--mx/--my/--ma 由组件逐帧写入。 */
+.metal {
+  background:
+    radial-gradient(circle at var(--mx, 30%) var(--my, 22%), rgba(255, 255, 255, .9), rgba(255, 255, 255, 0) 32%), /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
+    conic-gradient(from var(--ma, 0deg) at 50% 55%, #7d5e22, #f7e7a8, #a98232, #fff6cf, #8a6a2a, #ecd28a, #9c742c, #f7e7a8, #7d5e22), /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
+    repeating-linear-gradient(100deg, rgba(255, 255, 255, .07) 0 2rpx, rgba(0, 0, 0, .06) 2rpx 6rpx); /* ds-ok 金属色带是材质,不是界面色 */
+  background-blend-mode: screen, normal, overlay;
+}
+/* 自定义属性在小程序里不能补间,闲置流光改用一条移动的高光带 */
+.metal--idle::after { content: ''; position: absolute; top: 0; right: 0; bottom: 0; left: 0;
+  background: linear-gradient(115deg, rgba(255, 255, 255, 0) 35%, rgba(255, 255, 255, .55) 50%, rgba(255, 255, 255, 0) 65%); /* ds-ok 金属高光 */
+  background-size: 260% 100%; animation: tb-sweep 3.4s ease-in-out infinite; }
+@keyframes tb-sweep { 0% { background-position: 130% 0; } 60%, 100% { background-position: -40% 0; } }
+
+.tb-glyph { position: absolute; left: 50%; top: 50%; width: 26rpx; height: 26rpx; margin: -13rpx 0 0 -13rpx;
+  border: 3rpx solid rgba(58, 42, 8, .85); border-radius: 4rpx; box-sizing: border-box; } /* ds-ok 刻在金属上的深色线 */
+.tb-glyph--city::after { content: ''; position: absolute; left: 2rpx; right: 2rpx; top: 3rpx; height: 10rpx;
+  border-bottom: 3rpx solid rgba(58, 42, 8, .85); transform: skewY(-18deg); } /* ds-ok 信封折线 */
+.tb-glyph--free { border-radius: 50%; }
+.tb-glyph--big { width: 150rpx; height: 150rpx; margin: -75rpx 0 0 -75rpx; border-width: 8rpx; border-radius: 16rpx; } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
+.tb-glyph--big.tb-glyph--free { border-radius: 50%; }
+.tb-glyph--big.tb-glyph--city::after { left: 8rpx; right: 8rpx; top: 10rpx; height: 50rpx; border-bottom-width: 8rpx; }
+
+.tb-layer { position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 940; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; background: transparent; }
+.tb-dim { position: absolute; top: 0; right: 0; bottom: 0; left: 0; background: rgba(0, 0, 0, .72); /* ds-ok 放大层压暗 */
+  backdrop-filter: blur(16rpx); -webkit-backdrop-filter: blur(16rpx); animation: tb-fade .35s ease both; }
+@keyframes tb-fade { from { opacity: 0; } to { opacity: 1; } }
+.tb-big { position: relative; width: 420rpx; height: 474rpx; transition: transform .15s ease-out; }
+.tb-big--pop { animation: tb-pop .76s cubic-bezier(.2, .85, .25, 1.08) both; }
+@keyframes tb-pop { 0% { opacity: 0; transform: translateY(260rpx) scale(.18) rotateY(0); }
+  100% { opacity: 1; transform: none; } }
+.tb-big__hex { position: absolute; top: 0; right: 0; bottom: 0; left: 0; overflow: hidden;
+  clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); }
+.tb-copy { position: relative; margin-top: 56rpx; display: flex; flex-direction: column; align-items: center; gap: 10rpx;
+  animation: tb-fade .45s .2s ease both; }
+.tb-name { font-size: 42rpx; font-weight: 700; color: var(--cy-color-text-primary); } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
+.tb-sub { font-size: var(--cy-font-body); color: var(--cy-color-text-secondary); }
+.tb-hint { margin-top: 6rpx; font-size: var(--cy-type-caption); color: var(--cy-color-text-tertiary); }
+
+.tb-dim--press { opacity: .9; }
+/* 减少动态效果:放大层直接出现,不弹 */
+.tb-layer--reduced .tb-big { animation: none; }

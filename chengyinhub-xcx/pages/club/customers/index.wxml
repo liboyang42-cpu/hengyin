@@ -41,7 +41,7 @@
   <cy-empty wx:elif="{{state === 'empty'}}" fill size="lg" title="还没有客户"
             sub="有人买过本俱乐部的票之后，这里会按人汇总他的到店与退款。" />
 
-  <view wx:else class="cus-list">
+  <view wx:else class="cus-list" style="{{pmList === 1 ? '--pm-l:1;' : (pmList === 2 ? '--pm-l-d:.32s;--pm-l-s:1;' : '')}}">
     <view class="cus-row" wx:for="{{items}}" wx:key="memberId" data-member-id="{{item.memberId}}"
           bindtap="openCustomer" aria-role="button" aria-label="查看客户 {{item.displayName}}"
           hover-class="cy-pressed" hover-stay-time="80">

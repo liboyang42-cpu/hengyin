@@ -96,7 +96,7 @@ test('页面接线:申请成功把手里的 applyExpireTime 回填进卡片,foot
   });
   page.fetchTeams({ lat: 31.2, lng: 121.4 }, 3000);
   requests.filter((r) => r.url === '/api/team/nearby').pop().success({ code: 200, data: [row] });
-  page.onMarkerTap({ detail: { markerId: 74 } });
+  page.onMarkerTap({ detail: { markerId: 74 } }); page.onPoiFront(); // v13:点位卡 → 队伍半屏
   page.onCardPrimary();
   const req = requests.filter((r) => r.url === '/api/team/apply').pop();
   assert.ok(req, '必须请求 POST /api/team/apply');

@@ -23,7 +23,7 @@ module.exports = { valid: valid };
        本页职责:帖子 / 俱乐部两个 tab(2026-10-22 起不再列商家)。 -->
   <cy-tabs class="rel-tabs" variant="fill" wide="{{true}}" tabs="{{tabs}}" active="{{activeTab}}" bind:change="onTabChange" />
 
-  <view class="body">
+  <view class="body" style="{{pmList === 1 ? '--pm-q:1;' : (pmList === 2 ? '--pm-q-d:.32s;--pm-q-s:1;' : '')}}">
     <!-- 帖子(默认):2026-10-22 owner —— 合作 tab 看帖子,商家不再看到其他商家。
          与 pages/talent/list 的帖文同源 /api/club/post/feed;骨架超过 400ms 才出,回到本页保留旧内容。 -->
     <block wx:if="{{activeTab === 'feed'}}">

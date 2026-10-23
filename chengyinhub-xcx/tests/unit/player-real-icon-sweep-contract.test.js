@@ -104,7 +104,7 @@ test('替换后的可交互图标保留读屏名称、状态语义与至少 88rp
   assert.match(cssRule(freeMapStyle, '.fmap-btn'), /width:\s*88rpx[^}]*height:\s*88rpx/)
 
   const signupView = read('subpackageMember/signup/index.wxml')
-  assert.match(signupView, /<swiper-item[^>]*aria-role="button"[^>]*aria-label=/)
+  assert.match(signupView, /<view wx:for="\{\{ticketList\}\}"[^>]*class="wc"[^>]*aria-role="button"[^>]*aria-label=/) // v13 卡组
 })
 
 test('负控：把真实箭头恢复成文字箭头时，范围契约必须判红', () => {

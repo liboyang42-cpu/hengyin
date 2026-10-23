@@ -1,4 +1,4 @@
-const { readPublisherAccess } = require('../../../../utils/coop-publisher-access.js');
+const { readPublisherAccess } = require('../../../../utils/coop-publisher-access.js'); const pageMotion = require('../../../../utils/page-motion.js');
 const { returnToCoopOrigin } = require('../../../../utils/coop-invite-return.js');
 const modal = require('../../../../utils/modal.js');
 const cyLoading = require('../../../../utils/loading.js');
@@ -1504,7 +1504,7 @@ Component({
     var tab = e.detail.key;
     this._pendingCommunityTab = false;
     if (!tab || tab === this.data.activeTab || tab === 'posts' && !communityReadable()) return;
-    this.setData({ activeTab: tab });
+    pageMotion.enter(this, 'pmTab'); this.setData({ activeTab: tab }); // 2026-10-23:切标签内容浮上来
     if (tab === 'posts') {
       this.refreshDirtyPosts();
       if (this._squareListDirty || this._postsDirtyRefreshPromise) return;
