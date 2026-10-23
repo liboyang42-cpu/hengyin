@@ -4,7 +4,7 @@ Issue：https://github.com/liboyang42-cpu/chengyin-remote-ops/issues/5 领取组
 仓库：`github.com/liboyang42-cpu/hengyin` 仅写本仓  
 Base：`origin/master` `2ec68899099a1e250df0949a8383bf85b5d3ffe0`  
 分支：`cursor/c11-ops-support-adapters-d6bd`  
-Head：见本 PR。本文件不替代商店 / 备案门禁。
+Head：`628996ae99e921c81285b2e144956f25042e3aa7`（本文件若再提交会前进）。本文件不替代商店 / 备案门禁。
 
 ## 1. 白名单（实际写入）
 
@@ -56,10 +56,33 @@ Head：见本 PR。本文件不替代商店 / 备案门禁。
 命令（只跑本组新类）：
 
 ```bash
-mvn -q -pl chengyinhub-admin -Dtest=com.chengyinhub.business.service.support.ops.*Test test
+mvn -pl chengyinhub-admin -am test \
+  -Dtest=com.chengyinhub.business.service.support.ops.*Test \
+  -Dsurefire.failIfNoSpecifiedTests=false
 ```
 
-环境：本机 Maven + Java 21，隔离内存夹具，无 MySQL、无 HTTP、无生产库。
+环境：OpenJDK 21.0.12.1 · Maven 3.8.7 · 隔离内存夹具 · 无 MySQL / HTTP / 生产库。  
+真实结果（2026-10-23T19:53:51Z，`BUILD SUCCESS`）：
+
+```
+Tests run: 3, Failures: 0, Errors: 0, Skipped: 0 -- ReviewResultVisibilityAdapterTest
+Tests run: 3, Failures: 0, Errors: 0, Skipped: 0 -- VersionedLocaleDisplayTest
+Tests run: 4, Failures: 0, Errors: 0, Skipped: 0 -- SupportEventLocatorTest
+Tests run: 3, Failures: 0, Errors: 0, Skipped: 0 -- CompensationEntryProjectionTest
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0 -- C11FirstJourneyIsolationTest
+Tests run: 2, Failures: 0, Errors: 0, Skipped: 0 -- DataDeletionEvidenceTableTest
+Tests run: 16, Failures: 0, Errors: 0, Skipped: 0
+chengyinhub-admin .................................. SUCCESS
+BUILD SUCCESS
+```
+
+SHA256（生产 5 类）：
+
+- `SupportEventLocator.java` `82faef4f78ead9b8a582a3de1b57d3ffe41beeebdb86221225076ca03ddff37e`
+- `CompensationEntryProjection.java` `4374e44d0a23ef3887b9bce712c34abb320aee865e08785a0ea7383b5182c09c`
+- `DataDeletionEvidenceTable.java` `23ff2480afea59da48b2a85bb82dffce2c3c3635e8fa81c10b674045a504de97`
+- `VersionedLocaleDisplay.java` `4476d80b0f0a4e3bfa28004f54f251d002ba97853388d236fd41914138ccb98c`
+- `ReviewResultVisibilityAdapter.java` `7764ded15db376a87ab9d8f01ff1a1265dfac1b788243e3510e18e1b05d20e57`
 
 ## 4. 中美差异（v1 锁定）
 
