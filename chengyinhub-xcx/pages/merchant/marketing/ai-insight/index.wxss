@@ -358,12 +358,16 @@
 }
 .tcard-img { width: 100%; height: 100%; display: block; }
 .tcard-shade { position: absolute; left: 0; right: 0; top: 0; bottom: 0; background: var(--mi-shade); }
+/* 2026-10-23 业主:卡面只剩标题+描述后,「看看」独占一行会在文字下方留出一截空白。
+   改为两列:左列标题 / 描述贴底,右列「看看」与描述行底对齐,文字整体落到卡底。 */
 .tcard-over {
   position: absolute; left: 0; right: 0; bottom: 0;
-  display: flex; flex-direction: column; gap: var(--cy-space-1);
-  padding: var(--cy-space-3) var(--cy-space-3) var(--cy-space-3);
+  display: grid; grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: var(--cy-space-3); row-gap: var(--cy-space-1);
+  align-items: end;
+  padding: var(--cy-space-3);
 }
-.tcard-title { display: flex; align-items: center; gap: var(--cy-space-2); min-width: 0; }
+.tcard-title { grid-column: 1; grid-row: 1; display: flex; align-items: center; gap: var(--cy-space-2); min-width: 0; }
 .tcard-name {
   flex: 0 1 auto; min-width: 0;
   font-size: var(--cy-font-subtitle); font-weight: 700; color: var(--mi-on-ink);
@@ -377,14 +381,13 @@
   font-size: var(--cy-font-micro); font-weight: 600; color: var(--cy-text-title);
 }
 .tcard-reason {
+  grid-column: 1; grid-row: 2;
   font-size: var(--cy-font-caption); line-height: 1.45; color: var(--mi-on-cover-2);
   display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; /* 横版只留一行 */
 }
-.tcard-foot { display: flex; align-items: center; gap: var(--cy-space-2); margin-top: var(--cy-space-1); }
-/* 2026-10-23 业主:卡面不再有场次/主办一行,底栏只剩右侧「看看」 */
+.tcard-foot { grid-column: 2; grid-row: 1 / span 2; display: flex; align-items: flex-end; }
 .tcard-cta {
   flex: none;
-  margin-left: auto;
   padding: 16rpx var(--cy-space-4);
   border-radius: var(--cy-radius-pill);
   background: var(--mi-ink);
