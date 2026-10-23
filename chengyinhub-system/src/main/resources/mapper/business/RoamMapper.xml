@@ -108,6 +108,12 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
           and <include refid="cityNodeContentApproved" />
           and p.lat between #{minLat} and #{maxLat}
           and p.lng between #{minLng} and #{maxLng}
+        <!-- P1-058:半径最大 20km,城区一盒可达上千点。按到盒心的等距矩形近似距离由近到远,
+             再截 limit 条 —— 截断时丢的是最远的,而不是数据库随手给的任意一批。 -->
+        order by power(p.lat - (#{minLat} + #{maxLat}) / 2, 2)
+                 + power((p.lng - (#{minLng} + #{maxLng}) / 2) * cos(radians((#{minLat} + #{maxLat}) / 2)), 2) asc,
+                 p.id asc
+        limit #{limit}
     </select>
 
     <select id="selectPoisByIds" resultMap="RoamPoiResult">

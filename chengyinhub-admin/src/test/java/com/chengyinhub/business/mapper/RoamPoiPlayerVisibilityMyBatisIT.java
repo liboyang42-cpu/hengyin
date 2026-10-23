@@ -114,12 +114,12 @@ class RoamPoiPlayerVisibilityMyBatisIT {
                 RoamMapper mapper = session.getMapper(RoamMapper.class);
 
                 // ---------- C-17:地图图层只出「已批准 / 认领 / 历史遗留」在架据点 ----------
-                Map<Long, Boolean> player = foundFlags(mapper.selectPoisNear(31.22, 31.24, 121.46, 121.49, PLAYER));
+                Map<Long, Boolean> player = foundFlags(mapper.selectPoisNear(31.22, 31.24, 121.46, 121.49, PLAYER, 500));
                 assertEquals(Arrays.asList(1L, 4L, 5L, 7L, 8L), sortedKeys(player),
                         "待审/驳回/下线不得进玩家图层;已批准/认领/历史遗留必须在(删掉审核 include 这条必红)");
 
                 // ---------- CU-M-54:「已打卡但券未核销」单独一档,不能与「已完成」混为一谈 ----------
-                List<RoamPoi> pendingRows = mapper.selectPoisNear(31.22, 31.24, 121.46, 121.49, PLAYER);
+                List<RoamPoi> pendingRows = mapper.selectPoisNear(31.22, 31.24, 121.46, 121.49, PLAYER, 500);
                 Map<Long, Boolean> pending = new HashMap<>();
                 for (RoamPoi row : pendingRows) pending.put(row.getId(), row.getPendingRedeem());
                 assertEquals(Boolean.TRUE, pending.get(8L), "本玩家 status=0 且配了券 = 待核销(同一口径同 selectPendingCityNodeCouponId)");
@@ -134,11 +134,11 @@ class RoamPoiPlayerVisibilityMyBatisIT {
                 assertEquals(Boolean.FALSE, player.get(5L), "没发现的据点 found 必须是 false,不能整批为真");
                 assertEquals(Boolean.FALSE, player.get(7L), "别人到过店的据点只对我 found=false,但据点本身对我可见");
 
-                Map<Long, Boolean> stranger = foundFlags(mapper.selectPoisNear(31.22, 31.24, 121.46, 121.49, STRANGER));
+                Map<Long, Boolean> stranger = foundFlags(mapper.selectPoisNear(31.22, 31.24, 121.46, 121.49, STRANGER, 500));
                 assertEquals(Boolean.FALSE, stranger.get(1L), "别人的发现不能算我的:found 必须按 memberId 收窄");
                 assertEquals(Boolean.FALSE, stranger.get(4L), "别人的到店记录不能算我的");
 
-                Map<Long, Boolean> anonymous = foundFlags(mapper.selectPoisNear(31.22, 31.24, 121.46, 121.49, 0L));
+                Map<Long, Boolean> anonymous = foundFlags(mapper.selectPoisNear(31.22, 31.24, 121.46, 121.49, 0L, 500));
                 assertTrue(anonymous.values().stream().noneMatch(Boolean.TRUE::equals),
                         "未登录(memberId=0)不得下发任何 found=true");
 
@@ -152,7 +152,17 @@ class RoamPoiPlayerVisibilityMyBatisIT {
 
                 // 已下线网点:两条玩家查询都不放行
                 assertTrue(mapper.selectPlayerPoisByIds(Arrays.asList(6L)).isEmpty(), "status=0 不得被发现/打卡");
-                assertFalse(foundFlags(mapper.selectPoisNear(31.22, 31.24, 121.46, 121.49, PLAYER)).containsKey(6L));
+                assertFalse(foundFlags(mapper.selectPoisNear(31.22, 31.24, 121.46, 121.49, PLAYER, 500)).containsKey(6L));
+
+                // ---------- P1-058:按到盒心由近到远排序 + 截断(截掉的是最远的,不是任意一批) ----------
+                // 盒心放在 31.2307(8 号点所在纬度):由近到远应是 8,7,5,4,1 —— 与 id 升序正好相反,
+                // 删掉 order by 或改成按 id 排,这条必红。
+                assertEquals(Arrays.asList(8L, 7L, 5L, 4L, 1L),
+                        idsInOrder(mapper.selectPoisNear(31.2207, 31.2407, 121.46, 121.49, PLAYER, 500)),
+                        "附近 POI 必须按距离由近到远返回");
+                assertEquals(Arrays.asList(8L, 7L),
+                        idsInOrder(mapper.selectPoisNear(31.2207, 31.2407, 121.46, 121.49, PLAYER, 2)),
+                        "超出上限时只保留最近的 limit 条");
             } finally {
                 // 只回放前 4 条(全是 DROP;4 之后是 CREATE —— 反向跑 CREATE 会撞 1050)
                 for (int i = 3; i >= 0; i--) statement.execute(FIXTURE_DDL[i]);
@@ -170,6 +180,12 @@ class RoamPoiPlayerVisibilityMyBatisIT {
         List<Long> keys = new java.util.ArrayList<>(flags.keySet());
         java.util.Collections.sort(keys);
         return keys;
+    }
+
+    private static List<Long> idsInOrder(List<RoamPoi> rows) {
+        List<Long> ids = new java.util.ArrayList<>();
+        for (RoamPoi row : rows) ids.add(row.getId());
+        return ids;
     }
 
     private static List<Long> ids(List<RoamPoi> rows) {
