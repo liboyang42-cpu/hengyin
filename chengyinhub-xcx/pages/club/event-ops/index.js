@@ -1,5 +1,6 @@
 const cyModal = require('../../../utils/modal.js');
 const { chinaDateKey, chinaParts } = require('../../../utils/datetime.js');
+const { maxWeeklyOccurrences } = require('../utils/weekly-schedule-window.js');
 const toast = require('../../../utils/toast.js');
 const app = getApp()
 const motion = require('../../../utils/motion.js')
@@ -778,6 +779,14 @@ Page({
     if (this.data.recurrenceType === 'WEEKLY' && (!Number.isInteger(count) || count < 1 || count > 64)) {
       toast('每周场次数需为 1–64')
       return
+    }
+    if (this.data.recurrenceType === 'WEEKLY') {
+      // 与后端 90 天窗口同口径:超出的期数会被拒绝,提交前先说清上限。
+      const maxWeekly = maxWeeklyOccurrences(this.data.startDate, shanghaiToday())
+      if (maxWeekly > 0 && count > maxWeekly) {
+        toast('首次日期起 90 天内最多可排 ' + maxWeekly + ' 期')
+        return
+      }
     }
     if (capacity !== null && (!Number.isInteger(capacity) || capacity < 1 || capacity > 10000)) {
       toast('容量需为 1–10000')
