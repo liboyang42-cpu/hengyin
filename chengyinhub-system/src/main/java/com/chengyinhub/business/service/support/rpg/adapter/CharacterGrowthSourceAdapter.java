@@ -58,11 +58,18 @@ public class CharacterGrowthSourceAdapter {
             fact.put("applied", Boolean.FALSE);
             return fact;
         }
-        String source = "growth-reset:" + (context.getOriginalRequestId() == null ? "" : context.getOriginalRequestId());
+        String requestId = RpgAdapterSupport.blankToNull(context.getOriginalRequestId());
+        if (requestId == null) {
+            fact.put("applied", Boolean.FALSE);
+            fact.put("requestId", null);
+            fact.put("status", "WAITING_SOURCE");
+            return fact;
+        }
+        String source = "growth-reset:" + requestId;
         if (context.getState().getThemeRuntime().path("sources").path(source).asBoolean(false)) {
             fact.put("applied", Boolean.FALSE);
             fact.put("replay", Boolean.TRUE);
-            fact.put("requestId", context.getOriginalRequestId());
+            fact.put("requestId", requestId);
             return fact;
         }
         JourneyRules.Recovery recovery = context.getRules() == null ? null : context.getRules().getRecovery();
@@ -76,7 +83,7 @@ public class CharacterGrowthSourceAdapter {
         }
         context.getState().getThemeRuntime().with("sources").put(source, true);
         fact.put("applied", Boolean.TRUE);
-        fact.put("requestId", context.getOriginalRequestId());
+        fact.put("requestId", requestId);
         context.getFacts().put("growthReset", fact);
         return fact;
     }

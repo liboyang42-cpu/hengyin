@@ -56,7 +56,9 @@ public class RpgAdapterContext {
     public RpgAdapterSpec getSpec() { return spec == null ? RpgAdapterSpec.inactive() : spec; }
     public void setSpec(RpgAdapterSpec spec) { this.spec = spec == null ? RpgAdapterSpec.inactive() : spec; }
     public String getOriginalRequestId() { return originalRequestId; }
-    public void setOriginalRequestId(String originalRequestId) { this.originalRequestId = originalRequestId; }
+    public void setOriginalRequestId(String originalRequestId) {
+        this.originalRequestId = RpgAdapterSupport.blankToNull(originalRequestId);
+    }
     public Long getNodeId() { return nodeId; }
     public void setNodeId(Long nodeId) { this.nodeId = nodeId; }
     public Long getMemberId() { return memberId; }

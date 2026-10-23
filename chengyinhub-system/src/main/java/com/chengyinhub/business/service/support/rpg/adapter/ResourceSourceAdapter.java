@@ -23,7 +23,14 @@ public class ResourceSourceAdapter {
             fact.put("applied", Boolean.FALSE);
             return fact;
         }
-        fact.put("requestId", context.getOriginalRequestId());
+        String requestId = RpgAdapterSupport.blankToNull(context.getOriginalRequestId());
+        fact.put("requestId", requestId);
+        if (requestId == null) {
+            fact.put("applied", Boolean.FALSE);
+            fact.put("status", "WAITING_SOURCE");
+            context.getFacts().put("resources", fact);
+            return fact;
+        }
         JsonNode effects = Boolean.TRUE.equals(context.getReceipt().getSuccess())
                 ? context.getSpec().getResources().getSuccessEffects()
                 : context.getSpec().getResources().getFailEffects();
@@ -47,8 +54,9 @@ public class ResourceSourceAdapter {
         if (RpgAdapterSupport.inactive(context)) return;
         Object fact = context.getFacts().get("resources");
         if (fact != null) RpgAdapterSupport.putExtra(receipt, "resources", fact);
-        if (context.getOriginalRequestId() != null) {
-            RpgAdapterSupport.putExtra(receipt, "requestId", context.getOriginalRequestId());
+        String requestId = context == null ? null : RpgAdapterSupport.blankToNull(context.getOriginalRequestId());
+        if (requestId != null) {
+            RpgAdapterSupport.putExtra(receipt, "requestId", requestId);
         }
     }
 }

@@ -31,4 +31,12 @@ final class RpgAdapterSupport {
         breakdown.put(key, value);
         receipt.setBreakdown(breakdown);
     }
+
+    /** Missing requestId stays Java null, never {@code ""}. */
+    static String blankToNull(String value) {
+        if (value == null) {
+            return null;
+        }
+        return value.isBlank() ? null : value;
+    }
 }
