@@ -23,3 +23,13 @@ iOS exclusive already on chengyin-ios#67. This is the matching isolation produce
 ## D3/dot 接线
 
 离线包 operationId 接到既有 resume writer（源未到则保持 WAITING_SOURCE）。导航同意不得并入位置分享。迷雾不得写入到场证明。
+
+## Addendum 2026-10-23 16:22 America/Los_Angeles
+
+HEAD `6a82b4cae`：`discover` 在已有 original 时抛 `ALREADY_TERMINAL`，不再抹掉原记录。`recoverOriginal` 未见 id 仍抛 `ORIGINAL_RECORD_UNKNOWN`，`original`/`hold` 保持 null，不占账；之后对该 id 的唯一 `acceptHold` 才是原文写入。
+
+`SideQuestAcceptHold.java` SHA256 `45c3792d5571174d26c1456054324a78000efac48a1271fd0c0f49f8300fac13`。
+
+命令：`mvn -pl chengyinhub-admin -am -Dtest=com.chengyinhub.business.service.offline.*Test -Dsurefire.failIfNoSpecifiedTests=false test`
+
+结果：`BUILD SUCCESS` **7/0** 2026-10-23T23:22:52Z。`C05AccountSwitchRestartIsolationTest` 4/0。App / XCTest / MySQL / HTTP / CI = NOT_RUN。不声称 100%。
