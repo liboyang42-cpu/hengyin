@@ -108,10 +108,22 @@ class ThemeStateKeyServiceTest {
         service.register(7L, Arrays.asList(
                 key("clue.ledger_page", "flag", "run"),
                 key("counter.coins", "counter", "run"),
-                key("relation.owner", "relation", "party"),
+                key("relation.owner", "relation", "run"),
                 key("tag.hurried", "tag", "run")));
 
         verify(mapper, times(4)).upsertThemeStateKey(any(ThemeStateKey.class));
+    }
+
+    /** P2-025:party/deployment 运行期未实现,注册口必须拒绝,不能静默按 run 跑。 */
+    @Test
+    void unimplementedScopesAreRejectedAtRegistration() {
+        for (String scope : Arrays.asList("party", "deployment")) {
+            ServiceException error = assertThrows(ServiceException.class,
+                    () -> service.register(7L, Arrays.asList(key("relation.owner", "relation", scope))));
+            assertTrue(error.getMessage().contains("仅支持 run"), error.getMessage());
+            assertFalse(service.check(Arrays.asList(key("relation.owner", "relation", scope))).isEmpty(), scope);
+        }
+        verify(mapper, never()).upsertThemeStateKey(any(ThemeStateKey.class));
     }
 
     @Test
