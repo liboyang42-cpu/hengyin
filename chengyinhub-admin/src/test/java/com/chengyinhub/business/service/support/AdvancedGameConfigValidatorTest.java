@@ -13,6 +13,7 @@ import java.util.HashSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -1445,10 +1446,16 @@ class AdvancedGameConfigValidatorTest {
     }
 
     @Test
-    void scanRejectsUnknownKindWithFourWayMessage() {
+    void scanRejectsUnknownKindWithFiveWayMessage() {
         IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
                 () -> validator.validateAndNormalize(scanConfig("\"kind\":\"AR\"")));
-        assertEquals("扫码回复只能是文字、语音、图片或显形", error.getMessage());
+        assertEquals("扫码回复只能是文字、语音、图片、显形或不回复", error.getMessage());
+    }
+
+    // 2026-10-22 主人:扫码参与可以不回复 —— NONE 不要求回复文字,也不带任何回复媒体
+    @Test
+    void scanNoneNeedsNoReply() throws Exception {
+        assertDoesNotThrow(() -> validator.validateAndNormalize(scanConfig("\"kind\":\"NONE\"")));
     }
 
     // ===== 2026-10-11 选项问答:判断答案对错开关与选项反馈图片 =====

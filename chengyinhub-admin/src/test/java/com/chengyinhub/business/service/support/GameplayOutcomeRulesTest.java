@@ -26,6 +26,39 @@ class GameplayOutcomeRulesTest {
         assertEquals(normalized, validator.validateAndNormalize(normalized));
         assertFalse(json.readTree(normalized).path("interactionRules").has("hpCost"));
     }
+    @Test void passAndFailFeedbackKeepUpToThreeImages() throws Exception {
+        ObjectNode root = template();
+        root.with("outcomeRules").with("pass").putArray("images").add("https://cdn.example.com/a.jpg").add("/profile/upload/b.png").add("media-asset:12");
+        root.with("outcomeRules").with("fail").putArray("images").add("https://cdn.example.com/c.jpg");
+        ObjectNode normalized = (ObjectNode) json.readTree(validator.validateAndNormalize(root.toString()));
+        assertEquals(3, normalized.path("outcomeRules").path("pass").path("images").size());
+        assertEquals("https://cdn.example.com/c.jpg", normalized.path("outcomeRules").path("fail").path("images").path(0).asText());
+    }
+    @Test void rejectsTooManyOrUnsafeFeedbackImages() {
+        ObjectNode four = template();
+        four.with("outcomeRules").with("pass").putArray("images").add("/a.png").add("/b.png").add("/c.png").add("/d.png");
+        assertTrue(assertThrows(IllegalArgumentException.class, () -> validator.validateAndNormalize(four.toString())).getMessage().contains("最多 3 张"));
+        ObjectNode plain = template();
+        plain.with("outcomeRules").with("fail").putArray("images").add("http://insecure.example.com/a.png");
+        assertThrows(IllegalArgumentException.class, () -> validator.validateAndNormalize(plain.toString()));
+        ObjectNode notList = template();
+        notList.with("outcomeRules").with("pass").put("images", "/a.png");
+        assertThrows(IllegalArgumentException.class, () -> validator.validateAndNormalize(notList.toString()));
+    }
+    @Test void backgroundMusicIsPresenceBasedAndValidated() throws Exception {
+        ObjectNode root = template();
+        root.putObject("backgroundMusic").put("title", "老城茶馆").put("audioUrl", "https://cdn.example.com/tea.mp3").put("loop", true);
+        assertEquals("老城茶馆", json.readTree(validator.validateAndNormalize(root.toString())).path("backgroundMusic").path("title").asText());
+        ObjectNode flagged = template();
+        flagged.putObject("backgroundMusic").put("enabled", true).put("audioUrl", "https://cdn.example.com/tea.mp3");
+        assertThrows(IllegalArgumentException.class, () -> validator.validateAndNormalize(flagged.toString()));
+        ObjectNode silent = template();
+        silent.putObject("backgroundMusic").put("title", "无音频");
+        assertThrows(IllegalArgumentException.class, () -> validator.validateAndNormalize(silent.toString()));
+        ObjectNode insecure = template();
+        insecure.putObject("backgroundMusic").put("audioUrl", "http://cdn.example.com/tea.mp3");
+        assertThrows(IllegalArgumentException.class, () -> validator.validateAndNormalize(insecure.toString()));
+    }
     @Test void rejectsMalformedOutcomeAndExplicitLegacyCostConflict() {
         ObjectNode root = template();
         ((ObjectNode) root.path("outcomeRules").path("fail").path("costs").get(0)).put("amount", -1);

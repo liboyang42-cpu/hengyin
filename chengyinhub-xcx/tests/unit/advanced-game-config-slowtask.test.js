@@ -61,11 +61,14 @@ function serverSlowTaskFields() {
 // parse 的「未知段透传」保证这些段读进来原样留、存回去原样带 —— 不丢商家数据,
 // 只是本页配不了。接线是独立工单,不随本批落码;名单外再冒出第六个新段,下面仍会判红。
 const NOT_YET_WIRED_SERVER_SECTIONS = ['sort', 'match', 'classify', 'compare', 'roleViews']
+// 根层的互动工具段:不是玩法段(没有 enabled,有这一段就算开着),编辑页在「互动工具」里单独配,
+// 靠 parse 的未知段透传原样读写。2026-10-22 背景音乐。
+const ROOT_TOOL_SECTIONS = ['backgroundMusic']
 
 test('★后端 Validator 的段名单与本地 SECTIONS 一一对上 —— 少一段,那玩法在本页读不出来也存不回去,而且不报错', () => {
   const server = serverSections()
   assert.ok(server.size > 20, '后端一个段都没认出来,这条断言就是恒真的')
-  assert.deepEqual([...server].filter(k => cfg.SECTIONS.indexOf(k) < 0 && !NOT_YET_WIRED_SERVER_SECTIONS.includes(k)), [],
+  assert.deepEqual([...server].filter(k => cfg.SECTIONS.indexOf(k) < 0 && !NOT_YET_WIRED_SERVER_SECTIONS.includes(k) && !ROOT_TOOL_SECTIONS.includes(k)), [],
     '服务端有、本地名单没有,且不在「未接线名册」里:这一段商家配不了也存不了')
   assert.deepEqual(cfg.SECTIONS.filter(k => !server.has(k)), [],
     '本地名单有、服务端没有:填了会被服务端整段忽略')
