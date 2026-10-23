@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
-  "controlCount": 5070,
+  "controlCount": 5071,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -706868,6 +706868,15 @@
           ]
         },
         {
+          "route": "subpackageP3/pages/growthcenter/leaderboard/index",
+          "segments": [
+            {
+              "selector": "cy-tabs",
+              "index": 1
+            }
+          ]
+        },
+        {
           "route": "subpackageP3/pages/object-cards/index/index",
           "segments": [
             {
@@ -707445,6 +707454,15 @@
             {
               "selector": "cy-tabs",
               "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageP3/pages/growthcenter/leaderboard/index",
+          "segments": [
+            {
+              "selector": "cy-tabs",
+              "index": 1
             }
           ]
         },
@@ -708030,6 +708048,15 @@
           ]
         },
         {
+          "route": "subpackageP3/pages/growthcenter/leaderboard/index",
+          "segments": [
+            {
+              "selector": "cy-tabs",
+              "index": 1
+            }
+          ]
+        },
+        {
           "route": "subpackageP3/pages/object-cards/index/index",
           "segments": [
             {
@@ -708607,6 +708634,15 @@
             {
               "selector": "cy-tabs",
               "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageP3/pages/growthcenter/leaderboard/index",
+          "segments": [
+            {
+              "selector": "cy-tabs",
+              "index": 1
             }
           ]
         },
@@ -1158361,6 +1158397,115 @@
       }
     },
     {
+      "id": "subpackageP3/pages/growthcenter/leaderboard/index.wxml:123:bind:change:onMetricChange:4",
+      "route": "subpackageP3/pages/growthcenter/leaderboard/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "subpackageP3/pages/growthcenter/leaderboard/index.wxml",
+        "js": "subpackageP3/pages/growthcenter/leaderboard/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-tabs",
+        "event": "bind:change",
+        "handler": "onMetricChange",
+        "line": 123,
+        "selectorHint": "cy-tabs[bind:change]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "read",
+      "interactionMode": "event-contract",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/config/features",
+          "/api/growth/leaderboard",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "primaryApis": [
+          "/api/config/features",
+          "/api/growth/leaderboard"
+        ],
+        "auxiliaryApis": [
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/growth/leaderboard",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageP3/pages/growthcenter/leaderboard/index.js:106"
+      }
+    },
+    {
       "id": "subpackageP3/pages/growthcenter/leaderboard/index.wxml:17:bind:change:onPeriodChange:0",
       "route": "subpackageP3/pages/growthcenter/leaderboard/index",
       "hostRoutes": [],
@@ -1158470,7 +1158615,7 @@
       }
     },
     {
-      "id": "subpackageP3/pages/growthcenter/leaderboard/index.wxml:24:bind:change:onMetricChange:1",
+      "id": "subpackageP3/pages/growthcenter/leaderboard/index.wxml:26:bind:change:onMetricChange:1",
       "route": "subpackageP3/pages/growthcenter/leaderboard/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1158493,7 +1158638,7 @@
         "tag": "cy-tabs",
         "event": "bind:change",
         "handler": "onMetricChange",
-        "line": 24,
+        "line": 26,
         "selectorHint": "cy-tabs[bind:change]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1158579,7 +1158724,7 @@
       }
     },
     {
-      "id": "subpackageP3/pages/growthcenter/leaderboard/index.wxml:40:bind:retry:onRetry:2",
+      "id": "subpackageP3/pages/growthcenter/leaderboard/index.wxml:41:bind:retry:onRetry:2",
       "route": "subpackageP3/pages/growthcenter/leaderboard/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1158602,7 +1158747,7 @@
         "tag": "cy-error",
         "event": "bind:retry",
         "handler": "onRetry",
-        "line": 40,
+        "line": 41,
         "selectorHint": ".gc-error-board",
         "visibleCondition": "{{errorMsg}}",
         "loadFailureCondition": "{{!boardAuthRequired && !boardAccessDenied}}",
@@ -1158689,7 +1158834,7 @@
       }
     },
     {
-      "id": "subpackageP3/pages/growthcenter/leaderboard/index.wxml:59:bind:cta:goExplore:3",
+      "id": "subpackageP3/pages/growthcenter/leaderboard/index.wxml:60:bind:cta:goExplore:3",
       "route": "subpackageP3/pages/growthcenter/leaderboard/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1158712,7 +1158857,7 @@
         "tag": "cy-empty",
         "event": "bind:cta",
         "handler": "goExplore",
-        "line": 59,
+        "line": 60,
         "selectorHint": ".gc-empty-board",
         "visibleCondition": "{{!loading && !top3[0] && !rest.length && !me}}",
         "disabledCondition": null,
