@@ -1,0 +1,224 @@
+{
+  "repository": "liboyang42-cpu/hengyin",
+  "base": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+  "candidate": {
+    "sha": "91e78c448f69b2e3e3407acc111ff460c4a37ebb",
+    "tree": "392dac695de1aa84ec2fa7c6185505a395cb1dc1",
+    "parent": "ffc2e7159846892b530edb17bbb5e411471da8f4",
+    "branch": "codex/architecture-day-e-photo-owned-read"
+  },
+  "files_from_base": [
+    {
+      "path": "chengyinhub-admin/sql/migration_photo_check_intent_20261023.sql",
+      "sha": "ffc9f1d7aa8cb4ede2d74c3edc4e7dc3ee286b63",
+      "status": "added"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/PhotoCheckIntentFreshReadMySqlIT.java",
+      "sha": "808dfe5deeb9a631cdf5dd1c172918afa063f66e",
+      "status": "added"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/PhotoCheckIntentMySqlIT.java",
+      "sha": "3c0ae949c7f752575b51eeb7bb5d43ce5b9745e3",
+      "status": "added"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/PhotoCheckIntentRecoveryMySqlIT.java",
+      "sha": "5c13c8de8ae8cd82e0d7003f189f53654a956c87",
+      "status": "added"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/PhotoCheckIntentRecoveryReadTest.java",
+      "sha": "d5ced5dd4d5db0dd520b5a41b88df138957bc185",
+      "status": "added"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/PhotoCheckIntentServiceTest.java",
+      "sha": "c4938d3f5c328e8ab60998b73620fff89f6726c5",
+      "status": "added"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/PhotoCheckVisionServiceTest.java",
+      "sha": "979db89bc76e788f7c815002dc720cff5d1c0070",
+      "status": "modified"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/Pr69V3PhotoCheckCrossAccountTest.java",
+      "sha": "a7646950e051191d0cbede0454f79696b6217ce4",
+      "status": "modified"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/impl/AiQuotaReservationRedisIT.java",
+      "sha": "d669b1cdb677b6b9cc0f1418fe9258685f9f8773",
+      "status": "modified"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/impl/PhotoCheckQuotaPoolTest.java",
+      "sha": "4293d5698b96a81288751ab6b7cc3b358d347f19",
+      "status": "modified"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ObjectCardMintHookTest.java",
+      "sha": "d2504121e1608131f821029312b42b739107018a",
+      "status": "modified"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PlayKitPhotoCheckRuntimeTest.java",
+      "sha": "935ac6b693e884a8a7243e608b80206e399248cf",
+      "status": "modified"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/PhotoCheckIntentRow.java",
+      "sha": "e425dfce85a6115cf53d2ce47b58b609c2933bbe",
+      "status": "added"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/PhotoCheckIntentMapper.java",
+      "sha": "4bba7c453f16fd84fcece793de2a63d184d960fc",
+      "status": "added"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiGatewayService.java",
+      "sha": "2ee647ec65e1300af90421215427e7e70cbae704",
+      "status": "modified"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/OpenAiCompatibleLlmClient.java",
+      "sha": "806c3d12325697f4f1f57d1ce417e95db2bd1360",
+      "status": "modified"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/PhotoCheckIntentCommand.java",
+      "sha": "5eb1173c3f7b64abd7afb4693bb56ed04e7f5f56",
+      "status": "added"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/PhotoCheckIntentService.java",
+      "sha": "a997f4fc3d91c13fd79775a11f281c63d09ab45a",
+      "status": "added"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/PhotoCheckIntentState.java",
+      "sha": "2846a3d6cf3c3d6dd523da613744ba88f2f43610",
+      "status": "added"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/PhotoCheckIntentView.java",
+      "sha": "95466d4c4050955cd05143b7d4482497f9dd1633",
+      "status": "added"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/PhotoCheckVisionService.java",
+      "sha": "c293ad5e32d84c8f4538a7f83aed396abe921115",
+      "status": "modified"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImpl.java",
+      "sha": "f0ce857ae758ee88f30999696d4beb7c5531a2db",
+      "status": "modified"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/PhotoCheckIntentMapper.xml",
+      "sha": "3e669089c5743e59fc9736bd19fe881f4de4ac5a",
+      "status": "added"
+    },
+    {
+      "path": "docs/delivery/architecture-day/E/PHOTO-CI-FIX/README.md",
+      "sha": "44540353dda8cbe400f4121c15b22490fede1000",
+      "status": "added"
+    },
+    {
+      "path": "docs/delivery/architecture-day/E/PHOTO-KEY-RECOVERY/README.md",
+      "sha": "0deea5cd8bf5a8dbb1d2047520a4b9e8e120eb5e",
+      "status": "added"
+    },
+    {
+      "path": "docs/delivery/architecture-day/E/PHOTO-KEY-RECOVERY/source-manifest.json",
+      "sha": "88770d09764a9e99beb30c3fc8f638223e507dc1",
+      "status": "added"
+    },
+    {
+      "path": "docs/delivery/architecture-day/E/PHOTO-OWNED-READ/README.md",
+      "sha": "90b201cd2be75026506ea272e98d5995e93fa9b6",
+      "status": "added"
+    },
+    {
+      "path": "docs/delivery/architecture-day/E/PHOTO-OWNED-READ/source-manifest.json",
+      "sha": "ff7291307b137f22a583ade6b734d37652db4db3",
+      "status": "added"
+    },
+    {
+      "path": "docs/delivery/architecture-day/E/PHOTO-SPRING-FIX/README.md",
+      "sha": "91b8fb24747d970188e1a397a8cfac08295afe1e",
+      "status": "added"
+    },
+    {
+      "path": "docs/delivery/architecture-day/E/PHOTO/README.md",
+      "sha": "9d5f45e82efbd29a38826d0f9f36202087362963",
+      "status": "added"
+    },
+    {
+      "path": "docs/delivery/architecture-day/E/PHOTO/check_static.py",
+      "sha": "6d7e55713827d4aeeb6e3b1f751d1685e551c1a0",
+      "status": "added"
+    },
+    {
+      "path": "docs/delivery/architecture-day/E/PHOTO/source-manifest.json",
+      "sha": "b7d7bad27e9ca2b59c7391b514bf1d920e3d4c3d",
+      "status": "added"
+    },
+    {
+      "path": "docs/delivery/architecture-day/E/PHOTO/static-output.json",
+      "sha": "bea9177500ee6bdd5ea5a49a178416bdf13c0376",
+      "status": "added"
+    },
+    {
+      "path": "docs/delivery/architecture-day/ROOT-photo-adapter/candidate.json",
+      "sha": "d7378d2ff955c75040fa7ede487224835a732384",
+      "status": "added"
+    }
+  ],
+  "files_from_parent": [
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/PhotoCheckIntentFreshReadMySqlIT.java",
+      "sha": "808dfe5deeb9a631cdf5dd1c172918afa063f66e",
+      "status": "added"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/PhotoCheckIntentMapper.xml",
+      "sha": "3e669089c5743e59fc9736bd19fe881f4de4ac5a",
+      "status": "modified"
+    },
+    {
+      "path": "docs/delivery/architecture-day/E/PHOTO-OWNED-READ/README.md",
+      "sha": "90b201cd2be75026506ea272e98d5995e93fa9b6",
+      "status": "added"
+    },
+    {
+      "path": "docs/delivery/architecture-day/E/PHOTO-OWNED-READ/source-manifest.json",
+      "sha": "ff7291307b137f22a583ade6b734d37652db4db3",
+      "status": "added"
+    }
+  ],
+  "old_ci": {
+    "run": 40024662872,
+    "attempt": 1,
+    "job": 120657865513,
+    "artifact": 12531488336,
+    "source": "f281df751ce002f6409f29a8be4201c4f4a62695",
+    "original_mysql_test_blob": "3c0ae949c7f752575b51eeb7bb5d43ce5b9745e3",
+    "tests": 10,
+    "failures": 1,
+    "errors": 0,
+    "skipped": 0
+  },
+  "production_call_boundary": {
+    "inspected_published_root": "2631846bd618df7afe6b341351ea694c712bc40b",
+    "advanced_runtime_blob": "53394b52f8471db98ba2331697d30e112629b3bc",
+    "advanced_controller_blob": "5bfb96a26418d0efec2a3fc98d83ff68ecaf4faf",
+    "intent_service_calls_in_those_files": 0,
+    "read_only_transaction_calls_confirmed": false,
+    "c_photo_orchestration_not_frozen_in_this_review": true
+  }
+}

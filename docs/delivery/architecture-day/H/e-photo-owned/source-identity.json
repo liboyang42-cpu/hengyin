@@ -1,0 +1,172 @@
+[
+  {
+    "path": "chengyinhub-admin/sql/migration_photo_check_intent_20261023.sql",
+    "blob": "ffc9f1d7aa8cb4ede2d74c3edc4e7dc3ee286b63",
+    "sha256": "8671f805d52071ce1067838b21581ff53d278be34b8fd4a744b4b14183cbad6e"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/PhotoCheckIntentFreshReadMySqlIT.java",
+    "blob": "808dfe5deeb9a631cdf5dd1c172918afa063f66e",
+    "sha256": "2649cfe4b991e5ddafe2c13f12bf389cc7bb05aacc0d32c7da67697fd35d8250"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/PhotoCheckIntentMySqlIT.java",
+    "blob": "3c0ae949c7f752575b51eeb7bb5d43ce5b9745e3",
+    "sha256": "2338ca0c8d2b65a052fd952930cd005866c392b2810c4720f6e60121c2b8f2af"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/PhotoCheckIntentRecoveryMySqlIT.java",
+    "blob": "5c13c8de8ae8cd82e0d7003f189f53654a956c87",
+    "sha256": "4828df64093a2fa31b052e1e66c3d0d98eafbc404dd6ed98f0700a8ac63189e3"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/PhotoCheckIntentRecoveryReadTest.java",
+    "blob": "d5ced5dd4d5db0dd520b5a41b88df138957bc185",
+    "sha256": "9ab0af3e1c5c936e624ecedf2d63ef613c7db0d03e57b079dfd076a56c9332d2"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/PhotoCheckIntentServiceTest.java",
+    "blob": "c4938d3f5c328e8ab60998b73620fff89f6726c5",
+    "sha256": "db92c5f9397e53835762017bfd789cae41d96aa08c6c9028770c6380de38c4cc"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/PhotoCheckVisionServiceTest.java",
+    "blob": "979db89bc76e788f7c815002dc720cff5d1c0070",
+    "sha256": "845b3c8311cf1aeb4cc92f528152bcbb8c56a8811fb158ff85c5a6b415f6a7ce"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/Pr69V3PhotoCheckCrossAccountTest.java",
+    "blob": "a7646950e051191d0cbede0454f79696b6217ce4",
+    "sha256": "265aa86954e83210c7c5059b4cfa5a8658542c4b9553b7056f9b44b2c4df4b41"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/impl/AiQuotaReservationRedisIT.java",
+    "blob": "d669b1cdb677b6b9cc0f1418fe9258685f9f8773",
+    "sha256": "60bf44a2fd2310de771562d042ac9f5c5488384c6b59a8152a27f1e854787802"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/impl/PhotoCheckQuotaPoolTest.java",
+    "blob": "4293d5698b96a81288751ab6b7cc3b358d347f19",
+    "sha256": "43b91e94ae149d7b963a3d5d9cf3ff270f0749e150f009c98d8a4a0ae1ec95b7"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ObjectCardMintHookTest.java",
+    "blob": "d2504121e1608131f821029312b42b739107018a",
+    "sha256": "4c70288465d66407b3acaa30ed443716e1a3ee130887602e664921bce7e59988"
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PlayKitPhotoCheckRuntimeTest.java",
+    "blob": "935ac6b693e884a8a7243e608b80206e399248cf",
+    "sha256": "c2909d4cb9c45fb15263a260d7d2ee3f69d93f64a4c3737622a4488847cd21ce"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/PhotoCheckIntentRow.java",
+    "blob": "e425dfce85a6115cf53d2ce47b58b609c2933bbe",
+    "sha256": "6762d330117d89f19acc855e9951bcfce55c8d9ec5d675388f12585b4b1608a9"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/PhotoCheckIntentMapper.java",
+    "blob": "4bba7c453f16fd84fcece793de2a63d184d960fc",
+    "sha256": "732b66157915d271be000e72f52dc1050636de0b8bdf7ac11c96f5dddf64b985"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiGatewayService.java",
+    "blob": "2ee647ec65e1300af90421215427e7e70cbae704",
+    "sha256": "19e60307f8a209cc70b91f4c4cc24ba0368d0e9aa61c6cc581396dba5ff159c9"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/OpenAiCompatibleLlmClient.java",
+    "blob": "806c3d12325697f4f1f57d1ce417e95db2bd1360",
+    "sha256": "1cd2d40a37a66bd080e9c941c8997d0fa7948f9183a972ff33b5e827398cac2a"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/PhotoCheckIntentCommand.java",
+    "blob": "5eb1173c3f7b64abd7afb4693bb56ed04e7f5f56",
+    "sha256": "b617dd4f6461c5cde95f418b96f5409d65cf0fb6aec3cb1c292db216e421e23c"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/PhotoCheckIntentService.java",
+    "blob": "a997f4fc3d91c13fd79775a11f281c63d09ab45a",
+    "sha256": "36be3f1a0c904506e389b2e10fd19d73b47a89f3e7208f1e1e80873e5eb4bb1a"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/PhotoCheckIntentState.java",
+    "blob": "2846a3d6cf3c3d6dd523da613744ba88f2f43610",
+    "sha256": "e937b69ab084d9bd655e4549553d303bca50e3aae7b2261e7292d3c98af8490d"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/PhotoCheckIntentView.java",
+    "blob": "95466d4c4050955cd05143b7d4482497f9dd1633",
+    "sha256": "b946ff3ea01765798035a43ddd0f7b6841bdaa642b563d443a41320d2d175c44"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/PhotoCheckVisionService.java",
+    "blob": "c293ad5e32d84c8f4538a7f83aed396abe921115",
+    "sha256": "b8591c99ba2d5dc24b695950491755ace3e67be431e14747ae9c981f528cf5b2"
+  },
+  {
+    "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImpl.java",
+    "blob": "f0ce857ae758ee88f30999696d4beb7c5531a2db",
+    "sha256": "57ac8d76590de725edc3f8d8710715449a6ae56db72f017c31af66224eb7588b"
+  },
+  {
+    "path": "chengyinhub-system/src/main/resources/mapper/business/PhotoCheckIntentMapper.xml",
+    "blob": "3e669089c5743e59fc9736bd19fe881f4de4ac5a",
+    "sha256": "05063ceebc83459dbc6b0959e9b3d4d188d5caf895e0d88820876fb4d8e19a98"
+  },
+  {
+    "path": "docs/delivery/architecture-day/E/PHOTO-CI-FIX/README.md",
+    "blob": "44540353dda8cbe400f4121c15b22490fede1000",
+    "sha256": "355e4da6d59811255c40f48e643cd15d383b25b60e9ebd37d69af404d39bde3d"
+  },
+  {
+    "path": "docs/delivery/architecture-day/E/PHOTO-KEY-RECOVERY/README.md",
+    "blob": "0deea5cd8bf5a8dbb1d2047520a4b9e8e120eb5e",
+    "sha256": "294e6fd0ab0d605c91c719db8e914c93a0f0a11b7541dbbbf5b4dc53176146d8"
+  },
+  {
+    "path": "docs/delivery/architecture-day/E/PHOTO-KEY-RECOVERY/source-manifest.json",
+    "blob": "88770d09764a9e99beb30c3fc8f638223e507dc1",
+    "sha256": "93754bef46d1fe61392190fb85879031d32999c9a634732ae1a7f9405b6cacb8"
+  },
+  {
+    "path": "docs/delivery/architecture-day/E/PHOTO-OWNED-READ/README.md",
+    "blob": "90b201cd2be75026506ea272e98d5995e93fa9b6",
+    "sha256": "6db52140d1f1f663dc7cf6728133119b2fe2a8f03d9a4290ed241901f6fbb60d"
+  },
+  {
+    "path": "docs/delivery/architecture-day/E/PHOTO-OWNED-READ/source-manifest.json",
+    "blob": "ff7291307b137f22a583ade6b734d37652db4db3",
+    "sha256": "490467819b9ee941ec7efca1f334e8751f459a7c8c472a107a68101904ca6b36"
+  },
+  {
+    "path": "docs/delivery/architecture-day/E/PHOTO-SPRING-FIX/README.md",
+    "blob": "91b8fb24747d970188e1a397a8cfac08295afe1e",
+    "sha256": "dbb461f848f00aa773d90980f0aba001eb1c8f8e772edde3f27ebdb0093b9b4d"
+  },
+  {
+    "path": "docs/delivery/architecture-day/E/PHOTO/README.md",
+    "blob": "9d5f45e82efbd29a38826d0f9f36202087362963",
+    "sha256": "264987c6255bfa875c4db195d59a91d86f080c53fa08e38d00f6b58197118953"
+  },
+  {
+    "path": "docs/delivery/architecture-day/E/PHOTO/check_static.py",
+    "blob": "6d7e55713827d4aeeb6e3b1f751d1685e551c1a0",
+    "sha256": "84d12272a56ce1b44ef5dd0bcf40cc8a20b23101f4b0b57de5320be7a3436a44"
+  },
+  {
+    "path": "docs/delivery/architecture-day/E/PHOTO/source-manifest.json",
+    "blob": "b7d7bad27e9ca2b59c7391b514bf1d920e3d4c3d",
+    "sha256": "699ce1729525fbf2fb467e4ef8b38ea4222723d35524de783da448eeb453a50f"
+  },
+  {
+    "path": "docs/delivery/architecture-day/E/PHOTO/static-output.json",
+    "blob": "bea9177500ee6bdd5ea5a49a178416bdf13c0376",
+    "sha256": "f5a2a66d426d8e0c5d14d1be9f2ba5c283b803be034d3c3275e53db36dce9c5e"
+  },
+  {
+    "path": "docs/delivery/architecture-day/ROOT-photo-adapter/candidate.json",
+    "blob": "d7378d2ff955c75040fa7ede487224835a732384",
+    "sha256": "2533153204295e654c60863090fa9a20dc350bacebbd7fa5dcd46dcfce14386b"
+  }
+]

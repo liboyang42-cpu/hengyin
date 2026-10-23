@@ -1,0 +1,110 @@
+{
+  "run_id": 40024662872,
+  "attempt": 1,
+  "job_id": 120657865513,
+  "artifact_id": 12531488336,
+  "zip_sha256": "289c53f07fb2d6daaae28fb8f8aef7a91326535867d137068659e5cc45d8e1c1",
+  "files": {
+    "maven.log": "2a3e3a6df5205e27ce968675206ab70a5eb6d97229550c4512b32e059e3fd72f",
+    "receipt.json": "5d6fd6b29f6ed930d9fe23e47422f8dfc838b1decf68c70173bbc64bf5dcf735",
+    "surefire-reports/TEST-com.chengyinhub.business.service.ai.PhotoCheckIntentMySqlIT.xml": "5d606880449cc6e342b1ed6b6501df1b6133461a8978ddc82c9b08d74dc85945",
+    "surefire-reports/com.chengyinhub.business.service.ai.PhotoCheckIntentMySqlIT.txt": "7213ae0e83791a9bef24be51e89008a128e3e319b3c3cc6b112b56b42460c387"
+  },
+  "xml": {
+    "{http://www.w3.org/2001/XMLSchema-instance}noNamespaceSchemaLocation": "https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report.xsd",
+    "version": "3.0.2",
+    "name": "com.chengyinhub.business.service.ai.PhotoCheckIntentMySqlIT",
+    "time": "4.802",
+    "tests": "10",
+    "errors": "0",
+    "skipped": "0",
+    "failures": "1",
+    "flakes": "0"
+  },
+  "testcases": [
+    {
+      "name": "restartAndAncientInFlightOrUnknownNeverAllocateOrResend",
+      "status": "passed",
+      "failure": null,
+      "stack": null
+    },
+    {
+      "name": "concurrentExecutionRunsOnceAndLoserOnlySeesInFlight",
+      "status": "failed",
+      "failure": {
+        "message": "expected: <RESULT_READY> but was: <PREPARED>",
+        "type": "org.opentest4j.AssertionFailedError"
+      },
+      "stack": "org.opentest4j.AssertionFailedError: expected: <RESULT_READY> but was: <PREPARED>\n\tat org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:158)\n\tat org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:139)\n\tat org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:201)\n\tat org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:184)\n\tat org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:179)\n\tat org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:1188)\n\tat com.chengyinhub.business.service.ai.PhotoCheckIntentMySqlIT.concurrentExecutionRunsOnceAndLoserOnlySeesInFlight(PhotoCheckIntentMySqlIT.java:197)\n"
+    },
+    {
+      "name": "canonicalSnapshotAndGlobalNonceIdentityAreDurableAndReplayDoesNotReplan",
+      "status": "passed",
+      "failure": null,
+      "stack": null
+    },
+    {
+      "name": "competingPreparesKeepOneOriginalUnderRepeatableRead",
+      "status": "passed",
+      "failure": null,
+      "stack": null
+    },
+    {
+      "name": "receiptMustMatchOriginalMemberKeyFingerprintTypeAndReadyState",
+      "status": "passed",
+      "failure": null,
+      "stack": null
+    },
+    {
+      "name": "prepareRollbackAndSecurityRejectionsHaveNoDurableIntentOrQuota",
+      "status": "passed",
+      "failure": null,
+      "stack": null
+    },
+    {
+      "name": "springEnforcesMandatoryAndNeverBeforeAnyMutation",
+      "status": "passed",
+      "failure": null,
+      "stack": null
+    },
+    {
+      "name": "independentOriginalResultSurvivesFinalLocalRollbackAndAppliesAtomicallyLater",
+      "status": "passed",
+      "failure": null,
+      "stack": null
+    },
+    {
+      "name": "readWrongOwnerHashAndCorruptedSessionFailClosedWithoutWrites",
+      "status": "passed",
+      "failure": null,
+      "stack": null
+    },
+    {
+      "name": "changedFingerprintCannotReplaceOriginalKeyContextOrNonce",
+      "status": "passed",
+      "failure": null,
+      "stack": null
+    }
+  ],
+  "source_sha": "f281df751ce002f6409f29a8be4201c4f4a62695",
+  "workflow": {
+    "job": "storage_it",
+    "repository": "liboyang42-cpu/hengyin",
+    "run_attempt": "1",
+    "run_id": "40024662872",
+    "run_url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/40024662872",
+    "workflow_ref": "refs/heads/codex/architecture-day-photo-intent-ci-20261023",
+    "workflow_sha": "f281df751ce002f6409f29a8be4201c4f4a62695"
+  },
+  "cleanup": {
+    "mysql_leftover_schemas": [],
+    "mysql_schemas_after": [
+      "information_schema",
+      "mysql",
+      "performance_schema",
+      "sys"
+    ],
+    "status": "CLEAN"
+  },
+  "new_candidate_result": "NOT_VERIFIED"
+}

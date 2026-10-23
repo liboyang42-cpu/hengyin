@@ -1,0 +1,15 @@
+{
+  "kind": "STATIC_ONLY",
+  "verified_blobs": 34,
+  "full_tree": "392dac695de1aa84ec2fa7c6185505a395cb1dc1",
+  "l1_flush_l2_bypass_and_current_read": "PASS",
+  "declared_tests_only": {
+    "PhotoCheckIntentServiceTest": 16,
+    "PhotoCheckIntentMySqlIT": 10,
+    "PhotoCheckIntentRecoveryReadTest": 5,
+    "PhotoCheckIntentRecoveryMySqlIT": 4,
+    "PhotoCheckIntentFreshReadMySqlIT": 3
+  },
+  "java": "NOT_RUN",
+  "mysql_new_candidate": "NOT_RUN"
+}

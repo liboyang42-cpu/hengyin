@@ -1,0 +1,22 @@
+{
+  "local_original_commit": "86242095c53c6a8d2b23d089073b2123879640be",
+  "local_original_preserved": true,
+  "remote_original_probe": "404 NOT_FOUND; original commit was local only",
+  "public_branch": "codex/architecture-day-h-wp04-review-20261023",
+  "public_commit": "9de37f77b4d19389f7dadf6c6a88da4eece09e1b",
+  "public_parent": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+  "public_tree": "1985b54573bfa7dd22c4766391a394fe6c054514",
+  "scope": "docs/delivery/architecture-day/H/g-wp04/",
+  "files": 8,
+  "directory_blobs_equal_original": true,
+  "remote_ref_commit_parent_tree_and_compare_read_back": true,
+  "scans": {
+    "repository_secret_file_gate": "PASS",
+    "scoped_credential_and_signed_url_patterns": "PASS_LIMITED",
+    "diff_check": "PASS",
+    "gitleaks": "NOT_RUN_UNAVAILABLE"
+  },
+  "implementation_changes": false,
+  "java_or_database_execution": false,
+  "merge_or_deployment": false
+}
