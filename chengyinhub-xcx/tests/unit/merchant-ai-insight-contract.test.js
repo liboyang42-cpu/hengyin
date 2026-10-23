@@ -8,11 +8,15 @@ const path = require('node:path');
 // ③ type→路由映射与后端 sanitize 白名单一致(三枚举,无 self_event);
 // ④ AI 降级不连坐数据区;⑤ 数字位一律是数:null 指标写 0(2026-09-19 用户裁决),
 //    「算不出」这句实话改由 lowSample 提示承担,不再由数字位的横杠承担。
+//    2026-10-23 owner D4(P1-094)例外:比率位(_pct)分母为 0 时服务端回 null,显示「—」;计数位仍写 0。
 
 const MARKETING_JS = fs.readFileSync(path.join(__dirname, '../../pages/merchant/marketing/index.js'), 'utf8');
 const PAGE_JS = fs.readFileSync(path.join(__dirname, '../../pages/merchant/marketing/ai-insight/index.js'), 'utf8');
 const PAGE_WXML = fs.readFileSync(path.join(__dirname, '../../pages/merchant/marketing/ai-insight/index.wxml'), 'utf8');
 const APP_JSON = JSON.parse(fs.readFileSync(path.join(__dirname, '../../app.json'), 'utf8'));
+// D4 之后唯一允许出现「—」字面量的地方是比率位 _pct;扫描「计数位不许横杠」时先把它剥掉。
+const RATE_FN = /\n  _pct\(v\) \{[\s\S]*?\n  \},\n/;
+const nonRateJs = (js) => js.replace(RATE_FN, '\n');
 
 test('营销页 entries 有 AI 店铺参谋入口,go() 跳转到 ai-insight 页', () => {
   assert.match(MARKETING_JS, /action:\s*'aiInsight'/);
@@ -56,7 +60,9 @@ test('AI 降级不连坐:ai 为空时数据区照常、经营解读整段不显�
 test('数字位一律是数:null 指标写 0,不放横杠(2026-09-19 用户裁决,与营销页同口径)', () => {
   assert.match(PAGE_JS, /function numberOrNull\(value\)[\s\S]*?value === null \|\| value === undefined \|\| value === ''[\s\S]*?return null/);
   assert.match(PAGE_JS, /_countText\(v\)[\s\S]*?value === null \? '0'/);
-  assert.doesNotMatch(PAGE_JS, /(['"])—+\1/, 'js 字符串字面量里不许再有破折号占位');
+  assert.notEqual(nonRateJs(PAGE_JS), PAGE_JS, '锚点失效:_pct 已改名,比率位例外的剥离口径需同步');
+  assert.doesNotMatch(nonRateJs(PAGE_JS), /(['"])—+\1/, '除比率位外,js 字符串字面量里不许再有破折号占位');
+  assert.match(PAGE_JS, /_pct\(v\) \{[\s\S]*?value === null \? '—'/, 'D4:比率位 null 显示「—」');
   // 数字位不再兼职表达状态 ⇒ 状态必须另有出口,否则「算不出」就被画成「真的是 0」
   assert.match(PAGE_WXML, /wx:if="\{\{\s*facts\.lowSample\s*\}\}"/,
     '样本不足提示是本页唯一的「这不是零」出口，删掉它 0 就成了谎话');
@@ -114,7 +120,11 @@ test('后端全回 null 时,页面 builder 真的产出 0 而不是横杠(跑真
     sources: [],
   };
   const cards = page._buildMetricCards(facts);
-  assert.deepEqual(cards.map((card) => card.num), ['0%', '0%']);
+  // 2026-10-23 owner D4:比率为 null(分母为 0)显示「—」,不再写 0%
+  assert.deepEqual(cards.map((card) => card.num), ['—', '—']);
+  const sampled = page._buildMetricCards(Object.assign({}, facts, {
+    checkin: { total: 4, redeemRate: 0.5, repeatRate: 0 } }));
+  assert.deepEqual(sampled.map((card) => card.num), ['50%', '0%'], '有分母时真实的 0 仍是 0%');
   assert.deepEqual(cards.map((card) => card.name), ['核销率', '复购率']);
   const valueCard = page._buildValueCard(facts);
   assert.deepEqual([valueCard.visitors, valueCard.checkins, valueCard.redeems], ['0', '0', '0']);
@@ -125,5 +135,5 @@ test('后端全回 null 时,页面 builder 真的产出 0 而不是横杠(跑真
   const regressed = PAGE_JS.replace("return value === null ? '0' : String(value);",
     "return value === null ? '—' : String(value);");
   assert.notEqual(regressed, PAGE_JS, '负控锚点失效:_countText 字面量已改名，扫描口径需同步');
-  assert.match(regressed, /(['"])—+\1/);
+  assert.match(nonRateJs(regressed), /(['"])—+\1/);
 });

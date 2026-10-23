@@ -643,13 +643,14 @@ test('账本快速重试两个结算区块时，两路结果都能独立完成',
   assert.equal(ledger.data.loading, false)
 })
 
-test('AI 事实未知不冒充有数,数字位写 0、状态位说实话(2026-09-19 用户裁决)', () => {
+test('AI 事实未知不冒充有数,计数位写 0、比率位写「—」、状态位说实话(2026-09-19 用户裁决;2026-10-23 D4 比率位改「—」)', () => {
   const insight = loadPage('pages/merchant/marketing/ai-insight/index.js')
   const unknown = insight._buildValueCard({ attribution: {} })
   // ★数字位不再是状态位:未知写 0,「这不是零」由下面的 factState 与 lowSample 提示表达。
   assert.equal(unknown.visitors, '0')
   assert.equal(unknown.checkins, '0')
-  assert.equal(insight._buildMetricCards({ checkin: {}, crowd: {}, supply: {} })[0].num, '0%')
+  // 2026-10-23 owner D4(P1-094):比率位例外 —— 分母为 0 / 未知时服务端回 null,显示「—」,不再写 0%
+  assert.equal(insight._buildMetricCards({ checkin: {}, crowd: {}, supply: {} })[0].num, '—')
 
   insight.load()
   requests[0].success({ code: 200, data: { facts: { attribution: {} } } })
