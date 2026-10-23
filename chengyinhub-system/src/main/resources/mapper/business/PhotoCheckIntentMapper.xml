@@ -45,9 +45,13 @@
         WHERE member_id=#{memberId} AND session_id=#{sessionId} AND action_key=#{actionKey}
         FOR UPDATE
     </select>
-    <select id="selectOwned" resultMap="Intent">
+    <!-- NEVER can still bind a SqlSession to an empty Spring synchronization. REQUIRES_NEW
+         commits do not invalidate that suspended session's cached PREPARED/IN_FLIGHT rows.
+         Clear its first-level cache and use a current read after an original-session lock. -->
+    <select id="selectOwned" resultMap="Intent" useCache="false" flushCache="true">
         SELECT * FROM photo_check_intent
         WHERE id=#{id} AND member_id=#{memberId} AND request_fingerprint=#{fingerprint}
+        FOR UPDATE
     </select>
     <select id="selectForUpdate" resultMap="Intent">
         SELECT * FROM photo_check_intent WHERE id=#{id} AND request_fingerprint=#{fingerprint} FOR UPDATE
