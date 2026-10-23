@@ -1,0 +1,17 @@
+Source candidate: efa5c06f064f40349b6657ed644d2c39cfb254b3
+PR: https://github.com/liboyang42-cpu/hengyin/pull/573 (draft)
+Main CI: https://github.com/liboyang42-cpu/hengyin/actions/runs/40016877163
+Secret scan job 120631090357: SUCCESS; gitleaks 8.24.3, 2 commits scanned, no leaks found.
+Migration layout/safety: FAILED because migration_*.sql was misplaced under docs/proposals; SQL inventory unsafe. No waiver; file moved to canonical directory for next candidate, PR declaration updated.
+Backend tests job 120631279330: in progress as of 2026-10-23 20:13 UTC; not a passing result.
+
+Actual exact-source compile evidence:
+https://github.com/liboyang42-cpu/hengyin/actions/runs/40016877066/job/120631089732
+VALIDATED_SOURCE_SHA=efa5c06f064f40349b6657ed644d2c39cfb254b3; exact checkout verified by workflow.
+2026-10-23T20:10:12Z Compiling 1900 system source files with javac release 21
+2026-10-23T20:10:47Z Compiling 280 admin source files with javac release 21
+2026-10-23T20:10:51Z Compiling 1892 admin test source files with javac release 21
+2026-10-23T20:11:28Z Tests run: 39, Failures: 0, Errors: 0, Skipped: 0
+2026-10-23T20:11:28Z BUILD SUCCESS
+The selected 39 are existing NPC/topic suites, NOT B new payment tests. No claim of B payment/MySQL acceptance.
+New intent table DDL/WechatPaymentIntentMySqlIT: NOT RUN. Production/real WeChat: NOT RUN.

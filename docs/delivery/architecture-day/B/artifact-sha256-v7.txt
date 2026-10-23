@@ -1,0 +1,4 @@
+d2bae8b120ce03cb6993373e0cf3b89b1cabc33ca4a20484c3c48029e50ddee4  21910 bytes  /workspace/B-transfer-v2-from-public-base.patch  gzip+base64=7504 chars
+6633a1c0cb9be021b8ad99cbea3c7687b87702d7fb23831e45cfc04118ffd844  135099 bytes  /workspace/B-callback-v7-after-transfer-v2.patch  gzip+base64=38920 chars
+e00d81ed8fa68f1f32689620ac8170292278b8ff8eb976f93bd6799bf36ed2be  156498 bytes  /workspace/B-pay-gateway-v7-from-public-base.patch  gzip+base64=44868 chars
+00d79b7bf3914673f1227ac57628105acc4c772691718d83d63f657c44a00e53  151421 bytes  /workspace/B-pay-gateway-v7-working-from3bca5e05.patch  gzip+base64=44076 chars

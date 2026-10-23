@@ -1625,7 +1625,7 @@ class RegistrationFundsMybatisIntegrationTest {
     }
 
     @Test
-    void definiteLocalPreorderFailureReleasesPayingForSafeRetry() throws Exception {
+    void laterLocalPreorderRejectionKeepsOriginalPayingForLateSuccess() throws Exception {
         execute("UPDATE cms_registration SET owner_type=2,owner_id=55,ticket_id=9 WHERE id=11");
         IWechatPayService wechat = mock(IWechatPayService.class);
         when(wechat.isReady()).thenReturn(true);
@@ -1635,8 +1635,11 @@ class RegistrationFundsMybatisIntegrationTest {
         assertThrows(PaymentPreorderException.class,
                 () -> checkoutService(wechat).retryPayment(7L, 11L));
 
-        assertEquals(0, number("SELECT payment_status FROM cms_registration WHERE id=11"));
+        assertEquals(1, number("SELECT payment_status FROM cms_registration WHERE id=11"));
         assertEquals(1, number("SELECT registration_status FROM cms_registration WHERE id=11"));
+        execute("UPDATE cms_registration SET owner_type=1,owner_id=99,ticket_id=NULL WHERE id=11");
+        assertEquals("SUCCESS", registrationService.handleWechatPayCallback(callback()));
+        assertEquals(2, number("SELECT payment_status FROM cms_registration WHERE id=11"));
     }
 
     @Test

@@ -1,0 +1,9 @@
+Source 44f8e629c43e9d84aa29536c5c24e34dbd2e8c1e
+Main CI https://github.com/liboyang42-cpu/hengyin/actions/runs/40018865094
+Secret scan job120637896664: SUCCESS.
+Migration layout job120638069126: SUCCESS.
+Migration safety job120638069019: SUCCESS (explicit independent dependency entry included).
+Backend job120638069230: IN_PROGRESS at 2026-10-23 20:29 UTC; not passing evidence.
+Source review found existing MerchantCommerceServiceTest expected NOT_FOUND to close after24h, contrary to adopted UNKNOWN/original-no contract. Corrected to never close on missing query, retained entitlement grant checks; next candidate required.
+Full backend logs from prior failed runs not retrievable through connector (Transport closed), no reports artifact. Coordinator asked for failure summary.
+New-table MySQL IT/DDL: NOT RUN. No production.

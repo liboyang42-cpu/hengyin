@@ -73,6 +73,10 @@ class RefundVerifiedFactsTest {
         ReflectionTestUtils.setField(business, "notifyService", notifications);
         ReflectionTestUtils.setField(business, "alarmService", mock(AlarmService.class));
         wechat = new WechatPayServiceImpl();
+        WechatPaymentIntentTestSupport.install(wechat, Map.of());
+        var config = mock(com.chengyinhub.common.config.WxPayConfig.class);
+        when(config.getMerchantId()).thenReturn("merchant");
+        ReflectionTestUtils.setField(wechat, "wxPayConfig", config);
         ReflectionTestUtils.setField(wechat, "refundBizService", business);
         ReflectionTestUtils.setField(wechat, "notificationParser", parser);
         ReflectionTestUtils.setField(wechat, "refundService", sdk);

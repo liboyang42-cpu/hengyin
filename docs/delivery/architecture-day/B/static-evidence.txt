@@ -1,0 +1,12 @@
+Baseline: 2ec68899099a1e250df0949a8383bf85b5d3ffe0
+Candidate HEAD: 4f270d0451cc5f13737d0be2b40819fc3629445a
+Branch: codex/architecture-day-b-pay-gateway
+Scope check: PASS
+git diff --check baseline: PASS (no output)
+WechatPayTransferClassificationTest source @Test methods: 5 executed: 0
+WechatPayCallbackFactsTest source @Test methods: 6 executed: 0
+WechatPayCallbackForgedSignatureTest source @Test methods: 31 executed: 0
+SDK symbols: PASS transferbatch/model/InitiateBatchTransferResponse
+SDK symbols: PASS payments/model/Transaction
+SDK symbols: PASS payments/model/TransactionAmount
+Java compile/JUnit/MySQL/Redis/real payment: NOT RUN
