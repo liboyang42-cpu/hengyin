@@ -30,30 +30,25 @@ function hasReducedMotionContract(jsSource, wxmlSource, wxssSource, modifier) {
     && new RegExp(`\\.${escaped}[\\s\\S]*animation:\\s*none\\s*!important`).test(wxssSource);
 }
 
-test('创建引导、命名与编辑器采用克制的一次性入场动效', () => {
+// 2026-10-23 起名页 templateadd 退役删除(业主第四轮去掉起名一步),创建链路只剩引导页与编辑器两页。
+test('创建引导与编辑器采用克制的一次性入场动效', () => {
   const introWxss = read('pages/publish/template-intro/index.wxss');
-  const namingWxss = read('pages/publish/templateadd/templateadd.wxss');
   const editorWxss = read('pages/publish/temp/index.wxss');
 
   // 2026-10-22 owner 定稿:三张扇形卡换成整屏漂浮圆圈画布(.ti-field)
   assert.equal(hasEntryMotion(introWxss, ['.ti-field', '.ti-copy', '.ti-cta']), true);
-  assert.equal(hasEntryMotion(namingWxss, ['.fbox_sr', '.ta-cta']), true);
   assert.equal(hasEntryMotion(editorWxss, ['.cg-scroll']), true);
 });
 
-test('创建链路三页都遵从已保存的减少动态效果偏好', () => {
+test('创建链路两页都遵从已保存的减少动态效果偏好', () => {
   const introJs = read('pages/publish/template-intro/index.js');
-  const namingJs = read('pages/publish/templateadd/templateadd.js');
   const editorJs = read('pages/publish/temp/index.js');
   const introWxml = read('pages/publish/template-intro/index.wxml');
-  const namingWxml = read('pages/publish/templateadd/templateadd.wxml');
   const editorWxml = read('pages/publish/temp/index.wxml');
   const introWxss = read('pages/publish/template-intro/index.wxss');
-  const namingWxss = read('pages/publish/templateadd/templateadd.wxss');
   const editorWxss = read('pages/publish/temp/index.wxss');
 
   assert.equal(hasReducedMotionContract(introJs, introWxml, introWxss, 'ti--reduced-motion'), true);
-  assert.equal(hasReducedMotionContract(namingJs, namingWxml, namingWxss, 'ta--reduced-motion'), true);
   assert.equal(hasReducedMotionContract(editorJs, editorWxml, editorWxss, 'cg--reduced-motion'), true);
 });
 

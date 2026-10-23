@@ -2,7 +2,7 @@
  * Wave2 截图矩阵（机器可读），供总控在 verify worktree 串行采集。
  *
  * ── 机器统计（唯一真值，由本文件末尾 STATS 断言锁死）──────────────────
- *   total 341
+ *   total 339
  *   按 priority 计全部行：P0 133 / P1 198 / P2 10
  *   其中 blocked 24（不采集）：P0 9 / P1 7 / P2 8
  *   ⇒ actionable（本轮真要拍）：P0 124 / P1 191 / P2 2 = 317
@@ -296,7 +296,6 @@ const RAW = [
   ['B43', 'B43-myproject-topic.png', '/subpackageA/pages/myproject/index', 'player', 'normal', { typeTab: 'topic', projectState: 'ready', loading: false, loaded: true, ownerChips: [], stateIndex: 0, pendingSummary: { total: 0, rejected: 0, draft: 0, pending: 0 }, capped: false, list: [{ id: 1, title: '城市线索路线', cover: IMG, bizType: 'topic', projectTypeText: '主题', _stateVariant: 'active', stateText: '进行中', ownerType: 'merchant', signupCount: 3, viewCount: 28 }] }, undefined, TABS3, 'setData', 'P0', '', 'Tab 统一；项目卡重设计'],
   ['B44', 'B44-myproject-template.png', '/subpackageA/pages/myproject/index', 'player', 'normal', { typeTab: 'template', loading: false, loaded: true, projectState: 'ready', projectErrorMsg: '', tplList: [{ id: 11, title: '老建筑年份线索', imgUrl: IMG, _stateVariant: 'success', _statusText: '个人审核通过', marketPublishStatus: 1, _marketText: '广场已上架', _canToggleMarket: true, _marketActionText: '从广场下架', _marketPublishTarget: 0, _canSubmitMarket: false, useNum: 8, duration: 30 }], tplLoaded: true, tplLoading: false, tplErrorMsg: '' }, undefined, { selector: '.mp-card', min: 1 }, 'setData', 'P1', '', '模板 Tab 使用页面真实 typeTab/tplList/tplLoaded 状态，不再注入已删除的 activeTab'],
   ['B45', 'B45-template-intro.png', '/pages/publish/template-intro/index', 'player', 'normal', { cards: [{ title: '经典定向', catName: '定向', imgUrl: IMG, accent: '#E8590C' }] }, undefined, TITLE, 'setData', 'P0', '', '品类语义色已批准保留彩色'],
-  ['B46', 'B46-templateadd-init.png', '/pages/publish/templateadd/templateadd', 'player', 'form', null, undefined, TITLE, 'real-data', 'P0', '', '"这个有也是白色"'],
   ['B47', 'B47-topicadd-init.png', '/pages/publish/topicadd/topicadd', 'player', 'form', null, undefined, TITLE, 'real-data', 'P0', '被验对象已退役:PR #685 把 topicadd 降级成纯重定向壳(wxml 只剩一行注释),没有可拍的界面。它现在唯一该被验的是「转得对不对」,已由 tests/unit/topicadd-shell-redirect-contract.test.js 接管(4 条:必须 redirectTo 不能 navigateTo、三参数原样透传、无参转裸 fabu、onLoad 不传参不炸,负控双向验过)。截图证明不了跳转,单测能。', '已退役,见 blocked 原因'],
   ['B48', 'B48-fabu-step1.png', '/pages/publish/fabu/index', 'player', 'form', null, undefined, TITLE, 'real-data', 'P0', '', '★.rs-num--accent 仍消费紫 token --cy-route'],
   ['B49', 'B49-fabu-step2.png', '/pages/publish/fabu/index', 'player', 'form', { editorPage: 1, popChapter: true, popChapterAction: 1, chapterForm: { name: '第一章 · 桥下的暗号', description: '沿着旧桥砖墙寻找刻痕，下一条线索藏在转角。' }, 'formData.productType': 1 }, undefined, { selector: '.pop-model.show, .chapter-story-field__input', min: 2 }, 'setData', 'P1', '', '旧第二步已收进章节编辑弹层；截图真实可达的章节剧情表单'],
@@ -484,7 +483,6 @@ const RAW = [
   ['E18', 'E18-publish-simple-ai-plan.png', '/pages/publish/simple/index?mode=2', 'merchant', 'normal', { aiIdea: '周末咖啡与老建筑', aiGenerating: false, aiError: '', aiPlan: { title: '武康路咖啡建筑漫游', storyline: '沿着武康路寻找两处建筑细节与店铺故事。' }, aiPlanNodes: [{ name: '武康大楼', description: '观察红砖立面的转角', confirmed: true, address: '武康路 1 号', longitude: '121.4352', latitude: '31.2106' }, { name: '安福路话剧院', description: '找到门楣上的年份', confirmed: true, address: '安福路 288 号', longitude: '121.4256', latitude: '31.2127' }], canEnterAiEditor: true, aiTraceId: 'trace-demo-0807', aiQuotaLoaded: true, aiRemaining: 4, aiPrompts: ['老城建筑与咖啡', '周末亲子探险', '雨天室内漫游'], mode: 2 }, undefined, { selector: '.simple-ai', min: 1 }, 'identity+setData', 'P0', '', 'AI 简易发布方案态；点位全部已确认且有经纬度，canEnterAiEditor 与页面 every 判定一致；aiPrompts 保持字符串数组'],
   ['E19', 'E19-publish-temp-editor.png', '/pages/publish/temp/index', 'merchant', 'normal', { id: 0, durationOptions: ['30 分钟', '60 分钟', '90 分钟'], difficultyOptions: ['简易', '一般', '困难'], playersOptions: ['1-2 人', '2-6 人', '6-12 人'], playersText: '2-6 人', durationText: '30 分钟', difficultyLabel: '一般', selectedCategoryIds: [3], selectedCategoryNames: ['城市观察'], selectedCategoryNamesStr: '城市观察', categoryList: [{ id: 3, categoryName: '城市观察' }], formData: { originalTemplateId: 0, categoryId: 3, title: '找到老建筑的年份', description: '观察门楣和立面细节', imgUrl: IMG, players: '2-6 人', usageLocation: '户外街区', requiredMaterials: '手机、笔', duration: '30', difficulty: '中', isSync: 1, ruleInstructions: '到达点位后找到铜牌，输入上面的年份。', validationMethod: 1, feedbackMethod: 0, questionName: '铜牌上写的年份是？', questionAnswer: '1932', feedbackText: '你找到了这座建筑的时间线索。', couponId: 0, medalImg: '', medalName: '', questionA: '', questionB: '', questionC: '', questionD: '', correctAnswer: 'A', activityCategoryids: '3', hint1: '留意入口右侧', hint2: '铜牌在及肩高度', answerReveal: '1932', photoRequireDesc: '', photoReview: 0, audioUrl: '', audioDuration: '', audioFileName: '', audioFormat: '', storyJson: '', status: 1 }, moduleList: [{ key: 'finish', name: '完成方式' }], availableModules: [], optionItems: [], storyBeats: [{ id: 1, text: '门楣上的时间藏在铜牌里。', tag: '开场', imgs: [IMG] }], errors: {}, aiNodeAvailable: false, aiNodeState: 'idle', aiNodeError: '', aiNodeChips: ['设计一个现场观察问答', '生成拍照打卡任务', '补齐两级提示'] }, undefined, { selector: '.cg', min: 1 }, 'identity+setData', 'P0', '', '节点玩法编辑器正常态；duration/difficulty/players 选项使用 dictLabel 字符串数组'],
   ['E20', 'E20-template-intro-normal.png', '/pages/publish/template-intro/index', 'merchant', 'normal', { cards: [{ id: 11, title: '线索解谜', imgUrl: IMG, catName: '城市观察', accent: '#E8536B' }, { id: 12, title: '拍照打卡', imgUrl: '/images/route_free_cover.png', catName: '现场互动', accent: '#18B5A0' }, { id: 13, title: '问答任务', imgUrl: IMG, catName: '线索问答', accent: '#F0B429' }] }, undefined, { selector: '.ti', min: 1 }, 'identity+setData', 'P0', '', '节点玩法引导页三张真实形状卡片'],
-  ['E21', 'E21-templateadd-normal.png', '/pages/publish/templateadd/templateadd?id=11', 'merchant', 'normal', { id: 11, templateName: '老建筑年份线索', canSubmit: true }, undefined, { selector: '.theme-topic-editor', min: 1 }, 'identity+setData', 'P0', '', '节点玩法命名页'],
   ['E22', 'E22-topicadd-normal.png', '/pages/publish/topicadd/topicadd?mode=1', 'merchant', 'normal', { id: 0, templateName: '外滩夜行档案', canEnterPro: true, clubId: '', mode: 1, modeTitle: '城市定向', modeDesc: '按顺序完成点位，适合集合出发、带队运营和强节奏故事。', modeHint: '下一步会进入专业路线编辑器，默认创建城市定向票种。', namePlaceholder: '例如：外滩夜行档案' }, undefined, { selector: '.topicadd-page', min: 1 }, 'identity+setData', 'P0', '被验对象已退役:PR #685 把 topicadd 降级成纯重定向壳。注意本条的 DOM 断言 .topicadd-page 这个 class 也随之不存在了 —— 硬补拍等于连断言一起造假。「主题命名」已挪进 fabu 第一屏第一位的名称输入框(fabu/index.wxml:66),「类型确认」由 fabu 自带的模式切换器承担(:75);转跳本身由 tests/unit/topicadd-shell-redirect-contract.test.js 锁住。', '已退役,见 blocked 原因'],
   ['E23', 'E23-templatedetail-normal.png', '/pages/templatedetail/templatedetail?id=11&scope=library', 'merchant', 'normal', { id: 11, scope: 'library', info: { title: '老建筑年份线索', publisher: '城瘾玩法工坊', description: '观察建筑立面、门楣与铜牌，找到藏在街区里的时间线索。', ruleInstructions: '到达点位后阅读提示，输入现场看到的年份。', difficulty: '中', duration: 30, players: '2-6 人', requiredMaterials: '手机、笔', storyText: '一条街的时间，往往藏在最小的细节里。', storyImg: IMG, validationMethodStr: '文字暗号', validationMethod: 1, usageLocation: '户外街区', questionName: '铜牌上的年份是？', questionA: '', questionB: '', questionC: '', questionD: '', imgUrl: IMG }, gallery: [IMG, '/images/route_free_cover.png'], galleryColumns: [{ top: IMG, bottom: '/images/route_free_cover.png' }], coverUrl: IMG, categoryText: '城市观察', difficultyLetter: '中', difficultyLabel: '中等难度', loading: false, loadError: false, activeTab: 'details', primaryLabel: '开始应用', tplTabs: [{ key: 'details', label: '详情' }, { key: 'capabilities', label: '能力' }] }, undefined, { selector: '.xb-page', min: 1 }, 'identity+setData', 'P0', '', '玩法详情正常态；gallery 是 URL 字符串数组，galleryColumns 是列对象数组'],
   ['E24', 'E24-topic-pricing-normal.png', '/pages/topic/pricing/index?topicId=301', 'merchant', 'normal', { topicId: 301, subType: 'guided', leadCost: '200', teamSize: '10', loading: false, errorText: '', floor: 49, floorText: '49.00', finalPrice: 69, sliderMax: 120, referenceText: '上海同类已开售均价 ¥79.00（12 个样本）', referencePrice: 79, referenceDeltaText: '未高于同城参考价', saving: false, canConfirmPrice: true }, undefined, { selector: '.pg', min: 1 }, 'identity+setData', 'P0', '', '有人带终价确认正常态'],
@@ -647,10 +645,11 @@ const countBy = (pred) => SHOTS.filter(pred).length;
 // total 332→341、P1 189→198、actionable 308→317、B 67→68、C 54→56、D 39→44、F 92→93、setData 171→179、identity+setData 116→117。
 // 2026-10-20 与新主干两条官方线路按唯一ID并集，blocked/已验证不增加，计数由实列复算。
 // 2026-10-20 用户要求删掉「我的纠错 / 纠错进度」两页:D93/D94 两条 P1 setData 行退场,total 341、P1 198、actionable 317(P1 191)、D 42、setData 179。
+// 2026-10-23 起名页 templateadd 退役删除:B46(P0 real-data)/E21(P0 identity+setData)两行退场,total 341→339、P0 133→131、actionable 317→315(P0 124→122)、B 70→69、E 27→26、identity+setData 117→116、real-data 38→37。
 const STATS = {
-  "total": 341,
+  "total": 339,
   "byPriority": {
-    "P0": 133,
+    "P0": 131,
     "P1": 198,
     "P2": 10
   },
@@ -660,24 +659,24 @@ const STATS = {
     "P2": 8
   },
   "actionable": {
-    "P0": 124,
+    "P0": 122,
     "P1": 191,
     "P2": 2,
-    "total": 317
+    "total": 315
   },
   "blocked": 24,
   "domains": {
     "A": 53,
-    "B": 70,
+    "B": 69,
     "C": 56,
     "D": 42,
-    "E": 27,
+    "E": 26,
     "F": 93
   },
   "control": {
     "setData": 179,
-    "identity+setData": 117,
-    "real-data": 38,
+    "identity+setData": 116,
+    "real-data": 37,
     "real-device": 7
   },
   "fixtureVerified": 16

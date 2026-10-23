@@ -36,7 +36,7 @@ const CUSTOM_NAV_PAGES = {
   'subpackageA/pages/infomation/infomation': '城瘾玩法',
   'subpackageA/pages/infomationdetail/infomationdetail': '玩法详情',
   'pages/publish/activity/index': '发布活动',
-  'pages/publish/templateadd/templateadd': '创建节点玩法',
+  // 2026-10-23 起名页 templateadd 退役删除,不再列入
 }
 
 const TOPICADD_REDIRECT_SHELL = 'pages/publish/topicadd/topicadd'
