@@ -10,7 +10,7 @@
 
 - PR：candidate 为事件中的完整 head SHA，compare-base 必须等于 head 与事件 base SHA 的唯一实际 merge-base。CI checkout 必须是该 head 或父节点恰为 base/head 的 synthetic merge。
 - push：candidate 与事件 after、GITHUB_SHA 相等，compare-base 必须是事件 before，并且为 candidate 祖先；全零 before、非祖先强推等不能静默改用旧 baseline。
-- workflow_dispatch：candidate 为 GITHUB_SHA，比较其第一父提交。
+- workflow_dispatch：candidate 为 GITHUB_SHA；从真实事件 repository.default_branch 读取主干名，校验 origin 是固定公共仓库 HTTPS 地址，显式 fetch 此主干到 origin tracking ref 并与 FETCH_HEAD 核对，再取其与 candidate 的唯一 merge-base。缺事件、错误远端、fetch 失败、歧义 merge-base 均拒绝，不回退到 candidate 父提交。执行 source 时再次核对；主干在两次计算间移动导致比较点变化时拒绝并重跑。
 - 缺可信 CI 上下文、错误仓库、短 SHA、任意祖先冒充 merge-base、自身充当 base 均拒绝。GitHub 事件文件和 verifier 必须由受信任工作流提供；这是 CI 来源信任，不是本地环境变量的密码学证明。
 
 已进入比较 base 的历史改动不重复列出，也不修改固定存量 baseline。owner 检查从比较 base 中可明确识别的字面写目标取得技术 Mapper/module 写入口；历史已审 writer 不要求后续每个 PR 重审。
