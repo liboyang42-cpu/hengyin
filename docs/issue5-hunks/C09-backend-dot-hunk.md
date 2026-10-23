@@ -4,7 +4,7 @@ Issue：https://github.com/liboyang42-cpu/chengyin-remote-ops/issues/5 领取组
 仓库：`github.com/liboyang42-cpu/hengyin` 仅写本仓（不写 `chengyin`）  
 Base：`origin/master` `2ec68899099a1e250df0949a8383bf85b5d3ffe0`  
 分支：`cursor/c09-notify-webhook-producers-266c`  
-Head：`87cd81e40`（本文件若再提交会前进）。本文件不替代生产凭据、真实外发 Webhook 或公共 IM 协议。
+Head：`51b5aeef6`（本文件若再提交会前进）。本文件不替代生产凭据、真实外发 Webhook 或公共 IM 协议。
 
 ## 1. 白名单（实际写入）
 
@@ -61,30 +61,30 @@ mvn -pl chengyinhub-admin -am test \
 ```
 
 环境：OpenJDK 21.0.12.1 · Maven 3.8.7 · 隔离内存夹具 · 无 MySQL / HTTP / 生产库。  
-真实结果（2026-10-23T22:35:39Z，`BUILD SUCCESS`）：
+真实结果（2026-10-23T23:01:38Z，`BUILD SUCCESS`）：
 
 ```
 Tests run: 1, Failures: 0, Errors: 0, Skipped: 0 -- C09FirstJourneyIsolationTest
 Tests run: 1, Failures: 0, Errors: 0, Skipped: 0 -- DevicePushRegistrationLifecycleTest
 Tests run: 1, Failures: 0, Errors: 0, Skipped: 0 -- AttachmentReviewProducerTest
 Tests run: 1, Failures: 0, Errors: 0, Skipped: 0 -- WebhookSameEventRetryTest
-Tests run: 5, Failures: 0, Errors: 0, Skipped: 0 -- WebhookSsrfHopGuardTest
+Tests run: 6, Failures: 0, Errors: 0, Skipped: 0 -- WebhookSsrfHopGuardTest
 Tests run: 1, Failures: 0, Errors: 0, Skipped: 0 -- ImmutableReceiptProducerTest
 Tests run: 1, Failures: 0, Errors: 0, Skipped: 0 -- WebhookDeliveryLogProducerTest
 Tests run: 3, Failures: 0, Errors: 0, Skipped: 0 -- C09AccountSwitchRestartIsolationTest
-Tests run: 14, Failures: 0, Errors: 0, Skipped: 0
+Tests run: 15, Failures: 0, Errors: 0, Skipped: 0
 chengyinhub-admin .................................. SUCCESS
 BUILD SUCCESS
 ```
 
-SHA256（生产 6 类）：
+SHA256（生产 6 类；闸 `51b5aeef6`）：
 
 - `ImmutableReceiptProducer.java` `e8ba9b1fe8850a8f1d637721621d6c635e51481a7c9b65f626ca86d2cb51e0c5`
 - `AttachmentReviewProducer.java` `58d30b728c6ac3605aba83a1919f249ff80b82a04b6e029498a125ccb9a20a75`
 - `DevicePushRegistrationLifecycle.java` `595e7a432dd12a4865f6264da7b3441adcda20e24f306fa99e3872f264960b92`
 - `WebhookDeliveryLogProducer.java` `549fcf0e3be7bf7810073229ab085620906f3eed863a34c92e9a2ff34b7b3f74`
 - `WebhookSameEventRetry.java` `796c7733e7dec56b152766a146544b16e149d9c98c0a3a3f3634f6d072d5e602`
-- `WebhookSsrfHopGuard.java` `da151c7857fb7f15f92b6aed16be8a051be7d28b6468d061dc08a37a75b4aa30`
+- `WebhookSsrfHopGuard.java` `ca7e6aa925f330d24280b71048c32b99fa4760e3c1c23c02251f791a9bec645d`
 
 ## 4. 门禁分栏（文档不得冒充通过）
 
