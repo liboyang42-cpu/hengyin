@@ -306,7 +306,7 @@
     "architecture-day-state-recovery": {
       "lineage": "Public2ec E91 fresh/original-key reads + D b626 signup producer + A136 cancellation CAS",
       "registered_source": "931bfbc5bc0f30f8a52b64b777224b7a0c97e3e8",
-      "note": "43 exact cases: Photo original10+recovery4+fresh3, signup18, merchant cancellation8. Source/cleanup receipts govern runtime claims.",
+      "note": "Current50 exact cases: Photo original10+recovery4+fresh3, signup18, merchant cancellation15. Historic dde91 run43 and1dc merchant8 remain immutable old-source receipts; not added to this source acceptance.",
       "classes": [
         "com.chengyinhub.business.service.ai.PhotoCheckIntentMySqlIT",
         "com.chengyinhub.business.service.ai.PhotoCheckIntentRecoveryMySqlIT",
@@ -327,6 +327,23 @@
         "com.chengyinhub.business.it.Wp04CoopSettlementEvidenceMySqlIT",
         "com.chengyinhub.business.it.Wp04CurrentCashBasisMySqlIT",
         "com.chengyinhub.business.it.Wp08DeliveryJobsMySqlIT"
+      ]
+    },
+    "architecture-day-registration-write": {
+      "lineage": "Public2ec root A de31 registration whitelist/delete and C1eb H APPLIED assembly",
+      "registered_source": "0de20ce8398a00b9bca6b83ccaccea270da66de7",
+      "note": "109 ordinary@Test cases: original92+2 funds and original8+7 merchant cancellation. Actual dispatched source/zero-skip XML/cleanup govern acceptance. Historic43/8 runs retain their old-source counts.",
+      "classes": [
+        "com.chengyinhub.business.service.RegistrationFundsMybatisIntegrationTest",
+        "com.chengyinhub.business.it.MerchantRegistrationCancellationMySqlIT"
+      ]
+    },
+    "architecture-day-im-revocation": {
+      "lineage": "E7aeb team membership source-of-truth and stale IM index test-only delta on root0de",
+      "registered_source": "0de20ce8398a00b9bca6b83ccaccea270da66de7",
+      "note": "2 exact ordinary@Test methods; initialization failure is0/2, not green. Raw source-bound XML and cleanup required.",
+      "classes": [
+        "com.chengyinhub.business.service.impl.ImActivityTeamRevocationMySqlIT"
       ]
     }
   },
@@ -988,12 +1005,12 @@
       "note": "Real IM intents/messages and transactions with explicit JDBC registration fact adapter; fresh payment winner, original identity and late wake/recovery. Not full monetary mapper or process-kill acceptance."
     },
     "com.chengyinhub.business.it.MerchantRegistrationCancellationMySqlIT": {
-      "tests": 8,
+      "tests": 15,
       "storage": [
         "mysql"
       ],
       "gates": {},
-      "note": "Real production mapper/base DDL on own UUID database; owner/current deletion and cancel-vs-selection races. No HTTP/RBAC claim."
+      "note": "Original8 plus A7 deletion current-row/batch atomicity cases; root1dc mapper resource fixture retained. Source identity and raw XML required, no HTTP/RBAC claim."
     },
     "com.chengyinhub.business.it.ClubLeadChapterIntentMySqlIT": {
       "tests": 3,
@@ -1026,6 +1043,24 @@
       ],
       "gates": {},
       "note": "Default paused exact task seeds, preserved existing definitions, real original IM/XP/badge effects and MySQL task fence; no real cron/operator/provider claim"
+    },
+    "com.chengyinhub.business.service.RegistrationFundsMybatisIntegrationTest": {
+      "tests": 94,
+      "storage": [
+        "mysql"
+      ],
+      "gates": {
+        "CHENGYIN_FUNDS_MYSQL_IT": "1"
+      },
+      "note": "Original92 funds cases byte-preserved plus2 real admin economic identity mutation negative controls. Dedicated scratch MySQL; external providers mocked, not settlement/refund cross-domain acceptance."
+    },
+    "com.chengyinhub.business.service.impl.ImActivityTeamRevocationMySqlIT": {
+      "tests": 2,
+      "storage": [
+        "mysql"
+      ],
+      "gates": {},
+      "note": "Real PlayTeam quit transaction + IM service/mappers on7 tables, then all existing permission entry variants with independent full-table readback. Controlled external boundaries; not strict in-flight revocation/HTTP JWT."
     }
   }
 }

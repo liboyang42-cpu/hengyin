@@ -100,8 +100,10 @@ class RegistryContractTest(unittest.TestCase):
                     "p0-acceptance-ac1": 13, "architecture-day-batch1": 36,
                     "architecture-day-wave2": 44, "architecture-day-photo": 15,
                     "architecture-day-broadcast-migration": 10, "architecture-day-settlement": 7,
-                    "architecture-day-state-recovery": 43,
-                    "architecture-day-runtime-governance": 36}
+                    "architecture-day-state-recovery": 50,
+                    "architecture-day-runtime-governance": 36,
+                    "architecture-day-registration-write": 109,
+                    "architecture-day-im-revocation": 2}
         reg = registry()
         totals = {name: sum(reg["classes"][fqcn]["tests"] for fqcn in batch["classes"])
                   for name, batch in reg["batches"].items()}
@@ -130,6 +132,24 @@ class RegistryContractTest(unittest.TestCase):
                 facts, problems = rs.precheck(reg, _HERE.parent, fqcn)
                 self.assertEqual([], problems)
                 self.assertEqual([], facts["nested"])
+
+    def test_registration_and_revocation_batches_require_current_counts_and_real_gates(self):
+        reg = registry()
+        expected = {
+            "com.chengyinhub.business.service.RegistrationFundsMybatisIntegrationTest": (94, {"CHENGYIN_FUNDS_MYSQL_IT": "1"}),
+            "com.chengyinhub.business.it.MerchantRegistrationCancellationMySqlIT": (15, {}),
+        }
+        self.assertEqual(list(expected), reg["batches"]["architecture-day-registration-write"]["classes"])
+        revoked = "com.chengyinhub.business.service.impl.ImActivityTeamRevocationMySqlIT"
+        self.assertEqual([revoked], reg["batches"]["architecture-day-im-revocation"]["classes"])
+        expected[revoked] = (2, {})
+        for fqcn, (count, gates) in expected.items():
+            self.assertEqual(count, reg["classes"][fqcn]["tests"])
+            self.assertEqual(gates, reg["classes"][fqcn]["gates"])
+            facts, problems = rs.precheck(reg, _HERE.parent, fqcn)
+            self.assertEqual([], problems)
+            self.assertEqual(count, facts["declared_tests"])
+            self.assertEqual([], facts["nested"])
 
     def test_cloudten_routes_keep_their_namespace_and_never_claim_hosted_is_vps(self):
         reg = registry()
