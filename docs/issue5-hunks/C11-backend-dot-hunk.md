@@ -63,16 +63,17 @@ mvn -pl chengyinhub-admin -am test \
 ```
 
 环境：OpenJDK 21.0.12.1 · Maven 3.8.7 · 隔离内存夹具 · 无 MySQL / HTTP / 生产库。  
-真实结果（2026-10-23T19:53:51Z，`BUILD SUCCESS`）：
+真实结果（2026-10-23T22:29:10Z，`BUILD SUCCESS`）：
 
 ```
 Tests run: 3, Failures: 0, Errors: 0, Skipped: 0 -- ReviewResultVisibilityAdapterTest
 Tests run: 3, Failures: 0, Errors: 0, Skipped: 0 -- VersionedLocaleDisplayTest
-Tests run: 4, Failures: 0, Errors: 0, Skipped: 0 -- SupportEventLocatorTest
-Tests run: 3, Failures: 0, Errors: 0, Skipped: 0 -- CompensationEntryProjectionTest
+Tests run: 5, Failures: 0, Errors: 0, Skipped: 0 -- SupportEventLocatorTest
+Tests run: 4, Failures: 0, Errors: 0, Skipped: 0 -- CompensationEntryProjectionTest
 Tests run: 1, Failures: 0, Errors: 0, Skipped: 0 -- C11FirstJourneyIsolationTest
+Tests run: 3, Failures: 0, Errors: 0, Skipped: 0 -- C11AccountSwitchRestartIsolationTest
 Tests run: 2, Failures: 0, Errors: 0, Skipped: 0 -- DataDeletionEvidenceTableTest
-Tests run: 16, Failures: 0, Errors: 0, Skipped: 0
+Tests run: 21, Failures: 0, Errors: 0, Skipped: 0
 chengyinhub-admin .................................. SUCCESS
 BUILD SUCCESS
 ```
