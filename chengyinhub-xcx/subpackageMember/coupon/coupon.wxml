@@ -72,7 +72,7 @@
   </view>
   <view slot="footer" wx:if="{{currentCoupon.canStop}}">
     <cy-btn variant="danger" data-item="{{currentCoupon}}" catchtap="stopCoupon">停发该券</cy-btn>
-    <view class="tkbox_stop_hint">停发后不能再被领取、发放；已领到的券照常可用、可核销。</view>
+    <view class="tkbox_stop_hint">停发后不可领取，已领券仍可用</view>
   </view>
 </cy-sheet>
 </view>

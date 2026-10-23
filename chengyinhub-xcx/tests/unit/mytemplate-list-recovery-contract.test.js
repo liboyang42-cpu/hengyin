@@ -58,7 +58,7 @@ test('加载更多失败保留现有玩法与页码，重试仍请求同一页',
   assert.equal(h.requests[1].hideLoading, true)
   assert.equal(h.requests[1].silentError, true)
   assert.equal(h.page.data.loadingMore, true)
-  h.requests[1].fail({ errMsg: '网络开小差了' })
+  h.requests[1].fail({ errMsg: '网络异常，请重试' })
   h.requests[1].complete()
   assert.equal(h.page.data.page, 1, '失败时不能越过第 2 页')
   assert.deepEqual(h.page.data.list.map((item) => item.id), [1], '已显示内容不能被清空')
@@ -79,7 +79,7 @@ test('有内容时刷新失败转为局部提示，不把旧列表伪装成空�
   h.page.data.list = [{ id: 7, title: '已保留的玩法' }]
   h.page.data.hasMore = false
   h.page.refreshList()
-  h.requests[0].fail({ msg: '服务暂时不可用' })
+  h.requests[0].fail({ msg: '服务暂不可用' })
   h.requests[0].complete()
   assert.deepEqual(h.page.data.list.map((item) => item.id), [7])
   assert.equal(h.page.data.errorMsg, '')

@@ -12,10 +12,10 @@
             retry="重新加载" bind:retry="retry" auto-back />
   <cy-error wx:elif="{{pageState === 'no-permission'}}" fill size="lg"
             title="当前岗位没有营销数据查看权限"
-            sub="请联系店主调整经营团队权限"
+            sub="请联系店主开通"
             retry="" bind:back="onNavBack" auto-back custom-back />
   <cy-empty wx:elif="{{pageState === 'empty'}}" fill size="lg" kind="empty"
-            title="还没有触达记录" sub="这里显示最近 20 次客户触达任务" />
+            title="还没有触达记录" />
 
   <scroll-view wx:elif="{{pageState === 'ready'}}" scroll-y class="ccl-scroll"
                enhanced show-scrollbar="{{false}}">
@@ -45,14 +45,14 @@
     <view class="ccl-detail">
       <cy-skeleton wx:if="{{detailState === 'loading'}}" type="list" count="3" />
       <cy-inline-error wx:elif="{{detailState === 'error'}}" kind="data"
-                       title="触达明细没有加载出来" sub="{{detailError}}"
+                       title="触达明细加载失败" sub="{{detailError}}"
                        action="重新加载" bind:action="retryDetail" />
       <block wx:elif="{{detailState === 'ready' && detail}}">
         <view class="ccl-metrics">
-          <view class="ccl-metric"><text class="ccl-metric-num">{{detail.recipientCount || 0}}</text><text class="ccl-metric-label">名单人数</text></view>
-          <view class="ccl-metric"><text class="ccl-metric-num">{{detail.deliveredCount || 0}}</text><text class="ccl-metric-label">已送达</text></view>
-          <view class="ccl-metric"><text class="ccl-metric-num">{{detail.noConsentCount || 0}}</text><text class="ccl-metric-label">未同意</text></view>
-          <view class="ccl-metric"><text class="ccl-metric-num">{{detail.frequencySkippedCount || 0}}</text><text class="ccl-metric-label">频控跳过</text></view>
+          <view class="ccl-metric"><text class="ccl-metric-num">{{detail.recipientCount != null ? detail.recipientCount : '—'}}</text><text class="ccl-metric-label">名单人数</text></view>
+          <view class="ccl-metric"><text class="ccl-metric-num">{{detail.deliveredCount != null ? detail.deliveredCount : '—'}}</text><text class="ccl-metric-label">已送达</text></view>
+          <view class="ccl-metric"><text class="ccl-metric-num">{{detail.noConsentCount != null ? detail.noConsentCount : '—'}}</text><text class="ccl-metric-label">未同意</text></view>
+          <view class="ccl-metric"><text class="ccl-metric-num">{{detail.frequencySkippedCount != null ? detail.frequencySkippedCount : '—'}}</text><text class="ccl-metric-label">频控跳过</text></view>
           <view class="ccl-metric"><text class="ccl-metric-num">{{(detail.failedCount || 0) + (detail.retryableCount || 0)}}</text><text class="ccl-metric-label">未送达</text></view>
         </view>
         <text class="ccl-note">名单不含联系方式</text>

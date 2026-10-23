@@ -15,7 +15,7 @@ const config = require('../../pages/publish/utils/publish/advanced-game-config.j
 
 const FILLED = {
   estimate: {
-    enabled: true, title: '这罐咖啡豆有多少颗', unit: '颗', reveal: '一共 480 颗,老板数了两遍。',
+    enabled: true, title: '这罐咖啡豆有多少颗', unit: '颗', reveal: '一共 480 颗，老板数了两遍。',
     min: 0, max: 999, answer: 480, tolerance: 50, xp: 100
   },
   /* 猜图:2026-09-10 改模型 —— 从「两两比价格」换成「几张图挑正确的那张」。
@@ -140,7 +140,7 @@ const NEGATIVE = [
 NEGATIVE.forEach(([name, section, mutate, expected]) => {
   test(`负控:${name} 必须报错`, () => {
     const ok = filled(section);
-    assert.equal(config.validate(ok), '', `${section} 的合法配置本身就报错了,这条负控不成立`);
+    assert.equal(config.validate(ok), '', `${section} 的合法配置本身就报错了，这条负控不成立`);
     const bad = filled(section);
     mutate(bad);
     // 断言错在**哪一条**,不只是"报了个错" —— 只断言非空,任何别的原因报错都会误绿
@@ -194,7 +194,7 @@ test('没配的券和文案要删键,不能留 0 和空串', () => {
 test('关掉九宫格要删键,不是留 enabled:false', () => {
   const on = config.mergeTopicBingo('', { enabled: true, cells: BINGO_FULL() });
   const off = JSON.parse(config.mergeTopicBingo(on, { enabled: false }));
-  assert.ok(!('bingo' in off), '关掉后还留着 bingo 键,会让人以为还配着');
+  assert.ok(!('bingo' in off), '关掉后还留着 bingo 键，会让人以为还配着');
 });
 
 test('S 形序覆盖九格且不重不漏 —— 存错序等于九格的奖全对错格子', () => {
@@ -212,7 +212,7 @@ const BINGO_NEGATIVE = [
 BINGO_NEGATIVE.forEach(([name, mutate, expected]) => {
   test(`负控:九宫格 ${name} 必须报错`, () => {
     assert.equal(config.validateTopicBingo({ enabled: true, cells: BINGO_FULL() }), '',
-      '合法的九格本身就报错了,这条负控不成立');
+      '合法的九格本身就报错了，这条负控不成立');
     const cells = BINGO_FULL();
     mutate(cells);
     assert.equal(config.validateTopicBingo({ enabled: true, cells }), expected);

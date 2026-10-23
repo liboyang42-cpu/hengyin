@@ -8,7 +8,7 @@
           <view class="invite__name"><text class="invite__name-text">{{item.name}}</text><cy-icon wx:if="{{selectedId == item.id}}" name="check" size="24" /></view>
         </view></view>
       </scroll-view>
-      <text wx:if="{{loading}}" class="invite__hint">正在读取主题…</text>
+      <text wx:if="{{loading}}" class="invite__hint">加载中</text>
       <text wx:elif="{{!topics.length && !error}}" class="invite__hint">暂无自己发布的主题</text>
     </block>
     <text wx:if="{{selectedTopicName}}" class="invite__hint">{{selectedTopicName}}</text>
@@ -20,7 +20,7 @@
           <view class="invite__name"><text class="invite__name-text">{{item.name}}</text><cy-icon wx:if="{{selectedChapterId == item.id}}" name="check" size="24" /></view>
         </view></view>
       </scroll-view>
-      <text wx:elif="{{chaptersLoading}}" class="invite__hint">正在读取章节…</text>
+      <text wx:elif="{{chaptersLoading}}" class="invite__hint">加载中</text>
       <text wx:elif="{{!error}}" class="invite__hint">{{selectedId ? '该主题暂无章节' : '请先选择上方主题'}}</text>
     </block>
     <textarea class="invite__message" value="{{message}}" bindinput="onMessage" placeholder="写下想对对方说的话" maxlength="100" disabled="{{submitting}}" />

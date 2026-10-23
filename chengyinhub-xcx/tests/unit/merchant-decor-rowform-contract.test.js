@@ -65,7 +65,7 @@ test('承接设置沿用同接口完整白名单', () => {
 test('装修页从子页返回回读真数据，摘要只用后端字段', () => {
   const js = read('pages/merchant/decor/index.js')
   assert.match(js, /if \(this\._loadedOnce && this\.canReadProfileView\(\) && !this\.data\.fieldSheet\.show && !this\.data\.imageEditor\) this\.load\(\);/,
-    '资料视图无权限时回读会撞 403,onShow 必须先过视图权限判断')
+    '资料视图无权限时刷新会撞 403,onShow 必须先过视图权限判断')
   assert.match(js, /if \(m\.capacity != null && String\(m\.capacity\) !== ''\) parts\.push/)
   assert.match(js, /if \(m\.availableTime\) parts\.push\(m\.availableTime\)/)
 })

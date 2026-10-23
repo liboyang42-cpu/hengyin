@@ -107,7 +107,7 @@ test('① WXML 必须有显式 ERROR 分支,不能让 ERROR 掉进 wx:else 的 l
   const errIdx = wxml.indexOf("status === 'ERROR'")
   const loadingIdx = wxml.indexOf('kind="loading"')
   assert.ok(errIdx > -1 && loadingIdx > -1 && errIdx < loadingIdx,
-    'ERROR 分支必须在 loading 兜底之前,否则永远命中不到')
+    'ERROR 分支必须在 loading 保底之前，否则永远命中不到')
 })
 
 test('① ERROR 态必须给可重试入口(不是死胡同)', () => {
@@ -169,7 +169,7 @@ for (const p of BACK_PAGES) {
     vm.onBack()
     assert.equal(sandbox.navBacks.length, 1)
     const opts = sandbox.navBacks[0]
-    assert.equal(typeof opts.fail, 'function', '没有 fail 兜底 ⇒ 栈深 1 时箭头仍是死的')
+    assert.equal(typeof opts.fail, 'function', '没有 fail 保底 ⇒ 栈深 1 时箭头仍是死的')
     opts.fail()
     const bucket = p.api === 'switchTab' ? sandbox.switchTabs : sandbox.redirects
     assert.deepEqual(bucket, [p.url])
@@ -186,7 +186,7 @@ for (const p of BACK_PAGES) {
 test('③ infomationdetail 无 id 直达 ⇒ 错误态,且返回仍可用回落到玩法列表(行为)', () => {
   const vm = loadPage('subpackageA/pages/infomationdetail/infomationdetail.js')
   vm.onLoad({})                       // 无 id = 真实直达/深链形态,不编造 query
-  assert.equal(vm.data.missing, true, '无 id 应落参数缺失态(零假重试,不与网络/业务失败混为一谈)')
+  assert.equal(vm.data.missing, true, '无 id 应落参数缺失态(零假重试，不与网络/业务失败混为一谈)')
   assert.equal(vm.data.loading, false, '参数缺失态不得同时停在 loading')
   vm.onBack()
   const opts = sandbox.navBacks[0]
@@ -220,7 +220,7 @@ test('⑤ 玩法列表 onBack 回落设置页(由 sceneStack 统一承载玩法�
   assert.equal(typeof vm.onBack, 'function')
   vm.onBack()
   const opts = sandbox.navBacks[0]
-  assert.equal(typeof opts.fail, 'function', '没有 fail 兜底 ⇒ 栈首仍是死箭头')
+  assert.equal(typeof opts.fail, 'function', '没有 fail 保底 ⇒ 栈首仍是死箭头')
   opts.fail()
   assert.deepEqual(sandbox.redirects, ['/pages/shezhi/shezhi'])
   assert.match(read('pages/shezhi/shezhi.js'),
@@ -272,7 +272,7 @@ const GZ_JSON = 'pages/gerenziliao/gerenziliao.json'
 test('④ 保存动作必须落在带层级的固定底栏里(收编 cy-footer-bar,与队列内 address/addressinfo 同范式)', () => {
   const wxml = stripComments(read(GZ_WXML))
   assert.match(wxml, /<cy-footer-bar>[\s\S]*?<cy-btn[^>]*bindtap="saveInfo"[\s\S]*?<\/cy-footer-bar>/,
-    '保存必须包在 cy-footer-bar 内 —— 它带 z-index/安全区/页边距,自造裸 fixed 栏会在滚动后丢失')
+    '保存必须包在 cy-footer-bar 内 —— 它带 z-index/安全区/页边距，自造裸 fixed 栏会在滚动后丢失')
   assert.match(read(GZ_JSON), /"cy-footer-bar"/, 'json 必须注册 cy-footer-bar')
 })
 
@@ -281,7 +281,7 @@ test('④ 不得再留没有 z-index 的自造固定底栏(S1 消失的直接机
   const bar = /\.bmbottom\s*\{([^}]*)\}/.exec(wxss)
   if (bar) {
     assert.match(bar[1], /z-index/,
-      '.bmbottom 若保留,必须显式给 z-index;裸 fixed 无层级会在滚动后被盖/丢')
+      '.bmbottom 若保留，必须显式给 z-index;裸 fixed 无层级会在滚动后被盖/丢')
   } else {
     assert.doesNotMatch(stripComments(read(GZ_WXML)), /class="bmbottom"/,
       '.bmbottom 规则已删,WXML 不应再引用它')
@@ -301,7 +301,7 @@ test('④ 页面必须为固定底栏留出等高滚动空白(末项能滚过底
   const hold = /\.gz-footer-hold\s*\{([^}]*)\}/.exec(wxss)
   assert.ok(hold, '必须保留底栏避让占位')
   assert.match(hold[1], /--cy-comp-footer-h/,
-    '收编 cy-footer-bar 后,占位就该用它的官方高度 token(不再手算自造栏的三档)')
+    '收编 cy-footer-bar 后，占位就该用它的官方高度 token(不再手算自造栏的三档)')
   assert.doesNotMatch(stripComments(read(GZ_WXML)), /style="height:\s*\d+rpx"/,
     '占位不得退回内联字面高度')
 })

@@ -114,7 +114,7 @@ test('负控:判据改回 address 字符串时必须判红', async () => {
     "storePointText: hasPoint ? (profile.address || '已选择地图位置') : STORE_POINT_UNSET,",
     "storePointText: profile.address || '选择地图位置',"
   );
-  assert.notEqual(regressed, PAGE_JS, '负控锚点失效:落点判据已改名,扫描口径需同步');
+  assert.notEqual(regressed, PAGE_JS, '负控锚点失效:落点判据已改名，扫描口径需同步');
   const { page, requests } = loadPage(regressed);
   page._loadStorePoint();
   profileRequest(requests).success({ code: 200, data: { address: '上海市黄浦区咖啡', locationLat: null, locationLng: null } });

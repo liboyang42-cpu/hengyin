@@ -154,7 +154,7 @@ test('受理后回读两路断网:落「状态未刷新 / 回读最新状态失�
   assert.equal(dc.resume.doneCalls.length, 0);
   assert.equal(page.data.result.tone, 'unknown');
   assert.match(page.data.result.title, /已受理，但状态未刷新/);
-  assert.match(page.data.result.sub, /回读最新状态失败/);
+  assert.match(page.data.result.sub, /状态刷新失败/);
   assert.equal(page.data.view.title, '外滩夜行', '快照不被空状态冲掉');
 });
 

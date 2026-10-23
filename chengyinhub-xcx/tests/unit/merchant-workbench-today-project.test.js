@@ -146,7 +146,7 @@ test('B2: 空态文案报的是真实总数,不是被截到 10 条的 joinList',
   // 2026-09-30:先从全量 list 确认真正 status=1 的承接关系,再筛未结束;未确认申请不能占项目数。
   //   分母仍不得换成 slice(0,10) 之后的列表。
   assert.match(js, /const confirmedRows = list\.filter\(\(item\) => Number\(item\.status\) === 1\)/,
-    '只有已确认承接关系可进入项目分母,不能把未确认或未知关系算入')
+    '只有已确认承接关系可进入项目分母，不能把未确认或未知关系算入')
   assert.match(js, /const activeRows = confirmedRows\.filter\(\(item\) => !isEndedProject\(item\.startDate, item\.endDate, today\)\)/,
     '未结束项目必须从全量已确认承接关系上筛')
   assert.match(js, /_legacyJoinTotal = activeRows\.length/,

@@ -206,7 +206,7 @@ Page({
       },
       successStatusAbnormal: function (res, statusCode) {
         if (!isCurrent()) return;
-        finishLoadError(res, '服务暂时不可用，请稍后再试', statusCode);
+        finishLoadError(res, '服务暂不可用，请稍后重试', statusCode);
       },
       complete: function () {
         if (!isCurrent()) return;
@@ -294,7 +294,7 @@ Page({
       },
       successStatusAbnormal: function (res, statusCode) {
         if (!isCurrent()) return;
-        finishLoadError(res, '服务暂时不可用，请稍后再试', statusCode);
+        finishLoadError(res, '服务暂不可用，请稍后重试', statusCode);
       },
       complete: function () {
         if (!isCurrent()) return;
@@ -346,7 +346,7 @@ Page({
     const maxPages = 10;
     const isCurrent = () => that._isFavoriteResponseCurrent(owner, generation)
       && that._unlikeRequests && that._unlikeRequests[requestKey] === request;
-    const stillUnknown = () => { request.reading = false; toast('取消结果未确认，请稍后再点核对'); };
+    const stillUnknown = () => { request.reading = false; toast('取消结果未确认，请稍后再点确认'); };
     request.reading = true;
     const readPage = function (pageNum) {
       app.sendRequest({
@@ -441,7 +441,7 @@ Page({
               if (!isCurrent()) return;
               // 断网=结果未知:锁不放、原卡片不摘,经 like_list 回读后再决定
               request.unknown = true;
-              toast('取消结果未确认，正在核对');
+              toast('取消结果未确认，正在确认');
             },
             complete: function () {
               if (!isCurrent()) return;

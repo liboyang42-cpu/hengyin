@@ -16,7 +16,7 @@ function assertEditExit(wxml, js) {
   )
   // 2026-09-23 CU-M-29:「不在招商期」改票价救不回来,此时不能再指去编辑票价。
   assert.match(js, /const closed = \/\^招商写入已关闭\/\.test\(msg\);\s*if \(closed\) recruitClosed = true/,
-    '招商期拒绝必须单独识别,不能沿用「去编辑票价」出口')
+    '招商期拒绝必须单独识别，不能沿用「去编辑票价」出口')
   assert.match(
     js,
     /goEditTopic\(\)\s*\{[\s\S]*?\/pages\/publish\/fabu\/index\?id='\s*\+\s*this\.data\.topicId/,

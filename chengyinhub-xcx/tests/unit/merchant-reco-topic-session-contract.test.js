@@ -110,7 +110,7 @@ function openPlaza(options) {
 test('带 ?topicId= 进广场:命中那条被标出来并滚进视野,其余不动', () => {
   const { page, scrolled } = openPlaza({ topicId: '22' });
   const focused = page.data.routes.filter((item) => item.focus);
-  assert.equal(focused.length, 1, '只许标一条,不能把同名的两条一起标');
+  assert.equal(focused.length, 1, '只许标一条，不能把同名的两条一起标');
   assert.equal(focused[0].id, 22);
   // 跨 realm 的对象不做 deepStrictEqual(原型不同),逐字段比。
   assert.equal(scrolled.length, 1);
@@ -144,7 +144,7 @@ test('广场卡上有 id 锚点,命中态才有描边类', () => {
 test('负控:渲染完成后的定位钩子摘掉时,标记与滚动都必须落空', () => {
   const source = read(COOP_CENTER_JS);
   const regressed = source.replace('}, () => this._locateFocusTopic());', '});');
-  assert.notEqual(regressed, source, '负控锚点失效:定位钩子已改名,扫描口径需同步');
+  assert.notEqual(regressed, source, '负控锚点失效:定位钩子已改名，扫描口径需同步');
   const { page, requests, scrolled } = loadPage(regressed, COOP_CENTER_JS);
   page.onLoad({ topicId: '22' });
   requests[0].success(marketingHome(SAME_NAME_SESSIONS));
@@ -201,7 +201,7 @@ test('负控:卡面改回只渲染名字时,场次断言必须真红', () => {
     "const dateText = start && end && start !== end ? start + ' – ' + end : start;",
     "const dateText = '';"
   );
-  assert.notEqual(regressed, source, '负控锚点失效:场次拼接已改名,扫描口径需同步');
+  assert.notEqual(regressed, source, '负控锚点失效:场次拼接已改名，扫描口径需同步');
   const { page } = loadAiInsight(regressed);
   const cards = page._decorateTopics([
     { topicId: 21, name: 'E2E 探店日一期', startDate: '2026-09-01 00:00:00', endDate: '2026-09-02 00:00:00' },

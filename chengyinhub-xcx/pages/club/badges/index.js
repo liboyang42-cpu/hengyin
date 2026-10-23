@@ -273,7 +273,7 @@ Page({
       fail() {
         if (that._unloaded || that.accountStale(acct)) return
         // 网络断了结果未知:不当成失败让用户重提(会重复建),锁住提交并回读列表
-        markUnknown('网络中断，结果未确认。正在回读列表核对，确认前不能再次提交')
+        markUnknown('网络中断，结果未确认，正在刷新列表，确认前不能再次提交')
       },
       successStatusAbnormal(_res, status) {
         if (that._unloaded || that.accountStale(acct)) return
@@ -282,7 +282,7 @@ Page({
           that.setData({ creating: false, createError: '勋章没有创建成功' })
           return
         }
-        markUnknown('服务暂时没响应，结果未确认。正在回读列表核对，确认前不能再次提交')
+        markUnknown('服务暂不可用，结果未确认，正在刷新列表，确认前不能再次提交')
       },
     })
   },
@@ -302,7 +302,7 @@ Page({
       this.setData({ createUnknown: false, createVisible: false, form: emptyForm(), formErrors: {}, createError: '' })
       return
     }
-    this.setData({ createError: '列表里还没看到这枚勋章。可下拉刷新再核对；确认确实没建成后，点「我已核对」再提交' })
+    this.setData({ createError: '列表里还没看到这枚勋章。可下拉刷新再确认；确认确实没建成后，点「我已确认」再提交' })
   },
 
   confirmCreateChecked() {
@@ -316,7 +316,7 @@ Page({
     this._expectBadgeCode = null
     if (!code) return
     const found = badges.some(function (b) { return b.badgeCode === code })
-    if (!found) this.setData({ refreshError: '新勋章已提交，但列表里暂时没看到，稍后下拉刷新核对' })
+    if (!found) this.setData({ refreshError: '新勋章已提交，但列表里暂时没看到，稍后下拉刷新确认' })
   },
 
   // ===== 颁发 =====
@@ -409,7 +409,7 @@ Page({
       },
       // 结果未知:服务端对顺序重复颁发会回「已颁发过」,但并发/5xx 不保证读回确定结果,文案只承诺可核实的部分
       fail() { report(false, '网络中断，结果未确认；重试时平台会提示是否已颁发') },
-      successStatusAbnormal() { report(false, '服务暂时没响应，结果未确认；重试时平台会提示是否已颁发') },
+      successStatusAbnormal() { report(false, '服务暂不可用，结果未确认；重试时平台会提示是否已颁发') },
     })
   },
 

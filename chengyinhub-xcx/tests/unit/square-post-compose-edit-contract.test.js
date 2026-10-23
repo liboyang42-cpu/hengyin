@@ -100,8 +100,8 @@ test('渲染层:编辑态换标题/提交键,收起草稿入口与附件工具;�
   const wxml = read(COMPONENT_WXML);
   const assertRender = (source) => {
     assert.match(source, /cmp-bar-title">\{\{editMode \? '编辑帖文' : '新建帖文'\}\}/, '标题要随编辑态切换');
-    assert.match(source, /wx:if="\{\{!editMode\}\}" bindtap="onOpenDrafts"/, '编辑器不读也不写新建草稿,编辑态不给草稿入口');
-    assert.match(source, /class="cmp-tools" wx:if="\{\{!editMode\}\}"/, '编辑只提交正文,附件工具必须收起(留着就是骗用户)');
+    assert.match(source, /wx:if="\{\{!editMode\}\}" bindtap="onOpenDrafts"/, '编辑器不读也不写新建草稿，编辑态不给草稿入口');
+    assert.match(source, /class="cmp-tools" wx:if="\{\{!editMode\}\}"/, '编辑只提交正文，附件工具必须收起(留着就是骗用户)');
     assert.match(source, /aria-label="\{\{editMode \? '保存' : '发布'\}\}"/, '提交键文案随编辑态切换');
   };
   assertRender(wxml);
@@ -127,7 +127,7 @@ test('编辑态:正文按原帖预填,提交只发 id+正文+关联,不占意图
   assert.equal(payload.contents, '发错原文');
   assert.equal(String(payload.data_id), '9', '关联必须重发:后端编辑分支对 data_id 无值即清 0');
   assert.equal(String(payload.data_type), '1');
-  assert.equal('pics' in payload, false, '不提交图片 = 后端保留原图;发空串会把配图清掉');
+  assert.equal('pics' in payload, false, '不提交图片 = 后端保留原图；发空串会把配图清掉');
   assert.equal('address' in payload, false);
   assert.equal('longitude' in payload, false);
   assert.equal('latitude' in payload, false);

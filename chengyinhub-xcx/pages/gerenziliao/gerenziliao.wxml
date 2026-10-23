@@ -12,7 +12,7 @@
                 fill size="lg" bind:primary="retryLoad" auto-back custom-back bind:back="exitPage" />
 <block wx:else>
 <view class="profile-refresh-state">
-  <text wx:if="{{refreshing}}" class="profile-refreshing" aria-role="status">正在核对个人资料…</text>
+  <text wx:if="{{refreshing}}" class="profile-refreshing" aria-role="status">正在确认个人资料…</text>
 </view>
 <view class="shzltop">
   <view class="shzltop_tu" bindtap="uploadPic" aria-role="button" aria-label="上传图片" hover-class="cy-pressed" hover-stay-time="80">
@@ -95,7 +95,7 @@
   <cy-progress-status wx:if="{{saving || saveSucceeded}}" density="compact"
                       steps="{{saveSteps}}" current="{{saveSucceeded ? 1 : 0}}"
                       title="{{saveSucceeded ? '资料已保存' : '正在保存资料'}}"
-                      sub="{{saveSucceeded ? '即将返回上一页' : '请保持当前页面'}}" />
+                      sub="请勿离开本页" />
   <cy-inline-error wx:if="{{saveError}}" title="资料没有保存" sub="{{saveError}}"
                    action="重试保存" bind:action="saveInfo" />
 </view>

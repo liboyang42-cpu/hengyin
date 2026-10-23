@@ -132,11 +132,11 @@ test('活动 missing 与 empty 终态都通过组件事件返回来源列表', (
   assert.deepEqual(events, ['close', 'close'], '两种不可恢复终态都应交给宿主返回来源列表')
 })
 
-test('推文空态按主页归属切换口吻且不虚构发布动作', () => {
+test('帖文空态按主页归属切换口吻且不虚构发布动作', () => {
   const wxml = read(PROFILE_WXML)
   const tag = (wxml.match(/<cy-empty\b[^>]*\/>/g) || [])
     .find((candidate) => candidate.includes('wx:elif="{{nodata}}"'))
-  assert.ok(tag, '推文列表必须保留 nodata 空态')
+  assert.ok(tag, '帖文列表必须保留 nodata 空态')
 
   const copyBinding = attr(tag, 'sub')
   const branches = copyBinding.match(/^\{\{isSelf\s*\?\s*'([^']+)'\s*:\s*'([^']+)'\}\}$/)

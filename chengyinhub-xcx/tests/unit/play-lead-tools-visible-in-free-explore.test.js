@@ -37,7 +37,7 @@ test('FREE_EXPLORE 领队也够得着工具:右上角菜单按钮不按模式判
   const btn = WXML.match(/<view class="fx-story__act"([^>]*)bindtap="toggleSessionTools"/);
   assert.ok(btn, '找不到故事流右上角的游玩工具按钮');
   assert.doesNotMatch(btn[1], /wx:if=/, '菜单按钮挂了条件 ⇒ 某个模式的领队发车后没有任何入口(F-57)');
-  assert.doesNotMatch(WXML, /<view class="pbar[ "]/, '底栏已挪走,不许两套入口并存');
+  assert.doesNotMatch(WXML, /<view class="pbar[ "]/, '底栏已挪走，不许两套入口并存');
 });
 
 test('五行领队工具挂在模式分支之外,只由 lead 判', () => {

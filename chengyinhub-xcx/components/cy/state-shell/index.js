@@ -1,15 +1,15 @@
 // 状态编排层：统一全页 / 大区块状态的语义、动作和无障碍文案。
 // CTA 始终由页面显式传入；默认表只描述事实，不制造没有处理方的按钮。
 const STATE_DEFAULTS = {
-  empty:           { renderer: 'empty', emptyKind: 'empty',           title: '暂无内容',       sub: '这里还没有内容' },
+  empty:           { renderer: 'empty', emptyKind: 'empty',           title: '暂无内容',       sub: '' },
   loading:         { renderer: 'empty', emptyKind: 'loading',         title: '加载中',         sub: '' },
-  offline:         { renderer: 'empty', emptyKind: 'offline',         title: '网络好像断开了', sub: '检查网络连接后重试' },
-  network:         { renderer: 'empty', emptyKind: 'offline',         title: '网络没连上',     sub: '连接恢复后可继续' },
-  'no-permission': { renderer: 'empty', emptyKind: 'no-permission',   title: '暂时不能查看',   sub: '当前账号没有查看权限' },
-  'not-started':   { renderer: 'empty', emptyKind: 'not-started',     title: '还没开始',       sub: '开始后内容会显示在这里' },
-  'missing-param': { renderer: 'empty', emptyKind: 'missing-param',   title: '页面参数不完整', sub: '这个链接可能已失效，返回上一页重新进入' },
-  data:            { renderer: 'error', emptyKind: '',                title: '这部分没加载成功', sub: '已加载的内容仍可查看' },
-  error:           { renderer: 'error', emptyKind: '',                title: '出错了',         sub: '网络开了点小差，请稍后再试' },
+  offline:         { renderer: 'empty', emptyKind: 'offline',         title: '网络好像断开了', sub: '' },
+  network:         { renderer: 'empty', emptyKind: 'offline',         title: '网络没连上',     sub: '' },
+  'no-permission': { renderer: 'empty', emptyKind: 'no-permission',   title: '暂时不能查看',   sub: '' },
+  'not-started':   { renderer: 'empty', emptyKind: 'not-started',     title: '还没开始',       sub: '' },
+  'missing-param': { renderer: 'empty', emptyKind: 'missing-param',   title: '链接已失效', sub: '请返回重新进入' },
+  data:            { renderer: 'error', emptyKind: '',                title: '这部分没加载成功', sub: '' },
+  error:           { renderer: 'error', emptyKind: '',                title: '出错了',         sub: '' },
 };
 
 // 整页「加载没成功」类:用户在这页已无事可做,页面传 auto-back 时改零钮 fail 半屏 + 自动返回。
@@ -39,7 +39,7 @@ Component({
     _renderer: 'empty',
     _emptyKind: 'empty',
     _title: '暂无内容',
-    _sub: '这里还没有内容',
+    _sub: '',
     _primary: '',
     _autoBack: false,
     _loadFailure: false,

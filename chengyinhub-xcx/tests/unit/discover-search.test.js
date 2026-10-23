@@ -79,7 +79,7 @@ test('搜索商家和俱乐部保留正式卡片所需资料，不伪造营业�
   assert.equal(merchant.cardCover, 'cover.jpg');
   assert.equal(merchant.cardLogo, 'logo.jpg');
   assert.equal(merchant.cardStatus, 'none');
-  assert.equal(merchant.cardCategoryName, '', '拿不到品类就不给,由组件退回中性店铺图标');
+  assert.equal(merchant.cardCategoryName, '', '拿不到品类就不给，由组件退回中性店铺图标');
   assert.equal(merchant.path, '/pages/userinfo/userinfo?userId=18&tab=about');
 
   // CU-M-61:无封面的兜底图标按品类选。品类只认 sysCategoryList ——

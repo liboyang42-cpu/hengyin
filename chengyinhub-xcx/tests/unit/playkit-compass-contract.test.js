@@ -131,10 +131,10 @@ test('continuous:针走短弧,过正北不绕远路', () => {
   // 反向同理落在 -2。显示角越过 0/360 无所谓 —— transform 只吃差值
   assert.equal(vm._continuous(2, 358), 362);
   assert.equal(vm._continuous(358, 2), -2);
-  assert.equal(vm._continuous(90, null), 90, '第一帧没有上一针,直接落 0–359');
+  assert.equal(vm._continuous(90, null), 90, '第一帧没有上一针，直接落 0–359');
   let needle = vm._continuous(358, 0);
   needle = vm._continuous(2, needle);
-  assert.ok(Math.abs(needle) <= 4, '来回过正北,针的总行程仍是小角度,实际:' + needle);
+  assert.ok(Math.abs(needle) <= 4, '来回过正北，针的总行程仍是小角度，实际:' + needle);
 });
 
 test('signedDelta / turnText:往哪边转、还差几度,跨正北也走短弧', () => {
@@ -196,7 +196,7 @@ test('开跑后一帧读数:刻度盘反转、转向提示、读数不稳提示�
   assert.equal(vm.data.aligned, true);
   assert.ok(vm.data.holdPct > 0 && vm.data.holdPct < 100, '保持进度在走:' + vm.data.holdPct);
   advance(vm, 30, 100);
-  assert.equal(vm.data.holdPct, 100, '保持满判过时进度环要走满,不停在九成多');
+  assert.equal(vm.data.holdPct, 100, '保持满判过时进度环要走满，不停在九成多');
 });
 
 test('开局前不许订阅罗盘;开始 → stage.begin → run 才起表', () => {
@@ -220,7 +220,7 @@ test('扫过容差区不算对准:保持计时离开就归零', () => {
   assert.equal(vm._held, 0, '离开容差区的那一刻就该归零');
   vm.pushHeading(140);
   vm._tick();
-  assert.ok(vm._held <= 0.11, '重新攒,不能拿之前那 1 秒凑满 3 秒:' + vm._held);
+  assert.ok(vm._held <= 0.11, '重新攒，不能拿之前那 1 秒凑满 3 秒:' + vm._held);
   assert.equal(vm.events.filter((e) => e && e.name === 'submit').length, 0);
 });
 
@@ -245,7 +245,7 @@ test('后台限频那一帧不许白赚保持时长(dt 夹 0.1s)', () => {
   vm.pushHeading(140);
   vm._last = Date.now() - 10000;       // 模拟切后台 10 秒回来
   vm._tick();
-  assert.ok(vm._held <= 0.11, '一帧最多记 0.1 秒,实际:' + vm._held);
+  assert.ok(vm._held <= 0.11, '一帧最多记 0.1 秒，实际:' + vm._held);
 });
 
 test('设备不报方向:3 秒后明说没数据,不装忙也不判输', () => {
@@ -258,7 +258,7 @@ test('设备不报方向:3 秒后明说没数据,不装忙也不判输', () => {
   assert.match(WXML, /这台设备还没报出方向/, '这行字必须真的在屏上(死数据闸)');
   assert.equal(vm.events.filter((e) => e && e.name === 'submit').length, 0);
   assert.equal(vm.stageCalls.find((c) => Array.isArray(c) && c[0] === 'fail'), undefined,
-    '设备没罗盘不是玩家的错,不判负');
+    '设备没罗盘不是玩家的错，不判负');
 });
 
 test('切后台中止:停订阅、回待命,不留下后台偷跑的口子', () => {
@@ -310,7 +310,7 @@ test('playkit-view:compass 认型、题面字段齐全、done 谓词', () => {
   assert.equal(kit.done, false);
   assert.equal(compassKit({ bearing: 135, done: true }).done, true);
   const bare = compassKit({ done: false });
-  assert.equal(bare.tolerance, 15, '服务端没给的字段视图层兜底与运行期同值');
+  assert.equal(bare.tolerance, 15, '服务端没给的字段视图层保底与运行期同值');
   assert.equal(bare.holdSeconds, 3);
 });
 

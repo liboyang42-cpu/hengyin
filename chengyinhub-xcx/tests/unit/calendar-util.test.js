@@ -40,7 +40,7 @@ test('相隔天数跨月跨年跨闰日都不能差一天', () => {
   assert.equal(cal.daysBetween('2025-12-31', '2026-01-01'), 1)
   assert.equal(cal.daysBetween('2024-02-28', '2024-03-01'), 2, '闰年二月要多算一天')
   assert.equal(cal.daysBetween('2026-02-28', '2026-03-01'), 1)
-  assert.equal(cal.daysBetween('2026-09-25', '2026-09-04'), -21, '反向为负,不取绝对值')
+  assert.equal(cal.daysBetween('2026-09-25', '2026-09-04'), -21, '反向为负，不取绝对值')
 })
 
 test('月份平移跨年正确', () => {
@@ -99,7 +99,7 @@ test('buildMonths 连续跨年,月份不重不漏', () => {
 test('buildMonths 拒绝非法入参,返回空而不是抛', () => {
   assert.deepEqual(cal.buildMonths('', 3, {}), [])
   assert.deepEqual(cal.buildMonths('2026-09-01', 0, {}), [])
-  assert.deepEqual(cal.buildMonths('2026/09/01', 3, {}), [], '斜杠格式不认,避免时区解析')
+  assert.deepEqual(cal.buildMonths('2026/09/01', 3, {}), [], '斜杠格式不认，避免时区解析')
 })
 
 test('pickRange 状态机:四条路径各走一遍', () => {
@@ -135,7 +135,7 @@ test('负控:把首日偏移写成不取模,2 月那格立刻算错', () => {
   assert.equal(cal.firstDayOffset(2026, 2, 1), 6)
   assert.equal(broken(2026, 2, 1), -1)
   assert.notEqual(broken(2026, 2, 1), cal.firstDayOffset(2026, 2, 1),
-    '负控本身必须真的算出不同的值,否则这条断言什么也没证明')
+    '负控本身必须真的算出不同的值，否则这条断言什么也没证明')
 })
 
 test('addDays 跨月跨年跨闰日,负数往回走', () => {
@@ -167,7 +167,7 @@ test('quickRange:三个芯片各算一遍,含边界那两天', () => {
 
 test('quickRange 尊重 min:算出来早于下界的一律抬上来', () => {
   assert.deepEqual(cal.quickRange('next7', '2026-08-26', '2026-09-01'),
-    ['2026-09-01', '2026-09-07'], '整段一起后移,不是只裁开头')
+    ['2026-09-01', '2026-09-07'], '整段一起后移，不是只裁开头')
   assert.deepEqual(cal.quickRange('weekend', '2026-08-26', '2026-09-05'),
     ['2026-09-05', '2026-09-05'], '下界晚于本周末时两端一起抬到下界')
 })
@@ -226,7 +226,7 @@ test('WXS 的 dayClass 与 utils 的 dayType 逐日等价,不许漂移', () => {
       checked++
     }
   }
-  assert.equal(checked, 150, '比对覆盖面异常,契约可能没真跑')
+  assert.equal(checked, 150, '比对覆盖面异常，契约可能没真跑')
 })
 
 test('负控:把 WXS 的 start/end 判定顺序调换,契约必须判红', () => {
@@ -242,7 +242,7 @@ test('负控:把 WXS 的 start/end 判定顺序调换,契约必须判红', () =>
   assert.equal(wxs.dayClass(same, same, same, 'range', '', '', {}), 'cyc__day--start-end')
   assert.equal(broken(same, same, same), 'cyc__day--end')
   assert.notEqual(broken(same, same, same), wxs.dayClass(same, same, same, 'range', '', '', {}),
-    '负控必须真的算出不同的值,否则这条断言什么也没证明')
+    '负控必须真的算出不同的值，否则这条断言什么也没证明')
 })
 
 test('WXS 首日偏移只作用于每月第一格', () => {

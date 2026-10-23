@@ -89,7 +89,7 @@ test('多据点回执只打开选择面板,不直接取第一站或显示核销�
   assert.equal(page.data.stationSheet.items.length, 2);
   assert.deepEqual(openedScenes, ['merchant-station-picker']);
   assert.equal(page.data.verificationResult.show, false,
-    'needStationChoice 是未核销态,不能先显示成功结果');
+    'needStationChoice 是未核销态，不能先显示成功结果');
   assert.equal(requests.length, 1,
     '商家尚未点选时不得自动调用选择端点或拿候选第一行核销');
 });
@@ -101,7 +101,7 @@ test('取消据点选择不发第二次请求,code 仍保持未核销', () => {
   page.onStationSheetClose();
 
   assert.equal(closedScenes, 1);
-  assert.equal(requests.length, 1, '取消只关面板,不能调用核销端点');
+  assert.equal(requests.length, 1, '取消只关面板，不能调用核销端点');
   assert.equal(page.data.verificationResult.show, false,
     '取消不能把错误回执改写为已核销结果');
 });

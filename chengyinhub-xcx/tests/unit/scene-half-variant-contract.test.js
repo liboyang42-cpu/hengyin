@@ -29,7 +29,7 @@ function assertHalfSceneContract(scenes) {
     const scene = scenes[id]
     assert.ok(scene, `注册表缺少 ${id}`)
     assert.equal(scene.variant, 'half', `${id} 必须使用 70vh half 场景`)
-    assert.equal(Object.hasOwn(scene, 'canBack'), false, `${id} 半屏场景只能用叉号关闭,不得保留 canBack`)
+    assert.equal(Object.hasOwn(scene, 'canBack'), false, `${id} 半屏场景只能用叉号关闭，不得保留 canBack`)
   }
 }
 

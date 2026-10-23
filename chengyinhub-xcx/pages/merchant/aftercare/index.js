@@ -76,7 +76,7 @@ Page({
         }
         this.loadList(true);
       },
-      fail: () => this.setData({ pageState: 'error', errorMessage: '网络连接失败，请稍后重试' }),
+      fail: () => this.setData({ pageState: 'error', errorMessage: '网络异常，请重试' }),
     });
   },
 
@@ -115,7 +115,7 @@ Page({
         }
         const shaped = shapeAftercareListPage(res.data, bucket);
         if (!shaped || shaped.pageNum !== pageNum) {
-          this.handleListFailure(reset, '售后列表数据不完整，请稍后重试');
+          this.handleListFailure(reset, '售后列表加载失败，请重试');
           return;
         }
         const items = reset ? shaped.items : this.data.items.concat(shaped.items);
@@ -129,7 +129,7 @@ Page({
           loadingMore: false,
         });
       },
-      fail: () => this.handleListFailure(reset, '网络连接失败，请稍后重试'),
+      fail: () => this.handleListFailure(reset, '网络异常，请重试'),
     });
   },
 

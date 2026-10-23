@@ -402,7 +402,7 @@ Page({
       if (!current()) return;
       Object.assign(this.data, { failedAction: 'revoke' });
       this.setData({
-        submitError: '本机漫游定位已停，撤回记录待确认，请重试补传',
+        submitError: '本机定位已停，撤回记录待确认，请重试',
       });
     }).finally(() => {
       if (epoch === this._roamRevokeEpoch) this.setData({ submitting: false });

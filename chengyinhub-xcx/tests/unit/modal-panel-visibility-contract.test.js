@@ -42,7 +42,7 @@ test('cy-modal 的面板读专用档,不是页面卡片档', () => {
   const panel = wxss.match(/\.mo__card\s*\{[^}]*\}/)
   assert.ok(panel, '找不到 cy-modal 的面板样式块')
   assert.match(panel[0], /background:\s*var\(--cy-comp-modal-panel\)/,
-    'T2 面板必须读 --cy-comp-modal-panel;读 --cy-bg-card 会退回页底档,压在黑页上隐形')
+    'T2 面板必须读 --cy-comp-modal-panel;读 --cy-bg-card 会退回页底档，压在黑页上隐形')
 })
 
 test('暗端的 T2 面板必须比页底亮出一档', () => {
@@ -61,7 +61,7 @@ test('浅色域不跟着提亮 —— 那边的居中弹窗仍是白卡', () => 
     const v = tokenIn(tokens, scope, 'cy-comp-modal-panel')
     assert.ok(v, `${scope} 缺 --cy-comp-modal-panel 镜像`)
     assert.match(v, /var\(--cy-color-bg-surface\)/,
-      `${scope} 的居中弹窗应继续用白卡,别把暗端那档 #4D4D4D 漏过来`)
+      `${scope} 的居中弹窗应继续用白卡，别把暗端那档 #4D4D4D 漏过来`)
   }
 })
 

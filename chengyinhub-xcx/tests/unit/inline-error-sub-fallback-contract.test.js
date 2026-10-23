@@ -47,11 +47,11 @@ test('调用方自己写的 sub 原样透出,不被默认值覆盖', () => {
 test('什么都没说时仍按 kind 兜底,不留光杆错误卡', () => {
   const nothing = loadComponent('error', '', '')
   assert.equal(nothing.data._title, '这一步没有完成')
-  assert.equal(nothing.data._sub, '重试一次，或稍后再来')
+  assert.equal(nothing.data._sub, '')
 
   const network = loadComponent('network', '', '')
   assert.equal(network.data._title, '网络没连上')
-  assert.equal(network.data._sub, '连接恢复后可继续')
+  assert.equal(network.data._sub, '')
 })
 
 test('负控:字段校验卡不得再出现「重试一次，或稍后再来」这句兜底', () => {

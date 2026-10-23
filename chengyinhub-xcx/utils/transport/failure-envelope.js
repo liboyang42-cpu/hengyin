@@ -4,7 +4,7 @@ function fromHttpStatusAbnormal(body) {
     code: 'fail',
     httpFail: true,
     upstreamCode: source.code == null ? '' : source.code,
-    msg: source.msg || '服务暂时不可用',
+    msg: source.msg || '服务暂不可用',
   };
 }
 

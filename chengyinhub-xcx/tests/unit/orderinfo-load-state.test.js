@@ -228,7 +228,7 @@ test('orderinfo:业务失败(code!=200)进入 failed_business 并保留错误文
   assert.equal(vm.data.loadState, 'failed_business', '业务失败必须落 failed_business')
   assert.ok(
     String(vm.data.loadErrorText).includes('订单不存在'),
-    '错误文案应带上后端返回的原因,当前=' + vm.data.loadErrorText
+    '错误文案应带上后端返回的原因，当前=' + vm.data.loadErrorText
   )
   assert.deepEqual(vm.data.info, {}, '业务失败不得留下半成品 info')
 })
@@ -381,7 +381,7 @@ test('orderinfo:较早请求的失败不能打断较新的重试请求', () => {
 
   const [initial, retry] = infoRequests()
   initial.fail({ errMsg: 'request:fail timeout' })
-  assert.equal(vm.data.loadState, 'loading', '旧请求失败时较新的重试仍在途,不能提前落错误态')
+  assert.equal(vm.data.loadState, 'loading', '旧请求失败时较新的重试仍在途，不能提前落错误态')
 
   retry.success({ code: '200', data: { id: 1001, registrationStatus: 2, ownerType: 2 } })
   assert.equal(vm.data.loadState, 'ready', '较新的重试成功后必须进入 ready')
@@ -413,7 +413,7 @@ test('orderinfo:较新请求成功后,更早请求的网络失败不弹误导 to
   initial.fail({ errMsg: 'request:fail timeout' })
 
   assert.equal(vm.data.loadState, 'ready', '旧请求失败不得改写较新请求的成功态')
-  assert.equal(sandbox.toasts.length, 0, '旧请求失败不得弹出误导性的网络错误提示')
+  assert.equal(sandbox.toasts.length, 0, '旧请求失败不得弹出误导性的网络异常提示')
 })
 
 test('orderinfo:较新请求成功后,更早请求的业务失败不弹误导 toast', () => {
@@ -458,7 +458,7 @@ test('orderinfo:code=200 但 data 是数组/字符串等非订单对象,同样�
     assert.equal(
       vm.data.loadState,
       'failed_business',
-      'data=' + JSON.stringify(bad) + ' 不是有效订单对象,不能当成功'
+      'data=' + JSON.stringify(bad) + ' 不是有效订单对象，不能当成功'
     )
     sandbox.requests.length = 0
   }
@@ -478,7 +478,7 @@ test('orderinfo:成功态解析中的真实异常不被吞掉,不会伪装成业
   assert.throws(
     () => infoRequests()[0].success({ code: '200', data: poisoned }),
     /boom/,
-    '真实解析异常必须冒出来,不能被 guard 静默转成业务失败'
+    '真实解析异常必须冒出来，不能被 guard 静默转成业务失败'
   )
 })
 
@@ -566,7 +566,7 @@ function assertPlayerDarkTheme(wxml, wxss) {
   assert.match(
     wxml,
     /class="[^"]*\btheme-dark\b/,
-    '订单详情是玩家场景,根容器必须显式挂 theme-dark',
+    '订单详情是玩家场景，根容器必须显式挂 theme-dark',
   )
   assert.doesNotMatch(wxml, /\btheme-light\b/, '玩家订单详情不得回潮浅色主题')
   assert.doesNotMatch(wxss, /\.detail\.theme-light\s*\{/, '不得在组件内硬写浅色桥绕过玩家主题')
@@ -645,12 +645,12 @@ function assertSingleTopOffsetAndScroller(wxss) {
   assert.doesNotMatch(
     david[1],
     /(margin|padding)-top:/,
-    '.david 自带顶部让位,会与 spacer 叠成第二份让位把订单主体推下去:' + david[1],
+    '.david 自带顶部让位，会与 spacer 叠成第二份让位把订单主体推下去:' + david[1],
   )
   assert.doesNotMatch(
     david[1],
     /height:\s*\d/,
-    '.david 写死视口高度会与让位相加溢出可视区,高度应由内容决定:' + david[1],
+    '.david 写死视口高度会与让位相加溢出可视区，高度应由内容决定:' + david[1],
   )
   const detail = wxss.match(/\.detail\s*\{([^}]*)\}/)
   assert.ok(detail, '订单详情根容器必须存在')
@@ -731,7 +731,7 @@ test('orderinfo:ready 闸覆盖整页,失败/加载态下没有任何订单内�
   assert.deepEqual(
     strays,
     [],
-    '这些内容容器直挂在 .detail 下且不受 loadState 闸控制,失败态会照样渲染:\n' + strays.join('\n')
+    '这些内容容器直挂在 .detail 下且不受 loadState 闸控制，失败态会照样渲染:\n' + strays.join('\n')
   )
 
   // 自证:检查器能判红——把一个节点挪到闸外必须被抓到

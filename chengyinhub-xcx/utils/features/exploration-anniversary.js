@@ -33,7 +33,7 @@ function createExplorationAnniversaryClient(options) {
     if (today.getUTCFullYear() !== value.referenceYear || (input.month != null ? value.month !== input.month || value.day !== input.day
       : value.month !== today.getUTCMonth() + 1 || value.day !== today.getUTCDate())
       || (input.referenceYear != null && value.referenceYear !== input.referenceYear)
-      || (input.cursor != null && value.hasMore && value.nextCursor === input.cursor)) throw new Error('回忆日期或分页上下文不匹配');
+      || (input.cursor != null && value.hasMore && value.nextCursor === input.cursor)) throw new Error('加载失败，请重试');
     const seen = new Set(); let previous = input.boundary || null;
     const items = value.items.map(item => {
       const completed = item && stamp(item.completedAt);

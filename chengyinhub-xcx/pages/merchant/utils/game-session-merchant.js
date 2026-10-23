@@ -255,7 +255,7 @@ function summarizeMerchantProjection(projection) {
     return { state: 'closed', text: '本站已结束', tone: 'muted', pendingVerificationCount: pending, stationCount: stations.length }
   }
   if (stations.some((item) => item.status === 'INVITED')) {
-    return { state: 'invited', text: '待处理站点邀请', tone: 'pending', pendingVerificationCount: pending, stationCount: stations.length }
+    return { state: 'invited', text: '待处理节点邀请', tone: 'pending', pendingVerificationCount: pending, stationCount: stations.length }
   }
   if (stations.some((item) => item.status === 'PAUSED')) {
     return { state: 'paused', text: '本站已暂停', tone: 'paused', pendingVerificationCount: pending, stationCount: stations.length }

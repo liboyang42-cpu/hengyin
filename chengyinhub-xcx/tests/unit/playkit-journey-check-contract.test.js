@@ -105,7 +105,7 @@ function loadComponent(rel) {
 
 test('重掷只在「掷过、没结算、没重掷、还有幸运」时可见', () => {
   const can = loadComponent(COMPONENT).methods._canReroll
-  assert.equal(can(checkReceiptView(ROLL_RECEIPT)), true, 'roll 完还有 2 点幸运,可以重掷')
+  assert.equal(can(checkReceiptView(ROLL_RECEIPT)), true, 'roll 完还有 2 点幸运，可以重掷')
   assert.equal(can(null), false, '还没掷就没有重掷')
   assert.equal(can(checkReceiptView(Object.assign({}, ROLL_RECEIPT, { settled: true }))), false)
   assert.equal(can(checkReceiptView(Object.assign({}, ROLL_RECEIPT, { rerolled: true }))), false)

@@ -86,7 +86,7 @@ Page({
     // (设备定位与「用户拖过地图」两个事实只参与判定、不驱动渲染,按本仓 U4 口径存实例字段,
     // 不走 data —— 见 this._hasLocation / this._regionUserChosen)
     offline: false,
-    offlineMessage: '当前离线，尚无可用的活动缓存',
+    offlineMessage: '当前离线，暂无可显示的活动',
     lastListUpdatedText: '',
 
     // 选中的标记对应对象(模板库 §4.4②:标记选中后底部 Sheet 展示对应对象)
@@ -283,14 +283,14 @@ Page({
           return;
         }
         if (!res.data || !isRecordList(res.data.rows)) {
-          that.setPageError('活动列表没加载出来，请重试', requestPage);
+          that.setPageError('活动列表加载失败，请重试', requestPage);
           return;
         }
         const rawList = res.data.rows.map(function (activity) {
           const pointKind = discoverSearch.mapPointKind(activity);
           return Object.assign({}, activity, {
             mapPointKind: pointKind,
-            mapPointLabel: pointKind === 'topic' ? '主题点位' : '活动点位'
+            mapPointLabel: pointKind === 'topic' ? '主题节点' : '活动节点'
           });
         });
         // A-02:日期/价格筛选后端不消费,这里用 search2/result 同一套 matchesFilters 客户端过滤,
@@ -331,7 +331,7 @@ Page({
         if (!isCurrentQuery()) return;
         finishPageRequest();
         // 原先是空函数 —— 请求失败被整个吞掉,用户看不到任何反馈
-        that.setPageError((err && err.errMsg) || '网络开了点小差', requestPage);
+        that.setPageError((err && err.errMsg) || '网络异常，请重试', requestPage);
       }
     });
   },
@@ -340,7 +340,7 @@ Page({
   setListState(state, msg) {
     const text = {
       loading: '附近活动',
-      error: '没能加载出来，点这里重试',
+      error: '加载失败，点这里重试',
       empty: '这一带还没有活动',
       ready: '查看全部 ' + this.data.list.length + ' 个结果'
     }[state];
@@ -363,7 +363,7 @@ Page({
     if (failedPage === 1) { this.setData({ pageErrorIsRefresh: false }); this.setListState('error', msg); return; }
     this.setData({
       listState: 'ready',
-      pageError: msg || '没能加载更多，请重试',
+      pageError: msg || '加载更多失败，请重试',
       pageErrorIsRefresh: false,
     });
   },
@@ -427,7 +427,7 @@ Page({
     const spatialEpoch = this._beginSpatialInput();
     modal.show({
       title: '定位说明',
-      content: '用于将地图移到你附近的活动、主题点位与商家节点，并按距离排列结果，仅在本次操作中读取一次位置。',
+      content: '用于将地图移到你附近的活动、主题节点与商家节点，并按距离排列结果，仅在本次操作中读取一次位置。',
       confirmText: '继续定位',
       success: (result) => {
         if (!this._isCurrentSpatialInput(spatialEpoch)) return;
@@ -534,7 +534,7 @@ Page({
       width: 30,
       height: 30,
       callout: {
-        content: activity.name + (activity.mapPointKind === 'topic' ? ' · 主题点位' : ''),
+        content: activity.name + (activity.mapPointKind === 'topic' ? ' · 主题节点' : ''),
         color: '#333', /* ds-ok: 原生 <map> callout 只收字面色值,不吃 CSS var */
         fontSize: 12,
         borderRadius: 4,
@@ -1048,8 +1048,8 @@ Page({
     this.setData({
       offline: Boolean(isOffline),
       offlineMessage: hasCachedList
-        ? '当前离线，地图点位与活动列表来自上次加载'
-        : '当前离线，尚无可用的活动缓存'
+        ? '当前离线，地图节点与活动列表来自上次加载'
+        : '当前离线，暂无可显示的活动'
     });
   },
 

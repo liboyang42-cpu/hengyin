@@ -108,10 +108,10 @@ function assertStickyClearsNav(route, wxml, wxss) {
     if (inline) continue
 
     const wxssTop = /(^|[;{\s])top:\s*([^;]+);/.exec(body)
-    assert.ok(wxssTop, `${route} 的 .${cls} 是 sticky 却没有任何 top —— 永远不会吸顶,是静默失效`)
+    assert.ok(wxssTop, `${route} 的 .${cls} 是 sticky 却没有任何 top —— 永远不会吸顶，是静默失效`)
     assert.ok(
       !/^0(px|rpx)?$/.test(wxssTop[2].trim()),
-      `${route} 的 .${cls} 吸顶在 top:0,会落进 fixed cy-nav-bar 占据的区域 —— 吸住时与顶栏互相遮挡`,
+      `${route} 的 .${cls} 吸顶在 top:0，会落进 fixed cy-nav-bar 占据的区域 —— 吸住时与顶栏互相遮挡`,
     )
   }
 }
@@ -162,7 +162,7 @@ function assertCentredTitle(route, wxml) {
   assert.match(
     tag[1],
     /title="[^"]+"/,
-    `${route} 的实底顶栏没有标题,页内也没有 cy-page-title 承接——二三级页要么顶栏挂标题,要么页内有 cy-page-title`,
+    `${route} 的实底顶栏没有标题，页内也没有 cy-page-title 承接——二三级页要么顶栏挂标题，要么页内有 cy-page-title`,
   )
 }
 
@@ -173,13 +173,13 @@ test('自定义导航页:实底顶栏都有居中标题', () => {
 test('负控:把实底页的顶栏标题清空必须判红', () => {
   const route = 'subpackageB/pages/im/list/index'
   const wxml = read(`${route}.wxml`).replace('title="消息"', 'title=""')
-  assert.notEqual(wxml, read(`${route}.wxml`), '变异未生效,负控本身是假的')
+  assert.notEqual(wxml, read(`${route}.wxml`), '变异未生效，负控本身是假的')
   assert.throws(() => assertCentredTitle(route, wxml), /没有标题/)
 })
 
 test('自定义导航页:铺满层底色与固定顶栏同色,顶栏下缘不出色带', () => {
   const routes = customNavRoutes()
-  assert.ok(routes.length > 20, `自定义导航页只扫到 ${routes.length} 个,扫描器可能失效`)
+  assert.ok(routes.length > 20, `自定义导航页只扫到 ${routes.length} 个，扫描器可能失效`)
   routes.forEach((route) => assertNoNavSeam(route, read(`${route}.wxml`), readIf(`${route}.wxss`)))
 })
 
@@ -190,14 +190,14 @@ test('自定义导航页:页内吸顶元素让开固定顶栏', () => {
 test('负控:把某个自定义导航页的底色改回 bg-card 必须判红', () => {
   const route = 'subpackageB/pages/im/list/index'
   const wxss = read(`${route}.wxss`).replace('page { background: var(--cy-bg-page); }', 'page { background: var(--cy-bg-card); }')
-  assert.notEqual(wxss, read(`${route}.wxss`), '变异未生效,负控本身是假的')
+  assert.notEqual(wxss, read(`${route}.wxss`), '变异未生效，负控本身是假的')
   assert.throws(() => assertNoNavSeam(route, read(`${route}.wxml`), wxss), /顶栏下缘会出色带/)
 })
 
 test('负控:把吸顶元素的让位内联样式拿掉必须判红(静默失效)', () => {
   const route = 'pages/activity/list/index'
   const wxml = read(`${route}.wxml`).replace(' style="top: {{statusBarHeight + navBarHeight}}px;"', '')
-  assert.notEqual(wxml, read(`${route}.wxml`), '变异未生效,负控本身是假的')
+  assert.notEqual(wxml, read(`${route}.wxml`), '变异未生效，负控本身是假的')
   assert.throws(() => assertStickyClearsNav(route, wxml, read(`${route}.wxss`)), /永远不会吸顶/)
 })
 
@@ -205,6 +205,6 @@ test('负控:让位改回 top:0(藏进顶栏)必须判红', () => {
   const route = 'pages/activity/list/index'
   const wxml = read(`${route}.wxml`).replace(' style="top: {{statusBarHeight + navBarHeight}}px;"', '')
   const wxss = read(`${route}.wxss`).replace('position:sticky;', 'position:sticky;top:0;')
-  assert.notEqual(wxss, read(`${route}.wxss`), '变异未生效,负控本身是假的')
+  assert.notEqual(wxss, read(`${route}.wxss`), '变异未生效，负控本身是假的')
   assert.throws(() => assertStickyClearsNav(route, wxml, wxss), /会落进 fixed cy-nav-bar/)
 })

@@ -21,9 +21,9 @@ test('营销页 entries 有 AI 店铺参谋入口,go() 跳转到 ai-insight 页'
 
 test('店铺参谋入口与页面门禁按 MARKETING_READ(P4 #17-3),无此权限的岗位看不到也进不去', () => {
   assert.match(MARKETING_JS, /action:\s*'aiInsight'[^}]*permission:\s*'canReadMarketing'/,
-    '运营/店长有 MARKETING_READ 才显示店铺参谋图标;核销员/财务没有,不许显示死入口');
+    '运营/店长有 MARKETING_READ 才显示店铺参谋图标；核销员/财务没有，不许显示死入口');
   assert.match(PAGE_WXML, /<cy-access-gate[^>]*need="canReadMarketing"/,
-    '页面门禁必须与后端 require(MARKETING_READ) 对齐,否则无权限岗位点进来吃 403');
+    '页面门禁必须与后端 require(MARKETING_READ) 对齐，否则无权限岗位点进来吃 403');
 });
 
 test('ai-insight 页已注册进 pages/merchant 分包(tabBar 页在主包铁律不受影响:这是 navigateTo 子页)', () => {
@@ -42,7 +42,7 @@ test('跳转只走前端写死的路由,不 navigateTo 接口给的任意 url', 
 test('页面调用 /api/ai/merchant/insight 且不携带任何商家 id 参数', () => {
   assert.match(PAGE_JS, /url:\s*'\/api\/ai\/merchant\/insight'/);
   assert.doesNotMatch(PAGE_JS, /merchantId|merchantMemberId/,
-    '接口按登录态取商家身份,前端传 id = 给越权留口子');
+    '接口按登录态取商家身份，前端传 id = 给越权留口子');
 });
 
 // 2026-10-23 业主:「没有就不显示」—— ai 为空时经营解读整段(含标题)不画,不再出降级卡;数据区照常
@@ -59,12 +59,12 @@ test('数字位一律是数:null 指标写 0,不放横杠(2026-09-19 用户裁�
   assert.doesNotMatch(PAGE_JS, /(['"])—+\1/, 'js 字符串字面量里不许再有破折号占位');
   // 数字位不再兼职表达状态 ⇒ 状态必须另有出口,否则「算不出」就被画成「真的是 0」
   assert.match(PAGE_WXML, /wx:if="\{\{\s*facts\.lowSample\s*\}\}"/,
-    '样本不足提示是本页唯一的「这不是零」出口,删掉它 0 就成了谎话');
+    '样本不足提示是本页唯一的「这不是零」出口，删掉它 0 就成了谎话');
 });
 
 test('页头是问候区(Hi，店名 + 店铺头像),不再放店铺档案入口(2026-10-22 owner)', () => {
   const visible = PAGE_WXML.replace(/<!--[\s\S]*?-->/g, '');
-  assert.doesNotMatch(visible, /先配置店铺档案|goProfileSetup/, '店铺档案配置留在装修域合作设置,本页不再放入口');
+  assert.doesNotMatch(visible, /先配置店铺档案|goProfileSetup/, '店铺档案配置留在装修域合作设置，本页不再放入口');
   assert.doesNotMatch(PAGE_JS, /PROFILE_SETUP_ROUTE/);
   assert.match(PAGE_JS, /storeName: String\(profile\.storeName \|\| ''\)\.trim\(\)/, '店名取后端实时 profile');
   assert.match(visible, /<cy-avatar class="greet-avatar"/);
@@ -74,7 +74,7 @@ test('实体推荐:推荐主题去合作中心申请,推荐商家走 canonical �
   assert.match(PAGE_WXML, /为你推荐的主题/);
   assert.match(PAGE_WXML, /推荐联动的商家/);
   assert.match(PAGE_JS, /merchantHomeUrl\(/, '必须用统一的 merchantHomeUrl,不许手拼商家主页地址');
-  assert.doesNotMatch(PAGE_JS, /merchant\/profile\/index/, '旧「承接商家」页已退役,不许再链过去');
+  assert.doesNotMatch(PAGE_JS, /merchant\/profile\/index/, '旧「承接商家」页已退役，不许再链过去');
 });
 
 // 跑真代码而不是读源码:把「后端全回 null」喂进页面自己的两个 builder,
@@ -124,6 +124,6 @@ test('后端全回 null 时,页面 builder 真的产出 0 而不是横杠(跑真
   // 负控:把 null 改回横杠,上面这些判据必须转红
   const regressed = PAGE_JS.replace("return value === null ? '0' : String(value);",
     "return value === null ? '—' : String(value);");
-  assert.notEqual(regressed, PAGE_JS, '负控锚点失效:_countText 字面量已改名,扫描口径需同步');
+  assert.notEqual(regressed, PAGE_JS, '负控锚点失效:_countText 字面量已改名，扫描口径需同步');
   assert.match(regressed, /(['"])—+\1/);
 });

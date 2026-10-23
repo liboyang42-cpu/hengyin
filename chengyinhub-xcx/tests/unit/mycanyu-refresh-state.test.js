@@ -101,7 +101,7 @@ const clickVoucher = (page, id) => page.viewVoucher({ currentTarget: { dataset: 
 test('核销状态只接受明确0/1，不从已完成状态推断核销', () => {
   const page = loadPage();
   for (const [status, label] of [[1, '已核销'], ['1', '已核销'], [0, '未核销'], ['0', '未核销'],
-    [true, '核销状态待确认'], [null, '核销状态待确认'], [undefined, '核销状态待确认'], [2, '核销状态待确认']]) {
+    [true, '—'], [null, '—'], [undefined, '—'], [2, '—']]) {
     assert.equal(page.normalize({ ...joined(21, status), verificationStatus: status,
       firstSuccessfulScanAt: '2026-10-01 10:00:00' }).verificationText, label);
   }
@@ -214,7 +214,7 @@ test('未知核销值不能被共享读模型强转成已完成；返页旧快�
   const row = { ...joined(21, true), cmsTopic: { startDate: '2099-01-01', endDate: '2099-01-02' } };
   sandbox.requests[0].success({ code: 200, data: [row] });
   assert.equal(page.data.list[0].stateText, '未开始');
-  assert.equal(page.data.list[0].verificationText, '核销状态待确认');
+  assert.equal(page.data.list[0].verificationText, '—');
   page.onHide(); page.onShow(); assert.equal(page.data.refreshing, true);
   clickVoucher(page, 21); assert.equal(sandbox.navigations.length, 0);
   sandbox.requests.at(-1).fail({}); clickVoucher(page, 21); assert.equal(sandbox.navigations.length, 0);

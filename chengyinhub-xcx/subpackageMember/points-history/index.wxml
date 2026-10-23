@@ -7,11 +7,11 @@
     <cy-page-title title="积分明细" safe-top="{{false}}" />
     <view class="ph__body">
       <cy-skeleton wx:if="{{state === 'loading'}}" type="feed-card" count="3" />
-      <cy-error wx:elif="{{state === 'error'}}" title="积分明细没能加载出来" sub="你的积分没有变化，只是这次没读到" retry="重试" bind:retry="load" />
-      <cy-empty wx:elif="{{state === 'empty'}}" kind="empty" title="还没有积分记录" sub="完成任务获得积分后会出现在这里" />
+      <cy-error wx:elif="{{state === 'error'}}" title="积分明细加载失败" retry="重试" bind:retry="load" />
+      <cy-empty wx:elif="{{state === 'empty'}}" kind="empty" title="还没有积分记录" />
       <block wx:else>
         <cy-tabs variant="chip" tabs="{{filters}}" active="{{filter}}" bind:change="onFilter" />
-        <cy-empty wx:if="{{filterEmpty}}" kind="empty" title="{{filter === 'income' ? '还没有获得积分的记录' : '还没有使用积分的记录'}}" sub="切到「全部」可查看所有积分变动" />
+        <cy-empty wx:if="{{filterEmpty}}" kind="empty" title="{{filter === 'income' ? '还没有获得积分的记录' : '还没有使用积分的记录'}}" sub="换个筛选试试" />
         <view class="ph-group" wx:for="{{groups}}" wx:for-item="group" wx:key="key" style="{{pmList === 1 ? '--pm-l:1;' : (pmList === 2 ? '--pm-l-d:.32s;--pm-l-s:1;' : '')}}">
           <text class="ph-group__title">{{group.label}}</text>
           <view class="ph-row" wx:for="{{group.rows}}" wx:key="id">

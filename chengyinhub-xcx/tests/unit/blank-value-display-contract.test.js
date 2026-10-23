@@ -32,7 +32,7 @@ test('全仓 wxml 不得出现裸 ¥{{...}}(空值会渲成孤零零一个 ¥)',
       if (BARE.test(line)) bad.push(`${path.relative(ROOT, p)}:${i + 1}`)
     })
   }
-  assert.deepEqual(bad, [], `这些位置的 ¥ 是死字符,数值为空时只剩 ¥:\n  ${bad.join('\n  ')}`)
+  assert.deepEqual(bad, [], `这些位置的 ¥ 是死字符，数值为空时只剩 ¥:\n  ${bad.join('\n  ')}`)
 })
 
 test('money.amount:空值渲 —,0 是合法金额不能被吃掉', () => {

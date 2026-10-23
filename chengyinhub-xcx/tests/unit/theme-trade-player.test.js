@@ -8,7 +8,7 @@ global.wx = { showToast() {} };
 const view = { scope: 'TEAM', activityId: 5, sessionId: 7, teamId: 1, revision: 12, authorityEpoch: 4,
   availableActions: ['TRADE_OPEN', 'TRADE_CONFIRM', 'TRADE_CANCEL'],
   contents: [{ id: 'wood', kind: 'ITEM', name: '木料', quantity: 1 }],
-  world: { tradeTargets: [{ teamId: 2, disabled: false, nodeId: 11 }, { teamId: 3, disabled: true, disabledReason: '对方尚未到达同一可交易站点' }],
+  world: { tradeTargets: [{ teamId: 2, disabled: false, nodeId: 11 }, { teamId: 3, disabled: true, disabledReason: '对方尚未到达同一可交易节点' }],
     trades: [{ tradeKey: 't1', fromTeamId: 1, toTeamId: 2, give: [{ itemId: 'wood', quantity: 1 }], take: [], version: 1, status: 'OPEN', confirmedTeams: [], disabled: false, nodeId: 11 }], locked: { wood: 1 } } };
 test('恢复提示区分个人和团队支付，显式 consumed 优先于 noEffect', () => {
   assert.equal(trade.recoveryText({ noEffect: true, consumed: false, ownerId: 7 }), '已满，未消耗');
@@ -39,12 +39,12 @@ test('W1 交易读回只采用 disabled 和 nodeId，站名来自路线，不按
   const rows = trade.present(view, [{ nodeId: 11, name: '交换站' }]);
   assert.equal(rows.tradeTargets[0].stationName, '交换站');
   assert.equal(rows.tradeTargets[1].enabled, false);
-  assert.equal(rows.tradeTargets[1].reason, '对方尚未到达同一可交易站点');
+  assert.equal(rows.tradeTargets[1].reason, '对方尚未到达同一可交易节点');
   assert.equal(rows.tradeRows[0].stationName, '交换站');
   assert.equal(rows.tradeLockedText, '木料 ×1');
   const unknown = trade.present({ ...view, world: { tradeTargets: [{ teamId: 2, nodeId: 11 }] } }, []);
   assert.equal(unknown.tradeTargets[0].enabled, false);
-  assert.equal(unknown.tradeTargets[0].stationName, '站点资料尚未加载');
+  assert.equal(unknown.tradeTargets[0].stationName, '节点资料尚未加载');
 });
 test('仅当前队长操作，成员只读，不可用目标不创建表单也不发送请求', async () => {
   const { instance, requests } = page({ ...view, availableActions: [] });
@@ -147,7 +147,7 @@ test('核对回执失败或不匹配不解除锁定，业务拒绝保留表单�
   const unknown = page(view, (url, data) => url.endsWith('/preview') ? preview(data) : url.endsWith('/command') ? { netFail: true } : { code: 500, msg: '稍后查询' });
   fill(unknown.instance); await unknown.instance.previewThemeTrade(); await unknown.instance.submitThemeTrade();
   await unknown.instance.checkThemeTradeReceipt(); assert.ok(unknown.instance._tradePending);
-  const denied = page(view, (url, data) => url.endsWith('/preview') ? preview(data) : { code: 500, msg: '对方尚未到达同一可交易站点' });
+  const denied = page(view, (url, data) => url.endsWith('/preview') ? preview(data) : { code: 500, msg: '对方尚未到达同一可交易节点' });
   fill(denied.instance); await denied.instance.previewThemeTrade(); await denied.instance.submitThemeTrade();
   assert.equal(denied.instance._tradePending, null); assert.ok(denied.instance.data.themeTradeForm); assert.equal(denied.instance.data.themeTradePreview, null);
 });
@@ -178,7 +178,7 @@ test('交易经公共客户端送原纪元，权威冲突保留表单、读回�
 
 test('合并背包保留交易锁和预览失效，并保留奖励 sheet 与团队章节无命令语义', async () => {
   const { instance, requests } = page();
-  Object.assign(instance, bag.methods(async () => { throw new Error('交易待核对时不应发其他请求'); }));
+  Object.assign(instance, bag.methods(async () => { throw new Error('交易待确认时不应发其他请求'); }));
   instance._tradePending = { requestId: 'frozen-trade' };
   assert.equal(await instance._themePersonalCommand('USE', 'wood'), false);
   assert.equal(await instance._themeGameplayCommand({ operation: 'FACILITY_USE', contentId: 'f' }), false);

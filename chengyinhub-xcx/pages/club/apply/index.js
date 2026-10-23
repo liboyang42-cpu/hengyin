@@ -272,7 +272,7 @@ Page({
     if (this._submitting || !this.data.canNext || this.data.bootstrapState !== 'ready') return;
     // 账户互斥兜底:提交前再拦一次商户账户
     if (this.isMerchantAccount()) {
-      toast('商户账号不能申请主理人');
+      toast('商家账号不能申请主理人');
       return;
     }
     this._submitting = true;

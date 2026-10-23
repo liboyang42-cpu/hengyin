@@ -321,7 +321,7 @@ for (const outcome of ['success', 'failure']) {
   });
 }
 for (const kind of ['merchant', 'node']) {
-  test(kind + '声音状态回读未配置时清除旧样本', async () => {
+  test(kind + '声音状态刷新未配置时清除旧样本', async () => {
     const f = fixture(kind);
     f.state.holdRequest = true;
     f.target.data.show = true;

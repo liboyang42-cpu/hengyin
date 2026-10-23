@@ -81,14 +81,14 @@ Page({
       success(loc) {
         app.sendRequest({ url: '/api/team/nearby', method: 'GET', hideLoading: true, silentError: true, data: { lat: loc.latitude, lng: loc.longitude, radius: RADIUS },
           success(res) {
-            if (!(res && res.code == 200 && Array.isArray(res.data))) { that.setData({ openLoading: false, openError: '附近的队伍没能读到' }); return; }
+            if (!(res && res.code == 200 && Array.isArray(res.data))) { that.setData({ openLoading: false, openError: '附近的队伍获取失败' }); return; }
             const rows = res.data.filter((t) => t && (t.viewerStatus || 'NONE') === 'NONE').map((t) => {
               const d = T.decorateTeam(t);
               return { key: 'n' + d.teamId, teamId: d.teamId, name: nameOf(t), avatars: avatarsOf(d.faces, t.joinedCount), members: members(t), sub: d.sub || '', badge: d.card && d.card.mode === 'buy' ? '需购票' : '可申请' };
             });
             that.setData({ openLoading: false, openLoaded: true, openRows: rows });
           },
-          fail() { that.setData({ openLoading: false, openError: '附近的队伍没能读到' }); } });
+          fail() { that.setData({ openLoading: false, openError: '附近的队伍获取失败' }); } });
       },
       fail() { that.setData({ openLoading: false, openError: '需要定位才能看附近的队伍' }); } });
   },
@@ -105,7 +105,7 @@ Page({
       that._busy = true;
       app.sendRequest({ url: '/api/team/withdraw', method: 'POST', hideLoading: true, silentError: true, data: JSON.stringify({ teamId: Number(row.teamId) }), header: JSON_HEADER,
         success(res) { that._busy = false; if (res && res.code == 200) { cyToast('已撤回申请'); that.reload(); return; } const f = T.resolveTeamError('withdraw', res); cyToast(f.title || '没能撤回，请重试'); },
-        fail() { that._busy = false; cyToast('网络不太稳定，请重试'); } });
+        fail() { that._busy = false; cyToast('网络异常，请重试'); } });
     } });
   },
   openNearbyTeam(e) { const row = this.data.openRows[Number(e.currentTarget.dataset.index)]; if (row) wx.navigateTo({ url: '/subpackageRoam/nearby/index?radius=' + RADIUS + '&teamId=' + encodeURIComponent(row.teamId) }); },

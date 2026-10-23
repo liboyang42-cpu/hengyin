@@ -63,7 +63,7 @@ Page({
         loading: false,
         errorText: '探索链接不完整',
         errorKind: 'missing-param',
-        errorSub: '请从圈层主题或同行人分享的邀请重新进入',
+        errorSub: '请返回重新进入',
         errorAction: '返回首页'
       })
       return
@@ -452,7 +452,7 @@ Page({
     })
     const refreshed = await this.refreshCard()
     if (!refreshed) {
-      this.setData({ receiptText: '还是没核对上,网络恢复后点这里再试 · 期间请勿重复提交' })
+      this.setData({ receiptText: '还是没确认上，网络恢复后点这里再试 · 期间请勿重复提交' })
       return
     }
     const ok = landed()

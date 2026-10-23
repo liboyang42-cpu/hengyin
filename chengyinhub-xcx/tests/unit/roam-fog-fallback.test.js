@@ -316,11 +316,11 @@ test('poly 800 个离散历史点会保留揭雾且压住 polygon/setData 上限
     assert.strictEqual(fogStateAtOffset(page._fog, eastM, northM), 0, '离散历史揭雾点不能被性能降级吞掉');
   });
   assert.ok(fogStateAtOffset(page._fog, -2350, -2350) > 0,
-    '四个 55m 揭雾圆之间的未探索间隙必须保留雾,不能靠过度揭雾压 polygon');
+    '四个 55m 揭雾圆之间的未探索间隙必须保留雾，不能靠过度揭雾压 polygon');
   page._fogApplyReveal(page._c);
   const nextRevealErrorM = radialContourError(page._fog, 55);
   assert.ok(nextRevealErrorM <= 1.4,
-    '超限保护后新揭雾仍须保持精细硬边,当前误差 ' + nextRevealErrorM.toFixed(2) + 'm');
+    '超限保护后新揭雾仍须保持精细硬边，当前误差 ' + nextRevealErrorM.toFixed(2) + 'm');
   page._updateFogNow();
   const polygonCount = page.data.fogPolys.length;
   const payloadBytes = Buffer.byteLength(JSON.stringify(page.data.fogPolys));
@@ -337,8 +337,8 @@ test('poly 800 个离散历史点会保留揭雾且压住 polygon/setData 上限
   let scheduled = 0;
   page._scheduleFogUpdate = () => { scheduled++; page._updateFogNow(); };
   page._addReveal(backtrack);
-  assert.strictEqual(scheduled, 1, '裁窗后回走已探索区也必须重算玩家周边,不能被旧全雾挡板盖住');
-  assert.ok(page.data.fogPolys.length > 4, '回走点周边必须重新显示已揭区域,不能只剩全雾挡板');
+  assert.strictEqual(scheduled, 1, '裁窗后回走已探索区也必须重算玩家周边，不能被旧全雾挡板盖住');
+  assert.ok(page.data.fogPolys.length > 4, '回走点周边必须重新显示已揭区域，不能只剩全雾挡板');
 });
 
 test('poly 最小渲染窗仍碎片过多时 fail-closed 为全雾,绝不发超限或空数组', () => {
@@ -353,7 +353,7 @@ test('poly 最小渲染窗仍碎片过多时 fail-closed 为全雾,绝不发超�
   }
   page._updateFogNow();
   assert.ok(page.data.fogPolys.length > 0, '极端碎片时不能退成什么都不画');
-  assert.strictEqual(page.data.fogPolys.length, 1, '极端碎片必须收口成单块全雾,不能继续发送碎片 polygons');
+  assert.strictEqual(page.data.fogPolys.length, 1, '极端碎片必须收口成单块全雾，不能继续发送碎片 polygons');
   assert.strictEqual(page.data.fogPolys[0].fillColor, page._fogBandColor(1),
-    'fail-closed 只能回到全雾,不能通过降低浓度或透明来伪装通过');
+    'fail-closed 只能回到全雾，不能通过降低浓度或透明来伪装通过');
 });

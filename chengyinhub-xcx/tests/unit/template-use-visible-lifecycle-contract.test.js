@@ -133,7 +133,7 @@ test('复制模板的 pending 重入守卫必须阻止重复提交并在完成�
 
   h.requests[0].complete()
   h.page.useTt(event)
-  assert.equal(h.requests.length, 2, '请求完成后必须释放重入守卫,允许下一次真实操作')
+  assert.equal(h.requests.length, 2, '请求完成后必须释放重入守卫，允许下一次真实操作')
 })
 
 test('复制模板 pending 必须全局拦住第二个不同模板，不能只防同一张卡', () => {
@@ -143,7 +143,7 @@ test('复制模板 pending 必须全局拦住第二个不同模板，不能只�
 
   h.page.useTt(first)
   h.page.useTt(second)
-  assert.equal(h.requests.length, 1, '任一复制请求在途时,第二个模板也不得重复提交')
+  assert.equal(h.requests.length, 1, '任一复制请求在途时，第二个模板也不得重复提交')
 
   h.requests[0].fail({ msg: '复制失败' })
   h.requests[0].complete()

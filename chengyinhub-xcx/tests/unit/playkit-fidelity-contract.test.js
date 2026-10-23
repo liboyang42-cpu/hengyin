@@ -60,7 +60,7 @@ test('皮肤表逐字对应原型 .phone[data-skin=…]', () => {
 
 test('★变色就点的三档信号色照抄 Human Benchmark 那套约定', () => {
   const s = wxss('playkit-reaction')
-  assert.ok(hasHex(s, '#c5372f'), '等待期必须是红 —— 上一版用深蓝灰,那个颜色不说话')
+  assert.ok(hasHex(s, '#c5372f'), '等待期必须是红 —— 上一版用深蓝灰，那个颜色不说话')
   assert.ok(hasHex(s, '#22c55e'), '变绿那档是 #22c55e,不是随便一个绿')
   assert.ok(hasHex(s, '#1b1b22'), '抢跑单独一态')
   assert.ok(hasHex(s, '#0f172a'), '判完那档')
@@ -68,7 +68,7 @@ test('★变色就点的三档信号色照抄 Human Benchmark 那套约定', () 
 
 test('九宫格是有厚度的棋子:黑白相间 + 实心侧壁 + 点亮按下去', () => {
   const s = wxss('playkit-bingo')
-  assert.ok(/0 8rpx 0 #000/.test(s), '厚度靠实心投影当侧壁,不是柔影')
+  assert.ok(/0 8rpx 0 #000/.test(s), '厚度靠实心投影当侧壁，不是柔影')
   assert.ok(hasHex(s, '#ffffff') && hasHex(s, '#111114'), '黑白相间')
   assert.ok(hasHex(s, '#3fd2d2'), '点亮是青')
   assert.ok(hasHex(s, '#fc7ebd'), '连成线转粉')
@@ -87,16 +87,16 @@ test('抽卡是一副牌摊成扇形,不是一张孤零零的卡', () => {
 
 test('★硬币是银的、绕横轴翻、边上有滚花', () => {
   const s = wxss('playkit-coinflip')
-  assert.ok(s.includes('conic-gradient'), '滚花靠 conic 明暗交替,一条 radial 看着像塑料')
+  assert.ok(s.includes('conic-gradient'), '滚花靠 conic 明暗交替，一条 radial 看着像塑料')
   assert.ok(/rotateX\(180deg\)/.test(s), '绕横轴翻 —— 绕竖轴那是转陀螺')
-  assert.ok(hasHex(s, '#000'), '底必须黑,不然高光读不出来')
+  assert.ok(hasHex(s, '#000'), '底必须黑，不然高光加载失败')
   const j = js('playkit-coinflip')
   /* 2026-09-11:侧壁那六十片薄条已删。小程序会把这一层的 3D 压平,六十片摊成一条
      横穿屏幕的虚线(用户截图里问的就是它)。滚花现在只在两个面自己的 SVG 里 ——
      faces.js 的 common() 用两圈 dash 描边画齿,所以判据换成它,坏掉照样红。 */
   assert.ok(!/cf__slice/.test(s), '侧壁薄条不能回来:这一层 3D 在小程序里会被压平成一条横线')
   const f = fs.readFileSync(path.join(DIR, 'playkit-coinflip/faces.js'), 'utf8')
-  assert.ok(/ring\(80\.5/.test(f) && /ring\(69/.test(f), '面上的两圈滚花齿丢了,硬币会读成塑料片')
+  assert.ok(/ring\(80\.5/.test(f) && /ring\(69/.test(f), '面上的两圈滚花齿丢了，硬币会读成塑料片')
   // 动画时长两边必须一致,否则「转完了」和「显示结果」错开
   assert.equal((j.match(/const SPIN_MS = (\d+)/) || [])[1], '2200')
   assert.ok(s.includes('2.2s'), 'CSS 那条过渡也必须是 2.2s')
@@ -108,7 +108,7 @@ test('★问答的选项照试玩台 .qaopt(2026-10-23 用户:「回到试玩台
   assert.ok(/\.qa__opt \{[^}]*border-bottom: 1rpx solid var\(--soft\)/.test(s), '行与行之间是细线')
   assert.ok(/\.qa__opt--first \{[^}]*border-top: 1rpx solid var\(--soft\)/.test(s), '第一行上面也有一道线')
   assert.equal(/\.qa__opt \{[^}]*border-radius/.test(s), false, '单行不许有圆角 —— 那又变回一颗颗按钮')
-  assert.equal(/\.qa__opt\.is-(right|wrong) \{[^}]*background/.test(s), false, '对错只染字,不铺整行色块')
+  assert.equal(/\.qa__opt\.is-(right|wrong) \{[^}]*background/.test(s), false, '对错只染字，不铺整行色块')
   assert.ok(/\.qa__opt\.is-right::after \{ background: var\(--ok\)/.test(s), '尾巴方块跟着对错变色')
   assert.ok(/\.qa__input \{[\s\S]{0,400}?background: transparent/.test(s),
     '答案框不能是灰盒子 —— 盒子把「写答案」变成「填表格」')
@@ -122,13 +122,13 @@ test('猜数字是滚筒:一格一个数,上下两个不翻转', () => {
      原型那段渲染里写明「字形一个都不翻」,它第一版翻过来才是错的。
      邻数靠缩、糊、淡三样连续变化读出距离。 */
   assert.equal(s.includes('scaleY(-1)'), false, '邻数不翻转 —— 翻过来的数字没人认得出是 499')
-  assert.ok(/blur\(\d+rpx\)/.test(s) && s.includes('scale(.92)'), '邻数要缩要糊,否则读不出远近')
+  assert.ok(/blur\(\d+rpx\)/.test(s) && s.includes('scale(.92)'), '邻数要缩要糊，否则读不出远近')
   /* 它是滚轮:500 的邻居就该是 499 和 501。跳格的话中间那个数和上下两个不连续。 */
-  assert.ok(/span <= 2000\) return 1/.test(j), '常见量程必须一格一个数,不许跳格')
-  assert.ok(s.includes('mask-image'), '滚筒上下要淡出,才看着无头无尾')
+  assert.ok(/span <= 2000\) return 1/.test(j), '常见量程必须一格一个数，不许跳格')
+  assert.ok(s.includes('mask-image'), '滚筒上下要淡出，才看着无头无尾')
   assert.ok(m.includes('picker-view'), '手势交给原生 picker-view')
   assert.equal(/<input/.test(m), false,
-    '这一屏不是打字输入 —— 打字要人心里先有个数,滚轮是让人滑到差不多')
+    '这一屏不是打字输入 —— 打字要人心里先有个数，滚轮是让人滑到差不多')
 })
 
 test('猜图的底色顺序照原型,深色那格字要翻浅', () => {
@@ -139,7 +139,7 @@ test('猜图的底色顺序照原型,深色那格字要翻浅', () => {
      四张排在一起是红、蓝、深、紫。截图并排看才发现顺序反了。 */
   assert.ok(j.includes("'#f0402f', '#3563e9', '#2a2a28', '#8a6bf2'"),
     '底色顺序逐位照原型 tile.style.background 那一行')
-  assert.ok(/i % 6 === 2 \? '#e4ddd2'/.test(j), '第 3 格是深的,里面的字要翻浅')
+  assert.ok(/i % 6 === 2 \? '#e4ddd2'/.test(j), '第 3 格是深的，里面的字要翻浅')
 })
 
 
@@ -154,7 +154,7 @@ test('★副标题一律不显示 —— 原型 .hdr .s{display:none},那是「�
   /* header(title, sub) 的第二个参数在原型里被 CSS 全局隐藏了。
      照着 JS 抄会把它显示出来 —— 我在九宫格和滚筒上就是这么错的:
      读 JS 看到有 sub 就渲染,没去看 CSS 把它关掉了。 */
-  const BANNED = ['本周任务 · 城瘾', '上下滑动，松手后会自己滑一段', '上下滑动,松手后会自己滑一段']
+  const BANNED = ['本周任务 · 城瘾', '上下滑动，松手后会自己滑一段', '上下滑动，松手后会自己滑一段']
   for (const n of fs.readdirSync(DIR).filter((x) => /^playkit-/.test(x))) {
     const f = path.join(DIR, n, 'index.wxml')
     if (!fs.existsSync(f)) continue
@@ -171,7 +171,7 @@ test('★精准停表照的是试玩台 #kit2 那块浅色玻璃屏,不是主手
   const s = wxss('playkit-stopwatch')
   assert.ok(hasHex(s, '#F2F4F6'), '底色是 #F2F4F6 —— 走 skin-* 那套会变成深色屏')
   assert.ok(/\.sw__btn \{[\s\S]{0,700}?background: #111111/.test(s),
-    '这一屏的主按钮是黑的,不是别的玩法那颗白胶囊 —— 浅玻璃底上白按钮会糊进背景')
+    '这一屏的主按钮是黑的，不是别的玩法那颗白胶囊 —— 浅玻璃底上白按钮会糊进背景')
   assert.ok(/font-size: var\(--cy-play-display-4xl\)/.test(s), '走动的大数字使用 4xl 展示 token')
   assert.ok(/font-size: var\(--cy-play-display-2xl\)/.test(s), '准备屏的目标秒数使用 2xl 展示 token')
   assert.ok(/font-size: var\(--cy-type-data-xl\)/.test(s), '准备屏的误差使用 data-xl token')
@@ -179,8 +179,8 @@ test('★精准停表照的是试玩台 #kit2 那块浅色玻璃屏,不是主手
   const m = wxml('playkit-stopwatch')
   assert.ok(m.includes('开跑 1 秒后数字会消失') && m.includes('点屏幕任意处停'),
     '准备屏那两行提示逐字照原型')
-  assert.ok(m.includes('目标') && m.includes('误差'), '目标 / 误差是一对带标签的数,不是一句说明')
-  assert.ok(/—— · ——/.test(m), '数字藏了要有两道破折号占位,不能整块消失')
+  assert.ok(m.includes('目标') && m.includes('误差'), '目标 / 误差是一对带标签的数，不是一句说明')
+  assert.ok(/—— · ——/.test(m), '数字藏了要有两道破折号占位，不能整块消失')
 })
 
 test('★负控:随便改一个值,上面的断言必须判红', () => {

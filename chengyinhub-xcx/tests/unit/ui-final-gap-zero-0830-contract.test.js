@@ -23,7 +23,7 @@ test('结算页把资产动作与到账提醒从金额卡拆开，并为零调�
 
 test('成为节点常显主动作、驳回理由与三项运营动作', () => {
   const wxml = read('pages/merchant/citynode/index.wxml')
-  // 2026-09-23 CU-M-01:配额满/0 时同一颗主动作带 --disabled 修饰,仍常显
+  // 2026-09-23 CU-M-01:配额满/0 时同一颗主动作带 --disabled 修饰，仍常显
   assert.match(wxml, /class="cn-primary-action[ "]/)
   assert.match(wxml, /cn-primary-action--disabled/)
   assert.match(wxml, /class="cn-reject-reason"/)
@@ -32,8 +32,8 @@ test('成为节点常显主动作、驳回理由与三项运营动作', () => {
   assert.match(wxml, />扫码核销</)
 })
 
-// 2026-09-17 B-06:原「合作条款只读页(pricing/partner)展示冻结时间且不重复条款摘要」
-// 契约随孤儿页整页退役 —— 页面已从 app.json 摘除,该断言没有宿主。
+// 2026-09-17 B-06:原「合作条款只读页(pricing/partner)展示锁定时间且不重复条款摘要」
+// 契约随孤儿页整页退役 —— 页面已从 app.json 摘除，该断言没有宿主。
 
 test('俱乐部分润显式区分已结算与已入账', () => {
   const js = read('components/cy/scene-merchant-profit/index.js')
@@ -86,7 +86,7 @@ test('协作对象列表是裸行头像样式，确认页回显锁定对象与�
   const invite = read('pages/coop/invite/index.wxml')
   assert.match(invite, /class="target-list"/)
   assert.match(invite, /邀请对象 · 已锁定/)
-  assert.match(invite, /拟议条款 · 对方接受并成单后冻结/)
+  assert.match(invite, /拟议条款 · 对方接受并成单后锁定/)
 })
 
 test('日期范围使用商家主题日历弹窗并保留范围选择状态', () => {
@@ -108,7 +108,7 @@ test('订单详情采用摘要、时间线和明细三段结构', () => {
   const settlement = read('pages/coop/components/settlement-detail/index.wxml')
   /* 2026-09-11 按稿 578:2298 重排:摘要从正文里的一张「商品卡」搬到了头图上
      (稿的口径是「大金额与状态先行」)。三段结构本身没变 ——
-     摘要 = 头图上的金额/路线名/时间/状态药丸,时间线照旧,明细换成成组的行。 */
+     摘要 = 头图上的金额/路线名/时间/状态药丸，时间线照旧，明细换成成组的行。 */
   assert.match(member, /class="hero-amt"/)
   assert.match(member, /class="hero-pill hero-pill--\{\{statusTone\}\}"/)
   assert.match(member, /order-timeline/)

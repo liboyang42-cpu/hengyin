@@ -28,7 +28,7 @@ function loadSheet(mutate) {
   let src = fs.readFileSync(SHEET_JS, 'utf8')
   if (mutate) {
     const next = mutate(src)
-    assert.notEqual(next, src, '负控没有真的改到源码 —— 注入点写错了,这条负控是恒真的')
+    assert.notEqual(next, src, '负控没有真的改到源码 —— 注入点写错了，这条负控是恒真的')
     src = next
   }
   let captured = null
@@ -118,7 +118,7 @@ test('慢慢拖但没到 1/3 ⇒ 不关,弹回', () => {
   const events = drag(inst, { steps: Array(5).fill(20), stepMs: 100 })   // 100px < 200px
   assert.equal(closed(events), false, '没过阈值不能关')
   assert.equal(requested(events), false, '没过阈值也不该发 requestclose')
-  assert.equal(inst.data._dragStyle, '', '弹回时必须把行内 transform 清掉,否则面板停在半路')
+  assert.equal(inst.data._dragStyle, '', '弹回时必须把行内 transform 清掉，否则面板停在半路')
   assert.equal(inst.data._snapping, true, '没过阈值必须进吸附态')
 })
 
@@ -126,7 +126,7 @@ test('位移很小但甩得快 ⇒ 关闭(速度闸)', () => {
   const inst = makeInstance(loadSheet(), { panelHeight: 600 })
   // 总位移 60px(远小于 200px),但末段 30px/16ms ≈ 1.9 px/ms
   const events = drag(inst, { steps: [30, 30], stepMs: 16 })
-  assert.ok(closed(events), '快甩必须关闭 —— 这条挂的是速度闸,不是位移闸')
+  assert.ok(closed(events), '快甩必须关闭 —— 这条挂的是速度闸，不是位移闸')
 })
 
 test('dirty 时过阈值只发 requestclose,不发 close', () => {
@@ -152,14 +152,14 @@ test('往上拖有阻尼且不会触发关闭', () => {
   } finally { global.Date.now = realNow }
   const up = /--sh-drag-y:\s*(-?[\d.]+)px/.exec(inst2.data._dragStyle)
   assert.ok(up, '向上拖也要输出 --sh-drag-y')
-  assert.ok(Number(up[1]) > -30, `向上必须有阻尼,不能 1:1(实际 ${up[1]}px)`)
+  assert.ok(Number(up[1]) > -30, `向上必须有阻尼，不能 1:1(实际 ${up[1]}px)`)
 })
 
 test('量不到面板高度时降级成只看速度,慢拖不会误关', () => {
   const def = loadSheet()
   const inst = makeInstance(def, { panelHeight: 0 })
   const events = drag(inst, { steps: Array(30).fill(20), stepMs: 100 })
-  assert.equal(closed(events), false, 'h=0 时位移闸必须失效,不能拿 0 当阈值把面板一拖就关')
+  assert.equal(closed(events), false, 'h=0 时位移闸必须失效，不能拿 0 当阈值把面板一拖就关')
 })
 
 test('wxml:抓手挂了完整的四个触摸事件,且用 catch 不冒泡', () => {
@@ -177,7 +177,7 @@ test('wxml:抓手挂了完整的四个触摸事件,且用 catch 不冒泡', () =
   assert.match(wxml, /class="sh sh--\{\{variant\}\}[^"]*"[^>]*style="\{\{_dragStyle\}\}/,
     '根节点必须承载 _dragStyle(--sh-drag-y),拖拽才跟手')
   assert.match(wxml, /class="sh__panel[^"]*"[^>]*style="\{\{\(_morphOpen && !_closing\) \? '' : _morphStyle\}\}"/,
-    '.sh__panel 的行内 style 必须保持 morph 契约的原样,不许被拖拽叠一层')
+    '.sh__panel 的行内 style 必须保持 morph 契约的原样，不许被拖拽叠一层')
 })
 
 /* ——— 负控:两条闸各拆一次,对应用例必须判红 ——— */
@@ -186,7 +186,7 @@ test('负控:拆掉速度闸后,快甩用例必须判红', () => {
   const def = loadSheet((src) => src.replace('const DRAG_VELOCITY = 0.55;', 'const DRAG_VELOCITY = 1e9;'))
   const inst = makeInstance(def, { panelHeight: 600 })
   const events = drag(inst, { steps: [30, 30], stepMs: 16 })
-  assert.equal(closed(events), false, '速度闸被拆掉后快甩还能关 ⇒ 说明它根本不是靠速度闸关的,断言是假的')
+  assert.equal(closed(events), false, '速度闸被拆掉后快甩还能关 ⇒ 说明它根本不是靠速度闸关的，断言是假的')
 })
 
 test('负控:拆掉位移闸后,慢拖用例必须判红', () => {
@@ -204,7 +204,7 @@ test('maskClosable=false 时,过阈值的拖拽也不许关闭(与点遮罩同�
   inst.data.maskClosable = false
   const events = drag(inst, { steps: Array(15).fill(20), stepMs: 100 })
   assert.equal(closed(events), false, 'maskClosable=false 却被拖关了 —— 守卫被绕过')
-  assert.equal(inst.data._snapping, true, '不许关的面板必须弹回,不能停在半路')
+  assert.equal(inst.data._snapping, true, '不许关的面板必须弹回，不能停在半路')
 })
 
 test('负控:拖拽不查 maskClosable 时必须判红', () => {
@@ -226,8 +226,8 @@ test('dirty 时过阈值:关不掉,但面板必须弹回而不是瞬移', () => 
   const events = drag(inst, { steps: Array(15).fill(20), stepMs: 100 })
   assert.ok(requested(events), '仍要上报 requestclose,让父页面决定')
   assert.equal(closed(events), false, '脏输入不能直接关')
-  assert.equal(inst.data._snapping, true, '关不掉的面板必须进吸附态,否则是瞬移回位')
-  assert.equal(inst.data._dragStyle, '', '行内位移要清掉,否则停在半路')
+  assert.equal(inst.data._snapping, true, '关不掉的面板必须进吸附态，否则是瞬移回位')
+  assert.equal(inst.data._dragStyle, '', '行内位移要清掉，否则停在半路')
 })
 
 test('负控:把 dirty 从「不许关」里拿掉时,上面那条必须判红', () => {

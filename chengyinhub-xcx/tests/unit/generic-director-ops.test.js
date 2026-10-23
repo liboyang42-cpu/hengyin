@@ -55,12 +55,12 @@ const cases = [
   ['MANUAL_BEGIN', { highWaterHash: 'a'.repeat(64), configHash: 'b'.repeat(64), unknownRequests: '[]', reason: '改用人工账' },
     { highWaterHash: 'a'.repeat(64), configHash: 'b'.repeat(64), unknownRequests: [], reason: '改用人工账' }],
   ['MANUAL_IMPORT', { signatureId: '62' }, { signatureId: '62' }],
-  ['MANUAL_REVIEW', { reviewKind: 'HIGH_WATER', reason: '已核对高水位' }, { acceptCurrentHighWater: true, reason: '已核对高水位' }],
+  ['MANUAL_REVIEW', { reviewKind: 'HIGH_WATER', reason: '已确认高水位' }, { acceptCurrentHighWater: true, reason: '已确认高水位' }],
   ['MANUAL_REVIEW', { reviewKind: 'SIGNATURE', signatureId: '62', reason: '驳回该签名' }, { signatureId: '62', reason: '驳回该签名' }],
-  ['MANUAL_REVIEW', { reviewKind: 'REQUEST', memberId: '99', requestId: 'game_original', acceptLateConflict: true, reason: '明确核对迟到冲突' },
-    { memberId: 99, requestId: 'game_original', acceptLateConflict: true, reason: '明确核对迟到冲突' }],
-  ['STAFF_MANUAL_SIGN', { sequence: '1', occurredAt: '1791577800000', signedAction: 'ARRIVAL_ATTEST', teamId: '81', questKey: 'quest.1', reason: '纸账现场到达' },
-    { sequence: 1, occurredAt: 1791577800000, command: { action: 'ARRIVAL_ATTEST', payload: { teamId: 81, questKey: 'quest.1', reason: '纸账现场到达' } } }],
+  ['MANUAL_REVIEW', { reviewKind: 'REQUEST', memberId: '99', requestId: 'game_original', acceptLateConflict: true, reason: '明确确认迟到冲突' },
+    { memberId: 99, requestId: 'game_original', acceptLateConflict: true, reason: '明确确认迟到冲突' }],
+  ['STAFF_MANUAL_SIGN', { sequence: '1', occurredAt: '1791577800000', signedAction: 'ARRIVAL_ATTEST', teamId: '81', questKey: 'quest.1', reason: '纸质记录现场到达' },
+    { sequence: 1, occurredAt: 1791577800000, command: { action: 'ARRIVAL_ATTEST', payload: { teamId: 81, questKey: 'quest.1', reason: '纸质记录现场到达' } } }],
 ];
 for (const [action, draft, expected] of cases) test(`${action} exact whitelisted body ${draft.reviewKind || ''}`, () => {
   assert.deepEqual(genericOpsPayload(action, Object.assign({ ownerId: 1000, balance: 999 }, draft), guideControl), expected);
@@ -124,7 +124,7 @@ test('required reason, exclusive target and controlled signer are validated befo
   assert.throws(() => genericOpsPayload('RUN_CANCEL', { reason: '' }), /原因/);
   assert.throws(() => genericOpsPayload('RUN_PAUSE', { reason: '长'.repeat(201) }), /原因/);
   assert.throws(() => genericOpsPayload('ARRIVAL_CONFIRM', { teamId: '81', questKey: 'quest.1', operationKind: 'FACILITY', operationKey: 'tool.1', nonce: 'abc' }), /任务或操作/);
-  assert.throws(() => genericOpsPayload('MANUAL_BEGIN', { highWaterHash: 'a'.repeat(64), configHash: 'b'.repeat(64), unknownRequests: '[{"memberId":99,"requestId":"x","requestHash":"invalid"}]', reason: '接人工账' }), /待核对请求/);
+  assert.throws(() => genericOpsPayload('MANUAL_BEGIN', { highWaterHash: 'a'.repeat(64), configHash: 'b'.repeat(64), unknownRequests: '[{"memberId":99,"requestId":"x","requestHash":"invalid"}]', reason: '接人工账' }), /待复查操作/);
   assert.throws(() => genericOpsPayload('STAFF_MANUAL_SIGN', { signedAction: 'ITEM_USE', sequence: 1, occurredAt: 1 }), /核验/);
 });
 
@@ -137,7 +137,7 @@ test('authority conflict is preserved and unknown / replay receipt uses the orig
   await new Promise(resolve => setImmediate(resolve));
   calls[1].success({ code: 200, data: control(['RUN_PAUSE']) });
   await loaded;
-  const command = { activityId: 71, expectedRevision: 9, authorityEpoch: 2, requestId: 'game_original', action: 'RUN_PAUSE', payload: { reason: '暂停核对' } };
+  const command = { activityId: 71, expectedRevision: 9, authorityEpoch: 2, requestId: 'game_original', action: 'RUN_PAUSE', payload: { reason: '暂停确认' } };
   const conflicted = adapter.submit(command);
   calls[2].success({ code: 500, msg: '权威已切换', data: { reasonCode: 'GAME_AUTHORITY_CONFLICT' } });
   assert.equal((await conflicted).raw.reasonCode, 'GAME_AUTHORITY_CONFLICT');
@@ -285,7 +285,7 @@ test('manual begin uses the server anchor instead of editable hashes/time and pr
   const unknown = [{ memberId: 99, requestId: 'game_original', requestHash: 'c'.repeat(64) }];
   const snapshot = control(['MANUAL_BEGIN']);
   snapshot.offlineAnchor = { highWaterHash: 'a'.repeat(64), configHash: 'b'.repeat(64), epoch: 2, at: Date.UTC(2026, 9, 9, 6, 30) };
-  const draft = { highWaterHash: 'd'.repeat(64), configHash: 'e'.repeat(64), unknownRequests: JSON.stringify(unknown), offlineStartedAt: '1999-01-01 00:00:00', reason: '现场改用纸账' };
+  const draft = { highWaterHash: 'd'.repeat(64), configHash: 'e'.repeat(64), unknownRequests: JSON.stringify(unknown), offlineStartedAt: '1999-01-01 00:00:00', reason: '现场改用纸质记录' };
   const result = genericOpsPayload('MANUAL_BEGIN', draft, snapshot);
   assert.deepEqual(result.unknownRequests, unknown);
   assert.equal(result.offlineStartedAt, Date.UTC(2026, 9, 9, 6, 30));
@@ -339,7 +339,7 @@ test('offline start rejects malformed or mismatched server anchors as unknown', 
 });
 
 test('offline malformed responses and untyped server errors remain unknown; typed game rejection is definite', async () => {
-  for (const body of [undefined, null, {}, { code: 500, msg: '游戏服务暂时不可用' }, { code: 500, data: { reasonCode: 'OTHER_ERROR' } }]) {
+  for (const body of [undefined, null, {}, { code: 500, msg: '游戏服务暂不可用' }, { code: 500, data: { reasonCode: 'OTHER_ERROR' } }]) {
     const client = createGameSessionClient({ sendRequest(options) { options.success(body); } });
     assert.equal((await client.anchorSharedRun(71)).status, 'unknown-write');
   }

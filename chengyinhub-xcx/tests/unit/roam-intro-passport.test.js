@@ -96,7 +96,7 @@ test('negative control: 读数改回跟着旅程卡截断走必须判红', () =>
     global.getApp = previousGetApp
   }
   const shops = page.data.passport.stats.find(item => item.k === '探店').v
-  assert.notEqual(shops, 12, '一旦读数被 slice(0,12) 之类截断,这里会变 12 并判红')
+  assert.notEqual(shops, 12, '一旦读数被 slice(0,12) 之类截断，这里会变 12 并判红')
 })
 
 test('护照只统计当前玩家的漫游记录，不认领旧共享缓存或其他玩家记录', () => {

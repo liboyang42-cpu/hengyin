@@ -56,7 +56,7 @@ test('升级权益双击只创建一个带 requestId 的订单', () => {
   assert.equal(vm.data.checkoutBusy, true);
 });
 
-test('微信支付及订单成功后仍须核对生效授予记录', () => {
+test('微信支付及订单成功后仍须确认生效授予记录', () => {
   const vm = page();
   vm.tapTier({ currentTarget: { dataset: { key: 'premium_template' } } });
   sandbox.requests[0].success({ code: 200, data: validOrder() });
@@ -84,7 +84,7 @@ test('支付参数不完整时不得调用 requestPayment', () => {
 
   assert.equal(sandbox.payments.length, 0);
   assert.equal(vm.data.checkoutBusy, false);
-  assert.ok(sandbox.toasts.some((text) => /支付参数/.test(text)));
+  assert.ok(sandbox.toasts.some((text) => /支付发起失败/.test(text)));
 });
 
 test('页面卸载必须 destroy workflow 并 abort 在途建单/终态请求', () => {

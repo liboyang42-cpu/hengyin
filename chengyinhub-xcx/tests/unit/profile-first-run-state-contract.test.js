@@ -566,7 +566,7 @@ test('首访：所有来源成功且从未参与时进入引导态，不把空�
   assert.equal(component.data.profileMetricState, 'empty')
   // 2026-09-18 UI-04 用户拍板:数字统计没取到显示 0,不再是「—」。
   // 空态判定不受影响(它看的是 userSignals 原值,不是这个展示兜底)。
-  assert.equal(component.data.friendNum, 0, '字段缺失按 UI-04 兜底成 0')
+  assert.equal(component.data.friendNum, 0, '字段缺失按 UI-04 保底成 0')
 })
 
 test('真实零：有过节点参与的老用户即使里程、EXP、周积分都为零，仍展示真实指标', async () => {
@@ -722,7 +722,7 @@ function assertFirstRunMarkup(wxml, wxss) {
   assert.doesNotMatch(wxml, /class="pc-stat-n">\{\{userInfo\.(?:followNum|fansNum)\s*\|\|\s*0\}\}/)
   assert.doesNotMatch(wxml, /class="pc-gs-num">\{\{userInfo\.point\s*\|\|\s*0\}\}/)
   // 点击高度的保证随按钮一起搬到 cy-error 组件里(.cy-error-retry 的 height 就是 --cy-btn-h)。
-  assert.doesNotMatch(wxss, /\.pc-metric-retry\s*\{/, '自绘重试按钮的样式应随标签一起删除,别留孤儿')
+  assert.doesNotMatch(wxss, /\.pc-metric-retry\s*\{/, '自绘重试按钮的样式应随标签一起删除，别留孤儿')
   const errWxss = fs.readFileSync(path.join(ROOT, 'components/cy/error/index.wxss'), 'utf8')
   assert.match(errWxss, /\.cy-error-retry\s*\{[^}]*height:\s*var\(--cy-btn-h\)/s,
     'cy-error 的重试按钮必须保持 --cy-btn-h 的可点高度')

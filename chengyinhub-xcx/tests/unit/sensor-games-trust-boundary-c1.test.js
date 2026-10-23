@@ -1,9 +1,9 @@
 /* C1 传感器小游戏的可信边界(选项 A,2026-10-22 拍板)· 小程序侧
  *
  * 钉住四件事:
- *   ① 服务端发的挑战身份 attemptId 随成绩交上去;没有就不带(存量口径),不编一个;
+ *   ① 服务端发的挑战身份 attemptId 随成绩交上去；没有就不带(存量口径),不编一个;
  *   ② 奖励上限只搬服务端的 rewardCeiling:字段缺失时不承诺奖励、不说「已核验」;
- *   ③ 拍照兜底放行(passed && flagged)说「机会用完了，这张先算过」,不说「这张过了」;
+ *   ③ 拍照保底放行(passed && flagged)说「机会用完了，这张先算过」,不说「这张过了」;
  *   ④ 扫码说清是「任务码匹配」,不是到场核验。
  */
 const assert = require('node:assert/strict')
@@ -41,7 +41,7 @@ function instanceOf(component) {
   return inst
 }
 
-test('attemptOf 只认正的安全整数;别的一律当没有', () => {
+test('attemptOf 只认正的安全整数；别的一律当没有', () => {
   assert.equal(contract.attemptOf(4242001), 4242001)
   assert.equal(contract.attemptOf('4242001'), 4242001)
   for (const bad of [undefined, null, '', 0, -3, 1.5, 'abc', '12a', Number.MAX_SAFE_INTEGER + 2, {}, true]) {
@@ -49,7 +49,7 @@ test('attemptOf 只认正的安全整数;别的一律当没有', () => {
   }
 })
 
-test('kitFields 缺字段时给 0 / 空串,不按保守默认去说', () => {
+test('kitFields 缺字段时给 0 / 空串，不按保守默认去说', () => {
   assert.deepEqual(contract.kitFields(undefined), { attemptId: 0, rewardCeiling: '' })
   assert.deepEqual(contract.kitFields({ rewardCeiling: 'LOTS', attemptId: 'x' }), { attemptId: 0, rewardCeiling: '' })
   assert.deepEqual(contract.kitFields({ rewardCeiling: 'XP_BADGE_ONLY', attemptId: 9 }), { attemptId: 9, rewardCeiling: 'XP_BADGE_ONLY' })
@@ -62,7 +62,7 @@ test('rewardNote 只在服务端明说 XP_BADGE_ONLY 时说话;FULL 与缺失都
   assert.equal(contract.rewardNote(undefined), '')
 })
 
-test('freshAttempt:开局时手里那个号不算,只认之后服务端新发的', () => {
+test('freshAttempt:开局时手里那个号不算，只认之后服务端新发的', () => {
   assert.equal(contract.freshAttempt(22, 11), 22)
   assert.equal(contract.freshAttempt(11, 11), 0)
   assert.equal(contract.freshAttempt(0, 11), 0)
@@ -124,7 +124,7 @@ function photoVerdict(fields) {
   return inst.data
 }
 
-test('拍照兜底放行(passed && flagged)说「先算过」,不说「这张过了」,也不说已核验', () => {
+test('拍照保底放行(passed && flagged)说「先算过」,不说「这张过了」,也不说已核验', () => {
   const data = photoVerdict({ passed: true, flagged: true, rewardCeiling: 'XP_BADGE_ONLY' })
   assert.equal(data.verdict, '机会用完了，这张先算过')
   assert.notEqual(data.verdict, '这张过了')
@@ -132,7 +132,7 @@ test('拍照兜底放行(passed && flagged)说「先算过」,不说「这张过
   assert.match(data.rewardNote, /只记探索值与徽章/)
 })
 
-test('视觉模型真判 PASS 才显示已核验;字段缺失时什么都不说', () => {
+test('视觉模型真判 PASS 才显示已核验；字段缺失时什么都不说', () => {
   const verified = photoVerdict({ passed: true, photoVerified: true, rewardCeiling: 'FULL' })
   assert.equal(verified.verdict, '这张过了')
   assert.equal(verified.verifiedNote, '照片已核验')
@@ -144,16 +144,16 @@ test('视觉模型真判 PASS 才显示已核验;字段缺失时什么都不说'
   assert.equal(notYet.verifiedNote, '', '没过之前不说已核验')
 })
 
-test('扫码这一屏有一行说清是任务码匹配,不是到场核验', () => {
+test('扫码这一屏有一行说清是任务码匹配，不是到场核验', () => {
   const wxml = read('pages/play/components/playkit-scan/index.wxml')
   assert.match(wxml, /\{\{matchNote\}\}/)
   const component = loadComponent('pages/play/components/playkit-scan/index.js')
   assert.equal(component.data.matchNote, contract.SCAN_MATCH_NOTE)
   assert.match(contract.SCAN_MATCH_NOTE, /任务码/)
-  assert.match(contract.SCAN_MATCH_NOTE, /不代表到场/)
+  assert.match(contract.SCAN_MATCH_NOTE, /仅确认这一站的任务码/)
 })
 
-test('六个组件里「已核验」只走服务端 photoVerified 那一条,不许写死承诺奖励的话', () => {
+test('六个组件里「已核验」只走服务端 photoVerified 那一条，不许写死承诺奖励的话', () => {
   for (const name of SENSOR_COMPONENTS) {
     for (const ext of ['js', 'wxml']) {
       const src = read('pages/play/components/playkit-' + name + '/index.' + ext)
@@ -163,7 +163,7 @@ test('六个组件里「已核验」只走服务端 photoVerified 那一条,不�
   }
 })
 
-test('安静挑战显示校准状态与相对阈值,不是分贝', () => {
+test('安静挑战显示校准状态与相对阈值，不是分贝', () => {
   const wxml = read('pages/play/components/playkit-quiethold/index.wxml')
   assert.match(wxml, /calibration === 'calibrating'/)
   assert.match(wxml, /calibration === 'calibrated'/)
@@ -173,8 +173,8 @@ test('安静挑战显示校准状态与相对阈值,不是分贝', () => {
 })
 
 // DOC2 FXA(#478-3 后续):BF4/W48R 点名的三个还没传号的组件 —— reaction / ballshake 接上 attemptId,
-// compass 开跑时报 START_CHALLENGE 领号。诚实玩家带上号,不会因为「没号」被一并封顶。
-test('reaction / ballShake 的 kit 原样搬服务端 attemptId,分发器绑到组件上;罗盘开表走 START_CHALLENGE', () => {
+// compass 开跑时报 START_CHALLENGE 领号。诚实玩家带上号，不会因为「没号」被一并封顶。
+test('reaction / ballShake 的 kit 原样搬服务端 attemptId,分发器绑到组件上；罗盘开表走 START_CHALLENGE', () => {
   const now = new Date(2026, 9, 23, 12)
   const view = (seg) => ({ sessionId: 's1', version: 1, playKit: seg })
   assert.equal(pickPlayKit(view({ reaction: { rounds: 3, goalMs: 300, attemptId: 41 } }), now).attemptId, 41)

@@ -331,10 +331,10 @@ Page({
     return [
       { key: 'redeem', name: '核销率', num: this._pct(c.redeemRate), pct: this._fill(c.redeemRate),
         sub: this._countText(c.total) + ' 次打卡' + (wait === null ? '' : ' · 平均等待 ' + wait + ' 分钟'),
-        scope: '口径：已核销报名数 ÷ ' + window + '内报名数' },
+        scope: '计算方式：已核销报名数 ÷ ' + window + '内报名数' },
       { key: 'repeat', name: '复购率', num: this._pct(c.repeatRate), pct: this._fill(c.repeatRate),
         sub: '基于 ' + this._countText(facts && facts.sampleMembers) + ' 位核销顾客',
-        scope: '口径：核销≥2次的会员 ÷ ' + window + '内核销会员' },
+        scope: '计算方式：核销≥2次的会员 ÷ ' + window + '内核销会员' },
     ];
   },
 
@@ -381,7 +381,7 @@ Page({
       newVisitors: n,
       returningVisitors: r,
       newPct: Math.round(n / (n + r) * 100),
-      scope: '口径：' + window + '内有到店的玩家，窗口前（全历史）也到过店的算回头客',
+      scope: '计算方式：' + window + '内有到店的玩家，窗口前（全历史）也到过店的算回头客',
     };
   },
 

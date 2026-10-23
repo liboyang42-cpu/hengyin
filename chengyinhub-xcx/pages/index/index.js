@@ -374,17 +374,17 @@ Page({
             });
             return;
           }
-          cyToast((res && res.msg) || '这张码暂时打不开');
+          cyToast((res && res.msg) || '这张码无法打开');
           that.finishDoorSceneFallback();
         },
         fail() {
-          cyToast('这张码暂时打不开');
+          cyToast('这张码无法打开');
           that.finishDoorSceneFallback();
         },
       });
     }).catch(() => {
       if (that._unloaded) return;
-      cyToast('这张码暂时打不开');
+      cyToast('这张码无法打开');
       that.finishDoorSceneFallback();
     });
     return true;
@@ -1218,7 +1218,7 @@ Page({
           }
         } else {
           // 非 200 也是失败:原码直接落地不管,列表停在 [] → 渲染成空态/「正在加载」
-          markErr(res && res.msg ? res.msg : '列表没加载出来，请下拉刷新');
+          markErr(res && res.msg ? res.msg : '列表加载失败，请下拉刷新');
         }
       },
       // 原为空 fail:{} —— 列表停在 [] 且无任何标记,wxml 于是渲染

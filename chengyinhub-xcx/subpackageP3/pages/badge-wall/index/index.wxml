@@ -50,7 +50,7 @@
   </view>
 
   <cy-empty class="bw-empty-state" fill size="lg" title="还没有点亮勋章"
-    sub="完成一次城市探索或成长里程，第一枚勋章会在这里出现" cta="去探索" bind:cta="goExplore"
+    cta="去探索" bind:cta="goExplore"
     wx:if="{{loaded && !badges.length && !loadFail && !partialFail}}" />
 
   <!-- 原生 WebGL 覆盖层:普通 view 会被 canvas 原生层压住,返回必须留在 cover-view 上 -->
@@ -82,7 +82,7 @@
   <cy-error load-failure="{{loadFail && !wallAuthRequired && !wallAccessDenied}}" class="bw-error-state" wx:if="{{loadFail || partialFail || (glFail && viewMode === 'wall')}}" fill size="lg"
     icon="/images/no_data.svg"
     title="{{wallAuthRequired ? '登录后查看我的勋章' : loadFail ? '勋章数据没有到达' : partialFail ? '部分勋章数据未到达，当前结果不完整' : glFail ? '勋章墙渲染失败' : ''}}"
-    sub="{{wallAuthRequired ? '登录后可查看你已获得的城市勋章' : wallAccessDenied ? '请确认当前账号的查看权限' : partialFail ? '当前结果不完整，请重试获取全部勋章。' : '网络或渲染暂时失败，重试会重新加载'}}"
+    sub="{{partialFail ? '部分内容未更新' : ''}}"
     retry="{{wallAuthRequired ? '登录' : '重试'}}" bind:retry="retryWall" />
 
   <!-- 详情 veil + sheet:同样必须在原生 canvas 之上;外观照玩家场景弹窗 cy-scene-sheet(标题行只放标题与叉) -->

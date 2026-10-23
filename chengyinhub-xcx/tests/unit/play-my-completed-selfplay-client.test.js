@@ -121,7 +121,7 @@ test('F2:同主题活动+自玩两条真实对象都在,里程碑按 topicId 只
   const vm = loadPicker()
   vm.fetchList()
   requests[1].success({ code: '200', data: [activityItem, selfPlayItem] })
-  assert.equal(vm.data.list.length, 2, '选择器保留活动与自玩两条真实对象供关联发帖,不机械删活动')
+  assert.equal(vm.data.list.length, 2, '选择器保留活动与自玩两条真实对象供关联发帖，不机械删活动')
   assert.deepEqual(vm.data.list.map((item) => item.dataType).sort(), [1, 2])
 })
 
@@ -131,7 +131,7 @@ test('里程碑:空列表是「零完成」而不是「没有数据」', () => {
   page.loadMilestone()
   requests[0].success({ code: 200, data: [] })
 
-  assert.ok(page.data.milestone, '空数组是确定的 0,轴仍可渲染')
+  assert.ok(page.data.milestone, '空数组是确定的 0，轴仍可渲染')
   assert.equal(page.data.milestone.count, 0)
 })
 

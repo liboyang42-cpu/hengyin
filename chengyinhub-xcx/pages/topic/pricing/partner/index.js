@@ -6,9 +6,9 @@ const { merchantHomeUrl } = require('../../../../utils/merchant-home-link.js');
 const { readReducedMotion } = require('../../../../utils/motion-preference.js');
 
 function termsFootnote(shareMode) {
-  if (shareMode === 1) return '开售后条款冻结，按实际票款参与分成结算。';
-  if (shareMode === 2) return '开售后条款冻结，按实际核销人头结算。';
-  return '开售后阵容冻结；引流型合作不产生现金分成。';
+  if (shareMode === 1) return '开售后条款锁定，按实际票款分成结算';
+  if (shareMode === 2) return '开售后条款锁定，按实际核销人数结算';
+  return '开售后阵容锁定，引流型合作不产生现金分成';
 }
 
 function positiveInteger(value) {
@@ -154,7 +154,7 @@ Page({
         res = res || {};
         if (res.code != '200' || !res.data || !Array.isArray(res.data.lineup)) {
           this.finishLoad(epoch, {
-            loadError: requestError(res, '合作条款加载失败，请稍后重试。'),
+            loadError: requestError(res, '合作条款加载失败，请重试。'),
           });
           return;
         }
@@ -180,7 +180,7 @@ Page({
       },
       fail: (error) => {
         this.finishLoad(epoch, {
-          loadError: requestError(error, '合作条款加载失败，请稍后重试。'),
+          loadError: requestError(error, '合作条款加载失败，请重试。'),
         });
       },
     });

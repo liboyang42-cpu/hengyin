@@ -304,7 +304,7 @@ test('CU-C-92:可提现为 0 或余额未取到时禁用提现主按钮并说明
   // wxml 是真正决定按钮可不可点的一侧:禁用与提示文案都必须落在模板上
   const wxml = fs.readFileSync(path.join(root, 'pages/club/settlement/index.wxml'), 'utf8')
   assert.match(wxml, /disabled="\{\{withdrawing \|\| withdrawState !== 'positive'\}\}"/)
-  assert.match(wxml, /wx:if="\{\{withdrawState === 'zero'\}\}"[^>]*>可提现为 0/)
+  assert.match(wxml, /wx:if="\{\{withdrawState === 'zero'\}\}"[^>]*>客诉期结束后可提现/)
   assert.match(wxml, /<cy-funds-stages[^>]*bind:stages="onStages"/, '余额事件必须真接到页面')
 })
 
@@ -316,5 +316,5 @@ test('CU-C-93:chip 已经说清的状态不再在 meta 行重复一次', () => {
   const paidLine = wxml.match(/<text class="topic-row-meta-line"[^>]*>\{\{item\.paidText\}\}<\/text>/)
   assert.ok(paidLine, 'paidText 行还在(作废细节仍要说)')
   assert.match(paidLine[0], /wx:if="\{\{item\.status === 'void' \|\| item\.amountStatus !== 'verified'\}\}"/,
-    'pending/已入账 两档与 chip 同词,不得再渲染一次')
+    'pending/已入账 两档与 chip 同词，不得再渲染一次')
 })

@@ -58,7 +58,7 @@ test('B-04:定价确认成功 toast 说「等待开售审核」,不谎报已开�
   requests[0].success({ code: '200', msg: '终价已确认，请等待开售审核' })
 
   assert.ok(toasts.includes('终价已确认，请等待开售审核'), '必须采用后端真实口径')
-  assert.equal(toasts.includes('已确认并开售'), false, '确认≠开售,不能给发起人假的开卖预期')
+  assert.equal(toasts.includes('已确认并开售'), false, '确认≠开售，不能给发起人假的开卖预期')
 })
 
 test('B-04:后端没带 msg 时也用真话兜底,不回退旧谎报', () => {
@@ -78,10 +78,10 @@ test('B-07:踢人文案不再承诺邀请码可复活(KICKED 不在复活白名�
     .filter(Boolean)
     .join('\n')
 
-  assert.doesNotMatch(all, /接受邀请/, '被移出者用邀请码回不来,不能承诺接受邀请即可回归')
+  assert.doesNotMatch(all, /接受邀请/, '被移出者用邀请码回不来，不能承诺接受邀请即可回归')
   // 6-19:KICKED(3) 连重新申请也被后端永久拒绝(PlayTeamServiceImpl.apply / join 双重拦截),
   // 「重新申请加入」是第二个不存在的路径,同样不许承诺。
-  assert.doesNotMatch(all, /重新申请/, '被移出后不能再申请,不能承诺重新申请可回')
+  assert.doesNotMatch(all, /重新申请/, '被移出后不能再申请，不能承诺重新申请可回')
   assert.match(all, /(不能|无法)再次申请加入/, '必须与后端一致:被移出后永久不能再申请')
   assert.match(all, /此操作不可撤销/, '不可逆动作文案保留(danger-confirm-gate)')
 })

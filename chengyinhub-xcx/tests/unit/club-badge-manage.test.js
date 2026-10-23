@@ -139,7 +139,7 @@ test('视图:管理控件全部挂在 isOwner 条件下', () => {
   assert.match(view, /<cy-danger-confirm id="dc" bind:confirm="onConfirmGrant"/);
 });
 
-test('创建:表单校验先挡,通过后提交合同字段并回读列表核对 badgeCode', () => {
+test('创建:表单校验先挡，通过后提交合同字段并刷新列表确认 badgeCode', () => {
   const vm = loadPage();
   bootAs(vm, { isOwner: true, badges: BADGES });
   vm.openCreate();
@@ -159,7 +159,7 @@ test('创建:表单校验先挡,通过后提交合同字段并回读列表核对
   create.success({ code: 200, msg: '已创建', data: { id: 3, badgeCode: 'CLUB9_3' } });
   assert.equal(vm.data.createVisible, false);
   const lists = req('/api/club/badge/list');
-  assert.equal(lists.length, 2, '创建成功后回读列表');
+  assert.equal(lists.length, 2, '创建成功后刷新列表');
   lists[1].success({ code: 200, data: BADGES });
   assert.match(vm.data.refreshError, /暂时没看到/);
 });
@@ -182,7 +182,7 @@ function submitName(vm, name) {
   vm.submitCreate();
 }
 
-test('创建结果未知(断网/5xx):锁住提交,未回读确认前 submitCreate 被拒', () => {
+test('创建结果未知(断网/5xx):锁住提交，未刷新确认前 submitCreate 被拒', () => {
   for (const settle of [r => r.fail(), r => r.successStatusAbnormal({}, 502)]) {
     sandbox.requests = [];
     const vm = loadPage();
@@ -192,14 +192,14 @@ test('创建结果未知(断网/5xx):锁住提交,未回读确认前 submitCreat
     assert.equal(vm.data.createUnknown, true);
     assert.equal(vm.data.creating, false);
     assert.match(vm.data.createError, /结果未确认/);
-    assert.equal(req('/api/club/badge/list').length, 2, '未知后自动回读');
+    assert.equal(req('/api/club/badge/list').length, 2, '未知后自动刷新');
     vm.submitCreate();
     vm.submitCreate();
     assert.equal(req('/api/club/badge/create').length, 1, '未知期间不得再次提交');
   }
 });
 
-test('结果未知 → 回读出现提交前没有的同名勋章:确认已建成并收起表单', () => {
+test('结果未知 → 刷新出现提交前没有的同名勋章:确认已建成并收起表单', () => {
   const vm = loadPage();
   bootAs(vm, { isOwner: true, badges: BADGES });
   submitName(vm, '元老');
@@ -212,14 +212,14 @@ test('结果未知 → 回读出现提交前没有的同名勋章:确认已建�
   assert.equal(vm.data.form.name, '');
 });
 
-test('结果未知 → 回读没看到:保持锁定;用户明确「我已核对」才解锁重提', () => {
+test('结果未知 → 刷新没看到:保持锁定；用户明确「我已确认」才解锁重提', () => {
   const vm = loadPage();
   bootAs(vm, { isOwner: true, badges: BADGES });
   submitName(vm, '元老');
   req('/api/club/badge/create')[0].fail();
   req('/api/club/badge/list')[1].success({ code: 200, data: BADGES });
   assert.equal(vm.data.createUnknown, true);
-  assert.match(vm.data.createError, /我已核对/);
+  assert.match(vm.data.createError, /我已确认/);
   vm.submitCreate();
   assert.equal(req('/api/club/badge/create').length, 1);
   vm.confirmCreateChecked();
@@ -228,10 +228,10 @@ test('结果未知 → 回读没看到:保持锁定;用户明确「我已核对�
   assert.equal(req('/api/club/badge/create').length, 2);
   const view = fs.readFileSync(VIEW_PATH, 'utf8');
   assert.match(view, /disabled="\{\{createUnknown\}\}" bindtap="submitCreate"/);
-  assert.match(view, /action="我已核对" bind:action="confirmCreateChecked"/);
+  assert.match(view, /action="我已确认" bind:action="confirmCreateChecked"/);
 });
 
-test('HTTP 4xx 是明确失败:不锁定,可直接改后重提', () => {
+test('HTTP 4xx 是明确失败:不锁定，可直接改后重提', () => {
   const vm = loadPage();
   bootAs(vm, { isOwner: true, badges: BADGES });
   submitName(vm, '元老');
@@ -241,7 +241,7 @@ test('HTTP 4xx 是明确失败:不锁定,可直接改后重提', () => {
   assert.equal(req('/api/club/badge/create').length, 2);
 });
 
-test('换号:迟到响应丢弃,旧身份/名单/弹层/草稿全部清空并按新账号重读', () => {
+test('换号:迟到响应丢弃，旧身份/名单/弹层/草稿全部清空并按新账号重读', () => {
   const vm = loadPage();
   bootAs(vm, { isOwner: true, badges: BADGES });
   vm.openGrant({ currentTarget: { dataset: { code: 'CLUB9_2' } } });
@@ -259,14 +259,14 @@ test('换号:迟到响应丢弃,旧身份/名单/弹层/草稿全部清空并按
   assert.equal(vm.data.badges.length, 0);
   assert.equal(req('/api/club/detail').length, 2, '按 B 重读身份');
 
-  // B 的回读才生效
+  // B 的刷新才生效
   req('/api/club/detail')[1].success({ code: 200, data: { id: 9, isOwner: false } });
   req('/api/club/badge/list')[1].success({ code: 200, data: BADGES });
   assert.equal(vm.data.isOwner, false);
   assert.equal(vm.data.state, 'ready');
 });
 
-test('换号后回到页面(onShow)也会重置;同号 onShow 不打扰', () => {
+test('换号后回到页面(onShow)也会重置；同号 onShow 不打扰', () => {
   const vm = loadPage();
   bootAs(vm, { isOwner: true, badges: BADGES });
   vm.onShow();
@@ -277,7 +277,7 @@ test('换号后回到页面(onShow)也会重置;同号 onShow 不打扰', () => 
   assert.equal(req('/api/club/detail').length, 2);
 });
 
-test('换号前发出的创建/颁发,迟到回执不写进新账号页面', () => {
+test('换号前发出的创建/颁发，迟到回执不写进新账号页面', () => {
   const vm = loadPage();
   bootAs(vm, { isOwner: true, badges: BADGES });
   submitName(vm, '元老');
@@ -312,7 +312,7 @@ test('刷新后失去主理人身份:收起创建/成员弹层并清掉待执行
   }
 });
 
-test('图标不开放上传:页面不调上传通道,创建 payload 不带 iconUrl(2026-10-15 用户决定)', () => {
+test('图标不开放上传:页面不调上传通道，创建 payload 不带 iconUrl(2026-10-15 用户决定)', () => {
   const vm = loadPage();
   bootAs(vm, { isOwner: true, badges: BADGES });
   assert.equal(typeof vm.chooseIcon, 'undefined');
@@ -324,7 +324,7 @@ test('图标不开放上传:页面不调上传通道,创建 payload 不带 iconU
   assert.equal(sandbox.chooseImage, null);
   const view = fs.readFileSync(VIEW_PATH, 'utf8');
   assert.doesNotMatch(view, /chooseIcon|iconUploading/);
-  // 渲染与平台勋章墙一致:有 iconUrl 用 aspectFit 图片,没有就星标
+  // 渲染与平台勋章墙一致:有 iconUrl 用 aspectFit 图片，没有就星标
   assert.match(view, /<image wx:if="\{\{item\.iconUrl\}\}"[^>]*mode="aspectFit"/);
   assert.match(view, /<cy-icon wx:else name="star"/);
 });
@@ -401,7 +401,7 @@ test('club.badge.grant 已登记为不可逆并写明不可撤销', () => {
   assert.ok(action.consequences.every(c => !/来源标注|不会多记/.test(c.text)));
 });
 
-test('俱乐部详情:概览只读入口给成员/主理人,管理入口只给主理人', () => {
+test('俱乐部详情:概览只读入口给成员/主理人，管理入口只给主理人', () => {
   const view = fs.readFileSync(path.join(ROOT, 'pages/club/detail/index.wxml'), 'utf8');
   assert.match(view, /class="ov-badge-entry" wx:if="\{\{club\.isOwner \|\| club\.isJoined\}\}" catchtap="goClubBadges"/);
   assert.match(view, /class="cset-row" wx:if="\{\{club\.isOwner\}\}" catchtap="goClubBadges"/);

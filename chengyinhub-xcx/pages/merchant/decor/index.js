@@ -136,7 +136,7 @@ function classifyFailure(error, fallback) {
   }
   const transportText = error && typeof error === 'object' ? String(error.errMsg || '') : '';
   if (code === undefined && /request:fail|timeout|network|网络|断网/i.test(transportText)) {
-    return { kind: 'network', text: '网络连接失败，请检查网络后重试。' };
+    return { kind: 'network', text: '网络异常，请重试。' };
   }
   return { kind: 'data', text: requestText(error, fallback) };
 }
@@ -150,10 +150,10 @@ function readBackBusinessStatus(expected, success) {
       const actual = data ? Number(data.businessStatus) : NaN;
       if (actual === expected) { success(res); return; }
       success({ code: 'READBACK', msg: actual === 0 || actual === 1
-        ? '状态未同步：当前仍为' + (data.businessStatusText || (actual === 1 ? '营业中' : '已打烊')) + '，请重试'
-        : '状态未同步，请刷新后核对' });
+        ? '状态更新中：当前仍为' + (data.businessStatusText || (actual === 1 ? '营业中' : '已打烊')) + '，请重试'
+        : '状态更新中，请刷新' });
     },
-    fail: function () { success({ code: 'READBACK', msg: '状态未同步，请刷新后核对' }); },
+    fail: function () { success({ code: 'READBACK', msg: '状态更新中，请刷新' }); },
   });
 }
 
@@ -263,7 +263,7 @@ Page({
         that.setData({
           loadState: 'permission',
           loadErrTitle: '当前岗位没有资料编辑权限',
-          loadErrSub: '如需修改门店资料，请联系店主或店长。',
+          loadErrSub: '请联系店主开通',
         });
         return;
       }
@@ -396,7 +396,7 @@ Page({
 
           refreshing: false,
           loadState: 'error',
-          loadErrTitle: failure.kind === 'network' ? '网络没连上' : '店铺资料没打开',
+          loadErrTitle: failure.kind === 'network' ? '网络没连上' : '店铺资料无法打开',
           loadErrSub: failure.text,
         });
       }
@@ -787,7 +787,7 @@ Page({
         (Object.assign(that.data, {checkoutBusy: false}), that.setData({checkoutState: 'unknown'}));
         modal.show({
           title: '支付结果待确认',
-          content: '暂不要重复支付，请稍后查看已开通权益或联系官方运营。',
+          content: '请勿重复支付，稍后查看已开通权益或联系平台',
           showCancel: false
         });
       }
@@ -1188,7 +1188,7 @@ Page({
         const raw = ok && res.data && Array.isArray(res.data.rows)
           ? res.data.rows : (ok && Array.isArray(res.data) ? res.data : null);
         if (!raw || raw.some(a => !a || a.id === null || a.id === undefined || a.id === '')) {
-          that.setFeaturedError('活动列表暂时没能加载，请稍后重试');
+          that.setFeaturedError('活动列表加载失败，请重试');
           return;
         }
         that.setData({
@@ -1202,7 +1202,7 @@ Page({
         if (requestId === that._featuredRequestId) that.setFeaturedError('网络异常，检查网络后重试');
       },
       successStatusAbnormal() {
-        if (requestId === that._featuredRequestId) that.setFeaturedError('活动列表暂时没能加载，请稍后重试');
+        if (requestId === that._featuredRequestId) that.setFeaturedError('活动列表加载失败，请重试');
       },
     });
   },

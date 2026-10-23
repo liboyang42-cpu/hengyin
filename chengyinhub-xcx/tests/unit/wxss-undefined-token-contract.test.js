@@ -82,6 +82,6 @@ test('负控:带兜底的 var() 不算违规 —— 那是有意的可选变量'
   const tmp = path.join(require('node:os').tmpdir(), 'wxss-undefined-token-fallback.wxss')
   fs.writeFileSync(tmp, '.a { padding-top: var(--pk-top, 120rpx); background: var(--cy-nope, #fff); }\n')
   try {
-    assert.deepEqual(scanUndefined([tmp], DEFINED), [], '带兜底的被误判了,门禁会天天报假警')
+    assert.deepEqual(scanUndefined([tmp], DEFINED), [], '带保底的被误判了，门禁会天天报假警')
   } finally { fs.unlinkSync(tmp) }
 })

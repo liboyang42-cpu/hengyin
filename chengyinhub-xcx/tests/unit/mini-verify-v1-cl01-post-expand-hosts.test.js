@@ -55,7 +55,7 @@ test('CL-01 宿主链路:俱乐部详情原地展开;广场/收藏/达人列表�
   ];
   for (const host of hosts) {
     const tag = postCardTag(read(host.wxml));
-    assert.doesNotMatch(tag, /\bexpandable-text\b/, host.wxml + ' 是列表,只出提示');
+    assert.doesNotMatch(tag, /\bexpandable-text\b/, host.wxml + ' 是列表，只出提示');
     assert.match(tag, new RegExp('bind:detail="' + host.handler + '"'), host.wxml + ' 必须接 detail');
     const js = read(host.js);
     const body = js.slice(js.search(new RegExp('\\n\\s+' + host.handler + '\\s*(?::\\s*function\\s*)?\\([^)]*\\)\\s*\\{')));

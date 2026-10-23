@@ -40,7 +40,7 @@ test('start 下限语义与原生 picker 一致:选到更早会夹回下限', ()
 test('非法/空值不崩,落在可预期的位置', () => {
   assert.match(df.indexToDate(df.dateToIndex('', BASE, { year: BASE, month: 1, day: 1 }).index, BASE), /^\d{4}-\d{2}-\d{2}$/)
   assert.deepEqual(df.timeToIndex(''), [0, 0])
-  assert.deepEqual(df.timeToIndex('99:99'), [23, 59], '越界必须夹住,不能生成 99:99')
+  assert.deepEqual(df.timeToIndex('99:99'), [23, 59], '越界必须夹住，不能生成 99:99')
 })
 
 test('列数与跨度:年列 ±(1,3),月列 12,日列随月份变化', () => {

@@ -19,11 +19,11 @@ function modeReason(raw, chapters, matrix, details, mode) {
   if (mode.worldMode) next.gameplayRuntime.worldMode = mode.worldMode; else delete next.gameplayRuntime.worldMode;
   for (const node of nodes(chapters)) {
     const info = template(node, details);
-    if (!info && node.templateId) return '正在读取站点玩法，请稍后再选择';
+    if (!info && node.templateId) return '正在读取节点玩法，请稍后再选择';
     if (!info) continue;
     const context = support.context(next, node); context.settled = !context.challenge;
     const reason = support.validate(matrix, info, context);
-    if (reason) return (node.name || '站点') + '：' + reason;
+    if (reason) return (node.name || '节点') + '：' + reason;
   }
   return '';
 }
@@ -48,7 +48,7 @@ function syncChapters(raw, chapters) {
   const config = copy(support.parse(raw)), game = config.gameplayRuntime;
   if (!game || !game.runtimeScope) return { error: '请先选择进行方式', field: 'mode' };
   if (nodes(chapters).some(node => !Number.isSafeInteger(Number(node.id)) || Number(node.id) < 1))
-    return { error: '请先保存主题和站点草稿，再设置章节及到达关系', field: 'chapters' };
+    return { error: '请先保存主题和节点草稿，再设置章节及到达关系', field: 'chapters' };
   const previous = game.quests || [], acts = game.acts || [], nextQuests = [], nextActs = [];
   const zero = game.survival && game.survival.zeroChallenge || {};
   const challengeIds = [zero.challengeNodeId].concat(zero.alternativeNodeIds || []);
@@ -79,12 +79,12 @@ function syncChapters(raw, chapters) {
 function locations(raw, chapters) {
   const quests = support.parse(raw).gameplayRuntime?.quests || [], result = [];
   nodes(chapters).filter(node => Number(node.id) > 0).forEach(node => {
-    result.push({ value: 'node_' + node.id, label: node.name || '站点 ' + node.id });
+    result.push({ value: 'node_' + node.id, label: node.name || '节点 ' + node.id });
   });
   quests.forEach(quest => {
     if (!result.some(row => row.value === quest.locationKey)) {
       const node = nodes(chapters).find(row => Number(row.id) === quest.nodeId);
-      result.push({ value: quest.locationKey, label: '已有共用地点（' + (node?.name || '已保存站点') + '）' });
+      result.push({ value: quest.locationKey, label: '已有共用地点（' + (node?.name || '已保存节点') + '）' });
     }
   });
   return result;
@@ -96,17 +96,17 @@ function validate(raw, chapters) {
   if (game.runtimeScope === 'PLAYER' && (game.acts || []).some(act => act.hostUnlock)) return { field: 'acts', error: '个人独立进行不能设置工作人员开幕' };
   const all = nodes(chapters), ids = new Set(all.map(node => Number(node.id)).filter(id => id > 0));
   for (const quest of game.quests || []) {
-    if (!ids.has(quest.nodeId)) return { field: 'quests', error: '任务对应站点已改变，请保存草稿后重新设置章节及到达关系' };
+    if (!ids.has(quest.nodeId)) return { field: 'quests', error: '任务对应节点已改变，请保存草稿后重新设置章节及到达关系' };
     const choices = quest.approvedFallbackNodeIds || [];
     if (choices.length > 20 || new Set(choices).size !== choices.length || choices.some(id => !ids.has(id) || id === quest.nodeId))
-      return { field: 'quests', nodeId: quest.nodeId, error: '备用站点须从本主题其他站点选择，最多 20 个且不能重复' };
+      return { field: 'quests', nodeId: quest.nodeId, error: '备用节点须从本主题其他节点选择，最多 20 个且不能重复' };
   }
   if ((config.endings || []).length) {
     if (config.endings.length > 30) return { field: 'endings', error: '最多添加 30 个运行结局' };
     const seen = new Set();
     for (let index = 0; index < config.endings.length; index++) {
       const row = config.endings[index];
-      if (!/^[a-z][a-z0-9_]{0,31}$/.test(row.id) || seen.has(row.id)) return { field: 'endings', index, error: '结局标识重复或无效，请重新添加该结局' };
+      if (!/^[a-z][a-z0-9_]{0,31}$/.test(row.id) || seen.has(row.id)) return { field: 'endings', index, error: '结局编号重复或无效，请重新添加该结局' };
       seen.add(row.id);
       if (!String(row.title || '').trim() || row.title.length > 80 || String(row.summary || '').length > 2000)
         return { field: 'endings', index, error: '请填写结局名称（最多 80 字）和说明（最多 2000 字）' };
@@ -126,7 +126,7 @@ function copyReferences(runtime, reselect) {
   const game = runtime.gameplayRuntime;
   if (!game) return;
   if ((game.quests || []).length) {
-    reselect.push('通用玩法结构需在副本中重新配置（到达地点、工作人员引导和备用站点）');
+    reselect.push('通用玩法结构需在副本中重新配置（到达地点、工作人员引导和备用节点）');
     game.quests = [];
     (game.acts || []).forEach(act => { act.questKeys = []; });
   }
@@ -171,7 +171,7 @@ const methods = {
     const chapter = this.data.popChapterAction === 0 ? null : (this.data.formData.chapters || [])[this.data.popChapterIndex];
     const quest = game.quests.find(row => (chapter?.nodes || []).some(node => Number(node.id) === row.nodeId));
     const act = game.acts.find(row => row.actKey === quest?.actKey);
-    const reason = !act ? '本章没有普通任务站点，请先添加并保存站点' : game.runtimeScope === 'PLAYER' ? '个人独立进行不能设置工作人员开幕' : '';
+    const reason = !act ? '本章没有普通任务节点，请先添加并保存节点' : game.runtimeScope === 'PLAYER' ? '个人独立进行不能设置工作人员开幕' : '';
     // 关闭永远允许（可能是旧数据处于不合法状态，要让作者能自己关掉）；只拦“打开”。
     if (reason && (!act || e.detail.value)) return this.setData({ structureError: reason, structureErrorField: 'acts', chapterHostUnlockDisabledReason: reason });
     act.hostUnlock = !!e.detail.value;
@@ -189,7 +189,7 @@ const methods = {
         const chapter = this.data.formData.chapters[editor.chapterIndex];
         const first = chapter && (chapter.nodes || []).find(node => (config.gameplayRuntime?.quests || []).some(row => row.nodeId === Number(node.id)));
         editor.actKey = first && config.gameplayRuntime.quests.find(row => row.nodeId === Number(first.id)).actKey;
-        if (!error && !editor.actKey) error = '本章没有普通任务站点，请先添加并保存站点';
+        if (!error && !editor.actKey) error = '本章没有普通任务节点，请先添加并保存节点';
         editor.hostUnlock = (config.gameplayRuntime?.acts || []).find(row => row.actKey === editor.actKey)?.hostUnlock === true;
       } else {
         editor.nodeId = Number(this.data.nodesForm.id);
@@ -207,7 +207,7 @@ const methods = {
       structureLocations: locationRows, structureLocationIndex: locationRows.findIndex(row => row.value === quest.locationKey),
       structureGuideAllowed: !!allowed, structureFallbackCount: (quest.approvedFallbackNodeIds || []).length,
       structureFallbackNodes: nodes(this.data.formData.chapters).filter(node => Number(node.id) > 0 && Number(node.id) !== editor.nodeId)
-        .map(node => ({ id: Number(node.id), label: node.name || '站点 ' + node.id, selected: (quest.approvedFallbackNodeIds || []).includes(Number(node.id)) })),
+        .map(node => ({ id: Number(node.id), label: node.name || '节点 ' + node.id, selected: (quest.approvedFallbackNodeIds || []).includes(Number(node.id)) })),
     });
     this._refreshStructureEndings();
   },
@@ -231,7 +231,7 @@ const methods = {
     const id = Number(e.currentTarget.dataset.id), rows = copy(this.data.structureFallbackNodes), row = rows.find(node => node.id === id);
     if (!row || !this.data.structureEditor.quest) return;
     row.selected = !row.selected;
-    if (rows.filter(node => node.selected).length > 20) return this.setData({ structureError: '最多选择 20 个备用站点', structureErrorField: 'fallback' });
+    if (rows.filter(node => node.selected).length > 20) return this.setData({ structureError: '最多选择 20 个备用节点', structureErrorField: 'fallback' });
     this.setData({ structureFallbackNodes: rows, structureFallbackCount: rows.filter(node => node.selected).length, 'structureEditor.quest.approvedFallbackNodeIds': rows.filter(node => node.selected).map(node => node.id), structureError: '' });
   },
   addStructureEnding() {

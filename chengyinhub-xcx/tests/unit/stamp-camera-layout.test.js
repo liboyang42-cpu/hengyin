@@ -18,7 +18,7 @@ test('取景卡照原型 camPanel:让开微信胶囊、快门压在卡的底边�
   const layout = layoutStampCamera({ width: 390, height: 844, statusBarHeight: 24 });
 
   // 2026-09-11 用户裁决「不是 canon 了 用原型的」:拟物机身退场,body* 与 screen* 合成同一张卡。
-  assert.equal(layout.bodyL, layout.screenL, '卡本体就是取景区,不再有机身外壳');
+  assert.equal(layout.bodyL, layout.screenL, '卡本体就是取景区，不再有机身外壳');
   assert.equal(layout.bodyW, layout.screenW);
   assert.ok(layout.screenW >= 320 && layout.screenW < 390, '卡左右各让 14px,不顶到两侧');
   assert.ok(layout.screenT >= 76, '卡顶必须让开微信胶囊那条带');
@@ -27,7 +27,7 @@ test('取景卡照原型 camPanel:让开微信胶囊、快门压在卡的底边�
   assert.ok(layout.shutterL >= layout.screenL && layout.shutterL + layout.shutterS <= layout.screenL + layout.screenW,
     '快门必须落在卡内水平居中');
   assert.ok(Math.abs((layout.shutterL + layout.shutterS / 2) - 390 / 2) <= 1, '快门在屏幕中线上');
-  assert.ok(layout.shutterT + layout.shutterS <= layout.screenT + layout.screenH, '快门压在卡的底边内,不掉出去');
+  assert.ok(layout.shutterT + layout.shutterS <= layout.screenT + layout.screenH, '快门压在卡的底边内，不掉出去');
 });
 
 test('短屏设备:卡整体落在窗口内,取景框仍完整嵌在卡里', () => {

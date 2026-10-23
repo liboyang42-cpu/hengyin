@@ -109,9 +109,9 @@ test('俱乐部详情场次与工具选择不得走 wx.showActionSheet', () => {
     '一周七场或场次名偏长时原生菜单直接 fail，点击无反馈；导演台已改 cy-sheet')
   // 负控:剥注释不能把判据剥成瞎子 —— 真调用必须照样被抓出来
   assert.match(stripJsComments('foo() { wx.showActionSheet({ itemList: [] }) }'), /wx\.showActionSheet/,
-    '剥注释后连真调用都不见了,这道门禁成了摆设')
+    '剥注释后连真调用都不见了，这道门禁成了摆设')
   assert.doesNotMatch(stripJsComments('// 不走 wx.showActionSheet,理由见上'), /wx\.showActionSheet/,
-    '注释里的提及仍被判违规,门禁会逼人删掉解释')
+    '注释里的提及仍被判违规，门禁会逼人删掉解释')
   assert.match(wxml, /choiceSheetShow/,
     '超过 6 项必须用半屏清单，不能再依赖系统 ActionSheet 的 6 项上限')
   assert.match(wxml, /bindtap="onChoiceSheetSelect"/)

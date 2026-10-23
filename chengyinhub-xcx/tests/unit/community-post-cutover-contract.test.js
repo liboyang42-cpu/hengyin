@@ -139,7 +139,7 @@ test('unknown create retry reuses intent and real registration ID instead of inv
   assert.equal(h.calls[4].url,'/api/v1/community/drafts');assert.equal(h.modals.at(-1).confirmText,'原样重试');
 });
 test('unknown bookmark retry keeps request identity while success clears the pending command', async () => {
-  const h=harness([{code:500,msg:'结果待核对'},bundle(56,{viewerBookmarked:1})]);
+  const h=harness([{code:500,msg:'结果待确认'},bundle(56,{viewerBookmarked:1})]);
   await h.request('/api/creativesquare/bookmark',{id:56,bookmark:1,request_id:'first-key'});
   await h.request('/api/creativesquare/bookmark',{id:56,bookmark:1,request_id:'different-new-click'});
   assert.equal(h.calls[1].data.requestId,'first-key');
@@ -153,7 +153,7 @@ test('editing preserves secondary references and owner mentions without inventin
 });
 test('cold media intent without receipt stays blocked and instructs own-post readback, never creates another draft', async () => {
   const h=harness([guideline,{}]);const result=await h.request('/api/creativesquare/action',{contents:'冷恢复',pics:'/profile/owned.png',request_id:'existing-intent'});
-  assert.equal(result.code,409);assert.match(result.msg,/我的推文查看发布结果/);assert.equal(h.calls.some(c=>c.url.endsWith('/posts')),false);
+  assert.equal(result.code,409);assert.match(result.msg,/我的帖文查看发布结果/);assert.equal(h.calls.some(c=>c.url.endsWith('/posts')),false);
 });
 test('actor switch during publish preflight cannot acknowledge or publish as another member', async () => {
   const h=harness([guideline]);let delivered=0;h.client.request({url:'/api/creativesquare/action',data:{contents:'文案'},success(){delivered++},fail(){delivered++}});

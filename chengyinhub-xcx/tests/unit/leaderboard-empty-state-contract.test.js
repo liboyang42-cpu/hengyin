@@ -95,10 +95,10 @@ test('P1-1 结构:wxml 必须有一条只在「不加载 + 无错 + 三处皆空
   assert.ok(branch, '空榜分支缺失:找不到 class="gc-empty-board" 的 cy-empty')
   const tag = branch[0]
   assert.match(tag, /wx:elif="\{\{!loading && !top3\[0\] && !rest\.length && !me\}\}"/,
-    '空态的门必须同时排除 loading 与三处数据,否则加载中会闪空态、或有数据时误判空')
-  assert.match(tag, /kind="empty"/, '照抄同域 growthcenter/index 的写法,不自创')
-  assert.match(tag, /cta="/, '空态要给「能做什么」的出口,不是一句暂无数据')
-  assert.match(tag, /bind:cta="/, 'CTA 必须接住,否则是假按钮')
+    '空态的门必须同时排除 loading 与三处数据，否则加载中会闪空态、或有数据时误判空')
+  assert.match(tag, /kind="empty"/, '照抄同域 growthcenter/index 的写法，不自创')
+  assert.match(tag, /cta="/, '空态要给「能做什么」的出口，不是一句暂无数据')
+  assert.match(tag, /bind:cta="/, 'CTA 必须接住，否则是假按钮')
 })
 
 test('P1-1 文案:空态要说清「为什么空」与「能做什么」,不是「暂无数据」', () => {

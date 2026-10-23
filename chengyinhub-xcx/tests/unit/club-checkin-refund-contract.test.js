@@ -117,7 +117,7 @@ test('★回执未知(408/5xx/网络断)不算失败:锁住入口并去回读这
     assert.equal(h.page.data.refundErrorUnknown, true, scenario + ': 必须判成结果未知')
     assert.match(h.page.data.refundErrorText, /未确认/, scenario + ': 文案要说清结果未确认')
     assert.ok(h.requests.some((r) => r.url === '/api/club/crm/checkin/detail'),
-      scenario + ': 未知之后必须去回读对端事实,不能就地重试')
+      scenario + ': 未知之后必须去刷新对端事实，不能就地重试')
 
     // ★ 这一条是重复退款的闸:界面灰掉不够,bindtap 照样能触发
     const before = h.requests.filter((r) => r.url === '/api/registration/cancel-by-owner').length
@@ -135,7 +135,7 @@ test('★回读到 REFUNDED 才算退成;读回来不是 REFUNDED 就继续挂�
 
   readback.success({ code: 200, data: { registrationId: 9, statusCode: 'PAID', railStep: 1 } })
   assert.equal(h.page.data.refundErrorUnknown, true, '还不是 REFUNDED,不许收口')
-  assert.match(h.page.data.refundErrorText, /还不是已退款/)
+  assert.match(h.page.data.refundErrorText, /退款结果仍未确认/)
 
   const again = h.requests.filter((r) => r.url === '/api/club/crm/checkin/detail').pop()
   h.page.retryRefundReadback()
@@ -202,5 +202,5 @@ test('WXML 上灰掉的按钮不算闸:aria-disabled 与逻辑守卫必须同时
   const wxml = read('pages/club/checkin-detail/index.wxml')
   assert.match(wxml, /aria-disabled="\{\{refunding \|\| refundErrorUnknown\}\}"/)
   assert.match(read(PAGE), /this\.data\.refundErrorUnknown\) return;/,
-    'WXML 的 is-disabled 只是灰一下,真正拦住重复退款的必须是 JS 守卫')
+    'WXML 的 is-disabled 只是灰一下，真正拦住重复退款的必须是 JS 守卫')
 })

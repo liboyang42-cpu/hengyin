@@ -91,7 +91,7 @@ function merchantAccess(permissions) {
 
 function allowMerchant(page) {
   const access = last('/api/merchant/access/me');
-  assert.ok(access, '商家态必须回读 /api/merchant/access/me');
+  assert.ok(access, '商家态必须刷新 /api/merchant/access/me');
   access.success({ code: '200', data: merchantAccess([PROJECT_MANAGE]) });
 }
 
@@ -146,9 +146,9 @@ test('商家入口只读岗位权限接口,不再按俱乐部主理人判身份'
   const page = makePage();
   page.onLoad({ scope: 'MERCHANT' });
 
-  assert.ok(last('/api/merchant/access/me'), '必须回读 /api/merchant/access/me');
+  assert.ok(last('/api/merchant/access/me'), '必须刷新 /api/merchant/access/me');
   assert.equal(last('/api/publish/home'), undefined,
-    '商家态还在读 /api/publish/home 就是拿俱乐部口径判商家,实际:' + JSON.stringify(urlsSent()));
+    '商家态还在读 /api/publish/home 就是拿俱乐部口径判商家，实际:' + JSON.stringify(urlsSent()));
   assert.equal(page.data.accessState, 'checking', '权威回包前不得出表单');
 });
 
@@ -161,7 +161,7 @@ test('店主持「项目管理」→ 放行;回包缺这条权限 → 拒,且不
   });
   assert.equal(page.data.accessState, 'denied', '核销员/运营岗没有项目管理权');
   assert.match(page.data.deniedReason, /项目管理/,
-    '被拒的话必须说清要哪条权限,实际:' + page.data.deniedReason);
+    '被拒的话必须说清要哪条权限，实际:' + page.data.deniedReason);
   assert.equal(last('/api/activity/publish'), undefined);
 });
 
@@ -184,7 +184,7 @@ test('俱乐部线判据未受影响:仍读 /api/publish/home 认 role,不碰岗
   const page = makePage();
   page.onLoad({});
   const home = last('/api/publish/home');
-  assert.ok(home, '不带 scope 必须回读 /api/publish/home');
+  assert.ok(home, '不带 scope 必须刷新 /api/publish/home');
   assert.equal(last('/api/merchant/access/me'), undefined);
   home.success({ code: '200', data: { role: 'player' } });
   assert.equal(page.data.accessState, 'denied');
@@ -201,7 +201,7 @@ test('免费场发布:body 带 scope=MERCHANT,后端据此落到商家主体名�
   assert.ok(publish, '有项目管理权的店主必须发得出去');
   const payload = JSON.parse(publish.data);
   assert.equal(payload.scope, 'MERCHANT',
-    '不带 scope 后端按登录人判主办,店员发的会记成店员个人');
+    '不带 scope 后端按登录人判主办，店员发的会记成店员个人');
 });
 
 test('编辑已有活动同样带 scope=MERCHANT', () => {
@@ -233,7 +233,7 @@ test('俱乐部主理人发布的 body 不得多出 scope(负控)', () => {
   const publish = last('/api/activity/publish');
   assert.ok(publish);
   assert.equal(JSON.parse(publish.data).scope, undefined,
-    '俱乐部那条路多带 scope 会被后端当商家主办解析,身份直接串台');
+    '俱乐部那条路多带 scope 会被后端当商家主办解析，身份直接串台');
 });
 
 // ---- 收款缺口:商家这一路先只放开免费场 ----------------------------------
@@ -243,9 +243,9 @@ test('商家主办票价 > 0:当场挡住并说明,不发请求', () => {
   page.submitForm();
 
   assert.equal(last('/api/activity/publish'), undefined,
-    '全仓没有 sub_mchid,付费场下单进的是平台商户号 —— 静默放过去等于替平台收钱');
+    '全仓没有 sub_mchid,付费场下单进的是平台商家号 —— 静默放过去等于替平台收钱');
   assert.ok(toasts.some((t) => String(t).indexOf(FREE_ONLY) >= 0),
-    '必须给明确说明而不是静默失败,实际:' + JSON.stringify(toasts));
+    '必须给明确说明而不是静默失败，实际:' + JSON.stringify(toasts));
 });
 
 test('票价为字符串 "0" 不算付费(别把免费场误挡)', () => {
@@ -277,7 +277,7 @@ test('发布成功面板收掉 → 回「我的项目」必须带 scope=MERCHANT
   page.onResultSheetClose();
 
   assert.deepEqual(navigations, ['redirect:' + PROJECT_LIST + '?scope=MERCHANT'],
-    '商家活动记在店主名下,不带 scope 回列表读的是个人/俱乐部那一份,刚发的那场不在里面');
+    '商家活动记在店主名下，不带 scope 回列表读的是个人/俱乐部那一份，刚发的那场不在里面');
 });
 
 test('俱乐部主理人发布后回列表不带 scope(负控)', () => {

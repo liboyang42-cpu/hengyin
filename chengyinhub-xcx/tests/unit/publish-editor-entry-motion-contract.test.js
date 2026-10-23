@@ -69,7 +69,7 @@ test('负控：减少动态效果的读取、页面挂载或样式兜底任一�
 
   assert.notEqual(withoutPreference, introJs, '负控必须真实移除偏好读取');
   assert.notEqual(withoutModifier, introWxml, '负控必须真实移除页面状态 class');
-  assert.notEqual(withoutGuard, introWxss, '负控必须真实移除样式兜底');
+  assert.notEqual(withoutGuard, introWxss, '负控必须真实移除样式保底');
   assert.equal(hasReducedMotionContract(withoutPreference, introWxml, introWxss, modifier), false);
   assert.equal(hasReducedMotionContract(introJs, withoutModifier, introWxss, modifier), false);
   assert.equal(hasReducedMotionContract(introJs, introWxml, withoutGuard, modifier), false);

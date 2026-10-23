@@ -74,7 +74,7 @@ test('透明导航页:绝对定位的内容必须让开胶囊', () => {
 test('活动详情页的 hero 换算没有把状态栏那 49px 算进去', () => {
   const rules = absoluteTops(path.join(ROOT, 'pages/club/topic-detail/index.wxss'))
   const qa = rules.find(r => r.selector.includes('ctd-qa'))
-  assert.ok(qa, '.ctd-qa 不见了,本合同的锚点要重挑')
+  assert.ok(qa, '.ctd-qa 不见了，本合同的锚点要重挑')
   // 设计稿 y449 是画板坐标(含 49px 状态栏),本块基准是封面顶 → (449-49)×2
   assert.equal(qa.rpx, 800,
     `.ctd-qa 应为 800rpx;写成 898 就是把画板的 49px 状态栏一起算进去了(实测会压住「核销」标题)`)
@@ -84,14 +84,14 @@ test('负控:把任一 hero 元素挪到胶囊底下,门禁必须变红', () => 
   const wxss = path.join(ROOT, 'pages/club/topic-detail/index.wxss')
   const css = fs.readFileSync(wxss, 'utf8')
   const mutated = css.replace(/(\.ctd-head__logo\s*\{[^}]*?top:\s*)[\d.]+rpx/, '$1 40rpx')
-  assert.notEqual(mutated, css, '变异没生效:.ctd-head__logo 的形状变了,这个负控在空转')
+  assert.notEqual(mutated, css, '变异没生效:.ctd-head__logo 的形状变了，这个负控在空转')
 
   const tmp = path.join(ROOT, 'tests/unit/.tmp-capsule-negative.wxss')
   fs.writeFileSync(tmp, mutated)
   try {
     const caught = absoluteTops(tmp).some(r =>
       !FULL_BLEED.test(r.selector) && /head|hero/.test(r.selector) && r.rpx < CAPSULE_BOTTOM_RPX)
-    assert.equal(caught, true, '判据认不出被挪进胶囊的元素,它是橡皮图章')
+    assert.equal(caught, true, '判据认不出被挪进胶囊的元素，它是橡皮图章')
   } finally { fs.unlinkSync(tmp) }
 })
 
@@ -99,5 +99,5 @@ test('负控:判据不能把故意全幅的封面/遮罩判成违规', () => {
   const rules = absoluteTops(path.join(ROOT, 'pages/club/topic-detail/index.wxss'))
   const cover = rules.find(r => r.selector.includes('ctd-head__cover'))
   assert.ok(cover && cover.rpx === 0, '封面本来就该 top:0')
-  assert.equal(FULL_BLEED.test(cover.selector), true, '封面被判成违规,门禁会逼人把图往下推')
+  assert.equal(FULL_BLEED.test(cover.selector), true, '封面被判成违规，门禁会逼人把图往下推')
 })

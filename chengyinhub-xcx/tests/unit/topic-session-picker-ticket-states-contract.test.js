@@ -159,7 +159,7 @@ test('负控:撤掉修复(成功体也走 error+回显 msg)时,复现用例必�
     /          if \(!rows && d\) \{[\s\S]*?\n          \}\n/,
     ''
   )
-  assert.notEqual(regressed, current, '负控锚点失效:empty 分支已改名,扫描口径需同步')
+  assert.notEqual(regressed, current, '负控锚点失效:empty 分支已改名，扫描口径需同步')
   const { vm, requests } = loadComponent(regressed)
   vm.pickActivity(9)
   requests[0].success({ code: 200, msg: '操作成功', data: { id: 9, name: '夜行' } })

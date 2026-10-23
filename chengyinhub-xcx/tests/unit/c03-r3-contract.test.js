@@ -108,14 +108,14 @@ test('A 文案必须映射到最亮那一档中性文字 token,且与按钮面 �
   const fgLum = luminance(fg)
   assert.ok(fgLum >= primaryLum - 1e-9,
     `文案映射到 ${fgHook}(亮度 ${fgLum.toFixed(5)}),暗于 text-primary(${primaryLum.toFixed(5)});`
-    + ` 夜端 secondary 8.70:1 / tertiary 5.44:1 都能过 4.5:1 的线,所以必须另判亮度档`)
+    + ` 夜端 secondary 8.70:1 / tertiary 5.44:1 都能过 4.5:1 的线，所以必须另判亮度档`)
 })
 
 test('A 按钮面必须是实色档,不能再是近透明的 wash(原 --cy-bg-subtle 面 vs 页底仅 1.06:1)', () => {
   const bgHook = scopedHook(read(SZ_WXSS), '.sz-logout', '--cy-comp-btn-secondary-bg')
   const raw = resolveToken(bgHook)
   const c = parseColor(raw)
-  assert.equal(c.a, 1, `按钮面 ${bgHook}=${raw} 必须是不透明实色,半透明 wash 在夜端等于没有面`)
+  assert.equal(c.a, 1, `按钮面 ${bgHook}=${raw} 必须是不透明实色，半透明 wash 在夜端等于没有面`)
   const improved = contrast(over(c, PAGE_BG()), PAGE_BG())
   const before = contrast(over(parseColor(resolveToken('--cy-bg-subtle')), PAGE_BG()), PAGE_BG())
   assert.ok(improved > before, `面 vs 页底必须优于原状(${improved.toFixed(3)} > ${before.toFixed(3)})`)
@@ -220,7 +220,7 @@ for (const p of L2) {
     vm.onBack()
     assert.equal(sandbox.navBacks.length, 1, 'onBack 必须先尝试 navigateBack')
     const opts = sandbox.navBacks[0]
-    assert.equal(typeof opts.fail, 'function', 'navigateBack 必须带 fail 兜底,否则栈首页时箭头是死的')
+    assert.equal(typeof opts.fail, 'function', 'navigateBack 必须带 fail 保底，否则栈首页时箭头是死的')
     opts.fail()
     const bucket = p.fallbackApi === 'switchTab' ? sandbox.switchTabs : sandbox.redirects
     assert.deepEqual(bucket, [p.fallbackUrl], `fallback 必须是无参可达路由 ${p.fallbackUrl}`)
@@ -250,7 +250,7 @@ function agreementBackTarget(query) {
   vm.onBack()
   assert.equal(sandbox.navBacks.length, 1, 'onBack 必须先尝试 navigateBack')
   const opts = sandbox.navBacks[0]
-  assert.equal(typeof opts.fail, 'function', 'navigateBack 必须带 fail 兜底')
+  assert.equal(typeof opts.fail, 'function', 'navigateBack 必须带 fail 保底')
   opts.fail()
   return { redirects: sandbox.redirects, switchTabs: sandbox.switchTabs, doc: vm.data.doc }
 }
@@ -281,7 +281,7 @@ test('B-R4 data.docType 必须描述实际展示的文档,未知 type 不得留�
   vm.onLoad({ type: 'no_such_doc' })
   assert.equal(vm.data.doc.title, '用户服务协议', '未知 type 应回退到用户服务协议')
   assert.equal(vm.data.docType, 'user_agreement',
-    'docType 应随文档一起归一,不能留 no_such_doc —— 否则 data 与页面内容不一致')
+    'docType 应随文档一起归一，不能留 no_such_doc —— 否则 data 与页面内容不一致')
 })
 
 /* 2026-07-31 用户定「协议类长文 = 全屏弹窗」:shezhi / deregister 两处入口从 navigateTo
@@ -394,7 +394,7 @@ test('C 不可读行的显式状态文案是「内容待完善，暂不可查看
   // 只取 wx:else 那一枚 cy-cell 标签本身 —— 按 'item.usable' 切会把可用分支的 bindtap 也带进来(假红)
   const unusable = /<cy-cell\s+wx:else[^>]*\/>/.exec(wxml)
   assert.ok(unusable, '必须有 wx:else 的不可读行分支')
-  assert.match(unusable[0], /内容待完善，暂不可查看/)
+  assert.match(unusable[0], /即将上线/)
   assert.match(unusable[0], /disabled="\{\{true\}\}"/, '必须显式 disabled')
   assert.match(unusable[0], /arrow="\{\{\s*false\s*\}\}"/, '不得留 chevron 暗示可点')
   assert.doesNotMatch(unusable[0], /bindtap|catchtap/, '不可读行不得挂点击')

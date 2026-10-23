@@ -20,20 +20,20 @@ const WXSS = 'pages/activity/list/index.wxss'
 test('无封面时渲染「封面暂不可用」兜底,而不是一片空白', () => {
   const wxml = read(WXML)
   const cover = wxml.match(/<view class="oe-cover"[\s\S]*?<\/view>\s*<\/view>/)
-  assert.ok(cover, 'oe-cover 结构未找到,兜底断言的锚点失效')
+  assert.ok(cover, 'oe-cover 结构未找到，保底断言的锚点失效')
   const block = cover[0]
 
-  assert.match(block, /wx:if="\{\{!item\._coverStyle\}\}"/, '兜底必须挂在「没有封面样式」这个条件上')
-  assert.match(block, /class="cover-error"/, '必须复用既有 .cover-error 范式,不另造一套')
-  assert.match(block, /封面暂不可用/, '兜底文案必须与模板页/发布广场一致')
-  assert.match(block, /aria-label=/, '兜底块要有无障碍标签')
+  assert.match(block, /wx:if="\{\{!item\._coverStyle\}\}"/, '保底必须挂在「没有封面样式」这个条件上')
+  assert.match(block, /class="cover-error"/, '必须复用既有 .cover-error 范式，不另造一套')
+  assert.match(block, /封面暂不可用/, '保底文案必须与模板页/发布广场一致')
+  assert.match(block, /aria-label=/, '保底块要有无障碍标签')
 })
 
 test('兜底层铺满封面区:父级靠 padding-top 撑比例,兜底必须 absolute inset:0', () => {
   const wxss = read(WXSS)
   assert.match(wxss, /\.oe-cover\{[^}]*position:relative/, '.oe-cover 必须是定位上下文')
-  assert.match(wxss, /\.oe-cover \.cover-error\{[^}]*position:absolute/, '兜底层必须绝对定位')
-  assert.match(wxss, /\.oe-cover \.cover-error\{[^}]*inset:0/, '兜底层必须铺满,否则高度为 0 看不见')
+  assert.match(wxss, /\.oe-cover \.cover-error\{[^}]*position:absolute/, '保底层必须绝对定位')
+  assert.match(wxss, /\.oe-cover \.cover-error\{[^}]*inset:0/, '保底层必须铺满，否则高度为 0 看不见')
 })
 
 test('负控:兜底块被删掉时必须判红', () => {
@@ -73,7 +73,7 @@ test('文案与既有范式同源:模板页仍是「封面暂不可用」', () =
 function runDecorate(activity) {
   const src = read('pages/activity/list/index.js')
   const m = src.match(/_decorate\(e\)\s*\{[\s\S]*?\n  \},/)
-  assert.ok(m, '_decorate 未找到,生产者断言的锚点失效')
+  assert.ok(m, '_decorate 未找到，生产者断言的锚点失效')
   const body = m[0].replace(/^_decorate\(e\)\s*\{/, '').replace(/\},$/, '')
   // _decorate 依赖两个模块级 helper,给出与真实实现同形的桩:它们的返回值不影响
   // _coverStyle 这条链路,这里只要不炸即可。officialChannel 走真模块(缺口字段由 F21 契约钉)。
@@ -91,7 +91,7 @@ test('生产者:无封面时 _coverStyle 必须为空,兜底才可能被触发',
 test('生产者:有封面时 _coverStyle 非空,兜底不得抢占正常封面', () => {
   const style = runDecorate({ id: 1, title: 'x', coverImg: 'https://cdn/a b(1).jpg' })._coverStyle
   assert.match(style, /^background-image:url\('/, '有封面时必须产出 background-image')
-  assert.doesNotMatch(style, /'\)\.jpg/, "路径里的单引号需转义,别打断整条 style")
+  assert.doesNotMatch(style, /'\)\.jpg/, "路径里的单引号需转义，别打断整条 style")
 })
 
 test('负控:生产者改成「无封面也给个默认样式」时必须判红(否则兜底成死代码)', () => {

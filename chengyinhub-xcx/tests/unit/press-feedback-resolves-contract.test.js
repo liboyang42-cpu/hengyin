@@ -74,7 +74,7 @@ test('每个 hover-class 都必须在该文件真能取到的样式表里有定�
   for (const file of collectWxml(ROOT)) {
     for (const cls of unresolved(file)) dead.push(`${path.relative(ROOT, file)} → .${cls}`)
   }
-  assert.deepEqual(dead, [], '这些按压类取不到定义,元素按下去没有任何反应:\n  ' + dead.join('\n  '))
+  assert.deepEqual(dead, [], '这些按压类取不到定义，元素按下去没有任何反应:\n  ' + dead.join('\n  '))
 })
 
 test('负控:往 isolated 组件里塞一个只有全局定义的类,必须判红', () => {
@@ -94,5 +94,5 @@ test('负控:往 isolated 组件里塞一个只有全局定义的类,必须判�
 test('负控:页面引用全局类不算缺口(别把 app.wxss 这条链一起误杀)', () => {
   const page = path.join(ROOT, 'pages/play/circle/index.wxml')
   assert.ok(fs.readFileSync(page, 'utf8').includes('hover-class="cy-pressed"'), '负控锚点失效')
-  assert.deepEqual(unresolved(page), [], '页面不隔离,全局 .cy-pressed 对它有效,不该报缺口')
+  assert.deepEqual(unresolved(page), [], '页面不隔离，全局 .cy-pressed 对它有效，不该报缺口')
 })

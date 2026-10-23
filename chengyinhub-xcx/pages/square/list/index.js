@@ -623,7 +623,7 @@ Page({
   goUserInfo(id) { if (!id || this._navigating) return; this._navigating = true; // 跳转中不响应连点
     wx.navigateTo({
       url: '/pages/userinfo/userinfo?userId=' + id,
-      fail: () => toast('打不开这个主页'), complete: () => { this._navigating = false; },
+      fail: () => toast('无法打开这个主页'), complete: () => { this._navigating = false; },
     });
   },
 
@@ -928,7 +928,7 @@ Page({
           that.setData({
             resultSheet: {
               show: true, kind: 'success', title: res.data.lifecycle === 'PUBLISHED' ? '发布成功' : '已提交审核',
-              sub: res.data.lifecycle === 'PUBLISHED' ? '帖文已发布,现在广场里就能看到。' : '内容已保存，审核通过后公开显示。',
+              sub: res.data.lifecycle === 'PUBLISHED' ? '帖文已发布，现在广场里就能看到。' : '内容已保存，审核通过后公开显示。',
               meta: '', pill: res.data.lifecycle === 'PUBLISHED' ? '' : '以实际审核状态为准',
               why: '', duration: RESULT_SHEET_MS,
             },
@@ -950,7 +950,7 @@ Page({
             submitErrorKind: 'data',
             resultSheet: {
               show: true, kind: 'fail', title: '这条没有发出去',
-              sub: '内容还在,改完可以直接重发。',
+              sub: '修改后重试',
               meta: '', pill: '', why: message, duration: RESULT_SHEET_MS,
             },
           });
@@ -959,7 +959,7 @@ Page({
       fail: function (res) {
         publishIntent.settle(wx, 'square:list', publishMemberId, intent.key, 'unknown');
         that.setData({
-          submitError: app.getRequestErrorMessage(res, '网络错误，请检查连接后重试'),
+          submitError: app.getRequestErrorMessage(res, '网络异常，请检查连接后重试'),
           submitErrorKind: 'network'
         });
       },
@@ -1292,7 +1292,7 @@ Page({
         }
       },
       fail: function (res) {
-        setRequestError(res, '网络错误，请检查连接后重试');
+        setRequestError(res, '网络异常，请检查连接后重试');
       },
       complete: function () {
         if (requestId !== that._feedRequestId) return;

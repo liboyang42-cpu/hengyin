@@ -22,7 +22,7 @@ const KEYS = ['A', 'B', 'C', 'D'];
 const HEAD_OK = '答对了';
 const HEAD_NO = '再想想';
 /* 打字题答错的固定说法(原型写死这一句)。服务端给了话就用服务端的 */
-const RETRY_TEXT = '不对。把它清掉,再试一次。';
+const RETRY_TEXT = '不对。把它清掉，再试一次。';
 /* 一进来题目占满一屏,一秒后选项才淡进来 */
 const INTRO_MS = 1000;
 

@@ -245,7 +245,7 @@ test('通知页先预览再发送，明确站内回执、部分失败与失败�
   // 2026-09-09 按稿 R4 290:526 删掉顶部那两张渠道卡(站内可用 / 微信订阅暂不可用)。
   // 「只发得出站内」这件事没变,由发送按钮的文案与投递状态卡承载。
   assert.match(wxml, /发送站内通知/)
-  assert.doesNotMatch(wxml, /微信订阅/, '渠道卡已按稿删除,不许悄悄回来')
+  assert.doesNotMatch(wxml, /微信订阅/, '渠道卡已按稿删除，不许悄悄回来')
   // 「送达以站内回执为准」原本写在那张渠道卡上,卡随稿删了,判据落到它真正的承载处:
   // 投递状态三个数各自独立(总人数 / 已送达 / 失败),不是把「任务已创建」当成已送达。
   assert.match(wxml, /已送达站内[\s\S]{0,120}campaign\.successCount/)
@@ -408,14 +408,14 @@ test('签到更正丢响应后跨页面复用同一意图，5xx保留、4xx清�
   }
 
   const first = mount()
-  first.page.submitCorrection(52, true, 0, '现场漏扫，核对后补记')
+  first.page.submitCorrection(52, true, 0, '现场漏扫，确认后补记')
   const firstWrite = first.requests[0]
   const firstRequestId = JSON.parse(firstWrite.data).requestId
   firstWrite.fail()
   firstWrite.complete()
 
   const reopened = mount()
-  reopened.page.submitCorrection(52, true, 0, '现场漏扫，核对后补记')
+  reopened.page.submitCorrection(52, true, 0, '现场漏扫，确认后补记')
   const replay = reopened.requests[0]
   assert.equal(JSON.parse(replay.data).requestId, firstRequestId)
   replay.success({ code: 200, data: { id: 71, activityId: 31, memberId: 52, version: 1 } })
@@ -539,10 +539,10 @@ test('活动运营 access 三回调区分登录失效、真实拒权、网络与
     ['success', { code: 403, msg: reason }, undefined, 'no-permission'],
     ['successStatusAbnormal', { code: 403, msg: reason }, 403, 'no-permission'],
     ['fail', { code: 403, msg: reason }, 403, 'no-permission'],
-    ['success', { code: 500, msg: '服务暂时不可用' }, undefined, 'error'],
-    ['successStatusAbnormal', { code: 500, msg: '服务暂时不可用' }, 500, 'error'],
-    ['successStatusAbnormal', { code: 503, msg: '服务暂时不可用' }, 503, 'error'],
-    ['fail', { code: 503, msg: '服务暂时不可用' }, 503, 'error'],
+    ['success', { code: 500, msg: '服务暂不可用' }, undefined, 'error'],
+    ['successStatusAbnormal', { code: 500, msg: '服务暂不可用' }, 500, 'error'],
+    ['successStatusAbnormal', { code: 503, msg: '服务暂不可用' }, 503, 'error'],
+    ['fail', { code: 503, msg: '服务暂不可用' }, 503, 'error'],
     ['fail', { errMsg: 'request:fail timeout' }, undefined, 'network-error'],
   ]
   for (const [callback, response, status, expected] of cases) {

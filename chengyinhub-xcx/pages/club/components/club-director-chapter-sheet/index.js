@@ -16,7 +16,7 @@ Component({
     chapters: { type: Array, value: [] },
     confirmText: { type: String, value: '确认解锁章节' },
     confirmDisabled: { type: Boolean, value: false },
-    caption: { type: String, value: '解锁后玩家立即可进入该章节的站点，不可撤回。' },
+    caption: { type: String, value: '解锁后玩家立即可进入该章节的节点，不可撤回。' },
   },
   methods: {
     onClose() { this.triggerEvent('close') },

@@ -40,7 +40,7 @@ test('量化把相近色并到一起 —— 不并的话铺出来是噪点', () 
   const grid = [];
   for (let i = 0; i < 20; i++) grid.push([100 + i, 100 + i, 100 + i]);
   const q = pp.quantize(grid, 14);
-  assert.ok(q.palette.length <= 2, `相近色没并,收敛出了 ${q.palette.length} 个色`);
+  assert.ok(q.palette.length <= 2, `相近色没并，收敛出了 ${q.palette.length} 个色`);
   assert.equal(q.indexes.length, grid.length);
 });
 
@@ -88,7 +88,7 @@ test('绘制:每格一笔,整数倍,不越界', () => {
   assert.equal(side, 8 * 3);
   assert.equal(calls.length, 64);
   for (const c of calls) {
-    assert.equal(c.w, 3, '3.9 倍必须夹成 3 倍,半像素会毁掉像素画');
+    assert.equal(c.w, 3, '3.9 倍必须夹成 3 倍，半像素会毁掉像素画');
     assert.equal(c.h, 3);
     assert.ok(c.x >= 5 && c.x + c.w <= 5 + side);
     assert.ok(c.y >= 7 && c.y + c.h <= 7 + side);
@@ -97,10 +97,10 @@ test('绘制:每格一笔,整数倍,不越界', () => {
 
 test('裁剪框:比短边小一圈且偏上 —— 取满短边的话脸只剩十来格', () => {
   const c = pp.squareCrop(1080, 1920);
-  assert.ok(c.size < 1080, '取满短边脸会太小,必须收紧');
+  assert.ok(c.size < 1080, '取满短边脸会太小，必须收紧');
   assert.ok(c.size > 1080 * 0.4, '收得太狠会把额头下巴切掉');
   assert.ok(c.x > 0, '横向居中');
-  assert.ok(c.y < (1920 - c.size) / 2, '纵向应偏上,不是正中');
+  assert.ok(c.y < (1920 - c.size) / 2, '纵向应偏上，不是正中');
 
   // 正方形图也要收紧,而且框必须完全落在图内
   const s = pp.squareCrop(800, 800);

@@ -125,7 +125,7 @@ function calendarNotice(state, sessions) {
     return updated ? '按本月场次显示 · 更新于 ' + updated : '按本月场次显示';
   }
   if (state === 'loading') return LOADED_TOPICS_ONLY_NOTICE + '，场次加载中…';
-  if (state === 'error') return LOADED_TOPICS_ONLY_NOTICE + '，场次暂时没加载出来';
+  if (state === 'error') return LOADED_TOPICS_ONLY_NOTICE + '，场次加载失败';
   return LOADED_TOPICS_ONLY_NOTICE;
 }
 

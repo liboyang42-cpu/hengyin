@@ -85,7 +85,7 @@ Component({
       this._navigating = false; if (this._draftScope && !this.isDraftCurrent(this._draftScope)) { this.fetchDetail(); return; } if (!this._blockerReturnCheck) return
       this._blockerReturnCheck = false
       if (!this.data.dissolutionBlockerItems.length) return
-      this.setData({ showDissolutionBlockers: true, dissolutionBlockerText: '正在重新核对解散阻断明细…' })
+      this.setData({ showDissolutionBlockers: true, dissolutionBlockerText: '正在重新确认解散阻断明细…' })
       this.refreshDissolutionBlockers('')
     },
   },
@@ -105,7 +105,7 @@ Component({
         url: '/api/club/detail', method: 'POST', data: jsonBody({ id: this.data.clubId }), header: jsonHeader(),
         success: function (res) { if (!that.isDraftCurrent(scope)) return;
           if (res && res.code == '200' && drafts.detail(res.data, scope.clubId)) {
-            var c = res.data; if (c.id != null && String(c.id) !== scope.clubId) { that.setData({ loadState: 'business-error', loadErrorText: '返回的俱乐部资料不匹配，请重试' }); return; }
+            var c = res.data; if (c.id != null && String(c.id) !== scope.clubId) { that.setData({ loadState: 'business-error', loadErrorText: '资料加载失败，请重试' }); return; }
             // 2026-08-26:管理员(viewerIsAdmin)也能改**展示信息**;经营配置与解散仍只给主理人。
             // 后端 canGovernClub 是真闸,这里只是别把表单藏起来。
             if (c.isOwner !== true && c.viewerIsAdmin !== true) {
@@ -284,7 +284,7 @@ Component({
 
         fail: function () { if (!that.isDraftCurrent(scope)) return;
           that.setData({ saving: false, saveErrorText: '网络异常，请重试' });
-        }, successStatusAbnormal() { if (that.isDraftCurrent(scope)) that.setData({ saving: false, saveErrorText: '保存结果暂无法确认，草稿仍保留，请重试核对。' }); }
+        }, successStatusAbnormal() { if (that.isDraftCurrent(scope)) that.setData({ saving: false, saveErrorText: '保存结果暂无法确认，草稿仍保留，请重试' }); }
       });
     },
 
@@ -397,7 +397,7 @@ Component({
       if (!inviteId || this._blockerRetrying) return;
       this._blockerRetrying = true;
       this.setData({ dissolutionBlockerText: item && item.actionText === '核对退款结果'
-        ? '正在核对退款结果，仅查询原退款单…' : '正在重试保证金退款…' });
+        ? '正在确认退款结果，仅查询原退款单…' : '正在重试保证金退款…' });
       app.sendRequest({
         url: '/api/coop/deposit/refund/retry', method: 'POST',
         data: jsonBody({ inviteId: inviteId }), header: jsonHeader(),
@@ -408,7 +408,7 @@ Component({
               && typeof res.msg === 'string' && res.msg.trim();
             that.setData({
               // 退款接口只报告保证金状态；未重新读取解散条件前不能移除阻断。
-              dissolutionBlockerText: (confirmed ? res.msg : '退款结果暂无法确认') + '；未结事项仍保留，请核对后再操作',
+              dissolutionBlockerText: (confirmed ? res.msg : '退款结果暂无法确认') + '；未结事项仍保留，请确认后再操作',
             });
             // BL-140:再读一次阻断明细,以回读为准决定哪些行可以移除。
             that.refreshDissolutionBlockers(confirmed ? res.msg : '退款结果暂无法确认');
@@ -418,11 +418,11 @@ Component({
         },
         fail() {
           that._blockerRetrying = false;
-          that.setData({ dissolutionBlockerText: '退款结果暂无法确认，请先核对，勿重复提交' });
+          that.setData({ dissolutionBlockerText: '退款结果暂无法确认，请先确认，勿重复提交' });
         },
         successStatusAbnormal() {
           that._blockerRetrying = false;
-          that.setData({ dissolutionBlockerText: '退款结果暂无法确认，请先核对，勿重复提交' });
+          that.setData({ dissolutionBlockerText: '退款结果暂无法确认，请先确认，勿重复提交' });
         },
       });
     },
@@ -450,15 +450,15 @@ Component({
             else that.setData({ dissolutionBlockerText: text });
             return;
           }
-          that.setData({ dissolutionBlockerText: lead + ((res && res.msg) || '解散阻断明细暂无法核对，请稍后重试') });
+          that.setData({ dissolutionBlockerText: lead + ((res && res.msg) || '解散阻断明细暂无法确认，请稍后重试') });
         },
         fail() {
           that._blockerRefreshing = false;
-          that.setData({ dissolutionBlockerText: lead + '网络异常，阻断明细未能重新核对，请稍后重试' });
+          that.setData({ dissolutionBlockerText: lead + '网络异常，阻断明细未能重新确认，请稍后重试' });
         },
         successStatusAbnormal() {
           that._blockerRefreshing = false;
-          that.setData({ dissolutionBlockerText: lead + '阻断明细暂无法核对，请稍后重试' });
+          that.setData({ dissolutionBlockerText: lead + '阻断明细暂无法确认，请稍后重试' });
         },
       });
     },
@@ -527,7 +527,7 @@ Component({
         draftNotice: found.record ? (conflict ? '资料已更新，旧草稿不会直接提交。请对比后放弃旧草稿再编辑。' : '发现本账号未提交的本机草稿，请选择恢复或放弃。')
           : found.state === 'corrupt' ? '草稿已损坏，原记录已保留且不会覆盖，请勿退出丢失当前输入。'
           : found.state === 'error' ? '暂时无法读取草稿，原记录不会覆盖，请勿退出。可重新读取。' : '',
-        draftComparison: conflict ? drafts.compare(found.record.form, this.draftServer(latest)) || '资料已变化，请重新核对。' : '',
+        draftComparison: conflict ? drafts.compare(found.record.form, this.draftServer(latest)) || '资料已变化，请重新确认。' : '',
       });
     },
     restoreDraft() {
@@ -582,24 +582,24 @@ Component({
         success(res) {
           if (!that.isDraftCurrent(scope)) return;
           if (!res || res.code != '200' || !drafts.detail(res.data, scope.clubId)) {
-            that.setData({ saving: false, saveErrorText: '无法核对最新资料，请重试。' }); return;
+            that.setData({ saving: false, saveErrorText: '无法确认最新资料，请重试。' }); return;
           }
           const latest = res.data;
           if ((latest.id != null && String(latest.id) !== scope.clubId) ||
               (latest.isOwner !== true && latest.viewerIsAdmin !== true) || (latest.isOwner === true) !== that.data.isOwner) {
-            that.setData({ saving: false, draftBlocked: true, draftCanDiscard: found.state === 'ready', draftNotice: '编辑对象或权限已变化，请重新打开核对。' }); return;
+            that.setData({ saving: false, draftBlocked: true, draftCanDiscard: found.state === 'ready', draftNotice: '编辑对象或权限已变化，请重新打开确认。' }); return;
           }
           // 预读只能拦截此刻已存在的差异，不能消除随后到写入之间的并发窗口。
           if (drafts.base(that.draftServer(latest)) !== that._draftBase) {
             that.setData({ saving: false, draftBlocked: true, draftCanDiscard: found.state === 'ready',
               draftNotice: '资料已更新，本次未提交。请对比并放弃旧草稿后重新编辑。',
-              draftComparison: drafts.compare(that.data, that.draftServer(latest)) || '资料已变化，请重新核对。' }); return;
+              draftComparison: drafts.compare(that.data, that.draftServer(latest)) || '资料已变化，请重新确认。' }); return;
           }
           that.setData({ saving: false });
           that.submitDraft(scope);
         },
-        fail() { if (that.isDraftCurrent(scope)) that.setData({ saving: false, saveErrorText: '无法核对最新资料，请重试。' }); },
-        successStatusAbnormal() { if (that.isDraftCurrent(scope)) that.setData({ saving: false, saveErrorText: '无法核对最新资料，请重试。' }); },
+        fail() { if (that.isDraftCurrent(scope)) that.setData({ saving: false, saveErrorText: '无法确认最新资料，请重试。' }); },
+        successStatusAbnormal() { if (that.isDraftCurrent(scope)) that.setData({ saving: false, saveErrorText: '无法确认最新资料，请重试。' }); },
       });
     },
 
@@ -619,7 +619,7 @@ Component({
       const failed = () => {
         if (!that.isDraftCurrent(scope)) return;
         that._draftReading = false;
-        that.setData({ saveErrorText: '资料已保存，最新资料尚未核对；续编草稿保留，请重试保存以核对。' });
+        that.setData({ saveErrorText: '资料已保存，最新资料待确认；草稿已保留，请重试保存' });
       };
       app.sendRequest({
         url: '/api/club/detail', method: 'POST', data: jsonBody({ id: scope.clubId }), header: jsonHeader(),
@@ -632,7 +632,7 @@ Component({
               (latest.isOwner !== true && latest.viewerIsAdmin !== true) ||
               (latest.isOwner === true) !== that.data.isOwner || !that.confirmedDraftMatches(confirmed, latest)) {
             that.setData({ draftBlocked: true, draftCanDiscard: that._draftReadState === 'ready',
-              draftNotice: '保存后资料已变化，请对比后重新核对，续编草稿仍保留。',
+              draftNotice: '保存后资料已变化，请对比后重新确认，续编草稿仍保留。',
               draftComparison: drafts.compare(that.data, that.draftServer(latest)) }); return;
           }
           const nextBase = drafts.base(that.draftServer(latest));
@@ -659,11 +659,11 @@ Component({
         this.setData({ saving: false, saveErrorText: res && res.msg || '请稍后重试' }); return;
       }
       if (JSON.stringify(drafts.form(this.data)) !== submittedForm) {
-        this.setData({ saving: false, saveErrorText: '提交期间又有修改，草稿仍保留，请重新核对。' }); return;
+        this.setData({ saving: false, saveErrorText: '提交期间又有修改，草稿仍保留，请重新确认。' }); return;
       }
       this._draftDirty = false;
       const cleared = drafts.remove(wx, drafts.key(scope.owner, scope.clubId), expected);
-      this.setData({ saving: false, saveErrorText: '', draftNotice: cleared ? '' : '资料已保存，本机草稿未能清除，请核对后关闭。' });
+      this.setData({ saving: false, saveErrorText: '', draftNotice: cleared ? '' : '资料已保存，本机草稿未能清除，请确认后关闭。' });
       toast.success('已保存');
       if (!cleared) { this.setData({ draftBlocked: true }); return; }
       this._draftExpected = ''; this._savedDraft = null; this._draftReadState = 'empty';
@@ -760,9 +760,9 @@ function reconcileDissolutionBlockers(items, blockers, ctx) {
 }
 
 function dissolutionBlockerSummary(r) {
-  if (!r || !r.ok) return '解散阻断明细暂无法核对，请稍后重试'
-  if (r.cleared) return '已重新核对：资金阻断明细已无待处理项，可重新发起解散，以解散结果为准'
-  const parts = ['已重新核对']
+  if (!r || !r.ok) return '解散阻断明细暂无法确认，请稍后重试'
+  if (r.cleared) return '已重新确认：资金阻断明细已无待处理项，可重新发起解散，以解散结果为准'
+  const parts = ['已重新确认']
   if (r.removedCount) parts.push(r.removedCount + ' 项已不在阻断明细中')
   if (r.extraCount) parts.push('另有 ' + r.extraCount + ' 项未在本列表中，请重新发起解散查看')
   if (r.otherCount) parts.push('本类处理完后，重新发起解散还会提示另外 ' + r.otherCount + ' 项待处理')

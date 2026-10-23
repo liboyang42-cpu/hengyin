@@ -11,7 +11,7 @@ test('未报名的本场领队不再被「你还没有报名这个场次」挡�
     /if \(d\.registered === false([^)]*)\) \{\s*\n\s*that\.setData\(\{ loading: false, emptyTip: '你还没有报名这个场次'/);
   assert.ok(gate, '找不到未报名空态那道闸');
   assert.match(gate[1], /&& !d\.leadSpectator/,
-    '领队(leadSpectator)必须放行,否则发车/广播/放行章节都够不着(F-37)');
+    '领队(leadSpectator)必须放行，否则发车/广播/放行章节都够不着(F-37)');
 });
 
 test('leadSpectator 只解锁渲染,不得被当成报名或权益判据', () => {

@@ -449,11 +449,11 @@ Page({
             that.refreshPaymentState();
           });
         } else {
-          showLoadError((res && res.msg) || '返回的数据暂时不可用');
+          showLoadError((res && res.msg) || '加载失败，请重试');
         }
       },
       fail: function (res) {
-        showLoadError('网络开了点小差，请稍后重试');
+        showLoadError('网络异常，请重试');
       }
     });
     return requestContext.task;
@@ -753,7 +753,7 @@ Page({
       fail: function (res) {
         if (!isCurrent()) return;
         finish();
-        that.setData({ pageState: 'error', signupState: 'error', loadErrorMsg: '网络开了点小差，请稍后重试' });
+        that.setData({ pageState: 'error', signupState: 'error', loadErrorMsg: '加载失败，请重试' });
       }
     });
     return requestContext.task;
@@ -873,7 +873,7 @@ Page({
             waitlistState: 'UNKNOWN',
             waitlistEligibility: 'UNKNOWN',
             waitlistJoinAllowed: false,
-            waitlistError: '候补状态数据不完整，请重试',
+            waitlistError: '候补状态加载失败，请重试',
             waitlistOfferId: null,
             waitlistOfferToken: '',
             waitlistRegistrationId: null,
@@ -908,7 +908,7 @@ Page({
         });
       },
       fail() {
-        that.setData({ waitlistLoading: false, waitlistState: 'ERROR', waitlistError: '网络错误，请重试候补状态' },
+        that.setData({ waitlistLoading: false, waitlistState: 'ERROR', waitlistError: '网络异常，请重试候补状态' },
           () => that.refreshPaymentState());
       }
     });
@@ -981,7 +981,7 @@ Page({
           () => that.refreshPaymentState());
       },
       fail() {
-        that.setData({ waitlistLoading: false, waitlistState: 'ERROR', waitlistError: '网络错误，请重试加入候补' },
+        that.setData({ waitlistLoading: false, waitlistState: 'ERROR', waitlistError: '网络异常，请重试加入候补' },
           () => that.refreshPaymentState());
       }
     });
@@ -1027,7 +1027,7 @@ Page({
               () => that.refreshPaymentState());
           },
           fail() {
-            that.setData({ waitlistLoading: false, waitlistState: 'ERROR', waitlistError: '网络错误，请重试退出候补' },
+            that.setData({ waitlistLoading: false, waitlistState: 'ERROR', waitlistError: '网络异常，请重试退出候补' },
               () => that.refreshPaymentState());
           }
         });
@@ -1448,7 +1448,7 @@ Page({
               // 旧代码直接把这些单判成「支付参数不完整」→ onPayFail → 取消订单 → 同一 requestId
               // 再点又重放这张已取消的单,形成死循环。这里照主题自玩页的先例补一次取参数。
               if (Number(payableAmount) > 0 && !hasCompletePaymentParams(res.data)) {
-                cyLoading.show('获取支付参数...');
+                cyLoading.show('正在发起支付…');
                 app.sendRequest({
                   url: '/api/registration/pay',
                   method: 'POST',
@@ -1470,7 +1470,7 @@ Page({
                       return;
                     }
                     that.setData({ isPaying: false }, () => that.refreshPaymentState());
-                    cb({ ok: false, msg: (payRes && payRes.msg) || '支付参数获取失败，请重试' });
+                    cb({ ok: false, msg: (payRes && payRes.msg) || '支付发起失败，请重试' });
                   },
                   fail: function () {
                     cyLoading.hide();
@@ -1550,7 +1550,7 @@ Page({
     }
 
     if (that.data.waitlistEligibility === 'ALREADY_REGISTERED') {
-      app.tips('已有该票种报名，别重复提交');
+      app.tips('已有该票种报名，请勿重复提交');
       return;
     }
 
@@ -1807,7 +1807,7 @@ Page({
         that.setData({
           verifyingPayment: true,
           resultSheet: { show: true, kind: 'loading', title: '确认支付结果',
-            sub: '正在和微信核对这笔付款。', meta: '', pill: '', why: '',
+            sub: '正在确认支付', meta: '', pill: '', why: '',
             primaryText: '', secondaryText: '', duration: 0 },
         });
       },
@@ -1852,7 +1852,7 @@ Page({
           // 面板负责「说清楚发生了什么」并自愈;重试出口是页内那条 submitError,
           // 它一直留在页上 —— 恢复动作不能放进会自己消失的面板里。
           // 原来这里还会再 app.tips 一次,和面板+页内错误就是同一句话说三遍,故去掉。
-          resultSheet: { show: true, kind: 'fail', title: '这笔没有付成功', sub: '钱没有扣,可以直接重试。',
+          resultSheet: { show: true, kind: 'fail', title: '这笔没有付成功', sub: '未扣款，可重试',
             meta: '', pill: '', why: message, primaryText: '', secondaryText: '', duration: SUCCESS_HOLD_MS },
         }, () => that.refreshPaymentState());
         that.cancelPendingOrder({ stayOnPage: true });
@@ -1864,7 +1864,7 @@ Page({
           () => that.refreshPaymentState());
         modal.show({
           title: '支付结果待确认',
-          content: '暂不要重复支付，请稍后到订单中查看最终状态。',
+          content: '请勿重复支付，稍后到订单中查看结果',
           showCancel: false
         });
       }

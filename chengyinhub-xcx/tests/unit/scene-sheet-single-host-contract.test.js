@@ -49,7 +49,7 @@ test('五个宿主里的 scene-sheet 一律由 sceneCurrent 判定,不得有各�
          不许有第二个独立显隐位。所以改成数对子:有几层壳就得有几道门。 */
       const shells = (wxml.match(/class="psheet /g) || []).length
       const gates = (wxml.match(/wx:if="\{\{sceneCurrent && sceneCurrent\.id === '/g) || []).length
-      assert.ok(shells > 0, `${host} 一层 .psheet 都没有,断言失去意义`)
+      assert.ok(shells > 0, `${host} 一层 .psheet 都没有，断言失去意义`)
       // 少数几层不挂 sceneCurrent、由自己的 show 位管。它们各自算一道门 ——
       // 门的形式不同,但「一层壳必须有一道门」这条不变。
       for (const own of PROTO_HOSTS[host]) assert.match(wxml, own)
@@ -79,12 +79,12 @@ test('兜底 scene 宿主必须排除掉所有有专属门的场景 id', () => {
     const dedicated = [...wxml.matchAll(/wx:if="\{\{sceneCurrent && sceneCurrent\.id === '([a-z0-9-]+)'\}\}"/g)].map((m) => m[1])
     const fallback = [...wxml.matchAll(/wx:if="\{\{sceneCurrent(?: && sceneCurrent\.id !== '[a-z0-9-]+')*\}\}"/g)]
     if (!fallback.length) continue // play / roam 没有兜底门,只有专属门
-    assert.equal(fallback.length, 1, `${host} 有 ${fallback.length} 个兜底 scene 宿主,应当只有 1 个`)
+    assert.equal(fallback.length, 1, `${host} 有 ${fallback.length} 个保底 scene 宿主，应当只有 1 个`)
     const excluded = [...fallback[0][0].matchAll(/id !== '([a-z0-9-]+)'/g)].map((m) => m[1])
     for (const id of dedicated) {
       assert.ok(
         excluded.includes(id),
-        `${host}: '${id}' 有专属门但兜底门没排除它 → 该场景会同屏渲两个 scene-sheet`
+        `${host}: '${id}' 有专属门但保底门没排除它 → 该场景会同屏渲两个 scene-sheet`
       )
     }
   }

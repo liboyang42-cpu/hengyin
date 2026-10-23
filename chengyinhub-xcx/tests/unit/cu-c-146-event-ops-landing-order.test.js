@@ -25,7 +25,7 @@ const SERIES_MARK = '    <!-- 日期清单(Figma E1)';
 // 按源码顺序扫出 ready 区块里的每个 section(标题 + 渲染条件)。
 function sections(wxml) {
   const start = wxml.indexOf(READY_OPEN);
-  assert.ok(start >= 0, '找不到 state===ready 区块,扫描锚点失效');
+  assert.ok(start >= 0, '找不到 state===ready 区块，扫描锚点失效');
   const body = wxml.slice(start + READY_OPEN.length);
   const out = [];
   const re = /<view class="section[^"]*"([^>]*)>/g;
@@ -50,7 +50,7 @@ function assertLandingOrder(wxml) {
   assert.ok(manage >= 0 && roster >= 0 && series >= 0,
     `三段都在(本场管理 / 本场名册 / 日期清单): ${JSON.stringify(list.map((s) => s.title))}`);
   assert.equal(Math.min(manage, roster), 0,
-    '带 activityId 进来时第一段就得是本场内容,名册不该在页尾');
+    '带 activityId 进来时第一段就得是本场内容，名册不该在页尾');
   assert.ok(roster < series && manage < series,
     '全俱乐部的日期清单排在本场之后');
   assert.match(String(list[roster].guard), /canCheckin/,
@@ -64,7 +64,7 @@ function assertLandingOrder(wxml) {
   assert.equal(dup.length, 1, '「本场名册」这一行标题只允许出现一次');
   const at = wxml.indexOf('<text class="row-title">本场名册</text>');
   assert.match(wxml.slice(Math.max(0, at - 400), at), /wx:if="\{\{!canCheckin\}\}"/,
-    '这行只在没有核销权限(名册整段不渲染)时出现,否则与下方同名 section 重复');
+    '这行只在没有核销权限(名册整段不渲染)时出现，否则与下方同名 section 重复');
 }
 
 test('CU-C-146 现场名册入口:本场名册 / 本场管理排在首屏,日期清单退到其后', () => {
@@ -82,7 +82,7 @@ test('CU-C-146 全量清单只有一条路径能看见:不带 activityId 的入�
 test('CU-C-146 名册人数只算三个到场桶(候补另计),标题口径不许悄悄换成 registered', () => {
   const js = read('pages/club/event-ops/index.js');
   const fn = js.match(/function rosterTotal\(buckets\) \{[\s\S]*?\n\}/);
-  assert.ok(fn, 'rosterTotal 还在,口径要能静态核对');
+  assert.ok(fn, 'rosterTotal 还在，口径要能静态确认');
   assert.match(fn[0], /registered[\s\S]*arrived[\s\S]*noShow/, fn[0]);
   assert.doesNotMatch(fn[0], /waitlist/, '候补不算进名册总数(CU-C-62 口径)');
 });

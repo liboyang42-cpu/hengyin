@@ -14,7 +14,7 @@ const base = () => cfg.defaultConfig()
 test('一个都没开就返回 null —— 调用方据此回落到基础验证那套,而不是画一屏空的', () => {
   assert.equal(pv.buildPreviewKit(base()), null)
   assert.equal(pv.hasPreviewKit(base()), false)
-  assert.equal(pv.buildPreviewKit(null), null, '配置读不出来时也不能抛')
+  assert.equal(pv.buildPreviewKit(null), null, '配置加载失败时也不能抛')
 })
 
 test('★商家填什么就演什么 —— 标题、六个面全部原样带过去', () => {
@@ -48,7 +48,7 @@ test('★找东西的预览也不带坐标 —— 与玩家侧同一条规矩,�
   c.hiddenObject = { enabled: true, title: '找猫', imageUrl: 'https://cdn/scene.png',
     hotspots: [{ id: 's1', label: '窗台上的', x: 0.2, y: 0.3, r: 0.08 }] }
   const kit = pv.buildPreviewKit(c)
-  assert.equal(kit.targets[0].label, '窗台上的', '待找清单要带,玩家得知道自己在找什么')
+  assert.equal(kit.targets[0].label, '窗台上的', '待找清单要带，玩家得知道自己在找什么')
   /* ⚠️ 按**键**断言,别拿正则去搜整段 JSON:第一版写的是 /"x"|"y"|"r"/,
      而夹具里 imageUrl 的**值**恰好是 'x',于是这条恒红 —— 假阳性比漏检更费时间。 */
   assert.deepEqual(Object.keys(kit.targets[0]).sort(), ['id', 'label'],
@@ -60,7 +60,7 @@ test('商家没填的地方留空,不拿内置示例顶上去', () => {
   c.quietHold = { enabled: true, seconds: 15, kicker: '', sub: '' }
   const kit = pv.buildPreviewKit(c)
   assert.equal(kit.sub, '', '没填就是没有 —— 顶个示例上去等于「预览没理我」')
-  assert.equal(kit.kicker, '别出声', '标题空着回落到玩法自己的默认名,那是这一屏的身份不是内容')
+  assert.equal(kit.kicker, '别出声', '标题空着回落到玩法自己的默认名，那是这一屏的身份不是内容')
 })
 
 test('通用限时叠加到玩法上;玩法自己带了就不覆盖', () => {
@@ -111,7 +111,7 @@ test('★竞猜:预览的截止小时来自商家真填的那个,不是写死的
 
   assert.equal(kit.type, 'predict')
   assert.equal(kit.closeAtHour, 9, '预览必须拿商家真配的截止点')
-  assert.ok(!('closeMode' in kit), 'closeMode 全链路没人产出,预览不能自己造一个')
+  assert.ok(!('closeMode' in kit), 'closeMode 全链路没人产出，预览不能自己造一个')
   assert.ok(!('closeDays' in kit), 'closeDays 同上')
 })
 

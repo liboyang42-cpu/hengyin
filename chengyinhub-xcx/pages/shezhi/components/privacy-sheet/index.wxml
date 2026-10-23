@@ -7,10 +7,10 @@
     <text class="pv-sheet__title">更多隐私设置</text>
     <cy-btn variant="secondary" disabled="{{submitting}}" aria-disabled="{{submitting}}" class="pv-sheet__action" bindtap="openOwnMedia">城市定位与更多隐私设置</cy-btn>
     <text class="pv-sheet__title">附近的人位置分享</text>
-    <text class="pv-sheet__sub">关闭后立即停止向其他用户展示位置，不影响自己的定位和轨迹。</text>
+    <text class="pv-sheet__sub">关闭后他人看不到你的位置</text>
     <cy-btn variant="secondary" loading="{{submitting}}" disabled="{{submitting}}" class="pv-sheet__action" bindtap="disablePresenceSharing">关闭附近的人位置分享</cy-btn>
     <text class="pv-sheet__title">漫游定位</text>
-    <text class="pv-sheet__sub">撤回后，漫游不会继续读取实时位置或记录新的轨迹。</text>
+    <text class="pv-sheet__sub">撤回后停止记录轨迹</text>
     <cy-btn variant="secondary" loading="{{submitting}}" disabled="{{submitting}}" class="pv-sheet__action" bindtap="withdrawRoamLocationConsent">撤回漫游定位同意</cy-btn>
   </view>
 </cy-scene-sheet>

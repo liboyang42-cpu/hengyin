@@ -161,7 +161,7 @@ function kacchaLines(hits) {
   }));
 }
 // 地点卡的兜底说明;故事玩法入口卡不借用它(那是「走到某处」的话,玩法不需要走)。
-const NODE_DESC_FALLBACK = '走到这里,留意四周——故事就藏在细节里。';
+const NODE_DESC_FALLBACK = '走到这里，留意四周——故事就藏在细节里。';
 /* 入口卡按玩法类型换图标和动作词(2026-09-23 用户:拍照类要是相机)。 */
 const GAME_KINDS = {
   photo: { icon: 'camera', label: '在现场 · 拍一张', go: '打开相机' },
@@ -280,32 +280,32 @@ function buildMockPlayData(kind) {
     {
       nodeId: 1001, sortId: 1, name: '街角绿地补给点', address: '复兴公园南门',
       latitude: 31.21784, longitude: 121.46423, imgUrl: '/pages/play/images/d_topic1.png',
-      description: '找到最安静的一张长椅,拍下今天的城市颜色。', hookText: '离你最近,适合先热身',
-      cardHookLong: '这里不需要按路线走,靠近后完成一次观察打卡。', validationMethod: 2,
-      gameTitle: '城市颜色采样', photoRequireDesc: '拍一张能代表此刻心情的城市细节', storyText: '树影、路灯和行人的脚步,会把城市切成很多层。',
+      description: '找到最安静的一张长椅，拍下今天的城市颜色。', hookText: '离你最近，适合先热身',
+      cardHookLong: '这里不需要按路线走，靠近后完成一次观察打卡。', validationMethod: 2,
+      gameTitle: '城市颜色采样', photoRequireDesc: '拍一张能代表此刻心情的城市细节', storyText: '树影、路灯和行人的脚步，会把城市切成很多层。',
       fragmentText: '你拿到了一枚「午后光斑」。'
     },
     {
       nodeId: 1002, sortId: 2, name: '梧桐下的橱窗', address: '思南路街区',
       latitude: 31.21932, longitude: 121.46716, imgUrl: '/pages/play/images/d_topic2.png',
-      description: '观察一处橱窗或门牌,找出它和这条街的关系。', hookText: '有合作商户标记', merchantId: 10001,
-      cardHookLong: '如果正在营业,可以把这里当成路线中的停靠点。', validationMethod: 1,
+      description: '观察一处橱窗或门牌，找出它和这条街的关系。', hookText: '有合作商家标记', merchantId: 10001,
+      cardHookLong: '如果正在营业，可以把这里当成路线中的停靠点。', validationMethod: 1,
       gameTitle: '门牌线索', question: '这条街最常出现的树是什么?', answerReveal: '梧桐', feedbackText: '答案藏在抬头能看到的树冠里。',
       fragmentText: '你拿到了一枚「旧街门牌」。'
     },
     {
       nodeId: 1003, sortId: 3, name: '隐蔽展墙', address: '淮海中路支弄',
       latitude: 31.22224, longitude: 121.47042, imgUrl: '/pages/play/images/d_topic4.png',
-      description: '进入支弄,找到一面被海报或涂鸦覆盖的墙。', hookText: '更适合自由绕路发现',
-      cardHookLong: '不是必经站,但完成后会解锁一段城市手记。', validationMethod: 5,
+      description: '进入支弄，找到一面被海报或涂鸦覆盖的墙。', hookText: '更适合自由绕路发现',
+      cardHookLong: '不是必经站，但完成后会解锁一段城市手记。', validationMethod: 5,
       storyText: '支弄里的墙面会保存很多短暂出现过的生活痕迹。', fragmentText: '你拿到了一枚「支弄回声」。'
     },
     {
       nodeId: 1004, sortId: 4, name: '黄昏观景口', address: '新天地北里',
       latitude: 31.22458, longitude: 121.47518, imgUrl: '/pages/play/images/d_topic4.png',
-      description: '在天色变化时停留两分钟,记录你看到的城市边界。', hookText: '适合终点收束',
-      cardHookLong: '城市定向模式里,这里会作为最后一站。', validationMethod: 3,
-      gameTitle: '黄昏选择题', question: '此刻更适合记录什么?', options: { A: '灯光', B: '声音', C: '人流' }, answerReveal: '都可以,关键是停下来观察。',
+      description: '在天色变化时停留两分钟，记录你看到的城市边界。', hookText: '适合终点收束',
+      cardHookLong: '城市定向模式里，这里会作为最后一站。', validationMethod: 3,
+      gameTitle: '黄昏选择题', question: '此刻更适合记录什么?', options: { A: '灯光', B: '声音', C: '人流' }, answerReveal: '都可以，关键是停下来观察。',
       fragmentText: '你拿到了一枚「黄昏切面」。'
     }
   ];
@@ -318,7 +318,7 @@ function buildMockPlayData(kind) {
     chapters: [{
       idxLabel: free ? '附近探索' : '第一章',
       name: free ? '今天先从附近开始' : '顺着旧街走到黄昏',
-      description: free ? '没有固定路线,挑一个想去的点位出发,完成附近观察打卡。' : '按推荐顺序走完四站,把线索串成一段完整城市故事。',
+      description: free ? '没有固定路线，挑一个想去的节点出发，完成附近观察打卡。' : '按推荐顺序走完四站，把线索串成一段完整城市故事。',
       cover: '/pages/play/images/d_topic5.png', totalMileage: free ? 1.8 : 2.4, totalTime: free ? 2700 : 3600
     }],
     nodes
@@ -2456,11 +2456,11 @@ Page({
       this.setData({ 'gameModule.write': {
         status: 'unknown', requestId,
         canRetry: true,
-        message: (result && result.message) || '身份确认结果待核对，请勿重复提交',
+        message: (result && result.message) || '身份确认中，请勿重复提交',
       } });
     }).catch(() => {
       if (!this._isPlayerPendingContextCurrent(context)) return;
-      this.setData({ 'gameModule.write': { status: 'unknown', requestId, message: '身份确认结果待核对，请勿重复提交', canRetry: true } });
+      this.setData({ 'gameModule.write': { status: 'unknown', requestId, message: '身份确认中，请勿重复提交', canRetry: true } });
     });
   },
 
@@ -2522,7 +2522,7 @@ Page({
   _failPlayerPendingSave(requestId, keepUnknown) {
     if (!keepUnknown) this._playerPendingWrite = null;
     const message = keepUnknown
-      ? '无法安全保存重试状态；原操作仍待核对'
+      ? '无法保存重试状态，上次操作仍待确认'
       : '无法安全保存本次操作，请检查小程序存储后重试';
     this.setData({ 'gameModule.write': {
       status: keepUnknown ? 'unknown' : 'error',
@@ -2665,7 +2665,7 @@ Page({
           && current.write.requestId === pending.requestId && current.write.status === 'submitting'
           ? current.write : {
           status: 'unknown', requestId: pending.requestId,
-          message: pending.command ? '正在核对上次操作' : '正在核对上次操作；不会自动重发现场内容',
+          message: pending.command ? '正在确认上次操作' : '正在确认上次操作；不会自动重发现场内容',
           canRetry: !!pending.command,
         };
       }
@@ -2771,11 +2771,11 @@ Page({
         return;
       }
       this.setData({ 'gameModule.write': {
-        status: 'unknown', requestId, message: (result && result.message) || '结果待核对，请勿重复提交', canRetry: true,
+        status: 'unknown', requestId, message: (result && result.message) || '结果待确认，请勿重复提交', canRetry: true,
       } });
     }).catch(() => {
       if (!this._isPlayerPendingContextCurrent(context)) return;
-      this.setData({ 'gameModule.write': { status: 'unknown', requestId, message: '结果待核对，请勿重复提交', canRetry: true } });
+      this.setData({ 'gameModule.write': { status: 'unknown', requestId, message: '结果待确认，请勿重复提交', canRetry: true } });
     });
   },
 
@@ -2844,11 +2844,11 @@ Page({
         return;
       }
       this.setData({ 'gameModule.write': {
-        status: 'unknown', requestId, message: (result && result.message) || '提交结果待核对，请勿重复提交', canRetry: true,
+        status: 'unknown', requestId, message: (result && result.message) || '提交结果待确认，请勿重复提交', canRetry: true,
       } });
     }).catch(() => {
       if (!this._isPlayerPendingContextCurrent(context)) return;
-      this.setData({ 'gameModule.write': { status: 'unknown', requestId, message: '提交结果待核对，请勿重复提交', canRetry: true } });
+      this.setData({ 'gameModule.write': { status: 'unknown', requestId, message: '提交结果待确认，请勿重复提交', canRetry: true } });
     });
   },
 
@@ -2945,7 +2945,7 @@ Page({
           success: '提示已揭示',
           confirmed: '提示已确认揭示',
           rejected: '提示暂时不可用',
-          unknown: '提示结果待核对，请勿重复请求',
+          unknown: '提示结果待确认，请勿重复请求',
         });
       },
     });
@@ -2988,10 +2988,10 @@ Page({
         }
         this._submitPlayerAssist(input, {
           submitting: '正在揭示答案…',
-          success: '已按兜底完成',
-          confirmed: '答案已揭示，并记为兜底完成',
+          success: '已按保底完成',
+          confirmed: '答案已揭示，记为保底完成',
           rejected: '暂时不能揭示答案',
-          unknown: '揭示结果待核对，请勿重复请求',
+          unknown: '揭示结果待确认，请勿重复请求',
         });
       },
     });
@@ -3141,13 +3141,13 @@ Page({
       const pending = result && result.status === 'pending';
       const restored = !pendingWrite.command;
       this.setData({ 'gameModule.write.message': pending
-        ? (restored ? '结果仍在核对；不会自动重发现场内容' : '结果仍在核对，请稍后再试')
-        : (restored ? '暂时无法核对；不会自动重发现场内容' : '暂时无法核对，请保留本页稍后重试') });
+        ? (restored ? '结果仍在确认；不会自动重发现场内容' : '结果仍在确认，请稍后再试')
+        : (restored ? '暂时无法确认；不会自动重发现场内容' : '暂时无法确认，请保留本页稍后重试') });
     }).catch(() => {
       if (!isCurrent()) return;
       this.setData({ 'gameModule.write.message': pendingWrite && !pendingWrite.command
-        ? '暂时无法核对；不会自动重发现场内容'
-        : '暂时无法核对，请保留本页稍后重试' });
+        ? '暂时无法确认；不会自动重发现场内容'
+        : '暂时无法确认，请保留本页稍后重试' });
     });
   },
 
@@ -3170,7 +3170,7 @@ Page({
       return this._failPlayerPendingSave(pending.requestId, true);
     }
     this.setData({ 'gameModule.write': {
-      status: 'submitting', requestId: pending.requestId, message: '正在用原请求号重试…',
+      status: 'submitting', requestId: pending.requestId, message: '正在重试…',
     } });
     const context = this._playerPendingContext();
     gameSessionClient.submitAction('player', pending.command).then((result) => {
@@ -3206,12 +3206,12 @@ Page({
         return;
       }
       this.setData({ 'gameModule.write': {
-        status: 'unknown', requestId: pending.requestId, message: '重试结果仍待核对，请勿另起请求', canRetry: true,
+        status: 'unknown', requestId: pending.requestId, message: '重试结果仍待确认，请勿另起请求', canRetry: true,
       } });
     }).catch(() => {
       if (!this._isPlayerPendingContextCurrent(context)) return;
       this.setData({ 'gameModule.write': {
-        status: 'unknown', requestId: pending.requestId, message: '重试结果仍待核对，请勿另起请求', canRetry: true,
+        status: 'unknown', requestId: pending.requestId, message: '重试结果仍待确认，请勿另起请求', canRetry: true,
       } });
     });
     return true;
@@ -3237,7 +3237,7 @@ Page({
       }
     }).catch(() => {
       if (!current()) return;
-      this.setData({ 'board.loading': false, 'board.error': '网络不太好,榜单没拉到' });
+      this.setData({ 'board.loading': false, 'board.error': '网络不太好，榜单没拉到' });
     });
   },
   closeBoard() {
@@ -3259,7 +3259,7 @@ Page({
   _explainMissingEntryQr() {
     cyModal.show({
       title: '从票夹进入才能出示入场码',
-      content: '入场码要绑定你那张票,所以只有从票夹点进来才带得到。现在去票夹?',
+      content: '入场码要绑定你那张票，所以只有从票夹点进来才带得到。现在去票夹?',
       confirmText: '去票夹',
       cancelText: '先不去',
       success: (r) => { if (r.confirm) wx.reLaunch({ url: '/subpackageMember/signup/index' }); },
@@ -3906,7 +3906,7 @@ Page({
     this._loadCommitted = false;   // 每轮加载重新武装:上一轮的成功不能替这一轮的失败背书
     // 缺场次参数 ≠ 加载失败:reloadPlay 会再次命中这一行 return,给「重新加载」等于给一个
     // 物理上永远回到同一状态的假按钮。单独落 missing,只留真的走得通的出口(回活动详情)。
-    if (!this.data.activityId && !this.data.topicId) { this.setData({ loading: false, emptyTip: '场次信息缺失，请从票夹或路线详情进入', emptyKind: 'missing' }); return; }
+    if (!this.data.activityId && !this.data.topicId) { this.setData({ loading: false, emptyTip: '链接已失效，请返回重新进入', emptyKind: 'missing' }); return; }
     req('/api/play/nodes', 'GET', this._sessionParams()).then((res) => {
       if (!isCurrent()) return;
       if (res.code == 402 || res.code == '402') {
@@ -3917,12 +3917,12 @@ Page({
       }
       if (res.code != 200 && res.code != '200') {
         var isAuth = (res.msg && (res.msg.indexOf('登录') >= 0 || res.msg.indexOf('认证') >= 0));
-        that.setData({ loading: false, emptyTip: isAuth ? '登录已过期，请重新登录' : (res.msg || '加载失败，请稍后重试'), emptyKind: isAuth ? 'auth' : 'error' });
+        that.setData({ loading: false, emptyTip: isAuth ? '登录已过期，请重新登录' : (res.msg || '加载失败，请重试'), emptyKind: isAuth ? 'auth' : 'error' });
         return;
       }
       const d = res.data;
       if (!isRecord(d) || !isRecordList(d.nodes)) {
-        that.setData({ loading: false, emptyTip: '路线没加载出来，请稍后重试', emptyKind: 'error' });
+        that.setData({ loading: false, emptyTip: '加载失败，请重试', emptyKind: 'error' });
         return;
       }
       // 领队(leadSpectator)是运营身份,本来就不报名本场,不该被未报名空态挡住;
@@ -3934,7 +3934,7 @@ Page({
       that._playable = d.playable !== false;
       const raw = d.nodes;
       if (!raw.length && !(d.routeState && d.routeState.opening)) {
-        that.setData({ loading: false, emptyTip: '本场路线节点还在配置中，请稍后查看', emptyKind: 'empty' });
+        that.setData({ loading: false, emptyTip: '路线配置中', emptyKind: 'empty' });
         return;
       }
       const mode = Number(d.mode) || that.data.mode || 1;
@@ -4018,10 +4018,10 @@ Page({
       // 已经落地的成功首屏不在这里被覆盖(见上面的 _loadCommitted)。
       if (that._loadCommitted) {
         // 只打固定标签:生产 console 门禁禁止把异常/响应/身份动态值写进开发者日志。
-        console.error('[play] 首屏数据已落地,后处理异常');
+        console.error('[play] 首屏数据已落地，后处理异常');
         return;
       }
-      that.setData({ loading: false, emptyTip: '加载失败，请稍后重试', emptyKind: 'error' });
+      that.setData({ loading: false, emptyTip: '加载失败，请重试', emptyKind: 'error' });
     });
   },
 
@@ -4120,7 +4120,7 @@ Page({
       optionMedia: n.optionMedia || null,
       points: n.xp || 12,
       // 模板呈现字段(/api/play/nodes 已下发)
-      gameTitle: n.gameTitle || (vm === 6 ? '生活偏好校准' : (vm === 4 ? '现场打卡' : (vm === 2 ? '拍照任务' : (vm ? '点位任务' : '')))),
+      gameTitle: n.gameTitle || (vm === 6 ? '生活偏好校准' : (vm === 4 ? '现场打卡' : (vm === 2 ? '拍照任务' : (vm ? '节点任务' : '')))),
       duration: n.duration ? (n.duration + ' 分钟') : '', difficulty: n.difficulty || '', players: n.players || '',
       materials: n.requiredMaterials || '', rule: n.ruleInstructions || '',
       story: n.storyText || '', cover: n.storyImg || n.imgUrl || '',
@@ -4199,7 +4199,7 @@ Page({
       // 2026-09-18 UI-20 返修:publish/simple、fabu 建主题时给章节写的默认名是英文占位「Chapter 1」,
       // 不再原样上屏(也不落回主题名把章节标题变成主题名),统一显示「第 N 章」。
       name: displayChapterName(c.name, 0, d.topicName || '城市探索'),
-      description: c.description || '跟着脚步走完这几处坐标,把散落的线索串成一段属于你的城市故事。',
+      description: c.description || '跟着脚步走完这几处坐标，把散落的线索串成一段属于你的城市故事。',
       cover: this._coverOf(c.imgArr ? String(c.imgArr).split(',')[0] : (c.cover || ''), nodes),
       mileage: c.totalMileage ? (c.totalMileage + 'km') : '',
       timeText: c.totalTime ? Math.round(c.totalTime / 60) + ' 分钟' : '',
@@ -4532,7 +4532,7 @@ Page({
       fail() {
         if (!current()) { release(); return; }
         release();
-        that.setData({ gpsOk: false, gpsHint: '实时定位未开启 · 可扫码完成到达' });
+        that.setData({ gpsOk: false, gpsHint: '定位未开启，可扫码到达' });
       },
       success() {
         if (!current() || !that._watching) { release(); return; }
@@ -4686,7 +4686,7 @@ Page({
     };
     cyModal.show({
       title: '集合签到定位',
-      content: '仅本次签到获取当前位置，用于核对你是否在集合点500米内，不开启持续或后台定位。集合前60分钟起可签到。',
+      content: '仅本次签到获取当前位置，用于确认你是否在集合点500米内，不开启持续或后台定位。集合前60分钟起可签到。',
       confirmText: '定位并签到', cancelText: '取消',
       success(result) {
         if (!live()) { finish(); return; }
@@ -4824,7 +4824,7 @@ Page({
           finishLoading();
           if (r.httpFail) {
             intent.phase = 'checking';
-            if (current()) { this.diegetic('章节放行结果待核对，正在读取队伍进度'); audit(); }
+            if (current()) { this.diegetic('章节放行结果待确认，正在读取队伍进度'); audit(); }
             return;
           }
           release();
@@ -4885,7 +4885,7 @@ Page({
     const hideLoading = () => { if (loading) { loading = false; cyLoading.hide(); } };
     cyModal.show({
       title: '全团结算',
-      content: '将为到场已购票的全体队员核销并入结算,确认结算?',
+      content: '将为到场已购票的全体队员核销并入结算，确认结算?',
       confirmText: '结算全团',
       success: (res) => {
         if (settled) return;
@@ -5289,7 +5289,7 @@ Page({
   recordArrivalNetworkFailure(message, attempt) {
     if (this._hasGenericProofFlow() && attempt && ['arrive', 'checkin'].includes(attempt.type)) {
       this._arrivalWriteUnknown = true;
-      return this._readGenericProof(attempt && attempt.nodeId, '打卡结果待核对，请勿重复提交', 'arrive');
+      return this._readGenericProof(attempt && attempt.nodeId, '打卡结果待确认，请勿重复提交', 'arrive');
     }
     cyToast(message);
   },
@@ -5300,9 +5300,9 @@ Page({
   },
   recordArrivalHttpUnknown(message, nodeId) {
     this._arrivalWriteUnknown = true;
-    if (this._hasGenericProofFlow()) return this._readGenericProof(nodeId, '打卡结果待核对，请勿重复提交', 'arrive');
+    if (this._hasGenericProofFlow()) return this._readGenericProof(nodeId, '打卡结果待确认，请勿重复提交', 'arrive');
     // 结果未知这条尤其不能静默:看不见它的人只会反复点,而 beginArrivalWrite 已经把后续写拦住了。
-    cyToast((message ? message + '；' : '') + '打卡结果待核对，请重新进入后查看，暂不要重复提交');
+    cyToast((message ? message + '；' : '') + '打卡结果待确认，请重新进入后查看，暂请勿重复提交');
   },
   recordGameNetworkFailure(message, attempt) {
     if (this._gameWriteUnknown) return;
@@ -5320,7 +5320,7 @@ Page({
   },
   recordGameHttpUnknown(message, nodeId) {
     this._gameWriteUnknown = true;
-    this._gameWriteUnknownMessage = (message ? message + '；' : '') + '提交结果待核对，请重新进入后查看，暂不要重复提交';
+    this._gameWriteUnknownMessage = (message ? message + '；' : '') + '提交结果待确认，请重新进入后查看，暂请勿重复提交';
     this._lastGameAttempt = null;
     this.setData({ gWrong: false, gNetErr: this._gameWriteUnknownMessage, gNetRetryable: false, gWriteUnknown: true });
     if (this._hasGenericProofFlow()) return this._readGenericProof(nodeId || this.data.game.nodeId, '', 'game');
@@ -5504,7 +5504,7 @@ Page({
   },
   loadPreference(node) {
     if (this.data.isPreview) {
-      this.setData({ preference: { loading: false, error: '偏好题结果预览尚未接通，可跳过玩法继续查看故事', steps: [], submitting: false, result: null } });
+      this.setData({ preference: { loading: false, error: '偏好题暂不支持预览，可跳过玩法继续查看故事', steps: [], submitting: false, result: null } });
       return;
     }
     if (!this._isPlayAccountCurrent() || !node || node.nodeId !== this.data.game.nodeId) return;
@@ -5530,7 +5530,7 @@ Page({
           'preference.inheritedTags': Array.isArray(d.inheritedTags) ? d.inheritedTags : []
         });
       } else {
-        that.setData({ 'preference.loading': false, 'preference.error': r.msg || '偏好题暂时没加载出来' });
+        that.setData({ 'preference.loading': false, 'preference.error': r.msg || '偏好题加载失败' });
       }
     });
   },
@@ -5873,7 +5873,7 @@ Page({
           const current = this._isLegacyHintCurrent(intent);
           this._finishLegacyHint(intent);
           if (!current) return;
-          cyToast('提示没有加载出来，请重试');
+          cyToast('提示加载失败，请重试');
         });
       return;
     }
@@ -5897,7 +5897,7 @@ Page({
     this.setData({ hintUnlocking: true }); // 弹窗期间即占位:连点不再叠出第二个弹窗
     cyModal.show({
       title: '解锁提示',
-      content: '解锁本节点提示需 ' + (g.hintCost || 0) + ' 积分,确认解锁?',
+      content: '解锁本节点提示需 ' + (g.hintCost || 0) + ' 积分，确认解锁?',
       confirmText: '解锁',
       cancelText: '再想想',
       success(res) {
@@ -5920,7 +5920,7 @@ Page({
               });
               that.useHint(); // 解锁后立即揭示第一条
             } else {
-              cyToast(app.getRequestErrorMessage(resp, '解锁失败,请重试'));
+              cyToast(app.getRequestErrorMessage(resp, '解锁失败，请重试'));
             }
           },
           fail(resp) {
@@ -6061,7 +6061,7 @@ Page({
       this.stopNav(); this.clearGameNetworkError();
       this.setData({ nodes: this.data.nodes.map(merge), screen: '', 'sheet.show': false, flyScore: false, themeBackpackOpen: true, themeBackpackTab: 'game' }, () => this.rebuild());
       if (data.themeRuntime && data.themeRuntime.sessionId) this._applyThemeView(data.themeRuntime);
-      const message = data.disabledReason === 'PROOF_PENDING' ? '待审核 / 凭证未通过，请核对原任务' : '凭证已记录，请继续当前任务';
+      const message = data.disabledReason === 'PROOF_PENDING' ? '待审核 / 凭证未通过，请确认原任务' : '凭证已记录，请继续当前任务';
       this.diegetic(message);
       return data.sharedRuntime ? Promise.resolve(this._loadPlayerGameModule()).then(() => this._readGenericProof(nodeId)) : this._readGenericProof(nodeId);
     }
@@ -6226,7 +6226,7 @@ Page({
     wx.navigateTo({
       url: '/subpackageP3/pages/badge-wall/index/index'
         + (first.code ? '?badgeCode=' + encodeURIComponent(first.code) : ''),
-      fail: () => this.diegetic('徽章墙没打开,可以从成长中心进入'),
+      fail: () => this.diegetic('徽章墙无法打开，可以从成长中心进入'),
     });
   },
   closeRewardDrop() { this.setData({ 'rewardDrop.show': false }); },
@@ -6781,7 +6781,7 @@ Page({
         });
         return;
       }
-      cyToast('开始计时还未确认，请先核对结果');
+      cyToast('开始计时还未确认，请先确认结果');
       return;
     }
     game.action(name, payload);
@@ -7254,7 +7254,7 @@ Page({
       });
     this.setData({
       journalCards: cards.concat(historyCards),
-      nextChapterText: this.data.allDone ? '你已写满本章。翻过这一页,新的街巷正在等你。' : '走完本章坐标,下一章的扉页才会在流的尽头显形。'
+      nextChapterText: this.data.allDone ? '你已写满本章。翻过这一页，新的街巷正在等你。' : '走完本章坐标，下一章的扉页才会在流的尽头显形。'
     });
   },
   /* ⚠️ onJournalTouchMove / onJournalScroll(滚动沉降:越靠屏幕中央越清晰)
@@ -7919,7 +7919,7 @@ Page({
     that.diegetic('生成足迹卡…');
     that.paintFinishCard((path) => {
       if (!current()) return;
-      if (!path) { that.diegetic('足迹卡生成失败,再试一次'); return; }
+      if (!path) { that.diegetic('足迹卡生成失败，再试一次'); return; }
       wx.saveImageToPhotosAlbum({
         filePath: path,
         success() { if (current()) that.diegetic('已保存到相册'); },
@@ -7927,7 +7927,7 @@ Page({
           if (!current()) return;
           if (e.errMsg && e.errMsg.indexOf('auth') >= 0) { wx.openSetting({}); }
           else if (e.errMsg && e.errMsg.indexOf('cancel') >= 0) { /* 用户取消 */ }
-          else { that.diegetic('保存失败,再试一次'); }
+          else { that.diegetic('保存失败，再试一次'); }
         }
       });
     });
@@ -8068,10 +8068,10 @@ Page({
 
   onShareAppMessage(event) {
     return activityShareFromEvent(event)
-      || { title: '来城瘾,走一段城市探索', path: '/pages/play/index?activityId=' + this.data.activityId };
+      || { title: '来城瘾，走一段城市探索', path: '/pages/play/index?activityId=' + this.data.activityId };
   },
   // FE-17 朋友圈分享(游玩页高传播)
-  onShareTimeline() { return { title: '来城瘾,走一段城市探索', query: 'activityId=' + this.data.activityId }; },
+  onShareTimeline() { return { title: '来城瘾，走一段城市探索', query: 'activityId=' + this.data.activityId }; },
 
   /* v13 通关勋章页:只在整个主题走完时出。勋章取本次真拿到的;一枚没有就用这个主题本身(通关是真的)。
      四格统计只写拿得到的数(用时 / 步行 / 站点或商家 / 邮票或解谜分);新纪录只在解谜分超过个人最好时出。 */
@@ -8087,7 +8087,7 @@ Page({
     const stats = [];
     if (hms) stats.push({ k: '用时', v: hms, glyph: 'clock' });
     if (km) stats.push({ k: '步行 · 公里', v: km, glyph: 'walk' });
-    if (this.data.total) stats.push({ k: shop ? '去过 · 家' : '站点', v: this.data.doneCount + '/' + this.data.total, glyph: shop ? 'shop' : 'book' });
+    if (this.data.total) stats.push({ k: shop ? '去过 · 家' : '节点', v: this.data.doneCount + '/' + this.data.total, glyph: shop ? 'shop' : 'book' });
     if (shop && this.data.finishStamps.length) stats.push({ k: '邮票 · 枚', v: String(this.data.finishStamps.length), glyph: 'stamp' });
     else if (!shop && this.data.finishPuzzleCount) stats.push({ k: '解谜分', v: String(this.data.finishPuzzleScore), glyph: 'stamp' });
     const best = Number(this.data.finishPuzzleBest) || 0, score = Number(this.data.finishPuzzleScore) || 0;

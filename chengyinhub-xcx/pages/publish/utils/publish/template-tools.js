@@ -381,7 +381,7 @@ function apply(key, draft, advanced) {
         plan.planKey = newPlanKey(draft.plans.concat(plans));
       }
       if (plan.planKey && (!/^[a-z][a-z0-9_]{0,31}$/.test(plan.planKey)
-        || plans.some(row => row.planKey === plan.planKey))) return { error: '方案标识无效或重复，请重新添加该方案', plan: i, field: 'planKey' };
+        || plans.some(row => row.planKey === plan.planKey))) return { error: '方案编号无效或重复，请重新添加该方案', plan: i, field: 'planKey' };
       plans.push(plan);
     }
     if (draft.votePolicy) tools.votePolicy = draft.votePolicy; else delete tools.votePolicy;

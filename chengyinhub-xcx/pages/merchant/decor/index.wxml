@@ -20,7 +20,7 @@
       kind="no-permission"
       fill
       title="暂无装修权限"
-      sub="请切换到已审核通过的商家账号后再试"
+      sub="请切换到已审核的商家账号"
     />
   </view>
 
@@ -44,7 +44,7 @@
       kind="empty"
       fill
       title="暂时无法装修店铺"
-      sub="这个账号还没有店铺，先完成商家入驻拿到店铺，再回来填行业类型和品牌资料。"
+      sub="完成商家入驻后可用"
       cta="去商家入驻"
       bind:cta="goApply"
     />
@@ -284,8 +284,8 @@
               <text wx:if="{{subscriptionState === 'loading'}}" class="dc-muted">正在读取生效权益…</text>
               <text wx:elif="{{subscriptionState === 'error'}}" class="dc-muted">权益读取失败，当前状态未知。</text>
               <text wx:elif="{{subscriptionState === 'empty'}}" class="dc-muted">尚未查到生效授予记录。</text>
-              <text wx:if="{{checkoutState === 'entitlementPending'}}" class="dc-muted">支付已确认，正在核对权益。</text>
-              <text wx:elif="{{checkoutState === 'entitlementUnknown'}}" class="dc-muted">支付已确认，权益待核对，请勿重复购买。</text>
+              <text wx:if="{{checkoutState === 'entitlementPending'}}" class="dc-muted">支付已确认，正在确认权益。</text>
+              <text wx:elif="{{checkoutState === 'entitlementUnknown'}}" class="dc-muted">支付已确认，权益待确认，请勿重复购买。</text>
               <cy-cell wx:if="{{capabilityState === 'error' || subscriptionState === 'error' || checkoutState === 'entitlementUnknown'}}"
                 title="重新读取权益" arrow="{{false}}" required="{{false}}" bind:tap="retryEntitlements" />
               <!-- BL-108 已生效权益(只读):不展示价格、不做续费入口 -->
@@ -317,7 +317,7 @@
               <!-- CU-M-80:四项选中后只弹一句「请联系官方运营」等于没有出路。
                    open-type 只能落在 button 上,cy-cell 已内部封装透明按钮。 -->
               <cy-cell open-type="contact" arrow="{{false}}" title="联系运营开通"
-                description="说明要开通的权益，由官方运营人工办理"
+                description=""
                 required="{{false}}" hairline="{{false}}"
               />
             </view>
@@ -361,7 +361,7 @@
           <!-- owner 2026-10-22:联系电话 / 门店微信号 / 门店二维码由商家在此自助维护(原 CU-M-08 只读) -->
           <cy-cell arrow-icon="chevron-right" arrow="{{basicEditing}}"
             title="联系电话"
-            value="{{m.phone || '待填写'}}"
+            value="{{m.phone || '未填写'}}"
             required="{{false}}"
             bind:tap="onBasicAction" data-action="openField"
             data-k="phone"
@@ -411,7 +411,7 @@
             arrow="{{m.businessLicense ? true : false}}"
             title="营业执照"
             value="{{m.businessLicense ? '已提交 · 查看' : '未提交'}}"
-            description="{{m.businessLicense ? '' : '入驻时提交，如需更新请联系平台'}}"
+            description="{{m.businessLicense ? '' : '修改请联系平台'}}"
             required="{{true}}"
             bind:tap="previewLicense"
           />
@@ -419,7 +419,7 @@
             arrow="{{brandImages.length ? true : false}}"
             title="品牌形象图"
             value="{{brandImages.length ? brandImages.length + ' 张 · 查看' : '未上传'}}"
-            description="{{brandImages.length ? '' : '入驻时提交，如需更新请联系平台'}}"
+            description="{{brandImages.length ? '' : '修改请联系平台'}}"
             required="{{false}}"
             bind:tap="previewBrandImages"
             hairline="{{false}}"

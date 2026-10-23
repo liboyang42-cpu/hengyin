@@ -38,7 +38,7 @@ test('N1: 阶段枚举与后端 REPORT_STAGES 一致，中文名按用户决定�
   for (const s of backend) assert.equal(view.canAppeal(s), s === 'RESOLVED' || s === 'CLOSED', s)
   assert.equal(view.canAppeal('resolved'), true)
   assert.equal(view.canAppeal(''), false)
-  assert.equal(view.stageLabel('WHATEVER'), '状态待同步')
+  assert.equal(view.stageLabel('WHATEVER'), '—')
 })
 
 test('N1: 时间整形——ISO 带时区按本地时区、RuoYi 文本格式原样、坏值为空', () => {
@@ -268,12 +268,12 @@ test('N1 处理器: 申诉在 sheet 内先确认再提交；网络失败后回�
     assert.equal(h.vm.data.sheet, 'confirm')
     h.vm.submitAppeal()
     assert.equal(appealCalls, 1)
-    assert.equal(h.vm.data.sheet, 'unknown', '网络失败且回读没看到申诉 → 未确认')
+    assert.equal(h.vm.data.sheet, 'unknown', '网络失败且刷新没看到申诉 → 未确认')
     const keys = () => h.requests.filter((r) => r.url.endsWith('/appeal')).map((r) => JSON.parse(r.data).requestId)
     h.vm.submitAppeal()
     assert.equal(keys()[1], keys()[0], '同一份说明重试复用幂等键')
-    assert.equal(h.vm.data.sheet, 'ok', '回读看到 APPEALED → 成功')
-    assert.equal(h.vm.data.report.stageText, '申诉中', '成功后页面以回读为准')
+    assert.equal(h.vm.data.sheet, 'ok', '刷新看到 APPEALED → 成功')
+    assert.equal(h.vm.data.report.stageText, '申诉中', '成功后页面以刷新为准')
     assert.equal(h.vm.data.report.appealable, false)
   } finally { h.restore() }
 })
@@ -295,7 +295,7 @@ test('N1 处理器: 业务 409 显示后端原因并回读；未出结论的举�
     const before = h.requests.length
     h.vm.closeSheet()
     assert.equal(h.vm.data.sheet, '')
-    assert.ok(h.requests.length > before, '明确失败后回读')
+    assert.ok(h.requests.length > before, '明确失败后刷新')
   } finally { h.restore() }
   const h2 = loadPage('subpackageMember/report-detail/index.js', (o) => {
     o.success({ code: 200, data: { id: 6, stage: 'INVESTIGATING', timeline: [] } })
@@ -358,7 +358,7 @@ test('BL-31 处理器: 点开「我的举报」先跳转再把未读举报进度
     h.vm.openReportMine()
     assert.equal(h.requests.length, before, '已发过的不再发')
     h.vm.onShow && h.vm.loadReportEntry()
-    assert.equal(h.vm.data.reportUnread, 0, '未读以回读 read_at 为准')
+    assert.equal(h.vm.data.reportUnread, 0, '未读以刷新 read_at 为准')
   } finally { h.restore() }
   assert.equal(notices.makeReadRequestId('3', 1760000000000, 'abcd1234'), 'ntr-3-' + (1760000000000).toString(36) + '-abcd1234')
 })
@@ -406,7 +406,7 @@ test('BL-52 处理器: 申诉成功时 ok 半屏展示后端回执；网络失�
     h2.vm.onReasonInput({ detail: { value: '处理结论与事实不符' } })
     h2.vm.toConfirm()
     h2.vm.submitAppeal()
-    assert.equal(h2.vm.data.sheet, 'ok', '回读确认成功')
+    assert.equal(h2.vm.data.sheet, 'ok', '刷新确认成功')
     assert.equal(h2.vm.data.receiptText, '', '没有回执就不显示回执行')
   } finally { h2.restore() }
 })

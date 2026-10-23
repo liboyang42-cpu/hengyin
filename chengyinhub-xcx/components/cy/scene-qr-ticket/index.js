@@ -90,7 +90,7 @@ Component({
           if (token === this._loadToken) this.setData({ state: 'error', errorText: '网络没连上，请重试' })
         },
         successStatusAbnormal: () => {
-          if (token === this._loadToken) this.setData({ state: 'error', errorText: '入场码服务暂时不可用，请重试' })
+          if (token === this._loadToken) this.setData({ state: 'error', errorText: '入场码服务暂不可用，请重试' })
         },
       })
     },

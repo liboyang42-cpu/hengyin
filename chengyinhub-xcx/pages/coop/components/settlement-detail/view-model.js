@@ -63,11 +63,11 @@ function buildMerchantTimeline(record, status) {
     line('settled', '合作已结算', dateText(record.settleTime)),
   ]);
   if (status.text === '待入账') {
-    items.push(line('payable', '预计入账', dateText(record.payableTime)) || line('payable', '等待入账', '时间待确认'));
+    items.push(line('payable', '预计入账', dateText(record.payableTime)) || line('payable', '等待入账', '—'));
   } else if (status.text === '已入余额') {
-    items.push(line('paid', '已入余额', dateText(record.payoutTime)) || line('paid', '已入余额', '到账时间待确认'));
+    items.push(line('paid', '已入余额', dateText(record.payoutTime)) || line('paid', '已入余额', '—'));
   } else if (status.text === '已作废') {
-    items.push(line('void', '结算已作废', dateText(record.updateTime) || '时间待确认'));
+    items.push(line('void', '结算已作废', dateText(record.updateTime) || '—'));
   } else if (!items.length) {
     items.push(line('unknown', '结算状态待确认', '请稍后刷新'));
   }

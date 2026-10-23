@@ -87,7 +87,7 @@ test('负控③:合作池 tab、poolOnly 与 ?tab=pool 入口全仓不可达', (
   const { page } = loadList({});
   assert.deepEqual(page.data.listTabs.map(t => t.label), ['收到的', '我发出的']);
   page.onLoad({ tab: 'pool' });
-  assert.equal(page.data.tab, 0, '?tab=pool 不再有专门分支,落到默认收到的');
+  assert.equal(page.data.tab, 0, '?tab=pool 不再有专门分支，落到默认收到的');
   assert.doesNotMatch(js, /poolOnly|loadPool|applyPool/);
 
   // 字面量 + 字符串拼接两种形态都扫:'tab=pool'、"tab=" + 'pool'、tab: 'pool'
@@ -130,7 +130,7 @@ test('负控①:删 tab 后俱乐部仍能从俱乐部详情「可对接的活�
   assert.deepEqual(JSON.parse(writes[0].data), { topicId: 8, message: '带过 30 人' });
   writes[0].success({ code: 200 });
   assert.match(toasts.pop(), /我发出的/);
-  assert.ok(requests.some(r => r.url === '/api/coop/pool/list'), '成功后回读,卡片变「已申请」');
+  assert.ok(requests.some(r => r.url === '/api/coop/pool/list'), '成功后刷新，卡片变「已申请」');
   assert.match(read('pages/club/detail/index.wxml'), /catchtap="applyCoopPool"/);
 });
 
@@ -145,7 +145,7 @@ test('官方邀约收进「收到的」:非商家的权限失败=本来没有,�
 
   const club = loadList({ '/api/official/merchant-invites': { code: 403, errorCode: 'NOT_ACTIVE_MERCHANT', msg: '任意文案' } });
   club.page.loadOfficialInvites();
-  assert.equal(club.page.data.officialErrorText, '', '俱乐部主理人没有官方邀约,不是加载失败');
+  assert.equal(club.page.data.officialErrorText, '', '俱乐部主理人没有官方邀约，不是加载失败');
 
   // 负控:旧文案 / 泛 403 没有机器码,必须按故障报出来,不许靠文案正则猜成「不是商家」
   for (const res of [{ code: 500, msg: '仅审核通过且启用的商家可参与合作邀约' }, { code: 403, msg: '无权访问' }]) {

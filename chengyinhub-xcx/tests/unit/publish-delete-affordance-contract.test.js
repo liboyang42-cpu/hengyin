@@ -60,7 +60,7 @@ function violations(wxml, js) {
 
 test('发布页每个删除键的图标,必须和它到底弹不弹确认对得上', () => {
   const list = affordances(read(WXML))
-  assert.ok(list.length >= 5, '一个都没扫到 = 扫描器坏了,全绿在这里等于没测;实测 ' + list.length)
+  assert.ok(list.length >= 5, '一个都没扫到 = 扫描器坏了，全绿在这里等于没测；实测 ' + list.length)
   assert.deepEqual(
     violations(read(WXML), read(JS)).map((v) => v.handler + '→' + v.icon), [],
     '弹确认的必须用 trash-2(会丢东西),不弹确认的必须用 close/close-sm(只是摘引用)',

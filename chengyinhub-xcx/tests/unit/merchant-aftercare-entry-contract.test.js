@@ -16,8 +16,8 @@ test('退款售后列表和详情页已注册，台账退款条目直达售后�
 
   assert.ok(merchant.pages.includes('aftercare/index'));
   assert.ok(merchant.pages.includes('aftercare/detail/index'));
-  assert.doesNotMatch(ledgerWxml, /bindtap="goAftercare"/, '台账不得再渲染单独的退款售后卡片');
-  assert.doesNotMatch(ledgerJs, /goAftercare\s*\(/, '台账不得再保留只服务那张卡的跳转方法');
+  assert.doesNotMatch(ledgerWxml, /bindtap="goAftercare"/, '记录不得再渲染单独的退款售后卡片');
+  assert.doesNotMatch(ledgerJs, /goAftercare\s*\(/, '记录不得再保留只服务那张卡的跳转方法');
   assert.match(ledgerJs, /\/api\/merchant\/access\/me/);
   assert.match(ledgerJs, /\/api\/merchant\/aftercare\/list\?bucket=/);
   assert.match(ledgerJs, /item\.recordType === 'aftercare'[\s\S]*?\/pages\/merchant\/aftercare\/detail\/index\?refundId=/);

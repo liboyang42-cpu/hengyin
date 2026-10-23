@@ -1,7 +1,7 @@
 <view class="pg">
-  <text class="pg-intro">这里列出你的帖子与账号受到的处置。处置生效中或申诉处理中都不是最终结论；复核后会显示“维持处置”或“已撤销处置”。</text>
+  <text class="pg-intro">复核前的处置不是最终结论</text>
   <view class="pg-loading" wx:if="{{state === 'loading'}}">正在加载…</view>
-  <view class="pg-empty" wx:elif="{{state === 'login'}}">登录后可查看你的处置记录。</view>
+  <view class="pg-empty" wx:elif="{{state === 'login'}}">登录后查看处置记录</view>
   <cy-inline-error wx:elif="{{state === 'error'}}" load-failure kind="network" title="处置记录暂未取回" sub="{{error}}" action="重试" bind:action="retry" />
   <view class="pg-empty" wx:elif="{{state === 'empty'}}">暂无处置记录。</view>
   <view class="pg-list" wx:else>

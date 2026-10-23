@@ -1,7 +1,7 @@
 <view class="direct-ledger">
   <view class="direct-head">
     <text class="direct-title">{{kind === 'club' ? '商家计酬' : '俱乐部计酬'}}</text>
-    <text class="direct-count" wx:if="{{ledger}}">{{ledger.activeCount || 0}} 人次</text>
+    <text class="direct-count" wx:if="{{ledger}}">{{ledger.activeCount != null ? ledger.activeCount + ' 人次' : '—'}}</text>
   </view>
   <text class="direct-sub">俱乐部直接付款</text>
   <cy-skeleton wx:if="{{state === 'loading'}}" type="amount" count="{{1}}" />
@@ -25,7 +25,7 @@
     <text class="direct-empty" wx:if="{{!ledger.rows.length}}">还没有计酬核销记录</text>
     <!-- 记录编号是内部记录引用,只供联系客服时核对(owner 选项 B),不当作对外票据号展示。 -->
     <view class="direct-support" wx:if="{{ledger.rows.length}}">
-      <text class="direct-support-hint">账目有疑问可联系客服，提供对应的记录编号便于核对</text>
+      <text class="direct-support-hint">有疑问请联系客服</text>
       <button class="direct-support-btn" open-type="contact">联系客服</button>
     </view>
   </block>

@@ -234,7 +234,7 @@ test('本地规则与服务端一致:2–24 字 + 字符集', () => {
   assert.equal(nickname.localIssue('城瘾_玩家#01 ·x'), '');
   assert.match(nickname.localIssue('坏<script>'), /只能用/);
   assert.match(nickname.localIssue('😀😀'), /只能用/, 'emoji 不属于 \\p{L}/\\p{N},服务端同样拒');
-  assert.equal(nickname.codePointLength('𠮷野'), 2, '按码点计长,与服务端 codePointCount 一致');
+  assert.equal(nickname.codePointLength('𠮷野'), 2, '按码点计长，与服务端 codePointCount 一致');
 });
 
 test('readCheckResult 只认后端 available/errorCode,未知结构不当作可用', () => {

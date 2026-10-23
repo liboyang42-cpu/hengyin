@@ -15,7 +15,7 @@
       <cy-tabs class="result-tabs" tabs="{{resultTabs}}" active="{{activeResultType}}"
         variant="chip" bind:change="onResultTab" />
 
-      <cy-inline-error wx:if="{{clubLoginRequired}}" title="登录后可搜索俱乐部" action="登录" bind:action="loginForClubs" />
+      <cy-inline-error wx:if="{{clubLoginRequired}}" title="登录后搜索俱乐部" action="登录" bind:action="loginForClubs" />
       <cy-inline-error wx:elif="{{clubSearchDenied}}" title="{{clubSearchDenied}}" />
 
       <view wx:if="{{showSearchSkeleton && !visibleResults.length}}">

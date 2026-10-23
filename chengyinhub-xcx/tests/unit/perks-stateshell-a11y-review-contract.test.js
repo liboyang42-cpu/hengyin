@@ -27,7 +27,7 @@ function assertPerksFormAndDeleteA11y(wxml, js, actions) {
   const perk = actions['perk.delete']
   assert.ok(perk, 'perk.delete 必须登记在 utils/danger-actions.js')
   assert.match(perk.title, /\{name\}/,
-    '删除确认必须明确点名将被删除的权益,不能是泛化文案')
+    '删除确认必须明确点名将被删除的权益，不能是泛化文案')
   assert.match(perk.confirmText, /删除/,
     '危险确认动作本身必须说清是在删除')
   assert.ok(perk.consequences.some(item => item.text.includes('此操作不可撤销')),
@@ -37,7 +37,7 @@ function assertPerksFormAndDeleteA11y(wxml, js, actions) {
   assert.match(js, /String\(e\.currentTarget\.dataset\.name \|\| '该权益'\)/,
     '打开确认态时必须冻结当前权益名称')
   assert.match(js, /\.open\('perk\.delete',\s*\{\s*name:\s*name\s*\}\)/,
-    '冻结下来的名称必须真的传给确认弹窗,否则文案里的占位是空的')
+    '冻结下来的名称必须真的传给确认弹窗，否则文案里的占位是空的')
 }
 
 test('常备权益字段保留可见标签，删除确认点名具体权益', () => {

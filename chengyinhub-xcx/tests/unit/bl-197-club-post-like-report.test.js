@@ -116,7 +116,7 @@ test('点赞业务失败提示服务端文案,网络失败提示「网络异常�
   // 断网=结果未知:不再提示「请重试」,而是回读 post/list 核对(详见下方 club-like-unknown 用例)
   h.page.onLikePost(likeEvent(5))
   byUrl(h.requests, '/api/club/post/like')[2].fail()
-  assert.equal(toasts.pop(), '点赞结果未确认，正在核对')
+  assert.equal(toasts.pop(), '点赞结果未确认，正在确认')
   byUrl(h.requests, '/api/club/post/list')[0].success({ code: '200', data: [{ id: 5, isLiked: false, likeCount: 0 }] })
   assert.equal(toasts.pop(), '点赞没成功，可以再试一次')
 
@@ -160,7 +160,7 @@ test('点赞结果未知:锁不放,再点只回读不切换;回读与目标一�
   h.page.data.posts = [{ id: 5, isLiked: false, likeCount: 2 }]
   h.page.onLikePost(likeEvent(5))
   byUrl(h.requests, '/api/club/post/like')[0].fail()
-  assert.equal(toasts.pop(), '点赞结果未确认，正在核对')
+  assert.equal(toasts.pop(), '点赞结果未确认，正在确认')
   const reads = () => byUrl(h.requests, '/api/club/post/list')
   assert.equal(reads().length, 1)
   assert.deepEqual(JSON.parse(reads()[0].data), { id: '9', clubId: '9' })
@@ -172,14 +172,14 @@ test('点赞结果未知:锁不放,再点只回读不切换;回读与目标一�
 
   // 回读失败:仍未知,锁不放
   reads()[0].fail()
-  assert.equal(toasts.pop(), '点赞结果未确认，请稍后再点核对')
+  assert.equal(toasts.pop(), '点赞结果未确认，请稍后再点确认')
   h.page.onLikePost(likeEvent(5))
   assert.equal(byUrl(h.requests, '/api/club/post/like').length, 1)
   assert.equal(reads().length, 2)
 
   // 非严格布尔(如未登录时后端不标、字符串 "true")不算确认
   reads()[1].success({ code: '200', data: [{ id: 5, isLiked: 'true', likeCount: 3 }] })
-  assert.equal(toasts.pop(), '点赞结果未确认，请稍后再点核对')
+  assert.equal(toasts.pop(), '点赞结果未确认，请稍后再点确认')
   h.page.onLikePost(likeEvent(5))
   assert.equal(byUrl(h.requests, '/api/club/post/like').length, 1)
   // 帖子不在回读结果里也不算确认

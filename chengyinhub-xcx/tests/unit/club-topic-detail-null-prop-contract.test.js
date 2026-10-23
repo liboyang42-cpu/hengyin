@@ -109,9 +109,9 @@ const wxml = read(WXML)
 const js = read(JS)
 
 test('前提:setting 初值为 null,且这条绑定被渲染在设置面板之外(不是 ready 才求值)', () => {
-  assert.ok(nullableDataBases(js).has('setting'), 'data.setting 初值不再是 null —— 判据前提变了,先核对')
+  assert.ok(nullableDataBases(js).has('setting'), 'data.setting 初值不再是 null —— 判据前提变了，先确认')
   assert.equal(componentTags(wxml, COMPONENT)[0].line > 480, true,
-    '结束主题确认弹层应挂在设置面板(block wx:else)之外,才能在 setting=null 时求值')
+    '结束主题确认弹层应挂在设置面板(block wx:else)之外，才能在 setting=null 时求值')
 })
 
 test('cy-club-topic-end-confirm 的 topic-name:对可空 setting 必须三元兜底', () => {
@@ -122,14 +122,14 @@ test('cy-club-topic-end-confirm 的 topic-name:对可空 setting 必须三元兜
 
 test('负控:把兜底拆回旧写法,同一判据必须报红', () => {
   const mutated = wxml.replace("topic-name=\"{{setting ? setting.topicName : ''}}\"", 'topic-name="{{setting.topicName}}"')
-  assert.notEqual(mutated, wxml, '负控锚点失效:三元兜底写法变了,先修锚点')
+  assert.notEqual(mutated, wxml, '负控锚点失效:三元保底写法变了，先修锚点')
   const hits = unguardedMemberBindings(mutated, js)
-  assert.equal(hits.length, 1, '拆掉兜底后必须恰好命中一条')
+  assert.equal(hits.length, 1, '拆掉保底后必须恰好命中一条')
   assert.equal(hits[0].prop, 'topic-name')
 
   // 前提负控:setting 初值不是 null(如 {})时,同一条旧写法就不再命中 ——
   // 证明判据盯的是「初值 null」这个前提,不是属性名本身
   const nonNullInit = js.replace('setting: null,', 'setting: { topicName: \'\' },')
-  assert.notEqual(nonNullInit, js, '负控锚点失效:setting 初值行变了,先修锚点')
+  assert.notEqual(nonNullInit, js, '负控锚点失效:setting 初值行变了，先修锚点')
   assert.deepEqual(unguardedMemberBindings(mutated, nonNullInit), [])
 })

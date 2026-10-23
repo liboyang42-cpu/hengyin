@@ -120,5 +120,5 @@ test('activity without collaboratorsList prefills nothing and new activity keeps
 
 test('collaborator section is labelled as display-only credits', () => {
   const wxml = fs.readFileSync(path.join(ROOT, 'pages/publish/activity/index.wxml'), 'utf8')
-  assert.match(wxml, /合作者仅作活动页署名展示，不获得编辑或管理权限/)
+  assert.match(wxml, /合作者可编辑内容，不参与结算/)
 })

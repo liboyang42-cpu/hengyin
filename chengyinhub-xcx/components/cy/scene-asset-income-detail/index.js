@@ -162,7 +162,7 @@ Component({
           displayDate: formatDate(item.createTime, today, yesterday),
           isIncome,
           directionKnown: direction !== 'unknown',
-          directionText: direction === 'income' ? '收入' : (direction === 'expense' ? '支出' : '方向待确认'),
+          directionText: direction === 'income' ? '收入' : (direction === 'expense' ? '支出' : '—'),
           // 符号进文案:方向不能只靠颜色承载(WCAG 1.4.1),色盲用户要能从 +/− 和「收入/支出」读出来
           amountText: abs == null ? null : (direction === 'income' ? '+¥' : (direction === 'expense' ? '−¥' : '¥')) + abs,
         })

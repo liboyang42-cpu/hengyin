@@ -107,17 +107,17 @@
       <view class="post-card__actions-left">
       <view wx:if="{{interactiveActions}}" class="post-card__action post-card__action--like {{post.isLiked == 1 ? 'is-on' : ''}} {{likePop ? 'is-pop' : ''}}"
             catchtap="emitLike" aria-role="button" aria-label="{{post.isLiked == 1 ? '取消点赞' : '点赞'}}，当前 {{post.likeCount || 0}}" aria-pressed="{{post.isLiked == 1}}" hover-class="cy-pressed" hover-stay-time="80" hover-stop-propagation="true">
-        <cy-icon class="post-card__heart" wx:if="{{post.isLiked == 1}}" name="heart-filled" size="44" /><cy-icon class="post-card__heart" wx:else name="heart" size="44" /><text class="post-card__action-text">{{post.likeCount || 0}}</text>
+        <cy-icon class="post-card__heart" wx:if="{{post.isLiked == 1}}" name="heart-filled" size="44" /><cy-icon class="post-card__heart" wx:else name="heart" size="44" /><text class="post-card__action-text">{{post.likeCount || ''}}</text>
       </view>
       <view wx:else class="post-card__action post-card__action--like {{post.isLiked == 1 ? 'is-on' : ''}}" aria-hidden="true">
-        <cy-icon class="post-card__heart" wx:if="{{post.isLiked == 1}}" name="heart-filled" size="44" /><cy-icon class="post-card__heart" wx:else name="heart" size="44" /><text class="post-card__action-text">{{post.likeCount || 0}}</text>
+        <cy-icon class="post-card__heart" wx:if="{{post.isLiked == 1}}" name="heart-filled" size="44" /><cy-icon class="post-card__heart" wx:else name="heart" size="44" /><text class="post-card__action-text">{{post.likeCount || ''}}</text>
       </view>
       <view wx:if="{{interactiveActions}}" class="post-card__action" catchtap="emitComment"
             aria-role="button" aria-label="查看评论，当前 {{post.commentCount || 0}}" hover-class="cy-pressed" hover-stay-time="80" hover-stop-propagation="true">
-        <cy-icon class="post-card__comment-icon" name="comment" size="44" /><text class="post-card__action-text">{{post.commentCount || 0}}</text>
+        <cy-icon class="post-card__comment-icon" name="comment" size="44" /><text class="post-card__action-text">{{post.commentCount || ''}}</text>
       </view>
       <view wx:else class="post-card__action" aria-hidden="true">
-        <cy-icon class="post-card__comment-icon" name="comment" size="44" /><text class="post-card__action-text">{{post.commentCount || 0}}</text>
+        <cy-icon class="post-card__comment-icon" name="comment" size="44" /><text class="post-card__action-text">{{post.commentCount || ''}}</text>
       </view>
       <view wx:if="{{showFavorite}}" class="post-card__action post-card__action--favorite {{post.isBookmarked == 1 ? 'is-on' : ''}}"
             catchtap="emitFavorite" aria-role="button" aria-label="{{post.isBookmarked == 1 ? '取消收藏' : '收藏帖文'}}" aria-pressed="{{post.isBookmarked == 1}}" hover-class="cy-pressed" hover-stay-time="80" hover-stop-propagation="true">

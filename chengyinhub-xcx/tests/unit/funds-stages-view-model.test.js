@@ -219,7 +219,7 @@ test('CU-C-92:可提现余额归一化后抛给宿主页(0 ⇒ 不可提、>0 �
 
 test('CU-C-92:余额算不出/取不到时 resolved 为 unknown,不得当成 0 也不得当可提', () => {
   const cases = [
-    ['amountsKnown=false(费率算不出,余额会被低估)', () => ({ withdrawable: '0.00', amountsKnown: false }), { code: 200, data: {} }],
+    ['amountsKnown=false(费率算不出，余额会被低估)', () => ({ withdrawable: '0.00', amountsKnown: false }), { code: 200, data: {} }],
     ['响应形状不合法', () => null, { code: 200, data: {} }],
     ['请求失败', () => ({ withdrawable: '9.00', amountsKnown: true }), 'fail'],
   ];

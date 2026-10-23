@@ -67,7 +67,7 @@ test('merchantinfo 缺 id/topicId ⇒ 落缺参态,而不是渲染空壳主题�
   const { page, requests } = loadPage()
   page.onLoad({})
   assert.equal(page.data.missingParam, true, '两个参数都没有时必须落缺参态')
-  assert.equal(requests.length, 0, '缺参态不请求是对的,但不能什么都不说')
+  assert.equal(requests.length, 0, '缺参态不请求是对的，但不能什么都不说')
 
   const withTopic = loadPage()
   withTopic.page.onLoad({ topicId: '22' })

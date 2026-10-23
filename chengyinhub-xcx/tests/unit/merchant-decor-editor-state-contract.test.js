@@ -146,7 +146,7 @@ test('承接设置保存保持原 payload，锁重复并留下失败或成功回
   const h = loadPage('pages/merchant/decor/coop-setting/index.js')
   h.page.data.loadState = 'ok'
   h.page.data.form = { capacity: '18', availableTime: '周末', chargeType: 1, demand: '提前预约' }
-  h.page.data.keep = { suitActivityTypes: '亲子,城市探索', coopOpen: 1 }
+  h.page.data.keep = { suitActivityTypes: '亲子，城市探索', coopOpen: 1 }
   h.page.onNavBack = () => {}
 
   h.page.data.refreshing = true
@@ -160,7 +160,7 @@ test('承接设置保存保持原 payload，锁重复并留下失败或成功回
   assert.deepEqual(JSON.parse(h.requests[0].data), {
     capacity: 18,
     availableTime: '周末',
-    suitActivityTypes: '亲子,城市探索',
+    suitActivityTypes: '亲子，城市探索',
     chargeType: 1,
     demand: '提前预约',
     coopOpen: 1,
@@ -476,7 +476,7 @@ test('常备权益创建锁重复，保持 payload，写回执后必须用列表
   h.requests[1].success({ code: 200, data: { id: 77 } })
   assert.equal(h.page.data.formVisible, true, '写接口回执不能提前关闭表单')
   assert.equal(h.page.data.saveReceipt, '', '写接口回执不能提前宣称已保存')
-  assert.equal(h.page.data.saving, true, '权威回读完成前保持提交锁')
+  assert.equal(h.page.data.saving, true, '权威刷新完成前保持提交锁')
   assert.equal(h.requests[2].url, '/api/coop/perk-template/list')
 
   h.requests[2].success({ code: 200, data: [] })
@@ -607,7 +607,7 @@ test('BL-141 营业状态写后回读：一致才出回执，不一致或回读�
   h.requests[0].success({ code: 200, msg: '已打烊' })
   assert.equal(h.requests[1].url, '/api/merchant/business-status')
   assert.equal(h.requests[1].method, 'POST')
-  assert.equal(h.page.data.saveReceipt, '', '回读前不得宣称成功')
+  assert.equal(h.page.data.saveReceipt, '', '刷新前不得宣称成功')
   assert.equal(h.page.data.saving, true)
   h.requests[1].success({ code: 200, data: { businessStatus: 0, businessStatusText: '已打烊' } })
   assert.equal(h.page.data.m.businessStatus, 0)
@@ -616,19 +616,19 @@ test('BL-141 营业状态写后回读：一致才出回执，不一致或回读�
   h.page.toggleBusiness({ detail: { value: true } })
   h.requests[2].success({ code: 200 })
   h.requests[3].success({ code: 200, data: { businessStatus: 0, businessStatusText: '已打烊' } })
-  assert.equal(h.page.data.m.businessStatus, 0, '回读不一致必须回滚开关')
+  assert.equal(h.page.data.m.businessStatus, 0, '刷新不一致必须回滚开关')
   assert.equal(h.page.data.saveReceipt, '')
-  assert.match(h.page.data.saveError, /状态未同步：当前仍为已打烊/)
+  assert.match(h.page.data.saveError, /状态更新中：当前仍为已打烊/)
 
   h.page.toggleBusiness({ detail: { value: true } })
   h.requests[4].success({ code: 200 })
   h.requests[5].fail({ errMsg: 'request:fail timeout' })
   assert.equal(h.page.data.m.businessStatus, 0)
-  assert.match(h.page.data.saveError, /状态未同步，请刷新后核对/)
+  assert.match(h.page.data.saveError, /状态更新中，请刷新/)
 
   h.page.toggleBusiness({ detail: { value: true } })
   h.requests[6].success({ code: 500, msg: '营业状态参数错误' })
-  assert.equal(h.requests.length, 7, '写失败不发回读')
+  assert.equal(h.requests.length, 7, '写失败不发刷新')
   assert.equal(h.page.data.saveError, '营业状态参数错误')
 })
 

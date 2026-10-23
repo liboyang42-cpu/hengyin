@@ -220,7 +220,7 @@ test('重登后仍 401:不得把后端原始报文/接口路径 toast 给用户'
   calls[0].success(PROD_401);
   calls[1].success(PROD_401);
   const leaked = toasts.filter((t) => /请求访问|无法访问系统资源|\/api\//.test(t));
-  assert.deepEqual(leaked, [], '不应泄露后端原文,实际 toast:' + JSON.stringify(toasts));
+  assert.deepEqual(leaked, [], '不应泄露后端原文，实际 toast:' + JSON.stringify(toasts));
 });
 
 test('重登后仍 401 的背景请求(silentError):不弹任何 toast', () => {
@@ -255,7 +255,7 @@ test('statusCode 非 200 且未挂 successStatusAbnormal:回落到 fail(不再�
   assert.deepEqual(failed, { msg: '服务器错误' }, 'fail 必须收到 5xx,否则调用方的提交锁永不复位');
   assert.equal(failedStatus, 500, 'HTTP fallback 不得丢失 statusCode');
   assert.equal(succeeded, undefined, '5xx 不能当成功');
-  assert.deepEqual(toasts, [], '已交给 fail 处理,不该再重复弹 toast');
+  assert.deepEqual(toasts, [], '已交给 fail 处理，不该再重复弹 toast');
 });
 
 test('挂了 successStatusAbnormal 时仍走它,不回落 fail(既有契约不变)', () => {
@@ -319,7 +319,7 @@ test('A2-1 401 重登成功:param.complete 只触发一次(最终响应),不带 
   calls[1].success({ statusCode: 200, data: { code: 200, ok: 1 } });
   calls[1].complete({ statusCode: 200, data: { code: 200, ok: 1 } });
   assert.equal(completes.length, 1, 'complete 只应触发一次');
-  assert.equal(completes[0].code, 200, 'complete 应带最终 200 响应,而非 401 body');
+  assert.equal(completes[0].code, 200, 'complete 应带最终 200 响应，而非 401 body');
 });
 
 test('A2-3 401 重登失败(异步):complete 不早于 fail,且各一次', () => {
@@ -414,7 +414,7 @@ test('retry 只对传输层失败生效,重试期间不重复触发 complete', (
   timers.shift()();
   timers.shift()();
   assert.equal(calls.length, 3, '一共三跳:首发 + 两次重试');
-  assert.equal(failed, 1, '重试用尽才报失败,且只报一次');
+  assert.equal(failed, 1, '重试用尽才报失败，且只报一次');
   assert.equal(completed, 1, 'complete 只在最后一跳触发一次');
 });
 
@@ -617,7 +617,7 @@ test('a successful caller clearing its own session does not turn success into a 
 });
 
 // ---- #472-2(owner 2026-10-23 批准):同意接口 requestId 冲突 → 换新号重发恰好一次,绝不循环 ----
-const CONFLICT = { code: 409, msg: '同意请求标识冲突', errorCode: 'CONSENT_REQUEST_CONFLICT' };
+const CONFLICT = { code: 409, msg: '同意请求信息冲突', errorCode: 'CONSENT_REQUEST_CONFLICT' };
 function respond(call, statusCode, data) {
   call.success({ statusCode, data: JSON.parse(JSON.stringify(data)) });
   call.complete({ statusCode, data });

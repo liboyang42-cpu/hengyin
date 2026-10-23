@@ -25,15 +25,15 @@ Page({
   },
 
   onShareAppMessage() {
-    return { title: '这个据点等你到店打卡', path: SHARE_PATH + '?' + shareQuery(this.data.poiId) }
+    return { title: '这个节点等你到店打卡', path: SHARE_PATH + '?' + shareQuery(this.data.poiId) }
   },
 
   // 只能给 query;path 由平台固定为本页 —— 这正是本页要作为稳定宿主存在的原因。
   onShareTimeline() {
-    return { title: '这个据点等你到店打卡', query: shareQuery(this.data.poiId) }
+    return { title: '这个节点等你到店打卡', query: shareQuery(this.data.poiId) }
   },
 
   onAddToFavorites() {
-    return { title: '据点详情', path: SHARE_PATH + '?' + shareQuery(this.data.poiId) }
+    return { title: '节点详情', path: SHARE_PATH + '?' + shareQuery(this.data.poiId) }
   },
 })

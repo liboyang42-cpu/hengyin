@@ -36,7 +36,7 @@ function assertCoverFallbacks(markup) {
 test('缺封面的路线卡显示明确占位,选择器回落到占位封面', () => {
   assertCoverFallbacks(wxml);
   assert.ok(fs.existsSync(path.resolve(__dirname, '../../images/route_free_cover.png')),
-    '占位封面资源必须在主包里存在,子包引用才拿得到');
+    '占位封面资源必须在主包里存在，子包引用才拿得到');
   assert.ok(fs.existsSync(path.resolve(__dirname, '../../images/no_data.svg')));
 });
 

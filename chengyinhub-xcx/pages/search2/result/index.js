@@ -133,7 +133,7 @@ Page({
         showSearchSkeleton: false,
         everLoaded: this.data.everLoaded || hasResults,
         searchError: failed > 0 && !hasResults
-          ? (allFailed ? '搜索服务暂时不可用，请重试' : '部分搜索没有完成，请重试后再确认结果')
+          ? (allFailed ? '搜索服务暂不可用，请重试' : '部分搜索没有完成，请重试后再确认结果')
           : '',
         resultGroups: resultGroups,
         resultTabs: DEFAULT_RESULT_TABS.concat(resultGroups.map((group) => ({

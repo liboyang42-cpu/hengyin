@@ -29,8 +29,8 @@
     </view>
   </view>
 
-  <cy-empty wx:if="{{tab === 3 && mineAuthRequired}}" kind="no-permission" title="登录后查看我的活动" sub="登录后可查看你参与的官方活动" cta="登录" bind:cta="onRetry" />
-  <cy-empty wx:elif="{{tab === 3 && mineAccessDenied}}" kind="no-permission" title="当前身份不能查看这些活动" sub="请使用具有查看权限的账号" cta="重试" bind:cta="onRetry" />
+  <cy-empty wx:if="{{tab === 3 && mineAuthRequired}}" kind="no-permission" title="登录后查看我的活动" cta="登录" bind:cta="onRetry" />
+  <cy-empty wx:elif="{{tab === 3 && mineAccessDenied}}" kind="no-permission" title="当前身份不能查看这些活动" cta="重试" bind:cta="onRetry" />
   <view wx:elif="{{loading && events.length===0}}">
     <cy-skeleton type="feed-card" count="3" />
   </view>
@@ -65,7 +65,7 @@
         <view class="oe-meta">
           <text class="oe-time">{{item._timeText}}</text>
           <text wx:if="{{item.city}}" class="oe-fact"> · {{item.city}}</text>
-          <text class="oe-fact"> · {{item.participants||0}} 人参与</text>
+          <text class="oe-fact"> · {{item.participants != null ? item.participants + ' 人' : '—'}}参与</text>
         </view>
         <view wx:if="{{item._pct>=0}}" class="oe-collective">
           <view class="oe-bar"><view class="oe-bar-fill" style="width:{{ item._pct || 0 }}%"></view></view>

@@ -56,12 +56,12 @@ function assertNavCenteredTitle(wxss, wxml) {
   // ⚠️ 2026-07-29 复核阻塞项 1:旧写法 left=actionsRight / right=titleRight 左右不等,
   //   右 action 一宽,标题的几何中心就被推向左边 —— 那不是居中,是"没被遮住"而已。
   assert.match(wxml, /class="nav__title"[^>]*style="left: \{\{titleLeft\}\}px; right: \{\{titleRight\}\}px;"/,
-    '标题槽必须用左右两个内距变量,由 _titleInsets 保证恒相等')
+    '标题槽必须用左右两个内距变量，由 _titleInsets 保证恒相等')
   assert.match(wxml, /<view wx:if="\{\{showTitle\}\}" class="nav__title"/,
-    '槽窄到读不出词时必须整个不渲染(裁决:不许挤成 0 宽,也不许左偏)')
+    '槽窄到读不出词时必须整个不渲染(裁决:不许挤成 0 宽，也不许左偏)')
   const title = wxss.match(/\.nav__title \{[\s\S]*?\n\}/)
   assert.ok(title, '找不到 .nav__title 规则')
-  assert.match(title[0], /position:\s*absolute/, '标题必须脱离流居中,不能跟着返回钮排')
+  assert.match(title[0], /position:\s*absolute/, '标题必须脱离流居中，不能跟着返回钮排')
   assert.match(title[0], /text-align:\s*center/, '二级页导航标题必须居中')
   assert.match(title[0], /text-overflow:\s*ellipsis/, '长标题必须省略号收尾而不是撑破导航条')
   assert.match(title[0], /color:\s*var\(--cy-text-title\)/, '标题色随主题 token')
@@ -112,10 +112,10 @@ test('cy-nav-bar 行为:普通 action 宽度下标题严格几何居中(左右�
   ;[[375, 96, 0], [375, 96, 40], [375, 96, 60], [414, 96, 80], [320, 90, 30]].forEach(([sw, ar, aw]) => {
     const r = titleInsets(sw, ar, aw)
     assert.equal(r.titleLeft, r.titleRight,
-      `sw=${sw} action=${aw}:左右内距必须相等,不等即标题偏离几何中心`)
+      `sw=${sw} action=${aw}:左右内距必须相等，不等即标题偏离几何中心`)
     if (aw > 8) {
       assert.ok(r.titleLeft >= ar + aw,
-        `sw=${sw} action=${aw}:内距(${r.titleLeft})必须把 action 完整让开,否则标题压住它`)
+        `sw=${sw} action=${aw}:内距(${r.titleLeft})必须把 action 完整让开，否则标题压住它`)
     }
   })
   // 无 action 页零漂移:退回基线,不被窄 action 反向收小
@@ -129,7 +129,7 @@ test('cy-nav-bar 行为:槽窄到读不出词时整个不渲染标题(不挤 0 �
   // 裁决:此时不渲染 nav 标题,语义由页面自己的内容标题承担。
   const squeezed = titleInsets(375, 96, 98)
   assert.equal(squeezed.titleLeft, squeezed.titleRight, '即便降级也不许左右不等(不许左偏)')
-  assert.equal(squeezed.showTitle, false, '可用槽宽为负,必须整个不渲染而不是挤成 0 宽')
+  assert.equal(squeezed.showTitle, false, '可用槽宽为负，必须整个不渲染而不是挤成 0 宽')
   assert.ok(375 - squeezed.titleLeft * 2 < 96, '这一档的可用宽度确实低于最小可读宽度')
 
   // 边界两侧各取一点,证明闸是连续的而不是写死某个宽度
@@ -377,7 +377,7 @@ test('cy-empty 状态族:空 / 错 / 无权限 / 未开始具备不同视觉身�
   kinds.forEach((k) => {
     const r = table[k]
     assert.ok(r.title && r.title.length > 0, `kind=${k} 必须有默认主文案`)
-    assert.ok(!seen.has(r.title), `kind=${k} 的文案与其它态重复,用户分不清是哪种"空"`)
+    assert.ok(!seen.has(r.title), `kind=${k} 的文案与其它态重复，用户分不清是哪种"空"`)
     seen.add(r.title)
   })
   assertEmptySemanticVisuals(table)
@@ -444,7 +444,7 @@ test('cy-empty:状态默认值里不得埋 CTA(默认 CTA 没有默认动作 = �
   assert.match(wxml, /wx:if="\{\{cta\}\}"/, 'CTA 只在页面显式传入时才渲染')
   assert.match(wxml, /bindtap="onCta"/, 'CTA 必须绑到真实处理函数')
   assert.match(read('components/cy/empty/index.js'), /onCta\(\)\s*\{\s*this\.triggerEvent\('cta'\)/,
-    'CTA 必须把动作抛给页面,不能自己吞掉(吞掉 = 点了没反应)')
+    'CTA 必须把动作抛给页面，不能自己吞掉(吞掉 = 点了没反应)')
 })
 
 test('负控:给状态默认表塞一个默认 CTA(点了没动作)必须判红', () => {
@@ -510,7 +510,7 @@ function assertTabsFillScrollable(files) {
   const item = files.wxss.match(/\.cy-tabs--fill \.cy-tabs__item \{[\s\S]*?\n\}/)
   assert.ok(item, '找不到 .cy-tabs--fill .cy-tabs__item 规则')
   // 不挤压的真正机制是 flex-shrink:0(flex: 1 0 auto 的中间那位);min-width 是短标签时的兜底下限
-  assert.match(item[0], /flex:\s*1 0 auto/, 'item 必须 flex-shrink:0,否则 tab 一多就被压扁而不是横滑')
+  assert.match(item[0], /flex:\s*1 0 auto/, 'item 必须 flex-shrink:0，否则 tab 一多就被压扁而不是横滑')
   assert.match(item[0], /min-width:\s*var\(--cy-comp-tabs-fill-min-w\)/, '短标签的宽度下限走 token')
   // content-box 下 min-width 只管内容盒、内距会加在外面:实测 150rpx 下限 + 24rpx 内距 = 实际 103px,
   // 4 个 tab 就把 390pt 的行撑爆(member/index 已复现)。box-sizing 这条是那次回归的修法本身。
@@ -587,7 +587,7 @@ function assertLightCardSingleEdge(tokens) {
     assert.equal(border, 'transparent',
       `${selector} 同时有描边(${border})与投影(${shadow}):亮色域二者只能选一`)
   })
-  assert.ok(checked > 0, '没有任何带投影的亮色块被检查到,这条断言是恒真的')
+  assert.ok(checked > 0, '没有任何带投影的亮色块被检查到，这条断言是恒真的')
 }
 
 test('表面规范:亮色域「描边 / 投影」二选一,不得同时出现', () => {
@@ -646,7 +646,7 @@ test('负控:浅端漏掉「关掉高光」这一档(暗端高光漏进白卡)�
 // 7) cy-cover-fallback 资产合同
 // ============================================================
 function assertCoverFallback(files) {
-  assert.match(files.wxml, /binderror="onError"/, '图必须挂 error 回调,否则挂图就是个黑洞')
+  assert.match(files.wxml, /binderror="onError"/, '图必须挂 error 回调，否则挂图就是个黑洞')
   assert.match(files.wxml, /wx:if="\{\{src && !failed\}\}"/, '有图且未失败才渲染 <image>')
   assert.match(files.wxml, /wx:else[\s\S]*class="cy-cover__fallback"[\s\S]*\{\{title\}\}/,
     '无图 / 图挂时必须渲染主题名文字封面')
@@ -655,7 +655,7 @@ function assertCoverFallback(files) {
   assert.match(files.js, /observers[\s\S]*src\(next\)[\s\S]*failed: false/,
     'src 变更必须清掉 failed(列表节点复用身份闸)')
   assert.match(files.wxss, /background: linear-gradient\(135deg, var\(--cy-color-brand-soft\), var\(--cy-color-bg-surface-subtle\)\)/,
-    '兜底底色必须沿用既有配方,不另造第二套')
+    '保底底色必须沿用既有配方，不另造第二套')
   assert.match(files.wxss, /font-size: var\(--cy-comp-cover-fallback-font\)/, '文字封面字号走 token')
 }
 
@@ -686,11 +686,11 @@ test('负控:去掉 src 变更清失败态的身份闸必须判红', () => {
 // 那比不写更坏:它看起来像"做了"。边界已在交付报告里写明。
 function assertNoFakeDensityAttrs(files) {
   ;[/srcset=/, /sizes=/, /<picture[\s>]/, /image-set\(/].forEach((re) => {
-    assert.doesNotMatch(files.wxml, re, `小程序不支持该多倍图写法,写了 = 无效属性冒充资产合同(${re})`)
+    assert.doesNotMatch(files.wxml, re, `小程序不支持该多倍图写法，写了 = 无效属性冒充资产合同(${re})`)
     assert.doesNotMatch(files.wxss, re, `小程序不支持该多倍图写法(${re})`)
   })
   // 能真守住的那一半:无图 / 图挂都必须落到主题名文字兜底,不留黑洞
-  assert.match(files.wxml, /wx:else[\s\S]*class="cy-cover__fallback"/, '兜底分支必须覆盖 wx:if 的全部否定面')
+  assert.match(files.wxml, /wx:else[\s\S]*class="cy-cover__fallback"/, '保底分支必须覆盖 wx:if 的全部否定面')
 }
 
 test('cy-cover-fallback:不伪造小程序不支持的多倍图属性,文字兜底仍覆盖无图/图挂两态', () => {
@@ -739,13 +739,13 @@ function assertFloatingExitExplicit(wxss, wxml) {
   assert.ok(Number(hitW[1]) >= 88, `命中区宽下限必须 ≥88rpx,实为 ${hitW[1]}rpx`)
   assert.ok(Number(hitH[1]) >= 88, `命中区高下限必须 ≥88rpx,实为 ${hitH[1]}rpx`)
   const innerW = rule[0].match(/min-width:\s*(\d+)rpx/)
-  assert.ok(innerW, '视觉胶囊也必须给横向下限,否则文案一改命中区跟着缩水')
+  assert.ok(innerW, '视觉胶囊也必须给横向下限，否则文案一改命中区跟着缩水')
   assert.ok(Number(innerW[1]) >= 88, `视觉胶囊宽下限必须 ≥88rpx,实为 ${innerW[1]}rpx`)
   assert.match(hit[0], /align-items:\s*center/, '64rpx 胶囊必须在 88rpx 命中区里纵向居中')
 
   if (wxml) {
     // 显式标签:这是本项的核心判据,不是装饰
-    assert.match(wxml, /class="fmap-exit">退出</, '地图退出必须保留「退出」二字,不得收成无文字图标')
+    assert.match(wxml, /class="fmap-exit">退出</, '地图退出必须保留「退出」二字，不得收成无文字图标')
     assert.match(wxml, /class="fmap-exit-hit"[^>]*aria-label="退出游玩"/, 'aria-label 必须保留')
     // tap 必须在外层:挂回视觉层 = 命中区又缩回视觉尺寸(那正是本项要修的缺陷)
     assert.match(wxml, /class="fmap-exit-hit"[^>]*bindtap="onExitTap"/, 'tap 必须挂在命中区外层')
@@ -906,7 +906,7 @@ function assertSpinnerCycleToken(tokens, wxssByRel) {
             && /--reduced-motion(?:\s|\.)/.test(rule.selector)) continue
         declaredCount += 1
         assert.doesNotMatch(value, LITERAL_DURATION,
-          `${rule.selector} 的 ${prop} 写了字面时长,会层叠覆盖 spinner 转速(${rel}):${value.trim()}`)
+          `${rule.selector} 的 ${prop} 写了字面时长，会层叠覆盖 spinner 转速(${rel}):${value.trim()}`)
         assert.match(value, /var\(--cy-motion-spinner-cycle\)/,
           `${rule.selector} 的 ${prop} 必须读 --cy-motion-spinner-cycle(${rel})`)
       }

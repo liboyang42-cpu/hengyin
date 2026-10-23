@@ -136,7 +136,7 @@ test('CU-C-34:日期缺失时不编日期,但来源段仍在(不退回「看不�
 
 test('CU-C-34:展开候选与收起态都渲染这个字段(不能只改一半)', () => {
   const wxml = read(EVENT_OPS_WXML)
-  assert.match(wxml, /range-key="dropdownLabel"/, '展开候选仍按 name 取名字段,同名项还是分不出来')
+  assert.match(wxml, /range-key="dropdownLabel"/, '展开候选仍按 name 取名字段，同名项还是分不出来')
   assert.match(wxml, /\{\{topics\[topicIndex\]\.dropdownLabel\}\}/, '收起态还在显示纯名称')
   assert.doesNotMatch(wxml, /\{\{topics\[topicIndex\]\.name\}\}/, '收起态还留着旧的 name 绑定')
   assert.match(read(EVENT_OPS_JS), /dropdownLabel:\s*topicDropdownLabel\(item,\s*that\.data\.clubId\)/,
@@ -176,7 +176,7 @@ test('CU-C-46:cy-dropdown 面板自带暗色 token 镜像,与 tokens.wxss 的暗
     assert.equal(layer[key], tokens[key], `.cdd__layer--portal 的 ${key} 与暗色真值层不一致`)
   }
   // 没兜底值的 var(--cy-z-modal) 一旦取不到,整条 z-index 作废 —— 面板会落到下方字段后面
-  assert.match(dropdown, /z-index:\s*var\(--cy-z-modal,\s*900\)/, 'z-index 缺兜底值')
+  assert.match(dropdown, /z-index:\s*var\(--cy-z-modal,\s*900\)/, 'z-index 缺保底值')
 })
 
 test('CU-C-46:商家亮色镜像仍压过默认镜像(别把商家页也拖成暗的)', () => {
@@ -185,13 +185,13 @@ test('CU-C-46:商家亮色镜像仍压过默认镜像(别把商家页也拖成�
   assert.equal(merchant['--cy-color-bg-elevated'], '#FFFFFF')
   assert.equal(merchant['--cy-color-text-primary'], '#000000')
   assert.ok(dropdown.indexOf('.cdd__layer--portal {') < dropdown.indexOf('.cdd__layer.theme-merchant'),
-    '默认镜像要写在商家镜像之前,免得后来者把商家值覆盖掉')
+    '默认镜像要写在商家镜像之前，免得后来者把商家值覆盖掉')
 })
 
 test('CU-C-46 负控:摘掉默认镜像,逐字对称那条断言必须判红', () => {
   const dropdown = read('components/cy/dropdown/index.wxss')
   const mutated = dropdown.replace(/[^\n]*--cy-color-bg-elevated:\s*#1C1C1E;[^\n]*\n/, '')
-  assert.notEqual(mutated, dropdown, '变异没生效:锚点已漂,这个负控在空转')
+  assert.notEqual(mutated, dropdown, '变异没生效:锚点已漂，这个负控在空转')
   const tokens = tokenValues(read('style/tokens.wxss'), '^page')
   assert.equal(tokenValues(mutated, '^\\.cdd__layer--portal')['--cy-color-bg-elevated'], undefined)
   assert.notEqual(tokenValues(mutated, '^\\.cdd__layer--portal')['--cy-color-bg-elevated'], tokens['--cy-color-bg-elevated'])
@@ -211,7 +211,7 @@ test('CU-C-35:日期=上海今天且时刻已过 ⇒ 判为已过;今天但时�
     '表单日期就是今天、真正过期的是 09:00 的集合时刻 —— 这一条必须拦')
   assert.equal(assemblyAlreadyPast(['2026-09-23'], '11:00', now), false)
   assert.equal(assemblyAlreadyPast(['2026-09-24'], '09:00', now), false, '明天 09:00 当然没过期')
-  assert.equal(assemblyAlreadyPast(['2026-09-23'], '下班', now), false, '时刻形状不对交给形状校验,这里不猜')
+  assert.equal(assemblyAlreadyPast(['2026-09-23'], '下班', now), false, '时刻形状不对交给形状校验，这里不猜')
 })
 
 test('CU-C-35:跨上海午夜的旧日期被拦下,今天和未来的未到时刻仍放行', () => {
@@ -237,7 +237,7 @@ test('CU-C-35:提交时按上海当前时刻拦下,文案直说时刻(不是「�
   page.submitSeries()
   assert.deepEqual(collected.requests, [], '已过时刻却把请求发出去了')
   assert.ok(collected.toasts.includes('集合时间必须晚于当前时间'),
-    `提示必须说清是时刻的问题,实际:${JSON.stringify(collected.toasts)}`)
+    `提示必须说清是时刻的问题，实际:${JSON.stringify(collected.toasts)}`)
 })
 
 test('CU-C-35:客户端「今天」按上海日历算,不再读设备本地日历', () => {
@@ -253,7 +253,7 @@ test('CU-C-35:客户端「今天」按上海日历算,不再读设备本地日�
 test('CU-C-35 负控:把前置闸短路,「不许提交」那条断言必须判红(请求会真的发出去)', () => {
   const source = read(EVENT_OPS_JS)
   const mutated = source.replace('if (assemblyAlreadyPast(', 'if (false && assemblyAlreadyPast(')
-  assert.notEqual(mutated, source, '变异没生效:锚点已漂,这个负控在空转')
+  assert.notEqual(mutated, source, '变异没生效:锚点已漂，这个负控在空转')
   const { page, collected } = loadPage(EVENT_OPS_JS, mutated)
   const past = clockNow(-5 * 60 * 1000)
   page.data.canManage = true
@@ -287,7 +287,7 @@ test('CU-C-62:名册总数是三个到场桶之和,不是只数「已报名」',
     '活动过点后后端把未到场整批挪进 noShow,只数 registered 会归零')
   assert.equal(rosterTotal({ registered: [], arrived: [], noShow: [1] }), 1)
   assert.equal(rosterTotal({ registered: [], arrived: [], noShow: [], waitlist: [1, 2] }), 0,
-    '候补是另一份名单,不算进场名册')
+    '候补是另一份名单，不算进场名册')
   assert.equal(rosterTotal({}), 0, '字段缺失不许算成 NaN')
 })
 
@@ -317,7 +317,7 @@ test('CU-C-73:roster 下发的可更正时段驱动置灰,并写明可操作时�
     registered: [{ memberId: 9009, nickname: '已报名的人' }],
     correctionWindow: { startAt: '2026-10-02T10:00:00+08:00', endAt: '2026-10-04T10:00:00+08:00', operable: false },
   }))
-  assert.equal(page.data.correctionOperable, false, '服务端说不能更正,前端却仍放开')
+  assert.equal(page.data.correctionOperable, false, '服务端说不能更正，前端却仍放开')
   assert.match(page.data.correctionWindowText, /10月2日 10:00/, `没写出可操作时段:${page.data.correctionWindowText}`)
   assert.match(page.data.correctionWindowText, /10月4日 10:00/)
   const wxml = read(EVENT_OPS_WXML)
@@ -347,7 +347,7 @@ test('CU-C-73:可更正时段内照旧能打开原因输入框(不许把正常�
   page.data.activityId = 31
   page.data.correctionOperable = true
   page.correctAttendance({ currentTarget: { dataset: { memberId: 9009, version: 0, arrived: true } } })
-  assert.equal(collected.modals.length, 1, '可更正时段内反而打不开更正框')
+  assert.equal(collected.modals.length, 1, '可更正时段内反而无法打开更正框')
 })
 
 test('CU-C-73:老后端没下发 correctionWindow 时不锁死入口(服务端仍会拦)', () => {
@@ -363,7 +363,7 @@ test('CU-C-73:老后端没下发 correctionWindow 时不锁死入口(服务端�
 test('CU-C-73 负控:去掉前置闸,「不可更正」那条断言必须判红(弹层会打开)', () => {
   const source = read(EVENT_OPS_JS)
   const mutated = source.replace('if (!this.data.correctionOperable) {', 'if (false) {')
-  assert.notEqual(mutated, source, '变异没生效:锚点已漂,这个负控在空转')
+  assert.notEqual(mutated, source, '变异没生效:锚点已漂，这个负控在空转')
   const { page, collected } = loadPage(EVENT_OPS_JS, mutated)
   page.data.canCheckin = true
   page.data.activityId = 31
@@ -397,7 +397,7 @@ test('CU-C-74:弹层里那两句开发者口径的页脚也没了', () => {
 test('CU-C-74 负控:把类名放回 label,禁用词断言必须判红', () => {
   const js = read(TOPIC_DETAIL_JS)
   const mutated = js.replace("label: '退出以后的钱'", "label: '退出以后的钱（RefundPolicy 是唯一真源）'")
-  assert.notEqual(mutated, js, '变异没生效:锚点已漂,这个负控在空转')
+  assert.notEqual(mutated, js, '变异没生效:锚点已漂，这个负控在空转')
   assert.ok(/const RULES_SECTIONS = \[[\s\S]*?\n\];/.exec(mutated)[0].includes('RefundPolicy'))
 })
 
@@ -414,12 +414,12 @@ test('CU-C-76:广播入口按 canBroadcast 出两态,不可发送时写明是哪
   assert.match(wxml, /<text class="cli-sub">\{\{broadcastDisabledText\}\}<\/text>/,
     '不可发送的文案没走投影算出来的那句')
   assert.match(director, /canBroadcast: hasAction\(availableActions, 'BROADCAST'\) && !projection\.broadcastBlocker/,
-    '可点性没接后端的原因码,零成员仍然放行')
+    '可点性没接后端的原因码，零成员仍然放行')
   assert.match(director, /NO_RECIPIENT: '[^']*报名进场[^']*'/,
-    '零成员这一种原因没给下一步 —— 走查抱怨的正是「只说不能,不说怎样才能」')
+    '零成员这一种原因没给下一步 —— 走查抱怨的正是「只说不能，不说怎样才能」')
   assert.match(director, /只有本场进行中才能发送/, '丢了「本场没跑起来」那一种说法')
   assert.match(read('pages/club/utils/club-game-director-adapter.js'), /broadcastBlocker/,
-    '后端的原因码没进投影,前端只能继续按场次状态猜')
+    '后端的原因码没进投影，前端只能继续按场次状态猜')
   assert.match(read('pages/club/topic-detail/index.wxss'), /\.cli-entry--disabled\s*\{[^}]*--cy-color-text-disabled/,
     '置灰态没走 token')
 })
@@ -434,7 +434,7 @@ test('CU-C-76:发送被驳回时按后端原因码出话,不再统一「操作�
 test('CU-C-76 负控:把分态去掉,入口不分态那条断言必须判红', () => {
   const wxml = read(TOPIC_DETAIL_WXML)
   const mutated = wxml.replace('wx:if="{{canBroadcast}}" class="cli-entry"', 'class="cli-entry"')
-  assert.notEqual(mutated, wxml, '变异没生效:锚点已漂,这个负控在空转')
+  assert.notEqual(mutated, wxml, '变异没生效:锚点已漂，这个负控在空转')
   assert.equal(/wx:if="\{\{canBroadcast\}\}" class="cli-entry" bindtap="goBroadcast"/.test(mutated), false)
 })
 
@@ -444,9 +444,9 @@ test('CU-C-76 负控:可点性不接原因码时,零成员入口判绿断言必�
     "canBroadcast: hasAction(availableActions, 'BROADCAST') && !projection.broadcastBlocker,",
     "canBroadcast: hasAction(availableActions, 'BROADCAST'),"
   )
-  assert.notEqual(mutated, director, '变异没生效:锚点已漂,这个负控在空转')
+  assert.notEqual(mutated, director, '变异没生效:锚点已漂，这个负控在空转')
   assert.equal(/canBroadcast: hasAction\(availableActions, 'BROADCAST'\) && !projection\.broadcastBlocker/.test(mutated), false,
-    '回到旧写法 = BROADCAST 只看场次状态,零成员又能点进去')
+    '回到旧写法 = BROADCAST 只看场次状态，零成员又能点进去')
 })
 
 /* —————————————————— CU-C-77 C12「看看模板」要带 scope=my —————————————————— */
@@ -461,7 +461,7 @@ test('CU-C-77:剧情与玩法的模板入口指向个人玩法(cms_member_templa
 test('CU-C-77 负控:去掉 scope=my,上面那条断言必须判红', () => {
   const source = read(TOPIC_STORY_JS)
   const mutated = source.replace("templateId + '&scope=my'", 'templateId')
-  assert.notEqual(mutated, source, '变异没生效:锚点已漂,这个负控在空转')
+  assert.notEqual(mutated, source, '变异没生效:锚点已漂，这个负控在空转')
   const { page, collected } = loadPage(TOPIC_STORY_JS, mutated)
   page.onViewTemplate({ currentTarget: { dataset: { templateId: 990057 } } })
   assert.deepEqual(collected.navigations, ['/pages/templatedetail/templatedetail?id=990057'])
@@ -475,7 +475,7 @@ test('CU-C-80:返回主题详情重拉详情与统计(首展不重复拉)', () =
   page._clubId = 9
   page.data.loaded = true
   page.onShow()
-  assert.deepEqual(collected.requests, [], '首次展示由 onLoad 负责,不该重复拉一遍')
+  assert.deepEqual(collected.requests, [], '首次展示由 onLoad 负责，不该重复拉一遍')
   page.onShow()
   assert.deepEqual(collected.requests.map((r) => r.url),
     ['/api/topic/info-to-user', '/api/club/crm/topic-manage-stats'],
@@ -495,14 +495,14 @@ test('CU-C-80 负控:把首展闸去掉,「首展不重复拉」那条断言必�
   const source = read(TOPIC_DETAIL_JS)
   const mutated = source.replace(
     'if (!this._hasShown) { this._hasShown = true; return; }', 'if (false) { this._hasShown = true; }')
-  assert.notEqual(mutated, source, '变异没生效:锚点已漂,这个负控在空转')
+  assert.notEqual(mutated, source, '变异没生效:锚点已漂，这个负控在空转')
   const { page, collected } = loadPage(TOPIC_DETAIL_JS, mutated)
   page._topicId = 88
   page._clubId = 9
   page.data.loaded = true
   page.onShow()
   assert.equal(collected.requests.length, 2,
-    '没有首展闸时首展就会重拉 —— 上面那条「首展不重复拉」的断言认得出区别,不是橡皮图章')
+    '没有首展闸时首展就会重拉 —— 上面那条「首展不重复拉」的断言认得出区别，不是橡皮图章')
 })
 
 /* —————————————————— CU-C-88 主题内按报名口径命名 —————————————————— */
@@ -520,7 +520,7 @@ test('CU-C-88:入口与弹层都叫「报名参与者」,空态改「还没有�
 test('CU-C-88 负控:把入口文案换回「成员」,同一条断言必须判红', () => {
   const js = read(TOPIC_DETAIL_JS)
   const mutated = js.replace("label: '报名参与者'", "label: '成员'")
-  assert.notEqual(mutated, js, '变异没生效:锚点已漂,这个负控在空转')
+  assert.notEqual(mutated, js, '变异没生效:锚点已漂，这个负控在空转')
   assert.equal(/key: 'customer', label: '报名参与者'/.test(mutated), false)
 })
 

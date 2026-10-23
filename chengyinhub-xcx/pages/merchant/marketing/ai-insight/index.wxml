@@ -17,7 +17,7 @@
     <view class="greet mi-in" style="transition-delay: 0ms;">
       <view class="greet-b">
         <view class="greet-line"><text>Hi，</text><text>{{storeName || '店主'}}</text></view>
-        <text class="greet-tip">欢迎回来，看看城瘾这段时间为你带来了什么</text>
+        
         <text class="gen-at" wx:if="{{loading}}" aria-role="status">正在更新经营数据…</text>
         <!-- 2026-10-23 业主:删去「生成于 … · 次日更新」 -->
       </view>
@@ -76,7 +76,7 @@
     <!-- 未知和明确为零是两件事：字段缺失只能重试，服务端明确全零才给业务空态。 -->
     <cy-state-shell wx:if="{{factState === 'unknown'}}" kind="data"
                     title="基础数据暂未完整返回"
-                    sub="不会用 0 代替缺失的到店、打卡或核销数据"
+                    sub="数据暂缺"
                     primary="重新加载" bind:primary="retry" />
     <!-- 2026-10-23 业主:服务端明确全零时不再出零数据引导卡(业务空态 + 跳合作中心按钮),
          上方三格照常显示 0,下方各分区按「没有就不显示」各自隐藏(empty 与 ready 走同一分支)。

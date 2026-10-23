@@ -256,7 +256,7 @@ function createGameSessionClient(options) {
   function loadProjection(role, activityId) {
     var perspective = perspectiveOf(role);
     if (!perspective || !validActivityId(activityId)) {
-      return Promise.resolve({ status: 'business-error', message: '活动或身份参数无效' });
+      return Promise.resolve({ status: 'business-error', message: '活动或身份信息无效' });
     }
 
     var task = null;
@@ -328,7 +328,7 @@ function createGameSessionClient(options) {
 
   function loadClubRecapExport(activityId) {
     if (!validActivityId(activityId)) {
-      return Promise.resolve({ status: 'business-error', message: '活动参数无效' });
+      return Promise.resolve({ status: 'business-error', message: '活动信息无效' });
     }
     var task = null;
     var promise = new Promise(function (resolve) {
@@ -374,7 +374,7 @@ function createGameSessionClient(options) {
       return Promise.resolve({
         status: 'business-error',
         requestId: validRequestId(requestId) ? requestId : '',
-        message: '操作参数无效'
+        message: '操作信息无效'
       });
     }
 
@@ -450,7 +450,7 @@ function createGameSessionClient(options) {
   }
 
   function loadSharedStaffView(activityId, exported) {
-    if (!validActivityId(activityId)) return Promise.resolve({ status: 'business-error', message: '活动参数无效' });
+    if (!validActivityId(activityId)) return Promise.resolve({ status: 'business-error', message: '活动信息无效' });
     return new Promise(function (resolve) {
       sendRequest({
         url: exported ? '/api/game/session/shared/export' : '/api/game/session/shared/control', method: 'GET', data: { activityId: activityId },
@@ -475,14 +475,14 @@ function createGameSessionClient(options) {
   }
 
   function anchorSharedRun(activityId) {
-    if (!validActivityId(activityId)) return Promise.resolve({ status: 'business-error', message: '活动参数无效' });
+    if (!validActivityId(activityId)) return Promise.resolve({ status: 'business-error', message: '活动信息无效' });
     return new Promise(function (resolve) {
       sendRequest({ url: '/api/game/session/shared/export/anchor', method: 'POST', data: { activityId: activityId },
         header: { 'content-type': 'application/json' }, retry: 0, autoErrorToast: false,
         success: function (res) {
           if (Number(res && res.code) !== 200 && !(Number(res && res.code) === 500 && isObject(res.data)
             && /^GAME_[A-Z0-9_]+$/.test(res.data.reasonCode || ''))) {
-            resolve({ status: 'unknown-write', message: '离线记录结果待核对' }); return;
+            resolve({ status: 'unknown-write', message: '离线记录结果待确认' }); return;
           }
           if (Number(res && res.code) !== 200) { resolve(businessResult(res, '离线记录未开始')); return; }
           var data = res.data;
@@ -491,12 +491,12 @@ function createGameSessionClient(options) {
             || data.anchor.epoch !== data.authorityEpoch || !Number.isSafeInteger(data.anchor.at) || data.anchor.at < 1
             || data.anchor.configHash !== data.configHash || data.anchor.highWaterHash !== data.highWaterHash
             || !/^[a-f0-9]{64}$/.test(data.anchor.highWaterHash || '') || !/^[a-f0-9]{64}$/.test(data.anchor.configHash || '')) {
-            resolve({ status: 'unknown-write', message: '离线记录结果待核对' }); return;
+            resolve({ status: 'unknown-write', message: '离线记录结果待确认' }); return;
           }
           resolve({ status: 'ready', data: data });
         },
-        fail: function () { resolve({ status: 'unknown-write', message: '离线记录结果待核对' }); },
-        successStatusAbnormal: function () { resolve({ status: 'unknown-write', message: '离线记录结果待核对' }); }
+        fail: function () { resolve({ status: 'unknown-write', message: '离线记录结果待确认' }); },
+        successStatusAbnormal: function () { resolve({ status: 'unknown-write', message: '离线记录结果待确认' }); }
       });
     });
   }
@@ -504,7 +504,7 @@ function createGameSessionClient(options) {
   function readReceipt(activityId, requestId) {
     if (!validActivityId(activityId) || !validRequestId(requestId)) {
       return Promise.resolve({
-        status: 'business-error', requestId: String(requestId || ''), message: '操作记录参数无效'
+        status: 'business-error', requestId: String(requestId || ''), message: '操作记录信息无效'
       });
     }
 

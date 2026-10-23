@@ -85,7 +85,7 @@ test('二次确认点“再想想”不会发起取消请求，且不留下待�
   assert.equal(sandbox.requests.length, 0, '再想想之后没有待提交原因，误触确认也不该发请求')
 })
 
-test('取消响应不能乐观显示成功，必须独立回读 occurrence 状态后才确认', () => {
+test('取消响应不能乐观显示成功，必须独立刷新 occurrence 状态后才确认', () => {
   const vm = page({ clubId: 21, activityId: 71, canManage: true })
   vm.cancelCurrentOccurrence()
   sandbox.modals[0].success({ confirm: true, content: '场地临时关闭' })
@@ -123,7 +123,7 @@ test('取消响应不能乐观显示成功，必须独立回读 occurrence 状�
   assert.match(vm.data.cancellationSummary, /通知.*队列|无需通知/)
 })
 
-test('回读异常或状态未取消时 fail-closed，不把本场显示成已取消', () => {
+test('刷新异常或状态未取消时 fail-closed，不把本场显示成已取消', () => {
   const vm = page({ clubId: 21, activityId: 71, canManage: true })
   vm.submitOccurrenceCancellation('场地临时关闭')
   sandbox.requests[0].success({
@@ -136,11 +136,11 @@ test('回读异常或状态未取消时 fail-closed，不把本场显示成已�
   })
 
   assert.equal(vm.data.cancellationState, 'readback-error')
-  assert.match(vm.data.cancellationError, /回读/)
+  assert.match(vm.data.cancellationError, /刷新/)
   assert.equal(sandbox.toasts.some(item => item.icon === 'success'), false)
 })
 
-test('ACTIVE 回读必须同时证明活动未取消且仍发布，矛盾状态 fail-closed', () => {
+test('ACTIVE 刷新必须同时证明活动未取消且仍发布，矛盾状态 fail-closed', () => {
   const vm = page({ clubId: 21, activityId: 71, canManage: true })
   vm.loadCancellationState()
   sandbox.requests[0].success({
@@ -149,7 +149,7 @@ test('ACTIVE 回读必须同时证明活动未取消且仍发布，矛盾状态 
   })
 
   assert.equal(vm.data.cancellationState, 'readback-error')
-  assert.match(vm.data.cancellationError, /回读/)
+  assert.match(vm.data.cancellationError, /刷新/)
 })
 
 test('网络结果未知时保留同一 requestId，同原因重试不会重复退款或建通知', () => {

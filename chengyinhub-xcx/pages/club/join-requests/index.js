@@ -20,7 +20,7 @@ Page({
     //    编辑资料页那句「只有主理人可通过或拒绝申请」同日一并改掉,三处口径现在一致。
     // CU-C-133:数「谁能处理」的名单本身就漏掉被委派的成员。本页有 access-gate 拦在
     //    club:member:approve 上,能打开的人一定按得动,所以只报动作、不报名单。
-    introText: '待审核的入会申请 · 可直接通过或拒绝',
+    introText: '',
     state: 'loading', // loading | ready | business-error | network-error | missing-param
     errorText: '',
     refreshing: false,

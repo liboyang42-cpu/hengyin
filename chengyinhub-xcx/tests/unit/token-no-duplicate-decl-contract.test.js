@@ -68,7 +68,7 @@ test('同一个块里不许重复声明同一个 token', () => {
   const dupes = findDuplicateDecls(realFiles())
   assert.deepEqual(dupes, [],
     '这些 token 在同一个块里被声明了多次。CSS 里后者覆盖前者、值相同就不炸,'
-    + '但真源从此有两个,改其中一份会「改了没效果」:\n' + dupes.join('\n'))
+    + '但真源从此有两个，改其中一份会「改了没效果」:\n' + dupes.join('\n'))
 })
 
 test('负控:叠一份重复声明必须判红', () => {
@@ -89,5 +89,5 @@ test('负控:注释里提到 token 名不算声明 —— 判据看声明不看�
     + '  --cy-comp-scrim-top-h: 0px;\n'
     + '}\n'
   assert.deepEqual(findDuplicateDecls([['x.wxss', fixture]]), [],
-    '注释里引用同名 token 是本仓常态,按原文扫会误报')
+    '注释里引用同名 token 是本仓常态，按原文扫会误报')
 })

@@ -106,7 +106,7 @@ test('CU-M-123 消息与动态不再展示内部兼容模式说明,也不留空�
 // 被指向一个与自己无关的角色。本场景没有主办身份字段,统一说「主办方」。
 test('CU-M-107 活动票种空态不再把责任固定指向主理人', () => {
   const wxml = readWxml('subpackageMember/components/cy/scene-play-activity-detail/index.wxml')
-  assert.match(wxml, /主办方还没有发布可报名票种/)
+  assert.match(wxml, /title="暂无票种"/)
   assert.doesNotMatch(wxml, /主理人还没有发布可报名票种/)
 })
 

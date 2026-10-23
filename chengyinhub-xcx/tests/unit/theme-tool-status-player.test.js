@@ -14,7 +14,7 @@ const reasons = {
   PROOF_PENDING: '待核验', NOT_CAPTAIN: '仅队长可操作', SESSION_ENDED: '本局已结束',
   CHALLENGE_LIMIT: '挑战次数已用完', TEAM_COMPLETED: '本队已完成', COUNTERPART_COMPLETED: '对方已完成',
   RULE_BLOCKED: '前置条件未满足', TASK_ACTIVE: '请先完成或取消当前任务', SESSION_PAUSED: '本局已暂停',
-  WORLD_LOCKED: '当前表决已冻结',
+  WORLD_LOCKED: '当前表决已锁定',
 };
 for (const source of fixture.reasons) test('T07 禁用 ' + source.disabledReason + ' 使用行级状态及中文原因', () => {
   const rows = gameplay.actionRows({ ...copy(fixture.team), interactionTools: [source] }, []);
@@ -126,7 +126,7 @@ test('工具重进恢复当前实例核验：未通过只重开题面，通过�
 test('团队挑战回读两名队员的 6/10、12/10，恢复由服务器 awaitingChallenge=false 关闭挑战而不推进路线', () => {
   const page = { data:{themeBag:backpack.present(fixture.team,[]),nodes:[],playKit:{show:true,kit:{type:'ballshake'}},advancedPlay:{show:true,node:{nodeId:11}}},
     _themeChallengeNodeId:11,_themeHidden:true,setData(patch){for(const [key,value] of Object.entries(patch)){const parts=key.split('.');let at=this.data;for(const p of parts.slice(0,-1))at=at[p];at[parts.at(-1)]=value;}} };
-  Object.assign(page,backpack.methods(()=>{throw new Error('回读不可裁定成功或发路线命令');}));
+  Object.assign(page,backpack.methods(()=>{throw new Error('刷新不可裁定成功或发路线命令');}));
   const challenge={instanceId:'one',nodeId:11,goal:10,progress:6,restoreTo:4};
   page._applyThemeView({...copy(fixture.team),awaitingChallenge:true,hp:0,challenge});
   assert.equal(page.data.playKit.kit.challenge.progress,6);assert.equal(page.data.themeBag.challengeProgressText,'6/10');

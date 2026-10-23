@@ -1,8 +1,8 @@
 <view class="deregister-scene">
   <view class="deregister-card" wx:if="{{status === 'PENDING'}}">
     <text class="deregister-title">注销申请已提交</text>
-    <text class="deregister-copy">{{coolingOffEnded ? '冷静期已结束，账号将在随后的凌晨批次中完成注销；完成前仍可撤销。' : '账号功能已冻结。你可以在冷静期结束前撤销申请。'}}</text>
-    <text class="deregister-time">{{executeAfter ? (coolingOffEnded ? '冷静期结束时间：' : '预计执行时间：') + executeAfter : '执行时间待确认'}}</text>
+    <text class="deregister-copy">{{coolingOffEnded ? '冷静期已结束，账号将在随后的凌晨批次中完成注销；完成前仍可撤销。' : '账号功能已暂停，冷静期结束前可撤销申请'}}</text>
+    <text class="deregister-time">{{executeAfter ? (coolingOffEnded ? '冷静期结束时间：' : '预计执行时间：') + executeAfter : '—'}}</text>
     <cy-error wx:if="{{cancelError}}" title="撤销没有完成" sub="{{cancelError}}" retry="重试" bind:retry="cancel" />
     <cy-btn class="deregister-action" variant="secondary" loading="{{canceling}}" disabled="{{canceling}}" bindtap="cancel">撤销注销申请</cy-btn>
   </view>
@@ -29,12 +29,12 @@
 
   <cy-empty wx:elif="{{status === 'LOGIN_REQUIRED' || status === 'DENIED'}}" kind="no-permission" fill size="lg"
     title="{{status === 'LOGIN_REQUIRED' ? '登录后查看账号注销条件' : '当前账号无法查看注销条件'}}"
-    sub="{{status === 'LOGIN_REQUIRED' ? '请先登录需要注销的账号' : '请确认当前账号的查看权限'}}"
+    sub=""
     cta="{{status === 'LOGIN_REQUIRED' ? '登录' : '刷新'}}" bind:cta="loginToRead" />
-  <cy-error wx:elif="{{status === 'ERROR'}}" fill title="注销条件核验失败" sub="{{statusError || '没能确认注销条件，请稍后重试。'}}" retry="重试" bind:retry="loadStatus" />
+  <cy-error wx:elif="{{status === 'ERROR'}}" fill title="注销条件核验失败" sub="{{statusError}}" retry="重试" bind:retry="loadStatus" />
 
   <cy-empty class="deregister-loading" wx:elif="{{status === 'LOADING'}}" kind="loading" fill size="lg" title="正在核验注销条件" />
-  <cy-error wx:else fill title="账号状态待确认" sub="当前状态无法识别，请重新核验。" retry="重试" bind:retry="loadStatus" />
+  <cy-error wx:else fill title="账号状态待确认" retry="重试" bind:retry="loadStatus" />
 </view>
 
 <cy-agreement-sheet show="{{showNoticeSheet}}" type="deregister" theme="{{theme}}" bind:close="closeNoticeSheet" />

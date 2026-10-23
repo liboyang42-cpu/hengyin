@@ -5,7 +5,7 @@ const app = getApp()
 const { isBizOk } = require('../../../../utils/response-shape.js')
 const model = require('./model.js')
 
-const NET_FAIL = '网络不太稳定，暂时不知道举报是否已提交。再试一次不会重复提交。'
+const NET_FAIL = '网络异常，暂时不知道举报是否已提交。再试一次不会重复提交。'
 
 Component({
   properties: {
@@ -58,8 +58,8 @@ Component({
           this._policyVersion = taxonomy.policyVersion
           this.setData({ stage: 'pick', reasonLabels: taxonomy.reasons.map((r) => r.label) })
         },
-        fail: () => { if (seq === this._taxSeq) this.setData({ stage: 'loadfail', failText: '网络不太稳定，举报原因没有读取成功' }) },
-        successStatusAbnormal: () => { if (seq === this._taxSeq) this.setData({ stage: 'loadfail', failText: '网络不太稳定，举报原因没有读取成功' }) },
+        fail: () => { if (seq === this._taxSeq) this.setData({ stage: 'loadfail', failText: '网络异常，举报原因没有读取成功' }) },
+        successStatusAbnormal: () => { if (seq === this._taxSeq) this.setData({ stage: 'loadfail', failText: '网络异常，举报原因没有读取成功' }) },
       })
     },
     onReasonSelect(e) {

@@ -18,7 +18,7 @@ function classifyFailure(error, fallback) {
   }
   const transportText = error && typeof error === 'object' ? String(error.errMsg || '') : '';
   if (code === undefined && /request:fail|timeout|network|网络|断网/i.test(transportText)) {
-    return { kind: 'network', text: '网络连接失败，请检查网络后重试。' };
+    return { kind: 'network', text: '网络异常，请重试。' };
   }
   return { kind: 'data', text: requestText(error, fallback) };
 }
@@ -135,7 +135,7 @@ Page({
           const m = res.data;
           const memberId = Number(m.memberId);
           if (!Number.isInteger(memberId) || memberId < 1) {
-            return fail({ msg: '承接设置数据不完整' }, '承接设置数据不完整，请重试。');
+            return fail({ msg: '承接设置加载失败' }, '承接设置加载失败，请重试。');
           }
           const chargeType = m.chargeType === 0 || m.chargeType === '0'
             ? 0
@@ -158,12 +158,12 @@ Page({
           });
           that._initialForm = JSON.stringify(that.data.form);
         } else if (ok) {
-          fail({ msg: '承接设置数据不完整' }, '承接设置数据不完整，请重试。');
+          fail({ msg: '承接设置加载失败' }, '承接设置加载失败，请重试。');
         } else {
-          fail(res, '承接设置暂时没能加载，请重试。');
+          fail(res, '承接设置加载失败，请重试。');
         }
       },
-      fail(error) { fail(error, '承接设置暂时没能加载，请重试。'); },
+      fail(error) { fail(error, '承接设置加载失败，请重试。'); },
     });
   },
 

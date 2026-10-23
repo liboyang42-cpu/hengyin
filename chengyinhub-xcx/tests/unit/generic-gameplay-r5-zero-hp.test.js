@@ -47,7 +47,7 @@ for (const [label, policy, path, value, pattern] of [
 
 test('HP 关闭、策略不匹配、矩阵不支持 STEPS 均拒绝；选项显示真实原因', () => {
   const c = configured('WAIT'); assert.match(zero.validate(c, { hp: { enabled: false, max: 10 } }, policies), /开启/);
-  c.gameplayRuntime.survival.zeroSteps = zero.read(c).steps; assert.match(zero.validate(c, rules, policies), /所选恢复参数/);
+  c.gameplayRuntime.survival.zeroSteps = zero.read(c).steps; assert.match(zero.validate(c, rules, policies), /所选的恢复项/);
   const unsupported = matrix.zeroHpPolicies.generic.filter(key => key !== 'STEPS'); const options = zero.options(unsupported); const steps = options.find(row => row.key === 'STEPS'); assert.equal(steps.disabled, true); assert.match(steps.reason, /暂未开放/);
   assert.match(zero.validate(configured('STEPS'), rules, unsupported), /不支持/);
 });
@@ -111,8 +111,8 @@ test('恢复候选复用后端 v2 白名单；B 完成桥之外的恢复边界�
   for (const row of matrix.types.filter(row => row.r5CompletionProof && !values.includes(row.section))) {
     const advanced = require('../../pages/publish/utils/publish/node-game-catalog.js').applyToConfig(require('../../pages/publish/utils/publish/advanced-game-config.js').defaultConfig(), row.key);
     const candidate = node(90, advanced), p = page(); p._runtimeSavedNodes = () => [candidate, ...nodes]; p.openZeroHpEditor();
-    assert.match(support.choice(matrix, row.key, advanced, { challenge: true, challengeVersion: 2 }), /当前后端尚未接通/, row.key);
-    const option = p.data.runtimeChallengeNodes[0]; assert.equal(option.id, 90); assert.equal(option.disabled, true, row.key); assert.match(option.reason, /当前后端尚未接通/, row.key);
+    assert.match(support.choice(matrix, row.key, advanced, { challenge: true, challengeVersion: 2 }), /暂不支持归零恢复/, row.key);
+    const option = p.data.runtimeChallengeNodes[0]; assert.equal(option.id, 90); assert.equal(option.disabled, true, row.key); assert.match(option.reason, /暂不支持归零恢复/, row.key);
     p.pickZeroHpPolicy(event({ key: 'CHALLENGE' })); p.pickZeroHpChallengeNode(event({}, 0)); assert.equal(p.data.runtimeZeroEditor.draft.challenge.challengeNodeId, null);
     p.pickZeroHpChallengeNode(event({}, p.data.runtimeChallengeNodes.findIndex(row => row.id === 11))); assert.equal(p.data.runtimeZeroEditor.draft.challenge.challengeNodeId, 11);
     const old = configured('CHALLENGE'); Object.assign(old.gameplayRuntime.survival.zeroChallenge, { challengeNodeId: 90, gameplayKey: row.section }); const saved = page(old); saved._runtimeSavedNodes = () => [candidate, ...nodes]; saved.openZeroHpEditor();

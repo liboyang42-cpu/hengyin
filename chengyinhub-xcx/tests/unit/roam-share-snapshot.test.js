@@ -177,7 +177,7 @@ test('拍板17 分享者没开面板直接右上角转发:先发布再带令牌;
   page._sessionOwner = '9'
   page._setSessionView(Object.assign({}, SESSION))
   const share = page.onShareAppMessage()
-  assert.equal(share.path, '/pages/roam/index', '同步兜底 path')
+  assert.equal(share.path, '/pages/roam/index', '同步保底 path')
   assert.equal((await share.promise).path, '/subpackageRoam/session/index?shareToken=' + TOKEN)
 
   const failing = Object.assign(fakeApp(() => ({ code: 500, msg: 'x' })), { globalData: {}, getUserID: () => '9' })

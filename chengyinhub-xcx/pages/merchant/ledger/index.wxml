@@ -6,11 +6,11 @@
   <view class="ledger-nav-spacer" style="height: {{statusBarHeight + navBarHeight}}px;"></view>
   <cy-page-title title="{{pageTitle}}" safe-top="{{false}}" flush="{{true}}" />
   <!-- F-W1-02:无权限是可见的身份说明(不是加载失败),放在导航与标题之后,且下方内容整段不再渲染。 -->
-  <cy-empty wx:if="{{accessDenied}}" kind="no-permission" title="当前身份不能查看这份商家账本" sub="请使用具有商家查看权限的账号" />
+  <cy-empty wx:if="{{accessDenied}}" kind="no-permission" title="当前身份不能查看这份商家账本" />
   <cy-club-direct-ledger wx:if="{{!accessDenied && !routeError && view === 'settlement' && merchantAccess.canReadFinance}}" kind="merchant" />
   <block wx:if="{{!accessDenied}}">
   <cy-state-shell class="fill-slot" wx:if="{{routeError}}" kind="missing-param" fill size="lg"
-                  title="链接已失效" sub="请从商家工作台重新进入"
+                  title="链接已失效" sub="请返回重新进入"
                   primary="返回工作台" bind:primary="onNavBack" />
   <block wx:elif="{{view === 'redemptions'}}">
     <!-- 退款售后不再单独一张卡(UI-06,2026-09-18 用户走查):退款条目并进下面的状态 tab,
@@ -19,12 +19,12 @@
     <cy-tabs class="ledger-filter" wx:if="{{merchantAccess.canReadFinance}}" variant="chip" shared-slab tabs="{{redemptionTabs}}" active="{{redemptionFilter}}" bind:change="onRedemptionFilter" />
     <view class="ledger-redemption-content" aria-role="region" aria-label="核销与退款" aria-busy="{{loading ? 'true' : 'false'}}">
       <cy-skeleton wx:if="{{loading && !hasLoaded}}" type="list" count="{{3}}" />
-      <cy-error load-failure wx:elif="{{error && !hasLoaded}}" size="lg" fill title="核销记录加载失败" sub="数据服务暂不可用，请稍后重试" retry="重新加载" bind:retry="retry" />
+      <cy-error load-failure wx:elif="{{error && !hasLoaded}}" size="lg" fill title="核销记录加载失败" sub="请稍后重试" retry="重新加载" bind:retry="retry" />
       <block wx:else>
         <view class="ledger-inline-state" wx:if="{{(loading || error) && hasLoaded}}">
-          <text class="ledger-sync" wx:if="{{loading && hasLoaded}}" aria-role="status">正在核对最新记录…</text>
+          <text class="ledger-sync" wx:if="{{loading && hasLoaded}}" aria-role="status">正在确认最新记录…</text>
           <cy-inline-error load-failure wx:if="{{error && hasLoaded}}" title="最新记录暂未取回"
-                           sub="已保留上次确认的数据" action="重试" bind:action="retry" />
+                           action="重试" bind:action="retry" />
         </view>
 
         <view class="fin-summary" wx:if="{{summary}}">
@@ -52,7 +52,7 @@
             </view>
           </view>
         </block>
-        <cy-empty wx:elif="{{!loading && !error && !redemptionGroups.length}}" fill size="lg" kind="empty" title="还没有记录" sub="顾客到店核销或发起退款后会显示在这里" />
+        <cy-empty wx:elif="{{!loading && !error && !redemptionGroups.length}}" fill size="lg" kind="empty" title="还没有记录" />
       </block>
     </view>
   </block>
@@ -64,7 +64,7 @@
     <block wx:else>
       <text class="ledger-sync" wx:if="{{loading && hasLoaded}}" aria-role="status">正在更新近期动态…</text>
       <cy-inline-error load-failure wx:if="{{error && hasLoaded}}" title="最新动态暂未取回"
-                       sub="已保留上次确认的数据" action="重试" bind:action="retry" />
+                       action="重试" bind:action="retry" />
       <view class="fin-group" wx:if="{{projectEvents.length}}">
         <text class="fin-group__title">本项目近期收入与核销</text>
         <view class="fin-card">
@@ -78,26 +78,26 @@
         </view>
       </view>
       <cy-empty wx:elif="{{!loading && !error}}" kind="empty" fill size="lg"
-                title="近期暂无项目动态" sub="新的到账、核销消息会显示在这里" />
+                title="近期暂无项目动态" />
     </block>
   </block>
   <cy-skeleton wx:elif="{{loading && !hasLoaded}}" type="merchant-metric" count="{{3}}" />
-  <cy-error load-failure wx:elif="{{error && !hasLoaded}}" size="lg" fill title="结算数据加载失败" sub="数据服务暂不可用，请稍后重试" retry="重新加载" bind:retry="retry" auto-back />
+  <cy-error load-failure wx:elif="{{error && !hasLoaded}}" size="lg" fill title="结算数据加载失败" sub="请稍后重试" retry="重新加载" bind:retry="retry" auto-back />
 
   <block wx:else>
   <block wx:if="{{view === 'settlement'}}">
     <view class="ledger-inline-state ledger-inline-state--global"
           wx:if="{{hasLoaded && (loading || error) && !settlementLoading.overview && !settlementLoading.entries && !settlementLoading.batches && !settlementErrors.overview && !settlementErrors.entries && !settlementErrors.batches}}">
-      <text class="ledger-sync" wx:if="{{loading}}" aria-role="status">正在核对商家身份与最新结算…</text>
+      <text class="ledger-sync" wx:if="{{loading}}" aria-role="status">正在确认商家身份与最新结算…</text>
       <cy-inline-error wx:elif="{{error}}" title="最新结算暂未取回"
-                       sub="已保留上次确认的金额与明细"
+                       
                        action="重试" bind:action="retry" />
     </view>
     <view class="ledger-inline-state">
       <cy-skeleton wx:if="{{settlementLoading.overview && !overview}}" type="amount" count="{{1}}" />
       <text class="ledger-sync" wx:if="{{settlementLoading.overview && overview}}" aria-role="status">正在更新结算概览…</text>
       <cy-inline-error wx:if="{{settlementErrors.overview}}" title="{{settlementErrors.overview}}"
-                       sub="{{overview ? '已保留上次确认的概览' : '其它结算区块仍可继续查看'}}"
+                       
                        action="重试此部分" bind:action="retrySettlementOverview" />
     </view>
     <!-- hero:每页只准一个主数字。毛额/调整/待对公降为卡内 key-value,和主数字拉开量级。 -->
@@ -114,7 +114,7 @@
 
     <cy-btn class="fin-assets-cta" bindtap="goAssets">去我的资产</cy-btn>
     <view class="fin-alert-row" role="switch" aria-checked="{{settleAlertsEnabled}}">
-      <view class="fin-alert-copy"><text class="fin-alert-title">结算到账提醒</text><text class="fin-alert-sub">仅申请微信通知授权；到账情况请查看本页账本</text><text class="fin-alert-sub" aria-role="status">{{settleAlertsState === 'allowed' ? '已允许微信通知' : settleAlertsHint}}</text></view>
+      <view class="fin-alert-copy"><text class="fin-alert-title">结算到账提醒</text><text class="fin-alert-sub" aria-role="status">{{settleAlertsState === 'allowed' ? '已允许微信通知' : settleAlertsHint}}</text></view>
       <cy-switch checked="{{settleAlertsEnabled}}" disabled="{{settleAlertsLoading}}"
         accessibility-label="结算到账提醒，{{settleAlertsHint}}" bind:change="enableCoopSettleAlerts" />
     </view>
@@ -123,7 +123,7 @@
       <view class="fin-group__title">收入明细</view>
       <text class="ledger-sync" wx:if="{{settlementLoading.entries && entries.length}}" aria-role="status">正在更新收入明细…</text>
       <cy-inline-error wx:if="{{settlementErrors.entries}}" title="{{settlementErrors.entries}}"
-                       sub="{{entries.length ? '已保留上次确认的明细' : '结算概览和对公批次不受影响'}}"
+                       
                        action="重试此部分" bind:action="retrySettlementEntries" />
       <view class="fin-card" wx:if="{{entries.length}}">
         <view class="fin-row" wx:for="{{entries}}" wx:key="entryKey">
@@ -144,7 +144,7 @@
       <view class="fin-group__title">对公结算</view>
       <text class="ledger-sync" wx:if="{{settlementLoading.batches && batches.length}}" aria-role="status">正在更新对公结算…</text>
       <cy-inline-error wx:if="{{settlementErrors.batches}}" title="{{settlementErrors.batches}}"
-                       sub="{{batches.length ? '已保留上次确认的批次' : '结算概览和收入明细不受影响'}}"
+                       
                        action="重试此部分" bind:action="retrySettlementBatches" />
       <view class="fin-card" wx:if="{{batches.length}}">
         <view class="fin-row" wx:for="{{batches}}" wx:key="batchId" bindtap="goBatchDetail" data-id="{{item.batchId}}" hover-class="fin-row--tap" aria-role="button" aria-label="查看对公批次详情">
@@ -166,7 +166,7 @@
   </block>
 
   <block wx:else>
-    <view class="ledger-action" bindtap="goInbox" hover-class="ledger-action--tap"><view class="ledger-action-copy"><text class="ledger-action-title">站内消息</text><text class="ledger-action-sub">查看聊天与系统通知</text></view></view>
+    <view class="ledger-action" bindtap="goInbox" hover-class="ledger-action--tap"><view class="ledger-action-copy"><text class="ledger-action-title">站内消息</text></view></view>
     <!-- CU-M-123:这一屏原本还挂着一行「经营动态 / 消息入口保留为兼容模式」。
          「兼容模式」是内部实现口径,对商家没有信息量;而这一路并没有任何动态数据源,
          留着标题就是给一个永远为空的分组占位。整块摘掉,只留真正可点的站内消息入口。 -->

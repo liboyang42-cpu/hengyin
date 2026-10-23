@@ -2,7 +2,7 @@
 const sessions = new WeakMap();
 // 当前后端 GameplayRuntimeConfig 的 v2 恢复白名单；完成桥开放不等于恢复配置已接通。
 const ZERO_CHALLENGE_GAMEPLAYS = ['pricePair', 'blindTaste', 'check', 'diceRoll', 'coinFlip', 'random', 'estimate', 'qa', 'sort', 'match', 'classify', 'typeIn', 'ballShake', 'reaction', 'quietHold', 'shout', 'compass', 'stopwatch', 'countdown'];
-const ZERO_CHALLENGE_REASON = '当前后端尚未接通此玩法的归零恢复，请选择其他挑战站点';
+const ZERO_CHALLENGE_REASON = '此玩法暂不支持归零恢复，请选择其他挑战节点';
 // 服务端约束说明是工程合同（OWNER/TEAM/maxTries…），作者页只显示下面的作者文案；未知代码保留原文。
 const CONSTRAINT_COPY = {
   PROOF_REQUIRED: '这个附加玩法不能单独判定完成，需要配合主玩法使用',

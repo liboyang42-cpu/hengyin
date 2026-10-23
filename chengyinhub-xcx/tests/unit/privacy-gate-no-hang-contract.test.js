@@ -56,7 +56,7 @@ test('待决策时被系统返回退掉 ⇒ 授权 Promise 必须被结算,不�
   assert.equal(page.data.pendingAuthorization, true, '前提:确实处在待决策态')
 
   // 系统返回只会触发 onUnload —— 不经过叉号,也不经过同意按钮
-  assert.equal(typeof page.onUnload, 'function', '缺 onUnload ⇒ 系统返回这条路径无人兜底')
+  assert.equal(typeof page.onUnload, 'function', '缺 onUnload ⇒ 系统返回这条路径无人保底')
   page.onUnload()
 
   assert.equal(sandbox.resolved.length, 1, '离开授权闸必须结算等待中的 Promise')
@@ -77,7 +77,7 @@ test('负控:拿掉 onUnload 的兜底后,这条契约必须判红', () => {
     /  onUnload\(\) \{[\s\S]*?\n  \},/,
     '  onUnload() {},'
   )
-  assert.notEqual(mutated, source, '变异锚点失效:未找到 onUnload 兜底')
+  assert.notEqual(mutated, source, '变异锚点失效:未找到 onUnload 保底')
 
   const { page, sandbox } = loadPrivacyPage(mutated)
   page.onLoad()
@@ -86,6 +86,6 @@ test('负控:拿掉 onUnload 的兜底后,这条契约必须判红', () => {
   assert.throws(
     () => assert.equal(sandbox.resolved.length, 1),
     assert.AssertionError,
-    '拿掉兜底后检查器仍判绿 ⇒ 这条断言是橡皮图章'
+    '拿掉保底后检查器仍判绿 ⇒ 这条断言是橡皮图章'
   )
 })

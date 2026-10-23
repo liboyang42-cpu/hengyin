@@ -94,7 +94,7 @@ test('城市勋章详情使用后端 getTime，并消费后端明确返回的真
   assert.equal(badge.tierZh, '城市纪念章');
   assert.equal(badge.locked, false);
   assert.equal(badge.source, '城市纪念章 · 节点通关');
-  assert.equal(badge.desc, '完成带勋章的城市节点点亮,这一枚来自你走过的路。');
+  assert.equal(badge.desc, '城市节点点亮奖励');
   assertCityDetails(badge);
 });
 
@@ -116,7 +116,7 @@ test('成就行不是城市节点勋章，不得继承城市条件；日期仍�
   assert.equal(badge.locked, false);
   assert.equal(badge.cond, '');
   assert.equal(badge.source, '成长成就');
-  assert.notEqual(badge.desc, '完成带勋章的城市节点点亮,这一枚来自你走过的路。');
+  assert.notEqual(badge.desc, '城市节点点亮奖励');
 });
 
 test('身份卡保持未解锁/已解锁与 unlockTime/unlockHint 语义', async () => {
@@ -126,12 +126,12 @@ test('身份卡保持未解锁/已解锁与 unlockTime/unlockHint 语义', async
     identity: [
       {
         badgeCode: 'ID_CITY_PROPOSAL', badgeName: '城市提案', category: 'CREATE',
-        statement: '我向这座城,提交了第一个玩法。', unlocked: false,
+        statement: '我向这座城，提交了第一个玩法。', unlocked: false,
         unlockHint: '发布第一个可被体验的城市任务',
       },
       {
         badgeCode: 'FIRST_STEP', badgeName: '开始在场', category: 'EXPLORE',
-        statement: '我不是路过,我开始在场。', unlocked: true,
+        statement: '我不是路过，我开始在场。', unlocked: true,
         unlockTime: '2026-07-25 09:10:11', unlockHint: '完成你的第一个有效节点',
       },
     ],
@@ -155,7 +155,7 @@ test('城市勋章接口失败时保留身份卡，并显示可理解的部分�
   await loadWall(page, null, {
     identity: [{
       badgeCode: 'FIRST_STEP', badgeName: '开始在场', category: 'EXPLORE',
-      statement: '我不是路过,我开始在场。', unlocked: true,
+      statement: '我不是路过，我开始在场。', unlocked: true,
       unlockTime: '2026-07-25 09:10:11', unlockHint: '完成你的第一个有效节点',
     }],
   }, { wallStatus: 'fail' });
@@ -387,7 +387,7 @@ test('详情模板只在真实 cond 存在时显示条件行', () => {
   assert.match(wxml, /如何点亮/);
   assertErrorRetryContract(wxml);
   assert.match(wxml, /部分勋章数据未到达/);
-  assert.match(wxml, /当前结果不完整，请重试获取全部勋章/);
+  assert.match(wxml, /部分内容未更新/);
 });
 
 test('列表视图没有 WebGL 引擎时仍可打开勋章详情', () => {
@@ -613,8 +613,8 @@ test('★勋章没名字时的兜底名也不写「城市身份卡」;截图素�
   requests = [];
   const page = loadPage();
   await loadWall(page, { medals: [] }, { identity: [{ badgeCode: 'FIRST_STEP', badgeName: '', category: 'EXPLORE', unlocked: false }] });
-  assert.ok(page.data.badges[0].name, '兜底名不能是空');
-  assert.ok(!/城市身份卡/.test(page.data.badges[0].name), '兜底名还是城市身份卡');
+  assert.ok(page.data.badges[0].name, '保底名不能是空');
+  assert.ok(!/城市身份卡/.test(page.data.badges[0].name), '保底名还是城市身份卡');
   assert.ok(!('rarKey' in page.data.sheet), 'rarKey 没人读了');
   const fx = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../../scripts/fixtures.json'), 'utf8'));
   for (const id of ['B66', 'B67']) {

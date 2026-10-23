@@ -40,7 +40,7 @@ function assertContract(overrides = {}) {
   // CU-C-126:「承接商家」原来用 headerVariant="action" 的「取消/完成」头,两颗都只执行 onClose,
   // 让人误以为招商已经完成。现在抽屉只剩「标题 + 右上 ✕」一种头,退出通道唯一。
   assert.doesNotMatch(drawerWxml, /dw-act|dw-head--action/, '抽屉里不该再有取消/完成那一对假动作')
-  assert.doesNotMatch(drawerJs, /headerVariant:\s*\{\s*type/, 'headerVariant 属性已经废弃,不该留在组件接口上')
+  assert.doesNotMatch(drawerJs, /headerVariant:\s*\{\s*type/, 'headerVariant 属性已经废弃，不该留在组件接口上')
   // 锚在 <project-drawer ...> 开标签上,不要用裸 headerVariant="action" 全文匹配:
   // host 文件里有一行注释正解释「原来 headerVariant=action 为什么废」,全文匹配会命中注释假红。
   assert.doesNotMatch(hostWxml, /<project-drawer[^>]*headerVariant="action"/, '承接商家必须回到默认标题头')

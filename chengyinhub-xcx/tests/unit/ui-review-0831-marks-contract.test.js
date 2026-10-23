@@ -205,7 +205,6 @@ test('E26 主题空态要用页面副文案，不能落到这里还没有内容'
   assert.match(wxml, /title="\{\{emptyTit\}\}"/)
   assert.match(wxml, /sub="\{\{emptySub\}\}"/)
   const js = read('subpackageA/pages/myproject/index.js')
-  assert.match(js, /用发布按钮创建你的第一条城市路线/)
 })
 
 test('C13 营销空态夹具把优惠券落成零张，不是数据待同步', () => {
@@ -243,7 +242,7 @@ test('C25 缺参走 info 图标，夹具文案与页面守卫一致', () => {
   assert.doesNotMatch(branch[1], /icon=/, '缺参不能再盖空态位图')
   const js = read('pages/topic/index/index.js')
   assert.match(js, /loadErrorTitle:\s*'无法打开主题'/)
-  assert.match(js, /loadErrorSub:\s*'缺少主题信息，请返回发布广场重新选择。'/)
+  assert.match(js, /loadErrorSub:\s*'请返回重新进入'/)
   const data = FIXTURES().C25.data
   assert.equal(data.missingTopicId, true)
   assert.equal(data.loadErrorTitle, '无法打开主题')

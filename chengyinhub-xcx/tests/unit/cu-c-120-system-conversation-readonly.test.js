@@ -128,7 +128,7 @@ test('CU-C-120 行为:type=2 系统通知 ⇒ 只读,一个字都发不出去', 
   const ctx = openChat(2)
   assert.equal(ctx.page.data.readOnly, true, 'type=2 必须落进只读')
   assert.deepEqual(ctx.page.data.moreSheetItems, ['隐藏会话'],
-    '系统通知的对方是 id=0 的平台,举报/拉黑没有目标 ⇒ 只留真能做的隐藏会话')
+    '系统通知的对方是 id=0 的平台，举报/拉黑没有目标 ⇒ 只留真能做的隐藏会话')
   assert.equal(ctx.page._canSend(), false)
 
   ctx.page.setData({ text: '隔离走查：系统通知回复入口验证' })
@@ -142,7 +142,7 @@ test('CU-C-120 行为:type=2 系统通知 ⇒ 只读,一个字都发不出去', 
 test('CU-C-120 行为:type=1/3 仍可回复,只读不许扩大', () => {
   ;[1, 3].forEach((type) => {
     const ctx = openChat(type)
-    assert.equal(ctx.page.data.readOnly, false, `type=${type} 是可回复会话,不能被一起锁死`)
+    assert.equal(ctx.page.data.readOnly, false, `type=${type} 是可回复会话，不能被一起锁死`)
     assert.deepEqual(ctx.page.data.moreSheetItems, ['举报这条消息', '举报对方', '拉黑', '隐藏会话'])
     assert.equal(ctx.page._canSend(), true)
   })

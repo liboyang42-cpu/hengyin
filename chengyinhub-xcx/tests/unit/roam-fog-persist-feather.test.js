@@ -133,7 +133,7 @@ test('_drawScreenFog 用径向渐变羽化擦除,且羽化倍率作用在缩放�
   assert.ok(/,0\)$/.test(ops.stops[2][1].replace(/\s/g, '')), '最外圈必须渐隐到透明');
   // 负控本体:圆的填充必须是渐变对象;退回 '#000000' 硬笔刷即红
   const circleFills = ops.fillStyles.filter((f) => f && f._isGradient);
-  assert.strictEqual(circleFills.length, 1, '揭示圆必须用渐变笔刷填充,不许退回纯色硬边');
+  assert.strictEqual(circleFills.length, 1, '揭示圆必须用渐变笔刷填充，不许退回纯色硬边');
   // 缩放带上 FOG_FEATHER:画出的圆 = 投影半径 × 1.6
   const [projected] = projectRevealCircles(REGION, { width: 400, height: 400 }, page._reveals, 55);
   assert.ok(Math.abs(ops.scales[0][0] - projected.radiusX * 1.6) < 1e-6, '羽化倍率必须作用在 scale 上');

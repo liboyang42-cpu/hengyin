@@ -111,7 +111,7 @@ Page({
     const status = Number.isInteger(event.status) ? activityStatusText(event.status, 'owner') : '';
     return Object.assign({}, event, {
       _title: nonBlank(event.title, '未命名官方活动'),
-      _city: nonBlank(event.city, '城市待确认'),
+      _city: nonBlank(event.city, '—'),
       _category: nonBlank(event.category, ''),
       _st: status || '状态待确认',
       // 只给 V2 合同活动挂主办控制台入口;是否真是本场主办由控制台页的 publish-check 决定
@@ -126,11 +126,11 @@ Page({
     const audienceKnown = audience.length > 0 && audience.every(item => ROLE[item]);
     return Object.assign({}, b, {
       _title: nonBlank(b.title, '未命名官方通知'),
-      _aud: audienceKnown ? audience.map(item => ROLE[item]).join(' / ') : '对象待确认',
-      _mode: b.copyMode === 2 ? '分开发' : (b.copyMode === 1 ? '一起发' : '发送方式待确认'),
+      _aud: audienceKnown ? audience.map(item => ROLE[item]).join(' / ') : '—',
+      _mode: b.copyMode === 2 ? '分开发' : (b.copyMode === 1 ? '一起发' : '—'),
       _st: Number.isInteger(b.status) && BC_ST[b.status] ? BC_ST[b.status] : '状态待确认',
-      _reach: finiteCount(b.reachedCount) ? '站内触达 ' + b.reachedCount + ' 人' : '站内触达人数待确认',
-      _city: nonBlank(b.city, '范围待确认'),
+      _reach: finiteCount(b.reachedCount) ? '站内触达 ' + b.reachedCount + ' 人' : '—',
+      _city: nonBlank(b.city, '—'),
     });
   },
 

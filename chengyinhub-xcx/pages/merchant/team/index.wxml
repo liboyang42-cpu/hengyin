@@ -10,12 +10,12 @@
   </view>
   <!-- 未登录不再整屏拦:静默登录后自动加载;登录/身份确认失败只留这条内联错误。 -->
   <view class="tm-state" wx:elif="{{accessState === 'error'}}">
-    <cy-inline-error load-failure="{{!accessErrorIsDenied}}" title="{{accessErrorIsDenied ? '请确认登录或经营权限' : '经营团队没能加载出来'}}" sub="{{accessError}}" action="重新加载" bind:action="retryAccess" />
+    <cy-inline-error load-failure="{{!accessErrorIsDenied}}" title="{{accessErrorIsDenied ? '请确认登录或经营权限' : '经营团队加载失败'}}" sub="{{accessError}}" action="重新加载" bind:action="retryAccess" />
   </view>
 
   <view class="tm-state" wx:elif="{{accessState === 'invite'}}">
     <view class="tm-invite-landing">
-      <view class="tm-kicker">门店邀请</view>
+      
       <view class="tm-invite-title">加入经营团队</view>
       <view class="tm-invite-copy">接受后会获得店主分配的固定岗位；每个账号同一时间只能加入一个商家团队。</view>
       <cy-btn variant="primary" loading="{{accepting}}" bind:tap="acceptIncomingInvite">接受邀请</cy-btn>
@@ -50,7 +50,7 @@
       <view class="tm-share-card" wx:if="{{createdInvite}}">
         <view class="tm-share-main">
           <text class="tm-share-title">{{createdInvite.roleName}}邀请已创建</text>
-          <text class="tm-share-sub">{{createdInvite.expiresAtText}} 前有效；分享凭证只在本次页面停留期间可用。</text>
+          <text class="tm-share-sub">{{createdInvite.expiresAtText}} 前有效，请在本页分享</text>
         </view>
         <button wx:if="{{canShareCreatedInvite}}" class="tm-share-btn" open-type="share" aria-label="立即分享团队邀请">立即分享</button>
       </view>
@@ -85,7 +85,7 @@
             </view>
           </view>
         </view>
-        <cy-empty wx:else title="还没有员工" sub="先选择岗位创建邀请，再通过微信发给员工" cta="邀请员工" bind:cta="openInviteRoleSheet" />
+        <cy-empty wx:else title="还没有员工" cta="邀请员工" bind:cta="openInviteRoleSheet" />
 
         <view class="tm-section-head tm-section-head--invite" wx:if="{{pendingInvites.length}}">
           <view>

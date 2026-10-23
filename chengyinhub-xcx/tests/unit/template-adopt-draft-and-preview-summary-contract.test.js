@@ -101,7 +101,7 @@ function adoptLibraryTemplate(id, scope = '') {
   assert.equal(page.data.editorLoading, true, '公开详情 complete 不能提前放开编辑')
   adoption.success({ code: 200, data: 9101 })
   const own = requests.filter(item => item.url === '/api/template/myinfo').at(-1)
-  assert.equal(own.data.scope, scope, '草稿回读必须和采用写入使用同一身份')
+  assert.equal(own.data.scope, scope, '草稿刷新必须和采用写入使用同一身份')
   own.success({ code: 200, data: Object.assign({}, LIBRARY_TEMPLATE, { id: 9101, canEdit: true, originalTemplateId: id || 16 }) })
   page.validateForm = () => true
   return page
@@ -193,7 +193,7 @@ test('CU-M-68 采用完整源配置后只更新自己的草稿，不把库 id �
 
   const body = draftBody(page)
   assert.equal(body.id, 9101, '采用成功后只更新服务端返回的本人草稿')
-  assert.equal(body.originalTemplateId, 16, '来源 id 要留着,后端据此建新草稿并记来源')
+  assert.equal(body.originalTemplateId, 16, '来源 id 要留着，后端据此建新草稿并记来源')
   assert.equal(body.status, 0)
 })
 
@@ -293,7 +293,7 @@ test('CU-M-68 采用后首存成功即切到本人草稿:再存带新草稿 id',
   assert.equal(page.data.isMyScope, true)
 
   const second = draftBody(page)
-  assert.equal(second.id, 9101, '第二次保存要更新刚建的草稿,不是再建一份')
+  assert.equal(second.id, 9101, '第二次保存要更新刚建的草稿，不是再建一份')
 })
 
 test('CU-M-68 本人草稿续编仍带原 id(不能把 R9-04 的续编改回新建)', () => {
@@ -323,7 +323,7 @@ test('新建首存后先回读本人权限，再次保存更新同一份未完�
   page.saveDraft()
   assert.equal(requests.filter(r => r.url === '/api/template/draft').length, 1)
   readback.success({ code: 200, data: { id: 9202, title: '新建未完成草稿', canEdit: true } })
-  assert.equal(page.data.formData.title, '继续补充草稿', '权限回读不能覆盖首存期间继续输入的内容')
+  assert.equal(page.data.formData.title, '继续补充草稿', '权限刷新不能覆盖首存期间继续输入的内容')
   page.saveDraft()
   const second = requests.filter(r => r.url === '/api/template/draft').at(-1)
   assert.equal(JSON.parse(second.data).id, 9202)
@@ -427,7 +427,7 @@ test('新建草稿首存后的回读在换号或卸载后不能恢复编辑权�
     const readback = requests.filter(r => r.url === '/api/template/myinfo').at(-1)
     endSession(page)
     const before = JSON.stringify(page.data)
-    readback.success({ code: 200, data: { id: 9202, title: '迟到回读', canEdit: true } })
+    readback.success({ code: 200, data: { id: 9202, title: '迟到刷新', canEdit: true } })
     readback.complete()
     assert.equal(JSON.stringify(page.data), before)
     assert.equal(page._templateCanEdit, false)
@@ -443,7 +443,7 @@ test('保存前摘要已删:只在保存失败时出失败说明,也不再算摘
   const js = fs.readFileSync(path.resolve(__dirname, '../../pages/publish/temp/index.js'), 'utf8')
   assert.doesNotMatch(wxml, /cg-publish-summary/, '保存前摘要回潮了')
   assert.match(wxml, /<cy-inline-error wx:if="\{\{submitError\}\}"/, '失败说明只在保存失败时出')
-  assert.doesNotMatch(js, /summaryMethodLabel|summaryDurationText/, '摘要删了,读数也别再算')
+  assert.doesNotMatch(js, /summaryMethodLabel|summaryDurationText/, '摘要删了，读数也别再算')
 })
 
 

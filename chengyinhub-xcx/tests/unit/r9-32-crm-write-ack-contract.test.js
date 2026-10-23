@@ -24,7 +24,7 @@ test('RED 锚点:hide 成功回执不带 data 时也必须刷新详情且不弹�
   assert.match(requests[2].url, /\/notes\/hide$/);
   requests[2].success({ code: 200, msg: '备注已隐藏' });
 
-  assert.equal(requests.length, 4, '回执没有 data 不等于失败,必须 loadDetail(true)');
+  assert.equal(requests.length, 4, '回执没有 data 不等于失败，必须 loadDetail(true)');
   assert.match(requests[3].url, /\/customers\/41\/detail$/);
   assert.equal(page.data.noteHidingId, null);
   assert.equal(toasts.length, 0, '成功回执不得被当成失败弹提示(更不得弹成功 msg)');

@@ -128,8 +128,8 @@ test('4-10 营销 Hero 固定使用近 30 天口径,不再暴露已删除的窗�
   assert.equal(requests.some((item) => item.url.includes('windowDays=7')), false);
 
   const wxml = read('pages/merchant/marketing/index.wxml');
-  assert.doesNotMatch(wxml, /累计报名/, '「累计」这个口径在这页不成立,别再写');
-  assert.match(wxml, /\{\{hero\.label\}\}/, '标题必须由 hero 真源给,不许写死');
+  assert.doesNotMatch(wxml, /累计报名/, '「累计」这个口径在这页不成立，别再写');
+  assert.match(wxml, /\{\{hero\.label\}\}/, '标题必须由 hero 真源给，不许写死');
 });
 
 test('4-10 负控:把标签写回累计,窗口口径契约必须判红', () => {

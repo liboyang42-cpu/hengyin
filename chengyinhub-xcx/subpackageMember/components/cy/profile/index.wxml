@@ -27,7 +27,7 @@
                style="height:calc(100vh - {{statusBarHeight + navBarHeight}}px);"
                bindscrolltolower="onFeedReachBottom" lower-threshold="120">
     <view class="pc-body" style="{{pmTab === 1 ? '--pm-m:1;' : (pmTab === 2 ? '--pm-m-d:.32s;--pm-m-s:1;' : '')}}">
-      <cy-empty wx:if="{{isSelf && selfReadAccess}}" kind="no-permission" fill size="lg" title="{{selfReadAccess === 'login' ? '登录后查看我的主页' : '当前账号无法查看主页'}}" sub="{{selfReadAccess === 'login' ? '登录后可查看自己的资料、订单与成长记录' : '请确认当前账号的查看权限'}}" cta="{{selfReadAccess === 'login' ? '登录' : '重试'}}" bind:cta="loginToReadProfile" />
+      <cy-empty wx:if="{{isSelf && selfReadAccess}}" kind="no-permission" fill size="lg" title="{{selfReadAccess === 'login' ? '登录后查看我的主页' : '当前账号无法查看主页'}}" cta="{{selfReadAccess === 'login' ? '登录' : '重试'}}" bind:cta="loginToReadProfile" />
       <block wx:else>
 
       <!-- 首屏身份卡(ADA §二G):头像 + 玩家名 + 所在城市 + 三项统计合成一张卡,
@@ -111,9 +111,9 @@
           <text>发消息</text>
         </view>
         <!-- BL-69:商家在架据点的收藏入口,照「发消息」同款按钮;无在架节点不展示 -->
-        <view class="pc-primary pc-ticket" wx:if="{{!isSelf && subjectIsMerchant && merchantNode}}" bindtap="toggleMerchantNodeFavorite" hover-class="{{merchantNodeBusy ? 'none' : 'pc-btn-press'}}" aria-role="button" aria-label="{{merchantNodeBusy ? '正在更新据点收藏' : (merchantNode.favorited ? '取消收藏据点' : '收藏据点')}}" aria-pressed="{{merchantNode.favorited}}" aria-busy="{{merchantNodeBusy}}" aria-disabled="{{merchantNodeBusy}}">
+        <view class="pc-primary pc-ticket" wx:if="{{!isSelf && subjectIsMerchant && merchantNode}}" bindtap="toggleMerchantNodeFavorite" hover-class="{{merchantNodeBusy ? 'none' : 'pc-btn-press'}}" aria-role="button" aria-label="{{merchantNodeBusy ? '正在更新节点收藏' : (merchantNode.favorited ? '取消收藏节点' : '收藏节点')}}" aria-pressed="{{merchantNode.favorited}}" aria-busy="{{merchantNodeBusy}}" aria-disabled="{{merchantNodeBusy}}">
           <cy-icon name="{{merchantNode.favorited ? 'star-filled' : 'star'}}" size="32" />
-          <text>{{merchantNodeBusy ? '处理中…' : (merchantNode.favorited ? '已收藏据点' : '收藏据点')}}</text>
+          <text>{{merchantNodeBusy ? '处理中…' : (merchantNode.favorited ? '已收藏节点' : '收藏节点')}}</text>
         </view>
         <!-- UI-12:公开视角也要有「···」更多(分享主页/屏蔽);本人商家视角保持原入口。 -->
         <view class="pc-more" wx:if="{{!isSelf || isMerchantView}}" bindtap="openMoreMenu" hover-class="pc-btn-press" aria-role="button" aria-label="打开更多操作"><cy-icon name="more" size="32" /></view>
@@ -170,8 +170,8 @@
           </view>
         </scroll-view>
         <cy-error load-failure wx:elif="{{orderErr}}"
-          title="{{orderAuthError ? '登录未成功' : '订单暂时没加载出来'}}"
-          sub="{{orderAuthError ? '请重新进入小程序，再查看本人订单' : '已加载的订单仍为你保留，点重试即可'}}"
+          title="{{orderAuthError ? '登录未成功' : '订单加载失败'}}"
+          sub="{{orderAuthError ? '请重新进入小程序' : ''}}"
           retry="重试" bind:retry="reloadOrders" />
         </block>
 
@@ -185,8 +185,8 @@
           <view class="pc-sec-link" bindtap="goProject" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="管理全部项目"><text>管理全部</text><cy-icon name="arrow-right" size="26" /></view>
         </view>
         <cy-error load-failure wx:if="{{projectErr}}"
-          title="{{projectAuthError ? '登录未成功' : '项目暂时没加载出来'}}"
-          sub="{{projectAuthError ? '请重新进入小程序，再查看本人项目' : '已加载的项目仍为你保留，点重试即可'}}"
+          title="{{projectAuthError ? '登录未成功' : '项目加载失败'}}"
+          sub="{{projectAuthError ? '请重新进入小程序' : ''}}"
           retry="重试" bind:retry="reloadProjects" />
         <scroll-view wx:elif="{{projectPreviewList.length}}" class="pc-hscroll pc-project-scroll" scroll-x enhanced show-scrollbar="{{false}}">
           <view class="pc-hscroll-inner">
@@ -227,14 +227,14 @@
         <view class="pc-team-entry" wx:if="{{isClubLeader}}">
           <cy-cell icon="/images/icon_tab_workbench.svg"
                    title="俱乐部工作台"
-                   description="活动、成员与现场运营"
+                   description=""
                    hairline="{{false}}"
                    bind:tap="goClubWorkbench" />
         </view>
         <view class="pc-team-entry" wx:if="{{merchantAccess.active}}">
           <cy-cell icon="/images/icon_qa_person.svg"
                    title="经营团队"
-                   description="岗位权限、员工邀请与离职回收"
+                   description=""
                    value="{{merchantTeamEntryValue}}"
                    hairline="{{false}}"
                    bind:tap="goMerchantTeam" />
@@ -244,8 +244,8 @@
       <!-- ===== TAB · 推文 ===== -->
       <block wx:if="{{activeTab === 'posts'}}">
         <view class="pc-feed">
-          <cy-error load-failure wx:if="{{feedErr}}" title="{{feedAuthError ? '登录未成功' : '动态没加载出来'}}" sub="{{feedAuthError ? '请重新进入小程序，再查看本人数据' : '已发布的动态都还在，只是这次没取到'}}" retry="重试" bind:retry="reloadFeed" />
-          <cy-empty wx:elif="{{nodata}}" title="还没有推文" sub="{{isSelf ? '你还没有发布过推文' : 'TA 还没有发布推文'}}" />
+          <cy-error load-failure wx:if="{{feedErr}}" title="{{feedAuthError ? '登录未成功' : '帖文加载失败'}}" sub="{{feedAuthError ? '请重新进入小程序' : ''}}" retry="重试" bind:retry="reloadFeed" />
+          <cy-empty wx:elif="{{nodata}}" title="还没有帖文" sub="{{isSelf ? '你还没有发布过帖文' : 'TA 还没有发布帖文'}}" />
           <view class="pc-post" wx:for="{{list}}" wx:key="id">
             <view class="pc-post-head">
               <cy-avatar size="sm64" src="{{item.memberAvatar || userInfo.avatar || '/images/d_profile.png'}}" name="{{item.memberNickname || userInfo.nickname}}" />
@@ -317,7 +317,7 @@
              (组件只在 open-type 的 button 上有 aria-label),全仓也无 aria 挂自定义组件的先例。
              收编会静默丢掉这两个属性 ⇒ 等 cy-cell 支持 aria 透传再收。 -->
         <view class="pc-wall" bindtap="goWall" hover-class="pc-tap" hover-stay-time="80"
-              aria-role="button" aria-label="勋章墙,实时数字装置,查看全部勋章">
+              aria-role="button" aria-label="勋章墙，实时数字装置，查看全部勋章">
           <view class="pc-wall-l">
             <text class="pc-wall-t">勋章墙</text>
             <text class="pc-wall-s">实时数字装置 · 查看全部勋章</text>
@@ -326,7 +326,7 @@
         </view>
 
         <view class="pc-wall" bindtap="goAlbum" hover-class="pc-tap" hover-stay-time="80"
-              aria-role="button" aria-label="集邮册,上街拍到的城市,查看全部邮票">
+              aria-role="button" aria-label="集邮册，上街拍到的城市，查看全部邮票">
           <view class="pc-wall-l">
             <text class="pc-wall-t">集邮册</text>
             <text class="pc-wall-s">上街拍到的城市 · 查看全部邮票</text>
@@ -336,7 +336,7 @@
 
         <!-- 未收编 cy-cell:与上面两行同一条理由(cy-cell 不透传 aria,收编会静默丢掉无障碍名) -->
         <view class="pc-wall" bindtap="goObjectCards" hover-class="pc-tap" hover-stay-time="80"
-              aria-role="button" aria-label="藏品册,玩的时候拍下的东西,查看全部藏品卡">
+              aria-role="button" aria-label="藏品册，玩的时候拍下的东西，查看全部藏品卡">
           <view class="pc-wall-l">
             <text class="pc-wall-t">藏品册</text>
             <text class="pc-wall-s">玩的时候拍下的东西 · 查看全部藏品卡</text>
@@ -347,8 +347,8 @@
         <view class="pc-sec-tit">城市勋章 · {{medalCount}}</view>
         <!-- 未收编 cy-card:同上,cy-card 读 --cy-comp-card-bg ⇒ 商家视角会渲成夜间深卡 -->
         <view class="pc-card pc-achv-list">
-          <cy-error load-failure wx:if="{{medalErr}}" title="{{medalAuthError ? '登录未成功' : '勋章没加载出来'}}" sub="{{medalAuthError ? '请重新进入小程序，再查看本人数据' : '已点亮的勋章都还在，只是这次没取到'}}" retry="重试" bind:retry="reloadMedals" />
-          <cy-empty wx:elif="{{medals.length === 0}}" title="还没有点亮的勋章" sub="完成城市节点即可点亮" />
+          <cy-error load-failure wx:if="{{medalErr}}" title="{{medalAuthError ? '登录未成功' : '勋章加载失败'}}" sub="{{medalAuthError ? '请重新进入小程序' : ''}}" retry="重试" bind:retry="reloadMedals" />
+          <cy-empty wx:elif="{{medals.length === 0}}" title="还没有点亮的勋章" />
           <!-- medals 里只有【已点亮】的勋章,未点亮的不在列表里 —— 故此处没有进度可言,
                「已获得」由右侧 ✓ 表达。别再加进度条:它只会恒满。 -->
           <view class="pc-achv" wx:for="{{medals}}" wx:key="templateId"
@@ -366,9 +366,9 @@
         </view>
         </view>
         <cy-empty wx:elif="{{profileMetricState === 'empty'}}" kind="empty" title="成长记录从第一次探索开始"
-          sub="去完成一次城市探索，积分、排名与勋章会在这里出现" />
+          />
         <view wx:elif="{{profileMetricState === 'error'}}" class="pc-metric-error">
-          <cy-error load-failure title="{{profileMetricAuthError ? '登录未成功' : '成长记录没加载出来'}}" sub="{{profileMetricAuthError ? '请重新进入小程序，再查看本人数据' : '记录都还在，只是这次没取到'}}"
+          <cy-error load-failure title="{{profileMetricAuthError ? '登录未成功' : '成长记录加载失败'}}" sub="{{profileMetricAuthError ? '请重新进入小程序' : ''}}"
             retry="重新加载" bind:retry="reloadProfileMetrics" />
         </view>
         <cy-skeleton wx:else type="list" count="{{2}}" />
@@ -413,7 +413,7 @@
             <view class="pc-sec-tit {{featured ? '' : 'pc-sec-tit--flush'}}">{{subjectMerchant.storyTitle || '品牌故事'}}</view>
             <view class="pc-card pc-about" wx:if="{{subjectMerchant.description}}">{{subjectMerchant.description}}</view>
           </block>
-          <cy-empty wx:else title="还没有品牌故事" sub="商家完善资料后，这里会展示品牌介绍" />
+          <cy-empty wx:else title="还没有品牌故事" />
 
           <!-- ② 门店相册:空则整块不渲染 -->
           <block wx:if="{{merchantGallery.length}}">
@@ -497,7 +497,7 @@
 
         <!-- 网络失败:绝不回退成玩家 About 或「商家未完善」——那是拿「没查到」冒充业务事实 -->
         <view wx:elif="{{merchantState === 'network-error'}}" class="pc-metric-error">
-          <cy-error load-failure title="资料没加载出来" sub="这次没取到，重试一下"
+          <cy-error load-failure title="资料加载失败"
             retry="重新加载" bind:retry="retryMerchantProbe" />
         </view>
 
@@ -632,7 +632,7 @@
 <view class="scene-host" wx:if="{{sceneCurrent && sceneCurrent.id === 'member-chapter-picker'}}" catchtouchmove="blockSceneTouch">
 <cy-scene-sheet show="{{true}}" variant="{{sceneCurrent.variant}}" theme="{{isMerchantView ? 'merchant' : 'player'}}" title="{{sceneCurrent.title}}" mask-closable="{{sceneCurrent.maskClosable}}" bind:requestclose="onChapterSheetClose">
   <view class="chpick">
-    <view class="chpick__hint">你在本路线承接了多个章节,请选择本次要核销的那一个</view>
+    <view class="chpick__hint">选择本次核销的章节</view>
     <view class="chpick__item" wx:for="{{chapterSheet.items}}" wx:key="id"
           data-id="{{item.id}}" bindtap="onChapterPick" hover-class="cy-pressed" hover-stay-time="80">
       <text class="chpick__name">{{item.name}}{{item.replayed ? '（已核销，请勿重复提供权益）' : ''}}</text>
@@ -645,7 +645,7 @@
 <view class="scene-host" wx:if="{{sceneCurrent && sceneCurrent.id === 'member-station-picker'}}" catchtouchmove="blockSceneTouch">
 <cy-scene-sheet show="{{true}}" variant="{{sceneCurrent.variant}}" theme="{{isMerchantView ? 'merchant' : 'player'}}" title="{{sceneCurrent.title}}" mask-closable="{{sceneCurrent.maskClosable}}" bind:requestclose="onStationSheetClose">
   <view class="chpick">
-    <view class="chpick__hint">你在本路线承接了多个据点,请选择本次实际核销的据点</view>
+    <view class="chpick__hint">选择本次核销的节点</view>
     <view class="chpick__item" wx:for="{{stationSheet.items}}" wx:key="registrationMerchantId"
           data-registration-merchant-id="{{item.registrationMerchantId}}" bindtap="onStationPick" hover-class="cy-pressed" hover-stay-time="80">
       <text class="chpick__name">{{item.name}}</text>
@@ -670,8 +670,8 @@
     </view>
   </view>
   <cy-skeleton wx:if="{{pointsSheet.loading}}" type="list" count="{{3}}" />
-  <view wx:elif="{{pointsSheet.failed}}" class="pts-loading cy-fade-in" bindtap="loadPointsTasks" hover-class="cy-pressed" hover-stay-time="80">加载失败,点此重试</view>
-  <cy-empty wx:elif="{{pointsSheet.loaded && !pointsSheet.tasks.length && !pointsSheet.spendRules.length}}" title="暂无积分任务" sub="目前没有开启中的积分任务" />
+  <view wx:elif="{{pointsSheet.failed}}" class="pts-loading cy-fade-in" bindtap="loadPointsTasks" hover-class="cy-pressed" hover-stay-time="80">加载失败，点此重试</view>
+  <cy-empty wx:elif="{{pointsSheet.loaded && !pointsSheet.tasks.length && !pointsSheet.spendRules.length}}" title="暂无积分任务" />
   <block wx:else>
   <view class="pts-list" wx:if="{{pointsSheet.tasks.length}}">
     <view class="pts-row" wx:for="{{pointsSheet.tasks}}" wx:key="id">

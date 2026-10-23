@@ -126,8 +126,8 @@ Page({
             epoch,
             'data',
             hasObjectEnvelope
-              ? '俱乐部名额数据不完整，请重试'
-              : bizFailureMessage(res, '俱乐部名额没有加载出来'),
+              ? '俱乐部名额加载失败，请重试'
+              : bizFailureMessage(res, '俱乐部名额加载失败'),
           );
           return;
         }
@@ -150,7 +150,7 @@ Page({
           network ? 'network' : 'data',
           network
             ? '网络异常，请检查连接后重试'
-            : ((error && (error.msg || error.message)) || '俱乐部名额没有加载出来'),
+            : ((error && (error.msg || error.message)) || '俱乐部名额加载失败'),
         );
       },
     });

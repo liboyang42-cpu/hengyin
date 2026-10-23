@@ -41,7 +41,7 @@ function answer(requests, body) {
 }
 
 for (const pg of PAGES) {
-  test('BL-203 ' + pg.rel + ':上一页是列表时返回,否则打开列表', () => {
+  test('BL-203 ' + pg.rel + ':上一页是列表时返回，否则打开列表', () => {
     const self = pg.rel.replace(/\.js$/, '')
     const h = loadPage(pg.rel, [pg.list, self])
     try {

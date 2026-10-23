@@ -107,7 +107,7 @@ test('拍板22 换手机(本机没有快照)进同一场:从服务端恢复暂�
   assert.equal(page._sessionClock.elapsedSeconds(), 600)
   assert.equal(page._sessionClock.isPaused(), true, '恢复出来不偷跑')
   assert.deepEqual(storage['play_paused_run_v2:m9:a27'], { state: 'paused', elapsedSeconds: 600, savedAt: 5000 },
-    '服务端那份落回本机,之后断网重进也能恢复')
+    '服务端那份落回本机，之后断网重进也能恢复')
 })
 
 test('拍板22 两台设备各有一份:取较晚落盘的那份', async () => {
@@ -115,9 +115,9 @@ test('拍板22 两台设备各有一份:取较晚落盘的那份', async () => {
   const stale = loadPage()
   stale.data.topicId = '31'
   await loadNodes(stale, { nodes: NODES })
-  assert.equal(stale._sessionClock.elapsedSeconds(), 42, '本机快照先同步恢复,不等网络')
+  assert.equal(stale._sessionClock.elapsedSeconds(), 42, '本机快照先同步恢复，不等网络')
   await answerServerRun({ runState: 'PAUSED', elapsedSeconds: 1200, savedAt: 9000 })
-  assert.equal(stale._sessionClock.elapsedSeconds(), 1200, '另一台设备后来又玩了 20 分钟,不能被本机旧快照盖掉')
+  assert.equal(stale._sessionClock.elapsedSeconds(), 1200, '另一台设备后来又玩了 20 分钟，不能被本机旧快照盖掉')
 
   requests = []
   storage['play_paused_run_v2:m9:t31'] = { state: 'paused', elapsedSeconds: 300, savedAt: 9999 }
@@ -162,7 +162,7 @@ test('拍板22 离页/暂停把已用时双写服务端(活动场次按 activity
   page.onUnload()
   await flush()
   const save = find('/api/play/run-session/save', 'POST').pop()
-  assert.ok(save, '离页必须把会话写到服务端,否则换手机续不了')
+  assert.ok(save, '离页必须把会话写到服务端，否则换手机续不了')
   assert.deepEqual(save.data, { activityId: '27', elapsedSeconds: 42, savedAt: 42000 })
   assert.equal(storage['play_paused_run_v2:m9:a27'].elapsedSeconds, 42, '本机那份照写')
 })
@@ -206,7 +206,7 @@ test('拍板22 另一台设备已结束(墓碑晚于本机快照):本机快照�
   await loadNodes(page, { nodes: NODES })
   assert.equal(page.data.runState, 'paused')
   await answerServerRun({ runState: 'ENDED', elapsedSeconds: 0, savedAt: 2000 })
-  assert.equal(page.data.runState, 'idle', '别的设备已经结束这一局,这台不能再停在暂停态')
+  assert.equal(page.data.runState, 'idle', '别的设备已经结束这一局，这台不能再停在暂停态')
   assert.equal(storage['play_paused_run_v2:m9:t31'], undefined)
 
   requests = []
@@ -215,7 +215,7 @@ test('拍板22 另一台设备已结束(墓碑晚于本机快照):本机快照�
   newer.data.topicId = '31'
   await loadNodes(newer, { nodes: NODES })
   await answerServerRun({ runState: 'ENDED', elapsedSeconds: 0, savedAt: 2000 })
-  assert.equal(newer.data.runState, 'paused', '墓碑之后本机又开了新局并暂停,以本机为准')
+  assert.equal(newer.data.runState, 'paused', '墓碑之后本机又开了新局并暂停，以本机为准')
 })
 
 test('拍板22 恢复读在途时本局被结束:迟到的旧会话不能把它拉回暂停', async () => {

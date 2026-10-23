@@ -19,7 +19,7 @@ function classifyFailure(error, fallback) {
   }
   const transportText = error && typeof error === 'object' ? String(error.errMsg || '') : '';
   if (code === undefined && /request:fail|timeout|network|网络|断网/i.test(transportText)) {
-    return { kind: 'network', text: '网络连接失败，请检查网络后重试。' };
+    return { kind: 'network', text: '网络异常，请重试。' };
   }
   return { kind: 'data', text: requestText(error, fallback) };
 }
@@ -174,13 +174,13 @@ Page({
       data: JSON.stringify({}), header: { 'Content-Type': 'application/json' },
       success(res) {
         if (!isCurrent()) return;
-        if (!(res.code === '200' || res.code === 200)) return fail(res, '常备权益暂时没能加载，请重试。');
-        if (!isPerkTemplateList(res.data)) return fail({ msg: '常备权益数据格式异常' }, '常备权益数据格式异常');
+        if (!(res.code === '200' || res.code === 200)) return fail(res, '常备权益加载失败，请重试。');
+        if (!isPerkTemplateList(res.data)) return fail({ msg: '常备权益加载失败' }, '常备权益加载失败');
         const perks = shapePerkTemplates(res.data);
         if (!finish()) return;
         that.setData({ refreshing: false, perks: perks, loadState: 'ready', loadError: '' });
       },
-      fail(error) { fail(error, '常备权益暂时没能加载，请重试。'); }
+      fail(error) { fail(error, '常备权益加载失败，请重试。'); }
     });
   },
 
@@ -334,7 +334,7 @@ Page({
         }
         const perks = shapePerkTemplates(res.data);
         if (!perks) {
-          failReadback({ msg: '保存结果读取数据格式异常，请重新查询' });
+          failReadback({ msg: '保存结果读取加载失败，请重新查询' });
           return;
         }
         if (!perks.some((row) => matchesSavedPerk(row, pending))) {

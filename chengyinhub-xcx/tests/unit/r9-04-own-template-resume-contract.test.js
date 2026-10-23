@@ -281,7 +281,7 @@ test('主题内玩法完整保存为私有草稿并回传呈现和规则，不�
   // 后端 CmsTemplatePublishRequest.isSync 是 Integer。2026-09-22 走查实跑:这里发过 isSync:false,
   // 生产 Jackson 反序列化直接炸(HttpMessageNotReadableException),作者从发布页配任何故事玩法
   // 点「完成」都是 500「系统繁忙」—— 方法体都没进。前端单测 mock 了请求,布尔值从来碰不到后端。
-  assert.strictEqual(body.isSync, 0, 'isSync 必须是整数 0,后端是 Integer,发布尔会 500')
+  assert.strictEqual(body.isSync, 0, 'isSync 必须是整数 0，后端是 Integer,发布尔会 500')
   assert.equal(body.id, undefined, '首次编辑已发布模板应另存，不能降为草稿')
   request.success({ code: 200, data: 83 })
   assert.equal(emitted.event, 'templateCreated')

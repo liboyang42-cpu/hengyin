@@ -16,7 +16,7 @@ function assertSessionBlockContract(js, wxml) {
   // 买了票的玩家花名册,2026-09-04 判定表判定它本身就是错的(阵容=参与品牌),已删。
   // 这里改成断言它**没有回来**:非探店日那支里不许再出现按票列玩家的花名册。
   assert.doesNotMatch(wxml, /cmsRegistrationList/,
-    '按票种展开列报名玩家的花名册已废止,不许恢复')
+    '按票种展开列报名玩家的花名册已废止，不许恢复')
   // 取而代之的「阵容/商家」是参与品牌,和 isExplore 无关,两种主题都出
   assert.match(wxml, /阵容\/商家[\s\S]{0,400}info\.lineup/)
   assert.match(js, /isExplore: Number\(res\.data\.productType\) === 2/)

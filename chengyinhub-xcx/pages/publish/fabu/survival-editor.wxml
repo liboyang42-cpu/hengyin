@@ -43,14 +43,14 @@
     <view wx:for="{{survivalFacilities}}" wx:key="index">
      <view wx:if="{{item.generated}}" class="node-card__row rt-list-row" aria-label="{{item.label}}，{{item.sourceLabel}}">
       <view class="node-card__main"><text class="node-card__title">{{item.label}}</text><text class="node-card__value">{{item.sourceLabel}}</text></view>
-      <view class="node-pill rt-disabled" aria-disabled="true">在站点中编辑</view>
+      <view class="node-pill rt-disabled" aria-disabled="true">在节点中编辑</view>
      </view>
      <view wx:else class="node-card__row rt-list-row" data-kind="facilities" data-index="{{index}}" bindtap="editSurvivalRow" aria-role="button" aria-label="编辑{{item.label}}" hover-class="cy-pressed" hover-stay-time="80">
       <view class="node-card__main"><text class="node-card__title">{{item.label}}</text><text class="node-card__value">{{item.summary}}</text></view>
       <cy-icon name="chevron-right" size="24" />
      </view>
     </view>
-    <text wx:if="{{!survivalFacilities.length}}" class="node-card__value">还没有。站点玩法工具生成的设施也会列在这里。</text>
+    <text wx:if="{{!survivalFacilities.length}}" class="node-card__value">还没有。节点玩法工具生成的设施也会列在这里。</text>
    </view>
   </block>
 
@@ -98,8 +98,8 @@
    </view>
    <view class="node-card">
     <view class="rt-field"><text>到场核验</text><cy-dropdown topic-editor range="{{survivalLocations}}" range-key="label" value="{{survivalSelected.arrivalLocationKey.index}}" data-field="arrivalLocationKey" data-options="survivalLocations" bind:change="pickSurvivalField"><view class="rt-select">{{survivalSelected.arrivalLocationKey.label}}<cy-icon name="chevron-right" size="24" /></view></cy-dropdown></view>
-    <view class="rt-field"><text>操作站点</text><cy-dropdown topic-editor range="{{survivalNodes}}" range-key="label" value="{{survivalSelected.operationNodeId.index}}" data-field="operationNodeId" data-options="survivalNodes" bind:change="pickSurvivalField"><view class="rt-select">{{survivalSelected.operationNodeId.label}}<cy-icon name="chevron-right" size="24" /></view></cy-dropdown></view>
-    <text wx:if="{{survivalNodes.length <= 1}}" class="story-initial__example">先保存主题与站点，才能选择操作站点。</text>
+    <view class="rt-field"><text>操作节点</text><cy-dropdown topic-editor range="{{survivalNodes}}" range-key="label" value="{{survivalSelected.operationNodeId.index}}" data-field="operationNodeId" data-options="survivalNodes" bind:change="pickSurvivalField"><view class="rt-select">{{survivalSelected.operationNodeId.label}}<cy-icon name="chevron-right" size="24" /></view></cy-dropdown></view>
+    <text wx:if="{{survivalNodes.length <= 1}}" class="story-initial__example">先保存主题与节点，才能选择操作节点。</text>
    </view>
    <view class="node-card">
     <view class="rt-card-head"><text>使用条件 · 全部满足</text><view class="node-pill" bindtap="addSurvivalCondition" aria-role="button" aria-label="添加使用条件" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="24" />添加</view></view>

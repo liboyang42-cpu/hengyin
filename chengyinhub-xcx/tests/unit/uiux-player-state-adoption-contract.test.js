@@ -281,17 +281,16 @@ test('主题详情只接受具备可渲染名称的数据', () => {
   assert.equal(malformedChapter.page.data.loadError, true);
 });
 
-test('主题缺封面使用现有占位，路线无章节显示专属站点空态', () => {
+test('主题缺封面使用现有占位，路线无章节显示专属节点空态', () => {
   const wxml = source('pages/topic/index/index.wxml');
   assert.match(wxml, /src="\{\{\s*info\.imgUrl\s*\|\|\s*'\/pages\/topic\/images\/icon_line\.jpg'\s*\}\}"/);
   assert.match(wxml, /activeTab\s*==\s*'2'\s*&&\s*!info\.chaptersList\.length/);
   assert.match(wxml, /activeTab\s*==\s*'1'\s*&&\s*!info\.chaptersList\.length/,
     '路线节点 tab 不能在合法空数组时白屏');
-  assert.match(wxml, /这条路线还没有节点/);
+  assert.match(wxml, /路线配置中/);
   // CU-M-190:标签是「路线」、副文案说「每一站」,标题却写「任务」—— 同一屏三个词。
-  assert.match(wxml, /这条路线还没有站点/);
+  assert.match(wxml, /路线配置中/);
   assert.doesNotMatch(wxml, /这条路线还没有任务/);
-  assert.match(wxml, /发布者完成路线配置后，这里会显示每一站/);
 });
 
 test('官方活动详情区分网络失败与内容不可用', () => {
@@ -513,13 +512,13 @@ test('负控：把无轨迹条件反成有轨迹时，结算状态契约必须�
   assert.throws(() => assertRoamNoTrackState(mutated), /真实无轨迹结算/);
 });
 
-test('漫游据点读失败留白，写结果未知仍提供真实核对入口', () => {
+test('漫游节点读失败留白，写结果未知仍提供真实核对入口', () => {
   const wxml = source('pages/roam/index.wxml');
   const js = source('pages/roam/index.js');
   assert.doesNotMatch(wxml, /poiOffline \|\| merchantOffline/);
-  assert.doesNotMatch(wxml, /据点没加载出来|系统离线|当前离线|网络已断开/);
+  assert.doesNotMatch(wxml, /节点加载失败|系统离线|当前离线|网络已断开/);
   assert.match(wxml, /revealWriteUnknown \|\| recoveryError/);
-  assert.match(wxml, /bindtap="recoverRoam"[\s\S]*点击核对/);
+  assert.match(wxml, /bindtap="recoverRoam"[\s\S]*点击确认/);
   assert.match(js, /merchantOffline: true/);
   assert.doesNotMatch(js, /poiOffline: true/);
 });

@@ -75,16 +75,16 @@ function assertImmersiveCardContract(files) {
   assert.doesNotMatch(files.listWxml, /<cy-(?:completion-share|feed-play)-card\b/,
     '★ 列表页不许再自己判 variant —— 那正是俱乐部页/达人页漏渲染的原因')
   assert.match(files.listWxml, /bind:playdetail="goPlayTopicDetail"[\s\S]{0,80}bind:remix="goRemixTemplate"[\s\S]{0,40}bind:play="goPlay"/,
-    '列表页要把三个动作从帖文卡上接回来,否则成绩卡/模板卡点了没反应')
+    '列表页要把三个动作从帖文卡上接回来，否则成绩卡/模板卡点了没反应')
   assert.match(files.detailWxml, /<cy-completion-share-card\b[^>]*wx:if="\{\{info\.isCompletionShare\}\}"[^>]*roam-result="\{\{info\.isRoamResultShare\}\}"/s,
     '详情完赛分享必须与列表共用图片成绩卡')
   // 2026-09-02 Figma 297:1827 Roam variant:成绩不再叠在图片内部,改为 TitleRow → Stats → 轨迹图 竖排。
   assert.match(files.completionWxml, /class="completion-share-card__title-row"[\s\S]*class="completion-share-card__score"[\s\S]*class="completion-share-card__cover"/,
     'Roam 成绩卡必须按稿排:TitleRow → Stats → 轨迹图')
   assert.doesNotMatch(files.completionWxml, /completion-share-card__body|completion-share-card__metrics|completion-share-card__overlay/,
-    '完赛分享不得再把统计面板接在图片下方,也不再有压在封面上的 overlay')
+    '完赛分享不得再把统计面板接在图片下方，也不再有压在封面上的 overlay')
   assert.match(files.completionWxss, /\.completion-share-card\s*\{[^}]*flex-direction:\s*column[^}]*gap:\s*var\(--cy-space-3\)/s,
-    '成绩卡不再是绝对定位的全幅封面,而是稿上的竖排内容段')
+    '成绩卡不再是绝对定位的全幅封面，而是稿上的竖排内容段')
   // 2026-09-02 Figma 297:1827 改口径:图廊不再按「正文栏宽」算单张铺满,改成固定 300pt×230pt
   // 的横滑卡(比正文栏 289pt 略宽 ⇒ 右侧被切一刀,那一刀就是「还有下一张、可以滑」的提示)。
   // 原断言钉的是旧的 calc 表达式,与新口径互斥,故整条换成新几何。
@@ -225,7 +225,7 @@ test('completion-share-card 的每个属性,两个消费页都必须真的传(�
       tail: '详情页没有帖文卡的动作行,点赞头像组与评论预览照旧由子组件画,用默认 true',
     },
     'components/cy/post-card/index.wxml': {
-      time: '稿上 Roam 正文没有时间 —— 时间归帖文卡头部;详情页没有那个头部,所以只有它传',
+      time: '稿上 Roam 正文没有时间 —— 时间归帖文卡头部；详情页没有那个头部，所以只有它传',
     },
   }
   // 消费方从「广场列表页」换成了帖文卡组件(两块正文 2026-09-11 收进组件,页面不判 variant)。

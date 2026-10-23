@@ -13,7 +13,7 @@
 const TICK_MS = 50;                 // 与原型同值
 const HIDE_AFTER_MS = 1000;         // 开跑 1 秒后数字消失
 const MASK = '––:––.––';
-const EYEBROW = '把手机拿到面前,随时可以开始';
+const EYEBROW = '把手机拿到面前，随时可以开始';
 const CAP_ON = '开跑 1 秒后数字消失 · 点屏幕任意处停';
 const CAP_HID = '数字已隐藏 · 点屏幕任意处停';
 

@@ -1740,7 +1740,7 @@ function validateNormalized(model, opts) {
     /* 拍照那一档的大屏正中就是这句提示词(见 playkit-qa 的 shotLead)——
        不填的话玩家看到的是一屏只有题干的空画面,不知道要拍什么。
        施工文档 §1.3 的 REQ 里 qaShot 也是要 title + 提示词两样。 */
-    if (qa.mode === 'SHOT' && !text(qa.lead)) return '拍照打卡要写一句提示词,告诉玩家拍什么';
+    if (qa.mode === 'SHOT' && !text(qa.lead)) return '拍照打卡要写一句提示词，告诉玩家拍什么';
     if (text(qa.shotNote).length > 56) return '拍照补充说明不能超过 56 字';
     if (qa.mode === 'TYPE') {
       // 采用场景下答案被服务端剥掉了,本地不能因此判红
@@ -1947,13 +1947,13 @@ function validateNormalized(model, opts) {
     }
     const maxTries = Number(photoCheck.maxTries);
     if (!Number.isInteger(maxTries) || maxTries < 1 || maxTries > 10) return '拍照审核可以拍几次须为 1 至 10';
-    if (PHOTO_CHECK_FALLBACKS.indexOf(photoCheck.fallback) < 0) return '拍照审核的兜底只能是让他重拍或放过他';
+    if (PHOTO_CHECK_FALLBACKS.indexOf(photoCheck.fallback) < 0) return '拍照审核未通过时只能选择重拍或放行';
     /* 卡片三字段(立体藏品卡契约 §2.1)。口径与后端 validatePhotoCheck 逐字对齐:
        mode 只认空(老拍照审核)与 CARD;cardStyle 只认空(默认带高光)、foil、plain。
        本地放行而服务端判死 = 商家点「发布」才看到一句陌生的报错,那一屏就白配了。 */
     const cardMode = text(photoCheck.mode);
     if (cardMode && PHOTO_CHECK_MODES.indexOf(cardMode) < 0) {
-      return '拍照审核只认两种:普通审核,或拍物成卡';
+      return '拍照审核只认两种:普通审核，或拍物成卡';
     }
     if (text(photoCheck.cardTitle).length > 64) return '藏品卡名称不能超过 64 字';
     const cardStyle = text(photoCheck.cardStyle);
@@ -1968,7 +1968,7 @@ function validateNormalized(model, opts) {
   const journeyCheck = model.check || {};
   if (journeyCheck.enabled) {
     if (!CHECK_ID_PATTERN.test(text(journeyCheck.checkId))) {
-      return '检定的稳定标识只能使用 1 至 64 位字母、数字、下划线或短横线';
+      return '检定编号只能使用 1 至 64 位字母、数字、下划线或短横线';
     }
     if (CHECK_TIERS.indexOf(journeyCheck.tier) < 0) return '检定难度只能是 easy、medium 或 hard';
     if (text(journeyCheck.skill).length > 200) return '检定技能名不能超过 200 字';
@@ -2060,7 +2060,7 @@ function validateNormalized(model, opts) {
     const left = Array.isArray(match.left) ? match.left : [];
     const right = Array.isArray(match.right) ? match.right : [];
     if (left.length < 2 || left.length > 6) return '连线的左右两列须各为 2 至 6 项';
-    if (left.length !== right.length) return '连线的左右两列数量必须一致,一一对应才能配对';
+    if (left.length !== right.length) return '连线的左右两列数量必须一致，一一对应才能配对';
     const leftIssue = labelList(left, '连线左列');
     if (leftIssue) return leftIssue;
     const rightIssue = labelList(right, '连线右列');

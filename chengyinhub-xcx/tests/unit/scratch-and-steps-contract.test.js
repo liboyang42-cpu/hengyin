@@ -32,7 +32,7 @@ test('进度按已擦除面积占比算', () => {
   assert.equal(scratchProgress(fakeImage(pixels, 0)), 0)
   assert.equal(scratchProgress(fakeImage(pixels, 1)), 1)
   const half = scratchProgress(fakeImage(pixels, 0.5))
-  assert.ok(half > 0.45 && half < 0.55, '半张擦开应约等于 0.5,实得 ' + half)
+  assert.ok(half > 0.45 && half < 0.55, '半张擦开应约等于 0.5，实得 ' + half)
 })
 
 test('负控_数据不可用时给 0 而不是 1', () => {
@@ -65,10 +65,10 @@ test('刮开组件必须留一条不用手势的退路', () => {
   assert.ok(/bindtap="onDirectReveal"/.test(wxml),
     '必须有不依赖持续擦除或长按的直接揭示按钮')
   assert.ok(/onDirectReveal\s*\(/.test(js), 'onDirectReveal 必须真存在')
-  assert.ok(wxml.includes('直接揭示'), '退路必须是可见文案,不能藏在长按手势里')
+  assert.ok(wxml.includes('直接揭示'), '退路必须是可见文案，不能藏在长按手势里')
   assert.ok(
     /!revealed && !reducedMotion/.test(js),
-    '减动效用户应直接拿到结果:遮罩层根本不挂,而不是挂了再给按钮'
+    '减动效用户应直接拿到结果:遮罩层根本不挂，而不是挂了再给按钮'
   )
   // 真内容一直在 DOM 里:读屏器不该等你刮完才知道这儿有东西
   assert.match(wxml, /<slot\s*\/?>/, '真内容必须一直在 DOM 里')
@@ -85,7 +85,7 @@ test('庆祝不在擦的过程里发生', () => {
   const js = read('pages/play/components/scratch/index.js')
   // 稿:金币庆祝只在结果确认后出现。组件自己只发 reveal,庆祝由调用方在之后做
   assert.ok(!/celebrate|confetti|庆祝动画/.test(js), '组件不该自带庆祝')
-  assert.ok(/triggerEvent\('reveal'/.test(js), '揭示后要通知调用方,由它决定怎么庆祝')
+  assert.ok(/triggerEvent\('reveal'/.test(js), '揭示后要通知调用方，由它决定怎么庆祝')
 })
 
 // ==================== E · 零文字上手 ====================
@@ -101,7 +101,7 @@ test('每种玩法的步骤都是图标 + 短标签', () => {
       assert.equal(s.index, i + 1, '序号必须连续从 1 起')
       assert.ok(s.icon && s.icon.length, type + ' 第 ' + s.index + ' 步缺图标')
       // 标签是短词不是说明书 —— 稿:文字只做氛围不做说明书
-      assert.ok(s.label.length <= 5, type + ' 的标签「' + s.label + '」太长,应 ≤5 字')
+      assert.ok(s.label.length <= 5, type + ' 的标签「' + s.label + '」太长，应 ≤5 字')
     })
   }
 })
@@ -145,6 +145,6 @@ test('图形化之后,读屏器仍然拿得到完整步骤', () => {
   // 原来那行整句说明必须真被替换掉,而不是和图标行并排
   assert.ok(
     !wxml.includes('pk-desc--dim">{{steps}}'),
-    '整句说明应被图标行替代;并排等于没改(读者仍会去读那行字)'
+    '整句说明应被图标行替代；并排等于没改(读者仍会去读那行字)'
   )
 })

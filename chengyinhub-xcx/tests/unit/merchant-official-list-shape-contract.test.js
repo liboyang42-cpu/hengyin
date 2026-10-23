@@ -74,7 +74,7 @@ test('列表真实形状(真 SQL 列)带 fulfillmentPolicy,商家合作中心能
     Object.assign(rowFromShape(keys, 'REQUIRED_FULFILLMENT'), { id: 8 }),
     Object.assign(rowFromShape(keys, 'SELF_RUN'), { id: 9 }),
   ])
-  assert.deepEqual(events.map((e) => e.id), [7, 8], '可选合作/必须承接进商家列表;自办不进(过滤语义不变)')
+  assert.deepEqual(events.map((e) => e.id), [7, 8], '可选合作/必须承接进商家列表；自办不进(过滤语义不变)')
   assert.equal(events[1].recruitmentGapLabel, '信息不全', 'F21 缺口标记对商家可达')
 })
 

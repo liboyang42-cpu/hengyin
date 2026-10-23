@@ -38,5 +38,5 @@ test('排行榜：同分顺排名次按后端 rank 原样展示', () => {
 test('排行榜拒绝含空元素的榜单载荷', () => {
   const page = loadPage()
   assert.doesNotThrow(() => page.buildBoard({ list: [null] }))
-  assert.match(page.data.errorMsg, /没有加载出来/)
+  assert.match(page.data.errorMsg, /加载失败/)
 })

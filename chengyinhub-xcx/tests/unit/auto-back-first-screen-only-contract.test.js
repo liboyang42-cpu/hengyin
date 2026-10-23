@@ -50,7 +50,7 @@ const FIRST_SCREEN_ONLY = [
   {
     wxml: 'pages/activity/baoming/baoming.wxml',
     js: 'pages/activity/baoming/baoming.js',
-    rows: [/活动信息没能加载出来[\s\S]{0,200}?\/>/],
+    rows: [/活动信息加载失败[\s\S]{0,200}?\/>/],
     reloads: ['retryActivityInfo'],
   },
 ]
@@ -63,7 +63,7 @@ test('① 这四页的整页失败态,auto-back 必须带首屏条件(不能是�
     const wxml = stripComments(read(page.wxml))
     for (const row of page.rows) {
       const hit = wxml.match(row)
-      assert.ok(hit, `${page.wxml}:锚点失配,合同判据已失效 → ${row}`)
+      assert.ok(hit, `${page.wxml}:锚点失配，合同判据已失效 → ${row}`)
       const tag = hit[0]
       assert.match(tag, CONDITIONAL_AUTO_BACK,
         `${page.wxml}:页内重拉失败会连页带输入一起退掉,auto-back 必须是 {{!everLoaded}} 这类条件式\n${tag}`)
@@ -81,7 +81,7 @@ test('② 页面 JS 真的声明并置位 everLoaded,且页内确有重拉入口
     // 所以判据是「有一处把它赋成 false 以外的东西」,不是死认字面量 true
     assert.match(js, /everLoaded:\s*(?!false\b)/, `${page.js}:成功渲染后要把 everLoaded 置位`)
     for (const entry of page.reloads) {
-      assert.match(js, new RegExp('\\b' + entry + '\\s*\\('), `${page.js}:${entry} 不在了,合同前提(页内会重拉)已失效`)
+      assert.match(js, new RegExp('\\b' + entry + '\\s*\\('), `${page.js}:${entry} 不在了，合同前提(页内会重拉)已失效`)
     }
   }
 })

@@ -42,5 +42,5 @@ test('游玩路线灰阶不污染创作与活动页面的全局路线色', () =>
   assert.ok(globals.some((c) => sat(c) > 30), '全局路线色应保留彩色档以区分章节')
   // 两套不能同值 —— 那就是「污染」本身
   const playSet = new Set(['--cy-play-route', '--cy-play-route-5'].map(val))
-  assert.ok(!globals.some((c) => playSet.has(c)), 'play 灰阶与全局路线色出现同值,两套已污染')
+  assert.ok(!globals.some((c) => playSet.has(c)), 'play 灰阶与全局路线色出现同值，两套已污染')
 })

@@ -256,7 +256,7 @@ function synchronizeChapter(chapter) {
 function materializeChapter(source, makeKey) {
   var chapter = clone(source || {}) || {};
   var keyFactory = typeof makeKey === 'function' ? makeKey : function () {
-    throw new Error('故事流块缺少本地标识');
+    throw new Error('故事流块缺少本地信息');
   };
   chapter.nodes = chapter.nodes || [];
   if (!Array.isArray(chapter.blocks)) {
@@ -430,7 +430,7 @@ function applyStoryCommand(input, command) {
   if (command.type === 'insertNodeAt') {
     if (draft.chapter.blocks.length >= MAX_BLOCKS_PER_CHAPTER) throw new Error('每章最多 200 个内容块');
     var node = clone(command.node || {});
-    if (!node._localId) throw new Error('节点缺少本地标识');
+    if (!node._localId) throw new Error('节点缺少本地信息');
     if (draft.chapter.blocks.some(function (item) {
       return item && item.type === 'node' && item.nodeKey === node._localId;
     })) {
@@ -658,7 +658,7 @@ function applyStoryCommand(input, command) {
 
   if (command.type === 'editNode') {
     var editedNode = clone(command.node || {});
-    if (!editedNode._localId) throw new Error('节点缺少本地标识');
+    if (!editedNode._localId) throw new Error('节点缺少本地信息');
     var editedNodeIndex = draft.chapter.nodes.findIndex(function (item) {
       return item && item._localId === editedNode._localId;
     });

@@ -28,12 +28,12 @@
   <cy-state-shell class="bootstrap-state" wx:elif="{{bootstrapState === 'error'}}" kind="data" size="lg" fill
     title="主理人资格未确认" sub="{{bootstrapError}}" primary="重新检查" bind:primary="retryBootstrap" auto-back custom-back bind:back="onExit" />
   <cy-error class="bootstrap-state" wx:elif="{{bootstrapState === 'blocked'}}" size="lg" fill retry=""
-    title="当前账号不能申请" sub="商户与俱乐部主理人身份不能由同一账号同时持有" bind:back="onExit" auto-back custom-back />
+    title="当前账号不能申请" sub="商家账号不能同时成为主理人" bind:back="onExit" auto-back custom-back />
 
   <!-- ===== 开场屏(四步之前) ===== -->
   <view class="intro {{morphing ? 'intro--out' : 'cy-rise-in'}}"
         wx:if="{{bootstrapState === 'ready' && (mode==='intro' || morphing)}}">
-    <view class="intro__eyebrow">成为主理人</view>
+    
     <view class="intro__title">把你带的人，
 变成你的俱乐部</view>
     <view class="intro__points">
@@ -42,7 +42,7 @@
       <view class="intro__point"><view class="intro__dot" aria-hidden="true"></view><text>L1–L5 等级由平台后台评定，不影响先开始运营</text></view>
     </view>
     <view class="intro-cta"><cy-btn variant="primary" accessibilityLabel="开始申请" bindtap="startForm">开始申请</cy-btn></view>
-    <view class="intro__fine">联系方式只用于平台沟通，不对外展示。</view>
+    
   </view>
 
   <!-- 开场胶囊 → 进度条:共享元素形变。
@@ -89,7 +89,7 @@
           <input class="field__ctrl" data-field="coFounders" value="{{coFounders}}" bindinput="onInput" placeholder="多人用逗号分隔" placeholder-class="field__ph" />
         </view>
       </view>
-      <view class="hint">联系方式仅供平台沟通,不对外展示。</view>
+      <view class="hint">联系方式不对外展示</view>
     </view>
 
     <!-- 步骤2 组织经验 -->
@@ -169,7 +169,7 @@
   <!-- ===== 完成态(填完即有) ===== -->
   <cy-skeleton wx:if="{{bootstrapState === 'ready' && mode==='done' && doneState==='loading'}}" type="card" count="1" />
   <cy-error class="done-error" wx:if="{{bootstrapState === 'ready' && mode==='done' && doneState!=='ready' && doneState!=='loading'}}" fill
-    title="主理人状态未确认" sub="身份信息不完整，暂不能展示完成页" retry="重新确认" bind:retry="retryLeaderStatus" />
+    title="主理人状态未确认" retry="重新确认" bind:retry="retryLeaderStatus" />
   <scroll-view scroll-y class="body" wx:if="{{bootstrapState === 'ready' && mode==='done' && doneState==='ready'}}">
     <view class="sec-label">已成为主理人</view>
     <view class="card status-card">
@@ -180,7 +180,7 @@
       <view class="st-kv" wx:if="{{submissionReceipt && submissionReceipt.leaderName}}"><text class="k">主理人</text><text class="v">{{submissionReceipt.leaderName}}</text></view>
       <view class="st-kv"><text class="k">可建俱乐部</text><text class="v">最多 2 个</text></view>
     </view>
-    <view class="foot">接下来创建你的第一个俱乐部,开始招募成员、发布城市路线。</view>
+    
     <view class="body-pad"></view>
   </scroll-view>
 

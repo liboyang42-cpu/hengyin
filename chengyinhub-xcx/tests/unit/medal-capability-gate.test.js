@@ -26,7 +26,7 @@ function assertBackendGate(source) {
     `create / update 两条保存路径都要调 checkMedalCapability(含定义共 ${calls.length} 处，至少 3)`)
   // 只在真要写勋章时才查:无条件拦会把「身份变了、只想改描述」的存量作者锁在自己主题外面
   assert.match(source, /wantsMedal[\s\S]{0,200}?if \(!wantsMedal\)[\s\S]{0,60}?return null/,
-    '没有要写勋章时必须直接放行,不能无条件拦')
+    '没有要写勋章时必须直接放行，不能无条件拦')
 }
 
 test('E2 后端:主题 create/update 都挂上了勋章资格闸', () => {
@@ -42,7 +42,7 @@ test('负控:把勋章资格闸从主题保存路径摘掉必须判红', () => {
 test('E2 前端:锁态只读**不清空**,且默认不擅自上锁', () => {
   const js = read('pages/publish/fabu/index.js')
   assert.match(js, /medalEditable: !roleGuard\.hasSnapshot\(\) \|\| roleGuard\.can\('canDesignMedal'\)/,
-    '拿不到权限快照时按可编辑处理,与招商资格同一条取舍')
+    '拿不到权限快照时按可编辑处理，与招商资格同一条取舍')
   // 锁态绝不能顺手清掉存量勋章 —— 那等于替用户删图
   assert.doesNotMatch(js, /medalEditable[\s\S]{0,400}?formData\.finishMedal(Name|Img)'\]\s*=/,
     '锁态不许清空 formData.finishMedal*')

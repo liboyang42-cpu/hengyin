@@ -67,14 +67,14 @@ test('★每条 @import 都必须解析得到 —— 指空不会报错,只会�
 test('冻结基线只能减不能加:修好的必须从 FROZEN_BROKEN 里删掉', () => {
   const { broken } = survey()
   const stale = FROZEN_BROKEN.filter((b) => !broken.includes(b))
-  assert.deepEqual(stale, [], '这些已经修好了,请从冻结基线删除,别留空位')
+  assert.deepEqual(stale, [], '这些已经修好了，请从冻结基线删除，别留空位')
 })
 
 test('negative control:把一条 @import 改指到不存在的文件必须判红', () => {
   const target = path.join('pages', 'play', 'components', 'playkit-sort', 'index.wxss')
   const src = fs.readFileSync(path.join(ROOT, target), 'utf8')
   const mutated = src.replace('/pages/play/style/play-surface.wxss', '/style/play-surface.wxss')
-  assert.notEqual(mutated, src, '负控锚点失效:那一行的写法变了,判据要跟着改')
+  assert.notEqual(mutated, src, '负控锚点失效:那一行的写法变了，判据要跟着改')
   const { broken } = survey({ [target]: mutated })
   assert.ok(broken.includes(`${target} -> /style/play-surface.wxss`), '门禁没认出被改坏的 @import')
 })

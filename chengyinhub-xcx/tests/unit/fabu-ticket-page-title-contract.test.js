@@ -18,7 +18,7 @@ const page2 = step3.slice(step3.indexOf('wx:if="{{editorPage === 2}}"'));
 
 test('票务这一步有且只有一个页面级标题,排在区块标题之前', () => {
   const titles = page2.match(/<cy-page-title\b/g) || [];
-  assert.equal(titles.length, 1, '一个步骤一个 L1 标题,不许两处各摆一个');
+  assert.equal(titles.length, 1, '一个步骤一个 L1 标题，不许两处各摆一个');
   const firstSection = page2.indexOf('<view class="pd-section-title">档期</view>');
   assert.ok(firstSection > 0, '「档期」区块标题还在原位');
   assert.ok(page2.indexOf('<cy-page-title') < firstSection, '页面级标题必须在该屏第一个元素');
@@ -46,10 +46,10 @@ test('组件真的注册过,否则标题会静默不渲染', () => {
 test('这一页放的是页内标题,不是第二套导航(safe-top 关掉、缩进不叠加)', () => {
   const tag = page2.slice(page2.indexOf('<cy-page-title'), page2.indexOf('>', page2.indexOf('<cy-page-title')) + 1);
   // .slopes-info-page 自带 32rpx 横向内边距 → flush;这一屏上面还有 sheet 把手,不是顶格导航页
-  assert.match(tag, /safe-top="\{\{false\}\}"/, 'safe-top 必须显式关掉,否则标题会顶进胶囊区');
+  assert.match(tag, /safe-top="\{\{false\}\}"/, 'safe-top 必须显式关掉，否则标题会顶进胶囊区');
   assert.match(tag, /flush="\{\{true\}\}"/, '不关自带页边距会被推成双倍缩进');
   assert.equal((index.match(/<cy-page-title\b/g) || []).length, 0,
-    '编辑器首页的标题位是那行可编辑的主题名,不再叠一个 L1 标题');
+    '编辑器首页的标题位是那行可编辑的主题名，不再叠一个 L1 标题');
 });
 
 test('负控:撤掉组件注册或未干边距,都会红', () => {

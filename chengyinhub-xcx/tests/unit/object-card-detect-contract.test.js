@@ -48,10 +48,10 @@ function moveObjectCardAfterPhotoCheck(src) {
 test('objectCard 在册:共用 photoCheck 段、带 mode CARD、不叠加第二个段', () => {
   const game = catalog.findGame('objectCard')
   assert.ok(game, '目录里没有 objectCard —— 商家在「选玩法」那一屏根本看不到它')
-  assert.equal(game.section, 'photoCheck', '文档 §2.1:不新建段,复用 photoCheck')
+  assert.equal(game.section, 'photoCheck', '文档 §2.1:不新建段，复用 photoCheck')
   assert.equal(game.mode, 'CARD', '没有 mode 就分不开「拍物成卡」与「拍照审核」')
   assert.equal(game.label, '拍物成卡')
-  assert.equal(game.validationMethod, 0, '判定在服务端,不走老的通关校验方式')
+  assert.equal(game.validationMethod, 0, '判定在服务端，不走老的通关校验方式')
 })
 
 test('★老模板(配置里没有 mode)仍认出 photoCheck —— 认不出会把商家已有的配置显示成「没选玩法」', () => {
@@ -68,7 +68,7 @@ test('★新模板(mode CARD)认出 objectCard', () => {
 
 test('★顺序依赖:objectCard 必须排在 photoCheck 前面 —— 反序后新玩法永远认不出来', () => {
   assert.ok(positionOf('objectCard') < positionOf('photoCheck'),
-    'objectCard 排在 photoCheck 后面时,无 mode 的 photoCheck 会抢先匹配,藏品卡静默变回普通拍照审核')
+    'objectCard 排在 photoCheck 后面时，无 mode 的 photoCheck 会抢先匹配，藏品卡静默变回普通拍照审核')
   // 同一条依赖的另一半:photoCheck 条目**绝不能**补 mode。
   assert.equal(catalog.findGame('photoCheck').mode, undefined,
     'photoCheck 一旦带上 mode,老模板(配置里没有 mode)就再也认不出玩法了')

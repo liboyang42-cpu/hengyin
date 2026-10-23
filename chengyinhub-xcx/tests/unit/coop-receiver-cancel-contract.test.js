@@ -92,7 +92,7 @@ test('渲染层:取消合作入口不再按 box 分侧,只按 termsFrozen 分可
   assert.doesNotMatch(active, /box === 'sent'/,
     '收件方(received)也必须有取消合作入口 —— 后端对 status==1 的取消是双方放行');
   assert.match(active, /!invite\.termsFrozen/, '锁价前才给可点的取消');
-  assert.match(opBlock(wxml, 'cancelAccepted'), /op-name--danger/, '取消是涉资动作,沿用发起方那套危险样式');
+  assert.match(opBlock(wxml, 'cancelAccepted'), /op-name--danger/, '取消是涉资动作，沿用发起方那套危险样式');
 
   const locked = opLine(wxml, 'explainCancelLocked');
   assert.doesNotMatch(locked, /box === 'sent'/,
@@ -127,7 +127,7 @@ test('收件方点取消:弹必填理由确认框,确认后发 status=3 message,
 
   env.page.cancelAccepted();
   assert.equal(env.modalCalls.length, 1, '收件方点取消必须过确认弹窗');
-  assert.equal(env.modalCalls[0].editable, true, '理由必填,走可输入确认框');
+  assert.equal(env.modalCalls[0].editable, true, '理由必填，走可输入确认框');
   assert.equal(env.requests.some((r) => r.url === '/api/coop/handle'), false, '确认前不得发请求');
 
   env.modalCalls[0].success({ confirm: true, content: '测试理由' });
@@ -137,7 +137,7 @@ test('收件方点取消:弹必填理由确认框,确认后发 status=3 message,
     '收件方取消同样发 status=3 + message 字段');
   const before = env.requests.filter((r) => r.url === '/api/coop/list').length;
   write.success({ code: 200 });
-  assert.ok(env.requests.filter((r) => r.url === '/api/coop/list').length > before, '写成功后必须回读');
+  assert.ok(env.requests.filter((r) => r.url === '/api/coop/list').length > before, '写成功后必须刷新');
 });
 
 test('收件方锁价后只能看说明:不发请求,行内错误给客服口径', () => {
@@ -165,5 +165,5 @@ test('发起方一侧不能被改坏:发件箱仍能取消并回读', () => {
   broken.page.onLoad({ inviteId: '7', box: 'received' });
   broken.page.cancelAccepted();
   assert.equal(broken.requests.some((r) => r.url === '/api/coop/handle'), false,
-    '负控:守卫塞回后收件方不再能取消,本契约的行为断言必须能抓到这个回归');
+    '负控:守卫塞回后收件方不再能取消，本契约的行为断言必须能抓到这个回归');
 });

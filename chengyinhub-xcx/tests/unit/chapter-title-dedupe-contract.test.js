@@ -108,11 +108,11 @@ test('章节卡与发布确认预览都走这一份判据,不再各拼一次前�
   // 序号取 chapterNumbers(序章与结局章不占号,2026-09-24 #1137 合 master 时发现序章被算成第 1 章);结局章只显示章名 + 「结局」标签
   assert.match(wxml, /\{\{chapter\.ending \? chapter\.name : chapterTitle\.label\(\(chapterNumbers\[chapterIndex\] \|\| chapterIndex \+ 1\) - 1, chapter\.name\)\}\}/)
   assert.doesNotMatch(wxml, /chapter\.name !== \('第' \+ \(chapterIndex \+ 1\) \+ '章'\)/,
-    '旧的全等判据只覆盖「名字恰等于默认名」一种,名字带说明时照样重复')
+    '旧的全等判据只覆盖「名字恰等于默认名」一种，名字带说明时照样重复')
 
   const js = read('pages/publish/fabu/index.js')
   assert.doesNotMatch(js, /name: `第\$\{index \+ 1\}章 \$\{\(chapter && chapter\.name\) \|\| ''\}`/,
-    '确认预览原来无条件加前缀,是同一个病的第二处')
+    '确认预览原来无条件加前缀，是同一个病的第二处')
 })
 
 test('负控:标题退回无条件加前缀,契约必须判红', () => {
@@ -127,5 +127,5 @@ test('负控:标题退回无条件加前缀,契约必须判红', () => {
   }
   assert.equal(page._buildPublishPreview().chapters[0].name, '第1章 第1章 隔离书店站')
   assert.notEqual(page._buildPublishPreview().chapters[0].name, '第1章 隔离书店站',
-    '旧实现必须复现出重复序号,证明这条断言不是在给橡皮图章盖章')
+    '旧实现必须复现出重复序号，证明这条断言不是在给橡皮图章盖章')
 })

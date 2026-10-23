@@ -76,7 +76,7 @@ test('空值打开:内部值 = 界面所见(00:00),提示与确认键状态如�
   assert.equal(inst.data._endText, '00:00')
   assert.equal(inst.data._ok, false)
   assert.equal(inst.data._hint, '结束时间要晚于开始时间',
-    '00:00–00:00 不合法,必须当场说清而不是留一个静默的确定键')
+    '00:00–00:00 不合法，必须当场说清而不是留一个静默的确定键')
 })
 
 test('首次只改「结束」→ 完成:值如实落下,不再静默吞掉', () => {
@@ -105,9 +105,9 @@ test('± 一下正好走一格,且绕回一天之内不越界', () => {
   const inst = makeInstance({ value: ['00:00', '23:45'], minuteStep: 15 })
   open(inst)
   tapStep(inst, 'end', 1)
-  assert.equal(inst.data._endText, '00:00', '23:45 再加一格绕回 00:00,不许出现 24:00')
+  assert.equal(inst.data._endText, '00:00', '23:45 再加一格绕回 00:00，不许出现 24:00')
   tapStep(inst, 'start', -1)
-  assert.equal(inst.data._startText, '23:45', '00:00 减一格绕到前一天末尾,不许出现负时间')
+  assert.equal(inst.data._startText, '23:45', '00:00 减一格绕到前一天末尾，不许出现负时间')
 })
 
 test('拖动以「按下时的值 + 总位移」计算:来回滑一趟必须回到原处', () => {
@@ -135,5 +135,5 @@ test('负控:内部值与界面所见脱钩(旧实现形态)时,同一操作序�
   assert.equal(inst.__events.filter((e) => e.name === 'confirm').length, 0,
     '旧状态下 confirm 发不出去 —— 上面两条契约抓的就是这个静默失败')
   assert.notEqual(inst.data._hint, '结束时间要晚于开始时间',
-    '负控必须与修后行为可区分,否则契约什么也没证明')
+    '负控必须与修后行为可区分，否则契约什么也没证明')
 })

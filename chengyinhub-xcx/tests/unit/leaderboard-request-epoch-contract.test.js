@@ -55,12 +55,12 @@ test('最新请求失败后，旧成功/失败都不能复活或覆盖终态', (
 
   sandbox.requests[1].fail({ errMsg: 'offline' })
   sandbox.requests[1].complete()
-  assert.equal(page.data.errorMsg, '排行榜没有加载出来')
+  assert.equal(page.data.errorMsg, '排行榜加载失败')
   assert.equal(page.data.loading, false)
 
   sandbox.requests[0].success({ code: 200, data: board(99) })
   sandbox.requests[0].complete()
-  assert.equal(page.data.errorMsg, '排行榜没有加载出来')
+  assert.equal(page.data.errorMsg, '排行榜加载失败')
   assert.equal(page.data.top3.length, 0)
 })
 

@@ -159,7 +159,7 @@ Page({
         done();
         const d = res && res.data;
         if (String(res && res.code) !== '200' || !d || !isRecordList(d.received) || !isRecordList(d.sent)) {
-          that.setData({ state: 'error', errorText: (res && res.msg) || '协作邀请没加载出来' });
+          that.setData({ state: 'error', errorText: (res && res.msg) || '协作邀请加载失败' });
           return;
         }
         const rows = decorate(that.data.box === 'sent' ? d.sent : d.received, d.slots);
@@ -183,7 +183,7 @@ Page({
       fail() {
         if (!that._isCurrent(ctx)) return;
         done();
-        that.setData({ state: 'error', errorText: '网络不稳定，请检查连接后重试' });
+        that.setData({ state: 'error', errorText: '网络异常，请检查连接后重试' });
       },
     });
   },
@@ -296,7 +296,7 @@ Page({
      status 写成字面量、且落在 _post 的调用点上 —— coop-handle-single-consumer 那条门禁
      是从「直接包含请求 URL 的那个方法」往回找调用点解析角色的,只跟一层。
      所以确认弹层抽成 _confirm 收回调,而不是把 _post 再包一层转发。 */
-  accept() { const that = this; this._confirm('接受合作', '接受后条款即冻结，按这张单结算。', false, function () { that._post(1); }); },
+  accept() { const that = this; this._confirm('接受合作', '接受后条款锁定，按这张单结算', false, function () { that._post(1); }); },
   reject() {
     if (!String(this.data.draft || '').trim()) {
       this.setData({ draftError: '请说明拒绝理由，让对方知道如何调整。' });
@@ -361,7 +361,7 @@ Page({
         toast('已提交');
         that.load();
       },
-      fail() { if (!that._isCurrent(ctx)) return; that.setData({ submitting: false }); toast('网络开小差了，没能提交'); },
+      fail() { if (!that._isCurrent(ctx)) return; that.setData({ submitting: false }); toast('网络异常，没能提交'); },
     });
   },
 
@@ -412,7 +412,7 @@ Page({
           + (inv.partnerName ? '&name=' + encodeURIComponent(inv.partnerName) : '') });
         else toast((res && res.msg) || '暂不可联系');
       },
-      fail() { if (!that._isCurrent(ctx)) return; that._contacting = false; toast('网络开小差了，没能联系对方'); },
+      fail() { if (!that._isCurrent(ctx)) return; that._contacting = false; toast('网络异常，没能联系对方'); },
     });
   },
 
@@ -428,7 +428,7 @@ Page({
     const that = this;
     modal.show({
       title: '取消合作', editable: true,
-      content: '锁价开卖前可取消;锁价后需联系客服协商。',
+      content: '锁价开卖前可取消；锁价后需联系客服协商。',
       placeholderText: '请填写取消理由(必填)', confirmText: '提交取消', cancelText: '再想想',
       success(r) {
         if (!that._isCurrent(ctx)) return;
@@ -463,7 +463,7 @@ Page({
     const fail = function (value) {
       if (epoch !== that._perkEpoch || !that._isCurrent(ctx)) return;
       that._perkLoading = false;
-      that.setData({ perkState: 'error', perkErrorText: String(value && (value.msg || value.message) || '常备权益没加载出来') });
+      that.setData({ perkState: 'error', perkErrorText: String(value && (value.msg || value.message) || '常备权益加载失败') });
     };
     app.sendRequest({
       hideLoading: true, url: '/api/coop/perk-template/list', method: 'POST',
@@ -534,7 +534,7 @@ Page({
           toast((res && res.msg) || '申报失败');
         }
       },
-      fail() { if (that._isCurrent(ctx)) toast('网络开小差了，供给没申报上'); },
+      fail() { if (that._isCurrent(ctx)) toast('网络异常，供给没申报上'); },
       complete() { if (!that._isCurrent(ctx)) return; that._perkSaving = false; that.setData({ perkSaving: false }); },
     });
   },
@@ -602,7 +602,7 @@ Page({
       this._reviewing = false;
       if (found === true) { this.setData({ reviewVerifying: false, actionReceipt: '评价已提交' }); return; }
       this.setData({ reviewVerifying: false,
-        actionError: found === false ? '没有查到这次评价，可以重新评价' : '评价结果暂未确认，请稍后刷新核对后再评价' });
+        actionError: found === false ? '没有查到这次评价，可以重新评价' : '评价结果暂未确认，请稍后刷新确认后再评价' });
     });
   },
 

@@ -81,7 +81,7 @@ test('F-W5-11 快捷区复位规则带 .quick-acts 祖先,压得过微信内置 
   const wxml = read('pages/club/detail/index.wxml')
   const row = wxml.match(/<view class="quick-acts">([\s\S]*?)\n {6}<\/view>/)
   assert.ok(row, '缺少快捷区')
-  assert.match(row[1], /<button class="quick-act" open-type="share"/, '分享格仍是原生分享按钮,且在 .quick-acts 里')
+  assert.match(row[1], /<button class="quick-act" open-type="share"/, '分享格仍是原生分享按钮，且在 .quick-acts 里')
   assert.match(rule(css, '.quick-acts'), /repeat\(5, minmax\(0, 1fr\)\)/)
 })
 

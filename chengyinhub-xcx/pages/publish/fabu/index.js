@@ -401,8 +401,8 @@ Page({
     // 结局编辑器(2026-09-22 接线)。list 是 story-ending.parse 出来的界面形状,
     // 保存时由同一个 serialize 转回服务端形状 —— 校验口径与 JourneyStoryValidator 一致,不另写一套。
     // 结局章(2026-09-24):章节设置里的「设为结局」—— 什么时候播 + 选哪个伏笔 / 选项 / 站点
-    chapterEndingKinds: [{ key: 'fallback', label: '兜底（其它结局都不中时）' }, { key: 'thought', label: '某个伏笔应验了' },
-      { key: 'tag', label: '选过某个选项' }, { key: 'node', label: '到过某个站点' }],
+    chapterEndingKinds: [{ key: 'fallback', label: '默认（其它结局都不满足时）' }, { key: 'thought', label: '某个伏笔应验了' },
+      { key: 'tag', label: '选过某个选项' }, { key: 'node', label: '到过某个节点' }],
     chapterEndingKindIndex: 0, chapterEndingPickIndex: -1,
     storyDraftList: [],
     endingTagOptions: [],
@@ -658,7 +658,7 @@ Page({
     this.setData({ submitting: false, draftSaving: false, editIsDraft: false, submitError: reason,
       themeSaveState: 'localFailed', themeSaveLabel: SAVE_STATE_LABELS.localFailed,
       resultSheet: { show: true, kind: 'fail', title: rejected ? '审核未通过，修改尚未保存' : '后续修改尚未保存',
-        sub: '内容暂留在本页，请勿关闭或退出。', meta: '当前修改尚未保存',
+        sub: '请勿离开本页', meta: '当前修改尚未保存',
         why: reason, duration: RESULT_SHEET_MS } });
   },
 
@@ -1031,7 +1031,7 @@ Page({
     const scope = this.data.operationScope;
     modal.show({
       title: '确认旧草稿的发布入口',
-      content: '这份旧草稿没有记录商家或个人入口。确认属于当前入口后才恢复；上次结果未知的发布仍会保留并先核对。',
+      content: '这份旧草稿没有记录商家或个人入口。确认属于当前入口后才恢复；上次结果未知的发布仍会保留并先确认。',
       confirmText: '属于此入口', cancelText: '暂不恢复',
       success: (res) => {
         if (this._unloaded || owner !== String(app.getUserID() || '')
@@ -1052,7 +1052,7 @@ Page({
   _markDraftStorageUnavailable() {
     this._draftStorageUnavailable = true;
     this._draftAutosaveReady = true; // Keep the existing unsaved-exit warning active.
-    this.setData({ submitting: false, submitError: '本地草稿暂时无法读取，请稍后重新进入再发布，已有草稿不会被覆盖。' });
+    this.setData({ submitting: false, submitError: '本机草稿读取失败，请重新进入' });
   },
 
   _clearDraftEnvelope() {
@@ -2875,7 +2875,7 @@ Page({
     if (this._lockedSnapshot === this._lockedFingerprint()) return true;
     modal.show({
       title: '这些改动存不下来',
-      content: '主题已过审开卖，开始/结束日期、章节站点结构、票种与价格都不能再改了。'
+      content: '主题已过审开卖，开始/结束日期、章节节点结构、票种与价格都不能再改了。'
         + '要改这些只能先下架 → 退款 → 重发。其余文案与图片的修改可以正常保存。',
       showCancel: false,
       confirmText: '知道了'
@@ -2944,7 +2944,7 @@ Page({
         }
         if (ch.extraNodes) {
           ch.extraNodes = ch.extraNodes.map(item => Object.assign({}, item, { nodeId: nodeKeys.get(String(item.nodeId)) })).filter(item => {
-            if (!item.nodeId) lost.push('额外站点');
+            if (!item.nodeId) lost.push('额外节点');
             return !!item.nodeId;
           });
           if (!ch.extraNodes.length) delete ch.extraNodes;
@@ -2957,14 +2957,14 @@ Page({
         Object.entries(scene.nodeConfigs).forEach(([key, value]) => {
           const target = /^\d+$/.test(key) ? nodeKeys.get(key) : key;
           if (target) configs[target] = value;
-          else if (!reselect.includes('场景站点玩法')) reselect.push('场景站点玩法');
+          else if (!reselect.includes('场景节点玩法')) reselect.push('场景节点玩法');
         });
         scene.nodeConfigs = configs;
       });
       structure.copyReferences(runtime, reselect); // structure
       const survival = runtime.gameplayRuntime && runtime.gameplayRuntime.survival;
       if (survival && (survival.zeroChallenge || survival.zeroHpPolicy === 'CHALLENGE')) {
-        reselect.push('归零挑战需重新选择挑战站点');
+        reselect.push('归零挑战需重新选择挑战节点');
         delete survival.zeroChallenge;
         if (survival.zeroHpPolicy === 'CHALLENGE') delete survival.zeroHpPolicy;
         if (!Object.keys(survival).length) delete runtime.gameplayRuntime.survival;
@@ -2975,7 +2975,7 @@ Page({
         Object.entries(runtime.templateBindings).forEach(([key, value]) => {
           const target = /^\d+$/.test(key) ? nodeKeys.get(key) : key;
           if (target) bindings[target] = value;
-          else if (!reselect.includes('站点玩法资源绑定')) reselect.push('站点玩法资源绑定');
+          else if (!reselect.includes('节点玩法资源绑定')) reselect.push('节点玩法资源绑定');
         });
         runtime.templateBindings = bindings;
       }
@@ -3441,7 +3441,7 @@ Page({
         endTime: endDate,
         saleStartTime: fmt(now),
         saleEndTime: fmt(start),
-        description: '适合内测和线下试玩',
+        description: '适合线下试玩',
         refundSupported: true,
         syncWithTheme: true
       }],
@@ -6393,7 +6393,7 @@ Page({
     // advisory = computeCompleteness().missing 里的软项(站点级缺地点/描述/时长)+ 未配游戏站点;均落 Tab'0'
     // 软项都是站点级事实,没有单一字段:按章节区定位('chapters' → routeSection)。
     const advisory = [];
-    const softSet = ['部分站点缺地点', '部分站点缺描述', '部分站点缺时长'];
+    const softSet = ['部分节点缺地点', '部分节点缺描述', '部分节点缺时长'];
     const missing = (this.computeCompleteness().missing) || [];
     missing.forEach((m) => {
       if (softSet.indexOf(m) !== -1) advisory.push({ label: m, field: 'chapters', tab: '0' });
@@ -6405,7 +6405,7 @@ Page({
         if (node && !node.templateId) noGame++;
       });
     });
-    if (noGame > 0) advisory.push({ label: `${noGame} 个站点未配置玩法`, field: 'chapters', tab: '0' });
+    if (noGame > 0) advisory.push({ label: `${noGame} 个节点未配置玩法`, field: 'chapters', tab: '0' });
 
     return { blocking, advisory };
   },
@@ -6424,7 +6424,7 @@ Page({
       { label: '主题封面已上传', ok: !!fd.imgUrl },
       { label: '主题简介已填写', ok: !!(fd.description && fd.description.trim()) },
       { label: `已编排 ${chapters.length} 个章节`, ok: chapters.length > 0 },
-      { label: `已放置 ${nodeCount} 个站点`, ok: nodeCount > 0 },
+      { label: `已放置 ${nodeCount} 个节点`, ok: nodeCount > 0 },
       { label: `已配置 ${readyTickets.length} 种票单`, ok: readyTickets.length > 0 },
       { label: '通关规则已确定', ok: !!this.data.completionRuleMode },
       { label: '内容安全预检通过', ok: !!precheckOk },
@@ -6449,7 +6449,7 @@ Page({
       description: fd.description || '',
       stats: [
         { k: '章节', v: String((fd.chapters || []).length) },
-        { k: '站点', v: String(stats.totalNodes == null ? 0 : stats.totalNodes) },
+        { k: '节点', v: String(stats.totalNodes == null ? 0 : stats.totalNodes) },
         { k: '时长', v: stats.totalDurationDisplay || '—' },
         { k: '里程', v: stats.totalDistance || 0 },
       ],
@@ -6458,7 +6458,7 @@ Page({
         // 否则确认页会出现「第1章 第1章 隔离书店站」。
         name: chapterCardTitle(index, chapter && chapter.name),
         nodes: (((chapter && chapter.nodes) || []).map((node) => ({
-          name: (node && node.name) || '未命名站点',
+          name: (node && node.name) || '未命名节点',
           address: node && node._storyGame ? '无需到达地点' : ((node && node.address) || '未选地点'),
         }))),
       })),
@@ -6476,10 +6476,10 @@ Page({
     const unfinished = allTickets.length - ticketCount;
     const modeLabel = Number(formData.productType) === 2 ? '自由探索' : '城市定向';
     const completionLabel = this.data.completionRuleMode === 'AT_LEAST'
-      ? `完成任意 ${Number(this.data.completionRequiredCount) || 0} 个站点即通关`
-      : '完成全部站点后通关';
+      ? `完成任意 ${Number(this.data.completionRequiredCount) || 0} 个节点即通关`
+      : '完成全部节点后通关';
     return [
-      `「${formData.name || '未命名主题'}」将按${modeLabel}发布，共 ${chapters.length} 个章节、${nodeCount} 个站点。`,
+      `「${formData.name || '未命名主题'}」将按${modeLabel}发布，共 ${chapters.length} 个章节、${nodeCount} 个节点。`,
       `${completionLabel}；当前配置 ${ticketCount} 种票单${unfinished > 0 ? `，另有 ${unfinished} 种没填完` : ''}。`
     ];
   },
@@ -6518,9 +6518,9 @@ Page({
   // 预检不可用时的兜底文案(AI 不是发布的硬依赖,只降级成一条建议项)
   _precheckSkipLabel(msg) {
     if (String(msg || '').indexOf(AI_QUOTA_HINT) >= 0) {
-      return 'AI 次数已用完,本次跳过安全预检(不影响发布)';
+      return 'AI 次数已用完，本次跳过安全预检(不影响发布)';
     }
-    return '安全预检暂不可用,本次跳过(不影响发布)';
+    return '安全预检暂不可用，本次跳过(不影响发布)';
   },
 
   // 预检结果 → 并进 buildPublishCheck() 的本地判定,复用同一个弹层
@@ -6914,7 +6914,7 @@ Page({
     const out = [];
     (this.data.formData.chapters || []).forEach((chapter) => {
       (chapter.nodes || []).forEach((node) => {
-        if (node && node.id) out.push({ id: node.id, name: node.name || ('站点 ' + node.id) });
+        if (node && node.id) out.push({ id: node.id, name: node.name || ('节点 ' + node.id) });
       });
     });
     return out;
@@ -6967,7 +6967,7 @@ Page({
     const on = !!e.detail.value;
     const form = this.data.chapterForm || {};
     if (on && (form.nodes || []).length) {
-      cyToast('结局章里不能放站点或玩法');
+      cyToast('结局章里不能放节点或玩法');
       this.setData({ 'chapterForm.ending': null });
       return;
     }
@@ -7415,7 +7415,7 @@ Page({
           resultSheet: {
             show: true, kind: 'success', title: pendingReview ? '已提交审核' : '城市路线已发布',
             sub: localChanges ? '已发布提交时的版本；后续修改仍在本机，请继续编辑后另行保存。'
-              : pendingReview ? reviewNextStep : tid ? '接下来去招商家承接站点、找俱乐部带团。' : '路线已进入你的项目列表。',
+              : pendingReview ? reviewNextStep : tid ? '接下来去招商家承接节点、找俱乐部带团。' : '路线已进入你的项目列表。',
             meta: localChanges ? '草稿仍在本机' : chapterCount ? (chapterCount + ' 个章节') : '',
             why: '', duration: RESULT_SHEET_MS,
           }
@@ -7446,7 +7446,7 @@ Page({
           // 这句直接回答它,而且是真的 —— 本地草稿信封没被清(见 _clearDraftEnvelope
           // 只在成功路径调用)。
           resultSheet: { show: true, kind: 'fail', title: '这次还没有发布出去',
-            sub: '内容都还在,修好后可以直接重试', meta: '草稿仍在本机',
+            sub: '修改后重试', meta: '草稿仍在本机',
             why: reason, duration: RESULT_SHEET_MS }
         });
       }
@@ -7622,7 +7622,7 @@ Page({
         this._resultSheetNext = '';
         this.setData({
           resultSheet: { show: true, kind: 'success', title: '草稿已保存到云端',
-            sub: '还没有发布，玩家看不到；可以继续编辑，也能从「我的项目」重新打开。', meta: '',
+            sub: '已存草稿，可在「我的项目」继续编辑', meta: '',
             why: '', duration: RESULT_SHEET_MS }
         });
       },
@@ -7702,15 +7702,15 @@ Page({
     }
     const sheet = res.stage === 'publish'
       ? (res.unknown
-        ? { title: '发布结果待确认', sub: '最新内容已经在云端草稿里；重试前会先查询是否已发布', meta: '' }
-        : { title: '草稿已保存，但还没有发布', sub: '已确认这份草稿仍未发布，可以直接重试发布', meta: '' })
+        ? { title: '发布结果待确认', sub: '草稿已保存，可重试', meta: '' }
+        : { title: '草稿已保存，但还没有发布', sub: '草稿已保存，可重试', meta: '' })
       : res.stage === 'readback'
-        ? { title: '草稿已存到云端，但核对时发现与本机不一致', sub: '本机内容仍保留；再点一次「保存草稿」会更新同一份草稿，不会重复创建', meta: '草稿仍在本机' }
+        ? { title: '草稿已存到云端，但确认时发现与本机不一致', sub: '请再点一次「保存草稿」', meta: '草稿仍在本机' }
         : res.unknown
-          ? { title: '保存结果待确认', sub: '内容都还在本机；重试会找回或更新同一份草稿', meta: '草稿仍在本机' }
+          ? { title: '保存结果待确认', sub: '草稿已存本机，可重试', meta: '草稿仍在本机' }
           : publish
-            ? { title: '这次还没有发布出去', sub: '最新内容没能存进草稿，所以没有发布旧版本；内容都还在，可以直接重试', meta: '草稿仍在本机' }
-            : { title: '草稿还没有保存到云端', sub: '内容都还在，修好后可以直接重试', meta: '草稿仍在本机' };
+            ? { title: '这次还没有发布出去', sub: '草稿已存本机，可重试', meta: '草稿仍在本机' }
+            : { title: '草稿还没有保存到云端', sub: '修改后重试', meta: '草稿仍在本机' };
     this.setData({
       resultSheet: Object.assign({ show: true, kind: 'fail', why: reason, duration: RESULT_SHEET_MS }, sheet)
     });
@@ -7752,7 +7752,7 @@ Page({
         title: rejected ? '审核未通过' : pendingReview ? '已提交审核' : '城市路线已发布',
         sub: rejected ? '内容仍保留，可以修改后重新提交。'
           : result.localChanges ? '上次保存的版本已发布；后续修改仍在本机，请继续编辑后另行保存。'
-            : pendingReview ? reviewNextStep : '草稿已发布，接下来去招商家承接站点、找俱乐部带团。',
+            : pendingReview ? reviewNextStep : '草稿已发布，接下来去招商家承接节点、找俱乐部带团。',
         meta: keepDraft ? '草稿仍在本机' : '',
         why: rejectionReason, duration: RESULT_SHEET_MS }
     });
@@ -7760,11 +7760,11 @@ Page({
 
   _showPublishUnknown() {
     const reason = this.data.editingTopicId
-      ? '发布结果暂时无法确认，请到项目列表核对原主题。采用已保存版本前不会再次发布，本地草稿已保留。'
-      : '发布结果暂时无法确认，请到项目列表核对。为避免重复创建，当前草稿不会再次发布，内容仍在本机。';
+      ? '发布结果暂时无法确认，请到项目列表确认原主题。采用已保存版本前不会再次发布，本地草稿已保留。'
+      : '发布结果暂时无法确认，请到项目列表确认。为避免重复创建，当前草稿不会再次发布，内容仍在本机。';
     this.setData({ submitting: false, submitError: reason,
       resultSheet: { show: true, kind: 'fail', title: '发布结果待确认',
-        sub: '请先核对项目列表', meta: '草稿仍在本机', why: reason, duration: RESULT_SHEET_MS } });
+        sub: '请先确认项目列表', meta: '草稿仍在本机', why: reason, duration: RESULT_SHEET_MS } });
   },
 
   /* 面板收掉才跳走 —— 落点由各成功路径事先写进 _resultSheetNext。
@@ -8056,12 +8056,12 @@ Page({
           });
           return;
         }
-        cyToast(res && res.code == '200' ? '采用结果未确认，请到我的玩法核对' : app.getRequestErrorMessage(res, '采用公共玩法失败'));
+        cyToast(res && res.code == '200' ? '采用结果未确认，请到我的玩法确认' : app.getRequestErrorMessage(res, '采用公共玩法失败'));
       },
       fail(_res, status) {
         that._adoptingPublicTemplate = false;
         cyToast(status == 404 || status == 405 ? '当前服务尚未支持采用公共玩法，请更新服务后再试'
-          : '采用结果未确认，请先到我的玩法核对，避免重复创建');
+          : '采用结果未确认，请先到我的玩法确认，避免重复创建');
       }
     });
   },
@@ -8186,27 +8186,27 @@ Page({
             const newId = saved && saved.code == '200' ? Number(saved.data) : 0;
             if (!Number.isSafeInteger(newId) || newId <= 0) {
               that.setData({ nodeCopyBusy: false,
-                nodeCopyError: saved && saved.code == '200' ? '保存结果未确认，请到我的玩法核对' : app.getRequestErrorMessage(saved, '另存副本失败'),
+                nodeCopyError: saved && saved.code == '200' ? '保存结果未确认，请到我的玩法确认' : app.getRequestErrorMessage(saved, '另存副本失败'),
                 nodeCopyUncertain: !!(saved && saved.code == '200') });
               return;
             }
             if (that.data.nodesForm !== node || Number(that.data.nodesForm.templateId) !== sourceId
               || templateBinding.nodeKey(that.data.nodesForm) !== nodeKey) {
               that.setData({ nodeCopyBusy: false, nodeCopyUncertain: true,
-                nodeCopyError: '副本已保存，请到我的玩法核对后重新绑定' });
+                nodeCopyError: '副本已保存，请到我的玩法确认后重新绑定' });
               return;
             }
             const copy = Object.assign({}, source, { id: newId, status: 0 });
             that._templateDetailsById = Object.assign({}, that._templateDetailsById, { [newId]: copy });
             if (!that._bindNodeTemplate(copy)) {
-              that.setData({ nodeCopyBusy: false, nodeCopyUncertain: true, nodeCopyError: '副本已保存，请到我的玩法核对；' + that._templateSupportReason(copy) });
+              that.setData({ nodeCopyBusy: false, nodeCopyUncertain: true, nodeCopyError: '副本已保存，请到我的玩法确认；' + that._templateSupportReason(copy) });
             } else that.setData({ nodeCopyBusy: false });
             that.getStoryDraftList();
           },
           fail() {
             that._copyingBoundTemplate = false;
             that.setData({ nodeCopyBusy: false, nodeCopyUncertain: true,
-              nodeCopyError: '保存结果未确认，请先到我的玩法核对，避免重复创建' });
+              nodeCopyError: '保存结果未确认，请先到我的玩法确认，避免重复创建' });
           }
         });
       },
@@ -8266,7 +8266,7 @@ Page({
       if (inExtra) {
         ch.extraNodes = extras.filter(item => !same(item.nodeId));
         if (!ch.extraNodes.length) delete ch.extraNodes;
-        notes.push('第' + (ch.index + 1) + '章额外站点');
+        notes.push('第' + (ch.index + 1) + '章额外节点');
       }
     });
     // 运行结构里属于这一站的东西一并移出:任务(含幕的任务列表与前置引用)、玩法工具为它生成的设施与方案、
@@ -8292,14 +8292,14 @@ Page({
           const plans = new Set(toolRow.planKeys || []);
           if (game.plans) game.plans = game.plans.filter(row => !plans.has(row.endingKey));
           game.templateTools.nodes = game.templateTools.nodes.filter(row => row !== toolRow);
-          if (plans.size) notes.push('该站点玩法生成的表决方案');
+          if (plans.size) notes.push('该节点玩法生成的表决方案');
         }
-        if (goneFacilities.size) notes.push('该站点的设施');
+        if (goneFacilities.size) notes.push('该节点的设施');
       }
     }
     if (!before.length && !gameBefore) return null;
     this.setData({ 'formData.themeRuntimeConfig': JSON.stringify(runtime) });
-    return { before, gameBefore, note: notes.length ? '已从' + notes.join('、') + '中移除这个站点' : '' };
+    return { before, gameBefore, note: notes.length ? '已从' + notes.join('、') + '中移除这个节点' : '' };
   },
   _removeNodeTemplateBinding(node) {
     const runtime = templateBinding.parse(this.data.formData.themeRuntimeConfig);
@@ -8409,7 +8409,7 @@ Page({
     if (reason && !dataset.preview) { cyToast(reason); return; }
     const that = this;
     const themeName = this.data.formData.name;
-    const nodeName = this.data.nodesForm.name || ('站点' + (this.data.editTargetNodeLid || ''));
+    const nodeName = this.data.nodesForm.name || ('节点' + (this.data.editTargetNodeLid || ''));
     if (this._navigating) return; this._navigating = true; wx.navigateTo({ // 跳转中不响应连点,免得叠两层玩法编辑页
       url: '/pages/publish/temp/index?from=fabu&themeName=' + encodeURIComponent(themeName || '')
         + '&nodeName=' + encodeURIComponent(nodeName || '')

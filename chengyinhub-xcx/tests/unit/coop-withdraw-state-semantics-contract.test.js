@@ -14,7 +14,7 @@ test('提现方式调整是中性告知态，不得复用错误态语义', () =>
 })
 
 test('中性告知保留清晰的下一步且动作可达(2026-09-15 起改为联系平台客服线下处理)', () => {
-  assert.match(WXML, /<cy-empty\b[^>]*title="联系平台客服提现"[^>]*sub="添加客服微信，核对金额后线下处理。"[^>]*\/>/s)
+  assert.match(WXML, /<cy-empty\b[^>]*title="联系平台客服提现"[^>]*sub="添加客服微信，线下处理"[^>]*\/>/s)
   assert.match(WXML, /bindtap="goBankWithdraw"[^>]*aria-role="button"[^>]*aria-label="联系平台客服提现"/s)
 })
 

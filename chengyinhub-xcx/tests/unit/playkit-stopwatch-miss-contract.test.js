@@ -61,7 +61,7 @@ test('没停准还有机会:phase=over,偏差单列,还剩次数取自台面', (
   assert.equal(vm.data.phase, 'over');
   assert.match(vm.data.dev, /^早 2\.\d\d 秒$/);
   assert.equal(vm.data.left, 2);
-  assert.deepEqual(vm.calls, [], '没停准且还有机会,不出判定屏');
+  assert.deepEqual(vm.calls, [], '没停准且还有机会，不出判定屏');
 });
 
 test('负控:停准了不进 over,走台面胜利屏', () => {
@@ -75,7 +75,7 @@ test('over 屏:结论 + 「再来一局」按钮替掉计时条,按钮接的是 
   assert.match(WXML, /wx:if="\{\{phase === 'over'\}\}"><view class="sw__miss-i"><cy-icon name="close-sm" size="28" \/><\/view>没停准/);
   assert.match(WXML, /<view class="sw__foot" wx:if="\{\{phase === 'over'\}\}">[\s\S]*?bindtap="onStop"[\s\S]*?再来一局/);
   assert.match(WXML, /<view class="sw__bar" wx:else>/, '计时条只在非 over 时出现');
-  assert.match(WXML, /<cy-play-stage[^>]*skin="glass"/, '浅色玻璃屏要给台面浅色皮肤,否则还能错 / 倒数是暗版');
+  assert.match(WXML, /<cy-play-stage[^>]*skin="glass"/, '浅色玻璃屏要给台面浅色皮肤，否则还能错 / 倒数是暗版');
 });
 
 

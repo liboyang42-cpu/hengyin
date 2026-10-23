@@ -30,7 +30,7 @@ const PROCESSING = {
     variant: 'success',
   },
   UNKNOWN: {
-    text: '平台状态待确认',
+    text: '—',
     hint: '当前状态无法安全判断，请稍后刷新',
     variant: 'neutral',
   },
@@ -44,7 +44,7 @@ const OPINIONS = {
   },
   AGREE: {
     text: '商家已同意申请',
-    hint: '这是商家意见，不代表款项已退',
+    hint: '这是商家意见，退款以平台审核为准',
     variant: 'success',
   },
   REJECT: {
@@ -65,7 +65,7 @@ const RESPONSE_FLOW = {
   AGREE: {
     formTitle: '同意退款申请',
     confirmTitle: '确认同意',
-    consequence: '这是商家意见，不代表款项已退。提交后由平台审核，最终是否退款以平台审核结果为准。',
+    consequence: '这是商家意见，退款以平台审核结果为准',
     submitText: '确认同意',
   },
   REJECT: {
@@ -157,7 +157,7 @@ function shapeAftercareDetail(raw) {
     hasRefundPolicy: !!(policyCode || policyVersion !== null || refundDeadlineText),
     refundPolicyText: policyCode === 'EXPLORE_END_100_0'
       ? '截止前未核销可全额申请'
-      : (policyCode ? '退款规则以订单快照为准' : '退款政策待确认'),
+      : (policyCode ? '退款规则以下单时为准' : '—'),
     refundPolicyVersionText: policyVersion === null ? '' : `政策版本 ${policyVersion}`,
     refundDeadlineText,
     allowedDecisions,
@@ -367,7 +367,7 @@ function groupAftercareItems(items, now) {
 }
 
 function dayLabel(key, todayKey, yesterdayKey, today) {
-  if (!key) return '时间待确认';
+  if (!key) return '—';
   if (key === todayKey) return '今天';
   if (key === yesterdayKey) return '昨天';
   const [year, month, day] = key.split('-').map(Number);

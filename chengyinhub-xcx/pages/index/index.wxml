@@ -68,11 +68,11 @@
           <cy-skeleton type="feed-card" count="1" />
         </view>
         <view class="v3-sec-state" wx:elif="{{listErr.recommendedTopicList && !recoHero}}">
-          <cy-error load-failure title="编辑精选没能加载出来" sub="网络请求失败，重试会重新拉取一次"
+          <cy-error load-failure title="编辑精选加载失败"
                     retry="重试" data-list="recommendedTopicList" bind:retry="retryList" />
         </view>
         <view class="v3-sec-state" wx:elif="{{!listLoading.recommendedTopicList && !recoHero}}">
-          <cy-empty title="暂时没有精选主题" sub="下面的主题列表里先逛逛" />
+          <cy-empty title="暂时没有精选主题" />
         </view>
         <text class="v3-sec-sync" wx:if="{{listLoading.recommendedTopicList && recoHero}}"
               aria-role="status" aria-live="polite">正在更新编辑精选…</text>
@@ -137,11 +137,11 @@
           <cy-skeleton type="feed-card" count="2" />
         </view>
         <view class="v3-sec-state" wx:elif="{{listErr.nearbyActivityList && !nearbyActivityList.length}}">
-          <cy-error load-failure title="附近活动没能加载出来" sub="网络请求失败，重试会重新拉取一次"
+          <cy-error load-failure title="附近活动加载失败"
                     retry="重试" data-list="nearbyActivityList" bind:retry="retryList" />
         </view>
         <view class="v3-sec-state" wx:elif="{{!listLoading.nearbyActivityList && !nearbyActivityList.length}}">
-          <cy-empty title="你附近暂时没有可点亮的节点" sub="换个时间再来，或看看编辑精选" />
+          <cy-empty title="你附近暂时没有可点亮的节点" />
         </view>
         <text class="v3-sec-sync" wx:if="{{listLoading.nearbyActivityList && nearbyActivityList.length}}"
               aria-role="status" aria-live="polite">正在更新附近活动…</text>
@@ -177,7 +177,7 @@
           <cy-skeleton type="feed-card" count="2" />
         </view>
         <view class="v3-sec-state" wx:elif="{{listErr.upcomingActivityList && !upcomingActivityList.length}}">
-          <cy-error load-failure title="即将上线没能加载出来" sub="网络请求失败，重试会重新拉取一次"
+          <cy-error load-failure title="即将上线加载失败"
                     retry="重试" data-list="upcomingActivityList" bind:retry="retryList" />
         </view>
         <text class="v3-sec-sync" wx:if="{{listLoading.upcomingActivityList && upcomingActivityList.length}}"
@@ -247,8 +247,8 @@
             </view>
           </view>
           <cy-inline-error load-failure wx:if="{{bottomTopicFailedPage}}" class="feed-load-more-error" kind="network"
-            title="{{bottomTopicFailedPage > 1 ? '更多主题没有加载出来' : '主题列表没有加载出来'}}"
-            sub="{{bottomTopicFailedPage > 1 ? '已加载的主题仍可查看' : '下拉刷新或点重试再拉一次'}}"
+            title="{{bottomTopicFailedPage > 1 ? '更多主题加载失败' : '主题列表加载失败'}}"
+            
             action="重试" bind:action="retryBottomTopic" />
           <view class="loading-more" wx:if="{{isBottomLoading}}"><text>正在加载更多</text></view>
           <view class="no-more" wx:if="{{!hasMoreBottomTopic && bottomTopicList.length > 0}}"><text>· 没有更多了 ·</text></view>
@@ -290,8 +290,8 @@
             </view>
           </view>
           <cy-inline-error load-failure wx:if="{{bottomActivityFailedPage}}" class="feed-load-more-error" kind="network"
-            title="{{bottomActivityFailedPage > 1 ? '更多活动没有加载出来' : '活动列表没有加载出来'}}"
-            sub="{{bottomActivityFailedPage > 1 ? '已加载的活动仍可查看' : '下拉刷新或点重试再拉一次'}}"
+            title="{{bottomActivityFailedPage > 1 ? '更多活动加载失败' : '活动列表加载失败'}}"
+            
             action="重试" bind:action="retryBottomActivity" />
           <view class="loading-more" wx:if="{{isBottomLoading}}"><text>正在加载更多</text></view>
           <view class="no-more" wx:if="{{!hasMoreBottomActivity && bottomActivityList.length > 0}}"><text>· 没有更多了 ·</text></view>

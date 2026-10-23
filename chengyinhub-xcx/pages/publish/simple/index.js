@@ -126,7 +126,7 @@ Page({
     // 配额已用完就不要再发一趟注定被后端拒掉的请求 —— 页面顶部明明写着「还可生成 0 次」,
     // 输入框和发送钮却照常可用(2026-08-19 B51 实拍)。后端那道闸保留,这里只是不让用户白跑。
     if (this.data.aiQuotaLoaded && Number(this.data.aiRemaining) <= 0) {
-      this.setData({ aiError: '这一轮的 AI 起草次数用完了,可以先手动填,或稍后再试。' });
+      this.setData({ aiError: '这一轮的 AI 起草次数用完了，可以先手动填，或稍后再试。' });
       return;
     }
     const requestId = makeRequestId();
@@ -225,17 +225,17 @@ Page({
     const hasUsableNodes = nodes.every((node) => node && typeof node === 'object'
       && String(node.merchantName || node.roleText || node.task || '').trim());
     if ((res.code !== 200 && res.code !== '200') || !draft || !String(draft.title || '').trim() || !nodes.length || !hasUsableNodes) {
-      this.setData({ aiError: (res && res.msg) || 'AI 返回的主题不完整，请换一种说法重试。' });
+      this.setData({ aiError: (res && res.msg) || 'AI 生成的主题不完整，请换一种说法重试' });
       return;
     }
     if (nodes.length > MAX_AI_PLAN_NODES) {
-      this.setData({ aiError: 'AI 草稿最多只能包含不超过 3 个点位，请换一种说法重试。' });
+      this.setData({ aiError: 'AI 草稿最多只能包含不超过 3 个节点，请换一种说法重试。' });
       return;
     }
     this.setData({
       aiPlan: { title: draft.title, subtitle: draft.subtitle || '', storyline: draft.storyline || '' },
       aiPlanNodes: nodes.map((node, index) => ({
-        name: node.merchantName || node.roleText || node.task || ('点位 ' + (index + 1)),
+        name: node.merchantName || node.roleText || node.task || ('节点 ' + (index + 1)),
         description: node.task || node.roleText || '',
         address: '', longitude: '', latitude: '', confirmed: false
       })),
@@ -288,7 +288,7 @@ Page({
       name: plan.title.trim(), subtitle: plan.subtitle || '', description: plan.storyline || '',
       productType: this.data.mode, aiSimple: true, aiTraceId: this.data.aiTraceId,
       chapters: [{ name: '路线', description: plan.storyline || '', imgArr: '', nodes: nodes.map((node, index) => ({
-        name: node.name || ('点位 ' + (index + 1)), description: node.description || '', address: node.address,
+        name: node.name || ('节点 ' + (index + 1)), description: node.description || '', address: node.address,
         longitude: node.longitude, latitude: node.latitude, nodeTime: 30, businessTime: '', sortID: index + 1,
         templateId: 0, templateName: '', hookText: '', cardHookLong: '', fragmentText: ''
       })) }]

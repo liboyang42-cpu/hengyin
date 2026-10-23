@@ -183,7 +183,7 @@
         <view class="pd-completion-rule">
           <text>完成</text>
           <input class="pd-completion-rule__input {{completionRuleError || errors.completionRule ? 'is-error' : ''}}" type="number" value="{{completionRequiredCount}}" bindinput="onCompletionRequiredCountInput" />
-          <text>/ {{totalNodes || 0}} 个站点即通关</text>
+          <text>/ {{totalNodes || 0}} 个节点即通关</text>
         </view>
         <cy-inline-error class="pd-completion-rule__error" wx:if="{{completionRuleError || errors.completionRule}}" title="{{completionRuleError || errors.completionRule}}" />
       </block>

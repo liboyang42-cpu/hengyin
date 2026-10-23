@@ -57,7 +57,7 @@ test('「小瘾说」钩子取 hookText,后端必须真下发这个字段', () =
 test('章节正文只在故事流里,详情不再重复念一遍', () => {
   // 用户 09-07 口径:「章节详情里不写章节内容」。详情复述整章会让「点进故事流」失去理由。
   assert.doesNotMatch(js, /chapParas/,
-    '详情又把整章正文分段下发了 —— 那是故事流的活;而且上一版它下发了却没人渲染,是死字段')
+    '详情又把整章正文分段下发了 —— 那是故事流的活；而且上一版它下发了却没人渲染，是死字段')
   assert.doesNotMatch(wxml, /chapDesc|chapParas/,
     '卡片详情的 wxml 里出现了章节正文字段')
   // 卡背只留开头一段:卡面装不下整章
@@ -65,7 +65,7 @@ test('章节正文只在故事流里,详情不再重复念一遍', () => {
   // 故事流才是正文的去处,按空行分段(多则分段,少则一句)
   const story = js.slice(js.indexOf('  openChapStory() {'), js.indexOf('  closeChapStory() {'))
   assert.match(story, /\.split\(\/\\n\\s\*\\n\|\\r\?\\n\/\)/)
-  assert.match(story, /\.filter\(Boolean\)/, '空段必须滤掉,否则一个空行会多出一段空白')
+  assert.match(story, /\.filter\(Boolean\)/, '空段必须滤掉，否则一个空行会多出一段空白')
 })
 
 test('点大卡片进剧情,进游戏只有底部那一个 CTA', () => {
@@ -73,7 +73,7 @@ test('点大卡片进剧情,进游戏只有底部那一个 CTA', () => {
   // 底部 CTA 是唯一进玩法的入口,文案固定不带玩法名(用户 09-07 定)
   assert.match(wxml, /bindtap="heroEnter"[\s\S]{0,200}开始互动 获得奖励！/)
   assert.equal((wxml.match(/bindtap="heroEnter"/g) || []).length, 2,
-    '只有卡片详情与故事流两处 CTA 进玩法;多出来说明又开了旁路入口')
+    '只有卡片详情与故事流两处 CTA 进玩法；多出来说明又开了旁路入口')
   // 故事流那颗按玩法名走(样机同款「开始 · 找一本 1998」),没配玩法名才回落固定文案
   assert.match(wxml, /开始 · ' \+ hero\.node\.playName/)
 })
@@ -84,7 +84,7 @@ test('新方法不许与页面既有同名 —— 同名会被静默覆盖,零�
   for (const name of ['openChapStory', 'closeChapStory', 'openShopNpc', 'closeShopNpc',
     'sendShopNpc', 'openHeroNav', '_heroView', '_settleStory']) {
     const hits = (js.match(new RegExp('^  ' + name + '\\(', 'gm')) || []).length
-    assert.equal(hits, 1, name + ' 在页面里出现了 ' + hits + ' 次;重名会被静默覆盖')
+    assert.equal(hits, 1, name + ' 在页面里出现了 ' + hits + ' 次；重名会被静默覆盖')
   }
   const dataBlock = js.slice(js.indexOf('\n  data: {'), js.indexOf('\n  onLoad'))
   assert.equal((dataBlock.match(/^    chapStory:/gm) || []).length, 1)
@@ -98,16 +98,16 @@ test('故事流:快滑不显形,慢滑就地浮出 —— 阈值按每帧位移�
   assert.match(scroll, /Math\.abs\(top - \(this\._storyTop \|\| 0\)\) \/ dt \* 16/,
     '速度必须归一到每帧位移')
   assert.match(scroll, /this\._storyVel < STORY_FAST_PX \? 30 : 70/,
-    '快慢两档必须真的分叉;只有一档就等于没实现这条阈值')
+    '快慢两档必须真的分叉；只有一档就等于没实现这条阈值')
   assert.match(js, /const STORY_FAST_PX = 18;/, '阈值是样机定的 18px/frame')
   assert.doesNotMatch(scroll, /setData\(\{\s*'chapStory\.lines'/,
-    'onStoryScroll 里直接改 lines = 每帧跨线程量一次,会卡')
+    'onStoryScroll 里直接改 lines = 每帧跨线程量一次，会卡')
 })
 
 test('故事流:出屏复位,滚回来能重演', () => {
   const settle = between(js, '  _settleStory() {', '  _startStoryDust() {', '_settleStory')
   assert.match(settle, /if \(ln\.in && !inView\) return \{ \.\.\.ln, in: false/,
-    '不复位的话,向下滚完再向上滚就没有任何效果')
+    '不复位的话，向下滚完再向上滚就没有任何效果')
 })
 
 /** 注释是说明不是声明。不剥掉的话,一句「样机是 padding:40% 30px 86%」就能把门禁带红 ——
@@ -119,9 +119,9 @@ function stripCssComments(source) {
 test('故事流:滚动容器不许带左右 padding(本仓无全局 border-box)', () => {
   const clean = stripCssComments(wxss)
   const rule = clean.slice(clean.indexOf('.st-scroll{'), clean.indexOf('.fx-story__pad{'))
-  assert.ok(rule.length > 0, '.st-scroll / .fx-story__pad 两个锚点都要在,顺序也不能反')
+  assert.ok(rule.length > 0, '.st-scroll / .fx-story__pad 两个锚点都要在，顺序也不能反')
   assert.doesNotMatch(rule, /padding:[^;]*rpx/,
-    'scroll-view 加 padding 会把内容框撑出屏幕,长句右边被裁掉一截')
+    'scroll-view 加 padding 会把内容框撑出屏幕，长句右边被裁掉一截')
   assert.match(wxss, /\.st-line\{ margin:0 \d+rpx/, '边距给行不给容器')
 })
 
@@ -136,21 +136,21 @@ test('负控:真往 .st-scroll 里塞 padding 必须判红,而注释里提到 pa
 test('重答失败不许覆盖原来那条答案', () => {
   const ask = between(js, '  _askShopNpc(text, replaceIdx) {', '  _pushShopNpcReply(text, replaceIdx, audioUrl) {', '_askShopNpc')
   assert.match(ask, /if \(!reply && replaceIdx != null\)[\s\S]{0,320}return;/,
-    '重答拿不到回答就该保住原文;覆盖成「网络异常」= 玩家为了再问一次把好答案弄丢了')
+    '重答拿不到回答就该保住原文；覆盖成「网络异常」= 玩家为了再问一次把好答案弄丢了')
   // 负控:兜底文案那一支仍然要能覆盖(正常问答的失败提示还是要出现在流里)
   assert.match(ask, /_pushShopNpcReply\(reply \|\| \(r && r\.msg/)
 })
 
 test('对方消息不套气泡,我方才是右侧胶囊', () => {
   assert.match(wxss, /\.fx-msg--ai \.fx-msg__t\{(?![^}]*background)[^}]*\}/,
-    '助手消息一旦有 background 就成了气泡,与 ChatGPT / assistant-ui 的分工相反')
+    '助手消息一旦有 background 就成了气泡，与 ChatGPT / assistant-ui 的分工相反')
   assert.match(wxss, /\.fx-msg--me \.fx-msg__t\{[^}]*border-radius:var\(--cy-radius-lg\)/)
 })
 
 test('开场问候在开口后让位,不与消息流叠着', () => {
   assert.match(wxss, /\.fx-npc\.is-started \.fx-npc__hello\{[^}]*opacity:0/)
   assert.match(js, /onShopNpcFocus\(\) \{ if \(!this\.data\.shopNpc\.started\)/,
-    '点输入框就该让位;只在发出第一句才让位的话,键盘弹起时大字还压在消息区上')
+    '点输入框就该让位；只在发出第一句才让位的话，键盘弹起时大字还压在消息区上')
 })
 
 test('门店分身对话:归属校验必须在进模型之前', () => {
@@ -160,7 +160,7 @@ test('门店分身对话:归属校验必须在进模型之前', () => {
   // 各写一遍的话规则一改总会漏掉一边,而漏掉的那一边就是越权面。
   const gateBody = between(ctrl, 'private ShopGate gateShopChat(', 'private static final class ShopGate', '闸门实现')
   assert.match(gateBody, /if \(playTeamMapper\.hasCurrentNpcRegistration\(userId, node\.getTopicId\(\)\) <= 0\)\s*\{\s*return ShopGate\.deny/,
-    '必须按当前本人和节点主题查通行资格,无资格时拒绝,不能只保留一个未消费的 hasXX 调用')
+    '必须按当前本人和节点主题查通行资格，无资格时拒绝，不能只保留一个未消费的 hasXX 调用')
   const mapper = fs.readFileSync(path.join(REPO,
     'chengyinhub-system/src/main/resources/mapper/business/PlayTeamMapper.xml'), 'utf8')
   const registration = between(mapper, '<select id="hasCurrentNpcRegistration"', '<select id="selectMyTeams"', '当前 NPC 通行资格')
@@ -188,7 +188,7 @@ test('门店分身对话:归属校验必须在进模型之前', () => {
   // chatOn() 是「无形陪伴 V1 不提供自由追问」的合规闸,硬编码 false 且注明不许复用。
   // 挂上去这条链路就是死代码,而且哪天为漫游放开会把门店分身一起放开。
   assert.doesNotMatch(method, /npcFeatureFlags\.chatOn\(\)/,
-    '门店分身对话必须走自己的开关,不许复用漫游那条合规闸')
+    '门店分身对话必须走自己的开关，不许复用漫游那条合规闸')
 })
 
 test('门店分身对话:会话键取负,不与漫游会话撞 active-slot', () => {
@@ -217,7 +217,7 @@ test('店铺分身对话默认关,且不是靠 sys_config 缺省值蒙对的', (
   assert.match(flags, /public boolean shopChatOn\(\) \{\s*return on\(KEY_SHOP_CHAT\);/)
   // chatOn 那条合规闸不许被本轮改动松动
   assert.match(flags, /public boolean chatOn\(\) \{\s*return false;\s*\}/,
-    'chatOn 一旦从硬编码 false 改成挂条件,漫游那条合规结论就静默失效了')
+    'chatOn 一旦从硬编码 false 改成挂条件，漫游那条合规结论就静默失效了')
 })
 
 test('接口被闸掉时不许编借口,要把服务端原话端出来', () => {
@@ -226,7 +226,7 @@ test('接口被闸掉时不许编借口,要把服务端原话端出来', () => {
   const send = js.slice(js.indexOf('  sendShopNpc() {'), js.indexOf('\n  _pushShopNpcReply(text, replaceIdx, audioUrl) {'))
     .replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '')
   assert.match(send, /r && r\.msg \? String\(r\.msg\)/,
-    '默认关的接口回 403,编一句「我有点忙」会让玩家一直重试')
+    '默认关的接口回 403，编一句「我有点忙」会让玩家一直重试')
   assert.doesNotMatch(send, /有点忙/)
 })
 
@@ -245,7 +245,7 @@ test('故事流的图片块与文字共用同一套入场动效', () => {
   assert.match(wxml, /class="st-line \{\{item\.in/)
   const css = wxss.slice(wxss.indexOf('.st-line--img{'), wxss.indexOf('.st-line--img{') + 200)
   assert.doesNotMatch(css, /transition|opacity|filter/,
-    '图片块不许自带一套过渡;它要吃 .st-line 那一套')
+    '图片块不许自带一套过渡；它要吃 .st-line 那一套')
 })
 
 test('这一章的音频:作者没配就不渲染,不留点了没反应的壳', () => {
@@ -278,7 +278,7 @@ test('语音提问走和打字完全相同的那条链路,输入框一直在', (
   assert.match(wxml, /<input class="fx-npc__input"/)
   const inp = wxml.slice(wxml.indexOf('class="fx-npc__inp'), wxml.indexOf('fx-npc__send'))
   assert.ok(inp.indexOf('<input') >= 0 && inp.indexOf('onVoiceStart') >= 0,
-    '输入框与按住说话必须在同一条 composer 里,少一个就等于把另一种模式挤掉了')
+    '输入框与按住说话必须在同一条 composer 里，少一个就等于把另一种模式挤掉了')
 })
 
 test('ASR 没接入时在进模型之前就拒绝,不扣额度不留假记录', () => {
@@ -289,7 +289,7 @@ test('ASR 没接入时在进模型之前就拒绝,不扣额度不留假记录', 
   const avail = m.indexOf('speechToTextService.available()')
   const call = m.indexOf('chatWithShop')
   assert.ok(avail > 0 && (call < 0 || avail < call), 'available() 必须先判')
-  assert.match(m, /语音识别还没接入/, '要说清楚缺的是什么;含糊成「暂时不可用」会让人反复重试')
+  assert.match(m, /语音识别还没接入/, '要说清楚缺的是什么；含糊成「暂时不可用」会让人反复重试')
   // 空识别不许拿去调模型
   assert.match(m, /text == null \|\| text\.trim\(\)\.isEmpty\(\)/)
 })

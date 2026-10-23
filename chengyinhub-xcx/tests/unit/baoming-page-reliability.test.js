@@ -204,7 +204,7 @@ test('活动 200 但无有效票时明确暂不可报名，付款资格和模板
 
   const wxml = fs.readFileSync(
     path.join(__dirname, '../../pages/activity/baoming/baoming.wxml'), 'utf8')
-  assert.match(wxml, /wx:if="\{\{pageState === 'ready' && signupState === 'unavailable'\}\}"[^>]*title="暂不可报名"/)
+  assert.match(wxml, /wx:if="\{\{pageState === 'ready' && signupState === 'unavailable'\}\}"[^>]*title="暂无可用票"/)
   assert.match(wxml, /wx:if="\{\{pageState === 'ready' && selectedTicket\}\}"[^>]*class="setly"/)
   assert.match(wxml, /!selectedTicket \? '暂不可报名：暂无可用票'/)
 })
@@ -305,7 +305,7 @@ function openMultiTicketPage(overrides) {
 
 test('B-08:多票种时票种行可点开选择,切换后金额与报价都跟新票种走', () => {
   const page = openMultiTicketPage()
-  assert.equal(page.data.selectedTicket.id, 34, '缺 ticketId 仍默认第一张,行为不变')
+  assert.equal(page.data.selectedTicket.id, 34, '缺 ticketId 仍默认第一张，行为不变')
 
   page.openTicketSheet()
   assert.equal(page.data.ticketSheetShow, true)
@@ -319,7 +319,7 @@ test('B-08:多票种时票种行可点开选择,切换后金额与报价都跟�
   assert.equal(page.data.signupState, 'available')
 
   const quotes = requests.filter((request) => request.url === '/api/registration/quote')
-  assert.ok(quotes.length >= 2, '切换后必须重新报价,不能复用旧 quoteSign')
+  assert.ok(quotes.length >= 2, '切换后必须重新报价，不能复用旧 quoteSign')
   assert.equal(JSON.parse(quotes.at(-1).data).ticketId, 35)
   const waitlists = requests.filter((request) => request.url === '/api/club/event-ops/waitlist/status')
   assert.equal(JSON.parse(waitlists.at(-1).data).ticketId, 35, '候补状态也按新票种重查')

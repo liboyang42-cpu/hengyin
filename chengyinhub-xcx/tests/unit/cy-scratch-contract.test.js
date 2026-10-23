@@ -47,7 +47,7 @@ function load() {
 test('★减少动态效果时整层不挂 —— 不是擦得快一点,是不要求擦', () => {
   const c = load()
   const observer = c.observers['revealed, reducedMotion']
-  assert.ok(observer, '必须由 observer 决定挂不挂,不能只在 attached 里判一次')
+  assert.ok(observer, '必须由 observer 决定挂不挂，不能只在 attached 里判一次')
 
   const page = { data: { _masked: true }, _done: false, setData(p) { Object.assign(this.data, p) },
     _prepare() { this._prepared = true } }
@@ -76,15 +76,15 @@ test('已揭开过的内容不再盖第二层 —— 昨天擦过今天重开还
 
 test('★内容始终在 DOM 里,只是被盖住 —— 不做「擦完才渲染」', () => {
   assert.match(WXML, /<view class="scr__content"><slot \/><\/view>/,
-    'slot 必须无条件渲染;套 wx:if 会让读屏在擦开前读不到任何东西')
+    'slot 必须无条件渲染；套 wx:if 会让读屏在擦开前读不到任何东西')
   const slotAt = WXML.indexOf('<slot />')
   const maskAt = WXML.indexOf('wx:if="{{_masked}}"')
-  assert.ok(slotAt > -1 && maskAt > slotAt, '遮罩要盖在内容之上,不能替代内容')
+  assert.ok(slotAt > -1 && maskAt > slotAt, '遮罩要盖在内容之上，不能替代内容')
 })
 
 test('★擦不动的人要有出路:可见按钮直接揭开,并且 aria 说得出来', () => {
   assert.match(WXML, /class="scr__direct" bindtap="onDirectReveal"/,
-    '兜底出口必须可见、可点击，不能藏在长按手势里')
+    '保底出口必须可见、可点击，不能藏在长按手势里')
   assert.match(WXML, /aria-label="直接揭示\{\{label \? '：' \+ label : ''\}\}"/,
     '读屏要听到「直接揭示」及内容标签，不是一块无名的灰色')
   const c = load()
@@ -96,8 +96,8 @@ test('★擦不动的人要有出路:可见按钮直接揭开,并且 aria 说得
     triggerEvent(name) { this._ev = name },
   })
   c.methods.onDirectReveal.call(page)
-  assert.equal(page._done, true, '「已擦完」记在实例上,不进 data —— wxml 不引用它')
-  assert.equal(page._ev, 'reveal', '兜底出口也要抛 reveal,和擦完走同一条路')
+  assert.equal(page._done, true, '「已擦完」记在实例上，不进 data —— wxml 不引用它')
+  assert.equal(page._ev, 'reveal', '保底出口也要抛 reveal,和擦完走同一条路')
 })
 
 test('★进度判定不在 touchmove 里做 —— getImageData 每帧调会掉帧', () => {
@@ -105,7 +105,7 @@ test('★进度判定不在 touchmove 里做 —— getImageData 每帧调会掉
   assert.ok(move, '找不到 onTouchMove')
   assert.doesNotMatch(move[0], /getImageData/, 'touchmove 里直接读像素 = 每帧一次昂贵采样')
   assert.match(move[0], /now - this\._lastMeasure >= THROTTLE_MS/, '必须节流')
-  assert.match(JS, /const SAMPLE = \d+/, '必须是采样网格,不是逐像素')
+  assert.match(JS, /const SAMPLE = \d+/, '必须是采样网格，不是逐像素')
 })
 
 test('每擦一下轻震要节流 —— 每次 move 都震会变成持续嗡鸣', () => {
@@ -133,7 +133,7 @@ test('揭开只发生一次 —— 重复 _finish 不该抛第二次 reveal', ()
     triggerEvent() { count += 1 } }
   c.methods._finish.call(page)
   c.methods._finish.call(page)
-  assert.equal(count, 1, '节流采样会在同一帧多次命中阈值,不去重就会重复上报')
+  assert.equal(count, 1, '节流采样会在同一帧多次命中阈值，不去重就会重复上报')
 })
 
 test('★调用方:今日城市签把签文盖在刮层下,并透传显隐状态', () => {

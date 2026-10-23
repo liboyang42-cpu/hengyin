@@ -32,7 +32,7 @@
       <view class="intro__point"><view class="intro__dot" aria-hidden="true"></view><text>提交后可随时回来看进度与驳回原因</text></view>
     </view>
     <view class="intro-cta"><cy-btn variant="primary" accessibilityLabel="开始入驻" bindtap="startForm">开始入驻</cy-btn></view>
-    <view class="intro__fine">审核团队会用你填的联系电话与你确认。</view>
+    
     <view class="intro__fine intro__claim" bindtap="openClaim" aria-role="button" aria-label="认领已有门店" hover-class="cy-pressed" hover-stay-time="80">门店已在城瘾上线？认领已有门店</view>
   </view>
 
@@ -50,10 +50,10 @@
        会把贴底的开场屏顶上去(实测)。只在「ready+form+开场」这一态关。 -->
   <scroll-view scroll-y class="body" wx:if="{{!(bootstrapState === 'ready' && mode==='form' && introMode && !morphing)}}">
     <view class="bootstrap-state" wx:if="{{bootstrapState === 'checking-role'}}">
-      <cy-state-shell kind="loading" title="正在确认申请资格" sub="确认当前账号是否可以申请商家入驻" theme="merchant" />
+      <cy-state-shell kind="loading" title="正在确认申请资格" theme="merchant" />
     </view>
     <view class="bootstrap-state" wx:elif="{{bootstrapState === 'checking-application'}}">
-      <cy-state-shell kind="loading" title="正在检查已有申请" sub="已有资料不会重复提交" theme="merchant" />
+      <cy-state-shell kind="loading" title="正在检查已有申请" theme="merchant" />
     </view>
     <view class="bootstrap-state" wx:elif="{{bootstrapState === 'error'}}">
       <cy-state-shell kind="{{bootstrapErrorKind || 'error'}}"
@@ -68,7 +68,7 @@
       <view class="sec-label">主理人身份处理</view>
       <cy-card class="apply-card club-transfer-card">
         <view class="club-transfer-title">商家账号生效前，须完成俱乐部移交</view>
-        <view class="club-transfer-sub">只有已生效的俱乐部可以进入治理页移交。</view>
+        <view class="club-transfer-sub">仅已生效的俱乐部可移交</view>
         <view class="club-transfer-row" wx:for="{{ownedClubs}}" wx:key="id">
           <view class="club-transfer-copy">
             <view class="club-transfer-name">{{item.name}}</view>
@@ -131,7 +131,7 @@
                  aria-required="true" aria-label="联系电话，必填" />
         </view>
       </cy-card>
-      <view class="foot">请填写真实有效的信息，以便审核团队联系。</view>
+      
     </view>
 
     <!-- ===== 步骤2:经营信息 ===== -->
@@ -188,7 +188,7 @@
                 aria-role="button" aria-label="添加品牌形象图" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="40" /></view>
         </view>
       </cy-card>
-      <view class="foot">门店照片、产品图或品牌海报，最多 6 张。图片越多审核越快。</view>
+      <view class="foot">最多 6 张</view>
     </view>
 
     <!-- ===== 步骤4:预览确认 ===== -->
@@ -235,7 +235,7 @@
         </view>
         <cy-consent-check class="identity-consent" checked="{{identityConsented}}" text="{{identityHint}}"
                           bind:change="onIdentityConsent" />
-        <view class="foot">执照核验到主体,这一项核验到人 —— 能收款就得可追溯,二者不互相替代。</view>
+        <view class="foot">用于收款实名核验</view>
       </block>
       <view class="foot" wx:else>{{identityDoneHint}}</view>
       <cy-inline-error class="submit-error" wx:if="{{submitError && step===4}}"
@@ -250,12 +250,12 @@
             aria-label="商家入驻申请已提交，{{submissionReceipt.name}}，正在等待审核">
         <view class="succ-icon" aria-hidden="true"><cy-icon name="check" size="64" /></view>
         <view class="succ-tit">你的申请已提交</view>
-      <view class="succ-desc">我们会在 1-3 个工作日内完成审核，通过后商家账号生效。</view>
+      <view class="succ-desc">预计 1–3 个工作日完成审核</view>
       </view>
       <cy-card class="apply-card receipt-card">
         <view class="preview-kv"><text class="pk">店铺名称</text><text class="pv">{{submissionReceipt.name || '—'}}</text></view>
         <view class="preview-kv last"><text class="pk">联系电话</text><text class="pv">{{submissionReceipt.phone || '—'}}</text></view>
-        <view class="receipt-note">返回后，可再次进入“商家入驻”查看审核进度。</view>
+        
       </cy-card>
       <cy-card class="apply-card timeline">
         <view class="tl-item done">
@@ -281,7 +281,7 @@
     </block>
     <view class="bootstrap-state" wx:else>
       <cy-state-shell kind="error" title="页面状态暂时不可用"
-                      sub="请重新检查当前账号与申请状态" primary="重新检查"
+                      primary="重新检查"
                       theme="merchant" bind:primary="retryBootstrap" auto-back="{{!everSettled}}" />
     </view>
   </scroll-view>

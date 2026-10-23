@@ -150,5 +150,5 @@ test('订单列表的活动和主题空地点显示待确认，不泄漏 null �
     { id: 2, registrationStatus: 1, cmsTopic: { addressName: 'null' } },
     { id: 3, registrationStatus: 1, cmsActivity: { addressName: ' 人民广场 ' } },
   ] } })
-  assert.deepEqual(vm.data.list.map(row => row.addressText), ['地点待确认', '地点待确认', '人民广场'])
+  assert.deepEqual(vm.data.list.map(row => row.addressText), ['—', '—', '人民广场'])
 })

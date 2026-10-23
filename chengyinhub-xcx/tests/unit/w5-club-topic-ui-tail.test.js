@@ -36,11 +36,11 @@ function loadPostCard(source) {
 test('F-W5-01 帖子卡:超过 40 字或换行成 3 段以上才给「展开」', () => {
   const { card, observer } = loadPostCard()
   observer.call(card, '入社须知\n1. 准时集合\n2. 带水')
-  assert.equal(card.data.textLong, true, '短句多段的公告收起态会被夹成 2 行,必须能展开')
+  assert.equal(card.data.textLong, true, '短句多段的公告收起态会被夹成 2 行，必须能展开')
   observer.call(card, '一行就说完')
   assert.equal(card.data.textLong, false)
   observer.call(card, '第一段\n第二段')
-  assert.equal(card.data.textLong, false, '两段刚好占两行,不夹')
+  assert.equal(card.data.textLong, false, '两段刚好占两行，不夹')
   observer.call(card, 'x'.repeat(41))
   assert.equal(card.data.textLong, true)
   observer.call(card, undefined)

@@ -75,10 +75,10 @@ function assertFinalReviewContract(source = read) {
   // 那是在防「用字体符号 ✓ 冒充图标」,不是在要求必须用 cy-icon。改成钉真正的意图:
   // 那枚章必须是矢量图形,且路径来自稿(带绿章色),不是打字打出来的对勾。
   assert.match(signupSheet, /class="ma-succ-icon"[^>]*>\s*<\/view>/,
-    '成功标是纯装饰容器,图形由 wxss 的矢量 background 提供')
+    '成功标是纯装饰容器，图形由 wxss 的矢量 background 提供')
   const applyWxss = source('pages/topic/merchantapply/index.wxss')
   assert.match(applyWxss, /\.ma-succ-icon[\s\S]{0,400}background-image:\s*url\("data:image\/svg\+xml,/,
-    '成功章必须是矢量图形,不是字体符号也不是纯圆 + 勾')
+    '成功章必须是矢量图形，不是字体符号也不是纯圆 + 勾')
   assert.match(applyWxss, /%2322B573/, '章身必须是稿 365:957 的绿(#22B573),色值属图形本身')
   assert.doesNotMatch(signupSheet, />\s*[×＋✓]\s*</, '交互与成功态不得用字体符号冒充图标')
 

@@ -81,7 +81,7 @@ test('工作台项目卡过滤已结束项目,未开始/进行中/档期未知�
   assertNoEndedCard(page.data.projectCards);
   assert.deepEqual(page.data.projectCards.map((card) => card.title), [
     '进行中的路线', '还没开始的路线', '档期未知的路线',
-  ], '档期未知不是结束,不能静默吞掉');
+  ], '档期未知不是结束，不能静默吞掉');
 });
 
 test('过滤后没有卡片时隐藏项目整块', () => {
@@ -137,7 +137,7 @@ test('「全部 N」只数未结束的项目:承接与主办两侧都按状态�
     },
   });
   assert.equal(page.data.hostProjectTotal, 28,
-    'hostProjectTotal 必须用后端下发的全量未结束总数,不能数当前这一页');
+    'hostProjectTotal 必须用后端下发的全量未结束总数，不能数当前这一页');
 });
 
 test('工作台把已通过且供给生效的章节承接投影为可进入的项目卡', () => {
@@ -163,7 +163,7 @@ test('工作台把已通过且供给生效的章节承接投影为可进入的�
   assert.equal(page.data.projectCards[0].ownerId, 990027);
   assert.equal(page.data.projectCards[0].projectSource, 'chapter');
   assert.equal(page.data.projectCards[0].thumb, '/images/real-cover.png',
-    '章节承接卡必须消费真实主题封面,不能退成灰色占位');
+    '章节承接卡必须消费真实主题封面，不能退成灰色占位');
   const startDateText = page.formatDate('2026-09-30');
   assert.equal(page._chapterProjectList[0].startDateStr, startDateText,
     '章节承接档期必须复用现有上海日期 formatter');

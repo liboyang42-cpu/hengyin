@@ -200,7 +200,7 @@ test('核销进度 10 格:每次打开先整排点亮再退回真实格数,零�
     assert.equal(page.data.pipSweep, false);
   }
   const js = fs.readFileSync(path.join(ROOT, PAGE_JS_PATH), 'utf8');
-  assert.match(js, /if \(firstPaint\) that\._playIn\(\);\s*\n\s*else if \(replaying\) that\._countTo\(hero\.target\);\s*\/\/[^\n]*\n\s*that\._sweepPips\(\);/, '每次加载成功都扫,不只首帧');
+  assert.match(js, /if \(firstPaint\) that\._playIn\(\);\s*\n\s*else if \(replaying\) that\._countTo\(hero\.target\);\s*\/\/[^\n]*\n\s*that\._sweepPips\(\);/, '每次加载成功都扫，不只首帧');
 });
 
 test('进度条下一行只说核销率(不重复玩家环比,不随主卡窗口说错);环比 0 写持平', () => {
@@ -277,7 +277,7 @@ test('每次打开都重播入场:返回页面先无过渡复位再飞入,数字
   show.fn();
   assert.equal(page.data.shown, true);
   land.fn();
-  assert.equal(page.data.landing, false, '入场结束撤掉飞入过渡,按压不被延迟');
+  assert.equal(page.data.landing, false, '入场结束撤掉飞入过渡，按压不被延迟');
 
   const js = fs.readFileSync(path.join(ROOT, PAGE_JS_PATH), 'utf8');
   assert.match(js, /this\._replayIn\(\);\s*\n\s*this\.load\(\);\s*\n\s*\},/, 'onShow 返回路径重播');

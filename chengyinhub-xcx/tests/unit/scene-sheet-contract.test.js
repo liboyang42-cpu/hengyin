@@ -35,10 +35,10 @@ test('scene-sheet exposes full/half shells and semantic close events', () => {
     'T3 全屏高度必须走安全上限 token,不许写字面 vh,也不许写画板量出来的绝对像素')
   // 2026-09-02:peek 并入 half(下限相同、只差 12vh 上限,渲染常一模一样);
   // min-height 一并删掉 —— 它把一句话的说明也撑到近半屏。
-  assert.doesNotMatch(wxss, /^\s*\.ss--peek\b/m, 'peek 档已合并,不该再有 .ss--peek 规则')
+  assert.doesNotMatch(wxss, /^\s*\.ss--peek\b/m, 'peek 档已合并，不该再有 .ss--peek 规则')
   assert.match(wxss, /\.ss--half \.ss__panel\s*\{[^}]*max-height:\s*min\(70vh, var\(--cy-comp-sheet-max-h, var\(--cy-comp-sheet-max-height\)\)\);/)
   assert.doesNotMatch(wxss, /^\s*min-height:\s*42vh/m, 'T1 不设下限:短内容不该被强行撑高')
-  assert.doesNotMatch(wxss, /--cy-comp-sheet-full-max-height/, 'height 已是上限,孪生 max-height 应删掉')
+  assert.doesNotMatch(wxss, /--cy-comp-sheet-full-max-height/, 'height 已是上限，孪生 max-height 应删掉')
   assert.match(wxss, /\.ss--merchant\s*\{[\s\S]*--cy-comp-sheet-bg:\s*var\(--cy-comp-sheet-merchant-bg\);/)
 })
 
@@ -46,11 +46,11 @@ function assertCloseHitArea(tokens, wxml, wxss) {
   const hit = tokens.match(/--cy-comp-sheet-close-hit-size:\s*([\d.]+)rpx/)
   assert.ok(hit, '缺少关闭/返回控件的独立热区 token')
   assert.ok(Number(hit[1]) >= 88, '关闭/返回热区必须在不同稿宽下都保持至少 88rpx')
-  assert.match(wxml, /class="ss__control"/, '视觉圆必须包在独立热区内,不能直接把圆放大')
+  assert.match(wxml, /class="ss__control"/, '视觉圆必须包在独立热区内，不能直接把圆放大')
   assert.match(wxss, /width:\s*var\(--cy-comp-sheet-close-hit-size\)/)
   assert.match(wxss, /\.ss__control\s*\{[\s\S]*width:\s*var\(--cy-comp-sheet-close-size\)/)
   // 2026-09-02(§3.21 · 用户当面点名):视觉层保留(它是「视觉尺寸 vs 88rpx 热区」的分界),但底色必须透明
-  assert.match(wxss, /\.ss__control\s*\{[\s\S]*background:\s*transparent/, '✕ 去圆底,只留字形')
+  assert.match(wxss, /\.ss__control\s*\{[\s\S]*background:\s*transparent/, '✕ 去圆底，只留字形')
 }
 
 test('scene-sheet 的关闭/返回热区至少 88rpx,视觉圆仍保持 Figma 尺寸', () => {
@@ -128,7 +128,7 @@ test('scene stack caps depth at two and replaces the active child beyond the cap
 
 test('返回箭头只由实际栈深决定,注册表的子层提示不能污染首层', () => {
   let scenes = stack.pushScene([], { id: 'detail', title: '详情', canBack: true })
-  assert.equal(stack.currentScene(scenes).canBack, false, '从空栈直开仍是首层,只能显示关闭')
+  assert.equal(stack.currentScene(scenes).canBack, false, '从空栈直开仍是首层，只能显示关闭')
   scenes = stack.pushScene(scenes, { id: 'child', title: '子层', canBack: false })
   assert.equal(stack.currentScene(scenes).canBack, true, '实际第二层必须显示返回')
 })

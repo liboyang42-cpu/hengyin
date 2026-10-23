@@ -111,7 +111,7 @@ function createClient(app, wxApi) {
       const data = options.data || {}, targetType = options.url === '/api/comment/report' ? 'COMMENT' : 'CONTENT';
       const scope = 'square:report:' + targetType + ':' + data.id;
       const validReportKey = value => typeof value === 'string' && value.trim().length >= 8 && value.trim().length <= 96;
-      const storageError = () => ({ code: 507, msg: '举报记录未能保存，未重新提交，请稍后核对' });
+      const storageError = () => ({ code: 507, msg: '举报记录未能保存，未重新提交，请稍后确认' });
       const current = () => {
         if (task.aborted || !task.isCurrent()) throw { code: 499, msg: '已取消举报' };
         if (String(app.getUserID() || '') !== task.owner) throw { code: 409, msg: '登录身份已变化，请重试' };
@@ -131,7 +131,7 @@ function createClient(app, wxApi) {
         && row.description === stored.wire.description.trim()
         && Array.isArray(row.evidenceAssetIds) && JSON.stringify(row.evidenceAssetIds.map(String).sort()) === JSON.stringify(stored.wire.evidenceAssetIds.map(String).sort());
       const finish = row => {
-        if (!matches(row)) throw { code: 409, msg: '举报结果与原请求不一致，请先核对' };
+        if (!matches(row)) throw { code: 409, msg: '举报结果异常，请刷新后再试' };
         save({ status: 'confirmed' });
         try {
           wxApi.removeStorageSync(reportIntent.storageKey(scope, task.owner));
@@ -144,7 +144,7 @@ function createClient(app, wxApi) {
           || !validReportKey(stored.wire.requestId) || stored.wire.targetType !== targetType
           || String(stored.wire.targetId) !== String(data.id) || typeof stored.wire.description !== 'string'
           || !stored.wire.description.trim() || typeof stored.wire.reasonCode !== 'string'
-          || typeof stored.wire.policyVersion !== 'string' || !Array.isArray(stored.wire.evidenceAssetIds)) throw { code: 409, msg: '原举报记录不完整，请先核对' };
+          || typeof stored.wire.policyVersion !== 'string' || !Array.isArray(stored.wire.evidenceAssetIds)) throw { code: 409, msg: '原举报记录不完整，请先确认' };
         if (stored.status === 'rejected' && stored.rejectionCode === 400) {
           await modal({ title: '重新确认举报', content: '上次举报明确未被接受。将重新读取当前规则和原因，再提交修正后的举报。', confirmText: '重新确认', cancelText: '取消' }, task);
           current();
@@ -152,9 +152,9 @@ function createClient(app, wxApi) {
           wasUnknown = true;
           const rows = await call('', 'GET', { requestId: stored.wire.requestId }, task, true);
           current();
-          if (!Array.isArray(rows) || rows.length > 1) throw { code: 409, msg: '举报结果未能唯一确认，请稍后核对' };
+          if (!Array.isArray(rows) || rows.length > 1) throw { code: 409, msg: '举报结果未能唯一确认，请稍后确认' };
           if (rows.length === 1) return finish(rows[0]);
-          await modal({ title: '上次举报尚未确认', content: '暂未查到结果，不代表原提交未发生。是否使用原请求和相同内容重试？', confirmText: '原样重试', cancelText: '取消' }, task);
+          await modal({ title: '上次举报尚未确认', content: '暂未查到结果，是否重试？', confirmText: '原样重试', cancelText: '取消' }, task);
           current();
         }
       }
@@ -169,7 +169,7 @@ function createClient(app, wxApi) {
         current();
         if (!Number.isInteger(index) || !taxonomy.reasons[index]) throw { code: 500, msg: '举报原因选择无效，请重试' };
         const reason = taxonomy.reasons[index];
-        if (data.request_id != null && !validReportKey(data.request_id)) throw { code: 400, msg: '举报请求号格式不合法' };
+        if (data.request_id != null && !validReportKey(data.request_id)) throw { code: 400, msg: '举报编号无效，请重试' };
         if (data.evidenceAssetIds !== undefined && !Array.isArray(data.evidenceAssetIds)) throw { code: 400, msg: '举报证据格式不合法' };
         const wire = { targetType, targetId: data.id, reasonCode: reason.code, policyVersion: taxonomy.policyVersion,
           description: typeof data.description === 'string' && data.description.trim() ? data.description : reason.label,
@@ -235,7 +235,7 @@ function createClient(app, wxApi) {
       path = '/posts/' + id; map = bundle => { const row = normalizePost(bundle); posts[row.id] = row; return row; };
     } else if (url === '/api/creativesquare/bookmark' || url === '/api/creativesquare/like') {
       const type = url.endsWith('/bookmark') ? 'BOOKMARK' : 'LIKE';
-      if (type === 'LIKE' && Number(data.type) !== 1) return reject(options, '此互动暂未接通');
+      if (type === 'LIKE' && Number(data.type) !== 1) return reject(options, '此互动暂未开放');
       const previous = posts[id];
       if (type === 'LIKE' && !previous) return reject(options, '请刷新帖文后再操作');
       const enabled = type === 'BOOKMARK' ? Number(data.bookmark) === 1 : Number(previous.isLiked) !== 1;
@@ -257,7 +257,7 @@ function createClient(app, wxApi) {
       const row = comments[id]; if (!row) return reject(options, '请刷新评论后再操作');
       path = '/posts/' + value(row, 'postId', 'post_id') + '/comments/' + id; method = 'DELETE';
       body = { expectedVersion: row.version, requestId: stableCommand('delete-comment:' + id + ':' + row.version, data.request_id) };
-    } else return reject(options, '此社区功能尚未接通');
+    } else return reject(options, '此社区功能暂未开放');
     return app.sendRequest(Object.assign({}, options, { url: BASE + path, method: method, data: body,
       header: Object.assign({}, options.header, { 'content-type': 'application/json' }),
       success: res => {

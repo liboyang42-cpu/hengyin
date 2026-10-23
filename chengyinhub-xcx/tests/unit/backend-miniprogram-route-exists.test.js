@@ -66,18 +66,18 @@ test('后端硬编码的小程序路径都在 app.json 里真实存在', () => {
   const routes = allRoutes()
   const dead = findBackendRoutes().filter(h => !routes.has(h.route))
   assert.deepEqual(dead, [],
-    '后端引用了 app.json 里不存在的小程序页面 —— 用户点订阅消息/分享会落到空白页,且线上零告警')
+    '后端引用了 app.json 里不存在的小程序页面 —— 用户点订阅消息/分享会落到空白页，且线上零告警')
 })
 
 test('这道门禁确实扫到了后端(不是零命中的橡皮图章)', () => {
   const hits = findBackendRoutes()
   assert.ok(hits.length > 0,
-    '一处都没扫到说明正则或 JAVA_ROOTS 失效了,那这条测试恒绿等于没有')
+    '一处都没扫到说明正则或 JAVA_ROOTS 失效了，那这条测试恒绿等于没有')
 })
 
 test('negative control：app.json 里不存在的后端路径必须判红', () => {
   const routes = allRoutes()
   const fake = [{ file: 'X.java', line: 1, route: 'subpackageRoam/passport-DOES-NOT-EXIST/index' }]
   assert.ok(fake.filter(h => !routes.has(h.route)).length === 1,
-    '构造的坏路径没被判出来,说明判定逻辑本身是空的')
+    '构造的坏路径没被判出来，说明判定逻辑本身是空的')
 })

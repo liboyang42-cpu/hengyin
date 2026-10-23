@@ -151,7 +151,7 @@ test('用户填写关键词、品类、探索标签和城市角色后，商家�
 
 function assertMerchantNodesLocationGate(source) {
   assert.match(source, /if \(!this\._hasLocation && !this\._regionUserChosen\) \{/,
-    '无定位/未拖图时必须有闸,不能拿兜底坐标去查「附近据点」')
+    '无定位/未拖图时必须有闸，不能拿保底坐标去查「附近据点」')
   // UI-14:图例提示胶囊删掉后,merchantNodeNeedLocation 成为只写不读的死状态,已随 UI 一并移除;
   // 闸本身(不发请求 + 不把缺定位伪装成网络错误)保留。
   assert.doesNotMatch(source, /merchantNodeNeedLocation/, '无 UI 消费方后不得再保留死状态位')
@@ -192,7 +192,7 @@ test('活动地图接口 200 空 payload 不得崩溃，必须进入可重试错
 
   assert.doesNotThrow(() => request.success({ code: 200, data: null }))
   assert.equal(page.data.listState, 'error')
-  assert.equal(page.data.errorMsg, '活动列表没加载出来，请重试')
+  assert.equal(page.data.errorMsg, '活动列表加载失败，请重试')
 })
 
 // 地图上的商家 marker 指向的是「据点」(cityNodeId),不是商家主体(merchantId)。
@@ -211,7 +211,7 @@ test('商家 marker 点击进入据点深链宿主(调用与最终 route 一起�
   assert.deepEqual(navigations, [`${POI_HOST_ROUTE}?poiId=42`])
 
   const source = fs.readFileSync(path.resolve(__dirname, '../../pages/searchmap/index.js'), 'utf8')
-  assert.match(source, /openScene\('roam-poi-detail',\s*\{\s*poiId:/, 'marker 必须走场景注册表,不许自己拼据点路由')
+  assert.match(source, /openScene\('roam-poi-detail',\s*\{\s*poiId:/, 'marker 必须走场景注册表，不许自己拼据点路由')
   assert.doesNotMatch(source, /navigateTo\(\{\s*url:\s*'\/pages\/merchant\/profile/, '不得再直连旧商家页')
   assert.equal(getScene('roam-poi-detail').route, POI_HOST_ROUTE, '注册表的据点 route 就是站外稳定深链')
 })

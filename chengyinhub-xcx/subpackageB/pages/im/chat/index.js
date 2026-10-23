@@ -85,7 +85,7 @@ Page({
       loading: '消息加载中…',
       missing: '链接已失效，回消息列表重新进入',
       closed: '组局已结束，不能继续聊天',
-      error: '消息没加载出来，点上方「重试」再试',
+      error: '消息加载失败，点上方「重试」再试',
     },
     topicCache: {},
     routePickerOpen: false,

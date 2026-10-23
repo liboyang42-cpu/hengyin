@@ -92,7 +92,7 @@ function unknownContent() {
     return Object.assign({}, item, {
       count: null,
       countText: '0',
-      ariaLabel: '查看' + item.title + '，数量待同步',
+      ariaLabel: '查看' + item.title + '',
     });
   });
 }
@@ -539,7 +539,7 @@ Page({
     const signup = by['报名'];
     const verify = by['核销'];
     if (!signup && !verify) {
-      return { value: '0', sub: '还没有人报名 · 发布内容后开始积累', label: label, ariaLabel: label + ' 0' };
+      return { value: '0', sub: '暂无报名', label: label, ariaLabel: label + ' 0' };
     }
     const value = this._compact(signup && signup.count);
     if (!verify) {

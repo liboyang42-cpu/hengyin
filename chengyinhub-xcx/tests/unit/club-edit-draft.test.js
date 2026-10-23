@@ -319,7 +319,7 @@ test('回读失败仍保留续编，关闭重开从权威资料迁移，重试�
   const h = mount(); h.ready(); edit(h, 'name', '第一笔已保存')
   preflight(h).success({ code: 200 }); edit(h, 'name', '续编')
   h.requests.shift().fail()
-  assert.match(h.c.data.saveErrorText, /核对/)
+  assert.match(h.c.data.saveErrorText, /确认/)
   const latest = { ...CLUB, name: '第一笔已保存' }
   const reopened = mount({ values: JSON.parse(JSON.stringify(h.values)) }); reopened.ready(latest)
   assert.equal(reopened.c.data.draftAvailable, true)
@@ -368,7 +368,7 @@ test('权威回读不需要更新时间，无续编可正常关闭，业务异�
     f.requests.shift().success(res)
     assert.equal(f.c._draftBase, drafts.base(CLUB))
     assert.equal(drafts.read(f.wx, drafts.key(1, 9)).record.form.name, '续编')
-    assert.match(f.c.data.saveErrorText, /核对/)
+    assert.match(f.c.data.saveErrorText, /确认/)
   }
 })
 test('待核对草稿重开遇到不匹配权威资料或迁移失败，保留原稿不允许恢复', () => {

@@ -35,7 +35,7 @@
         aria-role="button" aria-label="提交本次撞击" hover-class="bl__b--press" hover-stay-time="80">提交本次撞击</view>
   <view wx:else class="bl__b {{running || awaitingResult || challenge.disabledReason || challenge.success ? 'bl__b--busy' : ''}} pe pe--up" style="--pe-d:1s" bindtap="onStart"
         aria-role="button" aria-label="开始弹球" hover-class="bl__b--press" hover-stay-time="80">
-    {{awaitingResult ? '正在核对…' : (running ? '撞!' : (challenge ? '免费重试' : '开始'))}}
+    {{awaitingResult ? '正在确认…' : (running ? '撞!' : (challenge ? '免费重试' : '开始'))}}
   </view>
 </cy-play-stage>
 

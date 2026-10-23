@@ -18,7 +18,7 @@ function runText(view) {
 }
 function manualRows(manual) { return (manual && manual.signatures || []).map(row => ({ ...row, title: actionNames[row.action] || '现场操作', statusText: { PENDING: '待核验', VERIFIED: '已核验', REJECTED: '未通过' }[row.status] || '状态尚未更新' })); }
 function arrivalTargets(view, nodes) {
-  const label = id => ((nodes || []).find(row => String(row.nodeId) === String(id)) || {}).name || '站点资料尚未加载';
+  const label = id => ((nodes || []).find(row => String(row.nodeId) === String(id)) || {}).name || '节点资料尚未加载';
   const targets = (view.quests || []).map(row => ({ label: label(row.nodeId), payload: { questKey: row.questKey }, nodeId: row.nodeId }));
   const operation = view.activeOperation;
   if (operation && operation.operationKind && operation.operationKey) targets.push({ label: label(operation.nodeId) + ' · 操作任务', payload: { operationKind: operation.operationKind, operationKey: operation.operationKey }, nodeId: operation.nodeId });
@@ -52,7 +52,7 @@ function methods(req) {
     _applyPlayerOpsView(view) {
       this.setData({ playerOperationRows: rows(view), playerManualRows: manualRows(view.run && view.run.manual), playerExitText: exitText(view), playerRunText: runText(view), playerOperationAvailable: !!this.data.playerOperationForm && rows(view).some(row => row.action === this.data.playerOperationForm.action) });
       if (this.data.playerArrivalProof && this.data.playerArrivalProof.sessionId !== view.sessionId) this.setData({ playerArrivalProof: null });
-      if (this._playerOpsPending && this._playerOpsPendingSessionId !== view.sessionId) this.setData({ playerOperationForm: null, playerOperationUnknown: true, playerOperationError: '上一局操作尚未确认，请先核对原操作结果' });
+      if (this._playerOpsPending && this._playerOpsPendingSessionId !== view.sessionId) this.setData({ playerOperationForm: null, playerOperationUnknown: true, playerOperationError: '上一局操作尚未确认，请先确认原操作结果' });
     },
     openPlayerOperations() { this.setData({ sessionToolsOpen: false, playerOperationsOpen: true }); return this.refreshThemeBackpack(); },
     closePlayerOperations() { if (!this._playerOpsReading) this.setData({ playerOperationsOpen: false }); },
@@ -74,7 +74,7 @@ function methods(req) {
     inputPlayerOperationReason(e) { if (!this._themeSending && !this._playerOpsPending && this.data.playerOperationForm) this.setData({ playerOperationForm: { ...this.data.playerOperationForm, reason: e.detail.value }, playerOperationError: '' }); },
     _canPlayerOperation(action) {
       const view = this.data.themeBag;
-      if (!view.sessionId || !rows(view).some(row => row.action === action) || this.data.isMock || this.data.isPreview || this._themeSending || this._playerOpsPending || this._planPending || this._tradePending || this._themePending || this._gameplayPending) { this.setData({ playerOperationError: '当前操作不可用，请刷新并核对上一条操作' }); return false; }
+      if (!view.sessionId || !rows(view).some(row => row.action === action) || this.data.isMock || this.data.isPreview || this._themeSending || this._playerOpsPending || this._planPending || this._tradePending || this._themePending || this._gameplayPending) { this.setData({ playerOperationError: '当前操作不可用，请刷新并确认上一条操作' }); return false; }
       return true;
     },
     submitPlayerOperation() {
@@ -94,7 +94,7 @@ function methods(req) {
           if (!Number.isSafeInteger(form.sequence) || form.sequence < 1 || form.sequence !== (view.run && view.run.manual && view.run.manual.nextSequence)) throw new Error('现场记录已变化，请刷新后重新打开');
           payload = { sequence: form.sequence, occurredAt: occurredAt(form.occurredAt), command: target.command };
         } else {
-          if (!arrivalTargets(view, this.data.nodes).some(row => JSON.stringify(row.payload) === JSON.stringify(target.payload) && row.nodeId === target.nodeId)) throw new Error('站点操作已变化，请重新打开');
+          if (!arrivalTargets(view, this.data.nodes).some(row => JSON.stringify(row.payload) === JSON.stringify(target.payload) && row.nodeId === target.nodeId)) throw new Error('节点操作已变化，请重新打开');
           payload = target.payload; this._playerOpsArrivalLabel = target.label;
         }
       } catch (error) { this.setData({ playerOperationError: error.message }); return Promise.resolve(false); }
@@ -104,7 +104,7 @@ function methods(req) {
     confirmPlayerExit() {
       const snapshot = this._playerExitSnapshot, view = this.data.themeBag;
       if (!this.data.playerExitConfirm || !snapshot || !this._canPlayerOperation('TEAM_EXIT')) return Promise.resolve(false);
-      if (snapshot.sessionId !== view.sessionId || snapshot.revision !== view.revision || snapshot.authorityEpoch !== view.authorityEpoch) { this.cancelPlayerExit(); this.setData({ playerOperationError: '状态已变化，请重新核对后确认' }); return Promise.resolve(false); }
+      if (snapshot.sessionId !== view.sessionId || snapshot.revision !== view.revision || snapshot.authorityEpoch !== view.authorityEpoch) { this.cancelPlayerExit(); this.setData({ playerOperationError: '状态已变化，请重新确认后确认' }); return Promise.resolve(false); }
       this.setData({ playerExitConfirm: false }); this._playerExitSnapshot = null;
       return this._sendPlayerOperation('TEAM_EXIT', snapshot.payload);
     },
@@ -128,7 +128,7 @@ function methods(req) {
       finally { this._playerOpsReading = false; this._themeSending = !!this._playerOpsPending; if (epoch === (this._themeEpoch || 0)) this.setData({ themeBagBusy: false }); }
     },
     async _finishPlayerOperation(result, command, sessionId) {
-      if (result.receipt && (result.receipt.action !== command.action || result.receipt.requestId !== command.requestId || String(result.receipt.activityId) !== String(command.activityId))) result = { status: 'unknown', message: '操作记录不匹配，请核对原操作' };
+      if (result.receipt && (result.receipt.action !== command.action || result.receipt.requestId !== command.requestId || String(result.receipt.activityId) !== String(command.activityId))) result = { status: 'unknown', message: '操作记录异常，请刷新后再试' };
       const applied = result.status === 'success' || result.status === 'matched';
       if (applied || result.status === 'business-error' && (!this.data.playerOperationUnknown || result.receipt)) {
         this._playerOpsPending = null;
@@ -141,7 +141,7 @@ function methods(req) {
         }
         this.setData(patch); await this.refreshThemeBackpack(); return applied;
       }
-      this.setData({ playerOperationUnknown: true, playerOperationError: result.message || '结果尚未确认，请核对原操作' }); await this.refreshThemeBackpack(); return false;
+      this.setData({ playerOperationUnknown: true, playerOperationError: result.message || '结果尚未确认，请刷新后再试' }); await this.refreshThemeBackpack(); return false;
     },
     copyPlayerArrivalProof() { const proof = this.data.playerArrivalProof; if (proof && proof.sessionId === this.data.themeBag.sessionId) wx.setClipboardData({ data: proof.nonce }); },
   };

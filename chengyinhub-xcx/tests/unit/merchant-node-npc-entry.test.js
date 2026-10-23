@@ -35,5 +35,5 @@ test('页面 handler 只按 data-* 打开,保存成功才刷新列表', () => {
   assert.match(JS, /nodeNpcNodeName: '',/);
   const close = JS.match(/onNodeNpcFormClose\(e\)\s*\{[\s\S]*?\n  \},/);
   assert.ok(close, '必须能定位到 onNodeNpcFormClose 实现');
-  assert.match(close[0], /e\.detail\.saved/, '失败留在表单重试,只有 saved=true 才刷新');
+  assert.match(close[0], /e\.detail\.saved/, '失败留在表单重试，只有 saved=true 才刷新');
 });

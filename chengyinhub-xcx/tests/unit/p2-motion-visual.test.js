@@ -93,7 +93,7 @@ test('关注 pending 截图必须有稳定窗口，并在截图返回后再次�
   const stableAssertAt = flowSource.indexOf("'follow.pending-frame-stable'")
   const successWaitAt = flowSource.indexOf("'关注成功终态'")
   assert.ok(captureAt >= 0 && rereadAt > captureAt && stableAssertAt > rereadAt,
-    '截图完成后必须再次回读 pending，不能只在截图前断言')
+    '截图完成后必须再次刷新 pending，不能只在截图前断言')
   assert.ok(successWaitAt > stableAssertAt, 'pending 图之后仍必须等待真实成功终态')
   assert.ok(flowSource.includes("4000,\n      '关注成功终态'"),
     '成功终态 timeout 必须覆盖 1500ms mock 延迟和截图开销')

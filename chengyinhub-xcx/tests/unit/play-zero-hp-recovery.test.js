@@ -64,11 +64,11 @@ test('微信运动拒绝授权保留恢复进度，设置及重试入口可再�
   assert.equal(await env.page.syncZeroHpSteps(), true);
 });
 
-test('恢复入口不重发其他待核对任务，权限回读变更后不发旧成员数据', async () => {
+test('恢复入口不重发其他待确认任务，权限刷新变更后不发旧成员数据', async () => {
   const env = load();
   env.page._gameplayPending = { input: { operation: 'QUEST_START' } };
   assert.equal(await env.page.syncZeroHpSteps(), false);
-  assert.match(env.page.data.zeroHpError, /核对上一条/); assert.equal(env.wxCalls.length, 0);
+  assert.match(env.page.data.zeroHpError, /确认上一条/); assert.equal(env.wxCalls.length, 0);
   env.page._gameplayPending = null;
   let run;
   wx.getWeRunData = options => { run = options; };
@@ -109,7 +109,7 @@ for (const msg of ['微信运动解密失败，请重新同步', '微信运动�
   });
 }
 
-test('服务端恢复成功关闭 episode，HP/used 原样回读，重复收据不叠加', async () => {
+test('服务端恢复成功关闭 episode，HP/used 原样刷新，重复收据不叠加', async () => {
   const env = load(), restored = { ...clone(fixtures.personal), version: 9, hp: 5,
     zeroHp: { ...fixtures.personal.zeroHp, phase: 'HEALTHY', used: 2, progress: 2000 } };
   env.respond(() => ({ code: 200, data: restored }));
@@ -150,7 +150,7 @@ test('shared 步数命令有 requestId/revision/epoch，网络重试同请求且
   assert.equal(env.page.data.zeroHpView.progress, 600);
 });
 
-test('基线成员退出，原成员同步禁用，当前队长按新回读重立基线且不清 used', () => {
+test('基线成员退出，原成员同步禁用，当前队长按新刷新重立基线且不清 used', () => {
   const { page } = load(), team = clone(fixtures.shared);
   page._applyThemeTeamView(team.player, team);
   const next = recorded('team-steps-baseline-left-new-captain');
@@ -159,7 +159,7 @@ test('基线成员退出，原成员同步禁用，当前队长按新回读重�
   assert.equal(page.data.zeroHpView.progress, next.zeroHp.progress); assert.equal(page.data.zeroHpView.used, next.zeroHp.used);
 });
 
-test('九个真实 MySQL 回读摘录进入真实 Page，HP/恢复字段原样保留', () => {
+test('九个真实 MySQL 刷新摘录进入真实 Page，HP/恢复字段原样保留', () => {
   for (const name of ['personal-steps-awaiting-baseline', 'personal-steps-recovering', 'team-wait', 'team-steps-awaiting-baseline', 'team-steps-recovering', 'team-steps-member-disabled', 'team-steps-baseline-left-new-captain', 'team-healthy', 'team-hp-zero-result-card']) {
     const env = load(), view = clone(recorded(name));
     if (name.startsWith('personal')) env.page._applyThemeView(view);
@@ -196,7 +196,7 @@ test('普通计步入口在归零时按会员恢复授权路由，绝不 SUBMIT_
   assert.equal(ordinary.length, 1); assert.equal(ordinary[0][0], 'SUBMIT_STEPS');
 });
 
-test('跨日与超时消息仅用服务器回读，CHALLENGE 失败与 thenPolicy 不由本地推断', () => {
+test('跨日与超时消息仅用服务器刷新，CHALLENGE 失败与 thenPolicy 不由本地推断', () => {
   const env = load(), message = '步数基线已跨日，请重新同步微信运动';
   env.page._applyThemeView({ ...fixtures.personal, zeroHp: { ...fixtures.personal.zeroHp, message, phase: 'AWAITING_BASELINE' } });
   assert.equal(env.page.data.zeroHpView.message, message); assert.equal(env.page.data.zeroHpView.progress, fixtures.personal.zeroHp.progress);

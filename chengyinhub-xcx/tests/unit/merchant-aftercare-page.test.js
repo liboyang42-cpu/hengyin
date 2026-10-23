@@ -461,7 +461,7 @@ test('财务页只显示补凭证能力，选择并上传后才允许提交 evid
   assert.equal(typeof mounted.imageSelections[1].options.mapResult, 'function');
   assert.equal(typeof mounted.imageSelections[1].options.formData, 'function');
   assert.equal(JSON.stringify(mounted.imageSelections[1].options.formData(0)), '{"refundId":"81"}',
-    'W6f:凭证上传必须带当前退款单,服务端据此绑定门店+退款单');
+    'W6f:凭证上传必须带当前退款单，服务端据此绑定门店+退款单');
   mounted.imageSelections[1].callback([
     mounted.imageSelections[1].options.mapResult(uploadResult, 0, '/tmp/evidence.jpg'),
   ]);

@@ -100,7 +100,7 @@ test('★flag 中途关掉 → 立刻停,不再冒泡', () => {
   h.resolveProfile(null, { profileId: 9, name: '小瘾' });
   h.setFeatureOn(false);
   h.npc.dispatch({ type: 'SESSION_STARTED' });
-  assert.equal(h.calls.bubbles.length, 0, 'flag 是活的,关了就该立刻噤声');
+  assert.equal(h.calls.bubbles.length, 0, 'flag 是活的，关了就该立刻噤声');
 });
 
 test('profile 慢加载:开场事件排队,到货后冒泡且 impression 只在展示后记', () => {

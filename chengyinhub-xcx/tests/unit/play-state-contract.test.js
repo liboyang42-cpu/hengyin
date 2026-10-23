@@ -78,7 +78,7 @@ test('自由漫游把失败、定位、离线与下一步映射到同一状态�
 
   const unknown = buildRoamGoal({
     visitActive: true,
-    checkinError: '结果待核对',
+    checkinError: '结果待确认',
     checkinRetryable: false,
     gpsEnabled: true,
   })

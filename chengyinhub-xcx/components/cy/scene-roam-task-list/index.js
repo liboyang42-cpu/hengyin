@@ -11,16 +11,16 @@ function toTs(value) {
 }
 
 function timeText(item) {
-  if (!item._statusKnown) return '时间与状态待确认'
+  if (!item._statusKnown) return '—'
   const now = Date.now(); const start = toTs(item.activityStart); const end = toTs(item.activityEnd)
   if (item.status == 1 && start) return start > now ? `距开始 ${Math.max(1, Math.floor((start - now) / 3600000))} 小时` : '即将开始'
   if ((item.status == 2 || item.status == 3) && end) return end > now ? `距结束 ${Math.max(1, Math.floor((end - now) / 3600000))} 小时` : '即将结束'
   if (item.status >= 5) return '已结束'
-  return activityStatusText(item.status) || '时间待确认'   // 与 pages/activity/list 同一真源
+  return activityStatusText(item.status) || '—'   // 与 pages/activity/list 同一真源
 }
 
 function countText(value) {
-  return typeof value === 'number' && Number.isInteger(value) && value >= 0 ? `${value} 人参与` : '人数待确认'
+  return typeof value === 'number' && Number.isInteger(value) && value >= 0 ? `${value} 人参与` : '—'
 }
 
 function progressValue(value) {

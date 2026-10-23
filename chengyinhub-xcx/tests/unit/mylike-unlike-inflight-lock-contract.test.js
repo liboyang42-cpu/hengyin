@@ -93,7 +93,7 @@ test('取消成功本地摘行;失败不摘行且锁释放', () => {
 
   page.topicUnlike({ currentTarget: { dataset: { index: 0, id: 12 } } });
   modals[2].success({ confirm: true });
-  assert.equal(unlikeRequests(requests).length, 3, '失败后锁必须释放,允许重试');
+  assert.equal(unlikeRequests(requests).length, 3, '失败后锁必须释放，允许重试');
 });
 
 test('负控:摘掉 in-flight 锁,连点必然发出两个 toggle 请求 ⇒ 用例真红', () => {

@@ -39,7 +39,7 @@ test('CU-C-38:一处封面都没有 ⇒ 不产出 imageUrl,不拿别的图顶', 
   assert.equal(resolveTopicCover({ imgUrl: null, imgArr: ' , ' }, toAbsolute), '')
   assert.equal(resolveTopicCover(undefined, toAbsolute), '')
   assert.equal('imageUrl' in buildTopicShare({ topicId: 1, name: 'N', cover: '' }), false,
-    '空封面必须整键省略,传空串会被微信当成坏图')
+    '空封面必须整键省略，传空串会被微信当成坏图')
 })
 
 test('CU-C-38:标题 = 主题名;名缺失才用调用方给的退路', () => {
@@ -141,7 +141,7 @@ test('CU-C-38:俱乐部「带票分享」与主题详情页同图同标题,归�
     '带票卡片必须有主题封面 —— 走查读到的就是这张空白图')
   assert.ok(share.path.indexOf('/pages/topic/index/index?id=77') === 0)
   assert.ok(share.path.indexOf('sourceClubId=7') > -1 && share.path.indexOf('clubCode=') > -1,
-    '票源归因参数是裁决 E2 的产物,补图不许顺手改路径')
+    '票源归因参数是裁决 E2 的产物，补图不许顺手改路径')
 })
 
 test('CU-C-38:负控 —— 期次没有封面时省略 imageUrl,标题退回店名而不是「主题详情」', () => {

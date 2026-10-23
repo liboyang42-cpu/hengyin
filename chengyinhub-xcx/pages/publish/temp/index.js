@@ -88,15 +88,15 @@ function isTemplateDetailPayload(value) {
 // 模块定义(常量,顺序即展示顺序)
 // 提示(hint)已并入「完成方式」,不再是独立模块
 const MODULE_DEFS = [
-  { key: 'finish', name: '玩法', desc: '玩家用什么方式通过这一关', iconName: 'check', tag: '', tagClass: '' },
+  { key: 'finish', name: '玩法', desc: '', iconName: 'check', tag: '', tagClass: '' },
   { key: 'reward', name: '完成奖励', desc: '优惠券 / 勋章', iconName: 'gift', tag: '', tagClass: '' },
-  { key: 'story', name: '剧情故事', desc: '到达时的时间流叙事 · 逐节展开', iconName: 'edit', tag: '', tagClass: '' },
+  { key: 'story', name: '剧情故事', desc: '到达后的剧情', iconName: 'edit', tag: '', tagClass: '' },
   { key: 'voice', name: '语音讲解', desc: '上传一段音频导览', iconName: 'play', tag: '', tagClass: '' },
 ]; const ADDABLE_MODULES = ['finish', 'reward']; // 2026-10-22:添加模块只出玩法与完成奖励(剧情不再新增,语音讲解在互动工具里)
 
 // 完成方式 tile(value 对应 validationMethod 映射)
 const METHOD_TILES = [
-  { value: 6, iconName: 'filter-lines', label: '偏好题组', sub: '多步选择，生成确定性结果' },
+  { value: 6, iconName: 'filter-lines', label: '偏好题组', sub: '多步选择，结果固定' },
   { value: 1, iconName: 'edit', label: '文字作答', sub: '写下现场看到或确认到的内容' },
   { value: 3, iconName: 'check', label: '选项问答', sub: '从选项中选出正确答案' },
   { value: 2, iconName: 'camera', label: '拍照打卡', sub: '上传现场照片' },
@@ -288,7 +288,7 @@ Page({
     qaModes: [
       { key: 'TYPE', iconName: 'edit', label: '打字答', sub: '玩家自己把答案打出来' },
       { key: 'PICK', iconName: 'check', label: '选项答', sub: '从你写的几个选项里挑一个' },
-      { key: 'SHOT', iconName: 'camera', label: '拍一张', sub: '交一张照片,不判对错' },
+      { key: 'SHOT', iconName: 'camera', label: '拍一张', sub: '交一张照片，不判对错' },
     ],
     scanKinds: [
       { key: 'TEXT', iconName: 'edit', label: '文字', sub: '扫完弹一段话' },
@@ -2881,7 +2881,7 @@ Page({
     const steps = this.data.pvSteps;
     const i = Math.max(0, Math.min(idx, steps.length - 1));
     const key = steps[i];
-    const labelMap = { arrival: '到达点位', story: '剧情解锁', challenge: '点位任务', complete: '任务完成', reward: '获得奖励' };
+    const labelMap = { arrival: '到达节点', story: '剧情解锁', challenge: '节点任务', complete: '任务完成', reward: '获得奖励' };
 
     const patch = {
       pvStep: i,
@@ -2920,7 +2920,7 @@ Page({
         5: '走到目标位置',
         0: '点击下方按钮完成打卡'
       };
-      patch.pvChallengeTitle = titleMap[vm] || '完成点位任务';
+      patch.pvChallengeTitle = titleMap[vm] || '完成节点任务';
       const subMap = { 1: '提交答案', 3: '提交答案', 2: '上传并完成', 4: '完成扫码', 5: '我已到达此处', 0: '完成打卡' };
       patch.pvSubmitLabel = subMap[vm] || '完成';
       patch.pvHasHint = HINT_METHODS.includes(vm) && this.data.hintEnabled && !!(this.data.formData.hint1 || this.data.formData.answerReveal);
@@ -3221,7 +3221,7 @@ Page({
 
   publishGame: function () {
     if (this.data.from === 'citynode' && !this.data.merchantAccess.canManageProjects) {
-      toast('当前岗位没有据点管理权限');
+      toast('当前岗位没有节点管理权限');
       return;
     }
     const formData = this.prepareFormData();
@@ -3290,7 +3290,7 @@ Page({
   saveDraft: function () {
     if (this.data.from === 'fabu') return this.publishGame();
     if (this.data.from === 'citynode') {
-      toast('据点玩法请配置完成后直接保存');
+      toast('节点玩法请配置完成后直接保存');
       return;
     }
     const formData = this.prepareFormData();
@@ -3321,7 +3321,7 @@ Page({
     const that = this;
     if (url === '/api/merchant/city-node/template/submit'
         && !that.data.merchantAccess.canManageProjects) {
-      toast('当前岗位没有据点管理权限');
+      toast('当前岗位没有节点管理权限');
       return;
     }
     if (that._submitting) return;
@@ -3537,7 +3537,7 @@ Page({
                   that.getData();
                 } else {
                   if (adopted && adopted.code == '200') that._adoptionUnconfirmed = true;
-                  that.setData({ editorLoading: false, loadErrorIsOperation: true, loadError: safeUserMessage(adopted, '采用结果未确认，请到我的玩法核对') });
+                  that.setData({ editorLoading: false, loadErrorIsOperation: true, loadError: safeUserMessage(adopted, '采用结果未确认，请到我的玩法确认') });
                 }
               },
               fail(_res, status) {
@@ -3548,7 +3548,7 @@ Page({
                   return;
                 }
                 that._adoptionUnconfirmed = true;
-                that.setData({ editorLoading: false, loadErrorIsOperation: true, loadError: '采用结果未确认，请先到我的玩法核对，避免重复创建' });
+                that.setData({ editorLoading: false, loadErrorIsOperation: true, loadError: '采用结果未确认，请先到我的玩法确认，避免重复创建' });
               }
             });
             return;

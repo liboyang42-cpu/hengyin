@@ -311,7 +311,7 @@ test('店长(MERCHANT_MANAGER)与后端 operatorRoles 对齐:名单、邀请、�
   });
   roleMounted.requests[0].complete();
   assert.equal(roleMounted.toasts.includes('岗位已更新'), true, '调岗成店长的成功回执不得被判无效');
-  assert.equal(roleMounted.requests[1].url, '/api/merchant/operators/list', '成功后回读权威名单');
+  assert.equal(roleMounted.requests[1].url, '/api/merchant/operators/list', '成功后刷新权威名单');
 
   // 邀请店长:回执同样要认
   const inviteMounted = mountTeamPage();
@@ -436,7 +436,7 @@ test('改岗网络结果未知时持久化复用 requestId，收到权威回执�
   replay.complete();
 
   assert.equal(reopened.requests[1].url, '/api/merchant/operators/list',
-    '改岗成功回执后必须以权威名单回读收口');
+    '改岗成功回执后必须以权威名单刷新收口');
   assert.doesNotMatch(JSON.stringify(storage), new RegExp(firstRequestId),
     '成功回执后应清理本次意图');
 });
@@ -473,7 +473,7 @@ test('改岗重放返回 later authoritative state 时只刷新名单，不假�
   assert.equal(mounted.toasts.includes('岗位已更新'), false,
     '后续状态已变化时不得继续显示原操作成功');
   assert.ok(mounted.toasts.some(message => /后续.*变化|最新名单/.test(message)),
-    '必须明确告知用户已回读后续状态');
+    '必须明确告知用户已刷新后续状态');
   assert.doesNotMatch(JSON.stringify(storage), new RegExp(requestId),
     'HTTP 200 later authoritative 已给出已知终态，不得留下永久重放意图');
 });

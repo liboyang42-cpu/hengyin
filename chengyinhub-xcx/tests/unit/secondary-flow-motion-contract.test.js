@@ -123,7 +123,7 @@ function findViolations(overrides = {}) {
     violations.push('style/wizard-intro.wxss:形变动了布局属性')
   }
   if (!/\.cy-motion-reduced\s+\.morph,/.test(morphCss)) {
-    violations.push('style/wizard-intro.wxss:形变没有减动效兜底')
+    violations.push('style/wizard-intro.wxss:形变没有减动效保底')
   }
   const sharedPath = 'style/motion-entry.wxss'
   const sharedMotion = overrides[sharedPath] || read(sharedPath)

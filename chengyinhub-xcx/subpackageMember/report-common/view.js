@@ -45,7 +45,7 @@ function stageInfo(stage) {
 
 function stageLabel(stage) {
   const info = stageInfo(stage)
-  return info ? info.label : '状态待同步'
+  return info ? info.label : '—'
 }
 
 function canAppeal(stage) {
@@ -106,7 +106,7 @@ function normalizeReport(raw, reasonLabels, offsetMinutes) {
   const row = {
     id: String(id),
     stage,
-    stageText: info ? info.label : '状态待同步',
+    stageText: info ? info.label : '—',
     stageHint: info ? info.hint : '状态暂时无法识别，请稍后刷新',
     stageTone: info ? info.tone : 'mono',
     targetText: (TARGETS[targetType] || '对象') + '举报',

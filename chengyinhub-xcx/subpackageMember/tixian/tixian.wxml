@@ -27,7 +27,7 @@
       <view class="txcon_ly">
         <view class="txcon_ly_name">提现方式</view>
         <view class="txcon_ly_inp">
-          <text class="tx-cs-note">联系平台客服,由客服协助线下处理</text>
+          <text class="tx-cs-note">添加客服微信，线下处理</text>
         </view>
       </view>
     </view>
@@ -35,7 +35,7 @@
     <view class="tx-bottom">
       <view class="txtpis">
         <view class="txtpis_tit">提现说明</view>
-        <view class="txtpis_txt">提现已改为客服协助线下处理,请添加平台客服微信核对。</view>
+        <view class="txtpis_txt">提现已改为客服协助线下处理，请添加平台客服微信确认。</view>
       </view>
       <view class="tx-cta">
         <cy-btn variant="primary" bindtap="saveData">联系客服提现</cy-btn>

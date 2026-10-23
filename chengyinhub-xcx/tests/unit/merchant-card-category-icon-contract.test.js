@@ -110,14 +110,14 @@ test('合作页商家卡:品类名从后端 sysCategoryList 取出并喂给卡�
   assert.equal(bookstore.displayDescription, '书店', '缺地址时的描述行也用同一个品类名');
 
   const florist = normalizeDiscoveryItem({ id: 9102, memberId: 89, name: '花房', categoryId: 8, sysCategoryList: [{ id: 8, categoryName: '花艺' }] }, '商家');
-  assert.equal(florist.categoryName, '花艺', '品类名要照后端原样交给卡片,不再一律「咖啡」');
-  assert.equal(resolveCategoryIcon(florist.categoryName), FALLBACK_ICON, '映射表认不出的品类退中性店铺,不得冒充咖啡杯');
+  assert.equal(florist.categoryName, '花艺', '品类名要照后端原样交给卡片，不再一律「咖啡」');
+  assert.equal(resolveCategoryIcon(florist.categoryName), FALLBACK_ICON, '映射表认不出的品类退中性店铺，不得冒充咖啡杯');
   const gym = normalizeDiscoveryItem({ id: 9104, memberId: 91, name: '攀岩馆', categoryId: 9, sysCategoryList: [{ id: 9, categoryName: '运动健身' }] }, '商家');
   assert.equal(resolveCategoryIcon(gym.categoryName), 'category-fitness', '映射表认得出的品类要出对应图标');
   assert.notEqual(resolveCategoryIcon(gym.categoryName), resolveCategoryIcon(bookstore.categoryName), '认得出的品类不能被中性图标抹平');
 
   const plain = normalizeDiscoveryItem({ id: 9103, memberId: 90, name: '小店', categoryId: 7 }, '商家');
-  assert.equal(plain.categoryName, '', '后端没给品类就交空串,由组件退回中性店铺图标');
+  assert.equal(plain.categoryName, '', '后端没给品类就交空串，由组件退回中性店铺图标');
 });
 
 test('合作页模板:2026-10-22 起不再渲染商家卡(商家看不到其他商家)', () => {
@@ -131,7 +131,7 @@ test('负控:合作页退回读 item.categoryName 时,书店卡必须变回空�
     'const categoryName = firstCategoryName(item);',
     'const categoryName = item.categoryName;'
   );
-  assert.notEqual(regressed, read(RELATION_JS), '负控锚点失效:合作页取法已改名,扫描口径需同步');
+  assert.notEqual(regressed, read(RELATION_JS), '负控锚点失效:合作页取法已改名，扫描口径需同步');
   const internals = loadRelationInternals(regressed);
   const row = internals.normalizeDiscoveryItem({
     id: 9101, memberId: 88, name: '旧书局', categoryId: 7, address: '',
@@ -144,7 +144,7 @@ test('后端对齐:/api/merchant/list 的发现列表补发品类名(批次只�
   const controller = read('../chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiMerchantController.java');
   assert.match(controller, /fillDiscoveryCategories\(publicRows, kept\);/, '发现列表必须回填品类(用与 publicRows 对齐的 kept,不因 null 行错位)');
   const helper = controller.slice(controller.indexOf('private void fillDiscoveryCategories'));
-  assert.match(helper, /selectSysCategoryListByIds\(ids\.toArray\(new String\[0\]\)\)/, '一次批量查,不按行重复查库');
+  assert.match(helper, /selectSysCategoryListByIds\(ids\.toArray\(new String\[0\]\)\)/, '一次批量查，不按行重复查库');
   assert.match(helper, /item\.setCategoryName\(c\.getCategoryName\(\)\)/, '只出 id/categoryName 两个字段');
 });
 test('当前八个一级分类准确映射，且所有图标均已注册', () => {

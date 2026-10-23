@@ -53,7 +53,7 @@ test('判据自身的负控:构造的死/活标签必须分得开', () => {
   assert.equal(isDeadRetry('<cy-error wx:if="{{list.length>0}}" bind:retry="reload" />'), false)
   assert.equal(isDeadRetry('<cy-error title="x" retry="" />'), false)
   assert.equal(isDeadRetry('<cy-error title="x" auto-back />'), false,
-    'auto-back 只渲零按钮半屏,没有重试按钮可死')
+    'auto-back 只渲零按钮半屏，没有重试按钮可死')
 })
 
 test('组件默认值没变:retry 仍默认渲染按钮,所以上面那条契约必须一直在', () => {

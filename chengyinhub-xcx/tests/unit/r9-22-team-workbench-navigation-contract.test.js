@@ -78,11 +78,11 @@ test('工作台落点真实注册,且 reLaunch 使其成为根页(无错误返�
   const routes = registeredRoutes(appJson)
   assert.ok(routes.has(WORKBENCH.slice(1)), '工作台必须在 app.json 注册')
   const tabBar = new Set((appJson.tabBar && appJson.tabBar.list || []).map(item => '/' + item.pagePath))
-  assert.ok(!tabBar.has(WORKBENCH), '工作台不在 tabBar 中,所以只能 reLaunch/redirectTo,不能 switchTab')
+  assert.ok(!tabBar.has(WORKBENCH), '工作台不在 tabBar 中，所以只能 reLaunch/redirectTo,不能 switchTab')
 
   const { page, navigations } = loadTeamPage()
   page.goWorkbench()
-  assert.equal(navigations[0].method, 'reLaunch', 'reLaunch 清掉经营团队页,工作台成为根页,返回栈不残留半截')
+  assert.equal(navigations[0].method, 'reLaunch', 'reLaunch 清掉经营团队页，工作台成为根页，返回栈不残留半截')
 })
 
 test('未登录不再摆「去登录」整屏闸:静默登录后自动确认身份', async () => {

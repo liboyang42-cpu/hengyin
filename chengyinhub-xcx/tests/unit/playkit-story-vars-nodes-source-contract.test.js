@@ -123,7 +123,7 @@ test('★合并口径:新回包逐键覆盖、空/缺失不动已有值,谁也�
 
   assert.equal(page._mergeStoryVars({ job: '老师', luck: 2 }), true)
   assert.deepEqual(page._storyVars, { name: '阿岚', job: '老师', luck: 2 },
-    '逐键合并:两边各有的键都要在,新回包的同名键覆盖旧值')
+    '逐键合并:两边各有的键都要在，新回包的同名键覆盖旧值')
 
   assert.equal(page._mergeStoryVars({}), false, '空对象不算一次有效更新')
   assert.equal(page._mergeStoryVars(null), false, '缺失整块不算更新')

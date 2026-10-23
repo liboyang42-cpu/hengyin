@@ -56,7 +56,7 @@ function assertModalUnifiedClose(wxml, wxss, js) {
 
   const close = wxss.match(/\.mo__close\s*\{[^}]*\}/)
   assert.ok(close, '找不到 .mo__close 样式规则')
-  assert.match(close[0], /position:\s*absolute/, '✕ 脱离文档流,不挤动标题')
+  assert.match(close[0], /position:\s*absolute/, '✕ 脱离文档流，不挤动标题')
   assert.match(close[0], /top:\s*var\(--cy-space-2\)/, '✕ 必须与紧凑标题行对齐')
   assert.match(close[0], /right:\s*0/, '✕ 锚在卡片右上角(右)')
   assert.match(close[0], /width:\s*var\(--cy-btn-h\)/, '✕ 热区宽度读 88rpx 按钮 token')
@@ -118,7 +118,7 @@ test('CU-M-153 节点交互预览:chrome 归 cy-sheet,不再自摆取消/关闭�
   const start = wxml.indexOf('<cy-sheet show="{{ popDavid }}"')
   assert.notEqual(start, -1, '找不到节点预览 sheet')
   const sheet = wxml.slice(start, wxml.indexOf('</cy-sheet>', start))
-  assert.match(sheet, /title="节点交互预览"/, '标题走 sheet 头部,右上 ✕ 才会渲染')
+  assert.match(sheet, /title="节点交互预览"/, '标题走 sheet 头部，右上 ✕ 才会渲染')
   assert.doesNotMatch(sheet, /closable="\{\{\s*false\s*\}\}"/, '不许再关掉 sheet 的关闭控件')
   assert.doesNotMatch(sheet, /pop-top/, '自摆的顶栏必须退役')
   assert.doesNotMatch(sheet, /取消|关闭/, '面板内不许再有文字版退出口(2026-09-19 裁决:只留右上 ✕)')

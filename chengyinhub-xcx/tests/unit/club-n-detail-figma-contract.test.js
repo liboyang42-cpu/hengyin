@@ -79,7 +79,7 @@ function assertContract(overrides = {}) {
 
   // —— 稿没画但现码有:治理与安全,不许照稿删掉 ——
   // 2026-09-09「会员与会费」按用户裁决(会费暂时不做)随两个会费页一并删除,这条断言撤走。
-  assert.doesNotMatch(wxml, /membership-overview-entry/, '会费整条已撤,不许留一个通向已删页的入口')
+  assert.doesNotMatch(wxml, /membership-overview-entry/, '会费整条已撤，不许留一个通向已删页的入口')
   assert.match(wxml, /class="overview-section governance-help-entry"/, '治理与安全必须保留')
   assert.match(wxml, /goClubAppeal/)
   assert.match(wxml, /reportClub"/)
@@ -94,9 +94,9 @@ function assertContract(overrides = {}) {
   // 2026-09-09 从 281:360 的横卡(左封面 + 右四行)改成稿 N2 的竖卡。
   assert.match(wxml, /<template name="clubEventCard">/)
   assert.match(wxml, /class="ev-coverslot"[\s\S]{0,300}class="ev-status ev-status--\{\{item\.statusTone\}\}"/,
-    '状态胶囊叠在封面上,不再是右列第一行')
+    '状态胶囊叠在封面上，不再是右列第一行')
   assert.match(wxml, /class="ev-name"[\s\S]{0,200}class="ev-time"[\s\S]{0,400}class="ev-stats"/)
-  // 三列数字块:算不出来的那一格整格不出,不用 0 冒充(「0 站」会被读成「这条路线没有站点」)
+  // 三列数字块:算不出来的那一格整格不出,不用 0 冒充(「0 站」会被读成「这条路线没有节点」)
   for (const key of ['signupText', 'stationText', 'mileageText']) {
     assert.match(wxml, new RegExp('class="ev-stat" wx:if="\\{\\{item\\.' + key + '\\}\\}"'),
       key + ' 缺失时那一格必须整格不出')
@@ -112,7 +112,7 @@ function assertContract(overrides = {}) {
   // —— 活动空态 282:478:卡容器内 标题 / 说明 / 主按钮 / 归属提示 ——
   // 2026-09-06 裸文字空态收编:标题 / 说明 / 主按钮 / 归属提示 都由 cy-empty 承载(说明里带归属句,cta 只给主理人)
   assert.match(rule(wxss, '.ev-empty'), /background:\s*var\(--cy-color-bg-elevated\)/)   // 空态仍在卡容器内(282:478)
-  assert.match(wxml, /<cy-empty wx:else class="ev-empty" title="还没有城市路线"[^>]*sub="\{\{club\.isOwner \|\| canManageActivities \?[^>]*会自动绑定「[^>]*cta="\{\{club\.isOwner \|\| canManageActivities \? '发布主题' : ''\}\}" bind:cta="onCreateTeam"/)
+  assert.match(wxml, /<cy-empty wx:else class="ev-empty" title="还没有城市路线"[^>]*cta="\{\{club\.isOwner \|\| canManageActivities \? '发布主题' : ''\}\}" bind:cta="onCreateTeam"/)
 
   // —— 发帖入口 285:395:头像 + 昵称 / 提示语 / 工具栏三图标 ——
   assert.match(wxml, /class="post-composer-who"[\s\S]{0,200}class="post-composer-ph"[\s\S]{0,200}class="post-composer-tools"/)

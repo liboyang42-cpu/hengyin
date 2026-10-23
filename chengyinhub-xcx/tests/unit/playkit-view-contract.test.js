@@ -55,10 +55,10 @@ test('盲品:未答时不预选,答对后锁住并回显', () => {
   const options = [{ key: 'A', label: '桂花乌龙' }, { key: 'B', label: '茉莉雪芽' }]
 
   const fresh = pickPlayKit({ ...base, playKit: { blindTaste: { title: 't', options, xp: 15 } } }, at(12, 0))
-  assert.equal(fresh.selectedKey, '', '没答过不能预选一个,否则像替玩家做了选择')
+  assert.equal(fresh.selectedKey, '', '没答过不能预选一个，否则像替玩家做了选择')
   assert.equal(fresh.locked, false)
   assert.equal(fresh.xpLabel, '答对 +15 XP')
-  assert.ok(fresh.steps, '服务端省略 steps 时仍必须给读屏器完整兜底')
+  assert.ok(fresh.steps, '服务端省略 steps 时仍必须给读屏器完整保底')
 
   const solved = pickPlayKit(
     { ...base, playKit: { blindTaste: { title: 't', options, xp: 15, solved: true, lastKey: 'B' } } },
@@ -105,7 +105,7 @@ test('计步:走够了就把位置让给还没做完的那一段', () => {
     steps: { goal: 6000, todaySteps: 6200, reached: true },
     qa: { mode: 'TYPE', title: '老板姓什么' },
   } }
-  assert.equal(pickPlayKit(view, at(12, 0)).type, 'qa', '走够了还占着屏,后面那段就弹不出来')
+  assert.equal(pickPlayKit(view, at(12, 0)).type, 'qa', '走够了还占着屏，后面那段就弹不出来')
 })
 
 test('城市签:票面全来自服务端_地址/留签人/那句/签号一一映射_不造兜底文案', () => {
@@ -122,7 +122,7 @@ test('城市签:票面全来自服务端_地址/留签人/那句/签号一一映
   assert.deepEqual(kit.lines, ['雨天走后门'])
   assert.equal(kit.leftAt, '2026-08-25 18:30')
   assert.equal(kit.photoUrl, 'https://cdn.chengyinhub.com/u/8/lane.jpg')
-  assert.equal(kit.serialLabel, 'NO. 0004', '签号 = 我是这一站第几位,不是日期')
+  assert.equal(kit.serialLabel, 'NO. 0004', '签号 = 我是这一站第几位，不是日期')
   assert.equal(kit.textMax, 40)
   assert.equal(kit.claimed, false)
   assert.equal(kit.revealed, false)
@@ -157,7 +157,7 @@ test('城市签:刮层在留一句之前就刮开_留完回来的视图不再盖
   const claimed = { type: 'dailysign', claimed: true }
   assert.equal(dailySignRevealState(null, claimed).revealed, true, '重进已留过的签直接显示')
   assert.equal(dailySignRevealState(unclaimed, claimed).revealed, true,
-    '本次留完那句回来,签文早就刮开了,再盖一层等于要人刮两遍')
+    '本次留完那句回来，签文早就刮开了，再盖一层等于要人刮两遍')
   assert.equal(dailySignRevealState(null, unclaimed).revealed, false)
 })
 
@@ -183,7 +183,7 @@ test('跨夜时段的倒计时不能算成负数或一整天', () => {
   assert.equal(secondsUntilOpen('23:00', at(22, 0)), 3600, '开点前一小时')
   // 23:30 已过今天的开点 ⇒ 等的是明天 23:00,而不是负数
   assert.equal(secondsUntilOpen('23:00', at(23, 30)), (23 * 60 + 30) * 60)
-  assert.equal(secondsUntilOpen('', at(12, 0)), 0, '格式不对时给 0,不炸')
+  assert.equal(secondsUntilOpen('', at(12, 0)), 0, '格式不对时给 0，不炸')
   assert.equal(secondsUntilOpen('25:00', at(12, 0)), 0)
 })
 
@@ -241,7 +241,7 @@ test('★抽卡抽满才算完:还有次数就得接着弹,不然剩的次数玩
       dailySign: { lines: ['签'] },
     },
   }, at(12, 0))
-  assert.equal(half.type, 'random', '还剩一次,应该继续弹抽卡')
+  assert.equal(half.type, 'random', '还剩一次，应该继续弹抽卡')
 
   const full = pickPlayKit({
     sessionId: 7, version: 1,
@@ -308,7 +308,7 @@ test('★每个玩法段都能还出 kit —— 缺一段就是整屏静默消�
     const kit = pickPlayKit(view, at(12, 0))
     if (!kit || !kit.type) missing.push(section)
   }
-  assert.deepEqual(missing, [], '这些段服务端会下发,客户端却拿不到 kit:' + missing.join(', '))
+  assert.deepEqual(missing, [], '这些段服务端会下发，客户端却拿不到 kit:' + missing.join(', '))
 })
 
 test('负控:把某一段从优先级表里摘掉,上一条必须判红', () => {
@@ -407,7 +407,7 @@ test('负控:给分发器多绑一个没人产出的属性,上一条必须判红
 
 test('负控:采集函数读的是真分发器,读空了就不许放行', () => {
   const bound = boundKeysByType()
-  assert.ok(Object.keys(bound).length > 15, '分发器里应认出十几个 kit 类型,认不出说明正则烂了')
+  assert.ok(Object.keys(bound).length > 15, '分发器里应认出十几个 kit 类型，认不出说明正则烂了')
   assert.ok((bound.predict || []).includes('closeAtHour'), '竞猜必须绑 closeAtHour')
 })
 
@@ -432,7 +432,7 @@ const SCREEN_OF = {
 test('★每个玩法段还出的是**指定的那一屏** —— 还错屏不会报错,只会长得不像原型', () => {
   const catalog = require('../../pages/publish/utils/publish/node-game-catalog.js')
   assert.deepEqual(catalog.PLAYKIT_SECTIONS.slice().sort(), Object.keys(SCREEN_OF).sort(),
-    '玩法目录里的段和这张表要一一对上,新增玩法必须在这儿指明用哪一屏')
+    '玩法目录里的段和这张表要一一对上，新增玩法必须在这儿指明用哪一屏')
   for (const section of catalog.PLAYKIT_SECTIONS) {
     const kit = pickPlayKit(
       { sessionId: 's1', version: 1, playKit: { [section]: { title: 't' } } }, at(12, 0))
@@ -444,7 +444,7 @@ test('★每个玩法段还出的是**指定的那一屏** —— 还错屏不�
    组件白建,谁也到不了。walk 屏此前就是这么躺着的。 */
 const ORPHAN_BRANCHES = {
   // 这一屏已被 walk 取代(原型真源指向 walk),留着只为回滚方便,确认后可删
-  steps: '已被 walk 屏取代,可删',
+  steps: '已被 walk 屏取代，可删',
   /* 2026-09-20 清账:bingo 已接进 TYPE_OF(玩家可见);
      stickerbook / gametimer / woodfish 三个纯孤儿整族删除(审查 #7 批复)。 */
 }
@@ -523,7 +523,7 @@ test('没开限时就是 0,过了点也是 0 —— 不能给负数让条反着�
 test('负控:走 Encounter 的豁免名单只许有 check', () => {
   const catalog = require('../../pages/publish/utils/publish/node-game-catalog.js')
   assert.deepEqual(catalog.ENCOUNTER_SECTIONS, ['check'],
-    '豁免名单被改动了 —— 每多一段就等于对它关掉「玩法静默消失」那条门禁,要有明确理由')
+    '豁免名单被改动了 —— 每多一段就等于对它关掉「玩法静默消失」那条门禁，要有明确理由')
   // check 走 Encounter，相册物化为已有 dream 展示块，其余段必须生成运行时 kit。
   assert.deepEqual(catalog.GAME_SECTIONS.filter(s => !catalog.PLAYKIT_SECTIONS.includes(s)).sort(), ['album', 'check'])
   assert.equal(catalog.PLAYKIT_SECTIONS.length, catalog.GAME_SECTIONS.length - 2)
@@ -553,7 +553,7 @@ test('正常:可做时给完整题面,且 exhausted 明确为 false', () => {
 
 test('不是力竭而拿不到 check(未到店 / 本站没检定):仍然是 null', () => {
   assert.equal(pickJourneyCheck({ allowedActions: ['qa'], check: { checkId: 'c1' } }), null,
-    '没力竭又不在 allowedActions 里 = 本来就没有入口,别凭空弹一个壳')
+    '没力竭又不在 allowedActions 里 = 本来就没有入口，别凭空弹一个壳')
   assert.equal(pickJourneyCheck({ allowedActions: ['check'], check: null }), null)
 })
 

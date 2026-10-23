@@ -136,7 +136,7 @@ function openForEdit(editScope) {
   const page = makePage();
   page.onLoad({ id: '77' });
   const detailReq = sent.find((r) => r.url === '/api/topic/edit-detail');
-  assert.ok(detailReq, '带 id 进入必须去拉主题详情回填,否则编辑器就是个空白新建表单');
+  assert.ok(detailReq, '带 id 进入必须去拉主题详情回填，否则编辑器就是个空白新建表单');
   assert.equal(detailReq.data.id, '77');
   detailReq.success({ code: '200', data: editDetailFixture(editScope) });
   return page;
@@ -159,7 +159,7 @@ test('带 id 进入:拉 edit-detail 并把内容回填到 formData', () => {
   assert.equal(page.data.formData.tickets[0].totalStock, 100);
   // 通关勋章图:漏了回填映射的话,编辑既有主题会静默把已传的勋章图清空 —— 保存后才发现。
   assert.equal(page.data.formData.finishMedalImg, 'https://cdn.example.com/medal-night.png',
-    '通关勋章图必须回填,否则编辑主题会静默丢图');
+    '通关勋章图必须回填，否则编辑主题会静默丢图');
   assert.deepEqual(page.data.formData.collaboratorIds, [201, 202]);
   assert.equal(page.data.formData.openMerchantPool, true, 'merchantStatus=1 → 进商家池');
   assert.equal(page.data.formData.selfPlay, true);
@@ -212,7 +212,7 @@ test('保存:走 /api/topic/v2/update 且带 id,绝不再打 create', () => {
   const body = JSON.parse(req.data);
   assert.equal(body.id, '77', 'update 不带 id 后端不知道改谁');
   assert.equal(body.name, '午夜巴士');
-  assert.equal(body.chapters.length, 1, 'FULL 档要整包上送,章节结构可改');
+  assert.equal(body.chapters.length, 1, 'FULL 档要整包上送，章节结构可改');
 });
 
 test('不带 id(新建):专业故事走 V2 create 且不带 id', () => {
@@ -260,7 +260,7 @@ test('WHITELIST 档改了票价:必须当场说清楚,不许静默剔掉后报�
   page._doSubmit();
 
   assert.equal(sent.length, 0, '改了锁定字段就不该发请求 —— 发了就等于「保存成功但没生效」');
-  assert.equal(modals.length, 1, '必须给一条可识别的拒绝信息,而不是默默吞掉');
+  assert.equal(modals.length, 1, '必须给一条可识别的拒绝信息，而不是默默吞掉');
   assert.ok(/票种与价格|不能再改/.test(modals[0].content), modals[0].content);
 });
 
@@ -285,7 +285,7 @@ test('回填还没到位就点保存:拦住,别拿空表单去重建', () => {
 
   page.submitForm();
 
-  assert.equal(sent.length, 0, 'FULL 档保存会整体重建章节/票,空表单存下去等于把原主题删空');
+  assert.equal(sent.length, 0, 'FULL 档保存会整体重建章节/票，空表单存下去等于把原主题删空');
   assert.ok(toasts.some((t) => /加载/.test(String(t))), '要告诉用户为什么点不动:' + JSON.stringify(toasts));
 });
 

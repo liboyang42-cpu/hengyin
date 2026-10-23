@@ -66,7 +66,7 @@ function methodBody(src, name) {
 
 test('规则只有一份:入口不自己写身份证校验,只调共享 util', () => {
   assert.match(read(UTIL), /require\('\.\/form-state\.js'\)/,
-    '身份证校验要用 form-state 里的 GB11643 实现,与后端 IdCardUtils 同口径')
+    '身份证校验要用 form-state 里的 GB11643 实现，与后端 IdCardUtils 同口径')
   for (const key of ['merchant', 'fabu']) {
     const { js } = ENTRY[key]
     const src = read(js)
@@ -75,7 +75,7 @@ test('规则只有一份:入口不自己写身份证校验,只调共享 util', (
     assert.match(src, /publisherIdentity\.(checkIdentityForm|identitySatisfied)\(/,
       `${js} 必须用 util 的校验判定`)
     assert.doesNotMatch(src, /isValidIdCard/,
-      `${js} 不得自己拿身份证校验位,那会在四处各写一套`)
+      `${js} 不得自己拿身份证校验位，那会在四处各写一套`)
   }
   const scene = read(SCENE_JS)
   assert.match(scene, /require\('[^']*utils\/publisher-identity\.js'\)/)

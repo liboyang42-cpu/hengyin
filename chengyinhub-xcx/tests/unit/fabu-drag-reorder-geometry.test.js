@@ -21,7 +21,7 @@ function rowGeometryFromWxss(wxss) {
   assert.ok(rule, 'wxss 必须定义 .slopes-node-row')
   const height = /height:\s*(\d+)rpx/.exec(rule[1])
   const margin = /margin-bottom:\s*var\(--cy-space-2\)/.exec(rule[1])
-  assert.ok(height, '.slopes-node-row 必须定高,否则 movable-view 的 y 折算没有依据')
+  assert.ok(height, '.slopes-node-row 必须定高，否则 movable-view 的 y 折算没有依据')
   assert.ok(margin, '.slopes-node-row 的行间距必须是 --cy-space-2(16rpx),换 token 要同步改本契约')
   return Number(height[1]) + 16
 }
@@ -36,7 +36,7 @@ test('拖拽落点几何:JS 的 CARD_H_RPX 必须等于 wxss 行高 + 行间距'
   assert.equal(
     cardHFromJs(read('index.js')),
     rowGeometryFromWxss(read('index.wxss')),
-    'CARD_H_RPX 与 .slopes-node-row 的实际占位对不上 → 松手后落点算偏,拖一行掉两行且零报错',
+    'CARD_H_RPX 与 .slopes-node-row 的实际占位对不上 → 松手后落点算偏，拖一行掉两行且零报错',
   )
 })
 
@@ -68,17 +68,17 @@ test('地图由 viewMode 切换,导航 chrome 必须留在地图之外', () => {
   assert.match(
     mapWrap[1],
     /wx:if="\{\{editorPage === 1 && viewMode === 'map'\}\}"/,
-    '地图必须由 viewMode 驱动,且只在第 1 页 —— 第 2 页是纯票务表单,地图对它没意义',
+    '地图必须由 viewMode 驱动，且只在第 1 页 —— 第 2 页是纯票务表单，地图对它没意义',
   )
-  assert.doesNotMatch(wxml, /activeTab/, '旧三步态已退役,不该有残留')
+  assert.doesNotMatch(wxml, /activeTab/, '旧三步态已退役，不该有残留')
 
   const mapBlock = /<view class="slopes-map-wrap"[\s\S]*?<\/map>/.exec(wxml)
   assert.ok(mapBlock, '必须能截出地图块')
   assert.doesNotMatch(mapBlock[0], /slopes-back/, '返回钮不能留在地图里:地图撤走它会跟着消失')
-  assert.doesNotMatch(mapBlock[0], /pd-step-progress/, '进度条不能留在地图里:地图只在第 1 页,留里面另一页就没导航了')
+  assert.doesNotMatch(mapBlock[0], /pd-step-progress/, '进度条不能留在地图里:地图只在第 1 页，留里面另一页就没导航了')
 
   assert.match(wxml, /class="slopes-sheet \{\{editorPage === 1 && viewMode === 'map' \? '' : 'slopes-sheet--full'\}\}"/,
-    '只有第 1 页的地图视图才让出顶部空间,其余情况 sheet 占满屏')
+    '只有第 1 页的地图视图才让出顶部空间，其余情况 sheet 占满屏')
 })
 
 test('拖拽三件套与节点抽屉入口必须真绑在 wxml 上(它们曾经全是死代码)', () => {
@@ -91,7 +91,7 @@ test('拖拽三件套与节点抽屉入口必须真绑在 wxml 上(它们曾经�
     ['showEditNodes', 'catchtap'],
     ['selectNode', 'catchtap'],
   ].forEach(([handler, binding]) => {
-    assert.match(wxml, new RegExp(`${binding}="${handler}"`), `${handler} 必须由 ${binding} 真绑定,否则又是死代码`)
+    assert.match(wxml, new RegExp(`${binding}="${handler}"`), `${handler} 必须由 ${binding} 真绑定，否则又是死代码`)
     assert.match(js, new RegExp(`^  ${handler}\\(`, 'm'), `${handler} 必须在 index.js 里真存在`)
   })
 

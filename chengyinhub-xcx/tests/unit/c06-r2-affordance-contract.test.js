@@ -104,7 +104,7 @@ function assertCodeMissingState(wxml) {
   assert.ok(missing, '缺参必须有页面自渲染的 missing 分支(不能把缺参交给 cy-qr-voucher)')
 
   // ① 真插画 + 真实原因 + 唯一真出口
-  assert.match(missing[0], /kind="missing-param"/, 'missing 态要用四态族的 missing-param(自带既有插画,不臆造资源)')
+  assert.match(missing[0], /kind="missing-param"/, 'missing 态要用四态族的 missing-param(自带既有插画，不臆造资源)')
   assert.match(missing[0], /cta="返回"[\s\S]*?bind:cta="onMissingBack"/, 'missing 态必须给一个真的走得通的出口')
 
   // ② 零重试:缺参重试永远回到同一状态
@@ -176,7 +176,7 @@ function assertShutterDiscoverable(wxml, wxss) {
   const shutter = wxml.match(/class="sc-shutter"[\s\S]*?style="([^"]*)"/)
   assert.ok(shutter, '必须有可见快门')
   assert.match(shutter[1], /left:\{\{shutterL\}\}px;top:\{\{shutterT\}\}px/,
-    '快门坐标必须来自 layout.js 的同一组变量,不许写死')
+    '快门坐标必须来自 layout.js 的同一组变量，不许写死')
   assert.match(wxml, /class="sc-shutter"[\s\S]{0,300}?bindtap="onShutter"/, '快门本体就是命中元素')
 
   const r = rule(wxss, '.sc-shutter')
@@ -225,7 +225,7 @@ function assertAlbumRetryReadsEnabled(wxss) {
   assert.match(root, /--cy-btn-solid-fg:\s*var\(--cy-color-action-primary-fg\)/,
     '.al-root 必须重新声明 --cy-btn-solid-fg,保证字色与新底色配套')
   // 纸感浅色是有意设计,别顺手翻成暗色
-  assert.match(wxss, /theme-light|纸感/, '集邮册浅色纸感是有意设计,不应被改掉')
+  assert.match(wxss, /theme-light|纸感/, '集邮册浅色纸感是有意设计，不应被改掉')
 }
 
 test('R2-4 静态:.al-root 重声明 btn-solid 别名,重试呈实心可点', () => {
@@ -251,7 +251,7 @@ function assertChatNoSendableIllusion(wxml, wxss) {
 
   // ② placeholder 不许在不可用时还写「发消息...」
   assert.match(wxml, /placeholder="\{\{disabled \? '不可回复' : loadState === 'ready' \? '发消息\.\.\.' : '会话不可用'\}\}"/,
-    '不可用时 placeholder 必须换掉,否则文案本身就在邀请发送')
+    '不可用时 placeholder 必须换掉，否则文案本身就在邀请发送')
 
   // ③ 发送钮高亮必须同时要求 ready(否则打了字就亮起来,像能发)
   assert.match(wxml, /send-circle \{\{text && !disabled && loadState === 'ready' \? 'active' : ''\}\}/,
@@ -280,10 +280,10 @@ test('R2-5 数据:每个非 ready 态都有一句真实原因,不留空白解释
   const ctx = loadPage('subpackageB/pages/im/chat/index.js')
   const map = ctx.page.data.sendBlockedMap
   ;['loading', 'missing', 'error'].forEach((state) => {
-    assert.ok(map && map[state] && map[state].length > 0, `${state} 态必须有解释文案,否则解释行渲染成空`)
+    assert.ok(map && map[state] && map[state].length > 0, `${state} 态必须有解释文案，否则解释行渲染成空`)
   })
   // 缺参的那句要真的把出路说清楚
-  assert.match(map.missing, /消息列表/, '缺参态要告诉用户回哪里去,不能只说「不可用」')
+  assert.match(map.missing, /消息列表/, '缺参态要告诉用户回哪里去，不能只说「不可用」')
 })
 
 test('negative control R2-5: 解禁视觉 / placeholder 不变 / 解释行只看 disabled,各自判红', () => {

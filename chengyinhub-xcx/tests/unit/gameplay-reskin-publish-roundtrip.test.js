@@ -143,7 +143,7 @@ for (const skin of fixture.themes) {
     assert.deepEqual(runtime.gameplayRuntime.acts, original.gameplayRuntime.acts.map(act => ({ ...act, questKeys: [] })));
     assert.deepEqual(runtime.gameplayRuntime.quests, []);
     assert.deepEqual(runtime.chapters.map(ch => ch.completion), original.chapters.map(ch => ch.completion));
-    // 2026-10-12:互斥组与额外站点(共用额度关系)按位置换成副本站点的 client 引用保留,不再整段丢弃
+    // 2026-10-12:互斥组与额外节点(共用额度关系)按位置换成副本节点的 client 引用保留,不再整段丢弃
     const idToClient = new Map(page.data.formData.chapters.flatMap(ch => ch.nodes).map((node, index) =>
       [String(node.id), 'client:' + next.data.formData.chapters.flatMap(ch => ch.nodes)[index].clientNodeKey]));
     assert.deepEqual(runtime.chapters.map(ch => [ch.exclusiveGroups || null, ch.extraNodes || null]),
@@ -163,7 +163,7 @@ for (const skin of fixture.themes) {
     }
     assert.ok(Object.keys(runtime.templateBindings).every(key => key.startsWith('client:')));
     assert.equal(modals.length, 1);
-    assert.equal(modals[0].content, '复制后需要重新选择：通用玩法结构需在副本中重新配置（到达地点、工作人员引导和备用站点）、归零挑战需重新选择挑战站点');
+    assert.equal(modals[0].content, '复制后需要重新选择：通用玩法结构需在副本中重新配置（到达地点、工作人员引导和备用节点）、归零挑战需重新选择挑战节点');
     assert.deepEqual(JSON.parse(page._runtimePayload()), original, '源主题编辑配置保持原值');
     assert.equal(next.data.formData.journeyStory, copied.formData.journeyStory);
     assert.equal(next.data.formData.completeRuleJson, copied.formData.completeRuleJson);

@@ -65,10 +65,10 @@ module.exports = { state: state, label: label, cta: cta };
   </view>
   <!-- PR10 F-W1-12:未登录(无会话 / 401)给登录引导,不与加载失败一起留白 -->
   <view class="davidwu" wx:elif="{{walletState === 'login'}}">
-    <cy-state-shell class="fill-slot" kind="no-permission" title="登录后查看票夹" sub="登录后可查看你报名的路线票和场次票" primary="登录" fill="{{true}}" size="lg" theme="player" bind:primary="loginWallet" />
+    <cy-state-shell class="fill-slot" kind="no-permission" title="登录后查看票夹" primary="登录" fill="{{true}}" size="lg" theme="player" bind:primary="loginWallet" />
   </view>
   <view class="davidwu" wx:elif="{{walletState === 'empty'}}">
-    <cy-state-shell class="fill-slot" kind="empty" title="还没有票" sub="去首页发现路线或报名场次，票会在这里出现。" fill="{{true}}" size="lg" theme="player" />
+    <cy-state-shell class="fill-slot" kind="empty" title="还没有票" fill="{{true}}" size="lg" theme="player" />
   </view>
 
   <view class="flex-a flex-col main" wx:if="{{walletState === 'ready' && (!focusState || focusState === 'ready')}}" style="padding-top:{{navTop}}px;">

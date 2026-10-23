@@ -40,7 +40,7 @@ function normalizeNode(item) {
 function normalizeApplication(item) {
   if (!item || !item.id) return null;
   return Object.assign({}, item, {
-    displayName: scalarText(item.name, '据点申请'),
+    displayName: scalarText(item.name, '节点申请'),
     auditReasonText: scalarText(item.auditReason, ''),
     actionState: 'idle',
     actionError: '',
@@ -207,22 +207,22 @@ Page({
 
   goCreate() {
     if (!this.data.merchantAccess.canManageProjects) {
-      return toast('当前岗位没有据点管理权限');
+      return toast('当前岗位没有节点管理权限');
     }
     if (this.data.quotaState !== 'ready') {
-      toast('据点配额暂未取回，请重试');
+      toast('节点配额暂未取回，请重试');
       this.retryQuota();
       return;
     }
     if (this.data.used >= this.data.max) {
-      return toast(this.data.max === 0 ? '当前没有据点配额' : '在架据点已满，请先下线一个');
+      return toast(this.data.max === 0 ? '当前没有节点配额' : '在架节点已满，请先下线一个');
     }
     wx.navigateTo({ url: '/pages/merchant/citynode/create/index' });
   },
 
   toggleClaim() {
     if (!this.data.merchantAccess.canManageProjects) {
-      return toast('当前岗位没有据点管理权限');
+      return toast('当前岗位没有节点管理权限');
     }
     const showClaim = !this.data.showClaim;
     this.setData({ showClaim: showClaim });
@@ -273,7 +273,7 @@ Page({
 
   submitClaim(e) {
     if (!this.data.merchantAccess.canManageProjects) {
-      return toast('当前岗位没有据点管理权限');
+      return toast('当前岗位没有节点管理权限');
     }
     const poiId = Number(e.currentTarget.dataset.poiid || 0);
     if (!Number.isInteger(poiId) || poiId <= 0) return;
@@ -314,7 +314,7 @@ Page({
   /** 撤回自己的待审认领:节点会重新回到可认领池,别人才能认领 —— 不做撤回,这个节点会锁在「已有待审申请」。 */
   cancelClaim(e) {
     if (!this.data.merchantAccess.canManageProjects) {
-      return toast('当前岗位没有据点管理权限');
+      return toast('当前岗位没有节点管理权限');
     }
     const poiId = Number(e.currentTarget.dataset.poiid || 0);
     if (!Number.isInteger(poiId) || poiId <= 0) return;
@@ -437,7 +437,7 @@ Page({
 
   toggleNode(e) {
     if (!this.data.merchantAccess.canManageProjects) {
-      return toast('当前岗位没有据点管理权限');
+      return toast('当前岗位没有节点管理权限');
     }
     const poiId = e.currentTarget.dataset.poiid;
     const row = this.data.nodes.find(function (item) { return String(item.poiId) === String(poiId); });
@@ -489,8 +489,8 @@ Page({
       if (result.status === 'unknown') {
         modal.show({
           title: '核销结果待确认',
-          content: (result.recovered ? '该玩家在本据点的上一次核销结果仍待确认，本次没有重新提交。' : '网络异常，核销可能已经完成。')
-            + '请让玩家在「我的券」核对是否到账，不要重复扫码；无法确认时请联系平台处理。',
+          content: (result.recovered ? '该玩家在本节点的上一次核销结果仍待确认，本次没有重新提交。' : '网络异常，核销可能已经完成。')
+            + '请让玩家在「我的券」确认是否到账，不要重复扫码；无法确认时请联系平台处理。',
           showCancel: false,
           confirmText: '知道了',
         });

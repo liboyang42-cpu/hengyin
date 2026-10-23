@@ -73,7 +73,7 @@ test('有人带:成团人数为空或 0 时不得确认终价,并当场说明理
   page.recalculate()
   requests[requests.length - 1].success({ code: '200', data: { priceMin: '0.00', canConfirm: true } })
   assert.equal(page.data.floor, 0)
-  assert.equal(page.data.canConfirmPrice, false, 'floor=0 时 0>=0 恒真,必须由人数这道闸兜住')
+  assert.equal(page.data.canConfirmPrice, false, 'floor=0 时 0>=0 恒真，必须由人数这道闸兜住')
 })
 
 test('有人带:人数缺失时同样不能确认(空值不是「已填 0 人」)', () => {
@@ -103,7 +103,7 @@ test('滑块与灰按钮:改价不复活人数缺失的提交,灰按钮要说明
   assert.equal(page.data.canConfirmPrice, false)
 
   page.onConfirmDisabledTap()
-  assert.match(page.data.submitError, /成团人数/, '点灰按钮必须有回执,本仓不许留死交互')
+  assert.match(page.data.submitError, /成团人数/, '点灰按钮必须有回执，本仓不许留死交互')
 })
 
 test('确认失败就地返回回执,不发建单请求', () => {
@@ -118,7 +118,7 @@ test('确认失败就地返回回执,不发建单请求', () => {
 test('CU-C-99/100:成本地板不带内部编号,主按钮不承诺「并开售」', () => {
   const wxml = read(WXML)
   assert.doesNotMatch(wxml, /<text[^>]*>[^<]*乙-2/, '内部条款编号不得出现在用户可见标题里(注释里留说明可以)')
-  assert.match(wxml, /<text class="pg-kicker">成本地板<\/text>/)
+  assert.match(wxml, /<text class="pg-kicker">最低价<\/text>/)
   assert.doesNotMatch(wxml, /确认终价并开售/, '按钮不能承诺点完就开卖')
   assert.match(wxml, /确认终价并提交开售审核/)
   assert.match(wxml, /bind:disabledtap="onConfirmDisabledTap"/, '禁用态要有解释出口')

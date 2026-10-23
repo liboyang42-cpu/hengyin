@@ -67,10 +67,10 @@ function filledForm() {
 }
 
 function assertDraftKept(inst, where) {
-  assert.equal(inst.data.answer, 2, where + ':关闭不能清空星级评分,失败提示承诺「评分和文案已保留」')
+  assert.equal(inst.data.answer, 2, where + ':关闭不能清空星级评分，失败提示承诺「评分和文案已保留」')
   assert.equal(inst.data.plnr, DRAFT_TEXT, where + ':关闭不能清空已写文案')
   assert.deepEqual(inst.data.uploadImages, DRAFT_IMAGES, where + ':关闭不能清空已选图片')
-  assert.equal(inst.data.canSubmitComment, true, where + ':草稿还在,重开应能直接重试')
+  assert.equal(inst.data.canSubmitComment, true, where + ':草稿还在，重开应能直接重试')
 }
 
 test('CU-C-105 ① 审核/业务失败后关闭表单:草稿保留,重新打开还在', () => {
@@ -120,7 +120,7 @@ test('CU-C-105 ④ 提交中不允许关闭(原守卫不能被顺手改掉)', ()
   m.inst.submitComment()
   assert.equal(m.inst.data.commentSubmitting, true, '前提失效:提交中没有置 submitting')
   m.inst.closeComment()
-  assert.equal(m.inst.data.voteShow, true, '提交还没回来,关闭不能把表单收掉')
+  assert.equal(m.inst.data.voteShow, true, '提交还没回来，关闭不能把表单收掉')
 })
 
 test('CU-C-104 填表前说明资格口径:提示在评分控件之前', () => {
@@ -133,7 +133,7 @@ test('CU-C-104 填表前说明资格口径:提示在评分控件之前', () => {
 
   const ratingAt = wxml.indexOf('class="activity-rating"', formStart)
   assert.ok(ratingAt > -1, '锚点失配:评分控件不在了')
-  assert.ok(hintAt < ratingAt, '提示必须排在评分/文案输入之前,否则仍是「资格提示滞后」')
+  assert.ok(hintAt < ratingAt, '提示必须排在评分/文案输入之前，否则仍是「资格提示滞后」')
 })
 
 test('CU-C-104 「写评价」入口保持人人可评:不加资格禁用/隐藏', () => {
@@ -141,5 +141,5 @@ test('CU-C-104 「写评价」入口保持人人可评:不加资格禁用/隐藏
   const entryAt = wxml.indexOf('bindtap="openComment"')
   assert.ok(entryAt > -1, '锚点失配:「写评价」入口不在了')
   const entryTag = wxml.slice(wxml.lastIndexOf('<', entryAt), wxml.indexOf('>', entryAt))
-  assert.doesNotMatch(entryTag, /disabled|wx:if|hidden/, '入口不能按报名/核销资格禁用或隐藏,裁决是保持人人可评')
+  assert.doesNotMatch(entryTag, /disabled|wx:if|hidden/, '入口不能按报名/核销资格禁用或隐藏，裁决是保持人人可评')
 })

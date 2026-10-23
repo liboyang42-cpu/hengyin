@@ -66,7 +66,7 @@ test('断网:UNKNOWN 不会被「状态有效但样本仍是旧录音」的回�
   assert.equal(f.page.data.voiceUnknown, true);
   f.last('/api/merchant/npc/voice/status').success({ code: '200', voiceStatus: 2, voiceSample: 'https://fixture/media/old.m4a' });
   await settle();
-  assert.equal(f.page.data.voiceUnknown, true, '原录音还没确认,不能解除 UNKNOWN');
+  assert.equal(f.page.data.voiceUnknown, true, '原录音还没确认，不能解除 UNKNOWN');
   assert.equal(f.page.data.voiceFile.url, URL, '原录音保留');
   // 锁住期间上传不再发 enroll
   const enrolls = f.requests.filter((r) => r.url === '/api/merchant/npc/voice/enroll').length;

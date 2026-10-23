@@ -74,7 +74,7 @@ function assertDecorChrome(src) {
   assert.match(navTag[0], /\stitle="\{\{view === .*pageTitle\}\}"/,
     '标题必须挂在导航条居中位(2026-08-20 统一规范),不能让这页变无题页')
   assert.doesNotMatch(src.decorWxml, /<cy-page-title/,
-    'L1 大标题已撤销,再挂 cy-page-title 就是双标题')
+    'L1 大标题已撤销，再挂 cy-page-title 就是双标题')
   assert.doesNotMatch(src.decorWxml, /slot="actions"/,
     '导航条不应重复放置「看公开主页」入口')
   assert.match(src.decorWxss, /@import ['"]\.\.\/\.\.\/\.\.\/style\/merchant-light\.wxss['"];/)

@@ -151,14 +151,14 @@ test('首页底部主题和活动列表 200 空 payload 都按加载失败处理
   assert.equal(topic.page.data.isBottomLoading, false);
   // A-14-2:失败不再只弹一次 toast,改为列表底部的行内重试标记(失败页)。
   assert.equal(topic.page.data.bottomTopicFailedPage, 1);
-  assert.equal(topic.toasts.length, 0, '行内重试已承接失败反馈,不再叠 toast');
+  assert.equal(topic.toasts.length, 0, '行内重试已承接失败反馈，不再叠 toast');
 
   const activity = loadPage();
   activity.page.loadBottomActivityList(1);
   assert.doesNotThrow(() => activity.requests[0].success({ code: 200, data: null }));
   assert.equal(activity.page.data.isBottomLoading, false);
   assert.equal(activity.page.data.bottomActivityFailedPage, 1);
-  assert.equal(activity.toasts.length, 0, '行内重试已承接失败反馈,不再叠 toast');
+  assert.equal(activity.toasts.length, 0, '行内重试已承接失败反馈，不再叠 toast');
 });
 
 test('A-14-2:底部信息流刷新失败落行内重试,重试复用失败页并在成功后清标记', () => {
@@ -185,7 +185,7 @@ test('A-14-2:加载更多失败按翻页口径重试(pageNum 前进),活动列�
   assert.equal(page.data.bottomTopicFailedPage, 2, '翻页失败记的是第 2 页');
 
   page.retryBottomTopic();
-  assert.equal(requests.at(-1).data.pageNum, 2, '重试翻的是同一页,不从头再来');
+  assert.equal(requests.at(-1).data.pageNum, 2, '重试翻的是同一页，不从头再来');
 
   const activity = loadPage();
   activity.page.setData({ bottomActivityPageNo: 1, hasMoreBottomActivity: true });

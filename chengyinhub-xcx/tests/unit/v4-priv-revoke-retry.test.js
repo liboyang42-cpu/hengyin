@@ -59,7 +59,7 @@ test('SC-PRIV-03 超时/HTTP500/业务失败/回包丢失都不提示撤回成�
   assert.equal(h.readbacks().length, 1);
   h.readbacks().at(-1).success(notRevoked);
   await settle();
-  assert.equal(h.sheet.data.submitting, false, '超时必须释放提交态,否则无法重试');
+  assert.equal(h.sheet.data.submitting, false, '超时必须释放提交态，否则无法重试');
   assert.deepEqual(h.toasts, ['本机漫游已停，记录待确认']);
 
   // 2) HTTP 500
@@ -98,7 +98,7 @@ test('SC-PRIV-03 超时/HTTP500/业务失败/回包丢失都不提示撤回成�
   assert.equal(h.toasts.at(-1), SUCCESS_TOAST);
   const ids = new Set(h.revokes().map(r => JSON.parse(r.data).requestId));
   assert.equal(h.revokes().length, 6);
-  assert.equal(ids.size, 1, '所有重试必须复用同一幂等号,回包丢失的那次不会被重复记账');
+  assert.equal(ids.size, 1, '所有重试必须复用同一幂等号，回包丢失的那次不会被重复记账');
   assert.equal(h.storage.size, 0, '成功后清掉待重试幂等号');
 
   // 迟到的旧回包不能再触发第二次成功提示
@@ -112,8 +112,8 @@ test('SC-PRIV-03 结果未知(超时/回包丢失)且回读显示仍未撤回:�
   h.sheet.withdrawRoamLocationConsent();
   h.revokes().at(-1).fail({ errMsg: 'request:fail' }); // 服务端可能已撤回
   await settle();
-  assert.equal(h.readbacks().length, 1, '结果未知必须先回读服务端');
-  assert.deepEqual(h.toasts, [], '回读返回前不得提前下结论');
+  assert.equal(h.readbacks().length, 1, '结果未知必须先刷新服务端');
+  assert.deepEqual(h.toasts, [], '刷新返回前不得提前下结论');
   assert.equal(h.sheet.data.submitting, true);
   h.readbacks().at(-1).fail({ errMsg: 'request:fail' }); // 回读本身也失败 → 失败
   await settle();
@@ -146,7 +146,7 @@ test('SC-PRIV-03 期望:结果未知时先回读服务端最新状态,再决定�
   await settle();
   assert.deepEqual(h.toasts, [SUCCESS_TOAST]);
   assert.equal(h.sheet.data.submitting, false);
-  assert.equal(h.storage.size, 0, '回读确认撤回后清掉待重试幂等号');
+  assert.equal(h.storage.size, 0, '刷新确认撤回后清掉待重试幂等号');
   // 业务失败(有回包)不回读,立即失败
   h.sheet.withdrawRoamLocationConsent();
   h.revokes().at(-1).success({ code: 500, msg: '服务繁忙' });

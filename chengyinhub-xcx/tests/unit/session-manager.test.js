@@ -208,7 +208,7 @@ test('单航班释放:前一轮结束后可再次登录', async () => {
 test('残留 dev token 被拒时如实失败,不再写假会话', async () => {
   const { deps, calls } = makeDeps({
     isDevEnv: () => true,
-    exchangeCode: async () => ({ msg: '微信服务暂时不可用' }),
+    exchangeCode: async () => ({ msg: '微信服务暂不可用' }),
     session: makeSession({ authorization: 'dev-token', user_id: '7' }),
   });
   const mgr = createSessionManager(deps);

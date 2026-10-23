@@ -10,13 +10,13 @@
                   fill size="lg" bind:primary="onErrorAction" auto-back />
   <block wx:else>
     <view class="team-refresh-state">
-      <text wx:if="{{refreshing && team}}" class="team-sync" aria-role="status">正在核对队伍状态…</text>
+      <text wx:if="{{refreshing && team}}" class="team-sync" aria-role="status">正在确认队伍状态…</text>
     </view>
   <block wx:if="{{team}}">
     <view class="team-head">
       <view class="team-status {{team.status < 2 ? 'live' : ''}}">{{statusText}}</view>
       <view class="team-title">{{team.title || '一起出发的玩家队伍'}}</view>
-      <view class="team-sub">{{team.joinMode == 2 ? '公开招募' : '仅邀请'}} · 组队与否不影响活动举行</view>
+      <view class="team-sub">{{team.joinMode == 2 ? '公开招募' : '仅邀请'}}</view>
       <view class="team-meta">
         <view class="team-meta-item"><text class="team-meta-value">{{team.joinedCount}} / {{team.maxMembers}}</text><text class="team-meta-key">当前成员</text></view>
         <view class="team-meta-item"><text class="team-meta-value">{{expireText || '待定'}}</text><text class="team-meta-key">场次开始</text></view>
@@ -44,7 +44,7 @@
 
     <view class="team-section-title">队伍成员</view>
     <view class="team-card">
-      <cy-empty wx:if="{{!members.length}}" kind="empty" title="还没有队员" sub="把邀请发给同行的朋友，他们加入后会出现在这里" />
+      <cy-empty wx:if="{{!members.length}}" kind="empty" title="还没有队员" />
       <view class="team-member" wx:for="{{members}}" wx:key="memberId">
         <image class="team-avatar" src="{{item.memberAvatar || '/images/d_profile.png'}}" mode="aspectFill" />
         <view class="team-member-main">
@@ -64,7 +64,7 @@
     </view>
     <view class="team-note team-report" wx:if="{{!leader}}" bindtap="openReport" aria-role="button" aria-label="举报这支队伍"
           hover-class="cy-pressed" hover-stay-time="80">举报队伍</view>
-    <view class="team-note" wx:if="{{joined}}">退队不会退款；如需退票，请在订单中单独处理。</view>
+    <view class="team-note" wx:if="{{joined}}">退队不退款，退票请到订单</view>
   </block>
   </block>
 </view>

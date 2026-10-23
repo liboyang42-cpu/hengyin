@@ -9,10 +9,10 @@
 
   <cy-skeleton wx:if="{{state === 'loading'}}" type="card" count="2" loading-label="正在加载核销详情" />
   <cy-error wx:elif="{{state === 'denied'}}" fill size="lg"
-            title="核销记录不可见" sub="{{errorText || '当前账号没有查看权限'}}" retry="" bind:back="goBack" auto-back custom-back />
-  <cy-error load-failure wx:elif="{{state === 'missing'}}" fill size="lg" title="打不开这条核销记录"
+            title="核销记录不可见" sub="{{errorText}}" retry="" bind:back="goBack" auto-back custom-back />
+  <cy-error load-failure wx:elif="{{state === 'missing'}}" fill size="lg" title="无法打开这条核销记录"
             sub="{{errorText}}" retry="返回" bind:retry="goBack" auto-back />
-  <cy-error load-failure wx:elif="{{state !== 'ready'}}" fill size="lg" title="核销凭证没加载出来"
+  <cy-error load-failure wx:elif="{{state !== 'ready'}}" fill size="lg" title="核销凭证加载失败"
             sub="{{errorText}}" retry="重新加载" bind:retry="retry" auto-back />
 
   <block wx:else>
@@ -71,7 +71,7 @@
           <text class="ckd-rail-label ckd-rail-label--{{item.tone}} {{item.current ? 'is-current' : ''}}">{{item.label}}</text>
         </view>
       </view>
-      <text wx:if="{{detail.statusCode === 'REFUNDED'}}" class="ckd-note">这单已退款，履约轨迹不再推进。</text>
+      <text wx:if="{{detail.statusCode === 'REFUNDED'}}" class="ckd-note">已退款</text>
     </view>
 
     <!-- 清退退款(2026-09-09 从报名名册行内挪来)。canRefund 由服务端判:
@@ -87,7 +87,7 @@
             hover-class="{{refunding || refundErrorUnknown ? 'none' : 'cy-pressed'}}" hover-stay-time="80">
         {{refunding ? '正在退款…' : '清退并退款'}}
       </view>
-      <text class="ckd-foot-note">退款按购买时冻结的政策执行；已核销的单退不了。</text>
+      <text class="ckd-foot-note">已核销订单不可退款</text>
     </view>
   </block>
 </view>

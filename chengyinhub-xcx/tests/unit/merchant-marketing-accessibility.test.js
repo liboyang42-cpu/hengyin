@@ -19,7 +19,7 @@ const wxml = fs.readFileSync(path.resolve(__dirname, '../../pages/merchant/marke
 // aria-role + aria-label,漏一个就等于这个入口对读屏器不存在。这条与入口数量无关。
 test('商家营销页每个自定义点击入口都有 button 角色和可读名称', () => {
   const tags = wxml.match(/<(?:view|cy-card)\b[^>]*\bbindtap="[^"]+"[^>]*>/g) || [];
-  assert.ok(tags.length > 0, '没扫到任何自定义点击入口,选择器多半失效了 —— 恒绿比红更危险');
+  assert.ok(tags.length > 0, '没扫到任何自定义点击入口，选择器多半失效了 —— 恒绿比红更危险');
   tags.forEach((tag) => {
     assert.match(tag, /\baria-role="button"/, tag);
     assert.match(tag, /\baria-label="[^"]+"/, tag);
@@ -28,7 +28,7 @@ test('商家营销页每个自定义点击入口都有 button 角色和可读名
 
 test('负控:任一自定义点击入口漏掉 aria-role / aria-label 时契约必须转红', () => {
   const stripped = wxml.replace(/(\<view\b[^>]*\bbindtap="[^"]+"[^>]*?)\saria-role="button"/, '$1');
-  assert.notEqual(stripped, wxml, '负控没改到东西,说明上面的选择器已经失效');
+  assert.notEqual(stripped, wxml, '负控没改到东西，说明上面的选择器已经失效');
   const tags = stripped.match(/<(?:view|cy-card)\b[^>]*\bbindtap="[^"]+"[^>]*>/g) || [];
   assert.throws(() => {
     tags.forEach((tag) => { assert.match(tag, /\baria-role="button"/, tag); });

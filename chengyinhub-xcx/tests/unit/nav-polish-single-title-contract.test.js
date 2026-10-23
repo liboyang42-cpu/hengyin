@@ -26,7 +26,7 @@ function pageTitleOf(wxml, rel) {
   // 2026-08-20 商家标题统一:merchant 页的标题移入 cy-nav-bar 居中,锚点跟着走 —— 
   // 「同一个词不能出现两处标题」的语义不变,只是页标题的载体从 cy-page-title 变成 nav title。
   const tag = wxml.match(/<cy-page-title[\s\S]*?\/>/) || wxml.match(/<cy-nav-bar\b[^>]*\stitle="[^"]*"[^>]*>/);
-  assert.ok(tag, `${rel}:cy-page-title/cy-nav-bar title 都不见了,单一大标题闸失去锚点`);
+  assert.ok(tag, `${rel}:cy-page-title/cy-nav-bar title 都不见了，单一大标题闸失去锚点`);
   const title = tag[0].match(/\stitle="([^"]*)"/);
   assert.ok(title, `${rel}:cy-page-title 缺 title 属性`);
   return { tag: tag[0], title: title[1] };
@@ -64,12 +64,12 @@ for (const rel of PAGES) {
 
 test('活动表单保留售出锁定原因，成长中心按批准Figma不展示副标题', () => {
   const expected = {
-    'pages/publish/activity/index.wxml': "{{timeLocationLocked ? '已售出：只能改文字、图片与票务' : ''}}"
+    'pages/publish/activity/index.wxml': ""
   };
   for (const [rel, sub] of Object.entries(expected)) {
     const { tag } = pageTitleOf(readPage(rel), rel);
     const got = tag.match(/\ssubtitle="([^"]*)"/);
-    assert.ok(got, `${rel}:自带头删掉了但副标题没并进 cy-page-title 的 subtitle 槽,信息丢失`);
+    assert.ok(got, `${rel}:自带头删掉了但副标题没并进 cy-page-title 的 subtitle 槽，信息丢失`);
     assert.equal(got[1], sub, `${rel}:subtitle 文案与规整专项拍板不符`);
   }
   const growth = 'subpackageP3/pages/growthcenter/index/index.wxml';
@@ -84,13 +84,13 @@ test('coop/list 顶部两个 action 已按用户备注移除,但两条路径都�
   const wxml = readPage('pages/coop/list/index.wxml');
   const js = readPage('pages/coop/list/index.js');
 
-  assert.doesNotMatch(wxml, /bindtap="goMybiz"/, 'coop/list:「结算」按钮该按用户备注移除,又回来了');
-  assert.doesNotMatch(wxml, /coop-nav-btn/, 'coop/list:「+ 发起邀请」按钮该按用户备注移除,又回来了');
+  assert.doesNotMatch(wxml, /bindtap="goMybiz"/, 'coop/list:「结算」按钮该按用户备注移除，又回来了');
+  assert.doesNotMatch(wxml, /coop-nav-btn/, 'coop/list:「+ 发起邀请」按钮该按用户备注移除，又回来了');
 
   // 「发起邀请」这条路径本身要留着:两个空态 CTA 仍指 goInvite,方法不能跟着按钮一起被删,
   // 否则就是这批刚修过的那种"绑定还在、方法没了"的静默死链。
   assert.match(wxml, /bindcta="goInvite"/, 'coop/list:空态「去发起邀请」CTA 不该跟着一起删');
-  assert.match(js, /\bgoInvite\(\)\s*\{/, 'coop/list:goInvite 方法必须还在,否则空态 CTA 是死链');
+  assert.match(js, /\bgoInvite\(\)\s*\{/, 'coop/list:goInvite 方法必须还在，否则空态 CTA 是死链');
 
   // 资金域定稿后，合作分润降级为结算来源筛选；旧 mybiz 评分/提现中心不再保留。
   const ledger = readPage('pages/merchant/ledger/index.wxml');
@@ -104,6 +104,6 @@ test('coop/list 顶部两个 action 已按用户备注移除,但两条路径都�
 
 test('负控:goInvite 方法被连按钮一起删掉(空态 CTA 变死链)必须判红', () => {
   const js = readPage('pages/coop/list/index.js').replace(/\bgoInvite\(\)\s*\{/, 'goInviteGone() {');
-  assert.doesNotMatch(js, /\bgoInvite\(\)\s*\{/, '变异未生效,负控本身是假的');
+  assert.doesNotMatch(js, /\bgoInvite\(\)\s*\{/, '变异未生效，负控本身是假的');
   assert.throws(() => assert.match(js, /\bgoInvite\(\)\s*\{/));
 });

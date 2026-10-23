@@ -142,7 +142,7 @@ test('D1 publish/activity:聚焦态边框必须是层叠里的胜者,而不是�
   assert.ok(
     winner.isFocus,
     `聚焦态边框被压掉了:层叠胜者是「${winner.selector}」(权重 ${winner.spec} @${winner.index})。`
-    + '同权重时后写者胜 ⇒ 把聚焦规则移到覆盖块之后,或提高其权重。',
+    + '同权重时后写者胜 ⇒ 把聚焦规则移到覆盖块之后，或提高其权重。',
   );
 
   const winnerColor = colorOf(winner);
@@ -155,7 +155,7 @@ test('D1 publish/activity:聚焦态边框必须是层叠里的胜者,而不是�
   assert.notEqual(
     winnerColor,
     colorOf(plainWinner),
-    `聚焦态边框颜色和非聚焦基线「${plainWinner.selector}」完全相同 ⇒ 聚焦前后没有任何视觉差,等于没做`,
+    `聚焦态边框颜色和非聚焦基线「${plainWinner.selector}」完全相同 ⇒ 聚焦前后没有任何视觉差，等于没做`,
   );
 
   // 「2rpx 墨色边」的 2rpx 那一半:凡是给这个元素定边宽的 border 简写都必须是 2rpx。
@@ -304,7 +304,7 @@ for (const page of FOCUS_PAGES) {
       declared,
       rendered,
       `${page.name} 的 focusField key 两侧对不上:input 声明 [${declared}] vs wxml 渲染 [${rendered}]。`
-      + '多出来的一侧就是断掉的半截通路(样式挂不上,或写了个没人渲染的 key)。',
+      + '多出来的一侧就是断掉的半截通路(样式挂不上，或写了个没人渲染的 key)。',
     );
 
     // 5) handler 函数体:focus 必须从 event dataset 写 focusField,blur 必须清空
@@ -329,7 +329,7 @@ for (const page of FOCUS_PAGES) {
       const value = focusFieldValue(setDataArgs(body));
       assert.ok(
         value && /^(''|""|``)$/.test(value),
-        `${page.name} 的 ${name} 必须 setData({ focusField: '' }) 清空聚焦态,现为「${value}」`,
+        `${page.name} 的 ${name} 必须 setData({ focusField: '' }) 清空聚焦态，现为「${value}」`,
       );
     }
   });

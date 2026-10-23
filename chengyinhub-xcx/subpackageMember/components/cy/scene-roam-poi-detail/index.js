@@ -55,7 +55,7 @@ Component({
     choiceSheetShow: false,
     choiceSheetItems: [],
     state: 'loading',
-    errorText: '这次没有读到据点信息，稍后可以重新读取。',
+    errorText: '节点信息加载失败',
     merchant: null,
     merchantError: '',
     node: null,
@@ -88,7 +88,7 @@ Component({
     _pendingNotice(storageError) {
       this._pendingCompletion = null
       this.setData({ completing: false, checkinPending: true })
-      this._setInteractionRecovery('unknown', '打卡结果待核对', '上次请求结果尚未确认，请查询当前状态；暂不重复提交。', 'query', '查询当前状态')
+      this._setInteractionRecovery('unknown', '打卡结果待确认', '上次请求结果尚未确认，请查询当前状态；暂不重复提交。', 'query', '查询当前状态')
       if (storageError) this.setData({ interactionTitle: '打卡记录暂时无法读取或保存', interactionText: '本地存储异常，暂不提交打卡。请恢复存储后查询当前状态。' })
     },
     onChoiceSheetSelect(e) {
@@ -166,7 +166,7 @@ Component({
           const method = typeof rawNode.validationMethod === 'number' ? rawNode.validationMethod : null
           const node = {
             ...rawNode,
-            vmLabel: validationMethodLabel(method, '核验方式待确认'),
+            vmLabel: validationMethodLabel(method, '—'),
             canInteract: rawNode.status === 1 && VALIDATION_METHODS.includes(method),
           }
           if (this.data.state !== 'ready') pageMotion.enter(this, 'pmPage'); this.setData({ node, state: 'ready', hasLocation: !!this._coordinates(node, null) })
@@ -182,13 +182,13 @@ Component({
           }
           if (node.merchantId && !this.data.checkinPending) this._loadMerchant(node.merchantId, token)
         },
-        fail: () => { if (!this._closed && token === this._loadToken && loadedOwner === ownerId()) this.setData({ state: 'error', errorText: '网络异常，这次没有读到据点信息。' }) },
+        fail: () => { if (!this._closed && token === this._loadToken && loadedOwner === ownerId()) this.setData({ state: 'error', errorText: '网络异常，请重试' }) },
         successStatusAbnormal: (res) => { if (!this._closed && token === this._loadToken && loadedOwner === ownerId()) this._nodeLoadFailed(res) },
       })
     },
     _nodeLoadFailed(res) {
       // 200 但数据形状不对时 msg 是「操作成功」,不能当失败原因(2026-09-17 拍板)。
-      this.setData({ state: res && (res.code === 410 || res.code === '410') ? 'unavailable' : 'error', errorText: bizFailureMessage(res, '这次没有读到据点信息，请稍后重试。') })
+      this.setData({ state: res && (res.code === 410 || res.code === '410') ? 'unavailable' : 'error', errorText: bizFailureMessage(res, '这次没有读到节点信息，请稍后重试。') })
     },
     _loadMerchant(id, loadToken) {
       const token = loadToken == null ? (this._loadToken || 0) + 1 : loadToken
@@ -217,9 +217,9 @@ Component({
           }
           const merchant = {
             ...rawMerchant,
-            displayName: nonEmptyString(rawMerchant.name) || '商家名称待确认',
-            chargeText: rawMerchant.chargeType === 1 ? '收费承接' : (rawMerchant.chargeType === 0 ? '免费承接' : '收费方式待确认'),
-            businessStatusText: rawMerchant.businessStatus === 1 ? '营业中' : (rawMerchant.businessStatus === 0 ? '已打烊' : '营业状态待确认'),
+            displayName: nonEmptyString(rawMerchant.name) || '—',
+            chargeText: rawMerchant.chargeType === 1 ? '收费承接' : (rawMerchant.chargeType === 0 ? '免费承接' : '—'),
+            businessStatusText: rawMerchant.businessStatus === 1 ? '营业中' : (rawMerchant.businessStatus === 0 ? '已打烊' : '—'),
             catNames: (rawMerchant.sysCategoryList || []).map((item) => nonEmptyString(item.categoryName)).filter(Boolean).join(' · '),
           }
           let gallery = []; let tags = []
@@ -290,7 +290,7 @@ Component({
       const node = this.data.node || {}; const merchant = this.data.merchant || {}
       const location = this._coordinates(node, merchant)
       if (!location) return
-      wx.openLocation({ ...location, name: nonEmptyString(node.name) || nonEmptyString(merchant.name) || '据点', address: nonEmptyString(node.merchantAddress) || nonEmptyString(merchant.address), scale: 18 })
+      wx.openLocation({ ...location, name: nonEmptyString(node.name) || nonEmptyString(merchant.name) || '节点', address: nonEmptyString(node.merchantAddress) || nonEmptyString(merchant.address), scale: 18 })
     },
     _isInteractionCancel(error) {
       return /\bcancel(?:led)?\b/i.test(String(error && error.errMsg || ''))
@@ -368,15 +368,15 @@ Component({
       this._interactionToken = token
       this._clearInteractionRecovery()
       if (node.needRedeem === true) {
-        this.triggerEvent('open', { id: 'qr-citynode', params: { poiId: this.data.poiId, name: node.name || '据点' } })
+        this.triggerEvent('open', { id: 'qr-citynode', params: { poiId: this.data.poiId, name: node.name || '节点' } })
         return
       }
       if (node.status !== 1) {
-        this._setInteractionRecovery('unavailable', '据点已下线', '这里保留你的历史记录，暂不接受新的打卡。', '')
+        this._setInteractionRecovery('unavailable', '节点已下线', '这里保留你的历史记录，暂不接受新的打卡。', '')
         return
       }
       if (node.canInteract === false || !VALIDATION_METHODS.includes(node.validationMethod)) {
-        this._setInteractionRecovery('unavailable', '核验方式待确认', '该据点尚未配置可用的核验方式，暂时不能打卡。', '')
+        this._setInteractionRecovery('unavailable', '—', '该节点尚未配置可用的核验方式，暂时不能打卡。', '')
         return
       }
       if (node.validationMethod === 1) {
@@ -471,7 +471,7 @@ Component({
               this._clearInteractionRecovery()
               this.setData({ 'node.completed': !result.needRedeem, 'node.needRedeem': result.needRedeem })
               this.triggerEvent('completed', { poiId, alreadyClaimed: result.alreadyClaimed === true, needRedeem: result.needRedeem })
-              if (result.needRedeem) this.triggerEvent('open', { id: 'qr-citynode', params: { poiId, name: this.data.node.name || '据点' } })
+              if (result.needRedeem) this.triggerEvent('open', { id: 'qr-citynode', params: { poiId, name: this.data.node.name || '节点' } })
               else toast(result.alreadyClaimed ? '你已完成过' : '打卡成功', { icon: result.alreadyClaimed ? 'none' : 'success' })
             },
             fail: () => { if (isCurrent()) this._pendingNotice(false) },

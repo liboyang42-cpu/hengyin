@@ -80,7 +80,7 @@ test('七个成功时刻都走 motion.haptic 且传了减动效偏好,没有裸 
   // profile 组件里两处核销共用同一段代码
   const profile = read('subpackageMember/components/cy/profile/index.js')
   const hits = profile.match(/motion\.haptic\(\{[^}]*reducedMotion:/g) || []
-  assert.equal(hits.length, 2, `cy-profile 的两处核销都要震,实际 ${hits.length} 处`)
+  assert.equal(hits.length, 2, `cy-profile 的两处核销都要震，实际 ${hits.length} 处`)
 })
 
 /* ---------- ② 金额 countUp ---------- */
@@ -89,10 +89,10 @@ function assertEarningsCountUp(js, wxml) {
   assert.match(js, /motion\.countUp\(/, '收益组件必须接 utils/motion 的 countUp')
   assert.match(js, /balanceDisplay:\s*v\.toFixed\(2\)/, 'countUp 帧只许写 balanceDisplay 展示值')
   assert.doesNotMatch(js, /balance:\s*v\.toFixed/, 'countUp 帧不得写 balance 真值(会让空态判断闪烁)')
-  assert.match(js, /readReducedMotion\(\)\s*\|\|/, '减动效必须直接落定,不走滚动')
-  assert.match(js, /balanceDisplay:\s*'0\.00'/, '起点必须显式归零,否则 refresh 时会闪出上次的金额')
+  assert.match(js, /readReducedMotion\(\)\s*\|\|/, '减动效必须直接落定，不走滚动')
+  assert.match(js, /balanceDisplay:\s*'0\.00'/, '起点必须显式归零，否则 refresh 时会闪出上次的金额')
   assert.match(js, /detached\(\)[\s\S]{0,120}_stopCountUp/, '组件销毁必须停掉滚动定时器')
-  assert.match(wxml, /money\.amount\(balanceDisplay \|\| balance\)/, '展示位读 balanceDisplay,兜底真值')
+  assert.match(wxml, /money\.amount\(balanceDisplay \|\| balance\)/, '展示位读 balanceDisplay,保底真值')
   assert.match(wxml, /balance === '0\.00'/, '空态判断必须继续读 balance 真值')
 }
 
@@ -138,7 +138,7 @@ test('所有隔离组件消费内容淡入时必须 @import 同一份定义,不�
     const wxssPath = wxmlPath.replace(/\.wxml$/, '.wxss')
     const wxss = fs.readFileSync(wxssPath, 'utf8')
     const rel = path.relative(ROOT, wxmlPath)
-    assert.match(wxss, /@import\s+'[^']*style\/fade-in\.wxss'/, `${rel} 用了 cy-fade-in 就必须 @import 定义,否则隔离下静默失效`)
+    assert.match(wxss, /@import\s+'[^']*style\/fade-in\.wxss'/, `${rel} 用了 cy-fade-in 就必须 @import 定义，否则隔离下静默失效`)
     assert.doesNotMatch(wxss, /@keyframes cy-fade-in/, `${rel} 不许自抄一份 keyframes(时长会各改各的)`)
   }
 })
@@ -186,9 +186,9 @@ test('动态评论列表的关注图标必须真正绑定动作并回读服务�
   assert.match(js, /commentFollowClick\(e\)[\s\S]*e\.currentTarget\.dataset\.index[\s\S]*follow_member_id:\s*item\.memberId/,
     '关注请求必须使用当前评论行的 memberId')
   assert.match(js, /commentFollowClick\(e\)[\s\S]*community\.request\(\{\s*url:\s*'\/api\/comment\/list'[\s\S]*isRecordList\(readback\.data\.rows\)[\s\S]*authoritative\.isFollowTheUser[\s\S]*this\.setData\(\{\s*list\s*\},[\s\S]*toast\('关注成功'\)/, // 2026-09-06 轻提示收口:toast('…') 取代 wx.showToast({ title })
-    '只有回读当前评论行的服务端权威终态后才能回写并报成功')
+    '只有刷新当前评论行的服务端权威终态后才能回写并报成功')
   assert.match(js, /已提交，但状态确认失败，请刷新/,
-    '回读失败不能静默或伪报成功')
+    '刷新失败不能静默或伪报成功')
   assert.match(js, /commentFollowClick\(e\)[\s\S]*fail\(\)[\s\S]*toast\('网络错误，请重试'\)/, // 同上
     '网络失败必须明确可重试')
 })

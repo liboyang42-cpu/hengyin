@@ -314,12 +314,12 @@ function validateNodeRequirements(graph, nodeIds, context, errors) {
     const prefix = 'nodeRequirements[' + index + ']';
     const id = stringId(requirement.nodeId);
     if (!nodeIds.has(id)) {
-      errors.push(routeError('DANGLING_REQUIREMENT_NODE', '现实门禁节点不属于当前主题', {
+      errors.push(routeError('DANGLING_REQUIREMENT_NODE', '现场条件节点不属于当前主题', {
         nodeId: id, field: prefix + '.nodeId'
       }));
     }
     if (seenNodes.has(id)) {
-      errors.push(routeError('DUPLICATE_NODE_REQUIREMENT', '同一节点只能配置一条现实门禁', {
+      errors.push(routeError('DUPLICATE_NODE_REQUIREMENT', '同一节点只能配置一条现场条件', {
         nodeId: id, field: prefix + '.nodeId'
       }));
     }
@@ -329,7 +329,7 @@ function validateNodeRequirements(graph, nodeIds, context, errors) {
     validateRequirementArray(requirement, index, 'requiredRoleCodes', ROLE_CODES, null, errors);
     ['requireOpen', 'requireReachable'].forEach((field) => {
       if (Object.prototype.hasOwnProperty.call(requirement, field) && typeof requirement[field] !== 'boolean') {
-        errors.push(routeError('INVALID_REQUIREMENT_BOOLEAN', '现实门禁开关必须是布尔值', {
+        errors.push(routeError('INVALID_REQUIREMENT_BOOLEAN', '现场条件开关必须是布尔值', {
           nodeId: id, field: prefix + '.' + field
         }));
       }
@@ -351,7 +351,7 @@ function validateRequirementArray(requirement, requirementIndex, field, allowedV
   const prefix = 'nodeRequirements[' + requirementIndex + '].' + field;
   const values = requirement[field];
   if (!Array.isArray(values) || !values.length) {
-    errors.push(routeError('INVALID_REQUIREMENT_ARRAY', '现实门禁选项必须是非空数组', {
+    errors.push(routeError('INVALID_REQUIREMENT_ARRAY', '现场条件选项必须是非空数组', {
       nodeId: stringId(requirement.nodeId), field: prefix
     }));
     return;
@@ -363,11 +363,11 @@ function validateRequirementArray(requirement, requirementIndex, field, allowedV
       ? typeof value === 'string'
       : typeof value === 'number' && Number.isSafeInteger(value) && value > 0;
     if (!validType || (allowedValues && !allowedValues.includes(canonical))) {
-      errors.push(routeError('INVALID_REQUIREMENT_VALUE', '现实门禁选项值不受支持', {
+      errors.push(routeError('INVALID_REQUIREMENT_VALUE', '现场条件选项值不受支持', {
         nodeId: stringId(requirement.nodeId), field: prefix + '[' + index + ']'
       }));
     } else if (seen.has(canonical)) {
-      errors.push(routeError('INVALID_REQUIREMENT_VALUE', '现实门禁选项不能重复', {
+      errors.push(routeError('INVALID_REQUIREMENT_VALUE', '现场条件选项不能重复', {
         nodeId: stringId(requirement.nodeId), field: prefix + '[' + index + ']'
       }));
     } else if (allowedTicketIds && !allowedTicketIds.has(canonical)) {

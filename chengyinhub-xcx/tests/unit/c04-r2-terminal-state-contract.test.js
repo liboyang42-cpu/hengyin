@@ -64,7 +64,7 @@ function assertMyCanyuTerminalHandler(source) {
   // 只有无快照的首载失败才落 errorMsg 走整页错误。
   assert.match(terminal[1], /if \(hasSnapshot\) \{[\s\S]*firstLoading:\s*false[\s\S]*refreshing:\s*false[\s\S]*errorMsg:\s*''/)
   assert.match(terminal[1], /\} else \{[\s\S]*firstLoading:\s*false[\s\S]*refreshing:\s*false[\s\S]*errorMsg:\s*message/)
-  assert.match(source, /successStatusAbnormal\(res\)\s*\{\s*finishLoadError\(res, '服务暂时不可用，请稍后再试'\);\s*\}/)
+  assert.match(source, /successStatusAbnormal\(res\)\s*\{\s*finishLoadError\(res, '服务暂不可用，请稍后重试'\);\s*\}/)
   assert.match(source, /fail\(res\)\s*\{\s*finishLoadError\(res, '网络异常，请重试'\);\s*\}/)
   assert.match(source, /silentError:\s*true/)
 }
@@ -154,7 +154,7 @@ test('负控：我的参与错误终态缺失或账号与生命周期守卫被�
     ['epoch === that._participationEpoch && ', ''],
     ['owner === currentOwner();', 'true;'],
     ['errorMsg: message,', "errorMsg: '',"],
-    ["finishLoadError(res, '服务暂时不可用，请稍后再试');", ''],
+    ["finishLoadError(res, '服务暂不可用，请稍后重试');", ''],
   ]) {
     assert.equal(source.split(before).length - 1, 1, '变异必须命中唯一目标：' + before)
     const mutated = source.replace(before, after)

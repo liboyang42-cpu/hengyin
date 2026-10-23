@@ -94,7 +94,7 @@ test('FOLLOWUP-A-2 审核记录展示每轮决定;canAppeal=true 才出「申诉
   appeal.success({ code: 200, appealId: 3, state: 'SUBMITTED' });
   assert.deepEqual(h.toasts, ['申诉已提交']);
   const reload = h.requests[2];
-  assert.equal(reload.url, '/api/audit/timeline', '提交后重读,申诉入口按新 canAppeal 收起');
+  assert.equal(reload.url, '/api/audit/timeline', '提交后重读，申诉入口按新 canAppeal 收起');
   reload.success(timeline({ canAppeal: false, appeal: { id: 3, state: 'SUBMITTED' } }));
   assert.equal(h.page.data.auditSheet.canAppeal, false);
   assert.equal(h.page.data.auditSheet.appealText, '申诉已提交，等待平台处理');

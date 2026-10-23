@@ -105,8 +105,8 @@ function methods(req) {
       const zero = this.data.zeroHpView, view = this.data.themeBag;
       if (!zero || !zero.canSteps || this.data.zeroHpBusy || this._themeSending || this.data.isMock || this.data.isPreview) return false;
       if (this._gameplayPending && this._gameplayPending.input.operation.startsWith('ZERO_HP_')) return this.retryThemeBagAction();
-      if (this._gameplayPending) { this.setData({ zeroHpError: '请先核对上一条操作' }); return false; }
-      if (this._themePending || this._planPending || this._tradePending) { this.setData({ zeroHpError: '请先核对上一条操作' }); return false; }
+      if (this._gameplayPending) { this.setData({ zeroHpError: '请先确认上一条操作' }); return false; }
+      if (this._themePending || this._planPending || this._tradePending) { this.setData({ zeroHpError: '请先确认上一条操作' }); return false; }
       const epoch = this._themeEpoch || 0, episodeId = zero.episodeId, sessionId = view.sessionId;
       this.setData({ zeroHpBusy: true, zeroHpError: '', zeroHpPermissionDenied: false });
       try {
@@ -220,7 +220,7 @@ function methods(req) {
     },
     _themePersonalCommand(operation, contentId, discardOwned) {
       if (this._themeSending) return Promise.resolve(false);
-      if (this._gameplayPending || this._tradePending || this._planPending) { toast('请先核对上一条操作'); return Promise.resolve(false); }
+      if (this._gameplayPending || this._tradePending || this._planPending) { toast('请先确认上一条操作'); return Promise.resolve(false); }
       if (this._themePending && (this._themePending.operation !== operation || this._themePending.contentId !== contentId)) { toast('请先重试上一条操作'); return Promise.resolve(false); }
       const view = this.data.themeBag;
       if (!view.sessionId || this.data.isPreview || this.data.isMock) return Promise.resolve(false);
@@ -390,7 +390,7 @@ function methods(req) {
           return this._readThemeRewardPreview(sheet.input).then(loaded => {
             this.setData({ 'themeRewardPreview.notice': loaded ? '状态已变化，已重新读取奖励，请再次确认' : '状态已变化，请重新读取并调整放弃选择' }); return false;
           });
-        } else this.setData({ 'themeRewardPreview.error': this.data.themeBagError || '操作失败，请核对后重试' });
+        } else this.setData({ 'themeRewardPreview.error': this.data.themeBagError || '操作失败，请确认后重试' });
         return ok;
       });
     },
@@ -417,7 +417,7 @@ function methods(req) {
       if (!sheet || sheet.invalid || this._themeSending) return Promise.resolve(false);
       return this._themeCommand('RECEIVE', sheet.source, rewards.selection(sheet.owned)).then(ok => {
         if (ok) this.setData({ themePendingClaim: null });
-        else this.setData({ 'themePendingClaim.error': this.data.themeBagError || '领取失败，请核对库存后重试' });
+        else this.setData({ 'themePendingClaim.error': this.data.themeBagError || '领取失败，请确认库存后重试' });
         return ok;
       });
     },
@@ -439,15 +439,15 @@ function methods(req) {
         if (applied && pending.input.previewVersion) this.closeThemeRewardPreview();
         await this.refreshThemeBackpack(); await this.refreshRouteState();
         if (epoch !== (this._themeEpoch || 0)) return false;
-        this.setData({ themeBagUnknown: !applied && !failed && !failureMessage, themeBagError: applied ? '' : failureMessage || (failed ? result.message : (pending.error ? pending.error + '；' : '') + '操作结果待核对，请勿重复提交') });
+        this.setData({ themeBagUnknown: !applied && !failed && !failureMessage, themeBagError: applied ? '' : failureMessage || (failed ? result.message : (pending.error ? pending.error + '；' : '') + '操作结果待确认，请勿重复提交') });
         return !!applied;
       } finally { this._themeSending = false; if (epoch === (this._themeEpoch || 0)) this.setData({ themeBagBusy: false }); }
     },
     _themeGameplayCommand(input) {
       const view = this.data.themeBag;
       if (this._themeSending || !view.sessionId || this.data.isPreview || this.data.isMock) return Promise.resolve(false);
-      if (this._themePending || this._tradePending || this._planPending) { toast('请先核对上一条操作'); return Promise.resolve(false); }
-      if (this._gameplayPending && JSON.stringify(this._gameplayPending.input) !== JSON.stringify(input)) { toast('请先核对上一条操作'); return Promise.resolve(false); }
+      if (this._themePending || this._tradePending || this._planPending) { toast('请先确认上一条操作'); return Promise.resolve(false); }
+      if (this._gameplayPending && JSON.stringify(this._gameplayPending.input) !== JSON.stringify(input)) { toast('请先确认上一条操作'); return Promise.resolve(false); }
       if (this._gameplayPending && input.operation.startsWith('QUEST_') && this.data.themeBagUnknown) return this._readThemeGameplayReceipt();
       if (!this._gameplayPending && rewards.ended(view) && (input.operation !== 'ITEM_RECEIVE' || !rewards.canClaim(view, input.contentId))) return Promise.resolve(false);
       const team = view.scope === 'TEAM';

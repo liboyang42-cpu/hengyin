@@ -71,7 +71,7 @@ test('★负控:把 moreSheet 从宿主标签上摘掉必须判红', () => {
   const start = host.indexOf('<project-join');
   const block = host.slice(start, host.indexOf('/>', start));
   assert.match(block, /moreSheet="\{\{ moreSheet \}\}"/,
-    'project-join 没收到 moreSheet —— 承接方的「更多」抽屉打不开');
+    'project-join 没收到 moreSheet —— 承接方的「更多」抽屉无法打开');
 
   // 判据本身要能红:摘掉之后 passedProps 就不含它
   const stripped = block.replace(/\s*moreSheet="\{\{ moreSheet \}\}"/, '');

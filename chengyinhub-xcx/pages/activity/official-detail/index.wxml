@@ -25,8 +25,8 @@
         <view class="od-facts-inner">
           <view class="od-fact">
             <text class="od-fact-label">参与</text>
-            <text class="od-fact-value">{{e.participants || 0}}</text>
-            <text class="od-fact-sub">人已报名</text>
+            <text class="od-fact-value">{{e.participants != null ? e.participants : '—'}}</text>
+            
           </view>
           <view class="od-fact" wx:if="{{e.signed}}">
             <text class="od-fact-label">我的进度</text>
@@ -36,12 +36,12 @@
           <view class="od-fact">
             <text class="od-fact-label">活动周期</text>
             <text class="od-fact-value od-fact-value--compact">{{e._durationText}}</text>
-            <text class="od-fact-sub">总时长</text>
+            
           </view>
           <view class="od-fact">
             <text class="od-fact-label">开放时间</text>
             <text class="od-fact-value od-fact-value--compact">{{e._dateRange}}</text>
-            <text class="od-fact-sub">北京时间</text>
+            
           </view>
           <view class="od-fact">
             <text class="od-fact-label">活动范围</text>
@@ -51,7 +51,7 @@
           <view class="od-fact" wx:if="{{e._taskTotal}}">
             <text class="od-fact-label">活动任务</text>
             <text class="od-fact-value">{{e._taskTotal}}</text>
-            <text class="od-fact-sub">项任务</text>
+            
           </view>
         </view>
       </scroll-view>
@@ -62,7 +62,7 @@
         <view wx:if="{{e.city}}" class="od-location">
           <view class="od-location-copy">
             <text class="od-location-name">{{e.city}}</text>
-            <text class="od-location-sub">活动举办城市</text>
+            
           </view>
           <view class="od-location-map">
             <view class="od-map-line od-map-line--a"></view>
@@ -100,7 +100,7 @@
           <text class="od-heading">我的活动任务</text>
           <text class="od-eligible {{e.eligible ? 'is-ok' : ''}}">{{e._eligibleText}}</text>
         </view>
-        <text wx:if="{{!e.signed}}" class="od-note">报名后发生的新到达或主题完成才会归入本场活动。</text>
+        <text wx:if="{{!e.signed}}" class="od-note">报名后的到达才计入活动</text>
         <text wx:if="{{e.paused}}" class="od-note od-note--danger">活动暂时暂停：{{e.pausedReason || '等待运营处理后恢复'}}</text>
         <cy-inline-error load-failure wx:if="{{boundTopicError}}" kind="data" title="绑定主题名称没读到" sub="{{boundTopicError}}" />
         <view wx:if="{{e.missions.length}}" class="od-task-list">
@@ -119,7 +119,7 @@
             <text class="od-task-action">{{item.complete ? '已验证' : item._supported ? (item.canVerifyArrival ? '去验证' : '自动同步') : '暂不支持'}}</text>
           </view>
         </view>
-        <text wx:else class="od-note">运营方尚未配置可验证任务。</text>
+        <text wx:else class="od-note">暂无任务</text>
       </view>
 
       <view class="od-section od-section--divided">
@@ -131,7 +131,7 @@
             <cy-icon name="gift" size="30" />
           </view>
         </view>
-        <text wx:else class="od-note">主办方尚未配置奖励，页面不承诺任何奖励。</text>
+        <text wx:else class="od-note">未配置奖励</text>
       </view>
 
       <view wx:if="{{e.collective && e.collective.enabled}}" class="od-section od-section--divided">
@@ -145,7 +145,7 @@
         <view class="od-progress-track"><view class="od-progress-fill" style="width:{{e.collective.pct || 0}}%"></view></view>
         <!-- F22:集体进度区始终保留;只有真的配置了合法集体券才承诺「达标发放」,否则如实说明不承诺。 -->
         <text class="od-progress-tip" wx:if="{{e._hasCollectiveReward}}">开启且集体达标、本人保持有效报名并完成全部任务后发放集体奖励</text>
-        <text class="od-progress-tip" wx:else>当前未配置集体奖励，全城进度仅供了解</text>
+        <text class="od-progress-tip" wx:else>未配置集体奖励</text>
       </view>
 
       <view wx:if="{{rewards.length}}" class="od-reward-tip">

@@ -13,7 +13,7 @@
     </view>
     <view class="simple-ai__quota-pill" wx:if="{{aiQuotaLoaded}}">
       <view class="simple-ai__quota-icon"><cy-icon name="clock" size="28" /></view>
-      <text>还可生成 {{ aiRemaining || 0 }} 次</text>
+      <text>还可生成 {{aiRemaining != null ? aiRemaining + ' 次' : '—'}}</text>
     </view>
   </view>
 
@@ -45,7 +45,7 @@
            发送键已经置灰(is-exhausted),但灰着不给理由 —— 顶部那行「还可生成 0 次」
            是小字,不会有人把两件事连起来。这里同时给出路:走「专业手动」。 -->
       <cy-inline-error wx:elif="{{!aiPlan && aiQuotaLoaded && aiRemaining <= 0}}" kind="data"
-                       title="今日额度已用完" sub="明天再来，或直接走「专业手动」自己填。" />
+                       title="今日额度已用完" sub="可改用手动创建" />
 
       <block wx:if="{{aiPlan}}">
         <view class="simple-ai__section-heading">
@@ -63,17 +63,17 @@
           <view>
             <text>确认地点</text>
           </view>
-          <text class="simple-ai__section-count">{{ aiPlanNodes.length || 0 }} 个点位</text>
+          <text class="simple-ai__section-count">{{ aiPlanNodes.length || 0 }} 个节点</text>
         </view>
         <cy-card class="simple-ai__node" wx:for="{{aiPlanNodes}}" wx:key="index" wx:for-item="node" wx:for-index="nodeIndex">
           <view class="simple-ai__node-head">
             <text class="simple-ai__node-num">{{nodeIndex + 1}}</text>
             <view class="simple-ai__node-copy">
-              <input class="simple-ai__node-name" value="{{node.name}}" bindinput="onAiNodeNameInput" data-index="{{nodeIndex}}" maxlength="30" aria-label="第{{nodeIndex + 1 || 1}}个点位名称" />
-              <textarea class="simple-ai__node-story" value="{{node.description}}" bindinput="onAiNodeStoryInput" data-index="{{nodeIndex}}" maxlength="300" fixed="{{true}}" aria-label="第{{nodeIndex + 1 || 1}}个点位故事" />
+              <input class="simple-ai__node-name" value="{{node.name}}" bindinput="onAiNodeNameInput" data-index="{{nodeIndex}}" maxlength="30" aria-label="第{{nodeIndex + 1 || 1}}个节点名称" />
+              <textarea class="simple-ai__node-story" value="{{node.description}}" bindinput="onAiNodeStoryInput" data-index="{{nodeIndex}}" maxlength="300" fixed="{{true}}" aria-label="第{{nodeIndex + 1 || 1}}个节点故事" />
             </view>
           </view>
-          <view class="simple-ai__poi {{node.confirmed ? 'is-confirmed' : ''}}" bindtap="confirmAiNodePoi" data-index="{{nodeIndex}}" aria-role="button" aria-label="第{{nodeIndex + 1 || 1}}个点位，{{node.confirmed ? '修改地点' : '确认地点'}}" hover-class="cy-pressed" hover-stay-time="80">
+          <view class="simple-ai__poi {{node.confirmed ? 'is-confirmed' : ''}}" bindtap="confirmAiNodePoi" data-index="{{nodeIndex}}" aria-role="button" aria-label="第{{nodeIndex + 1 || 1}}个节点，{{node.confirmed ? '修改地点' : '确认地点'}}" hover-class="cy-pressed" hover-stay-time="80">
             <text class="simple-ai__poi-label">{{node.confirmed ? node.address : '在地图中确认地点'}}</text>
             <view class="simple-ai__poi-arrow"><cy-icon name="arrow-right" size="28" /></view>
           </view>

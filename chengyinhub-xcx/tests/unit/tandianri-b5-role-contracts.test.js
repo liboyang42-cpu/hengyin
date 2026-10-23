@@ -403,7 +403,7 @@ test('negative control:小程序侧不得存在改票源归因的写接口(归�
   const banned = /\/api\/[a-z0-9/-]*(ticket-source|source-club|attribution)/i
   const offenders = files.filter((f) => banned.test(fs.readFileSync(f, 'utf8')))
   assert.deepEqual(offenders, [],
-    '归因只在建单时随请求体带一次,之后由 freezeTicketSourceOnPayment 冻死,不得再有改口')
+    '归因只在建单时随请求体带一次，之后由 freezeTicketSourceOnPayment 冻死，不得再有改口')
 })
 
 test('平台侧的完局面接口是只读的:小程序只 POST 查询,没有任何写语义参数', () => {
@@ -426,6 +426,6 @@ test('negative control:后端支付冻结闸必须还在,且仍会把非法标�
   const body = freeze.slice(0, freeze.indexOf('</update>'))
   assert.ok(/else null/.test(body), '不满足条件必须冻结为平台(null),前端才敢把标记原样送上去')
   assert.ok(/a\.club_id = r\.source_club_id or t\.club_id = r\.source_club_id/.test(body),
-    '标记必须至少等于活动或主题一侧的 club_id —— 这条没了,前端随便填个数就能归因')
-  assert.ok(/source_frozen_at is null/.test(body), '冻结必须一次性,否则支付后还能改归因')
+    '标记必须至少等于活动或主题一侧的 club_id —— 这条没了，前端随便填个数就能归因')
+  assert.ok(/source_frozen_at is null/.test(body), '冻结必须一次性，否则支付后还能改归因')
 })

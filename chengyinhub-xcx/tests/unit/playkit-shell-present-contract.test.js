@@ -33,7 +33,7 @@ const KITS = path.join(ROOT, 'pages', 'play', 'components')
 function presentList(name) {
   const src = fs.readFileSync(CFG, 'utf8')
   const m = src.match(new RegExp(name + '\\s*=\\s*\\[([\\s\\S]*?)\\]'))
-  assert.ok(m, `advanced-game-config.js 里找不到 ${name} —— 名单改名了,判据要跟着改`)
+  assert.ok(m, `advanced-game-config.js 里找不到 ${name} —— 名单改名了，判据要跟着改`)
   return m[1].split(',').map((s) => s.trim().replace(/^['"]|['"]$/g, '')).filter(Boolean)
 }
 
@@ -70,7 +70,7 @@ const SHEET_KITS = ['diyname', 'musiccorner', 'silentorder', 'slowtask', 'steps'
 test('扫描分母正常:两端都读得到(否则下面全是空转)', () => {
   assert.ok(presentList('PRESENT_FULLSCREEN_ONLY').length >= 5, '只能全屏名单读空了')
   assert.ok(presentList('PRESENT_INLINE_DEFAULT').length >= 3, '默认内嵌名单读空了')
-  assert.ok(shells().size >= 30, `只扫到 ${shells().size} 个玩法屏,选择器多半失配了`)
+  assert.ok(shells().size >= 30, `只扫到 ${shells().size} 个玩法屏，选择器多半失配了`)
 })
 
 test('★声明「默认内嵌」的段不能是半屏弹层 —— 零基线硬断言', () => {
@@ -78,14 +78,14 @@ test('★声明「默认内嵌」的段不能是半屏弹层 —— 零基线硬
   assert.deepEqual(bad, [],
     `这些段声明了「默认内嵌」,外壳却是半屏弹层:${bad.join(', ')}\n` +
     '  内嵌要放进 .chfull__para,那个段落恒带 transform+filter,是 position:fixed 后代的包含块 ——\n' +
-    '  半屏弹层贴的是视口,放进去会被圈进 190rpx 的段落里跟着缩放和模糊。\n' +
+    '  半屏弹层贴的是视口，放进去会被圈进 190rpx 的段落里跟着缩放和模糊。\n' +
     '  两条路:把组件改成 cy-play-stage(内嵌走 --pk-stage-pos 注入),或撤掉这个做不到的声明。')
 })
 
 test('★半屏玩法屏的名单只减不增 —— 新玩法屏变成半屏时要有人知道', () => {
   const sheets = [...shells()].filter(([, v]) => v === 'sheet').map(([k]) => k).sort()
   assert.deepEqual(sheets, [...SHEET_KITS].sort(),
-    '半屏玩法屏的集合变了。半屏本身不是错,但它意味着:进不了故事流内嵌、\n' +
+    '半屏玩法屏的集合变了。半屏本身不是错，但它意味着:进不了故事流内嵌、\n' +
     '  退出键 / 限时条 / 还能错 / 3-2-1 / 两张判定屏都得自己写一份。新玩法屏优先套 cy-play-stage。')
 })
 
@@ -96,8 +96,8 @@ test('★玩法屏的外壳只能三选一,独立壳限定相册、签到与拍�
   const bare = [...shells()].filter(([, v]) => v === 'bare').map(([k]) => k)
   // album 复用既有玻璃相册，没有限时或判定屏；objectcard 是既有独立全屏相机与揭晓流程，不使用通用玩法台面。
   assert.deepEqual(bare.sort(), ['album', 'dailysign', 'objectcard'],
-    `独立壳仅允许相册、签到和拍物相机,实际:${bare.join(', ')}\n` +
-    '  自己从零搭 = 退出键/限时条/判定屏各写一份,改一处漏一处。')
+    `独立壳仅允许相册、签到和拍物相机，实际:${bare.join(', ')}\n` +
+    '  自己从零搭 = 退出键/限时条/判定屏各写一份，改一处漏一处。')
 })
 
 /* ===================== 负控 ===================== */
@@ -106,7 +106,7 @@ test('negative control:让一个「默认内嵌」的段变成半屏,必须被�
   const shell = shells()
   const inline = presentList('PRESENT_INLINE_DEFAULT')
   const victim = inline.find((s) => shell.get(dirOf(s)) === 'stage')
-  assert.ok(victim, '「默认内嵌」里一个 stage 段都没有,负控失去锚点')
+  assert.ok(victim, '「默认内嵌」里一个 stage 段都没有，负控失去锚点')
   const faked = new Map(shell)
   faked.set(dirOf(victim), 'sheet')
   assert.ok(inline.filter((s) => faked.get(dirOf(s)) === 'sheet').includes(victim),
@@ -117,7 +117,7 @@ test('negative control:「声明整屏 + 半屏」不许被误判成违规(第�
   // steps 显式「只能全屏」且实际是半屏 —— fullscreen 的含义是「不内嵌」,半屏满足,不算违规
   assert.ok(presentList('PRESENT_FULLSCREEN_ONLY').includes('steps'))
   assert.equal(shells().get('steps'), 'sheet')
-  assert.deepEqual(inlineSheets(), [], '把「声明整屏 + 半屏」也算成了违规,规则又定偏了')
+  assert.deepEqual(inlineSheets(), [], '把「声明整屏 + 半屏」也算成了违规，规则又定偏了')
 })
 
 test('negative control:段名与目录名的大小写换算必须真的对上', () => {

@@ -122,7 +122,7 @@ test('答案只走 club 独立端点，页面不碰玩家端 /api/play/nodes', (
   //    却照样回 HTTP 200 + code:500 —— 零告警的哑火,取答案永远拿不到东西。
   //    (2026-09-03 requestbody-contract 抓出来的,这里跟着钉住,免得再退回去。)
   assert.equal((answerCall.header || {})['Content-Type'], 'application/json',
-    '@RequestBody 端点必须传 JSON 头,否则参数根本进不去')
+    '@RequestBody 端点必须传 JSON 头，否则参数根本进不去')
   assert.equal(typeof answerCall.data, 'string', '传 JSON 头时 body 必须是序列化后的字符串')
   const answerBody = JSON.parse(answerCall.data)
   // 服务端要靠这三个 id 做「俱乐部治理权 + 团归属 + 站点归属」三重校验，少一个就没法 fail-closed
@@ -168,7 +168,7 @@ test('页面壳与弹层遵循 DS：暗色根、T1 half 弹窗、分档 z-index'
      所以根节点不再恒暗,而是按身份切档。断言跟着改成「两档都在、且默认是暗」——
      钉的性质没弱化:俱乐部/玩家进来仍是纯黑,只有商家走浅色域。 */
   assert.match(wxml, /^<view class="\{\{isMerchantViewer \? 'theme-merchant' : 'theme-dark'\}\}">/,
-    '按身份切档:商家浅色域,俱乐部/玩家仍恒暗')
+    '按身份切档:商家浅色域，俱乐部/玩家仍恒暗')
   const storyJs = read('index.js')
   assert.match(storyJs, /policy\.isMerchantView\(/, '身份判定走统一的 identity-policy,不自己数 role')
   assert.match(storyJs, /merchantTheme\.merchantPageRestore\(\)/, '离开页面必须把主题还原')
@@ -227,7 +227,7 @@ test('答案弹层标题只留「答案」,玩法名作可换行副信息,不再
   const wxss = read('index.wxss')
   const node = /\.ans__node\s*\{([^}]*)\}/.exec(wxss)
   assert.ok(node, '副信息缺样式规则')
-  assert.doesNotMatch(node[1], /white-space:\s*nowrap/, '副信息必须能换行,否则又是一个被截断的长名')
+  assert.doesNotMatch(node[1], /white-space:\s*nowrap/, '副信息必须能换行，否则又是一个被截断的长名')
 })
 
 test('负控:CU-C-152 把玩法名重新拼回标题必须判红', () => {

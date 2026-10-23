@@ -8,17 +8,17 @@ const { summarizeOrderState } = require('../../utils/order-status.js');
 const root = path.join(__dirname, '..', '..');
 const read = (rel) => fs.readFileSync(path.join(root, rel), 'utf8');
 
-// 审核清单 §7「跨端不一致」:同一个码/状态在不同页面必须是同一句话,真源只有一份。
-test('核验方式码表:0-6 全有标签,四个消费方都读同一张表,不再各留副本', () => {
+// 审核清单 §7「跨端不一致」:同一个码/状态在不同页面必须是同一句话，真源只有一份。
+test('核验方式码表:0-6 全有标签，四个消费方都读同一张表，不再各留副本', () => {
   assert.equal(validationMethodLabel(6), '偏好题组', '码 6 以前在三处副本里是空串');
   assert.equal(validationMethodLabel(0), '无需验证');
   assert.equal(validationMethodLabel('4'), '到店扫码');
   assert.equal(validationMethodLabel(7), '传感器挑战', '后端 ValidationMethod.APP_SENSOR=7');
-  assert.equal(validationMethodLabel(8, '核验方式待确认'), '核验方式待确认');
+  assert.equal(validationMethodLabel(8, '—'), '—');
   assert.equal(validationMethodLabel(8), '');
   // 没配码 ≠ 无需验证:null/空串必须走 fallback,不能被 Number('') === 0 变成「无需验证」
-  assert.equal(validationMethodLabel(null, '核验方式待确认'), '核验方式待确认');
-  assert.equal(validationMethodLabel('', '核验方式待确认'), '核验方式待确认');
+  assert.equal(validationMethodLabel(null, '—'), '—');
+  assert.equal(validationMethodLabel('', '—'), '—');
   assert.equal(validationMethodLabel(undefined), '');
   assert.deepEqual(Object.keys(VALIDATION_METHOD_LABELS).map(Number).sort(), [0, 1, 2, 3, 4, 5, 6, 7]);
   for (const rel of [
@@ -48,11 +48,11 @@ test('报名状态 3=已取消、4=已过期(后端 CmsRegistration 口径),不�
   assert.match(detail, /stateKey === 'refunded' \? '已退款'/);
 });
 
-test('活动时间文案的非时间态回落到 activity-status 真源,列表页与漫游任务列表不再各说各话', () => {
+test('活动时间文案的非时间态回落到 activity-status 真源，列表页与漫游任务列表不再各说各话', () => {
   for (const rel of ['pages/activity/list/index.js', 'components/cy/scene-roam-task-list/index.js']) {
     const src = read(rel);
     const fn = src.slice(src.indexOf('function timeText'), src.indexOf('\n}', src.indexOf('function timeText')));
-    assert.match(fn, /activityStatusText\((?:e|item)\.status\) \|\| '时间待确认'/, `${rel} timeText 兜底`);
+    assert.match(fn, /activityStatusText\((?:e|item)\.status\) \|\| '—'/, `${rel} timeText 保底`);
     assert.doesNotMatch(fn, /'报名中'|'尚未开放'/, `${rel} 不许硬编码状态 0 的文案`);
   }
 });

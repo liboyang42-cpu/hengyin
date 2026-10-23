@@ -36,7 +36,7 @@ test('浅端:空态是白、填写态是灰(两档不能同值,且不能反)', (
     return out
   }
   const light = pairs(strip(read('style/tokens.wxss'))).filter(([i]) => lum(i) > 380)
-  assert.ok(light.length >= 2, `浅端两个作用域(商家/创建域)都要有空/填两档,现在 ${light.length} 处`)
+  assert.ok(light.length >= 2, `浅端两个作用域(商家/创建域)都要有空/填两档，现在 ${light.length} 处`)
   light.forEach(([idle, filled]) => {
     assert.ok(lum(idle) > lum(filled), `浅端空态 ${idle} 必须比填写态 ${filled} 亮(没填写是白色、填写之后是灰色)`)
   })
@@ -49,13 +49,13 @@ test('cy-field 消费专用三态 token，填写态由值决定', () => {
   assert.match(wxss, /background:\s*var\(--cy-comp-field-idle-bg\)/, '底色必须消费 Field 专用的空态档')
   assert.match(wxss, /\.is-filled \.fd__control \{[^}]*var\(--cy-comp-field-filled-bg\)/, '填写态必须换成 filled 档')
   assert.match(read('components/cy/field/index.wxml'), /_filled \? 'is-filled'/, '类名要挂在根节点上')
-  assert.match(read('components/cy/field/index.js'), /_filled: filled/, '填没填由 value/displayValue 推,不用调用方额外传')
+  assert.match(read('components/cy/field/index.js'), /_filled: filled/, '填没填由 value/displayValue 推，不用调用方额外传')
 })
 
 test('成功态不描边,错误态仍描边', () => {
   const wxss = strip(read('components/cy/field/index.wxss'))
   assert.doesNotMatch(wxss, /\.is-success \.fd__control \{[^}]*box-shadow/, '成功态不许再描一圈绿')
-  assert.match(wxss, /\.is-error \.fd__control \{[^}]*inset[^}]*var\(--cy-color-status-danger\)/, '错误态的描边要留着,它要拦住提交')
+  assert.match(wxss, /\.is-error \.fd__control \{[^}]*inset[^}]*var\(--cy-color-status-danger\)/, '错误态的描边要留着，它要拦住提交')
 })
 
 /* 2026-09-03 用户当面指出:「有一些是在卡片里面的,卡片里面的颜色就会和输入框重叠,尤其是商家版」。
@@ -72,7 +72,7 @@ test('未改为 Figma Field 的其他控件保留常驻描边', () => {
     ['pages/merchant/game-node/index.wxss', /\.gn-input,\s*\.gn-picker-value \{[^}]*box-shadow:\s*inset[^}]*var\(--cy-color-border-subtle\)/],
   ]
   for (const [file, re] of cases) {
-    assert.match(strip(read(file)), re, `${file}:填充会和卡片撞成同色,必须有常驻描边兜住边界`)
+    assert.match(strip(read(file)), re, `${file}:填充会和卡片撞成同色，必须有常驻描边兜住边界`)
   }
 })
 
@@ -82,7 +82,7 @@ test('负控:商家浅端的卡片底与空态填充确实同色(所以上面那
   const idle = light.match(/--cy-color-input-idle-bg:\s*(#[0-9A-Fa-f]{6})/)
   assert.ok(card && idle, 'merchant-light 里读不到卡片底或空态填充')
   assert.equal(card[1].toUpperCase(), idle[1].toUpperCase(),
-    '这条一旦不成立说明有人动了配色,上面那条描边要求要跟着重新论证,别默认还成立')
+    '这条一旦不成立说明有人动了配色，上面那条描边要求要跟着重新论证，别默认还成立')
 })
 
 test('Figma Field 深色常态无白边，禁用态不继承填写或聚焦描边', () => {

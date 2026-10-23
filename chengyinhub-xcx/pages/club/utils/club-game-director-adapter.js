@@ -94,9 +94,9 @@ function readinessBlockers(readiness, requiredStations, readyStations, teamsRead
   const explicit = asArray(readiness && readiness.blockers)
   if (explicit.length > 0) return explicit
   const blockers = []
-  if (requiredStations === 0) blockers.push('尚未配置可运行站点')
+  if (requiredStations === 0) blockers.push('尚未配置可运行节点')
   if (requiredStations !== null && readyStations !== null && readyStations < requiredStations) {
-    blockers.push((requiredStations - readyStations) + ' 个站点未 READY')
+    blockers.push((requiredStations - readyStations) + ' 个节点未 READY')
   }
   if (teamsReady === false) blockers.push('仍有队员未分配角色')
   return blockers
@@ -276,7 +276,7 @@ function createClubGameDirectorAdapter(explicitClient) {
         .then(normalizeClubProjection)
         .then(function (projection) {
           if (activityKey(projection.activityId) !== activityKey(activityId)) {
-            throw directorError('PROJECTION_MISMATCH', '活动导演数据与当前活动不匹配')
+            throw directorError('PROJECTION_MISMATCH', '导演台数据加载失败，请重新进入')
           }
           authorizedActivities.set(activityKey(activityId), projection)
           if (projection.playMode !== 'ROUTE' || typeof client.loadSharedControl !== 'function') return projection

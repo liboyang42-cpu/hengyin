@@ -116,7 +116,7 @@ test('撤回成功后作废认领缓存并回读申请列表', () => {
 
     assert.equal(env.page.data.claimState, 'idle', '节点回到可认领池，缓存必须作废')
     assert.deepEqual(env.page.data.claimable, [])
-    assert.ok(env.requests.some(item => item.url === '/api/merchant/city-node/list'), '撤回成功后必须回读')
+    assert.ok(env.requests.some(item => item.url === '/api/merchant/city-node/list'), '撤回成功后必须刷新')
   } finally {
     env.restore()
   }

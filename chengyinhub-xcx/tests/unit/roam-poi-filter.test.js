@@ -15,7 +15,7 @@ function memStorage() {
   }
 }
 
-test('BL-01 默认 3km、全部点位;非法值回落默认', () => {
+test('BL-01 默认 3km、全部节点;非法值回落默认', () => {
   assert.deepEqual(f.normalizeFilter(null), { radiusM: 3000, unvisitedOnly: false })
   assert.deepEqual(f.normalizeFilter({ radiusM: 7000, unvisitedOnly: 'yes' }), { radiusM: 3000, unvisitedOnly: false })
   assert.deepEqual(f.normalizeFilter({ radiusM: '1000', unvisitedOnly: true }), { radiusM: 1000, unvisitedOnly: true })
@@ -48,7 +48,7 @@ test('BL-01 页面把筛选半径传给 /api/roam/pois,半屏带标题与关闭'
   const js = fs.readFileSync(path.join(root, 'pages/roam/index.js'), 'utf8')
   const wxml = fs.readFileSync(path.join(root, 'pages/roam/index.wxml'), 'utf8')
   assert.match(js, /req\('\/api\/roam\/pois', 'GET', \{ lat: String\(c\.lat\), lng: String\(c\.lng\), radius: String\(radiusM\) \}/)
-  assert.match(wxml, /wx:if="\{\{sceneCurrent && sceneCurrent\.id === 'roam-poi-filter'\}\}"[\s\S]*?class="psheet__x" catchtap="onProtoSheetClose"[\s\S]*?<text class="ph1">筛选点位<\/text>/)
+  assert.match(wxml, /wx:if="\{\{sceneCurrent && sceneCurrent\.id === 'roam-poi-filter'\}\}"[\s\S]*?class="psheet__x" catchtap="onProtoSheetClose"[\s\S]*?<text class="ph1">筛选节点<\/text>/)
   assert.doesNotMatch(wxml, /poiFilterShow/)
   assert.match(js, /openPoiFilter\(\) \{[\s\S]*?this\.openScene\('roam-poi-filter'\);/)
   assert.deepEqual(f.radiusTabs().map((t) => t.key), ['1000', '3000', '5000'])

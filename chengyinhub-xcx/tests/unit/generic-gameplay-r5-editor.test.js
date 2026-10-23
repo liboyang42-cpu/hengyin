@@ -292,7 +292,7 @@ for (const timed of [false, true]) test('未新选的旧输入挑战打开保存
 
 test('真实 Page 新建两段本站反馈，after 选第二段保存/重开；选项引用稳定段 ID', () => {
   const p = page(); const raw = { schemaVersion: 1, qa: base().qa };
-  p.fillFormWithTemplateData({ title: '反馈站点', validationMethod: 0, advancedConfigJson: JSON.stringify(raw) }); p.openGameConfig();
+  p.fillFormWithTemplateData({ title: '反馈节点', validationMethod: 0, advancedConfigJson: JSON.stringify(raw) }); p.openGameConfig();
   while (p.data.advanced.branch.steps.length) p.removeBranchStep(event({ index: 0 }));
   p.addBranchStep(); p.addBranchStep(); const ids = p.data.advanced.branch.steps.map(row => row.id); assert.equal(ids.length, 2); assert.notEqual(ids[0], ids[1]);
   for (let i = 0; i < 2; i++) { p.updateBranchStep(event({ index: i, field: 'title' }, '反馈第' + (i + 1) + '段')); p.updateBranchStep(event({ index: i, field: 'body' }, '本站结果说明' + i)); }
@@ -419,7 +419,7 @@ test('独立模板无上下文仍拦真实冲突，空主题上下文也不当�
 
 test('R5 输入挑战不显示旧的限时秒数输入；只有旧版配置保留该字段', () => {
   const wxml = require('node:fs').readFileSync(require('node:path').join(__dirname, '../../pages/publish/temp/index.wxml'), 'utf8');
-  const grid = wxml.match(/<view class="cg-adv-grid" wx:if="\{\{advanced\.outcomeRules\.version !== 1\}\}">\n\s*<view><view class="cg-cfg-label">限时（3 至 120 秒）[\s\S]*?<\/view>\n\s*<block wx:else><view class="cg-cfg-label">可以打几次/);
+  const grid = wxml.match(/<view class="cg-adv-grid" wx:if="\{\{advanced\.outcomeRules\.version !== 1\}\}">\n\s*<view><view class="cg-cfg-label">限时（3 至 120 秒）[\s\S]*?<\/view>\n\s*<block wx:else><view class="cg-cfg-label">次数上限/);
   assert.ok(grid, '旧版配置：秒数与次数同在两列栅格；R5（outcomeRules v1）不显示秒数，次数整行显示，限时只由限时挑战附加项设置');
 });
 

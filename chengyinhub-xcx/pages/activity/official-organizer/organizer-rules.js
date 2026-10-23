@@ -31,7 +31,7 @@ const LIMITS = { reason: 200, plan: 300 };
 const PAUSE_FIELDS = ['reason', 'impactScope', 'alternativePlan', 'notificationPlan'];
 const PAUSE_PRESETS = {
   reason: ['天气或安全原因', '场地或合作商家临时不可用', '活动内容或任务需要修正'],
-  impactScope: ['全部已报名玩家', '部分点位或任务', '尚未报名的玩家'],
+  impactScope: ['全部已报名玩家', '部分节点或任务', '尚未报名的玩家'],
   alternativePlan: ['恢复后按原计划继续', '改期，时间另行通知', '暂无替代方案，恢复前不开放'],
   notificationPlan: ['站内通知全部已报名玩家', '主办方另行发布公告', '影响较小，暂不单独通知'],
 };

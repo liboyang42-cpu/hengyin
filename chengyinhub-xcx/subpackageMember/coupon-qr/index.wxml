@@ -33,7 +33,7 @@
     custom-back
     bind:back="onClose"
     title="缺少券信息"
-    sub="请返回票夹重新进入"
+    sub="请返回重新进入"
     primary="返回"
     fill="{{true}}"
     size="lg"
@@ -48,7 +48,7 @@
     wx:if="{{entryState === 'ready' && useStatus == 0 && notStarted}}"
     kind="not-started"
     title="还没到可用时间"
-    sub="{{errMsg || (coupon.startTimeText ? '该券 ' + coupon.startTimeText + ' 起可使用' : '该券尚未到可使用时间')}}"
+    sub="{{errMsg || (coupon.startTimeText ? coupon.startTimeText + ' 起可用' : '')}}"
     primary="重新获取"
     fill="{{true}}"
     size="lg"

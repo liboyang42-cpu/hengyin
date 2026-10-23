@@ -65,7 +65,7 @@ test('提交走 rename(id,title);后端报错原文回显,不关半屏', () => {
   assert.equal(page.data.renameError, '给这张卡起个名字');
   page.onRenameSubmit();
   requests[1].fail();
-  assert.equal(page.data.renameError, '网络连接失败，请稍后重试');
+  assert.equal(page.data.renameError, '网络异常，请重试');
 });
 
 test('成功:以返回卡名为准更新放大态,提示并回读当前分类', () => {

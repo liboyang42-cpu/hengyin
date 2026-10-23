@@ -10,7 +10,7 @@ test('沉浸游玩页保留地图退出能力，开始飞行层出现时隐藏�
   const wxml = read('pages/play/index.wxml')
   const wxss = read('pages/play/index.wxss')
   // 2026-08-06 用户裁决:起飞过场删除、地图左上退出钮删除(返回走系统手势/结算页)。
-  assert.doesNotMatch(wxml, /startFlight/, '起飞过场已删,不得回流')
+  assert.doesNotMatch(wxml, /startFlight/, '起飞过场已删，不得回流')
   // 2026-09-22 主地图整层删除后页面已没有带 show-exit 的地图;契约拆成两半:页面不许打开它,
   // 组件默认值必须是 false —— 只留前半条的话,组件改了默认值这里照样绿。
   assert.doesNotMatch(wxml, /show-exit="\{\{true\}\}"/)
@@ -18,7 +18,7 @@ test('沉浸游玩页保留地图退出能力，开始飞行层出现时隐藏�
   // 2026-09-09:顶部输入地址占住了胶囊底下那条位置带,状态条整体让到它下面(§6.6),
   // 所以 top 是 contentTop 加一个偏移。要守的仍是「由胶囊真实位置算出来」,不是那个字面表达式。
   assert.match(read('pages/play/index.wxml'), /class="play-topstack"[^>]*style="top:\{\{chrome\.contentTop \+ \d+\}\}px"/,
-    '状态条必须由胶囊真实位置定位,不能退回写死 top')
+    '状态条必须由胶囊真实位置定位，不能退回写死 top')
   assert.match(read('pages/play/index.wxml'), /<cy-map-address-search[^>]*top="\{\{chrome\.contentTop\}\}"/,
     '输入地址自己必须贴在胶囊底下那条位置带上')
   const freeMap = read('components/cy/free-map/index.wxml')

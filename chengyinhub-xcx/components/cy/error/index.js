@@ -11,7 +11,7 @@ Component({
   properties: {
     icon: { type: String, value: '' },
     title: { type: String, value: '出错了' },
-    sub: { type: String, value: '网络开了点小差，请稍后再试' },
+    sub: { type: String, value: '' },
     aria: { type: String, value: '' },
     retry: { type: String, value: '重试' },
     // 整页阻断态的安全第二出口；默认空，局部错误态保持单出口。

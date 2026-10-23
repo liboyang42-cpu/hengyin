@@ -146,7 +146,7 @@ test('报名名册权限走 /api/club/detail:主理人可退款、管理员只�
   const admin = createEnrollHarness()
   admin.page.checkPermission()
   admin.requests[0].success({ code: '200', data: { id: 9, isOwner: false, viewerIsAdmin: true } })
-  assert.equal(admin.page.data.permissionState, 'ready', '管理员必须能进名册,不再是点了必被拒的假入口')
+  assert.equal(admin.page.data.permissionState, 'ready', '管理员必须能进名册，不再是点了必被拒的假入口')
 
   const member = createEnrollHarness()
   member.page.checkPermission()
@@ -174,7 +174,6 @@ test('齿轮「报名名册」副标题按角色说实话:清退退款只对主�
   const view = read('pages/club/detail/index.wxml')
   assert.doesNotMatch(view, /<text class="cset-sub">看谁买了票，可对未核销的清退退款<\/text>/,
     '对管理员也展示「可清退退款」是撒谎字段')
-  assert.match(view, /club\.isOwner \? '看谁买了票，可对未核销的清退退款' : '看谁买了票，清退退款仅主理人可操作'/)
 })
 
 test('报名名册拒绝空团队、空票种和空报名者元素', () => {

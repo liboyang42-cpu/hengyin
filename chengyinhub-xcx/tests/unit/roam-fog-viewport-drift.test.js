@@ -69,7 +69,7 @@ test('走路跟随(causedBy=update)在 begin 不拉黑遮罩', () => {
   const page = screenPageAt();
   page.onRegionChange({ detail: { phase: 'begin', causedBy: 'update' } });
   assert.strictEqual(page.data.fogScreenGuard, false,
-    '程序跟随导致的 regionchange 若照旧拉黑,边走边揭就是持续黑闪');
+    '程序跟随导致的 regionchange 若照旧拉黑，边走边揭就是持续黑闪');
   cleanup(page);
 });
 
@@ -77,7 +77,7 @@ test('手势拖拽在 begin 立刻拉黑(拖动期间没有中间态 region,错�
   const page = screenPageAt();
   page.onRegionChange({ detail: { phase: 'begin', causedBy: 'drag' } });
   assert.strictEqual(page.data.fogScreenGuard, true,
-    '手势期间不遮 = 旧帧错位越拖越大,会把没探过的地名成片亮出来');
+    '手势期间不遮 = 旧帧错位越拖越大，会把没探过的地名成片亮出来');
   cleanup(page);
 });
 
@@ -86,7 +86,7 @@ test('end:帧视口漂移在半个揭示半径内 → 保留旧帧不拉黑', ()
   const page = screenPageAt({ lat: 31.2301, lng: 121.47 });
   page.onRegionChange({ detail: { phase: 'end', causedBy: 'update', scale: 17 } });
   assert.strictEqual(page.data.fogScreenGuard, false,
-    '米级漂移只在视口边缘多露一条窄边,不该付一次全屏黑');
+    '米级漂移只在视口边缘多露一条窄边，不该付一次全屏黑');
   cleanup(page);
 });
 
@@ -95,7 +95,7 @@ test('end:帧视口漂移超过半个揭示半径 → 拉黑', () => {
   const page = screenPageAt({ lat: 31.231, lng: 121.47 });
   page.onRegionChange({ detail: { phase: 'end', causedBy: 'update', scale: 17 } });
   assert.strictEqual(page.data.fogScreenGuard, true,
-    '视口真的走远了,旧帧覆盖的已不是当前画面,必须遮');
+    '视口真的走远了，旧帧覆盖的已不是当前画面，必须遮');
   cleanup(page);
 });
 
@@ -103,7 +103,7 @@ test('end:缩放变了必拉黑(旧帧尺寸整个不对)', () => {
   const page = screenPageAt();
   page.onRegionChange({ detail: { phase: 'end', causedBy: 'update', scale: 15 } });
   assert.strictEqual(page.data.fogScreenGuard, true,
-    '缩放变化下旧帧的洞半径全错,比错位更离谱');
+    '缩放变化下旧帧的洞半径全错，比错位更离谱');
   cleanup(page);
 });
 
@@ -124,7 +124,7 @@ test('onShow 对卡住的 guard 补一次重试(否则全黑且无出口)', () =
   page.retryScreenFog = () => { retried += 1; };
   page.onShow();
   assert.strictEqual(retried, 1,
-    'tabBar 页实例常驻,不在 onShow 自愈就只能杀进程');
+    'tabBar 页实例常驻，不在 onShow 自愈就只能杀进程');
   cleanup(page);
 });
 
@@ -135,7 +135,7 @@ test('onShow 不去打扰正常显示中的雾', () => {
   let retried = 0;
   page.retryScreenFog = () => { retried += 1; };
   page.onShow();
-  assert.strictEqual(retried, 0, '没卡住就别重建,重建会闪一次');
+  assert.strictEqual(retried, 0, '没卡住就别重建，重建会闪一次');
   cleanup(page);
 });
 
@@ -157,7 +157,7 @@ test('缩放动画期间仍然同步 _mapScale', () => {
   page._zoomLock = true
   page.onRegionChange({ detail: { phase: 'end', causedBy: 'update', scale: 14 } })
   assert.strictEqual(page._mapScale, 14,
-    '漏掉这一步,动画收尾后第一次 end 会拿旧 scale 比出 scaleChanged=true,把省下的全黑原样加回去')
+    '漏掉这一步，动画收尾后第一次 end 会拿旧 scale 比出 scaleChanged=true,把省下的全黑原样加回去')
   cleanup(page)
 })
 
@@ -166,7 +166,7 @@ test('拉远动画开场遮一次(洞会被放大成本不该露的区域)', () 
   page.data.reducedMotion = false
   page._animateZoom(17, 14, 200, { lat: 31.23, lng: 121.47 })   // to < from = 拉远
   assert.strictEqual(page.data.fogScreenGuard, true,
-    '拉远时同样像素对应更多米,旧帧的洞会把没探过的地名成片亮出来,这次黑不能省')
+    '拉远时同样像素对应更多米，旧帧的洞会把没探过的地名成片亮出来，这次黑不能省')
   if (page._zoomAnim) { clearInterval(page._zoomAnim); page._zoomAnim = null }
   cleanup(page)
 })
@@ -176,7 +176,7 @@ test('拉近动画不遮(洞覆盖范围变小,偏保守)', () => {
   page.data.reducedMotion = false
   page._animateZoom(14, 17, 200, { lat: 31.23, lng: 121.47 })   // to > from = 拉近
   assert.strictEqual(page.data.fogScreenGuard, false,
-    '拉近时旧帧露出的地理范围比该露的小,不泄露 ⇒ 不该付一次全黑')
+    '拉近时旧帧露出的地理范围比该露的小，不泄露 ⇒ 不该付一次全黑')
   if (page._zoomAnim) { clearInterval(page._zoomAnim); page._zoomAnim = null }
   cleanup(page)
 })

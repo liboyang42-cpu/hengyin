@@ -182,7 +182,7 @@ test('#19 场次失败:退回已加载主题并声明口径,可重试', () => {
 
   assert.equal(page.data.eventCalendarSessionState, 'error')
   assert.equal(page.data.eventCalendarSource, 'topics')
-  assert.equal(page.data.eventCalendarNotice, '月历仅展示已加载主题，场次暂时没加载出来')
+  assert.equal(page.data.eventCalendarNotice, '月历仅展示已加载主题，场次加载失败')
   const feb3 = page.data.eventCalendarCells.find((cell) => cell.dateText === '2028-02-03')
   assert.equal(feb3.events.length, 1)
 
@@ -197,7 +197,7 @@ test('#19 WXML:月历显示口径说明 + 失败重试;主题口径空态不说�
   assert.match(wxml, /catchtap="loadCalendarSessions"/)
   assert.match(wxml, /wx:key="calendarKey"/)
   assert.match(wxml, /eventCalendarSource === 'sessions' && !eventCalendarHasEvents[^>]*title="本月暂无场次"/)
-  assert.match(wxml, /title="已加载主题中本月暂无活动" sub="这不代表本月没有排期"/)
+  assert.match(wxml, /title="本月暂无排期"/)
   assert.doesNotMatch(wxml, /title="本月暂无活动"/, '主题口径不得暗示整月无排期')
 })
 
