@@ -117,8 +117,50 @@ jobs:
               - '.github/workflows/ci.yml'
               - 'ci/ui-build.sh'
             xcx:
+              # 2026-10-22(O16b):去掉原来的 `'!chengyinhub-xcx/docs/**'`。默认 predicate-quantifier
+              #   是 some,否定规则的含义是「任一文件不在 chengyinhub-xcx/docs 下」⇒ 几乎所有 PR 恒为 true
+              #   (#483 纯 docs PR 也跑了 static + 20 分片)。而且 chengyinhub-xcx/docs 本身也被读:
+              #   xcx-check.sh 的 JSON 可解析扫描、ui-governance-docs-contract 都读它,排除它反而是假绿。
+              # ★ 下面整张表是**正向**清单:小程序单测/静态门禁实际读到的全部路径(strace 全量回放 +
+              #   静态 grep 双向盘点,明细见 PR 与 ci/test_ci_cost_contract.py 的 XCX_READ_SET)。
+              #   新增一条读仓外文件的小程序测试时,必须把它读的路径加到这里,否则就是假绿。
               - 'chengyinhub-xcx/**'
-              - '!chengyinhub-xcx/docs/**'
+              # ui-integrity / backend-miniprogram-route-exists / build-action-ledger / roam-redline
+              # 扫整棵后端 src(ui-integrity 还按「仓库根每个目录/src/main/java」枚举新模块)与后台 UI src。
+              - 'chengyinhub-admin/**'
+              - 'chengyinhub-system/**'
+              - 'chengyinhub-common/**'
+              - 'chengyinhub-framework/**'
+              - 'chengyinhub-quartz/**'
+              - 'chengyinhub-generator/**'
+              - '*/src/main/java/**'
+              - 'chengyinhub-ui/**'
+              # page-cleanup-audit(tests/tools/audit-page-cleanup.js)对 `git ls-files` 全仓逐个
+              # readFileSync 这些扩展名;git grep '*.wxml' 也是全仓。根目录 *.py 会被 cwd=仓库根的
+              # python3 -m unittest 当模块优先导入。
+              - '**/*.{js,json,wxml,vue,html,java,xml,sql,yml,yaml,properties,ts}'
+              - '**/*.wxss'
+              - '*.py'
+              # rg / git ls-files --exclude-standard / git diff 的行为受根目录这些文件影响。
+              - '.gitignore'
+              - '.gitattributes'
+              - '.gitmodules'
+              - '.mailmap'
+              - '.ignore'
+              - '.rgignore'
+              - '.npmrc'
+              # 门禁脚本、工作流与 SQL 目录整体纳入(改门禁的 PR 恰恰最需要跑一次)。
+              - 'ci/**'
+              - 'scripts/**'
+              - 'sql/**'
+              - '.github/**'
+              # 小程序单测直接读的仓外资源/文档(逐条对应 XCX_READ_SET)。
+              - 'assets/covers/**'
+              - 'design/icons/lucide/**'
+              - 'docs/assets/template-covers/**'
+              - 'docs/delivery/gg-r5-zeroview-fixtures/**'
+              - 'docs/design/miniprogram-page-cleanup-1009.md'
+              - 'docs/城瘾小程序_设计系统权威基准_20260801.md'
               # 跨栈埋点白名单合同直接读该服务端文件。
               - 'chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAnalyticsController.java'
               # 漫游红线门禁(scripts/roam-redline-gate.js)直接读这四个后端文件:
@@ -173,6 +215,8 @@ jobs:
               - 'ci/test_community_legacy_comment_like_counts_mysql_integration.py'
               - 'ci/sql_splitter.py'
               - 'ci/migration-dependencies.json'
+              - 'ci/release_manifest.py'
+              - 'ci/test_release_manifest.py'
               - 'ci/classify-runtime.sh'
               - 'ci/classify-runtime-check.sh'
               - 'ci/ci-config-guard.sh'
@@ -586,6 +630,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+          # 2026-10-22 O-16:GitHub-hosted 每次是全新 VM,npm ci 要重下全部包。
+          # 只缓存 ~/.npm 下载缓存(按 lockfile 定键),npm ci 仍从 lockfile 全量重装 node_modules,
+          # 安装结果与不缓存完全一致,门禁口径不变。
+          cache: npm
+          cache-dependency-path: chengyinhub-ui/package-lock.json
       # 跑的就是部署链路那一份 ci/ui-build.sh:门禁绿 = 部署那条路能构建出产物。
       - name: Build admin UI
         run: bash ci/ui-build.sh "${{ github.sha }}"
@@ -610,6 +659,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+          # 同 admin_ui:只缓存 ~/.npm,npm ci 照旧全量安装。
+          cache: npm
+          cache-dependency-path: chengyinhub-ui/package-lock.json
       # 这些合约测试当前只用 node 内置模块 + tests/e2e 下的本地 helper/fixture,
       # 不依赖任何三方包;仍然装依赖,是为了跟本机 `npm run test:e2e:contract` 完全同路径 ——
       # 以后有合约引入三方包时不会因为 CI 少装依赖而变成 MODULE_NOT_FOUND 型迷惑失败。
@@ -787,6 +839,6 @@ jobs:
       - name: Install e2e chain test deps
         run: python3 -m pip install --quiet pymysql
       - name: Verify isolated candidate objects and packaged resource provenance
-        run: python3 -m unittest ci/test_shallow_source_custody.py ci/test_candidate_resource_manifest.py ci/test_prelaunch_business_seeds.py
+        run: python3 -m unittest ci/test_shallow_source_custody.py ci/test_candidate_resource_manifest.py ci/test_prelaunch_business_seeds.py ci/test_release_manifest.py
       - name: Run versioned migration runner unit and CI wiring contracts
         run: python3 -m unittest -v ci/test_run_migration.py ci/test_migration_runner_ci_contract.py ci/test_migration_h8_registration_columns.py ci/test_migration_h8_rate_scope.py ci/test_migration_h8_detail_move.py ci/test_mapper_h8_column_isolation.py ci/test_migration_h8_publisher_guard.py scripts/e2e/test_build_schema.py scripts/e2e/test_chain_lib.py scripts/e2e/test_chain_merchant_club.py scripts/e2e/test_chain_platform.py scripts/e2e/test_chain_sale_close.py

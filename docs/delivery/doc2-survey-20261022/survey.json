@@ -1,0 +1,266 @@
+{
+  "lane": "D2S",
+  "date": "2026-10-22",
+  "base_commit": "063a6c3c",
+  "read_only": true,
+  "items": [
+    {
+      "id": "O-15",
+      "title": "主题模式角色分离",
+      "exists": [
+        "ProductSlot 字符串常量 CONTENT/ORGANIZER/SUPPLY/DISTRIBUTION (chengyinhub-common/.../ProductSlot.java:24-33)",
+        "DB CHECK ck_role_slot (sql/base_schema_20260818.sql:4064)",
+        "singleton_key + uk_product_role_singleton (base:4056-4058)",
+        "ProductRoleServiceImpl 硬编码 slot (:61/:135/:173/:250)"
+      ],
+      "missing": [
+        "revenue_share 无任何校验(DB 无 CHECK, 服务从不写, backfill 写 NULL)",
+        "slot 无 Java enum / 服务层白名单"
+      ],
+      "conflicts": [
+        "C1-1 分成校验位置",
+        "C1-2 base 快照缺 declared_by/distribution 守卫",
+        "C1-3 测试 schema decimal(8,4) vs 生产 (10,4)"
+      ],
+      "tests": [
+        "ProductRoleServiceTest",
+        "ProductRoleMapperSqlTest",
+        "ProductRoleOrganizerActorTest",
+        "ProductRoleContentSlotBatchTest",
+        "ProductRoleWiringTest",
+        "ProductRoleContentOwnerSchemaGuardTest"
+      ]
+    },
+    {
+      "id": "O-01/O-02",
+      "title": "/arrive 防作弊",
+      "exists": [
+        "ApiPlayProgressController.java:2059-2065 空精度放行",
+        "GEOFENCE_METERS=50 (:2372), GEOFENCE_ACCURACY_METERS=80 (:2374)",
+        "roam discover 速度闸 35m/s (ApiRoamController.java:149,180-189)",
+        "member_visited_poi.geo_key varchar(24) 3位小数, uk_member_geo (base:2713-2724), ApiRoamController.java:919-921"
+      ],
+      "missing": [
+        "/api/play/arrive 无速度/位移校验",
+        "/api/club/lead/arrive 无精度参数",
+        "/api/roam/checkin 无速度闸、POI 坐标客户端自报"
+      ],
+      "haversine_duplicates": {
+        "java": [
+          "ApiPlayProgressController.java:2444",
+          "ApiRoamController.java:436",
+          "ShopDayProofServiceImpl.java:143",
+          "RoamExploreDayCandidateServiceImpl.java:161",
+          "OfficialEventV2ServiceImpl.java:2284",
+          "ClubGatherArrivalPolicy.java:23-27",
+          "TopicRouteCandidatePolicy.java:29 (R=6371008.8)",
+          "TopicRouteSimulator.java:67",
+          "DistanceCalculatorUtils.java:14 (km, 失败返回0)"
+        ],
+        "sql": [
+          "CmsTopicMapper.xml:610,643",
+          "RoamMapper.xml:256,477",
+          "MerchantLeadMapper.xml:13",
+          "ApiMapMapper.xml:23",
+          "RoamHangoutMapper.xml:45,110",
+          "ApiAiMapper.xml:41",
+          "MmsMerchantMapper.xml:112"
+        ],
+        "xcx": [
+          "utils/geo.js:5",
+          "pages/publish/utils/publish/publish-stats.js:9",
+          "pages/publish/utils/publish/topic-route-graph.js:484",
+          "pages/play/index.js:7539",
+          "utils/roam-geo.js:52",
+          "utils/roam-track-simplify.js:24-28",
+          "tests/unit/official-solo-story-seed-contract.test.js:105"
+        ]
+      },
+      "conflicts": [
+        "C2-1 空精度放行(被测试锁定)",
+        "C2-2 速度校验数据源",
+        "C2-3 geo_key vs poi_id",
+        "C2-4 距离工具收敛"
+      ],
+      "tests": [
+        "ApiPlayGpsGeofenceValidationTest#blankAccuracyIsAllowedForLegacyClients:287",
+        "RoamCheckinTest",
+        "ApiRoamCoordinateBoundaryTest",
+        "ClubGatherArrivalControllerTest",
+        "ClubGatherArrivalMySqlIT",
+        "xcx geo.test.js",
+        "xcx roam-geo.test.js"
+      ]
+    },
+    {
+      "id": "F1",
+      "title": "城市定向运行时 product_type=1",
+      "exists": [
+        "topic_route_session (migration_20260823_topic_route_graph.sql:25-46), status 0/1 + 代码 STATUS_ENDED=2 (TopicRouteSession.java:10-12)",
+        "懒建会话 ensureBranchSession:1150 / ensureJourneySession:2067",
+        "game_runtime_session score INT, status 0/1/2/3",
+        "/api/play/leaderboard 按完成节点数 (PlayerNodeProgressMapper.xml:166-178)",
+        "play_team/play_team_member (migration_20260820_play_team_core.sql)",
+        "cms_topic_node longitude/latitude varchar(255) (base:1585-1586)"
+      ],
+      "missing": [
+        "orient_session_clock",
+        "独立 start/prepare/abandon/task-result 端点",
+        "*_centi 计分与计分流水",
+        "Redis 排行榜",
+        "WGS84<->GCJ02 转换",
+        "LocationGuard/模拟定位检测",
+        "经纬度对调检测与清洗 SQL"
+      ],
+      "conflicts": [
+        "C3-1 时钟表",
+        "C3-2 计分口径/排行榜契约",
+        "C3-3 两条运行时并存",
+        "C3-4 坐标系与 varchar",
+        "C3-5 abandon 语义与 STATUS_ENDED"
+      ],
+      "tests": [
+        "TopicRouteRuntimeServiceImplTest",
+        "JourneyFullFlowMySqlIT",
+        "AdvancedGameRuntimeMySqlIT",
+        "PlayerLeaderboardScopeMyBatisTest",
+        "xcx roam-track-filter.test.js",
+        "xcx map-team.test.js"
+      ]
+    },
+    {
+      "id": "F2",
+      "title": "RPG P0",
+      "exists": [
+        "theme_state_key (migration_theme_state_key_20260916.sql:6-18, scope 仅 run)",
+        "GameplayCheckEngine d20/优劣势/modCap(Math.min,:75)/CRIT-FUMBLE(:76-79)",
+        "modCap 默认 6 范围 0..10"
+      ],
+      "missing": [
+        "theme_character 表",
+        "check.skill 绑定属性(目前仅展示)",
+        "mods[].var",
+        "负修正下限"
+      ],
+      "conflicts": [
+        "C4-1 skill/属性模型与 state_key 命名空间",
+        "C4-2 modCap 只封顶",
+        "C4-3 roll/rollAttempt 双入口"
+      ],
+      "tests": [
+        "GenericGameplayHttpE2eIT (18 方法, 未覆盖 mods/modCap/CRIT/FUMBLE/优劣势)",
+        "GameplayCheckEngineTest (2 用例)"
+      ]
+    },
+    {
+      "id": "F3",
+      "title": "自由探索 product_type=2",
+      "exists": [
+        "cms_topic_chapter (base:1470-1498)",
+        "merchant_chapter_offer quota_total/quota_used/valid_end (base:2763-2788)",
+        "registration_entitlement uk(registration_id,chapter_id) (base:4383-4398)",
+        "redemption active_key (base:4303-4325)",
+        "settlement_claim fulfillment_type REGISTRATION/REDEMPTION, service_unit 类别 (base:4698-4716)",
+        "merchant_payable claim_id nullable, 代码事实必填 (base:2906-2926; MerchantPayableServiceImpl:113,160)",
+        "VerificationRiskService 0.90 (:25,:47) 自由探索豁免高率"
+      ],
+      "missing": [
+        "权益/核销有效期",
+        "grant",
+        "reservation",
+        "unit_code",
+        "持有人余额"
+      ],
+      "conflicts": [
+        "C5-1 一次性权益唯一键 vs 余额模型",
+        "C5-2 claim 唯一键无单位",
+        "C5-3 claim_id 可空存量",
+        "C5-4 claim 并非 REDEMPTION-only",
+        "C5-5 0.90 自由探索豁免"
+      ],
+      "tests": [
+        "MerchantPayableServiceTest",
+        "SettlementClaimServiceImplTest",
+        "SettlementClaimMapperSqlTest",
+        "MerchantPayableSqlTest",
+        "PerkLedgerServiceTest",
+        "VerificationRiskFreeExploreTest"
+      ]
+    },
+    {
+      "id": "F5",
+      "title": "故事引擎词汇",
+      "exists": [
+        "conditionsPass: ITEM_HELD/ITEM_ACQUIRED/NODE_COMPLETED/HAS_TAG/EQ/NE/GT/GTE/LT/LTE (TopicRouteEngine.java:151-183)",
+        "applyEffects: ADD_TAG/SET/INC/FLOOR(counter.*) (:188-209)"
+      ],
+      "missing": [
+        "OR/NOT",
+        "REMOVE_TAG/DEC/GOTO/物品增减"
+      ],
+      "conflicts": [
+        "C6-1 validator 不认 FLOOR (TopicRouteConfigValidator.java:24)",
+        "C6-2 词汇表 6 处复制"
+      ],
+      "tests": [
+        "TopicRouteEngineTest (4 用例, 无 op 直测)",
+        "TopicRouteConfigValidatorTest",
+        "JourneyChoiceEffectsTest"
+      ]
+    },
+    {
+      "id": "F7",
+      "title": "合规",
+      "exists": [
+        "merchant_payable_batch/club_payable_batch invoice_status/invoice_no/red_invoice_no (后台台账)",
+        "consent_record",
+        "ums_member_identity (仅发布者)",
+        "协议文本不面向未成年 (xcx utils/agreement-docs.js:20)",
+        "夜间圈层 birthday 年龄闸 (CircleExploreServiceImpl.java:352-357)"
+      ],
+      "missing": [
+        "用户发票申请/开具/税控",
+        "注册 18+ 闸门",
+        "监护模式",
+        "防沉迷"
+      ],
+      "conflicts": [
+        "C7-1 未成年策略",
+        "C7-2 用户发票命名避开 club_membership_invoice"
+      ],
+      "tests": [
+        "MemberIdentityServiceTest",
+        "ApiComplianceControllerTest",
+        "ConsentGuardTest",
+        "CircleExploreServiceTest",
+        "xcx agreement-page-contract.test.js"
+      ]
+    },
+    {
+      "id": "O-14",
+      "title": "推荐/城市/搜索",
+      "exists": [
+        "recommendation_score_daily 表 + insertRecommendationScoreDaily 定义 (RecommendationScoreDailyMapper.java:13 / .xml:7-12)",
+        "address_name LIKE 城市筛选 (CmsTopicMapper.xml:342-343,752; CmsActivityMapper.xml:79,181)",
+        "community_search_document 仅投影 POST (CommunityPostMapper.xml:506-515)"
+      ],
+      "missing": [
+        "insertRecommendationScoreDaily 调用方(0 个)与定时任务",
+        "cms_topic/cms_activity.city_code",
+        "话题/活动搜索投影"
+      ],
+      "conflicts": [
+        "C8-1 city_code",
+        "C8-2 推荐写入方",
+        "C8-3 搜索投影扩展 (CHECK 不含 ACTIVITY)",
+        "seed_official_content_template.sql:7 引用不存在的 cms_topic.city_code"
+      ],
+      "tests": [
+        "ApiRecommendationControllerTest",
+        "P3AdminControllersTest",
+        "DiscoveryFilterContractTest",
+        "CommunityPostMapperMyBatisTest"
+      ]
+    }
+  ]
+}

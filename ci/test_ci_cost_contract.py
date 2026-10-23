@@ -47,6 +47,102 @@ def assert_contains(source: str, needle: str) -> None:
         raise AssertionError(f"missing CI contract: {needle}")
 
 
+# dorny/paths-filter@v3 用 picomatch({dot: true}) 逐条匹配,默认 predicate-quantifier=some:
+# 任一变更文件命中任一规则即 true。这里用纯 stdlib 复刻本仓用到的子集(** / * / ? / {a,b}),
+# 让 xcx 路由的真/假可以按「一组变更文件」直接断言,而不只是逐字比对 YAML。
+def glob_regex(pattern: str) -> re.Pattern:
+    out, i = [], 0
+    while i < len(pattern):
+        if pattern.startswith("**/", i):
+            out.append("(?:.*/)?")
+            i += 3
+        elif pattern.startswith("**", i):
+            out.append(".*")
+            i += 2
+        elif pattern[i] == "*":
+            out.append("[^/]*")
+            i += 1
+        elif pattern[i] == "?":
+            out.append("[^/]")
+            i += 1
+        elif pattern[i] == "{":
+            end = pattern.index("}", i)
+            out.append("(?:" + "|".join(re.escape(part) for part in pattern[i + 1:end].split(",")) + ")")
+            i = end + 1
+        else:
+            out.append(re.escape(pattern[i]))
+            i += 1
+    return re.compile("".join(out) + r"\Z")
+
+
+def filter_patterns(block: str) -> list:
+    return re.findall(r"^              - '([^']+)'$", block, re.MULTILINE)
+
+
+def filter_matches(block: str, changed: list) -> bool:
+    # some 量词下 '!x' 的含义是「任一文件不在 x」(几乎恒真);这里按 dorny 的语义如实计算。
+    patterns = filter_patterns(block)
+    compiled = [(p.startswith("!"), glob_regex(p.lstrip("!"))) for p in patterns]
+    return any((not rx.match(f)) if neg else bool(rx.match(f)) for f in changed for neg, rx in compiled)
+
+
+# 小程序单测/静态门禁实际读取的 chengyinhub-xcx 以外路径(2026-10-22 O16b 盘点:
+# strace 全量回放 node --test tests/unit/**(13565/13565)+ mini_static 全部步骤,再加静态 grep 交叉核对)。
+# 每条:代表性路径 -> 读它的测试 file:line。这些路径的变更必须让 xcx = true。
+XCX_READ_SET = {
+    "docs/design/miniprogram-page-cleanup-1009.md": "chengyinhub-xcx/tests/unit/page-cleanup-audit.test.js:15",
+    "docs/assets/template-covers/final/p01-tonights-passcode.webp": "chengyinhub-xcx/tests/unit/mock-image-asset-safety.test.js:58",
+    "docs/assets/template-covers/final/t25-shanghai-flavor-tour.webp": "chengyinhub-xcx/tests/unit/template-dev-preview-contract.test.js:153",
+    "docs/delivery/gg-r5-zeroview-fixtures/team-wait.json": "chengyinhub-xcx/tests/unit/play-zero-hp-recovery.test.js:4",
+    "docs/delivery/gg-r5-zeroview-fixtures/team-hp-zero-result-card.json": "chengyinhub-xcx/tests/unit/r5-player-runtime.test.js:232",
+    "docs/城瘾小程序_设计系统权威基准_20260801.md": "chengyinhub-xcx/tests/unit/cy-icon-pairing-contract.test.js:178",
+    "assets/covers/home-banners/home-banner-club.gif": "chengyinhub-xcx/tests/unit/home-action-banner-contract.test.js:99",
+    "assets/covers/topic-templates/shanghai-solo/old-movie.jpg": "chengyinhub-xcx/tests/unit/official-solo-story-seed-contract.test.js:130",
+    "design/icons/lucide/png/camera.png": "chengyinhub-xcx/tests/unit/licensed-seed-icon-assets.test.js:9",
+    "ci/migration-dependencies.json": "chengyinhub-xcx/tests/unit/official-solo-story-seed-contract.test.js:9",
+    "ci/xcx-unit-manifest.js": "chengyinhub-xcx/tests/unit/smoke.test.js:9",
+    "ci/silent-error-allowlist.txt": "chengyinhub-xcx/scripts/ui-validity-gates.js:12",
+    "ci/test_ds_selftest_temp_safety.py": "ci/xcx-check.sh:93",
+    "chengyinhub-admin/sql/migration_seed_official_solo_story_topics_20260823.sql": "chengyinhub-xcx/tests/unit/official-solo-story-seed-contract.test.js:7",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubController.java": "chengyinhub-xcx/tests/unit/backend-miniprogram-route-exists.test.js:23",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/MerchantSubscription.java": "chengyinhub-xcx/tests/unit/batch9-api-contract.test.js:38",
+    "chengyinhub-common/src/main/java/com/chengyinhub/common/core/domain/AjaxResult.java": "chengyinhub-xcx/tests/lint/ui-integrity.js:203",
+    "chengyinhub-ui/src/main.js": "chengyinhub-xcx/scripts/roam-redline-gate.js:250",
+    # page-cleanup-audit 对 git ls-files 全仓 readFileSync 这些扩展名(含 docs/ 下的 .json 等)。
+    "docs/delivery/doc2-survey-20261022/survey.json": "chengyinhub-xcx/tests/tools/audit-page-cleanup.js:11",
+    "ops/example.yml": "chengyinhub-xcx/tests/tools/audit-page-cleanup.js:11",
+    # git grep '*.wxml' 全仓。
+    "docs/fixture/page.wxml": "chengyinhub-xcx/tests/unit/roam-citystamp-entries.test.js:12",
+    # rg / git --exclude-standard 受根 ignore 文件影响;cwd=仓库根的 python3 -m unittest 会优先导入根目录 *.py。
+    ".gitignore": "ci/xcx-check.sh:86",
+    "json.py": "ci/xcx-check.sh:93",
+    # 小程序本体(含 chengyinhub-xcx/docs:xcx-check.sh 的 JSON 可解析扫描读它)。
+    "chengyinhub-xcx/docs/DESIGN.md": "chengyinhub-xcx/tests/unit/ui-governance-docs-contract.test.js:12",
+    "chengyinhub-xcx/docs/screenshots/x.json": "ci/xcx-check.sh:52",
+}
+
+# 门禁/工作流自身的变更也必须触发 xcx。
+XCX_GATE_CHANGES = (
+    ".github/workflows/ci.yml",
+    ".github/workflows/mini-followup-regression.yml",
+    "ci/xcx-check.sh",
+    "ci/test_ci_cost_contract.py",
+    "scripts/quality-gate.sh",
+    "pom.xml",
+    "package.json",
+)
+
+# 没有任何小程序测试读的变更:必须 xcx = false(这是本次改动要省下的那部分)。
+XCX_UNREAD_CHANGES = (
+    ("docs/delivery/doc2-survey-20261022/survey.md",),
+    ("docs/delivery/release-closeout-20261022/lane-w4.md", "docs/delivery/ci-speed-20261022.md"),
+    ("docs/design/other-page-notes.md",),
+    ("README.md", "AGENTS.md"),
+    ("docs/screenshots/a.png",),
+    ("ops/runbook.md",),
+)
+
+
 def validate(source: str, backend_script: str | None = None, production_workflows: dict | None = None,
              mini_script: str | None = None) -> None:
     changes = job_block(source, "changes")
@@ -124,7 +220,56 @@ def validate(source: str, backend_script: str | None = None, production_workflow
         xcx,
         "              - 'chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAnalyticsController.java'\n",
     )
-    assert_contains(xcx, "              - '!chengyinhub-xcx/docs/**'\n")
+    # 不许出现否定规则:默认 some 量词下 '!x' 对几乎所有 PR 都为真(#483 纯 docs PR 跑满小程序门禁的根因)。
+    if re.search(r"^              - '!", xcx, re.MULTILINE):
+        raise AssertionError("xcx filter must not use negated patterns under predicate-quantifier some")
+    if re.search(r"^\s+predicate-quantifier:", changes, re.MULTILINE):
+        raise AssertionError("xcx routing assumes the default predicate-quantifier: some")
+    for path in (
+        "chengyinhub-xcx/**",
+        "chengyinhub-admin/**",
+        "chengyinhub-system/**",
+        "chengyinhub-common/**",
+        "chengyinhub-framework/**",
+        "chengyinhub-quartz/**",
+        "chengyinhub-generator/**",
+        "*/src/main/java/**",
+        "chengyinhub-ui/**",
+        "**/*.{js,json,wxml,vue,html,java,xml,sql,yml,yaml,properties,ts}",
+        "**/*.wxss",
+        "*.py",
+        ".gitignore",
+        ".gitattributes",
+        ".gitmodules",
+        ".mailmap",
+        ".ignore",
+        ".rgignore",
+        ".npmrc",
+        "ci/**",
+        "scripts/**",
+        "sql/**",
+        ".github/**",
+        "assets/covers/**",
+        "design/icons/lucide/**",
+        "docs/assets/template-covers/**",
+        "docs/delivery/gg-r5-zeroview-fixtures/**",
+        "docs/design/miniprogram-page-cleanup-1009.md",
+        "docs/城瘾小程序_设计系统权威基准_20260801.md",
+    ):
+        assert_contains(xcx, f"              - '{path}'\n")
+    # 语义正控:每条被小程序测试读到的路径、每类门禁变更都必须让 xcx = true。
+    for path, reader in XCX_READ_SET.items():
+        if not filter_matches(xcx, [path]):
+            raise AssertionError(f"xcx filter misses mini test input {path} (read by {reader})")
+    for path in XCX_GATE_CHANGES:
+        if not filter_matches(xcx, [path]):
+            raise AssertionError(f"xcx filter misses gate change {path}")
+    # 语义负控:没人读的纯文档变更必须 xcx = false;混入一个被读文件则必须翻回 true。
+    for changed in XCX_UNREAD_CHANGES:
+        if filter_matches(xcx, list(changed)):
+            raise AssertionError(f"xcx filter is true for unread-only change {changed}")
+        if not filter_matches(xcx, list(changed) + ["chengyinhub-xcx/app.js"]):
+            raise AssertionError(f"xcx filter is false for mixed change {changed} + chengyinhub-xcx/app.js")
 
     # 漫游红线门禁同样跨栈：它的扫描面含这三个后端文件，前瞻指引口径的真源是第四个。
     # 少任何一条，单改 Java/XML 的 PR 就会整个跳过 mini_program job（审计 5 §六.6 的假绿形态）。
@@ -328,6 +473,39 @@ def main() -> None:
                 "              - 'chengyinhub-system/src/main/resources/mapper/business/RoamMapper.xml'\n",
             ),
         ),
+        (
+            "xcx negated docs exclusion is always true",
+            source.replace(
+                "              - 'chengyinhub-xcx/**'\n",
+                "              - 'chengyinhub-xcx/**'\n              - '!chengyinhub-xcx/docs/**'\n", 1),
+        ),
+        (
+            "xcx predicate quantifier changed",
+            source.replace("          token: ''\n", "          token: ''\n          predicate-quantifier: every\n", 1),
+        ),
+        (
+            "xcx catch-all makes docs-only PRs run",
+            source.replace(
+                "              - 'chengyinhub-xcx/**'\n",
+                "              - 'chengyinhub-xcx/**'\n              - '**'\n", 1),
+        ),
+    )
+    negative_controls += tuple(
+        ("xcx read path " + path, remove_from_filter(source, "xcx", f"              - '{path}'\n"))
+        for path in (
+            "docs/delivery/gg-r5-zeroview-fixtures/**",
+            "docs/assets/template-covers/**",
+            "docs/design/miniprogram-page-cleanup-1009.md",
+            "docs/城瘾小程序_设计系统权威基准_20260801.md",
+            "assets/covers/**",
+            "design/icons/lucide/**",
+            "**/*.{js,json,wxml,vue,html,java,xml,sql,yml,yaml,properties,ts}",
+            "chengyinhub-ui/**",
+            ".gitignore",
+            "*.py",
+        )
+    )
+    negative_controls += (
         (
             "redline gate on unconditional changes job",
             remove_from_job(

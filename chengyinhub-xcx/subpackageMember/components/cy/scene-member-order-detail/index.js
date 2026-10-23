@@ -5,6 +5,7 @@ const app = getApp();
 const { summarizeOrderState, canRequestOrderRefund, formatRefundDeadline } = require('../../../../utils/order-status.js');
 const { isFreeOrder, resolveActualPaidAmount } = require('../../../../utils/order-actual-pay.js');
 const cancellationFeedback = require('../../../../utils/cancellation-feedback.js');
+const subscribe = require('../../../../utils/subscribe.js');
 const { isUnknownHttpStatus } = require('../../../../utils/transport/failure-envelope.js');
 
 /* 稿 578:2312 的状态药丸:退款处理中是琥珀(#FF9E14)。其余档位按语义配到既有状态色,
@@ -528,6 +529,8 @@ Component({
           if (!finishCancelPrompt() || !isCurrent()) return;
           if (!res.confirm) return;
           if (that.data.cancelling) return;
+          // B9:退款结果(到账/被拒)订阅只在用户确认退款这一下申请;零元单没有钱可退,不弹
+          if (paid && !info.isFreeOrder) subscribe.request(['refund', 'refundRejected']);
           that.setData({ cancelling: true });
           cyLoading.show('处理中...');
           // 请求拥有的 loading/锁须释放；账号校验只限制业务回执更新。

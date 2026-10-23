@@ -881244,7 +881244,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7961"
+        "staticSource": "pages/play/index.js:7989"
       }
     },
     {
@@ -881321,7 +881321,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8014"
+        "staticSource": "pages/play/index.js:8042"
       }
     },
     {
@@ -881398,7 +881398,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8004"
+        "staticSource": "pages/play/index.js:8032"
       }
     },
     {
@@ -881542,7 +881542,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8014"
+        "staticSource": "pages/play/index.js:8042"
       }
     },
     {
@@ -881619,7 +881619,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8004"
+        "staticSource": "pages/play/index.js:8032"
       }
     },
     {
@@ -881763,7 +881763,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8008"
+        "staticSource": "pages/play/index.js:8036"
       }
     },
     {
@@ -882287,6 +882287,7 @@
           "/api/login/code",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -882307,6 +882308,7 @@
           "/api/game/session/view",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -882374,6 +882376,12 @@
           },
           {
             "url": "/api/play/journey/ending",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/journey/stage-end",
             "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
@@ -882712,6 +882720,7 @@
           "/api/media/asset/{param}/retry",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/nodes",
@@ -882739,6 +882748,7 @@
           "/api/media/asset/{param}/retry",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/nodes",
@@ -882832,6 +882842,12 @@
           },
           {
             "url": "/api/play/journey/ending",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/journey/stage-end",
             "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
@@ -883744,6 +883760,7 @@
           "/api/login/code",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/nodes",
@@ -883768,6 +883785,7 @@
           "/api/game/session/view",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/nodes",
@@ -883844,6 +883862,12 @@
           },
           {
             "url": "/api/play/journey/ending",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/journey/stage-end",
             "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
@@ -884063,6 +884087,7 @@
           "/api/play/checkin",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/nodes",
@@ -884087,6 +884112,7 @@
           "/api/play/checkin",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/nodes",
@@ -884168,6 +884194,12 @@
           },
           {
             "url": "/api/play/journey/ending",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/journey/stage-end",
             "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
@@ -884386,6 +884418,7 @@
           "/api/media/asset/{param}/retry",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/nodes",
@@ -884413,6 +884446,7 @@
           "/api/media/asset/{param}/retry",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/nodes",
@@ -884506,6 +884540,12 @@
           },
           {
             "url": "/api/play/journey/ending",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/journey/stage-end",
             "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
@@ -884750,6 +884790,7 @@
           "/api/login/code",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/nodes",
@@ -884773,6 +884814,7 @@
           "/api/game/session/view",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/nodes",
@@ -884848,6 +884890,12 @@
           },
           {
             "url": "/api/play/journey/ending",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/journey/stage-end",
             "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
@@ -885083,6 +885131,7 @@
           "/api/login/code",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -885103,6 +885152,7 @@
           "/api/game/session/view",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -885170,6 +885220,12 @@
           },
           {
             "url": "/api/play/journey/ending",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/journey/stage-end",
             "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
@@ -885367,6 +885423,7 @@
           "/api/play/answer",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/nodes",
@@ -885391,6 +885448,7 @@
           "/api/play/answer",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/nodes",
@@ -885472,6 +885530,12 @@
           },
           {
             "url": "/api/play/journey/ending",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/journey/stage-end",
             "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
@@ -886544,84 +886608,6 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1226:bindtap:retryRouteThumb:145",
-      "route": "pages/play/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "pages/play/index.wxml",
-        "js": "pages/play/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "retryRouteThumb",
-        "line": 1226,
-        "selectorHint": ".finsheet__map-error",
-        "visibleCondition": "{{finishSnapError}}",
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [
-          "/api/role/info"
-        ],
-        "primaryApis": [],
-        "auxiliaryApis": [
-          "/api/role/info"
-        ],
-        "apiContracts": [
-          {
-            "url": "/api/role/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/play/index.js:7811"
-      }
-    },
-    {
       "id": "pages/play/index.wxml:123:bindtap:openThemeHistory:16",
       "route": "pages/play/index",
       "hostRoutes": [],
@@ -886701,6 +886687,84 @@
       "evidence": {
         "status": "pending",
         "staticSource": "utils/theme-records.js:19"
+      }
+    },
+    {
+      "id": "pages/play/index.wxml:1231:bindtap:retryRouteThumb:145",
+      "route": "pages/play/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/play/index.wxml",
+        "js": "pages/play/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "retryRouteThumb",
+        "line": 1231,
+        "selectorHint": ".finsheet__map-error",
+        "visibleCondition": "{{finishSnapError}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [
+          "/api/role/info"
+        ],
+        "primaryApis": [],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/play/index.js:7839"
       }
     },
     {
@@ -886829,6 +886893,7 @@
           "/api/login/code",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -886849,6 +886914,7 @@
           "/api/game/session/view",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -886916,6 +886982,12 @@
           },
           {
             "url": "/api/play/journey/ending",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/journey/stage-end",
             "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
@@ -887014,7 +887086,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1264:bindtap:revokeOsTag:146",
+      "id": "pages/play/index.wxml:1269:bindtap:revokeOsTag:146",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -887037,7 +887109,7 @@
         "tag": "text",
         "event": "bindtap",
         "handler": "revokeOsTag",
-        "line": 1264,
+        "line": 1269,
         "selectorHint": ".newos__revoke",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -887106,7 +887178,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1292:bindtap:openFinishJournal:147",
+      "id": "pages/play/index.wxml:1297:bindtap:openFinishJournal:147",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -887129,7 +887201,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openFinishJournal",
-        "line": 1292,
+        "line": 1297,
         "selectorHint": ".finish-journal-entry",
         "visibleCondition": "{{canReplayJournal}}",
         "disabledCondition": null,
@@ -887184,7 +887256,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1299:bindtap:retryEnding:148",
+      "id": "pages/play/index.wxml:1304:bindtap:retryEnding:148",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -887207,7 +887279,7 @@
         "tag": "text",
         "event": "bindtap",
         "handler": "retryEnding",
-        "line": 1299,
+        "line": 1304,
         "selectorHint": ".finsheet__retry-act",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -887276,7 +887348,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1300:bindtap:goFinishRouteRecommendation:149",
+      "id": "pages/play/index.wxml:1305:bindtap:goFinishRouteRecommendation:149",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -887299,7 +887371,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goFinishRouteRecommendation",
-        "line": 1300,
+        "line": 1305,
         "selectorHint": ".finish-route-recommendation",
         "visibleCondition": "{{finishRouteRecommendation}}",
         "disabledCondition": null,
@@ -887382,7 +887454,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1312:bindtap:closeFinish:150",
+      "id": "pages/play/index.wxml:1317:bindtap:closeFinish:150",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -887405,7 +887477,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "closeFinish",
-        "line": 1312,
+        "line": 1317,
         "selectorHint": ".finsheet__cta",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -887464,7 +887536,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1317:bindtap:closeEnding:151",
+      "id": "pages/play/index.wxml:1322:bindtap:closeEnding:151",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -887487,7 +887559,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "closeEnding",
-        "line": 1317,
+        "line": 1322,
         "selectorHint": ".ending__close",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -887531,7 +887603,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1327:bindtap:saveFinishCard:152",
+      "id": "pages/play/index.wxml:1332:bindtap:saveFinishCard:152",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -887559,7 +887631,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "saveFinishCard",
-        "line": 1327,
+        "line": 1332,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -887625,11 +887697,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7887"
+        "staticSource": "pages/play/index.js:7915"
       }
     },
     {
-      "id": "pages/play/index.wxml:1328:bindtap:shareFinish:153",
+      "id": "pages/play/index.wxml:1333:bindtap:shareFinish:153",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -887652,7 +887724,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "shareFinish",
-        "line": 1328,
+        "line": 1333,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": "{{communityPostWrite}}",
         "disabledCondition": null,
@@ -887706,11 +887778,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7917"
+        "staticSource": "pages/play/index.js:7945"
       }
     },
     {
-      "id": "pages/play/index.wxml:1333:bind:done:closeFragment:154",
+      "id": "pages/play/index.wxml:1338:bind:done:closeFragment:154",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -887733,7 +887805,7 @@
         "tag": "cy-fragment",
         "event": "bind:done",
         "handler": "closeFragment",
-        "line": 1333,
+        "line": 1338,
         "selectorHint": "cy-fragment[bind:done]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -887777,7 +887849,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1353:bindtap:goSignup:155",
+      "id": "pages/play/index.wxml:1358:bindtap:goSignup:155",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -887800,7 +887872,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "goSignup",
-        "line": 1353,
+        "line": 1358,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": "{{emptyKind=='signup'}}",
         "disabledCondition": null,
@@ -887847,7 +887919,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1354:bindtap:doRelogin:156",
+      "id": "pages/play/index.wxml:1359:bindtap:doRelogin:156",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -887920,7 +887992,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "doRelogin",
-        "line": 1354,
+        "line": 1359,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": "{{emptyKind=='auth'}}",
         "disabledCondition": null,
@@ -887973,6 +888045,7 @@
           "/api/login/code",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/nodes",
@@ -887996,6 +888069,7 @@
           "/api/game/session/view",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/nodes",
@@ -888071,6 +888145,12 @@
           },
           {
             "url": "/api/play/journey/ending",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/journey/stage-end",
             "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
@@ -888181,7 +888261,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1356:bindtap:reloadPlay:157",
+      "id": "pages/play/index.wxml:1361:bindtap:reloadPlay:157",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -888254,7 +888334,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "reloadPlay",
-        "line": 1356,
+        "line": 1361,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -888307,6 +888387,7 @@
           "/api/login/code",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/nodes",
@@ -888330,6 +888411,7 @@
           "/api/game/session/view",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/nodes",
@@ -888405,6 +888487,12 @@
           },
           {
             "url": "/api/play/journey/ending",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/journey/stage-end",
             "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
@@ -888515,7 +888603,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1357:bindtap:goBackDetail:158",
+      "id": "pages/play/index.wxml:1362:bindtap:goBackDetail:158",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -888538,7 +888626,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "goBackDetail",
-        "line": 1357,
+        "line": 1362,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -888585,7 +888673,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1360:bindtap:goBackDetail:159",
+      "id": "pages/play/index.wxml:1365:bindtap:goBackDetail:159",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -888608,7 +888696,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "goBackDetail",
-        "line": 1360,
+        "line": 1365,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": "{{emptyKind=='missing'}}",
         "disabledCondition": null,
@@ -888655,7 +888743,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1362:bindtap:goGetPass:160",
+      "id": "pages/play/index.wxml:1367:bindtap:goGetPass:160",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -888678,7 +888766,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "goGetPass",
-        "line": 1362,
+        "line": 1367,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": "{{emptyKind=='needPass'}}",
         "disabledCondition": null,
@@ -888726,7 +888814,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1363:bindtap:goSignup:161",
+      "id": "pages/play/index.wxml:1368:bindtap:goSignup:161",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -888749,7 +888837,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "goSignup",
-        "line": 1363,
+        "line": 1368,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -888921,6 +889009,7 @@
           "/api/login/code",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -888941,6 +889030,7 @@
           "/api/game/session/view",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -889008,6 +889098,12 @@
           },
           {
             "url": "/api/play/journey/ending",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/journey/stage-end",
             "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
@@ -889245,6 +889341,7 @@
           "/api/play/companionLine",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/nodes",
@@ -889270,6 +889367,7 @@
           "/api/play/companionLine",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/nodes",
@@ -889357,6 +889455,12 @@
           },
           {
             "url": "/api/play/journey/ending",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/journey/stage-end",
             "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
@@ -889592,6 +889696,7 @@
           "/api/login/code",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/nodes",
@@ -889613,6 +889718,7 @@
           "/api/game/session/view",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/nodes",
@@ -889681,6 +889787,12 @@
           },
           {
             "url": "/api/play/journey/ending",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/journey/stage-end",
             "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
@@ -889785,7 +889897,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1400:bindtap:closeVoucher:162",
+      "id": "pages/play/index.wxml:1405:bindtap:closeVoucher:162",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -889808,7 +889920,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "closeVoucher",
-        "line": 1400,
+        "line": 1405,
         "selectorHint": ".voucher__back",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -889852,7 +889964,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1402:bindtap:openEntryQr:163",
+      "id": "pages/play/index.wxml:1407:bindtap:openEntryQr:163",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -889875,7 +889987,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openEntryQr",
-        "line": 1402,
+        "line": 1407,
         "selectorHint": ".voucher__cta",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -889961,7 +890073,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1419:bindtap:goCouponWallet:164",
+      "id": "pages/play/index.wxml:1424:bindtap:goCouponWallet:164",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -889984,7 +890096,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goCouponWallet",
-        "line": 1419,
+        "line": 1424,
         "selectorHint": ".woo__coupon",
         "visibleCondition": "{{medal.coupon}}",
         "disabledCondition": null,
@@ -890067,7 +890179,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1422:bind:confirm:closeMedal:165",
+      "id": "pages/play/index.wxml:1427:bind:confirm:closeMedal:165",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -890140,7 +890252,7 @@
         "tag": "cy-slide-confirm",
         "event": "bind:confirm",
         "handler": "closeMedal",
-        "line": 1422,
+        "line": 1427,
         "selectorHint": ".woo__cta",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -890192,6 +890304,7 @@
           "/api/login/code",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -890212,6 +890325,7 @@
           "/api/game/session/view",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -890279,6 +890393,12 @@
           },
           {
             "url": "/api/play/journey/ending",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/journey/stage-end",
             "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
@@ -890377,7 +890497,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1428:catchtouchmove:blockSceneTouch:166",
+      "id": "pages/play/index.wxml:1433:catchtouchmove:blockSceneTouch:166",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -890400,7 +890520,7 @@
         "tag": "view",
         "event": "catchtouchmove",
         "handler": "blockSceneTouch",
-        "line": 1428,
+        "line": 1433,
         "selectorHint": ".play-scene-host",
         "visibleCondition": "{{sceneCurrent && sceneCurrent.id === 'play-activity-detail'}}",
         "disabledCondition": null,
@@ -890445,7 +890565,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1429:bindtap:onProtoSheetClose:167",
+      "id": "pages/play/index.wxml:1434:bindtap:onProtoSheetClose:167",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -890468,7 +890588,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onProtoSheetClose",
-        "line": 1429,
+        "line": 1434,
         "selectorHint": ".pdim",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -890512,7 +890632,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1430:catchtap:noop:168",
+      "id": "pages/play/index.wxml:1435:catchtap:noop:168",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -890535,7 +890655,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "noop",
-        "line": 1430,
+        "line": 1435,
         "selectorHint": ".psheet",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -890580,7 +890700,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1432:catchtap:onProtoSheetClose:169",
+      "id": "pages/play/index.wxml:1437:catchtap:onProtoSheetClose:169",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -890603,7 +890723,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onProtoSheetClose",
-        "line": 1432,
+        "line": 1437,
         "selectorHint": ".psheet__x",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -890647,7 +890767,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1434:bind:close:closeScene:170",
+      "id": "pages/play/index.wxml:1439:bind:close:closeScene:170",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -890670,7 +890790,7 @@
         "tag": "cy-scene-play-activity-detail",
         "event": "bind:close",
         "handler": "closeScene",
-        "line": 1434,
+        "line": 1439,
         "selectorHint": "cy-scene-play-activity-detail[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -890714,7 +890834,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1437:catchtouchmove:blockSceneTouch:171",
+      "id": "pages/play/index.wxml:1442:catchtouchmove:blockSceneTouch:171",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -890737,7 +890857,7 @@
         "tag": "view",
         "event": "catchtouchmove",
         "handler": "blockSceneTouch",
-        "line": 1437,
+        "line": 1442,
         "selectorHint": ".play-scene-host",
         "visibleCondition": "{{sceneCurrent && sceneCurrent.id === 'roam-task-list'}}",
         "disabledCondition": null,
@@ -890782,7 +890902,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1438:bindtap:onProtoSheetClose:172",
+      "id": "pages/play/index.wxml:1443:bindtap:onProtoSheetClose:172",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -890805,7 +890925,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onProtoSheetClose",
-        "line": 1438,
+        "line": 1443,
         "selectorHint": ".pdim",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -890849,7 +890969,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1439:catchtap:noop:173",
+      "id": "pages/play/index.wxml:1444:catchtap:noop:173",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -890872,7 +890992,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "noop",
-        "line": 1439,
+        "line": 1444,
         "selectorHint": ".psheet",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -890917,7 +891037,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1441:catchtap:onProtoSheetClose:174",
+      "id": "pages/play/index.wxml:1446:catchtap:onProtoSheetClose:174",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -890940,7 +891060,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onProtoSheetClose",
-        "line": 1441,
+        "line": 1446,
         "selectorHint": ".psheet__x",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -890984,7 +891104,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1443:bind:close:closeScene:176",
+      "id": "pages/play/index.wxml:1448:bind:close:closeScene:176",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -891007,7 +891127,7 @@
         "tag": "cy-scene-roam-task-list",
         "event": "bind:close",
         "handler": "closeScene",
-        "line": 1443,
+        "line": 1448,
         "selectorHint": "cy-scene-roam-task-list[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -891051,7 +891171,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1443:bind:official:openOfficialEvent:177",
+      "id": "pages/play/index.wxml:1448:bind:official:openOfficialEvent:177",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -891074,7 +891194,7 @@
         "tag": "cy-scene-roam-task-list",
         "event": "bind:official",
         "handler": "openOfficialEvent",
-        "line": 1443,
+        "line": 1448,
         "selectorHint": "cy-scene-roam-task-list[bind:official]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -891122,7 +891242,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1443:bind:open:openChildScene:175",
+      "id": "pages/play/index.wxml:1448:bind:open:openChildScene:175",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -891145,7 +891265,7 @@
         "tag": "cy-scene-roam-task-list",
         "event": "bind:open",
         "handler": "openChildScene",
-        "line": 1443,
+        "line": 1448,
         "selectorHint": "cy-scene-roam-task-list[bind:open]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -891228,7 +891348,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1446:catchtouchmove:blockSceneTouch:178",
+      "id": "pages/play/index.wxml:1451:catchtouchmove:blockSceneTouch:178",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -891251,7 +891371,7 @@
         "tag": "view",
         "event": "catchtouchmove",
         "handler": "blockSceneTouch",
-        "line": 1446,
+        "line": 1451,
         "selectorHint": ".play-scene-host",
         "visibleCondition": "{{sceneCurrent && sceneCurrent.id === 'roam-poi-detail'}}",
         "disabledCondition": null,
@@ -891296,7 +891416,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1447:bindtap:onProtoSheetClose:179",
+      "id": "pages/play/index.wxml:1452:bindtap:onProtoSheetClose:179",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -891319,7 +891439,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onProtoSheetClose",
-        "line": 1447,
+        "line": 1452,
         "selectorHint": ".pdim",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -891363,7 +891483,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1448:catchtap:noop:180",
+      "id": "pages/play/index.wxml:1453:catchtap:noop:180",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -891386,7 +891506,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "noop",
-        "line": 1448,
+        "line": 1453,
         "selectorHint": ".psheet",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -891431,7 +891551,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1450:catchtap:onProtoSheetClose:181",
+      "id": "pages/play/index.wxml:1455:catchtap:onProtoSheetClose:181",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -891454,7 +891574,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onProtoSheetClose",
-        "line": 1450,
+        "line": 1455,
         "selectorHint": ".psheet__x",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -891498,7 +891618,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1452:bind:citystamp:openCityStamp:184",
+      "id": "pages/play/index.wxml:1457:bind:citystamp:openCityStamp:184",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -891521,7 +891641,7 @@
         "tag": "cy-scene-roam-poi-detail",
         "event": "bind:citystamp",
         "handler": "openCityStamp",
-        "line": 1452,
+        "line": 1457,
         "selectorHint": "cy-scene-roam-poi-detail[bind:citystamp]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -891569,7 +891689,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1452:bind:close:closeScene:183",
+      "id": "pages/play/index.wxml:1457:bind:close:closeScene:183",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -891592,7 +891712,7 @@
         "tag": "cy-scene-roam-poi-detail",
         "event": "bind:close",
         "handler": "closeScene",
-        "line": 1452,
+        "line": 1457,
         "selectorHint": "cy-scene-roam-poi-detail[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -891636,7 +891756,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1452:bind:open:openChildScene:182",
+      "id": "pages/play/index.wxml:1457:bind:open:openChildScene:182",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -891659,7 +891779,7 @@
         "tag": "cy-scene-roam-poi-detail",
         "event": "bind:open",
         "handler": "openChildScene",
-        "line": 1452,
+        "line": 1457,
         "selectorHint": "cy-scene-roam-poi-detail[bind:open]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -891739,276 +891859,6 @@
       "evidence": {
         "status": "pending",
         "staticSource": "pages/play/index.js:6296"
-      }
-    },
-    {
-      "id": "pages/play/index.wxml:1455:catchtouchmove:blockSceneTouch:185",
-      "route": "pages/play/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "pages/play/index.wxml",
-        "js": "pages/play/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "catchtouchmove",
-        "handler": "blockSceneTouch",
-        "line": 1455,
-        "selectorHint": ".play-scene-host",
-        "visibleCondition": "{{sceneCurrent && sceneCurrent.id === 'roam-discover'}}",
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "other",
-      "interactionMode": "event-contract",
-      "baseActionClass": "other",
-      "effectClasses": [
-        "other"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
-      "requiredBranches": [
-        "success",
-        "error"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/play/index.js:6312"
-      }
-    },
-    {
-      "id": "pages/play/index.wxml:1456:bindtap:onProtoSheetClose:186",
-      "route": "pages/play/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "pages/play/index.wxml",
-        "js": "pages/play/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "onProtoSheetClose",
-        "line": 1456,
-        "selectorHint": ".pdim",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": "关闭{{sceneCurrent.title}}",
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/play/index.js:3271"
-      }
-    },
-    {
-      "id": "pages/play/index.wxml:1457:catchtap:noop:187",
-      "route": "pages/play/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "pages/play/index.wxml",
-        "js": "pages/play/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "catchtap",
-        "handler": "noop",
-        "line": 1457,
-        "selectorHint": ".psheet",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "other",
-      "interactionMode": "tap",
-      "baseActionClass": "other",
-      "effectClasses": [
-        "other"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
-      "requiredBranches": [
-        "success",
-        "error"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/play/index.js:3268"
-      }
-    },
-    {
-      "id": "pages/play/index.wxml:1459:catchtap:onProtoSheetClose:188",
-      "route": "pages/play/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "pages/play/index.wxml",
-        "js": "pages/play/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "catchtap",
-        "handler": "onProtoSheetClose",
-        "line": 1459,
-        "selectorHint": ".psheet__x",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": "关闭{{sceneCurrent.title}}",
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/play/index.js:3271"
       }
     },
     {
@@ -892115,6 +891965,7 @@
           "/api/play/checkin",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/nodes",
@@ -892139,6 +891990,7 @@
           "/api/play/checkin",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/nodes",
@@ -892220,6 +892072,12 @@
           },
           {
             "url": "/api/play/journey/ending",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/journey/stage-end",
             "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
@@ -892332,7 +892190,277 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1461:bind:close:closeScene:190",
+      "id": "pages/play/index.wxml:1460:catchtouchmove:blockSceneTouch:185",
+      "route": "pages/play/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/play/index.wxml",
+        "js": "pages/play/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "catchtouchmove",
+        "handler": "blockSceneTouch",
+        "line": 1460,
+        "selectorHint": ".play-scene-host",
+        "visibleCondition": "{{sceneCurrent && sceneCurrent.id === 'roam-discover'}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "other",
+      "interactionMode": "event-contract",
+      "baseActionClass": "other",
+      "effectClasses": [
+        "other"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/play/index.js:6312"
+      }
+    },
+    {
+      "id": "pages/play/index.wxml:1461:bindtap:onProtoSheetClose:186",
+      "route": "pages/play/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/play/index.wxml",
+        "js": "pages/play/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "onProtoSheetClose",
+        "line": 1461,
+        "selectorHint": ".pdim",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "关闭{{sceneCurrent.title}}",
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/play/index.js:3271"
+      }
+    },
+    {
+      "id": "pages/play/index.wxml:1462:catchtap:noop:187",
+      "route": "pages/play/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/play/index.wxml",
+        "js": "pages/play/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "catchtap",
+        "handler": "noop",
+        "line": 1462,
+        "selectorHint": ".psheet",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "other",
+      "interactionMode": "tap",
+      "baseActionClass": "other",
+      "effectClasses": [
+        "other"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/play/index.js:3268"
+      }
+    },
+    {
+      "id": "pages/play/index.wxml:1464:catchtap:onProtoSheetClose:188",
+      "route": "pages/play/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/play/index.wxml",
+        "js": "pages/play/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "catchtap",
+        "handler": "onProtoSheetClose",
+        "line": 1464,
+        "selectorHint": ".psheet__x",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "关闭{{sceneCurrent.title}}",
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/play/index.js:3271"
+      }
+    },
+    {
+      "id": "pages/play/index.wxml:1466:bind:close:closeScene:190",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -892355,7 +892483,7 @@
         "tag": "cy-scene-roam-discover",
         "event": "bind:close",
         "handler": "closeScene",
-        "line": 1461,
+        "line": 1466,
         "selectorHint": "cy-scene-roam-discover[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -892399,7 +892527,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1461:bind:open:openChildScene:189",
+      "id": "pages/play/index.wxml:1466:bind:open:openChildScene:189",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -892422,7 +892550,7 @@
         "tag": "cy-scene-roam-discover",
         "event": "bind:open",
         "handler": "openChildScene",
-        "line": 1461,
+        "line": 1466,
         "selectorHint": "cy-scene-roam-discover[bind:open]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -892505,7 +892633,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1464:catchtouchmove:blockSceneTouch:191",
+      "id": "pages/play/index.wxml:1469:catchtouchmove:blockSceneTouch:191",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -892528,7 +892656,7 @@
         "tag": "view",
         "event": "catchtouchmove",
         "handler": "blockSceneTouch",
-        "line": 1464,
+        "line": 1469,
         "selectorHint": ".play-scene-host",
         "visibleCondition": "{{sceneCurrent && sceneCurrent.id === 'roam-history'}}",
         "disabledCondition": null,
@@ -892573,7 +892701,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1465:bindtap:onProtoSheetClose:192",
+      "id": "pages/play/index.wxml:1470:bindtap:onProtoSheetClose:192",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -892596,7 +892724,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onProtoSheetClose",
-        "line": 1465,
+        "line": 1470,
         "selectorHint": ".pdim",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -892640,7 +892768,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1466:catchtap:noop:193",
+      "id": "pages/play/index.wxml:1471:catchtap:noop:193",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -892663,7 +892791,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "noop",
-        "line": 1466,
+        "line": 1471,
         "selectorHint": ".psheet",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -892708,7 +892836,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1468:catchtap:onProtoSheetClose:194",
+      "id": "pages/play/index.wxml:1473:catchtap:onProtoSheetClose:194",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -892731,7 +892859,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onProtoSheetClose",
-        "line": 1468,
+        "line": 1473,
         "selectorHint": ".psheet__x",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -892775,7 +892903,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1470:bind:close:closeScene:196",
+      "id": "pages/play/index.wxml:1475:bind:close:closeScene:196",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -892798,7 +892926,7 @@
         "tag": "cy-scene-roam-history",
         "event": "bind:close",
         "handler": "closeScene",
-        "line": 1470,
+        "line": 1475,
         "selectorHint": "cy-scene-roam-history[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -892842,7 +892970,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1470:bind:open:openChildScene:195",
+      "id": "pages/play/index.wxml:1475:bind:open:openChildScene:195",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -892865,7 +892993,7 @@
         "tag": "cy-scene-roam-history",
         "event": "bind:open",
         "handler": "openChildScene",
-        "line": 1470,
+        "line": 1475,
         "selectorHint": "cy-scene-roam-history[bind:open]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -892948,7 +893076,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1473:catchtouchmove:blockSceneTouch:197",
+      "id": "pages/play/index.wxml:1478:catchtouchmove:blockSceneTouch:197",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -892971,7 +893099,7 @@
         "tag": "view",
         "event": "catchtouchmove",
         "handler": "blockSceneTouch",
-        "line": 1473,
+        "line": 1478,
         "selectorHint": ".play-scene-host",
         "visibleCondition": "{{sceneCurrent && sceneCurrent.id === 'roam-session'}}",
         "disabledCondition": null,
@@ -893016,7 +893144,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1474:bindtap:onProtoSheetClose:198",
+      "id": "pages/play/index.wxml:1479:bindtap:onProtoSheetClose:198",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -893039,7 +893167,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onProtoSheetClose",
-        "line": 1474,
+        "line": 1479,
         "selectorHint": ".pdim",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -893083,7 +893211,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1475:catchtap:noop:199",
+      "id": "pages/play/index.wxml:1480:catchtap:noop:199",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -893106,7 +893234,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "noop",
-        "line": 1475,
+        "line": 1480,
         "selectorHint": ".psheet",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -893151,7 +893279,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1477:catchtap:onProtoSheetClose:200",
+      "id": "pages/play/index.wxml:1482:catchtap:onProtoSheetClose:200",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -893174,7 +893302,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onProtoSheetClose",
-        "line": 1477,
+        "line": 1482,
         "selectorHint": ".psheet__x",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -893218,7 +893346,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1479:bind:close:closeScene:202",
+      "id": "pages/play/index.wxml:1484:bind:close:closeScene:202",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -893241,7 +893369,7 @@
         "tag": "cy-scene-roam-session",
         "event": "bind:close",
         "handler": "closeScene",
-        "line": 1479,
+        "line": 1484,
         "selectorHint": "cy-scene-roam-session[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -893285,7 +893413,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1479:bind:share:onSceneSessionShare:201",
+      "id": "pages/play/index.wxml:1484:bind:share:onSceneSessionShare:201",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -893308,7 +893436,7 @@
         "tag": "cy-scene-roam-session",
         "event": "bind:share",
         "handler": "onSceneSessionShare",
-        "line": 1479,
+        "line": 1484,
         "selectorHint": "cy-scene-roam-session[bind:share]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -893362,7 +893490,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1482:catchtouchmove:blockSceneTouch:203",
+      "id": "pages/play/index.wxml:1487:catchtouchmove:blockSceneTouch:203",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -893385,7 +893513,7 @@
         "tag": "view",
         "event": "catchtouchmove",
         "handler": "blockSceneTouch",
-        "line": 1482,
+        "line": 1487,
         "selectorHint": ".play-scene-host",
         "visibleCondition": "{{sceneCurrent && sceneCurrent.id === 'game-coupon-wallet'}}",
         "disabledCondition": null,
@@ -893430,7 +893558,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1483:bindtap:onProtoSheetClose:204",
+      "id": "pages/play/index.wxml:1488:bindtap:onProtoSheetClose:204",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -893453,7 +893581,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onProtoSheetClose",
-        "line": 1483,
+        "line": 1488,
         "selectorHint": ".pdim",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -893497,7 +893625,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1484:catchtap:noop:205",
+      "id": "pages/play/index.wxml:1489:catchtap:noop:205",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -893520,7 +893648,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "noop",
-        "line": 1484,
+        "line": 1489,
         "selectorHint": ".psheet",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -893565,7 +893693,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1486:catchtap:onProtoSheetClose:206",
+      "id": "pages/play/index.wxml:1491:catchtap:onProtoSheetClose:206",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -893588,7 +893716,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onProtoSheetClose",
-        "line": 1486,
+        "line": 1491,
         "selectorHint": ".psheet__x",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -893632,7 +893760,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1488:bind:close:closeScene:208",
+      "id": "pages/play/index.wxml:1493:bind:close:closeScene:208",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -893655,7 +893783,7 @@
         "tag": "cy-scene-game-coupon-wallet",
         "event": "bind:close",
         "handler": "closeScene",
-        "line": 1488,
+        "line": 1493,
         "selectorHint": "cy-scene-game-coupon-wallet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -893699,7 +893827,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1488:bind:open:openChildScene:207",
+      "id": "pages/play/index.wxml:1493:bind:open:openChildScene:207",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -893722,7 +893850,7 @@
         "tag": "cy-scene-game-coupon-wallet",
         "event": "bind:open",
         "handler": "openChildScene",
-        "line": 1488,
+        "line": 1493,
         "selectorHint": "cy-scene-game-coupon-wallet[bind:open]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -893805,7 +893933,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1491:catchtouchmove:blockSceneTouch:209",
+      "id": "pages/play/index.wxml:1496:catchtouchmove:blockSceneTouch:209",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -893828,7 +893956,7 @@
         "tag": "view",
         "event": "catchtouchmove",
         "handler": "blockSceneTouch",
-        "line": 1491,
+        "line": 1496,
         "selectorHint": ".play-scene-host",
         "visibleCondition": "{{sceneCurrent && sceneCurrent.id === 'qr-coupon'}}",
         "disabledCondition": null,
@@ -893873,7 +894001,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1492:bindtap:onProtoSheetClose:210",
+      "id": "pages/play/index.wxml:1497:bindtap:onProtoSheetClose:210",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -893896,7 +894024,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onProtoSheetClose",
-        "line": 1492,
+        "line": 1497,
         "selectorHint": ".pdim",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -893940,7 +894068,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1493:catchtap:noop:211",
+      "id": "pages/play/index.wxml:1498:catchtap:noop:211",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -893963,7 +894091,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "noop",
-        "line": 1493,
+        "line": 1498,
         "selectorHint": ".psheet",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -894005,140 +894133,6 @@
       "evidence": {
         "status": "pending",
         "staticSource": "pages/play/index.js:3268"
-      }
-    },
-    {
-      "id": "pages/play/index.wxml:1495:catchtap:onProtoSheetClose:212",
-      "route": "pages/play/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "pages/play/index.wxml",
-        "js": "pages/play/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "catchtap",
-        "handler": "onProtoSheetClose",
-        "line": 1495,
-        "selectorHint": ".psheet__x",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": "关闭{{sceneCurrent.title}}",
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/play/index.js:3271"
-      }
-    },
-    {
-      "id": "pages/play/index.wxml:1497:bind:close:backScene:213",
-      "route": "pages/play/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "pages/play/index.wxml",
-        "js": "pages/play/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-scene-qr-coupon",
-        "event": "bind:close",
-        "handler": "backScene",
-        "line": 1497,
-        "selectorHint": "cy-scene-qr-coupon[bind:close]",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "event-contract",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/play/index.js:6248"
       }
     },
     {
@@ -894220,7 +894214,141 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1500:catchtouchmove:blockSceneTouch:214",
+      "id": "pages/play/index.wxml:1500:catchtap:onProtoSheetClose:212",
+      "route": "pages/play/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/play/index.wxml",
+        "js": "pages/play/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "catchtap",
+        "handler": "onProtoSheetClose",
+        "line": 1500,
+        "selectorHint": ".psheet__x",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "关闭{{sceneCurrent.title}}",
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/play/index.js:3271"
+      }
+    },
+    {
+      "id": "pages/play/index.wxml:1502:bind:close:backScene:213",
+      "route": "pages/play/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/play/index.wxml",
+        "js": "pages/play/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-scene-qr-coupon",
+        "event": "bind:close",
+        "handler": "backScene",
+        "line": 1502,
+        "selectorHint": "cy-scene-qr-coupon[bind:close]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/play/index.js:6248"
+      }
+    },
+    {
+      "id": "pages/play/index.wxml:1505:catchtouchmove:blockSceneTouch:214",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -894243,7 +894371,7 @@
         "tag": "view",
         "event": "catchtouchmove",
         "handler": "blockSceneTouch",
-        "line": 1500,
+        "line": 1505,
         "selectorHint": ".play-scene-host",
         "visibleCondition": "{{sceneCurrent && sceneCurrent.id === 'qr-group-code'}}",
         "disabledCondition": null,
@@ -894288,7 +894416,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1501:bindtap:onProtoSheetClose:215",
+      "id": "pages/play/index.wxml:1506:bindtap:onProtoSheetClose:215",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -894311,7 +894439,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onProtoSheetClose",
-        "line": 1501,
+        "line": 1506,
         "selectorHint": ".pdim",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -894355,7 +894483,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1502:catchtap:noop:216",
+      "id": "pages/play/index.wxml:1507:catchtap:noop:216",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -894378,7 +894506,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "noop",
-        "line": 1502,
+        "line": 1507,
         "selectorHint": ".psheet",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -894423,7 +894551,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1504:catchtap:onProtoSheetClose:217",
+      "id": "pages/play/index.wxml:1509:catchtap:onProtoSheetClose:217",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -894446,7 +894574,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onProtoSheetClose",
-        "line": 1504,
+        "line": 1509,
         "selectorHint": ".psheet__x",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -894490,7 +894618,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1506:bind:close:backScene:218",
+      "id": "pages/play/index.wxml:1511:bind:close:backScene:218",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -894513,7 +894641,7 @@
         "tag": "cy-scene-qr-group-code",
         "event": "bind:close",
         "handler": "backScene",
-        "line": 1506,
+        "line": 1511,
         "selectorHint": "cy-scene-qr-group-code[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -894557,7 +894685,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1509:catchtouchmove:blockSceneTouch:219",
+      "id": "pages/play/index.wxml:1514:catchtouchmove:blockSceneTouch:219",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -894580,7 +894708,7 @@
         "tag": "view",
         "event": "catchtouchmove",
         "handler": "blockSceneTouch",
-        "line": 1509,
+        "line": 1514,
         "selectorHint": ".play-scene-host",
         "visibleCondition": "{{sceneCurrent && sceneCurrent.id === 'qr-citynode'}}",
         "disabledCondition": null,
@@ -894625,7 +894753,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1510:bindtap:onProtoSheetClose:220",
+      "id": "pages/play/index.wxml:1515:bindtap:onProtoSheetClose:220",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -894648,7 +894776,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onProtoSheetClose",
-        "line": 1510,
+        "line": 1515,
         "selectorHint": ".pdim",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -894692,7 +894820,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1511:catchtap:noop:221",
+      "id": "pages/play/index.wxml:1516:catchtap:noop:221",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -894715,7 +894843,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "noop",
-        "line": 1511,
+        "line": 1516,
         "selectorHint": ".psheet",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -894760,7 +894888,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1513:catchtap:onProtoSheetClose:222",
+      "id": "pages/play/index.wxml:1518:catchtap:onProtoSheetClose:222",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -894783,7 +894911,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onProtoSheetClose",
-        "line": 1513,
+        "line": 1518,
         "selectorHint": ".psheet__x",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -894827,7 +894955,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1515:bind:close:backScene:223",
+      "id": "pages/play/index.wxml:1520:bind:close:backScene:223",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -894850,7 +894978,7 @@
         "tag": "cy-scene-qr-citynode",
         "event": "bind:close",
         "handler": "backScene",
-        "line": 1515,
+        "line": 1520,
         "selectorHint": "cy-scene-qr-citynode[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -894894,7 +895022,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1519:catchtouchmove:blockSceneTouch:224",
+      "id": "pages/play/index.wxml:1524:catchtouchmove:blockSceneTouch:224",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -894917,7 +895045,7 @@
         "tag": "view",
         "event": "catchtouchmove",
         "handler": "blockSceneTouch",
-        "line": 1519,
+        "line": 1524,
         "selectorHint": ".play-scene-host",
         "visibleCondition": "{{sceneCurrent && sceneCurrent.id === 'qr-ticket'}}",
         "disabledCondition": null,
@@ -894962,7 +895090,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1520:bindtap:onProtoSheetClose:225",
+      "id": "pages/play/index.wxml:1525:bindtap:onProtoSheetClose:225",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -894985,7 +895113,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onProtoSheetClose",
-        "line": 1520,
+        "line": 1525,
         "selectorHint": ".pdim",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -895029,7 +895157,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1521:catchtap:noop:226",
+      "id": "pages/play/index.wxml:1526:catchtap:noop:226",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -895052,7 +895180,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "noop",
-        "line": 1521,
+        "line": 1526,
         "selectorHint": ".psheet",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -895097,7 +895225,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1523:catchtap:onProtoSheetClose:227",
+      "id": "pages/play/index.wxml:1528:catchtap:onProtoSheetClose:227",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -895120,7 +895248,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onProtoSheetClose",
-        "line": 1523,
+        "line": 1528,
         "selectorHint": ".psheet__x",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -895164,7 +895292,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1525:bind:close:backScene:228",
+      "id": "pages/play/index.wxml:1530:bind:close:backScene:228",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -895187,7 +895315,7 @@
         "tag": "cy-scene-qr-ticket",
         "event": "bind:close",
         "handler": "backScene",
-        "line": 1525,
+        "line": 1530,
         "selectorHint": "cy-scene-qr-ticket[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -895231,7 +895359,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1528:catchtouchmove:blockSceneTouch:229",
+      "id": "pages/play/index.wxml:1533:catchtouchmove:blockSceneTouch:229",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -895254,7 +895382,7 @@
         "tag": "view",
         "event": "catchtouchmove",
         "handler": "blockSceneTouch",
-        "line": 1528,
+        "line": 1533,
         "selectorHint": ".play-scene-host",
         "visibleCondition": "{{sceneCurrent && sceneCurrent.id === 'roam-stamp-album'}}",
         "disabledCondition": null,
@@ -895299,7 +895427,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1529:bindtap:onProtoSheetClose:230",
+      "id": "pages/play/index.wxml:1534:bindtap:onProtoSheetClose:230",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -895322,7 +895450,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onProtoSheetClose",
-        "line": 1529,
+        "line": 1534,
         "selectorHint": ".pdim",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -895366,7 +895494,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1530:catchtap:noop:231",
+      "id": "pages/play/index.wxml:1535:catchtap:noop:231",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -895389,7 +895517,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "noop",
-        "line": 1530,
+        "line": 1535,
         "selectorHint": ".psheet",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -895434,7 +895562,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1532:catchtap:onProtoSheetClose:232",
+      "id": "pages/play/index.wxml:1537:catchtap:onProtoSheetClose:232",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -895457,7 +895585,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onProtoSheetClose",
-        "line": 1532,
+        "line": 1537,
         "selectorHint": ".psheet__x",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -895501,7 +895629,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1534:bind:camera:openStampCameraFromScene:233",
+      "id": "pages/play/index.wxml:1539:bind:camera:openStampCameraFromScene:233",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -895524,7 +895652,7 @@
         "tag": "cy-scene-roam-stamp-album",
         "event": "bind:camera",
         "handler": "openStampCameraFromScene",
-        "line": 1534,
+        "line": 1539,
         "selectorHint": "cy-scene-roam-stamp-album[bind:camera]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -895572,7 +895700,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1534:bind:close:closeScene:234",
+      "id": "pages/play/index.wxml:1539:bind:close:closeScene:234",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -895595,7 +895723,7 @@
         "tag": "cy-scene-roam-stamp-album",
         "event": "bind:close",
         "handler": "closeScene",
-        "line": 1534,
+        "line": 1539,
         "selectorHint": "cy-scene-roam-stamp-album[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -895636,140 +895764,6 @@
       "evidence": {
         "status": "pending",
         "staticSource": "pages/play/index.js:6267"
-      }
-    },
-    {
-      "id": "pages/play/index.wxml:1537:bind:cancel:cancelSceneDiscard:236",
-      "route": "pages/play/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "pages/play/index.wxml",
-        "js": "pages/play/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-modal",
-        "event": "bind:cancel",
-        "handler": "cancelSceneDiscard",
-        "line": 1537,
-        "selectorHint": "cy-modal[bind:cancel]",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "event-contract",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/play/index.js:6289"
-      }
-    },
-    {
-      "id": "pages/play/index.wxml:1537:bind:confirm:confirmSceneDiscard:235",
-      "route": "pages/play/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "pages/play/index.wxml",
-        "js": "pages/play/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-modal",
-        "event": "bind:confirm",
-        "handler": "confirmSceneDiscard",
-        "line": 1537,
-        "selectorHint": "cy-modal[bind:confirm]",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "event-contract",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/play/index.js:6276"
       }
     },
     {
@@ -895872,6 +895866,7 @@
           "/api/play/companionLine",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/nodes",
@@ -895898,6 +895893,7 @@
           "/api/play/companionLine",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/nodes",
@@ -895986,6 +895982,12 @@
           },
           {
             "url": "/api/play/journey/ending",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/journey/stage-end",
             "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
@@ -896099,7 +896101,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1549:bind:close:closeStory:237",
+      "id": "pages/play/index.wxml:1542:bind:cancel:cancelSceneDiscard:236",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -896119,11 +896121,11 @@
       "requestMode": "ordered",
       "confirmationMode": null,
       "control": {
-        "tag": "cy-story-sheet",
-        "event": "bind:close",
-        "handler": "closeStory",
-        "line": 1549,
-        "selectorHint": "cy-story-sheet[bind:close]",
+        "tag": "cy-modal",
+        "event": "bind:cancel",
+        "handler": "cancelSceneDiscard",
+        "line": 1542,
+        "selectorHint": "cy-modal[bind:cancel]",
         "visibleCondition": null,
         "disabledCondition": null,
         "ariaLabel": null,
@@ -896162,7 +896164,74 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6360"
+        "staticSource": "pages/play/index.js:6289"
+      }
+    },
+    {
+      "id": "pages/play/index.wxml:1542:bind:confirm:confirmSceneDiscard:235",
+      "route": "pages/play/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/play/index.wxml",
+        "js": "pages/play/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-modal",
+        "event": "bind:confirm",
+        "handler": "confirmSceneDiscard",
+        "line": 1542,
+        "selectorHint": "cy-modal[bind:confirm]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/play/index.js:6276"
       }
     },
     {
@@ -896425,6 +896494,7 @@
           "/api/login/code",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -896445,6 +896515,7 @@
           "/api/game/session/view",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -896512,6 +896583,12 @@
           },
           {
             "url": "/api/play/journey/ending",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/journey/stage-end",
             "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
@@ -896610,7 +896687,74 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1553:bind:settled:onPrivacyGateSettled:238",
+      "id": "pages/play/index.wxml:1554:bind:close:closeStory:237",
+      "route": "pages/play/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/play/index.wxml",
+        "js": "pages/play/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-story-sheet",
+        "event": "bind:close",
+        "handler": "closeStory",
+        "line": 1554,
+        "selectorHint": "cy-story-sheet[bind:close]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/play/index.js:6360"
+      }
+    },
+    {
+      "id": "pages/play/index.wxml:1558:bind:settled:onPrivacyGateSettled:238",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -896633,7 +896777,7 @@
         "tag": "cy-privacy-gate",
         "event": "bind:settled",
         "handler": "onPrivacyGateSettled",
-        "line": 1553,
+        "line": 1558,
         "selectorHint": "cy-privacy-gate[bind:settled]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -896677,7 +896821,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1557:bindtap:closeRoleCard:239",
+      "id": "pages/play/index.wxml:1562:bindtap:closeRoleCard:239",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -896700,7 +896844,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "closeRoleCard",
-        "line": 1557,
+        "line": 1562,
         "selectorHint": ".rolemask",
         "visibleCondition": "{{roleCard.show}}",
         "disabledCondition": null,
@@ -896744,7 +896888,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1560:bind:kitaction:onPlayKitAction:240",
+      "id": "pages/play/index.wxml:1565:bind:kitaction:onPlayKitAction:240",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -896936,7 +897080,7 @@
         "tag": "cy-playkit",
         "event": "bind:kitaction",
         "handler": "onPlayKitAction",
-        "line": 1560,
+        "line": 1565,
         "selectorHint": "#playKit",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -897129,7 +897273,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1568:bind:action:onJourneyCheckAction:241",
+      "id": "pages/play/index.wxml:1573:bind:action:onJourneyCheckAction:241",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -897152,7 +897296,7 @@
         "tag": "cy-playkit-journey-check",
         "event": "bind:action",
         "handler": "onJourneyCheckAction",
-        "line": 1568,
+        "line": 1573,
         "selectorHint": "cy-playkit-journey-check[bind:action]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -897239,7 +897383,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1568:bind:close:closeJourneyCheck:242",
+      "id": "pages/play/index.wxml:1573:bind:close:closeJourneyCheck:242",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -897262,7 +897406,7 @@
         "tag": "cy-playkit-journey-check",
         "event": "bind:close",
         "handler": "closeJourneyCheck",
-        "line": 1568,
+        "line": 1573,
         "selectorHint": "cy-playkit-journey-check[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -897340,7 +897484,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1577:bindtap:confirmPlayerRole:243",
+      "id": "pages/play/index.wxml:1582:bindtap:confirmPlayerRole:243",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -897413,7 +897557,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "confirmPlayerRole",
-        "line": 1577,
+        "line": 1582,
         "selectorHint": ".rolecard__cta",
         "visibleCondition": "{{roleCard.confirmed || (gameModule.enabled && gameModule.activityId)}}",
         "disabledCondition": null,
@@ -897465,6 +897609,7 @@
           "/api/login/code",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -897485,6 +897630,7 @@
           "/api/game/session/view",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -897552,6 +897698,12 @@
           },
           {
             "url": "/api/play/journey/ending",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/journey/stage-end",
             "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
@@ -897650,7 +897802,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1583:bindtap:retryGameModule:244",
+      "id": "pages/play/index.wxml:1588:bindtap:retryGameModule:244",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -897723,7 +897875,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "retryGameModule",
-        "line": 1583,
+        "line": 1588,
         "selectorHint": ".rolecard__retry",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -897775,6 +897927,7 @@
           "/api/login/code",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -897795,6 +897948,7 @@
           "/api/game/session/view",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -897862,6 +898016,12 @@
           },
           {
             "url": "/api/play/journey/ending",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/journey/stage-end",
             "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
@@ -897960,7 +898120,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1585:bindtap:retryPlayerUnknownWrite:245",
+      "id": "pages/play/index.wxml:1590:bindtap:retryPlayerUnknownWrite:245",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -898033,7 +898193,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "retryPlayerUnknownWrite",
-        "line": 1585,
+        "line": 1590,
         "selectorHint": ".rolecard__retry",
         "visibleCondition": "{{gameModule.write.status === 'unknown' && gameModule.write.canRetry}}",
         "disabledCondition": null,
@@ -898085,6 +898245,7 @@
           "/api/login/code",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -898105,6 +898266,7 @@
           "/api/game/session/view",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -898172,6 +898334,12 @@
           },
           {
             "url": "/api/play/journey/ending",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/journey/stage-end",
             "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
@@ -898270,7 +898438,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1590:bindtap:closeGameModule:246",
+      "id": "pages/play/index.wxml:1595:bindtap:closeGameModule:246",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -898293,7 +898461,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "closeGameModule",
-        "line": 1590,
+        "line": 1595,
         "selectorHint": ".mask",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -898337,7 +898505,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1591:catchtap:noop:247",
+      "id": "pages/play/index.wxml:1596:catchtap:noop:247",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -898360,7 +898528,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "noop",
-        "line": 1591,
+        "line": 1596,
         "selectorHint": ".sheet",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -898405,7 +898573,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1593:catchtap:closeGameModule:248",
+      "id": "pages/play/index.wxml:1598:catchtap:closeGameModule:248",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -898428,7 +898596,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "closeGameModule",
-        "line": 1593,
+        "line": 1598,
         "selectorHint": ".sheet__x",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -898472,7 +898640,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1600:bindtap:retryGameModule:249",
+      "id": "pages/play/index.wxml:1605:bindtap:retryGameModule:249",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -898545,7 +898713,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "retryGameModule",
-        "line": 1600,
+        "line": 1605,
         "selectorHint": ".gmod__retry",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -898597,6 +898765,7 @@
           "/api/login/code",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -898617,6 +898786,7 @@
           "/api/game/session/view",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -898684,6 +898854,12 @@
           },
           {
             "url": "/api/play/journey/ending",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/journey/stage-end",
             "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
@@ -898782,7 +898958,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1606:bindtap:retryGameModule:250",
+      "id": "pages/play/index.wxml:1611:bindtap:retryGameModule:250",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -898855,7 +899031,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "retryGameModule",
-        "line": 1606,
+        "line": 1611,
         "selectorHint": ".gmod__retry",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -898907,6 +899083,7 @@
           "/api/login/code",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -898927,6 +899104,7 @@
           "/api/game/session/view",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -898994,6 +899172,12 @@
           },
           {
             "url": "/api/play/journey/ending",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/journey/stage-end",
             "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
@@ -899092,7 +899276,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1616:bindtap:reconcilePlayerChoice:251",
+      "id": "pages/play/index.wxml:1621:bindtap:reconcilePlayerChoice:251",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -899165,7 +899349,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "reconcilePlayerChoice",
-        "line": 1616,
+        "line": 1621,
         "selectorHint": ".gmod__reconcile",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -899217,6 +899401,7 @@
           "/api/login/code",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -899237,6 +899422,7 @@
           "/api/game/session/view",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -899304,6 +899490,12 @@
           },
           {
             "url": "/api/play/journey/ending",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/journey/stage-end",
             "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
@@ -899402,7 +899594,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1618:bindtap:retryPlayerUnknownWrite:252",
+      "id": "pages/play/index.wxml:1623:bindtap:retryPlayerUnknownWrite:252",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -899475,7 +899667,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "retryPlayerUnknownWrite",
-        "line": 1618,
+        "line": 1623,
         "selectorHint": ".gmod__reconcile",
         "visibleCondition": "{{gameModule.write.canRetry}}",
         "disabledCondition": null,
@@ -899527,6 +899719,7 @@
           "/api/login/code",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -899547,6 +899740,7 @@
           "/api/game/session/view",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -899614,6 +899808,12 @@
           },
           {
             "url": "/api/play/journey/ending",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/journey/stage-end",
             "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
@@ -899779,7 +899979,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1677:bindtap:requestPlayerHint:253",
+      "id": "pages/play/index.wxml:1682:bindtap:requestPlayerHint:253",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -899852,7 +900052,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "requestPlayerHint",
-        "line": 1677,
+        "line": 1682,
         "selectorHint": ".gmod__task-capture",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -899904,6 +900104,7 @@
           "/api/login/code",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -899924,6 +900125,7 @@
           "/api/game/session/view",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -899991,6 +900193,12 @@
           },
           {
             "url": "/api/play/journey/ending",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/journey/stage-end",
             "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
@@ -900090,7 +900298,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1685:bindtap:requestPlayerReveal:254",
+      "id": "pages/play/index.wxml:1690:bindtap:requestPlayerReveal:254",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -900163,7 +900371,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "requestPlayerReveal",
-        "line": 1685,
+        "line": 1690,
         "selectorHint": ".gmod__task-capture",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -900215,6 +900423,7 @@
           "/api/login/code",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -900235,6 +900444,7 @@
           "/api/game/session/view",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -900302,6 +900512,12 @@
           },
           {
             "url": "/api/play/journey/ending",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/journey/stage-end",
             "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
@@ -900401,7 +900617,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1694:bindinput:onPlayerTaskTextInput:255",
+      "id": "pages/play/index.wxml:1699:bindinput:onPlayerTaskTextInput:255",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -900424,7 +900640,7 @@
         "tag": "textarea",
         "event": "bindinput",
         "handler": "onPlayerTaskTextInput",
-        "line": 1694,
+        "line": 1699,
         "selectorHint": ".gmod__task-text",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -900468,7 +900684,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1699:bindtap:scanPlayerTaskEvidence:256",
+      "id": "pages/play/index.wxml:1704:bindtap:scanPlayerTaskEvidence:256",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -900494,7 +900710,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "scanPlayerTaskEvidence",
-        "line": 1699,
+        "line": 1704,
         "selectorHint": ".gmod__task-capture",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -900558,127 +900774,6 @@
       "evidence": {
         "status": "pending",
         "staticSource": "pages/play/index.js:3050"
-      }
-    },
-    {
-      "id": "pages/play/index.wxml:1706:bindtap:photoPlayerTaskEvidence:257",
-      "route": "pages/play/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "pages/play/index.wxml",
-        "js": "pages/play/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {
-        "cancelled": "chooseImage",
-        "denied": "chooseImage"
-      },
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "photoPlayerTaskEvidence",
-        "line": 1706,
-        "selectorHint": ".gmod__task-capture",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": "拍摄或选择本站任务照片",
-        "ariaLabelExpression": null,
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "external",
-      "interactionMode": "tap",
-      "baseActionClass": "write",
-      "effectClasses": [
-        "write",
-        "state"
-      ],
-      "accessBoundary": "owned-resource",
-      "externalCapabilities": [
-        "app.chooseImage"
-      ],
-      "successCapabilities": [
-        "app.chooseImage"
-      ],
-      "targets": {
-        "routes": [
-          "pages/crop/index"
-        ],
-        "apis": [
-          "/api/common/uploadOSS",
-          "/api/media/asset/",
-          "/api/media/asset/{param}/retry",
-          "/api/role/info"
-        ],
-        "primaryApis": [
-          "/api/common/uploadOSS",
-          "/api/media/asset/",
-          "/api/media/asset/{param}/retry"
-        ],
-        "auxiliaryApis": [
-          "/api/role/info"
-        ],
-        "apiContracts": [
-          {
-            "url": "/api/common/uploadOSS",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/media/asset/",
-            "method": "GET",
-            "auth": "authenticated"
-          },
-          {
-            "url": "/api/media/asset/{param}/retry",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/role/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
-        "writeApis": []
-      },
-      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
-      "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger",
-        "forbidden-owner",
-        "cancelled",
-        "denied"
-      ],
-      "requiredPlatforms": [
-        "ios",
-        "android"
-      ],
-      "externalGate": "real-device-required",
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/play/index.js:3077"
       }
     },
     {
@@ -900769,6 +900864,7 @@
           "/api/login/code",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/nodes",
@@ -900793,6 +900889,7 @@
           "/api/game/session/view",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/nodes",
@@ -900874,6 +900971,12 @@
           },
           {
             "url": "/api/play/journey/ending",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/journey/stage-end",
             "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
@@ -900983,7 +901086,128 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1723:bindtap:submitPlayerTask:258",
+      "id": "pages/play/index.wxml:1711:bindtap:photoPlayerTaskEvidence:257",
+      "route": "pages/play/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/play/index.wxml",
+        "js": "pages/play/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {
+        "cancelled": "chooseImage",
+        "denied": "chooseImage"
+      },
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "photoPlayerTaskEvidence",
+        "line": 1711,
+        "selectorHint": ".gmod__task-capture",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "拍摄或选择本站任务照片",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "external",
+      "interactionMode": "tap",
+      "baseActionClass": "write",
+      "effectClasses": [
+        "write",
+        "state"
+      ],
+      "accessBoundary": "owned-resource",
+      "externalCapabilities": [
+        "app.chooseImage"
+      ],
+      "successCapabilities": [
+        "app.chooseImage"
+      ],
+      "targets": {
+        "routes": [
+          "pages/crop/index"
+        ],
+        "apis": [
+          "/api/common/uploadOSS",
+          "/api/media/asset/",
+          "/api/media/asset/{param}/retry",
+          "/api/role/info"
+        ],
+        "primaryApis": [
+          "/api/common/uploadOSS",
+          "/api/media/asset/",
+          "/api/media/asset/{param}/retry"
+        ],
+        "auxiliaryApis": [
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/common/uploadOSS",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/media/asset/",
+            "method": "GET",
+            "auth": "authenticated"
+          },
+          {
+            "url": "/api/media/asset/{param}/retry",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger",
+        "forbidden-owner",
+        "cancelled",
+        "denied"
+      ],
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/play/index.js:3077"
+      }
+    },
+    {
+      "id": "pages/play/index.wxml:1728:bindtap:submitPlayerTask:258",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -901056,7 +901280,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "submitPlayerTask",
-        "line": 1723,
+        "line": 1728,
         "selectorHint": ".gmod__task-submit",
         "visibleCondition": "{{gameModule.canSubmitTask && item.playerTask.inputType && (!item.submission || item.submission.status === 'REJECTED')}}",
         "disabledCondition": null,
@@ -901108,6 +901332,7 @@
           "/api/login/code",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -901128,6 +901353,7 @@
           "/api/game/session/view",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -901195,6 +901421,12 @@
           },
           {
             "url": "/api/play/journey/ending",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/journey/stage-end",
             "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
@@ -901293,7 +901525,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1731:bindtap:submitPlayerChoice:259",
+      "id": "pages/play/index.wxml:1736:bindtap:submitPlayerChoice:259",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -901366,7 +901598,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "submitPlayerChoice",
-        "line": 1731,
+        "line": 1736,
         "selectorHint": ".gmod__choice",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -901418,6 +901650,7 @@
           "/api/login/code",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -901438,6 +901671,7 @@
           "/api/game/session/view",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -901505,6 +901739,12 @@
           },
           {
             "url": "/api/play/journey/ending",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/journey/stage-end",
             "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
@@ -901603,7 +901843,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1750:bindtap:closeBoard:260",
+      "id": "pages/play/index.wxml:1755:bindtap:closeBoard:260",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -901626,7 +901866,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "closeBoard",
-        "line": 1750,
+        "line": 1755,
         "selectorHint": ".mask",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -901670,7 +901910,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1751:catchtap:noop:261",
+      "id": "pages/play/index.wxml:1756:catchtap:noop:261",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -901693,7 +901933,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "noop",
-        "line": 1751,
+        "line": 1756,
         "selectorHint": ".sheet",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -901738,7 +901978,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1753:catchtap:closeBoard:262",
+      "id": "pages/play/index.wxml:1758:catchtap:closeBoard:262",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -901761,7 +902001,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "closeBoard",
-        "line": 1753,
+        "line": 1758,
         "selectorHint": ".sheet__x",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -901805,7 +902045,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1759:bindtap:openBoard:263",
+      "id": "pages/play/index.wxml:1764:bindtap:openBoard:263",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -901828,7 +902068,7 @@
         "tag": "text",
         "event": "bindtap",
         "handler": "openBoard",
-        "line": 1759,
+        "line": 1764,
         "selectorHint": ".board__retry",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -901999,7 +902239,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1776:bind:cancel:onTagSheetCancel:265",
+      "id": "pages/play/index.wxml:1781:bind:cancel:onTagSheetCancel:265",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -902022,7 +902262,7 @@
         "tag": "cy-option-sheet",
         "event": "bind:cancel",
         "handler": "onTagSheetCancel",
-        "line": 1776,
+        "line": 1781,
         "selectorHint": "cy-option-sheet[bind:cancel]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -902066,7 +902306,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1776:bind:select:onTagSheetSelect:264",
+      "id": "pages/play/index.wxml:1781:bind:select:onTagSheetSelect:264",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -902089,7 +902329,7 @@
         "tag": "cy-option-sheet",
         "event": "bind:select",
         "handler": "onTagSheetSelect",
-        "line": 1776,
+        "line": 1781,
         "selectorHint": "cy-option-sheet[bind:select]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -902157,7 +902397,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1782:bind:close:closeAlbum:266",
+      "id": "pages/play/index.wxml:1787:bind:close:closeAlbum:266",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -902180,7 +902420,7 @@
         "tag": "cy-playkit-album",
         "event": "bind:close",
         "handler": "closeAlbum",
-        "line": 1782,
+        "line": 1787,
         "selectorHint": "cy-playkit-album[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -902224,7 +902464,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1784:bind:checkreplay:checkThemeReplay:272",
+      "id": "pages/play/index.wxml:1789:bind:checkreplay:checkThemeReplay:272",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -902247,7 +902487,7 @@
         "tag": "cy-theme-records",
         "event": "bind:checkreplay",
         "handler": "checkThemeReplay",
-        "line": 1784,
+        "line": 1789,
         "selectorHint": "cy-theme-records[bind:checkreplay]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -902333,7 +902573,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1784:bind:closecard:closeThemeResultCard:270",
+      "id": "pages/play/index.wxml:1789:bind:closecard:closeThemeResultCard:270",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -902356,7 +902596,7 @@
         "tag": "cy-theme-records",
         "event": "bind:closecard",
         "handler": "closeThemeResultCard",
-        "line": 1784,
+        "line": 1789,
         "selectorHint": "cy-theme-records[bind:closecard]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -902400,7 +902640,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1784:bind:closehistory:closeThemeHistory:267",
+      "id": "pages/play/index.wxml:1789:bind:closehistory:closeThemeHistory:267",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -902423,7 +902663,7 @@
         "tag": "cy-theme-records",
         "event": "bind:closehistory",
         "handler": "closeThemeHistory",
-        "line": 1784,
+        "line": 1789,
         "selectorHint": "cy-theme-records[bind:closehistory]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -902467,7 +902707,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1784:bind:morehistory:loadMoreThemeHistory:268",
+      "id": "pages/play/index.wxml:1789:bind:morehistory:loadMoreThemeHistory:268",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -902490,7 +902730,7 @@
         "tag": "cy-theme-records",
         "event": "bind:morehistory",
         "handler": "loadMoreThemeHistory",
-        "line": 1784,
+        "line": 1789,
         "selectorHint": "cy-theme-records[bind:morehistory]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -902549,7 +902789,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1784:bind:opencard:openThemeRecordCard:269",
+      "id": "pages/play/index.wxml:1789:bind:opencard:openThemeRecordCard:269",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -902572,7 +902812,7 @@
         "tag": "cy-theme-records",
         "event": "bind:opencard",
         "handler": "openThemeRecordCard",
-        "line": 1784,
+        "line": 1789,
         "selectorHint": "cy-theme-records[bind:opencard]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -902639,7 +902879,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1784:bind:replay:replayThemeSession:271:variant:theme-replay",
+      "id": "pages/play/index.wxml:1789:bind:replay:replayThemeSession:271:variant:theme-replay",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -902774,7 +903014,7 @@
         "tag": "cy-theme-records",
         "event": "bind:replay",
         "handler": "replayThemeSession",
-        "line": 1784,
+        "line": 1789,
         "selectorHint": "cy-theme-records[bind:replay]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -902866,7 +903106,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1784:bind:retrycard:retryThemeResultCard:273",
+      "id": "pages/play/index.wxml:1789:bind:retrycard:retryThemeResultCard:273",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -902939,7 +903179,7 @@
         "tag": "cy-theme-records",
         "event": "bind:retrycard",
         "handler": "retryThemeResultCard",
-        "line": 1784,
+        "line": 1789,
         "selectorHint": "cy-theme-records[bind:retrycard]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -902991,6 +903231,7 @@
           "/api/login/code",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -903011,6 +903252,7 @@
           "/api/game/session/view",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -903078,6 +903320,12 @@
           },
           {
             "url": "/api/play/journey/ending",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/journey/stage-end",
             "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
@@ -903369,6 +903617,7 @@
           "/api/login/code",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/nodes",
@@ -903393,6 +903642,7 @@
           "/api/game/session/view",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/nodes",
@@ -903474,6 +903724,12 @@
           },
           {
             "url": "/api/play/journey/ending",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/journey/stage-end",
             "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
@@ -903670,6 +903926,7 @@
           "/api/login/code",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/nodes",
@@ -903694,6 +903951,7 @@
           "/api/game/session/view",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/nodes",
@@ -903775,6 +904033,12 @@
           },
           {
             "url": "/api/play/journey/ending",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/journey/stage-end",
             "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
@@ -904375,6 +904639,7 @@
           "/api/play/companionLine",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/nodes",
@@ -904400,6 +904665,7 @@
           "/api/play/companionLine",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/nodes",
@@ -904487,6 +904753,12 @@
           },
           {
             "url": "/api/play/journey/ending",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/journey/stage-end",
             "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
@@ -904736,6 +905008,7 @@
           "/api/play/companionLine",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/nodes",
@@ -904761,6 +905034,7 @@
           "/api/play/companionLine",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/nodes",
@@ -904848,6 +905122,12 @@
           },
           {
             "url": "/api/play/journey/ending",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/journey/stage-end",
             "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
@@ -905097,6 +905377,7 @@
           "/api/play/companionLine",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/nodes",
@@ -905122,6 +905403,7 @@
           "/api/play/companionLine",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/nodes",
@@ -905209,6 +905491,12 @@
           },
           {
             "url": "/api/play/journey/ending",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/journey/stage-end",
             "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
@@ -906002,6 +906290,7 @@
           "/api/login/code",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -906022,6 +906311,7 @@
           "/api/game/session/view",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -906089,6 +906379,12 @@
           },
           {
             "url": "/api/play/journey/ending",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/journey/stage-end",
             "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
@@ -907042,6 +907338,7 @@
           "/api/play/ending",
           "/api/play/journey/ending",
           "/api/play/journey/opening/complete",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/nodes",
@@ -907067,6 +907364,7 @@
           "/api/play/ending",
           "/api/play/journey/ending",
           "/api/play/journey/opening/complete",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/nodes",
@@ -907155,6 +907453,12 @@
           {
             "url": "/api/play/journey/opening/complete",
             "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/journey/stage-end",
+            "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
           },
@@ -907389,6 +907693,7 @@
           "/api/login/code",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -907409,6 +907714,7 @@
           "/api/game/session/view",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -907476,6 +907782,12 @@
           },
           {
             "url": "/api/play/journey/ending",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/journey/stage-end",
             "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
@@ -907699,6 +908011,7 @@
           "/api/login/code",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -907719,6 +908032,7 @@
           "/api/game/session/view",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -907786,6 +908100,12 @@
           },
           {
             "url": "/api/play/journey/ending",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/journey/stage-end",
             "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
@@ -908009,6 +908329,7 @@
           "/api/login/code",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -908029,6 +908350,7 @@
           "/api/game/session/view",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -908096,6 +908418,12 @@
           },
           {
             "url": "/api/play/journey/ending",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/journey/stage-end",
             "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
@@ -908320,6 +908648,7 @@
           "/api/play/encounter",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -908341,6 +908670,7 @@
           "/api/play/encounter",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -908414,6 +908744,12 @@
           },
           {
             "url": "/api/play/journey/ending",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/journey/stage-end",
             "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
@@ -908941,6 +909277,7 @@
           "/api/login/code",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -908961,6 +909298,7 @@
           "/api/game/session/view",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -909028,6 +909366,12 @@
           },
           {
             "url": "/api/play/journey/ending",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/journey/stage-end",
             "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
@@ -909346,6 +909690,7 @@
           "/api/login/code",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/nodes",
@@ -909369,6 +909714,7 @@
           "/api/game/session/view",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/nodes",
@@ -909444,6 +909790,12 @@
           },
           {
             "url": "/api/play/journey/ending",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/journey/stage-end",
             "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
@@ -910295,6 +910647,7 @@
           "/api/login/code",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -910315,6 +910668,7 @@
           "/api/game/session/view",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -910382,6 +910736,12 @@
           },
           {
             "url": "/api/play/journey/ending",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/journey/stage-end",
             "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
@@ -911880,6 +912240,7 @@
           "/api/play/companionLine",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/nodes",
@@ -911905,6 +912266,7 @@
           "/api/play/companionLine",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/nodes",
@@ -911992,6 +912354,12 @@
           },
           {
             "url": "/api/play/journey/ending",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/journey/stage-end",
             "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
@@ -913364,6 +913732,7 @@
           "/api/login/code",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/nodes",
@@ -913388,6 +913757,7 @@
           "/api/game/session/view",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/nodes",
@@ -913469,6 +913839,12 @@
           },
           {
             "url": "/api/play/journey/ending",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/journey/stage-end",
             "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
@@ -913842,6 +914218,7 @@
           "/api/login/code",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -913862,6 +914239,7 @@
           "/api/game/session/view",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -913929,6 +914307,12 @@
           },
           {
             "url": "/api/play/journey/ending",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/journey/stage-end",
             "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
@@ -914307,6 +914691,7 @@
           "/api/login/code",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -914327,6 +914712,7 @@
           "/api/game/session/view",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -914394,6 +914780,12 @@
           },
           {
             "url": "/api/play/journey/ending",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/journey/stage-end",
             "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
@@ -914617,6 +915009,7 @@
           "/api/login/code",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -914637,6 +915030,7 @@
           "/api/game/session/view",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -914704,6 +915098,12 @@
           },
           {
             "url": "/api/play/journey/ending",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/journey/stage-end",
             "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
@@ -915102,6 +915502,7 @@
           "/api/play/companionLine",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/nodes",
@@ -915127,6 +915528,7 @@
           "/api/play/companionLine",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/nodes",
@@ -915214,6 +915616,12 @@
           },
           {
             "url": "/api/play/journey/ending",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/journey/stage-end",
             "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
@@ -915427,6 +915835,7 @@
           "/api/play/checkin",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/nodes",
@@ -915451,6 +915860,7 @@
           "/api/play/checkin",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/nodes",
@@ -915532,6 +915942,12 @@
           },
           {
             "url": "/api/play/journey/ending",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/journey/stage-end",
             "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
@@ -915747,6 +916163,7 @@
           "/api/play/checkin",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/nodes",
@@ -915771,6 +916188,7 @@
           "/api/play/checkin",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/nodes",
@@ -915852,6 +916270,12 @@
           },
           {
             "url": "/api/play/journey/ending",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/journey/stage-end",
             "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
@@ -919105,6 +919529,7 @@
           "/api/login/code",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -919125,6 +919550,7 @@
           "/api/game/session/view",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -919192,6 +919618,12 @@
           },
           {
             "url": "/api/play/journey/ending",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/journey/stage-end",
             "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
@@ -919557,6 +919989,7 @@
           "/api/login/code",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -919577,6 +920010,7 @@
           "/api/game/session/view",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -919644,6 +920078,12 @@
           },
           {
             "url": "/api/play/journey/ending",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/journey/stage-end",
             "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
@@ -919947,6 +920387,7 @@
           "/api/login/code",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -919967,6 +920408,7 @@
           "/api/game/session/view",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -920034,6 +920476,12 @@
           },
           {
             "url": "/api/play/journey/ending",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/journey/stage-end",
             "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
@@ -920257,6 +920705,7 @@
           "/api/login/code",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -920277,6 +920726,7 @@
           "/api/game/session/view",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -920344,6 +920794,12 @@
           },
           {
             "url": "/api/play/journey/ending",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/journey/stage-end",
             "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
@@ -920680,6 +921136,7 @@
           "/api/login/code",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -920700,6 +921157,7 @@
           "/api/game/session/view",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -920767,6 +921225,12 @@
           },
           {
             "url": "/api/play/journey/ending",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/journey/stage-end",
             "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
@@ -921230,6 +921694,7 @@
           "/api/login/code",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -921250,6 +921715,7 @@
           "/api/game/session/view",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -921317,6 +921783,12 @@
           },
           {
             "url": "/api/play/journey/ending",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/journey/stage-end",
             "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
@@ -921603,6 +922075,7 @@
           "/api/play/companionLine",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/nodes",
@@ -921630,6 +922103,7 @@
           "/api/play/companionLine",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/nodes",
@@ -921724,6 +922198,12 @@
           },
           {
             "url": "/api/play/journey/ending",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/journey/stage-end",
             "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
@@ -922030,6 +922510,7 @@
           "/api/play/companionLine",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/nodes",
@@ -922057,6 +922538,7 @@
           "/api/play/companionLine",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/nodes",
@@ -922151,6 +922633,12 @@
           },
           {
             "url": "/api/play/journey/ending",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/journey/stage-end",
             "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
@@ -922936,6 +923424,7 @@
           "/api/login/code",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -922956,6 +923445,7 @@
           "/api/game/session/view",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -923023,6 +923513,12 @@
           },
           {
             "url": "/api/play/journey/ending",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/journey/stage-end",
             "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
@@ -923275,6 +923771,7 @@
           "/api/login/code",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -923295,6 +923792,7 @@
           "/api/game/session/view",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -923362,6 +923860,12 @@
           },
           {
             "url": "/api/play/journey/ending",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/journey/stage-end",
             "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
@@ -923883,6 +924387,7 @@
           "/api/login/code",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -923905,6 +924410,7 @@
           "/api/game/session/view",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -923979,6 +924485,12 @@
           },
           {
             "url": "/api/play/journey/ending",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/journey/stage-end",
             "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
@@ -924677,6 +925189,7 @@
           "/api/login/code",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -924699,6 +925212,7 @@
           "/api/game/session/view",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -924773,6 +925287,12 @@
           },
           {
             "url": "/api/play/journey/ending",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/journey/stage-end",
             "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
@@ -925209,6 +925729,7 @@
           "/api/login/code",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -925231,6 +925752,7 @@
           "/api/game/session/view",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -925305,6 +925827,12 @@
           },
           {
             "url": "/api/play/journey/ending",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/journey/stage-end",
             "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
@@ -925711,6 +926239,7 @@
           "/api/login/code",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -925731,6 +926260,7 @@
           "/api/game/session/view",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -925798,6 +926328,12 @@
           },
           {
             "url": "/api/play/journey/ending",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/journey/stage-end",
             "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
@@ -926119,6 +926655,7 @@
           "/api/login/code",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -926139,6 +926676,7 @@
           "/api/game/session/view",
           "/api/play/ending",
           "/api/play/journey/ending",
+          "/api/play/journey/stage-end",
           "/api/play/journey/thought/sync",
           "/api/play/my-completed",
           "/api/play/os/",
@@ -926206,6 +926744,12 @@
           },
           {
             "url": "/api/play/journey/ending",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/play/journey/stage-end",
             "method": "GET",
             "auth": "authenticated",
             "source": "server-controller"
@@ -1123446,7 +1123990,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:440"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:441"
       }
     },
     {
@@ -1123563,7 +1124107,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:468"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:469"
       }
     },
     {
@@ -1123697,7 +1124241,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:458"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:459"
       }
     },
     {
@@ -1123835,7 +1124379,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:404"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:405"
       }
     },
     {
@@ -1123973,7 +1124517,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:415"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:416"
       }
     },
     {
@@ -1124134,7 +1124678,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:725"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:728"
       }
     },
     {
@@ -1124296,7 +1124840,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:752"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:755"
       }
     },
     {
@@ -1124416,7 +1124960,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:782"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:785"
       }
     },
     {
@@ -1124486,7 +1125030,9 @@
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
+      "requiredCapabilityByBranch": {
+        "cancelled": "requestSubscribeMessage"
+      },
       "requestMode": "ordered",
       "confirmationMode": "wx.showModal",
       "control": {
@@ -1124508,7 +1125054,7 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "write",
+      "actionClass": "external",
       "interactionMode": "tap",
       "baseActionClass": "write",
       "effectClasses": [
@@ -1124516,7 +1125062,9 @@
         "state"
       ],
       "accessBoundary": "self",
-      "externalCapabilities": [],
+      "externalCapabilities": [
+        "requestSubscribeMessage"
+      ],
       "successCapabilities": [],
       "targets": {
         "routes": [
@@ -1124598,19 +1125146,23 @@
           "/api/registration/cancel"
         ]
       },
-      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
         "error",
         "timeout",
         "duplicate-trigger",
+        "cancelled",
         "modal-cancelled"
       ],
-      "requiredPlatforms": [],
-      "externalGate": null,
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:504"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:505"
       }
     },
     {
@@ -1124730,7 +1125282,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:451"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:452"
       }
     },
     {
@@ -1124857,7 +1125409,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:495"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:496"
       }
     },
     {
@@ -1125033,7 +1125585,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:627"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:630"
       }
     },
     {
@@ -1125153,7 +1125705,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:451"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:452"
       }
     },
     {
@@ -1125270,7 +1125822,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:484"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:485"
       }
     },
     {
@@ -1125407,7 +1125959,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:472"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:473"
       }
     },
     {
@@ -1125534,7 +1126086,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:488"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-detail/index.js:489"
       }
     },
     {
@@ -1125684,7 +1126236,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-history/index.js:258"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-history/index.js:259"
       }
     },
     {
@@ -1125794,7 +1126346,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-history/index.js:281"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-history/index.js:282"
       }
     },
     {
@@ -1125902,7 +1126454,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-history/index.js:275"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-history/index.js:276"
       }
     },
     {
@@ -1126051,7 +1126603,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-history/index.js:253"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-history/index.js:254"
       }
     },
     {
@@ -1126111,7 +1126663,9 @@
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
+      "requiredCapabilityByBranch": {
+        "cancelled": "requestSubscribeMessage"
+      },
       "requestMode": "ordered",
       "confirmationMode": "wx.showModal",
       "control": {
@@ -1126133,7 +1126687,7 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "write",
+      "actionClass": "external",
       "interactionMode": "tap",
       "baseActionClass": "write",
       "effectClasses": [
@@ -1126141,7 +1126695,9 @@
         "state"
       ],
       "accessBoundary": "self",
-      "externalCapabilities": [],
+      "externalCapabilities": [
+        "requestSubscribeMessage"
+      ],
       "successCapabilities": [],
       "targets": {
         "routes": [
@@ -1126207,19 +1126763,23 @@
           "/api/registration/cancel"
         ]
       },
-      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
         "error",
         "timeout",
         "duplicate-trigger",
+        "cancelled",
         "modal-cancelled"
       ],
-      "requiredPlatforms": [],
-      "externalGate": null,
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-history/index.js:295"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-history/index.js:296"
       }
     },
     {
@@ -1126330,7 +1126890,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-history/index.js:435"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-history/index.js:438"
       }
     },
     {
@@ -1126390,7 +1126950,9 @@
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
+      "requiredCapabilityByBranch": {
+        "cancelled": "requestSubscribeMessage"
+      },
       "requestMode": "ordered",
       "confirmationMode": "wx.showModal",
       "control": {
@@ -1126412,7 +1126974,7 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "write",
+      "actionClass": "external",
       "interactionMode": "tap",
       "baseActionClass": "write",
       "effectClasses": [
@@ -1126420,7 +1126982,9 @@
         "state"
       ],
       "accessBoundary": "self",
-      "externalCapabilities": [],
+      "externalCapabilities": [
+        "requestSubscribeMessage"
+      ],
       "successCapabilities": [],
       "targets": {
         "routes": [
@@ -1126486,19 +1127050,23 @@
           "/api/registration/cancel"
         ]
       },
-      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
         "error",
         "timeout",
         "duplicate-trigger",
+        "cancelled",
         "modal-cancelled"
       ],
-      "requiredPlatforms": [],
-      "externalGate": null,
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-history/index.js:295"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-history/index.js:296"
       }
     },
     {
@@ -1126606,7 +1127174,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-history/index.js:275"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-history/index.js:276"
       }
     },
     {
@@ -1126714,7 +1127282,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/cy/scene-member-order-history/index.js:275"
+        "staticSource": "subpackageMember/components/cy/scene-member-order-history/index.js:276"
       }
     },
     {
@@ -1136966,7 +1137534,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/scene-member-participation-detail/index.js:544"
+        "staticSource": "subpackageMember/components/scene-member-participation-detail/index.js:546"
       }
     },
     {
@@ -1137187,7 +1137755,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/components/scene-member-participation-detail/index.js:539"
+        "staticSource": "subpackageMember/components/scene-member-participation-detail/index.js:541"
       }
     },
     {
