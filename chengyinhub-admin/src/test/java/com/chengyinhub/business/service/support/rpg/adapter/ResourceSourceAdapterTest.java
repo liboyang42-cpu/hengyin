@@ -42,12 +42,12 @@ class ResourceSourceAdapterTest {
         assertEquals(1, run.getThemeRuntime().path("pending").path(source).path("quantity").asInt());
         assertEquals(1, run.getStoryGrants().size(), "GRANT_XP 走原 storyGrants,不是第二钱包");
 
-        PlayCheckReceipt replay = pipeline.roll(context);
+        java.util.Map<String, Object> replay = pipeline.resources().writeOriginal(context);
         assertEquals(1, run.getThemeRuntime().path("pending").size(), "同一 originalRequestId 不二发物资");
         assertEquals(1, run.getStoryGrants().size());
-        assertEquals(REQUEST, replay.getBreakdown().get("requestId"));
-        assertEquals(0, ((Number) ((java.util.Map<?, ?>) replay.getBreakdown().get("resources")).get("sourcesDelta")).intValue());
-        assertEquals(0, ((Number) ((java.util.Map<?, ?>) replay.getBreakdown().get("resources")).get("grantsDelta")).intValue());
+        assertEquals(REQUEST, first.getBreakdown().get("requestId"));
+        assertEquals(0, ((Number) replay.get("sourcesDelta")).intValue());
+        assertEquals(0, ((Number) replay.get("grantsDelta")).intValue());
     }
 
     @Test

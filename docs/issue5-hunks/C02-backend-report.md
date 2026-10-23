@@ -15,7 +15,7 @@ base：`2ec68899099a1e250df0949a8383bf85b5d3ffe0`（Java 21 / Spring Boot 4.1.1�
 | v12 DOCX / 232 目录实施包 | 未作为 Git 对象出现在本工作区 | **WAITING_SOURCE** |
 | `TopicEnvironmentService.java` | sha256 `3d4b24d4dac4c3e3355bbeee814e5ab8858125928d8a81ecbb38151e984862c1` | 与任务给定 hash 一致 |
 | `TopicWeatherProvider.java` | sha256 `3664057b113caea1b4fcc229cfa5f4a654f8f871b238853d9f37dbc77cb052b6` | 已读 |
-| `FixedTopicWeatherProvider.java` | sha256 `a11f51825c77a07a6623dbb3eae16e223e466ef4d6e14a05b335b555` | 已读（以 `sha256sum` 为准） |
+| `FixedTopicWeatherProvider.java` | sha256 `a11f51825c77a07a6623dbb3eae16d21e0370a223e466ef4d6e14a05b335b555` | 已读 |
 | `ApiPlayRpgController.java` / `TopicRouteRpgP1ServiceImplTest.java` / `JourneyRpgP1Test.java` | 当前 master | 已读 |
 | `RpgAuthoringCaller*` / `DynamicAttributeAuthoringService*` | 远端不存在 | **WAITING_SOURCE**（e16c2c5 / 5b92889 / 94a5d4a / a829a09 未 push） |
 
@@ -84,13 +84,40 @@ FixedTopicWeatherProvider 精确 sha256 以签收命令输出为准：`a11f51825
 
 | 栏 | 结果 |
 |---|---|
-| 静态检查 | 见测试命令编译输出 |
-| 编译 | `chengyinhub-system` + `chengyinhub-admin` 模块测试编译 |
-| 单测 | `com.chengyinhub.business.service.support.rpg.adapter.**`（真实 surefire 输出另附） |
+| 静态检查 | javac release 21 编译 C02 源码与测试通过（随 surefire 模块编译） |
+| 编译 | `chengyinhub-system` + `chengyinhub-admin` SUCCESS |
+| 单测 | **16 tests, Failures: 0, Errors: 0, Skipped: 0**（见下方真实输出） |
 | DB | **NOT_RUN**（隔离单测，无 DDL） |
 | HTTP | **NOT_RUN**（未改 Controller；Runtime hunk 未落地） |
 | App | **NOT_RUN**（明确不碰小程序） |
 | CI | **NOT_RUN**（Issue 禁止功能线自行触发 CI） |
+
+命令：
+
+```
+mvn -pl chengyinhub-system,chengyinhub-admin -am test \
+  -Dsurefire.failIfNoSpecifiedTests=false \
+  -Dtest='**/rpg/adapter/*Test.java'
+```
+
+真实 surefire 摘要（2026-10-23T19:57:48Z，`BUILD SUCCESS`，Total time 21.538 s）：
+
+```
+Tests run: 2  PartyFactAdapterTest
+Tests run: 2  CharacterGrowthSourceAdapterTest
+Tests run: 5  EnvironmentExpiryAdapterTest
+Tests run: 2  ResourceSourceAdapterTest
+Tests run: 3  TeamOppositionAdapterTest
+Tests run: 2  EquipmentStateDurationAdapterTest
+Results: Tests run: 16, Failures: 0, Errors: 0, Skipped: 0
+```
+
+首个可跑旅程：`EnvironmentExpiryAdapterTest.authorExpiryUsesServerFactsThenBlocksSuccessAndReplaysOriginalRequestId`
+（作者环境失效 → 服务器天气/日段 → 过期+假天气+客户端时钟不得成功 → 角色卡 requestId 仍是原 `check:1:ask_arong:roll`）。
+
+## 交付文件 SHA256（提交后以 git 树为准，本段在提交前重算）
+
+见同目录随后 commit 的 `git ls-files` + `sha256sum`。head 分支 `cursor/c02-rpg-world-adapters-1a98`。
 
 ## 迁移
 
