@@ -250,7 +250,7 @@ test('同路由重建必须使用无隐私副作用的中转页', () => {
 test('AI 店铺参谋按内容态验收，不依赖已迁入导航栏的旧页标题', () => {
   const shots = Object.fromEntries(SHOTS.map((shot) => [shot.id, shot]))
   assert.equal(shots.C12b.expect.selector, '.value-card, .ai-card')
-  assert.equal(shots.C12c.expect.selector, '.value-card, .ai-card--down')
+  assert.equal(shots.C12c.expect.selector, '.value-card') // 2026-10-23 业主:没有解读就整段不显示,降级卡已删
   assert.equal(shots.C12c.data.ai, false,
     'automator 对 null 回读为 undefined；降级夹具用稳定的 falsy 值并由 DOM 锁住真实分支')
 })
