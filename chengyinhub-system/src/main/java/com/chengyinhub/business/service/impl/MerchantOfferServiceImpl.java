@@ -3,10 +3,22 @@ package com.chengyinhub.business.service.impl;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+
+import com.chengyinhub.business.domain.ImMessage;
+import com.chengyinhub.business.notify.NotifyEvent;
+import com.chengyinhub.business.notify.NotifyMessage;
+import com.chengyinhub.business.notify.WxSubscribeChannel;
+import com.chengyinhub.business.service.IImService;
+import com.chengyinhub.business.service.ISystemNotificationIntentService;
 
 import com.chengyinhub.business.domain.CmsRegistrationMerchant;
 import com.chengyinhub.business.domain.CmsTopic;
@@ -64,6 +76,19 @@ public class MerchantOfferServiceImpl implements IMerchantOfferService {
 
     @Autowired
     private com.chengyinhub.business.service.INotifyService notifyService;
+
+    @Autowired
+    private ISystemNotificationIntentService systemNotificationIntents;
+
+    @Autowired
+    private IImService imService;
+
+    @Autowired
+    private WxSubscribeChannel ownerNoticeWxChannel;
+
+    @Autowired
+    @Qualifier("scheduledExecutorService")
+    private ScheduledExecutorService ownerNoticeExecutor;
 
     @Autowired
     private MerchantChapterApplicationMapper applicationMapper;
@@ -453,9 +478,8 @@ public class MerchantOfferServiceImpl implements IMerchantOfferService {
         }
         applicationMapper.retireApprovedForSupplyExit(topic.getId(), chapterId, merchantId);
         invalidateApprovedCanonical(topic.getId(), "ordinary-chapter-supply-withdraw");
-        businessNotice.sendAfterCommit(topic.getMemberId(), "章节供给已退出",
-                "主题「" + topic.getName() + "」有章节供给退出。" + (required ? "已暂停新报名，请核对补位方案。" : "请核对已有玩家的履约安排。"),
-                "chapter-supply-withdraw-owner", offerId);
+        registerOwnerWithdrawalNotice(offerId, topic.getMemberId(), "章节供给已退出",
+                "主题「" + topic.getName() + "」有章节供给退出。" + (required ? "已暂停新报名，请核对补位方案。" : "请核对已有玩家的履约安排。"));
         businessNotice.executeAfterCommit("chapter-supply-withdraw-players", offerId, () -> {
             List<Long> affected = registrationEntitlementMapper.selectAffectedPaidMembers(topic.getId(), chapterId);
             boolean delivered = true;
@@ -468,6 +492,64 @@ public class MerchantOfferServiceImpl implements IMerchantOfferService {
             return delivered;
         });
         return required;
+    }
+
+    /** 原退出事务保存站内意图；微信仅保留首次提交后的一次尝试，不参加原意图恢复。 */
+    private void registerOwnerWithdrawalNotice(Long offerId, Long recipient, String title, String body) {
+        if (!TransactionSynchronizationManager.isActualTransactionActive()
+                || !TransactionSynchronizationManager.isSynchronizationActive()) {
+            throw new IllegalStateException("退出通知原意图必须与供给退出同事务登记");
+        }
+        if (offerId == null || offerId <= 0) throw new IllegalStateException("退出通知原事件身份无效");
+        String eventKey = "chapter-supply-withdraw-owner:" + offerId;
+        Long intentId = systemNotificationIntents.findIntentId(eventKey);
+        NotifyMessage wxMessage = null;
+        if (intentId == null) {
+            if (recipient == null || recipient <= 0 || title == null || body == null) {
+                throw new IllegalStateException("退出通知原收件人或内容无效");
+            }
+            intentId = systemNotificationIntents.enqueue(recipient, ImMessage.MSG_TEXT,
+                    title + "\n" + body, null, eventKey);
+            if (intentId == null) throw new IllegalStateException("退出通知原意图未保存");
+            wxMessage = NotifyMessage.of(NotifyEvent.OFFICIAL_BROADCAST, recipient)
+                    .with("title", title).with("sub", body);
+        }
+        if (intentId <= 0) throw new IllegalStateException("退出通知原意图身份无效");
+        final Long originalIntentId = intentId;
+        final NotifyMessage originalWxMessage = wxMessage;
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                businessNotice.dispatchInNewTransaction("chapter-supply-withdraw-owner", offerId,
+                        () -> {
+                            Long messageId = imService.deliverSystemNotification(originalIntentId);
+                            return messageId != null && messageId > 0;
+                        });
+                if (originalWxMessage != null) scheduleOwnerWithdrawalWx(offerId, originalWxMessage);
+            }
+        });
+    }
+
+    private void scheduleOwnerWithdrawalWx(Long offerId, NotifyMessage originalWxMessage) {
+        try {
+            ownerNoticeExecutor.schedule(() -> {
+                if (TransactionSynchronizationManager.isActualTransactionActive()) {
+                    org.slf4j.LoggerFactory.getLogger(MerchantOfferServiceImpl.class)
+                            .error("退出主办方微信通知未执行：仍有数据库事务 offerId={}", offerId);
+                    return;
+                }
+                try {
+                    if (ownerNoticeWxChannel.send(originalWxMessage)) return;
+                } catch (Throwable unknown) {
+                    // 通道违约抛出也不能触发本地意图的微信重放。
+                }
+                org.slf4j.LoggerFactory.getLogger(MerchantOfferServiceImpl.class)
+                        .warn("退出主办方微信通知未确认，保留原事件人工核实，不自动重发 offerId={}", offerId);
+            }, 10, TimeUnit.MILLISECONDS);
+        } catch (Throwable rejected) {
+            org.slf4j.LoggerFactory.getLogger(MerchantOfferServiceImpl.class)
+                    .warn("退出主办方微信通知未安排 offerId={}", offerId);
+        }
     }
 
     private void invalidateCircleReview(Long topicId) {

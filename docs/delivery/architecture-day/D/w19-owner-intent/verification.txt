@@ -1,0 +1,31 @@
+PASS withdrawal business/permission/lock/CAS/return and player supplier byte-identical outside owner notice call
+PASS all other production class bytes preserved; additions limited to imports, four injected dependencies and two authorized helpers
+INVENTORY UNEXECUTED MerchantChapterOfferWithdrawTest.java 10
+INVENTORY UNEXECUTED FreeExploreNodeSupplyMySqlIT.java 8
+INVENTORY UNEXECUTED MerchantOfferOwnerNoticeIntentTest.java 11
+INVENTORY UNEXECUTED MerchantOfferOwnerNoticeIntentMySqlIT.java 21
+INVENTORY UNEXECUTED ApiCoopOfferWithdrawTest.java 10
+INVENTORY UNEXECUTED ApiCoopOfferWithdrawRouteTest.java 8
+PASS old 10/8/10+8 identities and assertions preserved except owner fanout verification replaced by original intent verification
+PASS unchanged shared source chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCoopController.java
+PASS unchanged shared source chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ImServiceImpl.java
+PASS unchanged shared source chengyinhub-system/src/main/java/com/chengyinhub/business/service/ISystemNotificationIntentService.java
+PASS unchanged shared source chengyinhub-system/src/main/java/com/chengyinhub/business/notify/NotifyChannel.java
+PASS unchanged shared source chengyinhub-system/src/main/java/com/chengyinhub/business/notify/InAppNotifyChannel.java
+PASS unchanged shared source chengyinhub-system/src/main/java/com/chengyinhub/business/notify/WxSubscribeChannel.java
+PASS unchanged shared source chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/NotifyServiceImpl.java
+PASS unchanged shared source chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/CommittedBusinessNotice.java
+PASS unchanged shared source chengyinhub-system/src/main/java/com/chengyinhub/business/task/ImNotificationDeliveryTask.java
+PASS unchanged shared source chengyinhub-quartz/src/main/java/com/chengyinhub/quartz/util/ScheduleUtils.java
+PASS unchanged shared source chengyinhub-system/src/main/resources/mapper/business/MerchantChapterOfferMapper.xml
+PASS unchanged shared source chengyinhub-system/src/main/resources/mapper/business/MerchantChapterApplicationMapper.xml
+PASS unchanged shared source chengyinhub-system/src/main/resources/mapper/business/RegistrationEntitlementMapper.xml
+RUN python3 -m unittest ci.test_w19_owner_notice_intent
+.......
+----------------------------------------------------------------------
+Ran 7 tests in 0.005s
+
+OK
+PASS git diff --check
+PASS bounded credential-pattern scan on owned source/tests/docs; zero hits
+NOT RUN Maven / javac / JUnit / MySQL / Redis / backend / CI / production DDL; zero real WX calls

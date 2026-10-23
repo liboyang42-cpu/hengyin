@@ -11,6 +11,7 @@ import com.chengyinhub.business.service.impl.MerchantOfferServiceImpl;
 import com.chengyinhub.common.constant.ProductType;
 import com.chengyinhub.common.constant.TermsMode;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InOrder;
 import org.mockito.ArgumentCaptor;
@@ -42,6 +43,7 @@ class MerchantChapterOfferWithdrawTest {
     private CommittedBusinessNotice notices;
     private RegistrationEntitlementMapper entitlements;
     private INotifyService notify;
+    private ISystemNotificationIntentService intents;
 
     @BeforeEach
     void setUp() {
@@ -56,6 +58,13 @@ class MerchantChapterOfferWithdrawTest {
         notices = mock(CommittedBusinessNotice.class);
         entitlements = mock(RegistrationEntitlementMapper.class);
         notify = mock(INotifyService.class);
+        intents = mock(ISystemNotificationIntentService.class);
+        when(intents.findIntentId(anyString())).thenReturn(null);
+        when(intents.enqueue(anyLong(), anyInt(), anyString(), nullable(String.class), anyString())).thenReturn(9001L);
+        ReflectionTestUtils.setField(service, "systemNotificationIntents", intents);
+        ReflectionTestUtils.setField(service, "imService", mock(IImService.class));
+        ReflectionTestUtils.setField(service, "ownerNoticeWxChannel", mock(com.chengyinhub.business.notify.WxSubscribeChannel.class));
+        ReflectionTestUtils.setField(service, "ownerNoticeExecutor", mock(java.util.concurrent.ScheduledExecutorService.class));
         ReflectionTestUtils.setField(service, "businessNotice", notices);
         ReflectionTestUtils.setField(service, "registrationEntitlementMapper", entitlements);
         ReflectionTestUtils.setField(service, "notifyService", notify);
@@ -84,13 +93,23 @@ class MerchantChapterOfferWithdrawTest {
         when(topicService.casUserStatus(TOPIC, 1, 0)).thenReturn(1);
         when(offers.withdrawOwned(eq(OFFER), eq(MERCHANT), anyString(), anyBoolean())).thenReturn(1);
         when(applications.retireApprovedForSupplyExit(TOPIC, CHAPTER, MERCHANT)).thenReturn(1);
+        // Decision fixture only; the dedicated MySQL IT establishes real transaction boundaries.
+        org.springframework.transaction.support.TransactionSynchronizationManager.setActualTransactionActive(true);
+        org.springframework.transaction.support.TransactionSynchronizationManager.initSynchronization();
+    }
+
+    @AfterEach
+    void clearFixtureSynchronization() {
+        org.springframework.transaction.support.TransactionSynchronizationManager.clearSynchronization();
+        org.springframework.transaction.support.TransactionSynchronizationManager.setActualTransactionActive(false);
     }
 
     @Test
     void exitNotifiesOnlyTheServerSelectedAffectedPaidPlayersAfterCommit() {
         assertTrue(service.withdrawOwnChapterOffer(OFFER, MERCHANT, "暂停营业"));
-        verify(notices).sendAfterCommit(eq(501L), anyString(), anyString(),
-                eq("chapter-supply-withdraw-owner"), eq(OFFER));
+        verify(intents).enqueue(eq(501L), eq(com.chengyinhub.business.domain.ImMessage.MSG_TEXT),
+                startsWith("章节供给已退出\n"), isNull(), eq("chapter-supply-withdraw-owner:" + OFFER));
+        verify(notices, never()).sendAfterCommit(any(), anyString(), anyString(), anyString(), any());
         ArgumentCaptor<Supplier<Boolean>> delivery = ArgumentCaptor.forClass(Supplier.class);
         verify(notices).executeAfterCommit(eq("chapter-supply-withdraw-players"), eq(OFFER), delivery.capture());
         verifyNoInteractions(entitlements, notify);
