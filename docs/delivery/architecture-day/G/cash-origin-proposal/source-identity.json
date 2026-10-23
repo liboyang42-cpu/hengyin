@@ -1,0 +1,87 @@
+{
+  "parent": "ee71b74b629539e9a257c308491f8f9d94fe193e",
+  "source": {
+    "AGENTS.md": {
+      "blob": "ee7aeda9c2279d5c6f5987b7b01abf7098fb3a19",
+      "sha256": "65026cbd9893b1458b2a7ceb46466486edcb1947b14603e105076ca947101ded"
+    },
+    "sql/base_schema_20260818.sql": {
+      "blob": "033d8990a75fb99e6b02d05948c03ac58f4d017b",
+      "sha256": "dcf816b8d735bb81b3aee7b921a6fc61d4b0355a02fc0e0e443e2ad1cca4b358"
+    },
+    "chengyinhub-admin/sql/migration_settlement_claim_20260811.sql": {
+      "blob": "8d00c9931d8ed626bf5bbd0323b957be6f22afb7",
+      "sha256": "4b9d487914fb146fb0d1de7625b398ccbd2143c7fa77d5d7ccc0a471b511394a"
+    },
+    "chengyinhub-admin/sql/migration_complaint_period_funds_gate_20260917.sql": {
+      "blob": "05121ad7d933aad9415e8d463c5314cc1fcd9482",
+      "sha256": "b9b3625158bc69d365e618dca40dc8f2085ee6779fd72fd19a30774faea51da2"
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java": {
+      "blob": "9686e2e983ce139c6593cfe9692b42bcdbfdc4de",
+      "sha256": "7b679dd00e49742be729d09660084a040ca3b12ab6f41e35349bb00e23865aeb"
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementClaimServiceImpl.java": {
+      "blob": "4ca02c4ddd10acf2e3fbf0d08ef7f475a67f0327",
+      "sha256": "04211a4ed5274c4afb8b17ba310507c9e12f729c05ea5c95598ba984c3690658"
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundServiceImpl.java": {
+      "blob": "844aafeb77318757c12c194e4c194a59ecf1f0c1",
+      "sha256": "01ba91d4b11db77576167fbabf107e3a234a133d090befab9b11dd4023aa615f"
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PricingServiceImpl.java": {
+      "blob": "61e2fcecb657514d832841b8c2e497ac11461892",
+      "sha256": "e758bf5b544222215100d69468b4404c43069935d40976ea042dc5f720066742"
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/CoopSettlementContract.java": {
+      "blob": "a17f8e77940b3e14bace71d08941f2026d589032",
+      "sha256": "18e851706129c9bbe528ac41bde1a7171c9d772cb0c7caeee7abae27044532a2"
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/SettlementDebtLedger.java": {
+      "blob": "1f0f6b6916e7840a5f03efce8709019ee9ca3bf7",
+      "sha256": "367d944cf8621084c818ce4121e6ae7d03fb29dd55314eb216d1464c4bbb1c14"
+    },
+    "chengyinhub-system/src/main/resources/mapper/business/CoopSettlementAdjustmentMapper.xml": {
+      "blob": "99bc7d55726ea4911ba055a5d0fb54104ed4bef6",
+      "sha256": "392b20be5fda2a4735ffdb0b2510f72fd70e4136e2296d86853452b0302a01b3"
+    },
+    "chengyinhub-system/src/main/resources/mapper/business/CoopSettlementDetailMapper.xml": {
+      "blob": "a97a72695d5f1b52bde8ca173238d68e10670820",
+      "sha256": "a86cea0ff482e8931b62b1088f316f4818209986dd433bafada53b3baf5559ff"
+    },
+    "chengyinhub-system/src/main/resources/mapper/business/SettlementClaimMapper.xml": {
+      "blob": "15cc1295213845364cea326ad3d8ae87c3286a7f",
+      "sha256": "01025c1590e90e6efa356bf72a43694e3d1abdee53f65793136c75c5dcd5a7ae"
+    },
+    "chengyinhub-system/src/main/resources/mapper/business/UmsMemberSettlementDebtMapper.xml": {
+      "blob": "8346af6af37b4aec9f53afbdd9af92a6e792928b",
+      "sha256": "bb83719bf536c8d3be9f5c4ff3afc20f16f101961eaebd35a7e788a6c7956c2e"
+    },
+    "docs/superpowers/specs/2026-07-12-coop-multi-party-settlement-design.md": {
+      "blob": "fd39da04f548c50f49803f35fc906188b43851d4",
+      "sha256": "a5eb86ff4cdfec327f18045ebc935b63eae2e87e4906d845d3721a2ea3e29919"
+    },
+    "docs/superpowers/plans/2026-07-12-coop-multi-party-settlement-p1.md": {
+      "blob": "4eba0f2cbf21a59b509e3b3f5fcc9a12735ea6cd",
+      "sha256": "bc06fd80636e7ba98b35411b852170f52a0b8f5037bb00b140e8e87e1fac2508"
+    }
+  },
+  "reviewed": {
+    "59eeae487a22803cf5e930ed5ece42c7c7525c1c:docs/delivery/architecture-day/A-funds-fence/PROTOCOL.md": {
+      "blob": "fdf1d0ad5678d39949e8f8f65459909b0ac2a844",
+      "sha256": "1ce4ea7174245a4e21bd508a282e3eef1b8a8157de925c4939b587c76e79189d"
+    },
+    "9de37f77b4d19389f7dadf6c6a88da4eece09e1b:docs/delivery/architecture-day/H/g-wp04/REVIEW.md": {
+      "blob": "4792ac748fb6f4cfb42d1436324427589e1725ca",
+      "sha256": "8cfde8bd809f74ecb6f08d02e02b57c5a6c259c8cc841c299da6185dfb192e1b"
+    }
+  },
+  "proposal": {
+    "README.md": "da26be23125bfbd3e2c49e0ca8658836ced994f32cb5c8fcbc0cde0787f48cb9",
+    "allocation-option-a.sql": "aac9221f315215146d0b4e5bab45158c07e66d7bf3a3f1dcd0ea5ea5b5166770",
+    "money-evidence.md": "89721eab9a4158a0b4bbcf0758429ddbf26073af97b4d21838b5f67d52964bf4",
+    "preflight.sql": "4d09b619a003d55f01263459e51aca024d4b520f4c4dd4d502e4cf4c48a32398",
+    "schema-candidate.sql": "b89bf5b5b7b8d553b14360979ceeb9e6588492ea64538beafc26a3eba022c622",
+    "verify_static.py": "53c694146fcb8a0bd0d5d1d520d728f3046849fc35496af71476f32914060aa4"
+  }
+}

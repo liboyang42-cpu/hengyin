@@ -1,0 +1,9 @@
+PASS: proposal-only scope; production/base schema/old migrations/frozen candidates untouched
+PASS: core 3 tables + explicitly conditional allocation table; 2 existing tables extended only in proposal
+PASS: preflight is SELECT-only; canonical IDs/unique keys and explicit execution receipt fields present
+PASS: candidate parentheses/string shape; not a SQL parser or MySQL verification
+PASS: exact 16 source files unchanged; A full protocol/H review/source/proposal SHA256 recorded
+NOT_RUN: SQL syntax/DDL/preflight, Java, MySQL, financial algorithms, CI, production; root confirmation required before coding
+SECRET-FILE-GATE PASS: 当前 Git tree 无密钥/证书文件或私钥正文
+PASS: staged git diff --check
+Gitleaks: NOT_RUN locally; root scan required
