@@ -129,6 +129,9 @@ MYBATIS_ITS=(
   O14CityCodeBackfillMySqlIT
   # DOC2 O5c-(a):统一留痕只读投影(五张留痕表分查 + 合并)。
   AuditTrailProjectionMySqlIT
+  # Lane BF4(W48R SHOULD-FIX 1):同意记录 requestId 去重 —— 并发同号重放只落一行、不一致重放 409、
+  #   RR 旧快照下必须当前读到原记录。类上门控 CHENGYIN_CONSENT_IDEMPOTENCY_MYSQL_IT=1,下面 mvn 行显式打开。
+  ConsentRecordIdempotencyMySqlIT
 )
 IFS=, ; IT_LIST="${MYBATIS_ITS[*]}" ; unset IFS
 # ⚠️ 必须带 -am:上面那句 `mvn clean test` 不 install 兄弟模块,
@@ -140,7 +143,8 @@ IFS=, ; IT_LIST="${MYBATIS_ITS[*]}" ; unset IFS
 #   surefire 3.x 还要 -Dsurefire.failIfNoSpecifiedTests=false(与 -DfailIfNoTests 是两个开关,
 #   少一个上游模块照样以「No tests matching pattern」失败)。
 #   「到底跑没跑」的保证**不靠这两个开关**,靠下面 assert_it_ran.py 的回读。
-CHENGYIN_IM_SEND_MYSQL_IT=1 CHENGYIN_FUNDS_MYSQL_IT=1 mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false \
+CHENGYIN_IM_SEND_MYSQL_IT=1 CHENGYIN_FUNDS_MYSQL_IT=1 CHENGYIN_CONSENT_IDEMPOTENCY_MYSQL_IT=1 \
+  mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false \
   -Dsurefire.failIfNoSpecifiedTests=false -Dchengyin.npc.expiry.mysql.it=true -Dtest="$IT_LIST"
 
 # 回读观测:surefire 绿不够。skipped != 0 说明又有人把「连不上就跳过」放回来了,
