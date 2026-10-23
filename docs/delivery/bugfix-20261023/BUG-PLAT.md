@@ -42,4 +42,9 @@
 
 ## CI
 
-见 PR 检查（run ID 在下方补充）。
+PR #556，head b651d722，全部检查通过（Admin UI 两项与 SBOM 因未改动按规则跳过）：
+
+- GitHub CI：run 39956890120（Backend tests、Mini program unit 1-20、static gates、migration gates、gitleaks 均 success）
+- Funds MySQL IT：run 39956890184（50/9/30，skipped=0）
+- Followup 39 selected backend cases：run 39956890199
+- isolated-authenticated-redis-recovery：run 39956890254
