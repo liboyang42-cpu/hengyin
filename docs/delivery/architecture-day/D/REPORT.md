@@ -23,7 +23,7 @@
 | `chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/OfficialBroadcastDeliveryMySqlIT.java` | 7 个批准环境真 MySQL/真 IM Mapper 集成用例；微信为故障注入桩 |
 | `chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/OfficialEventContractTest.java` | 仅适配广播测试/装配；原 17 个测试入口全部保留，非广播业务断言未改 |
 | `chengyinhub-admin/src/test/resources/it-schema/official-broadcast-delivery-it-schema.sql` | 公共基线两个广播表的原始 DDL，仅供随机隔离测试库 |
-| `docs/delivery/architecture-day/D/sql/migration_20261023_d_official_broadcast_delivery.sql` | 候选增量迁移，交集成人审评，不放入共享迁移入口、不执行 |
+| `chengyinhub-admin/sql/migration_20261023_d_official_broadcast_delivery.sql` | 候选增量迁移；经 F 集成维护移至规范目录并登记精确依赖，仍待授权执行 |
 | `chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/BusinessOfficialEventController.java` | 仅两个广播发布结果文案改为“通知已提交”，原鉴权和返回 ID 不变 |
 | `chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/business/OfficialBroadcastSubmissionControllerTest.java` | 4 个 Controller 结果边界测试源码，未运行 |
 | `chengyinhub-ui/src/views/business/officialevent/index.vue` | 仅广播提交回调和广播状态展示文案 |
@@ -108,7 +108,7 @@ CHENGYIN_BROADCAST_MYSQL_IT=1 mvn -B -pl chengyinhub-admin -am test \
 
 ## 迁移影响、预检与回退限制
 
-候选 SQL 位于本目录 sql/，未执行 DDL，也未写共享 schema/迁移入口。生产唯一身份索引、业务资金表与旧审计记录不变；新增六列：delivery_state、delivery_title、delivery_sub、failure_code、message_id、reached_time。新字段默认 UNKNOWN，避免旧写入被当成安全可重投。
+候选 SQL 已由 F 集成维护移至 chengyinhub-admin/sql/ 第一层，并登记官方广播表迁移的精确依赖；内容字节不变，未执行 DDL，进入库存不等于授权部署或落库。生产唯一身份索引、业务资金表与旧审计记录不变；新增六列：delivery_state、delivery_title、delivery_sub、failure_code、message_id、reached_time。新字段默认 UNKNOWN，避免旧写入被当成安全可重投。
 
 实施前必须停所有旧/新广播 worker 与发布入口，在受控环境审评并执行只读预检：
 

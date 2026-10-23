@@ -1988,5 +1988,63 @@ class 商家俱乐部Quartz提前启用_暂停Repair合同(unittest.TestCase):
         )
 
 
+class SingleRejectTriggerContract(unittest.TestCase):
+    """A literal, single SIGNAL has no internal statement separator; compound routines still fail closed."""
+
+    @staticmethod
+    def trigger(body="SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'append only'", timing="BEFORE", event="UPDATE"):
+        return "CREATE TRIGGER reject_change %s %s ON facts FOR EACH ROW %s;" % (timing, event, body)
+
+    def test_single_literal_rejection_triggers_need_no_client_delimiter(self):
+        for event in ("UPDATE", "DELETE"):
+            with self.subTest(event=event):
+                sql = self.trigger(event=event)
+                self.assertEqual(check_sql_text("unrelated_new_candidate.sql", sql), [])
+                self.assertEqual(len(split_statements(sql)), 1)
+
+    def test_canonical_cash_candidate_keeps_both_triggers_and_original_bytes(self):
+        path = os.path.join(REPO_ROOT, "chengyinhub-admin/sql/migration_20261023_cash_withdraw_fund_fact.sql")
+        with open(path, "rb") as source:
+            raw = source.read()
+        self.assertEqual(hashlib.sha256(raw).hexdigest(),
+                         "cf981d89214b219c41639537f301f2b55b2b568f2d310c06621e6df473b3f4ba")
+        sql = raw.decode("utf-8")
+        statements = split_statements(sql)
+        self.assertEqual(len(statements), 3)
+        self.assertEqual(check_sql_text(path, sql), [])
+        self.assertIn("cash_fund_fact_no_update BEFORE UPDATE", statements[1])
+        self.assertIn("cash_fund_fact_no_delete BEFORE DELETE", statements[2])
+        for trigger in statements[1:]:
+            self.assertIn("SIGNAL SQLSTATE '45000'", trigger)
+            self.assertIn("'cash withdrawal facts are append only'", trigger)
+
+    def test_compound_trigger_still_requires_custom_delimiter(self):
+        sql = self.trigger("BEGIN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='deny'; END")
+        self.assertTrue(any("DELIMITER" in p for p in check_sql_text("compound.sql", sql)))
+
+    def test_other_bodies_timing_events_and_dynamic_expressions_still_require_delimiter(self):
+        cases = [self.trigger("SET NEW.amount = 0"), self.trigger("RESIGNAL"),
+                 self.trigger("SIGNAL SQLSTATE '01000' SET MESSAGE_TEXT='warning'"),
+                 self.trigger("SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT=CONCAT('a','b')"),
+                 self.trigger(timing="AFTER"), self.trigger(event="INSERT"),
+                 self.trigger().replace("CREATE TRIGGER", "CREATE DEFINER=CURRENT_USER TRIGGER")]
+        for sql in cases:
+            with self.subTest(sql=sql):
+                self.assertTrue(any("DELIMITER" in p for p in check_sql_text("other.sql", sql)))
+
+    def test_incomplete_or_extended_trigger_statement_cannot_match_the_rejection_grammar(self):
+        for sql in (self.trigger()[:-1], self.trigger().replace("FOR EACH ROW", "FOR EACH"),
+                    self.trigger().replace(";", " SET @extra=1;"),
+                    self.trigger().replace("MESSAGE_TEXT", "MYSQL_ERRNO")):
+            with self.subTest(sql=sql):
+                self.assertTrue(check_sql_text("bad.sql", sql))
+
+    def test_literal_semicolons_stay_data_and_following_unbounded_write_stays_rejected(self):
+        sql = self.trigger("SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='BEGIN; UPDATE t SET a=0; END'")
+        self.assertEqual(check_sql_text("literal.sql", sql), [])
+        self.assertEqual(len(split_statements(sql)), 1)
+        self.assertTrue(any("WHERE" in p for p in check_sql_text("bad_write.sql", sql + "\nUPDATE t SET a=0;")))
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

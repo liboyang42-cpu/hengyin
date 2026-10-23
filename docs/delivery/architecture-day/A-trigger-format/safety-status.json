@@ -1,0 +1,5 @@
+{
+  "command": "bash ci/migration-safety-check.sh",
+  "exit_code": 1,
+  "kind": "lightweight Python/Git static gate; no Java/DB/CI dispatch"
+}

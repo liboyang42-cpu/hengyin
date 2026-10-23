@@ -69,16 +69,29 @@ test('BL-79 POST /api/object-card/rename:表单参数 id/title(非 JSON 体),上
   assert.ok(fieldsOf(SYS + 'domain/vo/PlayerObjectCardVO.java').has('title'))
 })
 
-test('BL-80 GET /api/official/broadcast/{id}/stats:白名单+发布者本人,返回 reached/clicked', () => {
+test('BL-80 GET /api/official/broadcast/{id}/stats:白名单+发布者本人,站内人数与通道回执分开', () => {
   const src = assertMapping('ApiOfficialEventController.java', '/api/official', 'Get', '/broadcast/{id}/stats')
   const body = methodBody(src, 'public AjaxResult broadcastStats(@PathVariable("id") Long id)', 1400)
   assert.match(body, /if \(!canPublish\(me\)\) return error\("无官方发布权限"\)/)
   assert.match(body, /officialBroadcastService\.getById\(id, me\)/)
   assert.match(body, /bc\.getSenderAccount\(\)\.equals\(me\)/, 'V1 通知只给发布者本人')
   assert.match(body, /officialEventV2Service\.broadcastStatsForOperator\(id, me\)/)
-  const stats = methodBody(readRepo(SYS + 'service/impl/OfficialBroadcastServiceImpl.java'), 'public java.util.Map<String, Object> reachStats(Long broadcastId, Long actorMemberId)', 500)
-  assert.match(stats, /m\.put\("reached", /)
-  assert.match(stats, /m\.put\("clicked", /)
+  // Read the whole stats method: a fixed character window truncated clicked after channel fields were added.
+  const impl = readRepo(SYS + 'service/impl/OfficialBroadcastServiceImpl.java')
+  const stats = impl.match(/public java\.util\.Map<String, Object> reachStats\(Long broadcastId, Long actorMemberId\) \{[\s\S]*?\n    \}/)
+  assert.ok(stats, '必须找到完整复盘方法，不能把相邻方法当成本方法合同')
+  assert.match(stats[0], /getById\(broadcastId, actorMemberId\)/, '服务层归属闸仍必须先执行')
+  assert.match(stats[0], /m\.put\("reached", logMapper\.countInappReached\(broadcastId\)\)/)
+  assert.match(stats[0], /m\.put\("clicked", logMapper\.countClicked\(broadcastId\)\)/)
+  assert.match(stats[0], /m\.put\("channelReached", logMapper\.countReached\(broadcastId\)\)/)
+  assert.match(stats[0], /m\.put\("byChannel", logMapper\.channelStats\(broadcastId\)\)/)
+  const mapper = readRepo('chengyinhub-system/src/main/resources/mapper/business/OfficialBroadcastLogMapper.xml')
+  for (const id of ['countInappReached', 'countClicked']) {
+    const query = mapper.match(new RegExp('<select id="' + id + '"[^>]*>([\\s\\S]*?)</select>'))
+    assert.ok(query, '缺少 ' + id + ' 查询')
+    assert.match(query[1], /channel = 'inapp'/, '人数只计站内，不混入订阅回执')
+    assert.match(query[1], /delivery_state = 'SUCCESS'/, 'UNKNOWN/失败不能算成功或点击人数')
+  }
   // 入口挂在「我发布的」列表,其通知来源仍是 my-published.broadcasts
   assert.match(src, /data\.put\("broadcasts", officialBroadcastService\.listBySender\(memberId, memberId\)\)/)
 })

@@ -1,0 +1,5 @@
+== [1/2] 迁移目录门:migration_*.sql 必须在 chengyinhub-admin/sql/ 第一层 ==
+  OK: 519 个 migration_*.sql 全在 chengyinhub-admin/sql/ 第一层
+== [2/2] 新增 SQL 前缀门:要在库上跑的 SQL 一律 migration_* ==
+  OK: 本分支(相对 origin/master)新增/修改的 SQL 前缀均合规
+迁移布局门禁:通过

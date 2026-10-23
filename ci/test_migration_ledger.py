@@ -44,6 +44,26 @@ class RepoFixture(unittest.TestCase):
 
 
 class ManifestContract(RepoFixture):
+    def test_architecture_day_auxiliary_paths_are_exact_not_directory_exceptions(self):
+        reviewed = {
+            "chengyinhub-admin/src/test/resources/architecture-day-a-fixture.sql": "TEST_FIXTURE",
+            "chengyinhub-admin/src/test/resources/it-schema/official-broadcast-delivery-it-schema.sql": "TEST_FIXTURE",
+            "docs/delivery/architecture-day/A/schema-candidate.sql": "AUXILIARY_NOT_EXECUTED",
+            "docs/delivery/architecture-day/A/schema-preflight.sql": "AUXILIARY_NOT_EXECUTED",
+        }
+        for path in reviewed:
+            self.write(path)
+        report = audit_inventory(self.tmp)
+        self.assertEqual([], report["problems"])
+        self.assertEqual([], report["migrations"])
+        self.assertEqual(reviewed, {item["path"]: item["classification"] for item in report["auxiliarySql"]})
+        unknown = [str(Path(path).with_name("unreviewed-" + Path(path).name)) for path in reviewed]
+        for path in unknown:
+            self.write(path)
+        report = audit_inventory(self.tmp)
+        self.assertEqual({("UNMANAGED_SQL_LOCATION", path) for path in unknown},
+                         {(item["code"], item["path"]) for item in report["problems"]})
+
     def test_generic_route_runtime_schema_is_explicit_test_fixture(self):
         path = "chengyinhub-admin/src/test/resources/it-schema/generic-route-runtime-it-schema.sql"
         self.write(path, "CREATE TABLE topic_route_session(id BIGINT);\n")

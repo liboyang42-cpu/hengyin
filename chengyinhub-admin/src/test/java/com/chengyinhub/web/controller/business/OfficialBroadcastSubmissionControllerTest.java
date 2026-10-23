@@ -86,10 +86,17 @@ class OfficialBroadcastSubmissionControllerTest {
     void missingOperatorMappingStillRejectsWithoutPublishing() {
         Fixture f = new Fixture();
         f.v2Event();
+        // The real resolver returns null for missing/invalid authorization; Mockito's boxed Long default is 0L.
+        when(f.v2.resolveAuthorizedOfficialMember(42L)).thenReturn(null);
         OfficialBroadcast request = new OfficialBroadcast();
         request.setEventId(7L);
-        assertNotEquals(200, f.controller.broadcast(request).get("code"));
+        AjaxResult rejected = f.controller.broadcast(request);
+        assertNotEquals(200, rejected.get("code"));
+        assertTrue(rejected.get("msg").toString().contains("未绑定有效官方会员授权"));
+        verify(f.events).adminGet(7L);
+        verify(f.v2).resolveAuthorizedOfficialMember(42L);
         verify(f.v2, never()).publishBroadcastForOperator(any(), any());
+        verifyNoMoreInteractions(f.v2);
         verifyNoInteractions(f.broadcasts);
     }
 

@@ -1,0 +1,26 @@
+............................................................................................................................................................................................F..................E.........release_manifest: git rev-parse failed: fatal: Needed a single revision
+.......
+======================================================================
+ERROR: test_task_dictionary_forward_is_selected_by_supported_fresh_builder (ci.test_prelaunch_business_seeds.MissingBusinessSeedsContract.test_task_dictionary_forward_is_selected_by_supported_fresh_builder)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/hengyin-f-migration-layout/ci/test_prelaunch_business_seeds.py", line 139, in test_task_dictionary_forward_is_selected_by_supported_fresh_builder
+    manifest = build_schema.build_manifest(ROOT, target_commit="a" * 40,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/hengyin-f-migration-layout/ci/migration_ledger.py", line 409, in build_manifest
+    raise LedgerError("SQL inventory is unsafe", inventory["problems"])
+ci.migration_ledger.LedgerError: SQL inventory is unsafe
+
+======================================================================
+FAIL: test_predeploy_snapshot_is_static_and_never_claims_historical_git_verification (ci.test_shallow_source_custody.PublicSnapshotHelperTest.test_predeploy_snapshot_is_static_and_never_claims_historical_git_verification)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/hengyin-f-migration-layout/ci/test_shallow_source_custody.py", line 111, in test_predeploy_snapshot_is_static_and_never_claims_historical_git_verification
+    self.assertEqual(0, result.returncode, result.stderr)
+AssertionError: 0 != 1 : PRE_DEPLOY_STATIC_NO_GO: SQL inventory is unsafe
+
+
+----------------------------------------------------------------------
+Ran 224 tests in 6.596s
+
+FAILED (failures=1, errors=1)
