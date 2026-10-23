@@ -16,7 +16,7 @@
   position: absolute;
   inset: 0;
   background: var(--cy-color-overlay);
-  animation: ds-fade-in var(--cy-motion-slow) var(--cy-ease-out);
+  animation: ds-fade-in var(--cy-motion-sheet-in) var(--cy-ease-standard);
 }
 
 /* 复刻 .pop-model 底部面板(common.wxss),视觉与 2026-08-25 之前一致 */
@@ -33,7 +33,7 @@
   border-radius: var(--cy-comp-sheet-radius) var(--cy-comp-sheet-radius) 0 0;
   padding: 0 var(--cy-page-x) env(safe-area-inset-bottom);
   box-sizing: border-box;
-  animation: ds-up var(--cy-motion-slow) var(--cy-ease-out);  /* T3:浮层出入=slow+减速收尾 */
+  animation: ds-up var(--cy-motion-sheet-in) var(--cy-ease-standard);  /* T3:浮层出入=slow+减速收尾 */
 }
 .ds-pop::before {
   content: "";
@@ -57,8 +57,8 @@
 /* 退场:show 置 false 后 JS 挂 .ds--closing 播完再卸载(见 index.js 的 exitMotion(220))。
    进场 ds-up 用 slow(350)、退场用 standard(220) —— DS 文档3 §B.1「进场慢、退场快」。 */
 .ds--closing { pointer-events: none; }
-.ds--closing .ds-pop { animation: ds-down var(--cy-motion-standard) var(--cy-ease-out) forwards; }
-.ds--closing .ds__mask { animation: ds-fade-out var(--cy-motion-standard) var(--cy-ease-out) forwards; }
+.ds--closing .ds-pop { animation: ds-down var(--cy-motion-sheet-out) var(--cy-ease-standard) forwards; }
+.ds--closing .ds__mask { animation: ds-fade-out var(--cy-motion-sheet-out) var(--cy-ease-standard) forwards; }
 
 /* 复刻 .pop-top(2026-09-24 CU-M-149 起与 cy-sheet 头部同构:标题在左、✕ 在右上角) */
 .ds-top {
@@ -134,3 +134,8 @@
 /* 同上:isolated 下全局 .cy-pressed 无效;遮罩只减淡不位移。 */
 .cy-pressed { opacity: .88; }
 .ds__mask--press { opacity: .86; }
+/* 2026-10-23 交接(见 behaviors/exit-motion.js):被接替的那层遮罩保持全暗直到卸载(important 才压得过关键帧),
+   接替的这层遮罩直接是暗的、不淡入 —— 一关一开时页面不会暗 → 亮 → 暗闪一下。 */
+/* 时间选择面板是 half 档:进 sheet-in 300 / 出 sheet-out 250,慢快慢,与 cy-sheet 同档(2026-10-23,原 350 / 220) */
+.ds--keep-mask .ds__mask { opacity: 1 !important; }
+.ds.ds--handoff-in .ds__mask { animation: none; }

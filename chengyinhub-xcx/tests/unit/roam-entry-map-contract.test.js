@@ -65,7 +65,9 @@ test('报名按钮使用白色 token，入口弹层按内容定高并统一透�
   assert.match(WXSS, /\.entry-sheet\.is-in\s*\{[^}]*translateY\(0\)/s)
   assert.doesNotMatch(WXML, /entrySheetExpanded|toggleEntrySheetHeight|onEntrySheetTouch/)
   assert.doesNotMatch(JS, /entrySheetExpanded|toggleEntrySheetHeight|onEntrySheetTouch/)
-  assert.match(WXSS, /\.entry-sheet\s*\{[^}]*--cy-motion-slow[^}]*--cy-ease-spring/s)
+  // 2026-10-23 业主确认弹层不回弹:入口半屏改走弹层规范的档位时长 + 慢快慢,不再是 slow + spring
+  assert.match(WXSS, /\.entry-sheet\s*\{[^}]*--cy-motion-sheet-out[^}]*--cy-ease-standard/s)
+  assert.doesNotMatch(WXSS, /\.entry-sheet\s*\{[^}]*--cy-ease-spring/s)
   assert.doesNotMatch(WXML, /entry-sheet__eyebrow|entry-activity__status|城市定向\s*·\s*报名中|>先报名</)
 })
 

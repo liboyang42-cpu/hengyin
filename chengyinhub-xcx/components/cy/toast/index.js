@@ -54,8 +54,8 @@ Component({
       if (!this.data.visible) return;
       if (this.data.reducedMotion) { this.setData({ visible: false, entered: false }); return; }
       this.setData({ entered: false });
-      // 220ms = --cy-motion-standard 的 JS 镜像(WXSS 变量 JS 读不到),与 .ct 的 transition 时长一致
-      this._exitTimer = setTimeout(() => { this._exitTimer = null; this.setData({ visible: false }); }, 220);
+      // 150ms = --cy-motion-toast-out 的 JS 镜像(WXSS 变量 JS 读不到),与 .ct 收起那条 transition 时长一致
+      this._exitTimer = setTimeout(() => { this._exitTimer = null; this.setData({ visible: false }); }, 150);
     },
     // 点「撤销」:不提交,交回调用方恢复界面
     onAction() {

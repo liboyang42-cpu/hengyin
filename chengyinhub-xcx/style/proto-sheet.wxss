@@ -13,8 +13,9 @@
    ⚠️ 用原型的 20/30 会让读数卡从压暗层里透出来(实拍见过:半屏上方露出「当前目标」一角)。 */
 .pdim{ position:fixed; left:0; right:0; top:0; bottom:0; z-index:60;
   background:rgba(0,0,0,.62); /* ds-ok 原型 .dim */
-  opacity:0; transition:opacity .2s linear; }
-.pdim.is-in{ opacity:1; }
+  /* 2026-10-23 业主定:弹层不回弹、慢快慢,按档位定速(tokens 的 --cy-motion-sheet-*);遮罩与面板同档同曲线(原 .2s linear) */
+  opacity:0; transition:opacity var(--cy-motion-sheet-out) var(--cy-ease-standard); }
+.pdim.is-in{ opacity:1; transition-duration:var(--cy-motion-sheet-in); }
 .psheet{ position:fixed; left:0; right:0; bottom:0; z-index:70; box-sizing:border-box;
   background:#000; border-radius:var(--cy-comp-sheet-radius) var(--cy-comp-sheet-radius) 0 0; /* ds-ok 原型 .sheet #000 / 28px */
   padding:0 var(--cy-page-x) calc(var(--cy-space-3) + env(safe-area-inset-bottom)); /* ds-ok 原型 padding:0 24px 22px */
@@ -28,10 +29,11 @@
      resolveMenuChrome)在页面根上给 --cy-psheet-max-h 传胶囊实测值时以它为准,拿不到才退回 token。 */
   max-height:min(var(--cy-comp-sheet-full), var(--cy-psheet-max-h, var(--cy-comp-sheet-max-height))); overflow-y:auto;
   transform:translateY(46rpx); opacity:0; /* ds-ok 原型 @keyframes up 的 24px */
-  transition:transform .26s cubic-bezier(.2,.82,.2,1), opacity .26s cubic-bezier(.2,.82,.2,1); }
-.psheet.is-in{ transform:none; opacity:1; }
+  /* 位移照原型(24px + 淡入)不改;时长 / 曲线并入弹层规范(原 .26s 自定义曲线) */
+  transition:transform var(--cy-motion-sheet-out) var(--cy-ease-standard), opacity var(--cy-motion-sheet-out) var(--cy-ease-standard); }
+.psheet.is-in{ transform:none; opacity:1; transition-duration:var(--cy-motion-sheet-in); }
 /* 半屏档:原型给这几屏设的 top 大致就是七成屏高 */
-.psheet--full{ height:min(var(--cy-comp-sheet-full), var(--cy-psheet-max-h, var(--cy-comp-sheet-max-height))); }
+.psheet--full{ --cy-motion-sheet-in:var(--cy-motion-sheet-full-in); --cy-motion-sheet-out:var(--cy-motion-sheet-full-out); height:min(var(--cy-comp-sheet-full), var(--cy-psheet-max-h, var(--cy-comp-sheet-max-height))); }
 .psheet--half{ max-height:min(var(--cy-comp-sheet-full), var(--cy-psheet-max-h, var(--cy-comp-sheet-max-height))); }
 /* ⚠️ 满屏档**不要**再给它让胶囊带。上面的 max-height 已经是
      calc(100vh - --cy-safe-top - 顶部留白),半屏是贴底的 ⇒ 它的上沿本来就落在胶囊下面。

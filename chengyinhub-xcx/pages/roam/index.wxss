@@ -76,8 +76,9 @@ page{ background:var(--cy-color-bg-page); }
 .entry-sheet{ background:var(--cy-comp-sheet-player-glass); backdrop-filter:blur(var(--cy-comp-sheet-blur)); -webkit-backdrop-filter:blur(var(--cy-comp-sheet-blur));
   padding-bottom:env(safe-area-inset-bottom);
   transform:translateY(100%) scale(.985); transform-origin:50% 100%;
-  transition:transform var(--cy-motion-slow) var(--cy-ease-spring), opacity var(--cy-motion-standard) var(--cy-ease-out); }
-.entry-sheet.is-in{ transform:translateY(0) scale(1); }
+  /* 2026-10-23 业主定:弹层不回弹、慢快慢,按档位定速(tokens 的 --cy-motion-sheet-*);原 350ms 弹簧曲线取消 */
+  transition:transform var(--cy-motion-sheet-out) var(--cy-ease-standard), opacity var(--cy-motion-sheet-out) var(--cy-ease-standard); }
+.entry-sheet.is-in{ transform:translateY(0) scale(1); transition-duration:var(--cy-motion-sheet-in); }
 .entry-sheet__head{ min-height:88rpx; margin-top:var(--cy-space-3); display:flex; align-items:flex-end; gap:var(--cy-space-2); }
 .entry-sheet__head-copy{ min-width:0; flex:1; display:flex; flex-direction:column; justify-content:center; }
 .entry-sheet__back{ flex:none; width:88rpx; height:88rpx; margin-left:calc(var(--cy-space-2) * -1); color:var(--cy-comp-sheet-player-text); display:flex; align-items:center; justify-content:center; }

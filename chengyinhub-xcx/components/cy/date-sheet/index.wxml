@@ -1,4 +1,4 @@
-<view class="ds {{reducedMotion ? 'ds--reduced-motion' : ''}} {{_closing ? 'ds--closing' : ''}}" wx:if="{{_render}}">
+<view class="ds {{reducedMotion ? 'ds--reduced-motion' : ''}} {{_closing ? 'ds--closing' : ''}} {{_keepMask ? 'ds--keep-mask' : ''}} {{_handoffIn ? 'ds--handoff-in' : ''}}" wx:if="{{_render}}">
   <view class="ds__mask" catchtouchmove="noop" bindtap="onMask" aria-role="button" aria-label="关闭{{title}}" hover-class="ds__mask--press" hover-stay-time="80"></view>
   <view class="ds-pop {{dark ? 'ds-pop--dark' : ''}}" style="{{panelStyle}}" catchtap="noop">
     <!-- 头部与 cy-sheet 同构:标题在左、右上角 ✕ 在右(CU-M-149)。

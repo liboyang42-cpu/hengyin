@@ -5037,7 +5037,7 @@ Page({
       cardHook: node.cardHook || ''
     });
     this.setData({
-      'sheet.show': true, 'sheet.node': sheetNode,
+      'sheet.show': true, sheetOut: false, 'sheet.node': sheetNode,
       'sheet.continueText': this.data.allDone ? '查看城市足迹卡' : '前往下一站'
     });
     // M6:开卡时相机平移,让选中节点落到上 1/3 视野(半屏大卡遮住下半屏时仍可见);无坐标节点优雅跳过
@@ -5075,7 +5075,7 @@ Page({
     if (n && !n.done && !this.data.isPreview && !this.data.isMock) {
       analytics.track('node_abandon', { bizType: 'topic', bizId: this.data.topicId, properties: { nodeId: n.nodeId, via: 'sheet' } });
     }
-    this.setData({ 'sheet.show': false });
+    this._outThen('sheet');
   },
   pickPreviewEnding(e) {
     const idx = Number(e.currentTarget.dataset.idx) || 0;
@@ -5369,7 +5369,7 @@ Page({
       return;
     }
     if (nodeOverride && nodeOverride.nodeId != null) {
-      this.setData({ 'sheet.node': nodeOverride, 'sheet.show': true }, () => this.startGame());
+      this.setData({ 'sheet.node': nodeOverride, 'sheet.show': true, sheetOut: false }, () => this.startGame());
       return;
     }
     this.stopAudio();
@@ -5463,7 +5463,7 @@ Page({
        放行,于是落到老任务页 —— 那屏只写了 vm 1/2/3/4/6,这三个进来只剩一屏
        标题文字、零按钮的死路。 */
       if (node.vm === 0 || node.vm === 5 || node.vm === 8 || node.vm === 9 || node.vm === 10) {
-        this.setData({ 'sheet.show': true });
+        this.setData({ 'sheet.show': true, sheetOut: false });
         this.onSheetGoTap();
       } else {
         this.startGame();
@@ -6364,7 +6364,7 @@ Page({
   // ---------- 旅程手记(原型 journalScreen:半屏 + 一行行 .kv) ----------
   openJournal() {
     this._endingEpoch = (this._endingEpoch || 0) + 1;
-    this.setData({ showJournal: true, journalDot: false, 'ending.show': false }, () => {
+    this.setData({ showJournal: true, journalOut: false, journalDot: false, 'ending.show': false }, () => {
       this.buildJournal();
     });
   },
@@ -6377,7 +6377,7 @@ Page({
   /* 自由探索的地图模式(原型 x-run):把卡包让开,露出本页本来就有的地图台、读数卡与底栏 ——
      它们原先被 mode!=2 一律关掉。地图那套是按城市定向写的,自由探索只借它的「看」,
      不借「一场会话」:所以底栏没有中键(原型 freeBar 的原话)。 */
-  closeJournal() { this.setData({ showJournal: false }); },
+  closeJournal() { this._outThen('journal'); },
 
   // FE-19 入场码:动态核销码,5 分钟有效,过期重开即重签发。
   // 拆两层(用户裁决:核销≠优惠券页):ensureTicket 只取码;展示层各自决定开哪个面。
@@ -8095,4 +8095,21 @@ Page({
     this.setData({ medalScreen: { show: true, items, title: shop ? '探店完成' : '主题通关', sub: (this.data.topicName ? this.data.topicName + ' · ' : '') + '获得 ' + items.length + ' 枚勋章' + (items.length > 1 ? '，点或拖动切换' : ''), stats: stats.slice(0, 4), record } });
   },
   onMedalRecords() { this.setData({ 'medalScreen.show': false }); },
+  // 2026-10-23 弹层动效:手动关闭的面板先挂 is-out 播退场(full 档 280ms = --cy-motion-sheet-full-out),
+  // 播完再卸载;减动效直接卸载。程序里一关一开的切换不走这里(那是直接换下一层,不叠)。
+  _outThen(which) {
+    const journal = which === 'journal';
+    const still = () => (journal ? this.data.journalOut : this.data.sheetOut);
+    const unmount = () => {
+      if (journal) this.setData({ journalOut: false, showJournal: false });
+      else this.setData({ sheetOut: false, 'sheet.show': false });
+    };
+    if (this.data.reducedMotion) { unmount(); return; }
+    if (still()) return;
+    if (journal) this.setData({ journalOut: true });
+    else this.setData({ sheetOut: true });
+    // 退场期间又被打开(打开处会把标记清回 false):不再卸载新开的那一层
+    setTimeout(() => { if (still()) unmount(); }, 280);
+  },
+
 });

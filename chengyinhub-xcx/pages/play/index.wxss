@@ -190,11 +190,15 @@ page { background: var(--cy-color-bg-page); }
 .mask.mask--story{z-index:108;} /* ds-ok 地点详情覆盖故事层106 */
 .sheet.sheet--story{z-index:109;} /* ds-ok 地点详情位于遮罩上 */
 .mask{ position:absolute; left:0; top:0; right:0; bottom:0; z-index:108;
-  background:rgba(0,0,0,.62); animation:fade .25s ease; } /* ds-ok 原型 .dim */
+  background:rgba(0,0,0,.62); animation:fade var(--cy-motion-sheet-full-in) var(--cy-ease-standard); } /* ds-ok 原型 .dim;2026-10-23 与面板同档同曲线(原 .25s) */
 .sheet{ position:absolute; left:0; right:0; bottom:0; z-index:109; background:#000000; /* ds-ok 原型 .sheet */
   border-radius:var(--cy-comp-sheet-radius) var(--cy-comp-sheet-radius) 0 0; /* ds-ok 原型 28px */
   /* 88% 在刘海机上顶边会落进胶囊行(12% 高≈101px vs 胶囊底≈103px)——与 .psheet 同法,页面根给实测值,取两者较小 */
-  height:min(var(--cy-comp-sheet-full), var(--cy-psheet-max-h, var(--cy-comp-sheet-max-height))); max-height:min(var(--cy-comp-sheet-full), var(--cy-psheet-max-h, var(--cy-comp-sheet-max-height))); overflow-y:auto; animation:sheetUp .4s var(--cy-ease-out); }
+  height:min(var(--cy-comp-sheet-full), var(--cy-psheet-max-h, var(--cy-comp-sheet-max-height))); max-height:min(var(--cy-comp-sheet-full), var(--cy-psheet-max-h, var(--cy-comp-sheet-max-height))); overflow-y:auto; animation:sheetUp var(--cy-motion-sheet-full-in) var(--cy-ease-standard); }
+/* 2026-10-23 弹层动效:手动关闭先播退场再卸载(index.js 的 _outThen);面板 full 档 280ms,遮罩同档 */
+.mask.is-out{ animation:none; opacity:0; transition:opacity var(--cy-motion-sheet-full-out) var(--cy-ease-standard); pointer-events:none; }
+.sheet.is-out{ animation:none; transform:translateY(105%); transition:transform var(--cy-motion-sheet-full-out) var(--cy-ease-standard); pointer-events:none; }
+.play--reduced-motion .mask, .play--reduced-motion .sheet{ animation:none; }
 .sheet-cover{ position:relative; height:364rpx; background: var(--cy-color-bg-elevated); display:flex; align-items:center; justify-content:center; }
 .sheet-cover image{ width:100%; height:100%; position:absolute; inset:0; } /* ds-ok Figma 实测(用户裁决字面值) */
 /* 原占位字在封面底上实测 3.68:1,不达 4.5 ⇒ 收编 text-tertiary(4.72:1) */

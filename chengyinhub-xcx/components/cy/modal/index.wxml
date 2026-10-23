@@ -1,4 +1,4 @@
-<view class="mo {{compact ? 'mo--compact' : ''}} {{reducedMotion ? 'mo--reduced-motion' : ''}} {{_closing ? 'mo--closing' : ''}}" wx:if="{{_render}}" catchtouchmove="noop" aria-hidden="{{!show || _closing}}">
+<view class="mo {{compact ? 'mo--compact' : ''}} {{reducedMotion ? 'mo--reduced-motion' : ''}} {{_closing ? 'mo--closing' : ''}} {{_keepMask ? 'mo--keep-mask' : ''}} {{_handoffIn ? 'mo--handoff-in' : ''}}" wx:if="{{_render}}" catchtouchmove="noop" aria-hidden="{{!show || _closing}}">
   <view class="mo__mask" bindtap="onMask" aria-role="button" aria-label="关闭当前面板" hover-class="cy-pressed" hover-stay-time="80"></view>
   <view class="mo__card">
     <!-- 统一右上角 X(用户规则:各类弹层关闭一律放右上角,底部按钮继续各自动作语义)。

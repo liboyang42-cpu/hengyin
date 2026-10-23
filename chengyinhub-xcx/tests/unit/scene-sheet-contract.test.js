@@ -24,7 +24,9 @@ test('scene-sheet exposes full/half shells and semantic close events', () => {
   assert.match(js, /dirty/)
   assert.match(js, /closeLabel/)
   assert.match(js, /closable:\s*\{ type: Boolean, value: true \}/)
-  assert.match(wxss, /--cy-motion-standard/)
+  // 2026-10-23 弹层动效:按档位定速,读 --cy-motion-sheet-in / -out(full 档在根节点重定义),不再是 standard 220
+  assert.match(wxss, /\.ss__panel\s*\{[^}]*transition:\s*transform var\(--cy-motion-sheet-out\) var\(--cy-ease-standard\)/)
+  assert.match(wxss, /\.ss--in \.ss__panel \{ transform: translateY\(0\); transition-duration: var\(--cy-motion-sheet-in\); \}/)
   assert.match(wxss, /box-shadow:\s*var\(--cy-sheet-inset-shadow\)/)
   assert.doesNotMatch(wxss, /--cy-motion-slow/)
   assert.match(wxss, /\.ss--full \.ss__panel\s*\{[\s\S]*height:\s*min\(var\(--cy-comp-sheet-full\), var\(--cy-comp-sheet-max-h, var\(--cy-comp-sheet-full-height\)\)\);/)

@@ -33,10 +33,10 @@ page { background: var(--cy-color-bg-page); }
    这里压在 WebGL 原生层上只能用 cover-view(chrome-spec 登记的例外),套不了组件,所以逐项抄它的令牌:
    满宽贴底、只有顶部圆角、无白色描边；标题、关闭热区和正文边距复用弹窗令牌。
    cover-view 做不了毛玻璃 ⇒ 底色取玩家弹层的实色档(--cy-comp-sheet-player-bg),不用半透明玻璃档。
-   缓动仍是用户指定的 Spring Animation。 */
+   缓动:2026-10-23 业主确认弹层不回弹,改走弹层规范的慢快慢(原为 Spring Animation)。 */
 .bw-veil { position: fixed; inset: 0; z-index: 40; background: var(--cy-comp-sheet-player-overlay);
-           opacity: 0; pointer-events: none; transition: opacity .28s ease; }
-.bw-veil.on { opacity: 1; pointer-events: auto; }
+           opacity: 0; pointer-events: none; transition: opacity var(--cy-motion-sheet-out) var(--cy-ease-standard); }
+.bw-veil.on { opacity: 1; pointer-events: auto; transition-duration: var(--cy-motion-sheet-in); }
 .bw-sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 41; box-sizing: border-box;
             transform: translateY(110%);
             background: var(--cy-comp-sheet-player-bg);
@@ -49,8 +49,9 @@ page { background: var(--cy-color-bg-page); }
                场景弹窗是 js 量胶囊底再算;这页根上已挂 --sbh/--nbh(状态栏 + 导航栏 = 胶囊底之下),直接用。
                token 版 --cy-comp-sheet-max-height 靠 env() 反算,模拟器/无刘海机上会顶过胶囊(实拍抓到)。 */
             max-height: min(var(--cy-comp-sheet-full), var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-max-height))); display: flex; flex-direction: column;
-            transition: transform .42s cubic-bezier(.34,1.28,.44,1); }
-.bw-sheet.on { transform: translateY(0); }
+            /* 2026-10-23 业主定:弹层不回弹、慢快慢,按档位定速(tokens 的 --cy-motion-sheet-*);原 .42s 过冲弹簧(1.28)取消 —— 业主 2026-10-23 确认去掉回弹 */
+            transition: transform var(--cy-motion-sheet-out) var(--cy-ease-standard); }
+.bw-sheet.on { transform: translateY(0); transition-duration: var(--cy-motion-sheet-in); }
 /* 标题行 = .ss__head:只放标题与叉,标题占满剩余宽度 */
 .bw-sh-hd { flex: none; display: flex; align-items: center; gap: var(--cy-space-2);
             padding: var(--cy-comp-sheet-header-pad-top) var(--cy-comp-sheet-header-pad-x) var(--cy-comp-sheet-header-pad-bottom); }

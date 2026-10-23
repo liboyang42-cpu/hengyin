@@ -440,3 +440,16 @@
 .sh--fixed-half .sh__panel { height: min(var(--cy-comp-sheet-half), var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-max-height))); }
 .sh--fixed-full .sh__panel { height: min(var(--cy-comp-sheet-full), var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-max-height))); }
 .sh--fixed .sh__body { flex: 1 1 auto; min-height: 0; }
+
+/* ═══ 2026-10-23 业主定:弹窗按档位定速 + 同一时刻只有一个弹层在动 ═══
+ * 档位类在根节点把 --cy-motion-sheet-in / -out 重定义成该档时长,面板与遮罩的进出场规则原样读这两条,
+ * 所以三档自动同档、退场仍短于进场。half 档不用写:就是 token 默认值 300 / 250。 */
+.sh--lv-peek { --cy-motion-sheet-in: var(--cy-motion-sheet-peek-in); --cy-motion-sheet-out: var(--cy-motion-sheet-peek-out); }
+.sh--lv-full { --cy-motion-sheet-in: var(--cy-motion-sheet-full-in); --cy-motion-sheet-out: var(--cy-motion-sheet-full-out); }
+/* 量高那一帧:面板和遮罩都不起跑、不可见,量完挂上档位类再一起升起(keyframes 从 none 换回才会从头播)。 */
+.sh.sh--measure .sh__panel,
+.sh.sh--measure .sh__mask { animation: none; visibility: hidden; }
+/* 交接(见 behaviors/exit-motion.js):被接替的那层遮罩保持全暗直到卸载 ——
+ * important 才压得过关键帧;接替的这层遮罩直接是暗的,不再淡入。页面不会暗 → 亮 → 暗闪一下。 */
+.sh--keep-mask .sh__mask { opacity: 1 !important; }
+.sh.sh--handoff-in .sh__mask { animation: none; }

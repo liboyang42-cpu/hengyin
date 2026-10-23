@@ -919,8 +919,8 @@
 <!-- 卡堆半屏已删除:选点统一走地点卡层(切换章节),入口在底栏与详情卡「换一处地点」 -->
 
 <!-- ===================== C. 节点详情卡 ===================== -->
-<view class="mask {{chapterFull ? 'mask--story' : ''}}" wx:if="{{sheet.show}}" bindtap="closeSheet" aria-role="button" aria-label="关闭面板" hover-class="cy-pressed" hover-stay-time="80"></view>
-<view class="sheet {{chapterFull ? 'sheet--story' : ''}}" wx:if="{{sheet.show}}">
+<view class="mask {{chapterFull ? 'mask--story' : ''}} {{sheetOut ? 'is-out' : ''}}" wx:if="{{sheet.show}}" bindtap="closeSheet" aria-role="button" aria-label="关闭面板" hover-class="cy-pressed" hover-stay-time="80"></view>
+<view class="sheet {{chapterFull ? 'sheet--story' : ''}} {{sheetOut ? 'is-out' : ''}}" wx:if="{{sheet.show}}">
   <view class="sheet-cover" bindtap="previewNodeImages" data-imgs="{{sheet.node.imgUrl}}" hover-class="cy-pressed" hover-stay-time="80">
     <image wx:if="{{sheet.node.imgUrl}}" src="{{img.first(sheet.node.imgUrl)}}" mode="aspectFill"></image>
     
@@ -1163,8 +1163,8 @@
      ⚠️ 正文没丢:每一行点进去还是原来那件全文半屏(openStory),换的是排版不是内容;
         未点亮的站仍然不给展开入口,防剧透那条规矩照旧。 -->
 <block wx:if="{{showJournal}}">
-<view class="mask" bindtap="closeJournal" aria-role="button" aria-label="合上旅程手记" hover-class="cy-pressed" hover-stay-time="80"></view>
-<view class="sheet" catchtap="noop">
+<view class="mask {{journalOut ? 'is-out' : ''}}" bindtap="closeJournal" aria-role="button" aria-label="合上旅程手记" hover-class="cy-pressed" hover-stay-time="80"></view>
+<view class="sheet {{journalOut ? 'is-out' : ''}}" catchtap="noop">
   <view class="sheet-grab"></view>
   <view class="sheet__x" catchtap="closeJournal" aria-role="button" aria-label="合上旅程手记" hover-class="cy-pressed" hover-stay-time="80"><view class="sheet__x-i"></view></view>
   <view class="sheet-body">

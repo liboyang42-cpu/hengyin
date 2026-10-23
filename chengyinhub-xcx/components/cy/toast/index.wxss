@@ -21,9 +21,11 @@
   pointer-events: none;
   opacity: 0;
   transform: translate(-50%, 16rpx);
-  transition: opacity var(--cy-motion-standard) var(--cy-ease-out), transform var(--cy-motion-standard) var(--cy-ease-out);
+  /* 2026-10-23 弹层动效:收起比出现快一档 —— 出现 standard(220)减速收尾,收起 toast-out(150)加速离场。
+     起点态(没有 .ct--in)上挂的是收起那条,.ct--in 上挂出现那条:transition 取的是目标态的声明。 */
+  transition: opacity var(--cy-motion-toast-out) var(--cy-ease-accelerate), transform var(--cy-motion-toast-out) var(--cy-ease-accelerate);
 }
-.ct.ct--in { opacity: 1; transform: translate(-50%, 0); }
+.ct.ct--in { opacity: 1; transform: translate(-50%, 0); transition: opacity var(--cy-motion-standard) var(--cy-ease-out), transform var(--cy-motion-standard) var(--cy-ease-out); }
 .ct.ct--reduced-motion { transition: none; }
 .ct__icon { flex: none; }
 .ct--success .ct__icon { color: var(--cy-color-status-success); }

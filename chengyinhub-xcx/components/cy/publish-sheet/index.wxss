@@ -92,3 +92,7 @@
 }
 
 .ps--merchant .ps__mask { background: var(--cy-comp-publish-merchant-glass); }
+/* 2026-10-23 交接(见 behaviors/exit-motion.js):被接替的那层遮罩保持全暗直到卸载(important 才压得过关键帧),
+   接替的这层遮罩直接是暗的、不淡入 —— 一关一开时页面不会暗 → 亮 → 暗闪一下。 */
+.ps--keep-mask .ps__mask { opacity: 1 !important; }
+.ps--quick.ps--handoff-in .ps__mask { transition: none; }

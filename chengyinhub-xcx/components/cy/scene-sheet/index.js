@@ -1,8 +1,15 @@
 const app = getApp();
 const { resolveMenuChrome } = require('../../../utils/nav-safe-area.js');
+const exitMotion = require('../../../behaviors/exit-motion.js');
+
+/* 2026-10-23 业主定:场景弹窗也要退场动画(原来 wx:if 直连 show,关闭瞬间消失),并按档位定速、
+ * 参与 exit-motion 的交接(同一时刻只有一个弹层在动)。half 档 300 / 250,full 档 340 / 280,
+ * 退场计时器是 --cy-motion-sheet-*-out 的 JS 镜像。进出场走 transition(_in 开关),不占 keyframes 棘轮。 */
+const LEVEL_EXIT_MS = { half: 250, full: 280 };
 
 Component({
   options: { multipleSlots: true },
+  behaviors: [exitMotion(250)],
   properties: {
     show: { type: Boolean, value: false },
     variant: { type: String, value: 'full' }, // full(T3) | half(T1)
@@ -21,6 +28,7 @@ Component({
     navRight: 0,
     closeLabel: '关闭当前场景',
     panelTopPx: 0,
+    _in: false,
   },
   observers: {
     title(value) {
@@ -47,6 +55,12 @@ Component({
     },
   },
   methods: {
+    // exit-motion 钩子:挂载时落在起点态,渲染完成后置 _in 让 transition 起跑
+    _enterData() {
+      this._exitMs = LEVEL_EXIT_MS[this.data.variant === 'half' ? 'half' : 'full'];
+      return { _in: false };
+    },
+    _afterEnter() { this.setData({ _in: true }); },
     noop() {},
     onBack() { this.triggerEvent('back'); },
     onMask() {

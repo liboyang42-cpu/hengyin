@@ -1440,7 +1440,7 @@ Page({
     if (this.data.selfPlayConfirmLoading || !this.data.selfPlayConfirmShow) return;
     if (this.data.reducedMotion) { this.setData({ selfPlayConfirmShow: false, buyIn: false }); return; }
     this.setData({ buyIn: false });
-    this._later(320, () => { if (!this.data.buyIn) this.setData({ selfPlayConfirmShow: false }); });
+    this._later(250, () => { if (!this.data.buyIn) this.setData({ selfPlayConfirmShow: false }); }); // 250 = --cy-motion-sheet-out
   },
 
   // 后端 /api/registration/create 与 /pay 硬校验「报名信息单独同意」已落库(activity_host_data_sharing /
