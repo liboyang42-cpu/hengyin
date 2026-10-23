@@ -106,10 +106,11 @@ mvn -pl chengyinhub-system,chengyinhub-admin -am test \
 ```
 
 环境：OpenJDK 21.0.12.1 · Maven 3.8.7 · 隔离内存夹具 · 无 MySQL / HTTP / 生产库。  
-真实结果（2026-10-23T20:13:52Z，`BUILD SUCCESS`）：
+真实结果（2026-10-23T23:01:37Z，`BUILD SUCCESS`）：
 
 ```
 Tests run: 2, Failures: 0, Errors: 0, Skipped: 0 -- C03FirstJourneyIsolationTest
+Tests run: 5, Failures: 0, Errors: 0, Skipped: 0 -- C03MechanismAccountSwitchRestartIsolationTest
 Tests run: 4, Failures: 0, Errors: 0, Skipped: 0 -- TradeBargainConsumerTest
 Tests run: 2, Failures: 0, Errors: 0, Skipped: 0 -- ProgressClockConsumerTest
 Tests run: 3, Failures: 0, Errors: 0, Skipped: 0 -- OracleBountyConsumerTest
@@ -117,11 +118,21 @@ Tests run: 3, Failures: 0, Errors: 0, Skipped: 0 -- OathFlashbackConsumerTest
 Tests run: 3, Failures: 0, Errors: 0, Skipped: 0 -- RouteCommunityDayConsumerTest
 Tests run: 3, Failures: 0, Errors: 0, Skipped: 0 -- ClueSecretGoalConsumerTest
 Tests run: 3, Failures: 0, Errors: 0, Skipped: 0 -- MechanismRequestIdBinderTest
-Tests run: 23, Failures: 0, Errors: 0, Skipped: 0
+Tests run: 28, Failures: 0, Errors: 0, Skipped: 0
 BUILD SUCCESS
 ```
 
-DB / HTTP / App / CI = **NOT_RUN**。Head：`df16aa70c`（本文件再提交会前进）。
+SHA256（生产 7 类，`b7dfe4d90`）：
+
+- `MechanismRequestIdBinder.java` `c07031d65ccf6406157108436a1d741848b0eed0cda241a42366c224e5e0bc34`
+- `ProgressClockConsumer.java` `ac44d4c1c98e3892068a7bf99db25d8333d9432b66359eee7877855abe0e24a8`
+- `TradeBargainConsumer.java` `6985baf14d04a5652e701989b7d70d23073efbb98833417ace61dd9d3fd97673`
+- `OracleBountyConsumer.java` `7838748b5363bf9b838c0396089c8a47695b5d2feaac323849260646226d1cbe`
+- `OathFlashbackConsumer.java` `44a428db91f9e0a3318de4bf06ae070e581a8eeae45ab464edcfd24fb46bc04b`
+- `RouteCommunityDayConsumer.java` `48a591d5885b4bb326b7286baa40ca42d328d22d510295add8e3329f14933968`
+- `ClueSecretGoalConsumer.java` `623032de196be5690493786e7fbb47870849235cc073bcac1f808d54536fac04`
+
+DB / HTTP / App / CI = **NOT_RUN**。Head：`b7dfe4d90`（本文件再提交会前进）。
 
 ## 5. 未确认决策（不编造标准答案或经济值）
 
@@ -138,4 +149,4 @@ DB / HTTP / App / CI = **NOT_RUN**。Head：`df16aa70c`（本文件再提交会�
 - 不要新表、新钱包、新 request 唯一键、新 Controller。
 - 不要把未启用机制做成「按钮 / port / 默认拒绝冒充完成」；未启用是作者没选，启用后必须真写效果。
 - 不要把 UNKNOWN 投影成 APPLIED，也不要为恢复 mint 新 requestId。
-- 不要对未见过的 requestId 做 `recoverUnknown` 时 `bind`/`put` 进账本；那会让后续唯一写入变成对 mint 出的 UNKNOWN 的 recover。未见过的 id 只回 UNKNOWN 且 `existing==null`。
+- 不要对未见过的 requestId 做 `recoverUnknown` / `recoverOriginal` 时 `bind`/`put` 进账本；那会让后续唯一写入变成对 mint 出的 UNKNOWN 的 recover。未见过的 id 只回 UNKNOWN 且 `existing==null`。`recoverOriginal` 对齐 iOS，委托 `recoverUnknown`。缺 requestId 仍抛（与 iOS `requireRequestID` 一致）。
