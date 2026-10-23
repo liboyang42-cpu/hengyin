@@ -1,0 +1,50 @@
+{
+  "repository": "liboyang42-cpu/hengyin",
+  "reviewed_commit": "6788c741c43d9516aa7c691ca93110677c7e1acb",
+  "parent": "af712b5a9d93df8ab4a6ab5d29fc791a5369cd0f",
+  "changes": [
+    "ci/prelaunch-seed-provenance.json",
+    "docs/delivery/architecture-day/COORDINATOR/af712-gate-followup.json"
+  ],
+  "controller_path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsRegistrationController.java",
+  "controller_blob": "c824a38adc2bf9cab14d66adc63af6c7ebcf173d",
+  "controller_sha256": "07724d3f3217833271389adcb73e6e10b13d97332cdf0a5e71fe1d522ecb7a85",
+  "provenance_blob": "d51c099e04825f6ec8ca0a7811c05bb2d54e163e",
+  "provenance_source_sha256": "07724d3f3217833271389adcb73e6e10b13d97332cdf0a5e71fe1d522ecb7a85",
+  "annotation_comparison": {
+    "base": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+    "types": [
+      "RequestMapping",
+      "GetMapping",
+      "PostMapping",
+      "PutMapping",
+      "DeleteMapping",
+      "PatchMapping",
+      "PreAuthorize",
+      "Secured",
+      "RolesAllowed"
+    ],
+    "count": 21,
+    "byte_identical": true,
+    "layer": "STATIC_SOURCE_ONLY"
+  },
+  "production_changed_by_commit": false,
+  "sql_role_grant_files_changed_by_commit": false,
+  "open_findings": [
+    "H-A136-01",
+    "H-A136-02"
+  ],
+  "no_additional_confirmed_P1_P2": true,
+  "not_verified": [
+    "Spring method security invocation with real identities",
+    "negative HTTP authorization matrix",
+    "real Dispatch concurrent transaction and rollback",
+    "new H two-test regression",
+    "whole-candidate permission acceptance"
+  ],
+  "root_reported_prelaunch_contracts": {
+    "tests": 8,
+    "failures": 0,
+    "independently_executed_by_H": false
+  }
+}

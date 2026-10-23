@@ -91,3 +91,13 @@
 独占交付文件：本报告、`candidate-bindings.json`、`mysql-evidence.json`、`mysql-rerun-evidence.json`、`static-evidence.json`、`economic-basis-and-admin-delete.review.patch`。patch 只提供给集成人安排受控 CI，不自动应用到 A 文件；原8项复跑已修好资源名，新SQL反例仍未执行。若两个反例均接纳，ControllerSafety 10→11，MerchantCancellation 8→9；原编排 43 不可原数照抄。
 
 无 schema 变更，无 DDL 执行。回退本 H 报告/未应用 patch 没有运行影响；回退 A 状态剥离/取消 CAS 会重开已修漏口，不是安全降级方案。若确认线上已有被后台改写的积分/库存依据，应先按原账本核对，不能批量猜默认值、清库或删除资金记录。本轮没有为这些历史修复制定新业务规则。
+
+## root6788 后续独立核对
+
+公开源 `6788c741c43d9516aa7c691ca93110677c7e1acb` 的 parent 为 `af712b5a9d93df8ab4a6ab5d29fc791a5369cd0f`。独立读取 commit、provenance 和 Controller 实体：只改 `ci/prelaunch-seed-provenance.json` 的该 Controller 一个 source hash，另增协调报告；没有修改生产、SQL、role/grant。源码 blob 仍是 A136 的 `c824a38adc2bf9cab14d66adc63af6c7ebcf173d`，实际 SHA-256 与 provenance 均为 `07724d3f3217833271389adcb73e6e10b13d97332cdf0a5e71fe1d522ecb7a85`。抽取路由/权限注解后与公共2ec逐字比较，21条全部相同，见 `provenance-6788-evidence.json`。
+
+这证明来源指纹修正对应真实已变源码、未在本提交增删声明权限；**不证明原权限设计充分、RBAC实际接线生效或全域越权负例通过**。协调者报告的8条来源合同测试没有由H重复执行，不提升其证据层级。
+
+继续追全部报名编辑/取消/选中/删除调用者，未确认新的可证 P1/P2；H-A136-01、02 在这个相同生产 blob 下仍存在。补充限制：商家后台 select/remove 使用现有 `TopicOperationsScopeAuthorizer`，其实际实现仅固定超管 userId=1有全局topic scope；所以 H-A136-02 的准确触发者是获准主题范围的后台账号（当前即超管），不是普通商家或仅猜有菜单权限的账号。状态竞争不能因触发者拥有后台权限而被当作已中标可删。H-A136-01 则需要报名 edit 权限，未声称任意未授权玩家可直接修改经济字段。
+
+旧dde91初始化失败、新1dc取消8项通过的两源证据继续保留。H新增两个反例仍未编译/执行；真实HTTP身份与授权矩阵、跨聚合支付竞争、完整Dispatch锁序与失败回滚仍未知。root完整CI的其他owner缺口及C最终session→intent边界未在本A审查中代签。
