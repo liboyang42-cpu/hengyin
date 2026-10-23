@@ -314,8 +314,8 @@ Page({
     introCards: [
       { key: 'start', icon: 'route', title: '开始漫游', sub: '走到哪，雾散到哪' },
       { key: 'map', nav: '/subpackageRoam/nearby/index', icon: 'map', title: '打开地图', sub: '寻找组队' },
-      { key: 'my-teams', nav: '/subpackageRoam/nearby/index?sheet=mine', icon: 'tab-club', title: '我的队伍', sub: '查看已加入和申请中的队伍' },
-    ],
+      { key: 'my-teams', nav: '/subpackageRoam/nearby/index?sheet=mine', icon: 'tab-club', title: '我的队伍', sub: '已加入 · 申请中' },
+    ], introStartLive: '', introTeamsLive: '附近正在组队', // 卡片实时行只放页面已有真数据;空串=隐藏,不摆占位
     boundEvent: null, // 官方活动绑定横幅(带 eventId 进入时显示)
     // V2 活动叠层只在玩家显式从活动进入或重新打开时显示；关闭后不影响日常漫游。
     eventOverlay: { show: false, missions: [], points: [], feedback: null },
@@ -5668,7 +5668,7 @@ Page({
   _entryIdentity() { return [readSession.memberId(getApp()), (getApp().globalData || {}).authorization || ''].join('|'); },
   _clearEntryRead() {
     this._entryItems = []; this._entryTeams = [];
-    this.setData({ entryMarkers: [], entryCards: [], searchPlaces: [], entryActivity: null, entryTeam: null, entrySheet: '' });
+    this.setData({ introTeamsLive: '附近正在组队', entryMarkers: [], entryCards: [], searchPlaces: [], entryActivity: null, entryTeam: null, entrySheet: '' });
   },
   loginForEntryRead() {
     if (this.data.entryReadAccess === 'denied') return;
@@ -5724,7 +5724,7 @@ Page({
     const app = getApp();
     const getImgUrl = typeof app.getImgUrl === 'function' ? app.getImgUrl.bind(app) : (url) => url;
     const view = entryMap.build(this._entryItems, this._entryTeams, this.data.entryLayers, getImgUrl);
-    this.setData({ entryMarkers: view.markers, entryCards: view.cards, searchPlaces: view.searchPlaces });
+    this.setData({ entryMarkers: view.markers, entryCards: view.cards, searchPlaces: view.searchPlaces, introTeamsLive: this._entryTeams.length ? '附近 ' + this._entryTeams.length + ' 支队伍在组队' : '附近正在组队' });
   },
   _showEntrySheet(entrySheet, entryActivity) {
     this.setData({ entrySheet, entryActivity: entryActivity || null, entryTeam: null, entrySheetView: 'main', entrySheetIn: false }, () => {

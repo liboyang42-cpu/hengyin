@@ -35,7 +35,8 @@ test('创建引导、命名与编辑器采用克制的一次性入场动效', ()
   const namingWxss = read('pages/publish/templateadd/templateadd.wxss');
   const editorWxss = read('pages/publish/temp/index.wxss');
 
-  assert.equal(hasEntryMotion(introWxss, ['.ti-card--0', '.ti-card--1', '.ti-card--2', '.ti-copy', '.ti-cta']), true);
+  // 2026-10-22 owner 定稿:三张扇形卡换成整屏漂浮圆圈画布(.ti-field)
+  assert.equal(hasEntryMotion(introWxss, ['.ti-field', '.ti-copy', '.ti-cta']), true);
   assert.equal(hasEntryMotion(namingWxss, ['.fbox_sr', '.ta-cta']), true);
   assert.equal(hasEntryMotion(editorWxss, ['.cg-scroll']), true);
 });
@@ -79,5 +80,5 @@ test('负控：任一入场动效退回无限循环时契约必须判红', () =>
   const mutated = introWxss.replace(/\bboth\b/, 'infinite');
 
   assert.notEqual(mutated, introWxss, '负控必须真实改动 animation iteration/fill');
-  assert.equal(hasEntryMotion(mutated, ['.ti-card--0', '.ti-card--1', '.ti-card--2', '.ti-copy', '.ti-cta']), false);
+  assert.equal(hasEntryMotion(mutated, ['.ti-field', '.ti-copy', '.ti-cta']), false);
 });

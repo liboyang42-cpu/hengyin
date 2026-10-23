@@ -18,7 +18,7 @@ Component({
     danger:      { type: Boolean, value: false },  // 危险行(如"退出账号"):标题用 status-danger
     hairline:    { type: Boolean, value: true },   // 底部发丝分割线,组内末行可关
     openType:    { type: String,  value: '' },     // 透传微信 open-type(如 "contact")
-    tint:        { type: String,  value: '' },     // Leading 图标染色变体:'mono'=单色描边(暗底页把深色线性图标统一染白,免逐图做暗色资产)
+    tint:        { type: String,  value: '' },     // Leading 图标染色变体:'mono'=单色描边(暗底页统一染白);'ink'=浅底页统一染成文字色
   },
   methods: {
     onTap() { if (!this.data.disabled) this.triggerEvent('tap', {}, {bubbles:this.data.bubbleTap, composed:this.data.bubbleTap}); },

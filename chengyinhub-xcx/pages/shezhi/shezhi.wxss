@@ -132,29 +132,6 @@ page { background-color: var(--cy-bg-page); }
    沿用同文件 .sz-card-row-icon(第 52 行)与 cy-cell tint="mono" 的既有手法。 */
 .sz-logout-icon { width: 34rpx; height: 34rpx; filter: brightness(0) invert(0.9); }
 
-.sz-attribution {
-  margin: var(--cy-space-5) var(--cy-page-x) 0;
-  padding: var(--cy-space-4);
-  border-radius: var(--cy-radius-lg);
-  background: var(--cy-color-bg-elevated);
-}
-.sz-attribution__title {
-  margin-bottom: var(--cy-space-3);
-  color: var(--cy-color-text-primary);
-  font-size: var(--cy-type-card-title);
-  font-weight: 700;
-}
-.sz-attribution__name,
-.sz-attribution__body,
-.sz-attribution__link {
-  font-size: var(--cy-type-label);
-  line-height: var(--cy-leading-normal);
-}
-.sz-attribution__name { color: var(--cy-color-text-primary); }
-.sz-attribution__body { margin-top: var(--cy-space-1); color: var(--cy-color-text-secondary); }
-.sz-attribution__link { margin-top: var(--cy-space-2); color: var(--cy-color-text-secondary); text-decoration: underline; }
-.sz-attribution__divider { height: 1rpx; margin: var(--cy-space-3) 0; background: var(--cy-color-border-subtle); }
-
 .reg-mask.show { opacity: 1; visibility: visible; }
 .reg-sheet.show { transform: translateY(0); }
 .reg-opt {
@@ -198,14 +175,17 @@ page { background-color: var(--cy-bg-page); }
 .theme-merchant .sz-card {
   background: var(--cy-color-bg-elevated);
 }
-.theme-merchant .sz-attribution { background: var(--cy-color-bg-elevated); }
 .theme-merchant .sz-card-edit {
   background: var(--cy-color-bg-surface-subtle);
   border-color: var(--cy-color-border-subtle);
 }
-.theme-merchant .sz-card-row-icon,
-.theme-merchant .sz-logout-icon {
+.theme-merchant .sz-card-row-icon {
   filter: none;
+}
+/* 退出账号图标与菜单图标同色:商户浅底下取文字色(与 cy-cell tint=ink 同一做法) */
+.theme-merchant .sz-logout-icon {
+  filter: brightness(0);
+  opacity: 0.78;
 }
 .theme-merchant .sz-card-edit image {
   filter: brightness(0);

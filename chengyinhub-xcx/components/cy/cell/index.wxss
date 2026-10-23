@@ -21,6 +21,8 @@
 }
 /* tint=mono:把深色线性图标统一染成前景色描边(暗底页图标可见且风格一致) */
 .cell--tint-mono .cell__icon { filter: brightness(0) invert(1); }
+/* tint=ink:浅底页(商家)把各色图标统一染成文字色,不保留各图自带的灰/蓝 */
+.cell--tint-ink .cell__icon { filter: brightness(0); opacity: 0.78; }
 
 .cell__body { flex: var(--cy-comp-cell-label-flex, 1); min-width: var(--cy-comp-cell-label-width, 0); }
 .cell__title {

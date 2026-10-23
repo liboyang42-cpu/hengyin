@@ -218,16 +218,6 @@ Page({
     wx.navigateTo({ url: '/pages/shezhi/about/index' });
   },
 
-  copyAttributionLink(e) {
-    const link = (e.currentTarget.dataset || {}).link;
-    if (!link) return;
-    wx.setClipboardData({
-      data: link,
-      success() { toast('来源地址已复制'); },
-      fail() { toast('复制失败，可长按选中地址'); },
-    });
-  },
-
   openScene(id, params = {}) {
     if (id === 'settings-profile' && this.data.isMerchantView) {
       this.goUserInfo();

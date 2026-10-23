@@ -19,7 +19,7 @@
         <view class="greet-line"><text>Hi，</text><text>{{storeName || '店主'}}</text></view>
         <text class="greet-tip">欢迎回来，看看城瘾这段时间为你带来了什么</text>
         <text class="gen-at" wx:if="{{loading}}" aria-role="status">正在更新经营数据…</text>
-        <text class="gen-at" wx:elif="{{generatedAt}}">生成于 {{generatedAt}} · 次日更新</text>
+        <!-- 2026-10-23 业主:删去「生成于 … · 次日更新」 -->
       </view>
       <cy-avatar class="greet-avatar" size="112" bordered shape="circle" src="{{profile.logo || ''}}" name="{{storeName || '店'}}" />
     </view>
@@ -66,7 +66,7 @@
         <view class="trio-cell"><text class="trio-k">核销</text><text class="trio-v">{{valueCard.redeems}}</text></view>
       </view>
 
-      <view class="seg-row seg-row--value" wx:if="{{valueCard}}" aria-hidden="true">
+      <view class="seg-row seg-row--value" wx:if="{{valueCard && valueCard.segs[0].on}}" aria-hidden="true">
         <view class="seg-pip {{seg.on || pipSweep ? 'seg-pip--on' : ''}}" wx:for="{{valueCard.segs}}" wx:for-item="seg" wx:key="index"
               style="transition-delay: {{(pipSweep ? 400 : 0) + index * 45}}ms;"></view>
       </view>
@@ -78,9 +78,9 @@
                     title="基础数据暂未完整返回"
                     sub="不会用 0 代替缺失的到店、打卡或核销数据"
                     primary="重新加载" bind:primary="retry" />
-    <cy-empty wx:elif="{{factState === 'empty'}}" kind="empty" title="还没有到店数据"
-              sub="先去合作中心承接一个主题，玩家到店打卡后这里就有数据了"
-              cta="去合作中心看看" bind:cta="goCoopCenter" />
+    <!-- 2026-10-23 业主:服务端明确全零时不再出零数据引导卡(业务空态 + 跳合作中心按钮),
+         上方三格照常显示 0,下方各分区按「没有就不显示」各自隐藏(empty 与 ready 走同一分支)。
+         ⚠️ 缺字段(unknown)仍走上面的重试态,不拿 0 冒充缺失。 -->
 
     <block wx:else>
       <!-- 到店时段(facts.checkin.slotBuckets 早/午/晚/夜):柱子从底部长出,最高柱深色斜纹 -->
@@ -180,11 +180,11 @@
                 </view>
                 <text class="tcard-reason">{{item.reason || '平台招商中的自由探索主题'}}</text>
                 <view class="tcard-foot">
-                  <view class="tcard-stats">
-                    <view class="tcard-stat" wx:if="{{item.dateText}}"><cy-icon name="calendar" size="28" /><text>{{item.dateText}}</text></view>
-                    <view class="tcard-sep" wx:if="{{item.dateText && item.hostName}}"></view>
-                    <view class="tcard-stat tcard-stat--host" wx:if="{{item.hostName}}"><cy-icon name="flag" size="28" /><text class="tcard-host">{{item.hostName}}</text></view>
-                  </view>
+                  <!-- 2026-10-23 业主:卡面只写标题和描述,删去左下角场次/主办(「城瘾官方」)一行。
+                       场次与主办仍在点开后的详情弹层里,同名主题在弹层里分得开。
+                       「看看」靠 margin-left:auto 留在右侧。
+                       本段占位注释保持行号不变,动作台账锚点不平移。
+                  -->
                   <view class="tcard-cta">看看</view>
                 </view>
               </view>
@@ -214,7 +214,7 @@
     </block>
 
     <!-- 经营解读(AI 可降级,数据区不连坐) -->
-    <view class="sec-head mi-in" style="transition-delay: 480ms;"><text class="sec-title">经营解读</text></view>
+    <view class="sec-head mi-in" wx:if="{{ai}}" style="transition-delay: 480ms;"><text class="sec-title">经营解读</text></view>
     <view wx:if="{{ai}}" class="ai-card">
       <text class="ai-lowsample" wx:if="{{facts.lowSample}}">数据还少，以下解读仅供参考</text>
       <text class="ai-summary">{{ai.summary}}</text>
@@ -227,13 +227,14 @@
       <!-- PC-233:智能解读与当日缓存同版——喂 AI 的是生成时的经营数据与档案,今天改档案对解读次日生效 -->
       <text class="ai-source" wx:if="{{generatedAt}}">解读依据 {{generatedAt}} 的经营数据与当时的档案；今天修改的档案次日生效</text>
     </view>
-    <view wx:else class="ai-card ai-card--down">
-      <text class="ai-down-title">{{factState === 'unknown' ? '基础数据暂未完整返回' : '基础数据可用'}}</text>
-      <cy-inline-error load-failure class="ai-down-txt" kind="data"
-        title="智能解读暂不可用" sub="{{aiError || '请稍后重试'}}{{factState === 'unknown' ? '' : '，上方经营数据不受影响'}}" />
-      <view class="ai-down-action" bindtap="retry" hover-class="cy-pressed" hover-stay-time="80"
-            aria-role="button" aria-label="重新生成经营解读">重新生成解读</view>
-    </view>
+    <!-- 2026-10-23 业主:没有解读就整段不显示(连标题),
+         不再出 AI 降级卡(降级说明 + 重新生成按钮)。
+         每次回到本页 onShow 都会重新 load(),解读随之重新请求。
+         数据区本来就不连坐,这里只是少画一张卡。
+
+
+
+    -->
   </view>
 
   <!-- 推荐主题详情弹层:卡片原位形变(ghost)→ 弹层;按钮带 topicId 去合作中心 -->

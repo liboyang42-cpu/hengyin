@@ -1,5 +1,5 @@
 <view class="ds {{reducedMotion ? 'ds--reduced-motion' : ''}} {{_closing ? 'ds--closing' : ''}}" wx:if="{{_render}}">
-  <view class="ds__mask" bindtap="onMask" aria-role="button" aria-label="关闭{{title}}" hover-class="ds__mask--press" hover-stay-time="80"></view>
+  <view class="ds__mask" catchtouchmove="noop" bindtap="onMask" aria-role="button" aria-label="关闭{{title}}" hover-class="ds__mask--press" hover-stay-time="80"></view>
   <view class="ds-pop {{dark ? 'ds-pop--dark' : ''}}" style="{{panelStyle}}" catchtap="noop">
     <!-- 头部与 cy-sheet 同构:标题在左、右上角 ✕ 在右(CU-M-149)。
          2026-09-19 用户裁决:弹层退出口只留右上角 ✕,原来的左上「取消」退役 ——

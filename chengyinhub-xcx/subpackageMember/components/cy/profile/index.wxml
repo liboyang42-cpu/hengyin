@@ -67,7 +67,7 @@
           <view class="pc-gamer-meta">
             <text class="pc-gamer-slogan" wx:if="{{subjectIsMerchant && subjectMerchant.slogan}}">{{subjectMerchant.slogan}}</text>
             <block wx:if="{{!subjectIsMerchant}}">
-              <view class="pc-gamer-loc"><cy-icon name="gps" size="24" />{{cityName}}</view>
+              <view class="pc-gamer-loc" wx:if="{{cityName && cityName !== '—'}}"><cy-icon name="gps" size="24" />{{cityName}}</view>
               <text class="pc-gamer-streak" wx:if="{{isSelf && profileMetricState === 'ready'}}">连续探索：{{streakDays || 0}}天</text>
             </block>
           </view>
@@ -146,18 +146,26 @@
 
       <!-- ===== TAB · 项目 ===== -->
       <block wx:if="{{isSelf && activeTab === 'projects'}}">
+        <block wx:if="{{orderPreviewList.length || orderErr}}">
         <view class="pc-sec-head" aria-label="{{orderAuthError ? '订单登录状态失效，请重新进入' : ''}}">
           <text class="pc-sec-tit pc-sec-tit--flush pc-sec-tit--sm">我的订单</text>
           <view class="pc-sec-link" bindtap="goOrder" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="查看订单详情"><text>查看详情</text><cy-icon name="arrow-right" size="26" /></view>
         </view>
         <scroll-view wx:if="{{orderPreviewList.length}}" class="pc-hscroll" scroll-x enhanced show-scrollbar="{{false}}">
           <view class="pc-hscroll-inner">
-            <view class="pc-proj-card" wx:for="{{orderPreviewList}}" wx:key="id" bindtap="onOrderPreviewTap" data-id="{{item.id}}" hover-class="cy-pressed" hover-stay-time="80">
-              <view class="pc-proj-body">
-                <view class="pc-proj-title">{{item.title}}</view>
-                <view class="pc-proj-sub">{{item.sub}}</view>
+            <view class="pc-ord-card {{ordFly}}" style="animation-delay: {{index < 5 ? index * 40 : 200}}ms" wx:for="{{orderPreviewList}}" wx:key="id" bindtap="onOrderPreviewTap" data-id="{{item.id}}" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="{{item.statusText}}：{{item.title}}">
+              <!-- 2026-10-22 owner 参考图:整卡封面铺满,下半段黑色渐变压暗,文字与按钮叠在渐变上 -->
+              <image wx:if="{{item.cover}}" class="pc-ord-cover__img" src="{{item.cover}}" mode="aspectFill" lazy-load="true" />
+              <view class="pc-ord-shade"></view>
+              <view class="pc-ord-tag pc-ord-tag--{{item.statusTone}}">{{item.statusText}}</view>
+              <view class="pc-ord-body">
+                <view class="pc-ord-title">{{item.title}}</view>
+                <view class="pc-ord-meta" wx:if="{{item.timeText}}">{{item.timeText}}</view>
+                <view class="pc-ord-foot">
+                  <view class="pc-ord-stat" wx:if="{{item.ticketText}}"><cy-icon name="coupon" size="30" /><text>{{item.ticketText}}</text></view>
+                  <view class="pc-ord-btn pc-ord-btn--{{item.statusTone}}">{{item.actionText}}</view>
+                </view>
               </view>
-              <image wx:if="{{item.cover}}" class="pc-proj-thumb" src="{{item.cover}}" mode="aspectFill" lazy-load="true" />
             </view>
           </view>
         </scroll-view>
@@ -165,7 +173,7 @@
           title="{{orderAuthError ? '登录未成功' : '订单暂时没加载出来'}}"
           sub="{{orderAuthError ? '请重新进入小程序，再查看本人订单' : '已加载的订单仍为你保留，点重试即可'}}"
           retry="重试" bind:retry="reloadOrders" />
-        <cy-empty wx:elif="{{orderLoaded && !orderErr}}" title="暂无订单" sub="去探索城市活动，报名后即可在这里查看" />
+        </block>
 
         <!-- C7:唯一管理入口(原「我的模板」section 并入我的项目页的模板 tab);角标=未通过+审核中 -->
         <block wx:if="{{projectPreviewList.length || projectErr}}">

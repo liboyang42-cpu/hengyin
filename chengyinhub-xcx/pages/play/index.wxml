@@ -118,7 +118,7 @@
     </view>
   </view>
   <!-- 游玩工具:2026-09-22 起从底栏抽屉转移到故事流右上角(用户裁决)。行内容一行未改,只换了容器与定位。 -->
-  <view class="tools-mask" wx:if="{{sessionToolsOpen}}" bindtap="toggleSessionTools" aria-role="button" aria-label="收起游玩工具" hover-class="cy-pressed" hover-stay-time="80"></view>
+  <view class="tools-mask" catchtouchmove="noop" wx:if="{{sessionToolsOpen}}" bindtap="toggleSessionTools" aria-role="button" aria-label="收起游玩工具" hover-class="cy-pressed" hover-stay-time="80"></view>
     <scroll-view class="tools tools--corner" wx:if="{{sessionToolsOpen}}" scroll-y enhanced show-scrollbar="{{false}}">
 <view wx:if="{{themeBag.inventoryEnabled && themeBag.scope !== 'TEAM'}}" class="drow" bindtap="openThemeHistory" aria-role="button" aria-label="我的游玩记录" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="clock" size="36" /><text>我的游玩记录</text></view>
         <include src="theme-player-ops-entry.wxml" />
@@ -433,7 +433,7 @@
      「核销」两个模式都需要 ⇒ 提到地图右侧常驻圆钮,不跟模式相关的动作挤同一排。 -->
 <block wx:if="{{!screen && !allDone && !emptyTip && !loading && !chapterFull}}">
   <!-- ===== 章节选择弹窗(自由探索:切换章节先选章,选完白卡换成该章的商家/地点)===== -->
-<view class="chpick-mask" wx:if="{{chapterPick.show}}" bindtap="closeChapterPick" aria-role="button" aria-label="关闭章节选择" hover-class="cy-pressed" hover-stay-time="80"></view>
+<view class="chpick-mask" catchtouchmove="noop" wx:if="{{chapterPick.show}}" bindtap="closeChapterPick" aria-role="button" aria-label="关闭章节选择" hover-class="cy-pressed" hover-stay-time="80"></view>
 <view class="chpick" wx:if="{{chapterPick.show}}">
   <view class="chpick__grab"></view>
   <view class="chpick__hd">选择章节</view>
@@ -1010,7 +1010,7 @@
 <!-- ===================== 任务页(p03 重做:新语言) =====================
      顶部标题齐胶囊(46rpx) + 688 黑卡承载题面与交互 + 底部白胶囊主 CTA。
      四型交互(扫码/文字/选项/拍照)与提示/揭示/错误链全部保留原绑定,只换壳。 -->
-<view class="gp2mask" wx:if="{{screen=='gamePlay'}}" bindtap="closeGame" aria-role="button" aria-label="关闭游戏" hover-class="cy-pressed" hover-stay-time="80"></view>
+<view class="gp2mask" catchtouchmove="noop" wx:if="{{screen=='gamePlay'}}" bindtap="closeGame" aria-role="button" aria-label="关闭游戏" hover-class="cy-pressed" hover-stay-time="80"></view>
 <view class="gp2 gp2--sheet {{chapter.atmosphereClass}}" wx:if="{{screen=='gamePlay'}}">
   <view class="gp2__grab"></view>
   <view class="gp2__head">
@@ -1187,7 +1187,7 @@
 </block>
 
 <!-- ===================== 章节结算(半屏,用户裁决:非全屏,底部=继续) ===================== -->
-<view class="finmask" wx:if="{{showFinish}}" bindtap="closeFinish" aria-role="button" aria-label="关闭完成面板" hover-class="cy-pressed" hover-stay-time="80"></view>
+<view class="finmask" catchtouchmove="noop" wx:if="{{showFinish}}" bindtap="closeFinish" aria-role="button" aria-label="关闭完成面板" hover-class="cy-pressed" hover-stay-time="80"></view>
 <view class="finsheet" wx:if="{{showFinish}}">
   <view class="finsheet__grab"></view>
   <view wx:if="{{themeBag.result && themeBag.scope !== 'TEAM'}}" class="finsheet__records">
@@ -1565,7 +1565,7 @@
 
 
 <!-- 升级2:俱乐部局角色卡(首入本场弹一次;v5 语言:scrim + 玻璃卡 + 翻入动画) -->
-<view class="rolemask" wx:if="{{roleCard.show}}" bindtap="closeRoleCard" aria-role="button" aria-label="关闭身份卡" hover-class="cy-pressed" hover-stay-time="80"></view>
+<view class="rolemask" catchtouchmove="noop" wx:if="{{roleCard.show}}" bindtap="closeRoleCard" aria-role="button" aria-label="关闭身份卡" hover-class="cy-pressed" hover-stay-time="80"></view>
 <!-- v5.1/v5.2 新玩法分发器:kit 由 cy-advanced-game 抛上来的权威会话视图派生
      (见 utils/playkit-view.js)。这些壳是独立 sheet,套不进面板自己那层 sheet,所以渲染在这里。 -->
 <cy-playkit id="playKit" kit="{{playKit.kit}}" show="{{playKit.show}}" bind:kitaction="onPlayKitAction" />

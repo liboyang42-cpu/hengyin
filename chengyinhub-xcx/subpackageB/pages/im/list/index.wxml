@@ -25,7 +25,7 @@
 
   <!-- 合作邀请:收到的在收件箱、我发出的在发件箱,点进邀约详情处理。与会话是两套数据源,读不到只在这里局部报错。 -->
   <cy-inline-error wx:if="{{inviteError}}" kind="data" title="{{inviteError}}" action="重试" bind:action="loadInvites" />
-  <view wx:for="{{activeTab === 'in' ? invitesIn : invitesOut}}" wx:key="rowKey" class="invite-row"
+  <view wx:for="{{activeTab === 'in' ? invitesIn : invitesOut}}" wx:key="rowKey" class="invite-row cy-fly-in" style="animation-delay: {{index < 5 ? index * 40 : 200}}ms"
         data-id="{{item.inviteId}}" data-box="{{activeTab === 'in' ? 'received' : 'sent'}}" bindtap="openInvite"
         aria-role="button" aria-label="合作邀请：{{item.partnerName || item.topicText}}，{{item.statusText}}"
         hover-class="cy-pressed-bg" hover-stay-time="80">

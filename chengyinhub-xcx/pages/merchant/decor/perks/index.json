@@ -19,5 +19,7 @@
     "cy-access-gate": "/components/cy/access-gate/index",
     "cy-dropdown": "/components/cy/dropdown/index",
     "cy-icon": "/components/cy/icon/index"
-  }
+  },
+  "backgroundColorTop": "#F3F4F4",
+  "backgroundColorBottom": "#F3F4F4"
 }

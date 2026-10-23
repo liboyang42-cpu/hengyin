@@ -458,4 +458,7 @@ Page({
       scopeId: this.data.node && this.data.node.merchantId,
     }
   },
+
+  // 遮罩 catchtouchmove 吃掉滑动,面板打开时底下页面不跟着滚
+  noop() {},
 })

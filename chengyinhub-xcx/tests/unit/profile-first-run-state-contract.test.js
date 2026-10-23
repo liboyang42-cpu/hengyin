@@ -217,14 +217,13 @@ for (const outcome of ['rows', 'empty', 'business-failure', 'network', 'malforme
     const oldRequest = requests.at(-1)
     memberId = '43'
     const current = component.loadOrderPreview()
-    requests.at(-1).success({ code: 200, data: { rows: [{ id: 99, topicName: '当前订单' }] } })
+    requests.at(-1).success({ code: 200, data: { rows: [{ id: 99, topicName: '当前订单', registrationStatus: 2, paymentStatus: 2 }] } })
     await current
     if (outcome === 'network') oldRequest.fail({ errMsg: 'old timeout' })
     else oldRequest.success(outcome === 'business-failure' ? { code: 401 }
-      : { code: 200, data: { rows: outcome === 'rows' ? [{ id: 88 }] : outcome === 'empty' ? [] : {} } })
+      : { code: 200, data: { rows: outcome === 'rows' ? [{ id: 88, registrationStatus: 2, paymentStatus: 2 }] : outcome === 'empty' ? [] : {} } })
     await old
     assert.deepEqual(component.data.orderPreviewList.map(row => row.id), [99])
-    assert.equal(component.data.orderLoaded, true)
     assert.equal(component.data.orderErr, false)
     assert.equal(component.data.orderAuthError, false)
   } finally { app.getUserID = originalGetUserID }
@@ -235,9 +234,9 @@ test('订单预览同账号连续刷新只接受最新请求', async () => {
   const old = component.loadOrderPreview()
   const oldRequest = requests.at(-1)
   const current = component.loadOrderPreview()
-  requests.at(-1).success({ code: 200, data: { rows: [{ id: 99 }] } })
+  requests.at(-1).success({ code: 200, data: { rows: [{ id: 99, registrationStatus: 2, paymentStatus: 2 }] } })
   await current
-  oldRequest.success({ code: 200, data: { rows: [{ id: 88 }] } })
+  oldRequest.success({ code: 200, data: { rows: [{ id: 88, registrationStatus: 2, paymentStatus: 2 }] } })
   await old
   assert.deepEqual(component.data.orderPreviewList.map(row => row.id), [99])
 })
@@ -253,7 +252,7 @@ for (const end of ['cleared-identity', 'detached']) test(`订单预览在${end}�
     const pending = component.loadOrderPreview()
     if (end === 'cleared-identity') memberId = null
     else componentDefinition.lifetimes.detached.call(component)
-    requests.at(-1).success({ code: 200, data: { rows: [{ id: 88 }] } })
+    requests.at(-1).success({ code: 200, data: { rows: [{ id: 88, registrationStatus: 2, paymentStatus: 2 }] } })
     await pending
     assert.deepEqual(component.data.orderPreviewList.map(row => row.id), end === 'cleared-identity' ? [] : [99])
     if (end === 'cleared-identity') assert.equal(component.data.selfReadAccess, 'login')
@@ -267,18 +266,15 @@ test('订单预览换号发起新读取时清除旧订单，当前失败保持�
   try {
     const component = loadProfile()
     const first = component.loadOrderPreview()
-    requests.at(-1).success({ code: 200, data: { rows: [{ id: 88 }] } })
+    requests.at(-1).success({ code: 200, data: { rows: [{ id: 88, registrationStatus: 2, paymentStatus: 2 }] } })
     await first
     memberId = '43'
     const current = component.loadOrderPreview()
     const startList = structuredClone(component.data.orderPreviewList)
-    const startLoaded = component.data.orderLoaded
     requests.at(-1).fail({ errMsg: 'current timeout' })
     await current
     assert.deepEqual(startList, [])
-    assert.equal(startLoaded, false)
     assert.equal(component.data.orderErr, true)
-    assert.equal(component.data.orderLoaded, false)
   } finally { app.getUserID = originalGetUserID }
 })
 
@@ -307,7 +303,7 @@ for (const outcome of ['rows', 'empty', 'business-failure', 'network', 'malforme
     await current
     if (outcome === 'network') oldRequest.fail({ errMsg: 'old timeout' })
     else oldRequest.success(outcome === 'business-failure' ? { code: 401 }
-      : { code: 200, data: { rows: outcome === 'rows' ? [{ id: 88 }] : outcome === 'empty' ? [] : {} } })
+      : { code: 200, data: { rows: outcome === 'rows' ? [{ id: 88, registrationStatus: 2, paymentStatus: 2 }] : outcome === 'empty' ? [] : {} } })
     await old
     assert.deepEqual(component.data.projectPreviewList.map(row => row.id), [99])
     assert.equal(component.data.projectErr, false)
@@ -321,9 +317,9 @@ test('项目预览回包：同账号连续刷新只接收最新请求', async ()
   const old = component.loadProjectPreview()
   const oldRequest = requests.at(-1)
   const current = component.loadProjectPreview()
-  requests.at(-1).success({ code: 200, data: { rows: [{ id: 99 }] } })
+  requests.at(-1).success({ code: 200, data: { rows: [{ id: 99, registrationStatus: 2, paymentStatus: 2 }] } })
   await current
-  oldRequest.success({ code: 200, data: { rows: [{ id: 88 }] } })
+  oldRequest.success({ code: 200, data: { rows: [{ id: 88, registrationStatus: 2, paymentStatus: 2 }] } })
   await old
   assert.deepEqual(component.data.projectPreviewList.map(row => row.id), [99])
 })
@@ -333,7 +329,7 @@ test('项目预览回包：旧分页首包不再向当前身份发下一页', as
   const old = component.loadProjectPreview()
   const oldRequest = requests.at(-1)
   const current = component.loadProjectPreview()
-  requests.at(-1).success({ code: 200, data: { rows: [{ id: 99 }] } })
+  requests.at(-1).success({ code: 200, data: { rows: [{ id: 99, registrationStatus: 2, paymentStatus: 2 }] } })
   await current
   oldRequest.success({ code: 200, data: { rows: Array.from({ length: 8 }, (_, id) => ({ id, startDate: '2020-01-01', endDate: '2020-02-01' })), total: 16 } })
   await flush()
@@ -352,9 +348,9 @@ test('项目预览回包：已发出的旧第二页不覆盖最新预览', async
   const oldSecondPage = requests.at(-1)
   assert.equal(oldSecondPage.data.pageNum, 2)
   const current = component.loadProjectPreview()
-  requests.at(-1).success({ code: 200, data: { rows: [{ id: 99 }] } })
+  requests.at(-1).success({ code: 200, data: { rows: [{ id: 99, registrationStatus: 2, paymentStatus: 2 }] } })
   await current
-  oldSecondPage.success({ code: 200, data: { rows: [{ id: 88 }] } })
+  oldSecondPage.success({ code: 200, data: { rows: [{ id: 88, registrationStatus: 2, paymentStatus: 2 }] } })
   await old
   assert.deepEqual(component.data.projectPreviewList.map(row => row.id), [99])
 })
@@ -370,7 +366,7 @@ for (const end of ['cleared-identity', 'detached']) test(`项目预览回包：$
     const pending = component.loadProjectPreview()
     if (end === 'cleared-identity') memberId = null
     else componentDefinition.lifetimes.detached.call(component)
-    requests.at(-1).success({ code: 200, data: { rows: [{ id: 88 }] } })
+    requests.at(-1).success({ code: 200, data: { rows: [{ id: 88, registrationStatus: 2, paymentStatus: 2 }] } })
     await pending
     assert.deepEqual(component.data.projectPreviewList.map(row => row.id), end === 'cleared-identity' ? [] : [99])
     if (end === 'cleared-identity') assert.equal(component.data.selfReadAccess, 'login')
@@ -384,7 +380,7 @@ test('项目预览回包：换号新读取先清除旧项目', async () => {
   try {
     const component = loadProfile()
     const first = component.loadProjectPreview()
-    requests.at(-1).success({ code: 200, data: { rows: [{ id: 88 }] } })
+    requests.at(-1).success({ code: 200, data: { rows: [{ id: 88, registrationStatus: 2, paymentStatus: 2 }] } })
     await first
     memberId = '43'
     const current = component.loadProjectPreview()
@@ -714,7 +710,9 @@ function assertFirstRunMarkup(wxml, wxss) {
   assert.doesNotMatch(wxml, /探索数据没加载出来|订单没加载出来/)
   assert.match(wxml, /<cy-error load-failure wx:elif="\{\{orderErr\}\}"[\s\S]*bind:retry="reloadOrders"/)
   assert.match(wxml, /<cy-error load-failure wx:if="\{\{projectErr\}\}"[\s\S]*bind:retry="reloadProjects"/)
-  assert.match(wxml, /wx:elif="\{\{orderLoaded && !orderErr\}\}" title="暂无订单"/)
+  // 2026-10-22 owner:没有未完成订单时整段「我的订单」不显示(不再摆「暂无订单」空态)
+  assert.doesNotMatch(wxml, /title="暂无订单"/)
+  assert.match(wxml, /<block wx:if="\{\{orderPreviewList\.length \|\| orderErr\}\}">/)
   assert.match(wxml, /class="pc-achievement-metrics" wx:if="\{\{profileMetricState === 'ready'\}\}"/)
   assert.match(wxml, /aria-label="城瘾积分 \{\{profilePoint\}\}"[\s\S]*class="pc-gs-num">\{\{profilePoint\}\}/)
   assert.match(wxml, /class="pc-rank-v">\{\{exploreStat\.shops \|\| 0\}\}家店/)
@@ -753,17 +751,14 @@ test('负控：把 ready 分支的真实 0 改成占位符时，契约必须精�
 
 test('订单预览失败保持未加载，重试成功才允许显示真实空态，再次失败保留失败标记', async () => {
   const component = loadProfile()
-  assert.equal(component.data.orderLoaded, false)
   let pending = component.loadOrderPreview()
   respond('/api/registration/list', 'fail')
   await pending
-  assert.equal(component.data.orderLoaded, false)
   assert.equal(component.data.orderErr, true)
   requests = []
   pending = component.loadOrderPreview()
   respond('/api/registration/list', { code: 200, data: { rows: [] } })
   await pending
-  assert.equal(component.data.orderLoaded, true)
   assert.equal(component.data.orderErr, false)
   assert.deepEqual(component.data.orderPreviewList, [])
   requests = []

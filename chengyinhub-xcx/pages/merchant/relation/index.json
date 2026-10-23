@@ -3,7 +3,7 @@
     "tabBar": "/components/tabBar/index",
     "cy-nav-bar": "/components/cy/nav-bar/index",
     "cy-empty": "/components/cy/empty/index",
-    "cy-merchant-card": "/components/cy/merchant-card/index",
+    "cy-post-card": "/components/cy/post-card/index",
     "cy-club-card": "/components/cy/club-card/index",
     "cy-icon": "/components/cy/icon/index",
     "cy-tabs": "/components/cy/tabs/index",

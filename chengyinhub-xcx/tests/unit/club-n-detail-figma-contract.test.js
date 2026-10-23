@@ -33,13 +33,17 @@ function assertContract(overrides = {}) {
   assert.match(rule(wxss, '.cover-wrap'), /height:\s*320rpx/, '封面 160px = 320rpx')
   assert.match(rule(wxss, '.profile-logo-wrap'), /width:\s*112rpx/, 'logo 56px = 112rpx')
   assert.match(rule(wxss, '.profile-logo-wrap'), /height:\s*112rpx/)
-  assert.match(rule(wxss, '.profile-id'), /padding-left:\s*140rpx/, '名字行让开 logo(pl70)')
+  // 拍板 2026-10-22:logo 进身份行做第一列,名字与 logo 垂直居中(取代原 pl70 让位 + 底对齐)
+  assert.match(rule(wxss, '.profile-id'), /align-items:\s*center/, '名字与 logo 垂直居中')
+  assert.match(wxml, /class="profile-id">\s*<view class="profile-logo-wrap">/, 'logo 是身份行第一列')
   assert.match(rule(wxss, '.profile-name'), /text-overflow:\s*ellipsis/, '俱乐部名单行省略')
-  // 元信息是三枚「图标 + 文字」chip,不是一行 · 拼接的纯文本
+  // 元信息是「图标 + 文字」chip,不是一行 · 拼接的纯文本
   assert.match(rule(wxss, '.profile-meta'), /display:\s*flex/)
   assert.match(rule(wxss, '.profile-meta-chip'), /display:\s*flex/)
-  assert.equal((wxml.match(/class="profile-meta-chip"/g) || []).length, 3, '元信息必须是三枚 chip')
-  assert.equal((wxml.match(/class="profile-meta-ico"/g) || []).length, 3, '每枚 chip 必须带图标')
+  // 拍板 2026-10-22:元信息固定两行 ——「类型 · N 名成员」/ 入会方式,各带原 chip 图标
+  assert.equal((wxml.match(/class="profile-meta-chip"/g) || []).length, 2, '元信息两行两枚 chip')
+  assert.equal((wxml.match(/class="profile-meta-ico"/g) || []).length, 2, '每枚 chip 必须带图标')
+  assert.match(rule(wxss, '.profile-meta'), /flex-direction:\s*column/, '两行固定换行,不随宽度乱折')
 
   // —— 概览:简介直接铺开,标题下不要小标题 ——
   assert.match(wxml, /class="ov-intro"/)

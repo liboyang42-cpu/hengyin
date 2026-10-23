@@ -21,7 +21,7 @@ Component({
   },
   data: {
     level: 'cards', selectedMode: 1, quickOpen: false,
-    /* 菜单顶边与右上角 ✕ 的起点:原来整层 inset:0 铺到状态栏,把原页的导航标题和
+    /* 菜单顶边的起点:原来整层 inset:0 铺到状态栏,把原页的导航标题和
        消息入口一起压暗(CU-M-157)。和 creation-success 同一份胶囊实测几何:
        contentTop = 胶囊底 + 呼吸,面板从微信导航下方开始。 */
     chrome: { contentTop: 56 }
@@ -89,11 +89,17 @@ Component({
       return this.properties.scope === 'MERCHANT' ? '&scope=MERCHANT' : '';
     },
 
+    // 先跳转、跳成功后再收菜单:原来先 close 再 navigateTo,玻璃层先退场、新页还没画出来,
+    // 中间露出原页/白底闪一下。现在模糊菜单一直盖着,直到下一页上屏;页面栈行为不变。
+    // 跳转失败则菜单保持打开并提示,用户可重试或点「返回」。
     _closeAndGo(url) {
-      this.triggerEvent('close');
+      if (this._navigating) return;
+      this._navigating = true;
       wx.navigateTo({
         url,
-        fail: () => toast('跳转失败，请重试')
+        success: () => this.triggerEvent('close'),
+        fail: () => toast('跳转失败，请重试'),
+        complete: () => { this._navigating = false; }
       });
     }
   }

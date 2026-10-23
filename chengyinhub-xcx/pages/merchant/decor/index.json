@@ -8,6 +8,7 @@
     "cy-nav-bar": "/components/cy/nav-bar/index",
     "cy-sheet": "/components/cy/sheet/index",
     "cy-category-sheet": "/components/cy/category-sheet/index",
+    "cy-tag-sheet": "/pages/merchant/components/cy/tag-sheet/index",
     "cy-switch": "/components/cy/switch/index",
     "cy-privacy-gate": "/components/cy/privacy-gate/index",
     "cy-toast": "/components/cy/toast/index",

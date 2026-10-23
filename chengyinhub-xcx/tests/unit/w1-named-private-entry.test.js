@@ -74,7 +74,7 @@ test('游客搜索保留主题/活动/公开商家，不发需要登录的俱乐
 });
 test('登录搜索仍包含俱乐部；账号/隐藏变化丢弃旧响应并保留当前公开搜索',()=>{
  for(const action of ['owner','onHide','onUnload']){
-  const h=mount(SEARCH);h.page.runSearch();assert.equal(h.requests.length,4);if(action==='owner')h.owner('8');else h.page[action]();
+  const h=mount(SEARCH);h.page.runSearch();assert.equal(h.requests.length,6);if(action==='owner')h.owner('8');else h.page[action]();
   const before=JSON.stringify(h.page.data);for(const r of h.requests)r.success({code:200,data:[]});assert.equal(JSON.stringify(h.page.data),before);h.page.onUnload();
  }
 });

@@ -177,7 +177,10 @@ Page({
         success: (res) => {
           if (!isCurrent()) return;
           if (res && (res.code == 200 || res.code == '200')) {
-            groupsByType[request.type] = discoverSearch.decorateRows(request.type, res.data, filters);
+            groupsByType[request.type] = discoverSearch.decorateRows(request.type, res.data, Object.assign({}, filters, { keyword: keyword }));
+            if (request.type === 'topicTemplate' || request.type === 'gameTemplate') {
+              groupsByType[request.type].forEach((item) => { item.cover = app.getImgUrl(item.cover); });
+            }
             if (request.type === 'merchant' || request.type === 'club') {
               groupsByType[request.type].forEach((item) => {
                 item.cardCover = app.getImgUrl(item.cardCover);

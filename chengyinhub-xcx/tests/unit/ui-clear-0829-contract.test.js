@@ -6,15 +6,16 @@ const test = require('node:test')
 const ROOT = path.resolve(__dirname, '../..')
 const read = (relativePath) => fs.readFileSync(path.join(ROOT, relativePath), 'utf8')
 
-test('设置页直接展示素材署名，独立署名页不再注册', () => {
+test('关于页底部展示素材署名(设置页不再放)，独立署名页不再注册', () => {
   const app = JSON.parse(read('app.json'))
   const routes = app.pages.concat(app.subPackages.flatMap((pkg) => pkg.pages.map((page) => `${pkg.root}/${page}`)))
   const settings = read('pages/shezhi/shezhi.wxml')
   const about = read('pages/shezhi/about/index.wxml')
 
   assert.equal(routes.includes('pages/shezhi/attribution/index'), false)
-  assert.match(settings, /game-icons\.net[\s\S]*Creative Commons BY 3\.0[\s\S]*Delapouite[\s\S]*Lord Berandas/)
-  assert.match(settings, /ansimuz[\s\S]*CC0 1\.0[\s\S]*Warped Miami Synth/)
+  assert.doesNotMatch(settings, /sz-attribution|素材署名/)
+  assert.match(about, /game-icons\.net[\s\S]*Creative Commons BY 3\.0[\s\S]*Delapouite[\s\S]*Lord Berandas/)
+  assert.match(about, /ansimuz[\s\S]*CC0 1\.0[\s\S]*Warped Miami Synth/)
   assert.doesNotMatch(about, /图像来源|openAttribution/)
 })
 

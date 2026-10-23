@@ -153,16 +153,20 @@ test('合作中心路线卡片的封面四态不丢失可理解内容', () => {
   assert.match(COOP_CENTER_WXML, /wx:if="\{\{item\.cover && !item\._coverFailed\}\}"/, '只在 URL 可用时渲染封面');
   assert.match(COOP_CENTER_WXML, /binderror="onRouteCoverError"/, '图片失败必须切换兜底');
   // 2026-09-15 集成总线:占位从 wx:else 空分支改为常驻纯色底、封面 image 叠在其内(U6 空白状态分支门禁),兜底语义不变。
-  assert.match(COOP_CENTER_WXML, /<view class="cc-route-cover"><image class="cc-route-cover__img" wx:if=/, '空 URL/图片失败必须有兜底:纯色占位常驻包住封面');
+  // 2026-10-22 owner 重做(参考图):整卡就是封面、文字全写在图上;兜底是按模式取色的深色渐变底常驻包住封面,
+  //   整张卡点进详情,「看详情」黑胶囊是卡上的明确动作标识;截止信息压成「截止 M月D日」放在图上底行。
+  const COVER_WITH_FALLBACK = /<view class="cc-route-cover[^"]*">\s*<image class="cc-route-cover__img" wx:if=/;
+  assert.match(COOP_CENTER_WXML, COVER_WITH_FALLBACK, '空 URL/图片失败必须有兜底:纯色占位常驻包住封面');
   assert.match(COOP_CENTER_WXML, /class="cc-route-title">\{\{item\.title\}\}/, '必须保留主题名');
   assert.match(COOP_CENTER_WXML, /item\.modeText/, '必须保留模式标签(城市定向/自由探索)');
-  assert.match(COOP_CENTER_WXML, /item\.deadlineText/, '必须保留截止信息');
-  assert.match(COOP_CENTER_WXML, /class="cc-detail"[^>]*bindtap="openTopic"/, '必须保留明确的看详情动作');
+  assert.match(COOP_CENTER_WXML, /item\.deadlineShort/, '必须保留截止信息');
+  assert.match(COOP_CENTER_WXML, /class="cc-route[^"]*"[^>]*bindtap="openTopic"/, '整张卡必须能点进详情');
+  assert.match(COOP_CENTER_WXML, /class="cc-detail"[^>]*>看详情</, '必须保留明确的看详情标识');
   assert.match(COOP_CENTER_JS, /onRouteCoverError\(e\)/, '必须处理封面加载失败');
   // 负控:封面不再有兜底分支时必须判红
-  const broken = COOP_CENTER_WXML.replace('<view class="cc-route-cover"><image', '<view><image');
+  const broken = COOP_CENTER_WXML.replace(/<view class="cc-route-cover[^"]*">(\s*)<image/, '<view>$1<image');
   assert.notEqual(broken, COOP_CENTER_WXML, '变异夹具必须真的删掉兜底');
-  assert.throws(() => assert.match(broken, /<view class="cc-route-cover"><image class="cc-route-cover__img" wx:if=/), assert.AssertionError);
+  assert.throws(() => assert.match(broken, COVER_WITH_FALLBACK), assert.AssertionError);
 });
 
 test('合作中心封面失败只标记同一张卡，迟到事件不误伤刷新后的新卡', () => {

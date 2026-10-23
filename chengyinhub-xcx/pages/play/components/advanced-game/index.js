@@ -514,6 +514,8 @@ Component({
       if (!canContinue(this.data.state)) return;
       this.triggerEvent('ready', { nodeId: (this.data.node || {}).nodeId });
     },
-    close() { this.triggerEvent('close'); }
+    close() { this.triggerEvent('close'); },
+    // 遮罩 catchtouchmove 吃掉滑动,弹层打开时底下页面不跟着滚
+    noop() {}
   }
 });

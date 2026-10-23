@@ -78,6 +78,7 @@ chengyinhub-xcx/pages/merchant/marketing/ai-insight/index.js 1  # AI 参谋整�
 chengyinhub-xcx/pages/merchant/marketing/index.js 1  # UNREVIEWED_BASELINE_20260818:1 存量未审查,禁止新增
 chengyinhub-xcx/pages/merchant/marketing/index.js 1  # 2026-08-26 营销页接回 access/me 权限真源新增一处:access/me 失败落 funnelError,由首屏错误态渲染并保留重试入口,关掉全局 toast 是为了不和页内错误双提示。(merchant/info 那处随该请求一并退役,额度已收回)
 chengyinhub-xcx/pages/merchant/relation/index.js 1  # UNREVIEWED_BASELINE_20260818:1 存量未审查,禁止新增
+chengyinhub-xcx/pages/merchant/relation/index.js 1  # 2026-10-22 帖子流 /api/club/post/feed:失败落页内 feedState=error/stale-error 并给重试按钮,不吞;通道 toast 会重复报错(同 talent/list 帖文 tab)
 chengyinhub-xcx/pages/play/index.js 1  # UNREVIEWED_BASELINE_20260818:1 存量未审查,禁止新增
 chengyinhub-xcx/pages/publish/fabu/index.js 0  # UNREVIEWED_BASELINE_20260818:2 2026-10-13 逐调用及回调审完，真实9处转下方实名理由；冻结2不变，零额收据保留
 chengyinhub-xcx/pages/publish/template-intro/index.js 1  # UNREVIEWED_BASELINE_20260818:1 存量未审查,禁止新增
@@ -107,6 +108,7 @@ chengyinhub-xcx/pages/club/detail/index.js 3  # 2026-08-25 经营闭环:场次�
 chengyinhub-xcx/pages/club/detail/index.js 2  # 2026-08-26 会员摘要失败落可重试 error 状态；活动举报解析失败由当前操作的精确 toast 承接，通用 toast 会双弹
 chengyinhub-xcx/pages/club/detail/index.js 6  # 2026-09-10 设置弹窗五处 + 发帖选择器一处:客户人数与已结算分润取不到就在原位显示「暂时读不到」(留空会被读成「一个客户都没有」「一分钱都没有」);开放设置三个开关(俱乐部公开可见 / 允许成员发帖 / 开放商家承接)失败落 openSettingErrorText 由该行下的 cy-inline-error 承接并可重试。「带上一次游玩记录」选择器失败落 postRefState=error,由半屏里的 cy-error 带重试承接。六处都有页内承接,通用 toast 会双弹
 chengyinhub-xcx/pages/club/detail/index.js 2  # 2026-10-22 W10a:月历场次读取失败落 eventCalendarSessionState=error,月历退回「月历仅展示已加载主题」并在说明行给「重试」;期次空原因读取失败落中性空态「暂时无法确认原因」+ 重新加载。两处都有页内承接,通用 toast 会双弹
+chengyinhub-xcx/pages/club/detail/index.js 1  # 2026-10-22 业主「入会欢迎语」:设置 → 开放设置里保存欢迎语失败(含送检拒绝 / 迁移未落库)落 openSettingErrorKey=welcomeNote,由该行下的 cy-inline-error 带原因与「重试」承接;通用 toast 会双弹
 chengyinhub-xcx/pages/club/event-ops/index.js 11  # 2026-08-25 活动运营:权限/系列/名册/取消状态失败落 errorText / seriesError / rosterError / cancellationError,写操作落当前表单错误;通用 toast 会双弹(2026-09-10 补记:场次取消提交与取消后的独立状态回读是两处,册子只记了一处)
 chengyinhub-xcx/pages/club/governance/index.js 4  # 2026-08-25 治理页:权限、案件、成员与封禁失败统一落页面 errorText 状态并可重试;通用 toast 会双弹
 chengyinhub-xcx/pages/club/notify/index.js 6  # 投递状态自动回读失败保留上次结果、手动刷新失败可见toast； 2026-08-25 通知运营:权限/预览失败落页内状态,发送与重试失败落精确操作错误;通用 toast 会双弹(2026-09-10 +1:R4 各分组人数是行内装饰,算不出来就不显示)
@@ -229,6 +231,7 @@ chengyinhub-xcx/pages/roam/index.js 1  # BL-41 护照「官方活动」大卡读
 chengyinhub-xcx/pages/club/topic-detail/index.js 1  # BL-98 报名人数按日趋势:失败落 trendState=error,后端原因(如 403 无权查看)原样回显在趋势区块;seq 只认最后一次回包,关全局 toast 免双弹
 chengyinhub-xcx/pages/merchant/decor/index.js 1  # BL-141 营业状态写后回读:回读不到或与提交值不一致都按保存失败处理,由 _startSave 回滚开关并给重试提示;关全局 toast 免双弹
 chengyinhub-xcx/pages/merchant/index/index.js 1  # BL-141 营业状态写后回读:回读不到或不一致明确 toast「状态未同步…」并以回读值为准;关全局 toast 免双弹
+chengyinhub-xcx/pages/merchant/index/index.js 2  # 2026-10-22 L03 工作台「我的消息」预览读会话(/api/im/conversations)与收到的邀请(/api/coop/list):只读附加区块,失败保留上次列表或页内写「消息暂时没读到」(可点进站内消息),每次回到工作台都弹 toast 是噪音
 chengyinhub-xcx/subpackageMember/components/cy/profile/index.js 2  # BL-69 商家主页在架据点读取失败即不展示收藏按钮(只读附加块,不打扰主页);收藏切换失败用 cyToast 明确提示且不改本地态,以接口返回的 favorited 为准
 chengyinhub-xcx/components/cy/scene-share-invite/index.js 1  # 个人码签发失败落 qrState=code-error 并显示 qrErrorText(含后端原因)供重试,epoch 丢弃迟到回包;关全局 toast 免双弹
 chengyinhub-xcx/subpackageMember/components/cy/merchant-correction-sheet/index.js 2  # BL-67 商家纠错半屏:读纠错类型失败落 loadfail 结果态(带重试),提交失败落 fail/unknown 结果态(含后端原因,同键可重试);关全局 toast 免双弹
@@ -237,3 +240,4 @@ chengyinhub-xcx/subpackageRoam/official-route/index.js 1  # 2026-10-19 移植基
 chengyinhub-xcx/subpackageMember/components/cy/team-report-sheet/index.js 1  # 2026-10-19 移植基线 f33f1180:举报失败落结果半屏 fail 态(含后端原因与重试),不再叠加统一 toast
 chengyinhub-xcx/pages/publish/components/topic-state-keys/index.js 3  # 2026-10-19 移植基线 49ee4a4d:状态键读取落 cy-error 重试;注册失败落表单 formError;删除失败落危险确认的 error 态,均为可见反馈
 chengyinhub-xcx/pages/shezhi/components/post-governance/index.js 2  # 2026-10-22 W9 帖子处置(F0521):处置列表读取失败落组件 cy-inline-error 带重试;申诉提交失败落组件 notice,结果不明先回读 me/enforcements 核对,不本地假设成功;通用 toast 会双弹
+chengyinhub-xcx/utils/predict-entry.js 1  # 2026-10-23 PR #508 业主第四轮:消息页「竞猜待答」入口只在有待答时出现。身份已先确认是可结算竞猜的商家,待答列表读失败时照样显示入口(fail-open),不让 48 小时期限的提醒悄悄消失;失败已有可见兜底(入口仍在、点进 predict 页有整页错误态),每次进消息页都弹通道 toast 是噪音

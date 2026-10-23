@@ -26,8 +26,10 @@
   <view class="tpl-toprow">
     <cy-tabs class="tpl-l1" variant="attached" tabs="{{ tabItems }}" active="{{ tab }}" bind:change="switchTab" />
     <view class="tpl-search" bindtap="goSearch" aria-role="button" aria-label="搜索模板主题与玩法" hover-class="cy-pressed" hover-stay-time="80">
-      <image class="tpl-search-ico" src="/images/icon_search.svg" mode="aspectFit" />
-      <text class="tpl-search-ph">搜索主题与玩法模板</text>
+      <view class="tpl-search-pill">
+        <image class="tpl-search-ico" src="/images/icon_search.svg" mode="aspectFit" />
+        <text class="tpl-search-ph">搜索主题与玩法模板</text>
+      </view>
     </view>
   </view>
   <view class="merchant-readonly-note"
@@ -60,7 +62,7 @@
     <!-- 空态把 banner 计入:单条数据时 banner 吃掉唯一内容、两个列表全空,
          只看列表会让空态与 banner 大卡同屏 -->
     <cy-empty class="fill-slot" wx:elif="{{ listLoaded && !banner.id && !topList.length && !tailList.length }}" fill="{{true}}" size="lg" kind="empty"
-      title="{{ emptyTitle }}" sub="{{ emptySub }}" cta="刷新试试" bindcta="retryTemplateLoad" />
+      title="{{ emptyTitle }}" sub="{{ emptySub }}" />
     <view wx:if="{{ loading && listLoaded }}" class="tpl-refreshing" aria-role="status" aria-live="polite">正在同步最新内容…</view>
 
     <!-- ====== Banner:一张头牌,带扫光描边 ====== -->
@@ -68,7 +70,7 @@
       <view class="sec-hd sec-hd-top">
         <text class="sec-title">{{ bannerTitle }}</text>
       </view>
-      <view class="feat-slide" style="{{pmList === 1 ? '--pm-t:1;' : (pmList === 2 ? '--pm-t-d:.32s;--pm-t-s:1;' : '')}}">
+      <view class="feat-slide {{ flyClass }}">
         <view class="feat-glow">
           <view class="feat-glow__sweep" aria-hidden="true"></view>
           <view class="feat-glow__face feat-media" data-item="{{ banner }}" bindtap="jumpDetail" hover-class="cy-pressed" hover-stay-time="80">
@@ -98,8 +100,8 @@
     <view class="sec-hd" wx:if="{{ topList.length }}">
       <text class="sec-title">{{ topTitle }}</text>
     </view>
-    <view class="cml-list cy-fade-in" wx:if="{{ topList.length }}" style="{{pmList === 1 ? '--pm-t:1;' : (pmList === 2 ? '--pm-t-d:.32s;--pm-t-s:1;' : '')}}">
-      <view class="cml-card" wx:for="{{ topList }}" wx:key="id" data-item="{{ item }}" bindtap="jumpDetail" hover-class="cy-pressed" hover-stay-time="80">
+    <view class="cml-list cy-fade-in" wx:if="{{ topList.length }}">
+      <view class="cml-card {{ flyClass }}" style="animation-delay: {{ index < 4 ? (index + 1) * 40 : 200 }}ms" wx:for="{{ topList }}" wx:key="id" data-item="{{ item }}" bindtap="jumpDetail" hover-class="cy-pressed" hover-stay-time="80">
         <image wx:if="{{ item._iconUrl }}" class="cml-pic cml-pic--art" src="{{ item._iconUrl }}" mode="aspectFit" aria-hidden="true" />
         <image wx:elif="{{ item.imgUrl && !item._coverFail }}" lazy-load="true" class="cml-pic" src="{{ item.imgUrl }}"
           mode="aspectFill" data-list="topList" data-idx="{{ index }}" data-key="{{ item.id }}" binderror="onCoverError" />
@@ -122,8 +124,8 @@
       <text class="sec-title">其他模板</text>
       <text class="sec-sub">不筛掉，继续显示</text>
     </view>
-    <view class="cml-list cy-fade-in" wx:if="{{ tailList.length }}" style="{{pmList === 1 ? '--pm-t:1;' : (pmList === 2 ? '--pm-t-d:.32s;--pm-t-s:1;' : '')}}">
-      <view class="cml-card" wx:for="{{ tailList }}" wx:key="id" data-item="{{ item }}" bindtap="jumpDetail" hover-class="cy-pressed" hover-stay-time="80">
+    <view class="cml-list cy-fade-in" wx:if="{{ tailList.length }}">
+      <view class="cml-card {{ flyClass }}" style="animation-delay: {{ index < 5 ? index * 40 : 200 }}ms" wx:for="{{ tailList }}" wx:key="id" data-item="{{ item }}" bindtap="jumpDetail" hover-class="cy-pressed" hover-stay-time="80">
         <image wx:if="{{ item._iconUrl }}" class="cml-pic cml-pic--art" src="{{ item._iconUrl }}" mode="aspectFit" aria-hidden="true" />
         <image wx:elif="{{ item.imgUrl && !item._coverFail }}" lazy-load="true" class="cml-pic" src="{{ item.imgUrl }}"
           mode="aspectFill" data-list="tailList" data-idx="{{ index }}" data-key="{{ item.id }}" binderror="onCoverError" />

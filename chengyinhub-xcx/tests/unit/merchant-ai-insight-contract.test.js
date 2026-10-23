@@ -45,9 +45,12 @@ test('页面调用 /api/ai/merchant/insight 且不携带任何商家 id 参数',
     '接口按登录态取商家身份,前端传 id = 给越权留口子');
 });
 
-test('AI 降级不连坐:ai 为空时数据区照常、降级卡有说明文案', () => {
-  assert.match(PAGE_WXML, /wx:else class="ai-card ai-card--down"/);
-  assert.match(PAGE_WXML, /数据不受影响/);
+// 2026-10-23 业主:「没有就不显示」—— ai 为空时经营解读整段(含标题)不画,不再出降级卡;数据区照常
+test('AI 降级不连坐:ai 为空时数据区照常、经营解读整段不显示', () => {
+  assert.doesNotMatch(PAGE_WXML, /class="ai-card ai-card--down"/);
+  assert.doesNotMatch(PAGE_WXML, /基础数据可用/);
+  // 合 master 后标题带入场动效类 mi-in 与延时 style;本条只钉「无 AI 不出标题」
+  assert.match(PAGE_WXML, /<view class="sec-head[^"]*" wx:if="\{\{ai\}\}"[^>]*><text class="sec-title">经营解读<\/text><\/view>/);
 });
 
 test('数字位一律是数:null 指标写 0,不放横杠(2026-09-19 用户裁决,与营销页同口径)', () => {
@@ -115,8 +118,8 @@ test('后端全回 null 时,页面 builder 真的产出 0 而不是横杠(跑真
   assert.deepEqual(cards.map((card) => card.name), ['核销率', '复购率']);
   const valueCard = page._buildValueCard(facts);
   assert.deepEqual([valueCard.visitors, valueCard.checkins, valueCard.redeems], ['0', '0', '0']);
-  // 核销率缺失不是 0%:进度条下明说暂无核销,不许拿 0 冒充有数
-  assert.equal(valueCard.caption, '近30天暂无核销', '核销率缺失时说暂无核销,不是 0%');
+  // 核销率缺失不是 0%:2026-10-23 业主「没有就不显示」⇒ 说明行整行不出(既不提示「暂无核销」,也不拿 0% 冒充)
+  assert.equal(valueCard.caption, '', '核销率缺失时说明行不显示,不是 0%');
 
   // 负控:把 null 改回横杠,上面这些判据必须转红
   const regressed = PAGE_JS.replace("return value === null ? '0' : String(value);",

@@ -63,7 +63,7 @@ Page({
     errorNeedsLogin: false,
     facts: null,          // 后端聚合事实包(必出层)
     ai: null,             // AI 解读(可为 null 的降级层)
-    aiError: '',
+    // aiError 已撤(2026-10-23,见 load 成功分支注释)
     generatedAt: '',
     profile: null,        // 后端实时读的店铺视图(storeName/logo + 承接档案字段),不走缓存
     storeName: '',        // 页头问候「Hi，店名」;头像直接读 profile.logo
@@ -206,7 +206,7 @@ Page({
           that.setData({
             facts: d.facts,
             ai: d.ai || null,
-            aiError: d.ai ? '' : (d.aiError || '智能解读暂不可用'),
+            // aiError 不再下发:2026-10-23 业主「没有就不显示」,唯一消费方 AI 降级卡已删(占位保留行号锚点)
             generatedAt: d.generatedAt || '',
             profile: d.profile || null,
             storeName: String(profile.storeName || '').trim(),
@@ -253,7 +253,7 @@ Page({
       error: error || '',
       facts: null,
       ai: null,
-      aiError: '',
+      // aiError 已撤(2026-10-23)
       generatedAt: '',
       profile: null,
       storeName: '',
@@ -363,7 +363,7 @@ Page({
     const caption = (facts && facts.window) || '近30天';
     return Object.assign(base, {
       segs: this._segs(rate),
-      caption: rate === null ? caption + '暂无核销' : caption + '核销率 ' + this._pct(rate),
+      caption: rate === null ? '' : caption + '核销率 ' + this._pct(rate), // 业主 10-23:没有就不显示(不出「暂无核销」提示,也不拿 0% 冒充)
     });
   },
 

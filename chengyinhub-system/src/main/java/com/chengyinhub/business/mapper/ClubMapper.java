@@ -57,6 +57,11 @@ public interface ClubMapper
     /** 稿 M「开放设置 · 允许成员发帖」。0=仅管理者可发 1=所有成员可发。 */
     public int updateMemberPostAllowed(@Param("clubId") Long clubId, @Param("enabled") Integer enabled);
 
+    /** 入会欢迎语:单独读写,不进 selectClubVo —— 列未落库时只影响这一项,不拖垮整个俱乐部查询。 */
+    public String selectWelcomeNote(@Param("clubId") Long clubId);
+
+    public int updateWelcomeNote(@Param("clubId") Long clubId, @Param("note") String note);
+
     /** 稿 M「开放设置 · 开放商家承接」。0=本俱乐部主题不进商家可承接列表 1=进。 */
     public int updateMerchantUndertakeOpen(@Param("clubId") Long clubId, @Param("enabled") Integer enabled);
 

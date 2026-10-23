@@ -270,6 +270,17 @@
         where id = #{clubId} and del_flag = 0
     </update>
 
+    <!-- 入会欢迎语(2026-10-22 业主):单独读写,不并进 selectClubVo。
+         迁移 migration_club_welcome_note_20261022.sql 落库前,读失败由 service 兜成「没写」,不影响详情。 -->
+    <select id="selectWelcomeNote" resultType="java.lang.String">
+        select welcome_note from club where id = #{clubId} and del_flag = 0
+    </select>
+
+    <update id="updateWelcomeNote">
+        update club set welcome_note = #{note}, update_time = now()
+        where id = #{clubId} and del_flag = 0
+    </update>
+
     <update id="updateMerchantUndertakeOpen">
         update club set merchant_undertake_open = #{enabled}, update_time = now()
         where id = #{clubId} and del_flag = 0

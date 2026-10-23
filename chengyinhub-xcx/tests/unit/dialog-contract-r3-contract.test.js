@@ -147,8 +147,8 @@ test('④ 失败徽章红读稿色 token,全部主题作用域重声明为 #F94D
   assert.match(strip(read('components/cy/result-sheet/index.wxss')), /\.rs--fail \.rs__scallop \{ color: var\(--cy-color-result-fail-badge\); \}/)
   const decl = (src) => (strip(src).match(/--cy-color-result-fail-badge:\s*#F94D5C;/g) || []).length
   assert.equal(decl(read('style/tokens.wxss')), 4)
-  assert.equal(decl(read('style/merchant-light.wxss')), 2)
-  assert.equal(decl(read('style/dark-mode.wxss')), 1)
+  assert.equal(decl(read('style/merchant-light.wxss')), 1)
+  assert.equal(decl(read('style/dark-mode.wxss')), 0, '系统深色镜像已移除(2026-10-22)')
 })
 
 test('① 审查补修:cy-error 挂上后 autoBack 才翻 true 也要开面板,且只开一次', () => {

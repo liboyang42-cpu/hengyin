@@ -35,18 +35,14 @@ test('预置协作对象入口向页内邀约弹窗透传真实目标，邀请�
   const invite = read('pages/coop/invite/index.js')
   const clubView = read('pages/club/detail/index.wxml')
   const merchantView = read('subpackageMember/components/cy/profile/index.wxml')
-  assert.match(club, /coopInviteShow: true/)
-  assert.match(clubView, /target-id="\{\{clubId\}\}"/)
+  // 拍板 2026-10-22:俱乐部主页不再挂邀约弹层,只剩商家主页这一个页内宿主。
+  assert.doesNotMatch(club, /coopInviteShow/)
+  assert.doesNotMatch(clubView, /<cy-coop-invite-sheet\b/)
   const binding = (view, name, data) => {
     const sheet = view.match(/<cy-coop-invite-sheet\b[^>]*>/)[0]
     const expression = sheet.match(new RegExp(name + '="\\{\\{(.*?)\\}\\}"'))[1]
     return require('node:vm').runInNewContext(expression, data)
   }
-  assert.equal(binding(clubView, 'target-name', { club: null }), '')
-  assert.equal(binding(clubView, 'target-name', { club: { name: '真实俱乐部' } }), '真实俱乐部')
-  assert.equal(binding(clubView, 'topic-name', { topicName: undefined }), '')
-  assert.equal(binding(clubView, 'operation-scope', { coopInviteScope: undefined }), '')
-  assert.equal(binding(clubView, 'operation-scope', { coopInviteScope: 'CLUB' }), 'CLUB')
   assert.match(merchant, /coopInviteShow: true/)
   assert.match(merchantView, /target-id="\{\{userId\}\}"/)
   assert.equal(binding(merchantView, 'target-name', { subjectMerchant: null, userInfo: { nickname: '当前资料名' }, nickname: '旧顶层名' }), '当前资料名')

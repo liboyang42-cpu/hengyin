@@ -132,5 +132,7 @@ Component({
       this._prevBrightness = null
     },
     close() { this.restoreBrightness(); this.triggerEvent('close') },
+    // 遮罩 catchtouchmove 吃掉滑动,大图二维码打开时底下页面不跟着滚
+    noop() {},
   },
 })

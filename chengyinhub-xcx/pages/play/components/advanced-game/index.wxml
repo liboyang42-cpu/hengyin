@@ -1,5 +1,5 @@
 <block wx:if="{{show && (!hidePanel || error || unknown)}}">
-<view class="ag-mask" bindtap="close" aria-role="button" aria-label="关闭高级玩法" hover-class="cy-pressed" hover-stay-time="80"></view>
+<view class="ag-mask" catchtouchmove="noop" bindtap="close" aria-role="button" aria-label="关闭高级玩法" hover-class="cy-pressed" hover-stay-time="80"></view>
 <view class="ag">
   <view class="ag__grab"></view>
   <view class="ag__head"><view><text class="ag__eyebrow">高级玩法</text><text class="ag__title">{{node.gameTitle || node.name}}</text></view><view class="ag__close" bindtap="close" aria-role="button" aria-label="关闭高级玩法" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="44" /></view></view>

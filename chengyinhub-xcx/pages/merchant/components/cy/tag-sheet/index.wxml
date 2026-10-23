@@ -1,0 +1,37 @@
+<!-- cy-tag-sheet:根节点只负责把 cy-sheet 的角色档钉成商家白(变量继承),不参与布局 -->
+<view class="ts">
+  <cy-sheet show="{{show}}" handle closable="{{false}}" mask-closable="{{!saving}}" footer bind:close="onClose">
+    <view class="ts__head">
+      <text class="ts__title">{{title}}</text>
+      <text class="ts__count">已选 {{_sel.length}}</text>
+    </view>
+    <text wx:if="{{hint}}" class="ts__hint {{hintError ? 'ts__hint--error' : ''}}" aria-role="{{hintError ? 'alert' : ''}}">{{hint}}</text>
+    <view wx:if="{{loading && !_rows.length}}" class="ts__state">正在载入…</view>
+    <cy-inline-error wx:elif="{{error}}" load-failure kind="error" title="列表暂未加载" sub="{{error}}" action="重试" bind:action="onRetry" />
+    <!-- 2026-10-22 owner:不分页,整片错落胶囊直接左右滑(自由滚动,无页码点) -->
+    <scroll-view wx:else class="ts__scroll" scroll-x enhanced show-scrollbar="{{false}}" scroll-left="{{_scrollLeft}}">
+      <view class="ts__rows">
+        <view wx:for="{{_rows}}" wx:for-item="row" wx:for-index="r" wx:key="r" class="ts__row">
+          <view
+            wx:for="{{row}}"
+            wx:key="key"
+            class="ts__tag {{item.checked ? 'ts__tag--on' : ''}}"
+            bindtap="onTap"
+            data-key="{{item.key}}"
+            aria-role="checkbox"
+            aria-checked="{{item.checked}}"
+            aria-label="{{item.label}}"
+            hover-class="ts--pressed"
+          >
+            <image wx:if="{{item.iconSrc}}" class="ts__icon" src="{{item.iconSrc}}" mode="aspectFit" />
+            <text class="ts__label">{{item.label}}</text>
+            <image wx:if="{{item.checked && _checkSrc}}" class="ts__check" src="{{_checkSrc}}" mode="aspectFit" />
+          </view>
+        </view>
+      </view>
+    </scroll-view>
+    <view slot="footer" class="ts__footer">
+      <view class="ts__save {{(saving || loading) ? 'ts__save--busy' : ''}}" bindtap="onConfirm" aria-role="button" hover-class="ts--pressed">{{saving ? '保存中…' : confirmText}}</view>
+    </view>
+  </cy-sheet>
+</view>

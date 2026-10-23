@@ -16,6 +16,7 @@ function loadDetail() {
   const navigations = []
   const requests = []
   const scrolls = []
+  const modals = []
   const app = {
     globalData: {},
     sendRequest(request) { requests.push(request) },
@@ -68,7 +69,7 @@ function loadDetail() {
       navigateTo(options) { navigations.push(options.url); if (options.complete) options.complete() },
       pageScrollTo(options) { scrolls.push(options) },
       showToast() {},
-      showModal() {},
+      showModal(options) { modals.push(options) },
       showShareMenu() {},
       setStorageSync() {},
     },
@@ -77,7 +78,7 @@ function loadDetail() {
     data: JSON.parse(JSON.stringify(definition.data)),
     setData(patch, callback) { Object.assign(this.data, patch); if (callback) callback.call(this) },
   })
-  return { page, navigations, requests, scrolls }
+  return { page, navigations, requests, scrolls, modals }
 }
 
 test('进入成员治理时收起设置，转让后返回不残留空白抽屉', () => {
@@ -174,7 +175,9 @@ test('quick action 与四个真 tab 分离，管理仅 owner 可见且已选 tab
   // 2026-08-26:分享从资料区那条整宽按钮收成导航栏图标。契约不变 ——
   // 分享仍是独立入口、不混进 tab;只是不再占一整行。
   // 2026-09-24 CU-C-61:分享改成原生 <button open-type="share">(view+bindtap 打不开转发面板)。
-  assert.match(view, /class="cover-nav-act"[^>]*open-type="share"/)
+  // 2026-10-22 owner:分享从导航栏挪到俱乐部名字行右端(.profile-share),仍是原生 share 按钮。
+  assert.match(view, /class="profile-share"[^>]*open-type="share"/)
+  assert.doesNotMatch(view, /class="cover-nav-act"[^>]*open-type="share"/, '导航栏不再放分享')
   assert.doesNotMatch(view, /class="club-share"/, '分享不得再回到整宽按钮')
   assert.match(view, /<cy-tabs\b[^>]*class="club-view-tabs"[^>]*tabs="\{\{clubTabs\}\}"[^>]*active="\{\{activeTab\}\}"[^>]*bind:change="switchTab"/)
   assert.doesNotMatch(view, />群组<\/text>/)
@@ -194,15 +197,16 @@ test('quick action 与四个真 tab 分离，管理仅 owner 可见且已选 tab
   assert.equal(page.data.activeTab, 'manage')
 })
 
-test('owner/member/admin 默认帖子，guest/商家访客默认概览', () => {
+// 2026-10-22 owner:不论身份,每次进俱乐部都先看「概览」(原先 owner/member 默认帖子)。
+test('进俱乐部一律先看概览(owner/member/访客/商家都一样)', () => {
   const { page } = loadDetail()
   page.data.isMerchantViewer = false
-  assert.equal(page.defaultTabForClub({ isOwner: true, isJoined: true }), 'posts')
-  assert.equal(page.defaultTabForClub({ isOwner: false, isJoined: true }), 'posts')
+  assert.equal(page.defaultTabForClub({ isOwner: true, isJoined: true }), 'overview')
+  assert.equal(page.defaultTabForClub({ isOwner: false, isJoined: true }), 'overview')
   assert.equal(page.defaultTabForClub({ isOwner: false, isJoined: false }), 'overview')
   page.data.isMerchantViewer = true
   assert.equal(page.defaultTabForClub({ isOwner: false, isJoined: false }), 'overview')
-  assert.equal(page.defaultTabForClub({ isOwner: true, isJoined: true }), 'posts', '商家+主理人双身份仍以当前俱乐部 owner 视图为准')
+  assert.equal(page.defaultTabForClub({ isOwner: true, isJoined: true }), 'overview')
 })
 
 test('管理深链只在详情回读 owner 身份后生效，参数不能替非 owner 越权', () => {
@@ -223,7 +227,7 @@ test('管理深链只在详情回读 owner 身份后生效，参数不能替非 
   genericOwner.page.onLoad({ id: '9', owner: '1' })
   const genericDetail = genericOwner.requests.find((request) => request.url === '/api/club/detail')
   genericDetail.success({ code: '200', data: { id: 9, isOwner: true, isJoined: true } })
-  assert.equal(genericOwner.page.data.activeTab, 'posts', '通用 owner 入口仍保持帖子默认契约')
+  assert.equal(genericOwner.page.data.activeTab, 'overview', '通用 owner 入口也先看概览(owner 2026-10-22)')
 })
 
 test('设置管理入口与旧 workbench 壳显式传递 manage 意图', () => {
@@ -618,4 +622,182 @@ test('公开帖子的游客空态只限制发布，不得误写为不可查看',
   const view = read(DETAIL_WXML)
   assert.match(view, /加入俱乐部后可发布/)
   assert.doesNotMatch(view, /加入俱乐部后可查看与发布/)
+})
+
+// —— L06 拍板 2026-10-22 ——
+// 2026-10-22 owner:每次进俱乐部都先看概览 —— 再次进入同一俱乐部也回到概览,不再沿用上次的 tab;中途同样不能闪出别的 tab。
+test('L06(a):详情回来前不渲染任何 tab 内容；同一俱乐部再次进入也先看概览，不先闪帖子', () => {
+  const { page, requests } = loadDetail()
+  const initialData = JSON.parse(JSON.stringify(page.data))
+  assert.equal(page.data.activeTab, '', '初值为空:不能先渲染「帖子」')
+  const view = read(DETAIL_WXML)
+  assert.match(view, /wx:if="\{\{activeTab === 'posts'\}\}"/, '帖子 tab 只在明确选中时渲染')
+  Object.assign(page.data, { clubId: 31 })
+  page.loadDetail()
+  requests.find(r => r.url === '/api/club/detail').success({ code: '200', data: { id: 31, isOwner: false, isJoined: false, joinPolicy: 0 } })
+  assert.equal(page.data.activeTab, 'overview', '访客默认概览')
+  page.switchTab({ detail: { key: 'events' } })
+
+  // 小程序里页面模块只执行一次,再次 navigateTo 是同一份定义的新实例 —— 这里同样复用同一个沙箱。
+  const seen = []
+  const again = Object.assign({}, page, {
+    data: Object.assign(JSON.parse(JSON.stringify(initialData)), { clubId: 31 }),
+    setData(patch, cb) { if ('activeTab' in patch) seen.push(patch.activeTab); Object.assign(this.data, patch); if (cb) cb.call(this) },
+  })
+  requests.length = 0
+  again.loadDetail()
+  requests.find(r => r.url === '/api/club/detail').success({ code: '200', data: { id: 31, isOwner: false, isJoined: false, joinPolicy: 0 } })
+  assert.ok(seen.length > 0)
+  assert.deepEqual(seen.filter(tab => tab !== 'overview'), [], '再次进入同一俱乐部直接落在概览,中途不出现别的 tab')
+})
+
+test('L06(c):公开加入团的访客能看成员名单与贡献榜，需审核团锁到通过审核', () => {
+  const pub = loadDetail()
+  Object.assign(pub.page.data, { clubId: 32 })
+  pub.page.loadDetail()
+  pub.requests.find(r => r.url === '/api/club/detail').success({ code: '200', data: { id: 32, isOwner: false, isJoined: false, joinPolicy: 0 } })
+  assert.equal(pub.page.data.canSeeRoster, true)
+  assert.equal(pub.page.data.canSeeMembers, false, '发帖/评论/举报仍要成员身份')
+  assert.ok(pub.requests.some(r => r.url === '/api/club/members'), '公开团访客要拉成员名单')
+
+  const gated = loadDetail()
+  Object.assign(gated.page.data, { clubId: 33 })
+  gated.page.loadDetail()
+  gated.requests.find(r => r.url === '/api/club/detail').success({ code: '200', data: { id: 33, isOwner: false, isJoined: false, joinPolicy: 1, myJoinStatus: 0 } })
+  assert.equal(gated.page.data.canSeeRoster, false)
+  assert.equal(gated.requests.some(r => r.url === '/api/club/members'), false)
+
+  const view = read(DETAIL_WXML)
+  assert.match(view, /通过审核后可看成员名单/)
+  assert.match(view, /通过审核后可看贡献榜/)
+  assert.match(view, /<block wx:if="\{\{canSeeRoster\}\}">\s*<view class="ov-lb"/)
+  assert.match(view, /class="member-report" wx:if="\{\{canSeeMembers && /, '访客看名单但不能逐人举报')
+})
+
+test('L06(c):需审核团申请留言必填、60 字内；公开团一键加入', () => {
+  const { page, requests, modals } = loadDetail()
+  Object.assign(page.data, { clubId: 34, club: { id: 34, joinPolicy: 1 } })
+  page.onJoin()
+  assert.equal(modals.length, 1)
+  assert.equal(modals[0].editable, true)
+  assert.doesNotMatch(modals[0].placeholderText, /选填/)
+  assert.equal(typeof modals[0].validate, 'function')
+  assert.equal(modals[0].validate('   '), '请先写一句申请留言')
+  assert.equal(modals[0].validate('长'.repeat(61)), '申请留言最多 60 字')
+  assert.equal(modals[0].validate('长'.repeat(60)), '')
+  modals[0].success({ confirm: true, content: '  朋友推荐来的  ' })
+  const join = requests.find(r => r.url === '/api/club/join')
+  assert.equal(JSON.parse(join.data).joinMessage, '朋友推荐来的')
+
+  const open = loadDetail()
+  Object.assign(open.page.data, { clubId: 35, club: { id: 35, joinPolicy: 0 } })
+  open.page.onJoin()
+  assert.equal(open.modals.length, 0, '公开团不问留言')
+  assert.ok(open.requests.some(r => r.url === '/api/club/join'))
+
+  const view = read(DETAIL_WXML)
+  assert.match(view, /aria-disabled="true">等待主理人审核<\/view>/)
+})
+
+test('L06(b/d/e):头部两行元信息；商家可加入、活动卡写「商家不能报名」；俱乐部页无邀约浮条', () => {
+  const { page, requests } = loadDetail()
+  Object.assign(page.data, { clubId: 36 })
+  page.loadDetail()
+  requests.find(r => r.url === '/api/club/detail').success({ code: '200', data: { id: 36, clubType: '旅行组织', memberCount: 1, joinPolicy: 0 } })
+  assert.equal(page.data.club.metaLine, '旅行组织 · 1 名成员')
+  assert.equal(page.data.club.joinPolicyText + '加入', '公开加入')
+
+  const view = read(DETAIL_WXML)
+  // 2026-10-22 owner:俱乐部谁都能进来看,加入按钮改成底部悬浮;条件里仍不挡商家
+  // 2026-10-22 owner:加入按钮只在「概览」出现,往下滑收起(join-float--hidden)
+  assert.match(view, /<block wx:if="\{\{detailLoaded && activeTab === 'overview' && !club\.isJoined && !club\.isOwner[^"]*\}\}">\s*<view class="join-float-space"><\/view>\s*<view class="join-float \{\{joinHidden && !joinFx \? 'join-float--hidden' : ''\}\}">/, '商家不再被挡在加入按钮外')
+  assert.doesNotMatch(view, /class="profile-cta"/, '头部不再放加入按钮')
+  assert.match(view, /wx:if="\{\{merchantNoSignup\}\}" class="ev-no-signup">商家不能报名</)
+  assert.match(view, /upcomingTopics[^\n]*\n[^\n]*merchantNoSignup: isMerchantViewer/)
+  assert.doesNotMatch(view, /club-coop-floating|cy-coop-invite-sheet|goClubCoop/)
+  assert.doesNotMatch(read('pages/club/detail/index.json'), /coop-invite-sheet/)
+})
+
+// 2026-10-22 owner:「加入俱乐部」往下滑时收起,往上滑或回到顶部再出来;只在状态变化时 setData
+test('加入俱乐部悬浮按钮:往下滑收起、往上滑/回顶再出现', () => {
+  const { page } = loadDetail()
+  let writes = 0
+  const setData = page.setData
+  page.setData = function (patch, cb) { writes++; return setData.call(this, patch, cb) }
+  page.onPageScroll({ scrollTop: 20 })
+  assert.equal(page.data.joinHidden, false, '顶部附近不收')
+  page.onPageScroll({ scrollTop: 200 })
+  assert.equal(page.data.joinHidden, true, '往下滑收起')
+  const before = writes
+  page.onPageScroll({ scrollTop: 400 })
+  assert.equal(writes, before, '继续往下滑不重复 setData')
+  page.onPageScroll({ scrollTop: 300 })
+  assert.equal(page.data.joinHidden, false, '往上滑再出现')
+  page.onPageScroll({ scrollTop: 500 })
+  page.onPageScroll({ scrollTop: 10 })
+  assert.equal(page.data.joinHidden, false, '回到顶部一定出现')
+})
+
+// 2026-10-22 业主:加入后弹「在这个俱乐部你可以做什么」,内容按本团真实设置拼;主理人可自定欢迎语
+test('欢迎层按本团设置拼条目:发帖开关、商家不能报名、成员优先/成员价', () => {
+  const { page } = loadDetail()
+  const open = page.buildWelcomeItems({ id: 1, memberPostAllowed: 1, prioritySignupEnabled: 1, memberDiscountPrice: 39 })
+  assert.equal(JSON.stringify(open.map(i => i.key)), JSON.stringify(['posts', 'events', 'overview']))
+  assert.match(open[0].title, /发帖/)
+  assert.match(open[1].sub, /成员优先报名、成员价 ¥39/)
+  const closed = page.buildWelcomeItems({ id: 1, memberPostAllowed: 0 })
+  assert.doesNotMatch(closed[0].title, /发帖/, '成员不能发帖的团不能说「发帖」')
+  page.data.isMerchantViewer = true
+  assert.match(page.buildWelcomeItems({ id: 1 })[1].sub, /商家身份不能报名/)
+})
+
+test('加入成功:按钮先变绿打勾,动效后才弹欢迎层;待审只回执不弹', () => {
+  const { page, requests, modals } = loadDetail()
+  Object.assign(page.data, { clubId: 36, club: { id: 36, name: '城市乐居人', joinPolicy: 0 }, reducedMotion: true })
+  const fx = []
+  const setData = page.setData
+  page.setData = function (patch, cb) {
+    if ('joinFx' in patch) fx.push(patch.joinFx)
+    if (patch.welcomeShow) fx.push('welcome')
+    return setData.call(this, patch, cb)
+  }
+  page.onJoin()
+  assert.equal(page.data.joinFx, 'busy')
+  page.onJoin()
+  assert.equal(requests.filter(r => r.url === '/api/club/join').length, 1, '请求中不重复提交')
+  requests.find(r => r.url === '/api/club/join').success({ code: '200', data: { state: 'joined' } })
+  // 沙箱里没有 setTimeout,动效后的那一步立即执行;顺序必须是 请求中 → 变绿打勾 → 弹欢迎层 → 复位
+  assert.equal(JSON.stringify(fx), JSON.stringify(['busy', 'done', 'welcome', '']), '成功先变绿打勾,再弹欢迎层')
+  assert.equal(page.data.welcomeShow, true)
+
+  const pending = loadDetail()
+  Object.assign(pending.page.data, { clubId: 37, club: { id: 37, joinPolicy: 1 } })
+  pending.page.submitJoin('想一起夜行')
+  pending.requests.find(r => r.url === '/api/club/join').success({ code: '200', data: { state: 'pending' } })
+  assert.equal(pending.page.data.joinFx, '')
+  assert.equal(pending.page.data.welcomeShow, false, '待审不弹欢迎层')
+  assert.ok(pending.modals.some(m => /申请已提交/.test(m.title)))
+  void modals
+})
+
+test('主理人保存入会欢迎语:走开放设置接口,回读值才落到页面', () => {
+  const { page, requests } = loadDetail()
+  Object.assign(page.data, { clubId: 38, club: { id: 38, isOwner: true, welcomeNote: '' } })
+  page.saveWelcomeNote('欢迎！周六晚上一起夜行')
+  const req = requests.find(r => r.url === '/api/club/open-settings/welcome-note')
+  assert.ok(req)
+  assert.equal(JSON.parse(req.data).welcomeNote, '欢迎！周六晚上一起夜行')
+  assert.equal(page.data.openSettingSaving, 'welcomeNote')
+  req.success({ code: 200, data: { welcomeNote: '欢迎！周六晚上一起夜行' } })
+  // 桩 setData 不展开路径键('club.welcomeNote' 原样落在 data 上),真机会展开;两处都认
+  const noteOf = () => page.data['club.welcomeNote'] !== undefined ? page.data['club.welcomeNote'] : page.data.club.welcomeNote
+  assert.equal(noteOf(), '欢迎！周六晚上一起夜行')
+  assert.equal(page.data.openSettingSaving, '')
+
+  page.saveWelcomeNote('x')
+  requests[requests.length - 1].success({ code: 500, msg: '内容含违规信息' })
+  assert.equal(page.data.openSettingErrorKey, 'welcomeNote')
+  assert.equal(noteOf(), '欢迎！周六晚上一起夜行', '失败不改页面上的值')
+  const view = read(DETAIL_WXML)
+  assert.match(view, /wx:if="\{\{club\.welcomeNote\}\}"[\s\S]{0,200}\{\{club\.welcomeNote\}\}/, '欢迎层最上面显示主理人欢迎语')
 })

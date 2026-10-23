@@ -4,7 +4,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class TencentMapClientTest {
 
@@ -26,6 +28,22 @@ class TencentMapClientTest {
 
         assertEquals("ok", client.get("https://example.test/geocode?location=30,120"));
         assertEquals("https://example.test/geocode?location=30,120&key=server-only-key", client.lastUrl);
+    }
+
+    @Test
+    void readyOnlyWhenEnabledWithKeyAndStartupWarnNeverFails() {
+        RecordingTencentMapClient client = new RecordingTencentMapClient();
+        ReflectionTestUtils.setField(client, "enabled", true);
+        ReflectionTestUtils.setField(client, "mapKey", "");
+        assertFalse(client.isReady());
+        client.warnIfNotReady();
+        ReflectionTestUtils.setField(client, "enabled", false);
+        ReflectionTestUtils.setField(client, "mapKey", "server-only-key");
+        assertFalse(client.isReady());
+        client.warnIfNotReady();
+        ReflectionTestUtils.setField(client, "enabled", true);
+        assertTrue(client.isReady());
+        client.warnIfNotReady();
     }
 
     private static final class RecordingTencentMapClient extends TencentMapClient {

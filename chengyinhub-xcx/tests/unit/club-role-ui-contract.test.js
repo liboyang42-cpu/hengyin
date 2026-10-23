@@ -624,7 +624,7 @@ test('详情管理页签由 access/me 权限驱动，副主理人与运营可进
   operator.page.loadClubAccess()
   operator.requests[1].success({ code: '200', data: { active: false, club: { id: 9 }, permissions: [] } })
   assert.equal(operator.page.data.canUseManageTab, false)
-  assert.equal(operator.page.data.activeTab, 'posts')
+  assert.equal(operator.page.data.activeTab, 'overview', '权限回收后退回默认 tab —— 2026-10-22 起一律是概览')
   assert.deepEqual(Array.from(operator.page.data.clubTabs, (tab) => tab.key), [
     'posts', 'events', 'overview',
   ])

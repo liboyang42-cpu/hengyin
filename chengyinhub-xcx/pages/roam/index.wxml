@@ -18,7 +18,7 @@
 
 <!-- 地图入口弹层只服务开始前浏览态；开始后的 psheet 与 HUD 保持原样。 -->
 <view class="roam-scene-host" wx:if="{{screen=='entry-map' && entrySheet}}" catchtouchmove="blockSceneTouch">
-  <view class="pdim {{entrySheetIn?'is-in':''}} entry-sheet__mask" bindtap="closeEntrySheet" aria-role="button" aria-label="关闭弹窗" hover-class="cy-pressed" hover-stay-time="80"></view>
+  <view class="pdim {{entrySheetIn?'is-in':''}} entry-sheet__mask" catchtouchmove="noop" bindtap="closeEntrySheet" aria-role="button" aria-label="关闭弹窗" hover-class="cy-pressed" hover-stay-time="80"></view>
   <view class="psheet {{entrySheetIn?'is-in':''}} entry-sheet">
     <view class="psheet__grab"></view>
     <view class="entry-sheet__head">
@@ -107,26 +107,51 @@
     <swiper class="intro-cards" previous-margin="46rpx" next-margin="85rpx" current="{{introCardIdx}}" bindchange="onIntroCardSwipe">
       <swiper-item>
         <view class="intro-card" bindtap="goStart" aria-role="button" aria-label="开始漫游" hover-class="cy-pressed" hover-stay-time="80">
-          <view class="intro-card__ic"><image class="intro-card__img" src="/images/roam/intro-roam.svg" mode="aspectFill" /></view>
-          <view class="intro-card__copy"><text class="intro-card__title">{{introCards[0].title}}</text><text class="intro-card__sub">{{introCards[0].sub}}</text></view>
+          <view class="intro-card__stub is-roam">
+            <image class="intro-card__img" src="/images/roam/intro-ticket-route.svg" mode="aspectFit" />
+            <text class="intro-card__code">NO.01</text>
+          </view>
+          <view class="intro-card__tear"></view>
+          <view class="intro-card__body">
+            <view class="intro-card__row"><text class="intro-card__title">{{introCards[0].title}}</text></view>
+            <text class="intro-card__sub">{{introCards[0].sub}}</text>
+            <text class="intro-card__livetx">{{introStartLive || '城瘾 · CITY ROAM'}}</text>
+          </view>
         </view>
       </swiper-item>
       <swiper-item>
         <view class="intro-card" bindtap="openNearbyMap" aria-role="button" aria-label="打开地图，寻找组队" hover-class="cy-pressed" hover-stay-time="80">
-          <view class="intro-card__ic"><image class="intro-card__img" src="/images/roam/intro-map.svg" mode="aspectFill" /></view>
-          <view class="intro-card__copy"><text class="intro-card__title">{{introCards[1].title}}</text><text class="intro-card__sub">{{introCards[1].sub}}</text></view>
+          <view class="intro-card__stub is-map">
+            <image class="intro-card__img" src="/images/roam/intro-ticket-map.svg" mode="aspectFit" />
+            <text class="intro-card__code">NO.02</text>
+          </view>
+          <view class="intro-card__tear"></view>
+          <view class="intro-card__body">
+            <view class="intro-card__row"><text class="intro-card__title">{{introCards[1].title}}</text></view>
+            <text class="intro-card__sub">{{introCards[1].sub}}</text>
+            <text class="intro-card__livetx">{{introTeamsLive || '城瘾 · CITY ROAM'}}</text>
+          </view>
         </view>
       </swiper-item>
       <swiper-item>
         <view class="intro-card" bindtap="openMyTeams" aria-role="button" aria-label="我的队伍" hover-class="cy-pressed" hover-stay-time="80">
-          <view class="intro-card__ic"><image class="intro-card__img" src="/images/roam/intro-team.svg" mode="aspectFill" /></view>
-          <view class="intro-card__copy"><text class="intro-card__title">{{introCards[2].title}}</text><text class="intro-card__sub">{{introCards[2].sub}}</text></view>
+          <view class="intro-card__stub is-team">
+            <image class="intro-card__img" src="/images/roam/intro-ticket-team.svg" mode="aspectFit" />
+            <text class="intro-card__code">NO.03</text>
+          </view>
+          <view class="intro-card__tear"></view>
+          <view class="intro-card__body">
+            <view class="intro-card__row"><text class="intro-card__title">{{introCards[2].title}}</text></view>
+            <text class="intro-card__sub">{{introCards[2].sub}}</text>
+            <text class="intro-card__livetx">城瘾 · CITY ROAM</text>
+          </view>
         </view>
       </swiper-item>
     </swiper>
     <view class="intro-dots"><view class="intro-dot {{index==introCardIdx?'is-on':''}}" wx:for="{{introCards}}" wx:key="key"></view></view>
     <view class="intro-map-space"></view>
-  <view class="entry-peek">
+  <!-- 2026-10-22 owner:附近没有活动时「附近活动」这一块整块不出(连标题带空态文案) -->
+  <view class="entry-peek" wx:if="{{entryReadAccess || entryLoadError || entryCards.length}}">
     <view class="entry-peek__head"><text>附近活动</text></view>
     <!-- 2026-10-17 合并 master:附近内容读权限态(未登录 / 无权)先于错误与列表 -->
     <cy-state-shell wx:if="{{entryReadAccess}}" kind="no-permission"

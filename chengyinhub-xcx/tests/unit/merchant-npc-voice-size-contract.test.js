@@ -87,8 +87,11 @@ function loadPage(options = {}) {
 
 const tick = () => new Promise((resolve) => setImmediate(resolve))
 
-test('录音面板是三句逐句录制的 Voice mode', () => {
-  assert.match(WXML, /Voice mode/)
+test('录音面板是三句逐句录制的「录制声音」卡(L09:中文标签、录制与确认同一版式)', () => {
+  assert.doesNotMatch(WXML, /Voice mode/)
+  assert.match(WXML, /<text class="npc-voice-mode__title">录制声音<\/text>/)
+  assert.doesNotMatch(WXML, /确认录音/, '录完确认不再换面板标题')
+  assert.match(WXML, /<view class="npc-voice-mode [^"]*">[\s\S]*?<view wx:else class="npc-voice-complete">[\s\S]*?<\/view>\s*<button wx:if="\{\{voiceFile\}\}" class="npc-voice-hold"/, '确认态留在同一张录音卡里')
   assert.match(SOURCE, /你好，欢迎来到我的小店/)
   assert.match(SOURCE, /你可以告诉我想找什么商品/)
   assert.match(SOURCE, /如果还有价格、服务或者到店方面的问题/)

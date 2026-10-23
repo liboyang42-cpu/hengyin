@@ -51,11 +51,11 @@ function assertFinalReviewContract(source = read) {
   // 由 merchant-marketing-state-contract 的「未知内容数量不会被当作零内容送去创建页」守),
   // 每次重设计都要重写一遍却从没抓到过缺陷 —— 删掉,不迁移。
 
-  // 2026-08-09:合作页删掉「我的合作」,只剩商家 / 俱乐部两个发现 tab,分区数 3 → 2。
+  // 2026-08-09:合作页删掉「我的合作」,2026-10-22 起 tab = 帖子 / 俱乐部:俱乐部列表 1 处(帖子是 post-card 流)。
   const relation = source('pages/merchant/relation/index.wxml')
-  assert.equal((relation.match(/<cy-empty wx:elif="\{\{!(?:merchant|club)Error\}\}" kind="empty"/g) || []).length, 2)
-  assert.equal((relation.match(/class="rel-item"[^>]*wx:if="\{\{item\.displayName\}\}"/g) || []).length, 2)
-  assert.equal((relation.match(/wx:if="\{\{relation\.valid\([^)]+\)\.length\}\}"/g) || []).length, 2)
+  assert.equal((relation.match(/<cy-empty wx:elif="\{\{(?:!clubError|feedState === 'empty')\}\}" kind="empty"/g) || []).length, 2)
+  assert.equal((relation.match(/class="rel-item"[^>]*wx:if="\{\{item\.displayName\}\}"/g) || []).length, 1)
+  assert.equal((relation.match(/wx:if="\{\{relation\.valid\([^)]+\)\.length\}\}"/g) || []).length, 1)
   assert.doesNotMatch(relation, /relation\.valid\(relations\)/)
 
   const citynodeWxss = source('pages/merchant/citynode/index.wxss')

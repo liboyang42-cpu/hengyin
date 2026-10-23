@@ -112,6 +112,7 @@ test('CL06 普通成员点击＋N展开已加载的完整名单，访客不能�
     page.data.club = { id: 7, memberCount: 5, isOwner: false };
     page.data.clubId = 7;
     page.data.canSeeMembers = true;
+    page.data.canSeeRoster = true;
     const members = Array.from({ length: 5 }, (_, index) => ({ id: index + 1, memberId: index + 10 }));
     routes['/api/club/members'] = (request) => request.success({ code: 200, data: members });
     page.loadMembers();
@@ -123,8 +124,10 @@ test('CL06 普通成员点击＋N展开已加载的完整名单，访客不能�
     assert.equal(requests.length, requestCount, '展开复用已加载名单，不发起业务写入');
     assert.equal(scrolls[0].selector, '#club-member-list');
 
+    // 拍板 2026-10-22:名单可见位改为 canSeeRoster(公开团访客也可见);需审核团的访客仍不能展开。
     const visitor = loadPage();
     visitor.data.canSeeMembers = false;
+    visitor.data.canSeeRoster = false;
     visitor.expandMembers();
     assert.equal(visitor.data.membersExpanded, false);
     assert.equal(scrolls.length, 1, '访客不能滚动进入成员名单');
@@ -169,8 +172,10 @@ test('CU-C-71 审批团(joinPolicy=1)保留「重新申请并等主理人通过�
 
 test('CU-C-71 加入按钮只在审批团被拒后才说「重新申请加入」', () => {
   const wxml = readDetailWxml();
-  assert.match(wxml, /club\.joinPolicy == 1 && club\.myJoinStatus === 2 \? '重新申请加入' : '加入俱乐部'/,
-    '公开团的按钮不能再叫「重新申请加入」—— 它点了就是立即成为成员');
+  // 2026-10-22 owner:按钮做成右下角小胶囊,文案缩短(加入 / 申请加入 / 重新申请);不变量照旧 ——
+  // 「重新申请」只出现在审批团(joinPolicy 1)被拒(myJoinStatus 2)之后,公开团点了就是成员。
+  assert.match(wxml, /club\.joinPolicy == 1 \? \(club\.myJoinStatus === 2 \? '重新申请' : '申请加入'\) : '加入'/,
+    '公开团的按钮不能再叫「重新申请」—— 它点了就是立即成为成员');
 });
 
 /* ——— CU-C-83(9-25 裁决:加「客户档案」直达):点成员行不许由前端按权限悄悄改道 ——— */
@@ -454,8 +459,10 @@ test('CU-C-51 概况卡写明统计范围,「参与人次」改称「游玩人�
 // 集成复审:CU-C-71 改文案时把加入按钮的 wx:else 弄丢了 ⇒ 审核中的人同时看到「等待审核」和可点的「加入俱乐部」,能重复申请。
 test('CU-C-71 回归：审核中只显示等待态，加入按钮必须挂在 wx:else 上', () => {
   const wxml = readDetailWxml();
-  const cta = wxml.slice(wxml.indexOf('<view class="profile-cta"'), wxml.indexOf('</view>', wxml.indexOf('bindtap="onJoin"')));
-  assert.match(cta, /wx:if="\{\{club\.myJoinStatus === 0\}\}"[^>]*>等待审核<\/view>\s*<view wx:else [^>]*bindtap="onJoin"/);
+  // 2026-10-22 owner:加入按钮改为底部悬浮(.join-float),判定口径不变
+  const cta = wxml.slice(wxml.indexOf('<view class="join-float '), wxml.indexOf('</view>', wxml.indexOf('bindtap="onJoin"')));
+  // 拍板 2026-10-22:待审态文案改为「等待主理人审核」(禁用态)。
+  assert.match(cta, /wx:if="\{\{club\.myJoinStatus === 0\}\}"[^>]*aria-disabled="true"[^>]*>等待主理人审核<\/view>\s*<view wx:else [^>]*bindtap="onJoin"/);
 });
 
 

@@ -228,13 +228,10 @@ test('入口3 附近合作商家 → 唯一带主题上下文的 contextual deep
   assertNearbyMerchantCard(read('pages/coop/nearby/index.wxml'));
 });
 
-test('入口4 商家关系 → canonical(公开投影的 memberId)', () => {
-  const { page, urls } = loadPage('pages/merchant/relation/index.js');
-  page.goMerchant(tap({ memberid: 88 }));
-  assert.deepEqual(urls(), [CANONICAL]);
-  // (2026-08-20 重设计:cy-cell 行换成卡组件,memberId 挂在组件实例上)
-  assert.match(read('pages/merchant/relation/index.wxml'),
-    /<cy-merchant-card[^>]*data-memberid="\{\{item\.memberId\}\}"[^>]*bind:tap="goMerchant"/);
+test('入口4 商家关系页不再有商家入口(2026-10-22 owner:商家看不到其他商家)', () => {
+  const { page } = loadPage('pages/merchant/relation/index.js');
+  assert.equal(page.goMerchant, undefined);
+  assert.doesNotMatch(read('pages/merchant/relation/index.wxml'), /<cy-merchant-card|goMerchant/);
   // 俱乐部那支不受影响:它的主体本来就是 clubId
   assert.match(read('pages/merchant/relation/index.wxml'),
     /<cy-club-card[^>]*data-id="\{\{item\.id\}\}"[^>]*bind:tap="goClub"/);
