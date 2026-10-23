@@ -4963,8 +4963,8 @@ Page({
    */
   shareTo(e) {
     const ch = (e && e.currentTarget && e.currentTarget.dataset && e.currentTarget.dataset.ch) || '';
-    // 可见性是**闸**不是标签:选了「仅自己」还能点进广场,那个选择器就是假的。
-    // 渠道按钮已按 share.channels 置灰,这里再拦一道 —— 置灰只挡手指,挡不住 automator/深链。
+    if (!ch) return Promise.resolve({ ok: false, channel: '', saved: false, posted: false, blocked: true }); // 没带渠道不是用户选了渠道,不拼「不发布到」
+    // 可见性是**闸**不是标签(选了「仅自己」还能点进广场,选择器就是假的);按钮已按 share.channels 置灰,这里再拦一道:置灰挡不住 automator/深链。
     if (!isChannelAllowed(ch, this.data.share.visibility)) {
       cyToast('当前可见范围不发布到' + (ch === '保存' ? '相册' : ch));
       return Promise.resolve({ ok: false, channel: ch, saved: false, posted: false, blocked: true });
@@ -5142,17 +5142,17 @@ Page({
    */
   _exportAndSave(loadingTitle, drawFn, current = this._roamReadScope()) {
     if (!current()) return Promise.resolve({ path: null, saved: false });
-    this._shareLoading = true;
-    cyLoading.show(loadingTitle);
+    // 每次 show 配一次 hide(cyLoading 按层计数):作用域失效走提前返回也要收,
+    // 否则换号/离开漫游后遮罩一直挂着;_cancelShareWork 已收过的不重复 hide。
+    const releaseLoading = require('../../utils/roam-share-loading.js').loadingRelease(this, cyLoading, loadingTitle);
     return Promise.resolve().then(drawFn).then((path) => {
+      releaseLoading();
       if (!current()) return { path: null, saved: false };
-      this._shareLoading = false;
-      cyLoading.hide();
       return this._saveToAlbum(path, current).then((saved) => ({ path, saved: current() && saved }));
     }).catch((err) => {
+      releaseLoading();
       if (!current()) return { path: null, saved: false };
-      this._shareLoading = false;
-      cyLoading.hide();
+      // 只有仍是当前作用域的失败才提示
       cyToast('生成失败');
       console.warn('card export fail');
       return { path: null, saved: false };
@@ -5643,7 +5643,7 @@ Page({
   },
   onShareAppMessage(event) {
     const activityShare = activityShareFromEvent(event);
-    if (activityShare) return activityShare;
+    return activityShare || require('../../utils/roam-menu-share.js').roamMenuShare(); // 不给 imageUrl 微信会截地图(实时位置)当封面
   },
 
   // P0(2026-09-05 审核):据点详情弹层里的打卡走 /api/city/nodes/{id}/complete,和本页的
