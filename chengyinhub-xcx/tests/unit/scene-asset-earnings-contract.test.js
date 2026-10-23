@@ -252,7 +252,7 @@ function assertEarningsEmptyState(wxml) {
   const empty = wxml.match(/<cy-empty[^>]*title="还没有收益"[^>]*>/)
   assert.ok(empty, '余额为 0 必须有空态')
   assert.doesNotMatch(empty[0], /创建俱乐部/, '空态不许把主办分润限定成只有俱乐部才有')
-  assert.match(empty[0], /sub="创作收益与主办分润到账后都会显示在这里"/, '空态要说出这笔余额的两条真来路')
+  assert.doesNotMatch(empty[0], /\bsub="/, '空态只留标题和按钮，不写说明句')
   return empty[0]
 }
 
@@ -262,8 +262,8 @@ test('CU-M-144 空态按余额真来路说，不把主办分润限定成俱乐�
 
 test('negative control CU-M-144: 空态退回「创建俱乐部获得分润」必须判红', () => {
   const wxml = read('index.wxml')
-  const reverted = wxml.replace('sub="创作收益与主办分润到账后都会显示在这里"',
-    'sub="发布路线与场次获得创作收益，或创建俱乐部获得分润"')
+  const reverted = wxml.replace('title="还没有收益"',
+    'title="还没有收益" sub="发布路线与场次获得创作收益，或创建俱乐部获得分润"')
   assert.notEqual(reverted, wxml, '负控锚点失效(源码已改动?)')
   assert.throws(() => assertEarningsEmptyState(reverted), assert.AssertionError)
 })

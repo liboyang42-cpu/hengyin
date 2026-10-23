@@ -62,7 +62,7 @@
       {{targetsErrorText}}<text class="inline-retry" bindtap="retryTargets" aria-role="button" aria-label="重试刷新合作对象" hover-class="cy-pressed" hover-stay-time="80">重试</text>
     </view>
     <cy-skeleton wx:if="{{targetsState === 'loading'}}" type="list" count="3" />
-    <cy-error class="error-kind--{{targetsErrorKind}}" wx:elif="{{targetsState === 'permission'}}" title="当前账号不能读取合作对象" sub="{{targetsErrorText}}" bind:retry="retryTargets" />
+    <cy-error class="error-kind--{{targetsErrorKind}}" wx:elif="{{targetsState === 'permission'}}" title="当前账号无权查看合作对象" bind:retry="retryTargets" />
     <cy-error load-failure class="error-kind--{{targetsErrorKind}}" wx:elif="{{targetsState === 'error'}}" title="合作对象加载失败" bind:retry="retryTargets" />
 
     <block wx:elif="{{presetTarget}}">

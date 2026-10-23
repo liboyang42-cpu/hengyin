@@ -112,7 +112,7 @@ Page({
       this.setData({
         invalidLink: true,
         loaded: true,
-        loadError: '合作链接无效或已失效，请从主题定价页重新进入。',
+        loadError: '链接已失效，请返回重新进入',
       });
       return;
     }

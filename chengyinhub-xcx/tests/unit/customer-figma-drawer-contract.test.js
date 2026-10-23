@@ -25,7 +25,7 @@ test('客户页的四类业务筛选统一放入底部弹窗', () => {
   assert.doesNotMatch(wxml, /cu-filter-chip--on|cu-seg--on/);
   assert.match(wxml, /wx:if="\{\{segment === item.key\}\}" name="check"/);
   assert.match(wxml, /class="cu-hero-title">客户</);
-  assert.match(wxml, /class="cu-hero-sub">\{\{error \? \'客户数量暂不可用\' : customerSummaryText\}\}<\/text>/);
+  assert.match(wxml, /class="cu-hero-sub" wx:if="\{\{!error && customerSummaryText\}\}">\{\{customerSummaryText\}\}<\/text>/);
   // 2026-09-25 CU-M-120/147 给三段补了 emptyLabel(空态专用说法),这条原来把整个对象字面量写死,
   // 多一个属性就红。钉的其实是「四枚分段的 key/label 与顺序」,所以只钉到 label 为止。
   assert.match(js, /\{ key: 'all', label: '全部' \}[\s\S]*\{ key: 'repeat', label: '回头客'[\s\S]*\{ key: 'new', label: '新客'[\s\S]*\{ key: 'noted', label: '有备注'/);

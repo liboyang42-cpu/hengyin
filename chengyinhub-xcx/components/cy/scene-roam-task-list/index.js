@@ -80,7 +80,7 @@ Component({
       let events = this.data.tab === 0 ? source.filter((item) => item._live || !item._statusKnown) : this.data.tab === 1 ? source.filter((item) => item.status === 1) : this.data.tab === 2 ? source.filter((item) => item.status === 5 || item.status === 6 || item.status === 9) : source
       const keyword = String(this.data.keyword || '').trim().toLowerCase()
       if (keyword) events = events.filter((item) => [item.title, item.subtitle, item.city].some((value) => String(value || '').toLowerCase().includes(keyword)))
-      const copy = keyword ? [`「${keyword}」${events.length} 个结果`, '换个关键词，或看看其他分类'] : [[ '暂无进行中的活动', '官方策展活动会第一时间出现在这里' ], [ '暂无即将开始的活动', '官方策展活动会第一时间出现在这里' ], [ '暂无已结束的活动', '往期活动归档后会出现在这里' ], [ '还没有参与的活动', '报名活动后会出现在这里' ]][this.data.tab]
+      const copy = keyword ? [`「${keyword}」${events.length} 个结果`, '换个关键词试试'] : [[ '暂无进行中的活动', '' ], [ '暂无即将开始的活动', '' ], [ '暂无已结束的活动', '' ], [ '还没有参与的活动', '' ]][this.data.tab]
       this.setData({ events, summary: keyword ? copy[0] : `${this.data.tabs[this.data.tab]} · 共 ${events.length} 个活动`, emptyTitle: keyword ? '没有找到相关活动' : copy[0], emptySub: copy[1] })
     },
     selectTab(event) { this.setData({ tab: Number(event.currentTarget.dataset.tab) }, () => this._filter()) },

@@ -10,7 +10,7 @@
   <cy-page-title class="c1-page-title" title="我的收藏" safe-top="{{false}}" />
   <cy-tabs class="favorite-tabs" variant="fill" wide="{{true}}" tabs="{{favoriteTabs}}" active="{{activeFavoriteTab}}" bind:change="onFavoriteTabChange" />
   <!-- PC-025/PC-180:如实说明取消收藏不撤回已记录的推荐兴趣;推荐偏好/排除尚未上线,说明里不得暗示可用 -->
-  <view class="favorite-recommend-note" bindtap="showRecommendNote" aria-role="button" aria-label="取消收藏不会撤回已记录的推荐兴趣，查看说明" hover-class="cy-pressed" hover-stay-time="80">取消收藏不会撤回已记录的推荐兴趣 · 说明</view>
+  <view class="favorite-recommend-note" wx:if="{{ztList1.length}}" bindtap="showRecommendNote" aria-role="button" aria-label="查看推荐说明" hover-class="cy-pressed" hover-stay-time="80">推荐说明</view>
 
   <view class="tablist favorite-list">
     <block wx:if="{{activeFavoriteTab === 'posts'}}">

@@ -20,7 +20,7 @@
             <text>{{item.mobilePhone}}</text>
             <!--<text class="default-tag" wx:if="{{item.isDefault == 1}}"> 默认</text>-->
           </view>
-          <view class="dz_li_left_txt">用于报名联系和到场核验</view>
+
         </view>
         <view class="dz_li_edit" catchtap="goEditAddress" data-id="{{item.id}}" aria-role="button" aria-label="编辑{{item.fullName}}" hover-class="cy-pressed" hover-stay-time="80" hover-stop-propagation="true">编辑</view>
         <view class="dz_li_right {{deletingIds[item.id] ? 'is-disabled' : ''}}" catchtap="deleteAddress" data-id="{{item.id}}" aria-role="button" aria-disabled="{{deletingIds[item.id]}}" aria-label="删除{{item.fullName}}" hover-class="{{deletingIds[item.id] ? 'none' : 'cy-pressed'}}" hover-stay-time="80" hover-stop-propagation="true">

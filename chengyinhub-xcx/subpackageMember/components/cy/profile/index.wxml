@@ -510,7 +510,7 @@
             <text>编辑</text>
           </view>
         </view>
-        <view class="pc-card pc-about">{{userInfo.introduction || '还没有写个人介绍，完善资料后可展示'}}</view>
+        <view class="pc-card pc-about">{{userInfo.introduction || '还没有个人介绍'}}</view>
 
         <view class="pc-sec-tit">兴趣标签</view>
         <view class="pc-tags">

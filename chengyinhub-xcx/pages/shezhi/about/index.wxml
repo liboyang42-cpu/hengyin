@@ -16,7 +16,7 @@
 
     <view class="about-section">
       <view class="about-section__title">我的二维码</view>
-      <view class="about-section__intro">活动现场出示，即将开通</view>
+      <view class="about-section__intro">活动现场出示</view>
       <cy-qr-voucher
         embedded="{{true}}"
         surface="host"

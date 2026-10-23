@@ -8,7 +8,7 @@
        接管后回落到无参可达的参与人列表。 -->
   <cy-nav-bar custom-back bind:back="onBack" />
   <!-- 说明改挂 page-title 的 subtitle:原来卡外还有一个同名「参与人信息」大标题 = 同页双标题(DS §3.1 禁止条) -->
-  <cy-page-title title="参与人信息" subtitle="仅用于报名联系，不公开" />
+  <cy-page-title title="参与人信息" subtitle="" />
   <cy-skeleton wx:if="{{bootstrapping}}" type="form-section" count="{{2}}" loading-label="正在读取参与人信息" />
   <cy-state-shell wx:elif="{{bootstrapError}}" kind="{{bootstrapErrorKind}}"
                   title="{{bootstrapError}}" sub="{{bootstrapErrorSub}}" primary="重新加载"

@@ -5,7 +5,7 @@
   <cy-nav-bar />
   <view class="cu-hero">
     <view class="cu-hero-title">客户</view>
-    <text class="cu-hero-sub">{{error ? '客户数量暂不可用' : customerSummaryText}}</text>
+    <text class="cu-hero-sub" wx:if="{{!error && customerSummaryText}}">{{customerSummaryText}}</text>
   </view>
 
   <view class="cu-segs">

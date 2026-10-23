@@ -168,7 +168,7 @@
                  两处用同一枚会让空态读成"这是城市定向的空态"。 -->
             <view class="slopes-empty-ico"><cy-icon name="pin-solid" size="48" /></view>
             <text class="slopes-empty-txt">还没有章节</text>
-            <text class="slopes-empty-sub">先写一章的故事，再往里放地点</text>
+
             <!-- 标签仍然读 starterAction.label,不写死也不加 || 兜底 —— 派生态必须由 JS 给。
                  2026-09-05 起三条起点收敛成同一个动作(创建章节),所以这里只剩一句副文。 -->
             <cy-btn wx:if="{{starterAction}}" class="slopes-empty-cta" variant="primary" bindtap="onTapPrimaryStarter">{{starterAction.label}}</cy-btn>
@@ -1393,7 +1393,7 @@
       <view class="pc-lead"></view>
     </view>
     <view class="pop-cont pc-cont">
-      <view class="pc-lede">确认后立即上架，平台将在发布后审核。</view>
+      <view class="pc-lede">发布后平台审核</view>
       <!-- 2026-10-22 业主裁决(L09):真正挡住发布的项排在最前,统一叫「需要先处理」,每条都带修复动作;
            旧草稿没记录入口时也是一条阻断项(否则确认后会静默发不出去)。红字提示只在这组非空时出现。 -->
       <block wx:if="{{publishCheck.blocking.length || !identityReady || legacyScopePending}}">
@@ -1421,7 +1421,7 @@
       <view class="pc-section-tit">本次发布</view>
       <cy-card class="pc-summary">
         <view class="pc-summary__line" wx:for="{{publishCheck.summary}}" wx:key="*this">{{item}}</view>
-        <view class="pc-summary__visibility">{{publishToCreative ? '默认公开：发布后会在创意广场公开展示；继续即按当前公开范围发布。' : '当前不在创意广场公开展示，仅通过主题入口访问。'}}</view>
+        <view class="pc-summary__visibility">{{publishToCreative ? '发布后在创意广场公开' : '仅通过主题入口访问'}}</view>
       </cy-card>
       <block wx:if="{{publishCheck.passed.length}}">
         <view class="pc-section-tit">自动检查</view>

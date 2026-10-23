@@ -385,7 +385,7 @@ test('CU-M-125 行为:只读闸不许顺手把普通私信也关掉', () => {
 test('negative control CU-M-125: 去掉按会话类型的只读判定 / 发送闸不看只读,各自照样发出失败请求', () => {
   // M125 的 disabled 与 C120 的 readOnly 共同保护系统通知,回到病灶需同时撤掉两处类型判定。
   const noReadOnly = openSystemNoticeChat((src) => src.replace(
-    "    if (type == 2) this.setData({ disabled: true, disabledText: '系统通知不支持回复，有新动态会出现在这里' });\n",
+    "    if (type == 2) this.setData({ disabled: true, disabledText: '系统通知，不能回复' });\n",
     '',
   ).replace('const readOnly = type === 2;', 'const readOnly = false;'))
   assert.equal(noReadOnly.page.data.disabled, false)

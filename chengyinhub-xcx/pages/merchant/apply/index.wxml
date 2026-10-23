@@ -28,7 +28,7 @@
 放进玩家的路线里</view>
     <view class="intro__points">
       <view class="intro__point"><view class="intro__dot" aria-hidden="true"></view><text>基础信息 · 经营信息 · 资质 · 确认</text></view>
-      <view class="intro__point"><view class="intro__dot" aria-hidden="true"></view><text>营业执照用于核验经营主体</text></view>
+
       <view class="intro__point"><view class="intro__dot" aria-hidden="true"></view><text>提交后可随时回来看进度与驳回原因</text></view>
     </view>
     <view class="intro-cta"><cy-btn variant="primary" accessibilityLabel="开始入驻" bindtap="startForm">开始入驻</cy-btn></view>
