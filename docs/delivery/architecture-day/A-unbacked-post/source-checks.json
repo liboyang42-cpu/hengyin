@@ -1,0 +1,18 @@
+{
+  "baseline": "05f4aa69e61752dcafb0bec73ca9ae9b2ff7a7f5",
+  "h_review": "c75ab442b572700df1d0289ba636f6f541168e4a",
+  "test_path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationFundsMybatisIntegrationTest.java",
+  "baseline_blob": "deafd09fb0ecb612b050893a9549502c99445c5f",
+  "baseline_sha256": "603e8cde99c74eadddd752b3f5d71b1fcf9308e36b0cb26f6a5e3232c4d860e0",
+  "candidate_sha256": "9418e4e7a28825c753ce777cfc7c5d32a640f2c1b9c738bcb0b8db2807384598",
+  "h_patch_sha256": "0ff672d9f432d8a23c773e3e572dfe35fec8b40d22c6f054c1d6c0617cd06999",
+  "h_patch_exactly_applied": true,
+  "added_lines": 51,
+  "baseline_tests_and_fixture_byte_preserved": 94,
+  "candidate_source_tests": 95,
+  "new_java_tests_executed": 0,
+  "java_compile": "NOT_RUN",
+  "mysql": "NOT_RUN",
+  "expected_pre_fix_outcome": "negative control expected to fail the conservation assertion; NOT_EXECUTED",
+  "production_fix": "PENDING user choice; no production change in this candidate"
+}
