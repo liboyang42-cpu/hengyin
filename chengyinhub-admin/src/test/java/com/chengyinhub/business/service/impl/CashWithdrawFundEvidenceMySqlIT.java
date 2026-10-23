@@ -130,7 +130,9 @@ class CashWithdrawFundEvidenceMySqlIT {
         IPlayerWithdrawalCooldownService cooldown = mock(IPlayerWithdrawalCooldownService.class);
         when(bounty.frozenAmount(memberId)).thenReturn(BigDecimal.ZERO);
         when(cooldown.frozenAmount(memberId)).thenReturn(BigDecimal.ZERO);
-        when(precheck.resolve(memberId)).thenReturn(new WithdrawalFrozenAmountResolver(bounty, cooldown).resolve(memberId));
+        WithdrawalFrozenAmountResolver.Frozen displaySnapshot =
+                new WithdrawalFrozenAmountResolver(bounty, cooldown).resolve(memberId);
+        when(precheck.resolve(memberId)).thenReturn(displaySnapshot);
         ReflectionTestUtils.setField(target, "frozenAmountResolver", precheck);
         WxPayConfig config = new WxPayConfig(); ReflectionTestUtils.setField(config, "appid", "unit-channel-appid");
         ReflectionTestUtils.setField(target, "wxPayConfig", config);
