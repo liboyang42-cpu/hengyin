@@ -265,6 +265,9 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
     }
 
     private void syncOne(MemberCashWithdraw w) {
+        // Serialize recovery with recordSubmissionIntent before doing any channel I/O.
+        w = prepareChannelQuery(w.getId());
+        if (w == null) return;
         Long id = w.getId();
         Date now = DateUtils.getNowDate();
         // 崩溃后 out_batch_no 可能为空:按确定性规则 CW+id 重算,保证能查到真实批次
@@ -324,6 +327,41 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
                         "id=" + id + " member=" + w.getMemberId() + " amount=" + w.getAmount() + " result=" + result);
             }
         }
+    }
+
+    /**
+     * A committed DEBIT without any channel history is a local crash window, not UNKNOWN.
+     * The original row lock chooses recovery or the first submission intent, never both.
+     * Recovery keeps the original identity and uses the existing two-person manual flow.
+     */
+    private MemberCashWithdraw prepareChannelQuery(Long id) {
+        return new org.springframework.transaction.support.TransactionTemplate(transactionManager)
+                .execute(status -> {
+                    MemberCashWithdraw original = mapper.selectByIdForUpdate(id);
+                    if (original == null || Integer.valueOf(1).equals(original.getFrozen())) return null;
+                    if (!Integer.valueOf(MemberCashWithdraw.STATUS_PROCESSING).equals(original.getStatus())
+                            && !Integer.valueOf(MemberCashWithdraw.STATUS_FAILED_MANUAL).equals(original.getStatus())
+                            && !Integer.valueOf(MemberCashWithdraw.STATUS_REFUND_PENDING_REVIEW).equals(original.getStatus())
+                            && !Integer.valueOf(MemberCashWithdraw.STATUS_FAILED_REFUNDED).equals(original.getStatus())) return null;
+                    List<CashWithdrawFundFact> facts = checkedFacts(original);
+                    // Do not reinterpret a missing intent alongside old UNKNOWN or any other channel fact.
+                    // REFUND is local too: repeated recovery after this manual refund needs no channel query.
+                    boolean onlyLocalFacts = !facts.isEmpty() && facts.stream().allMatch(f ->
+                            CashWithdrawFundFact.DEBIT.equals(f.getKind()) || CashWithdrawFundFact.REFUND.equals(f.getKind()));
+                    if (!onlyLocalFacts) return original;
+                    requireDebitEvidence(original, facts);
+                    if (Integer.valueOf(MemberCashWithdraw.STATUS_PROCESSING).equals(original.getStatus())) {
+                        requireRefundEvidence(original);
+                        MemberCashWithdraw manual = new MemberCashWithdraw();
+                        manual.setId(id);
+                        manual.setStatus(MemberCashWithdraw.STATUS_FAILED_MANUAL);
+                        manual.setFailReason("已扣款但未提交渠道，待双人复核回补");
+                        manual.setManualNote("原扣款证据完整且无提交意图，保留原CW/CD；不重发转账");
+                        if (mapper.updateStatusIfProcessing(manual) != 1)
+                            throw new IllegalStateException("提现未提交恢复状态写入失败");
+                    }
+                    return null;
+                });
     }
 
     /** status=0 且未冻结才可领取失败回补权；同步发起线和对账线必须共用这一道 CAS。 */

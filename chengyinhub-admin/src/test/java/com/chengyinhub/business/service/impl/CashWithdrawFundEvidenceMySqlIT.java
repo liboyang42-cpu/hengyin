@@ -117,20 +117,26 @@ class CashWithdrawFundEvidenceMySqlIT {
         when(members.addBalance(anyLong(), any())).thenAnswer(i ->
                 realBalanceWriter.addBalance(i.getArgument(0), i.getArgument(1)));
         channel = mock(IWechatPayService.class);
+        installService(admission);
+    }
+
+    private void installService(WithdrawalBalanceAdmissionService cashAdmission) {
         target = new CashWithdrawServiceImpl();
         ReflectionTestUtils.setField(target, "mapper", cash);
         ReflectionTestUtils.setField(target, "umsMemberService", members);
         ReflectionTestUtils.setField(target, "wechatPayService", channel);
         ReflectionTestUtils.setField(target, "alarmService", mock(AlarmService.class));
         ReflectionTestUtils.setField(target, "transactionManager", manager);
-        ReflectionTestUtils.setField(target, "balanceAdmissionService", admission);
+        ReflectionTestUtils.setField(target, "balanceAdmissionService", cashAdmission);
         // Display precheck stub only; locked admission uses the real frozen mappers above.
         WithdrawalFrozenAmountResolver precheck = mock(WithdrawalFrozenAmountResolver.class);
         MerchantReferralBountyService bounty = mock(MerchantReferralBountyService.class);
         IPlayerWithdrawalCooldownService cooldown = mock(IPlayerWithdrawalCooldownService.class);
         when(bounty.frozenAmount(memberId)).thenReturn(BigDecimal.ZERO);
         when(cooldown.frozenAmount(memberId)).thenReturn(BigDecimal.ZERO);
-        when(precheck.resolve(memberId)).thenReturn(new WithdrawalFrozenAmountResolver(bounty, cooldown).resolve(memberId));
+        WithdrawalFrozenAmountResolver.Frozen displaySnapshot =
+                new WithdrawalFrozenAmountResolver(bounty, cooldown).resolve(memberId);
+        when(precheck.resolve(memberId)).thenReturn(displaySnapshot);
         ReflectionTestUtils.setField(target, "frozenAmountResolver", precheck);
         WxPayConfig config = new WxPayConfig(); ReflectionTestUtils.setField(config, "appid", "unit-channel-appid");
         ReflectionTestUtils.setField(target, "wxPayConfig", config);
@@ -187,6 +193,113 @@ class CashWithdrawFundEvidenceMySqlIT {
         assertTrue(service.manualRefund(w.getId(), "checker", "复核", 4)); money("100");
         assertEquals(w.getOutBatchNo(), cash.selectById(w.getId()).getOutBatchNo());
         assertEquals(1, count(w.getId(), "REFUND")); verifyNoInteractions(channel);
+    }
+    /** Inject process exit after the real REQUIRES_NEW debit committed, bypassing withdraw's Exception catch. */
+    private MemberCashWithdraw processExitAfterDebitCommit() {
+        WithdrawalBalanceAdmissionService interrupted = mock(WithdrawalBalanceAdmissionService.class);
+        when(interrupted.debitCash(anyLong(), eq(memberId), any())).thenAnswer(i -> {
+            assertTrue(admission.debitCash(i.getArgument(0), i.getArgument(1), i.getArgument(2)).deducted);
+            throw new AssertionError("simulated process exit before SUBMIT_INTENT");
+        });
+        installService(interrupted);
+        AssertionError exit = assertThrows(AssertionError.class,
+                () -> service.withdraw(memberId, new BigDecimal("30.00")));
+        assertEquals("simulated process exit before SUBMIT_INTENT", exit.getMessage());
+        MemberCashWithdraw w = cash.selectByMember(memberId).get(0);
+        assertEquals(0, w.getStatus()); assertNotNull(w.getBalanceDeductId());
+        assertEquals(1, count(w.getId(), "DEBIT")); assertEquals(0, count(w.getId(), "SUBMIT_INTENT"));
+        assertEquals(0, count(w.getId(), "UNKNOWN")); money("70"); verifyNoInteractions(channel);
+        installService(admission); // Fresh service instance observes only committed original/facts.
+        return w;
+    }
+    @Test void processExitBeforeIntentRecoversOriginalThroughTwoPeopleWithoutChannelQuery() {
+        MemberCashWithdraw w = processExitAfterDebitCommit();
+        service.requery(w.getId());
+        MemberCashWithdraw recovered = cash.selectById(w.getId());
+        assertEquals(3, recovered.getStatus()); assertNull(recovered.getLastQueryTime());
+        assertEquals(0, count(w.getId(), "UNKNOWN")); assertEquals(0, count(w.getId(), "SUBMIT_INTENT"));
+        assertNull(ReflectionTestUtils.invokeMethod(target, "recordSubmissionIntent", w.getId()));
+        assertTrue(service.manualRefund(w.getId(), "maker", "原扣款未提交", 3));
+        service.requery(w.getId());
+        assertEquals(4, cash.selectById(w.getId()).getStatus()); money("70");
+        assertThrows(IllegalStateException.class, () -> service.manualRefund(w.getId(), "maker", "同人", 4));
+        assertTrue(service.manualRefund(w.getId(), "checker", "复核", 4));
+        service.requery(w.getId());
+        assertFalse(service.manualRefund(w.getId(), "other", "重复", 4));
+        assertEquals(2, cash.selectById(w.getId()).getStatus());
+        assertEquals(w.getOutBatchNo(), cash.selectById(w.getId()).getOutBatchNo());
+        assertEquals(w.getOutDetailNo(), cash.selectById(w.getId()).getOutDetailNo());
+        assertEquals(1, cash.selectByMember(memberId).size()); assertEquals(1, count(w.getId(), "DEBIT"));
+        assertEquals(1, count(w.getId(), "REFUND")); assertEquals(0, count(w.getId(), "UNKNOWN"));
+        verify(members, times(1)).addBalance(memberId, new BigDecimal("30.00"));
+        verifyNoInteractions(channel); money("100");
+    }
+    @Test void concurrentNeverSubmittedRecoveryAndCheckersPreserveOneOriginalRefund() throws Exception {
+        MemberCashWithdraw w = processExitAfterDebitCommit();
+        ExecutorService workers = Executors.newFixedThreadPool(3); CountDownLatch recover = new CountDownLatch(1);
+        try {
+            Future<?> first = workers.submit(() -> { await(recover); service.requery(w.getId()); });
+            Future<?> second = workers.submit(() -> { await(recover); service.requery(w.getId()); });
+            recover.countDown(); first.get(10, TimeUnit.SECONDS); second.get(10, TimeUnit.SECONDS);
+            assertEquals(3, cash.selectById(w.getId()).getStatus()); money("70");
+            assertTrue(service.manualRefund(w.getId(), "maker", "未提交", 3));
+            CountDownLatch verify = new CountDownLatch(1);
+            Future<Boolean> a = workers.submit(() -> { await(verify); return service.manualRefund(w.getId(), "checkerA", "复核", 4); });
+            Future<Boolean> b = workers.submit(() -> { await(verify); return service.manualRefund(w.getId(), "checkerB", "复核", 4); });
+            Future<?> again = workers.submit(() -> { await(verify); service.requery(w.getId()); });
+            verify.countDown();
+            assertEquals(1, (a.get(10, TimeUnit.SECONDS) ? 1 : 0) + (b.get(10, TimeUnit.SECONDS) ? 1 : 0));
+            again.get(10, TimeUnit.SECONDS);
+        } finally { workers.shutdownNow(); assertTrue(workers.awaitTermination(10, TimeUnit.SECONDS)); }
+        assertEquals(2, cash.selectById(w.getId()).getStatus());
+        assertEquals(1, cash.selectByMember(memberId).size()); assertEquals(1, count(w.getId(), "DEBIT"));
+        assertEquals(1, count(w.getId(), "REFUND")); assertEquals(0, count(w.getId(), "SUBMIT_INTENT"));
+        assertEquals(0, count(w.getId(), "UNKNOWN"));
+        verifyNoInteractions(channel); money("100");
+    }
+    @Test void recoveryRacingOriginalIntentClaimCannotBothAuthorizeRefundAndSubmission() throws Exception {
+        MemberCashWithdraw w = processExitAfterDebitCommit();
+        when(channel.queryTransferResult(w.getOutBatchNo(), w.getOutDetailNo())).thenAnswer(i -> {
+            assertFalse(TransactionSynchronizationManager.isActualTransactionActive());
+            assertEquals(1, count(w.getId(), "SUBMIT_INTENT"));
+            return Map.of("result", "UNKNOWN", "error", "NOT_FOUND");
+        });
+        ExecutorService workers = Executors.newFixedThreadPool(2); CountDownLatch start = new CountDownLatch(1);
+        CashWithdrawFundFact intent;
+        try {
+            Future<?> recover = workers.submit(() -> { await(start); service.requery(w.getId()); });
+            Future<CashWithdrawFundFact> submit = workers.submit(() -> {
+                await(start); return ReflectionTestUtils.invokeMethod(target, "recordSubmissionIntent", w.getId());
+            });
+            start.countDown(); recover.get(10, TimeUnit.SECONDS); intent = submit.get(10, TimeUnit.SECONDS);
+        } finally { workers.shutdownNow(); assertTrue(workers.awaitTermination(10, TimeUnit.SECONDS)); }
+        if (intent == null) {
+            assertEquals(3, cash.selectById(w.getId()).getStatus());
+            assertTrue(service.manualRefund(w.getId(), "maker", "未提交", 3));
+            assertTrue(service.manualRefund(w.getId(), "checker", "复核", 4));
+            assertEquals(1, count(w.getId(), "REFUND")); assertEquals(0, count(w.getId(), "UNKNOWN"));
+            verifyNoInteractions(channel); money("100");
+        } else {
+            assertEquals(1, count(w.getId(), "SUBMIT_INTENT")); assertEquals(1, count(w.getId(), "UNKNOWN"));
+            assertThrows(IllegalStateException.class, () -> service.manualRefund(w.getId(), "maker", "不可证未提交", null));
+            assertEquals(0, count(w.getId(), "REFUND")); money("70");
+        }
+        assertEquals(1, cash.selectByMember(memberId).size()); assertEquals(1, count(w.getId(), "DEBIT"));
+        verify(channel, never()).transferToBalance(any(), any(), any(), any(), any(), any());
+    }
+    @Test void oldUnknownWithoutIntentRemainsInvestigationAndCannotRefund() {
+        MemberCashWithdraw w = original();
+        assertTrue(admission.debitCash(w.getId(), memberId, w.getAmount()).deducted);
+        fact(w, "UNKNOWN"); state(w.getId(), 3);
+        when(channel.queryTransferResult(w.getOutBatchNo(), w.getOutDetailNo()))
+                .thenReturn(Map.of("result", "UNKNOWN", "error", "NOT_FOUND"));
+        service.requery(w.getId());
+        assertThrows(IllegalStateException.class, () -> service.manualRefund(w.getId(), "maker", "旧未知", 3));
+        assertEquals(3, cash.selectById(w.getId()).getStatus());
+        assertEquals(0, count(w.getId(), "SUBMIT_INTENT")); assertEquals(1, count(w.getId(), "UNKNOWN"));
+        assertEquals(0, count(w.getId(), "REFUND")); money("70");
+        verify(channel).queryTransferResult(w.getOutBatchNo(), w.getOutDetailNo());
+        verify(members, never()).addBalance(anyLong(), any());
     }
     @Test void evidenceBindFailureRollsBackTheDebitAndItsFact() {
         MemberCashWithdraw w = original(); MemberCashWithdrawMapper failing = spy(cash);
@@ -308,10 +421,10 @@ class CashWithdrawFundEvidenceMySqlIT {
     }
     @Test void committedRefundWithLostCommitReplyNeverReopensOrCreditsAgain() {
         MemberCashWithdraw w = accepted();
-        ReflectionTestUtils.setField(target, "transactionManager", loseCommitReplyAt(2));
+        ReflectionTestUtils.setField(target, "transactionManager", loseCommitReplyAt(3));
         when(channel.queryTransferResult(w.getOutBatchNo(), w.getOutDetailNo()))
                 .thenReturn(Map.of("result", "FAIL", "detailStatus", "FAIL"));
-        service.requery(w.getId()); // FINAL_FAIL commit succeeds, REFUND commits but its acknowledgement is lost.
+        service.requery(w.getId()); // Preparation and FINAL_FAIL commit; REFUND commits but its acknowledgement is lost.
         assertEquals(2, cash.selectById(w.getId()).getStatus()); assertNotNull(cash.selectById(w.getId()).getBalanceRefundId());
         assertFalse(service.manualRefund(w.getId(), "checker", "迟到重试", 4));
         assertEquals(1, count(w.getId(), "REFUND")); money("100");
