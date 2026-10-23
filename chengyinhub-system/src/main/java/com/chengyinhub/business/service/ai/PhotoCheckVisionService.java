@@ -77,43 +77,63 @@ public class PhotoCheckVisionService
 
     public PhotoCheckVisionResult review(Long memberId, String imageUrl, String requirement)
     {
+        return reviewOnce(memberId, imageUrl, requirement, null, null).result();
+    }
+
+    public record InputSnapshot(String encodedInputSha256, String modelName,
+            String promptVersion, String encoderVersion) {}
+
+    public record PreparedReview(PhotoCheckVisionResult result, String providerState, String reasonCode) {}
+
+    public PreparedReview reviewPrepared(Long memberId, String imageReference, String requirement,
+            String reservation, java.util.function.Consumer<InputSnapshot> beforeModel)
+    {
+        if (org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive())
+            throw new IllegalStateException("Photo provider execution cannot hold a business transaction");
+        if (reservation == null || reservation.isBlank() || beforeModel == null)
+            throw new IllegalArgumentException("Original photo reservation and snapshot writer required");
+        return reviewOnce(memberId, imageReference, requirement, reservation, beforeModel);
+    }
+
+    private PreparedReview reviewOnce(Long memberId, String imageUrl, String requirement,
+            String plannedReservation, java.util.function.Consumer<InputSnapshot> beforeModel)
+    {
         consentGuard.requireCurrentAgreement(memberId, "photo_model_processing", "object_photo");
         String url = imageUrl == null ? "" : imageUrl.trim();
         if (url.isEmpty())
-        {
-            return PhotoCheckVisionResult.degraded("照片地址为空");
-        }
+            return unavailable("照片地址为空", "NOT_SENT", "IMAGE_EMPTY");
         url = mediaReferences.processingUrl(url, memberId, "IMAGE");
         VisionImageEncoder.Encoded encoded = imageEncoder.encode(url);
         if (encoded.isRejected())
         {
             log.info("[PhotoCheckVision] image-rejected memberId={} reason={}", memberId, encoded.getRejectReason());
-            return PhotoCheckVisionResult.degraded(encoded.getRejectReason());
+            return unavailable(encoded.getRejectReason(), "NOT_SENT", "IMAGE_REJECTED");
         }
         String reservation;
         try
         {
-            reservation = chargeQuota(memberId);
+            reservation = chargeQuota(memberId, plannedReservation);
         }
         catch (RuntimeException unavailable)
         {
             alarm("拍照视觉审核额度不可用", "memberId=" + memberId);
-            return PhotoCheckVisionResult.degraded("照片审核额度暂时不可用");
+            return unavailable("照片审核额度暂时不可用", "NOT_SENT", "QUOTA_UNAVAILABLE");
         }
         if (reservation == null)
-        {
-            return PhotoCheckVisionResult.degraded("今天的照片审核次数用完了");
-        }
+            return unavailable("今天的照片审核次数用完了", "NOT_SENT", "QUOTA_EXHAUSTED");
 
         try
         {
             if (visionClient == null)
-            {
                 throw new IllegalStateException("视觉审核通道未装配");
-            }
-            if (visionClient instanceof OpenAiCompatibleLlmClient)
+            if (visionClient instanceof OpenAiCompatibleLlmClient client)
+                client.requireReady();
+            if (beforeModel != null)
             {
-                ((OpenAiCompatibleLlmClient) visionClient).requireReady();
+                String model = visionClient instanceof OpenAiCompatibleLlmClient client
+                        ? client.configuredModel() : "client:" + visionClient.name();
+                beforeModel.accept(new InputSnapshot(encodedInputHash(encoded.getDataUrl()), model,
+                        "photo-review-v1", "vision-image-encoder-v1"));
             }
             aiGatewayService.stageQuota(memberId, BIZ_TYPE, reservation, "MODEL_STARTED");
         }
@@ -122,7 +142,7 @@ public class PhotoCheckVisionService
             // chatVision 尚未调用，只有此路径可以按原预占补偿。
             refundQuota(memberId, reservation);
             alarm("拍照视觉审核发送前失败", "memberId=" + memberId);
-            return PhotoCheckVisionResult.degraded("照片暂时无法审核");
+            return unavailable("照片暂时无法审核", "NOT_SENT", "PRE_SEND_FAILED");
         }
 
         String answer;
@@ -133,18 +153,36 @@ public class PhotoCheckVisionService
         }
         catch (RuntimeException unknown)
         {
-            // 供应商可能已计费；保留 MODEL_STARTED 原预占供恢复任务核验，不退额或重发。
+            // 供应商可能已计费；保留原预占，首个本地降级结果仍由原意图持久化。
             alarm("拍照视觉审核结果待确认", "memberId=" + memberId);
-            return PhotoCheckVisionResult.degraded("照片审核结果待确认");
+            return unavailable("照片审核结果待确认", "UNKNOWN", "PROVIDER_RESULT_UNKNOWN");
         }
-
         PhotoCheckVisionResult parsed = parse(answer);
         if (parsed == null)
         {
             alarm("拍照视觉审核返回无法解析", "memberId=" + memberId);
-            return PhotoCheckVisionResult.degraded("照片暂时无法审核(模型没有给出结论)");
+            return unavailable("照片暂时无法审核(模型没有给出结论)", "RECEIVED", "RESULT_UNPARSEABLE");
         }
-        return parsed;
+        return new PreparedReview(parsed, "RECEIVED", "RESULT_RECEIVED");
+    }
+
+    private static PreparedReview unavailable(String reason, String providerState, String reasonCode)
+    {
+        return new PreparedReview(PhotoCheckVisionResult.degraded(reason), providerState, reasonCode);
+    }
+
+    private static String encodedInputHash(String encoded)
+    {
+        try
+        {
+            byte[] digest = java.security.MessageDigest.getInstance("SHA-256")
+                    .digest(encoded.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            return java.util.HexFormat.of().formatHex(digest);
+        }
+        catch (java.security.NoSuchAlgorithmException impossible)
+        {
+            throw new IllegalStateException("SHA-256 unavailable", impossible);
+        }
     }
 
     private String buildUserPrompt(String requirement)
@@ -156,7 +194,7 @@ public class PhotoCheckVisionService
     /**
      * @return 原预占凭证；null 仅表示额度已耗尽；基础设施故障停止供应商调用。
      */
-    private String chargeQuota(Long memberId)
+    private String chargeQuota(Long memberId, String plannedReservation)
     {
         if (aiGatewayService == null || memberId == null)
         {
@@ -164,7 +202,11 @@ public class PhotoCheckVisionService
         }
         try
         {
-            String reservation = aiGatewayService.consumeQuota(memberId, BIZ_TYPE);
+            String reservation = plannedReservation == null
+                    ? aiGatewayService.consumeQuota(memberId, BIZ_TYPE)
+                    : aiGatewayService.consumePlannedQuota(memberId, BIZ_TYPE, plannedReservation);
+            if (plannedReservation != null && !plannedReservation.equals(reservation))
+                throw new IllegalStateException("Photo quota reservation identity changed");
             if (reservation == null || reservation.trim().isEmpty())
             {
                 throw new IllegalStateException("Photo quota reservation unavailable");

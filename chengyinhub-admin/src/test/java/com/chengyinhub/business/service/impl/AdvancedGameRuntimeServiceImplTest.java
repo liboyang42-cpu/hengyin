@@ -1187,8 +1187,10 @@ class AdvancedGameRuntimeServiceImplTest {
         String saved = session.getStateJson();
         when(attemptMapper.selectByIdempotencyKey("rx-once")).thenReturn(receipt.get());
         Map<String, Object> replay = service.act(MEMBER_ID, 51L, 0, "rx-once", "SUBMIT_REACTION",
-                Collections.singletonMap("roundsMs", java.util.Arrays.asList(900, 900, 900)));
+                Collections.singletonMap("roundsMs", java.util.Arrays.asList(200, 500, 500)));
         assertEquals(first.toString(), replay.toString());
+        assertThrows(ServiceException.class, () -> service.act(MEMBER_ID, 51L, 0, "rx-once", "SUBMIT_REACTION",
+                Collections.singletonMap("roundsMs", java.util.Arrays.asList(900, 900, 900))));
         assertThrows(IllegalStateException.class, () -> service.act(MEMBER_ID, 51L, 1,
                 "rx-another-key", "SUBMIT_REACTION",
                 Collections.singletonMap("roundsMs", java.util.Arrays.asList(120, 120, 120))));
@@ -1198,7 +1200,7 @@ class AdvancedGameRuntimeServiceImplTest {
     }
 
     @Test
-    void reactionLegacyResultReadAndReplayDoNotInventBestOrReaward() {
+    void reactionLegacyResultReadDoesNotInventBestAndUnboundReplayIsRejected() {
         for (boolean passed : new boolean[] {false, true}) {
             String legacy = "{\"reaction\":{\"startedAtMs\":" + (NOW - 9000)
                     + ",\"submitted\":true,\"averageMs\":400,\"passed\":" + passed
@@ -1215,11 +1217,8 @@ class AdvancedGameRuntimeServiceImplTest {
                     + legacy.substring("{\"reaction\":".length(), legacy.length() - 1) + "}}");
             String key = "rx-legacy-" + passed;
             when(attemptMapper.selectByIdempotencyKey(key)).thenReturn(receipt);
-            Map<String, Object> replay = playKit(
-                    service.act(MEMBER_ID, 51L, 0, key, "SUBMIT_REACTION", Collections.emptyMap()), "reaction");
-            assertFalse(replay.containsKey("bestMs"));
-            assertEquals(passed, replay.get("passed"));
-            assertEquals(passed, replay.get("awarded"));
+            assertThrows(ServiceException.class, () ->
+                    service.act(MEMBER_ID, 51L, 0, key, "SUBMIT_REACTION", Collections.emptyMap()));
             assertThrows(IllegalStateException.class, () -> service.act(MEMBER_ID, 51L, 0,
                     "rx-legacy-new-" + passed, "SUBMIT_REACTION",
                     Collections.singletonMap("roundsMs", java.util.Arrays.asList(120, 120, 120))));

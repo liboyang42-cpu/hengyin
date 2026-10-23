@@ -265,6 +265,70 @@ class PhotoCheckVisionServiceTest {
     }
 
     @Test
+    void preparedReviewUsesOriginalReservationAndPersistsSnapshotBeforeProvider() {
+        modelSays("{\"pass\":true,\"confidence\":90,\"reason\":\"门牌\"}");
+        when(gateway.consumePlannedQuota(MEMBER_ID, "photo_check", "original-reservation"))
+                .thenReturn("original-reservation");
+        AtomicReference<PhotoCheckVisionService.InputSnapshot> snapshot = new AtomicReference<>();
+        PhotoCheckVisionService.PreparedReview review = service.reviewPrepared(
+                MEMBER_ID, IMAGE_URL, REQUIREMENT, "original-reservation", input -> {
+                    assertEquals(null, sentImage.get());
+                    snapshot.set(input);
+                });
+        assertTrue(review.result().isPass());
+        assertEquals("RECEIVED", review.providerState());
+        assertTrue(snapshot.get().encodedInputSha256().matches("[a-f0-9]{64}"));
+        org.mockito.Mockito.verify(gateway, org.mockito.Mockito.never())
+                .consumeQuota(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
+        org.mockito.Mockito.verify(gateway).retainQuota(MEMBER_ID, "photo_check",
+                "original-reservation", "PHOTO_RESULT");
+    }
+
+    @Test
+    void preparedSnapshotFailureCannotCallModelAndOnlyCompensatesOriginalReservation() {
+        modelSays("{\"pass\":true,\"confidence\":90,\"reason\":\"门牌\"}");
+        when(gateway.consumePlannedQuota(MEMBER_ID, "photo_check", "original-reservation"))
+                .thenReturn("original-reservation");
+        PhotoCheckVisionService.PreparedReview review = service.reviewPrepared(
+                MEMBER_ID, IMAGE_URL, REQUIREMENT, "original-reservation",
+                input -> { throw new IllegalStateException("snapshot database unavailable"); });
+        assertEquals("NOT_SENT", review.providerState());
+        assertTrue(review.result().isDegraded());
+        assertEquals(null, sentImage.get());
+        org.mockito.Mockito.verify(gateway).refundQuota(MEMBER_ID, "photo_check", "original-reservation");
+        org.mockito.Mockito.verify(gateway, org.mockito.Mockito.never())
+                .stageQuota(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(),
+                        org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
+    }
+
+    @Test
+    void preparedProviderFailurePreservesUnknownOriginalQuota() {
+        modelThrows(new IllegalStateException("provider timeout"));
+        when(gateway.consumePlannedQuota(MEMBER_ID, "photo_check", "original-reservation"))
+                .thenReturn("original-reservation");
+        PhotoCheckVisionService.PreparedReview review = service.reviewPrepared(
+                MEMBER_ID, IMAGE_URL, REQUIREMENT, "original-reservation", input -> {});
+        assertEquals("UNKNOWN", review.providerState());
+        assertTrue(review.result().isDegraded());
+        org.mockito.Mockito.verify(gateway, org.mockito.Mockito.never())
+                .refundQuota(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(),
+                        org.mockito.ArgumentMatchers.any());
+    }
+
+    @Test
+    void preparedReviewRejectsAnActiveBusinessTransactionBeforeAnyEffect() {
+        org.springframework.transaction.support.TransactionSynchronizationManager.setActualTransactionActive(true);
+        try {
+            org.junit.jupiter.api.Assertions.assertThrows(IllegalStateException.class,
+                    () -> service.reviewPrepared(MEMBER_ID, IMAGE_URL, REQUIREMENT, "original", input -> {}));
+        } finally {
+            org.springframework.transaction.support.TransactionSynchronizationManager.setActualTransactionActive(false);
+        }
+        org.mockito.Mockito.verifyNoInteractions(gateway);
+        assertEquals(null, sentImage.get());
+    }
+
+    @Test
     void 负控_图片超限在发请求前就拒掉且不占额度() {
         ReflectionTestUtils.setField(service, "visionClient", new LlmClient() {
             @Override

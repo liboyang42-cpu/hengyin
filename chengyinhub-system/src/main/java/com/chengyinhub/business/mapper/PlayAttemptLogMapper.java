@@ -23,6 +23,7 @@ public interface PlayAttemptLogMapper {
             @Param("topicId") Long topicId,
             @Param("activityId") Long activityId);
 
+    /** 返回持久原请求指纹；调用方必须先校验读取授权，再比较指纹后回放。 */
     PlayAttemptLog selectByIdempotencyKey(@Param("idempotencyKey") String idempotencyKey);
 
     List<PlayAttemptLog> selectPreferenceResults(@Param("memberId") Long memberId,

@@ -27,6 +27,8 @@ public class PlayAttemptLog {
     private String resultJson;
     /** 请求幂等键；普通尝试为空 */
     private String idempotencyKey;
+    /** 高级动作原请求指纹；历史 NULL 不得推测或释放其幂等身份。 */
+    private String requestFingerprint;
     private Date createdAt;
 
     public Long getId() { return id; }
@@ -61,6 +63,9 @@ public class PlayAttemptLog {
 
     public String getIdempotencyKey() { return idempotencyKey; }
     public void setIdempotencyKey(String idempotencyKey) { this.idempotencyKey = idempotencyKey; }
+
+    public String getRequestFingerprint() { return requestFingerprint; }
+    public void setRequestFingerprint(String requestFingerprint) { this.requestFingerprint = requestFingerprint; }
 
     public Date getCreatedAt() { return createdAt; }
     public void setCreatedAt(Date createdAt) { this.createdAt = createdAt; }

@@ -1,0 +1,54 @@
+[
+  {
+    "command": [
+      "node",
+      "chengyinhub-xcx/tests/unit/advanced-game-receipt-contract.test.js"
+    ],
+    "exitCode": 0,
+    "actual": {
+      "tests": 50,
+      "pass": 50,
+      "fail": 0,
+      "skipped": 0
+    }
+  },
+  {
+    "command": [
+      "node",
+      "chengyinhub-xcx/tests/unit/advanced-game-variants-recovery.test.js"
+    ],
+    "exitCode": 0,
+    "actual": {
+      "tests": 7,
+      "pass": 7,
+      "fail": 0,
+      "skipped": 0
+    }
+  },
+  {
+    "command": [
+      "node",
+      "chengyinhub-xcx/tests/unit/advanced-game-object-card-relay.test.js"
+    ],
+    "exitCode": 0,
+    "actual": {
+      "tests": 8,
+      "pass": 8,
+      "fail": 0,
+      "skipped": 0
+    }
+  },
+  {
+    "command": [
+      "node",
+      "chengyinhub-xcx/tests/unit/play-merchant-advanced-handoff-contract.test.js"
+    ],
+    "exitCode": 0,
+    "actual": {
+      "tests": 12,
+      "pass": 12,
+      "fail": 0,
+      "skipped": 0
+    }
+  }
+]

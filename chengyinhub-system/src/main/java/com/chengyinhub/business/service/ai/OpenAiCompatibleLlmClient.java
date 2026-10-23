@@ -62,6 +62,11 @@ public class OpenAiCompatibleLlmClient implements LlmClient
         return name;
     }
 
+    public String configuredModel()
+    {
+        return model;
+    }
+
     @Override
     public String chat(String systemPrompt, String userPrompt)
     {

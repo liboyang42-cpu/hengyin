@@ -1,0 +1,15 @@
+✔ variants拒绝畸形when而不是只检查存在 (13.164573ms)
+✔ 已支持条件DSL全部正常放行，不新增条件业务规则 (16.868622ms)
+✔ timer量程越界本地拒绝，validate与serialize均生效 (1.180311ms)
+✔ first-match逐条模拟，两条各自合法不能累加误杀 (0.868701ms)
+✔ current-N与=0合法边界保留，越下界与越次数上界拒绝 (1.631166ms)
+✔ 同条多字段作用后统一校验，判定误差允许小数底值 (1.318785ms)
+✔ 全部次数容错字段统一遵守既有0至10合同，=0不会误作负值或收紧 (8.905946ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 55.118246

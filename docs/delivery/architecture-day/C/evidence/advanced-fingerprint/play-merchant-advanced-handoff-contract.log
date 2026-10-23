@@ -1,0 +1,20 @@
+✔ 自由探索未进店时先去扫码，已进店和纯内容节点仍能打开玩法 (1.978588ms)
+✔ ★advanced 节点扫码进店：必须 navigateBack 交回游玩页 startGame，而不是开一张点不动的任务卡 (0.369946ms)
+✔ ★优先序：advanced 与 vm6 偏好题并存时 advanced 先，和游玩页 startGame 的 hasAdvanced early-return 同序 (0.573676ms)
+✔ 无 advanced 的老 vm6 节点：行为不变，仍走偏好题捷径回游玩页 (0.191522ms)
+✔ 无 advanced、无题面的老店：行为不变，弹任务卡且绝不 navigateBack (0.184182ms)
+✔ 有题面无 advanced 的老节点：仍在本页开本地答题卡，不被误劫去 navigateBack (0.188798ms)
+✔ ★接不上（上一页没有 startGame）：必须退回任务卡，不抛错、不白屏 (0.256338ms)
+✔ ★接不上（没有上一页，如票夹/分享直达）：同样退回任务卡，不抛错 (0.125896ms)
+✔ navigateBack 失败时不得静默：留在本页给出可读提示或退路，不能白跑一趟 (0.260645ms)
+✔ 未进店 / 已完成时仍然什么都不弹（进店闸不许被新分支绕过） (0.403205ms)
+✔ 架构既定：本页不装玩法组件，advanced 只能靠交接（index.json 加了就判红） (0.828843ms)
+✔ mutation 负控：摘掉 hasAdvanced 分支后本契约确实变红 (0.227916ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 12
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 11.993791
