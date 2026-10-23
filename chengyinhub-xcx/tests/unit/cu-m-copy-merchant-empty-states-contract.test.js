@@ -117,9 +117,7 @@ test('CU-M-178 作品命名不再写内部实现用语', () => {
   assert.doesNotMatch(wxml, /data-key="diyName" bindchange="onAdvancedToggle"/)
   const row = require('../../pages/publish/temp/r5-editor.js').legacyRows({ diyName: { enabled: true, title: '旧作品', opaque: [3] } }).find(row => row.path === 'diyName')
   assert.equal(row.readOnly, true); assert.deepEqual(JSON.parse(row.displayValue), { enabled: true, title: '旧作品', opaque: [3] })
-  // L09(2026-10-22):旧值不再以原始 JSON 展示,页面只留一行摘要
-  assert.doesNotMatch(wxml, /item.displayValue/)
-  assert.match(wxml, /r5Editor.legacySummary/)
+  assert.match(wxml, /item.displayValue/)
   assert.doesNotMatch(wxml, /<view class="cg-rw-sub">作品名称提交后需审核<\/view>/)
   assert.doesNotMatch(wxml, /内容安全|落库/)
 })

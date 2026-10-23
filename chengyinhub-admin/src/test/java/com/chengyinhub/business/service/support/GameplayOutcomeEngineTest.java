@@ -44,6 +44,14 @@ class GameplayOutcomeEngineTest {
         payer.getVariables().put("sys.hp",0);
         assertThrows(IllegalStateException.class,()->engine.assertPassAffordable(block,rules,payer,snapshot.path("themeConfig")));
     }
+    @Test void settledReceiptCarriesFeedbackImages() {
+        setup(5, 1).with("pass").putArray("images").add("https://cdn.example.com/win.jpg");
+        ObjectNode receipt = engine.settle(snapshot, rules, payer, recipients, "attempt:img", decision("PASS"), 1000);
+        assertEquals("pass", receipt.path("reply").asText());
+        assertEquals("https://cdn.example.com/win.jpg", receipt.path("images").path(0).asText());
+        ObjectNode failed = engine.settle(snapshot, rules, payer, recipients, "attempt:img-fail", decision("FAIL"), 1000);
+        assertFalse(failed.has("images"));
+    }
     @Test void failedCostClampsAndReplayCannotChargeAgainOrChangeTheOutcome() {
         setup(1, 3);
         ObjectNode receipt = engine.settle(snapshot, rules, payer, recipients, "attempt:1", decision("FAIL"), 1000);

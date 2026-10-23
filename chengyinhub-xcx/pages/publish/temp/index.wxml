@@ -13,7 +13,12 @@
     for (var i = 0; i < (effects || []).length; i++) { if (effects[i].op === 'ADD_TAG' && (effects[i].value || '').indexOf('tag.m_') === 0) return true; }
     return false;
   };
+  var has = function (list, key) {
+    for (var i = 0; i < (list || []).length; i++) { if (list[i].key === key) return true; }
+    return false;
+  };
   module.exports = {
+    has: has,
     // R3：效果行的字段错误（effectErrors 列表）按 path/index 取本行第一条
     rowErr: function (errors, path, index) { for (var i = 0; i < (errors || []).length; i++) { if (errors[i].path === path && errors[i].index === index) return errors[i].error; } return ''; },
     memo: memo,
@@ -83,10 +88,9 @@
     <!-- 从发布页进来的故事玩法不出这张卡:玩法看点 / 人数时长 / 类别都是给公共玩法库用的,
          故事玩法以草稿绑在主题上、不会自动进入广场。走查 W-04:逼作者给「新生儿登记」选
          「运动健身 / 美食烹饪」。 -->
-    <cy-card class="cg-card" id="sec-basic" wx:if="{{from !== 'fabu'}}">
-      <view class="cg-card-head">
-        <view class="cg-bar"></view><view class="cg-card-tit">模板信息</view>
-      </view>
+    <!-- 2026-10-22 主人定稿:分区标题放在卡片外,标题前不画竖线 -->
+    <view class="cg-sec" id="sec-basic" wx:if="{{from !== 'fabu'}}"><text class="cg-sec__t">模板信息</text></view>
+    <cy-card class="cg-card" wx:if="{{from !== 'fabu'}}">
 
       <!-- 玩法描述 -->
       <view class="cg-field">
@@ -146,10 +150,8 @@
     </cy-card>
 
     <!-- ============ 玩法规则 ============ -->
-    <cy-card class="cg-card" id="sec-rule">
-      <view class="cg-card-head">
-        <view class="cg-bar"></view><view class="cg-card-tit">玩法规则</view>
-      </view>
+    <view class="cg-sec" id="sec-rule"><text class="cg-sec__t">玩法规则<text class="req" aria-hidden="true">*</text></text></view>
+    <cy-card class="cg-card">
       <!-- 原型:序号是个圆点,画在输入框**外面**左侧;每步一个自增高的输入框 + 删除。
            整份规则仍然存在 formData.ruleInstructions 里(一行一步),没有新建后端字段。 -->
       <view class="cg-steps">
@@ -170,9 +172,7 @@
     </cy-card>
 
     <!-- ============ 玩法模块 ============ -->
-    <view class="cg-modsec" id="sec-module">
-      <view class="cg-modsec-tit">玩法模块</view>
-    </view>
+    <view id="sec-module"></view>
 
     <!-- 完成方式缺失提示 -->
     <cy-inline-error class="cg-inline-error cg-inline-error--banner" wx:if="{{errors.finish}}" title="{{errors.finish}}" />
@@ -181,48 +181,53 @@
 
       <!-- ======= 完成方式(核心) ======= -->
       <!-- R5：参与方式（扫码是参与方式，不是玩法）。与玩法互不占位。 -->
-      <cy-card class="cg-mod cg-mod--plain" wx:if="{{ mod.key === 'finish' }}">
-        <view class="cg-mod-body pad">
-          <!-- 2026-10-22 业主裁决(L09):参与方式改成底部选择面板(复用本页 pickerSheet),不再就地展开压住下方内容与底栏。 -->
-          <view class="cg-r5-row" bindtap="openParticipationSheet" aria-role="button" aria-label="选择参与方式" hover-class="cy-pressed" hover-stay-time="80"><view class="cg-r5-ico"><cy-icon name="{{r5Editor.participation === 'scan' ? 'qr-scan' : r5Editor.participation === 'gps' ? 'route' : 'check'}}" size="32" /></view><view class="cg-r5-row__main"><text class="cg-r5-row__title">玩家怎么参与</text><text class="cg-r5-row__sub">{{opt.label(r5Editor.participationOptions, r5Editor.participation)}}</text></view><view class="cg-r5-pill">选择<cy-icon name="chevron-right" size="24" /></view></view>
-          <view class="cg-r5-row cg-r5-row--hr" wx:if="{{r5Editor.participation === 'scan'}}" bindtap="openScanSheet" aria-role="button" aria-label="配置扫完回复" hover-class="cy-pressed" hover-stay-time="80">
-            <view class="cg-r5-row__main"><text class="cg-r5-row__title cg-r5-row__title--plain">扫完回复</text><text class="cg-r5-row__sub">{{r5Editor.scanSummary}}</text></view>
-            <view class="cg-r5-pill">配置<cy-icon name="chevron-right" size="24" /></view>
+      <!-- 参与方式:扫码参与 / 直接参与 / 定位到达(原下拉选项);扫码时「扫完回复」单独一个开关,打开才编辑回复 -->
+      <view class="cg-sec" id="sec-join" wx:if="{{ mod.key === 'finish' }}"><text class="cg-sec__t">参与方式</text></view>
+      <cy-card class="cg-card" wx:if="{{ mod.key === 'finish' }}">
+        <cy-dropdown topic-editor columns="{{2}}" range="{{r5Editor.participationOptions}}" range-key="label" reason-key="reason" value="{{opt.idx(r5Editor.participationOptions, r5Editor.participation)}}" bind:change="pickParticipation">
+          <view class="cg-pick" aria-role="button" aria-label="选择参与方式">{{opt.label(r5Editor.participationOptions, r5Editor.participation)}}<view class="cg-caret"><cy-icon name="back" size="28" /></view></view>
+        </cy-dropdown>
+        <block wx:if="{{r5Editor.participation === 'scan'}}">
+          <view class="cg-rw-line cg-line"><view class="cg-rw-name">扫完回复</view><cy-switch checked="{{advanced.scan.kind !== 'NONE'}}" bindchange="toggleScanReply" accessibility-label="扫完回复" /></view>
+          <view class="cg-scan-reply" wx:if="{{advanced.scan.kind !== 'NONE'}}">
+            <view class="cg-cfg-label">回复方式</view>
+            <cy-dropdown portal="{{false}}" range="{{scanReplyKinds}}" range-key="label" value="{{opt.idx(scanReplyKinds, advanced.scan.kind)}}" bind:change="pickScanReplyKind"><view class="cg-pick">{{opt.label(scanReplyKinds, advanced.scan.kind)}}<view class="cg-caret"><cy-icon name="back" size="28" /></view></view></cy-dropdown>
+            <block wx:if="{{advanced.scan.kind === 'TEXT'}}">
+              <view class="cg-cfg-label">回复内容 <text class="req" aria-hidden="true">*</text></view>
+              <textarea class="cg-cfg-textarea" value="{{advanced.scan.reply}}" maxlength="200" placeholder="例如 欢迎来到这家店，今天的手冲是耶加雪菲。" placeholder-class="cg-ph" data-section="scan" data-field="reply" bindinput="onAdvancedField" />
+            </block>
+            <view class="cg-r5-row" wx:else bindtap="openScanSheet" aria-role="button" aria-label="配置扫完回复" hover-class="cy-pressed" hover-stay-time="80">
+              <view class="cg-r5-row__main"><text class="cg-r5-row__title cg-r5-row__title--plain">{{opt.label(scanReplyKinds, advanced.scan.kind)}}回复</text><text class="cg-r5-row__sub">{{r5Editor.scanSummary}}</text></view>
+              <view class="cg-r5-pill">配置<cy-icon name="chevron-right" size="24" /></view>
+            </view>
           </view>
-        </view>
+        </block>
       </cy-card>
-      <cy-card class="cg-mod cg-mod--blue" wx:if="{{ mod.key === 'finish' }}">
-        <view class="cg-mod-head cg-mod-head--blue">
-          <view class="cg-mod-ico cg-mod-ico--blue"><cy-icon name="check" size="40" /></view>
-          <view class="cg-mod-meta">
-            <view class="cg-mod-name">玩法 <text class="cg-tag cg-tag--core">核心</text></view>
-          </view>
-          <view class="cg-mod-del" bindtap="removeModule" data-key="finish" aria-role="button" aria-label="移除玩法模块" hover-class="cy-pressed" hover-stay-time="80">
-            <cy-icon name="close-sm" size="32" />
-          </view>
-        </view>
-        <view class="cg-mod-body">
-          <!-- 2026-10-11 主人批准 HTML 原型：选择玩法用带分类标签的纵向列表（只列玩法，不含互动工具）；所选玩法的设置直接在本卡内编辑 -->
+      <!-- 玩法:标题在卡外(不标星、不挂「核心」),卡里只放所选玩法与形式/怎么出现;玩法自己的设置拆成下面几张卡 -->
+      <view class="cg-sec" id="sec-game" wx:if="{{ mod.key === 'finish' }}"><text class="cg-sec__t">玩法</text><view class="cg-sec__act" bindtap="removeModule" data-key="finish" aria-role="button" aria-label="移除玩法模块" hover-class="cy-pressed" hover-stay-time="80">移除</view></view>
+      <cy-card class="cg-card" wx:if="{{ mod.key === 'finish' }}">
+          <!-- 2026-10-22 主人定稿 HTML 原型：选择玩法改为半屏标签弹层，左右滑动 -->
           <view wx:if="{{!gameKey}}" class="cg-r5-row" bindtap="openR5GameSheet" aria-role="button" aria-label="选择玩法" hover-class="cy-pressed" hover-stay-time="80"><view class="cg-r5-row__main"><text class="cg-r5-row__title">选择玩法</text><cy-inline-error wx:if="{{errors.finish}}" class="cg-r5-row__sub is-err" kind="error" title="{{errors.finish}}" /></view><view class="cg-r5-pill">选择<cy-icon name="chevron-right" size="24" /></view></view>
           <block wx:else>
             <view class="cg-r5-row">
-              <view class="cg-r5-ico"><cy-icon name="{{gameCurrent.icon}}" size="32" /></view>
-              <view class="cg-r5-row__main"><text class="cg-r5-row__title">{{gameCurrent.label}}</text></view>
+              <view class="cg-game-ico cg-game-ico--{{r5Editor.gameTint}}"><cy-icon name="{{gameCurrent.icon}}" size="36" /></view>
+              <view class="cg-r5-row__main"><text class="cg-r5-row__title">{{gameCurrent.label}}</text><text class="cg-r5-row__sub" wx:if="{{gameCurrent.sub}}">{{gameCurrent.sub}}</text></view>
               <view class="cg-r5-pill" bindtap="openR5GameSheet" aria-role="button" aria-label="更换玩法" hover-class="cy-pressed" hover-stay-time="80">更换</view>
             </view>
-            <view class="cg-inline-cfg" id="game-cfg">
+            <view class="cg-two cg-game-opts" wx:if="{{r5Editor.forms.length > 1 || (gameKey !== 'bingo' && gameKey !== 'album')}}">
+              <view class="cg-col" wx:if="{{r5Editor.forms.length > 1}}"><view class="cg-cfg-label">形式</view>
+                <cy-dropdown topic-editor columns="{{2}}" range="{{r5Editor.forms}}" range-key="label" reason-key="reason" value="{{opt.idx(r5Editor.forms, r5Editor.formKey)}}" bind:change="pickR5Form"><view class="cg-pick">{{opt.label(r5Editor.forms, r5Editor.formKey)}}<view class="cg-caret"><cy-icon name="back" size="28" /></view></view></cy-dropdown>
+              </view>
+              <view class="cg-col" wx:if="{{gameKey !== 'bingo' && gameKey !== 'album'}}"><view class="cg-cfg-label">怎么出现</view>
+                <cy-dropdown portal="{{false}}" range="{{presentOptions}}" range-key="label" value="{{opt.idx(presentOptions, presentChoice)}}" disabled="{{presentInlineLocked}}" bind:change="onPickPresent"><view class="cg-pick {{opt.idx(presentOptions, presentChoice) < 0 ? 'empty' : ''}}">{{opt.label(presentOptions, presentChoice)}}<view class="cg-caret"><cy-icon name="back" size="28" /></view></view></cy-dropdown>
+              </view>
+            </view>
+            <view class="cg-cfg-hint" wx:if="{{presentInlineLocked}}">只能整屏：{{presentLockReason}}</view>
+          </block>
+      </cy-card>
+      <view class="cg-inline-cfg" id="game-cfg" wx:if="{{ mod.key === 'finish' && gameKey }}">
+    <view class="cg-sec"><text class="cg-sec__t">玩法设置</text></view>
     <cy-inline-error class="cg-inline-error" wx:if="{{r5Editor.error}}" title="{{r5Editor.error}}" />
-    <view class="cg-gcfg">
-      <view class="cg-two">
-        <view class="cg-col" wx:if="{{r5Editor.forms.length > 1}}"><view class="cg-cfg-label">形式</view>
-          <cy-dropdown topic-editor columns="{{2}}" range="{{r5Editor.forms}}" range-key="label" reason-key="reason" value="{{opt.idx(r5Editor.forms, r5Editor.formKey)}}" bind:change="pickR5Form"><view class="cg-pick">{{opt.label(r5Editor.forms, r5Editor.formKey)}}<view class="cg-caret"><cy-icon name="back" size="28" /></view></view></cy-dropdown>
-        </view>
-        <view class="cg-col" wx:if="{{gameKey !== 'bingo' && gameKey !== 'album'}}"><view class="cg-cfg-label">怎么出现</view>
-          <cy-dropdown portal="{{false}}" range="{{presentOptions}}" range-key="label" value="{{opt.idx(presentOptions, presentChoice)}}" disabled="{{presentInlineLocked}}" bind:change="onPickPresent"><view class="cg-pick {{opt.idx(presentOptions, presentChoice) < 0 ? 'empty' : ''}}">{{opt.label(presentOptions, presentChoice)}}<view class="cg-caret"><cy-icon name="back" size="28" /></view></view></cy-dropdown>
-        </view>
-      </view>
-      <view class="cg-cfg-hint" wx:if="{{presentInlineLocked}}">只能整屏：{{presentLockReason}}</view>
-    </view>
           <view class="cg-gcfg" wx:if="{{gameKey === 'bingo'}}">
     <view class="cg-cfg-label">九宫格在主题编辑页配置</view>
     </view>
@@ -283,7 +288,7 @@
       <view class="cg-adv-del" data-path="pricePair.items" data-index="{{gi}}" bindtap="removeAdvancedRow" aria-role="button" aria-label="删除" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="28" /></view>
     </view>
     <input class="cg-cfg-input" value="{{item.name}}" placeholder="这张图叫什么，如 冰美式" data-path="pricePair.items" data-index="{{gi}}" data-field="name" bindinput="updateAdvancedRow" />
-    <input class="cg-cfg-input" value="{{item.imageUrl}}" placeholder="图片地址（选填，https 或站内路径）" data-path="pricePair.items" data-index="{{gi}}" data-field="imageUrl" bindinput="updateAdvancedRow" />
+    <input class="cg-cfg-input" value="{{item.imageUrl}}" placeholder="图片地址(https 或站内路径)" data-path="pricePair.items" data-index="{{gi}}" data-field="imageUrl" bindinput="updateAdvancedRow" />
     <!-- 正确答案是**单选**:点圆圈设为正确答案。用开关的话会出现「把答案关掉」这种无意义状态 -->
     <view class="cg-choice-li cg-adv-correct" data-index="{{gi}}" bindtap="pickCorrectPicture"
           aria-role="radio" aria-checked="{{item.correct}}" aria-label="把图 {{gi + 1}} 设为正确答案"
@@ -352,10 +357,10 @@
     <view class="cg-qa-sec cg-qa-sec--first">题目</view>
     <view class="cg-cfg-label">题干 <text class="req" aria-hidden="true">*</text></view>
     <input class="cg-cfg-input" value="{{advanced.qa.title}}" placeholder="例如 这座桥建于哪一年?" data-section="qa" data-field="title" bindinput="onAdvancedField" />
-    <view class="cg-cfg-label">前置说明{{advanced.qa.mode === 'SHOT' ? '' : ' · 选填'}} <text class="req" wx:if="{{advanced.qa.mode === 'SHOT'}}" aria-hidden="true">*</text></view>
+    <view class="cg-cfg-label">前置说明 <text class="req" wx:if="{{advanced.qa.mode === 'SHOT'}}" aria-hidden="true">*</text></view>
     <input class="cg-cfg-input" value="{{advanced.qa.lead}}" placeholder="例如 先闭上眼睛尝一口" data-section="qa" data-field="lead" bindinput="onAdvancedField" />
     <block wx:if="{{advanced.qa.mode === 'SHOT'}}">
-    <view class="cg-cfg-label">补充说明 · 选填</view>
+    <view class="cg-cfg-label">补充说明</view>
     <input class="cg-cfg-input" value="{{advanced.qa.shotNote}}" placeholder="例如 站在树的左边，把整棵树都框进去" data-section="qa" data-field="shotNote" bindinput="onAdvancedField" />
     </block>
 
@@ -389,7 +394,7 @@
       <input class="cg-cfg-input" value="{{item.label}}" placeholder="玩家看到的文案" data-path="qa.options" data-index="{{qi}}" data-field="label" bindinput="updateAdvancedRow" />
       <view class="cg-qa-fb">
         <view class="cg-cfg-label">选中后的反馈</view>
-        <textarea class="cg-cfg-textarea" value="{{item.fb}}" placeholder="选了它之后玩家看到的文字 · 选填" maxlength="120" data-path="qa.options" data-index="{{qi}}" data-field="fb" bindinput="updateAdvancedRow" />
+        <textarea class="cg-cfg-textarea" value="{{item.fb}}" placeholder="选了它之后玩家看到的文字" maxlength="120" data-path="qa.options" data-index="{{qi}}" data-field="fb" bindinput="updateAdvancedRow" />
         <view class="cg-qmedia cg-qa-imgs">
           <view class="cg-qmedia-slot" wx:for="{{item.fbImgs}}" wx:key="*this" wx:for-item="img" wx:for-index="ii" data-index="{{qi}}" data-img="{{ii}}" bindtap="tapQaFbImg" aria-role="button" aria-label="选项 {{qi + 1}} 反馈图片 {{ii + 1}}" hover-class="cy-pressed" hover-stay-time="80">
             <image class="cg-qmedia-img" src="{{img}}" mode="aspectFill" />
@@ -531,7 +536,7 @@
     <view><view class="cg-cfg-label">容差（度） <text class="req" aria-hidden="true">*</text></view><input class="cg-cfg-input" type="number" value="{{advanced.compass.tolerance}}" placeholder="5 至 90" data-section="compass" data-field="tolerance" data-numeric="1" bindinput="onAdvancedField" /></view>
     <view><view class="cg-cfg-label">保持几秒 <text class="req" aria-hidden="true">*</text></view><input class="cg-cfg-input" type="number" value="{{advanced.compass.holdSeconds}}" placeholder="1 至 10" data-section="compass" data-field="holdSeconds" data-numeric="1" bindinput="onAdvancedField" /></view>
     </view>
-    <view class="cg-cfg-label">提示语 · 选填</view>
+    <view class="cg-cfg-label">提示语</view>
     <input class="cg-cfg-input" value="{{advanced.compass.hint}}" placeholder="例如 它比你想的更靠右" data-section="compass" data-field="hint" bindinput="onAdvancedField" />
     <view class="cg-cfg-label">对准奖励分</view>
     <input class="cg-cfg-input" type="number" value="{{advanced.compass.xp}}" placeholder="0 表示不给分" data-section="compass" data-field="xp" data-numeric="1" bindinput="onAdvancedField" />
@@ -646,7 +651,7 @@
       <view class="cg-adv-body">
     <view class="cg-cfg-label">标题 <text class="req" aria-hidden="true">*</text></view>
     <input class="cg-cfg-input" value="{{advanced.profile.title}}" placeholder="例如 出生登记" data-section="profile" data-field="title" bindinput="onAdvancedField" />
-    <view class="cg-cfg-label">引导语 · 选填</view>
+    <view class="cg-cfg-label">引导语</view>
     <input class="cg-cfg-input" value="{{advanced.profile.lead}}" placeholder="例如 填完这张表，你就有了身份" data-section="profile" data-field="lead" bindinput="onAdvancedField" />
     <view class="cg-rw-line compact"><view class="cg-rw-name">填写后添加头像</view><cy-switch checked="{{advanced.profile.avatar.enabled}}" data-key="profile.avatar.enabled" bindchange="onAdvancedSubToggle" /></view>
     <view class="cg-rw-line compact" wx:if="{{advanced.profile.avatar.enabled}}"><view class="cg-rw-name">头像必填</view><cy-switch checked="{{advanced.profile.avatar.required}}" data-key="profile.avatar.required" bindchange="onAdvancedSubToggle" /></view>
@@ -724,14 +729,14 @@
     <!-- 拍物成卡的兜底卡名:卡名先用 AI 认出来的物品名,认不出来用这里的,这里也空就用上面的标题。
        只在拍物成卡模式出现 —— 普通拍照审核没有卡。 -->
     <view wx:if="{{advanced.photoCheck.mode === 'CARD'}}">
-    <view class="cg-cfg-label">兜底卡名 · 选填</view>
+    <view class="cg-cfg-label">兜底卡名</view>
     <input class="cg-cfg-input" value="{{advanced.photoCheck.cardTitle}}" placeholder="例如 一枚旧弹壳" maxlength="64" data-section="photoCheck" data-field="cardTitle" bindinput="onAdvancedField" />
     </view>
-    <view class="cg-cfg-label">提示词 · 选填</view>
+    <view class="cg-cfg-label">提示词</view>
     <input class="cg-cfg-input" value="{{advanced.photoCheck.shotNote}}" placeholder="例如 把窗框也拍进去" data-section="photoCheck" data-field="shotNote" bindinput="onAdvancedField" />
     <view class="cg-cfg-label">要拍到什么才算过 <text class="req" aria-hidden="true">*</text></view>
     <input class="cg-cfg-input" value="{{advanced.photoCheck.requirement}}" placeholder="例如 画面里要能看见窗外的街景，窗框入镜" maxlength="60" data-section="photoCheck" data-field="requirement" bindinput="onAdvancedField" />
-    <view class="cg-cfg-label">取景轮廓 · 选填</view>
+    <view class="cg-cfg-label">取景轮廓</view>
     <!-- cg-qmedia--one:只有一个槽。不加这个修饰类的话 .cg-qmedia 的 flex:1 会把它
        撑满整行 —— 那个宽度是给「配图 + 音频」两个槽并排设计的(见题干附件那段)。 -->
     <view class="cg-qmedia cg-qmedia--one">
@@ -768,7 +773,7 @@
        fumbleEffects / failCostTag 这轮不做界面,但保存时必须原样保留。 -->
     <view class="cg-gcfg" wx:if="{{gameSection === 'check'}}">
       <view class="cg-adv-body">
-    <view class="cg-cfg-label">判定什么技能 · 选填</view>
+    <view class="cg-cfg-label">判定什么技能</view>
     <input class="cg-cfg-input" value="{{advanced.check.skill}}" placeholder="例如 潜行 / 观察" data-section="check" data-field="skill" bindinput="onAdvancedField" />
     <view class="cg-cfg-label">难度</view>
     <cy-dropdown portal="{{false}}" range="{{checkTiers}}" range-key="label" value="{{opt.idx(checkTiers, advanced.check.tier)}}" bind:change="pickCheckTier"><view class="cg-pick {{opt.idx(checkTiers, advanced.check.tier) < 0 ? 'empty' : ''}}">{{opt.label(checkTiers, advanced.check.tier)}}<view class="cg-caret"><cy-icon name="back" size="28" /></view></view></cy-dropdown>
@@ -851,7 +856,7 @@
         <view class="cg-qmedia cg-qmedia--one">
           <view class="cg-qmedia-slot" data-index="{{ai}}" bindtap="chooseAlbumImage" aria-role="button" aria-label="替换第{{(ai + 1) || 1}}张照片" hover-class="cy-pressed" hover-stay-time="80"><image class="cg-qmedia-img" src="{{item.url}}" mode="aspectFill" /></view>
         </view>
-        <input class="cg-cfg-input" value="{{item.line}}" maxlength="40" placeholder="这一张的配文 · 选填" data-index="{{ai}}" bindinput="onAlbumLine" aria-label="第{{(ai + 1) || 1}}张照片配文" />
+        <input class="cg-cfg-input" value="{{item.line}}" maxlength="40" placeholder="这一张的配文" data-index="{{ai}}" bindinput="onAlbumLine" aria-label="第{{(ai + 1) || 1}}张照片配文" />
       </view>
       <view class="cg-adv-add" wx:if="{{advanced.album.images.length < 6}}" bindtap="chooseAlbumImage" aria-role="button" aria-label="添加照片" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加照片</view>
     </view>
@@ -1043,7 +1048,7 @@
 
     <!-- 题干附件:文字作答与选项问答共用一段,别在两张卡里各写一份(改一处漏一处) -->
     <cy-card class="cg-cfg" wx:if="{{ formData.validationMethod === 1 || formData.validationMethod === 3 }}">
-    <view class="cg-cfg-label">题干附件 · 选填</view>
+    <view class="cg-cfg-label">题干附件</view>
     <view class="cg-qmedia">
       <view class="cg-qmedia-slot" wx:if="{{ formData.questionImg }}">
         <image class="cg-qmedia-img" src="{{ formData.questionImg }}" mode="aspectFill" />
@@ -1080,7 +1085,7 @@
       <view class="cg-hint-head">
         <view class="cg-hint-emoji"><cy-icon name="info" size="32" /></view>
         <view>
-          <view class="cg-sw-label">提示(选填)</view>
+          <view class="cg-sw-label">提示</view>
         </view>
       </view>
       <cy-switch checked="{{ hintEnabled }}" bindchange="onHintEnabledChange" />
@@ -1094,16 +1099,44 @@
         placeholder="兜底答案,实在卡住时直接给出" placeholder-class="cg-ph" />
     </view>
     </view>
-    <!-- 结果之后：通过 / 没通过（或每个选项 / 每个结果）各自的回复、消耗、效果 -->
-    <view class="cg-gcfg" wx:if="{{r5Editor.afterRows.length}}">
-      <view class="cg-r5-sec">结果之后</view>
-      <view class="cg-r5-row {{index ? 'cg-r5-row--hr' : ''}} {{item.disabled ? 'is-off' : ''}}" wx:for="{{r5Editor.afterRows}}" wx:key="path" data-path="{{item.path}}" bindtap="openAfterSheet" aria-role="button" aria-label="编辑{{item.label}}" aria-disabled="{{item.disabled}}" hover-class="{{item.disabled ? '' : 'cy-pressed'}}" hover-stay-time="80">
-        <view class="cg-r5-row__main"><text class="cg-r5-row__title">{{item.label}}</text><text class="cg-r5-row__sub">{{item.reason || item.summary}}</text></view>
-        <view class="cg-r5-pill" wx:if="{{!item.disabled}}">编辑<cy-icon name="chevron-right" size="24" /></view>
+    <!-- 结果反馈(2026-10-22 主人定稿):先写清三步,下面成功反馈 / 失败反馈各一个开关,打开才出现编辑。
+         文字与配图写在 outcomeRules.pass / fail 的 reply / images;消耗与效果仍在同一行结果里,从「消耗与效果」进去改。 -->
+    <block wx:if="{{r5Editor.afterRows.length}}">
+    <view class="cg-sec" id="sec-fb"><text class="cg-sec__t">结果反馈</text></view>
+    <view class="cg-gcfg">
+      <view class="cg-fb-steps">
+        <view class="cg-fb-step" wx:for="{{r5Editor.fbSteps}}" wx:key="*this"><text class="cg-fb-step__no">{{index + 1}}</text><text class="cg-fb-step__t">{{item}}</text></view>
       </view>
+      <block wx:for="{{r5Editor.fbRows}}" wx:key="path" wx:for-item="fb">
+        <view class="cg-rw-line cg-line"><view class="cg-rw-name">{{fb.label}}</view><cy-switch checked="{{fb.has || (fb.key === 'pass' ? fbOpenPass : fbOpenFail)}}" data-path="{{fb.path}}" data-key="{{fb.key}}" bindchange="toggleOutcomeFeedback" accessibility-label="{{fb.label}}" /></view>
+        <view class="cg-fb-body" wx:if="{{fb.has || (fb.key === 'pass' ? fbOpenPass : fbOpenFail)}}">
+          <textarea class="cg-cfg-textarea" value="{{fb.reply}}" maxlength="2000" placeholder="{{fb.label}}的文字" placeholder-class="cg-ph" data-path="{{fb.path}}" bindinput="inputOutcomeReply" />
+          <view class="pgrid">
+            <view class="pgrid-cell" wx:for="{{fb.images}}" wx:key="*this" wx:for-item="img" wx:for-index="ii">
+              <image src="{{img}}" mode="aspectFill" class="pgrid-cell-img" />
+              <view class="pgrid-del" catchtap="removeOutcomeImage" data-path="{{fb.path}}" data-index="{{ii}}" aria-role="button" aria-label="删除{{fb.label}}配图 {{ii + 1}}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="28" /></view>
+            </view>
+            <view class="pgrid-cell pgrid-add" wx:if="{{fb.images.length < 3}}" bindtap="uploadOutcomeImage" data-path="{{fb.path}}" aria-role="button" aria-label="添加{{fb.label}}配图" hover-class="cy-pressed" hover-stay-time="80">
+              <view class="pgrid-add-plus"><cy-icon name="plus" size="32" /></view>
+            </view>
+          </view>
+          <view class="cg-r5-row {{fb.disabled ? 'is-off' : ''}}" data-path="{{fb.path}}" data-inline="1" bindtap="openAfterSheet" aria-role="button" aria-label="编辑{{fb.label}}的消耗与效果" aria-disabled="{{fb.disabled}}" hover-class="{{fb.disabled ? '' : 'cy-pressed'}}" hover-stay-time="80">
+            <view class="cg-r5-row__main"><text class="cg-r5-row__title cg-r5-row__title--plain">消耗与效果</text><text class="cg-r5-row__sub">{{fb.reason || fb.extra}}</text></view>
+            <view class="cg-r5-pill" wx:if="{{!fb.disabled}}">编辑<cy-icon name="chevron-right" size="24" /></view>
+          </view>
+        </view>
+      </block>
+      <block wx:if="{{r5Editor.optionAfterRows.length}}">
+        <view class="cg-cfg-label cg-r5-gap">每个结果单独回复</view>
+        <view class="cg-r5-row {{index ? 'cg-r5-row--hr' : ''}} {{item.disabled ? 'is-off' : ''}}" wx:for="{{r5Editor.optionAfterRows}}" wx:key="path" data-path="{{item.path}}" bindtap="openAfterSheet" aria-role="button" aria-label="编辑{{item.label}}" aria-disabled="{{item.disabled}}" hover-class="{{item.disabled ? '' : 'cy-pressed'}}" hover-stay-time="80">
+          <view class="cg-r5-row__main"><text class="cg-r5-row__title cg-r5-row__title--plain">{{item.label}}</text><text class="cg-r5-row__sub">{{item.reason || item.summary}}</text></view>
+          <view class="cg-r5-pill" wx:if="{{!item.disabled}}">编辑<cy-icon name="chevron-right" size="24" /></view>
+        </view>
+      </block>
       <view class="cg-cfg-label cg-r5-gap">效果作用于</view>
       <cy-dropdown topic-editor columns="{{2}}" range="{{effectScopeOptions}}" range-key="label" reason-key="reason" value="{{opt.idx(effectScopeOptions, advanced.interactionRules.targetScope || 'OWNER')}}" bind:change="pickEffectScope"><view class="cg-pick">{{opt.label(effectScopeOptions, advanced.interactionRules.targetScope || 'OWNER')}}<view class="cg-caret"><cy-icon name="back" size="28" /></view></view></cy-dropdown>
     </view>
+    </block>
     <view class="cg-gcfg" wx:if="{{advanced.branch.enabled || (!r5Editor.nextDisabledReason && gameSection)}}">
       <view class="cg-adv-body">
       <view class="cg-r5-sec">{{advanced.branch.enabled && advanced.outcomeRules.version !== 1 ? '分支剧情（旧设置）' : '反馈分段（本站内）'}}</view>
@@ -1136,47 +1169,20 @@
       </view>
     </view>
 
-    <!-- 2026-10-22 业主裁决(L09):旧设置只给一行人话摘要,不再打印原始 JSON;保存时仍原样保留。 -->
     <view class="cg-gcfg" wx:if="{{r5Editor.legacyRows.length}}">
-      <view class="cg-cfg-hint">{{r5Editor.legacySummary}}</view>
+      <view class="cg-r5-sec">旧设置（只读，保存时原样保留）</view>
+      <view class="cg-cfg-hint" wx:for="{{r5Editor.legacyRows}}" wx:key="path">{{item.label}}：{{item.displayValue}}</view>
     </view>
-            </view>
-          </block>
-
-        </view>
-      </cy-card>
+      </view>
 
 
-      <!-- R5：互动工具（成功使用次数、投票与投入）与附加规则（限时、时段、排行榜）。费用并入各结果的「消耗」，不再是工具。 -->
-      <cy-card class="cg-mod cg-mod--plain" id="sec-template-tools" wx:if="{{ mod.key === 'finish' && gameKey && gameKey !== 'album' }}">
-        <view class="cg-mod-body pad">
-          <view class="cg-r5-sec">互动工具</view>
-          <view class="cg-r5-row {{index ? 'cg-r5-row--hr' : ''}}" wx:for="{{r5Editor.toolRows}}" wx:key="key" data-key="{{item.key}}" bindtap="openR5ToolSheet" aria-role="button" aria-label="配置{{item.label}}" hover-class="cy-pressed" hover-stay-time="80">
-            <view class="cg-r5-ico"><cy-icon name="{{item.icon}}" size="32" /></view>
-            <view class="cg-r5-row__main"><text class="cg-r5-row__title">{{item.label}}<text wx:if="{{item.kind === 'addon'}}" class="cg-tag cg-tag--topic">附加</text></text><text class="cg-r5-row__sub">{{item.summary}}</text></view>
-            <view class="cg-r5-pill">配置<cy-icon name="chevron-right" size="24" /></view>
-          </view>
-          <!-- L09:添加互动工具同样改成底部选择面板;不可选的项置灰并显示原因。 -->
-          <view class="cg-adv-add" bindtap="openR5ToolPicker" aria-role="button" aria-label="添加互动工具" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加互动工具</view>
-        </view>
-      </cy-card>
 
-      <!-- ======= 完成奖励(推荐) ======= -->
-      <cy-card class="cg-mod cg-mod--orange" wx:if="{{ mod.key === 'reward' && gameKey !== 'album' }}">
-        <view class="cg-mod-head cg-mod-head--orange">
-          <view class="cg-mod-ico cg-mod-ico--orange"><cy-icon name="gift" size="40" /></view>
-          <view class="cg-mod-meta">
-            <view class="cg-mod-name">完成奖励 <text class="cg-tag cg-tag--rec">推荐</text></view>
-          </view>
-          <view class="cg-mod-del" bindtap="removeModule" data-key="reward" aria-role="button" aria-label="移除完成奖励" hover-class="cy-pressed" hover-stay-time="80">
-            <cy-icon name="close-sm" size="32" />
-          </view>
-        </view>
-        <view class="cg-mod-body pad">
+      <!-- ======= 完成奖励 ======= -->
+      <view class="cg-sec" id="sec-reward" wx:if="{{ mod.key === 'reward' && gameKey !== 'album' }}"><text class="cg-sec__t">完成奖励</text><view class="cg-sec__act" bindtap="removeModule" data-key="reward" aria-role="button" aria-label="移除完成奖励" hover-class="cy-pressed" hover-stay-time="80">移除</view></view>
+      <cy-card class="cg-card" wx:if="{{ mod.key === 'reward' && gameKey !== 'album' }}">
           <!-- 优惠券:从我已发布的券里选 -->
           <view class="cg-rw-row">
             <view class="cg-rw-line">
-              <view class="cg-rw-ico"><cy-icon name="coupon" size="36" /></view>
               <view class="cg-rw-meta">
                 <view class="cg-rw-name">优惠券</view>
               </view>
@@ -1195,10 +1201,9 @@
             </cy-card>
           </view>
 
-          <!-- 文字反馈 -->
-          <view class="cg-rw-row">
+          <!-- 文字反馈:2026-10-22 起不再提供(文字写在结果反馈里);旧模板已有的文字仍显示,关掉即清空 -->
+          <view class="cg-rw-row" wx:if="{{ rwText }}">
             <view class="cg-rw-line">
-              <view class="cg-rw-ico"><cy-icon name="edit" size="36" /></view>
               <view class="cg-rw-meta">
                 <view class="cg-rw-name">文字反馈</view>
               </view>
@@ -1213,7 +1218,6 @@
           <!-- 勋章 -->
           <view class="cg-rw-row last">
             <view class="cg-rw-line">
-              <view class="cg-rw-ico"><cy-icon name="gift" size="36" /></view>
               <view class="cg-rw-meta">
                 <view class="cg-rw-name">勋章</view>
               </view>
@@ -1235,7 +1239,6 @@
             </cy-card>
           </view>
           <cy-inline-error class="cg-inline-error" wx:if="{{errors.reward}}" title="{{errors.reward}}" />
-        </view>
       </cy-card>
 
       <!-- ======= 剧情故事(多时间节点) ======= -->
@@ -1260,11 +1263,11 @@
               placeholder="这一刻发生了什么?写下玩家此时读到的片段…" placeholder-class="cg-ph" />
             <view class="cg-beat-row">
               <input class="cg-beat-tagin" value="{{ beat.tag }}" bindinput="onStoryBeatTag" data-index="{{ bi }}"
-                placeholder="时刻标签(选填,如「此刻」)" placeholder-class="cg-ph" />
+                placeholder="时刻标签,如「此刻」" placeholder-class="cg-ph" />
             </view>
             <view class="cg-beat-photos">
               <view class="pgrid-head">
-                <text class="pgrid-hint">配图(选填,最多6张)</text>
+                <text class="pgrid-hint">配图(最多6张)</text>
                 <text class="pgrid-count">{{ beat.imgs.length }}/6</text>
               </view>
               <view class="pgrid">
@@ -1287,38 +1290,26 @@
         </view>
       </cy-card>
 
-      <!-- ======= 语音讲解 ======= -->
-      <cy-card class="cg-mod cg-mod--plain" wx:if="{{ mod.key === 'voice' }}">
-        <view class="cg-mod-head">
-          <view class="cg-mod-ico cg-mod-ico--green"><cy-icon name="play" size="40" /></view>
-          <view class="cg-mod-meta">
-            <view class="cg-mod-name">语音讲解</view>
-          </view>
-          <view class="cg-mod-del" bindtap="removeModule" data-key="voice" aria-role="button" aria-label="移除语音讲解" hover-class="cy-pressed" hover-stay-time="80">
-            <cy-icon name="close-sm" size="32" />
-          </view>
-        </view>
-        <view class="cg-mod-body pad">
-          <cy-inline-error class="cg-inline-error" wx:if="{{errors.voice}}" title="{{errors.voice}}" />
-          <cy-card class="cg-audio" wx:if="{{ formData.audioUrl }}">
-            <view class="cg-audio__inner">
-              <view class="cg-audio-play" bindtap="onPreviewAudio" aria-role="button" aria-label="{{audioPreviewPlaying?'暂停导览音频':'播放导览音频'}}" hover-class="cy-pressed" hover-stay-time="80">{{audioPreviewPlaying?'暂停':'播放'}}</view>
-              <view class="cg-audio-meta">
-                <view class="cg-audio-name">{{formData.audioFileName||'导览音频'}}{{formData.audioFormat?'.'+formData.audioFormat:''}}</view>
-              </view>
-              <view class="cg-audio-del" bindtap="clearAudio" aria-role="button" aria-label="删除导览音频" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="28" /></view>
-            </view>
-          </cy-card>
-          <view class="cg-audio-empty" wx:else bindtap="uploadAudio" hover-class="cy-pressed" hover-stay-time="80">上传音频文件</view>
-          <view wx:if="{{ formData.audioUrl }}">
-            <view class="cg-cfg-label">时长(秒,可选)</view>
-            <input class="cg-cfg-input" type="number" value="{{ formData.audioDuration }}" bindinput="onAudioDurationChange"
-              placeholder="例如:45" placeholder-class="cg-ph" />
-          </view>
-        </view>
-      </cy-card>
 
     </block>
+
+    <!-- 互动工具(2026-10-22 主人定稿):放在页面最下面,一开始就在;添加从底部弹出。语音讲解、背景音乐也在这里。 -->
+    <view class="cg-sec" id="sec-template-tools"><text class="cg-sec__t">互动工具</text></view>
+    <cy-card class="cg-card">
+      <view class="cg-r5-row {{index ? 'cg-r5-row--hr' : ''}}" wx:for="{{r5Editor.toolRows}}" wx:key="key" data-key="{{item.key}}" bindtap="openR5ToolSheet" aria-role="button" aria-label="配置{{item.label}}" hover-class="cy-pressed" hover-stay-time="80">
+        <view class="cg-r5-row__main"><text class="cg-r5-row__title">{{item.label}}</text><text class="cg-r5-row__sub">{{item.summary}}</text></view>
+        <view class="cg-r5-pill">配置<cy-icon name="chevron-right" size="24" /></view>
+      </view>
+      <view class="cg-r5-row {{r5Editor.toolRows.length ? 'cg-r5-row--hr' : ''}}" wx:if="{{ opt.has(moduleList, 'voice') }}" bindtap="openVoiceSheet" aria-role="button" aria-label="配置语音讲解" hover-class="cy-pressed" hover-stay-time="80">
+        <view class="cg-r5-row__main"><text class="cg-r5-row__title">语音讲解</text><text class="cg-r5-row__sub">{{formData.audioUrl ? (formData.audioFileName || '已上传音频') : '还没有上传音频'}}</text></view>
+        <view class="cg-r5-pill">配置<cy-icon name="chevron-right" size="24" /></view>
+      </view>
+      <view class="cg-r5-row {{r5Editor.toolRows.length || opt.has(moduleList, 'voice') ? 'cg-r5-row--hr' : ''}}" wx:if="{{ advanced.backgroundMusic }}" bindtap="openMusicSheet" aria-role="button" aria-label="配置背景音乐" hover-class="cy-pressed" hover-stay-time="80">
+        <view class="cg-r5-row__main"><text class="cg-r5-row__title">背景音乐</text><text class="cg-r5-row__sub">{{advanced.backgroundMusic.title || (advanced.backgroundMusic.audioUrl ? '已上传音乐' : '还没有上传音乐')}}{{advanced.backgroundMusic.loop === false ? '' : ' · 循环'}}</text></view>
+        <view class="cg-r5-pill">配置<cy-icon name="chevron-right" size="24" /></view>
+      </view>
+      <view class="cg-adv-add {{r5Editor.toolRows.length || opt.has(moduleList, 'voice') || advanced.backgroundMusic ? '' : 'cg-adv-add--first'}}" bindtap="openToolPicker" aria-role="button" aria-label="添加互动工具" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加互动工具</view>
+    </cy-card>
 
     <!-- 空态 / 添加模块 -->
     <cy-card class="cg-empty" wx:if="{{ moduleList.length === 0 }}">
@@ -1484,14 +1475,10 @@
   </view>
 
   <!-- ============ 添加模块 sheet ============ -->
-  <view class="cg-mask" catchtouchmove="noop" wx:if="{{ showAddSheet }}" bindtap="closeAddSheet" aria-role="button" aria-label="关闭" hover-class="cy-pressed" hover-stay-time="80"></view>
+  <view class="cg-mask" wx:if="{{ showAddSheet }}" bindtap="closeAddSheet" aria-role="button" aria-label="关闭" hover-class="cy-pressed" hover-stay-time="80"></view>
   <view class="cg-sheet" style="--cy-comp-sheet-max-h:calc(100vh - {{sheetTop}}px);" wx:if="{{ showAddSheet }}">
     <view class="cg-sheet-bar"></view>
-    <view class="cg-sheet-head">
-      <view class="cg-sheet-tit">添加模块</view>
-      <view class="cg-sheet-close" bindtap="closeAddSheet" aria-role="button" aria-label="关闭模块选择" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="44" /></view>
-    </view>
-    <view class="cg-sheet-sub">每种模块最多添加一个</view>
+    <view class="cg-edit-head"><view class="cg-edit-head__exit" bindtap="closeAddSheet" aria-role="button" aria-label="退出添加模块" hover-class="cy-pressed" hover-stay-time="80">退出</view><view class="cg-edit-head__title">添加模块</view><view class="cg-edit-head__done" bindtap="closeAddSheet" aria-role="button" aria-label="完成添加模块" hover-class="cy-pressed" hover-stay-time="80">完成</view></view>
     <view class="cg-sheet-list">
       <view class="cg-sheet-card" wx:for="{{ availableModules }}" wx:key="key" hover-class="cg-sheet-card--pressed" hover-stay-time="80" bindtap="addModule" data-key="{{ item.key }}">
         <view class="cg-sheet-ico"><cy-icon name="{{item.iconName}}" size="40" /></view>
@@ -1505,37 +1492,103 @@
     <view class="cg-sheet-allin" wx:if="{{ availableModules.length === 0 }}">全部模块已添加</view>
   </view>
 
-  <!-- ============ 选择玩法 sheet：带分类标签的纵向列表，只列玩法（互动工具在玩法选好后单独添加） ============ -->
-  <view class="cg-mask" catchtouchmove="noop" wx:if="{{ gameSheetOpen }}" bindtap="closeR5GameSheet" aria-role="button" aria-label="退出选择玩法" hover-class="cy-pressed" hover-stay-time="80"></view>
-  <view class="cg-sheet cg-gsheet" style="--cy-comp-sheet-max-h:calc(100vh - {{sheetTop}}px);" wx:if="{{ gameSheetOpen }}">
-    <view class="cg-edit-head"><view class="cg-edit-head__exit" bindtap="closeR5GameSheet" aria-role="button" aria-label="退出选择玩法" hover-class="cy-pressed" hover-stay-time="80">退出</view><view class="cg-edit-head__title">选择玩法</view><view class="cg-edit-head__done" bindtap="closeR5GameSheet" aria-role="button" aria-label="完成选择玩法" hover-class="cy-pressed" hover-stay-time="80">完成</view></view>
-    <scroll-view scroll-x class="cg-gsheet-nav" enhanced show-scrollbar="{{false}}">
-      <view class="cg-gsheet-navi {{ sheetGroup === idx ? 'is-on' : '' }}" wx:for="{{ r5Editor.gameGroups }}" wx:key="title" wx:for-index="idx"
+  <!-- ============ 选择玩法 sheet(2026-10-22 主人定稿,Figma 标签样式):半屏弹层;所有分类排成一条只左右滑,
+       每类最多四行胶囊标签(宽度随字数、带图标),点分类跳过去;点标签先选中,底部看说明 / 预览,「完成」才换玩法。 ============ -->
+  <view class="cg-mask" wx:if="{{ gameSheetOpen }}" bindtap="closeR5GameSheet" aria-role="button" aria-label="退出选择玩法" hover-class="cy-pressed" hover-stay-time="80"></view>
+  <view class="cg-sheet cg-tsheet" wx:if="{{ gameSheetOpen }}">
+    <view class="cg-sheet-bar"></view>
+    <view class="cg-edit-head"><view class="cg-edit-head__exit" bindtap="closeR5GameSheet" aria-role="button" aria-label="退出选择玩法" hover-class="cy-pressed" hover-stay-time="80">退出</view><view class="cg-edit-head__title">选择玩法</view><view class="cg-edit-head__done" bindtap="confirmR5GameSheet" aria-role="button" aria-label="完成选择玩法" hover-class="cy-pressed" hover-stay-time="80">完成</view></view>
+    <scroll-view scroll-x class="cg-gsheet-nav" enhanced show-scrollbar="{{false}}" scroll-into-view="{{ sheetNavAnchor }}" scroll-with-animation>
+      <view class="cg-gsheet-navi {{ sheetGroup === idx ? 'is-on' : '' }}" id="gnav-{{ idx }}" wx:for="{{ r5Editor.gameGroups }}" wx:key="title" wx:for-index="idx"
             data-index="{{ idx }}" bindtap="jumpR5GameGroup" aria-role="button" aria-label="跳到{{ item.title }}" hover-class="cy-pressed" hover-stay-time="80">{{ item.title }}</view>
     </scroll-view>
-    <scroll-view scroll-y class="cg-gsheet-scroll" scroll-into-view="{{ sheetAnchor }}" scroll-with-animation>
-      <block wx:for="{{ r5Editor.gameGroups }}" wx:key="title" wx:for-item="group" wx:for-index="gi">
-        <view class="cg-gsheet-group" id="gsheet-g{{ gi }}">{{ group.title }}</view>
-        <view class="cg-gsheet-card {{ r5Editor.baseKey === g.key ? 'cur' : '' }}" wx:for="{{ group.items }}" wx:key="key" wx:for-item="g">
-          <view class="cg-gsheet-ico"><cy-icon name="{{ g.icon }}" size="34" /></view>
-          <view class="cg-gsheet-meta">
-            <view class="cg-gsheet-name">{{ g.label }}</view>
-            <view class="cg-gsheet-sub" wx:if="{{ g.sub }}">{{ g.sub }}</view>
-          </view>
-          <view class="cg-gsheet-btns">
-            <view wx:if="{{ g.reason || lockedGames[g.pickKey] || supportReasons[g.pickKey] }}" class="cg-gsheet-lock" aria-role="text">{{ g.reason || lockedGames[g.pickKey] || supportReasons[g.pickKey] }}</view>
-            <view wx:else class="cg-gsheet-btn {{ r5Editor.baseKey === g.key ? 'ghost' : 'solid' }}" data-key="{{ g.key }}" bindtap="pickR5GameFromSheet"
-                  aria-role="button" aria-label="选择{{ g.label }}" hover-class="cy-pressed" hover-stay-time="80">{{ r5Editor.baseKey === g.key ? '已选' : '选择' }}</view>
+    <scroll-view scroll-x class="cg-tstrip" enhanced show-scrollbar="{{false}}" scroll-into-view="{{ sheetAnchor }}" scroll-with-animation bindscroll="onGameStripScroll">
+      <view class="cg-tstrip__in">
+        <view class="cg-tblock" id="gsheet-g{{ gi }}" wx:for="{{ r5Editor.gameGroups }}" wx:key="title" wx:for-item="group" wx:for-index="gi">
+          <view class="cg-tblock__t">{{ group.title }}</view>
+          <view class="cg-trow" wx:for="{{ group.rows }}" wx:key="index" wx:for-item="row">
+            <view class="cg-tag-pill {{ sheetPick === g.key ? 'is-on' : '' }} {{ g.reason || lockedGames[g.pickKey] || supportReasons[g.pickKey] ? 'is-off' : '' }}" wx:for="{{ row }}" wx:key="key" wx:for-item="g"
+                  data-key="{{ g.key }}" data-reason="{{ g.reason || lockedGames[g.pickKey] || supportReasons[g.pickKey] }}" bindtap="pickR5GameTag"
+                  aria-role="button" aria-selected="{{ sheetPick === g.key }}" aria-label="{{ g.label }}" hover-class="cy-pressed" hover-stay-time="60">
+              <cy-icon class="cg-tag-pill__ic" name="{{ g.icon }}" size="36" />
+              <text class="cg-tag-pill__t">{{ g.label }}</text>
+              <image class="cg-tag-pill__ck" wx:if="{{ sheetPick === g.key }}" src="/images/icon_tag_check.svg" mode="aspectFit" />
+            </view>
           </view>
         </view>
-      </block>
+      </view>
     </scroll-view>
+    <view class="cg-tsheet__foot">
+      <view class="cg-tsheet__sub"><text class="cg-tsheet__name" wx:if="{{ sheetPickItem }}">{{ sheetPickItem.label }}</text>{{ sheetPickItem ? (sheetPickItem.reason || sheetPickItem.sub) : '选一个玩法' }}</view>
+      <view class="cg-r5-pill" wx:if="{{ sheetPickItem && !sheetPickItem.reason }}" data-key="{{ sheetPickItem.pickKey }}" bindtap="previewGameFromSheet" aria-role="button" aria-label="预览{{ sheetPickItem.label }}" hover-class="cy-pressed" hover-stay-time="80">预览</view>
+    </view>
   </view>
 
+  <!-- ============ 添加互动工具(底部弹出,同一种标签;已添加的打勾,点它直接去配置) ============ -->
+  <view class="cg-mask" wx:if="{{ toolPickerOpen }}" bindtap="closeToolPicker" aria-role="button" aria-label="退出添加互动工具" hover-class="cy-pressed" hover-stay-time="80"></view>
+  <view class="cg-sheet cg-tsheet cg-tsheet--auto" wx:if="{{ toolPickerOpen }}">
+    <view class="cg-sheet-bar"></view>
+    <view class="cg-edit-head"><view class="cg-edit-head__exit" bindtap="closeToolPicker" aria-role="button" aria-label="退出添加互动工具" hover-class="cy-pressed" hover-stay-time="80">退出</view><view class="cg-edit-head__title">互动工具</view><view class="cg-edit-head__done" bindtap="closeToolPicker" aria-role="button" aria-label="完成添加互动工具" hover-class="cy-pressed" hover-stay-time="80">完成</view></view>
+    <view class="cg-tpad">
+      <view class="cg-tag-pill {{ item.on ? 'is-on' : '' }} {{ item.reason ? 'is-off' : '' }}" wx:for="{{ toolPickerItems }}" wx:key="key"
+            data-key="{{ item.key }}" data-reason="{{ item.reason }}" bindtap="pickToolTag"
+            aria-role="checkbox" aria-checked="{{ item.on }}" aria-label="{{ item.label }}" hover-class="cy-pressed" hover-stay-time="60">
+        <cy-icon class="cg-tag-pill__ic" name="{{ item.icon }}" size="36" />
+        <text class="cg-tag-pill__t">{{ item.label }}</text>
+        <image class="cg-tag-pill__ck" wx:if="{{ item.on }}" src="/images/icon_tag_check.svg" mode="aspectFit" />
+      </view>
+    </view>
+    <view class="cg-tsheet__foot"><view class="cg-tsheet__sub">{{ toolPickerHint }}</view></view>
+  </view>
 
+  <!-- ============ 语音讲解(互动工具) ============ -->
+  <view class="cg-mask" wx:if="{{ voiceSheetOpen }}" bindtap="closeVoiceSheet" aria-role="button" aria-label="退出语音讲解" hover-class="cy-pressed" hover-stay-time="80"></view>
+  <view class="cg-sheet cg-edit-sheet" style="--cy-comp-sheet-max-h:calc(100vh - {{sheetTop}}px);" wx:if="{{ voiceSheetOpen }}">
+    <view class="cg-edit-head"><view class="cg-edit-head__exit" bindtap="closeVoiceSheet" aria-role="button" aria-label="退出语音讲解" hover-class="cy-pressed" hover-stay-time="80">退出</view><view class="cg-edit-head__title">语音讲解</view><view class="cg-edit-head__done" bindtap="closeVoiceSheet" aria-role="button" aria-label="完成语音讲解" hover-class="cy-pressed" hover-stay-time="80">完成</view></view>
+    <view class="cg-gcfg">
+          <cy-inline-error class="cg-inline-error" wx:if="{{errors.voice}}" title="{{errors.voice}}" />
+          <cy-card class="cg-audio" wx:if="{{ formData.audioUrl }}">
+            <view class="cg-audio__inner">
+              <view class="cg-audio-play" bindtap="onPreviewAudio" aria-role="button" aria-label="{{audioPreviewPlaying?'暂停导览音频':'播放导览音频'}}" hover-class="cy-pressed" hover-stay-time="80">{{audioPreviewPlaying?'暂停':'播放'}}</view>
+              <view class="cg-audio-meta">
+                <view class="cg-audio-name">{{formData.audioFileName||'导览音频'}}{{formData.audioFormat?'.'+formData.audioFormat:''}}</view>
+              </view>
+              <view class="cg-audio-del" bindtap="clearAudio" aria-role="button" aria-label="删除导览音频" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="28" /></view>
+            </view>
+          </cy-card>
+          <view class="cg-audio-empty" wx:else bindtap="uploadAudio" hover-class="cy-pressed" hover-stay-time="80">上传音频文件</view>
+          <view wx:if="{{ formData.audioUrl }}">
+            <view class="cg-cfg-label">时长(秒,可选)</view>
+            <input class="cg-cfg-input" type="number" value="{{ formData.audioDuration }}" bindinput="onAudioDurationChange"
+              placeholder="例如:45" placeholder-class="cg-ph" />
+          </view>
+            </view>
+    <view class="cg-adv-add cg-adv-add--danger" data-key="voice" bindtap="removeVoiceTool" aria-role="button" aria-label="移除语音讲解" hover-class="cy-pressed" hover-stay-time="80">移除语音讲解</view>
+  </view>
+
+  <!-- ============ 背景音乐(互动工具):advanced.backgroundMusic,有这一段就算开着 ============ -->
+  <view class="cg-mask" wx:if="{{ musicSheetOpen }}" bindtap="closeMusicSheet" aria-role="button" aria-label="退出背景音乐" hover-class="cy-pressed" hover-stay-time="80"></view>
+  <view class="cg-sheet cg-edit-sheet" style="--cy-comp-sheet-max-h:calc(100vh - {{sheetTop}}px);" wx:if="{{ musicSheetOpen }}">
+    <view class="cg-edit-head"><view class="cg-edit-head__exit" bindtap="closeMusicSheet" aria-role="button" aria-label="退出背景音乐" hover-class="cy-pressed" hover-stay-time="80">退出</view><view class="cg-edit-head__title">背景音乐</view><view class="cg-edit-head__done" bindtap="saveMusicSheet" aria-role="button" aria-label="完成背景音乐" hover-class="cy-pressed" hover-stay-time="80">完成</view></view>
+    <view class="cg-gcfg">
+      <view class="cg-cfg-label">音乐名称</view>
+      <input class="cg-cfg-input" value="{{musicDraft.title}}" maxlength="40" placeholder="例如 老城茶馆" placeholder-class="cg-ph" bindinput="inputMusicTitle" />
+      <view class="cg-cfg-label">音乐 <text class="req" aria-hidden="true">*</text></view>
+      <cy-card class="cg-audio" wx:if="{{ musicDraft.audioUrl }}">
+        <view class="cg-audio__inner">
+          <view class="cg-audio-meta"><view class="cg-audio-name">{{musicDraft.fileName || '背景音乐'}}</view></view>
+          <view class="cg-audio-del" bindtap="clearMusicAudio" aria-role="button" aria-label="删除背景音乐" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="28" /></view>
+        </view>
+      </cy-card>
+      <view class="cg-audio-empty" wx:else bindtap="uploadMusicAudio" aria-role="button" aria-label="上传背景音乐" hover-class="cy-pressed" hover-stay-time="80">上传音频文件</view>
+      <view class="cg-rw-line cg-line"><view class="cg-rw-name">循环播放</view><cy-switch checked="{{musicDraft.loop}}" bindchange="toggleMusicLoop" accessibility-label="循环播放" /></view>
+    </view>
+    <cy-inline-error class="cg-inline-error" wx:if="{{musicError}}" title="{{musicError}}" />
+    <view class="cg-adv-add cg-adv-add--danger" bindtap="removeMusicTool" aria-role="button" aria-label="移除背景音乐" hover-class="cy-pressed" hover-stay-time="80">移除背景音乐</view>
+  </view>
 
   <!-- ============ R5 扫码参与：扫完回复 ============ -->
-  <view class="cg-mask" catchtouchmove="noop" wx:if="{{scanSheetOpen}}" bindtap="closeScanSheet" aria-role="button" aria-label="退出扫完回复" hover-class="cy-pressed" hover-stay-time="80"></view>
+  <view class="cg-mask" wx:if="{{scanSheetOpen}}" bindtap="closeScanSheet" aria-role="button" aria-label="退出扫完回复" hover-class="cy-pressed" hover-stay-time="80"></view>
   <view class="cg-sheet cg-edit-sheet" style="--cy-comp-sheet-max-h:calc(100vh - {{sheetTop}}px);" wx:if="{{scanSheetOpen}}">
     <view class="cg-edit-head"><view class="cg-edit-head__exit" bindtap="closeScanSheet" aria-role="button" aria-label="退出扫完回复" hover-class="cy-pressed" hover-stay-time="80">退出</view><view class="cg-edit-head__title">扫完回复</view><view class="cg-edit-head__done" bindtap="saveScanSheet" aria-role="button" aria-label="完成扫完回复" hover-class="cy-pressed" hover-stay-time="80">完成</view></view>
     <cy-inline-error class="cg-inline-error" wx:if="{{r5Editor.error}}" title="{{r5Editor.error}}" />
@@ -1569,7 +1622,7 @@
       </block>
       <!-- 3D 模型(2026-09-23):有模型放模型,没模型把显形图做成立牌;只收 .glb(xr-frame 的格式) -->
       <block wx:if="{{advanced.scan.arMode !== 'NONE'}}">
-        <view class="cg-cfg-label">3D 模型 · 选填</view>
+        <view class="cg-cfg-label">3D 模型</view>
         <!-- 整行、与上下输入框左右对齐(用户 9-23):模型没有缩略图,不用方形图片槽 -->
         <view class="cg-adv-add cg-model cg-model--done" wx:if="{{advanced.scan.modelUrl}}">
           <cy-icon name="check" size="28" />已上传 3D 模型
@@ -1589,7 +1642,7 @@
   </view>
 
   <!-- ============ R5 附加规则面板（限时挑战 / 时段限定 / 排行榜） ============ -->
-  <view class="cg-mask" catchtouchmove="noop" wx:if="{{toolSheetKey && !toolSheetOpen}}" bindtap="closeR5ToolSheet" aria-role="button" aria-label="退出附加规则" hover-class="cy-pressed" hover-stay-time="80"></view>
+  <view class="cg-mask" wx:if="{{toolSheetKey && !toolSheetOpen}}" bindtap="closeR5ToolSheet" aria-role="button" aria-label="退出附加规则" hover-class="cy-pressed" hover-stay-time="80"></view>
   <view class="cg-sheet cg-edit-sheet" style="--cy-comp-sheet-max-h:calc(100vh - {{sheetTop}}px);" wx:if="{{toolSheetKey && !toolSheetOpen}}">
     <view class="cg-edit-head"><view class="cg-edit-head__exit" bindtap="closeR5ToolSheet" aria-role="button" aria-label="退出附加规则" hover-class="cy-pressed" hover-stay-time="80">退出</view><view class="cg-edit-head__title">{{toolSheetKey === 'timer' ? '限时挑战' : toolSheetKey === 'timeWindow' ? '时段限定' : '排行榜'}}</view><view class="cg-edit-head__done" bindtap="saveR5ToolSheet" aria-role="button" aria-label="完成附加规则" hover-class="cy-pressed" hover-stay-time="80">完成</view></view>
     <block wx:if="{{toolSheetKey === 'timer'}}">
@@ -1617,7 +1670,7 @@
           <input class="cg-cfg-input" value="{{advanced.timeWindow.eyebrow}}" placeholder="例如 午夜电台 · 时段限定" data-section="timeWindow" data-field="eyebrow" bindinput="onAdvancedField" />
           <view class="cg-cfg-label">未开放时的标题</view>
           <input class="cg-cfg-input" value="{{advanced.timeWindow.title}}" placeholder="例如 还没到开播时间" data-section="timeWindow" data-field="title" bindinput="onAdvancedField" />
-          <view class="cg-cfg-label">订阅消息模板 ID · 选填</view>
+          <view class="cg-cfg-label">订阅消息模板 ID</view>
           <input class="cg-cfg-input" value="{{advanced.timeWindow.subscribeTmplId}}" placeholder="留空则不提供开播提醒" data-section="timeWindow" data-field="subscribeTmplId" bindinput="onAdvancedField" />
         </view>
       </view>
@@ -1639,12 +1692,20 @@
   </view>
 
   <!-- ============ R5 结果之后（回复 / 消耗 / 效果 / 反馈下一段） ============ -->
-  <view class="cg-mask cg-mask--top" catchtouchmove="noop" wx:if="{{afterEditor.show}}" bindtap="closeAfterSheet" aria-role="button" aria-label="退出结果之后" hover-class="cy-pressed" hover-stay-time="80"></view>
+  <view class="cg-mask cg-mask--top" wx:if="{{afterEditor.show}}" bindtap="closeAfterSheet" aria-role="button" aria-label="退出结果之后" hover-class="cy-pressed" hover-stay-time="80"></view>
   <view class="cg-sheet cg-edit-sheet cg-edit-sheet--top" style="--cy-comp-sheet-max-h:calc(100vh - {{sheetTop}}px);" wx:if="{{afterEditor.show}}">
-    <view class="cg-edit-head"><view class="cg-edit-head__exit" bindtap="closeAfterSheet" aria-role="button" aria-label="退出结果之后" hover-class="cy-pressed" hover-stay-time="80">退出</view><view class="cg-edit-head__title">{{opt.label(r5Editor.afterRows, afterEditor.path, 'path')}}</view><view class="cg-edit-head__done" bindtap="saveAfterSheet" aria-role="button" aria-label="完成结果之后" hover-class="cy-pressed" hover-stay-time="80">完成</view></view>
-    <view class="cg-gcfg">
+    <view class="cg-edit-head"><view class="cg-edit-head__exit" bindtap="closeAfterSheet" aria-role="button" aria-label="退出结果之后" hover-class="cy-pressed" hover-stay-time="80">退出</view><view class="cg-edit-head__title">{{afterEditor.inline ? '消耗与效果' : opt.label(r5Editor.afterRows, afterEditor.path, 'path')}}</view><view class="cg-edit-head__done" bindtap="saveAfterSheet" aria-role="button" aria-label="完成结果之后" hover-class="cy-pressed" hover-stay-time="80">完成</view></view>
+    <view class="cg-gcfg" wx:if="{{!afterEditor.inline}}">
       <view class="cg-cfg-label">回复一句</view>
-      <input class="cg-cfg-input" value="{{afterEditor.draft.reply}}" maxlength="2000" placeholder="例如 你稳住了呼吸（选填）" placeholder-class="cg-ph" bindinput="inputAfterReply" />
+      <input class="cg-cfg-input" value="{{afterEditor.draft.reply}}" maxlength="2000" placeholder="例如 你稳住了呼吸" placeholder-class="cg-ph" bindinput="inputAfterReply" />
+      <view class="cg-cfg-label">配图</view>
+      <view class="pgrid">
+        <view class="pgrid-cell" wx:for="{{afterEditor.draft.images}}" wx:key="*this" wx:for-item="img" wx:for-index="ii">
+          <image src="{{img}}" mode="aspectFill" class="pgrid-cell-img" />
+          <view class="pgrid-del" catchtap="removeAfterImage" data-index="{{ii}}" aria-role="button" aria-label="删除配图 {{ii + 1}}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="28" /></view>
+        </view>
+        <view class="pgrid-cell pgrid-add" wx:if="{{afterEditor.draft.images.length < 3}}" bindtap="uploadAfterImage" aria-role="button" aria-label="添加配图" hover-class="cy-pressed" hover-stay-time="80"><view class="pgrid-add-plus"><cy-icon name="plus" size="32" /></view></view>
+      </view>
     </view>
     <view class="cg-gcfg">
       <view class="cg-r5-sec">消耗</view>
@@ -1673,7 +1734,7 @@
   </view>
 
   <!-- 工具子浮层编辑的是临时副本；关闭或点击遮罩不会改动玩法。 -->
-  <view class="cg-mask" catchtouchmove="noop" wx:if="{{toolSheetOpen}}" bindtap="closeR5ToolSheet" aria-role="button" aria-label="退出工具" hover-class="cy-pressed" hover-stay-time="80"></view>
+  <view class="cg-mask" wx:if="{{toolSheetOpen}}" bindtap="closeR5ToolSheet" aria-role="button" aria-label="退出工具" hover-class="cy-pressed" hover-stay-time="80"></view>
   <view class="cg-sheet cg-tool-sheet" style="--cy-comp-sheet-max-h:calc(100vh - {{sheetTop}}px);" wx:if="{{toolSheetOpen}}">
     <view class="cg-sheet-bar"></view>
     <view class="cg-edit-head"><view class="cg-edit-head__exit" bindtap="closeR5ToolSheet" aria-role="button" aria-label="退出工具" hover-class="cy-pressed" hover-stay-time="80">退出</view><view class="cg-edit-head__title">{{toolKey === 'cost' ? '费用' : toolKey === 'reward' ? '奖励' : toolKey === 'clue' ? '线索' : toolKey === 'uses' ? '成功使用次数' : toolKey === 'trade' ? '物资交换' : '投票与投入'}}</view><view class="cg-edit-head__done" bindtap="saveR5ToolSheet" aria-role="button" aria-label="完成工具" hover-class="cy-pressed" hover-stay-time="80">完成</view></view>
@@ -1779,7 +1840,7 @@
   </view>
 
   <!-- ============ 通用 picker sheet(玩家人数/玩法时长/适用场所) ============ -->
-  <view class="cg-mask" catchtouchmove="noop" wx:if="{{ pickerSheet.open }}" bindtap="closePickerSheet" aria-role="button" aria-label="关闭选择器" hover-class="cy-pressed" hover-stay-time="80"></view>
+  <view class="cg-mask" wx:if="{{ pickerSheet.open }}" bindtap="closePickerSheet" aria-role="button" aria-label="关闭选择器" hover-class="cy-pressed" hover-stay-time="80"></view>
   <view class="cg-sheet picker" style="--cy-comp-sheet-max-h:calc(100vh - {{sheetTop}}px);" wx:if="{{ pickerSheet.open }}">
     <view class="cg-sheet-bar"></view>
     <view class="cg-sheet-head">
@@ -1787,10 +1848,10 @@
       <view class="cg-sheet-close" bindtap="closePickerSheet" aria-role="button" aria-label="关闭选择器" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="44" /></view>
     </view>
     <view class="cg-picker-list">
-      <view class="cg-picker-li {{ item.active ? 'on' : '' }} {{ item.reason ? 'is-disabled' : '' }}" wx:for="{{ pickerSheet.options }}" wx:key="value"
-        bindtap="onPickerSheetSelect" data-value="{{ item.value }}" data-label="{{ item.label }}" data-reason="{{ item.reason || '' }}" hover-class="{{ item.reason ? 'none' : 'cy-pressed' }}" hover-stay-time="80"
-        aria-role="radio" aria-label="{{item.label}}" aria-checked="{{item.active}}" aria-disabled="{{!!item.reason}}">
-        <text class="cg-picker-label">{{ item.label }}</text><text class="cg-picker-reason" wx:if="{{ item.reason }}">{{ item.reason }}</text><view class="cg-picker-tick" aria-hidden="true"></view>
+      <view class="cg-picker-li {{ item.active ? 'on' : '' }}" wx:for="{{ pickerSheet.options }}" wx:key="value"
+        bindtap="onPickerSheetSelect" data-value="{{ item.value }}" data-label="{{ item.label }}" hover-class="cy-pressed" hover-stay-time="80"
+        aria-role="radio" aria-label="{{item.label}}" aria-checked="{{item.active}}">
+        <text class="cg-picker-label">{{ item.label }}</text><view class="cg-picker-tick" aria-hidden="true"></view>
       </view>
     </view>
   </view>

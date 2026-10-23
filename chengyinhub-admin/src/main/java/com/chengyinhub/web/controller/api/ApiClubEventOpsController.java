@@ -119,6 +119,19 @@ public class ApiClubEventOpsController extends BaseController {
         }
     }
 
+    /** O5b-7:关闭系列(CLOSED 终态);开关默认关,关闭时返回 403。已排场次与已付报名不动。 */
+    @PostMapping("/series/close")
+    public AjaxResult closeSeries(@RequestBody(required = false) ClubEventSeriesRequest request) {
+        Long principal = principal();
+        if (principal == null) return error("请先登录");
+        if (request == null) return new AjaxResult(HttpStatus.BAD_REQUEST, "缺少系列参数");
+        try {
+            return success(eventOpsService.closeSeries(principal, appUsername(principal), request));
+        } catch (ServiceException e) {
+            return serviceError(e);
+        }
+    }
+
     @PostMapping("/cancel")
     public AjaxResult cancelOccurrence(@RequestBody(required = false) ClubEventCancellationRequest request) {
         Long principal = principal();

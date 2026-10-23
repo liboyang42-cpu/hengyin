@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.ThemeCharacterMapper">
+
+    <resultMap type="ThemeCharacter" id="ThemeCharacterResult">
+        <result property="id"              column="id"                />
+        <result property="memberId"        column="member_id"         />
+        <result property="topicId"         column="topic_id"          />
+        <result property="valuesJson"      column="values_json"       />
+        <result property="sourceSessionId" column="source_session_id" />
+        <result property="sourceVersion"   column="source_version"    />
+        <result property="createTime"      column="create_time"       />
+        <result property="updateTime"      column="update_time"       />
+    </resultMap>
+
+    <select id="selectByMemberAndTopic" resultMap="ThemeCharacterResult">
+        select id, member_id, topic_id, values_json, source_session_id, source_version, create_time, update_time
+        from theme_character
+        where member_id = #{memberId} and topic_id = #{topicId}
+    </select>
+
+    <update id="updateIfNewer" parameterType="ThemeCharacter">
+        update theme_character
+        set values_json = #{valuesJson},
+            source_session_id = #{sourceSessionId},
+            source_version = #{sourceVersion},
+            update_time = #{updateTime}
+        where member_id = #{memberId} and topic_id = #{topicId}
+          and (source_session_id &lt; #{sourceSessionId}
+               or (source_session_id = #{sourceSessionId} and source_version &lt; #{sourceVersion}))
+    </update>
+
+    <insert id="insertIfAbsent" parameterType="ThemeCharacter">
+        insert into theme_character
+            (member_id, topic_id, values_json, source_session_id, source_version, create_time, update_time)
+        values
+            (#{memberId}, #{topicId}, #{valuesJson}, #{sourceSessionId}, #{sourceVersion}, #{createTime}, #{updateTime})
+        on duplicate key update id = id
+    </insert>
+
+</mapper>

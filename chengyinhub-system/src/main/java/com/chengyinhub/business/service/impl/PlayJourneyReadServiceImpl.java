@@ -86,6 +86,8 @@ public class PlayJourneyReadServiceImpl implements IPlayJourneyReadService {
     private static final String PREFIX_REST = "rest:";
     private static final String PREFIX_STAGE_REST = "stage-rest:";
     private static final String PREFIX_MISTAKE = "mistake:";
+    /** Doc2 F1a 定向会话回执(prepare/start/终局/任务结果)与节点推进无关,不进属性日志。 */
+    private static final String PREFIX_ORIENT = "orient:";
     private static final String PREFIX_ASK = "ask:";
     private static final String ID_CALL = "call";
 
@@ -360,6 +362,7 @@ public class PlayJourneyReadServiceImpl implements IPlayJourneyReadService {
      */
     static String kindOf(String actionId, String outcomeCode) {
         String id = actionId == null ? "" : actionId;
+        if (id.startsWith(PREFIX_ORIENT)) return null;
         if (id.startsWith(PREFIX_MISTAKE)) return KIND_MISTAKE;
         if (id.startsWith(PREFIX_STAGE_REST)) return KIND_REST;
         if (id.startsWith(PREFIX_ASK) || ID_CALL.equals(id)) return null;

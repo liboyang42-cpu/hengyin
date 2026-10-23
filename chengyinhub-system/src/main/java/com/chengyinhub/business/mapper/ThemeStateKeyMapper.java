@@ -16,8 +16,17 @@ public interface ThemeStateKeyMapper {
     /** 某主题已注册的全部状态键;没注册过返回空列表。 */
     List<ThemeStateKey> selectByTopicId(@Param("topicId") Long topicId);
 
-    /** 注册一个键;唯一键冲突时只覆盖 label/initial_value/update_time。 */
+    /**
+     * 注册一个键;唯一键冲突时覆盖 label/initial_value/update_time,F2 扩展列只在本次带值时覆盖
+     * (老调用方不带扩展列 = 保留作者在定义接口里设过的值)。
+     */
     int upsertThemeStateKey(ThemeStateKey key);
+
+    /** 某主题的一个键;不在返回 null。 */
+    ThemeStateKey selectByTopicIdAndStateKey(@Param("topicId") Long topicId, @Param("stateKey") String stateKey);
+
+    /** 整体覆盖一个键的定义元数据(F2 T01);键名 / 类型 / 作用域不变。返回受影响行数。 */
+    int updateDefinition(ThemeStateKey key);
 
     /** 删除某主题的一个键;返回受影响行数(键不在 = 0)。 */
     int deleteByTopicIdAndStateKey(@Param("topicId") Long topicId, @Param("stateKey") String stateKey);

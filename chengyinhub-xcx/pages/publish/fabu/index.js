@@ -7482,7 +7482,7 @@ Page({
         },
         fail: () => cb({ ok: false, networkError: true })
       });
-      this._serverDraftSaver = createServerDraftSaver({
+      this._serverDraftSaver = createServerDraftSaver({ publishCheck: (topicId, cb) => this._topicPublishCheck(topicId, cb), // BL-185
         isCurrent: current,
         pendingPublish: () => this._publishAttempt && this._publishAttempt.kind === 'SERVER_DRAFT'
           ? this._publishAttempt.topicId : 0,
@@ -8410,7 +8410,7 @@ Page({
     const that = this;
     const themeName = this.data.formData.name;
     const nodeName = this.data.nodesForm.name || ('站点' + (this.data.editTargetNodeLid || ''));
-    wx.navigateTo({
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ // 跳转中不响应连点,免得叠两层玩法编辑页
       url: '/pages/publish/temp/index?from=fabu&themeName=' + encodeURIComponent(themeName || '')
         + '&nodeName=' + encodeURIComponent(nodeName || '')
         + (this.data.supportMatrix ? '&supportContext=' + encodeURIComponent(JSON.stringify(ctx)) : '')
@@ -8428,7 +8428,7 @@ Page({
           });
           if (that._bindNodeTemplate(templateInfo)) cyToast.success('已绑定新玩法');
         }
-      }
+      }, complete: () => { this._navigating = false; }
     });
   },
 
@@ -8667,4 +8667,43 @@ Page({
     });
   },
 
+  // BL-185:存好并回读确认后、publish-draft 之前,对已存的这一版跑一次只读试检查。
+  // error 不发布;只有 warn 时提示,用户点「继续发布」才发。试检查本身拿不到结果不拦 ——
+  // publish-draft 服务端照样会拦,这里只是把问题提前一次说全。
+  _topicPublishCheck(topicId, cb) {
+    let settled = false;
+    const done = (result) => { if (!settled) { settled = true; cb(result); } };
+    app.sendRequest({
+      url: '/api/topic/publish-check',
+      method: 'GET',
+      hideLoading: true,
+      silentError: true,
+      data: { topicId, scope: this.data.operationScope },
+      success: (res) => {
+        const issues = (res && res.code == '200' && Array.isArray(res.data) ? res.data : [])
+          .filter((issue) => issue && issue.message);
+        const errors = issues.filter((issue) => issue.level === 'error');
+        const warns = issues.filter((issue) => issue.level !== 'error');
+        if (errors.length) {
+          done({ ok: false, msg: '发布前检查未通过：' + errors.map((issue) => issue.message).join('；') });
+          return;
+        }
+        if (!warns.length) { done({ ok: true }); return; }
+        cyLoading.hide();
+        modal.show({
+          title: '发布前提示',
+          content: warns.map((issue) => issue.message).join('\n'),
+          confirmText: '继续发布',
+          cancelText: '再改改',
+          success: (r) => {
+            if (r && r.confirm) cyLoading.show('正在保存并发布');
+            done(r && r.confirm ? { ok: true } : { ok: false, msg: '已暂停发布，草稿已保存' });
+          },
+          fail: () => done({ ok: false, msg: '已暂停发布，草稿已保存' })
+        });
+      },
+      fail: () => done({ ok: true }),
+      complete: () => done({ ok: true })
+    });
+  },
 });

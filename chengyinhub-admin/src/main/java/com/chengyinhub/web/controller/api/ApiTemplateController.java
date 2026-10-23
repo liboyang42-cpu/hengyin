@@ -53,6 +53,10 @@ import com.chengyinhub.common.enums.LimitType;
 @RequestMapping("/api/template")
 public class ApiTemplateController extends BaseController {
 
+    /** O5b-5:发布时标题相似度提示(WARN,不拦)。 */
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.support.TemplateTitleSimilarityService templateTitleSimilarityService;
+
     @Autowired
     private ITemplatePublishService templatePublishService;
 
@@ -123,7 +127,13 @@ public class ApiTemplateController extends BaseController {
             Long id = templatePublishService.publishTemplateWithTransaction(request, member_id, username);
             if (id > 0) {
                 submitTemplateMediaCheck(id, request, member_id);
-                return success(id);
+                AjaxResult ok = success(id);
+                // O5b-5(开关默认关):标题与广场在架模板高度相似只提示,不拦;无提示时不带 warnings,响应形状不变。
+                java.util.List<com.chengyinhub.business.service.support.TopicPublishCheckService.PublishCheckIssue> warnings =
+                        templateTitleSimilarityService == null ? null
+                                : templateTitleSimilarityService.check(request.getTitle(), member_id);
+                if (warnings != null && !warnings.isEmpty()) ok.put("warnings", warnings);
+                return ok;
             } else {
                 return error("发布失败");
             }

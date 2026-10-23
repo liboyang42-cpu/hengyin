@@ -402,6 +402,14 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
         // 内容字段沿发布 DTO 白名单复制，客户端不能恢复删除状态或伪造审核状态。
         CmsTemplatePublishRequest request = new CmsTemplatePublishRequest();
         BeanUtils.copyProperties(input, request);
+        // BeanUtils 不做 Long→Integer 转换，duration 会被静默跳过并落成 0；这里精确转换，溢出直接拒绝。
+        if (input.getDuration() != null) {
+            try {
+                request.setDuration(Math.toIntExact(input.getDuration()));
+            } catch (ArithmeticException overflow) {
+                throw new ServiceException("时长超出支持范围");
+            }
+        }
         validateSensorFields(request);
         normalizeAdvancedConfig(request);
         CmsMemberTemplate saved = new CmsMemberTemplate();

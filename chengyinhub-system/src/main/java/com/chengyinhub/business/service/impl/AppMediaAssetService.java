@@ -103,6 +103,19 @@ public class AppMediaAssetService {
         Map<String,Object> row=mapper.select(id);if(row==null)throw new ServiceException("媒体不存在");
         return FileOssUploadUtils.generateShortLivedPresignedUrl(String.valueOf(row.get("objectKey")),300);
     }
+    /**
+     * S531-3:申诉附件给审核员看 —— 与 reviewerPreview 同一条 5 分钟短签名;调用方须已校验媒体审核读取权限。
+     * 只返回编号、媒体类型与预览地址,不回 objectKey/归属等内部字段;媒体不存在时 previewUrl 为空。
+     */
+    public Map<String,Object> reviewerAttachmentPreview(Long id) {
+        Map<String,Object> item=new LinkedHashMap<>();item.put("assetId",id);
+        Map<String,Object> row=id==null?null:mapper.select(id);
+        item.put("mediaType",row==null?null:row.get("mediaType"));
+        String objectKey=row==null?null:String.valueOf(row.get("objectKey"));
+        item.put("previewUrl",row==null?null:"LOCAL".equals(row.get("storageType"))?localApprovedUrl(objectKey)
+                :FileOssUploadUtils.generateShortLivedPresignedUrl(objectKey,300));
+        return item;
+    }
     public String approvedUrl(Long id) {
         Map<String,Object> row=mapper.select(id);
         if(row==null || !"APPROVED".equals(row.get("reviewState")))throw new ServiceException("媒体尚未审核通过");

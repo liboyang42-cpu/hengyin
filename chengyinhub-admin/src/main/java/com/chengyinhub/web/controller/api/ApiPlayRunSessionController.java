@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Collections;
+
 /**
  * 第二轮拍板 22:游戏进度跨设备续玩。
  *
@@ -39,6 +41,15 @@ public class ApiPlayRunSessionController extends BaseController {
         try { return getAppUserId(); } catch (Exception e) { return 0L; }
     }
 
+    /**
+     * O-09:跨设备谁新谁旧只按服务端收到的时刻排。客户端 savedAt 是手机时钟,
+     * 被拨快的设备会让另一台设备的结束墓碑写不进去(已结束的局还魂),拨慢的设备的暂停会被丢掉。
+     * 客户端仍需带 savedAt(老版本兼容 + 入参校验),但落库与回传一律用这里的服务端时刻。
+     */
+    long serverNowMillis() {
+        return System.currentTimeMillis();
+    }
+
     @Operation(summary = "落盘暂停中的会话(已用时)")
     @PostMapping("/save")
     public AjaxResult save(Long activityId, Long topicId, Integer elapsedSeconds, Long savedAt) {
@@ -58,8 +69,9 @@ public class ApiPlayRunSessionController extends BaseController {
         } else {
             return error("参数有误");
         }
-        runSessionMapper.upsertPaused(memberId, actId, scopeTopicId, elapsedSeconds, savedAt);
-        return success();
+        long stamped = serverNowMillis();
+        runSessionMapper.upsertPaused(memberId, actId, scopeTopicId, elapsedSeconds, stamped);
+        return success(Collections.singletonMap("savedAt", stamped));
     }
 
     @Operation(summary = "读取某场的进行中会话(没有 = data 为空)")
@@ -78,8 +90,9 @@ public class ApiPlayRunSessionController extends BaseController {
         if (memberId == null || memberId <= 0) return error("请先登录");
         if (!positive(activityId) && !positive(topicId)) return error("参数有误");
         if (savedAt == null || savedAt <= 0) return error("落盘时间无效");
-        runSessionMapper.markEnded(memberId, positive(activityId) ? activityId : 0L, topicId, savedAt);
-        return success();
+        long stamped = serverNowMillis();
+        runSessionMapper.markEnded(memberId, positive(activityId) ? activityId : 0L, topicId, stamped);
+        return success(Collections.singletonMap("savedAt", stamped));
     }
 
     @Operation(summary = "我仍可继续的游戏会话(首页「继续游戏」)")

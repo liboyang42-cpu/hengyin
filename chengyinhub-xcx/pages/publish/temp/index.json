@@ -24,8 +24,5 @@
     "cy-playkit": "view"
   },
   "navigationStyle": "custom",
-  "navigationBarTextStyle": "black",
-  "backgroundColor": "#F3F4F4",
-  "backgroundColorTop": "#F3F4F4",
-  "backgroundColorBottom": "#F3F4F4"
+  "navigationBarTextStyle": "black"
 }

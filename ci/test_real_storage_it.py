@@ -88,6 +88,7 @@ class RegistryContractTest(unittest.TestCase):
         # 类条数全局唯一，按 master 侧登记：冲回 3→4、券生命周期 12→16、分享快照并发 2→3（extra-storage 71→76）。
         # 漏斗最大年份修复 4（含 TIMESTAMPADD 负控，master）。
         # port-prelaunch-69(W8)：退款通知 9 + 退款重试余量 5 + 漫游定位留存 21。
+        # p0-acceptance-ac1(AC1)：核销 5 + 跨账号 3 + 城市跑 2 + 自由探索供给闸 2 + 注销 1。
         # port-*：同批 master 侧移植，类与条数同原批；port-core-funds 27；port-ai-quota 22；port-f3-growth 12；port-f3-evidence 4。
         expected = {"core-funds": 27, "ai-quota": 22, "e04-07-coupon": 10, "community-e02": 14,
                     "b05-visibility": 3, "f3-growth": 12, "extra-storage": 131,
@@ -95,7 +96,8 @@ class RegistryContractTest(unittest.TestCase):
                     "port-extra-storage": 131,
                     "port-core-funds": 27, "port-ai-quota": 22,
                     "port-f3-growth": 12, "port-f3-evidence": 4,
-                    "funnel-max-date": 4, "port-prelaunch-69": 35}
+                    "funnel-max-date": 4, "port-prelaunch-69": 35,
+                    "p0-acceptance-ac1": 13}
         reg = registry()
         totals = {name: sum(reg["classes"][fqcn]["tests"] for fqcn in batch["classes"])
                   for name, batch in reg["batches"].items()}

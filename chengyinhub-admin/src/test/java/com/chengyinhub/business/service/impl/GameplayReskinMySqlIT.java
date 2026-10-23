@@ -30,7 +30,7 @@ class GameplayReskinMySqlIT {
             ItSchema.apply(connection,"it-schema/cms-topic-it-schema.sql");
             ItSchema.apply(connection,"it-schema/journey-full-flow-it-schema.sql");
             ItSchema.apply(connection,"it-schema/gameplay-reskin-commercial-it-schema.sql");
-            ItSchema.applyMigrations(connection,"sql/migration_theme_state_key_20260916.sql","sql/migration_20261003_merchant_offer_withdrawal_columns.sql",
+            ItSchema.applyMigrations(connection,"sql/migration_theme_state_key_20260916.sql", "sql/migration_20261022_theme_state_key_attribute_def.sql","sql/migration_20261003_merchant_offer_withdrawal_columns.sql",
                     "sql/migration_club_direct_merchant_receivable_20261004.sql",
                     "sql/migration_20261012_app_media_asset.sql",
                     "sql/migration_20261012_app_media_asset_namespaces.sql");

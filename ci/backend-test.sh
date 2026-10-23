@@ -73,6 +73,9 @@ MYBATIS_ITS=(
   #   FINISH 后复盘=结果行、订单/库存/权益/奖励=实际履约、二次 FINISH 不改任何行。真库真 mapper 才验得动。
   GameSessionScanLegalMySqlIT
   GameSessionCityEndMySqlIT
+  # 2026-10-22 发布验收 P1(导演台/商家城市节点/玩家城市局):准备→商家就绪→名单→开局、并发准备、
+  #   全员/定向广播与存活范围、同 requestId 只补发失败投递、单站暂停/恢复与玩家读回、队伍/账号隔离。
+  CityDirectorConsoleMySqlIT
   HangoutAuditLockMyBatisIT
   ImSendIdempotencyMybatisIntegrationTest
   # R9-02 迟到下注竞态:两个真事务交错(结算等锁定读、锁定读拒已结算),Mock 单测测不到
@@ -87,6 +90,11 @@ MYBATIS_ITS=(
   CityNodePendingVisibilityMySqlIT
   # MySQL leader session, failover fence, strict Druid wall and transactional duplicate definitions.
   SchedulerSessionLockMySqlIT
+  # 2026-10-22 发布验收 P1 俱乐部:入会通过/驳回、封禁/解封、举报工单在真库上的归属与幂等(真服务+真 mapper)。
+  ClubJoinGovernanceMySqlIT
+  # 2026-10-22 发布验收 P1 商家自由探索:节点编辑只改本行且审核痕迹真重置、非法提交零写入、
+  #   入驻服务端定字段+唯一键挡重复、撤回只动自己的供给、邀约收发两侧条款一致。
+  FreeExploreNodeSupplyMySqlIT
   ClubGatherArrivalMySqlIT
   ClubAttendanceTimeMappingMyBatisIT
   # 2026-10-22 W3 #334 F7:领队改集合时间/地点=单条「未售出才生效」条件 UPDATE;在途下单/修改在先两种交错都要真库。
@@ -98,6 +106,32 @@ MYBATIS_ITS=(
   JourneyFullFlowMySqlIT
   # Lane W10b:资料版本号递增 / 头像回执读 inbox / 分享版本 CAS 列与按令牌撤销,真迁移跑两遍证幂等。
   LaneW10bReadbackMySqlIT
+  # 2026-10-22 AC1 发布验收 P0 链(docs/delivery/release-closeout-20261022/acceptance-p0-backend.md):
+  #   核销(扫码/团码/撤销/双店员竞态)、跨账号、城市跑恢复竞态与冻结、自由探索供给闸、注销清理范围。
+  P0RedemptionChainMySqlIT
+  P0CrossAccountMySqlIT
+  P0CityRunChainMySqlIT
+  P0FreeExploreSupplyGateMySqlIT
+  P0DeregistrationMySqlIT
+  # 2026-10-22 发布验收 P1 玩家念头(领取/步数基线/达成加运气上限仅一次)与隐私(按用途撤回、到访头像窗口、
+  #   导出不跨账号且外人游标被拒、注销申请幂等与仅本人可撤)。
+  JourneyThoughtProgressMySqlIT
+  PrivacyVisibilityExportMySqlIT
+  # Lane DL1:赏金 NESTED savepoint 内真 1213 死锁必须抛给外层 @DeadlockRetry 整笔重试;两笔并发核销赏金只入账一次。
+  MerchantReferralBountyDeadlockRetryMySqlIT
+  # 2026-10-22 F2 RPG P0:属性定义老注册 upsert 保留扩展列、改 label 不改键名;角色卡台账只随更新的来源前移。
+  ThemeCharacterMapperMyBatisIT
+  # 2026-10-22 DOC2 F3 Phase 1:套票账本迁移可重跑 + 形状负控、Phase 1 不动 settlement_claim(7 列唯一键原样)、
+  #   A/B 同买一套票余额互不影响、快照冻结、同单位唯一在约、月度豁免唯一 —— 真 DDL + 真 mapper 才验得动。
+  FreeExploreBundleLedgerMySqlIT
+  # 2026-10-22 O-14 city_code 回填(RV3 B-519-1):南京西路(上海)/北京路(广州)反例、人工值不覆盖、重跑零变更、
+  #   修正重跑只改本回填写过的行、只读预览与真实执行逐行一致 —— 真迁移 + 真 MySQL 才验得动。
+  O14CityCodeBackfillMySqlIT
+  # DOC2 O5c-(a):统一留痕只读投影(五张留痕表分查 + 合并)。
+  AuditTrailProjectionMySqlIT
+  # Lane BF4(W48R SHOULD-FIX 1):同意记录 requestId 去重 —— 并发同号重放只落一行、不一致重放 409、
+  #   RR 旧快照下必须当前读到原记录。类上门控 CHENGYIN_CONSENT_IDEMPOTENCY_MYSQL_IT=1,下面 mvn 行显式打开。
+  ConsentRecordIdempotencyMySqlIT
 )
 IFS=, ; IT_LIST="${MYBATIS_ITS[*]}" ; unset IFS
 # ⚠️ 必须带 -am:上面那句 `mvn clean test` 不 install 兄弟模块,
@@ -109,7 +143,8 @@ IFS=, ; IT_LIST="${MYBATIS_ITS[*]}" ; unset IFS
 #   surefire 3.x 还要 -Dsurefire.failIfNoSpecifiedTests=false(与 -DfailIfNoTests 是两个开关,
 #   少一个上游模块照样以「No tests matching pattern」失败)。
 #   「到底跑没跑」的保证**不靠这两个开关**,靠下面 assert_it_ran.py 的回读。
-CHENGYIN_IM_SEND_MYSQL_IT=1 CHENGYIN_FUNDS_MYSQL_IT=1 mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false \
+CHENGYIN_IM_SEND_MYSQL_IT=1 CHENGYIN_FUNDS_MYSQL_IT=1 CHENGYIN_CONSENT_IDEMPOTENCY_MYSQL_IT=1 \
+  mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false \
   -Dsurefire.failIfNoSpecifiedTests=false -Dchengyin.npc.expiry.mysql.it=true -Dtest="$IT_LIST"
 
 # 回读观测:surefire 绿不够。skipped != 0 说明又有人把「连不上就跳过」放回来了,

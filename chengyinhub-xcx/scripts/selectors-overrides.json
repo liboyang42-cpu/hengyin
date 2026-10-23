@@ -598,7 +598,7 @@
     "visibleMin": 3
   },
   "B52": {
-    "selector": ".cg-hero-body, .cg-count, .cg-label, .cg-card-head",
+    "selector": ".cg-hero-body, .cg-count, .cg-label, .cg-sec",
     "min": 1
   },
   "B53": {

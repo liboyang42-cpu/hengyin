@@ -17,19 +17,17 @@
       <view class="cdd__panel {{dropUp ? 'cdd__panel--up' : ''}}" style="{{panelStyle}}" catchtap="noop">
         <scroll-view class="cdd__scroll" scroll-y="{{true}}" enhanced show-scrollbar="{{false}}" style="max-height:var(--cdd-scroll-height);">
           <slot wx:if="{{customPanel}}" name="panel" />
-          <!-- 两列卡片档(columns=2):名称 + 可选一行说明;不可选项置灰并显示原因;全部无说明时用紧凑卡片。header 插槽放分类标签。 -->
+          <!-- 说明档(原 columns=2):2026-10-22 主人定稿改为贴着字段弹出的单列菜单,和普通档同一种行,
+               不再铺满屏宽排两列卡片。每行 = 勾 + 名称 + 可选一行说明;不可选项置灰、说明位改写原因。 -->
           <block wx:elif="{{columns > 1}}">
             <view class="cdd__header" wx:if="{{header}}"><slot name="header" /></view>
-            <view class="cdd__grid">
-              <view class="cdd__cell {{compact ? 'cdd__cell--compact' : ''}} {{index === value ? 'cdd__cell--on' : ''}} {{item.reason ? 'cdd__cell--off' : ''}}"
-                    wx:for="{{cells}}" wx:key="index"
-                    data-index="{{index}}" bindtap="onPick"
-                    hover-class="{{item.reason ? '' : 'cdd__item--press'}}" hover-stay-time="60"
-                    aria-role="button" aria-label="{{item.label}}{{item.reason ? '，' + item.reason : ''}}" aria-disabled="{{!!item.reason}}">
-                <text class="cdd__cell-name">{{item.label}}</text>
-                <text class="cdd__cell-sub" wx:if="{{item.reason || item.sub}}">{{item.reason || item.sub}}</text>
-                <text class="cdd__cell-mark" wx:if="{{index === value && index !== uncheckedValue}}">已选</text>
-              </view>
+            <view class="cdd__item cdd__cell {{compact ? 'cdd__cell--compact' : ''}} {{index === value ? 'cdd__item--on' : ''}} {{item.reason ? 'cdd__cell--off' : ''}}"
+                  wx:for="{{cells}}" wx:key="index"
+                  data-index="{{index}}" bindtap="onPick"
+                  hover-class="{{item.reason ? '' : 'cdd__item--press'}}" hover-stay-time="60"
+                  aria-role="button" aria-label="{{item.label}}{{item.reason ? '，' + item.reason : ''}}" aria-disabled="{{!!item.reason}}">
+                <view class="cdd__item-txt"><text class="cdd__cell-name">{{item.label}}</text><text class="cdd__cell-sub" wx:if="{{item.reason || item.sub}}">{{item.reason || item.sub}}</text></view>
+              <view class="cdd__check"><cy-icon wx:if="{{index === value && index !== uncheckedValue}}" name="check" size="28" /></view>
             </view>
           </block>
           <block wx:else>
@@ -38,8 +36,8 @@
                 data-index="{{index}}" bindtap="onPick"
                 hover-class="cdd__item--press" hover-stay-time="60"
                 aria-role="button" aria-label="{{item}}">
-            <view class="cdd__check"><cy-icon wx:if="{{index === value && index !== uncheckedValue}}" name="check" size="28" /></view>
             <text class="cdd__item-txt">{{item}}</text>
+            <view class="cdd__check"><cy-icon wx:if="{{index === value && index !== uncheckedValue}}" name="check" size="28" /></view>
           </view>
           </block>
         </scroll-view>

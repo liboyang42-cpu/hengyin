@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- F1b 城市定向计分。orient_score_ledger / orient_score_settlement 只有 insert:
+     流水只追加、纠错写反向条目;结算每局一行(uk_orient_settlement_session)。 -->
+<mapper namespace="com.chengyinhub.business.mapper.OrientScoringMapper">
+
+    <resultMap id="RouteSession" type="com.chengyinhub.business.domain.TopicRouteSession">
+        <id property="id" column="id"/><result property="activityId" column="activity_id"/>
+        <result property="topicId" column="topic_id"/><result property="memberId" column="member_id"/>
+        <result property="playInstanceId" column="play_instance_id"/><result property="status" column="status"/>
+        <result property="completedAt" column="completed_at"/><result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <resultMap id="Entry" type="com.chengyinhub.business.domain.OrientScoreEntry">
+        <id property="id" column="id"/><result property="sessionId" column="session_id"/>
+        <result property="activityId" column="activity_id"/><result property="topicId" column="topic_id"/>
+        <result property="memberId" column="member_id"/><result property="dimension" column="dimension"/>
+        <result property="deltaCenti" column="delta_centi"/><result property="reasonCode" column="reason_code"/>
+        <result property="sourceType" column="source_type"/><result property="sourceRef" column="source_ref"/>
+        <result property="nodeId" column="node_id"/><result property="reversesEntryId" column="reverses_entry_id"/>
+        <result property="idempotencyKey" column="idempotency_key"/>
+        <result property="requestFingerprint" column="request_fingerprint"/>
+        <result property="operatorType" column="operator_type"/><result property="operatorId" column="operator_id"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <resultMap id="Settlement" type="com.chengyinhub.business.domain.OrientScoreSettlement">
+        <id property="id" column="id"/><result property="sessionId" column="session_id"/>
+        <result property="activityId" column="activity_id"/><result property="topicId" column="topic_id"/>
+        <result property="memberId" column="member_id"/><result property="totalCenti" column="total_centi"/>
+        <result property="entryCount" column="entry_count"/><result property="ledgerWatermarkId" column="ledger_watermark_id"/>
+        <result property="pointsAwarded" column="points_awarded"/><result property="xpAwarded" column="xp_awarded"/>
+        <result property="pointsRatePct" column="points_rate_pct"/><result property="xpRatePct" column="xp_rate_pct"/>
+        <result property="idempotencyKey" column="idempotency_key"/>
+        <result property="requestFingerprint" column="request_fingerprint"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <resultMap id="Appeal" type="com.chengyinhub.business.domain.OrientScoreAppeal">
+        <id property="id" column="id"/><result property="sessionId" column="session_id"/>
+        <result property="memberId" column="member_id"/><result property="entryId" column="entry_id"/>
+        <result property="nodeId" column="node_id"/><result property="reason" column="reason"/>
+        <result property="status" column="status"/><result property="resolutionEntryId" column="resolution_entry_id"/>
+        <result property="resolutionNote" column="resolution_note"/><result property="handledBy" column="handled_by"/>
+        <result property="handledAt" column="handled_at"/><result property="windowDeadline" column="window_deadline"/>
+        <result property="idempotencyKey" column="idempotency_key"/>
+        <result property="requestFingerprint" column="request_fingerprint"/>
+        <result property="createTime" column="create_time"/><result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <sql id="sessionColumns">id,activity_id,topic_id,member_id,play_instance_id,status,completed_at,create_time,update_time</sql>
+    <sql id="entryColumns">id,session_id,activity_id,topic_id,member_id,dimension,delta_centi,reason_code,source_type,
+        source_ref,node_id,reverses_entry_id,idempotency_key,request_fingerprint,operator_type,operator_id,create_time</sql>
+    <sql id="settlementColumns">id,session_id,activity_id,topic_id,member_id,total_centi,entry_count,ledger_watermark_id,
+        points_awarded,xp_awarded,points_rate_pct,xp_rate_pct,idempotency_key,request_fingerprint,create_time</sql>
+    <sql id="appealColumns">id,session_id,member_id,entry_id,node_id,reason,status,resolution_entry_id,resolution_note,
+        handled_by,handled_at,null as window_deadline,idempotency_key,request_fingerprint,create_time,update_time</sql>
+    <sql id="disputeColumns">id,session_id,member_id,null as entry_id,null as node_id,reason,status,
+        null as resolution_entry_id,resolution_note,handled_by,handled_at,window_deadline,idempotency_key,
+        request_fingerprint,create_time,update_time</sql>
+
+    <select id="selectSessionForUpdate" resultMap="RouteSession">
+        select <include refid="sessionColumns"/> from topic_route_session where id = #{id} for update
+    </select>
+    <select id="selectSessionById" resultMap="RouteSession">
+        select <include refid="sessionColumns"/> from topic_route_session where id = #{id}
+    </select>
+
+    <insert id="insertEntry" parameterType="com.chengyinhub.business.domain.OrientScoreEntry" useGeneratedKeys="true" keyProperty="id">
+        insert into orient_score_ledger(session_id,activity_id,topic_id,member_id,dimension,delta_centi,reason_code,
+          source_type,source_ref,node_id,reverses_entry_id,idempotency_key,request_fingerprint,operator_type,operator_id,create_time)
+        values(#{sessionId},#{activityId},#{topicId},#{memberId},#{dimension},#{deltaCenti},#{reasonCode},
+          #{sourceType},#{sourceRef},#{nodeId},#{reversesEntryId},#{idempotencyKey},#{requestFingerprint},
+          #{operatorType},#{operatorId},#{createTime})
+    </insert>
+    <select id="selectEntryById" resultMap="Entry">
+        select <include refid="entryColumns"/> from orient_score_ledger where id = #{id}
+    </select>
+    <select id="selectEntryByIdem" resultMap="Entry">
+        select <include refid="entryColumns"/> from orient_score_ledger
+         where session_id = #{sessionId} and idempotency_key = #{idempotencyKey}
+    </select>
+    <select id="selectEntryByReverses" resultMap="Entry">
+        select <include refid="entryColumns"/> from orient_score_ledger where reverses_entry_id = #{reversesEntryId}
+    </select>
+    <select id="selectEntriesBySession" resultMap="Entry">
+        select <include refid="entryColumns"/> from orient_score_ledger where session_id = #{sessionId} order by id asc
+    </select>
+
+    <!-- 已通过任务:review_status=1 才算(0 待审 / 2 驳回的拍照任务即便 status=1 也不算通过)。
+         与 D-13 排行榜同一实例口径:只看本局 play_instance_id。 -->
+    <select id="selectClearedProgress" resultType="com.chengyinhub.business.domain.PlayerNodeProgress">
+        select id, node_id as nodeId, status, review_status as reviewStatus, puzzle_score as puzzleScore,
+               completion_mode as completionMode, checkin_time as checkinTime
+          from player_node_progress
+         where member_id = #{memberId} and activity_id = #{activityId} and topic_id = #{topicId}
+           and play_instance_id = #{playInstanceId}
+           and status = 1 and review_status = 1 and del_flag = 0
+         order by id asc
+    </select>
+
+    <insert id="insertSettlement" parameterType="com.chengyinhub.business.domain.OrientScoreSettlement" useGeneratedKeys="true" keyProperty="id">
+        insert into orient_score_settlement(session_id,activity_id,topic_id,member_id,total_centi,entry_count,
+          ledger_watermark_id,points_awarded,xp_awarded,points_rate_pct,xp_rate_pct,idempotency_key,request_fingerprint,create_time)
+        values(#{sessionId},#{activityId},#{topicId},#{memberId},#{totalCenti},#{entryCount},#{ledgerWatermarkId},
+          #{pointsAwarded},#{xpAwarded},#{pointsRatePct},#{xpRatePct},#{idempotencyKey},#{requestFingerprint},#{createTime})
+    </insert>
+    <select id="selectSettlementBySession" resultMap="Settlement">
+        select <include refid="settlementColumns"/> from orient_score_settlement where session_id = #{sessionId}
+    </select>
+
+    <insert id="insertAppeal" parameterType="com.chengyinhub.business.domain.OrientScoreAppeal" useGeneratedKeys="true" keyProperty="id">
+        insert into orient_score_appeal(session_id,member_id,entry_id,node_id,reason,status,idempotency_key,
+          request_fingerprint,create_time,update_time)
+        values(#{sessionId},#{memberId},#{entryId},#{nodeId},#{reason},0,#{idempotencyKey},#{requestFingerprint},
+          #{createTime},#{updateTime})
+    </insert>
+    <select id="selectAppealById" resultMap="Appeal">
+        select <include refid="appealColumns"/> from orient_score_appeal where id = #{id}
+    </select>
+    <select id="selectAppealByIdem" resultMap="Appeal">
+        select <include refid="appealColumns"/> from orient_score_appeal
+         where member_id = #{memberId} and idempotency_key = #{idempotencyKey}
+    </select>
+    <select id="selectAppealsBySession" resultMap="Appeal">
+        select <include refid="appealColumns"/> from orient_score_appeal where session_id = #{sessionId} order by id asc
+    </select>
+    <select id="selectAppealsByStatus" resultMap="Appeal">
+        select <include refid="appealColumns"/> from orient_score_appeal
+         <where><if test="status != null">status = #{status}</if></where>
+         order by id desc limit #{limit}
+    </select>
+    <select id="countOpenAppeals" resultType="int">
+        select count(*) from orient_score_appeal
+         where session_id = #{sessionId} and status = 0
+           <choose>
+               <when test="entryId != null">and entry_id = #{entryId}</when>
+               <otherwise>and entry_id is null and node_id = #{nodeId}</otherwise>
+           </choose>
+    </select>
+    <update id="resolveAppeal" parameterType="com.chengyinhub.business.domain.OrientScoreAppeal">
+        update orient_score_appeal
+           set status = #{status}, resolution_entry_id = #{resolutionEntryId}, resolution_note = #{resolutionNote},
+               handled_by = #{handledBy}, handled_at = #{handledAt}, update_time = #{updateTime}
+         where id = #{id} and status = 0
+    </update>
+
+    <insert id="insertDispute" parameterType="com.chengyinhub.business.domain.OrientScoreAppeal" useGeneratedKeys="true" keyProperty="id">
+        insert into orient_result_dispute(session_id,member_id,reason,status,window_deadline,idempotency_key,
+          request_fingerprint,create_time,update_time)
+        values(#{sessionId},#{memberId},#{reason},0,#{windowDeadline},#{idempotencyKey},#{requestFingerprint},
+          #{createTime},#{updateTime})
+    </insert>
+    <select id="selectDisputeById" resultMap="Appeal">
+        select <include refid="disputeColumns"/> from orient_result_dispute where id = #{id}
+    </select>
+    <select id="selectDisputeByIdem" resultMap="Appeal">
+        select <include refid="disputeColumns"/> from orient_result_dispute
+         where member_id = #{memberId} and idempotency_key = #{idempotencyKey}
+    </select>
+    <select id="selectDisputesBySession" resultMap="Appeal">
+        select <include refid="disputeColumns"/> from orient_result_dispute where session_id = #{sessionId} order by id asc
+    </select>
+    <select id="selectDisputesByStatus" resultMap="Appeal">
+        select <include refid="disputeColumns"/> from orient_result_dispute
+         <where><if test="status != null">status = #{status}</if></where>
+         order by id desc limit #{limit}
+    </select>
+    <select id="countOpenDisputes" resultType="int">
+        select count(*) from orient_result_dispute
+         where session_id = #{sessionId} and member_id = #{memberId} and status = 0
+    </select>
+    <update id="resolveDispute" parameterType="com.chengyinhub.business.domain.OrientScoreAppeal">
+        update orient_result_dispute
+           set status = #{status}, resolution_note = #{resolutionNote},
+               handled_by = #{handledBy}, handled_at = #{handledAt}, update_time = #{updateTime}
+         where id = #{id} and status = 0
+    </update>
+
+    <select id="selectBoardTotals" resultType="java.util.HashMap">
+        select r.member_id as memberId, coalesce(sum(l.delta_centi), 0) as totalCenti
+          from topic_route_session r
+          left join orient_score_ledger l on l.session_id = r.id
+         where r.topic_id = #{topicId} and r.activity_id = #{activityId}
+           and r.member_id in
+           <foreach collection="memberIds" item="m" open="(" separator="," close=")">#{m}</foreach>
+           and r.id = (select max(x.id) from topic_route_session x
+                        where x.member_id = r.member_id and x.topic_id = r.topic_id
+                          and x.activity_id = r.activity_id)
+         group by r.member_id
+    </select>
+</mapper>

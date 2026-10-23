@@ -655,6 +655,35 @@ class CommunityPostMapperMyBatisTest {
         }
     }
 
+    @Test
+    void limitedPostIsOffFeedsButDirectlyReadableToAudience() throws Exception {
+        // O-05 #1:LIMITED = 降分发。不进任何 feed/搜索;直达读取只给受众内、未拉黑/屏蔽的非作者。
+        DriverManagerDataSource dataSource = dataSource();
+        JdbcTemplate jdbc = new JdbcTemplate(dataSource);
+        schema(jdbc);
+        post(jdbc, 21, 11, "LIMITED", "PUBLIC", "SH", 0, 0, "limited-public");
+        post(jdbc, 22, 12, "LIMITED", "FOLLOWERS", "SH", 0, 0, "limited-followers");
+        post(jdbc, 23, 13, "LIMITED", "PUBLIC", "SH", 0, 0, "limited-blocked");
+        post(jdbc, 24, 11, "HIDDEN", "PUBLIC", "SH", 0, 0, "hidden");
+        jdbc.update("insert into im_block(member_id,blocked_member_id) values (13,8)");
+
+        try (SqlSession session = factory(dataSource).openSession(true)) {
+            CommunityPostMapper mapper = session.getMapper(CommunityPostMapper.class);
+            assertEquals(0, mapper.selectFeed(query("LATEST")).size(), "LIMITED 不进公开 feed");
+            assertNull(mapper.selectById(21L, 8L), "既有 selectById 口径不变:非作者读不到 LIMITED");
+            assertNotNull(mapper.selectById(21L, 11L), "作者本人可见");
+
+            CommunityPost direct = mapper.selectLimitedById(21L, 8L);
+            assertNotNull(direct);
+            assertEquals("LIMITED", direct.getLifecycle());
+            assertNull(direct.getApproximateGeohash(), "直达读取不投影作者私有位置");
+            assertNull(mapper.selectLimitedById(22L, 8L), "仅粉丝可见且未关注 → 不可直达");
+            assertNull(mapper.selectLimitedById(23L, 8L), "拉黑关系 → 不可直达");
+            assertNull(mapper.selectLimitedById(24L, 8L), "只认 LIMITED,其它非公开态不放出");
+            assertNull(mapper.selectLimitedById(21L, 11L), "作者本人走 selectById,不走直达口");
+        }
+    }
+
     private CommunityPostFeedQuery query(String mode) {
         CommunityPostFeedQuery query = new CommunityPostFeedQuery();
         query.setViewerId(8L);

@@ -129,6 +129,10 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     @Autowired
     private com.chengyinhub.business.service.IPerkLedgerService perkLedgerService;
 
+    /** DOC2 F3 Phase 1 套票账本(开关默认关)。 */
+    @Autowired
+    private com.chengyinhub.business.service.IFreeExploreBundleService freeExploreBundleService;
+
     @Autowired
     @Lazy
     private com.chengyinhub.business.service.ITopicCompletionAwardService topicCompletionAwardService;
@@ -612,6 +616,11 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         // 容量按行/按票算,不按钱算,整单再调一次 = 重复预占。
         if (PurchaseKind.EXPLORE_PASS == registration.getPurchaseKind() && sellerTopic != null) {
             perkLedgerService.reserveEntitlements(registration.getId(), sellerTopic.getId());
+            // DOC2 F3 Phase 1:③ 套票冻结快照并按持有人发放单位。sale 开关默认关 ⇒ 空转零写入;
+            // 同事务,任一步抛出整单回滚(与上面的权益预占同一条纪律)。
+            if (freeExploreBundleService != null) {
+                freeExploreBundleService.freezeOnOrderCreated(registration, sellerTopic, registrationActivity);
+            }
         }
 
         //11-12. 扣用户积分 + 记流水
@@ -3207,6 +3216,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         // 放在 if 外面:tryActivate 每次都从库里重新数人头、且有 CAS 兜底,重复触发无害;
         // 而放进 if 里会让「台账已存在但赏金那次没算成」的情况永远补不回来。
         // onVerification 自己吞异常:核销是收钱路径,赏金是实验性冷启动功能,任何情况下都不能连累它。
+        // 只有锁冲突例外:它原样抛出,交给外层 @DeadlockRetry 整笔回滚重试(见 SavepointLockFailures)。
         merchantReferralBountyService.onVerification(verifierId);
         try {
             verificationRiskService.inspectAndQueue(verifierId, registrationId);

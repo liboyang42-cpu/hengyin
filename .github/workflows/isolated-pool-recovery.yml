@@ -7,6 +7,9 @@ on:
       - 'ci/upgrade-startup-smoke.sh'
       - 'ci/pool_recovery_probe.py'
       - 'ci/test_pool_recovery_probe.py'
+      - 'ci/upgrade-startup/**'
+      - 'chengyinhub-admin/src/main/resources/application.yml'
+      - 'chengyinhub-admin/src/main/resources/application-druid.yml'
   workflow_dispatch:
 
 permissions:
@@ -46,6 +49,10 @@ jobs:
             sudo apt-get install -y strace
           fi
           bash ci/upgrade-startup-smoke.sh 2>&1 | tee "$TMPDIR/entry.log"
+          # Fail closed: a green startup smoke alone is not pool-recovery evidence.
+          receipts=$(find "$TMPDIR" -name pool-recovery.json -type f)
+          test "$(printf '%s\n' "$receipts" | grep -c .)" = 1
+          python3 -I -c 'import json,sys; r=json.load(open(sys.argv[1])); assert r["result"]=="PASS_BOUNDED_POOL_TIMEOUT_RELEASE_SAME_PROCESS_RECOVERY", r.get("result"); print("PASS pool receipt", r["nativeDruidTimeoutWaitMs"], r["overflowRequest"])' "$receipts"
       - name: Preserve bounded recovery evidence including failures
         if: ${{ !cancelled() && steps.pool.outcome != 'skipped' }}
         uses: actions/upload-artifact@v4

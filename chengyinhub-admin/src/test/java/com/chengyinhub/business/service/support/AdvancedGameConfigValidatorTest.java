@@ -13,6 +13,7 @@ import java.util.HashSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -1445,10 +1446,16 @@ class AdvancedGameConfigValidatorTest {
     }
 
     @Test
-    void scanRejectsUnknownKindWithFourWayMessage() {
+    void scanRejectsUnknownKindWithFiveWayMessage() {
         IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
                 () -> validator.validateAndNormalize(scanConfig("\"kind\":\"AR\"")));
-        assertEquals("扫码回复只能是文字、语音、图片或显形", error.getMessage());
+        assertEquals("扫码回复只能是文字、语音、图片、显形或不回复", error.getMessage());
+    }
+
+    // 2026-10-22 主人:扫码参与可以不回复 —— NONE 不要求回复文字,也不带任何回复媒体
+    @Test
+    void scanNoneNeedsNoReply() throws Exception {
+        assertDoesNotThrow(() -> validator.validateAndNormalize(scanConfig("\"kind\":\"NONE\"")));
     }
 
     // ===== 2026-10-11 选项问答:判断答案对错开关与选项反馈图片 =====
@@ -1477,5 +1484,23 @@ class AdvancedGameConfigValidatorTest {
         assertThrows(IllegalArgumentException.class, () -> validator.validateAndNormalize(qaWith("", "[\"https://a/1.jpg\",\"https://a/2.jpg\",\"https://a/3.jpg\",\"https://a/4.jpg\"]", true)));
         assertThrows(IllegalArgumentException.class, () -> validator.validateAndNormalize(qaWith("", "[\"http://insecure/1.jpg\"]", true)));
         assertThrows(IllegalArgumentException.class, () -> validator.validateAndNormalize(qaWith("", "\"https://a/1.jpg\"", true)));
+    }
+
+    /** F2 T03:mods[].var 读 counter.* 属性,与静态 value 二选一。 */
+    @Test
+    void journeyCheckAcceptsCounterVarModsAndRejectsMixedOrForeignVars() {
+        validator.validateAndNormalize(journey("check",
+                "{\"enabled\":true,\"checkId\":\"lift\",\"tier\":\"medium\",\"skill\":\"counter.str\","
+                        + "\"mods\":[{\"when\":{\"op\":\"HAS_TAG\",\"value\":\"tag.ready\"},\"var\":\"counter.focus\"}]}"));
+        IllegalArgumentException mixed = assertThrows(IllegalArgumentException.class,
+                () -> validator.validateAndNormalize(journey("check",
+                        "{\"enabled\":true,\"checkId\":\"lift\",\"tier\":\"easy\","
+                                + "\"mods\":[{\"when\":{\"op\":\"HAS_TAG\",\"value\":\"tag.ready\"},\"var\":\"counter.focus\",\"value\":1}]}")));
+        assertTrue(mixed.getMessage().contains("var"), mixed.getMessage());
+        IllegalArgumentException foreign = assertThrows(IllegalArgumentException.class,
+                () -> validator.validateAndNormalize(journey("check",
+                        "{\"enabled\":true,\"checkId\":\"lift\",\"tier\":\"easy\","
+                                + "\"mods\":[{\"when\":{\"op\":\"HAS_TAG\",\"value\":\"tag.ready\"},\"var\":\"sys.luck\"}]}")));
+        assertTrue(foreign.getMessage().contains("counter."), foreign.getMessage());
     }
 }

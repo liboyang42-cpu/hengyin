@@ -3,6 +3,26 @@
   "dependencies": {
     "merchant_wechat_qrcode_20261022": [],
     "merchant_category_ids_20261022": [],
+    "orient_session_lifecycle_20261022": ["20260823_topic_route_graph"],
+    "orient_scoring_20261022": ["20260823_topic_route_graph"],
+    "play_arrive_guard_log_20261022": [],
+    "member_visited_poi_poi_key_20261022": ["member_visited_poi"],
+    "member_visited_poi_poi_key_backfill_20261022": ["member_visited_poi_poi_key_20261022", "roam"],
+    "20261022_location_guard_switch_seed": [],
+    "orient_geo_ar_team_20261022": [],
+    "o14_cms_topic_city_code_20261022": [],
+    "o14_cms_activity_city_code_20261022": [],
+    "o14_city_code_backfill_log_20261022": [],
+    "o14_content_city_code_backfill_20261022": ["o14_city_code_backfill_log_20261022", "o14_cms_activity_city_code_20261022", "o14_cms_topic_city_code_20261022"],
+    "o14_content_search_document_20261022": [],
+    "o14_reco_search_jobs_20261022": ["o14_content_search_document_20261022", "p3_platform_foundation"],
+    "doc2_f3_bundle_ledger_20261022": [],
+    "merchant_desk_receipt_20261022": [],
+    "merchant_redemption_anchor_20261022": [],
+    "pms_sku_booking_20261022": [],
+    "verification_review_evidence_20261022": [],
+    "20261022_merchant_desk_switch_seed": [],
+    "audit_problem_20261022": [],
     "roam_share_version_20261022": ["20260917_roam_share_snapshot"],
     "member_profile_version_20261022": [],
     "topic_completion_coupon_history_receipt_20261016": ["topic_completion_coupon_20260722"],
@@ -808,6 +828,10 @@
       "20260817_tandianri_batch3_funds_club_hours_correction"
     ],
     "20261017_job_dictionary_missing_seed": [],
-    "20261018_infomation_change_audit": []
+    "20261018_infomation_change_audit": [],
+    "20261022_theme_state_key_attribute_def": ["theme_state_key_20260916"],
+    "20261022_theme_character": ["theme_state_key_20260916", "20261022_theme_state_key_attribute_def"],
+    "20261022_f7_user_invoice": [],
+    "20261022_f7_minor_guardian": []
   }
 }

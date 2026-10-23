@@ -1,5 +1,7 @@
 package com.chengyinhub.business.service.impl;
 
+import com.chengyinhub.common.annotation.CriticalPath;
+import com.chengyinhub.common.observability.CriticalPathCode;
 import com.chengyinhub.business.domain.ConsentRecord;
 import com.chengyinhub.business.mapper.ConsentRecordMapper;
 import com.chengyinhub.business.service.IConsentRecordService;
@@ -22,6 +24,7 @@ public class ConsentRecordServiceImpl implements IConsentRecordService {
     private ConsentRecordMapper consentRecordMapper;
 
     @Override
+    @CriticalPath(value = CriticalPathCode.CP_CONSENT_WRITE_FAILED, op = "record")
     @Transactional(rollbackFor = Exception.class)
     public int record(Long memberId, String docType, String docVersion, String scene,
                       String eventType, String requestId, String ipAddress) {
@@ -30,6 +33,7 @@ public class ConsentRecordServiceImpl implements IConsentRecordService {
     }
 
     @Override
+    @CriticalPath(value = CriticalPathCode.CP_CONSENT_WRITE_FAILED, op = "record")
     @Transactional(rollbackFor = Exception.class)
     public int record(Long memberId, String docType, String docVersion, String scene,
                       String scopeType, Long scopeId, String eventType, String requestId, String ipAddress) {

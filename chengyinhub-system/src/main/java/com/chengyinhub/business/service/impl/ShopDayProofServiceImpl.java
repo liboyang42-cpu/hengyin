@@ -1,5 +1,6 @@
 package com.chengyinhub.business.service.impl;
 
+import com.chengyinhub.common.utils.GeoDistanceUtils;
 import com.chengyinhub.business.domain.CmsTopicNode;
 import com.chengyinhub.business.domain.PlayerNodeProgress;
 import com.chengyinhub.business.mapper.CmsTopicNodeMapper;
@@ -123,7 +124,7 @@ public class ShopDayProofServiceImpl implements IShopDayProofService {
         Double lat2 = parseCoordinate(b.getLatitude(), -90d, 90d);
         Double lng2 = parseCoordinate(b.getLongitude(), -180d, 180d);
         if (lat1 == null || lng1 == null || lat2 == null || lng2 == null) return false;
-        double distance = haversineMeters(lat1, lng1, lat2, lng2);
+        double distance = GeoDistanceUtils.haversineMeters(lat1, lng1, lat2, lng2);
         return Double.isFinite(distance) && distance <= SAME_PLACE_METERS;
     }
 
@@ -137,17 +138,6 @@ public class ShopDayProofServiceImpl implements IShopDayProofService {
         } catch (NumberFormatException e) {
             return null;
         }
-    }
-
-    /** 两坐标球面距离(米,haversine)。 */
-    private static double haversineMeters(double lat1, double lng1, double lat2, double lng2) {
-        double r = 6371000d;
-        double dLat = Math.toRadians(lat2 - lat1);
-        double dLng = Math.toRadians(lng2 - lng1);
-        double h = Math.sin(dLat / 2) * Math.sin(dLat / 2)
-                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
-                * Math.sin(dLng / 2) * Math.sin(dLng / 2);
-        return r * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
     }
 
     @Override

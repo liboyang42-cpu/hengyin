@@ -3557,6 +3557,7 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
                 messageId = imService.sendSystemInNestedTransaction(delivery.getMemberId(), ImMessage.MSG_TEXT,
                         broadcast.getContent(), extra);
             } catch (RuntimeException ex) {
+                com.chengyinhub.business.service.support.SavepointLockFailures.rethrowIfLockFailure(ex);
                 markBroadcastDeliveryOrThrow(delivery.getId(), "FAILED", null, "IM_DELIVERY_FAILED");
                 continue;
             }

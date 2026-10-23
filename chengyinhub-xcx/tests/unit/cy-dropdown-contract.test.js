@@ -167,9 +167,10 @@ test('RUN-003: 空选项不打开空面板，自定义面板仍可打开', () =>
   assert.equal(opened, 1)
 })
 
-test('RUN-012: 选择勾在文字前，未选中行保留同宽位置', () => {
+// 2026-10-22 主人定稿推翻 RUN-012 的位置:勾移到文字右侧(与 Figma 标签、原型一致),未选中行仍保留同宽位置
+test('选择勾在文字后，未选中行保留同宽位置', () => {
   const wxml = read('components/cy/dropdown/index.wxml')
-  assert.ok(wxml.indexOf('cdd__check') < wxml.indexOf('cdd__item-txt'))
+  assert.ok(wxml.indexOf('cdd__check') > wxml.indexOf('cdd__item-txt'))
   assert.match(wxml, /<view class="cdd__check">/)
 })
 
@@ -186,29 +187,27 @@ test('两列档:不可选卡片(带原因)点了不收起、不回传;可选卡�
   assert.equal(events[0].detail.value, 0)
 })
 
-test('两列档模板:名称+说明/原因、选中标记、header 插槽,单列档原样保留', () => {
+test('说明档(原两列档)改为单列菜单:名称+说明/原因、勾在文字后、header 插槽,不再排两列、行间无分隔线', () => {
   const wxml = read('components/cy/dropdown/index.wxml')
   assert.match(wxml, /wx:elif="\{\{columns > 1\}\}"/)
   assert.match(wxml, /<slot name="header" \/>/)
   assert.match(wxml, /\{\{item\.reason \|\| item\.sub\}\}/, '不可选时原因代替说明显示')
   assert.match(wxml, /class="cdd__item \{\{index === value/, '单列档条目必须仍在')
+  assert.match(wxml, /class="cdd__item cdd__cell /, '说明档用同一种菜单行')
+  assert.doesNotMatch(wxml, /cdd__grid/, '不再排两列卡片')
   const wxss = read('components/cy/dropdown/index.wxss')
-  assert.match(wxss, /\.cdd__grid\s*\{[^}]*grid-template-columns:\s*1fr 1fr/, '一行两项')
+  assert.doesNotMatch(wxss, /grid-template-columns/, '不再一行两项')
+  assert.doesNotMatch(wxss, /\.cdd__item[^{]*\{[^}]*border-(top|bottom)/, '菜单行之间不画分隔线')
 })
 
-test('两列档无说明时用紧凑卡片；R5 编辑器下拉不显示灰色说明，只保留不可选原因', () => {
+test('说明档无说明时与普通行同高、贴着字段弹出；R5 编辑器下拉不显示灰色说明，只保留不可选原因', () => {
   const src = read(REL)
-  assert.match(src, /compact: !cells\.some\(function \(cell\) \{ return cell\.sub \|\| cell\.reason; \}\)/, '全部卡片无说明/原因才紧凑')
+  assert.match(src, /compact: !cells\.some\(function \(cell\) \{ return cell\.sub \|\| cell\.reason; \}\)/, '全部无说明/原因才紧凑')
   assert.match(src, /that\.data\.compact \? CELL_H_COMPACT_RPX : CELL_H_RPX/, '面板高度跟随紧凑档')
-  assert.match(read('components/cy/dropdown/index.wxml'), /\{\{compact \? 'cdd__cell--compact' : ''\}\}/)
-  assert.match(read('components/cy/dropdown/index.wxss'), /\.cdd__cell--compact\s*\{[^}]*min-height:\s*88rpx/)
+  assert.match(src, /const CELL_H_COMPACT_RPX = ITEM_H_RPX;/, '无说明的行与普通行同高')
+  assert.doesNotMatch(src, /windowWidth \|\| 375\) - 24 : rect\.width/, '不再铺满屏宽')
   const temp = read('pages/publish/temp/index.wxml')
-  // L09(2026-10-22):参与方式 / 添加互动工具改走底部 pickerSheet,下拉只剩「形式」;面板里同样只显示不可选原因
-  assert.doesNotMatch(temp, /range="\{\{r5Editor\.(participationOptions|toolOptions)\}\}"/, '参与方式/互动工具不再就地展开')
-  const r5 = read('pages/publish/temp/r5-editor.js')
-  assert.match(r5, /openR5ToolPicker\(\) \{[^\n]*reason: item\.reason \|\| ''/, '工具面板保留不可选原因')
-  assert.doesNotMatch(r5.match(/openR5ToolPicker\(\) \{[^\n]*/)[0], /\bsub\b/, '工具面板不显示灰色说明')
-  for (const key of ['r5Editor.forms']) {
+  for (const key of ['r5Editor.participationOptions', 'r5Editor.forms']) {
     const tags = temp.match(new RegExp('<cy-dropdown[^>]*range="\\{\\{' + key.replace('.', '\\.') + '\\}\\}"[^>]*>', 'g')) || []
     assert.ok(tags.length > 0, key)
     for (const tag of tags) { assert.doesNotMatch(tag, /sub-key=/, key + ' 不显示灰色说明'); assert.match(tag, /reason-key="reason"/, key + ' 仍显示不可选原因') }
@@ -216,13 +215,17 @@ test('两列档无说明时用紧凑卡片；R5 编辑器下拉不显示灰色�
   assert.doesNotMatch(read('pages/publish/fabu/zero-hp-editor.wxml'), /sub-key=/, '归零策略下拉不显示灰色说明')
 })
 
-test('选择玩法：带分类标签的纵向列表，只列玩法（不含互动工具），页头左退出右完成', () => {
+// 2026-10-22 主人定稿:选择玩法 = 半屏弹层 + Figma 胶囊标签,所有分类排成一条只左右滑;互动工具从底部弹出的标签里加
+test('选择玩法：半屏标签条按分类左右滑，只列玩法（不含互动工具），页头左退出右完成，底部可预览', () => {
   const temp = read('pages/publish/temp/index.wxml')
-  const sheet = temp.slice(temp.indexOf('选择玩法 sheet：'), temp.indexOf('</scroll-view>', temp.indexOf('cg-gsheet-scroll')))
+  const sheet = temp.slice(temp.indexOf('选择玩法 sheet(2026-10-22'), temp.indexOf('添加互动工具(底部弹出'))
   assert.match(sheet, /wx:for="\{\{ r5Editor\.gameGroups \}\}"/, '分组来自玩法分类')
+  assert.match(sheet, /<scroll-view scroll-x class="cg-tstrip"/, '标签条只左右滑')
   assert.match(sheet, /cg-edit-head__exit[^>]*bindtap="closeR5GameSheet"[^>]*>退出<\/view>/)
-  assert.match(sheet, /cg-edit-head__done[^>]*>完成<\/view>/)
+  assert.match(sheet, /cg-edit-head__done[^>]*bindtap="confirmR5GameSheet"[^>]*>完成<\/view>/)
+  assert.match(sheet, /bindtap="previewGameFromSheet"/, '选中后可以预览')
   assert.doesNotMatch(sheet, /toolSelected|addR5Tool|toolOptions/, '玩法列表里没有互动工具')
   assert.doesNotMatch(temp, /range="\{\{r5Editor\.gameItems\}\}"/, '不再用两列下拉选玩法')
-  assert.match(temp, /class="cg-adv-add" bindtap="openR5ToolPicker"/, '互动工具在选好玩法后单独添加(底部选择面板)')
+  assert.match(temp, /bindtap="openToolPicker"/, '互动工具从底部弹出的标签里单独添加')
+  assert.match(temp, /bindtap="pickToolTag"/)
 })
