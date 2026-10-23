@@ -85,6 +85,14 @@ public final class WorkshopRunServerVerification {
         return toDecision(binder.recover(originalRequestId));
     }
 
+    /**
+     * Lookup original intent. Missing / never-seen ids stay UNKNOWN with Java
+     * {@code null} requestId when blank, and do not occupy the ledger.
+     */
+    public Decision recoverOriginal(String originalRequestId) {
+        return recover(originalRequestId);
+    }
+
     private Map<String, Object> liveVerify(ServerReceipt receipt, boolean jsSelfReport) {
         if (jsSelfReport) {
             Map<String, Object> out = new LinkedHashMap<>();

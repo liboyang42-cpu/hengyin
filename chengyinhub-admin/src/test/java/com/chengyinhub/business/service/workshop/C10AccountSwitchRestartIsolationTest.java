@@ -174,6 +174,30 @@ class C10AccountSwitchRestartIsolationTest {
         assertFalse(Boolean.TRUE.equals(ledger.existing("c10-mark-never-seen").result().get("replay")));
     }
 
+    @Test
+    void recoverOriginalOfNeverSeenIdDoesNotOccupyLedgerThenImportApplies() {
+        WorkshopOriginalRequestBinder ledger = new WorkshopOriginalRequestBinder();
+        WorkshopRunServerVerification verify = new WorkshopRunServerVerification(ledger);
+        WorkshopRunServerVerification.Decision blank = verify.recoverOriginal(null);
+        assertNull(blank.originalRequestId());
+        assertEquals(WorkshopRunServerVerification.Outcome.UNKNOWN, blank.outcome());
+        assertFalse(blank.mintedNewRequestId());
+        assertNull(ledger.existing(null));
+
+        WorkshopRunServerVerification.Decision never = verify.recoverOriginal("c10-recover-never-seen");
+        assertEquals("c10-recover-never-seen", never.originalRequestId());
+        assertEquals(WorkshopRunServerVerification.Outcome.UNKNOWN, never.outcome());
+        assertFalse(never.mintedNewRequestId());
+        assertNull(ledger.existing("c10-recover-never-seen"));
+
+        WorkshopModuleImportGate later = new WorkshopModuleImportGate(ledger);
+        WorkshopModuleImportGate.Decision firstWrite = later.importPreview(qmod("c10-recover-never-seen", "mod-later"));
+        assertEquals(WorkshopModuleImportGate.Outcome.WAITING_SOURCE, firstWrite.outcome());
+        assertEquals("c10-recover-never-seen", firstWrite.originalRequestId());
+        assertEquals(WorkshopOriginalRequestBinder.WAITING_SOURCE, ledger.existing("c10-recover-never-seen").status());
+        assertFalse(Boolean.TRUE.equals(ledger.existing("c10-recover-never-seen").result().get("replay")));
+    }
+
     private static WorkshopModuleImportGate.Manifest qmod(String originalRequestId, String moduleId) {
         return new WorkshopModuleImportGate.Manifest(
                 originalRequestId, moduleId, "1.0.0", CONTENT, 1, "qmod",
