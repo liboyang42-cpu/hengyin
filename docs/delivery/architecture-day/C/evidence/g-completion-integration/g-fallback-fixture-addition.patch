@@ -1,0 +1,22 @@
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ArchitectureDayGCompletionFallbackTest.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ArchitectureDayGCompletionFallbackTest.java
+@@ -44,6 +44,10 @@
+     void setup() {
+         controller = spy(new ApiPlayProgressController());
+         doReturn(7L).when(controller).getAppUserId();
++        com.chengyinhub.business.service.support.CompletedRouteFactReader completed =
++                mock(com.chengyinhub.business.service.support.CompletedRouteFactReader.class);
++        when(completed.findCurrentCompletedRoutes(7L)).thenReturn(List.of());
++        ReflectionTestUtils.setField(controller, "completedRouteFactReader", completed);
+         progress = mock(IPlayerNodeProgressService.class);
+         topics = mock(ICmsTopicService.class);
+         nodes = mock(ICmsTopicNodeService.class);
+@@ -57,7 +61,7 @@
+         ReflectionTestUtils.setField(controller, "cmsTopicNodeService", nodes);
+         ReflectionTestUtils.setField(controller, "perkLedgerService", perks);
+         ReflectionTestUtils.setField(controller, "topicRouteRuntimeService", routes);
+-        when(registrations.selectExplorePassesByActivity(7L)).thenReturn(Map.of());
++        when(registrations.selectCmsRegistrationList(any(com.chengyinhub.business.domain.CmsRegistration.class))).thenReturn(List.of());
+         when(routes.sessionStatuses(any())).thenReturn(Map.of());
+         CmsTopic topic = new CmsTopic();
+         topic.setId(301L);
