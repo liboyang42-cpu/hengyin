@@ -128,7 +128,7 @@ test('积分流水失败不把真实邀请记录整页判错，奖励字段明�
   assert.equal(component.data.rewardReady, false)
   assert.equal(component.data.groups[0].items[0].timeText, '邀请时间暂未记录')
   assert.equal(component.data.groups[0].items[0].statusText, '已加入 · 奖励发放中')
-  assert.equal(component.data.groups[0].items[0].rewardText, '待同步')
+  assert.equal(component.data.groups[0].items[0].rewardText, '发放中')
 })
 
 test('积分流水被分页截断时不把未匹配记录误判为首购未完成', async () => {
@@ -149,7 +149,7 @@ test('积分流水被分页截断时不把未匹配记录误判为首购未完�
 
   assert.equal(component.data.rewardReady, false)
   assert.equal(component.data.groups[0].items[0].statusText, '已加入 · 奖励发放中')
-  assert.equal(component.data.groups[0].items[0].rewardText, '待同步')
+  assert.equal(component.data.groups[0].items[0].rewardText, '发放中')
 })
 
 test('邀请人 Long ID 以字符串关联奖励，不经 Number 转换丢精度', async () => {

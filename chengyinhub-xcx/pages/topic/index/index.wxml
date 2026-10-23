@@ -289,7 +289,7 @@
                 <view class="sess__side">
                   <view class="sess__price" wx:if="{{item.price != null}}">{{money.amount(item.price)}}</view>
                   <view class="sess__left" wx:if="{{item.remaining != null}}">余 {{item.remaining}} 席</view>
-                  <view class="sess__left" wx:else>余席待确认</view>
+                  <view class="sess__left" wx:else>余席 —</view>
                 </view>
               </view>
               <view class="sess__note">每人限购 1 张 · 场次内自由顺序，不带队</view>

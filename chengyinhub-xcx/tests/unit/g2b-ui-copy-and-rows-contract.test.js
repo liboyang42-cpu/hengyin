@@ -22,7 +22,7 @@ test('CU-C-33:结算页补上所选票种的集合点,没填就整行不出', ()
   assert.match(wxml, /<view wx:if="\{\{selectedTicket\.meetingPoint\}\}" class="setbox_lb_li_top_con_dz">/,
     '集合点行必须由所选票种的 meetingPoint 驱动，且缺值时不渲染空行')
   assert.match(wxml, /集合点 · \{\{selectedTicket\.meetingPoint\}\}/)
-  assert.match(wxml, /activityInfo\.address \|\| activityInfo\.addressName \|\| '待确认集合地点'/,
+  assert.match(wxml, /activityInfo\.address \|\| activityInfo\.addressName \|\| '—'/,
     '活动地址那一行是另一件事，不能被这行顶掉')
 })
 
