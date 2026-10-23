@@ -103,7 +103,7 @@ test('.theme-dark 逃生口把顶栏底色写回暗色', () => {
 test('负控:.theme-dark 不写回顶栏底色必须判红', () => {
   const source = read(TOKENS)
   const target = `  --cy-comp-nav-bg:     var(--cy-color-bg-page);
-  --cy-comp-nav-border: var(--cy-color-border-subtle);
+  --cy-comp-nav-border: transparent; /* 2026-10-23 业主:页面上的横线去掉 —— 暗色也与全站默认一致,顶栏不画分隔线 */
 }`
   const idx = source.lastIndexOf(target)
   assert.ok(idx > 0, '锚点漂了,负控失效')
@@ -124,7 +124,7 @@ test('负控:任一浅色主题块漏掉 comp 别名重声明必须判红', () =
   const source = read(TOKENS)
   const target = `  /* comp 别名重声明:见基础 page 规则内「导航」段注释。 */
   --cy-comp-nav-bg:     var(--cy-color-bg-page);
-  --cy-comp-nav-border: var(--cy-color-border-subtle);`
+  --cy-comp-nav-border: transparent; /* 2026-10-23 业主:页面上的横线去掉 —— 暗色也与全站默认一致,顶栏不画分隔线 */`
   assert.ok(source.includes(target), '锚点漂了,负控失效')
   assert.throws(() => assertNavSurfaceContract(source.replace(target, '')))
 })

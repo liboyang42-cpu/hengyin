@@ -1563,7 +1563,7 @@ page.theme-dark,
   --cy-comp-sheet-role-card-shadow: 0 0 0 0 transparent;
   /* comp 别名重声明:见基础 page 规则内「导航」段注释。 */
   --cy-comp-nav-bg:     var(--cy-color-bg-page);
-  --cy-comp-nav-border: var(--cy-color-border-subtle);
+  --cy-comp-nav-border: transparent; /* 2026-10-23 业主:页面上的横线去掉 —— 暗色也与全站默认一致,顶栏不画分隔线 */
 }
 
 /* ============================================================

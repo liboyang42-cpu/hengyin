@@ -26,8 +26,8 @@ Component({
     plain: { type: Boolean, value: false },
     // hairline(2026-08-20):只管整条 border-bottom 画不画,其余(字号/指示条)不动。
     // member 主页那排 tab 用户定「不要那条白线」,但仍要选中指示条 ⇒ plain 管不了这个组合。
-    // 默认 true,其余使用方零影响。
-    hairline: { type: Boolean, value: true },
+    // 2026-10-23 起默认 false(页面不再画整条底线),需要底线的使用方显式传 hairline="{{true}}"。
+    hairline: { type: Boolean, value: false }, // 2026-10-23 业主:页面横线去掉 —— 整条底线默认不画,要画的页面显式传 hairline
     sticky: { type: Boolean, value: false },
     sharedSlab: { type: Boolean, value: false },
   },
