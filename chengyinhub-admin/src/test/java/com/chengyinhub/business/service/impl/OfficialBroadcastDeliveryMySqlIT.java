@@ -47,6 +47,7 @@ class OfficialBroadcastDeliveryMySqlIT {
     private JdbcTemplate db;
     private String schema;
     private boolean created;
+    private Path migration;
     private DataSourceTransactionManager transactions;
     private OfficialBroadcastLogMapper logs;
     private OfficialBroadcastMapper broadcasts;
@@ -84,7 +85,7 @@ class OfficialBroadcastDeliveryMySqlIT {
         db.update("insert into official_broadcast_log(broadcast_id,member_id,channel,reached) values(900,1,'inapp',1),(900,1,'subscribe',1),(900,2,'inapp',0)");
         Path root = Paths.get("").toAbsolutePath();
         if (!Files.isDirectory(root.resolve("chengyinhub-admin"))) root = root.getParent();
-        Path migration = root.resolve("docs/delivery/architecture-day/D/sql/migration_20261023_d_official_broadcast_delivery.sql");
+        migration = root.resolve("chengyinhub-admin/sql/migration_20261023_d_official_broadcast_delivery.sql");
         new ResourceDatabasePopulator(new FileSystemResource(migration.toFile())).execute(source);
         assertEquals(1, db.queryForObject("select count(*) from official_broadcast_log where delivery_state='SUCCESS'", Integer.class));
         assertEquals(2, db.queryForObject("select count(*) from official_broadcast_log where delivery_state='UNKNOWN'", Integer.class));
@@ -349,6 +350,68 @@ class OfficialBroadcastDeliveryMySqlIT {
         assertEquals(1, messages());
         assertEquals(2, logs.countReached(committed.getId()));
         verify(wx, times(1)).notifyOfficialBroadcast(anyLong(), anyString(), anyString());
+    }
+
+    /** Separate disposable legacy schema: never mutate the main IT fixture's already-migrated tables. */
+    private void withLegacySchema(java.util.function.BiConsumer<JdbcTemplate, DriverManagerDataSource> check) {
+        String isolated = "cy_broadcast_d_guard_" + UUID.randomUUID().toString().replace("-", "");
+        DriverManagerDataSource original = (DriverManagerDataSource) db.getDataSource();
+        assertNotNull(original);
+        assertNotNull(original.getUrl());
+        assertTrue(original.getUrl().contains("/" + schema + "?"));
+        String url = original.getUrl().replace("/" + schema + "?", "/" + isolated + "?");
+        admin.execute("create database " + isolated);
+        try {
+            DriverManagerDataSource source = new DriverManagerDataSource(url, original.getUsername(), original.getPassword());
+            new ResourceDatabasePopulator(new ClassPathResource("it-schema/official-broadcast-delivery-it-schema.sql"))
+                    .execute(source);
+            check.accept(new JdbcTemplate(source), source);
+        } finally {
+            assertTrue(isolated.matches("cy_broadcast_d_guard_[a-f0-9]{32}"));
+            admin.execute("drop database " + isolated);
+        }
+    }
+
+    @Test
+    void migrationRejectsUnknownChannelsBeforeAlteringOrBackfillingLegacyEvidence() {
+        for (String channel : new String[] { null, "fax", "INAPP", "inapp " }) {
+            withLegacySchema((legacy, source) -> {
+                legacy.update("insert into official_broadcast(id,title,audience,channels,status,reached_count) values(900,'legacy','player','inapp',2,23)");
+                legacy.update("insert into official_broadcast_log(broadcast_id,member_id,channel,reached,clicked,create_time) values(900,10,?,1,1,'2026-01-01 01:02:03')", channel);
+                java.util.List<java.util.Map<String, Object>> before = legacy.queryForList("select * from official_broadcast_log order by id");
+                RuntimeException rejected = assertThrows(RuntimeException.class,
+                        () -> new ResourceDatabasePopulator(new FileSystemResource(migration.toFile())).execute(source));
+                assertTrue(rejected.getMessage().contains("tmp_d_broadcast_delivery_guard"), "must fail in SQL preflight, not after ALTER");
+                assertEquals(0, legacy.queryForObject("select count(*) from information_schema.columns where table_schema=database() and table_name='official_broadcast_log' and column_name in ('delivery_state','delivery_title','delivery_sub','failure_code','message_id','reached_time')", Integer.class));
+                assertEquals(before, legacy.queryForList("select * from official_broadcast_log order by id"));
+                assertEquals(2, legacy.queryForObject("select status from official_broadcast where id=900", Integer.class));
+                assertEquals(23, legacy.queryForObject("select reached_count from official_broadcast where id=900", Integer.class));
+            });
+        }
+    }
+
+    @Test
+    void migrationPreservesRawEvidenceAndRepairsOnlyProvenDerivedFacts() {
+        withLegacySchema((legacy, source) -> {
+            legacy.update("insert into official_broadcast(id,title,audience,channels,status,reached_count) values(900,'sent','player','inapp,subscribe',2,99),(901,'draft','player','inapp',0,23),(902,'revoked','player','inapp',3,23),(903,'no evidence','player','inapp',2,77),(904,'pending','player','subscribe',1,null)");
+            legacy.update("insert into official_broadcast_log(broadcast_id,member_id,channel,reached,clicked,create_time) values(900,10,'inapp',1,1,'2026-01-01 01:02:03'),(900,10,'subscribe',1,1,'2026-01-01 01:02:03'),(900,11,'inapp',0,0,null),(901,10,'inapp',1,0,null),(902,10,'inapp',1,1,null),(904,10,'subscribe',1,0,null)");
+            String raw = "select id,broadcast_id,member_id,role,channel,reached,clicked,create_time from official_broadcast_log order by id";
+            java.util.List<java.util.Map<String, Object>> before = legacy.queryForList(raw);
+            new ResourceDatabasePopulator(new FileSystemResource(migration.toFile())).execute(source);
+            assertEquals(before, legacy.queryForList(raw), "retain every original identity/flag/timestamp");
+            assertEquals(3, legacy.queryForObject("select count(*) from official_broadcast_log where delivery_state='SUCCESS' and failure_code is null", Integer.class));
+            assertEquals(3, legacy.queryForObject("select count(*) from official_broadcast_log where delivery_state='UNKNOWN' and failure_code='LEGACY_UNVERIFIED'", Integer.class));
+            assertEquals(0, legacy.queryForObject("select count(*) from official_broadcast_log where delivery_state in ('PENDING','FAILED') or message_id is not null or reached_time is not null or delivery_title is not null or delivery_sub is not null", Integer.class));
+            assertEquals(1, legacy.queryForObject("select status from official_broadcast where id=900", Integer.class));
+            assertEquals(1, legacy.queryForObject("select reached_count from official_broadcast where id=900", Integer.class));
+            assertEquals(0, legacy.queryForObject("select status from official_broadcast where id=901", Integer.class));
+            assertEquals(3, legacy.queryForObject("select status from official_broadcast where id=902", Integer.class));
+            assertEquals(2, legacy.queryForObject("select sum(reached_count) from official_broadcast where id in (901,902)", Integer.class));
+            assertEquals(2, legacy.queryForObject("select status from official_broadcast where id=903", Integer.class));
+            assertEquals(77, legacy.queryForObject("select reached_count from official_broadcast where id=903", Integer.class), "no evidence means no derived rewrite");
+            assertEquals(1, legacy.queryForObject("select status from official_broadcast where id=904", Integer.class));
+            assertEquals(0, legacy.queryForObject("select reached_count from official_broadcast where id=904", Integer.class));
+        });
     }
 
 }

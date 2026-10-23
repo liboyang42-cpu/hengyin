@@ -1,0 +1,33 @@
+{
+  "baseline": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+  "candidate_sha256": "d8f0835d4b92f84866fcd2964693b164b521add5ff8ad751e3c6842dc79305cb",
+  "exclusions": [
+    "artifact-manifest.json (self)",
+    "validation-output.txt (timestamped execution log)"
+  ],
+  "files": {
+    "docs/delivery/architecture-day/G/README.md": "565490463e506de8d59ce76aa1cea2e001972e80e28de17fe98861d230e68c19",
+    "docs/delivery/architecture-day/G/acceptance-fixtures.md": "e7769c2e4c8fbd7e75bcf0210ac19a84349e38444075bbbf40b737ce56cedfe7",
+    "docs/delivery/architecture-day/G/approved-contract-review.md": "da870c84a9597c612fcbf48010b5258e40d4a7f35537b86adfa51c8217b7beb4",
+    "docs/delivery/architecture-day/G/caller-inventory.txt": "6d47407c89677dd7c5cf35aae229655dcede6b7c3ee8aeb9fa69126c9156e761",
+    "docs/delivery/architecture-day/G/completion-contract.md": "48627451857081bfaec4d1630d2dbacfc12258448b2778e24372dd58d5583bfc",
+    "docs/delivery/architecture-day/G/fixtures.json": "6171a36b6b08de174a87d482a34a4af971b95f978bcadca397ae973ab8bf8e55",
+    "docs/delivery/architecture-day/G/implementation.md": "1fe992af06a58711631ae4ccbe376e055f48a2743192003e19d6ab1ad9477f7d",
+    "docs/delivery/architecture-day/G/java-execution-status.json": "45ed11e6f4ab1997ba1616d3cd34992faca287c8c36b0a3875ae8c20b2e41881",
+    "docs/delivery/architecture-day/G/patch-scan.txt": "bf486f210b7c2e4989d63da3f728822784ab18910d97b2b7ae3cb0c7b1b3c908",
+    "docs/delivery/architecture-day/G/settlement-contract.md": "e284e257ac653e61c8ad3ce38a36da54aae31b59e991c04b3e5d1cc26b859b2e",
+    "docs/delivery/architecture-day/G/source-evidence.json": "253a96eaaa52d3ff0389ebc5e32e97888119e2e2a774a5ce8951b6e54c319345",
+    "docs/delivery/architecture-day/G/verify_contract.py": "2bde059d59806a4d5d3aec305cb8ecc00e8fd9eba8ac4a6504c23d199019953d",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CompletedRouteFactMapperMySqlIT.java": "c9997c547346a49422b05a775332a37265ec2c88a624930b0725e8a380acfd21",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ArchitectureDayGSettlementGuardsTest.java": "bc1236235e1da4c469e4c0bf71c5028380307bafafe7c64fbe4a9cc57baa376a",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CompletedRouteFactReaderTest.java": "a67e4767cb4191c9adb73c77423fe8be937b091d06da78537cedc9709bbd9424",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ArchitectureDayGCompletionFallbackTest.java": "f6546b6ea763654e42534f74d87d2b8ac86ce1a968be9993886b49d4dcbacaf3",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CompletedRouteFactMapper.java": "eb6c8390c6690685d958b19a0550910a9e4ed76911f28129cf53f7848b1ebdda",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/CompletedRouteFactReader.java": "a64d94bd1cd258980fdb15eecc048012c9af0cc6fd6625eae057ae9d3c484f08",
+    "chengyinhub-system/src/main/resources/mapper/business/CompletedRouteFactMapper.xml": "48cacbc75efd3abc2685e45d909da33a683fd3b678b9111bef19885ddde6bf80"
+  },
+  "production_read_query_added": true,
+  "funds_or_economic_eligibility_changed": false,
+  "java_executed": false,
+  "mysql_executed": false
+}

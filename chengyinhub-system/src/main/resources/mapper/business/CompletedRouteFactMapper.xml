@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.CompletedRouteFactMapper">
+    <resultMap id="CompletionFact" type="com.chengyinhub.business.domain.TopicRouteSession">
+        <id property="id" column="id"/>
+        <result property="memberId" column="member_id"/>
+        <result property="activityId" column="activity_id"/>
+        <result property="topicId" column="topic_id"/>
+        <result property="playInstanceId" column="play_instance_id"/>
+        <result property="configVersion" column="config_version"/>
+        <result property="status" column="status"/>
+        <result property="completedAt" column="completed_at"/>
+    </resultMap>
+
+    <!-- 先按 owner 选最新局，再判断完成；先筛 status=1 会复活旧局的完成状态。
+         不连接 progress/票/商家权益，不把路线完成转换为经济或核销资格。
+         冻结版本和来源 session id 随行，调用方仍需按现有规则检查主题可读性。 -->
+    <select id="selectCurrentCompletedRoutes" resultMap="CompletionFact">
+        select r.id, r.member_id, r.activity_id, r.topic_id, r.play_instance_id,
+               r.config_version, r.status, r.completed_at
+        from topic_route_session r
+        join (
+            select max(id) as id
+            from topic_route_session
+            where member_id = #{memberId}
+            group by activity_id, topic_id
+        ) latest on latest.id = r.id
+        where r.member_id = #{memberId} and r.status = 1
+        order by r.topic_id, r.activity_id, r.id
+    </select>
+</mapper>

@@ -57,6 +57,7 @@ import static org.mockito.Mockito.when;
  *  - leaders 为空时不返回 0 而照查 ByMerchant ⇒ merchantWhoNeverScannedGroupCode_getsZero 红
  *  - 团口径误用 ByMerchant 而非 ByVerifiers   ⇒ merchantWhoServedGroup_paidByGroupHeads 红
  *  - 组织槽为空时改走团口径                    ⇒ CoopSettlementPerMerchantTest 5 条红(T1 回归)
+ * WP04：显式计划替身下的五分项组合测试；不证明模拟的 CLUB/团路径已开放现金结算。
  */
 class CoopSettlementGroupBasisTest {
 
@@ -101,6 +102,7 @@ class CoopSettlementGroupBasisTest {
         ReflectionTestUtils.setField(svc, "cmsRegistrationMapper", cmsRegistrationMapper);
         ReflectionTestUtils.setField(svc, "coopOrderMapper", coopOrderMapper);
         ReflectionTestUtils.setField(svc, "coopSettlementMapper", coopSettlementMapper);
+        PreparedCoopPlanFixture.install(svc, cmsRegistrationMapper, coopOrderMapper, coopGroupVerifyMapper, coopSettlementMapper);
         ReflectionTestUtils.setField(svc, "coopGroupVerifyMapper", coopGroupVerifyMapper);
         ReflectionTestUtils.setField(svc, "pricingService", new PricingServiceImpl());
         ReflectionTestUtils.setField(svc, "umsMemberService", mock(IUmsMemberService.class));
@@ -134,6 +136,7 @@ class CoopSettlementGroupBasisTest {
      */
     @Test
     void merchantWhoServedGroup_paidByGroupHeads() {
+        PreparedCoopPlanFixture.topic(TOPIC);
         svc.settleCoopTopic(topic(), new BigDecimal("5000"));
 
         Map<String, List<CoopSettlement>> lines = capturedLines();
@@ -145,6 +148,7 @@ class CoopSettlementGroupBasisTest {
     /** ★★ 没扫过团码 = 没接待 = 拿 0。「有合作单就自动拿钱」必须不成立(否则钱与接待动作解绑)。 */
     @Test
     void merchantWhoNeverScannedGroupCode_getsZero() {
+        PreparedCoopPlanFixture.topic(TOPIC);
         svc.settleCoopTopic(topic(), new BigDecimal("5000"));
 
         Map<String, List<CoopSettlement>> lines = capturedLines();
@@ -160,6 +164,8 @@ class CoopSettlementGroupBasisTest {
                 clubOrder(),
                 merchantOrder(2L, MERCHANT_A, 1, "30", null)));
 
+        PreparedCoopPlanFixture.topic(TOPIC);
+
         svc.settleCoopTopic(topic(), new BigDecimal("5000"));
 
         Map<String, List<CoopSettlement>> lines = capturedLines();
@@ -169,6 +175,7 @@ class CoopSettlementGroupBasisTest {
     /** 俱乐部自己(LEAD_FEE)照旧全主题口径 —— 它带的是整趟,D22 没动它。 */
     @Test
     void clubLeadFee_unchangedByD22() {
+        PreparedCoopPlanFixture.topic(TOPIC);
         svc.settleCoopTopic(topic(), new BigDecimal("5000"));
 
         Map<String, List<CoopSettlement>> lines = capturedLines();
@@ -179,6 +186,7 @@ class CoopSettlementGroupBasisTest {
     /** 结算行快照与金额同口径(对账时「记着团 100 人却拿 0」会对不上)。 */
     @Test
     void groupBasis_snapshotMatchesAmount() {
+        PreparedCoopPlanFixture.topic(TOPIC);
         svc.settleCoopTopic(topic(), new BigDecimal("5000"));
 
         Map<String, List<CoopSettlement>> lines = capturedLines();
@@ -191,6 +199,7 @@ class CoopSettlementGroupBasisTest {
     /** 五分项守恒仍然成立(动了基数就必须重验守恒,否则残差被静默吃掉)。 */
     @Test
     void conservationStillHolds() {
+        PreparedCoopPlanFixture.topic(TOPIC);
         svc.settleCoopTopic(topic(), new BigDecimal("5000"));
 
         Map<String, List<CoopSettlement>> lines = capturedLines();

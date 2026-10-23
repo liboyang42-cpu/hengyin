@@ -1,0 +1,22 @@
+TAP version 13
+# Subtest: play pause and completion release only its tracker and listener while roam continues
+ok 1 - play pause and completion release only its tracker and listener while roam continues
+  ---
+  duration_ms: 8.352675
+  type: 'test'
+  ...
+# Subtest: completing the only active play stops location immediately and repeatedly finishing is harmless
+ok 2 - completing the only active play stops location immediately and repeatedly finishing is harmless
+  ---
+  duration_ms: 4.603293
+  type: 'test'
+  ...
+1..2
+# tests 2
+# suites 0
+# pass 2
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 27.366191

@@ -141,6 +141,9 @@ public class ApiPlayProgressController extends BaseController
     private ICmsActivityService cmsActivityService;
 
     @Autowired
+    private com.chengyinhub.business.service.support.CompletedRouteFactReader completedRouteFactReader;
+
+    @Autowired
     private ICommunityPostService communityPostService;
 
     // M9 埋点:节点级尝试日志(服务端,不依赖客户端)
@@ -1365,15 +1368,18 @@ public class ApiPlayProgressController extends BaseController
                 scope.denied = error("该节点不属于本主题"); return scope;
             }
         } catch (IllegalArgumentException e) { scope.denied = error("参数有误"); return scope; }
-        // 读回执仍须证明当前主体拥有本场/本主题的已支付报名。时效和实体版本仅在新写时校验。
+        // 读回执仍须证明原报名归属；普通免费报名沿用现有资格，探索票才以已付为前提。
+        // 时效和实体版本仅在新写时校验，不能把普通免费报名误升级为付费要求。
         CmsRegistration query = new CmsRegistration(); query.setMemberId(memberId);
         query.setOwnerType(scope.activityId > 0 ? 2L : 1L);
         query.setOwnerId(scope.activityId > 0 ? scope.activityId : scope.topicId);
-        query.setPaymentStatus(2); query.setRegistrationStatus(2);
+        query.setRegistrationStatus(2);
         List<CmsRegistration> registrations = cmsRegistrationService.selectCmsRegistrationList(query);
         if (registrations == null || registrations.stream().noneMatch(row -> row != null
                 && memberId.equals(row.getMemberId()) && query.getOwnerType().equals(row.getOwnerType())
-                && query.getOwnerId().equals(row.getOwnerId()) && Integer.valueOf(2).equals(row.getPaymentStatus())
+                && query.getOwnerId().equals(row.getOwnerId())
+                && (!Integer.valueOf(com.chengyinhub.common.constant.PurchaseKind.EXPLORE_PASS).equals(row.getPurchaseKind())
+                    || Integer.valueOf(2).equals(row.getPaymentStatus()))
                 && Integer.valueOf(2).equals(row.getRegistrationStatus()))) scope.denied = error("无权读取本次游玩命令");
         return scope;
     }
@@ -2799,17 +2805,42 @@ public class ApiPlayProgressController extends BaseController
      * (③ 看核销,其余看主题 complete_rule_json)。别再各写一份分流,加口径时只改这一处。
      */
     private boolean isCompletedCompletionFact(com.chengyinhub.business.domain.CmsTopic topic,
-            Integer routeStatus, CmsRegistration explore, Long topicId, int total, int done)
+            Integer routeStatus, List<CmsRegistration> explores, Long topicId, int total, int done)
     {
-        if (topic != null && Integer.valueOf(com.chengyinhub.common.constant.ProductType.FREE_EXPLORE)
+        if (topic == null || topicHistoryBlocked(topic)) return false;
+        boolean hasExplorePass = explores != null && !explores.isEmpty();
+        if (Integer.valueOf(com.chengyinhub.common.constant.ProductType.FREE_EXPLORE)
+                .equals(topic.getProductType()) && !hasExplorePass) return false;
+        if (Integer.valueOf(com.chengyinhub.common.constant.ProductType.FREE_EXPLORE)
                 .equals(topic.getProductType())
                 && !TopicRouteModePolicy.isEffectiveBranchGraph(topic, null)) {
-            return isTopicCompletedFor(explore, topicId, total, done);
+            for (CmsRegistration explore : explores) {
+                if (isTopicCompletedFor(explore, topicId, total, done)) return true;
+            }
+            return false;
         }
         if (TopicRouteModePolicy.isEffectiveBranchGraph(topic, null) || routeStatus != null) {
             return Integer.valueOf(TopicRouteSession.STATUS_COMPLETED).equals(routeStatus);
         }
-        return isTopicCompletedFor(explore, topicId, total, done);
+        if (hasExplorePass) {
+            for (CmsRegistration explore : explores) {
+                if (isTopicCompletedFor(explore, topicId, total, done)) return true;
+            }
+            return false;
+        }
+        return isTopicCompletedFor(null, topicId, total, done);
+    }
+
+    /** 完成列表只使用本人原场次的已付探索票；不以 product_type 反推或补造票。 */
+    private boolean completedExplorePassOwnedBy(Long memberId, Long activityId, CmsRegistration registration)
+    {
+        return registration != null && registration.getId() != null && registration.getId() > 0
+                && memberId.equals(registration.getMemberId())
+                && Long.valueOf(2L).equals(registration.getOwnerType())
+                && activityId.equals(registration.getOwnerId())
+                && Integer.valueOf(PurchaseKind.EXPLORE_PASS).equals(registration.getPurchaseKind())
+                && Integer.valueOf(2).equals(registration.getRegistrationStatus())
+                && Integer.valueOf(2).equals(registration.getPaymentStatus());
     }
 
     /**
@@ -3443,14 +3474,19 @@ public class ApiPlayProgressController extends BaseController
         probe.setMemberId(memberId);
         List<PlayerNodeProgress> all = playerNodeProgressService.selectPlayerNodeProgressList(probe);
 
-        // 按 activityId 聚合已打卡节点数;自玩(activity_id=0)按 topicId 聚合并按节点去重
-        Map<Long, Integer> doneByActivity = new LinkedHashMap<>();
+        // 完成节点按本人 activity/topic 双维归属并去重，不能把另一主题的旧行计入当前活动。
+        Map<String, java.util.LinkedHashSet<Long>> doneByScope = new LinkedHashMap<>();
+        java.util.Set<Long> progressActivities = new java.util.LinkedHashSet<>();
         Map<Long, java.util.LinkedHashSet<Long>> selfPlayNodesByTopic = new LinkedHashMap<>();
         for (PlayerNodeProgress p : all) {
-            if (p.getActivityId() == null) continue;
+            if (p == null || !memberId.equals(p.getMemberId()) || p.getActivityId() == null
+                    || p.getActivityId() < 0 || p.getTopicId() == null || p.getTopicId() <= 0
+                    || p.getNodeId() == null || p.getNodeId() <= 0) continue;
             // F1:完成事实只认 status==1。mode2 自由收集的到店/凭证行 status=0(markGameDone 0→1),
             // 按全部行数聚合会让「只到店没玩」的主题被列成已完成(与 advanceProgress/nodes/route 同口径)。
             if (p.getStatus() == null || p.getStatus() != 1) continue;
+            doneByScope.computeIfAbsent(ITopicRouteRuntimeService.sessionKey(memberId, p.getTopicId(), p.getActivityId()),
+                    k -> new java.util.LinkedHashSet<>()).add(p.getNodeId());
             if (p.getActivityId() == 0L) {
                 // R10-09:自玩会话 activity_id 恒 0,必须按 topicId 收窄聚合(与 /nodes、advanceProgress 同口径),
                 // 否则多主题互相污染;同节点重复行只算一次。
@@ -3460,25 +3496,55 @@ public class ApiPlayProgressController extends BaseController
                 }
                 continue;
             }
-            doneByActivity.merge(p.getActivityId(), 1, Integer::sum);
+            progressActivities.add(p.getActivityId());
         }
 
-        // [P0-17] ③ 的报名单,一次批量捞(**新增查询恒 1 次,与活动数无关**)。
-        // ⚠️ 别循环调 isRegistered(它加了 ownerId 且只返 boolean)—— 那才是 N+1。
-        // 口径真源在 ICmsRegistrationService.selectExplorePassesByActivity,三个读侧判定点共用。
-        Map<Long, CmsRegistration> exploreByActivity = cmsRegistrationService.selectExplorePassesByActivity(memberId);
+        // 一次批量读取原已付探索票。不能先压成一场一张：首张无效/未完成不应吞掉另一张合法完成票。
+        CmsRegistration exploreProbe = new CmsRegistration();
+        exploreProbe.setMemberId(memberId); exploreProbe.setOwnerType(2L);
+        exploreProbe.setRegistrationStatus(2); exploreProbe.setPaymentStatus(2);
+        exploreProbe.setPurchaseKind(PurchaseKind.EXPLORE_PASS);
+        Map<Long, List<CmsRegistration>> exploreByActivity = new LinkedHashMap<>();
+        for (CmsRegistration registration : cmsRegistrationService.selectCmsRegistrationList(exploreProbe)) {
+            if (registration != null && registration.getOwnerId() != null && registration.getOwnerId() > 0
+                    && completedExplorePassOwnedBy(memberId, registration.getOwnerId(), registration)) {
+                exploreByActivity.computeIfAbsent(registration.getOwnerId(), k -> new ArrayList<>()).add(registration);
+            }
+        }
 
-        // ★ 驱动集合必须是「打卡过的活动 ∪ 有 ③ 票的活动」,不能只用 doneByActivity ——
-        // ③ 认核销不认打卡,一个只核销、没打过卡的 ③ 玩家在 doneByActivity 里压根没有键,
+        // G 的只读窄投影仅补发现来源，不补写 progress、权益或奖励，也不自动启动/切换 runtime。
+        List<TopicRouteSession> completedRoutes = completedRouteFactReader.findCurrentCompletedRoutes(memberId);
+        Map<String, Integer> completedRouteStatuses = new LinkedHashMap<>();
+        java.util.Set<Long> routeActivities = new java.util.LinkedHashSet<>();
+        for (TopicRouteSession route : completedRoutes) {
+            if (route == null || !memberId.equals(route.getMemberId()) || route.getId() == null
+                    || route.getId() <= 0 || route.getActivityId() == null || route.getActivityId() < 0
+                    || route.getTopicId() == null || route.getTopicId() <= 0
+                    || !Integer.valueOf(TopicRouteSession.STATUS_COMPLETED).equals(route.getStatus())) continue;
+            completedRouteStatuses.put(ITopicRouteRuntimeService.sessionKey(memberId, route.getTopicId(), route.getActivityId()),
+                    route.getStatus());
+            if (route.getActivityId() == 0L) {
+                selfPlayNodesByTopic.computeIfAbsent(route.getTopicId(), k -> new java.util.LinkedHashSet<>());
+            } else {
+                routeActivities.add(route.getActivityId());
+            }
+        }
+
+        // ★ 驱动集合为「完成节点 ∪ 有效探索票 ∪ 当前已完成个人路线」。
+        // ③ 认核销不认打卡，只核销没打卡的玩家也必须进入候选。
         // 连循环都进不去 ⇒ 他永远看不到自己已通关的路线。这是切口径时最容易漏的一处。
-        java.util.Set<Long> candidates = new java.util.LinkedHashSet<>(doneByActivity.keySet());
+        java.util.Set<Long> candidates = new java.util.LinkedHashSet<>(progressActivities);
         candidates.addAll(exploreByActivity.keySet());
+        candidates.addAll(routeActivities);
 
         Map<Long, CmsActivity> candidateActivities = new LinkedHashMap<>();
         List<TopicRouteSession> routeScopes = new ArrayList<>();
         for (Long activityId : candidates) {
             CmsActivity activity = cmsActivityService.selectCmsActivityById(activityId);
             if (activity == null || activity.getTopicId() == null) continue;
+            String actualScope = ITopicRouteRuntimeService.sessionKey(memberId, activity.getTopicId(), activityId);
+            if (!doneByScope.containsKey(actualScope) && !completedRouteStatuses.containsKey(actualScope)
+                    && !exploreByActivity.containsKey(activityId)) continue;
             candidateActivities.put(activityId, activity);
             TopicRouteSession scope = new TopicRouteSession();
             scope.setMemberId(memberId);
@@ -3494,18 +3560,20 @@ public class ApiPlayProgressController extends BaseController
             scope.setActivityId(0L);
             routeScopes.add(scope);
         }
-        Map<String, Integer> routeStatuses = topicRouteRuntimeService == null
-                ? java.util.Collections.<String, Integer>emptyMap()
-                : topicRouteRuntimeService.sessionStatuses(routeScopes);
+        Map<String, Integer> routeStatuses = new LinkedHashMap<>(completedRouteStatuses);
+        if (topicRouteRuntimeService != null) {
+            // 后续批量读到更新的 RUNNING/ENDED 时覆盖早先候选，不能复活旧局成功。
+            routeStatuses.putAll(topicRouteRuntimeService.sessionStatuses(routeScopes));
+        }
 
         List<Map<String, Object>> result = new ArrayList<>();
         for (Long activityId : candidates) {
-            int done = doneByActivity.getOrDefault(activityId, 0);
-
             CmsActivity activity = candidateActivities.get(activityId);
-            // 自玩会话 activity_id 恒 0 ⇒ selectCmsActivityById(0) 返 null ⇒ 在此被静默排除。
-            // ⚠️ 这是**既有行为**(/my-completed 今天只覆盖活动单),切 ③ 口径时别顺手「修」。
+            // 活动候选必须能回到原 topic；自玩在下面的独立 topic 循环投影。
             if (activity == null || activity.getTopicId() == null) continue;
+            java.util.Set<Long> completedNodes = doneByScope.get(ITopicRouteRuntimeService.sessionKey(
+                    memberId, activity.getTopicId(), activityId));
+            int done = completedNodes == null ? 0 : completedNodes.size();
 
             CmsTopicNode nodeProbe = new CmsTopicNode();
             nodeProbe.setTopicId(activity.getTopicId());

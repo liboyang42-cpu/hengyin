@@ -286,6 +286,22 @@
         "com.chengyinhub.business.it.AdvancedCommandFingerprintMySqlIT",
         "com.chengyinhub.business.service.ai.PhotoCheckIntentMySqlIT"
       ]
+    },
+    "architecture-day-broadcast-migration": {
+      "lineage": "A/F migration parser/layout and D historical scope/backfill integrated verification",
+      "registered_source": "33ffb50086e85fca2238d9ca75df585a46226835",
+      "note": "D original7+frequency1+canonical migration2. Immutable prior765 run remains42; this current source declares44 in wave2. No persistent/production DDL.",
+      "classes": [
+        "com.chengyinhub.business.service.impl.OfficialBroadcastDeliveryMySqlIT"
+      ]
+    },
+    "architecture-day-settlement": {
+      "lineage": "Public2ec G frozen settlement/evidence isolated test; no monetary policy defaults",
+      "registered_source": "be00cb35689ef76bf7c06489bf23de10391f032e",
+      "note": "WP04 SQL evidence tests only; 27 unit scenarios, economic write/readback and completion consumer wiring remain separately unverified.",
+      "classes": [
+        "com.chengyinhub.business.it.Wp04CoopSettlementEvidenceMySqlIT"
+      ]
     }
   },
   "classes": {
@@ -643,7 +659,7 @@
       "note": "Architecture day A: source now declares23 tests including four never-submitted recovery/race regressions. Original debit/submit intent/refund evidence and transaction races; provider is a stub."
     },
     "com.chengyinhub.business.service.impl.OfficialBroadcastDeliveryMySqlIT": {
-      "tests": 8,
+      "tests": 10,
       "storage": [
         "mysql"
       ],
@@ -681,6 +697,14 @@
       ],
       "gates": {},
       "note": "E original intent/nonce claim, independent result commit, owner/fingerprint receipt binding and application rollback; controlled provider mock; not C runtime HTTP closure."
+    },
+    "com.chengyinhub.business.it.Wp04CoopSettlementEvidenceMySqlIT": {
+      "tests": 7,
+      "storage": [
+        "mysql"
+      ],
+      "gates": {},
+      "note": "Real baseline DDL/MyBatis association and fulfillment evidence; explicit isolated env and exact own UUID schema cleanup. Does not prove final settlement amount/write transaction."
     },
     "com.chengyinhub.business.it.ClubLeadChapterIntentMySqlIT": {
       "tests": 3,

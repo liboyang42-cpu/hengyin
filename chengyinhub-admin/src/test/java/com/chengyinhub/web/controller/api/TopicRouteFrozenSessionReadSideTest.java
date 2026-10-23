@@ -43,6 +43,10 @@ class TopicRouteFrozenSessionReadSideTest {
     void myCompletedUsesFrozenBranchSessionEvenAfterPublishedRouteBecomesLinear() {
         ApiPlayProgressController controller = spy(new ApiPlayProgressController());
         doReturn(MEMBER).when(controller).getAppUserId();
+        com.chengyinhub.business.service.support.CompletedRouteFactReader completedRoutes =
+                mock(com.chengyinhub.business.service.support.CompletedRouteFactReader.class);
+        when(completedRoutes.findCurrentCompletedRoutes(MEMBER)).thenReturn(Collections.emptyList());
+        ReflectionTestUtils.setField(controller, "completedRouteFactReader", completedRoutes);
 
         IPlayerNodeProgressService progressService = mock(IPlayerNodeProgressService.class);
         when(progressService.selectPlayerNodeProgressList(any()))
@@ -50,7 +54,7 @@ class TopicRouteFrozenSessionReadSideTest {
         ReflectionTestUtils.setField(controller, "playerNodeProgressService", progressService);
 
         ICmsRegistrationService registrationService = mock(ICmsRegistrationService.class);
-        when(registrationService.selectExplorePassesByActivity(MEMBER)).thenReturn(Collections.emptyMap());
+        when(registrationService.selectCmsRegistrationList(any(com.chengyinhub.business.domain.CmsRegistration.class))).thenReturn(Collections.emptyList());
         ReflectionTestUtils.setField(controller, "cmsRegistrationService", registrationService);
 
         CmsActivity activity = new CmsActivity();

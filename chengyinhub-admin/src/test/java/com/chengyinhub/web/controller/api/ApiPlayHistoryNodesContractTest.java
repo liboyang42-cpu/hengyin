@@ -130,6 +130,7 @@ class ApiPlayHistoryNodesContractTest
                 done(MEMBER, ACTIVE_NODE, 3000L)));
         when(progressService.selectPlayerNodeProgressList(any())).thenAnswer(inv -> progressRows);
         CurrentPlayControllerFixtures.install(controller);
+        BasicPlayCommandFixtures.scope(controller, TOPIC);
     }
 
     private CmsTopicNode node(long id, String name, Long status, String fragment)
@@ -341,8 +342,7 @@ class ApiPlayHistoryNodesContractTest
         delisted.setTemplateId(88L);
         when(nodeService.selectCmsTopicNodeById(DELISTED_DONE)).thenReturn(delisted);
 
-        AjaxResult answer = controller.answer(
-                String.valueOf(ACTIVITY), String.valueOf(DELISTED_DONE), "A", null, null, null);
+        AjaxResult answer = BasicPlayCommandFixtures.answer(controller, String.valueOf(ACTIVITY), String.valueOf(DELISTED_DONE), "A", null, null, null);
         assertEquals(500, answer.get("code"));
         assertEquals("该站已下架，暂时无法完成", answer.get("msg"));
 
@@ -368,7 +368,7 @@ class ApiPlayHistoryNodesContractTest
         delisted.setCheckinCode("OLD-CODE");
         when(nodeService.selectCmsTopicNodeList(any())).thenReturn(Collections.singletonList(delisted));
 
-        AjaxResult result = controller.checkin(String.valueOf(ACTIVITY), "OLD-CODE", null, null, null);
+        AjaxResult result = BasicPlayCommandFixtures.checkin(controller, String.valueOf(ACTIVITY), "OLD-CODE", null, null, null, null, String.valueOf(DELISTED_DONE));
 
         assertEquals(500, result.get("code"));
         assertEquals("该站已下架，暂时无法完成", result.get("msg"));
@@ -382,8 +382,7 @@ class ApiPlayHistoryNodesContractTest
         active.setTemplateId(88L);
         when(nodeService.selectCmsTopicNodeById(ACTIVE_NODE)).thenReturn(active);
 
-        AjaxResult answer = controller.answer(
-                String.valueOf(ACTIVITY), String.valueOf(ACTIVE_NODE), "A", null, null, null);
+        AjaxResult answer = BasicPlayCommandFixtures.answer(controller, String.valueOf(ACTIVITY), String.valueOf(ACTIVE_NODE), "A", null, null, null);
 
         assertNotEquals("该站已下架，暂时无法完成", answer.get("msg"),
                 "正常在线节点不得被下架闸误伤");

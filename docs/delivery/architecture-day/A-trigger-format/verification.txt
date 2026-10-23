@@ -1,0 +1,14 @@
+2026-10-23T20:43:13.184988+00:00
+COMMAND: python3 -m unittest ci.test_migration_gates ci.test_migration_ledger
+............................................................................................................................................................................................
+----------------------------------------------------------------------
+Ran 188 tests in 1.093s
+
+OK
+PASS: canonical SQL and two Java default-semicolon loaders byte-for-byte unchanged from F8aaa
+A_SQL_SHA256 cf981d89214b219c41639537f301f2b55b2b568f2d310c06621e6df473b3f4ba
+PASS: A SQL check empty; inventory has only D unsupported SQL shape; full safety exit1 recorded
+PASS: frozen A/P2/fixture/WP12 clean and unchanged; merchant-cancel worktree preserved
+PASS: changed/untracked files pass project secret-file gate; diff check passed
+LIMIT: no full entropy/history secret scan
+NOT RUN: Java/ScriptUtils/MySQL/Redis/backend tests; no DDL; no CI dispatch

@@ -76,7 +76,7 @@ class CashWithdrawFundEvidenceMySqlIT {
         try (Connection connection = source.getConnection()) {
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("architecture-day-a-fixture.sql"));
             Path root = Path.of(System.getProperty("architecture.a.repo", "..")).toAbsolutePath();
-            ScriptUtils.executeSqlScript(connection, new FileSystemResource(root.resolve("sql/migration_20261023_cash_withdraw_fund_fact.sql")));
+            ScriptUtils.executeSqlScript(connection, new FileSystemResource(root.resolve("chengyinhub-admin/sql/migration_20261023_cash_withdraw_fund_fact.sql")));
         }
         manager = new DataSourceTransactionManager(source);
         SqlSessionFactoryBean factory = new SqlSessionFactoryBean(); factory.setDataSource(source);

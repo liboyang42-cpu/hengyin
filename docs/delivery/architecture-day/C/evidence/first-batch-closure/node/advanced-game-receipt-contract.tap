@@ -1,0 +1,310 @@
+TAP version 13
+# Subtest: 失败玩法重新进入只恢复结果；明确重试走现有带版本幂等动作
+ok 1 - 失败玩法重新进入只恢复结果；明确重试走现有带版本幂等动作
+  ---
+  duration_ms: 5.330687
+  type: 'test'
+  ...
+# Subtest: 非队长、缺服务端重试授权、运行中和未知结果均不能重试
+ok 2 - 非队长、缺服务端重试授权、运行中和未知结果均不能重试
+  ---
+  duration_ms: 0.486599
+  type: 'test'
+  ...
+# Subtest: 重试撞到队长或版本变化，只读权威状态，不自动换版本再次重开
+ok 3 - 重试撞到队长或版本变化，只读权威状态，不自动换版本再次重开
+  ---
+  duration_ms: 0.429174
+  type: 'test'
+  ...
+# Subtest: 多人角色读取权威分配：队长显示标签，队员不可把隐藏角色误写成待分配
+ok 4 - 多人角色读取权威分配：队长显示标签，队员不可把隐藏角色误写成待分配
+  ---
+  duration_ms: 1.647641
+  type: 'test'
+  ...
+# Subtest: 权威会话的呈现方式和可收尾状态完整递交页面，内嵌不会变成默认全屏
+ok 5 - 权威会话的呈现方式和可收尾状态完整递交页面，内嵌不会变成默认全屏
+  ---
+  duration_ms: 0.308676
+  type: 'test'
+  ...
+# Subtest: 提交成功：hydrate 权威状态，不进 unknown
+ok 6 - 提交成功：hydrate 权威状态，不进 unknown
+  ---
+  duration_ms: 0.333963
+  type: 'test'
+  ...
+# Subtest: ★负控：响应丢失 ⇒ unknown，不得写成失败，也不得放行重复提交
+ok 7 - ★负控：响应丢失 ⇒ unknown，不得写成失败，也不得放行重复提交
+  ---
+  duration_ms: 2.625685
+  type: 'test'
+  ...
+# Subtest: unknown 回读发现 version 已前进 ⇒ 判定已落地，清锁且不重发
+ok 8 - unknown 回读发现 version 已前进 ⇒ 判定已落地，清锁且不重发
+  ---
+  duration_ms: 0.547548
+  type: 'test'
+  ...
+# Subtest: ★多人局:version 前进也不算证据 —— 队友的写入同样推高它,不许判成我方已落地
+ok 9 - ★多人局:version 前进也不算证据 —— 队友的写入同样推高它,不许判成我方已落地
+  ---
+  duration_ms: 0.859909
+  type: 'test'
+  ...
+# Subtest: unknown 回读发现 version 未变 ⇒ 说清没提交成功，才放行重试
+ok 10 - unknown 回读发现 version 未变 ⇒ 说清没提交成功，才放行重试
+  ---
+  duration_ms: 0.613846
+  type: 'test'
+  ...
+# Subtest: 回读本身也失败 ⇒ 保持 unknown 锁定，不猜结论
+ok 11 - 回读本身也失败 ⇒ 保持 unknown 锁定，不猜结论
+  ---
+  duration_ms: 0.423125
+  type: 'test'
+  ...
+# Subtest: ★同一 version 上重试复用同一幂等键 —— 服务端 replay 才能生效
+ok 12 - ★同一 version 上重试复用同一幂等键 —— 服务端 replay 才能生效
+  ---
+  duration_ms: 0.79256
+  type: 'test'
+  ...
+# Subtest: 服务端说「状态已更新」⇒ 自动回读权威状态，不让用户拿旧 version 反复重发
+ok 13 - 服务端说「状态已更新」⇒ 自动回读权威状态，不让用户拿旧 version 反复重发
+  ---
+  duration_ms: 3.167324
+  type: 'test'
+  ...
+# Subtest: state 缺 version ⇒ 拒发写请求，不拿空幂等键去撞服务端
+ok 14 - state 缺 version ⇒ 拒发写请求，不拿空幂等键去撞服务端
+  ---
+  duration_ms: 0.262517
+  type: 'test'
+  ...
+# Subtest: ★C-25 榜单请求失败:落「榜单暂时读不到」行内态,不再 unhandled rejection
+ok 15 - ★C-25 榜单请求失败:落「榜单暂时读不到」行内态,不再 unhandled rejection
+  ---
+  duration_ms: 0.907138
+  type: 'test'
+  ...
+# Subtest: C-25 榜单成功清掉失败态;业务错也落失败态而不是静默
+ok 16 - C-25 榜单成功清掉失败态;业务错也落失败态而不是静默
+  ---
+  duration_ms: 0.384227
+  type: 'test'
+  ...
+# Subtest: 草稿建档走本地kit，提交和重新打开都不请求正式会话
+ok 17 - 草稿建档走本地kit，提交和重新打开都不请求正式会话
+  ---
+  duration_ms: 0.602029
+  type: 'test'
+  ...
+# Subtest: 限时打字开始业务拒绝发送失败出口，并携带当次局标识
+ok 18 - 限时打字开始业务拒绝发送失败出口，并携带当次局标识
+  ---
+  duration_ms: 0.819039
+  type: 'test'
+  ...
+# Subtest: 限时打字响应丢失按服务器started回读；版本增长不冒充开表事实
+ok 19 - 限时打字响应丢失按服务器started回读；版本增长不冒充开表事实
+  ---
+  duration_ms: 1.059764
+  type: 'test'
+  ...
+# Subtest: 打字回读缺started事实保持unknown，禁止重复开表直到能核对
+ok 20 - 打字回读缺started事实保持unknown，禁止重复开表直到能核对
+  ---
+  duration_ms: 0.56242
+  type: 'test'
+  ...
+# Subtest: 切换到另一局后旧开表响应不覆盖新局或弹旧失败出口
+ok 21 - 切换到另一局后旧开表响应不覆盖新局或弹旧失败出口
+  ---
+  duration_ms: 0.247556
+  type: 'test'
+  ...
+# Subtest: CAS二阶段权威回读迟到不能覆盖同节点新局或解除其写锁
+ok 22 - CAS二阶段权威回读迟到不能覆盖同节点新局或解除其写锁
+  ---
+  duration_ms: 0.90847
+  type: 'test'
+  ...
+# Subtest: 独立refreshState的迟到响应、返回异局身份、节点上下文变化均不hydrate
+ok 23 - 独立refreshState的迟到响应、返回异局身份、节点上下文变化均不hydrate
+  ---
+  duration_ms: 0.256278
+  type: 'test'
+  ...
+# Subtest: unknown权威读返回异局事实时保留锁，不再次写入
+ok 24 - unknown权威读返回异局事实时保留锁，不再次写入
+  ---
+  duration_ms: 0.178673
+  type: 'test'
+  ...
+# Subtest: 真实静默重登失败清身份后 start 的旧success回包不改变原组件
+ok 25 - 真实静默重登失败清身份后 start 的旧success回包不改变原组件
+  ---
+  duration_ms: 10.080657
+  type: 'test'
+  ...
+# Subtest: 真实静默重登失败清身份后 start 的旧fail回包不改变原组件
+ok 26 - 真实静默重登失败清身份后 start 的旧fail回包不改变原组件
+  ---
+  duration_ms: 1.772636
+  type: 'test'
+  ...
+# Subtest: 真实静默重登失败清身份后 action 的旧success回包不改变原组件
+ok 27 - 真实静默重登失败清身份后 action 的旧success回包不改变原组件
+  ---
+  duration_ms: 0.926518
+  type: 'test'
+  ...
+# Subtest: 真实静默重登失败清身份后 action 的旧fail回包不改变原组件
+ok 28 - 真实静默重登失败清身份后 action 的旧fail回包不改变原组件
+  ---
+  duration_ms: 0.90782
+  type: 'test'
+  ...
+# Subtest: 真实静默重登失败清身份后 resolveUnknown 的旧success回包不改变原组件
+ok 29 - 真实静默重登失败清身份后 resolveUnknown 的旧success回包不改变原组件
+  ---
+  duration_ms: 0.799921
+  type: 'test'
+  ...
+# Subtest: 真实静默重登失败清身份后 resolveUnknown 的旧fail回包不改变原组件
+ok 30 - 真实静默重登失败清身份后 resolveUnknown 的旧fail回包不改变原组件
+  ---
+  duration_ms: 0.724259
+  type: 'test'
+  ...
+# Subtest: 真实静默重登失败清身份后 loadLeaderboard 的旧success回包不改变原组件
+ok 31 - 真实静默重登失败清身份后 loadLeaderboard 的旧success回包不改变原组件
+  ---
+  duration_ms: 0.77262
+  type: 'test'
+  ...
+# Subtest: 真实静默重登失败清身份后 loadLeaderboard 的旧fail回包不改变原组件
+ok 32 - 真实静默重登失败清身份后 loadLeaderboard 的旧fail回包不改变原组件
+  ---
+  duration_ms: 0.77215
+  type: 'test'
+  ...
+# Subtest: 真实静默重登失败清身份后 refreshState 的旧success回包不改变原组件
+ok 33 - 真实静默重登失败清身份后 refreshState 的旧success回包不改变原组件
+  ---
+  duration_ms: 4.091879
+  type: 'test'
+  ...
+# Subtest: 真实静默重登失败清身份后 refreshState 的旧fail回包不改变原组件
+ok 34 - 真实静默重登失败清身份后 refreshState 的旧fail回包不改变原组件
+  ---
+  duration_ms: 1.762632
+  type: 'test'
+  ...
+# Subtest: 同一账号正常续期保留在途回读；身份清空后重新start不永久卡住
+ok 35 - 同一账号正常续期保留在途回读；身份清空后重新start不永久卡住
+  ---
+  duration_ms: 0.503303
+  type: 'test'
+  ...
+# Subtest: 正常卸载仍按epoch拒绝旧回读，预览启动不新增网络或身份要求
+ok 36 - 正常卸载仍按epoch拒绝旧回读，预览启动不新增网络或身份要求
+  ---
+  duration_ms: 0.319272
+  type: 'test'
+  ...
+# Subtest: 同局旧回读不能覆盖新动作或 RUNNING 状态
+ok 37 - 同局旧回读不能覆盖新动作或 RUNNING 状态
+  ---
+  duration_ms: 0.314995
+  type: 'test'
+  ...
+# Subtest: 同局旧回读不能覆盖新动作或 COMPLETED 状态
+ok 38 - 同局旧回读不能覆盖新动作或 COMPLETED 状态
+  ---
+  duration_ms: 0.083423
+  type: 'test'
+  ...
+# Subtest: 同局旧回读不能覆盖新动作或 FAILED 状态
+ok 39 - 同局旧回读不能覆盖新动作或 FAILED 状态
+  ---
+  duration_ms: 0.163541
+  type: 'test'
+  ...
+# Subtest: 同局旧回读不能覆盖新动作或 EXPIRED 状态
+ok 40 - 同局旧回读不能覆盖新动作或 EXPIRED 状态
+  ---
+  duration_ms: 0.078846
+  type: 'test'
+  ...
+# Subtest: 旧unknown读不以本地高版本猜本人成功，保留锁并允许再次权威核对
+ok 41 - 旧unknown读不以本地高版本猜本人成功，保留锁并允许再次权威核对
+  ---
+  duration_ms: 0.197922
+  type: 'test'
+  ...
+# Subtest: CAS拒绝后的旧回读不倒退视图，仍按拒绝释放锁与抛失败出口
+ok 42 - CAS拒绝后的旧回读不倒退视图，仍按拒绝释放锁与抛失败出口
+  ---
+  duration_ms: 0.873408
+  type: 'test'
+  ...
+# Subtest: 同局等版本仍可接受，新局低版本不能被旧局高版本挡住
+ok 43 - 同局等版本仍可接受，新局低版本不能被旧局高版本挡住
+  ---
+  duration_ms: 0.364187
+  type: 'test'
+  ...
+# Subtest: 团队挑战不看 config.multiplayer：原命令同键重放核对，不能借队友版本增长判成功
+ok 44 - 团队挑战不看 config.multiplayer：原命令同键重放核对，不能借队友版本增长判成功
+  ---
+  duration_ms: 0.629159
+  type: 'test'
+  ...
+# Subtest: 团队挑战原键被明确拒绝后读取新状态，保留失败提示，不把版本推进当回执
+ok 45 - 团队挑战原键被明确拒绝后读取新状态，保留失败提示，不把版本推进当回执
+  ---
+  duration_ms: 0.383275
+  type: 'test'
+  ...
+# Subtest: 共享挑战旧原键回执迟到不能覆盖新局或解除新局写锁
+ok 46 - 共享挑战旧原键回执迟到不能覆盖新局或解除新局写锁
+  ---
+  duration_ms: 0.183301
+  type: 'test'
+  ...
+# Subtest: 零血恢复必须明确重试，接受同属新会话并解除提交锁
+ok 47 - 零血恢复必须明确重试，接受同属新会话并解除提交锁
+  ---
+  duration_ms: 0.16957
+  type: 'test'
+  ...
+# Subtest: 零血重试丢失响应后个人局也按原键核对新会话，不能猜版本成功
+ok 48 - 零血重试丢失响应后个人局也按原键核对新会话，不能猜版本成功
+  ---
+  duration_ms: 0.956872
+  type: 'test'
+  ...
+# Subtest: 新挑战回执必须属于原会话、原成员和原节点，普通动作不能接受换局
+ok 49 - 新挑战回执必须属于原会话、原成员和原节点，普通动作不能接受换局
+  ---
+  duration_ms: 0.221146
+  type: 'test'
+  ...
+# Subtest: 已完成一次但恢复次数不足的零血挑战仍需明确继续，普通完成局不允许重试
+ok 50 - 已完成一次但恢复次数不足的零血挑战仍需明确继续，普通完成局不允许重试
+  ---
+  duration_ms: 0.124334
+  type: 'test'
+  ...
+1..50
+# tests 50
+# suites 0
+# pass 50
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 72.825907

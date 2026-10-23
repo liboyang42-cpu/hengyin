@@ -160,7 +160,7 @@ class JourneyPublishFreezeTest {
 
         CmsRegistration pass = new CmsRegistration();
         pass.setId(9_000_001L); // 真实报名行必有主键；C包当前资格按原ID锁读
-        pass.setMemberId(MEMBER);
+        pass.setMemberId(MEMBER); pass.setOwnerType(2L); pass.setOwnerId(ACTIVITY);
         pass.setRegistrationStatus(2);
         when(registrationMapper.selectCmsRegistrationList(any(CmsRegistration.class)))
                 .thenReturn(Collections.singletonList(pass));
@@ -218,6 +218,7 @@ class JourneyPublishFreezeTest {
 
         wireController();
         CurrentPlayControllerFixtures.install(controller);
+        BasicPlayCommandFixtures.scope(controller, TOPIC);
         com.chengyinhub.business.service.support.CurrentPlayTestFixtures.delegateLocks(activityMapper, registrationMapper);
     }
 
@@ -276,9 +277,9 @@ class JourneyPublishFreezeTest {
         // 作者重新保存模板答案(同一节点,新答案)
         template.setQuestionAnswer("新答案");
 
-        AjaxResult live = controller.answer(String.valueOf(ACTIVITY), String.valueOf(NODE), "新答案", null, null, null);
+        AjaxResult live = BasicPlayCommandFixtures.answer(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), "新答案", null, null, null);
         assertEquals(500, live.get("code"), "新答案不在开局快照里,同一局不得按新配置判定");
-        AjaxResult frozenOk = controller.answer(String.valueOf(ACTIVITY), String.valueOf(NODE), "旧答案", null, null, null);
+        AjaxResult frozenOk = BasicPlayCommandFixtures.answer(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), "旧答案", null, null, null);
         assertEquals(200, frozenOk.get("code"), "按开局冻结的旧答案必须判对");
         Map<String, Object> data = (Map<String, Object>) frozenOk.get("data");
         assertEquals(Boolean.TRUE, data.get("firstTime"));
@@ -293,7 +294,7 @@ class JourneyPublishFreezeTest {
         stored[0].setConfigSnapshotJson(JSON.writeValueAsString(snapshot));
         template.setQuestionAnswer("修订答案");
 
-        AjaxResult result = controller.answer(String.valueOf(ACTIVITY), String.valueOf(NODE), "修订答案", null, null, null);
+        AjaxResult result = BasicPlayCommandFixtures.answer(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), "修订答案", null, null, null);
 
         assertEquals(200, result.get("code"), "老局快照没有冻结键时必须回退实时模板");
     }
@@ -306,7 +307,7 @@ class JourneyPublishFreezeTest {
         // 作者把节点从答题(1)改成 GPS 到点(5);节点没有坐标
         template.setValidationMethod(5);
 
-        AjaxResult result = controller.arrive(String.valueOf(ACTIVITY), String.valueOf(NODE), null, null, null);
+        AjaxResult result = BasicPlayCommandFixtures.arrive(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), null, null, null);
 
         assertEquals(500, result.get("code"));
         assertEquals("该站需完成对应任务后才能打卡", result.get("msg"),

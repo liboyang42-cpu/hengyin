@@ -26,6 +26,7 @@ final class CurrentPlayControllerFixtures {
     private CurrentPlayControllerFixtures() { }
 
     static void install(Object controller) {
+        if (controller instanceof ApiPlayProgressController) BasicPlayCommandFixtures.install((ApiPlayProgressController) controller);
         if (ReflectionTestUtils.getField(controller, "currentPlayActivityMapper") == null) {
             CmsActivityMapper activityMapper = mock(CmsActivityMapper.class);
             when(activityMapper.selectCmsActivityByIdForUpdate(anyLong())).thenAnswer(call -> {

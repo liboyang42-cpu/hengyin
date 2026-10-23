@@ -237,6 +237,7 @@ class ApiPlayDelistedCompletedRetryContractTest
         when(proofService.hasArrived(anyLong(), anyLong(), anyLong())).thenReturn(true);
         mockProgressRows(true);
         CurrentPlayControllerFixtures.install(controller);
+        BasicPlayCommandFixtures.scope(controller, TOPIC);
     }
 
     /**
@@ -275,12 +276,12 @@ class ApiPlayDelistedCompletedRetryContractTest
 
     private AjaxResult checkin()
     {
-        return controller.checkin(String.valueOf(ACTIVITY), CHECKIN_CODE, null, null, null);
+        return BasicPlayCommandFixtures.checkin(controller, String.valueOf(ACTIVITY), CHECKIN_CODE, null, null, null, null, String.valueOf(NODE));
     }
 
     private AjaxResult answer()
     {
-        return controller.answer(String.valueOf(ACTIVITY), String.valueOf(NODE), "A", null, null, null);
+        return BasicPlayCommandFixtures.answer(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), "A", null, null, null);
     }
 
     private AjaxResult preference()
@@ -304,7 +305,7 @@ class ApiPlayDelistedCompletedRetryContractTest
 
     private AjaxResult arrive()
     {
-        return controller.arrive(String.valueOf(ACTIVITY), String.valueOf(NODE), null, null, null, null, null);
+        return BasicPlayCommandFixtures.arrive(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), null, null, null, null, null);
     }
 
     // ---------- 已完成重试:下架闸必须放行原幂等回执 ----------

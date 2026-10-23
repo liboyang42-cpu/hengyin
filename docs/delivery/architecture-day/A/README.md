@@ -64,7 +64,7 @@
 ## CI 与 schema 前置
 
 - 本次用户授权仅为隔离 CI 候选的 commit/push 例外，未通过不得正式集成/合并/部署。
-- `sql/migration_20261023_cash_withdraw_fund_fact.sql` 仅编写候选，未执行生产或任何本地 DDL。docs 中 schema-candidate.sql 为同内容审阅副本，schema-preflight.sql 为只读预检方案。
+- `chengyinhub-admin/sql/migration_20261023_cash_withdraw_fund_fact.sql` 仅编写候选，未执行生产或任何本地 DDL。docs 中 schema-candidate.sql 为同内容审阅副本，schema-preflight.sql 为只读预检方案。
 - 新表为 InnoDB，原单外键、提交意图自引用、(withdrawal_id,kind)唯一、金额/DEBIT差额/NOT_ACCEPTED意图/FINAL_FAIL明细约束，以及禁止UPDATE/DELETE触发器。历史零回填，不清空资金或审计记录。
 - 先审查/核验 schema，再启用代码；缺表会 fail closed。旧代码回退会恢复危险的status-only回补，不能带着新在途单直接回退。应暂停新增提现、隔离在途，保留全部证据，审阅前向修复。
 - 现有 funds-mysql-it-gate.sh 使用固定测试类列表，**不会自动包含本次新IT**。需协调者在已批准的GitHub-hosted验证路径显式执行下列选择，不能凭旧门禁绿灯认定这些用例已跑。

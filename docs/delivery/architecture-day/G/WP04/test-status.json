@@ -1,0 +1,33 @@
+{
+  "source_sha256": "88157a9294ba692a23328d4322364bbf12420a4dd66ae4daf7c5e803db5f0655",
+  "java_compile": "NOT_RUN",
+  "java_tests": "NOT_RUN",
+  "mysql": "NOT_RUN",
+  "redis": "NOT_RUN",
+  "transaction_rollback_concurrency": "NOT_VERIFIED",
+  "reason": "仅批准 CI/VPS 执行 Java/MySQL；此 VM 未启动后端/数据库。隔离候选提交例外已获用户授权。",
+  "new_test_classes": {
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/Wp04CoopSettlementEvidenceMySqlIT.java": {
+      "test_methods": 7,
+      "status": "NOT_RUN"
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/Wp04CoopSettlementContractTest.java": {
+      "test_methods": 21,
+      "status": "NOT_RUN"
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/Wp04TopicSettlementEntryGuardsTest.java": {
+      "test_methods": 6,
+      "status": "NOT_RUN"
+    }
+  },
+  "changed_existing_tests": [
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CoopSettlementClaimServiceImplTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CoopSettlementContractTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TandianriBatch0FundsMybatisIntegrationTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSettlementEvidenceServiceTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSettlementIdempotencyTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementGroupBasisTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementPerMerchantTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementTest.java"
+  ]
+}

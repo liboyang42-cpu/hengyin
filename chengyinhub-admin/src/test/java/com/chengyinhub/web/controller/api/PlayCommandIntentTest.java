@@ -95,6 +95,18 @@ class PlayCommandIntentTest {
         assertNotEquals(200, controller.basicActionReceipt("20", null, "11", "done").get("code"));
     }
 
+    @Test void ordinaryFreeRegistrationKeepsOriginalScopeButUnpaidExploreAndForeignRowsCannotReadReceipts() {
+        CmsRegistration registration = new CmsRegistration(); registration.setMemberId(7L); registration.setOwnerType(2L);
+        registration.setOwnerId(20L); registration.setRegistrationStatus(2); registration.setPurchaseKind(1); registration.setPaymentStatus(0);
+        when(registrations.selectCmsRegistrationList(any())).thenReturn(Collections.singletonList(registration));
+        assertEquals(200, command("free", 3, "A", () -> AjaxResult.success("done")).get("code"));
+        assertEquals(200, controller.basicActionReceipt("20", null, "11", "free").get("code"));
+        registration.setPurchaseKind(3);
+        assertNotEquals(200, controller.basicActionReceipt("20", null, "11", "free").get("code"));
+        registration.setPaymentStatus(2); registration.setMemberId(8L);
+        assertNotEquals(200, controller.basicActionReceipt("20", null, "11", "free").get("code"));
+    }
+
     @Test void concurrentWinnerIsRecheckedAfterBusinessLockBeforeVersionConflict() {
         command("winner", 3, "A", () -> AjaxResult.success("done"));
         GameCommandReceipt committed = saved.values().iterator().next();

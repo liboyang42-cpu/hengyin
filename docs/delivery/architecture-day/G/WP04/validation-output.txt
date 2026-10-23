@@ -1,0 +1,14 @@
+{
+  "kind": "STATIC_ONLY",
+  "source_files": 22,
+  "source_sha256": "88157a9294ba692a23328d4322364bbf12420a4dd66ae4daf7c5e803db5f0655",
+  "frozen_source_files_unchanged": 7,
+  "b_method_sha256": "d05821905783aa40bc58ff45f52cfa5c123d299c5a709b697786b69ba7ec3a05",
+  "cms_method_scope": "PASS",
+  "xml_and_mapper_ids": "PASS",
+  "credential_pattern_scan": "PASS",
+  "java": "NOT_RUN",
+  "mysql": "NOT_RUN",
+  "funds_behavior": "NOT_VERIFIED"
+}
+SECRET-FILE-GATE PASS: 当前 Git tree 无密钥/证书文件或私钥正文

@@ -51,6 +51,12 @@ EXPLICIT_MANAGED_SQL = {
         "seed_refund_manual_menu_20260714",
 }
 EXPLICIT_AUXILIARY_SQL = {
+    # Architecture-day A/D: exact disposable test fixtures and non-executed
+    # review proposals; canonical executable migrations remain fully checked.
+    "chengyinhub-admin/src/test/resources/architecture-day-a-fixture.sql": "TEST_FIXTURE",
+    "chengyinhub-admin/src/test/resources/it-schema/official-broadcast-delivery-it-schema.sql": "TEST_FIXTURE",
+    "docs/delivery/architecture-day/A/schema-candidate.sql": "AUXILIARY_NOT_EXECUTED",
+    "docs/delivery/architecture-day/A/schema-preflight.sql": "AUXILIARY_NOT_EXECUTED",
     # Only the reviewed synthetic schema for the disposable, network-isolated startup gate.
     "ci/upgrade-startup/schema.sql": "TEST_FIXTURE",
     "chengyinhub-admin/sql/_四账映射与守恒规则_20260725.sql": "REFERENCE_ONLY",

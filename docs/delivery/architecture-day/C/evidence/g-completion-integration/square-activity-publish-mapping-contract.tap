@@ -1,0 +1,64 @@
+TAP version 13
+# Subtest: 公开关联选择器仅用 query 请求可关联完成记录，历史完成调用方保持默认
+ok 1 - 公开关联选择器仅用 query 请求可关联完成记录，历史完成调用方保持默认
+  ---
+  duration_ms: 5.812128
+  type: 'test'
+  ...
+# Subtest: 关联空态说明公开可用范围，不把历史已完成记录说成不存在
+ok 2 - 关联空态说明公开可用范围，不把历史已完成记录说成不存在
+  ---
+  duration_ms: 0.314473
+  type: 'test'
+  ...
+# Subtest: 自玩完成:真实 picker emit 到发布请求必须是 data_type=2 + data_id=topicId
+ok 3 - 自玩完成:真实 picker emit 到发布请求必须是 data_type=2 + data_id=topicId
+  ---
+  duration_ms: 13.621911
+  type: 'test'
+  ...
+# Subtest: 正式活动:仍是 data_type=1 + data_id=activityId
+ok 4 - 正式活动:仍是 data_type=1 + data_id=activityId
+  ---
+  duration_ms: 0.634486
+  type: 'test'
+  ...
+# Subtest: 清除选择:发布为无关联,不残留上一条 data_id
+ok 5 - 清除选择:发布为无关联,不残留上一条 data_id
+  ---
+  duration_ms: 0.758588
+  type: 'test'
+  ...
+# Subtest: 兼容旧结构(无 dataId):回退到 activityId,不丢活动关联
+ok 6 - 兼容旧结构(无 dataId):回退到 activityId,不丢活动关联
+  ---
+  duration_ms: 0.75968
+  type: 'test'
+  ...
+# Subtest: 失败恢复:发布失败保留选择,重试仍带同一自玩关联
+ok 7 - 失败恢复:发布失败保留选择,重试仍带同一自玩关联
+  ---
+  duration_ms: 0.691749
+  type: 'test'
+  ...
+# Subtest: 迟回/改动选择后重试:按重试当刻的选择发,不用旧值
+ok 8 - 迟回/改动选择后重试:按重试当刻的选择发,不用旧值
+  ---
+  duration_ms: 0.543331
+  type: 'test'
+  ...
+# Subtest: 发布在途防重复提交:第二次点击不发请求
+ok 9 - 发布在途防重复提交:第二次点击不发请求
+  ---
+  duration_ms: 0.604271
+  type: 'test'
+  ...
+1..9
+# tests 9
+# suites 0
+# pass 9
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 37.623373

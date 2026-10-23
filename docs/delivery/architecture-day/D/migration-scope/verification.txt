@@ -1,0 +1,29 @@
+Actual checks in isolated /workspace/architecture-day-d-migration; no DB/Java/CI execution.
+F parent 8aaa141c5990b089749d4364fa2472748a69d9ab tree f607c2dc33e33062ac4c7cc5e7e26c18a21dc34b reconstructed exactly; all151 changed blobs verified.
+Before: ci.test_official_broadcast_delivery_migration Ran6 FAILED(failures=6).
+After: python3 -m unittest ci.test_official_broadcast_delivery_migration ci.test_migration_gates
+Ran136 tests in0.593s; OK; zero skips.
+D check_sql_text=[]; actual shared sql_splitter statements=8.
+Original7 IT identities preserved; this F-based candidate9; with db5 concurrency delta expected10. Java/MySQL NOT RUN.
+
+Broader static command:
+python3 -m unittest ci.test_migration_gates ci.test_migration_ledger ci.test_shallow_source_custody ci.test_candidate_resource_manifest ci.test_prelaunch_business_seeds ci.test_release_manifest ci.test_official_broadcast_delivery_migration
+Ran230 tests in6.634s; FAILED(failures=1,errors=1), no skip.
+Failure test_predeploy_snapshot_is_static_and_never_claims_historical_git_verification: PRE_DEPLOY_STATIC_NO_GO: SQL inventory is unsafe.
+Error test_task_dictionary_forward_is_selected_by_supported_fresh_builder: LedgerError SQL inventory is unsafe.
+These remain the originalF global blockers, caused now solely by A trigger migration, not D.
+
+Actual audit_inventory problems:
+{
+  "problems": [
+    {
+      "code": "UNSUPPORTED_SQL_SHAPE",
+      "path": "chengyinhub-admin/sql/migration_20261023_cash_withdraw_fund_fact.sql",
+      "message": "migration cannot be safely split by ci/sql_splitter.py"
+    }
+  ]
+}
+
+D custody refreshed only canonical SQL+ownedIT; other11 entries unchanged.
+git diff --check exit0.
+No gates/whitelist/parser/baseline changed. No workflow dispatch/rerun, Java/backend/database or DDL started here.

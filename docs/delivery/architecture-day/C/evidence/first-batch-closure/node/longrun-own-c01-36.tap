@@ -1,0 +1,22 @@
+TAP version 13
+# Subtest: opening thought wait cannot submit original chapter in replacement session
+ok 1 - opening thought wait cannot submit original chapter in replacement session
+  ---
+  duration_ms: 31.25056
+  type: 'test'
+  ...
+# Subtest: old opening response neither closes current chapter nor releases replacement intent
+ok 2 - old opening response neither closes current chapter nor releases replacement intent
+  ---
+  duration_ms: 5.810105
+  type: 'test'
+  ...
+1..2
+# tests 2
+# suites 0
+# pass 2
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 48.853858

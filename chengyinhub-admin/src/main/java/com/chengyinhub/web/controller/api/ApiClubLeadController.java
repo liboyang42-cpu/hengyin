@@ -254,7 +254,8 @@ public class ApiClubLeadController extends BaseController {
         AjaxResult response = AjaxResult.success("已开启:" + target.getName(), result);
         claim.setOutcome("APPLIED"); claim.setResultJson(commandJson(response)); claim.setUpdateTime(new Date());
         if (commandReceiptMapper.completeReceipt(claim) != 1) throw new IllegalStateException("章节回执保存失败");
-        return response;
+        // 首响也使用已保存回执的表示，避免 Long ID 经无类型 JSON 回放变为 Integer 后不等价。
+        return chapterReplay(claim, hash);
     }
 
     /** 仅保留 Java 调用的显式拒绝，不提供旧语义执行路径。 */

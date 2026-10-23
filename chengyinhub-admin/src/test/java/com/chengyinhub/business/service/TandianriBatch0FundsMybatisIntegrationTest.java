@@ -104,11 +104,13 @@ class TandianriBatch0FundsMybatisIntegrationTest {
                 "DROP TABLE IF EXISTS cms_registration",
                 "DROP TABLE IF EXISTS oms_ticket",
                 "DROP TABLE IF EXISTS cms_activity",
+                "DROP TABLE IF EXISTS cms_topic_node",
                 "DROP TABLE IF EXISTS cms_topic",
+                "CREATE TABLE cms_topic_node (id BIGINT PRIMARY KEY,topic_id BIGINT)",
                 "CREATE TABLE cms_topic (id BIGINT PRIMARY KEY, name VARCHAR(100), product_type INT, del_flag INT, status INT, is_settlement INT, end_date DATETIME, update_by VARCHAR(64), update_time DATETIME)",
                 "CREATE TABLE cms_activity (id BIGINT PRIMARY KEY, topic_id BIGINT, member_id BIGINT, name VARCHAR(100), del_flag INT, status INT, is_settlement INT, end_date DATETIME, start_date DATETIME)",
-                "CREATE TABLE oms_ticket (id BIGINT PRIMARY KEY AUTO_INCREMENT, owner_type BIGINT, owner_id BIGINT, mode INT, del_flag INT, start_time DATETIME, end_time DATETIME)",
-                "CREATE TABLE cms_registration (id BIGINT PRIMARY KEY, owner_type BIGINT, owner_id BIGINT, member_id BIGINT, payable_amount DECIMAL(12,2), payment_status INT, registration_status INT, verification_status INT, purchase_kind INT, verification_time DATETIME, ticket_id BIGINT, refund_deadline DATETIME)",
+                "CREATE TABLE oms_ticket (id BIGINT PRIMARY KEY AUTO_INCREMENT, owner_type BIGINT, owner_id BIGINT, mode INT, sub_type VARCHAR(16), del_flag INT, start_time DATETIME, end_time DATETIME)",
+                "CREATE TABLE cms_registration (id BIGINT PRIMARY KEY, owner_type BIGINT, owner_id BIGINT, member_id BIGINT, payable_amount DECIMAL(12,2), payment_status INT, registration_status INT, verification_status INT, purchase_kind INT, verification_time DATETIME, order_num BIGINT DEFAULT 1, ticket_id BIGINT, refund_deadline DATETIME)",
                 "CREATE TABLE cms_registration_scan (id BIGINT PRIMARY KEY AUTO_INCREMENT, registration_id BIGINT, member_id BIGINT, registration_type INT, status INT DEFAULT 0, create_time DATETIME)",
                 "CREATE TABLE coop_group_member_verify (id BIGINT PRIMARY KEY AUTO_INCREMENT, registration_id BIGINT, topic_id BIGINT, activity_id BIGINT, verify_time DATETIME)",
                 // 2026-10-22 TF1:与生产 DDL(sql/base_schema_20260818.sql、migration_coop_group_activity_settlement_20260722)
@@ -282,11 +284,12 @@ class TandianriBatch0FundsMybatisIntegrationTest {
     }
 
     @Test
-    void settlementEvidenceServiceResolvesActiveActivityIdsBeforeLockingOnlyRegistrations() {
+    void settlementEvidenceServiceResolvesActiveActivityIdsBeforeRegistrationAndTicketQuery() {
         CoopSettlementSnapshot snapshot = new CoopSettlementSnapshot();
+        snapshot.setTopicId(TOPIC);
         snapshot.setCommercialContextId(TOPIC);
-        snapshot.setScopeType("TOPIC_EDITION");
-        snapshot.setScopeId(ACTIVITY);
+        snapshot.setScopeType("TOPIC");
+        snapshot.setScopeId(TOPIC);
         snapshot.setOrderId(COOP_ORDER);
         snapshot.setBeneficiaryId(MERCHANT);
         try (SqlSession session = factory.openSession(false)) {
@@ -358,9 +361,10 @@ class TandianriBatch0FundsMybatisIntegrationTest {
 
     private void assertDirectTopicRegistrationRemainsWhenActivityIdsAre(List<Long> activityIds) {
         CoopSettlementSnapshot snapshot = new CoopSettlementSnapshot();
+        snapshot.setTopicId(TOPIC);
         snapshot.setCommercialContextId(TOPIC);
-        snapshot.setScopeType("TOPIC_EDITION");
-        snapshot.setScopeId(ACTIVITY);
+        snapshot.setScopeType("TOPIC");
+        snapshot.setScopeId(TOPIC);
         snapshot.setOrderId(COOP_ORDER);
         snapshot.setBeneficiaryId(MERCHANT);
         try (SqlSession session = factory.openSession(false)) {

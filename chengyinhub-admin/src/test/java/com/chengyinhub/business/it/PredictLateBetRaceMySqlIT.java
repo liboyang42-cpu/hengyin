@@ -341,6 +341,7 @@ class PredictLateBetRaceMySqlIT {
                     + "attempt_type tinyint null, result tinyint null, wrong_answer varchar(120) null,"
                     + "duration_s int null, result_json json null,"
                     + "idempotency_key varchar(128) null, created_at datetime null,"
+                    + "request_fingerprint char(64) character set ascii collate ascii_bin null,"
                     + "unique key uk_play_attempt_idempotency (idempotency_key)"
                     + ") engine=InnoDB default charset=utf8mb4");
             st.execute("create table play_predict_bet ("

@@ -76,8 +76,12 @@ class ApiPlayMyCompletedSelfPlayContractTest
         ReflectionTestUtils.setField(controller, "cmsTopicNodeService", nodeService);
         ReflectionTestUtils.setField(controller, "perkLedgerService", perkLedgerService);
         ReflectionTestUtils.setField(controller, "topicRouteRuntimeService", routeService);
+        com.chengyinhub.business.service.support.CompletedRouteFactReader completedRoutes =
+                mock(com.chengyinhub.business.service.support.CompletedRouteFactReader.class);
+        when(completedRoutes.findCurrentCompletedRoutes(PLAYER)).thenReturn(Collections.emptyList());
+        ReflectionTestUtils.setField(controller, "completedRouteFactReader", completedRoutes);
 
-        when(registrationService.selectExplorePassesByActivity(PLAYER)).thenReturn(Collections.emptyMap());
+        when(registrationService.selectCmsRegistrationList(any(CmsRegistration.class))).thenReturn(Collections.emptyList());
         when(routeService.sessionStatuses(any())).thenReturn(Collections.emptyMap());
         when(progressService.selectPlayerNodeProgressList(any())).thenReturn(new ArrayList<>());
     }
@@ -242,9 +246,10 @@ class ApiPlayMyCompletedSelfPlayContractTest
         when(topicService.selectCmsTopicById(ACTIVITY_TOPIC)).thenReturn(topic(ACTIVITY_TOPIC, "探索票主题"));
         CmsRegistration pass = new CmsRegistration();
         pass.setId(700L);
-        Map<Long, CmsRegistration> passes = new LinkedHashMap<>();
-        passes.put(ACTIVITY, pass);
-        when(registrationService.selectExplorePassesByActivity(PLAYER)).thenReturn(passes);
+        pass.setMemberId(PLAYER); pass.setOwnerType(2L); pass.setOwnerId(ACTIVITY);
+        pass.setPurchaseKind(com.chengyinhub.common.constant.PurchaseKind.EXPLORE_PASS);
+        pass.setRegistrationStatus(2); pass.setPaymentStatus(2);
+        when(registrationService.selectCmsRegistrationList(any(CmsRegistration.class))).thenReturn(Collections.singletonList(pass));
         when(perkLedgerService.isExploreCompleted(700L, ACTIVITY_TOPIC)).thenReturn(true);
         when(progressService.selectPlayerNodeProgressList(any())).thenReturn(new ArrayList<>());
 

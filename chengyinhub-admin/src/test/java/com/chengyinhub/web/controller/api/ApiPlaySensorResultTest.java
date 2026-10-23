@@ -113,6 +113,7 @@ class ApiPlaySensorResultTest {
         when(completion.grantOnce(MEMBER, TOPIC, ACTIVITY, null))
                 .thenReturn(new TopicCompletionAwardVO());
         CurrentPlayControllerFixtures.install(controller);
+        BasicPlayCommandFixtures.scope(controller, TOPIC);
     }
 
     @Test
@@ -453,7 +454,7 @@ class ApiPlaySensorResultTest {
         template.setSensorType("filter_shot");
         template.setSensorConfig("{\"filterStyle\":\"pet_pov\"}");
 
-        AjaxResult result = controller.checkin(String.valueOf(ACTIVITY), "NODE-CODE", null);
+        AjaxResult result = BasicPlayCommandFixtures.checkin(controller, String.valueOf(ACTIVITY), "NODE-CODE", null, null, null, null, String.valueOf(NODE));
 
         assertEquals(500, result.get("code"));
         assertEquals("该站需通过 App 滤镜相机完成", result.get("msg"));
@@ -626,8 +627,8 @@ class ApiPlaySensorResultTest {
 
     @Test
     void vm7CannotBypassSensorValidationThroughLegacyCompletionEndpoints() {
-        assertEquals(500, controller.checkin(String.valueOf(ACTIVITY), "NODE-CODE", null).get("code"));
-        assertEquals(500, controller.arrive(String.valueOf(ACTIVITY), String.valueOf(NODE), null, null, null).get("code"));
+        assertEquals(500, BasicPlayCommandFixtures.checkin(controller, String.valueOf(ACTIVITY), "NODE-CODE", null, null, null, null, String.valueOf(NODE)).get("code"));
+        assertEquals(500, BasicPlayCommandFixtures.arrive(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), null, null, null).get("code"));
         assertEquals(500, controller.photo(String.valueOf(ACTIVITY), String.valueOf(NODE), "photo.jpg", null).get("code"));
         verify(progressService, never()).insertPlayerNodeProgress(any());
     }

@@ -88,11 +88,21 @@ public class CoopSettlementClaimServiceImpl implements ICoopSettlementClaimServi
         }
         CoopSettlementSnapshot snapshot = snapshotReader.read(order);
         if (snapshot == null) throw manualRepair("coop_order 冻结快照尚未接入");
+        CoopSettlementContract.requireSupportedCashPath(snapshot);
         snapshot.setSettlementSnapshotAt(settlementSnapshotAt);
         Date cutoff = windowResolver.endExclusive(snapshot);
-        if (cutoff == null) throw manualRepair("FulfillmentWindowResolver 无 endExclusive");
+        if (cutoff == null || !cutoff.equals(snapshot.getFulfillmentEndExclusive())
+                || snapshot.getFulfillmentStartInclusive() == null
+                || !snapshot.getFulfillmentStartInclusive().before(cutoff)
+                || settlementSnapshotAt == null || settlementSnapshotAt.before(cutoff)) {
+            throw manualRepair("FROZEN_FULFILLMENT_WINDOW_NOT_CLOSED");
+        }
         List<CoopSettlementCandidate> candidates = evidenceService.lockCandidates(snapshot, cutoff);
+        evidenceService.requireUnrefundedCashBasis(snapshot.getTopicId());
         List<CoopSettlementOriginLine> lines = CoopSettlementContract.originLines(snapshot, candidates, cutoff);
+        if (!"NONE".equals(snapshot.getCompensationMode()) && lines.isEmpty()) {
+            throw manualRepair("NO_PROVEN_FULFILLMENT:不得以零元终态消耗合作单");
+        }
         String route = "NONE".equals(snapshot.getCompensationMode()) ? "NONE" : "COOP_ORDER";
         return new CoopSettlementPlan(snapshot, route, lines);
     }

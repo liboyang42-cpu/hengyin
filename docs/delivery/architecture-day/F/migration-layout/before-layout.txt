@@ -1,0 +1,12 @@
+== [1/2] 迁移目录门:migration_*.sql 必须在 chengyinhub-admin/sql/ 第一层 ==
+::error::发现放错目录的迁移文件 —— migration_*.sql 必须在 chengyinhub-admin/sql/ 第一层
+  ✗ ./docs/delivery/architecture-day/D/sql/migration_20261023_d_official_broadcast_delivery.sql
+  ✗ ./sql/migration_20261023_cash_withdraw_fund_fact.sql
+  为什么:release-manifest.sh 只扫 chengyinhub-admin/sql(find -maxdepth 1),放别处的迁移
+          不进 release-manifest.json、预检也扫不到 → 静默漏落库(不报错、不炸、零告警)
+  怎么修:
+    git mv ./docs/delivery/architecture-day/D/sql/migration_20261023_d_official_broadcast_delivery.sql chengyinhub-admin/sql/
+    git mv ./sql/migration_20261023_cash_withdraw_fund_fact.sql chengyinhub-admin/sql/
+== [2/2] 新增 SQL 前缀门:要在库上跑的 SQL 一律 migration_* ==
+  OK: 本分支(相对 origin/master)新增/修改的 SQL 前缀均合规
+迁移布局门禁:未通过

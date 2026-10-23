@@ -42,6 +42,7 @@ class ClubLeadChapterIntentTest {
             state.setCurrentChapterId(i.getArgument(4)); return 1;
         });
         when(receipts.selectReceiptForUpdate(eq(100L), eq(9L), anyString())).thenAnswer(i -> saved.get(i.getArgument(2)));
+        when(receipts.selectReceipt(eq(100L), eq(9L), anyString())).thenAnswer(i -> saved.get(i.getArgument(2)));
         when(receipts.insertReceiptClaim(any())).thenAnswer(i -> { GameCommandReceipt row = i.getArgument(0); row.setId(1L); saved.put(row.getRequestId(), row); return 1; });
         when(receipts.completeReceipt(any())).thenReturn(1);
     }
@@ -51,6 +52,7 @@ class ClubLeadChapterIntentTest {
         AjaxResult first = controller.unlockChapter("100", "one", 10L, 20L);
         assertEquals(200, first.get("code")); assertEquals(20L, state.getCurrentChapterId());
         assertEquals(first, controller.unlockChapter("100", "one", 10L, 20L));
+        assertEquals(first, controller.unlockChapterReceipt("100", "one"));
         assertEquals(409, controller.unlockChapter("100", "one", 20L, 30L).get("code"));
         assertEquals(20L, state.getCurrentChapterId());
         verify(states, times(1)).unlockChapterCas(anyLong(), anyLong(), anyLong(), any(), anyLong());
@@ -65,10 +67,25 @@ class ClubLeadChapterIntentTest {
     }
     @Test void firstChapterExplicitZeroAndLastChapterCannotAdvance() {
         state.setCurrentChapterId(null);
-        assertEquals(200, controller.unlockChapter("100", "first", 0L, 10L).get("code"));
+        AjaxResult first = controller.unlockChapter("100", "first", 0L, 10L);
+        assertEquals(200, first.get("code"));
+        assertEquals(first, controller.unlockChapter("100", "first", 0L, 10L));
+        assertEquals(first, controller.unlockChapterReceipt("100", "first"));
         state.setCurrentChapterId(30L);
         assertNotEquals(200, controller.unlockChapter("100", "last", 30L, 40L).get("code"));
         assertEquals(30L, state.getCurrentChapterId());
+    }
+    @Test void largeChapterIdsHaveTheSameFirstReplayAndReadReceipt() {
+        ICmsTopicChapterService chapters = (ICmsTopicChapterService) ReflectionTestUtils.getField(controller, "cmsTopicChapterService");
+        long expected = (long) Integer.MAX_VALUE + 10;
+        long target = expected + 1;
+        state.setCurrentChapterId(expected);
+        when(chapters.selectCmsTopicChapterList(any())).thenReturn(new ArrayList<>(Arrays.asList(chapter(expected), chapter(target))));
+        AjaxResult first = controller.unlockChapter("100", "large", expected, target);
+        assertEquals(200, first.get("code"));
+        assertEquals(first, controller.unlockChapter("100", "large", expected, target));
+        assertEquals(first, controller.unlockChapterReceipt("100", "large"));
+        assertEquals(target, ((Map<?, ?>) first.get("data")).get("targetChapterId"));
     }
     @Test void handoverRevokesOldLeaderBeforeReplayAndStatusMustBeRunning() {
         controller.unlockChapter("100", "one", 10L, 20L);

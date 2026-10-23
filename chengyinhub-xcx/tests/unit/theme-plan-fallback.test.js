@@ -70,7 +70,9 @@ test('默认只读适配固定 shared/control 路径并保留回调与 app 接�
 });
 test('兜底未知结果只能核对原回执，不重发 PLAN_FALLBACK', () => {
   let checks = 0;
-  const page = { _pendingCommand: { action: 'PLAN_FALLBACK' }, onReconcileUnknownWrite() { checks++; return 'read'; } };
+  const page = { ...DIRECTOR_METHODS, _activityId: 5, _pendingCommand: { action: 'PLAN_FALLBACK' }, onReconcileUnknownWrite() { checks++; return 'read'; } };
+  global.getApp = () => ({ getUserID: () => '7', getAuthorization: () => 'unit-session' });
+  global.getCurrentPages = () => [page];
   assert.equal(DIRECTOR_METHODS.retryUnknownWrite.call(page), 'read'); assert.equal(checks, 1);
 });
 
@@ -80,6 +82,8 @@ test('兜底回执只接受匹配的 APPLIED fallback 结局，收尾原因保�
   page.applyPlanFallbackReceipt({ raw: { receipt: { ...raw.receipt, outcome: 'FAILED' } } }); assert.equal(page.data.planFallbackResult, null);
   page.applyPlanFallbackReceipt({ raw }); assert.equal(page.data.planFallbackSheet, false); assert.deepEqual(page.data.planFallbackResult, { endingKey: 'stop', title: '停在这里', reason: '全部队长拒绝' });
   let reads = 0;
-  const restored = { _pendingReceiptIndex: { action: 'PLAN_FALLBACK' }, onReconcileUnknownWrite() { reads++; } };
+  const restored = { ...DIRECTOR_METHODS, _activityId: 5, _pendingReceiptIndex: { action: 'PLAN_FALLBACK' }, onReconcileUnknownWrite() { reads++; } };
+  global.getApp = () => ({ getUserID: () => '7', getAuthorization: () => 'unit-session' });
+  global.getCurrentPages = () => [restored];
   DIRECTOR_METHODS.retryUnknownWrite.call(restored); assert.equal(reads, 1);
 });
