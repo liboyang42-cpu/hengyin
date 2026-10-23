@@ -1,0 +1,74 @@
+{
+  "core_source": "07172e6fddf28f99ea4ad214b5c92cfe7608e441",
+  "coverage_rows": {
+    "A": {
+      "actual_unique_rows": 15,
+      "duplicate_rows": 0,
+      "expected": 15
+    },
+    "G": {
+      "actual_unique_rows": 6,
+      "duplicate_rows": 0,
+      "expected": 6
+    },
+    "Q": {
+      "actual_unique_rows": 10,
+      "duplicate_rows": 0,
+      "expected": 10
+    },
+    "T": {
+      "actual_unique_rows": 22,
+      "duplicate_rows": 0,
+      "expected": 22
+    },
+    "WP": {
+      "actual_unique_rows": 18,
+      "duplicate_rows": 0,
+      "expected": 18
+    }
+  },
+  "diff_check": {
+    "staged": 0,
+    "status": "PASS",
+    "worktree": 0
+  },
+  "files_sha256": {
+    "REPORT.md": "64085779aff7bb452a37995cc1d291a4d5a3e74e3ba2742b7946d856efc6ae86",
+    "evidence-07172.json": "1d4f21daa090e2e3eea6f40fe63ba4970f64022c35b36a7df182adb808e637bc",
+    "historical-6788-evidence.json": "32c28dfa6b664610ec0ad82e8290d5f23f454158db35a970b59cecb42d3643c4",
+    "queries.md": "13b099edba90d2209f59f1b753761a3713b96d1fc1bfa37886dc142fe59d3553"
+  },
+  "frozen_gate_baseline_producer_bytes": "UNCHANGED",
+  "gitleaks": {
+    "exit_code": 0,
+    "leaks": 0,
+    "scope": "isolated copy of task staged files",
+    "version": "8.21.2"
+  },
+  "governance_doc_sha256": "aa0469b16953b604639305f1db13400e16545519d9c386a4f6a5c2ab8da24043",
+  "historic_evidence_exact_bytes_preserved": true,
+  "host_specific_private_paths": "NONE",
+  "java_mysql_jdeps_ci": "NOT_EXECUTED_IN_THIS_TASK; CORE07172_RUN_RESULTS_NOT_READ_BACK",
+  "json_files_parse": "PASS",
+  "kind": "DOC_ONLY_DELIVERY_VERIFICATION_NOT_BUSINESS_ACCEPTANCE",
+  "new_tests_or_policy": "NONE",
+  "parent": "4a6e3cf423594f4e4dc4b30aa769a90048f6aa6e",
+  "query_python_syntax": "AST_PARSE_PASS_NOT_GATE_TEST",
+  "scope": "ONLY_THIS_F_DOC_DIRECTORY",
+  "secret_file_gate": {
+    "scope": "only 5 new F documentation files",
+    "status": "PASS",
+    "violations": 0
+  },
+  "source_query_output": {
+    "production_changed_paths": 60,
+    "propagation_other_importers": 25,
+    "test_changed_paths": 127
+  },
+  "three_change_drills": {
+    "gameplay_rule": "NOT_EXECUTED",
+    "notification_channel": "NOT_EXECUTED",
+    "statistics_query": "NOT_EXECUTED"
+  },
+  "wp_titles_match_authoritative_spec": true
+}
