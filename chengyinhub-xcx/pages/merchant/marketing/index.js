@@ -1,5 +1,5 @@
 const app = getApp();
-const merchantTheme = require('../../../utils/merchant-theme.js'); const PM = require('../../../utils/page-motion.js');
+const merchantTheme = require('../../../utils/merchant-theme.js'); const pageMotion = require('../../../utils/page-motion.js');
 const { ensureSession } = require('../utils/session/ensure-session.js');
 const { normalizeMarketingHome } = require('../utils/merchant-aggregate.js');
 const { isRecord } = require('../../../utils/response-shape.js');
@@ -167,7 +167,7 @@ Page({
   },
 
   onLoad() {
-    this._unloaded = false; PM.enter(this, 'pmPage'); // 2026-10-23:营销各块依次浮上来
+    this._unloaded = false; pageMotion.enter(this, 'pmPage'); // 2026-10-23:营销各块依次浮上来
     this._skipNextShowReload = true;
     this._scopeMemberId = currentMemberId();
     const gd = app.globalData || {};
@@ -301,7 +301,7 @@ Page({
           return;
         }
         const couponView = buildCouponCard(home.coupons);
-        if (!that._heroCounted) { that._heroCounted = true; PM.countIn(that, 'mkK'); } // 2026-10-23:数字第一次到达时从 0 数上去
+        if (!that._heroCounted) { that._heroCounted = true; pageMotion.countIn(that, 'mkK'); } // 2026-10-23:数字第一次到达时从 0 数上去
         that.setData({
           hero: that._buildHero(rows, 30),
           couponCard: couponView.couponCard,

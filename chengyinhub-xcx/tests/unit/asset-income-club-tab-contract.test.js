@@ -19,6 +19,7 @@ function loadDefinition(source, app) {
     if (request.includes('merchant-theme')) return {}
     // 2026-09-15 提现改弹客服微信后 scene-merchant-profit 多了一条 require;本组件测试不驱动提现。
     if (request.includes('withdraw-cs')) return { showWithdrawCsPopup() {} }
+    if (request.includes('page-motion')) return require('../../utils/page-motion.js') // 2026-10-23 入场动效
     throw new Error(`unexpected require: ${request}`)
   }
   new Function('Component', 'getApp', 'require', 'wx', source)(component, () => app, localRequire, {})

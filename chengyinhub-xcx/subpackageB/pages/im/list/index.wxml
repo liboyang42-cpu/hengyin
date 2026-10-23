@@ -58,7 +58,7 @@
             bindcta="onEmptyCta" />
 
   <!-- 列表 -->
-  <scroll-view class="body" wx:else scroll-y enhanced show-scrollbar="{{false}}">
+  <scroll-view class="body" wx:else scroll-y enhanced show-scrollbar="{{false}}" style="{{pmList === 1 ? '--pm-l:1;' : (pmList === 2 ? '--pm-l-d:.32s;--pm-l-s:1;' : '')}}">
     <view class="conv-wrap {{item._open ? 'is-open' : ''}}" wx:for="{{viewList}}" wx:key="conversationId">
       <!-- 左滑露出的操作 -->
       <view class="conv-actions" style="opacity: {{item.offset ? 1 : 0}};">

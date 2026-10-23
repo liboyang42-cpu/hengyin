@@ -14,9 +14,9 @@
     <view class="hs-tool" data-key="export" bindtap="openTool" aria-role="button" aria-label="导出探索记录" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="download" size="31" /><text>导出</text></view>
   </view>
 
-  <view class="hs-scroll">
+  <view class="hs-scroll" style="{{pmList === 1 ? '--pm-l:1;' : (pmList === 2 ? '--pm-l-d:.32s;--pm-l-s:1;' : '')}}">
     <view class="rc" wx:for="{{list}}" wx:key="ts" bindtap="openSession" data-ts="{{item.ts}}"
-          aria-role="button" aria-label="{{item.dateShort}} {{item.title}},{{item.distanceText || 0}}公里" hover-class="cy-pressed" hover-stay-time="80">
+          aria-role="button" aria-label="{{item.dateShort}} {{item.title}},{{item.distanceText || 0}}公里" hover-class="cy-pressed" hover-stay-time="80" style="--pmi:{{index}};">
       <view class="rc__main">
         <view class="rc__thumb">
           <image wx:if="{{item.cover}}" class="rc__thumb-image" src="{{item.cover}}" mode="aspectFill" />

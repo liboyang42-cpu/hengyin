@@ -133,3 +133,15 @@ page { background: var(--cy-bg-page); }
 .invite-status { flex-shrink: 0; margin-left: var(--cy-space-1-5); font-size: var(--cy-type-micro); font-weight: 700; color: var(--cy-color-text-secondary); }
 .invite-status.is-pending { color: var(--cy-color-status-info); }
 .invite-status.is-accepted { color: var(--cy-color-status-success); }
+
+/* pm20 */
+/* 2026-10-23 页面动效(utils/page-motion.js):容器 --pm-* 置 1 时先隐着,再依次浮上来;静止时无过渡,按压反馈不受影响;减少动态效果时从不触发 */
+.conv-wrap { filter: opacity(calc(1 - var(--pm-l, 0))); translate: 0 calc(var(--pm-l, 0) * 31rpx); transition: filter var(--pm-l-d, 0s) ease, translate var(--pm-l-d, 0s) cubic-bezier(.2,.82,.2,1), transform var(--cy-motion-press) var(--cy-ease-out), opacity var(--cy-motion-press) var(--cy-ease-out); transition-delay: calc(var(--pm-l-s, 0) * 0ms), calc(var(--pm-l-s, 0) * 0ms), 0s, 0s; }
+.conv-wrap:nth-child(2) { transition-delay: calc(var(--pm-l-s, 0) * 30ms), calc(var(--pm-l-s, 0) * 30ms), 0s, 0s; }
+.conv-wrap:nth-child(3) { transition-delay: calc(var(--pm-l-s, 0) * 60ms), calc(var(--pm-l-s, 0) * 60ms), 0s, 0s; }
+.conv-wrap:nth-child(4) { transition-delay: calc(var(--pm-l-s, 0) * 90ms), calc(var(--pm-l-s, 0) * 90ms), 0s, 0s; }
+.conv-wrap:nth-child(5) { transition-delay: calc(var(--pm-l-s, 0) * 120ms), calc(var(--pm-l-s, 0) * 120ms), 0s, 0s; }
+.conv-wrap:nth-child(6) { transition-delay: calc(var(--pm-l-s, 0) * 150ms), calc(var(--pm-l-s, 0) * 150ms), 0s, 0s; }
+.conv-wrap:nth-child(7) { transition-delay: calc(var(--pm-l-s, 0) * 180ms), calc(var(--pm-l-s, 0) * 180ms), 0s, 0s; }
+.conv-wrap:nth-child(8) { transition-delay: calc(var(--pm-l-s, 0) * 210ms), calc(var(--pm-l-s, 0) * 210ms), 0s, 0s; }
+.conv-wrap:nth-child(n+9) { transition-delay: calc(var(--pm-l-s, 0) * 240ms), calc(var(--pm-l-s, 0) * 240ms), 0s, 0s; }

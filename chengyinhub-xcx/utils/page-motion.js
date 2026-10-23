@@ -14,9 +14,12 @@ function reduced(page) {
   return !!(page && page.data && page.data.reducedMotion) || readReducedMotion();
 }
 
+// 测试沙箱等没有计时器的环境里不做动效(内容照常显示)
+const hasTimers = () => typeof setTimeout === 'function' && typeof clearTimeout === 'function';
+
 function enter(page, key) {
   const k = key || 'pmPre';
-  if (!page || typeof page.setData !== 'function' || reduced(page)) return;
+  if (!page || typeof page.setData !== 'function' || !hasTimers() || reduced(page)) return;
   page.setData({ [k]: 1 });
   clearTimeout(page['_' + k + 'Timer']);
   const alive = () => !page._unloaded && !page._detached;
@@ -31,7 +34,7 @@ function enter(page, key) {
  * 模板用 utils/wxs/count.wxs 的 f(真实值, key) 显示 —— 真实值不动,只是显示按比例缩放;拿不到数就原样显示。
  * 只在页面第一次拿到数据时调用,刷新不再重数。 */
 function countIn(page, key, options) {
-  if (!page || typeof page.setData !== 'function' || reduced(page)) return;
+  if (!page || typeof page.setData !== 'function' || !hasTimers() || reduced(page)) return;
   const stops = page._pmCounters || (page._pmCounters = {});
   if (stops[key]) stops[key]();
   const alive = () => !page._unloaded && !page._detached;

@@ -1,5 +1,5 @@
 const modal = require('../../../utils/modal.js');
-const toast = require('../../../utils/toast.js'); const PM = require('../../../utils/page-motion.js');
+const toast = require('../../../utils/toast.js'); const pageMotion = require('../../../utils/page-motion.js');
 const { readPageStyle } = require('../../../utils/font-scale.js');
 const app = getApp();
 const roleGuard = require('../../../utils/roleGuard.js');
@@ -74,7 +74,7 @@ Page({
   onTopTabChange(e) {
     const key = e.detail.key;
     if (!key || key === this.data.activeTopTab) return;
-    PM.enter(this, key === 'feed' ? 'pmFeed' : 'pmClubs'); this.setData({ activeTopTab: key }); // 2026-10-23:切标签卡片依次浮上来
+    pageMotion.enter(this, key === 'feed' ? 'pmFeed' : 'pmClubs'); this.setData({ activeTopTab: key }); // 2026-10-23:切标签卡片依次浮上来
     if (key === 'feed' && this.data.feedState === 'idle') this.loadFeed();
   },
 
@@ -114,7 +114,7 @@ Page({
             || res.data.clubCount < 0) return fail(res, 'data');
         const rows = res.data.rows;
         const noClub = res.data.clubCount === 0;
-        that._feedLoading = false; PM.enter(that, 'pmFeed');
+        that._feedLoading = false; pageMotion.enter(that, 'pmFeed');
         that.setData({
           feed: rows.map(function (p) {
             // refType 的编号就是广场的 dataType;后端投影不出 sportName(被引对象已删/下架)时
@@ -360,7 +360,7 @@ Page({
         joined.forEach(function (c) { c.isJoined = true; });
         var nearby = d.nearby.map(normalizeClub);
         that._clubHomeLoading = false;
-        that._nearbyAll = nearby; PM.enter(that, 'pmClubs');
+        that._nearbyAll = nearby; pageMotion.enter(that, 'pmClubs');
         that.setData({
           myClubs: owned,
           myClubCount: owned.length,

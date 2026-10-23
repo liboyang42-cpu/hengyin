@@ -122,7 +122,7 @@
     <view class="sq-refresh-status" wx:if="{{isRefreshing}}" aria-live="polite">正在刷新动态…</view>
 
     <cy-empty wx:if="{{!communityPostRead}}" kind="no-permission" title="当前账号未开放社区" sub="其他城市探索功能仍可使用" />
-    <view class="list">
+    <view class="list" style="{{pmList === 1 ? '--pm-l:1;' : (pmList === 2 ? '--pm-l-d:.32s;--pm-l-s:1;' : '')}}">
       <cy-post-card wx:for="{{list}}" wx:key="id" post="{{item}}" index="{{index}}" user-id="{{userId}}"
         show-follow show-more show-share show-favorite interactive-actions interactive-user interactive-media
         accessibility-label="查看{{item.memberNickname || '城瘾玩家'}}的动态"

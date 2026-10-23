@@ -1,6 +1,6 @@
 'use strict'
 
-const { currentPlayerRoamMemory } = require('../../../utils/roam-player-memory.js')
+const { currentPlayerRoamMemory } = require('../../../utils/roam-player-memory.js'); const pageMotion = require('../../../utils/page-motion.js')
 const { validRecovery } = require('../../../utils/roam-recovery.js')
 const { readNonNegative } = require('../../../utils/roam-history-metrics.js')
 const WEEK = ['日', '一', '二', '三', '四', '五', '六']
@@ -61,7 +61,7 @@ Component({
         if (session.shopsValue === null) shopsKnown = false
         else shops += session.shopsValue
       })
-      this.setData({
+      pageMotion.enter(this, 'pmList'); this.setData({
         list,
         state: 'ready',
         inProgress: this._inProgress === true,

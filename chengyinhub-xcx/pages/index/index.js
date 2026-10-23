@@ -1,4 +1,4 @@
-const modal = require('../../utils/modal.js'); const PM = require('../../utils/page-motion.js');
+const modal = require('../../utils/modal.js'); const pageMotion = require('../../utils/page-motion.js');
 const cyLoading = require('../../utils/loading.js');
 const cyToast = require('../../utils/toast.js');
 const { readPageStyle } = require('../../utils/font-scale.js');
@@ -1204,7 +1204,7 @@ Page({
 
           const dataObj = {};
           dataObj[listName] = list;
-          dataObj['listErr.' + listName] = false; PM.enter(that, 'pm_' + listName); // 2026-10-23:列表到达时依次浮上来
+          dataObj['listErr.' + listName] = false; pageMotion.enter(that, 'pm_' + listName); // 2026-10-23:列表到达时依次浮上来
           that.setData(dataObj, function () {
             if (listName === 'nearbyActivityList' || listName === 'recommendedTopicList') {
               that._buildRecoHero();
@@ -1306,7 +1306,7 @@ loadBottomTopicList: function(pageNo, isRefresh = false) {
         const totalPages = Math.ceil(total / that.data.pageSize);
         
         if (isRefresh) {
-          PM.enter(that, 'pmFeed'); // 刷新时替换数据(2026-10-23:新的一页依次浮上来)
+          pageMotion.enter(that, 'pmFeed'); // 刷新时替换数据(2026-10-23:新的一页依次浮上来)
           that.setData({
             bottomTopicList: decorateImgs(list),
             bottomTopicPageNo: pageNo,
@@ -1413,7 +1413,7 @@ loadBottomActivityList: function(pageNo, isRefresh = false) {
         const totalPages = Math.ceil(total / that.data.pageSize);
         
         if (isRefresh) {
-          PM.enter(that, 'pmFeed'); // 刷新时替换数据(2026-10-23:新的一页依次浮上来)
+          pageMotion.enter(that, 'pmFeed'); // 刷新时替换数据(2026-10-23:新的一页依次浮上来)
           that.setData({
             bottomActivityList: decorateImgs(list),
             bottomActivityPageNo: pageNo,

@@ -1,4 +1,4 @@
-const modal = require('../../../utils/modal.js');
+const modal = require('../../../utils/modal.js'); const pageMotion = require('../../../utils/page-motion.js');
 const subscribe = require('../../../utils/subscribe.js');
 const cyLoading = require('../../../utils/loading.js');
 const toast = require('../../../utils/toast.js');
@@ -311,7 +311,7 @@ Page({
         const sent = decorate(d.sent, d.slots);
         // 回邀约的挂接与过滤无关:过滤只换显示,状态真源留在实例上(未过滤的那一份)
         that._sentAll = sent;
-        that.setData({
+        pageMotion.enter(that, 'pmList'); that.setData({
           received: that.applyTopicFilter(decorate(d.received, d.slots)),
           sent: that.applyTopicFilter(sent),
           receivedApplies: that.applyTopicFilter(linkRepliedApplies(that._receivedApplyLoadedScope === scope ? that.data.receivedApplies : [], sent)),

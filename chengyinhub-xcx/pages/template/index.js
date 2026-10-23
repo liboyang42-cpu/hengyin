@@ -1,5 +1,5 @@
 const { readReducedMotion } = require('../../utils/motion-preference.js');
-const modal = require('../../utils/modal.js'); const PM = require('../../utils/page-motion.js');
+const modal = require('../../utils/modal.js'); const pageMotion = require('../../utils/page-motion.js');
 const cyToast = require('../../utils/toast.js');
 const { readPageStyle } = require('../../utils/font-scale.js');
 const app = getApp();
@@ -448,7 +448,7 @@ Page({
     // 同时 `topList: cat ? top : top.slice(1)` 只在不选分类时把横幅项摘掉,选了分类就
     // 横幅 + 列表各出现一次,同一张卡同屏两遍。横幅只认分类命中的首项,列表一律去重。
     const banner = top[0] || {};
-    const searching = !!keyword; PM.enter(this, 'pmList'); // 2026-10-23:换品类 / 标签 / 搜索后卡片依次浮上来
+    const searching = !!keyword; pageMotion.enter(this, 'pmList'); // 2026-10-23:换品类 / 标签 / 搜索后卡片依次浮上来
     this.setData({
       banner: banner,
       // activeCat=0 走运营编排,所以叫「推荐」不叫「全部」—— 叫全部会让用户
