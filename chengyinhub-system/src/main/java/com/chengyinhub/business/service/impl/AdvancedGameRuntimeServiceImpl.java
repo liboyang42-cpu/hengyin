@@ -461,6 +461,10 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         }
         // C1:提交带了 attemptId 就必须是本人当前这一次开表(没用过、没过期)
         String attemptGame = ATTEMPT_BOUND_SUBMITS.get(normalizedAction);
+        // 队伍共享局:各成员各自开表,开表时间与挑战身份按成员各存一份,提交时共享段上只摆本人那份。
+        // 队友重开不再作废本人手里的号(W48R SHOULD-FIX 2);次数/交过/通过仍是全队共享口径。
+        boolean teamAttemptSlots = !zeroChallengeSession && Integer.valueOf(GameRuntimeSession.OWNER_TEAM).equals(session.getOwnerType());
+        boolean ownTeamSlot = teamAttemptSlots && attemptGame != null && restoreTeamMemberChallenge(state, attemptGame, memberId);
         if (attemptGame != null && !challengeTimedOut) requireCurrentAttempt(state.path(attemptGame), safePayload, memberId);
         if (!challengeTimedOut) switch (normalizedAction) {
             case "DRAW":
@@ -537,6 +541,7 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
                     JsonNode issued = state.path(startedGame).path("attempt");
                     if (issued.isObject()) state.with("zeroChallengeAttempts").with(String.valueOf(memberId)).set(startedGame, issued.deepCopy());
                 }
+                if (teamAttemptSlots && ATTEMPT_BOUND_SUBMITS.containsValue(challengeKey(safePayload))) saveTeamMemberChallenge(state, challengeKey(safePayload), memberId);
                 break;
             case "SUBMIT_REACTION":
                 submitReaction(config, state, safePayload);
@@ -600,6 +605,7 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         }
         // 交过一次,这个挑战身份就作废(单次消费);还有次数的停表要重新开始拿新的
         if (attemptGame != null && !challengeTimedOut) consumeAttempt(state.path(attemptGame));
+        if (ownTeamSlot && !challengeTimedOut) saveTeamMemberChallenge(state, attemptGame, memberId);
 
         if (challengeObjectiveSubmission) for (String kind : Arrays.asList("qa", "sort", "match", "classify"))
             if (state.has(kind)) state.with("zeroChallengeObjectives").with(String.valueOf(memberId)).set(kind, state.get(kind).deepCopy());
@@ -3085,14 +3091,42 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         if (clock.now().getTime() > attempt.path("expiresAtMs").asLong(0L)) throw new IllegalStateException("这一次挑战已经过期，请重新开始");
     }
 
+    /** 队伍共享局按成员存的开表现场:{memberId: {game: {startedAtMs, attempt}}} */
+    private static final String TEAM_MEMBER_CHALLENGES = "teamMemberChallenges";
+
+    /** 把本人那份开表现场摆回共享段;本人没有(升级前开的表)就按原共享口径,返回 false */
+    private boolean restoreTeamMemberChallenge(ObjectNode state, String game, Long memberId) {
+        JsonNode own = state.path(TEAM_MEMBER_CHALLENGES).path(String.valueOf(memberId)).path(game);
+        if (!own.isObject()) return false;
+        ObjectNode mechanic = state.with(game);
+        if (own.path("startedAtMs").isNumber()) mechanic.put("startedAtMs", own.path("startedAtMs").asLong()); else mechanic.remove("startedAtMs");
+        if (own.path("attempt").isObject()) mechanic.set("attempt", own.path("attempt").deepCopy()); else mechanic.remove("attempt");
+        return true;
+    }
+
+    /** 共享段上本人这次开表/提交后的现场存回本人名下;别人的挑战身份不会被存进来 */
+    private void saveTeamMemberChallenge(ObjectNode state, String game, Long memberId) {
+        JsonNode mechanic = state.path(game);
+        ObjectNode own = state.with(TEAM_MEMBER_CHALLENGES).with(String.valueOf(memberId)).putObject(game);
+        if (mechanic.path("startedAtMs").isNumber()) own.put("startedAtMs", mechanic.path("startedAtMs").asLong());
+        JsonNode attempt = mechanic.path("attempt");
+        if (attempt.isObject() && memberId != null && memberId.longValue() == attempt.path("memberId").asLong(0L)) own.set("attempt", attempt.deepCopy());
+    }
+
     private void consumeAttempt(JsonNode node) {
         JsonNode attempt = node.path("attempt");
         if (attempt.isObject()) ((ObjectNode) attempt).put("used", true);
     }
 
-    /** 本人、未用、未过期的挑战身份才下发;别人的(队伍共享局)、交过的、过期的一律不给 */
-    private void putAttempt(Map<String, Object> value, JsonNode st, Long actorMemberId) {
-        JsonNode attempt = st.path("attempt");
+    /**
+     * 本人、未用、未过期的挑战身份才下发;别人的(队伍共享局)、交过的、过期的一律不给。
+     * 按成员各存的那份(队伍共享局 / 归零挑战)优先,共享段上可能是队友刚开的那份。
+     */
+    private void putAttempt(Map<String, Object> value, JsonNode state, String game, Long actorMemberId) {
+        String member = String.valueOf(actorMemberId);
+        JsonNode attempt = state.path(TEAM_MEMBER_CHALLENGES).path(member).path(game).path("attempt");
+        if (!attempt.isObject()) attempt = state.path("zeroChallengeAttempts").path(member).path(game);
+        if (!attempt.isObject()) attempt = state.path(game).path("attempt");
         if (!attempt.isObject() || attempt.path("used").asBoolean(false) || actorMemberId == null
                 || actorMemberId.longValue() != attempt.path("memberId").asLong(0L)
                 || clock.now().getTime() > attempt.path("expiresAtMs").asLong(0L)) return;
@@ -3355,7 +3389,7 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         if (st.has("lastDiffMs")) value.put("lastDiffMs", st.path("lastDiffMs").asLong(0L));
         if (st.has("bestDiffMs")) value.put("bestDiffMs", st.path("bestDiffMs").asLong(0L));
         // C1:服务端挑战身份 + 证据口径。设备自报那几段只算娱乐成绩,奖励上限由这里说了算,界面照着显示
-        putAttempt(value, st, actorMemberId);
+        putAttempt(value, state, game, actorMemberId);
         boolean selfReported = SELF_REPORTED_SECTIONS.contains(game);
         value.put("evidence", selfReported ? "SELF_REPORTED" : "SERVER_TIMED");
         value.put("rewardCeiling", (selfReported ? RewardPolicy.XP_BADGE_ONLY : RewardPolicy.FULL).name());
@@ -4019,7 +4053,7 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
             putText(value, "hint", cfg);
             value.put("xp", cfg.path("xp").asInt(0));
             value.put("done", state.path("compass").path("done").asBoolean(false));
-            putAttempt(value, state.path("compass"), actorMemberId);
+            putAttempt(value, state, "compass", actorMemberId);
             value.put("evidence", "SELF_REPORTED");
             value.put("rewardCeiling", RewardPolicy.XP_BADGE_ONLY.name());
             kit.put("compass", value);
