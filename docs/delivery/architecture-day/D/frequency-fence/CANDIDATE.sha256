@@ -1,0 +1,6 @@
+75c5846963837d13961612f89c0515435dddacec557666f442d5e326bd295bc4  chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OfficialBroadcastServiceImpl.java
+9ff2b97bd31138188099ea681b6929d06577be075498afec9266667a4e73ea63  chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/OfficialBroadcastDeliveryTest.java
+6ccc791d38b20e8217cd2c953ee490a2207c5519b0011befdd73dcf4b80f0ca9  chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/OfficialBroadcastDeliveryMySqlIT.java
+f60fd9f9887c17fbda45900dd42437e5426aad35abf0753a07f97a1a9db9e051  chengyinhub-admin/src/test/resources/it-schema/official-broadcast-delivery-it-schema.sql
+e5b91694f431b160319c4d729deb6a0e1692d95df631329732ae30439519acc9  docs/delivery/architecture-day/D/frequency-fence/REPORT.md
+96a7a0d46e953dca2d7e74cfb65c45cbc88ce8b91ee368f07edc7bf540a2fbe3  docs/delivery/architecture-day/D/frequency-fence/verification.txt

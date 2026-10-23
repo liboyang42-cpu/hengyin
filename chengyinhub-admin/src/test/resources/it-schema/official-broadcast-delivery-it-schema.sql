@@ -31,3 +31,7 @@ CREATE TABLE `official_broadcast_log` (
   KEY `idx_broadcast` (`broadcast_id`),
   KEY `idx_obl_member_channel_reached_time` (`member_id`,`channel`,`reached`,`create_time`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='官方通知分发日志(uk 防重发)';
+
+-- Minimal existing-member lock fixture; production uses the existing ums_member primary key.
+-- Only lockMemberById is invoked here; unrelated member fields and money operations are not exercised.
+CREATE TABLE ums_member (id bigint NOT NULL PRIMARY KEY) ENGINE=InnoDB;

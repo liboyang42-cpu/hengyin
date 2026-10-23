@@ -53,6 +53,7 @@ class OfficialBroadcastDeliveryMySqlIT {
     private IImService im;
     private IWxSubscribeMsgService wx;
     private OfficialAudienceMapper audience;
+    private UmsMemberMapper members;
 
     private String required(String name) {
         String value = System.getenv(name);
@@ -101,11 +102,13 @@ class OfficialBroadcastDeliveryMySqlIT {
         factory.setTypeAliasesPackage("com.chengyinhub.business.domain");
         factory.setMapperLocations(new ClassPathResource("mapper/business/OfficialBroadcastMapper.xml"),
                 new ClassPathResource("mapper/business/OfficialBroadcastLogMapper.xml"),
+                new ClassPathResource("mapper/business/UmsMemberMapper.xml"),
                 new ClassPathResource("mapper/business/ImConversationMapper.xml"),
                 new ClassPathResource("mapper/business/ImConversationMemberMapper.xml"),
                 new ClassPathResource("mapper/business/ImMessageMapper.xml"));
         SqlSessionTemplate sessions = new SqlSessionTemplate(factory.getObject());
         logs = sessions.getMapper(OfficialBroadcastLogMapper.class);
+        members = sessions.getMapper(UmsMemberMapper.class);
         broadcasts = sessions.getMapper(OfficialBroadcastMapper.class);
         transactions = new DataSourceTransactionManager(source);
         ImServiceImpl target = new ImServiceImpl();
@@ -125,6 +128,8 @@ class OfficialBroadcastDeliveryMySqlIT {
         db.update("delete from im_message");
         db.update("delete from im_conversation_member");
         db.update("delete from im_conversation");
+        db.update("delete from ums_member");
+        db.update("insert into ums_member(id) values(10)");
         audience = mock(OfficialAudienceMapper.class);
         when(audience.selectPlayerIds(any())).thenReturn(Collections.singletonList(10L));
         wx = mock(IWxSubscribeMsgService.class);
@@ -150,6 +155,7 @@ class OfficialBroadcastDeliveryMySqlIT {
         ReflectionTestUtils.setField(result, "broadcastMapper", broadcasts);
         ReflectionTestUtils.setField(result, "logMapper", mapper);
         ReflectionTestUtils.setField(result, "audienceMapper", audience);
+        ReflectionTestUtils.setField(result, "memberMapper", members);
         ReflectionTestUtils.setField(result, "imService", im);
         ReflectionTestUtils.setField(result, "wxSubscribeMsgService", wx);
         ReflectionTestUtils.setField(result, "transactionManager", transactions);
@@ -160,6 +166,50 @@ class OfficialBroadcastDeliveryMySqlIT {
     private int messages() { return db.queryForObject("select count(*) from im_message", Integer.class); }
     private String state(Long id, String channel) {
         return db.queryForObject("select delivery_state from official_broadcast_log where broadcast_id=? and channel=?", String.class, id, channel);
+    }
+
+    @Test
+    void differentBroadcastsShareMemberFrequencyFenceAndDeferredIntentRecovers() throws Exception {
+        for (int i = 0; i < 4; i++) assertEquals(1, service(logs).dispatch(seed("inapp")));
+        assertEquals(4, messages());
+        assertEquals(4, logs.countRecentByMember(10L, 60));
+        OfficialBroadcast firstBroadcast = seed("inapp"), secondBroadcast = seed("inapp");
+        OfficialBroadcastLogMapper racing = mock(OfficialBroadcastLogMapper.class, delegatesTo(logs));
+        CyclicBarrier bothReadFour = new CyclicBarrier(2);
+        AtomicInteger stalePrechecks = new AtomicInteger();
+        doAnswer(call -> {
+            int count = logs.countRecentByMember(call.getArgument(0), call.getArgument(1));
+            if (!TransactionSynchronizationManager.isActualTransactionActive()) {
+                assertEquals(4, count, "force both old advisory prechecks to see the same four receipts");
+                stalePrechecks.incrementAndGet();
+                bothReadFour.await(10, TimeUnit.SECONDS);
+            }
+            return count;
+        }).when(racing).countRecentByMember(10L, 60);
+        ExecutorService workers = Executors.newFixedThreadPool(2);
+        try {
+            Future<Integer> first = workers.submit(() -> service(racing).dispatch(firstBroadcast));
+            Future<Integer> second = workers.submit(() -> service(racing).dispatch(secondBroadcast));
+            assertEquals(1, first.get(15, TimeUnit.SECONDS) + second.get(15, TimeUnit.SECONDS));
+        } finally {
+            workers.shutdownNow();
+        }
+        assertEquals(2, stalePrechecks.get());
+        assertEquals(5, messages(), "only one new real IM message may commit");
+        assertEquals(5, logs.countRecentByMember(10L, 60));
+        assertEquals(5, db.queryForObject("select count(*) from official_broadcast_log where delivery_state='SUCCESS'", Integer.class));
+        Long deferredId = db.queryForObject("select id from official_broadcast_log where delivery_state='PENDING'", Long.class);
+        Long deferredBroadcast = db.queryForObject("select broadcast_id from official_broadcast_log where id=?", Long.class, deferredId);
+        assertEquals(OfficialBroadcast.ST_PENDING, broadcasts.selectOfficialBroadcastById(deferredBroadcast).getStatus());
+        service(logs).runDueScheduled(); // fresh dispatcher cannot bypass the still-full window
+        assertEquals(5, messages());
+        assertEquals(deferredId, db.queryForObject("select id from official_broadcast_log where delivery_state='PENDING'", Long.class));
+        db.update("update official_broadcast_log set reached_time=date_sub(now(), interval 61 minute) where delivery_state='SUCCESS'");
+        service(logs).runDueScheduled(); // recover the same deferred identity after the window expires
+        assertEquals(6, messages());
+        assertEquals(OfficialBroadcastLog.SUCCESS, db.queryForObject("select delivery_state from official_broadcast_log where id=?", String.class, deferredId));
+        assertEquals(OfficialBroadcast.ST_SENT, broadcasts.selectOfficialBroadcastById(deferredBroadcast).getStatus());
+        verifyNoInteractions(wx);
     }
 
     @Test

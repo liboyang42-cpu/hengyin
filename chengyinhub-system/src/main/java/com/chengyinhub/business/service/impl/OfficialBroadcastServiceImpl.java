@@ -16,6 +16,7 @@ import com.chengyinhub.business.mapper.OfficialAudienceMapper;
 import com.chengyinhub.business.mapper.OfficialBroadcastLogMapper;
 import com.chengyinhub.business.mapper.OfficialBroadcastMapper;
 import com.chengyinhub.business.mapper.OfficialEventMapper;
+import com.chengyinhub.business.mapper.UmsMemberMapper;
 import com.chengyinhub.business.service.IImService;
 import com.chengyinhub.business.service.IOfficialBroadcastService;
 import com.chengyinhub.business.service.IOfficialEventV2Service;
@@ -55,6 +56,8 @@ public class OfficialBroadcastServiceImpl implements IOfficialBroadcastService {
     private OfficialBroadcastLogMapper logMapper;
     @Autowired
     private OfficialAudienceMapper audienceMapper;
+    @Autowired
+    private UmsMemberMapper memberMapper;
     @Autowired
     private IImService imService;
     @Autowired
@@ -133,6 +136,7 @@ public class OfficialBroadcastServiceImpl implements IOfficialBroadcastService {
                 lastMember = delivery.getMemberId();
                 capped = freqCapped(lastMember);
             }
+            // Advisory precheck preserves the existing channel policy; inapp enforces the cap under the member lock.
             if (capped) continue; // Keep the frozen intent; no fake success or deletion.
             if ("inapp".equals(delivery.getChannel())) deliverInapp(delivery);
             if ("subscribe".equals(delivery.getChannel())) deliverSubscribe(delivery);
@@ -210,9 +214,16 @@ public class OfficialBroadcastServiceImpl implements IOfficialBroadcastService {
     private void deliverInapp(OfficialBroadcastLog intent) {
         try {
             independent().executeWithoutResult(status -> {
+                // All broadcasts share this stable member mutex. Always acquire it BEFORE a delivery/IM lock.
+                Long memberId = intent.getMemberId();
+                if (memberId == null || !memberId.equals(memberMapper.lockMemberById(memberId))) return;
                 OfficialBroadcastLog row = logMapper.lockDelivery(intent.getId());
                 if (row == null || !(OfficialBroadcastLog.PENDING.equals(row.getDeliveryState())
                         || OfficialBroadcastLog.FAILED.equals(row.getDeliveryState()))) return;
+                if (!memberId.equals(row.getMemberId())) throw new ServiceException("通知接收人不一致");
+                // First consistent read in this fresh transaction: observe the previous holder's committed receipt.
+                // Hold the member fence through IM insertion and SUCCESS commit; capped intents remain retryable.
+                if (freqCapped(memberId)) return;
                 JSONObject extra = new JSONObject();
                 extra.put("title", row.getDeliveryTitle());
                 extra.put("sub", row.getDeliverySub());
