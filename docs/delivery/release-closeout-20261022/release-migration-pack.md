@@ -268,5 +268,14 @@ checksum 对账：如果生产有 `cy_migration_history` 表，按预检附录 A
 
 ## 7 CI 演练记录
 
-（PR 上的运行 ID 和结果见本节末尾，由 PR 推送后回填。）
+PR #551，head `cfa3544e`（本 pack 内容提交）：
+
+| Workflow | run ID | job | 结果 |
+|---|---|---|---|
+| Release migration rehearsal | **39927883146** | `rehearsal`（job 120328650404，ubuntu-24.04，`mysql:8.0.45@sha256:4af1f881…`） | **success**：静态契约 6/6；[1] 模拟基线（199 个快照后迁移）；[2] 基线预检 30/30 符合（29 NEEDED）；[3] 第一遍 30/30；[4] 执行后预检全部符合；[5] 第二遍零变更（仅声明的 `o14_city_code_backfill_log.write_time` 例外）；[6] 负控 7/7；[7] 风险探针复现 20261013 停在断言处、已提交 45 条页面授权；报告 artifact 12489104614 |
+| GitHub CI | 39927883253 | Migration layout gate / Migration safety gate / Fast gates / Secret scan / Mini program 各 job | 全部 success（Backend tests 等按路径过滤跳过） |
+| Funds MySQL IT | 39927883161 | 2 个 job | success |
+| Isolated authenticated Redis recovery | 39927883343 | 1 个 job | success |
+
+本提交只改本文件这一节，不改演练输入（pack .json / 预检 .sql / 脚本），所以上表结果对新 head 同样适用。
 
