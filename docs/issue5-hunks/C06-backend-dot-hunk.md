@@ -83,6 +83,14 @@ Tests run: 17, Failures: 0, Errors: 0, Skipped: 0
 BUILD SUCCESS
 ```
 
+`requeryPublished` of null/blank/never-seen does not occupy `publishedByRequestId`; later unique `publishApproved` of that original requestId is the first write. Did not invent `recoverOriginal`. 2026-10-23T23:44:26Z HEAD `708423c11`：
+
+```
+Tests run: 5 -- C06AccountSwitchRestartIsolationTest
+Tests run: 18, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS
+```
+
 App / 真库 / CI = NOT_RUN。
 
 SHA256（生产 4 类）：
