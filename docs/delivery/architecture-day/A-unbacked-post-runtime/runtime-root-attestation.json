@@ -1,0 +1,42 @@
+{
+  "provenance": "Coordinator root explicitly reported original XML/receipt download and readback in this task message; A did not download artifacts independently",
+  "source_sha": "2a2f37e8a7e7c357be390b586d889ec7535a1937",
+  "run_id": "40040570934",
+  "run_url": "https://github.com/liboyang42-cpu/hengyin/actions/runs/40040570934",
+  "branch": "codex/architecture-day-admin-post-evidence-20261023",
+  "class": "com.chengyinhub.business.service.RegistrationFundsMybatisIntegrationTest",
+  "executed": 95,
+  "passed": 94,
+  "failures": 1,
+  "errors": 0,
+  "skipped": 0,
+  "cleanup": "CLEAN",
+  "only_failure": {
+    "method": "bareAdminPostCannotCreateUnbackedPointsOrInventoryToRelease",
+    "source_line": 407,
+    "assertion": "member 8 points after bare admin insert and original-member cancellation",
+    "expected": 37,
+    "actual": 1037,
+    "unbacked_point_increase_observed": 1000
+  },
+  "later_assertions_not_executed": [
+    "member 7 points remain 100",
+    "ticket remaining inventory remains 9",
+    "points ledger row count remains unchanged"
+  ],
+  "inventory_increase_observed": "NOT_MEASURED; subsequent assertion not executed",
+  "ledger_change_observed": "NOT_MEASURED; subsequent assertion not executed",
+  "boundary": "Authorized handler direct invocation with real Service/Mapper/cancel and isolated MySQL; not HTTP/RBAC/production/payment-provider validation",
+  "a_independent_artifact_access": "gh api run/artifacts returned Forbidden",
+  "a_independent_xml_readback": false,
+  "artifact_id": null,
+  "artifact_attempt": null,
+  "xml_sha256": null,
+  "receipt_sha256": null,
+  "production_fix": "PENDING_USER_CHOICE; Controller.add frozen",
+  "integration_baseline": "26f3764ce0d81594be02c0eeace04aacdd483e58",
+  "integration_funds_source_test_count": 94,
+  "new_a_java_tests_executed": 0,
+  "new_a_mysql_tests_executed": 0,
+  "new_a_ci_dispatches": 0
+}

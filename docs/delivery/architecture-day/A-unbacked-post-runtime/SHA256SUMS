@@ -1,0 +1,5 @@
+230ac7a66d3b4deaee378f8dbc28c24c2de14edd49adcecf7fb9c26f0e783889  docs/delivery/architecture-day/A-unbacked-post-runtime/README.md
+7ccdda2c4bcc87138f425503f62c9eb7f8aa2db4f5f81897e5d387c28b143051  docs/delivery/architecture-day/A-unbacked-post-runtime/runtime-root-attestation.json
+59468264fafb1273e9e780ed3081afc18707aacfc41498e369fe335f4dd6de24  docs/delivery/architecture-day/A-unbacked-post-runtime/source-identity.json
+e4be85d8a14e381c4111e526da1626b52ea435c75ce8e1d09cf37af058aba11f  docs/delivery/architecture-day/A-unbacked-post-runtime/verification.json
+43f38319d4b317ba3dffa990bf8197647bbf64bf66c5c331720a6c0444861689  docs/delivery/architecture-day/A-unbacked-post-runtime/verify_static.py

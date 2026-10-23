@@ -1,0 +1,12 @@
+{
+  "scope": "doc-only; all production/test/schema/CI files unchanged",
+  "fixed_source_provenance": "PASS",
+  "root_result_transcription_consistency": "PASS; not independent XML readback",
+  "diff_check": "PASS",
+  "secret_file_gate": "PASS",
+  "new_files_secret_markers": "PASS",
+  "limited_credential_patterns": "PASS",
+  "a_new_java_mysql_ci_executions": 0,
+  "production_fix": "PENDING_USER_CHOICE",
+  "h_message_delivery": "ROOT_ONLY; not sent by A"
+}

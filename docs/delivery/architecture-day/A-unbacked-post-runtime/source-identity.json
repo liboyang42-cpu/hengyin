@@ -1,0 +1,48 @@
+{
+  "baseline": "26f3764ce0d81594be02c0eeace04aacdd483e58",
+  "run_source": "2a2f37e8a7e7c357be390b586d889ec7535a1937",
+  "a_test_candidate": "7e1fc9c26c9e0ce29c2489833bbefd121fbaf4b4",
+  "h_patch": "c75ab442b572700df1d0289ba636f6f541168e4a",
+  "a95_source_byte_preserved": true,
+  "h_added_lines": 51,
+  "run_source_tests": 95,
+  "current_source_tests": 94,
+  "removing_exact_h_block_restores_current_test_file": true,
+  "run_test_sha256": "9418e4e7a28825c753ce777cfc7c5d32a640f2c1b9c738bcb0b8db2807384598",
+  "current_test_sha256": "603e8cde99c74eadddd752b3f5d71b1fcf9308e36b0cb26f6a5e3232c4d860e0",
+  "production_files": {
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsRegistrationController.java": {
+      "blob": "29806316c297d6f74766788173adb9b16d0ae26d",
+      "sha256": "16767b31b2d6d5ba48e0a6aa2795ab0fa5860f10f88efb4ded20b3d76c18b002",
+      "run_and_current_exactly_equal": true
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java": {
+      "blob": "4d89d66ddc5838ba38b335a7cf797592782653f5",
+      "sha256": "4f04c625b48f78bb2fe2af5043c8860a45dc6b618847a994884ed2e6d31119f4",
+      "run_and_current_exactly_equal": true
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ICmsRegistrationService.java": {
+      "blob": "ce5ec614f08e94f639a26e9726c9001eb38bc99b",
+      "sha256": "6b5dd7c6970179b1deb0ed98c7f4e4841e9da61cdd3584e90a9d9d99203539eb",
+      "run_and_current_exactly_equal": true
+    },
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CmsRegistrationMapper.java": {
+      "blob": "164a0dce4d961070b079dcb890d64b52269d0189",
+      "sha256": "98f53c4e72947e4535868614dbb3f22d30acaaf84fd79700b0ebec2b45c929b2",
+      "run_and_current_exactly_equal": true
+    },
+    "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMapper.xml": {
+      "blob": "294c21f6c141975126d1197bd44f711d7e8e7db1",
+      "sha256": "2e0c38d4d8426aacf10b8759507992b319c791cc3b1a178d4ff01f0bb1e07c44",
+      "run_and_current_exactly_equal": true
+    }
+  },
+  "artifact_layout_source": {
+    "workflow_sha256": "ac5618ff03918675d1f39714d6a4a31f85681e337df24e6c9ffa9d8c5bf68c6e",
+    "runner_sha256": "269813582a0ae72efc2d397cca9376658cadf9bdcd5c635fb1dd95dce1084678"
+  },
+  "runtime_result_provenance": "ROOT_XML_RECEIPT_READBACK_REPORTED; A_ARTIFACT_DOWNLOAD_FORBIDDEN",
+  "not_a_runtime_verification": true,
+  "java_executed_by_this_script": 0,
+  "mysql_executed_by_this_script": 0
+}
