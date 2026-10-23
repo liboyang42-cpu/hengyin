@@ -8,7 +8,7 @@
 - 原 `/workspace/hengyin`、分支 `work` 保持原状；B 独立工作树 `/workspace/architecture-day-b`、分支 `codex/architecture-day-b-pay-gateway`，历史 HEAD `3bca5e05328ded4dc47fddd4614f30eff13a28fa`。
 - 历史转账 `090291402461c91377f5a494e92f01cf0887746a`、旧错误 Source 候选 `4f270d0451cc5f13737d0be2b40819fc3629445a` 均保留、不重写。不要直接集成历史 HEAD。
 - 此前未编译测试即提交，是我的执行失误，环境受限不能替代提交门禁。用户后续明确批准“审查/秘密扫描后的独立 codex CI 候选可先 commit/push”例外；本轮仅按该例外发布隔离候选，编译测试通过才可正式集成。不合并、不部署。
-- 最新完整补丁、拆分补丁及 SHA256 见 `artifact-sha256-v6.txt`；旧 v1/v2/v3 工件保留。`files-v4.txt` 列出精确 Java 文件。
+- 最新完整补丁、拆分补丁及 SHA256 见 `artifact-sha256-v7.txt`；旧 v1/v2/v3 工件保留。`files-v4.txt` 列出精确 Java 文件。
 
 ## 已授权的精确领域方法与实际修改
 
@@ -89,3 +89,5 @@ DDL 仅 `chengyinhub-admin/sql/migration_20261023_wx_pay_order_intent.sql`，从
 首次 CI（efa5c06f）完整 gitleaks 通过；迁移布局/清单门禁因 SQL 放在 docs/proposals 失败，已移至规范 chengyinhub-admin/sql 并补 PR 影响分类。保留原候选提交与所有原始证据。后端编译/单测结果另见 CI 回读文件。
 
 追加静态修正：查单异常测试夹具补齐意图数据库，使 SDK 404/5xx 真正被调用；会员非 CLOSED 负控断言实际查单/关单。dda99e55 迁移布局通过，迁移安全门还要求本表显式依赖登记，已追加单条空依赖。主 CI 后端失败摘要的日志连接器返回 Transport closed，已请求协调者提供 Maven 摘要，不能声称 B 支付用例通过。
+
+最终测试修正：旧 MerchantCommerceServiceTest 仍要求 NOT_FOUND 过24小时自动关闭，已按原号 UNKNOWN 合同改为窗口内外均保留；不减弱支付成功后的权益/交易号校验。查单异常测试显式断言原商户/原单号确实送入 SDK，避免空依赖异常误通过。生产 Java 与 efa5c06f 逐字节一致。

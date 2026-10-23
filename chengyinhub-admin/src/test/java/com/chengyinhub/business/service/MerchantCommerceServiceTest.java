@@ -307,7 +307,7 @@ class MerchantCommerceServiceTest {
     }
 
     @Test
-    void wechatMissingOrderIsClosedOnlyAfterAbandonWindowAndRenewalGrantCountsAsSuccess() {
+    void wechatMissingOrderStaysPendingPastAbandonWindowAndRenewalGrantCountsAsSuccess() {
         OmsOrder order = new OmsOrder();
         order.setId(19L); order.setOrderSn("CUSTOM_19"); order.setStatus(0L);
         order.setBizType(MerchantCommerceService.BIZ_CUSTOM_EVENT);
@@ -315,12 +315,12 @@ class MerchantCommerceServiceTest {
         when(orderMapper.selectOmsOrderByOrderSn("CUSTOM_19")).thenReturn(order);
         when(wechatPayService.queryOrderStatus("CUSTOM_19"))
                 .thenThrow(new com.chengyinhub.business.service.WechatOrderNotExistException("missing", null));
-        service.reconcileOrder("CUSTOM_19");   // 未建单=未付款的已知状态:窗口内保持待支付,不报失败
+        service.reconcileOrder("CUSTOM_19");   // NOT_FOUND 无法证明原号未受理，保持待支付供查证。
         verify(orderMapper, never()).markCommerceOrderClosed(any());
         verify(subscriptionMapper, never()).grantMerchantSubscription(any());
         order.setCreateTime(new java.util.Date(System.currentTimeMillis() - 25 * 60 * 60 * 1000L));
         service.reconcileOrder("CUSTOM_19");
-        verify(orderMapper).markCommerceOrderClosed(19L);
+        verify(orderMapper, never()).markCommerceOrderClosed(any());
 
         OmsOrder renewal = new OmsOrder();
         renewal.setId(20L); renewal.setOrderSn("TPLTM_20"); renewal.setStatus(0L); renewal.setMemberId(12L);

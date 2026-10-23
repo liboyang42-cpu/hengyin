@@ -1,0 +1,41 @@
+Baseline: 2ec68899099a1e250df0949a8383bf85b5d3ffe0
+Historical HEAD (new candidate is uncommitted): 3bca5e05328ded4dc47fddd4614f30eff13a28fa
+Branch: codex/architecture-day-b-pay-gateway
+Scope check: PASS
+git diff --check baseline: PASS (no output)
+Working file SHA256: da55f93a46f7e71a48633e42f05adafb9db1c06d5c3e7e06594d7feeb407c292 chengyinhub-admin/sql/migration_20261023_wx_pay_order_intent.sql
+Working file SHA256: 8e20947f14669f2d8d46eb3a394356717f32528716e8983b48bd0eba5ecfa023 chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCoopController.java
+Working file SHA256: be826bab05a48fcf7a50aac5dba320894b26c872a3e729dce8224eb4b9d229fd chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubMembershipServiceImplTest.java
+Working file SHA256: 1b5f8e6de8348b6beacc7ebe872d6ab5523f87837c7550aa3cb51ca0d9b5792f chengyinhub-admin/src/test/java/com/chengyinhub/business/service/MerchantCommerceServiceTest.java
+Working file SHA256: 52dd405fa084780b54a77a40f4336553c1709e56d5028b4a37109b7f20a30f27 chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationFundsMybatisIntegrationTest.java
+Working file SHA256: 5a92d08d98eaff052f1f97f9f3ad735850f6abb811a84d2b44222145b0afe2f5 chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RefundVerifiedFactsTest.java
+Working file SHA256: f27d193fc6427be5d0620c19f4443d8fbe0ffd0754ccabfdb71368e120a2f78c chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPayAppChannelTest.java
+Working file SHA256: 147993bcd5c21cf36e1d3310fe54b7c3149ef2972b15be8679af309dd14c5c77 chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPayCallbackFactsTest.java
+Working file SHA256: 3f91de7c3f1b56c7037da71326987a0477d751f394568658c8d511bca42d4218 chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPayCallbackForgedSignatureTest.java
+Working file SHA256: f976d802f3ab1fd0a5f5908bbece7dd710db6fc25528b04d4db20ef7cdc69313 chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPayNotifyUrlTest.java
+Working file SHA256: 4562e8f95aaaa5bd21d893ee3af76de74df0b90b17dde24c984d828e1731ce5d chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPayOrderQueryTest.java
+Working file SHA256: ca599da04341889ffca00e4dd1eb01222b7bdc34efe22f6c6fcce83038e7f114 chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPayReadinessTest.java
+Working file SHA256: ba176c7b267d03d0db4a3c480901ddafdd72935b4ffc1e0e0a76c9bd3f9290f3 chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPayRefundNotifyUrlTest.java
+Working file SHA256: 9d1a7d313527dd75673626e2ece497752564602883583857f716502a27f2971d chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPayTransferClassificationTest.java
+Working file SHA256: 0dcecb2c719f7511c1c65aade4325e2c973e268a7ffc9772203b64a17b419fbf chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPaymentIntentLockTest.java
+Working file SHA256: 70470c6a6cc717e497f7c8f4cd4afc23d82c7ff1f78dd44feb6f0dcf1b0e8ccf chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPaymentIntentMySqlIT.java
+Working file SHA256: 4c93f71b5bac892c3b9f1e61fea022bc25070a51ccab7351ed4a0357cebe4a5d chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WechatPaymentIntentTestSupport.java
+Working file SHA256: 8d25e999e265f3cf75019cee19c3df7b4ee998471ef3ea8fc415c679f355765e chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiCoopDepositStatusTest.java
+Working file SHA256: ecd23b433f170a5c16a50bd9e4cc575a4d521320aa4cf96eea86a114547ae8b6 chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubMembershipServiceImpl.java
+Working file SHA256: 7cea35acf9d89993540bcca6e759738566d02269b54e1acfe2b6015e1697ee85 chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantCommerceService.java
+Working file SHA256: 8b2070cd5ac5603ef72d8ee08856ac7f71a1dbaf4c8d6a2477aaf228cbeec70e chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RegistrationCheckoutServiceImpl.java
+Working file SHA256: 477e901c2a6276304c4925e7312a33b0cd36035f9d21411601188f293ccca8dd chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPayServiceImpl.java
+Working file SHA256: 11d2523f9bda4a3402b5de60212786131f91f584703b04a310125d5f337ddd0c ci/migration-dependencies.json
+WechatPayTransferClassificationTest source @Test methods: 8 local execution: 0; remote CI results tracked separately
+WechatPayCallbackFactsTest source @Test methods: 9 local execution: 0; remote CI results tracked separately
+WechatPayCallbackForgedSignatureTest source @Test methods: 31 local execution: 0; remote CI results tracked separately
+WechatPayOrderQueryTest source @Test methods: 5 local execution: 0; remote CI results tracked separately
+WechatPaymentIntentLockTest source @Test methods: 6 local execution: 0; remote CI results tracked separately
+WechatPaymentIntentMySqlIT source @Test methods: 5 local execution: 0; remote CI results tracked separately
+SDK symbols: PASS payments/jsapi/JsapiService
+SDK symbols: PASS transferbatch/model/InitiateBatchTransferResponse
+SDK symbols: PASS transferbatch/model/TransferBatchGet
+SDK symbols: PASS transferbatch/model/TransferDetailEntity
+SDK symbols: PASS payments/model/Transaction
+SDK symbols: PASS payments/model/TransactionAmount
+Local Java/JUnit/MySQL/Redis/real payment: NOT RUN; see CI evidence for actual remote results

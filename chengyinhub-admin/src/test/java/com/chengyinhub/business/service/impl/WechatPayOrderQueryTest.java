@@ -63,33 +63,42 @@ class WechatPayOrderQueryTest {
 
     @Test
     void orderNotExistIsMappedToDedicatedException() {
-        assertThrows(WechatOrderNotExistException.class,
-                () -> serviceFailingWith(404, "{\"code\":\"ORDER_NOT_EXIST\",\"message\":\"订单不存在\"}")
-                        .queryOrderStatus("T1"));
+        WechatPayServiceImpl service = serviceFailingWith(404,
+                "{\"code\":\"ORDER_NOT_EXIST\",\"message\":\"订单不存在\"}");
+        assertThrows(WechatOrderNotExistException.class, () -> service.queryOrderStatus("T1"));
+        verifyOriginalQueryWasCalled(service);
     }
 
     @Test
     void otherServiceErrorsStayGenericQueryFailures() {
         for (String[] failure : new String[][]{{"500", "SYSTEM_ERROR"}, {"500", "ORDER_NOT_EXIST"},
                 {"429", "ORDER_NOT_EXIST"}}) {
-            RuntimeException error = assertThrows(RuntimeException.class,
-                    () -> serviceFailingWith(Integer.parseInt(failure[0]),
-                            "{\"code\":\"" + failure[1] + "\",\"message\":\"query unavailable\"}")
-                            .queryOrderStatus("T1"));
+            WechatPayServiceImpl service = serviceFailingWith(Integer.parseInt(failure[0]),
+                    "{\"code\":\"" + failure[1] + "\",\"message\":\"query unavailable\"}");
+            RuntimeException error = assertThrows(RuntimeException.class, () -> service.queryOrderStatus("T1"));
             assertFalse(error instanceof WechatOrderNotExistException);
+            verifyOriginalQueryWasCalled(service);
         }
     }
 
     private WechatPayServiceImpl serviceFailingWith(int status, String body) {
         WechatPayServiceImpl service = new WechatPayServiceImpl();
         WechatPaymentIntentTestSupport.install(service, java.util.Map.of());
-        ReflectionTestUtils.setField(service, "wxPayConfig", mock(WxPayConfig.class));
+        WxPayConfig config = mock(WxPayConfig.class);
+        when(config.getMerchantId()).thenReturn("merchant");
+        ReflectionTestUtils.setField(service, "wxPayConfig", config);
         JsapiService jsapi = mock(JsapiService.class);
         HttpRequest request = new HttpRequest.Builder().httpMethod(HttpMethod.GET)
                 .url("https://api.mch.weixin.qq.com/v3/pay/transactions/out-trade-no/T1").build();
         when(jsapi.queryOrderByOutTradeNo(any())).thenThrow(new ServiceException(request, status, body));
         ReflectionTestUtils.setField(service, "jsapiService", jsapi);
         return service;
+    }
+
+    private void verifyOriginalQueryWasCalled(WechatPayServiceImpl service) {
+        JsapiService sdk = (JsapiService) ReflectionTestUtils.getField(service, "jsapiService");
+        org.mockito.Mockito.verify(sdk).queryOrderByOutTradeNo(org.mockito.ArgumentMatchers.argThat(
+                request -> "merchant".equals(request.getMchid()) && "T1".equals(request.getOutTradeNo())));
     }
 
     private Transaction original() {

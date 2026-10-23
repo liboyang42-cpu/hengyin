@@ -170,7 +170,7 @@ class WechatPayAppChannelTest {
         assertFalse(service.isReady());
         PaymentPreorderException ex = assertThrows(PaymentPreorderException.class,
                 () -> service.createAppOrder(registration()));
-        // 必须是明确失败:调用方据此释放支付占用;若误判为「结果未知」会把订单挂在 PAYING。
+        // 本次未发请求可明确拒绝；领域仍须保留原号历史，不能据此释放之前的 UNKNOWN。
         assertFalse(ex.isResultUncertain(),
                 "支付未就绪属于明确失败，不能当作结果未知挂起订单");
     }
