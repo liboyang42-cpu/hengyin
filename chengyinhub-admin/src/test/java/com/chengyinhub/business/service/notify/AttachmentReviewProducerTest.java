@@ -2,6 +2,7 @@ package com.chengyinhub.business.service.notify;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
@@ -11,7 +12,8 @@ class AttachmentReviewProducerTest {
     @Test
     void sixteenTypesSubmitOriginalReceiptAndVisibleProjectionIsNotApproval() {
         assertEquals(16, AttachmentReviewProducer.typeCount());
-        AttachmentReviewProducer producer = new AttachmentReviewProducer(new InMemoryNotifyFixtures.MemoryReviewStore());
+        InMemoryNotifyFixtures.MemoryReviewStore store = new InMemoryNotifyFixtures.MemoryReviewStore();
+        AttachmentReviewProducer producer = new AttachmentReviewProducer(store);
         int i = 0;
         for (AttachmentReviewProducer.AttachmentType type : AttachmentReviewProducer.AttachmentType.values()) {
             String requestId = "att-" + (++i);
@@ -27,5 +29,13 @@ class AttachmentReviewProducerTest {
             assertEquals(type, producer.recover(requestId, ImmutableReceiptProducer.PROJECTION_APPLIED).type);
         }
         assertEquals(16, i);
+        int occupied = store.size();
+        AttachmentReviewProducer.ReviewReceipt missing = producer.recoverUnknown("  ", "VISIBLE");
+        assertNull(missing.requestId);
+        assertEquals(AttachmentReviewProducer.STATUS_UNKNOWN, missing.status);
+        assertNull(store.find("att-ghost"));
+        assertEquals(AttachmentReviewProducer.STATUS_UNKNOWN,
+                producer.recoverUnknown("att-ghost", ImmutableReceiptProducer.PROJECTION_APPLIED).status);
+        assertEquals(occupied, store.size());
     }
 }

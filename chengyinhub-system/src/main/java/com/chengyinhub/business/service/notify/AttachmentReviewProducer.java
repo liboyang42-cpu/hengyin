@@ -84,13 +84,40 @@ public final class AttachmentReviewProducer {
     /** 可见/已应用投影不是原审核通过证明。 */
     public ReviewReceipt recover(String requestId, String appliedProjectionStatus) {
         ReviewReceipt original = require(requestId);
-        return original.withProjectionClaim(ImmutableReceiptProducer.PROJECTION_APPLIED.equals(appliedProjectionStatus)
-                || "VISIBLE".equals(appliedProjectionStatus)
-                || "APPLIED".equals(appliedProjectionStatus));
+        return original.withProjectionClaim(projectionClaimsVisible(appliedProjectionStatus));
+    }
+
+    public ReviewReceipt recoverOriginal(String requestId, String appliedProjectionStatus) {
+        return recoverUnknown(requestId, appliedProjectionStatus);
+    }
+
+    /**
+     * Missing requestId stays Java {@code null} / UNKNOWN and does not occupy the ledger.
+     */
+    public ReviewReceipt recoverUnknown(String requestId, String appliedProjectionStatus) {
+        String id = ImmutableReceiptProducer.parseRequestId(requestId);
+        if (id == null) {
+            return unknownReceipt(null);
+        }
+        ReviewReceipt original = store.find(id);
+        if (original != null) {
+            return original.withProjectionClaim(projectionClaimsVisible(appliedProjectionStatus));
+        }
+        return unknownReceipt(id);
     }
 
     public boolean treatsVisibleProjectionAsApproval(String appliedProjectionStatus) {
         return false;
+    }
+
+    private static boolean projectionClaimsVisible(String appliedProjectionStatus) {
+        return ImmutableReceiptProducer.PROJECTION_APPLIED.equals(appliedProjectionStatus)
+                || "VISIBLE".equals(appliedProjectionStatus)
+                || "APPLIED".equals(appliedProjectionStatus);
+    }
+
+    static ReviewReceipt unknownReceipt(String requestId) {
+        return new ReviewReceipt(requestId, null, null, STATUS_UNKNOWN, false);
     }
 
     private ReviewReceipt require(String requestId) {
@@ -142,7 +169,7 @@ public final class AttachmentReviewProducer {
         public Map<String, Object> asRequeryableView() {
             Map<String, Object> view = new LinkedHashMap<String, Object>();
             view.put("requestId", requestId);
-            view.put("type", type.name());
+            view.put("type", type == null ? null : type.name());
             view.put("originalDigest", originalDigest);
             view.put("status", status);
             view.put("usedVisibleProjectionAsApproval", Boolean.FALSE);

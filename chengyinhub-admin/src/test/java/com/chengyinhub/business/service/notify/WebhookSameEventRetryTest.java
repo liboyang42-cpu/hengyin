@@ -15,8 +15,9 @@ class WebhookSameEventRetryTest {
     void retryKeepsOriginalIdsAndUnknownDoesNotMintFromAppliedProjection() {
         InMemoryNotifyFixtures.RecordingTransport transport =
                 new InMemoryNotifyFixtures.RecordingTransport(200, "{}");
+        InMemoryNotifyFixtures.MemoryDeliveryStore store = new InMemoryNotifyFixtures.MemoryDeliveryStore();
         WebhookDeliveryLogProducer producer = new WebhookDeliveryLogProducer(
-                transport, new WebhookSsrfHopGuard(), new InMemoryNotifyFixtures.MemoryDeliveryStore(),
+                transport, new WebhookSsrfHopGuard(), store,
                 new InMemoryNotifyFixtures.FixedNonceSource("nonce-E"));
         WebhookSameEventRetry retry = new WebhookSameEventRetry(producer);
         WebhookDeliveryLogProducer.WebhookConfig config = InMemoryNotifyFixtures.fixtureConfig(true, false);
@@ -37,6 +38,20 @@ class WebhookSameEventRetryTest {
         assertEquals(WebhookSameEventRetry.UNKNOWN_NOT_RECOVERED, missing.note);
         assertTrue(missing.refusedAppliedProjection);
         assertNull(missing.log);
+        assertEquals(2, transport.urls.size());
+        int occupied = store.size();
+        WebhookSameEventRetry.RecoveredRetry blank = retry.recoverUnknown("  ",
+                ImmutableReceiptProducer.PROJECTION_APPLIED, config,
+                Collections.singletonList(InMemoryNotifyFixtures.publicHop()));
+        assertFalse(blank.recovered());
+        assertNull(blank.log);
+        assertEquals(WebhookSameEventRetry.UNKNOWN_NOT_RECOVERED, blank.note);
+        assertTrue(blank.refusedAppliedProjection);
+        assertNull(producer.recoverUnknown("  ", ImmutableReceiptProducer.PROJECTION_APPLIED).eventId);
+        assertEquals(WebhookDeliveryLogProducer.STATUS_UNKNOWN,
+                producer.recoverUnknown("evt-ghost", ImmutableReceiptProducer.PROJECTION_APPLIED).status);
+        assertNull(store.findByEventId("evt-ghost"));
+        assertEquals(occupied, store.size());
         assertEquals(2, transport.urls.size());
     }
 }

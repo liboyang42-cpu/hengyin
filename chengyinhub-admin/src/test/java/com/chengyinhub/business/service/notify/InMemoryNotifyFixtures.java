@@ -76,6 +76,10 @@ final class InMemoryNotifyFixtures {
         public void replaceSameIdentity(AttachmentReviewProducer.ReviewReceipt receipt) {
             rows.put(receipt.requestId, receipt);
         }
+
+        int size() {
+            return rows.size();
+        }
     }
 
     static final class MemoryDeviceStore implements DevicePushRegistrationLifecycle.RegistrationStore {
@@ -119,6 +123,10 @@ final class InMemoryNotifyFixtures {
         @Override
         public void replaceSameIdentity(WebhookDeliveryLogProducer.DeliveryLog log) {
             rows.put(log.eventId, log);
+        }
+
+        int size() {
+            return rows.size();
         }
     }
 

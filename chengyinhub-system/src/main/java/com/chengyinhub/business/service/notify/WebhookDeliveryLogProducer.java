@@ -110,6 +110,29 @@ public final class WebhookDeliveryLogProducer {
         return original;
     }
 
+    public DeliveryLog recoverOriginal(String originalRequestId, String projection) {
+        return recoverUnknown(originalRequestId, projection);
+    }
+
+    /**
+     * Missing eventId stays Java {@code null} / UNKNOWN and does not occupy the ledger.
+     */
+    public DeliveryLog recoverUnknown(String originalRequestId, String projection) {
+        String id = ImmutableReceiptProducer.parseRequestId(originalRequestId);
+        if (id == null) {
+            return unknownLog(null);
+        }
+        DeliveryLog original = store.findByEventId(id);
+        if (original != null) {
+            return original;
+        }
+        return unknownLog(id);
+    }
+
+    static DeliveryLog unknownLog(String eventId) {
+        return new DeliveryLog(null, eventId, null, null, null, null, STATUS_UNKNOWN, 0, -1, false);
+    }
+
     public boolean treatsAppliedProjectionAsOriginalProof(String appliedProjection) {
         return false;
     }

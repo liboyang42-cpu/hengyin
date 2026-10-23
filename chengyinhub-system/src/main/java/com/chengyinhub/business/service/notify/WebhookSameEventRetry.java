@@ -30,15 +30,16 @@ public final class WebhookSameEventRetry {
     public RecoveredRetry recoverUnknown(String originalEventId, String appliedProjection,
                                          WebhookDeliveryLogProducer.WebhookConfig config,
                                          List<WebhookSsrfHopGuard.Hop> hops) {
+        boolean refusedApplied = ImmutableReceiptProducer.PROJECTION_APPLIED.equals(appliedProjection);
+        if (ImmutableReceiptProducer.parseRequestId(originalEventId) == null) {
+            return new RecoveredRetry(null, UNKNOWN_NOT_RECOVERED, refusedApplied);
+        }
         try {
             WebhookDeliveryLogProducer.DeliveryLog original = producer.requireOriginal(originalEventId);
             WebhookDeliveryLogProducer.DeliveryLog retried = producer.retryExisting(original, config, hops);
             return new RecoveredRetry(retried, null, false);
-        } catch (IllegalStateException missing) {
-            if (ImmutableReceiptProducer.PROJECTION_APPLIED.equals(appliedProjection)) {
-                return new RecoveredRetry(null, UNKNOWN_NOT_RECOVERED, true);
-            }
-            return new RecoveredRetry(null, UNKNOWN_NOT_RECOVERED, false);
+        } catch (RuntimeException missing) {
+            return new RecoveredRetry(null, UNKNOWN_NOT_RECOVERED, refusedApplied);
         }
     }
 
