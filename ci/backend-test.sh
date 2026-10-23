@@ -127,6 +127,8 @@ MYBATIS_ITS=(
   # 2026-10-22 O-14 city_code 回填(RV3 B-519-1):南京西路(上海)/北京路(广州)反例、人工值不覆盖、重跑零变更、
   #   修正重跑只改本回填写过的行、只读预览与真实执行逐行一致 —— 真迁移 + 真 MySQL 才验得动。
   O14CityCodeBackfillMySqlIT
+  # DOC2 O5c-(a):统一留痕只读投影(五张留痕表分查 + 合并)。
+  AuditTrailProjectionMySqlIT
   # Lane BF4(W48R SHOULD-FIX 1):同意记录 requestId 去重 —— 并发同号重放只落一行、不一致重放 409、
   #   RR 旧快照下必须当前读到原记录。类上门控 CHENGYIN_CONSENT_IDEMPOTENCY_MYSQL_IT=1,下面 mvn 行显式打开。
   ConsentRecordIdempotencyMySqlIT
