@@ -1,0 +1,32 @@
+{
+  "source_sha": "1dc32d08095f5a621e6d665c75345b15a74e7c21",
+  "run_id": 40029966352,
+  "run_attempt": 1,
+  "job_id": 120675638553,
+  "artifact_id": 12533974185,
+  "xml_path": "surefire-reports/TEST-com.chengyinhub.business.it.MerchantRegistrationCancellationMySqlIT.xml",
+  "xml_sha256": "d367f1a290241151330df1763cb64e6567a6e187bc350e6ad047269b36404aeb",
+  "zip_sha256": "525cf2fd7274300e8c832066933249873ab122142d2f7ef8994cf2e9bfc1723e",
+  "tests": 8,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "testcases": [
+    "knownPendingRejectedAndNullAuditStillAllowFirstCancellationOnly",
+    "deletedOrUnknownDeletionStateCannotBeSelectedOrCancelledAgain",
+    "sameOriginalConcurrentCancelAndSelectionHaveExactlyOneWinner",
+    "ownerChangedAfterReadCannotBeCancelledOrReassignedBackByOldOwner",
+    "selectedWinnerCannotBeCancelledAndRejectionChangesNoPersistedField",
+    "winnerCommittedAfterCancelReadIsNotOverwrittenByStaleSnapshot",
+    "cancelledCandidateCannotBeSelectedEvenWhenDispatcherReadItEarlier",
+    "allowedCancellationPreservesConcurrentRejectionAndEditedFields"
+  ],
+  "cleanup_status": "CLEAN",
+  "storage": {
+    "version": "8.0.45",
+    "transaction_isolation": "REPEATABLE-READ",
+    "sql_mode": "ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION"
+  },
+  "scope": "Actual original eight merchant cancellation cases, not the new H review regression or HTTP/Dispatch acceptance",
+  "previous_failure_retained_in": "mysql-evidence.json"
+}

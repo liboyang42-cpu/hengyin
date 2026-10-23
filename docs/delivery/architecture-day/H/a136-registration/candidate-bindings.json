@@ -8,6 +8,15 @@
   "integration": "dde91d5c03a85c769e17c2a8c6e88364f4b0d27c",
   "integration_tree": "2df014c5cf40a2d61ac2aa50e79c5aed74ed9b56",
   "integration_tree_not_truncated": true,
+  "rerun_source": "1dc32d08095f5a621e6d665c75345b15a74e7c21",
+  "rerun_tree": "6601fb9241d425b2056388bd8534bda979ead662",
+  "rerun_tree_not_truncated": true,
+  "rerun_a_files_unchanged": 16,
+  "rerun_only_changed_a_file": {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/MerchantRegistrationCancellationMySqlIT.java",
+    "blob": "f20d82f16504ce53d771bbc8724b6d059ec53b40",
+    "change": "Only actual Mapper XML resource name; production A files unchanged"
+  },
   "files": [
     {
       "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsRegistrationController.java",

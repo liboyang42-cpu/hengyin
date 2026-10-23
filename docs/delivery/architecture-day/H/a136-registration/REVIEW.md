@@ -1,6 +1,6 @@
 # H 独立审查：A136 报名通用更新与商家取消 CAS
 
-结论：A136 的 `registrationStatus` 剥离及商家取消/选中同一行 CAS 在源码上成立；不能据此宣布报名写侧闭环。本轮确认一项 P1 既有经济字段漏口、一项 P2 既有后台删除竞争，以及一项已实际发生的 P2 测试初始化错误。没有修改 A 或其他 owner 的生产文件，没有新增 Agent。
+结论：A136 的 `registrationStatus` 剥离及商家取消/选中同一行 CAS 在源码上成立；修正测试资源名后的新源 `1dc32d0` 原 8 个 MySQL 用例已独立核对全绿/CLEAN。仍不能宣布报名写侧闭环：本轮确认一项 P1 既有经济字段漏口、一项 P2 既有后台删除竞争。另保留旧候选已实际发生、后续修复的 P2 初始化错误。没有修改 A 或其他 owner 的生产文件，没有新增 Agent。
 
 ## 候选身份与审查范围
 
@@ -57,7 +57,8 @@
 - `MerchantRegistrationCancellationMySqlIT.java:50` 使用 `P0AcceptanceSchema.sql(source,"CmsRegistrationMerchant")`；helper `P0AcceptanceSchema.java:83` 只追加 `.xml`，因此尝试加载不存在的 `mapper/business/CmsRegistrationMerchant.xml`。真实资源为 `CmsRegistrationMerchantMapper.xml`。
 - 最小修正：实参改为 `"CmsRegistrationMerchantMapper"`，不要改共用 helper、放松门禁或跳过测试；重新跑同一组并核对新 SHA、8 个 test case 原 XML、清理。若 owner 接纳本目录 SQL 反例，则新总数是 9，需同步真实登记。
 - 同 SHA 的 run `40029205360` 则在 checkout 步骤失败，不能用于任何 Java/DB 业务结论。本报告不重新验收其余四个已由协调者负责的类。
-- 后续进度单列：协调者已提交 `1dc32d08095f5a621e6d665c75345b15a74e7c21`，独立读取 GitHub commit 确认其相对 parent `f9409bec4d0407b5eb7d6a6f9512828f0bef6e2e` 只改上述资源名一行。定点 run `40029966352` 的 head 正是该 SHA；本报告读取时仍 `in_progress`，尚无 artifact，不提前声称 8 项已通过，也不把它与旧 SHA 的其他 35 项拼成同源 43 项 PASS。协调者已核对旧 run 的 Photo17、Signup18 原 XML 全绿/CLEAN，本 H 本轮没有重复下载验收这些 XML。
+- 后续进度单列：协调者已提交 `1dc32d08095f5a621e6d665c75345b15a74e7c21`，独立读取 GitHub commit 确认其相对 parent `f9409bec4d0407b5eb7d6a6f9512828f0bef6e2e` 只改上述资源名一行。定点 run `40029966352` 的 head 正是该 SHA；首次读取时仍 `in_progress`，尚无 artifact，不提前声称 8 项已通过，也不把它与旧 SHA 的其他 35 项拼成同源 43 项 PASS。协调者已核对旧 run 的 Photo17、Signup18 原 XML 全绿/CLEAN，本 H 本轮没有重复下载验收这些 XML。
+- **后续已完成并独立读回**：同 run `40029966352` 的 job `120675638553`、artifact `12533974185`，原 XML 包含完整 8 个业务 testcase，tests=8、failures/errors/skipped=0、CLEAN。新源与旧源的证据各自保存；详情及 XML/ZIP 哈希见 `mysql-rerun-evidence.json`。这关闭了 H-A136-03 的测试装配阻塞，未关闭 H-A136-01/02；没有把异源结果合计签成一候选 43 项通过。
 
 ## 调用者与竞争合同核对
 
@@ -81,12 +82,12 @@
 | A17文件与 root 对应 | 一致 | 完整 Git tree/blob 核对已执行 |
 | 后台 registrationStatus 不能直接迁移 | 符合本次单点合同 | 新增 Java 用例未在本轮获得独立执行证据 |
 | 后台经济依据不可变 | **失败：H-A136-01/P1** | 明确源码链；经济回读未执行，不冒充已观察到损失 |
-| 商家 owner/current state CAS | 源码符合 | 原 MySQL8业务用例均未启动，H-A136-03 |
+| 商家 owner/current state CAS | 源码符合 | dde91d5 原8项未启动；新源1dc32d0原8项真实MySQL全部通过/CLEAN |
 | 商家取消与选中相互覆盖 | 未发现新代码问题 | 真实完整 Dispatch 并发、回滚、唯一槽迁移仍未验 |
 | 后台删除与选中互斥 | **失败：H-A136-02/P2** | 确定性源码反例；附真库回归 patch，未执行 |
 | 新审查测试 | 2 个有意义反例 | `git apply --check` 对 A136 精确文件通过；Java未编译/未运行，无红绿声明 |
 | 本轮云环境执行 | Python XML/源码/哈希核对、patch 应用检查 | 没有在云 VM 启动 Java/数据库；没有真实付款/供应商/真机测试 |
 
-独占交付文件：本报告、`candidate-bindings.json`、`mysql-evidence.json`、`static-evidence.json`、`economic-basis-and-admin-delete.review.patch`。patch 只提供给集成人安排修正后的受控 CI，不自动应用到 A 文件；先修初始化资源名才能执行其中的 SQL 反例。若两个反例均接纳，ControllerSafety 10→11，MerchantCancellation 8→9；原编排 43 不可原数照抄。
+独占交付文件：本报告、`candidate-bindings.json`、`mysql-evidence.json`、`mysql-rerun-evidence.json`、`static-evidence.json`、`economic-basis-and-admin-delete.review.patch`。patch 只提供给集成人安排受控 CI，不自动应用到 A 文件；原8项复跑已修好资源名，新SQL反例仍未执行。若两个反例均接纳，ControllerSafety 10→11，MerchantCancellation 8→9；原编排 43 不可原数照抄。
 
 无 schema 变更，无 DDL 执行。回退本 H 报告/未应用 patch 没有运行影响；回退 A 状态剥离/取消 CAS 会重开已修漏口，不是安全降级方案。若确认线上已有被后台改写的积分/库存依据，应先按原账本核对，不能批量猜默认值、清库或删除资金记录。本轮没有为这些历史修复制定新业务规则。
