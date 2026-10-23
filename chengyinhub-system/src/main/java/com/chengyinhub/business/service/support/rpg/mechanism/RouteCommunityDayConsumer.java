@@ -70,6 +70,10 @@ public final class RouteCommunityDayConsumer {
         return binder.oneShot(play, MechanismRequestIdBinder.MECH_ROUTE_COMMUNITY_DAY, action, () -> applyLive(play));
     }
 
+    public Map<String, Object> recoverOriginal(MechanismRequestIdBinder.Play play) {
+        return binder.recoverUnknown(play);
+    }
+
     private Map<String, Object> applyLive(MechanismRequestIdBinder.Play play) {
         String action = MechanismRequestIdBinder.text(play.getPlayerChoice(), "action");
         if (!ACTION_TAKE_SEGMENT.equals(action)) {

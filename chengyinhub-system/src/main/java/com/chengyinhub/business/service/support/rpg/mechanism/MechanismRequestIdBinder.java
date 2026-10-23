@@ -202,6 +202,13 @@ public final class MechanismRequestIdBinder {
         return unknownMap(id);
     }
 
+    /**
+     * 对齐 iOS {@code recoverOriginal}:只读原 requestId。未见过的 id 不 {@code put} 进账本。
+     */
+    public Map<String, Object> recoverOriginal(Play play) {
+        return recoverUnknown(play);
+    }
+
     public Map<String, Object> readback(String requestId) {
         LedgerEntry entry = existing(requireRequestId(requestId));
         if (entry == null) throw new IllegalStateException("没有原 requestId 的效果账:" + requestId);

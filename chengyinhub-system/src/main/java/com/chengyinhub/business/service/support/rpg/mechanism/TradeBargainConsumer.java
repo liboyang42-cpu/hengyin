@@ -68,6 +68,10 @@ public final class TradeBargainConsumer {
         return binder.oneShot(play, MechanismRequestIdBinder.MECH_TRADE_BARGAIN, action, () -> applyLive(play));
     }
 
+    public Map<String, Object> recoverOriginal(MechanismRequestIdBinder.Play play) {
+        return binder.recoverUnknown(play);
+    }
+
     private Map<String, Object> applyLive(MechanismRequestIdBinder.Play play) {
         String action = MechanismRequestIdBinder.text(play.getPlayerChoice(), "action");
         JsonNode bargain = play.getFrozen().path(MechanismRequestIdBinder.MECH_TRADE_BARGAIN).path("bargain");

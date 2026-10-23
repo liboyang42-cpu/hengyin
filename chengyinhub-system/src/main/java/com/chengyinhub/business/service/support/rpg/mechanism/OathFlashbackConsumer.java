@@ -75,6 +75,10 @@ public final class OathFlashbackConsumer {
         return binder.oneShot(play, MechanismRequestIdBinder.MECH_OATH_FLASHBACK, action, () -> applyLive(play));
     }
 
+    public Map<String, Object> recoverOriginal(MechanismRequestIdBinder.Play play) {
+        return binder.recoverUnknown(play);
+    }
+
     private Map<String, Object> applyLive(MechanismRequestIdBinder.Play play) {
         String action = MechanismRequestIdBinder.text(play.getPlayerChoice(), "action");
         JsonNode frozen = play.getFrozen().path(MechanismRequestIdBinder.MECH_OATH_FLASHBACK);

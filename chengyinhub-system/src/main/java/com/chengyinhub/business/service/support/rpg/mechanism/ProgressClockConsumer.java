@@ -64,6 +64,10 @@ public final class ProgressClockConsumer {
         return binder.oneShot(play, MechanismRequestIdBinder.MECH_PROGRESS_CLOCK, action, () -> applyLive(play));
     }
 
+    public Map<String, Object> recoverOriginal(MechanismRequestIdBinder.Play play) {
+        return binder.recoverUnknown(play);
+    }
+
     private Map<String, Object> applyLive(MechanismRequestIdBinder.Play play) {
         JsonNode choice = play.getPlayerChoice();
         String action = MechanismRequestIdBinder.text(choice, "action");

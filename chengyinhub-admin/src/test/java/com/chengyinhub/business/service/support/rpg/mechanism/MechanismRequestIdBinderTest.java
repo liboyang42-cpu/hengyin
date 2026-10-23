@@ -69,5 +69,6 @@ class MechanismRequestIdBinderTest {
         assertThrows(IllegalArgumentException.class, () -> binder.bind("  ", "x", "y"));
         MechanismRequestIdBinder.Play play = new MechanismRequestIdBinder.Play();
         assertThrows(IllegalArgumentException.class, () -> binder.recoverUnknown(play));
+        assertThrows(IllegalArgumentException.class, () -> binder.recoverOriginal(play));
     }
 }
