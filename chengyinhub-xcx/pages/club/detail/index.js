@@ -537,6 +537,7 @@ Page({
     canSeeMembers: false,
     // 成员名单/贡献榜的可见位:成员 + 公开加入团的访客(拍板 2026-10-22)。发帖/评论/举报仍看 canSeeMembers。
     canSeeRoster: false,
+    joinHidden: false,   // 2026-10-22 owner:往下滑时收起底部「加入俱乐部」
     posts: [],
     pinnedNotices: [],
     postsLoaded: false,
@@ -3197,15 +3198,14 @@ Page({
 
   goBack() { wx.navigateBack({ delta: 1, fail() { wx.switchTab({ url: '/pages/talent/list/index' }); } }); },
 
-  rememberedTabForClub(club, canUseManageTab) {
-    const tab = club && lastTabByClub[String(club.id)];
-    if (!tab) return '';
-    return this.tabsForClub(club, canUseManageTab).some(function (t) { return t.key === tab; }) ? tab : '';
+  // 2026-10-22 owner:每次进俱乐部都先看「概览」—— 不再沿用上次停留的 tab(进页即新开)。
+  // 页内重载(同一页面实例)仍由 canKeepTab 保住当前 tab;显式要求管理 tab 的入口(_requestedTab)不受影响。
+  rememberedTabForClub() {
+    return '';
   },
 
-  defaultTabForClub(club) {
-    // 双身份时以当前俱乐部内的 owner/member 关系优先；只有纯访客才默认概览。
-    return club && (club.isOwner || club.isJoined) ? 'posts' : 'overview';
+  defaultTabForClub() {
+    return 'overview';
   },
 
   // 2026-08-26:管理员(role=1)也拿到管理 tab。判据用 detail 已下发的 viewerIsAdmin,
@@ -3508,4 +3508,16 @@ Page({
     });
   },
   goCoopSent() { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/coop/list/index?tab=sent', complete: () => { this._navigating = false; } }); },
+
+  // 2026-10-22 owner:「加入俱乐部」往下滑时收起,往上滑或回到顶部再出来(只在状态变化时 setData)。
+  onPageScroll(e) {
+    const top = (e && e.scrollTop) || 0;
+    const last = this._lastJoinScrollTop || 0;
+    this._lastJoinScrollTop = top;
+    let hidden = this.data.joinHidden;
+    if (top < 40) hidden = false;
+    else if (top - last > 6) hidden = true;
+    else if (last - top > 6) hidden = false;
+    if (hidden !== this.data.joinHidden) this.setData({ joinHidden: hidden });
+  },
 });

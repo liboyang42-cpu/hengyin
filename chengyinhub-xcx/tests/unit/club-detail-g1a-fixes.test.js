@@ -458,7 +458,7 @@ test('CU-C-51 概况卡写明统计范围,「参与人次」改称「游玩人�
 test('CU-C-71 回归：审核中只显示等待态，加入按钮必须挂在 wx:else 上', () => {
   const wxml = readDetailWxml();
   // 2026-10-22 owner:加入按钮改为底部悬浮(.join-float),判定口径不变
-  const cta = wxml.slice(wxml.indexOf('<view class="join-float"'), wxml.indexOf('</view>', wxml.indexOf('bindtap="onJoin"')));
+  const cta = wxml.slice(wxml.indexOf('<view class="join-float '), wxml.indexOf('</view>', wxml.indexOf('bindtap="onJoin"')));
   // 拍板 2026-10-22:待审态文案改为「等待主理人审核」(禁用态)。
   assert.match(cta, /wx:if="\{\{club\.myJoinStatus === 0\}\}"[^>]*aria-disabled="true"[^>]*>等待主理人审核<\/view>\s*<view wx:else [^>]*bindtap="onJoin"/);
 });

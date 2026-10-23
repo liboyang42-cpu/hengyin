@@ -197,15 +197,16 @@ test('quick action 与四个真 tab 分离，管理仅 owner 可见且已选 tab
   assert.equal(page.data.activeTab, 'manage')
 })
 
-test('owner/member/admin 默认帖子，guest/商家访客默认概览', () => {
+// 2026-10-22 owner:不论身份,每次进俱乐部都先看「概览」(原先 owner/member 默认帖子)。
+test('进俱乐部一律先看概览(owner/member/访客/商家都一样)', () => {
   const { page } = loadDetail()
   page.data.isMerchantViewer = false
-  assert.equal(page.defaultTabForClub({ isOwner: true, isJoined: true }), 'posts')
-  assert.equal(page.defaultTabForClub({ isOwner: false, isJoined: true }), 'posts')
+  assert.equal(page.defaultTabForClub({ isOwner: true, isJoined: true }), 'overview')
+  assert.equal(page.defaultTabForClub({ isOwner: false, isJoined: true }), 'overview')
   assert.equal(page.defaultTabForClub({ isOwner: false, isJoined: false }), 'overview')
   page.data.isMerchantViewer = true
   assert.equal(page.defaultTabForClub({ isOwner: false, isJoined: false }), 'overview')
-  assert.equal(page.defaultTabForClub({ isOwner: true, isJoined: true }), 'posts', '商家+主理人双身份仍以当前俱乐部 owner 视图为准')
+  assert.equal(page.defaultTabForClub({ isOwner: true, isJoined: true }), 'overview')
 })
 
 test('管理深链只在详情回读 owner 身份后生效，参数不能替非 owner 越权', () => {
@@ -226,7 +227,7 @@ test('管理深链只在详情回读 owner 身份后生效，参数不能替非 
   genericOwner.page.onLoad({ id: '9', owner: '1' })
   const genericDetail = genericOwner.requests.find((request) => request.url === '/api/club/detail')
   genericDetail.success({ code: '200', data: { id: 9, isOwner: true, isJoined: true } })
-  assert.equal(genericOwner.page.data.activeTab, 'posts', '通用 owner 入口仍保持帖子默认契约')
+  assert.equal(genericOwner.page.data.activeTab, 'overview', '通用 owner 入口也先看概览(owner 2026-10-22)')
 })
 
 test('设置管理入口与旧 workbench 壳显式传递 manage 意图', () => {
@@ -624,7 +625,8 @@ test('公开帖子的游客空态只限制发布，不得误写为不可查看',
 })
 
 // —— L06 拍板 2026-10-22 ——
-test('L06(a):详情回来前不渲染任何 tab 内容；同一俱乐部再次进入沿用上次停留的 tab，不先闪帖子', () => {
+// 2026-10-22 owner:每次进俱乐部都先看概览 —— 再次进入同一俱乐部也回到概览,不再沿用上次的 tab;中途同样不能闪出别的 tab。
+test('L06(a):详情回来前不渲染任何 tab 内容；同一俱乐部再次进入也先看概览，不先闪帖子', () => {
   const { page, requests } = loadDetail()
   const initialData = JSON.parse(JSON.stringify(page.data))
   assert.equal(page.data.activeTab, '', '初值为空:不能先渲染「帖子」')
@@ -646,7 +648,7 @@ test('L06(a):详情回来前不渲染任何 tab 内容；同一俱乐部再次�
   again.loadDetail()
   requests.find(r => r.url === '/api/club/detail').success({ code: '200', data: { id: 31, isOwner: false, isJoined: false, joinPolicy: 0 } })
   assert.ok(seen.length > 0)
-  assert.deepEqual(seen.filter(tab => tab !== 'events'), [], '再次进入同一俱乐部直接落在上次的 tab,中途不出现别的 tab')
+  assert.deepEqual(seen.filter(tab => tab !== 'overview'), [], '再次进入同一俱乐部直接落在概览,中途不出现别的 tab')
 })
 
 test('L06(c):公开加入团的访客能看成员名单与贡献榜，需审核团锁到通过审核', () => {
@@ -707,10 +709,31 @@ test('L06(b/d/e):头部两行元信息；商家可加入、活动卡写「商家
 
   const view = read(DETAIL_WXML)
   // 2026-10-22 owner:俱乐部谁都能进来看,加入按钮改成底部悬浮;条件里仍不挡商家
-  assert.match(view, /<block wx:if="\{\{detailLoaded && !club\.isJoined && !club\.isOwner[^"]*\}\}">\s*<view class="join-float-space"><\/view>\s*<view class="join-float">/, '商家不再被挡在加入按钮外')
+  // 2026-10-22 owner:加入按钮只在「概览」出现,往下滑收起(join-float--hidden)
+  assert.match(view, /<block wx:if="\{\{detailLoaded && activeTab === 'overview' && !club\.isJoined && !club\.isOwner[^"]*\}\}">\s*<view class="join-float-space"><\/view>\s*<view class="join-float \{\{joinHidden \? 'join-float--hidden' : ''\}\}">/, '商家不再被挡在加入按钮外')
   assert.doesNotMatch(view, /class="profile-cta"/, '头部不再放加入按钮')
   assert.match(view, /wx:if="\{\{merchantNoSignup\}\}" class="ev-no-signup">商家不能报名</)
   assert.match(view, /upcomingTopics[^\n]*\n[^\n]*merchantNoSignup: isMerchantViewer/)
   assert.doesNotMatch(view, /club-coop-floating|cy-coop-invite-sheet|goClubCoop/)
   assert.doesNotMatch(read('pages/club/detail/index.json'), /coop-invite-sheet/)
+})
+
+// 2026-10-22 owner:「加入俱乐部」往下滑时收起,往上滑或回到顶部再出来;只在状态变化时 setData
+test('加入俱乐部悬浮按钮:往下滑收起、往上滑/回顶再出现', () => {
+  const { page } = loadDetail()
+  let writes = 0
+  const setData = page.setData
+  page.setData = function (patch, cb) { writes++; return setData.call(this, patch, cb) }
+  page.onPageScroll({ scrollTop: 20 })
+  assert.equal(page.data.joinHidden, false, '顶部附近不收')
+  page.onPageScroll({ scrollTop: 200 })
+  assert.equal(page.data.joinHidden, true, '往下滑收起')
+  const before = writes
+  page.onPageScroll({ scrollTop: 400 })
+  assert.equal(writes, before, '继续往下滑不重复 setData')
+  page.onPageScroll({ scrollTop: 300 })
+  assert.equal(page.data.joinHidden, false, '往上滑再出现')
+  page.onPageScroll({ scrollTop: 500 })
+  page.onPageScroll({ scrollTop: 10 })
+  assert.equal(page.data.joinHidden, false, '回到顶部一定出现')
 })

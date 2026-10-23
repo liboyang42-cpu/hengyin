@@ -193,23 +193,34 @@ page { background: var(--cy-bg-page); }
   white-space: nowrap;
 }
 
-/* 2026-10-22 owner:「加入俱乐部」改为底部悬浮整宽按钮(未加入时出现),头部身份行不再放。
-   底部一层渐隐到页面底色,按钮浮在内容上方;页尾 .join-float-space 留出同高空位。 */
+/* 2026-10-22 owner:「加入俱乐部」底部悬浮,只在「概览」出现;不要太大 —— 居中的小号胶囊(按字宽,不再整宽),
+   不铺底部渐隐带;往下滑收起、往上滑再出来。
+   ⚠️ 进场动画(cy-rise,fill both 会一直占着 transform)挂在里层按钮上,收起用外层容器的 transition,两者不打架。 */
 .join-float {
   position: fixed;
   left: 0;
   right: 0;
-  bottom: 0;
+  bottom: calc(var(--cy-space-4) + env(safe-area-inset-bottom));
   z-index: 40;
-  padding: var(--cy-space-4) var(--cy-page-x) calc(var(--cy-space-3) + env(safe-area-inset-bottom));
-  background: linear-gradient(180deg, transparent 0%, var(--cy-bg-page) 40%);
+  display: flex;
+  justify-content: center;
   pointer-events: none;
-  /* 打开页面时从底部滑上来(复用全站 cy-rise,不新增关键帧),稍等资料区先出 */
+  transition: transform var(--cy-motion-standard) var(--cy-ease-out), opacity var(--cy-motion-standard) var(--cy-ease-out);
+}
+.join-float--hidden { transform: translateY(calc(100% + var(--cy-space-6))); opacity: 0; }
+.join-float--hidden .join-float__btn { pointer-events: none; }
+.join-float__btn {
+  pointer-events: auto;
+  box-sizing: border-box;
+  padding: 0 var(--cy-space-6);
+  font-size: var(--cy-font-label);
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, .28); /* ds-ok: 悬浮胶囊浮在内容上方的投影 */
+  /* 打开页面时从下方滑上来(复用全站 cy-rise,不新增关键帧),稍等资料区先出 */
   animation: cy-rise var(--cy-motion-slow) var(--cy-ease-emphasized-decelerate) 160ms both;
 }
-@media (prefers-reduced-motion: reduce) { .join-float { animation: none; } }
-.join-float__btn { width: 100%; pointer-events: auto; box-sizing: border-box; font-size: var(--cy-font-body); }
-.join-float-space { height: calc(var(--cy-btn-h) + var(--cy-space-7) + env(safe-area-inset-bottom)); }
+.cy-motion-reduced .join-float__btn, .join-float__btn--reduced { animation: none; }
+@media (prefers-reduced-motion: reduce) { .join-float__btn { animation: none; } .join-float { transition: none; } }
+.join-float-space { height: calc(var(--cy-btn-h) + var(--cy-space-6) + env(safe-area-inset-bottom)); }
 /* join-btn 收编至 .cy-btn（primary 反色中性白/secondary/ghost）;此处仅留行内布局 */
 .join-btn {
   display: flex;

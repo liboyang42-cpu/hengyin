@@ -1063,10 +1063,11 @@
   />
 
   <view class="safe-bottom"></view>
-  <!-- 2026-10-22 owner:俱乐部谁都能进来看,未加入时底部悬浮「加入俱乐部」;页尾留出同高空位,最后一条内容不被盖住 -->
-  <block wx:if="{{detailLoaded && !club.isJoined && !club.isOwner && !(sceneCurrent && sceneCurrent.id === 'club-edit')}}">
+  <!-- 2026-10-22 owner:俱乐部谁都能进来看,未加入时底部悬浮「加入俱乐部」—— 只在「概览」出现(帖子/活动不出),
+       小号居中胶囊;往下滑收起、往上滑或回到顶部再出来。页尾留出同高空位,最后一条内容不被盖住 -->
+  <block wx:if="{{detailLoaded && activeTab === 'overview' && !club.isJoined && !club.isOwner && !(sceneCurrent && sceneCurrent.id === 'club-edit')}}">
     <view class="join-float-space"></view>
-    <view class="join-float">
+    <view class="join-float {{joinHidden ? 'join-float--hidden' : ''}}">
       <view wx:if="{{club.myJoinStatus === 0}}" class="join-btn join-btn--pending join-float__btn" aria-role="button" aria-disabled="true">等待主理人审核</view>
       <view wx:else class="join-btn cy-btn cy-btn--primary join-float__btn" bindtap="onJoin" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">{{club.joinPolicy == 1 && club.myJoinStatus === 2 ? '重新申请加入' : '加入俱乐部'}}</view>
     </view>
