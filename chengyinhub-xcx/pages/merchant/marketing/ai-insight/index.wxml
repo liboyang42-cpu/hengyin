@@ -1,4 +1,4 @@
-<view class="page theme-merchant {{reducedMotion ? 'cy-motion-reduced' : ''}} {{shown ? 'mi-shown' : ''}}">
+<view class="page theme-merchant {{reducedMotion ? 'cy-motion-reduced' : ''}} {{shown ? 'mi-shown' : 'mi-pre'}} {{landing ? 'mi-landing' : ''}} {{replay ? 'mi-replay' : ''}}">
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
@@ -45,7 +45,7 @@
           <view class="seg-btn {{win === 30 ? 'seg-btn--on' : ''}}" data-win="30" bindtap="onWinTap" hover-class="cy-pressed" hover-stay-time="80" aria-role="tab" aria-selected="{{win === 30}}">近30天</view>
           <view class="seg-btn {{win === 90 ? 'seg-btn--on' : ''}}" data-win="90" bindtap="onWinTap" hover-class="cy-pressed" hover-stay-time="80" aria-role="tab" aria-selected="{{win === 90}}">近90天</view>
         </view>
-        <view class="heat" style="grid-template-columns: repeat({{hero.cols}}, 1fr);" aria-hidden="true">
+        <view class="heat {{hero.cols === 7 ? 'heat--week' : ''}}" style="grid-template-columns: repeat({{hero.cols}}, 1fr);" aria-hidden="true">
           <view class="heat-cell heat-cell--l{{cell.lv}} cy-rise-in" wx:for="{{hero.cells}}" wx:for-item="cell" wx:key="k"
                 style="animation-delay: {{cell.delay}}ms;"></view>
         </view>
@@ -67,10 +67,10 @@
       </view>
 
       <view class="seg-row seg-row--value" wx:if="{{valueCard}}" aria-hidden="true">
-        <view class="seg-pip {{seg.on ? 'seg-pip--on' : ''}}" wx:for="{{valueCard.segs}}" wx:for-item="seg" wx:key="index"
-              style="transition-delay: {{400 + index * 45}}ms;"></view>
+        <view class="seg-pip {{seg.on || pipSweep ? 'seg-pip--on' : ''}}" wx:for="{{valueCard.segs}}" wx:for-item="seg" wx:key="index"
+              style="transition-delay: {{(pipSweep ? 400 : 0) + index * 45}}ms;"></view>
       </view>
-      <text class="value-delta" wx:if="{{valueCard && valueCard.deltaText}}">{{facts.window || '近30天'}}核销进度 · {{valueCard.deltaText}}</text>
+      <text class="value-delta" wx:if="{{valueCard && valueCard.caption}}">{{valueCard.caption}}</text>
     </view>
 
     <!-- 未知和明确为零是两件事：字段缺失只能重试，服务端明确全零才给业务空态。 -->
@@ -127,8 +127,8 @@
 
       <!-- 客源主题(facts.sources):玩家从哪个主题来 -->
       <block wx:if="{{sources.length}}">
-        <view class="sec-head"><text class="sec-title">客源主题</text><text class="sec-note">{{facts.window || '近30天'}}</text></view>
-        <view class="card rows {{grown ? 'grown' : ''}}">
+        <view class="sec-head mi-in" style="transition-delay: 350ms;"><text class="sec-title">客源主题</text><text class="sec-note">{{facts.window || '近30天'}}</text></view>
+        <view class="card rows mi-in {{grown ? 'grown' : ''}}" style="transition-delay: 350ms;">
           <view class="src-row" wx:for="{{sources}}" wx:key="name">
             <view class="src-ico"><text>{{item.initial}}</text></view>
             <view class="src-body">
@@ -142,8 +142,8 @@
 
       <!-- 最近到店玩家:一人一张白卡,不加竖线(2026-10-22 owner) -->
       <block wx:if="{{recentVisitors.length}}">
-        <view class="sec-head"><text class="sec-title">最近到店玩家</text></view>
-        <view class="visitor" wx:for="{{recentVisitors}}" wx:key="index">
+        <view class="sec-head mi-in" style="transition-delay: 420ms;"><text class="sec-title">最近到店玩家</text></view>
+        <view class="visitor mi-in" wx:for="{{recentVisitors}}" wx:key="index" style="transition-delay: {{420 + index * 60}}ms;">
           <image class="visitor-avatar" src="{{item.avatar || '/images/d_profile.png'}}" mode="aspectFill" />
           <view class="visitor-body">
             <text class="visitor-name">{{item.nickname}}</text>
@@ -156,7 +156,7 @@
 
     <!-- 为你推荐的主题:横滑卡,点卡原位展开详情弹层,弹层里再去合作中心申请承接 -->
     <block wx:if="{{recTopics.length}}">
-      <view class="sec-head">
+      <view class="sec-head mi-in" style="transition-delay: 300ms;">
         <text class="sec-title">为你推荐的主题</text>
         <view class="sec-link" bindtap="goCoopCenter" hover-class="cy-pressed" hover-stay-time="80"
               aria-role="button" aria-label="查看全部招商主题">
@@ -169,15 +169,25 @@
           <view class="tcard" id="tc-{{index}}" wx:for="{{recTopics}}" wx:key="topicId" bindtap="openTopic"
                 data-idx="{{index}}" hover-class="cy-pressed" hover-stay-time="80"
                 aria-role="button" aria-label="查看主题{{item.name}} {{item.metaText}}">
+            <!-- owner 2026-10-23:整卡封面 + 底部渐暗,文字压在渐变上(参考人物卡) -->
             <view class="tcard-cover">
               <image class="tcard-img" wx:if="{{item.coverUrl}}" src="{{item.coverUrl}}" mode="aspectFill" />
-              <view class="tcard-tag">招商中</view>
-            </view>
-            <view class="tcard-body">
-              <text class="tcard-meta" wx:if="{{item.metaText}}">{{item.metaText}}</text>
-              <text class="tcard-name">{{item.name}}</text>
-              <text class="tcard-reason">{{item.reason || '平台招商中的自由探索主题'}}</text>
-              <view class="tcard-foot"><view class="tcard-cta">看看</view></view>
+              <view class="tcard-shade"></view>
+              <view class="tcard-over">
+                <view class="tcard-title">
+                  <text class="tcard-name">{{item.name}}</text>
+                  <view class="tcard-tag">招商中</view>
+                </view>
+                <text class="tcard-reason">{{item.reason || '平台招商中的自由探索主题'}}</text>
+                <view class="tcard-foot">
+                  <view class="tcard-stats">
+                    <view class="tcard-stat" wx:if="{{item.dateText}}"><cy-icon name="calendar" size="28" /><text>{{item.dateText}}</text></view>
+                    <view class="tcard-sep" wx:if="{{item.dateText && item.hostName}}"></view>
+                    <view class="tcard-stat tcard-stat--host" wx:if="{{item.hostName}}"><cy-icon name="flag" size="28" /><text class="tcard-host">{{item.hostName}}</text></view>
+                  </view>
+                  <view class="tcard-cta">看看</view>
+                </view>
+              </view>
             </view>
           </view>
         </view>
@@ -186,7 +196,7 @@
 
     <!-- 推荐联动的商家 -->
     <block wx:if="{{recPartners.length}}">
-      <view class="sec-head"><text class="sec-title">推荐联动的商家</text></view>
+      <view class="sec-head mi-in" style="transition-delay: 420ms;"><text class="sec-title">推荐联动的商家</text></view>
       <view class="pcard" wx:for="{{recPartners}}" wx:key="merchantId" bindtap="goRecPartner"
             data-member-id="{{item.memberId}}" hover-class="cy-pressed" hover-stay-time="80"
             aria-role="button" aria-label="查看商家{{item.name}}">
@@ -204,7 +214,7 @@
     </block>
 
     <!-- 经营解读(AI 可降级,数据区不连坐) -->
-    <view class="sec-head"><text class="sec-title">经营解读</text></view>
+    <view class="sec-head mi-in" style="transition-delay: 480ms;"><text class="sec-title">经营解读</text></view>
     <view wx:if="{{ai}}" class="ai-card">
       <text class="ai-lowsample" wx:if="{{facts.lowSample}}">数据还少，以下解读仅供参考</text>
       <text class="ai-summary">{{ai.summary}}</text>
