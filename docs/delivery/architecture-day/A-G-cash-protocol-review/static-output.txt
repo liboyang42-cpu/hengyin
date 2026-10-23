@@ -1,0 +1,4 @@
+PASS: fixed root/G source identities; 11 single-column FKs; no effect settlement target FK in canonical origin/candidate
+PASS: source contains pay1 rejection; normal PAYING was not classified as a proven zero-close bypass
+PASS: exact AUTO_INCREMENT/CHECK/receipt and positive-close conditions inventoried
+NOT_RUN: MySQL constraint admission, DDL, SQL witnesses, Java, lock schedules, financial algorithms, CI

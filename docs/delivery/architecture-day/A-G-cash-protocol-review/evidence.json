@@ -1,0 +1,141 @@
+{
+  "source": "66e9e1798bf0b3e1c2b7e6cb2b6ab13a3b3e1329",
+  "g_proposal": "5e2803424f4954d48efa07a7176176a289476d30",
+  "g_proposal_parent": "ee71b74b629539e9a257c308491f8f9d94fe193e",
+  "proposal_fk_edges": [
+    {
+      "name": "fk_coop_cash_close_platform",
+      "columns": [
+        "platform_head_id"
+      ],
+      "target_table": "coop_settlement",
+      "target_columns": [
+        "id"
+      ]
+    },
+    {
+      "name": "fk_coop_cash_event_close",
+      "columns": [
+        "cash_close_id"
+      ],
+      "target_table": "coop_settlement_cash_close",
+      "target_columns": [
+        "id"
+      ]
+    },
+    {
+      "name": "fk_coop_cash_contribution_close",
+      "columns": [
+        "cash_close_id"
+      ],
+      "target_table": "coop_settlement_cash_close",
+      "target_columns": [
+        "id"
+      ]
+    },
+    {
+      "name": "fk_coop_cash_contribution_event",
+      "columns": [
+        "admission_event_id"
+      ],
+      "target_table": "coop_settlement_cash_event",
+      "target_columns": [
+        "id"
+      ]
+    },
+    {
+      "name": "fk_coop_cash_effect_parent",
+      "columns": [
+        "parent_cash_adjustment_id"
+      ],
+      "target_table": "coop_settlement_adjustment",
+      "target_columns": [
+        "id"
+      ]
+    },
+    {
+      "name": "fk_coop_cash_effect_event",
+      "columns": [
+        "cash_event_id"
+      ],
+      "target_table": "coop_settlement_cash_event",
+      "target_columns": [
+        "id"
+      ]
+    },
+    {
+      "name": "fk_coop_cash_effect_paid",
+      "columns": [
+        "paid_flow_id"
+      ],
+      "target_table": "ums_member_balance_detail",
+      "target_columns": [
+        "id"
+      ]
+    },
+    {
+      "name": "fk_coop_cash_effect_balance",
+      "columns": [
+        "balance_flow_id"
+      ],
+      "target_table": "ums_member_balance_detail",
+      "target_columns": [
+        "id"
+      ]
+    },
+    {
+      "name": "fk_coop_cash_effect_debt",
+      "columns": [
+        "debt_id"
+      ],
+      "target_table": "ums_member_settlement_debt",
+      "target_columns": [
+        "id"
+      ]
+    },
+    {
+      "name": "fk_coop_cash_head_close",
+      "columns": [
+        "cash_close_id"
+      ],
+      "target_table": "coop_settlement_cash_close",
+      "target_columns": [
+        "id"
+      ]
+    },
+    {
+      "name": "fk_coop_cash_delivery_adjustment",
+      "columns": [
+        "source_cash_adjustment_id"
+      ],
+      "target_table": "coop_settlement_adjustment",
+      "target_columns": [
+        "id"
+      ]
+    }
+  ],
+  "proposal_cross_close_composite_fk_count": 0,
+  "proposal_head_target_fk_on_adjustment": false,
+  "schema_executed": false,
+  "sql_witnesses_executed": false,
+  "java_executed": false,
+  "mysql_executed": false,
+  "current_source_sha256": {
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/dto/TopicSettlementCashBasis.java": "5adb5b6253d7bb5c3ffa185db2a1962f9e793cdea0e1ddde5e69282c79f56ec5",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java": "7b679dd00e49742be729d09660084a040ca3b12ab6f41e35349bb00e23865aeb",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementClaimServiceImpl.java": "04211a4ed5274c4afb8b17ba310507c9e12f729c05ea5c95598ba984c3690658",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java": "4f04c625b48f78bb2fe2af5043c8860a45dc6b618847a994884ed2e6d31119f4",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxPaymentCallbackMutationService.java": "a235e1b3984f4d72998c338af4f4abd2e241bf404bd394f618395d7dc7bf0c32",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TeamGroupServiceImpl.java": "4b10e279bee96375bd6d46765247f08f692e89aae38faf5fc03224740d292643",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubEventOpsServiceImpl.java": "58bfc591ec1c5d7ac776cbf1f1c5a64b547241be83eec949877e5e484617b030",
+    "chengyinhub-system/src/main/resources/mapper/business/CoopSettlementEvidenceMapper.xml": "d1432987226913c7eafa4505cdc2803ebd4a58369b36788fbfdd2584ab09cb65",
+    "chengyinhub-system/src/main/resources/mapper/business/CmsTopicMapper.xml": "d0b4bbdafb1ca6aa32a8bd6c71d5f1a740f3708d099e95e27e5cccfa363295b0",
+    "chengyinhub-admin/sql/migration_settlement_claim_20260811.sql": "4b9d487914fb146fb0d1de7625b398ccbd2143c7fa77d5d7ccc0a471b511394a"
+  },
+  "external_source_sha256": {
+    "5e2803424f4954d48efa07a7176176a289476d30:docs/delivery/architecture-day/G/cash-origin-proposal/README.md": "da26be23125bfbd3e2c49e0ca8658836ced994f32cb5c8fcbc0cde0787f48cb9",
+    "5e2803424f4954d48efa07a7176176a289476d30:docs/delivery/architecture-day/G/cash-origin-proposal/schema-candidate.sql": "b89bf5b5b7b8d553b14360979ceeb9e6588492ea64538beafc26a3eba022c622",
+    "5e2803424f4954d48efa07a7176176a289476d30:docs/delivery/architecture-day/G/cash-origin-proposal/allocation-option-a.sql": "aac9221f315215146d0b4e5bab45158c07e66d7bf3a3f1dcd0ea5ea5b5166770",
+    "5e2803424f4954d48efa07a7176176a289476d30:docs/delivery/architecture-day/G/cash-origin-proposal/money-evidence.md": "89721eab9a4158a0b4bbcf0758429ddbf26073af97b4d21838b5f67d52964bf4"
+  }
+}
