@@ -52,4 +52,11 @@ c00_action: 重建 chengyinhub-xcx/scripts/uiaudit/action-ledger.json(npm run au
 
 ## CI
 
-见 PR 描述中的运行编号。
+PR #561,head `dee18185`:
+
+| 运行 | 工作流 | 结果 |
+|---|---|---|
+| 39963118482 | GitHub CI | Backend tests、迁移布局/安全门、Fast gates、gitleaks、单测分片 19/20 绿;分片 10/20 与小程序静态门 / static checks 红 —— 仅动作台账漂移(C00 保留文件,见上) |
+| 39963118439 | Funds MySQL IT | 绿 |
+| 39963118641 | isolated-authenticated-redis-recovery | 绿 |
+| 39963118360 | Followup 39 selected backend cases | 绿 |
