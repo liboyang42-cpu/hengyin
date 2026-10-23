@@ -381,13 +381,10 @@
   display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; /* 横版只留一行 */
 }
 .tcard-foot { display: flex; align-items: center; gap: var(--cy-space-2); margin-top: var(--cy-space-1); }
-.tcard-stats { flex: 1; min-width: 0; display: flex; align-items: center; gap: var(--cy-space-2); color: var(--mi-on-ink); }
-.tcard-stat { flex: none; display: flex; align-items: center; gap: 8rpx; font-size: var(--cy-font-micro); font-weight: 600; }
-.tcard-stat--host { flex: 0 1 auto; min-width: 0; }
-.tcard-host { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.tcard-sep { flex: none; width: 2rpx; height: 24rpx; background: var(--mi-on-cover-3); }
+/* 2026-10-23 业主:卡面不再有场次/主办一行,底栏只剩右侧「看看」 */
 .tcard-cta {
   flex: none;
+  margin-left: auto;
   padding: 16rpx var(--cy-space-4);
   border-radius: var(--cy-radius-pill);
   background: var(--mi-ink);

@@ -180,11 +180,11 @@
                 </view>
                 <text class="tcard-reason">{{item.reason || '平台招商中的自由探索主题'}}</text>
                 <view class="tcard-foot">
-                  <view class="tcard-stats">
-                    <view class="tcard-stat" wx:if="{{item.dateText}}"><cy-icon name="calendar" size="28" /><text>{{item.dateText}}</text></view>
-                    <view class="tcard-sep" wx:if="{{item.dateText && item.hostName}}"></view>
-                    <view class="tcard-stat tcard-stat--host" wx:if="{{item.hostName}}"><cy-icon name="flag" size="28" /><text class="tcard-host">{{item.hostName}}</text></view>
-                  </view>
+                  <!-- 2026-10-23 业主:卡面只写标题和描述,删去左下角场次/主办(「城瘾官方」)一行。
+                       场次与主办仍在点开后的详情弹层里,同名主题在弹层里分得开。
+                       「看看」靠 margin-left:auto 留在右侧。
+                       本段占位注释保持行号不变,动作台账锚点不平移。
+                  -->
                   <view class="tcard-cta">看看</view>
                 </view>
               </view>
