@@ -96,7 +96,7 @@ public final class TeamClubEligibilityAuthority {
     }
 
     public Registration readback(String requestId) {
-        Registration found = byRequestId.get(requestId);
+        Registration found = requestId == null ? null : byRequestId.get(requestId);
         if (found == null) {
             throw new OrienteeringEventException(OrienteeringEventException.NOT_FOUND, "没有这条报名回执");
         }

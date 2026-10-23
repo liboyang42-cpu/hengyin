@@ -174,9 +174,9 @@ public final class EventScoreVersioning {
         }
     }
 
-    /** 回读原完赛请求；找不到就 NOT_FOUND，绝不新造一条请求。 */
+    /** 回读原完赛请求；找不到就 NOT_FOUND，绝不新造一条请求。缺失键保持 null，不得写成空串。 */
     public ResultVersion readback(String requestId) {
-        ResultVersion found = resultsByRequest.get(requestId);
+        ResultVersion found = requestId == null ? null : resultsByRequest.get(requestId);
         if (found == null) {
             throw new OrienteeringEventException(OrienteeringEventException.NOT_FOUND, "没有这条成绩回执");
         }

@@ -52,7 +52,7 @@ public final class EventResultDispute {
     }
 
     public Dispute readback(String requestId) {
-        Dispute found = byRequest.get(requestId);
+        Dispute found = requestId == null ? null : byRequest.get(requestId);
         if (found == null) {
             throw new OrienteeringEventException(OrienteeringEventException.NOT_FOUND, "没有这条争议回执");
         }
@@ -87,7 +87,7 @@ public final class EventResultDispute {
     }
 
     public RestoreReceipt readRestore(String restoreRequestId) {
-        RestoreReceipt found = restores.get(restoreRequestId);
+        RestoreReceipt found = restoreRequestId == null ? null : restores.get(restoreRequestId);
         if (found == null) {
             throw new OrienteeringEventException(OrienteeringEventException.NOT_FOUND, "没有这条原奖励恢复回执");
         }
@@ -123,6 +123,7 @@ public final class EventResultDispute {
             this.rewardKind = rewardKind;
             this.reason = reason;
             this.status = status;
+            this.restoreRequestId = null;
             this.openedAt = openedAt;
         }
 
