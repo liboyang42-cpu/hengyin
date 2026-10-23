@@ -122,3 +122,11 @@ Results: Tests run: 16, Failures: 0, Errors: 0, Skipped: 0
 ## 迁移
 
 无。不新增表，不跑生产 DDL。旧局无 sidecar = `inactive`，state_json 字段集合不变。
+
+## Addendum 2026-10-23 16:25 America/Los_Angeles
+
+HEAD `e3ffe4afa`。`readCard` of never-seen `c02-growth-never` does not occupy `growth-reset:<id>`; later unique `resetIfRecovery` is the first write. Did not invent `recoverOriginal`. Missing requestId still WAITING_SOURCE + Java null.
+
+命令：`mvn -pl chengyinhub-admin -am -Dtest=com.chengyinhub.business.service.support.rpg.adapter.*Test -Dsurefire.failIfNoSpecifiedTests=false test`
+
+结果：`BUILD SUCCESS` **20/0** 2026-10-23T23:25:49Z。`C02AccountSwitchRestartIsolationTest` 4/0。Runtime still unwired. App / XCTest / MySQL / HTTP / CI = NOT_RUN。不声称 100%。
