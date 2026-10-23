@@ -7,9 +7,11 @@ candidate checkout. Policy changes require a separate reviewed gate revision.
 from __future__ import annotations
 
 import argparse
+import collections
 import hashlib
 import importlib.util
 import json
+import os
 import re
 import subprocess
 import sys
@@ -19,6 +21,7 @@ from pathlib import Path
 BASE = "2ec68899099a1e250df0949a8383bf85b5d3ffe0"
 HERE = Path(__file__).resolve().parent
 REPO = HERE.parent.parent
+SQL_SPLITTER_PATH = REPO / "ci/sql_splitter.py"
 SHA = re.compile(r"[0-9a-f]{40}\Z")
 IDENT = r"[A-Za-z_][A-Za-z0-9_]*"
 MAPPER = re.compile(r"chengyinhub-[^/]+/src/main/resources/mapper/.+\.xml\Z")
@@ -85,7 +88,7 @@ def xml(data):
         raise GateError("invalid XML: %s" % error) from error
 
 
-def sql_shape(node, fragments, namespace):
+def sql_shape(node, fragments, namespace, details=None):
     """Fingerprint statement + transitive includes; hints are NOT SQL parsing.
 
     Dynamic tags, substitutions and incomplete literal shapes remain UNKNOWN.
@@ -129,13 +132,15 @@ def sql_shape(node, fragments, namespace):
         columns = sorted(set(columns + re.findall(IDENT, match.group(1))))
     if len(hints) != 1 or node.tag not in {"insert", "update", "delete"}:
         unknown.add("unsupported_sql_shape")
+    if details is not None:
+        details.update(text=text, leading=node.text or "", unknown=sorted(unknown))
     fingerprint = digest(ET.tostring(node) + encode(dependencies))
     return {"sha256": fingerprint, "table_hints": hints, "column_hints": columns,
             "analysis": "UNKNOWN" if unknown else "LITERAL_SHAPE_ONLY",
             "unknown": sorted(unknown)}
 
 
-def inventory(root, ref):
+def inventory(root, ref, sql_details=None):
     names = tree(root, ref)
     mappers, fragments = {}, {}
     poms = {}
@@ -168,10 +173,13 @@ def inventory(root, ref):
             if not name or name in seen:
                 raise GateError("missing/duplicate statement id: " + path)
             seen.add(name)
-            shape = sql_shape(node, fragments, namespace)
+            details = {}
+            shape = sql_shape(node, fragments, namespace, details)
             # Selects are fingerprinted too: SQL can mutate via select/affectData.
             shape.update({"kind": node.tag, "owner": owner})
             statements[path + "#" + name] = shape
+            if sql_details is not None:
+                sql_details[path + "#" + name] = details
             if node.tag == "select":
                 continue
             for table in shape["table_hints"]:
@@ -184,63 +192,173 @@ def inventory(root, ref):
                 for table, records in sorted(owners.items())}}
 
 
-def static_findings(base, current, changed):
-    findings = []
+def dependency_counts(declarations):
+    """Maven coordinates + scope; whitespace/order/version changes are not additions."""
+    result = collections.Counter()
+    for declaration in declarations:
+        dep = xml(declaration.encode())
+        fields = {child.tag.split("}")[-1]: (child.text or "").strip() for child in dep}
+        key = (fields.get("groupId", ""), fields.get("artifactId", ""),
+               fields.get("type", "jar"), fields.get("classifier", ""))
+        result[(key, fields.get("scope", "compile"))] += 1
+    return result
+
+
+def literal_write_target(kind, details):
+    # Only an unambiguous literal leading target, not arbitrary regex table hints.
+    dynamic = [reason for reason in details["unknown"] if reason != "unsupported_sql_shape"]
+    text = details["leading"] if dynamic else details["text"]
+    target = r"`?(" + IDENT + r")`?"
+    patterns = {
+        "update": r"^\s*update\s+" + target + r"(?=\s+set\b|\s*$)",
+        "delete": r"^\s*delete\s+from\s+" + target + r"(?=\s+where\b|\s*$)",
+        "insert": r"^\s*(?:insert(?:\s+ignore)?|replace)\s+into\s+" + target + r"(?=\s|\(|$)",
+    }
+    match = re.match(patterns.get(kind, r"(?!)"), text, re.I)
+    return match.group(1) if match else None
+
+
+def scope_violation(kind, details):
+    """Recognize only a literal broad UPDATE/DELETE. No authorization claim."""
+    dynamic = [reason for reason in details["unknown"] if reason != "unsupported_sql_shape"]
+    if kind not in {"update", "delete"} or dynamic:
+        return None
+    # Reuse the project's existing quote/comment-aware SQL scanner.
+    spec = importlib.util.spec_from_file_location("architecture_sql_splitter", SQL_SPLITTER_PATH)
+    splitter = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(splitter)
+    text = details["text"]
+    if splitter.unterminated_token(text) or splitter.delimiter_error(text) or "/*!" in text:
+        return None
+    code = splitter.split_code_statements_with_delimiters(text)
+    if len(code) != 1:
+        return None
+    syntax = code[0][0]
+    if re.search(r"\b(select|join|union|call)\b", syntax, re.I):
+        return None
+    where = re.search(r"\bwhere\b(.*)", syntax, re.I | re.S)
+    if where is None:
+        return "literal UPDATE/DELETE has no WHERE scope"
+    if re.fullmatch(r"\s*(?:1\s*=\s*1|true)\s*", where.group(1), re.I):
+        return "literal UPDATE/DELETE has an unconditional WHERE"
+    return None
+
+
+def static_findings(base, current, changed, sql_details, base_details):
+    blockers, review = [], []
+    known_owners = {}
+    for key, statement in base["statements"].items():
+        if statement["kind"] == "select":
+            continue
+        table = literal_write_target(statement["kind"], base_details[key])
+        if table:
+            known_owners.setdefault(table, set()).add(statement["owner"])
     for pom, dependencies in current["dependencies"].items():
-        old = list(base["dependencies"].get(pom, []))
-        for declaration in dependencies:
-            if declaration in old:
-                old.remove(declaration)
-            else:
-                findings.append({"rule": "DEPENDENCY_EXPANSION", "key": pom,
-                                 "detail": "new/changed Maven dependency declaration"})
+        previous = dependency_counts(base["dependencies"].get(pom, []))
+        actual = dependency_counts(dependencies)
+        uses = {"compile": {"compile", "runtime", "test"}, "provided": {"compile", "test"},
+                "runtime": {"runtime", "test"}, "test": {"test"}, "system": {"compile", "test"}}
+        old_remaining, new_remaining = previous - actual, actual - previous
+        old_coordinates = collections.Counter()
+        new_coordinates = collections.Counter()
+        for (coordinate, _), count in previous.items():
+            old_coordinates[coordinate] += count
+        for (coordinate, _), count in actual.items():
+            new_coordinates[coordinate] += count
+        expanded_scope = any(coordinate == old_coordinate and scope in uses and old_scope in uses
+                             and bool(uses[scope] - uses[old_scope])
+                             for coordinate, scope in new_remaining for old_coordinate, old_scope in old_remaining)
+        if new_coordinates - old_coordinates or expanded_scope:
+            blockers.append({"rule": "DEPENDENCY_EXPANSION", "key": pom,
+                             "detail": "new dependency coordinate/scope or increased declaration count"})
     for key, statement in current["statements"].items():
         if statement == base["statements"].get(key):
             continue
-        findings.append({"rule": "SQL_REVIEW_REQUIRED", "key": key,
-                         "detail": statement["analysis"], "sha256": statement["sha256"]})
-        if statement["kind"] != "select":
-            for table in statement["table_hints"]:
-                if statement["owner"] not in base["observed_table_field_writers"].get(table, {}):
-                    findings.append({"rule": "NEW_TABLE_WRITER", "key": key,
-                                     "detail": table + " <- " + statement["owner"]})
+        details = sql_details[key]
+        kind = statement["kind"]
+        if kind == "select":
+            mutation = re.match(r"\s*(insert|replace|update|delete)\b", details["text"], re.I)
+            kind = mutation.group(1).lower() if mutation else "select"
+            kind = "insert" if kind == "replace" else kind
+        if kind == "select":
+            review.append({"key": key, "reason": "SQL_QUERY_CHANGED: effects/locking are not semantically parsed"})
+            continue
+        table = literal_write_target(kind, details)
+        owners = known_owners.get(table, set())
+        if owners and statement["owner"] not in owners:
+            blockers.append({"rule": "NEW_TABLE_WRITER", "key": key,
+                             "detail": table + " <- " + statement["owner"]})
+        violation = scope_violation(kind, details)
+        if violation:
+            blockers.append({"rule": "UNSCOPED_WRITE", "key": key, "detail": violation})
+        review.append({"key": key, "reason": "UNKNOWN" if details["unknown"] or not table else "WRITE_CONTRACT_REVIEW",
+                       "detail": "normal PR review: scope/identity/CAS/intent/recovery/atomicity as applicable"})
     for key in base["statements"].keys() - current["statements"].keys():
-        findings.append({"rule": "SQL_REMOVAL_REVIEW_REQUIRED", "key": key,
-                         "detail": "may remove receipt/recovery/guard query"})
+        review.append({"key": key, "reason": "SQL_REMOVED: review receipt/recovery callers"})
     for path in sorted(changed):
         if MAPPER.fullmatch(path):
-            # Dynamic refids cannot form a complete static dependency graph.
-            # Root attributes and fragment-only edits must still require review,
-            # even when no resolved statement fingerprint changes.
-            findings.append({"rule": "MAPPER_FILE_REVIEW_REQUIRED", "key": path,
-                             "detail": "UNKNOWN: XML metadata/dynamic include reachability needs review"})
-        # Broad UNKNOWN triage intentionally catches new annotations, JDBC,
-        # reflection and side effects without pretending to resolve Java calls.
-        if "/src/main/" in path and not MAPPER.fullmatch(path):
-            findings.append({"rule": "PRODUCTION_REVIEW_REQUIRED", "key": path,
-                             "detail": "UNKNOWN: scope/intent/version/recovery and dependency calls need review"})
-        if path.startswith((".github/workflows/", "ci/")) and not path.startswith("ci/architecture/"):
-            findings.append({"rule": "TEST_GATE_REVIEW_REQUIRED", "key": path,
-                             "detail": "shared gate or workflow changed"})
-        if "/src/test/" in path:
-            findings.append({"rule": "TEST_SOURCE_REVIEW_REQUIRED", "key": path,
-                             "detail": "test/fixture/skip changes require review; report counts alone are insufficient"})
-        if path.endswith(".sql") and "/src/main/" not in path:
-            findings.append({"rule": "SQL_SCRIPT_REVIEW_REQUIRED", "key": path,
-                             "detail": "UNKNOWN: migration/seed/ad-hoc SQL must not bypass mapper ownership review"})
-        if path.startswith(".mvn/") or path in {"mvnw", "mvnw.cmd"}:
-            findings.append({"rule": "BUILD_REVIEW_REQUIRED", "key": path,
-                             "detail": "Maven launcher/flags can change dependency or test execution"})
-        if path.endswith("pom.xml") and path not in current["dependencies"]:
-            findings.append({"rule": "UNKNOWN_BUILD_FILE", "key": path,
-                             "detail": "new/unclassified build file requires review"})
-        elif path.endswith("pom.xml"):
-            findings.append({"rule": "BUILD_REVIEW_REQUIRED", "key": path,
-                             "detail": "plugins/profiles/modules/test skip configuration require review"})
-    return sorted(findings, key=lambda item: (item["rule"], item["key"]))
+            # Keeps fragment-only and unresolved dynamic refid edits visible.
+            review.append({"key": path, "reason": "MAPPER_XML_CHANGED: dynamic fragment reachability/metadata need PR review"})
+        elif path.endswith(".sql"):
+            review.append({"key": path, "reason": "UNKNOWN_SQL_SCRIPT: use existing migration gates and PR review"})
+        elif path.endswith("pom.xml") or path.startswith(".mvn/") or path in {"mvnw", "mvnw.cmd"}:
+            review.append({"key": path, "reason": "BUILD_CHANGED: effective dependencies/test settings are not fully parsed"})
+    order = lambda item: (item.get("rule", ""), item["key"])
+    return sorted(blockers, key=order), sorted(review, key=order)
 
 
-def check_source(root, candidate, baseline_path=HERE / "baseline.json"):
+def comparison_base(root, candidate, supplied, context):
+    """Validate the CI event's comparison point, never an arbitrary caller SHA.
+
+    GitHub supplies the trusted event; local fixtures call this function directly.
+    A process that controls the verifier or CI event is outside this trust boundary.
+    """
+    if not SHA.fullmatch(supplied or ""):
+        raise GateError("comparison base must be a full lowercase commit SHA")
+    event, payload, checkout = context["event"], context["payload"], context["checkout_sha"]
+    if not SHA.fullmatch(checkout or ""):
+        raise GateError("invalid CI checkout SHA")
+    if payload.get("repository", {}).get("full_name") != "liboyang42-cpu/hengyin":
+        raise GateError("wrong CI repository")
+    if event == "pull_request":
+        pr = payload["pull_request"]
+        if candidate != pr["head"]["sha"]:
+            raise GateError("PR candidate must equal trusted event head SHA")
+        target = pr["base"]["sha"]
+        if not SHA.fullmatch(target or ""):
+            raise GateError("invalid PR target SHA")
+        # Also bind the CI checkout to the PR head or the exact synthetic merge.
+        parents = git(root, "show", "-s", "--format=%P", checkout).decode().strip().split()
+        if checkout != candidate and parents != [target, candidate]:
+            raise GateError("CI checkout is neither PR head nor its exact synthetic merge")
+        bases = git(root, "merge-base", "--all", candidate, target).decode().splitlines()
+        if len(bases) != 1:
+            raise GateError("ambiguous PR merge-base requires review")
+        expected = bases[0]
+    elif event == "push":
+        if candidate != checkout or payload.get("after") != candidate:
+            raise GateError("push candidate does not match trusted event")
+        expected = payload["before"]
+    elif event == "workflow_dispatch":
+        if candidate != checkout:
+            raise GateError("manual candidate does not match trusted CI checkout")
+        expected = git(root, "rev-parse", candidate + "^1").decode().strip()
+    else:
+        raise GateError("unsupported CI event")
+    if expected != supplied:
+        raise GateError("COMPARISON_BASE_MISMATCH: supplied base differs from trusted CI event/merge-base")
+    git(root, "merge-base", "--is-ancestor", supplied, candidate)
+    return supplied
+
+
+def ci_context(environ):
+    if environ.get("GITHUB_ACTIONS") != "true" or environ.get("GITHUB_REPOSITORY") != "liboyang42-cpu/hengyin":
+        raise GateError("trusted GitHub CI context required; no arbitrary local comparison-base default")
+    return {"event": environ["GITHUB_EVENT_NAME"], "checkout_sha": environ["GITHUB_SHA"],
+            "payload": json.loads(Path(environ["GITHUB_EVENT_PATH"]).read_text())}
+
+
+def check_source(root, candidate, compare_base, context, baseline_path=HERE / "baseline.json"):
     if not SHA.fullmatch(candidate):
         raise GateError("candidate must be a full lowercase commit SHA")
     if git(root, "rev-parse", "HEAD").decode().strip() != candidate:
@@ -248,31 +366,30 @@ def check_source(root, candidate, baseline_path=HERE / "baseline.json"):
     if git(root, "status", "--porcelain", "--untracked-files=all").strip():
         raise GateError("candidate checkout is dirty; commit/isolate changes before verification")
     git(root, "merge-base", "--is-ancestor", BASE, candidate)
+    comparison_base(root, candidate, compare_base, context)
     frozen = inventory(root, BASE)
     if baseline_path.read_bytes() != encode_inventory(frozen):
         raise GateError("BASELINE_LAUNDERING: baseline must exactly reproduce pinned public git blobs")
+    # Protect only executable verifier and frozen exceptions. A documentation or
+    # test-file edit is not itself an architecture violation. CI executes trusted
+    # selftests, not arbitrary additional files supplied by the candidate.
     names = set(tree(root, candidate))
-    # The verifier and frozen policy must come from the trusted checkout, not PR code.
-    trusted_files = sorted(p for p in HERE.rglob("*") if p.is_file()
-                           and "__pycache__" not in p.parts)
-    policy_names = {p.relative_to(REPO).as_posix() for p in trusted_files}
-    candidate_policy_names = {n for n in names if n.startswith("ci/architecture/")}
-    if policy_names != candidate_policy_names:
-        raise GateError("POLICY_CHANGE: candidate gate file set differs from trusted gate")
-    for path in trusted_files:
-        relative = path.relative_to(REPO).as_posix()
-        if blob(root, candidate, relative) != path.read_bytes():
+    for filename in ("gate.py", "baseline.json"):
+        relative = "ci/architecture/" + filename
+        if relative not in names or blob(root, candidate, relative) != (HERE / filename).read_bytes():
             raise GateError("POLICY_CHANGE: candidate changed trusted policy: " + relative)
-    changed = set(git(root, "diff", "--name-only", "--no-renames", BASE, candidate).decode().splitlines())
-    current = inventory(root, candidate)
-    return {"schema": 1, "candidate_sha": candidate, "base_sha": BASE,
-            "verdict": "STATIC_ONLY", "findings": static_findings(frozen, current, changed),
-            "coverage": {"statements": len(current["statements"]),
-                         "observed_tables": len(current["observed_table_field_writers"]),
-                         "unknown_statements": sum(s["analysis"] == "UNKNOWN"
-                                                   for s in current["statements"].values())},
-            "not_proven": ["Java/SQL semantics", "authorization", "transaction atomicity",
-                           "persistent recovery reachability", "real MySQL/Redis execution"]}
+    changed = set(git(root, "diff", "--name-only", "--no-renames", compare_base, candidate).decode().splitlines())
+    details = {}
+    current = inventory(root, candidate, details)
+    previous_details = {}
+    previous = inventory(root, compare_base, previous_details)
+    blockers, review = static_findings(previous, current, changed, details, previous_details)
+    return {"schema": 2, "candidate_sha": candidate, "comparison_base_sha": compare_base,
+            "legacy_baseline_sha": BASE, "ci_checkout_sha": context["checkout_sha"],
+            "verdict": "BLOCKED" if blockers else "PASS_WITH_REVIEW_ITEMS" if review else "PASS",
+            "findings": blockers, "review_items": review, "changed_files": sorted(changed),
+            "not_proven": ["Java/SQL authorization semantics", "transaction atomicity",
+                           "persistent intent/recovery", "Java or real storage test execution"]}
 
 
 def readback(plan, receipt, reports, assert_path=REPO / "ci/assert_it_ran.py"):
@@ -342,45 +459,6 @@ def readback(plan, receipt, reports, assert_path=REPO / "ci/assert_it_ran.py"):
                                               "report producer trust", "real business chain"]}
 
 
-def reviewed_result(result, review, evidence):
-    """Exact-candidate, external human review; never grow the legacy baseline.
-
-    The trusted CI caller supplies the approved review artifact, just as it
-    supplies the trusted test plan. A PR-authored JSON is not an approval.
-    """
-    if set(review) != {"schema", "candidate_sha", "findings_sha256", "reviewer", "decision_ref",
-                       "contracts", "required_suites"} or review["schema"] != 1:
-        raise GateError("invalid external review contract")
-    if review["candidate_sha"] != result["candidate_sha"] or evidence.get("candidate_sha") != result["candidate_sha"]:
-        raise GateError("review/evidence candidate mismatch")
-    if evidence.get("verdict") != "REPORTS_CONSISTENT" or not review["required_suites"] or review["required_suites"] != evidence.get("suites"):
-        raise GateError("review requires the exact verified suite plan")
-    if review["findings_sha256"] != digest(encode(result["findings"])):
-        raise GateError("review findings fingerprint mismatch")
-    if not all(isinstance(review[key], str) and review[key].strip() for key in ("reviewer", "decision_ref")):
-        raise GateError("missing external reviewer or decision reference")
-    if any(item["rule"] == "DEPENDENCY_EXPANSION" for item in result["findings"]):
-        raise GateError("dependency expansion is not authorized by this task; cannot waive")
-    required = {"scope", "identity", "intent", "version", "recovery", "atomicity", "reject_zero_effect"}
-    contracts = review["contracts"]
-    if not isinstance(contracts, list):
-        raise GateError("review contracts must be a list")
-    keys = set()
-    for contract in contracts:
-        if set(contract) != required | {"rule", "key"}:
-            raise GateError("each finding requires a full dangerous-command contract")
-        if any(not isinstance(contract[key], str) or not contract[key].strip() for key in contract):
-            raise GateError("empty review contract field; explain non-applicability explicitly")
-        key = (contract["rule"], contract["key"])
-        if key in keys:
-            raise GateError("duplicate review contract")
-        keys.add(key)
-    expected = {(item["rule"], item["key"]) for item in result["findings"]}
-    if not expected or keys != expected:
-        raise GateError("missing/extra review finding contracts")
-    return {**result, "verdict": "REVIEWED_STATIC_WITH_REPORTS", "reviewer": review["reviewer"],
-            "decision_ref": review["decision_ref"], "evidence": evidence}
-
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
@@ -390,8 +468,7 @@ def main():
     source = subs.add_parser("source")
     source.add_argument("--source", type=Path, required=True)
     source.add_argument("--candidate", required=True)
-    for flag in ("review", "plan", "receipt", "reports"):
-        source.add_argument("--" + flag, type=Path)
+    source.add_argument("--compare-base", required=True)
     evidence = subs.add_parser("evidence")
     evidence.add_argument("--plan", type=Path, required=True)
     evidence.add_argument("--receipt", type=Path, required=True)
@@ -402,22 +479,14 @@ def main():
             print(encode_inventory(inventory(args.source, BASE)).decode(), end="")
             return 0
         elif args.command == "source":
-            result = check_source(args.source, args.candidate)
-            inputs = [args.review, args.plan, args.receipt, args.reports]
-            if any(inputs):
-                if not all(inputs):
-                    raise GateError("external review requires --review --plan --receipt --reports together")
-                for path in inputs:
-                    if path.resolve().is_relative_to(args.source.resolve()):
-                        raise GateError("review/evidence inputs must be outside the candidate checkout")
-                evidence_result = readback(json.loads(args.plan.read_text()), json.loads(args.receipt.read_text()), args.reports)
-                result = reviewed_result(result, json.loads(args.review.read_text()), evidence_result)
+            result = check_source(args.source, args.candidate, args.compare_base, ci_context(os.environ))
         else:
             result = readback(json.loads(args.plan.read_text()), json.loads(args.receipt.read_text()), args.reports)
         print(encode(result).decode(), end="")
-        return 1 if result.get("findings") and result.get("verdict") != "REVIEWED_STATIC_WITH_REPORTS" else 0
+        return 1 if result.get("findings") else 0
     except (GateError, OSError, ValueError, TypeError, KeyError, AttributeError) as error:
         print("architecture gate FAIL-CLOSED: " + str(error), file=sys.stderr)
+        print(encode({"verdict": "FAIL_CLOSED", "error": str(error)}).decode(), end="")
         return 1
 
 

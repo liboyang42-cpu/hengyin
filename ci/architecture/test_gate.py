@@ -1,9 +1,9 @@
 """Lightweight isolated negative controls. No Java, database, Docker or network."""
 import copy
-import contextlib
 import importlib.util
-import io
 import json
+import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -38,6 +38,7 @@ class InventoryAndDeltaTest(unittest.TestCase):
         shell(self.root, "config", "user.email", "architecture-fixture@example.invalid")
         shell(self.root, "config", "user.name", "architecture isolated fixture")
         self.write(MAPPER, mapper())
+        self.write(MAPPER.replace("OrderMapper", "WalletMapper"), mapper("<update id='write'>update wallet set balance=#{balance} where id=#{id}</update>", "example.WalletMapper"))
         self.write(POM, b"<project><dependencies><dependency><groupId>com.chengyinhub</groupId><artifactId>chengyinhub-common</artifactId></dependency></dependencies></project>")
         self.write(JAVA, b"package example; class OrderService {}")
         self.base = self.commit()
@@ -56,7 +57,12 @@ class InventoryAndDeltaTest(unittest.TestCase):
     def delta(self):
         candidate = self.commit()
         changed = shell(self.root, "diff", "--name-only", "--no-renames", self.base, candidate).splitlines()
-        return gate.static_findings(self.before, gate.inventory(self.root, candidate), changed)
+        details = {}
+        current = gate.inventory(self.root, candidate, details)
+        before_details = {}
+        gate.inventory(self.root, self.before["base_sha"], before_details)
+        blockers, self.review = gate.static_findings(self.before, current, changed, details, before_details)
+        return blockers
 
     def test_unchanged_and_documentation_are_green(self):
         self.write("docs/example.md", b"review notes")
@@ -67,8 +73,8 @@ class InventoryAndDeltaTest(unittest.TestCase):
         self.assertEqual(["orders"], record["table_hints"])
 
     def test_dangerous_write_scope_removal_is_red(self):
-        self.write(MAPPER, mapper(ORDER.replace(" and owner_id=#{owner}", "")))
-        self.assertIn("SQL_REVIEW_REQUIRED", [f["rule"] for f in self.delta()])
+        self.write(MAPPER, mapper(ORDER.split(" where ")[0] + "</update>"))
+        self.assertIn("UNSCOPED_WRITE", [f["rule"] for f in self.delta()])
 
     def test_new_cross_table_writer_is_red(self):
         self.write(MAPPER, mapper(ORDER.replace("update orders", "update wallet")))
@@ -78,10 +84,10 @@ class InventoryAndDeltaTest(unittest.TestCase):
         self.write(MAPPER, mapper(namespace="foreign.OtherMapper"))
         self.assertIn("NEW_TABLE_WRITER", [f["rule"] for f in self.delta()])
 
-    def test_dynamic_sql_remains_unknown_and_red(self):
+    def test_dynamic_sql_is_reviewable_unknown_not_a_violation(self):
         self.write(MAPPER, mapper("<update id='finish'>update ${table} <set><if test='state != null'>state=#{state}</if></set> where id=#{id}</update>"))
-        findings = self.delta()
-        self.assertTrue(any(f["rule"] == "SQL_REVIEW_REQUIRED" and f["detail"] == "UNKNOWN" for f in findings))
+        self.assertEqual([], self.delta())
+        self.assertTrue(any(item["reason"] == "UNKNOWN" for item in self.review))
 
     def test_fragment_change_invalidates_dependent_statement(self):
         self.write(MAPPER, mapper("<sql id='scope'>and owner_id=#{owner}</sql><update id='finish'>update orders set state=#{state} where id=#{id} <include refid='scope'/></update>"))
@@ -115,48 +121,80 @@ class InventoryAndDeltaTest(unittest.TestCase):
         self.write(MAPPER, mapper(content.replace("and owner_id=#{owner}", "and 1=1")))
         after = gate.inventory(self.root, self.commit())
         self.assertEqual(before["statements"], after["statements"], "dynamic target is intentionally unresolved")
-        findings = gate.static_findings(before, after, [MAPPER])
-        self.assertIn("MAPPER_FILE_REVIEW_REQUIRED", [f["rule"] for f in findings])
+        details = {}
+        after = gate.inventory(self.root, shell(self.root, "rev-parse", "HEAD"), details)
+        before_details = {}
+        gate.inventory(self.root, ref, before_details)
+        blockers, review = gate.static_findings(before, after, [MAPPER], details, before_details)
+        self.assertEqual([], blockers)
+        self.assertTrue(any(item["key"] == MAPPER for item in review))
 
-    def test_new_dependency_version_or_scope_is_red(self):
-        self.write(POM, (self.root / POM).read_bytes().replace(b"</dependency>", b"<version>NEW</version></dependency>"))
+    def test_new_dependency_coordinate_is_red(self):
+        self.write(POM, (self.root / POM).read_bytes().replace(b"chengyinhub-common", b"new-library"))
         self.assertIn("DEPENDENCY_EXPANSION", [f["rule"] for f in self.delta()])
+
+    def test_version_formatting_changes_do_not_introduce_a_dependency(self):
+        self.write(POM, (self.root / POM).read_bytes().replace(b"</dependency>", b"<version>NEW</version></dependency>"))
+        self.assertEqual([], self.delta())
+        self.assertTrue(self.review)
+
+    def test_scope_expansion_is_red(self):
+        self.write(POM, (self.root / POM).read_bytes().replace(b"</dependency>", b"<scope>test</scope></dependency>"))
+        self.before = gate.inventory(self.root, self.commit())
+        self.write(POM, (self.root / POM).read_bytes().replace(b"<scope>test</scope>", b"<scope>compile</scope>"))
+        self.assertIn("DEPENDENCY_EXPANSION", [f["rule"] for f in self.delta()])
+
+    def test_scope_narrowing_is_not_a_violation(self):
+        self.write(POM, (self.root / POM).read_bytes().replace(b"</dependency>", b"<scope>runtime</scope></dependency>"))
+        self.assertEqual([], self.delta())
+
+    def test_scoped_write_change_is_reviewable_not_blocked(self):
+        self.write(MAPPER, mapper(ORDER.replace(" and owner_id=#{owner}", "")))
+        self.assertEqual([], self.delta())
+        self.assertTrue(self.review, "identity/CAS/authorization still need normal PR review")
+
+    def test_unconditional_where_is_red_but_quoted_where_does_not_hide_broad_write(self):
+        details = {}
+        self.write(MAPPER, mapper("<update id='finish'>update orders set state='where' where 1=1</update>"))
+        self.assertIn("UNSCOPED_WRITE", [item["rule"] for item in self.delta()])
+        self.write(MAPPER, mapper("<update id='finish'>update orders set state='where'</update>"))
+        self.assertIn("UNSCOPED_WRITE", [item["rule"] for item in self.delta()])
 
     def test_dependency_removal_does_not_expand_but_requires_build_review(self):
         self.write(POM, b"<project/>")
         rules = [f["rule"] for f in self.delta()]
         self.assertNotIn("DEPENDENCY_EXPANSION", rules)
-        self.assertIn("BUILD_REVIEW_REQUIRED", rules)
+        self.assertTrue(any(item["key"] == POM for item in self.review))
 
     def test_query_disguised_write_is_reviewed(self):
         self.write(MAPPER, mapper("<select id='hidden' affectData='true'>delete from orders</select>"))
-        self.assertIn("SQL_REVIEW_REQUIRED", [f["rule"] for f in self.delta()])
+        self.assertIn("UNSCOPED_WRITE", [item["rule"] for item in self.delta()])
+        self.assertTrue(self.review)
 
-    def test_removed_recovery_statement_is_red(self):
+    def test_removed_recovery_statement_is_review_item(self):
         self.write(MAPPER, mapper(""))
-        self.assertIn("SQL_REMOVAL_REVIEW_REQUIRED", [f["rule"] for f in self.delta()])
+        self.assertEqual([], self.delta())
+        self.assertTrue(any(item["reason"].startswith("SQL_REMOVED") for item in self.review))
 
-    def test_unknown_java_and_side_effect_are_red(self):
+    def test_java_change_alone_is_not_a_violation(self):
         self.write(JAVA, b"class OrderService { void afterCommit() { external.charge(); } }")
-        self.assertIn("PRODUCTION_REVIEW_REQUIRED", [f["rule"] for f in self.delta()])
+        self.assertEqual([], self.delta())
 
-    def test_shared_gate_and_test_skip_change_are_red(self):
+    def test_test_and_workflow_changes_do_not_require_java_receipt(self):
         self.write("ci/example.py", b"pass")
         self.write("chengyinhub-admin/src/test/java/example/ATest.java", b"@Disabled class ATest {}")
-        rules = [f["rule"] for f in self.delta()]
-        self.assertIn("TEST_GATE_REVIEW_REQUIRED", rules)
-        self.assertIn("TEST_SOURCE_REVIEW_REQUIRED", rules)
+        self.assertEqual([], self.delta())
 
-    def test_unknown_build_file_is_red(self):
+    def test_unknown_build_file_is_review_item(self):
         self.write("other/pom.xml", b"<project/>")
-        self.assertIn("UNKNOWN_BUILD_FILE", [f["rule"] for f in self.delta()])
+        self.assertEqual([], self.delta())
+        self.assertTrue(any(item["key"] == "other/pom.xml" for item in self.review))
 
     def test_migration_and_maven_flags_cannot_bypass_gate(self):
         self.write("chengyinhub-admin/sql/migration_new.sql", b"update wallet set balance=0;")
         self.write(".mvn/maven.config", b"-DskipTests")
-        rules = [f["rule"] for f in self.delta()]
-        self.assertIn("SQL_SCRIPT_REVIEW_REQUIRED", rules)
-        self.assertIn("BUILD_REVIEW_REQUIRED", rules)
+        self.assertEqual([], self.delta())
+        self.assertEqual(2, len(self.review))
 
     def prepare_policy(self):
         policy = self.root / "ci/architecture"
@@ -171,9 +209,13 @@ class InventoryAndDeltaTest(unittest.TestCase):
             (trusted / file.name).write_bytes(file.read_bytes())
         return trusted, candidate
 
-    def source_check(self, trusted, candidate):
+    def source_check(self, trusted, candidate, compare=None):
+        compare = compare or self.base
+        context = {"event": "push", "checkout_sha": candidate,
+                   "payload": {"repository": {"full_name": "liboyang42-cpu/hengyin"},
+                               "before": compare, "after": candidate}}
         with patch.object(gate, "BASE", self.base), patch.object(gate, "HERE", trusted), patch.object(gate, "REPO", trusted.parent.parent):
-            return gate.check_source(self.root, candidate, trusted / "baseline.json")
+            return gate.check_source(self.root, candidate, compare, context, trusted / "baseline.json")
 
     def test_clean_exact_candidate_and_trusted_policy_are_green(self):
         trusted, candidate = self.prepare_policy()
@@ -187,15 +229,21 @@ class InventoryAndDeltaTest(unittest.TestCase):
         with self.assertRaisesRegex(gate.GateError, "BASELINE_LAUNDERING"):
             self.source_check(trusted, candidate)
 
-    def test_candidate_cannot_edit_or_add_policy_exception(self):
+    def test_candidate_cannot_edit_frozen_baseline_or_verifier(self):
         trusted, _ = self.prepare_policy()
-        self.write("ci/architecture/allow-all.json", b"{}")
+        self.write("ci/architecture/baseline.json", b"{}")
         with self.assertRaisesRegex(gate.GateError, "POLICY_CHANGE"):
             self.source_check(trusted, self.commit())
-        (self.root / "ci/architecture/allow-all.json").unlink()
+        self.write("ci/architecture/baseline.json", (trusted / "baseline.json").read_bytes())
         self.write("ci/architecture/gate.py", b"# bypass")
         with self.assertRaisesRegex(gate.GateError, "POLICY_CHANGE"):
             self.source_check(trusted, self.commit())
+
+    def test_ordinary_gate_documentation_and_test_edits_do_not_block(self):
+        trusted, prior = self.prepare_policy()
+        self.write("ci/architecture/README.md", b"review documentation")
+        self.write("ci/architecture/test_new_rule.py", b"# proposed negative control")
+        self.assertEqual([], self.source_check(trusted, self.commit(), prior)["findings"])
 
     def test_dirty_and_mismatched_candidate_are_red(self):
         trusted, candidate = self.prepare_policy()
@@ -211,6 +259,75 @@ class InventoryAndDeltaTest(unittest.TestCase):
         unrelated = self.commit()
         with self.assertRaisesRegex(gate.GateError, "merge-base"):
             self.source_check(trusted, unrelated)
+
+    def test_accepted_history_is_not_reported_again_and_baseline_is_unchanged(self):
+        trusted, prior = self.prepare_policy()
+        baseline_bytes = (trusted / "baseline.json").read_bytes()
+        self.write(MAPPER, mapper(ORDER.replace("update orders", "update wallet")))
+        accepted = self.commit()
+        self.assertTrue(self.source_check(trusted, accepted, prior)["findings"])
+        self.write("docs/next-small-change.md", b"new normal PR")
+        current = self.commit()
+        result = self.source_check(trusted, current, accepted)
+        self.assertEqual([], result["findings"])
+        self.assertEqual([], result["review_items"])
+        self.assertEqual(["docs/next-small-change.md"], result["changed_files"])
+        self.assertEqual(baseline_bytes, (trusted / "baseline.json").read_bytes())
+
+    def test_pr_requires_actual_merge_base_not_any_ancestor(self):
+        self.write("docs/target.md", b"target")
+        target = self.commit()
+        self.write("docs/pr.md", b"head")
+        head = self.commit()
+        context = {"event": "pull_request", "checkout_sha": head,
+                   "payload": {"repository": {"full_name": "liboyang42-cpu/hengyin"},
+                               "pull_request": {"head": {"sha": head}, "base": {"sha": target}}}}
+        self.assertEqual(target, gate.comparison_base(self.root, head, target, context))
+        with self.assertRaisesRegex(gate.GateError, "COMPARISON_BASE_MISMATCH"):
+            gate.comparison_base(self.root, head, self.base, context)
+        with self.assertRaisesRegex(gate.GateError, "COMPARISON_BASE_MISMATCH"):
+            gate.comparison_base(self.root, head, head, context)
+        context["payload"]["pull_request"]["head"]["sha"] = target
+        self.assertRaises(gate.GateError, gate.comparison_base, self.root, head, target, context)
+
+    def test_real_synthetic_merge_context_is_bound_to_exact_base_and_head(self):
+        original_branch = shell(self.root, "branch", "--show-current")
+        shell(self.root, "branch", "fixture-pr", self.base)
+        self.write("docs/base-advance.md", b"base advanced")
+        target = self.commit()
+        shell(self.root, "checkout", "fixture-pr", "-q")
+        self.write("docs/pr-change.md", b"PR changed")
+        head = self.commit()
+        shell(self.root, "checkout", original_branch, "-q")
+        shell(self.root, "merge", "--no-ff", "fixture-pr", "-m", "synthetic fixture")
+        merge = shell(self.root, "rev-parse", "HEAD")
+        context = {"event": "pull_request", "checkout_sha": merge,
+                   "payload": {"repository": {"full_name": "liboyang42-cpu/hengyin"},
+                               "pull_request": {"head": {"sha": head}, "base": {"sha": target}}}}
+        self.assertEqual(self.base, gate.comparison_base(self.root, head, self.base, context))
+        context["checkout_sha"] = target
+        with self.assertRaisesRegex(gate.GateError, "synthetic merge"):
+            gate.comparison_base(self.root, head, self.base, context)
+
+    def test_push_and_manual_base_are_bound_to_trusted_event(self):
+        self.write("docs/first.md", b"one")
+        prior = self.commit()
+        self.write("docs/second.md", b"two")
+        candidate = self.commit()
+        context = {"event": "workflow_dispatch", "checkout_sha": candidate,
+                   "payload": {"repository": {"full_name": "liboyang42-cpu/hengyin"}}}
+        self.assertEqual(prior, gate.comparison_base(self.root, candidate, prior, context))
+        self.assertRaises(gate.GateError, gate.comparison_base, self.root, candidate, self.base, context)
+        context["event"] = "push"
+        context["payload"].update(before=prior, after=candidate)
+        self.assertEqual(prior, gate.comparison_base(self.root, candidate, prior, context))
+        self.assertRaises(gate.GateError, gate.comparison_base, self.root, candidate, candidate, context)
+        context["payload"]["before"] = "0" * 40
+        self.assertRaises(gate.GateError, gate.comparison_base, self.root, candidate, "0" * 40, context)
+
+    def test_missing_ci_context_and_short_compare_sha_are_rejected(self):
+        self.assertRaises(gate.GateError, gate.ci_context, {})
+        self.assertRaises(gate.GateError, gate.comparison_base, self.root, self.base, self.base[:8], {})
 
 
 class EvidenceTest(unittest.TestCase):
@@ -331,78 +448,6 @@ class EvidenceTest(unittest.TestCase):
         self.assertEqual("REPORTS_CONSISTENT", json.loads(result.stdout)["verdict"])
 
 
-class ExternalReviewTest(unittest.TestCase):
-    def setUp(self):
-        self.result = {"candidate_sha": "a" * 40, "verdict": "STATIC_ONLY",
-                       "findings": [{"rule": "SQL_REVIEW_REQUIRED", "key": MAPPER + "#finish", "detail": "UNKNOWN"}]}
-        self.evidence = {"candidate_sha": "a" * 40, "verdict": "REPORTS_CONSISTENT",
-                         "suites": {"example.RequiredIT": 2}}
-        self.review = {"schema": 1, "candidate_sha": "a" * 40,
-                       "findings_sha256": gate.digest(gate.encode(self.result["findings"])),
-                       "reviewer": "isolated fixture reviewer, not a real approval",
-                       "decision_ref": "isolated fixture decision, not production evidence",
-                       "required_suites": {"example.RequiredIT": 2},
-                       "contracts": [{"rule": "SQL_REVIEW_REQUIRED", "key": MAPPER + "#finish",
-                                      **{key: "fixture code/test reference" for key in
-                                         ("scope", "identity", "intent", "version", "recovery", "atomicity", "reject_zero_effect")}}]}
-
-    def test_exact_review_and_verified_test_plan_are_green(self):
-        result = gate.reviewed_result(self.result, self.review, self.evidence)
-        self.assertEqual("REVIEWED_STATIC_WITH_REPORTS", result["verdict"])
-        self.assertEqual(self.result["findings"], result["findings"], "review must retain original findings")
-
-    def test_stale_candidate_and_changed_findings_are_red(self):
-        self.review["candidate_sha"] = "b" * 40
-        self.assertRaises(gate.GateError, gate.reviewed_result, self.result, self.review, self.evidence)
-        self.review["candidate_sha"] = "a" * 40
-        self.result["findings"][0]["detail"] = "changed after review"
-        self.assertRaises(gate.GateError, gate.reviewed_result, self.result, self.review, self.evidence)
-
-    def test_missing_recovery_or_empty_contract_is_red(self):
-        del self.review["contracts"][0]["recovery"]
-        self.assertRaises(gate.GateError, gate.reviewed_result, self.result, self.review, self.evidence)
-        self.review["contracts"][0]["recovery"] = " "
-        self.assertRaises(gate.GateError, gate.reviewed_result, self.result, self.review, self.evidence)
-
-    def test_missing_extra_and_duplicate_contracts_are_red(self):
-        for contracts in ([], self.review["contracts"] * 2,
-                          [{**self.review["contracts"][0], "key": "foreign"}]):
-            with self.subTest(contracts=contracts):
-                review = {**self.review, "contracts": contracts}
-                self.assertRaises(gate.GateError, gate.reviewed_result, self.result, review, self.evidence)
-
-    def test_wrong_suite_plan_or_unverified_evidence_is_red(self):
-        self.review["required_suites"] = {"example.RequiredIT": 1}
-        self.assertRaises(gate.GateError, gate.reviewed_result, self.result, self.review, self.evidence)
-        self.review["required_suites"] = self.evidence["suites"]
-        self.evidence["verdict"] = "CLAIMED_GREEN"
-        self.assertRaises(gate.GateError, gate.reviewed_result, self.result, self.review, self.evidence)
-
-    def test_approval_cannot_waive_unapproved_dependency(self):
-        self.result["findings"][0]["rule"] = "DEPENDENCY_EXPANSION"
-        self.review["findings_sha256"] = gate.digest(gate.encode(self.result["findings"]))
-        with self.assertRaisesRegex(gate.GateError, "cannot waive"):
-            gate.reviewed_result(self.result, self.review, self.evidence)
-
-    def test_missing_reviewer_reference_and_unknown_schema_are_red(self):
-        for key, value in (("reviewer", ""), ("decision_ref", ""), ("schema", 2)):
-            with self.subTest(key=key):
-                self.assertRaises(gate.GateError, gate.reviewed_result, self.result, {**self.review, key: value}, self.evidence)
-
-    def test_cli_rejects_candidate_local_review_and_incomplete_review_inputs(self):
-        with tempfile.TemporaryDirectory() as folder:
-            candidate = Path(folder) / "candidate"
-            candidate.mkdir()
-            for arguments, message in ((["--review", str(candidate / "review.json")], "together"),
-                                       ([flag for key in ("review", "plan", "receipt", "reports")
-                                         for flag in ("--" + key, str(candidate / key))], "outside")):
-                stderr = io.StringIO()
-                with patch.object(gate, "check_source", return_value=self.result), patch.object(sys, "argv", [
-                    "gate.py", "source", "--source", str(candidate), "--candidate", "a" * 40, *arguments
-                ]), contextlib.redirect_stderr(stderr):
-                    self.assertEqual(1, gate.main())
-                self.assertIn(message, stderr.getvalue())
-
 
 class RegisteredReferencesTest(unittest.TestCase):
     def test_command_checklist_references_real_baseline_sources(self):
@@ -414,6 +459,55 @@ class RegisteredReferencesTest(unittest.TestCase):
                 with self.subTest(command=command["id"], path=path):
                     self.assertTrue(gate.blob(gate.REPO, gate.BASE, path))
             self.assertIn(command["symbol"].encode(), gate.blob(gate.REPO, gate.BASE, command["entry"]))
+
+
+def wiring_problems(text):
+    """Narrow text contract, like existing ci/test_ci_cost_contract.py, not YAML parsing."""
+    match = re.search(r"      # F architecture gate: begin\n(.*?)      # F architecture gate: end\n", text, re.S)
+    if not match:
+        return ["missing architecture steps"]
+    block = match.group(1)
+    problems = []
+    if not (re.search(r"^  fast_gates:\n", text, re.M).start() < match.start()
+            < re.search(r"^  backend:\n", text, re.M).start()):
+        problems.append("architecture must reuse unconditional fast_gates")
+    if not re.search(r"^          ref: [0-9a-f]{40}$", block, re.M):
+        problems.append("trusted verifier must use an immutable SHA")
+    for expected in ("repository: liboyang42-cpu/hengyin", "fetch-depth: 0", "persist-credentials: false",
+                     "if: '!cancelled()'", "steps.architecture_checkout.outcome == 'success'",
+                     "steps.architecture_selftest.outcome == 'success'", "--compare-base", "git merge-base",
+                     "github.event.pull_request.head.sha || github.sha", "github.event.pull_request.base.sha",
+                     "github.event.before", "workflow_dispatch)", "set -euo pipefail",
+                     "git worktree add --detach", "git worktree remove", "actions/upload-artifact@v4",
+                     "architecture_check.outcome != 'skipped'", "if-no-files-found: error"):
+        if expected not in block:
+            problems.append("missing " + expected)
+    if "continue-on-error" in block or "|| true" in block or "max-parallel: 20" not in text:
+        problems.append("error propagation/20-shard budget changed")
+    return problems
+
+
+class WorkflowWiringTest(unittest.TestCase):
+    def setUp(self):
+        path = Path(os.environ.get("ARCHITECTURE_WORKFLOW", gate.REPO / ".github/workflows/ci.yml"))
+        self.text = path.read_text()
+
+    def test_wired_steps_preserve_trust_and_budget(self):
+        self.assertEqual([], wiring_problems(self.text))
+
+    def test_missing_comparison_mutable_verifier_or_suppressed_error_is_red(self):
+        for mutated in (self.text.replace("--compare-base", "--wrong-base"),
+                        re.sub(r"(          ref: )[0-9a-f]{40}", r"\1master", self.text),
+                        self.text.replace("set -euo pipefail", "set +e\n          true || true")):
+            with self.subTest(mutated=mutated[-100:]):
+                self.assertTrue(wiring_problems(mutated))
+
+    def test_check_shell_parses_without_running_it(self):
+        start = self.text.index('          set -euo pipefail\n', self.text.index('# F architecture gate: begin'))
+        end = self.text.index('      - name: Preserve architecture', start)
+        script = "\n".join(line[10:] for line in self.text[start:end].splitlines()) + "\n"
+        result = subprocess.run(["bash", "-n"], input=script, capture_output=True, text=True)
+        self.assertEqual(0, result.returncode, result.stderr)
 
 
 if __name__ == "__main__":
