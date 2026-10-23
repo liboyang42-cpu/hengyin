@@ -24,3 +24,5 @@
 3. `action-ledger.test` 的 inventoryMatchesCurrent 仍要求在最终联合树重建当前生成清单。当前不覆盖共享 action-ledger.json、不扩大 baseline，不把未重建视为通过。D 的 broadcaststats(clicked) 静态契约另属 D，不在 C 修改范围。
 
 未验证：全仓 Node shards、全仓 UI 最终联合结果、Java/JUnit/MySQL、微信真机/跨进程实际小程序。没有 DDL、部署、正式合并、生产访问或外部模型调用。回退不能丢弃原账号待确认命令，不能恢复缺身份或新版本覆盖原意图的行为。
+
+提交检查纠正：`3b78ffb98eb8e1252e238e143d7724473b62360b` 在证据空白检查失败后被错误继续提交/推送，不能单独取用。随后补扫该提交完整 37 文件及 diff，4 个 generic-api-key 命中均为公开 UI 锚点证明的两项 SHA-256（正文两项 + diff 两项），并非凭据。证明字段改名为 digestSha256，未改摘要或增加扫描豁免；清理 TAP 空行和 patch 空白后，实际 git apply --check/diff --check 通过，最终 37 文件及累计 diff 复扫约 765.84 KB，无命中。后续修正提交与 3b78 必须一起取用；第一批 9a90123 和指纹 83a0479 未重写。

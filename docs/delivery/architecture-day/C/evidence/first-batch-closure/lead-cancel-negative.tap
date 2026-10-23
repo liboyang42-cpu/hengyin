@@ -20,9 +20,9 @@ not ok 3 - cancelling the replacement activity confirmation cannot inherit anoth
   failureType: 'testCodeFailure'
   error: |-
     replacement activity has no submitted command and can confirm again
-    
+
     2 !== 3
-    
+
   code: 'ERR_ASSERTION'
   name: 'AssertionError'
   expected: 3
