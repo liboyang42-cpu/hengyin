@@ -1,0 +1,121 @@
+{
+  "repository": "liboyang42-cpu/hengyin",
+  "baseline": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+  "candidate": "b453b6e1b41e59b365255a05c318cd305fd1c054",
+  "parent": "9b92fb5738244c677fea7470232f67d3b97b7a98",
+  "tree": "35e43f886ab01a29249008e00bb29dfe484ef113",
+  "production_view": {
+    "java_xml_count": 2721,
+    "all_public_blob_hashes_verified": true,
+    "tree_truncated": false
+  },
+  "reviewed_files": [
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiAiController.java",
+      "sha": "5470ba47cf79fe95bb37bc7087e886f44c56d3f5"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/AiQuotaRecoveryServiceTest.java",
+      "sha": "66c826a10157df91414aa70ef0e25f257c6e855f"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/OpenAiCompatibleLlmClientLogRedactionTest.java",
+      "sha": "6f13eb0a2975895a01276b2984d4d7ca824e7fa7"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/OpenAiCompatibleLlmClientVisionTest.java",
+      "sha": "4ec7db848e415656e5a532b9b9d18881076df289"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImplTest.java",
+      "sha": "50128ed2e397c12e417e953e4637104284a880fd"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/AiCreatorServiceImplTest.java",
+      "sha": "444e5a61bae0ef6d9a0a6d06329cc2588f2a1cc6"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/AiThemeDraftRequestServiceTest.java",
+      "sha": "ca39cfe6c4ee0220e9283d35ae49feae0b7db0ca"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiAiControllerTest.java",
+      "sha": "8c02b6b723146a4027f2716162fcb9fc1a7a25c8"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/AiQuotaReservationMapper.java",
+      "sha": "4887fff550faf9c3bd8dc4f7bfb72809a7eda699"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiProviderOutcomeUnknownException.java",
+      "sha": "241b35fcde9443f7d5beb864625703fc5d90f306"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/AiQuotaRecoveryService.java",
+      "sha": "05d6fda769001b49d21d36bd0c3fdcc62f85a10e"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/OpenAiCompatibleLlmClient.java",
+      "sha": "806c3d12325697f4f1f57d1ce417e95db2bd1360"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ai/impl/AiGatewayServiceImpl.java",
+      "sha": "f0ce857ae758ee88f30999696d4beb7c5531a2db"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AiCreatorServiceImpl.java",
+      "sha": "63f2a81ed380b8fed9ed98c0c4c50bbf5b2672aa"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AiThemeDraftRequestService.java",
+      "sha": "ead43ef46758a4b6b3d1884fcc10b19c6b28d6a3"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/task/AiQuotaRecoveryTask.java",
+      "sha": "738732dcb5e72777f25cd1d0ea99ea5faf57d9d8"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/AiQuotaReservationMapper.xml",
+      "sha": "192fbbc2b4c10fbe7c7bf06a36b17b5075aa7cc9"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/publish/simple/index.js",
+      "sha": "377072bfc7e1fb1f19d01e95fe5aa5cc24b63b2f"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/simple-ai-request-state.test.js",
+      "sha": "4e480a69127bdafbc44d68a844132ef86cedc6e4"
+    }
+  ],
+  "executed": {
+    "node": {
+      "command": "node tests/unit/simple-ai-request-state.test.js",
+      "tests": 6,
+      "passed": 6,
+      "failures": 0,
+      "skipped": 0,
+      "scope": "real Page and helper code, mocked HTTP response; no Java/provider/Redis proof"
+    },
+    "java": "NOT_RUN",
+    "mysql": "NOT_RUN",
+    "redis": "NOT_RUN",
+    "provider": "NOT_CALLED",
+    "http": "NOT_RUN"
+  },
+  "patch": {
+    "file": "request-unknown.review.patch",
+    "tests": 2,
+    "apply_check": "PASS",
+    "compiled": false,
+    "executed": false
+  },
+  "changes": [
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/AiCreatorServiceImplTest.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AiCreatorServiceImpl.java",
+    "docs/delivery/architecture-day/COORDINATOR/66e9-unit-failures.json",
+    "docs/delivery/architecture-day/COORDINATOR/player-theme-provider-unknown.md",
+    "docs/delivery/architecture-day/COORDINATOR/verified-40036839154.json",
+    "docs/delivery/architecture-day/COORDINATOR/verified-40036842511.json",
+    "docs/delivery/architecture-day/COORDINATOR/verified-40037252877.json"
+  ]
+}

@@ -1,0 +1,33 @@
+--- a/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/AiThemeDraftRequestServiceTest.java
++++ b/chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/AiThemeDraftRequestServiceTest.java
+@@ -144,4 +144,30 @@
+         assertFalse(AiThemeDraftRequestService.isValidRequestId("abc"));
+         assertFalse(AiThemeDraftRequestService.isValidRequestId(null));
+     }
++
++    @Test
++    void providerUnknownKeepsOriginalRequestUnknownOnSubmitReadAndReplay() {
++        when(creator.themeDraft(any(), eq(MEMBER))).thenThrow(
++                new com.chengyinhub.business.service.ai.AiProviderOutcomeUnknownException("provider outcome unknown", null));
++        AiThemeDraftRequestState first = service.submit(req(), MEMBER);
++        assertEquals(AiThemeDraftRequestState.UNKNOWN, first.getState());
++        assertEquals(RID, first.getRequestId());
++        assertEquals(AiThemeDraftRequestState.UNKNOWN, service.read(MEMBER, RID).getState());
++        AiThemeDraftRequestState replay = service.submit(req(), MEMBER);
++        assertEquals(AiThemeDraftRequestState.UNKNOWN, replay.getState());
++        assertTrue(replay.isReplayed());
++        verify(creator, times(1)).themeDraft(any(), eq(MEMBER));
++    }
++
++    @Test
++    void expiryOfResponseCacheDoesNotPermitReexecutionOfUnknownOriginalRequest() {
++        when(creator.themeDraft(any(), eq(MEMBER))).thenThrow(
++                new com.chengyinhub.business.service.ai.AiProviderOutcomeUnknownException("provider outcome unknown", null));
++        service.submit(req(), MEMBER);
++        // Model Redis TTL expiry of the 24h request/result cache. This is not proof that no provider ran.
++        store.remove(AiThemeDraftRequestService.key(MEMBER, RID));
++        AiThemeDraftRequestState replay = service.submit(req(), MEMBER);
++        verify(creator, times(1)).themeDraft(any(), eq(MEMBER));
++        assertEquals(AiThemeDraftRequestState.UNKNOWN, replay.getState());
++    }
+ }
