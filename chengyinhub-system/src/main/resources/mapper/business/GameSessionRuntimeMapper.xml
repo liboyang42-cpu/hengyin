@@ -296,6 +296,12 @@
                          and rm2.status=1 and rm2.del_flag=0)
          where n.topic_id=#{topicId} and n.status=1
            and (n.merchant_member_id is null or n.node_audit_status=1)
+           and not exists (select 1 from merchant_chapter_offer withdrawn
+                           where withdrawn.chapter_id = n.chapter_id
+                             and withdrawn.merchant_id = n.merchant_member_id
+                             and withdrawn.status = 0
+                             and withdrawn.withdraw_reason is not null
+                             and trim(withdrawn.withdraw_reason) != '')
     </insert>
 
     <update id="updateStationCode">
