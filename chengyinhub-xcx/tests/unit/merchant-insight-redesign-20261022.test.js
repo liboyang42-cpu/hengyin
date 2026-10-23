@@ -212,3 +212,37 @@ test('进度条下一行只说核销率(不重复玩家环比,不随主卡窗口
   assert.equal(page._buildHero(FACTS, 7, 'visitors', false).deltaText, '持平');
   assert.equal(page._buildHero(FACTS, 7, 'visitors', false).deltaDown, false);
 });
+
+test('切 7/30/90 天:进度条换成该窗口的打卡/核销并重扫;切指标不重扫', () => {
+  const timers = [];
+  const page = loadPage({ setTimeout: (fn, ms) => { timers.push({ fn, ms }); return timers.length; }, clearTimeout() {} });
+  page._trends = page._indexTrends(TRENDS);
+  page.data.facts = FACTS;
+  page._countTo = function () {};
+  page.data.valueCard = page._buildValueCard(FACTS, 30);
+  assert.equal(page.data.valueCard.caption, '近30天打卡 40 次 · 核销 12 次');
+  assert.equal(page.data.valueCard.segs.filter((s) => s.on).length, 3, '12/40 → 3 格');
+
+  page.onWinTap({ currentTarget: { dataset: { win: '7' } } });
+  assert.equal(page.data.valueCard.caption, '近7天打卡 9 次 · 核销 3 次');
+  assert.equal(page.data.valueCard.segs.filter((s) => s.on).length, 3, '3/9 → 3 格');
+  assert.equal(page.data.pipSweep, true, '切窗口重扫');
+  timers.pop().fn();
+  assert.equal(page.data.pipSweep, false);
+
+  page.onWinTap({ currentTarget: { dataset: { win: '90' } } });
+  assert.equal(page.data.valueCard.caption, '近90天打卡 99 次 · 核销 30 次');
+  assert.equal(page.data.pipSweep, true);
+  timers.pop().fn();
+
+  page.onMetricTap({ currentTarget: { dataset: { metric: 'checkins' } } });
+  assert.equal(page.data.pipSweep, false, '切指标不动进度条');
+  assert.equal(page.data.valueCard.caption, '近90天打卡 99 次 · 核销 30 次');
+
+  const empty = JSON.parse(JSON.stringify(TRENDS));
+  empty.windows.forEach((w) => { w.checkins = 0; w.redeems = 0; });
+  page._trends = page._indexTrends(empty);
+  const card = page._buildValueCard(FACTS, 7);
+  assert.equal(card.caption, '近7天暂无打卡核销');
+  assert.equal(card.segs.filter((s) => s.on).length, 0);
+});

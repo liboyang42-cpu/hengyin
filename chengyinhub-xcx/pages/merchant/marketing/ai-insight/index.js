@@ -198,7 +198,7 @@ Page({
             hero: that._buildHero(d.facts, that.data.win, that._metric || 'visitors', firstPaint),
             slots: that._buildSlots(d.facts),
             sources: that._buildSources(d.facts),
-            valueCard: that._buildValueCard(d.facts),
+            valueCard: that._buildValueCard(d.facts, that.data.win),
             metricCards: that._buildMetricCards(d.facts),
             split: that._buildSplit(d.facts),
             recentVisitors: Array.isArray(d.recentVisitors) ? d.recentVisitors : [],
@@ -320,19 +320,32 @@ Page({
   },
 
   // 首屏归因价值卡(调研共性规律#1:面板第一职责是「平台为你带来了什么」)
-  _buildValueCard(facts) {
+  _buildValueCard(facts, win) {
     const a = (facts && facts.attribution) || {};
-    const rate = numberOrNull(((facts && facts.checkin) || {}).redeemRate);
-    // 进度条下只说核销率本身:玩家环比已在主卡角标,且主卡会切 7/90 天,这行固定是 facts 窗口
-    const caption = (facts && facts.window) || '近30天';
-    return {
+    const base = {
       visitors: this._countText(a.visitors),
       checkins: this._countText(a.checkins),
       redeems: this._countText(a.redeems),
-      // 稿 1:27 价值卡进度 = 核销占打卡的比例(34/42 ≈ 8 格)
+    };
+    // 有 trends:进度条跟主卡所选 7/30/90 天走,= 该窗口核销次数 ÷ 打卡次数(只核销没打卡的封顶满格),
+    // 下行直接写这两个数,不另起一个和下方「核销率」卡口径不同的百分比。
+    const w = this._trends && this._trends[win];
+    if (w) {
+      const checkins = numberOrNull(w.checkins) || 0;
+      const redeems = numberOrNull(w.redeems) || 0;
+      const label = '近' + win + '天';
+      return Object.assign(base, {
+        segs: this._segs(checkins > 0 ? Math.min(1, redeems / checkins) : (redeems > 0 ? 1 : null)),
+        caption: checkins + redeems === 0 ? label + '暂无打卡核销' : label + '打卡 ' + checkins + ' 次 · 核销 ' + redeems + ' 次',
+      });
+    }
+    // 旧缓存没有 trends:沿用 facts 窗口的核销率
+    const rate = numberOrNull(((facts && facts.checkin) || {}).redeemRate);
+    const caption = (facts && facts.window) || '近30天';
+    return Object.assign(base, {
       segs: this._segs(rate),
       caption: rate === null ? caption + '暂无核销' : caption + '核销率 ' + this._pct(rate),
-    };
+    });
   },
 
   // 新客 vs 回头客双段横条(Square loyalty vs non-loyalty 的内部对比版)
@@ -438,8 +451,13 @@ Page({
     // 指标只是内部状态:WXML 读的是 hero.trio[].on,不走 setData
     this._metric = metric;
     const hero = this._buildHero(this.data.facts, win, metric, true);
-    this.setData({ win, winIdx: TREND_WINDOWS.indexOf(win), hero });
+    const winChanged = win !== this.data.win;
+    const patch = { win, winIdx: TREND_WINDOWS.indexOf(win), hero };
+    if (winChanged) patch.valueCard = this._buildValueCard(this.data.facts, win);
+    this.setData(patch);
     this._countTo(hero.target);
+    // 切时间窗:进度条跟着换窗口数,并重扫一遍(和打开页面同一套)
+    if (winChanged) this._sweepPips();
   },
 
   /** 大数字从 0 滚到目标值;切页/隐藏/清场都会停 */
