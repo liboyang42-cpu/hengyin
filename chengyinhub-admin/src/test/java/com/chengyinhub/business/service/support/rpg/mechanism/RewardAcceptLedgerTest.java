@@ -55,5 +55,9 @@ class RewardAcceptLedgerTest {
         assertEquals(RewardAcceptLedger.Outcome.UNKNOWN, recovered.outcome());
         assertFalse(recovered.mintedNewRequestId());
         assertFalse(recovered.projectionTakenAsSuccess());
+        RewardAcceptLedger.Decision original = ledger.recoverOriginal("c03-rew-unk");
+        assertEquals("c03-rew-unk", original.originalRequestId());
+        assertEquals(RewardAcceptLedger.Outcome.UNKNOWN, original.outcome());
+        assertFalse(original.mintedNewRequestId());
     }
 }

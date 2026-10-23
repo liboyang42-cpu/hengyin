@@ -142,6 +142,14 @@ public final class RewardAcceptLedger {
     }
 
     /**
+     * 对齐 iOS {@code recoverOriginal}:只读原 requestId。未见过的 id 不占账。
+     * 缺 requestId 保持 Java null + UNKNOWN，不抛。
+     */
+    public Decision recoverOriginal(String originalRequestId) {
+        return recover(originalRequestId);
+    }
+
+    /**
      * Record UNKNOWN for an already-bound id. A never-seen id must not occupy
      * the ledger, or a later unique accept becomes a replay of minted UNKNOWN.
      * APPLIED / REPLAY / WAITING_SOURCE / REJECTED original outcomes are not clobbered.
