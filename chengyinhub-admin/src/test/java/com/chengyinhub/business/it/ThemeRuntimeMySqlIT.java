@@ -340,7 +340,7 @@ class ThemeRuntimeMySqlIT {
         TopicRouteSession row=sql.getMapper(TopicRouteSessionMapper.class).selectAccessibleById(id,7L);runtime.gameplayAction(7L,id,row.getVersion(),"confirm","QUEST_RESOLVE","north",null);assertEquals(5,JSON.readTree(sql.getMapper(TopicRouteSessionMapper.class).selectAccessibleById(id,7L).getStateJson()).path("variables").path("sys.hp").asInt());
     }
     @org.junit.jupiter.params.ParameterizedTest
-    @org.junit.jupiter.params.provider.ValueSource(strings={"CAS","RECEIPT","CONCURRENT"})
+    @org.junit.jupiter.params.provider.ValueSource(strings={"CAS","RECEIPT","APPLIED","CONCURRENT"})
     void photoOriginalResultSurvivesLocalRollbackAndSameCommandAppliesOnce(String fault) throws Exception {
         Map<String,Object> initial=personalTask(false,null,"BLOCK_HP_COST",false,false,false,"photoCheck");
         long routeId=((Number)initial.get("sessionId")).longValue();
@@ -358,6 +358,10 @@ class ThemeRuntimeMySqlIT {
         PlayAttemptLogMapper realAttempts=sql.getMapper(PlayAttemptLogMapper.class);
         GameRuntimeSession before=realSessions.selectAccessibleById(sessionId,7L);
         String routeBefore=sql.getMapper(TopicRouteSessionMapper.class).selectAccessibleById(routeId,7L).getStateJson();
+        com.chengyinhub.business.service.ai.PhotoCheckIntentService actualIntents =
+                (com.chengyinhub.business.service.ai.PhotoCheckIntentService)
+                        ReflectionTestUtils.getField(advancedTarget, "photoCheckIntentService");
+        PhotoCheckIntentMapper realPhotoRows = sql.getMapper(PhotoCheckIntentMapper.class);
         if("CAS".equals(fault)) {
             GameRuntimeSessionMapper failing=mock(GameRuntimeSessionMapper.class,org.mockito.AdditionalAnswers.delegatesTo(realSessions));
             doReturn(0).when(failing).updateStateCas(any());ReflectionTestUtils.setField(advancedTarget,"sessionMapper",failing);
@@ -365,6 +369,15 @@ class ThemeRuntimeMySqlIT {
             PlayAttemptLogMapper failing=mock(PlayAttemptLogMapper.class,org.mockito.AdditionalAnswers.delegatesTo(realAttempts));
             doThrow(new IllegalStateException("fixture receipt insert failed")).when(failing).insertPlayAttemptLog(any());
             ReflectionTestUtils.setField(advancedTarget,"attemptMapper",failing);
+        }
+        if ("APPLIED".equals(fault)) {
+            PhotoCheckIntentMapper failing = mock(PhotoCheckIntentMapper.class,
+                    org.mockito.AdditionalAnswers.delegatesTo(realPhotoRows));
+            doAnswer(i -> {
+                assertEquals(1, realPhotoRows.markApplied(i.getArgument(0), i.getArgument(1), i.getArgument(2)));
+                throw new IllegalStateException("fixture failure after actual APPLIED update");
+            }).when(failing).markApplied(anyLong(), anyString(), anyLong());
+            ReflectionTestUtils.setField(actualIntents, "mapper", failing);
         }
         Map<String,Object> payload=Collections.singletonMap("imageUrl","media-asset:701");
         if ("CONCURRENT".equals(fault)) {
@@ -411,6 +424,7 @@ class ThemeRuntimeMySqlIT {
         PhotoCheckIntentRow ready=photoRows.selectByKey(7L,sessionId,scopedKey);
         assertNotNull(ready);assertEquals("RESULT_READY",ready.getState());assertEquals("RECEIVED",ready.getProviderState());
         String originalNonce=ready.getNonce();assertEquals("first saved result",ready.getResultReason());
+        ReflectionTestUtils.setField(actualIntents, "mapper", realPhotoRows);
         ReflectionTestUtils.setField(advancedTarget,"sessionMapper",realSessions);ReflectionTestUtils.setField(advancedTarget,"attemptMapper",realAttempts);
         Map<String,Object> applied=advanced.act(7L,sessionId,version,"photo-fault","SUBMIT_PHOTO_CHECK",payload);
         Map<String,Object> replay=advanced.act(7L,sessionId,version,"photo-fault","SUBMIT_PHOTO_CHECK",payload);

@@ -1,0 +1,112 @@
+[
+  {
+    "file": "advanced-game-receipt-contract",
+    "exit": 0,
+    "summary": [
+      "# tests 60",
+      "# pass 60",
+      "# fail 0",
+      "# skipped 0"
+    ]
+  },
+  {
+    "file": "play-qa-recovery-contract",
+    "exit": 0,
+    "summary": [
+      "# tests 6",
+      "# pass 6",
+      "# fail 0",
+      "# skipped 0"
+    ]
+  },
+  {
+    "file": "separate-consent-feature",
+    "exit": 0,
+    "summary": [
+      "# tests 25",
+      "# pass 25",
+      "# fail 0",
+      "# skipped 0"
+    ]
+  },
+  {
+    "file": "play-qa-photo-upload-contract",
+    "exit": 0,
+    "summary": [
+      "# tests 12",
+      "# pass 12",
+      "# fail 0",
+      "# skipped 0"
+    ]
+  },
+  {
+    "file": "advanced-game-object-card-relay",
+    "exit": 0,
+    "summary": [
+      "# tests 8",
+      "# pass 8",
+      "# fail 0",
+      "# skipped 0"
+    ]
+  },
+  {
+    "file": "playkit-photocheck-server-judge-contract",
+    "exit": 0,
+    "summary": [
+      "# tests 6",
+      "# pass 6",
+      "# fail 0",
+      "# skipped 0"
+    ]
+  },
+  {
+    "file": "playkit-photocheck-frame-contract",
+    "exit": 0,
+    "summary": [
+      "# tests 20",
+      "# pass 20",
+      "# fail 0",
+      "# skipped 0"
+    ]
+  },
+  {
+    "file": "object-card-page-lifecycle",
+    "exit": 0,
+    "summary": [
+      "# tests 3",
+      "# pass 3",
+      "# fail 0",
+      "# skipped 0"
+    ]
+  },
+  {
+    "file": "advanced-game-variants-recovery",
+    "exit": 0,
+    "summary": [
+      "# tests 7",
+      "# pass 7",
+      "# fail 0",
+      "# skipped 0"
+    ]
+  },
+  {
+    "file": "advanced-game-draw-audio",
+    "exit": 0,
+    "summary": [
+      "# tests 4",
+      "# pass 4",
+      "# fail 0",
+      "# skipped 0"
+    ]
+  },
+  {
+    "file": "architecture-day-c-intent",
+    "exit": 0,
+    "summary": [
+      "# tests 7",
+      "# pass 7",
+      "# fail 0",
+      "# skipped 0"
+    ]
+  }
+]

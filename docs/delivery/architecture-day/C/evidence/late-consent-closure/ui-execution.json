@@ -1,0 +1,21 @@
+[
+  {
+    "file": "ui-gate.txt",
+    "command": [
+      "node",
+      "tests/lint/ui-integrity.js",
+      "--warn-as-error"
+    ],
+    "exitCode": 0
+  },
+  {
+    "file": "ui-selftest.txt",
+    "command": [
+      "node",
+      "tests/lint/ui-integrity.js",
+      "--selftest",
+      "--warn-as-error"
+    ],
+    "exitCode": 0
+  }
+]

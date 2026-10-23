@@ -1,0 +1,76 @@
+{
+  "baseline": "6788c741c43d9516aa7c691ca93110677c7e1acb",
+  "controller_bindings": [
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsRegistrationController.java",
+      "base_sha256": "07724d3f3217833271389adcb73e6e10b13d97332cdf0a5e71fe1d522ecb7a85",
+      "candidate_sha256": "16767b31b2d6d5ba48e0a6aa2795ab0fa5860f10f88efb4ded20b3d76c18b002",
+      "registered_sha256": "07724d3f3217833271389adcb73e6e10b13d97332cdf0a5e71fe1d522ecb7a85",
+      "provenance_refresh_required": true,
+      "permission_annotation_count": 10,
+      "permission_and_route_annotations_unchanged": true
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsRegistrationMerchantController.java",
+      "base_sha256": "2e68901515fdd8b680246d19294401635f7d06dba244f656f3a577d3a11ff3b3",
+      "candidate_sha256": "7e3997f7a17c50a759cf87a7488d411379a640fac15deb9c09fddfb922a5739e",
+      "registered_sha256": "2e68901515fdd8b680246d19294401635f7d06dba244f656f3a577d3a11ff3b3",
+      "provenance_refresh_required": true,
+      "permission_annotation_count": 11,
+      "permission_and_route_annotations_unchanged": true
+    }
+  ],
+  "test_sources": [
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/business/CmsRegistrationControllerSafetyTest.java",
+      "original_tests_byte_unchanged": 10,
+      "candidate_source_test_count": 13,
+      "new_methods": [
+        "genericEditCannotRewriteOriginalPointsInventoryOrBeneficiary",
+        "genericEditDoesNotCopyOriginalIdentityContextOrAuditFacts",
+        "genericEditRequiresAnOriginalIdBeforeCallingWriter"
+      ],
+      "java_executed_this_batch": 0
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationFundsMybatisIntegrationTest.java",
+      "original_tests_byte_unchanged": 92,
+      "candidate_source_test_count": 94,
+      "new_methods": [
+        "adminEditOfPrepaidPointOrderReturnsOnlyTheOriginalDeductionOnMemberCancellation",
+        "adminEditOfZeroPointOrderCannotMintPointsOrMoveInventoryOnMemberCancellation"
+      ],
+      "java_executed_this_batch": 0
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/MerchantRegistrationCancellationMySqlIT.java",
+      "original_tests_byte_unchanged": 8,
+      "candidate_source_test_count": 15,
+      "new_methods": [
+        "adminDeleteCannotEraseWinnerCommittedAfterItsPrecheck",
+        "currentLockReadSeesWinnerCommittedAfterAnOlderRepeatableReadSnapshot",
+        "currentTopicScopeIsRecheckedAfterControllerSnapshot",
+        "legitimateBatchLocksUniqueIdsInAscendingOrderAndDeletesOnlyThoseRows",
+        "missingTargetAndDirectSingleWinnerDeletionBothRejectWithoutChanges",
+        "partialSqlDeleteThenCountMismatchRollsBackTheWholeBatch",
+        "winnerCommittedBetweenBatchPrecheckAndLocksPreservesEveryOriginalRow"
+      ],
+      "java_executed_this_batch": 0
+    }
+  ],
+  "source_checks": "PASS",
+  "xml_lock_cache_flags": "PASS",
+  "protected_sources_unchanged": [
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundServiceImpl.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WechatPayServiceImpl.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RegistrationCheckoutServiceImpl.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopSettlementClaimServiceImpl.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicOperationsScopeAuthorizer.java"
+  ],
+  "java_compilation": "NOT_RUN",
+  "mysql_execution": "NOT_RUN",
+  "ci_dispatched": false,
+  "production_ddl_executed": false
+}

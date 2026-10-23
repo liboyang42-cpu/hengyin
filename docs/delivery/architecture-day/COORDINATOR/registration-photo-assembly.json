@@ -1,0 +1,37 @@
+{
+  "assembly_parent": "00fc58c50febc3366f78af600c8f12636cd13de5",
+  "A_source": "de31f95da65921101b61a88c6b536cfb57ca0478",
+  "C_deltas": [
+    "971b77d2b06539102587a4a1588df64743f82bfe..09b1c1ad317c0f1449aef0ec378f48665638cb82",
+    "09b1c1ad317c0f1449aef0ec378f48665638cb82..1ebfbf6f6303e0d71bcd787be9e958266e5689b6"
+  ],
+  "H_test_source": "c5909f9ad856f7c80423f7230cf91a3949652333:mark-applied-rollback.review.patch",
+  "A_declared_tests": {
+    "admin_safety": 13,
+    "funds_mysql": 94,
+    "merchant_cancellation_mysql": 15
+  },
+  "C_related_node_tests": {
+    "tests": 158,
+    "pass": 158,
+    "fail": 0,
+    "skip": 0,
+    "independent_files": 11,
+    "ci_default_process_isolation": "PASS"
+  },
+  "UI_GATE_0": "PASS",
+  "architecture_selftests": 94,
+  "compiled_jdeps": "UNKNOWN",
+  "action_ledger_controls": 5105,
+  "java_mysql_for_new_A_H_source": "NOT_YET_RUN",
+  "full_candidate_ci": "NOT_YET_RUN",
+  "investigation_notes": [
+    "A original static script all preceding checks passed but its final protected-source equality against6788 fails because root already integrated G changes; report retained; protected sources equal actual parent00fc, all9 A production/test blobs matchde31, old10/92/8 test bodies unchanged.",
+    "Coordinator exploratory combined Node command with --test-isolation=none across11 files returned140/158 due shared globals. Correct file-separated execution and actual CI default process-isolation each passed158/158; no test/production change made for the wrong invocation.",
+    "Coordinator initially invoked action-ledger generator from repo root and cost unittest as package; correct working-directory and direct script entry passed; no source change or suppressions."
+  ],
+  "production_ddl": false,
+  "merge": false,
+  "deployment": false,
+  "all_complete": false
+}

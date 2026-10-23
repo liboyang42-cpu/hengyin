@@ -1,0 +1,15 @@
+{
+  "parent": "09b1c1ad317c0f1449aef0ec378f48665638cb82",
+  "unchangedBaselineMethods": [
+    {
+      "method": "_settleStory",
+      "unchanged": true,
+      "sha256": "c92ec4417bcd9a8323843f4a262ef9691f24a87eed7a655ddb9bf089a53c1b9e"
+    },
+    {
+      "method": "loadMilestone",
+      "unchanged": true,
+      "sha256": "97c63e860ffdc591ba3e1292f7cc15192beb87b88fa2e3d22f90a3015292201e"
+    }
+  ]
+}

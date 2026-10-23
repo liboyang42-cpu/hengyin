@@ -335,3 +335,43 @@ test('Photo 上传缺 assetId 时拒绝动作，不回退为 URL 身份', async 
     url: 'https://base/approved-image.jpg', reviewState: 'APPROVED' }) });
   assert.equal(gameActions.length, 0);
 });
+
+
+test('H-C9: A→B→A 同意记录迟到拒绝不得修改新登录 UI', async () => {
+  const { requestSeparateConsent } = require('../../utils/compliance/separate-consent.js');
+  const { createPageBoundOperation } = require('../../utils/page-bound-operation.js');
+  const actor = makeAppStub();
+  actor.globalData.authorization = 'A-original-login';
+  actor._featureFlagsEpoch = 100;
+  actor.getUserID = () => actor.globalData.user_id;
+  actor.getAuthorization = () => actor.globalData.authorization;
+  let consentModal, consentRecorded;
+  actor.recordConsent = () => new Promise(resolve => { consentRecorded = resolve; });
+  actor.requestSeparateConsent = (feature, isCurrent) => requestSeparateConsent(actor, wx, feature, isCurrent);
+  global.getApp = () => actor;
+  wx.showModal = options => { consentModal = options; };
+  const { page } = loadPage();
+  actor.createPageBoundOperation = () => {
+    lastOperation = createPageBoundOperation({ owner: page, getPages: () => [page],
+      getUserID: actor.getUserID, setInterval: () => 1, clearInterval() {} });
+    return lastOperation;
+  };
+  page.data.playKit.kit.type = 'photocheck'; page.data.playKit.kit.mode = 'CARD';
+  page._submitPlayKitAction('shoot', { tempFilePath: '/tmp/original-A-photo.jpg' });
+  assert.ok(consentModal);
+  consentModal.success({ confirm: true });
+  await new Promise(setImmediate);
+  assert.equal(typeof consentRecorded, 'function');
+  actor.globalData.user_id = 8; actor.globalData.authorization = 'B-login'; actor._featureFlagsEpoch++;
+  actor.globalData.user_id = 9; actor.globalData.authorization = 'A-new-login'; actor._featureFlagsEpoch++;
+  assert.equal(page._isPlayAccountCurrent(), false);
+  assert.equal(lastOperation.isAborted(), false, 'same-member return can occur between owner polling ticks');
+  const before = JSON.parse(JSON.stringify(page.data));
+  const toastCount = toasts.length;
+  consentRecorded();
+  await new Promise(setImmediate);
+  assert.equal(wxUploads.length, 0);
+  assert.equal(gameActions.length, 0);
+  assert.deepEqual(page.data, before, 'old consent rejection must not reset the active card panel');
+  assert.equal(toasts.length, toastCount, 'old consent rejection must not toast into the new login');
+});

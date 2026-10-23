@@ -1,0 +1,76 @@
+TAP version 13
+# Subtest: 合法 5MiB:真实链上传一次并提交 SUBMIT_QA
+ok 1 - 合法 5MiB:真实链上传一次并提交 SUBMIT_QA
+  ---
+  duration_ms: 37.841566
+  type: 'test'
+  ...
+# Subtest: 已知 15MiB:共享预检拒绝,不发网络,可操作文案,绝不提交
+ok 2 - 已知 15MiB:共享预检拒绝,不发网络,可操作文案,绝不提交
+  ---
+  duration_ms: 5.541455
+  type: 'test'
+  ...
+# Subtest: 上传在途切到 B 会话:旧回包不得提交到新题,可重新拍
+ok 3 - 上传在途切到 B 会话:旧回包不得提交到新题,可重新拍
+  ---
+  duration_ms: 4.473409
+  type: 'test'
+  ...
+# Subtest: 同会话版本前进:旧回包同样不得提交
+ok 4 - 同会话版本前进:旧回包同样不得提交
+  ---
+  duration_ms: 5.152712
+  type: 'test'
+  ...
+# Subtest: 非 qa kit 的 shoot 不得上传/提交
+ok 5 - 非 qa kit 的 shoot 不得上传/提交
+  ---
+  duration_ms: 6.097796
+  type: 'test'
+  ...
+# Subtest: 双击:上传在途时只起一次请求,不静默丢第二张
+ok 6 - 双击:上传在途时只起一次请求,不静默丢第二张
+  ---
+  duration_ms: 4.044537
+  type: 'test'
+  ...
+# Subtest: advanced-game acting/unknown 时不装成功,给可恢复提示
+ok 7 - advanced-game acting/unknown 时不装成功,给可恢复提示
+  ---
+  duration_ms: 3.815639
+  type: 'test'
+  ...
+# Subtest: 未知 size(旧组件):照常上传;失败不提交,换图可重试
+ok 8 - 未知 size(旧组件):照常上传;失败不提交,换图可重试
+  ---
+  duration_ms: 4.710028
+  type: 'test'
+  ...
+# Subtest: 上传中离页 abort:迟到的成功不得提交
+ok 9 - 上传中离页 abort:迟到的成功不得提交
+  ---
+  duration_ms: 4.262247
+  type: 'test'
+  ...
+# Subtest: Photo 上传保留受管 assetId，动作只携带 canonical media 引用
+ok 10 - Photo 上传保留受管 assetId，动作只携带 canonical media 引用
+  ---
+  duration_ms: 13.345883
+  type: 'test'
+  ...
+# Subtest: Photo 上传缺 assetId 时拒绝动作，不回退为 URL 身份
+ok 11 - Photo 上传缺 assetId 时拒绝动作，不回退为 URL 身份
+  ---
+  duration_ms: 9.150319
+  type: 'test'
+  ...
+1..11
+# tests 11
+# suites 0
+# pass 11
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 113.844285

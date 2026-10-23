@@ -1,0 +1,17 @@
+{
+  "u4": {
+    "key": "chengyinhub-xcx/pages/play/index.js:1708",
+    "count": 62,
+    "digest": "baf6e748e04ecf1e87dbdecb7c338e9f8545c56d9f87f08c2418828ce188e4ec",
+    "changed": false
+  },
+  "u5": {
+    "oldKey": "chengyinhub-xcx/pages/play/index.js:7776",
+    "newKey": "chengyinhub-xcx/pages/play/index.js:7778",
+    "reason": "已完成里程碑为可选增强，请求失败保持 milestone=null 且轴不渲染；owner=小程序，复核=2026-09-15",
+    "count": 39,
+    "oldDigest": "aa07a5f96af511897ace6d639672b508e19f605a031b6d2d8970801aee3bbd05",
+    "newDigest": "7d2c926c169fb5aeed34adfaa213332e9ed31e51acc422ff07c2a7ce0734339d"
+  },
+  "ratchetsAndCeilingsChanged": false
+}

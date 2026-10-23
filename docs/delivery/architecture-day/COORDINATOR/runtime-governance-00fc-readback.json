@@ -1,0 +1,131 @@
+{
+  "run": 40034458479,
+  "source_sha": "00fc58c50febc3366f78af600c8f12636cd13de5",
+  "tests": 36,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "classes": [
+    {
+      "class": "com.chengyinhub.business.service.ai.PhotoCheckIntentFreshReadMySqlIT",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "cleanup": "CLEAN",
+      "xml_sha256": "0ef3a0ffd133b750576af72d339daaa205cd27fffa3229d0f48450f9b85f6165",
+      "receipt_sha256": "242f78226b21319a6507b7c5efbfcec7cf5dfee348f8347d9fa88e02348f31ba",
+      "tests_executed": [
+        "cachedPreparedLoserOnlyReadsInFlightAndThenOriginalReadyResult",
+        "ownedReadAfterSessionLockUsesCurrentRowDespiteOlderRepeatableReadSnapshot",
+        "independentlyCommittedReadyRowMustNotReturnCachedPreparedAfterResume"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.ai.PhotoCheckIntentLockReadMySqlIT",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "cleanup": "CLEAN",
+      "xml_sha256": "7e1c6e5ee841b9c77163da586a70e390b807e6fcba1ea4fb7e9bdbc043523fcc",
+      "receipt_sha256": "f8c710c30f2e2d1940f6eb5aa4de393d88de067b89dfb52caa74f607629ae44e",
+      "tests_executed": [
+        "sameTransactionLockReadRefreshesCachedNullAfterIndependentCommit"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.ai.PhotoCheckIntentMySqlIT",
+      "tests": 10,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "cleanup": "CLEAN",
+      "xml_sha256": "11b30c53dde23df7aa5e9cf842e62f9d5c3d3faa83e0ddb23cd6f4d4bdf8726c",
+      "receipt_sha256": "02a21b9cc6fb2e4e7d0462af6c8c9f104a1107f943a6954bbd0fc801851cdbce",
+      "tests_executed": [
+        "restartAndAncientInFlightOrUnknownNeverAllocateOrResend",
+        "concurrentExecutionRunsOnceAndLoserOnlySeesInFlight",
+        "canonicalSnapshotAndGlobalNonceIdentityAreDurableAndReplayDoesNotReplan",
+        "competingPreparesKeepOneOriginalUnderRepeatableRead",
+        "receiptMustMatchOriginalMemberKeyFingerprintTypeAndReadyState",
+        "prepareRollbackAndSecurityRejectionsHaveNoDurableIntentOrQuota",
+        "springEnforcesMandatoryAndNeverBeforeAnyMutation",
+        "independentOriginalResultSurvivesFinalLocalRollbackAndAppliesAtomicallyLater",
+        "readWrongOwnerHashAndCorruptedSessionFailClosedWithoutWrites",
+        "changedFingerprintCannotReplaceOriginalKeyContextOrNonce"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.service.ai.PhotoCheckIntentRecoveryMySqlIT",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "cleanup": "CLEAN",
+      "xml_sha256": "9fba3881987a29ef6cd5c6ce010fc27424c597516b1f5ac052ef67bb37e34a60",
+      "receipt_sha256": "344254c86c8b14b52ebe56db1b478601cf3aa8050b95c961542ae25b9a908668",
+      "tests_executed": [
+        "lostPrepareResponseRecoversOriginalNonceAndPersistedResultByKey",
+        "exactMissingOwnerAndKeyReturnNullWhileHashConflictIs409AndAllAreSideEffectFree",
+        "sameLockingStatementCachedNullIsFlushedBeforeSecondCurrentRead",
+        "repeatableReadEmptySnapshotBeforeSessionLockSeesConcurrentCommittedOriginal"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.it.Wp04CoopSettlementEvidenceMySqlIT",
+      "tests": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "cleanup": "CLEAN",
+      "xml_sha256": "1e243925864353476933c9d195fdecfcdf4e52e912ac85aad7b46cec89657ff9",
+      "receipt_sha256": "07eabf24d1d66cee77d537d7b495efa9e5eaab7f61db2fdaa633d68bd8b23b9a",
+      "tests_executed": [
+        "pendingAndExecutedApprovedRefundsRemainBlockingUntilNetBasisExists",
+        "groupEvidenceRequiresSameTopicActivityOrderMerchantAndBothWindows",
+        "ticketOwnerTimeScanTypeAndReversalAreEnforced",
+        "nullOrEmptyActivitySetNeverGuessesActivityIdFromTopic",
+        "actualActivityParentExcludesCollidingIdAndDeletedShell",
+        "nodeMustHaveActualParentAndScansCannotProveNodeIdentity",
+        "activityScopeUsesActualOwnerInsteadOfTopicNumber"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.it.Wp04CurrentCashBasisMySqlIT",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "cleanup": "CLEAN",
+      "xml_sha256": "c1287c87cf7f616c35900c221cb902f7d27c0041db22578c798984037805e93c",
+      "receipt_sha256": "a7b8c7dc6a401468a17bf2ecbbde480eb2b00aab61d297f5d6eae1e71d26fb7f",
+      "tests_executed": [
+        "explicitCurrentReadsBypassMybatisLocalCacheAfterSameTransactionWrites",
+        "unverifiedActivityCashIncludingDeletedShellCannotHideBehindOldZeroCount",
+        "lockedCashRowsSerializeAnExistingRegistrationStateWriter",
+        "currentCashAndAuditDoNotReuseEarlierRepeatableReadTotal"
+      ]
+    },
+    {
+      "class": "com.chengyinhub.business.it.Wp08DeliveryJobsMySqlIT",
+      "tests": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "cleanup": "CLEAN",
+      "xml_sha256": "d57497fb5e805c4a91a51ad20c7ddc3d04b27318c3b55b704af2625e1fa13e08",
+      "receipt_sha256": "d1b032ffb7e3c0a280a76fa3c2e4462e8bbaf9b916d57778bb8e77241abbfb37",
+      "tests_executed": [
+        "explicitlyActiveFixtureConsumesRealImXpBadgeAndReplaysWithoutDuplicateEffects",
+        "pausedSqlSeedsCannotConsumeCommittedOriginalIntents",
+        "duplicatesAndKnownCanonicalClassFormsFailBeforeAnyInsert",
+        "existingPausedActiveAndUnrelatedRowsStayUnchangedIncludingOperatorSchedules",
+        "missingIntentSchemaStopsBeforeRegistration",
+        "realTaskSessionLockBlocksBothConsumersUntilOriginalSessionReleases",
+        "missingSeedsArePausedIdempotentAndRetainOriginalCron"
+      ]
+    }
+  ],
+  "scope": "7 exact real-storage suites only; not end-to-end C orchestration/full finance/HTTP/device/deployment. registered_source abf is diagnostic lineage, actual tested source is00fc."
+}

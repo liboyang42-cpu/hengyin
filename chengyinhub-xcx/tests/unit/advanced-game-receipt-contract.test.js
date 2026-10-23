@@ -778,6 +778,17 @@ test('Photo 仅显式 intentNotExecuted 释放原记录，缺媒体或存储失�
   const full = createGame([]); await full.action('SUBMIT_PHOTO_CHECK', photoInput()); assert.equal(full.calls.length, 0);
 });
 
+test('Photo 存储写入无异常但无法读回时明确拒绝，不发送原动作', async () => {
+  photoDisk();
+  global.wx.setStorageSync = () => {};
+  const game = createGame([]);
+  assert.equal(await game.action('SUBMIT_PHOTO_CHECK', photoInput()), false);
+  assert.equal(game.calls.length, 0);
+  assert.equal(game.data.acting, false);
+  assert.equal(game.data.unknown, false);
+  assert.match(game.data.error, /未保存/);
+});
+
 test('Photo A→B→A 的旧成功不改新登录代次 UI，原终态只清原存储键', async () => {
   const disk = photoDisk(); appStub._featureFlagsEpoch = 30;
   try {

@@ -1,0 +1,160 @@
+TAP version 13
+# Subtest: photo: separate refusal affects only that invocation; acceptance must persist exact scoped document
+ok 1 - photo: separate refusal affects only that invocation; acceptance must persist exact scoped document
+  ---
+  duration_ms: 11.821671
+  type: 'test'
+  ...
+# Subtest: voice: separate refusal affects only that invocation; acceptance must persist exact scoped document
+ok 2 - voice: separate refusal affects only that invocation; acceptance must persist exact scoped document
+  ---
+  duration_ms: 1.687984
+  type: 'test'
+  ...
+# Subtest: failed consent persistence and obsolete actor/token/page modal callbacks never authorize provider work
+ok 3 - failed consent persistence and obsolete actor/token/page modal callbacks never authorize provider work
+  ---
+  duration_ms: 5.114635
+  type: 'test'
+  ...
+# Subtest: actual play photo handler waits for separate consent and genuine readback before upload and runtime action
+ok 4 - actual play photo handler waits for separate consent and genuine readback before upload and runtime action
+  ---
+  duration_ms: 29.353707
+  type: 'test'
+  ...
+# Subtest: actual photo upload without an asset identity never reaches the runtime action
+ok 5 - actual photo upload without an asset identity never reaches the runtime action
+  ---
+  duration_ms: 9.300718
+  type: 'test'
+  ...
+# Subtest: actual photo consent persistence failure sends neither upload nor runtime action
+ok 6 - actual photo consent persistence failure sends neither upload nor runtime action
+  ---
+  duration_ms: 10.841809
+  type: 'test'
+  ...
+# Subtest: actual play refuse keeps photo private and sends no runtime action
+ok 7 - actual play refuse keeps photo private and sends no runtime action
+  ---
+  duration_ms: 8.616948
+  type: 'test'
+  ...
+# Subtest: actual play question keeps photo private and sends no runtime action
+ok 8 - actual play question keeps photo private and sends no runtime action
+  ---
+  duration_ms: 5.507736
+  type: 'test'
+  ...
+# Subtest: actual play leave keeps photo private and sends no runtime action
+ok 9 - actual play leave keeps photo private and sends no runtime action
+  ---
+  duration_ms: 7.237451
+  type: 'test'
+  ...
+# Subtest: late photo consent fulfilled after aba-rebind cannot affect current card or send work
+ok 10 - late photo consent fulfilled after aba-rebind cannot affect current card or send work
+  ---
+  duration_ms: 6.720957
+  type: 'test'
+  ...
+# Subtest: late photo consent fulfilled after page-epoch cannot affect current card or send work
+ok 11 - late photo consent fulfilled after page-epoch cannot affect current card or send work
+  ---
+  duration_ms: 8.02284
+  type: 'test'
+  ...
+# Subtest: late photo consent fulfilled after node cannot affect current card or send work
+ok 12 - late photo consent fulfilled after node cannot affect current card or send work
+  ---
+  duration_ms: 8.115187
+  type: 'test'
+  ...
+# Subtest: late photo consent fulfilled after page-node cannot affect current card or send work
+ok 13 - late photo consent fulfilled after page-node cannot affect current card or send work
+  ---
+  duration_ms: 7.522141
+  type: 'test'
+  ...
+# Subtest: late photo consent fulfilled after scene cannot affect current card or send work
+ok 14 - late photo consent fulfilled after scene cannot affect current card or send work
+  ---
+  duration_ms: 15.143764
+  type: 'test'
+  ...
+# Subtest: late photo consent fulfilled after session cannot affect current card or send work
+ok 15 - late photo consent fulfilled after session cannot affect current card or send work
+  ---
+  duration_ms: 5.882559
+  type: 'test'
+  ...
+# Subtest: late photo consent fulfilled after version cannot affect current card or send work
+ok 16 - late photo consent fulfilled after version cannot affect current card or send work
+  ---
+  duration_ms: 5.156386
+  type: 'test'
+  ...
+# Subtest: late photo consent fulfilled after new-intent cannot affect current card or send work
+ok 17 - late photo consent fulfilled after new-intent cannot affect current card or send work
+  ---
+  duration_ms: 5.650101
+  type: 'test'
+  ...
+# Subtest: late photo consent rejected after aba-rebind cannot affect current card or send work
+ok 18 - late photo consent rejected after aba-rebind cannot affect current card or send work
+  ---
+  duration_ms: 5.035928
+  type: 'test'
+  ...
+# Subtest: late photo consent rejected after page-epoch cannot affect current card or send work
+ok 19 - late photo consent rejected after page-epoch cannot affect current card or send work
+  ---
+  duration_ms: 6.304111
+  type: 'test'
+  ...
+# Subtest: late photo consent rejected after node cannot affect current card or send work
+ok 20 - late photo consent rejected after node cannot affect current card or send work
+  ---
+  duration_ms: 5.830833
+  type: 'test'
+  ...
+# Subtest: late photo consent rejected after page-node cannot affect current card or send work
+ok 21 - late photo consent rejected after page-node cannot affect current card or send work
+  ---
+  duration_ms: 5.950068
+  type: 'test'
+  ...
+# Subtest: late photo consent rejected after scene cannot affect current card or send work
+ok 22 - late photo consent rejected after scene cannot affect current card or send work
+  ---
+  duration_ms: 7.159596
+  type: 'test'
+  ...
+# Subtest: late photo consent rejected after session cannot affect current card or send work
+ok 23 - late photo consent rejected after session cannot affect current card or send work
+  ---
+  duration_ms: 6.647769
+  type: 'test'
+  ...
+# Subtest: late photo consent rejected after version cannot affect current card or send work
+ok 24 - late photo consent rejected after version cannot affect current card or send work
+  ---
+  duration_ms: 9.405403
+  type: 'test'
+  ...
+# Subtest: late photo consent rejected after new-intent cannot affect current card or send work
+ok 25 - late photo consent rejected after new-intent cannot affect current card or send work
+  ---
+  duration_ms: 7.774303
+  type: 'test'
+  ...
+1..25
+# tests 25
+# suites 0
+# pass 25
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 233.046868

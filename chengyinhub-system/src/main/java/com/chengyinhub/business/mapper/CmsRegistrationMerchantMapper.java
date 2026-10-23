@@ -26,6 +26,9 @@ public interface CmsRegistrationMerchantMapper
     /** 多据点核销事务内锁定所选记录,防止复核后被并发改归属或撤销。 */
     CmsRegistrationMerchant selectCmsRegistrationMerchantByIdForUpdate(Long id);
 
+    /** 后台整批删除的当前读；调用方按主键升序锁住全部目标后复验 scope/状态。 */
+    CmsRegistrationMerchant selectForDeletionByIdForUpdate(Long id);
+
     /**
      * 查询商家主题报名列表
      * 

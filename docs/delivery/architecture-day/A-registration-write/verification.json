@@ -1,0 +1,72 @@
+{
+  "base_sha": "6788c741c43d9516aa7c691ca93110677c7e1acb",
+  "changed_production_files": [
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsRegistrationController.java",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsRegistrationMerchantController.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CmsRegistrationMerchantMapper.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ICmsRegistrationMerchantService.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationMerchantServiceImpl.java",
+    "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMerchantMapper.xml"
+  ],
+  "changed_test_files": [
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/MerchantRegistrationCancellationMySqlIT.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationFundsMybatisIntegrationTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/business/CmsRegistrationControllerSafetyTest.java"
+  ],
+  "new_java_tests": 12,
+  "candidate_source_java_test_counts": {
+    "CmsRegistrationControllerSafetyTest": 13,
+    "RegistrationFundsMybatisIntegrationTest": 94,
+    "MerchantRegistrationCancellationMySqlIT": 15
+  },
+  "executed": [
+    {
+      "command": "git apply --check /tmp/a136-h-negative.patch",
+      "exit_code": 0,
+      "result": "H two negative controls applied before production edits; Java red phase NOT_RUN"
+    },
+    {
+      "command": "python3 docs/delivery/architecture-day/A-registration-write/verify_static.py",
+      "exit_code": 0,
+      "result": "source checks PASS; original 10/92/8 test bodies byte unchanged"
+    },
+    {
+      "command": "python3 -m unittest discover -s ci/architecture -p test_locking_select.py",
+      "exit_code": 0,
+      "tests": 19,
+      "failures": 0
+    },
+    {
+      "command": "python3 -m unittest discover -s ci -p test_prelaunch_business_seeds.py",
+      "exit_code": 1,
+      "tests": 8,
+      "failures": 1,
+      "failure": "test_source_hashes_and_real_controller_permissions: old CmsRegistrationMerchantController.java provenance hash differs; root must refresh both reviewed controller hashes, no CI changes made by A"
+    },
+    {
+      "command": "python3 ci/secret-file-gate.py",
+      "exit_code": 0
+    },
+    {
+      "command": "git diff --check",
+      "exit_code": 0
+    },
+    {
+      "command": "scan_paths + limited credential patterns on changed/new delivery files",
+      "exit_code": 0
+    }
+  ],
+  "not_run": [
+    "Java production/test compile",
+    "Java unit tests",
+    "MySQL integration tests",
+    "HTTP/AOP/RBAC",
+    "real WeChat/payment",
+    "full entropy/history secret scan (gitleaks unavailable)"
+  ],
+  "java_tests_executed": 0,
+  "mysql_tests_executed": 0,
+  "ddl_executed": false,
+  "ci_dispatched": false,
+  "overall_acceptance": "PENDING root controlled Java/MySQL and exact provenance refresh"
+}
