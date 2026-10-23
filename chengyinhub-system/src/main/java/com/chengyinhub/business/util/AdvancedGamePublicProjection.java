@@ -84,6 +84,7 @@ public final class AdvancedGamePublicProjection {
             copySilentOrder(safe, config.path("silentOrder"));
             copyDiyName(safe, config.path("diyName"));
             copyMusicCorner(safe, config.path("musicCorner"));
+            copyBackgroundMusic(safe, config.path("backgroundMusic"));
             copySteps(safe, config.path("steps"));
             copyDailySign(safe, config.path("dailySign"));
             copySlowTask(safe, config.path("slowTask"));
@@ -201,6 +202,14 @@ public final class AdvancedGamePublicProjection {
         for (JsonNode item : source.path("suggestions")) {
             if (item.isTextual()) suggestions.add(item.asText());
         }
+    }
+
+    private static void copyBackgroundMusic(ObjectNode target, JsonNode source) {
+        if (!source.isObject() || !source.path("audioUrl").isTextual()) return;
+        ObjectNode value = target.putObject("backgroundMusic");
+        putIfText(value, "title", source);
+        putIfText(value, "audioUrl", source);
+        value.put("loop", source.path("loop").asBoolean(true));
     }
 
     private static void copyMusicCorner(ObjectNode target, JsonNode source) {

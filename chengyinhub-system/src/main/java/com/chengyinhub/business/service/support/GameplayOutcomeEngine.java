@@ -135,6 +135,7 @@ public final class GameplayOutcomeEngine {
         }
         if(!pass && attempt.has("legacyFailCostTag"))paying.getTags().add(attempt.path("legacyFailCostTag").asText());
         receipt.put("settled", true).put("status", "SETTLED").put("consumed", !noEffect).put("resolvedAt", now).put("reply", after.path("reply").asText());
+        if (after.path("images").isArray() && after.path("images").size() > 0) receipt.set("images", after.get("images").deepCopy());
         if (after.has("nextStepId")) receipt.set("nextStepId", after.get("nextStepId").deepCopy());
         for (Map.Entry<Long, TopicRouteEngine.State> target : copies.entrySet()) {
             TopicRouteEngine.State actual = recipients.get(target.getKey()), next = target.getValue();

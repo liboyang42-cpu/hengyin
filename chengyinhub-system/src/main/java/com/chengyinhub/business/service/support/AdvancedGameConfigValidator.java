@@ -49,7 +49,8 @@ public class AdvancedGameConfigValidator {
     /** 问答三种模式。三种差的只是中间那一块,所以是一段带 mode,不是三段 */
     private static final Set<String> QA_MODES = new HashSet<>(Arrays.asList("TYPE", "PICK", "SHOT"));
     /** 扫码回什么。OVERLAY 是第四档:页内取景扫中后把图叠在镜头里(AR 契约 §2.2) */
-    private static final Set<String> SCAN_KINDS = new HashSet<>(Arrays.asList("TEXT", "VOICE", "IMAGE", "OVERLAY"));
+    // NONE = 只扫码进场、不回任何内容(2026-10-22 主人:扫码参与可以不回复)。
+    private static final Set<String> SCAN_KINDS = new HashSet<>(Arrays.asList("TEXT", "VOICE", "IMAGE", "OVERLAY", "NONE"));
     /** 显形档的真 AR(2026-09-22 用户定):不开 / 平面放置 / 图像识别。xr-frame 不支持运行中切换模式,所以是配置期二选一。 */
     private static final Set<String> SCAN_AR_MODES = new HashSet<>(Arrays.asList("NONE", "PLANE", "MARKER"));
     /** 找东西:3 个起(少于 3 个没有"还差几样"的张力),5 个封顶(商家标不动,玩家也找烦了) */
@@ -327,6 +328,7 @@ public class AdvancedGameConfigValidator {
         validateSilentOrder(root.get("silentOrder"));
         validateDiyName(root.get("diyName"));
         validateMusicCorner(root.get("musicCorner"));
+        validateBackgroundMusic(root.get("backgroundMusic"));
         validateSteps(root.get("steps"));
         validateDailySign(root.get("dailySign"));
         validateSlowTask(root.get("slowTask"));
@@ -875,6 +877,25 @@ public class AdvancedGameConfigValidator {
     }
 
     /**
+     * 背景音乐(互动工具):玩这一站时播放的一段音乐。只是氛围件,不参与判定。
+     * 有这一段就算开着,**不带 enabled**:带了的话支持矩阵会把它当成第二个玩法。
+     */
+    private void validateBackgroundMusic(JsonNode music) {
+        if (music == null || music.isNull()) return;
+        requireObject(music, "背景音乐配置格式不正确");
+        if (music.has("enabled")) throw new IllegalArgumentException("背景音乐不使用 enabled 字段");
+        optionalText(music, "title", 40, "背景音乐名称不能超过 40 字");
+        if (!music.path("audioUrl").isTextual() || music.path("audioUrl").asText("").trim().isEmpty()) {
+            throw new IllegalArgumentException("请上传背景音乐");
+        }
+        optionalMediaUrl(music, "audioUrl", 512,
+                "背景音乐地址不能超过 512 字", "背景音乐地址必须是 https 链接或站内路径");
+        if (music.has("loop") && !music.get("loop").isBoolean()) {
+            throw new IllegalArgumentException("背景音乐循环设置格式不正确");
+        }
+    }
+
+    /**
      * 计步挑战:目标步数。真实步数只能由服务端解密微信运动拿到(见 WeRunDecryptor),
      * 配置里不放任何客户端可自证的字段。
      */
@@ -1284,7 +1305,7 @@ public class AdvancedGameConfigValidator {
         if (!enabled(scan)) return;
         requireObject(scan, "扫码配置格式不正确");
         String kind = scan.path("kind").asText("");
-        if (!SCAN_KINDS.contains(kind)) throw new IllegalArgumentException("扫码回复只能是文字、语音、图片或显形");
+        if (!SCAN_KINDS.contains(kind)) throw new IllegalArgumentException("扫码回复只能是文字、语音、图片、显形或不回复");
         optionalText(scan, "reply", 200, "扫码回复不能超过 200 字");
         // 同上(C-01);显形图 / 识别图 / 3D 模型同理 —— 不配 AR 的扫码段也会带着空串来
         dropBlankText((ObjectNode) scan, "audioUrl", "imageUrl", "overlayUrl", "markerUrl", "modelUrl");

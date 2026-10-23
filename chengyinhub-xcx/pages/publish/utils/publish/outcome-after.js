@@ -4,7 +4,10 @@ const ONCE = ['profile', 'album', 'note', 'dailySign'];
 const MAINS = ['qa', 'pricePair', 'blindTaste', 'predict', 'photoCheck', 'coinFlip', 'diceRoll', 'random', 'sort', 'match', 'classify', 'estimate', 'hiddenObject', ...ONCE, 'steps', 'reaction', 'ballShake', 'quietHold', 'compass', 'shout', 'countdown', 'stopwatch', 'typeIn', 'check'];
 const mains = config => MAINS.filter(key => config[key]?.enabled === true);
 const once = config => mains(config).some(key => ONCE.includes(key));
-const empty = () => ({ reply: '', costs: [], effects: [], next: '' });
+const empty = () => ({ reply: '', images: [], costs: [], effects: [], next: '' });
+// 成功/失败反馈配图：最多 3 张，与服务端 GameplayOutcomeRules.images 同一口径。
+const IMAGE_MAX = 3;
+const mediaUrl = value => typeof value === 'string' && value.trim().length > 0 && value.length <= 512 && (/^https:\/\//.test(value) || /^\/(?!\/)[^\\]*$/.test(value) || /^media-asset:[1-9][0-9]{0,18}$/.test(value));
 function draft(row) { return Object.assign(empty(), clone(row || {}), { next: row?.nextStepId || '' }); }
 function paths(config) {
   const result = ['outcomeRules.pass'];
@@ -26,7 +29,9 @@ function localReason(config, path) {
 }
 function afterError(row, config, path) {
   if (!row || typeof row !== 'object' || Array.isArray(row)) return path + '：结果格式不正确';
-  if (Object.keys(row).some(key => !['reply', 'costs', 'effects', 'nextStepId'].includes(key))) return path + '：结果含不支持的字段';
+  if (Object.keys(row).some(key => !['reply', 'images', 'costs', 'effects', 'nextStepId'].includes(key))) return path + '：结果含不支持的字段';
+  if (row.images != null && (!Array.isArray(row.images) || row.images.length > IMAGE_MAX)) return path + '：反馈图片最多 ' + IMAGE_MAX + ' 张';
+  if ((row.images || []).some(url => !mediaUrl(url))) return path + '：反馈图片地址必须是 https 链接或站内路径';
   if (row.reply != null && (typeof row.reply !== 'string' || row.reply.length > 2000)) return path + '：回复不能超过 2000 字';
   if (row.nextStepId != null && (typeof row.nextStepId !== 'string' || !/^[A-Za-z0-9_-]{1,64}$/.test(row.nextStepId) || !(config.branch?.steps || []).some(step => step.id === row.nextStepId))) return '下一段必须选择本节点 branch.steps 中的有效步骤';
   const slots = config.interactionRules?.resourceSlots || [];
@@ -77,6 +82,7 @@ function apply(config, path, value) {
   const next = clone(config);
   next.outcomeRules = next.outcomeRules || Object.assign({ version: 1, pass: {} }, once(next) ? {} : { fail: {} });
   const row = clone(value); delete row.next; delete row.nextStepId;
+  if (!Array.isArray(row.images) || !row.images.length) delete row.images;
   if (value.next) row.nextStepId = value.next;
   const keys = path.split('.'); const last = keys.pop();
   let owner = keys.reduce((value, key) => value[key], next);
@@ -89,4 +95,4 @@ function apply(config, path, value) {
   const error = validate(next);
   return error ? { error } : { value: next };
 }
-module.exports = { get, paths, empty, draft, once, mains, validate, afterError, localReason, apply };
+module.exports = { get, paths, empty, draft, once, mains, validate, afterError, localReason, apply, IMAGE_MAX };

@@ -3446,6 +3446,14 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
             value.put("durationSeconds", cfg.path("durationSeconds").asInt(0));
             kit.put("musicCorner", value);
         }
+        if (config.path("backgroundMusic").path("audioUrl").isTextual()) {
+            JsonNode cfg = config.path("backgroundMusic");
+            Map<String, Object> value = new LinkedHashMap<>();
+            putText(value, "title", cfg);
+            putText(value, "audioUrl", cfg);
+            value.put("loop", cfg.path("loop").asBoolean(true));
+            kit.put("backgroundMusic", value);
+        }
         if (enabled(config.path("steps"))) {
             JsonNode cfg = config.path("steps");
             Map<String, Object> value = new LinkedHashMap<>();
