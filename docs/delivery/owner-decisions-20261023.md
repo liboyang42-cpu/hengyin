@@ -35,8 +35,14 @@
 
 - 本地:相关 Java 测试 88/88 通过(`PointsValuePolicyTest`、`CartSettlementTransactionalH2Test`、`RecommendationInterestWeightTest`、`AnalyticsControllerTest`、`SafeRatioTest`、`TemplateLibraryReviewVisibilityMyBatisTest`、`TemplatePublishAuditQueueTest`、`ApiRoamShopVisitTeleportAuditTest`、`ApiRoamCoordinateBoundaryTest`、`TopicSizeLimitsTest`);小程序单测 13877 条,唯一的失败是台账过期,重建后 `action-ledger.test.js` 46/46 通过;后台 UI 新测试通过(其余 15 条失败在 master 上同样存在,原因是本地没装 UI 依赖)。
 - 本地门禁:migration sql / dep-order / safety / layout、api-existence、silent-error、forbidden-hosts、secret-file、roam-redline 均通过。
-- CI 运行号:见 PR 评论 / 下方补记。
+- 本地后端全量 `mvn test`:13822 条,唯一真失败 `ApiRecommendationControllerTest` 锁旧权重 8,已改为 D2 的 1(`bb25383a`);其余 29 个 error 都是本地没有 MySQL 的 `*MyBatisTest`(CI 上通过)。
 
-## CI
+## CI(PR #567,head `bb25383a`)
 
-(推送后补记)
+- GitHub CI run `39997838560`:35 个 check,33 success、1 skipped(SBOM,按条件跳过)、**1 failure:Migration safety gate**
+- Funds MySQL IT `39997838690`、Mini followup focused regression `39997838584`、Isolated authenticated Redis recovery `39997838594`:success
+- 首轮 run `39997374407`(head `af470ebd`)被新推送取消。
+
+### 待 owner 批准:源码指纹
+
+`Migration safety gate` 红在 `ci/test_prelaunch_business_seeds.py::test_source_hashes_and_real_controller_permissions`:`ci/prelaunch-seed-provenance.json` 钉了 `AnalyticsController.java`(D3)与 `settlementrule/index.vue`(D6)的 sha256。两处权限语义都没变,但按仓库先例(`69a9c6b4`)重钉指纹要 owner 明确批准,本 PR 没有自行改。批准后把这两行 sha256 换成当前文件值即可转绿。
