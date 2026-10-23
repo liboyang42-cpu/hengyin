@@ -228,7 +228,7 @@ public class CmsRegistrationController extends BaseController
     @PutMapping
     public AjaxResult edit(@RequestBody CmsRegistration cmsRegistration)
     {
-        // A3-1(P0):支付/核销是交易事实,绝不能经这个通用 PUT 被后台裸改(篡改金额/交易号/核销码/核销状态)。
+        // 支付/报名/核销是交易事实,通用 PUT 不得绕过支付、取消或过期命令修改生命周期。
         // 一律置 null 让 update 的动态 <if> 跳过这些列 —— 对所有人(含超管)生效的止血本体,合法业务字段不受影响。
         stripImmutablePaymentFacts(cmsRegistration);
         if (!canViewPii())
@@ -241,15 +241,16 @@ public class CmsRegistrationController extends BaseController
     }
 
     /**
-     * A3-1(P0):剥离支付/核销事实字段,使其无法经通用 PUT 被后台篡改。
+     * 剥离支付/报名/核销事实字段,使其无法经通用 PUT 被后台篡改。
      * 置 null 后 CmsRegistrationMapper 的动态 &lt;if test="xxx != null"&gt; 会跳过这些列,保留库中真值。
-     * 这些字段只应由真实支付回调 / 核销流程写入,后台编辑表单只允许改非交易业务字段。
+     * 这些字段只应由支付、取消、过期或核销流程写入,后台编辑表单只允许改非交易业务字段。
      */
     private static void stripImmutablePaymentFacts(CmsRegistration r)
     {
         r.setTotalAmount(null);
         r.setPayableAmount(null);
         r.setPaymentStatus(null);
+        r.setRegistrationStatus(null);
         r.setPaymentType(null);
         r.setPaymentTime(null);
         r.setTransactionId(null);

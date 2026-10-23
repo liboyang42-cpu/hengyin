@@ -58,6 +58,7 @@ class StandaloneCheckoutSignupNoticeAcceptanceTest {
     private UmsMemberMapper memberMapper;
     private CmsRegistrationMapper registrationMapper;
     private IImService imService;
+    private ISystemNotificationIntentService intents;
     private INotifyService notifyService;
     private IWechatPayService wechat;
     private CmsRegistrationServiceImpl service;
@@ -69,6 +70,9 @@ class StandaloneCheckoutSignupNoticeAcceptanceTest {
         memberMapper = mock(UmsMemberMapper.class);
         registrationMapper = mock(CmsRegistrationMapper.class);
         imService = mock(IImService.class);
+        intents = mock(ISystemNotificationIntentService.class);
+        when(intents.findIntentId(anyString())).thenReturn(null);
+        when(intents.enqueue(anyLong(), any(), anyString(), any(), anyString())).thenReturn(11L);
         notifyService = mock(INotifyService.class);
         wechat = mock(IWechatPayService.class);
         when(wechat.isReady()).thenReturn(true);
@@ -86,14 +90,15 @@ class StandaloneCheckoutSignupNoticeAcceptanceTest {
         ReflectionTestUtils.setField(service, "cmsPointsSettingService", mock(ICmsPointsSettingService.class));
         ReflectionTestUtils.setField(service, "cmsRegistrationScanMapper", mock(CmsRegistrationScanMapper.class));
         ReflectionTestUtils.setField(service, "imService", imService);
+        ReflectionTestUtils.setField(service, "systemNotificationIntents", intents);
         ReflectionTestUtils.setField(service, "notifyService", notifyService);
         CommittedBusinessNotice notice = mock(CommittedBusinessNotice.class);
-        // 无事务同步时 effects 立即执行;这里让「报名成功」派发同步跑 delivery,只验证「发不发、发几次」。
+        // 回放单测手工触发的 afterCommit；这里只验证是否投递、投递几次，不证明数据库事务。
         doAnswer(inv -> "registration-signup".equals(inv.getArgument(0))
                 ? ((Supplier<?>) inv.getArgument(2)).get() : null)
                 .when(notice).dispatchInNewTransaction(anyString(), any(), any());
         ReflectionTestUtils.setField(service, "committedBusinessNotice", notice);
-        when(imService.sendSystem(anyLong(), any(), anyString(), any())).thenReturn(1L);
+        when(imService.deliverSystemNotification(11L)).thenReturn(1L);
 
         UmsMember m = new UmsMember();
         m.setId(MEMBER);
@@ -191,10 +196,22 @@ class StandaloneCheckoutSignupNoticeAcceptanceTest {
         when(registrationMapper.selectCmsRegistrationByIdForUpdate(REG)).thenReturn(paid);
         when(registrationMapper.claimPaymentSuccess(eq(REG), any(), any())).thenReturn(1, 0);
 
-        assertEquals("SUCCESS", service.completeZeroAmountPayment("R" + REG));
-        service.completeZeroAmountPayment("R" + REG);
-
-        verify(imService, times(1)).sendSystem(eq(MEMBER), any(), eq("报名成功"), any());
+        // Direct-new unit fixture supplies only synchronization; real rollback/persistence is tested in MySQL IT.
+        org.springframework.transaction.support.TransactionSynchronizationManager.setActualTransactionActive(true);
+        org.springframework.transaction.support.TransactionSynchronizationManager.initSynchronization();
+        try {
+            assertEquals("SUCCESS", service.completeZeroAmountPayment("R" + REG));
+            service.completeZeroAmountPayment("R" + REG);
+            verify(imService, never()).deliverSystemNotification(anyLong());
+            for (org.springframework.transaction.support.TransactionSynchronization callback :
+                    org.springframework.transaction.support.TransactionSynchronizationManager.getSynchronizations()) callback.afterCommit();
+        } finally {
+            org.springframework.transaction.support.TransactionSynchronizationManager.clearSynchronization();
+            org.springframework.transaction.support.TransactionSynchronizationManager.setActualTransactionActive(false);
+        }
+        verify(intents, times(1)).enqueue(eq(MEMBER), any(), eq("报名成功"), any(), eq("registration-signup:" + REG));
+        verify(imService, times(1)).deliverSystemNotification(11L);
+        verify(imService, never()).sendSystem(anyLong(), any(), anyString(), any());
         verify(notifyService, times(1)).notifySignupSuccess(eq(MEMBER), any());
     }
 
@@ -220,5 +237,6 @@ class StandaloneCheckoutSignupNoticeAcceptanceTest {
         verify(registrations, never()).completeZeroAmountPayment(anyString());
         verify(registrations, never()).handleWechatPayCallback(any());
         verify(imService, never()).sendSystem(anyLong(), any(), anyString(), any());
+        verify(intents, never()).enqueue(any(), any(), any(), any(), any());
     }
 }

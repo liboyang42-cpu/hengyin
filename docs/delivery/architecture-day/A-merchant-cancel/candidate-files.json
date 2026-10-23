@@ -1,0 +1,39 @@
+{
+  "base": "dee20f264de16d7b155c414cd5ebcfffff82908d",
+  "branch": "codex/architecture-day-a-merchant-cancel",
+  "excluded_self": "docs/delivery/architecture-day/A-merchant-cancel/candidate-files.json",
+  "files": [
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/MerchantRegistrationCancellationMySqlIT.java",
+      "sha256": "a1d7526fca33c4b19251186e30fbff3dca0df03b44e8bc60c74a80ef7a51c597"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/MerchantCancelAuditGateTest.java",
+      "sha256": "62b2db11733ebe39c404e3b67eac643755c341e936795303e218161c4b1adf63"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CmsRegistrationMerchantMapper.java",
+      "sha256": "41cd31814b624f032d62d5d38333f8098c8134e178750632ff7548f87f3d7fd7"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationMerchantServiceImpl.java",
+      "sha256": "3f8deaab6e1c4a9bfac841b3196d9d1929eb755c2080f4fc8698ff12fca7e614"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMerchantMapper.xml",
+      "sha256": "b08f7111f79097910e7c545f0e85425d6baccad740233b3dde9e08d1751989fc"
+    },
+    {
+      "path": "docs/delivery/architecture-day/A-merchant-cancel/README.md",
+      "sha256": "6849d8ce2844d8c332e5663fbeb6d64a615c61f7fae9db79e2c4a63e38616a0a"
+    },
+    {
+      "path": "docs/delivery/architecture-day/A-merchant-cancel/verification.txt",
+      "sha256": "5bc373db8c7dcd24933fa17784a9f03427099feae1c0ad953365a2fa619ee56f"
+    },
+    {
+      "path": "docs/delivery/architecture-day/A-merchant-cancel/verify-static.py",
+      "sha256": "ff0b718566137faa5d0553fee2b111881190be8452099fbbedbe0302924ad08a"
+    }
+  ]
+}

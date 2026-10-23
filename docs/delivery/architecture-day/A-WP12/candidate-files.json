@@ -1,0 +1,35 @@
+{
+  "base": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+  "branch": "codex/architecture-day-a-wp12",
+  "excluded_self": "docs/delivery/architecture-day/A-WP12/candidate-files.json",
+  "files": [
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsRegistrationController.java",
+      "sha256": "07724d3f3217833271389adcb73e6e10b13d97332cdf0a5e71fe1d522ecb7a85"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/business/CmsRegistrationControllerSafetyTest.java",
+      "sha256": "ecdd92fcbd72c35bbe164c4fc8550a3b9a0e77739c32609427a09566c9e8eae9"
+    },
+    {
+      "path": "docs/delivery/architecture-day/A-WP12/README.md",
+      "sha256": "63ec3c6ee450d9a24cb5ce638919f2059b7cb47d3743a0648468c8b12991adee"
+    },
+    {
+      "path": "docs/delivery/architecture-day/A-WP12/audit_static.py",
+      "sha256": "c317a6f587c48b3a03425821ca8597d9c36ccb9be093d7c2876919ca207a96fb"
+    },
+    {
+      "path": "docs/delivery/architecture-day/A-WP12/state-write-inventory.json",
+      "sha256": "efdbf5265f9fe34374e987dfa12e05e750812c5e68cc0989b0da3e7ba4de95e4"
+    },
+    {
+      "path": "docs/delivery/architecture-day/A-WP12/test-inventory.json",
+      "sha256": "1d0595e01a98841865632035e941e501350b8238f88d468148593fe91eda6714"
+    },
+    {
+      "path": "docs/delivery/architecture-day/A-WP12/verification.txt",
+      "sha256": "c44ff6bc4d7119ca70765e7af7f68fe899ce8e5069bd5d98285c9a983a12bd08"
+    }
+  ]
+}

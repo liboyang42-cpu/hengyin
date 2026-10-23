@@ -255,9 +255,8 @@ public class CmsRegistrationMerchantServiceImpl implements ICmsRegistrationMerch
             throw new RuntimeException("该报名已中标,不能直接取消;已发布的活动与票需一并处理,请走撤销中标流程");
         }
 
-        registration.setDelFlag(2);
-        registration.setUpdateBy(username);
-        registration.setUpdateTime(new java.util.Date());
-        return cmsRegistrationMerchantMapper.updateCmsRegistrationMerchant(registration) > 0;
+        // The read above only supplies a useful denial. Owner/review/deletion must still match at the write.
+        return cmsRegistrationMerchantMapper.cancelUnwonByMember(
+                registrationId, memberId, username, new java.util.Date()) == 1;
     }
 }

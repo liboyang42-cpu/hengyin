@@ -37,16 +37,21 @@
         SELECT * FROM photo_check_intent
         WHERE member_id=#{memberId} AND session_id=#{sessionId} AND action_key=#{actionKey}
     </select>
-    <!-- Current locking read after upsert: under MySQL REPEATABLE READ a concurrent committed
-         original must be visible even when this transaction already established a snapshot. -->
-    <select id="selectByKeyForUpdate" resultMap="Intent">
+    <!-- Current locking recovery read, also used after upsert. flushCache clears the
+         SqlSession first-level cached null; useCache=false alone only bypasses second-level cache.
+         FOR UPDATE sees the committed original even under an older RR read view. -->
+    <select id="selectByKeyForUpdate" resultMap="Intent" useCache="false" flushCache="true">
         SELECT * FROM photo_check_intent
         WHERE member_id=#{memberId} AND session_id=#{sessionId} AND action_key=#{actionKey}
         FOR UPDATE
     </select>
-    <select id="selectOwned" resultMap="Intent">
+    <!-- NEVER can still bind a SqlSession to an empty Spring synchronization. REQUIRES_NEW
+         commits do not invalidate that suspended session's cached PREPARED/IN_FLIGHT rows.
+         Clear its first-level cache and use a current read after an original-session lock. -->
+    <select id="selectOwned" resultMap="Intent" useCache="false" flushCache="true">
         SELECT * FROM photo_check_intent
         WHERE id=#{id} AND member_id=#{memberId} AND request_fingerprint=#{fingerprint}
+        FOR UPDATE
     </select>
     <select id="selectForUpdate" resultMap="Intent">
         SELECT * FROM photo_check_intent WHERE id=#{id} AND request_fingerprint=#{fingerprint} FOR UPDATE
