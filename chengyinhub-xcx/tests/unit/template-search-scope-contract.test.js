@@ -100,7 +100,7 @@ test('CU-M-64 主题模板:接口没有 keyword,按名称客户端硬筛,清掉�
   h.page.clearTemplateSearch()
   assert.equal(h.page.data.searchKeyword, '')
   lastRequest(h, TOPIC_URL).success({ code: '200', data: TWO_TOPICS })
-  assert.equal(h.page.data.banner._title, '主题A', '清掉搜索要回到全量,不能被上次的过滤结果粘住')
+  assert.equal(h.page.data.banner._title, '主题A', '清掉搜索要回到全量，不能被上次的过滤结果粘住')
   assert.equal(h.page.data.topList.length, 1)
 })
 

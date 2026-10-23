@@ -157,7 +157,7 @@ test('断网：本机稿保留、标云端未存，不弹面板；下次编辑�
   page.type('断网后继续写');
   t.mock.timers.tick(2000);
   assert.equal(writes().length, 2);
-  assert.equal(JSON.parse(writes()[1].data).requestId, firstKey, '同一份本机草稿沿用原意图键,服务端可认出已建的那份');
+  assert.equal(JSON.parse(writes()[1].data).requestId, firstKey, '同一份本机草稿沿用原意图键，服务端可认出已建的那份');
   assert.equal(writes()[1].url, '/api/topic/v2/create');
 });
 
@@ -175,7 +175,7 @@ test('A 号的定时器与迟到回包在切到 B 后不发请求、不改页面
   switchMember(8);
   const keys = Object.keys(stored).sort();
   writes()[0].success({ code: 200, data: { topicId: 501 } });
-  assert.equal(sent.length, 1, '迟到回包不再回读');
+  assert.equal(sent.length, 1, '迟到回包不再刷新');
   assert.equal(page.data.editingTopicId, '');
   assert.notEqual(page.data.themeSaveState, 'saved');
   assert.deepEqual(Object.keys(stored).sort(), keys);
@@ -240,7 +240,7 @@ test('UNKNOWN：保存回读网络失败标待确认且不自动重试；发布 
   page._publishAttempt = { status: 'UNKNOWN', kind: 'SERVER_DRAFT', topicId: '501' };
   page.type('发布结果不明后又改');
   t.mock.timers.tick(10000);
-  assert.equal(sent.length, 2, '先由用户明确操作去核对原发布,不自动保存');
+  assert.equal(sent.length, 2, '先由用户明确操作去确认原发布，不自动保存');
   page._publishAttempt = { status: 'UNKNOWN', kind: 'CREATE' };
   page.type('普通发布结果不明');
   t.mock.timers.tick(10000);
@@ -268,7 +268,7 @@ test('CAS 冲突等确定失败：标云端未存、只提示一次并暂停自�
 test('回读章节/站点身份不符：不清本机恢复稿、不标已存云端、暂停自动保存', (t) => {
   const { page, writes, sent, envelope } = loadPage();
   assert.equal(page._persistDraftEnvelope(), true);
-  page.type('身份核对');
+  page.type('身份确认');
   t.mock.timers.tick(2000);
   const body = JSON.parse(writes()[0].data);
   const bad = detailFor(body);
@@ -279,7 +279,7 @@ test('回读章节/站点身份不符：不清本机恢复稿、不标已存云�
   assert.notEqual(page.data.themeSaveState, 'saved');
   assert.equal(page.data.themeSaveLabel, '云端未存');
   assert.equal(envelope().status, 'ready', '新建时那份本机恢复稿仍在');
-  assert.equal(envelope({ topicId: '501' }).envelope.formData.name, '身份核对', '按主题号的恢复稿也在');
+  assert.equal(envelope({ topicId: '501' }).envelope.formData.name, '身份确认', '按主题号的恢复稿也在');
   page.type('继续');
   t.mock.timers.tick(10000);
   assert.equal(writes().length, 1);
@@ -342,11 +342,11 @@ test('手动保存与自动保存同一 saver：手动成功给面板并标已�
   assert.deepEqual(loading, ['正在保存草稿']);
   page.saveServerDraft({ type: 'tap' });
   t.mock.timers.tick(2000);
-  assert.equal(writes().length, 1, '手动保存在途,自动保存与重复点击都不并发');
+  assert.equal(writes().length, 1, '手动保存在途，自动保存与重复点击都不并发');
   answer(writes()[0]);
   assert.equal(page.data.resultSheet.title, '草稿已保存到云端');
   assert.equal(page.data.themeSaveLabel, '已存云端');
-  assert.equal(envelope().status, 'missing', '回读确认后才清新建恢复稿');
+  assert.equal(envelope().status, 'missing', '刷新确认后才清新建恢复稿');
   t.mock.timers.tick(10000);
   assert.equal(writes().length, 1);
 
@@ -368,7 +368,7 @@ test('真机 setData 回调异步：换上回读版本后的回写不把已存�
   assert.equal(page.data.themeSaveLabel, '已存云端');
   page.deferCallbacks = false;
   t.mock.timers.tick(10000);
-  assert.equal(writes().length, 1, '回读版本回写不触发新保存');
+  assert.equal(writes().length, 1, '刷新版本回写不触发新保存');
 });
 
 test('saver：hasChanges 只作用于保存草稿；发布路径仍按 master 的 localChanges 收口', () => {
@@ -386,7 +386,7 @@ test('saver：hasChanges 只作用于保存草稿；发布路径仍按 master �
   assert.equal(events[0][0], 'fail');
   assert.equal(events[0][1].localChanges, true);
   assert.equal(events[0][1].stage, 'readback');
-  assert.equal(events[0][1].detail.topic.id, 501, '带回读结果供页面接版本号');
+  assert.equal(events[0][1].detail.topic.id, 501, '带刷新结果供页面接版本号');
   saver.saveAndPublish(sent, h);
   calls[2]({ ok: true, data: { topicId: 501 } });
   calls[3]({ ok: true, data: detailFor(sent) });
@@ -396,14 +396,14 @@ test('saver：hasChanges 只作用于保存草稿；发布路径仍按 master �
 test('F-2：真机 setData 回调异步时，保存换版与重开都不把草稿标脏；重开不编辑零写入，之后一次编辑只存一次', (t) => {
   const first = loadPage();
   first.page.deferCallbacks = true;
-  first.page.type('重开核对');
+  first.page.type('重开确认');
   first.page.flush();
   t.mock.timers.tick(2000);
   first.answer(first.writes()[0], { configVersion: 2 });
   first.page.flush();
   t.mock.timers.tick(10000);
   assert.equal(first.writes().length, 1);
-  assert.equal(first.envelope({ topicId: '501' }).status, 'missing', '换上回读版本后不再回写一份与云端相同的本机恢复稿');
+  assert.equal(first.envelope({ topicId: '501' }).status, 'missing', '换上刷新版本后不再回写一份与云端相同的本机恢复稿');
   assert.equal(first.envelope().status, 'missing');
 
   // 重开同一份已存云端的草稿(共享同一份本机存储)
@@ -414,7 +414,7 @@ test('F-2：真机 setData 回调异步时，保存换版与重开都不把草�
   page._draftAutosaveReady = false;
   page.loadEditingTopic('501');
   const load = sent.find(r => r.url === '/api/topic/edit-detail');
-  load.success({ code: 200, data: detailFor({ name: '重开核对', chapters: [{ name: '第一章', nodes: [{ name: '甲', templateId: 3 }] }] }, { configVersion: 2 }) });
+  load.success({ code: 200, data: detailFor({ name: '重开确认', chapters: [{ name: '第一章', nodes: [{ name: '甲', templateId: 3 }] }] }, { configVersion: 2 }) });
   page.flush();
   t.mock.timers.tick(10000);
   page.flush();
@@ -432,7 +432,7 @@ test('F-2：真机 setData 回调异步时，保存换版与重开都不把草�
 });
 
 test('F-2 配套：重开时本机恢复稿与云端不同才上传一次；与云端相同只标已存云端不发请求', (t) => {
-  const cloud = { name: '恢复稿核对', chapters: [{ name: '第一章', nodes: [{ name: '甲', templateId: 3 }] }] };
+  const cloud = { name: '恢复稿确认', chapters: [{ name: '第一章', nodes: [{ name: '甲', templateId: 3 }] }] };
   const run = (localName) => {
     const ctx = loadPage();
     proEditorDraft.saveDraft(wx, { memberId: 7, operationScope: '', topicId: '501', baseRevision: '2026-10-22 10:00:00',
@@ -452,7 +452,7 @@ test('F-2 配套：重开时本机恢复稿与云端不同才上传一次；与�
   assert.equal(differs.page.data.formData.name, '本机改过的名字');
   assert.equal(differs.writes().length, 1, '恢复稿与云端不同:上传一次');
   assert.equal(JSON.parse(differs.writes()[0].data).name, '本机改过的名字');
-  const same = run('恢复稿核对');
+  const same = run('恢复稿确认');
   assert.equal(same.writes().length, 0, '恢复稿与云端相同:不发请求');
   assert.equal(same.page.data.themeSaveLabel, '已存云端');
 });

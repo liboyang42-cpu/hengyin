@@ -233,7 +233,7 @@ Page({
       fail(error) {
         that.setData({
           txSubmitError: error && error.errMsg
-            ? '网络连接异常，请检查后重试'
+            ? '网络异常，请检查后重试'
             : app.getRequestErrorMessage(error, '暂时无法提交，请重试'),
           txSubmitErrorKind: 'network',
         })

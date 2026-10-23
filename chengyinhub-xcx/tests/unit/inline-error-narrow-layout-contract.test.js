@@ -29,7 +29,7 @@ test('窄容器里操作键换行,正文不被压成竖排', () => {
   const copy = rule('.inline-error__copy')
   const min = copy.match(/min-width:\s*(\d+)rpx/)
   assert.ok(min, '正文必须有 min-width,否则 flex 会一路压到 0')
-  assert.ok(Number(min[1]) >= 200, `正文最小宽度 ${min[1]}rpx 太小,仍会压出竖排`)
+  assert.ok(Number(min[1]) >= 200, `正文最小宽度 ${min[1]}rpx 太小，仍会压出竖排`)
 })
 
 test('操作键与图标仍不参与收缩(它们是固定占位,收缩了会变形)', () => {

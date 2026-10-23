@@ -63,7 +63,7 @@ test('403 如实回显后端文案;关闭后迟到回包不再写入', () => {
   assert.equal(page.data.reviewDetail.error, '无权查看该审批记录')
   assert.equal(page.data.reviewDetail.retryable, false)
   page.retryReviewDetail()
-  assert.equal(requests.length, 1, '403 不给重试,重试入口也不再发请求')
+  assert.equal(requests.length, 1, '403 不给重试，重试入口也不再发请求')
 })
 
 test('网络失败可重试;关闭后迟到回包不再写入', () => {

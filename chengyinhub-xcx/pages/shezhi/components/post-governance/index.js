@@ -118,11 +118,11 @@ Component({
       const unknown = () => {
         intent.settle(wx, scope, owner, started.key, 'unknown');
         if (!sameOwner()) return;
-        this.setData({ notice: '提交结果未确认，正在核对…' });
+        this.setData({ notice: '提交结果未确认，正在确认…' });
         this.load().then((rows) => {
           const row = (rows || []).find((item) => item.id === enforcementId);
           if (row && !row.canAppeal) done('', true);
-          else done(rows ? '没有查到这条申诉，可以再次提交（不会重复提交）' : '提交结果暂未确认，请稍后刷新核对');
+          else done(rows ? '没有查到这条申诉，可以再次提交（不会重复提交）' : '提交结果暂未确认，请稍后刷新确认');
         });
       };
       app.sendRequest({

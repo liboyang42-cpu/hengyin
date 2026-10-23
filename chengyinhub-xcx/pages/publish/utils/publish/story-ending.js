@@ -70,12 +70,12 @@ function serialize(draft) {
   let fallbacks = 0;
   const endings = list.map((item, index) => {
     const code = String((item && item.code) || '').trim();
-    if (!CODE.test(code)) throw new Error('第 ' + (index + 1) + ' 个结局的标识不合法:' + code);
-    if (seen.indexOf(code) >= 0) throw new Error('结局标识重复:' + code);
+    if (!CODE.test(code)) throw new Error('第 ' + (index + 1) + ' 个结局的编号不合法:' + code);
+    if (seen.indexOf(code) >= 0) throw new Error('结局编号重复:' + code);
     seen.push(code);
 
     const title = String((item && item.title) || '').trim();
-    if (!title || title.length > 20) throw new Error('第 ' + (index + 1) + ' 个结局要有标题,且不超过 20 字');
+    if (!title || title.length > 20) throw new Error('第 ' + (index + 1) + ' 个结局要有标题，且不超过 20 字');
     const summary = String((item && item.summary) || '').trim();
     if (summary.length > 60) throw new Error('结局的一句话不能超过 60 字');
 
@@ -92,7 +92,7 @@ function serialize(draft) {
   });
 
   if (fallbacks !== 1) {
-    throw new Error('要恰好一个兜底结局(其它都不中时用它);现在有 ' + fallbacks + ' 个');
+    throw new Error('要恰好一个默认结局（其它都不满足时使用）；现在有 ' + fallbacks + ' 个');
   }
 
   const ending = Object.assign({}, root.ending, { endings: endings });
@@ -115,7 +115,7 @@ function conditionOf(item, title) {
   }
   if (item.kind === 'node') {
     const nodeId = Number(item.nodeId);
-    if (!nodeId) throw new Error('「' + title + '」要选一个站点');
+    if (!nodeId) throw new Error('「' + title + '」要选一个节点');
     return [{ op: 'NODE_COMPLETED', nodeId: nodeId }];
   }
   const raw = Array.isArray(item._when) ? item._when : [];
@@ -139,7 +139,7 @@ function chapterEndingIssue(chapter) {
   const ending = chapter && chapter.ending;
   if (!ending) return '';
   if (chapter.opening === true) return '开局不能同时是结局';
-  if ((chapter.nodes || []).length) return '结局章里不能放站点或玩法';
+  if ((chapter.nodes || []).length) return '结局章里不能放节点或玩法';
   if (Number(chapter.recruitEnabled) === 1) return '结局章不能开放商家承接';
   if (ending.fallback === true) return '';
   try { conditionOf(ending, chapter.name || '这个结局章'); } catch (e) { return e.message; }
@@ -151,7 +151,7 @@ function endingChaptersIssue(chapters) {
   const endings = (chapters || []).filter(c => c && c.ending);
   if (!endings.length) return '';
   const fallbacks = endings.filter(c => c.ending.fallback === true).length;
-  return fallbacks === 1 ? '' : (fallbacks ? '结局章里只能有一章兜底' : '结局章里要有一章兜底');
+  return fallbacks === 1 ? '' : (fallbacks ? '结局章里只能有一个默认结局' : '结局章里要有一个默认结局');
 }
 
 /**

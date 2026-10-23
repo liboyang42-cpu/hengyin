@@ -95,12 +95,12 @@ test('§2.1 accent 变体已废止,不许再出现', () => {
 
 test('§3.3 开关一律走 cy-switch,不许用原生 <switch>', () => {
   const hits = pageFiles('.wxml').flatMap((f) => (findRawSwitch(fs.readFileSync(f, 'utf8')).length ? [rel(f)] : []))
-  assert.deepEqual(hits, [], '原生 <switch> 的 color 只吃字面量、不认 CSS var,必然漂移;用 <cy-switch>')
+  assert.deepEqual(hits, [], '原生 <switch> 的 color 只吃字面量、不认 CSS var,必然漂移；用 <cy-switch>')
 })
 
 test('§1.2 玩家深色灰阶必须中性(饱和度 ≤5%)', () => {
   const tokens = fs.readFileSync(path.join(ROOT, 'style/tokens.wxss'), 'utf8')
-  assert.deepEqual(findSaturatedGrays(tokens), [], '灰阶带色相,大面积铺开会被看成泛紫/泛蓝')
+  assert.deepEqual(findSaturatedGrays(tokens), [], '灰阶带色相，大面积铺开会被看成泛紫/泛蓝')
 })
 
 // §4 状态色只能来自 --cy-color-status-* 四件套,不许硬编码 rgba,也不许借用品牌色。
@@ -188,7 +188,7 @@ test('§0.3 路线色板的 tokens 与 fabu JS 两份真源必须同步', () => 
   const tokens = fs.readFileSync(path.join(ROOT, 'style/tokens.wxss'), 'utf8')
   const fabu = fs.readFileSync(path.join(ROOT, 'pages/publish/fabu/index.js'), 'utf8')
   assert.deepEqual(findRouteColorDrift(tokens, fabu), [],
-    '<map> 颜色只能在 JS 设,这份字面量是必要的;但它和 tokens 漂开就会两套配色')
+    '<map> 颜色只能在 JS 设，这份字面量是必要的；但它和 tokens 漂开就会两套配色')
 })
 
 // 原生组件的 color/active-color 属性只吃字面量、不认 CSS var —— 这是 wxss 扫描的
@@ -247,7 +247,7 @@ test('§1.2 badge-wall 的 WebGL clearColor 必须跟页面底色一致', () => 
   const tokens = fs.readFileSync(path.join(ROOT, 'style/tokens.wxss'), 'utf8')
   const engine = fs.readFileSync(path.join(ROOT, 'subpackageP3/pages/badge-wall/index/engine.js'), 'utf8')
   assert.deepEqual(findClearColorDrift(tokens, engine), [],
-    'clearColor 是归一化浮点数、hex 扫描搜不到;整屏 canvas 时它就是画面主色')
+    'clearColor 是归一化浮点数、hex 扫描搜不到；整屏 canvas 时它就是画面主色')
 })
 
 // cy-tabs 的 variant(布局形态)和 wide(选中条宽度)是**正交**的两件事。
@@ -269,7 +269,7 @@ test('§9 cy-tabs 的 variant 与 wide 保持正交', () => {
   const wxml = fs.readFileSync(path.join(ROOT, 'components/cy/tabs/index.wxml'), 'utf8')
   const js = fs.readFileSync(path.join(ROOT, 'components/cy/tabs/index.js'), 'utf8')
   assert.deepEqual(findTabsWideSupport(wxml, js), [],
-    'variant 管布局、wide 管选中条宽度,两者必须能同时表达')
+    'variant 管布局、wide 管选中条宽度，两者必须能同时表达')
 })
 
 // §9 tab 一律走 cy-tabs。2026-08-05 收敛完成:全仓手写 tab 清零(最后一处是
@@ -293,7 +293,7 @@ function findHandwrittenTabs(files) {
 test('§9 tab 一律走 cy-tabs,不许手写', () => {
   const files = pageFiles('.wxml').map((f) => ({ file: rel(f), src: fs.readFileSync(f, 'utf8') }))
   assert.deepEqual(findHandwrittenTabs(files), [],
-    '手写 tab 各写各的吸顶/横滑/选中态,收敛后不许再冒出来')
+    '手写 tab 各写各的吸顶/横滑/选中态，收敛后不许再冒出来')
 })
 
 // ── 棘轮类:锁住存量,只能减不能增 ──
@@ -306,7 +306,7 @@ const RATCHET = {
 test('§2.2/§5 描边+填充并存的存量只能减不能增', () => {
   const n = pageFiles('.wxss').reduce((a, f) => a + findBorderAndFill(fs.readFileSync(f, 'utf8')).length, 0)
   assert.ok(n <= RATCHET.borderAndFill,
-    `描边+填充并存 ${n} 处,超过基线 ${RATCHET.borderAndFill} —— 新代码不许再这么写(规范真源 §2.2/§5)`)
+    `描边+填充并存 ${n} 处，超过基线 ${RATCHET.borderAndFill} —— 新代码不许再这么写(规范真源 §2.2/§5)`)
   if (n < RATCHET.borderAndFill) {
     console.log(`  ↓ 描边+填充并存已降到 ${n}(基线 ${RATCHET.borderAndFill}),记得把 RATCHET 调低锁住成果`)
   }
@@ -315,7 +315,7 @@ test('§2.2/§5 描边+填充并存的存量只能减不能增', () => {
 test('§0.3 硬编码颜色的存量只能减不能增', () => {
   const n = pageFiles('.wxss').reduce((a, f) => a + findHardcodedColors(fs.readFileSync(f, 'utf8')).length, 0)
   assert.ok(n <= RATCHET.hardcodedColor,
-    `硬编码颜色 ${n} 处,超过基线 ${RATCHET.hardcodedColor} —— 颜色走 token,真例外标 ds-ok 并写明理由`)
+    `硬编码颜色 ${n} 处，超过基线 ${RATCHET.hardcodedColor} —— 颜色走 token,真例外标 ds-ok 并写明理由`)
   if (n < RATCHET.hardcodedColor) {
     console.log(`  ↓ 硬编码颜色已降到 ${n}(基线 ${RATCHET.hardcodedColor}),记得把 RATCHET 调低锁住成果`)
   }

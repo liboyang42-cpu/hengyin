@@ -188,7 +188,7 @@ test('F06 reveal 只发送空 payload，权威兜底完成状态明确进入玩�
           nextLevel: null,
           nextImpactLabel: '',
           revealAvailable: true,
-          revealImpactLabel: '查看答案将记为兜底完成，不计正常榜单分',
+          revealImpactLabel: '查看答案将记为保底完成，不计正常榜单分',
           answerReveal: '未授权字段不得透传',
         },
       }, {
@@ -203,9 +203,9 @@ test('F06 reveal 只发送空 payload，权威兜底完成状态明确进入玩�
   assert.equal(view.nodes[0].completionStatus, 'FALLBACK_COMPLETED')
   assert.equal(view.nodes[0].completionSource, 'PLAYER_REVEAL')
   assert.equal(view.nodes[0].hint.revealAvailable, true)
-  assert.equal(view.nodes[0].hint.revealImpactLabel, '查看答案将记为兜底完成，不计正常榜单分')
+  assert.equal(view.nodes[0].hint.revealImpactLabel, '查看答案将记为保底完成，不计正常榜单分')
   assert.equal(view.nodes[0].hint.answerReveal, undefined)
-  assert.equal(view.nodes[1].completionStatus, undefined, '非完成节点不得靠 completionStatus 伪造兜底完成')
+  assert.equal(view.nodes[1].completionStatus, undefined, '非完成节点不得靠 completionStatus 伪造保底完成')
   assert.equal(view.nodes[1].completionSource, undefined)
 
   assert.deepEqual(buildPlayerRevealInput(
@@ -686,7 +686,7 @@ test('路线完成顺序优先使用服务端 completionOrder，同秒完成也�
   assert.deepEqual(completedRouteSegment(misleadingTimes, 2), [
     { lng: 121.2, lat: 31.2 },
     { lng: 121.3, lat: 31.3 },
-  ], 'completionOrder 是主顺序，doneAt 只在主顺序不可用或相同时兜底')
+  ], 'completionOrder 是主顺序，doneAt 只在主顺序不可用或相同时保底')
 
   const futureOrderWithEarlierTime = [
     { nodeId: 1, done: true, completionOrder: 804, doneAt: 900, lng: 121.4, lat: 31.4 },

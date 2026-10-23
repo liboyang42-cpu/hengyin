@@ -64,16 +64,16 @@ test('形似 cq1 但段数不对的码不进券核销端点', () => {
   assert.equal(resolveVerificationScan('cq1301.1726380000.sig.x').kind, 'invalid');
 });
 
-// 据点码的核销在另一个端点，护栏必须继续把它挡在这张共享路由表外面；
+// 节点码的核销在另一个端点，护栏必须继续把它挡在这张共享路由表外面；
 // 但挡下之后要说清「码没坏、是入口不对」，并给出可跳转的出口（F-RM-1 / #20）。
-test('据点码不进验票端点，但带一句指路与可跳转出口', () => {
+test('节点码不进验票端点，但带一句指路与可跳转出口', () => {
   const scan = resolveVerificationScan('v1.900.citynode_55.1999999999999.7.signature');
 
   assert.equal(scan.kind, 'invalid', '绝不能被任何宿主当成可核销码送进端点');
   assert.equal(scan.url, undefined);
-  assert.match(scan.message, /城市据点/);
+  assert.match(scan.message, /城市节点/);
   assert.equal(scan.path, '/pages/merchant/citynode/index');
-  assert.equal(scan.confirmText, '去据点页');
+  assert.equal(scan.confirmText, '去节点页');
 
   // 指路不能指向一个不存在的页面 —— 那比不指路更糟。
   const appJson = require('../../app.json');
@@ -96,9 +96,9 @@ test('出码口的兜底 TTL 只有这一个真源,且等于服务端签发口�
   ];
   for (const rel of issuers) {
     const src = fs.readFileSync(path.join(__dirname, '../..', rel), 'utf8');
-    assert.match(src, /ttlMs \|\| DYN_TTL_MS/, rel + ' 必须用共享常量兜底');
-    assert.doesNotMatch(src, /ttlMs \|\| \d/, rel + ' 不许再写裸数字兜底');
+    assert.match(src, /ttlMs \|\| DYN_TTL_MS/, rel + ' 必须用共享常量保底');
+    assert.doesNotMatch(src, /ttlMs \|\| \d/, rel + ' 不许再写裸数字保底');
   }
   assert.equal(require('../../utils/verification-scan.js').DYN_TTL_MS, 300_000,
-    'ApiVerifyController.java:45 DYN_TTL_MS = 300_000L,前端兜底不得另立一档');
+    'ApiVerifyController.java:45 DYN_TTL_MS = 300_000L,前端保底不得另立一档');
 });

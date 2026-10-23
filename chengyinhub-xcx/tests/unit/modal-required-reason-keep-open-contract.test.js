@@ -31,7 +31,7 @@ test('cy-modal-host:validate 不过时不关面板、不结算,提示与输入�
   host.onInput({ detail: { value: '   ' } })
   host.onConfirm()
   assert.equal(host.data.show, true, '校验不过必须留着面板')
-  assert.equal(host.data.inputError, '请填写封禁原因', '提示要贴在面板里,不能只 toast')
+  assert.equal(host.data.inputError, '请填写封禁原因', '提示要贴在面板里，不能只 toast')
   assert.deepEqual(results, [], '校验不过不得结算 success')
   assert.equal(host.data.inputValue, '   ', '已输入的内容不能丢')
 
@@ -63,7 +63,7 @@ test('utils/modal:无宿主回落原生弹窗时,validate 不通过就用同一�
     assert.equal(shown.length, 1)
     shown[0].success({ confirm: true, cancel: false, content: '  ' })
     assert.deepEqual(results, [], '空内容不得结算 success')
-    assert.equal(shown.length, 2, '校验不过要重开面板,不能悄悄关掉')
+    assert.equal(shown.length, 2, '校验不过要重开面板，不能悄悄关掉')
     // 可编辑弹窗的 content 是输入框预填值:提示不能进 content,否则再点确认就把提示当理由交了
     assert.equal(shown[1].content, '', '提示不得预填进输入框')
     assert.match(shown[1].placeholderText, /请填写封禁原因/)

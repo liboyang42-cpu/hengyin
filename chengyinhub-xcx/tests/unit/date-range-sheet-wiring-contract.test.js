@@ -43,7 +43,7 @@ test('负控:抽掉任意一根线,契约必须判红', () => {
    下面这条接住:min 必须来自 data 里一个会被赋值的字段,而不是写死的字面日期。 */
 test('min 是运行时算出来的,不是烤死在 wxml 里的字面日期', () => {
   const m = WXML.match(/<cy-date-range-sheet[\s\S]*?\/>/)
-  assert.doesNotMatch(m[0], /min="\d{4}-\d{2}-\d{2}"/, '写死日期会随时间过期,必须运行时算')
+  assert.doesNotMatch(m[0], /min="\d{4}-\d{2}-\d{2}"/, '写死日期会随时间过期，必须运行时算')
   const js = fs.readFileSync(path.join(ROOT, 'pages/topic/merchantapply/index.js'), 'utf8')
   assert.match(js, /availabilityMin/, '页面 js 必须真的给 availabilityMin 赋值')
 })

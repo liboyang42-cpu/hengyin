@@ -23,7 +23,7 @@ const COMP_WXML = 'pages/topic/components/project-join/index.wxml'
 test('数据层:页面从 join.registrations 取全部站,不是只取 registration', () => {
   const js = read(PAGE_JS)
   assert.match(js, /d\.join\.registrations/,
-    '不读 registrations 的话,后端就算下发了多站,前端仍然只显示第一站')
+    '不读 registrations 的话，后端就算下发了多站，前端仍然只显示第一站')
   assert.match(js, /myStations:\s*myStations/, 'myStations 必须真的写进 data')
 })
 
@@ -43,7 +43,7 @@ test('渲染层:组件真的把每一站渲染出来了', () => {
 test('交互层:切换走既有 act 分发白名单,不新造一套事件形状', () => {
   const comp = read(COMP_JS)
   assert.match(comp, /triggerEvent\('act',\s*\{\s*act:\s*'switchStation'/,
-    "组件必须用 {act, dataset} 这一套 —— 换个形状页面的 onJoinAct 就分发不到,静默失效")
+    "组件必须用 {act, dataset} 这一套 —— 换个形状页面的 onJoinAct 就分发不到，静默失效")
   const page = read(PAGE_JS)
   assert.match(page, /switchStation:\s*1,/,
     'HANDLERS 白名单没登记的话 onJoinAct 会直接 return,点了没反应且不报错')
@@ -61,7 +61,7 @@ test('交互层:切换后必须重新拉详情,否则切了站内容不变', () 
 test('后端:project home 下发 registrations 全量', () => {
   const java = fs.readFileSync(path.resolve(ROOT,
     '../chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ProjectHomeReadServiceImpl.java'), 'utf8')
-  assert.match(java, /join\.put\("registrations"/, '后端不下发,前端读什么都没用')
+  assert.match(java, /join\.put\("registrations"/, '后端不下发，前端读什么都没用')
   assert.doesNotMatch(java, /private CmsRegistrationMerchant findMyRegistration\(/,
-    '旧的单条版本必须已被替换掉,留着迟早有人再用回去')
+    '旧的单条版本必须已被替换掉，留着迟早有人再用回去')
 })

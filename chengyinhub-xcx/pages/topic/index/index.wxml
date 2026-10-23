@@ -29,7 +29,7 @@
          匹配这条分支,wx:if 必须紧跟标签名,插在前面会让那条契约假红。 -->
     <cy-empty wx:if="{{missingTopicId}}" kind="missing-param" title="{{loadErrorTitle}}" sub="{{loadErrorSub}}" cta="返回发布广场" fill="{{true}}" size="lg" bind:cta="goTopicList" class="fill-slot" />
     <!-- PR10 F-W1-12:未登录(无会话 / 401)不是加载失败,给登录引导 -->
-    <cy-empty wx:elif="{{loginRequired}}" kind="no-permission" title="登录后查看主题" sub="登录后可查看主题详情、场次和报名" cta="登录" fill="{{true}}" size="lg" bind:cta="onLoginRetry" class="fill-slot" />
+    <cy-empty wx:elif="{{loginRequired}}" kind="no-permission" title="登录后查看主题" cta="登录" fill="{{true}}" size="lg" bind:cta="onLoginRetry" class="fill-slot" />
     <cy-error load-failure wx:else icon="/images/no_data.svg" title="{{loadErrorTitle}}" sub="{{loadErrorSub}}" retry="重新加载" fill="{{true}}" size="lg" bind:retry="onRetryLoad" class="fill-slot" auto-back="{{!everLoaded}}" />
   </view>
 
@@ -127,7 +127,7 @@
     <view class="topic-beta" wx:if="{{info.betaFlag==1}}">
       <view class="topic-beta__head flex-ac">
         <text class="topic-beta__badge">Beta 试玩</text>
-        <text class="topic-beta__note">Beta 期主题，欢迎在评论区反馈体验</text>
+        <text class="topic-beta__note">Beta 主题，欢迎评论反馈</text>
       </view>
       <view class="topic-beta__action" wx:if="{{info.isOwner==1}}">
         <cy-btn variant="secondary" size="sm" bindtap="onGraduateBeta">转为正式主题</cy-btn>
@@ -401,7 +401,7 @@
         </view>
         <view class="david_tgb">
           <cy-empty wx:if="{{activeTab == '1' && !info.chaptersList.length}}" kind="empty"
-                    title="这条路线还没有节点" sub="发布者完成路线配置后，这里会显示路线与节点" cta="浏览其他主题" bind:cta="goTopicList" />
+                    title="路线配置中" cta="浏览其他主题" bind:cta="goTopicList" />
           <view class="topic-story-paywall" wx:if="{{info.storyLocked && info.lockedChapterCount > 0}}">
             <view class="topic-story-paywall__fade"></view>
             <view class="topic-story-paywall__card">
@@ -441,7 +441,7 @@
         <!-- CU-M-190:这一层的标签叫「路线」,空态标题却写「任务」,而下面一句又按「每一站」
              解释 —— 同一屏三个词。跟标签与副文案统一到「站点」。 -->
         <cy-empty wx:if="{{activeTab == '2' && !info.chaptersList.length}}" kind="empty"
-                  title="这条路线还没有站点" sub="发布者完成路线配置后，这里会显示每一站" cta="浏览其他主题" bind:cta="goTopicList" />
+                  title="路线配置中" cta="浏览其他主题" bind:cta="goTopicList" />
         <view class="wp davidxfxi" wx:if="{{!isExplore}}" wx:for="{{info.chaptersList}}" wx:key="index" wx:for-item="chapter"
           wx:for-index="chapterIndex">
           <view class="chart-tit">{{chapter.chapLabel || chapter.name}}</view>
@@ -481,7 +481,7 @@
               src="{{index<=answer? '/pages/topic/images/icon_star2.png' : '/pages/topic/images/icon_star1.png'}}" mode="aspectFit"></image>
           </view>
         </view>
-        <view class="vote-hint">说说你的真实体验，给下一位玩家一点参考。</view>
+        
         <view class="vote-cont">
           <textarea bindinput="onCommentInput" auto-height placeholder="请输入您的评价内容..." value="{{ plnr }}" />
         </view>

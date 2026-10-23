@@ -48,7 +48,7 @@ function serverPhotoCheckFields() {
 function serverEnum(name) {
   const code = strip(read(VALIDATOR))
   const m = code.match(new RegExp('Set<String>\\s+' + name + '\\s*=\\s*setOf\\(([^)]*)\\)'))
-  assert.ok(m, '后端没有 ' + name + ' 这份枚举名单,这条断言就是恒真的')
+  assert.ok(m, '后端没有 ' + name + ' 这份枚举名单，这条断言就是恒真的')
   return m[1].split(',').map((s) => s.trim().replace(/^"|"$/g, '')).filter(Boolean)
 }
 
@@ -56,7 +56,7 @@ function serverEnum(name) {
 function serverProjection() {
   const code = strip(read(RUNTIME))
   const at = code.indexOf('if (enabled(config.path("photoCheck")))')
-  assert.ok(at >= 0, '后端里没有 photoCheck 的 kit 投影块,这条断言就是恒真的')
+  assert.ok(at >= 0, '后端里没有 photoCheck 的 kit 投影块，这条断言就是恒真的')
   const body = code.slice(at, code.indexOf('kit.put("photoCheck"', at))
   const fromConfig = new Set()
   const fromState = new Set()
@@ -76,7 +76,7 @@ function serverProjection() {
     const src = locals.get(m[2])
     if (src) (src[0] === 'cfg' ? fromConfig : fromState).add(src[1])
   }
-  assert.ok(fromConfig.size >= 6, '只认出 ' + fromConfig.size + ' 个配置键,投影块的解析式多半失效了')
+  assert.ok(fromConfig.size >= 6, '只认出 ' + fromConfig.size + ' 个配置键，投影块的解析式多半失效了')
   return { fromConfig, fromState }
 }
 
@@ -92,8 +92,8 @@ function kitKeysOf(section, seg) {
    每一条都要说清为什么玩家屏上用不到它。新增一个投影字段而这里没记账,下面判红。 */
 const NOT_CARRIED = {
   requirement: '要拍到什么只进模型的 prompt,玩家屏上没有这一行(给了等于提示答案)',
-  minConfidence: '分数线是服务端判定的事,展示出来只会引来讨价还价',
-  xp: '经验由通关结算那条链发,这一屏不显示',
+  minConfidence: '分数线是服务端判定的事，展示出来只会引来讨价还价',
+  xp: '经验由通关结算那条链发，这一屏不显示',
   lastConfidence: '模型给的置信度不对玩家说话',
   verdict: 'C1:服务端原判定码(PASS/DEGRADED/FALLBACK_PASS/REJECT);玩家屏只认派生的 photoVerified,不按判定码另讲一套',
 }
@@ -101,19 +101,19 @@ const NOT_CARRIED = {
 /* 客户端 kit 里**不是**从 playKit.photoCheck 投影搬来的键。它们另有来源,所以不参与上面
    那张全等表 —— 但来源本身要在下面的用例里单独钉住,不能拿这张表当豁免口袋。 */
 const OUT_OF_PROJECTION = {
-  card: '不是配置投影,是判过这一次回包带的 objectCard 回执(契约 §10.2「当场看到卡」)',
-  place: '不是配置投影,是游玩页给的「主题名 · 节点名」(会话视图里只有 nodeId),信息卡的「地点」一行',
-  photoFailSeq: '不是配置投影,是页面的提交失败信号:上传没成时通知拍物成卡那一屏回取景,kit 恒给 0',
-  preview: '不是配置投影,是编辑页预览标记:玩家侧恒 false,只有 advanced-game-preview 给 true',
-  photoVerified: 'C1:服务端由 verdict 派生(只有视觉模型当场 PASS 才为真),不是配置/状态原字段;缺失即 false',
-  rewardCeiling: 'C1:服务端按 passed + photoVerified 派生的奖励上限,没过之前不下发;缺失即空串',
+  card: '不是配置投影，是判过这一次回包带的 objectCard 回执(契约 §10.2「当场看到卡」)',
+  place: '不是配置投影，是游玩页给的「主题名 · 节点名」(会话视图里只有 nodeId),信息卡的「地点」一行',
+  photoFailSeq: '不是配置投影，是页面的提交失败信号:上传没成时通知拍物成卡那一屏回取景,kit 恒给 0',
+  preview: '不是配置投影，是编辑页预览标记:玩家侧恒 false,只有 advanced-game-preview 给 true',
+  photoVerified: 'C1:服务端由 verdict 派生(只有视觉模型当场 PASS 才为真),不是配置/状态原字段；缺失即 false',
+  rewardCeiling: 'C1:服务端按 passed + photoVerified 派生的奖励上限，没过之前不下发；缺失即空串',
 }
 
 test('★objectCard 的三个字段:配置段有默认、后端 Validator 认、两边枚举逐字相同', () => {
   const seg = cfg.defaultConfig().photoCheck
   assert.equal(seg.mode, '', "老玩法的默认必须是空串 —— 'CARD' 才代表拍物成卡")
   assert.equal(seg.cardTitle, '', '卡名留空 = 用 title,不能凭空替商家编一个名字')
-  assert.equal(seg.cardStyle, 'foil', '默认有高光;不想要要显式选 plain')
+  assert.equal(seg.cardStyle, 'foil', '默认有高光；不想要要显式选 plain')
 
   const server = serverPhotoCheckFields()
   assert.deepEqual(cfg.PHOTO_CARD_FIELDS.filter((f) => !server.has(f)), [],
@@ -173,15 +173,15 @@ test('★三张表全等:配置段字段 = 服务端投影字段 = pickPlayKit �
 
   // 1) objectCard 的三个字段必须一路到 kit —— 少一个组件就静默回落(文档 §2.4)
   assert.deepEqual(cfg.PHOTO_CARD_FIELDS.filter((f) => !projected.fromConfig.has(f)), [],
-    '这三个字段没投影进 playKit:组件收到空值,退回普通拍照审核,没有任何报错')
+    '这三个字段没投影进 playKit:组件收到空值，退回普通拍照审核，没有任何报错')
   assert.deepEqual(cfg.PHOTO_CARD_FIELDS.filter((f) => carried.indexOf(f) < 0), [],
-    '投影进来了但 pickPlayKit 没搬:kit 属性回落到组件默认值,同样没声音')
+    '投影进来了但 pickPlayKit 没搬:kit 属性回落到组件默认值，同样没声音')
 
   // 2) 整段全等:服务端下发的每一个键,要么被搬进 kit,要么在 NOT_CARRIED 记过账
   const all = [...projected.fromConfig, ...projected.fromState]
   const carriedByProjection = carried.filter((key) => !(key in OUT_OF_PROJECTION))
   assert.deepEqual(all.slice().sort(), carriedByProjection.concat(Object.keys(NOT_CARRIED)).sort(),
-    '投影与搬运对不上:要么漏搬一个字段,要么新增的那条没记账')
+    '投影与搬运对不上:要么漏搬一个字段，要么新增的那条没记账')
   assert.deepEqual(carried.filter((key) => key in NOT_CARRIED), [],
     'NOT_CARRIED 里记的字段又被搬进 kit 了 —— 账要删掉')
 })

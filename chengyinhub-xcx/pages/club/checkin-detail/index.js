@@ -73,7 +73,7 @@ Page({
         }
         if (code !== 200 || !res.data) {
           // 200 但缺 data 时 msg 是「操作成功」,不能当失败原因(2026-09-17 拍板)。
-          that.setData({ state: 'error', errorText: bizFailureMessage(res, '网络不稳定，请检查连接后重试') });
+          that.setData({ state: 'error', errorText: bizFailureMessage(res, '网络异常，请检查连接后重试') });
           return;
         }
         that.setData({ state: 'ready', detail: res.data, rail: that.buildRail(res.data.railStep) });
@@ -87,14 +87,14 @@ Page({
           } else {
             that.setData({
               refundErrorUnknown: true,
-              refundErrorText: '退款结果仍未确认，这单还不是已退款；请稍后重新查询，不要重复提交',
+              refundErrorText: '退款结果仍未确认，请稍后刷新，请勿重复提交',
             });
           }
         }
       },
       fail() {
         done();
-        that.setData({ state: 'error', errorText: '网络不稳定，请检查连接后重试' });
+        that.setData({ state: 'error', errorText: '网络异常，请检查连接后重试' });
       },
     });
   },
@@ -164,7 +164,7 @@ Page({
     this.setData({
       refunding: false,
       refundErrorUnknown: true,
-      refundErrorText: '退款结果未确认，正在回读这单的状态；确认完成前请勿重复提交',
+      refundErrorText: '退款结果未确认，正在刷新这单状态，请勿重复提交',
     });
     this.load();
   },

@@ -121,9 +121,9 @@ test('负控:浮层里写回 96vh 必须判红', () => {
 
 test('负控:70vh 的 T1 档不该被误伤', () => {
   assert.deepEqual(findUnsafeHeights([['x.wxss', '.a { max-height: 70vh; }']]), [],
-    'T1 的 70vh 是独立设计档位,离胶囊还有 30vh 富余,不该判罚')
+    'T1 的 70vh 是独立设计档位，离胶囊还有 30vh 富余，不该判罚')
   assert.deepEqual(findUnsafeHeights([['x.wxss', '.a { max-height: 71vh; }']]).length, 1,
-    '刚过档就该报 —— 证明阈值真的在起作用,不是恒不报')
+    '刚过档就该报 —— 证明阈值真的在起作用，不是恒不报')
 })
 
 test('负控:写回画板量出来的绝对像素必须判红', () => {
@@ -210,7 +210,7 @@ test('⑤ 覆盖面板上限的地方,减去那一截必须来自胶囊实测', 
   const bad = hits.filter((h) => !derivesFromCapsule(h))
     .map((h) => `${h.rel}: ${SAFE_H}: ${h.value}`)
   assert.deepEqual(bad, [],
-    '全屏弹层的顶必须低于微信胶囊一点点,不是「满屏」。这些覆盖点既没引用 '
+    '全屏弹层的顶必须低于微信胶囊一点点，不是「满屏」。这些覆盖点既没引用 '
       + `var(--cy-comp-sheet-max-height),也没走 utils/${CHROME_UTIL} 的 resolveMenuChrome():\n`
       + bad.join('\n'))
 })
@@ -220,15 +220,15 @@ test('负控:⑤ 三种错法都要能红', () => {
   assert.equal(derivesFromCapsule({ ...base, value: 'var(--cy-comp-sheet-max-height)' }), true, '安全 token 应放行')
   assert.equal(derivesFromCapsule({ ...base, value: 'calc(100vh - {{chrome.sheetTop}}px)' }), true,
     '走共用胶囊工具的运行时值应放行')
-  assert.equal(derivesFromCapsule({ ...base, value: '100vh' }), false, '裸 100vh 必须红:那就是满屏,会压住胶囊')
+  assert.equal(derivesFromCapsule({ ...base, value: '100vh' }), false, '裸 100vh 必须红:那就是满屏，会压住胶囊')
   assert.equal(derivesFromCapsule({ ...base, value: 'calc(100vh - 88px)' }), false,
-    '减一个字面数必须红:那是从画板量的死数,不随机型变')
+    '减一个字面数必须红:那是从画板量的死数，不随机型变')
   // 用独立夹具验证缺少共用工具，避免某个真实组件接入工具后负控失效。
   const dir = fs.mkdtempSync(path.join(require('node:os').tmpdir(), 'cy-no-nav-'))
   try {
     fs.writeFileSync(path.join(dir, 'index.js'), 'Page({ data: { whatever: 88 } })')
     assert.equal(derivesFromCapsule({ rel: 'y/index.wxml', dir, value: 'calc(100vh - {{whatever}}px)' }), false,
-      '同目录没人走共用胶囊工具 ⇒ 等于自己另算一套,必须红')
+      '同目录没人走共用胶囊工具 ⇒ 等于自己另算一套，必须红')
   } finally { fs.rmSync(dir, { recursive: true, force: true }) }
 })
 
@@ -270,7 +270,7 @@ function collectClampPaddingBlocks() {
 test('⑥ clamp 面板带安全区内距的必须 border-box', () => {
   const bad = collectClampPaddingBlocks()
   assert.deepEqual(bad, [],
-    '这些面板把 clamp 写在 content-box 上,padding-bottom(env 安全区)会加在 clamp 之外,顶边越过胶囊线:\n'
+    '这些面板把 clamp 写在 content-box 上,padding-bottom(env 安全区)会加在 clamp 之外，顶边越过胶囊线:\n'
       + bad.join('\n'))
 })
 
@@ -283,7 +283,7 @@ test('负控:⑥ content-box + env 内距必须红,border-box 与无内距放行
     return clamped && padded && !/box-sizing\s*:\s*border-box/.test(body)
   }
   assert.equal(src('.a{ max-height: var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-max-height)); padding-bottom: env(safe-area-inset-bottom); }'), true,
-    'content-box + clamp + env 内距 = 2026-09-19 实拍炸过的那种,必须红')
+    'content-box + clamp + env 内距 = 2026-09-19 实拍炸过的那种，必须红')
   assert.equal(src('.a{ box-sizing: border-box; max-height: var(--cy-comp-sheet-max-h); padding: 0 40rpx calc(56rpx + env(safe-area-inset-bottom)); }'), false,
     'border-box 应放行')
   assert.equal(src('.a{ max-height: var(--cy-comp-sheet-max-h); padding: 0 40rpx; }'), false,
@@ -325,13 +325,13 @@ function assertFullVariantGeometry(overrides = {}) {
     `(a) full 变体的面板顶必须由胶囊实测值算出 calc(100vh - <实测>px),只留 env() 的 token 在模拟器上会压进胶囊行`)
 
   assert.doesNotMatch(wxml, /class="sh__nav"[^>]*padding-right/,
-    '(b) ✕ 不许再用 padding-right 往左躲胶囊 —— 那会让右上角关闭停在面板中部偏右,和 bottom 档不一致')
+    '(b) ✕ 不许再用 padding-right 往左躲胶囊 —— 那会让右上角关闭停在面板中部偏右，和 bottom 档不一致')
   assert.doesNotMatch(wxml, /class="sh__nav"[^>]*padding-top/,
     '(b) 顶边让开以后 .sh__nav 也不再吃状态栏 padding-top,否则整行白往下掉一截')
   assert.match(wxml, /style="\{\{_dragStyle\}\}\{\{variant === 'full' \? fullMaxH : ''\}\}"/,
-    '(c) 面板顶只在 full 档下发:bottom 档的 70vh 是独立设计档位,不能被顺手抬成近全屏')
+    '(c) 面板顶只在 full 档下发:bottom 档的 70vh 是独立设计档位，不能被顺手抬成近全屏')
   assert.match(wxss, new RegExp(`\\.sh--full \\.sh__panel \\{[\\s\\S]*?\\n\\s*height:\\s*var\\(${SAFE_H},\\s*var\\(${SAFE}\\)\\)`),
-    `(c) wxss 必须「实测通道优先、${SAFE} 兜底」,拿不到胶囊信息时仍退回安全区 token`)
+    `(c) wxss 必须「实测通道优先、${SAFE} 保底」,拿不到胶囊信息时仍退回安全区 token`)
 }
 
 test('⑦ full 变体:面板顶走胶囊实测,✕ 贴弹层右缘不再往左躲', () => {

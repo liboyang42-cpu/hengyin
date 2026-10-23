@@ -20,11 +20,11 @@ const NEARBY_WXML = read('subpackageRoam/nearby/index.wxml')
 test('P5 申请人行:applyMessage 出引号留言,空/缺省不出话', () => {
   const now = new Date(2026, 8, 15, 12, 10, 0).getTime()
   const rows = T.applicantRows([
-    { memberId: 5, memberName: '阿杰', appliedAt: '2026-09-15 12:08:00', applyMessage: '我们两个人,想跟着走完全程' },
+    { memberId: 5, memberName: '阿杰', appliedAt: '2026-09-15 12:08:00', applyMessage: '我们两个人，想跟着走完全程' },
     { memberId: 6, memberName: '小满', appliedAt: '2026-09-15 12:09:00', applyMessage: '' },
     { memberId: 7, memberName: '无留言', appliedAt: '2026-09-15 12:09:00' },
   ], now)
-  assert.equal(rows[0].messageText, '“我们两个人,想跟着走完全程”')
+  assert.equal(rows[0].messageText, '“我们两个人，想跟着走完全程”')
   assert.equal(rows[1].messageText, '', '空串不当留言渲染')
   assert.equal(rows[2].messageText, '', '缺字段不当留言渲染')
   assert.equal(rows[0].sub, '持本场票 · 2 分钟前申请')

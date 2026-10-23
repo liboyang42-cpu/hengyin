@@ -18,7 +18,7 @@
     <!-- 广场 = 原「可承接」:★ 商家在这里做的是「要不要接这一站」,卡面给 模式/余席/档期/地点/结算方式/招商截止 -->
     <block wx:if="{{activeTab === 'plaza'}}">
       <cy-skeleton wx:if="{{routesLoading && !routes.length}}" type="card" count="{{2}}" />
-      <cy-error load-failure class="cy-fade-in" size="lg" wx:elif="{{routesError && !routes.length}}" title="路线没有加载出来" sub="{{routesError}}" retry="重新加载" bind:retry="loadRoutes" />
+      <cy-error load-failure class="cy-fade-in" size="lg" wx:elif="{{routesError && !routes.length}}" title="路线加载失败" sub="{{routesError}}" retry="重新加载" bind:retry="loadRoutes" />
       <view wx:else class="cc-list">
         <view class="cc-refreshing" wx:if="{{routesLoading && routes.length}}" aria-role="status" aria-live="polite">正在刷新开放承接路线…</view>
         <!-- CU-M-85:id 供参谋页带 ?topicId= 进来时定位;focus 只标命中那一条。 -->
@@ -53,7 +53,7 @@
 
     <block wx:else>
       <cy-skeleton wx:if="{{eventsLoading && !events.length}}" type="card" count="{{2}}" />
-      <cy-error load-failure class="cy-fade-in" size="lg" wx:elif="{{eventsError && !events.length}}" title="官方活动没有加载出来" sub="{{eventsError}}" retry="重新加载" bind:retry="loadEvents" />
+      <cy-error load-failure class="cy-fade-in" size="lg" wx:elif="{{eventsError && !events.length}}" title="官方活动加载失败" sub="{{eventsError}}" retry="重新加载" bind:retry="loadEvents" />
       <view wx:else class="cc-list">
         <view class="cc-refreshing" wx:if="{{eventsLoading && events.length}}" aria-role="status" aria-live="polite">正在刷新官方活动…</view>
         <view class="cc-card cc-card--tap" wx:for="{{events}}" wx:key="id" data-id="{{item.id}}" bindtap="openEvent"

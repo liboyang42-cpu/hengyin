@@ -153,7 +153,7 @@ test('负控:空态判据改回只看 couponCount 时,第一条断言必须真�
     'if (!count && !total) return { couponCard: null, deckGhosts: 0, couponRate: \'\' };',
     "if (!count) return { couponCard: null, deckGhosts: 0, couponRate: '' };"
   );
-  assert.notEqual(regressed, PAGE_JS, '负控锚点失效:空态判据已改名,扫描口径需同步');
+  assert.notEqual(regressed, PAGE_JS, '负控锚点失效:空态判据已改名，扫描口径需同步');
   const page = render(regressed, { couponCount: 0, couponTotal: 3, received: 8, verified: 3 });
   assert.equal(page.data.couponCard, null);
   assert.throws(() => assert.notEqual(page.data.couponCard, null), assert.AssertionError);

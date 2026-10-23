@@ -85,18 +85,18 @@ test('game-director 整页已删,且全仓不再有残留引用', () => {
 test('宿主页(活动详情)恒暗,并且真的挂着导演台八件套', () => {
   const wxml = read('pages/club/topic-detail/index.wxml')
   assert.match(wxml, /class="[^"]*\btheme-dark\b[^"]*"/, '根节点必须挂 theme-dark')
-  assert.doesNotMatch(wxml, /theme-merchant/, '俱乐部端恒暗,不许挂商家浅色')
+  assert.doesNotMatch(wxml, /theme-merchant/, '俱乐部端恒暗，不许挂商家浅色')
   for (const n of ['ready', 'end-confirm', 'chapter-sheet', 'team-sheet',
                    'role-sheet', 'broadcast-sheet', 'incident-sheet', 'recap']) {
     assert.ok(wxml.includes(`<cy-club-director-${n}`),
-      `宿主页没挂 cy-club-director-${n} —— 组件建了却没人渲染,等于功能没被替代`)
+      `宿主页没挂 cy-club-director-${n} —— 组件建了却没人渲染，等于功能没被替代`)
   }
 })
 
 test('负控:宿主页混入 theme-merchant 时断言必须真的红', () => {
   const original = read('pages/club/topic-detail/index.wxml')
   const mutated = original.replace('theme-dark', 'theme-dark theme-merchant')
-  assert.notEqual(mutated, original, '变异没生效:根节点写法已漂移,这个负控在空转')
+  assert.notEqual(mutated, original, '变异没生效:根节点写法已漂移，这个负控在空转')
   assert.match(mutated, /theme-merchant/)
   assert.doesNotMatch(original, /theme-merchant/)
 })

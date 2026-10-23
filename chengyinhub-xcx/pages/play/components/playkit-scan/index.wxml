@@ -15,7 +15,7 @@
            框子是个「洞」不是一条横幅;扁的框会让人以为要横过来扫。
            四个角是四个直角括号,不是一整圈描边:整圈会把它变成一个「相框」。 -->
       <view class="sc__frame {{reducedMotion ? 'sc__frame--reduced' : ''}}" wx:if="{{kindKey !== '显形'}}" bindtap="onScan"
-            aria-role="button" aria-label="扫这个点位的码"
+            aria-role="button" aria-label="扫这个节点的码"
             hover-class="sc__press" hover-stay-time="80">
         <view class="sc__c sc__c--tl pe pe--corner" style="--pe-d:.25s;--pe-cx:-160rpx;--pe-cy:-160rpx"></view>
         <view class="sc__c sc__c--tr pe pe--corner" style="--pe-d:.25s;--pe-cx:160rpx;--pe-cy:-160rpx"></view>

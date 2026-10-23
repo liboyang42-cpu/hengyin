@@ -75,7 +75,7 @@ Component({
           const src = readPlayerCode(res)
           settle(src, (res && res.msg) || '个人码暂时没有生成，请重试')
         },
-        fail: function () { settle('', '网络异常，个人码没有加载出来') },
+        fail: function () { settle('', '网络异常，个人码加载失败') },
         successStatusAbnormal: function () { settle('', '个人码暂时没有生成，请重试') },
       })
     },

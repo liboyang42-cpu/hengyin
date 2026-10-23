@@ -28,7 +28,7 @@ function validate(form) {
   if (!proofs.length) return '请至少上传 1 张营业执照或门店实拍'
   if (proofs.length > MAX_PROOFS) return '证明材料最多 ' + MAX_PROOFS + ' 张'
   if (proofs.some((u) => text(u).length > 255)) return '证明图片地址过长，请重新上传'
-  if (!text(f.requestId)) return '请求标识缺失，请重试'
+  if (!text(f.requestId)) return '操作失败，请重试'
   return ''
 }
 

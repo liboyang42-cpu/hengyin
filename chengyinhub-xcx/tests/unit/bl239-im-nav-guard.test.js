@@ -37,7 +37,7 @@ function onceThenAgain(page, navs, tap, url) {
   assert.equal(navs.length, 2, '未回调前仍锁住')
   page.onShow()
   tap()
-  assert.equal(navs.length, 3, 'onShow 兜底清锁')
+  assert.equal(navs.length, 3, 'onShow 保底清锁')
 }
 
 const CHAT = '../../subpackageB/pages/im/chat/index.js'

@@ -296,7 +296,7 @@ test('提交 single-flight，失败保留草稿和页内重试，成功后只重
     env.requests[1].success({ code: 200, data: 101 })
     env.requests[1].complete()
     assert.equal(env.page.data.dirty, false)
-    assert.equal(env.requests.length, 3, '保存成功后必须回读申请状态')
+    assert.equal(env.requests.length, 3, '保存成功后必须刷新申请状态')
 
     env.requests[2].fail({ errMsg: 'request:fail timeout' })
     env.requests[2].complete()

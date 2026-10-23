@@ -80,6 +80,6 @@ test('CL-27 附近的人:单独同意后带 roam-presence-v1 开启,服务端回
   assert.equal(calls[0].method, 'POST');
   assert.equal(calls[0].data.visible, true);
   assert.equal(calls[0].data.consentVersion, 'roam-presence-v1');
-  assert.equal(calls[1].method, 'GET', '开启后必须回读服务端事实');
+  assert.equal(calls[1].method, 'GET', '开启后必须刷新服务端事实');
   assert.equal(h.page.data.presenceVisible, true);
 });

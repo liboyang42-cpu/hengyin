@@ -118,15 +118,15 @@ test('negative control:判定逻辑本身不是空的', () => {
   // 模拟「抽了模板却忘了传 data」——正是 #572 的形态
   const body = '<view wx:if="{{show}}">{{errorText}}</view>'
   const needed = referencedRoots(body)
-  assert.ok(needed.has('show') && needed.has('errorText'), '根标识符提取失效,门禁会恒绿')
+  assert.ok(needed.has('show') && needed.has('errorText'), '根信息符提取失效，门禁会恒绿')
   assert.deepEqual([...needed].filter(k => !new Set().has(k)).sort(), ['errorText', 'show'])
 
   // 局部循环变量不该被当成缺失字段
   const looped = '<view wx:for="{{list}}" wx:for-item="tag">{{tag.name}}</view>'
   const locals = localLoopVars(looped)
-  assert.ok(locals.has('tag'), 'wx:for-item 声明的局部变量必须被排除,否则会误伤 searchmap')
+  assert.ok(locals.has('tag'), 'wx:for-item 声明的局部变量必须被排除，否则会误伤 searchmap')
 
   // data 提供的键要能被正确解析出来
   assert.deepEqual([...providedKeys('{{item: selected}}')], ['item'])
-  assert.equal(providedKeys('{{...rest}}'), null, '展开运算符无法静态判定,应放行而不是误报')
+  assert.equal(providedKeys('{{...rest}}'), null, '展开运算符无法静态判定，应放行而不是误报')
 })

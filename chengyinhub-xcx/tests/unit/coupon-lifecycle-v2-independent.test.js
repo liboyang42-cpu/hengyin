@@ -255,7 +255,7 @@ test('独立页 NoGo-3:onHide/onUnload 废在途,onShow 能发当前请求,旧�
   h.instance.onHide()
   assert.equal(oldRequest.aborted, true, 'onHide 必须中止在途 token 请求')
   h.instance.onShow()
-  assert.equal(h.requests.length, 2, 'onShow 必须能立即发当前请求,不被旧 _refreshing 挡住')
+  assert.equal(h.requests.length, 2, 'onShow 必须能立即发当前请求，不被旧 _refreshing 挡住')
 
   succeed(oldRequest, { useStatus: 0, qrcodeUrl: 'account-a-qr', expiresIn: 60, startTime: FUTURE_START })
   assert.equal(h.instance.data.qrcodeUrl, '', '被中止/旧代际的响应不得落屏')

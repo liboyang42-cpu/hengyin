@@ -15,14 +15,14 @@
       <cy-tabs class="result-tabs" tabs="{{resultTabs}}" active="{{activeResultType}}"
         variant="chip" bind:change="onResultTab" />
 
-      <cy-inline-error wx:if="{{clubLoginRequired}}" title="登录后可搜索俱乐部" action="登录" bind:action="loginForClubs" />
+      <cy-inline-error wx:if="{{clubLoginRequired}}" title="登录后搜索俱乐部" action="登录" bind:action="loginForClubs" />
       <cy-inline-error wx:elif="{{clubSearchDenied}}" title="{{clubSearchDenied}}" />
 
       <view wx:if="{{showSearchSkeleton && !visibleResults.length}}">
         <cy-skeleton type="feed-card" count="3" />
       </view>
       <cy-error load-failure class="fill-slot cy-fade-in" wx:elif="{{searchError && !visibleResults.length}}" fill="{{true}}" size="lg" title="没能完成搜索" sub="{{searchError}}" bind:retry="runSearch" auto-back="{{!everLoaded}}" />
-      <cy-empty class="fill-slot" wx:if="{{!searchLoading && !searchError && !visibleResults.length}}" fill="{{true}}" size="lg" kind="empty" title="没有找到匹配内容" sub="换个关键词，或看看地图附近有什么" />
+      <cy-empty class="fill-slot" wx:if="{{!searchLoading && !searchError && !visibleResults.length}}" fill="{{true}}" size="lg" kind="empty" title="没有找到匹配内容" sub="换个关键词试试" />
       <view class="result-list" wx:if="{{visibleResults.length}}">
         <block wx:for="{{visibleResults}}" wx:key="key">
           <view wx:if="{{item.type === 'topic'}}" class="topic-result-card" data-id="{{item.id}}" data-scene-id="{{item.sceneId}}" data-path="{{item.path}}" bindtap="goResult" aria-role="button" aria-label="查看主题：{{item.title}}" hover-class="cy-pressed" hover-stay-time="80">

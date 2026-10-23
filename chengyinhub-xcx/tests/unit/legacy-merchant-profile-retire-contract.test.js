@@ -252,7 +252,7 @@ test('入口6 商家工作台分享 → 稳定 canonical,不带主题上下文',
   page.data.merchantInfo = { id: 7, memberId: 88, name: '城市运动装备馆' };
   const share = page.onShareAppMessage({ from: 'menu' });
   assert.equal(share.path, CANONICAL);
-  assert.doesNotMatch(share.path, /topicId/, '分享路径会被卡片固化,不许混进当次上下文');
+  assert.doesNotMatch(share.path, /topicId/, '分享路径会被卡片固化，不许混进当次上下文');
 
   // 没有会员主体时退回首页,而不是发一条打不开的链接
   const noSubject = loadPage('pages/merchant/index/index.js');
@@ -267,7 +267,7 @@ test('入口8 店铺装修预览 → canonical + preview=1(访客视角预览)',
   page.goPreview();
   assert.deepEqual(urls(), [CANONICAL + '&preview=1']);
   const host = fs.readFileSync(path.join(__dirname, '../../pages/userinfo/userinfo.js'), 'utf8');
-  assert.match(host, /previewSelf: options\.preview === '1'/, 'userinfo 必须读 preview=1,否则又成死参');
+  assert.match(host, /previewSelf: options\.preview === '1'/, 'userinfo 必须读 preview=1，否则又成死参');
 });
 
 test('入口9 全站搜索商家结果项 → canonical', () => {
@@ -380,7 +380,7 @@ test('旧壳 · 跳转本身失败时重试的是跳转,不是把它误报成参
   failRedirect = false;
   shell.page.retryLoad();
   assert.equal(shell.page.data.state, 'redirecting');
-  assert.equal(shell.page.data.state === 'invalid', false, 'poiId 那支没有解析步骤,不能退化成「参数无效」');
+  assert.equal(shell.page.data.state === 'invalid', false, 'poiId 那支没有解析步骤，不能退化成「参数无效」');
 });
 
 test('旧壳 · 猜不出目的地的三种 query:明确说无效,不猜', () => {

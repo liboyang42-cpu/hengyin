@@ -122,7 +122,7 @@ test('结果卡请求失败可单独重读，重读不触发写入',async()=>{
   assert.equal(requests.filter(r=>r[1]==='POST').length,0);
 });
 
-for (const entry of [true,false]) test((entry?'游玩页':'主题入口')+'计时清理未知后只读核对，不跳转、不重复清理写入',async()=>{
+for (const entry of [true,false]) test((entry?'游玩页':'主题入口')+'计时清理未知后只读确认，不跳转、不重复清理写入',async()=>{
   const {instance,requests,navigations}=page((url,method,data)=>url==='/api/play/run-session'?{code:200,data:{runState:'PAUSED',elapsedSeconds:99,savedAt:1}}:{code:200,data:method==='POST'||!data.sessionId||data.sessionId===73?fixture.replayed:fixture.completed},entry,()=>({code:'fail',netFail:true}));
   assert.equal(await instance.replayThemeSession(),false);
   assert.equal(await instance.checkThemeReplay(),false);

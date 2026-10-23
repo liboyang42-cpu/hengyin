@@ -45,7 +45,7 @@ function decorate(item) {
   const known = status === 0 || status === 1 || status === 2 || status === 3
   const started = startedAt(source.startTime)
   const startText = source.startTime ? `${dateText(source.startTime)} 起可用` : ''
-  const endText = source.endTime ? `有效期至 ${dateText(source.endTime)}` : '有效期待确认'
+  const endText = source.endTime ? `有效期至 ${dateText(source.endTime)}` : '—'
   const dateLine = status === 3 ? '该券已被平台手动失效' : (started ? endText : `${startText} · ${endText}`)
   return {
     ...source,
@@ -145,7 +145,7 @@ Component({
         },
         successStatusAbnormal: (res, statusCode) => failure(res, statusCode, '服务暂时不可用，请稍后重试。'),
         complete: settle,
-        fail: (res, statusCode) => failure(res, statusCode, '网络异常，请检查网络后重试。'),
+        fail: (res, statusCode) => failure(res, statusCode, '网络异常，请重试。'),
       })
     },
     filter() {

@@ -45,7 +45,7 @@
         </view>
       </view>
     </view>
-    <view class="foot">头像 1:1 方图 · 封面 16:9 横图,将展示在俱乐部主页与目录中。</view>
+    <view class="foot">头像 1:1 · 封面 16:9</view>
 
     <!-- 基础信息 -->
     <view class="sec-label mt">基础信息</view>
@@ -67,7 +67,7 @@
         <input disabled="{{saving || draftAvailable || draftBlocked}}" class="fi" data-field="style" value="{{style}}" bindinput="onInput" placeholder="如:轻松、沉浸、硬核(选填)" placeholder-class="ph" aria-label="俱乐部风格，选填" />
       </view>
     </view>
-    <view class="foot">主理人姓名与联系方式在「成为主理人」资料里维护,不在此修改。</view>
+    <view class="foot">在主理人资料中修改</view>
 
     <!-- 介绍 -->
     <view class="sec-label mt">俱乐部介绍</view>
@@ -104,7 +104,7 @@
         </view>
       </view>
     </view>
-    <view class="foot">点开在半屏里选,选完点「应用」。</view>
+    
 
     <!-- 经营配置：后台与报名服务端同一份 club 配置，不能只改展示文案。
          2026-08-26：这三项决定开卖时票怎么分、钱怎么收，只给主理人；
@@ -113,7 +113,7 @@
     <view class="card" wx:if="{{!isOwner}}">
       <view class="op-locked">
         <text class="op-locked-title">只有主理人能改经营配置</text>
-        <text class="op-locked-sub">这三项影响开卖时的分票和收款，只能由主理人设置。</text>
+        <text class="op-locked-sub">仅主理人可设置</text>
         <!-- 现状回显(Figma 29:149):管理员改不了这三项,但要能看见现值 ——
              这是管理员唯一能知道「保留了几个名额」的地方,没有它锁说明就只是拒绝。 -->
         <text class="op-locked-cur">当前:{{opCurrentText}}</text>
@@ -142,7 +142,7 @@
         <view class="operation-input"><input disabled="{{saving || draftAvailable || draftBlocked}}" class="fi" data-field="memberReservedQuota" value="{{memberReservedQuota}}" type="number" bindinput="onInput" placeholder="0" placeholder-class="ph" aria-label="成员保留名额" /><text>个</text></view>
       </view>
     </view>
-    <view class="foot">保留名额会在报名报价与建单时再次校验。</view>
+    
     </block>
 
     <!-- 危险操作(Figma 28:68):红标签 + danger-soft 底卡 + 后果说明 + 整宽描边 danger 胶囊。

@@ -279,7 +279,7 @@ test('删掉最后一章之后必须还能再添加 —— 空态入口不能因
   page.deleteChapter({ currentTarget: { dataset: {} } })
 
   assert.equal(page.data.formData.chapters.length, 0)
-  assert.ok(page.data.starterAction, '删空之后空态 CTA 必须回来,否则页面上没有任何添加入口')
+  assert.ok(page.data.starterAction, '删空之后空态 CTA 必须回来，否则页面上没有任何添加入口')
   // 把 WXML 那两个条件原样复述一遍:两个都不成立 = 用户看到的那个死锁
   const emptyCtaVisible = page.data.formData.chapters.length === 0 && !!page.data.starterAction
   const addRowVisible = !!(page.data.formData.chapters.length || page.data.pendingMaterials.length)
@@ -339,7 +339,7 @@ test('每次素材变更立即原子保存完整草稿信封，重进恢复同�
   // 契约钉 toast 的文案。原来这里还有一条 assert.equal(pendingRestoreNotice, '') ——
   // 字段本身已随提示条一起删掉,那条是恒真断言,一并去掉,别留橡皮图章。
   assert.ok(toasts.includes('已恢复上次未编排完的 1 个素材'),
-    '恢复草稿必须弹一次 toast:提示条撤了之后,不弹就等于什么都没告诉人')
+    '恢复草稿必须弹一次 toast:提示条撤了之后，不弹就等于什么都没告诉人')
 
   reopened.data.nodeDraftDestination = 'pending'
   reopened.data.nodesForm = Object.assign({}, reopened.data.nodesForm, {
@@ -744,7 +744,7 @@ test('选玩法面板每次打开都重拉「我的故事玩法草稿」,选中�
   page.showTemp()
   const req = requests.find((r) => r && r.url === '/api/template/my-list' && r.data && String(r.data.draft_status) === '0')
   assert.ok(req, '打开面板没有拉草稿')
-  assert.equal(req.data.is_quote, undefined, '带了 is_quote 就只回已发布,草稿永远拉不到')
+  assert.equal(req.data.is_quote, undefined, '带了 is_quote 就只回已发布，草稿永远拉不到')
   req.success({ code: 200, data: { rows: [{ id: 141, title: '新生儿登记', validationMethod: 0, advancedConfigJson: '{}' }] } })
   assert.deepEqual(page.data.storyDraftList.map((t) => t.id), [141])
 
@@ -838,7 +838,7 @@ test('添加直接进入单个伏笔配置，完成才回填，重开编辑不�
   assert.equal(JSON.parse(page.data.formData.journeyRules).thoughts[0].key, savedKey)
   assert.equal(page.data.thoughtOptions.length, 1)
   assert.equal(page.data.thoughtOptions[0].desc, '窗后的光')
-  assert.ok(key, '添加时生成内部标识')
+  assert.ok(key, '添加时生成内部信息')
 })
 
 test('旧资料多个伏笔不静默截断，也不能保存多个', () => {
@@ -906,7 +906,7 @@ test('插入地点前先判节点名额:满了当场说,不进配置;插故事�
   assert.notEqual(page.data.popChapterNodes, true, '名额满了还打开了地点配置')
 
   page.insertStoryNodeAt({ currentTarget: { dataset: { index: 1, kind: 'game' } } })
-  assert.equal(asked, 1, '故事玩法不算名额,不该去判')
+  assert.equal(asked, 1, '故事玩法不算名额，不该去判')
   assert.equal(page.data.popChapterNodes, true, '名额满了也照样能插故事玩法')
 })
 
@@ -924,7 +924,7 @@ test('节点数量不限，旧权限缓存的2节点额度不再限制地点和�
       { key: 'b2', type: 'node', nodeKey: 'g2', locationRequired: false },
       { key: 'b3', type: 'node', nodeKey: 'p1' },
     ] }] })
-    assert.equal(page._canAddFormalNodes(1), true, '两个故事玩法 + 一个地点 = 占 1 个名额,还能再加 1 个地点')
+    assert.equal(page._canAddFormalNodes(1), true, '两个故事玩法 + 一个地点 = 占 1 个名额，还能再加 1 个地点')
     page.data.formData.chapters[0].blocks[0].locationRequired = true
     assert.equal(page._canAddFormalNodes(1000), true, '地点和玩法都不受旧节点额度限制')
   } finally { Object.assign(roleGuard, saved) }
@@ -947,7 +947,7 @@ test('草稿恢复:剧情里的老结局清单转成结局章(章名 = 标题,�
 
   const again = makePage()
   again._applyDraftEnvelope({ formData: Object.assign({}, again.data.formData, { journeyStory: story, chapters }) })
-  assert.equal(again.data.formData.chapters.length, 3, '已经是结局章了,不重复转')
+  assert.equal(again.data.formData.chapters.length, 3, '已经是结局章了，不重复转')
 })
 
 test('打开结局章的设置:只有键的老结局按清单回显名字,不写「请选择」', () => {

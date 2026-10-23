@@ -15,9 +15,9 @@ test('投诉提交成功后必须离开本页,且不能是裸 navigateBack(栈�
 
   // ① 成功分支存在,并且成功之后调的是页面自己的 onBack(带栈长兜底),不是裸 navigateBack。
   // 2026-09-06 轻提示收口:成功提示从 wx.showToast({ title }) 改为 toast.success('…')
-  assert.match(js, /toast\.success\('投诉已提交'\)/, '成功提示文案不在了,先确认成功分支还在')
+  assert.match(js, /toast\.success\('投诉已提交'\)/, '成功提示文案不在了，先确认成功分支还在')
   assert.match(js, /setTimeout\(function \(\) \{ that\.onBack\(\); \}/,
-    '成功后必须复用 onBack()(它带栈长兜底);裸 wx.navigateBack 在直达进来时什么都不会发生')
+    '成功后必须复用 onBack()(它带栈长保底);裸 wx.navigateBack 在直达进来时什么都不会发生')
 
   // ② onBack 的兜底本身:栈长 > 1 才 navigateBack,否则 switchTab 回会员中心(tabBar 页)。
   const onBack = js.slice(js.indexOf('onBack() {'), js.indexOf('onBack() {') + 260)
@@ -29,7 +29,7 @@ test('投诉提交成功后必须离开本页,且不能是裸 navigateBack(栈�
   //    哪天真加了 submitted 态,这条会红,提醒把 D26 从 blocked 里放回来重新拍。
   const dataBlock = js.slice(js.indexOf('data: {'), js.indexOf('data: {') + 600)
   assert.doesNotMatch(dataBlock, /\bsubmitted\b/,
-    '页面新增了 submitted 页内状态 ⇒ D26 可以拍了,请把它从 blocked-baseline.json 里移除并重新拍')
+    '页面新增了 submitted 页内状态 ⇒ D26 可以拍了，请把它从 blocked-baseline.json 里移除并重新拍')
 
   // ④ 失败分支必须把 submitting 放回去,否则用户永久卡在「提交中」。
   const submitBlock = js.slice(js.indexOf('submitting: true'))
@@ -46,5 +46,5 @@ test('D26 已按 blocked 规范登记:基线里有它,且矩阵行写清了 reas
   const d26 = SHOTS.find((s) => s.id === 'D26')
   assert.ok(d26.blocked, 'D26 必须是 blocked')
   assert.match(d26.blocked, /altVerification/, 'blocked 文案必须给出替代验证手段')
-  assert.match(d26.blocked, /complaint-submit-success-contract/, '替代验证要指名到文件,别写"有单测"')
+  assert.match(d26.blocked, /complaint-submit-success-contract/, '替代验证要指名到文件，别写"有单测"')
 })

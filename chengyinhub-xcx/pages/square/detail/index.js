@@ -164,7 +164,7 @@ Page({
   goUserInfo() { const info = this.data.info || {}; if (!info.memberId || this._navigating) return; this._navigating = true; // 跳转中不响应连点
     wx.navigateTo({
       url: '/pages/userinfo/userinfo?userId=' + info.memberId,
-      fail: () => toast('打不开这个主页'), complete: () => { this._navigating = false; },
+      fail: () => toast('无法打开这个主页'), complete: () => { this._navigating = false; },
     });
   },
 
@@ -241,7 +241,7 @@ Page({
       },
       fail: function (res) {
         that.setData({
-          commentSubmitError: app.getRequestErrorMessage(res, '网络错误，请检查连接后重试'),
+          commentSubmitError: app.getRequestErrorMessage(res, '网络异常，请检查连接后重试'),
           commentSubmitErrorKind: 'network'
         });
       },
@@ -307,7 +307,7 @@ Page({
       },
       fail: function (res) {
         that.setData({
-          replySubmitError: app.getRequestErrorMessage(res, '网络错误，请检查连接后重试'),
+          replySubmitError: app.getRequestErrorMessage(res, '网络异常，请检查连接后重试'),
           replySubmitErrorKind: 'network'
         });
       },
@@ -1050,7 +1050,7 @@ Page({
         if (requestId !== that._detailRequestId) return;
         that.setData({
           detailState: 'error',
-          detailError: '网络开了点小差，请检查连接后重试',
+          detailError: '网络异常，请检查连接后重试',
         });
       },
       complete: function () {
@@ -1203,7 +1203,7 @@ Page({
         }
       },
       fail: function (res) {
-        setCommentError(res, '网络错误，请检查连接后重试');
+        setCommentError(res, '网络异常，请检查连接后重试');
       },
       complete: function () {
         if (requestId !== that._commentsRequestId) return;

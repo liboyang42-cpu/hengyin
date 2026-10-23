@@ -433,7 +433,7 @@ test('readReceipt 保留权威 FAILED 原因并归一为可解锁的 business-er
     receipt,
   })
 
-  const longReason = '本场状态已由其他工作人员更新，' + '请刷新页面后核对最新站点状态再重试。'.repeat(4)
+  const longReason = '本场状态已由其他工作人员更新，' + '请刷新页面后确认最新站点状态再重试。'.repeat(4)
   const longPending = client.readReceipt(71, 'req-merchant-71-ready')
   const longReceipt = Object.assign({}, receipt, {
     receiptId: 502,

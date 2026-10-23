@@ -145,7 +145,7 @@ test('B-05:主题「配置」在途时连点不重复复制草稿,完成后恢�
 test('B-05:主题「配置」失败后也要解锁,不能把入口永久焊死', () => {
   const h = loadPage({}, { deferTemplateUse: true });
   h.page.goTopicConfig(fire({ _kind: 'topic', id: 21, _title: '风味巡游' }));
-  h.requests[0].fail({ msg: '网络错误' });
+  h.requests[0].fail({ msg: '网络异常' });
   h.page.goTopicConfig(fire({ _kind: 'topic', id: 21, _title: '风味巡游' }));
   assert.equal(h.requests.length, 2, '失败必须放行下一次点击');
 });

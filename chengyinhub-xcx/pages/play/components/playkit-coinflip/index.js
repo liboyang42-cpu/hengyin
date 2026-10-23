@@ -32,7 +32,7 @@ Component({
   behaviors: [reducedMotionBehavior],
   properties: {
     show: { type: Boolean, value: false },
-    kicker: { type: String, value: '抛一次,认结果' },
+    kicker: { type: String, value: '抛一次，认结果' },
     headsLabel: { type: String, value: '正面' },
     headsAction: { type: String, value: '' },
     tailsLabel: { type: String, value: '反面' },

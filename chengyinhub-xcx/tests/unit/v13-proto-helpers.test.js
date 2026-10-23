@@ -9,7 +9,7 @@ const { buildTopicStatBar } = require('../../pages/topic/utils/topic-detail-fact
 test('点位规格:id 与页面 marker id 同一套,地标 / 商家 / 主题 / 活动 / 队伍各自的样子', () => {
   const specs = P.pinSpecs({
     items: [{ kind: 'topic', id: 5, productType: 2, picUrl: 'a.jpg' }, { kind: 'activity', id: 11, name: '上海戏剧节·安福路', picUrl: 'b.jpg' }, { kind: 'hangout', id: 9 }],
-    pois: [{ id: 3, type: 1, tags: '公园,绿地', coverImg: 'c.jpg' }, { id: 4, type: 2, tags: '', coverImg: 'd.jpg' }],
+    pois: [{ id: 3, type: 1, tags: '公园，绿地', coverImg: 'c.jpg' }, { id: 4, type: 2, tags: '', coverImg: 'd.jpg' }],
     teams: [{ teamId: 7, joinedCount: 2, maxMembers: 6, memberAvatarsJoined: 'x.jpg,y.jpg' }],
   })
   const byId = Object.fromEntries(specs.map((s) => [s.id, s]))

@@ -192,7 +192,7 @@ test('广场列表:丢回包后重试复用同一意图键;成功后相同正文
   first.complete()
   instance.retrySubmit()
   const retry = last(requests, '/api/creativesquare/action')
-  assert.equal(retry.data.request_id, firstKey, '重试必须复用同一意图键,不得再发一条')
+  assert.equal(retry.data.request_id, firstKey, '重试必须复用同一意图键，不得再发一条')
   assert.equal(intentStoreFor(wx, 'member-A', 'square:list').key, firstKey, '持久化意图键必须仍是同一个')
 
   retry.success({ code: '200', data: { id: 77, lifecycle: 'PUBLISHED' } })
@@ -308,7 +308,7 @@ test('漫游分享:未知结果重试复用意图键,成功后再次主动分享
   first.fail({ errMsg: 'request:fail timeout' })
   await firstFlow
   assert.equal(intentStoreFor(h.wx, 'member-A', 'square:roam:44').status, 'unknown')
-  assert.equal(h.instance._squarePostUnknown, true, '结果未知必须挂起,不假成功')
+  assert.equal(h.instance._squarePostUnknown, true, '结果未知必须挂起，不假成功')
 
   // 用户明确选择再次尝试(清掉待核对挂起) → 同一未决意图复用键
   h.instance._squarePostUnknown = false
@@ -362,7 +362,7 @@ test('R10-03 util:软删终态 discard 丢键,下一次同 payload 换新键', (
   assert.ok(trace && trace.key === first.key && trace.status === 'discarded', '旧键留痕但不复用')
 
   const next = intent.begin(wx, { scope, memberId: 'A', payload })
-  assert.notEqual(next.key, first.key, '重新发布必须换新键,不能被软删行占键')
+  assert.notEqual(next.key, first.key, '重新发布必须换新键，不能被软删行占键')
 })
 
 test('广场列表:服务端软删终态回执必须丢键并换新键重发', () => {

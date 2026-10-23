@@ -196,7 +196,7 @@ function createUploadClient(deps) {
           if (Number(res.statusCode) >= 500) {
             var body = null;
             try { body = JSON.parse(res.data); } catch (e) {}
-            settle(index, { status: 'failed', retryable: true, msg: safeUserMessage(body, '服务暂时不可用，请重试此文件') }); return;
+            settle(index, { status: 'failed', retryable: true, msg: safeUserMessage(body, '服务暂不可用，请重试此文件') }); return;
           }
           var data;
           try { data = JSON.parse(res.data); }

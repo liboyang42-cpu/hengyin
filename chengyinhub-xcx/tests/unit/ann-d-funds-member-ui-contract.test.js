@@ -16,7 +16,7 @@ function assertAnnotationDContract(files) {
   assert.equal(/--cy-comp-sheet-player-bg:\s*#1C1C1E;/.test(files.tokens), true,
     '统一弹窗的 player 底必须是实色，不能再让宿主页标题从 glass 透出')
   assert.match(rule(files.sheetWxss, '.sh__panel'), /--cy-comp-sheet-bg:\s*var\(--cy-comp-sheet-role-glass/,
-    '2026-08-07 用户拍板(修订):面板读 role 档,玩家=深玻璃/商家=不透明白')
+    '2026-08-07 用户拍板(修订):面板读 role 档，玩家=深玻璃/商家=不透明白')
   assert.match(rule(files.sheetWxss, '.sh__panel'), /background:\s*var\(--cy-comp-sheet-bg\)/)
   assert.doesNotMatch(rule(files.sheetWxss, '.sh__panel'), /border(?:-top)?\s*:/)
   /* 2026-09-02(§3.21 · 用户当面点名):✕ 去圆底。圆角留着无所谓,底色必须透明;
@@ -72,7 +72,7 @@ function assertAnnotationDContract(files) {
   assert.match(files.myinviteWxml, /<cy-scene-member-invite-history id="inviteHistory"/)
   assert.match(files.myinviteSceneWxml, /class="ir-row"[\s\S]*class="ir-time"[\s\S]*class="ir-status"[\s\S]*class="ir-reward"/)
   assert.match(files.myinviteSceneJs, /url:\s*'\/api\/user\/invite_list'[\s\S]*url:\s*'\/api\/user\/points\/list'/)
-  assert.match(files.earningsSceneWxml, /<cy-cell title="邀请记录" description="查看被邀请人、状态与奖励" bind:tap="openInvite"/)
+  assert.match(files.earningsSceneWxml, /<cy-cell title="邀请记录" bind:tap="openInvite"/)
   assert.match(rule(files.myinviteSceneWxss, '.ir-card'), /background:\s*var\(--cy-scene-card-bg,/)
   assert.doesNotMatch(rule(files.myinviteSceneWxss, '.ir-card'), /border:/)
   assert.doesNotMatch(rule(files.myinviteSceneWxss, '.ir-row + .ir-row'), /border-top:/)
@@ -86,7 +86,7 @@ function assertAnnotationDContract(files) {
   //   取代 2026-08-07 那条「弃返回钮保半屏,叉号关闭」的弹窗形态裁决(前提已变,不是被违反)。
   //   原来这页一进来就永久弹一个 cy-sheet(默认 variant=bottom 只盖 70vh),页面标题与弹层标题
   //   同屏各出一个「收益明细」—— 走查 D28 报的重复就是这么来的。现在正文直接落在页上。
-  assert.doesNotMatch(files.incomeWxml, /<cy-sheet/, '收益明细不再套弹层,正文直接落在页上')
+  assert.doesNotMatch(files.incomeWxml, /<cy-sheet/, '收益明细不再套弹层，正文直接落在页上')
   assert.doesNotMatch(files.incomeJson, /cy-sheet/, '弹层组件依赖要一并摘掉,不留死引用')
   assert.match(files.incomeWxml, /<cy-page-title title="收益明细"/, '标题只剩页面这一个')
   // ⚠️ 只数 title 属性,不数「收益明细」四个字 —— wxml 注释里也写着它,数原文会把注释算进去(今天踩过三次)
@@ -117,7 +117,7 @@ function assertAnnotationDContract(files) {
     /background:\s*linear-gradient\(to right, transparent, var\(--cy-tabs-fade-bg, var\(--cy-bg-page\)\)\)/)
   assert.match(files.earningsWxml, /sceneCurrent\.id === 'asset-income-detail'[\s\S]*?<cy-scene-sheet show="\{\{true\}\}"[\s\S]*?<cy-scene-asset-income-detail/)
   assert.doesNotMatch(files.earningsWxml, /sceneCurrent\.id === 'asset-income-detail'[\s\S]{0,200}closable="\{\{false\}\}"/,
-    '2026-08-07 拍板:收益明细半屏,右上叉号回归,不许再锁 closable=false')
+    '2026-08-07 拍板:收益明细半屏，右上叉号回归，不许再锁 closable=false')
 
   assert.match(files.earningsWxml, /<view class="er-page theme-dark">/,
     'D33 账户收益是玩家资金页，页面根必须显式进入深色主题')

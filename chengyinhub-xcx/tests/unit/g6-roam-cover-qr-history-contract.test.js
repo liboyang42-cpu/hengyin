@@ -81,7 +81,7 @@ test('CU-C-59 官方活动缺封面:样式为空走占位块,有封面才拼 url
   const withCover = h.instance._decorate({ id: 3, title: '有封面', coverImg: 'https://cdn/a b.png', status: 1 })
   assert.equal(withCover._coverStyle, "background-image:url('https://cdn/a b.png')")
   assert.ok(!h.instance._decorate({ id: 4, title: '引号', coverImg: "https://cdn/it's.png", status: 1 })._coverStyle.includes("it's"),
-    '封面 URL 里的单引号必须转义,否则整条 style 被截断')
+    '封面 URL 里的单引号必须转义，否则整条 style 被截断')
 
   const wxml = read('components/cy/scene-roam-task-list/index.wxml')
   assert.match(wxml, /style="\{\{item\._coverStyle\}\}"/)

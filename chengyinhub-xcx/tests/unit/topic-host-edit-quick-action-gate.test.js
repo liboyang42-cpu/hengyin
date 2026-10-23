@@ -78,7 +78,7 @@ test('主办方没有编辑资格时,更多格照常出现,但抽屉里的「票
   page.data.role = 'host';
   page.openMoreSheet();
   const topicRow = page.findMoreRow('topic');
-  assert.equal(topicRow.disabled, true, '后端说不能改,这一行还可点');
+  assert.equal(topicRow.disabled, true, '后端说不能改，这一行还可点');
   assert.equal(topicRow.tag, '不可用');
   // 章节控制不受编辑资格影响,不能被顺手一起关掉
   assert.ok(page.findMoreRow('chapterOpen'), '章节控制被编辑资格误伤了');
@@ -91,7 +91,7 @@ test('主办方有编辑资格时,抽屉里那一行可点', () => {
 
   page.data.role = 'host';
   page.openMoreSheet();
-  assert.ok(!page.findMoreRow('topic').disabled, '后端说能改,这一行反而点不了');
+  assert.ok(!page.findMoreRow('topic').disabled, '后端说能改，这一行反而点不了');
 });
 
 test('承接方的更多格与 host.canEdit 无关(它的闸是 canEditRegistration)', () => {
@@ -104,13 +104,13 @@ test('applyHome 把后端 host.canEdit 真的接进抽屉那一行', () => {
   denied.applyHome({ topic: {}, host: { ownerType: 'merchant', canEdit: false } });
   denied.data.role = 'host';
   denied.openMoreSheet();
-  assert.equal(denied.findMoreRow('topic').disabled, true, '后端说不能改,编辑那一行还可点');
+  assert.equal(denied.findMoreRow('topic').disabled, true, '后端说不能改，编辑那一行还可点');
 
   const allowed = makePage();
   allowed.applyHome({ topic: {}, host: { ownerType: 'merchant', canEdit: true } });
   allowed.data.role = 'host';
   allowed.openMoreSheet();
-  assert.ok(!allowed.findMoreRow('topic').disabled, '后端说能改,那一行反而点不了');
+  assert.ok(!allowed.findMoreRow('topic').disabled, '后端说能改，那一行反而点不了');
 
   // 后端漏发字段时保守放行:真正的拦截在后端(主题更新接口),前端置灰只是省一次无效跳转,
   // 因此不能因为字段缺失就把主办方的编辑能力整个吞掉。
@@ -189,7 +189,7 @@ test('更多里的本站四行都跳 game-node，且 activityId 取自 merchant/
   assert.equal(requests[0].url, '/api/game/session/merchant/entries');
   requests[0].success({ code: 200, data: [
     { activityId: 9, topicId: 77, activityName: '周六场' },
-    { activityId: 8, topicId: 999, activityName: '别的主题,不能混进来' },
+    { activityId: 8, topicId: 999, activityName: '别的主题，不能混进来' },
   ] });
   requests[0].complete();
   assert.deepEqual(navigations, ['/pages/merchant/game-node/index?activityId=9']);
@@ -230,7 +230,7 @@ test('★负控:四行退回 toast 或改用 upcoming-runs 的 ticketId 都要�
   // CU-C-68(2026-09-24 走查):这一组前面多了一道「本人是否同时以商家身份承接本站」的搪,
   // 主办方账号不再被放进来撞后端;走出去这一步本身不变 —— 仍然必须 return this.goStation(key)。
   assert.match(body, /key === 'howto' \|\| key === 'service' \|\| key === 'review' \|\| key === 'pause'\)\s*\{[\s\S]{0,400}?return this\.goStation\(key\)/,
-    '这四行必须真的走出去,不能退回 toast');
+    '这四行必须真的走出去，不能退回 toast');
   assert.match(body, /_stationOperable !== true[\s\S]{0,80}?app\.tips/, '主办方没承接本站时要在本地就拦下并说明');
   const station = source.slice(source.indexOf('goStation(focus)'), source.indexOf('openStation(activityId'));
   assert.doesNotMatch(station, /ticketId/, 'game-node 要 CmsActivity.id,拿 ticketId 会开错场次');
@@ -314,7 +314,7 @@ test('开放报名是真开关:发 chapter/recruit、取反、规则全交服务
   assert.equal(page.findMoreRow('chapterOpen').busy, true);
   assert.equal(requests[0].url, '/api/topic/chapter/recruit');
   assert.equal(requests[0].data.chapterId, 7);
-  assert.equal(requests[0].data.enabled, 0, '当前是开,点一下要关');
+  assert.equal(requests[0].data.enabled, 0, '当前是开，点一下要关');
 
   // 服务层拒绝时,理由原样回显 —— 「操作失败」四个字帮不了主办方
   requests[0].success({ code: 500, msg: '章节已有 3 条商家申请，不能关闭商家承接' });

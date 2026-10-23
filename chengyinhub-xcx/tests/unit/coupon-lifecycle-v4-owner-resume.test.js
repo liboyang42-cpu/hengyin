@@ -289,7 +289,7 @@ test('独立页:倒计时末点失败但仍在后端 TTL 内必须保留有效�
   h.instance.refreshToken()
   fail(h.requests[1])
 
-  assert.equal(h.instance.data.qrcodeUrl, 'LAST-TICK-QR', '倒计时 0/1 不等于 token 失效,不得下屏')
+  assert.equal(h.instance.data.qrcodeUrl, 'LAST-TICK-QR', '倒计时 0/1 不等于 token 失效，不得下屏')
   assert.equal(h.instance.data.qrState, 'ready')
 })
 

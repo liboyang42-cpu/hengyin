@@ -51,8 +51,8 @@ test('地图工具轨从右缘留出边距，不会被裁切', () => {
   const wxss = read('components/cy/free-map/index.wxss')
   const right = wxss.match(/\.fmap-ctrl\s*\{[^}]*right:\s*(\d+)rpx/s)
   assert.ok(right, '.fmap-ctrl 必须显式声明 right 偏移')
-  assert.ok(Number(right[1]) >= 16, `控件轨右边距 ${right[1]}rpx 太小,按钮会贴边`)
-  assert.doesNotMatch(wxss, /\.fmap-tool\s*\{/, '.fmap-tool 已随文字标签一并移除,别复活')
+  assert.ok(Number(right[1]) >= 16, `控件轨右边距 ${right[1]}rpx 太小，按钮会贴边`)
+  assert.doesNotMatch(wxss, /\.fmap-tool\s*\{/, '.fmap-tool 已随文字标签一并移除，别复活')
 })
 
 test('主题详情两种顶栏状态复用 DS back 图标而不是拉伸 PNG', () => {

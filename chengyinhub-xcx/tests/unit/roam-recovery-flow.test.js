@@ -84,7 +84,7 @@ test('首批确认后本机保存失败不得结算，恢复存储后仍用同�
   assert.equal(Object.keys(sessions).length, 1)
 })
 
-test('恢复核对期间重复点击只发送一个查询，未返回前不写', async () => {
+test('恢复确认期间重复点击只发送一个查询，未返回前不写', async () => {
   const page = mount(); page._pendingTiles = ['wtw3sjq']; await page._flushReveal()
   let query
   const original = app.sendRequest
@@ -168,7 +168,7 @@ test('已有结束意图在冷重进后先确认原格子，再只执行一次�
   assert.equal(second.data.finish.xpAwarded, 7)
 })
 
-test('finish已提交但timeout，冷重进只回读原结果，不重复奖励请求', async () => {
+test('finish已提交但timeout，冷重进只刷新原结果，不重复奖励请求', async () => {
   loseBootstrap = false
   const original = app.sendRequest
   app.sendRequest = o => {
@@ -196,14 +196,14 @@ test('存储失败时不发首笔写，请求中的失败不覆盖已保存key',
   assert.match(page.data.recoveryError, /保存/)
 })
 
-test('核对网络失败不当NOT_FOUND，不重新创建且保留原格子', async () => {
+test('确认网络失败不当NOT_FOUND，不重新创建且保留原格子', async () => {
   const first = mount(); first._pendingTiles = ['wtw3sjq']; await first._flushReveal(); await settle()
   const original = app.sendRequest
   app.sendRequest = o => o.url === '/api/roam/session' ? o.fail({}) : original(o)
   const second = mount(); await settle()
   assert.deepEqual(second._pendingTiles, ['wtw3sjq'])
   assert.equal(calls.filter(c => c.url === '/api/roam/reveal').length, 1)
-  assert.match(second.data.recoveryError, /核对/)
+  assert.match(second.data.recoveryError, /确认/)
 })
 
 for (const mode of ['timeout', 'missingSid']) test('首次' + mode + '后精确查询再重放同key，不盲建会话', async () => {
@@ -587,7 +587,7 @@ test('C3结束补传使用原SID的独立记录接口，重复/丢响应不结�
 })
 
 
-test('C3旧记录缺采集时间不伪造时间，保原pending供核对', async () => {
+test('C3旧记录缺采集时间不伪造时间，保原pending供确认', async () => {
   loseBootstrap = false
   const page = mount(); page._pendingTiles = ['wtw3sjq']; await page._flushReveal()
   page._pendingTiles = ['wtw3sjr']; page._saveRoamRecovery()
@@ -598,7 +598,7 @@ test('C3旧记录缺采集时间不伪造时间，保原pending供核对', async
 })
 
 
-test('M0116已成功结算的待交付徽章不伪报到手，独立回读DELIVERED后显示原徽章', () => {
+test('M0116已成功结算的待交付徽章不伪报到手，独立刷新DELIVERED后显示原徽章', () => {
   const page = mount(); page._roamSid = SID
   const result = { totalXp: 7, medal: '城市点亮 50 格', shopMedal: { code: 'ROAM_SHOP_STREAK', name: '原三店徽章' },
     badgeDelivery: [{ badgeCode: 'ROAM_TILES_50', state: 'DUE' }, { badgeCode: 'ROAM_SHOP_STREAK', state: 'DUE' }] }
@@ -644,7 +644,7 @@ test('C3补传回执在清缓存后迟到不得重建恢复或结算展示', asy
   assert.deepEqual(page._pendingTiles, [])
 })
 
-test('C3结束恢复保留过期位置清理，徽章待交付回读也不得还原几何', async () => {
+test('C3结束恢复保留过期位置清理，徽章待交付刷新也不得还原几何', async () => {
   const page = mount(); page._roamSid = SID; page._clientSessionKey = '1'.repeat(32)
   page._track = [{ lat: 31, lng: 121 }]; page._sessionTiles = { wtw3sjq: 1 }; page._pendingTiles = []
   page._recoveryArchiveTs = 1234

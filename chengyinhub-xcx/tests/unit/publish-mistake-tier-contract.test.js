@@ -46,7 +46,7 @@ test('三档放行,其余一律拒', () => {
 test('带空格的档位由 normalize 收口,后端见不到空白', () => {
   assert.equal(cfg.mistakeTierError({ mistakeTier: 'easy ' }), '', '前端 trim 后视为合法')
   assert.equal(cfg.normalize({ schemaVersion: 1, mistakeTier: 'easy ' }).mistakeTier, 'easy',
-    'normalize 必须 trim —— 否则后端精确匹配会拒,而作者在本页看不到任何理由')
+    'normalize 必须 trim —— 否则后端精确匹配会拒，而作者在本页看不到任何理由')
 })
 
 test('不配 = 合法(运行期按 easy 走,与并入难度表前的固定 -1 等价)', () => {
@@ -56,7 +56,7 @@ test('不配 = 合法(运行期按 easy 走,与并入难度表前的固定 -1 �
 
 test('normalize:配了原样留,空值不留键', () => {
   const kept = cfg.normalize({ schemaVersion: 1, mistakeTier: 'hard' })
-  assert.equal(kept.mistakeTier, 'hard', '配了就得带上,否则作者存完就丢')
+  assert.equal(kept.mistakeTier, 'hard', '配了就得带上，否则作者存完就丢')
   const dropped = cfg.normalize({ schemaVersion: 1, mistakeTier: '  ' })
-  assert.ok(!('mistakeTier' in dropped), '空值该删键,别留一份谁也没配的档位')
+  assert.ok(!('mistakeTier' in dropped), '空值该删键，别留一份谁也没配的档位')
 })

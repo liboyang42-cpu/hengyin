@@ -11,7 +11,7 @@ Component({
     show:        { type: Boolean, value: false },
     eyebrow:     { type: String,  value: '慢一点 · 跨日任务' },
     title:       { type: String,  value: '' },
-    startHint:   { type: String,  value: '现在开个头,剩下的交给时间。' },
+    startHint:   { type: String,  value: '现在开个头，剩下的交给时间。' },
     startLabel:  { type: String,  value: '就这么定了' },
     waitHint:    { type: String,  value: '' },
     waitCta:     { type: String,  value: '明天再来' },

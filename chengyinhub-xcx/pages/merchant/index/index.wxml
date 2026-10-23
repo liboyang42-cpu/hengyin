@@ -17,7 +17,7 @@
                bindrefresherrefresh="onRefresh">
 
     <cy-inline-error load-failure class="rv-console-error" wx:if="{{consoleError}}" kind="data"
-                     title="商家工作台没有加载出来"
+                     title="商家工作台加载失败"
                      sub="{{consoleError}}"
                      action="重新加载" bind:action="reloadConsole" />
 
@@ -50,7 +50,7 @@
             <view wx:else class="rv-biz {{ businessStatus == 0 ? 'rv-biz--off' : '' }}">
               <text class="rv-biz-dot"></text>{{ businessStatus == 0 ? '已打烊' : '营业中' }}
             </view>
-            <text class="rv-hero-tip">欢迎回来，今天也加油吧</text>
+            
           </view>
         </view>
         <view wx:if="{{merchantAccess.canWriteProfile}}" class="rv-hero-avatar-hit" bindtap="goBrandManage" aria-role="button" aria-label="管理品牌资料" hover-class="cy-pressed" hover-stay-time="80">
@@ -76,7 +76,7 @@
           <view class="rv-revenue-sync" wx:if="{{dashboardLoading && dashboardData.revenue != null}}" aria-role="status">正在更新经营数据…</view>
           <cy-inline-error wx:if="{{dashboardError}}" kind="data"
                            title="收入没更新成功"
-                           sub="{{dashboardData.revenue != null ? '上次确认的金额仍可查看' : '这次暂未取到金额'}}"
+                           sub=""
                            action="重新加载此部分" bind:action="reloadDashboard" />
         </view>
       </view>
@@ -213,7 +213,7 @@
           </view>
         </view>
 
-        <cy-error load-failure wx:if="{{joinError || hostError}}" title="项目和待办没能加载出来" sub="网络异常，请重试"
+        <cy-error load-failure wx:if="{{joinError || hostError}}" title="项目和待办加载失败"
                   retry="重试" bind:retry="reloadProjects" />
       </view>
       <view class="rv-project-state">
@@ -307,7 +307,7 @@
   <view class="scene-host" wx:if="{{sceneCurrent && sceneCurrent.id === 'merchant-chapter-picker'}}" catchtouchmove="blockSceneTouch">
     <cy-scene-sheet show="{{true}}" variant="{{sceneCurrent.variant}}" theme="{{sceneCurrent.theme}}" title="{{sceneCurrent.title}}" mask-closable="{{sceneCurrent.maskClosable}}" bind:requestclose="onChapterSheetClose">
     <view class="chpick">
-      <view class="chpick__hint">你在本路线承接了多个章节,请选择本次要核销的那一个</view>
+      <view class="chpick__hint">选择本次核销的章节</view>
       <view class="chpick__item" wx:for="{{chapterSheet.items}}" wx:key="id"
             data-id="{{item.id}}" bindtap="onChapterPick" aria-role="button" aria-label="选择核销章节{{item.name}}" hover-class="cy-pressed" hover-stay-time="80">
         <text class="chpick__name">{{item.name}}{{item.replayed ? '（已核销，请勿重复提供权益）' : ''}}</text>
@@ -321,9 +321,9 @@
   <view class="scene-host" wx:if="{{sceneCurrent && sceneCurrent.id === 'merchant-station-picker'}}" catchtouchmove="blockSceneTouch">
     <cy-scene-sheet show="{{true}}" variant="{{sceneCurrent.variant}}" theme="{{sceneCurrent.theme}}" title="{{sceneCurrent.title}}" mask-closable="{{sceneCurrent.maskClosable}}" bind:requestclose="onStationSheetClose">
     <view class="chpick">
-      <view class="chpick__hint">你在本路线承接了多个据点,请选择本次实际核销的据点</view>
+      <view class="chpick__hint">选择本次核销的节点</view>
       <view class="chpick__item" wx:for="{{stationSheet.items}}" wx:key="registrationMerchantId"
-            data-registration-merchant-id="{{item.registrationMerchantId}}" bindtap="onStationPick" aria-role="button" aria-label="选择实际核销据点{{item.name}}" hover-class="cy-pressed" hover-stay-time="80">
+            data-registration-merchant-id="{{item.registrationMerchantId}}" bindtap="onStationPick" aria-role="button" aria-label="选择实际核销节点{{item.name}}" hover-class="cy-pressed" hover-stay-time="80">
         <text class="chpick__name">{{item.name}}</text>
         <cy-icon class="chpick__chev" name="arrow-right" size="28" />
       </view>

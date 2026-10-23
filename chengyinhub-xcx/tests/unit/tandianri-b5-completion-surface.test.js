@@ -422,5 +422,5 @@ test('wxml 真的渲染了图鉴 / 到账明细 / 回访三块', () => {
   assert.ok(/completion\.awards\.items/.test(wxml), '到账明细未被 wxml 消费')
   assert.ok(/completion\.revisit\.show/.test(wxml), '回访入口未被 wxml 消费')
   assert.ok(/bindtap="followClub"/.test(wxml) && /bindtap="joinClub"/.test(wxml),
-    '关注/入群必须有真绑定,不能只写 handler')
+    '关注/入群必须有真绑定，不能只写 handler')
 })

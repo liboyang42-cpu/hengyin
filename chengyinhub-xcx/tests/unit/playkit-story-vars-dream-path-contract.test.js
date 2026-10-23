@@ -91,20 +91,20 @@ test('变量替换:有值用值,没值用竖线后的兜底,两者都没有就�
 
 test('★章节正文与节点 story 都过变量替换;服务端没下发 vars 时行为逐字不变', () => {
   const page = makePage({
-    description: '「{name|有人}推开门,看见{window}。」',
-    blocks: [{ type: 'text', content: '「{name|有人}推开门,看见{window}。」' }, { type: 'node', nodeId: 501 }],
+    description: '「{name|有人}推开门，看见{window}。」',
+    blocks: [{ type: 'text', content: '「{name|有人}推开门，看见{window}。」' }, { type: 'node', nodeId: 501 }],
   }, [{ nodeId: 501, done: true, story: '{name|有人}在门牌下站了一会儿。', description: '{name|有人}在门牌下站了一会儿。' }])
 
   // 没有 vars:有兜底的吃兜底,没兜底的原样留着花括号
   page.openChapterFull()
-  assert.equal(page.data.chapterParas[0].text, '「有人推开门,看见{window}。」')
+  assert.equal(page.data.chapterParas[0].text, '「有人推开门，看见{window}。」')
   assert.equal(page.data.chapterParas[1].text, '有人在门牌下站了一会儿。')
 
   // 服务端下发 vars 之后:值与兜底各就各位
   page._storyVars = { name: '阿岚', window: '一扇亮着的窗' }
   page.openChapterFull()
   assert.deepEqual(page.data.chapterParas.map(p => p.text), [
-    '「阿岚推开门,看见一扇亮着的窗。」',
+    '「阿岚推开门，看见一扇亮着的窗。」',
     '阿岚在门牌下站了一会儿。',
   ])
 
@@ -140,7 +140,7 @@ test('★dream 块铺成一个 chapterParas 项,不按张数铺 —— 少一个
   assert.deepEqual(para.strip.map(x => x.url), [para.images[0].url, para.images[1].url, para.images[0].url, para.images[1].url])
   assert.equal(para.images[0].line, '阿岚走进雾里', '每张那句也过故事变量')
   assert.equal(para.title, '相册', '旧梦块缺省名称为相册')
-  assert.equal(page.data.album.show, false, '正文里是一叠照片,不自己打开')
+  assert.equal(page.data.album.show, false, '正文里是一叠照片，不自己打开')
 })
 
 test('相册(通用多照片):故事流里是一条循环照片带,点开白底全屏从第一张起,共用相册组件;收起故事流时一并收起', () => {
@@ -148,7 +148,7 @@ test('相册(通用多照片):故事流里是一条循环照片带,点开白底�
   page._storyVars = { name: '阿岚' }
   page.openChapterFull()
   const para = page.data.chapterParas[0]
-  assert.equal(para.strip.length, 4, '两张补齐到四张,循环滚动才接得上')
+  assert.equal(para.strip.length, 4, '两张补齐到四张，循环滚动才接得上')
   assert.deepEqual(para.strip.map(s => s.url), ['https://cdn/a.jpg', 'https://cdn/b.jpg', 'https://cdn/a.jpg', 'https://cdn/b.jpg'])
   page.openAlbum({ currentTarget: { dataset: { i: 0 } } })
   assert.equal(page.data.album.show, true)
@@ -223,7 +223,7 @@ test('★不是分支路线 / 没有选择记录 → 空数组,整块不渲染,�
 test('★wxml 里 dream 真有一条渲染分支,且 .chfull__para 是不带条件的外层 —— 少一层就是空白段/整屏错位', () => {
   const fs = require('node:fs')
   const wxml = fs.readFileSync(path.resolve(__dirname, '../../pages/play/index.wxml'), 'utf8')
-  assert.ok(wxml.includes("item.kind === 'dream'"), 'dream 块没有渲染分支,玩家会读到一个空白段')
+  assert.ok(wxml.includes("item.kind === 'dream'"), 'dream 块没有渲染分支，玩家会读到一个空白段')
   const loop = wxml.match(/<view wx:for="\{\{chapterParas\}\}"[^>]*class="chfull__para\s[^"]*"/)
   assert.ok(loop, '.chfull__para 必须仍按 chapterParas 逐项铺 —— 条件包在外层会让下标对不上')
 })

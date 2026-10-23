@@ -64,7 +64,7 @@ function assertOwnerCtaContract(wxml, wxss) {
 
   // 2026-09-09 按稿 N1b/N3 删掉「进入群聊」。原来这里守的是它不许占 primary;
   // 现在守得更硬:这个按钮整个不该在这一页出现。
-  assert.doesNotMatch(wxml, /goGroupChat/, '群聊入口已按稿删除,不许悄悄回来')
+  assert.doesNotMatch(wxml, /goGroupChat/, '群聊入口已按稿删除，不许悄悄回来')
 
   const ownerRegion = wxml.match(/<!-- owner-cta-start -->([\s\S]*?)<!-- owner-cta-end -->/)
   assert.ok(ownerRegion, '找不到 owner 阶段式 CTA 区')
@@ -313,7 +313,7 @@ test('X08：网络失败落到可观察、可重试的网络错误终态', () =>
   network.component.data.clubId = marker
   network.component.loadClub()
   network.requests[0].fail({ errMsg: `network-${process.pid}` })
-  assert.ok(network.component.data.loadState === 'network-error', '网络失败必须落到网络错误终态')
+  assert.ok(network.component.data.loadState === 'network-error', '网络失败必须落到网络异常终态')
   assert.ok(network.component.data.loadErrorText, '网络失败必须保留可观察原因')
   assert.equal(network.modalCalls.length, 0, '网络失败不得弹系统 modal')
 })

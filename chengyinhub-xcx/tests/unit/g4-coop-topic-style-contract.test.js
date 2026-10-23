@@ -29,7 +29,7 @@ function assertG4Contract(overrides = {}) {
   assert.equal(nearbyJson.backgroundColor.toLowerCase(), pageBg.toLowerCase())
   assert.match(nearbyWxml, /class="merchant-result"[^>]*wx:if="\{\{item\.name\}\}"/, '缺商家名时不渲染半成品卡')
   assert.match(nearbyJs, /res\.data\.every\(validNearbyRow\)/,
-    '任一附近商家缺名称或关键标识时必须整批 fail-closed，不得悄悄过滤后冒充完整列表')
+    '任一附近商家缺名称或关键信息时必须整批 fail-closed，不得悄悄过滤后冒充完整列表')
   assert.match(nearbyWxml,
     /<cy-merchant-card variant="venue" interactive="\{\{!!item\.memberId\}\}"[\s\S]{0,140}bind:tap="openMerchant"[^>]{0,120}data-memberid="\{\{item\.memberId\}\}"/,
     '已入驻商家使用整卡入口，必须携带真实会员主体')

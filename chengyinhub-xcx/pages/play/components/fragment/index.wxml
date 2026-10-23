@@ -2,6 +2,6 @@
   <view class="frag-card {{flip?'frag-card--flip':''}} {{fly?'frag-card--fly':''}}">
     <view class="frag-step">故事碎片 · {{step}}</view>
     <view class="frag-text">{{text}}</view>
-    <view class="frag-tip">轻触收下,继续走</view>
+    <view class="frag-tip">轻触收下</view>
   </view>
 </view>

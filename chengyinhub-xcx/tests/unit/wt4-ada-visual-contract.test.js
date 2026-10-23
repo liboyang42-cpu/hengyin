@@ -331,7 +331,7 @@ function assertToneExpressedByBandOnly(ledgerCss) {
     assert.ok(band.matched > 0, `.rec--${tone}::before 色带规则必须存在`);
     assert.equal(
       band.style.background, bandToken,
-      `.rec--${tone} 的状态必须由左缘色带承载,色带色应为 ${bandToken}`
+      `.rec--${tone} 的状态必须由左缘色带承载，色带色应为 ${bandToken}`
     );
 
     // ★兜底闸:不依赖祖先链建模的完整度。只要**任何**规则的末段落在 .rec--{tone} 上
@@ -346,7 +346,7 @@ function assertToneExpressedByBandOnly(ledgerCss) {
           assert.ok(
             !bgDecl,
             `选择器 \`${selector}\` 给 .rec--${tone} 上了整卡底色(${bgDecl && bgDecl.join(': ')});` +
-            '状态只能由左缘 ::before 色带承载,整卡底色会把同卡 12px 正文 .rec-sub 压到 AA 4.5:1 以下'
+            '状态只能由左缘 ::before 色带承载，整卡底色会把同卡 12px 正文 .rec-sub 压到 AA 4.5:1 以下'
           );
         }
       }
@@ -466,13 +466,13 @@ function assertDrivenByTapToken(style, label) {
   const declared = SIZE_PROPS.filter((p) => style[p] != null);
   assert.ok(
     declared.length > 0,
-    `${label}:尺寸四件套一个都没声明,触达尺寸无从谈起`
+    `${label}:尺寸四件套一个都没声明，触达尺寸无从谈起`
   );
   for (const prop of declared) {
     assert.equal(
       style[prop], TAP_TOKEN_VALUE,
       `${label} 的 ${prop} = ${style[prop]},必须写成 ${TAP_TOKEN_VALUE}:` +
-      '触达尺寸要由 DS 控件高 token 驱动,裸 rpx 或换成别的 token 都不算(即便数值恰好也是 88)'
+      '触达尺寸要由 DS 控件高 token 驱动，裸 rpx 或换成别的 token 都不算(即便数值恰好也是 88)'
     );
   }
 }
@@ -547,7 +547,7 @@ test('①资金域行状态只由语义点/chip 表达,行与卡都不得被状�
       const bgDecl = rule.decls.find(([prop]) => prop === 'background' || prop === 'background-color');
       assert.ok(!bgDecl,
         `选择器 \`${selector}\` 给行/卡上了状态底色(${bgDecl && bgDecl.join(': ')});` +
-        '状态只能由语义点与 chip 承载,整行底色会把同行 12px 副文压到 AA 4.5:1 以下');
+        '状态只能由语义点与 chip 承载，整行底色会把同行 12px 副文压到 AA 4.5:1 以下');
     }
   }
 });
@@ -558,7 +558,7 @@ test('②资金域行文字起点齐平:语义点靠固定宽度+gap 让位,不�
   const row = rules.find((r) => r.selectors.some((sel) => sel.trim().endsWith('.fin-row')));
   assert.ok(row, '.fin-row 规则必须存在(选择器被改名会让整条契约失效)');
   assert.ok(row.decls.some(([prop, value]) => prop === 'gap' && /var\(--cy-space-/.test(value)),
-    '.fin-row 必须用 token gap 让位,文字起点才对所有行一致');
+    '.fin-row 必须用 token gap 让位，文字起点才对所有行一致');
   const dot = rules.find((r) => r.selectors.some((sel) => sel.trim().endsWith('.fin-row__dot')));
   assert.ok(dot, '.fin-row__dot 基础规则必须存在');
   assert.ok(dot.decls.some(([prop, value]) => prop === 'flex' && /0 0 /.test(value)),
@@ -593,7 +593,7 @@ function assertPageThemeScope(wxml, wxss, themeClass, rootClass, label, backgrou
   assert.ok(rootRule, `${label}:必须有 .${rootClass} 规则`);
   assert.match(
     rootRule[0], new RegExp(`background:\\s*var\\(${backgroundToken}\\)`),
-    `${label}:页底色必须落在挂了主题 class 的 .${rootClass} 上(page{} 在主题作用域外,解析不到本域值)`
+    `${label}:页底色必须落在挂了主题 class 的 .${rootClass} 上(page{} 在主题作用域外，解析不到本域值)`
   );
 }
 
@@ -673,7 +673,7 @@ test('③ledger 两个交互目标与 cy-tabs 触达区均 ≥ 88rpx', () => {
 // 锚点失效时变异是空操作,assert.throws 会当场暴露而不是假绿。
 const mutate = (css, from, to, what) => {
   const out = css.replace(from, to);
-  assert.notEqual(out, css, `变异锚点失效(${what}):源码已改动,负控不再有效`);
+  assert.notEqual(out, css, `变异锚点失效(${what}):源码已改动，负控不再有效`);
   return out;
 };
 
@@ -693,7 +693,7 @@ test('negative control:把 status-*-soft 整卡底色加回来必须判红', () 
     assert.throws(
       () => assertToneExpressedByBandOnly(mutated),
       assert.AssertionError,
-      `.rec--${tone} 补回整卡 soft 底色,契约①必须判红`
+      `.rec--${tone} 补回整卡 soft 底色，契约①必须判红`
     );
   }
 });

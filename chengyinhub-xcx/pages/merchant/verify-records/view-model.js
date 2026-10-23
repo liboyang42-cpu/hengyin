@@ -25,7 +25,7 @@ function shapeRecord(row) {
   const verified = isVerified(row);
   return {
     id,
-    nameText: text(row.name) || '未命名据点',
+    nameText: text(row.name) || '未命名节点',
     registrationText: Number.isSafeInteger(registrationId) && registrationId > 0 ? `报名 #${registrationId}` : '',
     methodText: METHOD_TEXT[Number(row.validationMethod)] || '',
     statusKey: verified ? 'VERIFIED' : 'UNVERIFIED',

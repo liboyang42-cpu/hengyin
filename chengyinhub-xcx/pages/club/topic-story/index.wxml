@@ -9,7 +9,7 @@
   <!-- Tabs · 路线 / 玩法(Figma 228:135 / 228:152)。稿上没有整条底线,故 hairline=false。 -->
   <cy-tabs class="story-tabs" tabs="{{tabs}}" active="{{tab}}" hairline="{{false}}" bind:change="onTab" />
 
-  <cy-error load-failure wx:if="{{loadError}}" title="剧情与玩法打不开" sub="{{loadError}}"
+  <cy-error load-failure wx:if="{{loadError}}" title="剧情与玩法无法打开" sub="{{loadError}}"
             retry="{{missingParam ? '返回' : '重试'}}" bind:retry="onRetry" />
   <cy-skeleton wx:elif="{{!loaded}}" type="list" loading-label="正在加载剧情与玩法" />
 
@@ -44,9 +44,9 @@
           </view>
         </block>
       </view>
-      <cy-empty wx:else size="sm" title="这一章还没有站点" sub="开放商家承接后，由承接商家补齐站点与玩法。" />
+      <cy-empty wx:else size="sm" title="这一章还没有节点" />
     </view>
-    <cy-empty wx:if="{{!chapters.length}}" kind="empty" title="还没有章节" sub="这个团还没有排出路线。" />
+    <cy-empty wx:if="{{!chapters.length}}" kind="empty" title="暂无路线" />
   </block>
 
   <!-- J1-B 玩法:章节 chip → 本章剧情 → 本章玩法 -->
@@ -98,9 +98,9 @@
           </view>
         </view>
       </view>
-      <cy-empty wx:if="{{!activeChapter.plays.length}}" kind="empty" title="这一章还没有玩法" sub="承接商家补齐模板后会出现在这里。" />
+      <cy-empty wx:if="{{!activeChapter.plays.length}}" kind="empty" title="这一章还没有玩法" />
     </block>
-    <cy-empty wx:else kind="empty" title="还没有章节" sub="这个团还没有排出路线。" />
+    <cy-empty wx:else kind="empty" title="暂无路线" />
   </block>
 
   <!-- J1-C 查看答案(T1 底部弹窗) -->

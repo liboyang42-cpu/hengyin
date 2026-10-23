@@ -23,7 +23,7 @@ test('字号换算:默认不放大,调大按比例,超上限夹逼', () => {
   const { scaleFromSetting, MIN_SCALE, MAX_SCALE } = fontScale
   assert.equal(scaleFromSetting(16), 1, '默认 16px 不该放大')
   assert.equal(scaleFromSetting(20), 1.25, '20px 应放大到 1.25')
-  assert.equal(scaleFromSetting(64), MAX_SCALE, '超大设置必须夹到上限,否则布局全炸')
+  assert.equal(scaleFromSetting(64), MAX_SCALE, '超大设置必须夹到上限，否则布局全炸')
   assert.equal(scaleFromSetting(12), MIN_SCALE, '调小不缩小 —— 缩小会把 20rpx 的 micro 档压到不可读')
   assert.ok(MAX_SCALE > 1 && MAX_SCALE <= 1.5, '上限要既有意义又不至于要求换一套布局')
 })
@@ -94,7 +94,7 @@ const NOT_SCALED = ['data-xl', 'display']
 
 test('9 档字阶等比消费 --cy-type-scale(层级不塌)', () => {
   const tokens = read('style/tokens.wxss')
-  assert.match(tokens, /--cy-type-scale:\s*1;/, '必须有默认值 1,不注入时行为与改造前等价')
+  assert.match(tokens, /--cy-type-scale:\s*1;/, '必须有默认值 1，不注入时行为与改造前等价')
   for (const name of SCALED) {
     const re = new RegExp('--cy-type-' + name + ':\\s*calc\\((\\d+)rpx \\* var\\(--cy-type-scale\\)\\)')
     assert.match(tokens, re, `--cy-type-${name} 必须消费 --cy-type-scale`)
@@ -107,7 +107,7 @@ test('超大展示档按设计不参与缩放(放大必破版)', () => {
     const decl = new RegExp('--cy-type-' + name + ':\\s*([^;]+);').exec(tokens)
     assert.ok(decl, `找不到 --cy-type-${name}`)
     assert.doesNotMatch(decl[1], /cy-type-scale/,
-      `--cy-type-${name} 是 56-64rpx 的巨号,参与缩放必然破版`)
+      `--cy-type-${name} 是 56-64rpx 的巨号，参与缩放必然破版`)
   }
 })
 
@@ -134,7 +134,7 @@ test('挂了 page-meta 的页面必须真的算并写入字阶(否则是个永�
     assert.match(js, /readPageStyle\(\)/, `${base}.js 必须真的调用 readPageStyle 写入`)
     // 写在 onShow 而非只在 onLoad:用户可能切去微信设置改完字号再切回来
     assert.match(js, /onShow[\s\S]{0,200}readPageStyle\(\)/,
-      `${base}.js 必须在 onShow 刷新,只在 onLoad 算一次会漏掉「后台改字号再切回」`)
+      `${base}.js 必须在 onShow 刷新，只在 onLoad 算一次会漏掉「后台改字号再切回」`)
   }
 })
 

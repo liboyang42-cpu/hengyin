@@ -33,7 +33,7 @@ Component({
     chapters: { type: Array, value: [] }, // mode='chapter'
   },
   data: {
-    introCopy: '章节承载招募品类、容量与条款，商家选择章节而不是具体点位；通过后由商家自己在章节下建点位，再走点位审核。',
+    introCopy: '章节承载招募品类、容量与条款，商家选择章节而不是具体节点；通过后由商家自己在章节下建节点，再走节点审核。',
   },
   methods: {
     // ===== mode='node' =====

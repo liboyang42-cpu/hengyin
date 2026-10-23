@@ -123,7 +123,7 @@ test('负控:formatDateTimeForAPI 改回原来那个绕 Date + 本地 getter 的
   if (offsetMinutes <= 0) {
     // 当前机器是 UTC 或正偏移时区(比如 CI ubuntu、UTC+8),旧实现在这些环境下不会露馅——
     // 这正是这个 bug 能在 CI 里活一整轮的原因,不是负控写错了,如实跳过并说明。
-    console.log(`[负控跳过] 当前机器 getTimezoneOffset()=${offsetMinutes}(非负偏移时区),旧实现在这里不会翻车,负控需要在 UTC-x 机器上跑`);
+    console.log(`[负控跳过] 当前机器 getTimezoneOffset()=${offsetMinutes}(非负偏移时区),旧实现在这里不会翻车，负控需要在 UTC-x 机器上跑`);
     return;
   }
   assert.notEqual(
@@ -167,7 +167,7 @@ test('负控:buildDateList 改回原来 date 字段走 toISOString(UTC)的实现
   if (offsetMinutes >= 0) {
     // UTC 或负偏移时区(本地时间比 UTC 晚或相同)下,本地凌晨1点时 UTC 还没翻到下一天，
     // 这个负控场景本来就不成立,如实跳过。
-    console.log(`[负控跳过] 当前机器 getTimezoneOffset()=${offsetMinutes}(非正偏移时区,如 UTC+8),这个边界在这里不成立`);
+    console.log(`[负控跳过] 当前机器 getTimezoneOffset()=${offsetMinutes}(非正偏移时区，如 UTC+8),这个边界在这里不成立`);
     return;
   }
   const fixedFieldStr = `${broken.month.toString().padStart(2, '0')}-${broken.day.toString().padStart(2, '0')}`;

@@ -44,7 +44,7 @@
   <block wx:if="{{tab===0}}">
     <cy-skeleton wx:if="{{listState === 'loading'}}" type="list" count="3" />
     <cy-error class="retry-lg" wx:elif="{{listState === 'permission'}}" fill title="当前账号不能查看协作邀请" sub="{{listErrorText}}" auto-back bind:retry="load" />
-    <cy-error load-failure class="retry-lg error-kind--{{listErrorKind}}" wx:elif="{{listState === 'error'}}" fill title="协作邀请没加载出来" sub="{{listErrorText || '服务暂时不可用,请稍后重试'}}" auto-back bind:retry="load" />
+    <cy-error load-failure class="retry-lg error-kind--{{listErrorKind}}" wx:elif="{{listState === 'error'}}" fill title="协作邀请加载失败" sub="{{listErrorText}}" auto-back bind:retry="load" />
     <block wx:else>
     <view class="inline-state" wx:if="{{receivedApplyState === 'loading'}}" aria-role="status" aria-live="polite">正在加载带队申请…</view>
     <!-- 收到的这一路单独报错:只在「收到的」说事,不把池子请求的错误顶到「我发出的」tab 上 -->
@@ -54,7 +54,7 @@
     <view class="inv {{item.status>=3 ? 'is-dim' : ''}}" wx:for="{{received}}" wx:key="rowKey"
       bindtap="goInviteDetail" data-id="{{item.inviteId}}" data-box="received" aria-role="button"
       aria-label="查看 {{item.topicText || '这条邀约'}} 的协作详情" hover-class="cy-pressed" hover-stay-time="80" style="{{pmList === 1 ? '--pm-l:1;' : (pmList === 2 ? '--pm-l-d:.32s;--pm-l-s:1;' : '')}}">
-      <cy-error wx:if="{{item.identityError}}" class="inv-identity-error" title="邀约标识待确认"
+      <cy-error wx:if="{{item.identityError}}" class="inv-identity-error" title="邀约信息待确认"
         sub="{{item.identityError}}" retry="刷新邀约" bind:retry="load" />
       <view class="inv-top">
         <view class="inv-badge inv-badge--{{item.badgeTone}}"><cy-icon name="{{item.badgeIcon}}" size="24" /><text>{{item.statusText}}</text></view>
@@ -77,7 +77,7 @@
       <view class="deposit-due" wx:if="{{item.depositDueText}}">{{item.depositDueText}}</view>
       <view class="inv-msg" wx:if="{{item.message}}">{{item.message}}</view>
       <cy-error class="inv-context-error" wx:if="{{item.status===0 && !item.decisionReady}}"
-        title="邀请信息不完整" sub="缺少邀请方、主题或合作条款，暂不能处理" retry="重新加载" bind:retry="load" />
+        title="邀请信息不完整" sub="邀约信息不完整" retry="重新加载" bind:retry="load" />
       <!-- 稿 261:277 ★接受/拒绝只出现在收件箱(后端 handle 写死受邀方本人)★左 secondary 右 primary,一屏一个实心。
            受邀方可以是商家也可以是俱乐部;俱乐部只有这一页能处理收到的邀约。 -->
       <view class="inv-acts" wx:if="{{item.status===0 && item.decisionReady && !item.legacyReadonly && !item.identityError}}">
@@ -172,7 +172,7 @@
     <view class="inline-state">
       新邀约到达时提醒我<cy-btn class="alert-btn" variant="ghost" size="sm" bindtap="enableInviteAlerts" accessibilityLabel="开启合作邀约提醒">开启</cy-btn>
     </view>
-    <cy-empty size="lg" style="flex:1;min-height:0;" kind="empty" wx:if="{{chapterState === 'ready' && !chapterReceived.length && receivedApplyState === 'ready' && !receivedApplyErrorText && !receivedRegErrorText && !officialErrorText && !listErrorText && !received.length && !receivedApplies.length && !receivedRegs.length && !officialInvites.length}}" fill title="还没有收到协作邀请" sub="别的商家或俱乐部发来的协作邀请、对你主题的带队申请会显示在这里" cta="去发起邀请" bindcta="goInvite" />
+    <cy-empty size="lg" style="flex:1;min-height:0;" kind="empty" wx:if="{{chapterState === 'ready' && !chapterReceived.length && receivedApplyState === 'ready' && !receivedApplyErrorText && !receivedRegErrorText && !officialErrorText && !listErrorText && !received.length && !receivedApplies.length && !receivedRegs.length && !officialInvites.length}}" fill title="还没有收到协作邀请" cta="去发起邀请" bindcta="goInvite" />
     </block>
   </block>
 
@@ -180,7 +180,7 @@
   <block wx:else>
     <cy-skeleton wx:if="{{listState === 'loading'}}" type="list" count="3" />
     <cy-error class="retry-lg" wx:elif="{{listState === 'permission'}}" fill title="当前账号不能查看协作邀请" sub="{{listErrorText}}" auto-back bind:retry="load" />
-    <cy-error load-failure class="retry-lg error-kind--{{listErrorKind}}" wx:elif="{{listState === 'error'}}" fill title="协作邀请没加载出来" sub="{{listErrorText || '服务暂时不可用,请稍后重试'}}" auto-back bind:retry="load" />
+    <cy-error load-failure class="retry-lg error-kind--{{listErrorKind}}" wx:elif="{{listState === 'error'}}" fill title="协作邀请加载失败" sub="{{listErrorText}}" auto-back bind:retry="load" />
     <block wx:else>
     <view class="inline-state" wx:if="{{sentApplyState === 'loading'}}" aria-role="status" aria-live="polite">正在加载带队申请…</view>
     <!-- 我发出的这一路单独报错:收到的池子请求失败不得在这里顶牌 -->
@@ -190,7 +190,7 @@
     <view class="inv {{item.status>=3 ? 'is-dim' : ''}}" wx:for="{{sent}}" wx:key="rowKey"
       bindtap="goInviteDetail" data-id="{{item.inviteId}}" data-box="sent" aria-role="button"
       aria-label="查看 {{item.topicText || '这条邀约'}} 的协作详情" hover-class="cy-pressed" hover-stay-time="80" style="{{pmList === 1 ? '--pm-l:1;' : (pmList === 2 ? '--pm-l-d:.32s;--pm-l-s:1;' : '')}}">
-      <cy-error wx:if="{{item.identityError}}" class="inv-identity-error" title="邀约标识待确认"
+      <cy-error wx:if="{{item.identityError}}" class="inv-identity-error" title="邀约信息待确认"
         sub="{{item.identityError}}" retry="刷新邀约" bind:retry="load" />
       <view class="inv-top">
         <view class="inv-badge inv-badge--{{item.badgeTone}}"><cy-icon name="{{item.badgeIcon}}" size="24" /><text>{{item.statusText}}</text></view>
@@ -255,7 +255,7 @@
       </view>
     </view>
     <!-- 同理:发件箱这一路/邀请列表失败时不许落「还没有发出…」 -->
-    <cy-empty size="lg" style="flex:1;min-height:0;" kind="empty" wx:if="{{chapterState === 'ready' && !chapterSent.length && sentApplyState === 'ready' && !sentApplyErrorText && !listErrorText && !sent.length && !sentApplies.length}}" fill title="还没有发出协作邀请" sub="你发出的协作邀请、带队申请会显示在这里" cta="去发起邀请" bindcta="goInvite" />
+    <cy-empty size="lg" style="flex:1;min-height:0;" kind="empty" wx:if="{{chapterState === 'ready' && !chapterSent.length && sentApplyState === 'ready' && !sentApplyErrorText && !listErrorText && !sent.length && !sentApplies.length}}" fill title="还没有发出协作邀请" cta="去发起邀请" bindcta="goInvite" />
     </block>
   </block>
 

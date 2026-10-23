@@ -243,7 +243,7 @@ function normalizeTeamActions(value) {
   const allowedStatuses = new Set(['JOINED', 'ASSIGNED', 'CONFIRMED', 'IN_PROGRESS', 'SUBMITTED', 'COMPLETED', 'FALLBACK_COMPLETED'])
   const labels = {
     JOINED: '待分配', ASSIGNED: '待确认身份', CONFIRMED: '身份已确认', IN_PROGRESS: '行动中',
-    SUBMITTED: '等待核验', COMPLETED: '已完成', FALLBACK_COMPLETED: '已通过兜底完成',
+    SUBMITTED: '等待核验', COMPLETED: '已完成', FALLBACK_COMPLETED: '已保底完成',
   }
   return value.map((item) => {
     const status = safeText(item && item.status, 40).toUpperCase()

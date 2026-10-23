@@ -11,7 +11,7 @@
   <cy-state-shell wx:elif="{{state === 'error'}}" kind="{{errorKind}}" title="勋章列表没加载成功" sub="{{errorText}}"
                   primary="重新加载" bind:primary="retryLoad" fill size="lg" />
   <block wx:else>
-    <text wx:if="{{refreshing}}" class="badge-refreshing" aria-role="status">正在核对勋章列表…</text>
+    <text wx:if="{{refreshing}}" class="badge-refreshing" aria-role="status">正在确认勋章列表…</text>
     <cy-inline-error wx:if="{{refreshError}}" title="列表没刷新成功" sub="{{refreshError}}" action="重新加载" bind:action="retryLoad" />
 
     <view wx:if="{{isOwner}}" class="section">
@@ -19,7 +19,7 @@
     </view>
 
     <cy-state-shell wx:if="{{state === 'empty'}}" kind="empty" title="还没有俱乐部勋章"
-                    sub="{{isOwner ? '创建第一枚勋章，颁给为俱乐部出力的成员。' : '主理人还没有创建勋章。'}}" />
+                    />
 
     <view wx:if="{{state === 'ready'}}" class="section">
       <text class="section-title">全部勋章 · {{badges.length || 0}} 枚</text>
@@ -52,7 +52,7 @@
               disabled="{{creating}}" data-field="desc" bind:input="onFormInput"
               error="{{!!formErrors.desc}}" errorText="{{formErrors.desc}}" />
     <cy-inline-error wx:if="{{createError && createUnknown}}" title="创建结果未确认" sub="{{createError}}"
-                     action="我已核对" bind:action="confirmCreateChecked" />
+                     action="我已确认" bind:action="confirmCreateChecked" />
     <cy-inline-error wx:elif="{{createError}}" title="勋章没有创建" sub="{{createError}}" />
   </view>
   <cy-btn slot="footer" variant="primary" loading="{{creating}}" disabled="{{createUnknown}}" bindtap="submitCreate">创建</cy-btn>
@@ -64,7 +64,7 @@
     <cy-skeleton wx:if="{{membersState === 'loading'}}" type="list" count="3" loading-label="正在读取成员名单" />
     <cy-inline-error wx:elif="{{membersState === 'error'}}" title="成员名单没加载成功" sub="{{membersError}}"
                      action="重新加载" bind:action="loadMembers" />
-    <cy-state-shell wx:elif="{{membersState === 'empty'}}" kind="empty" title="还没有成员" sub="有人加入俱乐部后才能颁发勋章。" />
+    <cy-state-shell wx:elif="{{membersState === 'empty'}}" kind="empty" title="暂无成员" />
     <block wx:elif="{{membersState === 'ready'}}">
       <view class="picker-row {{granting ? 'is-disabled' : ''}}" wx:for="{{members}}" wx:key="memberId"
             data-member-id="{{item.memberId}}" bindtap="pickMember"

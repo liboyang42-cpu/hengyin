@@ -52,7 +52,7 @@ test('countUpFrames:末帧恒等于目标值,途中单调逼近', () => {
 test('countUpFrames:换过冲缓动时末帧仍被钉死在目标值(金额不会停错)', () => {
   const overshoot = () => 1.2   // 恒返回 1.2:任何一帧照算都会冲过头
   const frames = countUpFrames(0, 1280, { duration: 220, fps: 30, ease: overshoot })
-  assert.equal(frames[frames.length - 1].value, 1280, '末帧必须被显式钉死,不能跟着缓动冲过去')
+  assert.equal(frames[frames.length - 1].value, 1280, '末帧必须被显式钉死，不能跟着缓动冲过去')
   assert.ok(frames[0].value > 1280, '中途允许过冲(这正是 spring 想要的观感)')
 })
 
@@ -153,7 +153,7 @@ test('stampIn:降级动效不震、时长归零(触感也是动效)', () => {
 
 test('stampIn:震动源报错不掀翻动效(部分机型会 reject)', () => {
   const plan = stampIn({ haptics: { vibrateShort() { throw new Error('no permission') } } })
-  assert.ok(plan.durationMs > 0, '震动失败后计划仍须返回,动画照常')
+  assert.ok(plan.durationMs > 0, '震动失败后计划仍须返回，动画照常')
 })
 
 test('stampIn:没有震动源时静默降级,不抛异常', () => {

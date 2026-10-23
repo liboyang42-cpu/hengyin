@@ -122,7 +122,7 @@ test('关联空态说明公开可用范围，不把历史已完成记录说成�
   const wxml = fs.readFileSync(path.resolve(__dirname,
     '../../pages/square/components/activity-picker/index.wxml'), 'utf8')
   assert.match(wxml, /title="暂无可关联的已完成活动或主题"/)
-  assert.match(wxml, /sub="这里只显示当前可用于公开关联的已完成记录"/)
+  assert.match(wxml, /sub="仅显示已完成的活动"/)
   assert.doesNotMatch(wxml, /还没有已通关的活动/)
 })
 
@@ -233,7 +233,7 @@ test('迟回/改动选择后重试:按重试当刻的选择发,不用旧值', ()
   page.retrySubmit()
 
   const body = requests[1].data
-  assert.equal(body.data_type, 1, '重试必须用当前选择,不得残留自玩关联')
+  assert.equal(body.data_type, 1, '重试必须用当前选择，不得残留自玩关联')
   assert.equal(body.data_id, 501)
   assert.equal(body.route_preview_img, 'https://img.example/new.png')
 })

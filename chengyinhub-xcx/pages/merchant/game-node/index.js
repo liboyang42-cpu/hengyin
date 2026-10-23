@@ -32,7 +32,7 @@ const DECLINE_REASONS = [
 ]
 
 const REJECT_REASONS = [
-  { code: 'ANSWER_MISMATCH', label: '答案不匹配' },
+  { code: 'ANSWER_MISMATCH', label: '答案不正确' },
   { code: 'EVIDENCE_UNCLEAR', label: '凭证无法辨认' },
   { code: 'DUPLICATE_SUBMISSION', label: '重复提交' },
 ]
@@ -226,7 +226,7 @@ Page({
       this._errorReasonCode = 'GAME_ACTIVITY_ID_REQUIRED'
       this.setData({
         viewState: 'business-error',
-        errorMessage: '页面参数不完整，请从商家项目卡重新进入',
+        errorMessage: '链接已失效，请返回重新进入',
       })
       return
     }
@@ -278,7 +278,7 @@ Page({
         this._projection = null
         this.setData({
           viewState: 'business-error',
-          errorMessage: '本站运行数据不完整，请稍后重试',
+          errorMessage: '本站运行加载失败，请重试',
           stations: [],
           station: null,
           summary: null,
@@ -490,7 +490,7 @@ Page({
       // R9-38:没选备用方案也能停,但玩家那边不会被引导去别的站 —— 停之前把这件事说清楚。
       modal.show({
         title: '不设备用方案，直接暂停？',
-        content: '玩家会看到本站暂停、暂停原因和预计恢复时间，不会被引导到其他站点；如需退款请联系平台客服。',
+        content: '玩家会看到本站暂停、暂停原因和预计恢复时间，不会被引导到其他节点；如需退款请联系平台客服。',
         confirmText: '确认暂停',
         cancelText: '再想想',
         success: (r) => { if (r && r.confirm) this._submitCommand(command) },
@@ -782,7 +782,7 @@ Page({
       return false
     }
     this._retrying = true
-    this.setData({ writeState: 'submitting', writeMessage: '正在用原请求号重试…' })
+    this.setData({ writeState: 'submitting', writeMessage: '正在重试…' })
     const task = this._client.submitAction('merchant', pending.command)
     this._retryTask = task
     task.then((result) => {

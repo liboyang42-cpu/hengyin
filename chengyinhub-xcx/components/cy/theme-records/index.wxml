@@ -35,6 +35,6 @@
   <cy-inline-error class="tr-error" wx:if="{{error}}" aria-live="polite" kind="error" title="{{error}}" load-failure="{{readFailure}}" />
   <view wx:if="{{error && !readFailure && !card}}" class="tr-button" bindtap="retryCard" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">重新加载本局结果</view>
   <view wx:if="{{replayAllowed}}" class="tr-button {{replayBusy || busy ? 'is-busy' : ''}}" bindtap="replay" aria-role="button" aria-disabled="{{replayBusy || busy}}" hover-class="cy-pressed" hover-stay-time="80">再玩一次</view>
-  <view wx:if="{{replayUnconfirmed && error}}" class="tr-button tr-button--muted {{replayBusy ? 'is-busy' : ''}}" bindtap="checkReplay" aria-role="button" aria-disabled="{{replayBusy}}" hover-class="cy-pressed" hover-stay-time="80">核对新一局</view>
+  <view wx:if="{{replayUnconfirmed && error}}" class="tr-button tr-button--muted {{replayBusy ? 'is-busy' : ''}}" bindtap="checkReplay" aria-role="button" aria-disabled="{{replayBusy}}" hover-class="cy-pressed" hover-stay-time="80">查看新一局</view>
  </view>
 </cy-sheet>

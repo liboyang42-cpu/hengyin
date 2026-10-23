@@ -16,7 +16,7 @@ function assertRedemptionEmptyValueContract(js, wxml) {
   assert.match(js, /row\.settlementAmount == null \|\| Number\(row\.settlementAmount\) === 0/, 'null 和已确认的 0 都不得生成金额显示模型');
   // v2:两种"没金额"要分开 —— 明确不产生现金给破折号,金额尚未成立给「待定」;都不得造 ¥0。
   assert.match(js, /item\.amountDisplay = item\.amountText != null \?/, '金额展示必须先判现金是否成立');
-  assert.match(js, /NO_CASH_SETTLEMENT' \? '—' : '待定'/, "null 不得造 ¥0:零现金给破折号,未成立给「待定」");
+  assert.match(js, /NO_CASH_SETTLEMENT' \? '—' : '待定'/, "null 不得造 ¥0:零现金给破折号，未成立给「待定」");
   assert.doesNotMatch(wxml, /¥\{\{/, '所有金额符号必须包含在已校验的显示文本中');
   assert.doesNotMatch(wxml, /¥0\.00/, '待主题结算不得伪装成零金额');
 }

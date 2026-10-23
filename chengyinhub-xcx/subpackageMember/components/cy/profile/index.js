@@ -36,7 +36,7 @@ const MEDAL_EMOJI = {
 
 const TAB_LABELS = {
   projects: '我的',
-  posts: '推文',
+  posts: '帖文',
   achievements: '成就',
   about: '关于'
 };
@@ -938,7 +938,7 @@ Component({
         return;
       }
       that.setData({ merchantNodeBusy: false, 'merchantNode.favorited': favorited });
-      cyToast(favorited ? '已收藏据点' : '已取消收藏');
+      cyToast(favorited ? '已收藏节点' : '已取消收藏');
     };
     this.setData({ merchantNodeBusy: true });
     app.sendRequest({
@@ -1739,7 +1739,7 @@ Component({
   openStationSheet: function (code, d) {
     var items = Array.isArray(d.stations) ? d.stations : [];
     if (!items.length) {
-      cyToast('没有可核销的据点');
+      cyToast('没有可核销的节点');
       return;
     }
     this.setData({ stationSheet: { show: true, code: code, items: items } });
@@ -2172,7 +2172,7 @@ Component({
     req('/api/club/my', {}).then(function (res) {
       cyLoading.hide();
       if (res.code != '200') {
-        cyToast(isAuthFailure(res) ? '登录未成功，请重新进入' : app.getRequestErrorMessage(res, '加载失败，请稍后重试'));
+        cyToast(isAuthFailure(res) ? '登录未成功，请重新进入' : app.getRequestErrorMessage(res, '加载失败，请重试'));
         return;
       }
       var owned = (res.code == '200' && res.data && res.data.owned) || [];

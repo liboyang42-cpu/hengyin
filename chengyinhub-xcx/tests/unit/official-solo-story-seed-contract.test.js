@@ -25,7 +25,7 @@ test('官方单人剧情种子与商家模板分层，配好首发参数但默�
   assert.match(sql, /t\.user_status<>0 OR t\.lifecycle<>0/,
     '未发布阶段必须同时锁定为未上架和 DRAFT');
   assert.match(sql, /SELECT t\.id, 'CONTENT', 'PLATFORM', NULL, 1/,
-    '内容槽必须归平台，不得绑定商户');
+    '内容槽必须归平台，不得绑定商家');
   assert.doesNotMatch(sql, /INSERT INTO cms_topic_template_meta/,
     '官方活动不得混入主题模板货架元数据');
   assert.ok(dependencies.dependencies.seed_official_solo_story_topics_20260823.includes('topic_lifecycle_recruit'),
@@ -44,25 +44,25 @@ test('五个主题各有五个 GPS 剧情节点，每站展示档案且末站有
   assert.match(sql, /seed\.rule_instructions, 5,/,
     '节点基础完成方式必须是带 50m 围栏的 GPS 到达');
   assert.match(sql, /COUNT\(DISTINCT n\.id\)<>5/,
-    '事务内回读必须拒绝节点数不是 5 的主题');
+    '事务内刷新必须拒绝节点数不是 5 的主题');
   assert.match(sql, /n\.sort_id>1 AND n\.unlock_after_node_id IS NULL/,
     '除起点外，每站必须存在前置解锁');
   assert.match(sql, /m\.validation_method<>5/,
-    '事务内回读必须拒绝非 GPS 节点');
+    '事务内刷新必须拒绝非 GPS 节点');
   assert.match(sql, /t\.self_play<>1 OR t\.self_play_price<>19\.90 OR t\.self_play_quota<>100/,
-    '事务内回读必须锁定自玩、首发价和配额');
+    '事务内刷新必须锁定自玩、首发价和配额');
   assert.match(sql, /m\.advanced_config_json IS NOT NULL[\s\S]*<>5/,
-    '事务内回读必须要求每个节点都有剧情档案');
+    '事务内刷新必须要求每个节点都有剧情档案');
   assert.match(sql, /JSON_LENGTH\(m\.advanced_config_json, '\$\.branch\.steps\[0\]\.options'\)=3[\s\S]*<>1/,
-    '事务内回读必须要求每个主题恰有一个三选一最终分支');
+    '事务内刷新必须要求每个主题恰有一个三选一最终分支');
   assert.match(sql, /COUNT\(r\.id\)<>1/,
     '每个官方主题必须恰有一个有效平台角色');
   assert.match(sql, /seed_official_solo_story_topics seed[\s\S]*NOT \(t\.total_mileage <=> seed\.total_mileage\)/,
-    '幂等回放必须回读主题期望值，不能只数行');
+    '幂等回放必须刷新主题期望值，不能只数行');
   assert.match(sql, /seed_official_solo_story_nodes seed[\s\S]*NOT \(n\.longitude <=> seed\.longitude\)[\s\S]*NOT \(n\.sort_id <=> seed\.sort_id\)/,
-    '幂等回放必须回读节点坐标与顺序');
+    '幂等回放必须刷新节点坐标与顺序');
   assert.match(sql, /NOT \(m\.advanced_config_json <=> seed\.advanced_config_json\)/,
-    '剧情档案与最终分支配置必须逐字回读，不能只校验 JSON 非空');
+    '剧情档案与最终分支配置必须逐字刷新，不能只校验 JSON 非空');
   assert.match(sql, /NOT \(n\.unlock_after_node_id <=> previous_node\.id\)/,
     '每站前驱必须精确指向上一站，不能只校验非空');
 });

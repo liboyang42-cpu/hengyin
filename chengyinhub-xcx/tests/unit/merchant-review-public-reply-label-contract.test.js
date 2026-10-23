@@ -31,7 +31,7 @@ test('回复气泡的称呼按 mode 分流,公开态不再说「你的回复」'
 
 test('负控:标签改回无 mode 判据时必须判红', () => {
   const regressed = WXML.replace("{{mode === 'manage' ? '你的回复' : '商家回复'}}", '你的回复');
-  assert.notEqual(regressed, WXML, '负控锚点失效:标签表达式已改名,扫描口径需同步');
+  assert.notEqual(regressed, WXML, '负控锚点失效:标签表达式已改名，扫描口径需同步');
   assert.throws(() => checkReplyLabel(regressed), assert.AssertionError);
 });
 

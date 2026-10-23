@@ -79,7 +79,7 @@ Page({
     loading: false,
     error: '',
     emptyTitle: '还没有客户',
-    emptySub: '有人买了你承接项目的票，就会出现在这里',
+    emptySub: '',
     emptyCta: '重新加载',
     emptyAction: 'retry',
     noPermission: false,
@@ -188,13 +188,13 @@ Page({
           && (res.data.active === true || res.data.active === false);
         if (!validAccess) {
           this._clearScopedData('', true);
-          this.setData({ loading: false, error: '经营身份加载失败，请稍后重试', noPermission: false });
+          this.setData({ loading: false, error: '经营身份加载失败，请重试', noPermission: false });
           return;
         }
         const access = normalizeMerchantAccess(res.data);
         if (access.invalid) {
           this._clearScopedData('', true);
-          this.setData({ loading: false, error: '经营身份加载失败，请稍后重试', noPermission: false });
+          this.setData({ loading: false, error: '经营身份加载失败，请重试', noPermission: false });
           return;
         }
         if (!access.active || !access.canReadCrm) {
@@ -215,7 +215,7 @@ Page({
           && ['PENDING', 'RUNNING'].includes(this.data.exportState)) this._pollExport();
       },
       fail: () => {
-        if (isCurrent()) this.setData({ loading: false, error: '经营身份加载失败，请稍后重试' });
+        if (isCurrent()) this.setData({ loading: false, error: '经营身份加载失败，请重试' });
       },
     });
   },
@@ -320,7 +320,7 @@ Page({
         loading: false,
         error: error || '',
         emptyTitle: '还没有客户',
-        emptySub: '有人买了你承接项目的票，就会出现在这里',
+        emptySub: '',
         emptyCta: '重新加载',
       });
       return;
@@ -336,7 +336,7 @@ Page({
         loading: false,
         error: error || '',
         emptyTitle: '还没有客户',
-        emptySub: '有人买了你承接项目的票，就会出现在这里',
+        emptySub: '',
         emptyCta: '重新加载',
         keyword: '',
         segment: 'all',
@@ -481,7 +481,7 @@ Page({
         }
         const list = data.rows.map(shapeRow);
         if (list.some(item => item === null)) {
-          that.setData({ error: '客户名单数据格式异常，请稍后重试' });
+          that.setData({ error: '客户名单加载失败，请重试' });
           return;
         }
         // P0-4:翻页只按数组路径回传新增行(旧写法整表 concat 全量跨序列化线重发)。
@@ -523,7 +523,7 @@ Page({
           that._clearScopedData('商家资格已失效', true);
           that.setData({ noPermission: true });
         } else {
-          that.setData({ error: '网络连接失败,请检查网络后重试' });
+          that.setData({ error: '网络异常，请重试' });
         }
       },
       complete() {
@@ -547,12 +547,12 @@ Page({
       // 只有本来就在「全部」里搜不到,才真的该换关键词。
       if (inSegment) {
         return {
-          emptyTitle: '这个分组没有匹配客户', emptySub: '换个分组看看，或保留关键词查看全部',
+          emptyTitle: '这个分组没有匹配客户', emptySub: '换个筛选试试',
           emptyCta: '查看全部客户', emptyAction: 'clear-filter',
         };
       }
       return {
-        emptyTitle: '没搜到这个客户', emptySub: '换个姓名再试试',
+        emptyTitle: '没搜到这个客户', emptySub: '换个关键词试试',
         emptyCta: '清除搜索', emptyAction: 'clear-search',
       };
     }
@@ -561,7 +561,7 @@ Page({
     // 「名单没取回来」,那是把正常结果报成故障。
     if (this.data.tagId || this.data.sourceType || this.data.sourceStart || this.data.sourceEnd) {
       return {
-        emptyTitle: '这个筛选条件下没有客户', emptySub: '换个标签或来源时间再看看',
+        emptyTitle: '这个筛选条件下没有客户', emptySub: '换个筛选试试',
         emptyCta: '清除筛选', emptyAction: 'clear-advanced',
       };
     }
@@ -569,7 +569,7 @@ Page({
       const seg = SEGMENTS.filter(s => s.key === this.data.segment)[0];
       const label = (seg && seg.emptyLabel) || '这一段';
       return {
-        emptyTitle: '还没有' + label, emptySub: '换个分段看看',
+        emptyTitle: '还没有' + label, emptySub: '换个筛选试试',
         emptyCta: '查看全部客户', emptyAction: 'clear-filter',
       };
     }
@@ -580,19 +580,19 @@ Page({
     if (countedAll === null) {
       return {
         emptyTitle: '客户统计暂未取到',
-        emptySub: '不会用 0 代替缺失的客户计数，请重新加载。',
+        emptySub: '',
         emptyCta: '重新加载', emptyAction: 'retry',
       };
     }
     if (countedAll > 0) {
       return {
         emptyTitle: '客户名单这次没取回来',
-        emptySub: '统计里有 ' + countedAll + ' 位客户,但名单没加载出来。下拉刷新或稍后再看。',
+        emptySub: '统计里有 ' + countedAll + ' 位客户，但名单加载失败。下拉刷新或稍后再看。',
         emptyCta: '重新加载', emptyAction: 'retry',
       };
     }
     return {
-      emptyTitle: '还没有客户', emptySub: '先去合作中心承接项目，有人购票后会出现在这里',
+      emptyTitle: '还没有客户', emptySub: '',
       emptyCta: '去合作中心', emptyAction: 'go-coop',
     };
   },
@@ -639,10 +639,10 @@ Page({
   _showContactFail(res) {
     this.setData({
       resultSheet: {
-        show: true, kind: 'fail', title: '号码没能取到',
-        sub: '为保护客户隐私，每次联系前都会重新确认你的权限和客户授权。',
+        show: true, kind: 'fail', title: '号码获取失败',
+        sub: '',
         meta: '', pill: '',
-        why: shapeRequestError(res, '服务暂时不可用，请稍后重试'),
+        why: shapeRequestError(res, '服务暂不可用，请稍后重试'),
         primaryText: '', secondaryText: '', duration: RESULT_SHEET_MS,
       },
     });
@@ -700,7 +700,7 @@ Page({
         this.load();
       },
       fail: () => {
-        if (isCurrent()) this.setData({ batchSubmitting: false, batchError: '网络连接失败，请稍后重试' });
+        if (isCurrent()) this.setData({ batchSubmitting: false, batchError: '网络异常，请重试' });
       },
     });
   },
@@ -805,7 +805,7 @@ Page({
         this._pollExport();
       },
       fail: () => {
-        if (isCurrent()) this.setData({ exportState: 'FAILED', exportError: '网络连接失败，请稍后重试' });
+        if (isCurrent()) this.setData({ exportState: 'FAILED', exportError: '网络异常，请重试' });
       },
     });
   },

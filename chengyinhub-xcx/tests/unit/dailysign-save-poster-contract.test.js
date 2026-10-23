@@ -75,7 +75,7 @@ const typesOf = (poster) => poster.blocks.map((b) => b.type)
 
 test('★onSave 不再往父级抛 save —— 那条线全链路无人接收,玩家点了没反应', async () => {
   assert.doesNotMatch(JS, /triggerEvent\(\s*['"]save['"]\s*\)/,
-    '又抛回父级了:分发器那条 bind:save 是死线,保存必须是组件内的本地行为')
+    '又抛回父级了:分发器那条 bind:save 是死线，保存必须是组件内的本地行为')
   const p = page()
   global.wx = fakeWx({})
   await C.methods.onSave.call(p)
@@ -104,7 +104,7 @@ test('★票面字段逐项进画布:标题/日期/地址/出票时刻/签号/�
 
   const poem = of(poster, 'poem')[0]
   assert.equal(poem.k, '留给你的一句')
-  assert.deepEqual(poem.lines, BASE.lines, 'lines 服务端已断好行,组件不许再按标点重排')
+  assert.deepEqual(poem.lines, BASE.lines, 'lines 服务端已断好行，组件不许再按标点重排')
 })
 
 test('★票面回落文案与 wxml 逐字一致:没有留签人写「这一站的发起人」、没有时刻写「这一站开场」', () => {
@@ -142,17 +142,17 @@ test('★条码用 buildBars 的宽/间隙逐条画:同一张签每次一样,且
 
   const build = () => C.methods._buildSignPoster.call(page(), measure, false)
   const bars = of(build(), 'barcode')[0].bars
-  assert.equal(bars.length, 46, 'bars 还没到时按签号补出 46 根,底部不许留一段空白')
+  assert.equal(bars.length, 46, 'bars 还没到时按签号补出 46 根，底部不许留一段空白')
   assert.deepEqual([...new Set(bars.map((b) => b.w))].sort(), [2, 4, 6])
   assert.deepEqual([...new Set(bars.map((b) => b.g))].sort(), [2, 4])
-  assert.deepEqual(bars, of(build(), 'barcode')[0].bars, '同一签号必须长一样(种子生成,不是随机)')
+  assert.deepEqual(bars, of(build(), 'barcode')[0].bars, '同一签号必须长一样(种子生成，不是随机)')
   assert.notDeepEqual(bars,
     of(C.methods._buildSignPoster.call(page({ serialLabel: 'NO. 0005' }), measure, false), 'barcode')[0].bars,
     '换一张签就该换一条码')
 
   for (const b of [bar, of(build(), 'barcode')[0]]) {
     const total = b.bars.reduce((acc, x) => acc + (x.w + x.g) * b.scale, 0)
-    assert.ok(total <= b.maxW + 0.5, '条码总宽必须收得进 ' + b.maxW + ' 单位,溢出就是被裁掉的假条码')
+    assert.ok(total <= b.maxW + 0.5, '条码总宽必须收得进 ' + b.maxW + ' 单位，溢出就是被裁掉的假条码')
   }
 })
 
@@ -176,9 +176,9 @@ test('★落笔只消费装配结果:不再量文字、不再算排版', () => {
 test('区块自上而下不重叠、全部落在纸内,纸落在台面内', () => {
   const poster = C.methods._buildSignPoster.call(page({ address: '巷口那家豆浆七点才开，别去早了' }), measure, false)
   assert.equal(poster.w, 750, '1 画布单位 = 1rpx,与 wxss 同一把尺')
-  assert.ok(poster.dpr >= 2, '导出至少 2 倍,存进相册的图不能糊')
+  assert.ok(poster.dpr >= 2, '导出至少 2 倍，存进相册的图不能糊')
   assert.ok(poster.paper.x > 0 && poster.paper.x + poster.paper.w <= poster.w)
-  assert.ok(poster.paper.y + poster.paper.h + 40 <= poster.h, '纸下沿要留出台面,否则锯齿被裁掉')
+  assert.ok(poster.paper.y + poster.paper.h + 40 <= poster.h, '纸下沿要留出台面，否则锯齿被裁掉')
   let prevEnd = poster.paper.y
   for (const b of poster.blocks) {
     assert.ok(b.y >= prevEnd - 0.01, b.type + ' 与上一块重叠')
@@ -186,7 +186,7 @@ test('区块自上而下不重叠、全部落在纸内,纸落在台面内', () =
     assert.ok(b.y + b.h <= poster.paper.y + poster.paper.h + 0.01, b.type + ' 画出纸外了')
     prevEnd = b.y + b.h
   }
-  assert.ok(poster.paper.y + poster.paper.h - prevEnd >= 14, '底部留白不足,锯齿会压到最后一块')
+  assert.ok(poster.paper.y + poster.paper.h - prevEnd >= 14, '底部留白不足，锯齿会压到最后一块')
 })
 
 test('★没拿到照片就整块不排:票面往上收,不留空洞、不画假占位', () => {
@@ -200,7 +200,7 @@ test('★没拿到照片就整块不排:票面往上收,不留空洞、不画假
     ['head', 'hr', 'od', 'hr', 'grid', 'hr', 'photo', 'hr', 'poem', 'hr', 'barcode'])
   assert.deepEqual(typesOf(noPhoto),
     ['head', 'hr', 'od', 'hr', 'grid', 'hr', 'poem', 'hr', 'barcode'],
-    '跳过照片时连带它前面那道虚线一起跳,否则票面出现两道挨着的虚线')
+    '跳过照片时连带它前面那道虚线一起跳，否则票面出现两道挨着的虚线')
   assert.ok(!typesOf(noPhoto).some((t, i, all) => t === 'hr' && all[i + 1] === 'hr'))
 
   const photo = of(withPhoto, 'photo')[0]
@@ -218,7 +218,7 @@ test('★没拿到照片就整块不排:票面往上收,不留空洞、不画假
 test('负控:照片没成却照样留块(票面出现两道挨着的虚线),契约必须判红', () => {
   const broken = ['head', 'hr', 'od', 'hr', 'grid', 'hr', 'hr', 'poem', 'hr', 'barcode']
   const real = typesOf(C.methods._buildSignPoster.call(page(), measure, false))
-  assert.notDeepEqual(broken, real, '负控构造失败:坏版本与好版本一模一样,等于没在测')
+  assert.notDeepEqual(broken, real, '负控构造失败:坏版本与好版本一模一样，等于没在测')
   assert.ok(broken.some((t, i) => t === 'hr' && broken[i + 1] === 'hr'),
     '负控要自证:坏版本的空洞正是「两道挨着的虚线」')
   assert.ok(!real.some((t, i) => t === 'hr' && real[i + 1] === 'hr'))
@@ -327,7 +327,7 @@ test('保存成功:票面被真画出来(标题/地址/签号/那句都落到画
   await C.methods.onSave.call(p)
   const rec = global.wx.__rec
   assert.equal(rec.exports, 1, '没有真的导出 canvas')
-  assert.ok(rec.width > 750, '画布按 dpr 放大过,导出不是 750 逻辑宽的糊图:' + rec.width)
+  assert.ok(rec.width > 750, '画布按 dpr 放大过，导出不是 750 逻辑宽的糊图:' + rec.width)
   assert.ok(rec.rects > 46, '台面 + 46 根条码都该是 fillRect 出来的:' + rec.rects)
   assert.ok(rec.strokes >= 40, '票面那道虚线是一段一段画的(.ds__hr 就是 dashed):' + rec.strokes)
   assert.deepEqual(rec.albums, ['/tmp/ds-sign.png'])
@@ -382,7 +382,7 @@ test('★相册权限被拒:去 wx.openSetting,不弹「失败」误人', async 
   const p = page()
   await C.methods.onSave.call(p)
   const rec = global.wx.__rec
-  assert.equal(rec.openSettings, 1, '拒过授权自己再问不会弹,只能带去设置')
+  assert.equal(rec.openSettings, 1, '拒过授权自己再问不会弹，只能带去设置')
   assert.ok(!rec.toasts.some((t) => /失败/.test(t)), JSON.stringify(rec.toasts))
   assert.equal(p.data.saving, false)
 })
@@ -450,7 +450,7 @@ test('★离屏 canvas 已挂在组件里,并且不进无障碍树', () => {
   assert.match(WXML, /<canvas[^>]*type="2d"[^>]*id="dsSignCv"[^>]*class="ds__cv"[^>]*aria-hidden="true"/,
     'type="2d" 才有 canvasToTempFilePath 的 canvas 参数;aria-hidden 防读屏念出一块无名画布')
   assert.match(WXSS, /\.ds__cv\s*\{[^}]*position:\s*fixed/, '离屏:不能占版面')
-  assert.match(WXSS, /\.ds__cv\s*\{[^}]*left:\s*-\d+px/, '离屏:挪出屏外,而不是 display:none(那样取不到节点)')
+  assert.match(WXSS, /\.ds__cv\s*\{[^}]*left:\s*-\d+px/, '离屏:挪出屏外，而不是 display:none(那样取不到节点)')
   assert.doesNotMatch(WXSS, /^canvas\s*\{/m, '组件 wxss 里不许有 tag selector(选择器门禁)')
 })
 

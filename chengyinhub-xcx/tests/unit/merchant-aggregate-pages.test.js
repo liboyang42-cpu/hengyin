@@ -220,7 +220,7 @@ test('关系聚合 403 清除旧门店数据并静默回会员中心，不冒充
   requests[1].success({ code: 403, msg: '商家身份无效或权限不足' });
 
   assert.deepEqual(navigations, ['/pages/member/index/index'],
-    '无商家身份的深链误入静默回会员中心,不摆整屏错误页');
+    '无商家身份的深链误入静默回会员中心，不摆整屏错误页');
   assert.equal(page.data.merchants.length, 0, '403 后不得继续显示上一经营主体的商家数据');
   assert.equal(page.data.clubs.length, 0);
 });
@@ -455,7 +455,7 @@ test('我的项目:俱乐部主理人在活动页签有「发布单场活动」�
     const leader = withGuard(true, { type: 'club_activity' });
     assert.equal(leader.page.data.canPublishActivity, true);
     leader.page.applyView();   // 真机上在项目列表回来后调用
-    assert.equal(leader.page.data.emptySub, '在这里发布你的第一场单场活动', '只对能发的人给发布提示');
+    assert.equal(leader.page.data.emptySub, '', '只对能发的人给发布提示');
     leader.page.onEmptyCta();
     assert.deepEqual(leader.navigations, ['/pages/publish/activity/index'], '活动页签空态按钮进活动发布页');
     assert.equal(withGuard(true, { type: 'club_activity', scope: 'MERCHANT' }).page.data.canPublishActivity, false,
@@ -466,7 +466,7 @@ test('我的项目:俱乐部主理人在活动页签有「发布单场活动」�
     assert.equal(other.page.data.emptySub, '', '不能发的人不给「可以在这里发布」的空头提示');
     const wxml = require('node:fs').readFileSync(path.join(__dirname, '../../subpackageA/pages/myproject/index.wxml'), 'utf8');
     assert.match(wxml, /typeTab === 'activity' && canPublishActivity && list\.length > 0[\s\S]*?bindtap="goCreateActivity"/,
-      '有活动时也要有常驻入口,不能只藏在空态里');
+      '有活动时也要有常驻入口，不能只藏在空态里');
   } finally {
     if (real) require.cache[guardPath] = real; else delete require.cache[guardPath];
   }

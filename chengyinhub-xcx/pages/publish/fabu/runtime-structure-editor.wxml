@@ -55,7 +55,7 @@
    <view class="rt-title"><text>到达与引导</text></view>
    <cy-inline-error wx:if="{{structureError}}" title="{{structureError}}" />
    <view class="node-card">
-    <view class="rt-field"><text>到达地点</text><cy-dropdown topic-editor range="{{structureLocations}}" range-key="label" value="{{structureLocationIndex}}" bind:change="onStructureLocation"><view class="rt-select" aria-role="button" aria-label="选择到达地点">{{structureLocationIndex >= 0 ? structureLocations[structureLocationIndex].label : '选择本主题站点'}}<cy-icon name="chevron-right" size="24" /></view></cy-dropdown></view>
+    <view class="rt-field"><text>到达地点</text><cy-dropdown topic-editor range="{{structureLocations}}" range-key="label" value="{{structureLocationIndex}}" bind:change="onStructureLocation"><view class="rt-select" aria-role="button" aria-label="选择到达地点">{{structureLocationIndex >= 0 ? structureLocations[structureLocationIndex].label : '选择本主题节点'}}<cy-icon name="chevron-right" size="24" /></view></cy-dropdown></view>
     <text class="story-initial__example">多个任务选同一地点时，共用该地点的到达核验。</text>
    </view>
    <view class="node-card">
@@ -66,13 +66,13 @@
     </view>
    </view>
    <view class="node-card">
-    <view class="rt-card-head"><text>预先批准的备用站点</text><text class="rt-count">已选 {{structureFallbackCount || 0}} / 20</text></view>
-    <text class="story-initial__example rt-lead">原站无法继续时，工作人员只能改派到这里选中的站点。</text>
+    <view class="rt-card-head"><text>预先批准的备用节点</text><text class="rt-count">已选 {{structureFallbackCount || 0}} / 20</text></view>
+    <text class="story-initial__example rt-lead">原站无法继续时，工作人员只能改派到这里选中的节点。</text>
     <view wx:for="{{structureFallbackNodes}}" wx:key="id" class="node-card__row rt-check-row" data-id="{{item.id}}" bindtap="toggleStructureFallback" aria-role="checkbox" aria-checked="{{item.selected}}" hover-class="cy-pressed" hover-stay-time="80">
      <view class="node-card__main"><text class="node-card__title">{{item.label}}</text></view>
      <view class="rt-check {{item.selected ? 'is-on' : ''}}" aria-hidden="true"><cy-icon wx:if="{{item.selected}}" name="check" size="24" /></view>
     </view>
-    <text wx:if="{{!structureFallbackNodes.length}}" class="node-card__value">请先保存其它站点，再选择备用站点</text>
+    <text wx:if="{{!structureFallbackNodes.length}}" class="node-card__value">请先保存其它节点，再选择备用节点</text>
    </view>
   </block>
  </view>

@@ -19,7 +19,7 @@ test('形象卡在 tab 之上,不藏在某个 tab 里', () => {
   // 卡片一旦掉进任何一个 tab 分支,大部分访客就永远看不到形象。
   assert.ok(cardAt < tabsAt, '形象卡必须在 tab 之上');
   assert.doesNotMatch(wxml.slice(cardAt, tabsAt), /activeTab/,
-    '形象卡与 tab 之间不得夹 activeTab 条件,否则等于又藏回某个 tab 里');
+    '形象卡与 tab 之间不得夹 activeTab 条件，否则等于又藏回某个 tab 里');
 });
 
 test('按 npc 是否存在整块渲染,招呼语可空', () => {

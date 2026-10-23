@@ -97,7 +97,7 @@ function authoredConfig(cfg, pos) {
   };
 }
 
-const CONFIG_LABELS = { chapters: '章节规则', bindings: '站点玩法资源对应', quests: '站点与章节的对应', rations: '章末配给', items: '物品', mode: '进行方式' };
+const CONFIG_LABELS = { chapters: '章节规则', bindings: '节点玩法资源对应', quests: '节点与章节的对应', rations: '章末配给', items: '物品', mode: '进行方式' };
 
 function initialOf(raw) {
   try {
@@ -212,12 +212,12 @@ function savedContentIssue(sent, detail) {
   for (let ci = 0; ci < (sent.chapters || []).length; ci++) {
     const before = sent.chapters[ci], after = detail.chapters[ci], nodes = after.cmsTopicNodeList || [];
     if (!topicIdOf(after.id) || chapterIds.has(String(Number(after.id)))
-        || String(after.topicId) !== String(detail.topic.id)) return '云端保存的章节或站点编号、归属不完整';
+        || String(after.topicId) !== String(detail.topic.id)) return '云端保存的章节或节点编号、归属不完整';
     chapterIds.add(String(Number(after.id)));
     for (const node of nodes) {
       if (!topicIdOf(node.id) || nodeIds.has(String(Number(node.id)))
           || String(node.chapterId) !== String(after.id) || String(node.topicId) !== String(detail.topic.id))
-        return '云端保存的站点编号或章节归属不一致';
+        return '云端保存的节点编号或章节归属不一致';
       nodeIds.add(String(Number(node.id)));
     }
     if (Array.isArray(before.blocks)) {
@@ -229,7 +229,7 @@ function savedContentIssue(sent, detail) {
           if (stable(storedBlock(before.blocks[bi], nodes, true, keepKey))
               !== stable(storedBlock(blocks[bi], nodes, false, keepKey))) return '云端保存的章节剧情块或节点引用与本机不一致';
         }
-      } catch (error) { return '云端保存的章节剧情块无法核对'; }
+      } catch (error) { return '云端保存的章节剧情块无法确认'; }
     }
   }
   return '';
@@ -244,16 +244,16 @@ function readbackIssue(sent, detail, expectDraft) {
   const got = detail.chapters;
   if (!Array.isArray(sentChapters) || !Array.isArray(got)
       || got.some(chapter => !chapter || !Array.isArray(chapter.cmsTopicNodeList)))
-    return '云端保存的章节或站点列表不完整';
+    return '云端保存的章节或节点列表不完整';
   if (sentChapters.length !== got.length) return '云端保存的章节数与本机不一致';
   for (let ci = 0; ci < got.length; ci++) {
     const a = sentChapters[ci] || {}, b = got[ci] || {};
     if (String(a.name || '') !== String(b.name || '')) return '第' + (ci + 1) + '章名称或顺序与本机不一致';
     const an = a.nodes || [], bn = b.cmsTopicNodeList || [];
-    if (an.length !== bn.length) return '第' + (ci + 1) + '章站点数与本机不一致';
+    if (an.length !== bn.length) return '第' + (ci + 1) + '章节点数与本机不一致';
     for (let ni = 0; ni < bn.length; ni++) {
-      if (!(Number(bn[ni] && bn[ni].id) > 0)) return '云端保存的站点缺少编号';
-      if (String(an[ni].name || '').trim() !== String(bn[ni].name || '').trim()) return '第' + (ci + 1) + '章站点顺序或名称与本机不一致';
+      if (!(Number(bn[ni] && bn[ni].id) > 0)) return '云端保存的节点缺少编号';
+      if (String(an[ni].name || '').trim() !== String(bn[ni].name || '').trim()) return '第' + (ci + 1) + '章节点顺序或名称与本机不一致';
       if ((Number(an[ni].templateId) || 0) !== (Number(bn[ni].templateId) || 0)) return '第' + (ci + 1) + '章「' + (bn[ni].name || '') + '」的玩法与本机不一致';
     }
   }

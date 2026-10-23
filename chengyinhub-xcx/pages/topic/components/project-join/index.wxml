@@ -79,9 +79,9 @@
   <!-- 已承接的章节走导览管理，不渲染招募报名页或伪造旧报名数据。 -->
   <block wx:if="{{ chapterProject }}">
     <view class="sec">
-      <view class="sec-head"><text class="sec-title">我的点位</text></view>
+      <view class="sec-head"><text class="sec-title">我的节点</text></view>
       <cy-skeleton wx:if="{{!myChapterNodesLoaded && !myChapterNodesError}}" type="card" />
-      <cy-error load-failure wx:if="{{myChapterNodesError}}" title="我的点位没能加载出来" sub="{{myChapterNodesError}}"
+      <cy-error load-failure wx:if="{{myChapterNodesError}}" title="我的节点加载失败" sub="{{myChapterNodesError}}"
                 retry="重试" data-act="retryMyChapterNodes" bind:retry="emit" />
       <view class="card chapter-project-item" wx:for="{{myChapterNodes}}" wx:key="id" wx:for-item="chapterNode">
         <text class="fact-main">{{chapterNode.name}}</text>
@@ -94,7 +94,7 @@
           <text wx:else class="chapter-project-meta">审核通过后可配置节点内容</text>
         </view>
       </view>
-      <cy-empty wx:if="{{myChapterNodesLoaded && !myChapterNodes.length && !myChapterNodesError}}" title="还没有自己的点位" sub="已通过的章节可在下面填写实际供给。" />
+      <cy-empty wx:if="{{myChapterNodesLoaded && !myChapterNodes.length && !myChapterNodesError}}" title="还没有自己的节点" />
     </view>
     <view class="sec">
       <view class="sec-head"><text class="sec-title">我的章节供给</text></view>
@@ -103,7 +103,7 @@
         <view class="chapter-project-meta" wx:if="{{application.termsLabel}}">{{application.termsLabel}}</view>
         <view class="chapter-project-actions" wx:if="{{application.canSubmitOffer || application.canWithdraw || application.canConfigureNode}}">
           <cy-btn wx:if="{{application.canConfigureNode}}" variant="ghost" size="sm"
-                  data-act="openChapterNodeForm" data-chapter-id="{{application.chapterId}}" bindtap="emit">配置点位</cy-btn>
+                  data-act="openChapterNodeForm" data-chapter-id="{{application.chapterId}}" bindtap="emit">配置节点</cy-btn>
           <cy-btn wx:if="{{application.canSubmitOffer}}" variant="ghost" size="sm"
                   data-act="openChapterOfferForm" data-chapter-id="{{application.chapterId}}" bindtap="emit">填写实际供给</cy-btn>
           <cy-btn wx:if="{{application.canWithdraw}}" variant="ghost" size="sm"
@@ -133,7 +133,7 @@
     <view class="sec-head">
       <text class="sec-title">核销</text>
       <view class="sec-action" bindtap="emit" data-act="goLedger" hover-class="cy-pressed" hover-stay-time="80">
-        <text>台账</text>
+        <text>记录</text>
         <cy-icon name="arrow-right" size="{{ 24 }}" />
       </view>
     </view>
@@ -154,7 +154,7 @@
     <!-- CU-C-123 同源:这一格与 project-host 的「已售份数」是同一张指标卡的两副面孔,
          零单时同样不解释显而易见的 0。 -->
     <view class="checkin-actions" wx:if="{{ showCheckinQr }}">
-      <text class="checkin-hint">请让玩家扫这一张。可下载到相册，贴在店里长期使用。</text>
+      <text class="checkin-hint">长期有效，可保存后张贴</text>
       <view class="checkin-btns">
         <cy-btn class="checkin-btn" variant="secondary" bindtap="emit" data-act="downloadCheckinQr">下载到本地</cy-btn>
         <cy-btn class="checkin-btn" variant="primary" bindtap="emit" data-act="showLiveCheckin">出示二维码</cy-btn>
@@ -334,7 +334,7 @@
           <text class="prep-label">达成时间</text>
           <text class="prep-text">{{ coopPartner.acceptedText }}</text>
         </view>
-        <view class="sec-empty">{{ coopPartner.note || '这一屏没有点位可列:你接的是整条路线的合作（到店核销与分成）,不针对某一站。' }}</view>
+        <view class="sec-empty">{{ coopPartner.note || '这一屏没有节点可列:你接的是整条路线的合作（到店核销与分成）,不针对某一站。' }}</view>
       </view>
     </view>
   </view>
@@ -394,10 +394,10 @@
   <project-drawer show="{{ chapterSheet.show }}" title="{{ info.topicName || '本章' }}"
                   bind:close="emitCloseChapter">
     <cy-skeleton wx:if="{{ chapterSheet.state === 'loading' }}" type="card" count="{{ 2 }}" />
-    <cy-error load-failure wx:elif="{{ chapterSheet.state === 'error' }}" title="本章内容没加载出来"
+    <cy-error load-failure wx:elif="{{ chapterSheet.state === 'error' }}" title="本章内容加载失败"
               sub="{{ chapterSheet.error }}" bind:retry="emitOpenChapter" />
     <cy-empty wx:elif="{{ chapterSheet.state === 'empty' }}" kind="empty" size="lg"
-              title="这条路线还没有章节" sub="主办方配好章节后,这里会显示本章剧情与各站玩法" />
+              title="这条路线还没有章节" />
     <block wx:else>
       <view class="dgroup-head-row" wx:if="{{ chapterSheet.story }}">
         <text class="dgroup-head">本章剧情</text>
@@ -492,7 +492,7 @@
       </view>
     </view>
     <cy-empty wx:else kind="empty" size="lg" title="这一站还没配玩法"
-              sub="主办方配好玩法模板后,这里会显示玩家要做什么" />
+              />
 
     <!-- 复用的 .reward 结构自带「玩家可获得」标题(承接页那块也是它),外面不再套一个同名分组头 -->
     <block wx:if="{{ nodeSheet.reward }}">
@@ -540,7 +540,7 @@
       </view>
       </view>
     </block>
-    <cy-empty wx:else title="这条路线还没有俱乐部带团" sub="俱乐部能一次带来成批玩家，比散客稳定。" />
+    <cy-empty wx:else title="这条路线还没有俱乐部带团" />
   </project-drawer>
 
   <!-- ===== 本主题客户抽屉 ===== -->

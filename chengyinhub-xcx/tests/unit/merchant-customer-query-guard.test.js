@@ -229,7 +229,7 @@ test('客户 access/me 业务失败或非法角色即使夹带权限数据也必
     page.onLoad()
     requests[0].success({ code: data.roleCode === 'UNKNOWN_ROLE' ? 200 : 500, data })
     assert.equal(page.data.noPermission, false, '非法回包只能表示读取失败，不是假权限事实')
-    assert.equal(page.data.error, '经营身份加载失败，请稍后重试')
+    assert.equal(page.data.error, '经营身份加载失败，请重试')
     assert.equal(page.data.canSegment, false)
     assert.equal(requests.length, 1, '非法身份不得继续请求客户数据')
   }
@@ -292,12 +292,12 @@ test('经营身份异常不能显示岗位权限拒绝，也不读CRM名单', ()
   for (const response of [{code:500,msg:'暂不可用'}, {code:200,data:null}, {code:200,data:{active:true}}, {code:200,data:[]}]) {
     const page=loadPage();page.loadAccess();requests[0].success(response);
     assert.equal(page.data.noPermission,false);assert.equal(page.data.loading,false);
-    assert.equal(page.data.error,'经营身份加载失败，请稍后重试');assert.equal(requests.length,1);
+    assert.equal(page.data.error,'经营身份加载失败，请重试');assert.equal(requests.length,1);
   }
 });
 test('经营身份真实active=false才显示岗位权限拒绝，网络失败保持读失败', () => {
   const denied=loadPage();denied.loadAccess();requests[0].success({code:200,data:{active:false,applicationState:'NONE'}});
   assert.equal(denied.data.noPermission,true);assert.equal(denied.data.error,'');assert.equal(requests.length,1);
   const failed=loadPage();failed.loadAccess();requests[0].fail({errMsg:'offline'});
-  assert.equal(failed.data.noPermission,false);assert.equal(failed.data.error,'经营身份加载失败，请稍后重试');assert.equal(requests.length,1);
+  assert.equal(failed.data.noPermission,false);assert.equal(failed.data.error,'经营身份加载失败，请重试');assert.equal(requests.length,1);
 });

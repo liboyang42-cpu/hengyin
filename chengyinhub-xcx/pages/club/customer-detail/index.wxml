@@ -10,7 +10,7 @@
   <cy-skeleton wx:if="{{state === 'loading'}}" type="card" count="4" loading-label="正在加载客户详情" />
   <!-- K2-D 无客户权限 -->
   <cy-error wx:elif="{{state === 'no-permission'}}" fill size="lg"
-            title="当前岗位没有客户查看权限" sub="{{errorText || '当前账号没有查看权限'}}"
+            title="当前岗位没有客户查看权限" sub="{{errorText}}"
             retry="" bind:back="goBack" auto-back custom-back />
   <!-- K2-E 加载失败 -->
   <cy-error load-failure wx:elif="{{state === 'network-error'}}" fill size="lg" title="客户详情加载失败"
@@ -71,7 +71,7 @@
       </view>
     </view>
     <!-- K2-C 暂无记录 -->
-    <cy-empty wx:else class="cd-record-empty" title="暂无参与记录" sub="该客户还没有报名或核销过" />
+    <cy-empty wx:else class="cd-record-empty" title="暂无参与记录" />
 
     <!-- K2-F:编辑态就地替换「标签与备注」这一段,不另开弹层 -->
     <view class="cd-section-row">

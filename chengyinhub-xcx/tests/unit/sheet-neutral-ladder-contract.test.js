@@ -43,7 +43,7 @@ const bgKeys = (body) => [...new Set(
 /** 弹层域必须覆盖玩家档 page{} 里的每一个中性面档 */
 function findLadderGaps(baseBody, scopes) {
   const base = bgKeys(baseBody)
-  assert.ok(base.length >= 5, `玩家档 page{} 只解析出 ${base.length} 个中性面档,解析器失效?`)
+  assert.ok(base.length >= 5, `玩家档 page{} 只解析出 ${base.length} 个中性面档，解析器失效?`)
   const gaps = []
   for (const [what, body] of scopes) {
     const have = new Set(bgKeys(body))
@@ -81,7 +81,7 @@ test('弹层重算旧底色与禁用按钮别名，不继承异色宿主的已�
 test('① 两个弹层域都覆盖到中性阶末端,不留穿透缺口', () => {
   const gaps = findLadderGaps(ruleBody(read('style/tokens.wxss'), '\npage {'), scopes())
   assert.deepEqual(gaps, [],
-    '这些档会穿透到宿主页,而字已被弹层强制成本域色 —— 挂在异色宿主上就是白字压白底:\n' + gaps.join('\n'))
+    '这些档会穿透到宿主页，而字已被弹层强制成本域色 —— 挂在异色宿主上就是白字压白底:\n' + gaps.join('\n'))
 })
 
 test('② 弹层内的 raised/interactive 走自己的 comp 出口,不直接引用全局暗端值', () => {
@@ -133,5 +133,5 @@ test('负控:bg-glass 由 --cy-sheet-bg 承担,不该被误判成缺口', () => 
   const base = decl([...ladder, 'glass'])
   const scope = [['x', decl(ladder)]]   // 覆盖了除 glass 外的全部
   assert.deepEqual(findLadderGaps(base, scope), [],
-    'bg-glass 是显式豁免项,报它就是误伤')
+    'bg-glass 是显式豁免项，报它就是误伤')
 })

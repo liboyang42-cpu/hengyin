@@ -51,11 +51,11 @@ test('BL-215 申诉成功 + 回读失败 → appealable 置 false,关闭后回�
     assert.equal(h.vm.data.report.appealable, true)
     submit(h.vm)
     assert.equal(h.vm.data.sheet, 'ok')
-    assert.equal(h.vm.data.report.appealable, false, '已受理,回读前不得再可申诉')
+    assert.equal(h.vm.data.report.appealable, false, '已受理，刷新前不得再可申诉')
     const reads = () => h.requests.filter((r) => r.url === '/api/community-trust/reports/7').length
     const before = reads()
     h.vm.closeSheet()
     assert.equal(h.vm.data.sheet, '')
-    assert.equal(reads(), before + 1, '成功后关闭也回读一次')
+    assert.equal(reads(), before + 1, '成功后关闭也刷新一次')
   } finally { h.restore() }
 })

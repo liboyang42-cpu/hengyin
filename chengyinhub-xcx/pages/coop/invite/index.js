@@ -11,7 +11,7 @@ const subscribe = require('../../../utils/subscribe.js');
 const merchantTheme = require('../../../utils/merchant-theme.js');
 const { isRecordList } = require('../../../utils/response-shape.js');
 const { toTimestamp, chinaParts } = require('../../../utils/datetime.js');
-const RECRUIT_CLOSED_TEXT = '主题不在招商期,暂不能发起邀约';
+const RECRUIT_CLOSED_TEXT = '主题不在招商期，暂不能发起邀约';
 
 // 主题日期的短标签:后端下发不带时区的中国时间串,统一锚上海日历再取月日。
 function topicDateText(raw) {
@@ -78,7 +78,7 @@ function failureKind(value) {
 }
 
 function failureText(value, fallback) {
-  if (failureKind(value) === 'network') return '网络不稳定，请检查连接后重试';
+  if (failureKind(value) === 'network') return '网络异常，请检查连接后重试';
   return String(value && (value.msg || value.message) || fallback);
 }
 
@@ -323,7 +323,7 @@ Page({
       if (that._recoverReadSession(value, epoch, 'topics')) return;
       if (!settle()) return;
       const kind = failureKind(value);
-      const text = failureText(value, '主题没加载出来');
+      const text = failureText(value, '主题加载失败');
       if (kind === 'permission' || kind === 'login') {
         that._topicsLoadedScope = '';
         that.setData({ myTopics: [], topicsState: kind, topicsRefreshing: false, topicsErrorKind: kind, topicsErrorText: text });
@@ -395,7 +395,7 @@ Page({
       if (that._recoverReadSession(value, epoch, 'targets')) return;
       if (!settle()) return;
       const kind = failureKind(value);
-      const text = failureText(value, '合作对象没加载出来');
+      const text = failureText(value, '合作对象加载失败');
       if (kind === 'permission' || kind === 'login') {
         that._targetsLoadedScope = '';
         that.setData({ clubs: [], merchants: [], targetsState: kind, targetsRefreshing: false, targetsErrorKind: kind, targetsErrorText: text });
@@ -570,7 +570,7 @@ Page({
       that._submitting = false;
       that.setData({ submitting: false });
       if (!failed.length) {
-        const receipt = '已发起 ' + okNames.length + ' 条,等待对方确认';
+        const receipt = '已发起 ' + okNames.length + ' 条，等待对方确认';
         const one = okNames.length === 1 ? okNames[0] : (okNames.length + ' 个对象');
         const toClub = that.data.activeType === 1;
         // 结果面板取代原来的 toast + 800ms 硬等:跳转改挂在面板收掉之后,
@@ -580,7 +580,7 @@ Page({
           sendReceipt: receipt,
           resultSheet: {
             show: true, kind: 'success', title: '协作邀请已发送',
-            sub: '已发给「' + one + '」,对方接受后即可' + (toClub ? '带团' : '承接站点') + '。',
+            sub: '已发给「' + one + '」,对方接受后即可' + (toClub ? '带团' : '承接') + '。',
             meta: that.data.topicName ? ('关联主题 · ' + that.data.topicName) : '',
             pill: '等待对方确认', why: '', primaryText: '', secondaryText: '', duration: RESULT_SHEET_MS,
           },
@@ -594,9 +594,9 @@ Page({
       that.setData({
         resultSheet: {
           show: true, kind: 'fail', title: '邀请没发出去',
-          sub: recruitClosed ? '这个主题现在不在招商期,重试也发不出去;换一个招商中的主题再发。' : '协作邀请未能送达,可以直接重试。',
+          sub: recruitClosed ? '这个主题现在不在招商期，重试也发不出去；换一个招商中的主题再发。' : '协作邀请未能送达，可以直接重试。',
           meta: that.data.topicName ? ('关联主题 · ' + that.data.topicName) : '',
-          pill: '', why: failed[0] || '服务暂时不可用,请稍后重试。',
+          pill: '', why: failed[0] || '服务暂不可用，请稍后重试',
           primaryText: '', secondaryText: '', duration: RESULT_SHEET_MS,
         },
       });
@@ -604,7 +604,7 @@ Page({
         'inviteModal.targetText': failedTargets.length === 1 ? failedTargets[0].name : ('待重试 ' + failedTargets.length + ' 个对象'),
         'inviteModal.targetLogo': failedTargets[0] && failedTargets[0].logo || '',
         'inviteModal.targetMeta': failedTargets[0] && failedTargets[0].meta || (that.data.activeType === 1 ? '俱乐部合作对象' : '商家合作对象'),
-        sendResult: (okNames.length ? '已发起 ' + okNames.length + ' 条;' : '') + '失败:' + failed.join('、'),
+        sendResult: (okNames.length ? '已发起 ' + okNames.length + ' 条；' : '') + '失败：' + failed.join('、'),
         sendRecruitClosed: recruitClosed,
       });
     }

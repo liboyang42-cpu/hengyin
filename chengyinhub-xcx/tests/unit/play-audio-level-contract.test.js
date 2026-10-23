@@ -28,7 +28,7 @@ test('peakOf:取峰值不取均值,负样本按绝对值算', () => {
   assert.equal(level.peakOf(pcm([100, -16384, 200])), 0.5,
     '一声咳嗽(半量程)不能被周围的小样本摊平');
   assert.equal(level.peakOf(pcm([0, 0, 0])), 0);
-  assert.equal(level.peakOf(null), 0, '拿不到数据给 0,不猜');
+  assert.equal(level.peakOf(null), 0, '拿不到数据给 0，不猜');
   assert.equal(level.peakOf(new ArrayBuffer(0)), 0);
 });
 
@@ -42,8 +42,8 @@ test('baseline:80 分位而不是最大值;空样本给保守低值 0.06', () =>
 
 test('thresholds:黄线 = 底噪+0.06 夹在 [0.12, 0.5];红线 = 黄线+0.09 封顶 0.72', () => {
   assert.deepEqual(level.thresholds(0.2), { mid: 0.26, hot: 0.35 });
-  assert.deepEqual(level.thresholds(0), { mid: 0.12, hot: 0.21 }, '极静场所也有下限线,不然呼吸都算出声');
-  assert.deepEqual(level.thresholds(0.9), { mid: 0.5, hot: 0.59 }, '极吵场所线封顶,不然永远「过不了」');
+  assert.deepEqual(level.thresholds(0), { mid: 0.12, hot: 0.21 }, '极静场所也有下限线，不然呼吸都算出声');
+  assert.deepEqual(level.thresholds(0.9), { mid: 0.5, hot: 0.59 }, '极吵场所线封顶，不然永远「过不了」');
 });
 
 test('bandOf:边界值本身不算过线(> 才是),hot 优先于 mid', () => {

@@ -12,7 +12,7 @@
             retry="重新加载" bind:retry="retry" auto-back />
   <cy-error wx:elif="{{pageState === 'no-permission'}}" fill size="lg"
             title="当前岗位没有核销记录查看权限"
-            sub="请联系店主调整经营团队权限"
+            sub="请联系店主开通"
             retry="" bind:back="onNavBack" auto-back custom-back />
 
   <view wx:elif="{{pageState === 'empty'}}" class="vrl-shell">

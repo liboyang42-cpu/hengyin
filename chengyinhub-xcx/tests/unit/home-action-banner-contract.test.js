@@ -248,8 +248,8 @@ test('三段本地 GIF 均为多帧、内容不同且总量保持在主包预算
   const ASSET_CEILING = 492680
   assert.ok(assetBytes <= ASSET_CEILING,
     `主包资源 ${assetBytes} 字节 > 棘轮 ${ASSET_CEILING}。`
-    + '图片/音频**不会**被微信压缩,是最贵的那部分 —— '
-    + '先考虑放服务端静态目录或挪进分包,不要直接调大这个数。')
+    + '图片/音频**不会**被微信压缩，是最贵的那部分 —— '
+    + '先考虑放服务端静态目录或挪进分包，不要直接调大这个数。')
 
   /* 总量这一条改成**量压缩后**(2026-09-02)。
    *
@@ -288,12 +288,12 @@ test('三段本地 GIF 均为多帧、内容不同且总量保持在主包预算
   assert.ok(deflatedBytes < MAIN_PACKAGE_COMPRESSED_CEILING,
     `主包压缩后 ${(deflatedBytes / 1048576).toFixed(2)}MB 超过棘轮 `
     + `${(MAIN_PACKAGE_COMPRESSED_CEILING / 1048576).toFixed(2)}MB。`
-    + '⚠️ 本条只是增长哨兵;微信卡的是 source size,真限只有 cli upload 能回答。'
-    + '先瘦身,或把它挪进分包。')
+    + '⚠️ 本条只是增长哨兵；微信卡的是 source size,真限只有 cli upload 能回答。'
+    + '先瘦身，或把它挪进分包。')
 
   // 粗底线:压缩比再差也不该到 4 倍。这条不是发布闸,是「上面那个 deflate 估算本身失灵」的哨兵。
   assert.ok(mainPackageBytes < 8 * 1024 * 1024,
-    `主包未压缩 ${(mainPackageBytes / 1048576).toFixed(2)}MB 已经离谱,先查是不是有大文件误入主包`)
+    `主包未压缩 ${(mainPackageBytes / 1048576).toFixed(2)}MB 已经离谱，先查是不是有大文件误入主包`)
 
   const posterDigests = [
     'images/home-banner-club.jpg',

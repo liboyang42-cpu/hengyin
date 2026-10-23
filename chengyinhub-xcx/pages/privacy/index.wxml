@@ -12,7 +12,7 @@
     <block wx:else>
       <view class="privacy-link" bindtap="openPrivacyContract" aria-role="button" aria-label="查看用户隐私保护指引" hover-class="cy-pressed" hover-stay-time="80">查看《隐私保护指引》</view>
     </block>
-    <cy-inline-error class="privacy-error" wx:if="{{submitError}}" kind="network" title="{{submitError}}" sub="你的选择还没有被记录，页面内容不会丢失。" action="重试" bind:action="retrySubmit" />
+    <cy-inline-error class="privacy-error" wx:if="{{submitError}}" kind="network" title="{{submitError}}" sub="保存失败，请重试" action="重试" bind:action="retrySubmit" />
     <block wx:if="{{pendingAuthorization}}">
       <!-- ⚠️ 微信强制:同意必须是原生 <button open-type="agreePrivacyAuthorization">,不能收编 cy-btn
            (developers.weixin.qq.com/miniprogram/dev/framework/user-privacy/PrivacyAuthorize.html) -->

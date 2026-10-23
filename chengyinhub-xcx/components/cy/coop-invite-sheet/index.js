@@ -50,9 +50,9 @@ Component({
             this._page = page;
             this._hasMore = page * 20 < Number(res.data.total || 0);
             this.setData({ topics: this.data.topics.concat(added), loading: false });
-          } else this.setData({ loading: false, error: (res && res.msg) || '主题没加载出来，请重试' });
+          } else this.setData({ loading: false, error: (res && res.msg) || '主题加载失败，请重试' });
         },
-        fail: () => { if (this.current(epoch)) this.setData({ loading: false, error: '主题没加载出来，请重试' }); },
+        fail: () => { if (this.current(epoch)) this.setData({ loading: false, error: '主题加载失败，请重试' }); },
       });
     },
     moreTopics() { if (this._hasMore) this.loadTopics(); },
@@ -78,9 +78,9 @@ Component({
             const fixed = this.data.chapterId && chapters.find(c => String(c.id) === String(this.data.chapterId));
             this.setData({ chapters, chaptersLoading: false, selectedChapterId: fixed ? fixed.id : null,
               error: this.data.chapterId && !fixed ? '当前章节不可用，请返回导览台刷新' : '' });
-          } else this.setData({ chaptersLoading: false, error: (res && res.msg) || '章节没加载出来，请重试' });
+          } else this.setData({ chaptersLoading: false, error: (res && res.msg) || '章节加载失败，请重试' });
         },
-        fail: () => { if (current()) this.setData({ chaptersLoading: false, error: '章节没加载出来，请重试' }); },
+        fail: () => { if (current()) this.setData({ chaptersLoading: false, error: '章节加载失败，请重试' }); },
       });
     },
     pickChapter(e) {

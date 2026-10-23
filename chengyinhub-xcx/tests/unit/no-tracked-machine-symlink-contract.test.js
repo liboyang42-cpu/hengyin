@@ -38,7 +38,7 @@ test('没有任何 tracked symlink 指向绝对路径', () => {
   assert.deepEqual(
     offenders,
     [],
-    `symlink 指向机器绝对路径,换台机器 checkout 就是死链:\n${offenders.join('\n')}`,
+    `symlink 指向机器绝对路径，换台机器 checkout 就是死链:\n${offenders.join('\n')}`,
   )
 })
 
@@ -51,7 +51,7 @@ test('没有任何 tracked 路径叫 node_modules', () => {
 
 test('negative control:判定逻辑读得到 git 索引', () => {
   const all = git('ls-files', '-s').split('\n').filter(Boolean)
-  assert.ok(all.length > 500, `git ls-files 只返回 ${all.length} 行,索引没读到,上面两条会恒绿`)
+  assert.ok(all.length > 500, `git ls-files 只返回 ${all.length} 行，索引没读到，上面两条会恒绿`)
   // 构造一条该被抓的记录,确认过滤逻辑真的会命中
   const fake = [{ file: 'x/node_modules', target: '/Users/someone/x' }].filter(e => e.target.startsWith('/'))
   assert.equal(fake.length, 1, '绝对路径判定失效')

@@ -22,7 +22,7 @@ const PLAY_RECEIPT_STATES = Object.freeze({
   // ⚠️ 文案里绝不能出现「成功」「失败」「已记录」——结果就是不知道。
   unknown: Object.freeze({
     key: 'unknown', label: '结果待确认 · 请勿重复提交',
-    readerLabel: '结果待确认。系统正在核对，请勿重复提交。',
+    readerLabel: '结果待确认。系统正在确认，请勿重复提交。',
     holdsLock: true, canRetry: false,
   }),
   failed: Object.freeze({
@@ -111,8 +111,8 @@ const PLAY_MAP_STATES = Object.freeze({
   offline: Object.freeze({
     key: 'offline',
     mapLabel: '离线',
-    cardLabel: '据点未更新',
-    readerLabel: '离线，据点或网络未更新，本地进度已保留',
+    cardLabel: '节点未更新',
+    readerLabel: '离线，节点或网络未更新，本地进度已保留',
     markerKey: '',
   }),
   'checkin-failed': Object.freeze({
@@ -182,11 +182,11 @@ function buildRoamGoal(input) {
     return {
       stateKey: 'checkin-failed',
       icon: 'warning',
-      text: retryable ? '打卡没记上 · 点击重试' : '打卡结果待核对 · 暂勿重复提交',
+      text: retryable ? '打卡没记上 · 点击重试' : '打卡结果待确认 · 暂勿重复提交',
       act: retryable ? 'retry-checkin' : '',
       readerLabel: retryable
         ? '打卡失败。本次打卡没有被记录，点击重试。'
-        : '打卡结果待核对。系统正在确认，请暂时不要重复提交。',
+        : '打卡结果待确认。系统正在确认，请暂时请勿重复提交。',
     }
   }
   if (data.visitActive) {
@@ -213,18 +213,18 @@ function buildRoamGoal(input) {
     return {
       stateKey: 'offline',
       icon: 'warning',
-      text: '据点未更新 · 本地足迹已保留 · 点击重试',
+      text: '节点未更新 · 本地足迹已保留 · 点击重试',
       act: 'retry-poi',
-      readerLabel: '离线。据点或网络未更新，本地足迹已保留，点击重试。',
+      readerLabel: '离线。节点或网络未更新，本地足迹已保留，点击重试。',
     }
   }
   if (data.nearbyCount > 0) {
     return {
       stateKey: 'actionable',
       icon: 'poi-shop',
-      text: '附近有 ' + data.nearbyCount + ' 个据点 · 去看看',
+      text: '附近有 ' + data.nearbyCount + ' 个节点 · 去看看',
       act: 'nearby',
-      readerLabel: '可行动。附近有 ' + data.nearbyCount + ' 个据点，可直接查看。',
+      readerLabel: '可行动。附近有 ' + data.nearbyCount + ' 个节点，可直接查看。',
     }
   }
   if (data.poiEmpty) {
@@ -233,7 +233,7 @@ function buildRoamGoal(input) {
       icon: 'discover-shop',
       text: '该区域暂未开放 · 发现附近真实店',
       act: 'discover',
-      readerLabel: '当前区域暂未开放漫游据点。可发现附近真实店铺。',
+      readerLabel: '当前区域暂未开放漫游节点。可发现附近真实店铺。',
     }
   }
   return {

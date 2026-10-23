@@ -67,19 +67,19 @@ const ROOT_TOOL_SECTIONS = ['backgroundMusic']
 
 test('★后端 Validator 的段名单与本地 SECTIONS 一一对上 —— 少一段,那玩法在本页读不出来也存不回去,而且不报错', () => {
   const server = serverSections()
-  assert.ok(server.size > 20, '后端一个段都没认出来,这条断言就是恒真的')
+  assert.ok(server.size > 20, '后端一个段都没认出来，这条断言就是恒真的')
   assert.deepEqual([...server].filter(k => cfg.SECTIONS.indexOf(k) < 0 && !NOT_YET_WIRED_SERVER_SECTIONS.includes(k) && !ROOT_TOOL_SECTIONS.includes(k)), [],
-    '服务端有、本地名单没有,且不在「未接线名册」里:这一段商家配不了也存不了')
+    '服务端有、本地名单没有，且不在「未接线名册」里:这一段商家配不了也存不了')
   assert.deepEqual(cfg.SECTIONS.filter(k => !server.has(k)), [],
     '本地名单有、服务端没有:填了会被服务端整段忽略')
   assert.ok(cfg.KIT_SECTIONS.includes('slowTask'),
-    'slowTask 是叠加型段,应与 timeWindow / dailySign 同组在册')
+    'slowTask 是叠加型段，应与 timeWindow / dailySign 同组在册')
 })
 
 test('slowTask 段在册:默认配置带得出来,默认是关的', () => {
   const seg = cfg.defaultConfig().slowTask
   assert.ok(seg, '没有默认段 —— 输入框没有可绑定的初值')
-  assert.equal(seg.enabled, false, '默认必须关着,不能凭空给每个节点开一个玩法')
+  assert.equal(seg.enabled, false, '默认必须关着，不能凭空给每个节点开一个玩法')
   assert.ok(cfg.SECTIONS.includes('slowTask'))
 })
 
@@ -90,8 +90,8 @@ test('★slowTask 的字段形状与后端 validateSlowTask 一一对上 —— 
 
 test('★商家填进去的内容:存 → 读回 → 再存,一个字不丢', () => {
   const filled = {
-    enabled: true, title: '这家店的三年,分三天读', startLabel: '就这么定了',
-    waitHint: '明天这个时候,这里会多出一点东西。', unlockLabel: '看看留下了什么',
+    enabled: true, title: '这家店的三年，分三天读', startLabel: '就这么定了',
+    waitHint: '明天这个时候，这里会多出一点东西。', unlockLabel: '看看留下了什么',
     unlockText: '第二年:门口那棵树是老板爷爷种的。', waitDays: 3, xp: 20,
   }
   const raw = JSON.stringify({ schemaVersion: 1, slowTask: filled })
@@ -140,7 +140,7 @@ test('存盘前清洗:没填的选填字段删键,数字字段商家删空时不
     unlockText: '明天再看', waitDays: 2, xp: '',
   }
   const out = JSON.parse(cfg.serialize(m)).slowTask
-  assert.ok(!('startLabel' in out), '空的按钮文案必须删键,不能留空串')
+  assert.ok(!('startLabel' in out), '空的按钮文案必须删键，不能留空串')
   assert.ok(!('waitHint' in out), '空的等待提示必须删键')
   assert.ok(!('unlockLabel' in out), '空的解锁文案必须删键')
   assert.equal(out.xp, 0, '奖励分留空就是不加分')
@@ -191,6 +191,6 @@ test('关掉的段不清洗、不校验,下次打开还能看见自己填了一�
 test('★它是叠加段,不进「一个节点只选一个玩法」的目录 —— 进了目录,选中任何主玩法都会顺手把它关掉', () => {
   const catalog = require('../../pages/publish/utils/publish/node-game-catalog.js')
   assert.ok(!catalog.GAME_SECTIONS.includes('slowTask'),
-    'slowTask 被当成单选主玩法:选别的玩法会静默关掉它,而玩家侧它排在 KIT_PRIORITY 的叠加带')
+    'slowTask 被当成单选主玩法:选别的玩法会静默关掉它，而玩家侧它排在 KIT_PRIORITY 的叠加带')
   assert.ok(catalog.GAME_SECTIONS.length > 0)
 })

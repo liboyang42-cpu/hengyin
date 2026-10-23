@@ -35,7 +35,7 @@ test('客户页的四类业务筛选统一放入底部弹窗', () => {
   assert.match(wxml, /class="cu-phone-row" wx:if="\{\{item\.phoneText\}\}"/);
   assert.match(wxml, /catchtap="copyCustomerPhone"[^>]*data-memberid="\{\{item\.memberId\}\}"/);
   assert.match(wxml, /class="cu-copy-img" src="\/pages\/merchant\/images\/icon_copy\.svg"/);
-  // F15:拨打/复制前先向服务端换取明文,拿到的号才用;列表里的脱敏号不得直接拨/复制。
+  // F15:拨打/复制前先向服务端换取明文，拿到的号才用；列表里的脱敏号不得直接拨/复制。
   assert.match(js, /copyCustomerPhone\(e\)\s*\{\s*this\._revealCustomerContact\(e, 'copy'\);\s*\}/);
   assert.match(js, /callCustomer\(e\)\s*\{\s*this\._revealCustomerContact\(e, 'call'\);\s*\}/);
   assert.match(js, /url: `\/api\/merchant\/crm\/customers\/\$\{memberId\}\/contact`/);
@@ -91,14 +91,14 @@ test('主办与承接两套主题名单都使用客户和核销口径', () => {
   assert.match(hostJs, /playerActions:\s*\{ type: Array, value: \[\] \}/,
     '主办组件必须接收客户抽屉动作');
   assert.match(hostWxml, /<project-drawer[^>]*actions="\{\{ playerActions \}\}"[^>]*bind:action="emitDrawerAction"/s,
-    '主办客户抽屉必须保留唯一的查看台账入口');
+    '主办客户抽屉必须保留唯一的查看记录入口');
   assert.doesNotMatch(joinWxml, /actions="\{\{ playerActions \}\}"/,
     '承接方已有页面内真实入口，客户抽屉不重复造入口');
   assert.match(pageJs, /playerActions:\s*\[\]/);
-  assert.match(pageJs, /this\.data\.role === 'host'[\s\S]*key: 'goLedger'[\s\S]*label: '查看全店台账'/,
-    '页面只能为主办方客户抽屉下发查看台账动作，且 CU-M-183 要求写明全店作用域');
+  assert.match(pageJs, /this\.data\.role === 'host'[\s\S]*key: 'goLedger'[\s\S]*label: '查看全店核销记录'/,
+    '页面只能为主办方客户抽屉下发查看记录动作，且 CU-M-183 要求写明全店作用域');
   assert.match(pageWxml, /<project-host[\s\S]*playerActions="\{\{ playerActions \}\}"[\s\S]*bind:act="onJoinAct"/,
-    '主办页必须把查看台账动作传入组件');
+    '主办页必须把查看记录动作传入组件');
 
   const icon = read('pages/topic/images/icon_copy.svg');
   assert.match(icon, /<g id="copy-06">/);

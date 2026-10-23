@@ -67,7 +67,7 @@ for (const [label, file] of entries) {
       const h = mount(file)
       h.request.success({ code: 200, msg: report.msg, data: report })
       assert.deepEqual(h.messages, [report.msg])
-      assert.equal(h.refreshes(), 1, '反馈后仍回读订单状态')
+      assert.equal(h.refreshes(), 1, '反馈后仍刷新订单状态')
     })
   }
   test(`F07 ${label} 旧响应缺少事实时不复述固定到账承诺`, () => {
@@ -78,12 +78,12 @@ for (const [label, file] of entries) {
 }
 
 for (const [label, file] of [...entries.slice(0, 2), ['参与详情', 'subpackageMember/components/scene-member-participation-detail/index.js']]) {
-  for (const status of [undefined, 408, 502]) test(label + '取消回执未知 ' + status + ' 自动回读，不重复提交', () => {
+  for (const status of [undefined, 408, 502]) test(label + '取消回执未知 ' + status + ' 自动刷新，不重复提交', () => {
     const h = mount(file); h.request.fail({ errMsg: 'request:fail timeout' }, status);
     assert.equal(h.refreshes(), 1);
     assert.match(h.messages.at(-1), /结果暂未确认/);
   })
-  test(label + '取消 HTTP403 明确拒绝不回读或报成功', () => {
+  test(label + '取消 HTTP403 明确拒绝不刷新或报成功', () => {
     const h = mount(file); h.request.fail({ msg: '没有权限' }, 403);
     assert.equal(h.refreshes(), 0);
     assert.equal(h.messages.some(text => /结果暂未确认|已取消|成功/.test(text)), false);

@@ -51,7 +51,7 @@ function submittedBlock(src) {
 const VOICE = /modal\.show\s*\(|\btoast\s*\(|_finishAction\s*\(\s*[^)]*,\s*[^)]+,\s*['"`]/
 
 test('每个 checkout workflow 宿主都得给 unknown 一个说法(闸不能是哑巴)', () => {
-  assert.ok(HOSTS.length >= 5, '宿主清单缩水了,这条尺子就没用了:只找到 ' + HOSTS.length + ' 个')
+  assert.ok(HOSTS.length >= 5, '宿主清单缩水了，这条尺子就没用了:只找到 ' + HOSTS.length + ' 个')
   const silent = HOSTS.filter((rel) => {
     const src = fs.readFileSync(path.join(ROOT, rel), 'utf8')
     const block = submittedBlock(src)

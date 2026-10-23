@@ -58,7 +58,7 @@ function themeBlocks(relPath) {
 const ALL = [...themeBlocks('style/tokens.wxss'), ...themeBlocks('style/merchant-light.wxss')]
 
 test('扫描口径没坏:至少找到 3 个定义了 bg-page 的主题块', () => {
-  assert.ok(ALL.length >= 3, `只找到 ${ALL.length} 个主题块 —— 正则或文件结构变了,本门禁形同虚设`)
+  assert.ok(ALL.length >= 3, `只找到 ${ALL.length} 个主题块 —— 正则或文件结构变了，本门禁形同虚设`)
 })
 
 test('每个主题里,白卡与凹槽都必须能从页底上分辨出来', () => {
@@ -76,5 +76,5 @@ test('每个主题里,白卡与凹槽都必须能从页底上分辨出来', () =
       )
     }
   }
-  assert.ok(checked >= 4, `只实际比对了 ${checked} 对,太少,门禁可能在空跑`)
+  assert.ok(checked >= 4, `只实际比对了 ${checked} 对，太少，门禁可能在空跑`)
 })

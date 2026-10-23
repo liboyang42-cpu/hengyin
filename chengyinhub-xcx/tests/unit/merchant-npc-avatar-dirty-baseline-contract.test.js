@@ -67,14 +67,14 @@ function emptyAvatarView() {
 test('空资料进入形象视图:没编辑不算脏(走查的最小复现)', () => {
   const page = emptyAvatarView();
   page.updateDirty();
-  assert.equal(page.data.dirty, false, '刚刚打开、什么都没改,不得报「还没有保存」');
+  assert.equal(page.data.dirty, false, '刚刚打开、什么都没改，不得报「还没有保存」');
 });
 
 test('空资料下真换了预设仍要判脏(不许用 savedAvatar 短路糊过去)', () => {
   const page = emptyAvatarView();
   page.data.presetId = OTHER;
   page.updateDirty();
-  assert.equal(page.data.dirty, true, '空资料里换了预设也是真修改,离场必须弹确认');
+  assert.equal(page.data.dirty, true, '空资料里换了预设也是真修改，离场必须弹确认');
 });
 
 test('照片处理出成品判脏', () => {
@@ -112,7 +112,7 @@ test('负控:updateDirty 改回比 savedAvatar 时,空资料首进那条必须�
     "dirty: !!this._portrait || (!!code && code !== baseline)",
     'dirty: !!this._portrait || code !== baseline'
   );
-  assert.notEqual(regressed, PAGE_JS, '负控锚点失效:updateDirty 已改名,扫描口径需同步');
+  assert.notEqual(regressed, PAGE_JS, '负控锚点失效:updateDirty 已改名，扫描口径需同步');
   const page = loadPage(regressed);
   page._saved = { avatar: '', name: '', greeting: '', persona: '', knowledge: '' };
   page.data.savedAvatar = '';

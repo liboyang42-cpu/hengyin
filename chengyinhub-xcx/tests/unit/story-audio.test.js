@@ -35,7 +35,7 @@ test('环境音按氛围选;同一个不重起;换一个旧的淡出停掉', () 
   a.bed('afternoon')
   assert.equal(ctx.made.filter((n) => n.kind === 'source').length, firstSources.length, '同名不重起')
   a.bed('office')
-  assert.ok(firstSources.every((n) => n.stopped >= 1), '换景后旧的那层要停掉,不叠着响')
+  assert.ok(firstSources.every((n) => n.stopped >= 1), '换景后旧的那层要停掉，不叠着响')
 })
 
 test('关掉声音:环境音停、音效不出;打开后照常', () => {

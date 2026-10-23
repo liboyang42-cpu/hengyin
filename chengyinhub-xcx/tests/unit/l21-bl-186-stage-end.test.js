@@ -59,7 +59,7 @@ test('BL-186 本章完成:按 topicId/activityId/chapterId 静默读 stage-end,�
   assert.equal(request.url, '/api/play/journey/stage-end')
   assert.equal(request.method, 'GET')
   assert.deepEqual(request.data, { topicId: '31', activityId: 5, chapterId: 77 })
-  assert.equal(request.silentError, true, '没配阶段是常态,不能弹「本章节未配置阶段结算」')
+  assert.equal(request.silentError, true, '没配阶段是常态，不能弹「本章节未配置阶段结算」')
   request.success({ code: 200, data: { changed: ['你在巷口留下了名字', '', 3], open: ' 去码头找船夫 ', hp: { value: 3 } } })
   await flush()
   assert.deepEqual(page.data.stageEnd, { changed: ['你在巷口留下了名字'], open: '去码头找船夫' })

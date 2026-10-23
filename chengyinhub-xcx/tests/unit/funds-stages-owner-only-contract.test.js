@@ -51,7 +51,7 @@ test('商家分润页:只有后端判定 isOwner===true 才显示三段,员工/�
 
 test('负控:商家分润页若把 isOwner 恒置 true,员工也会看到本人余额 ⇒ 必须判红', () => {
   const run = loadMerchantProfit((src) => src.replace('isOwner: res.data.isOwner === true,', 'isOwner: true,'))
-  assert.equal(run(false), true, '变异后员工被放行,说明上面的断言确实守着这条')
+  assert.equal(run(false), true, '变异后员工被放行，说明上面的断言确实守着这条')
 })
 
 function loadClubSettlement() {

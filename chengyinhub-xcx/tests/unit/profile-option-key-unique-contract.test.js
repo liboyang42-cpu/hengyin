@@ -120,7 +120,7 @@ test('没配勋章时不发 medalStyle(删掉奖励模块、或奖励模块在�
   page.data.formData.medalName = ''
   page.data.formData.medalImg = ''
   body = page.prepareFormData()
-  assert.equal(body.medalStyle, '', '没有勋章名也没有勋章图,样式就没有意义')
+  assert.equal(body.medalStyle, '', '没有勋章名也没有勋章图，样式就没有意义')
 })
 
 test('配了勋章时样式照常带上(负控:别把真设计勋章的样式也清掉)', () => {
@@ -214,7 +214,7 @@ test('没有分支能力位:分支剧情标成锁住,点「选择」不选中', 
     page.onLoad({ from: 'fabu' })
     assert.ok(page.data.lockedGames && page.data.lockedGames.branch, '分支没有被标成锁住')
     page.pickGame({ currentTarget: { dataset: { key: 'branch' } } })
-    assert.notEqual(page.data.gameKey, 'branch', '没能力位还能选中分支,配完才被服务端拒')
+    assert.notEqual(page.data.gameKey, 'branch', '没能力位还能选中分支，配完才被服务端拒')
   })
 })
 

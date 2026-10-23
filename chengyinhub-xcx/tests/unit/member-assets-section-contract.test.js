@@ -20,11 +20,11 @@ test('我的资产与订单、项目并列成第三段，且整段只在自己�
   assert.ok(order < project && project < asset, '我的资产必须排在订单、项目之后');
 
   const selfBlock = wxml.indexOf("<block wx:if=\"{{isSelf && activeTab === 'projects'}}\">");
-  assert.ok(selfBlock >= 0, 'isSelf + projects 的分支写法变了,本契约需要同步');
+  assert.ok(selfBlock >= 0, 'isSelf + projects 的分支写法变了，本契约需要同步');
   const blockEnd = wxml.indexOf('<!-- ===== TAB · 推文 ===== -->');
   assert.ok(blockEnd > selfBlock, '找不到 projects 分支的结束位置');
   assert.ok(asset > selfBlock && asset < blockEnd,
-    '我的资产必须落在 isSelf 分支内,否则别人主页也会看到余额');
+    '我的资产必须落在 isSelf 分支内，否则别人主页也会看到余额');
 });
 
 // 空值口径不自己另写一套:money.wxs 已经定死「空 → 「—」、0 照常渲」,
@@ -47,7 +47,7 @@ test('余额读现有 userInfo，不新增接口调用', () => {
   assert.match(js, /balanceText:\s*formatBalance\(res\.data\.balance\)/,
     '余额必须从 /api/user/info 的既有响应里取');
   const added = js.match(/url:\s*'\/api\/(withdrawal|member\/balance|user\/balance)[^']*'/g) || [];
-  assert.deepEqual(added, [], `不许为这一段新增资金接口调用,实际新增:${added}`);
+  assert.deepEqual(added, [], `不许为这一段新增资金接口调用，实际新增:${added}`);
 });
 
 // formatBalance 只负责小数位(money.wxs 明确不管各页小数口径),0 必须如实渲成 0.00,
@@ -57,9 +57,9 @@ test('formatBalance 只做小数位:0 照常 0.00，非数字退 null', () => {
   const body = js.match(/function formatBalance\([\s\S]*?\n\}/);
   assert.ok(body, 'formatBalance 不见了');
   assert.match(body[0], /toFixed\(2\)/, '金额必须两位小数');
-  assert.match(body[0], /=== *''/, '空串要当没取到,不能被 Number 静默变成 0');
+  assert.match(body[0], /=== *''/, '空串要当没取到，不能被 Number 静默变成 0');
   assert.match(body[0], /isFinite/, '非数字必须退 null,不能渲成 NaN');
-  assert.doesNotMatch(body[0], /\|\|\s*0\b/, '不许用 || 0 兜底 —— 那会把「没取到」变成「你没有钱」');
+  assert.doesNotMatch(body[0], /\|\|\s*0\b/, '不许用 || 0 保底 —— 那会把「没取到」变成「你没有钱」');
 });
 
 test('资产卡的金额走 --cy-type-data-xl(DS 里金额唯一那档),不按数值凑标题 token', () => {
@@ -73,6 +73,6 @@ test('资产卡的金额走 --cy-type-data-xl(DS 里金额唯一那档),不按�
 // 否则上面那条「走 money.amount」是恒真断言。
 test('负控:余额绕开 money.amount 直接渲原值必须判红', () => {
   const mutated = read(WXML).replace('{{money.amount(balanceText)}}', '{{balanceText}}');
-  assert.doesNotMatch(mutated, /money\.amount\(balanceText\)/, '变异未生效,负控本身是假的');
+  assert.doesNotMatch(mutated, /money\.amount\(balanceText\)/, '变异未生效，负控本身是假的');
   assert.throws(() => assert.match(mutated, /class="pc-asset__value[^>]*>\{\{money\.amount\(balanceText\)\}\}</));
 });

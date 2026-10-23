@@ -21,7 +21,7 @@ test('俱乐部主页用真实资源与 DS 图标，不把字符伪装成按钮�
   // 只是资产从 DS 图标换成了专门画的默认封面,所以 aria-label 也从「暂无封面」改成「使用默认封面」。
   assert.match(view, /<view\b[^>]*wx:else[^>]*class="cover-fallback"[^>]*aria-role="img"[^>]*aria-label="\{\{club\.name\}\} 使用默认封面"/)
   assert.match(view, /<image\b[^>]*class="cover-fallback-art"[^>]*src="\/pages\/club\/images\/club_cover_default\.png"[^>]*mode="aspectFill"/,
-    '缺封面必须落到真实的默认封面图片资产上,不能又退回字符/图标凑数')
+    '缺封面必须落到真实的默认封面图片资产上，不能又退回字符/图标凑数')
   assert.match(view, /<cy-icon\b[^>]*name="close-sm"/)
   assert.match(view, /<cy-icon\b[^>]*name="image"/)
   assert.ok((view.match(/<cy-icon\b[^>]*name="arrow-right"/g) || []).length >= 10)
@@ -41,11 +41,11 @@ test('俱乐部管理入口统一暴露按钮语义和最小命中区', () => {
   // 2026-08-26 管理 tab 收敛:小节标题里的 .sec-link 换成了「折叠行 + 设置弹窗行」。
   // 要守的还是同一条 —— 每个管理入口都得有按钮语义,并且命中区不低于 --cy-btn-h。
   const foldRows = view.match(/class="manage-fold-row"[\s\S]{0,240}?aria-role="button"/g) || []
-  assert.ok(foldRows.length >= 4, `经营折叠行需 >=4 个且带按钮语义,实得 ${foldRows.length}`)
+  assert.ok(foldRows.length >= 4, `经营折叠行需 >=4 个且带按钮语义，实得 ${foldRows.length}`)
   assert.ok((view.match(/aria-expanded="\{\{openManageSection === '[a-z]+'\}\}"/g) || []).length >= 4,
     '折叠行必须对读屏暴露展开态')
   const setRows = view.match(/class="cset-row"[\s\S]{0,320}?aria-role="button"/g) || []
-  assert.ok(setRows.length >= 5, `设置弹窗行需 >=5 个且带按钮语义,实得 ${setRows.length}`)
+  assert.ok(setRows.length >= 5, `设置弹窗行需 >=5 个且带按钮语义，实得 ${setRows.length}`)
   // 2026-09-02 对稿(Figma 23:14 MembersHead):邀请成员从 .member-invite 挪成分区头右侧文字链
   // 2026-09-24 CU-C-61:两处邀请成员都换成原生 <button open-type="share">(按钮语义由原生按钮提供)
   assert.match(view, /<button[^>]*class="ov-head-link"[^>]*aria-label="邀请成员"/, '概览仍保留邀请成员入口')

@@ -73,14 +73,14 @@ test('A6 承接设置保存保留同接口其它字段，并在 complete 统一�
   page.data.loadState = 'ok'
   page.onNavBack = () => {}
   page.data.form = { capacity: '18', availableTime: '周末', chargeType: 1, demand: '提前预约' }
-  page.data.keep = { suitActivityTypes: '亲子,城市探索', coopOpen: 1 }
+  page.data.keep = { suitActivityTypes: '亲子，城市探索', coopOpen: 1 }
 
   page.onSave()
   assert.equal(page.data.saving, true)
   assert.deepEqual(JSON.parse(request.data), {
     capacity: 18,
     availableTime: '周末',
-    suitActivityTypes: '亲子,城市探索',
+    suitActivityTypes: '亲子，城市探索',
     chargeType: 1,
     demand: '提前预约',
     coopOpen: 1,
@@ -88,7 +88,7 @@ test('A6 承接设置保存保留同接口其它字段，并在 complete 统一�
   request.success({ code: 200 })
   request.complete()
   assert.equal(page.data.saving, false)
-  assert.equal(page.data.keep.suitActivityTypes, '亲子,城市探索')
+  assert.equal(page.data.keep.suitActivityTypes, '亲子，城市探索')
 })
 
 test('B4 招商申请只有待审核 status=0 可撤回', () => {

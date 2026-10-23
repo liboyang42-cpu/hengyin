@@ -163,7 +163,7 @@ test('unknown 回读发现 version 已前进 ⇒ 判定已落地，清锁且不�
   assert.equal(game.data.unknown, false);
   assert.equal(game.data.state.version, 4, '必须采用服务端权威 version');
   assert.equal(game.data.error, '', '写入已落地，不该提示重试');
-  assert.equal(game.calls[1].url, '/api/play/advanced/state', '回读必须问服务端，不是读本地缓存');
+  assert.equal(game.calls[1].url, '/api/play/advanced/state', '刷新必须问服务端，不是读本地缓存');
 });
 
 test('★多人局:version 前进也不算证据 —— 队友的写入同样推高它,不许判成我方已落地', async () => {
@@ -177,10 +177,10 @@ test('★多人局:version 前进也不算证据 —— 队友的写入同样推
   await new Promise(setImmediate);
   await new Promise(setImmediate);
 
-  assert.equal(game.data.unknown, false, '回读拿到结果就该解锁,不能永远转圈');
-  assert.notEqual(game.data.error, '', '证不到是我落的,就不许把提示清空当成功');
+  assert.equal(game.data.unknown, false, '刷新拿到结果就该解锁，不能永远转圈');
+  assert.notEqual(game.data.error, '', '证不到是我落的，就不许把提示清空当成功');
   assert.match(game.data.error, /没能确认/, '要如实说「没能确认」,别谎报成功也别谎报失败');
-  assert.match(game.data.error, /不会重复提交/, '得告诉用户重试是安全的(幂等键兜底)');
+  assert.match(game.data.error, /不会重复提交/, '得告诉用户重试是安全的(幂等键保底)');
 });
 
 test('unknown 回读发现 version 未变 ⇒ 说清没提交成功，才放行重试', async () => {
@@ -202,8 +202,8 @@ test('回读本身也失败 ⇒ 保持 unknown 锁定，不猜结论', async () 
   await new Promise(setImmediate);
   await new Promise(setImmediate);
 
-  assert.equal(game.data.unknown, true, '核对不上就得一直锁着');
-  assert.equal(game.data.readingBack, false, '要能再点一次核对');
+  assert.equal(game.data.unknown, true, '确认不上就得一直锁着');
+  assert.equal(game.data.readingBack, false, '要能再点一次确认');
   assert.match(game.data.unknownText, /勿重复提交/);
 });
 
@@ -628,9 +628,9 @@ test('共享挑战旧原键回执迟到不能覆盖新局或解除新局写锁',
   game._unknownCommand={sessionId:42,version:3,idempotencyKey:'original',action:'SUBMIT_BALL_SHAKE',payload:{hits:6}};
   let finish;game.request=()=>new Promise(resolve=>{finish=resolve;});
   const waiting=game.resolveUnknown();
-  game.data.state={sessionId:99,version:1,nodeId:7,ownerType:2,config:{}};game.data.unknown=true;game.data.acting=true;game.data.error='新局待核对';
+  game.data.state={sessionId:99,version:1,nodeId:7,ownerType:2,config:{}};game.data.unknown=true;game.data.acting=true;game.data.error='新局待确认';
   finish({code:200,data:{sessionId:42,nodeId:7,ownerType:2,version:4,challenge:{progress:6,goal:10,success:false}}});await waiting;
-  assert.equal(game.data.state.sessionId,99);assert.equal(game.data.unknown,true);assert.equal(game.data.acting,true);assert.equal(game.data.error,'新局待核对');
+  assert.equal(game.data.state.sessionId,99);assert.equal(game.data.unknown,true);assert.equal(game.data.acting,true);assert.equal(game.data.error,'新局待确认');
 });
 
 

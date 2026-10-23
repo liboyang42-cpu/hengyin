@@ -102,7 +102,7 @@ test('A05/A06：广场顶部为横向 banner，发布器展示本人头像与昵
   // 断言随之从字面量改成昵称绑定 + 兜底「城瘾玩家」。
   assert.match(wxml, /class="compose-row"[\s\S]*?avatar \|\| '\/images\/d_profile\.png'[\s\S]*?class="compose-col"[\s\S]*?>\{\{nickname \|\| '城瘾玩家'\}\}</)
   assert.match(wxml, /class="compose-col"[\s\S]*?class="compose-input/,
-    '正文必须落在内容列里,否则又会通栏、与头像右边缘不齐')
+    '正文必须落在内容列里，否则又会通栏、与头像右边缘不齐')
   assert.match(postCard, /<cy-feed-play-card\b[^>]*bind:detail="emitPlayDetail"[^>]*bind:play="emitPlay"/,
     '发布帖文模板须接入列表/详情共用的可玩卡组件')
   assert.match(wxml, /bind:playdetail="goPlayTopicDetail"[\s\S]{0,80}bind:play="goPlay"/,
@@ -129,9 +129,9 @@ test('A10：详情无“动态”页标题，作者名可见，点赞和分享�
   assert.match(detail, /class="ph-name ph-name--handle ep1"[^>]*>@\{\{ info\.memberNickname \}\}/)
   // 2026-09-02 Figma 379:2571:点赞按稿改成「已赞实心红心 / 未赞描边」,name 由 isLiked 三元决定,
   // 断言从写死的 name="heart" 换成这条绑定 —— 两个态的图标名都要出现,少一个就红。
-  assert.match(detail, /class="act act--like[^>]*[\s\S]*?name="\{\{info\.isLiked==1 \? 'heart-filled' : 'heart'\}\}"[\s\S]*?\{\{info\.likeCount \|\| 0\}\}/)
+  assert.match(detail, /class="act act--like[^>]*[\s\S]*?name="\{\{info\.isLiked==1 \? 'heart-filled' : 'heart'\}\}"[\s\S]*?\{\{info\.likeCount \|\| ''\}\}/)
   assert.match(detail, /class="act act--comment[^>]*[\s\S]*?\{\{info\.commentCount \|\| 0\}\}/)
-  assert.match(detail, /class="comment-like[^>]*[\s\S]*?name="heart"[\s\S]*?\{\{item\.likeCount \|\| 0\}\}/)
+  assert.match(detail, /class="comment-like[^>]*[\s\S]*?name="heart"[\s\S]*?\{\{item\.likeCount \|\| ''\}\}/)
   assert.doesNotMatch(detail, /\{\{item\.likeCount\}\}\s*赞/)
   // 2026-09-21 用户拍板:帖文分享统一改成产品既有弯箭头位图，不使用方框上箭头。
   assert.match(detail, /class="act-share act-share--end"[^>]*[\s\S]*?src="\/images\/icon_share\.png"/)
@@ -162,7 +162,7 @@ test('A14/A15 + UI-19：俱乐部主 tab 贴导航等分，有页标题，一张
   // 2026-08-20 卡片重设计:三份内联拷贝收敛为 cy-club-card,单列不变;
   // club-card 类名必须留在组件实例上(截图矩阵选择器 .club-grid, .club-card 依赖它)
   assert.match(wxml, /<cy-club-card class="club-card"/)
-  assert.doesNotMatch(wxml, /class="club-card-logo"|class="club-card-body"/, '内联拷贝不许回流,卡体只在 cy-club-card 一处')
+  assert.doesNotMatch(wxml, /class="club-card-logo"|class="club-card-body"/, '内联拷贝不许回流，卡体只在 cy-club-card 一处')
   assert.match(wxss, /\.club-grid\s*\{[^}]*flex-direction:\s*column/)
   assert.match(js, /headerH = this\.data\.statusBarHeight \+ this\.data\.navBarHeight;/)
 })

@@ -91,10 +91,10 @@ test('★拍照问答不在动作表里 —— 它是两步,不是一步', () =>
 test('★抽卡与分支:客户端只发请求,内容与走向都由服务端定', () => {
   assert.equal(serverAction('random', 'draw'), 'DRAW')
   assert.deepEqual(serverPayload('random', 'draw', { index: 2 }), {},
-    '抽哪一件不能由客户端说了算 —— 带了下标就等于玩家自己挑内容,盲盒就不盲了')
+    '抽哪一件不能由客户端说了算 —— 带了下标就等于玩家自己挑内容，盲盒就不盲了')
   assert.equal(serverAction('branch', 'choose'), 'CHOOSE')
   assert.deepEqual(serverPayload('branch', 'choose', { optionId: 'left', index: 0 }),
-    { optionId: 'left' }, '走向由服务端按 optionId 判,下标在它那边没有意义')
+    { optionId: 'left' }, '走向由服务端按 optionId 判，下标在它那边没有意义')
 })
 
 test('★六个挑战壳真的会抛 start,分发器真的接住,页面真的走翻译层', () => {
@@ -105,7 +105,7 @@ test('★六个挑战壳真的会抛 start,分发器真的接住,页面真的走
   for (const k of ['reaction', 'ballshake', 'quiethold', 'shout', 'countdown', 'stopwatch']) {
     const src = read('pages/play/components/playkit-' + k + '/index.js')
     assert.match(src, /triggerEvent\('start'\)/,
-      k + ' 开跑时没报 start —— 服务端没记起点,之后的提交一律判「还没开始」')
+      k + ' 开跑时没报 start —— 服务端没记起点，之后的提交一律判「还没开始」')
   }
   /* 组件抛了不等于到了。2026-09-19 实测:分发器只给 countdown / stopwatch 接了 bind:start,
      另三个玩法玩家能玩完、成绩永远不成立(后端 serverElapsedMs 抛「还没开始」),
@@ -114,11 +114,11 @@ test('★六个挑战壳真的会抛 start,分发器真的接住,页面真的走
   for (const k of ['reaction', 'ballshake', 'quiethold', 'shout', 'countdown', 'stopwatch']) {
     const tag = new RegExp('<cy-playkit-' + k + '\\b[^>]*\\bbind:start="onStart"')
     assert.match(kit, tag,
-      '分发器没接 ' + k + ' 的 start —— START_CHALLENGE 发不出去,玩法成绩永远不成立')
+      '分发器没接 ' + k + ' 的 start —— START_CHALLENGE 发不出去，玩法成绩永远不成立')
   }
   const page = read('pages/play/index.js').replace(/\s+/g, ' ')
   assert.match(page, /const payload = serverPayload\(kit\.type, action, detail\);[\s\S]*?game\.action\(name, payload\)/,
-    '页面把 detail 原样发出去了 —— 字段名对不上,服务端按 0 判,而且不报错')
+    '页面把 detail 原样发出去了 —— 字段名对不上，服务端按 0 判，而且不报错')
 })
 
 /* ★ 跨语言那一半:同一份夹具后端也在读(PlaykitActionPayloadContractTest),
@@ -135,7 +135,7 @@ test('★夹具里的每一条:动作名与字段名都由这一层产出', () =
 
 test('负控:把一条从表里摘掉必须判红', () => {
   assert.equal(serverAction('stopwatch', 'submit'), 'SUBMIT_STOPWATCH')
-  assert.equal(serverAction('stopwatch', '不存在的动作'), '', '不在册的一律返回空串,不许瞎拼动作名')
+  assert.equal(serverAction('stopwatch', '不存在的动作'), '', '不在册的一律返回空串，不许瞎拼动作名')
   assert.equal(serverAction('不存在的玩法', 'submit'), '')
 })
 
@@ -153,5 +153,5 @@ test('★计步走密文那条路:walk 屏的动作必须被岔去 _submitSteps'
   const guard = src.match(/if \(([^)]*)\) \{ this\._submitSteps\(\); return; \}/)
   assert.ok(guard, '页面里必须有一处把计步岔去 _submitSteps')
   assert.ok(guard[1].includes("kit.type === 'walk'"),
-    '岔口要按 kit.type 认计步,不能只认某一个事件名 —— 换屏就会漏')
+    '岔口要按 kit.type 认计步，不能只认某一个事件名 —— 换屏就会漏')
 })

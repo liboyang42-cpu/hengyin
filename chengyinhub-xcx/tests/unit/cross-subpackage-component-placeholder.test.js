@@ -66,10 +66,10 @@ test('负控:把发布页的 componentPlaceholder 摘掉必须判红', () => {
   const file = 'pages/publish/temp/index.json'
   const json = readJson(file)
   assert.ok(json.componentPlaceholder && json.componentPlaceholder['cy-playkit'],
-    '发布页必须给跨分包的 cy-playkit 留占位,否则试玩屏是空白的')
+    '发布页必须给跨分包的 cy-playkit 留占位，否则试玩屏是空白的')
   const stripped = { ...json }
   delete stripped.componentPlaceholder
   const roots = subpackageRoots()
   const owner = ownerOf(stripped.usingComponents['cy-playkit'], roots)
-  assert.ok(owner && owner !== 'pages/publish', 'cy-playkit 必须确实来自另一个分包,否则这条负控是空的')
+  assert.ok(owner && owner !== 'pages/publish', 'cy-playkit 必须确实来自另一个分包，否则这条负控是空的')
 })

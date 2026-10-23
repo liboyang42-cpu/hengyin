@@ -62,7 +62,7 @@ Page({
     const clubId = positiveId(options && (options.clubId || options.id))
     const activityId = positiveId(options && options.activityId)
     if (!clubId) {
-      this.setData({ state: 'error', errorText: '缺少俱乐部 ID' })
+      this.setData({ state: 'error', errorText: '缺少俱乐部信息' })
       return
     }
     const audiences = AUDIENCES.map(item => Object.assign({}, item, {

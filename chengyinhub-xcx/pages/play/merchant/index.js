@@ -200,7 +200,7 @@ Page({
     })
     const fresh = await this._readbackNode()
     if (!fresh) {
-      this.setData({ 'game.errText': '还是没核对上，网络恢复后点这里再试 · 期间请勿重复提交' })
+      this.setData({ 'game.errText': '还是没确认上，网络恢复后点这里再试 · 期间请勿重复提交' })
       return
     }
     if (fresh.gameDone) {
@@ -306,7 +306,7 @@ Page({
     const before = this.data.node || {}
     const fresh = await this._readbackNode()
     if (!fresh) {
-      this.setData({ degradedMessage: '还是没核对上，网络恢复后点这里再试 · 期间请勿重复核销' })
+      this.setData({ degradedMessage: '还是没确认上，网络恢复后点这里再试 · 期间请勿重复核销' })
       return
     }
     const landed = (!!fresh.done && !before.done)
@@ -426,7 +426,7 @@ Page({
       requestId: `merchant-${eventType.toLowerCase()}-${merchantId}-${Date.now()}`,
     }), { json: true })
     if (!(write.code === 200 || write.code === '200')) {
-      this.setData({ consentBusy: false, merchantConsent: 'UNAVAILABLE', feedback: write.msg || '门店授权写入失败，核销码未打开' })
+      this.setData({ consentBusy: false, merchantConsent: 'UNAVAILABLE', feedback: write.msg || '门店授权失败，核销码未打开' })
       return false
     }
     const readback = await this._readbackConsent()

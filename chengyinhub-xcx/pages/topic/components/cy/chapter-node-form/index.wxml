@@ -1,10 +1,10 @@
 <view class="cnf-shell" style="{{sheetStyle}}">
-<cy-sheet show="{{show}}" variant="full" footer="{{true}}" title="{{formMode === 'offer' ? '填写实际供给' : (formMode === 'node' ? (editing ? '编辑点位' : '配置点位') : (editing ? '编辑申请 · 修改点位' : '申请承接并配置点位'))}}" closable="{{!submitting}}"
+<cy-sheet show="{{show}}" variant="full" footer="{{true}}" title="{{formMode === 'offer' ? '填写实际供给' : (formMode === 'node' ? (editing ? '编辑节点' : '配置节点') : (editing ? '编辑申请 · 修改节点' : '申请承接并配置节点'))}}" closable="{{!submitting}}"
   maskClosable="{{!submitting}}" bind:close="onClose">
   <view class="cnf-subtitle">{{chapterName || '当前章节'}}</view>
   <!-- CU-M-58:同一个章节重复提交不是新增,而是覆盖已有点位并回待审核 —— 先把覆盖范围说出来 -->
-  <view class="cnf-note" wx:if="{{editing && formMode !== 'node'}}">这条申请已有点位「{{presetNode.name}}」：保存会覆盖它的名称、地址与玩法，并重新进入待审核；同一条申请不会新增第二个点位。</view>
-  <view class="cnf-note" wx:if="{{editing && formMode === 'node'}}">保存会覆盖点位「{{presetNode.name}}」的名称、地址与玩法；审核结果以保存后的承接进度为准。</view>
+  <view class="cnf-note" wx:if="{{editing && formMode !== 'node'}}">保存将覆盖「{{presetNode.name}}」并重新审核</view>
+  <view class="cnf-note" wx:if="{{editing && formMode === 'node'}}">保存将覆盖「{{presetNode.name}}」</view>
 
   <block wx:if="{{formMode === 'application'}}">
     <view class="cnf-field">
@@ -71,7 +71,7 @@
         <view class="cnf-label"><text>现场与预约规则</text><text class="cnf-required" aria-hidden="true">*</text></view>
         <input class="cnf-input" value="{{form.merchantRules}}" placeholder="写明预约、改期及现场规则" disabled="{{submitting}}" data-key="merchantRules" bindinput="onInput" />
       </view>
-      <view class="cnf-note">提交时间会作为本次供给的最近确认时间；超过复核周期需重新确认。</view>
+      
     </block>
     <block wx:if="{{termsMode === 'PERK'}}">
       <view class="cnf-field">
@@ -103,7 +103,7 @@
 
   <block wx:if="{{formMode !== 'offer'}}">
     <view class="cnf-field">
-      <view class="cnf-label"><text>点位名称</text><text class="cnf-required" aria-hidden="true">*</text></view>
+      <view class="cnf-label"><text>节点名称</text><text class="cnf-required" aria-hidden="true">*</text></view>
       <input class="cnf-input" value="{{form.name}}" placeholder="玩家在路线上看到的名字" disabled="{{submitting}}"
         placeholder-class="cnf-placeholder" data-key="name" bindinput="onInput" />
     </view>
@@ -113,7 +113,7 @@
       <textarea class="cnf-input cnf-address" value="{{form.address}}" placeholder="默认取商家资料，可修改" disabled="{{submitting}}"
         auto-height="{{true}}" maxlength="140" placeholder-class="cnf-placeholder" data-key="address" bindinput="onInput" />
       <cy-btn class="cnf-map-button" variant="secondary" disabled="{{submitting}}" bindtap="chooseNodeLocation">地图选点</cy-btn>
-      <view class="cnf-note">{{locationReady ? '位置已确认；修改地址后需重新选点' : '请在地图选择到店位置，保存导航与现场校验所需位置'}}</view>
+      <view class="cnf-note">{{locationReady ? '位置已确认' : '请在地图上选择门店位置'}}</view>
     </view>
 
     <view class="cnf-field">
@@ -139,7 +139,7 @@
 
   <view slot="footer" class="cnf-actions">
     <cy-btn variant="primary" loading="{{submitting}}" disabled="{{!canSubmit || submitting}}" bindtap="onSubmit">
-      {{formMode === 'offer' ? '确认实际供给' : (editing ? '保存修改' : (formMode === 'node' ? '保存点位' : '提交申请与点位'))}}
+      {{formMode === 'offer' ? '确认实际供给' : (editing ? '保存修改' : (formMode === 'node' ? '保存节点' : '提交申请与节点'))}}
     </cy-btn>
   </view>
 </cy-sheet>

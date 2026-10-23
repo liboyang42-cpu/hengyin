@@ -133,7 +133,7 @@ test('签文池的换行草稿与落库的二维数组保持一致', () => {
 
   const saved = JSON.parse(page.prepareFormData().advancedConfigJson).dailySign;
   assert.deepEqual(saved.poems, [['第一条', '第二行'], ['新签第一行', '新签第二行']],
-    '末尾空行要清掉,其余原样落库');
+    '末尾空行要清掉，其余原样落库');
 });
 
 test('本模块不认识的将来玩法段，过一遍配置页也还在', () => {
@@ -150,7 +150,7 @@ test('配置有错时保留原文待修，不静默丢弃用户填的内容', ()
     blindTaste: Object.assign({}, BLIND_TASTE, { answerKey: 'Z' }),  // 答案不在选项里
   }));
   const saved = page.prepareFormData().advancedConfigJson;
-  assert.match(JSON.parse(saved).blindTaste.answerKey, /Z/, '错误配置原样带回,交给校验拦下并让用户改');
+  assert.match(JSON.parse(saved).blindTaste.answerKey, /Z/, '错误配置原样带回，交给校验拦下并让用户改');
 });
 
 

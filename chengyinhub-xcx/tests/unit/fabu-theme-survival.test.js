@@ -57,7 +57,7 @@ test('配给物品只列真实物品，不能用勋章；下拉正确提交稳�
   assert.deepEqual(p.data.survivalMaterialItems.map(i => i.value), ['supply']); p.pickSurvivalField(e({ field: 'itemId', options: 'survivalMaterialItems' }, 0)); assert.equal(p.data.survivalEditor.row.itemId, 'supply');
   p._setSurvivalRow({ ...p.data.survivalEditor.row, itemId: 'medal' }); assert.equal(p.saveSurvivalEditor(), false); assert.match(p.data.survivalEditor.error, /配给物品/);
 });
-test('独立设施稳定键/槽、所有前置类型、范围与站点边界', () => {
+test('独立设施稳定键/槽、所有前置类型、范围与节点边界', () => {
   const p = page(); p.openSurvivalEditor(); p.editSurvivalRow(e({ kind: 'facilities' })); assert.equal(p.data.survivalEditor.row.settlementSlot, 'facility_slot_1');
   p.addSurvivalCondition(); p.editSurvivalCondition(e({ index: 0, field: 'op', options: 'survivalOps' }, 6)); p.editSurvivalCondition(e({ index: 0, field: 'itemId', options: 'survivalItems' }, 0));
   assert.deepEqual(p.data.survivalEditor.row.when, [{ op: 'ITEM_HELD', itemId: 'supply', quantity: 1 }]);
@@ -65,13 +65,13 @@ test('独立设施稳定键/槽、所有前置类型、范围与站点边界', (
   c.gameplayRuntime.worldMode = 'TEAM_INDEPENDENT'; assert.match(survival.validate(c), /公共世界/);
 });
 test('未保存节点不提供假标识，模板设施只读', () => {
-  const p = page(built()); p.data.editingTopicId = ''; p.openSurvivalEditor(); assert.deepEqual(p.data.survivalNodes, [{ value: '', label: '不绑定操作站点' }]);
+  const p = page(built()); p.data.editingTopicId = ''; p.openSurvivalEditor(); assert.deepEqual(p.data.survivalNodes, [{ value: '', label: '不绑定操作节点' }]);
   const c = base(); c.gameplayRuntime.facilities = [{ facilityKey: 'tpl_node_101', actKey: 'act_one', settlementSlot: 'tpl_node_101', scope: 'OWNER', targetScope: 'OWNER', limit: 1, operationNodeId: 101 }];
-  const generated = page(c); generated.openSurvivalEditor(); generated.editSurvivalRow(e({ kind: 'facilities', index: 0 })); assert.match(generated.data.survivalEditor.error, /站点玩法工具/); assert.equal(generated.data.survivalEditor.kind, '');
+  const generated = page(c); generated.openSurvivalEditor(); generated.editSurvivalRow(e({ kind: 'facilities', index: 0 })); assert.match(generated.data.survivalEditor.error, /节点玩法工具/); assert.equal(generated.data.survivalEditor.kind, '');
 });
 test('复制保留恢复/配给/费用/奖励/结果卡，移除真实节点引用且告知作者', () => {
   const c = built(), notices = []; const recovery = structuredClone(c.gameplayRuntime.survival), card = structuredClone(c.card);
-  survival.copyReferences(c, notices); assert.deepEqual(c.gameplayRuntime.survival, recovery); assert.deepEqual(c.card, card); assert.deepEqual(notices, ['设施1操作与前置站点']);
+  survival.copyReferences(c, notices); assert.deepEqual(c.gameplayRuntime.survival, recovery); assert.deepEqual(c.card, card); assert.deepEqual(notices, ['设施1操作与前置节点']);
   assert.equal(Object.hasOwn(c.gameplayRuntime.facilities[0], 'operationNodeId'), false); assert.deepEqual(c.gameplayRuntime.facilities[0].when.map(w => w.op), ['ITEM_HELD', 'GTE']);
   assert.equal(survival.validate(c, []), ''); const source = fs.readFileSync(path.join(__dirname, '../../pages/publish/fabu/index.js'), 'utf8'); assert.match(source, /survivalEditor.copyReferences\(runtime, reselect\)/);
 });
@@ -102,13 +102,13 @@ test('删幕保留费用与效果，恢复的未解决引用不能变成全幕�
  test('协调者界面合同：分区直达、返回分区、摘要、空下拉与生成来源', () => {
   const p = page(built()); p.openSurvivalEditor(e({ section: 'recovery' }));
   assert.equal(p.data.survivalEditor.section, 'recovery'); p.editSurvivalRow(e({ kind: 'rations', index: 0 })); p.backSurvivalList(); assert.equal(p.data.survivalEditor.section, 'recovery');
-  p._refreshSurvivalSummary(); assert.deepEqual(p.data.survivalSummary, { recoveryText: '休整 1 · 救助 1 · 配给 1', facilityText: '独立 1 · 站点生成 0', cardText: '已自定义' });
+  p._refreshSurvivalSummary(); assert.deepEqual(p.data.survivalSummary, { recoveryText: '休整 1 · 救助 1 · 配给 1', facilityText: '独立 1 · 节点生成 0', cardText: '已自定义' });
   assert.deepEqual(p.data.survivalRecoveryKinds.map(r => r.value), ['REST', 'RESCUE']);
   p.openSurvivalEditor(e({ section: 'facility' })); p.editSurvivalRow(e({ kind: 'facilities', index: 0 }));
   p.pickSurvivalField(e({ field: 'arrivalLocationKey', options: 'survivalLocations' }, 0)); p.pickSurvivalField(e({ field: 'operationNodeId', options: 'survivalNodes' }, 0));
   assert.equal(Object.hasOwn(p.data.survivalEditor.row, 'operationNodeId'), false); assert.equal(Object.hasOwn(p.data.survivalEditor.row, 'arrivalLocationKey'), false);
   p.openSurvivalEditor(e({ section: 'card' })); assert.equal(p.data.survivalEditor.kind, 'card'); assert.equal(p.data.survivalEditor.section, 'card'); p.backSurvivalList(); assert.equal(p.data.survivalEditor.section, 'card');
-  const c = base(); c.gameplayRuntime.facilities = [{ facilityKey: 'tpl_node_101', operationNodeId: 101 }]; const generated = page(c); generated.openSurvivalEditor(); assert.equal(generated.data.survivalFacilities[0].sourceLabel, '由站点「广场」的玩法工具生成');
+  const c = base(); c.gameplayRuntime.facilities = [{ facilityKey: 'tpl_node_101', operationNodeId: 101 }]; const generated = page(c); generated.openSurvivalEditor(); assert.equal(generated.data.survivalFacilities[0].sourceLabel, '由节点「广场」的玩法工具生成');
   assert.equal(p._pruneSurvivalActRefs, survival.pruneActRefs);
  });
 

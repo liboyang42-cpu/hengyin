@@ -15,7 +15,7 @@ function ttlSeconds(value) {
 }
 
 Component({
-  properties: { poiId: { type: String, value: '' }, name: { type: String, value: '据点' } },
+  properties: { poiId: { type: String, value: '' }, name: { type: String, value: '节点' } },
   data: { state: 'loading', qr: '', code: '', countdown: 0, errorText: '' },
   observers: { poiId(value) { if (value) this.issue(value) } },
   lifetimes: { attached() { if (this.data.poiId) this.issue(this.data.poiId) }, detached() { this._issueToken = (this._issueToken || 0) + 1; this.clearTimer() } },

@@ -21,7 +21,7 @@ test('shapeRecordList 只认数组,丢掉无 id 行,状态只按 status===1 判�
     id: 'a1', nameText: '老码头', registrationText: '报名 #12', methodText: '图片验证',
     statusKey: 'VERIFIED', statusText: '已核销', statusTone: 'success', dateKey: '2026-10-14', timeText: '18:05',
   });
-  assert.equal(items[1].nameText, '未命名据点');
+  assert.equal(items[1].nameText, '未命名节点');
   assert.equal(items[1].registrationText, '');
   assert.equal(items[1].methodText, '');
   assert.equal(items[1].statusKey, 'UNVERIFIED');

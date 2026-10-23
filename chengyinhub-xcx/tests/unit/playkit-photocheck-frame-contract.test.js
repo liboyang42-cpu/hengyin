@@ -181,7 +181,7 @@ test('★轮廓图自己加载失败：只藏掉那条线，取景与快门照�
   const inst = instanceOf(loadComponent(COMPONENT_ABS), { frameUrl: '/profile/a.png', framing: true })
   inst.onOutlineError()
   assert.equal(inst.data.outlineFailed, true)
-  assert.equal(inst.data.framing, true, '一张轮廓图没加载出来，不该把玩家踢出取景层')
+  assert.equal(inst.data.framing, true, '一张轮廓图加载失败，不该把玩家踢出取景层')
   inst.triggerEvent = (name, detail) => { inst.emitted = { name, detail } }
   const wx = fakeWx()
   try {
@@ -333,12 +333,12 @@ test('★内嵌呈现下不进取景层 —— 故事流段落会把 fixed 的�
     wx.restore()
   }
   assert.equal(inst.data.framing, false, '内嵌下进了取景层 —— 真机上它会被圈进段落里还跟着糊')
-  assert.deepEqual(wx.calls, ['chooseMedia'], '内嵌下必须回落选图,玩法照常能完成')
+  assert.deepEqual(wx.calls, ['chooseMedia'], '内嵌下必须回落选图，玩法照常能完成')
 })
 
 test('★分发器把 inline 传给拍照审核 —— 不传的话上面那条判据永远是 false', () => {
   assert.match(read(DISPATCH_REL), /cy-playkit-photocheck[\s\S]*?inline="\{\{inline\}\}"/,
-    'playkit/index.wxml 没把 inline 传下去,组件里那个判据就是死的')
+    'playkit/index.wxml 没把 inline 传下去，组件里那个判据就是死的')
 })
 
 test('★快门在途点「退出取景」不生效 —— 否则照片照样提交、白吃一次机会', () => {
@@ -350,7 +350,7 @@ test('★快门在途点「退出取景」不生效 —— 否则照片照样提
   // 不 busy 时照常能退
   const idle = instanceOf(loadComponent(COMPONENT_ABS), { frameUrl: '/profile/a.png', framing: true, busy: false })
   idle.onFrameCancel()
-  assert.equal(idle.data.framing, false, '不 busy 时必须退得掉,否则玩家被关在取景器里')
+  assert.equal(idle.data.framing, false, '不 busy 时必须退得掉，否则玩家被关在取景器里')
 })
 
 test('★快门连着失败两次就回落选图 —— binderror 不响的那些机型只能靠这条', () => {
@@ -366,11 +366,11 @@ test('★快门连着失败两次就回落选图 —— binderror 不响的那�
   const wxCalls = wx.calls
   try {
     inst.onFrameShutter()
-    assert.deepEqual(wx.calls, ['takePhoto'], '第一次失败先让玩家再按一次,不该立刻放弃取景')
+    assert.deepEqual(wx.calls, ['takePhoto'], '第一次失败先让玩家再按一次，不该立刻放弃取景')
     inst.onFrameShutter()
   } finally {
     wx.restore()
   }
-  assert.ok(wx.calls.includes('chooseMedia'), '连着两次拍不上仍不回落,玩家被卡在取景器里')
+  assert.ok(wx.calls.includes('chooseMedia'), '连着两次拍不上仍不回落，玩家被卡在取景器里')
   assert.equal(inst.data.framing, false, '回落后必须退出取景层')
 })

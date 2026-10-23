@@ -107,7 +107,7 @@ test('★ 生成:POST /api/ai/club/design 必须 stringify + 大写 Content-Type
   assert.equal(typeof sent.data, 'string',
     'data 必须手动 stringify:大写 Content-Type 配裸对象 = 翻车组合,wx.request 不会替你序列化');
   assert.equal(sent.header['Content-Type'], 'application/json',
-    '@RequestBody 端点缺 JSON header → urlencoded → 后端拒收但兜成 200,业务方法体不执行');
+    '@RequestBody 端点缺 JSON header → urlencoded → 后端拒收但兜成 200，业务方法体不执行');
   assert.equal(sent.silentError, true, '不 silentError → request-client 自动 toast + sheet 内联报错 = 双弹');
   assert.deepEqual(JSON.parse(sent.data), { idea: '静安 夜间', clubStyle: '文艺', targetDurationMin: 90 },
     'idea/clubStyle 要 trim,时长要转 int');
@@ -142,7 +142,7 @@ test('★ parseError 非 null(解析炸了)→ error 态、原样展示后端文
   p.onClubAiGenerate();
   sent.success({ code: '200', data: { traceId: 't', parseError: 'AI 响应格式异常,请重试', plan: null } });
 
-  assert.equal(p.data.aiState, 'error', 'parseError 时 plan 不可信,不许当成功');
+  assert.equal(p.data.aiState, 'error', 'parseError 时 plan 不可信，不许当成功');
   assert.equal(p.data.aiErrorText, 'AI 响应格式异常,请重试');
   assert.equal(p.data.aiCanRetry, true);
   assert.equal(p.data.aiPlan, null, '解析炸了不许落 plan');
@@ -154,8 +154,8 @@ test('★ plan=null 且无 parseError(静默空成功)→ 走「AI 没给方案�
   sent.success({ code: '200', data: { traceId: 't', plan: null } });
 
   assert.equal(p.data.aiState, 'error');
-  assert.equal(p.data.aiErrorText, 'AI 这次没给出方案,换个说法再试试',
-    '「AI 没给建议」≠「解析炸了」:两条分支文案必须不同,混为一谈会误导用户重试无效的操作');
+  assert.equal(p.data.aiErrorText, 'AI 这次没给出方案，换个说法再试试',
+    '「AI 没给建议」≠「解析炸了」:两条分支文案必须不同，混为一谈会误导用户重试无效的操作');
   assert.equal(p.data.aiCanRetry, true);
 });
 
@@ -167,7 +167,7 @@ test('★ 频控超限:包含匹配后端文案(数字随 dailyLimit 配置变)+
 
   assert.equal(p.data.aiState, 'error');
   assert.equal(p.data.aiErrorText, '今日AI次数已用完(35/天),明天再来吧', '应原样展示后端拼好的文案');
-  assert.equal(p.data.aiCanRetry, false, '频控超限给重试按钮 = 骗用户点,点了还是失败');
+  assert.equal(p.data.aiCanRetry, false, '频控超限给重试按钮 = 骗用户点，点了还是失败');
   assert.deepEqual(toasts, [], 'silentError 下不该再自己弹 toast(防双弹)');
 });
 
@@ -185,7 +185,7 @@ test('网络失败 → error 态 + 网络文案', () => {
   p.onClubAiGenerate();
   sent.fail();
   assert.equal(p.data.aiState, 'error');
-  assert.equal(p.data.aiErrorText, '网络错误,请检查网络后重试');
+  assert.equal(p.data.aiErrorText, '网络异常，请重试');
 });
 
 // ===== 在途回调守卫 =====
@@ -224,7 +224,7 @@ test('★ 一键采用:落 storage + URL 不许带 from=ai + 提示手动补封�
   p.onClubAiAdopt();
 
   const draft = storage['ai_topic_draft:m1'];
-  assert.ok(draft, 'draft 必须落 storage:URL query 是扁平的,承载不了 chapters');
+  assert.ok(draft, 'draft 必须落 storage:URL query 是扁平的，承载不了 chapters');
   assert.equal(draft.name, '夜行静安');
   assert.equal(draft.aiTraceId, 'tr-9', 'traceId 丢了 = AI 生成内容零留痕');
   assert.equal(draft.chapters[0].nodes[0].name, '咖啡馆');
@@ -235,7 +235,7 @@ test('★ 一键采用:落 storage + URL 不许带 from=ai + 提示手动补封�
     '★ 带 from=ai 会让 fabu 的 applyAiDraft 拿扁平 options 当 draft,storage 里的真草稿被无视 → 灌一个空草稿');
 
   assert.ok(/封面图/.test(modals[0].content) && /分类/.test(modals[0].content),
-    'AI 给不了封面图和分类,不提示用户就是发布前才发现的死路');
+    'AI 给不了封面图和分类，不提示用户就是发布前才发现的死路');
   assert.equal(p.data.aiSheetShow, false);
 });
 

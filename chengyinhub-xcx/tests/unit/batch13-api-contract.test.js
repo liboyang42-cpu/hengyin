@@ -60,7 +60,7 @@ test('BL-140 阻断行 url 形如 dissolution-blockers/index?clubId=&type=deposi
   const body = block(readRepo(API + 'ApiClubController.java'), '@PostMapping("/dissolve")', 6000)
   assert.match(body, /"\/pages\/club\/dissolution-blockers\/index\?clubId=" \+ body\.getId\(\)\s*\+ "&type=deposit&id=" \+ deposit\.getId\(\)/)
   assert.match(body, /"\/pages\/club\/dissolution-blockers\/index\?clubId=" \+ body\.getId\(\)\s*\+ "&type=settlement&id=" \+ settlement\.getId\(\)/)
-  assert.match(body, /if \(historical && !deposit\.isRetryable\(\)\) action\.put\("url", "\/pages\/shezhi\/about\/index"\)/, '历史不可重试行无 type+id,回读时须原样保留')
+  assert.match(body, /if \(historical && !deposit\.isRetryable\(\)\) action\.put\("url", "\/pages\/shezhi\/about\/index"\)/, '历史不可重试行无 type+id,刷新时须原样保留')
 })
 
 test('BL-141 POST /api/merchant/business-status:无入参,BASIC_READ,返回 businessStatus(0/1)+businessStatusText', () => {
@@ -81,7 +81,7 @@ test('BL-141 POST /api/merchant/business-status/update:表单参数 business_sta
   assert.match(body, /MerchantPermission\.PROFILE_WRITE/)
   assert.match(body, /if \(bs != 0 && bs != 1\) return error\("营业状态参数错误"\)/)
   assert.match(body, /return success\(bs == 1 \? "已营业" : "已打烊"\)/)
-  assert.doesNotMatch(body, /put\("businessStatus"/, '写接口不回读状态')
+  assert.doesNotMatch(body, /put\("businessStatus"/, '写接口不刷新状态')
 })
 
 test('BL-142 BLOCKED:POST /api/coop/candidates 三组与现有按主题筛选列表一一对应(无新调用)', () => {

@@ -15,8 +15,8 @@ function frame(ry) {
 }
 
 test('人形是实的:有头、有躯干、有两条手臂,不是一个球', () => {
-  assert.ok(model.verts.length > 120, '顶点太少说明某个部件没建出来,实测 ' + model.verts.length)
-  assert.ok(model.faces.length > 200, '面太少,实测 ' + model.faces.length)
+  assert.ok(model.verts.length > 120, '顶点太少说明某个部件没建出来，实测 ' + model.verts.length)
+  assert.ok(model.faces.length > 200, '面太少，实测 ' + model.faces.length)
   const ys = model.verts.map((v) => v[1])
   assert.ok(Math.max(...ys) > 0.85, '头顶要在 y>0.85')
   assert.ok(Math.min(...ys) < -0.55, '躯干底要在 y<-0.55')
@@ -33,8 +33,8 @@ test('人形是实的:有头、有躯干、有两条手臂,不是一个球', () 
 test('背面剔除真的在剔:可见面必须显著少于总面数', () => {
   const { faces } = frame(0)
   assert.ok(faces.length < model.faces.length * 0.75,
-    '剔不掉背面的话,转到侧面会看见躯干内壁,像塌了一块。可见 ' + faces.length + '/' + model.faces.length)
-  assert.ok(faces.length > 100, '剔太狠了,人形会缺面')
+    '剔不掉背面的话，转到侧面会看见躯干内壁，像塌了一块。可见 ' + faces.length + '/' + model.faces.length)
+  assert.ok(faces.length > 100, '剔太狠了，人形会缺面')
 })
 
 test('画家算法:面按远到近排,近的后画才能盖住远的', () => {
@@ -47,9 +47,9 @@ test('画家算法:面按远到近排,近的后画才能盖住远的', () => {
 test('明暗有范围但不全黑:背光面留了环境光垫底', () => {
   const { faces } = frame(0)
   const sh = faces.map((f) => f.shade)
-  assert.ok(Math.min(...sh) >= 0.26, '背光面全黑会在暗底上消失,人形缺一块')
+  assert.ok(Math.min(...sh) >= 0.26, '背光面全黑会在暗底上消失，人形缺一块')
   assert.ok(Math.max(...sh) > 0.8, '没有受光面就没有体积感')
-  assert.ok(Math.max(...sh) - Math.min(...sh) > 0.4, '明暗差太小,看着是一张剪影不是一个立体')
+  assert.ok(Math.max(...sh) - Math.min(...sh) > 0.4, '明暗差太小，看着是一张剪影不是一个立体')
 })
 
 test('转到 ±38° 极限仍然完整落在画面内', () => {
@@ -90,12 +90,12 @@ function depthSpread(after) {
 test('转起来是真的绕 Y 轴转,不是把剪影压扁', () => {
   assert.ok(depthPairs().length > 20, '模型里要有成对的同 x 异 z 顶点才验得了这条')
   assert.ok(depthSpread(frame(30).proj.p) > 20,
-    '同 x 异 z 的两点位移必须明显不同;一样就说明只是横向压扁')
+    '同 x 异 z 的两点位移必须明显不同；一样就说明只是横向压扁')
 })
 
 test('负控:把旋转换成等比压扁,上一条必须判红', () => {
   const before = frame(0).proj.p
   const squashed = before.map((q) => [W / 2 + (q[0] - W / 2) * 0.8, q[1]])
   assert.ok(depthSpread(squashed) < 1,
-    '压扁下同 x 异 z 的两点位移应当完全一致,实测 ' + depthSpread(squashed).toFixed(3))
+    '压扁下同 x 异 z 的两点位移应当完全一致，实测 ' + depthSpread(squashed).toFixed(3))
 })

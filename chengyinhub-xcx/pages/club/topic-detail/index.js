@@ -117,13 +117,13 @@ const RULES_SECTIONS = [
     { title: '进了履约窗不退', text: '已进入履约窗的报名不可退款。' },
     { title: '算不出来 ≠ 不该退', text: '退款截止时间缺失时转人工核实，不由系统自行决定。', tone: 'warning' },
   ] },
-  { key: 'pause', label: '暂停一个站点', rows: [
+  { key: 'pause', label: '暂停一个节点', rows: [
     { title: '原因和预计恢复时间都必填', text: '两个都要填，否则提交不了。' },
-    { title: '必须绑一个已批准的备用方案', text: '不能直接指定备用站点。' },
+    { title: '必须绑一个已批准的备用方案', text: '不能直接指定备用节点。' },
     { title: '暂停期间这一站停摆', text: '玩家提交不了，商家也核验不了。' },
     { title: '暂停只影响本站', text: '不改变已发放的权益，也不动已经完成的提交。' },
-    { title: '「兜底完成」是自动的', text: '站点暂停并绑好方案后，玩家走到备用站点时会自动记为兜底完成，不需要手动操作。', tone: 'warning' },
-    { title: '恢复要过两个服务窗', text: '活动服务窗和站点服务窗都得在窗内才恢复得了。' },
+    { title: '「保底完成」是自动的', text: '节点暂停并绑好备用方案后，玩家到达备用节点会自动记为保底完成', tone: 'warning' },
+    { title: '恢复要过两个服务窗', text: '活动服务窗和节点服务窗都得在窗内才恢复得了。' },
   ] },
   { key: 'cancel', label: '取消一整场', rows: [
     { title: '会下架本场、处理退款并终止候补', text: '取消原因 2–255 字必填，会随通知一起发给已报名的人。', tone: 'danger' },
@@ -468,7 +468,7 @@ Page({
           opsTimeSheetVisible: false,
           resultSheet: {
             show: true, kind: 'success', title: '集合时间已更新',
-            sub: '已报备发起人；退款截止按新的集合时间前 24 小时计算。', why: '', duration: OPS_RESULT_SHEET_MS,
+            sub: '退款截止为集合前 24 小时', why: '', duration: OPS_RESULT_SHEET_MS,
           },
         });
         that.fetchDetail(); // 回读真源:新时间从 activityList 重新取,不在本地先改
@@ -481,7 +481,7 @@ Page({
       successStatusAbnormal(res, statusCode) {
         const status = Number(statusCode);
         const definite = status >= 400 && status < 500 && status !== 408; // 4xx = 明确拒绝;5xx/408 = 结果未知
-        failSheet(definite ? ((res && res.msg) || '服务拒绝了这次修改') : '服务暂时不可用，结果待确认；已重新读取当前时间');
+        failSheet(definite ? ((res && res.msg) || '服务拒绝了这次修改') : '服务暂不可用，结果待确认；已重新读取当前时间');
         if (!definite) that.fetchDetail();
       },
     });
@@ -588,7 +588,7 @@ Page({
     if (sessions.length >= 1) return { primary: { text: '去选一场', disabled: false }, sessionHint: '' };
     return {
       primary: { text: '去开场', disabled: false },
-      sessionHint: '这个主题还没有场次：核销与团码都要先开一场。',
+      sessionHint: '暂无场次',
     };
   },
 
@@ -745,7 +745,7 @@ Page({
   // 核销台账 = 本团名册里每个人的到场状态。名册页早就有这份数据,
   // 只是原来没把核销态显示出来(它只被用来算「能不能退款」)。
   goLedger() {
-    if (!this._clubId || !this._topicId) { this.notReady('核销台账'); return; }
+    if (!this._clubId || !this._topicId) { this.notReady('核销记录'); return; }
     if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/club/enroll/index?clubId=' + this._clubId + '&topicId=' + this._topicId, complete: () => { this._navigating = false; } });
   },
 
@@ -856,7 +856,7 @@ Page({
           nodeId: n.nodeId,
           merchantName: name,
           initial: name.slice(0, 1),
-          stationName: n.name || '未命名站点',
+          stationName: n.name || '未命名节点',
           phone: phone,
           // 未确认的商家回包里压根没有 phone —— 这里说清是「还没确认」,
           // 不要写成空字符串,空会被读成「这家没留电话」。
@@ -1009,7 +1009,7 @@ Page({
         that.fetchDetail();
         that.loadTopicSetting();
       },
-      fail() { that.setData({ endSubmitting: false, endErrorText: '网络开小差了，没能结束。' }); },
+      fail() { that.setData({ endSubmitting: false, endErrorText: '网络异常，没能结束。' }); },
     });
   },
 
@@ -1031,7 +1031,7 @@ Page({
     function onFailure(res, statusCode) {
       const code = Number(statusCode) || Number(res && res.code);
       const denied = code === 403;
-      const fallback = denied ? '当前账号暂时不能查看主题设置' : '主题设置没能取到，请稍后重试';
+      const fallback = denied ? '当前账号暂时不能查看主题设置' : '主题设置获取失败，请稍后重试';
       that.setData({
         settingState: denied ? 'denied' : 'error',
         settingErrorText: safeUserMessage(bizFailureMessage(res, fallback), fallback),
@@ -1099,7 +1099,7 @@ Page({
         }
         that.setData({ settingSaving: false, setting: that.buildSetting(res.data) });
       },
-      fail() { that.setData({ settingSaving: false, setting: before }); toast('网络开小差了，没能保存'); },
+      fail() { that.setData({ settingSaving: false, setting: before }); toast('网络异常，没能保存'); },
     });
   },
 

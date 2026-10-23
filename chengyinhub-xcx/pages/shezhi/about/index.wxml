@@ -16,7 +16,7 @@
 
     <view class="about-section">
       <view class="about-section__title">我的二维码</view>
-      <view class="about-section__intro">你的城瘾身份码，用来在活动现场亮明身份。这项功能还在开通中，开通后会自动出现在这里。</view>
+      <view class="about-section__intro">活动现场出示，即将开通</view>
       <cy-qr-voucher
         embedded="{{true}}"
         surface="host"
@@ -31,7 +31,7 @@
     </view>
 
     <view class="about-section about-section--menu">
-      <cy-cell tint="{{isMerchantView ? '' : 'mono'}}" icon="/pages/shezhi/images/icon_agreement.svg" title="用户服务协议" description="查看服务条款" bind:tap="openAgreement" />
+      <cy-cell tint="{{isMerchantView ? '' : 'mono'}}" icon="/pages/shezhi/images/icon_agreement.svg" title="用户服务协议" description="" bind:tap="openAgreement" />
       <cy-cell tint="{{isMerchantView ? '' : 'mono'}}" icon="/pages/shezhi/images/icon_headset.svg" title="联系我们" open-type="contact" hairline="{{false}}" />
     </view>
   </view>

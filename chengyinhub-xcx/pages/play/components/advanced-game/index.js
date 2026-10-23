@@ -255,7 +255,7 @@ Component({
     enterUnknown(sentVersion) {
       this.setData({
         acting: false, unknown: true, error: '',
-        unknownText: '结果还没确认，正在核对，请勿重复提交'
+        unknownText: '结果还没确认，正在确认，请勿重复提交'
       });
       this._unknownVersion = sentVersion;
       this.resolveUnknown();
@@ -295,7 +295,7 @@ Component({
           });
         }).catch(() => {
           if (!this.currentRequestContext(context)) return false;
-          this.setData({ readingBack: false, unknownText: '还没核对上，网络恢复后再试 · 原提交会自动去重' });
+          this.setData({ readingBack: false, unknownText: '还没确认上，网络恢复后再试 · 原提交会自动去重' });
           return false;
         });
       }
@@ -314,7 +314,7 @@ Component({
           const typeIn = (authoritative.playKit || {}).typeIn || {};
           // 开表有独立服务端事实，不拿版本增长代替开始计时。
           if (typeInStart && typeof typeIn.started !== 'boolean') {
-            this.setData({ readingBack: false, unknownText: '还没确认是否开始计时，请再核对 · 期间请勿重复提交' });
+            this.setData({ readingBack: false, unknownText: '还没确认是否开始计时，请再确认 · 期间请勿重复提交' });
             return;
           }
           const landed = typeInStart ? typeIn.started : advanced && !multiplayer;
@@ -333,7 +333,7 @@ Component({
           if (!this.currentRequestContext(context)) return;
           this.setData({
             readingBack: false,
-            unknownText: '还是没核对上，网络恢复后点这里再试 · 期间请勿重复提交'
+            unknownText: '还是没确认上，网络恢复后点这里再试 · 期间请勿重复提交'
           });
           this.emitActionFail(this._unknownAction);
         });

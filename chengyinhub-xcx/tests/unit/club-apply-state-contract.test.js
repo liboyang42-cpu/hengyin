@@ -297,7 +297,7 @@ test('开场形变的起止几何按中心对中心算，不是按顶边', () =>
   const m = h.page.data.morph
   assert.ok(m, '没量到几何就不该进形变态')
   // CTA 中心 y = 600 + 48/2 = 624;进度轨中心 y = 54 + 3/2 = 55.5
-  assert.equal(m.dy, 55.5 - 624, 'scaleY 以中心为原点,位移必须按中心算')
+  assert.equal(m.dy, 55.5 - 624, 'scaleY 以中心为原点，位移必须按中心算')
   assert.equal(m.sy, 3 / 48, '纵向压扁比 = 轨道高 / 胶囊高')
   // 白色占比 = 第一段 / 整条轨道(含段间空隙),不是写死的 25%
   assert.equal(m.fx, 82.75 / (16 + 3 * 86.75 + 82.75 - 16))
@@ -316,7 +316,7 @@ test('负控：位移按顶边算(漏掉中心修正)必须判红', () => {
     'dy: first.top - cta.top,')
   assert.notEqual(broken, src, '负控锚点失效')
   assert.match(src, /first\.height \/ 2\) - \(cta\.top \+ cta\.height \/ 2\)/,
-    '位移必须按中心对中心算:scaleY 以中心为原点,按顶边算会差半个胶囊高')
+    '位移必须按中心对中心算:scaleY 以中心为原点，按顶边算会差半个胶囊高')
 })
 
 test('减动效时不放形变，直接切到第一步', () => {

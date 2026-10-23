@@ -95,7 +95,7 @@ test('冷缓存冷启动:登录落地后首页自己复判身份并跳商家首�
 
   ctx.page.onLoad({});
   ctx.page.onShow();
-  assert.deepStrictEqual(ctx.redirects, [], '登录还没落地时不该跳转,应先渲染玩家首页');
+  assert.deepStrictEqual(ctx.redirects, [], '登录还没落地时不该跳转，应先渲染玩家首页');
 
   // 登录回来了:applySession 把角色写进 storage,然后 appReadyPromise resolve
   ctx.storage.role = 'merchant';
@@ -107,7 +107,7 @@ test('冷缓存冷启动:登录落地后首页自己复判身份并跳商家首�
   assert.deepStrictEqual(
     ctx.redirects,
     [MERCHANT_HOME],
-    '登录落地后没有复判身份 ⇒ 商家会一直停在玩家首页,直到手动切走再切回(2026-08-10 真机复现的就是这个)',
+    '登录落地后没有复判身份 ⇒ 商家会一直停在玩家首页，直到手动切走再切回(2026-08-10 真机复现的就是这个)',
   );
 });
 
@@ -155,7 +155,7 @@ test('复判时用户已经切走:不许把人从别的页面拽回商家首页'
   global.getCurrentPages = () => [ctx.page, { route: 'pages/other/index' }]; // 用户已经进了别的页
   ctx.landLogin();
   await flush();
-  assert.deepStrictEqual(ctx.redirects, [], '本页已不是栈顶,复判不该抢导航');
+  assert.deepStrictEqual(ctx.redirects, [], '本页已不是栈顶，复判不该抢导航');
 });
 
 test('appReady 拒绝必须给出可见错误，不能因页面时序分支静默吞掉', async () => {
@@ -198,6 +198,6 @@ test('跳商家首页必须带 fail 回调(导航被丢时不能零信号)', () 
   assert.strictEqual(
     typeof failHandler,
     'function',
-    'redirectTo 没有 fail 回调 ⇒ 跳转被框架丢掉时完全没有信号,分不清是没判出商家还是判出了没跳成',
+    'redirectTo 没有 fail 回调 ⇒ 跳转被框架丢掉时完全没有信号，分不清是没判出商家还是判出了没跳成',
   );
 });

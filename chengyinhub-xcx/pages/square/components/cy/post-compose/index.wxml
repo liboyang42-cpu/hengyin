@@ -107,13 +107,13 @@
   <cy-sheet show="{{activityPickerShow}}" title="选择活动" handle="{{true}}" closable bind:close="onCloseActivityPicker">
     <view class="cmp-act-pick">
       <cy-skeleton wx:if="{{activityLoading}}" type="list" count="3" />
-      <cy-error load-failure wx:elif="{{activityError}}" title="活动列表没有加载出来" sub="只显示你参加过或主办的活动" retry="重试" bind:retry="loadActivityOptions" />
+      <cy-error load-failure wx:elif="{{activityError}}" title="活动列表加载失败" sub="只显示你参加过或主办的活动" retry="重试" bind:retry="loadActivityOptions" />
       <block wx:else>
         <cy-cell wx:for="{{activityList}}" wx:key="activityId"
                  title="{{item.name}}" description="{{item.sourceLabel}}"
                  data-index="{{index}}" data-activity-id="{{item.activityId}}"
                  bind:tap="onPickActivity" />
-        <cy-empty wx:if="{{!activityList.length}}" size="sm" title="还没有可关联的活动" sub="参加或主办一场之后，这里会列出来" />
+        <cy-empty wx:if="{{!activityList.length}}" size="sm" title="还没有可关联的活动" />
       </block>
     </view>
   </cy-sheet>

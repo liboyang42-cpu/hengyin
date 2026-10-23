@@ -64,7 +64,7 @@ test('网络失败后关掉再打开:只读回读原 requestId,拿到已审核�
   assert.equal(chat.data.state, 'DONE');
   setShow(chat, false);
   setShow(chat, true);
-  assert.equal(requests.length, 2, '已恢复的问题不再回读');
+  assert.equal(requests.length, 2, '已恢复的问题不再刷新');
 });
 
 test('回读仍在处理:「查询处理结果」只再读一次,不走 POST', () => {
@@ -124,7 +124,7 @@ test('换了会话或轨道就不回读别处的问题;已有明确结论的问�
   sent.success({ code: 200, data: { requestId: sent.data.requestId, outcomeStatus: 'REJECTED', safetyDecision: 'BLOCK', errorCode: 'INPUT_BLOCK', safeText: '换个说法' } });
   setShow(merchant, false);
   setShow(merchant, true);
-  assert.equal(requests.at(-1), sent, '已拿到结论的问题不回读');
+  assert.equal(requests.at(-1), sent, '已拿到结论的问题不刷新');
 });
 
 test('迟到的回读响应在再次关闭后被丢弃', () => {

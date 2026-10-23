@@ -174,7 +174,7 @@ Page({
       },
       fail: function () {
         if (seq !== that._listSeq || !that._isCouponContextCurrent(owner, scope, epoch)) return;
-        that.setData({ loadState: 'error', errorMsg: '网络可能不稳定，请稍后再试' });
+        that.setData({ loadState: 'error', errorMsg: '网络异常，请重试' });
       },
       complete: function () {
 

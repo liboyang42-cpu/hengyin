@@ -155,15 +155,15 @@ test('已核销主单及未核销从单均展示人工售后主卡并可回查�
   }
 });
 
-for (const close of ['detail', 'sheet']) test('取消成功后' + close + '返回通过权威回读刷新订单列表', () => {
+for (const close of ['detail', 'sheet']) test('取消成功后' + close + '返回通过权威刷新刷新订单列表', () => {
   const h = harness(); h.initial();
   h.reply(h.beginCancel(), { code: 200, data: { cashRefundRequired: false } });
   h.reply(h.pending('/api/registration/info')[1], { code: 200, data: h.cancelled });
   assert.equal(h.detail.data.info.orderStateKey, 'cancelled');
   if (close === 'detail') h.detail.goBack(); else h.sheet.onBack();
   assert.equal(h.parent.data.sceneCurrent, null);
-  assert.equal(h.pending('/api/registration/list').length, 2, '成功取消必须触发一次列表回读');
-  assert.equal(h.history.data.list[0].orderStateKey, 'not_started', '回读完成前不能本地伪造已取消');
+  assert.equal(h.pending('/api/registration/list').length, 2, '成功取消必须触发一次列表刷新');
+  assert.equal(h.history.data.list[0].orderStateKey, 'not_started', '刷新完成前不能本地伪造已取消');
   h.reply(h.pending('/api/registration/list')[1], { code: 200, data: { rows: [h.cancelled] } });
   assert.equal(h.history.data.list[0].orderStateKey, 'cancelled');
 });
@@ -400,7 +400,7 @@ test('ORDER-01:扫码完成后退款主态及真实不可退资格继续阻断�
   }
 });
 
-for (const status of [undefined, 408, 502]) test('取消回执未知 ' + status + ' 回读详情和列表，不重复写入或猜成功', () => {
+for (const status of [undefined, 408, 502]) test('取消回执未知 ' + status + ' 刷新详情和列表，不重复写入或猜成功', () => {
   const h = harness(); h.initial();
   const request = h.beginCancel();
   request.fail({ errMsg: 'request:fail timeout' }, status); request.complete();

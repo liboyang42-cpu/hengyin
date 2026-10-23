@@ -87,7 +87,7 @@ function runInfoList(rows) {
 test('① 副标题与标题逐字相同时不渲染第二行(同一个值印两遍 = 零信息量)', () => {
   // 这就是复拍图 09 上的真实脏数据行
   const [row] = runInfoList([{ id: 7, title: '11', subtitle: '11', contents: '<p>正文</p>' }])
-  assert.equal(row.title, '11', '标题是真实数据,不许被代码改写或编造')
+  assert.equal(row.title, '11', '标题是真实数据，不许被代码改写或编造')
   assert.equal(row.description, '', 'subtitle 与 title 相同 ⇒ 摘要不渲染')
 })
 
@@ -137,7 +137,7 @@ test('① 不可用行在 WXML 上不可点且无 chevron,并带显式状态说�
   assert.match(unusable, /disabled/, '不可用行必须 disabled(不可点)')
   assert.match(unusable, /arrow="\{\{\s*false\s*\}\}"/, '不可用行不得留 chevron(暗示可点)')
   // R3 起文案统一为「内容待完善，暂不可查看」(原「内容未配置」)
-  assert.match(unusable, /内容待完善/, '必须给显式状态说明,不能只是空着')
+  assert.match(unusable, /即将上线/, '必须给显式状态说明，不能只是空着')
 })
 
 test('① 空列表仍然走 cy-empty 且 nodata 真被消费(R1 已修,别回退)', () => {
@@ -149,7 +149,7 @@ test('① 空列表仍然走 cy-empty 且 nodata 真被消费(R1 已修,别回�
   req.success({ code: '200', data: [] })
   req.complete()
   assert.deepEqual(vm.data.list, [])
-  assert.equal(vm.data.nodata, true, '空列表必须把 nodata 置真,否则空态不渲染')
+  assert.equal(vm.data.nodata, true, '空列表必须把 nodata 置真，否则空态不渲染')
 })
 
 /* ---------- ② 退出账号 = 可逆 ⇒ 中性;红只留给注销 ---------- */
@@ -158,7 +158,7 @@ test('② 退出账号不得用 danger 红(可逆操作)', () => {
   const wxml = read('pages/shezhi/shezhi.wxml')
   const logoutBlock = wxml.slice(wxml.indexOf('sz-logout'), wxml.indexOf('sz-logout') + 400)
   assert.ok(logoutBlock.includes('退出账号'), '定位到退出账号块')
-  assert.doesNotMatch(logoutBlock, /variant="danger"/, '退出登录可逆,不得用危险语义')
+  assert.doesNotMatch(logoutBlock, /variant="danger"/, '退出登录可逆，不得用危险语义')
   assert.match(logoutBlock, /variant="secondary"/, '应为中性动作语义')
 })
 
@@ -192,7 +192,7 @@ test('② 页面侧不得改回 .sz-bottom-btn 类名(会被 style/components.wx
 test('④ cy-page-title 的 title 不得收到 null(agreement 首帧 doc 为 null)', () => {
   const wxml = read('pages/agreement/index.wxml')
   assert.doesNotMatch(wxml, /title="\{\{doc\.title\}\}"/, 'doc 初值为 null,直接取 doc.title 会传 null 并告警')
-  assert.match(wxml, /title="\{\{doc \? doc\.title : ''\}\}"/, '需空串兜底(仍绑 doc.title,不许写死标题:本页也承载《账号注销须知》)')
+  assert.match(wxml, /title="\{\{doc \? doc\.title : ''\}\}"/, '需空串保底(仍绑 doc.title,不许写死标题:本页也承载《账号注销须知》)')
   // 行为侧:onLoad 前 data.doc 必须是可安全取值的形态
   const vm = loadPage('pages/agreement/index.js')
   assert.ok(!vm.data.doc || typeof vm.data.doc.title === 'string')
@@ -209,7 +209,7 @@ test('④ agreement 标题仍随 ?type= 变化(不许为了消告警写死)', ()
 
 test('④ roleBadge 的 role 不得收到 null(未登录时 userInfo.role 为空)', () => {
   const wxml = read('pages/member/index/index.wxml')
-  assert.match(wxml, /<roleBadge role="\{\{userInfo\.role \|\| ''\}\}"/, 'C03 调用方补空串兜底(不动 components/roleBadge)')
+  assert.match(wxml, /<roleBadge role="\{\{userInfo\.role \|\| ''\}\}"/, 'C03 调用方补空串保底(不动 components/roleBadge)')
 })
 
 // R5 已用 cy-footer-bar 替换自造底栏；仍核对页面占位与组件实际盒高同源。

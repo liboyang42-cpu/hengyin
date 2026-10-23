@@ -43,7 +43,7 @@ function assertRouteUsesCanonicalTypeResolver(source) {
   assert.match(source, /const\s+doc\s*=\s*getDoc\(type\)/,
     '路由 query 必须经 getDoc 解析，?type=deregister 才会展示账号注销须知');
   assert.match(source, /const\s+docType\s*=\s*resolveKey\(type\)/,
-    'Back 兜底必须使用与正文相同的解析 key，不能把 deregister 送回设置页');
+    'Back 保底必须使用与正文相同的解析 key，不能把 deregister 送回设置页');
   assert.doesNotMatch(source, /const\s+doc\s*=\s*DOCS\[type\]/,
     '禁止直接按原始 query 查 DOCS：短别名会静默回退成用户服务协议');
 }

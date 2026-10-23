@@ -78,7 +78,7 @@ test('浅色/商家页的弹窗必须落在主题作用域内(否则白页弹黑
   assert.deepEqual(
     offenders.map(o => o.file),
     [],
-    '这些页的 cy-sheet/cy-modal 挂在主题容器外且自身没挂主题类,商家/浅色态会弹出玩家黑弹窗:\n' +
+    '这些页的 cy-sheet/cy-modal 挂在主题容器外且自身没挂主题类，商家/浅色态会弹出玩家黑弹窗:\n' +
       offenders.map(o => `  ${o.file}\n` + o.strays.map(s => `    ${s.slice(0, 100)}`).join('\n')).join('\n'),
   )
 })
@@ -104,7 +104,7 @@ test('negative control: 注释里的假标签不得把容器外的弹窗洗成�
     '<view class="p theme-merchant"></view>\n' +
     '<!-- 参考写法:<view class="p theme-merchant"> -->\n' +
     '<cy-sheet show="{{a}}"></cy-sheet>'
-  assert.equal(straySheets(fake).length, 1, '注释必须被剥掉,弹窗仍应判为容器外')
+  assert.equal(straySheets(fake).length, 1, '注释必须被剥掉，弹窗仍应判为容器外')
 })
 
 // ============================================================================
@@ -185,13 +185,13 @@ test('negative control: 把某个 role token 改回 player 值必须判红(补�
   assert.notEqual(mutated, TOKENS_WXSS, '变异锚点失效')
   assert.ok(
     roleTokenDefects(SHEET_WXSS, mutated).some(d => d.includes('指回了玩家暗档')),
-    '声明存在但取值是玩家暗档,必须判红',
+    '声明存在但取值是玩家暗档，必须判红',
   )
 })
 
 test('negative control: 后代规则(.theme-light .foo)不得被要求声明整组', () => {
   const fake = '.theme-light .foo { color: red; }\n' + TOKENS_WXSS
-  assert.deepEqual(roleTokenDefects(SHEET_WXSS, fake), [], '只有主题根块才是主题档,后代规则不该被抓')
+  assert.deepEqual(roleTokenDefects(SHEET_WXSS, fake), [], '只有主题根块才是主题档，后代规则不该被抓')
 })
 
 test('negative control: 把弹窗从主题容器内挪到容器外必须判红', () => {

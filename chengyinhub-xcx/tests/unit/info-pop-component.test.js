@@ -111,19 +111,19 @@ test('sheet 变体不传 title 也有标题(否则 cy-sheet 不渲染关闭钮)'
   const def = loadDefinition();
   const ob = def.observers['ariaLabel, title'];
   const a = create({}); ob.call(a, '', '');
-  assert.equal(a.data._sheetTitle, '说明', '没给 title 要兜底,不能是空串');
+  assert.equal(a.data._sheetTitle, '说明', '没给 title 要保底，不能是空串');
   const b = create({}); ob.call(b, '', '结算口径');
   assert.equal(b.data._sheetTitle, '结算口径', '给了就用调用方的');
 
   const wxml = read('pages/merchant/components/cy/info-pop/index.wxml');
   assert.match(wxml, /<cy-sheet[\s\S]*?title="\{\{_sheetTitle\}\}"/,
-    'sheet 必须绑兜底后的 _sheetTitle,直接绑 title 会在没传时丢掉关闭钮');
+    'sheet 必须绑保底后的 _sheetTitle,直接绑 title 会在没传时丢掉关闭钮');
 });
 
 test('负控:sheet 直接绑原始 title,不传 title 时就会退回没有关闭钮的状态', () => {
   const wxml = read('pages/merchant/components/cy/info-pop/index.wxml');
   const mutated = wxml.replace('title="{{_sheetTitle}}"', 'title="{{title}}"');
-  assert.notEqual(mutated, wxml, '变异未生效,负控本身是假的');
+  assert.notEqual(mutated, wxml, '变异未生效，负控本身是假的');
   assert.throws(
     () => assert.match(mutated, /<cy-sheet[\s\S]*?title="\{\{_sheetTitle\}\}"/),
   );

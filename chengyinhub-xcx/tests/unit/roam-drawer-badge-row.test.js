@@ -25,6 +25,6 @@ test('运行态抽屉点「勋章」:不清空 screen,去勋章墙页面', () =>
   const prevWx = global.wx
   global.wx = { navigateTo: o => nav.push(o.url) }
   try { page.openRoamPassport() } finally { global.wx = prevWx }
-  assert.equal(page.data.screen, 'map', 'screen 必须仍是运行态,不能置空')
+  assert.equal(page.data.screen, 'map', 'screen 必须仍是运行态，不能置空')
   assert.deepEqual(nav, ['/subpackageP3/pages/badge-wall/index/index'])
 })

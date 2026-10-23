@@ -40,7 +40,7 @@ test('预设头像导出图片随正文滚动，旧头像和离开后的回调�
   assert.equal(component.data.failed, false);
   definition.lifetimes.ready.call(component);
   exports[3].fail();
-  assert.equal(component.data.failed, true, '当前导出失败须保留角色兜底');
+  assert.equal(component.data.failed, true, '当前导出失败须保留角色保底');
   component.data.src = '/uploaded.png';
   definition.observers.src.call(component, component.data.src);
   assert.equal(component.data.preset, false);

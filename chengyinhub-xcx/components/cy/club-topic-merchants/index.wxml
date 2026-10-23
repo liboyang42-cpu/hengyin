@@ -9,7 +9,7 @@
   <view class="ctm">
     <cy-skeleton wx:if="{{loadState === 'loading'}}" type="form-section" count="4" loading-label="正在读取商家信息" />
     <cy-error load-failure wx:elif="{{loadState === 'error'}}" title="商家信息没能打开" sub="{{loadErrorText}}" retry="重试" bind:retry="onRetry" />
-    <cy-empty wx:elif="{{loadState === 'empty'}}" kind="empty" title="还没有站点承接" sub="去招商弹窗邀请商家承接吧" />
+    <cy-empty wx:elif="{{loadState === 'empty'}}" kind="empty" title="还没有节点承接" sub="去招商弹窗邀请商家承接吧" />
 
     <block wx:elif="{{loadState === 'ready'}}">
       <view class="ctm__card">
@@ -50,7 +50,7 @@
         </block>
       </view>
 
-      <text class="ctm__footnote">联系方式在商家接受合作后才下发;未确认的商家不展示手机号。</text>
+      <text class="ctm__footnote">商家接受合作后显示联系方式</text>
     </block>
   </view>
 </cy-scene-sheet>

@@ -90,7 +90,7 @@ test('cy-sheet 面板必须是半透明玻璃底 + backdrop-filter 模糊 + 70vh
   // 专业发布域的弹窗统一贴到胶囊底 +5px)。断言同时钉住「变量名」和「兜底值」,
   // 任一被改掉都判红 —— 只钉 70vh 的话,把 fallback 悄悄改成 90vh 抓不到。
   assert.match(panel[0], /max-height:\s*var\(--cy-comp-sheet-max-h,\s*70vh\)/,
-    '半屏上限必须是 var(--cy-comp-sheet-max-h, 70vh):兜底 70vh 是 8-05 拍板值,不能动')
+    '半屏上限必须是 var(--cy-comp-sheet-max-h, 70vh):保底 70vh 是 8-05 拍板值，不能动')
 })
 
 test('--cy-comp-sheet-blur token 必须在 tokens.wxss 定义', () => {

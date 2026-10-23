@@ -37,7 +37,7 @@ test('★信息卡出来之后,下一次会话视图不带卡也不许把它清�
   assert.equal(oc.data.cardView, CARD)
   oc.data.card = null                     // 回读 / 下一次会话视图:没有 objectCard
   oc._maybeResult()
-  assert.equal(oc.data.cardView, CARD, '信息卡被清空了,玩家眼前的名称/分类一下子没了')
+  assert.equal(oc.data.cardView, CARD, '信息卡被清空了，玩家眼前的名称/分类一下子没了')
   assert.equal(oc.data.phase, 'info')
   oc._timers.forEach(clearTimeout)
 })

@@ -35,7 +35,7 @@ test('theme-light/merchant 块必须整组重声明 ② 旧名 alias(防深色�
     assert.match(
       block,
       new RegExp(alias.replace(/[-]/g, '\\-') + ':\\s*var\\(--cy-color-'),
-      `${alias} 未在白域块内重声明,白页旧名元素会读到深色快照`,
+      `${alias} 未在白域块内重声明，白页旧名元素会读到深色快照`,
     )
   }
 })

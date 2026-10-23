@@ -40,8 +40,8 @@ test('押金阻塞项:点击直接在弹层里重试原路退款,不跳已删除
   // d7593ff37 起:退款接口只报告保证金状态,未重新读取解散条件前不得移除阻断项;
   // 回包缺 refundState/msg 事实时不得说「已受理」
   requests[0].success({ code: '200' })
-  assert.equal(vm.data.dissolutionBlockerItems.length, 3, '退款接口 200 不代表解散条件已满足,阻断项必须保留')
-  assert.equal(vm.data.dissolutionBlockerText, '退款结果暂无法确认；未结事项仍保留，请核对后再操作')
+  assert.equal(vm.data.dissolutionBlockerItems.length, 3, '退款接口 200 不代表解散条件已满足，阻断项必须保留')
+  assert.equal(vm.data.dissolutionBlockerText, '退款结果暂无法确认；未结事项仍保留，请确认后再操作')
 })
 
 test('押金阻塞项:回包带渠道事实时复述后端 msg,阻断项仍保留', () => {
@@ -50,7 +50,7 @@ test('押金阻塞项:回包带渠道事实时复述后端 msg,阻断项仍保�
   vm.openDissolutionBlockerItem({ currentTarget: { dataset: { index: 0 } } })
   requests[0].success({ code: '200', msg: '保证金退款已受理', data: { refundState: 'PROCESSING' } })
   assert.equal(vm.data.dissolutionBlockerItems.length, 3)
-  assert.equal(vm.data.dissolutionBlockerText, '保证金退款已受理；未结事项仍保留，请核对后再操作')
+  assert.equal(vm.data.dissolutionBlockerText, '保证金退款已受理；未结事项仍保留，请确认后再操作')
 })
 
 test('结算阻塞项:落到俱乐部结算页;非阻塞页 url 原样跳', () => {

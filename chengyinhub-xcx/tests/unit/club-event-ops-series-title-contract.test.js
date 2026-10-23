@@ -23,7 +23,7 @@ const stripWxmlComments = s => s.replace(/<!--[\s\S]*?-->/g, '')
 function seriesRowTitleBinding() {
   const wxml = stripWxmlComments(read('pages/club/event-ops/index.wxml'))
   const block = /wx:for="\{\{seriesRows\}\}"[\s\S]*?<\/view>\s*<\/view>/.exec(wxml)
-  assert.ok(block, 'seriesRows 的循环块找不到了,本合同的锚点要重挑')
+  assert.ok(block, 'seriesRows 的循环块找不到了，本合同的锚点要重挑')
   const title = /<text class="row-title">([^<]*)<\/text>/.exec(block[0])
   assert.ok(title, 'seriesRows 行里的 .row-title 不见了')
   return title[1]
@@ -55,7 +55,7 @@ test('主题名还没到位时退回裸 id,不假装知道', () => {
   const js = read('pages/club/event-ops/index.js')
   const fn = /function decorateSeriesRow[\s\S]*?\n\}/.exec(js)
   assert.ok(fn, 'decorateSeriesRow 不见了')
-  assert.match(fn[0], /topic && topic\.name/, '没有「找不到主题」的兜底')
+  assert.match(fn[0], /topic && topic\.name/, '没有「找不到主题」的保底')
 })
 
 test('负控:把行标题换回裸绑定,门禁必须变红', () => {
@@ -63,11 +63,11 @@ test('负控:把行标题换回裸绑定,门禁必须变红', () => {
   const mutated = wxml.replace(
     '<text class="row-title">{{item.titleText}} · {{item.recurrenceLabel}}</text>',
     '<text class="row-title">{{item.topicId}} · {{item.recurrenceType}}</text>')
-  assert.notEqual(mutated, wxml, '变异没生效:锚点已漂移,这个负控在空转')
+  assert.notEqual(mutated, wxml, '变异没生效:锚点已漂移，这个负控在空转')
 
   const block = /wx:for="\{\{seriesRows\}\}"[\s\S]*?<\/view>\s*<\/view>/.exec(mutated)
   const binding = /<text class="row-title">([^<]*)<\/text>/.exec(block[0])[1]
-  assert.equal(/\bitem\.topicId\b/.test(binding), true, '裸绑定没被判据认出来,它是橡皮图章')
+  assert.equal(/\bitem\.topicId\b/.test(binding), true, '裸绑定没被判据认出来，它是橡皮图章')
 })
 
 // 截图验不了这个函数 —— 拍照时是 setData 直灌 seriesRows,绕过了它,
@@ -95,7 +95,7 @@ test('topics 还没到位时退回裸 id,而不是显示空字符串', () => {
   const decorate = loadDecorator()
   // 这正是截图里那个孤零零「·」的成因:一旦兜底失效,行标题就整个空掉
   const row = decorate({ topicId: 7, recurrenceType: 'WEEKLY' }, [])
-  assert.equal(row.titleText, '主题 #7', '没有兜底的话行标题会是空的')
+  assert.equal(row.titleText, '主题 #7', '没有保底的话行标题会是空的')
   assert.ok(row.titleText.length > 0)
 })
 
@@ -160,7 +160,7 @@ test('CU-C-146 识别信息从最轻的开始补:有首场日期就用日期,不
   const decorated = loadListDecorator()(rows, sameNameTopics)
   assert.match(decorated[0].titleText, /9月22日起/)
   assert.match(decorated[1].titleText, /10月5日起/)
-  assert.ok(!/主题 #/.test(decorated[0].titleText), '日期就能区分,不该再堆内部编号')
+  assert.ok(!/主题 #/.test(decorated[0].titleText), '日期就能区分，不该再堆内部编号')
 })
 
 test('CU-C-146 日期拿不到(list 侧 futureDates 恒为空,CU-C-04)才退到编号,不编一个假日期', () => {
@@ -170,7 +170,7 @@ test('CU-C-146 日期拿不到(list 侧 futureDates 恒为空,CU-C-04)才退到�
   ]
   const decorated = loadListDecorator()(rows, sameNameTopics)
   for (const row of decorated) {
-    assert.ok(!/日起/.test(row.titleText), `清单侧没有日期数据,不能凭空写一个:${row.titleText}`)
+    assert.ok(!/日起/.test(row.titleText), `清单侧没有日期数据，不能凭空写一个:${row.titleText}`)
   }
 })
 
@@ -183,7 +183,7 @@ test('CU-C-146 重复调用幂等:topics 晚到再算一遍不会把上一次的
   const once = decorateRows(rows, sameNameTopics)
   const twice = decorateRows(once, sameNameTopics)
   assert.deepEqual(twice.map(row => row.titleText), once.map(row => row.titleText),
-    '后缀被叠了两层,清单会越刷越长')
+    '后缀被叠了两层，清单会越刷越长')
   assert.equal(rows[0].titleText, undefined, '原对象被就地改了')
 })
 
@@ -193,7 +193,7 @@ test('CU-C-146 两条调用点都必须走整表装饰:单行装饰看不见隔�
   const seriesBlock = /loadSeries\(\)\s*\{[\s\S]*?\n  \},/.exec(js)
   assert.ok(topicsBlock && seriesBlock, 'loadTopics / loadSeries 找不到了')
   assert.match(topicsBlock[0], /decorateSeriesRows\(/, 'topics 晚到时没有按整张清单重算')
-  assert.match(seriesBlock[0], /decorateSeriesRows\(/, 'series 成功路径仍逐行装饰,同名两行判不出来')
+  assert.match(seriesBlock[0], /decorateSeriesRows\(/, 'series 成功路径仍逐行装饰，同名两行判不出来')
 })
 
 test('CU-C-146 负控:把整表装饰换成逐行装饰,同名两行必须重新撞在一起', () => {
@@ -201,7 +201,7 @@ test('CU-C-146 负控:把整表装饰换成逐行装饰,同名两行必须重新
   const mutated = src.replace(
     /function decorateSeriesRows\(rows, topics\) \{[\s\S]*?\n\}/,
     'function decorateSeriesRows(rows, topics) {\n  return (rows || []).map(row => decorateSeriesRow(row, topics))\n}')
-  assert.notEqual(mutated, src, '变异没生效:decorateSeriesRows 的锚点已漂移,这个负控在空转')
+  assert.notEqual(mutated, src, '变异没生效:decorateSeriesRows 的锚点已漂移，这个负控在空转')
   const rec = /const RECURRENCES = \[[\s\S]*?\n\]/.exec(mutated)
   const one = /function decorateSeriesRow[\s\S]*?\n\}/.exec(mutated)
   const many = /function decorateSeriesRows[\s\S]*?\n\}/.exec(mutated)
@@ -220,7 +220,7 @@ test('装饰不改原对象,重复调用幂等', () => {
   const raw = { topicId: 7, recurrenceType: 'WEEKLY' }
   const once = decorate(raw, topics)
   const twice = decorate(once, topics)
-  assert.equal(raw.titleText, undefined, '原对象被就地改了,重算会互相污染')
+  assert.equal(raw.titleText, undefined, '原对象被就地改了，重算会互相污染')
   assert.deepEqual(twice, once, '重复装饰结果不一致 —— topics 晚到时会二次装饰')
 })
 
@@ -259,20 +259,20 @@ test('实现参数与内部编号不再出现在活动运营页面上（CU-C-150
   assert.doesNotMatch(wxml, /版本 \{\{item\.version\}\}/, '日期清单行不该把乐观锁序号当状态给主理人')
   assert.doesNotMatch(wxml, /当前版本 \{\{expectedVersion\}\}/, '编辑态同理')
   assert.doesNotMatch(wxml, /系列 #\{\{editingSeriesId\}\}/, '自增主键不进文案')
-  assert.doesNotMatch(wxml, /成员 #\{\{item\.memberId\}\}/, '成员卡用姓名,不用主键')
+  assert.doesNotMatch(wxml, /成员 #\{\{item\.memberId\}\}/, '成员卡用姓名，不用主键')
   assert.match(wxml, /wx:if="\{\{offerWindowText\}\}"/, '未形成合法时长时不显示空回显')
   assert.doesNotMatch(wxml, /默认 1440 = 一天/, '库字段单位与默认值不当标签')
   // 候补开关这个真信息要留着,别把修文案修成把状态也删了
   assert.match(wxml, /候补\{\{item\.waitlistEnabled \? '开启' : '关闭'\}\}/)
   // offerMinutes 仍是提交口径(自然单位只是回显,没改数据模型)
   assert.match(read('pages/club/event-ops/index.js'), /\n      offerMinutes,/,
-    '提交载荷仍按分钟发 offerMinutes —— 自然单位只是回显,没改数据模型')
+    '提交载荷仍按分钟发 offerMinutes —— 自然单位只是回显，没改数据模型')
 })
 
 test('昵称缺失时兜底成可读称呼,不是主键（CU-C-150 负控）', () => {
   const src = read('pages/club/event-ops/index.js')
   assert.doesNotMatch(src, /row\.nickname\.trim\(\) : \('成员 #' \+ memberId\)/,
-    '昵称兜底又变回「成员 #id」⇒ 上面那条页面断言会红')
+    '昵称保底又变回「成员 #id」⇒ 上面那条页面断言会红')
   const fallbacks = src.match(/row\.nickname\.trim\(\) : '未命名成员'/g) || []
-  assert.equal(fallbacks.length, 2, '名册行与带队人下拉两处兜底都要收口,漏一处就只有一个改对')
+  assert.equal(fallbacks.length, 2, '名册行与带队人下拉两处保底都要收口，漏一处就只有一个改对')
 })

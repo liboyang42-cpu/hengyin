@@ -317,7 +317,7 @@ Page({
       },
       fail: () => {
         if (this._destroyed) return;
-        this.setData({ renameSubmitting: false, renameError: '网络连接失败，请稍后重试' });
+        this.setData({ renameSubmitting: false, renameError: '网络异常，请重试' });
       },
       successStatusAbnormal: () => {
         if (this._destroyed) return;

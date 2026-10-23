@@ -31,7 +31,7 @@ function assertTemplateStateNav(source) {
     'template nav must not carry a title any more — 标题已下沉为 hero 大标题,nav 再挂就是双标题',
   )
   assert.match(navTag[0], /\soverlay\b/, 'template nav stays overlay on the hero cover')
-  assert.match(navTag[0], /pill="\{\{!!coverUrl\}\}"/, 'pill 只在有封面时启用,无封面回落素箭头')
+  assert.match(navTag[0], /pill="\{\{!!coverUrl\}\}"/, 'pill 只在有封面时启用，无封面回落素箭头')
   assert.match(navTag[0], /custom-back[^>]*bind:back="goBack"/, 'template nav needs the page-owned back fallback')
   // 2026-07-31 Xbox 重设计:出血 hero 换成「小方封面 + 标题 + 发行方」的紧凑吸顶头。
   // 这条断言锁的东西没变 —— 标题必须真的还在页面上(nav 卸下 title 后不能连标题一起消失),
@@ -39,7 +39,7 @@ function assertTemplateStateNav(source) {
   assert.match(
     source,
     /class="xb-head-title[^"]*">\{\{ info\.title \|\| '玩法' \}\}</,
-    'template 标题下沉后必须由紧凑头大标题承接,不能连标题一起消失',
+    'template 标题下沉后必须由紧凑头大标题承接，不能连标题一起消失',
   )
   assert.match(source, /class="xb-state"[^>]*padding-top:\{\{statusBarHeight \+ navBarHeight \+ 24\}\}px/, 'loading/error state needs explicit safe top padding')
   assert.match(source, /wx:if="\{\{ loading \}\}"/, 'template loading state must stay reachable')
@@ -59,7 +59,7 @@ function assertTemplateStateNav(source) {
   assert.match(
     source,
     /<view style="height: \{\{statusBarHeight \+ navBarHeight\}\}px;"><\/view>/,
-    '紧凑头前必须有等高 spacer 让开 fixed 顶栏,否则首屏标题被顶栏压住',
+    '紧凑头前必须有等高 spacer 让开 fixed 顶栏，否则首屏标题被顶栏压住',
   )
   // 2026-08-04 按参考图(Xbox 63)重排:头部是**首屏大头、随页滚动**,不再吸顶;
   // 主动作也从固定底栏搬进页面流。原来钉死「xb-head 带 sticky top」「CTA 带 wx:if」的写法
@@ -80,7 +80,7 @@ function assertTemplateCtaDoesNotCoverContent(wxss) {
   const cta = wxss.match(/\.xb-cta \{[^}]*\}/s)
   assert.ok(cta, 'templatedetail 必须有 CTA 的样式')
   assert.doesNotMatch(cta[0], /position:\s*(fixed|sticky)/,
-    'CTA 必须在页面流里,不能是固定/吸底层 —— 固定层会压住正文最后一段(沉浸详情踩过的坑)')
+    'CTA 必须在页面流里，不能是固定/吸底层 —— 固定层会压住正文最后一段(沉浸详情踩过的坑)')
 
   const pad = wxss.match(/\.xb-scroll-pad \{[^}]*\}/s)
   assert.ok(pad, 'templatedetail 必须有 scroll-pad')
@@ -198,7 +198,7 @@ test('negative control: CTA 改回固定底栏(压住正文)必须判红', () =>
   assert.throws(
     () => assertTemplateCtaDoesNotCoverContent(mutated),
     (e) => e instanceof assert.AssertionError && /不能是固定\/吸底层/.test(e.message),
-    '固定层必须由「CTA 不许压正文」这道闸判红,而不是被别的断言顺手接住',
+    '固定层必须由「CTA 不许压正文」这道闸判红，而不是被别的断言顺手接住',
   )
 })
 

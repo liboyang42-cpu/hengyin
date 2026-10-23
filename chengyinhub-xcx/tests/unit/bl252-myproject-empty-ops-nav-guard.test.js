@@ -57,7 +57,7 @@ function onceThenAgain(page, tap, url) {
   assert.equal(navs.length, 2, '未回调前仍锁住')
   const fresh = Object.assign({}, page)
   show(fresh)
-  assert.equal(fresh._navigating, false, 'onShow 兜底清锁')
+  assert.equal(fresh._navigating, false, 'onShow 保底清锁')
 }
 
 const pick = (k) => ({ currentTarget: { dataset: { k } } })

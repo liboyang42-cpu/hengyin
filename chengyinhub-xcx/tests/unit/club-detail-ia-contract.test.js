@@ -208,7 +208,7 @@ test('owner/member/admin 默认帖子，guest/商家访客默认概览', () => {
 test('管理深链只在详情回读 owner 身份后生效，参数不能替非 owner 越权', () => {
   const owner = loadDetail()
   owner.page.onLoad({ id: '9', tab: 'manage' })
-  assert.notEqual(owner.page.data.activeTab, 'manage', '服务端身份回读前不得提前打开管理 tab')
+  assert.notEqual(owner.page.data.activeTab, 'manage', '服务端身份刷新前不得提前打开管理 tab')
   const ownerDetail = owner.requests.find((request) => request.url === '/api/club/detail')
   ownerDetail.success({ code: '200', data: { id: 9, isOwner: true, isJoined: true } })
   assert.equal(owner.page.data.activeTab, 'manage', '服务端确认 owner 后才接受管理意图')
@@ -407,8 +407,8 @@ test('管理 tab 的项目行进主办视图，且 loadTopics 仍按 endDate 标
   // 282:622 / 282:660 分了「即将举行 / 已结束」两段、也叫 upcomingTopics —— 那是另一个 tab
   // 的分段渲染,不是这条契约要挡的重复视图,所以守卫收窄到管理 tab 段落。
   const manageTab = view.slice(view.indexOf('class="feed feed--plain manage-feed"'))
-  assert.ok(manageTab, '找不到管理 tab 段落,守卫失去锚点')
-  assert.doesNotMatch(manageTab, /upcomingTopics/, '待带队场次区块已撤,不应再有残留绑定')
+  assert.ok(manageTab, '找不到管理 tab 段落，守卫失去锚点')
+  assert.doesNotMatch(manageTab, /upcomingTopics/, '待带队场次区块已撤，不应再有残留绑定')
 
   const { page, requests } = loadDetail()
   page.data.clubId = 9
@@ -466,7 +466,7 @@ test('普通成员首展仍由 onLoad 单飞，返页只先回读详情关系，
 
   page.onShow()
   const detail = requests.find(request => request.url === '/api/club/detail')
-  assert.ok(detail, '普通成员返回必须回读现有详情关系')
+  assert.ok(detail, '普通成员返回必须刷新现有详情关系')
   assert.equal(requests.some(request => request.url === '/api/club/members'), false,
     '关系确认前不得先拉新名单')
 
@@ -616,6 +616,6 @@ test('较早的详情关系响应迟到时不能覆盖较新的失权结果', ()
 
 test('公开帖子的游客空态只限制发布，不得误写为不可查看', () => {
   const view = read(DETAIL_WXML)
-  assert.match(view, /加入俱乐部后可发布/)
+  assert.match(view, /入会后可发布/)
   assert.doesNotMatch(view, /加入俱乐部后可查看与发布/)
 })

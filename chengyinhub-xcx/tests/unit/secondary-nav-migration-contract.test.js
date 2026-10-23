@@ -55,7 +55,7 @@ function assertSharedNav(route, title, sources) {
 function assertTitlelessSharedNav(route, title, sources) {
   const cfg = JSON.parse(sources.json)
   assert.equal(cfg.navigationStyle, 'custom', `${route} 必须走自定义导航`)
-  assert.equal(cfg.navigationBarTitleText, title, `${route} 必须保留原生标题兜底`)
+  assert.equal(cfg.navigationBarTitleText, title, `${route} 必须保留原生标题保底`)
   assert.equal(cfg.usingComponents['cy-nav-bar'], '/components/cy/nav-bar/index')
   assert.equal(cfg.usingComponents['cy-page-title'], undefined)
   assert.match(sources.wxml, /<cy-nav-bar\b/)
@@ -81,7 +81,7 @@ test('负控:把旧个人资料大标题加回无标题页必须判红', () => {
   const route = 'pages/gerenziliao/gerenziliao'
   const s = sourcesOf(route)
   s.wxml = s.wxml.replace('<cy-nav-bar />', '<cy-nav-bar />\n<cy-page-title title="个人资料" />')
-  assert.notEqual(s.wxml, read(`${route}.wxml`), '变异未生效,负控本身是假的')
+  assert.notEqual(s.wxml, read(`${route}.wxml`), '变异未生效，负控本身是假的')
   assert.throws(() => assertTitlelessSharedNav(route, '个人资料', s))
 })
 
@@ -110,7 +110,7 @@ const REMOVED_SELF_DRAWN_TITLES = [
 
 test('迁移页不再自绘重复标题', () => {
   REMOVED_SELF_DRAWN_TITLES.forEach(([file, cls]) => {
-    assert.doesNotMatch(read(file), new RegExp(cls), `${file} 仍留着自绘标题,与 nav 标题重复`)
+    assert.doesNotMatch(read(file), new RegExp(cls), `${file} 仍留着自绘标题，与 nav 标题重复`)
   })
 })
 

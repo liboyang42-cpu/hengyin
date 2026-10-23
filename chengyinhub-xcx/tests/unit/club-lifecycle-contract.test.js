@@ -29,11 +29,11 @@ test('俱乐部详情读取真实入会策略，并仅向主理人或获授权�
   assert.match(wxml, /class="cover-nav-act"[^>]*bindtap="onSettings"[^>]*wx:if="\{\{club && \(club\.isOwner \|\| canUseManageTab\)\}\}"/)
   assert.match(js, /canGovern\(club\)[\s\S]*c\.isOwner \|\| c\.viewerIsAdmin/)
   assert.match(js, /canUseManageTab:\s*legacyCanGovern/,
-    'detail 权威确认的 legacy 管理员必须在 access\/me 回读前后保留治理入口')
+    'detail 权威确认的 legacy 管理员必须在 access\/me 刷新前后保留治理入口')
   // 2026-09-09 用户裁决整页删除「探店日质量证据」,这条断言随入口一并撤。
   // ⚠️ 它原来守的是「质量证据是 owner-only」;现在全仓没有任何交证据的入口,
   // Q 结算靠什么算要产品那边给结论 —— 不是这条测试能替谁决定的事。
-  assert.doesNotMatch(wxml, /goEditionReport/, '质量证据页已删,不许留下指向它的死入口')
+  assert.doesNotMatch(wxml, /goEditionReport/, '质量证据页已删，不许留下指向它的死入口')
   assert.match(wxml, /<cy-sheet show="\{\{settingsShow\}\}"[^>]*title="俱乐部设置"/)
 })
 
@@ -140,10 +140,10 @@ test('入会申请页已注册，且通过与拒绝调用真实状态机接口',
   assert.match(buildIntro[0], /可直接通过或拒绝/,
     '副标题必须只报动作:能打开本页的人一律按得动(access-gate 拦在 club:member:approve)')
   assert.doesNotMatch(buildIntro[0], /主理人/,
-    'CU-C-133:数「谁能处理」的名单会排掉被委派的成员,别再把它写回文案')
+    'CU-C-133:数「谁能处理」的名单会排掉被委派的成员，别再把它写回文案')
   // ⚠️ 判据先剥注释再扫:解释这次更正的注释里必然出现那句错文案,
   //    按原文扫会把注释判成违规(本轮第五次踩「锚点钉字面量」)。
   const jsCode = js.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '')
   assert.doesNotMatch(jsCode, /仅主理人可处理/,
-    '与后端行为不符:管理员进得来也按得动,这句话会骗人')
+    '与后端行为不符:管理员进得来也按得动，这句话会骗人')
 })

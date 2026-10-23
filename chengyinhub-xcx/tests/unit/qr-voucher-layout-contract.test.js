@@ -91,7 +91,7 @@ function assertQrVoucherLayout(source) {
   assert.equal(
     error.attrs['wx:if'],
     "{{state === 'error' || (state === 'ready' && !qr && !code)}}",
-    '错误态必须同时覆盖 state==="error" 与 ready-但无码,否则 ready 无码会永久转圈',
+    '错误态必须同时覆盖 state==="error" 与 ready-但无码，否则 ready 无码会永久转圈',
   )
   const card = nodes.find(node => node.name === 'view' && classHas(node, 'qr__card'))
   assert.ok(card, 'ready/loading 的二维码必须继续落在浅色卡面内')
@@ -131,7 +131,7 @@ function assertQrVoucherLayout(source) {
   const readyImage = nodes.find(node => node.name === 'image' && node.attrs['wx:if'] === "{{state === 'ready' && qr}}")
   assert.ok(readyImage && classHas(readyImage, 'qr__img'), 'ready 二维码分支不能被错误态改动破坏')
   const codeText = nodes.find(node => node.attrs['wx:elif'] === "{{state === 'ready' && code}}")
-  assert.ok(codeText && classHas(codeText, 'qr__code-text'), 'ready 无图时的文本防伪码兜底不能丢')
+  assert.ok(codeText && classHas(codeText, 'qr__code-text'), 'ready 无图时的文本防伪码保底不能丢')
   const loading = nodes.find(node => node.name === 'view' && classHas(node, 'qr__ph') && !classHas(node, 'qr__error'))
   assert.ok(loading && walk(loading).some(n => classHas(n, 'qr__spin')), 'loading 转圈分支不能被破坏')
 
@@ -263,7 +263,7 @@ const LIGHT_SCOPE = 'page.theme-light,'
 /** tokens.wxss 里某个主题域(到最近一个行首 `}` 为止)的声明文本 */
 function scopeBody(anchor) {
   const at = TOKENS.indexOf(anchor)
-  assert.ok(at >= 0, `tokens.wxss 缺少 ${anchor.trim()} 域,本契约的取值锚点失效`)
+  assert.ok(at >= 0, `tokens.wxss 缺少 ${anchor.trim()} 域，本契约的取值锚点失效`)
   const end = TOKENS.indexOf('\n}', at)
   assert.ok(end > at, `${anchor.trim()} 域未闭合`)
   return TOKENS.slice(at, end)
@@ -290,7 +290,7 @@ function assertHostSurface(source) {
     '正文根节点必须按 surface 挂 host 档 class')
   for (const use of source.wxml.matchAll(/<template\s+is="qr-voucher-body"([^>]*)\/>/g)) {
     assert.match(String(use[1]), /\bsurface\b/,
-      'surface 必须进每一处 <template is> 的 data —— template 作用域独立,漏了恒为 undefined')
+      'surface 必须进每一处 <template is> 的 data —— template 作用域独立，漏了恒为 undefined')
   }
   // ② host 档三处正文全部改走主题 token(写死 hex 就等于又钉了一次单底假设)
   for (const selector of HOST_TEXT) {
@@ -308,14 +308,14 @@ function assertHostSurface(source) {
       const fg = hexIn(anchor, token)
       const ratio = contrast(fg, pageBg)
       assert.ok(ratio >= 4.5,
-        `${selector} 在${surfaceName}页底 ${pageBg} 上必须 ≥4.5:1,实得 ${ratio.toFixed(2)}(${token}=${fg})`)
+        `${selector} 在${surfaceName}页底 ${pageBg} 上必须 ≥4.5:1，实得 ${ratio.toFixed(2)}(${token}=${fg})`)
     }
   }
   // ④ 调用方必须真的选档:关于页 embedded 在会翻转的页面底上
   const aboutVoucher = ABOUT_WXML.match(/<cy-qr-voucher\b[\s\S]*?\/>/)
-  assert.ok(aboutVoucher, '关于页玩家个人码的 cy-qr-voucher 调用点未找到,锚点失效')
+  assert.ok(aboutVoucher, '关于页玩家个人码的 cy-qr-voucher 调用点未找到，锚点失效')
   assert.match(aboutVoucher[0], /\bsurface="host"/,
-    '关于页必须声明 surface="host" —— 不传就落回 scrim 档,浅字压浅底的 bug 原样回来')
+    '关于页必须声明 surface="host" —— 不传就落回 scrim 档，浅字压浅底的 bug 原样回来')
 }
 
 test('surface=host:铺在页面底上的正文随主题取色,暗/日间两档都可读', () => {
@@ -332,7 +332,7 @@ test('负控:host 承载面契约可判红(覆盖被抽掉 / 退回钉死浅字 
       }),
     },
     {
-      name: 'host 档退回写死的 scrim 浅色(token 假设没了,日间底照样看不见)',
+      name: 'host 档退回写死的 scrim 浅色(token 假设没了，日间底照样看不见)',
       apply: source => ({
         ...source,
         wxss: replaceInRule(source.wxss, '.qr--host-surface .qr__err-txt',

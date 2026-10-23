@@ -51,7 +51,7 @@ test('列表照 Revolut 316-318:左对齐大标题、搜索、按日分组行;�
   assert.match(wxml, /<cy-page-title title="退款售后"/);
   assert.doesNotMatch(wxml, /<cy-nav-bar[^>]*title=/, '标题只出现一次');
   assert.match(wxml, /<cy-search[^>]*value="\{\{keyword\}\}"[^>]*bind:input="onSearchInput"/);
-  assert.doesNotMatch(wxml.replace(/<!--[\s\S]*?-->/g, ''), /筛选|Filters|filter-lines/, '列表接口只有 bucket 维度,不得放假筛选按钮');
+  assert.doesNotMatch(wxml.replace(/<!--[\s\S]*?-->/g, ''), /筛选|Filters|filter-lines/, '列表接口只有 bucket 维度，不得放假筛选按钮');
   assert.match(wxml, /wx:for="\{\{groups\}\}"[^>]*wx:for-item="group"/);
   assert.match(wxml, /\{\{group\.label\}\}/);
   assert.match(wxml, /acl-status--\{\{item\.statusTone\}\}/);
@@ -60,11 +60,11 @@ test('列表照 Revolut 316-318:左对齐大标题、搜索、按日分组行;�
   assert.match(wxml, /wx:if="\{\{item\.takeoverText\}\}"[^>]*>· \{\{item\.takeoverText\}\}/, '转平台的单副标题注明');
   assert.match(wxml, /<text class="acl-activity" wx:if="\{\{item\.activityTitleText\}\}">/, '活动名第二行弱色');
   assert.match(wxml, /<cy-empty wx:if="\{\{keyword && !groups\.length\}\}"[^>]*title="没有找到"[^>]*cta="清除搜索" bind:cta="clearSearch"/);
-  assert.match(wxml, /只在已加载的 \{\{items\.length \|\| 0\}\} 笔中搜索/, '本地过滤必须说明范围,不冒充全量搜索');
+  assert.match(wxml, /只在已加载的 \{\{items\.length \|\| 0\}\} 笔中搜索/, '本地过滤必须说明范围，不冒充全量搜索');
   assert.match(wxml, /wx:if="\{\{keyword && hasMore\}\}"[\s\S]*?bindtap="loadMore"/, '筛完行数太少滚不到底时必须有显式加载更多');
   assert.match(wxml, /acl-group-total" wx:if="\{\{group\.totalText && !keyword && !\(hasMore && index === groups\.length - 1\)\}\}"/,
     '搜索中或最后一组可能被分页截断时不得显示合计');
-  assert.doesNotMatch(js, /keyword=|keyword:\s*this\.data\.keyword[^\n]*url/, '列表接口不支持关键词,不得拼进请求');
+  assert.doesNotMatch(js, /keyword=|keyword:\s*this\.data\.keyword[^\n]*url/, '列表接口不支持关键词，不得拼进请求');
   assert.match(js, /groups: groupAftercareItems\(filterAftercareItems\(items, this\.data\.keyword\), new Date\(\)\)/,
     '翻页加载后必须按当前关键词重算分组');
 });

@@ -169,7 +169,7 @@ test('orderinfo 失败面板关闭无条件回订单列表', () => {
   const tag = failSheetTag(read(`${ORDERINFO_WXML}.wxml`))
   assert.ok(tag, '失败面板锚点失效(源码已改动?)')
   assert.match(tag, /bind:close="backToOrderList"/)
-  assert.doesNotMatch(tag, /wx:if/, '缺 id 时它是唯一出路,不得挂条件')
+  assert.doesNotMatch(tag, /wx:if/, '缺 id 时它是唯一出路，不得挂条件')
 })
 
 test('负控:给失败面板挂上 wx:if="{{id}}" 后必须判红(缺 id 正是最需要它的一档)', () => {
@@ -261,7 +261,7 @@ test('mycanyuinfo 的 cy-error 动作槽由页面状态驱动,不再写死 id �
   assert.match(errorTag[0], /retry="\{\{errorActionText\}\}"/)
   assert.match(errorTag[0], /bind:retry="onErrorAction"/)
   assert.doesNotMatch(errorTag[0], /retry="\{\{id \? '重试' : ''\}\}"/,
-    '缺参数时给空标签 = 整屏无按钮,已被 R2 推翻')
+    '缺参数时给空标签 = 整屏无按钮，已被 R2 推翻')
 })
 
 // ————————————————————————————————————————————————————————————
@@ -305,7 +305,7 @@ function assertBackReachableAboveVoucher(rawWxml, label) {
   assert.ok(navTag, `${label}:缺少 cy-nav-bar`)
   assert.match(navTag[0], /custom-back/, `${label}:返回必须由页面接管`)
   assert.match(navTag[0], /bind:back="onClose"/, `${label}:复用本页已正确的 onClose`)
-  assert.match(navTag[0], /tint="light"/, `${label}:暗遮罩上必须强制白箭头,不能随主题漂移`)
+  assert.match(navTag[0], /tint="light"/, `${label}:暗遮罩上必须强制白箭头，不能随主题漂移`)
 }
 
 test('coupon-qr:凭证层降到导航层之下,返回钮浮在遮罩上且接管了返回', () => {

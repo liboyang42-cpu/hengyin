@@ -32,7 +32,7 @@ function checkNoBlockEntry(source, script) {
   const code = codeOnlyJs(script);
   assert.doesNotMatch(template, /bind:tap="onBlock"/, '「屏蔽」入口必须摘掉(裁决 B:不许假成功)');
   assert.doesNotMatch(template, /title="屏蔽"/, '菜单里不得残留「屏蔽」这一行');
-  assert.doesNotMatch(code, /onBlock/, 'onBlock 处理器随入口一起摘,不许留死代码');
+  assert.doesNotMatch(code, /onBlock/, 'onBlock 处理器随入口一起摘，不许留死代码');
   assert.doesNotMatch(code, /已屏蔽/, '不许留只弹 toast 的假成功');
 }
 
@@ -45,7 +45,7 @@ test('负控:把「屏蔽」入口塞回去时必须判红', () => {
     '<cy-cell wx:if="{{isSelf}}" title="设置"',
     '<cy-cell title="屏蔽" danger arrow="{{false}}" bind:tap="onBlock" />\n  <cy-cell wx:if="{{isSelf}}" title="设置"'
   );
-  assert.notEqual(regressed, wxml, '负控锚点失效:注释头已改名,扫描口径需同步');
+  assert.notEqual(regressed, wxml, '负控锚点失效:注释头已改名，扫描口径需同步');
   assert.throws(() => checkNoBlockEntry(regressed, js), assert.AssertionError);
 });
 

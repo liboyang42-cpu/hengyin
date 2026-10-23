@@ -63,7 +63,7 @@ function contactOf(it) {
   return parts.join(' · ');
 }
 
-const INVITE_ID_ERROR = '邀约标识无法确认，请刷新后重试';
+const INVITE_ID_ERROR = '邀约信息无法确认，请刷新后重试';
 
 function parseInviteId(value) {
   if (typeof value === 'number') return Number.isSafeInteger(value) && value > 0 ? String(value) : '';
@@ -174,7 +174,7 @@ function decorateApplies(rows, box) {
       titleText: it.topicName || '主题 #' + it.topicId,
       dateText: dateOf(it.startDate),
       subText: box === 'received' ? '俱乐部申请带队' : '申请带队' + (it.clubName ? ' · ' + it.clubName : ''),
-      termsText: it.message ? '留言:' + it.message : '申请只表意向,条款随商家回的邀约走',
+      termsText: it.message ? '留言:' + it.message : '申请只表意向，条款随商家回的邀约走',
     });
   });
 }

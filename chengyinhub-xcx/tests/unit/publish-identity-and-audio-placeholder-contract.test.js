@@ -50,7 +50,7 @@ test('没选文件的空音频块不上送 —— 它只是编辑器里的占位
   // 而不是直调 toPayloadChapter —— 直调曾绕过 materializeChapter 对空 url 的 throw,契约假绿。
   const payload = storyFlow.toPayloadChapter(storyFlow.materializeChapter(ch, makeKey))
   assert.equal(payload.blocks.filter((b) => b.type === 'audio').length, 0,
-    '空音频块上送 = 后端存一条 url 为空的块,玩家端读到一个不响的音频')
+    '空音频块上送 = 后端存一条 url 为空的块，玩家端读到一个不响的音频')
   assert.ok(payload.blocks.some((b) => b.type === 'text'), '把别的块也一起过滤掉了')
 })
 
@@ -64,7 +64,7 @@ test('★回归:带空音频占位块的章节能被 materializeChapter 原样�
   assert.doesNotThrow(() => { ch = storyFlow.materializeChapter(draft, makeKey) }, '空音频占位块不该让 materialize 抛错')
   const block = ch.blocks.find((b) => b.type === 'audio')
   assert.ok(block, '空音频占位块被 materialize 丢掉了 —— 用户刚插的占位在重开后凭空消失')
-  assert.equal(block.url, '', '占位块的空 url 要原样保留,后续 fillMedia 才有块可填')
+  assert.equal(block.url, '', '占位块的空 url 要原样保留，后续 fillMedia 才有块可填')
 })
 
 test('★负控:图片没有空态,空 url 的图片块过 materialize 仍必须抛错', () => {
@@ -76,7 +76,7 @@ test('★负控:图片没有空态,空 url 的图片块过 materialize 仍必须
 test('materialize 对有 url 的音频块仍派生文件名(占位块才不派生)', () => {
   const src = { name: '第1章', blocks: [{ key: 'a1', type: 'audio', url: 'https://cdn/钟楼.mp3' }], nodes: [] }
   const block = storyFlow.materializeChapter(src, makeKey).blocks.find((b) => b.type === 'audio')
-  assert.ok(block._name && block._name.length > 0, '有 url 的音频块要能派生出文件名,别显示成"音频片段"')
+  assert.ok(block._name && block._name.length > 0, '有 url 的音频块要能派生出文件名，别显示成"音频片段"')
 })
 
 // ── A2 / A4 / C 三条身份与入口 ──────────────────────────
@@ -85,12 +85,12 @@ test('城市定向的章节卡必须有「编辑章节」入口(稿 P2/C2 是两
   assert.ok(cta, '.slopes-chapter-cta 不见了')
   assert.match(cta[0], /catchtap="openStoryEditor"/)
   assert.match(cta[0], /catchtap="showEditChapter"/,
-    '城市定向档只有「编辑故事流」一颗时,章节设置在卡上没有任何入口')
+    '城市定向档只有「编辑故事流」一颗时，章节设置在卡上没有任何入口')
 })
 
 test('商家承接只有俱乐部主理人能开(2026-09-07 用户裁决 + 0811 后端同型闸)', () => {
   assert.match(WXML, /<view class="chapter-recruit" wx:if="\{\{merchantPoolEditable\}\}">/,
-    '这一段没有身份闸,玩家和商家也能开,开了要到发布时才被后端 resolveMerchantPoolFlag 拒')
+    '这一段没有身份闸，玩家和商家也能开，开了要到发布时才被后端 resolveMerchantPoolFlag 拒')
 })
 
 test('商家的票务页没有自玩票整段(稿 M11)', () => {
@@ -98,7 +98,7 @@ test('商家的票务页没有自玩票整段(稿 M11)', () => {
   assert.ok(idx > 0, '自玩票段不见了')
   const guard = STEP3.slice(Math.max(0, idx - 400), idx)
   assert.match(guard, /operationScope !== 'MERCHANT'/,
-    '自玩票段没有身份闸 —— 商家发的是自由探索、卖的是承接位,这一段对它没有意义')
+    '自玩票段没有身份闸 —— 商家发的是自由探索、卖的是承接位，这一段对它没有意义')
 })
 
 // ── 商家承接的身份闸,判据本身也要有合同 ─────────────────
@@ -110,9 +110,9 @@ test('merchantPoolEditable 的判据:有快照就只认俱乐部主理人,没快
   const body = /_syncMerchantPoolEligibility\(\)\s*\{([\s\S]*?)\n  \},/.exec(js)
   assert.ok(body, '_syncMerchantPoolEligibility 不见了')
   assert.match(body[1], /!roleGuard\.hasSnapshot\(\)\s*\|\|\s*roleGuard\.isClubLeader\(\)/,
-    '判据必须是「没快照 或 是主理人」—— 少了 hasSnapshot 那半边,弱网首帧会把存量主题的招商静默关掉')
+    '判据必须是「没快照 或 是主理人」—— 少了 hasSnapshot 那半边，弱网首帧会把存量主题的招商静默关掉')
   assert.match(body[1], /formData\.openMerchantPool.*=\s*false|'formData\.openMerchantPool'\]\s*=\s*false/s,
-    '判成不可编辑时必须同时把已开的开关压回 false,否则界面没了、值还在,发布时被后端拒')
+    '判成不可编辑时必须同时把已开的开关压回 false,否则界面没了、值还在，发布时被后端拒')
 })
 
 test('★负控:判据退成只看 isClubLeader,合同必须判红', () => {

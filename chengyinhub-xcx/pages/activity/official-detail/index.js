@@ -33,8 +33,8 @@ const CATEGORY_TEXT = {
 // OfficialEventV2ServiceImpl.validatePublishMission 明确禁止发布(且 missionComplete 对前者恒 false),
 // 前端不得编造「去验证/自动同步」,如实标未支持,但任务条目照常展示(不删入口)。
 const MISSION_TYPE_TEXT = {
-  ROAM_POI_ARRIVAL: { label: '漫游据点到达', action: '该任务类型暂不支持发布与核验', supported: false },
-  EVENT_POINT_ARRIVAL: { label: '活动点位到达', action: '走到活动指定点位，系统会自动确认到达', supported: true },
+  ROAM_POI_ARRIVAL: { label: '漫游节点到达', action: '该任务类型暂不支持发布与核验', supported: false },
+  EVENT_POINT_ARRIVAL: { label: '活动节点到达', action: '走到活动指定节点，系统会自动确认到达', supported: true },
   THEME_VERIFIED_FINISH: { label: '完成绑定主题', action: '完成绑定的主题，完成后自动同步', supported: true },
   ROAM_SESSION_AREA: { label: '漫游区域覆盖', action: '该任务类型暂不支持发布与核验', supported: false },
 };
@@ -216,7 +216,7 @@ Page({
               e: null,
               loadErrKind: 'data',
               loadErrTitle: '活动内容不可用',
-              loadErrSub: '活动可能已下线，或当前链接已经失效。',
+              loadErrSub: '',
               loadErrAction: '返回活动列表'
             });
           } else {
@@ -241,7 +241,7 @@ Page({
         this.setData({
           loadErrKind: 'network',
           loadErrTitle: '网络没连上',
-          loadErrSub: this.data.e ? '已保留上次加载的活动详情，连接恢复后可以重试。' : '活动详情还没加载出来，连接恢复后可以重试。',
+          loadErrSub: this.data.e ? '已保留上次加载的活动详情，连接恢复后可以重试。' : '活动详情加载失败，连接恢复后可以重试。',
           loadErrAction: '重试'
         });
       },

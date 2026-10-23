@@ -43,7 +43,7 @@ function submitAlbum(page, action, detail, toast) {
   if (!state || state.sessionId !== kit.sessionId || state.version !== kit.version) {
     toast('玩法状态已变化，请重进节点'); return;
   }
-  if (game.data.acting || game.data.unknown) { toast('结果正在核对，请稍后再试'); return; }
+  if (game.data.acting || game.data.unknown) { toast('结果正在确认，请稍后再试'); return; }
   if (action === 'shoot') {
     if (!detail || !detail.tempFilePath) { toast('请先拍摄或选择照片'); return; }
     // 网络/5xx 失败：保留这张已选照片，只重传同一张；上传成功后才提交一次。其他失败请玩家重新选图。

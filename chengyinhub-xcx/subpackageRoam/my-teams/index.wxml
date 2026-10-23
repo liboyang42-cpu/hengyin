@@ -19,7 +19,7 @@
 
   <block wx:if="{{tab === 'mine'}}">
     <view class="mt-state" wx:if="{{loading && !groups.length}}">正在读取你的队伍…</view>
-    <view class="mt-err" wx:elif="{{mineError}}" bindtap="reload" aria-role="button" aria-label="队伍没能读到，点按重试" hover-class="cy-pressed" hover-stay-time="80">队伍没能读到 · 点按重试</view>
+    <view class="mt-err" wx:elif="{{mineError}}" bindtap="reload" aria-role="button" aria-label="队伍获取失败，点按重试" hover-class="cy-pressed" hover-stay-time="80">队伍获取失败 · 点按重试</view>
     <block wx:elif="{{groups.length}}">
       <block wx:for="{{groups}}" wx:for-item="g" wx:key="key">
         <view class="mt-sec">{{g.title}}</view>

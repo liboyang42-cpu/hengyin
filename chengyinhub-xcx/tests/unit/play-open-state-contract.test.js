@@ -31,7 +31,7 @@ test('三处消费方都读换算结果,不得再读 normNode 根本不产的 no
   const strip = (s) => s.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/.*$/gm, '$1')
 
   assert.doesNotMatch(strip(playJs), /\b[a-z]\.openText \|\| ''/,
-    'play 页不得再回落读 x.openText —— 那个字段不存在,读了等于永久空白')
+    'play 页不得再回落读 x.openText —— 那个字段不存在，读了等于永久空白')
   assert.match(strip(playJs), /resolveOpenState\(/, 'play 页必须走共享换算')
   assert.match(strip(merchantJs), /resolveOpenState\(/, '商家权益页必须走共享换算')
 })

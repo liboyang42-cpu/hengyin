@@ -110,7 +110,7 @@ test('负责范围内的重试动作统一为“重试”，错误态不再覆�
 
 test('聊天失败提示与页面重试按钮使用同一文案', () => {
   const source = fs.readFileSync(path.join(ROOT, 'subpackageB/pages/im/chat/index.js'), 'utf8')
-  assert.match(source, /error: '消息没加载出来，点上方「重试」再试'/)
+  assert.match(source, /error: '消息加载失败，点上方「重试」再试'/)
   assert.doesNotMatch(source, /点上方「重新加载」/)
 })
 

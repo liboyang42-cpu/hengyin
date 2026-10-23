@@ -98,7 +98,7 @@ test('名额接口 code=200 仍要求 owned 数组，缺失或非法不得冒充
     h.requests[0].success({ code: 200, data })
     assert.equal(h.page.data.bootstrapState, 'error')
     assert.equal(h.page.data.bootstrapErrorKind, 'data')
-    assert.match(h.page.data.bootstrapError, /名额数据不完整/)
+    assert.match(h.page.data.bootstrapError, /名额加载失败/)
   })
 })
 
@@ -236,7 +236,7 @@ test('向导选项、图片动作和主操作具备语义与 88rpx 点击下限'
   // 2026-09-06 用户定:删掉顶栏关闭钮(onClose 方法仍被三处错误态的「返回上一页」复用)。
   // 控件没了,原来那条 .cc-close 88rpx 触控下限断言就成了死锚点 —— 永远红,
   // 而「永远红」和「永远绿」一样没有信息。改成断言它确实不在,防止有人无意间加回来。
-  assert.doesNotMatch(WXML, /class="cc-close"/, '顶栏关闭钮已按裁决删除,别加回来')
+  assert.doesNotMatch(WXML, /class="cc-close"/, '顶栏关闭钮已按裁决删除，别加回来')
 })
 
 test('bootstrap epoch 负控：移除保护后旧检查可覆盖新一轮 ready', () => {

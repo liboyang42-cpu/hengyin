@@ -107,7 +107,7 @@ test('后端契约:hasGame 覆盖答题、App 传感器与滤镜拍照,未进店
   // 里的嵌套括号就能让 [^)]* 匹不到),所以这里不去猜条件长什么样。
   assert.doesNotMatch(ctrl, /m\.remove\(\s*"answerReveal"\s*\)/,
     'answerReveal 只能走无条件的 removeAll 列表 —— 剧透保护管的是剧情文本该不该提前看见,' +
-    '不是答案该不该提前拿到;revealed 由玩家自己写,挂上它等于这条付费内容闸自己开了')
+    '不是答案该不该提前拿到;revealed 由玩家自己写，挂上它等于这条付费内容闸自己开了')
   assert.match(ctrl, /removeAll\(Arrays\.asList\("medalName", "medalStyle", "medalImg", "couponId", "coupon"\)\)/)
   assert.match(ctrl, /hasArrived\(memberId, actId, node\.getId\(\)\)/)
   assert.match(ctrl, /markGameDone\(memberId, actId, node\.getTopicId\(\), node\.getId\(\)\)/)

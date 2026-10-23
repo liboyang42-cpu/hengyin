@@ -56,7 +56,7 @@ module.exports = { valid: valid };
               address="{{item.address || ''}}" available-time="{{item.businessTime || item.availableTime || ''}}" capacity="{{item.capacity}}" charge-type="{{item.chargeType}}" suit-types="{{item.suitActivityTypes || ''}}" coop-open="{{item.coopOpen}}" />
           </view>
         </view>
-        <cy-empty wx:elif="{{!merchantError}}" kind="empty" title="暂无可合作商家" sub="稍后再来看看" />
+        <cy-empty wx:elif="{{!merchantError}}" kind="empty" title="暂无可合作商家" />
       </block>
 
       <block wx:else>
@@ -69,7 +69,7 @@ module.exports = { valid: valid };
               data-id="{{item.id}}" aria-label="查看{{item.displayName}}俱乐部档案" bind:tap="goClub" bind:action="goClub"  hover-class="cy-pressed" hover-stay-time="80"/>
           </view>
         </view>
-        <cy-empty wx:elif="{{!clubError}}" kind="empty" title="暂无可合作俱乐部" sub="稍后再来看看" />
+        <cy-empty wx:elif="{{!clubError}}" kind="empty" title="暂无可合作俱乐部" />
       </block>
     </block>
   </view>

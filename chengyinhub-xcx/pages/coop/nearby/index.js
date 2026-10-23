@@ -21,7 +21,7 @@ function failureKind(value) {
 }
 
 function failureText(value, fallback) {
-  if (failureKind(value) === 'network') return '网络不稳定，请检查连接后重试';
+  if (failureKind(value) === 'network') return '网络异常，请检查连接后重试';
   return String(value && (value.msg || value.message) || fallback);
 }
 
@@ -157,7 +157,7 @@ Page({
     if (hasTopicParam && parsedTopicId == null) {
       this.setData({
         topicId: '', topicName: decodeText(options.topicName), pageTitle: '找商家承接',
-        pageState: 'missing-param', errorKind: 'missing-param', errorText: '主题参数无效，无法查询可承接商家',
+        pageState: 'missing-param', errorKind: 'missing-param', errorText: '主题信息无效，无法查询可承接商家',
       });
       return;
     }
@@ -184,7 +184,7 @@ Page({
 
   _setFailure(value, hadSnapshot) {
     const kind = failureKind(value);
-    const text = failureText(value, '附近商家没加载出来');
+    const text = failureText(value, '附近商家加载失败');
     if (kind === 'permission') {
       this._loadedScope = '';
       this.setData({
@@ -240,7 +240,7 @@ Page({
         that._locating = false;
         const failure = isLocationPermissionFailure(value)
           ? Object.assign({}, value, { code: 403, msg: '需要定位权限才能找附近商家' })
-          : Object.assign({}, value, { msg: '定位服务暂时不可用，请稍后重试' });
+          : Object.assign({}, value, { msg: '定位服务暂不可用，请稍后重试' });
         that._setFailure(failure, hadSnapshot);
         stopPullDownRefresh();
       },
@@ -457,7 +457,7 @@ Page({
     let confirmed = false;
     modal.show({
       title: '邀请商家补位',
-      content: '邀请「' + merchant.name + '」补位「' + candidate.chapterName + '」，商家可直接填写供给与点位。',
+      content: '邀请「' + merchant.name + '」补位「' + candidate.chapterName + '」，商家可直接填写供给与节点。',
       confirmText: '发送邀请',
       success: (res) => {
         if (!res.confirm || confirmed || epoch !== this._replacementInviteEpoch || scope !== this._scope()) return;
@@ -481,7 +481,7 @@ Page({
           success: (response) => {
             if (!isCurrent()) return;
             if (response && response.code == '200') {
-              this._finishAction(key, '已邀请「' + merchant.name + '」补位「' + candidate.chapterName + '」，等待商家提交供给与点位', '');
+              this._finishAction(key, '已邀请「' + merchant.name + '」补位「' + candidate.chapterName + '」，等待商家提交供给与节点', '');
               const position = this._listPosition;
               if (position) this.fetch(position.longitude, position.latitude);
               else this.locate();
@@ -509,7 +509,7 @@ Page({
         this._finishAction(key, '定位设置已更新，正在重试', '');
         this.locate();
       },
-      fail: (value) => this._finishAction(key, '', failureText(value, '设置暂时没打开，请稍后重试')),
+      fail: (value) => this._finishAction(key, '', failureText(value, '设置无法打开，请稍后重试')),
     });
   },
 

@@ -30,7 +30,7 @@ function assertExitIsLeftmost(sources) {
   const wxml = sources[FABU_WXML] === undefined ? read(FABU_WXML) : sources[FABU_WXML];
   const topic = sources[TOPIC_WXML] === undefined ? read(TOPIC_WXML) : sources[TOPIC_WXML];
   const tops = positions(wxml, 'class="node-sheet__top"').length + positions(topic, 'class="node-sheet__top"').length;
-  assert.ok(tops >= 4, `node-sheet__top 头部至少应有 4 处,实测 ${tops}`);
+  assert.ok(tops >= 4, `node-sheet__top 头部至少应有 4 处，实测 ${tops}`);
 
   for (const [file, source] of [[FABU_WXML, wxml], [TOPIC_WXML, topic]]) {
     for (const start of positions(source, '<view class="node-sheet__top"')) {

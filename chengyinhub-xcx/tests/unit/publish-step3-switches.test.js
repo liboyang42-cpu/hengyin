@@ -116,12 +116,12 @@ function submitBody(page) {
 test('新建默认:openClubPool 初值为 true(专业版开关默认开)', () => {
   const page = makePage();
   assert.equal(page.data.formData.openClubPool, true,
-    '裁决 12B 前默认关;改回默认关前先改这条断言的理由');
+    '裁决 12B 前默认关；改回默认关前先改这条断言的理由');
 });
 
 test('城市定向:回填开着 → 上送 1', () => {
   const page = openForEdit({ productType: 1, openClubPool: 1 });
-  assert.equal(page.data.formData.openClubPool, true, '回填如实反映库里的值,读侧不撒谎');
+  assert.equal(page.data.formData.openClubPool, true, '回填如实反映库里的值，读侧不撒谎');
   assert.equal(submitBody(page).openClubPool, 1, '开关开着就必须按开着上送');
 });
 
@@ -136,7 +136,7 @@ test('自由探索:开关不露面,回填带来的 1 必须在上送体里归 0'
   // 回填仍然如实反映库里的旧值 —— 归一化只发生在上送这一处,读侧不撒谎。
   assert.equal(page.data.formData.openClubPool, true);
   assert.equal(submitBody(page).openClubPool, 0,
-    '自由探索按 spec §2.1 没有俱乐部带队;送 1 出去后端会直接抛,发布硬失败');
+    '自由探索按 spec §2.1 没有俱乐部带队；送 1 出去后端会直接抛，发布硬失败');
 });
 
 test('俱乐部自己发的团(clubId 锁死):不开放公开承接池,上送恒 0', () => {
@@ -144,7 +144,7 @@ test('俱乐部自己发的团(clubId 锁死):不开放公开承接池,上送恒
   assert.equal(page._lockClub, true, 'clubId 进入即锁定归属俱乐部 = 俱乐部侧发布');
   assert.ok(page.data.formData.clubId, '归属俱乐部已锁进表单');
   assert.equal(submitBody(page).openClubPool, 0,
-    '2026-09-15 补充裁决:俱乐部自办团不进公开承接池;存量回填的 1 也必须在上送体归 0');
+    '2026-09-15 补充裁决:俱乐部自办团不进公开承接池；存量回填的 1 也必须在上送体归 0');
 });
 
 // 上面五条只钉住「送出去的值」。展示层还得单独钉一条:上送归一会把自由探索/俱乐部自办团的
@@ -163,7 +163,7 @@ test('step3:「邀请俱乐部带队」在、绑活方法、只对非俱乐部�
   assert.ok(/checked="\{\{formData\.openClubPool\}\}"/.test(live), '开关必须在版面上');
   assert.ok(live.includes('onClubPoolChange'), '绑定必须在');
   assert.ok(live.indexOf('wx:if="{{formData.productType === 1 && !formData.clubId}}">俱乐部承接</view>') >= 0,
-    '只对「非俱乐部城市定向」露出:自由探索撞服务端带队闸;俱乐部自办团不进公开池,'
+    '只对「非俱乐部城市定向」露出:自由探索撞服务端带队闸；俱乐部自办团不进公开池,'
     + '两处露出的都是点得动却不生效的死开关');
   assert.ok(!/wx:if="\{\{formData\.productType === 1\}\}">俱乐部承接/.test(live),
     '旧条件(不看 clubId)不能回潮 —— 那正是「界面在骗人」的形态');
@@ -174,7 +174,7 @@ test('step3:「邀请俱乐部带队」在、绑活方法、只对非俱乐部�
   //   「开放给商家市场」,同一个人同一件事两个说法。这句话描述的是【主题的属性】,
   //   不是读者的身份,所以统一成一个名字。
   //   结构与文案的完整断言(含负控)在 publish-schedule-recruit-sections-contract.test.js。
-  assert.ok(live.includes('开放给商家承接'), '商家池开关必须在,且是统一文案');
+  assert.ok(live.includes('开放给商家承接'), '商家池开关必须在，且是统一文案');
   assert.ok(!live.includes('开放给商家市场') && !live.includes('愿意商家参与'),
     '按入口切的两个旧名字都不该再出现(注释除外)');
 });

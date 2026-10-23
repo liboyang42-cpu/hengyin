@@ -143,8 +143,8 @@ guard('wizard', () => {
   vm.data.editingTopicId = String(fixture.topicId) // 与 onLoad(?id=) 进编辑态一致
   vm.applyEditingTopic(JSON.parse(JSON.stringify(W.editDetail)))
   const preview = vm._buildPublishPreview()
-  const station = preview.stats.filter((s) => s.k === '站点')[0]
-  const passed = vm._buildPublishPassed(true).map((i) => i.label).filter((l) => /个站点$/.test(l))[0] || ''
+  const station = preview.stats.filter((s) => s.k === '节点')[0]
+  const passed = vm._buildPublishPassed(true).map((i) => i.label).filter((l) => /个节点$/.test(l))[0] || ''
   return {
     startDateTime: vm.data.startDateTime, endDateTime: vm.data.endDateTime,
     previewStationValue: station ? station.v : '',

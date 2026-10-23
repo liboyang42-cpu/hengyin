@@ -172,7 +172,7 @@ test('券码轮询失败保留有效二维码，且终态不得被迟到的出�
   assert.match(wxml, /<cy-inline-error[^>]*pollError/)
 })
 
-test('据点核销码切换据点后忽略上一据点的迟到响应', () => {
+test('节点核销码切换节点后忽略上一节点的迟到响应', () => {
   const relativePath = 'components/cy/scene-qr-citynode/index.js'
   const harness = mount(relativePath)
 
@@ -189,7 +189,7 @@ test('据点核销码切换据点后忽略上一据点的迟到响应', () => {
   assert.equal(harness.instance.data.code, 'NEW')
 })
 
-test('据点核销码和团码缺少真实 TTL 时进入错误态，不默认续成五分钟', () => {
+test('节点核销码和团码缺少真实 TTL 时进入错误态，不默认续成五分钟', () => {
   const city = mount('components/cy/scene-qr-citynode/index.js')
   city.instance.data.poiId = 'poi-1'
   city.instance.issue('poi-1')
@@ -283,7 +283,7 @@ test('漫游任务列表忽略旧聚合响应，失败保留上次快照且未�
 
   assert.equal(harness.instance.data.all[0].title, '新活动')
   assert.equal(harness.instance.data.all[0]._statusText, '状态待确认')
-  assert.equal(harness.instance.data.all[0]._participantsText, '人数待确认')
+  assert.equal(harness.instance.data.all[0]._participantsText, '—')
   assert.equal(harness.instance.data.all[0]._pct, -1)
 
   harness.instance.load()
@@ -383,7 +383,7 @@ test('城市集邮册拒绝未知总数和缺图邮票，并用真实图标承�
   assert.equal(json.usingComponents['cy-icon'], '/components/cy/icon/index')
 })
 
-test('据点详情切换时忽略旧响应，未知核验方式不得静默降级成定位打卡', () => {
+test('节点详情切换时忽略旧响应，未知核验方式不得静默降级成定位打卡', () => {
   const relativePath = 'subpackageMember/components/cy/scene-roam-poi-detail/index.js'
   const harness = mount(relativePath)
   harness.instance.data.poiId = '21'
@@ -392,17 +392,17 @@ test('据点详情切换时忽略旧响应，未知核验方式不得静默降�
   harness.instance._load()
   assert.equal(harness.requests.length, 2)
 
-  harness.requests[1].success({ code: 200, data: { id: '22', name: '新据点', validationMethod: 99 } })
-  harness.requests[0].success({ code: 200, data: { id: '21', name: '旧据点', validationMethod: 5 } })
-  assert.equal(harness.instance.data.node.name, '新据点')
-  assert.equal(harness.instance.data.node.vmLabel, '核验方式待确认')
+  harness.requests[1].success({ code: 200, data: { id: '22', name: '新节点', validationMethod: 99 } })
+  harness.requests[0].success({ code: 200, data: { id: '21', name: '旧节点', validationMethod: 5 } })
+  assert.equal(harness.instance.data.node.name, '新节点')
+  assert.equal(harness.instance.data.node.vmLabel, '—')
   assert.equal(harness.instance.data.node.canInteract, false)
 
   harness.instance.startInteract()
   assert.equal(harness.requests.length, 2, '未知核验方式不得发起完成请求')
 })
 
-test('据点商家未知收费和营业状态如实显示，缺图时不再注入虚构商家图', () => {
+test('节点商家未知收费和营业状态如实显示，缺图时不再注入虚构商家图', () => {
   const relativePath = 'subpackageMember/components/cy/scene-roam-poi-detail/index.js'
   const harness = mount(relativePath)
   harness.instance.data.poiId = ''
@@ -410,8 +410,8 @@ test('据点商家未知收费和营业状态如实显示，缺图时不再注�
   harness.instance._load()
   harness.requests[0].success({ code: 200, data: { id: 7, name: '城瘾小店', chargeType: null, businessStatus: null } })
   assert.equal(harness.instance.data.state, 'ready')
-  assert.equal(harness.instance.data.merchant.chargeText, '收费方式待确认')
-  assert.equal(harness.instance.data.merchant.businessStatusText, '营业状态待确认')
+  assert.equal(harness.instance.data.merchant.chargeText, '—')
+  assert.equal(harness.instance.data.merchant.businessStatusText, '—')
 
   const wxml = read('subpackageMember/components/cy/scene-roam-poi-detail/index.wxml')
   assert.match(wxml, /merchant\.businessStatusText/)
@@ -458,7 +458,7 @@ function mountPoiCheckin({ storage = new Map(), owner = 7, poiId = '21', source 
   }
 }
 
-test('据点打卡明确写前拒绝给回输入机会，提交中不得并发', () => {
+test('节点打卡明确写前拒绝给回输入机会，提交中不得并发', () => {
   const harness = mountPoiCheckin()
   harness.instance.completeNode('保留的暗号')
   harness.instance.completeNode('重复提交')
@@ -513,7 +513,7 @@ function assertPoiUnknownRecovery(source) {
   for (const scope of [{ owner: 8 }, { poiId: '22' }]) {
     const other = mountPoiCheckin({ source, storage: offline.storage, ...scope })
     assert.equal(other.instance.data.checkinPending, false, '原 pending 不得污染其他 owner/poi')
-    assert.equal(other.storage.size, 1, '读取其他身份或据点不得清除原 key')
+    assert.equal(other.storage.size, 1, '读取其他身份或节点不得清除原 key')
   }
   reopened.instance.recoverInteraction()
   reopened.replyGet({ completed: true, needRedeem: false })
@@ -524,7 +524,7 @@ function assertPoiUnknownRecovery(source) {
   assert.equal(reopened.posts().length, 0)
 }
 
-test('据点打卡超时按原 owner/poi 持久恢复 UNKNOWN，只 GET 不发第二 POST', () => {
+test('节点打卡超时按原 owner/poi 持久恢复 UNKNOWN，只 GET 不发第二 POST', () => {
   assertPoiUnknownRecovery()
 })
 
@@ -597,7 +597,7 @@ test('活动票种:库存未知可选，只有确证的 0 才算售罄', () => {
   })
   const tickets = harness.instance.data.tickets
   assert.deepEqual(tickets.map((t) => t._available), [true, false, true])
-  assert.deepEqual(tickets.map((t) => t._inventoryText), ['余票待确认', '已售罄', '剩余 3 张'])
+  assert.deepEqual(tickets.map((t) => t._inventoryText), ['—', '已售罄', '剩余 3 张'])
 
   harness.instance.selectTicket({ currentTarget: { dataset: { id: '11' } } })
   assert.equal(harness.instance.data.selectedTicketId, '11', '库存未知的票必须可选 —— 售罄由服务端判')
@@ -698,7 +698,7 @@ test('通用场景表单失败时保留内容、内联错误与重试能力', ()
 
   const wxml = read('components/cy/scene-route-content/index.wxml')
   assert.match(wxml, /submitError/)
-  assert.match(wxml, /正在提交/)
+  assert.match(wxml, /提交中/)
   assert.match(wxml, /bind:retry="submitForm"/)
 })
 

@@ -71,7 +71,7 @@ test('① 深色块只命中浅色业务域,不动玩家域', () => {
   const selectorLine = src.slice(at, src.indexOf('{', src.indexOf('{', at) + 1))
   assert.match(selectorLine, /\.theme-light/, '深色块必须覆盖 .theme-light')
   assert.match(selectorLine, /\.theme-merchant/, '深色块必须覆盖 .theme-merchant')
-  assert.doesNotMatch(selectorLine, /\.theme-dark/, '玩家域恒深,不该被系统外观改写')
+  assert.doesNotMatch(selectorLine, /\.theme-dark/, '玩家域恒深，不该被系统外观改写')
   // 选择器里不许出现裸 page(那会把玩家域基底一起改掉);page.theme-light 是允许的
   const bareePage = /(^|[\s,])page(\s*[,{]|\s*$)/m.test(selectorLine)
   assert.equal(bareePage, false, '不许用裸 page 选择器 —— 会把玩家域基底一起切掉')
@@ -96,7 +96,7 @@ test('④ app.json 开 darkmode,但不配 themeLocation(全局 chrome 属玩家�
   const app = JSON.parse(read('app.json'))
   assert.equal(app.darkmode, true, 'app.json 必须声明 darkmode,否则 JS 读不到系统主题')
   assert.equal(app.themeLocation, undefined,
-    '不配 themeLocation:导航/tabBar 属玩家域恒深色,配了会让它们跟系统变浅')
+    '不配 themeLocation:导航/tabBar 属玩家域恒深色，配了会让它们跟系统变浅')
   assert.equal(app.tabBar.backgroundColor, '#0A0A0B', 'tabBar 应保持玩家域深色')
 })
 
@@ -105,7 +105,7 @@ test('⑥ 深色块必须排在 tokens 之后被引入(同特异度靠源码顺�
   const iTokens = appWxss.indexOf("style/tokens.wxss")
   const iDark = appWxss.indexOf("style/dark-mode.wxss")
   assert.ok(iTokens >= 0 && iDark >= 0, 'app.wxss 必须同时引入 tokens 与 dark-mode')
-  assert.ok(iDark > iTokens, 'dark-mode.wxss 必须排在 tokens.wxss 之后,否则被浅色值覆盖回去')
+  assert.ok(iDark > iTokens, 'dark-mode.wxss 必须排在 tokens.wxss 之后，否则被浅色值覆盖回去')
 })
 
 test('⑤ 深色值不得引用未定义 token(var() 引用未定义会让整条声明静默作废)', () => {

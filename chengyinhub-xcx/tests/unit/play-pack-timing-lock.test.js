@@ -18,7 +18,7 @@ const WXSS = fs.readFileSync(path.join(ROOT, 'pages/play/index.wxss'), 'utf8')
 
 function jsConst(name) {
   const m = JS.match(new RegExp('^const ' + name + '\\s*=\\s*([0-9.]+)\\s*;', 'm'))
-  assert.ok(m, `index.js 里找不到常量 ${name}(锚点失效,不是代码没问题)`)
+  assert.ok(m, `index.js 里找不到常量 ${name}(锚点失效，不是代码没问题)`)
   return Number(m[1])
 }
 

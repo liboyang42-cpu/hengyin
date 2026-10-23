@@ -104,13 +104,13 @@ test('受邀方落承接视图:role=join、没有报名行也不去查一条不�
 
   assert.equal(page.data.role, 'join');
   assert.equal(page.data.fromMerchantJoin, false, '不得退回主题浏览页(那是招商/玩家视角)');
-  assert.equal(page.data.loadFailed, false, '后端认了这层关系,就不该再是一屏「没能加载到这条承接记录」');
+  assert.equal(page.data.loadFailed, false, '后端认了这层关系，就不该再是一屏「加载失败到这条承接记录」');
   assert.equal(page.data.regId, 0, '邀约不生成报名行:不许伪造一个 regId');
   assert.equal(page.data.myStations.length, 0);
   assert.equal(requests.some((r) => r.url === '/api/registration/merchant/info'), false,
-    '没有报名行还去拉承接详情 = 拿 0 当 id 查,必然报错');
+    '没有报名行还去拉承接详情 = 拿 0 当 id 查，必然报错');
 
-  assert.ok(page.data.coopPartner, '受邀方这一档要有自己的形状,页面据此收掉按站点算的区块');
+  assert.ok(page.data.coopPartner, '受邀方这一档要有自己的形状，页面据此收掉按站点算的区块');
   assert.equal(page.data.coopPartner.inviteId, 990026);
   assert.equal(page.data.coopPartner.termsText, '分成 20%');
 });
@@ -119,7 +119,7 @@ test('受邀方的关系入口只给真能用的两格:扫码 + 俱乐部', () =
   const page = openAsInvitedPartner(coopOnlyHome());
 
   assert.deepEqual(page.data.quickActions.map((a) => a.key), ['scan', 'club'],
-    '「客户」走 /api/project/players、「更多」抽屉里每行都挂报名行 —— 受邀方点了必被拒,不给');
+    '「客户」走 /api/project/players、「更多」抽屉里每行都挂报名行 —— 受邀方点了必被拒，不给');
 
   // 俱乐部抽屉的数据在 project-home 那一次就带回来了,不该再拉一次接口
   assert.equal(page.data.clubSheet.items.length, 1);
@@ -136,7 +136,7 @@ test('负控:有报名行的承接方仍走原来那条完整链路,不落到受
   assert.equal(page.data.coopPartner, null, '已经有站点的人不该被当成「没有点位」');
   assert.equal(page.data.regId, 777);
   assert.ok(requests.some((r) => r.url === '/api/registration/merchant/info'),
-    '有报名行就要回到既有的承接详情链路,数字与玩法才有来源');
+    '有报名行就要回到既有的承接详情链路，数字与玩法才有来源');
 });
 
 test('负控:后端没认这层关系时(接口拒)照旧是整页失败态,不渲染半屏假承接', () => {
@@ -161,7 +161,7 @@ test('组件:coopPartner 有值时按站点算的区块整块不出,底栏也不
   }
   assert.match(wxml, /<view class="sec" wx:if="\{\{ coopPartner \}\}">[\s\S]{0,200}你与这条路线的合作/);
   assert.match(wxml, /class="rules" wx:if="\{\{ !coopPartner \}\}"/,
-    '「退出与暂停规则」那句的主语是路线场次,他一场都没有');
+    '「退出与暂停规则」那句的主语是路线场次，他一场都没有');
   assert.match(wxml, /wx:if="\{\{ coopPartner \}\}"[^>]*data-act="goVerify"/,
     '受邀方底栏那颗按钮只能焊在扫码核销上:primaryText 那套按 stateKey 推导的动作在他身上没有来源');
 

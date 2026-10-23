@@ -86,7 +86,7 @@ test('CU-M-167 首次保存名字真的落库,并带上屏幕上预览的那个�
   assert.equal(page.data.hasProfile, false, '前置:空资料');
 
   const sent = await saveName(page, requests, '探店小助手');
-  assert.ok(sent, '点「保存」必须发出一个请求,不能只改显示');
+  assert.ok(sent, '点「保存」必须发出一个请求，不能只改显示');
   assert.equal(sent.request.url, '/api/merchant/npc/save');
   assert.equal(sent.payload.name, '探店小助手');
   assert.equal(sent.payload.avatar, 'px1:' + FIRST, '建档要带上正在预览的那个形象(后端 avatar 为空会拒)');
@@ -114,7 +114,7 @@ test('保存失败时弹层留着并把原因写在里面(不能假称已保存)
   sent.request.success({ code: 500, msg: '形象未保存，请重试' });
   await flush();
 
-  assert.ok(page.data.field, '失败不许关弹层,否则用户只看到一个静默丢失');
+  assert.ok(page.data.field, '失败不许关弹层，否则用户只看到一个静默丢失');
   assert.equal(page.data.saveError, '形象未保存，请重试');
   assert.equal(page.data.hasProfile, false, '没存上就不能自称已建档');
 });
@@ -128,7 +128,7 @@ test('先填招呼语:没有名字时回到名字这一栏,内容不丢(建档�
 
   assert.equal(requests.length, 0, '名字都没有时不发建档请求');
   assert.equal(page.data.field.key, 'name', '直接把用户带到缺的那一栏');
-  assert.equal(page.data.greeting, '欢迎来到店里', '招呼语得留在页面态里,不许白写');
+  assert.equal(page.data.greeting, '欢迎来到店里', '招呼语得留在页面态里，不许白写');
 
   page.data.field.value = '探店小助手';
   const sent = await saveNameAfterGreeting(page, requests);
@@ -149,7 +149,7 @@ test('负控:把「保存」改回只关弹层不发请求时,上面几条必须
     'this.save(() => this.setData({ field: null }));',
     'this.setData({ field: null });'
   );
-  assert.notEqual(regressed, PAGE_JS, '负控锚点失效:saveField 的建档调用已改名,扫描口径需同步');
+  assert.notEqual(regressed, PAGE_JS, '负控锚点失效:saveField 的建档调用已改名，扫描口径需同步');
   const { page, requests } = loadPage(regressed);
   page.editField({ currentTarget: { dataset: { key: 'name' } } });
   page.data.field.value = '探店小助手';

@@ -29,7 +29,7 @@ function rule(source, selector) {
 
 // ── ① 可读性:事实栏文字必须用主题文字 token,不再用首页深色区白字 ──────────────
 test('F22 可读性:事实栏不得再用首页深色区的浅色文字变量', () => {
-  assert.doesNotMatch(rule(WXSS, '.od-facts'), /--cy-color-home-upcoming/, '事实栏底色是浅色表面,不能用深色区白字')
+  assert.doesNotMatch(rule(WXSS, '.od-facts'), /--cy-color-home-upcoming/, '事实栏底色是浅色表面，不能用深色区白字')
   assert.match(rule(WXSS, '.od-fact-value'), /color:\s*var\(--cy-color-text-primary\)/, '主数值要用主题主文字')
   assert.match(rule(WXSS, '.od-fact-label'), /color:\s*var\(--cy-color-text-secondary\)/, '标签要用主题次文字')
   assert.match(rule(WXSS, '.od-fact-sub'), /color:\s*var\(--cy-color-text-secondary\)/, '副标要用主题次文字')
@@ -114,7 +114,7 @@ test('F22 任务说明:支持类型给准确中文;后端禁发布类型如实�
   assert.match(byType.ROAM_SESSION_AREA._descText, /暂不支持|未支持/, 'ROAM_SESSION_AREA 要如实标未支持')
   // 有真实核验路径的类型保留准确中文
   assert.equal(byType.EVENT_POINT_ARRIVAL._supported, true)
-  assert.match(byType.EVENT_POINT_ARRIVAL._descText, /点位/, 'EVENT_POINT_ARRIVAL 要有准确中文')
+  assert.match(byType.EVENT_POINT_ARRIVAL._descText, /节点/, 'EVENT_POINT_ARRIVAL 要有准确中文')
   assert.equal(byType.THEME_VERIFIED_FINISH._supported, true)
   assert.match(byType.THEME_VERIFIED_FINISH._descText, /主题/, 'THEME_VERIFIED_FINISH 要有准确中文')
   e.missions.forEach((m) => {
@@ -251,7 +251,7 @@ test('F22 P2 奖励:集体未开启时如实说明不可得,个人券与成长�
     rewardJson: JSON.stringify({ settleCouponId: 9, settleXp: 50, collectiveCouponId: 3 }),
     collective: { enabled: false },
   })
-  assert.equal(list.length, 3, '个人券/成长值/集体券都要在,不能因集体未开启被隐藏')
+  assert.equal(list.length, 3, '个人券/成长值/集体券都要在，不能因集体未开启被隐藏')
   assert.ok(list.some((s) => /成长值/.test(s) && /50/.test(s)), '成长值必须保留')
   assert.ok(list.some((s) => /券/.test(s) && !/集体/.test(s)), '个人券必须保留')
   const collective = list.find((s) => /集体/.test(s))

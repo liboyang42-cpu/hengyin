@@ -88,12 +88,12 @@ test('筛选:日期「今天」在客户端过滤已返回列表,请求里不再
   assert.deepEqual(page.data.activityMarkers.map((item) => item.activityId), [1, 3], '地图点位与列表同口径');
   for (const dead of ['min_price', 'max_price', 'date_type', 'start_date', 'end_date']) {
     assert.equal(Object.prototype.hasOwnProperty.call(requests[0].data, dead), false,
-      `${dead} 后端签名不消费,发过去就是死参数`);
+      `${dead} 后端签名不消费，发过去就是死参数`);
   }
   // 2026-09-16 截图冒烟修复:没选分类时传空串,不能传 null/undefined 原样透出 ——
   // wx.request 会把 null 序列化成字面量 "null",后端 DiscoveryFilterContract 解析不出正整数
   // 直接 400「category_id 必须为正整数」。空串才是「未提供」的同义表达(后端 optionalRaw)。
-  assert.equal(requests[0].data.category_id, '', '没选分类必须传空串,不许传会序列化成 "null" 的空值');
+  assert.equal(requests[0].data.category_id, '', '没选分类必须传空串，不许传会序列化成 "null" 的空值');
   assert.equal(requests[0].data.keyword, '跑');
 });
 
@@ -148,7 +148,7 @@ test('筛选只影响展示:整页被筛掉时仍按原始行数保留继续翻�
   page.getList();
   ok(requests[0], ROWS.slice(0, 2));
   assert.deepEqual(page.data.list, [], '今天没有匹配场次');
-  assert.equal(page.data.hasMore, true, '原始返回满页 = 后面可能还有,不能因筛空一页就判到底');
+  assert.equal(page.data.hasMore, true, '原始返回满页 = 后面可能还有，不能因筛空一页就判到底');
 });
 
 test('A-08:首页刷新失败且屏上有旧结果 ⇒ 保留旧结果 + 页内错误条,可原地重试', () => {
@@ -161,8 +161,8 @@ test('A-08:首页刷新失败且屏上有旧结果 ⇒ 保留旧结果 + 页内�
 
   assert.deepEqual(page.data.list, cached, '刷新失败必须保住旧列表');
   assert.equal(page.data.listState, 'ready');
-  assert.notEqual(page.data.pageError, '', 'A-08:有旧结果时刷新失败不再静默,必须挂内联错误条');
-  assert.equal(page.data.pageErrorIsRefresh, true, '刷新失败与翻页失败要能区分,文案不同');
+  assert.notEqual(page.data.pageError, '', 'A-08:有旧结果时刷新失败不再静默，必须挂内联错误条');
+  assert.equal(page.data.pageErrorIsRefresh, true, '刷新失败与翻页失败要能区分，文案不同');
 
   page.retryListPage();
   assert.equal(page.data.pageError, '', '重试开始先收掉错误条');

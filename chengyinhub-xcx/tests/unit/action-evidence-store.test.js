@@ -343,7 +343,7 @@ test('复合写区分首步失败与后步失败，并绑定同一 eventId 链�
       scope: 'self', scopeVerified: true, decision: 'allowed',
     },
     authority: { endpoint: `${url}/event-42`, resourceId: 'event-42', before, after },
-    assertions: ['权威事实已回读'],
+    assertions: ['权威事实已刷新'],
   })
   assert.doesNotThrow(() => validateAuthorityEvidence(compound, {
     sequence: [receipt('/api/test/publish', { status: 0 }, { status: 0 })],

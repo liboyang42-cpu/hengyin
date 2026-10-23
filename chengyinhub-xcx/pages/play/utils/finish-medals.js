@@ -17,7 +17,7 @@ function buildFinishMedals(opts) {
     if (!m || !doneIds[String(m.nodeId)] || seen[String(m.nodeId)]) return;
     seen[String(m.nodeId)] = true;
     const rank = Number(m.rank) > 0 ? Number(m.rank) : 0;
-    out.push({ key: 'node-' + m.nodeId, name: m.name || '专属徽章', img: m.img || '', sub: (rank ? '第 ' + rank + ' 名 · ' : '') + '站点奖牌', glyph: 'star' });
+    out.push({ key: 'node-' + m.nodeId, name: m.name || '专属徽章', img: m.img || '', sub: (rank ? '第 ' + rank + ' 名 · ' : '') + '节点奖牌', glyph: 'star' });
   });
   return out;
 }

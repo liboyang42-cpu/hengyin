@@ -120,7 +120,7 @@ test('评价分页元数据与每一行必须完整匹配请求，畸形 200 整
   const js = read('pages/merchant/reviews/index.js');
   // W10a #20:管理态额外把本次筛选交给 shape 层核对服务端回显。
   assert.match(js, /shapePage\(res\.data,\s*mode,\s*pageNum,\s*20,\s*mode === 'manage' \? filter : undefined\)/,
-    '页面必须把本次请求页码、页大小与筛选交给 shape 层核对');
+    '页面必须把本次请求页码、页大小与筛选交给 shape 层确认');
 });
 
 test('merchant reputation redesign keeps backend stats visible instead of deriving them from current page', () => {
@@ -186,7 +186,7 @@ test('ambiguous legacy owner redemption is shown as fail-closed instead of guess
 
   assert.match(js, /mode === 'manage' && items\.length === 0/);
   assert.match(wxml, /AMBIGUOUS_LEGACY_MERCHANT_SCOPE/);
-  assert.match(wxml, /平台不会替你猜测归属/);
+  assert.match(wxml, /暂不能评价/);
 });
 
 test('cold-start fallback keeps public viewers out of merchant workbench', () => {

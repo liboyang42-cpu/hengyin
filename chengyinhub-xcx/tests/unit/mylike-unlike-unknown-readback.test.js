@@ -2,7 +2,7 @@
 
 // PRIVATE-GROUP-F-current-favorites-AI / PC-024:取消收藏断网 = 结果未知。
 // /api/topic/like 是 toggle,未知时再发一次可能把已取消的收藏插回来:
-// 锁不放、原卡片不摘,按 like_list 回读——读到=没取消成功,读完没有=已取消;回读失败保持未知。
+// 锁不放、原卡片不摘，按 like_list 刷新——读到=没取消成功，读完没有=已取消；刷新失败保持未知。
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -51,23 +51,23 @@ function unknownUnlike(env, id) {
   return req;
 }
 
-test('断网后保持锁定与原卡片,回读读完没有=已取消并按 ID 摘卡', () => {
+test('断网后保持锁定与原卡片，刷新读完没有=已取消并按 ID 摘卡', () => {
   const env = loadPage();
   env.page.setData({ ztList1: [{ id: 11 }, { id: 12 }] });
   unknownUnlike(env, 11);
-  assert.equal(env.toasts.includes('取消结果未确认，正在核对'), true);
-  assert.ok(!env.toasts.some((t) => /网络错误，请重试/.test(t)));
+  assert.equal(env.toasts.includes('取消结果未确认，正在确认'), true);
+  assert.ok(!env.toasts.some((t) => /网络异常，请重试/.test(t)));
   assert.deepEqual(env.page.data.ztList1.map((t) => t.id), [11, 12], '结果未知不摘卡');
   assert.equal(reads(env.requests).length, 1);
   assert.deepEqual(reads(env.requests)[0].data, { pageNum: 1, pageSize: 50 });
 
-  // 回读在途:再点既不开确认框也不发 toggle、不重复回读
+  // 刷新在途:再点既不开确认框也不发 toggle、不重复刷新
   tap(env.page, 11);
   assert.equal(env.modals.length, 1);
   assert.equal(toggles(env.requests).length, 1);
   assert.equal(reads(env.requests).length, 1);
 
-  // 第一页满页且没有 → 读第二页;第二页不满且没有 → 已取消
+  // 第一页满页且没有 → 读第二页；第二页不满且没有 → 已取消
   reads(env.requests)[0].success({ code: '200', data: { rows: rows([12], 49) } });
   assert.deepEqual(reads(env.requests)[1].data, { pageNum: 2, pageSize: 50 });
   reads(env.requests)[1].success({ code: '200', data: { rows: rows([13]) } });
@@ -78,20 +78,20 @@ test('断网后保持锁定与原卡片,回读读完没有=已取消并按 ID �
   assert.equal(env.modals.length, 2);
 });
 
-test('回读读到该主题=没取消成功,放锁可再试;回读失败/畸形保持未知,再点只回读', () => {
+test('刷新读到该主题=没取消成功，放锁可再试；刷新失败/畸形保持未知，再点只刷新', () => {
   const env = loadPage();
   env.page.setData({ ztList1: [{ id: 11 }] });
   unknownUnlike(env, 11);
 
   reads(env.requests)[0].fail();
-  assert.equal(env.toasts.pop(), '取消结果未确认，请稍后再点核对');
+  assert.equal(env.toasts.pop(), '取消结果未确认，请稍后再点确认');
   tap(env.page, 11);
   assert.equal(env.modals.length, 1, '未知期间不开确认框');
   assert.equal(toggles(env.requests).length, 1, '未知期间不发 toggle');
   assert.equal(reads(env.requests).length, 2);
 
   reads(env.requests)[1].success({ code: '200', data: { rows: 'oops' } });
-  assert.equal(env.toasts.pop(), '取消结果未确认，请稍后再点核对');
+  assert.equal(env.toasts.pop(), '取消结果未确认，请稍后再点确认');
   tap(env.page, 11);
   assert.equal(reads(env.requests).length, 3);
 
@@ -102,7 +102,7 @@ test('回读读到该主题=没取消成功,放锁可再试;回读失败/畸形�
   assert.equal(env.modals.length, 2, '确认未生效后才允许再次取消');
 });
 
-test('换号后旧回读丢弃', () => {
+test('换号后旧刷新丢弃', () => {
   const env = loadPage();
   env.page.setData({ ztList1: [{ id: 11 }] });
   env.page._syncFavoriteAccount();
@@ -116,7 +116,7 @@ test('换号后旧回读丢弃', () => {
   assert.equal(env.toasts.length, 0);
 });
 
-test('收藏与推荐说明:如实讲不撤回已记录兴趣,且不暗示推荐排除/偏好已上线', () => {
+test('收藏与推荐说明:如实讲不撤回已记录兴趣，且不暗示推荐排除/偏好已上线', () => {
   const env = loadPage();
   env.page.showRecommendNote();
   const content = env.modals.pop().content;

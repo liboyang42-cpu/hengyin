@@ -54,7 +54,7 @@ test('迁移:走 app.sendRequest、POST 正确地址、不手拼 Authorization',
   assert.equal(sent.length, 1);
   assert.equal(sent[0].url, '/api/analytics/events/batch');
   assert.equal(sent[0].method, 'POST');
-  assert.equal(sent[0].header.Authorization, undefined, '认证由 request-client 注入,不在 analytics 手拼');
+  assert.equal(sent[0].header.Authorization, undefined, '认证由 request-client 注入，不在 analytics 手拼');
   assert.equal(sent[0].data.events.length, 1);
   assert.equal(sent[0].data.events[0].bizId, 'A');
 });
@@ -99,7 +99,7 @@ test('并发底线#35:投递中新 track 的事件不被快照覆盖丢失', () 
   analytics.track('content_view', { bizId: 'A' }); // push A → flush(在途 sent[0])
   assert.equal(sent.length, 1);
   analytics.track('content_view', { bizId: 'B' }); // 在途期间 push B
-  assert.equal(sent.length, 1, '投递锁:在途不再并发投递,避免重复投');
+  assert.equal(sent.length, 1, '投递锁:在途不再并发投递，避免重复投');
   sent[0].success({ code: 200, data: { accepted: 1 } });                  // A 投递成功
   const q = store[QKEY] || [];
   assert.equal(q.length, 1, 'B 不应被旧快照回写抹掉');

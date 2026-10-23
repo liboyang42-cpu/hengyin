@@ -6,7 +6,7 @@ const CARD_FIELDS = ['scene', 'ending', 'hp', 'luck', 'actions', 'medals', 'item
 const TARGETS = [{ value: 'OWNER', label: '本队 / 本人' }, { value: 'PARTICIPANTS', label: '选择参与队伍' }, { value: 'WORLD', label: '全场队伍' }];
 const RECOVERY_KINDS = [{ value: 'REST', label: '休整：增加数值' }, { value: 'RESCUE', label: '救助：恢复至下限' }];
 const SCOPES = [{ value: 'OWNER', label: '每队 / 每人' }, { value: 'WORLD', label: '全场共用' }];
-const OPS = [{ value: 'EQ', label: '等于' }, { value: 'NE', label: '不等于' }, { value: 'GT', label: '大于' }, { value: 'GTE', label: '至少' }, { value: 'LT', label: '小于' }, { value: 'LTE', label: '至多' }, { value: 'ITEM_HELD', label: '持有物品' }, { value: 'ITEM_ACQUIRED', label: '曾获得物品' }, { value: 'NODE_COMPLETED', label: '已完成站点' }];
+const OPS = [{ value: 'EQ', label: '等于' }, { value: 'NE', label: '不等于' }, { value: 'GT', label: '大于' }, { value: 'GTE', label: '至少' }, { value: 'LT', label: '小于' }, { value: 'LTE', label: '至多' }, { value: 'ITEM_HELD', label: '持有物品' }, { value: 'ITEM_ACQUIRED', label: '曾获得物品' }, { value: 'NODE_COMPLETED', label: '已完成节点' }];
 const integer = (v, min, max) => Number.isInteger(v) && v >= min && v <= max;
 function key(rows, field, prefix) { let n = 1; while (rows.some(row => row[field] === prefix + n)) n++; return prefix + n; }
 function validate(c, nodes, rules) {
@@ -45,15 +45,15 @@ function validate(c, nodes, rules) {
     if (row.targetScope !== 'OWNER' && game.worldMode !== 'WORLD_SHARED') return '多人设施仅适用于公共世界';
     if (row.targetScope === 'PARTICIPANTS' && (game.quests || []).some(q => q.facilityKey === row.facilityKey)) return '参与队伍设施不能绑定单队任务';
     if (row.hpDelta != null && !integer(row.hpDelta, -999, 999)) return '设施增减值须为负 999 到 999 的整数';
-    if (row.arrivalLocationKey && !/^[a-z][a-z0-9_]{0,31}$/.test(row.arrivalLocationKey)) return '请选择有效的到场站点';
+    if (row.arrivalLocationKey && !/^[a-z][a-z0-9_]{0,31}$/.test(row.arrivalLocationKey)) return '请选择有效的到场节点';
     if (row.arrivalLocationKey && game.runtimeScope === 'PLAYER') return '个人玩法不支持工作人员到场核验';
-    if (row.operationNodeId != null && (!integer(row.operationNodeId, 1, Number.MAX_SAFE_INTEGER) || (nodes && !nodes.some(n => n.value === row.operationNodeId)))) return '请先保存主题与站点，再选择设施操作站点';
+    if (row.operationNodeId != null && (!integer(row.operationNodeId, 1, Number.MAX_SAFE_INTEGER) || (nodes && !nodes.some(n => n.value === row.operationNodeId)))) return '请先保存主题与节点，再选择设施操作节点';
     if ((row.when || []).length > 30) return '设施前置条件最多 30 项';
     for (const condition of row.when || []) {
       if (['ITEM_HELD', 'ITEM_ACQUIRED'].includes(condition.op)) {
         if (!(c.items || []).some(i => i.id === condition.itemId) || !integer(condition.quantity, 1, 999)) return '请选择前置物品，数量须为 1 到 999 的整数';
       } else if (condition.op === 'NODE_COMPLETED') {
-        if (!integer(condition.nodeId, 1, Number.MAX_SAFE_INTEGER) || (nodes && !nodes.some(n => n.value === condition.nodeId))) return '请先保存主题与前置站点，再选择';
+        if (!integer(condition.nodeId, 1, Number.MAX_SAFE_INTEGER) || (nodes && !nodes.some(n => n.value === condition.nodeId))) return '请先保存主题与前置节点，再选择';
       } else if (!OPS.slice(0, 6).some(op => op.value === condition.op) || !/^(sys\.(hp|luck|actions)|(clue|relation|counter)\.[a-z][a-z0-9_]{0,47})$/.test(condition.var || '') || !integer(condition.value, -999999, 999999)) return '请选择前置数值，比较值须为负 999999 到 999999 的整数';
     }
   }
@@ -84,7 +84,7 @@ function copyReferences(c, notices) {
     if (facility.operationNodeId != null) { delete facility.operationNodeId; changed = true; }
     const when = (facility.when || []).filter(row => row.op !== 'NODE_COMPLETED');
     if (when.length !== (facility.when || []).length) { facility.when = when; changed = true; }
-    if (changed) notices.push('设施' + (i + 1) + '操作与前置站点');
+    if (changed) notices.push('设施' + (i + 1) + '操作与前置节点');
   }
 }
 // 删除幕后保留规则内容；恢复的空幕集合代表全幕，不能自动清空适用范围。
@@ -100,7 +100,7 @@ const methods = {
   _pruneSurvivalActRefs: pruneActRefs,
   _refreshSurvivalSummary(c = this._runtimeConfig()) {
     const game = c.gameplayRuntime || {}, rows = (game.survival || {}).recoveries || [], rations = (game.survival || {}).rations || [], facilities = game.facilities || [];
-    this.setData({ themeReplayEnabled: c.replayEnabled === true, survivalSummary: { recoveryText: rows.length || rations.length ? '休整 ' + rows.filter(r => r.kind === 'REST').length + ' · 救助 ' + rows.filter(r => r.kind === 'RESCUE').length + ' · 配给 ' + rations.length : '未配置', facilityText: facilities.length ? '独立 ' + facilities.filter(f => !f.facilityKey.startsWith('tpl_node_')).length + ' · 站点生成 ' + facilities.filter(f => f.facilityKey.startsWith('tpl_node_')).length : '未配置', cardText: c.card ? '已自定义' : '默认' } });
+    this.setData({ themeReplayEnabled: c.replayEnabled === true, survivalSummary: { recoveryText: rows.length || rations.length ? '休整 ' + rows.filter(r => r.kind === 'REST').length + ' · 救助 ' + rows.filter(r => r.kind === 'RESCUE').length + ' · 配给 ' + rations.length : '未配置', facilityText: facilities.length ? '独立 ' + facilities.filter(f => !f.facilityKey.startsWith('tpl_node_')).length + ' · 节点生成 ' + facilities.filter(f => f.facilityKey.startsWith('tpl_node_')).length : '未配置', cardText: c.card ? '已自定义' : '默认' } });
   },
   openSurvivalEditor(e) {
     this._survivalDraft = clone(this._runtimeConfig()); this._survivalDirty = {};
@@ -114,19 +114,19 @@ const methods = {
   _refreshSurvival() {
     const c = this._survivalDraft, game = c.gameplayRuntime, survival = game.survival;
     const chapters = this.data.formData.chapters || [], allNodes = chapters.flatMap(ch => ch.nodes || []);
-    const nodes = this.data.editingTopicId ? allNodes.filter(n => Number(n.id) > 0).map(n => ({ value: Number(n.id), label: n.name || n.templateName || '未命名站点' })) : [];
+    const nodes = this.data.editingTopicId ? allNodes.filter(n => Number(n.id) > 0).map(n => ({ value: Number(n.id), label: n.name || n.templateName || '未命名节点' })) : [];
     const acts = (game.acts || []).map((act, i) => { const q = (game.quests || []).find(q => q.actKey === act.actKey); const chapter = chapters.find(ch => (ch.nodes || []).some(n => q && Number(n.id) === q.nodeId)); return { value: act.actKey, label: chapter && chapter.name || '第' + (i + 1) + '幕' }; });
     const items = (c.items || []).map(i => ({ value: i.id, label: i.name || '未命名物品', kind: i.kind }));
     const rules = initial.parse(this.data.formData.journeyRules);
     const states = [{ value: 'sys.hp', label: c.hpName || '生命值' }, { value: 'sys.luck', label: c.luckName || '幸运值' }, { value: 'sys.actions', label: c.actionName || '行动次数' }].concat((rules.attributes || []).map(row => ({ value: row.key, label: row.label })));
     const locations = [];
-    (game.quests || []).forEach(q => { if (q.locationKey && !locations.some(row => row.value === q.locationKey)) locations.push({ value: q.locationKey, label: (nodes.find(n => n.value === q.nodeId) || {}).label || '站点' + (locations.length + 1) }); });
-    (game.facilities || []).forEach(f => { if (f.arrivalLocationKey && !locations.some(l => l.value === f.arrivalLocationKey)) locations.push({ value: f.arrivalLocationKey, label: '已有到场站点' }); });
+    (game.quests || []).forEach(q => { if (q.locationKey && !locations.some(row => row.value === q.locationKey)) locations.push({ value: q.locationKey, label: (nodes.find(n => n.value === q.nodeId) || {}).label || '节点' + (locations.length + 1) }); });
+    (game.facilities || []).forEach(f => { if (f.arrivalLocationKey && !locations.some(l => l.value === f.arrivalLocationKey)) locations.push({ value: f.arrivalLocationKey, label: '已有到场节点' }); });
     const cardLabels = ['场景', '结局', c.hpName || '生命值', c.luckName || '幸运值', c.actionName || '行动次数', '勋章', '物品', '故事', '救助记录'];
-    this.setData({ survivalDraft: clone(c), survivalActs: acts, survivalItems: items, survivalNodes: [{ value: '', label: '不绑定操作站点' }].concat(nodes), survivalLocations: [{ value: '', label: '不要求工作人员核验' }].concat(locations), survivalStates: states,
+    this.setData({ survivalDraft: clone(c), survivalActs: acts, survivalItems: items, survivalNodes: [{ value: '', label: '不绑定操作节点' }].concat(nodes), survivalLocations: [{ value: '', label: '不要求工作人员核验' }].concat(locations), survivalStates: states,
       survivalRecoveries: (survival.recoveries || []).map((r, i) => ({ label: (r.kind === 'REST' ? '休整' : '救助') + ' ' + (i + 1), summary: (r.kind === 'REST' ? '增加 ' + r.hpDelta : '恢复到 ' + r.hpFloor) + ' · 最多 ' + r.limit + ' 次' })),
       survivalRations: (survival.rations || []).map(r => ({ label: (items.find(i => i.value === r.itemId) || {}).label || '请选择物品', summary: ((acts.find(a => a.value === r.actKey) || {}).label || '引用的幕已删除，请重新选择') + ' · ' + r.quantity + ' 件' })),
-      survivalFacilities: (game.facilities || []).map((f, i) => ({ label: (nodes.find(n => n.value === f.operationNodeId) || {}).label || '设施 ' + (i + 1), generated: f.facilityKey.startsWith('tpl_node_'), sourceLabel: f.facilityKey.startsWith('tpl_node_') ? '由站点「' + ((nodes.find(n => n.value === Number(f.facilityKey.slice(9))) || {}).label || '未命名站点') + '」的玩法工具生成' : '', summary: (TARGETS.find(t => t.value === f.targetScope) || {}).label || '请选择作用对象' })),
+      survivalFacilities: (game.facilities || []).map((f, i) => ({ label: (nodes.find(n => n.value === f.operationNodeId) || {}).label || '设施 ' + (i + 1), generated: f.facilityKey.startsWith('tpl_node_'), sourceLabel: f.facilityKey.startsWith('tpl_node_') ? '由节点「' + ((nodes.find(n => n.value === Number(f.facilityKey.slice(9))) || {}).label || '未命名节点') + '」的玩法工具生成' : '', summary: (TARGETS.find(t => t.value === f.targetScope) || {}).label || '请选择作用对象' })),
       survivalMaterialItems: items.filter(item => item.kind === 'ITEM'),
       survivalCardFields: CARD_FIELDS.map((value, i) => ({ value, label: cardLabels[i], checked: (c.card && c.card.fields || []).includes(value) })) });
   },
@@ -134,8 +134,8 @@ const methods = {
     const { kind, index } = e.currentTarget.dataset; const c = this._survivalDraft;
     const list = kind === 'facilities' ? c.gameplayRuntime.facilities || [] : c.gameplayRuntime.survival[kind] || [];
     const i = index == null ? -1 : Number(index);
-    if (kind !== 'card' && i < 0 && !this.data.survivalActs.length) { this.setData({ 'survivalEditor.error': '请先配置幕与站点，再添加恢复或配给' }); return; }
-    if (kind === 'facilities' && i >= 0 && list[i].facilityKey.startsWith('tpl_node_')) { this.setData({ 'survivalEditor.error': '请在站点玩法工具中编辑此设施' }); return; }
+    if (kind !== 'card' && i < 0 && !this.data.survivalActs.length) { this.setData({ 'survivalEditor.error': '请先配置幕与节点，再添加恢复或配给' }); return; }
+    if (kind === 'facilities' && i >= 0 && list[i].facilityKey.startsWith('tpl_node_')) { this.setData({ 'survivalEditor.error': '请在节点玩法工具中编辑此设施' }); return; }
     let row = kind === 'card' ? clone(c.card || {}) : i >= 0 ? clone(list[i]) : kind === 'recoveries' ? { recoveryKey: key(list, 'recoveryKey', 'recovery_'), kind: 'REST', limit: 1, hpDelta: 1 } : kind === 'facilities' ? { facilityKey: key(list, 'facilityKey', 'facility_'), settlementSlot: key(list.concat((c.gameplayRuntime.quests || [])), 'settlementSlot', 'facility_slot_'), actKey: this.data.survivalActs[0].value, scope: 'OWNER', targetScope: 'OWNER', limit: 1 } : { rationKey: key(list, 'rationKey', 'ration_'), actKey: this.data.survivalActs[0].value, itemId: '', quantity: 1, fallbackHpCost: 0 };
     this.setData({ survivalEditor: { show: true, section: this.data.survivalEditor.section, kind, index: i, row, customized: kind === 'card' && !!c.card, error: '' } }); this._setSurvivalRow(row);
   },
@@ -152,7 +152,7 @@ const methods = {
         opIndex: OPS.findIndex(op => op.value === condition.op), opLabel: (OPS.find(op => op.value === condition.op) || {}).label || '请选择',
         stateLabel: (this.data.survivalStates.find(s => s.value === condition.var) || {}).label || '请选择数值',
         itemLabel: (this.data.survivalItems.find(i => i.value === condition.itemId) || {}).label || '请选择物品',
-        nodeLabel: (this.data.survivalNodes.find(n => n.value === condition.nodeId) || {}).label || '请选择已保存站点' })) });
+        nodeLabel: (this.data.survivalNodes.find(n => n.value === condition.nodeId) || {}).label || '请选择已保存节点' })) });
   },
   inputSurvivalField(e) {
     const { field } = e.currentTarget.dataset; const row = clone(this.data.survivalEditor.row);

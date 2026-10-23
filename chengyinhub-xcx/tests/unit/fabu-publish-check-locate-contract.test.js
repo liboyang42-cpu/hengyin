@@ -85,7 +85,7 @@ test('档期类缺项切到票务与档期页(editorPage 2)', () => {
     const page = makePage();
     page.setData({ editorPage: 1 });
     const focused = locate(page, field);
-    assert.equal(page.data.editorPage, 2, `${field} 的控件在票务页,不是创作页`);
+    assert.equal(page.data.editorPage, 2, `${field} 的控件在票务页，不是创作页`);
     assert.deepEqual(focused, [field], '仍走提交时那条定位路(展开票务 + 打开票单编辑器)');
   }
 });
@@ -96,7 +96,7 @@ test('主题详情弹窗里的缺项要把弹窗打开', () => {
     page.setData({ editorPage: 2, topicDetailShow: false });
     locate(page, field);
     assert.equal(page.data.topicDetailShow, true, `${field} 这一格在主题详情弹窗里`);
-    assert.equal(page.data.editorPage, 1, '弹窗挂在创作页上,不该顺手停在票务页');
+    assert.equal(page.data.editorPage, 1, '弹窗挂在创作页上，不该顺手停在票务页');
   }
 });
 

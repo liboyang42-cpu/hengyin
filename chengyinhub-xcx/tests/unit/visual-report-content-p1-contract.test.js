@@ -81,7 +81,7 @@ function assertRemainingP1Contract(files) {
 
   // 2026-08-06 用户裁决:起飞过场与地图左上退出钮一并删除(返回=系统手势/结算页),
   // 这里只锁「过场不得回流」——出口语义由 play-special-case 合同盯 show-exit。
-  assert.doesNotMatch(files.playWxml, /startFlight/, '起飞过场已删,不得回流')
+  assert.doesNotMatch(files.playWxml, /startFlight/, '起飞过场已删，不得回流')
 
   assert.match(files.templateWxml, /wx:if="\{\{item\.useNum != null && item\.useNum !== ''\}\}"[^>]*>\{\{\s*item\.useNum \|\| 0\s*\}\} 次引用/)
   assert.match(files.templateWxml, /\{\{item\._statusText\}\}/)

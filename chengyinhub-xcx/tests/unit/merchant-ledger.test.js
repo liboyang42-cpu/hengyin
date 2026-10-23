@@ -6,7 +6,7 @@ const path = require('node:path');
 const root = path.join(__dirname, '../..');
 const read = file => fs.readFileSync(path.join(root, file), 'utf8');
 
-test('商家台账只读资金域接口，详情用 recordType 和 recordId 路由', () => {
+test('商家记录只读资金域接口，详情用 recordType 和 recordId 路由', () => {
   const js = read('pages/merchant/ledger/index.js');
   assert.match(js, /\/api\/merchant\/finance\/redemptions/);
   assert.match(js, /\/api\/merchant\/finance\/overview/);
@@ -214,7 +214,7 @@ test('settlement notice: actual helper stays in tap stack and accepted means not
   assert.equal(h.page.data.settleAlertsLoading, false);
   assert.deepEqual(h.messages, ['已允许微信通知']);
   const wxml = read('pages/merchant/ledger/index.wxml');
-  assert.match(wxml, /到账情况请查看本页账本/);
+
   assert.match(wxml, /settleAlertsHint/);
   assert.doesNotMatch(wxml, /入账后通过服务通知告诉你/);
 });

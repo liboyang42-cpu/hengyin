@@ -64,7 +64,7 @@ test('★本地算分那套整段删除:不再读像素、不再有 scoreOf / re
   const src = read(REL)
   for (const dead of ['scoreOf', 'readPixels', 'getImageData', 'createOffscreenCanvas', 'luma(', '_scoreOf']) {
     assert.equal(src.includes(dead), false,
-      dead + ' 还在组件里残留 —— 契约 §2.2 改版后判定全在服务端,本地启发式一律不许留')
+      dead + ' 还在组件里残留 —— 契约 §2.2 改版后判定全在服务端，本地启发式一律不许留')
   }
 })
 
@@ -116,7 +116,7 @@ test('★分发器把 degraded / lastReason 传给组件 —— 少一个绑定,
 
 test('★降级(degraded)只说「没能审」,不许出现通过 / 不通过这类假结论', () => {
   const data = runVerdict({ tries: 1, maxTries: 3, flagged: true, degraded: true })
-  assert.ok(data.verdict.includes('没能审'), 'degraded 必须说清这次没能审,实际:' + data.verdict)
+  assert.ok(data.verdict.includes('没能审'), 'degraded 必须说清这次没能审，实际:' + data.verdict)
   assert.notEqual(data.verdictKind, 'ok', 'degraded 不许给通过态')
   assert.notEqual(data.verdictKind, 'no', 'degraded 不许给不通过态')
   const src = read(REL)

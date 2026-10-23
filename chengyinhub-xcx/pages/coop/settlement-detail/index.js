@@ -131,7 +131,7 @@ Page({
     this._clubId = hasClubId ? clubId : '';   // 只给请求与返回路径用,不进视图
     // 俱乐部视角没有 clubId 取不到数(后端按 clubId 做范围校验),别发注定失败的请求
     if (recordId == null || recordId === '' || (source === 'club' && !hasClubId)) {
-      this.setData({ loadState: 'missing-param', errorText: '缺少结算记录标识' });
+      this.setData({ loadState: 'missing-param', errorText: '缺少结算记录信息' });
       return;
     }
     this.load();
@@ -199,7 +199,7 @@ Page({
       this.setData({ detail: null });
     }
     if (!this.data.recordId) {
-      this.setData({ loadState: 'missing-param', errorKind: 'data', errorText: '缺少结算记录标识' });
+      this.setData({ loadState: 'missing-param', errorKind: 'data', errorText: '缺少结算记录信息' });
       wx.stopPullDownRefresh();
       return;
     }
@@ -239,7 +239,7 @@ Page({
             loadState: hasDetail && !denied ? 'stale-error' : 'error',
             errorKind: 'data',
             errorText: String(res && res.code) === '200'
-              ? '结算详情没加载出来' : ((res && res.msg) || '结算详情没加载出来'),
+              ? '结算详情加载失败' : ((res && res.msg) || '结算详情加载失败'),
           });
           return;
         }
@@ -272,8 +272,8 @@ Page({
           loadState: hasDetail && !denied ? 'stale-error' : 'error',
           errorKind: network ? 'network' : 'data',
           errorText: network
-            ? '网络不稳定，请检查连接后重试'
-            : ((error && (error.msg || error.message)) || '结算详情没加载出来'),
+            ? '网络异常，请检查连接后重试'
+            : ((error && (error.msg || error.message)) || '结算详情加载失败'),
         });
       },
     });

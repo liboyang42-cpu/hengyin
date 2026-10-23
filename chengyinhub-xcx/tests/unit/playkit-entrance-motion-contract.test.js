@@ -37,12 +37,12 @@ function checkSurface(raw) {
     'play-surface.wxss 缺 `.pk--reduced .pk-in { animation: none }`')
   // 注释里可以解释这段历史,所以只看真正的规则行,不看整文件
   assert.doesNotMatch(css, /\.cy-motion-reduced\s+\.pk-in/,
-    '又写回页面级的 .cy-motion-reduced —— 组件隔离下选不到,是死规则')
+    '又写回页面级的 .cy-motion-reduced —— 组件隔离下选不到，是死规则')
 }
 
 function checkKitWxml(kit, wxml) {
   assert.match(wxml, /reducedMotion\s*\?\s*'pk--reduced'/,
-    `${kit} 写了 pk-in 却没挂减弱开关,动效关不掉`)
+    `${kit} 写了 pk-in 却没挂减弱开关，动效关不掉`)
 }
 
 test('★减弱动效必须按组件自己的根类 .pk--reduced 写,不能用页面级的 .cy-motion-reduced', () => {
@@ -59,7 +59,7 @@ test('negative control:摘掉任一屏的 pk--reduced 绑定,判据必须真的�
   const kit = kitsUsingPkIn()[0]
   const wxml = fs.readFileSync(path.join(COMPONENTS, kit, 'index.wxml'), 'utf8')
   const mutated = wxml.replace(/\s*\{\{reducedMotion \? 'pk--reduced' : ''\}\}/, '')
-  assert.notEqual(mutated, wxml, '负控锚点失效:绑定没被摘掉,说明写法变了,判据要跟着改')
+  assert.notEqual(mutated, wxml, '负控锚点失效:绑定没被摘掉，说明写法变了，判据要跟着改')
   assert.throws(() => checkKitWxml(kit, mutated))
 })
 
@@ -77,9 +77,9 @@ const REPLAY_KITS = ['playkit-journey-check', 'playkit-photocheck', 'playkit-typ
 
 function checkReplayWiring(kit, js, wxml) {
   assert.match(js, /behaviors\/replay-motion\.js/, `${kit} 没挂 replay-motion behavior`)
-  assert.match(js, /this\.replayMotion\(\)/, `${kit} 挂了 behavior 却从不调用,等于没接`)
+  assert.match(js, /this\.replayMotion\(\)/, `${kit} 挂了 behavior 却从不调用，等于没接`)
   assert.match(wxml, /_motionReset \? 'pk--reset'/,
-    `${kit} 调了 replayMotion 但外层 view 没挂 pk--reset —— 摘不掉动画,重播不了`)
+    `${kit} 调了 replayMotion 但外层 view 没挂 pk--reset —— 摘不掉动画，重播不了`)
 }
 
 test('★节点复用的屏必须把重播三件套接齐(behavior + 调用 + wxml 类)', () => {
@@ -99,7 +99,7 @@ test('★摘除规则必须存在,否则 pk--reset 挂了也摘不掉动画', ()
   // 专属动效也要各自摘:共用那条只管 .pk-in
   const jc = fs.readFileSync(path.join(COMPONENTS, 'playkit-journey-check', 'index.wxss'), 'utf8')
   assert.match(jc, /\.pk--reset\s+\.jc__die\s*\{[^}]*animation:\s*none/,
-    'jc__die 没有 pk--reset 的摘除规则,重掷时骰子仍然不重播')
+    'jc__die 没有 pk--reset 的摘除规则，重掷时骰子仍然不重播')
 })
 
 test('negative control:摘掉任一件接线,判据必须真的抛', () => {
@@ -108,7 +108,7 @@ test('negative control:摘掉任一件接线,判据必须真的抛', () => {
   const wxml = fs.readFileSync(path.join(COMPONENTS, kit, 'index.wxml'), 'utf8')
   // 只摘 wxml 那一件:behavior 与调用都还在,正是最容易漏且最不报错的那种漏法
   const mutated = wxml.replace(/\s*\{\{_motionReset \? 'pk--reset' : ''\}\}/, '')
-  assert.notEqual(mutated, wxml, '负控锚点失效:绑定写法变了,判据要跟着改')
+  assert.notEqual(mutated, wxml, '负控锚点失效:绑定写法变了，判据要跟着改')
   assert.throws(() => checkReplayWiring(kit, js, mutated))
   // 再摘调用那一件
   assert.throws(() => checkReplayWiring(kit, js.replace(/this\.replayMotion\(\)/g, 'void 0'), wxml))

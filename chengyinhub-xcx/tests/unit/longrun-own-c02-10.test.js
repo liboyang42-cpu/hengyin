@@ -79,7 +79,7 @@ test('unreadable active draft cannot be treated as missing and cannot send or ov
     assert.equal(sent.length, 0);
     assert.equal(JSON.stringify(storage), before);
     assert.equal(navigations.length, 0);
-    assert.match(page.data.submitError, /无法读取/);
+    assert.match(page.data.submitError, /读取失败/);
   } finally { wx.getStorageSync = originalGet; }
 });
 test('a read failure of a pointed UNKNOWN envelope propagates instead of silently creating another UUID', () => {

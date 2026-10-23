@@ -26,24 +26,24 @@ test('走 T1 底部弹层的壳,不是自绘', () => {
 test('保存入口必须在,且只在真有码时才给', () => {
   const wxml = read(`${C}/index.wxml`)
   const save = /<view[^>]*class="cgcs__save"[\s\S]*?<\/view>/.exec(wxml)
-  assert.ok(save, '缺保存入口 —— 打印不出来,这一页就没意义了')
+  assert.ok(save, '缺保存入口 —— 打印不出来，这一页就没意义了')
   assert.match(save[0], /wx:if="\{\{state === 'ready' && qr\}\}"/,
-    '没码时也给保存,存下来是张空白图')
+    '没码时也给保存，存下来是张空白图')
   assert.match(save[0], /<cy-icon[^>]*name="download"/, '按稿 335:1347 用 download 图标')
   assert.match(read('components/cy/icon/icons.wxss'), /\.cyi--download\b/,
-    'download 图标不在图标库里,绑了也是空的')
+    'download 图标不在图标库里，绑了也是空的')
 })
 
 test('二维码底恒为浅色 —— 深色底扫不出来', () => {
   const wxss = read(`${C}/index.wxss`)
   const rule = /\.cgcs__qr\s*\{([^}]*)\}/.exec(wxss)
   assert.ok(rule, '.cgcs__qr 规则不见了')
-  assert.match(rule[1], /background:\s*#F8F8F8/i, '扫码底必须是浅色实色,不能跟着暗色主题走')
+  assert.match(rule[1], /background:\s*#F8F8F8/i, '扫码底必须是浅色实色，不能跟着暗色主题走')
 })
 
 test('保存失败三种原因分开说,不许一句「保存失败」糊过去', () => {
   const js = read(`${C}/index.js`)
-  assert.match(js, /auth deny|authorize/, '拒过授权要引导去设置,再调 authorize 不会弹窗')
+  assert.match(js, /auth deny|authorize/, '拒过授权要引导去设置，再调 authorize 不会弹窗')
   assert.match(js, /openSetting/, '缺去设置的入口')
   assert.match(js, /downloadFile/, '缺下载失败分支')
   assert.match(js, /indexOf\('cancel'\)/, '用户自己取消不该当成错误打扰他')
@@ -52,7 +52,7 @@ test('保存失败三种原因分开说,不许一句「保存失败」糊过去'
 test('负控:把保存入口拿掉,门禁必须判红', () => {
   const wxml = read(`${C}/index.wxml`)
   const mutated = wxml.replace(/<view[^>]*class="cgcs__save"[\s\S]*?<\/view>/, '')
-  assert.notEqual(mutated, wxml, '变异没生效:锚点已漂移,这个负控在空转')
+  assert.notEqual(mutated, wxml, '变异没生效:锚点已漂移，这个负控在空转')
   assert.equal(/class="cgcs__save"/.test(mutated), false, '判据认不出保存入口被删')
 })
 
@@ -66,12 +66,12 @@ function assertErrorIsCompact(wxml, wxss) {
   assert.match(wxml, /class="cgcs__error"/, '错误态要有自己的紧凑块')
   const errBox = /\.cgcs__error\s*\{([^}]*)\}/.exec(wxss)
   assert.ok(errBox, '.cgcs__error 规则不见了')
-  assert.doesNotMatch(errBox[1], /height:\s*\d+rpx/, '错误块不得再钉死高度,高要跟着文案走')
+  assert.doesNotMatch(errBox[1], /height:\s*\d+rpx/, '错误块不得再钉死高度，高要跟着文案走')
   const errText = /\.cgcs__error-text\s*\{([^}]*)\}/.exec(wxss)
   assert.ok(errText, '.cgcs__error-text 规则不见了')
-  assert.doesNotMatch(errText[1], /white-space:\s*nowrap/, '错误文案要能自然换行,不许 nowrap 顶穿')
+  assert.doesNotMatch(errText[1], /white-space:\s*nowrap/, '错误文案要能自然换行，不许 nowrap 顶穿')
   const retry = /class="cgcs__retry"[^>]*>([^<]*)</.exec(wxml)
-  assert.ok(retry && retry[1].trim() === '重试', '「重试」要独占一个热区,不再和正文挤在同一窄栏里折行')
+  assert.ok(retry && retry[1].trim() === '重试', '「重试」要独占一个热区，不再和正文挤在同一窄栏里折行')
 }
 
 test('CU-C-148 错误态缩成按内容高的说明块,不复用死码格', () => {

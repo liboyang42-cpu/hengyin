@@ -39,9 +39,9 @@ test('★徽章掉落必须留住 badgeCode，并给出查看收藏 + 继续两�
   const wxml = read('pages/play/index.wxml');
 
   const hunk = js.slice(js.indexOf('const newBadges'), js.indexOf('const newBadges') + 700);
-  assert.match(hunk, /code: b\.code/, 'badgeCode 是回读用的稳定 ID，映射时不能丢');
+  assert.match(hunk, /code: b\.code/, 'badgeCode 是刷新用的稳定 ID，映射时不能丢');
   assert.doesNotMatch(hunk, /this\.diegetic\('解锁徽章/,
-    '奖励落位不能只是一句 toast —— 一闪而过就没有回读入口了');
+    '奖励落位不能只是一句 toast —— 一闪而过就没有刷新入口了');
 
   assert.match(wxml, /bindtap="openRewardCollection"/);
   assert.match(wxml, /bindtap="closeRewardDrop"/);

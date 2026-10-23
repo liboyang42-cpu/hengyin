@@ -29,13 +29,13 @@ test('join:补秒并归一化到两位;任一非法返回空串', () => {
 
 test('★跨天必须按「日期+时刻」一起算 —— 只比时刻会算成负数', () => {
   assert.equal(dt.spanMinutes('2026-09-01 22:00:00', '2026-09-02 02:00:00'), 240,
-    '跨夜 4 小时;只看时刻会得到 -1200')
+    '跨夜 4 小时；只看时刻会得到 -1200')
   assert.equal(dt.spanMinutes('2026-09-01 09:00:00', '2026-09-01 17:30:00'), 510)
   assert.equal(dt.spanMinutes('2026-08-31 23:00:00', '2026-09-01 01:00:00'), 120, '跨月')
   assert.equal(dt.spanMinutes('2026-12-31 23:00:00', '2027-01-01 01:00:00'), 120, '跨年')
   assert.equal(dt.spanMinutes('2024-02-28 12:00:00', '2024-03-01 12:00:00'), 2880, '闰年二月多一天')
   assert.equal(dt.spanMinutes('2026-09-01 09:00:00', '2026-09-01 09:00:00'), 0, '同一时刻是 0')
-  assert.equal(dt.spanMinutes('2026-09-02 09:00:00', '2026-09-01 09:00:00'), -1440, '倒序为负,不取绝对值')
+  assert.equal(dt.spanMinutes('2026-09-02 09:00:00', '2026-09-01 09:00:00'), -1440, '倒序为负，不取绝对值')
 })
 
 test('spanMinutes 非法返回 null 而不是 0 —— 0 是「同一时刻」这个合法答案', () => {
@@ -63,7 +63,7 @@ test('validate:各类失败给出能区分的 reason', () => {
 
   assert.equal(dt.validate('2026-09-03 09:00:00', '2026-09-01 09:00:00').reason, 'not-after')
   assert.equal(dt.validate('2026-09-01 09:00:00', '2026-09-01 09:00:00').reason, 'not-after',
-    '起止同一刻的券没有有效期,不能放行')
+    '起止同一刻的券没有有效期，不能放行')
   assert.equal(dt.validate('bad', '2026-09-01 09:00:00').reason, 'invalid')
   assert.equal(dt.validate('2026-09-01 09:00:00', '2026-09-01 10:00:00', { minMinutes: 120 }).reason, 'too-short')
   assert.equal(dt.validate('2026-09-01 09:00:00', '2026-09-30 09:00:00', { maxMinutes: 1440 }).reason, 'too-long')
@@ -74,13 +74,13 @@ test('validate:各类失败给出能区分的 reason', () => {
 test('validate 不夹取:越界把真实跨度原样返回', () => {
   const r = dt.validate('2026-09-01 09:00:00', '2026-09-30 09:00:00', { maxMinutes: 1440 })
   assert.equal(r.ok, false)
-  assert.equal(r.minutes, 41760, '真实值原样返回,不是被夹过的 1440')
+  assert.equal(r.minutes, 41760, '真实值原样返回，不是被夹过的 1440')
 })
 
 test('withDate / withTime:只换一半,另一半原样保留', () => {
   assert.equal(dt.withDate('2026-09-01 09:30:00', '2026-09-05'), '2026-09-05 09:30:00')
   assert.equal(dt.withTime('2026-09-01 09:30:00', '18:45'), '2026-09-01 18:45:00')
-  assert.equal(dt.withDate('', '2026-09-05'), '2026-09-05 00:00:00', '原值为空时给个零点,不要产出空串')
+  assert.equal(dt.withDate('', '2026-09-05'), '2026-09-05 00:00:00', '原值为空时给个零点，不要产出空串')
   assert.equal(dt.withTime('', '18:45'), '', '没有日期就拼不出时刻')
 })
 
@@ -92,5 +92,5 @@ test('负控:把跨天跨度写成只比时刻,跨夜必然算成负数', () => 
   assert.equal(dt.spanMinutes(A, B), 240)
   assert.equal(broken(A, B), -1200)
   assert.notEqual(broken(A, B), dt.spanMinutes(A, B),
-    '负控必须真的算出不同的值,否则这条断言什么也没证明')
+    '负控必须真的算出不同的值，否则这条断言什么也没证明')
 })

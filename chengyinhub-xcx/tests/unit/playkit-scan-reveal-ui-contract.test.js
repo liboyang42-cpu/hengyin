@@ -49,10 +49,10 @@ test('显形档:取景时活相机中央是一个小准星(不是扫码框),显�
   const wxml = read(WXML)
   const cam = wxml.slice(wxml.indexOf('<view class="sc__cam"'), wxml.indexOf('<view class="sc__camoff"'))
   const ticks = cam.match(/class="sc__tick sc__tick--(tl|tr|bl|br)"/g) || []
-  assert.equal(ticks.length, 4, '准星是四个小角,不是老三档那套大取景框角标')
+  assert.equal(ticks.length, 4, '准星是四个小角，不是老三档那套大取景框角标')
   assert.doesNotMatch(cam, /sc__c--live/, '老三档的大角标(60rpx)放在整屏相机上就是「扫码框」,看起来不对')
   const guard = cam.slice(0, cam.indexOf('sc__tick--tl'))
-  assert.match(guard, /wx:if="\{\{!overlayUrl\}\}"/, '识别成功后准星要退场,把画面让给显形出来的东西')
+  assert.match(guard, /wx:if="\{\{!overlayUrl\}\}"/, '识别成功后准星要退场，把画面让给显形出来的东西')
 })
 
 test('负控:把准星的 !overlayUrl 条件摘掉,上一条必须红', () => {
@@ -72,7 +72,7 @@ test('显形有过程:先透明挂上,下一拍才到位 —— 同一拍挂上�
   global.setTimeout = (fn) => { timers.push(fn); return timers.length }
   try {
     component.methods._revealOverlay.call(inst)
-    assert.equal(inst.data.overIn, false, '同一拍就到位 = 没有过程,等于「啪」一下出现')
+    assert.equal(inst.data.overIn, false, '同一拍就到位 = 没有过程，等于「啪」一下出现')
     assert.equal(timers.length, 1, '必须排到下一拍')
     timers[0]()
     assert.equal(inst.data.overIn, true, '下一拍要到位')
@@ -86,17 +86,17 @@ test('减弱动态效果:直接终态,不排下一拍', () => {
   const prev = global.setTimeout
   global.setTimeout = () => { scheduled += 1; return 1 }
   try { component.methods._revealOverlay.call(inst) } finally { global.setTimeout = prev }
-  assert.equal(inst.data.overIn, true, '减弱动态效果时还要等一拍,就是在对一个要求别动的人做动画')
+  assert.equal(inst.data.overIn, true, '减弱动态效果时还要等一拍，就是在对一个要求别动的人做动画')
   assert.equal(scheduled, 0)
 })
 
 test('overlayUrl 从空变有值的那一刻触发显形;收起再打开要重新浮一次', () => {
   const component = loadComponent()
-  assert.ok(component.observers.overlayUrl, '没接观察者 = 服务端给了图,显形永远不发生')
+  assert.ok(component.observers.overlayUrl, '没接观察者 = 服务端给了图，显形永远不发生')
   const src = read(JS)
   assert.match(src, /if \(url\) this\._revealOverlay\(\)/)
   assert.match(src, /if \(this\.data\.overIn\) this\.setData\(\{ overIn: false \}\)/,
-    '收起不复位 = 第二次打开直接停在终态,没有显形')
+    '收起不复位 = 第二次打开直接停在终态，没有显形')
   assert.match(src, /detached\(\) \{[^}]*clearTimeout\(this\._overTimer\)/, '组件卸载要清掉那一拍')
   assert.match(src, /detached\(\) \{[^}]*clearTimeout\(this\._arTimer\)/, '组件卸载也要清掉 AR 回落计时')
 })
@@ -105,10 +105,10 @@ test('叠加图装进固定高度的框:不再是 widthFix(图越高越往下长
   const wxml = read(WXML)
   const over = (wxml.match(/<image class="sc__over[^>]*>/) || [''])[0]
   assert.match(over, /mode="aspectFit"/, '固定框 + aspectFit,多高的图都不越界')
-  assert.doesNotMatch(over, /widthFix/, 'widthFix 让高度跟着图走,高图直接压到底部气泡')
+  assert.doesNotMatch(over, /widthFix/, 'widthFix 让高度跟着图走，高图直接压到底部气泡')
   const wxss = read('pages/play/components/playkit-scan/index.wxss')
   const rule = (wxss.match(/\.sc__over \{[^}]*\}/) || [''])[0]
-  assert.match(rule, /height: \d+rpx/, '框高要写死,不然 aspectFit 没有边界可 fit')
+  assert.match(rule, /height: \d+rpx/, '框高要写死，不然 aspectFit 没有边界可 fit')
 })
 
 // ==================== 2026-09-22 用户定调:显形档是整屏相机,上面不留玩法页的地址栏 ====================
@@ -137,7 +137,7 @@ test('准星小而轻;说明收进底部一条半透明条,不压在画面中间
   assert.match(pill, /\{\{titleText\}\}/, '商家写的那句标题在说明条里')
   const pillRule = (wxss.match(/\.sc__pill \{[^}]*\}/) || [''])[0]
   assert.match(pillRule, /bottom:/, '说明条贴底')
-  assert.match(pillRule, /background: rgba\(/, '半透明,不挡画面')
+  assert.match(pillRule, /background: rgba\(/, '半透明，不挡画面')
   const q = (wxml.match(/<view class="sc__q"[^>]*>/) || [''])[0]
   assert.match(q, /wx:if="\{\{kindKey !== '显形'\}\}"/, '显形档里顶部不再放标题')
 })

@@ -308,7 +308,7 @@ Component({
 
       // 6. 活动说明
       displayInfo.activityDesc = trimmedString(info.activityDesc) || trimmedString(source.description);
-      displayInfo.cooperateDateText = trimmedString(info.cooperateDate) || '接待时间待确认';
+      displayInfo.cooperateDateText = trimmedString(info.cooperateDate) || '—';
       displayInfo.hasCooperateDate = !!trimmedString(info.cooperateDate);
       displayInfo.hasNodeName = !!trimmedString(info.nodeName);
 

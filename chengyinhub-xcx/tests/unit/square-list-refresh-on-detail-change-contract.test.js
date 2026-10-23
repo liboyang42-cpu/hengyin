@@ -86,7 +86,7 @@ test('列表:无脏标不重拉,置脏标后 onShow 刷一次,且脏标只消费
 
   page.markSquareListDirty();
   page.onShow();
-  assert.equal(feedRequests(requests).length, 1, '详情删/改过,回列表必须刷一次首屏');
+  assert.equal(feedRequests(requests).length, 1, '详情删/改过，回列表必须刷一次首屏');
   assert.equal(feedRequests(requests)[0].data.pageNum, 1, '只刷首屏');
 
   page.onShow();
@@ -154,7 +154,7 @@ test('详情:删除成功调用上一页 markSquareListDirty', () => {
   const del = requests.find((r) => r.url === '/api/creativesquare/delete');
   assert.ok(del, '删除必须发请求');
   del.success({ code: '200' });
-  assert.equal(prev.marked, 1, '详情删帖成功必须给列表置脏标,否则返回后还是旧卡');
+  assert.equal(prev.marked, 1, '详情删帖成功必须给列表置脏标，否则返回后还是旧卡');
 });
 
 test('详情:编辑保存成功也置脏标(列表正文同样会过期)', () => {
@@ -180,7 +180,7 @@ test('A-14-1:评论点赞失败且后端无 msg 时,兜底文案不静默也不�
     "toast(app.getRequestErrorMessage(res, '操作失败，请重试'));",
     'toast(res.msg);',
   );
-  assert.notEqual(source, read(DETAIL_REL), '负控锚点失效:兜底文案未命中');
+  assert.notEqual(source, read(DETAIL_REL), '负控锚点失效:保底文案未命中');
   const broken = loadDetail(null, { share: true, source });
   broken.page.setData({ list: [{ id: 55, isLiked: 0, likeCount: 1 }] });
   broken.page.commentLikeClick({ currentTarget: { dataset: { index: 0 } } });
@@ -196,7 +196,7 @@ test('A-RPT-5:分享直开详情(栈里没有列表)时,置脏落 app 级脏标'
   page.deleteSquarePost();
   requests.find((r) => r.url === '/api/creativesquare/delete').success({ code: '200' });
   assert.equal(app.globalData.squareListDirty, true,
-    '分享直开没有上一页实例,脏标必须落到 app 级,否则之后进列表仍是旧卡');
+    '分享直开没有上一页实例，脏标必须落到 app 级，否则之后进列表仍是旧卡');
 });
 
 test('A-RPT-5:列表消费 app 级脏标刷一次,且只消费一次', () => {

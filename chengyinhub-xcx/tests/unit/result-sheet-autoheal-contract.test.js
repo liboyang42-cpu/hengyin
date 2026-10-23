@@ -196,7 +196,7 @@ function declarationsOf(name, sources) {
 test('⑨ loading 弧读自己的 comp 钩子,不是「本主题强调色」', () => {
   assert.match(SHEET_WXSS, /border-top-color:\s*var\(--cy-comp-result-spinner\)/)
   assert.doesNotMatch(SHEET_WXSS, /border-top-color:\s*var\(--cy-color-brand\)/,
-    '--cy-color-brand 玩家域=白、商家域=灰,拿它当品牌紫等于这个颜色从没出现过')
+    '--cy-color-brand 玩家域=白、商家域=灰，拿它当品牌紫等于这个颜色从没出现过')
 })
 
 test('⑩ 该钩子只声明一次且指向品牌紫 —— 任何一档都不许覆盖成别的颜色', () => {

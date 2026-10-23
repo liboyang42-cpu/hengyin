@@ -35,7 +35,7 @@ Page({
         refreshing: false,
         error: '队伍链接不完整',
         errorKind: 'missing-param',
-        errorSub: '请从活动、订单或队长分享的邀请重新进入',
+        errorSub: '请返回重新进入',
         errorAction: '返回上一页'
       });
     }
@@ -109,7 +109,7 @@ Page({
             refreshing: false,
             error: '登录后查看队伍',
             errorKind: 'no-permission',
-            errorSub: '请重新登录后再打开这支队伍',
+            errorSub: '',
             errorAction: '登录'
           });
           return;

@@ -79,7 +79,7 @@ test('凡是传了 flush 的页面,父容器必须真的有横向内边距', () 
     if (rootHasHorizontalPadding(dir) === false) offenders.push(dir)
   }
   assert.deepEqual(offenders.filter(d => !LEGACY_FLUSH_MISUSE.includes(d)), [],
-    '这些页传了 flush 但根容器没有横向内边距,标题会贴到屏幕边缘')
+    '这些页传了 flush 但根容器没有横向内边距，标题会贴到屏幕边缘')
 })
 
 test('冻结基线只能减不能加:修好的条目必须及时删掉', () => {
@@ -87,17 +87,17 @@ test('冻结基线只能减不能加:修好的条目必须及时删掉', () => {
     fs.existsSync(path.join(ROOT, d, 'index.wxss')) && rootHasHorizontalPadding(d) === false)
   const stale = LEGACY_FLUSH_MISUSE.filter(d => !current.includes(d))
   assert.deepEqual(stale, [],
-    '这些条目已经修好了,基线里的记录是过期的 —— 删掉它们,否则基线会慢慢变成许可证')
+    '这些条目已经修好了，基线里的记录是过期的 —— 删掉它们，否则基线会慢慢变成许可证')
 })
 
 test('负控:把 flush 加回去,门禁必须变红', () => {
   assert.equal(rootHasHorizontalPadding('pages/club/edit'), false,
-    '前置条件:该页根容器本来就没有横向内边距,这正是不能传 flush 的理由')
+    '前置条件:该页根容器本来就没有横向内边距，这正是不能传 flush 的理由')
 
   const wxml = stripWxmlComments(read('pages/club/edit/index.wxml'))
   const mutated = wxml.replace('<cy-page-title title="编辑资料" safe-top="{{false}}" />',
                                '<cy-page-title title="编辑资料" safe-top="{{false}}" flush="{{true}}" />')
-  assert.notEqual(mutated, wxml, '变异没生效:锚点已漂移,这个负控在空转')
+  assert.notEqual(mutated, wxml, '变异没生效:锚点已漂移，这个负控在空转')
   assert.equal(/<cy-page-title[^>]*\bflush\b/.test(mutated), true, '判据认不出 flush,它是橡皮图章')
 })
 
@@ -106,5 +106,5 @@ test('负控:判据不能把「父容器确有横向内边距」的合法页面�
     fs.existsSync(path.join(ROOT, d, 'index.wxss')) &&
     rootHasHorizontalPadding(d) === true)
   assert.ok(legit.length > 0,
-    '全仓找不到一个合法使用 flush 的页面 —— 说明判据把所有页都当成违规了,它不是在检查而是在一刀切')
+    '全仓找不到一个合法使用 flush 的页面 —— 说明判据把所有页都当成违规了，它不是在检查而是在一刀切')
 })

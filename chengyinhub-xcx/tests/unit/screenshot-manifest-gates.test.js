@@ -252,7 +252,7 @@ test('AI 店铺参谋按内容态验收，不依赖已迁入导航栏的旧页�
   assert.equal(shots.C12b.expect.selector, '.value-card, .ai-card')
   assert.equal(shots.C12c.expect.selector, '.value-card, .ai-card--down')
   assert.equal(shots.C12c.data.ai, false,
-    'automator 对 null 回读为 undefined；降级夹具用稳定的 falsy 值并由 DOM 锁住真实分支')
+    'automator 对 null 刷新为 undefined；降级夹具用稳定的 falsy 值并由 DOM 锁住真实分支')
 })
 
 test('首页游客态直接验收匿名问候并禁止玩家身份徽章', () => {

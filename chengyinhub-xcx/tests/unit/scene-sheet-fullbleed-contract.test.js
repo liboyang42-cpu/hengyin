@@ -62,7 +62,7 @@ test('cy-scene-sheet 面板宽度链路上不得有定长夹宽(否则宽屏真�
     hits,
     [],
     '.ss / .ss__stack / .ss__panel 只能满宽。--cy-comp-sheet-width 是核稿参考值,\n' +
-      '不是布局约束,挂上去会让 >393px 的机器右侧漏出底层页面:\n' +
+      '不是布局约束，挂上去会让 >393px 的机器右侧漏出底层页面:\n' +
       hits.join('\n'),
   )
 })
@@ -77,17 +77,17 @@ test('夹宽检测器自证:能判红也能判绿', () => {
   )
   assert.deepEqual(findWidthClamps('.ss__stack { width: 100%; }'), [], '满宽写法不该被误报')
   assert.deepEqual(findWidthClamps('.ss--full .ss__panel { width: 380px; }'), ['.ss--full .ss__panel { width: 380px }'], '带修饰符的后代规则也要认')
-  assert.deepEqual(findWidthClamps('.ss--player .ss__title { max-width: 200px; }'), [], '链路以外的子元素限宽是正常排版,不该拦')
+  assert.deepEqual(findWidthClamps('.ss--player .ss__title { max-width: 200px; }'), [], '链路以外的子元素限宽是正常排版，不该拦')
   // 下面两条是 2026-08-10 code review 找出的漏网形态,补进负控免得门禁只认历史那一种
   assert.deepEqual(
     findWidthClamps('.ss__stack, .foo { max-width: 360px; }'),
     ['.ss__stack, .foo { max-width: 360px }'],
-    '逗号组里只要有一支落在链路上就得认,不能因为最后一支不是链路就整条放过',
+    '逗号组里只要有一支落在链路上就得认，不能因为最后一支不是链路就整条放过',
   )
   assert.deepEqual(
     findWidthClamps('.ss__panel { margin-right: 40px; }'),
     ['.ss__panel { margin-right: 40px }'],
-    '横向外边距会露出同一条缝,和 max-width 等价',
+    '横向外边距会露出同一条缝，和 max-width 等价',
   )
-  assert.deepEqual(findWidthClamps('.ss__panel { margin-right: 0; }'), [], 'margin 为 0 是没表态,不该误报')
+  assert.deepEqual(findWidthClamps('.ss__panel { margin-right: 0; }'), [], 'margin 为 0 是没表态，不该误报')
 })

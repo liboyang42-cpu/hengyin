@@ -1,7 +1,7 @@
 const initial = require('../utils/publish/story-initial-state.js');
 const matrix = require('../utils/publish/gameplay-support-matrix.js');
 const clone = value => JSON.parse(JSON.stringify(value));
-const OPTIONS = [{ key: 'BLOCK_HP_COST', label: '仅禁止扣该值的任务', sub: '其他任务仍可参与' }, { key: 'THEME_FAIL', label: '主题失败', sub: '本次主题结束' }, { key: 'CHALLENGE', label: '完成恢复挑战', sub: '完成指定站点后恢复' }, { key: 'STEPS', label: '走够步数', sub: '达到恢复步数后恢复' }, { key: 'WAIT', label: '等待一段时间', sub: '等待指定分钟后恢复' }];
+const OPTIONS = [{ key: 'BLOCK_HP_COST', label: '仅禁止扣该值的任务', sub: '其他任务仍可参与' }, { key: 'THEME_FAIL', label: '主题失败', sub: '本次主题结束' }, { key: 'CHALLENGE', label: '完成恢复挑战', sub: '完成指定节点后恢复' }, { key: 'STEPS', label: '走够步数', sub: '达到恢复步数后恢复' }, { key: 'WAIT', label: '等待一段时间', sub: '等待指定分钟后恢复' }];
 const THEN = [{ key: 'THEME_FAIL', label: '主题失败' }, { key: 'BLOCK_HP_COST', label: '仅禁止扣该值的任务' }];
 const BLOCK = { CHALLENGE: 'zeroChallenge', STEPS: 'zeroSteps', WAIT: 'zeroWait' };
 const FIELD = { CHALLENGE: 'challenge', STEPS: 'steps', WAIT: 'wait' };
@@ -37,7 +37,7 @@ function validate(config, rules, policies, nodes, support) {
   if (['BLOCK_PAID', 'LEGACY_END'].includes(policy)) return '';
   if (policy === 'CHALLENGE' && survival.zeroChallenge?.version == null) {
     const row = survival.zeroChallenge;
-    if (!integer(row.challengeNodeId, 1, Number.MAX_SAFE_INTEGER)) return '请先保存主题和挑战站点，再选择主挑战';
+    if (!integer(row.challengeNodeId, 1, Number.MAX_SAFE_INTEGER)) return '请先保存主题和挑战节点，再选择主挑战';
     if (!Array.isArray(row.alternativeNodeIds) || row.alternativeNodeIds.length > 3 || new Set(row.alternativeNodeIds).size !== row.alternativeNodeIds.length || row.alternativeNodeIds.some(id => !integer(id, 1, Number.MAX_SAFE_INTEGER) || id === row.challengeNodeId)) return '备选挑战最多 3 个，且不能与主挑战重复';
     if (!rules?.hp?.enabled) return '请先开启' + (config.hpName || '生命值');
     if (!integer(row.restoreTo, 1, rules.hp.max)) return '恢复值须在 1 到' + (config.hpName || '生命值') + '上限之间';
@@ -47,7 +47,7 @@ function validate(config, rules, policies, nodes, support) {
   if (!OPTIONS.some(row => row.key === policy)) return '请选择有效的 HP 归零策略';
   // 未启用生命时，缺省的「仅禁止扣该值的任务」不起作用，也不该要求先开启生命（例如只用自定义数值的主题）
   if (!rules?.hp?.enabled) return policy === 'BLOCK_HP_COST' ? '' : '请先开启' + (config.hpName || '生命值');
-  for (const [key, block] of Object.entries(BLOCK)) if (key !== policy && survival[block] != null) return '归零策略只能配置所选恢复参数';
+  for (const [key, block] of Object.entries(BLOCK)) if (key !== policy && survival[block] != null) return '只能设置所选的恢复项';
   if (!BLOCK[policy]) return '';
   const row = survival[BLOCK[policy]];
   if (!row || typeof row !== 'object' || Array.isArray(row)) return '请配置恢复条件';
@@ -60,14 +60,14 @@ function validate(config, rules, policies, nodes, support) {
   if (policy === 'CHALLENGE') {
     if (!integer(row.requiredCompletions, 1, 99)) return '需完成次数须为 1 至 99 的整数';
     if (!integer(row.withinSeconds, 1, 86400)) return '恢复挑战限时须为 1 至 86400 秒';
-    if (!integer(row.challengeNodeId, 1, Number.MAX_SAFE_INTEGER)) return '请先保存主题和挑战站点，再选择主挑战';
+    if (!integer(row.challengeNodeId, 1, Number.MAX_SAFE_INTEGER)) return '请先保存主题和挑战节点，再选择主挑战';
     if (!Array.isArray(row.alternativeNodeIds) || row.alternativeNodeIds.length > 3 || new Set(row.alternativeNodeIds).size !== row.alternativeNodeIds.length || row.alternativeNodeIds.some(id => !integer(id, 1, Number.MAX_SAFE_INTEGER) || id === row.challengeNodeId)) return '备选挑战最多 3 个，且不能与主挑战重复';
     if (!matrix.ZERO_CHALLENGE_GAMEPLAYS.includes(row.gameplayKey)) return '请选择恢复玩法';
     if (nodes) {
       const main = nodes.find(node => node.id === row.challengeNodeId);
-      if (!main || row.alternativeNodeIds.some(id => !nodes.some(node => node.id === id))) return '请选择主题已有真实挑战站点';
+      if (!main || row.alternativeNodeIds.some(id => !nodes.some(node => node.id === id))) return '请选择主题已有真实挑战节点';
       const advanced = matrix.config(main.template);
-      if (!advanced[row.gameplayKey]?.enabled) return '恢复玩法须匹配主挑战站点';
+      if (!advanced[row.gameplayKey]?.enabled) return '恢复玩法须匹配主挑战节点';
       if (row.gameplayKey === 'check' && advanced.outcomeRules?.version !== 1) return '检定恢复须先配置通过/没通过之后';
       const issue = matrix.challengeError(support, nodes, row); if (issue) return issue;
     }
@@ -77,7 +77,7 @@ function validate(config, rules, policies, nodes, support) {
 function options(policies) { return OPTIONS.map(row => Object.assign({}, row, { disabled: !policies.includes(row.key), reason: policies.includes(row.key) ? '' : row.key === 'STEPS' ? '微信运动恢复暂未开放' : '当前主题暂不支持，请加载玩法支持信息' })); }
 function summary(config) {
   const draft = read(config), label = OPTIONS.find(row => row.key === draft.policy)?.label || ({ BLOCK_PAID: '禁止所有收费动作', LEGACY_END: '旧版结束' })[draft.policy] || draft.policy;
-  const condition = draft.policy === 'WAIT' ? draft.wait.minutes + ' 分钟' : draft.policy === 'STEPS' ? draft.steps.steps + ' 步' : draft.policy === 'CHALLENGE' ? '站点 ' + (draft.challenge.challengeNodeId || '未选择') : '';
+  const condition = draft.policy === 'WAIT' ? draft.wait.minutes + ' 分钟' : draft.policy === 'STEPS' ? draft.steps.steps + ' 步' : draft.policy === 'CHALLENGE' ? '节点 ' + (draft.challenge.challengeNodeId || '未选择') : '';
   return [label, condition, draft.zeroMessage].filter(Boolean).join(' · ');
 }
 const data = { runtimeZeroHpSummary: '', runtimeZeroHpOptions: [], runtimeZeroThenOptions: THEN, runtimeZeroEditor: { show: false, draft: null, error: '', readOnly: false } };

@@ -23,7 +23,7 @@ test('创建页收成两段卡:玩法配置 + 店址确认', () => {
   assert.match(wxml, /class="cnc-ok" wx:if="\{\{tpl\}\}"/)
   assert.match(wxml, /class="cnc-ok" wx:if="\{\{picked\}\}"/)
   // 本页不再自绘模板表单
-  assert.ok(!/<input/.test(wxml), '模板字段已搬去玩法配置页,本页不许再留输入框')
+  assert.ok(!/<input/.test(wxml), '模板字段已搬去玩法配置页，本页不许再留输入框')
 })
 
 test('玩法配置改用游戏模板配置页,且保存必须走据点端点', () => {
@@ -48,7 +48,7 @@ test('创建页沿用投放端点及其传输契约', () => {
   // 2026-09-06 轻提示收口:页面不再直调 wx.showToast,统一走 utils/toast.js 的 toast(...)
   assert.match(js, /if \(!this\.data\.tpl \|\| !this\.data\.tpl\.id\) return toast\(/)
   assert.match(js, /if \(!this\.data\.picked\) return toast\(/)
-  assert.match(js, /applications\.some\(function \(item\)/, '回读必须核对对面产生的申请 id，不能只看请求成功')
+  assert.match(js, /applications\.some\(function \(item\)/, '刷新必须确认对面产生的申请 id，不能只看请求成功')
 })
 
 test('店址默认取商家档案坐标,但必须让商家确认一次', () => {
@@ -93,8 +93,8 @@ test('temp → 据点端点的字段映射不许漏', () => {
   const js = read('pages/publish/temp/index.js')
   const fn = js.slice(js.indexOf('toNodeTemplate: function'), js.indexOf('onPickInteraction:'))
   assert.match(fn, /feedbackMethodStr = String\(body\.feedbackMethod\)/, 'feedbackMethod(数字) → feedbackMethodStr(字符串)')
-  assert.match(fn, /body\.interactionType =/, '玩法语义只有据点有,普通发布 DTO 没这个字段')
-  assert.match(fn, /body\.activityCategoryids = body\.categoryIds/, 'categoryIds 是发布 DTO 的名字,实体侧不认')
+  assert.match(fn, /body\.interactionType =/, '玩法语义只有据点有，普通发布 DTO 没这个字段')
+  assert.match(fn, /body\.activityCategoryids = body\.categoryIds/, 'categoryIds 是发布 DTO 的名字，实体侧不认')
   assert.match(fn, /delete body\.audioFileName/, '本页独有的上传辅助字段实体上没有')
 })
 

@@ -39,7 +39,7 @@ function classBlock(src, name) {
 test('BL-85 GET /api/merchant/ops/prerequisites:按登录主体计算,返回 PrerequisiteChecklist', () => {
   const src = assertMapping('ApiMerchantOpsController.java', '/api/merchant/ops', 'Get', '/prerequisites')
   const body = methodBody(src, 'public AjaxResult prerequisites()')
-  assert.match(body, /prerequisiteService\.calculate\(getAppUserId\(\)\)/, '只按登录主体计算,不信前端参数')
+  assert.match(body, /prerequisiteService\.calculate\(getAppUserId\(\)\)/, '只按登录主体计算，不信前端参数')
   const vo = readRepo(SYS + 'domain/vo/MerchantOpsVO.java')
   const checklist = fieldsOf(classBlock(vo, 'PrerequisiteChecklist'))
   for (const f of ['merchantId', 'canContinue', 'checkedAt', 'items']) assert.ok(checklist.has(f), 'PrerequisiteChecklist 缺字段 ' + f)

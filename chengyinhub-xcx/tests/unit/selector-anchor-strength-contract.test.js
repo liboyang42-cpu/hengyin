@@ -112,7 +112,7 @@ test('弱锚点棘轮:只许减不许增(新增恒真断言必须显式改 basel
   assert.deepEqual(
     added.map((w) => `${w.id}(${w.page}) -> ${w.selector}`),
     [],
-    '出现了新的恒真断言。要么把锚点改成该状态独有的内容节点,要么显式写进 weak-anchor-baseline.json 并说明理由',
+    '出现了新的恒真断言。要么把锚点改成该状态独有的内容节点，要么显式写进 weak-anchor-baseline.json 并说明理由',
   )
   assert.ok(
     weak.length <= BASELINE.count,
@@ -123,22 +123,22 @@ test('弱锚点棘轮:只许减不许增(新增恒真断言必须显式改 basel
 test('baseline 不许留已经修好的行(修完必须回收,否则棘轮会松)', () => {
   const weak = new Set(scan().map((w) => w.id))
   const stale = BASELINE.weakIds.filter((id) => !weak.has(id))
-  assert.deepEqual(stale, [], '这些行已经不弱了,请从 weak-anchor-baseline.json 里删掉')
+  assert.deepEqual(stale, [], '这些行已经不弱了，请从 weak-anchor-baseline.json 里删掉')
 })
 
 test('★负控:把任一行的锚点换回恒渲染节点,门禁必须判它弱', () => {
   const byId = Object.fromEntries(SHOTS.map((x) => [x.id, x]))
   const victim = 'B27'                       // 本轮已改成 .oe-card 的行
   const shot = byId[victim]
-  assert.ok(shot, '负控靶子不存在,锚点失效')
-  assert.ok(!BASELINE.weakIds.includes(victim), '负控靶子不该在 baseline 里,否则这条负控没意义')
+  assert.ok(shot, '负控靶子不存在，锚点失效')
+  assert.ok(!BASELINE.weakIds.includes(victim), '负控靶子不该在 baseline 里，否则这条负控没意义')
   const index = buildConditionalIndex(fs.readFileSync(path.join(ROOT, routeOf(shot) + '.wxml'), 'utf8'))
 
   assert.equal(isWeakAnchor(SELECTORS[victim].selector, index), false, '现锚点(.oe-card)不该被判弱')
   assert.equal(isWeakAnchor('.oe-page', index), true, '换回页面根容器 .oe-page 必须被判弱')
   assert.equal(isWeakAnchor('view', index), true, '裸标签 view 必须被判弱')
   // 组件标签要分两种:恒渲染的弱、只在分支里出现的强
-  assert.equal(isWeakAnchor('cy-empty', index), false, '只在空态分支渲染的 cy-empty 是强锚点,不该被判弱')
+  assert.equal(isWeakAnchor('cy-empty', index), false, '只在空态分支渲染的 cy-empty 是强锚点，不该被判弱')
 })
 
 test('★负控:wx:else 分支里的节点不许被当成恒渲染(第一版漏了 else)', () => {
@@ -156,7 +156,7 @@ test('★负控:wx:else 分支里的节点不许被当成恒渲染(第一版漏�
 
 test('★负控:页面 wxml 里根本没有的 key 不判弱(它指的是子组件内部)', () => {
   const index = buildConditionalIndex('<view class="shell"><cy-scene-x /></view>')
-  assert.equal(isWeakAnchor('.id-item', index), false, '深链壳的正文在组件里,静态扫不到不等于弱')
+  assert.equal(isWeakAnchor('.id-item', index), false, '深链壳的正文在组件里，静态扫不到不等于弱')
   assert.equal(isWeakAnchor('.shell', index), true)
 })
 
@@ -201,13 +201,13 @@ test('★死锚点棘轮:只许减不许增(锚点在全仓源码里必须真的
   const dead = deadAnchors(allSourceText())
   const allowed = new Set(BASELINE.deadAnchors || [])
   const added = dead.filter((d) => !allowed.has(d))
-  assert.deepEqual(added, [], '出现了新的死锚点:wxml 改了、selectors.json 没跟。这一行会永远红,而「永远红」和「永远绿」一样没有信息')
+  assert.deepEqual(added, [], '出现了新的死锚点:wxml 改了、selectors.json 没跟。这一行会永远红，而「永远红」和「永远绿」一样没有信息')
   assert.ok(dead.length <= (BASELINE.deadAnchors || []).length, '死锚点条数只许减不许增')
 })
 
 test('★负控:塞一条全仓不存在的 class,死锚点门禁必须红', () => {
   const dead = deadAnchors('<view class="real-one"></view>')
-  assert.ok(dead.length > 0, '构造出的死锚点没被识别,门禁失效')
+  assert.ok(dead.length > 0, '构造出的死锚点没被识别，门禁失效')
   const stillAlive = deadAnchors('<view class="real-one"></view>').filter((d) => d.includes('.real-one'))
   assert.deepEqual(stillAlive, [], '源码里真实存在的 class 不该被误判成死锚点')
 })

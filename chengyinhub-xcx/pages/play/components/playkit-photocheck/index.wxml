@@ -26,7 +26,7 @@
         <cy-spin-card frames="{{card.frames}}" title="{{card.title}}"
                       caption="{{card.caption}}" card-style="{{card.cardStyle}}" />
       </view>
-      <text class="pc__card-note">{{card.generating ? '已收进藏品册 · 3D 生成中,稍后在藏品册里转着看' : '已收进藏品册'}}</text>
+      <text class="pc__card-note">{{card.generating ? '已收进藏品册 · 3D 生成中，稍后在藏品册里转着看' : '已收进藏品册'}}</text>
     </view>
   </view>
 

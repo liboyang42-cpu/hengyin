@@ -3,7 +3,7 @@ const after = require('../utils/publish/outcome-after.js');
 const tools = require('../utils/publish/template-tools.js');
 const matrix = require('../utils/publish/gameplay-support-matrix.js');
 const clone = value => JSON.parse(JSON.stringify(value));
-const PARTICIPATION = [{ key: 'direct', label: '直接参与', value: 0, sub: '直接开始', reason: '' }, { key: 'gps', label: '定位到达', value: 5, sub: '到达站点后开始', reason: '' }, { key: 'scan', label: '扫码参与', value: 4, sub: '扫现场码后开始', reason: '' }];
+const PARTICIPATION = [{ key: 'direct', label: '直接参与', value: 0, sub: '直接开始', reason: '' }, { key: 'gps', label: '定位到达', value: 5, sub: '到达节点后开始', reason: '' }, { key: 'scan', label: '扫码参与', value: 4, sub: '扫现场码后开始', reason: '' }];
 const REMOVED = ['branch', 'silentOrder', 'diyName', 'musicCorner', 'slowTask', 'multiplayer'];
 function legacyRows(config) {
   const rows = [];
@@ -12,7 +12,7 @@ function legacyRows(config) {
   REMOVED.filter(key => config[key]?.enabled).forEach(key => add(key, '旧规则：' + key));
   for (const path of ['ballShake.timed', 'ballShake.seconds', 'typeIn.seconds', 'sort.maxAttempts', 'qa.maxTries', 'photoCheck.maxTries', 'estimate.maxTries', 'pricePair.maxTries', 'hiddenObject.maxTries']) {
     const value = after.get(config, path);
-    if (config[path.split('.')[0]]?.enabled && value !== 0 && value !== '' && value !== false && !(path === 'qa.maxTries' && config.qa.mode === 'PICK')) add(path, '旧参数：' + path);
+    if (config[path.split('.')[0]]?.enabled && value !== 0 && value !== '' && value !== false && !(path === 'qa.maxTries' && config.qa.mode === 'PICK')) add(path, '旧设置：' + path);
   }
   if (config.variants?.length) add('variants', '旧放宽条件');
   return rows;

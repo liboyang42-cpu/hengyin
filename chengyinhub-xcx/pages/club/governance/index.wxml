@@ -10,10 +10,10 @@
   <!-- 2026-08-26:权限拒绝原来和加载失败共用一个 error 态,渲染成「暂时不可用 + 重新加载」——
        给了一个永远点不成功的重试按钮,用户不会知道是权限问题。现在拆成三条。 -->
   <cy-error wx:elif="{{state === 'no-permission'}}" fill size="lg" retry=""
-            title="你没有成员治理的权限" sub="{{errorText || '成员治理只开给主理人与副主理人。'}}" auto-back />
+            title="你没有成员治理的权限" sub="{{errorText || '仅主理人和管理员可用'}}" auto-back />
   <cy-error load-failure wx:elif="{{state === 'network-error'}}" title="网络连接失败" sub="{{errorText}}" retry="重新加载" bind:retry="retryLoad" auto-back />
   <cy-error load-failure wx:elif="{{state === 'error'}}" title="治理功能暂时不可用" sub="{{errorText}}" retry="重新加载" bind:retry="retryLoad" auto-back />
-  <cy-empty wx:elif="{{state === 'empty'}}" fill size="lg" title="暂无可治理成员" sub="成员加入后可在这里进行安全治理；历史记录也会保留。" />
+  <cy-empty wx:elif="{{state === 'empty'}}" fill size="lg" title="暂无可治理成员" />
 
   <block wx:elif="{{state === 'ready'}}">
     <view class="section action-section" wx:if="{{mode === 'report'}}">
@@ -28,7 +28,7 @@
           </view>
         </view>
       </view>
-      <text class="action-note">请只提交可核实的具体事实。平台审核前，不会自动认定违规或执行封禁。</text>
+      <text class="action-note">请提交可核实的事实</text>
       <view class="platform-button {{actingKey ? 'disabled' : ''}}" bindtap="reportTarget"
         aria-role="button" aria-disabled="{{actingKey !== ''}}" hover-class="{{actingKey ? 'none' : 'cy-pressed'}}" hover-stay-time="80">填写事实并提交平台</view>
     </view>
@@ -37,7 +37,7 @@
          没有就把表单换成空态 —— 原来表单常显,用户填完一遍提交时才被后端拒掉。 -->
     <view class="section action-section" wx:if="{{mode === 'appeal' && banKnown && !activeBan}}">
       <text class="section-title">对当前有效封禁提出申诉</text>
-      <cy-empty size="sm" title="当前没有可申诉的封禁" sub="只有被本俱乐部限期封禁时才能向平台提交申诉。" />
+      <cy-empty size="sm" title="当前没有可申诉的封禁" sub="仅限期封禁可申诉" />
     </view>
 
     <view class="section action-section" wx:if="{{mode === 'appeal' && (!banKnown || activeBan)}}">
@@ -52,7 +52,7 @@
           </view>
         </view>
       </view>
-      <text class="action-note">申诉由平台裁决，通过后解除封禁，但不会自动恢复成员身份。</text>
+      <text class="action-note">申诉通过后解封，需重新入会</text>
       <view class="platform-button {{actingKey ? 'disabled' : ''}}" bindtap="appealBan"
         aria-role="button" aria-disabled="{{actingKey !== ''}}" hover-class="{{actingKey ? 'none' : 'cy-pressed'}}" hover-stay-time="80">填写理由并提交申诉</view>
     </view>

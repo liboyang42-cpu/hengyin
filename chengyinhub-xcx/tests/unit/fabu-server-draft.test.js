@@ -7,10 +7,10 @@ const detail = (extra) => Object.assign({ isDraft: true,
   chapters: [{ id: 101, topicId: 501, cmsTopicNodeList: [{ id: 11, chapterId: 101, topicId: 501, name: '甲' }, { id: 12, chapterId: 101, topicId: 501, name: '乙' }] }] }, extra,
   { topic: Object.assign({ id: 501, status: 0, name: '寒冬' }, extra && extra.topic) });
 
-test('回读校验：必须仍是草稿、站点都有编号且与本机一致', () => {
+test('回读校验：必须仍是草稿、节点都有编号且与本机一致', () => {
   assert.equal(readbackIssue(payload, detail(), true), '');
   assert.match(readbackIssue(payload, detail({ isDraft: false }), true), /不是草稿/);
-  assert.match(readbackIssue(payload, detail({ chapters: [{ cmsTopicNodeList: [{ id: 11, name: '甲' }] }] }), true), /站点/);
+  assert.match(readbackIssue(payload, detail({ chapters: [{ cmsTopicNodeList: [{ id: 11, name: '甲' }] }] }), true), /节点/);
   assert.match(readbackIssue(payload, detail({ chapters: [{ cmsTopicNodeList: [{ id: 11, name: '乙' }, { id: 12, name: '甲' }] }] }), true), /顺序/);
   assert.match(readbackIssue(payload, detail({ chapters: [{ cmsTopicNodeList: [{ name: '甲' }, { id: 2, name: '乙' }] }] }), true), /编号/);
   assert.match(readbackIssue(payload, detail({ topic: { name: '别的' } }), true), /主题名/);
@@ -30,7 +30,7 @@ test('保存草稿：带 saveDraft=1、回读确认后才成功；连点只发�
   assert.equal(saver.saveAndPublish(payload, h), false);
   assert.equal(calls.length, 1); assert.equal(calls[0][1].saveDraft, 1);
   calls[0][2]({ ok: true, data: { topicId: 501 } });
-  assert.deepEqual(events, [['saved', 501]], 'HTTP 成功还不算成功，要等回读');
+  assert.deepEqual(events, [['saved', 501]], 'HTTP 成功还不算成功，要等刷新');
   assert.equal(calls[1][0], 'readback'); assert.equal(calls[1][1], 501);
   calls[1][2]({ ok: true, data: detail() });
   assert.equal(events[1][0], 'ok'); assert.equal(events[1][1].topicId, 501);
@@ -102,8 +102,8 @@ test('编辑页：首次保存草稿走 create，回读后才清本机恢复稿�
   assert.equal(removed.filter(k => k.startsWith('pro_editor')).length, 0, '只拿到 200 不清本机稿');
   assert.equal(sent[1].url, '/api/topic/edit-detail'); assert.equal(sent[1].data.id, 501);
   sent[1].success({ code: 200, data: detail() });
-  assert.equal(page.applied.length, 1, '回读版本换进编辑器');
-  assert.ok(removed.some(k => k.includes('u-1')) && removed.some(k => k.includes('501')), '回读确认后清掉本机恢复稿');
+  assert.equal(page.applied.length, 1, '刷新版本换进编辑器');
+  assert.ok(removed.some(k => k.includes('u-1')) && removed.some(k => k.includes('501')), '刷新确认后清掉本机恢复稿');
   assert.equal(page.data.resultSheet.title, '草稿已保存到云端'); assert.equal(page.data.draftSaving, false);
 
   // 再次保存 → update 同一主题;失败保留内容并可重试
@@ -141,7 +141,7 @@ test('已发布主题不出现草稿保存：editIsDraft=false 时 saveServerDra
   assert.equal(sent[0].url, '/api/topic/v2/update'); assert.equal(JSON.parse(sent[0].data).saveDraft, undefined);
 });
 
-test('删改站点后：存草稿不被「章节与到达关系」闸拦住（那道闸要求先存草稿），发布仍过闸', () => {
+test('删改节点后：存草稿不被「章节与到达关系」闸拦住（那道闸要求先存草稿），发布仍过闸', () => {
   const { page, sent } = loadPage();
   const options = [];
   page._buildSubmitPayload = (opts) => { options.push(opts || null); return JSON.parse(JSON.stringify(payload)); };
@@ -170,7 +170,7 @@ const richSent = {
     gameplayRuntime: { runtimeScope: 'TEAM', worldMode: 'WORLD_SHARED', quests: [{ questKey: 'q1', nodeId: 101, actKey: 'act_a' }], survival: { rations: [{ rationKey: 'r1', actKey: 'act_a', itemId: 'i1', quantity: 1, fallbackHpCost: 2 }] } },
   }),
 };
-// 服务端重建站点:新编号 901/902/903/904,client 键与旧编号都换成新编号;slotDigest/编译字段可以变
+// 服务端重建节点:新编号 901/902/903/904,client 键与旧编号都换成新编号;slotDigest/编译字段可以变
 const richBack = (mutate) => {
   const cfg = {
     items: [{ id: 'i1', kind: 'ITEM', name: '口粮' }],
@@ -193,7 +193,7 @@ test('回读核对：服务端合法换号通过；章节合并/顺序、玩法�
   assert.equal(readbackIssue(richSent, richBack(), true), '');
   // 章节合并
   assert.match(readbackIssue(richSent, richBack(d => { d.chapters = [{ name: '一', cmsTopicNodeList: d.chapters[0].cmsTopicNodeList.concat(d.chapters[1].cmsTopicNodeList) }]; }), true), /章节数/);
-  // 站点挪到别的章(名称数量不变)
+  // 节点挪到别的章(名称数量不变)
   assert.match(readbackIssue(richSent, richBack(d => { const t = d.chapters[0].cmsTopicNodeList[1]; d.chapters[0].cmsTopicNodeList[1] = d.chapters[1].cmsTopicNodeList[0]; d.chapters[1].cmsTopicNodeList[0] = t; }), true), /第1章/);
   // 玩法换了
   assert.match(readbackIssue(richSent, richBack(d => { d.chapters[1].cmsTopicNodeList[0].templateId = 99; }), true), /玩法/);
@@ -390,7 +390,7 @@ test('UNKNOWN后改写本机稿，回读确认原版本已发布时不丢后续�
   const drafts = require('../../pages/publish/utils/publish/pro-editor-draft.js');
   const saved = drafts.loadDraft(wx, { topicId: '501' }, { memberId: 7 });
   assert.equal(saved.envelope.formData.name, '后续修改');
-  assert.equal(saved.envelope.publishAttempt, undefined, '原发布已核对，保留新稿而不是旧UNKNOWN');
+  assert.equal(saved.envelope.publishAttempt, undefined, '原发布已确认，保留新稿而不是旧UNKNOWN');
   assert.equal(t.page.data.resultSheet.meta, '草稿仍在本机');
 });
 
@@ -403,7 +403,7 @@ test('发布200但仍DRAFT、UNKNOWN回读空或异主题不得当成成功', ()
     Object.assign(t.page.data, { editingTopicId: '501', editLoaded: true, editIsDraft: true });
     t.page._doSubmit(); t.sent[0].success({ code: 200, data: 501 }); t.sent[1].success({ code: 200, data: detail() });
     t.sent[2].success({ code: 200, data: { published: false, reviewState: 'DRAFT' } });
-    assert.equal(t.sent[3].url, '/api/topic/edit-detail', '未确认的200仍回读');
+    assert.equal(t.sent[3].url, '/api/topic/edit-detail', '未确认的200仍刷新');
     t.sent[3].success({ code: 200, data: wrong });
     assert.equal(t.page.data.editIsDraft, true);
     assert.equal(t.page.data.resultSheet.title, '发布结果待确认');
@@ -449,7 +449,7 @@ test('UNKNOWN原号回读审核拒绝：明确失败并保留修改，不能误�
     assert.equal(t.page.data.editIsDraft, false, '拒审实体不能冒充可自动发布的草稿');
     const drafts = require('../../pages/publish/utils/publish/pro-editor-draft.js');
     assert.equal(drafts.loadDraft(wx, { topicId: '501' }, { memberId: 7 }).envelope.formData.name, '寒冬');
-    assert.equal(t.sent.length, reload ? 5 : 4, '仅回读原号，不自动重发写请求');
+    assert.equal(t.sent.length, reload ? 5 : 4, '仅刷新原号，不自动重发写请求');
   }
 });
 

@@ -140,26 +140,26 @@ test('详情票种:已开始/已结束的场次置灰并写明理由,卡点不�
   assert.deepEqual(tickets.map((t) => t._windowPassed), [true, true, false, true])
   assert.deepEqual(tickets.map((t) => t._windowText), ['场次已结束', '场次已开始', '', '场次已开始'])
   assert.equal(tickets[2]._dateText, '场次时间 1月1日 09:00 - 1月1日 18:00',
-    '票种行标注「场次时间」,与顶部的活动时间分区,同日多场靠这个时间区分')
+    '票种行标注「场次时间」,与顶部的活动时间分区，同日多场靠这个时间区分')
 
   const wxml = read('subpackageMember/components/cy/scene-play-activity-detail/index.wxml')
   assert.match(wxml, /item\._available \|\| item\._windowPassed \? 'ticket--disabled'/,
     '过期场次必须与售罄同样置灰')
   assert.match(wxml, /item\._windowText \? ' · ' \+ item\._windowText/,
-    '置灰还不够 —— 卡面要写明是场次问题,不然用户以为还能捡漏')
+    '置灰还不够 —— 卡面要写明是场次问题，不然用户以为还能捡漏')
 
   const blocked = captureToasts(() => {
     harness.instance.selectTicket({ currentTarget: { dataset: { id: '11' } } })
     harness.instance.selectTicket({ currentTarget: { dataset: { id: '12' } } })
   })
-  assert.deepEqual(blocked.shown, ['场次已结束', '场次已开始'], '理由要说准,不能一律报「已售罄」')
+  assert.deepEqual(blocked.shown, ['场次已结束', '场次已开始'], '理由要说准，不能一律报「已售罄」')
   assert.equal(harness.instance.data.selectedTicketId, '', '过期场次不得被选中')
 
   // ★开场即停售:进行中场次(id15,startTime 已过)现在同样不能被选中
   const inProgress = captureToasts(() => {
     harness.instance.selectTicket({ currentTarget: { dataset: { id: '15' } } })
   })
-  assert.deepEqual(inProgress.shown, ['场次已开始'], '场次一到开始时间就不再放行,不再「进行中照样能买」')
+  assert.deepEqual(inProgress.shown, ['场次已开始'], '场次一到开始时间就不再放行，不再「进行中照样能买」')
   assert.equal(harness.instance.data.selectedTicketId, '', '已开始场次不得被选中')
 
   const ok2 = captureToasts(() => {
@@ -234,7 +234,7 @@ function loadBaomingWithTickets(ticketId, tickets) {
 
 test('结算页:没有指定票种时默认落在还能卖的场次上,不选过期那张', () => {
   const page = loadBaomingWithTickets(null)
-  assert.equal(page.data.selectedTicket.id, 13, '列表第一张已过期,默认选中必须跳过它')
+  assert.equal(page.data.selectedTicket.id, 13, '列表第一张已过期，默认选中必须跳过它')
   assert.equal(page.data.signupState, 'available')
 })
 
@@ -259,7 +259,7 @@ test('结算页:已开始的场次即使未散场也停售,默认落到还没开
     { id: 13, name: '10.1 场', price: 69, remainingInventory: 5, startTime: FUTURE, endTime: FUTURE_END },
   ])
   assert.equal(page.data.selectedTicket.id, 13,
-    '★9-25 裁决:startTime 已过即停售,默认选中不得停在已开始的那场(撤销修复后这里会是 11)')
+    '★9-25 裁决:startTime 已过即停售，默认选中不得停在已开始的那场(撤销修复后这里会是 11)')
   assert.equal(page.data.signupState, 'available')
 })
 
@@ -267,7 +267,7 @@ test('结算页换票弹层:已开始/过期场次不出现,选项按场次开�
   const page = loadBaomingWithTickets(null)
   page.openTicketSheet()
   assert.deepEqual(page.data.ticketSheetItems, ['10.1 场 · 01-01 09:00 · ¥69.00', '10.2 场 · 01-01 09:00 · ¥69.00'],
-    '过期/已开始场次不得出现;同日多场靠带上场次时间区分')
+    '过期/已开始场次不得出现；同日多场靠带上场次时间区分')
   page.onTicketSheetSelect({ detail: { index: 1 } })
   assert.equal(page.data.selectedTicket.id, 14, '下标必须落在过滤后的那份列表上')
 })

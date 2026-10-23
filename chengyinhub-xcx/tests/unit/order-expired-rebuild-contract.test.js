@@ -112,7 +112,7 @@ test('#21 过期判据:410 与后端原文都能识别,别的失败不误判', (
   assert.equal(isOrderExpiredFailure({ code: 410, msg: EXPIRED_COPY }), true);
   assert.equal(isOrderExpiredFailure({ code: '410' }), true, '后端 JSON 数字到了前端可能是字符串');
   assert.equal(isOrderExpiredFailure({ code: 500, msg: EXPIRED_COPY }), true,
-    '旧 jar 还没升级成 410 时,文案兜底也要能识别');
+    '旧 jar 还没升级成 410 时，文案保底也要能识别');
   assert.equal(isOrderExpiredFailure({ code: 500, msg: '支付服务暂不可用，请稍后再试' }), false,
     '不能把所有 /pay 失败都当成过期去重建订单');
   assert.equal(isOrderExpiredFailure(null), false);
@@ -121,7 +121,7 @@ test('#21 过期判据:410 与后端原文都能识别,别的失败不误判', (
 
 test('#21 两端对齐:前端兜底文案与后端拒绝原文逐字一致,后端确有 410 映射', () => {
   assert.equal(ORDER_EXPIRED_USER_MESSAGE, EXPIRED_COPY,
-    '重建失败时的兜底话术必须与后端拒绝原文同源');
+    '重建失败时的保底话术必须与后端拒绝原文同源');
   const service = fs.readFileSync(path.join(REPO_ROOT,
     'chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java'), 'utf8');
   assert.ok(service.includes('new RegistrationOrderExpiredException("' + EXPIRED_COPY + '")'),
@@ -146,7 +146,7 @@ test('#21 终态单冲突判据:只认 409 + 该幂等键对应报名文案,价�
   assert.equal(isTerminalOrderConflict({ code: 409, msg: '价格已更新，请重新确认' }), false,
     '价格变更 409 必须继续走重报价逻辑');
   assert.equal(isTerminalOrderConflict({ code: 409, msg: '该幂等键已用于不同的报名内容，请重新提交' }), false,
-    '内容冲突不是终态单,不在本次拍板范围');
+    '内容冲突不是终态单，不在本次拍板范围');
   assert.equal(isTerminalOrderConflict({ code: 500, msg: TERMINAL_EXPIRED }), false);
   assert.equal(isTerminalOrderConflict(null), false);
 });
@@ -195,7 +195,7 @@ test('baoming:过期待支付单自动换新幂等键重建并继续拉起支付
   assert.equal(sandbox.requests.length, 3, '过期后必须自动追一次重建请求');
   const firstKey = JSON.parse(sandbox.requests[0].data).requestId;
   const rebuilt = sandbox.requests[2];
-  assert.equal(rebuilt.url, '/api/registration/create', '重建必须走正常建单接口,不许绕过校验');
+  assert.equal(rebuilt.url, '/api/registration/create', '重建必须走正常建单接口，不许绕过校验');
   const rebuiltBody = JSON.parse(rebuilt.data);
   assert.notEqual(rebuiltBody.requestId, firstKey, '继续用旧键只会重放那张已关掉的单');
   assert.equal(rebuiltBody.ticketId, 7, '同样的票种');
@@ -277,12 +277,12 @@ test('baoming:终态单冲突(已取消)409 自动换新键重建,不再误报�
   const firstKey = JSON.parse(sandbox.requests[0].data).requestId;
   sandbox.requests[0].success({ code: 409, msg: TERMINAL_CANCELLED });
 
-  assert.equal(sandbox.requests.length, 2, '终态单冲突必须直接换键重建,不再重报价');
+  assert.equal(sandbox.requests.length, 2, '终态单冲突必须直接换键重建，不再重报价');
   assert.equal(sandbox.requests.some(r => r.url === '/api/registration/quote'), false,
-    '终态单冲突不是价格变更,不该走重报价');
+    '终态单冲突不是价格变更，不该走重报价');
   const rebuiltBody = JSON.parse(sandbox.requests[1].data);
   assert.equal(sandbox.requests[1].url, '/api/registration/create');
-  assert.notEqual(rebuiltBody.requestId, firstKey, '旧键对应的单已取消,必须换新键');
+  assert.notEqual(rebuiltBody.requestId, firstKey, '旧键对应的单已取消，必须换新键');
   assert.deepEqual(sandbox.toasts, [], '玩家无感:不得先弹「价格已更新」或过期文案');
 
   sandbox.requests[1].success(httpOk({ registrationId: 1002, payableAmount: 50, payParams: FULL_PAY_PARAMS }));
@@ -417,7 +417,7 @@ test('baoming:连续两次终态冲突后,用户再点一次仍是全新一单(�
   assert.equal(sandbox.requests.length, 3);
   const stuckKey = JSON.parse(sandbox.requests[1].data).requestId;
   const freshKey = JSON.parse(sandbox.requests[2].data).requestId;
-  assert.notEqual(freshKey, stuckKey, '旧键已在重建检测点作废,重试必须是新键');
+  assert.notEqual(freshKey, stuckKey, '旧键已在重建检测点作废，重试必须是新键');
 });
 
 // ---- ④ 负控:把「换新键」改回「保留旧键」必须真红 ----

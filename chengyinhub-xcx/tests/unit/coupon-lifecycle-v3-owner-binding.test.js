@@ -228,7 +228,7 @@ test('钱包:未来券等待→到点→失败恢复/过期/已核销,两账号�
   assert.equal(h.instance.data.all[1]._canView, false)
   assert.equal(h.instance.data.all[2]._canView, false)
   h.instance.openCode({ currentTarget: { dataset: { item: h.instance.data.all[0] } } })
-  assert.deepEqual(h.sandbox.events.map((e) => e.name), ['open'], '未来券可进等待详情,不触发核销')
+  assert.deepEqual(h.sandbox.events.map((e) => e.name), ['open'], '未来券可进等待详情，不触发核销')
 
   // 两账号切换:第一次请求还在途时切到 B 并重新 load,旧 A 回包不得覆盖 B 列表。
   h.instance.load()

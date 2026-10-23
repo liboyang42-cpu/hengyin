@@ -121,7 +121,7 @@ test('R9-21 暂停后离开页面,重进恢复暂停态与已走用时,而不是
   const second = loadPage()
   second.data.topicId = '31'
   await loadNodes(second, { nodes: NODES })
-  assert.equal(second.data.runState, 'paused', '重进页面必须恢复暂停态,不能回到「开始」')
+  assert.equal(second.data.runState, 'paused', '重进页面必须恢复暂停态，不能回到「开始」')
   assert.equal(second._sessionClock.elapsedSeconds(), 42, '重进必须恢复已走用时')
   assert.equal(second._sessionClock.isPaused(), true, '恢复的时钟必须停在暂停上(不偷跑)')
 
@@ -168,7 +168,7 @@ test('R9-21 服务端说这场已经结束(时间窗关闭 / 路线终态)时不
   expired.data.topicId = '31'
   await loadNodes(expired, { playable: false, timeNote: '本场已结束', nodes: NODES })
   assert.equal(expired.data.runState, 'idle', '时间窗关闭了就不能把玩家拉回暂停中的计时')
-  assert.equal(storage['play_paused_run_v2:m9:t31'], undefined, '不恢复时必须清掉兜底快照')
+  assert.equal(storage['play_paused_run_v2:m9:t31'], undefined, '不恢复时必须清掉保底快照')
 
   storage['play_paused_run_v2:m9:t31'] = Object.assign({}, seeded)
   const withdrawn = loadPage()
@@ -177,7 +177,7 @@ test('R9-21 服务端说这场已经结束(时间窗关闭 / 路线终态)时不
     routeState: { routeMode: 'BRANCH_GRAPH', status: 'ENDED' },
     nodes: NODES,
   })
-  assert.equal(withdrawn.data.runState, 'idle', '路线终态是服务端权威,优先于本地暂停快照')
+  assert.equal(withdrawn.data.runState, 'idle', '路线终态是服务端权威，优先于本地暂停快照')
   assert.equal(storage['play_paused_run_v2:m9:t31'], undefined)
 })
 
@@ -218,7 +218,7 @@ test('R9-21 重新按「开始」起新局时,旧暂停快照作废', () => {
   page.requestPlayLocation = () => {}   // 定位弹窗不是本契约
   page.onRunToggle()
   assert.equal(page.data.runState, 'running')
-  assert.equal(storage['play_paused_run_v2:m9:t31'], undefined, '新局的用时从 0 起,旧快照不能留下')
+  assert.equal(storage['play_paused_run_v2:m9:t31'], undefined, '新局的用时从 0 起，旧快照不能留下')
 })
 
 test('R9-21 服务端游戏会话已结束(FINISHED/CANCELLED)时,撤掉恢复出来的暂停局', async () => {
@@ -248,7 +248,7 @@ test('R9-21 服务端游戏会话已结束(FINISHED/CANCELLED)时,撤掉恢复�
     }
     page._loadPlayerGameModule()
     await flush()
-    assert.equal(page.data.runState, 'idle', '服务端说本局已结束,不能再停在恢复出来的暂停态')
+    assert.equal(page.data.runState, 'idle', '服务端说本局已结束，不能再停在恢复出来的暂停态')
     assert.equal(storage['play_paused_run_v2:m9:a27'], undefined, '服务端权威态下本地快照必须作废')
   } finally {
     require.cache[gameSessionPath].exports = realExports
@@ -328,7 +328,7 @@ test('R1 通关(openFinish)当场作废暂停快照,之后 onHide/onUnload 不�
   stubFinishPanel(first).openFinish()   // 末站完成走的就是 openFinish
   assert.equal(storage['play_paused_run_v2:m9:t31'], undefined, '通关那一刻暂停快照就必须作废')
   assert.equal(first.data.runState, 'idle', '通关后底部运行栈必须回 idle,不能再显示一局没结束的行程')
-  assert.equal(first._runStarted, false, '通关即会话终点,不能还挂着「行程已开始」')
+  assert.equal(first._runStarted, false, '通关即会话终点，不能还挂着「行程已开始」')
 
   first.onHide()                   // 通关后切后台/被盖住
   assert.equal(storage['play_paused_run_v2:m9:t31'], undefined, '通关后 onHide 不能再写回暂停快照')
@@ -361,7 +361,7 @@ test('R1 服务端路线态 COMPLETED 是结束事实:重进不恢复暂停会�
   })
   assert.equal(page.data.nodes.filter((n) => !n.done).length, 1, '前提:还有没走完的可见节点,allDone 不成立')
   assert.equal(page.data.runState, 'idle', '路线已 COMPLETED 时不能再把暂停快照恢复成进行中的行程')
-  assert.equal(storage['play_paused_run_v2:m9:t31'], undefined, '不恢复时必须清掉兜底快照')
+  assert.equal(storage['play_paused_run_v2:m9:t31'], undefined, '不恢复时必须清掉保底快照')
 })
 
 // ===== 负控:把 R1 的两条修复摘掉,上面的判据必须真的判红 =====
@@ -409,7 +409,7 @@ test('R9-21 负控:摘掉恢复入口,重进必须复现原症状(idle)', async 
   page.data.topicId = '31'
   page._restoreRunSession = () => false   // 复刻修复前的行为
   await loadNodes(page, { nodes: NODES })
-  assert.equal(page.data.runState, 'idle', '判据必须挂在恢复入口上,不然是假绿')
+  assert.equal(page.data.runState, 'idle', '判据必须挂在恢复入口上，不然是假绿')
 })
 
 test('R9-21 负控:离页不落盘,重进就恢复不了(落盘是恢复的唯一来源)', async () => {

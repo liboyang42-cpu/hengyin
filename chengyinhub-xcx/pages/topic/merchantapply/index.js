@@ -368,7 +368,7 @@ Page({
           canSubmit,
         });
       },
-      fail: (error, status) => failClosed(app.getRequestErrorMessage(error, '网络不稳定，报名信息没有加载出来'), error, status),
+      fail: (error, status) => failClosed(app.getRequestErrorMessage(error, '网络异常，报名信息加载失败'), error, status),
       successStatusAbnormal: (error, status) => failClosed(
         (app.getRequestErrorMessage && app.getRequestErrorMessage(error, '报名信息加载失败')) || '报名信息加载失败', error, status),
       complete: () => failClosed('报名信息加载没有完成，请重试'),

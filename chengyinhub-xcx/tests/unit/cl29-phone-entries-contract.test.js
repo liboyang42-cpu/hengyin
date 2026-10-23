@@ -102,7 +102,7 @@ test('CL-29 报名:参与人缺手机号时不建单,提示并直接带去参与
   assert.ok(!h.calls.requests.some((r) => /\/api\/registration\/create/.test(r.url || '')));
   assert.deepEqual(h.calls.tips, ['参与人信息需要包含手机号']);
   assert.deepEqual(h.calls.navigations, ['/pages/addressinfo/addressinfo?mode=participant'],
-    '缺号必须给出填写入口,而不是只弹一句错误');
+    '缺号必须给出填写入口，而不是只弹一句错误');
 });
 
 test('CL-29 报名:已有参与人列表时缺号改为打开参与人选择弹窗,仍不建单', () => {

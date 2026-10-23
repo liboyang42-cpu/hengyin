@@ -54,10 +54,10 @@
     </block>
 
     <block wx:elif="{{entrySheet=='layers'}}">
-      <view class="entry-layer" data-key="activities" bindtap="toggleEntryLayer" aria-role="switch" aria-checked="{{entryLayers.activities}}" hover-class="cy-pressed" hover-stay-time="80"><view class="entry-layer__icon"><cy-icon name="pin" size="32" /></view><view class="entry-layer__copy"><text>附近活动</text><text>封面图片点位</text></view><view class="entry-layer__switch {{entryLayers.activities?'is-on':''}}"><view></view></view></view>
+      <view class="entry-layer" data-key="activities" bindtap="toggleEntryLayer" aria-role="switch" aria-checked="{{entryLayers.activities}}" hover-class="cy-pressed" hover-stay-time="80"><view class="entry-layer__icon"><cy-icon name="pin" size="32" /></view><view class="entry-layer__copy"><text>附近活动</text><text>封面图片节点</text></view><view class="entry-layer__switch {{entryLayers.activities?'is-on':''}}"><view></view></view></view>
       <view class="entry-layer" data-key="teams" bindtap="toggleEntryLayer" aria-role="switch" aria-checked="{{entryLayers.teams}}" hover-class="cy-pressed" hover-stay-time="80"><view class="entry-layer__icon"><cy-icon name="tab-club" size="32" /></view><view class="entry-layer__copy"><text>正在招募的队伍</text><text>队长头像与剩余名额</text></view><view class="entry-layer__switch {{entryLayers.teams?'is-on':''}}"><view></view></view></view>
       <view class="entry-layer" data-key="posts" bindtap="toggleEntryLayer" aria-role="switch" aria-checked="{{entryLayers.posts}}" hover-class="cy-pressed" hover-stay-time="80"><view class="entry-layer__icon"><cy-icon name="image" size="32" /></view><view class="entry-layer__copy"><text>帖文与图片打卡</text><text>公开内容，位置做合并显示</text></view><view class="entry-layer__switch {{entryLayers.posts?'is-on':''}}"><view></view></view></view>
-      <view class="entry-layer__note">公开动态只展示经过隐私处理的位置，不使用用户发布时的精确坐标。</view>
+      <view class="entry-layer__note">公开位置已模糊处理</view>
     </block>
 
     <block wx:elif="{{entrySheet=='activity' && entryActivity && entrySheetView=='team' && entryTeam}}">
@@ -93,9 +93,9 @@
   <cy-state-shell class="intro-permission" wx:if="{{introError}}" kind="no-permission"
                   title="需要定位才能开始漫游" sub="{{introError}}"
                   primary="去设置" bind:primary="openRoamLocationSetting" />
-  <cy-error wx:if="{{recoveryError}}" title="上次漫游需要核对" sub="{{recoveryError}}"
-            retry="核对漫游记录" bind:retry="recoverRoam" />
-  <view wx:elif="{{recoveryAvailable}}" class="intro-permission">已找回本次漫游记录，点击开始漫游继续探索。</view>
+  <cy-error wx:if="{{recoveryError}}" title="上次漫游需要确认" sub="{{recoveryError}}"
+            retry="确认漫游记录" bind:retry="recoverRoam" />
+  <view wx:elif="{{recoveryAvailable}}" class="intro-permission">已恢复上次漫游</view>
   <view wx:if="{{introTab=='start'}}" class="intro-start">
     <view class="intro-stage">
       <free-map id="entryMap" class="intro-map__el" scene="explore" center="{{center}}" scale="14"
@@ -258,7 +258,7 @@
     </view>
     <view class="pc-close" bindtap="closeMultiView" aria-role="button" aria-label="关闭" hover-class="cy-pressed" hover-stay-time="80"><view class="pc-close__glyph"><cy-icon name="close-sm" size="32" /></view></view>
   </view>
-  <text class="pc-body">你走过的是绿的,别人的贴各自的色。走进别人点亮过的块,那块会记成两个人都到过。</text>
+  <text class="pc-body">你走过的是绿的，别人的贴各自的色。走进别人点亮过的块，那块会记成两个人都到过。</text>
   <view class="terrlist">
     <view class="tr" wx:for="{{multiView.rows}}" wx:key="key">
       <image class="tr__fa" wx:if="{{item.avatar}}" src="{{item.avatar}}" mode="aspectFill" style="border-color:{{item.color}}" />
@@ -280,7 +280,7 @@
     <view class="event-overlay__close" bindtap="closeEventOverlay" aria-role="button" aria-label="关闭官方活动提示" hover-class="cy-pressed" hover-stay-time="80"><view class="event-overlay__close-glyph"><cy-icon name="close-sm" size="32" /></view></view>
   </view>
   <text wx:if="{{eventOverlay.paused}}" class="event-overlay__risk">活动暂停：{{eventOverlay.pausedReason||'等待运营处理'}}</text>
-  <text wx:elif="{{!eventOverlay.signed}}" class="event-overlay__hint">先报名，之后发生的新到达才会计入本场活动。</text>
+  <text wx:elif="{{!eventOverlay.signed}}" class="event-overlay__hint">报名后的到达才计入活动</text>
   <view wx:for="{{eventOverlay.missions}}" wx:key="missionCode" class="event-task {{item.complete?'event-task--done':''}}">
     <cy-icon wx:if="{{item.complete}}" class="event-task__check" name="check" size="26" />
     <view class="event-task__copy"><text class="event-task__title">{{item.title}}</text><text class="event-task__sub">{{item.description}}</text></view>
@@ -403,9 +403,9 @@
 <!-- §7.4 据点加载失败可见:据点没拉到时说清「地图上的点未经核实」,并说明本地进度没丢。
      原来这里是静默的 —— 拉取失败照旧显示演示据点,用户分不出真假。 -->
 <view class="maptip maptip--offline maptip--recovery" wx:if="{{(revealWriteUnknown || recoveryError) && mapLoad!='slow'}}" aria-role="alert" aria-live="polite">
-  <view class="maptip__act" bindtap="recoverRoam" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="核对漫游记录">
+  <view class="maptip__act" bindtap="recoverRoam" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="确认漫游记录">
     <cy-icon name="warning" size="24" />
-    <text>{{recoveryError ? recoveryError + ' · 点击核对' : '点亮同步结果待核对 · 点击核对'}}</text>
+    <text>{{recoveryError ? recoveryError + ' · 点击确认' : '点亮同步结果待确认 · 点击确认'}}</text>
   </view>
 </view>
 <!-- BL-03 位置上报连续网络失败 / 系统断网:只提示,格子仍先记在本机;上报成功或网络恢复即消失。 -->
@@ -539,7 +539,7 @@
     <view class="location-picker__current">
       <view class="location-picker__icon"><cy-icon name="gps" size="32" /></view>
       <view class="location-picker__copy">
-        <text class="location-picker__label">当前漫游锚点</text>
+        <text class="location-picker__label">当前漫游位置</text>
         <text class="location-picker__value">{{currentAddress}}</text>
       </view>
     </view>
@@ -597,12 +597,12 @@
     <text class="psub">{{checkinView.sub}}</text>
     <view class="drow" bindtap="onCheckinStamp" aria-role="button" aria-label="城市贴纸" hover-class="cy-pressed" hover-stay-time="80">
       <view class="dic pic pic--stamp"></view>
-      <view class="dcopy"><text class="dt">城市贴纸</text><text class="ds">拍一张,传上去,再看别人在此地拍的</text></view>
+      <view class="dcopy"><text class="dt">城市贴纸</text><text class="ds">拍一张，传上去，再看别人在此地拍的</text></view>
       <view class="darr"></view>
     </view>
     <view class="drow" bindtap="onCheckinSign" aria-role="button" aria-label="今日城市签" hover-class="cy-pressed" hover-stay-time="80">
       <view class="dic pic pic--journal"></view>
-      <view class="dcopy"><text class="dt">今日城市签</text><text class="ds">先写再看:写一句,才换来上一个人那张</text></view>
+      <view class="dcopy"><text class="dt">今日城市签</text><text class="ds">先写再看:写一句，才换来上一个人那张</text></view>
       <view class="darr"></view>
     </view>
   </view>
@@ -619,9 +619,9 @@
     <view class="dcopy"><text class="dt">查找附近好玩的</text><text class="ds">{{more.funText}}</text></view>
     <view class="darr"></view>
   </view>
-  <view class="drow" bindtap="openPoiFilter" aria-role="button" aria-label="筛选地图点位，{{more.filterText}}" hover-class="cy-pressed" hover-stay-time="80">
+  <view class="drow" bindtap="openPoiFilter" aria-role="button" aria-label="筛选地图节点，{{more.filterText}}" hover-class="cy-pressed" hover-stay-time="80">
     <view class="dic pic pic--route"></view>
-    <view class="dcopy"><text class="dt">筛选点位</text><text class="ds">{{more.filterText}}</text></view>
+    <view class="dcopy"><text class="dt">筛选节点</text><text class="ds">{{more.filterText}}</text></view>
     <view class="darr"></view>
   </view>
   <view class="drow" bindtap="openNearestRunner" aria-role="button" aria-label="附近正在走的人" hover-class="cy-pressed" hover-stay-time="80">
@@ -724,7 +724,7 @@
   </view>
   <view class="drow {{gpsOk ? '' : 'is-off'}}" bindtap="openRoamLocationSetting" aria-role="button" aria-label="到点提醒，{{gpsOk ? '已开启' : '定位未开启'}}" hover-class="cy-pressed" hover-stay-time="80">
     <view class="dic pic pic--bell"></view>
-    <view class="dcopy"><text class="dt">到点提醒</text><text class="ds">走近站点时震动</text></view>
+    <view class="dcopy"><text class="dt">到点提醒</text><text class="ds">走近节点时震动</text></view>
     <text class="dv">{{gpsOk ? '开' : '关'}}</text>
     <view class="darr"></view>
   </view>
@@ -942,15 +942,15 @@
       </view>
     </scroll-view>
     <view class="settle__err" wx:if="{{finish.settleErr}}">
-      <cy-error title="{{finish.settleErr === 'reveal' ? '探索记录尚未确认，暂未结算' : '漫游结算需要核对'}}"
-                sub="{{recoveryError || (finish.settleErr === 'reveal' ? '待确认的格子已保留，重试确认成功后继续结算' : '漫游记录已保留，确认活动进度后继续原结算')}}"
-                retry="{{finish.settleErr === 'unknown' || finish.settleErr === 'bootstrap' || finish.settleErr === 'recovery' ? '核对结算结果' : '重新结算'}}" bind:retry="retrySettle" />
+      <cy-error title="{{finish.settleErr === 'reveal' ? '探索记录尚未确认，暂未结算' : '漫游结算需要确认'}}"
+                sub="{{recoveryError || '结算未完成，请重试'}}"
+                retry="{{finish.settleErr === 'unknown' || finish.settleErr === 'bootstrap' || finish.settleErr === 'recovery' ? '确认结算结果' : '重新结算'}}" bind:retry="retrySettle" />
     </view>
     <view wx:if="{{recoveryCanContinue}}" class="settle__minor-act" bindtap="continueUnstartedRoam" aria-role="button" aria-label="继续本次探索" hover-class="cy-pressed" hover-stay-time="80">继续本次探索</view>
-    <view class="settle__err" wx:if="{{finish.resultIncomplete}}">已确认本次探索值；历史结算缺少完整快照，无法核对当次勋章与回顾。</view>
+    <view class="settle__err" wx:if="{{finish.resultIncomplete}}">已确认本次探索值；历史记录不完整，无法显示当次勋章与回顾</view>
     <view class="settle__err" wx:if="{{finish.eventErr}}">
-      <cy-error title="{{finish.eventErr === 'unknown' ? '活动进度响应异常，请先核对' : '这次没能计入活动进度'}}"
-                sub="{{finish.eventErr === 'unknown' ? '本次活动进度可能已经记入，请稍后重新进入查看，暂不要重复上报' : '漫游记录本身已保存,只是没上报到活动的集体进度'}}"
+      <cy-error title="{{finish.eventErr === 'unknown' ? '活动进度响应异常，请先确认' : '这次没能计入活动进度'}}"
+                sub="{{finish.eventErr === 'unknown' ? '活动进度未确认，请稍后查看' : '漫游已保存，活动进度未上报'}}"
                 retry="{{finish.eventErr === 'unknown' ? '' : '重新上报'}}" bind:retry="retryEventReport" />
     </view>
     <view class="settle__map">
@@ -986,7 +986,7 @@
   <view class="dr-content">
     <image class="dr-cover" src="{{discoverReward.poi.imgUrl}}" mode="aspectFill"></image>
     <view class="dr-name serif">{{discoverReward.poi.name}}</view>
-    <view class="dr-sub">这家店被你从雾里点亮了,选一份见面礼</view>
+    <view class="dr-sub">选一份见面礼</view>
     <view class="dr-row">
       <view class="dr-opt" bindtap="onDiscoverCoupon" hover-class="cy-pressed" hover-stay-time="80">
         <view class="dr-oi"><cy-icon name="coupon" size="40" /></view>
@@ -1046,11 +1046,11 @@
       <view class="sh-vis__seg {{share.visibility === 'private' ? 'is-on' : ''}}" bindtap="onShareVisibility" data-v="private"
             aria-role="radio" aria-checked="{{share.visibility === 'private'}}" hover-class="cy-pressed" hover-stay-time="80">仅自己</view>
     </view>
-    <text class="sh-vis__hint">{{share.visibility === 'public' ? '发到广场，全站可见。' : (share.visibility === 'friends' ? '不进广场，存图后自己发朋友圈，只有好友看得到。' : '只存到相册，不发布到任何地方。')}}</text>
-    <text class="sh-vis__hint">本次漫游记录始终保留在「我的漫游历史」，不受这里影响。</text>
+    <text class="sh-vis__hint">{{share.visibility === 'public' ? '全站可见' : (share.visibility === 'friends' ? '仅好友可见' : '仅存相册')}}</text>
+    
   </view>
   <view class="sh-channels">
-    <view wx:if="{{share.communityWrite}}" class="sh-ch {{share.can.square ? '' : 'is-off'}}" bindtap="shareTo" data-ch="广场" hover-class="cy-pressed" hover-stay-time="80"><view class="sh-ci"><cy-icon name="tab-feed" size="36" /></view><text>{{share.squarePostUnknown?'广场 · 待核对':'广场'}}</text></view>
+    <view wx:if="{{share.communityWrite}}" class="sh-ch {{share.can.square ? '' : 'is-off'}}" bindtap="shareTo" data-ch="广场" hover-class="cy-pressed" hover-stay-time="80"><view class="sh-ci"><cy-icon name="tab-feed" size="36" /></view><text>{{share.squarePostUnknown?'广场 · 待确认':'广场'}}</text></view>
     <view class="sh-ch {{share.can.moments ? '' : 'is-off'}}" bindtap="shareTo" data-ch="朋友圈" hover-class="cy-pressed" hover-stay-time="80"><view class="sh-ci"><cy-icon name="share" size="36" /></view><text>朋友圈</text></view>
     <view class="sh-ch {{share.can.xhs ? '' : 'is-off'}}" bindtap="shareTo" data-ch="小红书" hover-class="cy-pressed" hover-stay-time="80"><view class="sh-ci"><cy-icon name="image" size="36" /></view><text>小红书</text></view>
     <view class="sh-ch {{share.can.save ? '' : 'is-off'}}" bindtap="shareTo" data-ch="保存" hover-class="cy-pressed" hover-stay-time="80"><view class="sh-ci"><cy-icon name="check" size="36" /></view><text>保存</text></view>
@@ -1075,16 +1075,16 @@
 <view class="psheet psheet--half {{sceneIn ? 'is-in' : ''}} {{reducedMotion ? 'is-reduced' : ''}}" catchtap="noop">
   <view class="psheet__grab" catchtap="onProtoSheetClose" aria-role="button" aria-label="返回更多" hover-class="cy-pressed" hover-stay-time="80"></view>
   <view class="psheet__x" catchtap="onProtoSheetClose" aria-role="button" aria-label="返回更多" hover-class="cy-pressed" hover-stay-time="80"><view class="psheet__x-i"></view></view>
-  <text class="ph1">筛选点位</text>
+  <text class="ph1">筛选节点</text>
   <view class="poi-filter">
     <text class="poi-filter__label">搜索范围</text>
     <cy-tabs variant="chip" tabs="{{poiFilterTabs}}" active="{{poiFilter.radiusM + ''}}" bind:change="onPoiFilterRadius" />
     <view class="drow">
       <view class="dic pic pic--route"></view>
-      <view class="dcopy"><text class="dt">只看未到过</text><text class="ds">已到过、已打卡的点位先不显示</text></view>
+      <view class="dcopy"><text class="dt">只看未到过</text><text class="ds">已到过、已打卡的节点先不显示</text></view>
       <view class="dsw {{poiFilter.unvisitedOnly ? 'is-on' : ''}}" catchtap="togglePoiFilterUnvisited" aria-role="switch" aria-checked="{{poiFilter.unvisitedOnly}}" aria-label="只看未到过" hover-class="cy-pressed" hover-stay-time="80"><view class="dsw-i"></view></view>
     </view>
-    <text class="roam-rules__lede">范围只影响漫游点位；筛选按账号保存在本机。</text>
+    <text class="roam-rules__lede">范围只影响漫游节点；筛选按账号保存在本机。</text>
   </view>
 </view>
 </view>

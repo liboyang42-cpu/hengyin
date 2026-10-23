@@ -190,7 +190,7 @@ Component({
       if (!this.data.framing) return;
       this._camErr = true;
       this.setData({ framing: false });
-      cyToast('取景器打不开，改用相册或相机拍');
+      cyToast('取景器无法打开，改用相册或相机拍');
       this.chooseViaMedia();
     },
 

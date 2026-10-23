@@ -22,7 +22,7 @@ const MODES = [
     name: '城市定向',
     tag: '组队 · 按顺序',
     icon: 'flag',
-    desc: '按顺序打卡通关,到点了大家一起出发。适合约人、适合有剧情的路线。',
+    desc: '按顺序打卡，到点集合出发',
     target: '/pages/index/index',
   },
   {
@@ -30,7 +30,7 @@ const MODES = [
     name: '自由探索',
     tag: '随时 · 自己走',
     icon: 'route',
-    desc: '点位全开,想从哪个开始都行。买张通行证随时开玩,不用等人凑齐。',
+    desc: '节点全开，随时开玩',
     target: '/pages/index/index',
   },
   {
@@ -38,7 +38,7 @@ const MODES = [
     name: '漫游',
     tag: '无终点 · 散步',
     icon: 'gps',
-    desc: '边走边点亮城市迷雾,没有任务也没有终点。顺路散个步也算数。',
+    desc: '边走边点亮城市',
     target: '/pages/roam/index',
   },
 ];

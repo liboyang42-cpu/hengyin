@@ -190,7 +190,7 @@ function cancellationSummary(result) {
       : refundStatus === 'ACCEPTED_WITH_MANUAL_REVIEW' ? '退款任务已受理，部分需人工跟进'
         : refundStatus === 'ACCEPTED' || refundStatus === 'REFUND_REQUESTED'
           || refundStatus === 'ALREADY_ACCEPTED'
-          ? '退款任务已受理' : '退款状态待回读'
+          ? '退款任务已受理' : '退款状态更新中'
   const registered = String((result && result.registeredNotificationStatus) || '')
   const waitlist = String((result && result.waitlistNotificationStatus) || '')
   const notifications = registered === 'NOT_REQUIRED' && waitlist === 'NOT_REQUIRED'
@@ -346,7 +346,7 @@ function occurrenceRow(raw) {
 // CU-C-03:场次时区固定上海(表单也这么写),必须按上海日历取字段 —— 原来用手机本地
 // getHours/getDate,非上海时区的设备把 9-28 09:00 显示成「9月27日 18:00」。
 function occurrenceDateText(raw) {
-  if (raw === null || raw === undefined || raw === '') return '日期待确认'
+  if (raw === null || raw === undefined || raw === '') return '—'
   const p = chinaParts(typeof raw === 'number' ? raw : String(raw).replace(/\//g, '-'))
   if (!p) return String(raw)
   const week = ['日', '一', '二', '三', '四', '五', '六'][p.weekday]
@@ -425,7 +425,7 @@ Page({
     this._focusTopicId = positiveId(options && options.topicId)
     const recurrenceType = options && options.recurrence === 'ONCE' ? 'ONCE' : this.data.recurrenceType
     if (!clubId) {
-      this.setData({ state: 'error', errorText: '缺少俱乐部 ID' })
+      this.setData({ state: 'error', errorText: '缺少俱乐部信息' })
       return
     }
     this.setData({ clubId, activityId, recurrenceType })
@@ -589,7 +589,7 @@ Page({
         const raw = ok(res) && Array.isArray(res.data) ? res.data : null
         const rows = raw && raw.map(item => normalizeSeries(item, that.data.clubId))
         if (!rows || rows.some(item => !item)) {
-          that.setData({ seriesState: 'error', seriesError: bizFailureMessage(res, '系列列表数据不完整') })
+          that.setData({ seriesState: 'error', seriesError: bizFailureMessage(res, '系列列表加载失败') })
           return
         }
         that.setData({
@@ -899,14 +899,14 @@ Page({
         if (!state) {
           that.setData({
             cancellationState: 'readback-error',
-            cancellationError: bizFailureMessage(res, '取消状态回读失败，请重试'),
+            cancellationError: bizFailureMessage(res, '取消状态刷新失败，请重试'),
           })
           return
         }
         if (cancelResult && state.occurrenceStatus !== 'CANCELLED') {
           that.setData({
             cancellationState: 'readback-error',
-            cancellationError: '取消请求已受理，但独立回读尚未确认取消，请重试回读',
+            cancellationError: '取消已提交，结果待确认，请刷新',
           })
           return
         }
@@ -928,12 +928,12 @@ Page({
         }
       },
       fail() {
-        that.setData({ cancellationState: 'readback-error', cancellationError: '网络异常，取消状态回读失败' })
+        that.setData({ cancellationState: 'readback-error', cancellationError: '网络异常，取消状态刷新失败' })
       },
       successStatusAbnormal(res) {
         that.setData({
           cancellationState: 'readback-error',
-          cancellationError: (res && res.msg) || '取消状态回读失败，请重试',
+          cancellationError: (res && res.msg) || '取消状态刷新失败，请重试',
         })
       },
     })
@@ -1053,7 +1053,7 @@ Page({
         const noShow = data && normalizeRows(data.noShow)
         if (!data || registered === null || waitlist === null || arrived === null || noShow === null
             || data.phoneIncluded !== false) {
-          that.setData({ rosterState: 'error', rosterError: bizFailureMessage(res, '名册数据不完整') })
+          that.setData({ rosterState: 'error', rosterError: bizFailureMessage(res, '名册加载失败') })
           return
         }
         const buckets = { registered, waitlist, arrived, noShow }

@@ -41,14 +41,14 @@ function actBlock(source, marker) {
 
 function assertAcceptedCard(area, label) {
   const buttons = [...area.matchAll(/class="inv-btn[^"]*"/g)];
-  assert.ok(buttons.length <= 2, label + '已接受卡最多两个按钮,现为 ' + buttons.length + ' 个');
+  assert.ok(buttons.length <= 2, label + '已接受卡最多两个按钮，现为 ' + buttons.length + ' 个');
   assert.match(area, /class="inv-btn inv-btn--secondary"[^>]*catchtap="goInviteDetail"[^>]*>查看合作</,
     label + '「查看合作」必须是次级按钮');
   assert.match(area, /wx:if="\{\{item\.depositOwed\}\}"[\s\S]{0,200}?class="inv-btn inv-btn--primary"[^>]*catchtap="payDeposit"/,
     label + '欠保证金时主按钮必须是「缴纳保证金」');
   for (const moved of ['contactPartner', 'openPerkPick', 'reviewCoop', 'cancelAccepted', 'explainCancelLocked']) {
     assert.doesNotMatch(area, new RegExp('catchtap="' + moved + '"'),
-      label + moved + ' 已搬到协作详情页,不得留在卡片上');
+      label + moved + ' 已搬到协作详情页，不得留在卡片上');
   }
 }
 
@@ -184,10 +184,10 @@ test('详情页承接搬来的合作动作,底部动作条不塞这些按钮', (
     '底部动作条不允许再堆这些动作');
   // 动作条里各状态分支互斥:逐分支验证并排按钮 ≤2(整块总数会把互斥分支加在一起,没有意义)
   const branches = acts.split('<block ').slice(1);
-  assert.ok(branches.length >= 4, '动作条状态分支变少,检查是否吞了终态说明');
+  assert.ok(branches.length >= 4, '动作条状态分支变少，检查是否吞了终态说明');
   branches.forEach((branch) => {
     const barButtons = [...branch.matchAll(/class="act act--(?:solid|ghost)[^"]*"/g)];
-    assert.ok(barButtons.length <= 2, '详情页动作条单个分支 ≤2 并排,现为 ' + barButtons.length + ' 个');
+    assert.ok(barButtons.length <= 2, '详情页动作条单个分支 ≤2 并排，现为 ' + barButtons.length + ' 个');
   });
 });
 
@@ -206,7 +206,7 @@ test('F-44/CU-M-92:商家已接受邀约用 topicId+MERCHANT 进项目(后端判
   // CU-M-92(走查第三轮):必须是 topicId= —— id= 是「浏览/招商」入口,受邀商家点进项目
   // 看到主题介绍和「报名」,那不是他该落的页。带 topicId 才有 /api/project/home 判身份。
   assert.match(accepted.navigations[0], /[?&]topicId=/,
-    '已接受邀约的商家要进承接视图,入口必须带 topicId');
+    '已接受邀约的商家要进承接视图，入口必须带 topicId');
 
   for (const status of [0, 3]) {
     const blocked = loadPage('pages/coop/invite-detail/index.js', inviteResponse(row(status)));
@@ -248,7 +248,7 @@ test('详情页:已评价的合作回读星级', () => {
   }));
   env.page.onLoad({ inviteId: '7', box: 'received' });
   const request = env.requests.find((r) => r.url === '/api/coop/review/summary');
-  assert.ok(request, '已接受合作必须回读自己的评价');
+  assert.ok(request, '已接受合作必须刷新自己的评价');
   assert.deepEqual(JSON.parse(request.data), { toId: 21 });
   request.success({ code: 200, data: { reviews: [
     { fromId: 999, topicId: 8, rating: 1 },
@@ -278,7 +278,7 @@ test('详情页:发件箱已接受可取消合作(锁价置灰只说明),走 han
   assert.deepEqual(JSON.parse(write.data), { id: '7', status: 3, message: '测试理由' });
   const before = env.requests.filter((r) => r.url === '/api/coop/list').length;
   write.success({ code: 200 });
-  assert.ok(env.requests.filter((r) => r.url === '/api/coop/list').length > before, '写成功后必须回读详情');
+  assert.ok(env.requests.filter((r) => r.url === '/api/coop/list').length > before, '写成功后必须刷新详情');
 
   const frozen = loadPage('pages/coop/invite-detail/index.js', inviteResponse({
     id: 7, inviteId: '7', status: 1, inviteType: 1, topicId: 8, topicName: '主题', shareMode: 0,
@@ -698,7 +698,7 @@ test('评价断网不断言未提交:回读到评分即显示已评价,回读前
   assert.equal(e.page.data.reviewVerifying, true);
   assert.ok(e.toasts.every(t => !/没提交|未提交/.test(t)), '不能断言评价未提交');
   e.page.reviewCoop();
-  assert.equal(e.page.data.reviewSheetShow, false, '回读完成前不放开重试');
+  assert.equal(e.page.data.reviewSheetShow, false, '刷新完成前不放开重试');
   summaries().at(-1).success({code:200,data:{reviews:[{fromId:1,topicId:8,rating:4}]}});
   assert.equal(e.page.data.reviewVerifying, false);
   assert.equal(e.page.data.myReviewStars, '★★★★');
@@ -713,7 +713,7 @@ test('评价网关超时回读没有评分才允许重新评价;回读失败不�
   assert.equal(e.page.data.myReviewStars, '');
   assert.match(e.page.data.actionError, /没有查到这次评价/);
   e.page.reviewCoop();
-  assert.equal(e.page.data.reviewSheetShow, true, '核对后可重试');
+  assert.equal(e.page.data.reviewSheetShow, true, '确认后可重试');
 
   const f = detailContextHarness();
   f.page.reviewCoop(); f.page.onReviewSheetSelect({detail:{index:0}});

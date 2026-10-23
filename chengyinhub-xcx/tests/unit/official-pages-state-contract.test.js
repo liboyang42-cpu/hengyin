@@ -79,7 +79,7 @@ test('官方邀约写操作同步防重，失败留在原卡片且重试前不�
   assert.equal(h.requests.length, 1);
   assert.equal(h.requests[0].method, 'POST');
   page.act(actionEvent(21, 'decline'));
-  assert.equal(h.requests.length, 1, '请求在途时不能发起冲突写操作');
+  assert.equal(h.requests.length, 1, '请求在途时不能发起冲突操作');
   assert.equal(h.modals.length, 1, '请求在途时不能再弹第二个确认框');
 
   h.requests[0].fail({ errMsg: 'request:fail network' });
@@ -99,11 +99,11 @@ test('官方邀约写操作同步防重，失败留在原卡片且重试前不�
 
   page.retryAction();
   h.requests[2].success({ code: 200 });
-  assert.equal(h.requests.length, 4, '写成功后必须回读收件箱，以服务端事实更新列表');
+  assert.equal(h.requests.length, 4, '写成功后必须刷新收件箱，以服务端事实更新列表');
   assert.equal(h.requests[3].method, 'GET');
-  assert.deepEqual(page.data.invites, before, '回读完成前仍保留旧快照，不伪造成功状态');
+  assert.deepEqual(page.data.invites, before, '刷新完成前仍保留旧快照，不伪造成功状态');
   page.act(actionEvent(21, 'accept'));
-  assert.equal(h.modals.length, 1, '服务端回读完成前旧卡片仍不可重复提交');
+  assert.equal(h.modals.length, 1, '服务端刷新完成前旧卡片仍不可重复提交');
   h.requests[3].success({
     code: 200,
     data: [{ partyId: 21, partyType: 'MERCHANT', role: 'FULFILLMENT_MERCHANT', status: 'ACCEPTED' }],
@@ -155,13 +155,13 @@ test('我的发布严格区分 0 与 unknown，未知状态、对象、方式和
 
   assert.equal(page.data.hasLoaded, true);
   assert.equal(page.data.events[0]._title, '未命名官方活动');
-  assert.equal(page.data.events[0]._city, '城市待确认');
+  assert.equal(page.data.events[0]._city, '—');
   assert.equal(page.data.events[0]._st, '状态待确认');
   assert.equal(page.data.broadcasts[0]._st, '状态待确认');
-  assert.equal(page.data.broadcasts[0]._aud, '对象待确认');
-  assert.equal(page.data.broadcasts[0]._mode, '发送方式待确认');
-  assert.equal(page.data.broadcasts[0]._reach, '站内触达人数待确认');
-  assert.equal(page.data.broadcasts[0]._city, '范围待确认');
+  assert.equal(page.data.broadcasts[0]._aud, '—');
+  assert.equal(page.data.broadcasts[0]._mode, '—');
+  assert.equal(page.data.broadcasts[0]._reach, '—');
+  assert.equal(page.data.broadcasts[0]._city, '—');
   assert.equal(page.data.broadcasts[1]._reach, '站内触达 0 人', '数值 0 必须保留为真实零触达');
 });
 

@@ -80,7 +80,7 @@ test('管理态切筛选:带 filter 重读第一页,列表与计数都用服务�
   tap(h.page, 'platform');
   assert.equal(h.requests.length, 2);
   assert.match(h.requests[1].url, /filter=platform&pageNum=1/);
-  assert.equal(h.page.data.pageState, 'ready', '切筛选保留页头,不整页骨架');
+  assert.equal(h.page.data.pageState, 'ready', '切筛选保留页头，不整页骨架');
   assert.equal(h.page.data.filterLoading, true);
   assert.equal(h.page.data.filteredItems.length, 0, '旧筛选的条目不能留在新 tab 下');
 
@@ -88,7 +88,7 @@ test('管理态切筛选:带 filter 重读第一页,列表与计数都用服务�
   h.requests[1].success(manageResponse('platform', [{ id: 8, underPlatformReview: true }, { id: 9, status: 'PENDING_REVIEW' }]));
   assert.deepEqual(h.page.data.filteredItems.map((item) => item.id), [8, 9]);
   assert.equal(h.page.data.filterLoading, false);
-  assert.equal(h.page.data.total, 40, '页头总数是全店口径,不是筛选后条数');
+  assert.equal(h.page.data.total, 40, '页头总数是全店口径，不是筛选后条数');
 });
 
 test('管理态筛选为空 → 列表内筛选空态,不是整页「还没有真实到店评价」', () => {

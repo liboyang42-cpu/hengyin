@@ -80,8 +80,8 @@ Component({
           this.setData({ saving: false, adding: false, notice: '已注册，发布前请确认节点引用都已配置' })
           this.load()
         },
-        fail: () => { this.setData({ saving: false, formError: '网络不太稳定，没有注册成功，可以再试一次' }) },
-        successStatusAbnormal: () => { this.setData({ saving: false, formError: '网络不太稳定，没有注册成功，可以再试一次' }) },
+        fail: () => { this.setData({ saving: false, formError: '网络异常，没有注册成功，可以再试一次' }) },
+        successStatusAbnormal: () => { this.setData({ saving: false, formError: '网络异常，没有注册成功，可以再试一次' }) },
       })
     },
     onAskDelete(e) {
@@ -107,8 +107,8 @@ Component({
           dc.done()
           this.load()
         },
-        fail: () => { this.setData({ deleting: '', deleteError: '网络不太稳定，没有删除成功，可以再试一次' }); dc.failed('网络不太稳定，没有删除成功，可以再试一次') },
-        successStatusAbnormal: () => fail('网络不太稳定，没有删除成功，可以再试一次'),
+        fail: () => { this.setData({ deleting: '', deleteError: '网络异常，没有删除成功，可以再试一次' }); dc.failed('网络异常，没有删除成功，可以再试一次') },
+        successStatusAbnormal: () => fail('网络异常，没有删除成功，可以再试一次'),
       })
     },
   },

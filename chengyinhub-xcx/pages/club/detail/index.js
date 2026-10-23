@@ -58,12 +58,12 @@ const OWNER_STAGE_COPY = {
   // CU-C-89:这个阶段是**俱乐部级**的(任意一个项目被承接就算到),没有单一「该项目」,
   // 入口也只能打开全团场次清单 —— 文案不能再按单项目口吻写,否则多项目的主理人认错待办对象。
   executionAccepted: { label: '活动运营', hint: '已承接项目，可查看全部项目的场次运营' },
-  loading: { label: '读取管理进度…', hint: '正在核对项目与邀请状态' },
+  loading: { label: '读取管理进度…', hint: '正在确认项目与邀请状态' },
   error: { label: '重试管理进度', hint: '暂时无法确认当前阶段' },
   // 管理员没有经营阶段:邀商家/发布主题/开一场都是主理人的事。
   // ★ 不给它一个终态,ownerStage 会永远停在 'loading' —— 管理员打开管理 tab
   //   看到的就是一张标题写着「读取管理进度…」的卡,永远转不完(2026-08-26 修)。
-  admin: { label: '带好眼下这一场', hint: '你能管人和执行:审批入会、管成员、看名册、出团码、进导演台。' },
+  admin: { label: '带好眼下这一场', hint: '管理员：成员与现场执行' },
 };
 // 带队进度时间线的四站,与上面的 OWNER_STAGE_COPY 同一台阶段机,只是换成「走到哪了」的说法。
 const LEAD_STAGE_STATIONS = ['发布主题', '邀请商家', '等待商家回应', '商家已接受'];
@@ -867,7 +867,7 @@ Page({
         that.filterMerchants();
       },
       // E-09(2026-09-16):失败原来是空列表 → 「还没有开放对接的商家」。
-      fail() { that.setData({ merchantsLoaded: true, merchantsError: '网络不稳定，商家列表没能加载出来' }); },
+      fail() { that.setData({ merchantsLoaded: true, merchantsError: '网络异常，商家列表加载失败' }); },
     });
   },
 
@@ -1489,7 +1489,7 @@ Page({
       success(res) {
         if (token !== that._clubAiToken) return;   // 已取消 / 被新一次生成取代
         if (res.code != '200') {
-          const msg = (res && res.msg) || '生成失败,请重试';
+          const msg = (res && res.msg) || '生成失败，请重试';
           that.showClubAiError(msg, msg.indexOf(AI_QUOTA_MARK) < 0);
           return;
         }
@@ -1497,7 +1497,7 @@ Page({
         // parseError 非 null = AI 响应解析炸了,plan/merchantSuggestions/promoCopy 均不可信(后端 VO javadoc)
         if (d.parseError) { that.showClubAiError(d.parseError, true); return; }
         // plan 为 null 且无 parseError = AI 没给方案(静默空成功),与「解析炸了」是两回事
-        if (!d.plan) { that.showClubAiError('AI 这次没给出方案,换个说法再试试', true); return; }
+        if (!d.plan) { that.showClubAiError('AI 这次没给出方案，换个说法再试试', true); return; }
         that._aiResp = d;
         that.setData({
           aiState: 'done',
@@ -1508,13 +1508,13 @@ Page({
       },
       fail() {
         if (token !== that._clubAiToken) return;
-        that.showClubAiError('网络错误,请检查网络后重试', true);
+        that.showClubAiError('网络异常，请重试', true);
       },
       // HTTP statusCode!=200(如部署期 502)时 request-client 只弹 toast 就 return,success/fail 都不调
       // → 不兜底状态机会永远停在 generating(面板转圈、且 :239 的在途守卫让重试也点不动)。
       complete() {
         if (token !== that._clubAiToken) return;
-        if (that.data.aiState === 'generating') that.showClubAiError('生成失败,请稍后重试', true);
+        if (that.data.aiState === 'generating') that.showClubAiError('生成失败，请稍后重试', true);
       },
     });
   },
@@ -1546,7 +1546,7 @@ Page({
     this.setData({ aiSheetShow: false });
     modal.show({
       title: '方案已带到发布页',
-      content: '标题、简介和节点已回填。封面图和活动分类 AI 给不了,需要你手动补齐后才能发布。',
+      content: '标题、简介和节点已回填。封面图和活动分类 AI 给不了，需要你手动补齐后才能发布。',
       showCancel: false, confirmText: '去发布',
       success() { wx.navigateTo({ url: '/pages/publish/fabu/index?clubId=' + cid }); },
     });
@@ -1601,7 +1601,7 @@ Page({
         that.setData({ leaderboard: foldLeaderboard(list.map((it) => that.decorateRank(it, sortBy)), that.data.myMemberId), leaderboardLoaded: true, leaderboardError: '', leaderboardEmptyTitle: leaderboardEmptyTitle(sortBy) });
       },
       // E-09(2026-09-16):失败渲染成「还没有人通关」= 把不知道说成没有。留错误态+重试。
-      fail() { that.setData({ leaderboardLoaded: true, leaderboardError: '网络不稳定，榜单没能加载出来' }); },
+      fail() { that.setData({ leaderboardLoaded: true, leaderboardError: '网络异常，榜单加载失败' }); },
     });
   },
 
@@ -1690,7 +1690,7 @@ Page({
       success(res) {
         // E-09(2026-09-16):失败原来是 rows=[] → 渲染成「还没有帖子」(把「不知道」说成「没有」)。
         if (res.code != '200' || !Array.isArray(res.data)) {
-          that.setData({ postsLoaded: true, postsError: bizFailureMessage(res, '帖子没能加载出来') });
+          that.setData({ postsLoaded: true, postsError: bizFailureMessage(res, '帖子加载失败') });
           return;
         }
         const posts = res.data.map(function (p) {
@@ -1698,7 +1698,7 @@ Page({
         });
         pageMotion.enter(that, 'pmPosts'); that.setData({ posts: posts, pinnedNotices: clubPinnedNotice.pick(posts, that.data.clubId), postsLoaded: true, postsError: '' }, function () { that.scrollToRequestedPost(); });
       },
-      fail() { that.setData({ postsLoaded: true, postsError: '网络不稳定，帖子没能加载出来' }); },
+      fail() { that.setData({ postsLoaded: true, postsError: '网络异常，帖子加载失败' }); },
     });
   },
 
@@ -1810,7 +1810,7 @@ Page({
         }
         that.setData({ postRefState: 'ready', postRefOptions: buildPostRefOptions(res.data) });
       },
-      fail() { that.setData({ postRefState: 'error', postRefErrorText: '网络异常，没能读到你的游玩记录' }); },
+      fail() { that.setData({ postRefState: 'error', postRefErrorText: '网络异常，获取失败你的游玩记录' }); },
     });
   },
 
@@ -2931,7 +2931,7 @@ Page({
         that.setData({ groupCodeState: 'error', groupCodeErrMsg: '网络异常，请重试' });
       },
       successStatusAbnormal(res) {
-        that.setData({ groupCodeState: 'error', groupCodeErrMsg: that.friendlyGroupCodeError(res && res.msg, '场次暂时没能加载，请稍后重试') });
+        that.setData({ groupCodeState: 'error', groupCodeErrMsg: that.friendlyGroupCodeError(res && res.msg, '场次加载失败，请重试') });
       },
     });
   },
@@ -3045,7 +3045,7 @@ Page({
       fail() {
         if (liking[key] !== entry) return;
         entry.unknown = true;
-        cyToast('点赞结果未确认，正在核对');
+        cyToast('点赞结果未确认，正在确认');
         that.readbackPostLike(key);
       },
     });
@@ -3070,7 +3070,7 @@ Page({
         if (!stillMine()) return;
         const rows = res && res.code == '200' && Array.isArray(res.data) ? res.data : null;
         const row = rows && rows.find(function (p) { return p && String(p.id) === String(entry.postId); });
-        if (!row || typeof row.isLiked !== 'boolean') { cyToast('点赞结果未确认，请稍后再点核对'); return; }
+        if (!row || typeof row.isLiked !== 'boolean') { cyToast('点赞结果未确认，请稍后再点确认'); return; }
         delete liking[key];
         const posts = (that.data.posts || []).map(function (p) {
           if (String(p.id) !== String(entry.postId)) return p;
@@ -3081,7 +3081,7 @@ Page({
       },
       fail() {
         entry.reading = false;
-        if (stillMine()) cyToast('点赞结果未确认，请稍后再点核对');
+        if (stillMine()) cyToast('点赞结果未确认，请稍后再点确认');
       },
     });
   },
@@ -3102,7 +3102,7 @@ Page({
       success(res) {
         if (that.data.openCommentPost !== postId) return;
         if (!res || res.code != '200') {
-          that.setData({ comments: [], commentsLoaded: false, commentsError: bizFailureMessage(res, '评论没能加载出来') });
+          that.setData({ comments: [], commentsLoaded: false, commentsError: bizFailureMessage(res, '评论加载失败') });
           return;
         }
         const rows = Array.isArray(res.data) ? res.data : [];
@@ -3432,7 +3432,7 @@ Page({
         const d = res && res.data;
         // 形状不对就当没拿到,不把坏响应渲染成空列表 —— 空列表会被读成「没有可对接的活动」
         if (String(res && res.code) !== '200' || !d || typeof d.hasClub !== 'boolean' || !isPoolList(d.rows)) {
-          that.setData({ coopPool: [], coopPoolState: 'error', coopPoolError: bizFailureMessage(res, '合作池没加载出来') });
+          that.setData({ coopPool: [], coopPoolState: 'error', coopPoolError: bizFailureMessage(res, '合作池加载失败') });
           return;
         }
         if (d.hasClub === false) {
@@ -3441,7 +3441,7 @@ Page({
         }
         that.setData({ coopPool: decoratePool(d.rows), coopPoolState: 'ready', coopPoolError: '' });
       },
-      fail() { that.setData({ coopPool: [], coopPoolState: 'error', coopPoolError: '网络不稳定，请检查连接后重试' }); },
+      fail() { that.setData({ coopPool: [], coopPoolState: 'error', coopPoolError: '网络异常，请检查连接后重试' }); },
     });
   },
   retryCoopPool() { this.setData({ coopPoolState: 'idle' }); this.loadCoopPool(); },

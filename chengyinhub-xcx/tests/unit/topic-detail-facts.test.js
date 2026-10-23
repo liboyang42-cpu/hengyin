@@ -39,7 +39,7 @@ test('星星取整,评分本身不取整', () => {
   assert.equal(rating.value, '4.8', '评分显示的是真值')
   assert.equal(rating.starList.length, 5, '星星是取整后的颗数')
   // wx:for 只遍历数组。给个数字会静默什么都不渲染 —— 一颗星都不出,还不报错。
-  assert.ok(Array.isArray(rating.starList), '星星必须是数组,不能是 count')
+  assert.ok(Array.isArray(rating.starList), '星星必须是数组，不能是 count')
 })
 
 test('缺值的格子整格不出,不拿 0 或「—」占位', () => {
@@ -62,10 +62,10 @@ test('两端共用同一份格子 —— 各写各的 wxml 就是这次要修的
   for (const [name, wxml] of [['玩家版', player], ['商家版', merchant]]) {
     assert.match(wxml, /class="statbar"[^>]*wx:if="\{\{statBar\.length\}\}"/, `${name}必须渲染共用的 statBar`)
     assert.match(wxml, /class="statbar__sep"[^>]*wx:if="\{\{index > 0\}\}"/, `${name}的格间竖线首尾不出(稿 188:2968)`)
-    assert.match(wxml, /<scroll-view scroll-x class="statbar"/, `${name}的数据条是横滑,不是网格`)
+    assert.match(wxml, /<scroll-view scroll-x class="statbar"/, `${name}的数据条是横滑，不是网格`)
   }
   for (const [name, js] of [['玩家版', read('pages/topic/index/index.js')], ['商家版', read('pages/topic/merchantinfo/merchantinfo.js')]]) {
-    assert.match(js, /buildTopicStatBar\(/, `${name}必须调共用函数,不许自己再算一套`)
+    assert.match(js, /buildTopicStatBar\(/, `${name}必须调共用函数，不许自己再算一套`)
   }
 })
 

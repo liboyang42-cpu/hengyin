@@ -54,15 +54,15 @@ test('营销同意保存失败后的回读不会清掉失败提示', () => {
     '营销同意必须绑定服务端返回的精确 merchant row');
   requests[0].success({ code: 409, msg: '退订状态保存失败' });
 
-  assert.equal(requests[1].method, 'GET', '保存失败后应回读服务端真值');
-  assert.equal(component.data.error, '退订状态保存失败', '回读开始时失败提示仍应可见');
+  assert.equal(requests[1].method, 'GET', '保存失败后应刷新服务端真值');
+  assert.equal(component.data.error, '退订状态保存失败', '刷新开始时失败提示仍应可见');
   requests[1].success({ code: 200, data: [{
     merchantRowId: 1,
     merchantOwnerMemberId: 7,
     merchantName: '山风咖啡',
     couponOptedIn: true,
   }] });
-  assert.equal(component.data.error, '退订状态保存失败', '真值回读完成后仍应保留本次保存失败提示');
+  assert.equal(component.data.error, '退订状态保存失败', '真值刷新完成后仍应保留本次保存失败提示');
 });
 
 test('客户导出与合规触达使用权限门控的等层工具且避开原生按钮底色', () => {
@@ -82,13 +82,13 @@ test('客户导出与合规触达使用权限门控的等层工具且避开原�
     '四个同层工具不得再分出黑底主操作档');
   const toolbarRule = wxss.match(/\.cu-toolbar\s*\{[^}]*\}/);
   assert.ok(toolbarRule, '缺少 .cu-toolbar 布局规则');
-  assert.match(toolbarRule[0], /display:\s*grid/, '工具组必须是规则网格,不是会错落的一行');
+  assert.match(toolbarRule[0], /display:\s*grid/, '工具组必须是规则网格，不是会错落的一行');
   assert.match(toolbarRule[0], /grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/,
-    '窄屏两列等宽,四个工具都要可达且对齐');
+    '窄屏两列等宽，四个工具都要可达且对齐');
   assert.doesNotMatch(toolbarRule[0], /justify-content:\s*flex-end/,
     '工具组不得靠右散落');
   assert.match(wxss, /\.cu-tool[^\{]*\{[^}]*background:\s*var\(--cy-bg-card\)/,
-    '四枚工具共用同一档卡面,浅灰透明底那两枚不再像未启用');
+    '四枚工具共用同一档卡面，浅灰透明底那两枚不再像未启用');
   assert.match(wxss, /\.cu-tool[^\{]*\{[^}]*color:\s*var\(--cy-text-body\)/,
     '工具文字必须用正文档');
 });

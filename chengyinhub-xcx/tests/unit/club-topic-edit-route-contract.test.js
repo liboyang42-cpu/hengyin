@@ -46,6 +46,6 @@ test('编辑主题:goEditTopic 发的参数必须是 fabu 认的 id,不是 topic
 
   assert.equal(navigations.length, 1)
   assert.match(navigations[0], /^\/pages\/publish\/fabu\/index\?id=88(?:&|$)/,
-    '必须带 ?id=88 —— 带 topicId 打开的是空白新表单,保存会多建一条主题')
+    '必须带 ?id=88 —— 带 topicId 打开的是空白新表单，保存会多建一条主题')
   assert.doesNotMatch(navigations[0], /topicId=/)
 })

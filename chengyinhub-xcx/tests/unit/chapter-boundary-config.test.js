@@ -41,7 +41,7 @@ test('① 发布器:章节边界两项的 UI 入口已随商家承接整体移�
   const js = stripJs(read('pages/publish/fabu/index.js'));
 
   assert.doesNotMatch(editorWxml, /onChapterValidationMethodToggle/,
-    '章节承接配置已移到发布后工作台,编辑器里不该再有入口');
+    '章节承接配置已移到发布后工作台，编辑器里不该再有入口');
   assert.doesNotMatch(editorWxml, /onChapterMaxNodeXpInput/, '同上');
 
   // 数据层不许跟着一起消失 —— 工作台要复用它们

@@ -32,7 +32,7 @@ Component({
     openOwnMedia() {
       if (this.data.submitting) return;
       wx.navigateTo({ url: '/pages/privacy/index', success: () => this.triggerEvent('close'),
-        fail: () => toast('隐私设置暂时打不开，请重试') });
+        fail: () => toast('隐私设置无法打开，请重试') });
     },
 
     openPrivacyContract() {

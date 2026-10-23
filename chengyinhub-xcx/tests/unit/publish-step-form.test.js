@@ -56,5 +56,5 @@ test('发布活动页真的按步渲染,且首错会先跳步再滚动', () => {
   assert.match(js, /resolveStepOfField\(/, '首错定位必须解析字段所属步');
   const scroll = js.match(/scrollToError\(key\)\s*\{([\s\S]*?)\n {2}\}/);
   assert.ok(scroll, 'scrollToError 不见了');
-  assert.match(scroll[1], /setData\(/, '错误字段若不在当前步,必须先切步再滚动,否则选择器根本不在页面上');
+  assert.match(scroll[1], /setData\(/, '错误字段若不在当前步，必须先切步再滚动，否则选择器根本不在页面上');
 });

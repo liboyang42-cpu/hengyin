@@ -120,7 +120,7 @@ test('/api/coop/handle 的消费方 = 协作邀请页 + 协作详情,各自服�
   assert.deepEqual(
     consumers(),
     CLUB_SURFACES.slice().sort(),
-    '消费方集合变了:收发件箱(coop/list)与协作详情(coop/invite-detail)之外再多一个,要先说清它服务的是哪个角色'
+    '消费方集合变了:收发件箱(coop/list)与协作详情(coop/invite-detail)之外再多一个，要先说清它服务的是哪个角色'
   );
 });
 

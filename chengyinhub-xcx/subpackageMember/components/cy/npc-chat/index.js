@@ -347,7 +347,7 @@ Component({
     _onNetworkFailure: function (generation) {
       if (!this._isCurrent(generation)) return;
       this._requestControl = null;
-      this._appendAssistant('网络不太稳定，这条问题还没有送达，可以再试一次。', 'FAILED');
+      this._appendAssistant('网络异常，这条问题还没有送达，可以再试一次。', 'FAILED');
     },
 
     _startTypewriter: function (generation, text, audioUrl) {

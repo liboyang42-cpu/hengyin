@@ -93,7 +93,7 @@ test('长按面板带出 canSaveAsTemplate;选中后先确认再发 save-as', ()
   assert.equal(sent[0].data.id, 11);
 
   sent[0].success({ code: '200', msg: '已另存为主题模板' });
-  assert.equal(page.reloads, 1, '成功后回读列表');
+  assert.equal(page.reloads, 1, '成功后刷新列表');
   assert.equal(toasts.pop(), '已另存为主题模板');
 });
 

@@ -75,7 +75,7 @@ test('通过/拒绝的确认层都写上申请人姓名，不再用「这一项�
   reject.page.reject({ currentTarget: { dataset: { memberId: 901 } } })
   assert.equal(reject.modals.length, 1)
   assert.equal(reject.modals[0].title, '拒绝「小林」的入会申请?')
-  assert.doesNotMatch(reject.modals[0].title, /这一项/, '缺参兜底词不该再出现')
+  assert.doesNotMatch(reject.modals[0].title, /这一项/, '缺参保底词不该再出现')
 })
 
 test('拿不到该行昵称时退回中性称呼，不显示 memberId 或少一个占位', () => {

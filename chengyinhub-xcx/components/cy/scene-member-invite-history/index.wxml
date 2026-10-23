@@ -12,12 +12,12 @@
   </view>
 
   <view class="ir-sync-note" wx:if="{{groups.length && !rewardReady}}" aria-role="status">
-    邀请记录已到达，奖励流水暂未同步
+    奖励同步中
   </view>
 
   <cy-skeleton wx:if="{{loading && !groups.length}}" type="list" count="{{4}}" />
   <cy-error load-failure="{{!authRequired && !accessDenied}}" wx:elif="{{loadErr && !groups.length}}" fill size="lg"
-    title="{{authRequired ? '登录后查看邀请记录' : accessDenied ? '当前账号无法查看邀请记录' : '邀请记录没加载出来'}}" sub="{{authRequired ? '登录后可查看你的真实邀请关系' : accessDenied ? '请确认当前账号的查看权限' : '网络可能不稳定，你的邀请关系还在'}}" retry="{{authRequired ? '登录' : '重试'}}" bind:retry="retry" />
+    title="{{authRequired ? '登录后查看邀请记录' : accessDenied ? '当前账号无法查看邀请记录' : '邀请记录加载失败'}}" retry="{{authRequired ? '登录' : '重试'}}" bind:retry="retry" />
   <cy-empty wx:elif="{{empty}}" fill size="lg" kind="empty"
     title="还没有人接受你的邀请" sub="好友加入后，会按时间出现在这里" />
 

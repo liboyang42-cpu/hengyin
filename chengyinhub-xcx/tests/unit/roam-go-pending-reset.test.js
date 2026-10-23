@@ -36,7 +36,7 @@ test('onShow 清掉 goStart 的在途标记,让已死锁的常驻实例自愈', 
   try {
     page._roamStartPending = true      // 模拟上一次 goStart 卡在途中(弹窗被吞/网络挂起)
     page.onShow()
-    assert.equal(page._roamStartPending, false, 'onShow 后必须归零,否则 GO 永久静默')
+    assert.equal(page._roamStartPending, false, 'onShow 后必须归零，否则 GO 永久静默')
   } finally {
     global.getApp = prevGetApp
   }

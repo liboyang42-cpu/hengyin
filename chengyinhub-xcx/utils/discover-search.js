@@ -54,7 +54,7 @@ function decorateItem(type, item) {
 
   const detail = {
     topic: item.addressName || item.description || '城市主题',
-    activity: item.topicId ? '关联主题点位' : (item.addressName || item.address || '活动地点待公布'),
+    activity: item.topicId ? '关联主题节点' : (item.addressName || item.address || '活动地点待公布'),
     club: item.city || item.description || '城市俱乐部',
     merchant: item.cityRole || item.address || item.slogan || item.description || '合作商家',
   }[type];

@@ -153,7 +153,7 @@ test('HTTP 非 2xx 会收敛为失败，不会永远停在生成中', () => {
 
   assert.equal(chat.data.state, 'FAILED');
   assert.equal(chat.data.isThinking, false);
-  assert.match(chat.data.messages.at(-1).text, /网络不太稳定/);
+  assert.match(chat.data.messages.at(-1).text, /网络异常/);
 });
 
 

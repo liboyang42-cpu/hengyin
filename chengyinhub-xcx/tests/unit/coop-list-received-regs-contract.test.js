@@ -99,7 +99,7 @@ test('承接报名聚合:请求带 scope(缺省 {})、行带主题名与调配�
 
   assert.equal(rows[1].auditText, '已落选');
   assert.equal(rows[1].dim, true, '已落选只做历史展示');
-  assert.equal(rows[1].name, '商家 #43', '缺店名回落编号,不冒充具名商家');
+  assert.equal(rows[1].name, '商家 #43', '缺店名回落编号，不冒充具名商家');
   assert.equal(rows[1].placeText, '桥下');
   assert.equal(page.data.receivedRegState, 'ready');
 });
@@ -130,7 +130,7 @@ test('确认占槽:单飞、写 registrationId、成功后回读并给二次发�
   const readsBefore = byUrl('/api/coop/candidates/received').length;
   writes[0].success({ code: 200 });
   assert.match(page.data.actionReceipt, /已确认「漫步咖啡」占住候选位置/);
-  assert.equal(byUrl('/api/coop/candidates/received').length, readsBefore + 1, '占槽成功必须权威回读');
+  assert.equal(byUrl('/api/coop/candidates/received').length, readsBefore + 1, '占槽成功必须权威刷新');
   assert.equal(modals.length, 2, '占位后必须给带条款邀约的下一步');
   assert.match(modals[1].content, /分账条款/);
 
@@ -151,7 +151,7 @@ test('确认占槽结果未知:回读列表且不得冒充完成', () => {
   byUrl('/api/coop/candidates/confirm')[0].fail({ errMsg: 'request:fail timeout' });
   assert.match(page.data.actionError, /网络/);
   assert.equal(page.data.actionReceipt, '');
-  assert.equal(byUrl('/api/coop/candidates/received').length, readsBefore + 1, '未知结果必须回读');
+  assert.equal(byUrl('/api/coop/candidates/received').length, readsBefore + 1, '未知结果必须刷新');
 });
 
 test('确认占槽 4xx 是确定失败:只报错,不伪造回读', () => {
@@ -182,7 +182,7 @@ test('★负控:删掉占槽成功后的回读 → 「必须回读」判据会�
     "that._finishAction(actionKey, '已确认「' + toName + '」占住候选位置', '');\n            that.loadReceivedRegs();",
     "that._finishAction(actionKey, '已确认「' + toName + '」占住候选位置', '');",
   );
-  assert.notEqual(mutated, source, '负控锚点失效:占槽回读不存在');
+  assert.notEqual(mutated, source, '负控锚点失效:占槽刷新不存在');
 
   let definition;
   const requests = [];
@@ -213,7 +213,7 @@ test('★负控:删掉占槽成功后的回读 → 「必须回读」判据会�
   write.success({ code: 200 });
   const readsAfter = requests.filter((r) => r.url === '/api/coop/candidates/received').length;
   assert.equal(readsAfter, readsBefore,
-    '负控必须复现「不回读」;正控那条 readsAfter === readsBefore + 1 会因此判红');
+    '负控必须复现「不刷新」;正控那条 readsAfter === readsBefore + 1 会因此判红');
 });
 
 test('入口清零:四个旧跳转全改指铃铛「收到的」/附近商家,页路径与 goCandidates 全仓消失', () => {

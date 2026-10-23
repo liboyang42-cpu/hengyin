@@ -82,7 +82,7 @@ function merchantAccess(id = 3, name = 'A店') {
 function assertPartialStateUi(wxml, json) {
   // 2026-09-16 去闸:身份确认不再整屏;确认期用普通骨架,失败落页内内联错误。
   assert.doesNotMatch(wxml, /rv-gate|consoleState/,
-    '整屏身份闸必须删除,确认期走普通加载态')
+    '整屏身份闸必须删除，确认期走普通加载态')
   assert.match(json, /"cy-inline-error"\s*:\s*"\/components\/cy\/inline-error\/index"/,
     '商家工作台必须注册局部错误组件')
   assert.match(wxml, /<cy-inline-error\b[^>]*wx:if="\{\{consoleError\}\}"[^>]*bind:action="reloadConsole"/,
@@ -96,7 +96,7 @@ function assertPartialStateUi(wxml, json) {
   assert.match(wxml, /!projectCards\.length\s*&&\s*\(joinLoading\s*\|\|\s*hostLoading\s*\|\|\s*todoLoading\s*\|\|\s*gameEntryLoading\)/,
     '项目骨架只能遮住还没有旧项目的首载')
   assert.doesNotMatch(wxml, /<cy-inline-error\b[^>]*wx:if="\{\{joinError\s*\|\|\s*hostError\s*\|\|\s*todoError\}\}"/,
-    '项目刷新失败静默降级:保留成功卡片,不挂区块横幅')
+    '项目刷新失败静默降级:保留成功卡片，不挂区块横幅')
 }
 
 test('商家工作台采用首载骨架、stale 内容与局部恢复三段式状态', () => {

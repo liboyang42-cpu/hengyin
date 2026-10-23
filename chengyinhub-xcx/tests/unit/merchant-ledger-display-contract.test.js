@@ -218,7 +218,7 @@ test('步进器按业务事实判 done/now/todo,不拿「有没有时间戳」�
   }, { batchId: 'b7' }).timeline.map((n) => n.state).join(' ');
   assert.equal(batchStates('PENDING'), 'done now todo', '批次已生成 ⇒ 首节点实心');
   assert.equal(batchStates('CONFIRMED', { confirmedAt: '2026-08-08 15:20:00' }), 'done done now',
-    '对账已确认 ⇒ 前两节点实心,正在等打款');
+    '对账已确认 ⇒ 前两节点实心，正在等打款');
   assert.equal(batchStates('PAID', { confirmedAt: '2026-08-08 15:20:00', paidAt: '2026-08-10 09:00:00' }),
     'done done done', 'PAID 三节点全 done');
 });
@@ -245,6 +245,6 @@ test('终态的末节点必须是 done:走完了就没有「当前步」,不许�
 
   // 标签不许待/已混用:同一条 timeline 里既有「待 X」又有「已 X」,读者无法判断哪些已发生。
   [].concat(settled.timeline, paid.timeline).forEach((n) => {
-    assert.doesNotMatch(n.label, /^待/, `节点标签 ${n.label} 不得用「待 X」——节点名是里程碑,不是等待态`);
+    assert.doesNotMatch(n.label, /^待/, `节点标签 ${n.label} 不得用「待 X」——节点名是里程碑，不是等待态`);
   });
 });

@@ -49,7 +49,7 @@ test('负控:把缺数据判定换成真值判断,0 的那两条断言必须判�
     /const missing = raw === null[\s\S]*?\.trim\(\) === ''\);/,
     'const missing = !raw;'          // ← 常见的偷懒写法,0 会被误判成缺数据
   );
-  assert.notEqual(mutated, src, '变异未生效,负控本身是假的');
+  assert.notEqual(mutated, src, '变异未生效，负控本身是假的');
 
   // 用变异后的源码跑一遍 observer
   const prev = global.Component; let def;
@@ -100,7 +100,7 @@ test('columns 决定网格列数,内联样式里给 repeat(n)', () => {
 test('columns 非法值回落到至少 1 列,不产出 repeat(0) 这种废样式', () => {
   [0, -5, NaN, null, undefined, 'abc'].forEach((bad) => {
     const s = build([], bad)._colStyle;
-    assert.match(s, /repeat\([1-9]\d*,/, `columns=${JSON.stringify(bad)} 不该算出非正列数,得到 ${s}`);
+    assert.match(s, /repeat\([1-9]\d*,/, `columns=${JSON.stringify(bad)} 不该算出非正列数，得到 ${s}`);
   });
 });
 
@@ -157,7 +157,7 @@ test('三档字号严格递减(lg > md > sm),不能出现越降越大', () => {
   };
   const lg = px('lg'), md = px('md'), sm = px('sm');
   assert.ok(lg > md, `lg(${lg}) 必须大于 md(${md})`);
-  assert.ok(md > sm, `md(${md}) 必须大于 sm(${sm}) —— 第一版这里是 56 < 58,阶梯反了`);
+  assert.ok(md > sm, `md(${md}) 必须大于 sm(${sm}) —— 第一版这里是 56 < 58，阶梯反了`);
 });
 
 test('缺数据的「—」按短值处理,不会因为降档逻辑变成怪尺寸', () => {
@@ -175,7 +175,7 @@ test('span>1 产出内联 grid-column,任意列数都成立(不再依赖逐个�
   ], 3);
   assert.equal(d._cards[0].spanStyle, '', 'span=1 不需要内联');
   assert.match(d._cards[1].spanStyle, /grid-column:\s*span 2/);
-  assert.match(d._cards[2].spanStyle, /grid-column:\s*span 3/, 'span=3 也要有,旧实现这里是空的');
+  assert.match(d._cards[2].spanStyle, /grid-column:\s*span 3/, 'span=3 也要有，旧实现这里是空的');
 });
 
 test('负控:wxss 里不该再留死的 .sc__card--spanN 类(改内联后它已无渲染方)', () => {

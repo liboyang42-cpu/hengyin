@@ -10,8 +10,8 @@ const ROAM_WXML = fs.readFileSync(path.join(__dirname, '../../pages/roam/index.w
 // F13「首写前 key 持久化」要求的 32 位十六进制会话关联(validRecovery 只认这个形状或精确 sid)。
 // ⚠️ 这里刻意用重复段拼出低熵值:原来那个随机形状的 32 位 hex 被 gitleaks 的
 // generic-api-key 规则按熵值判成疑似密钥(2026-09-16 在 master 上实测 leaks found: 1,
-// 连带把 Deploy 挡成 skipped)。形状约束是「32 位十六进制」,与熵无关,所以降熵不削弱契约;
-// 也不要改成写进 .gitleaksignore —— 那是让闸变瞎,不是把问题解决掉。
+// 连带把 Deploy 挡成 skipped)。形状约束是「32 位十六进制」,与熵无关，所以降熵不削弱契约;
+// 也不要改成写进 .gitleaksignore —— 那是让闸变瞎，不是把问题解决掉。
 const F13_KEY = 'abcdef01'.repeat(4)
 
 let pageConfig
@@ -86,7 +86,7 @@ test('三个 RequestBody 写入口发 JSON，并保留基础路线幂等上下�
   page.submitPreference({ choices: { first: 'a' } })
   page.data.preference.pendingTag = { id: 9, tagValue: 'old' }
   page.data.preference.availableTagValues = ['new']
-  page.correctPreferenceTag()   // 选项弹层由「改错」打开,选中项来自弹层打开时的档位
+  page.correctPreferenceTag()   // 选项弹层由「改错」打开，选中项来自弹层打开时的档位
   page.onTagSheetSelect({ detail: { index: 0 } })
   page.data.shopNpc.nodeId = 11
   page.data.shopNpc.show = true   // 只有打开着的店铺分身对话才能发问
@@ -145,7 +145,7 @@ test('漫游结算接口遇到携带 200 业务码的 HTTP 异常时不能误报
   page._foundRoamPois = {}
   page._roamSid = 88
   // F13: 首写前已有持久化的会话关联(页面正常生命周期由 _ensureRoamRecovery 落盘),
-  // 缺它 _saveRoamRecovery 会失败并把请求挡在发送之前 —— 那是夹具缺前置,不是产品不恢复。
+  // 缺它 _saveRoamRecovery 会失败并把请求挡在发送之前 —— 那是夹具缺前置，不是产品不恢复。
   page._clientSessionKey = F13_KEY
 
   const settling = page._postRoamFinish(1200)
@@ -177,7 +177,7 @@ test('漫游地图 POI 列表拒绝非数组及空元素', async () => {
   assert.deepEqual(page._pois, [])
 })
 
-test('漫游打卡 POST 收到 HTTP 异常时只提示核对，不留失败浮卡', async () => {
+test('漫游打卡 POST 收到 HTTP 异常时只提示确认，不留失败浮卡', async () => {
   const toasts = []
   global.wx.showToast = (value) => { toasts.push(value) }
   const page = loadPage(ROAM_PAGE)
@@ -191,10 +191,10 @@ test('漫游打卡 POST 收到 HTTP 异常时只提示核对，不留失败浮�
 
   assert.equal(await checking, false)
   assert.equal(page.data.visit.checkinOk, false)
-  // 拍板 9-16「漫游打卡不存在失败态」:失败不保留卡,只收卡 + 一句提示(失败字段已删)。
+  // 拍板 9-16「漫游打卡不存在失败态」:失败不保留卡，只收卡 + 一句提示(失败字段已删)。
   assert.equal(page.data.visit.active, false)
   assert.equal(page.data.visit.checkinErr, undefined)
-  assert.equal(toasts.length, 1, '失败必须有一句可见提示,不许静默')
+  assert.equal(toasts.length, 1, '失败必须有一句可见提示，不许静默')
   assert.ok(String(toasts[0].title).length > 0)
 })
 
@@ -209,8 +209,8 @@ test('一次性打卡码已用过时展示服务端文案，不塌成对不上�
 
   assert.equal(toasts.length, 1)
   assert.equal(toasts[0].title, '这张码已用过')
-  // 明确失败(服务端说得出原因)不该挂成「结果待核对」——那会把后续写全部拦死。
-  assert.ok(!page._arrivalWriteUnknown, '明确失败不得进入待核对态')
+  // 明确失败(服务端说得出原因)不该挂成「结果待确认」——那会把后续写全部拦死。
+  assert.ok(!page._arrivalWriteUnknown, '明确失败不得进入待确认态')
 })
 
 test('5-3 注入③:/api/play/checkin 返回 500 时玩家看到明确错误', async () => {
@@ -224,11 +224,11 @@ test('5-3 注入③:/api/play/checkin 返回 500 时玩家看到明确错误', a
   requests[0].successStatusAbnormal({ code: 500, msg: '核销服务暂不可用' })
   await new Promise((resolve) => setImmediate(resolve))
 
-  // 2026-09-22 错误条随底部读数卡删除,可见性改由 toast 承担;盲重试的闸仍是 _arrivalWriteUnknown。
+  // 2026-09-22 错误条随底部读数卡删除，可见性改由 toast 承担；盲重试的闸仍是 _arrivalWriteUnknown。
   assert.equal(toasts.length, 1, '500 不能只写日志或静默失败')
   assert.equal(page._arrivalWriteUnknown, true, 'HTTP 结果未知时必须禁止盲重试')
   assert.match(toasts[0].title, /核销服务暂不可用/)
-  assert.match(toasts[0].title, /打卡结果待核对/)
+  assert.match(toasts[0].title, /打卡结果待确认/)
 })
 
 test('答题 POST 遇到携带 200 业务码的 HTTP 异常时不完成也不开放盲重试', async () => {
@@ -380,14 +380,14 @@ test('游玩页各写入口在途和 HTTP 结果未知时都不能重复 POST', 
 
     requests[0].successStatusAbnormal({ code: 500, msg: 'gateway timeout' })
     await new Promise((resolve) => setImmediate(resolve))
-    assert.equal(item.state(page), true, item.name + '应进入待核对态')
+    assert.equal(item.state(page), true, item.name + '应进入待确认态')
 
     item.invoke(page)
-    assert.equal(requests.length, 1, item.name + '待核对时不能重发')
+    assert.equal(requests.length, 1, item.name + '待确认时不能重发')
   }
 })
 
-test('章节放行 HTTP 异常后先读回队伍进度，核对完成前不能再推进一章', async () => {
+test('章节放行 HTTP 异常后先读回队伍进度，确认完成前不能再推进一章', async () => {
   const page = loadPage(PLAY_PAGE)
   page.data.activityId = 88
   page.data.lead = { exists: true, status: 2, isLeader: true, chapterName: '第一章' }
@@ -447,7 +447,7 @@ test('章节放行专用读回完成后忽略更早轮询的过期响应', async
   assert.equal(page.data.lead.chapterName, '第二章')
   assert.equal(page.data.leadUnlockChecking, false)
   page.leadUnlock()
-  assert.equal(requests.length, 4, '核对后只能从第二章开始新的一次放行')
+  assert.equal(requests.length, 4, '确认后只能从第二章开始新的一次放行')
 })
 
 test('队伍轮询持续慢于轮询间隔时仍会落地尚未过期的响应', async () => {
@@ -559,7 +559,7 @@ test('章节放行专用读回失败后可由重试读回解锁', async () => {
   assert.equal(page.data.leadUnlockChecking, false)
 })
 
-test('不相关节点的成功响应不能清除另一类待核对写锁', async () => {
+test('不相关节点的成功响应不能清除另一类待确认写锁', async () => {
   const page = loadPage(PLAY_PAGE)
   page.data.nodes = [
     { nodeId: 7, points: 12 },
@@ -674,27 +674,27 @@ test('漫游首次建会话的揭雾结果未知时不能自动重放', async ()
 
 test('漫游模板只在结果确定可重试时显示写请求重试入口', () => {
   assert.match(PLAY_WXML, /gWriteUnknown/)
-  // 2026-09-22 到达写失败的重试条长在底部读数卡上,随地图层删除后改走全局 toast。
+  // 2026-09-22 到达写失败的重试条长在底部读数卡上，随地图层删除后改走全局 toast。
   // 这条断言换成钉死「失败仍然说得出话」——静默失败是本文件要防的第一件事。
   const playJs = fs.readFileSync(path.join(__dirname, '../../pages/play/index.js'), 'utf8')
   assert.match(playJs, /recordArrivalNetworkFailure\(message, attempt\)\s*\{[\s\S]{0,400}?cyToast\(message\)/,
     '到达/打卡写失败必须可见')
   assert.match(playJs, /recordArrivalHttpUnknown\(message, nodeId\)\s*\{[\s\S]{0,600}?cyToast\(/,
     '结果未知必须可见:看不见它的人只会反复点')
-  assert.doesNotMatch(playJs, /arrivalError/, '错误条已删,不得留下只写不读的错误态字段')
+  assert.doesNotMatch(playJs, /arrivalError/, '错误条已删，不得留下只写不读的错误态字段')
   assert.match(ROAM_WXML, /wx:if="\{\{paceCard\.checkinRetryable\}\}" bindtap="retryRoamPoiDiscover"/)
   // 拍板 9-16:探店打卡不存在失败态 —— 失败浮卡与重试入口已删除(人不在店内时按钮不可用只提示)。
   assert.doesNotMatch(ROAM_WXML, /visit\.checkinRetryable/)
   assert.doesNotMatch(ROAM_WXML, /retryCheckin/)
-  // 结果未知/首写未知/恢复核对态:按钮文案与路由都必须是「核对结算结果」(retrySettle 只走权威回读);
+  // 结果未知/首写未知/恢复确认态:按钮文案与路由都必须是「确认结算结果」(retrySettle 只走权威刷新);
   // 只有结果已确定(server/reveal 等)才允许露出写请求重发「重新结算」。
-  assert.match(ROAM_WXML, /retry="\{\{finish\.settleErr === 'unknown' \|\| finish\.settleErr === 'bootstrap' \|\| finish\.settleErr === 'recovery' \? '核对结算结果' : '重新结算'\}\}"/)
+  assert.match(ROAM_WXML, /retry="\{\{finish\.settleErr === 'unknown' \|\| finish\.settleErr === 'bootstrap' \|\| finish\.settleErr === 'recovery' \? '确认结算结果' : '重新结算'\}\}"/)
   assert.match(ROAM_WXML, /retry="\{\{finish\.eventErr === 'unknown' \? '' : '重新上报'\}\}"/)
   assert.match(ROAM_WXML, /share\.squarePostUnknown/)
   assert.match(ROAM_WXML, /revealWriteUnknown/)
 })
 
-test('漫游结算重试按结果确定性路由:未知态只回读,确定失败才重发', () => {
+test('漫游结算重试按结果确定性路由:未知态只刷新，确定失败才重发', () => {
   const page = loadPage(ROAM_PAGE)
   let recovered = 0
   let posted = 0
@@ -705,7 +705,7 @@ test('漫游结算重试按结果确定性路由:未知态只回读,确定失败
     page._finishPromise = null
     page.data.finish = { settleErr: err }
     page.retrySettle()
-    assert.equal(recovered, ['unknown', 'bootstrap', 'recovery'].indexOf(err) + 1, `${err} 必须走权威回读`)
+    assert.equal(recovered, ['unknown', 'bootstrap', 'recovery'].indexOf(err) + 1, `${err} 必须走权威刷新`)
     assert.equal(posted, 0, `${err} 不得走写请求重发`)
   }
 
@@ -715,7 +715,7 @@ test('漫游结算重试按结果确定性路由:未知态只回读,确定失败
   assert.equal(posted, 1, '确定的失败才允许重新结算')
 })
 
-test('F-W1-10:页面卸载后在途的队伍进度回包不会重新拉起 4 秒轮询,且轮询读取静默', async () => {
+test('F-W1-10:页面卸载后在途的队伍进度回包不会重新拉起 4 秒轮询，且轮询读取静默', async () => {
   const page = loadPage(PLAY_PAGE)
   page.data.activityId = 88
   const intervals = []

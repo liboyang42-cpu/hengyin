@@ -31,7 +31,7 @@
     <cy-skeleton class="feed-state" wx:if="{{feedState === 'loading'}}" type="card" count="{{3}}" />
     <cy-error load-failure class="feed-state cy-fade-in" wx:elif="{{feedState === 'error'}}" title="动态加载失败" sub="{{feedError}}" retry="重试" bind:retry="loadFeed" />
     <block wx:else>
-      <cy-progress-status class="talent-state" wx:if="{{feedState === 'refreshing'}}" title="正在更新帖文" sub="现有内容仍可查看" />
+      <cy-progress-status class="talent-state" wx:if="{{feedState === 'refreshing'}}" title="正在更新帖文" />
       <block wx:if="{{feed.length}}">
         <cy-post-card class="cy-fade-in" wx:for="{{feed}}" wx:key="id" post="{{item}}" index="{{index}}" light="{{isMerchantViewer}}" interactive-user interactive-club show-share
           accessibility-label="查看{{item.memberNickname || '城瘾玩家'}}的动态"
@@ -55,10 +55,10 @@
            (在合作中心 / 消息与动态里处理),这里就是完整的俱乐部列表。 -->
 
       <cy-skeleton wx:if="{{!clubsLoaded && !clubsError}}" type="card" count="{{3}}" />
-      <cy-error load-failure="{{!clubsLoginRequired && !clubsPermissionDenied}}" wx:elif="{{clubsError && clubsState !== 'stale-error'}}" fill title="{{clubsLoginRequired ? '登录后查看我的俱乐部' : clubsPermissionDenied ? '当前账号无法查看俱乐部' : '俱乐部列表加载失败'}}" sub="{{clubsErrorText || '网络恢复后可重试'}}" retry="{{clubsLoginRequired ? (clubsLoginPending ? '正在登录…' : '登录') : '重试'}}" bind:retry="retryClubs" />
+      <cy-error load-failure="{{!clubsLoginRequired && !clubsPermissionDenied}}" wx:elif="{{clubsError && clubsState !== 'stale-error'}}" fill title="{{clubsLoginRequired ? '登录后查看我的俱乐部' : clubsPermissionDenied ? '当前账号无法查看俱乐部' : '俱乐部列表加载失败'}}" sub="{{clubsErrorText}}" retry="{{clubsLoginRequired ? (clubsLoginPending ? '正在登录…' : '登录') : '重试'}}" bind:retry="retryClubs" />
       <block wx:else>
-        <cy-progress-status class="talent-state" wx:if="{{clubsState === 'refreshing'}}" title="正在更新俱乐部" sub="现有列表仍可查看" />
-        <cy-progress-status class="talent-state" wx:if="{{isMerchantViewer && merchantCityState === 'loading' && clubsLoaded && clubsState !== 'refreshing'}}" title="正在确认同城范围" sub="俱乐部列表仍可查看" />
+        <cy-progress-status class="talent-state" wx:if="{{clubsState === 'refreshing'}}" title="正在更新俱乐部" />
+        <cy-progress-status class="talent-state" wx:if="{{isMerchantViewer && merchantCityState === 'loading' && clubsLoaded && clubsState !== 'refreshing'}}" title="正在确认同城范围" />
         <cy-inline-error load-failure class="talent-state" wx:elif="{{isMerchantViewer && merchantCityState === 'error'}}" kind="{{merchantCityErrorKind}}" title="同城范围暂未确认" sub="{{merchantCityError}}" action="重试" bind:action="detectMerchant" />
 
       <!-- 2026-09-18 UI-19:不再分「我的 / 附近」两段 —— 这里就是一张完整的俱乐部列表。
@@ -75,8 +75,8 @@
           <cy-club-card class="club-card" wx:for="{{nearbyClubs}}" wx:key="id" club="{{item}}" interactive="{{true}}"
             data-id="{{item.id}}" bind:tap="goClubDetail" bind:action="onClubCardAction" aria-role="button" aria-label="打开俱乐部主页"  hover-class="cy-pressed" hover-stay-time="80"/>
         </view>
-        <cy-empty wx:elif="{{!isMerchantViewer}}" title="还没有俱乐部" sub="本城暂无正在组织探索的同好，创建你自己的俱乐部，成为第一个" cta="创建俱乐部" bindcta="onClubApply" />
-        <cy-empty wx:else title="本城还没有俱乐部" sub="本城暂无正在组织探索的同好" />
+        <cy-empty wx:elif="{{!isMerchantViewer}}" title="还没有俱乐部" cta="创建俱乐部" bindcta="onClubApply" />
+        <cy-empty wx:else title="本城还没有俱乐部" />
       </view>
       </block>
 
@@ -84,9 +84,9 @@
     <view class="club-manage-sub">成员管理</view>
     <scroll-view class="club-member-list" scroll-y>
       <cy-skeleton wx:if="{{clubMembersState === 'loading'}}" type="list" count="{{3}}" />
-      <cy-error load-failure wx:elif="{{clubMembersState === 'error'}}" title="成员没有加载出来" sub="{{clubMembersError}}" retry="重试" bind:retry="retryClubMembers" />
+      <cy-error load-failure wx:elif="{{clubMembersState === 'error'}}" title="成员加载失败" sub="{{clubMembersError}}" retry="重试" bind:retry="retryClubMembers" />
       <block wx:else>
-        <cy-progress-status class="talent-state" wx:if="{{clubMembersState === 'refreshing'}}" title="正在更新成员" sub="现有名单仍可查看" />
+        <cy-progress-status class="talent-state" wx:if="{{clubMembersState === 'refreshing'}}" title="正在更新成员" />
         <view wx:for="{{clubMembers}}" wx:key="memberId" class="club-member" aria-label="{{item.nickname || '城瘾玩家'}}{{item.isOwner ? '，主理人' : ''}}">
           <cy-avatar size="72" src="{{item.avatar || '/images/d_profile.png'}}" />
           <view class="club-member-info">
@@ -96,7 +96,7 @@
           </view>
           <view wx:if="{{!item.isOwner}}" class="club-member-remove" catchtap="removeClubMember" data-member-id="{{item.memberId}}" data-member-name="{{item.nickname || '这位成员'}}" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="移除{{item.nickname || '该成员'}}">移除</view>
         </view>
-        <cy-empty wx:if="{{clubMembersLoaded && clubMembersState === 'empty'}}" title="暂无成员" sub="该俱乐部还没有成员加入，分享俱乐部让同好加入" />
+        <cy-empty wx:if="{{clubMembersLoaded && clubMembersState === 'empty'}}" title="暂无成员" />
       </block>
     </scroll-view>
   </cy-sheet>

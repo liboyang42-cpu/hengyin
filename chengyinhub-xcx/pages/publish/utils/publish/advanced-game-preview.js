@@ -51,7 +51,7 @@ const BUILDERS = {
   album: c => c.images && c.images.length ? ({ type: 'album', images: c.images.map(image => ({url: image.url, line: image.line || ''})) }) : null,
   coinFlip: (c) => ({
     type: 'coinflip',
-    kicker: orBlank(c.kicker) || '抛一次,认结果',
+    kicker: orBlank(c.kicker) || '抛一次，认结果',
     headsLabel: orBlank(c.heads && c.heads.label) || '正面',
     headsAction: orBlank(c.heads && c.heads.action),
     tailsLabel: orBlank(c.tails && c.tails.label) || '反面',
@@ -116,7 +116,7 @@ const BUILDERS = {
   }),
   stopwatch: (c) => ({
     type: 'stopwatch',
-    kicker: orBlank(c.kicker) || '把手机拿到面前,随时可以开始',
+    kicker: orBlank(c.kicker) || '把手机拿到面前，随时可以开始',
     targetSeconds: num(c.targetSeconds, 10),
     toleranceMs: num(c.toleranceMs, 300),
     tries: num(c.tries, 0),

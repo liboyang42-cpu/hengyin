@@ -14,11 +14,11 @@
             retry="重新加载" bind:retry="retry" />
   <cy-empty wx:elif="{{pageState === 'no-permission'}}" fill size="lg" kind="no-permission"
             title="当前岗位不能结算竞猜"
-            sub="{{errorMessage || '结算会按规则发券,需要项目管理权限。请联系店主调整经营团队权限'}}"
+            sub="{{errorMessage || '请联系店主开通'}}"
             cta="返回工作台" bind:cta="onNavBack" />
   <cy-empty wx:elif="{{pageState === 'empty'}}" fill size="lg" kind="empty"
             title="没有等你给答案的竞猜"
-            sub="玩家押完之后,那一轮会出现在这里等你公布答案" />
+            />
 
   <scroll-view wx:elif="{{pageState === 'ready'}}" scroll-y class="pdm-scroll"
                enhanced show-scrollbar="{{false}}">

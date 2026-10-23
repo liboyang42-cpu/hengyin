@@ -194,7 +194,7 @@ test('换一块播时停掉上一块,不叠音', () => {
   const second = createdAudios[1]
   assert.equal(second.src, 'https://cdn/a2.mp3')
   assert.equal(second.played, 1)
-  assert.equal(page.data.storyAudioKey, '', '换块先停旧块,key 复位;新块 onPlay 后才指向新块')
+  assert.equal(page.data.storyAudioKey, '', '换块先停旧块,key 复位；新块 onPlay 后才指向新块')
   second.handlers.play()
   assert.equal(page.data.storyAudioKey, 'a2')
 })

@@ -17,7 +17,7 @@
     <view class="greet mi-in" style="transition-delay: 0ms;">
       <view class="greet-b">
         <view class="greet-line"><text>Hi，</text><text>{{storeName || '店主'}}</text></view>
-        <text class="greet-tip">欢迎回来，看看城瘾这段时间为你带来了什么</text>
+        
         <text class="gen-at" wx:if="{{loading}}" aria-role="status">正在更新经营数据…</text>
         <text class="gen-at" wx:elif="{{generatedAt}}">生成于 {{generatedAt}} · 次日更新</text>
       </view>
@@ -76,10 +76,10 @@
     <!-- 未知和明确为零是两件事：字段缺失只能重试，服务端明确全零才给业务空态。 -->
     <cy-state-shell wx:if="{{factState === 'unknown'}}" kind="data"
                     title="基础数据暂未完整返回"
-                    sub="不会用 0 代替缺失的到店、打卡或核销数据"
+                    sub="数据暂缺"
                     primary="重新加载" bind:primary="retry" />
     <cy-empty wx:elif="{{factState === 'empty'}}" kind="empty" title="还没有到店数据"
-              sub="先去合作中心承接一个主题，玩家到店打卡后这里就有数据了"
+              
               cta="去合作中心看看" bind:cta="goCoopCenter" />
 
     <block wx:else>
@@ -230,7 +230,7 @@
     <view wx:else class="ai-card ai-card--down">
       <text class="ai-down-title">{{factState === 'unknown' ? '基础数据暂未完整返回' : '基础数据可用'}}</text>
       <cy-inline-error load-failure class="ai-down-txt" kind="data"
-        title="智能解读暂不可用" sub="{{aiError || '请稍后重试'}}{{factState === 'unknown' ? '' : '，上方经营数据不受影响'}}" />
+        title="智能解读暂不可用" sub="{{aiError}}" />
       <view class="ai-down-action" bindtap="retry" hover-class="cy-pressed" hover-stay-time="80"
             aria-role="button" aria-label="重新生成经营解读">重新生成解读</view>
     </view>

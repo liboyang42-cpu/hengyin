@@ -77,7 +77,7 @@ Component({
         fail: function() {
           that.setData({
             error: true,
-            errorMsg: '网络异常，请检查网络后重试。',
+            errorMsg: '网络异常，请重试。',
             loading: false
           });
         }

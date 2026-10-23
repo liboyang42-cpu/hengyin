@@ -38,7 +38,7 @@ test('★卡包还没撕开时蒙版减淡,白字一露头就回到原来的深�
   const m = css.match(/\.fx-bg--pack \.fx-bg__veil\{[^}]*opacity:\s*([0-9.]+)/)
   assert.ok(m, '卡包阶段没减淡蒙版')
   assert.ok(Number(m[1]) > 0 && Number(m[1]) < 1, '蒙版透明度要在 0 和 1 之间')
-  assert.match(css, /\.fx-bg__veil\{[^}]*transition:\s*opacity/, '摘档时蒙版要渐变回去,不能一下跳黑')
+  assert.match(css, /\.fx-bg__veil\{[^}]*transition:\s*opacity/, '摘档时蒙版要渐变回去，不能一下跳黑')
 
   // 减淡档的判据要与「通行证头 / 小标题」白字自己的露脸判据逐字相同。
   // packOpen 是发牌全部落地才置的(约 2.4s 后),headIn 才是白字露脸那一拍:
@@ -48,7 +48,7 @@ test('★卡包还没撕开时蒙版减淡,白字一露头就回到原来的深�
   assert.ok(bg, '底图没有单独的减淡档')
   const textIn = [...wxml.matchAll(/class="fx-(?:pass|lhd) fx-veil \{\{([^}]*)\}\}/g)].map((x) => cond(x[1]))
   assert.equal(textIn.length, 2, '通行证头和小标题的露脸判据各一条')
-  assert.notEqual(cond(bg), 'packOpen', '只判 packOpen:发牌那 ~2.4s 白字已露脸、蒙版还浅,亮封面上会糊')
+  assert.notEqual(cond(bg), 'packOpen', '只判 packOpen:发牌那 ~2.4s 白字已露脸、蒙版还浅，亮封面上会糊')
   for (const t of textIn) {
     assert.equal(cond(bg), t, '底图减淡档和白字露脸不是同一判据 —— 一边改了另一边就又错开')
   }

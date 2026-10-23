@@ -18,13 +18,13 @@ function openScene(id, params = {}) {
   try {
     scene = getScene(id, params)
   } catch (_) {
-    toast('场景暂时打不开')
+    toast('场景无法打开')
     return
   }
   wx.navigateTo({
     url: pageUrl(scene),
     fail() {
-      toast('场景暂时打不开')
+      toast('场景无法打开')
     },
   })
 }

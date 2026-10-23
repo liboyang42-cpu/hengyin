@@ -132,7 +132,7 @@ Page({
           toast('网络没连上，显示上次读到的状态');
           return;
         }
-        this.setData({ phase: 'error', loadErrKind: 'network', loadError: '网络没连上，连接恢复后可以重试。' });
+        this.setData({ phase: 'error', loadErrKind: 'network', loadError: '网络没连上，请重试' });
       },
     });
   },
@@ -178,7 +178,7 @@ Page({
           toast('网络没连上，显示上次读到的状态');
           return;
         }
-        this.setData({ phase: 'error', loadErrKind: 'network', loadError: '网络没连上，连接恢复后可以重试。' });
+        this.setData({ phase: 'error', loadErrKind: 'network', loadError: '网络没连上，请重试' });
       },
     });
   },
@@ -188,7 +188,7 @@ Page({
     const view = {
       title: state.title || '未命名官方活动',
       statusText: Number.isInteger(state.status) ? (activityStatusText(state.status, 'owner') || '状态待确认') : '状态待确认',
-      controlText: CONTROL_TEXT[state.controlState] || '控制状态待确认',
+      controlText: CONTROL_TEXT[state.controlState] || '—',
       paused: state.controlState === rules.CONTROL_PAUSED,
       pausedReason: state.pausedReason,
       resumeNote: state.resumeNote,
@@ -332,7 +332,7 @@ Page({
     const verdict = readable === true ? rules.verifyReadBack(action, this._state) : (readable === null ? 'unread' : 'mismatch');
     if (verdict === 'confirmed') {
       if (action !== 'schedule') this.setData({ forms: this._withClearedForm(action) });
-      this.setData({ busyAction: '', result: { action, tone: 'success', title: label + '已生效', sub: '已按平台最新记录刷新。' } });
+      this.setData({ busyAction: '', result: { action, tone: 'success', title: label + '已生效', sub: '已刷新' } });
       dc.done('');
       return;
     }
@@ -340,10 +340,10 @@ Page({
     let result;
     if (unknown) {
       result = verdict === 'unread'
-        ? { action, tone: 'unknown', title: label + '结果未确认', sub: '网络中断，暂时不知道平台是否已执行，也没读到最新状态。请稍后下拉刷新核对，再决定是否重新操作。' }
-        : { action, tone: 'unknown', title: label + '结果未确认', sub: '这次提交没有收到明确答复，当前显示的是刚读到的平台记录，请以它为准再决定是否重新操作。' };
+        ? { action, tone: 'unknown', title: label + '结果未确认', sub: '请下拉刷新后再操作' }
+        : { action, tone: 'unknown', title: label + '结果未确认', sub: '以当前显示的记录为准' };
     } else {
-      result = { action, tone: 'unknown', title: label + '已受理，但状态未刷新', sub: verdict === 'unread' ? '回读最新状态失败，请下拉刷新核对。' : '回读到的活动状态与预期不一致，请下拉刷新；仍不一致请联系平台处理。' };
+      result = { action, tone: 'unknown', title: label + '已受理，但状态未刷新', sub: verdict === 'unread' ? '状态刷新失败，请下拉刷新' : '活动状态与预期不一致，请下拉刷新；仍有问题请联系平台' };
     }
     this.setData({ busyAction: '', result });
   },

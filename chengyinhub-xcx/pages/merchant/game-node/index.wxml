@@ -19,7 +19,7 @@
 
   <cy-skeleton wx:if="{{viewState === 'loading'}}" class="gn-state" type="card" count="{{3}}" />
   <cy-empty wx:elif="{{viewState === 'empty'}}" class="gn-state cy-fade-in" kind="empty" fill="{{true}}" size="lg"
-            title="暂无本站任务" sub="俱乐部或主办方发出站点邀请后，会显示在这里" />
+            title="暂无本站任务" />
   <cy-error wx:elif="{{viewState === 'business-error'}}" class="gn-state cy-fade-in" fill="{{true}}" size="lg"
             title="暂时不能查看本站" sub="{{errorMessage}}" bind:retry="retryLoad" auto-back />
   <cy-error load-failure wx:elif="{{viewState === 'network-error'}}" class="gn-state cy-fade-in" fill="{{true}}" size="lg"
@@ -39,13 +39,13 @@
         <view class="gn-hero-head">
           <view class="gn-hero-copy">
             <text class="gn-eyebrow">{{station.stationCode || '本站任务'}}</text>
-            <text class="gn-title">{{station.nodeName || '未命名站点'}}</text>
+            <text class="gn-title">{{station.nodeName || '未命名节点'}}</text>
           </view>
           <text class="gn-status gn-status--{{summary.tone}}">{{station.statusText}}</text>
         </view>
         <text class="gn-summary">{{summary.text}}</text>
         <view class="gn-facts">
-          <view class="gn-fact"><text class="gn-fact-value">{{station.capacity || 0}}</text><text class="gn-fact-label">接待容量</text></view>
+          <view class="gn-fact"><text class="gn-fact-value">{{station.capacity != null ? station.capacity : '—'}}</text><text class="gn-fact-label">接待容量</text></view>
           <view class="gn-fact"><text class="gn-fact-value">{{station.pendingVerificationCount}}</text><text class="gn-fact-label">待核验</text></view>
           <view class="gn-fact"><text class="gn-fact-value">{{station.playable ? '可接待' : '不可接待'}}</text><text class="gn-fact-label">玩家状态</text></view>
         </view>
@@ -57,7 +57,7 @@
         <view class="gn-section-head">
           <!-- 稿 469:1002 的标题是「这一站怎么接待」——「本站执行卡」是内部叫法,
                商家看不出它跟自己今晚要干的事有什么关系。 -->
-          <view><text class="gn-section-title">这一站怎么接待</text><text class="gn-section-sub">商家只做什么 —— 剧情你不用知道</text></view>
+          <view><text class="gn-section-title">这一站怎么接待</text><text class="gn-section-sub">商家须知</text></view>
         </view>
         <block wx:if="{{station.playerTask}}">
           <!-- 稿 469:1002 的顺序是「你要做的 → 玩家会做什么 → 不能说的」。
@@ -77,14 +77,14 @@
           </view>
           <!-- 稿 469:1002 结尾这句是整张卡的理由:说清「为什么不给你看剧情」,
                否则「不能说的」读起来像在防着商家。 -->
-          <text class="gn-runbook-why">这三条会毁掉后面几站的体验 —— 主办方设计的剧情你看不到,也不需要看到。</text>
+          <text class="gn-runbook-why">这三条会毁掉后面几站的体验 —— 主办方设计的剧情你看不到，也不需要看到。</text>
         </block>
         <text class="gn-muted" wx:else>主办方尚未配置本站任务，当前不要引导玩家开始。</text>
       </view>
 
       <view class="gn-card" wx:if="{{station.canAccept || station.canDecline}}">
         <view class="gn-section-head">
-          <view><text class="gn-section-title">站点邀请</text><text class="gn-section-sub">接受后才能填写准备清单并开放本站</text></view>
+          <view><text class="gn-section-title">节点邀请</text><text class="gn-section-sub">接受后可填写准备清单</text></view>
         </view>
         <view class="gn-dual-actions">
           <cy-btn class="gn-action" wx:if="{{station.canDecline}}" variant="secondary" disabled="{{writeState !== 'idle'}}" loading="{{writeState === 'submitting'}}" bindtap="openDeclineSheet">拒绝邀请</cy-btn>
@@ -94,7 +94,7 @@
 
       <view class="gn-card" wx:if="{{station.canReady}}">
         <view class="gn-section-head">
-          <view><text class="gn-section-title">准备清单</text><text class="gn-section-sub">全部完成后，本站才可进入准备完成状态</text></view>
+          <view><text class="gn-section-title">准备清单</text></view>
         </view>
         <view class="gn-check-row" wx:for="{{readyDraft.checklist}}" wx:key="code"
               bindtap="onChecklistToggle" data-index="{{index}}" aria-role="checkbox" aria-checked="{{item.checked}}" hover-class="cy-pressed" hover-stay-time="80">
@@ -129,7 +129,7 @@
       </view>
 
       <view class="gn-card" wx:if="{{station.status === 'PAUSED'}}">
-        <view class="gn-section-head"><view><text class="gn-section-title">暂停信息</text><text class="gn-section-sub">玩家端不会把暂停站点显示为可接待</text></view></view>
+        <view class="gn-section-head"><view><text class="gn-section-title">暂停信息</text></view></view>
         <view class="gn-info-row"><text>暂停原因</text><text>{{station.pauseReason || station.pauseReasonCode || '未说明'}}</text></view>
         <view class="gn-info-row"><text>预计恢复</text><text>{{station.resumeEta || '待确认'}}</text></view>
         <view class="gn-info-row"><text>备用方案</text><text>{{station.fallbackPlanCode || '未设置'}}{{station.fallbackPlanVersion ? ' v' + station.fallbackPlanVersion : ''}}</text></view>
@@ -139,7 +139,7 @@
       </view>
 
       <view class="gn-card" wx:if="{{station.canPause || station.canVerify || station.playable}}">
-        <view class="gn-section-head"><view><text class="gn-section-title">本站运行</text><text class="gn-section-sub">只处理本站当前可执行的动作</text></view></view>
+        <view class="gn-section-head"><view><text class="gn-section-title">本站运行</text></view></view>
         <cy-btn wx:if="{{station.playable}}" variant="primary" disabled="{{writeState !== 'idle'}}" bindtap="showLiveCheckin">出示打卡码</cy-btn>
         <cy-btn wx:if="{{station.canPause}}" class="gn-verify-actions" variant="secondary" disabled="{{writeState !== 'idle'}}" bindtap="openPauseSheet">暂停接待</cy-btn>
         <view class="gn-dual-actions gn-verify-actions" wx:if="{{station.canVerify}}">
@@ -149,22 +149,22 @@
       </view>
 
       <view class="gn-card">
-        <view class="gn-section-head"><view><text class="gn-section-title">最近操作</text><text class="gn-section-sub">这里只展示已经确认完成的操作</text></view></view>
+        <view class="gn-section-head"><view><text class="gn-section-title">最近操作</text></view></view>
         <view class="gn-receipt" wx:for="{{recentReceipts}}" wx:key="requestId">
-          <view><text class="gn-receipt-title">{{item.actionText}}</text><text class="gn-receipt-sub">第 {{item.revision}} 版{{item.replayed ? ' · 本次请求已处理，无需重复操作' : ''}}</text></view>
+          <view><text class="gn-receipt-title">{{item.actionText}}</text><text class="gn-receipt-sub">第 {{item.revision}} 版{{item.replayed ? ' · 已处理' : ''}}</text></view>
           <text class="gn-receipt-outcome">{{item.outcomeText}}</text>
         </view>
         <cy-empty wx:if="{{!recentReceipts.length}}" size="sm" title="本次进入页面后还没有已确认操作" />
       </view>
 
       <view class="gn-card">
-        <view class="gn-section-head"><view><text class="gn-section-title">本站复盘</text><text class="gn-section-sub">只看自己这一站 · 缺的指标不显示为零</text></view></view>
+        <view class="gn-section-head"><view><text class="gn-section-title">本站复盘</text></view></view>
         <block wx:if="{{recap}}">
           <view class="gn-info-row"><text>到站玩家</text><text>{{recap.arrivedPlayers}}</text></view>
           <view class="gn-info-row"><text>任务提交</text><text>{{recap.submissionCount}}</text></view>
           <view class="gn-info-row"><text>核验通过 / 驳回</text><text>{{recap.approvedCount}} / {{recap.rejectedCount}}</text></view>
           <view class="gn-info-row"><text>证据已记录</text><text>{{recap.recordedCount}}</text></view>
-          <view class="gn-info-row"><text>正常完成 / 兜底完成</text><text>{{recap.normalCompletedCount}} / {{recap.fallbackCompletedCount}}</text></view>
+          <view class="gn-info-row"><text>正常完成 / 保底完成</text><text>{{recap.normalCompletedCount}} / {{recap.fallbackCompletedCount}}</text></view>
           <view class="gn-info-row"><text>暂停事件</text><text>{{recap.pauseEventCount}}</text></view>
           <view class="gn-info-row"><text>公开授权内容</text><text>{{recap.authorizedContentCount}}</text></view>
           <text class="gn-muted">仅显示本站安全聚合，不公开玩家内容。</text>
@@ -174,9 +174,9 @@
     </view>
   </scroll-view>
 
-  <cy-sheet show="{{declineSheetShow}}" title="拒绝站点邀请" bind:close="closeDeclineSheet">
+  <cy-sheet show="{{declineSheetShow}}" title="拒绝节点邀请" bind:close="closeDeclineSheet">
     <view class="gn-sheet">
-      <text class="gn-sheet-tip">请选择拒绝原因，主办方会看到</text>
+      <text class="gn-sheet-tip">拒绝原因将告知主办方</text>
       <view class="gn-choice-grid">
         <view class="gn-choice {{declineDraft.reasonCode === item.code ? 'gn-choice--on' : ''}}"
               wx:for="{{declineReasons}}" wx:key="code" data-code="{{item.code}}" bindtap="onDeclineReasonTap" hover-class="cy-pressed" hover-stay-time="80">{{item.label}}</view>
@@ -187,7 +187,7 @@
 
   <cy-sheet show="{{pauseSheetShow}}" title="暂停接待" bind:close="closePauseSheet">
     <view class="gn-sheet">
-      <text class="gn-sheet-tip">暂停后玩家端将立即看到本站不可接待</text>
+      <text class="gn-sheet-tip">暂停后玩家立即不可预约本站</text>
       <view class="gn-choice-grid">
         <view class="gn-choice {{pauseDraft.reasonCode === item.code ? 'gn-choice--on' : ''}}"
               wx:for="{{pauseReasons}}" wx:key="code" data-code="{{item.code}}" bindtap="onPauseReasonTap" hover-class="cy-pressed" hover-stay-time="80">{{item.label}}</view>
@@ -252,7 +252,7 @@
   state="{{checkinQrState}}"
   qr="{{checkinQrUrl}}"
   title="本站打卡码"
-  desc="请让玩家扫这一张。扫过即作废，请再出示一张新的。"
+  desc="一次有效，扫后自动更新"
   countdown="{{checkinQrState === 'ready' ? checkinCountdown + 's 后自动换新' : ''}}"
   error-text="{{checkinErr || '打卡码暂时没能生成'}}"
   mask-closable="{{true}}"

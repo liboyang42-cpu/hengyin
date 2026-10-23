@@ -156,19 +156,19 @@ Page({
         if (res.code === 200 || res.code === '200') {
           this.buildBoard(res.data || {}, metric)
         } else {
-          this.setData({ errorMsg: (app.getRequestErrorMessage && app.getRequestErrorMessage(res, '排行榜没有加载出来')) || '排行榜没有加载出来' })
+          this.setData({ errorMsg: (app.getRequestErrorMessage && app.getRequestErrorMessage(res, '排行榜加载失败')) || '排行榜加载失败' })
         }
       },
       fail: (res, statusCode) => {
         if (recover(res, statusCode) || !isCurrent()) return
         if (denied(res, statusCode)) return
-        this.setData({ errorMsg: '排行榜没有加载出来' })
+        this.setData({ errorMsg: '排行榜加载失败' })
       },
       successStatusAbnormal: (error, statusCode) => {
         if (recover(error, statusCode) || !isCurrent()) return
         if (denied(error, statusCode)) return
         this.setData({
-          errorMsg: (app.getRequestErrorMessage && app.getRequestErrorMessage(error, '排行榜没有加载出来')) || '排行榜没有加载出来'
+          errorMsg: (app.getRequestErrorMessage && app.getRequestErrorMessage(error, '排行榜加载失败')) || '排行榜加载失败'
         })
       },
       complete: () => {
@@ -180,7 +180,7 @@ Page({
 
   buildBoard(data, metric) {
     if (!isRecord(data) || !isRecordList(data.list) || (data.me != null && !isRecord(data.me))) {
-      this.setData({ errorMsg: '排行榜没有加载出来' })
+      this.setData({ errorMsg: '排行榜加载失败' })
       return
     }
     const unit = (metric || this.data.metric) === 'exp' ? 'EXP' : '积分'

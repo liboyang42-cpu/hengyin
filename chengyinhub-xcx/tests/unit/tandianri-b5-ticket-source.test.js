@@ -99,7 +99,7 @@ test('negative control:同一期出现两家不同俱乐部的标记 ⇒ 不仲�
   const second = ts.captureFromQuery({ id: '77', sourceClubId: '8', clubCode: 'B' })
   assert.equal(second.captured, false)
   assert.equal(second.reason, 'CONFLICT')
-  assert.deepEqual(ts.attributionPayload(77), {}, '冲突时既不许挑一家,也不许留下半个审计码')
+  assert.deepEqual(ts.attributionPayload(77), {}, '冲突时既不许挑一家，也不许留下半个审计码')
 })
 
 test('negative control:冲突墓碑必须持久化,第三次捕获不能让任一家赢回来', () => {

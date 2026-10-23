@@ -199,7 +199,7 @@ test('onLoad:AI 草稿当场生效、被消费掉、且不触发 starter 灌注'
   assert.equal(p.data.formData.chapters[0].nodes.length, 0, '空剧情章节里的 AI 节点不能直接冒充正式节点');
   assert.equal(p.data.pendingMaterials.length, 1);
   assert.equal(p.data.pendingMaterials[0].kind, 'node');
-  assert.equal('ai_topic_draft:m42' in storage, false, '草稿必须被消费,不许滞留到下次进页');
+  assert.equal('ai_topic_draft:m42' in storage, false, '草稿必须被消费，不许滞留到下次进页');
   assert.equal(storage.topic_starter_prefilled_v1, undefined, 'AI 入口不该触发 starter 灌注');
   const persisted = Object.values(storage).find(value => value && value.draftUuid && value.formData);
   assert.equal(persisted.formData.name, 'AI 生成的路线', '消费 AI 草稿后必须立即接力进完整草稿信封，杀进程也不能丢');
@@ -364,9 +364,9 @@ test('★ parse_error 是「AI 自己炸了」→ 只降级成 advisory,不许�
   });
 
   assert.equal(p.data.publishCheck.blocking.length, 0,
-    'parse_error 虽然 level=error,但错在 AI 不在用户内容,阻断=可用性事故');
+    'parse_error 虽然 level=error,但错在 AI 不在用户内容，阻断=可用性事故');
   assert.ok(p.data.publishCheck.advisory.some((a) => a.label === 'AI 响应格式异常,请重试'),
-    'parse_error 要以建议项呈现,不能静默吞掉');
+    'parse_error 要以建议项呈现，不能静默吞掉');
 
   sent = [];
   p.confirmPublishCheck();
@@ -383,7 +383,7 @@ test('★ 预检频控超限 → 降级放行 + 友好文案(包含匹配,不硬
 
   const labels = p.data.publishCheck.advisory.map((a) => a.label);
   assert.equal(p.data.publishCheck.blocking.length, 0);
-  assert.ok(labels.some((l) => l.indexOf('AI 次数已用完') >= 0), '频控要给专门的友好文案,不能落到通用兜底');
+  assert.ok(labels.some((l) => l.indexOf('AI 次数已用完') >= 0), '频控要给专门的友好文案，不能落到通用保底');
 
   sent = [];
   p.confirmPublishCheck();
@@ -411,7 +411,7 @@ test('预检防连点:在途再次 submitForm 不重复烧 AI 次数', () => {
   p.submitForm();
   p.submitForm();
   assert.equal(sent.filter((s) => s.url === '/api/ai/safety/precheck').length, 1,
-    '频控 20/天 是全端点共用一池,连点必须只发一次');
+    '频控 20/天 是全端点共用一池，连点必须只发一次');
 });
 
 // ★★ HTTP statusCode != 200(部署期 502 窗口:本仓库合并即自动部署,「200→502→200」是明写的既有现象)。
@@ -428,7 +428,7 @@ test('★ 预检遇 HTTP 502(success/fail 都不触发,只有 complete)→ 不�
   const req = sent.find((s) => s.url === '/api/ai/safety/precheck');
   assert.ok(req, '第一次点发布应该发出预检');
   assert.equal(typeof req.complete, 'function',
-    '必须传 complete —— 它是 statusCode!=200 时唯一还会跑的回调,不传就没有任何重置时机');
+    '必须传 complete —— 它是 statusCode!=200 时唯一还会跑的回调，不传就没有任何重置时机');
 
   // 模拟 request-client 的 502 分支:success/fail 都不调,只调 complete
   req.complete({ statusCode: 502 });
@@ -437,7 +437,7 @@ test('★ 预检遇 HTTP 502(success/fail 都不触发,只有 complete)→ 不�
   sent = [];
   p.submitForm();
   assert.equal(sent.filter((s) => s.url === '/api/ai/safety/precheck').length, 1,
-    '502 之后发布按钮必须还能用;若这里是 0,说明 _prechecking 泄漏成永久 true = 发布路被 AI 锁死');
+    '502 之后发布按钮必须还能用；若这里是 0，说明 _prechecking 泄漏成永久 true = 发布路被 AI 锁死');
 });
 
 /* 2026-09-06:预检的在途反馈**用仓库唯一的 cyLoading**(utils/loading.js 明写
@@ -456,9 +456,9 @@ test('★ 预检遇 HTTP 502 → 必须收掉在途遮罩,否则挡死整页', (
   const completeBlock = precheck.slice(precheck.indexOf('complete:'), precheck.indexOf('success:'));
   assert.ok(completeBlock.length > 0, 'complete 段必须切得出来');
   assert.match(completeBlock, /cyLoading\.hide\(\)/,
-    '收遮罩只能放 complete —— 502 时 success/fail 一个都不跑,放别处就是永久遮罩');
+    '收遮罩只能放 complete —— 502 时 success/fail 一个都不跑，放别处就是永久遮罩');
   assert.match(completeBlock, /_prechecking = false/,
-    '在途守卫也只能在 complete 重置,否则一次 502 就把发布按钮变哑巴');
+    '在途守卫也只能在 complete 重置，否则一次 502 就把发布按钮变哑巴');
 });
 
 
@@ -476,7 +476,7 @@ test('★ 发布者实名没登记 → 确认发布不放行;登记成功那一�
 
   sent = [];
   p.confirmPublishCheck();
-  assert.equal(sent.length, 0, '实名没登记时「确认发布」必须是空操作(不静默放行,也不硬发)');
+  assert.equal(sent.length, 0, '实名没登记时「确认发布」必须是空操作(不静默放行，也不硬发)');
 
   Object.assign(p.data, {
     identityRealName: '林野',
@@ -516,9 +516,9 @@ test('★ 实名登记失败 → 弹层留在原地报错,字段不丢,主题不
   assert.equal(sent[0].url, '/api/publisher/identity');
   sent[0].success({ code: 500, msg: '该证件已绑定其他账号' });
   assert.equal(p.data.identityError, '该证件已绑定其他账号');
-  assert.equal(p.data.publishCheck.show, true, '报错要让位给同一层的字段,不能把弹层关掉');
+  assert.equal(p.data.publishCheck.show, true, '报错要让位给同一层的字段，不能把弹层关掉');
   assert.equal(createdCount(), 0);
-  assert.equal(p.data.identityReady, true, '三项还在,置灰键不该反过来又被点亮成假可用');
+  assert.equal(p.data.identityReady, true, '三项还在，置灰键不该反过来又被点亮成假可用');
 });
 
 

@@ -83,7 +83,7 @@ Component({
         filePath,
         success() {
           that._saving = false
-          toast('已存到相册，可打印后贴在站点')
+          toast('已存到相册，可打印后贴在节点')
           that.triggerEvent('saved')
         },
         fail(err) {

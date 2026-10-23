@@ -47,7 +47,7 @@
       </block>
 
       <block wx:elif="{{state === 'done'}}">
-        <text class="ai__status">已生成,可继续编辑</text>
+        <text class="ai__status">已生成，可继续编辑</text>
         <view class="ai__ghost" catchtap="onRegenerate" hover-class="cy-pressed" hover-stay-time="80">换一版</view>
       </block>
 

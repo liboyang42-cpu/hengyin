@@ -36,7 +36,7 @@ function answer(requests, list) {
 }
 
 for (const pg of PAGES) {
-  test('BL-202 ' + pg.rel + ':onShow 静默回读后保留已展开的 40 条', () => {
+  test('BL-202 ' + pg.rel + ':onShow 静默刷新后保留已展开的 40 条', () => {
     const h = loadPage(pg.rel)
     try {
       const list = Array.from({ length: 50 }, (_, i) => pg.row(i))
@@ -46,7 +46,7 @@ for (const pg of PAGES) {
       assert.equal(h.p.data.rows.length, 40)
       h.p.onShow()
       answer(h.requests, list)
-      assert.equal(h.p.data.rows.length, 40, '静默回读不缩回')
+      assert.equal(h.p.data.rows.length, 40, '静默刷新不缩回')
       h.p.onPullDownRefresh()
       answer(h.requests, list)
       assert.equal(h.p.data.rows.length, 20, '下拉刷新仍重置为首页')

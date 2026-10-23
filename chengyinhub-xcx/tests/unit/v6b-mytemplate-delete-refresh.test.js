@@ -62,7 +62,7 @@ test('V6b CX-12：确认后只删被点的那一条一次，扣 total 并回读'
   deletes(h.requests)[0].complete()
   assert.deepEqual(h.page.data.list.map(r => r.id), [7])
   assert.equal(h.page.data.total, 1)
-  assert.ok(h.requests.some(r => r.url === '/api/template/my-list'), '删除成功要回读列表')
+  assert.ok(h.requests.some(r => r.url === '/api/template/my-list'), '删除成功要刷新列表')
 })
 
 test('V6b CX-12 缺陷复现：有内容时刷新失败被静默吞掉，旧列表被当成最新展示', () => {
@@ -70,7 +70,7 @@ test('V6b CX-12 缺陷复现：有内容时刷新失败被静默吞掉，旧列�
   h.page.data.list = [{ id: 7, title: '已显示的玩法' }]
   h.page.refreshList()
   const req = h.requests.at(-1)
-  req.fail({ errMsg: '网络开小差了' })
+  req.fail({ errMsg: '网络异常，请重试' })
   req.complete()
   assert.deepEqual(h.page.data.list.map(r => r.id), [7], '旧内容要保留')
   const flagged = Object.keys(h.page.data).some(k => /stale|refresh(Error|Failed)/i.test(k) && h.page.data[k])

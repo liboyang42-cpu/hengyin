@@ -23,7 +23,7 @@ test('★详情面板与玩家场景弹窗(cy-scene-sheet)同一副外观', () =
   assert.match(sheet, /left:\s*0/, '面板要贴满左边')
   assert.match(sheet, /right:\s*0/, '面板要贴满右边')
   assert.ok(!/92vw|max-width/.test(sheet), '面板还是居中浮着的窄卡')
-  assert.match(sheet, /background:\s*var\(--cy-comp-sheet-player-bg\)/, '面板底色要读玩家弹层令牌(cover-view 做不了毛玻璃,取实色档)')
+  assert.match(sheet, /background:\s*var\(--cy-comp-sheet-player-bg\)/, '面板底色要读玩家弹层令牌(cover-view 做不了毛玻璃，取实色档)')
   assert.match(sheet, /border:\s*none/, '用户要求黑色弹窗不带白色描边')
   assert.match(sheet, /border-radius:\s*var\(--cy-comp-sheet-radius\) var\(--cy-comp-sheet-radius\) 0 0/)
   const hd = rule('.bw-sh-hd')
@@ -48,7 +48,7 @@ test('★信息行是面内卡分组行,不用 cover-view 不认的 grid', () =>
 
 test('★详情保留系统字体和滚动上限，短内容不撑满，长标题完整换行', () => {
   const sheet = rule('.bw-sheet')
-  assert.match(sheet, /font-family:\s*-apple-system, BlinkMacSystemFont, "Inter", "PingFang SC", sans-serif/, '页面根是等宽字体,弹窗要改回场景弹窗的系统字体')
+  assert.match(sheet, /font-family:\s*-apple-system, BlinkMacSystemFont, "Inter", "PingFang SC", sans-serif/, '页面根是等宽字体，弹窗要改回场景弹窗的系统字体')
   assert.match(rule('.bw-veil'), /background:\s*var\(--cy-comp-sheet-player-overlay\)/, '遮罩要用玩家弹层那档(.30),不是 cy-sheet 的 .56')
   assert.doesNotMatch(sheet, /border-(left|right|top):/)
   assert.doesNotMatch(sheet, /(^|[;\s])height:/, '短内容不能固定撑成全屏')

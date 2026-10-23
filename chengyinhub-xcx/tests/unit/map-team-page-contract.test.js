@@ -183,7 +183,7 @@ test('errorCode=TEAM_FULL → 关卡 + 从地图移除 + 失败半屏;没有 err
   tapTeam(p2, 7)
   p2.onCardPrimary()
   requests.filter((r) => r.url === '/api/team/apply').pop().success({ code: 500, msg: 'TEAM_FULL 已满' })
-  assert.equal(p2.data.current.card.mode, 'apply', '只有文案里写了码,不能按文案分支')
+  assert.equal(p2.data.current.card.mode, 'apply', '只有文案里写了码，不能按文案分支')
   assert.equal(p2.data.resultSheet.why, 'TEAM_FULL 已满')
 })
 

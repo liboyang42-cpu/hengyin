@@ -71,16 +71,16 @@ function createExplorationGoalsClient(options) {
     try { sync(); } catch (error) { return Promise.reject(error); }
     if (!input || !/^[A-Za-z0-9_-]{16,64}$/.test(input.requestId || '') || !metrics.includes(input.metric)
       || !Number.isInteger(input.target) || input.target < 1 || input.target > 100 || !calendar(input.startDate)
-      || !calendar(input.endDateExclusive) || input.startDate >= input.endDateExclusive) return Promise.reject(new Error('目标参数不合法'));
+      || !calendar(input.endDateExclusive) || input.startDate >= input.endDateExclusive) return Promise.reject(new Error('目标设置无效'));
     const draft = {};
     for (const key of ['requestId', 'metric', 'target', 'startDate', 'endDateExclusive']) draft[key] = input[key];
     const fingerprint = JSON.stringify(draft);
-    if (pending && pending.fingerprint !== fingerprint) return Promise.reject(new Error('请先恢复上一目标的原请求'));
+    if (pending && pending.fingerprint !== fingerprint) return Promise.reject(new Error('请先完成上一个目标的操作'));
     if (flight) return flight;
     const attempt = pending || { input: draft, fingerprint, unknown: false }; pending = attempt;
     const promise = request('/api/exploration-goals/create', 'POST', draft).then(response => {
       response.check(); const clean = goal(response.data);
-      if (!matches(clean, draft)) throw new Error('创建响应与原请求不匹配');
+      if (!matches(clean, draft)) throw new Error('创建结果异常，请重试');
       if (pending === attempt) pending = null;
       return clean;
     }).catch(error => {
@@ -100,7 +100,7 @@ function createExplorationGoalsClient(options) {
       const attempt = pending;
       return request('/api/exploration-goals/receipt', 'GET', { requestId }).then(response => {
         response.check(); const clean = goal(response.data);
-        if (clean.requestId !== requestId || (attempt && attempt.input.requestId === requestId && !matches(clean, attempt.input))) throw new Error('目标结果与原操作不匹配');
+        if (clean.requestId !== requestId || (attempt && attempt.input.requestId === requestId && !matches(clean, attempt.input))) throw new Error('操作结果异常，请重试');
         if (pending === attempt && attempt && attempt.input.requestId === requestId) pending = null;
         return clean;
       });
@@ -108,17 +108,17 @@ function createExplorationGoalsClient(options) {
     detail(id) {
       try { sync(); } catch (error) { return Promise.reject(error); }
       if (!identifier(id)) return Promise.reject(new Error('目标编号须为字符串'));
-      return request('/api/exploration-goals/detail', 'GET', { id }, ++readEpoch).then(response => { response.check(); const clean = goal(response.data); if (clean.id !== id) throw new Error('目标编号不匹配'); return clean; });
+      return request('/api/exploration-goals/detail', 'GET', { id }, ++readEpoch).then(response => { response.check(); const clean = goal(response.data); if (clean.id !== id) throw new Error('操作结果异常，请重试'); return clean; });
     },
     list(beforeId, limit) {
       try { sync(); } catch (error) { return Promise.reject(error); }
-      if ((beforeId != null && !identifier(beforeId)) || (limit != null && (!Number.isInteger(limit) || limit < 1 || limit > 50))) return Promise.reject(new Error('分页参数不合法'));
+      if ((beforeId != null && !identifier(beforeId)) || (limit != null && (!Number.isInteger(limit) || limit < 1 || limit > 50))) return Promise.reject(new Error('加载失败，请重试'));
       return request('/api/exploration-goals/list', 'GET', Object.assign({ limit: limit || 20 }, beforeId != null ? { beforeId } : {}), ++readEpoch).then(response => {
         response.check(); const value = response.data;
         if (!Array.isArray(value.items) || value.items.length > (limit || 20) || typeof value.hasMore !== 'boolean'
           || (value.hasMore ? !identifier(value.nextBeforeId) || !value.items.length : value.nextBeforeId !== null)) throw new Error('目标列表响应未确认');
         const items = value.items.map(goal);
-        if (new Set(items.map(item => item.id)).size !== items.length || (value.hasMore && value.nextBeforeId !== items[items.length - 1].id)) throw new Error('目标分页游标不匹配');
+        if (new Set(items.map(item => item.id)).size !== items.length || (value.hasMore && value.nextBeforeId !== items[items.length - 1].id)) throw new Error('加载失败，请重试');
         return { items, hasMore: value.hasMore, nextBeforeId: value.nextBeforeId };
       });
     },

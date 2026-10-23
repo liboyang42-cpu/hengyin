@@ -60,7 +60,7 @@ Page({
         }
         this.loadList();
       },
-      fail: () => this.setData({ pageState: 'error', errorMessage: '网络连接失败，请稍后重试' }),
+      fail: () => this.setData({ pageState: 'error', errorMessage: '网络异常，请重试' }),
     });
   },
 
@@ -110,7 +110,7 @@ Page({
       fail: () => {
         if (!settle()) return;
         if (keep) toast('刷新失败，稍后再试');
-        else this.setData({ pageState: 'error', errorMessage: '网络连接失败，请稍后重试' });
+        else this.setData({ pageState: 'error', errorMessage: '网络异常，请重试' });
       },
     });
   },
@@ -152,7 +152,7 @@ Page({
       },
       fail: () => {
         if (seq !== this._detailSeq) return;
-        this.setData({ detailState: 'error', detailError: '网络连接失败，请稍后重试' });
+        this.setData({ detailState: 'error', detailError: '网络异常，请重试' });
       },
     });
   },

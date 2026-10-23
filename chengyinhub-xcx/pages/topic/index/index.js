@@ -49,7 +49,7 @@ function walkText(prev, node) {
   if (!a || !b) return '';
   const meters = haversine(a.latitude, a.longitude, b.latitude, b.longitude);
   if (!Number.isFinite(meters) || meters <= 0) return '';
-  return '直线约 ' + distanceText(meters) + ' · 步行用时待确认';
+  return '直线约 ' + distanceText(meters) + '';
 }
 
 /* CU-C-65:站点级字段裸插值会把 null 印成字面「null」(WXML 文本插值对 null 就是这么做的,
@@ -204,7 +204,7 @@ Page({
         loadError: true,
         missingTopicId: true,
         loadErrorTitle: '无法打开主题',
-        loadErrorSub: '缺少主题信息，请返回发布广场重新选择。',
+        loadErrorSub: '请返回重新进入',
         topicLoaded: false,
       });
       return;
@@ -895,7 +895,7 @@ Page({
     // 总数只是数量，不授予读取未揭示节点、模板或路线的权限。
     // 缺失值不生成站点条目；章节局部节点标签继续反映各自可见内容。
     const stations = Number(d.locationCount);
-    if (Number.isFinite(stations) && stations > 0) out.push(stations + ' 个站点');
+    if (Number.isFinite(stations) && stations > 0) out.push(stations + ' 个节点');
     const plays = Number(d.templateCount);
     if (Number.isFinite(plays) && plays > 0) out.push(plays + ' 个玩法');
     if (d.audioUrl) {
@@ -1152,7 +1152,7 @@ Page({
       if (!this._navigating) { this._navigating = true; wx.navigateTo({ url: '/pages/topic/pricing/index?topicId=' + this.data.id, complete: () => { this._navigating = false; } }); }
       return true;
     }
-    toast(lc == 7 ? '该主题立项待审,暂未开售' : (lc == 1 ? '该主题招募中,暂未开售' : '该主题定价中,暂未开售'));
+    toast(lc == 7 ? '该主题立项待审，暂未开售' : (lc == 1 ? '该主题招募中，暂未开售' : '该主题定价中，暂未开售'));
     return true;
   },
 
@@ -1205,7 +1205,7 @@ Page({
     if (!topicId) return;
     modal.show({
       title: '转为正式主题',
-      content: '转正后不再显示 Beta 试玩标识。主题内容、已售出的票和进行中的行程都不受影响。',
+      content: '转正后不再显示 Beta 标记。主题内容、已售出的票和进行中的行程都不受影响。',
       confirmText: '确认转正',
       success(m) {
         if (!m.confirm) return;
@@ -1263,7 +1263,7 @@ Page({
     if (!club || !topicId) return;
     modal.show({
       title: '移交给俱乐部承接',
-      content: '将复制一份新的城市定向主题(有人带),挂到「' + club.name + '」承接;原主题会下架,历史票不受影响。',
+      content: '将复制一份新的城市定向主题(有人带),挂到「' + club.name + '」承接；原主题会下架，历史票不受影响。',
       confirmText: '确认移交',
       success(m) {
         if (!m.confirm) return;
@@ -1281,7 +1281,7 @@ Page({
               const newId = r.data && r.data.newTopicId;
               modal.show({
                 title: '已移交',
-                content: '已生成新的城市定向草稿,去配置票种并邀请该俱乐部承接?',
+                content: '已生成新的城市定向草稿，去配置票种并邀请该俱乐部承接?',
                 confirmText: '去配置', cancelText: '稍后',
                 success(g) {
                   if (g.confirm && newId) {
@@ -1343,7 +1343,7 @@ Page({
                 cb({ ok: true, data: d });
               } else if (d.registrationId) {
                 // 重放命中已有订单,回到那张订单取支付参数
-                loading.show('获取支付参数...');
+                loading.show('正在发起支付…');
                 app.sendRequest({
                   url: '/api/registration/pay',
                   method: 'POST',
@@ -1452,7 +1452,7 @@ Page({
     if (!topicId || that.data.selfPlayConfirmLoading || that._selfPlaySubmitting) return;
     if (!that.data.selfPlayConsentChecked) {
       // 单独同意只能用户自己勾,按钮不代勾;这里只提示,不算错误态
-      that.setData({ selfPlayConsentHint: '请先勾选上面的同意，才能为你建单' });
+      that.setData({ selfPlayConsentHint: '请先勾选同意' });
       return;
     }
     // 保持用户点击手势：订阅拒绝/失败不阻塞既有同意记录和支付链。
@@ -1670,7 +1670,7 @@ Page({
     this.setData({
       resultSheet: {
         show: true, kind: 'success', title: '购买成功',
-        sub: '票已放入票夹,随时可以开始探索。',
+        sub: '已放入票夹',
         meta: '', pill: '', why: '', duration: RESULT_SHEET_MS,
         consentName: '', consentChecked: false, consentState: 'idle', consentError: '',
       },
@@ -2006,7 +2006,7 @@ Page({
     const include = markers.map(function (marker) { return { latitude: marker.latitude, longitude: marker.longitude }; });
     polyline.forEach(function (line) { line.points.forEach(function (point) { include.push(point); }); });
     const source = roadSegments ? (straightSegments ? '道路段参考 · 虚线为节点直线预览，章间未规划' : '道路段参考 · 按章节分段，章间未规划')
-      : (straightSegments ? '节点直线预览 · 尚未规划步行路线，章间未规划' : '仅显示节点位置 · 尚未规划步行路线，章间未规划');
+      : (straightSegments ? '节点直线预览 · 尚未规划步行路线，章间未规划' : '仅显示节节点置 · 尚未规划步行路线，章间未规划');
     this.setData({
       routeReady: include.length > 0,
       routeSourceText: include.length ? source : '', routeMarkers: markers, routePolyline: polyline, routeIncludePoints: include,
@@ -2124,7 +2124,7 @@ Page({
           missingTopicId: false,
           loginRequired: isLoginRequired(app, res, statusCode),
           loadErrorTitle: '主题详情加载失败',
-          loadErrorSub: '网络连接异常，请稍后重试。',
+          loadErrorSub: '',
           topicLoaded: false,
         });
       }

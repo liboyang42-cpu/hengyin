@@ -35,7 +35,7 @@ test('损坏或缺点的道路整段退为虚线，不跳过断点连线', () =>
 });
 test('站间坐标不换算成步行分钟', () => {
   const walk = runtime.walk;
-  assert.match(walk(nodes[0], nodes[1]), /^直线约 .*步行用时待确认$/);
+  assert.match(walk(nodes[0], nodes[1]), /^直线约 [\d.]+ 公里$/);
   assert.equal(walk(null, nodes[1]), '');
 });
 

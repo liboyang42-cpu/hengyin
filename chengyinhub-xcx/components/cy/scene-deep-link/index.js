@@ -68,7 +68,7 @@ Component({
         this.openScene(id, routeParams, true)
       } catch (error) {
         this._rootOpened = false
-        toast('场景暂时打不开')
+        toast('场景无法打开')
       }
     },
 

@@ -10,7 +10,7 @@ const fullResp = () => ({
   plan: {
     title: '梧桐区半日漫游',
     subtitle: '从咖啡到旧书店',
-    storyline: '沿着法租界的梧桐,走一段慢下来的路。',
+    storyline: '沿着法租界的梧桐，走一段慢下来的路。',
     tags: ['citywalk'],
     estDurationMin: 120,
     fitReason: '适合周末',
@@ -39,7 +39,7 @@ test('完整 plan:顶层字段逐一映射', () => {
   const d = aiPlanToDraft(fullResp());
   assert.equal(d.name, '梧桐区半日漫游');
   assert.equal(d.subtitle, '从咖啡到旧书店');
-  assert.equal(d.description, '沿着法租界的梧桐,走一段慢下来的路。');
+  assert.equal(d.description, '沿着法租界的梧桐，走一段慢下来的路。');
 });
 
 test('aiTraceId 从 resp 顶层注入(留痕标记的唯一开关)', () => {

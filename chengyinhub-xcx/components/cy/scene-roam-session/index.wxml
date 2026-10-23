@@ -2,8 +2,8 @@
   <view class="session-status" aria-role="status">正在读取本次漫游</view>
   <view class="session-skeleton"><view class="session-skeleton__row"></view><view class="session-skeleton__row"></view><view class="session-skeleton__row"></view></view>
 </block>
-<cy-error load-failure wx:elif="{{state === 'error'}}" class="session-state-fill" fill title="这次漫游暂时打不开" sub="本地记录读取失败，原记录不会被删除。" retry="重试" bind:retry="retry" />
-<cy-empty wx:elif="{{state === 'empty'}}" class="session-state-fill" fill size="lg" kind="missing-param" title="找不到这次漫游" sub="这条足迹可能已被清理，返回历史重新选择。" cta="返回漫游历史" bind:cta="back" />
+<cy-error load-failure wx:elif="{{state === 'error'}}" class="session-state-fill" fill title="这次漫游无法打开" retry="重试" bind:retry="retry" />
+<cy-empty wx:elif="{{state === 'empty'}}" class="session-state-fill" fill size="lg" kind="missing-param" title="找不到这次漫游" cta="返回漫游历史" bind:cta="back" />
 
 <!-- PR 600 本次漫游正文；标题栏由外层 scene-sheet / 深链页提供。 -->
 <view wx:else class="ss">

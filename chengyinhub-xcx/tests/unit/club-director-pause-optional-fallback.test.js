@@ -32,8 +32,8 @@ function setup(planOptions) {
 
 test('没有已批准备用方案也能暂停本站:确认后提交,payload 不带方案字段', () => {
   const calls = setup([])
-  assert.ok(calls.modal, '必须先弹确认,不能直接 toast 拦下')
-  assert.match(calls.modal.content, /不会被引导到其他站点/)
+  assert.ok(calls.modal, '必须先弹确认，不能直接 toast 拦下')
+  assert.match(calls.modal.content, /不会被引导到其他节点/)
   calls.modal.success({ confirm: false })
   assert.equal(calls.actions.length, 0, '取消不得提交')
   calls.modal.success({ confirm: true, content: '人手不够' })

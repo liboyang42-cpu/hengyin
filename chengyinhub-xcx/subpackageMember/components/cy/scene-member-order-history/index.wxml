@@ -12,20 +12,20 @@
       wx:elif="{{errorMsg && list.length==0}}"
       fill="{{true}}"
       size="lg"
-      title="{{orderAuthRequired ? '登录后查看订单' : orderAccessDenied ? '当前账号无法查看订单' : '订单暂时没有加载出来'}}"
-      sub="{{orderAuthRequired || orderAccessDenied ? errorMsg : '可能是网络波动或服务正在同步数据，已支付订单不会丢失。'}}"
+      title="{{orderAuthRequired ? '登录后查看订单' : orderAccessDenied ? '当前账号无法查看订单' : '订单加载失败'}}"
+      sub="{{orderAuthRequired || orderAccessDenied ? errorMsg : '已支付订单不受影响'}}"
       retry="{{orderAuthRequired ? '登录' : '重试'}}"
       bind:retry="retryList"
     />
 
     <cy-empty wx:if="{{!loading && !errorMsg && list.length==0 && !hasOrders}}" fill class="cy-fill-state" size="lg"
-              icon="/subpackageMember/images/d_yhqon.png" title="还没有城市路线订单" sub="报名或购买城市路线后，订单会出现在这里。"
+              icon="/subpackageMember/images/d_yhqon.png" title="还没有城市路线订单"
               cta="{{canDiscoverRoutes ? '去发现城市路线' : ''}}" bind:cta="goDiscoverRoutes" />
     <cy-empty wx:if="{{!loading && !errorMsg && list.length==0 && hasOrders}}" fill class="cy-fill-state" size="lg"
-              kind="empty" title="当前筛选暂无订单" sub="试试切换其他状态查看订单。" />
+              kind="empty" title="当前筛选暂无订单" sub="换个筛选试试" />
 
     <cy-error load-failure class="cy-fade-in" wx:if="{{errorMsg && list.length>0}}"
-      title="订单刷新失败" sub="已加载的订单仍为你保留" retry="重试" bind:retry="retryList" />
+      title="订单刷新失败" retry="重试" bind:retry="retryList" />
 
     <!-- D04 行卡范式:订单号 + 状态 chip + 时间 + 地点 + 实付款 + 双动作。
          原来整卡是 <navigator> 会压新页;场景里必须改成 tap → open 事件推 H10 子层。 -->

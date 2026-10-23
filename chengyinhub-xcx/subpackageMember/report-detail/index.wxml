@@ -9,9 +9,9 @@
       <cy-skeleton wx:if="{{state === 'loading'}}" type="feed-card" count="2" />
       <cy-state-shell wx:elif="{{state === 'missing-param'}}" kind="missing-param" />
       <cy-state-shell wx:elif="{{state === 'no-permission'}}" kind="no-permission"
-                      title="暂时不能查看这条举报" sub="只有举报人本人可以查看举报进度" />
-      <cy-state-shell wx:elif="{{state === 'error'}}" kind="data" title="举报进度没能加载出来"
-                      sub="{{errorSub || '举报处理不受影响，只是这次没读到'}}" primary="重试" bind:primary="retry" />
+                      title="暂时不能查看这条举报" sub="仅举报人可查看" />
+      <cy-state-shell wx:elif="{{state === 'error'}}" kind="data" title="举报进度加载失败"
+                      sub="{{errorSub}}" primary="重试" bind:primary="retry" />
       <block wx:else>
         <view class="rd-card">
           <view class="rd-card__head">
@@ -85,7 +85,7 @@
       <cy-btn variant="primary" bindtap="closeSheet">知道了</cy-btn>
     </block>
     <block wx:elif="{{sheet === 'unknown'}}">
-      <text class="rd-sheet__text">网络不太稳定，暂时没读到申诉记录。再试一次不会重复提交。</text>
+      <text class="rd-sheet__text">网络异常，暂时没读到申诉记录。再试一次不会重复提交。</text>
       <view class="rd-sheet__row">
         <cy-btn variant="secondary" bindtap="closeSheet">稍后再看</cy-btn>
         <cy-btn variant="primary" bindtap="submitAppeal">再试一次</cy-btn>

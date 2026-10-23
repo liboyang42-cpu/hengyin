@@ -111,7 +111,7 @@ Component({
             return;
           }
           const shaped = shapeTopicCustomers(res.data);
-          if (!shaped) { that.setData({ state: 'error', errorText: '客户名单数据格式异常' }); return; }
+          if (!shaped) { that.setData({ state: 'error', errorText: '客户名单加载失败' }); return; }
           that.setData({ summary: shaped, state: shaped.sessions.length ? 'ready' : 'empty', errorText: '' });
         },
         successStatusAbnormal(res, statusCode) {
@@ -123,7 +123,7 @@ Component({
         },
         fail() {
           if (epoch !== that._epoch) return;
-          that.setData({ state: 'error', errorText: '网络不稳定，稍后再试一次' });
+          that.setData({ state: 'error', errorText: '网络异常，稍后再试一次' });
         },
       });
     },

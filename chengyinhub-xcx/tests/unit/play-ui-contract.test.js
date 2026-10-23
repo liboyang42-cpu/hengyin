@@ -149,7 +149,7 @@ test('自由漫游雾层浓度:overlay 与 poly 两条路径同档,且降级不�
   // 2026-08-04 前这里锁的是 _fogMode='none' + fogPolys:[] —— 那两行正是「漫游看不到迷雾」的成因,
   // 被当成契约锁住后,修 bug 反而会判红。改锁真正的不变量:降级路径必须仍然画雾。
   assert.doesNotMatch(roamJs, /this\._fogMode = 'none';/,
-    '降级不得退成无雾;要保留浓度上限请改 FOG_ALPHA / _fogBandColor')
+    '降级不得退成无雾；要保留浓度上限请改 FOG_ALPHA / _fogBandColor')
   assert.match(roamJs, /_fogFallbackToPoly\(\)/)
   assert.match(roamJs, /this\._fogMode = 'poly';[\s\S]{0,120}this\._initFogGrid\(\);/)
 })

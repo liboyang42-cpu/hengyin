@@ -23,7 +23,7 @@ function shapeRound(row) {
     rid: String((row && row.nodeId) || '') + ':' + String((row && row.playDay) || ''),
     nodeId: (row && row.nodeId) || 0,
     playDay: (row && row.playDay) || '',
-    nodeName: (row && row.nodeName) || '未命名点位',
+    nodeName: (row && row.nodeName) || '未命名节点',
     question: (row && row.question) || '',
     options: options,
     betCount: Number((row && row.betCount) || 0),
@@ -131,7 +131,7 @@ Page({
         }
         this.loadInbox();
       },
-      fail: (res, status) => { if (!this._recoverAccess(res, status, token) && current()) this._readError(res, '网络连接失败，请稍后重试', status); },
+      fail: (res, status) => { if (!this._recoverAccess(res, status, token) && current()) this._readError(res, '网络异常，请重试', status); },
       successStatusAbnormal: (res, status) => { if (!this._recoverAccess(res, status, token) && current()) this._readError(res, '经营身份加载失败', status); },
     });
   },
@@ -164,7 +164,7 @@ Page({
           pageState: items.length ? 'ready' : 'empty',
         });
       },
-      fail: (res, status) => { if (!this._recoverAccess(res, status, epoch) && current()) this._readError(res, '网络连接失败，请稍后重试', status); },
+      fail: (res, status) => { if (!this._recoverAccess(res, status, epoch) && current()) this._readError(res, '网络异常，请重试', status); },
       successStatusAbnormal: (res, status) => { if (!this._recoverAccess(res, status, epoch) && current()) this._readError(res, '待答列表加载失败', status); },
     });
   },
@@ -189,7 +189,7 @@ Page({
         show: true, rid: rid, key: this.data.pickedKey, label: picked.label || '',
         /* 把后果写全:结算是一次性的,而且会按规则发券 —— 这两件事
            点下去之后都撤不回来,不能等玩家来问才发现。 */
-        content: '押中的人会按你配的规则拿到奖励。这一轮只能公布一次,公布后不能改。',
+        content: '押中的人会按你配的规则拿到奖励。这一轮只能公布一次，公布后不能改。',
       },
     });
   },
@@ -229,7 +229,7 @@ Page({
       },
       fail: () => {
         this.setData({ submitting: false, 'confirm.show': false });
-        cyToast('网络连接失败，请稍后重试');
+        cyToast('网络异常，请重试');
       },
     });
   },

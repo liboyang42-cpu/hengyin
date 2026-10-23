@@ -239,7 +239,7 @@ Page({
     } catch (e) {
       // A-10:深链 ?scene=不存在 时 getScene 会 throw,onLoad 里没有 try 会让页面卡在半初始化态。
       // 与 scene-deep-link 同一口径:toast + 留在原页(兜底返回)。
-      toast('场景暂时打不开');
+      toast('场景无法打开');
       return false;
     }
     if (String(id).indexOf('settings-') === 0) next.theme = this.data.settingsTheme;

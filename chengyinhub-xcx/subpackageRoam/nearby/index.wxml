@@ -30,7 +30,7 @@
   <!-- 2026-10-22 业主:计数条下面一行筛选 —— 全部 / 主题队伍 / 地点▾ / 商家▾。
        地点、商家点开是下拉,选项只来自本屏真实数据(主题 / 活动、POI 标签),不预置分类。 -->
   <scroll-view class="mt-filter" scroll-x enhanced show-scrollbar="{{false}}" style="top:{{hudTop + 52}}px;">
-    <view class="mt-chip {{layer === 'all' ? 'is-on' : ''}}" data-layer="all" bindtap="onLayerTap" aria-role="button" aria-label="全部点位" hover-class="cy-pressed" hover-stay-time="80">全部</view>
+    <view class="mt-chip {{layer === 'all' ? 'is-on' : ''}}" data-layer="all" bindtap="onLayerTap" aria-role="button" aria-label="全部节点" hover-class="cy-pressed" hover-stay-time="80">全部</view>
     <view class="mt-chip {{layer === 'team' ? 'is-on' : ''}}" data-layer="team" bindtap="onLayerTap" aria-role="button" aria-label="只看主题队伍" hover-class="cy-pressed" hover-stay-time="80">主题队伍</view>
     <view class="mt-chip {{layer === 'place' ? 'is-on' : ''}}" data-layer="place" bindtap="onLayerTap" aria-role="button" aria-label="地点玩法{{layer === 'place' && layerSub ? '：' + layerSub : ''}}，展开选项" hover-class="cy-pressed" hover-stay-time="80">{{layer === 'place' && layerSub ? layerSub : '地点玩法'}}<view class="mt-chip__caret {{layerSheet === 'place' ? 'is-up' : ''}}"></view></view>
     <view class="mt-chip {{layer === 'shop' ? 'is-on' : ''}}" data-layer="shop" bindtap="onLayerTap" aria-role="button" aria-label="商家{{layer === 'shop' && layerSub ? '：' + layerSub : ''}}，展开选项" hover-class="cy-pressed" hover-stay-time="80">{{layer === 'shop' && layerSub ? layerSub : '商家'}}<view class="mt-chip__caret {{layerSheet === 'shop' ? 'is-up' : ''}}"></view></view>
@@ -49,11 +49,11 @@
       </view>
       <text class="mt-badge mt-badge--{{item.tone}}">{{item.badge}}</text>
     </view>
-    <view class="mt-foot" wx:if="{{!listRows.length}}">这个范围内暂时没有点位,放大范围再看看</view>
+    <view class="mt-foot" wx:if="{{!listRows.length}}">附近暂无节点</view>
   </scroll-view>
 
   <view class="nb-load-error" wx:if="{{nearbyReadAccess || loadError}}" style="top:{{hudTop + (viewMode === 'map' ? 100 : 56)}}px;">
-    <cy-error load-failure="{{!nearbyReadAccess}}" title="{{nearbyReadAccess === 'login' ? '登录后查看附近信息' : nearbyReadAccess === 'denied' ? '当前账号无法查看附近信息' : '附近信息没能读到'}}" sub="地图仍可查看，队伍或活动没有读到" retry="{{nearbyReadAccess === 'login' ? '去登录' : '重试'}}" bind:retry="retryNearby" />
+    <cy-error load-failure="{{!nearbyReadAccess}}" title="{{nearbyReadAccess === 'login' ? '登录后查看附近信息' : nearbyReadAccess === 'denied' ? '当前账号无法查看附近信息' : '附近信息获取失败'}}" retry="{{nearbyReadAccess === 'login' ? '去登录' : '重试'}}" bind:retry="retryNearby" />
   </view>
 
   <!-- P1 角控件(稿 591:1020 / 591:1022)。开卡片时收起。 -->
@@ -107,7 +107,7 @@
           <view class="mt-sbtn mt-sbtn--w {{busy ? 'is-busy' : ''}}" data-id="{{item.memberId}}" data-ok="true" bindtap="onHandle" aria-role="button" aria-label="同意 {{item.name}}" hover-class="cy-pressed" hover-stay-time="80">同意</view>
         </view>
       </view>
-      <text class="mt-foot" wx:if="{{!applicants.length}}">现在没有待处理的申请</text>
+      <text class="mt-foot" wx:if="{{!applicants.length}}">暂无申请</text>
     </view>
   </view>
   </block>
@@ -120,7 +120,7 @@
     <view class="psheet__x" catchtap="closeSheet" aria-role="button" aria-label="关闭" hover-class="cy-pressed" hover-stay-time="80"><view class="psheet__x-i"></view></view>
     <view class="pbody">
       <text class="ph1">我的队伍</text>
-      <text class="psub">只显示你已加入或申请过的队伍</text>
+      
       <view class="mt-notice mt-notice--plain" wx:if="{{myReadAccess}}" aria-role="text">{{myReadAccess === 'login' ? '登录后查看自己的队伍' : '当前账号无法查看队伍'}}</view>
       <view class="mt-sbtn mt-sbtn--w" wx:if="{{myReadAccess === 'login'}}" bindtap="loginForMyTeams" aria-role="button" aria-label="去登录" hover-class="cy-pressed" hover-stay-time="80">去登录</view>
       <view class="mt-notice mt-notice--plain" wx:if="{{myReadError}}" aria-role="text">队伍信息未完整读取，请重新打开重试</view>
@@ -131,7 +131,7 @@
         </view>
         <view class="mt-sbtn mt-sbtn--{{item.action.kind === 'primary' ? 'w' : 's'}} {{busy ? 'is-busy' : ''}}" data-index="{{index}}" bindtap="onMyRowAction" aria-role="button" aria-label="{{item.action.text}}" hover-class="cy-pressed" hover-stay-time="80">{{item.action.text}}</view>
       </view>
-      <text class="mt-foot" wx:if="{{myLoaded && !myReadAccess && !myReadError && !myLoading && !myRows.length}}">还没有加入或申请过队伍,在地图上点一支看看</text>
+      <text class="mt-foot" wx:if="{{myLoaded && !myReadAccess && !myReadError && !myLoading && !myRows.length}}">暂无队伍</text>
     </view>
   </view>
   </block>

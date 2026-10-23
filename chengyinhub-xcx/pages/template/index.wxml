@@ -32,7 +32,7 @@
   </view>
   <view class="merchant-readonly-note"
     wx:if="{{operationScope && merchantAccessLoaded && !canManageMerchantProjects}}">
-    当前岗位可浏览模板；发布、复制和配置由店主或店长操作
+    仅店主、店长可发布和复制
   </view>
 
   <!-- ====== 内容面(紫渐变,与选中 tab 连体) ====== -->
@@ -120,7 +120,7 @@
 
     <view class="sec-hd" wx:if="{{ tailList.length }}">
       <text class="sec-title">其他模板</text>
-      <text class="sec-sub">不筛掉，继续显示</text>
+      
     </view>
     <view class="cml-list cy-fade-in" wx:if="{{ tailList.length }}" style="{{pmList === 1 ? '--pm-t:1;' : (pmList === 2 ? '--pm-t-d:.32s;--pm-t-s:1;' : '')}}">
       <view class="cml-card" wx:for="{{ tailList }}" wx:key="id" data-item="{{ item }}" bindtap="jumpDetail" hover-class="cy-pressed" hover-stay-time="80">

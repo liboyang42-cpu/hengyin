@@ -179,16 +179,16 @@ Page({
         const data = res && (res.code == '200' || res.code === 200) ? res.data : null;
         const actual = data ? Number(data.businessStatus) : NaN;
         if (actual !== 0 && actual !== 1) {
-          cyToast('状态未同步，请刷新后核对');
+          cyToast('状态更新中，请刷新');
           return;
         }
         that.setData({ businessStatus: actual });
         cyToast(actual === expected ? (actual === 1 ? '已营业' : '已打烊')
-          : '状态未同步，当前' + (data.businessStatusText || (actual === 1 ? '营业中' : '已打烊')));
+          : '状态更新中，当前' + (data.businessStatusText || (actual === 1 ? '营业中' : '已打烊')));
       },
       fail() {
         if (!isCurrentAction()) return;
-        cyToast('状态未同步，请刷新后核对');
+        cyToast('状态更新中，请刷新');
       }
     });
   },
@@ -1231,7 +1231,7 @@ Page({
   openStationSheet(code, d) {
     const items = Array.isArray(d.stations) ? d.stations : [];
     if (!items.length) {
-      cyToast('没有可核销的据点');
+      cyToast('没有可核销的节点');
       return;
     }
     this.setData({ stationSheet: { show: true, code: code, items: items } });
@@ -1363,7 +1363,7 @@ Page({
     const home = merchantHomeUrl(this.data.merchantInfo && this.data.merchantInfo.memberId);
     const mname = (this.data.merchantInfo && this.data.merchantInfo.name) || '城瘾Hub';
     return {
-      title: home ? (mname + ' · 商家主页') : '城瘾Hub - 商户中心',
+      title: home ? (mname + ' · 商家主页') : '城瘾Hub - 商家中心',
       path: home || '/pages/index/index',
     };
   },

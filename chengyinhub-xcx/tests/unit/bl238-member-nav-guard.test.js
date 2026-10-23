@@ -45,7 +45,7 @@ function onceThenAgain(navs, tap, url, reset) {
   assert.equal(navs.length, 2, '未回调前仍锁住')
   reset()
   tap()
-  assert.equal(navs.length, 3, '回前台兜底清锁')
+  assert.equal(navs.length, 3, '回前台保底清锁')
 }
 
 function mountDetail() {

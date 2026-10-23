@@ -136,7 +136,7 @@ Page({
         }
         const shaped = shapeCustomerList(res.data);
         if (!shaped) {
-          that.setData({ state: 'error', errorText: '客户名单数据格式异常' });
+          that.setData({ state: 'error', errorText: '客户名单加载失败' });
           return;
         }
         pageMotion.enter(that, 'pmList'); that.setData({
@@ -169,7 +169,7 @@ Page({
     this.setData({
       state: forbidden ? 'no-permission' : 'error',
       errorText: forbidden ? (msg || '请联系主理人调整角色权限')
-                           : (msg || '登录状态已变化,请重新进入客户名单'),
+                           : (msg || '登录状态已变化，请重新进入客户名单'),
       items: [],
     });
   },

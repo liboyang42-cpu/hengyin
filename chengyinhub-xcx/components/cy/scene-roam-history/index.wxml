@@ -1,5 +1,5 @@
 <!-- PR 600 RunCard 正文；标题栏由外层 scene-sheet / 深链页提供。 -->
-<cy-error load-failure wx:if="{{state === 'error'}}" fill size="lg" title="漫游记录暂时读不出来" sub="本地记录没有被删除，可以重新读取。" retry="重试" bind:retry="retry" />
+<cy-error load-failure wx:if="{{state === 'error'}}" fill size="lg" title="漫游记录加载失败" retry="重试" bind:retry="retry" />
 <view wx:elif="{{state === 'loading'}}" class="history-loading" aria-role="status">正在读取漫游记录…</view>
 <view wx:else class="hs">
   <view class="hs-sum" wx:if="{{summary.trips}}">
@@ -42,8 +42,8 @@
 
     <!-- CU-M-55:正在漫游时 sessions 必然为空(记录要结算才写),此时说「你还没有开始过」
          与事实相反,CTA 也不该是「出发第一次漫游」。判据在组件:本机 recovery 记录仍在。 -->
-    <cy-empty wx:if="{{!list.length && inProgress}}" fill size="lg" class="fill-slot" kind="not-started" title="正在漫游中" sub="这次漫游还没结束，历史只收录结算过的记录；回到地图可以接着走" cta="回到地图" bind:cta="closeToRoam" />
-    <cy-empty wx:elif="{{!list.length}}" fill size="lg" class="fill-slot" kind="empty" title="还没有漫游记录" sub="{{tools ? '出发一次，这里就会留下记录。' : '你还没有开始过城市漫游，出发一次就会在这里留下记录。记录只保存在这台手机上，换机或清缓存后不会保留'}}" cta="出发第一次漫游" bind:cta="closeToRoam" />
+    <cy-empty wx:if="{{!list.length && inProgress}}" fill size="lg" class="fill-slot" kind="not-started" title="正在漫游中" sub="结束后收录" cta="回到地图" bind:cta="closeToRoam" />
+    <cy-empty wx:elif="{{!list.length}}" fill size="lg" class="fill-slot" kind="empty" title="还没有漫游记录" sub="{{tools ? '' : '记录仅存本机'}}" cta="出发第一次漫游" bind:cta="closeToRoam" />
     <view wx:if="{{list.length}}" style="height:80rpx"></view>
   </view>
 </view>

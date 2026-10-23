@@ -20,7 +20,7 @@ function integer(value, title, min, max) {
 }
 
 function attribute(row) {
-  if (!COUNTER.test(row.key || '')) throw new Error('数值标识无效');
+  if (!COUNTER.test(row.key || '')) throw new Error('数值编号无效');
   const label = String(row.label || '').trim();
   if (!label || label.length > 24) throw new Error('数值名称须为 1 至 24 字');
   const min = integer(row.min, label + '下限', -10000, 10000);
@@ -36,7 +36,7 @@ function links(list, attributes, hpEnabled, hpLabel = '生命值') {
     const source = (attributes || []).find(a => a.key === row.sourceKey && COUNTER.test(a.key));
     if (!source) throw new Error('关联来源须为已启用的自定义值');
     if (!hpEnabled || row.targetKey !== 'sys.hp') throw new Error('关联目标只支持已启用的' + hpLabel);
-    if (!/^[a-z][a-z0-9_]{0,31}$/.test(row.id || '') || ids.has(row.id)) throw new Error('关联标识无效或重复');
+    if (!/^[a-z][a-z0-9_]{0,31}$/.test(row.id || '') || ids.has(row.id)) throw new Error('关联编号无效或重复');
     ids.add(row.id);
     if (!TRIGGERS.includes(row.trigger) || !['EVENT', 'RUN'].includes(row.frequency)) throw new Error('关联触发方式无效');
     if (!Array.isArray(row.allowedReasons) || !row.allowedReasons.length || new Set(row.allowedReasons).size !== row.allowedReasons.length || row.allowedReasons.some(reason => !REASONS.includes(reason))) throw new Error('请选择关联的触发来源');
@@ -72,7 +72,7 @@ function references(key, formData, runtime, rules) {
     Object.keys(node).forEach(field => { if (!['statKey', 'sourceKey', 'targetKey'].includes(field)) walk(node[field], location, path + field + '.'); });
   };
   (formData.chapters || []).forEach((chapter, ci) => (chapter.nodes || []).forEach((node, ni) => {
-    walk(node, '第' + (ci + 1) + '章站点「' + (node.name || ni + 1) + '」玩法绑定', '');
+    walk(node, '第' + (ci + 1) + '章节点「' + (node.name || ni + 1) + '」玩法绑定', '');
   }));
   return [...new Set(found)];
 }

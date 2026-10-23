@@ -33,7 +33,7 @@ test('trustedPass 只证明凭证通过，QUEST_RESOLVE 是否可结算仍遵从
   const denied = { ...passed, quests: passed.quests.map(q => ({ ...q, enabled: false, disabledReason: 'LIMIT_REACHED', actionSummary: { ...q.actionSummary, enabled: false, disabledReason: 'LIMIT_REACHED' } })) };
   assert.equal(gameplay.actionRows(denied, [])[0].enabled, false);
   const allowedByServer = { ...passed, awaitingChallenge: true, gameplay: {}, quests: passed.quests.map(q => ({ ...q, actionSummary: { ...q.actionSummary, costs: { hpCost: 2 } } })) };
-  assert.equal(gameplay.actionRows(allowedByServer, [])[0].enabled, true, '现代回读显式 enabled 不由本端费用/恢复规则覆盖');
+  assert.equal(gameplay.actionRows(allowedByServer, [])[0].enabled, true, '现代刷新显式 enabled 不由本端费用/恢复规则覆盖');
 });
 test('服务器未完成的共享/个人到达凭证不置 done、不发默认 XP，改读任务状态', async () => {
   for (const runtime of [{ sharedRuntime: { teamId: 8, receiptId: 19, runtimeInstance: 'game:7', authorityEpoch: 4, basicVerified: true } }, { themeRuntime: { sessionId: 7, version: 9, activeQuest: 'q', quests: [], allowedActions: [] } }]) {

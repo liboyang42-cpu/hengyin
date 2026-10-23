@@ -10,20 +10,20 @@
                   fill size="lg" bind:primary="onErrorAction" auto-back />
   <block wx:else>
     <view class="team-refresh-state">
-      <text wx:if="{{refreshing && team}}" class="team-sync" aria-role="status">正在核对邀请状态…</text>
+      <text wx:if="{{refreshing && team}}" class="team-sync" aria-role="status">正在确认邀请状态…</text>
     </view>
   <block wx:if="{{team}}">
     <view class="team-head">
-      <view class="team-eyebrow">TEAM INVITATION</view>
+
       <view class="team-title">{{team.title || '一起出发的玩家队伍'}}</view>
-      <view class="team-sub">你收到一份玩家组队邀请，邀请码不能用于活动签到或商家核销。组队与否不影响活动举行，入队不会代替报名或购票。</view>
+      <view class="team-sub">邀请码不能用于签到或核销，入队不代替报名或购票</view>
     </view>
     <view class="team-card">
       <view class="team-meta">
         <view class="team-meta-item"><text class="team-meta-value">{{team.joinedCount}} / {{team.maxMembers}}</text><text class="team-meta-key">当前成员</text></view>
         <view class="team-meta-item"><text class="team-meta-value">邀请制</text><text class="team-meta-key">加入方式</text></view>
       </view>
-      <view class="team-note">加入后会进入队伍群聊。退队与退票互不联动。</view>
+      <view class="team-note">入队后自动进群聊</view>
     </view>
     <cy-inline-error wx:if="{{joinError}}" title="暂时无法加入" sub="{{joinError}}"
                      action="重试加入" bind:action="join" />

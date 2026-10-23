@@ -43,11 +43,11 @@
       <button wx:if="{{exportError && (exportState === 'PENDING' || exportState === 'RUNNING')}}"
               class="cu-inline-button" bindtap="retryExportStatus">重新查询</button>
       <cy-inline-error class="cu-batch-error" wx:if="{{exportError}}" kind="data"
-        title="导出状态未同步" sub="{{exportError}}" />
+        title="导出状态更新中" sub="{{exportError}}" />
     </view>
 
   <cy-empty class="cy-fade-in cu-state-clear" wx:if="{{noPermission}}" kind="no-permission" fill="{{true}}" size="lg"
-            title="当前岗位没有客户查看权限" sub="请联系店主调整经营团队权限" />
+            title="当前岗位没有客户查看权限" sub="请联系店主开通" />
   <cy-skeleton wx:elif="{{loading && !rows.length}}" type="card" count="{{4}}" />
   <!-- auto-back 只认首屏:换分群 / 换标签 / 换关键词都会清空 rows 再拉一次,
        那一次失败若也自动退页,分群与群发草稿会跟着页面一起没(审查C A1)。 -->

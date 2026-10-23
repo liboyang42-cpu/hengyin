@@ -181,7 +181,7 @@ test('合作页 401 静默重登后自动重载，403 静默回会员中心', as
   requests[0].fail({ code: 401, msg: '登录状态失效' }, 401)
   requests[0].complete()
   await flush()
-  assert.equal(page.data.pageState, 'loading', '重登期间保持普通加载态,不摆整屏去登录')
+  assert.equal(page.data.pageState, 'loading', '重登期间保持普通加载态，不摆整屏去登录')
   const retried = requests[1]
   assert.ok(retried, '重登成功后必须自动重拉合作数据')
   retried.success(relationHome())
@@ -191,7 +191,7 @@ test('合作页 401 静默重登后自动重载，403 静默回会员中心', as
   page.loadRelationHome()
   requests[2].fail({ code: 403, msg: '商家身份无效或权限不足' }, 403)
   assert.deepEqual(navigations.at(-1), { method: 'switchTab', url: '/pages/member/index/index' },
-    '无商家身份深链误入必须静默回会员中心,不弹整屏页')
+    '无商家身份深链误入必须静默回会员中心，不弹整屏页')
 
   const view = read('pages/merchant/relation/index.wxml')
   assertNoLoginGate(view)

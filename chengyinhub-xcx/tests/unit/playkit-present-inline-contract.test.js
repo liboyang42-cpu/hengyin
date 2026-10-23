@@ -109,7 +109,7 @@ test('★内嵌 kit 铺成一个 kind:kit 段,正好落在第一个未完成节�
   page.openChapterFull()
 
   assert.deepEqual(page.data.chapterParas.map(p => p.kind), ['text', 'text', 'kit'],
-    '内嵌 kit 必须正好占一项,且落在截断闸(第一个未完成节点)处')
+    '内嵌 kit 必须正好占一项，且落在截断闸(第一个未完成节点)处')
   assert.equal(page.data.chapterParas.filter(p => p.kind === 'kit').length, 1)
   assert.equal(page.data.chapterParas[2].text, '')
 })
@@ -147,10 +147,10 @@ test('★kit 段的外层仍是循环里那个唯一的 .chfull__para —— 少
   const wxml = read('pages/play/index.wxml')
   // 外层:chapterParas 逐项铺,保留 chfull__para 类名,没有条件包在这一层(一旦包了,下标就对不上)
   const loops = wxml.match(/<view wx:for="\{\{chapterParas\}\}"[^>]*class="chfull__para(?:\s[^"]*)?"/g) || []
-  assert.equal(loops.length, 1, '.chfull__para 的外层循环只能有一个,且不带条件')
+  assert.equal(loops.length, 1, '.chfull__para 的外层循环只能有一个，且不带条件')
   // 内嵌 kit 的渲染分支在同一个循环体内(wx:elif),不是另起一个循环
   assert.match(wxml, /wx:elif="\{\{item\.kind === 'kit'\}\}"[\s\S]*?cy-playkit kit="\{\{playKit\.kit\}\}" show="\{\{true\}\}"/,
-    'kit 段没有在循环里渲染,或 kit 绑的不是页面上那份 playKit.kit')
+    'kit 段没有在循环里渲染，或 kit 绑的不是页面上那份 playKit.kit')
 })
 
 // ===== ③ play-stage 内嵌档:在流里 + 退出钮隐藏 + z-index/skin 不走样 =====
@@ -163,7 +163,7 @@ test('play-stage 内嵌档在流里渲染、退出钮走变量隐藏;z-index 仍
   assert.match(wxss, /position:\s*var\(--pk-stage-pos,\s*fixed\)/,
     '内嵌档没接 --pk-stage-pos:缺省必须仍是 fixed(存量模板逐字不变)')
   assert.match(wxss, /height:\s*var\(--pk-stage-height,\s*auto\)/,
-    '内嵌块没有高度变量:relative 下 top/bottom:0 撑不起来,整块会塌成 0')
+    '内嵌块没有高度变量:relative 下 top/bottom:0 撑不起来，整块会塌成 0')
   assert.match(wxss, /\.st__back\s*\{[^}]*display:\s*var\(--pk-back-display,\s*flex\)/,
     '内嵌态退出钮没有隐藏通道')
   // z-index:内嵌态(position:relative)同样认它,手写数字会压到地图/角色卡底下。
@@ -174,11 +174,11 @@ test('play-stage 内嵌档在流里渲染、退出钮走变量隐藏;z-index 仍
   assert.equal(/z-index:\s*\d/.test(stageRule[0]), false, '台面根节点出现了手写数字 z-index')
   // skin 认领:play-surface 必须还在 import 里,否则 --bg 解析成空、整层透明且不报错
   assert.ok(wxss.includes('@import "/pages/play/style/play-surface.wxss"'),
-    'play-surface 的皮肤表没被 import:skin-xxx 无人认领,--bg 空,内嵌态同样整层透明')
+    'play-surface 的皮肤表没被 import:skin-xxx 无人认领,--bg 空，内嵌态同样整层透明')
 
   // 故事流那层把变量给到位(名字对不上就不生效且不报错)
   const kitRule = pageWxss.match(/\.chfull__kit\{[^}]*\}/)
-  assert.ok(kitRule, '故事流里没有 .chfull__kit 这一层,变量没有落脚点')
+  assert.ok(kitRule, '故事流里没有 .chfull__kit 这一层，变量没有落脚点')
   assert.match(kitRule[0], /--pk-stage-pos:relative/)
   assert.match(kitRule[0], /--pk-stage-height:/)
   assert.match(kitRule[0], /--pk-back-display:none/)
@@ -207,7 +207,7 @@ test('★diceRoll 两套呈现都在:整屏(摇一摇)与内嵌(故事流里直�
   assert.match(wxss, /\.dz\s*\{[^}]*position:\s*absolute/, '整屏那套的几何被改掉了')
   // 内嵌不靠摇手机(走在路上会误触发);整屏照旧摇
   assert.match(js, /if \(this\.data\.inline\) this\._offShake\(\); else this\._onShake\(\);/,
-    '内嵌版没有关掉摇一摇监听,或整屏版不再监听')
+    '内嵌版没有关掉摇一摇监听，或整屏版不再监听')
   // 分发器要把 inline 属性转给 diceroll(别的 kit 不需要这个属性)
   assert.match(dispatcherWxml, /cy-playkit-diceroll[\s\S]*?inline="\{\{inline\}\}"/,
     '分发器没有把 inline 转给 diceroll')
@@ -252,7 +252,7 @@ test('故事流与发布页预览用同一组内嵌变量,逐条一致(两处不
 
 test('预览不再在玩法外面另印一遍标题(题目出现两遍)', () => {
   const wxml = read('pages/publish/temp/index.wxml')
-  assert.doesNotMatch(wxml, /cg-pv-inline-heading/, '预览外层标题还在:没起名时回落成题目,与玩法自己的题目重复')
+  assert.doesNotMatch(wxml, /cg-pv-inline-heading/, '预览外层标题还在:没起名时回落成题目，与玩法自己的题目重复')
 })
 
 test('玩法那一步的预览提交栏跟着暗:不许用浅色主题的 surface 白(那条白带会从玩法卡两侧露出来);到达那几步是浅底不许跟着暗', () => {
@@ -260,5 +260,5 @@ test('玩法那一步的预览提交栏跟着暗:不许用浅色主题的 surfac
   assert.match(wxss, /\.cg-preview--kit \.cg-pv-submit\s*\{[^}]*background:\s*#0A0A0A/i,
     '预览态提交栏没有暗底覆盖:--cy-color-bg-surface 在发布分包是白')
   assert.doesNotMatch(wxss, /\.cg-preview \.cg-pv-submit\s*\{[^}]*#0A0A0A/i,
-    '暗色提交栏套到了整个预览上:到达 / 完成那几步是浅底,会压一条暗块')
+    '暗色提交栏套到了整个预览上:到达 / 完成那几步是浅底，会压一条暗块')
 })

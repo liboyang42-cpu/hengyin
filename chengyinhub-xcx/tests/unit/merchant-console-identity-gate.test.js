@@ -542,13 +542,13 @@ test('BL-141 营业状态写后回读：以回读值刷新开关，不一致或�
   assert.equal(page.data.businessStatus, 0, '以回读值为准')
   assert.equal(toasts.length, 2)
   assert.doesNotMatch(JSON.stringify(toasts[1]), /已营业/)
-  assert.match(JSON.stringify(toasts[1]), /状态未同步/)
+  assert.match(JSON.stringify(toasts[1]), /状态更新中/)
 
   page.toggleBusiness()
   requests[4].success({ code: 200 })
   requests[5].fail()
   assert.equal(page.data.businessStatus, 0)
-  assert.match(JSON.stringify(toasts[2]), /状态未同步/)
+  assert.match(JSON.stringify(toasts[2]), /状态更新中/)
 })
 
 test('页面卸载后身份成功、降级或失败回调都不得写页、跳转或再发子请求', () => {
