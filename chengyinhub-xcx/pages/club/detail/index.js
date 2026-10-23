@@ -529,7 +529,6 @@ Page({
     posts: [],
     pinnedNotices: [],
     postsLoaded: false,
-    postsHasMore: false,
     postText: '',
     // 发帖区默认收起,点一下才展开(2026-08-26)
     composerOpen: false,
@@ -1716,7 +1715,7 @@ Page({
         const posts = res.data.map(function (p) {
           return normalizeClubPost(p, that.data.club && that.data.club.memberId);
         });
-        pageMotion.enter(that, 'pmPosts'); that.setData({ posts: posts, postsHasMore: unpinnedClubPosts(res.data).length >= limit, pinnedNotices: clubPinnedNotice.pick(posts, that.data.clubId), postsLoaded: true, postsError: '' }, function () { that.scrollToRequestedPost(); });
+        pageMotion.enter(that, 'pmPosts'); that._postsHasMore = unpinnedClubPosts(res.data).length >= limit; that.setData({ posts: posts, pinnedNotices: clubPinnedNotice.pick(posts, that.data.clubId), postsLoaded: true, postsError: '' }, function () { that.scrollToRequestedPost(); });
       },
       fail() { if (epoch === that._postsEpoch) that.setData({ postsLoaded: true, postsError: '网络不稳定，帖子没能加载出来' }); },
     });
@@ -1724,7 +1723,7 @@ Page({
 
   // P0-82:滚到底续页。只追加更早的非置顶帖;期间若整页回读(loadPosts)则本次结果作废。
   loadMorePosts() {
-    if (!this.data.postsHasMore || this.data.postsError || this._postsMoreEpoch === this._postsEpoch) return;
+    if (!this._postsHasMore || this.data.postsError || this._postsMoreEpoch === this._postsEpoch) return;
     const beforeId = clubPostCursor(this.data.posts);
     if (beforeId == null) return;
     const that = this;
@@ -1741,7 +1740,8 @@ Page({
         const more = unpinnedClubPosts(res.data).filter(function (p) { return !seen[String(p.id)]; }).map(function (p) {
           return normalizeClubPost(p, that.data.club && that.data.club.memberId);
         });
-        that.setData({ posts: (that.data.posts || []).concat(more), postsHasMore: unpinnedClubPosts(res.data).length >= CLUB_POST_PAGE_SIZE });
+        that._postsHasMore = unpinnedClubPosts(res.data).length >= CLUB_POST_PAGE_SIZE;
+        that.setData({ posts: (that.data.posts || []).concat(more) });
       },
       fail() {
         if (epoch !== that._postsEpoch) return;

@@ -257,7 +257,7 @@ test('动态流分页:首页 limit=20,满页才续页,续页带 beforeId 且不�
   assert.deepEqual(JSON.parse(lists()[0].data), { id: '9', clubId: '9', limit: 20 })
   lists()[0].success({ code: '200', data: [{ id: 99, isPinned: 1, type: 2, authorMemberId: 1, content: '置顶' }].concat(page(50, 31)) })
   assert.equal(h.page.data.posts.length, 21)
-  assert.equal(h.page.data.postsHasMore, true)
+  assert.equal(h.page._postsHasMore, true)
 
   h.page.onReachBottom()
   h.page.onReachBottom()
@@ -265,7 +265,7 @@ test('动态流分页:首页 limit=20,满页才续页,续页带 beforeId 且不�
   assert.deepEqual(JSON.parse(lists()[1].data), { id: '9', clubId: '9', limit: 20, beforeId: 31 })
   lists()[1].success({ code: '200', data: [{ id: 31, authorMemberId: 1, content: 'dup' }].concat(page(30, 25)) })
   assert.equal(h.page.data.posts.length, 27, '与已加载重复的帖子不再追加')
-  assert.equal(h.page.data.postsHasMore, false, '不满一页即到底')
+  assert.equal(h.page._postsHasMore, false, '不满一页即到底')
   h.page.onReachBottom()
   assert.equal(lists().length, 2)
 
