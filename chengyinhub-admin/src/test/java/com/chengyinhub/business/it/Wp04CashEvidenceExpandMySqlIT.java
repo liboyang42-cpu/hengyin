@@ -164,6 +164,48 @@ class Wp04CashEvidenceExpandMySqlIT {
         assertEquals(0,count(CONTRIBUTION)); assertLegacy();
     }
 
+    @Test void positiveCloseRequiresActualNonNullInitiatorAndEveryFrozenRate() throws Exception {
+        expand();
+        String[] fields={"fee_platform_rate","fee_guarantee_base_rate","fee_guarantee_step_rate","fee_guarantee_max_merchant"};
+        String[] originals={"0.10","0.05","0.02","5"};
+        for (int index=0;index<fields.length;index++) {
+            db.update("UPDATE cms_topic SET "+fields[index]+"=NULL WHERE id=11");
+            CoopSettlementCashClose incomplete=close(11);
+            switch (index) {
+                case 0 -> incomplete.setPlatformRate(null);
+                case 1 -> incomplete.setGuaranteeBaseRate(null);
+                case 2 -> incomplete.setGuaranteeStepRate(null);
+                case 3 -> incomplete.setGuaranteeMaxMerchant(null);
+                default -> fail("unexpected fixture field");
+            }
+            assertThrows(DataAccessException.class,()->fenced(11,()->mapper.recordClose(incomplete)),fields[index]);
+            db.update("UPDATE cms_topic SET "+fields[index]+"=? WHERE id=11",new BigDecimal(originals[index]));
+        }
+        db.update("UPDATE cms_topic SET member_id=NULL WHERE id=11");
+        CoopSettlementCashClose missingOwner=close(11); missingOwner.setInitiatorMemberId(null);
+        assertThrows(DataAccessException.class,()->fenced(11,()->mapper.recordClose(missingOwner)));
+        assertEquals(0,count(CLOSE)); assertLegacy();
+    }
+    @Test void zeroCloseCannotReplaceActualUnknownOwnerAndRatesWithInventedDefaults() throws Exception {
+        expand();
+        db.update("UPDATE cms_topic SET member_id=NULL,fee_platform_rate=NULL,fee_guarantee_base_rate=NULL,"
+                +"fee_guarantee_step_rate=NULL,fee_guarantee_max_merchant=NULL WHERE id=22");
+        CoopSettlementCashClose invented=zeroClose(22,0);
+        invented.setPlatformRate(BigDecimal.ZERO); invented.setGuaranteeBaseRate(BigDecimal.ZERO);
+        invented.setGuaranteeStepRate(BigDecimal.ZERO); invented.setGuaranteeMaxMerchant(0);
+        assertThrows(IllegalStateException.class,()->fenced(22,()->mapper.recordClose(invented)));
+        assertEquals(0,count(CLOSE)); assertEquals(0,count(EVENT)); assertLegacy();
+    }
+    @Test void eventStorageRejectsSelfDeclaredVerifiedPaymentEvenWithExistingRefundAndContribution() throws Exception {
+        expand(); CoopSettlementCashClose c=evidence(11,101,"10.00");
+        for (String type:List.of("PAYMENT_SUCCESS","VERIFIED_PAYMENT")) {
+            CoopSettlementCashEvent unsupported=event(c.getId(),501,101,"5.00"); unsupported.setEventType(type);
+            unsupported.setSourceSnapshot("{\"verified\":true,\"transactionId\":\"TEST-SELF-CLAIM\"}");
+            assertThrows(DataAccessException.class,()->fenced(11,()->mapper.recordEvent(unsupported)));
+        }
+        assertEquals(0,count(EVENT)); assertEquals(1,count(CLOSE)); assertEquals(1,count(CONTRIBUTION)); assertLegacy();
+    }
+
     @Test void expandPreservesLegacyOriginalRowsAndBothOldUniqueKeys() throws Exception {
         assertEquals(0,preflight()); expand();
         assertLegacy();
@@ -331,6 +373,21 @@ class Wp04CashEvidenceExpandMySqlIT {
         assertThrows(DataAccessException.class,()->run("migration_20261023_g_cash_evidence_expand.sql"));
         assertEquals(0,newTables()); assertEquals(0,newHeadColumns());
         assertEquals(2,count("coop_settlement")); assertEquals(0,new BigDecimal("12.00").compareTo(db.queryForObject("SELECT amount FROM coop_settlement WHERE id=2",BigDecimal.class)));
+    }
+    @Test void changedOriginalOrderUniqueKeyFailsPreflightBeforeAnyDdl() {
+        db.execute("ALTER TABLE coop_settlement DROP INDEX uk_settle_order, ADD UNIQUE KEY uk_settle_order(coop_order_id,merchant_id)");
+        assertEquals(1,preflight());
+        assertThrows(DataAccessException.class,()->run("migration_20261023_g_cash_evidence_expand.sql"));
+        assertEquals(0,newTables()); assertEquals(0,newHeadColumns()); assertLegacy();
+        assertEquals(List.of("coop_order_id","merchant_id"),indexColumns("coop_settlement","uk_settle_order"));
+    }
+    @Test void changedOriginalAdjustmentIdentityFailsPreflightEvenWithThreeUniqueColumns() {
+        db.execute("ALTER TABLE coop_settlement_adjustment DROP INDEX uk_coop_adjustment_event, "
+                +"ADD UNIQUE KEY uk_coop_adjustment_event(claim_id,entry_kind,settlement_id)");
+        assertEquals(1,preflight());
+        assertThrows(DataAccessException.class,()->run("migration_20261023_g_cash_evidence_expand.sql"));
+        assertEquals(0,newTables()); assertEquals(0,newHeadColumns()); assertLegacy();
+        assertEquals(List.of("claim_id","entry_kind","settlement_id"),indexColumns("coop_settlement_adjustment","uk_coop_adjustment_event"));
     }
     @Test void existingPartialSchemaIsNotOverwrittenOrTreatedAsApplied() {
         db.execute("CREATE TABLE coop_settlement_cash_event(id BIGINT PRIMARY KEY)"); // deliberate wrong-shape negative control, own UUID only.

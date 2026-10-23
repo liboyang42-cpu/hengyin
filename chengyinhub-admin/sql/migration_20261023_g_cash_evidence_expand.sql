@@ -31,6 +31,11 @@ SELECT CAST(IF(
        AND table_name='coop_settlement' AND index_name='uk_settle_order' AND non_unique=0 AND column_name='coop_order_id')=1
   AND (SELECT COUNT(*) FROM information_schema.statistics WHERE table_schema=DATABASE()
        AND table_name='coop_settlement_adjustment' AND index_name='uk_coop_adjustment_event' AND non_unique=0)=3
+  AND (SELECT COUNT(*) FROM information_schema.statistics WHERE table_schema=DATABASE()
+       AND table_name='coop_settlement' AND index_name='uk_settle_order' AND non_unique=0)=1
+  AND (SELECT GROUP_CONCAT(column_name ORDER BY seq_in_index SEPARATOR ',') FROM information_schema.statistics
+       WHERE table_schema=DATABASE() AND table_name='coop_settlement_adjustment'
+       AND index_name='uk_coop_adjustment_event' AND non_unique=0)='claim_id,entry_kind,event_key'
   AND (SELECT COUNT(*) FROM coop_settlement h LEFT JOIN ums_member m ON m.id=h.merchant_id
        WHERE h.merchant_id IS NULL OR h.merchant_id<=0 OR m.id IS NULL
           OR h.payee_type='platform' OR h.line_type IN ('PLATFORM','DEPOSIT_DEDUCTION'))=0

@@ -1,11 +1,11 @@
 # G：现金结构检查点（零销售 / late SUCCESS 合同尚未统一）
 
-结论：这是**未验证、不得直接应用或启用的结构检查点**，不是 H-G01/H-G03 闭环交付。新增三表、现有 head/adjustment 扩展与 25 条真实 MySQL 测试源码；Java 编译及 MySQL **执行均为 0**。只读核对 root `00fc58c5` 后补入零销售 close 与全状态原订单快照；late SUCCESS 完整来源接口仍未统一，不能把本候选当作可启用的现金结构终稿。
+结论：这是**未验证、不得直接应用或启用的结构检查点**，不是 H-G01/H-G03 闭环交付。新增三表、现有 head/adjustment 扩展与 30 条真实 MySQL 测试源码；Java 编译及 MySQL **执行均为 0**。只读核对 root `00fc58c5` 后补入零销售 close 与全状态原订单快照；本批可独立交 root 做仅结构的受控验证；late SUCCESS 明确 UNIMPLEMENTED/P1，不能因此开启现金 dispatch。
 
 ## 基线、隔离与范围
 
 - 公共仓库：`https://github.com/liboyang42-cpu/hengyin`；公共参考 `2ec68899099a1e250df0949a8383bf85b5d3ffe0`。
-- 本批实际父提交：`5e2803425f4954d48efa07a7176176a289476d30`；独立工作树 `/workspace/hengyin-g-cash-evidence-expand`，分支 `codex/architecture-day-g-cash-evidence-expand`。从原方案创建时干净，没有切换/回退共享树。
+- 首个结构检查点的实际父提交：`5e2803424f4954d48efa07a7176176a289476d30`；本次收敛 delta 父提交：`9a08a66cd35b465ce06c2dbdf76727e28e981102`；独立工作树 `/workspace/hengyin-g-cash-evidence-expand`，分支 `codex/architecture-day-g-cash-evidence-expand`。从原方案创建时干净，没有切换/回退共享树。
 - 只新增本批 migration/precheck/rollback、三 DTO、一 Mapper Java/XML、专属 IT 和本目录。既有生产 Java/XML、A/B/钱包/债务、CMS 方法、原 051/657/ee71/27a、根 CI/迁移登记均未改。
 - root 已修的 WP08 Matcher 和旧 SQL IT env/UUID cleanup 不在本批 diff 内。
 - 遵守根 AGENTS；用户明确批准隔离未验证候选提交/推送，Java/MySQL 统一由 root 受控 CI 执行。本机不跑 Java/数据库，不派 CI。
@@ -28,7 +28,7 @@
 - 同理，源 topic/member/四冻结费率以及 registration 当前状态/金额/原号均须 `INSERT ... SELECT` 精确匹配；这些 Mapper 是未来内部存储原语，不是外部可信认证接口。
 - 待 A 给出实际反例后，root/G 仍须对照具体 insert/事务，而非只看 FK 名称。未执行真实 MySQL，不声称上述约束已在引擎上验过。
 
-## 尚未统一的 late SUCCESS（技术接口阻塞，不是新的金额政策）
+## late SUCCESS：UNIMPLEMENTED / P1，独立于本批结构验收
 
 实际核对 `00fc58c5`：
 
@@ -37,14 +37,9 @@
 - `queryOrder` 返回 total/currency/transaction_id/out_trade_no/trade_state，但不是不可变原成功回执；`completePaymentSuccess` 的 registration 状态与 transaction_id 也不能代替已关闭原单的完整 SUCCESS 原事实。
 - 当前新 event **仅实现 REFUND_APPROVED 来源**。它要求已有原 contribution，故即使 ZERO close 已可建立，也还不能保存“空 ZERO close 后才发现原支付”或“已关闭原单但外部已成功”的完整事件。此缺口明确未实现，不用退款行、假贡献、假正 S、假 head 或 STALE ACK 代替。
 
-建议 root/A/B 先统一的最小接口：
+root 已明确核定：00fc 无可引用的完整持久已验证支付事实表/ID；B218 最终修复尚未交，SDK 查单能力不等于已落库完整事实。本批无需等待或猜测该表，不创建 self-VERIFIED 写入口，不新增支付成功 event 类型。结构仅含真实原收口 / 已批准退款证据与 S=0 anchor，late SUCCESS 保留 **UNIMPLEMENTED/P1**，后续与共同 fence / A/B 原支付事实成组交付。没有因这个 P1 假定本结构测试失败，也没有因结构候选而认定 P1 已关闭。
 
-1. 保持 close 原 topic 唯一键不变；已验证 payment SUCCESS 用原 payer registration / out_trade_no / transaction_id 的确定身份追加，close 原 S 和原贡献不更新；来源明确 CALLBACK 或 QUERY、确认时间、币种、实付分额、原 sourceRegistrationId，且金额/商户身份经过原验证链核对。
-2. 新三表内可选择让 cash_event 自身作为完整已验证事实的不可变回执，或精确引用 root/B **已存在且确实含完整事实**的回执；需要 root/B 给出实际表/唯一键/字段/候选 SHA，不能把 hash-only inbox 当成它。G 不额外建支付平台/第四金额分摊表。
-3. 事件必须允许 ZERO close 原贡献集合外的真实晚到源；用真实 topic 关联和强事务断言绑定同一 close。不能继续以“必须在原 contribution 内”为保存完整 latefact 的先决条件；原观察集合之外只能标明新事实，不能补入原销售合计伪装当时已知。
-4. 原正常付款/父单从单/通知 winner、关闭单的权益处置、回执与支付业务效果的事务边界由 root/A/B 共同确认；G 不改其代码。是否已完成现金归一须与支付 DONE 分开，dispatch 保持关闭。
-
-在此接口统一前，不整批铺生产逻辑，也不将本迁移标成可上线终稿。这里尚无退款净额或多人固定费的任何算法。
+后续 latefact 接线仍必须保证原 payer registration / out_trade_no / transaction_id / 币种 / 实付分额 / 确认来源与时间的完整事实持久化，不能覆盖 close 原 S、释放原业务键或以 STALE ACK 丢弃已成功事实。没有原贡献的空 ZERO close 也必须能保留真实后到事实；这个未来能力不能由当前退款 event 冒充。本批未新增其字段、状态、来源表引用或金额计算。
 
 ## PLATFORM / head / adjustment 的窄扩展
 
@@ -63,10 +58,30 @@
 
 ## 实际验证与未跑项
 
-已实际执行：Python SQL gate 对三个新 SQL 均返回 []；XML 可解析；三条 FOR UPDATE/cache flag 静态检查通过；源码计数为 25 个 `@Test`。这些是静态结果，不是 SQL/结算运行。
+已实际执行：Python SQL gate 对三个新 SQL 均返回 []；XML 可解析；三条 FOR UPDATE/cache flag 静态检查通过；源码计数为 30 个 `@Test`。这些是静态结果，不是 SQL/结算运行。
 
-未执行：Java 编译、25 项 MySQL、真实 forward migration/preflight/rollback、真实并发、B 验签/关单/原号恢复、真实结算非零金额/余额/归一/退款/债务/出款。没有 Mock/H2/Python 合成业务数冒充金融验证；root 00fc CI 通过不覆盖本批新增源码。
+未执行：Java 编译、30 项 MySQL、真实 forward migration/preflight/rollback、真实并发、B 验签/关单/原号恢复、真实结算非零金额/余额/归一/退款/债务/出款。没有 Mock/H2/Python 合成业务数冒充金融验证；root 00fc CI 通过不覆盖本批新增源码。
 
-25 项 IT 计划包括：旧行/旧 unique 保留、显式平台 NULL/SQL NULL 绕过拒绝、原 JSON/type/current scope、父单真实 payer、contribution/event/head/adjustment 跨 close、全局头唯一、异载荷冲突、实际事务失败回滚、脏旧账 preflight、残缺结构拒绝覆盖、空回退/非空拒绝、事务要求；新增五项专测合法空 ZERO、待付原额与原基数分离/状态后变不覆盖、ZERO/POSITIVE/NULL 类型错配、全状态原观察、已付不能伪造零贡献。测试只证明所实际运行的结构/原证据范围，不计算/发放资金。
+30 项 IT 计划包括：旧行/旧 unique 保留、显式平台 NULL/SQL NULL 绕过拒绝、原 JSON/type/current scope、父单真实 payer、contribution/event/head/adjustment 跨 close、全局头唯一、异载荷冲突、实际事务失败回滚、脏旧账 preflight、残缺结构拒绝覆盖、空回退/非空拒绝、事务要求；新增五项专测合法空 ZERO、待付原额与原基数分离/状态后变不覆盖、ZERO/POSITIVE/NULL 类型错配、全状态原观察、已付不能伪造零贡献。测试只证明所实际运行的结构/原证据范围，不计算/发放资金。
 
 另补独立外键反例的行为源码：refund502 属于 registration201，而 close11 已有 registration101；两个独立源 ID 都存在时，recordEvent 仍必须由真实 INSERT...SELECT 的来源断言拒绝，原501正控可记录。此为新增测试设计，尚未执行；不冒充 A 尚未发出的完整反例报告。
+
+## root 最新范围确认与独立风险记账
+
+- 已实际只读 fetch `05f4aa69e61752dcafb0bec73ca9ae9b2ff7a7f5`，核对 CMS 结算、报名回调和 inbox 三文件相较 `00fc58c50febc3366f78af600c8f12636cd13de5` 无差异；未切换本工作树或合并 root 分支。
+- 本目录原报告父 SHA 有一字符笔误，现已按 Git 实际父提交改正；`source-sha256.json.parent` 原值一直正确。
+
+| 风险 / 范围 | 本批行为与证据状态 | 上线门槛 |
+| --- | --- | --- |
+| A 零销售有待付单后原 SUCCESS | S=0 anchor / 原状态快照已编写；真实服务交错 **UNIMPLEMENTED/P1**；没有支付成功 event | 原成功完整事实与共同 fence 成组验收，现金 dispatch 关闭 |
+| A 跨 close / 独立 FK | 已编写 compound-FK 跨 close 与 INSERT...SELECT 源关联反例；A 完整反例待转；本批 MySQL 未跑 | root 同 SHA 真 MySQL 执行，按实际源反例复审 |
+| root/B 完整已验证支付事实缺失 | 无虚构引用表，无 self-VERIFIED / PAYMENT_SUCCESS 类型写入；新增负控源码 | 后续 A/B/G/root 成组协议，不阻塞本批仅退款证据的受控测试 |
+| 已批准退款如何冲回各头 | 只存原退款证据，原贡献/头不覆盖；金额算法未实现 | 用户待决规则与实际余额/债务/回执验证；本批不替代 |
+| 多票固定费 | 未增加计费路径或规则 | 沿用 qty1 边界，待明确业务决定 |
+| 本批 30 项结构源码 | 仅静态检查通过，Java / MySQL 实际执行 0 | root 受控 CI 编译、MySQL forward/preflight/rollback/行为断言 |
+
+本批追加三项真实 MySQL 测试源码：正额源缺 owner 或任何冻结费率必须拒绝；零销售源未知值不能被 default0/假 owner 代替；即使真实 refund/contribution 均存在，声明 PAYMENT_SUCCESS/VERIFIED_PAYMENT 仍不能写入本 event。它们不调用支付网关、不增加经济资格，不证明 latefact 已落地。root 通报 D29 XML/CLEAN 与既有 backend 单测失败均保持原覆盖范围，不计入 G 本批执行结果。
+
+预检复核另发现：原先只按命中列/列数检查旧唯一键不足以证明键身份。现补旧 order unique 必须恰好一列、adjustment unique 必须为原 claim_id/entry_kind/event_key 的完整列序；两个真实 MySQL 负控源码分别构造扩大 order unique 和三列但替换 event_key 的错误结构，必须在首 DDL 前拒绝且保留全部旧数据。没有修改旧 unique，也没有改变任何金额规则。这两项均未执行。
+
+本次 delta 仅涉及自有候选 migration/precheck 的唯一键预检、专属 IT 和本目录报告/检查输出/指纹；三 DTO、Mapper Java/XML、rollback 脚本保持 9a08 原 bytes。此结构候选可交 root 独立编译/真 MySQL 验证，无需等待 latefact 新表；生产启用及 P1 的验收边界不变。
