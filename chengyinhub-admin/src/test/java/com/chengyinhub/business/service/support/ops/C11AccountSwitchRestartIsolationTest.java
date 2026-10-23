@@ -94,4 +94,22 @@ class C11AccountSwitchRestartIsolationTest {
         assertThrows(IllegalArgumentException.class,
                 () -> new InMemoryOriginalEventSource().add(event(null, "UNKNOWN", 501L)));
     }
+
+    @Test
+    void recoverOriginalOfNeverSeenIdDoesNotOccupyThenUniqueWriteApplies() {
+        InMemoryOriginalEventSource source = new InMemoryOriginalEventSource();
+        SupportEventLocator locator = new SupportEventLocator(source);
+        assertNull(locator.recoverOriginal(null, null));
+        assertNull(locator.recoverOriginal("  ", null));
+        IllegalStateException missing = assertThrows(IllegalStateException.class,
+                () -> locator.recoverOriginal("c11-never-seen", null));
+        assertTrue(missing.getMessage().contains("c11-never-seen"));
+        assertTrue(source.findByRequestId("c11-never-seen").isEmpty());
+        source.add(event("c11-never-seen", "UNKNOWN", 11L));
+        SupportEventLocator.LocatedEvent recovered = locator.recoverOriginal("c11-never-seen", null);
+        assertEquals("c11-never-seen", recovered.getRequestId());
+        assertEquals("UNKNOWN", recovered.getOriginalOutcome());
+        assertEquals(1, source.findByRequestId("c11-never-seen").size());
+        assertNotEquals(SupportEventLocator.PROJECTION_APPLIED_SUCCESS, recovered.getOriginalOutcome());
+    }
 }
