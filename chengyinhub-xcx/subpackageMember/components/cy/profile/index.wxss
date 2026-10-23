@@ -1,5 +1,6 @@
 /* 骨架屏→内容淡切:isolated 组件收不到全局 components.wxss,@import 同一份定义 */
 @import '../../../../style/fade-in.wxss';
+@import '../../../../style/motion-entry.wxss'; /* 订单卡飞入 .cy-fly-in / .cy-fly-wait */
 :host { display: block; min-height: 100vh; }
 .pc-page { min-height: 100vh; position: relative; color: var(--cy-color-text-primary); }
 .pc-player {

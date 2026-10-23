@@ -66,7 +66,7 @@ Page({
     listLoaded: false,        // 任一 tab 拿到过数据 —— 四态里区分「首次加载」与「已有内容」
     banner: {},
     topList: [],
-    tailList: [],
+    tailList: [], flyClass: '',   // owner 10-22:每次打开页面卡片飞入(onShow 飞入、onHide 先藏好等下次重播)
     bannerTitle: '推荐',
     topTitle: '全部主题',
     emptyTitle: '',
@@ -139,7 +139,7 @@ Page({
 
   onShow() {
     this.setData({ reducedMotion: readReducedMotion() });
-
+    this.setData({ flyClass: this.data.reducedMotion ? '' : 'cy-fly-in' });   // 卡片飞入
     this.setData({ pageMetaStyle: readPageStyle() });
     wx.hideTabBar();
     // 收敛:商家玩家共用发布广场,底部 tabBar 按本地身份立即渲染(避免等 /api/publish/home 异步返回时闪 consumer)
@@ -352,6 +352,8 @@ Page({
 
   onHide() {
     merchantTheme.merchantPageRestore();
+    // 离开时先把卡片藏好(cy-fly-wait 透明),下次回到本页 onShow 再飞进来,不会先闪一帧旧卡
+    this.setData({ flyClass: this.data.reducedMotion ? '' : 'cy-fly-wait' });
   },
 
   // 主题模板走 name 字段(主题推荐/最新主题走 title),两边共用同一套真实图标映射

@@ -1,5 +1,6 @@
 const app = getApp();
 const merchantTheme = require('../../../utils/merchant-theme.js');
+const { readReducedMotion } = require('../../../utils/motion-preference.js');
 const { normalizeMarketingHome } = require('../utils/merchant-aggregate.js');
 const officialChannel = require('../../../utils/merchant-official-channel.js');
 const { toTimestamp, chinaParts } = require('../../../utils/datetime.js');
@@ -86,6 +87,7 @@ function routeScopeText(recruiting) {
 
 Page({
   data: {
+    flyClass: '',   // owner 10-22:每次打开页面广场卡飞入(onShow 飞入、onHide 先藏好等下次重播)
     statusBarHeight: app.globalData.statusBarHeight || 20,
     navBarHeight: app.globalData.navBarHeight || 44,
     tabs: [
@@ -110,8 +112,14 @@ Page({
     this.loadAvailable();
   },
 
-  onShow() { merchantTheme.merchantPageShow(); },
-  onHide() { merchantTheme.merchantPageRestore(); },
+  onShow() {
+    merchantTheme.merchantPageShow();
+    this.setData({ flyClass: readReducedMotion() ? '' : 'cy-fly-in' });
+  },
+  onHide() {
+    merchantTheme.merchantPageRestore();
+    this.setData({ flyClass: readReducedMotion() ? '' : 'cy-fly-wait' });
+  },
   onUnload() { merchantTheme.merchantPageRestore(); },
 
   onNavBack() {

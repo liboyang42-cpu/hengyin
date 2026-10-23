@@ -136,7 +136,8 @@ test('不带 topicId 的老入口(查看全部/直接进广场)行为不变', ()
 test('广场卡上有 id 锚点,命中态才有描边类', () => {
   const wxml = read('pages/merchant/coop-center/index.wxml');
   assert.match(wxml, /id="cc-route-\{\{item\.id\}\}"/, '定位靠这个 id,删了滚动就落空');
-  assert.match(wxml, /class="cc-route \{\{item\.focus \? 'cc-route--focus' : ''\}\}"/);
+  // 2026-10-22 owner:广场卡每次打开都飞入,class 尾部多一个 {{flyClass}}
+  assert.match(wxml, /class="cc-route \{\{item\.focus \? 'cc-route--focus' : ''\}\}( \{\{flyClass\}\})?"/);
   assert.match(read('pages/merchant/coop-center/index.wxss'), /\.cc-route--focus \{/);
 });
 

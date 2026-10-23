@@ -448,7 +448,7 @@ Component({
     page_no: 1,
     hasMore: false,
     nodata: false,
-    orderPreviewList: [],
+    orderPreviewList: [], ordFly: '',   // ordFly:owner 10-22 订单卡每次打开都飞入(show 飞入 / hide 先藏好)
     projectPreviewList: [],
 
     // 订单未加载时不展示内容；只有成功返回空列表才显示暂无订单。
@@ -518,7 +518,7 @@ Component({
   pageLifetimes: {
     show: function () {
       if (!this._profileAttached) return; this._navigating = false;
-      this._profileHidden = false;
+      this._profileHidden = false; var ordFly = readReducedMotion() ? '' : 'cy-fly-in'; if (this.data && typeof this.data.ordFly === 'string' && this.data.ordFly !== ordFly) this.setData({ ordFly: ordFly });
       const identityChanged = this._syncProfileReadIdentity();
       if (identityChanged || this._profileNeedsInitialize) {
         this._profileNeedsInitialize = false;
@@ -556,7 +556,7 @@ Component({
     // applyTheme 的那些)会顶着一条白导航栏 —— 旧 merchant/profile 页用
     // merchantPageRestore 处理的就是这件事,收编后这层责任跟着搬过来。
     hide: function () {
-      this._profileHidden = true;
+      this._profileHidden = true; if (this.data && this.data.orderPreviewList && this.data.orderPreviewList.length) this.setData({ ordFly: readReducedMotion() ? '' : 'cy-fly-wait' });
       this._profileReadEpoch = (this._profileReadEpoch || 0) + 1;
       if (this.data.pointsSheet.loading) this.setData({ 'pointsSheet.loading': false });
       this._profileShown = true;

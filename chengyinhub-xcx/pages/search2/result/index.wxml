@@ -24,7 +24,8 @@
       <cy-error load-failure class="fill-slot cy-fade-in" wx:elif="{{searchError && !visibleResults.length}}" fill="{{true}}" size="lg" title="没能完成搜索" sub="{{searchError}}" bind:retry="runSearch" auto-back="{{!everLoaded}}" />
       <cy-empty class="fill-slot" wx:if="{{!searchLoading && !searchError && !visibleResults.length}}" fill="{{true}}" size="lg" kind="empty" title="没有找到" sub="" />
       <view class="result-list" wx:if="{{visibleResults.length}}">
-        <block wx:for="{{visibleResults}}" wx:key="key">
+        <!-- owner 10-22:每次打开都让卡片逐张飞进来(回到本页会重搜、结果重挂,自然重播) -->
+        <view class="cy-fly-in" style="animation-delay: {{index < 8 ? index * 60 : 480}}ms" wx:for="{{visibleResults}}" wx:key="key">
           <view wx:if="{{item.type === 'topic'}}" class="topic-result-card" data-id="{{item.id}}" data-scene-id="{{item.sceneId}}" data-path="{{item.path}}" bindtap="goResult" aria-role="button" aria-label="查看主题：{{item.title}}" hover-class="cy-pressed" hover-stay-time="80">
             <view class="topic-result-card__media">
               <image wx:if="{{item.cover}}" class="topic-result-card__cover" src="{{item.cover}}" mode="aspectFill" />
@@ -77,7 +78,7 @@
             </view>
             <cy-icon class="result-card__arrow" name="arrow-right" size="24" />
           </view>
-        </block>
+        </view>
       </view>
     </view>
   </view>
