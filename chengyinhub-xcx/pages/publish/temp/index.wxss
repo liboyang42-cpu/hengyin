@@ -1284,16 +1284,6 @@ page {
 /* 玩法屏自己有安全区,外面那 188rpx 的留白会把它整块往下推 */
 .cg-preview--kit .cg-pv-scroll { padding-top: env(safe-area-inset-top); }
 
-/* 玩法在场时的翻页条:浮在玩法屏上方靠底,别占玩法自己的版面。
-   玩法屏的主按钮在离底 26px 的位置(原型实测),所以这条再往上让一截。 */
-.cg-pv-float {
-  position: absolute; left: 0; right: 0; z-index: 5;
-  bottom: calc(env(safe-area-inset-bottom) + 200rpx);
-  display: flex; align-items: center; justify-content: center; gap: var(--cy-space-3);
-  pointer-events: none;
-}
-.cg-pv-float .cg-pv-arrow, .cg-pv-float .cg-pv-dots { pointer-events: auto; }
-
 /* ===== 找东西:在图上点出目标 ===== */
 .cg-ho-scene {
   position: relative; width: 100%; height: 360rpx; margin-top: var(--cy-space-1);

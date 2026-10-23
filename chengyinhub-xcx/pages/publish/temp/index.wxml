@@ -1338,13 +1338,10 @@
       <view class="cg-pv-inline-end"><view class="cg-pv-inline-continue">继续故事</view></view>
     </scroll-view>
     <cy-playkit class="{{ pvKit.mode === 'CARD' ? 'theme-dark' : '' }}" wx:elif="{{pvStepKey === 'challenge' && pvKit}}" kit="{{pvKit}}" show="{{true}}" bind:kitaction="onPvKitAction" />
-    <view class="cg-pv-float" wx:if="{{ pvStepKey === 'challenge' && pvKit }}">
-      <view class="cg-pv-arrow {{ pvStep <= 0 ? 'disabled' : '' }}" bindtap="pvPrev" aria-role="button" aria-label="上一步预览" aria-disabled="{{pvStep <= 0}}" hover-class="{{pvStep <= 0 ? 'none' : 'cy-pressed'}}" hover-stay-time="80"><cy-icon name="back" size="36" /></view>
-      <view class="cg-pv-dots">
-        <view class="cg-pv-dot {{ pvStep === idx ? 'on' : '' }}" wx:for="{{ pvSteps }}" wx:key="*this" wx:for-index="idx"></view>
-      </view>
-      <view class="cg-pv-arrow {{ pvStep >= pvSteps.length - 1 ? 'disabled' : '' }}" bindtap="pvNext" aria-role="button" aria-label="下一步预览" aria-disabled="{{pvStep >= pvSteps.length - 1}}" hover-class="{{pvStep >= pvSteps.length - 1 ? 'none' : 'cy-pressed'}}" hover-stay-time="80"><cy-icon name="arrow-right" size="36" /></view>
-    </view>
+    <!-- 照「城瘾玩法试玩台」:玩法铺满整屏,不压翻页点和箭头(退出在玩法自己的左上角);
+         玩完由判定屏整屏涌上来,作者配的成功 / 失败反馈就写在这一屏。 -->
+    <cy-play-verdict wx:if="{{ pvStepKey === 'challenge' && pvKit }}" show="{{ pvVerdict.show }}" kind="{{ pvVerdict.kind }}"
+                     text="{{ pvVerdict.text }}" images="{{ pvVerdict.images }}" closable="{{ true }}" bind:close="closePvVerdict" />
     <!-- 2026-09-18 UI-22:翻页条 + 步骤标签固定在滚动区之上(不再 sticky 在滚动流里),
          步骤标签紧贴翻页点,滚到哪一步都和下面的内容对得上,也不会被滚过去的卡片压住。 -->
     <view class="cg-pv-head" wx:if="{{ !(pvStepKey === 'challenge' && pvKit) }}">
@@ -1460,7 +1457,8 @@
     </scroll-view>
 
     <!-- 预览态底部栏(FE-04:previewMode 时隐藏发布/草稿控件,temp 收窄为纯预览) -->
-    <view class="cg-pv-submit" wx:if="{{!previewMode}}">
+    <!-- 玩法那一屏只有玩法本身(照试玩台);保存 / 发布留在玩完之后的几步 -->
+    <view class="cg-pv-submit" wx:if="{{!previewMode && !(pvStepKey === 'challenge' && pvKit)}}">
       <!-- 2026-09-23 用户:底部「保存前摘要」删掉;只在保存失败时出失败说明 -->
       <cy-inline-error wx:if="{{submitError}}" kind="network"
         title="{{from === 'citynode' ? '玩法没有保存成功' : (lastSubmitAction === 'draft' ? '草稿没有保存成功' : '玩法没有发布成功')}}"

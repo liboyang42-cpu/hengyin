@@ -80,10 +80,28 @@ function feedbackRows(config, rows) {
 // 选择玩法的标签条:每个分类最多四行,标签按顺序轮流落到各行(宽度随字数,不强行对齐)。
 function tagRows(items) { const rows = [[], [], [], []]; items.forEach((item, i) => rows[i % 4].push(item)); return rows.filter(row => row.length); }
 function summary(row) { return !row ? '未配置' : [row.reply, (row.costs || []).length ? '消耗 ' + row.costs.length + ' 项' : '', (row.effects || []).length ? '效果 ' + row.effects.length + ' 项' : '', row.nextStepId ? '进入 ' + row.nextStepId : ''].filter(Boolean).join(' · ') || '无额外处理'; }
-const data = { fbOpenPass: false, fbOpenFail: false, sheetPick: '', sheetPickItem: null, sheetNavAnchor: '', toolPickerOpen: false, toolPickerItems: [], toolPickerHint: '', voiceSheetOpen: false, musicSheetOpen: false, musicDraft: { title: '', audioUrl: '', fileName: '', loop: true }, musicError: '',
+const data = { pvVerdict: { show: false, kind: 'win', text: '', images: [] }, fbOpenPass: false, fbOpenFail: false, sheetPick: '', sheetPickItem: null, sheetNavAnchor: '', toolPickerOpen: false, toolPickerItems: [], toolPickerHint: '', voiceSheetOpen: false, musicSheetOpen: false, musicDraft: { title: '', audioUrl: '', fileName: '', loop: true }, musicError: '',
   scanReplyKinds: [{ key: 'TEXT', label: '文字' }, { key: 'VOICE', label: '语音' }, { key: 'IMAGE', label: '图片' }, { key: 'OVERLAY', label: '显形' }],
   gameConfigOpen: false, scanSheetOpen: false, toolSheetKey: '', afterOpOptions: [{ key: 'INC', label: '增加' }, { key: 'FLOOR', label: '恢复到至少' }], effectScopeOptions: [], r5Editor: view({}, 0), afterEditor: { show: false, path: '', draft: after.empty(), error: '' } };
 const methods = {
+  // 试玩判定屏(照试玩台):判得出对错才弹,返回是否弹了。成功「继续」进下一步;失败回到玩法开头再来。
+  // 按哪份配置判:选择玩法里的「预览」用那份范例(_pvAdvanced),其余用作者正在填的这份
+  showPvVerdict(kit, detail, action) {
+    const pv = require('./preview-verdict.js'), config = this._pvAdvanced || this.data.advanced, kind = pv.judge(config, kit, action || (detail && detail.action), detail && detail.detail);
+    if (!kind) return false;
+    const fb = pv.feedback(config, kind);
+    this.setData({ pvVerdict: { show: true, kind, text: fb.text, images: fb.images } });
+    return true;
+  },
+  closePvVerdict() {
+    const kind = this.data.pvVerdict.kind, kit = this.data.pvKit;
+    this.setData({ pvVerdict: { show: false, kind: 'win', text: '', images: [] } });
+    // 只有玩法这一屏的试玩(选择玩法里的「预览」、「试玩当前玩法」)玩完就回编辑页
+    if (kind === 'win' || !kit) { if (this.data.pvStep >= this.data.pvSteps.length - 1) this.closePreview(); else this.pvNext(); return; }
+    // 玩法组件的「已提交」是它自己的状态,卸掉重挂才回到开局那一屏(判定屏盖着,看不到这一下)
+    this._pvTypeStartedAt = 0;
+    this.setData({ pvKit: null }, () => this.setData({ pvKit: Object.assign({}, kit, { passed: false, attempts: 0, startConfirmed: false, result: null }) }));
+  },
   _takeR5Snapshot(kind) { this['_r5Snapshot_' + kind] = clone({ advanced: this.data.advanced, formData: this.data.formData, dirty: this.data.dirty || false, gameKey: this.data.gameKey, gameCurrent: this.data.gameCurrent, gameSection: this.data.gameSection, timerAvailable: this.data.timerAvailable, presentChoice: this.data.presentChoice, presentInlineLocked: this.data.presentInlineLocked, presentLockReason: this.data.presentLockReason, pvMethodLabel: this.data.pvMethodLabel, pvMethodIconName: this.data.pvMethodIconName, participationChanged: !!this._r5ParticipationChanged }); },
   _restoreR5Snapshot(kind) { const saved = this['_r5Snapshot_' + kind]; if (!saved) return; this._r5ParticipationChanged = saved.participationChanged; delete saved.participationChanged; this._setFormState(saved, null, { pristine: true }); delete this['_r5Snapshot_' + kind]; },
   _validateR5Panel() { return require('../utils/publish/advanced-game-config.js').validate(this.data.advanced, this._advancedValidateOpts()) || matrix.validate(this._supportMatrix, Object.assign({}, this.data.formData, { advancedConfigJson: this.data.advanced }), this._supportContext); },

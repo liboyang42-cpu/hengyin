@@ -18,10 +18,69 @@ test('结算后的回执把配图(最多 3 张)交给结果位;未结算不露�
   assert.deepEqual(legacy.images, [], '旧回执没有 images 字段时是空列表,模板里 .length 不会报错');
 });
 
-test('结果位模板在结算后显示配图', () => {
-  const wxml = fs.readFileSync(path.join(ROOT, 'pages/play/theme-backpack.wxml'), 'utf8');
-  assert.match(wxml, /wx:if="\{\{r5OutcomeReply\.settled && r5OutcomeReply\.images\.length\}\}"/);
-  assert.match(wxml, /wx:for="\{\{r5OutcomeReply\.images\}\}"/);
+test('成功 / 失败反馈不进背包:背包只留结算状态,文字与配图上整屏判定', () => {
+  const bag = fs.readFileSync(path.join(ROOT, 'pages/play/theme-backpack.wxml'), 'utf8');
+  assert.doesNotMatch(bag, /r5OutcomeReply\.reply|r5OutcomeReply\.images/);
+  assert.match(bag, /r5OutcomeReply\.statusText/);
+  const page = fs.readFileSync(path.join(ROOT, 'pages/play/index.wxml'), 'utf8');
+  assert.match(page, /<cy-play-verdict show="\{\{r5Verdict\.show\}\}"[^>]*text="\{\{r5Verdict\.text\}\}" images="\{\{r5Verdict\.images\}\}"[^>]*bind:close="closeR5Verdict"/);
+  const verdict = fs.readFileSync(path.join(ROOT, 'pages/play/components/play-verdict/index.wxml'), 'utf8');
+  assert.match(verdict, /wx:for="\{\{images\}\}"/);
+});
+
+function runtimeHost() {
+  const runtime = require('../../pages/play/utils/r5-player-runtime.js');
+  const host = { data: JSON.parse(JSON.stringify(runtime.data)), setData(patch) {
+    Object.keys(patch).forEach(key => { if (key.includes('.')) { const [a, b] = key.split('.'); this.data[a][b] = patch[key]; } else this.data[key] = patch[key]; });
+  } };
+  host.data.journeyCheck = {};
+  Object.assign(host, runtime.methods());
+  return host;
+}
+const receipt = (id, settled, outcome, reply, images) => ({ sessionId: 1, lastOutcome: { attemptId: id, settled, status: settled ? 'SETTLED' : 'PENDING', outcome, reply, images } });
+
+test('玩家端:亲眼等到结算才弹判定屏;进页时已结过的、同一张回执、没配反馈的都不弹', () => {
+  const host = runtimeHost();
+  host._applyR5OutcomeView(receipt('a0', true, 'PASS', '旧的反馈', []));
+  assert.equal(host.data.r5Verdict.show, false, '进页第一份视图只记下来');
+  host._applyR5OutcomeView(receipt('a1', false, '', '', []));
+  host._applyR5OutcomeView(receipt('a1', true, 'FAIL', '再找找门牌', ['https://cdn.example.com/1.jpg']));
+  assert.deepEqual(host.data.r5Verdict, { show: true, kind: 'fail', text: '再找找门牌', images: ['https://cdn.example.com/1.jpg'] });
+  host.setData({ 'r5Verdict.show': false });   // 页面上的 closeR5Verdict 就是这一句
+  host._applyR5OutcomeView(receipt('a1', true, 'FAIL', '再找找门牌', ['https://cdn.example.com/1.jpg']));
+  assert.equal(host.data.r5Verdict.show, false, '轮询回来同一张回执不重弹');
+  host._applyR5OutcomeView(receipt('a2', true, 'PASS', '', []));
+  assert.equal(host.data.r5Verdict.show, false, '没配反馈就不弹');
+  host._applyR5OutcomeView(receipt('a3', true, 'PASS', '门开了', []));
+  assert.equal(host.data.r5Verdict.kind, 'win');
+});
+
+test('编辑页试玩:按作者刚填的答案本地判,反馈取对应那一边', () => {
+  const pv = require('../../pages/publish/temp/preview-verdict.js');
+  const advanced = { qa: { mode: 'PICK', answerText: '钟楼、Bell Tower', options: [{ id: 'o1', correct: false }, { id: 'o2', correct: true }] },
+    outcomeRules: { pass: { reply: '对了', images: ['https://cdn.example.com/p.jpg'] }, fail: { reply: '' } } };
+  const qa = { type: 'qa' };
+  assert.equal(pv.judge(advanced, qa, 'submit', { mode: 'pick', index: 1, optionId: 'o2' }), 'win');
+  assert.equal(pv.judge(advanced, qa, 'submit', { mode: 'pick', index: 0, optionId: 'o1' }), 'fail');
+  assert.equal(pv.judge(advanced, qa, 'submit', { mode: 'type', input: '  bell tower ' }), 'win', '与服务端同:去空格、不分大小写、顿号分隔');
+  assert.equal(pv.judge(advanced, qa, 'submit', { mode: 'type', input: '鼓楼' }), 'fail');
+  advanced.qa.multi = true; advanced.qa.options.push({ id: 'o3', correct: true });
+  assert.equal(pv.judge(advanced, qa, 'submit', { mode: 'pick', optionIds: ['o3', 'o2'] }), 'win');
+  assert.equal(pv.judge(advanced, qa, 'submit', { mode: 'pick', optionIds: ['o2'] }), 'fail');
+  assert.equal(pv.judge(advanced, { type: 'estimate' }, 'answer', {}), '', '答案在玩法自己那儿的不硬判');
+  assert.equal(pv.judge(advanced, { type: 'compass' }, 'verdict', { kind: 'fail' }), 'fail');
+  assert.equal(pv.judge(advanced, { type: 'typein', passed: true }, 'submit', {}), 'win');
+  assert.deepEqual(pv.feedback(advanced, 'win'), { text: '对了', images: ['https://cdn.example.com/p.jpg'] });
+  assert.deepEqual(pv.feedback(advanced, 'fail'), { text: '', images: [] }, '没打开那一边就只有两个字');
+});
+
+test('编辑页试玩:玩法那一屏不压翻页点 / 箭头 / 保存栏,判定屏可「继续」', () => {
+  const wxml = fs.readFileSync(path.join(ROOT, 'pages/publish/temp/index.wxml'), 'utf8');
+  assert.doesNotMatch(wxml, /cg-pv-float/);
+  assert.match(wxml, /<cy-play-verdict wx:if="\{\{ pvStepKey === 'challenge' && pvKit \}\}"[^>]*closable="\{\{ true \}\}" bind:close="closePvVerdict"/);
+  assert.match(wxml, /class="cg-pv-submit" wx:if="\{\{!previewMode && !\(pvStepKey === 'challenge' && pvKit\)\}\}"/);
+  const json = JSON.parse(fs.readFileSync(path.join(ROOT, 'pages/publish/temp/index.json'), 'utf8'));
+  assert.equal(json.componentPlaceholder['cy-play-verdict'], 'view', '跨分包组件要占位');
 });
 
 function loadAdvancedGame(audios) {

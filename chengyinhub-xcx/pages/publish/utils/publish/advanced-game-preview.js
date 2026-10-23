@@ -251,7 +251,8 @@ const BUILDERS = {
     lead: orBlank(c.lead),
     imageUrl: orBlank(c.imageUrl),
     audioUrl: orBlank(c.audioUrl),
-    options: (Array.isArray(c.options) ? c.options : []).map((o) => ({ t: orBlank(o.label) })),
+    // id 照带(不是秘密):试玩判定按 id 认选项;correct 与反馈仍不带
+    options: (Array.isArray(c.options) ? c.options : []).map((o) => ({ id: orBlank(o.id), t: orBlank(o.label) })),
     // 多选标记照配置带过去:预览要演的就是「勾多个再提交」那一屏
     multi: !!c.multi,
     shotLead: orBlank(c.lead) || orBlank(c.title),

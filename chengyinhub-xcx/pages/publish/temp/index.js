@@ -2771,7 +2771,7 @@ Page({
   /** 按商家此刻填的这份配置试玩(原型 §1.1 玩法模块底下那一条)。
       与「先看再选」不同:那个用样例,这个用真配置 —— 商家要看的是自己填的东西。 */
   tryCurrentGame: function () {
-    this._pvTypeStartedAt = 0;
+    this._pvTypeStartedAt = 0; this._pvAdvanced = null;
     const pvKit = advancedGamePreview.buildPreviewKit(this.data.advanced, {
       title: this.data.formData.title,
       limitSeconds: (this.data.advanced.timer && this.data.advanced.timer.enabled)
@@ -2790,7 +2790,7 @@ Page({
     const key = e.currentTarget.dataset.key;
     if (templateTools.TOOLS.some(tool => tool.key === key)) return this.previewToolFromSheet(e);
     const draft = nodeGameCatalog.applyToConfig(this.data.advanced, key, { demo: true });
-    if (!draft) return;
+    if (!draft) return; this._pvAdvanced = draft;   // 试玩判定按这份范例配置判,不按真配置
     /* 没有节点级配置的玩法(九宫格:九格与两档奖励配在主题上)永远建不出 kit ——
        给它一副范例屏,别让商家点了预览只吃到一句「要先配一点内容」、看不到这玩法长什么样。 */
     const pvKit = advancedGamePreview.buildPreviewKit(draft, { title: this.data.formData.title, limitSeconds: 0 })
@@ -2806,7 +2806,7 @@ Page({
   },
 
   openPreview: function () {
-    this._pvTypeStartedAt = 0;
+    this._pvTypeStartedAt = 0; this._pvAdvanced = null;
     // 查看预览前必填校验
     const formData = this.prepareFormData();
     if (!this.validateForm(formData, false)) return;
@@ -2834,14 +2834,14 @@ Page({
     if (result) {
       this._pvTypeStartedAt = result.startedAt;
       this.setData({ pvKit: result.kit });
-      if (result.message) app.tips(result.message);
-    } else if (d.action === 'verdict' || d.action === 'drawn' || d.action === 'scanned') this.pvNext();
+      if (!(result.ready && result.kit.type === 'typein' && this.showPvVerdict(result.kit, d))) { if (result.message) app.tips(result.message); }
+    } else if (d.action === 'verdict' || d.action === 'drawn' || d.action === 'scanned') { if (!this.showPvVerdict(kit, d)) this.pvNext(); }
     // CU-C-11:问答类提交在预览里不判定,原来静默吞掉 ⇒ 点「提交」像坏了。明说,别让商家以为答错/没反应。
-    else if (d.action === 'answer' || d.action === 'submit' || d.action === 'shoot') app.tips('试玩只看样子，不判对错');
+    else if (d.action === 'answer' || d.action === 'submit' || d.action === 'shoot') { if (!this.showPvVerdict(kit, d)) app.tips('试玩只看样子，不判对错'); }
   },
   closePreview: function () {
     this._pvTypeStartedAt = 0;
-    this.setData({ previewVisible: false, canPublishGame: false, pvKit: null });
+    this.setData({ previewVisible: false, canPublishGame: false, pvKit: null, pvVerdict: { show: false, kind: 'win', text: '', images: [] } });
     this.syncNativeTheme();
   },
 
