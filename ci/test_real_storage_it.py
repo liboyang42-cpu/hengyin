@@ -104,7 +104,8 @@ class RegistryContractTest(unittest.TestCase):
                     "architecture-day-runtime-governance": 36,
                     "architecture-day-registration-write": 109,
                     "architecture-day-im-revocation": 2,
-                    "architecture-day-w19-owner-notice": 29}
+                    "architecture-day-w19-owner-notice": 29,
+                    "architecture-day-play-scheduler": 16}
         reg = registry()
         totals = {name: sum(reg["classes"][fqcn]["tests"] for fqcn in batch["classes"])
                   for name, batch in reg["batches"].items()}
@@ -162,6 +163,21 @@ class RegistryContractTest(unittest.TestCase):
         for fqcn, (count, gates) in expected.items():
             self.assertEqual(count, reg["classes"][fqcn]["tests"])
             self.assertEqual(gates, reg["classes"][fqcn]["gates"])
+            facts, problems = rs.precheck(reg, _HERE.parent, fqcn)
+            self.assertEqual([], problems)
+            self.assertEqual(count, facts["declared_tests"])
+            self.assertEqual([], facts["nested"])
+
+    def test_play_and_scheduler_batch_preserves_exact_non_dynamic_cases(self):
+        reg = registry()
+        expected = {
+            "com.chengyinhub.business.it.PlayHintUnlockMySqlIT": 10,
+            "com.chengyinhub.quartz.util.SchedulerSessionLockMySqlIT": 3,
+            "com.chengyinhub.quartz.util.SchedulerHandoffBoundaryMySqlIT": 3,
+        }
+        self.assertEqual(list(expected), reg["batches"]["architecture-day-play-scheduler"]["classes"])
+        for fqcn, count in expected.items():
+            self.assertEqual(count, reg["classes"][fqcn]["tests"])
             facts, problems = rs.precheck(reg, _HERE.parent, fqcn)
             self.assertEqual([], problems)
             self.assertEqual(count, facts["declared_tests"])

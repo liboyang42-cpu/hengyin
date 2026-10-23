@@ -354,6 +354,16 @@
         "com.chengyinhub.business.service.impl.MerchantOfferOwnerNoticeIntentMySqlIT",
         "com.chengyinhub.business.it.FreeExploreNodeSupplyMySqlIT"
       ]
+    },
+    "architecture-day-play-scheduler": {
+      "lineage": "C e190 Photo test contracts +W09-T10 / E0c49 scheduler3+existing3 on root reviewed cce assembly",
+      "registered_source": "cce07a2ce1c4c02efec7abe501f1073cafeefb5a",
+      "note": "16 ordinary@Test exact cases; no dynamic counts, raw zero-skip XML and independently CLEAN scratch required. Full backend CI also checks52 Photo unit and actual Theme/APPLIED cases.",
+      "classes": [
+        "com.chengyinhub.business.it.PlayHintUnlockMySqlIT",
+        "com.chengyinhub.quartz.util.SchedulerSessionLockMySqlIT",
+        "com.chengyinhub.quartz.util.SchedulerHandoffBoundaryMySqlIT"
+      ]
     }
   },
   "classes": {
@@ -1088,6 +1098,30 @@
       ],
       "gates": {},
       "note": "Original8 supply/card/terms assertions retained; only new owner notification dependencies explicitly wired as boundary mocks. Not owner intent persistence proof."
+    },
+    "com.chengyinhub.business.it.PlayHintUnlockMySqlIT": {
+      "tests": 10,
+      "storage": [
+        "mysql"
+      ],
+      "gates": {},
+      "note": "Original controller transaction on real entitlement/activity/registration locks and event14 unique ledger/debit; node/template/topic catalog doubles.10 fixed ordinary cases after root splits two parameter values; no extraction/HTTP/modern receipt proof."
+    },
+    "com.chengyinhub.quartz.util.SchedulerSessionLockMySqlIT": {
+      "tests": 3,
+      "storage": [
+        "mysql"
+      ],
+      "gates": {},
+      "note": "Existing3 real MySQL session/definition locks and leader termination, unchanged production and tests; only task-owned scratch connections/schema."
+    },
+    "com.chengyinhub.quartz.util.SchedulerHandoffBoundaryMySqlIT": {
+      "tests": 3,
+      "storage": [
+        "mysql"
+      ],
+      "gates": {},
+      "note": "Real coordinator/lock SQL deterministic in-flight/old epoch/post-lock leadership races. KILL only exact owned scratch leader connection, no business effects/Quartz/production or multi-JVM disaster proof."
     }
   }
 }
