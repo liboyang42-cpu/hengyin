@@ -17,6 +17,10 @@ public final class EventResultDispute {
     public static final int STATUS_PENDING = 0;
     public static final int STATUS_RESTORED = 1;
     public static final int STATUS_REJECTED = 2;
+    public static final String OUTCOME_NOT_FOUND = "NOT_FOUND";
+    public static final String OUTCOME_PENDING = "PENDING";
+    public static final String OUTCOME_RESTORED = "RESTORED";
+    public static final String OUTCOME_REJECTED = "REJECTED";
 
     private static final Pattern REQUEST_ID = Pattern.compile("[A-Za-z0-9_.:-]{8,64}");
 
@@ -59,6 +63,26 @@ public final class EventResultDispute {
         return found;
     }
 
+    public OriginalReceipt recoverOriginal(String requestId) {
+        return recoverUnknown(requestId);
+    }
+
+    /**
+     * Missing / blank requestId stays Java {@code null} with typed {@code NOT_FOUND}.
+     * Never-seen ids return {@code NOT_FOUND} without occupying the ledger.
+     */
+    public OriginalReceipt recoverUnknown(String requestId) {
+        String id = parseKey(requestId);
+        if (id == null) {
+            return OriginalReceipt.notFound(null);
+        }
+        Dispute found = byRequest.get(id);
+        if (found == null) {
+            return OriginalReceipt.notFound(id);
+        }
+        return new OriginalReceipt(found.requestId, outcomeOf(found.status), false, found);
+    }
+
     /**
      * 按原完赛请求恢复奖励快照。回执引用原 requestId 与 originalRewardCenti，
      * 不生成新的发奖 request。
@@ -94,11 +118,43 @@ public final class EventResultDispute {
         return found;
     }
 
-    private static String requireKey(String requestId) {
+    static String parseKey(String requestId) {
         if (requestId == null || !REQUEST_ID.matcher(requestId).matches()) {
-            throw new OrienteeringEventException(OrienteeringEventException.INVALID_ARGUMENT, "幂等键无效");
+            return null;
         }
         return requestId;
+    }
+
+    private static String requireKey(String requestId) {
+        String id = parseKey(requestId);
+        if (id == null) {
+            throw new OrienteeringEventException(OrienteeringEventException.INVALID_ARGUMENT, "幂等键无效");
+        }
+        return id;
+    }
+
+    private static String outcomeOf(int status) {
+        if (status == STATUS_RESTORED) return OUTCOME_RESTORED;
+        if (status == STATUS_REJECTED) return OUTCOME_REJECTED;
+        return OUTCOME_PENDING;
+    }
+
+    public static final class OriginalReceipt {
+        public final String originalRequestId;
+        public final String outcome;
+        public final boolean mintedNewRequest;
+        public final Dispute dispute;
+
+        OriginalReceipt(String originalRequestId, String outcome, boolean mintedNewRequest, Dispute dispute) {
+            this.originalRequestId = originalRequestId;
+            this.outcome = outcome;
+            this.mintedNewRequest = mintedNewRequest;
+            this.dispute = dispute;
+        }
+
+        static OriginalReceipt notFound(String requestId) {
+            return new OriginalReceipt(requestId, OUTCOME_NOT_FOUND, false, null);
+        }
     }
 
     public static final class Dispute {

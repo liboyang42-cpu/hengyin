@@ -27,6 +27,8 @@ public final class TeamClubEligibilityAuthority {
 
     public static final int TEAM_MIN = 2;
     public static final int TEAM_MAX = 4;
+    public static final String OUTCOME_NOT_FOUND = "NOT_FOUND";
+    public static final String OUTCOME_REGISTERED = "REGISTERED";
     private static final Pattern REQUEST_ID = Pattern.compile("[A-Za-z0-9_.:-]{8,64}");
 
     public enum EntryMode { SOLO, TEAM }
@@ -103,6 +105,26 @@ public final class TeamClubEligibilityAuthority {
         return found;
     }
 
+    public OriginalReceipt recoverOriginal(String requestId) {
+        return recoverUnknown(requestId);
+    }
+
+    /**
+     * Missing / blank requestId stays Java {@code null} with typed {@code NOT_FOUND}.
+     * Never-seen ids return {@code NOT_FOUND} without occupying the ledger.
+     */
+    public OriginalReceipt recoverUnknown(String requestId) {
+        String id = parseKey(requestId);
+        if (id == null) {
+            return OriginalReceipt.notFound(null);
+        }
+        Registration found = byRequestId.get(id);
+        if (found == null) {
+            return OriginalReceipt.notFound(id);
+        }
+        return new OriginalReceipt(found.requestId, OUTCOME_REGISTERED, false, found);
+    }
+
     /** 已取消能力的显式拒绝，避免调用方把空名单交给随机匹配。 */
     public Registration refuseRandomMatchmaking(CmsTopic course, Collection<Long> authorizedClubIds, String requestId) {
         throw new OrienteeringEventException(OrienteeringEventException.MATCHMAKING_CANCELLED,
@@ -160,11 +182,37 @@ public final class TeamClubEligibilityAuthority {
         return new ArrayList<Long>(unique);
     }
 
-    private static String requireKey(String requestId) {
+    static String parseKey(String requestId) {
         if (requestId == null || !REQUEST_ID.matcher(requestId).matches()) {
-            throw new OrienteeringEventException(OrienteeringEventException.INVALID_ARGUMENT, "报名幂等键无效");
+            return null;
         }
         return requestId;
+    }
+
+    private static String requireKey(String requestId) {
+        String id = parseKey(requestId);
+        if (id == null) {
+            throw new OrienteeringEventException(OrienteeringEventException.INVALID_ARGUMENT, "报名幂等键无效");
+        }
+        return id;
+    }
+
+    public static final class OriginalReceipt {
+        public final String originalRequestId;
+        public final String outcome;
+        public final boolean mintedNewRequest;
+        public final Registration registration;
+
+        OriginalReceipt(String originalRequestId, String outcome, boolean mintedNewRequest, Registration registration) {
+            this.originalRequestId = originalRequestId;
+            this.outcome = outcome;
+            this.mintedNewRequest = mintedNewRequest;
+            this.registration = registration;
+        }
+
+        static OriginalReceipt notFound(String requestId) {
+            return new OriginalReceipt(requestId, OUTCOME_NOT_FOUND, false, null);
+        }
     }
 
     public static final class Registration {

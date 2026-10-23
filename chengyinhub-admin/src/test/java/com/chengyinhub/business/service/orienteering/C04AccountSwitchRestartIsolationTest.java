@@ -195,4 +195,100 @@ class C04AccountSwitchRestartIsolationTest {
         assertEquals(FINISH_ORIGINAL, finished.requestId);
         assertNotEquals("", finished.requestId);
     }
+
+    @Test
+    void recoverUnknownKeepsMissingRequestIdNullAndDoesNotOccupyLedger() {
+        Registration original = authority.register(course, TeamClubEligibilityAuthority.EntryMode.TEAM,
+                List.of(501L, 502L), List.of(CLUB_A), REG_ORIGINAL);
+        EventScoreVersioning.EventRun run = scores.start(original, frozen, safety, 7L, START_ORIGINAL);
+        scores.appendScore(run.id, 5000, "TASK", "TASK_DONE", "scr-isol01");
+
+        EventScoreVersioning.OriginalReceipt blankScore = scores.recoverUnknown(null);
+        assertNull(blankScore.originalRequestId);
+        assertEquals(EventScoreVersioning.OUTCOME_NOT_FOUND, blankScore.outcome);
+        assertEquals(false, blankScore.mintedNewRequest);
+        assertNull(blankScore.result);
+        EventScoreVersioning.OriginalReceipt emptyScore = scores.recoverUnknown("");
+        assertNull(emptyScore.originalRequestId);
+        assertEquals(EventScoreVersioning.OUTCOME_NOT_FOUND, emptyScore.outcome);
+        assertEquals(false, emptyScore.mintedNewRequest);
+
+        TeamClubEligibilityAuthority.OriginalReceipt blankReg = authority.recoverUnknown(null);
+        assertNull(blankReg.originalRequestId);
+        assertEquals(TeamClubEligibilityAuthority.OUTCOME_NOT_FOUND, blankReg.outcome);
+        assertEquals(false, blankReg.mintedNewRequest);
+        assertNull(blankReg.registration);
+        TeamClubEligibilityAuthority.OriginalReceipt emptyReg = authority.recoverUnknown("");
+        assertNull(emptyReg.originalRequestId);
+        assertNotEquals("", emptyReg.originalRequestId);
+        assertEquals(TeamClubEligibilityAuthority.OUTCOME_NOT_FOUND, emptyReg.outcome);
+
+        EventResultDispute.OriginalReceipt blankDispute = disputes.recoverUnknown(null);
+        assertNull(blankDispute.originalRequestId);
+        assertEquals(EventResultDispute.OUTCOME_NOT_FOUND, blankDispute.outcome);
+        assertEquals(false, blankDispute.mintedNewRequest);
+        assertNull(blankDispute.dispute);
+        EventResultDispute.OriginalReceipt emptyDispute = disputes.recoverUnknown("");
+        assertNull(emptyDispute.originalRequestId);
+        assertEquals(EventResultDispute.OUTCOME_NOT_FOUND, emptyDispute.outcome);
+
+        assertEquals(OrienteeringEventException.NOT_FOUND,
+                assertThrows(OrienteeringEventException.class, () -> scores.readback(null)).getErrorCode());
+        assertEquals(OrienteeringEventException.NOT_FOUND,
+                assertThrows(OrienteeringEventException.class, () -> scores.readback("")).getErrorCode());
+        assertEquals(OrienteeringEventException.NOT_FOUND,
+                assertThrows(OrienteeringEventException.class, () -> authority.readback(null)).getErrorCode());
+        assertEquals(OrienteeringEventException.NOT_FOUND,
+                assertThrows(OrienteeringEventException.class, () -> disputes.readback(null)).getErrorCode());
+
+        EventScoreVersioning.OriginalReceipt neverFinish = scores.recoverUnknown(FINISH_UNKNOWN);
+        assertEquals(FINISH_UNKNOWN, neverFinish.originalRequestId);
+        assertEquals(EventScoreVersioning.OUTCOME_NOT_FOUND, neverFinish.outcome);
+        assertEquals(false, neverFinish.mintedNewRequest);
+        assertNull(neverFinish.result);
+        assertEquals(OrienteeringEventException.NOT_FOUND,
+                assertThrows(OrienteeringEventException.class, () -> scores.readback(FINISH_UNKNOWN)).getErrorCode());
+
+        ResultVersion firstFinish = scores.finish(run.id, FINISH_UNKNOWN);
+        assertEquals(FINISH_UNKNOWN, firstFinish.requestId);
+        assertEquals(EventScoreVersioning.OUTCOME_FINISHED, firstFinish.outcome);
+        assertSame(firstFinish, scores.readback(FINISH_UNKNOWN));
+        EventScoreVersioning.OriginalReceipt recoveredFinish = scores.recoverUnknown(FINISH_UNKNOWN);
+        assertEquals(FINISH_UNKNOWN, recoveredFinish.originalRequestId);
+        assertEquals(EventScoreVersioning.OUTCOME_FINISHED, recoveredFinish.outcome);
+        assertEquals(false, recoveredFinish.mintedNewRequest);
+        assertSame(firstFinish, recoveredFinish.result);
+
+        TeamClubEligibilityAuthority.OriginalReceipt neverReg = authority.recoverUnknown("reg-unknow");
+        assertEquals("reg-unknow", neverReg.originalRequestId);
+        assertEquals(TeamClubEligibilityAuthority.OUTCOME_NOT_FOUND, neverReg.outcome);
+        assertEquals(false, neverReg.mintedNewRequest);
+        assertNull(neverReg.registration);
+        assertEquals(OrienteeringEventException.NOT_FOUND,
+                assertThrows(OrienteeringEventException.class, () -> authority.readback("reg-unknow")).getErrorCode());
+
+        Registration firstUnknownReg = authority.register(course, TeamClubEligibilityAuthority.EntryMode.TEAM,
+                List.of(501L, 502L), List.of(CLUB_A), "reg-unknow");
+        assertEquals("reg-unknow", firstUnknownReg.requestId);
+        assertSame(firstUnknownReg, authority.readback("reg-unknow"));
+        assertEquals("reg-unknow", authority.recoverUnknown("reg-unknow").originalRequestId);
+        assertEquals(TeamClubEligibilityAuthority.OUTCOME_REGISTERED,
+                authority.recoverUnknown("reg-unknow").outcome);
+
+        EventResultDispute.OriginalReceipt neverDispute = disputes.recoverUnknown("dsp-unknow");
+        assertEquals("dsp-unknow", neverDispute.originalRequestId);
+        assertEquals(EventResultDispute.OUTCOME_NOT_FOUND, neverDispute.outcome);
+        assertEquals(false, neverDispute.mintedNewRequest);
+        assertNull(neverDispute.dispute);
+        assertEquals(OrienteeringEventException.NOT_FOUND,
+                assertThrows(OrienteeringEventException.class, () -> disputes.readback("dsp-unknow")).getErrorCode());
+
+        EventResultDispute.Dispute firstDispute = disputes.open(FINISH_UNKNOWN, "未知争议键首次写入", "dsp-unknow");
+        assertEquals("dsp-unknow", firstDispute.requestId);
+        assertEquals(FINISH_UNKNOWN, firstDispute.originalResultRequestId);
+        assertSame(firstDispute, disputes.readback("dsp-unknow"));
+        assertEquals(EventResultDispute.OUTCOME_PENDING, disputes.recoverUnknown("dsp-unknow").outcome);
+        assertEquals(false, disputes.recoverUnknown("dsp-unknow").mintedNewRequest);
+        assertSame(firstDispute, disputes.recoverUnknown("dsp-unknow").dispute);
+    }
 }

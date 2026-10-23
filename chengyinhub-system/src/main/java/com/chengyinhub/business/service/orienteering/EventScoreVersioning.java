@@ -27,6 +27,8 @@ public final class EventScoreVersioning {
     public static final String OUTCOME_DNF = "DNF";
     public static final String OUTCOME_DQ = "DQ";
     public static final String OUTCOME_FINISHED = "FINISHED";
+    public static final String OUTCOME_NOT_FOUND = "NOT_FOUND";
+    public static final String OUTCOME_UNKNOWN = "UNKNOWN";
 
     private static final Set<String> EVIDENCE_KINDS = Set.of("SCAN", "PHOTO", "QUIZ", "TASK_RECEIPT");
     private static final Set<String> GPS_KINDS = Set.of("GPS", "LAT", "LNG", "LATLNG", "COORDINATE", "LOCATION");
@@ -183,6 +185,26 @@ public final class EventScoreVersioning {
         return found;
     }
 
+    public OriginalReceipt recoverOriginal(String requestId) {
+        return recoverUnknown(requestId);
+    }
+
+    /**
+     * Missing / blank requestId stays Java {@code null} with typed {@code NOT_FOUND}.
+     * Never-seen ids return {@code NOT_FOUND} without occupying the ledger.
+     */
+    public OriginalReceipt recoverUnknown(String requestId) {
+        String id = parseKey(requestId);
+        if (id == null) {
+            return OriginalReceipt.notFound(null);
+        }
+        ResultVersion found = resultsByRequest.get(id);
+        if (found == null) {
+            return OriginalReceipt.notFound(id);
+        }
+        return new OriginalReceipt(found.requestId, found.outcome, false, found);
+    }
+
     public ResultVersion rejectGrowthSubstitution() {
         throw new OrienteeringEventException(OrienteeringEventException.GROWTH_LEADERBOARD_FORBIDDEN,
                 "赛事成绩不能用成长个人榜替代");
@@ -246,11 +268,19 @@ public final class EventScoreVersioning {
                 || lower.contains("\"longitude\"") || lower.contains("gps=");
     }
 
-    private static String requireKey(String requestId) {
+    static String parseKey(String requestId) {
         if (requestId == null || !REQUEST_ID.matcher(requestId).matches()) {
-            throw new OrienteeringEventException(OrienteeringEventException.INVALID_ARGUMENT, "幂等键无效");
+            return null;
         }
         return requestId;
+    }
+
+    private static String requireKey(String requestId) {
+        String id = parseKey(requestId);
+        if (id == null) {
+            throw new OrienteeringEventException(OrienteeringEventException.INVALID_ARGUMENT, "幂等键无效");
+        }
+        return id;
     }
 
     private static EventRun snapshot(EventRun run) {
@@ -328,6 +358,24 @@ public final class EventScoreVersioning {
 
         boolean sameAs(Evidence other) {
             return taskId == other.taskId && kind.equals(other.kind) && fingerprint.equals(other.fingerprint);
+        }
+    }
+
+    public static final class OriginalReceipt {
+        public final String originalRequestId;
+        public final String outcome;
+        public final boolean mintedNewRequest;
+        public final ResultVersion result;
+
+        OriginalReceipt(String originalRequestId, String outcome, boolean mintedNewRequest, ResultVersion result) {
+            this.originalRequestId = originalRequestId;
+            this.outcome = outcome;
+            this.mintedNewRequest = mintedNewRequest;
+            this.result = result;
+        }
+
+        static OriginalReceipt notFound(String requestId) {
+            return new OriginalReceipt(requestId, OUTCOME_NOT_FOUND, false, null);
         }
     }
 
