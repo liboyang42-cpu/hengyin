@@ -57,11 +57,12 @@ class PhotoCheckIntentMySqlIT {
 
     private static String required(String name) {
         String value=System.getenv(name); assertNotNull(value,"explicit task configuration required: "+name);
-        assertFalse(value.isBlank(), "empty task configuration: "+name); return value;
+        if (!name.endsWith("_PASSWORD")) assertFalse(value.isBlank(), "empty task configuration: "+name);
+        return value;
     }
     @BeforeAll void connect() throws Exception {
-        int port=Integer.parseInt(required("CHENGYIN_PHOTO_MYSQL_IT_PORT")); assertTrue(port>0 && port<=65535);
-        user=required("CHENGYIN_PHOTO_MYSQL_IT_USER"); password=required("CHENGYIN_PHOTO_MYSQL_IT_PASSWORD");
+        int port=Integer.parseInt(required("CHENGYIN_AI_MYSQL_IT_PORT")); assertTrue(port>0 && port<=65535);
+        user=required("CHENGYIN_AI_MYSQL_IT_USER"); password=required("CHENGYIN_AI_MYSQL_IT_PASSWORD");
         adminUrl="jdbc:mysql://127.0.0.1:"+port+"/?serverTimezone=UTC";
         schema="chengyin_photo_intent_"+UUID.randomUUID().toString().replace("-", "");
         try(Connection admin=DriverManager.getConnection(adminUrl,user,password); Statement statement=admin.createStatement()) {
