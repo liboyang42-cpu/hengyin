@@ -478,8 +478,8 @@ class RegistrationReadContractMybatisIntegrationTest {
         RedisTemplate<Object, Object> template = mock(RedisTemplate.class);
         ValueOperations<Object, Object> values = mock(ValueOperations.class);
         when(template.opsForValue()).thenReturn(values);
-        when(values.get(any())).thenAnswer(i -> redis.get(String.valueOf(i.getArgument(0))));
-        doAnswer(i -> { redis.put(String.valueOf(i.getArgument(0)), i.getArgument(1)); return null; })
+        when(values.get(any())).thenAnswer(i -> redis.get(String.valueOf((Object) i.getArgument(0))));
+        doAnswer(i -> { redis.put(String.valueOf((Object) i.getArgument(0)), i.getArgument(1)); return null; })
                 .when(values).set(any(), any(), anyLong(), any(TimeUnit.class));
         ICmsTopicService topics = mock(ICmsTopicService.class);
         when(topics.selectCmsTopicList(any())).thenReturn(new ArrayList<>());
