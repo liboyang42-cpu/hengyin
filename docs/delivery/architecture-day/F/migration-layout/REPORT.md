@@ -26,9 +26,9 @@
 
 - before-layout.txt / before-seeds.txt：原失败，分别指出两个目录及旧 controller hash/非法 SQL 库存。
 - permissions.txt：现有 test_source_hashes_and_real_controller_permissions，1 项通过；CI 成本合同通过。
-- static-gates.txt：执行现有 migration gates、ledger、shallow source custody、candidate resource manifest、prelaunch seeds、release manifest，共 224 项，222 通过；2 项因下面相同的 SQL 库存阻塞失败/报错，没有跳过或改断言。
+- static-gates.txt：执行 `python3 -m unittest ci.test_migration_gates ci.test_migration_ledger ci.test_shallow_source_custody ci.test_candidate_resource_manifest ci.test_prelaunch_business_seeds ci.test_release_manifest`，共 224 项，222 通过；2 项因下面相同的 SQL 库存阻塞失败/报错，没有跳过或改断言。
 - sql-contract.txt：既有 check_sql_text 对两份规范迁移仍明确拒绝；review.json：两份迁移字节身份、旧依赖保留、A/D custody、共享文件冻结及剩余库存问题精确回读。
-- 冻结代码后将运行完整 layout/safety shell；其结果在后续同目录证据提交单独记录。Python/Git 静态检查不是 Java/MySQL 验证。
+- 在代码提交 `f4c5b18db69e8bc55ba96e4a9202aa9f4a82b808` 实际执行 `bash ci/migration-layout-check.sh`：exit 0，519 个规范目录迁移，增量前缀通过。`bash ci/migration-safety-check.sh`：exit 1；其 130 项分句/迁移门禁及 52 项 ledger 自测均通过，SQL/manifest 仍拒绝这两份原字节迁移。任务注册检查通过，依赖声明棘轮只增未减；非 PR 上下文的标题/描述检查按既有逻辑未执行。原始输出 layout-full.txt / safety-full.txt，退出码 full-gate-status.json。Python/Git 静态检查不是 Java/MySQL 验证。
 
 ## 仍阻塞、后续重放与回退
 
