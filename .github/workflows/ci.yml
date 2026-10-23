@@ -323,7 +323,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: liboyang42-cpu/hengyin
-          ref: 2cddcd9ee925d9ac10f305a032878576dde6324d
+          ref: cdc2e7d0b28e609dae2787500d6e0e345da47899
           path: .architecture-gate
           fetch-depth: 0
           persist-credentials: false
@@ -345,7 +345,7 @@ jobs:
           case "$GITHUB_EVENT_NAME" in
             pull_request) arch_base=$(git merge-base "$ARCH_CANDIDATE_SHA" "$ARCH_TARGET_SHA") ;;
             push) arch_base="$ARCH_BEFORE_SHA" ;;
-            workflow_dispatch) arch_base=$(git rev-parse "$ARCH_CANDIDATE_SHA^1") ;;
+            workflow_dispatch) arch_base=$(python3 .architecture-gate/ci/architecture/gate.py manual-base --source . --candidate "$ARCH_CANDIDATE_SHA") ;;
             *) echo '::error::Unsupported architecture CI event'; exit 1 ;;
           esac
           arch_source=$(mktemp -d "$RUNNER_TEMP/architecture-source.XXXXXX")

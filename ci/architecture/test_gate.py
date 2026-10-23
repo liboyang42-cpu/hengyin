@@ -1,5 +1,6 @@
 """Lightweight isolated negative controls. No Java, database, Docker or network."""
 import copy
+from contextlib import contextmanager
 import importlib.util
 import json
 import os
@@ -209,11 +210,11 @@ class InventoryAndDeltaTest(unittest.TestCase):
             (trusted / file.name).write_bytes(file.read_bytes())
         return trusted, candidate
 
-    def source_check(self, trusted, candidate, compare=None):
+    def source_check(self, trusted, candidate, compare=None, context=None):
         compare = compare or self.base
-        context = {"event": "push", "checkout_sha": candidate,
-                   "payload": {"repository": {"full_name": "liboyang42-cpu/hengyin"},
-                               "before": compare, "after": candidate}}
+        context = context or {"event": "push", "checkout_sha": candidate,
+                              "payload": {"repository": {"full_name": "liboyang42-cpu/hengyin"},
+                                          "before": compare, "after": candidate}}
         with patch.object(gate, "BASE", self.base), patch.object(gate, "HERE", trusted), patch.object(gate, "REPO", trusted.parent.parent):
             return gate.check_source(self.root, candidate, compare, context, trusted / "baseline.json")
 
@@ -309,17 +310,136 @@ class InventoryAndDeltaTest(unittest.TestCase):
         with self.assertRaisesRegex(gate.GateError, "synthetic merge"):
             gate.comparison_base(self.root, head, self.base, context)
 
-    def test_push_and_manual_base_are_bound_to_trusted_event(self):
+    def manual_context(self, candidate):
+        return {"event": "workflow_dispatch", "checkout_sha": candidate,
+                "payload": {"repository": {"full_name": "liboyang42-cpu/hengyin",
+                                           "default_branch": "master"}}}
+
+    @contextmanager
+    def manual_origin(self, tip):
+        # Only replace network transport, not refs, fetch, merge-base or checker.
+        # The local bare repo models the trusted public origin's actual tip.
+        original_git = gate.git
+        remote = self.root / ".git/manual-origin.git"
+        shell(self.root, "clone", "--bare", "--quiet", str(self.root), str(remote))
+        shell(remote, "update-ref", "refs/heads/master", tip)
+        shell(self.root, "remote", "add", "origin", "https://github.com/liboyang42-cpu/hengyin.git")
+
+        def transport(root, *args):
+            if args[0] == "fetch":
+                self.assertEqual(("fetch", "--no-tags", "--no-recurse-submodules", "origin",
+                                  "+refs/heads/master:refs/remotes/origin/master"), args)
+                return original_git(root, *args[:3], str(remote), *args[4:])
+            return original_git(root, *args)
+        with patch.object(gate, "git", side_effect=transport):
+            yield
+
+    def test_manual_first_feature_violation_then_docs_is_still_red(self):
+        trusted, trunk = self.prepare_policy()
+        self.write(MAPPER, mapper(ORDER.replace("update orders", "update wallet")))
+        first = self.commit()
+        self.write("docs/second.md", b"docs-only second feature commit")
+        candidate = self.commit()
+        context = self.manual_context(candidate)
+        with self.manual_origin(trunk):
+            self.assertEqual(trunk, gate.manual_base(self.root, candidate, context))
+            result = self.source_check(trusted, candidate, trunk, context)
+            self.assertIn("NEW_TABLE_WRITER", [f["rule"] for f in result["findings"]])
+            self.assertIn(MAPPER, result["changed_files"])
+            with self.assertRaisesRegex(gate.GateError, "COMPARISON_BASE_MISMATCH"):
+                self.source_check(trusted, candidate, first, context)
+
+    def test_manual_already_merged_history_is_not_reported_again(self):
+        trusted, _ = self.prepare_policy()
+        baseline = (trusted / "baseline.json").read_bytes()
+        self.write(MAPPER, mapper(ORDER.replace("update orders", "update wallet")))
+        accepted = self.commit()
+        self.write("docs/next.md", b"normal small change after reviewed trunk")
+        candidate = self.commit()
+        with self.manual_origin(accepted):
+            result = self.source_check(trusted, candidate, accepted, self.manual_context(candidate))
+        self.assertEqual([], result["findings"])
+        self.assertEqual([], result["review_items"])
+        self.assertEqual(["docs/next.md"], result["changed_files"])
+        self.assertEqual(baseline, (trusted / "baseline.json").read_bytes())
+
+    def test_manual_diverged_trunk_uses_merge_base_not_tip_or_parent(self):
+        branch = shell(self.root, "branch", "--show-current")
+        shell(self.root, "branch", "feature", self.base)
+        self.write("docs/trunk.md", b"trunk advanced separately")
+        trunk = self.commit()
+        shell(self.root, "checkout", "feature", "-q")
+        self.write("docs/first.md", b"first feature commit")
+        first = self.commit()
+        self.write("docs/second.md", b"second feature commit")
+        candidate = self.commit()
+        context = self.manual_context(candidate)
+        with self.manual_origin(trunk):
+            self.assertEqual(self.base, gate.comparison_base(self.root, candidate, self.base, context))
+            for wrong in (trunk, first, candidate):
+                self.assertRaises(gate.GateError, gate.comparison_base, self.root, candidate, wrong, context)
+        shell(self.root, "checkout", branch, "-q")
+
+    def test_manual_missing_or_forged_default_branch_and_origin_are_red(self):
+        context = self.manual_context(self.base)
+        for invalid in (None, "", "../forged", "master:refs/heads/forged", "-master"):
+            with self.subTest(branch=invalid):
+                context["payload"]["repository"]["default_branch"] = invalid
+                self.assertRaises(gate.GateError, gate.manual_base, self.root, self.base, context)
+        context = self.manual_context(self.base)
+        with self.manual_origin(self.base):
+            shell(self.root, "remote", "set-url", "origin", "https://example.invalid/forged.git")
+            with self.assertRaisesRegex(gate.GateError, "fixed public repository"):
+                gate.manual_base(self.root, self.base, context)
+
+    def test_manual_fetch_failure_cannot_use_stale_tracking_ref(self):
+        shell(self.root, "remote", "add", "origin", "https://github.com/liboyang42-cpu/hengyin.git")
+        shell(self.root, "update-ref", "refs/remotes/origin/master", self.base)
+        original_git = gate.git
+        def offline(root, *args):
+            if args[0] == "fetch":
+                raise gate.GateError("fixture fetch unavailable")
+            return original_git(root, *args)
+        with patch.object(gate, "git", side_effect=offline):
+            with self.assertRaisesRegex(gate.GateError, "fetch unavailable"):
+                gate.manual_base(self.root, self.base, self.manual_context(self.base))
+
+    def test_manual_fetched_ref_mismatch_and_ambiguous_merge_base_are_red(self):
+        self.write("docs/next.md", b"next")
+        candidate = self.commit()
+        with self.manual_origin(candidate):
+            transport = gate.git
+            def mismatch(root, *args):
+                if args == ("rev-parse", "--verify", "FETCH_HEAD^{commit}"):
+                    return (self.base + "\n").encode()
+                return transport(root, *args)
+            with patch.object(gate, "git", side_effect=mismatch):
+                with self.assertRaisesRegex(gate.GateError, "freshly fetched origin"):
+                    gate.manual_base(self.root, candidate, self.manual_context(candidate))
+            def ambiguous(root, *args):
+                if args[:2] == ("merge-base", "--all"):
+                    return (self.base + "\n" + candidate + "\n").encode()
+                return transport(root, *args)
+            with patch.object(gate, "git", side_effect=ambiguous):
+                with self.assertRaisesRegex(gate.GateError, "ambiguous manual"):
+                    gate.manual_base(self.root, candidate, self.manual_context(candidate))
+
+    def test_manual_candidate_must_match_real_checkout_and_repository(self):
+        context = self.manual_context(self.base)
+        context["checkout_sha"] = "a" * 40
+        self.assertRaises(gate.GateError, gate.manual_base, self.root, self.base, context)
+        context = self.manual_context(self.base)
+        context["payload"]["repository"]["full_name"] = "forged/repo"
+        self.assertRaises(gate.GateError, gate.manual_base, self.root, self.base, context)
+
+    def test_push_base_is_bound_to_trusted_event(self):
         self.write("docs/first.md", b"one")
         prior = self.commit()
         self.write("docs/second.md", b"two")
         candidate = self.commit()
-        context = {"event": "workflow_dispatch", "checkout_sha": candidate,
-                   "payload": {"repository": {"full_name": "liboyang42-cpu/hengyin"}}}
-        self.assertEqual(prior, gate.comparison_base(self.root, candidate, prior, context))
-        self.assertRaises(gate.GateError, gate.comparison_base, self.root, candidate, self.base, context)
-        context["event"] = "push"
-        context["payload"].update(before=prior, after=candidate)
+        context = {"event": "push", "checkout_sha": candidate,
+                   "payload": {"repository": {"full_name": "liboyang42-cpu/hengyin"},
+                               "before": prior, "after": candidate}}
         self.assertEqual(prior, gate.comparison_base(self.root, candidate, prior, context))
         self.assertRaises(gate.GateError, gate.comparison_base, self.root, candidate, candidate, context)
         context["payload"]["before"] = "0" * 40
@@ -477,12 +597,12 @@ def wiring_problems(text):
                      "if: '!cancelled()'", "steps.architecture_checkout.outcome == 'success'",
                      "steps.architecture_selftest.outcome == 'success'", "--compare-base", "git merge-base",
                      "github.event.pull_request.head.sha || github.sha", "github.event.pull_request.base.sha",
-                     "github.event.before", "workflow_dispatch)", "set -euo pipefail",
+                     "github.event.before", "workflow_dispatch)", "gate.py manual-base --source . --candidate", "set -euo pipefail",
                      "git worktree add --detach", "git worktree remove", "actions/upload-artifact@v4",
                      "architecture_check.outcome != 'skipped'", "if-no-files-found: error"):
         if expected not in block:
             problems.append("missing " + expected)
-    if "continue-on-error" in block or "|| true" in block or "max-parallel: 20" not in text:
+    if "continue-on-error" in block or "|| true" in block or "^1" in block or "max-parallel: 20" not in text:
         problems.append("error propagation/20-shard budget changed")
     return problems
 
@@ -496,7 +616,8 @@ class WorkflowWiringTest(unittest.TestCase):
         self.assertEqual([], wiring_problems(self.text))
 
     def test_missing_comparison_mutable_verifier_or_suppressed_error_is_red(self):
-        for mutated in (self.text.replace("--compare-base", "--wrong-base"),
+        for mutated in (self.text.replace("gate.py manual-base --source . --candidate", "gate.py inventory --source"),
+                        self.text.replace("--compare-base", "--wrong-base"),
                         re.sub(r"(          ref: )[0-9a-f]{40}", r"\1master", self.text),
                         self.text.replace("set -euo pipefail", "set +e\n          true || true")):
             with self.subTest(mutated=mutated[-100:]):

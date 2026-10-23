@@ -307,6 +307,41 @@ def static_findings(base, current, changed, sql_details, base_details):
     return sorted(blockers, key=order), sorted(review, key=order)
 
 
+def manual_base(root, candidate, context):
+    """Fetch the real event's default branch; never trust a candidate input/ref.
+
+    A fresh single-ref fetch binds origin's tracking ref to FETCH_HEAD. No cached
+    ref or candidate-parent fallback is allowed, including when the fetch fails.
+    """
+    payload = context["payload"]
+    repository = payload.get("repository", {})
+    if (context["event"] != "workflow_dispatch"
+            or repository.get("full_name") != "liboyang42-cpu/hengyin"
+            or not SHA.fullmatch(candidate or "")
+            or candidate != context["checkout_sha"]):
+        raise GateError("manual candidate does not match trusted CI event/repository")
+    branch = repository.get("default_branch")
+    if not isinstance(branch, str) or not branch or branch.startswith("-"):
+        raise GateError("missing/invalid trusted default branch")
+    head_ref = "refs/heads/" + branch
+    git(root, "check-ref-format", head_ref)
+    origin = git(root, "remote", "get-url", "--all", "origin").decode().splitlines()
+    if origin not in (["https://github.com/liboyang42-cpu/hengyin.git"],
+                      ["https://github.com/liboyang42-cpu/hengyin"]):
+        raise GateError("origin must be the fixed public repository HTTPS remote")
+    tracking = "refs/remotes/origin/" + branch
+    git(root, "fetch", "--no-tags", "--no-recurse-submodules", "origin",
+        "+" + head_ref + ":" + tracking)
+    target = git(root, "rev-parse", "--verify", tracking + "^{commit}").decode().strip()
+    fetched = git(root, "rev-parse", "--verify", "FETCH_HEAD^{commit}").decode().strip()
+    if not SHA.fullmatch(target) or target != fetched:
+        raise GateError("default branch tracking ref does not match freshly fetched origin")
+    bases = git(root, "merge-base", "--all", candidate, target).decode().splitlines()
+    if len(bases) != 1:
+        raise GateError("ambiguous manual merge-base requires review")
+    return bases[0]
+
+
 def comparison_base(root, candidate, supplied, context):
     """Validate the CI event's comparison point, never an arbitrary caller SHA.
 
@@ -340,9 +375,7 @@ def comparison_base(root, candidate, supplied, context):
             raise GateError("push candidate does not match trusted event")
         expected = payload["before"]
     elif event == "workflow_dispatch":
-        if candidate != checkout:
-            raise GateError("manual candidate does not match trusted CI checkout")
-        expected = git(root, "rev-parse", candidate + "^1").decode().strip()
+        expected = manual_base(root, candidate, context)
     else:
         raise GateError("unsupported CI event")
     if expected != supplied:
@@ -469,6 +502,9 @@ def main():
     source.add_argument("--source", type=Path, required=True)
     source.add_argument("--candidate", required=True)
     source.add_argument("--compare-base", required=True)
+    manual = subs.add_parser("manual-base")
+    manual.add_argument("--source", type=Path, required=True)
+    manual.add_argument("--candidate", required=True)
     evidence = subs.add_parser("evidence")
     evidence.add_argument("--plan", type=Path, required=True)
     evidence.add_argument("--receipt", type=Path, required=True)
@@ -477,6 +513,9 @@ def main():
     try:
         if args.command == "inventory":
             print(encode_inventory(inventory(args.source, BASE)).decode(), end="")
+            return 0
+        elif args.command == "manual-base":
+            print(manual_base(args.source, args.candidate, ci_context(os.environ)))
             return 0
         elif args.command == "source":
             result = check_source(args.source, args.candidate, args.compare_base, ci_context(os.environ))
