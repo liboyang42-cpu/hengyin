@@ -452,9 +452,9 @@ Page({
     this._metric = metric;
     const hero = this._buildHero(this.data.facts, win, metric, true);
     const winChanged = win !== this.data.win;
-    const patch = { win, winIdx: TREND_WINDOWS.indexOf(win), hero };
-    if (winChanged) patch.valueCard = this._buildValueCard(this.data.facts, win);
-    this.setData(patch);
+    const winIdx = TREND_WINDOWS.indexOf(win);
+    if (winChanged) this.setData({ win, winIdx, hero, valueCard: this._buildValueCard(this.data.facts, win) });
+    else this.setData({ win, winIdx, hero });
     this._countTo(hero.target);
     // 切时间窗:进度条跟着换窗口数,并重扫一遍(和打开页面同一套)
     if (winChanged) this._sweepPips();
