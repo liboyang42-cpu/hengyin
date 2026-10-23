@@ -70,6 +70,10 @@ public final class CompensationEntryProjection {
         return project(requestId, topicId, viewer, currentFinal);
     }
 
+    public View recoverOriginal(String requestId, Long topicId, ViewerGrant viewer, FinalCompensationFacts currentFinal) {
+        return requery(requestId, topicId, viewer, currentFinal);
+    }
+
     static boolean hasExistingApprovePermission(Set<String> existingPermissionCodes) {
         if (existingPermissionCodes == null || existingPermissionCodes.isEmpty()) {
             return false;

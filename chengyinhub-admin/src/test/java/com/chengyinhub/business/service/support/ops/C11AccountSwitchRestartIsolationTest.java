@@ -72,6 +72,9 @@ class C11AccountSwitchRestartIsolationTest {
         assertEquals("UNKNOWN", recovered.getOriginalOutcome());
         assertEquals(first.getOriginalOutcome(), recovered.getOriginalOutcome());
         assertTrue(recovered.originalIsNotProjectionSuccess());
+        SupportEventLocator.LocatedEvent original = restarted.recoverOriginal(ORIGINAL, projection);
+        assertEquals(recovered.getRequestId(), original.getRequestId());
+        assertEquals(recovered.getOriginalOutcome(), original.getOriginalOutcome());
     }
 
     @Test
@@ -84,6 +87,8 @@ class C11AccountSwitchRestartIsolationTest {
         assertNull(locator.locateByRequestId(null, projection));
         assertNull(locator.locateByRequestId("  ", projection));
         assertNull(locator.requery("", projection));
+        assertNull(locator.recoverOriginal(null, projection));
+        assertNull(locator.recoverOriginal("", projection));
         assertEquals(ORIGINAL, locator.locateByRequestId(ORIGINAL, projection).getRequestId());
         assertNotEquals("", locator.locateByRequestId(ORIGINAL, projection).getRequestId());
         assertThrows(IllegalArgumentException.class,

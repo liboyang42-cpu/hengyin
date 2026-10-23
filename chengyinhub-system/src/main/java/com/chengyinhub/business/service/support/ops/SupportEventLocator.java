@@ -57,6 +57,10 @@ public final class SupportEventLocator {
         return locateByRequestId(requestId, currentProjection);
     }
 
+    public LocatedEvent recoverOriginal(String requestId, CurrentProjection currentProjection) {
+        return requery(requestId, currentProjection);
+    }
+
     public LocatedEvent locateByRunId(Long runId, CurrentProjection currentProjection) {
         if (runId == null || runId <= 0L) {
             throw new IllegalArgumentException("runId 不合法");
