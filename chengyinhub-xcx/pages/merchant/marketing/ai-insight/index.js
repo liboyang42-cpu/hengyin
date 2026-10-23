@@ -39,6 +39,13 @@ function monthDay(value) {
   return parts ? parts.month + '月' + parts.day + '日' : '';
 }
 
+// 主题卡底栏用短日期「10/20」,给主办方名留位置
+function slashDay(value) {
+  const timestamp = toTimestamp(value);
+  const parts = timestamp ? chinaParts(timestamp) : null;
+  return parts ? parts.month + '/' + parts.day : '';
+}
+
 function isAccessDenied(res) {
   const code = res && (res.code !== undefined ? res.code : res.statusCode);
   return String(code) === '401' || String(code) === '403';
@@ -623,6 +630,12 @@ Page({
       const hostText = item.hostName ? '主办 ' + item.hostName : '';
       return Object.assign({}, item, {
         metaText: [dateText, hostText].filter(Boolean).join(' · '),
+        // 卡面底栏:日期与主办分两枚图标位
+        dateText: (function () {
+          const a = slashDay(item.startDate);
+          const b = slashDay(item.endDate);
+          return a && b && a !== b ? a + '–' + b : a;
+        })(),
       });
     });
   },

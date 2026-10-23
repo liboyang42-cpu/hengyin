@@ -95,7 +95,7 @@ test('旧缓存没有 trends:退回 30 天归因三数,不出窗口切换与格�
   assert.equal(h.num, '21');
   assert.equal(h.title, '近30天，城瘾为你带来');
   assert.equal(h.cells.length, 0);
-  assert.match(PAGE_WXML, /<block wx:if="\{\{hero && hero\.hasTrend\}\}">[\s\S]*class="seg"[\s\S]*class="heat"/);
+  assert.match(PAGE_WXML, /<block wx:if="\{\{hero && hero\.hasTrend\}\}">[\s\S]*class="seg"[\s\S]*class="heat[ "]/);
 });
 
 test('切窗口/切指标重建主卡;无 trends 时窗口点击不动', () => {
@@ -245,4 +245,16 @@ test('切 7/30/90 天:进度条换成该窗口的打卡/核销并重扫;切指�
   const card = page._buildValueCard(FACTS, 7);
   assert.equal(card.caption, '近7天暂无打卡核销');
   assert.equal(card.segs.filter((s) => s.on).length, 0);
+});
+
+test('7 天格子与 30/90 天同大;推荐主题卡是整卡封面 + 底部渐暗,底栏短日期与主办', () => {
+  const wxss = fs.readFileSync(path.join(ROOT, 'pages/merchant/marketing/ai-insight/index.wxss'), 'utf8');
+  assert.match(PAGE_WXML, /class="heat \{\{hero\.cols === 7 \? 'heat--week' : ''\}\}"/);
+  assert.match(wxss, /\.heat--week \.heat-cell \{ width: calc\(\(100% - 112rpx\) \/ 15\); \}/, '15 列格宽,gap 8rpx × 14');
+  assert.match(PAGE_WXML, /<view class="tcard-cover">[\s\S]*?<view class="tcard-shade"><\/view>[\s\S]*?<view class="tcard-over">[\s\S]*?class="tcard-cta">看看</);
+  assert.match(wxss, /--mi-shade:\s*linear-gradient\(180deg/);
+  const page = loadPage();
+  const [t] = page._decorateTopics([{ topicId: 1, name: 'a', startDate: '2026-10-20', endDate: '2026-11-30', hostName: '城市乐居人' }]);
+  assert.equal(t.dateText, '10/20–11/30');
+  assert.equal(t.metaText, '10月20日 – 11月30日 · 主办 城市乐居人', '弹层与读屏仍用完整写法');
 });

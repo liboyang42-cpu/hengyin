@@ -45,7 +45,7 @@
           <view class="seg-btn {{win === 30 ? 'seg-btn--on' : ''}}" data-win="30" bindtap="onWinTap" hover-class="cy-pressed" hover-stay-time="80" aria-role="tab" aria-selected="{{win === 30}}">近30天</view>
           <view class="seg-btn {{win === 90 ? 'seg-btn--on' : ''}}" data-win="90" bindtap="onWinTap" hover-class="cy-pressed" hover-stay-time="80" aria-role="tab" aria-selected="{{win === 90}}">近90天</view>
         </view>
-        <view class="heat" style="grid-template-columns: repeat({{hero.cols}}, 1fr);" aria-hidden="true">
+        <view class="heat {{hero.cols === 7 ? 'heat--week' : ''}}" style="grid-template-columns: repeat({{hero.cols}}, 1fr);" aria-hidden="true">
           <view class="heat-cell heat-cell--l{{cell.lv}} cy-rise-in" wx:for="{{hero.cells}}" wx:for-item="cell" wx:key="k"
                 style="animation-delay: {{cell.delay}}ms;"></view>
         </view>
@@ -169,15 +169,25 @@
           <view class="tcard" id="tc-{{index}}" wx:for="{{recTopics}}" wx:key="topicId" bindtap="openTopic"
                 data-idx="{{index}}" hover-class="cy-pressed" hover-stay-time="80"
                 aria-role="button" aria-label="查看主题{{item.name}} {{item.metaText}}">
+            <!-- owner 2026-10-23:整卡封面 + 底部渐暗,文字压在渐变上(参考人物卡) -->
             <view class="tcard-cover">
               <image class="tcard-img" wx:if="{{item.coverUrl}}" src="{{item.coverUrl}}" mode="aspectFill" />
-              <view class="tcard-tag">招商中</view>
-            </view>
-            <view class="tcard-body">
-              <text class="tcard-meta" wx:if="{{item.metaText}}">{{item.metaText}}</text>
-              <text class="tcard-name">{{item.name}}</text>
-              <text class="tcard-reason">{{item.reason || '平台招商中的自由探索主题'}}</text>
-              <view class="tcard-foot"><view class="tcard-cta">看看</view></view>
+              <view class="tcard-shade"></view>
+              <view class="tcard-over">
+                <view class="tcard-title">
+                  <text class="tcard-name">{{item.name}}</text>
+                  <view class="tcard-tag">招商中</view>
+                </view>
+                <text class="tcard-reason">{{item.reason || '平台招商中的自由探索主题'}}</text>
+                <view class="tcard-foot">
+                  <view class="tcard-stats">
+                    <view class="tcard-stat" wx:if="{{item.dateText}}"><cy-icon name="calendar" size="28" /><text>{{item.dateText}}</text></view>
+                    <view class="tcard-sep" wx:if="{{item.dateText && item.hostName}}"></view>
+                    <view class="tcard-stat tcard-stat--host" wx:if="{{item.hostName}}"><cy-icon name="flag" size="28" /><text class="tcard-host">{{item.hostName}}</text></view>
+                  </view>
+                  <view class="tcard-cta">看看</view>
+                </view>
+              </view>
             </view>
           </view>
         </view>
