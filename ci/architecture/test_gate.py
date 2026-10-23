@@ -201,6 +201,10 @@ class InventoryAndDeltaTest(unittest.TestCase):
         policy = self.root / "ci/architecture"
         policy.mkdir(parents=True)
         (policy / "baseline.json").write_bytes(gate.encode_inventory(self.before))
+        details = {}
+        gate.inventory(self.root, self.before["base_sha"], details)
+        (policy / "locking-select-baseline.proposal.json").write_bytes(
+            gate.encode_inventory(gate.locking_debt_proposal(self.before, details)))
         (policy / "gate.py").write_bytes(b"# trusted fixture")
         candidate = self.commit()
         # Trusted files are kept outside candidate to exercise PR policy changes.

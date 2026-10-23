@@ -1,0 +1,58 @@
+{
+  "source_base": "2631846bd618df7afe6b341351ea694c712bc40b",
+  "public_debt_base": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+  "architecture_selftests": {
+    "actual": 94,
+    "passed": 94,
+    "log": "selftests.txt"
+  },
+  "new_locking_selftests": 19,
+  "original_architecture_selftests": 75,
+  "assert_it_ran_tests": {
+    "actual": 5,
+    "passed": 5
+  },
+  "checks": {
+    "ci-cost.txt": {
+      "exit_code": 0,
+      "command": [
+        "python3",
+        "ci/test_ci_cost_contract.py"
+      ]
+    },
+    "diff-check.txt": {
+      "exit_code": 0,
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ]
+    }
+  },
+  "java_mysql_jdeps_ci": "NOT_RUN",
+  "business_xml_workflow_producer": "UNCHANGED",
+  "secret_file_gate": {
+    "scope": "task staged paths",
+    "path_count": 13,
+    "violations": 0
+  },
+  "gitleaks": {
+    "version": "8.21.2",
+    "scope": "task staged paths copied to isolated temporary directory",
+    "exit_code": 0,
+    "log": "gitleaks.txt"
+  },
+  "source_files_sha256": {
+    "ci/architecture/gate.py": "4a3831c9040acc03ad5f13ffd8b60a7ec452b5921bae8ecaefae064fd24ac623",
+    "ci/architecture/locking-select-baseline.proposal.json": "c71bbc7fdbf4996b68f5977ebd344dac150f56128dea4837c69ec3f91b83e52b",
+    "ci/architecture/test_gate.py": "a4d80fd440da5c2aad4078639ca0022a585c12108609839dd0c36ea8282d9727",
+    "ci/architecture/test_locking_select.py": "049d97a11939899ad85673b947df2dff433c00d8e257843fe462ec6eb633d6bf"
+  },
+  "baseline_reproduction": {
+    "old_baseline_sha256": "1997d73ccf6133b3eb3ceb55eb26357181ec1df02bcd22f519f7cfc30a905bc3",
+    "proposal_entries": 93,
+    "source": "immutable public2ec",
+    "status": "exact-reproduction; proposal not approved/not exemption"
+  },
+  "baseline_java_compilation_exception": "User authorized isolated CI candidate commits; Java/MySQL execution remains NOT_RUN"
+}
