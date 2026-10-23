@@ -9,7 +9,6 @@ page { background: var(--cy-bg-page); }
 
 /* period tabs:走 cy-tabs 组件(见 wxml),页面只保留左右边距 */
 .gc-tabs { margin: 0 var(--cy-space-5); }
-.gc-divider { height: 2rpx; background: rgba(255,255,255,0.08); margin: var(--cy-space-3-5) 44rpx 0; } /* ds-ok */
 
 /* 2026-08-19:错误态/说明态已迁到 cy-error / cy-empty(带重试与图标),
    .gc-state 只剩「加载中…」这一处使用;原 .gc-state--error / --notice 两条
@@ -50,6 +49,7 @@ page { background: var(--cy-bg-page); }
 
 /* metric toggle:走 cy-tabs chip 变体(见 wxml),这里只补页面级间距 */
 .gc-metric-row { padding: 32rpx var(--cy-space-5) 0; }
+.gc-metric-row--board { display: flex; justify-content: flex-end; padding: var(--cy-space-4) var(--cy-space-5) var(--cy-space-2); }
 
 /* list */
 .gc-list { padding: var(--cy-space-1-5) var(--cy-space-3-5) 0; }
