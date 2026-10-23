@@ -1,0 +1,466 @@
+{
+  "baseline": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+  "frozen_D_candidate": "e71777f375fcbb19a17b46647c36391ec03ed3b4",
+  "frozen_D_tree": "7a836874abeec1d9af3a23770dcc5d7e6868a4cf",
+  "runtime_database_inspected": false,
+  "summary": {
+    "java_source_files": 2427,
+    "direct_registration_sites": 15,
+    "after_commit_sites": 12,
+    "after_completion_sites": 3,
+    "indirect_consumer_calls": 16,
+    "transactional_event_listeners": 0,
+    "frozen_overlay_new_sites": 1
+  },
+  "direct_sites": [
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRoamController.java",
+      "line": 664,
+      "callbacks": [
+        "afterCommit"
+      ]
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRoamController.java",
+      "line": 847,
+      "callbacks": [
+        "afterCommit"
+      ]
+    },
+    {
+      "path": "chengyinhub-quartz/src/main/java/com/chengyinhub/quartz/service/impl/SysJobServiceImpl.java",
+      "line": 118,
+      "callbacks": [
+        "afterCommit"
+      ]
+    },
+    {
+      "path": "chengyinhub-quartz/src/main/java/com/chengyinhub/quartz/util/MySqlSessionLock.java",
+      "line": 99,
+      "callbacks": [
+        "afterCompletion"
+      ]
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AppSessionRegistryServiceImpl.java",
+      "line": 170,
+      "callbacks": [
+        "afterCompletion"
+      ]
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+      "line": 2604,
+      "callbacks": [
+        "afterCommit"
+      ]
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopDepositRefundService.java",
+      "line": 53,
+      "callbacks": [
+        "afterCommit"
+      ]
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopInviteServiceImpl.java",
+      "line": 687,
+      "callbacks": [
+        "afterCommit"
+      ]
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantCrmExportServiceImpl.java",
+      "line": 415,
+      "callbacks": [
+        "afterCommit"
+      ]
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayCheckinCodeServiceImpl.java",
+      "line": 106,
+      "callbacks": [
+        "afterCompletion"
+      ]
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundServiceImpl.java",
+      "line": 480,
+      "callbacks": [
+        "afterCommit"
+      ]
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RoamBadgeDeliveryService.java",
+      "line": 46,
+      "callbacks": [
+        "afterCommit"
+      ]
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TeamGroupServiceImpl.java",
+      "line": 1511,
+      "callbacks": [
+        "afterCommit"
+      ]
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/CommittedBusinessNotice.java",
+      "line": 47,
+      "callbacks": [
+        "afterCommit"
+      ]
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/system/service/impl/SysConfigServiceImpl.java",
+      "line": 224,
+      "callbacks": [
+        "afterCommit"
+      ]
+    }
+  ],
+  "indirect_consumer_calls": [
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ChapterMerchantNodeServiceImpl.java",
+      "line": 334,
+      "receiver": "businessNotice",
+      "method": "executeAfterCommit",
+      "first_line": "\"chapter-supply-replace-players\", replacementOfferId, () -> {"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubMemberServiceImpl.java",
+      "line": 451,
+      "receiver": "businessNotice",
+      "method": "sendAfterCommit",
+      "first_line": "memberId, approve ? \"入会申请已通过\" : \"入会申请未通过\","
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+      "line": 2577,
+      "receiver": "committedBusinessNotice",
+      "method": "dispatchInNewTransaction",
+      "first_line": "\"registration-qrcode\", registrationId, () -> {"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+      "line": 2586,
+      "receiver": "committedBusinessNotice",
+      "method": "dispatchInNewTransaction",
+      "first_line": "\"registration-signup\", paid == null ? null : paid.getId(), () -> {"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+      "line": 3228,
+      "receiver": "committedBusinessNotice",
+      "method": "executeAfterCommit",
+      "first_line": "\"verification.risk.queue-failed\", registrationId,"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopComplaintServiceImpl.java",
+      "line": 97,
+      "receiver": "businessNotice",
+      "method": "sendAfterCommit",
+      "first_line": "c.getReporterMemberId(), \"投诉处理有进展\","
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopComplaintServiceImpl.java",
+      "line": 140,
+      "receiver": "businessNotice",
+      "method": "sendAfterCommit",
+      "first_line": "c.getReporterMemberId(), \"投诉工单已处理\","
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopComplaintServiceImpl.java",
+      "line": 143,
+      "receiver": "businessNotice",
+      "method": "sendAfterCommit",
+      "first_line": "respondent, \"投诉工单处理结果\","
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantChapterApplicationServiceImpl.java",
+      "line": 172,
+      "receiver": "committedNotice",
+      "method": "sendAfterCommit",
+      "first_line": "topic.getMemberId(), \"章节申请已撤回\", \"商家已撤回章节承接申请\","
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantChapterApplicationServiceImpl.java",
+      "line": 283,
+      "receiver": "committedNotice",
+      "method": "sendAfterCommit",
+      "first_line": "invitedResponse ? topic.getMemberId() : application.getMerchantId(),"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantChapterApplicationServiceImpl.java",
+      "line": 490,
+      "receiver": "committedNotice",
+      "method": "sendAfterCommit",
+      "first_line": "merchantMemberId, \"章节承接邀请\", \"请在主题承接进度中接受或拒绝邀请\","
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantChapterApplicationServiceImpl.java",
+      "line": 499,
+      "receiver": "committedNotice",
+      "method": "sendAfterCommit",
+      "first_line": "merchantMemberId, \"章节承接邀请\", \"请在主题承接进度中接受或拒绝邀请\","
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantChapterApplicationServiceImpl.java",
+      "line": 529,
+      "receiver": "committedNotice",
+      "method": "sendAfterCommit",
+      "first_line": "application.getMerchantId(), \"章节邀请已撤回\", \"主办方已撤回待接受的章节邀请\","
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantOfferServiceImpl.java",
+      "line": 456,
+      "receiver": "businessNotice",
+      "method": "sendAfterCommit",
+      "first_line": "topic.getMemberId(), \"章节供给已退出\","
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantOfferServiceImpl.java",
+      "line": 459,
+      "receiver": "businessNotice",
+      "method": "executeAfterCommit",
+      "first_line": "\"chapter-supply-withdraw-players\", offerId, () -> {"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/VerificationRiskService.java",
+      "line": 64,
+      "receiver": "committedBusinessNotice",
+      "method": "executeAfterCommit",
+      "first_line": "\"verification.risk\", reviewId,"
+    }
+  ],
+  "frozen_D_overlay_sites": [
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OfficialBroadcastServiceImpl.java",
+      "line": 99,
+      "callbacks": [
+        "afterCommit"
+      ],
+      "source_commit": "e71777f375fcbb19a17b46647c36391ec03ed3b4",
+      "source_sha256": "acba1956e3393825b7ce057fa2c6f13273b2e3f10a16b69e3b9542644a26c6a7"
+    }
+  ],
+  "transactional_event_listeners": [],
+  "source_file_fingerprints": [
+    {
+      "path": "chengyinhub-admin/sql/migration_20261012_roam_presence_revoke_job.sql",
+      "sha256": "cd83ff76cd1367cf24e5127460761efa702ee975a05849c3a9a4b1fee9a688ea"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_20261013_b_im_notification_intent.sql",
+      "sha256": "9225abc336584d27262982eddbde50eef404656222afeff7032db4bcf964aec6"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_20261013_monitor_remaining_jobs.sql",
+      "sha256": "f69a6f8f4c14d3d5fa01b83ec6ff81cdb9e51f0e991bd596f54997027e6a6c39"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_20261013_roam_badge_delivery.sql",
+      "sha256": "d61e3da63b28e46cff6b77acc22cfb2f665dd6bcf9b0315c763189d56e79dec7"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_20261013_roam_reward_delivery.sql",
+      "sha256": "1c0bb85009f68b3ed5e631a26136175fc64cbaa53a2f5285843449360c6111b1"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_merchant_operator_crm_phase1a_delivery_job_20260825.sql",
+      "sha256": "3d1d64c5e9f7364f93cf141cf466b03b29711c2a9565d7e43fa8d8c6d03bba68"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_official_event_sysjob.sql",
+      "sha256": "2fec1800f4de53fc82e11040a1cd85933e06c07cc3ee3ba6a55f791fcdfd9c68"
+    },
+    {
+      "path": "chengyinhub-admin/sql/migration_verification_qrcode_repair_job.sql",
+      "sha256": "21c70ac205f71243b695572b14ed7cd7654762e85647dd199f068b7bc49a6332"
+    },
+    {
+      "path": "chengyinhub-admin/sql/seed_refund_manual_menu_20260714.sql",
+      "sha256": "886bf11c3464b4ab820e953893b0536f2eb77c9096e3be637c6d2a2acbe98226"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRoamController.java",
+      "sha256": "caf81cea7ee243e687e2ad16671ca018b53142c35eb59b68a65ff8654024a967"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/job/LeaderScheduledJobsConfig.java",
+      "sha256": "8d8def82330fd7210739ea1d71c042d57e3ba5366ef9903be4174e5233c1f61e"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RefundNotificationMybatisIntegrationTest.java",
+      "sha256": "90ce29a969825a148c3968651c9e1325a0c52afeaa24270340cefb541f4d1d43"
+    },
+    {
+      "path": "chengyinhub-common/src/main/java/com/chengyinhub/common/constant/Constants.java",
+      "sha256": "534068b4f0541c82158414ee022f24eea6b4de64b07aa8f609c4423c5f053edd"
+    },
+    {
+      "path": "chengyinhub-common/src/main/java/com/chengyinhub/common/constant/ScheduleConstants.java",
+      "sha256": "a8a338bd404e3e5ceb7474d64f856908e66b1f0db02a99444ffab091440662a2"
+    },
+    {
+      "path": "chengyinhub-quartz/src/main/java/com/chengyinhub/quartz/service/MySqlSchedulerCoordinator.java",
+      "sha256": "a419e344dd6513ed7cbc562dff608172e5a1989abd298e4d403c9f5b61d3b6d1"
+    },
+    {
+      "path": "chengyinhub-quartz/src/main/java/com/chengyinhub/quartz/service/impl/SysJobServiceImpl.java",
+      "sha256": "c170bbbbd1f3f9596619b994c5cb0b1c69801a5a5a9b9dedc9cb0e0aee85c892"
+    },
+    {
+      "path": "chengyinhub-quartz/src/main/java/com/chengyinhub/quartz/util/MySqlSessionLock.java",
+      "sha256": "4ed674d724d3ff35491eaba04f736fe52989cc08cf14f1d8b734bbdcdb970085"
+    },
+    {
+      "path": "chengyinhub-quartz/src/main/java/com/chengyinhub/quartz/util/ScheduleUtils.java",
+      "sha256": "c5542b38dc37b41ea9cf7548aa7e31bf8b5a221e8bd6a82d12dc77ce07df7fd1"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ISystemNotificationIntentService.java",
+      "sha256": "efc7f6a956738131dd1eb1b70a424a6020822e790c68690f2fa3e30bba696d0c"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AppSessionRegistryServiceImpl.java",
+      "sha256": "9c1d32b04a79adb8e342d33eea1a8d7c53d39c36752803269edcc853f9a0c424"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ChapterMerchantNodeServiceImpl.java",
+      "sha256": "ebf6facc82a946998f82c98fe20aa695abfee4c2cf6049635e9f22d47065e291"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubMemberServiceImpl.java",
+      "sha256": "45d4ea5eb03c6be7c2da8c5fcc192a716fb860de54f5a05612b38dbbb20b2be2"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+      "sha256": "7cb41e27de48229c10688084fd7450defe590ea07b78673db25a9485a0846cda"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopComplaintServiceImpl.java",
+      "sha256": "aabd9c9bc163ee3dd0cbbf4f1a5525bb9930a4db741747fcdf863cdeacb8f8f1"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopDepositRefundService.java",
+      "sha256": "13ca893a018e897918f7c10c0d07affe338761d6377d89a3b844c0599b35253a"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CoopInviteServiceImpl.java",
+      "sha256": "05624ecf9f832e562999f696b9b959392c9437a760686d63164cf2695f611549"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ImServiceImpl.java",
+      "sha256": "14c10081c8e82a14b05e05962a62194c905bf08a231a342d23941e0330a2b243"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantChapterApplicationServiceImpl.java",
+      "sha256": "9659303de11fd32b98d617cf908901041da68562268d1c38debb8ee81bf932d9"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantCrmCampaignServiceImpl.java",
+      "sha256": "5bfda494698da4ef9c6c6a62a2a47729cc08be3c749f0f73a33511d268c05987"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantCrmDeliveryGuardService.java",
+      "sha256": "6d70372da81f24b2b2051457baf6250e4fd0c807ed069c48be058655eb5cdbf9"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantCrmExportServiceImpl.java",
+      "sha256": "143a64f0b984bb1b89fec775b56c4059251bc6ed62afa2eabdb53508f8d37268"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantCrmRecipientDeliveryServiceImpl.java",
+      "sha256": "b73115ee3b6feb4761428ae1176138e2bec09727ed946c6680e10d161b0d5dff"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantOfferServiceImpl.java",
+      "sha256": "2525ef5e17519bbb08694b303628f75813d72eb535c39c03596f16b8508095f1"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PlayCheckinCodeServiceImpl.java",
+      "sha256": "8eea7a544dbd7ccd73c6c2b0128b877165a562dab259f1ecd67e0a71cd39dd32"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RefundServiceImpl.java",
+      "sha256": "01ba91d4b11db77576167fbabf107e3a234a133d090befab9b11dd4023aa615f"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RoamBadgeDeliveryService.java",
+      "sha256": "32b54af080b2f4cb580ad4801bc33539a4738fa77e810fbb85072213707d4009"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TeamGroupServiceImpl.java",
+      "sha256": "4b10e279bee96375bd6d46765247f08f692e89aae38faf5fc03224740d292643"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/VerificationRiskService.java",
+      "sha256": "a24a66460a4d73c68aa3ef76addfe338463e559be013ee4f534478c322b4fc4d"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/CommittedBusinessNotice.java",
+      "sha256": "f1d97648913cb8c5026da8606d16977e5aca3f00ce46d0cf0fa16240d71d5e7e"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/task/ImNotificationDeliveryTask.java",
+      "sha256": "4b7e09df442d7311e24fbc52def8022fb0db22e98e16bbc4563c35e8304bff2d"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/task/MerchantCrmDeliveryRecoveryTask.java",
+      "sha256": "bc4aba46c3ce545195bd7a450e52d7618e0d092bf7c67f5e409b93560f6af0f9"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/task/RefundReconcileTask.java",
+      "sha256": "603e58db234ca17da058d054a4dc0f92ca6fea1e1464c6bce1f8667a6e7123b3"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/task/RoamPresenceRevokeAuditTask.java",
+      "sha256": "cc607900290f881b36f9485a36b485d1e17fbb8980a0d70d4828a774c170b513"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/task/RoamRewardDeliveryTask.java",
+      "sha256": "bae467e9a74638cd12141c697c9b7fdc87b48354e1ca16e082ca74772d0ce717"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/task/VerificationQrcodeRepairTask.java",
+      "sha256": "a1523d5f0d21b5bad5169b767f6ad72f2cc028073ac51633ce5a4479da029ff9"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/system/service/impl/SysConfigServiceImpl.java",
+      "sha256": "30e3670580eab44ce1af6abc9c1dd456ffd9e569a8eb4b0b9cffc7d74194a370"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/ClubMemberMapper.xml",
+      "sha256": "098860979c2ff6756f403f310359dd7e333dd3d25cdc9cdc49e594ac89a2cb77"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/CoopInviteMapper.xml",
+      "sha256": "085242989a1c46d1cef5c1573eb5c5feafdbbf04c40ac80cc27241acc4e0359b"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/ImNotificationIntentMapper.xml",
+      "sha256": "d1036113aa06903155a3a414851ca7ce212f55942c94b18f1ecde45f5eb41f53"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/MerchantChapterOfferMapper.xml",
+      "sha256": "3259ded45f1dc6275115f5d125b5e816dd99e31a3be91db38f41ef2f3978c212"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/MerchantCrmCampaignMapper.xml",
+      "sha256": "2aa2d1909859dc81987acf6ca3311c14a511ef43232338adae3d29302593d4e4"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/RefundApplicationMapper.xml",
+      "sha256": "810b764c0711cacc27b37611865a546345edc1babaeec96a3fd1b10e5841365a"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/RoamBadgeDeliveryMapper.xml",
+      "sha256": "82855f4c2d884d5bc1cd2351177f2ecdf70fa4360f0354fc248fb365ead2d48d"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/RoamPresenceRevokeIntentMapper.xml",
+      "sha256": "6fb20c265723ff19489dbed9cb4add1e1ecf3bf8180178c299939e73d31f316b"
+    }
+  ]
+}

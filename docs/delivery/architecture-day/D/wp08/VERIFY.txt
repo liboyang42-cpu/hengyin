@@ -1,0 +1,9 @@
+WP08: actual static verification only; no Java/backend/DB/Redis/WeChat execution.
+PASS 54 source/SQL/test evidence fingerprints match fixed public baseline.
+PASS inventory: 2427 production Java files; 15 registrations =12 afterCommit+3 afterCompletion; 16 helper calls; 0 transactional event listeners; frozen D adds 1 afterCommit.
+PASS tables cover direct effects D01-D16 and every indirect consumer C01-C16; source coordinates resolve.
+PASS frozen D staged tree remains 7a836874abeec1d9af3a23770dcc5d7e6868a4cf; overlay source unchanged.
+PASS readonly-preflight.sql contains 10 SELECT statements only; NOT EXECUTED.
+PASS audit worktree modifications restricted to D/wp08 docs; git diff --check clean. No production implementation/test assertion changed.
+READ ONLY SOURCE FINDING: RefundNotificationMybatisIntegrationTest explicitly asserts no retry for failed/throwing notification after terminal refund; test read, NOT RUN.
+COORDINATOR-OWNED FOLLOWUP: removing redundant CHENGYIN_BROADCAST_MYSQL_IT custom gate only in joint CI candidate, gates={}; frozen e717 untouched; no duplicate D test edit.
