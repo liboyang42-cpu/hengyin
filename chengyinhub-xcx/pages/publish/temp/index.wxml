@@ -1481,7 +1481,6 @@
     <view class="cg-edit-head"><view class="cg-edit-head__exit" bindtap="closeAddSheet" aria-role="button" aria-label="退出添加模块" hover-class="cy-pressed" hover-stay-time="80">退出</view><view class="cg-edit-head__title">添加模块</view><view class="cg-edit-head__done" bindtap="closeAddSheet" aria-role="button" aria-label="完成添加模块" hover-class="cy-pressed" hover-stay-time="80">完成</view></view>
     <view class="cg-sheet-list">
       <view class="cg-sheet-card" wx:for="{{ availableModules }}" wx:key="key" hover-class="cg-sheet-card--pressed" hover-stay-time="80" bindtap="addModule" data-key="{{ item.key }}">
-        <view class="cg-sheet-ico"><cy-icon name="{{item.iconName}}" size="40" /></view>
         <view class="cg-sheet-meta">
           <view class="cg-sheet-name">{{ item.name }}<text class="cg-tag {{ item.tagClass }}" wx:if="{{ item.tag }}">{{ item.tag }}</text></view>
           <view class="cg-sheet-desc">{{ item.desc }}</view>
@@ -1729,7 +1728,7 @@
       <input class="cg-cfg-input" placeholder="输入名称后确认，例如 体温" placeholder-class="cg-ph" confirm-type="done" bindconfirm="declareAfterValueSlot" />
 
     </view>
-    <view class="cg-gcfg"><view class="cg-cfg-label">进入下一段</view><cy-dropdown topic-editor columns="{{2}}" range="{{r5Editor.nextStepOptions}}" range-key="label" reason-key="reason" value="{{opt.idx(r5Editor.nextStepOptions, afterEditor.draft.next)}}" disabled="{{!!r5Editor.nextDisabledReason}}" bind:change="pickAfterNextStep"><view class="cg-pick">{{opt.label(r5Editor.nextStepOptions, afterEditor.draft.next)}}<cy-icon name="back" size="28" /></view></cy-dropdown><view wx:if="{{r5Editor.nextDisabledReason}}" class="cg-cfg-hint">{{r5Editor.nextDisabledReason}}</view></view>
+    <view class="cg-gcfg"><view class="cg-cfg-label">进入下一段</view><cy-dropdown topic-editor columns="{{2}}" range="{{r5Editor.nextStepOptions}}" range-key="label" reason-key="reason" value="{{opt.idx(r5Editor.nextStepOptions, afterEditor.draft.next)}}" disabled="{{!!r5Editor.nextDisabledReason}}" bind:change="pickAfterNextStep"><view class="cg-pick">{{opt.label(r5Editor.nextStepOptions, afterEditor.draft.next)}}<view class="cg-caret"><cy-icon name="back" size="28" /></view></view></cy-dropdown><view wx:if="{{r5Editor.nextDisabledReason}}" class="cg-cfg-hint">{{r5Editor.nextDisabledReason}}</view></view>
     <cy-inline-error class="cg-inline-error" wx:if="{{afterEditor.error}}" title="{{afterEditor.error}}" />
   </view>
 

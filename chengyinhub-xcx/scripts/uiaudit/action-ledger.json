@@ -981750,7 +981750,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1497:bindtap:closeR5GameSheet:356",
+      "id": "pages/publish/temp/index.wxml:1496:bindtap:closeR5GameSheet:356",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -981773,7 +981773,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "closeR5GameSheet",
-        "line": 1497,
+        "line": 1496,
         "selectorHint": ".cg-mask",
         "visibleCondition": "{{ gameSheetOpen }}",
         "disabledCondition": null,
@@ -981817,7 +981817,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1500:bindtap:closeR5GameSheet:357",
+      "id": "pages/publish/temp/index.wxml:1499:bindtap:closeR5GameSheet:357",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -981840,7 +981840,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "closeR5GameSheet",
-        "line": 1500,
+        "line": 1499,
         "selectorHint": ".cg-edit-head__exit",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -981884,7 +981884,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1500:bindtap:confirmR5GameSheet:358",
+      "id": "pages/publish/temp/index.wxml:1499:bindtap:confirmR5GameSheet:358",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -981907,7 +981907,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "confirmR5GameSheet",
-        "line": 1500,
+        "line": 1499,
         "selectorHint": ".cg-edit-head__done",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -981967,7 +981967,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1503:bindtap:jumpR5GameGroup:359",
+      "id": "pages/publish/temp/index.wxml:1502:bindtap:jumpR5GameGroup:359",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -981990,7 +981990,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "jumpR5GameGroup",
-        "line": 1503,
+        "line": 1502,
         "selectorHint": "#gnav-{{ idx }}",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -982034,7 +982034,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1505:bindscroll:onGameStripScroll:360",
+      "id": "pages/publish/temp/index.wxml:1504:bindscroll:onGameStripScroll:360",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -982057,7 +982057,7 @@
         "tag": "scroll-view",
         "event": "bindscroll",
         "handler": "onGameStripScroll",
-        "line": 1505,
+        "line": 1504,
         "selectorHint": ".cg-tstrip",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -982101,7 +982101,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1511:bindtap:pickR5GameTag:361",
+      "id": "pages/publish/temp/index.wxml:1510:bindtap:pickR5GameTag:361",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -982124,7 +982124,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "pickR5GameTag",
-        "line": 1511,
+        "line": 1510,
         "selectorHint": ".cg-tag-pill",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -982168,7 +982168,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1523:bindtap:previewGameFromSheet:362",
+      "id": "pages/publish/temp/index.wxml:1522:bindtap:previewGameFromSheet:362",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -982191,7 +982191,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "previewGameFromSheet",
-        "line": 1523,
+        "line": 1522,
         "selectorHint": ".cg-r5-pill",
         "visibleCondition": "{{ sheetPickItem && !sheetPickItem.reason }}",
         "disabledCondition": null,
@@ -982235,7 +982235,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1528:bindtap:closeToolPicker:363",
+      "id": "pages/publish/temp/index.wxml:1527:bindtap:closeToolPicker:363",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -982258,7 +982258,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "closeToolPicker",
-        "line": 1528,
+        "line": 1527,
         "selectorHint": ".cg-mask",
         "visibleCondition": "{{ toolPickerOpen }}",
         "disabledCondition": null,
@@ -982302,7 +982302,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1531:bindtap:closeToolPicker:364",
+      "id": "pages/publish/temp/index.wxml:1530:bindtap:closeToolPicker:364",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -982325,7 +982325,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "closeToolPicker",
-        "line": 1531,
+        "line": 1530,
         "selectorHint": ".cg-edit-head__exit",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -982369,7 +982369,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1531:bindtap:closeToolPicker:365",
+      "id": "pages/publish/temp/index.wxml:1530:bindtap:closeToolPicker:365",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -982392,7 +982392,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "closeToolPicker",
-        "line": 1531,
+        "line": 1530,
         "selectorHint": ".cg-edit-head__done",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -982436,7 +982436,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1534:bindtap:pickToolTag:366",
+      "id": "pages/publish/temp/index.wxml:1533:bindtap:pickToolTag:366",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -982459,7 +982459,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "pickToolTag",
-        "line": 1534,
+        "line": 1533,
         "selectorHint": ".cg-tag-pill",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -982518,7 +982518,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1545:bindtap:closeVoiceSheet:367",
+      "id": "pages/publish/temp/index.wxml:1544:bindtap:closeVoiceSheet:367",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -982541,7 +982541,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "closeVoiceSheet",
-        "line": 1545,
+        "line": 1544,
         "selectorHint": ".cg-mask",
         "visibleCondition": "{{ voiceSheetOpen }}",
         "disabledCondition": null,
@@ -982585,7 +982585,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1547:bindtap:closeVoiceSheet:368",
+      "id": "pages/publish/temp/index.wxml:1546:bindtap:closeVoiceSheet:368",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -982608,7 +982608,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "closeVoiceSheet",
-        "line": 1547,
+        "line": 1546,
         "selectorHint": ".cg-edit-head__exit",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -982652,7 +982652,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1547:bindtap:closeVoiceSheet:369",
+      "id": "pages/publish/temp/index.wxml:1546:bindtap:closeVoiceSheet:369",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -982675,7 +982675,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "closeVoiceSheet",
-        "line": 1547,
+        "line": 1546,
         "selectorHint": ".cg-edit-head__done",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -982719,7 +982719,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1552:bindtap:onPreviewAudio:370",
+      "id": "pages/publish/temp/index.wxml:1551:bindtap:onPreviewAudio:370",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -982742,7 +982742,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onPreviewAudio",
-        "line": 1552,
+        "line": 1551,
         "selectorHint": ".cg-audio-play",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -982808,7 +982808,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1556:bindtap:clearAudio:371",
+      "id": "pages/publish/temp/index.wxml:1555:bindtap:clearAudio:371",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -982831,7 +982831,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "clearAudio",
-        "line": 1556,
+        "line": 1555,
         "selectorHint": ".cg-audio-del",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -982890,7 +982890,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1559:bindtap:uploadAudio:372",
+      "id": "pages/publish/temp/index.wxml:1558:bindtap:uploadAudio:372",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -982913,7 +982913,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "uploadAudio",
-        "line": 1559,
+        "line": 1558,
         "selectorHint": ".cg-audio-empty",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -983012,7 +983012,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1562:bindinput:onAudioDurationChange:373",
+      "id": "pages/publish/temp/index.wxml:1561:bindinput:onAudioDurationChange:373",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -983035,7 +983035,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onAudioDurationChange",
-        "line": 1562,
+        "line": 1561,
         "selectorHint": ".cg-cfg-input",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -983094,7 +983094,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1566:bindtap:removeVoiceTool:374",
+      "id": "pages/publish/temp/index.wxml:1565:bindtap:removeVoiceTool:374",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -983117,7 +983117,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "removeVoiceTool",
-        "line": 1566,
+        "line": 1565,
         "selectorHint": ".cg-adv-add",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -983177,7 +983177,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1570:bindtap:closeMusicSheet:375",
+      "id": "pages/publish/temp/index.wxml:1569:bindtap:closeMusicSheet:375",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -983200,7 +983200,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "closeMusicSheet",
-        "line": 1570,
+        "line": 1569,
         "selectorHint": ".cg-mask",
         "visibleCondition": "{{ musicSheetOpen }}",
         "disabledCondition": null,
@@ -983244,7 +983244,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1572:bindtap:closeMusicSheet:376",
+      "id": "pages/publish/temp/index.wxml:1571:bindtap:closeMusicSheet:376",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -983267,7 +983267,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "closeMusicSheet",
-        "line": 1572,
+        "line": 1571,
         "selectorHint": ".cg-edit-head__exit",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -983311,7 +983311,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1572:bindtap:saveMusicSheet:377",
+      "id": "pages/publish/temp/index.wxml:1571:bindtap:saveMusicSheet:377",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -983334,7 +983334,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "saveMusicSheet",
-        "line": 1572,
+        "line": 1571,
         "selectorHint": ".cg-edit-head__done",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -983394,7 +983394,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1575:bindinput:inputMusicTitle:378",
+      "id": "pages/publish/temp/index.wxml:1574:bindinput:inputMusicTitle:378",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -983417,7 +983417,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "inputMusicTitle",
-        "line": 1575,
+        "line": 1574,
         "selectorHint": ".cg-cfg-input",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -983461,7 +983461,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1580:bindtap:clearMusicAudio:379",
+      "id": "pages/publish/temp/index.wxml:1579:bindtap:clearMusicAudio:379",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -983484,7 +983484,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "clearMusicAudio",
-        "line": 1580,
+        "line": 1579,
         "selectorHint": ".cg-audio-del",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -983528,7 +983528,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1583:bindtap:uploadMusicAudio:380",
+      "id": "pages/publish/temp/index.wxml:1582:bindtap:uploadMusicAudio:380",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -983551,7 +983551,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "uploadMusicAudio",
-        "line": 1583,
+        "line": 1582,
         "selectorHint": ".cg-audio-empty",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -983642,7 +983642,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1584:bindchange:toggleMusicLoop:381",
+      "id": "pages/publish/temp/index.wxml:1583:bindchange:toggleMusicLoop:381",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -983665,7 +983665,7 @@
         "tag": "cy-switch",
         "event": "bindchange",
         "handler": "toggleMusicLoop",
-        "line": 1584,
+        "line": 1583,
         "selectorHint": "cy-switch[bindchange]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -983709,7 +983709,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1587:bindtap:removeMusicTool:382",
+      "id": "pages/publish/temp/index.wxml:1586:bindtap:removeMusicTool:382",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -983732,7 +983732,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "removeMusicTool",
-        "line": 1587,
+        "line": 1586,
         "selectorHint": ".cg-adv-add",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -983792,7 +983792,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1591:bindtap:closeScanSheet:383",
+      "id": "pages/publish/temp/index.wxml:1590:bindtap:closeScanSheet:383",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -983815,7 +983815,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "closeScanSheet",
-        "line": 1591,
+        "line": 1590,
         "selectorHint": ".cg-mask",
         "visibleCondition": "{{scanSheetOpen}}",
         "disabledCondition": null,
@@ -983874,7 +983874,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1593:bindtap:closeScanSheet:384",
+      "id": "pages/publish/temp/index.wxml:1592:bindtap:closeScanSheet:384",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -983897,7 +983897,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "closeScanSheet",
-        "line": 1593,
+        "line": 1592,
         "selectorHint": ".cg-edit-head__exit",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -983956,7 +983956,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1593:bindtap:saveScanSheet:385",
+      "id": "pages/publish/temp/index.wxml:1592:bindtap:saveScanSheet:385",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -983979,7 +983979,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "saveScanSheet",
-        "line": 1593,
+        "line": 1592,
         "selectorHint": ".cg-edit-head__done",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -984023,7 +984023,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1599:bind:change:pickScanKind:386",
+      "id": "pages/publish/temp/index.wxml:1598:bind:change:pickScanKind:386",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -984046,7 +984046,7 @@
         "tag": "cy-dropdown",
         "event": "bind:change",
         "handler": "pickScanKind",
-        "line": 1599,
+        "line": 1598,
         "selectorHint": "cy-dropdown[bind:change]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -984105,7 +984105,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1601:bindinput:onAdvancedField:387",
+      "id": "pages/publish/temp/index.wxml:1600:bindinput:onAdvancedField:387",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -984128,7 +984128,7 @@
         "tag": "textarea",
         "event": "bindinput",
         "handler": "onAdvancedField",
-        "line": 1601,
+        "line": 1600,
         "selectorHint": ".cg-cfg-textarea",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -984187,7 +984187,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1604:bindinput:onAdvancedField:388",
+      "id": "pages/publish/temp/index.wxml:1603:bindinput:onAdvancedField:388",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -984210,7 +984210,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onAdvancedField",
-        "line": 1604,
+        "line": 1603,
         "selectorHint": ".cg-cfg-input",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -984269,7 +984269,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1608:bindinput:onAdvancedField:389",
+      "id": "pages/publish/temp/index.wxml:1607:bindinput:onAdvancedField:389",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -984292,7 +984292,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onAdvancedField",
-        "line": 1608,
+        "line": 1607,
         "selectorHint": ".cg-cfg-input",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -984433,7 +984433,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1612:bindinput:onAdvancedField:390",
+      "id": "pages/publish/temp/index.wxml:1611:bindinput:onAdvancedField:390",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -984456,7 +984456,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onAdvancedField",
-        "line": 1612,
+        "line": 1611,
         "selectorHint": ".cg-cfg-input",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -984515,7 +984515,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1616:bindchange:onAdvancedField:391",
+      "id": "pages/publish/temp/index.wxml:1615:bindchange:onAdvancedField:391",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -984538,7 +984538,7 @@
         "tag": "slider",
         "event": "bindchange",
         "handler": "onAdvancedField",
-        "line": 1616,
+        "line": 1615,
         "selectorHint": "slider[bindchange]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -984597,7 +984597,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1618:bind:change:pickScanArMode:392",
+      "id": "pages/publish/temp/index.wxml:1617:bind:change:pickScanArMode:392",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -984620,7 +984620,7 @@
         "tag": "cy-dropdown",
         "event": "bind:change",
         "handler": "pickScanArMode",
-        "line": 1618,
+        "line": 1617,
         "selectorHint": "cy-dropdown[bind:change]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -984679,7 +984679,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1621:bindinput:onAdvancedField:393",
+      "id": "pages/publish/temp/index.wxml:1620:bindinput:onAdvancedField:393",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -984702,7 +984702,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onAdvancedField",
-        "line": 1621,
+        "line": 1620,
         "selectorHint": ".cg-cfg-input",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -984761,7 +984761,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1629:catchtap:clearScanModel:394",
+      "id": "pages/publish/temp/index.wxml:1628:catchtap:clearScanModel:394",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -984784,7 +984784,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "clearScanModel",
-        "line": 1629,
+        "line": 1628,
         "selectorHint": ".cg-model-x",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -984926,7 +984926,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1633:bindtap:uploadScanModel:395",
+      "id": "pages/publish/temp/index.wxml:1632:bindtap:uploadScanModel:395",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -984949,7 +984949,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "uploadScanModel",
-        "line": 1633,
+        "line": 1632,
         "selectorHint": ".cg-adv-add",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -985048,7 +985048,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1639:bindinput:onAdvancedField:396",
+      "id": "pages/publish/temp/index.wxml:1638:bindinput:onAdvancedField:396",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -985071,7 +985071,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onAdvancedField",
-        "line": 1639,
+        "line": 1638,
         "selectorHint": ".cg-cfg-input",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -985130,7 +985130,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1645:bindtap:closeR5ToolSheet:397",
+      "id": "pages/publish/temp/index.wxml:1644:bindtap:closeR5ToolSheet:397",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -985153,7 +985153,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "closeR5ToolSheet",
-        "line": 1645,
+        "line": 1644,
         "selectorHint": ".cg-mask",
         "visibleCondition": "{{toolSheetKey && !toolSheetOpen}}",
         "disabledCondition": null,
@@ -985212,7 +985212,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1647:bindtap:closeR5ToolSheet:398",
+      "id": "pages/publish/temp/index.wxml:1646:bindtap:closeR5ToolSheet:398",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -985235,7 +985235,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "closeR5ToolSheet",
-        "line": 1647,
+        "line": 1646,
         "selectorHint": ".cg-edit-head__exit",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -985294,7 +985294,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1647:bindtap:saveR5ToolSheet:399",
+      "id": "pages/publish/temp/index.wxml:1646:bindtap:saveR5ToolSheet:399",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -985317,7 +985317,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "saveR5ToolSheet",
-        "line": 1647,
+        "line": 1646,
         "selectorHint": ".cg-edit-head__done",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -985377,7 +985377,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1652:bindchange:onAdvancedToggle:400",
+      "id": "pages/publish/temp/index.wxml:1651:bindchange:onAdvancedToggle:400",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -985400,7 +985400,7 @@
         "tag": "cy-switch",
         "event": "bindchange",
         "handler": "onAdvancedToggle",
-        "line": 1652,
+        "line": 1651,
         "selectorHint": "cy-switch[bindchange]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -985459,7 +985459,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1655:bindinput:onAdvancedField:401",
+      "id": "pages/publish/temp/index.wxml:1654:bindinput:onAdvancedField:401",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -985482,7 +985482,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onAdvancedField",
-        "line": 1655,
+        "line": 1654,
         "selectorHint": ".cg-cfg-input",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -985541,7 +985541,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1656:bind:change:onAdvancedPicker:402",
+      "id": "pages/publish/temp/index.wxml:1655:bind:change:onAdvancedPicker:402",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -985564,7 +985564,7 @@
         "tag": "cy-dropdown",
         "event": "bind:change",
         "handler": "onAdvancedPicker",
-        "line": 1656,
+        "line": 1655,
         "selectorHint": "cy-dropdown[bind:change]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -985623,7 +985623,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1663:bindchange:onAdvancedToggle:403",
+      "id": "pages/publish/temp/index.wxml:1662:bindchange:onAdvancedToggle:403",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -985646,7 +985646,7 @@
         "tag": "cy-switch",
         "event": "bindchange",
         "handler": "onAdvancedToggle",
-        "line": 1663,
+        "line": 1662,
         "selectorHint": "cy-switch[bindchange]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -985705,7 +985705,89 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1666:bindinput:onAdvancedField:404",
+      "id": "pages/publish/temp/index.wxml:1665:bindinput:onAdvancedField:404",
+      "route": "pages/publish/temp/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/publish/temp/index.wxml",
+        "js": "pages/publish/temp/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "input",
+        "event": "bindinput",
+        "handler": "onAdvancedField",
+        "line": 1665,
+        "selectorHint": ".cg-cfg-input",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "read",
+      "interactionMode": "event-contract",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [
+          "/api/play/theme/support-matrix"
+        ],
+        "primaryApis": [
+          "/api/play/theme/support-matrix"
+        ],
+        "auxiliaryApis": [],
+        "apiContracts": [
+          {
+            "url": "/api/play/theme/support-matrix",
+            "method": "GET",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/publish/temp/index.js:577"
+      }
+    },
+    {
+      "id": "pages/publish/temp/index.wxml:1666:bindinput:onAdvancedField:405",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -985787,7 +985869,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1667:bindinput:onAdvancedField:405",
+      "id": "pages/publish/temp/index.wxml:1669:bindinput:onAdvancedField:406",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -985810,7 +985892,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onAdvancedField",
-        "line": 1667,
+        "line": 1669,
         "selectorHint": ".cg-cfg-input",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -985869,7 +985951,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1670:bindinput:onAdvancedField:406",
+      "id": "pages/publish/temp/index.wxml:1671:bindinput:onAdvancedField:407",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -985892,7 +985974,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onAdvancedField",
-        "line": 1670,
+        "line": 1671,
         "selectorHint": ".cg-cfg-input",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -985951,7 +986033,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1672:bindinput:onAdvancedField:407",
+      "id": "pages/publish/temp/index.wxml:1673:bindinput:onAdvancedField:408",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -985974,7 +986056,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onAdvancedField",
-        "line": 1672,
+        "line": 1673,
         "selectorHint": ".cg-cfg-input",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -986033,89 +986115,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1674:bindinput:onAdvancedField:408",
-      "route": "pages/publish/temp/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "pages/publish/temp/index.wxml",
-        "js": "pages/publish/temp/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "input",
-        "event": "bindinput",
-        "handler": "onAdvancedField",
-        "line": 1674,
-        "selectorHint": ".cg-cfg-input",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "read",
-      "interactionMode": "event-contract",
-      "baseActionClass": "read",
-      "effectClasses": [
-        "read",
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [
-          "/api/play/theme/support-matrix"
-        ],
-        "primaryApis": [
-          "/api/play/theme/support-matrix"
-        ],
-        "auxiliaryApis": [],
-        "apiContracts": [
-          {
-            "url": "/api/play/theme/support-matrix",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
-        "writeApis": []
-      },
-      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success",
-        "error",
-        "timeout",
-        "duplicate-trigger"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/publish/temp/index.js:577"
-      }
-    },
-    {
-      "id": "pages/publish/temp/index.wxml:1680:bindchange:onAdvancedToggle:409",
+      "id": "pages/publish/temp/index.wxml:1679:bindchange:onAdvancedToggle:409",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -986138,7 +986138,7 @@
         "tag": "cy-switch",
         "event": "bindchange",
         "handler": "onAdvancedToggle",
-        "line": 1680,
+        "line": 1679,
         "selectorHint": "cy-switch[bindchange]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -986197,7 +986197,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1683:bind:change:onAdvancedPicker:410",
+      "id": "pages/publish/temp/index.wxml:1682:bind:change:onAdvancedPicker:410",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -986220,7 +986220,7 @@
         "tag": "cy-dropdown",
         "event": "bind:change",
         "handler": "onAdvancedPicker",
-        "line": 1683,
+        "line": 1682,
         "selectorHint": "cy-dropdown[bind:change]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -986279,7 +986279,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1685:bind:change:onAdvancedPicker:411",
+      "id": "pages/publish/temp/index.wxml:1684:bind:change:onAdvancedPicker:411",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -986302,7 +986302,7 @@
         "tag": "cy-dropdown",
         "event": "bind:change",
         "handler": "onAdvancedPicker",
-        "line": 1685,
+        "line": 1684,
         "selectorHint": "cy-dropdown[bind:change]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -986361,7 +986361,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1687:bindinput:onAdvancedField:412",
+      "id": "pages/publish/temp/index.wxml:1686:bindinput:onAdvancedField:412",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -986384,7 +986384,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onAdvancedField",
-        "line": 1687,
+        "line": 1686,
         "selectorHint": ".cg-cfg-input",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -986443,7 +986443,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1691:bindtap:removeR5Tool:413",
+      "id": "pages/publish/temp/index.wxml:1690:bindtap:removeR5Tool:413",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -986466,7 +986466,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "removeR5Tool",
-        "line": 1691,
+        "line": 1690,
         "selectorHint": ".cg-adv-add",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -986526,7 +986526,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1695:bindtap:closeAfterSheet:414",
+      "id": "pages/publish/temp/index.wxml:1694:bindtap:closeAfterSheet:414",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -986549,7 +986549,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "closeAfterSheet",
-        "line": 1695,
+        "line": 1694,
         "selectorHint": ".cg-mask",
         "visibleCondition": "{{afterEditor.show}}",
         "disabledCondition": null,
@@ -986608,7 +986608,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1697:bindtap:closeAfterSheet:415",
+      "id": "pages/publish/temp/index.wxml:1696:bindtap:closeAfterSheet:415",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -986631,7 +986631,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "closeAfterSheet",
-        "line": 1697,
+        "line": 1696,
         "selectorHint": ".cg-edit-head__exit",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -986690,7 +986690,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1697:bindtap:saveAfterSheet:416",
+      "id": "pages/publish/temp/index.wxml:1696:bindtap:saveAfterSheet:416",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -986713,7 +986713,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "saveAfterSheet",
-        "line": 1697,
+        "line": 1696,
         "selectorHint": ".cg-edit-head__done",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -986770,6 +986770,73 @@
       "evidence": {
         "status": "pending",
         "staticSource": "pages/publish/temp/r5-editor.js:257"
+      }
+    },
+    {
+      "id": "pages/publish/temp/index.wxml:1699:bindinput:inputAfterReply:417",
+      "route": "pages/publish/temp/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/publish/temp/index.wxml",
+        "js": "pages/publish/temp/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "input",
+        "event": "bindinput",
+        "handler": "inputAfterReply",
+        "line": 1699,
+        "selectorHint": ".cg-cfg-input",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/publish/temp/r5-editor.js:247"
       }
     },
     {
@@ -986856,74 +986923,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1700:bindinput:inputAfterReply:417",
-      "route": "pages/publish/temp/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "pages/publish/temp/index.wxml",
-        "js": "pages/publish/temp/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "input",
-        "event": "bindinput",
-        "handler": "inputAfterReply",
-        "line": 1700,
-        "selectorHint": ".cg-cfg-input",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "event-contract",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/publish/temp/r5-editor.js:247"
-      }
-    },
-    {
-      "id": "pages/publish/temp/index.wxml:1705:catchtap:removeAfterImage:418",
+      "id": "pages/publish/temp/index.wxml:1704:catchtap:removeAfterImage:418",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -986946,7 +986946,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "removeAfterImage",
-        "line": 1705,
+        "line": 1704,
         "selectorHint": ".pgrid-del",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -986990,7 +986990,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1707:bindtap:uploadAfterImage:419",
+      "id": "pages/publish/temp/index.wxml:1706:bindtap:uploadAfterImage:419",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -987016,7 +987016,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "uploadAfterImage",
-        "line": 1707,
+        "line": 1706,
         "selectorHint": ".pgrid-cell",
         "visibleCondition": "{{afterEditor.draft.images.length < 3}}",
         "disabledCondition": null,
@@ -987111,7 +987111,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1713:bind:change:pickAfterRowStat:420",
+      "id": "pages/publish/temp/index.wxml:1712:bind:change:pickAfterRowStat:420",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -987134,7 +987134,7 @@
         "tag": "cy-dropdown",
         "event": "bind:change",
         "handler": "pickAfterRowStat",
-        "line": 1713,
+        "line": 1712,
         "selectorHint": "cy-dropdown[bind:change]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -987178,7 +987178,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1714:bindinput:inputAfterRow:421",
+      "id": "pages/publish/temp/index.wxml:1713:bindinput:inputAfterRow:421",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -987201,7 +987201,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "inputAfterRow",
-        "line": 1714,
+        "line": 1713,
         "selectorHint": ".cg-cfg-input",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -987245,7 +987245,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1714:bindtap:removeAfterRow:422",
+      "id": "pages/publish/temp/index.wxml:1713:bindtap:removeAfterRow:422",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -987268,7 +987268,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "removeAfterRow",
-        "line": 1714,
+        "line": 1713,
         "selectorHint": ".cg-r5-del",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -987312,7 +987312,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1716:bindtap:addAfterRow:423",
+      "id": "pages/publish/temp/index.wxml:1715:bindtap:addAfterRow:423",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -987335,7 +987335,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "addAfterRow",
-        "line": 1716,
+        "line": 1715,
         "selectorHint": ".cg-adv-add",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -987379,7 +987379,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1722:bind:change:pickAfterRowStat:424",
+      "id": "pages/publish/temp/index.wxml:1721:bind:change:pickAfterRowStat:424",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -987402,7 +987402,7 @@
         "tag": "cy-dropdown",
         "event": "bind:change",
         "handler": "pickAfterRowStat",
-        "line": 1722,
+        "line": 1721,
         "selectorHint": "cy-dropdown[bind:change]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -987446,7 +987446,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1723:bind:change:pickAfterRowOp:425",
+      "id": "pages/publish/temp/index.wxml:1722:bind:change:pickAfterRowOp:425",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -987469,7 +987469,7 @@
         "tag": "cy-dropdown",
         "event": "bind:change",
         "handler": "pickAfterRowOp",
-        "line": 1723,
+        "line": 1722,
         "selectorHint": "cy-dropdown[bind:change]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -987513,7 +987513,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1725:bindinput:inputAfterRow:426",
+      "id": "pages/publish/temp/index.wxml:1724:bindinput:inputAfterRow:426",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -987536,7 +987536,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "inputAfterRow",
-        "line": 1725,
+        "line": 1724,
         "selectorHint": ".cg-cfg-input",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -987580,7 +987580,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1725:bindtap:removeAfterRow:427",
+      "id": "pages/publish/temp/index.wxml:1724:bindtap:removeAfterRow:427",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -987603,7 +987603,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "removeAfterRow",
-        "line": 1725,
+        "line": 1724,
         "selectorHint": ".cg-r5-del",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -987647,7 +987647,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1727:bindtap:addAfterRow:428",
+      "id": "pages/publish/temp/index.wxml:1726:bindtap:addAfterRow:428",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -987670,7 +987670,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "addAfterRow",
-        "line": 1727,
+        "line": 1726,
         "selectorHint": ".cg-adv-add",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -987714,7 +987714,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1729:bindconfirm:declareAfterValueSlot:429",
+      "id": "pages/publish/temp/index.wxml:1728:bindconfirm:declareAfterValueSlot:429",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -987737,7 +987737,7 @@
         "tag": "input",
         "event": "bindconfirm",
         "handler": "declareAfterValueSlot",
-        "line": 1729,
+        "line": 1728,
         "selectorHint": ".cg-cfg-input",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -987796,7 +987796,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1732:bind:change:pickAfterNextStep:430",
+      "id": "pages/publish/temp/index.wxml:1731:bind:change:pickAfterNextStep:430",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -987819,7 +987819,7 @@
         "tag": "cy-dropdown",
         "event": "bind:change",
         "handler": "pickAfterNextStep",
-        "line": 1732,
+        "line": 1731,
         "selectorHint": "cy-dropdown[bind:change]",
         "visibleCondition": null,
         "disabledCondition": "{{!!r5Editor.nextDisabledReason}}",
@@ -987863,7 +987863,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1737:bindtap:closeR5ToolSheet:431",
+      "id": "pages/publish/temp/index.wxml:1736:bindtap:closeR5ToolSheet:431",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -987886,7 +987886,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "closeR5ToolSheet",
-        "line": 1737,
+        "line": 1736,
         "selectorHint": ".cg-mask",
         "visibleCondition": "{{toolSheetOpen}}",
         "disabledCondition": null,
@@ -987945,7 +987945,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1740:bindtap:closeR5ToolSheet:432",
+      "id": "pages/publish/temp/index.wxml:1739:bindtap:closeR5ToolSheet:432",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -987968,7 +987968,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "closeR5ToolSheet",
-        "line": 1740,
+        "line": 1739,
         "selectorHint": ".cg-edit-head__exit",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -988027,7 +988027,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1740:bindtap:saveR5ToolSheet:433",
+      "id": "pages/publish/temp/index.wxml:1739:bindtap:saveR5ToolSheet:433",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -988050,7 +988050,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "saveR5ToolSheet",
-        "line": 1740,
+        "line": 1739,
         "selectorHint": ".cg-edit-head__done",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -988110,7 +988110,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1743:bindchange:updateToolField:434",
+      "id": "pages/publish/temp/index.wxml:1742:bindchange:updateToolField:434",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -988133,7 +988133,7 @@
         "tag": "cy-switch",
         "event": "bindchange",
         "handler": "updateToolField",
-        "line": 1743,
+        "line": 1742,
         "selectorHint": "cy-switch[bindchange]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -988177,7 +988177,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1746:bindtap:removeCostGroup:435",
+      "id": "pages/publish/temp/index.wxml:1745:bindtap:removeCostGroup:435",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -988200,7 +988200,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "removeCostGroup",
-        "line": 1746,
+        "line": 1745,
         "selectorHint": "view[bindtap]",
         "visibleCondition": "{{toolDraft.mode === 'OPTIONS' && toolDraft.groups.length > 2}}",
         "disabledCondition": null,
@@ -988244,7 +988244,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1747:bindinput:updateCostRow:436",
+      "id": "pages/publish/temp/index.wxml:1746:bindinput:updateCostRow:436",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -988267,7 +988267,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "updateCostRow",
-        "line": 1747,
+        "line": 1746,
         "selectorHint": ".cg-cfg-input",
         "visibleCondition": "{{toolDraft.mode === 'OPTIONS'}}",
         "disabledCondition": null,
@@ -988311,7 +988311,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1749:bindtap:removeCostRow:437",
+      "id": "pages/publish/temp/index.wxml:1748:bindtap:removeCostRow:437",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -988334,7 +988334,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "removeCostRow",
-        "line": 1749,
+        "line": 1748,
         "selectorHint": "view[bindtap]",
         "visibleCondition": "{{group.rows.length > 1}}",
         "disabledCondition": null,
@@ -988378,7 +988378,74 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1750:bind:change:updateCostRow:438",
+      "id": "pages/publish/temp/index.wxml:1749:bind:change:updateCostRow:438",
+      "route": "pages/publish/temp/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/publish/temp/index.wxml",
+        "js": "pages/publish/temp/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-dropdown",
+        "event": "bind:change",
+        "handler": "updateCostRow",
+        "line": 1749,
+        "selectorHint": "cy-dropdown[bind:change]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/publish/temp/index.js:2540"
+      }
+    },
+    {
+      "id": "pages/publish/temp/index.wxml:1750:bind:change:updateCostRow:439",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -988445,74 +988512,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1751:bind:change:updateCostRow:439",
-      "route": "pages/publish/temp/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "pages/publish/temp/index.wxml",
-        "js": "pages/publish/temp/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-dropdown",
-        "event": "bind:change",
-        "handler": "updateCostRow",
-        "line": 1751,
-        "selectorHint": "cy-dropdown[bind:change]",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "event-contract",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/publish/temp/index.js:2540"
-      }
-    },
-    {
-      "id": "pages/publish/temp/index.wxml:1752:bindinput:updateCostRow:440",
+      "id": "pages/publish/temp/index.wxml:1751:bindinput:updateCostRow:440",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -988535,7 +988535,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "updateCostRow",
-        "line": 1752,
+        "line": 1751,
         "selectorHint": ".cg-cfg-input",
         "visibleCondition": "{{!cost.key}}",
         "disabledCondition": null,
@@ -988579,7 +988579,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1753:bindinput:updateCostRow:441",
+      "id": "pages/publish/temp/index.wxml:1752:bindinput:updateCostRow:441",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -988602,7 +988602,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "updateCostRow",
-        "line": 1753,
+        "line": 1752,
         "selectorHint": ".cg-cfg-input",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -988646,7 +988646,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1756:bindtap:addCostRow:442",
+      "id": "pages/publish/temp/index.wxml:1755:bindtap:addCostRow:442",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -988669,7 +988669,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "addCostRow",
-        "line": 1756,
+        "line": 1755,
         "selectorHint": ".cg-adv-add",
         "visibleCondition": "{{group.rows.length < 32}}",
         "disabledCondition": null,
@@ -988713,7 +988713,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1759:bindtap:addCostGroup:443",
+      "id": "pages/publish/temp/index.wxml:1758:bindtap:addCostGroup:443",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -988736,7 +988736,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "addCostGroup",
-        "line": 1759,
+        "line": 1758,
         "selectorHint": ".cg-adv-add",
         "visibleCondition": "{{toolDraft.mode === 'OPTIONS' && toolDraft.groups.length < 4}}",
         "disabledCondition": null,
@@ -988780,7 +988780,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1762:bindchange:updateToolField:444",
+      "id": "pages/publish/temp/index.wxml:1761:bindchange:updateToolField:444",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -988803,7 +988803,7 @@
         "tag": "cy-switch",
         "event": "bindchange",
         "handler": "updateToolField",
-        "line": 1762,
+        "line": 1761,
         "selectorHint": "cy-switch[bindchange]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -988847,7 +988847,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1764:bindtap:removeCostGroup:445",
+      "id": "pages/publish/temp/index.wxml:1763:bindtap:removeCostGroup:445",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -988870,7 +988870,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "removeCostGroup",
-        "line": 1764,
+        "line": 1763,
         "selectorHint": "view[bindtap]",
         "visibleCondition": "{{toolDraft.mode === 'OPTIONS' && toolDraft.groups.length > 2}}",
         "disabledCondition": null,
@@ -988914,7 +988914,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1765:bindinput:updateCostRow:446",
+      "id": "pages/publish/temp/index.wxml:1764:bindinput:updateCostRow:446",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -988937,7 +988937,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "updateCostRow",
-        "line": 1765,
+        "line": 1764,
         "selectorHint": ".cg-cfg-input",
         "visibleCondition": "{{toolDraft.mode === 'OPTIONS'}}",
         "disabledCondition": null,
@@ -988981,7 +988981,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1767:bindtap:removeCostRow:447",
+      "id": "pages/publish/temp/index.wxml:1766:bindtap:removeCostRow:447",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -989004,7 +989004,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "removeCostRow",
-        "line": 1767,
+        "line": 1766,
         "selectorHint": "view[bindtap]",
         "visibleCondition": "{{group.rows.length > 1}}",
         "disabledCondition": null,
@@ -989048,7 +989048,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1768:bind:change:updateCostRow:448",
+      "id": "pages/publish/temp/index.wxml:1767:bind:change:updateCostRow:448",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -989071,7 +989071,7 @@
         "tag": "cy-dropdown",
         "event": "bind:change",
         "handler": "updateCostRow",
-        "line": 1768,
+        "line": 1767,
         "selectorHint": "cy-dropdown[bind:change]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -989115,7 +989115,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1769:bindinput:updateCostRow:449",
+      "id": "pages/publish/temp/index.wxml:1768:bindinput:updateCostRow:449",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -989138,7 +989138,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "updateCostRow",
-        "line": 1769,
+        "line": 1768,
         "selectorHint": ".cg-cfg-input",
         "visibleCondition": "{{!grant.key}}",
         "disabledCondition": null,
@@ -989182,7 +989182,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1770:bindinput:updateCostRow:450",
+      "id": "pages/publish/temp/index.wxml:1769:bindinput:updateCostRow:450",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -989205,7 +989205,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "updateCostRow",
-        "line": 1770,
+        "line": 1769,
         "selectorHint": ".cg-cfg-input",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -989249,7 +989249,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1773:bindtap:addCostRow:451",
+      "id": "pages/publish/temp/index.wxml:1772:bindtap:addCostRow:451",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -989272,7 +989272,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "addCostRow",
-        "line": 1773,
+        "line": 1772,
         "selectorHint": ".cg-adv-add",
         "visibleCondition": "{{group.rows.length < 32}}",
         "disabledCondition": null,
@@ -989316,7 +989316,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1776:bindtap:addCostGroup:452",
+      "id": "pages/publish/temp/index.wxml:1775:bindtap:addCostGroup:452",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -989339,7 +989339,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "addCostGroup",
-        "line": 1776,
+        "line": 1775,
         "selectorHint": ".cg-adv-add",
         "visibleCondition": "{{toolDraft.mode === 'OPTIONS' && toolDraft.groups.length < 4}}",
         "disabledCondition": null,
@@ -989383,7 +989383,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1780:bindtap:removeClueRow:453",
+      "id": "pages/publish/temp/index.wxml:1779:bindtap:removeClueRow:453",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -989406,7 +989406,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "removeClueRow",
-        "line": 1780,
+        "line": 1779,
         "selectorHint": "view[bindtap]",
         "visibleCondition": "{{toolDraft.rows.length > 1}}",
         "disabledCondition": null,
@@ -989450,7 +989450,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1781:bindinput:updateClueRow:454",
+      "id": "pages/publish/temp/index.wxml:1780:bindinput:updateClueRow:454",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -989473,7 +989473,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "updateClueRow",
-        "line": 1781,
+        "line": 1780,
         "selectorHint": ".cg-cfg-input",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -989517,7 +989517,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1783:bindchange:updateClueRow:455",
+      "id": "pages/publish/temp/index.wxml:1782:bindchange:updateClueRow:455",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -989540,7 +989540,7 @@
         "tag": "cy-switch",
         "event": "bindchange",
         "handler": "updateClueRow",
-        "line": 1783,
+        "line": 1782,
         "selectorHint": "cy-switch[bindchange]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -989584,7 +989584,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1786:bindtap:addClueRow:456",
+      "id": "pages/publish/temp/index.wxml:1785:bindtap:addClueRow:456",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -989607,7 +989607,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "addClueRow",
-        "line": 1786,
+        "line": 1785,
         "selectorHint": ".cg-adv-add",
         "visibleCondition": "{{toolDraft.rows.length < 10}}",
         "disabledCondition": null,
@@ -989651,7 +989651,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1787:bindchange:updateToolField:457",
+      "id": "pages/publish/temp/index.wxml:1786:bindchange:updateToolField:457",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -989674,7 +989674,7 @@
         "tag": "cy-switch",
         "event": "bindchange",
         "handler": "updateToolField",
-        "line": 1787,
+        "line": 1786,
         "selectorHint": "cy-switch[bindchange]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -989718,7 +989718,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1791:bindinput:updateToolField:458",
+      "id": "pages/publish/temp/index.wxml:1790:bindinput:updateToolField:458",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -989741,7 +989741,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "updateToolField",
-        "line": 1791,
+        "line": 1790,
         "selectorHint": ".cg-cfg-input",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -989785,7 +989785,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1793:bind:change:updateToolField:459",
+      "id": "pages/publish/temp/index.wxml:1792:bind:change:updateToolField:459",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -989808,7 +989808,7 @@
         "tag": "cy-dropdown",
         "event": "bind:change",
         "handler": "updateToolField",
-        "line": 1793,
+        "line": 1792,
         "selectorHint": "cy-dropdown[bind:change]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -989852,7 +989852,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1794:bindchange:updateToolField:460",
+      "id": "pages/publish/temp/index.wxml:1793:bindchange:updateToolField:460",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -989875,7 +989875,7 @@
         "tag": "cy-switch",
         "event": "bindchange",
         "handler": "updateToolField",
-        "line": 1794,
+        "line": 1793,
         "selectorHint": "cy-switch[bindchange]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -989919,7 +989919,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1796:bindchange:updateToolField:461",
+      "id": "pages/publish/temp/index.wxml:1795:bindchange:updateToolField:461",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -989942,7 +989942,7 @@
         "tag": "cy-switch",
         "event": "bindchange",
         "handler": "updateToolField",
-        "line": 1796,
+        "line": 1795,
         "selectorHint": "cy-switch[bindchange]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -989986,7 +989986,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1801:bindtap:removeVotePlan:462",
+      "id": "pages/publish/temp/index.wxml:1800:bindtap:removeVotePlan:462",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -990009,7 +990009,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "removeVotePlan",
-        "line": 1801,
+        "line": 1800,
         "selectorHint": "view[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -990053,7 +990053,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1802:bindinput:updateVotePlan:463",
+      "id": "pages/publish/temp/index.wxml:1801:bindinput:updateVotePlan:463",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -990076,7 +990076,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "updateVotePlan",
-        "line": 1802,
+        "line": 1801,
         "selectorHint": ".cg-cfg-input",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -990120,7 +990120,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1803:bindinput:updateVotePlan:464",
+      "id": "pages/publish/temp/index.wxml:1802:bindinput:updateVotePlan:464",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -990143,7 +990143,7 @@
         "tag": "textarea",
         "event": "bindinput",
         "handler": "updateVotePlan",
-        "line": 1803,
+        "line": 1802,
         "selectorHint": ".cg-cfg-textarea",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -990187,7 +990187,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1805:bindtap:removeVoteMaterial:465",
+      "id": "pages/publish/temp/index.wxml:1804:bindtap:removeVoteMaterial:465",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -990210,7 +990210,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "removeVoteMaterial",
-        "line": 1805,
+        "line": 1804,
         "selectorHint": "view[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -990254,7 +990254,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1806:bind:change:updateVotePlan:466",
+      "id": "pages/publish/temp/index.wxml:1805:bind:change:updateVotePlan:466",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -990277,7 +990277,7 @@
         "tag": "cy-dropdown",
         "event": "bind:change",
         "handler": "updateVotePlan",
-        "line": 1806,
+        "line": 1805,
         "selectorHint": "cy-dropdown[bind:change]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -990321,7 +990321,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1807:bindinput:updateVotePlan:467",
+      "id": "pages/publish/temp/index.wxml:1806:bindinput:updateVotePlan:467",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -990344,7 +990344,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "updateVotePlan",
-        "line": 1807,
+        "line": 1806,
         "selectorHint": ".cg-cfg-input",
         "visibleCondition": "{{!material.itemId}}",
         "disabledCondition": null,
@@ -990388,7 +990388,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1808:bindinput:updateVotePlan:468",
+      "id": "pages/publish/temp/index.wxml:1807:bindinput:updateVotePlan:468",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -990411,7 +990411,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "updateVotePlan",
-        "line": 1808,
+        "line": 1807,
         "selectorHint": ".cg-cfg-input",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -990455,7 +990455,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1811:bindtap:addVoteMaterial:469",
+      "id": "pages/publish/temp/index.wxml:1810:bindtap:addVoteMaterial:469",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -990478,7 +990478,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "addVoteMaterial",
-        "line": 1811,
+        "line": 1810,
         "selectorHint": ".cg-adv-add",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -990522,7 +990522,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1814:bindtap:removePlanClue:470",
+      "id": "pages/publish/temp/index.wxml:1813:bindtap:removePlanClue:470",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -990545,7 +990545,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "removePlanClue",
-        "line": 1814,
+        "line": 1813,
         "selectorHint": "view[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -990589,7 +990589,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1815:bindinput:updatePlanClue:471",
+      "id": "pages/publish/temp/index.wxml:1814:bindinput:updatePlanClue:471",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -990612,7 +990612,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "updatePlanClue",
-        "line": 1815,
+        "line": 1814,
         "selectorHint": ".cg-cfg-input",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -990656,7 +990656,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1817:bindtap:addPlanClue:472",
+      "id": "pages/publish/temp/index.wxml:1816:bindtap:addPlanClue:472",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -990679,7 +990679,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "addPlanClue",
-        "line": 1817,
+        "line": 1816,
         "selectorHint": ".cg-adv-add",
         "visibleCondition": "{{plan.clueNames.length < 10}}",
         "disabledCondition": null,
@@ -990723,7 +990723,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1820:bindtap:addVotePlan:473",
+      "id": "pages/publish/temp/index.wxml:1819:bindtap:addVotePlan:473",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -990746,7 +990746,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "addVotePlan",
-        "line": 1820,
+        "line": 1819,
         "selectorHint": ".cg-adv-add",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -990790,7 +990790,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1823:bindinput:updateToolField:474",
+      "id": "pages/publish/temp/index.wxml:1822:bindinput:updateToolField:474",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -990813,7 +990813,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "updateToolField",
-        "line": 1823,
+        "line": 1822,
         "selectorHint": ".cg-cfg-input",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -990857,7 +990857,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1824:bindinput:updateToolField:475",
+      "id": "pages/publish/temp/index.wxml:1823:bindinput:updateToolField:475",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -990880,7 +990880,7 @@
         "tag": "textarea",
         "event": "bindinput",
         "handler": "updateToolField",
-        "line": 1824,
+        "line": 1823,
         "selectorHint": ".cg-cfg-textarea",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -990924,7 +990924,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1833:bindinput:updateSlotLabel:476",
+      "id": "pages/publish/temp/index.wxml:1832:bindinput:updateSlotLabel:476",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -990947,7 +990947,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "updateSlotLabel",
-        "line": 1833,
+        "line": 1832,
         "selectorHint": ".cg-cfg-input",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -990991,7 +990991,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1839:bindtap:removeR5Tool:477",
+      "id": "pages/publish/temp/index.wxml:1838:bindtap:removeR5Tool:477",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -991014,7 +991014,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "removeR5Tool",
-        "line": 1839,
+        "line": 1838,
         "selectorHint": ".cg-adv-add",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -991074,7 +991074,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1843:bindtap:closePickerSheet:478",
+      "id": "pages/publish/temp/index.wxml:1842:bindtap:closePickerSheet:478",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -991097,7 +991097,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "closePickerSheet",
-        "line": 1843,
+        "line": 1842,
         "selectorHint": ".cg-mask",
         "visibleCondition": "{{ pickerSheet.open }}",
         "disabledCondition": null,
@@ -991141,7 +991141,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1848:bindtap:closePickerSheet:479",
+      "id": "pages/publish/temp/index.wxml:1847:bindtap:closePickerSheet:479",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -991164,7 +991164,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "closePickerSheet",
-        "line": 1848,
+        "line": 1847,
         "selectorHint": ".cg-sheet-close",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -991208,7 +991208,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1852:bindtap:onPickerSheetSelect:480",
+      "id": "pages/publish/temp/index.wxml:1851:bindtap:onPickerSheetSelect:480",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -991234,7 +991234,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onPickerSheetSelect",
-        "line": 1852,
+        "line": 1851,
         "selectorHint": ".cg-picker-li",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -991339,7 +991339,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1860:bind:close:onCategorySheetClose:482",
+      "id": "pages/publish/temp/index.wxml:1859:bind:close:onCategorySheetClose:482",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -991362,7 +991362,7 @@
         "tag": "cy-category-sheet",
         "event": "bind:close",
         "handler": "onCategorySheetClose",
-        "line": 1860,
+        "line": 1859,
         "selectorHint": "cy-category-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -991406,7 +991406,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1860:bind:select:onCategorySelect:481",
+      "id": "pages/publish/temp/index.wxml:1859:bind:select:onCategorySelect:481",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -991429,7 +991429,7 @@
         "tag": "cy-category-sheet",
         "event": "bind:select",
         "handler": "onCategorySelect",
-        "line": 1860,
+        "line": 1859,
         "selectorHint": "cy-category-sheet[bind:select]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -991488,7 +991488,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1869:bind:afterleave:onNativeBackGuard:483",
+      "id": "pages/publish/temp/index.wxml:1868:bind:afterleave:onNativeBackGuard:483",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -991511,7 +991511,7 @@
         "tag": "page-container",
         "event": "bind:afterleave",
         "handler": "onNativeBackGuard",
-        "line": 1869,
+        "line": 1868,
         "selectorHint": "page-container[bind:afterleave]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -991652,7 +991652,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1872:bind:action:onCreationSuccessAction:484",
+      "id": "pages/publish/temp/index.wxml:1871:bind:action:onCreationSuccessAction:484",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -991675,7 +991675,7 @@
         "tag": "creation-success",
         "event": "bind:action",
         "handler": "onCreationSuccessAction",
-        "line": 1872,
+        "line": 1871,
         "selectorHint": "creation-success[bind:action]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -991724,7 +991724,7 @@
       }
     },
     {
-      "id": "pages/publish/temp/index.wxml:1878:bind:close:onResultSheetClose:485",
+      "id": "pages/publish/temp/index.wxml:1877:bind:close:onResultSheetClose:485",
       "route": "pages/publish/temp/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -991747,7 +991747,7 @@
         "tag": "cy-result-sheet",
         "event": "bind:close",
         "handler": "onResultSheetClose",
-        "line": 1878,
+        "line": 1877,
         "selectorHint": "cy-result-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
