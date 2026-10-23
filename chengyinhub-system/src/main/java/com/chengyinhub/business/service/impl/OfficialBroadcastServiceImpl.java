@@ -1,5 +1,6 @@
 package com.chengyinhub.business.service.impl;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -18,17 +19,23 @@ import com.chengyinhub.business.mapper.OfficialEventMapper;
 import com.chengyinhub.business.service.IImService;
 import com.chengyinhub.business.service.IOfficialBroadcastService;
 import com.chengyinhub.business.service.IOfficialEventV2Service;
-import com.chengyinhub.business.service.INotifyService;
+import com.chengyinhub.business.service.IWxSubscribeMsgService;
 import com.chengyinhub.common.exception.ServiceException;
 import com.chengyinhub.common.utils.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 /**
- * 官方通知/广播 实现。best-effort:单个 member 发送失败不影响整体。
+ * 官方广播：冻结逐成员/通道意图，站内信与回执同事务，微信 UNKNOWN 不自动重投。
  *
  * @author cy
  * @date 2026-07-08
@@ -51,7 +58,11 @@ public class OfficialBroadcastServiceImpl implements IOfficialBroadcastService {
     @Autowired
     private IImService imService;
     @Autowired
-    private INotifyService notifyService;
+    private IWxSubscribeMsgService wxSubscribeMsgService;
+    @Autowired
+    private PlatformTransactionManager transactionManager;
+    @Value("${wx.subscribe.tplOfficialEvent:}")
+    private String officialTemplate;
     @Autowired
     private OfficialEventMapper eventMapper;
     @Autowired
@@ -71,77 +82,215 @@ public class OfficialBroadcastServiceImpl implements IOfficialBroadcastService {
         if (requireV2EventScope(bc.getEventId(), actorMemberId)) {
             bc.setSenderAccount(actorMemberId);
         }
+        validateChannels(bc.getChannels());
         bc.setCreateTime(new Date());
         bc.setStatus(OfficialBroadcast.ST_PENDING);
-        broadcastMapper.insertOfficialBroadcast(bc);
+        bc.setReachedCount(0);
+        new TransactionTemplate(transactionManager).executeWithoutResult(status -> {
+            if (broadcastMapper.insertOfficialBroadcast(bc) != 1 || bc.getId() == null)
+                throw new ServiceException("通知保存失败");
+        });
 
         boolean immediate = bc.getScheduledTime() == null
                 || bc.getScheduledTime().getTime() <= System.currentTimeMillis();
         if (immediate) {
-            dispatch(bc);
+            if (TransactionSynchronizationManager.isActualTransactionActive()) {
+                // Only wake after the caller's broadcast insert commits; recovery also scans immediate rows.
+                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                    @Override public void afterCommit() { wakeDispatch(bc); }
+                });
+            } else {
+                wakeDispatch(bc);
+            }
         }
         return bc;
     }
 
+    private void wakeDispatch(OfficialBroadcast bc) {
+        try {
+            dispatch(bc);
+        } catch (RuntimeException failure) {
+            // Publication is already committed. Report accepted/pending, not a rejection with side effects.
+            log.warn("[官方通知] 已提交待恢复 bc={} type={}", bc.getId(), failure.getClass().getSimpleName());
+        }
+    }
+
     int dispatch(OfficialBroadcast bc) {
         if (bc == null || bc.getId() == null) return 0;
-        String channels = bc.getChannels() == null ? "" : bc.getChannels();
-        boolean inapp = channels.contains("inapp");
-        boolean subscribe = channels.contains("subscribe");
-        int copyMode = bc.getCopyMode() == null ? OfficialBroadcast.MODE_UNIFIED : bc.getCopyMode();
-        JSONObject content = parse(bc.getContentJson());
+        // The remote call must never inherit a caller's transaction (including afterCommit resources).
+        TransactionTemplate outside = new TransactionTemplate(transactionManager);
+        outside.setPropagationBehavior(TransactionDefinition.PROPAGATION_NOT_SUPPORTED);
+        Integer reached = outside.execute(status -> dispatchOutsideTransaction(bc));
+        return reached == null ? 0 : reached;
+    }
 
-        // 圈人:角色×城市;memberId 去重(角色互斥,首命中角色为准)
+    private int dispatchOutsideTransaction(OfficialBroadcast bc) {
+        List<OfficialBroadcastLog> deliveries = independent().execute(status -> prepare(bc.getId()));
+        Long lastMember = null;
+        boolean capped = false;
+        for (OfficialBroadcastLog delivery : safeDeliveries(deliveries)) {
+            if (!delivery.getMemberId().equals(lastMember)) {
+                lastMember = delivery.getMemberId();
+                capped = freqCapped(lastMember);
+            }
+            if (capped) continue; // Keep the frozen intent; no fake success or deletion.
+            if ("inapp".equals(delivery.getChannel())) deliverInapp(delivery);
+            if ("subscribe".equals(delivery.getChannel())) deliverSubscribe(delivery);
+        }
+        OfficialBroadcast result = independent().execute(status -> {
+            OfficialBroadcast current = logMapper.lockBroadcast(bc.getId());
+            if (current == null) throw new ServiceException("通知不存在");
+            int reached = logMapper.countInappReached(bc.getId());
+            OfficialBroadcast patch = new OfficialBroadcast();
+            patch.setId(bc.getId());
+            patch.setReachedCount(reached);
+            // Revoked/draft broadcasts must not be revived by an old worker.
+            patch.setStatus(current.getStatus());
+            if (Integer.valueOf(OfficialBroadcast.ST_PENDING).equals(current.getStatus())
+                    && logMapper.countUnsuccessful(bc.getId()) == 0) {
+                patch.setStatus(OfficialBroadcast.ST_SENT);
+            }
+            if (broadcastMapper.updateOfficialBroadcast(patch) != 1)
+                throw new ServiceException("通知统计保存失败");
+            return patch;
+        });
+        bc.setReachedCount(result.getReachedCount());
+        bc.setStatus(result.getStatus());
+        return result.getReachedCount();
+    }
+
+    /** Serialize the first audience snapshot. Retrying uses these rows, never a new audience/copy. */
+    private List<OfficialBroadcastLog> prepare(Long broadcastId) {
+        OfficialBroadcast bc = logMapper.lockBroadcast(broadcastId);
+        if (bc == null || !Integer.valueOf(OfficialBroadcast.ST_PENDING).equals(bc.getStatus()))
+            return java.util.Collections.emptyList();
+        List<OfficialBroadcastLog> existing = logMapper.selectByBroadcast(broadcastId);
+        if (!existing.isEmpty()) return existing;
+        validateChannels(bc.getChannels());
         Map<Long, String> targets = new LinkedHashMap<>();
-        String aud = bc.getAudience() == null ? "" : bc.getAudience();
-        if (aud.contains("player")) {
+        String audience = bc.getAudience() == null ? "" : bc.getAudience();
+        if (audience.contains("player"))
             for (Long id : safe(audienceMapper.selectPlayerIds(bc.getCity()))) targets.putIfAbsent(id, "player");
-        }
-        if (aud.contains("club")) {
+        if (audience.contains("club"))
             for (Long id : safe(audienceMapper.selectClubMemberIds(bc.getCity()))) targets.putIfAbsent(id, "club");
-        }
-        if (aud.contains("merchant")) {
+        if (audience.contains("merchant"))
             for (Long id : safe(audienceMapper.selectMerchantMemberIds(bc.getCity()))) targets.putIfAbsent(id, "merchant");
-        }
-
-        int reached = 0, capped = 0;
-        for (Map.Entry<Long, String> e : targets.entrySet()) {
-            Long memberId = e.getKey();
-            String role = e.getValue();
-            if (memberId == null || memberId <= 0) continue;
-            // 频控:近 FREQ_WINDOW_MIN 分钟已收 >= FREQ_MAX 条官方通知 → 跳过该用户防轰炸
-            if (freqCapped(memberId)) { capped++; continue; }
-            String[] ts = resolveTitleSub(copyMode, content, role, bc.getTitle());
-            String title = ts[0], sub = ts[1];
-
-            // 站内信(必达渠道):uk 防重发。insertLog 先落 reached=0 的占位行防重发,
-            // 发送成功后才 markReached=1 —— 发送失败则该行保持 reached=0,不计入触达统计(避免虚高)。
-            if (inapp && insertLog(bc.getId(), memberId, role, "inapp")) {
-                try {
-                    String extra = "{\"title\":\"" + esc(title) + "\",\"sub\":\"" + esc(sub)
-                            + "\",\"bcId\":" + bc.getId() + "}";
-                    imService.sendSystem(memberId, ImMessage.MSG_CARD, title, extra);
-                    logMapper.markReached(bc.getId(), memberId, "inapp");
-                    reached++;
-                } catch (Exception ex) {
-                    log.warn("[官方通知] 站内信失败(未置达,统计不计) member={}", memberId, ex);
-                }
-            }
-            // 订阅消息(强触达,best-effort;未授权/未配模板跳过)
-            if (subscribe && insertLog(bc.getId(), memberId, role, "subscribe")) {
-                try {
-                    notifyService.notifyOfficialBroadcast(memberId, title, sub);
-                    logMapper.markReached(bc.getId(), memberId, "subscribe");
-                } catch (Exception ex) {
-                    log.warn("[官方通知] 订阅消息失败(未置达) member={}", memberId, ex);
-                }
+        List<OfficialBroadcastLog> result = new ArrayList<>();
+        JSONObject content = parse(bc.getContentJson());
+        int mode = bc.getCopyMode() == null ? OfficialBroadcast.MODE_UNIFIED : bc.getCopyMode();
+        for (Map.Entry<Long, String> target : targets.entrySet()) {
+            if (target.getKey() == null || target.getKey() <= 0) continue;
+            String[] copy = resolveTitleSub(mode, content, target.getValue(), bc.getTitle());
+            for (String channel : bc.getChannels().split(",")) {
+                OfficialBroadcastLog delivery = new OfficialBroadcastLog();
+                delivery.setBroadcastId(broadcastId);
+                delivery.setMemberId(target.getKey());
+                delivery.setRole(target.getValue());
+                delivery.setChannel(channel.trim());
+                delivery.setDeliveryState(OfficialBroadcastLog.PENDING);
+                delivery.setDeliveryTitle(copy[0]);
+                delivery.setDeliverySub(copy[1]);
+                if (logMapper.insertPending(delivery) != 1)
+                    throw new ServiceException("通知投递意图保存失败");
+                result.add(delivery);
             }
         }
-        bc.setReachedCount(reached);
-        bc.setStatus(OfficialBroadcast.ST_SENT);
-        broadcastMapper.updateOfficialBroadcast(bc);
-        log.info("[官方通知] bc={} 圈人={} 站内触达={} 频控跳过={}", bc.getId(), targets.size(), reached, capped);
-        return reached;
+        // Empty audiences are terminal too, so later recovery cannot expand them.
+        if (result.isEmpty()) {
+            OfficialBroadcast patch = new OfficialBroadcast();
+            patch.setId(broadcastId);
+            patch.setStatus(OfficialBroadcast.ST_SENT);
+            patch.setReachedCount(0);
+            if (broadcastMapper.updateOfficialBroadcast(patch) != 1)
+                throw new ServiceException("通知状态保存失败");
+        }
+        return result;
+    }
+
+    private void deliverInapp(OfficialBroadcastLog intent) {
+        try {
+            independent().executeWithoutResult(status -> {
+                OfficialBroadcastLog row = logMapper.lockDelivery(intent.getId());
+                if (row == null || !(OfficialBroadcastLog.PENDING.equals(row.getDeliveryState())
+                        || OfficialBroadcastLog.FAILED.equals(row.getDeliveryState()))) return;
+                JSONObject extra = new JSONObject();
+                extra.put("title", row.getDeliveryTitle());
+                extra.put("sub", row.getDeliverySub());
+                extra.put("bcId", row.getBroadcastId());
+                Long messageId = imService.sendSystem(row.getMemberId(), ImMessage.MSG_CARD,
+                        row.getDeliveryTitle(), extra.toJSONString());
+                if (messageId == null || messageId <= 0) throw new ServiceException("站内信未返回回执");
+                // Same DB transaction as sendSystem: no message can commit without its terminal receipt.
+                transition(row, OfficialBroadcastLog.SUCCESS, null, messageId);
+            });
+        } catch (RuntimeException failure) {
+            log.warn("[官方通知] 站内信事务未确认 bc={} delivery={} type={}",
+                    intent.getBroadcastId(), intent.getId(), failure.getClass().getSimpleName());
+            independent().executeWithoutResult(status -> {
+                OfficialBroadcastLog row = logMapper.lockDelivery(intent.getId());
+                // A lost commit response may already have left SUCCESS. Never overwrite it.
+                if (row != null && OfficialBroadcastLog.PENDING.equals(row.getDeliveryState()))
+                    transition(row, OfficialBroadcastLog.FAILED, "LOCAL_TRANSACTION_FAILED", null);
+            });
+        }
+    }
+
+    private void deliverSubscribe(OfficialBroadcastLog intent) {
+        Boolean claimed = independent().execute(status -> {
+            OfficialBroadcastLog row = logMapper.lockDelivery(intent.getId());
+            if (row == null || !(OfficialBroadcastLog.PENDING.equals(row.getDeliveryState())
+                    || (OfficialBroadcastLog.FAILED.equals(row.getDeliveryState())
+                        && "TEMPLATE_MISSING".equals(row.getFailureCode())))) return false;
+            if (StringUtils.isBlank(officialTemplate)) {
+                transition(row, OfficialBroadcastLog.FAILED, "TEMPLATE_MISSING", null);
+                return false;
+            }
+            // Commit before the remote call. Process death or timeout leaves UNKNOWN, never a retry lease.
+            transition(row, OfficialBroadcastLog.UNKNOWN, "OUTCOME_UNCONFIRMED", null);
+            return true;
+        });
+        if (!Boolean.TRUE.equals(claimed)) return;
+        boolean delivered;
+        try {
+            // This is the WX-only contract. INotifyService fans out and cannot prove WX acceptance.
+            delivered = wxSubscribeMsgService.notifyOfficialBroadcast(intent.getMemberId(),
+                    intent.getDeliveryTitle(), intent.getDeliverySub());
+        } catch (RuntimeException failure) {
+            log.warn("[官方通知] 微信结果未知 bc={} delivery={} type={}",
+                    intent.getBroadcastId(), intent.getId(), failure.getClass().getSimpleName());
+            return;
+        }
+        if (!delivered) return; // false also hides network failures; it is NOT a safe-retry signal.
+        independent().executeWithoutResult(status -> {
+            OfficialBroadcastLog row = logMapper.lockDelivery(intent.getId());
+            if (row != null && OfficialBroadcastLog.UNKNOWN.equals(row.getDeliveryState()))
+                transition(row, OfficialBroadcastLog.SUCCESS, null, null);
+        });
+    }
+
+    private void transition(OfficialBroadcastLog row, String state, String failureCode, Long messageId) {
+        if (logMapper.transition(row.getId(), row.getDeliveryState(), state, failureCode, messageId) != 1)
+            throw new ServiceException("通知投递状态冲突");
+    }
+
+    private TransactionTemplate independent() {
+        TransactionTemplate tx = new TransactionTemplate(transactionManager);
+        tx.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+        return tx;
+    }
+
+    private void validateChannels(String channels) {
+        if (StringUtils.isBlank(channels)) throw new ServiceException("请选择通知通道");
+        java.util.Set<String> selected = new java.util.HashSet<>();
+        for (String channel : channels.split(",", -1)) {
+            String value = channel.trim();
+            if (!("inapp".equals(value) || "subscribe".equals(value)) || !selected.add(value))
+                throw new ServiceException("通知通道无效或重复");
+        }
+    }
+
+    private List<OfficialBroadcastLog> safeDeliveries(List<OfficialBroadcastLog> rows) {
+        return rows == null ? java.util.Collections.emptyList() : rows;
     }
 
     @Override
@@ -162,7 +311,7 @@ public class OfficialBroadcastServiceImpl implements IOfficialBroadcastService {
 
     @Override
     public void runDueScheduled() {
-        List<OfficialBroadcast> due = broadcastMapper.selectDueScheduled();
+        List<OfficialBroadcast> due = logMapper.selectRecoverableBroadcasts();
         if (due == null) return;
         for (OfficialBroadcast bc : due) {
             try {
@@ -177,7 +326,10 @@ public class OfficialBroadcastServiceImpl implements IOfficialBroadcastService {
     public java.util.Map<String, Object> reachStats(Long broadcastId, Long actorMemberId) {
         getById(broadcastId, actorMemberId);
         java.util.Map<String, Object> m = new java.util.LinkedHashMap<>();
-        m.put("reached", logMapper.countReached(broadcastId));
+        // reached/clicked are inapp members; channelReached counts successful channel receipts.
+        m.put("reached", logMapper.countInappReached(broadcastId));
+        m.put("channelReached", logMapper.countReached(broadcastId));
+        m.put("byChannel", logMapper.channelStats(broadcastId));
         m.put("clicked", logMapper.countClicked(broadcastId));
         return m;
     }
@@ -241,24 +393,6 @@ public class OfficialBroadcastServiceImpl implements IOfficialBroadcastService {
         }
     }
 
-    /**
-     * insert ignore 占位:返回 true=新记录(本次可发送),false=已占位过(不重发)。
-     * 落 reached=0 的尝试行;真正发送成功后由 markReached 置 1,避免"发送失败仍计触达"。
-     */
-    private boolean insertLog(Long bcId, Long memberId, String role, String channel) {
-        OfficialBroadcastLog l = new OfficialBroadcastLog();
-        l.setBroadcastId(bcId);
-        l.setMemberId(memberId);
-        l.setRole(role);
-        l.setChannel(channel);
-        l.setReached(0);
-        try {
-            return logMapper.insertIgnore(l) > 0;
-        } catch (Exception ex) {
-            return false;
-        }
-    }
-
     /** copyMode 解析文案:1一起发(统一)/2分开发(按角色取)。返回 [title, sub]。 */
     private String[] resolveTitleSub(int copyMode, JSONObject content, String role, String fallbackTitle) {
         String title = fallbackTitle, sub = "";
@@ -289,8 +423,4 @@ public class OfficialBroadcastServiceImpl implements IOfficialBroadcastService {
         return list == null ? java.util.Collections.emptyList() : list;
     }
 
-    private String esc(String s) {
-        if (s == null) return "";
-        return s.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", " ");
-    }
 }

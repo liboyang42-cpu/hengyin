@@ -239,13 +239,11 @@ public class BusinessOfficialEventController extends BaseController {
                 Long officialMemberId = resolveV2OfficialMember();
                 if (officialMemberId == null) return error(V2_OPERATOR_UNAUTHORIZED);
                 saved = officialEventV2Service.publishBroadcastForOperator(bc, officialMemberId);
-                return AjaxResult.success("通知已发送,触达 " + (saved.getReachedCount() == null ? 0 : saved.getReachedCount()) + " 人",
-                        saved.getId());
+                return AjaxResult.success("通知已提交", saved.getId());
             }
         }
         saved = officialBroadcastService.publish(bc, null);
-        return AjaxResult.success("通知已发送,触达 " + (saved.getReachedCount() == null ? 0 : saved.getReachedCount()) + " 人",
-                saved.getId());
+        return AjaxResult.success("通知已提交", saved.getId());
     }
 
     @PreAuthorize("@ss.hasPermi('business:officialevent:list')")

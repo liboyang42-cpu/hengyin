@@ -274,7 +274,7 @@ const MISSION_TYPE_TEXT = {
   ROAM_SESSION_AREA: '漫游区域覆盖'
 }
 const POLICY_TEXT = { SELF_RUN: '官方自行运行', OPTIONAL_PARTNERS: '合作可选', REQUIRED_FULFILLMENT: '外部履约必需' }
-const BROADCAST_STATUS_TEXT = { 0: '草稿', 1: '待发', 2: '已发', 3: '已停止（已送达内容不回收）' }
+const BROADCAST_STATUS_TEXT = { 0: '草稿', 1: '投递未全部确认', 2: '投递已确认', 3: '已停止（已送达内容不回收）' }
 const PARTY_ROLE_TEXT = { ORGANIZER: '主办方', CO_ORGANIZER: '协办方', FULFILLMENT_MERCHANT: '商家履约', FULFILLMENT_CLUB: '俱乐部履约', SPONSOR: '支持方', PROMOTION_PARTNER: '推广伙伴' }
 const PARTY_TYPE_TEXT = { OFFICIAL: '官方', MERCHANT: '商家', CLUB: '俱乐部' }
 const PARTY_STATUS_TEXT = { INVITED: '已邀请待确认', ACCEPTED: '已接受', ACTIVE: '已生效', DECLINED: '已拒绝', WITHDRAWN: '已撤回', SUSPENDED: '已暂停', COMPLETED: '已完成', ARCHIVED: '已归档' }
@@ -532,7 +532,7 @@ export default {
       if (!auth.hasPermi('business:officialevent:notify')) { this.$modal.msgWarning('没有通知权限'); return }
       if (!this.notify.audience.length) { this.$modal.msgWarning('请选择通知对象'); return }
       const data = { eventId: this.notifyEventId, title: this.notify.title || '官方通知', audience: this.notify.audience.join(','), copyMode: 1, contentJson: JSON.stringify({ title: this.notify.title || '官方通知', sub: this.notify.content }), channels: this.notify.channels.join(',') || 'inapp', city: this.notify.city || null }
-      broadcastOfficial(data).then(res => { this.$modal.msgSuccess(res.msg || '通知已发送'); this.notifyOpen = false })
+      broadcastOfficial(data).then(() => { this.$modal.msgSuccess('通知已提交'); this.notifyOpen = false })
     }
   }
 }
