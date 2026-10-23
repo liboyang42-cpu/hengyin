@@ -67,6 +67,9 @@ class Pr69V3PhotoCheckCrossAccountTest
                 .thenReturn("{\"pass\":true,\"confidence\":90,\"reason\":\"满足要求\"}");
         consent = mock(ConsentGuard.class);
         service = new PhotoCheckVisionService();
+        AiGatewayService quota = mock(AiGatewayService.class);
+        when(quota.consumeQuota(MEMBER_A, "photo_check")).thenReturn("reservation");
+        ReflectionTestUtils.setField(service, "aiGatewayService", quota);
         ReflectionTestUtils.setField(service, "consentGuard", consent);
         ReflectionTestUtils.setField(service, "mediaReferences", guard);
         ReflectionTestUtils.setField(service, "visionClient", vision);

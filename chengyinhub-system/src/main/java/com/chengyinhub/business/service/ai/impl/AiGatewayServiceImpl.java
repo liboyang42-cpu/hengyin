@@ -317,15 +317,35 @@ public class AiGatewayServiceImpl implements AiGatewayService
 
     /**
      * 非文本调用(拍照视觉审核)的计次:池子由 bizType 决定(photo_check 走独立 photo 池),
-     * 键名/上限/分池规则与 generate 同源。先扣后调,失败路径退不退由调用方按
-     * 「用户有没有拿到结论」决定(refundQuota 对应本方法)。
+     * 键名/上限/分池规则与 generate 同源；未知供应商结果不得按“没有结论”退额。
      */
     @Override
     public String consumeQuota(Long memberId, String bizType)
     {
+        return consumePlannedQuota(memberId, bizType, planQuotaReservation(memberId, bizType, IdUtils.simpleUUID()));
+    }
+
+    @Override
+    public String planQuotaReservation(Long memberId, String bizType, String nonce)
+    {
+        if (memberId == null || memberId <= 0 || nonce == null || !nonce.matches("[a-f0-9]{32}"))
+            throw new IllegalArgumentException("Invalid original quota identity");
         String group = rateGroupOf(bizType);
         String key = RATE_KEY_PREFIX + group + ":" + memberId + ":" + LocalDate.now(QUOTA_ZONE).format(DATE_FMT);
-        String nonce = IdUtils.simpleUUID();
+        return key + "|" + nonce;
+    }
+
+    @Override
+    public String consumePlannedQuota(Long memberId, String bizType, String reservation)
+    {
+        if (memberId == null || memberId <= 0 || receiptOf(memberId, bizType, reservation) == null)
+            throw new IllegalArgumentException("Invalid original quota reservation");
+        int split = reservation.lastIndexOf('|');
+        String key = reservation.substring(0, split);
+        String nonce = reservation.substring(split + 1);
+        String day = key.substring(key.length() - 8);
+        LocalDate.parse(day, java.time.format.DateTimeFormatter.BASIC_ISO_DATE);
+        String group = rateGroupOf(bizType);
         String receipt = "ai:gen:reservation:" + key + ":" + nonce;
         if(quotaRecovery!=null) quotaRecovery.prepare(memberId,bizType,group,key,receipt);
         Long used;
@@ -351,7 +371,7 @@ public class AiGatewayServiceImpl implements AiGatewayService
             throw new AiServiceException(AiServiceException.Reason.RATE_LIMITED,
                     "今日AI次数已用完(" + dailyLimitOf(group) + "/天),明天再来吧");
         }
-        return key + "|" + nonce;
+        return reservation;
     }
 
     @Override

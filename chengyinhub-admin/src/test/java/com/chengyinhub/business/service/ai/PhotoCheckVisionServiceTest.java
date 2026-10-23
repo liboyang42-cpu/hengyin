@@ -139,6 +139,8 @@ class PhotoCheckVisionServiceTest {
         assertTrue(result.isDegraded());
         assertFalse(result.isPass(), "拿不到结论不能变成通过");
         assertFalse(result.getReason().isEmpty());
+        verify(gateway).refundQuota(MEMBER_ID, "photo_check", "reservation");
+        verify(gateway, never()).stageQuota(anyLong(), anyString(), anyString(), anyString());
     }
 
     @Test
@@ -161,7 +163,7 @@ class PhotoCheckVisionServiceTest {
     }
 
     @Test
-    void 负控_模型调用抛异常时降级并退还额度() {
+    void 负控_模型调用结果未知时降级且保留原预占() {
         modelThrows(new RuntimeException("AI 模型调用失败(429)"));
         AtomicBoolean refunded = new AtomicBoolean(false);
         org.mockito.Mockito.doAnswer(invocation -> {
@@ -173,13 +175,15 @@ class PhotoCheckVisionServiceTest {
 
         assertTrue(result.isDegraded());
         assertFalse(result.isPass());
-        assertTrue(refunded.get(), "用户没拿到结论,这一次额度必须退还");
+        assertFalse(refunded.get(), "供应商可能已计费，不能因异常退款");
+        verify(gateway).stageQuota(MEMBER_ID, "photo_check", "reservation", "MODEL_STARTED");
+        verify(gateway, never()).retainQuota(anyLong(), anyString(), anyString(), anyString());
         verify(alarm).alarm(any(), any());
     }
 
     @Test
     void 负控_每日额度超限时降级且不调模型() {
-        doThrow(new AiServiceException("今日AI次数已用完(20/天),明天再来吧"))
+        doThrow(new AiServiceException(AiServiceException.Reason.RATE_LIMITED, "今日AI次数已用完(20/天),明天再来吧"))
                 .when(gateway).consumeQuota(MEMBER_ID, "photo_check");
         AtomicBoolean called = new AtomicBoolean(false);
         ReflectionTestUtils.setField(service, "visionClient", new LlmClient() {
@@ -210,15 +214,118 @@ class PhotoCheckVisionServiceTest {
     }
 
     @Test
-    void 负控_额度层故障不拦玩家_照常调模型判定() {
+    void 负控_额度层故障不产生无凭证模型调用() {
         doThrow(new RuntimeException("Redis connection refused"))
                 .when(gateway).consumeQuota(MEMBER_ID, "photo_check");
         modelSays("{\"pass\":true,\"confidence\":90,\"reason\":\"拍到了\"}");
 
         PhotoCheckVisionResult result = service.review(MEMBER_ID, IMAGE_URL, REQUIREMENT);
 
-        assertFalse(result.isDegraded(), "额度层故障不该把一次正常判定变成降级:" + result.getReason());
-        assertTrue(result.isPass());
+        assertTrue(result.isDegraded());
+        assertFalse(result.isPass());
+        assertEquals(null, sentImage.get(), "额度故障时模型调用数必须为零");
+        verify(gateway, never()).stageQuota(anyLong(), anyString(), anyString(), anyString());
+        verify(gateway, never()).refundQuota(anyLong(), anyString(), anyString());
+    }
+
+    @Test
+    void missingReservationOrGatewayNeverCallsProvider() {
+        modelSays("{\"pass\":true,\"confidence\":90,\"reason\":\"ok\"}");
+        for (String token : new String[]{null, "", "   "}) {
+            when(gateway.consumeQuota(MEMBER_ID, "photo_check")).thenReturn(token);
+            assertTrue(service.review(MEMBER_ID, IMAGE_URL, REQUIREMENT).isDegraded());
+            assertEquals(null, sentImage.get());
+        }
+        ReflectionTestUtils.setField(service, "aiGatewayService", null);
+        assertTrue(service.review(MEMBER_ID, IMAGE_URL, REQUIREMENT).isDegraded());
+        assertEquals(null, sentImage.get());
+        verify(gateway, never()).stageQuota(anyLong(), anyString(), anyString(), anyString());
+    }
+
+    @Test
+    void stageFailureCompensatesOriginalReservationWithoutCallingProvider() {
+        modelSays("{\"pass\":true,\"confidence\":90,\"reason\":\"ok\"}");
+        doThrow(new IllegalStateException("stage reply lost"))
+                .when(gateway).stageQuota(MEMBER_ID, "photo_check", "reservation", "MODEL_STARTED");
+        assertTrue(service.review(MEMBER_ID, IMAGE_URL, REQUIREMENT).isDegraded());
+        assertEquals(null, sentImage.get());
+        verify(gateway).refundQuota(MEMBER_ID, "photo_check", "reservation");
+    }
+
+    @Test
+    void resultPersistenceFailureKeepsOriginalReservationAndDoesNotRefund() {
+        modelSays("{\"pass\":true,\"confidence\":90,\"reason\":\"ok\"}");
+        doThrow(new IllegalStateException("receipt write unavailable"))
+                .when(gateway).retainQuota(MEMBER_ID, "photo_check", "reservation", "PHOTO_RESULT");
+        PhotoCheckVisionResult result = service.review(MEMBER_ID, IMAGE_URL, REQUIREMENT);
+        assertTrue(result.isDegraded());
+        assertFalse(result.isPass());
+        assertTrue(sentImage.get() != null);
+        verify(gateway, never()).refundQuota(anyLong(), anyString(), anyString());
+    }
+
+    @Test
+    void preparedReviewUsesOriginalReservationAndPersistsSnapshotBeforeProvider() {
+        modelSays("{\"pass\":true,\"confidence\":90,\"reason\":\"门牌\"}");
+        when(gateway.consumePlannedQuota(MEMBER_ID, "photo_check", "original-reservation"))
+                .thenReturn("original-reservation");
+        AtomicReference<PhotoCheckVisionService.InputSnapshot> snapshot = new AtomicReference<>();
+        PhotoCheckVisionService.PreparedReview review = service.reviewPrepared(
+                MEMBER_ID, IMAGE_URL, REQUIREMENT, "original-reservation", input -> {
+                    assertEquals(null, sentImage.get());
+                    snapshot.set(input);
+                });
+        assertTrue(review.result().isPass());
+        assertEquals("RECEIVED", review.providerState());
+        assertTrue(snapshot.get().encodedInputSha256().matches("[a-f0-9]{64}"));
+        org.mockito.Mockito.verify(gateway, org.mockito.Mockito.never())
+                .consumeQuota(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
+        org.mockito.Mockito.verify(gateway).retainQuota(MEMBER_ID, "photo_check",
+                "original-reservation", "PHOTO_RESULT");
+    }
+
+    @Test
+    void preparedSnapshotFailureCannotCallModelAndOnlyCompensatesOriginalReservation() {
+        modelSays("{\"pass\":true,\"confidence\":90,\"reason\":\"门牌\"}");
+        when(gateway.consumePlannedQuota(MEMBER_ID, "photo_check", "original-reservation"))
+                .thenReturn("original-reservation");
+        PhotoCheckVisionService.PreparedReview review = service.reviewPrepared(
+                MEMBER_ID, IMAGE_URL, REQUIREMENT, "original-reservation",
+                input -> { throw new IllegalStateException("snapshot database unavailable"); });
+        assertEquals("NOT_SENT", review.providerState());
+        assertTrue(review.result().isDegraded());
+        assertEquals(null, sentImage.get());
+        org.mockito.Mockito.verify(gateway).refundQuota(MEMBER_ID, "photo_check", "original-reservation");
+        org.mockito.Mockito.verify(gateway, org.mockito.Mockito.never())
+                .stageQuota(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(),
+                        org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
+    }
+
+    @Test
+    void preparedProviderFailurePreservesUnknownOriginalQuota() {
+        modelThrows(new IllegalStateException("provider timeout"));
+        when(gateway.consumePlannedQuota(MEMBER_ID, "photo_check", "original-reservation"))
+                .thenReturn("original-reservation");
+        PhotoCheckVisionService.PreparedReview review = service.reviewPrepared(
+                MEMBER_ID, IMAGE_URL, REQUIREMENT, "original-reservation", input -> {});
+        assertEquals("UNKNOWN", review.providerState());
+        assertTrue(review.result().isDegraded());
+        org.mockito.Mockito.verify(gateway, org.mockito.Mockito.never())
+                .refundQuota(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(),
+                        org.mockito.ArgumentMatchers.any());
+    }
+
+    @Test
+    void preparedReviewRejectsAnActiveBusinessTransactionBeforeAnyEffect() {
+        org.springframework.transaction.support.TransactionSynchronizationManager.setActualTransactionActive(true);
+        try {
+            org.junit.jupiter.api.Assertions.assertThrows(IllegalStateException.class,
+                    () -> service.reviewPrepared(MEMBER_ID, IMAGE_URL, REQUIREMENT, "original", input -> {}));
+        } finally {
+            org.springframework.transaction.support.TransactionSynchronizationManager.setActualTransactionActive(false);
+        }
+        org.mockito.Mockito.verifyNoInteractions(gateway);
+        assertEquals(null, sentImage.get());
     }
 
     @Test
