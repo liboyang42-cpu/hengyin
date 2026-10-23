@@ -189,12 +189,10 @@
         </cy-dropdown>
         <block wx:if="{{r5Editor.participation === 'scan'}}">
           <view class="cg-rw-line cg-line"><view class="cg-rw-name">扫完回复</view><cy-switch checked="{{advanced.scan.kind !== 'NONE'}}" bindchange="toggleScanReply" accessibility-label="扫完回复" /></view>
+          <!-- 照原型:开关打开就是一行回复,不再先选「回复方式」;老模板里的语音 / 图片回复照旧点进去配 -->
           <view class="cg-scan-reply" wx:if="{{advanced.scan.kind !== 'NONE'}}">
-            <view class="cg-cfg-label">回复方式</view>
-            <cy-dropdown portal="{{false}}" range="{{scanReplyKinds}}" range-key="label" value="{{opt.idx(scanReplyKinds, advanced.scan.kind)}}" bind:change="pickScanReplyKind"><view class="cg-pick">{{opt.label(scanReplyKinds, advanced.scan.kind)}}<view class="cg-caret"><cy-icon name="back" size="28" /></view></view></cy-dropdown>
             <block wx:if="{{advanced.scan.kind === 'TEXT'}}">
-              <view class="cg-cfg-label">回复内容 <text class="req" aria-hidden="true">*</text></view>
-              <textarea class="cg-cfg-textarea" value="{{advanced.scan.reply}}" maxlength="200" placeholder="例如 欢迎来到这家店，今天的手冲是耶加雪菲。" placeholder-class="cg-ph" data-section="scan" data-field="reply" bindinput="onAdvancedField" />
+              <textarea class="cg-cfg-textarea" value="{{advanced.scan.reply}}" maxlength="200" auto-height placeholder="例如 欢迎来到老城茶馆" placeholder-class="cg-ph" data-section="scan" data-field="reply" bindinput="onAdvancedField" aria-label="扫完回复的内容" />
             </block>
             <view class="cg-r5-row" wx:else bindtap="openScanSheet" aria-role="button" aria-label="配置扫完回复" hover-class="cy-pressed" hover-stay-time="80">
               <view class="cg-r5-row__main"><text class="cg-r5-row__title cg-r5-row__title--plain">{{opt.label(scanReplyKinds, advanced.scan.kind)}}回复</text><text class="cg-r5-row__sub">{{r5Editor.scanSummary}}</text></view>
@@ -214,11 +212,9 @@
               <view class="cg-r5-row__main"><text class="cg-r5-row__title">{{gameCurrent.label}}</text><text class="cg-r5-row__sub" wx:if="{{gameCurrent.sub}}">{{gameCurrent.sub}}</text></view>
               <view class="cg-r5-pill" bindtap="openR5GameSheet" aria-role="button" aria-label="更换玩法" hover-class="cy-pressed" hover-stay-time="80">更换</view>
             </view>
-            <view class="cg-two cg-game-opts" wx:if="{{r5Editor.forms.length > 1 || (gameKey !== 'bingo' && gameKey !== 'album')}}">
-              <view class="cg-col" wx:if="{{r5Editor.forms.length > 1}}"><view class="cg-cfg-label">形式</view>
-                <cy-dropdown topic-editor columns="{{2}}" range="{{r5Editor.forms}}" range-key="label" reason-key="reason" value="{{opt.idx(r5Editor.forms, r5Editor.formKey)}}" bind:change="pickR5Form"><view class="cg-pick">{{opt.label(r5Editor.forms, r5Editor.formKey)}}<view class="cg-caret"><cy-icon name="back" size="28" /></view></view></cy-dropdown>
-              </view>
-              <view class="cg-col" wx:if="{{gameKey !== 'bingo' && gameKey !== 'album'}}"><view class="cg-cfg-label">怎么出现</view>
+            <!-- 2026-10-23 主人:「形式」不在卡里选了(每种形式在选择玩法里各是一枚标签),卡里只留呈现方式 -->
+            <view class="cg-game-opts" wx:if="{{gameKey !== 'bingo' && gameKey !== 'album'}}">
+              <view><view class="cg-cfg-label">呈现方式</view>
                 <cy-dropdown portal="{{false}}" range="{{presentOptions}}" range-key="label" value="{{opt.idx(presentOptions, presentChoice)}}" disabled="{{presentInlineLocked}}" bind:change="onPickPresent"><view class="cg-pick {{opt.idx(presentOptions, presentChoice) < 0 ? 'empty' : ''}}">{{opt.label(presentOptions, presentChoice)}}<view class="cg-caret"><cy-icon name="back" size="28" /></view></view></cy-dropdown>
               </view>
             </view>
@@ -1502,7 +1498,7 @@
   <!-- ============ 选择玩法 sheet(2026-10-22 主人定稿,Figma 标签样式):半屏弹层;所有分类排成一条只左右滑,
        每类最多四行胶囊标签(宽度随字数、带图标),点分类跳过去;点标签先选中,底部看说明 / 预览,「完成」才换玩法。 ============ -->
   <view class="cg-mask" wx:if="{{ gameSheetOpen }}" bindtap="closeR5GameSheet" aria-role="button" aria-label="退出选择玩法" hover-class="cy-pressed" hover-stay-time="80"></view>
-  <view class="cg-sheet cg-tsheet" wx:if="{{ gameSheetOpen }}">
+  <view class="cg-sheet cg-tsheet cg-tsheet--auto" wx:if="{{ gameSheetOpen }}">
     <view class="cg-sheet-bar"></view>
     <view class="cg-edit-head"><view class="cg-edit-head__exit" bindtap="closeR5GameSheet" aria-role="button" aria-label="退出选择玩法" hover-class="cy-pressed" hover-stay-time="80">退出</view><view class="cg-edit-head__title">选择玩法</view><view class="cg-edit-head__done" bindtap="confirmR5GameSheet" aria-role="button" aria-label="完成选择玩法" hover-class="cy-pressed" hover-stay-time="80">完成</view></view>
     <scroll-view scroll-x class="cg-gsheet-nav" enhanced show-scrollbar="{{false}}" scroll-into-view="{{ sheetNavAnchor }}" scroll-with-animation>

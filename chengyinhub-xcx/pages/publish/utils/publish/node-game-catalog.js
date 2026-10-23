@@ -16,7 +16,7 @@ const GROUPS = [
     title: '问答类',
     items: [
       { key: 'qaText', icon: 'edit', label: '文字问答', sub: '出一道题,玩家打字作答', section: 'qa', mode: 'TYPE', validationMethod: 0 },
-      { key: 'qaPick', icon: 'check', label: '选项问答', sub: '2-4 个选项里选一个 · 闭眼盲品也是这套', section: 'qa', mode: 'PICK', validationMethod: 0 },
+      { key: 'qaPick', icon: 'check', label: '选项问答', sub: '2-4 个选项里选一个', section: 'qa', mode: 'PICK', validationMethod: 0 },
       { key: 'qaShot', icon: 'camera', label: '拍照打卡', sub: '给一句提示词,玩家拍一张交上来', section: 'qa', mode: 'SHOT', validationMethod: 2 },
       { key: 'branch', icon: 'switch-chapter', label: '分支剧情', sub: '界面和问答一样,只是选项决定下一段', section: 'branch', validationMethod: 0 },
     ],

@@ -207,7 +207,9 @@ test('说明档无说明时与普通行同高、贴着字段弹出；R5 编辑�
   assert.match(src, /const CELL_H_COMPACT_RPX = ITEM_H_RPX;/, '无说明的行与普通行同高')
   assert.doesNotMatch(src, /windowWidth \|\| 375\) - 24 : rect\.width/, '不再铺满屏宽')
   const temp = read('pages/publish/temp/index.wxml')
-  for (const key of ['r5Editor.participationOptions', 'r5Editor.forms']) {
+  // 2026-10-23 主人:「形式」下拉去掉了(每种形式在选择玩法里各是一枚标签),只剩参与方式这一个
+  assert.doesNotMatch(temp, /range="\{\{r5Editor\.forms\}\}"/, '卡里不再有「形式」下拉')
+  for (const key of ['r5Editor.participationOptions']) {
     const tags = temp.match(new RegExp('<cy-dropdown[^>]*range="\\{\\{' + key.replace('.', '\\.') + '\\}\\}"[^>]*>', 'g')) || []
     assert.ok(tags.length > 0, key)
     for (const tag of tags) { assert.doesNotMatch(tag, /sub-key=/, key + ' 不显示灰色说明'); assert.match(tag, /reason-key="reason"/, key + ' 仍显示不可选原因') }

@@ -1637,3 +1637,28 @@ page {
   display: flex; align-items: center; justify-content: center;
   background: rgba(127, 127, 127, .24); color: var(--cy-color-text-inverse);  /* ds-ok 叠在深浅两种玩法皮肤上都看得清的中性半透明 */
 }
+
+/* ============ 2026-10-23 主人走查:间距照原型 gameplay-create-proto-20261022(1px = 2rpx) ============
+   分区标题 22/4/10、卡片内边距 16、圆角 14、页边 13;开关行上分隔线 + 16 间距;字段之间 16。 */
+.cg-sec { margin: 44rpx 26rpx 0; padding: 0 8rpx; }                                 /* ds-ok 原型 .sh 22px 4px 10px */
+.cg-sec + .cg-card, .cg-sec + .cg-gcfg, .cg-sec + .cg-inline-error + .cg-gcfg,
+.cg-inline-cfg > .cg-sec + .cg-gcfg, .cg-inline-cfg > .cg-sec + .cg-inline-error + .cg-gcfg { margin-top: var(--cy-space-2-5); }
+.cg-card { margin-left: 26rpx; margin-right: 26rpx; --cy-comp-card-pad: var(--cy-space-4); --cy-comp-card-radius: 28rpx; } /* ds-ok 原型 .card 16px / 14px,页边 13px */
+.cg-inline-cfg > .cg-gcfg, .cg-inline-cfg > .cg-cfg { margin-left: 26rpx; margin-right: 26rpx; padding: var(--cy-space-4); border-radius: 28rpx; } /* ds-ok 同上 */
+.cg-line { display: flex; align-items: center; min-height: 88rpx; margin-top: var(--cy-space-4); padding-top: var(--cy-space-1-5); } /* ds-ok 原型 .frow.line 44px */
+.cg-scan-reply { padding-top: var(--cy-space-1); }
+.cg-game-opts { margin-top: var(--cy-space-4); }
+.cg-addmod { margin: 44rpx 26rpx 0; }                                                 /* ds-ok 原型 .addmod margin-top 22px */
+
+/* 底部两颗按钮直接浮在页面上(2026-10-23 主人:不要白底栏)。
+   栏本身只留一层页面底色的透明度渐隐,滚到下面的字不会和按钮叠在一起;
+   查看预览是黑色主键,不能点时是半透明黑而不是一行灰字;保存草稿是白色胶囊带投影。 */
+.cg-bottombar {
+  background: linear-gradient(to bottom, rgba(243, 244, 244, 0), var(--cy-color-bg-page) 58%); /* ds-ok 页面底色的透明度渐隐 */
+  backdrop-filter: none; border-top: 0; box-shadow: none;
+  padding-top: var(--cy-space-6);
+  --cy-bg-subtle: rgba(17, 18, 20, .28);              /* ds-ok 不能点的主键:半透明黑 */
+  --cy-text-placeholder: #FFFFFF;                     /* ds-ok 同上,字仍是白 */
+  --cy-comp-btn-secondary-bg: #FFFFFF;                /* ds-ok 保存草稿:白胶囊浮在灰页面上 */
+}
+.cg-bottombar > cy-btn { border-radius: var(--cy-comp-btn-radius); box-shadow: 0 12rpx 32rpx rgba(17, 18, 20, .12); } /* ds-ok 浮起来的投影 */

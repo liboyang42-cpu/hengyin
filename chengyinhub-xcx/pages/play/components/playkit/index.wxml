@@ -151,14 +151,14 @@
 
 <!-- 竞猜转盘与抽卡牌堆都是整屏排版(内容绝对定位贴满台面)。故事流里内嵌时台面高度是 auto,
      会塌成 0、卡片压到题目上 —— 内嵌时给台面一个固定高度(2026-10-23 走查截图 11/12) -->
-<cy-playkit-predict wx:elif="{{kit.type === 'predict'}}" style="{{inline ? '--pk-stage-height:1100rpx' : ''}}"
+<cy-playkit-predict wx:elif="{{kit.type === 'predict'}}" style="{{inline ? '--pk-stage-height:1100rpx;--pk-stage-body-pos:absolute;--pk-col-pos:absolute;--pk-btn-pos:absolute;--pk-btn-bottom:40rpx' : ''}}"
   show="{{show}}" question="{{kit.question}}" hint="{{kit.hint}}" options="{{kit.options}}"
   close-at-hour="{{kit.closeAtHour}}" reveal-days="{{kit.revealDays}}" reveal-hour="{{kit.revealHour}}"
   settle-status="{{kit.settleStatus}}" settled-option="{{kit.settledOption}}"
   won="{{kit.won}}" my-option-key="{{kit.myOptionKey}}"
   bind:submit="onSubmit" bind:close="onClose" />
 
-<cy-playkit-random wx:elif="{{kit.type === 'random'}}" style="{{inline ? '--pk-stage-height:1180rpx' : ''}}"
+<cy-playkit-random wx:elif="{{kit.type === 'random'}}" style="{{inline ? '--pk-stage-height:1180rpx;--pk-stage-body-pos:absolute' : ''}}"
   show="{{show}}" deck-name="{{kit.deckName}}" cards="{{kit.cards}}"
   drawn="{{kit.drawn}}" draw-count="{{kit.drawCount}}"
   bind:draw="onDraw" bind:drawn="onDrawn" bind:close="onClose" />

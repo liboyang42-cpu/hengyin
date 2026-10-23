@@ -98,6 +98,7 @@ Component({
         trackFill: r ? trackPct(r.total) : 0,
         trackDc: r ? trackPct(r.dc) : 0,
       });
+      if (r && r.settled) { this._destroyDie(); return; }   // 画布随 wx:if 卸掉,渲染器跟着停
       this._syncDie(r, fresh);
     },
   },
