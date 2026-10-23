@@ -3,6 +3,7 @@ package com.chengyinhub.business.service.impl;
 import com.chengyinhub.common.annotation.CriticalPath;
 import com.chengyinhub.common.observability.CriticalPathCode;
 import java.util.List;
+import com.chengyinhub.common.exception.ServiceException;
 import com.chengyinhub.common.utils.DateUtils;
 import com.chengyinhub.common.utils.uuid.IdUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -411,10 +412,15 @@ public class SmsCouponHistoryServiceImpl implements ISmsCouponHistoryService
     public int insertSmsCouponHistory(SmsCouponHistory smsCouponHistory)
     {
         smsCouponHistory.setCreateTime(DateUtils.getNowDate());
+        // O-06 库存守恒:先条件占库存再写领取记录(同事务)。原先「先插记录、再无条件 +1」
+        // 并发补录可让 receive_count 越过 publish_count,限量券被超发。
+        if (smsCouponHistory.getCouponId() != null
+                && smsCouponMapper.tryIncrementReceiveCountWithinStock(smsCouponHistory.getCouponId()) == 0) {
+            throw new ServiceException("优惠券不存在或库存不足");
+        }
         int rows = smsCouponHistoryMapper.insertSmsCouponHistory(smsCouponHistory);
-        // 领取计数维护:每新增一条领取记录,父券 receive_count +1(原子)
-        if (rows > 0 && smsCouponHistory.getCouponId() != null) {
-            smsCouponMapper.incrementReceiveCount(smsCouponHistory.getCouponId());
+        if (smsCouponHistory.getCouponId() != null && rows != 1) {
+            throw new IllegalStateException("优惠券领取记录写入失败");
         }
         return rows;
     }
