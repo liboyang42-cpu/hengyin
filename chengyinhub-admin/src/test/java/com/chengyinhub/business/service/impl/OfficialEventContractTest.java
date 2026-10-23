@@ -17,10 +17,9 @@ import com.chengyinhub.business.service.IGrowthService;
 import com.chengyinhub.business.service.IImService;
 import com.chengyinhub.business.service.IOfficialEventV2Service;
 import com.chengyinhub.business.service.ISmsCouponHistoryService;
-import com.chengyinhub.business.service.INotifyService;
+import com.chengyinhub.business.service.IWxSubscribeMsgService;
 import com.chengyinhub.common.exception.ServiceException;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -50,13 +49,13 @@ class OfficialEventContractTest {
     private OfficialBroadcastServiceImpl broadcastService(OfficialAudienceMapper aud,
                                                           OfficialBroadcastLogMapper logMapper,
                                                           IImService im,
-                                                          INotifyService wx) {
+                                                          IWxSubscribeMsgService wx) {
         OfficialBroadcastServiceImpl s = new OfficialBroadcastServiceImpl();
         ReflectionTestUtils.setField(s, "broadcastMapper", mock(OfficialBroadcastMapper.class));
         ReflectionTestUtils.setField(s, "logMapper", logMapper);
         ReflectionTestUtils.setField(s, "audienceMapper", aud);
         ReflectionTestUtils.setField(s, "imService", im);
-        ReflectionTestUtils.setField(s, "notifyService", wx);
+        ReflectionTestUtils.setField(s, "wxSubscribeMsgService", wx);
         return s;
     }
 
@@ -74,110 +73,60 @@ class OfficialEventContractTest {
 
     @Test
     void dispatch_圈人跨角色去重_双渠道fanout() {
-        OfficialAudienceMapper aud = mock(OfficialAudienceMapper.class);
-        // 11 同时命中 player 与 club → 去重,首命中 player 为准;总去重后 = {10,11,20,30} = 4 人
-        when(aud.selectPlayerIds("成都")).thenReturn(Arrays.asList(10L, 11L));
-        when(aud.selectClubMemberIds("成都")).thenReturn(Arrays.asList(11L, 20L));
-        when(aud.selectMerchantMemberIds("成都")).thenReturn(Collections.singletonList(30L));
-
-        OfficialBroadcastLogMapper logMapper = mock(OfficialBroadcastLogMapper.class);
-        when(logMapper.insertIgnore(any())).thenReturn(1); // 全新,可发
-
-        IImService im = mock(IImService.class);
-        INotifyService wx = mock(INotifyService.class);
-
-        int reached = broadcastService(aud, logMapper, im, wx).dispatch(bc(1, "{\"title\":\"统一标题\",\"sub\":\"统一内容\"}"));
-
-        // 去重后 4 人,站内信 4 次(未去重会是 5 次)
-        assertEquals(4, reached);
-        verify(im, times(4)).sendSystem(anyLong(), eq(3), anyString(), anyString());
-        // 订阅渠道也 4 次
-        verify(wx, times(4)).notifyOfficialBroadcast(anyLong(), anyString(), anyString());
+        OfficialBroadcastDeliveryTest.Fixture f = new OfficialBroadcastDeliveryTest.Fixture(bc(1,
+                "{\"title\":\"统一标题\",\"sub\":\"统一内容\"}"));
+        when(f.audience.selectPlayerIds("成都")).thenReturn(Arrays.asList(10L, 11L));
+        when(f.audience.selectClubMemberIds("成都")).thenReturn(Arrays.asList(11L, 20L));
+        when(f.audience.selectMerchantMemberIds("成都")).thenReturn(Collections.singletonList(30L));
+        assertEquals(4, f.service.dispatch(f.broadcast));
+        verify(f.im, times(4)).sendSystem(anyLong(), eq(3), anyString(), anyString());
+        verify(f.wx, times(4)).notifyOfficialBroadcast(anyLong(), anyString(), anyString());
+        assertEquals(8, f.rows.size());
     }
 
     @Test
     void dispatch_uk已发过则不重发() {
-        OfficialAudienceMapper aud = mock(OfficialAudienceMapper.class);
-        when(aud.selectPlayerIds(any())).thenReturn(Arrays.asList(10L, 11L));
-        when(aud.selectClubMemberIds(any())).thenReturn(Collections.emptyList());
-        when(aud.selectMerchantMemberIds(any())).thenReturn(Collections.emptyList());
-
-        OfficialBroadcastLogMapper logMapper = mock(OfficialBroadcastLogMapper.class);
-        when(logMapper.insertIgnore(any())).thenReturn(0); // uk 冲突,已发过
-
-        IImService im = mock(IImService.class);
-        INotifyService wx = mock(INotifyService.class);
-
-        int reached = broadcastService(aud, logMapper, im, wx).dispatch(bc(1, null));
-
-        assertEquals(0, reached);
-        verify(im, never()).sendSystem(anyLong(), anyInt(), anyString(), anyString());
-        verify(wx, never()).notifyOfficialBroadcast(anyLong(), anyString(), anyString());
+        OfficialBroadcastDeliveryTest.Fixture f = new OfficialBroadcastDeliveryTest.Fixture(bc(1, null));
+        when(f.audience.selectPlayerIds("成都")).thenReturn(Arrays.asList(10L, 11L));
+        assertEquals(2, f.service.dispatch(f.broadcast));
+        assertEquals(2, f.restart().dispatch(f.broadcast)); // Total confirmed inapp receipts, not this-attempt count.
+        verify(f.im, times(2)).sendSystem(anyLong(), anyInt(), anyString(), anyString());
+        verify(f.wx, times(2)).notifyOfficialBroadcast(anyLong(), anyString(), anyString());
+        assertEquals(4, f.rows.size());
     }
 
     @Test
     void dispatch_分开发_按角色取对应文案() {
-        OfficialAudienceMapper aud = mock(OfficialAudienceMapper.class);
-        when(aud.selectPlayerIds("成都")).thenReturn(Collections.singletonList(10L));
-        when(aud.selectClubMemberIds("成都")).thenReturn(Collections.emptyList());
-        when(aud.selectMerchantMemberIds("成都")).thenReturn(Collections.emptyList());
-
-        OfficialBroadcastLogMapper logMapper = mock(OfficialBroadcastLogMapper.class);
-        when(logMapper.insertIgnore(any())).thenReturn(1);
-        IImService im = mock(IImService.class);
-        INotifyService wx = mock(INotifyService.class);
-
-        String content = "{\"player\":{\"title\":\"玩家标题\",\"sub\":\"出门点亮\"},\"merchant\":{\"title\":\"商家标题\",\"sub\":\"客流洪峰\"}}";
-        broadcastService(aud, logMapper, im, wx).dispatch(bc(2, content));
-
-        ArgumentCaptor<String> titleCap = ArgumentCaptor.forClass(String.class);
-        verify(im, times(1)).sendSystem(eq(10L), eq(3), titleCap.capture(), anyString());
-        assertEquals("玩家标题", titleCap.getValue()); // 玩家收到玩家文案,而非默认标题
+        OfficialBroadcastDeliveryTest.Fixture f = new OfficialBroadcastDeliveryTest.Fixture(bc(2,
+                "{\"player\":{\"title\":\"玩家标题\",\"sub\":\"出门点亮\"},"
+                + "\"merchant\":{\"title\":\"商家标题\",\"sub\":\"客流洪峰\"}}"));
+        when(f.audience.selectPlayerIds("成都")).thenReturn(Collections.singletonList(10L));
+        f.service.dispatch(f.broadcast);
+        verify(f.im).sendSystem(eq(10L), eq(3), eq("玩家标题"), anyString());
+        verify(f.wx).notifyOfficialBroadcast(10L, "玩家标题", "出门点亮");
     }
 
     @Test
     void dispatch_频控_超限用户被跳过() {
-        OfficialAudienceMapper aud = mock(OfficialAudienceMapper.class);
-        when(aud.selectPlayerIds("成都")).thenReturn(Arrays.asList(10L, 11L));
-        when(aud.selectClubMemberIds("成都")).thenReturn(Collections.emptyList());
-        when(aud.selectMerchantMemberIds("成都")).thenReturn(Collections.emptyList());
-
-        OfficialBroadcastLogMapper logMapper = mock(OfficialBroadcastLogMapper.class);
-        when(logMapper.insertIgnore(any())).thenReturn(1);
-        // 10 号近1小时已收5条(达上限)→ 跳过;11 号未达 → 正常发
-        when(logMapper.countRecentByMember(eq(10L), anyInt())).thenReturn(5);
-        when(logMapper.countRecentByMember(eq(11L), anyInt())).thenReturn(0);
-
-        IImService im = mock(IImService.class);
-        INotifyService wx = mock(INotifyService.class);
-
-        int reached = broadcastService(aud, logMapper, im, wx).dispatch(bc(1, null));
-
-        assertEquals(1, reached); // 仅 11 收到
-        verify(im, times(1)).sendSystem(eq(11L), anyInt(), anyString(), anyString());
-        verify(im, never()).sendSystem(eq(10L), anyInt(), anyString(), anyString());
+        OfficialBroadcastDeliveryTest.Fixture f = new OfficialBroadcastDeliveryTest.Fixture(bc(1, null));
+        when(f.audience.selectPlayerIds("成都")).thenReturn(Arrays.asList(10L, 11L));
+        when(f.logs.countRecentByMember(eq(10L), anyInt())).thenReturn(5);
+        assertEquals(1, f.service.dispatch(f.broadcast));
+        verify(f.im).sendSystem(eq(11L), anyInt(), anyString(), anyString());
+        verify(f.im, never()).sendSystem(eq(10L), anyInt(), anyString(), anyString());
+        verify(f.wx, never()).notifyOfficialBroadcast(eq(10L), anyString(), anyString());
+        assertEquals(OfficialBroadcast.ST_PENDING, f.broadcast.getStatus());
     }
 
     @Test
     void dispatch_频控_查询异常fallback禁止发送() {
-        OfficialAudienceMapper aud = mock(OfficialAudienceMapper.class);
-        when(aud.selectPlayerIds("成都")).thenReturn(Arrays.asList(10L, 11L));
-        when(aud.selectClubMemberIds("成都")).thenReturn(Collections.emptyList());
-        when(aud.selectMerchantMemberIds("成都")).thenReturn(Collections.emptyList());
-
-        OfficialBroadcastLogMapper logMapper = mock(OfficialBroadcastLogMapper.class);
-        when(logMapper.insertIgnore(any())).thenReturn(1);
-        when(logMapper.countRecentByMember(eq(10L), anyInt())).thenThrow(new RuntimeException("simulated DB timeout"));
-        when(logMapper.countRecentByMember(eq(11L), anyInt())).thenReturn(0);
-
-        IImService im = mock(IImService.class);
-        INotifyService wx = mock(INotifyService.class);
-
-        int reached = broadcastService(aud, logMapper, im, wx).dispatch(bc(1, null));
-
-        assertEquals(1, reached);
-        verify(im, times(1)).sendSystem(eq(11L), anyInt(), anyString(), anyString());
-        verify(im, never()).sendSystem(eq(10L), anyInt(), anyString(), anyString());
+        OfficialBroadcastDeliveryTest.Fixture f = new OfficialBroadcastDeliveryTest.Fixture(bc(1, null));
+        when(f.audience.selectPlayerIds("成都")).thenReturn(Arrays.asList(10L, 11L));
+        when(f.logs.countRecentByMember(eq(10L), anyInt())).thenThrow(new RuntimeException("DB timeout"));
+        assertEquals(1, f.service.dispatch(f.broadcast));
+        verify(f.im).sendSystem(eq(11L), anyInt(), anyString(), anyString());
+        verify(f.im, never()).sendSystem(eq(10L), anyInt(), anyString(), anyString());
+        verify(f.wx, never()).notifyOfficialBroadcast(eq(10L), anyString(), anyString());
     }
 
     @Test
@@ -186,7 +135,7 @@ class OfficialEventContractTest {
         OfficialEventMapper eventMapper = mock(OfficialEventMapper.class);
         IOfficialEventV2Service v2 = mock(IOfficialEventV2Service.class);
         OfficialBroadcastServiceImpl service = broadcastService(mock(OfficialAudienceMapper.class),
-                mock(OfficialBroadcastLogMapper.class), mock(IImService.class), mock(INotifyService.class));
+                mock(OfficialBroadcastLogMapper.class), mock(IImService.class), mock(IWxSubscribeMsgService.class));
         ReflectionTestUtils.setField(service, "broadcastMapper", broadcastMapper);
         ReflectionTestUtils.setField(service, "eventMapper", eventMapper);
         ReflectionTestUtils.setField(service, "officialEventV2Service", v2);
@@ -459,7 +408,7 @@ class OfficialEventContractTest {
         when(em.selectOfficialEventById(9L)).thenReturn(ended);
 
         OfficialBroadcastServiceImpl svc = broadcastService(mock(OfficialAudienceMapper.class),
-                mock(OfficialBroadcastLogMapper.class), mock(IImService.class), mock(INotifyService.class));
+                mock(OfficialBroadcastLogMapper.class), mock(IImService.class), mock(IWxSubscribeMsgService.class));
         ReflectionTestUtils.setField(svc, "broadcastMapper", bm);
         ReflectionTestUtils.setField(svc, "eventMapper", em);
         ReflectionTestUtils.setField(svc, "officialEventV2Service", v2);
@@ -490,7 +439,7 @@ class OfficialEventContractTest {
         when(em.selectOfficialEventById(9L)).thenReturn(ended);
 
         OfficialBroadcastServiceImpl svc = broadcastService(mock(OfficialAudienceMapper.class),
-                mock(OfficialBroadcastLogMapper.class), mock(IImService.class), mock(INotifyService.class));
+                mock(OfficialBroadcastLogMapper.class), mock(IImService.class), mock(IWxSubscribeMsgService.class));
         ReflectionTestUtils.setField(svc, "broadcastMapper", bm);
         ReflectionTestUtils.setField(svc, "eventMapper", em);
         ReflectionTestUtils.setField(svc, "officialEventV2Service", v2);

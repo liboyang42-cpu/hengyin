@@ -1,0 +1,71 @@
+$ git diff --check
+
+exit=0
+
+PASS XML parse and bindings: 13 mapper statements; 14 model setters; locking selects disable cache.
+
+PASS isolated MySQL fixture uses exact public-baseline broadcast table DDL.
+
+PASS all 17 baseline OfficialEventContractTest method identities retained.
+
+$ node chengyinhub-xcx/tests/unit/official-broadcast-stats.test.js
+✔ 点通知卡读该条复盘,成功显示触达与点击 (2.837667ms)
+✔ 后端拒绝/形状不对/网络失败如实提示,可再点重试 (0.948003ms)
+✔ 列表已刷新换了条目时,迟到的复盘不写到别的卡上 (1.914883ms)
+✔ 接线:通知卡可点、复盘就地替换原触达行;不改主标题;回调不用 this 方法简写 (0.445584ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 12.423841
+
+exit=0
+
+$ node chengyinhub-xcx/tests/unit/official-pages-state-contract.test.js
+✔ 官方邀约写操作同步防重，失败留在原卡片且重试前不假更新列表 (7.805874ms)
+✔ 官方邀约动作错误与忙碌态使用现有 inline-error，并暴露无障碍状态 (0.50963ms)
+✔ 我的发布拒绝畸形 rows，不能把未知载荷冒充两个空列表 (1.548469ms)
+✔ 我的发布严格区分 0 与 unknown，未知状态、对象、方式和范围不伪装成空值 (0.558975ms)
+✔ 我的发布刷新保留已确认快照，失败进入局部错误且较早响应不能覆盖新结果 (0.766268ms)
+✔ 我的发布首载、刷新、局部错误与未知数字文案在视图层分离 (0.531193ms)
+✔ negative control: 移除同步锁、严格列表或 unknown 投影时合同必须判红 (3.396041ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 22.233321
+
+exit=0
+
+NOT RUN: Java compile/package, JUnit (17 existing + 12 new unit + 7 new MySQL IT), MySQL DDL/transactions/concurrency, real process restart, real WeChat.
+
+Final static review: mapper bindings rechecked; JUnit source inventory 17/12/7; every original test identity retained; non-broadcast test segment unchanged. Java tests still NOT RUN.
+
+Continuation: environment binding recovered without destructive lifecycle operation.
+Preserved staged patch: bytes=103847 sha256=c72b57b69352c593de3154dd842881353fafb4bfc44d6353b3899eb7474cb773
+Preserved staged tree: fc7d94ae6375fc9bfdc716cff3b32c3352711b9d
+All 9 original source/migration manifest entries: OK
+
+$ node chengyinhub-ui/tests/unit/official-broadcast-submission-contract.test.js (before fix)
+Tests 3, pass 1, fail 2, skipped 0, exit=1.
+Expected failing assertions: actual 通知已发送 / expected 通知已提交; actual 待发 / expected 投递未全部确认.
+
+$ node chengyinhub-ui/tests/unit/official-broadcast-submission-contract.test.js (after fix)
+PASS 发布响应只确认提交；UNKNOWN/部分成功不能从响应文案推断全部送达
+PASS 待发/部分成功/UNKNOWN 的主状态显示未全部确认，非法状态不冒充送达
+PASS 无权限或缺受众仍拒绝发布，结果文案修改不产生额外请求
+Tests 3, pass 3, fail 0, skipped 0, exit=0.
+
+$ node chengyinhub-ui/tests/unit/official-enum-text-contract.test.js
+Tests 7, pass 7, fail 0, skipped 0, exit=0.
+
+$ git diff --check
+exit=0.
+Java source inventory: OfficialEventContractTest=17; OfficialBroadcastDeliveryTest=12; OfficialBroadcastSubmissionControllerTest=4; OfficialBroadcastDeliveryMySqlIT=7.
+All Java compilation/JUnit/MySQL/DDL still NOT RUN. User explicitly authorized isolated CI-only candidate commit/push; no merge/integration/deployment authorization implied.

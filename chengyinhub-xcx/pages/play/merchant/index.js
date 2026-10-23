@@ -155,6 +155,7 @@ Page({
   onGamePick(e) { this.setData({ 'game.choice': e.currentTarget.dataset.k, 'game.errText': '' }) },
   onGameInput(e) { this.setData({ 'game.answer': e.detail.value, 'game.errText': '' }) },
   async submitGame() {
+    if (!this._isIntentOwnerCurrent()) return
     const node = this.data.node
     const game = this.data.game
     if (!node || game.submitting || game.done) return
@@ -162,10 +163,13 @@ Page({
     const answer = vm === 3 ? game.choice : String(game.answer || '').trim()
     if (!answer) { this.setData({ 'game.errText': vm === 3 ? '先选一个选项' : '先写下答案' }); return }
     this.setData({ 'game.submitting': true, 'game.errText': '', 'game.receipt': 'submitting' })
-    const res = await request('/api/play/answer', Object.assign({}, this._session, { nodeId: node.nodeId, answer }))
+    const res = await this._sendBasicIntent('answer', '/api/play/answer', { nodeId: node.nodeId, answer })
+    if (!this._isIntentOwnerCurrent() || res.obsolete) return
     // 响应丢了 ⇒ 结果未知。后端 advanceProgress 按 rows>0 算 firstTime,重发不会重复发奖,
     // 但「重发写请求去试」本身就是不该做的事 —— 改成读 /nodes 的 gameDone 位。
-    if (res.netFail) return this._resolveGameUnknown()
+    if (res.netFail || res.httpFail || Number(res.code) === 520) return this._resolveGameUnknown()
+    if (res.intentTerminal) this._prev._resolveRouteAction('answer', node.nodeId)
+    else this._prev._handleRouteConflict(res, 'answer', node.nodeId)
     if (!(res.code === 200 || res.code === '200')) {
       this.setData({
         'game.submitting': false, 'game.receipt': 'failed',
@@ -198,19 +202,22 @@ Page({
       'game.submitting': true, 'game.receipt': 'unknown',
       'game.errText': getPlayReceiptState('unknown').label
     })
-    const fresh = await this._readbackNode()
-    if (!fresh) {
+    if (!this._isIntentOwnerCurrent()) return
+    const receipt = await this._prev._readBasicRouteIntent('answer', this.data.node.nodeId)
+    if (!this._isIntentOwnerCurrent()) return
+    if (!receipt.intentTerminal) {
       this.setData({ 'game.errText': '还是没确认上，网络恢复后点这里再试 · 期间请勿重复提交' })
       return
     }
-    if (fresh.gameDone) {
+    this._prev._resolveRouteAction('answer', this.data.node.nodeId)
+    if (Number(receipt.code) === 200) {
       // 已经记上了,但这次读不回本次奖励明细 —— 只报状态,不编造 xp。
       this._settleGameDone({ firstTime: false }, '这道题已经记下了')
       return
     }
     this.setData({
       'game.submitting': false, 'game.receipt': 'failed',
-      'game.errText': getPlayReceiptState('failed').readerLabel
+      'game.errText': receipt.msg || getPlayReceiptState('failed').readerLabel
     })
   },
 
@@ -276,12 +283,18 @@ Page({
   },
 
   async _submitProof(sendProof, payload, successMessage, opts) {
+    if (sendProof === requestCheckin && !this._isIntentOwnerCurrent()) return
     this.setData({ busy: true, feedback: '', degradedMessage: '', receipt: 'submitting' })
-    const response = await sendProof(payload)
+    const basic = sendProof === requestCheckin
+    if (basic) this._proofBasicIntent = true
+    const response = basic ? await this._sendBasicIntent('checkin', '/api/play/checkin', Object.assign({}, payload, { nodeId: this.data.node.nodeId })) : await sendProof(payload)
+    if (basic && (!this._isIntentOwnerCurrent() || response.obsolete)) return
+    if (basic && response.intentTerminal) this._prev._resolveRouteAction('checkin', this.data.node.nodeId)
+    else if (basic) this._prev._handleRouteConflict(response, 'checkin', this.data.node.nodeId)
     if (!(response.code === 200 || response.code === '200')) {
       // netFail = 请求没拿到响应,服务端可能已经写进去了。原来这里 busy:false 就放行了,
       // 一句「请勿重复核销」拦不住手 —— 改成锁着不放,只能由 /api/play/nodes 权威回读解锁。
-      if (response.netFail) return this._resolveProofUnknown(opts)
+      if (response.netFail || response.httpFail || Number(response.code) === 520) return this._resolveProofUnknown(opts)
       this.setData({
         busy: false, receipt: 'failed', degradedMessage: '',
         feedback: response.msg || '现场记录失败，请稍后重试',
@@ -303,6 +316,19 @@ Page({
     if (opts) this._proofUnknownOpts = opts
     const unknown = getPlayReceiptState('unknown')
     this.setData({ busy: true, receipt: 'unknown', feedback: '', degradedMessage: unknown.label })
+    if (this._proofBasicIntent) {
+      if (!this._isIntentOwnerCurrent()) return
+      const receipt = await this._prev._readBasicRouteIntent('checkin', this.data.node.nodeId)
+      if (!this._isIntentOwnerCurrent()) return
+      if (!receipt.intentTerminal) { this.setData({ degradedMessage: '原到店命令结果待确认，请稍后查询' }); return }
+      this._prev._resolveRouteAction('checkin', this.data.node.nodeId)
+      this._proofBasicIntent = false
+      const landed = Number(receipt.code) === 200
+      const node = landed ? Object.assign({}, this.data.node, receipt.data || {}) : this.data.node
+      this.setData({ node, busy: false, receipt: landed ? 'confirmed' : 'failed', degradedMessage: '', feedback: receipt.msg || '' })
+      if (landed) { this._writeBack(node); if (this._proofUnknownOpts && this._proofUnknownOpts.autoPopup) this._maybeAutoPopup() }
+      return
+    }
     const before = this.data.node || {}
     const fresh = await this._readbackNode()
     if (!fresh) {
@@ -329,6 +355,19 @@ Page({
   retryProofReadback() {
     if (this.data.receipt !== 'unknown') return
     this._resolveProofUnknown(this._proofUnknownOpts)
+  },
+
+  _isIntentOwnerCurrent() {
+    return !!this._prev && typeof this._prev._isPlayAccountCurrent === 'function' && this._prev._isPlayAccountCurrent()
+      && typeof this._prev._sendBasicRouteIntent === 'function'
+  },
+
+  _sendBasicIntent(kind, url, input) {
+    if (!this._isIntentOwnerCurrent()) return Promise.resolve({ obsolete: true })
+    try {
+      const body = this._prev._routeWritePayload(kind, input.nodeId, input)
+      return this._prev._sendBasicRouteIntent(url, body)
+    } catch (error) { return Promise.resolve({ code: 520, httpFail: true, msg: error.message }) }
   },
 
   _readbackNode() {

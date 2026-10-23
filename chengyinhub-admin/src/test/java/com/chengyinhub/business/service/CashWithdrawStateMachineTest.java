@@ -64,6 +64,7 @@ class CashWithdrawStateMachineTest {
     private AlarmService alarmService;
     private MerchantReferralBountyService merchantReferralBountyService;
     private CashWithdrawServiceImpl svc;
+    private com.chengyinhub.business.service.impl.CashWithdrawEvidenceFixture evidence;
 
     private static final BigDecimal TEN = new BigDecimal("10.00");
 
@@ -103,6 +104,8 @@ class CashWithdrawStateMachineTest {
             ((MemberCashWithdraw) inv.getArgument(0)).setId(1L);
             return 1;
         });
+        evidence = new com.chengyinhub.business.service.impl.CashWithdrawEvidenceFixture(mapper);
+        when(umsMemberService.addBalance(anyLong(), any())).thenReturn(true);
     }
 
     private void stubMemberWithOpenid() {
@@ -116,6 +119,7 @@ class CashWithdrawStateMachineTest {
     private MemberCashWithdraw pendingRecord() {
         MemberCashWithdraw w = new MemberCashWithdraw();
         w.setId(1L);
+        w.setDelFlag(0);
         w.setMemberId(9L);
         w.setAmount(TEN);
         w.setOutBatchNo("CW1");
@@ -130,6 +134,7 @@ class CashWithdrawStateMachineTest {
         Map<String, String> m = new HashMap<>();
         m.put("result", result);
         if (batchStatus != null) m.put("batchStatus", batchStatus);
+        if ("FAIL".equals(result)) m.put("detailStatus", "FAIL");
         return m;
     }
 
@@ -185,7 +190,7 @@ class CashWithdrawStateMachineTest {
     // ④ 扣款抛异常(DB 未知异常,余额可能已扣)→ 置待人工(status=3)+告警,不假称已退款,不转账
     @Test
     void deductThrows_marksFailed_noZombie_noTransfer() {
-        when(mapper.updateStatusIfProcessing(any())).thenReturn(1);
+        when(mapper.updateStatusIfProcessing(any())).thenAnswer(evidence::processing);
         when(mapper.countPendingByMember(9L)).thenReturn(0);
         stubMemberWithOpenid();
         doThrow(new RuntimeException("扣款状态不明")).when(umsMemberService).deductWithdrawableBalance(eq(9L), any(), any());
@@ -207,12 +212,13 @@ class CashWithdrawStateMachineTest {
     void sync_success_marksSuccess() {
         when(mapper.selectPendingForQuery(anyInt())).thenReturn(Collections.singletonList(pendingRecord()));
         when(wechatPayService.queryTransferResult("CW1", "CD1")).thenReturn(qr("SUCCESS", "FINISHED"));
-        when(mapper.updateStatusIfProcessing(any())).thenReturn(1);
+        when(mapper.updateStatusIfProcessing(any())).thenAnswer(evidence::processing);
 
+        evidence.seedDebit(1L);
         svc.syncPendingWithdrawals(50);
 
         ArgumentCaptor<MemberCashWithdraw> cap = ArgumentCaptor.forClass(MemberCashWithdraw.class);
-        verify(mapper).updateStatusIfProcessing(cap.capture());
+        verify(mapper).confirmChannelSuccess(cap.capture());
         assertEquals(MemberCashWithdraw.STATUS_SUCCESS, cap.getValue().getStatus());
         verify(umsMemberService, never()).addBalance(anyLong(), any());
     }
@@ -224,12 +230,13 @@ class CashWithdrawStateMachineTest {
         Map<String, String> q = qr("SUCCESS", "FINISHED");
         q.put("detailId", "1234567890abcdef");
         when(wechatPayService.queryTransferResult("CW1", "CD1")).thenReturn(q);
-        when(mapper.updateStatusIfProcessing(any())).thenReturn(1);
+        when(mapper.updateStatusIfProcessing(any())).thenAnswer(evidence::processing);
 
+        evidence.seedDebit(1L);
         svc.syncPendingWithdrawals(50);
 
         ArgumentCaptor<MemberCashWithdraw> cap = ArgumentCaptor.forClass(MemberCashWithdraw.class);
-        verify(mapper).updateStatusIfProcessing(cap.capture());
+        verify(mapper).confirmChannelSuccess(cap.capture());
         assertEquals("1234567890abcdef", cap.getValue().getWechatDetailId());
     }
 
@@ -238,9 +245,10 @@ class CashWithdrawStateMachineTest {
     void sync_fail_claimThenRefundOnce() {
         when(mapper.selectPendingForQuery(anyInt())).thenReturn(Collections.singletonList(pendingRecord()));
         when(wechatPayService.queryTransferResult("CW1", "CD1")).thenReturn(qr("FAIL", "CLOSED"));
-        when(mapper.updateStatusIfProcessing(any())).thenReturn(1); // 抢占成功
+        when(mapper.updateStatusIfProcessing(any())).thenAnswer(evidence::processing); // 抢占成功
         // addBalance 成功(不抛异常)
 
+        evidence.seedDebit(1L);
         svc.syncPendingWithdrawals(50);
 
         verify(umsMemberService, times(1)).addBalance(9L, TEN);
@@ -263,8 +271,9 @@ class CashWithdrawStateMachineTest {
         q.put("failReasonCode", "REAL_NAME_CHECK_FAIL");
         q.put("detailId", "detail-9");
         when(wechatPayService.queryTransferResult("CW1", "CD1")).thenReturn(q);
-        when(mapper.updateStatusIfProcessing(any())).thenReturn(1); // 抢占成功
+        when(mapper.updateStatusIfProcessing(any())).thenAnswer(evidence::processing); // 抢占成功
 
+        evidence.seedDebit(1L);
         svc.syncPendingWithdrawals(50);
 
         ArgumentCaptor<MemberCashWithdraw> claim = ArgumentCaptor.forClass(MemberCashWithdraw.class);
@@ -280,29 +289,31 @@ class CashWithdrawStateMachineTest {
         when(wechatPayService.queryTransferResult("CW1", "CD1")).thenReturn(qr("FAIL", "CLOSED"));
         when(mapper.updateStatusIfProcessing(any())).thenReturn(0); // 抢占失败:别人已处理
 
+        evidence.seedDebit(1L);
         svc.syncPendingWithdrawals(50);
 
         verify(umsMemberService, never()).addBalance(anyLong(), any()); // ★杜绝重复退款
         verify(umsMemberService, never()).deductBalance(anyLong(), any());
     }
 
-    // PR #8 回归:抢占 0→3 成功,但 3→2 回补领取 CAS 落空(已被人工/并发处理)→ 不加余额、不告警、只写一次领取
+    // 已持原单行锁后 3→2 CAS 意外落空：不加余额、抛出回滚，并告警调查。
     @Test
-    void sync_fail_refundClaimLost_noBalanceNoAlarm() {
+    void sync_fail_refundClaimLost_failsClosedAndAlarms() {
         when(mapper.selectPendingForQuery(anyInt())).thenReturn(Collections.singletonList(pendingRecord()));
         when(wechatPayService.queryTransferResult("CW1", "CD1")).thenReturn(qr("FAIL", "CLOSED"));
-        when(mapper.updateStatusIfProcessing(any())).thenReturn(1); // 抢占成功
+        when(mapper.updateStatusIfProcessing(any())).thenAnswer(evidence::processing); // 抢占成功
         when(mapper.updateStatusIfManual(any())).thenReturn(0);     // 回补领取输掉
 
+        evidence.seedDebit(1L);
         svc.syncPendingWithdrawals(50);
 
         verify(umsMemberService, never()).addBalance(anyLong(), any());
         verify(umsMemberService, never()).deductBalance(anyLong(), any());
-        verify(alarmService, never()).alarm(anyString(), anyString());
+        verify(alarmService).alarm(anyString(), anyString());
         verify(mapper, times(1)).updateStatusIfProcessing(any());
         ArgumentCaptor<MemberCashWithdraw> fin = ArgumentCaptor.forClass(MemberCashWithdraw.class);
-        verify(mapper, times(1)).updateStatusIfManual(fin.capture());
-        assertEquals(MemberCashWithdraw.STATUS_FAILED_REFUNDED, fin.getValue().getStatus());
+        verify(mapper, times(2)).updateStatusIfManual(fin.capture());
+        assertEquals(MemberCashWithdraw.STATUS_FAILED_REFUNDED, fin.getAllValues().get(0).getStatus());
     }
 
     // ⑧ 退款失败(addBalance 抛异常,真实语义)→ 保持待人工 + 告警
@@ -310,9 +321,10 @@ class CashWithdrawStateMachineTest {
     void sync_fail_refundThrows_manualAndAlarm() {
         when(mapper.selectPendingForQuery(anyInt())).thenReturn(Collections.singletonList(pendingRecord()));
         when(wechatPayService.queryTransferResult("CW1", "CD1")).thenReturn(qr("FAIL", "CLOSED"));
-        when(mapper.updateStatusIfProcessing(any())).thenReturn(1); // 抢占成功
+        when(mapper.updateStatusIfProcessing(any())).thenAnswer(evidence::processing); // 抢占成功
         doThrow(new RuntimeException("增加余额失败")).when(umsMemberService).addBalance(eq(9L), any());
 
+        evidence.seedDebit(1L);
         svc.syncPendingWithdrawals(50);
 
         verify(alarmService, times(1)).alarm(anyString(), anyString());
@@ -328,6 +340,7 @@ class CashWithdrawStateMachineTest {
         when(mapper.selectPendingForQuery(anyInt())).thenReturn(Collections.singletonList(pendingRecord()));
         when(wechatPayService.queryTransferResult("CW1", "CD1")).thenReturn(qr("UNKNOWN", null));
 
+        evidence.seedDebit(1L);
         svc.syncPendingWithdrawals(50);
 
         verify(umsMemberService, never()).addBalance(anyLong(), any());
@@ -343,8 +356,9 @@ class CashWithdrawStateMachineTest {
         old.setCreateTime(old.getSubmitTime());
         when(mapper.selectPendingForQuery(anyInt())).thenReturn(Collections.singletonList(old));
         when(wechatPayService.queryTransferResult("CW1", "CD1")).thenReturn(qr("UNKNOWN", null));
-        when(mapper.updateStatusIfProcessing(any())).thenReturn(1);
+        when(mapper.updateStatusIfProcessing(any())).thenAnswer(evidence::processing);
 
+        evidence.seedDebit(1L);
         svc.syncPendingWithdrawals(50);
 
         ArgumentCaptor<MemberCashWithdraw> cap = ArgumentCaptor.forClass(MemberCashWithdraw.class);
@@ -361,9 +375,10 @@ class CashWithdrawStateMachineTest {
         when(umsMemberService.deductWithdrawableBalance(eq(9L), any(), any())).thenReturn(true);
         Map<String, String> res = new HashMap<>();
         res.put("ok", "false");
+        res.put("ambiguous", "false");
         res.put("error", "转账服务未就绪");
         when(wechatPayService.transferToBalance(anyString(), anyString(), any(), anyString(), anyString(), anyString())).thenReturn(res);
-        when(mapper.updateStatusIfProcessing(any())).thenReturn(1);
+        when(mapper.updateStatusIfProcessing(any())).thenAnswer(evidence::processing);
         // deductBalance 成功(不抛),addBalance 成功(不抛)
 
         assertThrows(IllegalStateException.class, () -> svc.withdraw(9L, new BigDecimal("10.00")));
@@ -380,13 +395,18 @@ class CashWithdrawStateMachineTest {
         when(umsMemberService.deductWithdrawableBalance(eq(9L), any(), any())).thenReturn(true);
         Map<String, String> res = new HashMap<>();
         res.put("ok", "false");
+        res.put("ambiguous", "false");
         res.put("error", "转账服务未就绪");
         when(wechatPayService.transferToBalance(anyString(), anyString(), any(), anyString(), anyString(), anyString())).thenReturn(res);
-        when(mapper.updateStatusIfProcessing(any())).thenReturn(1);
+        when(mapper.updateStatusIfProcessing(any())).thenAnswer(evidence::processing);
         org.springframework.transaction.PlatformTransactionManager transactions = mock(org.springframework.transaction.PlatformTransactionManager.class);
         when(transactions.getTransaction(any())).thenReturn(mock(org.springframework.transaction.TransactionStatus.class));
-        doThrow(new org.springframework.transaction.TransactionSystemException("commit outcome unknown"))
-                .when(transactions).commit(any());
+        java.util.concurrent.atomic.AtomicInteger commits = new java.util.concurrent.atomic.AtomicInteger();
+        org.mockito.Mockito.doAnswer(inv -> {
+            if (commits.incrementAndGet() == 3)
+                throw new org.springframework.transaction.TransactionSystemException("commit outcome unknown");
+            return null;
+        }).when(transactions).commit(any());
         ReflectionTestUtils.setField(svc, "transactionManager", transactions);
 
         assertThrows(IllegalStateException.class, () -> svc.withdraw(9L, new BigDecimal("10.00")));
@@ -409,8 +429,9 @@ class CashWithdrawStateMachineTest {
         MemberCashWithdraw w = pendingRecord();
         w.setStatus(MemberCashWithdraw.STATUS_FAILED_MANUAL);
         when(mapper.selectById(1L)).thenReturn(w);
-        when(mapper.updateStatusIfManual(any())).thenReturn(1);
+        when(mapper.updateStatusIfManual(any())).thenAnswer(evidence::manual);
 
+        evidence.seedDebit(1L);
         boolean ok = svc.manualRefund(1L, "finance", "手工核实");
 
         assertTrue(ok);
@@ -437,6 +458,7 @@ class CashWithdrawStateMachineTest {
         when(mapper.selectById(1L)).thenReturn(w);
         when(mapper.updateStatusIfManual(any())).thenReturn(0); // 抢占失败
 
+        evidence.seedDebit(1L);
         boolean ok = svc.manualRefund(1L, "finance", null);
 
         assertFalse(ok);
@@ -464,8 +486,9 @@ class CashWithdrawStateMachineTest {
         w.setStatus(MemberCashWithdraw.STATUS_REFUND_PENDING_REVIEW);
         w.setManualOperator("maker");
         when(mapper.selectById(1L)).thenReturn(w);
-        when(mapper.updateStatusIfRefundReview(any())).thenReturn(1);
+        when(mapper.updateStatusIfRefundReview(any())).thenAnswer(evidence::review);
 
+        evidence.seedDebit(1L);
         boolean ok = svc.manualRefund(1L, "checker", null);
 
         assertTrue(ok);
@@ -483,6 +506,7 @@ class CashWithdrawStateMachineTest {
         w.setManualOperator("finance");
         when(mapper.selectById(1L)).thenReturn(w);
 
+        evidence.seedDebit(1L);
         assertThrows(IllegalStateException.class, () -> svc.manualRefund(1L, "finance", null));
 
         verify(mapper, never()).updateStatusIfRefundReview(any());
@@ -490,20 +514,18 @@ class CashWithdrawStateMachineTest {
     }
 
     @Test
-    void manualRefund_refundThrows_backToPendingReview() {
+    void manualRefund_refundThrows_escapesForWholeTransactionRollback() {
         MemberCashWithdraw w = pendingRecord();
         w.setStatus(MemberCashWithdraw.STATUS_REFUND_PENDING_REVIEW);
         w.setManualOperator("maker");
         when(mapper.selectById(1L)).thenReturn(w);
-        when(mapper.updateStatusIfRefundReview(any())).thenReturn(1);
+        when(mapper.updateStatusIfRefundReview(any())).thenAnswer(evidence::review);
         doThrow(new RuntimeException("增加余额失败")).when(umsMemberService).addBalance(eq(9L), any());
 
-        boolean ok = svc.manualRefund(1L, "checker", null);
-
-        assertFalse(ok);
-        verify(mapper).updateMemberCashWithdraw(org.mockito.ArgumentMatchers.argThat(back ->
-                Integer.valueOf(MemberCashWithdraw.STATUS_REFUND_PENDING_REVIEW).equals(back.getStatus())));
-        verify(alarmService).alarm(anyString(), anyString());
+        evidence.seedDebit(1L);
+        assertThrows(RuntimeException.class, () -> svc.manualRefund(1L, "checker", null));
+        verify(mapper, never()).updateMemberCashWithdraw(any());
+        // Real rollback is asserted by CashWithdrawFundEvidenceMySqlIT, not this mock fixture.
     }
 
     // ⑯ 对账:积压超阈值 → 告警(处理中积压 + 待人工;successNoBatch=0 不告警 → 恰 2 次)

@@ -315,6 +315,63 @@ jobs:
         if: '!cancelled()'
         run: node ci/silent-error-gate.js
 
+      # F architecture gate: begin
+      # Reuse this unconditional job; no new job/matrix or Java receipt requirement.
+      - name: Checkout reviewed architecture verifier
+        id: architecture_checkout
+        if: '!cancelled()'
+        uses: actions/checkout@v4
+        with:
+          repository: liboyang42-cpu/hengyin
+          ref: 2cddcd9ee925d9ac10f305a032878576dde6324d
+          path: .architecture-gate
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Architecture gate positive and negative controls
+        id: architecture_selftest
+        if: ${{ !cancelled() && steps.architecture_checkout.outcome == 'success' }}
+        env:
+          ARCHITECTURE_WORKFLOW: ${{ github.workspace }}/.github/workflows/ci.yml
+        run: python3 -m unittest discover -s .architecture-gate/ci/architecture -p 'test_*.py' -v
+      - name: Check architecture changes against trusted CI base
+        id: architecture_check
+        if: ${{ !cancelled() && steps.architecture_selftest.outcome == 'success' }}
+        env:
+          ARCH_CANDIDATE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          ARCH_TARGET_SHA: ${{ github.event.pull_request.base.sha }}
+          ARCH_BEFORE_SHA: ${{ github.event.before }}
+        run: |
+          set -euo pipefail
+          case "$GITHUB_EVENT_NAME" in
+            pull_request) arch_base=$(git merge-base "$ARCH_CANDIDATE_SHA" "$ARCH_TARGET_SHA") ;;
+            push) arch_base="$ARCH_BEFORE_SHA" ;;
+            workflow_dispatch) arch_base=$(git rev-parse "$ARCH_CANDIDATE_SHA^1") ;;
+            *) echo '::error::Unsupported architecture CI event'; exit 1 ;;
+          esac
+          arch_source=$(mktemp -d "$RUNNER_TEMP/architecture-source.XXXXXX")
+          cleanup_architecture_source() {
+            arch_status=$?
+            trap - EXIT
+            if ! git worktree remove "$arch_source"; then
+              echo '::error::Could not remove this job architecture source worktree'
+              exit 1
+            fi
+            exit "$arch_status"
+          }
+          trap cleanup_architecture_source EXIT
+          git worktree add --detach "$arch_source" "$ARCH_CANDIDATE_SHA"
+          python3 .architecture-gate/ci/architecture/gate.py source \
+            --source "$arch_source" --candidate "$ARCH_CANDIDATE_SHA" \
+            --compare-base "$arch_base" > "$RUNNER_TEMP/architecture-findings.json"
+      - name: Preserve architecture blockers and review items
+        if: ${{ !cancelled() && steps.architecture_check.outcome != 'skipped' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: architecture-findings-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/architecture-findings.json
+          if-no-files-found: error
+      # F architecture gate: end
+
   backend:
     name: Backend tests
     needs: changes

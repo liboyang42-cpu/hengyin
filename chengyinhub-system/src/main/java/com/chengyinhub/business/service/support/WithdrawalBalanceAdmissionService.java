@@ -1,6 +1,7 @@
 package com.chengyinhub.business.service.support;
 
 import com.chengyinhub.business.mapper.UmsMemberMapper;
+import com.chengyinhub.business.domain.CashWithdrawFundFact;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,11 +30,24 @@ public class WithdrawalBalanceAdmissionService {
         com.chengyinhub.business.domain.MemberCashWithdraw original = cash.selectByIdForUpdate(id);
         if (original == null || memberId == null || !memberId.equals(original.getMemberId())
                 || amount == null || original.getAmount() == null || amount.compareTo(original.getAmount()) != 0
+                || !Integer.valueOf(0).equals(original.getDelFlag())
                 || !Integer.valueOf(com.chengyinhub.business.domain.MemberCashWithdraw.STATUS_PROCESSING).equals(original.getStatus())
+                || original.getBalanceDeductId() != null || original.getBalanceRefundId() != null
+                || !("CW" + id).equals(original.getOutBatchNo()) || !("CD" + id).equals(original.getOutDetailNo())
                 || Integer.valueOf(1).equals(original.getFrozen()))
             return new Admission(null, null, null, false, false);
+        if (!cash.selectFundFacts(id).isEmpty())
+            return new Admission(null, null, null, false, false);
         Admission result = debit(memberId, amount, true);
-        if (!result.deducted) {
+        if (result.deducted) {
+            CashWithdrawFundFact fact = CashWithdrawFundFact.of(original, CashWithdrawFundFact.DEBIT);
+            fact.setBalanceBefore(result.before); fact.setBalanceAfter(result.after);
+            if (cash.insertFundFact(fact) != 1 || fact.getId() == null)
+                throw new IllegalStateException("提现扣款证据写入失败");
+            original.setBalanceDeductId(fact.getId());
+            if (cash.bindDebitEvidence(original) != 1)
+                throw new IllegalStateException("提现扣款证据关联失败");
+        } else {
             com.chengyinhub.business.domain.MemberCashWithdraw failed = new com.chengyinhub.business.domain.MemberCashWithdraw();
             failed.setId(id);
             failed.setStatus(com.chengyinhub.business.domain.MemberCashWithdraw.STATUS_FAILED_NO_DEBIT);

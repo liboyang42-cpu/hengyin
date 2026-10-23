@@ -179,27 +179,86 @@ function defaultActionId() {
   return 'route-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 12)
 }
 
-function createRouteActionStore(idFactory) {
+function createRouteActionStore(idFactory, options) {
   const makeId = typeof idFactory === 'function' ? idFactory : defaultActionId
+  const opts = options || {}
+  const storage = opts.storage
+  const storageKey = storage && opts.scope ? 'cy_play_intents_v1:' + JSON.stringify(opts.scope) : ''
   const pending = Object.create(null)
   const keyOf = (kind, nodeId) => String(kind || 'complete') + ':' + String(nodeId == null ? '' : nodeId)
+  const copy = value => JSON.parse(JSON.stringify(value))
+  if (storageKey) {
+    const saved = storage.getStorageSync(storageKey)
+    if (saved && typeof saved === 'object') Object.keys(saved).forEach(key => {
+      const row = saved[key]
+      if (row && typeof row.routeActionId === 'string' && /^[A-Za-z0-9:_-]{1,80}$/.test(row.routeActionId)) pending[key] = { index: copy(row), body: null }
+    })
+  }
+  const persist = () => {
+    if (!storageKey) return
+    const index = {}
+    Object.keys(pending).forEach(key => { index[key] = pending[key].index })
+    try { storage.setStorageSync(storageKey, index) } catch (error) { throw new Error('未能保存待确认命令，请释放存储空间后重试') }
+  }
+  const identity = (kind, nodeId, state) => ({
+    routeActionId: String(makeId()), expectedRouteVersion: normalizeRouteState(state).version,
+    operation: String(kind), nodeId,
+  })
   return {
     context(kind, nodeId, routeStateInput) {
       const key = keyOf(kind, nodeId)
-      if (!pending[key]) pending[key] = String(makeId())
-      const routeState = normalizeRouteState(routeStateInput)
+      if (!pending[key]) { pending[key] = { index: identity(kind, nodeId, routeStateInput), body: null }; persist() }
       return {
-        routeActionId: pending[key],
-        expectedRouteVersion: routeState.version,
+        routeActionId: pending[key].index.routeActionId,
+        expectedRouteVersion: pending[key].index.expectedRouteVersion,
       }
+    },
+    payload(kind, nodeId, routeStateInput, input) {
+      const key = keyOf(kind, nodeId)
+      if (!pending[key]) {
+        const index = identity(kind, nodeId, routeStateInput)
+        // 本地只存可回读的索引；原答案、扫码内容、坐标、照片地址留在进程内。
+        ;['activityId', 'topicId', 'commandId', 'expectedChapterId', 'targetChapterId'].forEach(field => {
+          if (input[field] != null) index[field] = input[field]
+        })
+        const body = Object.assign(copy(input), { routeActionId: index.routeActionId, expectedRouteVersion: index.expectedRouteVersion })
+        pending[key] = { index, body }
+      }
+      persist()
+      const entry = pending[key]
+      if (!entry.body) return Object.assign(copy(entry.index), { receiptOnly: true })
+      const result = copy(entry.body)
+      Object.defineProperty(result, '_bindRouteContext', { value: fields => {
+        Object.assign(entry.body, fields)
+        ;['routeSessionId', 'runtimeInstance', 'authorityEpoch', 'expectedRouteVersion'].forEach(field => {
+          if (fields[field] != null) entry.index[field] = fields[field]
+        })
+        persist()
+        Object.assign(result, fields)
+      } })
+      Object.defineProperty(result, '_markIntentUnknown', { value: () => {
+        entry.body.receiptOnly = true
+        result.receiptOnly = true
+        persist()
+      } })
+      return result
     },
     resolve(kind, nodeId) {
       delete pending[keyOf(kind, nodeId)]
+      persist()
     },
     clear() {
+      // 页面换局只释放内存，不删除尚未确认的持久身份。
       Object.keys(pending).forEach((key) => delete pending[key])
     },
   }
+}
+
+const scopedStores = Object.create(null)
+function scopedRouteActionStore(scope, storage) {
+  const key = JSON.stringify(scope)
+  if (!scopedStores[key]) scopedStores[key] = createRouteActionStore(null, { scope, storage })
+  return scopedStores[key]
 }
 
 function isRouteConflict(response) {
@@ -219,5 +278,6 @@ module.exports = {
   orderedJourneyNodes,
   buildVisibleRoutePath,
   createRouteActionStore,
+  scopedRouteActionStore,
   isRouteConflict,
 }

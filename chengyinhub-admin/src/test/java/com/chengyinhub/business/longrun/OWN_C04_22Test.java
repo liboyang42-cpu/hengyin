@@ -85,7 +85,7 @@ class OWN_C04_22Test {
 
     private static MemberCashWithdraw row(int status) {
         MemberCashWithdraw row = new MemberCashWithdraw(); row.setId(1L); row.setMemberId(7L);
-        row.setAmount(new BigDecimal("20.00")); row.setStatus(status); row.setOutBatchNo("CW1"); row.setOutDetailNo("CD1");
+        row.setDelFlag(0); row.setAmount(new BigDecimal("20.00")); row.setStatus(status); row.setOutBatchNo("CW1"); row.setOutDetailNo("CD1");
         return row;
     }
     private static Map<String,String> accepted() {
@@ -113,10 +113,18 @@ class OWN_C04_22Test {
             WithdrawalFrozenAmountResolver.Frozen frozen = resolver.resolve(7L);
             WithdrawalBalanceAdmissionService.Admission admitted = new WithdrawalBalanceAdmissionService.Admission(
                     new BigDecimal("100"), new BigDecimal("80"), frozen, true);
-            when(admission.debitCash(eq(1L), eq(7L), any())).thenReturn(admitted);
+            when(mapper.selectById(1L)).thenAnswer(i -> stored.get());
+            com.chengyinhub.business.service.impl.CashWithdrawEvidenceFixture evidence =
+                    new com.chengyinhub.business.service.impl.CashWithdrawEvidenceFixture(mapper);
+            when(admission.debitCash(eq(1L), eq(7L), any())).thenAnswer(i -> {
+                evidence.seedDebit(1L); return admitted;
+            });
             // master 设计：原提现单由 CashWithdrawServiceImpl 直接插入（无独立 FailureRecoveryService）。
             when(mapper.insertMemberCashWithdraw(any())).thenAnswer(i -> { i.getArgument(0, MemberCashWithdraw.class).setId(1L); return 1; });
-            when(mapper.selectByIdForUpdate(1L)).thenAnswer(i -> stored.get());
+            org.mockito.Mockito.doAnswer(i -> stored.get()).when(mapper).selectByIdForUpdate(1L);
+            org.springframework.transaction.PlatformTransactionManager transactions = mock(org.springframework.transaction.PlatformTransactionManager.class);
+            when(transactions.getTransaction(any())).thenReturn(mock(org.springframework.transaction.TransactionStatus.class));
+            ReflectionTestUtils.setField(service, "transactionManager", transactions);
             com.chengyinhub.common.config.WxPayConfig config = mock(com.chengyinhub.common.config.WxPayConfig.class);
             when(config.getAppid()).thenReturn("appid");
             ReflectionTestUtils.setField(service, "mapper", mapper);

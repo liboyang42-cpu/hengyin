@@ -56,6 +56,7 @@ class ClubLeadFlowTest {
     private ApiClubLeadController member;   // getAppUserId()=7
     private ApiClubLeadController otherActivityParticipant; // getAppUserId()=8，仅参加别的场次
     private ClubLeadMapper clubLeadMapper;
+    private com.chengyinhub.business.mapper.GameSessionRuntimeMapper commandReceiptMapper;
     private ClubEventOpsMapper clubEventOpsMapper;
     private ClubRoleAssignmentMapper clubRoleAssignmentMapper;
     private ICmsActivityService activityService;
@@ -75,6 +76,7 @@ class ClubLeadFlowTest {
         ApiClubLeadController c = spy(new ApiClubLeadController());
         doReturn(uid).when(c).getAppUserId();
         ReflectionTestUtils.setField(c, "clubLeadMapper", clubLeadMapper);
+        ReflectionTestUtils.setField(c, "commandReceiptMapper", commandReceiptMapper);
         ReflectionTestUtils.setField(c, "clubEventOpsMapper", clubEventOpsMapper);
         ReflectionTestUtils.setField(c, "clubRoleAssignmentMapper", clubRoleAssignmentMapper);
         ReflectionTestUtils.setField(c, "cmsActivityService", activityService);
@@ -106,6 +108,15 @@ class ClubLeadFlowTest {
     @SuppressWarnings("unchecked")
     void setUp() {
         clubLeadMapper = mock(ClubLeadMapper.class);
+        commandReceiptMapper = mock(com.chengyinhub.business.mapper.GameSessionRuntimeMapper.class);
+        when(commandReceiptMapper.insertReceiptClaim(any())).thenReturn(1);
+        when(commandReceiptMapper.completeReceipt(any())).thenReturn(1);
+        when(clubLeadMapper.lockClubOwner(5L)).thenReturn(9L);
+        when(clubLeadMapper.selectByActivityForUpdate(100L)).thenAnswer(inv -> stateHolder[0]);
+        when(clubLeadMapper.unlockChapterCas(org.mockito.ArgumentMatchers.eq(100L), anyLong(), anyLong(), any(), anyLong())).thenAnswer(inv -> {
+            if (!java.util.Objects.equals(stateHolder[0].getCurrentChapterId(), inv.getArgument(3))) return 0;
+            stateHolder[0].setCurrentChapterId(inv.getArgument(4)); return 1;
+        });
         clubEventOpsMapper = mock(ClubEventOpsMapper.class);
         clubRoleAssignmentMapper = mock(ClubRoleAssignmentMapper.class);
         activityService = mock(ICmsActivityService.class);
@@ -224,12 +235,12 @@ class ClubLeadFlowTest {
         assertEquals(1, checkins.size(), "同成员重复签到内存只一条(真库靠 uk 幂等)");
 
         // ④ 队长顺延下一章(10→20)
-        AjaxResult r4 = leader.unlockChapter("100");
+        AjaxResult r4 = leader.unlockChapter("100", "chapter-two", 10L, 20L);
         assertEquals(20L, stateHolder[0].getCurrentChapterId().longValue(), "放行第二章");
         assertTrue(String.valueOf(r4.get("msg")).contains("第二章"));
 
         // ⑤ 已是最后一章 → 顺延到头返回提示,不越界
-        AjaxResult r5 = leader.unlockChapter("100");
+        AjaxResult r5 = leader.unlockChapter("100", "no-next-chapter", 20L, 30L);
         assertEquals("已是最后一章", r5.get("msg"));
         assertEquals(20L, stateHolder[0].getCurrentChapterId().longValue());
 
@@ -302,8 +313,8 @@ class ClubLeadFlowTest {
     @Test
     void memberCannotUnlockOrBroadcast() {
         leader.start("100"); // 建态并发车
-        AjaxResult u = member.unlockChapter("100");
-        assertEquals("只有队长可以放行章节", u.get("msg"));
+        AjaxResult u = member.unlockChapter("100", "not-leader", 10L, 20L);
+        assertEquals("只有当前队长可以放行章节", u.get("msg"));
         AjaxResult b = member.broadcast("100", "大家跟上");
         assertEquals("只有队长可以广播", b.get("msg"));
         // 队长广播成功落字段

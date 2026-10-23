@@ -4353,6 +4353,11 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         return state.getThemeRuntime().path("gameplay").path("arrivals").path(String.valueOf(nodeId)).asBoolean(false);
     }
 
+    private String routeIntentFingerprint(Object fields) {
+        try { return java.util.HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(write(fields).getBytes(StandardCharsets.UTF_8))); }
+        catch(NoSuchAlgorithmException impossible) { throw new IllegalStateException("动作摘要算法不可用",impossible); }
+    }
+
     @Override
     @Transactional(isolation=Isolation.READ_COMMITTED,rollbackFor=Exception.class)
     public Map<String,Object> recordPlayerArrival(Long memberId,Long topicId,Long activityId,Long nodeId,String actionId,Integer expectedVersion) {return recordPlayerArrival(memberId,topicId,activityId,nodeId,actionId,expectedVersion,"SCAN");}
@@ -4360,20 +4365,25 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
     @Transactional(isolation=Isolation.READ_COMMITTED,rollbackFor=Exception.class)
     public Map<String,Object> recordPlayerArrival(Long memberId,Long topicId,Long activityId,Long nodeId,String actionId,Integer expectedVersion,String kind) {
         if(!Arrays.asList("SCAN","GPS","ANSWER").contains(kind))throw new IllegalArgumentException("到达来源不支持");
+        if(actionId==null || !actionId.matches("[A-Za-z0-9:_-]{1,80}") || expectedVersion==null || expectedVersion<0 || nodeId==null || nodeId<=0)throw new IllegalArgumentException("必须提供到达动作标识、目标和期望版本");
         requireScope(memberId,topicId,activityId);
         TopicRouteSession session=currentSession(memberId,topicId,activityId);
-        if(!genericPlayer(session) || !Integer.valueOf(TopicRouteSession.STATUS_RUNNING).equals(session.getStatus()))throw new ServiceException("本局不是运行中的通用个人局",409);
-        String key="arrival:"+kind+":"+(actionId==null?java.util.UUID.randomUUID().toString():actionId);
-        if(!key.matches("[A-Za-z0-9:_-]{1,96}"))throw new IllegalArgumentException("扫码动作标识不正确");
+        if(!genericPlayer(session))throw new ServiceException("本局不是通用个人局",409);
+        String key="arrival:"+actionId;
+        String receiptId="arrival-receipt:"+routeIntentFingerprint(Arrays.asList("arrival:v2",key,kind,nodeId,expectedVersion));
         TopicRouteAction replay=routeMapper.selectActionByAction(session.getId(),memberId,key);
-        if(replay!=null){if(!nodeId.equals(replay.getNodeId()))throw new ServiceException("动作标识已用于其他站点",409);return JSON.convertValue(validator.readTree(replay.getResponseJson()),new TypeReference<Map<String,Object>>(){});}
-        if(expectedVersion!=null && !expectedVersion.equals(session.getVersion()))throw new ServiceException("本局已更新，请刷新",409);
+        if(replay!=null){if(!receiptId.equals(replay.getReceiptId()))throw new ServiceException("动作标识已用于其他输入",409);return JSON.convertValue(validator.readTree(replay.getResponseJson()),new TypeReference<Map<String,Object>>(){});}
+        for(String legacyKind:Arrays.asList("SCAN","GPS","ANSWER")) {
+            if(routeMapper.selectActionByAction(session.getId(),memberId,"arrival:"+legacyKind+":"+actionId)!=null)throw new ServiceException("历史到达身份缺少原版本指纹，请核对原回执",409);
+        }
+        if(!Integer.valueOf(TopicRouteSession.STATUS_RUNNING).equals(session.getStatus()))throw new ServiceException("本局已结束",409);
+        if(!expectedVersion.equals(session.getVersion()))throw new ServiceException("本局已更新，请刷新",409);
         if(!canPlay(memberId,topicId,activityId,nodeId,actionId))throw new ServiceException("该站当前不可到达",409);
         TopicRouteEngine.State state=readEngineState(session.getStateJson());state.getThemeRuntime().with("gameplay").with("arrivals").put(String.valueOf(nodeId),true);
         state.getThemeRuntime().with("gameplay").with("arrivalFacts").putObject(String.valueOf(nodeId)).put("kind",kind).put("receiptId",key).put("arrivedAt",clock.millis());bindBasicCompletion(session,state,nodeId);
-        TopicRouteAction action=new TopicRouteAction();action.setSessionId(session.getId());action.setMemberId(memberId);action.setNodeId(nodeId);action.setActionId(key);action.setReceiptId(key);action.setOutcomeCode("TASK_ARRIVAL");action.setResponseJson("{}");action.setCreateTime(new Date(clock.millis()));
+        TopicRouteAction action=new TopicRouteAction();action.setSessionId(session.getId());action.setMemberId(memberId);action.setNodeId(nodeId);action.setActionId(key);action.setReceiptId(receiptId);action.setOutcomeCode("TASK_ARRIVAL");action.setResponseJson("{}");action.setCreateTime(new Date(clock.millis()));
         try {if(routeMapper.insertAction(action)!=1)throw new IllegalStateException("扫码回执登记失败");}
-        catch(DuplicateKeyException duplicate){TopicRouteAction winner=routeMapper.selectActionByAction(session.getId(),memberId,key);if(winner==null || !nodeId.equals(winner.getNodeId()))throw new ServiceException("动作标识已用于其他站点",409);return JSON.convertValue(validator.readTree(winner.getResponseJson()),new TypeReference<Map<String,Object>>(){});}
+        catch(DuplicateKeyException duplicate){TopicRouteAction winner=routeMapper.selectActionByAction(session.getId(),memberId,key);if(winner==null || !receiptId.equals(winner.getReceiptId()))throw new ServiceException("动作标识已用于其他输入",409);return JSON.convertValue(validator.readTree(winner.getResponseJson()),new TypeReference<Map<String,Object>>(){});}
         Integer version=session.getVersion();session.setStateJson(write(state));session.setUpdateTime(new Date(clock.millis()));
         if(routeMapper.updateStateCas(session)!=1)throw new ServiceException("本局已更新，请刷新",409);
         session.setVersion(version+1);Map<String,Object> view=themeViewOf(session);
@@ -4452,7 +4462,8 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         TopicRouteSession session=routeMapper.selectAccessibleById(sessionId,memberId);
         if(session==null)throw new ServiceException("本局不存在或无权操作",403);
         if(!genericPlayer(session))throw new ServiceException("本局不是通用个人局",409);
-        String key="gameplay:"+actionId,receiptId="gameplay-receipt:"+shortHash(key+":"+operation+":"+contentId+":"+choiceKey+":"+discardRewards+":"+previewVersion+(costOption==null?"":":"+costOption)+(weRun==null?"":":"+shortHash(weRun.toString())));
+        if(version==null || version<0)throw new IllegalArgumentException("必须提供期望版本");
+        String key="gameplay:"+actionId,receiptId="gameplay-receipt:"+routeIntentFingerprint(Arrays.asList("gameplay:v2",key,version,operation,contentId,choiceKey,discardRewards,previewVersion,costOption,weRun));
         TopicRouteAction replay=routeMapper.selectActionByAction(sessionId,memberId,key);
         if(replay!=null){if(!receiptId.equals(replay.getReceiptId()))throw new ServiceException("动作标识已用于其他操作",409);return JSON.convertValue(validator.readTree(replay.getResponseJson()),new TypeReference<Map<String,Object>>(){});}
         requireScope(memberId,session.getTopicId(),session.getActivityId());
@@ -4542,8 +4553,9 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         if(session==null)throw new ServiceException("本局不存在或无权操作",403);
         if (operation == null || !java.util.Arrays.asList("USE","DISCARD","RECEIVE","END","RESCUE","CHAPTER_START","CHAPTER_END").contains(operation) || (!"END".equals(operation) && !"RESCUE".equals(operation) && (contentId == null || contentId.length() > 96))) throw new IllegalArgumentException("动作参数不正确");
         Long actionNodeId=session.getCurrentNodeId();
+        if(version==null || version<0)throw new IllegalArgumentException("必须提供期望版本");
         String key="theme:"+actionId;
-        String receiptId="theme-receipt:"+shortHash(key+":"+operation+":"+contentId+(discardOwned==null?"":":"+discardOwned));
+        String receiptId="theme-receipt:"+routeIntentFingerprint(Arrays.asList("theme:v2",key,version,operation,contentId,discardOwned));
         TopicRouteAction replay=routeMapper.selectActionByAction(sessionId,memberId,key);
         if(replay!=null){
             if(!operation.equals(replay.getOutcomeCode()) || !receiptId.equals(replay.getReceiptId())) throw new ServiceException("动作标识已用于其他操作",409);

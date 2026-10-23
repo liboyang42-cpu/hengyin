@@ -171,6 +171,10 @@ public class ApiPlayProgressController extends BaseController
     private com.chengyinhub.business.mapper.ClubLeadMapper clubLeadMapper;
     @Autowired
     private com.chengyinhub.business.service.IGameSessionRuntimeService gameSessionRuntimeService;
+    @Autowired
+    private com.chengyinhub.business.mapper.GameSessionRuntimeMapper playCommandReceiptMapper;
+    @Autowired
+    private com.chengyinhub.business.mapper.TopicRouteSessionMapper playCommandRouteMapper;
     /** O-01 /arrive 位置守卫(第 4–7 层)与空精度开关;两个开关默认 = 现行行为,未注入时同样按现行行为 */
     @Autowired(required = false)
     private com.chengyinhub.business.service.support.ArriveLocationGuard arriveLocationGuard;
@@ -1336,16 +1340,179 @@ public class ApiPlayProgressController extends BaseController
         return "路才刚开始,慢慢逛";
     }
 
-    /**
-     * 扫码打卡：扫节点二维码(内容=checkin_code)推进进度
-     */
+    /** 基础验证动作沿用现有命令回执；不保存原答案、扫码内容或坐标。 */
+    private static class BasicIntentScope {
+        Long activityId;
+        Long topicId;
+        Long nodeId;
+        AjaxResult denied;
+    }
+
+    private BasicIntentScope basicIntentScope(Long memberId, String activityId, String topicId, String nodeId) {
+        BasicIntentScope scope = new BasicIntentScope();
+        if (memberId == null || memberId <= 0) { scope.denied = error("请先登录"); return scope; }
+        try {
+            scope.activityId = StringUtils.isBlank(activityId) ? 0L : Long.valueOf(activityId);
+            scope.nodeId = Long.valueOf(nodeId);
+            if (scope.activityId < 0 || scope.nodeId <= 0) throw new IllegalArgumentException();
+            CmsTopicNode node = cmsTopicNodeService.selectCmsTopicNodeById(scope.nodeId);
+            if (node == null || node.getTopicId() == null) { scope.denied = error("节点不存在"); return scope; }
+            scope.topicId = node.getTopicId();
+            if (scope.activityId > 0) {
+                CmsActivity activity = cmsActivityService.selectCmsActivityById(scope.activityId);
+                if (activity == null || !scope.topicId.equals(activity.getTopicId())) { scope.denied = error("该节点不属于本次活动"); return scope; }
+            } else if (!scope.topicId.equals(Long.valueOf(topicId))) {
+                scope.denied = error("该节点不属于本主题"); return scope;
+            }
+        } catch (IllegalArgumentException e) { scope.denied = error("参数有误"); return scope; }
+        // 读回执仍须证明当前主体拥有本场/本主题的已支付报名。时效和实体版本仅在新写时校验。
+        CmsRegistration query = new CmsRegistration(); query.setMemberId(memberId);
+        query.setOwnerType(scope.activityId > 0 ? 2L : 1L);
+        query.setOwnerId(scope.activityId > 0 ? scope.activityId : scope.topicId);
+        query.setPaymentStatus(2); query.setRegistrationStatus(2);
+        List<CmsRegistration> registrations = cmsRegistrationService.selectCmsRegistrationList(query);
+        if (registrations == null || registrations.stream().noneMatch(row -> row != null
+                && memberId.equals(row.getMemberId()) && query.getOwnerType().equals(row.getOwnerType())
+                && query.getOwnerId().equals(row.getOwnerId()) && Integer.valueOf(2).equals(row.getPaymentStatus())
+                && Integer.valueOf(2).equals(row.getRegistrationStatus()))) scope.denied = error("无权读取本次游玩命令");
+        return scope;
+    }
+
+    @GetMapping("/action-context")
+    @Transactional(readOnly = true)
+    public AjaxResult basicActionContext(String activityId, String topicId, String nodeId) {
+        Long memberId = currentMemberId();
+        BasicIntentScope scope = basicIntentScope(memberId, activityId, topicId, nodeId);
+        if (scope.denied != null) return scope.denied;
+        return AjaxResult.success(basicActionContext(memberId, scope));
+    }
+
+    private Map<String, Object> basicActionContext(Long memberId, BasicIntentScope scope) {
+        Map<String, Object> context = new java.util.LinkedHashMap<>();
+        com.chengyinhub.business.domain.GameSession sharedSession = playCommandReceiptMapper.selectSessionByActivity(scope.activityId);
+        com.fasterxml.jackson.databind.JsonNode shared = gameSessionRuntimeService == null ? null
+                : gameSessionRuntimeService.sharedRouteSnapshot(memberId, scope.topicId, scope.activityId, scope.nodeId);
+        if (shared != null) {
+            if (sharedSession == null || shared.path("runtimeInstance").asText().isEmpty()
+                    || !shared.path("authorityEpoch").canConvertToInt()) throw new IllegalStateException("本场缺少动作权威身份");
+            context.put("routeSessionId", sharedSession.getId()); context.put("expectedRouteVersion", sharedSession.getRevision());
+            context.put("runtimeInstance", shared.path("runtimeInstance").asText()); context.put("authorityEpoch", shared.path("authorityEpoch").asInt());
+            return context;
+        }
+        com.chengyinhub.business.domain.TopicRouteSession session = playCommandRouteMapper.selectCurrentByOwner(scope.activityId, scope.topicId, memberId);
+        if (session == null) session = playCommandRouteMapper.selectByOwner(scope.activityId, scope.topicId, memberId, "default");
+        context.put("routeSessionId", session == null ? 0L : session.getId());
+        context.put("expectedRouteVersion", session == null ? 0 : session.getVersion());
+        return context;
+    }
+
+    @GetMapping("/action-receipt")
+    @Transactional(readOnly = true)
+    public AjaxResult basicActionReceipt(String activityId, String topicId, String nodeId, String routeActionId) {
+        Long memberId = currentMemberId();
+        if (routeActionId == null || !routeActionId.matches("[A-Za-z0-9:_-]{1,80}")) return error("动作标识无效");
+        BasicIntentScope scope = basicIntentScope(memberId, activityId, topicId, nodeId);
+        if (scope.denied != null) return scope.denied;
+        com.chengyinhub.business.domain.GameCommandReceipt receipt = playCommandReceiptMapper.selectReceipt(scope.activityId, memberId, basicRequestId(routeActionId));
+        if (receipt == null) return new AjaxResult(520, "原命令结果待确认，请稍后查询");
+        if (!scope.nodeId.equals(receipt.getNodeId()) || !"PLAYER".equals(receipt.getActorPerspective())
+                || receipt.getAction() == null || !receipt.getAction().startsWith("PLAY_BASIC_")) return error("无权读取该命令");
+        return basicReplay(receipt);
+    }
+
+    private AjaxResult executeBasicIntent(String kind, String activityId, String topicId, String nodeId,
+            String actionId, Integer expectedVersion, Long registrationId, Long routeSessionId,
+            String runtimeInstance, Integer authorityEpoch, List<?> input, java.util.function.Supplier<AjaxResult> execute) {
+        Long memberId = currentMemberId();
+        if (memberId == null || memberId <= 0) return error("请先登录");
+        if (actionId == null || !actionId.matches("[A-Za-z0-9:_-]{1,80}") || expectedVersion == null
+                || expectedVersion < 0 || routeSessionId == null || routeSessionId < 0) return error("必须提供动作标识、期望版本和原运行时身份");
+        BasicIntentScope scope = basicIntentScope(memberId, activityId, topicId, nodeId);
+        if (scope.denied != null) return scope.denied;
+        String hash = basicHash(basicJson(java.util.Arrays.asList(kind, scope.activityId, scope.topicId,
+                scope.nodeId, expectedVersion, registrationId, routeSessionId, runtimeInstance, authorityEpoch, input)));
+        String requestId = basicRequestId(actionId);
+        com.chengyinhub.business.domain.GameCommandReceipt prior = playCommandReceiptMapper.selectReceiptForUpdate(scope.activityId, memberId, requestId);
+        // 原回执先于实体当前版本、到达距离、答案、旧实例和旧 epoch 检查。
+        if (prior != null) return basicReplay(prior, hash);
+        // 锁住业务聚合后再次查同一身份：等待并发赢家期间，原回执可能已提交。
+        playCommandReceiptMapper.selectSessionByActivityForUpdate(scope.activityId);
+        com.chengyinhub.business.domain.TopicRouteSession locked = playCommandRouteMapper.selectCurrentByOwner(scope.activityId, scope.topicId, memberId);
+        if (locked == null) locked = playCommandRouteMapper.selectByOwner(scope.activityId, scope.topicId, memberId, "default");
+        if (locked != null) playCommandRouteMapper.selectAccessibleByIdForUpdate(locked.getId(), memberId);
+        prior = playCommandReceiptMapper.selectReceiptForUpdate(scope.activityId, memberId, requestId);
+        if (prior != null) return basicReplay(prior, hash);
+        Map<String, Object> current = basicActionContext(memberId, scope);
+        if (!java.util.Objects.equals(routeSessionId, current.get("routeSessionId"))
+                || !java.util.Objects.equals(expectedVersion, current.get("expectedRouteVersion"))
+                || !java.util.Objects.equals(runtimeInstance, current.get("runtimeInstance"))
+                || !java.util.Objects.equals(authorityEpoch, current.get("authorityEpoch"))) {
+            return new AjaxResult(409, "原动作状态已过期，确认后才能创建新意图").put("intentNotExecuted", true);
+        }
+        com.chengyinhub.business.domain.GameCommandReceipt claim = new com.chengyinhub.business.domain.GameCommandReceipt();
+        claim.setActivityId(scope.activityId); claim.setNodeId(scope.nodeId); claim.setActorMemberId(memberId);
+        claim.setActorPerspective("PLAYER"); claim.setRequestId(requestId); claim.setRequestHash(hash);
+        claim.setAction("PLAY_BASIC_" + kind); claim.setOutcome("PENDING"); claim.setCreateTime(new Date()); claim.setUpdateTime(new Date());
+        if (playCommandReceiptMapper.insertReceiptClaim(claim) != 1) {
+            prior = playCommandReceiptMapper.selectReceiptForUpdate(scope.activityId, memberId, requestId);
+            if (prior == null) throw new IllegalStateException("动作回执登记失败");
+            return basicReplay(prior, hash);
+        }
+        AjaxResult response = execute.get();
+        response.put("intentTerminal", true);
+        claim.setOutcome(Integer.valueOf(200).equals(response.get("code")) ? "APPLIED" : "FAILED");
+        claim.setResultJson(basicJson(response)); claim.setUpdateTime(new Date());
+        if (playCommandReceiptMapper.completeReceipt(claim) != 1) throw new IllegalStateException("动作终态回执保存失败");
+        return response;
+    }
+
+    private AjaxResult basicReplay(com.chengyinhub.business.domain.GameCommandReceipt receipt, String hash) {
+        if (!hash.equals(receipt.getRequestHash()) || !"PLAYER".equals(receipt.getActorPerspective())
+                || receipt.getAction() == null || !receipt.getAction().startsWith("PLAY_BASIC_")) return new AjaxResult(409, "动作标识已用于其他输入");
+        return basicReplay(receipt);
+    }
+
+    private AjaxResult basicReplay(com.chengyinhub.business.domain.GameCommandReceipt receipt) {
+        if (!java.util.Arrays.asList("APPLIED", "FAILED").contains(receipt.getOutcome())) return new AjaxResult(520, "原命令结果待确认，请稍后查询");
+        try { return com.chengyinhub.common.utils.JsonUtils.getObjectMapper().readValue(receipt.getResultJson(), AjaxResult.class); }
+        catch (java.io.IOException e) { throw new IllegalStateException("动作回执不可读", e); }
+    }
+
+    private String basicJson(Object value) {
+        try { return com.chengyinhub.common.utils.JsonUtils.getObjectMapper().writeValueAsString(value); }
+        catch (com.fasterxml.jackson.core.JsonProcessingException e) { throw new IllegalStateException("动作回执不可编码", e); }
+    }
+
+    private String basicHash(String value) {
+        try { return java.util.HexFormat.of().formatHex(java.security.MessageDigest.getInstance("SHA-256").digest(value.getBytes(java.nio.charset.StandardCharsets.UTF_8))); }
+        catch (java.security.NoSuchAlgorithmException e) { throw new IllegalStateException(e); }
+    }
+
+    private String basicRequestId(String actionId) { return "play:" + basicHash(actionId).substring(0, 48); }
+
+    /** 扫码打卡：原节点、输入与前置状态属于同一意图。 */
     @Operation(summary = "扫码打卡")
     @RateLimiter(time = 10, count = 120, limitType = LimitType.MEMBER)
     @PostMapping("/checkin")
     @DeadlockRetry
     @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public AjaxResult checkin(String activityId, String code, String topicId,
-            String routeActionId, Integer expectedRouteVersion, Long registrationId)
+            String routeActionId, Integer expectedRouteVersion, Long registrationId,
+            String nodeId, Long routeSessionId, String runtimeInstance, Integer authorityEpoch)
+    {
+        return executeBasicIntent("SCAN", activityId, topicId, nodeId, routeActionId, expectedRouteVersion,
+                registrationId, routeSessionId, runtimeInstance, authorityEpoch, java.util.Arrays.asList(code),
+                () -> checkinOnce(activityId, code, topicId, routeActionId, expectedRouteVersion, registrationId, nodeId, runtimeInstance, authorityEpoch));
+    }
+
+    public AjaxResult checkin(String activityId, String code, String topicId,
+            String routeActionId, Integer expectedRouteVersion, Long registrationId) {
+        return error("必须提供原目标节点和运行时身份");
+    }
+
+    private AjaxResult checkinOnce(String activityId, String code, String topicId,
+            String routeActionId, Integer expectedRouteVersion, Long registrationId, String intendedNodeId,
+            String runtimeInstance, Integer authorityEpoch)
     {
         Long memberId = currentMemberId();
         if (memberId <= 0) return error("请先登录");
@@ -1380,6 +1547,7 @@ public class ApiPlayProgressController extends BaseController
             }
             node = nodeList.get(0);
         }
+        if (!String.valueOf(node.getId()).equals(intendedNodeId)) return error("扫码节点与本次意图目标不一致");
         // 规则16:普通下架/停用节点停止新发现,旧码/旧链接不得再产生新完成;
         // 已正式完成者的幂等重试仍走原回执(与 photo 同口径,§7-2)
         if (isDelistedNode(node) && !hasCompletedNodeFact(memberId, activityId, node)) {
@@ -1426,7 +1594,7 @@ public class ApiPlayProgressController extends BaseController
             PlayerNodeProgress proof = shopDayProofService.markArrived(memberId, actId, node);
             Map<String,Object> arrivalData=shopDayProofData(node,proof);
             if(personalGameplay)arrivalData.put("themeRuntime",topicRouteRuntimeService.recordPlayerArrival(memberId,ctx.topicId,actId,node.getId(),routeActionId,expectedRouteVersion));
-            if(sharedRoute!=null)arrivalData.put("sharedRuntime",gameSessionRuntimeService.recordSharedBasicArrival(memberId,ctx.topicId,actId,node.getId(),routeActionId==null?"scan:"+java.util.UUID.randomUUID().toString():routeActionId,"SCAN",sharedRoute.path("runtimeInstance").asText("game:"+sharedRoute.path("gameSessionId").asLong()),sharedRoute.path("authorityEpoch").asInt()));
+            if(sharedRoute!=null)arrivalData.put("sharedRuntime",gameSessionRuntimeService.recordSharedBasicArrival(memberId,ctx.topicId,actId,node.getId(),routeActionId,"SCAN",runtimeInstance,authorityEpoch));
             recordFirstSuccessfulScan(memberId, ctx);
             return AjaxResult.success(personalGameplay?"已记录到达，请继续当前任务":"已记录到达，请继续本队任务", arrivalData);
         }
@@ -1504,7 +1672,20 @@ public class ApiPlayProgressController extends BaseController
     @DeadlockRetry
     @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public AjaxResult answer(String activityId, String nodeId, String answer, String topicId,
-            String routeActionId, Integer expectedRouteVersion)
+            String routeActionId, Integer expectedRouteVersion, Long routeSessionId, String runtimeInstance, Integer authorityEpoch)
+    {
+        return executeBasicIntent("ANSWER", activityId, topicId, nodeId, routeActionId, expectedRouteVersion,
+                null, routeSessionId, runtimeInstance, authorityEpoch, java.util.Arrays.asList(answer),
+                () -> answerOnce(activityId, nodeId, answer, topicId, routeActionId, expectedRouteVersion, runtimeInstance, authorityEpoch));
+    }
+
+    public AjaxResult answer(String activityId, String nodeId, String answer, String topicId,
+            String routeActionId, Integer expectedRouteVersion) {
+        return error("必须提供原运行时身份");
+    }
+
+    private AjaxResult answerOnce(String activityId, String nodeId, String answer, String topicId,
+            String routeActionId, Integer expectedRouteVersion, String runtimeInstance, Integer authorityEpoch)
     {
         Long memberId = currentMemberId();
         if (memberId <= 0) return error("请先登录");
@@ -1589,7 +1770,7 @@ public class ApiPlayProgressController extends BaseController
             PlayerNodeProgress proof = shopDayProofService.markArrived(memberId, actId, node);
             Map<String,Object> completion = shopDayProofData(node, proof);
             if (personalAnswerGameplay) completion.put("themeRuntime", topicRouteRuntimeService.recordPlayerArrival(memberId,ctx.topicId,actId,node.getId(),routeActionId,expectedRouteVersion,"ANSWER"));
-            if (sharedAnswerRoute != null) completion.put("sharedRuntime", gameSessionRuntimeService.recordSharedBasicArrival(memberId,ctx.topicId,actId,node.getId(),routeActionId==null?"answer:"+java.util.UUID.randomUUID().toString():routeActionId,"ANSWER",sharedAnswerRoute.path("runtimeInstance").asText("game:"+sharedAnswerRoute.path("gameSessionId").asLong()),sharedAnswerRoute.path("authorityEpoch").asInt()));
+            if (sharedAnswerRoute != null) completion.put("sharedRuntime", gameSessionRuntimeService.recordSharedBasicArrival(memberId,ctx.topicId,actId,node.getId(),routeActionId,"ANSWER",runtimeInstance,authorityEpoch));
             return AjaxResult.success("答案已验证，请继续当前任务", completion);
         }
         logAttempt(memberId, node, actId, 1, 1, null); // M9 答对
@@ -1981,7 +2162,21 @@ public class ApiPlayProgressController extends BaseController
     @DeadlockRetry
     @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public AjaxResult arrive(String activityId, String nodeId, String longitude, String latitude, String topicId,
-            String routeActionId, Integer expectedRouteVersion, String accuracy)
+            String routeActionId, Integer expectedRouteVersion, String accuracy, Long routeSessionId,
+            String runtimeInstance, Integer authorityEpoch)
+    {
+        return executeBasicIntent("GPS", activityId, topicId, nodeId, routeActionId, expectedRouteVersion,
+                null, routeSessionId, runtimeInstance, authorityEpoch, java.util.Arrays.asList(longitude, latitude, accuracy),
+                () -> arriveOnce(activityId, nodeId, longitude, latitude, topicId, routeActionId, expectedRouteVersion, accuracy, runtimeInstance, authorityEpoch));
+    }
+
+    public AjaxResult arrive(String activityId, String nodeId, String longitude, String latitude, String topicId,
+            String routeActionId, Integer expectedRouteVersion, String accuracy) {
+        return error("必须提供原运行时身份");
+    }
+
+    private AjaxResult arriveOnce(String activityId, String nodeId, String longitude, String latitude, String topicId,
+            String routeActionId, Integer expectedRouteVersion, String accuracy, String runtimeInstance, Integer authorityEpoch)
     {
         Long memberId = currentMemberId();
         if (memberId <= 0) return error("请先登录");
@@ -2112,7 +2307,7 @@ public class ApiPlayProgressController extends BaseController
 
         if(personalArrival || sharedArrival!=null) {PlayerNodeProgress proof=shopDayProofService.markArrived(memberId,actId,node);Map<String,Object> data=shopDayProofData(node,proof);
             if(personalArrival)data.put("themeRuntime",topicRouteRuntimeService.recordPlayerArrival(memberId,ctx.topicId,actId,node.getId(),routeActionId,expectedRouteVersion,"GPS"));
-            if(sharedArrival!=null)data.put("sharedRuntime",gameSessionRuntimeService.recordSharedBasicArrival(memberId,ctx.topicId,actId,node.getId(),routeActionId==null?"gps:"+java.util.UUID.randomUUID().toString():routeActionId,"GPS",sharedArrival.path("runtimeInstance").asText("game:"+sharedArrival.path("gameSessionId").asLong()),sharedArrival.path("authorityEpoch").asInt()));
+            if(sharedArrival!=null)data.put("sharedRuntime",gameSessionRuntimeService.recordSharedBasicArrival(memberId,ctx.topicId,actId,node.getId(),routeActionId,"GPS",runtimeInstance,authorityEpoch));
             recordFirstSuccessfulScan(memberId,ctx);return AjaxResult.success("已记录本局到达，请继续当前任务或操作",data);}
         logAttempt(memberId, node, actId, 3, 1, null); // M9 GPS到达成功
         Map<String, Object> data = advanceProgress(memberId, node, actId, null, null, null,

@@ -105,6 +105,9 @@ class PlayKitPhotoCheckRuntimeTest {
         ReflectionTestUtils.setField(service, "random", (AdvancedGameRandom) bound -> 0);
 
         visionService = new PhotoCheckVisionService();
+        com.chengyinhub.business.service.ai.AiGatewayService quota = mock(com.chengyinhub.business.service.ai.AiGatewayService.class);
+        when(quota.consumeQuota(MEMBER_ID, "photo_check")).thenReturn("reservation");
+        ReflectionTestUtils.setField(visionService, "aiGatewayService", quota);
         org.springframework.test.util.ReflectionTestUtils.setField(visionService, "consentGuard", org.mockito.Mockito.mock(com.chengyinhub.business.service.ConsentGuard.class));
         com.chengyinhub.business.mapper.AppMediaAssetMapper reviewedImages = mock(com.chengyinhub.business.mapper.AppMediaAssetMapper.class);
         when(reviewedImages.selectByObjectKey("/profile/upload/2026/10/12/0123456789abcdef0123456789abcdef.jpg")).thenReturn(Map.of(

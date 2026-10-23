@@ -1,0 +1,18 @@
+✔ LINEAR 保持按 sortId 选择第一未完成节点 (1.703002ms)
+✔ BRANCH_GRAPH 只认服务端当前节点，不能被更小 sortId 覆盖 (1.094394ms)
+✔ BRANCH_GRAPH 缺失或非法节点状态时 fail closed，不回退本地排序 (0.238963ms)
+✔ 节点完成回执已确认但新 routeState 尚未读回时，不把旧 currentNode 再推荐一次 (1.723283ms)
+✔ 手记和进行中路线按 decisionLog 的真实选择排序且不泄露未选支线 (0.468732ms)
+✔ 完成动作超时重试复用 routeActionId，并且上下文无法携带客户端目标 (0.412078ms)
+✔ 版本冲突识别同时兼容 HTTP envelope 与 AjaxResult code/message (0.372689ms)
+✔ 念头进度要带到页面上 —— 归一化是白名单,漏登记就等于服务端没下发 (0.150452ms)
+✔ 畸形念头项直接丢掉,不让它把菜单渲染成空白行 (0.186716ms)
+✔ 没有念头时给空数组,页面不用到处判 null (0.668576ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 10
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 14.662786

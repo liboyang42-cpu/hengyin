@@ -1,0 +1,42 @@
+-- Test fixture copied from the public baseline; no data or production configuration.
+CREATE TABLE ums_member(id BIGINT PRIMARY KEY, balance DECIMAL(15,2)) ENGINE=InnoDB;
+CREATE TABLE merchant_referral_bounty(id BIGINT PRIMARY KEY, inviter_member_id BIGINT, status INT, bounty_amount DECIMAL(15,2), frozen_until DATETIME(3), del_flag CHAR(1), INDEX(inviter_member_id)) ENGINE=InnoDB;
+CREATE TABLE player_withdrawal_cooldown(id BIGINT PRIMARY KEY, member_id BIGINT, amount DECIMAL(15,2), cooldown_until DATETIME(3), INDEX(member_id)) ENGINE=InnoDB;
+CREATE TABLE `member_cash_withdraw` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `member_id` bigint NOT NULL COMMENT '提现会员(商家/主理人)',
+  `openid` varchar(64) DEFAULT NULL COMMENT '收款人微信openid',
+  `amount` decimal(15,2) NOT NULL COMMENT '提现金额(元)',
+  `out_batch_no` varchar(64) DEFAULT NULL COMMENT '商户批次单号(幂等键=CW+id)',
+  `out_detail_no` varchar(64) DEFAULT NULL COMMENT '商户明细单号',
+  `transfer_batch_id` varchar(64) DEFAULT NULL COMMENT '微信批次单号',
+  `wechat_detail_id` varchar(64) DEFAULT NULL COMMENT '微信明细号(渠道侧detail_id,对账用)',
+  `status` tinyint(1) NOT NULL DEFAULT '0' COMMENT '0处理中 1成功 2失败',
+  `fail_reason` varchar(255) DEFAULT NULL COMMENT '失败原因',
+  `channel_error_code` varchar(64) DEFAULT NULL COMMENT '渠道错误码(微信FailReasonType枚举/ServiceException.getErrorCode(),机器可读,区别于fail_reason人类文案)',
+  `create_time` datetime DEFAULT NULL,
+  `finish_time` datetime DEFAULT NULL COMMENT '出金完成/失败时间',
+  `del_flag` tinyint(1) NOT NULL DEFAULT '0' COMMENT '0存在 2删除',
+  `wechat_batch_status` varchar(32) DEFAULT NULL COMMENT '微信批次状态',
+  `submit_time` datetime DEFAULT NULL COMMENT '提交微信时间',
+  `last_query_time` datetime DEFAULT NULL COMMENT '最后查询微信时间',
+  `balance_deduct_id` bigint DEFAULT NULL COMMENT '余额扣减流水ID',
+  `balance_refund_id` bigint DEFAULT NULL COMMENT '余额回补流水ID',
+  `manual_operator` varchar(64) DEFAULT NULL COMMENT '人工处理人',
+  `manual_verifier` varchar(64) DEFAULT NULL COMMENT '人工回补第二复核人(须与处理人不同)',
+  `manual_note` varchar(500) DEFAULT NULL COMMENT '人工处理说明',
+  `trace_id` varchar(64) DEFAULT NULL COMMENT '审计 trace id',
+  `pending_member_key` bigint GENERATED ALWAYS AS ((case when (`status` in (0,3,4)) then `member_id` else NULL end)) VIRTUAL COMMENT '在途(0/3/4)时=member_id,用于唯一约束原子防重',
+  `audit_by` bigint DEFAULT NULL COMMENT '审计操作人ID(自助=memberId,人工=operatorId,自动=0)',
+  `audit_time` datetime DEFAULT NULL COMMENT '审计操作时间',
+  `frozen` tinyint(1) DEFAULT '0' COMMENT 'P块冻结:1=冻结中(暂停自动化处理,不动余额),0/NULL=未冻结',
+  `frozen_reason` varchar(255) DEFAULT NULL COMMENT '冻结原因(运营填写)',
+  `frozen_by` varchar(64) DEFAULT NULL COMMENT '冻结操作人(sys_user.user_name)',
+  `frozen_at` datetime DEFAULT NULL COMMENT '冻结时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_cw_out_batch` (`out_batch_no`),
+  UNIQUE KEY `uk_pending_member` (`pending_member_key`),
+  KEY `idx_cw_member` (`member_id`),
+  KEY `idx_cw_status` (`status`),
+  KEY `idx_mcw_status_query` (`status`,`last_query_time`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='微信零钱提现单(真实出金)';

@@ -1,0 +1,51 @@
+# F：架构增量门禁与报告回读
+
+本工具使用 Python 标准库，只做可可靠识别的源级检查。它不要求普通 Java/测试/文档变化提交七项 JSON 审批或 Java 测试回执；审阅仍走正常 PR code review。源码门禁和真实测试回读是两个独立入口。
+
+## 固定存量，增量比较
+
+`baseline.json` 始终从公共 `2ec68899099a1e250df0949a8383bf85b5d3ffe0` 的 git blob 精确再生成核对，保持 2,948 条 Mapper 语句、94 条依赖声明、表字段写入口提示及传递 include 指纹；不按新候选重建、增补例外。其字节及 verifier 的修改需要受信任 verifier 的新固定 SHA，不能由候选自豁免。普通门禁测试、README 变化本身不阻断。
+
+本次影响另用可信 GitHub CI 事件校验的 `--compare-base`，不是永远 diff 2ec→candidate：
+
+- PR：candidate 为事件中的完整 head SHA，compare-base 必须等于 head 与事件 base SHA 的唯一实际 merge-base。CI checkout 必须是该 head 或父节点恰为 base/head 的 synthetic merge。
+- push：candidate 与事件 after、GITHUB_SHA 相等，compare-base 必须是事件 before，并且为 candidate 祖先；全零 before、非祖先强推等不能静默改用旧 baseline。
+- workflow_dispatch：candidate 为 GITHUB_SHA，比较其第一父提交。
+- 缺可信 CI 上下文、错误仓库、短 SHA、任意祖先冒充 merge-base、自身充当 base 均拒绝。GitHub 事件文件和 verifier 必须由受信任工作流提供；这是 CI 来源信任，不是本地环境变量的密码学证明。
+
+已进入比较 base 的历史改动不重复列出，也不修改固定存量 baseline。owner 检查从比较 base 中可明确识别的字面写目标取得技术 Mapper/module 写入口；历史已审 writer 不要求后续每个 PR 重审。
+
+## 自动阻断与审阅项
+
+| 类型 | 自动行为与界限 |
+| --- | --- |
+| 新增依赖/扩大 scope | 比较标准化 group/artifact/type/classifier、声明数量及已知 scope 使用范围；新增坐标、增量声明、test→compile 等扩大为红。仅格式、版本变化或 compile→runtime 不作为新增依赖，POM 仍列审阅项。不是 effective POM/传递依赖分析。 |
+| 跨技术 owner 写 | 新/变更语句的字面写目标是已有表，而 module/Mapper namespace 不在比较 base 的已知写入口中，判红。表名不明确或新表无既定 owner，列 UNKNOWN，不猜归属。 |
+| 明确无作用域写 | 新/变更的可识别字面 UPDATE/DELETE 缺 WHERE 或 WHERE 恒为 1=1/true，判红。复用 `ci/sql_splitter.py` 处理引号/注释，避免字符串中的 where 伪装作用域；select 标签伪装的直接 DML 同样检查。 |
+| 动态/复杂 SQL、include | 不做完整 SQL 语义证明。动态标签/表名、未解析/循环 refid、复杂 SQL、删除语句、新表等输出 `review_items`，交普通 PR 审阅。保留跨 namespace 传递 include 指纹和片段文件级提示，动态 refid 片段变化不会漏出清单。 |
+| Java、测试、workflow 变化 | 不是违规本身，不要求 JSON 审批/Java 报告；由既有测试/成本/报告门禁及 PR review 处理。不声明自动证明 JDBC、反射、授权、事务、版本/CAS、意图/恢复和拒绝零副作用。 |
+
+`findings` 是可识别阻断项，非空退出 1；`review_items` 是仍需审阅的未知/合同提示，单独存在不导致退出 1。`PASS` 或 `PASS_WITH_REVIEW_ITEMS` 只代表该源级检查，没有表示业务合同安全或后端测试通过。
+
+`owners.json` 解释技术入口含义；`commands.json` 仍是四条高风险业务链的代码/恢复源/已有测试参考，不是审批 JSON 或运行时合规认证。scope、唯一身份、关键意图、版本/CAS、恢复调度和原子提交只有业务 owner+相应故障/并发测试才能确认；静态解析做不到的必须保留在 PR 审阅中。
+
+## 运行与 CI 接线
+
+```sh
+python3 -m unittest discover -s ci/architecture -p 'test_*.py' -v
+# CI 环境中，用固定版本 verifier 扫描独立 candidate worktree：
+python3 gate/ci/architecture/gate.py source --source candidate \
+  --candidate "$SOURCE_SHA" --compare-base "$COMPARISON_BASE_SHA"
+```
+
+`.github/workflows/ci.yml` 在既有无条件 `fast_gates` 尾部增加架构步骤，不新增 job/matrix、不改既有检查条件和 `max-parallel: 20`。checkout verifier 使用固定完整 SHA；自测从该受信任版本执行。candidate 使用本 job 唯一临时 worktree，完整历史读取；`if: !cancelled()` 保留前序失败后的诊断，阻断退出码不会吞掉；上传 findings/review_items，清理只触及本 job 的 worktree。
+
+PR 架构检查使用 PR head；原 Backend job 仍按既有 checkout 检查 integrated merge。输出明确区分 candidate_sha 和 ci_checkout_sha，不能把一个 SHA 的 Java 报告当另一个 SHA 的验收。手动冻结候选使用 workflow_dispatch 可统一在该候选 SHA 上实跑。
+
+## 现有报告机制
+
+`evidence --plan ... --receipt ... --reports ...` 是独立的一致性辅助入口，先复用受信任 `ci/assert_it_ran.py`，再核对全限定类名、精确 testcase、报告集合/哈希、candidate/run/attempt 和 Maven exit code。缺报告、零用例、skip、失败/error/flaky、重复 testcase、错候选、错 attempt 必须红。它没有接成普通源码变更的额外审批门槛。
+
+真实 Java/MySQL/Redis 验证继续使用现有批准的 `ci/backend-test.sh`、`ci/funds_it_gate.py`、`ci/real_storage_it.py` 及其 GitHub-hosted scratch workflow。不要把合成 XML 自测、push 总绿或路径过滤 skipped 当成 Backend tests 实跑。回读工具不独立证明存储身份、报告生产者诚实或测试语义覆盖。
+
+当前交付和合法 Java 执行入口见 `docs/delivery/architecture-day/F/FOLLOWUP.md`。旧 `REPORT.md`/verification 是 941612/1ce413 阶段的历史结果，不适用于本轮未提交代码。

@@ -105,7 +105,7 @@ test('共享未知结算读到匹配 APPLIED 才解锁，个人没有 receipt GE
 test('通用到达请求响应丢失立刻权威读回，不留可重写的网络重试', async () => {
   const { page, app, calls } = loadPage(); page.data.themeBag = backpack.present(pending, []); page._withThoughtSync = job => Promise.resolve().then(job);
   page._sessionParams = () => ({ activityId: 5 });
-  app.sendRequest = options => { calls.push(options); options.fail(); };
+  app.sendRequest = options => { calls.push(options); if (options.url === '/api/play/action-context') options.success({ code: 200, data: { routeSessionId: 0, expectedRouteVersion: 0 } }); else options.fail(); };
   await page.arrive(41, 'arrive'); await new Promise(resolve => setImmediate(resolve));
   assert.ok(page.reads || page.bagReads); assert.equal(page._arrivalWriteUnknown, true);
   await page.arrive(41, 'arrive'); assert.equal(calls.filter(c => c.method === 'POST').length, 1);

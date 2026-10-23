@@ -1,0 +1,78 @@
+{
+  "kind": "PYTHON_STATIC_SELFTESTS_ONLY",
+  "source_sha": "941612b0ee71a536168a9b103878d834019ae632",
+  "base_sha": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+  "started_at_utc": "2026-10-23T19:16:09.135559+00:00",
+  "checks": [
+    {
+      "name": "source-check",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "ci/architecture/gate.py",
+        "source",
+        "--source",
+        "/workspace/hengyin-architecture-f",
+        "--candidate",
+        "941612b0ee71a536168a9b103878d834019ae632"
+      ],
+      "exit_code": 0,
+      "log": "source-check.log",
+      "sha256": "982bdda3a52c80ff87e9733859a71b3ce2f9fda3c20aa502a93d1033eea03fe6"
+    },
+    {
+      "name": "architecture-selftests",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "ci/architecture",
+        "-p",
+        "test_*.py",
+        "-v"
+      ],
+      "exit_code": 0,
+      "log": "architecture-selftests.log",
+      "sha256": "540685b6c35e76931c21db0522535b6ee913e70cf23cf72413b329874506b9ca"
+    },
+    {
+      "name": "existing-assert-selftests",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "-m",
+        "unittest",
+        "ci/test_assert_it_ran.py",
+        "-v"
+      ],
+      "exit_code": 0,
+      "log": "existing-assert-selftests.log",
+      "sha256": "03f0d605d6bf1ad0ac899fce32f4c64774c4fa1d9e808fa6b9419ec98ef3cc9c",
+      "environment": {
+        "GATE_SELFTEST": "1",
+        "GATE": "/workspace/hengyin-architecture-f/ci/assert_it_ran.py"
+      }
+    },
+    {
+      "name": "diff-check",
+      "command": [
+        "git",
+        "diff",
+        "--check",
+        "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+        "941612b0ee71a536168a9b103878d834019ae632"
+      ],
+      "exit_code": 0,
+      "log": "diff-check.log",
+      "sha256": "ae777c39bf64a202a3c959b1da23772bc298f302d88f7d2ffc1b6e29104b57a5"
+    }
+  ],
+  "not_run": [
+    "Java compilation",
+    "Java unit tests",
+    "MySQL",
+    "Redis",
+    "HTTP/business chain",
+    "GitHub CI"
+  ]
+}
