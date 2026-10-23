@@ -98,7 +98,7 @@ function assertReceiptUnknown(data, source) {
   assert.equal(h.events.length, 0, '未知回执不能发完成事件或开码')
   assert.equal(h.notices.includes('打卡成功'), false)
   h.instance.recoverInteraction(); h.get()
-  assert.equal(h.posts().length, 1, '只能 GET 核对，不能重放 POST')
+  assert.equal(h.posts().length, 1, '只能 GET 确认，不能重放 POST')
 }
 
 for (const couponId of [null, undefined, 0, -1, true, '088', 'x', [], {}]) {

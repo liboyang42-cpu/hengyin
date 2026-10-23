@@ -201,10 +201,9 @@
 .npc-voice-hold::after { border: 0; }
 .npc-voice-hold--active { transform: scale(.98); }
 .npc-voice-hold[disabled] { opacity: .58; color: var(--cy-color-text-inverse); }
+/* 录完确认是录音卡里的一段(L09 统一版式),不再自带第二层卡片底 */
 .npc-voice-complete {
-  padding: var(--cy-space-4) var(--cy-space-3);
-  border-radius: var(--cy-radius-lg);
-  background: var(--cy-color-bg-surface-subtle);
+  padding: var(--cy-space-4) 0;
   text-align: center;
 }
 .npc-voice-complete__title {

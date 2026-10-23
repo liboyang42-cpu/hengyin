@@ -1,7 +1,7 @@
 'use strict';
 
-// BL-207 官方邀约:已有列表时刷新失败要按来源给反馈——下拉失败轻提示、动作后回读失败提示未同步并清掉回读期望,
-// onShow 静默回读失败不提示;首屏失败仍进错误态。
+// BL-207 官方邀约:已有列表时刷新失败要按来源给反馈——下拉失败轻提示、动作后刷新失败提示未同步并清掉刷新期望,
+// onShow 静默刷新失败不提示；首屏失败仍进错误态。
 const assert = require('node:assert/strict');
 const path = require('node:path');
 const test = require('node:test');
@@ -60,18 +60,18 @@ test('下拉刷新失败:轻提示「刷新失败，稍后再试」并保留列�
   assert.ok(h.stops() >= 2, '下拉失败也要收转圈');
 });
 
-test('动作成功后回读失败:提示「已提交，状态未同步」并清掉回读期望', () => {
+test('动作成功后刷新失败:提示「已提交，状态未同步」并清掉刷新期望', () => {
   const h = loaded();
   h.page._submitAction({ partyId: 21, action: 'accept', organizerInvite: false, isAccept: true });
   h.finish(h.requests[1], (r) => r.success({ code: 200 }));
   assert.equal(h.requests[2].method, 'GET');
   h.finish(h.requests[2], (r) => r.success({ code: 500 }));
-  assert.ok(h.toasts.includes('已提交，状态未同步，稍后下拉刷新'));
+  assert.ok(h.toasts.includes('已提交，稍后下拉刷新查看状态'));
   assert.equal(h.page._expectReadback, null);
-  assert.equal(h.page.data.invites[0].status, 'INVITED', '回读失败不假更新列表');
+  assert.equal(h.page.data.invites[0].status, 'INVITED', '刷新失败不假更新列表');
 });
 
-test('onShow 静默回读失败不提示;首屏失败仍进错误态', () => {
+test('onShow 静默刷新失败不提示；首屏失败仍进错误态', () => {
   const h = loaded();
   h.page.onShow();
   h.finish(h.requests[1], (r) => r.fail({ errMsg: 'request:fail' }));

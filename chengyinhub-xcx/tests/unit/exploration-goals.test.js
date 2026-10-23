@@ -16,7 +16,7 @@ test('creates with original request and exact fields; same payload double tap jo
 });
 test('network uncertainty preserves exact original payload and explicit retry', async () => {
   const s = setup(); const a = s.client.create(draft); s.sent[0].fail(); await assert.rejects(a);
-  await assert.rejects(s.client.create({ ...draft, target: 3 }), /原请求/);
+  await assert.rejects(s.client.create({ ...draft, target: 3 }), /上一个目标/);
   const b = s.client.retry(); assert.equal(s.sent[1].data, s.sent[0].data); ok(s.sent[1]); await b;
 });
 test('first deterministic rejection releases pending request so correction is possible', async () => {
@@ -45,7 +45,7 @@ test('404 receipt is not proof of no commit; retain original', async () => {
 });
 test('receipt with original key but changed body cannot resolve unknown', async () => {
   const s = setup(); const a = s.client.create(draft); s.sent[0].fail(); await assert.rejects(a);
-  const b = s.client.receipt(draft.requestId); ok(s.sent[1], { ...row, target: 3 }); await assert.rejects(b, /不匹配/); assert.equal(s.client.pendingRequestId(), draft.requestId);
+  const b = s.client.receipt(draft.requestId); ok(s.sent[1], { ...row, target: 3 }); await assert.rejects(b, /异常/); assert.equal(s.client.pendingRequestId(), draft.requestId);
 });
 test('old account and same-member new login callbacks cannot expose goal data', async () => {
   for (const owner of ['8:login-1', '7:login-2', '']) {

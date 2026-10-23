@@ -104,12 +104,12 @@ function emptyStateCopy(radiusM, suggested) {
       title: '还没有局',
       sub: '雾再远一点,' + fmtKm(suggested.radius) + ' 内有 ' + Number(suggested.count) + ' 个局在约。',
       primary: '看远一点',
-      secondary: '或者,在这里开一局',
+      secondary: '或者，在这里开一局',
       action: 'expand',
       radiusText: here,
     };
   }
-  return { title: '还没有局', sub: '开一个,让附近的人找到你。', primary: '在这里开一局', secondary: '', action: 'create', radiusText: here };
+  return { title: '还没有局', sub: '开一个，让附近的人找到你。', primary: '在这里开一局', secondary: '', action: 'create', radiusText: here };
 }
 
 /** 建局表单校验;返回 null 表示通过,否则返回第一条错误文案(指明哪道闸)。 */

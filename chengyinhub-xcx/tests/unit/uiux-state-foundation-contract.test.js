@@ -114,7 +114,7 @@ test('cy-state-shell 统一语义、主题、aria 与双动作；没有显式文
   assert.equal(instance.data._renderer, 'empty');
   assert.equal(instance.data._emptyKind, 'offline');
   assert.equal(instance.data._title, '网络没连上');
-  assert.equal(instance.data._sub, '连接恢复后可继续');
+  assert.equal(instance.data._sub, '');
   instance.onPrimary();
   instance.onSecondary();
   assert.deepEqual(instance.events.map((event) => event.name), ['primary', 'secondary']);
@@ -149,11 +149,11 @@ test('cy-inline-error 区分 network / data，保留单一局部恢复动作', (
   const network = resolve('network');
   assert.equal(network.data._glyph, 'warning');
   assert.equal(network.data._title, '网络没连上');
-  assert.equal(network.data._sub, '连接恢复后可继续');
+  assert.equal(network.data._sub, '');
   const data = resolve('data');
   assert.equal(data.data._glyph, 'info');
   assert.equal(data.data._title, '这部分没更新成功');
-  assert.equal(data.data._sub, '已有内容仍可查看');
+  assert.equal(data.data._sub, '');
 
   data.onAction();
   assert.deepEqual(data.events.map((event) => event.name), ['action']);

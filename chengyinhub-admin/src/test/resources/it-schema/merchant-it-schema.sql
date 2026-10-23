@@ -4,6 +4,7 @@
 --   2026-08-24 mms_merchant_member_index(idx_mms_merchant_member)、
 --   2026-09-12 derivative_benefits(derivative_benefits)、
 --   2026-09-15 disable_reason(R9-35,平台停用原因;只由平台停用入口写入,启用时清空)。
+--   2026-10-22 merchant_wechat_qrcode(wechat_qrcode)、merchant_category_ids(category_ids)。
 -- 因此本文件是「基线快照 + 已合入迁移投影」,不是单次 SHOW CREATE TABLE 的未裁剪副本。
 --
 -- 为什么需要:平台停用/启用写入链路(disable_reason)与 MmsMerchantMapper 的列映射,
@@ -16,6 +17,8 @@ CREATE TABLE `mms_merchant` (
   `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '商家名称',
   `wechat` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT '' COMMENT '微信二维码',
   `category_id` int DEFAULT '0' COMMENT '分类ID',
+  `wechat_qrcode` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '门店微信二维码图片URL',
+  `category_ids` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '行业类型多选(逗号分隔sys_category.id)',
   `logo` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '商家LOGO',
   `description` varchar(1000) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '介绍',
   `derivatives` varchar(1000) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '衍生品',

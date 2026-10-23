@@ -91,11 +91,11 @@ test('O-09 勋章墙:切后台 + 改手机时间后回来,计数与获得日期�
   nowMs += 400 * 24 * 3600 * 1000 // 后台期间手机时间被拨快一年多
   const sent = requests.length
   page.onShow()
-  assert.equal(requests.length, sent, '同一账号回前台不重复拉取,读数保持服务端那一份')
+  assert.equal(requests.length, sent, '同一账号回前台不重复拉取，读数保持服务端那一份')
   assert.deepEqual(snapshot(page), before)
 
   // 重新回读(例如登录态续期后)同一份服务端数据:计数相同,不叠加。
   page.loadData()
   await answerWall(page)
-  assert.deepEqual(snapshot(page), before, '回读同一份服务端事实,计数与日期都不随手机时钟变')
+  assert.deepEqual(snapshot(page), before, '刷新同一份服务端事实，计数与日期都不随手机时钟变')
 })

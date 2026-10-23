@@ -17,7 +17,7 @@ test('精度阈值 80m:>80 不足,=80/缺失/非法放行', () => {
   assert.equal(A.accuracyOf({}), undefined);
   assert.equal(A.accuracyOf(null), undefined);
   assert.equal(JSON.stringify({ a: A.accuracyOf({}) }), '{}');   // 缺失时整字段省略
-  assert.equal(A.isLowAccuracyMsg('抱歉,定位精度不足(120m)'), true);
+  assert.equal(A.isLowAccuracyMsg('抱歉，定位精度不足(120m)'), true);
   assert.equal(A.isLowAccuracyMsg('还没到这一站附近'), false);
   assert.equal(A.LOW_ACCURACY_HINT, '定位精度不足 · 可扫码完成');
 });

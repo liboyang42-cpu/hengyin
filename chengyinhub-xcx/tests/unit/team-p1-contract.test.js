@@ -65,7 +65,7 @@ function assertTeamCompliance(sources) {
      createActivityTeam 真建队),不是那个已经不存在的 chooseAndCreate。 */
   const orderJs = sanitized['subpackageMember/components/cy/scene-member-order-detail/index.js']
   const bFlow = orderJs.slice(orderJs.indexOf('startOrderTeam()'), orderJs.indexOf('openMeetingPoint('))
-  assert.ok(bFlow.length > 0, 'B 模式建队流程的锚点必须切得出东西,否则下面两条是空断言')
+  assert.ok(bFlow.length > 0, 'B 模式建队流程的锚点必须切得出东西，否则下面两条是空断言')
   assert.match(bFlow, /teamUp\.memberSheet/, 'B 模式的人数选项必须来自共享 helper')
   assert.match(bFlow, /teamUp\.createActivityTeam/, '真正建队仍要走共享 helper')
   assert.doesNotMatch(bFlow, /share/i, '报名后组队也不能以分享作为创建队伍的前置条件')
@@ -126,7 +126,7 @@ function assertTeamStateUx(detailWxml, joinWxml, detailJson, joinJson, teamWxss)
     '队伍详情首载必须使用与详情结构同构的骨架')
   assert.match(detailWxml, /<cy-state-shell\b[^>]*wx:elif="\{\{error && !team\}\}"[^>]*kind="\{\{errorKind\}\}"[^>]*primary="\{\{errorAction\}\}"[^>]*bind:primary="onErrorAction"/,
     '队伍详情首载失败/缺参必须给语义状态与唯一恢复动作')
-  assert.match(detailWxml, /正在核对队伍状态…/,
+  assert.match(detailWxml, /正在确认队伍状态…/,
     '队伍详情刷新旧内容时必须显式标记正在更新')
   assert.doesNotMatch(detailWxml, /<cy-inline-error\b[^>]*(wx:if|wx:elif)="\{\{error && team\}\}"/,
     '队伍详情刷新失败必须保留旧队伍并局部重试')
@@ -134,7 +134,7 @@ function assertTeamStateUx(detailWxml, joinWxml, detailJson, joinJson, teamWxss)
   assert.match(joinWxml, /<cy-skeleton\b[^>]*wx:if="\{\{loading && !team\}\}"[^>]*type="detail"/,
     '加入邀请首载必须使用同构骨架')
   assert.match(joinWxml, /<cy-state-shell\b[^>]*wx:elif="\{\{error && !team\}\}"[^>]*kind="\{\{errorKind\}\}"[^>]*primary="\{\{errorAction\}\}"[^>]*bind:primary="onErrorAction"/,
-    '邀请缺参不能伪装成可无限重试的网络错误')
+    '邀请缺参不能伪装成可无限重试的网络异常')
   assert.match(joinWxml, /<cy-inline-error\b[^>]*wx:if="\{\{joinError\}\}"[^>]*action="重试加入"[^>]*bind:action="join"/,
     '加入失败必须在动作附近留下可恢复状态，不能只闪 toast')
   assert.match(joinWxml, /aria-busy="\{\{joining\}\}"[^>]*aria-disabled="\{\{joining\}\}"/,

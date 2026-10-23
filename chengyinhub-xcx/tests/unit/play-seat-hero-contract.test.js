@@ -22,7 +22,7 @@ const WXSS = fs.readFileSync(path.join(ROOT, 'pages/play/index.wxss'), 'utf8')
 
 function method(name) {
   const m = JS.match(new RegExp('^  ' + name + '\\([^)]*\\) \\{[\\s\\S]*?^  \\},', 'm'))
-  assert.ok(m, `index.js 里找不到方法 ${name}(锚点失效,不是代码没问题)`)
+  assert.ok(m, `index.js 里找不到方法 ${name}(锚点失效，不是代码没问题)`)
   return m[0]
 }
 function toMs(raw) {

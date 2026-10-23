@@ -41,7 +41,7 @@ function assertReadableDarkText(wxss) {
   assert.doesNotMatch(
     body,
     /color:\s*var\(--cy-(?:color-)?text-inverse\)/,
-    '.team-entry__k 是暗卡上的正文,用「反色字」token 会渲成近乎同色的黑字(实测对比度 ~1.05:1):' + body
+    '.team-entry__k 是暗卡上的正文，用「反色字」token 会渲成近乎同色的黑字(实测对比度 ~1.05:1):' + body
   )
   assert.match(
     body,
@@ -124,7 +124,7 @@ test('P1-5 前提:优惠券页属于商家浅色工作域', () => {
 // ---------- P1-2 排行榜失败不得再落「暂未开放」 ----------
 function assertRankFailureIsRetryable(wxml) {
   assert.doesNotMatch(wxml, /暂未开放|还没开放|gc-state--notice|boardState\s*===\s*'notice'/, '不得保留 notice/暂未开放 分流')
-  assert.doesNotMatch(wxml, /<cy-inline-error|排行榜没有加载出来/, '成长中心按已确认设计暂不展示错误提示')
+  assert.doesNotMatch(wxml, /<cy-inline-error|排行榜加载失败/, '成长中心按已确认设计暂不展示错误提示')
   assert.match(wxml, /bindtap="goLeaderboard"/, '完整排行榜入口必须保留')
   assert.match(fs.readFileSync(GC_JS, 'utf8'), /onPullDownRefresh\(\)/, '失败后仍可通过下拉刷新恢复')
 }
@@ -160,7 +160,7 @@ test('P1-2 行为:HTTP 404、网络失败与业务失败都落 error', () => {
   ctx.page.loadMyRank()
   ctx.requests[0].successStatusAbnormal({ statusCode: 404, msg: 'not found' })
   assert.equal(ctx.page.boardState, 'error', '404 不得再落 notice')
-  assert.match(ctx.page.errorMsg, /not found|没有加载出来/)
+  assert.match(ctx.page.errorMsg, /not found|加载失败/)
   assert.doesNotMatch(ctx.page.errorMsg, /暂未开放/)
 
   ctx = loadGrowthPage()

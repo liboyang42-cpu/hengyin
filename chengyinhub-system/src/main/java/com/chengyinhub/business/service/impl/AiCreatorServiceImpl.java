@@ -67,6 +67,8 @@ public class AiCreatorServiceImpl implements IAiCreatorService
             new java.util.HashSet<>(java.util.Arrays.asList("topic_coop", "decor", "content"));
     private static final String PLAYER_THEME_DRAFT_RATE_PREFIX = "ai:theme:draft:player:";
     private static final DateTimeFormatter RATE_DATE_FMT = DateTimeFormatter.ofPattern("yyyyMMdd");
+    /** 每日额度按北京时间换日，不随 JVM 默认时区漂移。 */
+    private static final java.time.ZoneId QUOTA_ZONE = java.time.ZoneId.of("Asia/Shanghai");
 
     @Autowired
     private IAiTopicPlanService aiTopicPlanService;
@@ -174,9 +176,11 @@ public class AiCreatorServiceImpl implements IAiCreatorService
         }
         // player 走独立的 theme_draft 专项额度(比 gen 池更紧),两者取更紧的那个。
         int playerRemaining = Math.max(0, PLAYER_THEME_DRAFT_DAILY_LIMIT - playerThemeDraftUsed(memberId));
+        // 网关 gen 池与其它创作类共用,被用光时专项额度再有剩余也生成不了。
+        int gatewayRemaining = Math.max(0, gateway.remainingQuota(memberId, "theme_draft"));
         resp.setLimited(true);
         resp.setLimit(PLAYER_THEME_DRAFT_DAILY_LIMIT);
-        resp.setRemaining(playerRemaining);
+        resp.setRemaining(Math.min(playerRemaining, gatewayRemaining));
         return resp;
     }
 
@@ -592,7 +596,7 @@ public class AiCreatorServiceImpl implements IAiCreatorService
     /** 原日、nonce 与代际绑定；未知响应只补偿自己的预占。 */
     private PlayerThemeDraftQuotaReservation reservePlayerThemeDraftQuota(Long memberId)
     {
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(QUOTA_ZONE);
         String key = PLAYER_THEME_DRAFT_RATE_PREFIX + memberId + ":" + now.toLocalDate().format(RATE_DATE_FMT);
         String receipt = "ai:player:theme:draft:reservation:" + key + ":"
                 + com.chengyinhub.common.utils.uuid.IdUtils.simpleUUID();
@@ -637,7 +641,7 @@ public class AiCreatorServiceImpl implements IAiCreatorService
 
     private int playerThemeDraftUsed(Long memberId)
     {
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(QUOTA_ZONE);
         String key = PLAYER_THEME_DRAFT_RATE_PREFIX + memberId + ":" + now.toLocalDate().format(RATE_DATE_FMT);
         try
         {

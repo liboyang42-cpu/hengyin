@@ -81,7 +81,7 @@ test('渲染层:形象页保留性格设定与审核状态，移除说明小字'
   const cell = wxml.match(/<cy-cell[^>]*data-key="persona"[^>]*\/>/);
   assert.ok(cell, '找不到性格设定入口');
   assert.match(cell[0], /title="性格设定"/);
-  assert.match(wxml, /field\.multiline/, '性格设定必须走多行输入,不能塞进单行 input');
+  assert.match(wxml, /field\.multiline/, '性格设定必须走多行输入，不能塞进单行 input');
   assert.match(cell[0], /value="\{\{persona \|\| '填写性格设定'\}\}"/);
   assert.doesNotMatch(cell[0], /description=/);
   assert.match(wxml, /auditStatus === 2 && auditReason/, '审核驳回后必须把原因显示给商家');
@@ -117,7 +117,7 @@ test('行为层:整页保存与脏态判定都包含 persona', async () => {
   let left = false;
   env.page.leavePage = () => { left = true; };
   env.page.onNavBack();
-  assert.equal(left, false, '人设改过但在保存前退出,必须先弹放弃确认');
+  assert.equal(left, false, '人设改过但在保存前退出，必须先弹放弃确认');
   assert.equal(env.page.data.discardVisible, true);
 
   const env2 = savedPage({ persona: '旧人设' });

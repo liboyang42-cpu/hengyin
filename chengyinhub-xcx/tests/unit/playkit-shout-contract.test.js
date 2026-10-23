@@ -140,7 +140,7 @@ test('开跑先开表:submit 之前必有 start 事件(成绩按服务器时间�
   const vm = load();
   vm.onStart();
   assert.deepEqual(vm.stageCalls, ['begin'], '校准屏由 stage 出');
-  assert.ok(vm.events.includes('rec.start:PCM'), '采样链路是 PCM 逐帧,与 quietHold 同参数');
+  assert.ok(vm.events.includes('rec.start:PCM'), '采样链路是 PCM 逐帧，与 quietHold 同参数');
   vm.frame(0); vm.onSample();
   vm.onCalibrated();
   vm.onRun();
@@ -170,7 +170,7 @@ test('持续是真持续:过线累计,掉线清零,攒着喊不算', () => {
 
   // 过 2 秒(20 拍 × 100ms),掉线 1 拍,再过 2 秒 —— 若不清零会凑成 4 秒假胜
   advance(vm, 20, 100, () => vm.frame(hot));
-  assert.equal(vm.data.loud, true, '过线时 loud 亮,屏上「过线了，别停」');
+  assert.equal(vm.data.loud, true, '过线时 loud 亮，屏上「过线了，别停」');
   advance(vm, 1, 100, () => vm.frame(0.01));
   assert.equal(vm.data.loud, false);
   assert.equal(vm._held, 0, '掉线那一拍必须把攒的秒数清零');
@@ -187,7 +187,7 @@ test('喊满秒数:判一次,交的是 submit + { heldMs },并且停表停麦', 
   const hot = vm._hot + 0.05;
   advance(vm, 52, 100, () => vm.frame(hot));   // 5.2 秒,过线即胜
   const submits = vm.events.filter((e) => e && e.name === 'submit');
-  assert.equal(submits.length, 1, '判过之后表已停,不许再交第二次');
+  assert.equal(submits.length, 1, '判过之后表已停，不许再交第二次');
   assert.ok(submits[0].detail.heldMs >= 5000 && submits[0].detail.heldMs <= 5300,
     'payload 只有毫秒数:实得 ' + JSON.stringify(submits[0].detail));
   assert.ok(vm.events.includes('rec.stop'), '用完即弃:停麦');

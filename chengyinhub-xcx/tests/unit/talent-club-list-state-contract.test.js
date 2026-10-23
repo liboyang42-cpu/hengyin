@@ -222,7 +222,7 @@ test('游客不请求私有俱乐部聚合和IM未读，登录点击成功才真
   const h=loadPage();let owner='';let loginCalls=0;h.app.getUserID=()=>owner;
   h.app.firstLogin=()=>{loginCalls++;owner='9';return Promise.resolve();};
   h.page.loadClubHome();h.page.loadImUnread();assert.equal(h.requests.length,0);
-  assert.equal(h.page.data.clubsLoginRequired,true);assert.match(h.page.data.clubsErrorText,/登录后/);
+  assert.equal(h.page.data.clubsLoginRequired,true);assert.equal(h.page.data.clubsErrorText,'');
   h.page.retryClubs();h.page.retryClubs();await Promise.resolve();
   assert.equal(loginCalls,1);assert.equal(h.requests.length,1);assert.equal(h.requests[0].url,'/api/club/home');
 });

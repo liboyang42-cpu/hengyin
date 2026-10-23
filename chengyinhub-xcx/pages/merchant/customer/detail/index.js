@@ -80,7 +80,7 @@ Page({
         this.setData({ canEdit: access.canSegmentCrm === true });
         this.loadDetail();
       },
-      fail: () => this.setData({ pageState: 'error', errorMessage: '网络连接失败，请稍后重试' }),
+      fail: () => this.setData({ pageState: 'error', errorMessage: '网络异常，请重试' }),
     });
   },
 
@@ -103,8 +103,8 @@ Page({
         }
         const detail = shapeCustomerDetail(res.data, this._customerMemberId);
         if (!detail) {
-          if (silent) { toast.error('客户详情数据不完整，请稍后重试'); return; }
-          this.setData({ pageState: 'error', errorMessage: '客户详情数据不完整，请稍后重试' });
+          if (silent) { toast.error('客户详情加载失败，请重试'); return; }
+          this.setData({ pageState: 'error', errorMessage: '客户详情加载失败，请重试' });
           return;
         }
         this.setData({
@@ -116,7 +116,7 @@ Page({
           noteHistory: detail.history,
         });
       },
-      fail: () => this.setData({ pageState: 'error', errorMessage: '网络连接失败，请稍后重试' }),
+      fail: () => this.setData({ pageState: 'error', errorMessage: '网络异常，请重试' }),
     });
   },
 
@@ -176,7 +176,7 @@ Page({
         this.setData({ noteSubmitting: false, noteContent: '', noteError: '', correctsNoteId: null, editorOpen: false });
         this.loadDetail(true);
       },
-      fail: () => this.setData({ noteSubmitting: false, noteError: '网络连接失败，请稍后重试' }),
+      fail: () => this.setData({ noteSubmitting: false, noteError: '网络异常，请重试' }),
     });
   },
 
@@ -223,7 +223,7 @@ Page({
         if (!successWrite(res)) { toast(errorText(res, '隐藏跟进失败')); return; }
         this.loadDetail(true);
       },
-      fail: () => { this.setData({ noteHidingId: null }); toast('网络连接失败，请稍后重试'); },
+      fail: () => { this.setData({ noteHidingId: null }); toast('网络异常，请重试'); },
     });
   },
 
@@ -259,7 +259,7 @@ Page({
         this.setData({ tagSubmitting: false, tagName: '', tagError: '' });
         this.loadDetail(true);
       },
-      fail: () => this.setData({ tagSubmitting: false, tagError: '网络连接失败，请稍后重试' }),
+      fail: () => this.setData({ tagSubmitting: false, tagError: '网络异常，请重试' }),
     });
   },
 
@@ -292,7 +292,7 @@ Page({
         delete this._removeRequestIds[tagId];
         this.loadDetail(true);
       },
-      fail: () => toast('网络连接失败，请稍后重试'),
+      fail: () => toast('网络异常，请重试'),
     });
   },
 });

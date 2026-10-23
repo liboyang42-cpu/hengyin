@@ -10,10 +10,10 @@ test('主题通关徽章只在全部完成且后端下发了 reward 时出现', 
   assert.deepEqual(buildFinishMedals({ allDone: true, reward })[0], { key: 'theme', name: '外滩夜行者', img: 'm.png', sub: '通关 · 主题徽章', glyph: 'flag' })
 })
 
-test('站点名次奖牌只收本局真夺到且该站已完成的,同站不重复', () => {
+test('站点名次奖牌只收本局真夺到且该站已完成的，同站不重复', () => {
   const nodes = [{ nodeId: 1, done: true }, { nodeId: 2, done: false }]
   const won = [{ nodeId: 1, name: '头号', rank: 2 }, { nodeId: 1, name: '头号', rank: 2 }, { nodeId: 2, name: '没走完', rank: 1 }]
   const out = buildFinishMedals({ allDone: false, nodes, won })
-  assert.deepEqual(out.map((m) => m.sub), ['第 2 名 · 站点奖牌'])
+  assert.deepEqual(out.map((m) => m.sub), ['第 2 名 · 节点奖牌'])
   assert.deepEqual(buildFinishMedals({}), [])
 })

@@ -16,8 +16,8 @@ test('退款售后列表和详情页已注册，台账退款条目直达售后�
 
   assert.ok(merchant.pages.includes('aftercare/index'));
   assert.ok(merchant.pages.includes('aftercare/detail/index'));
-  assert.doesNotMatch(ledgerWxml, /bindtap="goAftercare"/, '台账不得再渲染单独的退款售后卡片');
-  assert.doesNotMatch(ledgerJs, /goAftercare\s*\(/, '台账不得再保留只服务那张卡的跳转方法');
+  assert.doesNotMatch(ledgerWxml, /bindtap="goAftercare"/, '记录不得再渲染单独的退款售后卡片');
+  assert.doesNotMatch(ledgerJs, /goAftercare\s*\(/, '记录不得再保留只服务那张卡的跳转方法');
   assert.match(ledgerJs, /\/api\/merchant\/access\/me/);
   assert.match(ledgerJs, /\/api\/merchant\/aftercare\/list\?bucket=/);
   assert.match(ledgerJs, /item\.recordType === 'aftercare'[\s\S]*?\/pages\/merchant\/aftercare\/detail\/index\?refundId=/);
@@ -28,7 +28,7 @@ test('商家工作台从更多菜单提供权限收口的退款售后入口', ()
   const js = read('pages/merchant/index/index.js');
 
   assert.match(wxml, /wx:if="\{\{merchantAccess\.canReadAftercare\}\}"[^>]*data-action="aftercare"/);
-  assert.match(wxml, /class="rv-aftercare-alert"[^>]*wx:if="\{\{merchantAccess\.canReadAftercare && !todoLoading && todo\.refundCount > 0\}\}"[^>]*bindtap="goAftercare"/,
+  assert.match(wxml, /class="rv-aftercare-alert"[^>]*wx:if="\{\{merchantAccess\.canReadAftercare && todo\.refundCount > 0\}\}"[^>]*bindtap="goAftercare"/,
     '有真实待回应售后时，必须在四个快捷操作下方直接显示高频待办');
   assert.match(wxml, /有 \{\{todo\.refundCount \|\| 0\}\} 笔售后待回应/);
   assert.match(js, /action === 'aftercare'[^\n]*goAftercare/);

@@ -211,7 +211,7 @@ function computeCompleteness(formData, ctx) {
   });
   const okAllCoords = nodeCount > 0 && coordMissing === 0;
   checks.push(okAllCoords);
-  if (!okAllCoords) missing.push(nodeCount === 0 ? '至少一个站点' : `${coordMissing} 个站点还没选地点`);
+  if (!okAllCoords) missing.push(nodeCount === 0 ? '至少一个节点' : `${coordMissing} 个节点还没选地点`);
 
   // —— 节点级:每个节点需有地点 + 描述 + 时长 ——
   let nodeTotal = 0, nodeAddrOk = 0, nodeDescOk = 0, nodeTimeOk = 0;
@@ -225,13 +225,13 @@ function computeCompleteness(formData, ctx) {
   });
   if (nodeTotal > 0) {
     const aAddr = nodeAddrOk === nodeTotal;
-    checks.push(aAddr); if (!aAddr) missing.push('部分站点缺地点');
+    checks.push(aAddr); if (!aAddr) missing.push('部分节点缺地点');
     const aDesc = nodeDescOk === nodeTotal;
-    checks.push(aDesc); if (!aDesc) missing.push('部分站点缺描述');
+    checks.push(aDesc); if (!aDesc) missing.push('部分节点缺描述');
     const aTime = nodeTimeOk === nodeTotal;
-    checks.push(aTime); if (!aTime) missing.push('部分站点缺时长');
+    checks.push(aTime); if (!aTime) missing.push('部分节点缺时长');
   } else {
-    checks.push(false); missing.push('尚未添加站点');
+    checks.push(false); missing.push('尚未添加节点');
   }
 
   const passed = checks.filter(Boolean).length;

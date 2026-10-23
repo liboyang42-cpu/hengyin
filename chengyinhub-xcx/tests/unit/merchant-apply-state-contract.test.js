@@ -826,7 +826,6 @@ test('提交成功留下持久可读回执，并保留再次查看审核进度�
   assert.match(wxml, /class="success"[^>]*aria-role="status"[^>]*aria-live="polite"/)
   assert.match(wxml, /submissionReceipt\.name/)
   assert.match(wxml, /submissionReceipt\.phone/)
-  assert.match(wxml, /可再次进入“商家入驻”查看审核进度/)
 })
 
 test('商家申请的进度、营业日、图片与动态主操作满足读屏和 88rpx 契约', () => {
@@ -941,6 +940,6 @@ test('实名登记失败停在第 4 步:入驻单不许跟着发出去', () => {
   assert.equal(page.data.submitError, '该证件已绑定其他账号')
   assert.equal(page.data.submitErrorKind, 'data')
   assert.equal(page.data.identityRegistered, false)
-  assert.equal(page.data.step, 4, '报错留在原地,草稿不丢')
+  assert.equal(page.data.step, 4, '报错留在原地，草稿不丢')
   assert.equal(page.data.name, '河畔咖啡')
 })

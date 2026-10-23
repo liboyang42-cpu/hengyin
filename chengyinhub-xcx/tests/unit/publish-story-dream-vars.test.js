@@ -131,7 +131,7 @@ test('★空梦块计数:只数一张都没有的梦,有图的梦/文字/音频�
   const draft = draftWithEmptyDream()
   assert.equal(story.countEmptyDreamBlocks(draft.chapter), 1)
   draft.chapter.blocks.push({ key: 'a1', type: 'audio', url: '' })
-  assert.equal(story.countEmptyDreamBlocks(draft.chapter), 1, '没填的音频占位是留着待补的,不该被数成空梦块')
+  assert.equal(story.countEmptyDreamBlocks(draft.chapter), 1, '没填的音频占位是留着待补的，不该被数成空梦块')
   assert.equal(story.countEmptyDreamBlocks(buildDream().chapter), 0)
   assert.equal(story.countEmptyDreamBlocks(null), 0)
 })
@@ -139,7 +139,7 @@ test('★空梦块计数:只数一张都没有的梦,有图的梦/文字/音频�
 test('★丢掉空梦块后,其余块的顺序和章节投影要还是对的', () => {
   const chapter = draftWithEmptyDream().chapter
   const kept = story.discardEmptyDreamBlocks(chapter)
-  assert.deepEqual(kept.blocks.map((b) => b.key), ['dream_1'], '空梦块要走,有图的梦块要留')
+  assert.deepEqual(kept.blocks.map((b) => b.key), ['dream_1'], '空梦块要走，有图的梦块要留')
   assert.equal(story.countEmptyDreamBlocks(kept), 0)
   assert.equal(kept.description, story.projectedDescription(kept.blocks), '描述要按剩下的块重新投影')
   // 没有空块时不该白改一次投影
@@ -156,7 +156,7 @@ test('★点「完成」收编辑器:草稿里的空梦块当场就没了,重开
   assert.equal(closed.storyEditor.show, false)
   assert.equal(closed.storyEditor.chapterIndex, -1)
   assert.equal(page.destroyed, 1)
-  assert.equal(page.statRefreshed, 1, '块数变了要刷新统计,不然章节卡还显示旧的')
+  assert.equal(page.statRefreshed, 1, '块数变了要刷新统计，不然章节卡还显示旧的')
 })
 
 test('★没有空梦块时收编辑器:不去动 formData.chapters(别白写一次大对象)', () => {
@@ -231,7 +231,7 @@ test('★插入位置:光标处/越界夹到两端/没记到光标就追加到�
 test('★负控:把「没记到光标」也当 0 处理,上一条必须判红', () => {
   // 这是插入位置最容易错的一处:Number(-1) 是整数,不判负号就会插到句首
   const broken = String('你好').slice(0, Math.max(0, Math.min(2, Number(-1)))) + '{name}' + String('你好').slice(0)
-  assert.notEqual(broken, '你好{name}', '把 -1 当 0 的写法确实会插错位置,上一条才抓得到')
+  assert.notEqual(broken, '你好{name}', '把 -1 当 0 的写法确实会插错位置，上一条才抓得到')
 })
 
 test('正文菜单仅含文字图片音频地点，旧相册块仍可编辑', () => {

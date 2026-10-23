@@ -66,7 +66,7 @@ Page({
     listLoaded: false,        // 任一 tab 拿到过数据 —— 四态里区分「首次加载」与「已有内容」
     banner: {},
     topList: [],
-    tailList: [],
+    tailList: [], flyClass: '',   // owner 10-22:每次打开页面卡片飞入(onShow 飞入、onHide 先藏好等下次重播)
     bannerTitle: '推荐',
     topTitle: '全部主题',
     emptyTitle: '',
@@ -139,7 +139,7 @@ Page({
 
   onShow() {
     this.setData({ reducedMotion: readReducedMotion() });
-
+    this.setData({ flyClass: this.data.reducedMotion ? '' : 'cy-fly-in' });   // 卡片飞入
     this.setData({ pageMetaStyle: readPageStyle() });
     wx.hideTabBar();
     // 收敛:商家玩家共用发布广场,底部 tabBar 按本地身份立即渲染(避免等 /api/publish/home 异步返回时闪 consumer)
@@ -284,21 +284,8 @@ Page({
   /* CU-M-64:入口现在只搜模板。原来这里 (以及死代码 searchClick) 只是跳到通用搜索
      /pages/search2 —— 那里搜的是主题/活动/俱乐部/商家四类,一类都不是「节点玩法」,
      而入口写着「搜索节点玩法与主题」:按承诺搜的人走错搜索范围,还搜不到。 */
-  goSearch() {
-    modal.show({
-      title: '搜索模板',
-      editable: true,
-      placeholderText: '输入主题或玩法名称',
-      confirmText: '搜索',
-      validate: (content) => String(content || '').trim() ? '' : '请输入要搜索的名称',
-      success: (res) => {
-        if (!res || !res.confirm) return;
-        const keyword = String(res.content || '').trim();
-        if (!keyword) { cyToast('请输入要搜索的名称'); return; }
-        this.startTemplateSearch(keyword);
-      },
-    });
-  },
+  // 2026-10-22 owner 裁决:模板页搜索入口统一走通用搜索(pages/search2),模板作为结果类型出现在那里。
+  goSearch() { wx.navigateTo({ url: '/pages/search2/index' }); },
   goInbox() { wx.navigateTo({ url: '/subpackageB/pages/im/list/index' }); },
 
   // ===== 模板内搜索(2026-09-24 裁决 CU-M-64) =====
@@ -365,6 +352,8 @@ Page({
 
   onHide() {
     merchantTheme.merchantPageRestore();
+    // 离开时先把卡片藏好(cy-fly-wait 透明),下次回到本页 onShow 再飞进来,不会先闪一帧旧卡
+    this.setData({ flyClass: this.data.reducedMotion ? '' : 'cy-fly-wait' });
   },
 
   // 主题模板走 name 字段(主题推荐/最新主题走 title),两边共用同一套真实图标映射
@@ -461,10 +450,10 @@ Page({
         : (cat ? (catName + ' · ' + top.length + ' 个') : (isTopic ? '全部主题' : '全部玩法')),
       emptyTitle: searching ? '没有找到相关模板' : (isTopic ? '还没有可复用的主题模板' : '这个品类还没有玩法'),
       emptySub: searching
-        ? '换个名称试试，或点上面的「清除」看全部模板'
+        ? '换个关键词试试'
         : (isTopic
-          ? '新的整包主题开放后会出现在这里,也可以先去「游戏」里挑单个玩法'
-          : '换个品类,或者看看「主题」里的整包路线')
+          ? ''
+          : '')
     });
   },
 

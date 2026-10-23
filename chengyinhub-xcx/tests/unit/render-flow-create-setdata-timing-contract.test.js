@@ -116,13 +116,13 @@ test('零回归:无参 / 未知 tab 参数不排队、不写,落到默认「收�
   assert.deepEqual(duringReceived, [], '?tab=received 不得在创建期同步写');
   received.runNextTicks();
   assert.equal(received.page.data.tab, 0, '?tab=received 的落点仍是默认「收到的」');
-  assert.equal(received.page._operationScope, 'MERCHANT', 'scope 必须随入口落地,写动作按 owner 口径');
+  assert.equal(received.page._operationScope, 'MERCHANT', 'scope 必须随入口落地，写动作按 owner 口径');
 });
 
 test('零回归:手势路径(onTabChange/switchToReceived)保持同步写,不许被一起延后', () => {
   const h = loadPage();
   h.page.onTabChange({ detail: { key: '1' } });
-  assert.equal(h.page.data.tab, 1, '点 tab 要立刻响应(此时没有创建流程,同步写是安全的)');
+  assert.equal(h.page.data.tab, 1, '点 tab 要立刻响应(此时没有创建流程，同步写是安全的)');
   assert.equal(h.page.data.tabKey, '1');
   assert.equal(h.nextTicks.length, 0, '手势路径不得改走 nextTick');
 

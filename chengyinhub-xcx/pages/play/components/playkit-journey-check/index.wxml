@@ -58,7 +58,7 @@
         </view>
       </view>
       <view class="jc__hint" wx:if="{{landed && rerollVisible}}">{{receipt.r5 ? '剩余重掷次数：' + receipt.rerollRemaining : '还剩幸运，可以重掷一次'}}</view>
-      <view class="jc__hint" wx:if="{{receipt.pending}}">结算中，请在原任务确认结果</view>
+      <view class="jc__hint" wx:if="{{receipt.pending}}">结算中</view>
     </block>
 
     <!-- 结算屏:这才是服务端给的文案 + 失败代价 + 生命/幸运读数 -->

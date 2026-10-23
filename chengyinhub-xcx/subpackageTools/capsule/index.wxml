@@ -6,9 +6,9 @@
   <cy-page-title title="时光胶囊" />
 
   <view class="tu-msg tu-msg--err tu-msg--row" wx:if="{{status === 'error' || status === 'conflict' || status === 'no-permission'}}"><text>{{message || '暂时没读到，请重试'}}</text><view class="tu-retry" bindtap="onRetry" aria-role="button" aria-label="重试" hover-class="cy-pressed" hover-stay-time="80">重试</view></view>
-  <view class="tu-msg tu-msg--wait" wx:if="{{status === 'unknown' || pendingCreate}}">上次封存还没收到回执，先核对再决定是否重试。</view>
+  <view class="tu-msg tu-msg--wait" wx:if="{{status === 'unknown' || pendingCreate}}">上次封存结果未确认</view>
   <view class="tu-btns" wx:if="{{status === 'unknown' || pendingCreate}}">
-    <view class="tu-btn tu-btn--w" bindtap="recover" aria-role="button" aria-label="核对上次封存" hover-class="cy-pressed" hover-stay-time="80">核对上次封存</view>
+    <view class="tu-btn tu-btn--w" bindtap="recover" aria-role="button" aria-label="确认上次封存" hover-class="cy-pressed" hover-stay-time="80">确认上次封存</view>
     <view class="tu-btn tu-btn--s" bindtap="retryCreate" aria-role="button" aria-label="用原内容重试封存" hover-class="cy-pressed" hover-stay-time="80">用原内容重试</view>
   </view>
 
@@ -35,7 +35,7 @@
       <view class="tu-row" bindtap="{{photoUrl ? 'clearPhoto' : 'choosePhoto'}}" aria-role="button" aria-label="{{photoUrl ? '移除照片' : '附一张照片'}}" hover-class="cy-pressed" hover-stay-time="80">
         <image wx:if="{{photoUrl}}" class="tu-row__ic" src="{{photoUrl}}" mode="aspectFill" />
         <view wx:else class="tu-row__ic"><cy-icon name="plus" size="34" /></view>
-        <view class="tu-row__body"><text class="tu-row__t">{{photoUrl ? '已附照片' : '附一张照片'}}</text><text class="tu-row__s">{{photoUrl ? '点一下移除' : '可选'}}</text></view>
+        <view class="tu-row__body"><text class="tu-row__t">{{photoUrl ? '已附照片' : '附一张照片'}}</text><text class="tu-row__s">{{photoUrl ? '移除' : '可选'}}</text></view>
       </view>
     </view>
     <view class="rd-label rd-label--row"><text>开启日期</text><text class="rd-label__v">{{unlockDate}}</text></view>

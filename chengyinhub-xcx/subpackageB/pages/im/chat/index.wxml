@@ -35,10 +35,10 @@
 
     <!-- 四态分流:加载中 / 坏链接 / 失败 / 真的没消息。原来只有最后一条,前三种全被说成「还没有消息」。 -->
     <cy-skeleton wx:if="{{loadState === 'loading'}}" type="list" count="{{4}}" />
-    <cy-empty wx:elif="{{loadState === 'missing'}}" class="chat-empty cy-fade-in" kind="missing-param" title="这个会话打不开" sub="链接可能已失效，回消息列表重新进入" />
-    <cy-empty wx:elif="{{loadState === 'closed'}}" class="chat-empty cy-fade-in" fill="{{true}}" size="lg" kind="not-found" title="这个组局已结束" sub="聊天已关闭。如有平台处置，可在消息列表的系统通知中查看处理结果。" cta="返回消息列表" bind:cta="returnToMessageList" />
-    <cy-error load-failure wx:elif="{{loadState === 'error'}}" class="chat-empty" title="消息没加载出来" sub="{{loadErrorText || '网络或服务暂时不可用，已发出的消息不会丢'}}" retry="重试" bind:retry="retryLoad" />
-    <cy-empty wx:elif="{{!msgs.length}}" class="chat-empty" kind="empty" title="还没有消息" sub="{{readOnly ? '平台通知会出现在这里' : '发送第一条消息，和对方确认路线、集合点或合作细节'}}" />
+    <cy-empty wx:elif="{{loadState === 'missing'}}" class="chat-empty cy-fade-in" kind="missing-param" title="这个会话无法打开" sub="请返回重新进入" />
+    <cy-empty wx:elif="{{loadState === 'closed'}}" class="chat-empty cy-fade-in" fill="{{true}}" size="lg" kind="not-found" title="这个组局已结束" sub="聊天已关闭" cta="返回消息列表" bind:cta="returnToMessageList" />
+    <cy-error load-failure wx:elif="{{loadState === 'error'}}" class="chat-empty" title="消息加载失败" sub="{{loadErrorText}}" retry="重试" bind:retry="retryLoad" />
+    <cy-empty wx:elif="{{!msgs.length}}" class="chat-empty" kind="empty" title="还没有消息" />
 
     <block wx:for="{{msgs}}" wx:key="id">
       <!-- 卡片/系统消息仍走居中时间分隔(与改动前一致);普通文字/图片气泡改用贴气泡的行内时间(见下方),

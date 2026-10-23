@@ -19,7 +19,7 @@ function marketView(t) {
       : reviewing ? '个人审核中' : '状态待确认',
     _stateClass: draft ? 'st-draft' : approved ? 'st-online' : rejected ? 'st-rejected' : 'st-pending',
     _marketText: noMarket ? '未提交广场' : pending ? '广场审核中' : online ? '广场已上架'
-      : delisted ? '广场已下架' : market && is(t.marketStatus, 2) ? '广场需重新提交' : '广场状态待确认',
+      : delisted ? '广场已下架' : market && is(t.marketStatus, 2) ? '广场需重新提交' : '—',
     _canSubmitMarket: approved && (noMarket || (market && is(t.marketStatus, 2))),
     _canToggleMarket: pending || online || (approved && delisted),
     _marketActionText: pending ? '撤回广场审核' : online ? '从广场下架' : '上架广场',

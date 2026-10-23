@@ -7,8 +7,8 @@
 
   <scroll-view class="cp-scroll" scroll-y bindscrolltolower="onReachBottom">
     <cy-skeleton wx:if="{{loading && !list.length}}" type="list" count="4" />
-    <cy-error load-failure class="cy-fade-in" wx:elif="{{loadError && !list.length}}" title="合作者列表没能加载出来" sub="{{loadError}}" bind:retry="onRetry" />
-    <cy-empty wx:elif="{{nodata && !list.length}}" kind="empty" title="还没有可邀请的合作者" sub="列表里暂时没有可邀请的用户；可以先返回，之后再添加合作者。" cta="稍后添加" bind:cta="onClose" />
+    <cy-error load-failure class="cy-fade-in" wx:elif="{{loadError && !list.length}}" title="合作者列表加载失败" sub="{{loadError}}" bind:retry="onRetry" />
+    <cy-empty wx:elif="{{nodata && !list.length}}" kind="empty" title="暂无可邀请用户" cta="稍后添加" bind:cta="onClose" />
 
     <view class="cp-li" wx:for="{{list}}" wx:key="id">
       <cy-avatar class="cp-li-avatar" src="{{item.avatar}}" name="{{item.displayName}}" size="72" />
@@ -22,7 +22,7 @@
 
     <view class="cp-tail" wx:if="{{list.length}}">
       <view class="cp-tail__loading" wx:if="{{loading}}">正在加载更多合作者…</view>
-      <cy-error load-failure wx:elif="{{loadError}}" title="更多合作者没能加载出来" sub="{{loadError}}" bind:retry="onRetry" />
+      <cy-error load-failure wx:elif="{{loadError}}" title="更多合作者加载失败" sub="{{loadError}}" bind:retry="onRetry" />
     </view>
   </scroll-view>
 </cy-sheet>

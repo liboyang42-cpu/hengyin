@@ -17,7 +17,7 @@ const { pickImagePaths, isChooseCancelled } = require('../../utils/choose-media.
 
 test('已迁到 wx.chooseMedia,不再调用废弃的 wx.chooseImage', () => {
   assert.match(APP_JS, /wx\.chooseMedia\(/, '必须使用 wx.chooseMedia')
-  assert.doesNotMatch(APP_JS, /wx\.chooseImage\(/, 'wx.chooseImage 已废弃,不得再调用')
+  assert.doesNotMatch(APP_JS, /wx\.chooseImage\(/, 'wx.chooseImage 已废弃，不得再调用')
   assert.match(APP_JS, /mediaType:\s*\['image'\]/, '必须限定 mediaType,否则用户能选出视频')
 })
 
@@ -52,14 +52,14 @@ test('取消判定:新旧两种 errMsg 都算取消', () => {
 
 test('取消判定:真错误不能被当成取消吞掉', () => {
   for (const real of ['chooseMedia:fail auth deny', 'chooseMedia:fail system error', '', undefined, null]) {
-    assert.equal(isChooseCancelled(real), false, `${String(real)} 是真错误/空值,不该被当成用户取消`)
+    assert.equal(isChooseCancelled(real), false, `${String(real)} 是真错误/空值，不该被当成用户取消`)
   }
 })
 
 test('负控:只改 API 名不改取值,会静默丢掉所有图片', () => {
   const oldPick = (res) => res.tempFilePaths || []      // 迁移时最容易犯的错
   assert.deepEqual(oldPick({ tempFiles: [{ tempFilePath: '/a.png' }] }), [],
-    '证明「只改名不改取值」确实会拿到空数组 —— 而且不报错,所以必须有这条测试')
+    '证明「只改名不改取值」确实会拿到空数组 —— 而且不报错，所以必须有这条测试')
   assert.deepEqual(pickImagePaths({ tempFiles: [{ tempFilePath: '/a.png' }] }), ['/a.png'])
 })
 

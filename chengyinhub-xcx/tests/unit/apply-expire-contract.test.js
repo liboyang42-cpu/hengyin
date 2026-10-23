@@ -31,7 +31,7 @@ test('P4 申请中:foot 说真实剩余时间,不再写死「24 小时」', () =
 test('拿不到 applyExpireTime:兜底文案不许再断言 24 小时(退回通用规则句)', () => {
   const s = T.teamCardState(Object.assign({}, base, { viewerStatus: 'PENDING' }), NOW);
   assert.doesNotMatch(s.foot, /24\s*小时/);
-  assert.ok(s.foot.length > 0, '兜底文案不能为空');
+  assert.ok(s.foot.length > 0, '保底文案不能为空');
 });
 
 test('P6「申请中」行说真实剩余时间', () => {

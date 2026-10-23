@@ -97,7 +97,7 @@ Page({
       },
       successStatusAbnormal: function (res) {
         if (generation !== that._listGeneration) return;
-        finishLoadError(res, '服务暂时不可用，请稍后再试');
+        finishLoadError(res, '服务暂不可用，请稍后重试');
       },
       complete: function () {
         if (generation !== that._listGeneration) return;

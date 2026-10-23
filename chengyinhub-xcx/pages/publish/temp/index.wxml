@@ -50,16 +50,16 @@
   <cy-empty wx:if="{{creatorLoginRequired}}" title="登录后编辑玩法模板" cta="去登录" bind:cta="onCreatorLogin" />
   <view class="cg-load-state" wx:elif="{{editorLoading}}">
     <cy-skeleton type="detail" />
-    <view class="cg-load-state__hint">正在加载玩法内容…</view>
+    <view class="cg-load-state__hint">加载中</view>
   </view>
   <view class="cg-load-state" wx:elif="{{loadError}}">
-    <cy-error load-failure="{{!loadErrorIsOperation && !loadErrorIsAccess}}" title="{{loadErrorIsOperation ? '采用尚未确认' : loadErrorIsAccess ? '当前请求无法读取玩法' : '玩法详情没有加载出来'}}" sub="{{loadError}}" retry="重新加载" bind:retry="retryGetData" />
+    <cy-error load-failure="{{!loadErrorIsOperation && !loadErrorIsAccess}}" title="{{loadErrorIsOperation ? '采用尚未确认' : loadErrorIsAccess ? '当前请求无法读取玩法' : '玩法详情加载失败'}}" sub="{{loadError}}" retry="重新加载" bind:retry="retryGetData" />
   </view>
 
   <!-- ============ 编辑态 ============ -->
   <scroll-view wx:else scroll-y class="cg-scroll" style="padding-top: {{statusBarHeight + navBarHeight}}px;" enhanced show-scrollbar="{{false}}" scroll-into-view="{{scrollIntoView}}">
     <text wx:if="{{supportMatrixLoading}}" aria-live="polite">正在读取玩法支持范围</text>
-<cy-inline-error load-failure class="cg-inline-error" wx:if="{{supportMatrixLoadError}}" title="{{supportMatrixLoadError}}" sub="仍可保存，支持情况以保存结果为准" action="重试" bind:action="retrySupportMatrix" />
+<cy-inline-error load-failure class="cg-inline-error" wx:if="{{supportMatrixLoadError}}" title="{{supportMatrixLoadError}}" action="重试" bind:action="retrySupportMatrix" />
 
     <!-- 封面 + 名字:原型是**同一张卡** —— 上半是 1:1 的大方块封面(斜纹占位 + 圆形 ＋),
          下半是名字输入框(原型 .hero / .hero-cover / .hero-body)。 -->
@@ -248,9 +248,9 @@
       <view class="cg-adv-body">
     <view class="cg-cfg-label">目标步数 <text class="req" aria-hidden="true">*</text></view>
     <input class="cg-cfg-input" type="number" value="{{advanced.steps.goal}}" placeholder="100 至 100000" data-section="steps" data-field="goal" data-numeric="1" bindinput="onAdvancedField" />
-    <view class="cg-cfg-label">眉标</view>
+    <view class="cg-cfg-label">小标题</view>
     <input class="cg-cfg-input" value="{{advanced.steps.eyebrow}}" placeholder="例如 低碳行动 · 今日步数" data-section="steps" data-field="eyebrow" bindinput="onAdvancedField" />
-    <view class="cg-cfg-label">达标奖励分</view>
+    <view class="cg-cfg-label">奖励分</view>
     <input class="cg-cfg-input" type="number" value="{{advanced.steps.xp}}" placeholder="0 表示不给分" data-section="steps" data-field="xp" data-numeric="1" bindinput="onAdvancedField" />
       </view>
     </view>
@@ -260,7 +260,7 @@
     <input class="cg-cfg-input" value="{{advanced.estimate.title}}" placeholder="例如 这罐咖啡豆有多少颗" data-section="estimate" data-field="title" bindinput="onAdvancedField" />
     <view class="cg-adv-grid">
     <view><view class="cg-cfg-label">单位</view><input class="cg-cfg-input" value="{{advanced.estimate.unit}}" placeholder="颗 / 杯 / 本" data-section="estimate" data-field="unit" bindinput="onAdvancedField" /></view>
-    <view><view class="cg-cfg-label">答对奖励分</view><input class="cg-cfg-input" type="number" value="{{advanced.estimate.xp}}" placeholder="0 表示不给分" data-section="estimate" data-field="xp" data-numeric="1" bindinput="onAdvancedField" /></view>
+    <view><view class="cg-cfg-label">奖励分</view><input class="cg-cfg-input" type="number" value="{{advanced.estimate.xp}}" placeholder="0 表示不给分" data-section="estimate" data-field="xp" data-numeric="1" bindinput="onAdvancedField" /></view>
     </view>
     <view class="cg-adv-grid">
     <view><view class="cg-cfg-label">量程下限</view><input class="cg-cfg-input" type="digit" value="{{advanced.estimate.min}}" data-section="estimate" data-field="min" data-numeric="1" bindinput="onAdvancedField" /></view>
@@ -270,7 +270,7 @@
     <view><view class="cg-cfg-label">正确答案 <text class="req" wx:if="{{!formData.originalTemplateId}}" aria-hidden="true">*</text></view><input class="cg-cfg-input" type="digit" value="{{advanced.estimate.answer}}" data-section="estimate" data-field="answer" data-numeric="1" bindinput="onAdvancedField" /></view>
     <view><view class="cg-cfg-label">容差 <text class="req" wx:if="{{!formData.originalTemplateId}}" aria-hidden="true">*</text></view><input class="cg-cfg-input" type="digit" value="{{advanced.estimate.tolerance}}" data-section="estimate" data-field="tolerance" data-numeric="1" bindinput="onAdvancedField" /></view>
     </view>
-    <view class="cg-cfg-label">揭示文案</view>
+    <view class="cg-cfg-label">揭晓文字</view>
     <textarea class="cg-cfg-textarea" value="{{advanced.estimate.reveal}}" placeholder="例如 一共 480 颗，老板数了两遍" data-section="estimate" data-field="reveal" bindinput="onAdvancedField" />
       </view>
     </view>
@@ -298,8 +298,8 @@
     </view>
     <view class="cg-adv-add" data-path="pricePair.items" bindtap="addAdvancedRow" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加一张</view>
     <view class="cg-adv-grid">
-    <view><view class="cg-cfg-label">答对的奖励分</view><input class="cg-cfg-input" type="number" value="{{advanced.pricePair.xp}}" placeholder="0 至 200" data-section="pricePair" data-field="xp" data-numeric="1" bindinput="onAdvancedField" /></view>
-    <view><view class="cg-cfg-label">可以猜几次</view><input class="cg-cfg-input" type="number" value="{{advanced.pricePair.maxTries}}" placeholder="0 表示不限" data-section="pricePair" data-field="maxTries" data-numeric="1" bindinput="onAdvancedField" /></view>
+    <view><view class="cg-cfg-label">奖励分</view><input class="cg-cfg-input" type="number" value="{{advanced.pricePair.xp}}" placeholder="0 至 200" data-section="pricePair" data-field="xp" data-numeric="1" bindinput="onAdvancedField" /></view>
+    <view><view class="cg-cfg-label">次数上限</view><input class="cg-cfg-input" type="number" value="{{advanced.pricePair.maxTries}}" placeholder="0 表示不限" data-section="pricePair" data-field="maxTries" data-numeric="1" bindinput="onAdvancedField" /></view>
     </view>
       </view>
     </view>
@@ -309,7 +309,7 @@
     <input class="cg-cfg-input" value="{{advanced.hiddenObject.title}}" placeholder="例如 找出藏在店里的三只猫" data-section="hiddenObject" data-field="title" bindinput="onAdvancedField" />
     <view class="cg-cfg-label">提示</view>
     <input class="cg-cfg-input" value="{{advanced.hiddenObject.hint}}" placeholder="例如 窗台、书架、收银台后面" data-section="hiddenObject" data-field="hint" bindinput="onAdvancedField" />
-    <view class="cg-cfg-label">可以错几次</view>
+    <view class="cg-cfg-label">次数上限</view>
     <input class="cg-cfg-input" type="number" value="{{advanced.hiddenObject.maxTries}}" placeholder="0 表示不限" data-section="hiddenObject" data-field="maxTries" data-numeric="1" bindinput="onAdvancedField" />
     <view class="cg-cfg-label">场景图地址 <text class="req" aria-hidden="true">*</text></view>
     <input class="cg-cfg-input" value="{{advanced.hiddenObject.imageUrl}}" placeholder="https 链接或站内路径" data-section="hiddenObject" data-field="imageUrl" bindinput="onAdvancedField" />
@@ -322,7 +322,7 @@
         hover-class="cg-ho-scene--press" hover-stay-time="60">
     <image class="cg-ho-img" wx:if="{{advanced.hiddenObject.imageUrl}}"
            src="{{advanced.hiddenObject.imageUrl}}" mode="aspectFill" />
-    <view class="cg-ho-ph" wx:else>先填上面的场景图地址,再回来点位置</view>
+    <view class="cg-ho-ph" wx:else>先填上面的场景图地址，再回来节点置</view>
     <view class="cg-ho-pin {{hotspotArming === hi ? 'is-arming' : ''}}"
           wx:for="{{advanced.hiddenObject.hotspots}}" wx:key="id" wx:for-index="hi"
           wx:if="{{item.x >= 0 && item.y >= 0}}"
@@ -343,7 +343,7 @@
     </view>
     </view>
     <view class="cg-adv-add" data-path="hiddenObject.hotspots" bindtap="addAdvancedRow" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加目标</view>
-    <view class="cg-cfg-label">找齐奖励分</view>
+    <view class="cg-cfg-label">奖励分</view>
     <input class="cg-cfg-input" type="number" value="{{advanced.hiddenObject.xp}}" placeholder="0 表示不给分" data-section="hiddenObject" data-field="xp" data-numeric="1" bindinput="onAdvancedField" />
       </view>
     </view>
@@ -371,15 +371,15 @@
     <block wx:if="{{advanced.qa.judge !== false}}">
       <view class="cg-two cg-qa-pair">
         <view class="cg-col"><view class="cg-cfg-label">选择方式</view><cy-dropdown topic-editor columns="{{2}}" range="{{qaAnswerModes}}" range-key="label" value="{{opt.idx(qaAnswerModes, advanced.qa.multi ? 'multi' : 'single')}}" bind:change="pickQaAnswerMode"><view class="cg-pick">{{advanced.qa.multi ? '多选' : '单选'}}<view class="cg-caret"><cy-icon name="back" size="28" /></view></view></cy-dropdown></view>
-        <view class="cg-col"><view class="cg-cfg-label">可以答几次</view><cy-dropdown topic-editor columns="{{2}}" range="{{qaTriesOptions}}" range-key="label" value="{{opt.idx(qaTriesOptions, advanced.qa.maxTries || 0)}}" bind:change="pickQaMaxTries"><view class="cg-pick">{{opt.label(qaTriesOptions, advanced.qa.maxTries || 0) || (advanced.qa.maxTries + ' 次')}}<view class="cg-caret"><cy-icon name="back" size="28" /></view></view></cy-dropdown></view>
+        <view class="cg-col"><view class="cg-cfg-label">次数上限</view><cy-dropdown topic-editor columns="{{2}}" range="{{qaTriesOptions}}" range-key="label" value="{{opt.idx(qaTriesOptions, advanced.qa.maxTries || 0)}}" bind:change="pickQaMaxTries"><view class="cg-pick">{{opt.label(qaTriesOptions, advanced.qa.maxTries || 0) || (advanced.qa.maxTries + ' 次')}}<view class="cg-caret"><cy-icon name="back" size="28" /></view></view></cy-dropdown></view>
       </view>
       <view class="cg-two cg-qa-pair">
         <view class="cg-col"><view class="cg-cfg-label">次数用完后</view><cy-dropdown topic-editor columns="{{2}}" range="{{qaRevealOptions}}" range-key="label" value="{{opt.idx(qaRevealOptions, !!advanced.qa.reveal)}}" bind:change="pickQaReveal"><view class="cg-pick">{{advanced.qa.reveal ? '亮出正确答案' : '不亮出答案'}}<view class="cg-caret"><cy-icon name="back" size="28" /></view></view></cy-dropdown></view>
-        <view class="cg-col"><view class="cg-cfg-label">答对奖励分</view><input class="cg-cfg-input" type="number" value="{{advanced.qa.xp}}" placeholder="0 至 200" data-section="qa" data-field="xp" data-numeric="1" bindinput="onAdvancedField" /></view>
+        <view class="cg-col"><view class="cg-cfg-label">奖励分</view><input class="cg-cfg-input" type="number" value="{{advanced.qa.xp}}" placeholder="0 至 200" data-section="qa" data-field="xp" data-numeric="1" bindinput="onAdvancedField" /></view>
       </view>
     </block>
     <block wx:else>
-      <view class="cg-cfg-label">完成奖励分</view><input class="cg-cfg-input" type="number" value="{{advanced.qa.xp}}" placeholder="0 至 200" data-section="qa" data-field="xp" data-numeric="1" bindinput="onAdvancedField" />
+      <view class="cg-cfg-label">奖励分</view><input class="cg-cfg-input" type="number" value="{{advanced.qa.xp}}" placeholder="0 至 200" data-section="qa" data-field="xp" data-numeric="1" bindinput="onAdvancedField" />
     </block>
     <view class="cg-qa-sec">选项</view>
     <view class="cg-adv-repeat" wx:for="{{advanced.qa.options}}" wx:key="id" wx:for-index="qi">
@@ -415,8 +415,8 @@
     </block>
 
     <view class="cg-adv-grid" wx:if="{{advanced.qa.mode !== 'PICK'}}">
-    <view><view class="cg-cfg-label">可以答几次</view><input class="cg-cfg-input" type="number" value="{{advanced.qa.maxTries}}" placeholder="0 表示不限" data-section="qa" data-field="maxTries" data-numeric="1" bindinput="onAdvancedField" /></view>
-    <view><view class="cg-cfg-label">答对奖励分</view><input class="cg-cfg-input" type="number" value="{{advanced.qa.xp}}" placeholder="0 至 200" data-section="qa" data-field="xp" data-numeric="1" bindinput="onAdvancedField" /></view>
+    <view><view class="cg-cfg-label">次数上限</view><input class="cg-cfg-input" type="number" value="{{advanced.qa.maxTries}}" placeholder="0 表示不限" data-section="qa" data-field="maxTries" data-numeric="1" bindinput="onAdvancedField" /></view>
+    <view><view class="cg-cfg-label">奖励分</view><input class="cg-cfg-input" type="number" value="{{advanced.qa.xp}}" placeholder="0 至 200" data-section="qa" data-field="xp" data-numeric="1" bindinput="onAdvancedField" /></view>
     </view>
       </view>
     </view>
@@ -438,7 +438,7 @@
     <view><view class="cg-cfg-label">当天截止（点）</view><cy-dropdown portal="{{false}}" range="{{predictHourOptions}}" data-section="predict" data-field="closeAtHour" data-options="predictHourOptions" bind:change="onAdvancedPicker"><view class="cg-pick">{{advanced.predict.closeAtHour || 0}} 点<view class="cg-caret"><cy-icon name="back" size="28" /></view></view></cy-dropdown></view>
     <view><view class="cg-cfg-label">第几天揭晓</view><cy-dropdown portal="{{false}}" range="{{predictDayOptions}}" data-section="predict" data-field="revealDays" data-options="predictDayOptions" bind:change="onAdvancedPicker"><view class="cg-pick">{{predictDayLabel}}<view class="cg-caret"><cy-icon name="back" size="28" /></view></view></cy-dropdown></view>
     <view><view class="cg-cfg-label">揭晓时间（点）</view><cy-dropdown portal="{{false}}" range="{{predictHourOptions}}" data-section="predict" data-field="revealHour" data-options="predictHourOptions" bind:change="onAdvancedPicker"><view class="cg-pick">{{advanced.predict.revealHour || 0}} 点<view class="cg-caret"><cy-icon name="back" size="28" /></view></view></cy-dropdown></view>
-    <view><view class="cg-cfg-label">押中奖励分</view><input class="cg-cfg-input" type="number" value="{{advanced.predict.xp}}" placeholder="0 表示不给分" data-section="predict" data-field="xp" data-numeric="1" bindinput="onAdvancedField" /></view>
+    <view><view class="cg-cfg-label">奖励分</view><input class="cg-cfg-input" type="number" value="{{advanced.predict.xp}}" placeholder="0 表示不给分" data-section="predict" data-field="xp" data-numeric="1" bindinput="onAdvancedField" /></view>
     </view>
       </view>
     </view>
@@ -465,7 +465,7 @@
     <block wx:if="{{advanced.diceRoll.mode === 'd20'}}">
     <view class="cg-adv-grid">
       <view><view class="cg-cfg-label">难度 DC · 1 至 40 <text class="req" aria-hidden="true">*</text></view><input class="cg-cfg-input" type="number" value="{{advanced.diceRoll.dc}}" aria-label="D20 难度 DC" data-section="diceRoll" data-field="dc" bindinput="onAdvancedField" /></view>
-      <view><view class="cg-cfg-label">加值 · -20 至 20</view><input class="cg-cfg-input" type="text" value="{{advanced.diceRoll.modifier}}" aria-label="D20 加值，可填负数" data-section="diceRoll" data-field="modifier" bindinput="onAdvancedField" /></view>
+      <view><view class="cg-cfg-label">加值（−20–20）</view><input class="cg-cfg-input" type="text" value="{{advanced.diceRoll.modifier}}" aria-label="D20 加值，可填负数" data-section="diceRoll" data-field="modifier" bindinput="onAdvancedField" /></view>
     </view>
     <view class="cg-cfg-label">掷骰方式</view>
     <cy-dropdown portal="{{false}}" range="{{d20RollModes}}" range-key="label" value="{{opt.idx(d20RollModes, advanced.diceRoll.rollMode)}}" bind:change="onD20RollMode"><view class="cg-pick {{opt.idx(d20RollModes, advanced.diceRoll.rollMode) < 0 ? 'empty' : ''}}">{{opt.label(d20RollModes, advanced.diceRoll.rollMode)}}<view class="cg-caret"><cy-icon name="back" size="28" /></view></view></cy-dropdown>
@@ -534,7 +534,7 @@
     </view>
     <view class="cg-cfg-label">提示语</view>
     <input class="cg-cfg-input" value="{{advanced.compass.hint}}" placeholder="例如 它比你想的更靠右" data-section="compass" data-field="hint" bindinput="onAdvancedField" />
-    <view class="cg-cfg-label">对准奖励分</view>
+    <view class="cg-cfg-label">奖励分</view>
     <input class="cg-cfg-input" type="number" value="{{advanced.compass.xp}}" placeholder="0 表示不给分" data-section="compass" data-field="xp" data-numeric="1" bindinput="onAdvancedField" />
 
       </view>
@@ -545,7 +545,7 @@
     <input class="cg-cfg-input" value="{{advanced.shout.kicker}}" placeholder="例如 一起喊，让这儿听见" data-section="shout" data-field="kicker" bindinput="onAdvancedField" />
     <view class="cg-cfg-label">要连续喊满几秒 <text class="req" aria-hidden="true">*</text></view>
     <input class="cg-cfg-input" type="number" value="{{advanced.shout.seconds}}" placeholder="5 至 300" data-section="shout" data-field="seconds" data-numeric="1" bindinput="onAdvancedField" />
-    <view class="cg-cfg-label">喊满奖励分</view>
+    <view class="cg-cfg-label">奖励分</view>
     <input class="cg-cfg-input" type="number" value="{{advanced.shout.xp}}" placeholder="0 表示不给分" data-section="shout" data-field="xp" data-numeric="1" bindinput="onAdvancedField" />
 
       </view>
@@ -569,7 +569,7 @@
     <view><view class="cg-cfg-label">允许误差（毫秒） <text class="req" aria-hidden="true">*</text></view><input class="cg-cfg-input" type="number" value="{{advanced.stopwatch.toleranceMs}}" placeholder="50 至 5000" data-section="stopwatch" data-field="toleranceMs" data-numeric="1" bindinput="onAdvancedField" /></view>
     </view>
 
-    <view class="cg-cfg-label">可以停几次</view>
+    <view class="cg-cfg-label">次数上限</view>
     <input class="cg-cfg-input" type="number" value="{{advanced.stopwatch.tries}}" placeholder="0 表示不限" data-section="stopwatch" data-field="tries" data-numeric="1" bindinput="onAdvancedField" />
       </view>
     </view>
@@ -632,7 +632,7 @@
     </view>
     <input class="cg-cfg-input" value="{{itemRow.label}}" placeholder="例如 滤杯" data-path="classify.items" data-index="{{ci}}" data-field="label" bindinput="updateAdvancedRow" />
     <cy-dropdown portal="{{false}}" range="{{opt.names(advanced.classify.bins, '类别 ')}}" value="{{opt.idx(advanced.classify.bins, advanced.classify.answer[itemRow.id], 'id')}}" data-item="{{itemRow.id}}" bind:change="setClassifyBin"><view class="cg-pick {{opt.idx(advanced.classify.bins, advanced.classify.answer[itemRow.id], 'id') < 0 ? 'empty' : ''}}"><text>{{opt.label(advanced.classify.bins, advanced.classify.answer[itemRow.id], 'id', '类别 ')}}</text><view class="cg-caret"><cy-icon name="back" size="28" /></view></view></cy-dropdown>
-    <view class="cg-cfg-hint" wx:if="{{!advanced.classify.answer[itemRow.id]}}">还没选类别</view>
+    <view class="cg-cfg-hint" wx:if="{{!advanced.classify.answer[itemRow.id]}}">未选择类别</view>
     </view>
     <view class="cg-adv-add" bindtap="addClassifyItem" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加条目</view>
       </view>
@@ -681,7 +681,7 @@
               <view class="cg-tool-actions cg-effect-draft-actions"><view bindtap="saveEffectResource" aria-role="button" aria-label="确认新建需要的数值" hover-class="cy-pressed" hover-stay-time="80">确认</view><view bindtap="closeEffectResource" aria-role="button" aria-label="取消新建" hover-class="cy-pressed" hover-stay-time="80">取消</view></view>
               <cy-inline-error wx:if="{{effectResourceError}}" title="{{effectResourceError.error}}" />
             </block>
-            <view class="cg-cfg-hint" wx:if="{{effectRows['profile.questions.' + qi + '.options.' + oi + '.effects'][ei].missing}}">这个数值已不存在，请重新选择</view>
+            <view class="cg-cfg-hint" wx:if="{{effectRows['profile.questions.' + qi + '.options.' + oi + '.effects'][ei].missing}}">数值已删除，请重选</view>
             <cy-dropdown portal="{{false}}" range="{{resourceEffectOps}}" range-key="label" value="{{opt.idx(resourceEffectOps, eff.op)}}" data-path="{{'profile.questions.' + qi + '.options.' + oi + '.effects'}}" data-index="{{ei}}" bind:change="pickEffectOp"><view class="cg-pick {{opt.idx(resourceEffectOps, eff.op) < 0 ? 'empty' : ''}}">{{opt.label(resourceEffectOps, eff.op)}}<view class="cg-caret"><cy-icon name="back" size="28" /></view></view></cy-dropdown>
             <input class="cg-cfg-input" type="number" value="{{eff.value}}" placeholder="数量 1 至 999" data-path="{{'profile.questions.' + qi + '.options.' + oi + '.effects'}}" data-index="{{ei}}" data-field="value" bindinput="updateEffectField" />
             <cy-inline-error wx:if="{{opt.rowErr(effectErrors, 'profile.questions.' + qi + '.options.' + oi + '.effects', ei)}}" title="{{opt.rowErr(effectErrors, 'profile.questions.' + qi + '.options.' + oi + '.effects', ei)}}" />
@@ -714,7 +714,7 @@
     </view>
     <view class="cg-adv-add" wx:if="{{advanced.profile.questions.length < 8}}" bindtap="addProfileQuestion" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加问题</view>
 
-    <view><view class="cg-cfg-label">填完奖励分</view><input class="cg-cfg-input" type="number" value="{{advanced.profile.xp}}" placeholder="0 表示不给分" data-section="profile" data-field="xp" data-numeric="1" bindinput="onAdvancedField" /></view>
+    <view><view class="cg-cfg-label">奖励分</view><input class="cg-cfg-input" type="number" value="{{advanced.profile.xp}}" placeholder="0 表示不给分" data-section="profile" data-field="xp" data-numeric="1" bindinput="onAdvancedField" /></view>
       </view>
     </view>
 
@@ -725,7 +725,7 @@
     <!-- 拍物成卡的兜底卡名:卡名先用 AI 认出来的物品名,认不出来用这里的,这里也空就用上面的标题。
        只在拍物成卡模式出现 —— 普通拍照审核没有卡。 -->
     <view wx:if="{{advanced.photoCheck.mode === 'CARD'}}">
-    <view class="cg-cfg-label">兜底卡名</view>
+    <view class="cg-cfg-label">默认卡名</view>
     <input class="cg-cfg-input" value="{{advanced.photoCheck.cardTitle}}" placeholder="例如 一枚旧弹壳" maxlength="64" data-section="photoCheck" data-field="cardTitle" bindinput="onAdvancedField" />
     </view>
     <view class="cg-cfg-label">提示词</view>
@@ -755,12 +755,12 @@
             block-size="24" data-section="photoCheck" data-field="frameOpacity" data-numeric="1" bindchange="onAdvancedField" />
     </view>
     <view class="cg-adv-grid">
-    <view><view class="cg-cfg-label">置信度分数线（0 至 100）</view><slider min="0" max="100" step="1" value="{{advanced.photoCheck.minConfidence}}" show-value activeColor="var(--cy-color-action-primary-bg)" backgroundColor="var(--cy-color-border-subtle)" block-size="24" data-section="photoCheck" data-field="minConfidence" data-numeric="1" bindchange="onAdvancedField" /></view>
-    <view><view class="cg-cfg-label">可以拍几次（1 至 10） <text class="req" aria-hidden="true">*</text></view><input class="cg-cfg-input" type="number" value="{{advanced.photoCheck.maxTries}}" placeholder="3" data-section="photoCheck" data-field="maxTries" data-numeric="1" bindinput="onAdvancedField" /></view>
+    <view><view class="cg-cfg-label">识别通过分（0–100）</view><slider min="0" max="100" step="1" value="{{advanced.photoCheck.minConfidence}}" show-value activeColor="var(--cy-color-action-primary-bg)" backgroundColor="var(--cy-color-border-subtle)" block-size="24" data-section="photoCheck" data-field="minConfidence" data-numeric="1" bindchange="onAdvancedField" /></view>
+    <view><view class="cg-cfg-label">次数上限（1–10） <text class="req" aria-hidden="true">*</text></view><input class="cg-cfg-input" type="number" value="{{advanced.photoCheck.maxTries}}" placeholder="3" data-section="photoCheck" data-field="maxTries" data-numeric="1" bindinput="onAdvancedField" /></view>
     </view>
     <view class="cg-cfg-label">次数用尽还没过</view>
     <cy-dropdown portal="{{false}}" range="{{photoCheckFallbacks}}" range-key="label" value="{{opt.idx(photoCheckFallbacks, advanced.photoCheck.fallback)}}" bind:change="pickPhotoCheckFallback"><view class="cg-pick {{opt.idx(photoCheckFallbacks, advanced.photoCheck.fallback) < 0 ? 'empty' : ''}}">{{opt.label(photoCheckFallbacks, advanced.photoCheck.fallback)}}<view class="cg-caret"><cy-icon name="back" size="28" /></view></view></cy-dropdown>
-    <view class="cg-cfg-label">通过奖励分</view><input class="cg-cfg-input" type="number" value="{{advanced.photoCheck.xp}}" placeholder="0 表示不给分" data-section="photoCheck" data-field="xp" data-numeric="1" bindinput="onAdvancedField" />
+    <view class="cg-cfg-label">奖励分</view><input class="cg-cfg-input" type="number" value="{{advanced.photoCheck.xp}}" placeholder="0 表示不给分" data-section="photoCheck" data-field="xp" data-numeric="1" bindinput="onAdvancedField" />
       </view>
     </view>
 
@@ -775,7 +775,7 @@
     <cy-dropdown portal="{{false}}" range="{{checkTiers}}" range-key="label" value="{{opt.idx(checkTiers, advanced.check.tier)}}" bind:change="pickCheckTier"><view class="cg-pick {{opt.idx(checkTiers, advanced.check.tier) < 0 ? 'empty' : ''}}">{{opt.label(checkTiers, advanced.check.tier)}}<view class="cg-caret"><cy-icon name="back" size="28" /></view></view></cy-dropdown>
     <view class="cg-cfg-label">过了说一句</view><input class="cg-cfg-input" value="{{advanced.check.successText}}" placeholder="例如 你站稳了" data-section="check" data-field="successText" bindinput="onAdvancedField" />
     <view class="cg-cfg-label">没过说一句</view><input class="cg-cfg-input" value="{{advanced.check.failText}}" placeholder="例如 你的手在抖" data-section="check" data-field="failText" bindinput="onAdvancedField" />
-    <view class="cg-cfg-label" wx:if="{{advanced.check.successEffects.length}}">判定通过后的效果（旧，保留）</view>
+    <view class="cg-cfg-label" wx:if="{{advanced.check.successEffects.length}}">判定通过后的效果</view>
     <view class="cg-adv-repeat" wx:for="{{advanced.check.successEffects}}" wx:key="index" wx:for-index="ei" wx:for-item="eff">
     <view class="cg-adv-repeat-head">
       <text>效果 {{ei + 1}}</text>
@@ -790,7 +790,7 @@
         <view class="cg-tool-actions cg-effect-draft-actions"><view bindtap="saveEffectResource" aria-role="button" aria-label="确认新建需要的数值" hover-class="cy-pressed" hover-stay-time="80">确认</view><view bindtap="closeEffectResource" aria-role="button" aria-label="取消新建" hover-class="cy-pressed" hover-stay-time="80">取消</view></view>
         <cy-inline-error wx:if="{{effectResourceError}}" title="{{effectResourceError.error}}" />
       </block>
-      <view class="cg-cfg-hint" wx:if="{{effectRows['check.successEffects'][ei].missing}}">这个数值已不存在，请重新选择</view>
+      <view class="cg-cfg-hint" wx:if="{{effectRows['check.successEffects'][ei].missing}}">数值已删除，请重选</view>
       <cy-dropdown portal="{{false}}" range="{{resourceEffectOps}}" range-key="label" value="{{opt.idx(resourceEffectOps, eff.op)}}" data-path="check.successEffects" data-index="{{ei}}" bind:change="pickEffectOp"><view class="cg-pick {{opt.idx(resourceEffectOps, eff.op) < 0 ? 'empty' : ''}}">{{opt.label(resourceEffectOps, eff.op)}}<view class="cg-caret"><cy-icon name="back" size="28" /></view></view></cy-dropdown>
       <input class="cg-cfg-input" type="number" value="{{eff.value}}" placeholder="数量 1 至 999" data-path="check.successEffects" data-index="{{ei}}" data-field="value" bindinput="updateEffectField" />
       <cy-inline-error wx:if="{{opt.rowErr(effectErrors, 'check.successEffects', ei)}}" title="{{opt.rowErr(effectErrors, 'check.successEffects', ei)}}" />
@@ -805,7 +805,7 @@
     </block>
     </view>
 
-    <view class="cg-cfg-label" wx:if="{{advanced.check.failEffects.length}}">判定失败后的效果（旧，保留）</view>
+    <view class="cg-cfg-label" wx:if="{{advanced.check.failEffects.length}}">判定失败后的效果</view>
     <view class="cg-adv-repeat" wx:for="{{advanced.check.failEffects}}" wx:key="index" wx:for-index="ei" wx:for-item="eff">
     <view class="cg-adv-repeat-head">
       <text>效果 {{ei + 1}}</text>
@@ -820,7 +820,7 @@
         <view class="cg-tool-actions cg-effect-draft-actions"><view bindtap="saveEffectResource" aria-role="button" aria-label="确认新建需要的数值" hover-class="cy-pressed" hover-stay-time="80">确认</view><view bindtap="closeEffectResource" aria-role="button" aria-label="取消新建" hover-class="cy-pressed" hover-stay-time="80">取消</view></view>
         <cy-inline-error wx:if="{{effectResourceError}}" title="{{effectResourceError.error}}" />
       </block>
-      <view class="cg-cfg-hint" wx:if="{{effectRows['check.failEffects'][ei].missing}}">这个数值已不存在，请重新选择</view>
+      <view class="cg-cfg-hint" wx:if="{{effectRows['check.failEffects'][ei].missing}}">数值已删除，请重选</view>
       <cy-dropdown portal="{{false}}" range="{{resourceEffectOps}}" range-key="label" value="{{opt.idx(resourceEffectOps, eff.op)}}" data-path="check.failEffects" data-index="{{ei}}" bind:change="pickEffectOp"><view class="cg-pick {{opt.idx(resourceEffectOps, eff.op) < 0 ? 'empty' : ''}}">{{opt.label(resourceEffectOps, eff.op)}}<view class="cg-caret"><cy-icon name="back" size="28" /></view></view></cy-dropdown>
       <input class="cg-cfg-input" type="number" value="{{eff.value}}" placeholder="数量 1 至 999" data-path="check.failEffects" data-index="{{ei}}" data-field="value" bindinput="updateEffectField" />
       <cy-inline-error wx:if="{{opt.rowErr(effectErrors, 'check.failEffects', ei)}}" title="{{opt.rowErr(effectErrors, 'check.failEffects', ei)}}" />
@@ -866,15 +866,15 @@
     <input class="cg-cfg-input" value="{{advanced.note.prompt}}" placeholder="例如 你看到窗外什么" data-section="note" data-field="prompt" bindinput="onAdvancedField" />
     <view class="cg-adv-grid">
     <view><view class="cg-cfg-label">最多几个字</view><input class="cg-cfg-input" type="number" value="{{advanced.note.maxLength}}" placeholder="40" data-section="note" data-field="maxLength" data-numeric="1" bindinput="onAdvancedField" /></view>
-    <view><view class="cg-cfg-label">给后来的人看几条（0 至 5）</view><input class="cg-cfg-input" type="number" value="{{advanced.note.showPrevious}}" placeholder="3" data-section="note" data-field="showPrevious" data-numeric="1" bindinput="onAdvancedField" /></view>
+    <view><view class="cg-cfg-label">展示条数（0–5）</view><input class="cg-cfg-input" type="number" value="{{advanced.note.showPrevious}}" placeholder="3" data-section="note" data-field="showPrevious" data-numeric="1" bindinput="onAdvancedField" /></view>
     </view>
-    <view class="cg-cfg-label">预设短句（0 至 6 条，给玩家抄近路）</view>
+    <view class="cg-cfg-label">预设短句（最多 6 条）</view>
     <view class="cg-adv-repeat" wx:for="{{advanced.note.presets}}" wx:key="index" wx:for-index="pi">
     <view class="cg-adv-repeat-head"><text>短句 {{pi + 1}}</text><view class="cg-adv-del" data-index="{{pi}}" bindtap="removeNotePreset" aria-role="button" aria-label="删除" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="28" /></view></view>
     <input class="cg-cfg-input" value="{{item}}" placeholder="例如 天是灰的" data-index="{{pi}}" bindinput="updateNotePreset" />
     </view>
     <view class="cg-adv-add" wx:if="{{advanced.note.presets.length < 6}}" bindtap="addNotePreset" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加短句</view>
-    <view><view class="cg-cfg-label">留言奖励分</view><input class="cg-cfg-input" type="number" value="{{advanced.note.xp}}" placeholder="0 表示不给分" data-section="note" data-field="xp" data-numeric="1" bindinput="onAdvancedField" /></view>
+    <view><view class="cg-cfg-label">奖励分</view><input class="cg-cfg-input" type="number" value="{{advanced.note.xp}}" placeholder="0 表示不给分" data-section="note" data-field="xp" data-numeric="1" bindinput="onAdvancedField" /></view>
       </view>
     </view>
 
@@ -886,12 +886,12 @@
     <input class="cg-cfg-input" value="{{advanced.typeIn.target}}" placeholder="例如 hello world" data-section="typeIn" data-field="target" bindinput="onAdvancedField" />
     <view class="cg-adv-grid" wx:if="{{advanced.outcomeRules.version !== 1}}">
     <view><view class="cg-cfg-label">限时（3 至 120 秒） <text class="req" aria-hidden="true">*</text></view><input class="cg-cfg-input" type="number" value="{{advanced.typeIn.seconds}}" placeholder="10" data-section="typeIn" data-field="seconds" data-numeric="1" bindinput="onAdvancedField" /></view>
-    <view><view class="cg-cfg-label">可以打几次（0 = 不限）</view><input class="cg-cfg-input" type="number" value="{{advanced.typeIn.tries}}" placeholder="0" data-section="typeIn" data-field="tries" data-numeric="1" bindinput="onAdvancedField" /></view>
+    <view><view class="cg-cfg-label">次数上限（0 = 不限）</view><input class="cg-cfg-input" type="number" value="{{advanced.typeIn.tries}}" placeholder="0" data-section="typeIn" data-field="tries" data-numeric="1" bindinput="onAdvancedField" /></view>
     </view>
-    <block wx:else><view class="cg-cfg-label">可以打几次（0 = 不限）</view><input class="cg-cfg-input" type="number" value="{{advanced.typeIn.tries}}" placeholder="0" data-section="typeIn" data-field="tries" data-numeric="1" bindinput="onAdvancedField" /></block>
+    <block wx:else><view class="cg-cfg-label">次数上限（0 = 不限）</view><input class="cg-cfg-input" type="number" value="{{advanced.typeIn.tries}}" placeholder="0" data-section="typeIn" data-field="tries" data-numeric="1" bindinput="onAdvancedField" /></block>
     <view class="cg-rw-line compact"><view class="cg-rw-name">区分大小写</view><cy-switch checked="{{advanced.typeIn.caseSensitive}}" data-key="typeIn.caseSensitive" bindchange="onAdvancedSubToggle" /></view>
     <view class="cg-rw-line compact"><view class="cg-rw-name">终端样式（黑底白字，打对后整屏收成一条线）</view><cy-switch checked="{{advanced.typeIn.terminalSkin}}" data-key="typeIn.terminalSkin" bindchange="onAdvancedSubToggle" /></view>
-    <view><view class="cg-cfg-label">打完奖励分</view><input class="cg-cfg-input" type="number" value="{{advanced.typeIn.xp}}" placeholder="0 表示不给分" data-section="typeIn" data-field="xp" data-numeric="1" bindinput="onAdvancedField" /></view>
+    <view><view class="cg-cfg-label">奖励分</view><input class="cg-cfg-input" type="number" value="{{advanced.typeIn.xp}}" placeholder="0 表示不给分" data-section="typeIn" data-field="xp" data-numeric="1" bindinput="onAdvancedField" /></view>
       </view>
     </view>
 
@@ -932,7 +932,7 @@
     </view>
     </view>
     <view class="cg-adv-add" bindtap="addBlindOption" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加选项</view>
-    <view class="cg-cfg-label">答对奖励分</view>
+    <view class="cg-cfg-label">奖励分</view>
     <input class="cg-cfg-input" type="number" value="{{advanced.blindTaste.xp}}" placeholder="0 表示不给分" data-section="blindTaste" data-field="xp" data-numeric="1" bindinput="onAdvancedField" />
       </view>
     </view>
@@ -967,7 +967,7 @@
 
     <!-- 结果合同:这一关能产出哪些路线结果。跟着选中的玩法走,所以排在配置后面 -->
     <view class="cg-outcome-contract" wx:if="{{gameKey && gameKey !== 'album'}}">
-    <view class="cg-cfg-label">本玩法可产出的路线结果</view>
+    <view class="cg-cfg-label">可触发的结果</view>
     <view class="cg-outcome-row" wx:for="{{outcomePreview}}" wx:key="code">
       <text class="cg-outcome-label">{{item.label}}</text>
     </view>
@@ -981,7 +981,7 @@
       placeholder="例如:这座桥建于哪一年?" placeholder-class="cg-ph" />
     <view class="cg-cfg-label">正确答案 <text class="req" wx:if="{{!formData.originalTemplateId}}" aria-hidden="true">*</text></view>
     <input class="cg-cfg-input" value="{{ formData.questionAnswer }}" bindinput="onQuestionAnswerChange"
-      placeholder="可填多个,用、分隔" placeholder-class="cg-ph" />
+      placeholder="可填多个，用、分隔" placeholder-class="cg-ph" />
     </cy-card>
 
     <!-- 选项问答 -->
@@ -1072,7 +1072,7 @@
     <cy-card class="cg-cfg" wx:if="{{ !advanced.qa.enabled && formData.validationMethod === 2 }}">
     <view class="cg-cfg-label">拍照要求</view>
     <textarea class="cg-cfg-textarea" value="{{ formData.photoRequireDesc }}" bindinput="onPhotoRequireDescChange"
-      maxlength="50" placeholder="告诉玩家要拍什么,例如:与这棵古树合影" placeholder-class="cg-ph" />
+      maxlength="50" placeholder="告诉玩家要拍什么，例如:与这棵古树合影" placeholder-class="cg-ph" />
     </cy-card>
 
     <!-- 提示(并入完成方式;text/choice/gps 可开关) -->
@@ -1088,11 +1088,11 @@
     </view>
     <view class="cg-hint-fields" wx:if="{{ hintEnabled }}">
       <input class="cg-cfg-input" value="{{ formData.hint1 }}" bindinput="onHint1Change"
-        placeholder="一级提示,如:留意脚下的石板" placeholder-class="cg-ph" />
+        placeholder="一级提示，如:留意脚下的石板" placeholder-class="cg-ph" />
       <input class="cg-cfg-input" value="{{ formData.hint2 }}" bindinput="onHint2Change"
         placeholder="二级提示(可选),更明确的引导" placeholder-class="cg-ph" />
       <input class="cg-cfg-input" value="{{ formData.answerReveal }}" bindinput="onAnswerRevealChange"
-        placeholder="兜底答案,实在卡住时直接给出" placeholder-class="cg-ph" />
+        placeholder="备用答案，卡住时直接给出" placeholder-class="cg-ph" />
     </view>
     </view>
     <!-- 结果反馈(2026-10-22 主人定稿):先写清三步,下面成功反馈 / 失败反馈各一个开关,打开才出现编辑。
@@ -1147,7 +1147,7 @@
     <view wx:if="{{step.terminal && advanced.branch.enabled && advanced.outcomeRules.version !== 1}}" class="cg-outcome-fields">
       <view class="cg-cfg-label">稳定 outcomeCode <text class="req" aria-hidden="true">*</text></view>
       <input class="cg-cfg-input" value="{{step.outcomeCode}}" placeholder="例如 FOUND_CLOCK" data-index="{{si}}" data-field="outcomeCode" bindinput="updateBranchStep" />
-      <view class="cg-cfg-label">作者可读名称</view>
+      <view class="cg-cfg-label">名称（仅自己可见）</view>
       <input class="cg-cfg-input" value="{{step.outcomeLabel}}" placeholder="例如 找到钟楼" data-index="{{si}}" data-field="outcomeLabel" bindinput="updateBranchStep" />
     </view>
     <view wx:if="{{!step.terminal}}" class="cg-adv-options">
@@ -1226,7 +1226,7 @@
                   <cy-icon wx:else name="plus" size="40" />
                 </view>
                 <input class="cg-cfg-input flat" value="{{ formData.medalName }}" bindinput="onMedalNameInput"
-                  placeholder="勋章名称,如 老城探秘者" placeholder-class="cg-ph" />
+                  placeholder="勋章名称，如 老城探秘者" placeholder-class="cg-ph" />
                 <view class="cg-medal-clear" wx:if="{{ formData.medalImg }}" catchtap="clearMedal" aria-role="button" aria-label="清除勋章图片" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="28" /></view>
               </view>
               <!-- 双样式(用户 8-07 拍板):发布者可选 二维发光 / 3D珐琅;珐琅建议透明角方图 -->
@@ -1259,11 +1259,11 @@
               placeholder="这一刻发生了什么?写下玩家此时读到的片段…" placeholder-class="cg-ph" />
             <view class="cg-beat-row">
               <input class="cg-beat-tagin" value="{{ beat.tag }}" bindinput="onStoryBeatTag" data-index="{{ bi }}"
-                placeholder="时刻标签,如「此刻」" placeholder-class="cg-ph" />
+                placeholder="时刻标签，如「此刻」" placeholder-class="cg-ph" />
             </view>
             <view class="cg-beat-photos">
               <view class="pgrid-head">
-                <text class="pgrid-hint">配图(最多6张)</text>
+                <text class="pgrid-hint">配图（最多 6 张）</text>
                 <text class="pgrid-count">{{ beat.imgs.length }}/6</text>
               </view>
               <view class="pgrid">
@@ -1297,11 +1297,11 @@
         <view class="cg-r5-pill">配置<cy-icon name="chevron-right" size="24" /></view>
       </view>
       <view class="cg-r5-row {{r5Editor.toolRows.length ? 'cg-r5-row--hr' : ''}}" wx:if="{{ opt.has(moduleList, 'voice') }}" bindtap="openVoiceSheet" aria-role="button" aria-label="配置语音讲解" hover-class="cy-pressed" hover-stay-time="80">
-        <view class="cg-r5-row__main"><text class="cg-r5-row__title">语音讲解</text><text class="cg-r5-row__sub">{{formData.audioUrl ? (formData.audioFileName || '已上传音频') : '还没有上传音频'}}</text></view>
+        <view class="cg-r5-row__main"><text class="cg-r5-row__title">语音讲解</text><text class="cg-r5-row__sub">{{formData.audioUrl ? (formData.audioFileName || '已上传音频') : '未上传'}}</text></view>
         <view class="cg-r5-pill">配置<cy-icon name="chevron-right" size="24" /></view>
       </view>
       <view class="cg-r5-row {{r5Editor.toolRows.length || opt.has(moduleList, 'voice') ? 'cg-r5-row--hr' : ''}}" wx:if="{{ advanced.backgroundMusic }}" bindtap="openMusicSheet" aria-role="button" aria-label="配置背景音乐" hover-class="cy-pressed" hover-stay-time="80">
-        <view class="cg-r5-row__main"><text class="cg-r5-row__title">背景音乐</text><text class="cg-r5-row__sub">{{advanced.backgroundMusic.title || (advanced.backgroundMusic.audioUrl ? '已上传音乐' : '还没有上传音乐')}}{{advanced.backgroundMusic.loop === false ? '' : ' · 循环'}}</text></view>
+        <view class="cg-r5-row__main"><text class="cg-r5-row__title">背景音乐</text><text class="cg-r5-row__sub">{{advanced.backgroundMusic.title || (advanced.backgroundMusic.audioUrl ? '已上传音乐' : '未上传')}}{{advanced.backgroundMusic.loop === false ? '' : ' · 循环'}}</text></view>
         <view class="cg-r5-pill">配置<cy-icon name="chevron-right" size="24" /></view>
       </view>
       <view class="cg-adv-add {{r5Editor.toolRows.length || opt.has(moduleList, 'voice') || advanced.backgroundMusic ? '' : 'cg-adv-add--first'}}" bindtap="openToolPicker" aria-role="button" aria-label="添加互动工具" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="28" />添加互动工具</view>
@@ -1309,7 +1309,7 @@
 
     <!-- 空态 / 添加模块 -->
     <cy-card class="cg-empty" wx:if="{{ moduleList.length === 0 }}">
-      <cy-empty title="还没有添加玩法模块" sub="先从「完成方式」开始，搭出这一关怎么玩" cta="添加模块" bind:cta="openAddSheet" />
+      <cy-empty title="还没有添加玩法模块" sub="先设置完成方式" cta="添加模块" bind:cta="openAddSheet" />
     </cy-card>
     <view class="cg-addmod" wx:elif="{{ availableModules.length > 0 }}" hover-class="cg-addmod--pressed" hover-stay-time="80" bindtap="openAddSheet"><cy-icon name="plus" size="28" />添加模块</view>
 
@@ -1417,11 +1417,11 @@
                 </view>
               </view>
               <!-- 无需 -->
-              <view wx:else class="cg-pv-none">本点位无需验证,点击下方按钮即可完成</view>
+              <view wx:else class="cg-pv-none">本节点无需验证，点击下方按钮即可完成</view>
             </view>
-            <view class="cg-pv-wrong" wx:if="{{ pvWrong }}"><cy-icon name="warning" size="32" />回答不正确,再试一次</view>
+            <view class="cg-pv-wrong" wx:if="{{ pvWrong }}"><cy-icon name="warning" size="32" />回答不正确，再试一次</view>
           </cy-card>
-          <view class="cg-pv-usehint" wx:if="{{ pvHasHint && !pvHintShown }}" bindtap="pvUseHint" aria-role="button" aria-label="使用提示" hover-class="cy-pressed" hover-stay-time="80">需要提示?</view>
+          <view class="cg-pv-usehint" wx:if="{{ pvHasHint && !pvHintShown }}" bindtap="pvUseHint" aria-role="button" aria-label="使用提示" hover-class="cy-pressed" hover-stay-time="80">需要提示？</view>
           <view class="cg-pv-hint" wx:if="{{ pvHintShown }}">{{ pvHintText }}</view>
           <cy-btn variant="primary" style="margin-top:var(--cy-space-4)" bindtap="pvSubmitChallenge">{{ pvSubmitLabel }}</cy-btn>
         </view>
@@ -1430,7 +1430,7 @@
         <view wx:if="{{ pvStepKey === 'complete' }}" class="cg-pv-panel cg-pv-complete">
           <view class="cg-pv-check"><cy-icon name="check" size="96" /></view>
           <view class="cg-pv-complete-t1">任务完成!</view>
-          <view class="cg-pv-complete-t2">你解开了这个点位的秘密</view>
+          <view class="cg-pv-complete-t2">你解开了这个节点的秘密</view>
           <cy-btn variant="primary" class="cy-btn-inline" style="margin-top:var(--cy-space-4)" bindtap="pvNext">{{ rwAny ? '领取奖励' : '完成' }}</cy-btn>
         </view>
 
@@ -1464,7 +1464,7 @@
       <!-- 2026-09-23 用户:底部「保存前摘要」删掉;只在保存失败时出失败说明 -->
       <cy-inline-error wx:if="{{submitError}}" kind="network"
         title="{{from === 'citynode' ? '玩法没有保存成功' : (lastSubmitAction === 'draft' ? '草稿没有保存成功' : '玩法没有发布成功')}}"
-        sub="{{submitError}}。已填的内容都还在，点「重试」再提交一次。" action="重试" bind:action="retrySubmit" />
+        sub="{{submitError}}" action="重试" bind:action="retrySubmit" />
       <!-- 据点玩法没有草稿(saveDraft 对 citynode 只会弹「请直接保存」),不摆一颗点了没用的键;
            主键是「保存玩法」—— 保存后回到据点页再提交投放,这里不是发布路线。 -->
       <view class="cg-pv-bottombar">
@@ -1557,7 +1557,7 @@
           </cy-card>
           <view class="cg-audio-empty" wx:else bindtap="uploadAudio" hover-class="cy-pressed" hover-stay-time="80">上传音频文件</view>
           <view wx:if="{{ formData.audioUrl }}">
-            <view class="cg-cfg-label">时长(秒,可选)</view>
+            <view class="cg-cfg-label">时长（秒，选填）</view>
             <input class="cg-cfg-input" type="number" value="{{ formData.audioDuration }}" bindinput="onAudioDurationChange"
               placeholder="例如:45" placeholder-class="cg-ph" />
           </view>
@@ -1609,7 +1609,7 @@
     <block wx:elif="{{advanced.scan.kind === 'OVERLAY'}}">
       <view class="cg-cfg-label">显形图地址 <text class="req" aria-hidden="true">*</text></view>
       <input class="cg-cfg-input" value="{{advanced.scan.overlayUrl}}" placeholder="https 链接或站内路径" data-section="scan" data-field="overlayUrl" bindinput="onAdvancedField" />
-      <view class="cg-cfg-label">显形图大小（占画面宽度百分比）</view>
+      <view class="cg-cfg-label">图片宽度（%）</view>
       <slider min="20" max="100" step="5" value="{{advanced.scan.overlayScale || 60}}" show-value
               activeColor="var(--cy-color-action-primary-bg)" backgroundColor="var(--cy-color-border-subtle)"
               block-size="24" data-section="scan" data-field="overlayScale" data-numeric="1" bindchange="onAdvancedField" />
@@ -1634,7 +1634,7 @@
         </view>
       </block>
     </block>
-    <view class="cg-cfg-label">扫到的奖励分</view>
+    <view class="cg-cfg-label">奖励分</view>
     <input class="cg-cfg-input" type="number" value="{{advanced.scan.xp}}" placeholder="0 至 200" data-section="scan" data-field="xp" data-numeric="1" bindinput="onAdvancedField" />
         </view>
     </view>
@@ -1649,7 +1649,7 @@
         <!-- 限时只给真的会执行它的玩法(施工文档 §1.4)。计步、竞猜、抽卡、硬币、骰子、扫码
              这些没有可限的东西 —— 摆一个不会生效的开关,商家以为设了,玩家那边什么也没发生。 -->
         <view class="cg-rw-line" wx:if="{{timerAvailable}}"><view class="cg-rw-meta"><view class="cg-rw-name">限时挑战</view></view><cy-switch checked="{{advanced.timer.enabled}}" data-key="timer" bindchange="onAdvancedToggle" /></view>
-        <view class="cg-cfg-hint" wx:else>这个玩法没有可限的时间:{{gameCurrent.label}}一下就结束,或者结果要等到以后。</view>
+        <view class="cg-cfg-hint" wx:else>此玩法不支持限时</view>
         <view class="cg-adv-grid" wx:if="{{advanced.timer.enabled}}">
           <view><view class="cg-cfg-label">时长（秒） <text class="req" aria-hidden="true">*</text></view><input class="cg-cfg-input" type="number" value="{{advanced.timer.durationSeconds}}" data-section="timer" data-field="durationSeconds" data-numeric="1" bindinput="onAdvancedField" /></view>
           <view><view class="cg-cfg-label">超时结果</view><cy-dropdown portal="{{false}}" range="{{timerTimeoutOptions}}" data-section="timer" data-field="timeoutResult" data-options="timerTimeoutOptions" bind:change="onAdvancedPicker"><view class="cg-pick">{{advanced.timer.timeoutResult}}<view class="cg-caret"><cy-icon name="back" size="28" /></view></view></cy-dropdown></view>
@@ -1665,7 +1665,7 @@
             <view><view class="cg-cfg-label">开放起 <text class="req" aria-hidden="true">*</text></view><input class="cg-cfg-input" value="{{advanced.timeWindow.openFrom}}" placeholder="23:00" data-section="timeWindow" data-field="openFrom" bindinput="onAdvancedField" /></view>
             <view><view class="cg-cfg-label">开放止 <text class="req" aria-hidden="true">*</text></view><input class="cg-cfg-input" value="{{advanced.timeWindow.openTo}}" placeholder="01:00" data-section="timeWindow" data-field="openTo" bindinput="onAdvancedField" /></view>
           </view>
-          <view class="cg-cfg-label">眉标</view>
+          <view class="cg-cfg-label">小标题</view>
           <input class="cg-cfg-input" value="{{advanced.timeWindow.eyebrow}}" placeholder="例如 午夜电台 · 时段限定" data-section="timeWindow" data-field="eyebrow" bindinput="onAdvancedField" />
           <view class="cg-cfg-label">未开放时的标题</view>
           <input class="cg-cfg-input" value="{{advanced.timeWindow.title}}" placeholder="例如 还没到开播时间" data-section="timeWindow" data-field="title" bindinput="onAdvancedField" />
@@ -1789,7 +1789,7 @@
       <view wx:elif="{{toolKey === 'uses'}}">
         <view class="cg-cfg-label">成功上限</view><input class="cg-cfg-input" type="number" value="{{toolDraft.limit}}" placeholder="1 至 99" data-field="limit" bindinput="updateToolField" />
         <cy-inline-error wx:if="{{toolError && toolError.field === 'limit'}}" title="{{toolError.error}}" />
-        <view class="cg-cfg-label">次数归属</view><cy-dropdown portal="{{false}}" range="{{toolScopes}}" range-key="label" value="{{opt.idx(toolScopes, toolDraft.scope)}}" data-field="scope" bind:change="updateToolField"><view class="cg-pick">{{opt.label(toolScopes, toolDraft.scope)}}<view class="cg-caret"><cy-icon name="back" size="28" /></view></view></cy-dropdown>
+        <view class="cg-cfg-label">次数计算方式</view><cy-dropdown portal="{{false}}" range="{{toolScopes}}" range-key="label" value="{{opt.idx(toolScopes, toolDraft.scope)}}" data-field="scope" bind:change="updateToolField"><view class="cg-pick">{{opt.label(toolScopes, toolDraft.scope)}}<view class="cg-caret"><cy-icon name="back" size="28" /></view></view></cy-dropdown>
         <view class="cg-rw-line compact"><view class="cg-rw-name">效果对象须已到达</view><cy-switch checked="{{toolDraft.requireArrival}}" data-field="requireArrival" bindchange="updateToolField" /></view>
       </view>
       <view wx:elif="{{toolKey === 'trade'}}"><view class="cg-rw-line"><view class="cg-rw-name">允许物资交换</view><cy-switch checked="{{toolDraft.allowTrade}}" data-field="allowTrade" bindchange="updateToolField" /></view></view>

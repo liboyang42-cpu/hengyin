@@ -18,7 +18,7 @@
     <view wx:if="{{refreshing}}" class="refreshing" aria-role="status" aria-live="polite">正在更新入会申请…</view>
     <cy-inline-error load-failure wx:if="{{staleError}}" class="list-inline-error" kind="{{staleErrorKind}}" title="入会申请暂未更新"
                      sub="{{staleError}}" action="重试更新" bind:action="loadRequests" />
-    <cy-empty wx:if="{{requests.length === 0}}" fill size="lg" title="暂无待审申请" sub="新的申请会显示在这里" />
+    <cy-empty wx:if="{{requests.length === 0}}" fill size="lg" title="暂无待审申请" />
 
     <!-- 稿 P3 30:2 的汇总行(「N 条待审 · 可直接通过或拒绝」)就是上面那条 .intro,
          由 buildIntro 按条数生成 —— 这里不要再摆一条一模一样的。 -->

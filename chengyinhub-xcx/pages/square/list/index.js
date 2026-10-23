@@ -623,7 +623,7 @@ Page({
   goUserInfo(id) { if (!id || this._navigating) return; this._navigating = true; // 跳转中不响应连点
     wx.navigateTo({
       url: '/pages/userinfo/userinfo?userId=' + id,
-      fail: () => toast('打不开这个主页'), complete: () => { this._navigating = false; },
+      fail: () => toast('无法打开这个主页'), complete: () => { this._navigating = false; },
     });
   },
 
@@ -928,7 +928,7 @@ Page({
           that.setData({
             resultSheet: {
               show: true, kind: 'success', title: res.data.lifecycle === 'PUBLISHED' ? '发布成功' : '已提交审核',
-              sub: res.data.lifecycle === 'PUBLISHED' ? '帖文已发布,现在广场里就能看到。' : '内容已保存，审核通过后公开显示。',
+              sub: res.data.lifecycle === 'PUBLISHED' ? '帖文已发布，现在广场里就能看到。' : '内容已保存，审核通过后公开显示。',
               meta: '', pill: res.data.lifecycle === 'PUBLISHED' ? '' : '以实际审核状态为准',
               why: '', duration: RESULT_SHEET_MS,
             },
@@ -950,7 +950,7 @@ Page({
             submitErrorKind: 'data',
             resultSheet: {
               show: true, kind: 'fail', title: '这条没有发出去',
-              sub: '内容还在,改完可以直接重发。',
+              sub: '修改后重试',
               meta: '', pill: '', why: message, duration: RESULT_SHEET_MS,
             },
           });
@@ -959,7 +959,7 @@ Page({
       fail: function (res) {
         publishIntent.settle(wx, 'square:list', publishMemberId, intent.key, 'unknown');
         that.setData({
-          submitError: app.getRequestErrorMessage(res, '网络错误，请检查连接后重试'),
+          submitError: app.getRequestErrorMessage(res, '网络异常，请检查连接后重试'),
           submitErrorKind: 'network'
         });
       },
@@ -1118,21 +1118,21 @@ Page({
     if (res.from === 'button') {
       const dataset = res.target.dataset;
       const id = dataset.id;
-      let path = `/pages/square/detail/index?id=${id}`;
+      // U-050:转发卡只给公开且已发布的帖子带正文摘要/封面/详情链接;
+      // 私密/仅关注者/未发布的帖子退回广场通用卡,卡片上不带正文与图片。
+      const post = (this.data.list || []).find(function (row) { return row && String(row.id) === String(id); });
       analytics.track('content_share', {
         bizType: 'square',
         bizId: id
       });
-      return {
-        title: '城瘾Hub',
-        path: path,
+      return Object.assign(require('../../../utils/square-share.js').buildSquareShare(post), {
         success: function (res) {
           toast.success('分享成功');
         },
         fail: function (res) {
           toast('分享取消');
         }
-      };
+      });
     }
 
     // 默认分享（非按钮触发）
@@ -1292,7 +1292,7 @@ Page({
         }
       },
       fail: function (res) {
-        setRequestError(res, '网络错误，请检查连接后重试');
+        setRequestError(res, '网络异常，请检查连接后重试');
       },
       complete: function () {
         if (requestId !== that._feedRequestId) return;

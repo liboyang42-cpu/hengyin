@@ -125,7 +125,7 @@ test('下载失败落在自己的终态:不再谎称已就绪,且留下能点的
   const wxml = read('pages/merchant/customer/index.wxml');
   assert.match(wxml, /exportState === 'DOWNLOAD_FAILED'/, '该态要有自己的说法');
   assert.match(wxml, /exportState === 'SUCCESS'\}\}">导出已就绪/, '「已就绪」只许挂在 SUCCESS 上');
-  assert.match(wxml, /DOWNLOAD_FAILED' \? '重新下载' : '下载并打开'/, '失败后按钮要改名,不能还是那句「下载并打开」');
+  assert.match(wxml, /DOWNLOAD_FAILED' \? '重新下载' : '下载并打开'/, '失败后按钮要改名，不能还是那句「下载并打开」');
 });
 
 function mountList(overrideSource) {

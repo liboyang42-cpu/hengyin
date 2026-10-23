@@ -84,7 +84,7 @@ Page({
         }
         this.loadDetail();
       },
-      fail: () => this.setData({ pageState: 'error', errorMessage: '网络连接失败，请稍后重试' }),
+      fail: () => this.setData({ pageState: 'error', errorMessage: '网络异常，请重试' }),
     });
   },
 
@@ -109,7 +109,7 @@ Page({
             canRespond: false,
             allowedDecisionMap: { AGREE: false, REJECT: false, EVIDENCE: false },
             pageState: 'error',
-            errorMessage: '退款售后数据不完整，请稍后重试',
+            errorMessage: '退款售后加载失败，请重试',
           });
           return;
         }
@@ -130,7 +130,7 @@ Page({
         });
         this.refreshSubmitState();
       },
-      fail: () => this.setData({ pageState: 'error', errorMessage: '网络连接失败，请稍后重试' }),
+      fail: () => this.setData({ pageState: 'error', errorMessage: '网络异常，请重试' }),
     });
   },
 

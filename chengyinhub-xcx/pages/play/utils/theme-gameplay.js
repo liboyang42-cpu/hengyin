@@ -46,7 +46,7 @@ const reasons = {
   PROOF_PENDING: '待核验', NOT_CAPTAIN: '仅队长可操作', SESSION_ENDED: '本局已结束',
   CHALLENGE_LIMIT: '挑战次数已用完', TEAM_COMPLETED: '本队已完成', COUNTERPART_COMPLETED: '对方已完成',
   RULE_BLOCKED: '前置条件未满足', TASK_ACTIVE: '请先完成或取消当前任务', SESSION_PAUSED: '本局已暂停',
-  WORLD_LOCKED: '当前表决已冻结',
+  WORLD_LOCKED: '当前表决已锁定',
 };
 
 function toolStatus(source, view, selected) {
@@ -93,7 +93,7 @@ function actionRows(view, nodes) {
       openable: !ended && active && proofPending && source.trustedPass === false,
       enabled: !ended && (!hasState || source.enabled === true) && (operation === 'OPEN_QUEST' || !!allowed(operation, key) || previewAllowed(operation, key)) && !blocked, blocked, costOptions, frozenIndex: active && Number.isInteger(frozenQuest) ? frozenQuest : -1,
       choices: personal ? [...new Set(available.filter(action => action.contentId === key && ['QUEST_RESOLVE', 'GAMEPLAY_PREVIEW'].includes(action.operation) && action.choiceKey).map(action => action.choiceKey))].map((choiceKey, index) => ({ choiceKey, label: '方案 ' + (index + 1) })) : (quest.choices || []).map((choice, index) => ({ choiceKey: choice.choiceKey, label: choice.label || choice.title || '方案 ' + (index + 1) })),
-      disabledText: proofPending ? '待审核 / 凭证未通过，请打开原任务核对' : status.disabledText || (ended ? '本局已结束，仅可领取待领奖励' : ''),
+      disabledText: proofPending ? '待审核 / 凭证未通过，请打开原任务确认' : status.disabledText || (ended ? '本局已结束，仅可领取待领奖励' : ''),
       frozenText: active && costOptions[frozenQuest] ? costOptions[frozenQuest].label + ' · ' + costOptions[frozenQuest].amountText : '',
       chargeNote: !ended && active ? '任务进行中不扣费用，结算时才按实际扣除' : '',
       cancelable: !ended && active && !!allowed('QUEST_CANCEL', key) });

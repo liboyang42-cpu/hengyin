@@ -59,8 +59,8 @@ test('模板把首屏三态与分页失败重试接到组件状态机', () => {
 test('负控：摘掉分页错误的 retry 接线必须判红', () => {
   const source = read('pages/publish/components/collaborator-picker/index.wxml');
   const mutated = source.replace(
-    'title="更多合作者没能加载出来" sub="{{loadError}}" bind:retry="onRetry"',
-    'title="更多合作者没能加载出来" sub="{{loadError}}"',
+    'title="更多合作者加载失败" sub="{{loadError}}" bind:retry="onRetry"',
+    'title="更多合作者加载失败" sub="{{loadError}}"',
   );
   assert.notEqual(mutated, source, '负控必须真实摘掉分页 retry 接线');
   assert.throws(() => assertVisibleStateWiring(mutated), assert.AssertionError);

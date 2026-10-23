@@ -66,7 +66,7 @@ for (const late of ['success', 'fail']) {
       assert.equal(h.vm.data.report.appealable, false)
       if (late === 'success') held[0].success({ code: 200, data: OLD })
       else held[0].fail({})
-      assert.equal(h.vm.data.report.stage, 'APPEALED', '旧快照不得覆盖回读后的阶段')
+      assert.equal(h.vm.data.report.stage, 'APPEALED', '旧快照不得覆盖刷新后的阶段')
       assert.equal(h.vm.data.report.appealable, false, '「提交申诉」不得重新可点')
       assert.equal(pulls, 1, '下拉转圈照常收起')
     } finally { h.restore() }

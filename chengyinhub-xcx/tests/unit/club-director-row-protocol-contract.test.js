@@ -75,7 +75,7 @@ function pageMethod(name) {
 test('D8 现场事件:行有 id/title/subtitle,选中按 detail.id 命中', () => {
   const host = hostWithProjection()
   const row = host.data.incidentRows[0]
-  assert.equal(row.id, 'pause:8', '行 id 必须存在,否则组件 data-id 为空、点击回传 undefined')
+  assert.equal(row.id, 'pause:8', '行 id 必须存在，否则组件 data-id 为空、点击回传 undefined')
   assert.equal(row.title, '商家暂停')
   assert.match(row.subtitle, /外滩钟楼/)
 
@@ -93,7 +93,7 @@ test('D6 角色分配:chip 选项投影成 {id,label},选中按 detail.id 找 ro
   ])
   host.data.roleDraft = { teamId: 11, memberId: 21, roleCode: 'SCOUT' }
   directorMethods().onRoleOptionChange.call(host, { detail: { id: 'KEEPER' } })
-  assert.equal(host.data.roleDraft.roleCode, 'KEEPER', '点第二个 chip 必须真的切过去,不是永远第一个')
+  assert.equal(host.data.roleDraft.roleCode, 'KEEPER', '点第二个 chip 必须真的切过去，不是永远第一个')
 })
 
 test('D6 角色接管:候选行 id=teamId:memberId 且带标题,点击按 detail.id 解析来源', () => {
@@ -140,7 +140,7 @@ test('D4 手动解锁:章节行补 id,选择按 detail.id 反查索引', () => {
   const host = hostWithProjection()
   assert.deepEqual(host.data.chapterOptions.map((c) => c.id), [2, 5])
   directorMethods().onUnlockChapterChange.call(host, { detail: { id: 5 } })
-  assert.equal(host.data.unlockChapterIndex, 1, '点第二章必须选中第二章,不是永远第 0 个')
+  assert.equal(host.data.unlockChapterIndex, 1, '点第二章必须选中第二章，不是永远第 0 个')
 })
 
 test('宿主页 wxml 只喂投影后的数据,不许再喂原始投影/字符串数组', () => {

@@ -108,7 +108,7 @@ test('retryProofReadback 只在 unknown 下生效，且只重读不重写', asyn
   const page = createPage({}, { readback: null });
   page.data.receipt = 'confirmed';
   page.retryProofReadback();
-  assert.equal(page.calls.filter((c) => c.readback).length, 0, '非 unknown 态不该触发回读');
+  assert.equal(page.calls.filter((c) => c.readback).length, 0, '非 unknown 态不该触发刷新');
 });
 
 test('业务失败（非网络）仍走 failed，不冒充 unknown', async () => {
@@ -178,7 +178,7 @@ test('答题 unknown 回读 gameDone=true ⇒ confirmed 且不编造 xp', async 
   await page.submitGame();
   assert.equal(page.data.game.receipt, 'confirmed');
   assert.equal(page.data.game.done, true);
-  assert.doesNotMatch(page.data.game.resultText, /探索值/, '回读拿不到本次奖励明细，不许编');
+  assert.doesNotMatch(page.data.game.resultText, /探索值/, '刷新拿不到本次奖励明细，不许编');
   assert.equal(page.calls.filter((c) => c.readback).length, 1);
 });
 
@@ -247,10 +247,10 @@ test('★5xx / 408 是「结果未知」,不是「答错了」', async () => {
     appStub.handler = (o) => o.successStatusAbnormal({ msg: '网关超时' }, status);
     await page.submitGame();
     assert.equal(page.data.game.receipt, 'failed',
-      `HTTP ${status} 必须先进 unknown 再由回读判定，不能直接判业务失败`);
+      `HTTP ${status} 必须先进 unknown 再由刷新判定，不能直接判业务失败`);
     // 回读说没落地才允许 failed；关键是它走了回读这条路
     assert.equal(page.calls.filter((c) => c.readback).length, 1,
-      `HTTP ${status} 必须触发权威回读`);
+      `HTTP ${status} 必须触发权威刷新`);
     assert.doesNotMatch(page.data.game.errText, /再想想/,
       `HTTP ${status} 不得把丢响应讲成答错了`);
   }
@@ -261,7 +261,7 @@ test('4xx 仍是明确的业务失败，不走回读', async () => {
   appStub.handler = (o) => o.successStatusAbnormal({ msg: '先扫店内静态码进店' }, 403);
   await page.submitGame();
   assert.equal(page.data.game.receipt, 'failed');
-  assert.equal(page.calls.filter((c) => c.readback).length, 0, '4xx 不该触发回读');
+  assert.equal(page.calls.filter((c) => c.readback).length, 0, '4xx 不该触发刷新');
   assert.equal(page.data.game.errText, '先扫店内静态码进店');
 });
 

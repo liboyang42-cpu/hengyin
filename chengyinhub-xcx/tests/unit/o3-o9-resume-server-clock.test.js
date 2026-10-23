@@ -108,7 +108,7 @@ test('O-09 设备 B 时钟拨快一年:暂停快照改记服务端时刻,设备 
   save.success({ code: 200, data: { savedAt: 60000 } })
   await flush()
   assert.deepEqual(storage[KEY], { state: 'paused', elapsedSeconds: 600, savedAt: 60000 },
-    '服务端确认后本机快照改用服务端时刻,与另一台设备同钟可比')
+    '服务端确认后本机快照改用服务端时刻，与另一台设备同钟可比')
 
   // 设备 A(时钟正常)随后结束这一局:服务端墓碑时刻 61000。B 重进必须认这块墓碑。
   requests = []
@@ -138,7 +138,7 @@ test('O-09 服务端回包时本机已写了更新的一份(继续玩又暂停):
   storage[KEY] = { state: 'paused', elapsedSeconds: 90, savedAt: 9000 }
   const request = () => Promise.resolve({ code: 200, data: { savedAt: 70000 } })
   assert.equal(await runSession.saveServerPausedRun(request, { memberId: '9', topicId: '31' }, 42, 4000, wxStub), true)
-  assert.deepEqual(storage[KEY], { state: 'paused', elapsedSeconds: 90, savedAt: 9000 }, '用时不同 = 不是这次写的,保持本机')
+  assert.deepEqual(storage[KEY], { state: 'paused', elapsedSeconds: 90, savedAt: 9000 }, '用时不同 = 不是这次写的，保持本机')
 })
 
 test('O-09 设备时钟拨慢 + 断网暂停:本机后写的快照仍比已采纳的服务端时刻新,重进不被旧用时覆盖', async () => {

@@ -36,8 +36,8 @@ function save(p) {
 }
 function fourSegments() {
   const a = config.defaultConfig();
-  a.qa.enabled = true; a.qa.title = '下一步核对什么'; a.qa.answerText = '授权';
-  for (const section of ['sort', 'match', 'classify']) { a[section].enabled = true; a[section].prompt = '核对' + section; }
+  a.qa.enabled = true; a.qa.title = '下一步确认什么'; a.qa.answerText = '授权';
+  for (const section of ['sort', 'match', 'classify']) { a[section].enabled = true; a[section].prompt = '确认' + section; }
   a.sort.items.forEach((row, i) => { row.label = '时间' + i; });
   for (const side of ['left', 'right']) a.match[side].forEach((row, i) => { row.label = side + i; });
   a.classify.items.forEach((row, i) => { row.label = '记录' + i; });

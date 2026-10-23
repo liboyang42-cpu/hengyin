@@ -56,7 +56,7 @@ test('② 六个状态齐全,主键文案与核销/未通过原因的出没按�
   }
   for (const [key, want] of Object.entries(expect)) {
     const row = new RegExp('^\\s*' + key + ':\\s*\\{([^}]*)\\}', 'm').exec(body)
-    assert.ok(row, `STATES 缺状态 ${key} —— 六态少一个,那个状态的页面就没人渲染`)
+    assert.ok(row, `STATES 缺状态 ${key} —— 六态少一个，那个状态的页面就没人渲染`)
     assert.match(row[1], new RegExp(`primary:\\s*'${want.primary}'`), `${key} 主键文案不符`)
     assert.match(row[1], new RegExp(`disabled:\\s*${want.disabled}`), `${key} 主键可点性不符`)
     assert.match(row[1], new RegExp(`verify:\\s*${want.verify}`), `${key} 核销区出没不符`)
@@ -92,7 +92,7 @@ test('④ 四圆钮按稿绑定图标与顺序', () => {
     ['customer', '报名参与者', 'mtab-customers'],
     ['groupcode', '团码', 'qr'],
     ['more', '更多', 'more'],
-  ], '四圆钮的顺序/文案/图标按 Figma 绑定;要改先跟设计确认')
+  ], '四圆钮的顺序/文案/图标按 Figma 绑定；要改先跟设计确认')
 
   // 图标名必须是 icons.wxss 里真有的那 62 枚之一 —— 写错名字不会报错,只会渲染成空白
   const iconCss = read('components/cy/icon/icons.wxss')

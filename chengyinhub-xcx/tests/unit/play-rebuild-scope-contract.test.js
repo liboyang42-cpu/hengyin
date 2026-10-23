@@ -62,7 +62,7 @@ test('负控:把那两行粘回去,上面这条必须判红', () => {
   const offenders = singleParamMapBlocks(broken)
     .filter((b) => b.param !== 'i')
     .filter((b) => /\bi\b/.test(b.body) || /\bsegStep\b/.test(b.body))
-  assert.ok(offenders.length > 0, '粘回违规行后必须能抓到,否则这条检查是橡皮图章')
+  assert.ok(offenders.length > 0, '粘回违规行后必须能抓到，否则这条检查是橡皮图章')
 })
 
 test('seatTiles 那份带索引参数,是合法的 —— 别把它一起误杀', () => {

@@ -268,7 +268,7 @@ test('CU-C-41:source=club 按 topicId 从俱乐部结算汇总命中,走专用�
   requests[0].success({ code: 200, data: { topics: [clubRow()] } })
   assert.equal(page.data.loadState, 'ready')
   assert.equal(page.data.detail.built, 'club')
-  assert.equal(page.data.detail.id, 990028, '按 topicId 命中,不是结算行 id')
+  assert.equal(page.data.detail.id, 990028, '按 topicId 命中，不是结算行 id')
 })
 
 // 集成复审:俱乐部汇总是「一条结算记录一行」,同一主题可能多行 —— 带了行 id 就必须按 id 取,
@@ -292,7 +292,7 @@ test('CU-C-41:source=club 缺 clubId 停在缺参终态,不发注定失败的请
 
   const bad = loadPage()
   bad.page.onLoad({ source: 'club', topicId: '990028', clubId: '0' })
-  assert.equal(bad.requests.length, 0, 'clubId=0 也取不到数,不得发请求')
+  assert.equal(bad.requests.length, 0, 'clubId=0 也取不到数，不得发请求')
   assert.equal(bad.page.data.loadState, 'missing-param')
 })
 
@@ -313,7 +313,7 @@ test('CU-C-41:俱乐部行的金额/状态不齐时判数据错误,不把缺字�
 })
 
 test('CU-C-41:俱乐部视角不挂商家守卫(后端按 clubId + finance:read 准入)', () => {
-  assert.match(WXML, /<cy-access-gate[^>]*wx:if="\{\{source === 'ledger'\}\}"/, '商家守卫只能盖商家台账线')
+  assert.match(WXML, /<cy-access-gate[^>]*wx:if="\{\{source === 'ledger'\}\}"/, '商家守卫只能盖商家记录线')
   assert.doesNotMatch(WXML, /source !== 'finance'/, '新来源一律不得再落到商家守卫里')
 })
 
@@ -337,7 +337,7 @@ test('CU-C-41:俱乐部视角视图模型透传已格式化金额,未知不伪�
   assert.deepStrictEqual(ready.lines.map((item) => item.value), ['¥ 130.00', '¥ -2.00', '¥ 128.00'])
 
   const unverified = buildClubSettlementDetail(clubRow({ status: 'settled', amountStatus: 'unverified', amountText: null }))
-  assert.equal(unverified.amount, '—', '未核验不伪造成 0,也不算半个数')
+  assert.equal(unverified.amount, '—', '未核验不伪造成 0，也不算半个数')
   assert.equal(unverified.status, '待核验')
 
   const voided = buildClubSettlementDetail(clubRow({ status: 'void' }))

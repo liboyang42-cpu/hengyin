@@ -40,7 +40,8 @@ page { background: var(--cy-bg-page); }
   position: absolute;
   inset: 0;
   z-index: 2;
-  background: linear-gradient(180deg, rgba(0,0,0,0.12) 0%, rgba(0,0,0,0.62) 100%);
+  /* 拍板 2026-10-22:封面下半段渐变到页底色(完全不透明),logo+名字浮在接缝上 */
+  background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 38%, rgba(0,0,0,0.55) 68%, var(--cy-bg-page) 100%); /* ds-ok: owner 10-22 封面下沿压黑渐变到页底 */
   pointer-events: none;
 }
 .cover-img {
@@ -93,7 +94,8 @@ page { background: var(--cy-bg-page); }
 /* —— 资料区 —— */
 .profile {
   position: relative;
-  z-index: 2;
+  /* 高于 .cover-wrap(3):身份行上移压在封面下沿,必须盖在封面之上 */
+  z-index: 4;
   /* 名字挪到 logo 右侧后,顶部只需让开 logo 露出的 48rpx 一点点;
      左侧让开 logo 宽 96 + 间距 20 = 116rpx。 */
   /* Figma 93:19 Identity:px14 pt8 pb4 —— 名字的绝对左边距要落在 84px(= 页边 14 + pl 70) */
@@ -101,11 +103,9 @@ page { background: var(--cy-bg-page); }
   background: var(--cy-bg-page);
 }
 .profile-logo-wrap {
-  position: absolute;
-  left: var(--cy-space-4);
-  /* Figma 93:18:logo 56px 落在 160px 封面的 y=136 → 只压出封面下沿 24px = 48rpx */
-  bottom: -48rpx;
-  z-index: 10;
+  /* 拍板 2026-10-22:logo 进身份行做第一列,名字在右侧与它垂直居中(不再半压在封面下沿,
+     那样名字只能贴着 logo 底边,看起来像掉在 logo 右下方)。 */
+  flex: none;
   width: 112rpx;
   height: 112rpx;
   border-radius: var(--cy-radius-md);
@@ -117,12 +117,35 @@ page { background: var(--cy-bg-page); }
 .profile-logo { width: 100%; height: 100%; display: block; }
 .profile-id {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   gap: var(--cy-space-2-5);
-  padding-left: 140rpx; /* ds-ok: Figma 93:20 name row pl70;= logo 112 + 间距 28,与 .profile-logo-wrap 联动 */
-  min-height: 64rpx;
+  min-height: 112rpx; /* ds-ok: = logo 112,名字按 logo 中线居中 */
+  /* 拍板 2026-10-22:logo + 名字悬浮在封面与下方文字之间 —— 身份行中线落在封面下沿。
+     用 top 上移 + 等量负 margin-bottom,不动 .profile 自身盒子(避免外边距折叠把背景带上去)。 */
+  position: relative;
+  top: calc(-56rpx - var(--cy-space-2)); /* ds-ok: logo 112 的一半 + .profile 顶部内边距 */
+  margin-bottom: calc(-56rpx - var(--cy-space-2));
 }
 .profile-id-main { flex: 1; min-width: 0; }
+/* 2026-10-22 owner:分享挪到名字行右端,圆钮;触控 88rpx(44pt 无障碍下限)。原生 button 盒模型清零同 .cover-nav-act。
+   ⚠️ 必须两级选择器:微信内置 wx-button:not([size=mini]) { width:184px } 的优先级(0,1,1)高过单个类,
+   单写 .profile-share 时宽度被它顶成 184px 的椭圆、把俱乐部名挤成「城市…」(DevTools 实测)。 */
+.profile-id .profile-share {
+  flex: none;
+  width: var(--cy-btn-h);
+  height: var(--cy-btn-h);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  line-height: normal;
+  border-radius: 50%;
+  background: var(--cy-color-bg-surface-subtle);
+  color: var(--cy-color-text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.profile-id .profile-share::after { border: 0; }
 .profile-links {
   display: flex;
   gap: var(--cy-space-4);
@@ -153,15 +176,14 @@ page { background: var(--cy-bg-page); }
 /* Figma 93:22 Meta:三枚「图标 19 + 文字 15」chip,gap 20。
    2026-08-26 曾把它压成一行 · 拼接的纯文本并撤掉图标,282:x 那版稿又把图标行留着 —— 以稿为准复原。 */
 .profile-meta {
-  margin-top: var(--cy-space-3-5);
+  /* 拍板 2026-10-22:固定两行(「类型 · N 名成员」/ 入会方式),不再随宽度任意折行。 */
+  margin-top: var(--cy-space-2-5);
   display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  /* 稿上 chip 间距是 20px(93:23 末端 85 → 93:29 起点 105)= 40rpx;
-     原来取了最近的 --cy-space-5(48rpx),实测每道缝多 3.2px、整行右端超稿 11px。 */
-  gap: var(--cy-space-2-5) 40rpx; /* ds-ok: Figma 93:22 chip 间距 20px,8rpx 阶梯上无 40 这一档 */
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--cy-space-1-5);
 }
-.profile-meta-chip { display: flex; align-items: center; gap: var(--cy-space-1-5); min-width: 0; }
+.profile-meta-chip { display: flex; align-items: center; gap: var(--cy-space-1-5); min-width: 0; max-width: 100%; }
 .profile-meta-ico { flex: none; color: var(--cy-color-text-primary); }
 .profile-meta-text {
   font-size: var(--cy-type-card-title);
@@ -171,8 +193,75 @@ page { background: var(--cy-bg-page); }
   white-space: nowrap;
 }
 
-/* 主按钮已收进身份行右侧,不再整宽 */
-.profile-cta { flex-shrink: 0; }
+/* 2026-10-22 owner:「加入」悬浮在右下角,只在「概览」出现;做小 —— 视觉 68rpx 高的小胶囊,
+   触控区用 ::after 撑回 88rpx(44pt 无障碍下限)。往下滑收起、往上滑再出来。
+   点击:请求中变淡 → 成功变绿、左侧勾从 0 宽展开(transition,不新增关键帧)→ 弹欢迎层。
+   ⚠️ 进场动画(cy-rise,fill both 会一直占着 transform)挂在里层按钮上,收起用外层容器的 transition,两者不打架。 */
+.join-float {
+  position: fixed;
+  right: var(--cy-page-x);
+  bottom: calc(var(--cy-space-4) + env(safe-area-inset-bottom));
+  z-index: 40;
+  display: flex;
+  pointer-events: none;
+  transition: transform var(--cy-motion-standard) var(--cy-ease-out), opacity var(--cy-motion-standard) var(--cy-ease-out);
+}
+.join-float--hidden { transform: translateY(calc(100% + var(--cy-space-6))); opacity: 0; }
+.join-float--hidden .join-float__btn { pointer-events: none; }
+.join-float .join-float__btn {
+  position: relative;
+  pointer-events: auto;
+  box-sizing: border-box;
+  height: 68rpx;                        /* ds-ok: 业主要小号胶囊;触控区由 ::after 撑回 88rpx */
+  padding: 0 var(--cy-space-4);
+  font-size: var(--cy-font-label);
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, .28); /* ds-ok: 悬浮胶囊浮在内容上方的投影 */
+  transition: background-color var(--cy-motion-standard) var(--cy-ease-out), color var(--cy-motion-standard) var(--cy-ease-out), opacity var(--cy-motion-standard) var(--cy-ease-out);
+  /* 打开页面时从下方滑上来(复用全站 cy-rise,不新增关键帧),稍等资料区先出 */
+  animation: cy-rise var(--cy-motion-slow) var(--cy-ease-emphasized-decelerate) 160ms both;
+}
+.join-float .join-float__btn::after { content: ''; position: absolute; left: 0; right: 0; top: -10rpx; bottom: -10rpx; }
+/* 勾:未完成时不占位(display:none);变绿那一下出现并从 0 放大到 1 带过冲(只动 transform,合成层动画) */
+.join-float__check { display: none; align-items: center; margin-right: var(--cy-space-1); }
+.join-float__check > cy-icon { display: block; transform: scale(0) rotate(-30deg); transition: transform var(--cy-motion-slow) var(--cy-ease-spring); }
+.join-float .join-float__btn--busy { opacity: .6; }
+.join-float .join-float__btn--done { background: var(--cy-color-status-success); color: #FFFFFF; } /* ds-ok: 绿底上恒用白字白勾 */
+.join-float__btn--done .join-float__check { display: flex; }
+.join-float__btn--done .join-float__check > cy-icon { transform: scale(1) rotate(0); }
+.cy-motion-reduced .join-float__btn, .join-float__btn--reduced { animation: none; }
+@media (prefers-reduced-motion: reduce) { .join-float__btn { animation: none; } .join-float { transition: none; } }
+.join-float-space { height: calc(var(--cy-btn-h) + var(--cy-space-4) + env(safe-area-inset-bottom)); }
+
+/* 加入后的欢迎层:在这个俱乐部你可以做什么(条目逐条飞入) */
+.welcome { padding: var(--cy-space-1) 0 var(--cy-space-3); }
+.welcome-note {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cy-space-1);
+  margin-bottom: var(--cy-space-4);
+  padding: var(--cy-space-3) var(--cy-space-3-5);
+  border-radius: var(--cy-radius-lg);
+  background: var(--cy-color-bg-surface-subtle);
+}
+.welcome-note__from { font-size: var(--cy-font-label); color: var(--cy-color-text-tertiary); }
+.welcome-note__text { font-size: var(--cy-font-body); line-height: var(--cy-leading-loose); color: var(--cy-color-text-primary); white-space: pre-wrap; }
+.welcome-item { display: flex; align-items: flex-start; gap: var(--cy-space-3); padding: var(--cy-space-2-5) 0; }
+.welcome-item__ico {
+  flex: none;
+  width: 72rpx;                         /* ds-ok: 条目图标圆底 36pt */
+  height: 72rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--cy-color-bg-surface-subtle);
+  color: var(--cy-color-text-primary);
+}
+.welcome-item__main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4rpx; }
+.welcome-item__title { font-size: var(--cy-font-body); font-weight: 700; color: var(--cy-color-text-primary); }
+.welcome-item__sub { font-size: var(--cy-font-label); line-height: var(--cy-leading-normal); color: var(--cy-color-text-secondary); }
+.welcome-actions { display: flex; gap: var(--cy-space-2-5); }
+.welcome-actions .welcome-actions__btn { flex: 1; }
 /* join-btn 收编至 .cy-btn（primary 反色中性白/secondary/ghost）;此处仅留行内布局 */
 .join-btn {
   display: flex;
@@ -352,6 +441,15 @@ page { background: var(--cy-bg-page); }
   border: 2rpx solid var(--club-accent);
   border-radius: var(--cy-radius-pill);
   color: var(--club-accent);
+  font-size: var(--cy-font-caption);
+}
+.ev-no-signup {
+  display: flex;
+  align-items: center;
+  align-self: flex-start;
+  margin-top: var(--cy-space-1);
+  padding: 0 var(--cy-space-2);
+  color: var(--club-text-muted);
   font-size: var(--cy-font-caption);
 }
 .event-report {
@@ -1132,7 +1230,9 @@ page { background: var(--cy-bg-page); }
   margin: 0 var(--cy-page-x) var(--cy-space-4);
 }
 .ov-strip-item {
-  flex: 1;
+  /* 拍板 2026-10-22:成员从左往右排,不再 flex:1 撑满(只有 1 人时会被挤到正中) */
+  flex: none;
+  width: 120rpx; /* ds-ok: 头像 64 + 名字留白 */
   min-width: 0;
   display: flex;
   flex-direction: column;
@@ -1190,8 +1290,6 @@ page { background: var(--cy-bg-page); }
 
 /* 黑色编辑弹窗不描边；只覆盖本页的非游戏编辑宿主。 */
 .club-scene-host { --cy-comp-sheet-border-width: 0px; }
-.club-coop-floating { position: fixed; left: var(--cy-space-3); right: var(--cy-space-3); bottom: calc(var(--cy-space-2) + env(safe-area-inset-bottom)); z-index: var(--cy-z-sticky); background: transparent; }
-.club-coop-floating .join-btn { width: 100%; box-sizing: border-box; }
 /* 黑色编辑弹窗不描边；只覆盖本页的非游戏编辑宿主。 */
 .club-scene-host { --cy-comp-sheet-border-width: 0px; }
 

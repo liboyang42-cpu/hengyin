@@ -47,7 +47,7 @@ test('★两档状态字必须用 != 0,不许退化成真值判断', () => {
     assert.ok(block.includes(`${expr} ? '已开启' : '已关闭'`),
       `「${s.title}」的状态字必须判 ${expr};真值判断会把字符串 "0" 显示成「已开启」`)
     assert.ok(block.includes(`aria-checked="{{club.${s.field} != 0}}"`),
-      `「${s.title}」的 aria-checked 要和可见状态同一个判据,否则读屏与肉眼说的不是一回事`)
+      `「${s.title}」的 aria-checked 要和可见状态同一个判据，否则读屏与肉眼说的不是一回事`)
   }
 })
 
@@ -66,7 +66,7 @@ test('保存中只标当前那一行,别的行不跟着变', () => {
   for (const s of SWITCHES) {
     const block = rowBlock(s.title)
     assert.ok(block.includes(`openSettingSaving === '${s.key}' ? '保存中…'`),
-      `「${s.title}」的保存中必须按 key 精确匹配,否则点一个开关三行一起转圈`)
+      `「${s.title}」的保存中必须按 key 精确匹配，否则点一个开关三行一起转圈`)
   }
 })
 
@@ -74,7 +74,7 @@ test('每一行都有自己的错误位与重试,且只在自己出错时出现'
   for (const s of SWITCHES) {
     const block = rowBlock(s.title)
     assert.ok(block.includes(`openSettingErrorKey === '${s.key}'`),
-      `「${s.title}」的错误条要按 key 出,否则一个开关失败三行全报错`)
+      `「${s.title}」的错误条要按 key 出，否则一个开关失败三行全报错`)
     assert.ok(block.includes(`bind:action="${s.handler}"`),
       `「${s.title}」的重试要回到它自己的 handler`)
   }

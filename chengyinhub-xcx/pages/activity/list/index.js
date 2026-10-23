@@ -31,7 +31,7 @@ function timeText(e) {
   if (e.status == 1 && st) { const d = st - now; return d > 0 ? '距开始 ' + fmtDur(d) : '即将开始'; }
   if ((e.status == 2 || e.status == 3) && en) { const d = en - now; return d > 0 ? '距结束 ' + fmtDur(d) : '即将结束'; }
   if (e.status >= 5) return '已结束';
-  return activityStatusText(e.status) || '时间待确认';   // 草稿=空、结算中=结算中,不再一律「报名中」
+  return activityStatusText(e.status) || '—';   // 草稿=空、结算中=结算中,不再一律「报名中」
 }
 function fmtDur(ms) {
   const h = Math.floor(ms / 3600000);
@@ -205,14 +205,14 @@ Page({
           this._loaded = true;
           done({ _all: res.data.filter(this._isCompleteEvent).map(this._decorate) });
         } else {
-          done({ loadError: true, loadErrorMsg: app.getRequestErrorMessage(res, '网络开了点小差，请稍后再试') });
+          done({ loadError: true, loadErrorMsg: app.getRequestErrorMessage(res, '网络异常，请重试') });
         }
       },
       successStatusAbnormal: (data) => {
-        done({ loadError: true, loadErrorMsg: app.getRequestErrorMessage(data, '服务暂时不可用，请稍后再试') });
+        done({ loadError: true, loadErrorMsg: app.getRequestErrorMessage(data, '服务暂不可用，请稍后重试') });
       },
       fail: (res) => {
-        done({ loadError: true, loadErrorMsg: app.getRequestErrorMessage(res, '网络异常，请稍后再试') });
+        done({ loadError: true, loadErrorMsg: app.getRequestErrorMessage(res, '网络异常，请重试') });
       },
     });
     this.fetchMine();

@@ -198,7 +198,7 @@ test('E-13 客户页守卫与后端 canGovernClub(MEMBER_MANAGE)对齐,列表返
 
   const listJs = read('pages/club/customers/index.js');
   assert.match(listJs, /onShow\(\)/, '列表必须有 onShow 重载');
-  assert.match(listJs, /this\.data\.state === 'ready'/, '只在有内容时重拉,不去覆盖错误态');
+  assert.match(listJs, /this\.data\.state === 'ready'/, '只在有内容时重拉，不去覆盖错误态');
 
   // 后端判据出处:ClubMemberServiceImpl.canGovernClub 只认 MEMBER_MANAGE
   const svc = read('../chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubMemberServiceImpl.java');
@@ -250,5 +250,5 @@ test('E-15g 解散确认框带的是俱乐部真名,而不是回退成「这一�
   assert.ok(opened, '必须真的调到三段式确认框');
   assert.equal(opened.action, 'club.dissolve');
   assert.equal(opened.meta && opened.meta.name, '夜行团',
-    'name 必须取 data.name(=this.data.form 在组件里不存在,取它文案会回退成「这一项」)');
+    'name 必须取 data.name(=this.data.form 在组件里不存在，取它文案会回退成「这一项」)');
 });

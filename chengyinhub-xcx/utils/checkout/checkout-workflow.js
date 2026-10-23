@@ -123,8 +123,8 @@ function createCheckoutWorkflow(deps) {
       if (validatePayment && !validatePayment(data)) {
         state = 'idle';
         call(handlers.onPayFail, safePaymentFailure(
-          { ok: false, status: 'failed', errMsg: '支付参数不完整，请重新发起' },
-          '支付参数不完整，请重新发起'
+          { ok: false, status: 'failed', errMsg: '支付发起失败，请重试' },
+          '支付发起失败，请重试'
         ));
         return;
       }

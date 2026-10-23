@@ -114,7 +114,7 @@ test('服务端说仍在处理 / 无法确认:保持锁;无法确认且改了灵
   assert.match(page.data.aiError, /可能再用一次额度/);
 
   page.generateAiPlan();
-  assert.equal(sent.shift().url, '/api/ai/theme/draft/request', '灵感没改:仍只回读');
+  assert.equal(sent.shift().url, '/api/ai/theme/draft/request', '灵感没改:仍只刷新');
   sent.length = 0;
   page.data.aiGenerating = false;
   page.setData({ aiIdea: '换个灵感' });

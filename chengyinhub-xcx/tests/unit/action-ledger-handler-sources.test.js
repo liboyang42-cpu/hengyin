@@ -96,7 +96,7 @@ test('真实反引号模板 URL 动作保留读写分类与分支，不因去污
   ]
   for (const [js, handler, actionClass, url] of cases) {
     const hits = ledger().controls.filter(row => row.entry.js === js && row.control.handler === handler)
-    assert.ok(hits.length, `${handler} 在台账中缺项`)
+    assert.ok(hits.length, `${handler} 在记录中缺项`)
     for (const row of hits) {
       assert.equal(row.actionClass, actionClass, `${handler} 读写分类被降级`)
       assert.ok(row.targets.primaryApis.includes(url), `${handler} 缺真实模板 URL ${url}`)
@@ -120,7 +120,7 @@ test('四条商家写端点精确落入 writeApis，详情查询保留在 primar
   ]
   for (const [js, handler, writeUrl, readUrl] of cases) {
     const hits = ledger().controls.filter(row => row.entry.js === js && row.control.handler === handler)
-    assert.ok(hits.length, `${handler} 在台账中缺项`)
+    assert.ok(hits.length, `${handler} 在记录中缺项`)
     for (const row of hits) {
       assert.equal(row.actionClass, 'write', `${handler} 必须判写`)
       assert.deepEqual(row.targets.writeApis, [writeUrl], `${handler} writeApis 必须只含真实写端点`)
@@ -159,13 +159,13 @@ test('权威回读负控：绑定详情读端点冒充写被拒，绑定真实�
   ]
   for (const [js, handler, writeTemplate, writeUrl, readTemplate, readUrl] of cases) {
     const action = ledger().controls.find(row => row.entry.js === js && row.control.handler === handler)
-    assert.ok(action, `${handler} 在台账中缺项`)
+    assert.ok(action, `${handler} 在记录中缺项`)
     // 错误证据：把详情查询读端点绑定成写成功回读，必须被拒
     assert.throws(() => validateAuthorityReceipt(action, receiptFor(action, readTemplate, readUrl), 'write', 'success', attestation),
       /不在动作 API 真源中|未命中本次 fixture 声明/, `${handler} 详情读端点不得被接受为写`)
     // 真实写正控：绑定真实写端点且服务端状态变化，必须被接受
     assert.doesNotThrow(() => validateAuthorityReceipt(action, receiptFor(action, writeTemplate, writeUrl), 'write', 'success', attestation),
-      `${handler} 真实写端点回读必须被接受`)
+      `${handler} 真实写端点刷新必须被接受`)
   }
 })
 
@@ -205,7 +205,7 @@ test('聊天拉黑和清空确认落库记为真实写入，不因 confirm 被 D
   const rows = ledger().controls.filter(row => row.entry.js === 'subpackageB/pages/im/chat/index.js')
   for (const [id, api] of [['block', '/api/im/block'], ['clear', '/api/im/delete']]) {
     const confirm = rows.find(row => row.control.handler === 'onDangerConfirm' && row.variant.id === id)
-    assert.ok(confirm, `${id} 确认在台账中缺项`)
+    assert.ok(confirm, `${id} 确认在记录中缺项`)
     assert.equal(confirm.actionClass, 'write')
     assert.deepEqual(confirm.targets.writeApis, [api])
     assert.deepEqual(confirm.requiredRequests, [{ urlTemplate: api, method: 'POST', kind: 'write' }])

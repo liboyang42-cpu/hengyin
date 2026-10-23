@@ -18,7 +18,7 @@ function assertDisabledReadsField(wxml, buttonText, field) {
 // 只剩「联系客服提现」一个动作。旧契约(按钮只读 canSubmit)随表单一起作废,这里改成反向断言。
 function assertTixianFormRetired(js, wxml) {
   assert.doesNotMatch(wxml, /canSubmit/, '表单退役后页面不得再有资金提交门闩')
-  assert.doesNotMatch(js, /canSubmit/, '同上门闩字段必须随表单一起删除,不能留在 js 里')
+  assert.doesNotMatch(js, /canSubmit/, '同上门闩字段必须随表单一起删除，不能留在 js 里')
   assert.doesNotMatch(wxml, /placeholder-class="tx-placeholder"|bindinput=/, '页面不得再采集姓名/银行账号/手机号')
   assert.match(wxml, /bindtap="saveData"/, '页面唯一的提现动作是联系客服(弹客服微信)')
 }
@@ -129,9 +129,9 @@ test('专业发布：发布主动作读取 JS 派生状态(平铺后只剩这一
   const primary = wxml.match(/<cy-btn[^>]*bindtap="submitForm"[^>]*>[\s\S]*?<\/cy-btn>/)
   assert.ok(primary, '发布主动作必须存在')
   assert.match(primary[0], /disabled="\{\{!canPublish\}\}"/, '发布按钮的可用态必须来自 JS 派生的 canPublish')
-  assert.match(primary[0], /loading="\{\{submitting\}\}"/, '提交中必须有 loading 态,不能重复点')
+  assert.match(primary[0], /loading="\{\{submitting\}\}"/, '提交中必须有 loading 态，不能重复点')
   assert.match(primary[0], /submitting \? '发布中\.\.\.' : '发布'/, '提交中文案必须切换')
-  assert.doesNotMatch(wxml, /canAdvanceRoute/, '步骤已退役,不该再有下一步闸的残留接线')
+  assert.doesNotMatch(wxml, /canAdvanceRoute/, '步骤已退役，不该再有下一步闸的残留接线')
   assert.match(js, /canPublish:\s*false/)
   assert.match(js, /refreshPrimaryActionState\s*\(\)/)
   assert.match(js, /setData\(patch, \(\) => that\.refreshPrimaryActionState\(\)\)/)

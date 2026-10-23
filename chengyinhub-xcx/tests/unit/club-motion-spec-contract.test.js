@@ -134,7 +134,7 @@ function assertNoLiteralMotion(wxss, what) {
     assert.doesNotMatch(decl, /cubic-bezier/,
       `${what} 里还有字面 cubic-bezier,必须读 --cy-ease-* 档:${decl.trim()}`)
     assert.doesNotMatch(decl, /(?:^|[\s(,])\d+(?:\.\d+)?m?s\b/,
-      `${what} 里还有字面时长,必须读 --cy-motion-* 档:${decl.trim()}`)
+      `${what} 里还有字面时长，必须读 --cy-motion-* 档:${decl.trim()}`)
   }
 }
 
@@ -219,7 +219,7 @@ function assertFoldMotion(wxss) {
   // 内容进场:两处折叠面板共用一组 keyframes(稿 42:168「内容自 -4px 归位」)
   assert.match(src, /@keyframes cy-fold-in\b/, '缺行内展开的内容进场 keyframes cy-fold-in')
   const kf = src.match(/@keyframes cy-fold-in\s*\{[\s\S]*?\n\}/)
-  assert.ok(kf, 'cy-fold-in 的 keyframes 体读不出来')
+  assert.ok(kf, 'cy-fold-in 的 keyframes 体加载失败')
   assert.match(kf[0], /from\s*\{[^}]*opacity:\s*0/, '稿 40:3:内容 opacity 0 → 1')
   assert.match(kf[0], /from\s*\{[^}]*translateY\(-4px\)/, '稿 42:168:内容自 -4px 归位')
   for (const panel of ['manage-fold-panel', 'cset-panel']) {
@@ -272,12 +272,12 @@ test('负控:折叠面板不挂进场动画必须判红', () => {
 function assertReducedMotionWired({ wxss, wxml, js }) {
   const src = stripComments(wxss)
   const rule = src.match(/\.cy-motion-reduced\s+\.manage-fold-panel[\s\S]{0,120}?\{([^}]*)\}/)
-  assert.ok(rule, '缺 .cy-motion-reduced 下折叠面板的兜底规则')
-  assert.match(rule[1], /animation-name:\s*cy-fade-in/, '稿 40:3:兜底要换成纯淡入,不是 animation:none')
-  assert.match(rule[1], /animation-duration:\s*var\(--cy-motion-crossfade\)/, '稿 40:3:兜底统一 150ms crossfade 档')
+  assert.ok(rule, '缺 .cy-motion-reduced 下折叠面板的保底规则')
+  assert.match(rule[1], /animation-name:\s*cy-fade-in/, '稿 40:3:保底要换成纯淡入，不是 animation:none')
+  assert.match(rule[1], /animation-duration:\s*var\(--cy-motion-crossfade\)/, '稿 40:3:保底统一 150ms crossfade 档')
 
   assert.match(wxml.split('\n')[0], /reducedMotion\s*\?\s*'cy-motion-reduced'/,
-    '页面根节点没按 reducedMotion 挂 .cy-motion-reduced —— 兜底规则匹配不到,等于没写')
+    '页面根节点没按 reducedMotion 挂 .cy-motion-reduced —— 保底规则匹配不到，等于没写')
   assert.match(js, /readReducedMotion\s*\(\s*\)/,
     'index.js 只 import 了 readReducedMotion 却没调用,reducedMotion 永远是 false')
   assert.match(js, /reducedMotion:\s*false/, 'data 里要有 reducedMotion 初值')

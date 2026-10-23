@@ -30,7 +30,7 @@ function numeric(value) {
 function readinessText(readiness) {
   const ready = numeric(readiness && readiness.readyStations)
   const required = numeric(readiness && readiness.requiredStations)
-  if (ready === null || required === null) return '站点准备数据待确认'
+  if (ready === null || required === null) return '—'
   return ready + '/' + required + ' 站 READY'
 }
 
@@ -81,7 +81,7 @@ function teamView(team) {
   return Object.assign({}, item, {
     nameText: item.name || item.teamName || '未命名队伍',
     statusText: item.status || 'UNKNOWN',
-    progressText: completed !== null && total !== null ? completed + '/' + total + ' 节点' : '进度待确认',
+    progressText: completed !== null && total !== null ? completed + '/' + total + ' 节点' : '—',
     issueText: item.blockedReason || item.issue || '',
     isAbnormal: status === 'BLOCKED' || status === 'PAUSED' || status === 'ERROR'
       || !!(item.blocked || item.blockedReason || item.issue),
@@ -109,10 +109,10 @@ function roleView(role) {
   const labels = { CONFIRMED: '已确认', PENDING: '待确认', REJECTED: '未接受' }
   labels.ASSIGNED = '待确认'
   return Object.assign({}, item, {
-    memberNameText: item.memberName || item.name || (item.memberId == null ? '成员待同步' : '成员 #' + item.memberId),
+    memberNameText: item.memberName || item.name || (item.memberId == null ? '成员更新中' : '成员 #' + item.memberId),
     roleNameText: item.roleName || item.roleLabel || item.roleCode || '角色待分配',
     confirmationStatus: status,
-    confirmationText: !item.roleCode ? '待分配' : (labels[status] || '确认状态待同步'),
+    confirmationText: !item.roleCode ? '待分配' : (labels[status] || '确认状态更新中'),
   })
 }
 
@@ -150,15 +150,15 @@ function broadcastView(broadcast) {
     SUCCESS: '已确认送达',
     REJECTED: '发送未生效',
     FAILED: '发送未生效',
-    PENDING: '发送状态待确认',
+    PENDING: '—',
     SENDING: '发送中',
     SENT: '已送达',
     PARTIAL: '部分送达',
   }
   return Object.assign({}, item, {
-    contentText: item.content || '广播内容待同步',
-    targetText: item.targetName || item.roleName || targetLabels[targetType] || '范围待确认',
-    receiptText: statusLabels[status] || '发送状态待同步',
+    contentText: item.content || '广播内容更新中',
+    targetText: item.targetName || item.roleName || targetLabels[targetType] || '—',
+    receiptText: statusLabels[status] || '发送状态更新中',
   })
 }
 
@@ -257,7 +257,7 @@ function hasAction(actions, action) {
 // 后端投影按判据给原因码(场次没跑起来 / 跑起来了但没人可送达),这里只负责把码念成人话。
 // NO_RECIPIENT 的句子必须带下一步 —— 走查抱怨的是「只说不能,不说怎样才能」。
 const BROADCAST_BLOCKER_TEXT = {
-  NO_RECIPIENT: '本场还没有可送达的玩家。等玩家报名进场后,这里才能发送。',
+  NO_RECIPIENT: '本场还没有可送达的玩家。等玩家报名进场后，这里才能发送。',
 }
 
 function broadcastBlockerText(blocker, sessionStatusText) {
@@ -393,10 +393,10 @@ function incidentRows(stations, submissions) {
         kind: 'PAUSED',
         nodeId: st.nodeId,
         label: '商家暂停',
-        text: (st.nodeName || '未命名站点') + ' · ' + (st.pauseReason || st.pauseReasonCode || '未填原因')
+        text: (st.nodeName || '未命名节点') + ' · ' + (st.pauseReason || st.pauseReasonCode || '未填原因')
           + (st.resumeEta ? ('，预计 ' + st.resumeEta + ' 恢复') : ''),
         // 绑了兜底方案的,玩家走到兜底站点会自动记「兜底完成」—— 不是这里点出来的
-        sub: st.fallbackPlanCode ? ('已绑兜底方案 ' + st.fallbackPlanCode) : '未绑兜底方案',
+        sub: st.fallbackPlanCode ? ('已绑备用方案 ' + st.fallbackPlanCode) : '未绑备用方案',
         planOptions: Array.isArray(st.fallbackPlanOptions) ? st.fallbackPlanOptions : [],
       })
     } else if (Number(st.pendingVerificationCount) > 0) {
@@ -405,7 +405,7 @@ function incidentRows(stations, submissions) {
         kind: 'BACKLOG',
         nodeId: st.nodeId,
         label: '待核验积压',
-        text: (st.nodeName || '未命名站点') + ' · ' + st.pendingVerificationCount + ' 条待商家核验',
+        text: (st.nodeName || '未命名节点') + ' · ' + st.pendingVerificationCount + ' 条待商家核验',
         sub: '',
         planOptions: Array.isArray(st.fallbackPlanOptions) ? st.fallbackPlanOptions : [],
       })
@@ -421,7 +421,7 @@ function incidentRows(stations, submissions) {
       kind: rejected ? 'REJECTED' : 'PENDING_SUBMIT',
       submissionId: sm.submissionId,
       label: rejected ? '任务驳回' : '待核验提交',
-      text: (sm.teamId ? ('队 ' + sm.teamId + ' · ') : '') + (sm.nodeName || '未命名站点')
+      text: (sm.teamId ? ('队 ' + sm.teamId + ' · ') : '') + (sm.nodeName || '未命名节点')
         + (rejected ? ' 已驳回待重交' : ' 提交待核验'),
       sub: rejected ? (sm.decisionReason || '') : '',
       planOptions: [],
@@ -471,7 +471,7 @@ const DIRECTOR_DATA = {
     chapterOptions: [],
     chapterOptionLabels: [],
     readiness: { requiredStations: null, readyStations: null, teamsReady: null, canStart: false },
-    readinessText: '站点准备数据待确认',
+    readinessText: '—',
     canPrepare: false,
     blockers: [],
     incidentRows: [],
@@ -505,7 +505,7 @@ const DIRECTOR_DATA = {
     broadcastScopeOptions: BROADCAST_SCOPE_OPTIONS,
     broadcastTargetRows: [],
     broadcastPreviewReady: false,
-    broadcastPreviewText: '广播范围人数待确认',
+    broadcastPreviewText: '—',
     broadcastDraft: { targetType: 'ALL', targetIndex: 0, content: '' },
     canUnlockChapter: false,
     unlockSheetVisible: false,
@@ -599,7 +599,7 @@ const DIRECTOR_METHODS = {
       title: '暂停本站',
       content: plan
         ? '暂停只影响本站，不改变已发放的权益与已完成的提交。'
-        : '这一站没有已批准的备用方案：玩家会看到本站暂停和预计恢复时间，不会被引导到其他站点。',
+        : '这一站没有已批准的备用方案：玩家会看到本站暂停和预计恢复时间，不会被引导到其他节点。',
       editable: true,
       placeholderText: '暂停原因（至少 2 个字，会同步给商家与玩家）',
       confirmText: '确认暂停',
@@ -642,12 +642,12 @@ const DIRECTOR_METHODS = {
     } catch (_) {}
     this.setData({
       writeState: pendingWrite || this._offlineAnchorPending ? 'unknown-write' : 'idle',
-      writeMessage: pendingWrite || this._offlineAnchorPending ? '检测到上次未确认的操作，正在准备核对' : '',
+      writeMessage: pendingWrite || this._offlineAnchorPending ? '检测到上次未确认的操作，正在准备确认' : '',
       writeLocked: !!(pendingWrite || this._offlineAnchorPending),
       canRetryUnknownWrite: false,
     })
     if (!activityId) {
-      this.setData({ loadState: 'empty', errorText: '缺少活动标识' })
+      this.setData({ loadState: 'empty', errorText: '缺少活动信息' })
       return
     }
     this.loadProjection()
@@ -768,8 +768,8 @@ const DIRECTOR_METHODS = {
       const ledger = snapshot.manual || {}
       const rows = Object.keys(ledger.signatures || {}).map(id => {
         const signature = ledger.signatures[id]
-        return '签名 ' + id + ' · 序号 ' + signature.sequence + ' · ' + (signature.command && signature.command.action || '') + (signature.used ? ' · 已消费' : ' · 待处理')
-      }).concat((ledger.unknownRequests || []).map(item => '会员 ' + item.memberId + ' · 请求 ' + item.requestId + ' · ' + item.outcome))
+        return '签名 ' + id + ' · 序号 ' + signature.sequence + ' · ' + (signature.command && signature.command.action || '') + (signature.used ? ' · 已使用' : ' · 待处理')
+      }).concat((ledger.unknownRequests || []).map(item => '会员 ' + item.memberId + ' · 操作 ' + item.requestId + ' · ' + item.outcome))
       this.setData(Object.assign({ genericOpsDraft: filled,
         genericOpsLedgerRows: rows,
         genericOpsError: snapshot.manual && snapshot.manual.needsReview ? '人工账高水位尚待复核，不能先签署或执行' : '' }, genericOpsForm(action, filled, this._genericControl)))
@@ -783,7 +783,7 @@ const DIRECTOR_METHODS = {
   startOfflineRecord() {
     if (this.data.writeLocked || !this._genericControl || this._genericControl.offlineAnchorAvailable !== true) return false
     const epoch = this.data.authorityEpoch, revision = this.data.revision
-    modal.show({ title: '开始离线记录', content: '记录当前进度后，按纸账记下现场操作。恢复网络后先暂停本局，再核对并导入已签记录。',
+    modal.show({ title: '开始离线记录', content: '先记下当前进度，现场操作写在纸上。恢复网络后先暂停本局，再导入纸质记录。',
       confirmText: '开始记录', cancelText: '暂不开始', success: result => {
         if (!result.confirm || this.data.writeLocked) return
         if (!this._genericControl || this._genericControl.offlineAnchorAvailable !== true || this.data.authorityEpoch !== epoch || this.data.revision !== revision) {
@@ -792,14 +792,14 @@ const DIRECTOR_METHODS = {
         const key = pendingWriteKey(this._activityId)
         if (!key) { toast('请先确认当前登录身份'); return }
         try { wx.setStorageSync(key + ':offline-start', { epoch }) }
-        catch (_) { toast('无法保存核对状态，未开始离线记录'); return }
+        catch (_) { toast('无法保存确认状态，未开始离线记录'); return }
         this._offlineAnchorPending = { epoch }
         this.setData({ writeLocked: true, writeState: 'submitting', writeMessage: '正在确认离线记录起点…', canRetryUnknownWrite: false })
         this._getAdapter().anchorSharedRun(this._activityId).then(response => {
           if (response && response.status === 'business-error') {
             this._clearOfflineAnchorPending()
             this.setData({ writeLocked: false, writeState: 'idle', writeMessage: response.message || '离线记录未开始' })
-            toast(response.message || '离线记录未开始，请重新核对后再试')
+            toast(response.message || '离线记录未开始，请重新确认后再试')
             this.loadProjection(); return
           }
           return this._reconcileOfflineAnchor()
@@ -823,15 +823,15 @@ const DIRECTOR_METHODS = {
       const control = projection.genericControl, anchor = control && control.offlineAnchor
       if (!anchor || anchor.epoch !== this._offlineAnchorPending.epoch || anchor.epoch !== control.run.authorityEpoch
         || !Number.isSafeInteger(anchor.at) || anchor.at < 1 || !/^[a-f0-9]{64}$/.test(anchor.highWaterHash || '') || !/^[a-f0-9]{64}$/.test(anchor.configHash || '')) {
-        this.setData({ writeLocked: true, writeState: 'unknown-write', writeMessage: '尚未读到本局离线记录，请核对结果；不会重复开始。', canRetryUnknownWrite: false })
+        this.setData({ writeLocked: true, writeState: 'unknown-write', writeMessage: '尚未读到本局离线记录，请确认结果；不会重复开始。', canRetryUnknownWrite: false })
         return false
       }
       this._clearOfflineAnchorPending()
-      this.setData({ writeLocked: false, writeState: 'idle', writeMessage: '离线记录起点已确认；恢复网络后请先暂停并核对纸账。', canRetryUnknownWrite: false })
+      this.setData({ writeLocked: false, writeState: 'idle', writeMessage: '离线记录已开始；恢复网络后请先暂停并导入纸质记录。', canRetryUnknownWrite: false })
       toast('离线记录起点已确认')
       return true
     }).catch(() => {
-      this.setData({ writeLocked: true, writeState: 'unknown-write', writeMessage: '离线记录结果待确认，请重新核对；不会重复开始。', canRetryUnknownWrite: false })
+      this.setData({ writeLocked: true, writeState: 'unknown-write', writeMessage: '离线记录结果待确认，请重新确认；不会重复开始。', canRetryUnknownWrite: false })
       return false
     }).finally(() => { this._offlineAnchorReading = false })
   },
@@ -863,12 +863,12 @@ const DIRECTOR_METHODS = {
     catch (error) { this.setData({ genericOpsError: error.message }); return false }
     const revision = this.data.revision, epoch = this.data.authorityEpoch
     modal.show({ title: '确认' + option.title,
-      content: (option.irreversible ? '此操作会写入不可撤销的现场事实。' : '将按本局规则核验并应用本次操作。') + (payload.reason ? '原因：' + payload.reason : '请确认现场凭证与输入准确。'),
+      content: (option.irreversible ? '此操作不可撤销' : '将按本局规则核验并应用本次操作。') + (payload.reason ? '原因：' + payload.reason : '请确认现场凭证与输入准确。'),
       confirmText: '确认提交',
       success: result => {
         if (!result.confirm || this.data.writeLocked) return
         if (revision !== this.data.revision || epoch !== this.data.authorityEpoch || !genericOpsActions(this._genericControl).some(item => item.id === action)) {
-          this.setData({ genericOpsError: '场次状态已变化，请重新核对' }); return
+          this.setData({ genericOpsError: '场次状态已变化，请重新确认' }); return
         }
         this.setData({ genericOpsSheet: false })
         this.executeAction(action, payload)
@@ -899,7 +899,7 @@ const DIRECTOR_METHODS = {
       return String(item.teamId) === String(teamId) && String(item.memberId) === String(memberId)
     })
     if (!row || row.teamId == null || row.memberId == null) {
-      toast('成员信息待同步')
+      toast('成员信息更新中')
       return
     }
     const roleOptions = this._roleOptions || []
@@ -1055,7 +1055,7 @@ const DIRECTOR_METHODS = {
       // 5-04:行组件要 {id,title} 并回传 {id};原来喂的是 teamView 原始行 → 空白且点不中
       broadcastTargetRows: targets.map(function (item) { return { id: item.id, title: item.label } }),
       broadcastPreviewReady: recipientCount !== null && recipientCount > 0 && !!selected,
-      broadcastPreviewText: targetLabel + (recipientCount === null ? ' · 人数待确认' : ' · ' + recipientCount + ' 人'),
+      broadcastPreviewText: targetLabel + (recipientCount === null ? '' : ' · ' + recipientCount + ' 人'),
       broadcastDraft: {
         targetType: normalized,
         targetIndex: 0,
@@ -1097,7 +1097,7 @@ const DIRECTOR_METHODS = {
     const recipientCount = broadcastRecipientCount(targetType, selected, this.data.teams, this.data.roles)
     this.setData({
       broadcastPreviewReady: recipientCount !== null && recipientCount > 0,
-      broadcastPreviewText: selected.label + (recipientCount === null ? ' · 人数待确认' : ' · ' + recipientCount + ' 人'),
+      broadcastPreviewText: selected.label + (recipientCount === null ? '' : ' · ' + recipientCount + ' 人'),
       broadcastDraft: Object.assign({}, this.data.broadcastDraft, { targetIndex: index }),
     })
   },
@@ -1248,7 +1248,7 @@ const DIRECTOR_METHODS = {
     const that = this
     modal.show({
       title: '进入准备',
-      content: '进入后将开始收集站点和队伍 READY 状态。',
+      content: '进入后将开始收集节点和队伍 READY 状态。',
       confirmText: '开始准备',
       success(result) { if (result.confirm) that.executeAction('PREPARE', {}) },
     })
@@ -1258,7 +1258,7 @@ const DIRECTOR_METHODS = {
     if (this.data.writeLocked) return
     if (this.data.loadState !== 'ready') return
     if (this.data.revision == null) {
-      toast('状态版本待确认，请先重新加载')
+      toast('状态已变化，请先刷新')
       return
     }
     if (action === 'TAKEOVER_ROLE') {
@@ -1312,7 +1312,7 @@ const DIRECTOR_METHODS = {
         that._unknownRequestId = requestId
         that.setData({
           writeState: 'unknown-write',
-          writeMessage: '结果待核对，核对前已锁定全部写操作',
+          writeMessage: '结果待确认，确认前暂停所有操作',
           writeLocked: true,
           canRetryUnknownWrite: command.action !== 'PLAN_FALLBACK',
         })
@@ -1347,11 +1347,11 @@ const DIRECTOR_METHODS = {
       that._unknownRequestId = requestId
       that.setData({
         writeState: 'unknown-write',
-        writeMessage: '请求结果待核对，核对前已锁定全部写操作',
+        writeMessage: '结果待确认，确认前暂停所有操作',
         writeLocked: true,
         canRetryUnknownWrite: command.action !== 'PLAN_FALLBACK',
       })
-      toast('结果待核对，请勿重复操作')
+      toast('结果待确认，请勿重复操作')
       if (command.action === 'PLAN_FALLBACK') that.onReconcileUnknownWrite()
       else that._readGenericUnknown()
     })
@@ -1363,13 +1363,13 @@ const DIRECTOR_METHODS = {
     if (!this.data.writeLocked || !this._unknownRequestId) return
     const that = this
     const requestId = this._unknownRequestId
-    this.setData({ writeState: 'receipt-reading', writeMessage: '正在核对最终结果…' })
+    this.setData({ writeState: 'receipt-reading', writeMessage: '正在确认最终结果…' })
     this._getAdapter().readReceipt(this._activityId, requestId,
       this._pendingCommand || this._pendingReceiptIndex).then(function (result) {
       if (!result || result.state === 'pending' || result.state === 'business-error') {
         that.setData({
           writeState: 'unknown-write',
-          writeMessage: '结果仍待核对，写操作继续锁定',
+          writeMessage: '结果仍待确认，操作继续暂停',
           writeLocked: true,
         })
         return
@@ -1394,7 +1394,7 @@ const DIRECTOR_METHODS = {
     }).catch(function () {
       that.setData({
         writeState: 'unknown-write',
-        writeMessage: '暂时无法核对，写操作继续锁定',
+        writeMessage: '暂时无法确认，操作继续暂停',
         writeLocked: true,
       })
     })
@@ -1423,19 +1423,19 @@ const DIRECTOR_METHODS = {
     if (!savePendingWrite(this._activityId, command)) {
       this.setData({
         writeState: 'unknown-write',
-        writeMessage: '无法安全保存重试状态；原操作仍待核对',
+        writeMessage: '无法保存重试状态，上次操作仍待确认',
         writeLocked: true,
         canRetryUnknownWrite: true,
       })
       toast('无法安全保存，未发送重试')
       return false
     }
-    this.setData({ writeState: 'submitting', writeMessage: '正在用原请求号重试…', writeLocked: true })
+    this.setData({ writeState: 'submitting', writeMessage: '正在重试…', writeLocked: true })
     this._getAdapter().submit(command).then(function (result) {
       if (that._handleDirectorAuthorityConflict(result)) return
       if (!result || result.state === 'unknown-write' || result.state === 'business-error') {
         that.setData({
-          writeState: 'unknown-write', writeMessage: '结果仍待核对，写操作继续锁定', writeLocked: true,
+          writeState: 'unknown-write', writeMessage: '结果仍待确认，操作继续暂停', writeLocked: true,
         })
         return
       }
@@ -1451,7 +1451,7 @@ const DIRECTOR_METHODS = {
       that.loadProjection()
     }).catch(function () {
       that.setData({
-        writeState: 'unknown-write', writeMessage: '重试结果仍待核对，写操作继续锁定', writeLocked: true,
+        writeState: 'unknown-write', writeMessage: '重试结果仍待确认，操作继续暂停', writeLocked: true,
       })
     })
     return true

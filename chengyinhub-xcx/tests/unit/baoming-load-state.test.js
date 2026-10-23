@@ -437,7 +437,7 @@ test('候补名额另算售止:拿着未过期 OFFER 的人不被票种截止误
 
   page.data.waitlistState = 'EXPIRED'
   page.refreshPaymentState()
-  assert.equal(page.data.signupClosed, true, '凭证一旦失效,截止闸重新落下')
+  assert.equal(page.data.signupClosed, true, '凭证一旦失效，截止闸重新落下')
   assert.equal(page.data.canPay, false)
 })
 
@@ -448,7 +448,7 @@ test('模板把「报名已截止」说到人看得见的地方:空态与置灰 
     path.join(__dirname, '../../pages/activity/baoming/baoming.wxml'), 'utf8')
 
   assert.match(wxml, /<cy-empty[^>]*signupState === 'closed'[^>]*title="报名已截止"/,
-    '已截止要有整屏可见的说明,不能只有置灰按钮')
+    '已截止要有整屏可见的说明，不能只有置灰按钮')
   const payBtn = wxml.split('\n').filter((line) => line.includes('disabled="{{!canPay}}"'))
   assert.equal(payBtn.length, 1, '付款 CTA 应当只有一条')
   assert.match(payBtn[0], /signupClosed \? '报名已截止'/, '置灰的 CTA 必须自己带理由')

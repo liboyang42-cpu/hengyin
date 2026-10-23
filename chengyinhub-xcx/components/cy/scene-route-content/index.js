@@ -52,7 +52,7 @@ function amountText(value) {
 }
 
 function nameOf(item) {
-  return valueOf(item, ['name', 'title', 'topicName', 'activityName', 'templateName', 'merchantName', 'couponName']) || '记录名称待确认'
+  return valueOf(item, ['name', 'title', 'topicName', 'activityName', 'templateName', 'merchantName', 'couponName']) || '—'
 }
 
 function normalizeRows(rows, sceneId) {
@@ -182,7 +182,7 @@ Component({
         return
       }
       if (config.requiresId && !config.data.id) {
-        this.setData({ state: 'error', errorText: '缺少记录参数，请返回上一级重新进入' })
+        this.setData({ state: 'error', errorText: '链接已失效，请返回重新进入' })
         return
       }
       if (sceneId === 'settings-likes') {
@@ -210,7 +210,7 @@ Component({
         success: (res) => {
           if (token !== this._loadToken) return
           if (!isOk(res)) {
-            this.setData({ state: 'error', errorText: (res && res.msg) || '服务暂时没有响应' })
+            this.setData({ state: 'error', errorText: (res && res.msg) || '服务暂不可用' })
             return
           }
           const access = merchantAccessPolicy.normalizeMerchantAccess(payloadOf(res))
@@ -245,7 +245,7 @@ Component({
         success: (res) => {
           if (token !== this._loadToken) return
           if (!isOk(res)) {
-            this.setData({ state: 'error', errorText: (res && res.msg) || '服务暂时没有响应' })
+            this.setData({ state: 'error', errorText: (res && res.msg) || '服务暂不可用' })
             return
           }
           this.applyPayload(sceneId, payloadForScene(sceneId, res), config.formType, params)
@@ -254,7 +254,7 @@ Component({
           if (token === this._loadToken) this.setData({ state: 'error', errorText: '网络没连上，请稍后重试' })
         },
         successStatusAbnormal: () => {
-          if (token === this._loadToken) this.setData({ state: 'error', errorText: '服务暂时不可用，请稍后重试' })
+          if (token === this._loadToken) this.setData({ state: 'error', errorText: '服务暂不可用，请稍后重试' })
         },
       })
     },
@@ -320,7 +320,7 @@ Component({
         'member-withdraw-history': '还没有提现记录',
         'member-order-history': '还没有订单',
         'settings-likes': '还没有收藏内容',
-        'merchant-citynode': '还没有城市据点',
+        'merchant-citynode': '还没有城市节点',
         'club-manage': '还没有可管理的俱乐部',
       }
       return texts[sceneId] || '这里还没有记录'
@@ -494,7 +494,7 @@ Component({
         return
       }
       if (sceneId === 'merchant-citynode' && !this.data.merchantAccess.canManageProjects) {
-        toast('当前岗位没有据点管理权限')
+        toast('当前岗位没有节点管理权限')
         return
       }
       // 商家入驻先登记实名再发业务单；主理人能力档案没有票费，直接提交。
@@ -542,7 +542,7 @@ Component({
           }
         },
         successStatusAbnormal: () => {
-          if (token === this._submitToken && sceneId === this.data.sceneId) this.setData({ submitting: false, submitError: '服务暂时不可用，已填写内容不会丢失，请重试' })
+          if (token === this._submitToken && sceneId === this.data.sceneId) this.setData({ submitting: false, submitError: '提交失败，请重试' })
         },
         cancel: () => {
           if (token === this._submitToken && sceneId === this.data.sceneId) this.setData({ submitting: false, submitError: '' })

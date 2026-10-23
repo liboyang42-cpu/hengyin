@@ -44,7 +44,7 @@ test('★默认表逐段对账:可内嵌默认内嵌九个(0924 用户裁决)、
     assert.equal(cfg.defaultPresent(section), 'fullscreen')
     assert.equal(cfg.presentInlineLocked(section), true, section + ' 必须置灰内嵌档')
   }
-  assert.equal(cfg.defaultPresent(DICE), 'fullscreen', 'diceRoll 默认是整屏(用户两种写法都在,默认照旧)')
+  assert.equal(cfg.defaultPresent(DICE), 'fullscreen', 'diceRoll 默认是整屏(用户两种写法都在，默认照旧)')
   assert.equal(cfg.presentInlineLocked(DICE), false, 'diceRoll 不许被锁:内嵌那套是用户点名要保留的')
 })
 

@@ -54,7 +54,7 @@ test('失败:落弹层内 loadError + 重试,不与「真·无分类」混淆', 
   requests[0].fail({ errMsg: 'request:fail timeout' });
 
   assert.equal(vm.data.loaded, false, '失败不能当加载完成');
-  assert.notEqual(vm.data.loadError, '', '失败必须有可见原因,不能显示成空列表');
+  assert.notEqual(vm.data.loadError, '', '失败必须有可见原因，不能显示成空列表');
   assert.deepEqual(vm.data.categoryList, []);
 
   // 重试:同一个方法再拉一次即可(弹层内 action 绑定它)
@@ -98,7 +98,7 @@ test('渲染与接线:错误条用 cy-inline-error,action 指回 getCategoryList
 test('负控:失败分支改回不记录原因,失败用例真红', () => {
   const source = read();
   const broken = source.replace(
-    "        fail(res) {\n          that.setData({\n            categoryList: [],\n            loaded: false,\n            loadError: app.getRequestErrorMessage(res, '分类没能加载出来'),\n          });",
+    "        fail(res) {\n          that.setData({\n            categoryList: [],\n            loaded: false,\n            loadError: app.getRequestErrorMessage(res, '分类加载失败'),\n          });",
     "        fail(res) {\n          that.setData({ categoryList: [], loaded: false, loadError: '' });");
   assert.notEqual(broken, source, '负控锚点失效:fail 分支未命中');
 
@@ -106,6 +106,6 @@ test('负控:失败分支改回不记录原因,失败用例真红', () => {
   vm.getCategoryList();
   requests[0].fail({ errMsg: 'request:fail timeout' });
   assert.throws(() => {
-    assert.notEqual(vm.data.loadError, '', '失败必须有可见原因,不能显示成空列表');
-  }, assert.AssertionError, '负控:去掉失败原因后,主用例断言必须真红');
+    assert.notEqual(vm.data.loadError, '', '失败必须有可见原因，不能显示成空列表');
+  }, assert.AssertionError, '负控:去掉失败原因后，主用例断言必须真红');
 });

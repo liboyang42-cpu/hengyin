@@ -53,6 +53,16 @@ Page({
     toast('身份码开通后会自动出现');
   },
 
+  copyAttributionLink(e) {
+    const link = (e.currentTarget.dataset || {}).link;
+    if (!link) return;
+    wx.setClipboardData({
+      data: link,
+      success() { toast('来源地址已复制'); },
+      fail() { toast('复制失败，可长按选中地址'); },
+    });
+  },
+
   openAgreement() {
     this.setData({ showAgreementSheet: true });
   },

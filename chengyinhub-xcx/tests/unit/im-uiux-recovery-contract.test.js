@@ -102,7 +102,28 @@ for (const method of ['loadConversations', 'loadMerchantEntry']) {
       ? [{ conversationId: 42, unread: 1, type: 1 }]
       : merchantAccess })
     if (method === 'loadConversations') assert.equal(h.page.data.list[0].conversationId, 42)
-    else assert.equal(h.page.data.canSettlePredict, true)
+    else {
+      // owner 2026-10-22:身份通过后再问待答列表,有待答才出这一行
+      const inbox = h.requests.find((r) => r.url === '/api/merchant/predict/inbox')
+      assert.ok(inbox, '商家身份通过后要读待答列表')
+      inbox.success({ code: 200, data: [{ roundId: 1 }] })
+      assert.equal(h.page.data.canSettlePredict, true)
+    }
+  })
+}
+
+// owner 2026-10-22:没有待答时「竞猜待答」整行不出;待答读失败时照样出(提醒有 48 小时期限,不能悄悄消失)
+for (const [label, respond, expected] of [
+  ['没有待答 → 不出', (r) => r.success({ code: 200, data: [] }), false],
+  ['有待答 → 出', (r) => r.success({ code: 200, data: [{ roundId: 3 }] }), true],
+  ['待答读失败 → 照样出', (r) => r.fail({ errMsg: 'request:fail' }), true],
+]) {
+  test(`竞猜待答入口:${label}`, () => {
+    const h = loadPage(LIST_MODULE)
+    h.page.loadMerchantEntry()
+    h.requests[0].success({ code: 200, data: merchantAccess })
+    respond(h.requests.find((r) => r.url === '/api/merchant/predict/inbox'))
+    assert.equal(h.page.data.canSettlePredict, expected)
   })
 }
 
@@ -113,6 +134,7 @@ for (const callback of ['success', 'fail']) {
     h.page.loadMerchantEntry()
     h.requests[1].success({ code: 200, data: merchantAccess })
     h.requests[0][callback]({ code: 200, data: { active: false } })
+    h.requests.find((r) => r.url === '/api/merchant/predict/inbox').success({ code: 200, data: [{ roundId: 1 }] })
     assert.equal(h.page.data.canSettlePredict, true)
   })
 }

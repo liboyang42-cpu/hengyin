@@ -82,21 +82,23 @@ function merchantAccess(id = 3, name = 'A店') {
 function assertPartialStateUi(wxml, json) {
   // 2026-09-16 去闸:身份确认不再整屏;确认期用普通骨架,失败落页内内联错误。
   assert.doesNotMatch(wxml, /rv-gate|consoleState/,
-    '整屏身份闸必须删除,确认期走普通加载态')
+    '整屏身份闸必须删除，确认期走普通加载态')
   assert.match(json, /"cy-inline-error"\s*:\s*"\/components\/cy\/inline-error\/index"/,
     '商家工作台必须注册局部错误组件')
   assert.match(wxml, /<cy-inline-error\b[^>]*wx:if="\{\{consoleError\}\}"[^>]*bind:action="reloadConsole"/,
     '身份/加载失败必须有页内重试出路')
-  assert.match(wxml, /dashboardLoading\s*&&\s*dashboardData\.revenue\s*==\s*null/,
-    '只有没有旧收入时才显示首载骨架')
-  assert.match(wxml, /dashboardLoading\s*&&\s*dashboardData\.revenue\s*!=\s*null/,
-    '已有收入刷新时必须留下正在更新提示')
+  // 2026-10-22 owner 裁决推翻「首载骨架 + 正在更新提示」:金额永远在位(首帧 ¥0.00),真值到了滚过去,
+  // 加载中不出任何 loading UI(不足 400ms 不画加载态)。
+  assert.match(wxml, /class="rv-revenue-amount"[^>]*>\{\{money\.amount2\(revenueShown\)\}\}</,
+    '收入金额永远在位,加载中显示当前值')
+  assert.doesNotMatch(wxml, /<cy-skeleton[^>]*type="amount"|正在更新经营数据/,
+    '收入区不得再出骨架或正在更新提示')
   assert.match(wxml, /<cy-inline-error\b[^>]*wx:if="\{\{dashboardError\}\}"[^>]*bind:action="reloadDashboard"/,
     '收入局部失败必须原位说明并只重试经营数据')
   assert.match(wxml, /!projectCards\.length\s*&&\s*\(joinLoading\s*\|\|\s*hostLoading\s*\|\|\s*todoLoading\s*\|\|\s*gameEntryLoading\)/,
     '项目骨架只能遮住还没有旧项目的首载')
   assert.doesNotMatch(wxml, /<cy-inline-error\b[^>]*wx:if="\{\{joinError\s*\|\|\s*hostError\s*\|\|\s*todoError\}\}"/,
-    '项目刷新失败静默降级:保留成功卡片,不挂区块横幅')
+    '项目刷新失败静默降级:保留成功卡片，不挂区块横幅')
 }
 
 test('商家工作台采用首载骨架、stale 内容与局部恢复三段式状态', () => {
@@ -114,9 +116,8 @@ test('收入局部重试通过无参 wrapper，组件 event 不会被误当成 d
   const request = requests.find((item) => item.url === '/api/merchant/dashboard')
   assert.ok(request)
   request.success({ code: 200, data: { revenue: 66, pendingOrders: 1 } })
-  request.complete()
   assert.equal(page.data.dashboardData.revenue, '66.00')
-  assert.equal(page.data.dashboardLoading, false)
+  assert.equal('dashboardLoading' in page.data, false, '2026-10-22 owner 裁决:收入区无加载态 UI,dashboardLoading 已退役')
 })
 
 test('商家身份请求 pending 时 fail closed，过期回调不能覆盖新一轮结果', () => {
@@ -167,7 +168,6 @@ test('账号在请求途中变化时，旧身份与旧经营回调都不得写�
   const dashboardA = requests.find((item) => item.url === '/api/merchant/dashboard')
   userId = 10
   dashboardA.success({ code: 200, data: { revenue: 999, pendingOrders: 1 } })
-  dashboardA.complete()
   merchantInfoA.success({ code: 200, data: { id: 3, name: 'A店迟到' } })
 
   assert.equal(dataPending.data.displayName, 'A店', '旧子请求不得覆盖已确认身份头之外的后续视图')
@@ -228,10 +228,10 @@ test('登出或切换商家后，旧主体的子请求不能回填品牌、金�
   const staleDashboard = requests.find((item) => item.url === '/api/merchant/dashboard')
   if (staleDashboard) {
     staleDashboard.success({ code: 200, data: { revenue: 888, pendingOrders: 2 } })
-    staleDashboard.complete()
   }
   assert.equal(page.data.displayName, '商家')
   assert.equal(page.data.dashboardData.revenue, null)
+  assert.equal(page.data.revenueShown, '0.00', '旧主体迟到的金额不得滚上屏')
   assert.equal(page.data.todo.pendingVerify, 0)
 
   userId = 10
@@ -253,11 +253,9 @@ test('经营数据刷新失败保留最后一次已确认金额，未知值仍�
   const request = requests.find((item) => item.url === '/api/merchant/dashboard')
   assert.ok(request)
   request.fail({ msg: '网络连接失败' })
-  request.complete()
 
   assert.deepEqual(page.data.dashboardData, { revenue: '128.50', pendingOrders: 2 })
   assert.equal(page.data.dashboardError, '网络连接失败')
-  assert.equal(page.data.dashboardLoading, false)
 })
 
 test('连续整台刷新只接受最后一轮响应，旧经营快照不得倒灌', () => {
@@ -345,11 +343,11 @@ test('负控：把收入和项目恢复为互斥整块 loading 时必须判红',
   const wxml = fs.readFileSync(WXML_PATH, 'utf8')
   const json = fs.readFileSync(JSON_PATH, 'utf8')
   const mutated = wxml
-    .replace(/dashboardLoading\s*&&\s*dashboardData\.revenue\s*==\s*null/, 'dashboardLoading')
+    .replace('{{money.amount2(revenueShown)}}', '<cy-skeleton wx:if="{{dashboardLoading}}" type="amount" />')
     .replace(/!projectCards\.length\s*&&\s*\(joinLoading\s*\|\|\s*hostLoading\s*\|\|\s*todoLoading\)/,
       'joinLoading || hostLoading || todoLoading')
   assert.notEqual(mutated, wxml, '负控锚点失效')
-  assert.throws(() => assertPartialStateUi(mutated, json), /只有没有旧收入时|项目骨架只能/)
+  assert.throws(() => assertPartialStateUi(mutated, json), /收入金额永远在位|收入区不得再出骨架|项目骨架只能/)
 })
 
 test('负控：把整屏身份闸加回工作台必须判红', () => {

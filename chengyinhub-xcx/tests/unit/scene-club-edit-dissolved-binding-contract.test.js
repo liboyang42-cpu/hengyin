@@ -30,7 +30,7 @@ test('scene-club-edit 仍然对外抛 dissolved 事件', () => {
   assert.match(
     componentJs,
     /triggerEvent\(\s*['"]dissolved['"]/,
-    'scene-club-edit 不再抛 dissolved —— 事件改名了就得同步改本契约与所有宿主,不能让断言静默变恒真',
+    'scene-club-edit 不再抛 dissolved —— 事件改名了就得同步改本契约与所有宿主，不能让断言静默变恒真',
   )
 })
 
@@ -39,13 +39,13 @@ test('每个 cy-scene-club-edit 宿主都必须绑 dissolved,且 handler 真实�
   const TAG = /<cy-scene-club-edit\b[\s\S]*?\/?>/g
   const hosts = walkWxml(ROOT).filter((p) => /<cy-scene-club-edit\b/.test(fs.readFileSync(p, 'utf8')))
 
-  assert.ok(hosts.length >= 3, `宿主只找到 ${hosts.length} 个,少于已知的 3 个 —— 扫描口径坏了或宿主被删`)
+  assert.ok(hosts.length >= 3, `宿主只找到 ${hosts.length} 个，少于已知的 3 个 —— 扫描口径坏了或宿主被删`)
 
   for (const wxmlPath of hosts) {
     const rel = path.relative(ROOT, wxmlPath)
     for (const tag of fs.readFileSync(wxmlPath, 'utf8').match(TAG) || []) {
       const bound = tag.match(/bind:?dissolved\s*=\s*"([^"]+)"/i)
-      assert.ok(bound, `${rel}: cy-scene-club-edit 没绑 dissolved —— 解散成功后宿主收不到,用户会卡在已删俱乐部的页面`)
+      assert.ok(bound, `${rel}: cy-scene-club-edit 没绑 dissolved —— 解散成功后宿主收不到，用户会卡在已删俱乐部的页面`)
 
       const handler = bound[1].trim()
       const siblingJs = wxmlPath.replace(/\.wxml$/, '.js')

@@ -367,7 +367,7 @@ test('决定结局的表决可写「没有方案执行时」收场；关闭决�
   const base = { votePolicy: 'MAJORITY', decidesEnding: true, plans: [{ title: '撤离', summary: '启动撤离', materialCost: [] }] };
   const withFallback = tools.apply('vote', { ...base, fallbackTitle: ' 沉默的城市 ', fallbackSummary: '维护窗口结束。' }, advancedConfig.defaultConfig()).value;
   assert.deepEqual(withFallback.interactionTools.fallback, { title: '沉默的城市', summary: '维护窗口结束。' });
-  assert.equal(withFallback.interactionTools.plans[0].endingKey, undefined, '新方案不要求结局标识或结局章');
+  assert.equal(withFallback.interactionTools.plans[0].endingKey, undefined, '新方案不要求结局信息或结局章');
   const read = tools.read('vote', withFallback);
   assert.equal(read.fallbackTitle, '沉默的城市'); assert.equal(read.fallbackSummary, '维护窗口结束。');
   assert.match(tools.apply('vote', { ...base, fallbackSummary: '只有内容' }, advancedConfig.defaultConfig()).error, /标题须为 1 至 80 字/);
@@ -407,7 +407,7 @@ test('线索工具：本队或全场公开，同名同键；投票方案「需�
   assert.deepEqual(tools.read('clue', clue).rows, [{ name: 'EV01 原始采样', public: false }, { name: 'EV04 维护规程', public: true }]);
   assert.match(tools.apply('clue', { rows: [{ name: 'A', public: false }, { name: 'A', public: true }] }, base).error, /不能重复/);
   const vote = tools.apply('vote', { votePolicy: 'MAJORITY', decidesEnding: true, plans: [{ title: '关闭太阳', summary: '', materialCost: [], clueNames: ['EV04 维护规程'] }], slotMode: true, slots: [], legacyRefs: {} }, base).value;
-  assert.deepEqual(vote.interactionTools.plans[0].when, [{ var: ev04, op: 'EQ', value: 1 }], '与公开线索同名即同一标识');
+  assert.deepEqual(vote.interactionTools.plans[0].when, [{ var: ev04, op: 'EQ', value: 1 }], '与公开线索同名即同一信息');
   assert.deepEqual(vote.clues, { [ev04]: 'EV04 维护规程' });
   assert.deepEqual(tools.read('vote', vote).plans[0].clueNames, ['EV04 维护规程']);
   assert.match(tools.apply('clue', { rows: [{ name: 'x', public: true }] }, vote).error, /投票不能与/);

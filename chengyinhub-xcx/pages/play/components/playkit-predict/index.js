@@ -193,7 +193,7 @@ function revealOf(d) {
   if (Number(status) === 2) {
     return {
       revealKind: 'void', revealHead: '这一轮作废了',
-      revealText: '商家没有在期限内给出答案。这一轮不发奖,你押的那一下不算数。',
+      revealText: '商家没有在期限内给出答案。这一轮不发奖，你押的那一下不算数。',
     };
   }
   if (Number(status) === 1) {
@@ -203,7 +203,7 @@ function revealOf(d) {
       ? { revealKind: 'won', revealHead: '猜中了', revealText: '答案是「' + answer + '」,你押的就是它。' }
       : { revealKind: 'lost', revealHead: '没猜中', revealText: '答案是「' + answer + '」,你押的是「' + mine + '」。' };
   }
-  return { revealKind: 'wait', revealHead: '等商家给答案', revealText: '答案给出来之后,这里会告诉你中没中。' };
+  return { revealKind: 'wait', revealHead: '等商家给答案', revealText: '答案给出来之后，这里会告诉你中没中。' };
 }
 
 /** key → 选项文案。找不到就把 key 原样回去,不编一个「未知选项」出来。 */
@@ -240,8 +240,8 @@ function waitLabelOf(closeAtHour, revealDays, revealHour) {
 
   const closeSay = close ? '今天 ' + close + ' 截止' : '';
   const revealSay = (days >= 0 && reveal) ? dayText(days) + ' ' + reveal + ' 由商家给出答案' : '';
-  if (closeSay && revealSay) return closeSay + ',' + revealSay + '。';
+  if (closeSay && revealSay) return closeSay + '，' + revealSay + '。';
   if (revealSay) return revealSay + '。';
-  if (closeSay) return closeSay + ',之后由商家给出答案。';
+  if (closeSay) return closeSay + '，之后由商家给出答案。';
   return '';
 }

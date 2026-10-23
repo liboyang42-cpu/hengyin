@@ -61,13 +61,13 @@ function buildSharePayload(session, privacy) {
 }
 /** 待办标记按账号分:A 作废失败留下的标记,不能被 B 登录后「补作废 B 自己的」顺手清掉。 */
 function revokePendingKey(app) {
-  return REVOKE_PENDING_PREFIX + String((app && typeof app.getUserID === 'function' && app.getUserID()) || '')
+  const id = String((app && typeof app.getUserID === 'function' && app.getUserID()) || '').trim(); return /^(|0|undefined|null)$/.test(id) ? '' : REVOKE_PENDING_PREFIX + id // 无账号返回 '':不读不写全局键
 }
 function readRevokePending(app, storage) {
-  try { return storage.getStorageSync(revokePendingKey(app)) === 1 } catch (_) { return true }
+  try { const key = revokePendingKey(app); return !!key && storage.getStorageSync(key) === 1 } catch (_) { return true }
 }
 function writeRevokePending(storage, key, pending) {
-  try {
+  if (key) try {
     if (pending) storage.setStorageSync(key, 1)
     else storage.removeStorageSync(key)
   } catch (_) {}
@@ -75,7 +75,7 @@ function writeRevokePending(storage, key, pending) {
 /** 作废本人全部分享快照。返回 Promise<boolean>;false 时待办标记留着,下次发布前补做。 */
 function revokeShareSnapshots(app, storage) {
   const key = revokePendingKey(app), generation = (revokeGenerations.get(key) || 0) + 1
-  revokeGenerations.set(key, generation); writeRevokePending(storage, key, true)
+  if (!key) return Promise.resolve(false); revokeGenerations.set(key, generation); writeRevokePending(storage, key, true)
   return send(app, { url: '/api/roam/share/revoke', method: 'POST', data: {} }).then((res) => {
     if (!isOk(res)) return false
     if (revokeGenerations.get(key) === generation) writeRevokePending(storage, key, false)
@@ -84,7 +84,7 @@ function revokeShareSnapshots(app, storage) {
 }
 /** Promise<{ token, reason }>:reason = '' | 'private' | 'revoke-pending' | 'failed'。 */
 function publishShareSnapshot(app, storage, session) {
-  const owner = revokePendingKey(app)
+  const owner = revokePendingKey(app); if (!owner) return Promise.resolve({ token: '', reason: 'failed' })
   // 与现有 request-client/session-manager 一致：账号与会话凭据共同识别在途所有者。
   const currentAuthorization = () => typeof app.getAuthorization === 'function'
     ? app.getAuthorization() : app.globalData && app.globalData.authorization

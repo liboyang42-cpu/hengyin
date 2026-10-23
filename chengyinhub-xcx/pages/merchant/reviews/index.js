@@ -219,7 +219,7 @@ Page({
         }
         const shaped = shapePage(res.data, mode, pageNum, 20, mode === 'manage' ? filter : undefined);
         if (!shaped) {
-          this.setData({ pageState: 'error', loadingMore: false, filterLoading: false, errorMessage: '评价数据不完整，请稍后重试' });
+          this.setData({ pageState: 'error', loadingMore: false, filterLoading: false, errorMessage: '评价加载失败，请重试' });
           return;
         }
         const items = append ? this.data.items.concat(shaped.items) : shaped.items;
@@ -257,7 +257,7 @@ Page({
           pageState: append ? this.data.pageState : 'error',
           loadingMore: false,
           filterLoading: false,
-          errorMessage: '网络连接失败，请稍后重试',
+          errorMessage: '网络异常，请重试',
         });
       },
     };

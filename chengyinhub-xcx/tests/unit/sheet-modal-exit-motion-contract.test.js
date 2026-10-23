@@ -57,7 +57,7 @@ function assertExitMotion({ wxml, js, wxss, behavior, tokens, closingClass, ente
     assert.match(r, /forwards/, `${closingClass} 的退场动画必须 forwards 停在末帧`)
     exitTokens.add(motionTokenOf(r, '退场'))
   }
-  assert.equal(exitTokens.size, 1, '面板与遮罩的退场时长必须同档,否则遮罩先没了面板还在')
+  assert.equal(exitTokens.size, 1, '面板与遮罩的退场时长必须同档，否则遮罩先没了面板还在')
   const exitToken = [...exitTokens][0]
   const exitMs = tokenMs(tokens, exitToken)
 
@@ -76,14 +76,14 @@ function assertExitMotion({ wxml, js, wxss, behavior, tokens, closingClass, ente
   assert.ok(wired, '组件必须挂 exitMotion(<ms>) behavior')
   assert.equal(
     Number(wired[1]), exitMs,
-    `exitMotion(${wired[1]}) 与 --cy-motion-${exitToken}(${exitMs}ms)漂移了,两处必须同步`,
+    `exitMotion(${wired[1]}) 与 --cy-motion-${exitToken}(${exitMs}ms)漂移了，两处必须同步`,
   )
   assert.match(js, /behaviors:\s*\[[^\]]*reducedMotionBehavior/, '必须同时挂 reduced-motion,否则 behavior 读不到 reducedMotion')
   assert.match(wxss, new RegExp('\\.' + closingClass + '\\s*\\{[^}]*pointer-events:\\s*none'), '退场开始后必须冻结点击')
   assert.match(js, /if\s*\(this\.data\._closing\)\s*return/, '事件处理器必须在退场期间拒绝重复触发')
 
   // behavior 本体:减动效立即卸载、重开/销毁清定时器
-  assert.match(behavior, /reducedMotion[\s\S]{0,120}_render:\s*false/, 'reducedMotion 时必须立即卸载,不能空等动画时长')
+  assert.match(behavior, /reducedMotion[\s\S]{0,120}_render:\s*false/, 'reducedMotion 时必须立即卸载，不能空等动画时长')
   assert.match(behavior, /clearTimeout\(this\._exitTimer\)/, '重新打开/销毁时必须清退场定时器')
   assert.match(behavior, /detached\(\)[\s\S]{0,120}clearTimeout/, '组件销毁必须清定时器')
 }
@@ -145,10 +145,10 @@ function assertDateSheetMask({ wxml, js, wxss }) {
   // 没有遮罩时,面板只贴在屏幕底部,上半屏可以直接点到背后的表单/导航。
   assert.match(wxml, /class="ds__mask"[^>]*bindtap="onMask"/, '时间选择面板必须有可点的遮罩层')
   assert.match(wxss, /\.ds__mask\s*\{[^}]*position:\s*absolute[^}]*\}/, '遮罩必须铺满定位层')
-  assert.match(wxss, /\.ds\s*\{[^}]*inset:\s*0/, '根节点必须是全屏定位层,否则遮不住上半屏')
+  assert.match(wxss, /\.ds\s*\{[^}]*inset:\s*0/, '根节点必须是全屏定位层，否则遮不住上半屏')
   // 半截的滚轮值不该被当成用户的选择落下去。
   assert.match(js, /onMask\(\)[\s\S]{0,220}triggerEvent\('cancel'\)/, '点遮罩必须触发 cancel,不能触发 confirm')
-  assert.match(wxml, /catchtap="noop"/, '面板本身必须吃掉点击,不能冒泡到遮罩把自己关掉')
+  assert.match(wxml, /catchtap="noop"/, '面板本身必须吃掉点击，不能冒泡到遮罩把自己关掉')
 }
 
 function dateSheetMaskArgs(overrides) {

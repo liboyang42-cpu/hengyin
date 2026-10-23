@@ -73,7 +73,7 @@ test('未知 changeType 不得默认为支出,显示中性待确认状态', () =
     const row = vm.formatList([{ changeType, changeBalance: 88 }])[0]
     assert.equal(row.isIncome, null, `changeType=${String(changeType)} 不得伪装成支出`)
     assert.equal(row.directionKnown, false)
-    assert.equal(row.directionText, '方向待确认')
+    assert.equal(row.directionText, '—')
     assert.equal(row.amountText, '¥88.00', '方向未知时金额不得带收入/支出符号')
   }
 })
@@ -85,7 +85,7 @@ test('negative control:把 changeType 当状态用、或退回硬拼 + 号,各�
   assert.notEqual(expense.directionText, '处理中', '支出被说成处理中 = 拿方向字段冒充状态')
   // 退回硬拼 '+¥' 的写法
   assert.doesNotMatch(expense.amountText, /^\+/, '支出不得带加号')
-  assert.doesNotMatch(expense.amountText, /-\d/, '负号必须被方向符号吸收,不能渲成 ¥-50.00')
+  assert.doesNotMatch(expense.amountText, /-\d/, '负号必须被方向符号吸收，不能渲成 ¥-50.00')
 })
 
 test('接口返回的 rows 不是数组时落错误态,不当成空列表', () => {

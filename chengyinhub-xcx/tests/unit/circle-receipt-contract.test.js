@@ -102,7 +102,7 @@ test('★「你已经记录过这家供给」是确认不是失败：不弹红�
   await page.recordOffer(tap(9));
   assert.equal(page.data.receipt, 'confirmed',
     '撞唯一键说明上一次其实写进去了；判 failed 会让用户以为没记上，然后再点一次');
-  assert.equal(page.refreshCalls, 1, '要回读记录卡把真实状态拿回来');
+  assert.equal(page.refreshCalls, 1, '要刷新记录卡把真实状态拿回来');
   assert.deepEqual(page.toasts, [], '不该弹错误提示');
   page.restore();
 });

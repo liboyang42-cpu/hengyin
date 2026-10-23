@@ -18,16 +18,29 @@ class ClubEventScheduleMaterializerTest {
     private final ClubEventScheduleMaterializer materializer = new ClubEventScheduleMaterializer();
 
     @Test
-    void weeklyMaterializationUsesShanghaiCalendarAndStopsAtSixtyFourOccurrences() {
+    void weeklyMaterializationFillsTheNinetyDayWindowExactly() {
         ClubEventSeriesRequest request = request("WEEKLY");
         request.setStartDate("2026-08-24");
-        request.setOccurrenceCount(64);
+        request.setOccurrenceCount(13);
 
         List<LocalDate> dates = materializer.materialize(request, LocalDate.of(2026, 8, 23));
 
-        assertEquals(13, dates.size(), "90 天窗口内只有 13 个每周场次");
+        assertEquals(13, dates.size(), "90 天窗口内恰好 13 个每周场次");
         assertEquals(LocalDate.of(2026, 8, 24), dates.get(0));
         assertEquals(LocalDate.of(2026, 11, 16), dates.get(12));
+    }
+
+    @Test
+    void weeklyRequestBeyondNinetyDayWindowIsRejectedInsteadOfSilentlyTruncated() {
+        ClubEventSeriesRequest request = request("WEEKLY");
+        request.setStartDate("2026-08-24");
+        for (int requested : new int[] {14, 64}) {
+            request.setOccurrenceCount(requested);
+            ServiceException error = assertThrows(ServiceException.class,
+                    () -> materializer.materialize(request, LocalDate.of(2026, 8, 23)),
+                    "请求 " + requested + " 期不能静默只排 13 期");
+            assertTrue(error.getMessage().contains("最多可排 13 期"), error.getMessage());
+        }
     }
 
     @Test

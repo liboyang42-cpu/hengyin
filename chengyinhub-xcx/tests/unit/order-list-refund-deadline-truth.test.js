@@ -78,6 +78,6 @@ test('后端没给 refundInfo:中性话术,不出现写死的不可退规则', (
 
 test('负控锚点:组件源码里不得再有写死的截止规则', () => {
   const source = fs.readFileSync(JS, 'utf8')
-  assert.doesNotMatch(source, /已核销或已过开始时间不可退/, '写死的规则句是这次的病根,不许回潮')
+  assert.doesNotMatch(source, /已核销或已过开始时间不可退/, '写死的规则句是这次的病根，不许回潮')
   assert.match(source, /refundInfo/, '必须真的读后端 refundInfo')
 })

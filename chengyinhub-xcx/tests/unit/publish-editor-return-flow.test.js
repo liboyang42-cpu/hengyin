@@ -56,37 +56,31 @@ function runCreateFlow(transform = source => source) {
     showToast() {},
   }
 
+  // 2026-10-22 owner:去掉「起名字」一步,引导页直接进编辑器新建
   const intro = loadPage('pages/publish/template-intro/index.js', wx, transform)
   intro.goCreate()
-
-  const naming = loadPage('pages/publish/templateadd/templateadd.js', wx, transform)
-  naming.data.templateName = '梧桐夜行'
-  naming.onCreateTemplate()
 
   return stack
 }
 
-test('创建玩法保留引导与命名层级，编辑器连续两次返回不会直接掉回发布首页', () => {
+test('创建玩法保留引导层级，编辑器返回回到引导而不是掉回发布首页', () => {
   const stack = runCreateFlow()
   assert.deepEqual(stack.map(url => url.split('?')[0]), [
     '/pages/template/index',
     '/pages/publish/template-intro/index',
-    '/pages/publish/templateadd/templateadd',
     '/pages/publish/temp/index',
   ])
+  assert.equal(stack.at(-1), '/pages/publish/temp/index', '新建直接进编辑器,不带 id(不经过起名页)')
 
   stack.pop()
-  assert.equal(stack.at(-1), '/pages/publish/templateadd/templateadd', '第一次返回必须回到命名')
-  stack.pop()
-  assert.equal(stack.at(-1), '/pages/publish/template-intro/index', '第二次返回必须回到引导')
+  assert.equal(stack.at(-1), '/pages/publish/template-intro/index', '返回必须回到引导')
 })
 
-test('负控：把两次 navigateTo 变回 redirectTo 时，契约必须识别出返回层级丢失', () => {
+test('负控：把 navigateTo 变回 redirectTo 时，契约必须识别出返回层级丢失', () => {
   const stack = runCreateFlow(source => source.replace(/wx\.navigateTo/g, 'wx.redirectTo'))
   assert.notDeepEqual(stack.map(url => url.split('?')[0]), [
     '/pages/template/index',
     '/pages/publish/template-intro/index',
-    '/pages/publish/templateadd/templateadd',
     '/pages/publish/temp/index',
   ])
   stack.pop()
@@ -224,10 +218,11 @@ test('命名页进入编辑器后返回可再次确认，在途连点仍只导�
 test('创建流程原生状态栏跟随浅色编辑与深色玩法预览，关闭后恢复', () => {
   const themes = []
   const wx = { onTheme(theme) { themes.push(theme) } }
-  for (const file of ['pages/publish/template-intro/index.js', 'pages/publish/templateadd/templateadd.js']) {
-    loadPage(file, wx).onShow()
-    assert.equal(themes.at(-1), 'light')
-  }
+  // 2026-10-22 owner 定稿:引导页改深底(漂浮圆圈),命名页仍浅色
+  loadPage('pages/publish/template-intro/index.js', wx).onShow()
+  assert.equal(themes.at(-1), 'dark')
+  loadPage('pages/publish/templateadd/templateadd.js', wx).onShow()
+  assert.equal(themes.at(-1), 'light')
   const page = loadPage('pages/publish/temp/index.js', wx)
   page.onShow()
   assert.equal(themes.at(-1), 'light')

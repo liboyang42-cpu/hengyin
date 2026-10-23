@@ -45,7 +45,7 @@ function assertContract(overrides = {}) {
   assert.match(avatarWxml, /wx:else class="av__img" src="\/images\/d_profile\.png"/,
     'placeholder 档必须落到全站同一张默认头像')
   assert.doesNotMatch(avatarWxml, /av__ph/,
-    '线描占位已退役,不得漂回来 —— 否则「这人没头像」又有两套长相')
+    '线描占位已退役，不得漂回来 —— 否则「这人没头像」又有两套长相')
 
   // 2026-09-09 清退退款从名册行内挪到核销详情底部,44px 触控合同跟着搬过来
   assert.match(rule(checkinWxss, '.ckd-refund'), /min-height:\s*var\(--cy-btn-h\)/)

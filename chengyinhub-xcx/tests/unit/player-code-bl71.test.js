@@ -35,7 +35,7 @@ function load(requests, previews) {
   return c
 }
 
-test('playerCode:请求正确接口,成功后进入图片加载,加载完成可预览', () => {
+test('playerCode:请求正确接口，成功后进入图片加载，加载完成可预览', () => {
   const requests = []; const previews = []
   const c = load(requests, previews)
   c.syncQr()
@@ -52,7 +52,7 @@ test('playerCode:请求正确接口,成功后进入图片加载,加载完成可�
   assert.deepEqual(previews, [{ current: 'https://oss/me.png', urls: ['https://oss/me.png'] }])
 })
 
-test('生成失败显示后端文案并可重试;网络失败如实说明;迟到回包丢弃', () => {
+test('生成失败显示后端文案并可重试；网络失败如实说明；迟到回包丢弃', () => {
   const requests = []
   const c = load(requests, [])
   c.syncQr()
@@ -70,7 +70,7 @@ test('生成失败显示后端文案并可重试;网络失败如实说明;迟到
   assert.equal(c.data.qrSrc, '', '卸载后迟到回包不写入')
 })
 
-test('显式 qrUrl 优先,不请求;未开 playerCode 时行为不变', () => {
+test('显式 qrUrl 优先，不请求；未开 playerCode 时行为不变', () => {
   const requests = []
   const c = load(requests, [])
   c.data.qrUrl = 'https://given/qr.png'
@@ -84,12 +84,12 @@ test('显式 qrUrl 优先,不请求;未开 playerCode 时行为不变', () => {
 })
 
 test('模板:沿用现有二维码位与 cy-error,个人主页本人视角开启 playerCode', () => {
-  assert.match(COMP_WXML, /wx:elif="\{\{qrState === 'code-error'\}\}"[\s\S]*?<cy-error title="个人码没有加载出来" sub="\{\{qrErrorText\}\}"/)
+  assert.match(COMP_WXML, /wx:elif="\{\{qrState === 'code-error'\}\}"[\s\S]*?<cy-error title="个人码加载失败" sub="\{\{qrErrorText\}\}"/)
   assert.match(COMP_WXML, /show-menu-by-longpress="\{\{playerCode\}\}"/)
   assert.match(PROFILE_WXML, /<cy-scene-share-invite theme="\{\{sceneCurrent\.theme\}\}" player-code="\{\{isSelf\}\}" \/>/)
 })
 
-test('首开 observer 与 attached 连调 syncQr 只发一次个人码请求;回包后可再次请求', () => {
+test('首开 observer 与 attached 连调 syncQr 只发一次个人码请求；回包后可再次请求', () => {
   const requests = []
   const c = load(requests, [])
   c.syncQr()
@@ -100,7 +100,7 @@ test('首开 observer 与 attached 连调 syncQr 只发一次个人码请求;回
   assert.equal(requests.length, 2, '回包后重试照常请求')
 })
 
-test('模板:预览点击挂在带条件按压态的二维码框上,图片本身不再绑 tap', () => {
+test('模板:预览点击挂在带条件按压态的二维码框上，图片本身不再绑 tap', () => {
   assert.match(COMP_WXML, /class="siv__qr-frame"\s+hover-class="\{\{playerCode && qrState === 'ready' \? 'cy-pressed' : 'none'\}\}" hover-stay-time="80" bindtap="previewQr">/)
   assert.doesNotMatch(COMP_WXML, /<image[^>]*bindtap=/)
 })

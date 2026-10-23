@@ -70,7 +70,7 @@ test('我的模板兜底取标题首字，缺标题时退到「玩」', () => {
   const { page } = loadMyTemplatePage()
   assert.equal(page.decorateItem({ id: 1, title: '街角密码' }).coverInitial, '街')
   assert.equal(page.decorateItem({ id: 2, name: '夜行者' }).coverInitial, '夜')
-  assert.equal(page.decorateItem({ id: 3 }).coverInitial, '玩', '无标题时必须仍有兜底字')
+  assert.equal(page.decorateItem({ id: 3 }).coverInitial, '玩', '无标题时必须仍有保底字')
   assert.equal(page.decorateItem({ id: 4, title: '  留白  ' }).coverInitial, '留', '首字取值前先 trim')
   assert.equal(page.decorateItem({ id: 5, title: 'A线' }).coverFailed, false)
   assert.equal(page.decorateItem({ id: 6, title: 'A线' }).drop, false)
@@ -112,7 +112,7 @@ test('负控 R4：封面选源(resolveCoverUrl)回潮时必须判红', () => {
 test('负控 R4：兜底字号退回已废弃的 --cy-font-display 时必须判红(§5.5-5 授权保留项)', () => {
   const wxss = read('subpackageMember/mytemplate/mytemplate.wxss')
   const mutated = wxss.replace('font-size: var(--cy-type-page-title);', 'font-size: var(--cy-font-display);')
-  assert.notEqual(mutated, wxss, '变异锚点失效：未找到兜底字号')
+  assert.notEqual(mutated, wxss, '变异锚点失效：未找到保底字号')
   assert.throws(() => assertCoverFallback({
     wxml: read('subpackageMember/mytemplate/mytemplate.wxml'),
     js: read('subpackageMember/mytemplate/mytemplate.js'),

@@ -12,7 +12,7 @@
   <cy-state-shell class="cc-state" wx:if="{{bootstrapState === 'checking' || bootstrapState === 'redirecting'}}"
     kind="loading" size="lg" fill
     title="{{bootstrapState === 'redirecting' ? '正在前往主理人申请' : '正在确认创建资格'}}"
-    sub="{{bootstrapState === 'redirecting' ? '即将打开申请页' : '同时检查主理人身份与可用名额'}}" />
+    sub="{{bootstrapState === 'redirecting' ? '即将打开申请页' : ''}}" />
   <cy-state-shell class="cc-state" wx:elif="{{bootstrapState === 'error'}}"
     kind="{{bootstrapErrorKind}}" size="lg" fill title="创建资格未确认" sub="{{bootstrapError}}"
     primary="重新检查" secondary="返回上一页" bind:primary="retryBootstrap" bind:secondary="onClose" auto-back custom-back bind:back="onClose" />
@@ -40,7 +40,7 @@
       <view class="intro__point"><view class="intro__dot" aria-hidden="true"></view><text>每位主理人最多建 2 个俱乐部</text></view>
     </view>
     <view class="intro-cta"><cy-btn variant="primary" accessibilityLabel="开始创建" bindtap="startForm">开始创建</cy-btn></view>
-    <view class="intro__fine">类型决定俱乐部的主分类与标签，之后可改。</view>
+    <view class="intro__fine">之后可修改</view>
   </view>
 
   <!-- 开场胶囊 → 进度条:共享元素形变,几何与约束见 utils/wizard-morph.js -->
@@ -61,7 +61,7 @@
   </view>
 
   <view class="cc-head {{stepIn ? 'cy-rise-in' : ''}}" wx:if="{{bootstrapState === 'ready' && submitState !== 'success' && !introMode}}">
-    <view class="cc-eyebrow">建一个俱乐部</view>
+    
     <view class="cc-q cy-h1">{{step === 1 ? '选择你的俱乐部类型' : (step === 2 ? '哪些最符合你的活动方向?' : (step === 3 ? '完善俱乐部资料' : '你的俱乐部在哪座城市?'))}}</view>
     <view class="cc-legend" wx:if="{{step === 3 || step === 4}}">标 <text class="cc-req" aria-hidden="true">*</text> 的是必填</view>
   </view>
@@ -130,7 +130,7 @@
     </view>
     <view class="cc-field">
       <text class="cc-field-label">核心关键词(选填)</text>
-      <input class="cc-input cc-input--field {{keywords ? 'is-filled' : ''}}" aria-label="核心关键词，选填" placeholder="逗号分隔,如 徒步,摄影" value="{{keywords}}" data-field="keywords" bindinput="onInput" maxlength="60" disabled="{{submitting}}" />
+      <input class="cc-input cc-input--field {{keywords ? 'is-filled' : ''}}" aria-label="核心关键词，选填" placeholder="逗号分隔，如 徒步，摄影" value="{{keywords}}" data-field="keywords" bindinput="onInput" maxlength="60" disabled="{{submitting}}" />
     </view>
     <view class="cc-field">
       <text class="cc-field-label">风格/调性(选填)</text>

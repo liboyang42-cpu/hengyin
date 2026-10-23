@@ -2619,6 +2619,40 @@ class GameSessionRuntimeServiceImplTest {
     }
 
     @Test
+    void storyVariablesAndObjectStyleEffectsMustBeIntegersSoRouteConditionsSeeThem() {
+        assertTrue(service.isGameModuleConfigEnabled(choiceConfigJson()));
+        assertFalse(service.isGameModuleConfigEnabled(choiceConfigJson().replace(
+                "\"effects\":{\"trust\":1}},", "\"effects\":{\"trust\":true}},")));
+        assertFalse(service.isGameModuleConfigEnabled(choiceConfigJson().replace(
+                "\"effects\":{\"trust\":1}},", "\"effects\":{\"trust\":\"1\"}},")));
+        assertFalse(service.isGameModuleConfigEnabled(choiceConfigJson().replace(
+                "\"effects\":{\"trust\":1}},", "\"effects\":{\"__tags\":1}},")));
+        assertFalse(service.isGameModuleConfigEnabled(routeStyleStoryConfigJson().replace(
+                "\"variables\":{\"trust\":0}", "\"variables\":{\"trust\":\"0\"}")));
+        assertFalse(service.isGameModuleConfigEnabled(routeStyleStoryConfigJson().replace(
+                "\"variables\":{\"trust\":0}", "\"variables\":{\"trust\":1.5}")));
+        assertTrue(service.isGameModuleConfigEnabled(branchingChoiceConfigJson()));
+    }
+
+    @Test
+    void prepareRejectsNonIntegerStoryVariableBeforeCreatingSession() {
+        CmsTopic topic = configuredTopic();
+        topic.setGameModuleConfigJson(choiceConfigJson().replace(
+                "\"effects\":{\"trust\":1}},", "\"effects\":{\"trust\":true}},"));
+        when(topicMapper.selectCmsTopicByIdForUpdate(TOPIC)).thenReturn(topic);
+        when(clubMemberService.isTopicOwner(TOPIC, CLUB, PLAYER)).thenReturn(true);
+        when(runtimeMapper.insertReceiptClaim(any())).thenReturn(1);
+
+        GameSessionException error = assertThrows(GameSessionException.class, () -> service.command(
+                GameActorContext.club(PLAYER), command("prepare-non-integer-story-variable", 0, "PREPARE",
+                        Collections.emptyMap())));
+
+        assertEquals("GAME_CONFIG_INVALID", error.getErrorCode());
+        assertTrue(error.getMessage().contains("整数"));
+        verify(runtimeMapper, never()).insertSession(any());
+    }
+
+    @Test
     void prepareRejectsInvalidRouteStyleStoryRuleBeforeCreatingSession() {
         CmsTopic topic = configuredTopic();
         topic.setGameModuleConfigJson(routeStyleStoryConfigJson().replace(

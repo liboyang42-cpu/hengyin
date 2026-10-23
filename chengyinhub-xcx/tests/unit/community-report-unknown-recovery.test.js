@@ -62,7 +62,7 @@ test('empty exact lookup requires explicit consent then retries only unchanged o
   const a = harness(); await firstPost(a); const original = a.wire(); a.calls[1].fail({ errMsg: 'lost' }); await tick();
   const b = harness(a.store); b.request(); await tick(); await b.reply(0, []);
   assert.equal(b.calls.length, 1); assert.equal(b.dialogs.length, 1);
-  assert.match(b.dialogs[0].content, /不代表原提交未发生/);
+  assert.match(b.dialogs[0].content, /是否重试/);
   b.dialogs[0].success({ confirm: true }); await tick();
   assert.deepEqual(b.calls[1].data, original); await b.reply(1, b.row(original)); assert.equal(b.store.size, 0);
 });

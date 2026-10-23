@@ -79,7 +79,7 @@ test('SC-PRIV-05 闸:连点同意只走一趟;提交中点拒绝被忽略;每个
   gate.agreePrivacy({ detail: { buttonId: 'b3' } }); // 已结算后再点:不再结算调用方
   await settle(); h.replyOk(); await settle();
   for (const c of callers) assert.deepEqual(c, [{ event: 'agree', buttonId: 'b1' }]);
-  assert.equal(h.logins, 2, '第三次点击是已结算后的新提交,前两次连点只登录一次');
+  assert.equal(h.logins, 2, '第三次点击是已结算后的新提交，前两次连点只登录一次');
   assert.equal(h.agreeRequests().length, 2, '待补传清空后再次同意不重复留痕');
   assert.equal(h.requests.filter(r => JSON.parse(r.data).eventType !== 'AGREE').length, 0);
   assert.equal(h.app.getUsageConsent().granted(), true, '提交中的拒绝不得清掉同意');

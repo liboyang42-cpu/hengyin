@@ -59,8 +59,8 @@ test('抖动要有方差,不能是所有元素加同一个常数偏移(常数偏
     dxSet.add((it.x - baseX).toFixed(2));
     dySet.add((it.y - baseY).toFixed(2));
   });
-  assert.ok(dxSet.size > items.length / 4, `dx 取值只有 ${dxSet.size} 种,像是常数偏移而非散落`);
-  assert.ok(dySet.size > items.length / 4, `dy 取值只有 ${dySet.size} 种,像是常数偏移而非散落`);
+  assert.ok(dxSet.size > items.length / 4, `dx 取值只有 ${dxSet.size} 种，像是常数偏移而非散落`);
+  assert.ok(dySet.size > items.length / 4, `dy 取值只有 ${dySet.size} 种，像是常数偏移而非散落`);
 });
 
 test('rot 不能恒为 0,且取值要有多样性', () => {
@@ -71,6 +71,6 @@ test('rot 不能恒为 0,且取值要有多样性', () => {
     if (Math.abs(it.rot) > 0.5) nonZero = true;
     rotSet.add(it.rot.toFixed(1));
   });
-  assert.ok(nonZero, 'rot 全部趋近 0,没有真旋转');
-  assert.ok(rotSet.size > items.length / 4, `rot 取值只有 ${rotSet.size} 种,没有多样性`);
+  assert.ok(nonZero, 'rot 全部趋近 0，没有真旋转');
+  assert.ok(rotSet.size > items.length / 4, `rot 取值只有 ${rotSet.size} 种，没有多样性`);
 });

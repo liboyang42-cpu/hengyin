@@ -363,7 +363,7 @@ Page({
         if (!that.isDetailRequestCurrent(token, context)) return;
         that.setData({
           loadError: true,
-          loadErrorMsg: app.getRequestErrorMessage(res, '网络错误，玩法详情暂时没有加载出来。')
+          loadErrorMsg: app.getRequestErrorMessage(res, '网络异常，玩法详情加载失败。')
         });
       },
       complete: function () {

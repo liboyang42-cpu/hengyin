@@ -234,8 +234,8 @@ class PublicTopicStationCountMySqlIT {
             assertEquals(0, counter.sql.stream().filter(sql -> sql.contains("from cms_topic_node")).count());
             admin.update("UPDATE " + database + ".cms_topic_template_meta SET template_status='EXPERIMENTAL' WHERE topic_id=23");
             counter.sql.clear();
-            assertNull(service.buildPublicTopicTemplateDetail(23L, null, false, null));
-            assertEquals(0, counter.sql.stream().filter(sql -> sql.contains("from cms_topic_node")).count());
+            // 2026-10-22 owner 裁决:货架/info 不再要求 VERIFIED,非 VERIFIED(此处 EXPERIMENTAL)的已发布模板同样可见
+            assertNotNull(service.buildPublicTopicTemplateDetail(23L, null, false, null));
         } finally {
             admin.update("DELETE FROM " + database + ".cms_topic_template_meta WHERE topic_id IN (23,24,900)");
             admin.update("UPDATE " + database + ".cms_topic SET is_template=0 WHERE id IN (23,24,900)");

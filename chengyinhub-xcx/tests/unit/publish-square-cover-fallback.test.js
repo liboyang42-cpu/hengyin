@@ -106,7 +106,7 @@ test('idx 必须是范围内的整数:小数 / NaN / Infinity / 越界一律不�
   [1.5, 0.1, NaN, Infinity, -Infinity, '1.5', 2, 99, '2', null, {}, []].forEach((bad) => {
     page.onCoverError(errEvent('tailList', bad, 2));
   });
-  assert.equal(page.setDataCalls.length, 0, `不该写入,实际写了 ${JSON.stringify(page.setDataCalls)}`);
+  assert.equal(page.setDataCalls.length, 0, `不该写入，实际写了 ${JSON.stringify(page.setDataCalls)}`);
   // 同一批里合法的那条必须仍能写进去,证明上面不是被整体挡死
   page.onCoverError(errEvent('tailList', 1, 2));
   assert.equal(page.setDataCalls.length, 1);
@@ -176,7 +176,7 @@ test('上界闸独立行为负控:下标越界但属性沿原型链能取到时,
   const arr = [{ id: 1, title: 'A' }, { id: 2, title: 'B' }];
   Object.setPrototypeOf(arr, { 2: { id: 9, title: '原型上的影子' } });
   assert.equal(arr.length, 2);
-  assert.ok(arr[2], '夹具前提:arr[2] 取得到,但不在 length 之内');
+  assert.ok(arr[2], '夹具前提:arr[2] 取得到，但不在 length 之内');
   setByPath(page.data, 'tailList', arr);
   page.onCoverError(errEvent('tailList', 2, 9));
   assert.equal(page.setDataCalls.length, 0,
@@ -273,16 +273,16 @@ test('没有按 URL/标题写死的黑名单(兜底是失败态,不是内容治�
 test('版式几何:banner 轨对齐/露出与最新主题行内小图几何被钉住', () => {
   // 2026-08-26:banner 从 swiper 轮播改成单张头牌(四刀切退役后没有第二张可轮),
   // 露出/残影那套推导随轮播一起作废;新的几何锚点是「扫光环 + 卡面」两层。
-  assert.doesNotMatch(WXML, /<swiper class="feat-swiper/, '轮播已退役,不该再回来');
+  assert.doesNotMatch(WXML, /<swiper class="feat-swiper/, '轮播已退役，不该再回来');
   assert.match(WXML, /<view class="feat-glow">/, 'banner 必须套扫光环');
-  assert.match(WXML, /<view class="feat-glow__face feat-media"/, '卡面必须盖住扫光层中心,否则整卡被渐变糊住');
+  assert.match(WXML, /<view class="feat-glow__face feat-media"/, '卡面必须盖住扫光层中心，否则整卡被渐变糊住');
   assert.match(WXSS, /\.feat-glow\s*\{[^}]*overflow: hidden/, '扫光层靠溢出裁剪成描边');
   assert.match(WXSS, /\.feat-glow\s*\{[^}]*transform: translateZ\(0\)/, '安卓上 radius+overflow 要提合成层才裁得干净');
-  assert.match(WXSS, /@media \(prefers-reduced-motion: reduce\)[\s\S]*?\.feat-glow__sweep\s*\{[^}]*animation: none/, '减动效必须显式停掉,不能只靠全局压时长');
+  assert.match(WXSS, /@media \(prefers-reduced-motion: reduce\)[\s\S]*?\.feat-glow__sweep\s*\{[^}]*animation: none/, '减动效必须显式停掉，不能只靠全局压时长');
   assert.match(WXSS, /\.feat-slide\s*\{[^}]*padding: 0 var\(--cy-page-x\)/);
   assert.match(WXSS, /\.feat-text\s*\{[^}]*padding: var\(--cy-space-3\)/);
   assert.match(WXSS, /\.cml-card\s*\{[^}]*display: flex/, '最新主题必须是横排行(图左文右)');
-  assert.match(WXSS, /\.cml-pic\s*\{[^}]*width: 176rpx/, '行内小图几何变了要重新核对裁切比');
+  assert.match(WXSS, /\.cml-pic\s*\{[^}]*width: 176rpx/, '行内小图几何变了要重新确认裁切比');
 });
 
 test('兜底使用本地图片而非主题文本', () => {

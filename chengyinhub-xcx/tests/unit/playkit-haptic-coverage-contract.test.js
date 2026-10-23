@@ -37,7 +37,7 @@ const read = (name) => fs.readFileSync(path.join(DIR, name, 'index.js'), 'utf8')
 
 test('每个玩法壳都有一次触感,且都走 motion.haptic', () => {
   const list = shells()
-  assert.ok(list.length >= 9, '玩法壳只扫到 ' + list.length + ' 个,扫描器可能坏了')
+  assert.ok(list.length >= 9, '玩法壳只扫到 ' + list.length + ' 个，扫描器可能坏了')
   // 相册只有浏览和关闭，没有完成动作；不能为通过门禁伪造完成触感。
   const missing = list.filter((name) => name !== 'playkit-album' && !/motion\.haptic\(/.test(read(name)))
   assert.deepEqual(missing, [],
@@ -47,7 +47,7 @@ test('每个玩法壳都有一次触感,且都走 motion.haptic', () => {
 test('★不许绕过 motion.haptic 直接调 wx.vibrateShort —— 那会在减动效下照震', () => {
   const offenders = shells().filter((name) => /wx\.vibrateShort/.test(read(name)))
   assert.deepEqual(offenders, [],
-    'motion.haptic 会在 reducedMotion 时静音,裸 wx.vibrateShort 不会:\n  ' + offenders.join('\n  '))
+    'motion.haptic 会在 reducedMotion 时静音，裸 wx.vibrateShort 不会:\n  ' + offenders.join('\n  '))
 })
 
 test('★每次触感都必须把 reducedMotion 传进去 —— 不传等于永远不静音', () => {
@@ -72,15 +72,15 @@ test('壳要接 reduced-motion behavior,否则 this.data.reducedMotion 恒为 un
   })
   assert.deepEqual(bad, [],
     '传了减动效开关却没接 behavior 也没读 motion-preference,读到的永远是 undefined ——\n' +
-    '  静音分支形同虚设,而且没有任何断言会告诉你:\n  ' + bad.join('\n  '))
+    '  静音分支形同虚设，而且没有任何断言会告诉你:\n  ' + bad.join('\n  '))
 })
 
 test('★steps 的触感落在「达标」而不是「刷新」,且只在跨越那一刻震一次', () => {
   const src = read('playkit-steps')
   assert.doesNotMatch(src, /onRefresh\(\)\s*\{[^}]*motion\.haptic/,
-    '刷新只是去取数,取回来还没达标就震一下是骗人')
+    '刷新只是去取数，取回来还没达标就震一下是骗人')
   assert.match(src, /_reachedGoal !== undefined && !this\._reachedGoal && percent >= 100/,
-    '必须是「从没达标 → 达标」这条**边**:首屏就已达标不该凭空震,已达标后再刷新也不该重复震')
+    '必须是「从没达标 → 达标」这条**边**:首屏就已达标不该凭空震，已达标后再刷新也不该重复震')
 })
 
 test('★负控:随便去掉一个壳的触感,门禁必须判红', () => {

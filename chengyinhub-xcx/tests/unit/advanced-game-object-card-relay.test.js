@@ -74,7 +74,7 @@ test('★提交被服务端拒(非 200):抛 actionfail,带上动作名', async (
 })
 
 test('状态已更新:回读完也抛 actionfail(这一步没提交)', async () => {
-  const game = createGame([{ res: { code: 500, msg: '状态已更新,请刷新' } }, { res: { code: 200, data: view(5) } }])
+  const game = createGame([{ res: { code: 500, msg: '状态已更新，请刷新' } }, { res: { code: 200, data: view(5) } }])
   await game.action('SUBMIT_PHOTO_CHECK', {})
   await flush()
   assert.equal(game.events.filter((e) => e.name === 'actionfail').length, 1)
@@ -84,12 +84,12 @@ test('响应丢失后回读:没写进去 → actionfail;回读也失败 → acti
   const notLanded = createGame([{ err: new Error('timeout') }, { res: { code: 200, data: view(3) } }])
   await notLanded.action('SUBMIT_PHOTO_CHECK', {})
   await flush(); await flush()
-  assert.equal(notLanded.events.filter((e) => e.name === 'actionfail').length, 1, '回读说没写进去,却没通知页面')
+  assert.equal(notLanded.events.filter((e) => e.name === 'actionfail').length, 1, '刷新说没写进去，却没通知页面')
 
   const readbackDown = createGame([{ err: new Error('timeout') }, { err: new Error('timeout') }])
   await readbackDown.action('SUBMIT_PHOTO_CHECK', {})
   await flush(); await flush()
-  assert.equal(readbackDown.events.filter((e) => e.name === 'actionfail').length, 1, '回读也失败,那一屏还在转圈')
+  assert.equal(readbackDown.events.filter((e) => e.name === 'actionfail').length, 1, '刷新也失败，那一屏还在转圈')
 })
 
 test('负控:响应丢失但回读证明已写进去 → 不抛 actionfail(那是成功)', async () => {

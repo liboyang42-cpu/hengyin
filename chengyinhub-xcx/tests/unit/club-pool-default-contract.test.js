@@ -31,13 +31,13 @@ test('专业版发布页:开关在、绑活方法、新建默认开、非俱乐�
   assert.ok(live.includes('onClubPoolChange'), '开关必须绑到活方法');
   assert.ok(live.includes('邀请俱乐部带队'), '文案必须在');
   assert.ok(live.indexOf('wx:if="{{formData.productType === 1 && !formData.clubId}}">俱乐部承接</view>') >= 0,
-    '只对「非俱乐部城市定向」露出:自由探索没有俱乐部带队;俱乐部自办团不进公开承接池');
+    '只对「非俱乐部城市定向」露出:自由探索没有俱乐部带队；俱乐部自办团不进公开承接池');
 
   const js = read('pages/publish/fabu/index.js');
   assert.match(js, /openClubPool:\s*true,/, '新建默认必须为开');
   assert.match(js,
     /openClubPool:\s*\(productType === 1 && !this\.data\.formData\.clubId && this\.data\.formData\.openClubPool\)\s*\?\s*1\s*:\s*0/,
-    '上送归一:非俱乐部城市定向按开关,自由探索与俱乐部自办团恒 0');
+    '上送归一:非俱乐部城市定向按开关，自由探索与俱乐部自办团恒 0');
 });
 
 test('negative control:默认改回关、上送漏掉任一恒 0 条件、版面撤开关都必须判红', () => {

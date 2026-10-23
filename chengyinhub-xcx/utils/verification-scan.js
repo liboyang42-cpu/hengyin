@@ -21,9 +21,9 @@ function resolveVerificationScan(raw) {
       // 据点核销的归属/幂等校验在另一个端点,这张共享路由表**不能**收下它(护栏由
       // verification-scan.test.js 钉着)。但商家在这里看到的是「码不行」,而码是好的、
       // 只是入口不对 —— 给一句指路,并带上去哪里的出口。
-      return invalid('这是据点核销码，请从「城市据点」页扫码核销', {
+      return invalid('这是节点核销码，请从「城市节点」页扫码核销', {
         path: '/pages/merchant/citynode/index',
-        confirmText: '去据点页',
+        confirmText: '去节点页',
       });
     }
     return invalid('暂不支持此动态码');

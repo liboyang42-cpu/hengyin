@@ -48,7 +48,7 @@ function offenders() {
         // 直接写
         for (const sd of seg.matchAll(/setData\(/g)) {
           if (keyWritten(seg.slice(sd.index, sd.index + 800), w)) {
-            bad.push(name + ' → observer 监听 ' + w + ',函数体里又 setData ' + w)
+            bad.push(name + ' → observer 监听 ' + w + '，函数体里又 setData ' + w)
             break
           }
         }
@@ -57,7 +57,7 @@ function offenders() {
           const fn = call[1]
           const fm = new RegExp('\\n {4}' + fn + '\\([^)]*\\)\\s*\\{([\\s\\S]*?)\\n {4}\\},').exec(src)
           if (fm && keyWritten(fm[1], w)) {
-            bad.push(name + ' → observer 监听 ' + w + ',而 ' + fn + '() 里写了 ' + w)
+            bad.push(name + ' → observer 监听 ' + w + '，而 ' + fn + '() 里写了 ' + w)
           }
         }
       }
@@ -67,9 +67,9 @@ function offenders() {
 }
 
 test('★没有玩法壳存在自触发 observer', () => {
-  assert.ok(shells().length >= 15, '只扫到 ' + shells().length + ' 个壳,扫描器多半坏了')
+  assert.ok(shells().length >= 15, '只扫到 ' + shells().length + ' 个壳，扫描器多半坏了')
   assert.deepEqual(offenders(), [],
-    '这些 observer 会自己触发自己 —— 死循环打挂运行时,而且一条错都不报:\n  '
+    '这些 observer 会自己触发自己 —— 死循环打挂运行时，而且一条错都不报:\n  '
     + offenders().join('\n  '))
 })
 

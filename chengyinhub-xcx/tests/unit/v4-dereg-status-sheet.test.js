@@ -58,7 +58,7 @@ test('SC-DEREG-01 状态读取失败(网络/HTTP 异常/业务失败)一律 ERRO
 
   inst.loadStatus();
   statusReq().success({ code: 200, data: { status: 'NORMAL' } });
-  assert.equal(inst.data.status, 'LOADING', '状态正常后还要过资格预检,未预检前不可注销');
+  assert.equal(inst.data.status, 'LOADING', '状态正常后还要过资格预检，未预检前不可注销');
   assert.equal(deletable(inst), false);
   precheckReq().fail({ errMsg: 'request:fail' });
   assert.equal(inst.data.status, 'ERROR'); assert.equal(deletable(inst), false);

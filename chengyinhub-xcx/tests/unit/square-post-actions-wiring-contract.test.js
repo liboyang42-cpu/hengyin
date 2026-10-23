@@ -29,7 +29,7 @@ function assertDetailWired(wxml) {
   // A-09:溢出入口不再按「关联帖/作者」设条件 —— 非本人纯文本帖也要能在这里举报
   // (组件 owner=false 时只渲染举报行,不会露出编辑/删除;见 post-actions/index.wxml)。
   assert.match(wxml, /<view class="ph-more" catchtap="openPostActions"/,
-    '溢出入口必须对所有人可达,否则非本人纯文本帖在详情页没有举报路');
+    '溢出入口必须对所有人可达，否则非本人纯文本帖在详情页没有举报路');
   assert.doesNotMatch(wxml, /ph-more"[^>]*wx:if/,
     '溢出入口不许再挂 hasPlayCover/isMine 条件(A-09 回退会重现「详情页举报不了」)');
   assert.match(wxml, /<cy-post-compose[^>]*edit-post="\{\{composeEdit\}\}"/,
@@ -39,7 +39,7 @@ function assertDetailWired(wxml) {
 }
 
 function assertListWired(wxml) {
-  assert.match(wxml, POST_ACTIONS_TAG, '广场列表必须挂三合一操作弹层,三根线齐全');
+  assert.match(wxml, POST_ACTIONS_TAG, '广场列表必须挂三合一操作弹层，三根线齐全');
   assert.match(wxml, /<cy-post-actions id="post-actions"[^>]*owner="\{\{currentActionOwner\}\}"/,
     'owner 必须来自当前行作者判定');
   assert.match(wxml, /<cy-post-compose[^>]*edit-post="\{\{composeEdit\}\}"/,
@@ -155,7 +155,7 @@ test('详情:作者点删除走 /api/creativesquare/delete,成功后落到「暂
   assert.equal(h.page.data.isMine, true, '本人帖必须判定 isMine');
 
   h.page.openPostActions();
-  assert.equal(h.page.data.postActionShow, true, '··· 先开弹层,不直接删');
+  assert.equal(h.page.data.postActionShow, true, '··· 先开弹层，不直接删');
   assert.equal(h.requests.some((r) => r.url === '/api/creativesquare/delete'), false);
 
   h.page.onPostAction({ detail: { action: 'delete', id: '77' } });
@@ -237,7 +237,7 @@ test('列表:more 解析当前行的 id/归属;删除摘行、编辑开面板、
 
   h.page.onComposeClose();
   assert.equal(h.page.data.composeShow, false);
-  assert.equal(h.page.data.composeEdit, null, '关面板必须清编辑态,免得下次新建以编辑态打开');
+  assert.equal(h.page.data.composeEdit, null, '关面板必须清编辑态，免得下次新建以编辑态打开');
 
   h.page.showAction({ detail: { index: 0 } });
   h.page.onPostAction({ detail: { action: 'delete', id: '11' } });
@@ -270,7 +270,7 @@ test('A-09:非本人纯文本帖在详情也有举报入口(owner=false 只渲�
   assert.equal(h.page.data.composeShow, false, '非本人不该打开编辑面板');
 
   const wxml = read('pages/square/detail/index.wxml');
-  assert.match(wxml, /<cy-post-actions[^>]*owner="\{\{isMine\}\}"/, 'owner 仍由 isMine 决定,非本人不露出编辑/删除');
+  assert.match(wxml, /<cy-post-actions[^>]*owner="\{\{isMine\}\}"/, 'owner 仍由 isMine 决定，非本人不露出编辑/删除');
 });
 
 test('列表:编辑入口显式带编辑态,关闭后清编辑态', () => {
@@ -286,5 +286,5 @@ test('列表:编辑入口显式带编辑态,关闭后清编辑态', () => {
 
   h.page.onComposeClose();
   assert.equal(h.page.data.composeShow, false);
-  assert.equal(h.page.data.composeEdit, null, '关闭后必须清编辑态,不能带到下一次打开');
+  assert.equal(h.page.data.composeEdit, null, '关闭后必须清编辑态，不能带到下一次打开');
 });

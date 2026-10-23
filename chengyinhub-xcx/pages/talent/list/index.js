@@ -303,7 +303,7 @@ Page({
     }
     if (!owner) {
       this.setData({ clubsLoginRequired: true, clubsPermissionDenied: false, clubsError: true,
-        clubsState: 'error', clubsErrorText: '登录后可查看你创建和加入的俱乐部' });
+        clubsState: 'error', clubsErrorText: '' });
       return;
     }
     if (this._clubHomeLoading) return;

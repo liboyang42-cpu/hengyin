@@ -254,7 +254,7 @@ test('核销详情 code=200 仍校验身份与结算状态完整性，空对象�
     mounted.requests[0].success({ code: 200, data })
     assert.equal(mounted.page.data.loadState, 'error')
     assert.equal(mounted.page.data.detail, null)
-    assert.match(mounted.page.data.errorText, /数据不完整/)
+    assert.match(mounted.page.data.errorText, /加载失败/)
   })
 })
 
@@ -307,7 +307,7 @@ test('结算批次 code=200 仍校验批次身份与资金字段完整性，空�
     mounted.requests[0].success({ code: 200, data })
     assert.equal(mounted.page.data.loadState, 'error')
     assert.equal(mounted.page.data.detail, null)
-    assert.match(mounted.page.data.errorText, /数据不完整/)
+    assert.match(mounted.page.data.errorText, /加载失败/)
   })
 })
 

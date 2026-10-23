@@ -45,7 +45,7 @@ function assertActivityReportGate(wxml) {
       'CU-C-149:本人创建的项目不给「举报活动」:' + site);
   });
   assert.match(wxml, /wx:if="\{\{canReport\}\}" class="event-report"/,
-    '模板内仍按 canReport 渲染(闸加在 data 上,不是加在模板里)');
+    '模板内仍按 canReport 渲染(闸加在 data 上，不是加在模板里)');
 }
 
 // ---------------------------------------------------------------- 页面沙箱
@@ -129,7 +129,7 @@ test('CU-C-138 行为:自己的评论点举报不弹确认框,别人的照常弹
   assert.equal(modals.length, 0, '本人的评论不该给自己开审核单');
 
   page.onReportComment({ currentTarget: { dataset: { id: 6 } } });
-  assert.equal(modals.length, 1, '别人评论的举报是正当入口,不能顺手一起关');
+  assert.equal(modals.length, 1, '别人评论的举报是正当入口，不能顺手一起关');
   assert.equal(modals[0].confirmText, '举报');
 });
 
@@ -139,7 +139,7 @@ test('CU-C-149 行为:自己项目的场次不进举报流程,别人项目的才
   page._topics = [{ id: 990030, memberId: 9008 }, { id: 990031, memberId: 7 }];
 
   page.reportTopicActivity({ currentTarget: { dataset: { id: 990030 } } });
-  assert.equal(requests.length, 0, '本人项目不该去拉场次列表,更不该进举报页');
+  assert.equal(requests.length, 0, '本人项目不该去拉场次列表，更不该进举报页');
   assert.equal(modals.length, 0);
 
   page.reportTopicActivity({ currentTarget: { dataset: { id: 990031 } } });
@@ -185,7 +185,7 @@ test('negative control CU-C-138/149:撤掉任一道闸,对应检查器必须判�
   mutated.page.setData({ myMemberId: 9008, comments: [{ id: 5, memberId: 9008 }] });
   mutated.page.onReportComment({ currentTarget: { dataset: { id: 5 } } });
   assert.equal(mutated.modals.length, 1,
-    '摘闸后没弹框 ⇒ 这条负控没量到东西,得改锚点(不能留一条恒红的断言)');
+    '摘闸后没弹框 ⇒ 这条负控没量到东西，得改锚点(不能留一条恒红的断言)');
   assert.throws(
     () => assert.equal(mutated.modals.length, 0, '本人的评论不该给自己开审核单'),
     assert.AssertionError,

@@ -142,14 +142,15 @@ test('搜索同关键词重试保留旧结果，部分失败只显示局部错�
   const { page, requests } = loadSearchResultPage();
   page.setData({ keyword: '咖啡' });
   page.runSearch();
-  resolveSearchBatch(requests.slice(0, 4));
-  assert.equal(page.data.visibleResults.length, 4);
+  // 六路请求;主题模板在客户端按关键词过滤,夹具名称不含关键词 ⇒ 5 条可见
+  resolveSearchBatch(requests.slice(0, 6));
+  assert.equal(page.data.visibleResults.length, 5);
 
   page.runSearch();
-  assert.equal(page.data.visibleResults.length, 4, '同关键词刷新开始时不能清空旧结果');
-  resolveSearchBatch(requests.slice(4, 8), new Set([1, 2, 3]));
+  assert.equal(page.data.visibleResults.length, 5, '同关键词刷新开始时不能清空旧结果');
+  resolveSearchBatch(requests.slice(6, 12), new Set([1, 2, 3]));
 
-  assert.equal(page.data.visibleResults.length, 4, '失败分类继续展示上一次成功内容');
+  assert.equal(page.data.visibleResults.length, 5, '失败分类继续展示上一次成功内容');
   assert.equal(page.data.searchError, '');
 });
 
@@ -171,7 +172,7 @@ test('搜索当前 tab 恰好为空时，仍按全部分组判断是否存在旧
   const { page, requests } = loadSearchResultPage();
   page.setData({ keyword: '咖啡' });
   page.runSearch();
-  resolveSearchBatch(requests.slice(0, 4));
+  resolveSearchBatch(requests.slice(0, 6));
   const previousGroups = page.data.resultGroups;
   page.setData({ activeResultType: 'missing-type', visibleResults: [] });
 
@@ -185,15 +186,15 @@ test('搜索新关键词用 epoch 拒绝旧请求迟到回写', () => {
   const { page, requests } = loadSearchResultPage();
   page.setData({ keyword: '旧词' });
   page.runSearch();
-  const oldBatch = requests.slice(0, 4);
+  const oldBatch = requests.slice(0, 6);
 
   page.setData({ keyword: '新词' });
   page.runSearch();
-  const freshBatch = requests.slice(4, 8);
+  const freshBatch = requests.slice(6, 12);
   freshBatch.forEach((request, index) => request.success({ code: 200, data: { rows: [{ id: index + 20, name: '新结果-' + index }] } }));
   oldBatch.forEach((request, index) => request.success({ code: 200, data: { rows: [{ id: index + 40, name: '旧结果-' + index }] } }));
 
-  assert.deepEqual(page.data.visibleResults.map(item => item.title), ['新结果-0', '新结果-1', '新结果-2', '新结果-3']);
+  assert.deepEqual(page.data.visibleResults.map(item => item.title), ['新结果-0', '新结果-1', '新结果-2', '新结果-3', '新结果-5']);
 });
 
 test('搜索有旧结果时用局部错误而不是整页替换', () => {
@@ -280,17 +281,16 @@ test('主题详情只接受具备可渲染名称的数据', () => {
   assert.equal(malformedChapter.page.data.loadError, true);
 });
 
-test('主题缺封面使用现有占位，路线无章节显示专属站点空态', () => {
+test('主题缺封面使用现有占位，路线无章节显示专属节点空态', () => {
   const wxml = source('pages/topic/index/index.wxml');
   assert.match(wxml, /src="\{\{\s*info\.imgUrl\s*\|\|\s*'\/pages\/topic\/images\/icon_line\.jpg'\s*\}\}"/);
   assert.match(wxml, /activeTab\s*==\s*'2'\s*&&\s*!info\.chaptersList\.length/);
   assert.match(wxml, /activeTab\s*==\s*'1'\s*&&\s*!info\.chaptersList\.length/,
     '路线节点 tab 不能在合法空数组时白屏');
-  assert.match(wxml, /这条路线还没有节点/);
+  assert.match(wxml, /路线配置中/);
   // CU-M-190:标签是「路线」、副文案说「每一站」,标题却写「任务」—— 同一屏三个词。
-  assert.match(wxml, /这条路线还没有站点/);
+  assert.match(wxml, /路线配置中/);
   assert.doesNotMatch(wxml, /这条路线还没有任务/);
-  assert.match(wxml, /发布者完成路线配置后，这里会显示每一站/);
 });
 
 test('官方活动详情区分网络失败与内容不可用', () => {
@@ -512,13 +512,13 @@ test('负控：把无轨迹条件反成有轨迹时，结算状态契约必须�
   assert.throws(() => assertRoamNoTrackState(mutated), /真实无轨迹结算/);
 });
 
-test('漫游据点读失败留白，写结果未知仍提供真实核对入口', () => {
+test('漫游节点读失败留白，写结果未知仍提供真实核对入口', () => {
   const wxml = source('pages/roam/index.wxml');
   const js = source('pages/roam/index.js');
   assert.doesNotMatch(wxml, /poiOffline \|\| merchantOffline/);
-  assert.doesNotMatch(wxml, /据点没加载出来|系统离线|当前离线|网络已断开/);
+  assert.doesNotMatch(wxml, /节点加载失败|系统离线|当前离线|网络已断开/);
   assert.match(wxml, /revealWriteUnknown \|\| recoveryError/);
-  assert.match(wxml, /bindtap="recoverRoam"[\s\S]*点击核对/);
+  assert.match(wxml, /bindtap="recoverRoam"[\s\S]*点击确认/);
   assert.match(js, /merchantOffline: true/);
   assert.doesNotMatch(js, /poiOffline: true/);
 });

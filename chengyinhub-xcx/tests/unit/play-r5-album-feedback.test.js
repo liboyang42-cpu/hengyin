@@ -318,7 +318,7 @@ for (const outcome of ['PASS', 'FAIL', 'CLOSED']) {
     assert.equal(game.data.currentStep.id, 'feedback');
     assert.equal(page._kit().type, 'branch');
     assert.equal(page._kit().writable, outcome !== 'CLOSED');
-    assert.equal(requests.length, 1, '重入只回读，不提交动作或重试');
+    assert.equal(requests.length, 1, '重入只刷新，不提交动作或重试');
     page.onPlayKitAction({ detail: { type: 'branch', action: 'choose', detail: { optionId: 'continue' } } });
     assert.equal(requests.length, outcome === 'CLOSED' ? 1 : 2);
     if (outcome !== 'CLOSED') assert.equal(JSON.parse(requests[1].data).action, 'CHOOSE');

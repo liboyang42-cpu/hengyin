@@ -137,6 +137,14 @@ public class ApiMerchantController extends BaseController {
     @Autowired
     private IMapGeocodeService mapGeocodeService;
 
+    /** 门店联系电话:11 位大陆手机号。 */
+    static final java.util.regex.Pattern MERCHANT_PHONE = java.util.regex.Pattern.compile("1[3-9]\\d{9}");
+    /** 门店微信号:字母、数字、下划线或减号,最多 20 位。 */
+    static final java.util.regex.Pattern MERCHANT_WECHAT_ID = java.util.regex.Pattern.compile("[A-Za-z0-9_-]{1,20}");
+    /** 行业类型多选:逗号分隔的正整数 id,最多 MAX_MERCHANT_CATEGORIES 个。 */
+    static final java.util.regex.Pattern MERCHANT_CATEGORY_IDS = java.util.regex.Pattern.compile("[1-9]\\d{0,8}(,[1-9]\\d{0,8})*");
+    static final int MAX_MERCHANT_CATEGORIES = 5;
+
     /** location_verified:1=商家在地图上亲自点的。 */
     static final int LOCATION_PICKED = 1;
     /** location_verified:2=按地址反查推断的,没人确认过。0 是建表默认值,表示压根没坐标。 */
@@ -262,8 +270,8 @@ public class ApiMerchantController extends BaseController {
         } else {
 
             // 查询分类信息，categoryId 可能为 null
-            if (mmsMerchant.getCategoryId() != null) {
-                String categoryIds = mmsMerchant.getCategoryId().toString();
+            if (categoryIdsOf(mmsMerchant) != null) {
+                String categoryIds = categoryIdsOf(mmsMerchant);
                 if (!StringUtils.isEmpty(categoryIds)) {
                     String[] ids = categoryIds.split(",");
                     List<SysCategory> listCategory = sysCategoryService.selectSysCategoryListByIds(ids);
@@ -382,7 +390,7 @@ public class ApiMerchantController extends BaseController {
         if (!isPubliclyVisible(m)) return error("商家不存在或未开放");
 
         PublicMerchantVO vo = PublicMerchantVO.from(m);
-        vo.setSysCategoryList(publicCategories(m.getCategoryId()));
+        vo.setSysCategoryList(publicCategories(categoryIdsOf(m)));
         // 装修里选中的招牌主推(活动/券)。旧 public-detail 一直有这张卡,统一主页漏了 ——
         // 商家在装修页看到"发布后即可选一个置顶到主页",公开主页却什么都不显示。
         // 归属与公开状态每次匿名读取都重新核验,保存时合法不代表此刻仍公开。
@@ -406,9 +414,16 @@ public class ApiMerchantController extends BaseController {
     }
 
     /** 品类只出 id/categoryName,不透出分类状态、删除标记与审计字段。 */
-    private List<PublicMemberVO.PublicCategoryVO> publicCategories(Integer categoryId) {
-        if (categoryId == null) return null;
-        List<SysCategory> cats = sysCategoryService.selectSysCategoryListByIds(categoryId.toString().split(","));
+    /** 行业类型 id 串:多选列 category_ids 优先,迁移前/老数据回退到单值 category_id。 */
+    static String categoryIdsOf(MmsMerchant m) {
+        if (m == null) return null;
+        if (m.getCategoryIds() != null && !m.getCategoryIds().trim().isEmpty()) return m.getCategoryIds().trim();
+        return m.getCategoryId() == null ? null : m.getCategoryId().toString();
+    }
+
+    private List<PublicMemberVO.PublicCategoryVO> publicCategories(String categoryIds) {
+        if (categoryIds == null || categoryIds.isEmpty()) return null;
+        List<SysCategory> cats = sysCategoryService.selectSysCategoryListByIds(categoryIds.split(","));
         if (cats == null || cats.isEmpty()) return null;
         List<PublicMemberVO.PublicCategoryVO> out = new java.util.ArrayList<>();
         for (SysCategory c : cats) {
@@ -429,7 +444,7 @@ public class ApiMerchantController extends BaseController {
             return error("商家不存在或未开放");
         }
         PublicMerchantDiscoveryVO publicMerchant = PublicMerchantDiscoveryVO.from(m);
-        publicMerchant.setSysCategoryList(publicCategories(m.getCategoryId()));
+        publicMerchant.setSysCategoryList(publicCategories(categoryIdsOf(m)));
         AjaxResult ajax = success(publicMerchant);
         ajax.put("officialActivities", publicOfficialActivities(
                 coopInviteService.listAwardedOfficialActivities(m.getMemberId())));
@@ -569,7 +584,13 @@ public class ApiMerchantController extends BaseController {
         MmsMerchant m = mmsMerchantService.selectMmsMerchantById(access.getMerchantId());
         if (m == null) return error("商家不存在");
         MerchantEditProfileVO profile = MerchantEditProfileVO.from(m);
-        profile.setSysCategoryList(publicCategories(m.getCategoryId()));
+        if (!access.hasPermission(MerchantPermission.PROFILE_WRITE)) {
+            // 联系方式只给能改资料的岗位(店主/店长)回显;只管承接的运营看不到
+            profile.setPhone(null);
+            profile.setWechat(null);
+            profile.setWechatQrcode(null);
+        }
+        profile.setSysCategoryList(publicCategories(categoryIdsOf(m)));
         return success(profile);
     }
 
@@ -628,6 +649,7 @@ public class ApiMerchantController extends BaseController {
                 || !matchesIfSupplied(request.getServiceTag(), current.getServiceTag())
                 || !matchesIfSupplied(request.getServiceText(), current.getServiceText())
                 || !matchesIfSupplied(request.getCategoryId(), current.getCategoryId())
+                || !matchesIfSupplied(request.getCategoryIds(), current.getCategoryIds())
                 || !matchesIfSupplied(request.getAddress(), current.getAddress())) {
             return false;
         }
@@ -705,7 +727,24 @@ public class ApiMerchantController extends BaseController {
         String featuredError = validateFeaturedSelection(
                 body.getFeaturedType(), body.getFeaturedId(), access);
         if (featuredError != null) return error(featuredError);
-        // 白名单:只允许改展示层字段 + 行业类型(categoryId),按 memberId 定位自己的商家,防 IDOR
+        // 行业类型多选(owner 2026-10-22):categoryIds 是多选真源,categoryId 恒为其中第一个,
+        // 只认单类目的旧读者(搜索筛选/卡片图标)继续读 category_id。老客户端只传 categoryId 时两列同步成单选。
+        String categoryIds = null;
+        Integer primaryCategoryId = body.getCategoryId();
+        if (body.getCategoryIds() != null) {
+            String raw = body.getCategoryIds().trim();
+            if (raw.isEmpty()) return error("请至少选择一个行业类型");
+            if (!MERCHANT_CATEGORY_IDS.matcher(raw).matches()) return error("行业类型参数错误");
+            java.util.LinkedHashSet<String> ids = new java.util.LinkedHashSet<>(java.util.Arrays.asList(raw.split(",")));
+            if (ids.size() > MAX_MERCHANT_CATEGORIES) return error("行业类型最多选 " + MAX_MERCHANT_CATEGORIES + " 个");
+            List<SysCategory> found = sysCategoryService.selectSysCategoryListByIds(ids.toArray(new String[0]));
+            if (found == null || found.size() != ids.size()) return error("行业类型已变化，请刷新后重选");
+            categoryIds = String.join(",", ids);
+            primaryCategoryId = Integer.valueOf(ids.iterator().next());
+        } else if (primaryCategoryId != null) {
+            categoryIds = String.valueOf(primaryCategoryId);
+        }
+        // 白名单:只允许改展示层字段 + 行业类型(categoryId/categoryIds),按 memberId 定位自己的商家,防 IDOR
         MmsMerchant upd = new MmsMerchant();
         upd.setId(m.getId());
         upd.setCoverImage(reviewedMedia(memberId, body.getCoverImage(), false));
@@ -718,7 +757,8 @@ public class ApiMerchantController extends BaseController {
         upd.setFeaturedId(body.getFeaturedId());
         upd.setServiceTag(body.getServiceTag());
         upd.setServiceText(body.getServiceText());
-        if (body.getCategoryId() != null) upd.setCategoryId(body.getCategoryId());
+        if (primaryCategoryId != null) upd.setCategoryId(primaryCategoryId);
+        if (categoryIds != null) upd.setCategoryIds(categoryIds);
         // 位置:verified 由服务端按"是否提交了完整坐标"判定,不信任客户端自证的 locationVerified(防自证位置)
         if (body.getLocationLat() != null && body.getLocationLng() != null) {
             upd.setLocationLat(body.getLocationLat());
@@ -1238,10 +1278,22 @@ public class ApiMerchantController extends BaseController {
         if (request.getDerivativeBenefits() != null && request.getDerivativeBenefits().length() > 100) {
             return error("衍生权益最多 100 个字");
         }
+        // owner 2026-10-22:联系电话 / 门店微信号 / 门店二维码改由商家在「门店信息」自助维护(原 CU-M-08 只读)。
+        // 电话是到店联系的唯一通道,只收 11 位大陆手机号、不允许清空;微信号与二维码可清空。
+        if (request.getPhone() != null && !MERCHANT_PHONE.matcher(request.getPhone()).matches()) {
+            return error("请填写 11 位手机号");
+        }
+        if (request.getWechat() != null && !request.getWechat().isEmpty()
+                && !MERCHANT_WECHAT_ID.matcher(request.getWechat()).matches()) {
+            return error("微信号只能包含字母、数字、下划线或减号，最多 20 位");
+        }
+        if (request.getWechatQrcode() != null && request.getWechatQrcode().length() > 512) {
+            return error("二维码图片地址过长，请重新上传");
+        }
         // 内容安全:商家名/简介/衍生介绍等文本命中违规即拒(商家资料匿名可访问公开)
         String secMsg = wxContentSecurityService.checkText(
                 IWxContentSecurityService.joinText(request.getName(), request.getDescription(), request.getDerivativeBenefits(), request.getDerivatives(),
-                        request.getPreference(), request.getWebsite()),
+                        request.getPreference(), request.getWebsite(), request.getWechat()),
                 merchantOpenid(access.getOwnerMemberId()));
         if (secMsg != null) return error(secMsg);
         // 部分更新白名单:null 表示本次不修改，空字符串仍可显式清空。
@@ -1256,18 +1308,24 @@ public class ApiMerchantController extends BaseController {
         if (request.getWebsite() != null) update.setWebsite(request.getWebsite());
         if (request.getPreference() != null) update.setPreference(request.getPreference());
         if (request.getBusinessTime() != null) update.setBusinessTime(request.getBusinessTime());
+        if (request.getPhone() != null) update.setPhone(request.getPhone());
+        if (request.getWechat() != null) update.setWechat(request.getWechat());
+        if (request.getWechatQrcode() != null) {
+            update.setWechatQrcode(reviewedMedia(member_id, request.getWechatQrcode(), false));
+        }
         if (request.getLogo() == null && request.getName() == null && request.getDescription() == null
                 && request.getDerivatives() == null && request.getDerivativeBenefits() == null && request.getWebsite() == null
-                && request.getPreference() == null && request.getBusinessTime() == null) {
+                && request.getPreference() == null && request.getBusinessTime() == null
+                && request.getPhone() == null && request.getWechat() == null && request.getWechatQrcode() == null) {
             return error("没有可更新的资料");
         }
         int rows = mmsMerchantService.updateAuthorizedProfile(
                 update, member_id, MerchantPermission.PROFILE_WRITE);
-        // logo 异步内容安全送检(BIZ_TYPE_MERCHANT_PROFILE)
-        if (request.getLogo() != null) {
+        // logo / 门店二维码异步内容安全送检(BIZ_TYPE_MERCHANT_PROFILE)
+        if (request.getLogo() != null || request.getWechatQrcode() != null) {
             try {
                 wxContentSecurityService.submitMediaCheck(IWxContentSecurityService.BIZ_TYPE_MERCHANT_PROFILE,
-                        mmsMerchant.getId(), mediaCsv(request.getLogo()), merchantOpenid(member_id));
+                        mmsMerchant.getId(), mediaCsv(request.getLogo(), request.getWechatQrcode()), merchantOpenid(member_id));
             } catch (Exception ignore) {}
         }
         if (rows > 0) {

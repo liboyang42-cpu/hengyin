@@ -77,11 +77,11 @@ function sharedSites(chapters, templateId, current) {
   const currentKey = nodeKey(current);
   (chapters || []).forEach(chapter => (chapter.nodes || []).forEach(node => {
     if (Number(node.templateId) !== Number(templateId)) return;
-    sites.push({ key: nodeKey(node), label: (chapter.name ? chapter.name + ' · ' : '') + (node.name || '未命名站点') });
+    sites.push({ key: nodeKey(node), label: (chapter.name ? chapter.name + ' · ' : '') + (node.name || '未命名节点') });
   }));
   if (current && Number(current.templateId) === Number(templateId)
     && !sites.some(site => currentKey && site.key === currentKey))
-    sites.push({ key: currentKey, label: current.name || '当前站点' });
+    sites.push({ key: currentKey, label: current.name || '当前节点' });
   return sites;
 }
 
@@ -166,7 +166,7 @@ function issues(chapters, runtimeRaw, details, journeyRaw, requested) {
     const key = nodeKey(node);
     if (!template || !Object.prototype.hasOwnProperty.call(template, 'advancedConfigJson')) {
       if (requested && requested[node.templateId])
-        result.push({ key, label: (node.name || '未命名节点') + '：资源未绑定（玩法详情待核对）' });
+        result.push({ key, label: (node.name || '未命名节点') + '：资源未绑定（玩法详情待确认）' });
       return;
     }
     let slots;

@@ -63,7 +63,7 @@ Page({
     errorNeedsLogin: false,
     facts: null,          // 后端聚合事实包(必出层)
     ai: null,             // AI 解读(可为 null 的降级层)
-    aiError: '',
+    // aiError 已撤(2026-10-23,见 load 成功分支注释)
     generatedAt: '',
     profile: null,        // 后端实时读的店铺视图(storeName/logo + 承接档案字段),不走缓存
     storeName: '',        // 页头问候「Hi，店名」;头像直接读 profile.logo
@@ -206,7 +206,7 @@ Page({
           that.setData({
             facts: d.facts,
             ai: d.ai || null,
-            aiError: d.ai ? '' : (d.aiError || '智能解读暂不可用'),
+            // aiError 不再下发:2026-10-23 业主「没有就不显示」,唯一消费方 AI 降级卡已删(占位保留行号锚点)
             generatedAt: d.generatedAt || '',
             profile: d.profile || null,
             storeName: String(profile.storeName || '').trim(),
@@ -253,7 +253,7 @@ Page({
       error: error || '',
       facts: null,
       ai: null,
-      aiError: '',
+      // aiError 已撤(2026-10-23)
       generatedAt: '',
       profile: null,
       storeName: '',
@@ -331,10 +331,10 @@ Page({
     return [
       { key: 'redeem', name: '核销率', num: this._pct(c.redeemRate), pct: this._fill(c.redeemRate),
         sub: this._countText(c.total) + ' 次打卡' + (wait === null ? '' : ' · 平均等待 ' + wait + ' 分钟'),
-        scope: '口径：已核销报名数 ÷ ' + window + '内报名数' },
+        scope: '计算方式：已核销报名数 ÷ ' + window + '内报名数' },
       { key: 'repeat', name: '复购率', num: this._pct(c.repeatRate), pct: this._fill(c.repeatRate),
         sub: '基于 ' + this._countText(facts && facts.sampleMembers) + ' 位核销顾客',
-        scope: '口径：核销≥2次的会员 ÷ ' + window + '内核销会员' },
+        scope: '计算方式：核销≥2次的会员 ÷ ' + window + '内核销会员' },
     ];
   },
 
@@ -363,7 +363,7 @@ Page({
     const caption = (facts && facts.window) || '近30天';
     return Object.assign(base, {
       segs: this._segs(rate),
-      caption: rate === null ? caption + '暂无核销' : caption + '核销率 ' + this._pct(rate),
+      caption: rate === null ? '' : caption + '核销率 ' + this._pct(rate), // 业主 10-23:没有就不显示(不出「暂无核销」提示,也不拿 0% 冒充)
     });
   },
 
@@ -381,7 +381,7 @@ Page({
       newVisitors: n,
       returningVisitors: r,
       newPct: Math.round(n / (n + r) * 100),
-      scope: '口径：' + window + '内有到店的玩家，窗口前（全历史）也到过店的算回头客',
+      scope: '计算方式：' + window + '内有到店的玩家，窗口前（全历史）也到过店的算回头客',
     };
   },
 

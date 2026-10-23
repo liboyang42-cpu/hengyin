@@ -18,7 +18,7 @@
       <view class="voucher__foot">
         <text class="voucher__exp">{{countdown || '正在签发动态码…'}}</text>
         <text class="voucher__name">城瘾活动入场码</text>
-        <text class="voucher__desc">出示给商家 / 俱乐部扫码核销 · 按屏幕倒计时自动失效</text>
+        <text class="voucher__desc">出示扫码核销</text>
       </view>
     </view>
     <view class="voucher__acts">
@@ -27,7 +27,7 @@
     </view>
   </block>
 
-  <view class="bigqr-mask" wx:if="{{bigQr}}" bindtap="closeBigQr" aria-role="button" aria-label="关闭二维码" hover-class="cy-pressed" hover-stay-time="80"></view>
+  <view class="bigqr-mask" catchtouchmove="noop" wx:if="{{bigQr}}" bindtap="closeBigQr" aria-role="button" aria-label="关闭二维码" hover-class="cy-pressed" hover-stay-time="80"></view>
   <view class="bigqr-under" wx:if="{{bigQr}}"></view>
   <view class="bigqr" wx:if="{{bigQr}}">
     <view class="bigqr__head">
@@ -35,7 +35,7 @@
     </view>
     <image class="bigqr__img" src="{{qr}}" mode="aspectFit" />
     <view class="bigqr__title">出示给商家核销</view>
-    <view class="bigqr__desc">动态码按屏幕倒计时失效，过期请重新获取</view>
+    
     <view class="bigqr__alt" bindtap="retry" aria-role="button" aria-label="刷新二维码" hover-class="cy-pressed" hover-stay-time="80">刷新二维码</view>
   </view>
 </view>

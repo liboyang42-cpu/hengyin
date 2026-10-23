@@ -82,7 +82,7 @@ function assertUnknownTemplateFallbackUsesDsIcon(markup) {
   // 2026-08-26:列表统一成 .cml-pic 之后,「没有专属资源」的兜底不再是 cy-icon 图标位,
   // 而是明确失败态(no_data + 「封面暂不可用」)。守的不变量没变:不许伪造资产。
   assert.match(markup, /class="cml-pic cover-error"[\s\S]*?<text class="cover-error-text">封面暂不可用<\/text>/,
-    '没有专属资源的模板必须落到明确失败态,不能留空白');
+    '没有专属资源的模板必须落到明确失败态，不能留空白');
   assert.doesNotMatch(markup, /\{\{\s*item\._initial\s*\}\}/,
     '未知模板不得用首字冒充图形资产');
   assert.doesNotMatch(markup, /linear-gradient\([^)]*item\./,
@@ -128,9 +128,9 @@ test('12 个交互模板使用具象游戏图标，未知模板使用设计系�
 
   // 负控:把兜底态拆掉,检查器必须真的判红(只比字符串变没变是恒真的假负控)
   const mutant = wxml.replaceAll('class="cml-pic cover-error"', 'class="cml-pic"');
-  assert.notEqual(mutant, wxml, '负控锚点失效：找不到未知模板兜底态');
+  assert.notEqual(mutant, wxml, '负控锚点失效：找不到未知模板保底态');
   assert.throws(() => assertUnknownTemplateFallbackUsesDsIcon(mutant),
-    '拆掉兜底态后检查器仍然放行 —— 这条断言是恒绿的');
+    '拆掉保底态后检查器仍然放行 —— 这条断言是恒绿的');
   assert.throws(() => assertUnknownTemplateFallbackUsesDsIcon(mutant));
 });
 
@@ -249,6 +249,6 @@ test('交互模板图标映射覆盖 19 个官方玩法,且每个文件都真实
     const svg = fs.readFileSync(abs, 'utf8');
     // 全套统一石墨底 + 骨白描边;混进渐变说明有人绕过了这套规范
     assert.ok(svg.includes('#121215'), `${title} 图标底色不是规范的 #121215`);
-    assert.ok(!/Gradient/i.test(svg), `${title} 图标里出现了渐变,与图标规范不符`);
+    assert.ok(!/Gradient/i.test(svg), `${title} 图标里出现了渐变，与图标规范不符`);
   });
 });

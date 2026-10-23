@@ -11,7 +11,7 @@ const CEILINGS = ['FULL', 'XP_BADGE_ONLY'];
 /** 服务端说只记探索值与徽章时的那一句;别的情况(含字段缺失)一个字都不说。 */
 const XP_BADGE_ONLY_NOTE = '本机成绩：只记探索值与徽章，不发券或积分';
 /** 扫码比对的是节点静态码:证明码对得上,不证明人在现场。 */
-const SCAN_MATCH_NOTE = '核对的是这一站的任务码，不代表到场核验';
+const SCAN_MATCH_NOTE = '仅确认这一站的任务码';
 /** 拍照:视觉模型当场真判 PASS(服务端 photoVerified=true)才这么说。 */
 const PHOTO_VERIFIED_NOTE = '照片已核验';
 /** 次数用尽兜底放行:算过,但不是「这张过了」。 */

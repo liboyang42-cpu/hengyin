@@ -64,7 +64,7 @@ test('到店时间按主题取最近一场俱乐部场次;没俱乐部或没人�
     { topicId: 78, clubName: '夜跑团', paidCount: 1, startTime: '2026-09-27T01:00:00.000+00:00' },
   ]
   const out = attachVisitTexts(cards, runs)
-  assert.equal(out[0].visitText, '城瘾跑团 · 9月28日 周一 10:30 到店', '跳过无俱乐部与零付款场次,取最近一场俱乐部场次')
+  assert.equal(out[0].visitText, '城瘾跑团 · 9月28日 周一 10:30 到店', '跳过无俱乐部与零付款场次，取最近一场俱乐部场次')
   assert.equal(out[1].visitText, '夜跑团 · 9月27日 周日 09:00 到店', '带偏移的时间按上海日历显示')
   assert.equal(out[2].visitText, '', '没有俱乐部要来就不写')
   assert.equal(out[3].visitText, undefined, '主办卡不挂到店时间')

@@ -39,7 +39,7 @@ function createChat(app) {
 function sampleVo() {
   return {
     retentionDays: 90,
-    retentionPolicy: '聊天原文最长保留 90 天,到期自动删除;你也可以在此随时主动删除全部记录,删除立即生效且不可恢复。',
+    retentionPolicy: '聊天原文最长保留 90 天，到期自动删除；你也可以在此随时主动删除全部记录，删除立即生效且不可恢复。',
     records: [
       { id: 1, userId: 5, profileId: 2, activityId: 3, userMsg: '下一站去哪?', npcReply: '往南走两百米。', safetyFlag: 0,
         model: 'm', latencyMs: 10, tokenIn: 1, tokenOut: 2, createTime: '2026-10-01T12:00:00.000+08:00' },
@@ -56,7 +56,7 @@ test('格式化:可读文本含条数、保留说明与逐条对话', () => {
   assert.match(text, /保留说明：聊天原文最长保留 90 天/);
   assert.match(text, /\[2026-10-01 12:00:00\]\n我：下一站去哪\?\nAI：往南走两百米。/);
   assert.match(text, /\[时间未记录\]\n我：（无内容）\nAI：（没有回复）/);
-  assert.equal(exp.formatJson, undefined, '用户决定:导出 = 复制文本,不提供 JSON');
+  assert.equal(exp.formatJson, undefined, '用户决定:导出 = 复制文本，不提供 JSON');
 });
 
 test('格式化:畸形回包返回 null,不当成空记录', () => {
@@ -166,7 +166,7 @@ test('组件:导出不打断在途提问,返回对话后回答照常呈现', () 
 test('timeText:ISO 串只去 +08:00,秒/毫秒时间戳按北京时间,空值标未记录', () => {
   assert.equal(exp.timeText('2026-10-01T12:00:00.000+08:00'), '2026-10-01 12:00:00');
   assert.equal(exp.timeText('2026-10-01T12:00:00+0800'), '2026-10-01 12:00:00');
-  assert.equal(exp.timeText('2026-10-01T04:00:00.000Z'), '2026-10-01 04:00:00Z', '其他时区保留偏移,不冒充北京时间');
+  assert.equal(exp.timeText('2026-10-01T04:00:00.000Z'), '2026-10-01 04:00:00Z', '其他时区保留偏移，不冒充北京时间');
   assert.equal(exp.timeText('2026-10-01 12:00:00'), '2026-10-01 12:00:00');
   assert.equal(exp.timeText(Date.UTC(2026, 9, 1, 4, 0, 0)), '2026-10-01 12:00:00', '毫秒时间戳');
   assert.equal(exp.timeText(null), '时间未记录');

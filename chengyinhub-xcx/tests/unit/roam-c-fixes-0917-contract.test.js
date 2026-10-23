@@ -112,7 +112,7 @@ test('C-12 打卡真失败(服务端拒/网络断)不留失败浮卡,只收起�
   const ok = await page._sendCheckin({ id: 'shop-1', name: '店' });
 
   assert.equal(ok, false);
-  assert.equal(page.data.visit.active, false, '失败必须收起打卡卡,不许留失败态');
+  assert.equal(page.data.visit.active, false, '失败必须收起打卡卡，不许留失败态');
   assert.equal(page.data.visit.checkinErr, undefined, '失败态字段已随拍板删除');
   assert.match(toasts[0].title, /还没到该店附近/);
 });
@@ -126,7 +126,7 @@ test('C-12 照片不参与审核:打卡失败时照片仍留在本次足迹', as
 
   await page._sendCheckin({ id: 'shop-1', name: '店' });
 
-  assert.equal(page._kept.length, 1, '照片不参与审核,打卡失败也不许丢');
+  assert.equal(page._kept.length, 1, '照片不参与审核，打卡失败也不许丢');
   assert.equal(page._kept[0].photo.path, '/tmp/a.jpg');
 });
 

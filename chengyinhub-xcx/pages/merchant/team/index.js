@@ -392,7 +392,7 @@ Page({
           this.recoverSession();
           return;
         }
-        this.setData({ accessState: 'error', accessErrorIsDenied: [400, 403, 422].includes(failureStatus(res, status)), accessError: app.getRequestErrorMessage(res, '网络连接失败，请稍后重试') });
+        this.setData({ accessState: 'error', accessErrorIsDenied: [400, 403, 422].includes(failureStatus(res, status)), accessError: app.getRequestErrorMessage(res, '网络异常，请重试') });
       },
       successStatusAbnormal: (res, status) => {
         if (this._recoverReadSession(res, status, version)) return;
@@ -483,7 +483,7 @@ Page({
         const operators = data.operators.map(shapeOperator);
         const invites = data.invites.map(shapeInvite);
         if (operators.some(item => item === null) || invites.some(item => item === null)) {
-          this.setData({ teamState: 'error', teamError: '团队名单数据格式异常，请稍后重试' });
+          this.setData({ teamState: 'error', teamError: '团队名单加载失败，请重试' });
           return;
         }
         this.setData({
@@ -493,7 +493,7 @@ Page({
           pendingInvites: invites.filter(item => item.status === 'PENDING'),
         });
       },
-      fail: (res, status) => { if (token === this._teamReadEpoch && !this._recoverReadSession(res, status, version) && current()) this.setData({ teamState: 'error', teamError: '网络连接失败，请稍后重试' }); },
+      fail: (res, status) => { if (token === this._teamReadEpoch && !this._recoverReadSession(res, status, version) && current()) this.setData({ teamState: 'error', teamError: '网络异常，请重试' }); },
     });
   },
 
@@ -579,7 +579,7 @@ Page({
         }
         this.loadTeam();
       },
-      fail: () => toast('网络连接失败，请稍后重试'),
+      fail: () => toast('网络异常，请重试'),
       complete: () => this.setData({ submitting: false }),
     });
   },
@@ -639,7 +639,7 @@ Page({
         toast.success('岗位已更新');
         this.loadTeam();
       },
-      fail: () => toast('网络连接失败，请稍后重试'),
+      fail: () => toast('网络异常，请重试'),
       complete: () => this.setData({ submitting: false }),
     });
   },
@@ -742,7 +742,7 @@ Page({
         this.reportDanger(true);
         this.loadTeam();
       },
-      fail: () => this.reportDanger(false, '网络连接失败，请稍后重试'),
+      fail: () => this.reportDanger(false, '网络异常，请重试'),
       complete: () => this.setData({ submitting: false }),
     });
   },
@@ -787,7 +787,7 @@ Page({
         this.loadAccess();
       },
       fail: () => {
-        this.setData({ acceptResult: '网络连接失败，请稍后重试' });
+        this.setData({ acceptResult: '网络异常，请重试' });
         toast('邀请处理失败');
       },
       complete: () => this.setData({ accepting: false }),

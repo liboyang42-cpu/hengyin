@@ -17,7 +17,7 @@
 <cy-nav-spacer />
 
 <cy-empty class="page-terminal" wx:if="{{pageState === 'missing-param'}}" fill size="lg" kind="missing-param"
-  title="无法打开报名页" sub="链接缺少活动信息，请返回后重新选择"
+  title="无法打开报名页" sub="请返回重新进入"
   cta="去发现活动" bind:cta="goDiscoverActivities" />
 
 <!-- 你已经报过名了。
@@ -37,10 +37,10 @@
 
 <cy-skeleton wx:if="{{pageState === 'ready' && participantState === 'loading' && addressList.length === 0}}" type="list" count="1" />
 <cy-inline-error load-failure wx:elif="{{pageState === 'ready' && participantState === 'error'}}"
-  title="参与人信息没能加载" sub="{{participantErrorMsg}}"
+  title="参与人信息加载失败" sub="{{participantErrorMsg}}"
   action="重试" bind:action="retryAddressList" />
 <cy-inline-error load-failure wx:elif="{{pageState === 'ready' && participantState === 'staleError'}}"
-  title="参与人信息暂未更新" sub="已有名单仍可使用，{{participantErrorMsg}}"
+  title="参与人信息暂未更新" sub="{{participantErrorMsg}}"
   action="重试" bind:action="retryAddressList" />
 
 <!-- 已选参与人信息 -->
@@ -60,13 +60,13 @@
 
 <!-- M1-3 门卡:俱乐部活动对非成员不下发详情。这不是加载失败,重试无意义 —— 只给「去加入俱乐部」。 -->
 <cy-empty class="page-terminal" wx:if="{{pageState === 'gate'}}" fill size="lg"
-  title="{{loadErrorMsg}}" sub="加入俱乐部后即可报名这场活动"
+  title="{{loadErrorMsg}}" sub="入会后可报名"
   cta="{{gateClubId ? '去加入俱乐部' : '去发现活动'}}" bind:cta="goGateClub" />
 
 <!-- 详情加载失败:不摆出金额与付款入口,只给重试 -->
 <!-- auto-back 只认首屏:退候补成功后会 getActivityInfo() 重拉一次,
      那一次失败若也自动退页,用户刚做成的操作会被一个「正在退出」盖掉(审查C A1)。 -->
-<cy-error load-failure wx:if="{{pageState === 'error'}}" fill size="lg" title="活动信息没能加载出来" sub="{{loadErrorMsg}}" retry="重试" bind:retry="retryActivityInfo" auto-back="{{!everLoaded}}" />
+<cy-error load-failure wx:if="{{pageState === 'error'}}" fill size="lg" title="活动信息加载失败" sub="{{loadErrorMsg}}" retry="重试" bind:retry="retryActivityInfo" auto-back="{{!everLoaded}}" />
 
 <!-- 活动信息 -->
 <view wx:if="{{pageState === 'ready'}}" class="setbox">
@@ -78,7 +78,7 @@
              两者都没有时如实提示待同步,不拿路线票券占位图冒充活动海报。 -->
         <view class="setbox_lb_li_top_tu">
           <image wx:if="{{img.first(activityInfo.imgUrl) || img.first(activityInfo.imgArr)}}" lazy-load="true" src="{{img.first(activityInfo.imgUrl) || img.first(activityInfo.imgArr)}}" mode="aspectFill" />
-          <view wx:else class="activity-poster-empty">海报待同步</view>
+          <view wx:else class="activity-poster-empty">暂无海报</view>
         </view>
         <view class="setbox_lb_li_top_con">
           <!-- 参考图的条目顺序是「标题 → 时间 → 地点」:先回答"是什么",再说何时何地。
@@ -86,13 +86,13 @@
           <!-- ⚠️ 兜底不能用标签词本身。这是**结算页**(实拍 ¥68 / ¥600),名称缺失时原来显示字面量
                「活动名称」,用户看不出自己在付什么 —— 那比留白更糟,因为它看起来像一个真名字。
                改成明确说明数据没到,与票券卡「路线信息待同步」同一套口径。 -->
-          <view class="setbox_lb_li_top_con_name">{{activityInfo.name || '活动信息待同步'}}</view>
+          <view class="setbox_lb_li_top_con_name">{{activityInfo.name || '—'}}</view>
           <view class="setbox_lb_li_top_con_time">{{activityInfo.formattedDateTime}}</view>
           <!-- CU-C-33:同场次的集合点原来在结算页整行丢失 —— 字段(oms_ticket.meeting_point)
                随 /api/activity/info 到了,只是本页从来没渲染过。它和下面那行活动 address
                (场馆地址)不是一回事:一个是这场集合在哪里。没填就不出这一行。 -->
           <view wx:if="{{selectedTicket.meetingPoint}}" class="setbox_lb_li_top_con_dz"><cy-icon class="d_location" name="poi-landmark" size="24" />集合点 · {{selectedTicket.meetingPoint}}</view>
-          <view class="setbox_lb_li_top_con_dz"><cy-icon class="d_location" name="poi-landmark" size="24" />{{activityInfo.address || activityInfo.addressName || '待确认集合地点'}}</view>
+          <view class="setbox_lb_li_top_con_dz"><cy-icon class="d_location" name="poi-landmark" size="24" />{{activityInfo.address || activityInfo.addressName || '—'}}</view>
         </view>
       </view>
     </view>
@@ -100,12 +100,12 @@
 </view>
 
 <cy-empty wx:if="{{pageState === 'ready' && signupState === 'unavailable'}}"
-  title="暂不可报名" sub="当前活动还没有可用票，请稍后再看看" kind="not-started" />
+  title="暂无可用票" kind="not-started" />
 
 <!-- 深链直入报名时绕过详情组件的截止拦查:原来要填完整张表才被拒。这里在加载当刻就说明白。
      票已卖完的情况交给下面的候补卡(它有可动的出口),不叠加这张空态。 -->
 <cy-empty wx:if="{{pageState === 'ready' && signupState === 'closed' && !ticketSoldOut}}"
-  title="报名已截止" sub="这个票种的报名时间已经结束，看看别的场次吧" kind="not-started" />
+  title="报名已截止" kind="not-started" />
 
 <!-- 费用明细:票种/订单金额/俱乐部权益/积分抵扣/总计 收进一个信息块。
      标准票行原来挂在「活动信息」卡底部,与下面的金额行被一条卡边界劈开 ——
@@ -194,10 +194,10 @@
   <view class="popup-content">
       <cy-skeleton wx:if="{{participantState === 'loading' && addressList.length === 0}}" type="list" count="2" />
       <cy-inline-error load-failure wx:elif="{{participantState === 'error'}}"
-        title="参与人信息没能加载" sub="{{participantErrorMsg}}"
+        title="参与人信息加载失败" sub="{{participantErrorMsg}}"
         action="重试" bind:action="retryAddressList" />
       <cy-inline-error load-failure wx:elif="{{participantState === 'staleError'}}"
-        title="参与人信息暂未更新" sub="已有名单仍可使用，{{participantErrorMsg}}"
+        title="参与人信息暂未更新" sub="{{participantErrorMsg}}"
         action="重试" bind:action="retryAddressList" />
       <view wx:for="{{addressList}}" wx:key="id" 
             class="address-item {{selectedAddress && item.id == selectedAddress.id ? 'active' : ''}}" 
@@ -212,7 +212,7 @@
       </view>
       
       <cy-empty wx:if="{{participantState === 'ready' && addressList.length === 0}}"
-        kind="empty" title="还没有参与人信息" sub="添加姓名和手机号后即可继续报名"
+        kind="empty" title="还没有参与人信息"
         cta="新增参与人信息" bind:cta="goToAddAddress" />
   </view>
   <cy-btn slot="footer" variant="primary" bindtap="goToAddressList">管理参与人信息</cy-btn>

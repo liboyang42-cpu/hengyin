@@ -84,7 +84,7 @@ test('P1-2 结构:真失败走 cy-error 且带 retry,不再是裸 view 一行红
   // ⚠️ 别用 /retry="/ 当锚点:`bind:retry="onRetry"` 里也含这五个字符 ⇒ 把
   //    retry="重新加载" 整行删掉,这条断言照样绿(第一版负控 N4 就是这么假绿的)。
   //    锚定「前面是空白、不是 bind:」的那个独立属性。
-  assert.match(tag, /\sretry="[^"]+"/, '错误态必须给重试入口(retry 属性本身,不是 bind:retry)')
+  assert.match(tag, /\sretry="[^"]+"/, '错误态必须给重试入口(retry 属性本身，不是 bind:retry)')
   assert.match(tag, /bind:retry="/, '重试必须接住')
 })
 
@@ -98,12 +98,12 @@ test('P1-2 行为:点重试**真的重新发起一次请求**(截图证明不了
   page.onLoad({})
   requests[0].fail()
   requests[0].complete()
-  assert.equal(page.data.errorMsg, '排行榜没有加载出来')
+  assert.equal(page.data.errorMsg, '排行榜加载失败')
 
   const before = requests.length
   assert.equal(typeof page.onRetry, 'function', 'bind:retry 指向的方法必须存在')
   page.onRetry()
-  assert.equal(requests.length, before + 1, '重试必须真的重新取数,不能只是清个文案')
+  assert.equal(requests.length, before + 1, '重试必须真的重新取数，不能只是清个文案')
   assert.equal(page.data.errorMsg, '', '重试要先清掉上一次的错误文案')
   assert.equal(page.data.loading, true, '重试要回到加载态')
 })

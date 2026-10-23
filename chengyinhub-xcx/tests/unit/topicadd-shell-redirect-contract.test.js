@@ -42,7 +42,7 @@ function runShell(options) {
 
 test('壳必须用 redirectTo 转走,不能用 navigateTo 把自己留在页面栈里', () => {
   const calls = runShell({ mode: '2' })
-  assert.equal(calls.navigateTo.length, 0, '用了 navigateTo:壳会留在页面栈,用户按返回会被无限转回来')
+  assert.equal(calls.navigateTo.length, 0, '用了 navigateTo:壳会留在页面栈，用户按返回会被无限转回来')
   assert.equal(calls.redirectTo.length, 1, '壳必须且只能 redirectTo 一次')
   assert.match(calls.redirectTo[0], /^\/pages\/publish\/fabu\/index/, '必须转到 fabu')
 })

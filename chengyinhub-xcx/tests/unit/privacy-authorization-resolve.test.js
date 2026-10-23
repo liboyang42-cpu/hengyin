@@ -13,7 +13,7 @@ const read = (f) => fs.readFileSync(path.join(ROOT, f), 'utf8')
 test('隐私页被系统返回卸掉时必须兜底 resolve 授权,否则后续接口静默挂起', () => {
   const js = read('pages/privacy/index.js')
   assert.match(js, /onUnload\(\)\s*\{[\s\S]{0,300}?hasPendingPrivacyAuthorization\(\)[\s\S]{0,200}?resolvePrivacyAuthorization\(/,
-    'pages/privacy/index.js 必须在 onUnload 里对未决授权兜底 resolve')
+    'pages/privacy/index.js 必须在 onUnload 里对未决授权保底 resolve')
 
   // 兜底必须先问「还有没有未决的」:agree/disagree 里已经 resolve 过再走 navigateBack 也会触发
   // onUnload,无条件再 resolve 一次会把语义从「同意」翻成「拒绝」。

@@ -107,7 +107,7 @@ test('CU-M-27:商家态动作链在白纱压最暗照片上仍达 AA', () => {
   const fg = parseColor(resolve(linkColorToken(/\.pc-merchant\s+\.pc-sec-link\s*\{([^}]*)\}/), vars))
   assert.ok(fg, '动作链颜色必须解析到可计算的字面值')
   const ratio = contrast(fg, backdrop)
-  assert.ok(ratio >= AA, `商家态「管理全部 →」压在深色封面上只有 ${ratio.toFixed(2)}:1,需 ≥${AA}:1`)
+  assert.ok(ratio >= AA, `商家态「管理全部 →」压在深色封面上只有 ${ratio.toFixed(2)}:1，需 ≥${AA}:1`)
 })
 
 test('CU-M-27:负控 —— 修复前的 secondary 档在同一底上不达标', () => {
@@ -115,7 +115,7 @@ test('CU-M-27:负控 —— 修复前的 secondary 档在同一底上不达标',
   const backdrop = worstCaseHeroBackdrop()
   const stale = parseColor(resolve(vars['--cy-color-text-secondary'], vars))
   const ratio = contrast(stale, backdrop)
-  assert.ok(ratio < AA, `secondary 档在封面最坏底上竟达 ${ratio.toFixed(2)}:1 —— 本条负控的前提没了,需重新判定`)
+  assert.ok(ratio < AA, `secondary 档在封面最坏底上竟达 ${ratio.toFixed(2)}:1 —— 本条负控的前提没了，需重新判定`)
 })
 
 test('CU-M-27:动作链颜色只走 token,不落字面色值', () => {

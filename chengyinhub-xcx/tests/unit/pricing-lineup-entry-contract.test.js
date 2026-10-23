@@ -13,7 +13,7 @@ test('定价页渲染合作阵容行并绑定 goPartner', () => {
   const wxml = read('pages/topic/pricing/index.wxml');
   assert.match(wxml, /wx:for="\{\{lineup\}\}"/, '阵容列表必须遍历 lineup');
   assert.match(wxml, /bindtap="goPartner"/, '阵容行必须接 goPartner');
-  assert.match(wxml, /wx:key="lineupKey"/, '行 key 用 toType:toId 组合,防跨类型同 id 撞 key');
+  assert.match(wxml, /wx:key="lineupKey"/, '行 key 用 toType:toId 组合，防跨类型同 id 撞 key');
 });
 
 test('goPartner 跳转携带 partner 页守卫要求的全部三参', () => {

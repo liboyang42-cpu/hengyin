@@ -33,13 +33,17 @@ function assertContract(overrides = {}) {
   assert.match(rule(wxss, '.cover-wrap'), /height:\s*320rpx/, '封面 160px = 320rpx')
   assert.match(rule(wxss, '.profile-logo-wrap'), /width:\s*112rpx/, 'logo 56px = 112rpx')
   assert.match(rule(wxss, '.profile-logo-wrap'), /height:\s*112rpx/)
-  assert.match(rule(wxss, '.profile-id'), /padding-left:\s*140rpx/, '名字行让开 logo(pl70)')
+  // 拍板 2026-10-22:logo 进身份行做第一列,名字与 logo 垂直居中(取代原 pl70 让位 + 底对齐)
+  assert.match(rule(wxss, '.profile-id'), /align-items:\s*center/, '名字与 logo 垂直居中')
+  assert.match(wxml, /class="profile-id">\s*<view class="profile-logo-wrap">/, 'logo 是身份行第一列')
   assert.match(rule(wxss, '.profile-name'), /text-overflow:\s*ellipsis/, '俱乐部名单行省略')
-  // 元信息是三枚「图标 + 文字」chip,不是一行 · 拼接的纯文本
+  // 元信息是「图标 + 文字」chip,不是一行 · 拼接的纯文本
   assert.match(rule(wxss, '.profile-meta'), /display:\s*flex/)
   assert.match(rule(wxss, '.profile-meta-chip'), /display:\s*flex/)
-  assert.equal((wxml.match(/class="profile-meta-chip"/g) || []).length, 3, '元信息必须是三枚 chip')
-  assert.equal((wxml.match(/class="profile-meta-ico"/g) || []).length, 3, '每枚 chip 必须带图标')
+  // 拍板 2026-10-22:元信息固定两行 ——「类型 · N 名成员」/ 入会方式,各带原 chip 图标
+  assert.equal((wxml.match(/class="profile-meta-chip"/g) || []).length, 2, '元信息两行两枚 chip')
+  assert.equal((wxml.match(/class="profile-meta-ico"/g) || []).length, 2, '每枚 chip 必须带图标')
+  assert.match(rule(wxss, '.profile-meta'), /flex-direction:\s*column/, '两行固定换行,不随宽度乱折')
 
   // —— 概览:简介直接铺开,标题下不要小标题 ——
   assert.match(wxml, /class="ov-intro"/)
@@ -75,7 +79,7 @@ function assertContract(overrides = {}) {
 
   // —— 稿没画但现码有:治理与安全,不许照稿删掉 ——
   // 2026-09-09「会员与会费」按用户裁决(会费暂时不做)随两个会费页一并删除,这条断言撤走。
-  assert.doesNotMatch(wxml, /membership-overview-entry/, '会费整条已撤,不许留一个通向已删页的入口')
+  assert.doesNotMatch(wxml, /membership-overview-entry/, '会费整条已撤，不许留一个通向已删页的入口')
   assert.match(wxml, /class="overview-section governance-help-entry"/, '治理与安全必须保留')
   assert.match(wxml, /goClubAppeal/)
   assert.match(wxml, /reportClub"/)
@@ -90,9 +94,9 @@ function assertContract(overrides = {}) {
   // 2026-09-09 从 281:360 的横卡(左封面 + 右四行)改成稿 N2 的竖卡。
   assert.match(wxml, /<template name="clubEventCard">/)
   assert.match(wxml, /class="ev-coverslot"[\s\S]{0,300}class="ev-status ev-status--\{\{item\.statusTone\}\}"/,
-    '状态胶囊叠在封面上,不再是右列第一行')
+    '状态胶囊叠在封面上，不再是右列第一行')
   assert.match(wxml, /class="ev-name"[\s\S]{0,200}class="ev-time"[\s\S]{0,400}class="ev-stats"/)
-  // 三列数字块:算不出来的那一格整格不出,不用 0 冒充(「0 站」会被读成「这条路线没有站点」)
+  // 三列数字块:算不出来的那一格整格不出,不用 0 冒充(「0 站」会被读成「这条路线没有节点」)
   for (const key of ['signupText', 'stationText', 'mileageText']) {
     assert.match(wxml, new RegExp('class="ev-stat" wx:if="\\{\\{item\\.' + key + '\\}\\}"'),
       key + ' 缺失时那一格必须整格不出')
@@ -108,7 +112,7 @@ function assertContract(overrides = {}) {
   // —— 活动空态 282:478:卡容器内 标题 / 说明 / 主按钮 / 归属提示 ——
   // 2026-09-06 裸文字空态收编:标题 / 说明 / 主按钮 / 归属提示 都由 cy-empty 承载(说明里带归属句,cta 只给主理人)
   assert.match(rule(wxss, '.ev-empty'), /background:\s*var\(--cy-color-bg-elevated\)/)   // 空态仍在卡容器内(282:478)
-  assert.match(wxml, /<cy-empty wx:else class="ev-empty" title="还没有城市路线"[^>]*sub="\{\{club\.isOwner \|\| canManageActivities \?[^>]*会自动绑定「[^>]*cta="\{\{club\.isOwner \|\| canManageActivities \? '发布主题' : ''\}\}" bind:cta="onCreateTeam"/)
+  assert.match(wxml, /<cy-empty wx:else class="ev-empty" title="还没有城市路线"[^>]*cta="\{\{club\.isOwner \|\| canManageActivities \? '发布主题' : ''\}\}" bind:cta="onCreateTeam"/)
 
   // —— 发帖入口 285:395:头像 + 昵称 / 提示语 / 工具栏三图标 ——
   assert.match(wxml, /class="post-composer-who"[\s\S]{0,200}class="post-composer-ph"[\s\S]{0,200}class="post-composer-tools"/)

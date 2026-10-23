@@ -118,13 +118,13 @@ function allRoutes() {
 
 test('导航与页标题不得被裹进只覆盖部分状态的条件分支', () => {
   const routes = allRoutes()
-  assert.ok(routes.length >= 100, `路由盘点疑似漏读,只拿到 ${routes.length} 条`)
+  assert.ok(routes.length >= 100, `路由盘点疑似漏读，只拿到 ${routes.length} 条`)
 
   const actual = routes.flatMap((route) => scanRoute(route, read(`${route}.wxml`))).sort()
   assert.deepEqual(
     actual,
     ALLOWED.slice().sort(),
-    '出现了新的条件化 nav/title。若确属互斥分支各自完整,补进 ALLOWED 并写明理由;'
+    '出现了新的条件化 nav/title。若确属互斥分支各自完整，补进 ALLOWED 并写明理由；'
       + '否则把 cy-nav-bar / cy-page-title 提到条件之外——否则加载/空/错态会整段丢标题和返回出口。',
   )
 })
@@ -159,7 +159,7 @@ test('负控:把 wx:if 直接写在 cy-page-title 标签上时必须判红', () 
 test('负控:标签自闭合与属性里的尖括号不得让扫描器漏判', () => {
   const tricky = '<view wx:if="{{a>b}}"><image src="x" /><cy-page-title title="标题" /></view>'
   const hits = scanRoute('probe', tricky)
-  assert.equal(hits.length, 1, '自闭合的 <image /> 不应污染标签栈,条件祖先仍须被识别')
+  assert.equal(hits.length, 1, '自闭合的 <image /> 不应污染标签栈，条件祖先仍须被识别')
 })
 
 

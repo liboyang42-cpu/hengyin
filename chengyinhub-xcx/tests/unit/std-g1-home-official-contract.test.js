@@ -151,7 +151,7 @@ test('G1 profile：兼容壳解析失败可重试，重试期间回到骨架态'
   assert.equal(page.data.state, 'network-error');
   assert.ok(page.data.message, '错误态必须给出可读原因');
   page.retryLoad();
-  assert.equal(page.data.state, 'loading', '重试期间要回到骨架态,不能停在错误屏上');
+  assert.equal(page.data.state, 'loading', '重试期间要回到骨架态，不能停在错误屏上');
   assert.equal(requests.length, 2, '重试必须真的重发解析请求');
 });
 

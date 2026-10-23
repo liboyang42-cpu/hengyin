@@ -100,7 +100,7 @@ function buildGroups(records, rewards, rewardReady) {
     }
     const nickname = typeof record.nickname === 'string' && record.nickname.trim()
       ? record.nickname.trim()
-      : '昵称待确认'
+      : '—'
     const recordTime = shortTime(record.createTime)
     const earned = !!reward
     const rewardTime = earned ? shortTime(reward.createTime) : ''
@@ -113,8 +113,8 @@ function buildGroups(records, rewards, rewardReady) {
       timeText: recordTime || '邀请时间暂未记录',
       statusText: earned
         ? '首购奖励已到账' + (!recordTime && rewardTime ? ' · ' + rewardTime : '')
-        : (rewardReady ? '已加入 · 首购待完成' : '已加入 · 奖励待同步'),
-      rewardText: earned ? '+' + rewardValue + ' 积分' : (rewardReady ? '待解锁' : '待同步'),
+        : (rewardReady ? '已加入 · 首购待完成' : '已加入 · 奖励发放中'),
+      rewardText: earned ? '+' + rewardValue + ' 积分' : (rewardReady ? '待解锁' : '发放中'),
     })
   })
   groups.forEach((group) => {

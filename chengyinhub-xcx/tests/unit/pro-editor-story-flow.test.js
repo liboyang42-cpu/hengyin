@@ -249,7 +249,7 @@ test('negative control: 撤销快照少任一样,都塞不回原位', () => {
   assert.throws(() => storyFlow.applyStoryCommand(
     { chapter: restored(), pendingMaterials: [] },
     { type: 'insertNodeAt', index: blockIndex, blockKey: block.key, node: undefined },
-  ), /节点缺少本地标识/, '少了 node 竟然还能插回去 ⇒ 快照里 node 这一样是白存的')
+  ), /节点缺少本地信息/, '少了 node 竟然还能插回去 ⇒ 快照里 node 这一样是白存的')
 
   // ② 少了 blockIndex:插入点失效,不能默默塞到末尾(那是"位置丢了"却装作成功)
   assert.throws(() => storyFlow.applyStoryCommand(
@@ -635,7 +635,7 @@ test('audio 块原样留在故事流里,不再被升成章节属性', () => {
   }, () => 'k' + (seq += 1))
 
   assert.deepEqual(chapter.blocks.map(b => b.type), ['audio', 'text', 'audio'],
-    '两段都留着:章节级那段是另一件事,不从块里迁')
+    '两段都留着:章节级那段是另一件事，不从块里迁')
   assert.equal(chapter.audioUrl, undefined, '不许顺手写章节级字段')
 })
 

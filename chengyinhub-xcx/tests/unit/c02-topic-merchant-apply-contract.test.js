@@ -64,7 +64,7 @@ function assertApply3HasNoTopicCard(wxml) {
 // CU-C-123 删除「数字为 0 是正常的」常驻句；保留数字、业务标签和核销动作。
 function metricDefaultLine(js, key) {
   const line = js.split('\n').find((l) => l.includes(`${key}:`) && /:\s*0,/.test(l))
-  assert.ok(line, `merchantinfo 的 ${key} 必须有默认值兜底`)
+  assert.ok(line, `merchantinfo 的 ${key} 必须有默认值保底`)
   return line
 }
 
@@ -85,7 +85,7 @@ test('C2:merchantinfo 核销数值位都有默认值兜底,不会渲染成 undef
 
 test('C2 负控:去掉 verifiedCount 默认值时,由数值位兜底这道闸判红', () => {
   const mutated = read(INFO_JS).replaceAll('verifiedCount: 0,', 'verifiedCount: undefined,')
-  assert.throws(() => assertMetricsDefaultToZero(mutated), /verifiedCount 必须有默认值兜底/)
+  assert.throws(() => assertMetricsDefaultToZero(mutated), /verifiedCount 必须有默认值保底/)
 })
 
 test('C2:merchantinfo 保留零值指标，不常驻重复解释', () => {
@@ -355,7 +355,7 @@ function assertApply2ContextGuard(js, wxml) {
   assert.match(
     js,
     /saveTemplate:\s*function \(\) \{[\s\S]*?if \(!this\.data\.applicationContextReady \|\| !hasApplicationContext\(this\.data\)\) \{[\s\S]*?return;/,
-    '即使意外触发提交函数,缺上下文或空地址/日期也必须拒绝提交'
+    '即使意外触发提交函数，缺上下文或空地址/日期也必须拒绝提交'
   )
 }
 

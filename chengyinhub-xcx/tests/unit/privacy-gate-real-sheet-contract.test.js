@@ -28,7 +28,7 @@ test('app.js 触发授权时优先调当前页的真弹窗,路由页只作回退
   assert.match(fn, /typeof current\.showPrivacyGate === 'function'/, '必须先探测当前页的真弹窗')
   const gateIdx = fn.indexOf('showPrivacyGate()')
   const navIdx = fn.indexOf('wx.navigateTo')
-  assert.ok(gateIdx > 0 && navIdx > gateIdx, '真弹窗必须排在 navigateTo 之前,否则永远走不到')
+  assert.ok(gateIdx > 0 && navIdx > gateIdx, '真弹窗必须排在 navigateTo 之前，否则永远走不到')
 })
 
 test('每个可触发授权的页面都挂了 cy-privacy-gate,并暴露 showPrivacyGate', () => {
@@ -60,5 +60,5 @@ test('待决策态不给静默退出:遮罩不可关,且组件销毁时兜底结
   const wxml = read('components/cy/privacy-gate/index.wxml')
   assert.match(wxml, /mask-closable="\{\{false\}\}"/, '强制闸不能点遮罩关掉')
   const js = read('components/cy/privacy-gate/index.js')
-  assert.match(js, /detached\(\)[\s\S]*resolvePrivacyAuthorization/, '宿主页被回收时必须结算,否则同样挂起')
+  assert.match(js, /detached\(\)[\s\S]*resolvePrivacyAuthorization/, '宿主页被回收时必须结算，否则同样挂起')
 })

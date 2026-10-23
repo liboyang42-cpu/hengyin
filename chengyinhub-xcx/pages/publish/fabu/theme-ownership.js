@@ -131,7 +131,7 @@ const methods = {
       const source = (this._templateDetailsById || {})[node.templateId] || node.templateInfo;
       const key = binding.nodeKey(node), template = effectiveTemplate(config, node, source);
       const issue = planIssue(template, config.templateBindings?.[key], form, config, chapterIndex);
-      if (issue) issues.push({ label: (node.name || '站点') + '：' + issue.error,
+      if (issue) issues.push({ label: (node.name || '节点') + '：' + issue.error,
         field: 'templateTool:' + key + ':vote:' + issue.planKey, tab: '0' });
     }));
     return issues;

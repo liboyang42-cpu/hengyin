@@ -343,7 +343,7 @@ test('退款按状态并入 tab:待处理含待回应+处理中,已处理只含�
   page.data.redemptionFilter = 'pending'
   page._applyRedemptionView()
   assert.deepEqual(page.data.redemptions.map((item) => item.recordKey), ['aftercare:2', 'aftercare:1'],
-    '待处理 tab 只含未完成的退款,且按时间倒序')
+    '待处理 tab 只含未完成的退款，且按时间倒序')
 
   page.data.redemptionFilter = 'handled'
   page._applyRedemptionView()
@@ -351,7 +351,7 @@ test('退款按状态并入 tab:待处理含待回应+处理中,已处理只含�
 
   page.data.redemptionFilter = 'no_cash'
   page._applyRedemptionView()
-  assert.equal(page.data.redemptions.length, 0, '不结现金是核销口径,不掺退款')
+  assert.equal(page.data.redemptions.length, 0, '不结现金是核销口径，不掺退款')
 
   page.data.redemptionFilter = 'all'
   page._applyRedemptionView()

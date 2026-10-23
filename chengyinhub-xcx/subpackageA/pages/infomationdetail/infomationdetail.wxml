@@ -19,10 +19,10 @@
 
   <!-- 接口 200 但实体已被删除:重试没有意义(它真的不在了),所以给的是「去看看别的」而不是「重试」 -->
   <cy-empty class="if-fill" wx:elif="{{notfound}}" fill="{{true}}" size="lg"
-    title="这篇玩法说明不在了" sub="它可能已被下架。去玩法列表看看其它的。"
+    title="这篇玩法说明不在了"
     cta="返回玩法列表" bind:cta="onMissingBack" />
 
-  <cy-error load-failure class="if-fill" wx:elif="{{error}}" fill="{{true}}" size="lg" icon="/images/no_data.svg" title="加载失败" sub="{{errorMsg || '请稍后重试'}}" bind:retry="retryLoad" auto-back />
+  <cy-error load-failure class="if-fill" wx:elif="{{error}}" fill="{{true}}" size="lg" icon="/images/no_data.svg" title="加载失败" sub="{{errorMsg}}" bind:retry="retryLoad" auto-back />
 
   <!-- 内容区域 -->
   <view wx:else class="detail-content">

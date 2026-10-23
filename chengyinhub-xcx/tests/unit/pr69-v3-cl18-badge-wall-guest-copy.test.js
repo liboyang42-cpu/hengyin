@@ -50,7 +50,7 @@ test('游客打开勋章墙:不发私有请求，标题是登录引导、按钮�
   const shown = renderErrorState(page.data)
   assert.equal(shown['wx:if'], true)
   assert.equal(shown.title, '登录后查看我的勋章')
-  assert.equal(shown.sub, '登录后可查看你已获得的城市勋章')
+  assert.equal(shown.sub, '')
   assert.equal(shown.retry, '登录')
   assert.equal(shown['load-failure'], false, '登录引导不能被当成加载失败留白')
   assert.doesNotMatch(shown.title, /没有到达|失败/)

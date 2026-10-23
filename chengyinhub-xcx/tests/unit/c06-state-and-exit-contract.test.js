@@ -113,21 +113,21 @@ function assertAlbumStates(js, wxml) {
   // ① 计数大字必须等数据到位才渲染,否则首屏就是权威口吻的「0 枚」
   const head = wxml.match(/<view class="al-hd"[^>]*>/)
   assert.ok(head, 'al-hd 计数行必须存在')
-  assert.match(head[0], /wx:if="\{\{loaded\}\}"/, '计数大字必须 gate 在 loaded 上,否则数据没回来就先说「0 枚」:' + head[0])
+  assert.match(head[0], /wx:if="\{\{loaded\}\}"/, '计数大字必须 gate 在 loaded 上，否则数据没回来就先说「0 枚」:' + head[0])
 
   // ② 失败必须有自己的态 + 一个真的走得通的下一步。整屏失败只属「一枚都没渲染出来」;
   //    已有邮票时那是续页失败,不该把看到的墙换成一张错误页。
   assert.match(wxml, /<cy-error[^>]*wx:elif="\{\{error && !items\.length\}\}"[\s\S]{0,240}?bind:retry="retryLoad"/,
-    '失败态必须走 cy-error、给重试出口,且整屏形态限定在首屏失败')
+    '失败态必须走 cy-error、给重试出口，且整屏形态限定在首屏失败')
   assert.match(wxml, /class="al-more" wx:elif="\{\{error && items\.length\}\}"[^>]*bindtap="retryLoad"/,
-    '续页失败必须在页尾给这一页的重试,而不是整屏报错或静默')
+    '续页失败必须在页尾给这一页的重试，而不是整屏报错或静默')
   assert.match(js, /retryLoad\s*\(/, 'js 必须实现 retryLoad')
 
   // ③ 空态与失败态互斥(空态挂 wx:elif 接在失败/加载链上,不能各自独立 wx:if)
   const empty = wxml.match(/<cy-empty [^>]*title="还没有邮票"[^>]*>/)
   assert.ok(empty, '空态必须是 cy-empty(2026-09-06 裸文字空态收编)')
   assert.match(empty[0], /wx:elif="\{\{loaded && total === 0\}\}"/,
-    '空态必须挂在失败/加载链的 wx:elif 上,否则失败时空态照样渲染:' + empty[0])
+    '空态必须挂在失败/加载链的 wx:elif 上，否则失败时空态照样渲染:' + empty[0])
 }
 
 test('C06-1 集邮册:计数不假零、失败与空是两个态', () => {
@@ -186,7 +186,7 @@ test('negative control: fail 改回 loaded:true(失败伪装成空)必须判红'
   ))
   ctx.page.onLoad()
   ctx.requests[0].fail()
-  assert.equal(ctx.page.data.loaded, true, '病灶形态下 loaded 竟没被置真,说明变异没生效')
+  assert.equal(ctx.page.data.loaded, true, '病灶形态下 loaded 竟没被置真，说明变异没生效')
   assert.throws(
     () => assert.equal(ctx.page.data.loaded, false, '失败不得置 loaded'),
     assert.AssertionError,
@@ -209,7 +209,7 @@ test('negative control: 拿掉计数行的 wx:if 与空态的 wx:elif 各自判�
 // ================================================================ C06-2 会话页
 function assertChatStates(js, wxml) {
   // 四态各有专属分支,且互斥
-  assert.match(wxml, /<cy-skeleton[^>]*wx:if="\{\{loadState === 'loading'\}\}"/, '加载态必须是骨架,不是「还没有消息」')
+  assert.match(wxml, /<cy-skeleton[^>]*wx:if="\{\{loadState === 'loading'\}\}"/, '加载态必须是骨架，不是「还没有消息」')
   assert.match(wxml, /<cy-empty[^>]*wx:elif="\{\{loadState === 'missing'\}\}"[^>]*kind="missing-param"/, '缺参必须走 missing-param 态')
   assert.match(wxml, /<cy-error[^>]*wx:elif="\{\{loadState === 'error'\}\}"[^>]*bind:retry="retryLoad"/, '失败必须走 cy-error 并给重试')
   assert.match(wxml, /<cy-empty[^>]*wx:elif="\{\{!msgs\.length\}\}"[^>]*kind="empty"[^>]*title="还没有消息"/, '真空态保留原文案并显式声明 kind')
@@ -221,7 +221,7 @@ function assertChatStates(js, wxml) {
   assert.match(js, /loadState !== 'ready'/, 'onSend 必须在非 ready 态短路')
 
   // 页面身份:名字为空时给按会话类型的兜底,不留无名头像
-  assert.match(wxml, /class="hero-name">\{\{heroName\}\}/, 'hero 名字必须用带兜底的 heroName')
+  assert.match(wxml, /class="hero-name">\{\{heroName\}\}/, 'hero 名字必须用带保底的 heroName')
   assert.match(js, /heroName/, 'js 必须计算 heroName')
 }
 
@@ -362,7 +362,7 @@ function openSystemNoticeChat(transform) {
 test('CU-M-125 行为:系统通知会话按只读渲染,文字/图片/卡片三条出口都不发请求', () => {
   const ctx = openSystemNoticeChat()
   assert.equal(ctx.page.data.disabled, true, '系统通知必须置只读')
-  assert.match(ctx.page.data.disabledText, /系统通知/, '只读必须说出原因,不能只留一条灰掉的输入栏')
+  assert.match(ctx.page.data.disabledText, /系统通知/, '只读必须说出原因，不能只留一条灰掉的输入栏')
 
   ctx.page.setData({ text: '在吗' })
   ctx.page.onSend()
@@ -379,7 +379,7 @@ test('CU-M-125 行为:只读闸不许顺手把普通私信也关掉', () => {
   ctx.requests[0].success({ code: 200, data: { list: [], hasMore: false } })
   ctx.page.setData({ text: '在吗' })
   ctx.page.onSend()
-  assert.equal(sentReqs(ctx).length, 1, '私信照旧发得出去,证明上面的零请求是闸生效而不是发送整个坏了')
+  assert.equal(sentReqs(ctx).length, 1, '私信照旧发得出去，证明上面的零请求是闸生效而不是发送整个坏了')
 })
 
 test('negative control CU-M-125: 去掉按会话类型的只读判定 / 发送闸不看只读,各自照样发出失败请求', () => {
@@ -404,7 +404,7 @@ test('negative control CU-M-125: 去掉按会话类型的只读判定 / 发送�
   ))
   assert.equal(gateIgnoresReadOnly.page.data.disabled, true, '变异没生效:只读判定本身被改掉了')
   gateIgnoresReadOnly.page.sendCard({ cardType: 'route', topicId: 7 })
-  assert.equal(sentReqs(gateIgnoresReadOnly).length, 1, '病灶形态:亮了只读样式,卡片还是发得出去')
+  assert.equal(sentReqs(gateIgnoresReadOnly).length, 1, '病灶形态:亮了只读样式，卡片还是发得出去')
   assert.throws(
     () => assert.deepEqual(sentReqs(gateIgnoresReadOnly), [], '发送闸必须同时看 disabled'),
     assert.AssertionError,
@@ -422,8 +422,8 @@ test('C06-2 行为:名字缺失时按会话类型兜底,不留无名会话', () 
 
   const named = loadPage(CHAT_JS)
   named.page.onLoad({ conversationId: '11', name: encodeURIComponent('阿岚') })
-  assert.equal(named.page.data.heroName, '阿岚', '有真名时不得被兜底顶掉')
-  assert.equal(named.page.data.name, '阿岚', '气泡上的发送人名仍取真名,不能被兜底串污染')
+  assert.equal(named.page.data.heroName, '阿岚', '有真名时不得被保底顶掉')
+  assert.equal(named.page.data.name, '阿岚', '气泡上的发送人名仍取真名，不能被保底串污染')
 })
 
 test('negative control: 去掉缺参短路 ⇒ 坏链接照样打后端且被说成空对话', () => {
@@ -432,7 +432,7 @@ test('negative control: 去掉缺参短路 ⇒ 坏链接照样打后端且被说
     '',
   ))
   ctx.page.onLoad({})
-  assert.equal(ctx.requests.length, 1, '病灶形态下应当照旧发请求,否则变异没生效')
+  assert.equal(ctx.requests.length, 1, '病灶形态下应当照旧发请求，否则变异没生效')
   assert.notEqual(ctx.page.data.loadState, 'missing')
   assert.throws(
     () => assert.equal(ctx.page.data.loadState, 'missing', '缺 conversationId 必须落 missing'),
@@ -480,10 +480,10 @@ function assertSingleExit(wxml, wxss, sceneWxml) {
   // 2026-08-04 收口:手写的 .hs-back 换成 cy-nav-bar plain + cy-page-title,返回由 bind:back 接。
   // 判据不变(整页只有一个出口触点),只是把「触点长什么样」放宽成两种合法写法之一。
   const backTaps = wxml.match(/bindtap="goBack"|bind:back="goBack"/g) || []
-  assert.equal(backTaps.length, 1, `漫游历史的出口只能有一个,现有 ${backTaps.length} 个(裸 ‹ 与圆底 ✕ 动作完全相同)`)
-  assert.doesNotMatch(wxml, /class="hs-x"/, '圆底 ✕ 是弹层语义,不能当页面出口')
-  assert.equal(rule(wxss, '.hs-x'), null, '.hs-x 的圆底样式也必须一并清掉,否则下次有人把它挂回去')
-  assert.match(sceneWxml, /<cy-empty[^>]*kind="empty"/, '空态必须随正文组件显式声明四态族,否则没有插画(LEGACY_DEFAULT)')
+  assert.equal(backTaps.length, 1, `漫游历史的出口只能有一个，现有 ${backTaps.length} 个(裸 ‹ 与圆底 ✕ 动作完全相同)`)
+  assert.doesNotMatch(wxml, /class="hs-x"/, '圆底 ✕ 是弹层语义，不能当页面出口')
+  assert.equal(rule(wxss, '.hs-x'), null, '.hs-x 的圆底样式也必须一并清掉，否则下次有人把它挂回去')
+  assert.match(sceneWxml, /<cy-empty[^>]*kind="empty"/, '空态必须随正文组件显式声明四态族，否则没有插画(LEGACY_DEFAULT)')
 }
 
 test('C06-3 漫游历史:唯一出口 + 空态显式声明', () => {
@@ -510,7 +510,7 @@ function assertSessionIdentity(wxml, wxss, sceneWxml) {
   assert.match(title[0], /title="本次漫游"/, '页面身份文案必须稳定:' + title[0])
   assert.ok(
     wxml.indexOf('<cy-page-title') < wxml.indexOf('<cy-scene-roam-session'),
-    '大标题必须排在正文组件之前,让组件内错误/正常两态共享页面身份',
+    '大标题必须排在正文组件之前，让组件内错误/正常两态共享页面身份',
   )
   const identities = wxml.match(/class="ss-name"/g) || []
   assert.deepEqual(identities, [], '正文中段不得再留一处身份文案(双标题)')
@@ -560,7 +560,7 @@ test('C06-5 行为:缺场次参数落 missing,且重试证明无效(故不得给
   page.data.topicId = ''
   page.loadData(true)
   assert.equal(page.data.emptyKind, 'missing', '缺参不是「加载失败」,它是另一种状态')
-  assert.match(page.data.emptyTip, /场次信息缺失/, '文案不变')
+  assert.match(page.data.emptyTip, /链接已失效/, '文案不变')
 
   // 真按一次「重新加载」会发生什么:回到同一个状态。这就是它是假按钮的证据。
   page.reloadPlay()
@@ -575,8 +575,8 @@ test('C06-5 行为:缺场次参数落 missing,且重试证明无效(故不得给
 
 test('negative control: 把缺参改回 emptyKind:error ⇒ 缺参又被渲染成可重试的加载失败', () => {
   const { page } = loadPage('pages/play/index.js', null, (src) => src.replace(
-    "emptyTip: '场次信息缺失，请从票夹或路线详情进入', emptyKind: 'missing'",
-    "emptyTip: '场次信息缺失，请从票夹或路线详情进入', emptyKind: 'error'",
+    "emptyTip: '链接已失效，请返回重新进入', emptyKind: 'missing'",
+    "emptyTip: '链接已失效，请返回重新进入', emptyKind: 'error'",
   ))
   page.data.activityId = ''
   page.data.topicId = ''
@@ -626,7 +626,7 @@ test('negative control: 快门退回透明热区、或提示丢掉缩放倍率,�
 function assertNoMainMapLayer(wxml) {
   // 2026-09-22 用户裁决「不要了」:主地图整层删除,根因①(原生层压住提示)不复存在。
   // 这条改成钉死「主地图不许回潮」——回潮就等于把那块会压住提示与出路的原生层又请回来。
-  assert.doesNotMatch(wxml, /<view class="stage"/, '地图舞台已删,不得回潮')
+  assert.doesNotMatch(wxml, /<view class="stage"/, '地图舞台已删，不得回潮')
   const maps = wxml.match(/<free-map\b[^>]*/g) || []
   // 2026-09-23 用户裁决(优化顺序第 1 项):故事流左上角罗盘点开 = 真实小地图,再点收回。
   // 它是按需挂载的一层(wx:if="{{storyMap}}"),不是常驻舞台 —— 除它和完成页回放之外仍不许有地图。
@@ -673,7 +673,7 @@ test('C06-7 首屏成功态与数据同一次 setData 落地:回调中途抛错�
   assert.equal(page.data.loading, false)
   assert.equal(page.data.emptyTip, '', '成功态不该有提示文案')
   // 起始页删除后首屏直接落卡包:screen='' 正是主内容块(wx:if="{{!screen && ...}}")的渲染条件。
-  assert.equal(page.data.screen, '', '首屏必须落在卡包态,回调抛错也不能被推去别的屏')
+  assert.equal(page.data.screen, '', '首屏必须落在卡包态，回调抛错也不能被推去别的屏')
 })
 
 test('负控:叫「预制人生」的主题(按名字或稳定 topicId)都不再被换轨，照常走通用 play', async () => {
@@ -688,7 +688,7 @@ test('负控:叫「预制人生」的主题(按名字或稳定 topicId)都不再
   await new Promise((resolve) => setImmediate(resolve))
   // 负控:原先按标题正则、后按稳定 topicId 990059 换轨到专用分包,两条都已拆除 ——
   // 必须留在通用 play 页正常渲染,作者配出来的《预制人生》才验收得了。
-  assert.deepEqual(routes, [], '换轨已拆除,不该再有任何 redirect')
+  assert.deepEqual(routes, [], '换轨已拆除，不该再有任何 redirect')
   assert.equal(page.data.loading, false)
 })
 
@@ -699,7 +699,7 @@ test('negative control: screen 改回只在回调末尾落地 ⇒ 回调抛错�
       'that._loadPlayerGameModule();',
       "that._loadPlayerGameModule(); if (first) that.setData({ screen: 'intro' }); throw new Error('回调中途抛错');",
     ))
-  assert.equal(page.data.loading, false, '载荷本身必须能走到成功分支,否则负控与正控都恒真')
+  assert.equal(page.data.loading, false, '载荷本身必须能走到成功分支，否则负控与正控都恒真')
   assert.notEqual(page.data.screen, 'intro', '病灶形态(回调抛错)必须真回不到 intro,否则上一条断言恒真')
 })
 
@@ -721,20 +721,20 @@ function assertGenericCardAffordance(wxml) {
   assert.match(card[0], /interactive="\{\{item\.cardTarget\}\}"/,
     '通用卡的可点性必须由 decorate 算出的 cardTarget 决定:' + card[0])
   assert.match(card[0], /hover-class="\{\{item\.cardTarget \? 'cy-pressed' : 'none'\}\}"/,
-    '没有去处的卡不得给按压反馈,否则看起来仍可点:' + card[0])
+    '没有去处的卡不得给按压反馈，否则看起来仍可点:' + card[0])
 }
 
 test('CU-M-124 行为:通用卡按真有的动作决定可点性,无去向的通知不再冒充按钮', () => {
   assert.equal(decorateCard('{"title":"报名成功","sub":"你的报名已提交"}').cardTarget, false,
     '没有 action / 结果 / 回流的通用卡必须报成不可点')
   assert.equal(decorateCard('{"title":"活动","action":"/pages/activity/detail/index?id=7"}').cardTarget, true,
-    '带 action 的卡照旧可点,收口不许把所有卡片一起做成死的')
+    '带 action 的卡照旧可点，收口不许把所有卡片一起做成死的')
   assert.equal(decorateCard('{"title":"公告","bcId":9}').cardTarget, true,
-    '官方通知卡点开要打回流,不能因为没 action 就判成不可点')
+    '官方通知卡点开要打回流，不能因为没 action 就判成不可点')
   assert.equal(decorateCard('{"title":"举报结果","result":{"taskId":40}}').cardTarget, true,
     '系统发的结果卡可回查')
   assert.equal(decorateCard('{"title":"结果","result":{"taskId":40}}', { senderId: 8 }).cardTarget, false,
-    'result 只有系统消息(senderId=0)才回查得到,普通发卡不得据此报成可点')
+    'result 只有系统消息(senderId=0)才回查得到，普通发卡不得据此报成可点')
 
   assertGenericCardAffordance(read(CHAT_WXML))
 })
@@ -746,14 +746,14 @@ test('negative control CU-M-124: 退回「一律可点」或漏掉 bcId/result,�
       'interactive="{{item.cardTarget}}"', 'interactive="{{true}}"',
     )),
     assert.AssertionError,
-    '把可点性写回 true 时本节必须判红,否则上一条断言恒真',
+    '把可点性写回 true 时本节必须判红，否则上一条断言恒真',
   )
   // ② 判定漏掉 bcId ⇒ 公告卡的 cardTarget 变 false,正控里的真值断言不是白拿的
   const dropBcId = decorateCard('{"title":"公告","bcId":9}', null, (src) => replaceRequired(src,
     'systemCard.genericActionInfo(projected)',
     'systemCard.genericActionInfo(Object.assign({}, projected, { card: Object.assign({}, card, { bcId: undefined }) }))',
   ))
-  assert.equal(dropBcId.cardTarget, false, '病灶形态:漏判 bcId 后官方通知又变成不可点,回流入口消失')
+  assert.equal(dropBcId.cardTarget, false, '病灶形态:漏判 bcId 后官方通知又变成不可点，回流入口消失')
   assert.throws(
     () => assert.equal(dropBcId.cardTarget, true, '官方通知卡必须可点'),
     assert.AssertionError,

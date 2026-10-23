@@ -181,7 +181,7 @@ test('R6 商家承接候选:加载失败保留上下文并提供重试', () => {
      所以这里分两截查:页面必须把状态**透传**下去,组件里必须真的按状态分支。 */
   const wxml = read('pages/topic/merchantinfo/merchantinfo.wxml');
   assert.match(wxml, /<cy-chapter-target-picker[\s\S]*?chapters-state="\{\{chapterRecruitmentState\}\}"/,
-    '页面必须把章节取数状态透传给选标的弹层,否则组件只能猜');
+    '页面必须把章节取数状态透传给选标的弹层，否则组件只能猜');
   assert.match(wxml, /<cy-chapter-target-picker[\s\S]*?bind:retrychapters="loadMerchantRecruitmentChapters"/,
     '失败态的重试必须回到页面的取数方法');
 
@@ -220,5 +220,5 @@ test('R7 商家详情直达:业务、网络与畸形200失败都进 error 而非
 
   const wxml = read('subpackageMember/components/cy/scene-roam-poi-detail/index.wxml');
   assert.match(wxml, /<cy-error\b[^>]*wx:elif="\{\{state === 'error'\}\}"[^>]*sub="\{\{errorText\}\}"[^>]*bind:retry="retry"/);
-  assert.match(wxml, /state === 'ready'/, '主体必须只在明确 ready 时渲染,不得用 wx:else 兜未知态');
+  assert.match(wxml, /state === 'ready'/, '主体必须只在明确 ready 时渲染，不得用 wx:else 兜未知态');
 });

@@ -60,7 +60,7 @@
       </view>
       <view class="metric">
         <text class="metric-n">{{ hostRecruit.nodeFilled }}</text>
-        <text class="metric-l">已招站点</text>
+        <text class="metric-l">已招节点</text>
       </view>
       <view class="metric" wx:if="{{ hostOwnerType !== 'club' }}">
         <text class="metric-n">{{ clubCount }}</text>
@@ -75,7 +75,7 @@
   <view class="sec rules" bindtap="emit" data-act="toggleRules" aria-role="button" aria-expanded="{{rulesOpen}}"
         aria-label="{{rulesOpen ? '收起可修改内容说明' : '查看哪些内容还能修改'}}" hover-class="cy-pressed" hover-stay-time="80">
     <cy-icon name="info" size="{{ 26 }}" />
-    <text wx:if="{{ rulesOpen }}">开卖后日期、站点和票价不能再改，名称、描述和封面可以随时改。</text>
+    <text wx:if="{{ rulesOpen }}">开卖后日期、节点和票价不能再改，名称、描述和封面可以随时改。</text>
     <text wx:else>哪些内容还能改</text>
     <cy-icon wx:if="{{ !rulesOpen }}" name="arrow-right" size="24" />
   </view>
@@ -125,7 +125,7 @@
       </view>
       </view>
     </block>
-    <cy-empty wx:else title="还没有俱乐部带团" sub="俱乐部能一次带来成批玩家，比散客稳定。" />
+    <cy-empty wx:else title="还没有俱乐部带团" />
   </project-drawer>
 
   <!-- ===== 承接商家抽屉(主办方独有) ===== -->
@@ -158,7 +158,7 @@
             <text class="dr-sub">{{ item.chapterName || '未命名章节' }} · {{ item.sourceLabel }}</text>
             <text class="dr-sub" wx:if="{{ item.message }}">{{ item.message }}</text>
             <text class="dr-sub" wx:if="{{ item.auditRemark && !item.actionable }}">处理说明：{{ item.auditRemark }}</text>
-            <text class="dr-sub" wx:if="{{ item.actionable }}">通过本申请时，该商家已提交的点位会一并过审</text>
+            <text class="dr-sub" wx:if="{{ item.actionable }}">通过本申请时，该商家已提交的节点会一并过审</text>
           </view>
           <view class="review-actions" wx:if="{{item.revocableInvite}}">
             <view class="review-btn review-btn--ghost" catchtap="emit" data-act="revokeChapterInvitation" data-id="{{item.id}}" aria-role="button" aria-label="撤回章节邀请" hover-class="cy-pressed" hover-stay-time="80">撤回邀请</view>
@@ -177,11 +177,11 @@
       <!-- CU-C-63(用户裁定 A:保持联动):章节申请通过时,该商家待审核的点位在同一次处置里
            一并通过 —— 这张卡只是**过审后**更新的点位,单独审核只适用于这一类更新。
            原来两张卡都写「待审核」+ 各自一颗「通过」,看不出哪一半会被连带处置。 -->
-      <view class="dg-label">过审后更新的点位（单独审核）</view>
+      <view class="dg-label">过审后更新的节点（单独审核）</view>
       <view class="dcard">
         <view class="review-row" wx:for="{{ pendingMerchantNodes }}" wx:key="id">
           <view class="review-main">
-            <view class="dr-line1"><text class="dr-name ep1">{{ item.name || '未命名点位' }}</text></view>
+            <view class="dr-line1"><text class="dr-name ep1">{{ item.name || '未命名节点' }}</text></view>
             <text class="dr-sub" wx:if="{{ item.address }}">{{ item.address }}</text>
             <text class="dr-sub" wx:if="{{ item.description }}">{{ item.description }}</text>
           </view>
@@ -222,7 +222,7 @@
       <view class="dcard">
       <view class="dn" wx:for="{{ hostRecruit.openNodes }}" wx:key="nodeId">
         <view class="dn-plus"><cy-icon name="plus" size="{{ 28 }}" /></view>
-        <text class="dn-name">{{ item.nodeName || '未命名站点' }}</text>
+        <text class="dn-name">{{ item.nodeName || '未命名节点' }}</text>
         <view class="dn-btn" catchtap="emit" data-act="goInviteMerchant" hover-class="cy-pressed" hover-stay-time="80">去招商</view>
       </view>
       </view>
@@ -231,14 +231,14 @@
     <!-- CU-M-181:原来这句写着「先去编辑里加站点」,但抽屉底部那颗按钮恒写「去找商家」,
          照着空态做找不到「编辑」,照按钮点又落进没有站点可承接的空页。空态只陈述前置条件,
          怎么补交给底部那颗按 nodeTotal 换出来的「去加站点」。 -->
-    <cy-empty wx:if="{{ !hostMerchants.length && !hostRecruit.openNodes.length }}" title="这条路线还没有配置站点" sub="先把站点配好，商家才有可承接的站。" />
+    <cy-empty wx:if="{{ !hostMerchants.length && !hostRecruit.openNodes.length }}" title="这条路线还没有配置节点" sub="先把节点配好，商家才有可承接的站。" />
   </project-drawer>
 
   <!-- ===== 圈层供给角色抽屉(BL-183) ===== -->
-  <project-drawer show="{{ circleConfig.show }}" title="选择供给角色" subtitle="选3—4个，主体验、补给/休息、社交/表达各至少一个"
+  <project-drawer show="{{ circleConfig.show }}" title="选择供给角色" subtitle="选 3–4 个，每类至少一个"
                   actions="{{ circleConfig.submitting ? [] : circleConfigActions }}"
                   bind:close="emitCloseCircleConfig" bind:action="emitCircleConfigSubmit">
-    <view class="dg-sub">不显示当前已开启的角色；保存后会按这次的选择重新开启，原复核记录需要重新确认。</view>
+    <view class="dg-sub">保存后需重新确认</view>
     <view class="dcard">
       <view class="dpick" wx:for="{{ circleCandidates }}" wx:key="code"
             catchtap="toggleCircleCandidate" data-code="{{ item.code }}"
@@ -284,7 +284,7 @@
                   bind:close="emitClosePlayer" bind:action="emitDrawerAction">
     <!-- CU-C-67:名单读失败与「一单没卖」是两个态 —— 失败时不摆三个 0(那读起来就是「没人买票」),
          就地给可重试的错态。零单空态仍在 playerSheet.emptyText 那一条里。 -->
-    <cy-inline-error load-failure wx:if="{{ playerSheet.errorText }}" kind="data" title="客户名单没加载出来"
+    <cy-inline-error load-failure wx:if="{{ playerSheet.errorText }}" kind="data" title="客户名单加载失败"
       sub="{{ playerSheet.errorText }}" action="重新加载" data-act="retryPlayerSheet" bind:action="emit" />
     <block wx:else>
     <view class="dsum" wx:if="{{ playerSheet.shopDay }}">

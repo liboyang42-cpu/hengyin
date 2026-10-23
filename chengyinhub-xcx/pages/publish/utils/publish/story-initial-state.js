@@ -38,11 +38,11 @@ function thoughts(list) {
   const seen = [];
   return list.map((row) => {
     const key = String((row && row.key) || '').trim();
-    if (!THOUGHT_KEY.test(key)) throw new Error('伏笔标识不合法:' + key);
-    if (seen.indexOf(key) >= 0) throw new Error('伏笔标识重复:' + key + ';同一个 key 的进度会互相覆盖');
+    if (!THOUGHT_KEY.test(key)) throw new Error('伏笔编号不合法:' + key);
+    if (seen.indexOf(key) >= 0) throw new Error('伏笔编号重复:' + key + ';同一个 key 的进度会互相覆盖');
     seen.push(key);
     const name = String((row && row.name) || '').trim();
-    if (!name || name.length > 20) throw new Error('伏笔要有名字,且不超过 20 字');
+    if (!name || name.length > 20) throw new Error('伏笔要有名字，且不超过 20 字');
     const desc = String((row && row.desc) || '').trim();
     if (desc.length > 60) throw new Error('伏笔的一句话不能超过 60 字');
     // 应验方式(2026-09-22 用户裁决「伏笔不能只是微信步数」):走够步数,或选到某些选项,至少一种。
@@ -54,7 +54,7 @@ function thoughts(list) {
     }
     const when = conditions(row && row.when, name);
     const doneWhen = conditions(row && row.doneWhen, name);
-    if (!hasNeed && !doneWhen) throw new Error('伏笔「' + name + '」还没有应验方式:填步数,或选一个选项');
+    if (!hasNeed && !doneWhen) throw new Error('伏笔「' + name + '」还没有应验方式:填步数，或选一个选项');
     const item = { key: key, name: name };
     if (hasNeed) item.need = need;
     if (desc) item.desc = desc;
@@ -134,7 +134,7 @@ function serialize(input, names) {
     const keys = new Set();
     rules.attributes = rules.attributes.map(row => {
       if (!values.COUNTER.test(row.key || '')) return row;
-      if (keys.has(row.key)) throw new Error('数值标识重复：' + row.key);
+      if (keys.has(row.key)) throw new Error('数值编号重复：' + row.key);
       keys.add(row.key);
       return values.attribute(row);
     });

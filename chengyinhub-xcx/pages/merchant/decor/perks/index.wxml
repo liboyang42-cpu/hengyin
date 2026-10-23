@@ -15,7 +15,7 @@
     wx:elif="{{loadState === 'permission'}}"
     kind="no-permission"
     title="暂无编辑权限"
-    sub="请切换到已审核通过的商家账号后再试"
+    sub="请切换到已审核的商家账号"
   />
   <cy-error load-failure
     class="dp-retry cy-fade-in"
@@ -24,7 +24,7 @@
     wx:elif="{{loadState === 'error'}}"
     icon="/images/no_data.svg"
     title="权益加载失败"
-    sub="{{loadError || '检查网络后重试'}}"
+    sub="{{loadError}}"
     retry="重试"
     bind:retry="retryLoad" auto-back
   />
@@ -53,7 +53,7 @@
       wx:if="{{!perks.length}}"
       kind="empty"
       title="还没有常备权益"
-      sub="把可核销的礼品、优惠券或折扣整理成清单"
+      
     />
     <view class="dp-card" wx:for="{{perks}}" wx:key="id">
       <view class="dp-main">

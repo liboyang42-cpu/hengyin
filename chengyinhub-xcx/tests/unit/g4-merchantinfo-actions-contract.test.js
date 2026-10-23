@@ -6,10 +6,10 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 /* 走查 G4 · 承接详情页(merchantinfo / project-host)的那几条:
-   CU-C-63 章节申请通过连带点位(裁决 A:保持联动,把话说清) /
+   CU-C-63 章节申请通过连带节点(裁决 A:保持联动,把话说清) /
    CU-C-64 招商入口丢主题名 / CU-C-67 俱乐部主理人名单与台账 /
-   CU-C-68 主办方「本站运营」按商家身份取站点 / CU-C-69 · M-56 权益票夹落点 /
-   M-58 重开申请要回填 / M-59 待审核点位不给不可用的配置入口 / M-89 缺图占位。 */
+   CU-C-68 主办方「本站运营」按商家身份取节点 / CU-C-69 · M-56 权益票夹落点 /
+   M-58 重开申请要回填 / M-59 待审核节点不给不可用的配置入口 / M-89 缺图占位。 */
 
 const ROOT = path.resolve(__dirname, '../..');
 const read = (p) => fs.readFileSync(path.join(ROOT, p), 'utf8');
@@ -109,7 +109,7 @@ function beforeEach() {
   requests = [];
 }
 
-/** 开抽屉会顺带探一次站点资格 —— 测试里统一拿那条请求自己喂结果。 */
+/** 开抽屉会顺带探一次节点资格 —— 测试里统一拿那条请求自己喂结果。 */
 function hostDrawer() {
   const page = makePage({ role: 'host', topicId: 8001 });
   page.openMoreSheet();
@@ -149,7 +149,7 @@ test('CU-C-69 / M-56:权益票夹直达常备权益页,且失败不静默', () =
   page.onMorePick({ currentTarget: { dataset: { key: 'perk' } } });
   assert.equal(navigations.length, 1);
   assert.equal(navigations[0].url, '/pages/merchant/decor/perks/index', '不再只跳到品牌中心首页');
-  assert.equal(typeof navigations[0].fail, 'function', 'navigateTo 必须带 fail 回调,否则失败是静默的');
+  assert.equal(typeof navigations[0].fail, 'function', 'navigateTo 必须带 fail 回调，否则失败是静默的');
   navigations[0].fail({ errMsg: 'navigateTo:fail page not found' });
   assert.ok(toasts.some((t) => /权益票夹/.test(t)), '失败要给可见说明');
 });
@@ -157,7 +157,7 @@ test('CU-C-69 / M-56:权益票夹直达常备权益页,且失败不静默', () =
 test('CU-C-68:没承接本站的主办方拿到的是置灰的「本站运营」,点下去不发请求', () => {
   beforeEach();
   const { page, probe } = hostDrawer();
-  // 后端有回应,但这条主题下没有本商家的站点入口
+  // 后端有回应,但这条主题下没有本商家的节点入口
   probe.success({ code: 200, data: [{ topicId: 8001, activityId: 0 }] });
   const ops = stationGroup(page);
   assert.ok(ops, '分组还在(只是不能点)');
@@ -173,7 +173,7 @@ test('CU-C-68:没承接本站的主办方拿到的是置灰的「本站运营」
 test('CU-C-68:确认不是商家身份时不写「探不到」的说明(那是两种不同的原因)', () => {
   beforeEach();
   const { page, probe } = hostDrawer();
-  probe.success({ code: 500, msg: '当前商家不负责本场站点', data: { reasonCode: 'GAME_FORBIDDEN_SCOPE' } });
+  probe.success({ code: 500, msg: '当前商家不负责本场节点', data: { reasonCode: 'GAME_FORBIDDEN_SCOPE' } });
   assert.equal(page.data.stationOpsErrorText, '', '明确拒绝不是「没探到」');
   assert.equal(stationGroup(page).rows[0].tag, '不可用');
 });
@@ -202,13 +202,13 @@ test('CU-C-68:探不到(空 ≠ 错)时留可见说明并给重试,不默默灰�
   assert.match(pageWxml, /station-ops-error-text="\{\{stationOpsErrorText\}\}"/, '页面要把说明透给组件');
 });
 
-test('CU-C-63(裁决 A):通过申请时确认框写明本次点位一并通过', () => {
+test('CU-C-63(裁决 A):通过申请时确认框写明本次节点一并通过', () => {
   const js = read('pages/topic/merchantinfo/merchantinfo.js');
-  assert.match(js, /content: '通过后商家即可按约定准备供给与点位；本次已提交的点位将一并通过审核。'/,
-    '确认框必须说清点位会跟着过审 —— 点位一过审就对玩家公开');
+  assert.match(js, /content: '通过后商家即可按约定准备供给与节点；本次已提交的节点将一并通过审核。'/,
+    '确认框必须说清节点会跟着过审 —— 节点一过审就对玩家公开');
   const hostWxml = stripWxmlComments(read('pages/topic/components/project-host/index.wxml'));
-  assert.match(hostWxml, /过审后更新的点位（单独审核）/, '点位卡文案收窄:它管的是过审后的更新');
-  assert.match(hostWxml, /通过本申请时，该商家已提交的点位会一并过审/, '章节申请卡上也要就地说明');
+  assert.match(hostWxml, /过审后更新的节点（单独审核）/, '节点卡文案收窄:它管的是过审后的更新');
+  assert.match(hostWxml, /通过本申请时，该商家已提交的节点会一并过审/, '章节申请卡上也要就地说明');
 });
 
 test('CU-C-67:客户名单读失败与「一单没卖」是两个态', () => {
@@ -223,7 +223,7 @@ test('CU-C-67:客户名单读失败与「一单没卖」是两个态', () => {
   assert.deepEqual(page.data.playerSheet.summary, {}, '失败时不许摆一排 0(那读起来是没人买票)');
   const hostWxml = stripWxmlComments(read('pages/topic/components/project-host/index.wxml'));
   assert.match(hostWxml, /wx:if="\{\{ playerSheet\.errorText \}\}"[\s\S]{0,240}data-act="retryPlayerSheet"/,
-    '失败态要可重试,且与空态互斥渲染');
+    '失败态要可重试，且与空态互斥渲染');
 });
 
 test('CU-C-67:俱乐部读数(viewType=CLUB_TOPIC_ROSTER)能被客户抽屉正确整形', () => {
@@ -240,7 +240,7 @@ test('CU-C-67:俱乐部读数(viewType=CLUB_TOPIC_ROSTER)能被客户抽屉正�
   }, 'all');
   assert.equal(patch['playerSheet.shopDay'], false, '俱乐部名单不是「探店日门店名册」口径');
   assert.deepEqual(patch['playerSheet.rows'].map((r) => r.stateText), ['已核销', '已接洽', '待核销']);
-  assert.equal(patch['playerSheet.groups'].length, 2, '按场次分组,没场次的归到「未指定场次」');
+  assert.equal(patch['playerSheet.groups'].length, 2, '按场次分组，没场次的归到「未指定场次」');
   assert.equal(patch['playerSheet.summary'].paidCount, 3);
 });
 
@@ -260,7 +260,7 @@ test('CU-C-67:「查看台账」按身份分流 —— 俱乐部去名册页,商
   assert.ok(toasts.some((t) => /关联俱乐部/.test(t)));
 });
 
-test('CU-M-58:重开申请时把已有点位带进表单(不是一张会被覆盖的空表)', () => {
+test('CU-M-58:重开申请时把已有节点带进表单(不是一张会被覆盖的空表)', () => {
   beforeEach();
   const page = makePage({
     topicId: 990030,
@@ -270,7 +270,7 @@ test('CU-M-58:重开申请时把已有点位带进表单(不是一张会被覆�
     info: { lifecycle: 1, chaptersList: [] },
   });
   page.onChapterTargetConfirm({ detail: { chapterId: 9, chapterName: '第1章', chapter: { termsMode: 'PERK' } } });
-  assert.equal(page.data.presetChapterNode.id, 80, '同一章节已有我的点位 → 进表单时带上它');
+  assert.equal(page.data.presetChapterNode.id, 80, '同一章节已有我的节点 → 进表单时带上它');
   assert.equal(page.data.chapterNodeFormVisible, true);
   const noNode = makePage({ topicId: 990030, myChapterNodes: [], info: { lifecycle: 1, chaptersList: [] } });
   noNode.onChapterTargetConfirm({ detail: { chapterId: 12, chapterName: '第2章', chapter: {} } });
@@ -279,7 +279,7 @@ test('CU-M-58:重开申请时把已有点位带进表单(不是一张会被覆�
   assert.match(wxml, /presetNode="\{\{presetChapterNode\}\}"/, '要真的传进组件');
 });
 
-test('CU-M-59:待审核/已驳回的点位不给「节点NPC」入口,就地说明什么时候能配', () => {
+test('CU-M-59:待审核/已驳回的节点不给「节点NPC」入口,就地说明什么时候能配', () => {
   const wxml = stripWxmlComments(read('pages/topic/merchantinfo/merchantinfo.wxml'));
   const block = wxml.slice(wxml.indexOf('data-node-id="{{chapterNode.id}}"') - 600);
   assert.match(block, /wx:if="\{\{chapterNode\.auditLabel === '已通过'\}\}"/, '入口要与后端闸同一判据');
@@ -292,10 +292,10 @@ test('CU-M-89:节点介绍缺图不留固定高空白', () => {
     'imgUrl 是 NULL 就不渲染图片');
   assert.match(wxml, /wx:else class="pic pic--empty"/, '缺图给同尺寸占位');
   const wxss = read('pages/topic/merchantinfo/merchantinfo.wxss');
-  assert.match(wxss, /\.pic--empty \{[\s\S]{0,200}background: var\(--cy-bg-subtle\)/, '占位块要有底色,否则还是一块白');
+  assert.match(wxss, /\.pic--empty \{[\s\S]{0,200}background: var\(--cy-bg-subtle\)/, '占位块要有底色，否则还是一块白');
 });
 
-test('CU-M-58:表单打开时把已有点位填回字段里(不是一张空表)', () => {
+test('CU-M-58:表单打开时把已有节点填回字段里(不是一张空表)', () => {
   let componentConfig = null;
   global.Component = (value) => { componentConfig = value; };
   const componentPath = path.join(ROOT, 'pages/topic/components/cy/chapter-node-form/index.js');
@@ -327,7 +327,7 @@ test('CU-M-58:表单打开时把已有点位填回字段里(不是一张空表)'
   const editing = makeForm({ id: 80, name: 'Audit coffee station', address: 'A 路 1 号',
     longitude: '120.7', latitude: '31.3', templateId: 33, xpValue: 5 });
   editing.openForm();
-  assert.equal(editing.data.editing, true, '有已有点位就是编辑,不是新申请');
+  assert.equal(editing.data.editing, true, '有已有节点就是编辑，不是新申请');
   assert.equal(editing.data.form.name, 'Audit coffee station', '原值要回填');
   assert.equal(editing.data.form.address, 'A 路 1 号');
   assert.equal(editing.data.form.longitude, '120.7');
@@ -342,21 +342,21 @@ test('CU-M-58:表单打开时把已有点位填回字段里(不是一张空表)'
   assert.equal(fresh.data.form.name, '', '真·新申请仍是空表单');
   assert.equal(fresh.data.canSubmit, false);
 
-  const legacy = makeForm({ id: 81, name: '旧点位', address: '有地址但无坐标', templateId: 33 });
+  const legacy = makeForm({ id: 81, name: '旧节点', address: '有地址但无坐标', templateId: 33 });
   legacy.openForm();
-  assert.equal(legacy.data.canSubmit, false, '历史空坐标点位需真实选点后才能保存');
+  assert.equal(legacy.data.canSubmit, false, '历史空坐标节点需真实选点后才能保存');
 
-  // 集成复审:「填写实际供给」不是改点位 —— 上一次申请留下的预填不能串进来(否则会写「这条申请已有点位…覆盖」)
+  // 集成复审:「填写实际供给」不是改节点 —— 上一次申请留下的预填不能串进来(否则会写「这条申请已有节点…覆盖」)
   const offer = makeForm({ id: 80, name: 'Audit coffee station', address: 'A 路 1 号', templateId: 33 }, 'offer');
   offer.loadMyPerkTemplates = () => {};
   offer.openForm();
-  assert.equal(offer.data.editing, false, '供给表单不是编辑点位');
-  assert.equal(offer.data.form.name, '', '供给表单不回填点位');
+  assert.equal(offer.data.editing, false, '供给表单不是编辑节点');
+  assert.equal(offer.data.form.name, '', '供给表单不回填节点');
 
   const wxml = read('pages/topic/components/cy/chapter-node-form/index.wxml');
-  assert.match(wxml, /editing \? '保存修改' : \(formMode === 'node' \? '保存点位' : '提交申请与点位'\)/,
-    '已有点位、新配置与新申请应分别说清保存或提交');
-  assert.match(wxml, /保存会覆盖它的名称、地址与玩法/, '覆盖范围要写在表单里');
+  assert.match(wxml, /editing \? '保存修改' : \(formMode === 'node' \? '保存节点' : '提交申请与节点'\)/,
+    '已有节点、新配置与新申请应分别说清保存或提交');
+  assert.match(wxml, /保存将覆盖/, '覆盖范围要写在表单里');
 });
 
 test('章节承办聚合缺生命周期时正常补拉详情；冻结、失败和旧身份回包不能开放配置', () => {

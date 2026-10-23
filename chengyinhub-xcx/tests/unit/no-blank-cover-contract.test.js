@@ -24,7 +24,7 @@ test('CU-M-104 模板详情头图:无封面必须给图标 + 短文案,不是一
   assert.ok(slot, 'xb-head-cover 锚点失效')
 
   assert.match(slot[0], /class="xb-head-cover-ph"[^>]*aria-role="img"/, '占位块要声明自己是图片位')
-  assert.match(slot[0], /src="\/images\/no_data\.svg"/, '必须用全站缺图图标,不另造一套')
+  assert.match(slot[0], /src="\/images\/no_data\.svg"/, '必须用全站缺图图标，不另造一套')
   assert.match(slot[0], /封面暂不可用/, '文案与 pages/template 列表同一口径')
 
   const ph = wxss.match(/\.xb-head-cover-ph\s*\{[^}]*\}/)
@@ -54,7 +54,7 @@ test('CU-M-129 模板详情「包含内容」大图:无封面时整块收起,不
     '不许用只有底色的空 view 顶替大图位')
   assert.match(card[0], /class="xb-edition-foot"/, '收起大图后卡片的玩法名称仍在')
   assert.equal(/\.xb-edition-img--placeholder\s*\{/.test(wxss), false,
-    '占位样式已无宿主,留着就是死规则')
+    '占位样式已无宿主，留着就是死规则')
 })
 
 test('负控:「包含内容」退回空占位块时必须判红', () => {
@@ -64,7 +64,7 @@ test('负控:「包含内容」退回空占位块时必须判红', () => {
   assert.notEqual(mutated, wxss, '变异锚点失效')
   assert.throws(
     () => assert.equal(/\.xb-edition-img--placeholder\s*\{/.test(mutated), false,
-      '占位样式已无宿主,留着就是死规则'),
+      '占位样式已无宿主，留着就是死规则'),
     assert.AssertionError,
   )
 })
@@ -127,12 +127,12 @@ test('CU-C-147 活动详情 Hero:无封面给图标 + 短文案,不是只有一�
   assert.ok(slot, 'ctd-head__cover 锚点失效')
 
   assert.match(slot[0], /class="ctd-head__cover-fallback"[^>]*aria-role="img"/, '占位块要声明自己是图片位')
-  assert.match(slot[0], /src="\/images\/no_data\.svg"/, '必须用全站缺图图标,不另造一套')
+  assert.match(slot[0], /src="\/images\/no_data\.svg"/, '必须用全站缺图图标，不另造一套')
   assert.match(slot[0], /封面暂不可用/, '与模板详情头图 / IM 报名卡同一口径')
 
   const ph = wxss.match(/\.ctd-head__cover-fallback\s*\{[^}]*\}/)
   assert.ok(ph, '.ctd-head__cover-fallback 规则缺失')
-  assert.match(ph[0], /flex-direction:\s*column/, '图标与文案要排成一列,不能只居中一个图标')
+  assert.match(ph[0], /flex-direction:\s*column/, '图标与文案要排成一列，不能只居中一个图标')
 })
 
 test('CU-C-147 活动详情:无商家 Logo / 无主题封面时两块空壳整块不出', () => {
@@ -146,7 +146,7 @@ test('CU-C-147 活动详情:无商家 Logo / 无主题封面时两块空壳整�
   const topicCover = wxml.match(/<view class="ctd-topic__cover"[^>]*>/)
   assert.ok(topicCover, 'ctd-topic__cover 容器锚点失效')
   assert.match(topicCover[0], /wx:if="\{\{topic\.cover\}\}"/,
-    '与 Hero 同一个 topic.cover,Hero 已经说了没图,这里不许再摆第二个空方块')
+    '与 Hero 同一个 topic.cover,Hero 已经说了没图，这里不许再摆第二个空方块')
 })
 
 test('负控:Hero 兜底退回一枚没有文案的通用图标必须判红', () => {
@@ -234,7 +234,7 @@ function compositeOver(rgbaLiteral, backdropHex) {
 // 沿 var() 一路跳到十六进制。给定的两份主题文件里商家浅色档在前(merchant-light.wxss
 // 的 page{} 在 :12,@media dark 镜像在 :358),商家页恒浅,取第一处命中就是真呈现值。
 function resolveToHex(value, sources, depth = 0) {
-  assert.ok(depth < 8, `${value} 解析层数过深,可能有环`)
+  assert.ok(depth < 8, `${value} 解析层数过深，可能有环`)
   const nested = value.match(/^var\(\s*(--[\w-]+)\s*\)$/)
   if (nested) {
     for (const src of sources) {
@@ -258,13 +258,13 @@ test('CU-M-156 商家详情第二屏:加载结束后无封面必须说话,骨架
   assert.ok(slot, 'detail-cover-fallback 锚点失效')
 
   assert.match(slot[0], /class="detail-cover-ph"[^>]*wx:if="\{\{ info\.name \}\}"/,
-    '缺图档必须吃"加载已结束"这个条件 —— info: {} 时它不许说话,说了就是撒谎')
-  assert.match(slot[0], /src="\/images\/no_data\.svg"/, '必须用全站缺图图标,不另造一套')
+    '缺图档必须吃"加载已结束"这个条件 —— info: {} 时它不许说话，说了就是撒谎')
+  assert.match(slot[0], /src="\/images\/no_data\.svg"/, '必须用全站缺图图标，不另造一套')
   assert.match(slot[0], /封面暂不可用/, '与其他三处缺图占位同一口径')
   assert.match(slot[0], /aria-role="img"/, '占位块要声明自己是图片位')
   assert.match(slot[0], /aria-label="\{\{ info\.name \}\} 暂无封面"/, '读屏要知道是哪条主题没图')
   assert.doesNotMatch(slot[0], /<view class="detail-cover-fallback"[^>]*aria-hidden/,
-    '容器已经装了会说话的内容,再 aria-hidden 等于把这段抹掉')
+    '容器已经装了会说话的内容，再 aria-hidden 等于把这段抹掉')
 
   const ph = wxss.match(/\.topic \.det1 \.detail-cover-ph\s*\{[^}]*\}/)
   assert.ok(ph, '.detail-cover-ph 规则缺失')
@@ -278,7 +278,7 @@ test('CU-M-156 商家详情第二屏:骨架必须退到未加载那一档,不许
   const slot = wxml.match(/<view class="detail-cover-fallback"[\s\S]*?(?=\n\s*<view class="cont">)/)
   const skeleton = slot[0].match(/<view class="detail-cover-skeleton"[^>]*>/)
   assert.ok(skeleton, '骨架块锚点失效')
-  assert.match(skeleton[0], /wx:else/, '骨架是"还没加载完"那一档,与缺图档互斥')
+  assert.match(skeleton[0], /wx:else/, '骨架是"还没加载完"那一档，与缺图档互斥')
   assert.match(skeleton[0], /aria-hidden="true"/, '纯装饰骨架不进读屏')
 })
 
@@ -297,7 +297,7 @@ test('负控:第二屏退回只有装饰灰条的降级块时必须判红', () =
 
 test('CU-M-156 分类标签:合并两份规则后的有效配色要读得清(≥4.5:1)', () => {
   const merged = effectiveDecls(read(MERCHANT_PAGE_WXSS), read(MERCHANT_SHARED_WXSS))
-  assert.ok(merged.background, '有效样式里没有背景色,拿什么算对比')
+  assert.ok(merged.background, '有效样式里没有背景色，拿什么算对比')
   assert.ok(merged.color, '有效样式里没有文字色 —— 只改底不改字正是本次事故')
 
   // 标签压在 .det1 上,最坏底是没封面时那块 --cy-bg-card-2(比压在实景照片上更难读)。

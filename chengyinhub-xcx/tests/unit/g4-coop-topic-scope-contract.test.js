@@ -97,22 +97,11 @@ test('RUN-010:先浏览俱乐部资料再邀约也保留商家范围，普通入
       const club = makePage(loadPage('pages/club/detail/index.js'));
       club.loadAll = () => {};
       club.onLoad(input);
-      assert.equal(club.data.isMerchantViewer, expected === 'MERCHANT', '商家上下文应保留商家观看视角，邀约另核对发布者事实');
-      club.data.club = { id: 7, name: '俱乐部', isOwner: false };
-      club.goClubCoop();
-      assert.notEqual(club.data.coopInviteShow, true, '角色或 MERCHANT 上下文不能代替发布者事实');
-      club.refreshCoopPublisherAccess();
-      const publisherReq = requests.at(-1);
-      assert.equal(publisherReq.url, '/api/topic/list');
-      assert.deepEqual(publisherReq.data, { is_my: 1, scope: expected || '', pageNum: 1, pageSize: 1 });
-      publisherReq.success({ code: 403, data: { rows: [{ id: 301 }] } });
-      club.goClubCoop();
-      assert.notEqual(club.data.coopInviteShow, true, '失败回包不得开放邀约');
-      club.refreshCoopPublisherAccess();
-      requests.at(-1).success({ code: 200, data: { rows: [{ id: 301 }] } });
-      club.goClubCoop();
-      assert.equal(club.data.coopInviteShow, true);
-      assert.equal(club.data.coopInviteScope, expected || '');
+      assert.equal(club.data.isMerchantViewer, expected === 'MERCHANT', '商家上下文应保留商家观看视角');
+      // 拍板 2026-10-22:俱乐部主页不再承载邀约,也不为邀约去读发布者授权。
+      assert.equal(typeof club.refreshCoopPublisherAccess, 'undefined');
+      assert.equal(typeof club.goClubCoop, 'undefined');
+      assert.equal(requests.some((r) => r.url === '/api/topic/list'), false);
     }
   } finally { global.getApp = previousApp; }
 });
@@ -123,11 +112,11 @@ test('CU-C-75:协作列表按入口带来的 topicId 过滤,范围可撤', () =>
   const page = makePage(config);
   page.onLoad({ tab: 'received', topicId: '990030', topicName: encodeURIComponent('隔离主题') });
   assert.equal(page._topicFilter, '990030');
-  assert.match(page.data.topicScopeText, /隔离主题/, '范围要写在页面上,不是默默少几行');
+  assert.match(page.data.topicScopeText, /隔离主题/, '范围要写在页面上，不是默默少几行');
 
   page.load();
   const listReq = findRequest('/api/coop/list');
-  assert.ok(listReq, '还是要拉全量(过滤只换显示,不改后端契约)');
+  assert.ok(listReq, '还是要拉全量(过滤只换显示，不改后端契约)');
   listReq.success({
     code: 200,
     data: {
@@ -201,7 +190,7 @@ test('CU-M-92:邀约进项目走 topicId=,由后端判身份进承接视图(不�
      (ProjectHomeReadServiceImpl#findAcceptedMerchantInvite)。这条断言守的是这个前提:
      两边必须同时成立,只剩一边就是死胡同。 */
   assert.match(read('pages/coop/invite-detail/index.js'), /ProjectHomeReadServiceImpl/,
-    '这个决定的证据要留在代码里,否则下一个人会当成 bug 再改一遍');
+    '这个决定的证据要留在代码里，否则下一个人会当成 bug 再改一遍');
   const wxml = stripWxmlComments(read('pages/coop/invite-detail/index.wxml'));
   assert.match(wxml, />进入项目</);
   assert.doesNotMatch(wxml, /进入项目 \/ 配置承接/, '文案不得承诺「配置承接」这一步:邀约不产生点位');
@@ -216,7 +205,7 @@ test('CU-M-92:merchantinfo 收到 topicId 才去问 /api/project/home 判身份'
   reset();
   const withId = makePage(config);
   withId.onLoad({ id: '990030', scope: 'MERCHANT' });
-  assert.equal(findRequest('/api/project/home'), null, 'id 入口按招商浏览处理(既有分支,不动)');
+  assert.equal(findRequest('/api/project/home'), null, 'id 入口按招商浏览处理(既有分支，不动)');
   assert.ok(findRequest('/api/topic/info-to-user') || findRequest('/api/topic/info-to-merchant'),
     'id 入口读的是主题投影');
 });

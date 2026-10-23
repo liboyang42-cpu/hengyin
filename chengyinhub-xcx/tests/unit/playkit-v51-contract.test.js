@@ -76,7 +76,7 @@ test('silentorder:已表演时长只进位到分', () => {
   const fmt = methodsOf('pages/play/components/playkit-silentorder/index.js')._formatElapsed
   assert.equal(fmt(84), '01:24')          // 稿 46:316 的示例值
   assert.equal(fmt(0), '00:00')
-  assert.equal(fmt(3661), '61:01', '超过一小时继续累加分钟,不悄悄回绕')
+  assert.equal(fmt(3661), '61:01', '超过一小时继续累加分钟，不悄悄回绕')
 })
 
 test('steps:千分位与封顶百分比', () => {
@@ -124,13 +124,13 @@ test('分发器契约:白名单每种玩法都真有组件、真被注册、真�
   const VARIANT_SCREENS = {
     '/pages/play/components/playkit-objectcard/index': 'photocheck 的 mode=CARD(拍物成卡):取景 → 点阵消散 → 信息卡',
     // 2026-10-23:不是新的玩家 kit 类型 —— 玩家页在故事流里直挂检定卡;这一支只给编辑页试玩(journeycheck)
-    '/pages/play/components/playkit-journey-check/index': 'D20 三档检定卡,编辑页试玩专用入口',
+    '/pages/play/components/playkit-journey-check/index': 'D20 三档检定卡，编辑页试玩专用入口',
   }
   const TERMINAL_UI = ['/components/cy/sheet/index', '/components/cy/btn/index']
   TERMINAL_UI.forEach((rel) => assert.ok(registered.includes(rel), '已结束玩法的共用结果入口缺少组件:' + rel))
   Object.keys(VARIANT_SCREENS).forEach((rel) => assert.ok(registered.includes(rel), '记了账却没注册:' + rel))
   assert.equal(registered.length, types.length + Object.keys(VARIANT_SCREENS).length + TERMINAL_UI.length,
-    '注册数必须 = 白名单数 + 记账的模式分屏 + 共用结果组件,不许多也不许少')
+    '注册数必须 = 白名单数 + 记账的模式分屏 + 共用结果组件，不许多也不许少')
 })
 
 test('已结束新版玩法不提交交互事件，重试仅接受服务端明确许可', () => {
@@ -157,7 +157,7 @@ test('play 页接线:入口、分发器、氛围件都真挂在 wxml 上', () =>
   const js = read('pages/play/index.js')
 
   assert.ok(json.usingComponents['cy-playkit'], 'play 页必须注册 cy-playkit')
-  assert.ok(wxml.includes('<cy-playkit '), '分发器必须真渲染在 play 页上,否则组件是死代码')
+  assert.ok(wxml.includes('<cy-playkit '), '分发器必须真渲染在 play 页上，否则组件是死代码')
   assert.ok(wxml.includes('bind:kitaction="onPlayKitAction"'), '玩法事件必须有页面接手')
   assert.ok(/onPlayKitAction\s*\(/.test(js), 'onPlayKitAction 必须在页面 js 里真存在')
 
@@ -165,7 +165,7 @@ test('play 页接线:入口、分发器、氛围件都真挂在 wxml 上', () =>
   // 造的,后端根本没有;现在改成 cy-advanced-game 抛上来的权威视图(见 utils/playkit-view.js)。
   assert.ok(
     wxml.includes('bind:session="onAdvancedSession"'),
-    'cy-advanced-game 必须把会话视图抛给页面,否则玩法永远不会出现'
+    'cy-advanced-game 必须把会话视图抛给页面，否则玩法永远不会出现'
   )
   assert.ok(/onAdvancedSession\s*\(/.test(js), 'onAdvancedSession 必须真存在')
   assert.ok(

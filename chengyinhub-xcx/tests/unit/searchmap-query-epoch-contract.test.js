@@ -338,7 +338,7 @@ test('A-RPT-7:刷新失败(pageErrorIsRefresh)不再连翻页一起禁掉', () =
 test('A-RPT-7 负控:翻页自己的错误仍必须拦住加载更多', () => {
   const { page, requests } = loadPage();
   page.setData({ pageNum: 2, pageSize: 1, list: [{ id: 1 }], listState: 'ready', hasMore: true });
-  page.setPageError('没能加载更多，请重试', 2);
+  page.setPageError('加载更多失败，请重试', 2);
   assert.equal(page.data.pageErrorIsRefresh, false, '前置:这是翻页失败态');
 
   page.loadMoreResults();
@@ -440,7 +440,7 @@ test('离线时保留已有地图结果，恢复连接后原地刷新而不先�
   assert.deepEqual(page.data.list, cached);
   // A-08:原先这里是 pageError === '' 的静默降级 —— 用户会把旧结果当成新区域/新筛选的结果。
   // 现在必须挂内联错误条,并可原地重试(单列用例见 searchmap-filter-and-refresh-contract)。
-  assert.notEqual(page.data.pageError, '', '有旧结果时刷新失败不再静默,必须挂内联错误条');
+  assert.notEqual(page.data.pageError, '', '有旧结果时刷新失败不再静默，必须挂内联错误条');
   assert.equal(page.data.pageErrorIsRefresh, true, '刷新失败文案与翻页失败区分');
   assert.equal(page.data.listRefreshing, false);
 });

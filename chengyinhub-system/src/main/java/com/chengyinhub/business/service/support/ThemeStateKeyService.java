@@ -35,8 +35,11 @@ public class ThemeStateKeyService {
             ThemeStateKey.TYPE_FLAG, ThemeStateKey.TYPE_COUNTER,
             ThemeStateKey.TYPE_RELATION, ThemeStateKey.TYPE_TAG));
 
-    private static final Set<String> SCOPES = new HashSet<String>(Arrays.asList(
-            ThemeStateKey.SCOPE_RUN, ThemeStateKey.SCOPE_PARTY, ThemeStateKey.SCOPE_DEPLOYMENT));
+    /**
+     * 运行期只按 run 读写;party/deployment 只有常量没有实现,收下来作者会以为状态跨队/跨场共享,
+     * 实际每局各算各的。实现之前在注册口拒掉,不静默降级成 run。
+     */
+    private static final Set<String> SCOPES = new HashSet<String>(Arrays.asList(ThemeStateKey.SCOPE_RUN));
 
     /** 命名空间 → key_type 一一对应:前缀就是类型,不允许交叉(否则运行期按前缀读写会与声明对不上)。 */
     private static final Map<String, String> PREFIX_KEY_TYPES;
@@ -325,7 +328,7 @@ public class ThemeStateKeyService {
         }
         if (key.getScope() == null || !SCOPES.contains(key.getScope())) {
             throw new ServiceException("状态键作用域不合法:" + key.getScope()
-                    + "(仅支持 run/party/deployment)");
+                    + "(目前仅支持 run;party/deployment 尚未实现)");
         }
         String prefix = stateKey.substring(0, stateKey.indexOf('.') + 1);
         String expectedType = PREFIX_KEY_TYPES.get(prefix);

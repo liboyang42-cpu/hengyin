@@ -17,6 +17,10 @@ public interface ClubPostMapper
     /** 列表(join 作者昵称头像,del_flag=0,倒序) */
     public List<ClubPost> selectClubPostList(ClubPost clubPost);
 
+    /** 动态流分页:pinned=true 取置顶帖;否则非置顶帖 id 倒序,beforeId 之前 */
+    List<ClubPost> selectClubPostPage(@Param("clubId") Long clubId, @Param("pinned") boolean pinned,
+                                      @Param("beforeId") Long beforeId, @Param("limit") int limit);
+
     public int insertClubPost(ClubPost clubPost);
 
     public int updateClubPost(ClubPost clubPost);

@@ -1,10 +1,10 @@
 <view class="node-card sk">
   <text class="node-card__title">状态键</text>
-  <text class="sk__desc">剧情里用来记录线索、计数、关系和标签的变量。节点配置只能引用这里注册过的键。</text>
-  <text class="sk__desc" wx:if="{{readOnly}}">当前为只读：这个主题的结构已冻结，不能新增或删除。</text>
+  <text class="sk__desc">记录线索、计数和关系的变量</text>
+  <text class="sk__desc" wx:if="{{readOnly}}">主题已锁定，仅可查看</text>
 
   <view class="sk__state" wx:if="{{state === 'loading'}}"><cy-skeleton type="feed-card" count="1" /></view>
-  <cy-error wx:elif="{{state === 'error'}}" title="状态键没能加载出来" sub="已有配置没有变化，只是这次没读到" retry="重试" bind:retry="load" />
+  <cy-error wx:elif="{{state === 'error'}}" title="状态键加载失败" retry="重试" bind:retry="load" />
   <text class="sk__empty" wx:elif="{{state === 'empty'}}">还没有注册状态键</text>
   <view class="sk-row" wx:for="{{keys}}" wx:key="stateKey">
     <view class="sk-row__main">

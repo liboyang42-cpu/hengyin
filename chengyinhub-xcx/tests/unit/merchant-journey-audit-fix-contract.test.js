@@ -59,7 +59,7 @@ test('工作台事件接口为空时不得用报名列表编造待处理报名',
   const js = read('pages/merchant/index/index.js');
   assert.doesNotMatch(js, /buildNotifications\s*\(/,
     'events 空数组是「没有真实动态」，不能拿 joinList 编三条待处理报名');
-  assert.match(js, /notifications:\s*\[\]/);
+  assert.match(js, /_notifications = \[\];/);
 });
 
 test('工作台零项目时整块「项目」不显示，不出现去承接 CTA', () => {

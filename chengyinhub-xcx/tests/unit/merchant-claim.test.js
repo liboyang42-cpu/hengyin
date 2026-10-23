@@ -15,7 +15,7 @@ test('validate:逐项拦截并放行合法表单', () => {
   assert.match(c.validate({ ...good, proofUrls: [] }), /至少/)
   assert.match(c.validate({ ...good, proofUrls: new Array(11).fill('u') }), /最多/)
   assert.match(c.validate({ ...good, statement: 'x'.repeat(1001) }), /1000/)
-  assert.match(c.validate({ ...good, requestId: '' }), /请求标识/)
+  assert.match(c.validate({ ...good, requestId: '' }), /操作失败/)
 })
 
 test('buildSubmitBody 对齐 MerchantClaimDTO.SubmitRequest', () => {
@@ -37,7 +37,7 @@ test('describe 四态:none / pending / approved / rejected(带原因)', () => {
   assert.match(c.describe([{ id: 1, status: 'REJECTED' }]).reason, /未填写/)
 })
 
-test('requestId 每次不同;错误文案优先用服务端 msg', () => {
+test('requestId 每次不同；错误文案优先用服务端 msg', () => {
   assert.notEqual(c.newRequestId(1, 0.1), c.newRequestId(1, 0.2))
   assert.equal(c.submitErrorMessage({ code: 409, msg: '该商家已有所有者' }), '该商家已有所有者')
   assert.match(c.submitErrorMessage({ code: 400 }), /不完整/)

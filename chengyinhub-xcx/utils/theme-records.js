@@ -99,7 +99,7 @@ function methods(req, playPage) {
         const read = await readServerPausedRun(req, scope);
         cleared = read.ok && !read.record && read.endedAt >= this._themeReplayClearAt;
       }
-      if (!cleared || !clearRunSession(wx, scope)) { this.setData({ themeRecordsReadFailure: false, themeRecordsError: '新一局已开启，旧行程用时暂未清理，请核对新一局' }); return false; }
+      if (!cleared || !clearRunSession(wx, scope)) { this.setData({ themeRecordsReadFailure: false, themeRecordsError: '新一局已开启，旧行程用时暂未清理，请查看新一局' }); return false; }
       if (this._themeRecordsDisposed) return false;
       const url = '/pages/play/index?topicId=' + encodeURIComponent(view.topicId) + (view.activityId ? '&activityId=' + encodeURIComponent(view.activityId) : '');
       const navigate = playPage ? wx.redirectTo : wx.navigateTo;

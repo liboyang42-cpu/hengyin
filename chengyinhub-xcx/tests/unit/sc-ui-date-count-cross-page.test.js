@@ -114,8 +114,8 @@ test('SC-UI-DATE-COUNT 探针在三个设备时区都真的跑在对应时区', 
 
 test('SC-UI-DATE-COUNT 站数:主题卡 / 主题页「包含」/ 统计视图 读同一口径(status=1 节点数),三个时区一致', () => {
   for (const { zone, out } of allZones()) {
-    assert.equal(out.topicCard.stationText, String(STATION_COUNT), zone + ' 主题卡「站点」')
-    assert.ok(out.topicPage.contentIncludes.includes(STATION_COUNT + ' 个站点'), zone + ' 主题页「包含」:' + JSON.stringify(out.topicPage.contentIncludes))
+    assert.equal(out.topicCard.stationText, String(STATION_COUNT), zone + ' 主题卡「节点」')
+    assert.ok(out.topicPage.contentIncludes.includes(STATION_COUNT + ' 个节点'), zone + ' 主题页「包含」:' + JSON.stringify(out.topicPage.contentIncludes))
     assert.equal(out.topicDetail.structureText, CHAPTERS.length + ' 章 · ' + STATION_COUNT + ' 站', zone + ' 统计视图结构行')
   }
 })
@@ -207,18 +207,18 @@ test('SC-UI-DATE-COUNT 主题页章节行「N 个节点」只数上架节点,合
 })
 
 /* 创建/发布向导 pages/publish/fabu 读 edit-detail,回包带隐藏节点 104。作者保存按旧 id 保留隐藏态
- *   (TopicUpdateByOwnerTest#fullRebuild_keepsBackOfficeHiddenNodeHidden...),所以发布确认页「站点」格、
- *   「共 N 个站点」摘要、「已放置 N 个站点」只数 status=1,与其它页同为 3,也就是保存后上架的站数。 */
+ *   (TopicUpdateByOwnerTest#fullRebuild_keepsBackOfficeHiddenNodeHidden...),所以发布确认页「节点」格、
+ *   「共 N 个节点」摘要、「已放置 N 个节点」只数 status=1,与其它页同为 3,也就是保存后上架的站数。 */
 test('SC-UI-DATE-COUNT 向导站数与服务端站数口径一致(含后台隐藏节点时)', () => {
   for (const { zone, out } of allZones()) {
     assert.deepEqual({
       wizardPreview: out.wizard.previewStationValue,
-      wizardSummary: (/(\d+) 个站点/.exec(out.wizard.summaryLine) || [])[1],
+      wizardSummary: (/(\d+) 个节点/.exec(out.wizard.summaryLine) || [])[1],
       wizardPassed: out.wizard.passedStationLabel,
     }, {
       wizardPreview: String(STATION_COUNT),
       wizardSummary: String(STATION_COUNT),
-      wizardPassed: '已放置 ' + STATION_COUNT + ' 个站点',
+      wizardPassed: '已放置 ' + STATION_COUNT + ' 个节点',
     }, zone)
   }
 })

@@ -1,6 +1,8 @@
 {
   "schemaVersion": 1,
   "dependencies": {
+    "merchant_wechat_qrcode_20261022": [],
+    "merchant_category_ids_20261022": [],
     "orient_session_lifecycle_20261022": ["20260823_topic_route_graph"],
     "orient_scoring_20261022": ["20260823_topic_route_graph"],
     "play_arrive_guard_log_20261022": [],
@@ -53,6 +55,7 @@
       "settlement_reconciliation_job_20260710"
     ],
     "20261012_topic_like_unique": [],
+    "20261023_creative_square_like_unique": [],
     "20261012_club_join_review": [
       "club_join_policy_20260809",
       "club_join_message_20260910"
@@ -648,6 +651,7 @@
     "x11_decommission_route_eggs_20260907": [],
     "club_topic_display_settings_20260906": [],
     "club_open_settings_20260909": [],
+    "club_welcome_note_20261022": ["club_open_settings_20260909"],
     "club_join_message_20260910": [],
     "club_post_reference_20260910": [],
     "club_waitlist_offer_window_20260911": [

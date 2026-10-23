@@ -2,10 +2,8 @@
   <!-- top 由 JS 按微信胶囊实测下发:整层玻璃菜单原来铺到状态栏,把原页的导航标题
        和消息入口一起压暗了(CU-M-157)。面板从微信导航下方开始,不再盖住导航行。 -->
   <view class="ps__mask" style="top:{{chrome.contentTop}}px" catchtouchmove="noop" bindtap="onMask" aria-role="button" aria-label="关闭发布菜单" hover-class="cy-pressed" hover-stay-time="80"></view>
-  <!-- 右上角 ✕ = 退出整个菜单(走查点名「只有底部返回、无右上角 X」)。
-       二级那行「返回」是「上一步」不是退出,和 ✕ 各管一件事;首屏那行「返回」和 ✕
-       确实是同一件事,但整组四行是用户视频确认过的构图,删行属于视觉改版,留待裁决。 -->
-  <view class="ps__close" style="top:{{chrome.contentTop}}px" bindtap="onClose" aria-role="button" aria-label="关闭发布菜单" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="44" /></view>
+  <!-- 2026-10-22 业主裁决:去掉右上角 ✕,退出菜单只走首屏底部「返回」与点遮罩
+       (取代此前「走查点名要 ✕」的注释)。二级那行「返回」仍是「上一步」。 -->
   <view class="ps__quick" catchtap="noop" catchtouchmove="noop">
     <block wx:if="{{level === 'cards'}}">
     <view class="ps__quick-action ps__quick-action--explore" bindtap="chooseTopicMode" data-mode="2" aria-role="button" aria-label="发布自由探索" hover-class="cy-pressed" hover-stay-time="80"><text>自由探索</text><image class="ps__quick-icon" src="/images/publish-quick/explore.png" mode="aspectFit" /></view>

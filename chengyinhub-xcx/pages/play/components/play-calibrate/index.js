@@ -15,7 +15,7 @@ Component({
   properties: {
     show: { type: Boolean, value: false },
     label: { type: String, value: '' },
-    sub: { type: String, value: '别动,量一下这儿的底子' },
+    sub: { type: String, value: '别动，量一下这儿的底子' },
     ms: { type: Number, value: 1200 },
   },
   data: { percent: 0 },   // 0–1,直接喂 scaleX

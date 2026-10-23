@@ -14,7 +14,7 @@ Page({
   },
   onLoad(options) {
     const batchId = options && options.batchId ? String(options.batchId) : '';
-    this.setData({ batchId, loadState: batchId ? 'loading' : 'missing-param', errorText: batchId ? '' : '缺少结算批次标识' });
+    this.setData({ batchId, loadState: batchId ? 'loading' : 'missing-param', errorText: batchId ? '' : '缺少结算批次信息' });
     this.load();
   },
   onShow() { merchantTheme.merchantPageShow(); },
@@ -28,7 +28,7 @@ Page({
   onNavBack() { if (getCurrentPages().length > 1) wx.navigateBack(); else wx.reLaunch({ url: '/pages/merchant/ledger/index?view=settlement' }); },
   load() {
     if (!this.data.batchId) {
-      this.setData({ loadState: 'missing-param', errorKind: 'data', errorText: '缺少结算批次标识' });
+      this.setData({ loadState: 'missing-param', errorKind: 'data', errorText: '缺少结算批次信息' });
       stopPullDownRefresh();
       return;
     }
@@ -63,8 +63,8 @@ Page({
           loadState: hasDetail ? 'stale-error' : 'error',
           errorKind: 'data',
           errorText: hasObjectEnvelope
-            ? '结算详情数据不完整，请重试'
-            : ((res && res.msg) || '结算详情没加载出来'),
+            ? '结算详情加载失败，请重试'
+            : ((res && res.msg) || '结算详情加载失败'),
         });
         return;
       }
@@ -88,8 +88,8 @@ Page({
         loadState: hasDetail ? 'stale-error' : 'error',
         errorKind: network ? 'network' : 'data',
         errorText: network
-          ? '网络不稳定，请检查连接后重试'
-          : ((error && (error.msg || error.message)) || '结算详情没加载出来'),
+          ? '网络异常，请检查连接后重试'
+          : ((error && (error.msg || error.message)) || '结算详情加载失败'),
       });
     } });
   },
@@ -179,7 +179,7 @@ function formatBatch(batch) {
   item.amountDisplay = item.amountText == null ? null : `¥${item.amountText}`;
   item.amountFallback = '待定';
   item.paymentText = paymentText(item);
-  item.invoiceText = { NONE: '未开票', ISSUED: '已开票', RED: '已红冲' }[item.invoiceState] || '发票状态待确认';
+  item.invoiceText = { NONE: '未开票', ISSUED: '已开票', RED: '已红冲' }[item.invoiceState] || '—';
   item.isPaid = item.netDirection === 'PLATFORM_PAYS_MERCHANT' && item.paymentState === 'PAID';
   item.paidAtText = item.paidAt ? String(item.paidAt).slice(0, 16).replace('T', ' ') : '';
   item.showPaymentProgress = item.netDirection === 'PLATFORM_PAYS_MERCHANT';

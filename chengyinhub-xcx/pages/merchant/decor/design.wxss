@@ -324,3 +324,7 @@
 .dc-edit-label { display:flex; align-items:center; justify-content:flex-end; min-width:44px; min-height:44px; font-size:var(--cy-type-label); color:var(--cy-color-text-tertiary); }
 
 .dc-mask-pressed { opacity:0.8; }
+
+/* owner 2026-10-22:门店二维码缩略图(行下方,点开大图)。胶囊样式已移入 cy-tag-sheet(L11) */
+.dc-qr-thumb { display:block; width:160rpx; height:160rpx; margin:0 0 23rpx 31rpx; border-radius:15rpx; /* ds-ok: 沿用 dc-gallery 圆角口径 */ background:var(--cy-color-bg-surface-subtle); }
+.dc-sr-status { position:absolute; width:1px; height:1px; overflow:hidden; opacity:0; pointer-events:none; }

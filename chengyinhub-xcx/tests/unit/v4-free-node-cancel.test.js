@@ -73,7 +73,7 @@ test('改了名称和地址后关闭表单:只发 close、不发 submit,重开�
   input(component, 'name', '改过的名字');
   input(component, 'address', '随手改的地址');
   component.onClose();
-  assert.deepEqual(events.map(e => e.name), ['close'], '取消只能关闭,不得提交');
+  assert.deepEqual(events.map(e => e.name), ['close'], '取消只能关闭，不得提交');
   assert.equal(requests.some(r => /chapter-node\/submit|chapter-application\/apply/.test(r.url)), false);
 
   // 父页把 show 置回 false 再打开 → observer 重新 openForm,改动被丢弃

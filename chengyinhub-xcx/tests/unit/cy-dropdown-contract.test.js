@@ -66,7 +66,7 @@ test('labels 派生:字符串数组、对象+range-key、对象缺 key 都不能
   // observers 不经 flatten 暴露,直接验证与它等价的规则在组件源码里存在
   const src = read(REL)
   assert.match(src, /rangeKey \? item\[rangeKey\]/, 'range-key 必须用于对象项取名')
-  assert.match(src, /item\.name \|\| item\.label/, '没给 range-key 时要有可预期的兜底,不能显示 [object Object]')
+  assert.match(src, /item\.name \|\| item\.label/, '没给 range-key 时要有可预期的保底，不能显示 [object Object]')
   assert.equal(derive, null)
 })
 
@@ -77,8 +77,8 @@ test('★ bind:change 回传的是下标,不是值本身(与原生 picker 一致
   instance.onPick({ currentTarget: { dataset: { index: '2' } } })
   assert.equal(events.length, 1)
   assert.equal(events[0].name, 'change')
-  assert.equal(events[0].detail.value, 2, 'detail.value 必须是下标;回传值本身会让所有调用方 options[index] 变 undefined')
-  assert.equal(typeof events[0].detail.value, 'number', '下标必须是数字,字符串会让 === 比较全部落空')
+  assert.equal(events[0].detail.value, 2, 'detail.value 必须是下标；回传值本身会让所有调用方 options[index] 变 undefined')
+  assert.equal(typeof events[0].detail.value, 'number', '下标必须是数字，字符串会让 === 比较全部落空')
 })
 
 test('退场动画播放期间不再接受选择,避免关闭途中又发一次 change', () => {
@@ -99,7 +99,7 @@ test('disabled 时点击不展开', () => {
 test('面板走 fixed 层:调用方常把选择器放在 overflow:hidden 容器里', () => {
   const wxss = read('components/cy/dropdown/index.wxss')
   assert.match(wxss, /\.cdd__layer\s*\{[^}]*position:\s*fixed/, '面板层必须 fixed,absolute 会被祖先裁掉')
-  assert.match(wxss, /\.cdd__mask\s*\{[^}]*background:\s*transparent/, 'dropdown 是轻量态,不压暗整页')
+  assert.match(wxss, /\.cdd__mask\s*\{[^}]*background:\s*transparent/, 'dropdown 是轻量态，不压暗整页')
   const wxml = read('components/cy/dropdown/index.wxml')
   assert.match(wxml, /class="cdd__mask"[^>]*bindtap="onMask"/, '点外部必须能收起')
 })

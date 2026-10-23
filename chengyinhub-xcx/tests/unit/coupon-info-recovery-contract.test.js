@@ -104,11 +104,11 @@ test('发布失败原位可见、表单保留且重试不重复提交', () => {
   assert.equal(h.requests[0].hideLoading, true, '进度应留在表单主按钮')
   assert.equal(h.requests[0].silentError, true, '页面自己承接错误，不能叠全局 toast')
 
-  h.requests[0].success({ code: 500, msg: '投放数需要重新核对' })
+  h.requests[0].success({ code: 500, msg: '投放数需要重新确认' })
   h.requests[0].complete()
   assert.equal(h.page.data.isSubmitting, false)
   assert.equal(h.page.data.submitErrorKind, 'data')
-  assert.equal(h.page.data.submitError, '投放数需要重新核对')
+  assert.equal(h.page.data.submitError, '投放数需要重新确认')
   assert.equal(h.page.data.formData.name, '新人礼券')
   assert.deepEqual(h.toasts, [])
   assert.deepEqual(h.tips, [])

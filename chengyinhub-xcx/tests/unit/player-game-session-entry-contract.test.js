@@ -94,7 +94,7 @@ function loadUnknownWritePlayer(options = {}) {
     enabled: true,
     activityId: 701,
     revision: 9,
-    write: { status: 'unknown', requestId: command.requestId, message: '结果待核对' },
+    write: { status: 'unknown', requestId: command.requestId, message: '结果待确认' },
   })
 
   return {
@@ -147,7 +147,7 @@ function readyPlayerProjection(revision = 9) {
   }
 }
 
-test('玩家页从共享三身份客户端读取服务端投影并提供精确回执回读', () => {
+test('玩家页从共享三身份客户端读取服务端投影并提供精确回执刷新', () => {
   assert.match(js, /require\('\.\.\/\.\.\/utils\/game-session-client\.js'\)/)
   assert.match(js, /loadProjection\('player', activityId\)/)
   assert.match(js, /submitAction\('player', input\)/)
@@ -158,7 +158,7 @@ test('玩家页从共享三身份客户端读取服务端投影并提供精确�
   assert.match(wxml, /核验编号 \{\{item\.submission\.submissionId\}\}/)
   assert.match(wxml, /bindtap="confirmPlayerRole"/)
   assert.match(js, /game_player_pending_/)
-  assert.match(js, /结果待核对，请勿重复提交/)
+  assert.match(js, /结果待确认，请勿重复提交/)
   assert.match(js, /normalizePlayerPendingReceiptIndex/)
   assert.match(js, /setStorageSync\(key, receiptIndex\)/)
   assert.match(js, /retryPlayerUnknownWrite\s*\(\)/)
@@ -238,12 +238,12 @@ test('D05 暂停节点把服务端批准的替代行动展示给玩家', () => {
   assert.match(wxml, /\{\{item\.fallback\.planCode\}\} v\{\{item\.fallback\.planVersion\}\}/)
 })
 
-test('R9-38 暂停节点无兜底路线也展示暂停安排与退款去处', () => {
+test('R9-38 暂停节点无保底路线也展示暂停安排与退款去处', () => {
   assert.match(wxml, /\{\{item\.pause\.reason\}\}/)
   assert.match(wxml, /\{\{item\.pause\.resumeEta\}\}/)
   assert.match(wxml, /如需退款请联系平台客服/)
   assert.doesNotMatch(wxml, /item\.status === 'PAUSED' && item\.fallback/,
-    '暂停说明不能只在有兜底路线时才渲染')
+    '暂停说明不能只在有保底路线时才渲染')
 })
 
 test('完成回执只触发上一确认节点到本节点的路线分段表现', () => {
@@ -332,11 +332,11 @@ test('D05 提示点击前显示影响，确认后只提交服务端 nextLevel', 
   }
 })
 
-test('F06 reveal 明示兜底完成影响，确认后只提交空 payload', async () => {
+test('F06 reveal 明示保底完成影响，确认后只提交空 payload', async () => {
   assert.match(wxml, /\{\{item\.hint\.revealImpactLabel\}\}/)
   assert.match(wxml, /bindtap="requestPlayerReveal"/)
-  assert.match(wxml, /记为兜底完成、不计正常榜单分/)
-  assert.match(wxml, /兜底完成 · 不计正常榜单分/)
+  assert.match(wxml, /记为保底完成，不计入榜单分/)
+  assert.match(wxml, /保底完成 · 不计入榜单分/)
 
   const harness = loadUnknownWritePlayer()
   try {
@@ -354,7 +354,7 @@ test('F06 reveal 明示兜底完成影响，确认后只提交空 payload', asyn
           nextLevel: null,
           nextImpactLabel: '',
           revealAvailable: true,
-          revealImpactLabel: '查看答案将记为兜底完成，不计正常榜单分',
+          revealImpactLabel: '查看答案将记为保底完成，不计正常榜单分',
         },
       }],
     })
@@ -368,7 +368,7 @@ test('F06 reveal 明示兜底完成影响，确认后只提交空 payload', asyn
     await settle()
 
     assert.equal(harness.modalCalls.length, 1)
-    assert.equal(harness.modalCalls[0].content, '查看答案将记为兜底完成，不计正常榜单分')
+    assert.equal(harness.modalCalls[0].content, '查看答案将记为保底完成，不计正常榜单分')
     assert.deepEqual(harness.submitCalls[0].input, {
       activityId: 701,
       nodeId: 31,
@@ -383,7 +383,7 @@ test('F06 reveal 明示兜底完成影响，确认后只提交空 payload', asyn
   }
 })
 
-test('PLAYER_REVEAL 的权威答案立即展示，刷新后的兜底完成节点仍保留答案', async () => {
+test('PLAYER_REVEAL 的权威答案立即展示，刷新后的保底完成节点仍保留答案', async () => {
   const storage = new Map()
   const harness = loadUnknownWritePlayer({ storage })
   try {
@@ -403,7 +403,7 @@ test('PLAYER_REVEAL 的权威答案立即展示，刷新后的兜底完成节点
           nextLevel: null,
           nextImpactLabel: '',
           revealAvailable: true,
-          revealImpactLabel: '查看答案将记为兜底完成，不计正常榜单分',
+          revealImpactLabel: '查看答案将记为保底完成，不计正常榜单分',
         },
       }],
     })
@@ -469,7 +469,7 @@ test('PLAYER_REVEAL 的权威答案立即展示，刷新后的兜底完成节点
   }
 })
 
-test('敏感玩家写只在内存保留原命令，重启后仅按落盘回执索引核对且绝不自动重发', async () => {
+test('敏感玩家写只在内存保留原命令，重启后仅按落盘回执索引确认且绝不自动重发', async () => {
   const storage = new Map()
   const first = loadUnknownWritePlayer({ storage })
   try {
@@ -493,7 +493,7 @@ test('敏感玩家写只在内存保留原命令，重启后仅按落盘回执�
       }],
     })
     first.page._playerPendingWrite = null
-    first.setSubmitResult({ status: 'unknown', message: '结果待核对' })
+    first.setSubmitResult({ status: 'unknown', message: '结果待确认' })
 
     first.page.submitPlayerTask({ currentTarget: { dataset: { node: 31, task: 'PHOTO_SCENE' } } })
     await settle()
@@ -698,7 +698,7 @@ test('D05/F06 unknown-write 只有精确动作终态 receipt 才解锁', async (
         command,
       }
       harness.page.data.gameModule.write = {
-        status: 'unknown', requestId: command.requestId, message: '结果待核对',
+        status: 'unknown', requestId: command.requestId, message: '结果待确认',
       }
 
       const wrongAction = row.action === 'PLAYER_HINT' ? 'PLAYER_REVEAL' : 'PLAYER_HINT'
@@ -853,7 +853,7 @@ test('新版玩法重试只委托同局同版本的真实高级玩法组件，�
   } finally { harness.cleanup() }
 })
 
-test('玩家未知写回读：非终态不解锁，精确 APPLIED/FAILED 终态分别确认或驳回', async () => {
+test('玩家未知写刷新：非终态不解锁，精确 APPLIED/FAILED 终态分别确认或驳回', async () => {
   const failed = loadUnknownWritePlayer()
   try {
     failed.setReceiptResult({

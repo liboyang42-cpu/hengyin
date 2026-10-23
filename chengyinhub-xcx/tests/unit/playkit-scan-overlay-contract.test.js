@@ -74,7 +74,7 @@ test('normalizeKind:认得「显形」,认不出的回落「文字」', () => {
   const vm = load();
   assert.equal(vm._normalizeKind('显形'), '显形');
   assert.equal(vm._normalizeKind('文字'), '文字');
-  assert.equal(vm._normalizeKind('AR'), '文字', '没注册的值走最保守档,不凭空要相机权限');
+  assert.equal(vm._normalizeKind('AR'), '文字', '没注册的值走最保守档，不凭空要相机权限');
   assert.equal(vm._normalizeKind(''), '文字');
 });
 
@@ -90,7 +90,7 @@ test('相机只在该开时开:显形+支持才 camLive;别的档永远不占相
 
   const noCam = load({ cameraSupported: false });
   noCam.open('显形');
-  assert.equal(noCam.data.camLive, false, '老基础库/无相机设备:camLive 关,走旁路');
+  assert.equal(noCam.data.camLive, false, '老基础库/无相机设备:camLive 关，走旁路');
 });
 
 test('相机 error 一次就永久走旁路,不再反复撞墙', () => {
@@ -102,7 +102,7 @@ test('相机 error 一次就永久走旁路,不再反复撞墙', () => {
   assert.ok(!('camErr' in vm.data), 'camErr 不许进 data');
   assert.equal(vm.data.camLive, false);
   vm.open('显形');   // 重开这一屏也不回头
-  assert.equal(vm.data.camLive, false, '错过一次就安静地用微信扫一扫,别每次都弹权限');
+  assert.equal(vm.data.camLive, false, '错过一次就安静地用微信扫一扫，别每次都弹权限');
 });
 
 test('旁路两键都在:wxml 里有「去设置」和「用微信扫一扫」,点后者走的是生产的 wx.scanCode', () => {
@@ -143,7 +143,7 @@ test('扫过之后不再交:回包里已经有东西了,再对准也不触发', 
   vm.onScanCode({ detail: { result: 'CODE-B' } });
   vm.onScan({ scanCodeResult: 'CODE-B' });
   assert.equal(vm.events.filter((e) => e && e.name === 'scanned').length, 0);
-  assert.ok(!vm.events.includes('scanCode'), '已经扫过了,点旁路也不该再拉扫一扫');
+  assert.ok(!vm.events.includes('scanCode'), '已经扫过了，点旁路也不该再拉扫一扫');
 });
 
 test('显形图是空的:不渲染叠加层,但绝不拦提交', () => {
@@ -163,7 +163,7 @@ test('显形图是空的:不渲染叠加层,但绝不拦提交', () => {
 
 test('老三档一个字没动:fake 取景框只在非显形时渲染', () => {
   assert.match(WXML, /class="sc__frame [^"]*" wx:if="\{\{kindKey !== '显形'\}\}"/);
-  assert.match(WXML, /bindtap="onScan"\s+aria-role="button" aria-label="扫这个点位的码"/);
+  assert.match(WXML, /bindtap="onScan"\s+aria-role="button" aria-label="扫这个节点的码"/);
 });
 
 test('占比夹回 20–100,非法值回默认 60', () => {
@@ -176,14 +176,14 @@ test('占比夹回 20–100,非法值回默认 60', () => {
   assert.equal(vm.data.overlayW, '20%');
   vm.properties.overlayScale = 0;
   vm.open('显形');
-  assert.equal(vm.data.overlayW, '60%', '0 / 空 = 没填,按默认而不是夹到 20');
+  assert.equal(vm.data.overlayW, '60%', '0 / 空 = 没填，按默认而不是夹到 20');
 });
 
 test('属性契约:kit 投影的 overlay 两个字段必须都有对应属性', () => {
   const props = load().definition.properties;
   assert.ok(props.overlayUrl && props.overlayUrl.type === String);
   assert.ok(props.overlayScale && props.overlayScale.type === Number);
-  assert.equal(props.overlayScale.value, 60, '没配时默认 60,与服务端 playKitRuntime 同值');
+  assert.equal(props.overlayScale.value, 60, '没配时默认 60，与服务端 playKitRuntime 同值');
 });
 
 test('playkit-view 翻译:OVERLAY 认成「显形」并透传两个叠加字段,认不出的照旧回落「文字」', () => {

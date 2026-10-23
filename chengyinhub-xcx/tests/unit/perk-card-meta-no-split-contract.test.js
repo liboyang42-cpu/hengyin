@@ -52,20 +52,20 @@ const decl = (body, prop) => {
  */
 function assertMetaCannotSplit(wxml, wxss) {
   const outer = ruleBody(wxss, 'dp-meta')
-  assert.equal(decl(outer, 'display'), 'flex', '.dp-meta 必须靠 flex 排布事实,不能回退成一条自然折行的文本')
-  assert.equal(decl(outer, 'flex-wrap'), 'wrap', '.dp-meta 排不开时必须整档换行,而不是溢出或裁掉')
+  assert.equal(decl(outer, 'display'), 'flex', '.dp-meta 必须靠 flex 排布事实，不能回退成一条自然折行的文本')
+  assert.equal(decl(outer, 'flex-wrap'), 'wrap', '.dp-meta 排不开时必须整档换行，而不是溢出或裁掉')
 
   const item = ruleBody(wxss, 'dp-meta-item')
   assert.equal(decl(item, 'white-space'), 'nowrap', '.dp-meta-item 不 nowrap,档内还能被拆开——修的就是这个')
 
   const inner = metaBlock(wxml)
   const items = [...inner.matchAll(/<text class="dp-meta-item"[^>]*>([\s\S]*?)<\/text>/g)].map((m) => m[1].trim())
-  assert.equal(items.length, 4, `.dp-meta 里应有 4 档事实,实得 ${items.length}:\n${inner}`)
+  assert.equal(items.length, 4, `.dp-meta 里应有 4 档事实，实得 ${items.length}:\n${inner}`)
 
   // 有效期是走查点名的那一档:标签「有效期至」和值必须在同一个节点里,不能只留一个裸日期。
   const expiry = items.find((t) => t.includes('item.validText'))
   assert.ok(expiry, '有效期这一档不见了')
-  assert.ok(/有效期至\s*\{\{item\.validText\}\}/.test(expiry), `有效期必须是「标签 + 值」的完整片段,实得:${expiry}`)
+  assert.ok(/有效期至\s*\{\{item\.validText\}\}/.test(expiry), `有效期必须是「标签 + 值」的完整片段，实得:${expiry}`)
   assert.ok(!/^\s*[·・]/.test(expiry), '分隔点不得再写进文案 —— 间距由 layout 的 gap 供给')
   items.forEach((t) => assert.ok(!/[·]/.test(t), `事实串里混进了分隔点:${t}`))
 }
@@ -76,13 +76,13 @@ test('常备权益卡片:四档事实各自成块,不会被拆到两行', () => 
 
 test('负控:外层退回一条自然折行的 text 必须判红', () => {
   const mutated = read(`${DIR}/index.wxss`).replace(/(\.dp-meta \{[^}]*?)display: flex/, '$1display: block')
-  assert.notEqual(mutated, read(`${DIR}/index.wxss`), '变异锚点漂了,负控本身是假的')
+  assert.notEqual(mutated, read(`${DIR}/index.wxss`), '变异锚点漂了，负控本身是假的')
   assert.throws(() => assertMetaCannotSplit(read(`${DIR}/index.wxml`), mutated), assert.AssertionError)
 })
 
 test('负控:项不再 nowrap 必须判红', () => {
   const mutated = read(`${DIR}/index.wxss`).replace('.dp-meta-item { white-space: nowrap; }', '.dp-meta-item { }')
-  assert.notEqual(mutated, read(`${DIR}/index.wxss`), '变异锚点漂了,负控本身是假的')
+  assert.notEqual(mutated, read(`${DIR}/index.wxss`), '变异锚点漂了，负控本身是假的')
   assert.throws(() => assertMetaCannotSplit(read(`${DIR}/index.wxml`), mutated), assert.AssertionError)
 })
 
@@ -91,7 +91,7 @@ test('负控:把日期降成一个没有标签的裸值必须判红(正是走查
     '<text class="dp-meta-item" wx:if="{{item.validText}}">有效期至 {{item.validText}}</text>',
     '<text class="dp-meta-item" wx:if="{{item.validText}}">{{item.validText}}</text>',
   )
-  assert.notEqual(mutated, read(`${DIR}/index.wxml`), '变异锚点漂了,负控本身是假的')
+  assert.notEqual(mutated, read(`${DIR}/index.wxml`), '变异锚点漂了，负控本身是假的')
   assert.throws(() => assertMetaCannotSplit(mutated, read(`${DIR}/index.wxss`)), assert.AssertionError)
 })
 
@@ -100,7 +100,7 @@ test('负控:把分隔点重新写回文案必须判红', () => {
     '>零售价 {{money.amount(item.retailValue)}}<',
     '>· 零售价 {{money.amount(item.retailValue)}}<',
   )
-  assert.notEqual(mutated, read(`${DIR}/index.wxml`), '变异锚点漂了,负控本身是假的')
+  assert.notEqual(mutated, read(`${DIR}/index.wxml`), '变异锚点漂了，负控本身是假的')
   assert.throws(() => assertMetaCannotSplit(mutated, read(`${DIR}/index.wxss`)), assert.AssertionError)
 })
 
@@ -109,15 +109,15 @@ test('负控:把分隔点重新写回文案必须判红', () => {
 test('视图模型:quotaText 不再走私分隔符,与其余三档同为裸值', () => {
   const src = read(`${DIR}/index.js`)
   const m = src.match(/quotaText:\s*[^\n]*\?\s*'([^']*)'\s*\+/)
-  assert.ok(m, 'quotaText 的字面前缀锚点漂了,判据失效')
-  assert.equal(m[1], '可接待 ', `前缀应只剩中文标签,实得:${JSON.stringify(m[1])}`)
+  assert.ok(m, 'quotaText 的字面前缀锚点漂了，判据失效')
+  assert.equal(m[1], '可接待 ', `前缀应只剩中文标签，实得:${JSON.stringify(m[1])}`)
 })
 
 test('负控:把「 · 」前缀加回 quotaText 必须判红', () => {
   const src = read(`${DIR}/index.js`)
   const mutated = src.replace("quotaText: Number.isInteger(p.quota) && p.quota >= 0 ? '可接待 '", "quotaText: Number.isInteger(p.quota) && p.quota >= 0 ? ' · 可接待 '")
-  assert.notEqual(mutated, src, '变异锚点漂了,负控本身是假的')
+  assert.notEqual(mutated, src, '变异锚点漂了，负控本身是假的')
   const m = mutated.match(/quotaText:\s*[^\n]*\?\s*'([^']*)'\s*\+/)
   assert.equal(m[1], ' · 可接待 ')
-  assert.notEqual(m[1], '可接待 ', '撤掉修复却仍满足判据,说明上面那条是空转')
+  assert.notEqual(m[1], '可接待 ', '撤掉修复却仍满足判据，说明上面那条是空转')
 })

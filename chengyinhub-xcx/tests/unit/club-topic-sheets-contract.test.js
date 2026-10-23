@@ -60,7 +60,7 @@ test('负控:联系人行改用 station.status 判据必须被判红', () => {
     'wx:if="{{station.contact}}"',
     'wx:if="{{station.status === \'accepted\'}}"',
   )
-  assert.notEqual(mutated, wxml, '负控锚点失效 —— wx:if="{{station.contact}}" 没找到,说明模板结构变了')
+  assert.notEqual(mutated, wxml, '负控锚点失效 —— wx:if="{{station.contact}}" 没找到，说明模板结构变了')
   assert.throws(() => assertPhoneGatedByContactPresence(mutated), assert.AssertionError)
 })
 
@@ -75,7 +75,7 @@ test('J7 号码脱敏展示与真实号码分离(phoneMasked 用于展示,phone 
 
 test('J4 三个开关都是 cy-switch,且不写「已开/已关」文字', () => {
   const wxml = read('components/cy/club-topic-settings/index.wxml')
-  assert.doesNotMatch(wxml, /已开|已关/, 'DS-9 铁律:开关不许配文字状态,视觉本身就是状态')
+  assert.doesNotMatch(wxml, /已开|已关/, 'DS-9 铁律:开关不许配文字状态，视觉本身就是状态')
   assert.match(wxml, /<cy-switch checked="\{\{openForMerchant\}\}"[^>]*bindchange="onOpenForMerchantChange"/)
   assert.match(wxml, /<cy-switch checked="\{\{pinned\}\}"[^>]*bindchange="onPinnedChange"/)
   assert.match(wxml, /<cy-switch checked="\{\{membersOnly\}\}"[^>]*bindchange="onMembersOnlyChange"/)
@@ -84,7 +84,7 @@ test('J4 三个开关都是 cy-switch,且不写「已开/已关」文字', () =>
   assert.match(js, /onOpenForMerchantChange\(e\)\s*\{\s*this\.toggleField\('openForMerchant'/)
   assert.match(js, /onPinnedChange\(e\)\s*\{\s*this\.toggleField\('pinned'/)
   assert.match(js, /onMembersOnlyChange\(e\)\s*\{\s*this\.toggleField\('membersOnly'/)
-  assert.match(js, /triggerEvent\('togglefield'/, '开关切换只抛事件给宿主,组件本身不发保存请求')
+  assert.match(js, /triggerEvent\('togglefield'/, '开关切换只抛事件给宿主，组件本身不发保存请求')
 })
 
 test('负控:塞回「已开」字样必须被判红', () => {
@@ -97,7 +97,7 @@ test('负控:塞回「已开」字样必须被判红', () => {
 
 test('J4 只改承接开关与展示偏好:主题内容改动跳转交给宿主,不在本组件内直接保存主题字段', () => {
   const js = read('components/cy/club-topic-settings/index.js')
-  assert.match(js, /triggerEvent\('editcontent'/, '编辑主题内容必须只是抛事件,交给宿主导航到编辑主题页')
+  assert.match(js, /triggerEvent\('editcontent'/, '编辑主题内容必须只是抛事件，交给宿主导航到编辑主题页')
   assert.doesNotMatch(js, /clubType|activityPrefs|description:/, '不得在本组件里读写主题内容字段(名称/类型/简介等)')
 })
 
@@ -154,14 +154,14 @@ test('J3-A 节点序号优先取 node.seq,不能只用段内下标', () => {
   assert.match(
     wxml,
     /class="cto__node-seq">\{\{node\.seq \|\| ni \+ 1\}\}</,
-    '序号圈必须是 node.seq 优先、段内下标兜底 —— 只用 ni + 1 会让第二章从 1 重新数',
+    '序号圈必须是 node.seq 优先、段内下标保底 —— 只用 ni + 1 会让第二章从 1 重新数',
   )
 })
 
 test('负控:序号退回纯段内下标必须被判红', () => {
   const wxml = read('components/cy/club-topic-onboarding/index.wxml')
   const mutated = wxml.replace('{{node.seq || ni + 1}}', '{{ni + 1}}')
-  assert.notEqual(mutated, wxml, '负控没改到东西,断言锚点已经失配')
+  assert.notEqual(mutated, wxml, '负控没改到东西，断言锚点已经失配')
   assert.doesNotMatch(mutated, /class="cto__node-seq">\{\{node\.seq \|\| ni \+ 1\}\}</)
 })
 
@@ -174,8 +174,8 @@ const NO_BACKEND_YET = ['club-topic-merchants', 'club-topic-settings', 'club-top
 
 function assertNoLiveNetworkCall(js) {
   const code = stripJsComments(js)
-  assert.doesNotMatch(code, /url\s*:\s*['"]\/api\//, '后端接口还没有,不能写死一个打不通的 endpoint')
-  assert.doesNotMatch(code, /sendRequest|wx\.request/, '组件不发请求,数据由宿主通过属性传入')
+  assert.doesNotMatch(code, /url\s*:\s*['"]\/api\//, '后端接口还没有，不能写死一个打不通的 endpoint')
+  assert.doesNotMatch(code, /sendRequest|wx\.request/, '组件不发请求，数据由宿主通过属性传入')
 }
 
 test('J7/J4/J3 三个待接线组件不发网络请求(后端 TODO,数据全部走属性)', () => {

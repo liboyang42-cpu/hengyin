@@ -8,11 +8,11 @@ const { shapeRecord } = require('../../pages/merchant/verify-records/view-model.
 
 test('shapeRecord: 完整行映射', () => {
   assert.deepEqual(shapeRecord({
-    id: 11, registrationId: 42, name: ' 一号据点 ', status: 1, validationMethod: 2,
+    id: 11, registrationId: 42, name: ' 一号节点 ', status: 1, validationMethod: 2,
     createTime: '2026-10-15 09:30:12',
   }), {
     id: '11',
-    nameText: '一号据点',
+    nameText: '一号节点',
     registrationText: '报名 #42',
     methodText: '图片验证',
     statusKey: 'VERIFIED',
@@ -47,7 +47,7 @@ test('shapeRecord: 未知 status 兜底为「未核销」（只有 1 / "1" 算�
 test('shapeRecord: 缺字段兜底（名称、报名号、验证方式、时间）', () => {
   const row = shapeRecord({ id: 'r1' });
   assert.equal(row.id, 'r1');
-  assert.equal(row.nameText, '未命名据点');
+  assert.equal(row.nameText, '未命名节点');
   assert.equal(row.registrationText, '');
   assert.equal(row.methodText, '');
   assert.equal(row.dateKey, '');

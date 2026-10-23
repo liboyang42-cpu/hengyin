@@ -20,7 +20,7 @@
       kind="no-permission"
       fill
       title="暂无装修权限"
-      sub="请切换到已审核通过的商家账号后再试"
+      sub="请切换到已审核的商家账号"
     />
   </view>
 
@@ -44,7 +44,7 @@
       kind="empty"
       fill
       title="暂时无法装修店铺"
-      sub="这个账号还没有店铺，先完成商家入驻拿到店铺，再回来填行业类型和品牌资料。"
+      sub="完成商家入驻后可用"
       cta="去商家入驻"
       bind:cta="goApply"
     />
@@ -52,12 +52,9 @@
 
   <scroll-view scroll-y class="dc-scroll" enhanced show-scrollbar="{{false}}" wx:elif="{{loadState === 'ok' && m}}">
     <view class="dc-content {{view === 'home' ? 'dc-content--home' : ''}}">
-      <view wx:if="{{saveReceipt}}" class="dc-save-receipt" aria-role="status" aria-live="polite">
-        {{saveReceipt}}
-      </view>
-      <view wx:if="{{refreshing}}" class="dc-refreshing" aria-role="status" aria-live="polite">
-        正在刷新店铺资料…
-      </view>
+      <!-- owner 2026-10-22:返回页面时静默刷新、保留旧内容;保存回执走 toast,不再在标题上方插横幅把内容顶下去。
+           回执只留给读屏的 aria-live 播报,绝对定位脱离文档流,不占高度。 -->
+      <view class="dc-sr-status" aria-role="status" aria-live="polite">{{saveReceipt}}</view>
       <cy-inline-error
         wx:if="{{saveError && !fieldSheet.show && !imageEditor}}"
         kind="{{saveErrorKind}}"
@@ -287,8 +284,8 @@
               <text wx:if="{{subscriptionState === 'loading'}}" class="dc-muted">正在读取生效权益…</text>
               <text wx:elif="{{subscriptionState === 'error'}}" class="dc-muted">权益读取失败，当前状态未知。</text>
               <text wx:elif="{{subscriptionState === 'empty'}}" class="dc-muted">尚未查到生效授予记录。</text>
-              <text wx:if="{{checkoutState === 'entitlementPending'}}" class="dc-muted">支付已确认，正在核对权益。</text>
-              <text wx:elif="{{checkoutState === 'entitlementUnknown'}}" class="dc-muted">支付已确认，权益待核对，请勿重复购买。</text>
+              <text wx:if="{{checkoutState === 'entitlementPending'}}" class="dc-muted">支付已确认，正在确认权益。</text>
+              <text wx:elif="{{checkoutState === 'entitlementUnknown'}}" class="dc-muted">支付已确认，权益待确认，请勿重复购买。</text>
               <cy-cell wx:if="{{capabilityState === 'error' || subscriptionState === 'error' || checkoutState === 'entitlementUnknown'}}"
                 title="重新读取权益" arrow="{{false}}" required="{{false}}" bind:tap="retryEntitlements" />
               <!-- BL-108 已生效权益(只读):不展示价格、不做续费入口 -->
@@ -320,7 +317,7 @@
               <!-- CU-M-80:四项选中后只弹一句「请联系官方运营」等于没有出路。
                    open-type 只能落在 button 上,cy-cell 已内部封装透明按钮。 -->
               <cy-cell open-type="contact" arrow="{{false}}" title="联系运营开通"
-                description="说明要开通的权益，由官方运营人工办理"
+                description=""
                 required="{{false}}" hairline="{{false}}"
               />
             </view>
@@ -358,50 +355,33 @@
             value="{{m.preference || '待填写'}}"
 
             required="{{false}}"
-            bind:tap="onBasicAction" data-action="openField"
-            data-k="preference"
+            bind:tap="onBasicAction" data-action="openPreference"
           />
-          <cy-dropdown
-            portal="{{false}}"
-            id="category-menu"
-            disabled="{{!basicEditing}}"
-            custom-panel
-            below
-            gap="4"
-            panel-height="260"
-            bind:open="goCategory"
-          >
-            <cy-cell arrow-icon="chevron-right" arrow="{{basicEditing}}" bubble-tap title="行业类型" value="{{catNames || '选择行业'}}"  required="{{false}}" />
-            <view slot="panel" class="dc-menu">
-              <cy-inline-error load-failure kind="error" wx:if="{{categoryError}}" title="行业列表暂未加载" sub="{{categoryError}}" action="重试" bind:action="goCategory" />
-              <view
-                class="dc-choice"
-                wx:for="{{categoryOptions}}"
-                wx:key="id"
-                data-index="{{index}}"
-                bindtap="toggleCategory"
-                aria-role="checkbox"
-                aria-checked="{{item.checked}}"
-                hover-class="cy-pressed"
-              >
-                <text>{{item.categoryName}}</text>
-                <cy-icon wx:if="{{item.checked}}" name="check" size="30" />
-              </view>
-              <cy-btn bindtap="saveCategories" loading="{{saving}}" disabled="{{!categoryOptions.length}}">
-                完成
-              </cy-btn>
-            </view>
-          </cy-dropdown>
-          <!-- CU-M-08:联系电话/门店微信是入驻资料,/api/merchant/update 白名单不收(ApiMerchantController 注释)。
-               只读展示:不再标必填星号装成「该你填」,写明去哪改。 -->
-          <cy-cell arrow-icon="chevron-right" arrow="{{false}}"
+          <cy-cell arrow-icon="chevron-right" arrow="{{basicEditing}}" title="行业类型" value="{{catNames || '选择行业'}}"  required="{{false}}" bind:tap="onBasicAction" data-action="goCategory" />
+          <!-- owner 2026-10-22:联系电话 / 门店微信号 / 门店二维码由商家在此自助维护(原 CU-M-08 只读) -->
+          <cy-cell arrow-icon="chevron-right" arrow="{{basicEditing}}"
             title="联系电话"
             value="{{m.phone || '未填写'}}"
-            description="入驻时填写，修改请联系平台"
             required="{{false}}"
-            hairline="{{true}}"
+            bind:tap="onBasicAction" data-action="openField"
+            data-k="phone"
           />
-          <cy-cell arrow-icon="chevron-right" arrow="{{false}}" title="门店微信" value="{{m.wechat || '未填写'}}" required="{{false}}" hairline="{{false}}" />
+          <cy-cell arrow-icon="chevron-right" arrow="{{basicEditing}}"
+            title="门店微信"
+            value="{{wechatId || '待填写'}}"
+            required="{{false}}"
+            bind:tap="onBasicAction" data-action="openField"
+            data-k="wechat"
+          />
+          <cy-cell arrow-icon="chevron-right" arrow="{{basicEditing}}"
+            title="门店二维码"
+            value="{{wechatQr ? (basicEditing ? '更换' : '查看') : (basicEditing ? '上传二维码' : '未上传')}}"
+            required="{{false}}"
+            hairline="{{false}}"
+            bind:tap="onQrcodeTap"
+          />
+          <image wx:if="{{wechatQr}}" class="dc-qr-thumb" src="{{wechatQr}}" mode="aspectFit"
+            bindtap="previewQrcode" aria-role="button" aria-label="查看门店二维码" hover-class="cy-pressed" />
         </view>
         <view class="dc-card dc-fields">
           <cy-cell arrow-icon="chevron-right" arrow="{{basicEditing}}"
@@ -410,20 +390,12 @@
             required="{{true}}"
             bind:tap="onBasicAction" data-action="geoLocate"
           />
-          <decor-hours
-            id="business-hours"
-            value="{{m.businessTime}}"
-            saving="{{saving || !basicEditing}}"
-            error="{{saveError}}"
-            bind:save="onHoursSave"
-          >
-            <cy-cell arrow-icon="chevron-right" arrow="{{basicEditing}}"
-              bubble-tap
-              title="经营时间"
-              value="{{m.businessTime || '选择营业日与时间'}}"
-              required="{{true}}"
-            />
-          </decor-hours>
+          <cy-cell arrow-icon="chevron-right" arrow="{{basicEditing}}"
+            title="经营时间"
+            value="{{m.businessTime || '选择营业日与时间'}}"
+            required="{{true}}"
+            bind:tap="onBasicAction" data-action="openHours"
+          />
 
         </view>
 
@@ -439,7 +411,7 @@
             arrow="{{m.businessLicense ? true : false}}"
             title="营业执照"
             value="{{m.businessLicense ? '已提交 · 查看' : '未提交'}}"
-            description="{{m.businessLicense ? '' : '入驻时提交，如需更新请联系平台'}}"
+            description="{{m.businessLicense ? '' : '修改请联系平台'}}"
             required="{{true}}"
             bind:tap="previewLicense"
           />
@@ -447,7 +419,7 @@
             arrow="{{brandImages.length ? true : false}}"
             title="品牌形象图"
             value="{{brandImages.length ? brandImages.length + ' 张 · 查看' : '未上传'}}"
-            description="{{brandImages.length ? '' : '入驻时提交，如需更新请联系平台'}}"
+            description="{{brandImages.length ? '' : '修改请联系平台'}}"
             required="{{false}}"
             bind:tap="previewBrandImages"
             hairline="{{false}}"
@@ -479,6 +451,7 @@
         class="dc-input"
         value="{{fieldSheet.value}}"
         maxlength="{{fieldSheet.max}}"
+        type="{{fieldSheet.inputType || 'text'}}"
         placeholder="{{fieldSheet.placeholder}}"
         bindinput="onFieldInput"
         disabled="{{saving}}"
@@ -489,6 +462,35 @@
       <cy-btn loading="{{saving}}" bindtap="confirmField">{{saveError ? '重试保存' : '保存'}}</cy-btn>
     </view>
   </cy-sheet>
+  <!-- 经营类目 / 行业类型:底部 sheet + 胶囊多选(owner 2026-10-22,替代原文本框与下拉列表)。
+       L11:换成 Figma「Edit Interests」胶囊半屏弹窗,标签横向翻页;数据模型与保存链路沿用 chipSheet -->
+  <cy-tag-sheet
+    show="{{chipSheet.show}}"
+    title="{{chipSheet.title}}"
+    items="{{chipSheet.options}}"
+    value="{{chipSheet.value}}"
+    max="{{chipSheet.kind === 'category' ? 5 : 0}}"
+    hint="{{saveError ? saveError : (chipSheet.kind === 'category' ? '可多选，最多 5 个，第一个作为主行业' : '可多选')}}"
+    hint-error="{{!!saveError}}"
+    loading="{{chipSheet.loading}}"
+    error="{{chipSheet.error}}"
+    saving="{{saving || refreshing}}"
+    confirm-text="{{saveError ? '重试保存' : '保存'}}"
+    bind:change="onChipSheetChange"
+    bind:confirm="saveChipSheet"
+    bind:close="closeChipSheet"
+    bind:retry="retryChipSheet"
+  />
+  <!-- 经营时间:组件挂在 scroll-view 外的页面根,底部 sheet 不被滚动容器裁切 -->
+  <decor-hours
+    wx:if="{{view === 'basic' && m}}"
+    id="business-hours"
+    value="{{m.businessTime}}"
+    saving="{{saving || !basicEditing}}"
+    error="{{hoursOpen ? saveError : ''}}"
+    bind:save="onHoursSave"
+    bind:visible="onHoursVisible"
+  />
   <cy-sheet inset show="{{customTagVisible}}" title="自定义标签" bind:close="closeCustomTag">
     <view class="dc-sheet-content">
       <input
@@ -512,7 +514,7 @@
     </view>
   </cy-sheet>
   <view wx:if="{{imageEditor && !discardVisible}}" class="dc-image-layer">
-    <view aria-label="关闭图片编辑" class="dc-image-mask" bindtap="closeImage" hover-class="dc-mask-pressed" />
+    <view aria-label="关闭图片编辑" class="dc-image-mask" catchtouchmove="noop" bindtap="closeImage" hover-class="dc-mask-pressed" />
     <!-- 顶边复查(2026-09-18):面板在幕布里垂直居中 ⇒ 可用高度要两头都让开胶囊行(2×sheetTop) -->
     <view class="dc-image-panel" style="max-height:calc(100vh - {{chrome.sheetTop * 2}}px)">
       <view class="dc-heading">
@@ -545,9 +547,10 @@
     show="{{privacyGateShow}}"
     bind:settled="onPrivacyGateSettled"
   />
-  <!-- 物理返回守卫:图片编辑/字段面板/放弃确认任一开着时,返回键先关浮层而不是退页;backGuardOff 用于消费后重挂 -->
+  <!-- 物理返回守卫:图片编辑/字段面板/胶囊面板/放弃确认任一开着时,返回键先关浮层而不是退页;backGuardOff 用于消费后重挂。
+       imagePicking:选图跳裁剪页期间守卫让位(离页也会触发 leave,不能当成返回键关掉图片编辑) -->
   <page-container
-    show="{{!backGuardOff && (imageEditor || fieldSheet.show || discardVisible)}}"
+    show="{{!backGuardOff && !imagePicking && (imageEditor || fieldSheet.show || discardVisible || chipSheet.show)}}"
     duration="{{0}}" overlay="{{false}}"
     custom-style="width:0;height:0;background:transparent;pointer-events:none"
     bind:afterleave="onNativeBackGuard" />

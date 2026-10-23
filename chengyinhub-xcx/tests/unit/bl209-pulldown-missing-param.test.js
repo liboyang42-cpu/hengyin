@@ -61,6 +61,6 @@ for (const c of CASES) {
     assert.ok(first > 0);
     page.onPullDownRefresh();
     assert.ok(sandbox.requests.length > first, '下拉应再发一轮读取');
-    assert.equal(sandbox.stops, 0, '有参时不提前收转圈,由读取回包收');
+    assert.equal(sandbox.stops, 0, '有参时不提前收转圈，由读取回包收');
   });
 }

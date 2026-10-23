@@ -118,7 +118,7 @@ Component({
           if (isOk(res)) { this._requestId = ''; settle(); this.loadStatus(); return }
           settle(claim.submitErrorMessage(res))
         },
-        fail: () => settle('网络异常，请重试（同一份申请不会重复提交）'),
+        fail: () => settle('网络异常，请重试'),
         successStatusAbnormal: (res) => settle(claim.submitErrorMessage(res)),
       })
     },

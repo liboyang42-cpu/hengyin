@@ -18,7 +18,7 @@ const { COUPON_TYPE_LABELS } = require(path.join(ROOT, 'utils/coupon-form.js'));
 test('A-14-3:搜索入口页不再绑死字段 searchLoading', () => {
   const wxml = read('pages/search2/index.wxml');
   const js = read('pages/search2/index.js');
-  assert.doesNotMatch(wxml, /loading="\{\{searchLoading\}\}"/, '入口页没有在页内加载,不许挂永远不转的转圈态');
+  assert.doesNotMatch(wxml, /loading="\{\{searchLoading\}\}"/, '入口页没有在页内加载，不许挂永远不转的转圈态');
   assert.doesNotMatch(js, /searchLoading/, '入口页 js 也不该再声明这个死字段');
 
   // 负控:把绑定加回去,判据必须能抓住

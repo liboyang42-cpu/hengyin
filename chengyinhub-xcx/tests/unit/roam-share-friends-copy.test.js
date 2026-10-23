@@ -11,5 +11,5 @@ test('「仅好友」提示文案与实际渠道一致:不承诺转发,只说朋
   assert.ok(hint, '找不到仅好友档提示文案')
   assert.deepEqual(channelsForVisibility('friends'), ['朋友圈', '保存'])
   assert.doesNotMatch(hint[1], /转发/)
-  assert.match(hint[1], /朋友圈/)
+  assert.match(hint[1], /好友/)
 })

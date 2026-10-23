@@ -235,7 +235,7 @@ Page({
     const stale = () => that._unloaded || that._hidden || seq !== that._nicknameSeq || !that.currentProfileContext(context);
     const onFailure = () => {
       if (stale()) return;
-      that.setData({ nicknameState: 'error', nicknameHint: '暂时没查到昵称是否可用，可以重试或直接保存' });
+      that.setData({ nicknameState: 'error', nicknameHint: '无法验证昵称，可直接保存' });
     };
     app.sendRequest({
       hideLoading: true,
@@ -335,7 +335,7 @@ Page({
     this.setData({
       tempName: name,
       nicknameState: 'available',
-      nicknameHint: '已选用推荐昵称，保存时会再确认一次',
+      nicknameHint: '',
       nicknameSuggestions: [],
       nicknameSuggestError: ''
     });

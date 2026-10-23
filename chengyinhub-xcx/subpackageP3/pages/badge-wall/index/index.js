@@ -151,7 +151,7 @@ function medalToBadge(item) {
     time,
     family: 'medal',
     source: '城市纪念章 · 节点通关',
-    desc: '完成带勋章的城市节点点亮,这一枚来自你走过的路。',
+    desc: '城市节点点亮奖励',
     cond: item.condition || ''
   };
 }
@@ -356,7 +356,7 @@ Page({
     //   —— 连没点亮的也在 list 里 —— 所以「不在 list」= 它压根不是身份卡,
     //   不是「还没同步」。原来那句「还没出现在墙上,稍后下拉重试」是在断言一件
     //   本页无权断言的事:徽章明明发了,却被说成没到。
-    this.setData({ focusText: '这枚不是身份卡,记在成长中心' });
+    this.setData({ focusText: '这枚不是身份卡，记在成长中心' });
   },
 
   applyBadges(list) {

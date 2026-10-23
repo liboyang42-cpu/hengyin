@@ -260,7 +260,7 @@ Page({
       fail(res, status) {
         if (that._recoverAccess(res, status, epoch) || !current()) return;
         if ([401, 403, 400, 422].includes(failureStatus(res, status))) { that._readError(res, '无法读取店铺资料', status); return; }
-        that.setData({ shopLoaded: true, shopLoadError: '网络异常,店铺资料没读出来' });
+        that.setData({ shopLoaded: true, shopLoadError: '网络异常，店铺资料没读出来' });
       },
       successStatusAbnormal(res, status) { if (!that._recoverAccess(res, status, epoch) && current()) that._readError(res, '店铺资料没能读取', status); },
     });
@@ -269,7 +269,7 @@ Page({
   /** 去配玩法:temp 页保存后用 eventChannel 把 templateId 回传过来 */
   goConfigTemplate() {
     if (!this.data.merchantAccess.canManageProjects) {
-      return toast('当前岗位没有据点管理权限');
+      return toast('当前岗位没有节点管理权限');
     }
     const that = this;
     wx.navigateTo({
@@ -294,7 +294,7 @@ Page({
   /** 挪一下:打开地图重选,选完就不再是「档案坐标」了 */
   repick() {
     if (!this.data.merchantAccess.canManageProjects) {
-      return toast('当前岗位没有据点管理权限');
+      return toast('当前岗位没有节点管理权限');
     }
     const that = this;
     wx.chooseLocation({
@@ -370,7 +370,7 @@ Page({
   // 提交据点投放申请;审核通过前绝不在客户端伪造成已上线节点。
   submitNode() {
     if (!this.data.merchantAccess.canManageProjects) {
-      return toast('当前岗位没有据点管理权限');
+      return toast('当前岗位没有节点管理权限');
     }
     if (this.data.submitting) return;
     if (this.data.submittedApplicationId) return this.readBackAndReturn(this.data.submittedApplicationId);
@@ -428,7 +428,7 @@ Page({
           that.onNavBack();
           return;
         }
-        that.setData({ readbackError: '申请已提交，审核状态暂未同步' });
+        that.setData({ readbackError: '申请已提交，审核状态更新中' });
       },
       fail() {
         that.setData({ readbackError: '申请已提交，但审核状态读取失败' });

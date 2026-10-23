@@ -234,7 +234,7 @@ test('暂停:先确认再提交;200 后回读到 PAUSED 才宣称生效', () => 
   });
   assert.equal(dc.pause.busyCount, 1);
   req.success(ok());
-  assert.equal(dc.pause.doneCalls.length, 0, '回读前不给成功回执');
+  assert.equal(dc.pause.doneCalls.length, 0, '刷新前不给成功回执');
   finishLoad(app, { check: PASS, detail: ok(Object.assign({}, LIVE, { controlState: 'PAUSED', pausedReason: 'reason 内容' })) });
   assert.equal(dc.pause.doneCalls.length, 1);
   assert.equal(page.data.result.tone, 'success');
@@ -274,7 +274,7 @@ test('业务拒绝:服务端原话留在确认框可重试,不刷新、不假成
   assert.deepEqual(dc.resume.failedCalls, ['恢复前检查未通过：缺少有效主办方']);
   assert.equal(page.data.result.tone, 'error');
   assert.equal(page.data.busyAction, '');
-  assert.equal(app.requests.length, count, '明确失败不触发回读');
+  assert.equal(app.requests.length, count, '明确失败不触发刷新');
   assert.equal(page.data.forms.resume.reason, '已处理', '失败保留输入');
 });
 
@@ -317,7 +317,7 @@ test('4xx 是明确失败,不走未知分支', () => {
 });
 
 test('危险确认文案已登记;不可逆的写明不可撤销', () => {
-  assert.equal(getDangerAction('official.organizer.invite', {}), null, '邀请/转交暂不做,确认文案不应残留');
+  assert.equal(getDangerAction('official.organizer.invite', {}), null, '邀请/转交暂不做，确认文案不应残留');
   assert.equal(getDangerAction('official.organizer.transfer', {}), null);
   assert.equal(getDangerAction('official.organizer.schedule', { name: 'x' }).confirmText, '发布活动');
   for (const action of ['schedule', 'pause', 'resume']) {

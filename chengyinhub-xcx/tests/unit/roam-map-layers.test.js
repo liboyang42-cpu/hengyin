@@ -9,7 +9,7 @@ const colors = { place: '#4ADE80', shop: '#E7A84B', plateText: '#132A2E' }
 
 test('筛选选项:地点 = 本屏主题/活动 + 地标标签;商家 = 商家标签;不预置分类', () => {
   const o = L.filterOptions(
-    [{ type: 1, tags: '公园,滨江' }, { type: 2, tags: '咖啡、餐饮' }, { type: 2, tags: '咖啡' }],
+    [{ type: 1, tags: '公园，滨江' }, { type: 2, tags: '咖啡、餐饮' }, { type: 2, tags: '咖啡' }],
     [{ kind: 'topic' }, { kind: 'activity' }, { kind: 'topic' }])
   assert.deepEqual(o.place, ['全部地点', '主题', '活动', '公园', '滨江'])
   assert.deepEqual(o.shop, ['全部商家', '咖啡', '餐饮'])

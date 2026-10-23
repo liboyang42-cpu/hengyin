@@ -111,12 +111,12 @@ test('报名或支付失败会持久显示，重新提交及关键选择变化�
   page.data.orderInfo = { registrationId: 99 }
   page._hostShareConsentReady = true
   page.handlePayment()
-  latestHandlers.onPayFail({ errMsg: '支付服务暂时不可用' })
-  assert.equal(page.data.submitError, '支付服务暂时不可用')
+  latestHandlers.onPayFail({ errMsg: '支付服务暂不可用' })
+  assert.equal(page.data.submitError, '支付服务暂不可用')
   /* 2026-09-05:失败不再额外弹 toast(toast + 页内错误 + 结果面板 = 同一句说三遍)。
      页内 submitError 仍是持久出口(上一行),面板负责把这一刻讲清楚。 */
   assert.equal(page.data.resultSheet.kind, 'fail')
-  assert.equal(page.data.resultSheet.why, '支付服务暂时不可用', '面板必须带上失败原因')
+  assert.equal(page.data.resultSheet.why, '支付服务暂不可用', '面板必须带上失败原因')
   assert.equal(goBackCalls, 0, '支付失败应留在结算页展示错误；未支付订单仍由取消接口释放')
   assert.equal(requests.at(-1).url, '/api/registration/cancel')
 })

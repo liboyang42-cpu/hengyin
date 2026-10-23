@@ -22,6 +22,6 @@
   <view class="b3__name">{{name}}</view>
   <view class="b3__sub" wx:if="{{sub}}">{{sub}}</view>
   <view class="b3__hint" wx:if="{{motionReduced && renderState === 'ready'}}">已减少动态效果</view>
-  <view class="b3__hint" aria-live="polite">{{renderState === 'loading' ? (style === 'glow' ? '正在准备发光徽章…' : '正在准备 3D 徽章…') : (renderState === 'fallback' ? '当前环境显示静态徽章预览' : (style === 'glow' ? '' : '拖动可旋转查看'))}}</view>
+  <view class="b3__hint" aria-live="polite">{{renderState === 'loading' ? (style === 'glow' ? '正在准备发光徽章…' : '正在准备 3D 徽章…') : (renderState === 'fallback' ? '静态预览' : (style === 'glow' ? '' : '拖动可旋转查看'))}}</view>
 </view>
 </view>

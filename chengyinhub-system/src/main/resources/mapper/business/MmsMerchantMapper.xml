@@ -9,7 +9,9 @@
         <result property="memberId"    column="member_id"    />
         <result property="name"    column="name"    />
         <result property="wechat"    column="wechat"    />
+        <result property="wechatQrcode"    column="wechat_qrcode"    />
         <result property="categoryId"    column="category_id"    />
+        <result property="categoryIds"    column="category_ids"    />
         <result property="logo"    column="logo"    />
         <result property="description"    column="description"    />
         <result property="derivatives"    column="derivatives"    />
@@ -52,7 +54,7 @@
     </resultMap>
 
     <sql id="selectMmsMerchantVo">
-        select id, member_id, name, wechat, category_id, logo, description, derivatives, derivative_benefits, website, preference, phone, address, business_time, business_license, status, reson, disable_reason, account_status, business_status, del_flag, capacity, available_time, suit_activity_types, charge_type, demand, coop_open, cover_image, slogan, city_role, story_title, gallery, tags, featured_type, featured_id, service_tag, service_text, location_lat, location_lng, location_verified, create_by, create_time, update_by, update_time from mms_merchant
+        select id, member_id, name, wechat, wechat_qrcode, category_id, category_ids, logo, description, derivatives, derivative_benefits, website, preference, phone, address, business_time, business_license, status, reson, disable_reason, account_status, business_status, del_flag, capacity, available_time, suit_activity_types, charge_type, demand, coop_open, cover_image, slogan, city_role, story_title, gallery, tags, featured_type, featured_id, service_tag, service_text, location_lat, location_lng, location_verified, create_by, create_time, update_by, update_time from mms_merchant
     </sql>
 
     <!-- 商家列表筛选条件:普通列表与距离排序列表共用,保证两条路径筛选口径完全一致 -->
@@ -103,7 +105,7 @@
       order by 先按 distance is null 升序(有坐标在前),再按 distance 升序 —— 无坐标一律排最后,不占前排。
     -->
     <select id="selectMerchantListByDistance" parameterType="com.chengyinhub.business.domain.dto.MerchantSearchQuery" resultMap="MerchantSearchResult">
-        select id, member_id, name, wechat, category_id, logo, description, derivatives, derivative_benefits, website, preference,
+        select id, member_id, name, wechat, wechat_qrcode, category_id, category_ids, logo, description, derivatives, derivative_benefits, website, preference,
                phone, address, business_time, business_license, status, reson, disable_reason, account_status, business_status,
                del_flag, capacity, available_time, suit_activity_types, charge_type, demand, coop_open,
                cover_image, slogan, city_role, story_title, gallery, tags, featured_type, featured_id,
@@ -165,7 +167,9 @@
             <if test="memberId != null">member_id,</if>
             <if test="name != null">name,</if>
             <if test="wechat != null">wechat,</if>
+            <if test="wechatQrcode != null">wechat_qrcode,</if>
             <if test="categoryId != null">category_id,</if>
+            <if test="categoryIds != null">category_ids,</if>
             <if test="logo != null">logo,</if>
             <if test="description != null">description,</if>
             <if test="derivatives != null">derivatives,</if>
@@ -209,7 +213,9 @@
             <if test="memberId != null">#{memberId},</if>
             <if test="name != null">#{name},</if>
             <if test="wechat != null">#{wechat},</if>
+            <if test="wechatQrcode != null">#{wechatQrcode},</if>
             <if test="categoryId != null">#{categoryId},</if>
+            <if test="categoryIds != null">#{categoryIds},</if>
             <if test="logo != null">#{logo},</if>
             <if test="description != null">#{description},</if>
             <if test="derivatives != null">#{derivatives},</if>
@@ -257,7 +263,9 @@
             <if test="memberId != null">member_id = #{memberId},</if>
             <if test="name != null">name = #{name},</if>
             <if test="wechat != null">wechat = #{wechat},</if>
+            <if test="wechatQrcode != null">wechat_qrcode = #{wechatQrcode},</if>
             <if test="categoryId != null">category_id = #{categoryId},</if>
+            <if test="categoryIds != null">category_ids = #{categoryIds},</if>
             <if test="logo != null">logo = #{logo},</if>
             <if test="description != null">description = #{description},</if>
             <if test="derivatives != null">derivatives = #{derivatives},</if>
@@ -375,7 +383,7 @@
         </foreach>
     </delete>
     <update id="clearProfileMedia">
-        update mms_merchant set logo = null, cover_image = null, gallery = null where id = #{id}
+        update mms_merchant set logo = null, cover_image = null, gallery = null, wechat_qrcode = null where id = #{id}
     </update>
 
     <update id="claimOwnerCas">

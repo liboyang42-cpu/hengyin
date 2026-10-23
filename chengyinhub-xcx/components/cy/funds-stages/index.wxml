@@ -12,7 +12,7 @@
   <view class="fs-row" wx:if="{{showWithdrawable}}">
     <text class="fs-label">可提现</text><text class="fs-amount fs-amount--strong">{{money.amount(stages.withdrawable)}}</text>
   </view>
-  <text class="fs-note" wx:if="{{!stages.amountsKnown}}">部分未到账金额暂时算不出，以结算到账为准</text>
+  <text class="fs-note" wx:if="{{!stages.amountsKnown}}">部分金额待结算</text>
 </view>
 <view class="fs fs-row" wx:elif="{{state === 'error'}}" aria-role="alert">
   <text class="fs-label">未到账金额暂时取不到</text>

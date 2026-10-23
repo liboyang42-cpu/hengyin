@@ -95,13 +95,13 @@ Page({
         if (epoch !== that._epoch) return;
         if (!res || res.code != '200') {
           if (isAuthFailure(res)) { that.deny(res); return; }
-          that.setData({ state: 'error', errorText: (res && res.msg) || '网络不稳定，稍后再试一次' });
+          that.setData({ state: 'error', errorText: (res && res.msg) || '网络异常，稍后再试一次' });
           return;
         }
         // shapeCustomerDetail 会核对回包里的 memberId 与路由参数一致,拒收串号响应
         const shaped = shapeCustomerDetail(res.data, that._memberId);
         if (!shaped) {
-          that.setData({ state: 'error', errorText: '客户详情数据格式异常' });
+          that.setData({ state: 'error', errorText: '客户详情加载失败' });
           return;
         }
         that.setData({ state: 'ready', detail: shaped, errorText: '', editing: false });
@@ -109,12 +109,12 @@ Page({
       successStatusAbnormal(res, statusCode) {
         if (epoch !== that._epoch) return;
         if (isAuthFailure(res, statusCode)) { that.deny(res, statusCode); return; }
-        that.setData({ state: 'error', errorText: (res && res.msg) || '网络不稳定，稍后再试一次' });
+        that.setData({ state: 'error', errorText: (res && res.msg) || '网络异常，稍后再试一次' });
       },
       fail(value, statusCode) {
         if (epoch !== that._epoch) return;
         if (isAuthFailure(value, statusCode)) { that.deny(value, statusCode); return; }
-        that.setData({ state: 'network-error', errorText: '网络不稳定，稍后再试一次' });
+        that.setData({ state: 'network-error', errorText: '网络异常，稍后再试一次' });
       },
     });
   },
@@ -209,7 +209,7 @@ Page({
       },
       fail() {
         // 写失败不许静默:不知道服务端到底存没存,必须让用户看见并自己决定重试
-        that.setData({ draftError: '网络不稳定，标签与备注可能没保存成功，请重新打开确认' });
+        that.setData({ draftError: '网络异常，标签与备注可能没保存成功，请重新打开确认' });
       },
     });
   },

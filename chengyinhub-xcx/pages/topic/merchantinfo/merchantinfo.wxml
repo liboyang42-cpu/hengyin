@@ -17,8 +17,8 @@
 </block>
 <block wx:elif="{{ projectReadAuth }}">
   <cy-nav-bar custom-back bind:back="goBack" />
-  <cy-empty wx:if="{{ projectReadAuth === 'login' }}" fill size="lg" kind="login" title="请登录后查看主题" cta="重新登录" bind:cta="retryProjectLogin" />
-  <cy-empty wx:else fill size="lg" kind="error" title="当前账号无权查看" sub="请返回后确认主题及账号权限" cta="返回上一页" bind:cta="goBack" />
+  <cy-empty wx:if="{{ projectReadAuth === 'login' }}" fill size="lg" kind="login" title="登录后查看主题" cta="登录" bind:cta="retryProjectLogin" />
+  <cy-empty wx:else fill size="lg" kind="error" title="当前账号无权查看" sub="" cta="返回上一页" bind:cta="goBack" />
 </block>
 <project-host wx:elif="{{ role === 'host' }}"
     hostOwnerType="{{ hostOwnerType || '' }}"
@@ -303,7 +303,7 @@
         <view class="wp">
         <view class="det-type">我在这条路线上的承接</view>
         <view wx:if="{{myChapterNodes.length}}">
-          <view class="dt">我的点位</view>
+          <view class="dt">我的节点</view>
           <view class="dd merchant-chapter-option" wx:for="{{myChapterNodes}}" wx:key="id" wx:for-item="chapterNode">
             <view>{{chapterNode.name}}</view>
             <view class="merchant-chapter-meta">{{chapterNode.address || '未填地址'}} · {{chapterNode.auditLabel}}</view>
@@ -329,7 +329,7 @@
             <view class="merchant-chapter-meta" wx:if="{{application.termsLabel}}">{{application.termsLabel}}</view>
             <view class="merchant-chapter-actions" wx:if="{{application.canSubmitOffer || application.canWithdraw || application.canConfigureNode}}">
               <cy-btn wx:if="{{application.canConfigureNode}}" variant="ghost" size="sm" class="cy-btn-inline"
-                data-chapter-id="{{application.chapterId}}" bindtap="openChapterNodeForm">配置点位</cy-btn>
+                data-chapter-id="{{application.chapterId}}" bindtap="openChapterNodeForm">配置节点</cy-btn>
               <cy-btn wx:if="{{application.canSubmitOffer}}" variant="ghost" size="sm" class="cy-btn-inline"
                 data-chapter-id="{{application.chapterId}}" bindtap="openChapterOfferForm">填写实际供给</cy-btn>
               <cy-btn wx:if="{{application.canAcceptInvite}}" variant="primary" size="sm" class="cy-btn-inline"
@@ -503,7 +503,7 @@
   code="{{checkinCode}}"
   bindlongpress="copyCheckinCode"
   title="本站打卡码"
-  desc="请让玩家扫这一张。可下载到相册，贴在店里长期使用。"
+  desc="长期有效，可保存后张贴"
   countdown=""
   error-text="{{checkinErr || '打卡码暂时没能生成'}}"
   secondary-text="{{checkinQrState === 'ready' && checkinQrUrl ? '保存到相册' : ''}}"

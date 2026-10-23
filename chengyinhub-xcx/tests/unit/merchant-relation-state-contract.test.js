@@ -72,30 +72,29 @@ function relationHome(overrides) {
 }
 
 function assertCardProjection(view) {
-  assert.match(view, /cover="\{\{item\.coverUrl\}\}"/)
-  assert.match(view, /logo="\{\{item\.logoUrl\}\}"/)
+  // 俱乐部卡整条 item 传入(coverUrl/logoUrl 已在页面投影好),不得退回读原始字段
+  assert.match(view, /<cy-club-card club="\{\{item\}\}"/)
 }
 
 test('合作页把后端公开封面与头像字段投影成卡片真实资源', () => {
   const { page, requests } = createPage()
-  page.onLoad({})
+  page.onLoad({ tab: 'club' })
   requests[0].success(relationHome({
     code: '200',
     data: {
       stats: { merchantCount: 0, clubCount: 0, pendingCoopCount: 0 },
       relations: [],
       discovery: {
-        merchants: [{ id: 2, memberId: 20, name: '邻店', coverImage: 'merchant-cover.jpg', logo: 'merchant-logo.png', businessStatus: 9, locationVerified: 'unknown', distance: -20 }],
-        clubs: [{ id: 3, name: '夜行俱乐部', cover: 'club-cover.jpg', logo: 'club-logo.png' }],
+        merchants: [{ id: 2, memberId: 20, name: '邻店' }],
+        clubs: [{ id: 3, name: '夜行俱乐部', cover: 'club-cover.jpg', logo: 'club-logo.png', businessStatus: 9, locationVerified: 'unknown', distance: -20 }],
       },
     },
   }))
 
-  assert.equal(page.data.merchants[0].coverUrl, 'https://img.example/merchant-cover.jpg')
-  assert.equal(page.data.merchants[0].logoUrl, 'https://img.example/merchant-logo.png')
-  assert.equal(page.data.merchants[0].displayStatus, 'none')
-  assert.equal(page.data.merchants[0].displayLocationVerified, null)
-  assert.equal(page.data.merchants[0].distanceText, '')
+  assert.equal(page.data.merchants, undefined, '2026-10-22:商家目录已移除')
+  assert.equal(page.data.clubs[0].displayStatus, 'none')
+  assert.equal(page.data.clubs[0].displayLocationVerified, null)
+  assert.equal(page.data.clubs[0].distanceText, '')
   assert.equal(page.data.clubs[0].coverUrl, 'https://img.example/club-cover.jpg')
   assert.equal(page.data.clubs[0].logoUrl, 'https://img.example/club-logo.png')
 
@@ -106,42 +105,40 @@ test('合作页把后端公开封面与头像字段投影成卡片真实资源',
 
 test('负控：卡片回退消费未转换字段时封面投影门禁会变红', () => {
   const broken = read('pages/merchant/relation/index.wxml')
-    .replace('cover="{{item.coverUrl}}"', 'cover="{{item.coverImage}}"')
-    .replace('logo="{{item.logoUrl}}"', 'logo="{{item.logo}}"')
+    .replace('<cy-club-card club="{{item}}"', '<cy-club-card club="{{item.raw}}"')
   assert.throws(() => assertCardProjection(broken))
 })
 
 test('合作页非空脏列表显示分区错误，不能伪装成成功空态', () => {
   const { page, requests } = createPage()
-  page.onLoad({})
+  page.onLoad({ tab: 'club' })
   requests[0].success(relationHome({
     code: 200,
     data: {
       stats: { merchantCount: 0, clubCount: 0, pendingCoopCount: 0 },
       relations: [],
       discovery: {
-        merchants: [{ id: 2, name: { raw: true } }],
-        clubs: [{ id: 3, name: '有效俱乐部' }],
+        merchants: [],
+        clubs: [{ id: 3, name: '有效俱乐部' }, { id: 4, name: { raw: true } }],
       },
     },
   }))
 
   assert.equal(page.data.pageState, 'ready')
-  assert.equal(page.data.merchants.length, 0)
-  assert.equal(page.data.merchantError, '部分商家资料暂无法显示')
-  assert.equal(page.data.clubError, '')
-  assert.match(read('pages/merchant/relation/index.wxml'), /merchantError[\s\S]*bind:action="loadRelationHome"/)
-  assert.match(read('pages/merchant/relation/index.wxml'), /wx:elif="\{\{!merchantError\}\}"[^>]*title="暂无可合作商家"/)
+  assert.equal(page.data.clubs.length, 1)
+  assert.equal(page.data.clubError, '部分俱乐部资料暂无法显示')
+  assert.match(read('pages/merchant/relation/index.wxml'), /clubError[\s\S]*bind:action="loadRelationHome"/)
+  assert.match(read('pages/merchant/relation/index.wxml'), /wx:elif="\{\{!clubError\}\}"[^>]*title="暂无可合作俱乐部"/)
 })
 
 test('合作页刷新失败保留上次内容并提供可见重试', () => {
   const { page, requests } = createPage()
-  page.onLoad({})
+  page.onLoad({ tab: 'club' })
   requests[0].success(relationHome({
     data: {
       stats: { merchantCount: 0, clubCount: 0, pendingCoopCount: 0 },
       relations: [],
-      discovery: { merchants: [{ id: 2, memberId: 20, name: '邻店' }], clubs: [] },
+      discovery: { merchants: [], clubs: [{ id: 2, name: '邻店俱乐部' }] },
     },
   }))
   requests[0].complete()
@@ -151,13 +148,13 @@ test('合作页刷新失败保留上次内容并提供可见重试', () => {
   requests[1].complete()
 
   assert.equal(page.data.pageState, 'ready')
-  assert.equal(page.data.merchants[0].displayName, '邻店')
+  assert.equal(page.data.clubs[0].displayName, '邻店俱乐部')
   assert.doesNotMatch(read('pages/merchant/relation/index.wxml'), /<cy-inline-error[^>]*staleError/)
 })
 
 test('合作页初次异常进入整页错误，请求静默且防重复', () => {
   const { page, requests } = createPage()
-  page.onLoad({})
+  page.onLoad({ tab: 'club' })
   page.loadRelationHome()
 
   assert.equal(requests.length, 1)
@@ -168,20 +165,19 @@ test('合作页初次异常进入整页错误，请求静默且防重复', () =>
 
   assert.equal(page.data.pageState, 'error')
   assert.equal(page.data.error, '合作数据加载失败')
-  assert.deepEqual(page.data.merchants, [])
   assert.deepEqual(page.data.clubs, [])
 })
 
 test('合作页 401 静默重登后自动重载，403 静默回会员中心', async () => {
   const { page, requests, navigations, state } = createPage()
-  page.onLoad({})
+  page.onLoad({ tab: 'club' })
   assert.equal(requests.length, 1)
 
   state.memberId = ''
   requests[0].fail({ code: 401, msg: '登录状态失效' }, 401)
   requests[0].complete()
   await flush()
-  assert.equal(page.data.pageState, 'loading', '重登期间保持普通加载态,不摆整屏去登录')
+  assert.equal(page.data.pageState, 'loading', '重登期间保持普通加载态，不摆整屏去登录')
   const retried = requests[1]
   assert.ok(retried, '重登成功后必须自动重拉合作数据')
   retried.success(relationHome())
@@ -191,7 +187,7 @@ test('合作页 401 静默重登后自动重载，403 静默回会员中心', as
   page.loadRelationHome()
   requests[2].fail({ code: 403, msg: '商家身份无效或权限不足' }, 403)
   assert.deepEqual(navigations.at(-1), { method: 'switchTab', url: '/pages/member/index/index' },
-    '无商家身份深链误入必须静默回会员中心,不弹整屏页')
+    '无商家身份深链误入必须静默回会员中心，不弹整屏页')
 
   const view = read('pages/merchant/relation/index.wxml')
   assertNoLoginGate(view)
@@ -215,21 +211,21 @@ test('负控:把未登录整屏 cy-empty 加回合作页必须判红', () => {
 
 test('合作页未登录先静默登录,失败只落页内错误态', async () => {
   const first = createPage({ memberId: '', sessionResult: { ok: false } })
-  first.page.onLoad({})
+  first.page.onLoad({ tab: 'club' })
   assert.equal(first.requests.length, 0, '登录没成功不该发合作请求')
   await flush()
   assert.equal(first.page.data.pageState, 'error')
   assert.equal(first.page.data.error, '登录失败，请重试')
 
   const second = createPage({ memberId: '' })
-  second.page.onLoad({})
+  second.page.onLoad({ tab: 'club' })
   await flush()
   assert.equal(second.requests.length, 1, '静默登录成功后必须自动加载')
 })
 
 test('合作页异常回调与缺少可访问主体的商家卡都不会落成空态', () => {
   const { page, requests } = createPage()
-  page.onLoad({})
+  page.onLoad({ tab: 'club' })
   requests[0].successStatusAbnormal({ msg: 'upstream abnormal' })
   requests[0].complete()
   assert.equal(page.data.pageState, 'error')
@@ -239,16 +235,16 @@ test('合作页异常回调与缺少可访问主体的商家卡都不会落成�
     data: {
       stats: { merchantCount: 0, clubCount: 0, pendingCoopCount: 0 },
       relations: [],
-      discovery: { merchants: [{ id: 2, name: '没有 memberId 的商家' }], clubs: [] },
+      discovery: { merchants: [], clubs: [{ id: 2, name: { raw: true } }] },
     },
   }))
-  assert.equal(page.data.merchants.length, 0)
-  assert.equal(page.data.merchantError, '部分商家资料暂无法显示')
+  assert.equal(page.data.clubs.length, 0)
+  assert.equal(page.data.clubError, '部分俱乐部资料暂无法显示')
 })
 
 test('合作页下拉刷新收口刷新态，卸载后迟到响应无效', () => {
   const { page, requests, stopped } = createPage()
-  page.onLoad({})
+  page.onLoad({ tab: 'club' })
   requests[0].success(relationHome())
   requests[0].complete()
 
@@ -259,12 +255,12 @@ test('合作页下拉刷新收口刷新态，卸载后迟到响应无效', () =>
     data: {
       stats: { merchantCount: 0, clubCount: 0, pendingCoopCount: 0 },
       relations: [],
-      discovery: { merchants: [{ id: 9, memberId: 90, name: '迟到商家' }], clubs: [] },
+      discovery: { merchants: [], clubs: [{ id: 9, name: '迟到俱乐部' }] },
     },
   }))
   requests[1].complete()
 
-  assert.deepEqual(page.data.merchants, [])
+  assert.deepEqual(page.data.clubs, [])
   assert.equal(stopped(), 1)
   const config = JSON.parse(read('pages/merchant/relation/index.json'))
   assert.equal(config.enablePullDownRefresh, true)
@@ -279,4 +275,42 @@ test('俱乐部卡所有入口先去主页，保留主题上下文', () => {
   page.goClub({ currentTarget: { dataset: { id: 7 } } })
   assert.match(navigations.at(-1).url, /pages\/club\/detail\/index\?id=7&topicId=990062/)
   assert.match(read('pages/merchant/relation/index.wxml'), /bind:action="goClub"/)
+})
+
+// 2026-10-22 owner:合作 tab = 帖子 | 俱乐部,帖子默认;商家不看其他商家
+test('合作页默认帖子 tab,拉 /api/club/post/feed;骨架超过 400ms 才出', () => {
+  const { page, requests } = createPage()
+  page.onLoad({})
+  assert.deepEqual(page.data.tabs.map((t) => t.label), ['帖子', '俱乐部'])
+  assert.equal(page.data.activeTab, 'feed')
+  const feedReq = requests.find((r) => r.url === '/api/club/post/feed')
+  assert.ok(feedReq, '帖子流请求')
+  assert.equal(page.data.feedState, 'loading')
+  assert.equal(page.data.feedSlow, false, '加载初期不显示骨架,避免闪屏')
+  feedReq.success({ code: 200, data: { clubCount: 1, rows: [{ id: 5, clubId: 3, content: '夜跑', nickname: '甲', images: 'a.jpg;b.jpg', createTime: '2026-10-21 10:00:00' }] } })
+  assert.equal(page.data.feedState, 'ready')
+  assert.equal(page.data.feed[0].picList.length, 2)
+  assert.equal(page.data.feed[0].memberNickname, '甲')
+})
+
+test('帖子为空/失败状态;刷新失败保留旧内容;切 tab 不重复拉取', () => {
+  const { page, requests } = createPage()
+  page.onLoad({})
+  const feedReq = () => requests.filter((r) => r.url === '/api/club/post/feed')
+  feedReq()[0].success({ code: 200, data: { clubCount: 0, rows: [] } })
+  assert.equal(page.data.feedState, 'empty')
+  assert.equal(page.data.feedEmptyTitle, '这里还没有帖子')
+  page.onTabChange({ detail: { key: 'club' } })
+  page.onTabChange({ detail: { key: 'feed' } })
+  assert.equal(feedReq().length, 1, '回到帖子 tab 不重拉,保留已有内容')
+  feedReq()[0].complete && feedReq()[0].complete()
+  page.loadFeed()
+  feedReq()[1].success({ code: 500 })
+  assert.equal(page.data.feedState, 'stale-error')
+})
+
+test('合作页模板不含商家目录入口', () => {
+  const view = read('pages/merchant/relation/index.wxml')
+  assert.doesNotMatch(view, /cy-merchant-card|goMerchant|merchants/)
+  assert.match(view, /<cy-post-card/)
 })

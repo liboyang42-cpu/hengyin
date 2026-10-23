@@ -61,7 +61,7 @@
       <view class="qa__fb qa__fb-enter {{multi ? (passed ? 'qa__fb--ok' : 'qa__fb--no') : ''}}"
             wx:if="{{feedback || shownFeedbackImages.length || (judge !== false && !finished && (passed || (multi && attempts > 0)))}}">
         <view class="qa__fb-h" wx:if="{{judge !== false && !finished}}">{{fbHead}}</view>
-        {{feedback || (judge !== false && multi && attempts > 0 && !finished && !passed ? '还不对,可以再选一次。' : '')}}
+        {{feedback || (judge !== false && multi && attempts > 0 && !finished && !passed ? '还不对，可以再选一次。' : '')}}
         <view class="qa__media" wx:for="{{shownFeedbackImages}}" wx:key="*this"
               data-i="{{index}}" bindtap="onPreviewFeedback" aria-role="button" aria-label="查看反馈图片"
               hover-class="qa__press" hover-stay-time="80">

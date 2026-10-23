@@ -22,6 +22,8 @@ function load(file, app = {}, wx = {}, pages = []) {
   instance.triggerEvent = () => {};
   return { instance, config };
 }
+// 模拟 wx.navigateTo 成功:同步回调 success/complete(菜单在跳成功后才收起)。
+const navigateOk = urls => ({ url, success, complete }) => { urls.push(url); if (success) success(); if (complete) complete(); };
 const tap = index => ({ currentTarget: { dataset: { index } } });
 
 test('悬浮发布原地展开；玩家与商家中间导航仍进入模板广场', () => {
@@ -64,7 +66,7 @@ test('关闭后到达的旧能力请求不能覆盖新一轮菜单', () => {
 for (const mode of [1, 2]) {
   test(`类型 ${mode} 在快速配置和专业手动中均保留 mode`, () => {
     const urls = [];
-    const { instance: sheet } = load('components/cy/publish-sheet/index.js', {}, { navigateTo: ({ url }) => urls.push(url) });
+    const { instance: sheet } = load('components/cy/publish-sheet/index.js', {}, { navigateTo: navigateOk(urls) });
     sheet.data.variant = 'quick'; sheet.data.pub = { permission: {} };
     sheet.chooseTopicMode({ currentTarget: { dataset: { mode } } });
     assert.equal(sheet.data.level, 'topicAbility');
@@ -76,7 +78,7 @@ for (const mode of [1, 2]) {
 
 test('模版保留现有介绍入口；信息未就绪时不会进入发布流程', () => {
   const urls = [];
-  const { instance: sheet } = load('components/cy/publish-sheet/index.js', {}, { navigateTo: ({ url }) => urls.push(url) });
+  const { instance: sheet } = load('components/cy/publish-sheet/index.js', {}, { navigateTo: navigateOk(urls) });
   sheet.data.variant = 'quick';
   sheet.goTemplate(); sheet.chooseTopicMode({ currentTarget: { dataset: { mode: 2 } } });
   assert.equal(urls.length, 0); assert.equal(sheet.data.level, 'cards');
@@ -86,7 +88,28 @@ test('模版保留现有介绍入口；信息未就绪时不会进入发布流�
 
 test('现有主题发布禁用权限仍会阻止跳转', () => {
   const urls = [];
-  const { instance: sheet } = load('components/cy/publish-sheet/index.js', {}, { navigateTo: ({ url }) => urls.push(url) });
+  const { instance: sheet } = load('components/cy/publish-sheet/index.js', {}, { navigateTo: navigateOk(urls) });
   sheet.data.pub = { permission: { canSimplePublish: false, canProPublish: false } };
   sheet.chooseSimple(); sheet.choosePro(); assert.equal(urls.length, 0);
+});
+
+test('L09 先跳转后收菜单:成功后才 close,失败时菜单保持打开', () => {
+  const order = [];
+  let pending = null;
+  const { instance: sheet } = load('components/cy/publish-sheet/index.js', {}, {
+    navigateTo: (options) => { order.push('navigate:' + options.url); pending = options; }
+  });
+  sheet.triggerEvent = name => order.push(name);
+  sheet.data.pub = { permission: {} };
+  sheet.goTemplate();
+  assert.deepEqual(order, ['navigate:/pages/publish/template-intro/index'], '新页上屏前不能先收起菜单');
+  sheet.goTemplate();
+  assert.equal(order.length, 1, '跳转进行中重复点击不应再次 navigateTo');
+  pending.success(); pending.complete();
+  assert.deepEqual(order, ['navigate:/pages/publish/template-intro/index', 'close']);
+
+  order.length = 0;
+  sheet.goTemplate();
+  pending.fail(); pending.complete();
+  assert.deepEqual(order, ['navigate:/pages/publish/template-intro/index'], '跳转失败时菜单不应关闭');
 });

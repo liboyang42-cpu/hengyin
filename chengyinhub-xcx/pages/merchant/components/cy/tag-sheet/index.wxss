@@ -1,0 +1,124 @@
+/* cy-tag-sheet · Figma「Edit Interests」(375pt 帧,px × 2 = rpx)。
+ * 颜色全是 Figma 定值,不读语义 token —— 商家白底档,手机深色模式下不翻。 */
+.ts {
+  /* cy-sheet 的角色档钉成商家白:页面在系统深色下会把 role 档切到玩家深玻璃,
+     这些变量从这里继承进 isolated 的 cy-sheet,把它拉回白底 */
+  /* 商家档常量(tokens.wxss 定义,深色块里不重定义) */
+  --cy-comp-sheet-role-glass: var(--cy-comp-sheet-merchant-glass);
+  --cy-comp-sheet-role-page: var(--cy-comp-sheet-merchant-elevated);
+  --cy-comp-sheet-role-surface: var(--cy-comp-sheet-merchant-elevated);
+  --cy-comp-sheet-role-card: var(--cy-comp-sheet-merchant-elevated);
+  --cy-comp-sheet-role-elevated: var(--cy-comp-sheet-merchant-elevated);
+  --cy-comp-sheet-role-text: #151B23;   /* ds-ok: Figma Edit Interests 定值,商家白底不随深色翻 */
+  --cy-comp-sheet-role-text-secondary: #777777;   /* ds-ok: Figma Edit Interests 定值,商家白底不随深色翻 */
+  --cy-comp-sheet-role-muted: #777777;   /* ds-ok: Figma Edit Interests 定值,商家白底不随深色翻 */
+  --cy-comp-sheet-role-divider: #EBEBEB;   /* ds-ok: Figma Edit Interests 定值,商家白底不随深色翻 */
+  --cy-comp-sheet-role-border-strong: #EBEBEB;   /* ds-ok: Figma Edit Interests 定值,商家白底不随深色翻 */
+  --cy-comp-sheet-handle-bg: #DBDBDB;   /* ds-ok: Figma Edit Interests 定值,商家白底不随深色翻 */
+  --cy-page-x: 40rpx;   /* Figma 左右 20px */
+}
+
+.ts__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 16rpx 0 24rpx;
+}
+.ts__title {
+  font-size: var(--cy-font-subtitle);   /* 32rpx = Figma 16px / 900 */
+  font-weight: 900;
+  line-height: 1.3;
+  color: #151B23;   /* ds-ok: Figma Edit Interests 定值,商家白底不随深色翻 */
+}
+.ts__count {
+  font-size: var(--cy-font-caption, 24rpx);
+  color: #777777;   /* ds-ok: Figma Edit Interests 定值,商家白底不随深色翻 */
+}
+.ts__hint {
+  display: block;
+  margin: -12rpx 0 24rpx;
+  font-size: var(--cy-font-caption, 24rpx);
+  color: #777777;   /* ds-ok: Figma Edit Interests 定值,商家白底不随深色翻 */
+}
+.ts__hint--error { color: #E5484D; }   /* ds-ok: 浅色 --cy-color-status-danger 原值,商家白底不随深色翻;保存失败回显不能和普通提示一样灰 */
+.ts__state {
+  min-height: 240rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16rpx;
+  font-size: var(--cy-font-body);
+  color: #777777;   /* ds-ok: Figma Edit Interests 定值,商家白底不随深色翻 */
+}
+
+/* 2026-10-22 owner:不翻页 —— 整片错落胶囊横向自由滚动。滚动区出血到面板两侧边缘,
+   内容左右各留 40rpx 页边;三行按序号错开起点,形成不规则的左右滑动感。 */
+.ts__scroll {
+  margin: 0 -40rpx;
+  width: calc(100% + 80rpx);
+  white-space: nowrap;
+}
+.ts__rows {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 16rpx;           /* 与行内间距一致 */
+  padding: 4rpx 40rpx 8rpx;
+}
+/* 第二轮(owner):胶囊缩小一档;每行左边对齐(不再错开起点),行内/行间距统一 16rpx。
+   字数不同所以每行右侧长短不一,这是正常的。 */
+.ts__row {
+  display: flex;
+  gap: 16rpx;
+}
+.ts__tag {
+  flex: none;
+  box-sizing: border-box;
+  height: 68rpx;        /* 34px:比 Figma 47px 小一档 */
+  border-radius: var(--cy-radius-pill);
+  border: 1px solid #EBEBEB;   /* ds-ok: Figma Edit Interests 定值,商家白底不随深色翻 */
+  background: #FFFFFF;   /* ds-ok: Figma Edit Interests 定值,商家白底不随深色翻 */
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  padding: 0 26rpx 0 22rpx;   /* 宽度随文字 */
+}
+.ts__tag--on { background: #D9D9D9; }   /* ds-ok: Figma Edit Interests 定值,商家白底不随深色翻 */
+.ts__icon {
+  flex: none;
+  width: 32rpx;         /* 16 × 15px,保持 Figma 21.5:19.9 比例 */
+  height: 30rpx;
+  opacity: .58;         /* 未选:#131313 × 58% 叠白 ≈ #767676,对上稿里的 #777 */
+}
+.ts__tag--on .ts__icon { opacity: 1; }
+.ts__label {
+  flex: none;
+  font-size: var(--cy-font-label, 26rpx);   /* 13px regular */
+  font-weight: 400;
+  color: #777777;   /* ds-ok: Figma Edit Interests 定值,商家白底不随深色翻 */
+  white-space: nowrap;
+}
+.ts__tag--on .ts__label { color: #131313; }   /* ds-ok: Figma Edit Interests 定值,商家白底不随深色翻 */
+.ts__check {
+  flex: none;
+  margin-left: 2rpx;
+  width: 15rpx;
+  height: 11rpx;
+}
+
+.ts__footer { padding-top: 16rpx; }
+.ts__save {
+  height: 96rpx;        /* 48px */
+  border-radius: var(--cy-radius-lg);   /* 32rpx = 16px */
+  background: #070005;   /* ds-ok: Figma Edit Interests 定值,商家白底不随深色翻 */
+  color: #FFFFFF;   /* ds-ok: Figma Edit Interests 定值,商家白底不随深色翻 */
+  font-size: var(--cy-font-body);   /* 28rpx = 14px semibold */
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.ts__save--busy { opacity: .5; }
+
+/* isolated 下全局 .cy-pressed 进不来,本地一份;只减淡不位移(同 cy-sheet 的做法) */
+.ts--pressed { opacity: .72; }

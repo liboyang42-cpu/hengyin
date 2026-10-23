@@ -1,6 +1,6 @@
 <cy-sheet show="{{show}}" title="认领已有门店" bind:close="onClose">
   <view class="mcs">
-    <view wx:if="{{phase === 'loading'}}" class="mcs__note" aria-role="status" aria-live="polite">正在读取认领状态…</view>
+    <view wx:if="{{phase === 'loading'}}" class="mcs__note" aria-role="status" aria-live="polite">加载中</view>
 
     <cy-inline-error wx:elif="{{phase === 'error'}}" kind="error" title="认领状态读取失败" sub="{{loadError}}"
                      action="重试" bind:action="retry" />
@@ -16,7 +16,7 @@
     </block>
 
     <block wx:else>
-      <view class="mcs__note">门店已在城瘾上线、但还没有所有者时，可提交认领，审核通过后归到你的账号。</view>
+      <view class="mcs__note">认领已上线、无人管理的门店</view>
 
       <view wx:if="{{!picked}}" class="mcs__block">
         <view class="mcs__search">
@@ -26,7 +26,7 @@
         </view>
         <view wx:for="{{candidates}}" wx:key="id" class="mcs__cand" data-id="{{item.id}}" bindtap="pick"
               aria-role="button" aria-label="选择{{item.name}}" hover-class="cy-pressed" hover-stay-time="80">{{item.name}}</view>
-        <view wx:if="{{searched && !candidates.length}}" class="mcs__note">没有找到这家门店。若尚未上线，请走“商家入驻”。</view>
+        <view wx:if="{{searched && !candidates.length}}" class="mcs__note">未找到门店，可申请入驻</view>
       </view>
 
       <block wx:else>

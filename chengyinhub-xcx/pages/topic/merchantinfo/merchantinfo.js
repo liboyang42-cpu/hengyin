@@ -70,7 +70,7 @@ function replacementPendingReview(row) {
 }
 
 function chapterNodeReadOnlyReason(info, application) {
-  if (application && application.offerState === 'WITHDRAWN') return '供给已退出，点位仅保留历史记录';
+  if (application && application.offerState === 'WITHDRAWN') return '供给已退出，节点仅保留历史记录';
   const lifecycle = info && info.lifecycle;
   if (replacementApplication(application)) {
     const paused = info && Number(info.status) === 1 && info.userStatus != null
@@ -85,8 +85,8 @@ function chapterNodeReadOnlyReason(info, application) {
     return '补位状态已变化，请刷新承接进度';
   }
   if (lifecycle === 1 || lifecycle === '1' || lifecycle === 7 || lifecycle === '7') return '';
-  if (lifecycle === 0 || lifecycle === '0') return '主题尚在草稿阶段，暂不可配置点位';
-  if ([2, 3, 4, 5, 6, '2', '3', '4', '5', '6'].includes(lifecycle)) return '主题已进入商业冻结阶段，不可配置点位';
+  if (lifecycle === 0 || lifecycle === '0') return '主题尚在草稿阶段，暂不可配置节点';
+  if ([2, 3, 4, 5, 6, '2', '3', '4', '5', '6'].includes(lifecycle)) return '主题已锁定，不可配置节点';
   return '主题状态暂未确认，请刷新详情后重试';
 }
 
@@ -656,7 +656,7 @@ Page({
         } : {
           chapterRecruitmentLoading: false,
           chapterRecruitmentState: 'error',
-          chapterRecruitmentError: app.getRequestErrorMessage(res, '可承接章节加载失败，请稍后重试'),
+          chapterRecruitmentError: app.getRequestErrorMessage(res, '可承接章节加载失败，请重试'),
         });
         that.refreshMyChapterApplications();
       },
@@ -665,7 +665,7 @@ Page({
         that.setData({
           chapterRecruitmentLoading: false,
           chapterRecruitmentState: 'error',
-          chapterRecruitmentError: app.getRequestErrorMessage(res, '网络异常，可承接章节暂时没能加载'),
+          chapterRecruitmentError: app.getRequestErrorMessage(res, '网络异常，可承接章节加载失败'),
         });
         that.refreshMyChapterApplications();
       }
@@ -861,7 +861,7 @@ Page({
         if (!current()) return;
         if (Number(that.data.topicId) !== Number(topicId)) return;
         if (res.code != '200' || !isRecordList(res.data)) {
-          if (that.data.chapterProject) that.setData({ myChapterNodesError: app.getRequestErrorMessage(res, '我的点位没能加载出来') });
+          if (that.data.chapterProject) that.setData({ myChapterNodesError: app.getRequestErrorMessage(res, '我的节点加载失败') });
           return;
         }
         const rows = res.data;
@@ -876,7 +876,7 @@ Page({
         if (current.handle(res)) return;
         if (!current()) return;
         if (Number(that.data.topicId) !== Number(topicId)) return;
-        if (that.data.chapterProject) that.setData({ myChapterNodesError: app.getRequestErrorMessage(res, '网络异常，我的点位没能加载出来') });
+        if (that.data.chapterProject) that.setData({ myChapterNodesError: app.getRequestErrorMessage(res, '网络异常，我的节点加载失败') });
       },
     });
   },
@@ -1249,7 +1249,7 @@ Page({
       if (!application || Number(draft.chapterId) !== Number(this.data.selectedChapterId)) return;
       this._chapterApplying = true;
       this.setData({ chapterNodeSubmitting: true });
-      cyLoading.show('保存点位中...');
+      cyLoading.show('保存节点中...');
       this.submitChapterNodeDraft(draft);
       return;
     }
@@ -1368,7 +1368,7 @@ Page({
         else if (dc) dc.failed(app.getRequestErrorMessage(res, '邀请未处理，请重试'));
         else cyToast(app.getRequestErrorMessage(res, '邀请未处理，请重试'));
       },
-      fail: () => { if (current()) { if (dc) dc.failed('结果未确认，请刷新承接进度核对'); else cyToast('结果未确认，请刷新承接进度核对'); } },
+      fail: () => { if (current()) { if (dc) dc.failed('结果未确认，请刷新承接进度确认'); else cyToast('结果未确认，请刷新承接进度确认'); } },
       complete: () => { this._chapterWithdrawing = false; },
     });
   },
@@ -1391,7 +1391,7 @@ Page({
       header: { 'Content-Type': 'application/json' },
       data: JSON.stringify({ applicationId, scope: this.data.operationScope }),
       success: (res) => { if (current()) { if (res.code == '200') { this.loadOwnerChapterApplications(true); if (dc) dc.done(); } else if (dc) dc.failed(app.getRequestErrorMessage(res, '邀请未撤回，请重试')); else cyToast(app.getRequestErrorMessage(res, '邀请未撤回，请重试')); } },
-      fail: () => { if (current()) { if (dc) dc.failed('结果未确认，请刷新邀请列表核对'); else cyToast('结果未确认，请刷新邀请列表核对'); } },
+      fail: () => { if (current()) { if (dc) dc.failed('结果未确认，请刷新邀请列表确认'); else cyToast('结果未确认，请刷新邀请列表确认'); } },
       complete: () => { this._chapterApplicationAuditing = false; },
     });
   },
@@ -1520,10 +1520,10 @@ Page({
           this.setData({ chapterNodeFormVisible: false });
           this.loadMyChapterNodes(true);
           this.loadMyChapterApplications(true);
-          cyToast.success(this.data.chapterNodeFormMode === 'node' ? '点位已保存，请查看承接进度' : '已提交，等待审核');
+          cyToast.success(this.data.chapterNodeFormMode === 'node' ? '节点已保存，请查看承接进度' : '已提交，等待审核');
           return;
         }
-        app.tips(app.getRequestErrorMessage(res, '点位提交失败'));
+        app.tips(app.getRequestErrorMessage(res, '节点提交失败'));
       },
       fail: () => {
         cyToast('网络错误，请重试');
@@ -1604,7 +1604,7 @@ Page({
     // 总数只是数量，不授予读取未揭示节点、模板或路线的权限。
     // 缺失值不生成站点条目；章节局部节点标签继续反映各自可见内容。
     const stations = Number(d.locationCount);
-    if (Number.isFinite(stations) && stations > 0) out.push(stations + ' 个站点');
+    if (Number.isFinite(stations) && stations > 0) out.push(stations + ' 个节点');
     const plays = Number(d.templateCount);
     if (Number.isFinite(plays) && plays > 0) out.push(plays + ' 个玩法');
     if (d.audioUrl) {
@@ -1855,7 +1855,7 @@ Page({
           }
           const all = rawRegistrations || [];
           const myStations = all.length > 1 ? all.map(function (r) {
-            return { id: r.id, name: r.nodeName || r.chapterName || '未命名站点' };
+            return { id: r.id, name: r.nodeName || r.chapterName || '未命名节点' };
           }) : [];
           that.setData({
             loadFailed: false, role: 'join', chapterProject: false, regId: reg.id,
@@ -2047,7 +2047,7 @@ Page({
          只说供给与点位,商家/主办方看不出点位也会跟着过审 —— 而点位一过审就对玩家公开。 */
       cyModal.show({
         title: '通过章节申请',
-        content: '通过后商家即可按约定准备供给与点位；本次已提交的点位将一并通过审核。',
+        content: '通过后商家即可按约定准备供给与节点；本次已提交的节点将一并通过审核。',
         confirmText: '确认通过',
         success(res) { if (res.confirm) submit('通过'); },
       });
@@ -2081,27 +2081,27 @@ Page({
         data: { nodeId, approve, reason: reason || '', scope: that.data.operationScope },
         success(res) {
           if (res.code != '200') {
-            app.tips(app.getRequestErrorMessage(res, '点位审核失败'));
+            app.tips(app.getRequestErrorMessage(res, '节点审核失败'));
             return;
           }
-          cyToast(approve ? '点位已通过' : '点位已驳回');
+          cyToast(approve ? '节点已通过' : '节点已驳回');
           that.loadPendingMerchantNodes(true);
         },
-        fail(res) { app.tips(app.getRequestErrorMessage(res, '点位审核失败')); },
+        fail(res) { app.tips(app.getRequestErrorMessage(res, '节点审核失败')); },
         complete() { that._merchantNodeAuditing = false; },
       });
     };
     if (approve) {
       cyModal.show({
-        title: '通过商家点位',
-        content: '这是内容准入，不代表平台或主办方为商家背书。',
+        title: '通过商家节点',
+        content: '仅表示内容已通过审核',
         confirmText: '确认通过',
         success(res) { if (res.confirm) submit('通过'); },
       });
       return;
     }
     cyModal.show({
-      title: '驳回商家点位',
+      title: '驳回商家节点',
       editable: true,
       placeholderText: '填写需修改的内容',
       confirmText: '确认驳回',
@@ -2340,7 +2340,7 @@ Page({
       playerActions: this.data.role === 'host'
         // CU-M-183:商家那本台账不按主题过滤,按钮就得先说清是「全店」——
         // 点进去才发现混着别的项目,主办方会以为名单和台账口径不一致。
-        ? [{ key: 'goLedger', label: '查看全店台账' }]
+        ? [{ key: 'goLedger', label: '查看全店核销记录' }]
         : [],
     });
     app.sendRequest({
@@ -2354,7 +2354,7 @@ Page({
             || Array.isArray(res.data) || !isRecordList(res.data.rows)) {
           // CU-C-67:读失败是「名单没拿到」,不是「一单没卖」—— 原来两件事共用同一句话,
           // 俱乐部主理人看到「名单没加载出来」而顶部还摆着三个 0,分不出是哪一种。
-          that.showPlayerSheetError(app.getRequestErrorMessage(res, '名单没加载出来'));
+          that.showPlayerSheetError(app.getRequestErrorMessage(res, '名单加载失败'));
           return;
         }
         that.setData(that.buildPlayerSheet(res.data, that.data.playerSheet.filter));
@@ -2369,7 +2369,7 @@ Page({
   /* CU-C-67:名单读失败就要说读失败 —— 分开存、分开渲染(零单的话在 buildPlayerSheet 里)。 */
   showPlayerSheetError(text) {
     this.setData({
-      'playerSheet.errorText': String(text || '名单没加载出来'),
+      'playerSheet.errorText': String(text || '名单加载失败'),
       'playerSheet.raw': {},
       'playerSheet.rows': [],
       'playerSheet.groups': [],
@@ -2504,7 +2504,7 @@ Page({
       return [{ key: 'goInviteMerchant', label: '去找商家' }, review];
     }
     if (this._hostCanEdit === false) return [review];
-    return [{ key: 'goAddStations', label: '去加站点' }, review];
+    return [{ key: 'goAddStations', label: '去加节点' }, review];
   },
 
   /** CU-M-181:「去加站点」= 主题编辑器,与「更多 → 票价与主题内容」同一个落点。 */
@@ -2514,7 +2514,7 @@ Page({
     if (this._navigating) return; this._navigating = true; wx.navigateTo({
       url: '/pages/publish/fabu/index?id=' + id
         + (this.data.operationScope === 'MERCHANT' ? '&scope=MERCHANT' : ''),
-      fail: () => app.tips('编辑器暂时打不开，稍后重试'), complete: () => { this._navigating = false; },
+      fail: () => app.tips('编辑器无法打开，稍后重试'), complete: () => { this._navigating = false; },
     });
   },
 
@@ -2648,7 +2648,7 @@ Page({
         stepText: (row.nodeOrder && row.nodeTotal) ? ('第 ' + row.nodeOrder + '/' + row.nodeTotal + ' 站') : '',
         // 一行说完「多少人 · 成不成团」,避免模板里拼三段 text 造出连缀的分隔点
         metaText: [
-          (row.paidCount || 0) + ' 人',
+          row.paidCount != null ? row.paidCount + ' 人' : '',
           that.teamStatusText(row.teamStatus),
         ].filter(Boolean).join(' · '),
         arrivalText: hasWindow
@@ -2821,7 +2821,7 @@ Page({
     if (state.key === 'pending') {
       rows.push({ key: 'audit', label: '主办方审核中', st: 'now', tag: '进行中',
         sub: '一般 1–2 个工作日出结果' });
-      rows.push({ key: 'start', label: '开始接待', time: '待定', st: 'wait', sub: '通过后才会排期' });
+      rows.push({ key: 'start', label: '开始接待', time: '待定', st: 'wait', sub: '' });
       rows.push({ key: 'end', label: '结束', time: '待定', st: 'wait' });
       return rows;
     }
@@ -2941,7 +2941,7 @@ Page({
    */
   buildPlay(tpl) {
     if (!tpl) return null;
-    const VERIFY_TEXT = { 1: '玩家答文字题,你对暗号', 2: '玩家拍照打卡,你确认', 3: '玩家选选项,你确认' };
+    const VERIFY_TEXT = { 1: '玩家答文字题，你对暗号', 2: '玩家拍照打卡，你确认', 3: '玩家选选项，你确认' };
     const chips = [];
     if (tpl.players) chips.push(tpl.players);
     if (tpl.duration) chips.push(tpl.duration + ' 分钟');
@@ -3239,19 +3239,19 @@ Page({
       })),
     });
     const OPS = [
-      { key: 'howto',   label: '这一站怎么接待', sub: '商家只做什么 · 不看剧情(剧透隔离)' },
-      { key: 'service', label: '服务时段与接待容量', sub: '决定这一站能接多少人、什么时候接' },
+      { key: 'howto',   label: '这一站怎么接待', sub: '商家须知' },
+      { key: 'service', label: '服务时段与接待容量', sub: '' },
       { key: 'customer', label: '客户 · 谁要来 / 谁还没来',
-        sub: '查看报名、到店和核销情况' },
-      { key: 'pause',   label: '暂停接待', sub: '临时有事 / 设备故障 · 需要已审核的备用方案' },
+        sub: '' },
+      { key: 'pause',   label: '暂停接待', sub: '需已审核的备用方案' },
     ];
     if (this.data.role === 'host') {
       const canEdit = this._hostCanEdit !== false;
-      return present({ subtitle: '你是这条路线的主办方,可以编辑主题内容和管理章节', groups: [
+      return present({ subtitle: '', groups: [
         { head: '编辑', rows: [
           ...((this.data.info || {}).canResubmitSupplyReview === true ? [{ key: 'supplyReview', label: '补位后重新提交审核',
-            sub: '核对新供给并提交新版本，报名仍保持暂停', disabled: !!this._supplyReviewBusy }] : []),
-          { key: 'perk',  label: '权益票夹', sub: '商家常备权益 · 挂在店铺装修里' },
+            sub: '确认新供给并提交新版本，报名仍保持暂停', disabled: !!this._supplyReviewBusy }] : []),
+          { key: 'perk',  label: '权益票夹', sub: '' },
           { key: 'topic', label: '票价与主题内容', sub: canEdit ? '改票价 / 章节 / 节点' : '当前没有编辑资格',
             disabled: !canEdit, tag: canEdit ? '' : '不可用' },
         ] },
@@ -3282,38 +3282,38 @@ Page({
     }
     const st = this.data.stateKey;
     if (st === 'ended') {
-      return present({ subtitle: '结束后只剩复盘与结算', groups: [
+      return present({ subtitle: '', groups: [
         { head: '本站运营', rows: [
-          { key: 'review',     label: '本站复盘', sub: '只看自己这一站 · 缺的指标不显示为零' },
-          { key: 'settlement', label: '查看结算报告', sub: '结算明细与分润' },
+          { key: 'review',     label: '本站复盘', sub: '' },
+          { key: 'settlement', label: '查看结算报告', sub: '' },
         ] },
-        { head: '其他', rows: [{ key: 'support', label: '联系客服', sub: '结算有疑问找平台' }] },
+        { head: '其他', rows: [{ key: 'support', label: '联系客服', sub: '' }] },
       ] });
     }
     if (this.canEditRegistration()) {
       // pending / rejected:还能改内容,也还没开始接待
-      return present({ subtitle: '这两个状态还能改内容,也还没开始接待', groups: [
+      return present({ subtitle: '', groups: [
         { head: '我的报名', rows: [
-          { key: 'editRegistration', label: '修改承接内容', sub: '改完重新进入审核', tag: '可改' },
+          { key: 'editRegistration', label: '修改承接内容', sub: '', tag: '可改' },
         ] },
         { head: '先配起来', rows: [
-          { key: 'service', label: '服务时段与接待容量', sub: '过审前就能填,过审后直接生效' },
+          { key: 'service', label: '服务时段与接待容量', sub: '' },
         ] },
         { head: '其他', rows: [
-          { key: 'support', label: '联系客服', sub: '审核有疑问找平台' },
-          { key: 'cancel',  label: '取消参与', sub: '审核中可直接取消,不用走客服', danger: true },
+          { key: 'support', label: '联系客服', sub: '' },
+          { key: 'cancel',  label: '取消参与', sub: '', danger: true },
         ] },
       ] });
     }
     // confirmed / running:内容锁死,运营动作才是主角
-    return present({ subtitle: '审核通过后内容锁死,这里全是运营动作', groups: [
+    return present({ subtitle: '', groups: [
       { head: '我的报名', rows: [
         { key: 'editRegistration', label: '修改承接内容',
-          sub: '该报名已通过审核,内容不能再修改', disabled: true, tag: '不可用' },
+          sub: '已过审，不可修改', disabled: true, tag: '不可用' },
       ] },
       { head: '本站运营', rows: OPS },
       { head: '其他', rows: [
-        { key: 'support', label: '联系客服', sub: '要改内容也走客服' },
+        { key: 'support', label: '联系客服', sub: '修改请联系客服' },
         { key: 'quit',    label: '联系客服申请退出', sub: '已确认承接后不能自行取消', danger: true },
       ] },
     ] });
@@ -3375,7 +3375,7 @@ Page({
         : '章节还没读到 · 稍后再试';
     }
     // 这一行管的还是同一章的招商:结束后商家不能再申请承接,已确认的承接不受影响
-    return '结束后商家不能再申请承接本章,已确认的承接不受影响';
+    return '结束后商家不能再申请承接本章，已确认的承接不受影响';
   },
   chapterRecruitTag() {
     const c = this.chapterRecruitChapter();
@@ -3448,7 +3448,7 @@ Page({
       success: res => {
         if (!current()) return;
         if (!res || Number(res.code) !== 200 || !res.data || res.data.reviewState !== 'PENDING') {
-          app.tips(app.getRequestErrorMessage(res, '重提未完成，请核对供给')); return;
+          app.tips(app.getRequestErrorMessage(res, '重提未完成，请确认供给')); return;
         }
         this._supplyReviewBusy = false;
         app.tips('已提交审核，报名保持暂停');
@@ -3474,7 +3474,7 @@ Page({
     if (key === 'perk') {
       wx.navigateTo({
         url: '/pages/merchant/decor/perks/index',
-        fail: () => app.tips('权益票夹暂时打不开，稍后重试'),
+        fail: () => app.tips('权益票夹无法打开，稍后重试'),
       });
       return;
     }
@@ -3488,7 +3488,7 @@ Page({
     if (key === 'support' || key === 'quit') {
       cyModal.show({
         title: key === 'quit' ? '申请退出' : '联系客服',
-        content: '在「我的 → 帮助与客服」里发起,带上这条路线的名字,客服会核对后处理。',
+        content: '在「我的 → 帮助与客服」里发起，带上这条路线的名字，客服会确认后处理。',
         showCancel: false, confirmText: '知道了',
       });
       return;
@@ -3578,15 +3578,15 @@ Page({
       ? (this.data.myChapterApplications || []).filter(row => row.canConfigureNode)
       : (this.data.myChapterNodes || []);
     if (!rows.length) {
-      app.tips(action === 'edit' ? '当前没有可编辑的章节' : '请先配置点位，审核通过后可出示二维码');
+      app.tips(action === 'edit' ? '当前没有可编辑的章节' : '请先配置节点，审核通过后可出示二维码');
       return;
     }
     this._stationPick = { chapterAction: action,
       ids: rows.map(row => action === 'edit' ? row.chapterId : row.id) };
     if (rows.length === 1) return this.onStationSheetSelect({ detail: { index: 0 } });
     this.setData({ stationSheetShow: true,
-      stationSheetTitle: action === 'edit' ? '选择编辑章节' : '选择出示码的点位',
-      stationSheetItems: rows.map(row => action === 'edit' ? row.chapterName || '未命名章节' : row.name || '未命名点位') });
+      stationSheetTitle: action === 'edit' ? '选择编辑章节' : '选择出示码的节点',
+      stationSheetItems: rows.map(row => action === 'edit' ? row.chapterName || '未命名章节' : row.name || '未命名节点') });
   },
 
   onStationSheetCancel() { this._stationPick = null; this.setData({ stationSheetShow: false }); },
@@ -3626,7 +3626,7 @@ Page({
           // CU-M-21:原来只 toast 2 秒,点完回到原页像没反应 —— 改成要点「知道了」的说明。
           cyModal.show({
             title: '还没有可接待的场次',
-            content: '本站接待、服务时段和暂停都按场次配置。这条路线开出场次、且你这一站在场次里之后,这里才能进入。',
+            content: '本站接待、服务时段和暂停都按场次配置。这条路线开出场次、且你这一站在场次里之后，这里才能进入。',
             showCancel: false, confirmText: '知道了',
           });
           return;
@@ -3643,7 +3643,7 @@ Page({
         });
       },
       fail(res) {
-        if (current.handle(res)) return; app.tips(app.getRequestErrorMessage(res, '本站入口没读到,检查网络后重试')); },
+        if (current.handle(res)) return; app.tips(app.getRequestErrorMessage(res, '本站入口没读到，检查网络后重试')); },
       // 闸在 complete 里放:只在 success 里放的话,失败一次这个入口就永久点不动了
       complete() { if (!current()) return; that._stationLoading = false; cyLoading.hide(); },
     });
@@ -3681,7 +3681,7 @@ Page({
         if (current.handle(res)) return;
         if (!(res && (res.code == 200 || res.code == '200') && res.data)) {
           that.setData({ 'chapterSheet.state': 'error',
-            'chapterSheet.error': app.getRequestErrorMessage(res, '本章内容没加载出来') });
+            'chapterSheet.error': app.getRequestErrorMessage(res, '本章内容加载失败') });
           return;
         }
         that.applyChapterSheet(res.data);
@@ -3689,7 +3689,7 @@ Page({
       fail(res) {
         if (current.handle(res)) return;
         that.setData({ 'chapterSheet.state': 'error',
-          'chapterSheet.error': app.getRequestErrorMessage(res, '本章内容没加载出来,检查网络后重试') });
+          'chapterSheet.error': app.getRequestErrorMessage(res, '本章内容加载失败，检查网络后重试') });
       },
     });
   },
@@ -3717,7 +3717,7 @@ Page({
       const tpl = n.cmsMemberTemplate || null;
       return {
         id: n.id,
-        name: n.name || '未命名站点',
+        name: n.name || '未命名节点',
         // 玩法与奖励复用承接页那两个 build —— 同一份形状,不另写一套渲染口径
         play: this.buildPlay(tpl),
         reward: this.buildReward(tpl),
@@ -3751,7 +3751,7 @@ Page({
       nodeSheet: {
         show: true,
         name: node.name,
-        chapterText: (node.mine ? '我承接的站点 · ' : '') + (this.data.chapterSheet.chapterName || ''),
+        chapterText: (node.mine ? '我承接的节点 · ' : '') + (this.data.chapterSheet.chapterName || ''),
         play: play,
         reward: node.reward,
         templateId: node.templateId,
@@ -3966,7 +3966,7 @@ Page({
      source=finance 时该页拿 topicId 当记录标识(settlement-detail/index.js:79-81)。 */
   goSettlementReport() {
     const id = this.data.topicId || (this.data.info && this.data.info.topicId);
-    if (!id) { app.tips('还没读到主题标识，稍后再试'); return; }
+    if (!id) { app.tips('主题加载中，请稍后再试'); return; }
     if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/coop/settlement-detail/index?source=finance&topicId=' + id, complete: () => { this._navigating = false; } });
   },
 

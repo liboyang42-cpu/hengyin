@@ -30,13 +30,13 @@ test('M5 automator 只能经公开 UI 与 HTTP 边界验收，禁止页面状态
   assert.match(creatorFlow, /node-route-entry[\s\S]*route-mapping-row[\s\S]*trigger\('change'/,
     '创作端必须经公开节点摘要与 picker 完成结果到下一站的对应')
   assert.match(creatorFlow, /firstPicker\.trigger\('change', \{ value: 2 \}\)/,
-    '创作端必须真的改变第一条结果对应，不能选择原目标后只回读原图')
+    '创作端必须真的改变第一条结果对应，不能选择原目标后只刷新原图')
   assert.match(creatorFlow, /secondPicker\.trigger\('change', \{ value: 1 \}\)/,
     '创作端必须保留两个不同目标，交换两条结果对应后再验收玩家分流')
   assert.match(creatorFlow, /outcomeCode === 'HISTORY'[\s\S]*toNodeId\) === '1003'/,
-    '保存请求必须回读寻找历史的新目标')
+    '保存请求必须刷新寻找历史的新目标')
   assert.match(creatorFlow, /outcomeCode === 'ART'[\s\S]*toNodeId\) === '1002'/,
-    '保存请求必须回读寻找艺术的新目标')
+    '保存请求必须刷新寻找艺术的新目标')
   assert.match(creatorFlow, /重新进入后“寻找历史”仍对应艺术支线/,
     '重新进入必须从 API 恢复刚才修改的对应')
   assert.doesNotMatch(creatorFlow, /route-advanced-toggle|placeholder="权重"|runRouteSimulation/,

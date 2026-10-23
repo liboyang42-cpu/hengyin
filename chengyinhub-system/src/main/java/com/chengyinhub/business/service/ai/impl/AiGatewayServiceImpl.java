@@ -38,6 +38,8 @@ public class AiGatewayServiceImpl implements AiGatewayService
     private static final Logger log = LoggerFactory.getLogger(AiGatewayServiceImpl.class);
 
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("yyyyMMdd");
+    /** 每日额度按北京时间换日，不随 JVM 默认时区漂移。 */
+    static final java.time.ZoneId QUOTA_ZONE = java.time.ZoneId.of("Asia/Shanghai");
     private static final String RATE_KEY_PREFIX = "ai:gen:limit:";
     private static final int BRIEF_MAX = 500;
     private static final int REVIEW_CHUNK_MAX = 2000;
@@ -276,7 +278,7 @@ public class AiGatewayServiceImpl implements AiGatewayService
         }
         String rateGroup = rateGroupOf(bizType);
         int limit = dailyLimitOf(rateGroup);
-        String key = RATE_KEY_PREFIX + rateGroup + ":" + memberId + ":" + LocalDate.now().format(DATE_FMT);
+        String key = RATE_KEY_PREFIX + rateGroup + ":" + memberId + ":" + LocalDate.now(QUOTA_ZONE).format(DATE_FMT);
         Object raw;
         try
         {
@@ -322,7 +324,7 @@ public class AiGatewayServiceImpl implements AiGatewayService
     public String consumeQuota(Long memberId, String bizType)
     {
         String group = rateGroupOf(bizType);
-        String key = RATE_KEY_PREFIX + group + ":" + memberId + ":" + LocalDate.now().format(DATE_FMT);
+        String key = RATE_KEY_PREFIX + group + ":" + memberId + ":" + LocalDate.now(QUOTA_ZONE).format(DATE_FMT);
         String nonce = IdUtils.simpleUUID();
         String receipt = "ai:gen:reservation:" + key + ":" + nonce;
         if(quotaRecovery!=null) quotaRecovery.prepare(memberId,bizType,group,key,receipt);

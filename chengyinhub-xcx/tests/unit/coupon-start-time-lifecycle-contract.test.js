@@ -161,7 +161,7 @@ test('页面出码:qr-token 带未来 start 时不出码,展示可用时间', ()
   const wxml = read('subpackageMember/coupon-qr/index.wxml')
   assert.match(wxml, /useStatus == 0 && notStarted/, '等待壳必须由 notStarted 驱动')
   assert.match(wxml, /!notStarted/, '码凭证必须被 notStarted 阻断')
-  assert.match(wxml, /起可使用/)
+  assert.match(wxml, /起可用/)
 })
 
 test('负控:出码页忽略 start 继续亮码时必须判红', () => {

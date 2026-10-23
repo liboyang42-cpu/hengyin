@@ -66,7 +66,7 @@ function methodBody(src, name) {
 
 test('规则只有一份:入口不自己写身份证校验,只调共享 util', () => {
   assert.match(read(UTIL), /require\('\.\/form-state\.js'\)/,
-    '身份证校验要用 form-state 里的 GB11643 实现,与后端 IdCardUtils 同口径')
+    '身份证校验要用 form-state 里的 GB11643 实现，与后端 IdCardUtils 同口径')
   for (const key of ['merchant', 'fabu']) {
     const { js } = ENTRY[key]
     const src = read(js)
@@ -75,7 +75,7 @@ test('规则只有一份:入口不自己写身份证校验,只调共享 util', (
     assert.match(src, /publisherIdentity\.(checkIdentityForm|identitySatisfied)\(/,
       `${js} 必须用 util 的校验判定`)
     assert.doesNotMatch(src, /isValidIdCard/,
-      `${js} 不得自己拿身份证校验位,那会在四处各写一套`)
+      `${js} 不得自己拿身份证校验位，那会在四处各写一套`)
   }
   const scene = read(SCENE_JS)
   assert.match(scene, /require\('[^']*utils\/publisher-identity\.js'\)/)
@@ -187,11 +187,12 @@ test('发布弹层:实名没齐时确认键置灰且会说话', () => {
   const wxml = read(ENTRY.fabu.wxml)
   const btn = /<cy-btn[^>]*bindtap="confirmPublishCheck"[^>]*>/.exec(wxml)
   assert.ok(btn, '找不到「确认发布」按钮')
-  assert.match(btn[0], /disabled="\{\{!!publishCheck\.blocking\.length \|\| !identityReady\}\}"/,
+  // L09(2026-10-22):旧草稿归属待确认(legacyScopePending)并进同一个阻断条件
+  assert.match(btn[0], /disabled="\{\{!!publishCheck\.blocking\.length \|\| !identityReady \|\| legacyScopePending\}\}"/,
     '实名不齐时确认发布必须置灰')
   assert.match(btn[0], /bind:disabledtap="onPublishCheckDisabledTap"/,
     '置灰键要点得动并说出缺什么(置灰键会说话)')
-  assert.match(wxml, /wx:if="\{\{publishCheck\.blocking\.length \|\| !identityReady\}\}"/,
+  assert.match(wxml, /wx:if="\{\{publishCheck\.blocking\.length \|\| !identityReady \|\| legacyScopePending\}\}"/,
     '必填项区块要把「发布者实名未填写」也列进阻断')
 })
 

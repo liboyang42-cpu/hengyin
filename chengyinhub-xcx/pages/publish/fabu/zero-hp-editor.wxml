@@ -13,9 +13,9 @@
     </view>
    </view>
    <view class="node-card" wx:if="{{runtimeZeroEditor.draft.policy === 'CHALLENGE'}}">
-    <text class="story-initial__example" wx:if="{{!runtimeChallengeNodes.length}}">{{supportMatrix ? '没有可用挑战站点，请检查玩法配置或等待详情加载。' : '请先保存主题和站点，才能选择挑战站点。'}}</text>
-    <view class="rt-field"><text>用哪个站点的玩法</text><cy-dropdown topic-editor range="{{runtimeChallengeNodes}}" range-key="name" reason-key="reason" value="{{zh.idx(runtimeChallengeNodes, runtimeZeroEditor.draft.challenge.challengeNodeId, 'id')}}" bind:change="pickZeroHpChallengeNode"><view class="rt-select">{{zh.label(runtimeChallengeNodes, runtimeZeroEditor.draft.challenge.challengeNodeId, 'id', 'name')}}<cy-icon name="chevron-right" size="24" /></view></cy-dropdown></view>
-    <view class="rt-field" wx:if="{{runtimeAlternativeNodes.length}}"><text>备选站点（最多 3 个）</text>
+    <text class="story-initial__example" wx:if="{{!runtimeChallengeNodes.length}}">{{supportMatrix ? '没有可用挑战节点，请检查玩法配置或等待详情加载。' : '请先保存主题和节点，才能选择挑战节点。'}}</text>
+    <view class="rt-field"><text>用哪个节点的玩法</text><cy-dropdown topic-editor range="{{runtimeChallengeNodes}}" range-key="name" reason-key="reason" value="{{zh.idx(runtimeChallengeNodes, runtimeZeroEditor.draft.challenge.challengeNodeId, 'id')}}" bind:change="pickZeroHpChallengeNode"><view class="rt-select">{{zh.label(runtimeChallengeNodes, runtimeZeroEditor.draft.challenge.challengeNodeId, 'id', 'name')}}<cy-icon name="chevron-right" size="24" /></view></cy-dropdown></view>
+    <view class="rt-field" wx:if="{{runtimeAlternativeNodes.length}}"><text>备选节点（最多 3 个）</text>
      <view class="rt-pills"><view wx:for="{{runtimeAlternativeNodes}}" wx:key="id" class="node-pill" data-id="{{item.id}}" bindtap="toggleZeroHpAlternative" aria-role="button" aria-disabled="{{!!item.reason && !item.selected}}" aria-label="{{item.selected ? '移除' : '添加'}}备选{{item.name}}" hover-class="cy-pressed" hover-stay-time="80">{{item.selected ? '已选 · ' : '添加 · '}}{{item.name}}<text wx:if="{{item.reason}}" class="node-binding__error">{{item.reason}}{{item.selected ? ' · 点击移除' : ''}}</text></view></view>
     </view>
     <view class="rt-two"><view class="rt-field"><text>需完成几次</text><input type="number" value="{{runtimeZeroEditor.draft.challenge.requiredCompletions}}" data-path="challenge.requiredCompletions" bindinput="inputZeroHpField" /></view><view class="rt-field"><text>限时（秒）</text><input type="number" value="{{runtimeZeroEditor.draft.challenge.withinSeconds}}" data-path="challenge.withinSeconds" bindinput="inputZeroHpField" /></view></view>

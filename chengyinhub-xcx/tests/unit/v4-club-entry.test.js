@@ -92,7 +92,7 @@ test('俱乐部卡按 id 进详情;wxml 分支顺序保证 error 先于 empty', 
   const wxml = read('pages/talent/list/index.wxml')
   const errIdx = wxml.indexOf("wx:elif=\"{{clubsError && clubsState !== 'stale-error'}}\"")
   const emptyIdx = wxml.indexOf('title="还没有俱乐部"')
-  assert.ok(errIdx > 0 && emptyIdx > errIdx, 'error 分支必须在 empty 之前,且 empty 只在 clubsLoaded 区块内')
+  assert.ok(errIdx > 0 && emptyIdx > errIdx, 'error 分支必须在 empty 之前，且 empty 只在 clubsLoaded 区块内')
 })
 
 function loadDetail() {

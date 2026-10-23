@@ -17,9 +17,9 @@ const PROFILE_JS = 'subpackageMember/components/cy/profile/index.js';
 test('创建俱乐部在 onLoad 就预检主理人身份，不让人填完四步再被拒', () => {
   const js = read(CREATE_JS);
   const onLoad = js.slice(js.indexOf('onLoad()'), js.indexOf('// ===== 步骤导航'));
-  assert.ok(onLoad.length > 0, 'onLoad 段落定位失败,契约需同步');
+  assert.ok(onLoad.length > 0, 'onLoad 段落定位失败，契约需同步');
   assert.match(onLoad, /roleGuard\.isClubLeader\(\)/, '预检必须走 roleGuard(权限单一事实源)');
-  assert.match(onLoad, /redirectTo[\s\S]{0,80}club\/apply/, '非主理人要送去申请页,不是留在表单里');
+  assert.match(onLoad, /redirectTo[\s\S]{0,80}club\/apply/, '非主理人要送去申请页，不是留在表单里');
   assert.match(onLoad, /!snapshot\s*\|\|\s*!roleGuard\.hasSnapshot\(\)/,
     '拿不到权限快照时必须 fail-closed 并给恢复动作，不能先露表单让用户白填');
   assert.match(onLoad, /failBootstrap\(epoch,[\s\S]{0,120}主理人资格/,
@@ -37,15 +37,15 @@ test('类型卡与方向 chip 选中态是整卡翻白 + 反色字 + 反色圆�
   // 选中 = 整卡翻白底黑字。master #1001 曾按 G1 稿改成「深卡 + 白描边」并在此钉死,
   // 本轮以裁决为准反过来。保护点没变 —— 选中必须一眼看得出,不能只靠一圈弱描边。
   assert.match(wxss, /^\.cc-opt \{[^}]*border:\s*1rpx solid var\(--cy-border-card\)/ms,
-    '未选卡必须预留同宽描边,避免选中时整卡跳位');
+    '未选卡必须预留同宽描边，避免选中时整卡跳位');
   assert.match(wxss, /^\.cc-opt\.sel \{[^}]*background:\s*var\(--cy-text-title\)/ms,
     '选中卡必须整卡翻白底');
   assert.match(wxss, /^\.cc-opt\.sel \.cc-opt-t \{[^}]*color:\s*var\(--cy-text-inverse\)/ms,
-    '翻白后标题必须反色,否则白字落白底直接消失');
+    '翻白后标题必须反色，否则白字落白底直接消失');
   assert.match(wxss, /^\.cc-radio\.on \{[^}]*border-color:\s*var\(--cy-text-inverse\)/ms,
-    '翻白后单选点也要反色,白点落白底会消失');
+    '翻白后单选点也要反色，白点落白底会消失');
   assert.match(wxss, /^\.cc-radio\.on::after \{[^}]*background:\s*var\(--cy-text-inverse\)/ms,
-    '选中的单选点必须有实心内点,不是空心描边');
+    '选中的单选点必须有实心内点，不是空心描边');
   assert.match(wxss, /^\.cc-chip\.on \{[^}]*background:\s*var\(--cy-text-title\)[^}]*color:\s*var\(--cy-text-inverse\)/ms,
     '选中 chip 必须整颗翻白 + 反色字');
 });
@@ -53,7 +53,7 @@ test('类型卡与方向 chip 选中态是整卡翻白 + 反色字 + 反色圆�
 test('负控:选中态退回「一圈描边」必须判红', () => {
   const wxss = read(CREATE_WXSS);
   const mutated = wxss.replace(/^(\.cc-opt\.sel \{[^}]*)background:\s*var\(--cy-text-title\)/ms, '$1background: transparent');
-  assert.notEqual(mutated, wxss, '变异未生效,负控本身是假的');
+  assert.notEqual(mutated, wxss, '变异未生效，负控本身是假的');
   assert.throws(() => assert.match(mutated, /^\.cc-opt\.sel \{[^}]*background:\s*var\(--cy-text-title\)/ms));
 });
 
@@ -71,9 +71,9 @@ test('个人资料走真页且排在设置第一项，不再是通用表单弹�
   const wxml = read(SETTINGS_WXML);
   const menu = wxml.slice(wxml.indexOf('<view class="sz-menu">'), wxml.indexOf('</view>', wxml.indexOf('<view class="sz-menu">')));
   const titles = [...menu.matchAll(/title="([^"]+)"/g)].map((m) => m[1]);
-  assert.ok(titles[0].includes('个人资料'), `个人资料必须排设置第一项,实际顺序:${titles.join(' / ')}`);
+  assert.ok(titles[0].includes('个人资料'), `个人资料必须排设置第一项，实际顺序:${titles.join(' / ')}`);
   assert.ok(titles[0].includes('品牌中心'), '商家视角第一项文案必须是品牌中心(2026-08-20 个人资料∪品牌中心合并)');
-  assert.ok(titles.includes('成为俱乐部主理人'), '成为主理人要直接摆在列表里,不藏在选择弹窗后面');
+  assert.ok(titles.includes('成为俱乐部主理人'), '成为主理人要直接摆在列表里，不藏在选择弹窗后面');
   assert.ok(titles.includes('成为商家'), '成为商家同上');
 });
 
@@ -83,7 +83,7 @@ test('负控:预检恢复未知快照放行必须判红', () => {
     'if (!snapshot || !roleGuard.hasSnapshot()) {',
     'if (false) {'
   );
-  assert.notEqual(mutated, read(CREATE_JS), '变异未生效,负控本身是假的');
+  assert.notEqual(mutated, read(CREATE_JS), '变异未生效，负控本身是假的');
   const onLoad = mutated.slice(mutated.indexOf('onLoad()'), mutated.indexOf('// ===== 步骤导航'));
   assert.throws(() => assert.match(onLoad, /!snapshot\s*\|\|\s*!roleGuard\.hasSnapshot\(\)/));
 });

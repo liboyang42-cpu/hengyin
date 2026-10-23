@@ -26,6 +26,7 @@ const { isRecord, isRecordList } = require('../../../../utils/response-shape.js'
 const { inactiveAccess, normalizeMerchantAccess } = require('../../../../utils/merchant-access-policy.js');
 const { isEndedProject, statusLabelOf } = require('../../../../utils/merchant-workbench.js');
 const mediaPreview = require('../../../../utils/media-preview.js');
+const { buildOrderPreviewList } = require('./order-preview.js');
 const { shapeMerchantSafety } = require('./merchant-safety-summary.js');
 const { shapeMerchantNode, readFavoriteToggle } = require('./merchant-node-favorite.js');
 const THEME_EMOJI = ['🍜', '❤️', '📚', '☕', '🌸', '🎮', '📷', '🏯'];
@@ -36,7 +37,7 @@ const MEDAL_EMOJI = {
 
 const TAB_LABELS = {
   projects: '我的',
-  posts: '推文',
+  posts: '帖文',
   achievements: '成就',
   about: '关于'
 };
@@ -447,13 +448,12 @@ Component({
     page_no: 1,
     hasMore: false,
     nodata: false,
-    orderPreviewList: [],
+    orderPreviewList: [], ordFly: '',   // ordFly:owner 10-22 订单卡每次打开都飞入(show 飞入 / hide 先藏好)
     projectPreviewList: [],
 
     // 订单未加载时不展示内容；只有成功返回空列表才显示暂无订单。
     orderErr: false,
     orderAuthError: false,
-    orderLoaded: false,
     projectErr: false,
     projectAuthError: false,
     feedErr: false,
@@ -518,7 +518,7 @@ Component({
   pageLifetimes: {
     show: function () {
       if (!this._profileAttached) return; this._navigating = false;
-      this._profileHidden = false;
+      this._profileHidden = false; var ordFly = readReducedMotion() ? '' : 'cy-fly-in'; if (this.data && typeof this.data.ordFly === 'string' && this.data.ordFly !== ordFly) this.setData({ ordFly: ordFly });
       const identityChanged = this._syncProfileReadIdentity();
       if (identityChanged || this._profileNeedsInitialize) {
         this._profileNeedsInitialize = false;
@@ -556,7 +556,7 @@ Component({
     // applyTheme 的那些)会顶着一条白导航栏 —— 旧 merchant/profile 页用
     // merchantPageRestore 处理的就是这件事,收编后这层责任跟着搬过来。
     hide: function () {
-      this._profileHidden = true;
+      this._profileHidden = true; if (this.data && this.data.orderPreviewList && this.data.orderPreviewList.length) this.setData({ ordFly: readReducedMotion() ? '' : 'cy-fly-wait' });
       this._profileReadEpoch = (this._profileReadEpoch || 0) + 1;
       if (this.data.pointsSheet.loading) this.setData({ 'pointsSheet.loading': false });
       this._profileShown = true;
@@ -573,7 +573,7 @@ Component({
         pointsStat: { weekPoints: 0, rankPercentage: 0 }, rankDisplay: { no: 0, delta: '' },
         identityCard: { shops: 0, themes: 0, routes: 0, km: '0', medals: 0, cities: 1 },
         exploreStat: { shops: 0, weekExp: 0 }, themeProgress: [], medals: [], medalCount: 0,
-        orderPreviewList: [], projectPreviewList: [], projectPendingCount: 0, orderLoaded: false,
+        orderPreviewList: [], projectPreviewList: [], projectPendingCount: 0,
         orderErr: false, orderAuthError: false, projectErr: false, projectAuthError: false, medalErr: false, medalAuthError: false,
         list: [], page_no: 1, hasMore: false, nodata: false, feedErr: false, feedAuthError: false,
         pointsSheet: { show: false, loading: false, loaded: false, failed: false, tasks: [] },
@@ -938,7 +938,7 @@ Component({
         return;
       }
       that.setData({ merchantNodeBusy: false, 'merchantNode.favorited': favorited });
-      cyToast(favorited ? '已收藏据点' : '已取消收藏');
+      cyToast(favorited ? '已收藏节点' : '已取消收藏');
     };
     this.setData({ merchantNodeBusy: true });
     app.sendRequest({
@@ -1372,14 +1372,17 @@ Component({
     var requestId = that._orderPreviewRequestId = (that._orderPreviewRequestId || 0) + 1;
     var profileEpoch = that._followEpoch || 0;
     if (that._orderPreviewMemberId !== undefined && that._orderPreviewMemberId !== memberId) {
-      that.setData({ orderPreviewList: [], orderLoaded: false, orderErr: false, orderAuthError: false });
+      that.setData({ orderPreviewList: [], orderErr: false, orderAuthError: false });
     }
     that._orderPreviewMemberId = memberId;
     return req('/api/registration/list', {
       pageNum: 1,
       pageSize: 8,
       owner_type: 3,
-      status: '0'
+      // 2026-10-22 owner:只要还要用的单。status '2' = 已付款未核销(后端 registrationStatus=2 且未完成),
+      // is_online=1 = 未结束;退款/过期等再由 buildOrderPreviewList 按订单页同一读模型筛掉。
+      status: '2',
+      is_online: 1
     }).then(function (res) {
       if (!that._currentProfileRead(read, res)) return;
       if (that._profileAttached === false || requestId !== that._orderPreviewRequestId
@@ -1394,14 +1397,8 @@ Component({
         that.setData({ orderErr: true, orderAuthError: false });
         return;
       }
-      var list = rows.slice(0, 8).map(function (item) {
-        var topic = item.cmsActivity || item.cmsTopic || {};
-        var pics = topic.pics ? String(topic.pics).split(';').filter(function (u) { return u.trim(); }) : [];
-        var title = topic.name || item.topicName || '探索订单';
-        var sub = item.createTime ? String(item.createTime).slice(0, 16).replace('T', ' ') : '报名订单';
-        return { id: item.id, title: title, sub: sub, cover: topic.imgUrl || pics[0] || '' };
-      });
-      that.setData({ orderLoaded: true, orderErr: false, orderAuthError: false, orderPreviewList: list });
+      var list = buildOrderPreviewList(rows, function (u) { return u && typeof app.getImgUrl === 'function' ? app.getImgUrl(u) : u; }, Date.now(), 8);
+      that.setData({ orderErr: false, orderAuthError: false, orderPreviewList: list });
     });
   },
 
@@ -1739,7 +1736,7 @@ Component({
   openStationSheet: function (code, d) {
     var items = Array.isArray(d.stations) ? d.stations : [];
     if (!items.length) {
-      cyToast('没有可核销的据点');
+      cyToast('没有可核销的节点');
       return;
     }
     this.setData({ stationSheet: { show: true, code: code, items: items } });
@@ -2172,7 +2169,7 @@ Component({
     req('/api/club/my', {}).then(function (res) {
       cyLoading.hide();
       if (res.code != '200') {
-        cyToast(isAuthFailure(res) ? '登录未成功，请重新进入' : app.getRequestErrorMessage(res, '加载失败，请稍后重试'));
+        cyToast(isAuthFailure(res) ? '登录未成功，请重新进入' : app.getRequestErrorMessage(res, '加载失败，请重试'));
         return;
       }
       var owned = (res.code == '200' && res.data && res.data.owned) || [];

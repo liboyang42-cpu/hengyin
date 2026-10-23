@@ -23,7 +23,7 @@ function createCapsuleClient(options) {
         if (token !== epoch || owner !== identity()) return reject(new Error('登录会话已变化'));
         if (error) return reject(error);
         if (!response || response.code !== 200 || !response.data) {
-          const failure = new Error((response && response.msg) || '请求未确认，请使用原请求重试');
+          const failure = new Error((response && response.msg) || '结果未确认，请重试');
           failure.code = response && response.code === 400 ? 'REJECTED' : 'OUTCOME_UNKNOWN';
           return reject(failure);
         }
@@ -47,10 +47,10 @@ function createCapsuleClient(options) {
   }
   function create(input) {
     try { sync(); } catch (e) { return Promise.reject(e); }
-    if (!input || !/^[A-Za-z0-9_-]{16,64}$/.test(input.requestId || '')) return Promise.reject(new Error('需要原请求编号'));
+    if (!input || !/^[A-Za-z0-9_-]{16,64}$/.test(input.requestId || '')) return Promise.reject(new Error('操作失败，请重试'));
     const draft = { requestId: input.requestId, body: input.body || '', photoUrl: input.photoUrl || '', unlockDate: input.unlockDate };
     const fingerprint = JSON.stringify(draft);
-    if (pending && pending.fingerprint !== fingerprint) return Promise.reject(new Error('上一枚胶囊结果待确认，请先重试原请求'));
+    if (pending && pending.fingerprint !== fingerprint) return Promise.reject(new Error('上一枚胶囊结果待确认，请先重试'));
     if (flight) return flight;
     pending = pending || { input: draft, fingerprint, unknown: false };
     const attempt = pending;

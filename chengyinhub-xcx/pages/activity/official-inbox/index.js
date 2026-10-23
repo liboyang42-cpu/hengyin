@@ -5,7 +5,7 @@ const app = getApp();
 const policy = require('../../../utils/identity/identity-policy.js');
 const merchantTheme = require('../../../utils/merchant-theme.js');
 const inviteCard = require('./invite-card.js');
-const TARGET_LABEL = { NODE: '指定站点职责', ROUTE: '指定路线职责', CHAPTER: '指定章节职责' };
+const TARGET_LABEL = { NODE: '指定节点职责', ROUTE: '指定路线职责', CHAPTER: '指定章节职责' };
 
 const STATUS = { INVITED: '待你确认', ACCEPTED: '已接受', ACTIVE: '履约中' };
 const ROLE = {
@@ -66,7 +66,7 @@ Page({
         if (res && (res.code == 200 || res.code == '200') && Array.isArray(res.data)
             && res.data.every((item) => item && typeof item === 'object' && !Array.isArray(item))) {
           const invites = res.data.map((item) => {
-            const role = ROLE[item.role] || item.role || '职责待确认';
+            const role = ROLE[item.role] || item.role || '—';
             return Object.assign({}, item, {
               _partyKey: String(item.partyId == null ? '' : item.partyId),
               _status: STATUS[item.status] || item.status || '状态待确认',
@@ -80,7 +80,7 @@ Page({
                 eventTitle: item.eventTitle || '未命名官方活动',
                 // CU-C-14:city=NULL 是全国活动(详情页写「全国」),不是「未设城市」;
                 // 内部 targetType/targetId(EVENT #99002302)不给用户看。
-                cityRole: (item.city || '全国') + ' · ' + role,
+                cityRole: (item.city || '全国') + (role && role !== '—' ? ' · ' + role : ''),
                 scope: !item.targetType || item.targetType === 'EVENT'
                   ? '本场整体职责'
                   : (TARGET_LABEL[item.targetType] || '指定范围职责')
@@ -131,7 +131,7 @@ Page({
     const f = (value) => {
       if (!value) return '不限';
       const p = chinaParts(/^\d+$/.test(String(value)) ? Number(value) : value);
-      return p ? p.month + '月' + p.day + '日 ' + pad(p.hours) + ':' + pad(p.minutes) : '时间待确认';
+      return p ? p.month + '月' + p.day + '日 ' + pad(p.hours) + ':' + pad(p.minutes) : '—';
     };
     return f(start) + ' — ' + f(end);
   },
@@ -199,7 +199,7 @@ Page({
     if (!expect) return;
     this._expectReadback = null;
     if (!inviteCard.readbackMismatch(invites, expect)) return;
-    toast('已提交，状态未同步，稍后下拉刷新');
+    toast('已提交，稍后下拉刷新查看状态');
   },
 
   _clearActionBusy(clearFailed) {
@@ -237,6 +237,6 @@ function setInboxFetchFailure(page, res, hasSnapshot, requestId, source) {
   page.setData({ loading: false, refreshing: false });
   if (page._expectReadback) { // 动作成功后的回读(含被下拉/onShow 取代的那次)没拿到服务端事实
     page._expectReadback = null;
-    toast('已提交，状态未同步，稍后下拉刷新');
+    toast('已提交，稍后下拉刷新查看状态');
   } else if (source === 'pull') toast('刷新失败，稍后再试');
 }

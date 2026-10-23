@@ -265,7 +265,7 @@ test('核销三格只在开始接待之后出现', () => {
 
   const confirmed = makePage();
   confirmed.processData({ status: 1, topicStartDate: daysFromToday(3) });
-  assert.equal(confirmed.data.showFulfillment, false, '已确认但没开场,核销数还没有意义');
+  assert.equal(confirmed.data.showFulfillment, false, '已确认但没开场，核销数还没有意义');
 
   const running = makePage();
   running.processData({ status: 1, topicStartDate: daysFromToday(-1), topicEndDate: daysFromToday(5) });
@@ -284,7 +284,7 @@ test('核销三格只在开始接待之后出现', () => {
 test('开场前要准备只在已确认与进行中出现', () => {
   const pending = makePage();
   pending.processData({ status: 0 });
-  assert.equal(pending.data.showPrep, false, '审核中还没定下来,不催备料');
+  assert.equal(pending.data.showPrep, false, '审核中还没定下来，不催备料');
 
   const confirmed = makePage();
   confirmed.processData({ status: 1, topicStartDate: daysFromToday(3) });
@@ -303,20 +303,20 @@ test('开场前要准备只在已确认与进行中出现', () => {
   assert.equal(ended.data.showPrep, false, '已结束不用再配');
 });
 
-/** 章节与节点是两件不同的事实,原来 chapterName || nodeName 会让有章节时看不见点位。 */
+/** 章节与节点是两件不同的事实,原来 chapterName || nodeName 会让有章节时看不见节点。 */
 test('章节与节点同时下发时两个都要显示,不互相顶替', () => {
   const page = makePage();
 
   page.processData({ status: 1, chapterName: '夜航咖啡', nodeName: '第三站' });
   assert.equal(page.data.assignedLabel, '承接的章节');
   assert.equal(page.data.assignedValue, '夜航咖啡');
-  assert.equal(page.data.assignedNodeText, '第三站', '章节占主行时,节点必须还有自己的一行');
+  assert.equal(page.data.assignedNodeText, '第三站', '章节占主行时，节点必须还有自己的一行');
 
   const page2 = makePage();
   page2.processData({ status: 1, nodeName: '第三站' });
   assert.equal(page2.data.assignedLabel, '承接的节点');
   assert.equal(page2.data.assignedValue, '第三站');
-  assert.equal(page2.data.assignedNodeText, '', '只有节点时它已占主行,不重复成两行');
+  assert.equal(page2.data.assignedNodeText, '', '只有节点时它已占主行，不重复成两行');
 
   const page3 = makePage();
   page3.processData({ status: 1, chapterName: '夜航咖啡' });
@@ -339,7 +339,7 @@ test('玩法/奖励/准备三块由 templateDetail 驱动，没有就整块不�
   assert.equal(page.data.play.img, 'https://cdn/game.png');
   assert.equal(page.data.play.name, '暗号对答');
   assert.deepEqual(page.data.play.chips, ['2-6 人', '25 分钟', '难度 中等']);
-  assert.equal(page.data.play.verifyText, '玩家答文字题,你对暗号');
+  assert.equal(page.data.play.verifyText, '玩家答文字题，你对暗号');
   assert.equal(page.data.reward.medalName, '霓虹电报员');
   assert.equal(page.data.reward.xp, 120);
   assert.equal(page.data.prepText, '线索卡 20 张、印章 1 枚');
@@ -360,7 +360,7 @@ test('玩法/奖励/准备三块由 templateDetail 驱动，没有就整块不�
 
 /** 核销方式是商家现场要做的动作,一行,留在卡上。 */
 test('核销方式按 validationMethod 给一行人话', () => {
-  const cases = [[1, '玩家答文字题,你对暗号'], [2, '玩家拍照打卡,你确认'], [3, '玩家选选项,你确认'], [0, '']];
+  const cases = [[1, '玩家答文字题，你对暗号'], [2, '玩家拍照打卡，你确认'], [3, '玩家选选项，你确认'], [0, '']];
   cases.forEach(([m, expected]) => {
     const page = makePage();
     page.processData({ status: 1, templateDetail: { title: 'x', validationMethod: m } });
@@ -404,7 +404,7 @@ test('两个角色点更多都开抽屉，分组按角色给', () => {
   host.data.role = 'host';
   host.onQuickAction({ currentTarget: { dataset: { key: 'more' } } });
   assert.equal(host.data.moreSheet.show, true);
-  assert.equal(navigations.length, 0, '先给选择,不直接跳走');
+  assert.equal(navigations.length, 0, '先给选择，不直接跳走');
   const hostKeys = host.data.moreSheet.groups.flatMap((g) => g.rows.map((r) => r.key));
   assert.ok(hostKeys.includes('perk') && hostKeys.includes('topic'), '主办方保留编辑二选一');
   assert.ok(hostKeys.includes('chapterOpen'), '主办方独有章节控制');
@@ -453,7 +453,7 @@ test('承接方三个入口、主办方四个入口', () => {
   assert.deepEqual(page.buildQuickActions('join').map((a) => a.key), ['scan', 'club', 'customer', 'more']);
   assert.deepEqual(page.buildQuickActions('host').map((a) => a.key), ['club', 'merchant', 'customer', 'more']);
   assert.deepEqual(page.data.quickActions.map((a) => a.key), ['scan', 'club', 'customer', 'more'],
-    '接口没回来之前先按承接方给,不能渲染成空');
+    '接口没回来之前先按承接方给，不能渲染成空');
 });
 
 /** 电话可见范围由后端判死,前端只负责显示;这里只锁「拿到什么就显示什么」不做二次过滤。 */
@@ -466,7 +466,7 @@ test('俱乐部半屏按后端给的原样映射，缺电话时不编一个出�
   assert.equal(rows[0].phone, '13800000001');
   assert.equal(rows[0].statusText, '合作中');
   assert.equal(rows[1].name, '未命名俱乐部');
-  assert.equal(rows[1].phone, '', '后端没给电话就是没有,不兜一个假的');
+  assert.equal(rows[1].phone, '', '后端没给电话就是没有，不兜一个假的');
   assert.equal(rows[1].statusText, '待对方确认');
 
   // fail-closed:status 缺失时按「待确认」,不按「合作中」——
@@ -489,7 +489,7 @@ test('俱乐部半屏按后端给的原样映射，缺电话时不编一个出�
 test('俱乐部抽屉的动作按身份/空态给不同文案', () => {
   const empty = makePage();
   empty.openClubSheet();
-  assert.equal(empty.data.clubSheet.show, true, '空态也要开抽屉,里面那句引导就是下一步');
+  assert.equal(empty.data.clubSheet.show, true, '空态也要开抽屉，里面那句引导就是下一步');
   assert.deepEqual(empty.data.clubActions.map((a) => a.label), ['去找俱乐部']);
 
   const withClubs = makePage();
@@ -513,7 +513,7 @@ test('客户入口开玩家名单抽屉，不跳全局关系页', () => {
   page.data.topicId = 8001;
   page.onQuickAction({ currentTarget: { dataset: { key: 'customer' } } });
   assert.equal(page.data.playerSheet.show, true);
-  assert.equal(navigations.length, 0, '就地开抽屉,不跳页');
+  assert.equal(navigations.length, 0, '就地开抽屉，不跳页');
 
   // 资金域核销记录是二级出口,但不再假装按 topicId 过滤（旧页此前会静默丢参）。
   const ledger = makePage();
@@ -567,7 +567,7 @@ test('玩家名单按场次分组，空态分三种说法', () => {
       return page.data.playerSheet.emptyText;
     });
   assert.equal(new Set(zeroOrderTexts).size, 2,
-    `零单时四档至少分「总单为零」与「这一档也没记录」两种说法,实际:${zeroOrderTexts.join(' | ')}`);
+    `零单时四档至少分「总单为零」与「这一档也没记录」两种说法，实际:${zeroOrderTexts.join(' | ')}`);
   assert.match(zeroOrderTexts[0], /还没有人下单。路线上架后/);
   assert.doesNotMatch(zeroOrderTexts.join('\n'), /,/u, '中文文案不用半角逗号');
   // 有人扫码待确认时,「待核销」为空不等于「全部客户都已核销」—— 那句是假的。
@@ -597,7 +597,7 @@ test('本店现场名单为空只描述现场记录，不推断主题没有订�
  * 主办视图的数据整形。数字一律兜底 —— 后端少给一个字段就渲染出 undefined,
  * 是这类聚合页最常见的翻车方式。
  */
-test('主办段整形:进度条按站点数等分，数字有兜底', () => {
+test('主办段整形:进度条按节点数等分，数字有兜底', () => {
   const page = makePage();
   page.applyHome({
     topic: { name: '外滩夜行', startDate: '2026-08-02', endDate: '2026-08-16', started: true },
@@ -674,7 +674,7 @@ test('准备清单三项固定，按现码字段判打没打勾', () => {
 
   const page2 = makePage();
   page2.processData({ status: 1, templateId: 5, templateName: '暗号接头', couponId: 9, picUrl: 'a.png' });
-  assert.equal(page2.data.todos.length, 3, '配好了也要列出来,打上勾');
+  assert.equal(page2.data.todos.length, 3, '配好了也要列出来，打上勾');
   assert.deepEqual(page2.data.todos.map((t) => t.done), [true, true, true]);
   assert.doesNotMatch(page2.data.todos[2].text, /还没/, '配好的项不该还说「还没」');
 });
@@ -733,12 +733,12 @@ test('承接块打开章节抽屉、玩法块跳模板，规则文案不在本�
   assert.doesNotMatch(wxml, /play\.rule|play\.story|play\.intro|play\.photoDesc/, '规则/剧情/说明/拍照要求不在本页渲染');
   // 四个关系入口是本页骨干,不是装饰;图标必须来自 Figma 导出的资源文件
   assert.match(wxml, /wx:for="\{\{ quickActions \}\}"[\s\S]{0,160}data-act="onQuickAction"/, '四个关系入口');
-  assert.doesNotMatch(wxml, /<svg|<path /, '图标不许在 wxml 里手画,必须用导出的资源');
+  assert.doesNotMatch(wxml, /<svg|<path /, '图标不许在 wxml 里手画，必须用导出的资源');
 
   const page = makePage();
   page.processData({ status: 1 });
   assert.equal(page.data.templateReady, false);
-  assert.equal(page.data.templateSubText, '未配置玩法模板', '没配模板时给出的是待办口径,不暗示可点进去');
+  assert.equal(page.data.templateSubText, '未配置玩法模板', '没配模板时给出的是待办口径，不暗示可点进去');
 
   page.processData({ status: 1, templateId: 5, templateName: '暗号接头' });
   assert.equal(page.data.templateReady, true);
@@ -832,7 +832,7 @@ test('★负控:后端没下发答案(非中标商家被 strip)时前端必须�
     // 后端 TemplateSecrets.strip 之后就是这个形状
     questionAnswer: null, correctAnswer: null,
   } });
-  assert.equal(page.data.play.answerText, '', '拿不到答案就该是空,前端不许自己编或改判身份');
+  assert.equal(page.data.play.answerText, '', '拿不到答案就该是空，前端不许自己编或改判身份');
   // 题面本身不是秘密,可以留着 —— 商家至少知道玩家会被问什么
   assert.equal(page.data.play.questionText, '今晚的暗号是什么?');
 });
@@ -939,7 +939,7 @@ test('打开节点:自己那站带答案，别的站没有答案可给', () => {
   p.data.topicId = 9;
   p.data.info = { nodeId: 302 };
   // 承接单详情那条链路给的自己那一站(后端 merchantView 只对 auditStatus=1 放行)
-  p.data.play = { img: '', name: '暗号对答 · 霓虹密语', chips: [], verifyText: '玩家答文字题,你对暗号',
+  p.data.play = { img: '', name: '暗号对答 · 霓虹密语', chips: [], verifyText: '玩家答文字题，你对暗号',
     questionText: '今晚的第三种光', answerText: '霓虹拾光' };
   p.openChapterSheet();
   requests[0].success(chapterPayload());
@@ -948,7 +948,7 @@ test('打开节点:自己那站带答案，别的站没有答案可给', () => {
   assert.equal(p.data.nodeSheet.show, true);
   assert.equal(p.data.chapterSheet.show, false, '开节点必须关章节:两个抽屉同开会叠两层遮罩');
   assert.equal(p.data.nodeSheet.play.answerText, '霓虹拾光', '自己那一站要能看到现场答案');
-  assert.match(p.data.nodeSheet.chapterText, /^我承接的站点 · /);
+  assert.match(p.data.nodeSheet.chapterText, /^我承接的节点 · /);
   assert.equal(p.data.nodeSheet.reward.medalName, '霓虹电报员勋章');
   assert.equal(p.data.nodeSheet.reward.xp, 120);
   assert.deepEqual(p.data.nodeSheet.actions, [{ key: 'openNodeTemplate', label: '看模板' }]);
@@ -960,8 +960,8 @@ test('打开节点:自己那站带答案，别的站没有答案可给', () => {
 
   p.openNodeSheet({ currentTarget: { dataset: { id: 303 } } });
   assert.ok(!p.data.nodeSheet.play.answerText, '别的站不该有答案 —— 后端就没给');
-  assert.ok(!p.data.nodeSheet.reward, '那一站没配勋章就不显示奖励块,不补 0');
-  assert.ok(!/我承接的站点/.test(p.data.nodeSheet.chapterText));
+  assert.ok(!p.data.nodeSheet.reward, '那一站没配勋章就不显示奖励块，不补 0');
+  assert.ok(!/我承接的节点/.test(p.data.nodeSheet.chapterText));
   global.getApp = () => app;
 });
 
@@ -980,7 +980,7 @@ test('打开章节:拉不到时说清楚，不假装这条路线没有章节', (
   p.openChapterSheet();
   requests[0].fail({ errMsg: 'request:fail' });
   assert.equal(p.data.chapterSheet.state, 'error');
-  assert.match(p.data.chapterSheet.error, /没加载出来/);
+  assert.match(p.data.chapterSheet.error, /加载失败/);
 
   // 真的一个章节都没有,才是 empty
   const p2 = makePage();
@@ -1046,7 +1046,7 @@ test('已结束的主按钮是查看结算报告,落到结算明细页', () => {
 
   assert.equal(page.data.primaryText, '查看结算报告');
   assert.equal(page.data.primaryAction, 'settlement');
-  assert.equal(page.data.fulfillActionText, '', '底部已有这颗按钮,履约卡里不再放第二颗同名的');
+  assert.equal(page.data.fulfillActionText, '', '底部已有这颗按钮，履约卡里不再放第二颗同名的');
 
   page.onPrimaryTap();
   assert.equal(navigations.length, 1);
@@ -1106,7 +1106,7 @@ test('承接详情核销区是出示二维码 + 下载到本地，码卡挂在�
   assert.match(wxml, /wx:if="\{\{ showCheckinQr \}\}"/);
   assert.match(wxml, /data-act="showLiveCheckin"[\s\S]{0,80}出示二维码/);
   assert.match(wxml, /data-act="downloadCheckinQr"[\s\S]{0,80}下载到本地/);
-  assert.match(wxml, /贴在店里长期使用/);
+  assert.match(wxml, /长期有效，可保存后张贴/);
   assert.doesNotMatch(wxml, /扫过即作废/);
   assert.match(pageWxml, /<cy-qr-voucher[\s\S]*bind:secondary="downloadCheckinQr"/);
   assert.doesNotMatch(pageWxml, /自动换新/);
@@ -1168,22 +1168,22 @@ test('CU-M-183:主办方抽屉的台账入口写明「全店」作用域', () =>
   host.data.topicId = 8001;
   host.openPlayerSheet();
   assert.deepEqual(host.data.playerActions.map((a) => a.key), ['goLedger']);
-  assert.match(host.data.playerActions[0].label, /全店/, '入口要先说清这不是本主题台账');
+  assert.match(host.data.playerActions[0].label, /全店/, '入口要先说清这不是本主题记录');
 
   const joiner = makePage();
   joiner.data.role = 'join';
   joiner.data.topicId = 8001;
   joiner.openPlayerSheet();
-  assert.deepEqual(joiner.data.playerActions, [], '承接方不下发主办方的台账出口');
+  assert.deepEqual(joiner.data.playerActions, [], '承接方不下发主办方的记录出口');
 
   const source = fs.readFileSync(path.resolve(__dirname, '../../pages/topic/merchantinfo/merchantinfo.js'), 'utf8');
-  const withoutScopeWord = source.replace(/label: '查看全店台账'/, "label: '查看台账'");
+  const withoutScopeWord = source.replace(/label: '查看全店核销记录'/, "label: '查看核销记录'");
   assert.notEqual(withoutScopeWord, source, '负控锚点失效:入口文案没被改回去');
-  assert.doesNotMatch(withoutScopeWord, /key: 'goLedger', label: '查看全店台账'/, '去掉「全店」二字必须判红');
+  assert.doesNotMatch(withoutScopeWord, /key: 'goLedger', label: '查看全店核销记录'/, '去掉「全店」二字必须判红');
 });
 /* ===== CU-M-181:承接商家抽屉的主按钮必须对得上「现在做得动的事」 =====
-   走查:抽屉空态写着「先去编辑里加站点再招商」,底部按钮却恒是「去找商家」;
-   点进去的附近商家页在零站点时既招不成,空态又叫人「换个位置」,而全页没有位置控件。 */
+   走查:抽屉空态写着「先去编辑里加节点再招商」,底部按钮却恒是「去找商家」;
+   点进去的附近商家页在零节点时既招不成,空态又叫人「换个位置」,而全页没有位置控件。 */
 
 const NEARBY_WXML = path.resolve(__dirname, '../../pages/coop/nearby/index.wxml');
 const HOST_PAGE_SRC = fs.readFileSync(path.resolve(__dirname, PAGE), 'utf8');
@@ -1192,7 +1192,7 @@ function hostRecruitOf(nodeTotal) {
   return { nodeTotal, nodeFilled: 0, pendingCount: 0, openNodes: [] };
 }
 
-test('有站点时抽屉主按钮照旧是「去找商家」，落地仍是附近商家页', () => {
+test('有节点时抽屉主按钮照旧是「去找商家」，落地仍是附近商家页', () => {
   const page = makePage();
   page.setData({ hostRecruit: hostRecruitOf(3), topicId: '77' });
   page.onQuickAction({ currentTarget: { dataset: { key: 'merchant' } } });
@@ -1203,21 +1203,21 @@ test('有站点时抽屉主按钮照旧是「去找商家」，落地仍是附�
   assert.match(navigations[0].url, /^\/pages\/coop\/nearby\/index\?topicId=77/);
 });
 
-test('★零站点时主按钮换成「去加站点」，点了进主题编辑器(站点在那里配)', () => {
+test('★零节点时主按钮换成「去加节点」，点了进主题编辑器(节点在那里配)', () => {
   const page = makePage();
   page.setData({ hostRecruit: hostRecruitOf(0), topicId: '77' });
   page._hostCanEdit = true;
   page.onQuickAction({ currentTarget: { dataset: { key: 'merchant' } } });
 
   const keys = page.data.merchantActions.map((a) => a.key);
-  assert.ok(!keys.includes('goInviteMerchant'), '没有站点还能「去找商家」= 把人带到招不成的空页');
+  assert.ok(!keys.includes('goInviteMerchant'), '没有节点还能「去找商家」= 把人带到招不成的空页');
   assert.equal(keys[0], 'goAddStations');
   page.onJoinAct({ detail: { act: 'goAddStations', dataset: {} } });
   assert.equal(navigations.length, 1);
   assert.equal(navigations[0].url, '/pages/publish/fabu/index?id=77');
 });
 
-test('★零站点且没有编辑资格时不给主按钮，只留「查看收到的申请」', () => {
+test('★零节点且没有编辑资格时不给主按钮，只留「查看收到的申请」', () => {
   const page = makePage();
   page.setData({ hostRecruit: hostRecruitOf(0), topicId: '77' });
   page._hostCanEdit = false;
@@ -1228,33 +1228,33 @@ test('★零站点且没有编辑资格时不给主按钮，只留「查看收�
 
 test('抽屉空态只陈述前置条件，不再指一条页面上没有的「编辑」入口', () => {
   const hostWxml = fs.readFileSync(HOST_WXML, 'utf8');
-  const line = hostWxml.split('\n').find((l) => l.includes('这条路线还没有配置站点'));
-  assert.ok(line, '主办方抽屉的零站点空态必须还在');
-  assert.ok(!/先去编辑里加站点/.test(line), '空态指向的「编辑」不是这个抽屉里的入口，指错等于没指');
+  const line = hostWxml.split('\n').find((l) => l.includes('这条路线还没有配置节点'));
+  assert.ok(line, '主办方抽屉的零节点空态必须还在');
+  assert.ok(!/先去编辑里加节点/.test(line), '空态指向的「编辑」不是这个抽屉里的入口，指错等于没指');
 });
 
 test('附近商家空态不再教人「换个位置」，改指向本页真有的刷新', () => {
   const nearby = fs.readFileSync(NEARBY_WXML, 'utf8');
   assert.ok(!/换个位置/.test(nearby), '这一页只有设备定位 + 刷新，没有任何位置控件');
-  assert.match(nearby, /title="附近暂无可联系商家" sub="[^"]*刷新[^"]*"[^>]*cta="刷新附近商家"/);
+  assert.match(nearby, /title="附近暂无商家"[^>]*cta="刷新附近商家"/);
 });
 
-test('★负控:把 nodeTotal 分流改回恒有站点，零站点又会拿到「去找商家」', () => {
+test('★负控:把 nodeTotal 分流改回恒有节点，零节点又会拿到「去找商家」', () => {
   const matched = HOST_PAGE_SRC.match(/buildMerchantActions\(\) \{([\s\S]*?)\n  \},/)
   assert.ok(matched, 'merchantinfo.js 里找不到 buildMerchantActions')
   const run = (body, nodeTotal, canEdit) =>
     new Function(body).call({ data: { hostRecruit: hostRecruitOf(nodeTotal) }, _hostCanEdit: canEdit })
   const real = run(matched[1], 0, true)
-  assert.equal(real[0].key, 'goAddStations', '读法不对:真码在零站点时已经不给「去找商家」了')
+  assert.equal(real[0].key, 'goAddStations', '读法不对:真码在零节点时已经不给「去找商家」了')
 
   const mutated = matched[1].replace('nodeTotal || 0) > 0', 'nodeTotal || 1) > 0')
   assert.notEqual(mutated, matched[1], '负控未命中 nodeTotal 判据')
   assert.equal(run(mutated, 0, true)[0].key, 'goInviteMerchant',
-    '撤掉分流后零站点还能拿到「去找商家」= 上面那条合同是假的')
+    '撤掉分流后零节点还能拿到「去找商家」= 上面那条合同是假的')
 })
 
 
-test('自由探索尚无站点仍可邀请商家承接章节，模式由主题回包决定', () => {
+test('自由探索尚无节点仍可邀请商家承接章节，模式由主题回包决定', () => {
   const page = makePage();
   page.setData({ topicId: '77' });
   page.applyHome({

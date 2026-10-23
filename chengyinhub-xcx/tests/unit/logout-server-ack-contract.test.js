@@ -100,7 +100,7 @@ test('#16 服务端注销成功才清本地登录态', () => {
   assert.equal(requests[0].url, '/api/logout');
   assert.equal(requests[0].method, 'POST');
   assert.equal(calls.busyOn, 1, '请求在途要锁死弹窗');
-  assert.equal(cleared.storage, 0, '服务端还没回执,本地一律不能清');
+  assert.equal(cleared.storage, 0, '服务端还没回执，本地一律不能清');
 
   requests[0].success({ code: 200 });
 
@@ -146,7 +146,7 @@ test('#16 弱网/业务失败:不清本地,弹窗给「退出没有完成,请重
   confirmLogout(page, dlg);
   requests[0].fail({ errMsg: 'request:fail timeout' });
 
-  assert.equal(cleared.storage, 0, '请求失败时清本地 = 假退出,服务端 token 还活着');
+  assert.equal(cleared.storage, 0, '请求失败时清本地 = 假退出，服务端 token 还活着');
   assert.deepEqual(cleared.relaunched, []);
   assert.equal(globalData.authorization, 'token-live', '重试必须复用同一个仍有效的 token');
   assert.deepEqual(calls.failed, ['退出没有完成，请重试']);

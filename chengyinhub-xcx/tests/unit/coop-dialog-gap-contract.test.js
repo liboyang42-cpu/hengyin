@@ -26,14 +26,14 @@ const CUSTOM_BACK = [
   ['pages/coop/nearby/index.wxml', "pageState === 'error'", 'goBack'],
   ['pages/coop/nearby/index.wxml', '附近商家暂不可用', 'goBack'],
   ['pages/coop/invite-detail/index.wxml', "state !== 'ready'", 'goBack'],
-  ['pages/coop/settlement-detail/index.wxml', '结算详情没加载出来', 'onNavBack'],
+  ['pages/coop/settlement-detail/index.wxml', '结算详情加载失败', 'onNavBack'],
 ];
 
 // fill 整页但明确豁免 auto-back 的三条(各有页面级出口,不是「加载失败甩手不管」)
 const FILL_ALLOW = [
   ['pages/coop/invite-detail/index.wxml', /state === 'missing'/, '缺参终态:给了显式 CTA「回协作邀请」,不是加载失败'],
-  ['pages/coop/invite-detail/index.wxml', /state === 'notfound'/, '业务不可见终态:同上,回列表是唯一下一步'],
-  ['pages/coop/withdraw/records/index.wxml', /state === 'error'/, '重定向壳:重试=重新发起跳转,是真动作'],
+  ['pages/coop/invite-detail/index.wxml', /state === 'notfound'/, '业务不可见终态:同上，回列表是唯一下一步'],
+  ['pages/coop/withdraw/records/index.wxml', /state === 'error'/, '重定向壳:重试=重新发起跳转，是真动作'],
 ];
 
 // 局部失败面:必须留在行内(带自己的重试出口),且信号不许出现在任何 cy-error 整页分支里
@@ -77,7 +77,7 @@ test('pages/coop/** 每个 fill 整页失败都接 auto-back,豁免三条各自�
   assert.deepEqual(violations, [], '整页失败退回老写法(只剩短重试按钮):\n  ' + violations.join('\n  '));
   // 正控件:扫描面不许悄悄塌成 0,否则上面那句恒真
   // 2026-09-16 −2:候选池页整页删除(它自带 permission/error 两个 fill 整页失败)⇒ 实测 11
-  assert.ok(fillTotal >= 11, 'pages/coop 的 fill 整页失败面应 >= 11,实际 ' + fillTotal);
+  assert.ok(fillTotal >= 11, 'pages/coop 的 fill 整页失败面应 >= 11，实际 ' + fillTotal);
   for (const [file, re, why] of FILL_ALLOW) {
     assert.match(read(file), re, '豁免锚点失效(' + why + '): ' + file);
   }
@@ -90,7 +90,7 @@ test('整页失败的返回句柄:coop/list 走默认返回,有自己出口的�
     assert.equal(matched.length, 2, '两个 tab 各一份整页失败分支: ' + anchor);
     for (const tag of matched) {
       assert.match(tag, /\bauto-back\b/, anchor);
-      assert.doesNotMatch(tag, /custom-back/, 'coop/list 没有页面级返回句柄,走默认返回(栈回退/域兜底)');
+      assert.doesNotMatch(tag, /custom-back/, 'coop/list 没有页面级返回句柄，走默认返回(栈回退/域保底)');
     }
   }
   for (const [file, anchor, handler] of CUSTOM_BACK) {
@@ -183,7 +183,7 @@ test('coop/list 局部失败:带队申请/官方邀约任一路失败都不许�
   leg.byUrl('/api/coop/list')[0].success(LIST_OK);
   leg.byUrl('/api/coop/pool/received')[0].success({ code: 200, data: [] });
   leg.byUrl('/api/coop/pool/mine')[0].fail({ errMsg: 'request:fail timeout' });
-  assert.equal(leg.page.data.listState, 'ready', '带队申请一路失败 = 局部失败,整页保持 ready');
+  assert.equal(leg.page.data.listState, 'ready', '带队申请一路失败 = 局部失败，整页保持 ready');
   assert.equal(leg.page.data.received.length, 1, '邀约列表照常');
   assert.equal(leg.page.data.sentApplyState, 'error');
   assert.match(leg.page.data.sentApplyErrorText, /网络/);
@@ -192,7 +192,7 @@ test('coop/list 局部失败:带队申请/官方邀约任一路失败都不许�
   official.page.load();
   official.byUrl('/api/coop/list')[0].success(LIST_OK);
   official.byUrl('/api/official/merchant-invites')[0].success({ code: 500, msg: '服务暂不可用' });
-  assert.equal(official.page.data.listState, 'ready', '官方邀约失败 = 局部失败,整页保持 ready');
+  assert.equal(official.page.data.listState, 'ready', '官方邀约失败 = 局部失败，整页保持 ready');
   assert.ok(official.page.data.officialErrorText);
   assert.equal(official.page.data.received.length, 1);
 });
@@ -202,7 +202,7 @@ test('★负控①:整页失败退回老写法(删 auto-back) → 分级判据�
   const mutated = source.replace(/auto-back bind:retry="load"/g, 'bind:retry="load"');
   assert.notEqual(mutated, source, '负控锚点失效:整页 auto-back 不存在');
   const violations = fillViolations(mutated, 'pages/coop/list/index.wxml');
-  assert.equal(violations.length, 4, '两个 tab × 两档整页失败都必须被判红,实际: ' + JSON.stringify(violations));
+  assert.equal(violations.length, 4, '两个 tab × 两档整页失败都必须被判红，实际: ' + JSON.stringify(violations));
 });
 
 test("★负控②:局部失败被改成整页退出(listState='error') → 行为判据必须红", () => {

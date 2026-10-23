@@ -123,7 +123,7 @@ test('T03 头图只写发布者与标题,不拿合作者冒充发起人', () => 
   assert.doesNotMatch(hero, /collaboratorsList/, '不得再拿 collaboratorsList 当发起人显示 —— 发布者不在这张表里')
   assert.doesNotMatch(hero, /sysCategoryList|topic-category-chip/, 'v13 头图上不放类别 chips')
   const motion = read('pages/topic/utils/topic-motion.js')
-  assert.match(motion, /text\(d\.contentPublisherName\) \|\| text\(d\.clubName\)/, '发布者取内容主体公开名,没有再退到承接俱乐部名')
+  assert.match(motion, /text\(d\.contentPublisherName\) \|\| text\(d\.clubName\)/, '发布者取内容主体公开名，没有再退到承接俱乐部名')
 })
 
 // 2026-09-06:本测试原来的名字与判据都建立在一个错前提上 —— 它把
@@ -155,7 +155,7 @@ test('T03 章节标题下的统计只读本章数据，不印主题合计', () =
   for (const stale of ['info.totalTimeFormatted', 'info.locationCount', 'info.templateCount']) {
     assert.equal(
       metricBodies(wxml, stale).length, 0,
-      `${stale} 是主题合计,不能印在章节标题下面(它已经在 detailFacts 里了)`
+      `${stale} 是主题合计，不能印在章节标题下面(它已经在 detailFacts 里了)`
     )
   }
 
@@ -171,7 +171,7 @@ test('T03 章节标题下的统计只读本章数据，不印主题合计', () =
   // location_count 是主题保存时的快照,商家点位过审后不重算,于是卡片写 1、下面列出 2。
   // 现在按本章真实节点数算,快照仍作兵底(节点列表为空时)。
   assert.match(js, /const nodeCount = \(chapter\.nodes \|\| \[\]\)\.length \|\| Number\(chapter\.locationCount\) \|\| 0/,
-    '缺地点数时不许印 0,且数源要用本章实时节点');
+    '缺地点数时不许印 0，且数源要用本章实时节点');
   assert.match(js, /metaPlace\s*=\s*nodeCount\s*>\s*0/, '缺地点数时不许印 0');
   assert.match(js, /metaPlay\s*=\s*Number\(chapter\.templateCount\)\s*>\s*0/, '缺玩法数时不许印 0')
 })

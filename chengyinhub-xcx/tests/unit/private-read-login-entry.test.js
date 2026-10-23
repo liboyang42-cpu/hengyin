@@ -30,7 +30,7 @@ test('badge guest renders login title, explanation and login entry without a pri
   assert.equal(h.requests.length, 0);
   assert.equal(shown['wx:if'], true);
   assert.equal(shown.title, '登录后查看我的勋章');
-  assert.equal(shown.sub, '登录后可查看你已获得的城市勋章');
+  assert.equal(shown.sub, '');
   assert.equal(shown.retry, '登录');
   assert.equal(shown['load-failure'], false);
 });

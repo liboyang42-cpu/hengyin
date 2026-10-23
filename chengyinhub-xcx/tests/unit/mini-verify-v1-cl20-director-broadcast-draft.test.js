@@ -42,7 +42,7 @@ function setup(submit) {
 function writeAndSend(ctx, content) {
   ctx.openBroadcast();
   assert.equal(ctx.data.broadcastSheetVisible, true);
-  assert.equal(ctx.data.broadcastPreviewReady, true, '夹具:全部在场 5 人,可发送');
+  assert.equal(ctx.data.broadcastPreviewReady, true, '夹具:全部在场 5 人，可发送');
   ctx.onBroadcastContentInput({ detail: { value: content } });
   ctx.confirmBroadcast();
 }
@@ -75,5 +75,5 @@ test('CL-20 广播被后端驳回:草稿保留;写成功才清空(正控)', asyn
   const ok = setup(() => Promise.resolve({ state: 'confirmed', raw: {} }));
   writeAndSend(ok.ctx, '成功后清空');
   await settle();
-  assert.equal(ok.ctx.data.broadcastDraft.content, '', '写成功后草稿清空,下一条从空白开始');
+  assert.equal(ok.ctx.data.broadcastDraft.content, '', '写成功后草稿清空，下一条从空白开始');
 });

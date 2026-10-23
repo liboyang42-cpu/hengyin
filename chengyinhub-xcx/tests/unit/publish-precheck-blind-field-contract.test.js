@@ -89,7 +89,7 @@ test('AI 的 warn/info 仍然进 advisory,error 级真问题仍然进 blocking',
   assert.ok(pc.advisory.some((a) => a.label === '其他节点缺少任务描述。'))
   assert.ok(pc.advisory.some((a) => a.label === '疑似测试内容。'))
   assert.equal(pc.advisory.some((a) => /缺少主题封面图/.test(a.label)), false,
-    '丢弃 = 不进任何一栏,不是降级成建议')
+    '丢弃 = 不进任何一栏，不是降级成建议')
 })
 
 test('只剩 missing_cover 时算预检通过(否则「内容安全预检通过」永远红)', () => {

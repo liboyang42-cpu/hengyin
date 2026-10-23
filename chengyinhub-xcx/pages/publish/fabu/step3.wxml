@@ -253,7 +253,7 @@
                     <text class="node-card__title">集合地点<text class="g-req">*</text></text>
                     <text class="node-card__value">{{editingTicket.meetingPoint || '请选择地点'}}</text>
                   </view>
-                  <view class="node-pill"><text>{{editingTicket.meetingPoint ? '修改点位' : '选择点位'}}</text><cy-icon name="chevron-right" size="24" /></view>
+                  <view class="node-pill"><text>{{editingTicket.meetingPoint ? '修改节点' : '选择节点'}}</text><cy-icon name="chevron-right" size="24" /></view>
                 </view>
               </block>
 

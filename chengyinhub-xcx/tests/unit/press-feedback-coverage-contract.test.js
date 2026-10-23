@@ -143,6 +143,8 @@ function surveyAll(overrides = {}) {
 /* 2026-10-12 49 → 50:主题编辑页故事流站点块上的「计入方式」选择器外包一层 catchtap="noop" 挡板,
    防止点选择器同时打开站点编辑。是挡板不是缺反馈,已登记在下表并由逐文件那条反查必须是 noop。 */
 // 2026-10-20 合并 master 进 #293:上面两条 49 → 50 是不同的两处挡板(漫游点位筛选 / 故事流计入方式),合并后实测 51。
+// 2026-10-22 +1:创建引导页「玩法预览」半屏的防穿透遮罩(已登记进 SWALLOWER_CEILING),51 → 52。
+// 2026-10-22 owner 复审:没有「玩法预览」这一页,半屏连同遮罩一起撤掉,52 → 51。
 const RATCHET = 51
 /** 实测剩下的 9 处全部是 bindtap="noop" 的弹窗挡板(吞点击防穿透关闭)。
  *  挡板本身不是动作,给它按压态就是伪造可交互暗示 —— 所以它们**永远**留在这张表上,
@@ -222,7 +224,7 @@ test('.cy-pressed 必须有位移，不能退回「只是变暗」', () => {
 test('减少动态效果时撤位移但保留减淡（反馈不能归零）', () => {
   const css = read('style/components.wxss')
   const guard = /\.cy-motion-reduced\s+\.cy-pressed\s*\{[^}]*\}/.exec(css)
-  assert.ok(guard, '缺少 .cy-motion-reduced 兜底')
+  assert.ok(guard, '缺少 .cy-motion-reduced 保底')
   assert.match(guard[0], /transform:\s*none/, '减少动态效果必须撤掉位移')
   assert.doesNotMatch(guard[0], /opacity:\s*1\b/, '不能把减淡也一起撤掉，那等于按下去毫无回应')
 })
@@ -278,7 +280,7 @@ test('关闭挡板豁免不能被滥用：登记在册的 handler 必须只做�
       // handler 必须存在,且函数体里除了 triggerEvent('close') 没有别的语句 ——
       // 一旦有人往这里塞真动作(跳转 / 发请求),豁免立刻失效。
       const body = new RegExp(handler + "\\s*\\(\\)\\s*\\{([^}]*)\\}").exec(js)
-      assert.ok(body, `${file} 的 ${handler} 在同名 js 里找不到,无法核对它只做关闭`)
+      assert.ok(body, `${file} 的 ${handler} 在同名 js 里找不到，无法确认它只做关闭`)
       const stmts = body[1].split(';').map((x) => x.trim()).filter(Boolean)
       assert.deepEqual(
         stmts, ["this.triggerEvent('close')"],

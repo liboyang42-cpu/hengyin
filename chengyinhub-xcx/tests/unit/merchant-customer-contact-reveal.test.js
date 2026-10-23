@@ -2,7 +2,7 @@
 
 /* F15:客户列表的拨打/复制必须先向服务端换取明文号码。
    列表里下发的是脱敏号(138****0000),直接拨/复制等于把假号当号用;
-   换取接口失败(越权/无同意/超限)时落失败半屏,而不是静默什么都不发生。 */
+   换取接口失败(越权/无同意/超限)时落失败半屏，而不是静默什么都不发生。 */
 
 const test = require('node:test')
 const assert = require('node:assert/strict')
@@ -103,7 +103,7 @@ test('网络失败落失败半屏；畸形 200（无号码）同样 fail-closed'
   requests[0].fail({})
   requests[0].complete()
   assert.equal(page.data.resultSheet.show, true)
-  assert.match(page.data.resultSheet.why, /服务暂时不可用|网络/)
+  assert.match(page.data.resultSheet.why, /服务暂不可用|网络/)
 
   const second = loadPage()
   tap(second, 'copyCustomerPhone', 45)

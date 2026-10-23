@@ -91,14 +91,14 @@ function assertSheetsMutuallyExclusive(page, label) {
   page.navigateToCategorySelect();
   assert.equal(page.data.categorySheetVisible, true, `${label}: 分类半屏应被打开`);
   assert.equal(page.data.collaboratorPickerShow, false,
-    `${label}: 打开分类半屏时必须关闭合作者选择器,否则两块 sheet 同 z-index 叠成错乱面板`);
+    `${label}: 打开分类半屏时必须关闭合作者选择器，否则两块 sheet 同 z-index 叠成错乱面板`);
 
   // B. 分类已开 → 开合作者,必须把分类关掉
   page.setData({ categorySheetVisible: true, collaboratorPickerShow: false });
   page.AddCollaborator({});
   assert.equal(page.data.collaboratorPickerShow, true, `${label}: 合作者选择器应被打开`);
   assert.equal(page.data.categorySheetVisible, false,
-    `${label}: 打开合作者选择器时必须关闭分类半屏,否则两块 sheet 同 z-index 叠成错乱面板`);
+    `${label}: 打开合作者选择器时必须关闭分类半屏，否则两块 sheet 同 z-index 叠成错乱面板`);
 }
 
 test('两个半屏(分类 / 合作者)在 activity 页互斥,开一个必关另一个', () => {
@@ -153,7 +153,7 @@ test('fabu 从主题详情面板里打开分类时,详情面板必须先关掉',
   page.navigateToCategorySelect();
   assert.equal(page.data.categorySheetVisible, true, '分类半屏应被打开');
   assert.equal(page.data.topicDetailShow, false,
-    '开着详情面板时打开分类必须同时关掉详情,否则分类弹层被详情遮罩压住');
+    '开着详情面板时打开分类必须同时关掉详情，否则分类弹层被详情遮罩压住');
 });
 
 // CU-M-160(2026-09-25 走查):上面那条钉的是「开分类 ⇒ 关详情」,但当时没人写它的逆操作 ——
@@ -170,7 +170,7 @@ test('fabu 关闭分类半屏要回到主题详情面板,不是落回主编辑�
   page.onCategorySheetClose();
   assert.equal(page.data.categorySheetVisible, false, '分类半屏应已关闭');
   assert.equal(page.data.topicDetailShow, true,
-    '关掉分类半屏必须回到打开它的主题详情面板,否则用户填了一半的内容看不见');
+    '关掉分类半屏必须回到打开它的主题详情面板，否则用户填了一半的内容看不见');
 });
 
 test('fabu 点分类半屏的保存(select 后紧跟 close)同样回到详情面板', () => {
@@ -180,7 +180,7 @@ test('fabu 点分类半屏的保存(select 后紧跟 close)同样回到详情面
   page.onCategorySelect({ detail: { selectedIds: [], selectedCategories: [] } });
   page.onCategorySheetClose();
   assert.equal(page.data.categorySheetVisible, false, '保存后分类半屏应已关闭');
-  assert.equal(page.data.topicDetailShow, true, '保存后必须回到详情面板,类别才看得见');
+  assert.equal(page.data.topicDetailShow, true, '保存后必须回到详情面板，类别才看得见');
 });
 
 test('负控:关闭分类半屏不恢复详情面板时,契约必须判红', () => {
@@ -221,10 +221,10 @@ test('fabu 保存或取消类别都回到主题详情面板', () => {
   assert.equal(page.data.formData.categoryIds, '4001', '保存要把选择落到表单');
   assert.deepEqual(page.data.selectedCategoryIds, [4001]);
   assert.equal(page.data.topicDetailShow, false,
-    '收到 select 的当场不许重开详情:分类半屏还没关,叠开就退回 CU-C-45 那个错乱形态');
+    '收到 select 的当场不许重开详情:分类半屏还没关，叠开就退回 CU-C-45 那个错乱形态');
   page.onCategorySheetClose();
   assert.equal(page.data.categorySheetVisible, false);
-  assert.equal(page.data.topicDetailShow, true, '分类半屏关掉后回到主题详情,不用人再点一次');
+  assert.equal(page.data.topicDetailShow, true, '分类半屏关掉后回到主题详情，不用人再点一次');
 
   // 取消只有 close、没有 select:返回打开分类的详情面板,不提交临时选择。
   const cancelled = loadPage(PAGES.fabu);
@@ -274,7 +274,7 @@ test('负控:任一入口退回「开自己不关对方」的旧行为,互斥契
     assert.throws(
       () => assertSheetsMutuallyExclusive(page, `${name} 负控-分类`),
       assert.AssertionError,
-      `${name}: 分类入口不关合作者时,契约必须判红`,
+      `${name}: 分类入口不关合作者时，契约必须判红`,
     );
 
     // ② 合作者入口退回旧实现
@@ -286,7 +286,7 @@ test('负控:任一入口退回「开自己不关对方」的旧行为,互斥契
     assert.throws(
       () => assertSheetsMutuallyExclusive(page, `${name} 负控-合作者`),
       assert.AssertionError,
-      `${name}: 合作者入口不关分类时,契约必须判红`,
+      `${name}: 合作者入口不关分类时，契约必须判红`,
     );
   }
 });

@@ -17,8 +17,8 @@ test('CU-M-184:核销台账标题覆盖退款，汇总仍点名核销口径', ()
   assert.match(js, /route\.view === 'redemptions' \? '核销与退款'/, '按路由复位时也不能退回只说核销');
   assert.match(wxml, /aria-label="核销与退款"/, '读屏的区域名与可见标题一致');
   assert.match(wxml, /<text class="fin-summary__k">本月核销<\/text>/,
-    '汇总标签点名核销,数字才不会被读成含退款');
-  assert.match(wxml, /title="还没有记录" sub="顾客到店核销或发起退款后会显示在这里"/,
+    '汇总标签点名核销，数字才不会被读成含退款');
+  assert.match(wxml, /title="还没有记录"/,
     '空态要说清这里会出现两类记录');
 
   const reverted = js.replace(/pageTitle: '核销与退款'/, "pageTitle: '核销记录'");

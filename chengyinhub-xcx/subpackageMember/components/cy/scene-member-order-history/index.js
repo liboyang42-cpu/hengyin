@@ -204,7 +204,7 @@ Component({
             const allRows = rows.map((item) => {
               const product = item.cmsActivity || item.cmsTopic || {}
               const address = typeof product.addressName === 'string' ? product.addressName.trim() : ''
-              item.addressText = address && address.toLowerCase() !== 'null' ? address : '地点待确认'
+              item.addressText = address && address.toLowerCase() !== 'null' ? address : '—'
               if (item.createTime) item.createTimeFormatted = formatDateTime(item.createTime)
               if (item.cmsActivity && item.cmsActivity.startDate && item.cmsActivity.endDate) {
                 item.cmsActivity.timeRangeFormatted = formatActivityTimeRange(item.cmsActivity.startDate, item.cmsActivity.endDate)

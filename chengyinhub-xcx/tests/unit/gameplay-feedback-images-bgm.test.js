@@ -15,7 +15,7 @@ test('结算后的回执把配图(最多 3 张)交给结果位;未结算不露�
   const pending = outcomeReply({ lastOutcome: { attemptId: 'a2', settled: false, status: 'PENDING', images: ['https://cdn.example.com/1.jpg'] } });
   assert.deepEqual(pending.images, []);
   const legacy = outcomeReply({ lastOutcome: { attemptId: 'a3', settled: true, status: 'SETTLED', outcome: 'FAIL', reply: '' } });
-  assert.deepEqual(legacy.images, [], '旧回执没有 images 字段时是空列表,模板里 .length 不会报错');
+  assert.deepEqual(legacy.images, [], '旧回执没有 images 字段时是空列表，模板里 .length 不会报错');
 });
 
 test('成功 / 失败反馈不进背包:背包只留结算状态,文字与配图上整屏判定', () => {
@@ -71,7 +71,7 @@ test('编辑页试玩:按作者刚填的答案本地判,反馈取对应那一边
   assert.equal(pv.judge(advanced, { type: 'compass' }, 'verdict', { kind: 'fail' }), 'fail');
   assert.equal(pv.judge(advanced, { type: 'typein', passed: true }, 'submit', {}), 'win');
   assert.deepEqual(pv.feedback(advanced, 'win'), { text: '对了', images: ['https://cdn.example.com/p.jpg'] });
-  assert.deepEqual(pv.feedback(advanced, 'fail'), { text: '', images: [] }, '没打开那一边就只有两个字');
+  assert.deepEqual(pv.feedback(advanced, 'fail'), { text: '', images: [] }, '无法打开那一边就只有两个字');
 });
 
 test('编辑页试玩:玩法那一屏不压翻页点 / 箭头 / 保存栏,判定屏可「继续」', () => {

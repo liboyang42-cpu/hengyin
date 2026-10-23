@@ -67,7 +67,7 @@ function survey(overrides = {}) {
 
 test('cy-skeleton 宿主不得被页面样式变成 row flex 容器(会整块不渲染)', () => {
   const { gaps, fileCount } = survey()
-  assert.ok(fileCount >= 200, '扫描分母异常,必须覆盖全部 wxml')
+  assert.ok(fileCount >= 200, '扫描分母异常，必须覆盖全部 wxml')
   assert.deepEqual(gaps, [], '这些骨架屏会占着高度但一个像素都不画')
 })
 
@@ -80,7 +80,7 @@ test('负控:把 club/apply 那个已知缺陷放回去必须判红', () => {
   )
   assert.notEqual(reverted, source, '负控锚点失效')
   const { gaps } = survey({ [wxml]: reverted })
-  assert.ok(gaps.includes(`${wxml}#cy-skeleton.bootstrap-state`), `负控没判红,实际:${JSON.stringify(gaps)}`)
+  assert.ok(gaps.includes(`${wxml}#cy-skeleton.bootstrap-state`), `负控没判红，实际:${JSON.stringify(gaps)}`)
 })
 
 test('负控:column 方向的 flex 宿主不算缺口,别把它们也拖进来', () => {

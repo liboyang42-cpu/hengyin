@@ -47,7 +47,7 @@ test('server-draft:试检查报 error → 不落发布标记、不调 publish-dr
   const [kind, fail] = events.at(-1);
   assert.equal(kind, 'fail');
   assert.equal(fail.stage, 'publish'); assert.equal(fail.unknown, false); assert.equal(fail.topicId, 501);
-  assert.ok(fail.detail, '带回读结果,页面才能换上真实编号并标「已存云端」');
+  assert.ok(fail.detail, '带刷新结果，页面才能换上真实编号并标「已存云端」');
   assert.match(fail.msg, /第2站缺坐标/);
   assert.equal(saver.isBusy(), false, '失败后可重试');
 });

@@ -51,25 +51,25 @@ for (const page of PAGES) {
     for (const code of [2, 401, 403]) {
       assert.equal(isAuthFailure({ code }), true, `判据漏了 ${code},这类失败不会触发清 PII`)
     }
-    assert.equal(isAuthFailure({ code: 500 }), false, '判据太宽,把服务器错误也当成鉴权失败')
+    assert.equal(isAuthFailure({ code: 500 }), false, '判据太宽，把服务器错误也当成鉴权失败')
   })
 
   test(`${page.js}:分流要窄 —— 只有 403 进「没权限」`, () => {
     const body = denyBody(page.js)
-    assert.match(body, /isForbidden\(/, 'deny 没有按 403 分流,又会把未登录说成没权限')
+    assert.match(body, /isForbidden\(/, 'deny 没有按 403 分流，又会把未登录说成没权限')
     assert.match(body, /'no-permission'\s*:\s*'error'/,
-      '403 之外必须落到普通错误态,不能一律 no-permission')
+      '403 之外必须落到普通错误态，不能一律 no-permission')
     const { isForbidden } = loadPredicates(page.js)
     assert.equal(isForbidden({ code: 403 }), true, '403 必须判为没权限')
-    assert.equal(isForbidden({ code: 401 }), false, '401 是未登录,不是没权限')
-    assert.equal(isForbidden({ code: 2 }), false, 'code 2 是通用业务错误,不是没权限')
+    assert.equal(isForbidden({ code: 401 }), false, '401 是未登录，不是没权限')
+    assert.equal(isForbidden({ code: 2 }), false, 'code 2 是通用业务错误，不是没权限')
   })
 
   test(`${page.js}:任何鉴权失败都要清掉客户 PII`, () => {
     const body = denyBody(page.js)
     // 清空写在 setData 的公共部分,不能只挂在某个三元分支上
     assert.match(body, new RegExp(`${page.pii}:\\s*(\\[\\]|null)\\s*,`),
-      `${page.pii} 没被无条件清空,旧身份的客户资料会留在屏幕上`)
+      `${page.pii} 没被无条件清空，旧身份的客户资料会留在屏幕上`)
     const line = body.split('\n').find(l => new RegExp(`^\\s*${page.pii}:`).test(l))
     assert.ok(line, `找不到 ${page.pii} 的赋值行`)
     assert.ok(!/[?]/.test(line), `${page.pii} 的清空写成了条件式:${line.trim()}`)
@@ -78,7 +78,7 @@ for (const page of PAGES) {
   test(`${page.js}:每个失败回调都把 statusCode 传给 deny`, () => {
     const src = stripJsComments(read(page.js))
     const calls = [...src.matchAll(/that\.deny\(([^)]*)\)/g)].map(m => m[1])
-    assert.ok(calls.length >= 3, `deny 调用点只有 ${calls.length} 个,少于三个回调`)
+    assert.ok(calls.length >= 3, `deny 调用点只有 ${calls.length} 个，少于三个回调`)
     // success 回调没有 statusCode 参数(HTTP 200 + 业务码),它传一个即可
     const missing = calls.filter(a => !/,/.test(a) && !/^res$/.test(a.trim()))
     assert.deepEqual(missing, [], '这些调用点吞掉了 statusCode,403 会被误判成普通错误')
@@ -92,14 +92,14 @@ test('负控:把 401 从判据里摘掉,门禁必须变红', () => {
   const mutated = src
     .replace('code === 2 || code === 401 || code === 403', 'code === 403')
     .replace('[2, 401, 403].includes', '[403].includes')
-  assert.notEqual(mutated, src, '变异没生效:判据形状已漂移,这个负控在空转')
+  assert.notEqual(mutated, src, '变异没生效:判据形状已漂移，这个负控在空转')
   const { isAuthFailure } = evalPredicates(mutated)
-  assert.equal(isAuthFailure({ code: 401 }), false, '判据没被真正削弱,这个负控在空转')
+  assert.equal(isAuthFailure({ code: 401 }), false, '判据没被真正削弱，这个负控在空转')
 })
 
 test('负控:把清 PII 挪进条件分支,门禁必须变红', () => {
   const body = denyBody(PAGES[0].js)
   const mutated = body.replace(/items:\s*\[\]\s*,/, 'items: forbidden ? [] : this.data.items,')
-  assert.notEqual(mutated, body, '变异没生效:锚点已漂移,这个负控在空转')
+  assert.notEqual(mutated, body, '变异没生效:锚点已漂移，这个负控在空转')
   assert.equal(/items:\s*(\[\]|null)\s*,/.test(mutated), false, '判据认不出条件化的清空')
 })

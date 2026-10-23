@@ -57,7 +57,7 @@ function directorView() {
   const region = /导演台\(施工文档[\s\S]*?<view class="ctd-footspacer">/.exec(host)
   assert.ok(region, '宿主页里找不到导演台区域 —— 本合同的锚点要重挑')
   assert.match(region[0], /directorActive/,
-    '导演台外壳没了:投影加载失败会静默,写锁也没有安全出口')
+    '导演台外壳没了:投影加载失败会静默，写锁也没有安全出口')
   parts.push(region[0])
   assert.ok(parts.length > DIRECTOR_COMPONENTS.length,
     '宿主页里一个 cy-club-director-* 都没挂 —— 组件建了却没人渲染')
@@ -551,7 +551,7 @@ test('导演 adapter 仅暴露服务端可解锁后续章，并保留权威卡�
   assert.doesNotMatch(JSON.stringify(projection.teams[1]), /"hintLevel":0/)
 })
 
-test('导演页使用后端 nodeName 展示站点名，不降级成未命名节点', async () => {
+test('导演页使用后端 nodeName 展示节点名，不降级成未命名节点', async () => {
   const projection = {
     sessionId: 9001,
     activityId: 701,
@@ -730,7 +730,7 @@ test('unknown 写在回执仍 pending 时保持全页写锁，不能再次发送
   assert.equal(harness.page.data.writeState, 'unknown-write')
 
   harness.page.onStartSession()
-  assert.equal(submits, 1, '未知写未回读前不得重复发同一业务动作')
+  assert.equal(submits, 1, '未知写未刷新前不得重复发同一业务动作')
   harness.page.onReconcileUnknownWrite()
   await settle()
   assert.equal(reads, 1)
@@ -829,7 +829,7 @@ test('角色分配弹层改选同队另一人 ⇒ 写的是被选中的人', asy
   assert.deepEqual(JSON.parse(JSON.stringify(writes[0].payload)), {
     teamId: 11,
     assignments: [{ memberId: 22, roleCode: 'KEEPER' }],
-  }, '改选了人,写下去的必须是新选的那个')
+  }, '改选了人，写下去的必须是新选的那个')
 })
 
 test('定向广播先用权威队伍成员数预览范围，再按锁定契约发送', async () => {
@@ -904,7 +904,7 @@ test('广播范围缺成员数时显示待确认且禁止发送，不写成 0 �
   harness.page.openBroadcast()
   harness.page.onBroadcastContentInput({ detail: { value: '请注意安全' } })
   assert.equal(harness.page.data.broadcastPreviewReady, false)
-  assert.match(harness.page.data.broadcastPreviewText, /人数待确认/)
+  assert.match(harness.page.data.broadcastPreviewText, /全部在场玩家/)
   assert.doesNotMatch(harness.page.data.broadcastPreviewText, /0 人/)
   harness.page.confirmBroadcast()
   assert.equal(writes.length, 0)
@@ -928,12 +928,12 @@ test('CU-C-76:本场在跑但没人可送达时,广播入口提前禁用并说�
 
   assert.equal(harness.page.data.canBroadcast, false, '零成员的场子入口还放行')
   assert.match(harness.page.data.broadcastDisabledText, /没有可送达的玩家/, '没说清是哪一种「不能」')
-  assert.match(harness.page.data.broadcastDisabledText, /报名进场/, '只说不能,不给可执行的下一步')
+  assert.match(harness.page.data.broadcastDisabledText, /报名进场/, '只说不能，不给可执行的下一步')
   harness.page.openBroadcast()
   assert.equal(harness.page.data.broadcastSheetVisible, false, '被禁用的入口仍然弹得开选范围流程')
   assert.equal(harness.toasts.length, 1)
   assert.equal(harness.toasts[0].title, harness.page.data.broadcastDisabledText,
-    '点它时弹的那句必须和置灰行上那句同源,不能两处各写一份')
+    '点它时弹的那句必须和置灰行上那句同源，不能两处各写一份')
 })
 
 test('CU-C-76:本场没跑起来时仍按场次状态解释,不改口成「没人」', async () => {
@@ -951,7 +951,7 @@ test('CU-C-76:本场没跑起来时仍按场次状态解释,不改口成「没�
   assert.equal(harness.page.data.canBroadcast, false)
   assert.match(harness.page.data.broadcastDisabledText, /只有本场进行中才能发送/)
   assert.doesNotMatch(harness.page.data.broadcastDisabledText, /报名进场/,
-    '把「没人」那句套到场次状态未开始上,等于告诉主理人去做一件没用的事')
+    '把「没人」那句套到场次状态未开始上，等于告诉主理人去做一件没用的事')
 })
 
 test('CU-C-76:后端没给原因码(旧响应/缺字段)时入口照常可点', async () => {
@@ -994,10 +994,10 @@ test('CU-C-76:发送被驳回时按原因码出话,认不出才回退通用文�
 
   const noRecipient = await rejectToast('GAME_BROADCAST_NO_RECIPIENT')
   assert.match(noRecipient, /没有发出/,
-    '投影算完到点发送之间没人进场,光「操作未生效」等于让人再点一次')
+    '投影算完到点发送之间没人进场，光「操作未生效」等于让人再点一次')
   assert.match(noRecipient, /报名进场后再发/)
   assert.match(await rejectToast('GAME_STATE_CONFLICT'), /操作未生效，请刷新后重试/,
-    '认不出的原因码不得编造解释,保留原通用文案')
+    '认不出的原因码不得编造解释，保留原通用文案')
 })
 
 test('F-L3-01:写操作被驳回(含版本冲突)后自动重读投影，不让下一次操作继续带旧 revision', async () => {
@@ -1182,7 +1182,7 @@ test('加载异常分流 empty / business / network，且失败后不得用旧�
   const view = directorView()
   assert.match(view, /wx:elif="\{\{loadState === 'business-error'\}\}"/)
   assert.match(view, /wx:elif="\{\{loadState === 'network-error'\}\}"/)
-  assert.match(view, /节点数据尚未下发，不能据此判断为零进度/)
+  assert.match(view, /节点数据加载中/)
 })
 
 test('unknown 写持久化：重新进入自动用原 requestId 回读，pending 保留，确认后清理', async () => {
@@ -1333,10 +1333,10 @@ test('角色接管入口只向已确认且已有角色的成员展示', () => {
     'title 取 memberNameText,组件拿不到 title 就是空白行')
   assert.deepEqual(runFilter(rows, false), [],
     '没有接管权限时一个候选都不该有')
-  assert.deepEqual(runFilter(undefined, true), [], 'roles 还没下发时不许崩,也不许瞎给')
+  assert.deepEqual(runFilter(undefined, true), [], 'roles 还没下发时不许崩，也不许瞎给')
   // 绑定确实用的是这份筛过的列表,不是原始 roles
   assert.match(read(DIRECTOR_HOST_WXML), /takeovers="\{\{directorTakeoverCandidates\}\}"/,
-    '组件绑到了没筛过的列表,守卫等于没写')
+    '组件绑到了没筛过的列表，守卫等于没写')
 
   // 负控:把「已确认」那半条判据拿掉,PENDING 的人就会混进候选 —— 必须能被抓到。
   // ⚠️ 先剥注释再变异:宿主页在 data 块的注释里也写着同一串判据(它在解释守卫从哪搬来的),
@@ -1344,7 +1344,7 @@ test('角色接管入口只向已确认且已有角色的成员展示', () => {
   //    2026-09-03 实测踩到,是这条负控自己抓出来的。
   const host2 = read('pages/club/topic-detail/index.js').replace(/^\s*\/\/.*$/gm, '')
   const loosened = host2.replace(" && item.confirmationStatus === 'CONFIRMED'", '')
-  assert.notEqual(loosened, host2, '变异没生效:判据形状已漂移,这个负控在空转')
+  assert.notEqual(loosened, host2, '变异没生效:判据形状已漂移，这个负控在空转')
   const page2 = {
     data: {
       canTakeoverRoles: true,
@@ -1354,13 +1354,13 @@ test('角色接管入口只向已确认且已有角色的成员展示', () => {
   }
   runPageMethod(loosened, 'refreshTakeoverCandidates', page2)
   assert.equal(page2.data.directorTakeoverCandidates.length, 1,
-    '放宽后 PENDING 没混进来,说明判据根本没在起作用')
+    '放宽后 PENDING 没混进来，说明判据根本没在起作用')
   // 旧的模板 wx:if 守卫已经不存在了(守卫挪到了喂数据那侧),
   // 确认它没有偷偷留在任何一个组件里 —— 两处都有会出现「藏起来但仍可点」的鬼影。
   assert.doesNotMatch(
     directorView(),
     /wx:if="\{\{canTakeoverRoles\s*&&\s*item\.roleCode/,
-    '模板里还留着旧守卫:守卫应当只有一处,在喂数据那侧',
+    '模板里还留着旧守卫:守卫应当只有一处，在喂数据那侧',
   )
 })
 

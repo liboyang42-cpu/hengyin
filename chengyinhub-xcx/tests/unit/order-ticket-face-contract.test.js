@@ -69,7 +69,7 @@ function assertWalletContract(wxml, wxss, json) {
   const cta = wxml.slice(wxml.indexOf('function cta('), wxml.indexOf('module.exports'))
   assert.doesNotMatch(cta, /return '查看详情'/, '票夹不能再给一条通往订单页的入口')
   assert.match(cta, /if \(s === 'ready'\) return '开始游戏'/)
-  assert.match(cta, /if \(s === 'pending'\) return '去支付'/, '没付完的单要能去付,文案照实写')
+  assert.match(cta, /if \(s === 'pending'\) return '去支付'/, '没付完的单要能去付，文案照实写')
   assert.equal(json.usingComponents?.['cy-icon'], '/components/cy/icon/index')
 }
 

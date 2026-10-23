@@ -106,9 +106,9 @@ test('商家态读岗位权限接口决定入口,不读本地 role 缓存', () =
   const page = makePage();
   page.onLoad({ scope: 'MERCHANT' });
 
-  assert.ok(last('/api/merchant/access/me'), '必须回读 /api/merchant/access/me');
+  assert.ok(last('/api/merchant/access/me'), '必须刷新 /api/merchant/access/me');
   assert.equal(last('/api/role/info'), undefined,
-    '商家能不能发看项目管理权,不是全局 role;读缓存会把店长/核销员一视同仁,实际:' + JSON.stringify(urlsSent()));
+    '商家能不能发看项目管理权，不是全局 role;读缓存会把店长/核销员一视同仁，实际:' + JSON.stringify(urlsSent()));
   assert.equal(page.data.canPublishActivity, false, '回包前 fail-closed,入口先不出');
 });
 

@@ -17,7 +17,7 @@ test('P2 没票:主按钮白「去买这场的票」,无次级', () => {
   assert.deepEqual(s.primary, { text: '去买这场的票', action: 'buy' });
   assert.equal(s.secondary, null);
   assert.equal(s.notice.text, '加入队伍需要先持有这一场的票');
-  assert.equal(s.foot, '', '2026-10-15 精简:状态行已说明需先买票,卡片不再加底注');
+  assert.equal(s.foot, '', '2026-10-15 精简:状态行已说明需先买票，卡片不再加底注');
 });
 
 test('P3 有票:主按钮「申请加入」', () => {

@@ -35,7 +35,7 @@
     class="gc-error-board"
     fill
     size="lg"
-    title="{{boardAuthRequired ? '登录后查看排行榜' : boardAccessDenied ? '当前账号无法查看排行榜' : '排行榜没能加载出来'}}"
+    title="{{boardAuthRequired ? '登录后查看排行榜' : boardAccessDenied ? '当前账号无法查看排行榜' : '排行榜加载失败'}}"
     sub="{{errorMsg}}"
     retry="{{boardAuthRequired ? '登录' : '重新加载'}}"
     bind:retry="onRetry"
@@ -55,7 +55,7 @@
     size="lg"
     kind="empty"
     title="这张榜还没有人上榜"
-    sub="完成一次城市探索就会累计{{unit}}，第一个上榜的可能就是你"
+    sub="完成一次城市探索即可累计{{unit}}"
     cta="去探索"
     bind:cta="goExplore"
   />

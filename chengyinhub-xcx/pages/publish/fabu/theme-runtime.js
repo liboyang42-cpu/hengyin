@@ -115,7 +115,7 @@ const methods = {
   _chapterSavedNodes(index) {
     if (!this.data.editingTopicId) return [];
     const ch = (this.data.formData.chapters || [])[index];
-    return ((ch && ch.nodes) || []).map(node => ({ id: Number(node.id), name: node.name || ('站点 ' + node.id) }))
+    return ((ch && ch.nodes) || []).map(node => ({ id: Number(node.id), name: node.name || ('节点 ' + node.id) }))
       .filter(node => Number.isSafeInteger(node.id) && node.id > 0);
   },
   _chapterRuleIssue(index, row) {
@@ -128,24 +128,24 @@ const methods = {
     for (const item of extra) {
       if (!ids.has(item.nodeId)) return '额外节点须先保存，且必须属于本章';
       if (!/^[a-z][a-z0-9_]{0,31}$/.test(item.slot || '')) return '额外任务槽名称须以小写字母开头，只能使用小写字母、数字或下划线，最多 32 位';
-      if (used.has(item.nodeId)) return '同一站点不能重复配置为额外节点';
+      if (used.has(item.nodeId)) return '同一节点不能重复配置为额外节点';
       used.add(item.nodeId);
     }
     for (const group of groups) {
-      if (!Array.isArray(group) || group.length < 2) return '互斥选项每组至少选择 2 个站点';
+      if (!Array.isArray(group) || group.length < 2) return '互斥选项每组至少选择 2 个节点';
       for (const id of group) {
         if (!ids.has(id)) return '互斥选项须先保存，且必须属于本章';
-        if (used.has(id)) return '站点不能同时属于多个互斥组或额外节点';
+        if (used.has(id)) return '节点不能同时属于多个互斥组或额外节点';
         used.add(id);
       }
     }
     // 计入完成的单位：未分组的普通站点各 1，每个互斥组合计 1，额外节点不计（与后端 A08 计数一致）
     const ch = (this.data.formData.chapters || [])[index];
     const count = ((ch && ch.nodes) || []).length - extra.length - groups.reduce((total, group) => total + group.length - 1, 0);
-    if (extra.length && count < 1) return '额外节点不能占满本章全部站点，至少保留一个计入完成的站点';
+    if (extra.length && count < 1) return '额外节点不能占满本章全部节点，至少保留一个计入完成的节点';
     if (row.completion) {
       if (row.completion.type !== 'ANY_N') return row.completion.type === 'ALL' ? '' : '本章完成要求不支持该方式';
-      if (!Number.isInteger(row.completion.quantity) || row.completion.quantity < 1 || row.completion.quantity > count) return '任选数量须在 1 到本章可完成的站点数之间';
+      if (!Number.isInteger(row.completion.quantity) || row.completion.quantity < 1 || row.completion.quantity > count) return '任选数量须在 1 到本章可完成的节点数之间';
       if (row.completion.overflowSlot && !/^[a-z][a-z0-9_]{0,31}$/.test(row.completion.overflowSlot)) return '超量任务槽名称须以小写字母开头，只能使用小写字母、数字或下划线，最多 32 位';
     }
     return '';
@@ -160,7 +160,7 @@ const methods = {
       quantity: row.completion && row.completion.quantity != null ? String(row.completion.quantity) : '',
       overflowSlot: row.completion && row.completion.overflowSlot || '',
       groups: copy(row.exclusiveGroups || []).map(ids => ({ ids, options: nodes.map(node => ({ ...node, selected: ids.includes(node.id) })) })),
-      extraNodes: copy(row.extraNodes || []).map(item => ({ ...item, nodeIndex: nodes.findIndex(node => node.id === item.nodeId), nodeName: (nodes.find(node => node.id === item.nodeId) || {}).name || '选择已保存站点' })),
+      extraNodes: copy(row.extraNodes || []).map(item => ({ ...item, nodeIndex: nodes.findIndex(node => node.id === item.nodeId), nodeName: (nodes.find(node => node.id === item.nodeId) || {}).name || '选择已保存节点' })),
       nodes, slots,
     } });
     this._openChapterRation(index);
@@ -226,7 +226,7 @@ const methods = {
     const valueRows = purposeOptions(c, initial.parse(this.data.formData.journeyRules)).filter(row => row.key === 'HP' || values.COUNTER.test(row.key || ''));
     const fallbackKey = row && row.fallback && row.fallback.statKey ? row.fallback.statKey : 'HP';
     const valueIndex = Math.max(0, valueRows.findIndex(v => v.key === fallbackKey));
-    const reason = !game.runtimeScope ? '请先选择进行方式' : !actKey ? '请先保存本章站点' : !items.length ? '请先在主题里添加物品' : '';
+    const reason = !game.runtimeScope ? '请先选择进行方式' : !actKey ? '请先保存本章节点' : !items.length ? '请先在主题里添加物品' : '';
     this.setData({ runtimeChapterRation: {
       enabled: !!row, actKey, rationKey: row ? row.rationKey : '', itemIndex, itemLabel: itemIndex >= 0 ? items[itemIndex].name : '请选择',
       quantity: String(row ? row.quantity : 1), fallback: String(row ? (row.fallback ? row.fallback.amount : row.fallbackHpCost || 0) : 0), values: valueRows, valueIndex, items, reason,
@@ -314,7 +314,7 @@ const methods = {
     this.setData({ runtimeOverflowOptions: options, runtimeOverflowLabel: !current ? '不允许' : shared ? '与「' + shared.members.join('、') + '」共用' : '单独额度（' + scope + '一次）' });
   },
   addChapterExclusiveGroup() {
-    if (this.data.runtimeChapterRules.nodes.length < 2) { toast('请先保存本章至少 2 个站点'); return; }
+    if (this.data.runtimeChapterRules.nodes.length < 2) { toast('请先保存本章至少 2 个节点'); return; }
     const groups = this.data.runtimeChapterRules.groups.slice();
     groups.push({ ids: [], options: this.data.runtimeChapterRules.nodes.map(node => ({ ...node, selected: false })) });
     this.setData({ 'runtimeChapterRules.groups': groups });
@@ -323,7 +323,7 @@ const methods = {
     const index = Number(e.currentTarget.dataset.index), id = Number(e.currentTarget.dataset.id);
     const groups = copy(this.data.runtimeChapterRules.groups), group = groups[index];
     if (!group) return;
-    if (!group.ids.includes(id) && groups.some((other, i) => i !== index && other.ids.includes(id))) { toast('该站点已在其他互斥组'); return; }
+    if (!group.ids.includes(id) && groups.some((other, i) => i !== index && other.ids.includes(id))) { toast('该节点已在其他互斥组'); return; }
     group.ids = group.ids.includes(id) ? group.ids.filter(value => value !== id) : group.ids.concat(id);
     group.options.forEach(option => { option.selected = group.ids.includes(option.id); });
     this.setData({ 'runtimeChapterRules.groups': groups });
@@ -349,7 +349,7 @@ const methods = {
     const map = new Map();
     const at = slot => { if (!map.has(slot)) map.set(slot, { slot, members: [], nodes: [], overflowChapters: [] }); return map.get(slot); };
     (c.chapters || []).slice().sort((x, y) => x.index - y.index).forEach(ch => {
-      (ch.extraNodes || []).forEach(item => { const a = at(item.slot); a.nodes.push(String(item.nodeId)); a.members.push(names[String(item.nodeId)] || '已删除站点'); });
+      (ch.extraNodes || []).forEach(item => { const a = at(item.slot); a.nodes.push(String(item.nodeId)); a.members.push(names[String(item.nodeId)] || '已删除节点'); });
       if (ch.completion && ch.completion.overflowSlot) { const a = at(ch.completion.overflowSlot); a.overflowChapters.push(ch.index); a.members.push('第' + (ch.index + 1) + '章补做'); }
     });
     return Array.from(map.values());
@@ -367,15 +367,15 @@ const methods = {
     allowances.forEach(a => a.nodes.forEach(id => {
       roles[id] = a.members.length > 1 ? '额外 · 与' + (a.members.length - 1) + '处共用（' + scope + '共一次）' : '额外 · ' + scope + '一次';
     }));
-    const options = [{ label: '计入完成', value: '' }, { label: '额外站点 · 单独额度（' + scope + '一次）', value: OWN }]
-      .concat(allowances.map(a => ({ label: '额外站点 · 与「' + a.members.join('、') + '」共用（' + scope + '共一次）', value: a.slot })));
+    const options = [{ label: '计入完成', value: '' }, { label: '额外节点 · 单独额度（' + scope + '一次）', value: OWN }]
+      .concat(allowances.map(a => ({ label: '额外节点 · 与「' + a.members.join('、') + '」共用（' + scope + '共一次）', value: a.slot })));
     return { storyNodeRoles: roles, storyRoleOptions: options };
   },
   _storyNodeRoles(c) { return this._storyRolePatch(c).storyNodeRoles; },
   onStoryNodeRole(e) {
     const nodeId = Number(e.currentTarget.dataset.nodeid), option = this.data.storyRoleOptions[Number(e.detail.value)];
     const index = (this.data.formData.chapters || []).findIndex(ch => (ch.nodes || []).some(node => Number(node.id) === nodeId));
-    if (!(nodeId > 0) || index < 0) { toast('先保存草稿，再设置额外站点'); return; }
+    if (!(nodeId > 0) || index < 0) { toast('先保存草稿，再设置额外节点'); return; }
     if (!option) return;
     const c = this._runtimeConfig(), hadExtra = !!(c.chapters.find(ch => ch.index === index) || {}).extraNodes, row = chapter(c, index);
     const current = (row.extraNodes || []).find(item => item.nodeId === nodeId);
@@ -506,7 +506,7 @@ const methods = {
         let game = {};
         try { const raw = template.advancedConfigJson || node.advancedConfigJson || '{}'; game = (typeof raw === 'string' ? JSON.parse(raw) : raw) || {}; } catch (_) {}
         const enabled = key => game[key] && game[key].enabled === true;
-        nodes.push({ id, name: node.name || ('站点 ' + id), template: Object.assign({}, template, { advancedConfigJson: game }), context: supportMatrix.context(this.data.formData.themeRuntimeConfig, node), physical: ['ballShake', 'shout', 'steps', 'compass', 'quietHold'].some(enabled), question: ['qa', 'sort', 'match', 'classify'].some(enabled) });
+        nodes.push({ id, name: node.name || ('节点 ' + id), template: Object.assign({}, template, { advancedConfigJson: game }), context: supportMatrix.context(this.data.formData.themeRuntimeConfig, node), physical: ['ballShake', 'shout', 'steps', 'compass', 'quietHold'].some(enabled), question: ['qa', 'sort', 'match', 'classify'].some(enabled) });
       }
     }));
     return nodes;
@@ -727,7 +727,7 @@ const methods = {
     if (survival && survival.zeroHpPolicy === 'CHALLENGE') {
       const nodes = this._runtimeSavedNodes(), challenge = survival.zeroChallenge;
       const ids = [challenge.challengeNodeId].concat(challenge.alternativeNodeIds);
-      if (ids.some(id => !nodes.some(node => node.id === id))) return '请先保存主题和挑战站点，再选择真实站点';
+      if (ids.some(id => !nodes.some(node => node.id === id))) return '请先保存主题和挑战节点，再选择真实节点';
       const matrixError = supportMatrix.challengeError(this.data.supportMatrix, nodes, challenge);
       if (matrixError) return matrixError;
       if (!this.data.supportMatrix && nodes.find(node => node.id === challenge.challengeNodeId).physical && !challenge.alternativeNodeIds.some(id => nodes.find(node => node.id === id).question)) return '体能或传感器主挑战须配题目类备选挑战';

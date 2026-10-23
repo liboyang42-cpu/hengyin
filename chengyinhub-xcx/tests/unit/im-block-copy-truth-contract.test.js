@@ -23,12 +23,12 @@ function actionText(key) {
 test('拉黑文案不再承诺「设置里解除」', () => {
   const all = actionText('im.block')
 
-  assert.doesNotMatch(all, /设置里解除|随时可以在设置/, '没有这个入口,不许写')
+  assert.doesNotMatch(all, /设置里解除|随时可以在设置/, '没有这个入口，不许写')
   assert.match(all, /对方不会收到拉黑提示/, '真实后果要保留')
   // RV-p6 #3:「需要时请联系客服」同样做不到 —— 客服端只有 adminUnblock,只删平台级拉黑(memberId=0),
   // 解不了「我拉黑了谁」。在有黑名单列表接口 + 解除入口之前,只能写真话。
   assert.match(all, /此会话更多菜单解除拉黑/, '应指向真实会话菜单')
-  assert.doesNotMatch(all, /联系客服/, '客服也解不了用户之间的拉黑,不许把人引过去')
+  assert.doesNotMatch(all, /联系客服/, '客服也解不了用户之间的拉黑，不许把人引过去')
 })
 
 test('解除入口指向实际已有unblock调用，不能导向设置或客服', () => {

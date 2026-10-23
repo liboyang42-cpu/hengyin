@@ -455,6 +455,23 @@ class AiGatewayServiceImplTest {
     }
 
     @Test
+    void dailyQuotaKeyUsesBeijingDateEvenWhenJvmDefaultZoneDiffers() {
+        java.util.TimeZone original = java.util.TimeZone.getDefault();
+        try {
+            // UTC-12 与北京差 20 小时:一天里大部分时刻两地日期不同,旧实现按默认时区取日会换错键。
+            java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone("Etc/GMT+12"));
+            String beijingDay = java.time.LocalDate.now(java.time.ZoneId.of("Asia/Shanghai"))
+                    .format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd"));
+            service.remainingQuota(MEMBER_ID, "theme_draft");
+            ArgumentCaptor<Object> key = ArgumentCaptor.forClass(Object.class);
+            verify(valueOperations).get(key.capture());
+            assertEquals("ai:gen:limit:gen:" + MEMBER_ID + ":" + beijingDay, key.getValue());
+        } finally {
+            java.util.TimeZone.setDefault(original);
+        }
+    }
+
+    @Test
     void npcChatAndCreationUseDifferentRateKeys() {
         java.util.Map<String, Long> counters = installPerKeyCounterStub();
 

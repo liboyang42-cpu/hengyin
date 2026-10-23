@@ -48,7 +48,7 @@ REJECTS.forEach(([name, patch]) => {
   test(`必须拦下:${name}`, () => {
     const result = checkWithdrawForm(withPatch(patch));
     assert.equal(result.ok, false, name + ' 应当被拦下');
-    assert.ok(result.message, '被拦下时必须给出可展示的原因,不能静默返回 false');
+    assert.ok(result.message, '被拦下时必须给出可展示的原因，不能静默返回 false');
     assert.equal(canSubmitWithdraw(withPatch(patch)), false, '按钮态必须与校验同源');
   });
 });

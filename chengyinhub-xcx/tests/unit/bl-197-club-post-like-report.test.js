@@ -116,7 +116,7 @@ test('点赞业务失败提示服务端文案,网络失败提示「网络异常�
   // 断网=结果未知:不再提示「请重试」,而是回读 post/list 核对(详见下方 club-like-unknown 用例)
   h.page.onLikePost(likeEvent(5))
   byUrl(h.requests, '/api/club/post/like')[2].fail()
-  assert.equal(toasts.pop(), '点赞结果未确认，正在核对')
+  assert.equal(toasts.pop(), '点赞结果未确认，正在确认')
   byUrl(h.requests, '/api/club/post/list')[0].success({ code: '200', data: [{ id: 5, isLiked: false, likeCount: 0 }] })
   assert.equal(toasts.pop(), '点赞没成功，可以再试一次')
 
@@ -160,7 +160,7 @@ test('点赞结果未知:锁不放,再点只回读不切换;回读与目标一�
   h.page.data.posts = [{ id: 5, isLiked: false, likeCount: 2 }]
   h.page.onLikePost(likeEvent(5))
   byUrl(h.requests, '/api/club/post/like')[0].fail()
-  assert.equal(toasts.pop(), '点赞结果未确认，正在核对')
+  assert.equal(toasts.pop(), '点赞结果未确认，正在确认')
   const reads = () => byUrl(h.requests, '/api/club/post/list')
   assert.equal(reads().length, 1)
   assert.deepEqual(JSON.parse(reads()[0].data), { id: '9', clubId: '9' })
@@ -172,14 +172,14 @@ test('点赞结果未知:锁不放,再点只回读不切换;回读与目标一�
 
   // 回读失败:仍未知,锁不放
   reads()[0].fail()
-  assert.equal(toasts.pop(), '点赞结果未确认，请稍后再点核对')
+  assert.equal(toasts.pop(), '点赞结果未确认，请稍后再点确认')
   h.page.onLikePost(likeEvent(5))
   assert.equal(byUrl(h.requests, '/api/club/post/like').length, 1)
   assert.equal(reads().length, 2)
 
   // 非严格布尔(如未登录时后端不标、字符串 "true")不算确认
   reads()[1].success({ code: '200', data: [{ id: 5, isLiked: 'true', likeCount: 3 }] })
-  assert.equal(toasts.pop(), '点赞结果未确认，请稍后再点核对')
+  assert.equal(toasts.pop(), '点赞结果未确认，请稍后再点确认')
   h.page.onLikePost(likeEvent(5))
   assert.equal(byUrl(h.requests, '/api/club/post/like').length, 1)
   // 帖子不在回读结果里也不算确认
@@ -235,4 +235,56 @@ test('未知锁按 owner+俱乐部隔离:换号后旧回读丢弃,新账号可�
   h.page.data.clubId = '10'
   h.page.onLikePost(likeEvent(5))
   assert.equal(like('/api/club/post/like').length, 3)
+})
+
+// P1-023:点赞带上发起时的目标态,服务端按目标态幂等
+test('点赞请求带目标态 liked:未赞→true,已赞→false', () => {
+  const h = createDetailHarness()
+  h.page.data.posts = [{ id: 5, isLiked: false }, { id: 6, isLiked: true }]
+  h.page.onLikePost(likeEvent(5))
+  h.page.onLikePost(likeEvent(6))
+  assert.deepEqual(byUrl(h.requests, '/api/club/post/like').map((r) => JSON.parse(r.data)),
+    [{ postId: 5, liked: true }, { postId: 6, liked: false }])
+})
+
+// P0-82:动态流分页——首页带 limit,滚到底按最小非置顶 id 续页、去重追加;整页回读后迟到的续页丢弃
+test('动态流分页:首页 limit=20,满页才续页,续页带 beforeId 且不重复追加', () => {
+  const h = createDetailHarness()
+  h.page.data.activeTab = 'posts'
+  const page = (from, to) => { const out = []; for (let id = from; id >= to; id -= 1) out.push({ id, authorMemberId: 1, content: 'p' + id }); return out }
+  h.page.loadPosts()
+  const lists = () => byUrl(h.requests, '/api/club/post/list')
+  assert.deepEqual(JSON.parse(lists()[0].data), { id: '9', clubId: '9', limit: 20 })
+  lists()[0].success({ code: '200', data: [{ id: 99, isPinned: 1, type: 2, authorMemberId: 1, content: '置顶' }].concat(page(50, 31)) })
+  assert.equal(h.page.data.posts.length, 21)
+  assert.equal(h.page._postsHasMore, true)
+
+  h.page.onReachBottom()
+  h.page.onReachBottom()
+  assert.equal(lists().length, 2, '续页在途时不重复发')
+  assert.deepEqual(JSON.parse(lists()[1].data), { id: '9', clubId: '9', limit: 20, beforeId: 31 })
+  lists()[1].success({ code: '200', data: [{ id: 31, authorMemberId: 1, content: 'dup' }].concat(page(30, 25)) })
+  assert.equal(h.page.data.posts.length, 27, '与已加载重复的帖子不再追加')
+  assert.equal(h.page._postsHasMore, false, '不满一页即到底')
+  h.page.onReachBottom()
+  assert.equal(lists().length, 2)
+
+  // 回读保留已加载深度(26 条非置顶,上限 50)
+  h.page.loadPosts()
+  assert.equal(JSON.parse(lists()[2].data).limit, 26)
+})
+
+test('动态流分页:续页在途时整页回读,迟到的续页结果丢弃', () => {
+  const h = createDetailHarness()
+  h.page.data.activeTab = 'posts'
+  const page = (from, to) => { const out = []; for (let id = from; id >= to; id -= 1) out.push({ id, authorMemberId: 1, content: 'p' + id }); return out }
+  h.page.loadPosts()
+  const lists = () => byUrl(h.requests, '/api/club/post/list')
+  lists()[0].success({ code: '200', data: page(40, 21) })
+  h.page.onReachBottom()
+  h.page.loadPosts()
+  lists()[2].success({ code: '200', data: page(41, 22) })
+  lists()[1].success({ code: '200', data: page(20, 1) })
+  assert.equal(h.page.data.posts.length, 20)
+  assert.equal(h.page.data.posts[0].id, 41)
 })

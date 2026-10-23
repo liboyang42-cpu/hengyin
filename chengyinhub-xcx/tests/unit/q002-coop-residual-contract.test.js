@@ -206,18 +206,13 @@ test('找俱乐部走发现页,topicId 一路带到主页邀约弹窗', () => {
   list.page.goClub({ currentTarget: { dataset: { id: '9' } } })
   assert.match(list.navigations[0], /^\/pages\/club\/detail\/index\?id=9&topicId=301&topicName=/)
 
+  // 拍板 2026-10-22:邀约不放在俱乐部主页 —— 主页仍收下 topicId(供活动/返回链路使用),
+  // 但不再有「发起合作」浮条与邀约弹层,也不为它去回读发布者授权。
   const detail = createPage('pages/club/detail/index.js')
   detail.page.onLoad({ id: '9', topicId: '301', topicName: '%E8%8B%8F%E6%B2%B3%E6%B9%BE' })
-  detail.page.data.club = { id: 9, name: '夜行团' }
-  detail.page.goClubCoop()
-  assert.notEqual(detail.page.data.coopInviteShow, true, '主题上下文不是发布者授权')
-  detail.page.refreshCoopPublisherAccess()
-  const access = detail.requests.at(-1)
-  assert.equal(access.url, '/api/topic/invite-chapters')
-  assert.deepEqual(access.data, { id: '301', scope: '' })
-  access.success({ code: 200, data: { chapters: [{ id: 12 }] } })
-  detail.page.goClubCoop()
-  assert.equal(detail.page.data.coopInviteShow, true)
   assert.equal(detail.page.data.topicId, '301')
-  assert.equal(detail.navigations.length, 0, '主页直接弹邀约语，不新增页面')
+  assert.equal(typeof detail.page.goClubCoop, 'undefined')
+  assert.equal(detail.requests.some(r => r.url === '/api/topic/invite-chapters'), false)
+  const view = fs.readFileSync(path.join(__dirname, '../../pages/club/detail/index.wxml'), 'utf8')
+  assert.doesNotMatch(view, /cy-coop-invite-sheet|发起合作<\/view>/)
 })

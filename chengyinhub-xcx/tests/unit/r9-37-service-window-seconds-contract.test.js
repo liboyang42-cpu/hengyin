@@ -42,7 +42,7 @@ function merchantView(serviceStartAt, serviceEndAt) {
           taskCode: 'DOCK_CODE', prompt: '扫描柜台上的本站任务码', inputType: 'SCAN',
           verificationRequired: true,
         },
-        merchantInstruction: '只核对玩家出示的编号与现场任务完成情况',
+        merchantInstruction: '只确认玩家出示的编号与现场任务完成情况',
         hiddenInfoReminder: '不要透露其他角色线索或后台答案',
         capacity: 2,
         serviceStartAt,
@@ -57,7 +57,7 @@ function merchantView(serviceStartAt, serviceEndAt) {
 test('RED 锚点:服务端返回带秒时间时,商家端必须仍判本站可接待', () => {
   const projection = normalizeMerchantProjection(merchantView('2026-09-13 20:00:00', '2026-09-13 22:00:00'))
   assert.equal(projection.enabled, true)
-  assert.equal(projection.stations[0].playable, true, 'HH:mm:ss 是服务端真实格式,不得判成不可接待')
+  assert.equal(projection.stations[0].playable, true, 'HH:mm:ss 是服务端真实格式，不得判成不可接待')
 })
 
 test('无秒与带秒混用也要能比较先后(兼容窗口期)', () => {

@@ -28,12 +28,12 @@
 
     <!-- errorMsg 原样透传,不吞后端文案 -->
     <block wx:elif="{{errorMsg}}">
-      <cy-error load-failure fill class="cy-fill-state" size="lg" title="可投诉活动没能加载出来" sub="{{errorMsg}}" bind:retry="onRetry" auto-back />
+      <cy-error load-failure fill class="cy-fill-state" size="lg" title="可投诉活动加载失败" sub="{{errorMsg}}" bind:retry="onRetry" auto-back />
     </block>
 
     <block wx:elif="{{topics.length === 0}}">
       <cy-empty fill class="cy-fill-state" size="lg" kind="empty" title="暂无可投诉的活动"
-                sub="投诉需针对你已报名并支付的活动；报名并支付后可在这里发起。" />
+                />
     </block>
 
     <block wx:else>

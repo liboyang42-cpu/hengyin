@@ -20,7 +20,7 @@ Page({
       recordType,
       recordId,
       loadState: recordType && recordId ? 'loading' : 'missing-param',
-      errorText: recordType && recordId ? '' : '缺少核销记录标识',
+      errorText: recordType && recordId ? '' : '缺少核销记录信息',
     });
     this.load();
   },
@@ -35,7 +35,7 @@ Page({
   onNavBack() { if (getCurrentPages().length > 1) wx.navigateBack(); else wx.reLaunch({ url: '/pages/merchant/ledger/index?view=redemptions' }); },
   load() {
     if (!this.data.recordType || !this.data.recordId) {
-      this.setData({ loadState: 'missing-param', errorKind: 'data', errorText: '缺少核销记录标识' });
+      this.setData({ loadState: 'missing-param', errorKind: 'data', errorText: '缺少核销记录信息' });
       stopPullDownRefresh();
       return;
     }
@@ -71,8 +71,8 @@ Page({
             loadState: hasDetail ? 'stale-error' : 'error',
             errorKind: 'data',
             errorText: hasObjectEnvelope
-              ? '核销详情数据不完整，请重试'
-              : ((res && res.msg) || '核销详情没加载出来'),
+              ? '核销详情加载失败，请重试'
+              : ((res && res.msg) || '核销详情加载失败'),
           });
           return;
         }
@@ -113,8 +113,8 @@ Page({
           loadState: hasDetail ? 'stale-error' : 'error',
           errorKind: network ? 'network' : 'data',
           errorText: network
-            ? '网络不稳定，请检查连接后重试'
-            : ((error && (error.msg || error.message)) || '核销详情没加载出来'),
+            ? '网络异常，请检查连接后重试'
+            : ((error && (error.msg || error.message)) || '核销详情加载失败'),
         });
       },
     });
@@ -171,7 +171,7 @@ function isRedemptionDetailPayload(response, expectedType, expectedId) {
 function fulfillmentStateText(state) {
   if (state === 'ACTIVE') return '核销有效';
   if (state === 'REVERSED') return '核销已撤销';
-  return '核销状态待确认';
+  return '—';
 }
 /** displayState → chip 语义色(1:1 映射,不含业务判断)。 */
 function stateVariant(displayState) {

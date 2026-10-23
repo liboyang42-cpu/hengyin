@@ -136,7 +136,7 @@ test('★未勾单独同意时不得建单 —— 同意记录必须先于提现
   h.page.onTxSave()
 
   assert.equal(h.requests.filter((r) => /withdrawal\/create/.test(r.url || '')).length, 0,
-    '没有单独同意就建单 = 打了款却没有同意凭据,个保法上站不住')
+    '没有单独同意就建单 = 打了款却没有同意凭据，个保法上站不住')
 })
 
 test('提现 sheet 提交中可见、防重复，业务失败与断网均原位恢复并保留表单', () => {
@@ -159,11 +159,11 @@ test('提现 sheet 提交中可见、防重复，业务失败与断网均原位�
   } })
   h.modals[0].success({ confirm: true })
   h.requests[1].success({ code: 200 })
-  h.requests[2].success({ code: 500, msg: '收款信息需要重新核对' })
+  h.requests[2].success({ code: 500, msg: '收款信息需要重新确认' })
   h.requests[2].complete()
   assert.equal(h.page.data.txSubmitting, false)
   assert.equal(h.page.data.txSubmitErrorKind, 'data')
-  assert.equal(h.page.data.txSubmitError, '收款信息需要重新核对')
+  assert.equal(h.page.data.txSubmitError, '收款信息需要重新确认')
   assert.equal(h.page.data.txBankAccount, '6222020000000000')
   assert.deepEqual(h.tips, [])
   assert.deepEqual(h.toasts, [])

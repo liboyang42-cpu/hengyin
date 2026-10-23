@@ -7,12 +7,12 @@
     <cy-page-title title="{{route.name || '线路详情'}}" subtitle="{{route.metaText}}" safe-top="{{false}}" />
     <view class="orr__body">
       <cy-skeleton wx:if="{{state === 'loading'}}" type="feed-card" count="2" />
-      <cy-error wx:elif="{{state === 'error'}}" title="线路没能加载出来" sub="网络请求失败，重试会重新拉取一次" retry="重试" bind:retry="load" />
-      <cy-empty wx:elif="{{state === 'notfound'}}" kind="empty" title="这条线路不存在或已下架" sub="回到列表看看其他线路" />
+      <cy-error wx:elif="{{state === 'error'}}" title="线路加载失败" retry="重试" bind:retry="load" />
+      <cy-empty wx:elif="{{state === 'notfound'}}" kind="empty" title="这条线路不存在或已下架" />
       <block wx:else>
         <image wx:if="{{route.cover}}" class="orr__cover" src="{{route.cover}}" mode="aspectFill" />
-        <text class="orr__sec">站点（{{route.nodes.length}}）</text>
-        <cy-empty wx:if="{{!route.nodes.length}}" kind="empty" title="这条线路还没有站点" sub="" />
+        <text class="orr__sec">节点（{{route.nodes.length}}）</text>
+        <cy-empty wx:if="{{!route.nodes.length}}" kind="empty" title="这条线路还没有节点" sub="" />
         <view class="orr-node" wx:for="{{route.nodes}}" wx:key="key" data-index="{{index}}" bindtap="openNode"
               aria-role="button" aria-label="第{{item.order}}站 {{item.name}}{{item.lat !== null ? '，点击查看位置' : ''}}"
               hover-class="{{item.lat !== null ? 'cy-pressed' : 'none'}}" hover-stay-time="80">

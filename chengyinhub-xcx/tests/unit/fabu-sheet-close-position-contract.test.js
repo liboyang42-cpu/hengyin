@@ -30,7 +30,7 @@ function assertExitIsLeftmost(sources) {
   const wxml = sources[FABU_WXML] === undefined ? read(FABU_WXML) : sources[FABU_WXML];
   const topic = sources[TOPIC_WXML] === undefined ? read(TOPIC_WXML) : sources[TOPIC_WXML];
   const tops = positions(wxml, 'class="node-sheet__top"').length + positions(topic, 'class="node-sheet__top"').length;
-  assert.ok(tops >= 4, `node-sheet__top 头部至少应有 4 处,实测 ${tops}`);
+  assert.ok(tops >= 4, `node-sheet__top 头部至少应有 4 处，实测 ${tops}`);
 
   for (const [file, source] of [[FABU_WXML, wxml], [TOPIC_WXML, topic]]) {
     for (const start of positions(source, '<view class="node-sheet__top"')) {
@@ -82,14 +82,17 @@ function assertChapterHeader(source) {
   assert.doesNotMatch(source, /bindtap="cancelChapter"[^>]*>取消</, '左上的「取消」被加回来了');
   assert.match(source, /class="cs-close cs-exit"[^>]*bindtap="cancelChapter"[^>]*>退出<\/view>\s*<view class="tit">[^<]*<\/view>\s*<view class="node-sheet__done" bindtap="confrimChapter"[^>]*>完成<\/view>/, '章节设置必须是左退出、中标题、右完成(与其他编辑页同一颗黑色完成)');
   assert.doesNotMatch(source, /class="pc-back"/, '发布确认顶部又退回左上返回箭头');
-  assert.match(source, /<view class="tit">发布确认<\/view>\s*<view class="pc-close"[^>]*bindtap="closePublishCheck"/);
+  // 2026-10-22 业主裁决(L09):发布确认撤掉右上 ✕,退出走底部「返回修改」与遮罩
+  assert.doesNotMatch(source, /class="pc-close"/, '发布确认又长回右上 ✕');
+  assert.match(source, /class="pc-mask"[^>]*bindtap="closePublishCheck"/, '发布确认缺点遮罩返回修改');
+  assert.match(source, /<cy-btn[^>]*bindtap="closePublishCheck"[^>]*>返回修改<\/cy-btn>/);
 }
 
 test('主题详情弹层只有一处标题:撤掉「编辑主题」小字,主题名承担标题', () => {
   assertSingleTitle(read(TOPIC_WXML));
 });
 
-test('编辑章节半屏:左退出 / 右完成;发布确认浮层仍是确认层(右上 ✕)', () => {
+test('编辑章节半屏:左退出 / 右完成;发布确认浮层仍是确认层(无 ✕,返回修改 + 遮罩)', () => {
   assertChapterHeader(read(FABU_WXML));
 });
 

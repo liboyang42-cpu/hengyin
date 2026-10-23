@@ -70,7 +70,7 @@ test('开始时间已过、恰好开始、未来、无效或缺省均不能推�
   page._buildRecoHero();
   assert.equal(page.data.recoCards.length, 5);
   assert.deepEqual(page.data.recoCards.map(row => row.statusLabel), ['', '', '', '', '']);
-  assert.ok(page.data.recoCards.every(row => row.betaFlag === 1), 'Beta 标识仍来自服务端字段');
+  assert.ok(page.data.recoCards.every(row => row.betaFlag === 1), 'Beta 信息仍来自服务端字段');
 });
 
 test('刷新保留现有精选卡，空回包清空轮播，失败仍保留独立错误和重试参数', () => {

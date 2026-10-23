@@ -14,7 +14,7 @@ function present(view, nodes) {
   const allowed = action => (view.availableActions || []).includes(action);
   const station = row => {
     const node = (nodes || []).find(node => String(node.nodeId) === String(row.nodeId));
-    return node ? node.name : row.nodeId ? '站点资料尚未加载' : '';
+    return node ? node.name : row.nodeId ? '节点资料尚未加载' : '';
   };
   return {
     tradeTargets: (world.tradeTargets || []).map(row => Object.assign({}, row, {
@@ -129,7 +129,7 @@ function methods(req) {
       const { key, action, version } = e.currentTarget.dataset;
       if (!['TRADE_CONFIRM', 'TRADE_CANCEL'].includes(action) || !this._canThemeTrade(action, key)) return Promise.resolve(false);
       const row = this.data.themeBag.tradeRows.find(row => row.tradeKey === key);
-      if (Number(version) !== row.version) { this.setData({ themeTradeError: '交易版本已变化，请核对当前清单' }); return Promise.resolve(false); }
+      if (Number(version) !== row.version) { this.setData({ themeTradeError: '交易版本已变化，请确认当前清单' }); return Promise.resolve(false); }
       return this._sendThemeTrade(action, { tradeKey: row.tradeKey, version: row.version });
     },
     async _sendThemeTrade(action, payload) {
@@ -150,7 +150,7 @@ function methods(req) {
       try {
         const result = await client().readReceipt(command.activityId, command.requestId);
         if (epoch !== (this._themeEpoch || 0)) return false;
-        if (result.receipt && result.receipt.action !== command.action) { this.setData({ themeTradeError: '交易结果暂未确认，请稍后核对' }); return false; }
+        if (result.receipt && result.receipt.action !== command.action) { this.setData({ themeTradeError: '交易结果暂未确认，请稍后确认' }); return false; }
         return await this._finishThemeTrade(result, command);
       } finally { this._themeSending = false; if (epoch === (this._themeEpoch || 0)) this.setData({ themeBagBusy: false }); }
     },
@@ -162,7 +162,7 @@ function methods(req) {
         if (applied && command.action === 'TRADE_OPEN') this.setData({ themeTradeForm: null });
         await this.refreshThemeBackpack(); return applied;
       }
-      this.setData({ themeTradeUnknown: true, themeTradeError: result.message || '交易结果待确认，请核对后再操作' }); return false;
+      this.setData({ themeTradeUnknown: true, themeTradeError: result.message || '交易结果待确认，请确认后再操作' }); return false;
     },
   };
   return tradeMethods;

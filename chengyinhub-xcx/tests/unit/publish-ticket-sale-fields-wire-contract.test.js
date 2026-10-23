@@ -87,7 +87,7 @@ test('专业版新建:售票时间补全为完整时间串,布尔与集合点地
   assert.ok(req, '新建必须走到 /api/topic/v2/create');
   const ticket = JSON.parse(req.data).tickets[0];
   assert.equal(ticket.saleStartTime, '2026-09-18 00:00:00',
-    '纯日期串必须补 00:00:00,否则后端 @JsonFormat 直接 400');
+    '纯日期串必须补 00:00:00，否则后端 @JsonFormat 直接 400');
   assert.equal(ticket.saleEndTime, '2026-09-25 23:59:59', '售票结束补 23:59:59');
   assert.equal(ticket.meetingPointAddress, '上海市黄浦区人民大道 1 号', '集合点地址必须原样上送');
   assert.equal(ticket.refundSupported, false, '布尔必须保持 boolean(后端用 Boolean 接)');

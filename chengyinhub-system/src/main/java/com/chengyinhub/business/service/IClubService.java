@@ -58,6 +58,12 @@ public interface IClubService
      */
     public void updateMemberPostAllowed(Long clubId, Long ownerId, boolean enabled);
 
+    /** 入会欢迎语:读不到(含列未落库)时返回 null,详情照常。 */
+    public String selectWelcomeNote(Long clubId);
+
+    /** 入会欢迎语:仅主理人可改;空串 = 清空。列未落库时抛 IllegalStateException。 */
+    public void updateWelcomeNote(Long clubId, Long ownerId, String note);
+
     /**
      * 稿 M 268:223「开放设置 · 俱乐部公开可见」。只有主理人能改。
      * 关掉之后这个俱乐部不再出现在公开列表里,非成员也打不开详情。

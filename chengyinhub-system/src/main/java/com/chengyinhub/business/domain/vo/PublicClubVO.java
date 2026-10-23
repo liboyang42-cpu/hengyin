@@ -33,6 +33,8 @@ public class PublicClubVO {
     private Integer publicVisible;
     /** 允许成员发帖 0/1。前端据此决定发帖框出不出;真闸在 /api/club/post/create 上。 */
     private Integer memberPostAllowed;
+    /** 入会欢迎语(主理人自定)。空串/null = 没写,前端只显示默认的「你可以做什么」。 */
+    private String welcomeNote;
     /** 开放商家承接 0/1。真闸在商家池那条查询上,这里只供主理人渲染开关。 */
     private Integer merchantUndertakeOpen;
     private Boolean joinPolicySupported;
@@ -74,6 +76,7 @@ public class PublicClubVO {
         // 缺列/旧行读到 null 时按 1 —— 与加这列之前的行为一致,不会突然把发帖框藏掉
         vo.memberPostAllowed = club.getMemberPostAllowed() == null ? 1 : club.getMemberPostAllowed();
         vo.merchantUndertakeOpen = club.getMerchantUndertakeOpen() == null ? 1 : club.getMerchantUndertakeOpen();
+        vo.welcomeNote = club.getWelcomeNote() == null ? "" : club.getWelcomeNote();
         vo.myJoinStatus = club.getMyJoinStatus();
         vo.myJoinReviewReason = club.getMyJoinReviewReason();
         vo.viewerIsAdmin = club.getViewerIsAdmin();
@@ -107,6 +110,7 @@ public class PublicClubVO {
     public Boolean getIsOwner() { return isOwner; }
     public Integer getJoinPolicy() { return joinPolicy; }
     public Integer getMemberPostAllowed() { return memberPostAllowed; }
+    public String getWelcomeNote() { return welcomeNote; }
     public Integer getMerchantUndertakeOpen() { return merchantUndertakeOpen; }
     public Boolean getJoinPolicySupported() { return joinPolicySupported; }
     public Integer getMyJoinStatus() { return myJoinStatus; }

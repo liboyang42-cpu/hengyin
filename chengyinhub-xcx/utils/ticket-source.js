@@ -40,6 +40,12 @@ function normalizeCode(value) {
   return { ok: true, code: text }
 }
 
+// 归因跟着账号走:storage 是整机共享的,A 号捕获的标记不能带进同一台手机上 B 号的订单。
+// 会话字段 user_id 由 utils/session/session-store.js 维护,退出/换号时清空。
+function currentMemberId() {
+  try { return toPositiveLong(wx.getStorageSync('user_id')) } catch (e) { return null }
+}
+
 function readRecord() {
   let raw = ''
   try { raw = wx.getStorageSync(STORAGE_KEY) } catch (e) { return null }
@@ -47,6 +53,9 @@ function readRecord() {
   try {
     const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw
     if (!parsed || typeof parsed !== 'object') return null
+    // 记录已绑定到别的账号(或当前未登录)⇒ 对当前身份等于没有归因。
+    const owner = toPositiveLong(parsed.memberId)
+    if (owner && owner !== currentMemberId()) return null
     return parsed
   } catch (e) {
     // 坏 JSON 只可能是被人手改过或版本漂移 —— 当作无归因,不猜。
@@ -55,7 +64,9 @@ function readRecord() {
 }
 
 function writeRecord(record) {
-  try { wx.setStorageSync(STORAGE_KEY, JSON.stringify(record)) } catch (e) { /* 存不下就等于没归因 */ }
+  // 登录前捕获的记录先不绑定,由下单时的登录身份认领(attributionPayload)。
+  const stored = Object.assign({}, record, { memberId: record.memberId || currentMemberId() || null })
+  try { wx.setStorageSync(STORAGE_KEY, JSON.stringify(stored)) } catch (e) { /* 存不下就等于没归因 */ }
 }
 
 function dropRecord() {
@@ -134,6 +145,8 @@ function attributionPayload(topicId) {
   const record = readRecord()
   if (!record || Number(record.topicId) !== wanted) return {}
   if (record.conflicted === true) return {}
+  // 未绑定的记录由第一次带它下单的登录账号认领;之后换号就不再跟随。
+  if (!toPositiveLong(record.memberId) && currentMemberId()) writeRecord(record)
   const payload = {}
   const clubId = toPositiveLong(record.sourceClubId)
   if (clubId) payload.sourceClubId = clubId

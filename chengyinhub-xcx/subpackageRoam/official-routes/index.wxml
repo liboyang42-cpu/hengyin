@@ -4,11 +4,11 @@
   <cy-modal-host id="cy-modal-host" />
   <view class="orl__shell" style="padding-top: {{statusBarHeight + navBarHeight}}px;">
     <cy-nav-bar plain custom-back bind:back="goBack" />
-    <cy-page-title title="官方线路" subtitle="官方整理的城市漫游线路" safe-top="{{false}}" />
+    <cy-page-title title="官方线路" subtitle="" safe-top="{{false}}" />
     <view class="orl__body">
       <cy-skeleton wx:if="{{state === 'loading'}}" type="feed-card" count="3" />
-      <cy-error wx:elif="{{state === 'error'}}" title="线路没能加载出来" sub="网络请求失败，重试会重新拉取一次" retry="重试" bind:retry="load" />
-      <cy-empty wx:elif="{{state === 'empty'}}" kind="empty" title="还没有上架的官方线路" sub="过阵子再来看看" />
+      <cy-error wx:elif="{{state === 'error'}}" title="线路加载失败" retry="重试" bind:retry="load" />
+      <cy-empty wx:elif="{{state === 'empty'}}" kind="empty" title="还没有上架的官方线路" />
       <block wx:else>
         <view class="orl-card" wx:for="{{routes}}" wx:key="id" data-id="{{item.id}}" bindtap="openRoute"
               aria-role="button" aria-label="查看线路 {{item.name}}" hover-class="cy-pressed" hover-stay-time="80" style="{{pmList === 1 ? '--pm-l:1;' : (pmList === 2 ? '--pm-l-d:.32s;--pm-l-s:1;' : '')}}">

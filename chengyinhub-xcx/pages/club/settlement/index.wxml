@@ -29,8 +29,8 @@
         aria-disabled="{{withdrawing || withdrawState !== 'positive'}}"
         aria-label="{{withdrawState === 'zero' ? '联系平台客服提现，当前可提现为 0' : (withdrawState === 'unknown' ? '联系平台客服提现，可提现余额待确认' : '联系平台客服提现')}}"
         bindtap="goWithdraw">联系平台客服提现</button>
-      <text class="withdraw-hint" wx:if="{{withdrawState === 'zero'}}">可提现为 0：分润到账并客诉期结束后才能提现</text>
-      <text class="withdraw-hint" wx:elif="{{withdrawState === 'unknown'}}">{{summary.isOwner === false ? '仅主理人可发起提现' : '可提现余额待确认'}}</text>
+      <text class="withdraw-hint" wx:if="{{withdrawState === 'zero'}}">客诉期结束后可提现</text>
+      <text class="withdraw-hint" wx:elif="{{withdrawState === 'unknown'}}">{{summary.isOwner === false ? '仅主理人可发起提现' : '—'}}</text>
       <!-- 2026-09-04 截图走查改:原文案是「已入账金额待确认」,而它正上方那张卡
            写着「已入账分润 ¥12,480.00」—— 一个说已入账、一个说待确认,自相矛盾,
            而且是在动钱的页面上。
@@ -61,7 +61,7 @@
           <cy-icon class="topic-row-arrow" name="arrow-right" size="24" />
         </view>
       </view>
-      <text class="footnote">已入账以打款记录为准，作废记录不再打款。</text>
+      
     </view>
   </block>
 </view>

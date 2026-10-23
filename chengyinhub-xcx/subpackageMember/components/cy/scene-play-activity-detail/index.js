@@ -56,9 +56,9 @@ function normalizeTicket(ticket) {
     _id: String(source.id == null ? '' : source.id),
     _dateText: source.startTime ? `场次时间 ${dateText(source.startTime)}${source.endTime ? ` - ${dateText(source.endTime)}` : ''}` : '',
     _deadlineText: source.endTime ? dateText(source.endTime) : '',
-    _nameText: nonEmptyString(source.name) || '票种名称待确认',
+    _nameText: nonEmptyString(source.name) || '—',
     _priceText: price === null ? '价格待定' : `¥${price}`,
-    _inventoryText: remaining === null ? '余票待确认' : remaining > 0 ? `剩余 ${remaining} 张` : '已售罄',
+    _inventoryText: remaining === null ? '—' : remaining > 0 ? `剩余 ${remaining} 张` : '已售罄',
     // remaining_inventory 可空:商家没填库存 ≠ 卖完了。只把**确证的 0** 当售罄,
     // 空值照常可选(原来这里显示「余票待确认」、点下去却说「已售罄」并硬拦);
     // 真超卖由服务端建单时判,不在这里替它猜。
@@ -69,7 +69,7 @@ function normalizeTicket(ticket) {
 }
 
 function actionFor(info) {
-  if (!info || (info.isSignUp !== 0 && info.isSignUp !== 1)) return { state: 'unavailable', text: '报名状态待确认' }
+  if (!info || (info.isSignUp !== 0 && info.isSignUp !== 1)) return { state: 'unavailable', text: '—' }
   if (info.isSignUp === 0) return { state: 'signup', text: '立即报名' }
   const now = Date.now()
   const start = info.startDate ? toTimestamp(String(info.startDate)) : NaN
@@ -111,7 +111,7 @@ Component({
     hostName: '',
     hostAvatar: '',
     categoryText: '',
-    titleText: '活动标题待确认',
+    titleText: '—',
     registrationCountText: '0',
     averageRatingText: '—',
     commentCountText: '0',
@@ -219,7 +219,7 @@ Component({
           if (!this._activityReadCurrent(token, res)) return
           this._loadingId = ''
           if (!ok(res)) {
-            this.failLoad(token, res && res.msg ? res.msg : '活动详情暂时打不开，请稍后重试。', res)
+            this.failLoad(token, res && res.msg ? res.msg : '活动详情无法打开，请稍后重试。', res)
             return
           }
           if (!res.data) {
@@ -252,10 +252,10 @@ Component({
               || (nonNegativeInteger(item.players) === null ? '' : String(item.players))
             return {
               ...item,
-              _titleText: nonEmptyString(item.title) || '节点名称待确认',
+              _titleText: nonEmptyString(item.title) || '—',
               _imageUrl: nonEmptyString(item.imgUrl),
-              _playersText: players ? (/人$/.test(players) ? players : `${players}人`) : '人数待确认',
-              _durationText: duration === null ? '时长待确认' : `${duration} 分钟`,
+              _playersText: players ? (/人$/.test(players) ? players : `${players}人`) : '—',
+              _durationText: duration === null ? '—' : `${duration} 分钟`,
             }
           })
           const info = {
@@ -290,7 +290,7 @@ Component({
               : '时间待定',
             hostName: nonEmptyString(host.memberRealName),
             hostAvatar: nonEmptyString(host.memberAvatar),
-            titleText: nonEmptyString(info.name) || '活动标题待确认',
+            titleText: nonEmptyString(info.name) || '—',
             categoryText: info.sysCategoryList.map((item) => nonEmptyString(item.categoryName)).filter(Boolean).join(' · '),
             registrationCountText: countText(info.registrationCount),
             averageRatingText: averageRating !== null && averageRating <= 5 ? String(averageRating) : '—',
@@ -303,7 +303,7 @@ Component({
           this.triggerEvent('loaded', { id: requestedId, name: info.name || '', imgUrl: info.imgUrl || '' })
         },
         successStatusAbnormal: (res, status) => this.failLoad(token, '服务暂时不可用，请稍后重试。', res, status),
-        fail: (res, status) => this.failLoad(token, '网络异常，请检查网络后重试。', res, status),
+        fail: (res, status) => this.failLoad(token, '网络异常，请重试。', res, status),
       })
     },
 
@@ -498,7 +498,7 @@ Component({
               if (token === this._cancelToken && activityId === this.data.activityId) this.setData({ cancelling: false, cancelError: '网络异常，取消原因已保留，请重试。' })
             },
             successStatusAbnormal: () => {
-              if (token === this._cancelToken && activityId === this.data.activityId) this.setData({ cancelling: false, cancelError: '服务暂时不可用，取消原因已保留，请重试。' })
+              if (token === this._cancelToken && activityId === this.data.activityId) this.setData({ cancelling: false, cancelError: '服务暂不可用，取消原因已保留，请重试。' })
             },
           })
         },
@@ -605,7 +605,7 @@ Component({
           if (token === this._commentToken && activityId === this.data.activityId) this.setData({ commentSubmitting: false, commentError: '网络异常，评分和文案已保留，请重试。' })
         },
         successStatusAbnormal: () => {
-          if (token === this._commentToken && activityId === this.data.activityId) this.setData({ commentSubmitting: false, commentError: '服务暂时不可用，评分和文案已保留，请重试。' })
+          if (token === this._commentToken && activityId === this.data.activityId) this.setData({ commentSubmitting: false, commentError: '服务暂不可用，评分和文案已保留，请重试。' })
         },
       })
     },

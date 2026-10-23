@@ -79,12 +79,12 @@ test('声称「已加载」的夹具必须真的注入内容,不能只注一个 
     }
   }
   assert.deepEqual(hollow, [],
-    '这些夹具声称已加载却没注任何内容,拍出来是空壳截图:\n  ' + hollow.join('\n  '))
+    '这些夹具声称已加载却没注任何内容，拍出来是空壳截图:\n  ' + hollow.join('\n  '))
 })
 
 test('★负控:空的 [] / {} 不能冒充内容', () => {
   assert.equal(hasSubstance("{ topicLoaded: true, detailFacts: [], ratingRows: [] }"), false,
-    '空数组必须判成空壳,否则「注了字段」就成了橡皮图章')
+    '空数组必须判成空壳，否则「注了字段」就成了橡皮图章')
   assert.equal(hasSubstance("{ topicLoaded: true, detailFacts: [{ key: '时长' }] }"), true,
     '负控锚点失效:非空数组本来就该算内容')
 })
@@ -118,5 +118,5 @@ test('★负控:把 C23 的内容字段拿掉,检查器必须判红', () => {
     .replace(/detailFacts[\s\S]*?\],\s*/, '')
     .replace(/ratingText[^,]*,\s*/, '').replace(/ratingTotal[^,}]*/, '')
   assert.equal(hasSubstance(stripped), false,
-    '摘掉内容后判据必须认为它是空壳,否则上面那条断言是橡皮图章')
+    '摘掉内容后判据必须认为它是空壳，否则上面那条断言是橡皮图章')
 })

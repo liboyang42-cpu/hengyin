@@ -75,7 +75,7 @@
         </view>
       </block>
 
-      <text class="cto__footnote">商家申请通过后，还要各自提交点位并过点位审核，才会出现在玩家路线上。</text>
+      <text class="cto__footnote">商家申请通过后，还要各自提交节点并过节点审核，才会出现在玩家路线上。</text>
     </block>
   </view>
 </cy-scene-sheet>

@@ -46,7 +46,7 @@ function assertContract(overrides = {}) {
   // 卡面不许再长回按钮:三个动作只能从长按面板走
   assert.doesNotMatch(projectWxml, /catchtap="(goCandidates|toggleStatus|deleteItem)"/,
     '候选池 / 上下架 / 删除不能回到卡面上')
-  assert.match(projectWxml, /bindlongpress="onCardLong"/, '长按是这三个动作唯一的入口,不能丢')
+  assert.match(projectWxml, /bindlongpress="onCardLong"/, '长按是这三个动作唯一的入口，不能丢')
   // 长按面板同时保留审核记录与另存为模板；另一张审核 cy-sheet 不计入操作行。
   const opsStart = projectWxml.indexOf('<cy-sheet show="{{opsSheet.show}}"')
   assert.notEqual(opsStart, -1, '长按操作面板必须存在')

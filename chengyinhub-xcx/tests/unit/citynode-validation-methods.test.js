@@ -113,8 +113,8 @@ test('vm=3:商家表单必须能填选项并标出正确项,否则提交不出 c
   assert.match(wxml, /bindtap="pickCorrectOption"/, '要有地方标出哪个是正确答案');
 
   const js = strip(read('pages/publish/temp/index.js'));
-  assert.match(js, /formData\.correctAnswer = correct \? correct\.letter : 'A'/, 'vm=3 必须提交 correctAnswer —— 不提交则后端拿 null 比,玩家永远答不对');
-  assert.match(js, /formData\[`question\$\{item\.letter\}`\] = item\.text/, '选项原文也要提交,否则玩家看不到选什么');
+  assert.match(js, /formData\.correctAnswer = correct \? correct\.letter : 'A'/, 'vm=3 必须提交 correctAnswer —— 不提交则后端拿 null 比，玩家永远答不对');
+  assert.match(js, /formData\[`question\$\{item\.letter\}`\] = item\.text/, '选项原文也要提交，否则玩家看不到选什么');
 
   // ★ 并且这份 formData 必须真的送到据点端点去(据点端点才有 validationMethodError 那道闸)
   assert.match(js, /from === 'citynode'[\s\S]{0,400}city-node\/template\/submit/);
@@ -128,13 +128,13 @@ test('vm=3:玩家侧要拿到选项才能选,但答案绝不能下发', () => {
   // 原本钉在旧页那半边跟着搬 —— 保护的性质不变(选项要下发、答案不许下发)。
   const scene = strip(read('subpackageMember/components/cy/scene-roam-poi-detail/index.js'));
   assert.match(scene, /questionA/, '玩家端要读服务端下发的选项');
-  assert.match(scene, /choiceSheetItems/, '选项问答要给选项列表,不能让玩家盲猜着打字');
+  assert.match(scene, /choiceSheetItems/, '选项问答要给选项列表，不能让玩家盲猜着打字');
 
   assert.equal(/correctAnswer/i.test(scene), false, '玩家场景组件不得读取或展示正确答案');
 
   // 玩家侧投影里出现 correctAnswer 就等于下发答案
   const vo = strip(read('../chengyinhub-system/src/main/java/com/chengyinhub/business/domain/vo/CityNodeVO.java'));
-  assert.equal(/correctAnswer/i.test(vo), false, 'CityNodeVO 是玩家侧投影,带上答案就是泄题');
+  assert.equal(/correctAnswer/i.test(vo), false, 'CityNodeVO 是玩家侧投影，带上答案就是泄题');
   const mapper = strip(read('../chengyinhub-system/src/main/resources/mapper/business/RoamMapper.xml'));
   assert.equal(/correct_answer/.test(mapper), false, '玩家侧查询选出 correct_answer 就是泄题');
 });
@@ -170,7 +170,7 @@ test('vm=2:玩家端必须真的上传照片并把 photoUrl 放进请求体', ()
   // ⚠️ 不能只断言出现过 photoUrl —— 光是函数形参 `doComplete(answer, photoUrl, code)`
   // 就能让 /photoUrl/ 恒真,那是假绿(已实测:删掉请求体里那一项,断言照样绿)。
   // 要钉的是「它进了发给后端的 data」。
-  assert.match(js, /photoUrl:\s*photoUrl/, 'photoUrl 必须进请求体,否则后端判「请上传拍照打卡照片」,永远完不成');
+  assert.match(js, /photoUrl:\s*photoUrl/, 'photoUrl 必须进请求体，否则后端判「请上传拍照打卡照片」,永远完不成');
 
 });
 
@@ -194,7 +194,7 @@ test('vm=2:场景组件上传照片并把返回 URL 送进完成请求', () => {
 test('vm=4:玩家端要扫码,且把码发给后端', () => {
   const js = strip(read('subpackageMember/components/cy/scene-roam-poi-detail/index.js'));
   assert.match(js, /scanCode/, '到店扫码要真的调起扫码');
-  assert.match(js, /code:\s*code/, '扫到的码必须发给后端,否则跟 GPS 判定没区别');
+  assert.match(js, /code:\s*code/, '扫到的码必须发给后端，否则跟 GPS 判定没区别');
 
 });
 
@@ -328,7 +328,7 @@ test('vm=1/5:场景组件保留文字作答与 GPS 完成路径', () => {
 
 test('vm=4:商家要能取到自己那张张贴码', () => {
   const js = strip(read('pages/merchant/citynode/index.js'));
-  assert.match(js, /city-node\/poster-code/, '商家没有取码入口,这张码就永远到不了店里');
+  assert.match(js, /city-node\/poster-code/, '商家没有取码入口，这张码就永远到不了店里');
 
   const wxml = strip(read('pages/merchant/citynode/index.wxml'));
   assert.match(wxml, /bindtap="showPosterCode"/);
@@ -341,7 +341,7 @@ test('★负控:这些断言不是橡皮图章', () => {
   assert.equal(/body\.correctAnswer\s*=/.test(strip('// body.correctAnswer = x')), false,
     '注释里提一嘴不能算实现');
   assert.match(strip('const a=1;\nbody.correctAnswer = "A";'), /body\.correctAnswer\s*=/,
-    '真代码必须被认出来,否则断言恒假、修坏了也不会红');
+    '真代码必须被认出来，否则断言恒假、修坏了也不会红');
   // 泄题那两条是「必须不存在」型断言,构造一个含答案的样本确认它真能判红
   assert.equal(/correctAnswer/i.test('private String correctAnswer;'), true,
     '泄题断言要真能在出现答案字段时判红');

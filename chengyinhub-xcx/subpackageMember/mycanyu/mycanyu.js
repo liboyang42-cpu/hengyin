@@ -111,7 +111,7 @@ Page({
       stateKey: orderState.key,
       stateText: orderState.text,
       verificationText: item.verificationStatus === 1 || item.verificationStatus === '1' ? '已核销'
-        : item.verificationStatus === 0 || item.verificationStatus === '0' ? '未核销' : '核销状态待确认',
+        : item.verificationStatus === 0 || item.verificationStatus === '0' ? '未核销' : '—',
       voucherAvailable: !!registrationId(item.id),
       stateVariant: orderState.key === 'not_started' ? 'info'
         : orderState.key === 'in_progress' ? 'success' : 'neutral',
@@ -184,7 +184,7 @@ Page({
         finishLoadError(res, '参与记录加载失败，请重试');
       },
       successStatusAbnormal(res) {
-        finishLoadError(res, '服务暂时不可用，请稍后再试');
+        finishLoadError(res, '服务暂不可用，请稍后重试');
       },
       fail(res) {
         finishLoadError(res, '网络异常，请重试');

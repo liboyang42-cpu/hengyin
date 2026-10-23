@@ -37,7 +37,7 @@ Component({
           if (preserveError) this.setData({ state, rows });
           else this.setData({ state, rows, error: '' });
         },
-        fail: () => this.setData({ state: 'error', error: '网络连接失败，请稍后重试' }),
+        fail: () => this.setData({ state: 'error', error: '网络异常，请重试' }),
       });
     },
 

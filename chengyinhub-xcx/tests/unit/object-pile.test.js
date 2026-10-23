@@ -67,7 +67,7 @@ test('★藏品册页:用共用的物理与映射、分类交给服务端筛、�
   assert.ok(/require\(['"][./]*utils\/object-pile(\.js)?['"]\)/.test(js), '物理要走 utils/object-pile,别在页面里再写一份')
   assert.ok(/category: category === ALL \? '' : category/.test(js), '分类要交给服务端筛:客户端筛只筛得到第一页')
   assert.ok(/<canvas type="2d" id="ocPile"/.test(wxml), '物品堆要画在 2d canvas 上')
-  assert.ok(/pile\.settled\(this\._bodies\)/.test(js), '全停住以后要停掉逐帧重画,不然一直耗电')
+  assert.ok(/pile\.settled\(this\._bodies\)/.test(js), '全停住以后要停掉逐帧重画，不然一直耗电')
 })
 
 test('负控:首屏失败才整页报错,切分类失败只提示并退回原来那一类', () => {
@@ -76,7 +76,7 @@ test('负控:首屏失败才整页报错,切分类失败只提示并退回原来
   assert.ok(at >= 0, '未找到当前 _failed(previous, loadSeq) 签名')
   const body = js.slice(at, js.indexOf('\n  },', at))
   assert.ok(/if \(!this\.data\.loaded\) \{ this\.setData\(\{ loading: false, error: true \}\); return; \}/.test(body), body)
-  assert.ok(/filter: previous/.test(body), '切分类失败要退回原来那一类,不然药丸和堆对不上')
+  assert.ok(/filter: previous/.test(body), '切分类失败要退回原来那一类，不然药丸和堆对不上')
 })
 
 test('★藏品册页隐藏时停掉逐帧重画、回来再接着画 —— 聚成一团时它一直在画', () => {

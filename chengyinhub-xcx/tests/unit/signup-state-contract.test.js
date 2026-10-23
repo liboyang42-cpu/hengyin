@@ -81,7 +81,7 @@ function assertWalletStatesAreExclusive(template) {
     assert.match(
       template,
       new RegExp(`wx:elif="\\{\\{walletState === '${state}'\\}\\}"`),
-      `${state} 必须挂在 wx:elif 上 —— 四态用 if/elif 串起来才互斥,并列 wx:if 会同时出现两块`,
+      `${state} 必须挂在 wx:elif 上 —— 四态用 if/elif 串起来才互斥，并列 wx:if 会同时出现两块`,
     )
   }
   assert.match(
@@ -113,7 +113,7 @@ test('票夹首载两路保持 loading，当前 tab 不闪真实空态', () => {
   assert.ok(sandbox.requests.find((r) => r.data && r.data.owner_type === 2), '缺场次票列表请求')
   const teamRequest = sandbox.requests.find((r) => r.url === '/api/team/my')
   assert.ok(teamRequest, '缺我的队伍请求')
-  assert.equal(teamRequest.silentError, true, '队伍拉不到只影响那一行,不许弹全局错')
+  assert.equal(teamRequest.silentError, true, '队伍拉不到只影响那一行，不许弹全局错')
 
   const template = wxml()
   const components = JSON.parse(read('subpackageMember/signup/index.json')).usingComponents
@@ -124,7 +124,6 @@ test('票夹首载两路保持 loading，当前 tab 不闪真实空态', () => {
   assert.doesNotMatch(template, /kind="loading"/, '票券结构已知，首载应使用同构票券骨架而不是通用转圈')
   assert.match(template, /walletState === 'empty'[\s\S]{0,240}还没有票/)
   // 空态文案要把两条来路都说清 —— 合并之后用户不知道票该从哪来
-  assert.match(template, /去首页发现路线或报名场次/)
 })
 
 test('票券 skeleton 保留票面与票根轮廓，加载完成时不会产生大幅布局跳变', () => {
@@ -197,7 +196,7 @@ test('一路空一路有票:合起来是 ready,有票的那些照常显示', () 
   assert.equal(page.data.walletState, 'ready', '一路空不该把整页判成空')
   assert.equal(page.data.ticketList.length, 1)
   assert.equal(page.data.ticketList[0].wTitle, '周末场次')
-  assert.equal(page.data.ticketList[0].kind, 'activity', 'kind 决定点开跳哪,不能丢')
+  assert.equal(page.data.ticketList[0].kind, 'activity', 'kind 决定点开跳哪，不能丢')
   assertWalletStatesAreExclusive(wxml())
 })
 

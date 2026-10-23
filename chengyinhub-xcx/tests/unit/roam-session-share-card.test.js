@@ -570,3 +570,22 @@ test('旧千点历史深链分享先裁隐私再按几何预算，不生成千�
   assert.ok(route.segs.length > 0 && route.segs.length <= 179)
   assert.equal(JSON.stringify(track), before)
 })
+
+test('P0-58 用户在系统存图面板点取消:不挂「保存失败」错误条，与真失败区分', async () => {
+  const page = loadPage()
+  page.onLoad({ ts: '1717243200000' })
+  await page.share()
+  global.wx.saveImageToPhotosAlbum = ({ fail }) => fail({ errMsg: 'saveImageToPhotosAlbum:fail cancel' })
+
+  const cancelled = await page.saveShareCard()
+
+  assert.deepEqual(cancelled, { ok: false, saved: false })
+  assert.equal(page.data.share.error, '')
+  assert.equal(page.data.share.saving, false)
+
+  global.wx.saveImageToPhotosAlbum = ({ fail }) => fail({ errMsg: 'saveImageToPhotosAlbum:fail io error' })
+  const failed = await page.saveShareCard()
+  assert.deepEqual(failed, { ok: false, saved: false })
+  assert.equal(page.data.share.error, '保存失败，请重试')
+  assert.equal(page.data.share.retrySave, true)
+})

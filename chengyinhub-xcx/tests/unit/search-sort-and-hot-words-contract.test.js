@@ -67,7 +67,7 @@ test('CU-M-63 推荐位标题不作个性化承诺,也不冒充聚合热搜', ()
 // 这里只钉住已知的空结果词不回来、词表形状不坏。
 test('CU-M-63 已知搜不出东西的词不得回到词表', () => {
   assert.ok(Array.isArray(SEARCH_HOT_WORDS) && SEARCH_HOT_WORDS.length >= 4)
-  assert.ok(!SEARCH_HOT_WORDS.includes('盗墓笔记'), '盗墓笔记在库内四类里都是 0 条,点了只有一张空结果页')
+  assert.ok(!SEARCH_HOT_WORDS.includes('盗墓笔记'), '盗墓笔记在库内四类里都是 0 条，点了只有一张空结果页')
   ;['暗号', '解谜', '寻宝', '菜单', '音乐', '亲子', '下班'].forEach((dead) => {
     assert.ok(!SEARCH_HOT_WORDS.includes(dead), `「${dead}」2026-09-24 在生产公开搜索里是 0 条`)
   })
@@ -82,7 +82,7 @@ test('CU-M-66 排序选择必须进结果页 URL,「最热」从 UI 撤掉', () 
   assert.match(navigations[0], /(\?|&)sortType=1(&|$)/)
 
   const wxml = strip(read('pages/search2/index.wxml'))
-  assert.doesNotMatch(wxml, /最热/, '四类后端都没有热度排序,这个选项不能留在 UI 上')
+  assert.doesNotMatch(wxml, /最热/, '四类后端都没有热度排序，这个选项不能留在 UI 上')
   assert.match(wxml, /最近/)
 })
 

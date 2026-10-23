@@ -56,7 +56,7 @@ function createExplorationExportClient(options){
     const marker={};flight=marker;
     marker.promise=send('/api/personal-exploration-export/page',{cursor:original.cursor},token).then(value=>{
       check();if(token!==generation||state!==original)throw new Error('导出请求已过期');
-      const snapshot=descriptor(value);if(keys.some(k=>snapshot[k]!==original.snapshot[k])||value.cursor!==original.cursor||value.offset!==original.offset||!Array.isArray(value.items)||value.items.length>snapshot.pageSize||typeof value.complete!=='boolean')throw new Error('分页与原导出不匹配');
+      const snapshot=descriptor(value);if(keys.some(k=>snapshot[k]!==original.snapshot[k])||value.cursor!==original.cursor||value.offset!==original.offset||!Array.isArray(value.items)||value.items.length>snapshot.pageSize||typeof value.complete!=='boolean')throw new Error('导出内容已变化，请重新开始');
       if(value.state==='SOURCE_CHANGED'){
         if(value.complete||value.nextCursor!==null||value.items.length||value.emittedRows!==original.offset)throw new Error('数据变化结果未确认');state={...original,changed:true};return {state:'SOURCE_CHANGED',complete:false,restartRequired:true,data:null,checkpoint:checkpoint()};
       }

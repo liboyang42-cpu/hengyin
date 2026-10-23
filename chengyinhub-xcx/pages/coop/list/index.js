@@ -30,7 +30,7 @@ function failureKind(value) {
   return 'server';
 }
 function failureText(value, fallback) {
-  if (failureKind(value) === 'network') return '网络不稳定，请检查连接后重试';
+  if (failureKind(value) === 'network') return '网络异常，请检查连接后重试';
   return String(value && (value.msg || value.message) || fallback);
 }
 function stopPullDownRefresh() {
@@ -285,7 +285,7 @@ Page({
       if (that._recoverReadSession(value, epoch, 'list')) return;
       if (!settle()) return;
       const kind = failureKind(value);
-      const text = failureText(value, '协作邀请没加载出来');
+      const text = failureText(value, '协作邀请加载失败');
       if (kind === 'permission' || kind === 'login') {
         that._listLoadedScope = '';
         that._sentAll = [];
@@ -367,7 +367,7 @@ Page({
                   ? '供给待审核' : '已获准 · 待补供给',
             }));
           });
-        } else errors.push(failureText(res, '章节承接记录没加载出来'));
+        } else errors.push(failureText(res, '章节承接记录加载失败'));
         if (--pending) return;
         this._chapterLoading = false;
         this.setData({ chapterReceived: received, chapterSent: sent,
@@ -451,7 +451,7 @@ Page({
         return;
       }
       // 失败:只清掉这一路的列表(没有旧快照时),只在这一路的 tab 上报错+保留旧快照
-      const text = failureText(res, '申请带队记录没加载出来');
+      const text = failureText(res, '申请带队记录加载失败');
       if (leg === 'received') {
         that.setData({
           receivedApplyState: receivedHadSnapshot ? 'ready' : 'error',
@@ -518,7 +518,7 @@ Page({
       if (that._showReadAccessFailure(value)) return;
       that.setData({
         receivedRegState: hadSnapshot ? 'ready' : 'error',
-        receivedRegErrorText: failureText(value, '承接报名没加载出来'),
+        receivedRegErrorText: failureText(value, '承接报名加载失败'),
         receivedRegs: hadSnapshot ? that.data.receivedRegs : [],
       });
     };
@@ -567,7 +567,7 @@ Page({
       if (value && value.errorCode === 'NOT_ACTIVE_MERCHANT') that.setData({ officialInvites: [], officialErrorText: '' });
       else {
         that._showReadAccessFailure(value);
-        that.setData({ officialErrorText: failureText(value, '官方邀约没加载出来') });
+        that.setData({ officialErrorText: failureText(value, '官方邀约加载失败') });
       }
     };
     app.sendRequest({
@@ -584,13 +584,13 @@ Page({
 
   acceptOfficialInvite(e) {
     const id = e.currentTarget.dataset.id;
-    const terms = e.currentTarget.dataset.terms || '合作条款待确认';
+    const terms = e.currentTarget.dataset.terms || '—';
     const that = this;
     const actionKey = 'official-accept:' + id;
     if (!this._beginAction(actionKey)) return;
     modal.show({
       title: '确认接受邀约',
-      content: terms + '\n\n接受后条款即冻结，后续合作按此执行。', confirmText: '接受',
+      content: terms + '\n\n接受后条款锁定，后续合作按此执行。', confirmText: '接受',
       success(r) { if (r.confirm) that._submitOfficialInvite(actionKey, id, 1, ''); else that._finishAction(actionKey, '', ''); },
       fail() { that._finishAction(actionKey, '', '操作确认没有打开，请重试'); },
     });
@@ -617,7 +617,7 @@ Page({
     const that = this;
     let data;
     try { data = officialChannel.handlePayload(id, status, reason); } catch (error) {
-      this._finishAction(actionKey, '', failureText(error, '邀约参数无效'));
+      this._finishAction(actionKey, '', failureText(error, '邀约信息无效'));
       return;
     }
     app.sendRequest({
@@ -702,7 +702,7 @@ Page({
     if (!this._beginAction(actionKey)) return;
     modal.show({
       title: '撤回申请',
-      content: '撤回后商家将不再看到这条申请,之后可重新申请。',
+      content: '撤回后商家将不再看到这条申请，之后可重新申请。',
       confirmText: '撤回',
       success(r) {
         if (!r.confirm) { that._finishAction(actionKey, '', ''); return; }
@@ -737,7 +737,7 @@ Page({
     modal.show({
       danger: true,
       title: '拒绝申请',
-      content: '拒绝「' + name + '」的带队申请?对方会收到通知,之后仍可重新申请。',
+      content: '拒绝「' + name + '」的带队申请?对方会收到通知，之后仍可重新申请。',
       confirmText: '拒绝',
       cancelText: '再想想',
       success(r) {
@@ -832,7 +832,7 @@ Page({
     if (!this._beginAction(actionKey)) return;
     modal.show({
       title: '确认候选',
-      content: '确认该商家占住这个地点?同地点其他待调配报名将自动落选。\n确认后需再向他发出带条款的合作邀约,他接受才成合作单。',
+      content: '确认该商家占住这个地点?同地点其他待调配报名将自动落选。\n确认后需再向他发出带条款的合作邀约，他接受才成合作单。',
       confirmText: '确认',
       success(r) {
         if (!r.confirm) { that._finishAction(actionKey, '', ''); return; }
@@ -847,8 +847,8 @@ Page({
             that.loadReceivedRegs();
             // 占槽成功 → 直接引到发邀约,别让流程断在「中标了但没合同」
             modal.show({
-              title: '已占位,接着发邀约',
-              content: '现在给「' + toName + '」发一张带分账条款的邀约,他接受后才成合作单。',
+              title: '已占位，接着发邀约',
+              content: '现在给「' + toName + '」发一张带分账条款的邀约，他接受后才成合作单。',
               confirmText: '去发邀约', cancelText: '稍后',
               success(r2) {
                 if (!r2.confirm || !toId) return;
@@ -973,10 +973,10 @@ Page({
         cyLoading.hide();
         modal.show({
           title: '支付结果待确认',
-          content: '暂不要重复缴纳，请稍后刷新合作列表查看保证金状态。',
+          content: '请勿重复缴纳，稍后刷新合作列表查看保证金状态',
           showCancel: false
         });
-        that._finishAction(actionKey, '', '支付结果待确认，暂不要重复缴纳，请稍后刷新');
+        that._finishAction(actionKey, '', '支付结果待确认，请勿重复缴纳，稍后刷新');
       }
     });
 
@@ -1101,7 +1101,7 @@ Page({
   cancelSent(e) {
     this._cancelAsInitiator(e.currentTarget.dataset.id, {
       title: '取消邀请',
-      content: '对方还没处理,取消后这条邀约作废。',
+      content: '对方还没处理，取消后这条邀约作废。',
       placeholder: '请填写取消理由(必填)',
       confirmText: '取消邀请',
       emptyTip: '请填写取消理由',
@@ -1124,11 +1124,11 @@ Page({
           that.load();
         } else {
           that._finishAction(actionKey, '', res && res.code != '200'
-            ? failureText(res, '退款重试失败') : '退款结果暂无法确认，请先核对，勿重复提交');
+            ? failureText(res, '退款重试失败') : '退款结果暂无法确认，请先确认，勿重复提交');
         }
       },
-      fail() { that._finishAction(actionKey, '', '退款结果暂无法确认，请先核对，勿重复提交'); },
-      successStatusAbnormal() { that._finishAction(actionKey, '', '退款结果暂无法确认，请先核对，勿重复提交'); },
+      fail() { that._finishAction(actionKey, '', '退款结果暂无法确认，请先确认，勿重复提交'); },
+      successStatusAbnormal() { that._finishAction(actionKey, '', '退款结果暂无法确认，请先确认，勿重复提交'); },
     });
   }
 });

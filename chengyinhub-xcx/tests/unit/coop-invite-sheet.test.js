@@ -84,3 +84,26 @@ test('邀约返回不命中已卸载或属于旧账号的同主题页面',()=>{
  actor=10;host._disposed=true;assert.equal(finish(99),false);
  host._disposed=false;assert.equal(finish(99),true);assert.equal(reads,1);assert.equal(navigations.length,1);
 });
+
+test('拍板 2026-10-22:邀约主题列表滤掉已结束/已下架/未过审的主题,整页被滤空时自动翻下一页', () => {
+  const s = setup();
+  const pad = n => String(n).padStart(2, '0');
+  const d = new Date();
+  const today = d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+  const first = s.requests.shift();
+  assert.equal(first.data.is_my, 1);
+  first.success({ code: 200, data: { total: 40, rows: [
+    { id: 1, name: '已结束', endDate: '2020-01-01', status: 1, userStatus: 1 },
+    { id: 2, name: '已下架', endDate: '2999-01-01', status: 1, userStatus: 0 },
+    { id: 3, name: '未过审', status: 0, userStatus: 1 },
+  ] } });
+  assert.equal(s.c.data.topics.length, 0);
+  const second = s.requests.shift();
+  assert.equal(second.data.pageNum, 2, '整页过期时接着拉下一页');
+  second.success({ code: 200, data: { total: 40, rows: [
+    { id: 4, name: '今天结束', endDate: today + ' 23:59:59', status: 1, userStatus: 1 },
+    { id: 5, name: '在售', endDate: '2999-12-31', status: 1, userStatus: 1 },
+    { id: 6, name: '旧回包无字段' },
+  ] } });
+  assert.deepEqual([...s.c.data.topics.map(t => t.id)], [4, 5, 6]);
+});

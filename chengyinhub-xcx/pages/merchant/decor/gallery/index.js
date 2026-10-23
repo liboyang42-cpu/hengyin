@@ -23,7 +23,7 @@ function classifyFailure(error, fallback) {
   }
   const transportText = error && typeof error === 'object' ? String(error.errMsg || '') : '';
   if (code === undefined && /request:fail|timeout|network|网络|断网/i.test(transportText)) {
-    return { kind: 'network', text: '网络连接失败，请检查网络后重试。' };
+    return { kind: 'network', text: '网络异常，请重试。' };
   }
   return { kind: 'data', text: requestText(error, fallback) };
 }
@@ -178,25 +178,25 @@ Page({
       success(res) {
         if (!isCurrent()) return;
         const ok = res.code === '200' || res.code === 200;
-        if (!ok) return fail(res, '门店相册暂时没能加载，请重试。');
+        if (!ok) return fail(res, '门店相册加载失败，请重试。');
         if (!res.data || typeof res.data !== 'object' || Array.isArray(res.data)) {
-          return fail({ msg: '相册数据不完整' }, '相册数据不完整，请重试。');
+          return fail({ msg: '相册加载失败' }, '相册加载失败，请重试。');
         }
         const memberId = Number(res.data.memberId);
         if (!Number.isInteger(memberId) || memberId < 1) {
-          return fail({ msg: '相册数据不完整' }, '相册数据不完整，请重试。');
+          return fail({ msg: '相册加载失败' }, '相册加载失败，请重试。');
         }
         let gallery = [];
         try { gallery = res.data.gallery ? JSON.parse(res.data.gallery) : []; } catch (e) {
-          return fail({ msg: '相册数据格式异常' }, '相册数据格式异常');
+          return fail({ msg: '相册加载失败' }, '相册加载失败');
         }
-        if (!Array.isArray(gallery)) return fail({ msg: '相册数据格式异常' }, '相册数据格式异常');
+        if (!Array.isArray(gallery)) return fail({ msg: '相册加载失败' }, '相册加载失败');
         if (!finish()) return;
         that._dataIdentity = owner;
         that.setData({ refreshing: false, gallery: gallery, loadState: 'ready', loadErrorKind: '', loadError: '', dirty: false });
       },
-      fail(error, statusCode) { fail(statusCode ? Object.assign({}, error, { code: statusCode }) : error, '门店相册暂时没能加载，请重试。'); },
-      successStatusAbnormal(error, statusCode) { fail(statusCode ? Object.assign({}, error, { code: statusCode }) : error, '门店相册暂时没能加载，请重试。'); }
+      fail(error, statusCode) { fail(statusCode ? Object.assign({}, error, { code: statusCode }) : error, '门店相册加载失败，请重试。'); },
+      successStatusAbnormal(error, statusCode) { fail(statusCode ? Object.assign({}, error, { code: statusCode }) : error, '门店相册加载失败，请重试。'); }
     });
   },
 

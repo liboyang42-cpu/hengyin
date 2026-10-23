@@ -55,7 +55,7 @@ function timelineRows(data) {
 function appealText(data) {
   const appeal = data && data.appeal;
   if (!appeal || !appeal.state) return '';
-  return APPEAL_TEXT[appeal.state] || '申诉状态待确认';
+  return APPEAL_TEXT[appeal.state] || '—';
 }
 
 function validateReason(content) {

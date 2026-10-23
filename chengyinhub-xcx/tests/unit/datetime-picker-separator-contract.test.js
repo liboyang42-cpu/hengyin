@@ -34,7 +34,7 @@ test('两处有效期选择都走 cy-datetime-range,不再自己拼滚轮', () =
     assert.match(wxml, /<cy-datetime-range/, wxmlPath + ' 应使用 cy-datetime-range')
     assert.equal(wxml.includes('<picker-view'), false,
       wxmlPath + ' 又自己拼滚轮了 —— 四滚轮双面板正是「看不到另一头 / 不显示跨度 / 需要一个连接词」的来源')
-    assert.match(read(jsonPath), /"cy-datetime-range"/, jsonPath + ' 没注册组件,页面会渲染成空节点')
+    assert.match(read(jsonPath), /"cy-datetime-range"/, jsonPath + ' 没注册组件，页面会渲染成空节点')
   }
 })
 
@@ -42,7 +42,7 @@ test('组件里日期与时刻是同一个 picker-view 的两列,中间没有连
   const wxml = read('components/cy/datetime-range/index.wxml')
   // 一个 picker-view、三列(日期 / 时 / 分)
   assert.equal((wxml.match(/<picker-view[ >]/g) || []).length, 1,
-    '拆成两个 picker-view 就又需要在中间放一个词,而没有哪个词是对的')
+    '拆成两个 picker-view 就又需要在中间放一个词，而没有哪个词是对的')
   assert.equal((wxml.match(/<picker-view-column>/g) || []).length, 3)
 })
 
@@ -56,7 +56,7 @@ test('cy-time-range 的两端各自标注「开始」「结束」,不靠中间�
   assert.match(wxml, /ctr__unit">结束</,
     '区间终点必须自己标注「结束」')
   assert.doesNotMatch(wxml, /ctr__sep/,
-    '两端已各自标注,中间不该再出现分隔词槽位')
+    '两端已各自标注，中间不该再出现分隔词槽位')
 })
 
 test('负控:把调用方改回自己拼滚轮,契约必须判红', () => {

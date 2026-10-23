@@ -611,16 +611,16 @@ function pickPlayKit(view, now) {
         duration: seg.durationSeconds || 0,
         // 稿里这句写了「爪印自动落章 +10 XP」,但音乐角明确不判定通关(2026-08-26 拍板),
         // 所以文案不承诺奖励 —— 承诺了拿不到才是最伤的
-        hint: '坐下来,听完这一首',
+        hint: '坐下来，听完这一首',
       });
     }
     if (name === 'slowTask') {
       return Object.assign(base, {
         title: seg.title || '',
-        startHint: seg.startHint || '现在开个头,剩下的交给时间。',
+        startHint: seg.startHint || '现在开个头，剩下的交给时间。',
         startLabel: seg.startLabel || '就这么定了',
         // 等待期文案不含秒级倒计时:这是低压循环,精确到秒会把"慢慢来"变成"快到了"
-        waitHint: seg.waitHint || '明天这个时候,这里会多出一点东西。',
+        waitHint: seg.waitHint || '明天这个时候，这里会多出一点东西。',
         unlockLabel: seg.unlockLabel || '看看留下了什么',
         unlockText: seg.unlockText || '',
         started: !!seg.started,

@@ -28,7 +28,7 @@ function assertSeparateConsentIntact(js, wxml) {
   assert.match(
     wxml,
     /class="bmbottom_box"[^>]*bindtap="toggleHostShare"[^>]*aria-role="checkbox"[^>]*aria-checked="\{\{hostShareChecked\}\}"/,
-    '单独同意必须由用户主动操作独立控件,不能收成小字或推定同意',
+    '单独同意必须由用户主动操作独立控件，不能收成小字或推定同意',
   )
   assert.match(
     wxml,

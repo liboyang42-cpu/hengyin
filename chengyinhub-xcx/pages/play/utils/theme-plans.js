@@ -2,8 +2,8 @@ const sessionClient = require('../../../utils/game-session-client.js');
 const trade = require('./theme-trade.js');
 const modal = require('../../../utils/modal.js');
 
-const reasonText = reason => ({ NOT_CAPTAIN: '仅当前队长可操作', RULE_BLOCKED: '方案前置条件尚未满足', NOT_ARRIVED: '尚未到达操作站点', PROOF_PENDING: '操作任务尚未通过', WORLD_LOCKED: '当前票轮已锁定，请先改案', SESSION_ENDED: '本局已结束', SESSION_PAUSED: '本局已暂停', INSUFFICIENT_RESOURCES: '可用物资不足', LIMIT_REACHED: '该操作已完成', CHALLENGE_LIMIT: '挑战次数已达上限', TEAM_COMPLETED: '本队已完成', COUNTERPART_COMPLETED: '对方已完成', TASK_ACTIVE: '请先完成或取消当前任务' }[reason] || reason || '信息尚未更新');
-const phaseText = phase => ({ FUNDING: '讨论与投入', VOTING: '首选表决', ACCEPTANCE: '接受方案轮', SELECTED: '方案已选定', EXECUTED: '操作已执行', FALLBACK: '兜底收尾', TIED: '等待重投', CONSENSUS: '共识表决' }[phase] || phase || '信息尚未更新');
+const reasonText = reason => ({ NOT_CAPTAIN: '仅当前队长可操作', RULE_BLOCKED: '方案前置条件尚未满足', NOT_ARRIVED: '尚未到达操作节点', PROOF_PENDING: '操作任务尚未通过', WORLD_LOCKED: '当前票轮已锁定，请先改案', SESSION_ENDED: '本局已结束', SESSION_PAUSED: '本局已暂停', INSUFFICIENT_RESOURCES: '可用物资不足', LIMIT_REACHED: '该操作已完成', CHALLENGE_LIMIT: '挑战次数已达上限', TEAM_COMPLETED: '本队已完成', COUNTERPART_COMPLETED: '对方已完成', TASK_ACTIVE: '请先完成或取消当前任务' }[reason] || reason || '信息尚未更新');
+const phaseText = phase => ({ FUNDING: '讨论与投入', VOTING: '首选表决', ACCEPTANCE: '接受方案轮', SELECTED: '方案已选定', EXECUTED: '操作已执行', FALLBACK: '默认结局收尾', TIED: '等待重投', CONSENSUS: '共识表决' }[phase] || phase || '信息尚未更新');
 const policyText = policy => ({ MAJORITY: '多数通过', UNANIMOUS: '全体同意', MAJORITY_ACCEPTANCE: '多数通过 · 接受轮恢复' }[policy] || '信息尚未更新');
 function present(view, nodes) {
   const world = view.world || {}, tools = (view.interactionTools || []).filter(row => row.kind === 'PLAN');
@@ -26,7 +26,7 @@ function present(view, nodes) {
       row.conditionText = Array.isArray(row.missingClues) && row.missingClues.length ? '还缺线索：' + row.missingClues.join('、')
         : row.conditionsMet === true ? '前置条件已满足' : row.conditionsMet === false ? '前置条件未满足' : '前置条件状态尚未更新';
       row.reason = row.actions.disabledReason ? reasonText(row.actions.disabledReason) : readback ? '' : '信息尚未更新';
-      row.operationNodeName = ((nodes || []).find(node => String(node.nodeId) === String(row.operationNodeId)) || {}).name || '站点资料尚未加载';
+      row.operationNodeName = ((nodes || []).find(node => String(node.nodeId) === String(row.operationNodeId)) || {}).name || '节点资料尚未加载';
       row.operationStarted = view.activeOperation && view.activeOperation.operationKind === 'PLAN' && view.activeOperation.operationKey === row.endingKey;
       row.canEditFunding = !!row.proposalKey && allowed('PLAN_INTENT') && row.actions.canFund === true;
       row.commandButtons = [];
@@ -101,7 +101,7 @@ function methods(req) {
     _canThemePlan(action, row) {
       const view = this.data.themeBag;
       if (view.scope !== 'TEAM' || !view.sessionId || this.data.isPreview || this.data.isMock || this._themeSending || this._planPending || this._tradePending || this._themePending || this._gameplayPending) return false;
-      if (!view.planReadback || !(view.availableActions || []).includes(action)) { this.setData({ themePlanError: view.planReadback ? '当前操作不可用，请核对队长身份与票轮' : '信息尚未更新' }); return false; }
+      if (!view.planReadback || !(view.availableActions || []).includes(action)) { this.setData({ themePlanError: view.planReadback ? '当前操作不可用，请确认队长身份与票轮' : '信息尚未更新' }); return false; }
       const gate = { PLAN_PROPOSE: 'canFund', PLAN_INTENT: 'canFund', VOTE_CAST: 'canVote', CONSENSUS_CAST: 'canVote', ACCEPT_SET: 'canAccept', PLAN_EXECUTE: 'canExecute' }[action];
       if (gate && row && row.actions[gate] !== true) { this.setData({ themePlanError: row.reason }); return false; }
       return true;
@@ -129,10 +129,10 @@ function methods(req) {
       if (['PLAN_CHANGE', 'PLAN_WITHDRAW', 'PLAN_EXECUTE', 'PLAN_REJECT_ALL'].includes(action)) {
         modal.show({ title: { PLAN_CHANGE: '改案并重新签署', PLAN_WITHDRAW: '撤回本队提案', PLAN_EXECUTE: '执行已选方案', PLAN_REJECT_ALL: '拒绝全部剩余方案' }[action],
           content: action === 'PLAN_EXECUTE' ? '操作通过后才会消耗已确认物资，结果以确认的操作记录为准。'
-            : action === 'PLAN_CHANGE' ? '改案只释放方案锁定的物资和本轮投票、签名；交易锁定的物资不会释放。请核对后确认。'
-              : '这次操作会影响当前票轮与签名，请核对后确认。', confirmText: '确认', success: result => {
+            : action === 'PLAN_CHANGE' ? '改案只释放方案锁定的物资和本轮投票、签名；交易锁定的物资不会释放。请确认后确认。'
+              : '这次操作会影响当前票轮与签名，请确认后确认。', confirmText: '确认', success: result => {
             if (!result.confirm) return;
-            if (revision !== this.data.themeBag.revision || epoch !== this.data.themeBag.authorityEpoch) { this.setData({ themePlanError: '状态已变化，请重新核对后确认' }); return; }
+            if (revision !== this.data.themeBag.revision || epoch !== this.data.themeBag.authorityEpoch) { this.setData({ themePlanError: '状态已变化，请重新确认后确认' }); return; }
             if (this._canThemePlan(action, this._currentThemePlan())) send();
           } });
         return Promise.resolve(false);
@@ -161,7 +161,7 @@ function methods(req) {
       const row = this._currentThemePlan();
       if (!row || !row.operationNodeId || !row.operationStarted) return false;
       const node = this._nodeById(Number(row.operationNodeId));
-      if (!node) { this.setData({ themePlanError: '操作站点资料尚未加载' }); return false; }
+      if (!node) { this.setData({ themePlanError: '操作节点资料尚未加载' }); return false; }
       this.setData({ themeBackpackOpen: false, themePlanKey: '', advancedPlay: { show: true, node }, playKit: { show: false, kit: null } }); return true;
     },
     async _sendThemePlan(action, payload) {
@@ -190,7 +190,7 @@ function methods(req) {
       finally { this._themeSending = false; if (epoch === (this._themeEpoch || 0)) this.setData({ themeBagBusy: false }); }
     },
     async _finishThemePlan(result, command) {
-      if (result.receipt && (result.receipt.action !== command.action || result.receipt.requestId !== command.requestId || String(result.receipt.activityId) !== String(command.activityId))) result = { status: 'unknown', message: '操作记录不匹配，请核对原请求' };
+      if (result.receipt && (result.receipt.action !== command.action || result.receipt.requestId !== command.requestId || String(result.receipt.activityId) !== String(command.activityId))) result = { status: 'unknown', message: '操作记录异常，请刷新后再试' };
       const applied = result.status === 'success' || result.status === 'matched';
       if (applied || result.status === 'business-error' && (!this.data.themePlanUnknown || result.receipt)) {
         this._planPending = null;
@@ -201,7 +201,7 @@ function methods(req) {
         if (ending) patch.themePlanResult = ending;
         this.setData(patch); await this.refreshThemeBackpack(); return applied;
       }
-      this.setData({ themePlanUnknown: true, themePlanError: result.message || '结果待确认，请核对原请求' });
+      this.setData({ themePlanUnknown: true, themePlanError: result.message || '结果待确认，请刷新后再试' });
       await this.refreshThemeBackpack(); return false;
     },
   };

@@ -2,18 +2,18 @@
 const { toTimestamp } = require('../../../utils/datetime.js')
 
 const labels = {
-  ACT_UNLOCK: '主持开放幕', ARRIVAL_CONFIRM: '核验到达凭证', ARRIVAL_ATTEST: '纸账到达核验', ARRIVAL_REVOKE: '撤销到达核验',
+  ACT_UNLOCK: '主持开放幕', ARRIVAL_CONFIRM: '核验到达凭证', ARRIVAL_ATTEST: '纸质记录到达核验', ARRIVAL_REVOKE: '撤销到达核验',
   RUN_PAUSE: '暂停本局', RUN_RESUME: '恢复本局', RUN_INTERRUPT: '中止本局', RUN_CANCEL: '取消本局',
   MANUAL_BEGIN: '进入人工账', STAFF_MANUAL_SIGN: '签署现场核验', MANUAL_IMPORT: '执行已签事件', MANUAL_REVIEW: '复核人工冲突',
   AUTHORITY_RESUME: '恢复在线权威', QUEST_GUIDE: '工作人员指导完成', LOCATION_REBIND: '迁移到批准备用站', STAFF_TEAM_EXIT: '工作人员确认队伍退出',
 }
 const irreversible = ['RUN_INTERRUPT', 'RUN_CANCEL', 'MANUAL_IMPORT', 'MANUAL_REVIEW', 'STAFF_TEAM_EXIT', 'QUEST_GUIDE', 'ACT_UNLOCK']
 const fieldLabels = {
-  actKey: '幕标识', teamId: '队伍 ID', questKey: '任务标识（或填写操作类型与标识）', operationKind: '操作类型（FACILITY 或 PLAN）', operationKey: '操作标识',
+  actKey: '幕编号', teamId: '队伍 ID', questKey: '任务编号（或填操作类型与编号）', operationKind: '操作类型（FACILITY 或 PLAN）', operationKey: '操作编号',
   nonce: '队长出示的到达凭证', reason: '实际操作原因（1–200 字）', nodeId: '已批准备用节点 ID',
-  highWaterHash: '本局高水位指纹', configHash: '本局规则指纹', unknownRequests: '待核对请求清单（JSON 数组）', offlineStartedAt: '离线开始时间（北京时间，可选）',
-  signatureId: '签名 ID', reviewKind: '复核对象', memberId: '原操作者会员 ID', requestId: '原请求号', acceptLateConflict: '明确接受迟到指纹冲突（不重放）',
-  sequence: '当前连续序号', occurredAt: '实际事件时间（北京时间）', signedAction: '本人核验动作', originalRequestId: '原在线请求号（可选）', originalExpectedRevision: '原在线版本（与原请求号一起填）',
+  highWaterHash: '本局高水位指纹', configHash: '本局规则指纹', unknownRequests: '待复查操作清单', offlineStartedAt: '离线开始时间（北京时间，可选）',
+  signatureId: '签名 ID', reviewKind: '复核对象', memberId: '原操作者会员 ID', requestId: '原操作编号', acceptLateConflict: '接受延迟记录的冲突（不再提交）',
+  sequence: '当前连续序号', occurredAt: '实际事件时间（北京时间）', signedAction: '本人核验动作', originalRequestId: '原操作编号（可选）', originalExpectedRevision: '原版本号（与原操作编号一起填）',
 }
 const targetFields = ['teamId', 'questKey', 'operationKind', 'operationKey']
 const schemas = {
@@ -109,7 +109,7 @@ function genericOpsFields(action, draft, control) {
   if (action === 'STAFF_MANUAL_SIGN') keys = keys.concat(schemas[draft.signedAction] || [], ['originalRequestId', 'originalExpectedRevision'])
   if (action === 'MANUAL_REVIEW') keys = keys.concat(draft.reviewKind === 'SIGNATURE' ? ['signatureId', 'reason']
     : draft.reviewKind === 'REQUEST' ? ['memberId', 'requestId', 'acceptLateConflict', 'reason'] : ['reason'])
-  const optionLabels = Object.assign({ HIGH_WATER: '核对当前高水位', SIGNATURE: '驳回已签事件', REQUEST: '复核未知在线请求' }, labels)
+  const optionLabels = Object.assign({ HIGH_WATER: '查看当前进度', SIGNATURE: '驳回已签事件', REQUEST: '复查未完成的操作' }, labels)
   const choices = { signedAction: ['ARRIVAL_CONFIRM', 'ARRIVAL_ATTEST', 'QUEST_GUIDE'], reviewKind: ['HIGH_WATER', 'SIGNATURE', 'REQUEST'] }
   if (isGuide(action, draft) && control && Array.isArray(control.guideTasks)) {
     choices.questKey = control.guideTasks.map(task => task.questKey)
@@ -118,8 +118,8 @@ function genericOpsFields(action, draft, control) {
   return keys.map(key => ({ key, label: fieldLabels[key], value: draft[key] == null ? '' : draft[key], valueLabel: optionLabels[draft[key]] || draft[key] || '',
     multiline: key === 'reason' || key === 'unknownRequests', boolean: key === 'acceptLateConflict',
     options: choices[key] || [], optionIndex: (choices[key] || []).indexOf(draft[key]),
-    optionLabels: key === 'signedAction' ? ['核验到达凭证', '纸账到达核验', '工作人员指导完成']
-      : key === 'reviewKind' ? ['核对当前高水位', '驳回已签事件', '复核未知在线请求'] : key === 'questKey' ? choices.questKey || [] : [],
+    optionLabels: key === 'signedAction' ? ['核验到达凭证', '纸质记录到达核验', '工作人员指导完成']
+      : key === 'reviewKind' ? ['查看当前进度', '驳回已签事件', '复查未完成的操作'] : key === 'questKey' ? choices.questKey || [] : [],
     maxLength: key === 'unknownRequests' ? 20000 : key === 'reason' ? 200 : 128 }))
     .concat(isGuide(action, draft) ? guideFields(guideTask(draft, control), draft) : [])
 }
@@ -127,13 +127,13 @@ function genericOpsFields(action, draft, control) {
 function text(draft, key, maximum, optional) {
   const value = String(draft[key] == null ? '' : draft[key]).trim()
   if (optional && !value) return null
-  if (!value || value.length > maximum || /[\u0000-\u001f\u007f]/.test(value)) throw new Error('请核对' + fieldLabels[key])
+  if (!value || value.length > maximum || /[\u0000-\u001f\u007f]/.test(value)) throw new Error('请确认' + fieldLabels[key])
   return value
 }
 
 function integer(draft, key, minimum) {
   const value = ['occurredAt', 'offlineStartedAt'].includes(key) ? toTimestamp(draft[key]) : Number(draft[key])
-  if (draft[key] === '' || draft[key] == null || !Number.isSafeInteger(value) || value < minimum) throw new Error('请核对' + fieldLabels[key])
+  if (draft[key] === '' || draft[key] == null || !Number.isSafeInteger(value) || value < minimum) throw new Error('请确认' + fieldLabels[key])
   return value
 }
 
@@ -159,14 +159,14 @@ function genericOpsPayload(action, draft, control) {
     if (original) {
       payload.originalRequestId = original
       payload.originalExpectedRevision = integer(draft, 'originalExpectedRevision', 0)
-    } else if (draft.originalExpectedRevision != null && draft.originalExpectedRevision !== '') throw new Error('原请求号与版本须一起填写')
+    } else if (draft.originalExpectedRevision != null && draft.originalExpectedRevision !== '') throw new Error('原操作编号与版本号须一起填写')
     return payload
   }
   if (action === 'MANUAL_IMPORT') return { signatureId: text(draft, 'signatureId', 128) }
   const payload = action.startsWith('ARRIVAL_') ? target(draft) : {}
   if (action === 'ARRIVAL_CONFIRM') {
     payload.nonce = text(draft, 'nonce', 64)
-    if (!/^[A-Za-z0-9_-]{43}$/.test(payload.nonce)) throw new Error('请核对队长出示的到达凭证')
+    if (!/^[A-Za-z0-9_-]{43}$/.test(payload.nonce)) throw new Error('请确认队长出示的到达凭证')
     return payload
   }
   payload.reason = text(draft, 'reason', 200)
@@ -182,10 +182,10 @@ function genericOpsPayload(action, draft, control) {
     payload.configHash = anchor ? anchor.configHash : text(draft, 'configHash', 64)
     if (![payload.highWaterHash, payload.configHash].every(value => /^[a-f0-9]{64}$/.test(value))) throw new Error('请先读取本局账本指纹')
     let unknown
-    try { unknown = typeof draft.unknownRequests === 'string' ? JSON.parse(draft.unknownRequests) : draft.unknownRequests } catch (_) { throw new Error('待核对请求清单须是 JSON 数组') }
+    try { unknown = typeof draft.unknownRequests === 'string' ? JSON.parse(draft.unknownRequests) : draft.unknownRequests } catch (_) { throw new Error('待复查操作清单格式不正确') }
     if (!Array.isArray(unknown) || unknown.length > 100 || unknown.some(item => !item || Object.keys(item).sort().join(',') !== 'memberId,requestHash,requestId'
       || !Number.isSafeInteger(item.memberId) || item.memberId < 1 || typeof item.requestId !== 'string' || !item.requestId || item.requestId.length > 64
-      || typeof item.requestHash !== 'string' || !/^[a-f0-9]{64}$/.test(item.requestHash))) throw new Error('待核对请求必须携带原操作者、原请求号和指纹')
+      || typeof item.requestHash !== 'string' || !/^[a-f0-9]{64}$/.test(item.requestHash))) throw new Error('待复查操作缺少原操作者或原操作编号')
     payload.unknownRequests = unknown
     if (anchor) payload.offlineStartedAt = anchor.at
     else if (draft.offlineStartedAt != null && draft.offlineStartedAt !== '') throw new Error('请先开始离线记录，确认成功后再继续')

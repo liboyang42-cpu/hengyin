@@ -22,7 +22,7 @@ test('商家守卫:非成员/缺权限 → deny;有权限 → allow;响应坏了
 
 test('俱乐部守卫:active 非布尔 → unknown;范围不符 / 缺权限 → deny;命中 → allow', () => {
   const ok = (extra) => ({ code: 200, data: Object.assign({ active: true, club: { id: 7, name: 'x' }, permissions: ['club:read', 'club:finance:read'] }, extra) });
-  assert.equal(decideClubGate({ code: 200, data: { club: { id: 7 } } }, 7, 'club:read').state, 'unknown', '没表态是坏响应,不能栽成没权限');
+  assert.equal(decideClubGate({ code: 200, data: { club: { id: 7 } } }, 7, 'club:read').state, 'unknown', '没表态是坏响应，不能栽成没权限');
   assert.equal(decideClubGate({ code: 200, data: { active: false } }, 7, 'club:read').state, 'deny');
   assert.equal(decideClubGate(ok({}), 8, 'club:read').state, 'deny', '不在这个俱乐部');
   assert.equal(decideClubGate(ok({}), '7', 'club:member:approve').state, 'deny', '缺权限');
@@ -36,13 +36,13 @@ test('守卫组件:deny 才整屏盖住,盖层用 modal 档 z 与页面底色,�
   assert.match(wxml, /wx:if="\{\{state === 'deny'\}\}"/);
   // 2026-09-15 弹窗合同(稿 356-5220):无权限是终态,不给按钮,原因展示 2s 后自己出去
   assert.match(wxml, /<cy-result-sheet [^>]*kind="fail"[^>]*why="[^"]+"[^>]*bind:close="onExit"/);
-  assert.doesNotMatch(wxml, /primary-text=/, '有按钮就不自愈,会把人卡在盖层上');
+  assert.doesNotMatch(wxml, /primary-text=/, '有按钮就不自愈，会把人卡在盖层上');
   const wxss = read('components/cy/access-gate/index.wxss');
   assert.match(wxss, /position: fixed;[\s\S]*z-index: var\(--cy-z-modal\);[\s\S]*background: var\(--cy-color-bg-page\)/);
   const js = read('components/cy/access-gate/index.js');
   assert.equal((js.match(/hideLoading: true,\s*\n\s*autoErrorToast: false/g) || []).length, 2, '两条分支都不许再弹 toast');
   assert.doesNotMatch(js, /silentError: true/, 'fail 已挂,silentError 是冗余的静默开关');
-  assert.match(js, /code === 401/, '401 必须拦并给去处,不能落进 unknown');
+  assert.match(js, /code === 401/, '401 必须拦并给去处，不能落进 unknown');
   assert.match(js, /url: '\/api\/club\/access\/me'/);
   assert.match(js, /url: '\/api\/merchant\/access\/me'/);
 });
@@ -62,16 +62,16 @@ test('商家页 / 俱乐部主理人页:要么自己读 access/me,要么挂 cy-a
   const CLUB_OWNER_PAGES = ['pages/club/edit/index', 'pages/club/join-requests/index', 'pages/club/customers/index', 'pages/club/customer-detail/index', 'pages/club/settlement/index', 'pages/club/group-code/index'].map((p) => path.join(root, p));
   // 豁免必须写理由:不写理由的豁免下次没人敢删,等于永久放行。
   const EXEMPT = {
-    'pages/merchant/apply/index': '申请入驻:此时还不是商家成员,守卫无从谈起',
-    'pages/coop/list/index': '协作邀请收发件箱:/api/coop/list 与 /api/coop/pool/received·mine 都服务俱乐部主理人,商家守卫比后端严会锁住主理人',
+    'pages/merchant/apply/index': '申请入驻:此时还不是商家成员，守卫无从谈起',
+    'pages/coop/list/index': '协作邀请收发件箱:/api/coop/list 与 /api/coop/pool/received·mine 都服务俱乐部主理人，商家守卫比后端严会锁住主理人',
     'pages/coop/invite-detail/index': 'E-01(2026-09-16):/api/coop/list·/handle(to_type=club 的群主可接受/拒绝/取消)·/contact·/perks/attach·/review/save 都不要求商家行(ApiCoopController:1215-1250 / :399-418 / :738-763 / :896-925),挂 merchant 守卫会把主理人锁在协作执行页外',
-    'pages/coop/invite/index': 'E-01(2026-09-16):type0 达人→商家后端明确放行无商家行 talent(ApiCoopController:267-285),只有 type1 要商家;页面级 merchant 守卫比后端严',
+    'pages/coop/invite/index': 'E-01(2026-09-16):type0 达人→商家后端明确放行无商家行 talent(ApiCoopController:267-285),只有 type1 要商家；页面级 merchant 守卫比后端严',
     'pages/coop/nearby/index': 'E-01(2026-09-16):/api/merchant/nearby 登录即可、/api/merchant/chapter-application/invitable 只要求主题发布者(scope 非 MERCHANT 时 principalMemberId 放行),都不要求商家行',
     'pages/coop/finance/index': 'E-01(2026-09-16):/api/coop/finance 只按登录人取数(ApiCoopController:926-934),不要求商家行',
-    'pages/club/workbench/index': '纯重定向壳:onLoad 立即 redirectTo 俱乐部详情,自身不渲染内容',
+    'pages/club/workbench/index': '纯重定向壳:onLoad 立即 redirectTo 俱乐部详情，自身不渲染内容',
     'subpackageA/pages/assetcenter/income-detail/income-detail': '纯重定向壳:跳 earnings',
     'subpackageA/pages/assetcenter/earnings/index': '用户自己的收益页(/api/user/info 按 token 自限),不是商家岗位权限范畴',
-    'pages/club/topic-story/index': '面向参与者的剧情只读页,没有俱乐部范围参数可核;后端按主题可见性拦',
+    'pages/club/topic-story/index': '面向参与者的剧情只读页，没有俱乐部范围参数可核；后端按主题可见性拦',
     'pages/merchant/profile/index': '4-04 旧商家主页兼容壳:只做「旧链接 → 统一主页」的公开重定向(/api/merchant/public-home 匿名可读),挂商家门禁会让玩家在重定向前被盖屏',
     'pages/club/group-code/index': '只带 activityId,后端 resolve(clubId=null) 必返 403 —— 挂守卫等于对所有人含主理人恒锁',
   };
@@ -87,7 +87,7 @@ test('商家页 / 俱乐部主理人页:要么自己读 access/me,要么挂 cy-a
   assert.ok(pages.length >= 20, '商家页扫描范围异常:' + pages.length);
   for (const [rel, why] of Object.entries(EXEMPT)) {
     assert.ok(why && why.length >= 8, rel + ' 的豁免必须写清理由');
-    assert.ok(fs.existsSync(path.join(root, rel + '.js')), '豁免名单里的页已不存在,该删:' + rel);
+    assert.ok(fs.existsSync(path.join(root, rel + '.js')), '豁免名单里的页已不存在，该删:' + rel);
   }
 });
 
@@ -133,8 +133,8 @@ test('coop 页守卫的 kind 必须与后端真实准入一致,不许比后端�
     'pages/coop/nearby/index': { gate: 'none', why: 'nearby 登录即可、invitable 只要求主题发布者' },
     'pages/coop/finance/index': { gate: 'none', why: '/api/coop/finance 按登录人取数' },
     'pages/coop/settlement-detail/index': { gate: 'merchant-if-ledger', why: 'finance/club 线路登录即可;ledger 走 /api/coop/mybiz 才要商家' },
-    'pages/coop/withdraw/index': { gate: 'merchant', why: '商家域提现深链壳(涉资,保留岗位守卫)' },
-    'pages/coop/withdraw/records/index': { gate: 'merchant', why: '商家域提现记录壳(涉资,保留岗位守卫)' },
+    'pages/coop/withdraw/index': { gate: 'merchant', why: '商家域提现深链壳(涉资，保留岗位守卫)' },
+    'pages/coop/withdraw/records/index': { gate: 'merchant', why: '商家域提现记录壳(涉资，保留岗位守卫)' },
   };
   const walk = (dir, out) => {
     for (const name of fs.readdirSync(dir)) {
@@ -203,7 +203,7 @@ test('商家守卫的 need 只能取已核实过后端出处的值,拿不准必�
     if (!m) continue;
     const rel = path.relative(root, wxmlPath).replace(/\.wxml$/, '');
     const want = VERIFIED[rel] || '';
-    if (m[1] !== want) bad.push(rel + ' need=' + JSON.stringify(m[1]) + ',应为 ' + JSON.stringify(want));
+    if (m[1] !== want) bad.push(rel + ' need=' + JSON.stringify(m[1]) + '，应为 ' + JSON.stringify(want));
   }
   assert.deepEqual(bad, []);
 });

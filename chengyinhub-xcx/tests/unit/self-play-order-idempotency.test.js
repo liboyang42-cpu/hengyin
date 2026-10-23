@@ -264,7 +264,7 @@ test('自玩购买:不勾选单独同意不建单,只给内联提示', () => {
   assert.equal(requests.length, 0);
   assert.equal(consents.length, 0);
   assert.ok(vm.data.selfPlayConsentHint, '未勾选必须给可见提示');
-  assert.equal(vm.data.selfPlayConsentError, '', '未勾选是提示不是错误态,按钮也不得代勾');
+  assert.equal(vm.data.selfPlayConsentError, '', '未勾选是提示不是错误态，按钮也不得代勾');
   assert.equal(vm.data.selfPlayConsentChecked, false);
 });
 

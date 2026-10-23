@@ -252,7 +252,7 @@ Page({
       return Object.assign({}, item, {
         kind: 'topic',
         wKey: 'topic-' + item.id,
-        wTitle: t.name || '路线信息待同步',
+        wTitle: t.name || '—',
         wImg: t.imgUrl || '/images/route_city_cover.png', wType: Number(t.productType) === 2 ? '自由探索' : '城市定向', wColor: Number(t.productType) === 2 ? '#7CF0A0' : '#5AA9FF', wUntil: item.expiresAt || t.endDate || '', // ds-ok v13 类型色
       });
     });
@@ -261,7 +261,7 @@ Page({
       return Object.assign({}, item, {
         kind: 'activity',
         wKey: 'activity-' + item.id,
-        wTitle: a.name || '活动信息待同步',
+        wTitle: a.name || '—',
         wImg: a.imgUrl || '/images/route_city_cover.png',
         wType: '场次', wColor: '#E8B86B', wUntil: a.endTime || a.endDate || '', // ds-ok v13 卡角色
       });
@@ -430,7 +430,7 @@ Page({
         if (that._unloaded || that._refreshOnShow || owner !== walletOwner() || requestSeq !== that._topicRequestSeq) return;
         // 原为空函数:请求失败被整个吞掉,列表停在 [] ⇒ 页面显示「还没有票!」= 错误伪装成空态
         that._topic = { list: that._topic.list, state: 'error',
-          err: (err && err.errMsg) || '网络开了点小差', login: isLoginRequired(app, err, statusCode) };
+          err: (err && err.errMsg) || '网络异常，请重试', login: isLoginRequired(app, err, statusCode) };
         that.rebuildTicketList();
       },
       complete: function () {
@@ -497,7 +497,7 @@ Page({
         if (that._unloaded || that._refreshOnShow || owner !== walletOwner() || requestSeq !== that._activityRequestSeq) return;
         // 原为空函数:请求失败被整个吞掉,列表停在 [] ⇒ 页面显示「还没有票!」= 错误伪装成空态
         that._activity = { list: that._activity.list, state: 'error',
-          err: (err && err.errMsg) || '网络开了点小差', login: isLoginRequired(app, err, statusCode) };
+          err: (err && err.errMsg) || '网络异常，请重试', login: isLoginRequired(app, err, statusCode) };
         that.rebuildTicketList();
       },
       complete: function () {

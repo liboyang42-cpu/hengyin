@@ -10,17 +10,17 @@
     <cy-skeleton type="detail" count="1" />
   </view>
   <view class="detail-state" wx:elif="{{detailState === 'error'}}">
-    <cy-error load-failure class="fill-slot" fill="{{true}}" size="lg" title="动态没能加载出来" sub="{{detailError}}" bind:retry="onRetryDetail" auto-back />
+    <cy-error load-failure class="fill-slot" fill="{{true}}" size="lg" title="动态加载失败" sub="{{detailError}}" bind:retry="onRetryDetail" auto-back />
     <cy-btn variant="ghost" bindtap="goBack">返回上一页</cy-btn>
   </view>
   <view class="detail-state" wx:elif="{{detailState === 'missing-param'}}">
-    <cy-empty class="fill-slot" fill="{{true}}" size="lg" kind="missing-param" title="没有找到这条动态" sub="这个链接可能已失效，请返回上一页，从动态列表重新打开。" cta="返回上一页" bind:cta="goBack" />
+    <cy-empty class="fill-slot" fill="{{true}}" size="lg" kind="missing-param" title="没有找到这条帖文" sub="请返回重新进入" cta="返回上一页" bind:cta="goBack" />
   </view>
   <view class="detail-state" wx:elif="{{detailState === 'closed'}}">
-    <cy-empty class="fill-slot" fill="{{true}}" size="lg" kind="empty" title="社区暂未开放" sub="当前账号还不能查看社区动态，开放后会第一时间上线。" cta="返回上一页" bind:cta="goBack" />
+    <cy-empty class="fill-slot" fill="{{true}}" size="lg" kind="empty" title="社区暂未开放" sub="" cta="返回上一页" bind:cta="goBack" />
   </view>
   <view class="detail-state" wx:elif="{{detailState === 'empty'}}">
-    <cy-empty class="fill-slot" fill="{{true}}" size="lg" kind="empty" title="这条动态暂不可用" sub="它可能已被删除或暂时无法访问，返回列表看看其他内容。" cta="返回上一页" bind:cta="goBack" />
+    <cy-empty class="fill-slot" fill="{{true}}" size="lg" kind="empty" title="这条帖文暂不可用" cta="返回上一页" bind:cta="goBack" />
   </view>
   <block wx:else>
   <view class="gbox1">
@@ -98,10 +98,10 @@
         <view class="actions flex-cb">
           <view class="act-left flex-ac">
             <view class="act act--like flex-ac {{info.isLiked==1 ? 'is-on' : ''}} {{likeBurst ? 'is-bursting' : ''}}" catchtap="lickClick" data-type="1" aria-role="button" aria-label="点赞，当前 {{info.likeCount || 0}}" hover-class="cy-pressed" hover-stay-time="80">
-              <cy-icon class="act-ico" name="{{info.isLiked==1 ? 'heart-filled' : 'heart'}}" size="40" /><text>{{info.likeCount || 0}}</text>
+              <cy-icon class="act-ico" name="{{info.isLiked==1 ? 'heart-filled' : 'heart'}}" size="40" /><text>{{info.likeCount || ''}}</text>
             </view>
             <view class="act act--comment flex-ac" catchtap="focusCommentInput" aria-role="button" aria-label="评论，当前 {{info.commentCount || 0}}" hover-class="cy-pressed" hover-stay-time="80">
-              <cy-icon class="act-ico" name="comment" size="40" /><text>{{info.commentCount || 0}}</text>
+              <cy-icon class="act-ico" name="comment" size="40" /><text>{{info.commentCount || ''}}</text>
             </view>
             <view class="act act--favorite flex-ac {{info.isBookmarked==1 ? 'is-on' : ''}} {{favoriteBurst ? 'is-bursting' : ''}}" catchtap="favoriteClick" aria-role="button" aria-label="{{info.isBookmarked==1 ? '取消收藏' : '收藏帖文'}}" aria-pressed="{{info.isBookmarked==1}}" hover-class="cy-pressed" hover-stay-time="80">
               <cy-icon class="act-ico" name="{{info.isBookmarked==1 ? 'star-filled' : 'star'}}" size="40" />
@@ -127,8 +127,8 @@
   <view class="list">
 
     <cy-skeleton wx:if="{{commentsState === 'loading' && !list.length}}" type="list" count="3" />
-    <cy-error load-failure wx:elif="{{commentsState === 'error' && commentLoadError && !list.length}}" title="评论没能加载" sub="网络可能不稳定，已发布的评论不会丢失" retry="重试" bind:retry="retryComments" />
-    <cy-empty wx:if="{{commentsState === 'ready' && nodata}}" kind="empty" title="还没有评论" sub="说说你对这条动态的想法吧" />
+    <cy-error load-failure wx:elif="{{commentsState === 'error' && commentLoadError && !list.length}}" title="评论加载失败" retry="重试" bind:retry="retryComments" />
+    <cy-empty wx:if="{{commentsState === 'ready' && nodata}}" kind="empty" title="还没有评论" />
 
     <view class="dl" wx:for="{{ list }}" wx:key="id">
       <view class="li">
@@ -160,7 +160,7 @@
             <view class="item-link flex-ac">
               <button class="comment-like {{item.isLiked==1 ? 'is-on' : ''}}" hover-class="none" bindtap="commentLikeClick" data-index="{{index}}" aria-label="点赞评论，当前 {{item.likeCount || 0}}">
                 <cy-icon name="heart" size="32" />
-                <text>{{item.likeCount || 0}}</text>
+                <text>{{item.likeCount || ''}}</text>
               </button>
               <button hover-class="none" bindtap="msgClick" aria-role="button" aria-label="回复评论" data-item="{{item}}">
                 <cy-icon name="comment" size="32" />
@@ -178,12 +178,12 @@
       </view>
     </view>
     <view class="comment-load-more-status" wx:if="{{commentLoadingMore}}" aria-live="polite">正在加载更多评论…</view>
-    <cy-inline-error load-failure wx:if="{{commentLoadMoreError}}" kind="network" title="更多评论没有加载出来" sub="{{commentLoadMoreError}}" action="重试" bind:action="retryCommentLoadMore" />
+    <cy-inline-error load-failure wx:if="{{commentLoadMoreError}}" kind="network" title="更多评论加载失败" sub="{{commentLoadMoreError}}" action="重试" bind:action="retryCommentLoadMore" />
   </view>
 
   <!--新加评论-->
   <view class="comment-submit-feedback" wx:if="{{commentSubmitError}}">
-    <cy-inline-error kind="{{commentSubmitErrorKind}}" title="{{commentSubmitError}}" sub="评论内容仍保留在输入框" action="重试" bind:action="retryCommentSubmit" />
+    <cy-inline-error kind="{{commentSubmitErrorKind}}" title="{{commentSubmitError}}" action="重试" bind:action="retryCommentSubmit" />
   </view>
   <view class="david_kong"></view>
   <view class="david_npl" wx:if="{{popShow==false}}">
@@ -212,7 +212,7 @@
 
   <!-- 评论弹窗 -->
   <cy-sheet inset show="{{popShow}}" title="回复评论" bind:close="popClose">
-    <cy-inline-error wx:if="{{replySubmitError}}" kind="{{replySubmitErrorKind}}" title="{{replySubmitError}}" sub="回复内容仍保留在输入框" action="重试" bind:action="retryReplySubmit" />
+    <cy-inline-error wx:if="{{replySubmitError}}" kind="{{replySubmitErrorKind}}" title="{{replySubmitError}}" action="重试" bind:action="retryReplySubmit" />
     <view class="reply-sheet__info flex-cb">
       <view class="user flex-ac">
         <image lazy-load="true" src="{{avatar || '/images/d_profile.png'}}" mode="aspectFill" />

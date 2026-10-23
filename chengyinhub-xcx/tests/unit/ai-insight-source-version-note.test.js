@@ -16,7 +16,8 @@ test('智能解读卡标注生成时间对应的数据/档案版本,仅在有生
   const wxml = read('pages/merchant/marketing/ai-insight/index.wxml');
   // 2026-10-22 batch2 集成:#511 店铺参谋改版把解读卡改为 view.ai-card,且页内不再出现「店铺档案」字样,按新结构取卡片区间。
   const start = wxml.indexOf('<view wx:if="{{ai}}" class="ai-card">');
-  const end = wxml.indexOf('<view wx:else class="ai-card ai-card--down">');
+  // 2026-10-23 业主:降级卡已删(没有解读就整段不显示),区间终点改到其后的说明注释
+  const end = wxml.indexOf('<!-- 2026-10-23 业主:没有解读就整段不显示');
   assert.ok(start >= 0 && end > start, '解读卡结构必须可定位');
   const aiCard = wxml.slice(start, end);
   assert.match(aiCard, /<text class="ai-source" wx:if="\{\{generatedAt\}\}">解读依据 \{\{generatedAt\}\} 的经营数据与当时的档案；今天修改的档案次日生效<\/text>/);

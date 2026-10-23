@@ -78,21 +78,21 @@ test('负控:把裁剪比例改成 0(闸门失效)，上面那组断言必须判
   const mutant = clipTrackForSharing(source, { clipEnabled: false, clipPercent: 10 })
 
   // ★ 第一行先证明变异真的发生了(闸门确实没裁),再证明断言抓得住它
-  assert.equal(mutant.length, source.length, '变异没生效:关掉裁剪却还是裁了,负控本身是假的')
+  assert.equal(mutant.length, source.length, '变异没生效:关掉裁剪却还是裁了，负控本身是假的')
   assert.deepEqual(mutant[0], source[0])
   assert.deepEqual(mutant[mutant.length - 1], source[source.length - 1])
 
   assert.throws(
     () => assertRouteWasClipped(source, mutant),
     /裁剪没有发生/,
-    '闸门失效时断言仍然绿 —— 这组测试是恒真的,抓不住回归',
+    '闸门失效时断言仍然绿 —— 这组测试是恒真的，抓不住回归',
   )
 })
 
 test('负控:9 个点 × 1% 裁不掉任何点，端点原样 —— 证明「变了」不是断言写法带来的必然', () => {
   const source = track(9)
   const clipped = clipTrackForSharing(source, { clipEnabled: true, clipPercent: 1 })
-  assert.equal(clipped.length, 9, 'floor(9 × 1%) = 0,本来就裁不掉点')
+  assert.equal(clipped.length, 9, 'floor(9 × 1%) = 0，本来就裁不掉点')
   assert.deepEqual(clipped[0], source[0])
   assert.throws(() => assertRouteWasClipped(source, clipped), /裁剪没有发生/)
 })
@@ -198,7 +198,7 @@ test('契约:分享 sheet 的置灰只能读 share.can 布尔，不许在 WXML �
   const wxml = fs.readFileSync(path.join(ROOT, 'pages/roam/index.wxml'), 'utf8')
   // 2026-09-19 裁决:分享 sheet 退出口只留 ✕(底部「取消」已删),区间尾锚改用 sheet 之后的 canvas。
   const sheet = wxml.slice(wxml.indexOf('sh-channels'), wxml.indexOf('<canvas type="2d" id="iconcv"'))
-  assert.equal(/indexOf/.test(sheet), false, '渠道置灰又用回了 WXML indexOf —— 那个表达式恒假,置灰不会生效')
+  assert.equal(/indexOf/.test(sheet), false, '渠道置灰又用回了 WXML indexOf —— 那个表达式恒假，置灰不会生效')
   assert.match(sheet, /share\.can\.square/)
   assert.match(sheet, /share\.can\.save/)
 })
@@ -212,5 +212,5 @@ test('契约:两条分享链路都必须过裁剪，缺一条就有一张图仍�
   assert.match(session, /clipSavedTrackForSharing\(s\.track \|\| \[\], readSharePrivacy\(wx\)\)/,
     'subpackageRoam/session 的足迹卡没过裁剪')
   assert.match(roam, /isChannelAllowed\(ch, this\.data\.share\.visibility\)/,
-    '可见性没有在 shareTo 里真拦渠道,只置灰 = 假闸')
+    '可见性没有在 shareTo 里真拦渠道，只置灰 = 假闸')
 })

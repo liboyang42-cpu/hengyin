@@ -77,7 +77,7 @@ test('负控:把「我发布的」action 塞回导航条(旧布局)必须判红'
   )
   assert.notEqual(mutated, wxml, '变异锚点失效(源码已改动?)')
   // 先自证变异真的被守卫看见(否则下面的 throws 可能是别的原因红的)
-  assert.equal(navActionWidthOf(mutated), 60, '变异后必须解析出 action 槽,否则守卫没被触动')
+  assert.equal(navActionWidthOf(mutated), 60, '变异后必须解析出 action 槽，否则守卫没被触动')
   assert.throws(() => assertNavTitleAlwaysVisible(mutated), assert.AssertionError)
 })
 
@@ -93,7 +93,7 @@ function assertManageEntry(wxml) {
   const row = wxml.match(/<view wx:if="\{\{canPublish \|\| events\.length \|\| \(!loading && !curError\)\}\}" class="oe-summary-row">[\s\S]*?\n    <\/view>/)
   assert.ok(row, '摘要行的显示条件必须放宽到 canPublish,否则加载/错误态下管理入口不可达')
   assert.match(row[0], /wx:if="\{\{canPublish\}\}"[^>]*bindtap="goMine"/,
-    '「我发布的」在 canPublish 下必须恒显示,不得再叠加 loading/error 条件')
+    '「我发布的」在 canPublish 下必须恒显示，不得再叠加 loading/error 条件')
 }
 
 test('activity/list:「我发布的」下沉到内容区后仍随时可达', () => {
@@ -155,6 +155,6 @@ test('activity/list:页面名不得在 nav 与内容区重复', () => {
   // 注释不渲染,先剥掉再判 —— 否则解释"为什么标题只留在 nav"的注释自己会把断言判红
   const body = wxml.replace(navBlock[0], '').replace(/<!--[\s\S]*?-->/g, '')
   assert.doesNotMatch(body, /城市事件/, '旧产品名不得再出现在内容区')
-  assert.doesNotMatch(body, /承接邀约/, '邀约是动作名,不得再写成独立产品「承接邀约」')
+  assert.doesNotMatch(body, /承接邀约/, '邀约是动作名，不得再写成独立产品「承接邀约」')
   assert.doesNotMatch(body, /<cy-page-title/, '本页不得引入内容区大标题')
 })

@@ -7,10 +7,10 @@
   <cy-nav-bar />
   <cy-page-title title="主办控制台" />
 
-  <cy-state-shell wx:if="{{phase === 'loading'}}" fill kind="loading" title="正在核对主办身份" sub="" />
+  <cy-state-shell wx:if="{{phase === 'loading'}}" fill kind="loading" title="正在确认主办身份" sub="" />
   <cy-state-shell wx:elif="{{phase === 'missing'}}" fill kind="missing-param" primary="返回" bind:primary="onBack" />
   <cy-state-shell wx:elif="{{phase === 'denied'}}" fill kind="no-permission" title="只有本场主办方可以使用控制台" sub="{{deniedReason}}" primary="返回" bind:primary="onBack" />
-  <cy-state-shell wx:elif="{{phase === 'error'}}" fill kind="{{loadErrKind}}" title="控制台没加载出来" sub="{{loadError}}" primary="重试" bind:primary="load" />
+  <cy-state-shell wx:elif="{{phase === 'error'}}" fill kind="{{loadErrKind}}" title="控制台加载失败" sub="{{loadError}}" primary="重试" bind:primary="load" />
 
   <scroll-view wx:else scroll-y class="oo-scroll">
     <view wx:if="{{refreshing}}" class="oo-sync" aria-role="status" aria-live="polite">正在读取平台最新记录…</view>

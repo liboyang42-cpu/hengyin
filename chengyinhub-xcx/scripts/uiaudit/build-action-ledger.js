@@ -708,6 +708,18 @@ const ACTION_VARIANTS = new Map([
     { id: 'name', handler: 'openField', locatorInstance: { attribute: 'data-action', value: 'editName' }, apis: [], effectClasses: ['state'] },
     { id: 'slogan', handler: 'openField', locatorInstance: { attribute: 'data-action', value: 'editSlogan' }, apis: [], effectClasses: ['state'] },
   ]],
+  // 门店信息胶囊半屏「保存」:经营类目(kind=preference)走 saveBrand,行业类型走 saveDecor,两条写入互斥,一次点击只发其一。
+  ['pages/merchant/decor/index.js:saveChipSheet', [{
+    id: null, handler: 'saveChipSheet',
+    apis: ['/api/merchant/decor/save', '/api/merchant/update'],
+    writeApis: ['/api/merchant/decor/save', '/api/merchant/update'],
+    effectClasses: ['write', 'state'], externalCapabilities: [],
+    requiredRequestsByBranch: {
+      'busy-or-invalid': [],
+      'preference': [{ urlTemplate: '/api/merchant/update', method: 'POST', kind: 'write' }],
+      'industry': [{ urlTemplate: '/api/merchant/decor/save', method: 'POST', kind: 'write' }],
+    },
+  }]],
   // pages/merchant/decor/story 的 onSave 证据规格随 2026-09-19 审查 #30 撤掉:
   // 那一页没进 app.json、全仓零入口,已整页删除;再留一份「必须验到 8 个分支」的规格,
   // 台账会永远报缺证据。品牌故事的实际写入口在装修首页 goStory→openField(上面那条)。

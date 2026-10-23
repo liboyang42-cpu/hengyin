@@ -16,8 +16,8 @@
        让位以胶囊底实测(chromeClearTop,onLoad 走 resolveMenuChrome)为准;
        --cy-safe-top 只在拿不到胶囊坐标时兜底 —— env 在无刘海机/模拟器解析为 0,裸 token 会压胶囊行。 -->
   <view wx:if="{{loadError || !loaded}}" class="ctd-chrome-clear" style="{{chromeClearTop ? 'padding-top:' + chromeClearTop + 'px;' : ''}}">
-    <cy-error load-failure wx:if="{{loadError}}" title="活动暂时打不开"
-              sub="{{missingParam ? '这个链接缺少活动编号，从俱乐部管理里重新打开一次。' : '可能是网络波动,或这个活动已经下架。'}}"
+    <cy-error load-failure wx:if="{{loadError}}" title="活动无法打开"
+              sub="{{missingParam ? '请返回重新进入' : ''}}"
               retry="{{missingParam ? '返回上一页' : '重新加载'}}" bind:retry="onRetry" />
     <cy-skeleton wx:else type="detail" loading-label="正在加载活动详情" />
   </view>
@@ -99,8 +99,8 @@
     <view wx:if="{{showVerify}}" class="ctd-sec">
       <view class="ctd-sec__head">
         <text class="ctd-sec__tit">核销</text>
-        <view class="ctd-sec__more" bindtap="goLedger" aria-role="button" aria-label="打开核销台账" hover-class="cy-pressed" hover-stay-time="80">
-          <text class="ctd-sec__more-txt">台账</text><cy-icon name="slide-arrow" size="24" />
+        <view class="ctd-sec__more" bindtap="goLedger" aria-role="button" aria-label="打开核销记录" hover-class="cy-pressed" hover-stay-time="80">
+          <text class="ctd-sec__more-txt">记录</text><cy-icon name="slide-arrow" size="24" />
         </view>
       </view>
       <view class="ctd-metrics">
@@ -178,12 +178,12 @@
              重试原操作 = 用同一个 requestId 重发(幂等)。丢了它,主理人只能靠猜。 -->
         <view class="ctd-director-unknown" wx:if="{{writeLocked || writeState === 'storage-error'}}">
           <view class="ctd-director-unknown__main">
-            <text class="ctd-director-unknown__title">{{writeState === 'storage-error' ? '无法安全提交' : (writeState === 'unknown-write' ? '结果待核对' : '操作处理中')}}</text>
+            <text class="ctd-director-unknown__title">{{writeState === 'storage-error' ? '无法安全提交' : (writeState === 'unknown-write' ? '结果待确认' : '操作处理中')}}</text>
             <text class="ctd-director-unknown__sub">{{writeMessage}}</text>
           </view>
           <view class="ctd-director-unknown__acts" wx:if="{{writeState === 'unknown-write'}}">
-            <view class="ctd-director-unknown__act" bindtap="onReconcileUnknownWrite" aria-role="button" aria-label="核对操作最终结果" hover-class="cy-pressed" hover-stay-time="80">核对结果</view>
-            <view class="ctd-director-unknown__act" wx:if="{{canRetryUnknownWrite}}" bindtap="retryUnknownWrite" aria-role="button" aria-label="用原请求号重试原操作" hover-class="cy-pressed" hover-stay-time="80">重试原操作</view>
+            <view class="ctd-director-unknown__act" bindtap="onReconcileUnknownWrite" aria-role="button" aria-label="确认操作最终结果" hover-class="cy-pressed" hover-stay-time="80">确认结果</view>
+            <view class="ctd-director-unknown__act" wx:if="{{canRetryUnknownWrite}}" bindtap="retryUnknownWrite" aria-role="button" aria-label="用原操作编号重试原操作" hover-class="cy-pressed" hover-stay-time="80">重试原操作</view>
           </view>
         </view>
       </block>
@@ -203,7 +203,7 @@
       <text class="ctd-plan-fallback__title">通用玩法现场运营</text>
       <text class="ctd-director-note">{{genericOpsStatus}}</text>
       <text class="ctd-director-note" wx:if="{{genericOpsTeams}}">{{genericOpsTeams}}</text>
-      <text class="ctd-director-note">仅显示本场授权动作；结果待确认时锁定写入。</text>
+      
       <view class="ctd-generic-ops__actions">
         <view wx:for="{{genericOpsActions}}" wx:key="id" data-action="{{item.id}}"
           class="ctd-director-field__act {{writeLocked ? 'is-disabled' : ''}}" bindtap="openGenericOps"
@@ -214,8 +214,8 @@
     </view>
     <cy-scene-sheet show="{{genericOpsSheet}}" variant="half" title="{{genericOpsTitle}}" closable maskClosable bind:close="closeGenericOps">
       <scroll-view scroll-y class="ctd-generic-ops__form">
-        <text class="ctd-director-note">任务标识与操作标识二选一，时间按北京时间填写。</text>
-        <text class="ctd-director-note" wx:if="{{genericOpsAction === 'QUEST_GUIDE' || genericOpsAction === 'STAFF_MANUAL_SIGN' && genericOpsDraft.signedAction === 'QUEST_GUIDE'}}">请选择本局任务并录入队伍实际作答；本面板不提供正确答案，完整填写后会核验作答。</text>
+        <text class="ctd-director-note">时间为北京时间</text>
+        <text class="ctd-director-note" wx:if="{{genericOpsAction === 'QUEST_GUIDE' || genericOpsAction === 'STAFF_MANUAL_SIGN' && genericOpsDraft.signedAction === 'QUEST_GUIDE'}}">录入队伍答案，提交后核验</text>
         <text wx:for="{{genericOpsLedgerRows}}" wx:key="*this" class="ctd-director-note" selectable>{{item}}</text>
         <view wx:for="{{genericOpsFields}}" wx:key="key" class="ctd-director-field">
           <text class="ctd-director-field__label">{{item.label}}</text>
@@ -233,15 +233,15 @@
         <view class="ctd-director-field__acts ctd-generic-ops__confirm">
           <view class="ctd-director-field__act" bindtap="closeGenericOps" aria-role="button" aria-label="取消运营操作" hover-class="cy-pressed" hover-stay-time="80">取消</view>
           <view class="ctd-director-field__act ctd-director-field__act--primary {{writeLocked || !genericOpsReady ? 'is-disabled' : ''}}" bindtap="confirmGenericOps"
-            aria-role="button" aria-disabled="{{writeLocked || !genericOpsReady}}" aria-label="核对并提交运营操作" hover-class="cy-pressed" hover-stay-time="80">核对并提交</view>
+            aria-role="button" aria-disabled="{{writeLocked || !genericOpsReady}}" aria-label="确认并提交运营操作" hover-class="cy-pressed" hover-stay-time="80">确认并提交</view>
         </view>
       </scroll-view>
     </cy-scene-sheet>
     <!-- D1 准备中:准备总览整段。只在「准备中」态出,其余状态它没有意义。 -->
     <view class="ctd-plan-fallback" wx:if="{{directorActive && loadState === 'ready' && planFallbackKnown}}">
-      <text class="ctd-plan-fallback__title">方案兜底收尾</text>
-      <text class="ctd-director-note">{{planFallbackAvailable ? '本场已开放兜底结局；需工作人员填写原因并确认' : planFallbackReason}}</text>
-      <view wx:if="{{planFallbackAvailable}}" class="ctd-director-export {{writeLocked ? 'is-disabled' : ''}}" bindtap="openPlanFallback" aria-role="button" aria-label="填写兜底收尾原因" hover-class="cy-pressed" hover-stay-time="80">填写收尾原因</view>
+      <text class="ctd-plan-fallback__title">默认结局收尾</text>
+      <text class="ctd-director-note">{{planFallbackAvailable ? '本场可用默认结局收尾，需填写原因并确认' : planFallbackReason}}</text>
+      <view wx:if="{{planFallbackAvailable}}" class="ctd-director-export {{writeLocked ? 'is-disabled' : ''}}" bindtap="openPlanFallback" aria-role="button" aria-label="填写默认结局收尾原因" hover-class="cy-pressed" hover-stay-time="80">填写收尾原因</view>
     </view>
     <view class="ctd-plan-fallback" wx:if="{{planFallbackResult}}"><text class="ctd-director-note">{{planFallbackResult.title}}</text><text class="ctd-director-note">收尾原因：{{planFallbackResult.reason}}</text></view>
     <cy-club-director-ready
@@ -255,8 +255,8 @@
 
     <!-- 收编时别把这两句丢了:它们各自挡着一个误读。 -->
     <cy-empty wx:if="{{directorActive && loadState === 'ready' && stations.length === 0}}"
-      title="暂无节点状态" sub="节点数据尚未下发，不能据此判断为零进度。" />
-    <view class="ctd-director-note" wx:if="{{directorActive && canUnlockChapter}}">仅改变章节开放状态，玩家进度与发放状态保持不变。</view>
+      title="暂无节点状态" sub="节点数据加载中" />
+    <view class="ctd-director-note" wx:if="{{directorActive && canUnlockChapter}}">玩家进度与发放状态保持不变</view>
 
     <block wx:if="{{directorActive && loadState === 'ready' && leaderboardVisibleKnown}}">
       <view class="ctd-director-recaphead">
@@ -265,12 +265,12 @@
           aria-role="button" aria-label="调整排行榜可见性" hover-class="cy-pressed" hover-stay-time="80">{{leaderboard.visible ? '隐藏榜单' : '显示榜单'}}</view>
       </view>
       <cy-club-director-row-list rows="{{leaderboard.rows}}" surface="elevated" />
-      <cy-empty wx:if="{{!leaderboard.rows.length}}" title="暂无榜单记录" sub="玩家完成站点后显示排名。" />
+      <cy-empty wx:if="{{!leaderboard.rows.length}}" title="暂无榜单记录" />
     </block>
 
     <!-- D9 已结束:复盘/漏斗/榜单。 -->
     <view class="ctd-director-recaphead" wx:if="{{directorActive && statusKey === 'ended'}}">
-      <view class="ctd-director-note" wx:if="{{!recap}}">复盘尚未生成，不会把缺失指标显示为零。</view>
+      <view class="ctd-director-note" wx:if="{{!recap}}">复盘尚未生成</view>
       <view class="ctd-director-export {{exportState === 'loading' ? 'is-disabled' : ''}}" wx:if="{{canExportRecap}}"
         bindtap="copyRecap" aria-role="button" aria-label="复制复盘数据" hover-class="cy-pressed" hover-stay-time="80">{{exportState === 'loading' ? '复制中' : '复制复盘数据'}}</view>
     </view>
@@ -312,7 +312,7 @@
     <cy-club-director-end-confirm
       show="{{directorEndConfirmShow}}"
       title="结束这场活动？"
-      content="结束后不能再核销、不能再改队伍与角色;已产生的结算事实会保留。此操作不可撤销。"
+      content="结束后不能再核销、不能再改队伍与角色；已产生的结算事实会保留。此操作不可撤销。"
       cancel-text="再想想" confirm-text="结束活动" loading="{{writeLocked}}"
       bind:cancel="onDirectorEndCancel" bind:confirm="onDirectorEndConfirm" />
 
@@ -342,7 +342,7 @@
       <view class="ctd-director-field">
         <text class="ctd-director-field__label">现场原因<text class="ctd-required" aria-hidden="true">*</text></text>
         <textarea class="ctd-director-field__input" value="{{unlockReason}}" bindinput="onUnlockReasonInput"
-          placeholder="写明为什么要手动解锁,会进审计记录" maxlength="200" auto-height />
+          placeholder="写明为什么要手动解锁，会进审计记录" maxlength="200" auto-height />
       </view>
     </cy-club-director-chapter-sheet>
 
@@ -374,7 +374,7 @@
         </cy-dropdown>
         <text class="ctd-director-field__label">接管原因<text class="ctd-required" aria-hidden="true">*</text></text>
         <textarea class="ctd-director-field__input" value="{{takeoverDraft.reason}}" bindinput="onTakeoverReasonInput"
-          placeholder="写明为什么要接管,会进审计记录" maxlength="200" auto-height />
+          placeholder="写明为什么要接管，会进审计记录" maxlength="200" auto-height />
         <view class="ctd-director-field__acts">
           <view class="ctd-director-field__act" bindtap="closeTakeoverRole" aria-role="button" aria-label="取消接管" hover-class="cy-pressed" hover-stay-time="80">取消接管</view>
           <view class="ctd-director-field__act ctd-director-field__act--primary {{writeLocked || !takeoverDraft.reason ? 'is-disabled' : ''}}"
@@ -419,15 +419,15 @@
         hover-class="cy-pressed" hover-stay-time="80">
         <view class="tset-row-main">
           <text class="tset-row-title">剧情与玩法</text>
-          <text class="tset-row-sub">看这条路线有几章几站、玩法配没配。</text>
+          
         </view>
         <cy-icon name="arrow-right" size="28" />
       </view>
-      <view class="tset-row" bindtap="goLedger" aria-role="button" aria-label="核销台账"
+      <view class="tset-row" bindtap="goLedger" aria-role="button" aria-label="核销记录"
         hover-class="cy-pressed" hover-stay-time="80">
         <view class="tset-row-main">
-          <text class="tset-row-title">核销台账</text>
-          <text class="tset-row-sub">按团看报名与核销，能清退退款。</text>
+          <text class="tset-row-title">核销记录</text>
+          
         </view>
         <cy-icon name="arrow-right" size="28" />
       </view>
@@ -435,7 +435,7 @@
         hover-class="cy-pressed" hover-stay-time="80">
         <view class="tset-row-main">
           <text class="tset-row-title">场次管理</text>
-          <text class="tset-row-sub">加日期、改未来场次、取消本场。</text>
+          
         </view>
         <cy-icon name="arrow-right" size="28" />
       </view>
@@ -443,14 +443,14 @@
         hover-class="cy-pressed" hover-stay-time="80">
         <view class="tset-row-main">
           <text class="tset-row-title">退出与暂停规则</text>
-          <text class="tset-row-sub">玩家退出、队长移交、暂停与退款的判据。</text>
+          
         </view>
         <cy-icon name="arrow-right" size="28" />
       </view>
 
     <cy-skeleton wx:if="{{settingState === 'loading'}}" type="list" count="2" />
     <cy-empty wx:elif="{{settingState === 'denied'}}" title="暂时不能查看主题设置" sub="{{settingErrorText}}" />
-    <cy-error load-failure wx:elif="{{settingState !== 'ready'}}" title="主题设置没能取到" sub="{{settingErrorText || '稍后再试一次'}}" retry="重试" bind:retry="loadTopicSetting" />
+    <cy-error load-failure wx:elif="{{settingState !== 'ready'}}" title="主题设置获取失败" sub="{{settingErrorText}}" retry="重试" bind:retry="loadTopicSetting" />
     <block wx:else>
       <view class="tset-head">
         <text class="tset-name">{{setting.topicName}}</text>
@@ -460,7 +460,7 @@
         hover-class="cy-pressed" hover-stay-time="80">
         <view class="tset-row-main">
           <text class="tset-row-title">编辑主题内容</text>
-          <text class="tset-row-sub">名称、封面、剧情、日期、票价都在编辑主题页改。</text>
+          
         </view>
         <cy-icon name="arrow-right" size="28" />
       </view>
@@ -469,7 +469,7 @@
         aria-role="button" aria-label="承接审核与项目协作" hover-class="cy-pressed" hover-stay-time="80">
         <view class="tset-row-main">
           <text class="tset-row-title">承接审核</text>
-          <text class="tset-row-sub">审核商家申请与点位，查看项目协作进度。</text>
+          
         </view>
         <cy-icon name="arrow-right" size="28" />
       </view>
@@ -504,11 +504,11 @@
         aria-role="button" aria-label="结束主题" hover-class="cy-pressed" hover-stay-time="80">
         <view class="tset-row-main">
           <text class="tset-row-title tset-row-title--danger">结束主题</text>
-          <text class="tset-row-sub">停止售卖，并把未核销的票原价退回。</text>
+          <text class="tset-row-sub">未核销票原价退回</text>
         </view>
         <cy-icon name="arrow-right" size="28" />
       </view>
-      <text class="tset-foot">含已核销票的订单退不了，会留给平台人工处理，结束后会告诉你有几笔。</text>
+      <text class="tset-foot">已核销订单转平台处理</text>
     </block>
   </view>
 </cy-scene-sheet>
@@ -518,10 +518,10 @@
 <cy-scene-sheet show="{{merchantSheetVisible}}" variant="half" title="商家" closable maskClosable bind:close="closeMerchants">
   <view class="tset">
     <cy-skeleton wx:if="{{merchantState === 'loading'}}" type="list" count="2" />
-    <cy-empty wx:elif="{{merchantState === 'denied'}}" title="{{merchantDeniedReason || '商家信息没能取到'}}" />
-    <cy-error load-failure wx:elif="{{merchantState !== 'ready'}}" title="商家信息没能取到" sub="稍后再试一次" retry="重试" bind:retry="loadMerchants" />
+    <cy-empty wx:elif="{{merchantState === 'denied'}}" title="{{merchantDeniedReason || '商家信息获取失败'}}" />
+    <cy-error load-failure wx:elif="{{merchantState !== 'ready'}}" title="商家信息获取失败" retry="重试" bind:retry="loadMerchants" />
     <block wx:else>
-      <cy-empty wx:if="{{!merchantRows.length}}" title="这个主题还没有承接商家" sub="开放商家对接后，商家会出现在这里。" />
+      <cy-empty wx:if="{{!merchantRows.length}}" title="这个主题还没有承接商家" />
       <view wx:for="{{merchantRows}}" wx:key="nodeId" class="cli-row {{index === 0 ? 'cli-row--first' : ''}}">
         <view class="cli-ava">{{item.initial}}</view>
         <view class="cli-main">
@@ -536,7 +536,7 @@
           </view>
         </view>
       </view>
-      <text class="tset-foot">联系方式在商家接受合作后才下发；未确认的商家不展示手机号。</text>
+      <text class="tset-foot">商家接受后显示联系方式</text>
     </block>
   </view>
 </cy-scene-sheet>
@@ -548,7 +548,7 @@
 <cy-scene-sheet show="{{customerSheetVisible}}" variant="half" title="报名参与者" closable maskClosable bind:close="closeCustomers">
   <view class="tset">
     <cy-skeleton wx:if="{{customerState === 'loading'}}" type="list" count="2" />
-    <cy-error load-failure wx:elif="{{customerState !== 'ready'}}" title="报名名单没能取到" sub="{{customerErrorReason || '稍后再试一次'}}" retry="重试" bind:retry="loadCustomers" />
+    <cy-error load-failure wx:elif="{{customerState !== 'ready'}}" title="报名名单获取失败" sub="{{customerErrorReason}}" retry="重试" bind:retry="loadCustomers" />
     <block wx:else>
       <view class="cli-stats">
         <text wx:for="{{customerStats}}" wx:key="key"
@@ -560,7 +560,7 @@
           data-value="{{item.value}}" bindtap="onCustomerFilter"
           aria-role="button" aria-label="只看{{item.label}}" hover-class="cy-pressed" hover-stay-time="80">{{item.label}}</view>
       </view>
-      <cy-empty wx:if="{{!customerRows.length}}" title="{{customerFilter ? '这一档还没有人' : '还没有人报名'}}" sub="{{customerFilter ? '换一个筛选看看。' : '有人下单后会出现在这里。'}}" />
+      <cy-empty wx:if="{{!customerRows.length}}" title="{{customerFilter ? '这一档还没有人' : '还没有人报名'}}" sub="{{customerFilter ? '换个筛选试试' : ''}}" />
       <view wx:for="{{customerRows}}" wx:key="key" class="cli-row {{index === 0 ? 'cli-row--first' : ''}}">
         <view class="cli-ava">{{item.initial}}</view>
         <view class="cli-main">
@@ -573,14 +573,14 @@
           <text wx:if="{{item.verifyText}}" class="cli-sub">{{item.verifyText}}</text>
         </view>
       </view>
-      <text class="tset-foot" wx:if="{{customerRows.length}}">看不全的手机号，与你在本活动的权限有关。</text>
+      
       <!-- CU-C-76:不可发送时不再让人点进去只吃一句笼统 toast —— 入口置灰并就地写清资格条件;
            可发送(canBroadcast,来自导演台投影)时才进选范围流程。 -->
       <view wx:if="{{canBroadcast}}" class="cli-entry" bindtap="goBroadcast"
         aria-role="button" aria-label="定向广播" hover-class="cy-pressed" hover-stay-time="80">
         <view class="cli-main">
           <text class="cli-name">定向广播</text>
-          <text class="cli-sub">选队伍发一条现场通知。进去后先选范围再发送。</text>
+          
         </view>
         <cy-icon name="slide-arrow" size="24" />
       </view>
@@ -596,7 +596,7 @@
     <block wx:if="{{trendState !== 'idle'}}">
       <text class="tset-label">按参与日期 · 报名人数</text>
       <cy-skeleton wx:if="{{trendState === 'loading'}}" type="list" count="1" />
-      <cy-error wx:elif="{{trendState === 'error'}}" title="报名趋势没能取到" sub="{{trendError || '稍后再试一次'}}" retry="重试" bind:retry="loadRegistrationTrend" />
+      <cy-error wx:elif="{{trendState === 'error'}}" title="报名趋势获取失败" sub="{{trendError}}" retry="重试" bind:retry="loadRegistrationTrend" />
       <cy-empty wx:elif="{{!trendRows.length}}" title="还没有带参与日期的报名" />
       <view wx:for="{{trendRows}}" wx:key="key" class="cli-row {{index === 0 ? 'cli-row--first' : ''}}">
         <view class="cli-main"><text class="cli-name">{{item.dateText}}</text></view>
@@ -617,7 +617,7 @@
 <!-- HO-26 改集合时间:日期 + 时间各一格,底部两颗小按钮并排。已售锁定由后端判(CR-63),这里先把规则说在前面。 -->
 <cy-scene-sheet show="{{opsTimeSheetVisible}}" variant="half" title="修改集合时间" closable bind:close="closeOpsTimeSheet">
   <view class="ctd-director-field">
-    <text class="ctd-opstime__hint">已有人报名或下单的场次，集合时间和地点不能再改（当日备注仍可改）。</text>
+    <text class="ctd-opstime__hint">已有报名，集合时间和地点不可改</text>
     <text class="ctd-director-field__label">集合日期</text>
     <cy-date-field mode="date" value="{{opsTimeDraft.date}}" bind:change="onOpsDateChange">
       <view class="ctd-director-field__picker">{{opsTimeDraft.date || '选择日期'}}</view>
@@ -626,7 +626,7 @@
     <cy-date-field mode="time" value="{{opsTimeDraft.time}}" bind:change="onOpsTimeChange">
       <view class="ctd-director-field__picker">{{opsTimeDraft.time || '选择时间'}}</view>
     </cy-date-field>
-    <text class="ctd-opstime__hint">改完会报备发起人；退款截止按新的集合时间前 24 小时计算。</text>
+    <text class="ctd-opstime__hint">退款截止为集合前 24 小时</text>
     <view class="ctd-director-field__acts">
       <view class="ctd-director-field__act" bindtap="closeOpsTimeSheet" aria-role="button" aria-label="取消修改集合时间" hover-class="cy-pressed" hover-stay-time="80">取消</view>
       <view class="ctd-director-field__act ctd-director-field__act--primary {{opsTimeSubmitting ? 'is-disabled' : ''}}"
@@ -665,7 +665,7 @@
   </view>
 </cy-scene-sheet>
 
-<cy-club-director-chapter-sheet show="{{planFallbackSheet}}" title="兜底收尾" chapters="{{[]}}" confirm-text="核对并确认收尾" confirm-disabled="{{writeLocked || !planFallbackAvailable}}" caption="{{planFallbackError || (writeLocked ? writeMessage : '本场确认可收尾后才能继续；不会消耗物资')}}" bind:close="closePlanFallback" bind:confirm="confirmPlanFallback">
-  <view class="ctd-director-field"><text class="ctd-director-field__label">收尾原因</text><textarea class="ctd-plan-fallback__input" value="{{planFallbackDraft}}" maxlength="500" bindinput="inputPlanFallbackReason" disabled="{{writeLocked}}" aria-label="必填的兜底收尾原因" placeholder="说明本场无法继续执行方案的原因" /></view>
-  <view wx:if="{{writeLocked && writeState === 'unknown-write'}}" class="ctd-director-export" bindtap="onReconcileUnknownWrite" aria-role="button" aria-label="核对原收尾请求的结果" hover-class="cy-pressed" hover-stay-time="80">核对原请求结果</view>
+<cy-club-director-chapter-sheet show="{{planFallbackSheet}}" title="默认结局收尾" chapters="{{[]}}" confirm-text="确认收尾" confirm-disabled="{{writeLocked || !planFallbackAvailable}}" caption="{{planFallbackError || (writeLocked ? writeMessage : '确认收尾后继续')}}" bind:close="closePlanFallback" bind:confirm="confirmPlanFallback">
+  <view class="ctd-director-field"><text class="ctd-director-field__label">收尾原因</text><textarea class="ctd-plan-fallback__input" value="{{planFallbackDraft}}" maxlength="500" bindinput="inputPlanFallbackReason" disabled="{{writeLocked}}" aria-label="必填的默认结局收尾原因" placeholder="说明本场无法继续执行方案的原因" /></view>
+  <view wx:if="{{writeLocked && writeState === 'unknown-write'}}" class="ctd-director-export" bindtap="onReconcileUnknownWrite" aria-role="button" aria-label="确认原收尾请求的结果" hover-class="cy-pressed" hover-stay-time="80">查看上次操作结果</view>
 </cy-club-director-chapter-sheet>

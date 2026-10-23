@@ -44,11 +44,11 @@ Component({
         },
         fail: () => {
           this._busy = false
-          this.setData({ stage: 'fail', failedText: '网络不太稳定，举报没有提交成功，可以再试一次' })
+          this.setData({ stage: 'fail', failedText: '网络异常，举报没有提交成功，可以再试一次' })
         },
         successStatusAbnormal: () => {
           this._busy = false
-          this.setData({ stage: 'fail', failedText: '网络不太稳定，举报没有提交成功，可以再试一次' })
+          this.setData({ stage: 'fail', failedText: '网络异常，举报没有提交成功，可以再试一次' })
         },
       })
     },

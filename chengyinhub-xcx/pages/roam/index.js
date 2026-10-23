@@ -44,8 +44,8 @@ const { fromHttpStatusAbnormal } = require('../../utils/transport/failure-envelo
 const { resolveMenuChrome } = require('../../utils/nav-safe-area.js');
 const { bindPlayerRoamMemory } = require('../../utils/roam-player-memory.js');
 const { syncRoamTileMemory } = require('../../utils/roam-tile-memory-sync.js');
+const { ALBUM_SAVE, classifyAlbumSaveError, normalizeAlbumOutcome } = require('../../utils/album-save-outcome.js');
 const MOCK_IMG = '/images/index-figma/nearby-card.jpg';
-
 const { onRoamCacheInvalidated } = require('../../utils/roam-cache-epoch.js');
 function roamMemory(page) {
   const memory = bindPlayerRoamMemory(page, getApp(), wx);
@@ -314,8 +314,8 @@ Page({
     introCards: [
       { key: 'start', icon: 'route', title: '开始漫游', sub: '走到哪，雾散到哪' },
       { key: 'map', nav: '/subpackageRoam/nearby/index', icon: 'map', title: '打开地图', sub: '寻找组队' },
-      { key: 'my-teams', nav: '/subpackageRoam/nearby/index?sheet=mine', icon: 'tab-club', title: '我的队伍', sub: '查看已加入和申请中的队伍' },
-    ],
+      { key: 'my-teams', nav: '/subpackageRoam/nearby/index?sheet=mine', icon: 'tab-club', title: '我的队伍', sub: '已加入 · 申请中' },
+    ], introStartLive: '', introTeamsLive: '附近正在组队', // 卡片实时行只放页面已有真数据;空串=隐藏,不摆占位
     boundEvent: null, // 官方活动绑定横幅(带 eventId 进入时显示)
     // V2 活动叠层只在玩家显式从活动进入或重新打开时显示；关闭后不影响日常漫游。
     eventOverlay: { show: false, missions: [], points: [], feedback: null },
@@ -1124,12 +1124,12 @@ Page({
       { id: 109, cat: 'merchant', name: '巷子面馆', ...P(-50, 25), points: 25, desc: '老板凌晨四点就开始熬汤。', imgUrl: MOCK_IMG },
       { id: 110, cat: 'merchant', name: '拐角披萨', ...P(20, 55), points: 30, desc: '一整块芝士拉到看不见边。', imgUrl: MOCK_IMG },
       { id: 101, cat: 'merchant', name: '深夜食堂', ...P(-40, -120), points: 30, desc: '凌晨两点还亮着灯的那家。', imgUrl: MOCK_IMG },
-      { id: 111, cat: 'merchant', name: '老友烧烤', ...P(-70, -95), points: 20, desc: '啤酒论箱起卖,老板不劝酒也不劝退。', imgUrl: MOCK_IMG },
+      { id: 111, cat: 'merchant', name: '老友烧烤', ...P(-70, -95), points: 20, desc: '啤酒论箱起卖，老板不劝酒也不劝退。', imgUrl: MOCK_IMG },
       { id: 102, cat: 'park', name: '苏堤小游园', ...P(-190, 20), points: 20, desc: '傍晚有人在这里遛狗、下棋、发呆。' },
-      { id: 103, cat: 'landmark', name: '城西美术馆', ...P(-320, 230), points: 25, desc: '免费开放的那层,总有学生在临摹。' },
+      { id: 103, cat: 'landmark', name: '城西美术馆', ...P(-320, 230), points: 25, desc: '免费开放的那层，总有学生在临摹。' },
       { id: 104, cat: 'park', name: '梧桐口袋公园', ...P(-130, 390), points: 20, desc: '一小片被高楼夹住的绿。' },
       { id: 105, cat: 'merchant', name: '山丘咖啡', ...P(130, 480), points: 30, desc: '巷口第三家。老板记得每个熟客的豆子。', imgUrl: MOCK_IMG },
-      { id: 112, cat: 'merchant', name: '巷角包子', ...P(160, 460), points: 20, desc: '皮薄馅大,早上六点就排队。', imgUrl: MOCK_IMG },
+      { id: 112, cat: 'merchant', name: '巷角包子', ...P(160, 460), points: 20, desc: '皮薄馅大，早上六点就排队。', imgUrl: MOCK_IMG },
       { id: 106, cat: 'landmark', name: '老钟楼', ...P(290, 310), points: 25, desc: '整点还会响。' },
       { id: 107, cat: 'merchant', name: '无早旧书店', ...P(150, 120), points: 30, desc: '二手书按气味分类的地方。', imgUrl: MOCK_IMG },
       { id: 113, cat: 'merchant', name: '老巷炸串', ...P(120, 145), points: 20, desc: '油锅从下午响到凌晨。', imgUrl: MOCK_IMG },
@@ -1390,7 +1390,7 @@ Page({
   // _initWorld 的 13 家演示商家(转角奶茶/深夜食堂…)—— 用户分不出真假,会走过去打卡。
   // 演示种子仅在开发版且显式打开 roamDemoPois 时注入；网络失败仍需显示离线状态。
   _fetchRoamPois(c) {
-    const current = this._roamReadScope();
+    const scope = this._roamReadScope(), seq = this._roamPoiSeq = (this._roamPoiSeq || 0) + 1, current = () => scope() && seq === this._roamPoiSeq; // 连续重拉只认最后一次,旧回包晚到不覆盖新结果
     // 等待附近商家加载完成再拉 POI,避免并发修改 this._pois 丢数据
     const nearbyDone = this._nearbyReady || Promise.resolve();
     return nearbyDone.then(() => {
@@ -1586,7 +1586,7 @@ Page({
 
   _saveRoamRecovery() {
     if (this._roamRecoveryAbandoned) return true;
-    if (!this._recoveryOwnerCurrent()) return this._recoveryFailure('登录账号已变化，请回到漫游页核对');
+    if (!this._recoveryOwnerCurrent()) return this._recoveryFailure('登录账号已变化，请回到漫游页确认');
     const record = {
       clientSessionKey: this._clientSessionKey || '', sessionId: exactSessionId(this._roamSid),
       collectedAt: Object.fromEntries((this._pendingTiles || []).filter(tile => Object.prototype.hasOwnProperty.call(this._pendingCollectedAt || {}, tile)).map(tile => [tile, this._pendingCollectedAt[tile]])),
@@ -1621,7 +1621,7 @@ Page({
     const state = roamMemory(this).readRecoveryState();
     if (!state.ok || (state.record && !validRecovery(state.record))) {
       this._recoveryReadFailed = true;
-      return this._recoveryFailure('本机漫游记录暂时无法读取，请重试核对');
+      return this._recoveryFailure('本机漫游记录暂时无法读取，请重试确认');
     }
     this._recoveryReadFailed = false;
     if (!state.record) return true;
@@ -1663,14 +1663,14 @@ Page({
       if (generation !== this._roamWriteGeneration || !this._recoveryOwnerCurrent()) return false;
       const fact = res && res.data;
       if (!apiOk(res) || !fact || !['ACTIVE', 'FINISHED', 'NOT_FOUND'].includes(fact.state))
-        return this._recoveryFailure('漫游状态暂时无法核对，请稍后重试；待确认记录仍保留');
+        return this._recoveryFailure('漫游状态暂时无法确认，请稍后重试；待确认记录仍保留');
       if (fact.state !== 'NOT_FOUND') {
         const sid = exactSessionId(fact.sessionId);
         if (!sid || (exactSessionId(this._roamSid) && sid !== exactSessionId(this._roamSid)) || (this._clientSessionKey && fact.clientSessionKey !== this._clientSessionKey))
-          return this._recoveryFailure('漫游关联响应不完整，请重新核对');
+          return this._recoveryFailure('漫游关联响应不完整，请重新确认');
         this._roamSid = sid;
       } else if (!this._clientSessionKey || exactSessionId(this._roamSid)) {
-        return this._recoveryFailure('原漫游记录未找到，请稍后重新核对');
+        return this._recoveryFailure('原漫游记录未找到，请稍后重新确认');
       }
       if (fact.state === 'NOT_FOUND' && this._finishRequested && !this._pendingTiles.length) {
         this.setData({ recoveryCanContinue: true });
@@ -1682,7 +1682,7 @@ Page({
         this._finishRequested = true;
         const result = fact.result;
         if (!result || typeof result.totalXp !== 'number' || !Number.isFinite(result.totalXp))
-          return this._recoveryFailure('结算事实暂时无法读取，请重新核对');
+          return this._recoveryFailure('结算事实暂时无法读取，请重新确认');
         if (fact.locationExpired === true) {
           this._track = []; this._pendingTiles = []; this._pendingCollectedAt = {}; this._sessionTiles = {}; this._foundRoamPois = {}; this._pois = [];
           const { stripGeometry } = require('../../utils/roam-location-retention.js');
@@ -1690,10 +1690,10 @@ Page({
           if (!this._saveRoamRecovery()) return false;
           const memory = roamMemory(this);
           const state = memory.readSessionState();
-          if (!state.ok) return this._recoveryFailure('足迹存档暂时无法读取，请重试核对');
+          if (!state.ok) return this._recoveryFailure('足迹存档暂时无法读取，请重试确认');
           const rows = state.sessions.map(row => row.ts === this._recoveryArchiveTs
             ? { ...stripGeometry(row), finishedAt: fact.finishedAt, locationExpired: true } : row);
-          if (!memory.writeSessions(rows)) return this._recoveryFailure('过期足迹清理未保存，请重试核对');
+          if (!memory.writeSessions(rows)) return this._recoveryFailure('过期足迹清理未保存，请重试确认');
         }
         if (fact.locationExpired !== true && !await this._archiveFinishedRecords()) return false;
         if (generation !== this._roamWriteGeneration || !this._recoveryOwnerCurrent()) return false;
@@ -1706,7 +1706,7 @@ Page({
       return this._flushReveal().then(ok => ok && this._finishRequested ? this._postRoamFinish(this._lastDistanceM || 0) : ok);
     }).catch(() => {
       if (generation !== this._roamWriteGeneration || !this._recoveryOwnerCurrent()) return false;
-      return this._recoveryFailure('漫游状态暂时无法核对，请稍后重试；原会话记录仍保留');
+      return this._recoveryFailure('漫游状态暂时无法确认，请稍后重试；原会话记录仍保留');
     });
     this._recoveryPromise = pending;
     const release = () => { if (this._recoveryPromise === pending) this._recoveryPromise = null; };
@@ -1823,7 +1823,7 @@ Page({
     }));
     const points = (event.overlay || []).map((point) => ({
       latitude: Number(point.latitude), longitude: Number(point.longitude), radiusM: Number(point.radiusM || 120),
-      name: point.name || point.bindingCode || '活动点位', missionCodes: point.missionCodes || [],
+      name: point.name || point.bindingCode || '活动节点', missionCodes: point.missionCodes || [],
     })).filter((point) => isFinite(point.latitude) && isFinite(point.longitude));
     return {
       show: true, id: eventId, title: event.title || '官方活动', status: event.status,
@@ -1895,7 +1895,7 @@ Page({
           if (data.accepted) {
             const missions = (overlay.missions || []).map((item) => item.missionCode === missionCode
               ? Object.assign({}, item, { complete: !!data.completed }) : item);
-            this._eventOverlayFeedback = { text: '验证成功，任务证据已写入本场活动。', tone: 'success' };
+            this._eventOverlayFeedback = { text: '验证成功，已计入本场活动', tone: 'success' };
             this.setData({ 'eventOverlay.missions': missions, 'eventOverlay.feedback': this._eventOverlayFeedback });
             if (data.completed) this._triggerCelebration('task-complete');
             motion.haptic({ type: 'light', reducedMotion: readReducedMotion() });
@@ -1912,7 +1912,7 @@ Page({
 
   _arrivalReason(reason) {
     return ({
-      NOT_SIGNED: '当前报名资格无效，不能写入活动证据。',
+      NOT_SIGNED: '当前报名资格无效，不能计入活动',
       ACTIVITY_NOT_LIVE: '活动不在进行中，不能验证到达。',
       LOCATION_INVALID: '定位数据无效，请在地图定位稳定后重试。',
       LOCATION_ACCURACY_TOO_LOW: '定位精度不足，请到开阔处等待定位稳定后重试。',
@@ -1997,7 +1997,7 @@ Page({
 
   _applyRoamFinishResult(result, complete, badgeDelivery) {
     if (typeof result.totalXp !== 'number' || !Number.isFinite(result.totalXp))
-      return this._recoveryFailure('结算事实暂时无法读取，请重新核对');
+      return this._recoveryFailure('结算事实暂时无法读取，请重新确认');
     this._finishedAt = result.finishedAt || this._finishedAt || 0;
     const statuses = Array.isArray(badgeDelivery) ? badgeDelivery : result.badgeDelivery;
     const delivered = (code, sourceId) => Array.isArray(statuses) && statuses.some(row => row && typeof row === 'object'
@@ -2013,7 +2013,7 @@ Page({
     this._shopMedalFromServer = !!shopMedal;
     const memory = roamMemory(this);
     const archiveState = memory.readSessionState();
-    if (!archiveState.ok) return this._recoveryFailure('结算已确认，足迹存档暂时无法读取，请重试核对');
+    if (!archiveState.ok) return this._recoveryFailure('结算已确认，足迹存档暂时无法读取，请重试确认');
     if (this._recoveryArchiveTs && !archiveState.sessions.some(row => row.ts === this._recoveryArchiveTs)) {
       if (!this._saveSession(this.data.finish)) return false;
     }
@@ -2024,12 +2024,12 @@ Page({
       archived.sessionId = exactSessionId(this._roamSid);
       archived.xpAwarded = result.totalXp;
       archived.medal = medal; archived.shopMedalName = shopMedal ? shopMedal.name : '';
-      if (!memory.writeSessions(arr)) return this._recoveryFailure('结算已确认，足迹存档更新失败，请重试核对');
+      if (!memory.writeSessions(arr)) return this._recoveryFailure('结算已确认，足迹存档更新失败，请重试确认');
     }
     this._roamBadgePending = !!exactSessionId(this._roamSid) && !!((result.medal && !medal) || (result.shopMedal && !shopMedal));
     if (this._roamBadgePending) {
       if (!this._saveRoamRecovery()) return false;
-    } else if (!memory.writeRecovery(null)) return this._recoveryFailure('结算已确认，本机恢复记录更新失败，请重试核对');
+    } else if (!memory.writeRecovery(null)) return this._recoveryFailure('结算已确认，本机恢复记录更新失败，请重试确认');
     if (!this._roamCompleted) {
       if (medal || shopMedal) this._triggerCelebration('medal-earned');
       if (result.routeStory) analytics.track('roam_route_story_shown', { bizType: 'roam' });
@@ -2714,7 +2714,7 @@ Page({
       Promise.resolve(loginApp.firstLogin ? loginApp.firstLogin() : null).then(() => {
         this._roamStartPending = false;
         if (typeof loginApp.getUserID === 'function' && loginApp.getUserID()) { this.goStart(); return; }
-        this.setData({ introError: '登录没有成功，请检查网络后重试。', locErr: false });
+        this.setData({ introError: '登录失败，请重试', locErr: false });
       });
       return;
     }
@@ -2724,7 +2724,7 @@ Page({
       return;
     }
     if (!loginApp || typeof loginApp.recordConsent !== 'function') {
-      this.setData({ introError: '登录没有成功，请检查网络后重试。', locErr: false });
+      this.setData({ introError: '登录失败，请重试', locErr: false });
       return;
     }
     this._roamStartPending = true;
@@ -2764,7 +2764,7 @@ Page({
           if (stale()) { abandon(); return; }
           this._roamStartPending = false;
           this._shootAfterStart = false;
-          this.setData({ introError: '未取得当前位置，请开启定位后重试。', locErr: true });
+          this.setData({ introError: '请开启定位后重试', locErr: true });
         },
       });
     };
@@ -4171,7 +4171,7 @@ Page({
         const unknown = result.reason === 'unknown';
         let tip = result.msg || '暂时无法确认这次到点，可以保持当前位置后重试。';
         if (result.reason === 'net') tip = '确认没有送出去，网络恢复后可以重试。';
-        if (unknown) tip = result.msg || '服务响应异常，确认结果待核对。请稍后重新进入查看，暂不要重复提交。';
+        if (unknown) tip = result.msg || '服务响应异常，确认结果待确认。请稍后重新进入查看，暂请勿重复提交。';
         this.setData({ 'paceCard.checkinErr': tip, 'paceCard.checkinRetryable': !unknown });
         return false;
       }
@@ -4287,8 +4287,8 @@ Page({
       let tip = r.msg || '这次打卡还没有确认成功，走近一点再试。';
       if (r.reason === 'net') tip = '打卡没送出去，网络不通。这一站还没记上，恢复网络后走近再试。';
       if (r.reason === 'nosession') tip = '这次漫游还没正式开始记录。先在地图上走一小段，再回来打卡。';
-      if (r.reason === 'nolocal') tip = '这个点位不是合作商家，打不了卡。换一个点位或稍后再试。';
-      if (r.reason === 'unknown') tip = r.msg || '服务响应异常，打卡结果待核对。请稍后重新进入查看，暂不要重复提交。';
+      if (r.reason === 'nolocal') tip = '这个节点不是合作商家，打不了卡。换一个节点或稍后再试。';
+      if (r.reason === 'unknown') tip = r.msg || '服务响应异常，打卡结果待确认。请稍后重新进入查看，暂请勿重复提交。';
       this.setData({ visit: { active: false, checkinOk: false, poi: {}, photos: [] } });
       this._syncGoal();
       cyToast(tip);
@@ -4963,8 +4963,8 @@ Page({
    */
   shareTo(e) {
     const ch = (e && e.currentTarget && e.currentTarget.dataset && e.currentTarget.dataset.ch) || '';
-    // 可见性是**闸**不是标签:选了「仅自己」还能点进广场,那个选择器就是假的。
-    // 渠道按钮已按 share.channels 置灰,这里再拦一道 —— 置灰只挡手指,挡不住 automator/深链。
+    if (!ch) return Promise.resolve({ ok: false, channel: '', saved: false, posted: false, blocked: true }); // 没带渠道不是用户选了渠道,不拼「不发布到」
+    // 可见性是**闸**不是标签(选了「仅自己」还能点进广场,选择器就是假的);按钮已按 share.channels 置灰,这里再拦一道:置灰挡不住 automator/深链。
     if (!isChannelAllowed(ch, this.data.share.visibility)) {
       cyToast('当前可见范围不发布到' + (ch === '保存' ? '相册' : ch));
       return Promise.resolve({ ok: false, channel: ch, saved: false, posted: false, blocked: true });
@@ -4973,7 +4973,7 @@ Page({
     if (ch === '广场') return this._shareToSquare();
     if (ch === '保存') {
       return this._exportAndSave('生成卡片', () => this._drawShareCard(this.data.share.idx), this._shareScope())
-        .then((r) => ({ ok: r.saved, channel: ch, saved: r.saved, posted: false }));
+        .then((r) => ({ ok: r.saved, channel: ch, saved: r.saved, posted: false, cancelled: r.outcome === ALBUM_SAVE.CANCELLED }));
     }
     return this._shareToAlbumGuide(ch);
   },
@@ -4987,10 +4987,10 @@ Page({
     const current = this._shareScope();
     const copy = this._shareCopy();
     return this._exportAndSave('生成卡片', () => this._drawShareCard(this.data.share.idx), current).then((r) => {
-      if (!current() || !r.saved) return { ok: false, channel: ch, saved: false, posted: false };
+      if (!current() || !r.saved) return { ok: false, channel: ch, saved: false, posted: false, cancelled: r.outcome === ALBUM_SAVE.CANCELLED };
       cyModal.show({
         title: '去' + ch + '发布',
-        content: '足迹卡已存到相册,打开' + ch + '选它就行。文案参考(可长按复制):\n' + copy,
+        content: '足迹卡已存到相册，打开' + ch + '选它就行。文案参考(可长按复制):\n' + copy,
         confirmText: '知道了', showCancel: false,
       });
       return { ok: true, channel: ch, saved: true, posted: false };
@@ -5018,7 +5018,7 @@ Page({
     const cancelled = () => ({ ok: false, channel: '广场', saved: false, posted: false, cancelled: true });
     const fail = (msg) => { cyToast(msg); return { ok: false, channel: '广场', saved: false, posted: false }; };
     if (!current()) return Promise.resolve(cancelled());
-    if (this._squarePostUnknown) return Promise.resolve(fail('上次发布结果待核对，请先到广场查看，暂不要重复发布'));
+    if (this._squarePostUnknown) return Promise.resolve(fail('上次发布结果待确认，请先到广场查看，暂不要重复发布'));
     if (this._squarePostInFlight) return Promise.resolve(fail('正在发布，请勿重复操作'));
     const sessionId = this._activeShareSessionId();
     if (!sessionId) return Promise.resolve(fail(this._shareSource ? '这条漫游记录还没有关联线上会话，暂时不能发到广场' : '漫游记录尚未生成，请稍后再试'));
@@ -5072,7 +5072,7 @@ Page({
           if (httpFail(res) || netFail(res)) {
             rememberUnknown();
             settleIntent('unknown');
-            return fail('发布响应异常，帖子可能已经发出，请到广场核对，暂不要重复发布');
+            return fail('发布响应异常，帖子可能已经发出，请到广场确认，暂不要重复发布');
           }
           state.settled = true;
           if (res && (res.code == '200' || res.code == 200)) {
@@ -5095,7 +5095,7 @@ Page({
           }
           if (!current() || (err && err.cancelled)) return cancelled();
           console.warn('square share fail');
-          return fail(state.sent ? '发布结果待核对，请到广场查看，暂不要重复发布' : ((err && err.message) || '发布失败'));
+          return fail(state.sent ? '发布结果待确认，请到广场查看，暂不要重复发布' : ((err && err.message) || '发布失败'));
         });
     });
     return flow.finally(() => {
@@ -5142,17 +5142,17 @@ Page({
    */
   _exportAndSave(loadingTitle, drawFn, current = this._roamReadScope()) {
     if (!current()) return Promise.resolve({ path: null, saved: false });
-    this._shareLoading = true;
-    cyLoading.show(loadingTitle);
+    // 每次 show 配一次 hide(cyLoading 按层计数):作用域失效走提前返回也要收,
+    // 否则换号/离开漫游后遮罩一直挂着;_cancelShareWork 已收过的不重复 hide。
+    const releaseLoading = require('../../utils/roam-share-loading.js').loadingRelease(this, cyLoading, loadingTitle);
     return Promise.resolve().then(drawFn).then((path) => {
+      releaseLoading();
       if (!current()) return { path: null, saved: false };
-      this._shareLoading = false;
-      cyLoading.hide();
-      return this._saveToAlbum(path, current).then((saved) => ({ path, saved: current() && saved }));
+      return this._saveToAlbum(path, current).then((r) => { const outcome = current() ? normalizeAlbumOutcome(r) : ALBUM_SAVE.FAILED; return { path, saved: outcome === ALBUM_SAVE.SAVED, outcome }; });
     }).catch((err) => {
+      releaseLoading();
       if (!current()) return { path: null, saved: false };
-      this._shareLoading = false;
-      cyLoading.hide();
+      // 只有仍是当前作用域的失败才提示
       cyToast('生成失败');
       console.warn('card export fail');
       return { path: null, saved: false };
@@ -5184,23 +5184,23 @@ Page({
 
   _saveToAlbum(path, current = this._roamReadScope()) {
     return new Promise((resolve) => {
-      if (!current()) { resolve(false); return; }
+      if (!current()) { resolve(ALBUM_SAVE.FAILED); return; }
       wx.saveImageToPhotosAlbum({
         filePath: path,
-        success: () => { if (!current()) { resolve(false); return; } cyToast('已保存到相册'); resolve(true); },
+        success: () => { if (!current()) { resolve(ALBUM_SAVE.FAILED); return; } cyToast('已保存到相册'); resolve(ALBUM_SAVE.SAVED); },
         fail: (e) => {
-          if (!current()) { resolve(false); return; }
-          const msg = (e && e.errMsg) || '';
-          if (/auth|deny/i.test(msg)) {
+          if (!current()) { resolve(ALBUM_SAVE.FAILED); return; }
+          const outcome = classifyAlbumSaveError(e);
+          if (outcome === ALBUM_SAVE.DENIED) {
             cyModal.show({
               title: '需要相册权限', content: '在设置里允许保存到相册后重试。',
               confirmText: '去设置', cancelText: '取消',
               success: (m) => { if (m.confirm && current()) wx.openSetting({}); },
             });
-          } else if (!/cancel/i.test(msg)) {
+          } else if (outcome === ALBUM_SAVE.FAILED) {
             cyToast('保存失败');
           }
-          resolve(false);
+          resolve(outcome);
         },
       });
     });
@@ -5519,7 +5519,7 @@ Page({
   },
   _poiFilterSummary() {
     const f = this._poiFilterState();
-    return '范围 ' + roamPoiFilter.radiusLabel(f.radiusM) + (f.unvisitedOnly ? ' · 只看未到过' : ' · 全部点位');
+    return '范围 ' + roamPoiFilter.radiusLabel(f.radiusM) + (f.unvisitedOnly ? ' · 只看未到过' : ' · 全部节点');
   },
   _savePoiFilter(next) {
     this._roamPoiFilter = roamPoiFilter.normalizeFilter(next);
@@ -5643,7 +5643,7 @@ Page({
   },
   onShareAppMessage(event) {
     const activityShare = activityShareFromEvent(event);
-    if (activityShare) return activityShare;
+    return activityShare || require('../../utils/roam-menu-share.js').roamMenuShare(); // 不给 imageUrl 微信会截地图(实时位置)当封面
   },
 
   // P0(2026-09-05 审核):据点详情弹层里的打卡走 /api/city/nodes/{id}/complete,和本页的
@@ -5668,7 +5668,7 @@ Page({
   _entryIdentity() { return [readSession.memberId(getApp()), (getApp().globalData || {}).authorization || ''].join('|'); },
   _clearEntryRead() {
     this._entryItems = []; this._entryTeams = [];
-    this.setData({ entryMarkers: [], entryCards: [], searchPlaces: [], entryActivity: null, entryTeam: null, entrySheet: '' });
+    this.setData({ introTeamsLive: '附近正在组队', entryMarkers: [], entryCards: [], searchPlaces: [], entryActivity: null, entryTeam: null, entrySheet: '' });
   },
   loginForEntryRead() {
     if (this.data.entryReadAccess === 'denied') return;
@@ -5724,7 +5724,7 @@ Page({
     const app = getApp();
     const getImgUrl = typeof app.getImgUrl === 'function' ? app.getImgUrl.bind(app) : (url) => url;
     const view = entryMap.build(this._entryItems, this._entryTeams, this.data.entryLayers, getImgUrl);
-    this.setData({ entryMarkers: view.markers, entryCards: view.cards, searchPlaces: view.searchPlaces });
+    this.setData({ entryMarkers: view.markers, entryCards: view.cards, searchPlaces: view.searchPlaces, introTeamsLive: this._entryTeams.length ? '附近 ' + this._entryTeams.length + ' 支队伍在组队' : '附近正在组队' });
   },
   _showEntrySheet(entrySheet, entryActivity) {
     this.setData({ entrySheet, entryActivity: entryActivity || null, entryTeam: null, entrySheetView: 'main', entrySheetIn: false }, () => {

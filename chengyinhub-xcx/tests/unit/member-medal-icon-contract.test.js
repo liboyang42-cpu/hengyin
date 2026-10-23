@@ -28,7 +28,7 @@ test('勋章图片优先，缺失图片使用通用 star 图标而不渲染 emoj
   assert.match(
     wxml,
     /<view class="pc-achv-ico pc-achv-ico--fallback" wx:else[\s\S]*?<cy-icon\b[^>]*name="star"[^>]*\/>[\s\S]*?<\/view>/,
-    'medalImg 缺失时必须渲染 star cy-icon 兜底'
+    'medalImg 缺失时必须渲染 star cy-icon 保底'
   );
   assert.doesNotMatch(wxml, /item\.emoji/, '正式勋章图标不得消费 emoji 字段');
   assert.doesNotMatch(wxml, /pc-achv-ico--emoji/, '正式勋章图标不得保留 emoji fallback class');

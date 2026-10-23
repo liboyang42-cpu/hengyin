@@ -103,7 +103,7 @@ test('断网/响应不明:先回读处置列表,读到申诉才算已提交;读�
     t.vm.onReasonInput({ detail: { value: '误判' } });
     t.vm.submitAppeal();
     await new Promise((r) => setImmediate(r));
-    assert.equal(t.calls[2].method, 'GET', '结果不明后必须回读');
+    assert.equal(t.calls[2].method, 'GET', '结果不明后必须刷新');
     assert.equal(t.vm.data.submitting, false);
     assert.equal(t.vm.data.editingId, 4, '没读到申诉时留在表单内允许重试');
     assert.match(t.vm.data.notice, /不会重复提交/);
@@ -114,7 +114,7 @@ test('断网/响应不明:先回读处置列表,读到申诉才算已提交;读�
     t.vm.submitAppeal();
     assert.equal(JSON.parse(t.calls[3].data).requestId, firstKey, '同一内容重试复用 requestId');
     await new Promise((r) => setImmediate(r));
-    assert.equal(t.vm.data.editingId, null, '回读到申诉后关闭表单');
+    assert.equal(t.vm.data.editingId, null, '刷新到申诉后关闭表单');
     assert.equal(t.vm.data.rows[0].stateLabel, '申诉处理中');
     assert.equal(t.vm.data.rows[0].canAppeal, false);
   } finally { t.restore(); }

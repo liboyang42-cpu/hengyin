@@ -72,7 +72,7 @@ test('replayed 只查询原回执；操作结局只采用匹配 APPLIED 回执',
   assert.equal(requests.length, 2); assert.equal(host.data.themePlanResult.endingKey, 'safe_end'); assert.equal(host.data.themePlanResult.terminal, true);
 });
 
-test('旧服只有可见 PLAN 工具时展示需求与站点但不猜资格/余额/表决结果', () => {
+test('旧服只有可见 PLAN 工具时展示需求与节点但不猜资格/余额/表决结果', () => {
   const view = { scope: 'TEAM', teamId: 1, availableActions: ['PLAN_PROPOSE', 'PLAN_EXECUTE'], contents: [{ id: 'tool', kind: 'ITEM', name: '工具包', quantity: 99 }],
     interactionTools: [{ kind: 'PLAN', endingKey: 'continue', title: '继续推进', summary: '讨论后操作', operationNodeId: 11, enabled: true, materialCost: [{ itemId: 'tool', quantity: 2 }] }],
     world: { stage: 'DRAFT', round: 0, proposals: [] } };
@@ -100,11 +100,11 @@ test('已选方案只走真实 PLAN 操作，开始无 costOption，取消为空
   assert.equal(await host.onThemePlanCommand(event({ action: 'OPERATION_CANCEL' })), true);
   assert.deepEqual(requests.map(row => row.data.payload), [{ operationKind: 'PLAN', operationKey: 'continue' }, {}]);
 });
-test('实际 operationNodeId 来自路线，未开始不打开；未知站点显示原因', () => {
+test('实际 operationNodeId 来自路线，未开始不打开；未知节点显示原因', () => {
   const { host } = page(); Object.assign(host.data.themeBag.planRows[0], { operationNodeId: 11 });
   assert.equal(host.openThemePlanOperation(), false);
   host.data.themeBag.planRows[0].operationStarted = true; host._nodeById = () => null;
-  assert.equal(host.openThemePlanOperation(), false); assert.match(host.data.themePlanError, /站点资料/);
+  assert.equal(host.openThemePlanOperation(), false); assert.match(host.data.themePlanError, /节点资料/);
   const node = { nodeId: 11, name: '操作站' }; host._nodeById = id => id === 11 && node;
   assert.equal(host.openThemePlanOperation(), true); assert.deepEqual(host.data.advancedPlay.node, node);
 });
@@ -165,7 +165,7 @@ test('原回执 action 不匹配时不展示结局、不解锁、不重复写', 
     if (url.endsWith('/command')) { command = body; return {netFail:true}; }
     return receipt(command,{ action:'PLAN_EXECUTE',result:{result:{endingKey:'wrong',title:'不可展示'}}});
   });
-  host.editThemePlanFunding(); await host.saveThemePlanFunding(); assert.equal(host.data.themePlanUnknown,true); assert.equal(host.data.themePlanResult,null); assert.ok(host._planPending); assert.match(host.data.themePlanError,/不匹配/);
+  host.editThemePlanFunding(); await host.saveThemePlanFunding(); assert.equal(host.data.themePlanUnknown,true); assert.equal(host.data.themePlanResult,null); assert.ok(host._planPending); assert.match(host.data.themePlanError,/异常/);
   await host.checkThemePlanReceipt(); assert.equal(requests.filter(row=>row.method==='POST').length,1);
 });
 test('读取本队已签接受清单，轮询保留未提交选择，换场/换轮不沿用旧选择', () => {
@@ -192,6 +192,6 @@ test('方案锁定说明：锁定物资仍计入负重；改案只释放方案�
   assert.equal(await host.onThemePlanCommand(event({ action: 'PLAN_CHANGE' })), false);
   assert.equal(requests.length, 0);
   assert.equal(shown.length, 1);
-  assert.equal(shown[0].content, '改案只释放方案锁定的物资和本轮投票、签名；交易锁定的物资不会释放。请核对后确认。');
+  assert.equal(shown[0].content, '改案只释放方案锁定的物资和本轮投票、签名；交易锁定的物资不会释放。请确认后确认。');
   assert.doesNotMatch(shown[0].content, /全部|所有占用/);
 });

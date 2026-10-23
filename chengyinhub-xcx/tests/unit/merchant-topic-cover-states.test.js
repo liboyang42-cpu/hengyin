@@ -67,7 +67,7 @@ function assertCoverErrorSetsFallback(page) {
   page.onCoverError({ type: 'error' });
   assert.equal(page.setDataCalls.length, 1, 'binderror 必须真的写入 coverFailed');
   assert.equal(page.setDataCalls[0].coverFailed, true, 'setData patch 必须把 coverFailed 写为 true');
-  assert.equal(page.data.coverFailed, true, '失败后 WXML 才会切到 wx:else 兜底');
+  assert.equal(page.data.coverFailed, true, '失败后 WXML 才会切到 wx:else 保底');
 }
 
 /* 2026-09-08 稿 181:576 改了这一屏的口径:封面正常出图时上面不压任何字,
@@ -80,18 +80,18 @@ test('招募主题封面缺失时保留信息锚点', () => {
   const text = hero[1];
 
   const brief = /<view class="cover-brief">/.exec(text);
-  assert.ok(brief, '兜底态的信息锚点缺失');
+  assert.ok(brief, '保底态的信息锚点缺失');
   assert.match(text, /info\.name \|\| '主题详情'/, '必须保留主题名');
   assert.match(text, /info\.productType/, '必须保留类型或来源');
   assert.match(text, /info\.subtitle \|\| info\.description/, '必须保留价值一句话');
   assert.match(text, /class="slide-txt slide-txt--cover-fallback" wx:if="\{\{ !info\.imgUrl \|\| coverFailed \}\}"/,
-    '锚点必须挂在「封面没出来」这个条件上,不能又变回无条件渲染压在图上');
+    '锚点必须挂在「封面没出来」这个条件上，不能又变回无条件渲染压在图上');
 
   assert.match(text, /wx:if="\{\{ info\.imgUrl && !coverFailed \}\}"/, '有 URL 且未失败时才渲染封面');
-  assert.match(text, /binderror="onCoverError"/, '404 必须进入兜底');
-  assert.match(text, /<view class="slide-cover-fallback" wx:else>/, '空 URL 与加载失败必须有兜底');
+  assert.match(text, /binderror="onCoverError"/, '404 必须进入保底');
+  assert.match(text, /<view class="slide-cover-fallback" wx:else>/, '空 URL 与加载失败必须有保底');
   assert.match(WXSS, /\.topic \.slide1 \.slide-cover-fallback\s*\{[^}]*background: var\(--cy-bg-card-2\)/,
-    '兜底不能是全白/全黑空腔');
+    '保底不能是全白/全黑空腔');
 });
 
 function assertFallbackContrast(wxml, wxss) {
@@ -100,22 +100,22 @@ function assertFallbackContrast(wxml, wxss) {
   const text = hero[1];
 
   assert.match(text, /class="slide-scrim \{\{ !info\.imgUrl \|\| coverFailed \? 'slide-scrim--cover-fallback' : '' \}\}"/,
-    '浅色兜底必须同步移除图片态的压暗遮罩');
+    '浅色保底必须同步移除图片态的压暗遮罩');
   /* 2026-09-08 稿 181:576:封面正常渲染时上面不压任何字(整页是一条长滚动),
      所以信息锚点整块改成「只有封面没出来才渲染」,类名不再是三元切换。
      契约要守的仍是同一件事 —— 兜底屏必须有那块深色信息锚点,不能整屏空白。 */
   assert.match(text, /class="slide-txt slide-txt--cover-fallback" wx:if="\{\{ !info\.imgUrl \|\| coverFailed \}\}"/,
-    '封面缺失时必须渲染浅底信息锚点,且用 fallback 深色样式');
+    '封面缺失时必须渲染浅底信息锚点，且用 fallback 深色样式');
   assert.doesNotMatch(text, /class="slide-hint"/,
     '稿上封面不压提示语,「下滑查看…」不能回来');
   assert.match(wxss, /\.topic \.slide1 \.slide-txt--cover-fallback\s*\{[^}]*color: var\(--cy-text-title\)/,
-    '浅色兜底的正文不能继续使用 inverse/白字');
+    '浅色保底的正文不能继续使用 inverse/白字');
   assert.match(wxss, /\.topic \.slide1 \.slide-txt--cover-fallback \.cover-brief-title\s*\{[^}]*color: var\(--cy-text-title\)/,
-    '主题名在浅色兜底上必须使用深色标题 token');
+    '主题名在浅色保底上必须使用深色标题 token');
   assert.match(wxss, /\.topic \.slide1 \.slide-txt--cover-fallback \.cover-brief-value\s*\{[^}]*color: var\(--cy-text-body\)/,
-    '价值说明在浅色兜底上必须使用深色正文 token');
+    '价值说明在浅色保底上必须使用深色正文 token');
   assert.match(wxss, /\.topic \.slide1 \.slide-txt--cover-fallback \.jt\s*\{[^}]*background: var\(--cy-color-overlay\)/,
-    '浅色兜底的白色下滑箭头必须有深色 token 承载底');
+    '浅色保底的白色下滑箭头必须有深色 token 承载底');
 }
 
 test('封面失败或空 URL 时，浅色兜底必须切换为深色信息锚点', () => {
@@ -127,7 +127,7 @@ test('负控：浅色兜底重新使用 inverse/白字会判红', () => {
     '.topic .slide1 .slide-txt--cover-fallback {\n  color: var(--cy-text-title);\n}',
     '.topic .slide1 .slide-txt--cover-fallback {\n  color: var(--cy-text-inverse);\n}'
   );
-  assert.notEqual(broken, WXSS, '变异夹具必须真的把兜底正文改回 inverse/白字');
+  assert.notEqual(broken, WXSS, '变异夹具必须真的把保底正文改回 inverse/白字');
   assert.throws(() => assertFallbackContrast(WXML, broken), /正文不能继续使用 inverse/);
 });
 
@@ -151,18 +151,22 @@ test('负控：删除或破坏 onCoverError 会被四态测试判红', () => {
 //   prepareApplication 与 typeText 是稿上已删的旧结构,改写为对稿后四态「不丢可理解内容」的断言。
 test('合作中心路线卡片的封面四态不丢失可理解内容', () => {
   assert.match(COOP_CENTER_WXML, /wx:if="\{\{item\.cover && !item\._coverFailed\}\}"/, '只在 URL 可用时渲染封面');
-  assert.match(COOP_CENTER_WXML, /binderror="onRouteCoverError"/, '图片失败必须切换兜底');
+  assert.match(COOP_CENTER_WXML, /binderror="onRouteCoverError"/, '图片失败必须切换保底');
   // 2026-09-15 集成总线:占位从 wx:else 空分支改为常驻纯色底、封面 image 叠在其内(U6 空白状态分支门禁),兜底语义不变。
-  assert.match(COOP_CENTER_WXML, /<view class="cc-route-cover"><image class="cc-route-cover__img" wx:if=/, '空 URL/图片失败必须有兜底:纯色占位常驻包住封面');
+  // 2026-10-22 owner 重做(参考图):整卡就是封面、文字全写在图上;兜底是按模式取色的深色渐变底常驻包住封面,
+  //   整张卡点进详情,「看详情」黑胶囊是卡上的明确动作标识;截止信息压成「截止 M月D日」放在图上底行。
+  const COVER_WITH_FALLBACK = /<view class="cc-route-cover[^"]*">\s*<image class="cc-route-cover__img" wx:if=/;
+  assert.match(COOP_CENTER_WXML, COVER_WITH_FALLBACK, '空 URL/图片失败必须有兜底:纯色占位常驻包住封面');
   assert.match(COOP_CENTER_WXML, /class="cc-route-title">\{\{item\.title\}\}/, '必须保留主题名');
   assert.match(COOP_CENTER_WXML, /item\.modeText/, '必须保留模式标签(城市定向/自由探索)');
-  assert.match(COOP_CENTER_WXML, /item\.deadlineText/, '必须保留截止信息');
-  assert.match(COOP_CENTER_WXML, /class="cc-detail"[^>]*bindtap="openTopic"/, '必须保留明确的看详情动作');
+  assert.match(COOP_CENTER_WXML, /item\.deadlineShort/, '必须保留截止信息');
+  assert.match(COOP_CENTER_WXML, /class="cc-route[^"]*"[^>]*bindtap="openTopic"/, '整张卡必须能点进详情');
+  assert.match(COOP_CENTER_WXML, /class="cc-detail"[^>]*>看详情</, '必须保留明确的看详情标识');
   assert.match(COOP_CENTER_JS, /onRouteCoverError\(e\)/, '必须处理封面加载失败');
   // 负控:封面不再有兜底分支时必须判红
-  const broken = COOP_CENTER_WXML.replace('<view class="cc-route-cover"><image', '<view><image');
+  const broken = COOP_CENTER_WXML.replace(/<view class="cc-route-cover[^"]*">(\s*)<image/, '<view>$1<image');
   assert.notEqual(broken, COOP_CENTER_WXML, '变异夹具必须真的删掉兜底');
-  assert.throws(() => assert.match(broken, /<view class="cc-route-cover"><image class="cc-route-cover__img" wx:if=/), assert.AssertionError);
+  assert.throws(() => assert.match(broken, COVER_WITH_FALLBACK), assert.AssertionError);
 });
 
 test('合作中心封面失败只标记同一张卡，迟到事件不误伤刷新后的新卡', () => {

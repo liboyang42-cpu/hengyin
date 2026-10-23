@@ -82,7 +82,7 @@ function assertRoutesExist(routes, hits) {
   const dead = hits.filter(h => !routes.has(h.route))
     .map(h => `${h.rel}:${h.line} ${h.field} → ${h.route}`)
   assert.deepEqual(dead, [],
-    '导航指向了 app.json 里不存在的页面 —— 用户点了没反应,且线上零告警')
+    '导航指向了 app.json 里不存在的页面 —— 用户点了没反应，且线上零告警')
 }
 
 function dynamicKey(item) {
@@ -91,7 +91,7 @@ function dynamicKey(item) {
 
 function assertDynamicInventory(dynamic, expected = EXPECTED_DYNAMIC_NAV) {
   assert.deepEqual(dynamic.map(dynamicKey).sort(), expected.slice().sort(),
-    '动态导航清单发生漂移 —— 新增/改动须人工核对目标并更新显式盘点')
+    '动态导航清单发生漂移 —— 新增/改动须人工确认目标并更新显式盘点')
 }
 
 test('所有静态导航目标都在 app.json 里真实存在', () => {
@@ -103,7 +103,7 @@ test('所有静态导航目标都在 app.json 里真实存在', () => {
 test('这道门禁确实扫到了导航调用(不是零命中的橡皮图章)', () => {
   const { hits } = collect()
   assert.ok(hits.length > 50,
-    `只扫到 ${hits.length} 处导航,正则或扫描范围多半失效了 —— 那这条测试恒绿等于没有`)
+    `只扫到 ${hits.length} 处导航，正则或扫描范围多半失效了 —— 那这条测试恒绿等于没有`)
 })
 
 test('动态拼接的导航路径逐条列出,不静默放过', () => {
@@ -184,21 +184,23 @@ test('退役孤儿页不得重新注册', () => {
 // 都得有至少一处静态可读的运行时跳转,或者在下面显式豁免表里说清为什么没有。
 const ORPHAN_EXEMPT = new Map([
   // 刻意保留的深链/兼容壳(分享链接、扫码、旧路由),站内不再有人 navigateTo
-  ['/pages/club/workbench/index', '历史深链壳,转 club/detail'],
-  ['/pages/agreement/index', '协议深链页,站内用 agreement-sheet'],
+  ['/pages/club/workbench/index', '历史深链壳，转 club/detail'],
+  ['/pages/agreement/index', '协议深链页，站内用 agreement-sheet'],
   ['/pages/coop/withdraw/records/index', '旧提现记录路由壳,redirect 到 tixianjilu'],
   // 2026-09-15 收款模型定稿 §3:平台不打款,俱乐部结算页原来唯一指向这里的 navigateTo 撤掉了。
   // 本页留着当历史路由壳(旧分享链接/旧扫码仍会落到它):唯一动作已改成弹平台客服微信。
-  ['/pages/coop/withdraw/index', '旧提现入口路由壳,唯一动作改为弹平台客服微信'],
+  ['/pages/coop/withdraw/index', '旧提现入口路由壳，唯一动作改为弹平台客服微信'],
   ['/pages/merchant/profile/index', '旧商家主页路由壳'],
   ['/pages/publish/topicadd/topicadd', '旧发布路由壳,2026-10 到期删(见 topicadd.js:19)'],
+  // 2026-10-22 owner:创建节点玩法去掉「起名字」一步,引导页直接进编辑器;app.json 注册由 C00 撤(CY-HANDOFF #508)
+  ['/pages/publish/templateadd/templateadd', '起名页已退役,待 C00 从 app.json 撤注册后删页'],
   // 已知孤儿,待接线/拍板(三端审核清单 §7):接上后从这里删掉
   // 2026-09-17 B-06 曾把 pricing/partner 整页退役(全仓零入口);2026-09-19 批复1-a=2 裁决复活并
   // 接进定价页「合作阵容」(pricing/index.js goPartner)——页有真实入口,不再需要豁免条目。
-  ['/pages/play/circle/index', '退役兼容壳:圈层 2026-08-29 退役,旧分享兜底,2026-12-31 到期删(见 circle/index.js 顶部排期)'],
+  ['/pages/play/circle/index', '退役兼容壳:圈层 2026-08-29 退役，旧分享保底,2026-12-31 到期删(见 circle/index.js 顶部排期)'],
   // 2026-10-19 移植共享基线 366b846f:基线把「官方线路」入口放在旧漫游入口地图上,master 漫游改版后该屏已删,
   // 入口位置待产品拍板(候选:漫游护照玩法卡);接上后从这里删掉。详情页由列表页跳转,不在豁免内。
-  ['/subpackageRoam/official-routes/index', '待拍板:官方线路列表页入口随 master 漫游改版消失,接线位置待产品决定'],
+  ['/subpackageRoam/official-routes/index', '待拍板:官方线路列表页入口随 master 漫游改版消失，接线位置待产品决定'],
   // 2026-09-22 Phase 0 立体藏品卡闸口页:走查用的实验室页,站内不给入口(卡好不好看还没拍板),
   // 真机录屏与截图矩阵 F89 都靠编译模式直达。Phase 1/2 把 objectCard 接进玩法后从这里删掉。
 ])
@@ -221,7 +223,7 @@ function orphansOf(routes, entries, exempt) {
 test('app.json 每一页至少有一处运行时跳转指向它,否则必须在豁免表里写明原因(孤儿页负控)', () => {
   const { orphans, staleExempt } = orphansOf(knownRoutes(), navigationEntries(runtimeSources(ROOT)), ORPHAN_EXEMPT)
   assert.deepEqual(orphans, [], '这些页面注册了但全仓没有任何静态跳转指向它(页存在没人跳 = 造了白造):\n  ' + orphans.join('\n  '))
-  assert.deepEqual(staleExempt, [], '这些豁免项已经有人跳了,把它从豁免表删掉:\n  ' + staleExempt.join('\n  '))
+  assert.deepEqual(staleExempt, [], '这些豁免项已经有人跳了，把它从豁免表删掉:\n  ' + staleExempt.join('\n  '))
 })
 
 test('负控:把一页的唯一跳转拿掉,孤儿页负控必须变红', () => {
@@ -229,7 +231,7 @@ test('负控:把一页的唯一跳转拿掉,孤儿页负控必须变红', () => 
   const entries = navigationEntries(runtimeSources(ROOT))
   const target = '/pages/club/customer-detail/index'
   assert.ok(routes.has(target))
-  assert.deepEqual(orphansOf(routes, entries, ORPHAN_EXEMPT).orphans, [], '基线本身必须是绿的,负控才有意义')
+  assert.deepEqual(orphansOf(routes, entries, ORPHAN_EXEMPT).orphans, [], '基线本身必须是绿的，负控才有意义')
   const mutated = orphansOf(routes, entries.filter((h) => h.route !== target), ORPHAN_EXEMPT)
   assert.deepEqual(mutated.orphans, [target], '拿掉跳转后必须被判成孤儿')
 })

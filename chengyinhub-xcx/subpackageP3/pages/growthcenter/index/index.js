@@ -135,8 +135,8 @@ function rankHttpFailure(error) {
   }
   return {
     boardState: 'error',
-    message: (app.getRequestErrorMessage && app.getRequestErrorMessage(error, '排行榜没有加载出来'))
-      || '排行榜没有加载出来'
+    message: (app.getRequestErrorMessage && app.getRequestErrorMessage(error, '排行榜加载失败'))
+      || '排行榜加载失败'
   }
 }
 
@@ -326,8 +326,8 @@ Page({
             boardState: 'error',
             rankErrorKind: 'data',
             errorMsg: isSuccess(res)
-              ? '排行榜数据不完整，请重试'
-              : ((app.getRequestErrorMessage && app.getRequestErrorMessage(res, '排行榜没有加载出来')) || '排行榜没有加载出来')
+              ? '排行榜加载失败，请重试'
+              : ((app.getRequestErrorMessage && app.getRequestErrorMessage(res, '排行榜加载失败')) || '排行榜加载失败')
           })
           this.setData({
             rankState: hasRankSnapshot ? 'stale-error' : 'error'
@@ -342,8 +342,8 @@ Page({
           boardState: 'error',
           rankErrorKind: isTransportFailure(error) ? 'network' : 'data',
           errorMsg: isTransportFailure(error)
-            ? '网络不稳定，请检查连接后重试'
-            : ((error && (error.msg || error.message)) || '排行榜没有加载出来')
+            ? '网络异常，请检查连接后重试'
+            : ((error && (error.msg || error.message)) || '排行榜加载失败')
         })
         this.setData({
           rankState: hasRankSnapshot ? 'stale-error' : 'error'

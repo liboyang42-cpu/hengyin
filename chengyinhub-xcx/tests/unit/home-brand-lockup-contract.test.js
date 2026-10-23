@@ -12,11 +12,11 @@ function assertNoBrandLockups(source) {
   assert.doesNotMatch(source.playerWxml, /v3-hero-brand|CHEIN/,
     '玩家首页不挂品牌 lockup')
   assert.doesNotMatch(source.playerWxss, /\.v3-hero-brand/,
-    '玩家端品牌样式随节点一起退役,不留死样式')
+    '玩家端品牌样式随节点一起退役，不留死样式')
   assert.doesNotMatch(source.merchantWxml, /rv-home-brand|CHEIN/,
     '商家首页不挂品牌 lockup')
   assert.doesNotMatch(source.merchantWxss, /\.rv-home-brand/,
-    '商家端品牌样式随节点一起退役,不留死样式')
+    '商家端品牌样式随节点一起退役，不留死样式')
 }
 
 test('玩家与商家首页都不再挂 CHEIN 品牌 lockup', () => {

@@ -1,11 +1,14 @@
-const toast = require('../../../utils/toast.js'); const pageMotion = require('../../../utils/page-motion.js');
+const pageMotion = require('../../../utils/page-motion.js');
 const app = getApp();
 const merchantTheme = require('../../../utils/merchant-theme.js');
 const { normalizeRelationHome } = require('../utils/merchant-aggregate.js');
-const { merchantHomeUrl } = require('../../../utils/merchant-home-link.js');
 const { ensureSession } = require('../utils/session/ensure-session.js');
 // CU-M-61:品类名取法与发现页共用一份(utils/category-icon.js),两页不再各写一套。
 const { firstCategoryName } = require('../../../utils/category-icon.js');
+// 帖子流与 pages/talent/list 的「帖文」tab 同一套投影/判定,别写第二份。
+const { isCompletedShare, hasFeedPlayCover } = require('../../../utils/feed-play-card.js');
+const { decodeDisplayText } = require('../../../utils/display-text.js');
+const { isRecord, isRecordList } = require('../../../utils/response-shape.js');
 
 function textOrDash(value, fallback) {
   if (value === null || value === undefined || value === '') return fallback || '—';
@@ -33,9 +36,8 @@ function resolveAccessFailure(res, status) {
   return '';
 }
 
-function normalizeDiscoveryItem(item, typeName) {
+function normalizeDiscoveryItem(item, typeName) {  // typeName 现在只会是「俱乐部」(2026-10-22:商家不再看到其他商家)
   if (!item || typeof item !== 'object' || !hasPositiveId(item.id)) return null;
-  if (typeName === '商家' && !hasPositiveId(item.memberId)) return null;
   const displayName = typeof item.name === 'string' ? item.name.trim() : textOrDash(item.name);
   if (!displayName || displayName === '—') return null;
   // 2026-08-20 卡片重设计:distance 后端回米;俱乐部 logo/cover 与 talent/list 同口径走 getImgUrl
@@ -60,7 +62,7 @@ function normalizeDiscoveryItem(item, typeName) {
     displayStatus,
     displayLocationVerified,
     logoUrl: assetUrl(item.logo),
-    coverUrl: assetUrl(typeName === '商家' ? item.coverImage : item.cover),
+    coverUrl: assetUrl(item.cover),
   });
 }
 
@@ -79,12 +81,17 @@ Page({
     refreshing: false,
     pageState: 'idle',
     error: '',
-    merchantError: '',
     clubError: '',
-    tabs: [{ key: 'merchant', label: '商家' }, { key: 'club', label: '俱乐部' }],
-    activeTab: 'merchant',
-    merchants: [],
+    // 2026-10-22 owner:合作 tab 看帖子,商家不看其他商家;帖子在前并为默认
+    tabs: [{ key: 'feed', label: '帖子' }, { key: 'club', label: '俱乐部' }],
+    activeTab: 'feed',
     clubs: [],
+    feed: [],
+    feedState: 'idle',   // idle | loading | ready | empty | error | stale-error
+    feedSlow: false,     // 加载超过 400ms 才显示骨架,避免闪屏
+    feedError: '',
+    feedEmptyTitle: '还没有帖子',
+    feedEmptySub: '',
     // 从项目详情「找俱乐部」进来时带着主题:一路带到俱乐部主页,
     // 在那儿发起合作时主题已经定了,不用再选一遍
     topicId: '',
@@ -101,7 +108,7 @@ Page({
     this.setData({
       statusBarHeight: sys.statusBarHeight || 20,
       navBarHeight: (getApp().globalData && getApp().globalData.navBarHeight) || 44,
-      activeTab: (options && options.tab === 'club') ? 'club' : this.data.activeTab,
+      activeTab: (options && options.tab === 'club') ? 'club' : 'feed',
       topicId: (options && options.topicId) || '',
       topicName: (options && options.topicName) ? decodeURIComponent(options.topicName) : '',
     });
@@ -112,6 +119,7 @@ Page({
   enterRelation(authRetryUsed) {
     this._authRetryUsed = authRetryUsed === true;
     if (app.getUserID()) {
+      if (this.data.activeTab === 'feed') this.loadFeed();
       this.loadRelationHome();
       return;
     }
@@ -120,7 +128,7 @@ Page({
     ensureSession(app).then(function (ok) {
       if (that._destroyed) return;
       if (!ok || !app.getUserID()) {
-        that.setData({ pageState: 'error', error: '登录失败，请重试', merchants: [], clubs: [] });
+        that.setData({ pageState: 'error', error: '登录失败，请重试', clubs: [] });
         return;
       }
       that.enterRelation(that._authRetryUsed);
@@ -137,7 +145,7 @@ Page({
   recoverSession() {
     if (this._destroyed) return;
     if (this._authRetryUsed) {
-      this.setData({ pageState: 'error', error: '登录已失效，请重新登录', merchants: [], clubs: [] });
+      this.setData({ pageState: 'error', error: '登录已失效，请重新登录', clubs: [] });
       return;
     }
     this._authRetryUsed = true;
@@ -145,17 +153,21 @@ Page({
     ensureSession(app).then(function (ok) {
       if (that._destroyed) return;
       if (!ok) {
-        that.setData({ pageState: 'error', error: '登录失败，请重试', merchants: [], clubs: [] });
+        that.setData({ pageState: 'error', error: '登录失败，请重试', clubs: [] });
         return;
       }
       that._hasLoaded = false;
+      if (that.data.activeTab === 'feed' && that.data.feedState === 'error') that.loadFeed();
       that.loadRelationHome();
     });
   },
 
   onTabChange(e) {
     const key = e.detail && e.detail.key;
-    if (key === 'merchant' || key === 'club') { pageMotion.enter(this, 'pmList'); this.setData({ activeTab: key }); } // 2026-10-23:切标签卡片依次浮上来
+    if (key !== 'feed' && key !== 'club') return;
+    if (key === this.data.activeTab) return;
+    this.setData({ activeTab: key });
+    if (key === 'feed' && this.data.feedState === 'idle') this.loadFeed();
   },
 
   loadRelationHome() {
@@ -184,13 +196,10 @@ Page({
           that.applyLoadError(res);
           return;
         }
-        const merchantResult = normalizeDiscoveryList(home.merchants, '商家');
         const clubResult = normalizeDiscoveryList(home.clubs, '俱乐部');
         that._hasLoaded = true; pageMotion.enter(that, 'pmList');
         that.setData({
-          merchants: merchantResult.rows,
           clubs: clubResult.rows,
-          merchantError: merchantResult.error,
           clubError: clubResult.error,
           pageState: 'ready',
           error: '',
@@ -225,6 +234,88 @@ Page({
     });
   },
 
+  // 帖子流:范围由后端 /api/club/post/feed 按身份判死(商家看谈成过的俱乐部)。
+  // 回到本页(如从俱乐部返回)不重拉也不换 tab;有旧内容时刷新失败保留旧内容。
+  loadFeed() {
+    if (this._destroyed || this._feedLoading) return;
+    const that = this;
+    const hasSnapshot = ['ready', 'empty', 'stale-error'].indexOf(this.data.feedState) >= 0;
+    const requestId = (this._feedRequestId || 0) + 1;
+    this._feedRequestId = requestId;
+    this._feedLoading = true;
+    if (!hasSnapshot) {
+      this.setData({ feedState: 'loading', feedSlow: false, feedError: '' });
+      this._feedSlowTimer = setTimeout(function () {
+        if (that._feedLoading && !that._destroyed) that.setData({ feedSlow: true });
+      }, 400);
+    }
+    function isCurrent() { return !that._destroyed && requestId === that._feedRequestId; }
+    function finish() { clearTimeout(that._feedSlowTimer); that._feedLoading = false; }
+    function fail(res) {
+      if (!isCurrent()) return;
+      finish();
+      that.setData({
+        feedState: hasSnapshot ? 'stale-error' : 'error',
+        feedSlow: false,
+        feedError: app.getRequestErrorMessage(res, '帖子加载失败，请重试'),
+      });
+    }
+    app.sendRequest({
+      hideLoading: true, silentError: true,
+      url: '/api/club/post/feed', method: 'POST',
+      data: JSON.stringify({ limit: 20 }),
+      header: { 'Content-Type': 'application/json' },
+      success(res) {
+        if (!isCurrent()) return;
+        if (!res || (res.code != 200 && res.code != '200') || !isRecord(res.data) || !isRecordList(res.data.rows)
+            || typeof res.data.clubCount !== 'number' || !Number.isFinite(res.data.clubCount)
+            || res.data.clubCount < 0) return fail(res);
+        const rows = res.data.rows;
+        const noClub = res.data.clubCount === 0;
+        finish();
+        that.setData({
+          feed: rows.map(function (p) {
+            const ref = Object.assign({}, p, { dataType: p.refType, completed: true });
+            return Object.assign({}, p, {
+              memberNickname: p.nickname,
+              memberAvatar: p.avatar,
+              contents: decodeDisplayText(p.content),
+              picList: String(p.images || '').split(/[;,]/).filter(Boolean).slice(0, 3),
+              formattedCreateTime: String(p.createTime || '').slice(5, 16),
+              isCompletionShare: isCompletedShare(ref),
+              hasPlayCover: hasFeedPlayCover(ref),
+            });
+          }),
+          feedState: rows.length ? 'ready' : 'empty',
+          feedSlow: false,
+          feedError: '',
+          feedEmptyTitle: noClub ? '这里还没有帖子' : '还没有帖子',
+          feedEmptySub: noClub
+            ? '帖子来自你合作过的俱乐部，谈成合作后即可看到'
+            : '你合作过的俱乐部还没有人发布帖子',
+        });
+      },
+      fail,
+    });
+  },
+
+  onPostTap(e) {
+    const clubId = e.detail && e.detail.clubId;
+    const postId = e.detail && e.detail.postId;
+    if (clubId && postId) wx.navigateTo({ url: '/pages/club/detail/index?id=' + clubId + '&postId=' + postId + '&scope=MERCHANT' });
+  },
+
+  onPostClub(e) {
+    const clubId = e.detail && e.detail.clubId;
+    if (clubId) wx.navigateTo({ url: '/pages/club/detail/index?id=' + clubId + '&scope=MERCHANT' });
+  },
+
+  onPostReference(e) {
+    const post = this.data.feed[e.detail && e.detail.index];
+    if (!post || !post.sportTopicId) return this.onPostTap(e);
+    wx.navigateTo({ url: '/pages/topic/index/index?id=' + post.sportTopicId });
+  },
+
   applyLoadError(res, status) {
     const accessFailure = resolveAccessFailure(res, status);
     if (accessFailure === 'anonymous') {
@@ -234,7 +325,7 @@ Page({
     }
     if (accessFailure === 'denied') {
       this._hasLoaded = false;
-      this.setData({ merchants: [], clubs: [], merchantError: '', clubError: '' });
+      this.setData({ clubs: [], clubError: '' });
       // 没有商家身份的账号本没有合作入口;深链误入就静默回会员中心,不摆整屏闸。
       wx.switchTab({ url: '/pages/member/index/index' });
       return;
@@ -249,27 +340,23 @@ Page({
     this.setData({
       pageState: 'error',
       error: app.getRequestErrorMessage(res, '合作数据加载失败'),
-      merchants: [],
       clubs: [],
-      merchantError: '',
       clubError: '',
     });
   },
 
   onPullDownRefresh() {
+    if (this.data.activeTab === 'feed') {
+      this.loadFeed();
+      wx.stopPullDownRefresh();
+      return;
+    }
     if (this._relationLoading) {
       wx.stopPullDownRefresh();
       return;
     }
     this._pullRefreshing = true;
     this.loadRelationHome();
-  },
-
-  // 公开投影带 memberId(relation-home.discovery.merchants),直接进统一主页的「关于」
-  goMerchant(e) {
-    const url = merchantHomeUrl(e.currentTarget.dataset.memberid, { topicId: this.data.topicId, topicName: this.data.topicName, chapterId: this._chapterId, scope: 'MERCHANT' });
-    if (url) wx.navigateTo({ url: url });
-    else toast('该商家暂不可查看');
   },
 
   goClub(e) {
@@ -289,6 +376,8 @@ Page({
   onUnload() {
     this._destroyed = true;
     this._requestEpoch += 1;
+    this._feedRequestId = (this._feedRequestId || 0) + 1;
+    clearTimeout(this._feedSlowTimer);
     this._relationLoading = false;
     merchantTheme.merchantPageRestore();
   },

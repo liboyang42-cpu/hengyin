@@ -65,7 +65,7 @@ test('官方邀约关键字段为空时归一为可读占位，WXML 不直渲原
   // 2026-09-23 CU-C-14:city 空 = 全国活动(与详情页同口径);内部 targetType/targetId 不露给用户。
   assert.deepEqual(page.data.invites[0]._display, {
     eventTitle: '未命名官方活动',
-    cityRole: '全国 · 职责待确认',
+    cityRole: '全国',
     scope: '指定范围职责'
   });
   assert.equal(page.data.invites[1]._display.scope, '本场整体职责', 'EVENT #id 不得出现在卡片上');

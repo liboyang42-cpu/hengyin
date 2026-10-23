@@ -168,7 +168,7 @@ test('个人主页:关注请求带意图态,丢响应重试同一意图不反转
 
   // 用户保持同一意图重试:仍发 follow=1(服务端据此幂等,不会变取消)
   profile.toggleFollow()
-  assert.equal(followRequest(profile.requests).data.follow, 1, '重试必须保持同一意图,不得反转为取消')
+  assert.equal(followRequest(profile.requests).data.follow, 1, '重试必须保持同一意图，不得反转为取消')
   profile.answer('/api/user/follow/action', { code: '200' })
   await Promise.resolve(); await Promise.resolve()
   assert.equal(profile.data.userInfo.isFollow, 1)
@@ -315,7 +315,7 @@ test('广场详情:清空后的空 pics 不再渲染空媒体位', () => {
     code: '200',
     data: { id: 5, memberId: 9, contents: '正文', pics: '', address: '', longitude: '', latitude: '' },
   })
-  assert.equal(instance.data.picList.length, 0, '空 pics 必须解析为空数组,不能是 [""]')
+  assert.equal(instance.data.picList.length, 0, '空 pics 必须解析为空数组，不能是 [""]')
 })
 
 test('广场列表:清空后的空 pics 解析为空数组', () => {

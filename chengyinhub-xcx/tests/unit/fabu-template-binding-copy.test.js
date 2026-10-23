@@ -86,7 +86,7 @@ test('终局表决采用与重进：无资源槽也保存结局章映射，模�
   assert.deepEqual(saved.planEndings, { leave: '91' }); assert.equal(saved.slotDigest, binding.slotDigest([]));
   p._openNodeBinding(p.data.nodesForm); assert.equal(p.data.nodePlanEndingRows[0].targetLabel, '离开现场');
   p.setEditorState = () => {}; p.showEditNodes = () => {};
-  p.onEditBoundTemplate = () => { assert.fail('结局选择错误须留在站点采用处'); };
+  p.onEditBoundTemplate = () => { assert.fail('结局选择错误须留在节点采用处'); };
   p.locatePublishIssue({ currentTarget: { dataset: { field: 'templateTool:11:vote:leave', label: '请选择结局章' } } });
   assert.equal(p.data.nodePlanEndingError, '请选择结局章');
   p.data.formData.chapters[0].nodes = [Object.assign({}, p.data.nodesForm)];
@@ -121,7 +121,7 @@ function sharedPage() {
   return { p, source };
 }
 
-test('共用玩法列出站点，另存副本传完整作者字段且成功后仅重绑本站', () => {
+test('共用玩法列出节点，另存副本传完整作者字段且成功后仅重绑本站', () => {
   const { p, source } = sharedPage();
   assert.deepEqual(p.data.nodeSharedSites.map(s => s.label), ['第一章 · 第一站', '第一章 · 第二站']);
   p.onCopyBoundTemplate();
@@ -201,7 +201,7 @@ test('选公共玩法先采用为我的草稿,再用会员模板 id 绑节点', 
   assert.equal(p.data.nodesForm.templateId, 0, '采用返回前不得把库 id 写进节点');
 
   adopt.success({ code: '200', data: 9001 });
-  assert.equal(p.data.nodesForm.templateId, 0, '会员草稿详情回读前不得使用公共库投影');
+  assert.equal(p.data.nodesForm.templateId, 0, '会员草稿详情刷新前不得使用公共库投影');
   const detail = sent.find((r) => r.url === '/api/template/myinfo');
   assert.equal(detail.data.id, 9001);
   detail.success({ code: '200', data: { id: 9001, title: '公共猜谜', advancedConfigJson: '{}' } });
@@ -228,7 +228,7 @@ test('我的模板直接绑定;与公共库重号时选中态按来源区分', (
   p.data.nodesForm = { name: '', templateId: 0 };
   p.selectTemp(tap(libraryRow, 'public'));
   p.selectTemp(tap({ id: 7, title: '我的同号模板' }, 'mine'));
-  assert.equal(p.data.selectedTempSource, 'mine', '同 id 不同来源应切换选中,而不是取消');
+  assert.equal(p.data.selectedTempSource, 'mine', '同 id 不同来源应切换选中，而不是取消');
   p.confirmTemp();
   assert.equal(sent.filter((r) => r.url === '/api/template/adopt-draft').length, 0);
   sent.find((r) => r.url === '/api/template/myinfo').success({ code: '200',
@@ -295,7 +295,7 @@ test('复制绑定使用稳定 client 键，移除源 id 和仅含归零挑战�
   const copied = src._buildCopiedDraft(2, false);
   const nodes = copied.formData.chapters[0].nodes;
   const saved = JSON.parse(copied.formData.themeRuntimeConfig);
-  // 2026-10-12:互斥组与额外站点(共用额度关系)不再丢,换成新草稿的 client 引用,首次保存由服务端换回真实编号
+  // 2026-10-12:互斥组与额外节点(共用额度关系)不再丢,换成新草稿的 client 引用,首次保存由服务端换回真实编号
   assert.deepEqual(saved.chapters, [{ index: 0, completion: runtime.chapters[0].completion,
     exclusiveGroups: [['client:stable-a', 'client:local-b']], extraNodes: [{ nodeId: 'client:' + nodes[2].clientNodeKey, slot: 'shared' }] }]);
   assert.equal(Object.hasOwn(saved, 'gameplayRuntime'), false);
@@ -304,11 +304,11 @@ test('复制绑定使用稳定 client 键，移除源 id 和仅含归零挑战�
   assert.deepEqual(saved.templateBindings['client:' + nodes[2].clientNodeKey], runtime.templateBindings[13]);
   assert.ok(nodes.every(node => !Object.hasOwn(node, 'id') && node.clientNodeKey));
   assert.equal(Object.keys(saved.templateBindings).length, 3);
-  assert.equal(copied.copyReferenceNotice, '复制后需要重新选择：归零挑战需重新选择挑战站点、站点玩法资源绑定');
+  assert.equal(copied.copyReferenceNotice, '复制后需要重新选择：归零挑战需重新选择挑战节点、节点玩法资源绑定');
   assert.deepEqual(JSON.parse(src.data.formData.themeRuntimeConfig), runtime);
 });
 
-test('复制成新草稿：互斥组与额外站点(含共用额度)换成 client 引用保留，不再要求重选', () => {
+test('复制成新草稿：互斥组与额外节点(含共用额度)换成 client 引用保留，不再要求重选', () => {
   const p = makePage();
   p.data.formData = Object.assign({}, p.data.formData, { productType: 1, tickets: [] });
   p.data.formData.chapters = [{ name: '一', nodes: [{ id: 101, name: '甲', _localId: 'a' }, { id: 102, name: '乙', _localId: 'b' }, { id: 103, name: '丙', _localId: 'c' }] }];
@@ -321,7 +321,7 @@ test('复制成新草稿：互斥组与额外站点(含共用额度)换成 clien
 });
 
 
-test('删除站点：从互斥组/额外站点/运行任务里明确移出并说明，不足两站的互斥组整组去掉；不改指别的站点', () => {
+test('删除节点：从互斥组/额外节点/运行任务里明确移出并说明，不足两站的互斥组整组去掉；不改指别的节点', () => {
   const p = makePage();
   p.data.formData = Object.assign({}, p.data.formData, { productType: 1, chapters: [{ name: '一', nodes: [{ id: 116 }, { id: 117 }, { id: 118 }] }] });
   p.data.formData.themeRuntimeConfig = JSON.stringify({
@@ -337,14 +337,14 @@ test('删除站点：从互斥组/额外站点/运行任务里明确移出并说
   const c = JSON.parse(p.data.formData.themeRuntimeConfig);
   assert.deepEqual(c.chapters[0].exclusiveGroups, [[116, 117]]);
   assert.equal(Object.hasOwn(c.chapters[1], 'exclusiveGroups'), false, '只剩一站的互斥组整组去掉');
-  assert.deepEqual(c.chapters[1].extraNodes, [{ nodeId: 123, slot: 'shared' }], '共用额度里的其他站点不受影响');
+  assert.deepEqual(c.chapters[1].extraNodes, [{ nodeId: 123, slot: 'shared' }], '共用额度里的其他节点不受影响');
   assert.deepEqual(c.gameplayRuntime.quests, [{ questKey: 'node_116', nodeId: 116, actKey: 'a', prerequisites: [] }]);
-  assert.deepEqual(c.gameplayRuntime.facilities, [{ facilityKey: 'facility_1', operationNodeId: 116 }], '该站点生成/操作的设施移出,别的保留');
+  assert.deepEqual(c.gameplayRuntime.facilities, [{ facilityKey: 'facility_1', operationNodeId: 116 }], '该节点生成/操作的设施移出，别的保留');
   assert.deepEqual(c.gameplayRuntime.plans, [{ endingKey: 'plan_keep' }]);
   assert.deepEqual(c.gameplayRuntime.templateTools.nodes, [{ nodeId: 116, planKeys: [] }]);
   assert.deepEqual(c.gameplayRuntime.acts[0].questKeys, ['node_116']);
-  assert.match(refs.note, /第4章互斥选项、第6章互斥选项、第6章额外站点、该站点玩法生成的表决方案、该站点的设施/);
+  assert.match(refs.note, /第4章互斥选项、第6章互斥选项、第6章额外节点、该节点玩法生成的表决方案、该节点的设施/);
   assert.equal(refs.before.length, 2);
   assert.equal(refs.gameBefore.facilities.length, 2, '撤销用的原运行结构完整保留');
-  assert.equal(p._removeNodeRuleRefs({ id: 999 }), null, '没被引用的站点不改配置');
+  assert.equal(p._removeNodeRuleRefs({ id: 999 }), null, '没被引用的节点不改配置');
 });

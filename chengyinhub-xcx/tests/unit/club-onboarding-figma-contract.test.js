@@ -19,7 +19,7 @@ const APPLY_WXSS = read('pages/club/apply/index.wxss')
 function darkAliasTarget(alias) {
   const dark = TOKENS.slice(0, TOKENS.indexOf('--cy-color-bg-elevated:       #FFFFFF'))
   const hit = new RegExp(`^\\s*${alias}:\\s*var\\((--cy-color-[a-z-]+)\\)`, 'm').exec(dark)
-  assert.ok(hit, `取不到 ${alias} 的 alias 目标,锚点可能被改动`)
+  assert.ok(hit, `取不到 ${alias} 的 alias 目标，锚点可能被改动`)
   const value = new RegExp(`^\\s*${hit[1]}:\\s*(#[0-9A-Fa-f]{6})`, 'm').exec(dark)
   assert.ok(value, `取不到 ${hit[1]} 的真值`)
   return value[1].toUpperCase()
@@ -32,7 +32,7 @@ function darkAliasTarget(alias) {
 // 仍然存在的**开场屏副标题**,把「别挑错 alias」这条知识留在活的锚点上。
 test('说明文案用 text/secondary(#B7B7B7)，不是解析成 #919191 的同名 alias', () => {
   assert.equal(darkAliasTarget('--cy-text-body'), '#B7B7B7', '--cy-text-body 必须仍解析到 text/secondary')
-  assert.equal(darkAliasTarget('--cy-text-secondary'), '#919191', '--cy-text-secondary 仍是历史错位,别当 secondary 用')
+  assert.equal(darkAliasTarget('--cy-text-secondary'), '#919191', '--cy-text-secondary 仍是历史错位，别当 secondary 用')
 
   const introCss = read('style/wizard-intro.wxss')
   assert.match(introCss, /^\.intro__sub \{[^}]*color:\s*var\(--cy-color-text-secondary\)/ms,
@@ -47,7 +47,7 @@ test('负控:开场屏副标题换回 --cy-text-secondary 必须判红', () => {
   const css = read('style/wizard-intro.wxss')
   const mutated = css.replace(
     /^(\.intro__sub \{[^}]*color:\s*)var\(--cy-color-text-secondary\)/ms, '$1var(--cy-text-secondary)')
-  assert.notEqual(mutated, css, '变异未生效,负控本身是假的')
+  assert.notEqual(mutated, css, '变异未生效，负控本身是假的')
   assert.throws(() => assert.match(mutated, /^\.intro__sub \{[^}]*color:\s*var\(--cy-color-text-secondary\)/ms))
 })
 
@@ -58,7 +58,7 @@ test('负控:开场屏副标题换回 --cy-text-secondary 必须判红', () => {
 // 所以承载那句话的 .cc-note 节点本身不存在了。这里保留的是**那句话不许回来**这条知识。
 test('「入会审批默认开启」这句与后端默认相反，不许出现在建团向导里', () => {
   assert.doesNotMatch(CREATE_WXML, /入会审批默认开启/,
-    '后端默认 join_policy=0,这句会骗人;要改行为得先动后端,不能只改文案')
+    '后端默认 join_policy=0，这句会骗人；要改行为得先动后端，不能只改文案')
 })
 
 // ── ③ 稿没画、但现码有的字段一律保留,别在下一轮"照稿清理"里被删掉 ──
@@ -98,7 +98,7 @@ test('输入框空态与已填态各用专用 token，并由字段值驱动', ()
     assert.match(wxss, new RegExp(`^\\.${sel}\\.is-filled \\{[^}]*background:\\s*var\\(--cy-color-input-bg-filled\\)`, 'ms'),
       `${label}输入框已填态必须用 input-bg-filled`)
     assert.match(wxml, new RegExp(`class="${sel}[^"]*\\{\\{\\s*\\w+ \\? 'is-filled' : ''\\s*\\}\\}`),
-      `${label}已填态必须由字段值驱动,不能是死类名`)
+      `${label}已填态必须由字段值驱动，不能是死类名`)
   }
 })
 
@@ -167,5 +167,5 @@ test('申请页规范顶距挂在包住 nav 的容器上，标题任何状态都
   assert.match(APPLY_WXSS, /^\.page \{[^}]*box-sizing:\s*border-box/ms,
     '.page 带了 padding-top 就必须 border-box,否则页面比屏幕高一个导航')
   assert.match(APPLY_WXML, /class="step-head [^"]*" wx:if="\{\{mode !== 'intro'\}\}"/,
-    '标题块在开场屏之外无条件渲染,加载/错误/完成态都不丢标题')
+    '标题块在开场屏之外无条件渲染，加载/错误/完成态都不丢标题')
 })

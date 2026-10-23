@@ -27,7 +27,7 @@ test('详情设置页放置活动运营和通知成员，并按真实权限收�
   // 而 CLUB_LEGACY_ADMIN 在后端根本没有 NOTIFY_SEND —— 旧管理员看得见、点进去被拒。
   // 现在收成单一来源 canSendNotify(纯 has),并在这里钉死不许再走 legacy 兜底。
   assert.match(wxml, /club\.isOwner \|\| canSendNotify[^>]+catchtap="goClubNotify"[^>]*>[\s\S]*?通知成员/)
-  assert.doesNotMatch(js, /canSendNotify\s*=\s*legacyCanGovern/, '通知能力不得吃 legacy 兜底')
+  assert.doesNotMatch(js, /canSendNotify\s*=\s*legacyCanGovern/, '通知能力不得吃 legacy 保底')
   assert.doesNotMatch(wxml, /club\.viewerIsAdmin[^>]+bindtap="goEventOps"/, '活动运营不得靠旧管理员身份放行')
   assert.match(js, /goEventOps\(\)[\s\S]*?\/pages\/club\/event-ops\/index\?clubId=/)
   assert.match(js, /goClubNotify\(\)[\s\S]*?\/pages\/club\/notify\/index\?clubId=/)

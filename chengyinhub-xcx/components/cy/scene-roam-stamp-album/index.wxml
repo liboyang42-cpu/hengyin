@@ -4,7 +4,7 @@
      原型没有的三样留着 —— 它是静态稿,没有接口:空/错/加载三态、分页续读、相机入口。 -->
 <view class="album-body">
   <cy-tabs plain tabs="{{tabs}}" active="{{tab}}" bind:change="onTabChange" />
-  <text class="album-sub" wx:if="{{loaded}}">{{tab === 'received' ? '别人投来、你换回的 ' + (total || 0) + ' 枚' : '这座城市里你已经收下的 ' + (total || 0) + ' 枚'}}</text>
+  <text class="album-sub" wx:if="{{loaded}}">{{'共 ' + (total || 0) + ' 枚'}}</text>
 
   <view class="stkgrid" wx:if="{{items.length}}">
     <block wx:for="{{items}}" wx:key="id">
@@ -22,10 +22,10 @@
     <view class="stkcell stkcell--lock" wx:if="{{noMore && tab === 'mine'}}"><text class="stkcell__lock-t">还没收到</text></view>
   </view>
 
-  <cy-error load-failure class="album-state" fill size="lg" wx:if="{{error && !items.length}}" title="{{tab === 'received' ? '收到的邮票没打开' : '集邮册没打开'}}" sub="邮票都还在，只是这次没读到。" retry="重试" bind:retry="retryLoad" />
+  <cy-error load-failure class="album-state" fill size="lg" wx:if="{{error && !items.length}}" title="{{tab === 'received' ? '收到的邮票无法打开' : '集邮册无法打开'}}" retry="重试" bind:retry="retryLoad" />
   <cy-skeleton wx:elif="{{loading && !items.length}}" type="card" count="2" />
-  <view class="album-empty" wx:elif="{{loaded && total === 0 && tab === 'mine'}}"><text class="album-empty__title">还没有邮票</text><text class="album-empty__sub">上街拍一张，城市就进你的册子了</text><view class="album-empty__cta" bindtap="openCamera" aria-role="button" aria-label="打开集邮相机" hover-class="cy-pressed" hover-stay-time="80">打开集邮相机</view></view>
-  <view class="album-empty" wx:elif="{{loaded && total === 0}}"><text class="album-empty__title">还没有收到的邮票</text><text class="album-empty__sub">投一张自己的票，就能换回别人那张</text></view>
+  <view class="album-empty" wx:elif="{{loaded && total === 0 && tab === 'mine'}}"><text class="album-empty__title">还没有邮票</text><view class="album-empty__cta" bindtap="openCamera" aria-role="button" aria-label="打开集邮相机" hover-class="cy-pressed" hover-stay-time="80">打开集邮相机</view></view>
+  <view class="album-empty" wx:elif="{{loaded && total === 0}}"><text class="album-empty__title">还没有收到的邮票</text></view>
 
   <text class="album-mini" wx:if="{{items.length && tab === 'mine'}}">每投一张换来的那张，就落在这儿。</text>
 

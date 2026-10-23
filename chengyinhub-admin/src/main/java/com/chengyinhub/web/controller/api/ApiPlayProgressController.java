@@ -1372,6 +1372,12 @@ public class ApiPlayProgressController extends BaseController
             nodeProbe.setCheckinCode(trimmedCode);
             List<CmsTopicNode> nodeList = cmsTopicNodeService.selectCmsTopicNodeList(nodeProbe);
             if (nodeList == null || nodeList.isEmpty()) return error("无效的打卡码");
+            // 静态码应全局唯一(uk_cms_topic_node_checkin_code);库里一码多站时不猜取第一条,
+            // 否则会把到店记到别的站/别的主题上 —— 拒绝并留日志给运营排查。
+            if (nodeList.size() > 1) {
+                logger.warn("打卡码命中多个节点,拒绝打卡 nodeCount={}", nodeList.size());
+                return error("该打卡码对应多个站点，请联系商家处理");
+            }
             node = nodeList.get(0);
         }
         // 规则16:普通下架/停用节点停止新发现,旧码/旧链接不得再产生新完成;

@@ -56,7 +56,7 @@ test('商家工作台「更多」不留评价死入口', () => {
   const wxml = read('pages/merchant/index/index.wxml');
 
   assert.doesNotMatch(wxml, /data-action="review"/, '「更多」里的评价入口已删');
-  assert.doesNotMatch(js, /goReviews/, 'goReviews handler 一并删掉,不留孤儿');
+  assert.doesNotMatch(js, /goReviews/, 'goReviews handler 一并删掉，不留孤儿');
   // 负控:同组其它入口仍在,证明上面两条不是因为文件读空而恒真
   assert.match(wxml, /data-action="messages"/);
   assert.match(js, /goMessages\(\)/);

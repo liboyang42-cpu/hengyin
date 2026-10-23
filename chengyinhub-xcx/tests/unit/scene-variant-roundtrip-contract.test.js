@@ -26,12 +26,12 @@ function sceneTable() {
       if (entries.length) return entries
     }
   }
-  throw new Error('没能从 utils/scene-registry.js 里找到场景表,契约无法判定(不是通过)')
+  throw new Error('没能从 utils/scene-registry.js 里找到场景表，契约无法判定(不是通过)')
 }
 
 test('registry 里声明的 variant 必须原样活过 normalizeScene', () => {
   const entries = sceneTable()
-  assert.ok(entries.length > 10, `场景表只解析出 ${entries.length} 条,疑似解析失败`)
+  assert.ok(entries.length > 10, `场景表只解析出 ${entries.length} 条，疑似解析失败`)
 
   const declared = new Set(entries.map(([, v]) => v.variant).filter(Boolean))
   assert.ok(declared.size >= 2, `registry 只声明了 ${[...declared]} 一种 variant,这条契约失去意义`)
@@ -42,7 +42,7 @@ test('registry 里声明的 variant 必须原样活过 normalizeScene', () => {
     const got = normalizeScene({ id, route: cfg.route, variant: cfg.variant }).variant
     if (got !== cfg.variant) dropped.push(`${id}: registry 声明 ${cfg.variant},normalize 后变成 ${got}`)
   }
-  assert.deepEqual(dropped, [], `variant 被 normalizeScene 吞掉,对应的 scene-sheet 样式档位永远不会生效:\n${dropped.join('\n')}`)
+  assert.deepEqual(dropped, [], `variant 被 normalizeScene 吞掉，对应的 scene-sheet 样式档位永远不会生效:\n${dropped.join('\n')}`)
 })
 
 test('未知 variant 仍 fail-closed 到 full', () => {

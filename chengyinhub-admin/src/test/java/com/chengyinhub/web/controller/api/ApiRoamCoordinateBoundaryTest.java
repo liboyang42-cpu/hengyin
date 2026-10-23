@@ -273,7 +273,7 @@ class ApiRoamCoordinateBoundaryTest
         assertNotEquals(200, controller.pois(Double.NaN, NEAR_LNG, null).get("code"));
         assertNotEquals(200, controller.nearbyExploreDay(Double.NaN, NEAR_LNG).get("code"));
         assertNotEquals(200, controller.nearbyRunners(Double.NaN, NEAR_LNG, null).get("code"));
-        verify(roamMapper, never()).selectPoisNear(anyDouble(), anyDouble(), anyDouble(), anyDouble(), any());
+        verify(roamMapper, never()).selectPoisNear(anyDouble(), anyDouble(), anyDouble(), anyDouble(), any(), anyInt());
         verify(roamMapper, never()).selectNearbyRunners(anyLong(), anyDouble(), anyDouble(), anyInt(), any(), any(), anyInt());
     }
 
@@ -286,7 +286,8 @@ class ApiRoamCoordinateBoundaryTest
         RoamPoi found = new RoamPoi();
         found.setId(POI_ID);
         found.setFound(true);
-        when(roamMapper.selectPoisNear(anyDouble(), anyDouble(), anyDouble(), anyDouble(), org.mockito.ArgumentMatchers.eq(PLAYER)))
+        when(roamMapper.selectPoisNear(anyDouble(), anyDouble(), anyDouble(), anyDouble(), org.mockito.ArgumentMatchers.eq(PLAYER),
+                org.mockito.ArgumentMatchers.eq(ApiRoamController.POIS_NEAR_LIMIT)))
                 .thenReturn(Collections.singletonList(found));
 
         AjaxResult r = controller.pois(NEAR_LAT, NEAR_LNG, 3000);
@@ -294,6 +295,7 @@ class ApiRoamCoordinateBoundaryTest
         assertEquals(200, r.get("code"));
         assertEquals(Boolean.TRUE, ((java.util.List<RoamPoi>) r.get("data")).get(0).getFound(),
                 "found 是服务端按账号投影的事实,必须原样下发 —— 前端靠它把已发现地点保持点亮");
-        verify(roamMapper).selectPoisNear(anyDouble(), anyDouble(), anyDouble(), anyDouble(), org.mockito.ArgumentMatchers.eq(PLAYER));
+        verify(roamMapper).selectPoisNear(anyDouble(), anyDouble(), anyDouble(), anyDouble(), org.mockito.ArgumentMatchers.eq(PLAYER),
+                org.mockito.ArgumentMatchers.eq(ApiRoamController.POIS_NEAR_LIMIT));
     }
 }

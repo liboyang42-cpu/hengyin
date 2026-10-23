@@ -67,7 +67,7 @@ test('★--cy-play-display-* 只补全站没有的那一段,不许和全站 ramp
   // 全站最大档 page-title=58rpx、data-2xl=84rpx;玩法屏这一段必须严格更大
   assert.ok(Math.min(...play) > 84,
     `玩法屏显示档最小值 ${Math.min(...play)}rpx 没超过全站 data-2xl(84rpx) —— ` +
-    '那一段全站已经有了,自己再立一份就是两套并存。')
+    '那一段全站已经有了，自己再立一份就是两套并存。')
 })
 
 test('★玩法屏显示档不参与缩放 —— 与 data-xl / display 同口径', () => {
@@ -75,7 +75,7 @@ test('★玩法屏显示档不参与缩放 —— 与 data-xl / display 同口�
   const block = tokens.match(/--cy-play-display-xl[\s\S]{0,400}/)[0]
   assert.doesNotMatch(block, /--cy-play-display-[\w]+:\s*calc\([^;]*--cy-type-scale/,
     '玩法屏显示档乘了 --cy-type-scale。全站大数字档(data-xl / display)都刻意不缩放:' +
-    '已够大,放大必破版 —— 这一档要跟它们同口径。')
+    '已够大，放大必破版 —— 这一档要跟它们同口径。')
 })
 
 /* ===================== 负控 ===================== */

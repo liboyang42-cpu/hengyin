@@ -133,7 +133,7 @@ Page({
         showSearchSkeleton: false,
         everLoaded: this.data.everLoaded || hasResults,
         searchError: failed > 0 && !hasResults
-          ? (allFailed ? '搜索服务暂时不可用，请重试' : '部分搜索没有完成，请重试后再确认结果')
+          ? (allFailed ? '搜索服务暂不可用，请重试' : '部分搜索没有完成，请重试后再确认结果')
           : '',
         resultGroups: resultGroups,
         resultTabs: DEFAULT_RESULT_TABS.concat(resultGroups.map((group) => ({
@@ -177,7 +177,10 @@ Page({
         success: (res) => {
           if (!isCurrent()) return;
           if (res && (res.code == 200 || res.code == '200')) {
-            groupsByType[request.type] = discoverSearch.decorateRows(request.type, res.data, filters);
+            groupsByType[request.type] = discoverSearch.decorateRows(request.type, res.data, Object.assign({}, filters, { keyword: keyword }));
+            if (request.type === 'topicTemplate' || request.type === 'gameTemplate') {
+              groupsByType[request.type].forEach((item) => { item.cover = app.getImgUrl(item.cover); });
+            }
             if (request.type === 'merchant' || request.type === 'club') {
               groupsByType[request.type].forEach((item) => {
                 item.cardCover = app.getImgUrl(item.cardCover);

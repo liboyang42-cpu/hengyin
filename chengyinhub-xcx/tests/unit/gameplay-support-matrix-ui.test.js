@@ -414,5 +414,5 @@ test('fabu 主题详情半屏说明支持状态来源,反馈/工单是独立渠�
   const card = wxml.slice(wxml.indexOf('id="fieldRuntimeState"'), wxml.indexOf('id="fieldGameRules"'));
   assert.match(card, /支持状态以玩法支持矩阵为准。反馈或工单是独立渠道，提交后不会改变支持状态。/);
   const row = card.match(/<view class="node-card__row">[^\n]*玩法支持[^\n]*\n/)[0];
-  assert.doesNotMatch(row, /bind(?:tap|change)|catchtap|<cy-switch|<input/, '只改文案,不加开关或动作');
+  assert.doesNotMatch(row, /bind(?:tap|change)|catchtap|<cy-switch|<input/, '只改文案，不加开关或动作');
 });

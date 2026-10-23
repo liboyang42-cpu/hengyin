@@ -65,7 +65,7 @@ test('cy-sheet 全高用于明确登记的长表单和详情，其余保持普�
   )
 })
 
-test('cy-sheet 面板必须是半透明玻璃底 + backdrop-filter 模糊 + 70vh 半屏', () => {
+test('cy-sheet 面板必须是半透明玻璃底 + backdrop-filter 模糊 + 高度跟内容、上限到胶囊底', () => {
   const wxss = read('components/cy/sheet/index.wxss')
   const panel = wxss.match(/\.sh__panel\s*\{[^}]*\}/)
   assert.ok(panel, '找不到 .sh__panel 规则')
@@ -89,8 +89,16 @@ test('cy-sheet 面板必须是半透明玻璃底 + backdrop-filter 模糊 + 70vh
   // 一处都不受影响;只有显式传 --cy-comp-sheet-max-h 的调用点才另算(用户 8-10 定:
   // 专业发布域的弹窗统一贴到胶囊底 +5px)。断言同时钉住「变量名」和「兜底值」,
   // 任一被改掉都判红 —— 只钉 70vh 的话,把 fallback 悄悄改成 90vh 抓不到。
-  assert.match(panel[0], /max-height:\s*var\(--cy-comp-sheet-max-h,\s*70vh\)/,
-    '半屏上限必须是 var(--cy-comp-sheet-max-h, 70vh):兜底 70vh 是 8-05 拍板值,不能动')
+  // 2026-10-23 业主(实机):70vh 把长内容截掉、短内容底下又留空 —— 改为「高度跟内容走,上限到胶囊底下」。
+  // 上限仍是带兜底的变量:实测胶囊(attached 下发)优先,拿不到退回从安全区反算的 token,不写死 vh。
+  assert.match(panel[0], /max-height:\s*var\(--cy-comp-sheet-max-h,\s*var\(--cy-comp-sheet-max-height\)\)/,
+    '面板上限必须是 var(--cy-comp-sheet-max-h, var(--cy-comp-sheet-max-height)):胶囊实测优先、token 兜底')
+  // 面板自己不滚:纵向 flex + overflow hidden,只让 .sh__body 一个滚动区(否则整层 catchtouchmove 下实机滑不动)
+  assert.match(panel[0], /display:\s*flex;[\s\S]*flex-direction:\s*column;[\s\S]*overflow:\s*hidden;/)
+  assert.doesNotMatch(panel[0], /overflow-y:\s*auto/, '面板不许自己滚动')
+  const body = wxss.match(/\.sh__body\s*\{[^}]*\}/)
+  assert.match(body[0], /flex:\s*0 1 auto;[\s\S]*min-height:\s*0;[\s\S]*overscroll-behavior:\s*contain;/,
+    '正文是唯一滚动区:随内容高、被上限收住时在里面滚,滚到头不穿透')
 })
 
 test('--cy-comp-sheet-blur token 必须在 tokens.wxss 定义', () => {

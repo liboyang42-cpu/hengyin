@@ -2,10 +2,10 @@
   <cy-nav-bar back="{{viewer !== 'self'}}" custom-back bind:back="goBack" />
   <cy-page-title title="个人主页" safe-top="{{false}}" />
   <view class="profile-loading__body">
-    <cy-error load-failure wx:if="{{failed}}" title="主页没能加载" sub="请重试，或使用导航离开。" retry="重试" bind:retry="retryLoad" />
+    <cy-error load-failure wx:if="{{failed}}" title="主页加载失败" retry="重试" bind:retry="retryLoad" />
     <view wx:else aria-role="status" aria-live="polite" aria-label="主页正在加载">
       <cy-skeleton wx:if="{{loading}}" />
-      <text class="profile-loading__hint">正在加载主页，请稍候</text>
+      <text class="profile-loading__hint">加载中</text>
     </view>
   </view>
   <tabBar wx:if="{{viewer === 'self'}}" activePath="/pages/member/index/index"

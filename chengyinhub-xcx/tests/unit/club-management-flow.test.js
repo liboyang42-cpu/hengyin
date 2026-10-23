@@ -76,14 +76,14 @@ test('CU-C-72 榜单空态按当前榜各说一句,不是一句通用的「还�
     sent.success({ code: '200', data: [] });
     assert.equal(page.data.leaderboardEmptyTitle, cases[sortBy], `sortBy=${sortBy} 的空态文案不对`);
     assert.equal(page.data.leaderboardLoaded, true);
-    assert.equal(page.data.leaderboardError, '', '空榜不是错误,不得落到错误态');
+    assert.equal(page.data.leaderboardError, '', '空榜不是错误，不得落到错误态');
   });
 
   // 空态文案绑在 data 上,不能退回 wxml 里写死一句(那样切榜就不会变)
   const wxml = fs.readFileSync(path.join(__dirname, '../../pages/club/detail/index.wxml'), 'utf8');
   const emptyTag = wxml.match(/<cy-empty[^>]*class="ov-lb-empty"[\s\S]*?\/>/);
   assert.ok(emptyTag, '找不到榜单空态的 cy-empty');
-  assert.match(emptyTag[0], /title="\{\{leaderboardEmptyTitle\}\}"/, '空态文案必须由 data 提供,切榜才跟着变');
+  assert.match(emptyTag[0], /title="\{\{leaderboardEmptyTitle\}\}"/, '空态文案必须由 data 提供，切榜才跟着变');
 
   // ★负控:文案退回与 sortBy 无关(一律同一句)→ 判红
   const script = fs.readFileSync(path.join(__dirname, '../../pages/club/detail/index.js'), 'utf8');
@@ -95,7 +95,7 @@ test('CU-C-72 榜单空态按当前榜各说一句,不是一句通用的「还�
   failing.data.clubId = 7;
   failing.loadLeaderboard();
   sent.fail();
-  assert.equal(failing.data.leaderboardError, '网络不稳定，榜单没能加载出来');
+  assert.equal(failing.data.leaderboardError, '网络异常，榜单加载失败');
 });
 
 test('榜单排序菜单选择同步请求参数和空态文案，同选项不重复请求', () => {
@@ -149,7 +149,7 @@ test('CU-C-83 俱乐部成员行:主理人/管理员点成员弹「公开资料 
     page.data.canReadMembers = !!viewer.canReadMembers;
     page.goMemberProfile({ currentTarget: { dataset: { memberId: 92 } } });
     assert.deepEqual(navigations, ['/pages/userinfo/userinfo?userId=92'],
-      '无客户管理权限的人看不到「客户档案」入口,点成员行就是公开主页');
+      '无客户管理权限的人看不到「客户档案」入口，点成员行就是公开主页');
     assert.notEqual(page.data.choiceSheetShow, true, '无权限时不该弹选择清单');
   });
 
@@ -163,7 +163,7 @@ test('CU-C-83 俱乐部成员行:主理人/管理员点成员弹「公开资料 
     page.data.club = viewer.club;
     page.data.clubId = 7;
     page.goMemberProfile({ currentTarget: { dataset: { memberId: viewer.memberId } } });
-    assert.deepEqual(navigations, [], '有权限时先弹清单,不直接跳');
+    assert.deepEqual(navigations, [], '有权限时先弹清单，不直接跳');
     assert.equal(page.data.choiceSheetShow, true);
     assert.deepEqual(page.data.choiceSheetItems.map((i) => i.key), ['public', 'customer'],
       '入口按裁决固定为「公开资料 + 客户档案」');
@@ -171,7 +171,7 @@ test('CU-C-83 俱乐部成员行:主理人/管理员点成员弹「公开资料 
     navigations.length = 0;
     page.onChoiceSheetSelect({ currentTarget: { dataset: { key: 'customer' } } });
     assert.deepEqual(navigations, ['/pages/club/customer-detail/index?clubId=7&memberId=' + viewer.memberId],
-      '客户档案直达该成员在本俱乐部的 CRM 客户详情,沿用客户列表 openCustomer 的路由');
+      '客户档案直达该成员在本俱乐部的 CRM 客户详情，沿用客户列表 openCustomer 的路由');
 
     navigations.length = 0;
     page.goMemberProfile({ currentTarget: { dataset: { memberId: viewer.memberId } } });
@@ -221,7 +221,7 @@ test('俱乐部主页不在首屏拉或展示收益;分润只在主理人打开�
   const outsideOpener = script.replace(opener[0], '');
   assert.doesNotMatch(outsideOpener, /\/api\/club\/settlement\/summary/,
     '首屏加载链路上不许出现分润请求');
-  assert.match(script, /res\.data\.settledAmountText/, '金额由服务端格式化好,前端只透传');
+  assert.match(script, /res\.data\.settledAmountText/, '金额由服务端格式化好，前端只透传');
   assert.doesNotMatch(script, /settledAmount\s*[*/+-]/, '前端不许对金额做任何运算');
 
   // 概览/帖子/活动三个公开 tab 里一个收益字样都不许有

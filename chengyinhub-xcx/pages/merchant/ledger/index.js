@@ -57,7 +57,7 @@ Page({
     settleAlertsEnabled: false,
     settleAlertsLoading: false,
     settleAlertsState: 'unknown',
-    settleAlertsHint: '授权状态待确认',
+    settleAlertsHint: '—',
   },
 
   onLoad(options) {
@@ -144,7 +144,7 @@ Page({
       settleAlertsEnabled: false,
       settleAlertsLoading: false,
       settleAlertsState: 'unknown',
-      settleAlertsHint: '授权状态待确认',
+      settleAlertsHint: '—',
     });
   },
 
@@ -506,7 +506,7 @@ Page({
       item.amountDisplay = null;
       item.amountTone = 'mute';
       item.stateText = row.fulfillmentState === 'REVERSED'
-        ? '核销已撤销' : (row.fulfillmentState === 'ACTIVE' ? '核销有效' : '核销状态待确认');
+        ? '核销已撤销' : (row.fulfillmentState === 'ACTIVE' ? '核销有效' : '—');
       item.stateVariant = row.fulfillmentState === 'ACTIVE' ? 'success' : 'neutral';
       return item;
     }
@@ -586,7 +586,7 @@ Page({
     this.setData({
       settleAlertsEnabled: false,
       settleAlertsState: 'unknown',
-      settleAlertsHint: loading ? '正在确认微信通知授权…' : '授权状态待确认',
+      settleAlertsHint: loading ? '正在确认微信通知授权…' : '—',
       settleAlertsLoading: loading,
     });
     return operation;

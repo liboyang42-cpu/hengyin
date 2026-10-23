@@ -32,9 +32,9 @@ const STATE_VARIANT = {
 function stateVariant(cls) { return STATE_VARIANT[cls] || 'neutral'; }
 
 const TYPE_EMPTY = {
-  topic: { tit: '还没有主题', sub: '用发布按钮创建你的第一条城市路线' },
+  topic: { tit: '还没有主题', sub: '' },
   activity: { tit: '还没有活动', sub: '' },
-  template: { tit: '还没有节点玩法', sub: '发布路线时可以沉淀自己的节点互动，之后在这里复用和管理' }
+  template: { tit: '还没有节点玩法', sub: '' }
 };
 
 /* 稿 260:277 卡片第二行:「8月23日 19:20—21:00」。
@@ -225,7 +225,7 @@ Page({
       }
       this.setData({ loading: false, projectAccessDenied: denied,
         projectState: this.data.loaded ? 'ready' : 'error',
-        projectErrorMsg: app.getRequestErrorMessage(res, '项目加载失败，请稍后重试') });
+        projectErrorMsg: app.getRequestErrorMessage(res, '项目加载失败，请重试') });
     } else {
       if (denied) {
         this.setData({ tplLoading: false, tplAccessDenied: true, tplList: [], tplLoaded: false,
@@ -342,7 +342,7 @@ Page({
 
     // 发布提示只对能发的人说;别人看到「主理人可以在这里发布」却没有按钮,是空头承诺(CU-C-22)
     const empty = tab === 'activity' && this.data.canPublishActivity
-      ? { tit: '还没有活动', sub: '在这里发布你的第一场单场活动' }
+      ? { tit: '还没有活动', sub: '' }
       : (TYPE_EMPTY[tab] || TYPE_EMPTY.topic);
     pageMotion.enter(this, 'pmList'); this.setData({
       list: rows,

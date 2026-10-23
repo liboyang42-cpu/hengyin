@@ -108,7 +108,7 @@ test('商家券列表:状态签区分已失效/已停发,只有进行中/未开�
 
   const wxml = read('subpackageMember/coupon/coupon.wxml')
   assert.match(wxml, /wx:if="\{\{currentCoupon\.canStop\}\}"[\s\S]{0,200}catchtap="stopCoupon"/)
-  assert.match(wxml, /停发后不能再被领取、发放；已领到的券照常可用、可核销。/)
+  assert.match(wxml, /停发后不可领取，已领券仍可用/)
 })
 
 test('停发走已登记危险确认:确认后 POST /api/coupon/stop 并回读列表;取消则不发请求', () => {
@@ -117,7 +117,7 @@ test('停发走已登记危险确认:确认后 POST /api/coupon/stop 并回读�
 
   page.stopCoupon({ currentTarget: { dataset: { item: active } } })
   assert.equal(modals.length, 1)
-  assert.equal(modals[0].dangerKey, 'merchant.coupon.stop', '必须走已登记的危险动作确认,不能裸执行')
+  assert.equal(modals[0].dangerKey, 'merchant.coupon.stop', '必须走已登记的危险动作确认，不能裸执行')
   assert.equal(JSON.stringify(modals[0].dangerParams), JSON.stringify({ name: '进行中券' }))
 
   // 取消 = 不发请求
@@ -135,7 +135,7 @@ test('停发走已登记危险确认:确认后 POST /api/coupon/stop 并回读�
   assert.equal(toasts[toasts.length - 1], '已停发「进行中券」')
   assert.equal(page.data.tpShow, false, '停发成功后详情弹窗关闭')
   assert.equal(requests.filter((r) => r.url === '/api/coupon/mypublishlist').length, readsBefore + 1,
-    '停发成功必须回读列表,让状态签变「已停发」')
+    '停发成功必须刷新列表，让状态签变「已停发」')
 })
 
 test('停发带商家 scope:scope=MERCHANT 时请求必须带上,服务端按 owner 落权', () => {

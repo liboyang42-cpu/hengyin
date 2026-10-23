@@ -37,7 +37,7 @@ module.exports = async function submitProgress(env) {
     if (!bundle || !bundle.post || !Array.isArray(bundle.media) || !Array.isArray(bundle.references)
       || String(bundle.post.authorId) !== owner || bundle.viewerIsAuthor !== true
       || !Number.isInteger(bundle.post.version) || bundle.post.version < 0)
-      throw { code: 502, msg: '本人帖文状态未能确认，请先核对' };
+      throw { code: 502, msg: '本人帖文状态未能确认，请先确认' };
     return bundle;
   };
   const effect = bundle => {
@@ -62,7 +62,7 @@ module.exports = async function submitProgress(env) {
   const finish = bundle => {
     owned(bundle); save({ status: 'confirmed' });
     try { wxApi.removeStorageSync(intent.storageKey(scope, owner)); if (wxApi.getStorageSync(intent.storageKey(scope, owner))) throw Error(); }
-    catch (_) { throw { code: 507, msg: '提交已确认，但本机进度未能清理，请先核对' }; }
+    catch (_) { throw { code: 507, msg: '提交已确认，但本机进度未能清理，请先确认' }; }
     return bundle;
   };
   try {
@@ -75,7 +75,7 @@ module.exports = async function submitProgress(env) {
       const createdDraft = ctx.createdAsNew && ctx.draftId;
       if (String(ctx.memberId) !== owner || !intent.isIntentKey(ctx.key) || !ctx.input
         || (String(ctx.input.id || '') !== String(input.id || '')
-          && !(createdDraft && (!input.id || String(input.id) === String(ctx.draftId))))) throw { code: 409, msg: '原提交来源不一致，请先核对' };
+          && !(createdDraft && (!input.id || String(input.id) === String(ctx.draftId))))) throw { code: 409, msg: '原提交来源不一致，请先确认' };
       const comparisonInput = clone(ctx.input);
       if (createdDraft && !input.id) delete comparisonInput.id;
       wasUnknown = !rejected && (ctx.status === 'unknown' || ctx.status === 'sending');
@@ -89,7 +89,7 @@ module.exports = async function submitProgress(env) {
           createBody: null, patchBody: null, beforeEffect: null, publishBody: null, guideline: null, acked: false,
           retryPublishAfterEdit: !!ctx.draftId, createWasSent: !!ctx.draftId, status: 'prepared', writePhase: null, rejectionCode: null });
       } else if (JSON.stringify(comparisonInput) !== JSON.stringify(input)) {
-        await modal({ title: '先核对上次提交', content: '上次结果尚未确认。先核对原提交，本次新输入会保留，不会代替原内容重试。', confirmText: '核对原稿', cancelText: '取消' }, task);
+        await modal({ title: '先确认上次提交', content: '上次结果尚未确认。先确认原提交，本次新输入会保留，不会代替原内容重试。', confirmText: '确认原稿', cancelText: '取消' }, task);
         check(); task.recoveredPrevious = true;
       }
     } else {
@@ -105,7 +105,7 @@ module.exports = async function submitProgress(env) {
       freshPartial = false;
     }
     const form = ctx.input;
-    if (form.file_url || form.longitude || form.latitude || form.address) throw { code: 409, msg: '请先移除尚未接通的附件或地点，内容已保留' };
+    if (form.file_url || form.longitude || form.latitude || form.address) throw { code: 409, msg: '请先移除暂未开放的附件或地点，内容已保留' };
     if (ctx.patchBody) {
       const latest = await read(form.id);
       if (latest.post.version === ctx.patchBody.expectedVersion + 1 && same(latest, ctx.patchBody)) {
@@ -114,7 +114,7 @@ module.exports = async function submitProgress(env) {
         wasUnknown = false;
       } else {
         if (latest.post.version !== ctx.patchBody.expectedVersion || JSON.stringify(effect(latest)) !== JSON.stringify(ctx.beforeEffect))
-          throw { code: 409, msg: '帖文已变化，未重发原修改，请先核对' };
+          throw { code: 409, msg: '帖文已变化，未重发原修改，请先确认' };
         await modal({ title: '原修改尚未确认', content: '是否使用原版本和相同内容重试？当前新输入会保留。', confirmText: '原样重试', cancelText: '取消' }, task); check();
       }
     }
@@ -138,10 +138,10 @@ module.exports = async function submitProgress(env) {
         const existing = previous && previous.media.find(m => selectedId !== undefined ? String(m.id) === String(selectedId)
           : (field(m, 'derivedObjectKey', 'derived_object_key') || field(m, 'objectKey', 'object_key')) === path);
         if (existing) { mediaIds.push(existing.id); continue; }
-        if (selectedId !== undefined) throw { code: 409, msg: '原图片已变化，未重新绑定，请刷新后核对' };
+        if (selectedId !== undefined) throw { code: 409, msg: '原图片已变化，未重新绑定，请刷新后确认' };
         if (!ctx.registrations[path]) {
           const receipt = ctx.captures[path];
-          if (!receipt) throw { code: 409, msg: '图片上传状态无法确认，请先到我的推文查看发布结果，再重新选择图片' };
+          if (!receipt) throw { code: 409, msg: '图片上传状态无法确认，请先到我的帖文查看发布结果，再重新选择图片' };
           const media = await write('media', '/media/register', 'POST', { uploadRequestId: receipt.uploadRequestId, mediaType: 'IMAGE', objectKey: receipt.objectKey || receipt.url,
             uploadReceipt: receipt.uploadReceipt, mimeType: receipt.mimeType, byteSize: receipt.byteSize }, task);
           if (!media || !media.id) throw { code: 502, msg: '媒体登记未确认' };
@@ -178,7 +178,7 @@ module.exports = async function submitProgress(env) {
     if (ctx.patchBody) {
       await write('patch', '/posts/' + form.id, 'PATCH', ctx.patchBody);
       const latest = await read(form.id);
-      if (latest.post.version !== ctx.patchBody.expectedVersion + 1 || !same(latest, ctx.patchBody)) throw { code: 502, msg: '修改结果未确认，请回读后重试' };
+      if (latest.post.version !== ctx.patchBody.expectedVersion + 1 || !same(latest, ctx.patchBody)) throw { code: 502, msg: '修改结果未确认，请刷新后重试' };
       if (!ctx.retryPublishAfterEdit) return finish(latest);
       save({ createBody: ctx.patchBody, patchBody: null, beforeEffect: null, publishBody: null, status: 'prepared', writePhase: null });
       wasUnknown = false;
@@ -186,32 +186,32 @@ module.exports = async function submitProgress(env) {
     if (!ctx.draftId) {
       if (ctx.createWasSent) {
         const page = await call('/drafts', 'GET', { limit: 100 }, task);
-        if (!page || !Array.isArray(page.items) || page.hasMore !== false) throw { code: 409, msg: '原草稿尚未唯一确认，请先到我的推文核对' };
+        if (!page || !Array.isArray(page.items) || page.hasMore !== false) throw { code: 409, msg: '原草稿尚未唯一确认，请先到我的帖文确认' };
         const matches = page.items.filter(b => b && b.post && b.post.clientRequestId === ctx.wireKey);
-        if (matches.length > 1) throw { code: 409, msg: '原提交结果不唯一，请先核对' };
+        if (matches.length > 1) throw { code: 409, msg: '原提交结果不唯一，请先确认' };
         if (matches.length) { owned(matches[0]); save({ draftId: matches[0].post.id }); }
-        else { await modal({ title: '原提交尚未确认', content: '暂未查到原草稿，不代表写入未发生。是否使用原请求和相同内容重试？', confirmText: '原样重试', cancelText: '取消' }, task); check(); }
+        else { await modal({ title: '原提交尚未确认', content: '暂未查到草稿，是否重试？', confirmText: '原样重试', cancelText: '取消' }, task); check(); }
       }
       if (!ctx.draftId) {
         save({ createWasSent: true }); const created = await write('create', '/posts', 'POST', ctx.createBody);
         if (created && created.intentDiscarded === true) {
           intent.discard(wxApi, scope, owner, ctx.key);
-          if (wxApi.getStorageSync(intent.storageKey(scope, owner))) throw { code: 507, msg: '原提交记录未能清理，请先核对' };
-          throw { code: 409, msg: '原提交已删除，请先核对后重新创建', intentDiscarded: true };
+          if (wxApi.getStorageSync(intent.storageKey(scope, owner))) throw { code: 507, msg: '原提交记录未能清理，请先确认' };
+          throw { code: 409, msg: '原提交已删除，请先确认后重新创建', intentDiscarded: true };
         }
-        owned(created); if (created.post.clientRequestId !== ctx.wireKey) throw { code: 502, msg: '原提交标识未能确认' };
+        owned(created); if (created.post.clientRequestId !== ctx.wireKey) throw { code: 502, msg: '上次提交未能确认' };
         save({ draftId: created.post.id });
       }
     }
     let latest = await read(ctx.draftId);
-    if (!same(latest, ctx.createBody)) throw { code: 409, msg: '原草稿内容已变化，请先核对' };
+    if (!same(latest, ctx.createBody)) throw { code: 409, msg: '原草稿内容已变化，请先确认' };
     if (unknownPhase === 'create') wasUnknown = false;
     if (['CHECKING', 'PUBLISHED'].includes(latest.post.lifecycle)) return finish(latest);
-    if (latest.post.lifecycle !== 'DRAFT') throw { code: 409, msg: '原草稿状态已变化，请先核对' };
+    if (latest.post.lifecycle !== 'DRAFT') throw { code: 409, msg: '原草稿状态已变化，请先确认' };
     if (!ctx.publishBody) save({ publishBody: { expectedVersion: latest.post.version, requestId: requestId() } });
     await write('publish', '/posts/' + ctx.draftId + '/publish', 'POST', ctx.publishBody);
     latest = await read(ctx.draftId);
-    if (!['CHECKING', 'PUBLISHED'].includes(latest.post.lifecycle) || !same(latest, ctx.createBody)) throw { code: 502, msg: '发布结果未确认，请回读后再操作' };
+    if (!['CHECKING', 'PUBLISHED'].includes(latest.post.lifecycle) || !same(latest, ctx.createBody)) throw { code: 502, msg: '发布结果未确认，请刷新后再操作' };
     return finish(latest);
   } catch (error) {
     if (ctx && ctx.key && String(env.app.getUserID() || '') === owner) {

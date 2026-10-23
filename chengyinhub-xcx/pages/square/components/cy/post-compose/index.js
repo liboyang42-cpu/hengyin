@@ -364,7 +364,7 @@ Component({
       const res = proEditorDraft.loadDraft(wx, { topicId: key }, { memberId: this._memberId });
       if (res.status !== 'ready' || !res.envelope || !res.envelope.formData) {
         // status 可能是 member_mismatch / revision_conflict / 空 —— 对用户是同一件事:这条恢复不了。
-        return fail('这条草稿打不开了');
+        return fail('这条草稿无法打开了');
       }
       this.applyContent(res.envelope.formData.contents);
       this.setData({ draftsShow: false });
@@ -385,12 +385,12 @@ Component({
         proEditorDraft.removeDraft(wx, { topicId: key }, { memberId: this._memberId });
         left = this.readDrafts();
       } catch (err) {
-        sheet && sheet.deleteFailed('删除失败,请重试');
+        sheet && sheet.deleteFailed('删除失败，请重试');
         return;
       }
       this.setData({ drafts: left });
       if (left.some((d) => d.key === key)) {
-        sheet && sheet.deleteFailed('删除失败,请重试');   // 删了还在 = 没删掉,别报「已删除」
+        sheet && sheet.deleteFailed('删除失败，请重试');   // 删了还在 = 没删掉,别报「已删除」
         return;
       }
       sheet && sheet.deleteDone();

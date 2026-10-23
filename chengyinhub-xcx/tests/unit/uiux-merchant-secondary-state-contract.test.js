@@ -88,14 +88,14 @@ function assertSecondaryStateMarkup(aiWxml, customerWxml, ledgerWxml) {
   assert.match(aiWxml, /error\s*&&\s*!facts/, '店铺参谋只有无旧 facts 时才用整页错误')
   assert.doesNotMatch(aiWxml, /<cy-inline-error\b[^>]*wx:if="\{\{error && facts\}\}"/,
     '店铺参谋刷新失败要保留事实层并局部提示')
-  assert.match(aiWxml, /基础数据可用/, 'AI 降级必须明确基础数据仍可用')
+  // 2026-10-23 业主:明确为零时照常显示 0,不出「还没有到店数据」引导;AI 没有就整段不显示
+  assert.doesNotMatch(aiWxml, /基础数据可用|还没有到店数据|去合作中心看看/, '零数据/AI 缺席不再出引导或降级卡')
   assert.match(aiWxml, /factState\s*===\s*'unknown'/, '店铺参谋必须区分事实未知与明确为零')
-  assert.match(aiWxml, /factState\s*===\s*'empty'/, '店铺参谋只有明确零值才进入业务空态')
 
   assert.match(customerWxml, /<cy-error\b[^>]*wx:elif="\{\{error && !rows\.length\}\}"/,
     '客户页只有首载失败才显示整页错误')
   assert.doesNotMatch(customerWxml, /<cy-inline-error\b[^>]*wx:if="\{\{error && rows\.length\}\}"/,
-    '已有客户时刷新失败静默降级,旧列表留在屏上')
+    '已有客户时刷新失败静默降级，旧列表留在屏上')
   assert.match(customerWxml, /\{\{error \? '客户数量暂不可用' : customerSummaryText\}\}/,
     '客户总量必须由标题摘要承接，失败时不能继续显示加载中')
   assert.doesNotMatch(customerWxml, /class="cu-seg-num"/,
@@ -108,7 +108,7 @@ function assertSecondaryStateMarkup(aiWxml, customerWxml, ledgerWxml) {
   assert.match(ledgerWxml, /<cy-inline-error\b[^>]*wx:if="\{\{error && hasLoaded\}\}"/,
     '账本刷新失败必须保留资金记录并原位恢复')
   assert.match(ledgerWxml,
-    /class="ledger-inline-state ledger-inline-state--global"[^>]*wx:if="\{\{hasLoaded && \(loading \|\| error\)[^}]*settlementLoading\.overview[^}]*settlementErrors\.batches\}\}"[\s\S]*?正在核对商家身份与最新结算…[\s\S]*?<cy-inline-error wx:elif="\{\{error\}\}"[^>]*title="最新结算暂未取回"[^>]*action="重试"[^>]*bind:action="retry"/,
+    /class="ledger-inline-state ledger-inline-state--global"[^>]*wx:if="\{\{hasLoaded && \(loading \|\| error\)[^}]*settlementLoading\.overview[^}]*settlementErrors\.batches\}\}"[\s\S]*?正在确认商家身份与最新结算…[\s\S]*?<cy-inline-error wx:elif="\{\{error\}\}"[^>]*title="最新结算暂未取回"[^>]*action="重试"[^>]*bind:action="retry"/,
     '结算有旧金额时，身份重验 loading/error 必须显式标记 stale 并提供恢复动作')
   assert.match(ledgerWxml, /kind="missing-param"[^>]*primary="返回工作台"/,
     '账本缺参不能提供无效重试')
@@ -160,7 +160,7 @@ test('店铺参谋和客户刷新失败保留最后一次成功内容', () => {
   requests[0].fail()
   requests[0].complete()
   assert.deepEqual(customer.data.rows, [{ memberId: 7, displayName: '林野' }])
-  assert.match(customer.data.error, /网络连接失败/)
+  assert.match(customer.data.error, /网络异常/)
 })
 
 test('客户页分群失败时保留旧数据并提供局部重试', () => {

@@ -643,6 +643,8 @@ public class ApiClubController extends BaseController {
                         club.getId(), memberId, e);
             }
         } catch (Exception ignore) { }
+        // 2026-10-22 业主:入会欢迎语(主理人自定),新成员加入后的欢迎弹层最上面显示。单独读,读不到当没写。
+        club.setWelcomeNote(clubService.selectWelcomeNote(club.getId()));
         return AjaxResult.success(PublicClubVO.from(club));
     }
 
@@ -656,7 +658,9 @@ public class ApiClubController extends BaseController {
         if (club == null) return error("俱乐部不存在");
         boolean isOwner = OwnershipUtils.isOwner(club.getMemberId(), memberId);
         boolean isMember = clubMemberService.selectByClubAndMember(body.getClubId(), memberId) != null;
-        if (!isOwner && !isMember) return error("仅俱乐部成员可查看成员名单");
+        if (!isOwner && !isMember && !canBrowsePublicRoster(club, memberId)) {
+            return error(isPublicJoinClub(club) ? "仅俱乐部成员可查看成员名单" : "通过审核后可看成员名单");
+        }
         ClubMember q = new ClubMember();
         q.setClubId(body.getClubId());
         q.setStatus(1);
@@ -747,11 +751,19 @@ public class ApiClubController extends BaseController {
         Long memberId;
         try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
         if (body.getId() == null) return error("缺少俱乐部ID");
-        if (isMerchant(memberId)) return error("商家不能加入俱乐部");
+        // 拍板 2026-10-22:商家可以加入俱乐部(不能报名俱乐部活动,闸在报名/候补侧),这里不再拦商家。
 
         Club club = clubService.selectClubById(body.getId());
         if (club == null || club.getStatus() == null || club.getStatus() != 1L) {
             return error("俱乐部不存在或未开放");
+        }
+        // 拍板 2026-10-22:需审核的团,申请留言必填、最多 60 字(前端同限);公开团不读留言。
+        if (!isPublicJoinClub(club)) {
+            String message = body.getJoinMessage() == null ? "" : body.getJoinMessage().trim();
+            if (message.isEmpty()) return error("请先给主理人写一句申请留言");
+            if (message.codePointCount(0, message.length()) > JOIN_MESSAGE_MAX) {
+                return error("申请留言最多 " + JOIN_MESSAGE_MAX + " 字");
+            }
         }
         // F-L5C-02:入会申请留言给主理人看,写入前送检。
         String joinRisk = wxContentSecurityService.checkText(body.getJoinMessage(), openidOf(memberId));
@@ -786,6 +798,67 @@ public class ApiClubController extends BaseController {
         Map<String, Object> data = new HashMap<>();
         data.put("memberPostAllowed", saved == null ? null : saved.getMemberPostAllowed());
         return AjaxResult.success("已保存", data);
+    }
+
+    private static final int WELCOME_NOTE_MAX = 200;
+
+    @Operation(summary = "开放设置:入会欢迎语")
+    @PostMapping("/open-settings/welcome-note")
+    public AjaxResult updateWelcomeNote(@RequestBody Club body) {
+        Long memberId;
+        try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
+        if (body == null || body.getId() == null) return error("缺少俱乐部ID");
+        String note = body.getWelcomeNote() == null ? "" : body.getWelcomeNote().trim();
+        if (note.codePointCount(0, note.length()) > WELCOME_NOTE_MAX) {
+            return error("欢迎语最多 " + WELCOME_NOTE_MAX + " 字");
+        }
+        // 欢迎语会展示给所有新成员,写入前送检(清空不用检)。
+        if (!note.isEmpty()) {
+            String risk = wxContentSecurityService.checkText(note, openidOf(memberId));
+            if (risk != null) return error(risk);
+        }
+        try {
+            clubService.updateWelcomeNote(body.getId(), memberId, note);
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            return error(e.getMessage());
+        }
+        // 回读再下发:前端渲染库里的事实。
+        String saved = clubService.selectWelcomeNote(body.getId());
+        Map<String, Object> data = new HashMap<>();
+        data.put("welcomeNote", saved == null ? "" : saved);
+        return AjaxResult.success("已保存", data);
+    }
+
+    private static final int JOIN_MESSAGE_MAX = 60;
+
+    /** join_policy=0(公开加入)。列未落库时按既有「公开直进」口径;读取失败按需审核(宁可少给)。 */
+    private boolean isPublicJoinClub(Club club) {
+        if (club == null || club.getId() == null) return false;
+        try {
+            if (!clubService.isJoinPolicySupported()) return true;
+            Integer policy = clubService.selectJoinPolicy(club.getId());
+            return Integer.valueOf(0).equals(policy);
+        } catch (RuntimeException e) {
+            log.warn("读取 join_policy 失败,按需审核处理 clubId={}", club.getId(), e);
+            return false;
+        }
+    }
+
+    /**
+     * 拍板 2026-10-22:公开加入的团,登录用户不入团也能看成员名单与贡献榜。
+     * 仍守:俱乐部在营业(status=1)、对外可见(publicVisible)、本人未被本团/平台封禁。
+     * 需审核的团保持「通过审核后可看」。名单字段与隐私口径与成员看到的完全相同。
+     */
+    private boolean canBrowsePublicRoster(Club club, Long viewerId) {
+        if (club == null || viewerId == null || viewerId <= 0) return false;
+        if (club.getStatus() == null || club.getStatus() != 1L) return false;
+        if (!canViewClub(club) || !isPublicJoinClub(club)) return false;
+        try {
+            clubParticipationGuard.requireAllowed(club.getId(), viewerId);
+        } catch (RuntimeException blocked) {
+            return false;
+        }
+        return true;
     }
 
     /**
@@ -1543,6 +1616,9 @@ public class ApiClubController extends BaseController {
         return local.format(java.time.format.DateTimeFormatter.ofPattern(pattern));
     }
 
+    /** 俱乐部动态流单页非置顶条数上限 */
+    private static final int POST_PAGE_MAX = 50;
+
     @Operation(summary = "俱乐部动态列表(公开)")
     @PostMapping("/post/list")
     public AjaxResult postList(@RequestBody ClubPost body) {
@@ -1550,9 +1626,11 @@ public class ApiClubController extends BaseController {
         Club club = clubService.selectClubById(body.getClubId());
         if (club == null) return error("俱乐部不存在");
         if (!canViewClub(club)) return error("这个俱乐部只对成员开放");
-        ClubPost q = new ClubPost();
-        q.setClubId(body.getClubId());
-        List<ClubPost> posts = clubPostService.selectClubPostList(q);
+        // P0-82:按页取,不再整俱乐部全量拉。首页=置顶帖+最新 limit 条;翻页带 beforeId(上一页最后一条非置顶帖)。
+        // 回包仍是数组,老客户端不传 limit 时按上限取首页。
+        int limit = body.getLimit() == null ? POST_PAGE_MAX : Math.max(1, Math.min(POST_PAGE_MAX, body.getLimit()));
+        Long beforeId = body.getBeforeId() != null && body.getBeforeId() > 0 ? body.getBeforeId() : null;
+        List<ClubPost> posts = clubPostService.selectClubPostPage(body.getClubId(), beforeId, limit);
         projectPostReferences(posts);
         try {
             Long memberId = currentMemberId();
@@ -1698,18 +1776,18 @@ public class ApiClubController extends BaseController {
         if (targetPost == null || Integer.valueOf(2).equals(targetPost.getDelFlag())) {
             return error("动态不存在");
         }
-        boolean liked;
-        if (clubPostLikeService.selectByPostAndMember(body.getPostId(), memberId) != null) {
+        // P1-023:带 liked 时按目标态幂等(重试/重复请求不会来回翻转);不带时保持旧切换语义。
+        boolean current = clubPostLikeService.selectByPostAndMember(body.getPostId(), memberId) != null;
+        boolean liked = body.getLiked() == null ? !current : body.getLiked();
+        if (liked != current && !liked) {
             clubPostLikeService.deleteByPostAndMember(body.getPostId(), memberId);
             clubPostService.incrementLikeCount(body.getPostId(), -1);
-            liked = false;
-        } else {
+        } else if (liked != current) {
             ClubPostLike like = new ClubPostLike();
             like.setPostId(body.getPostId());
             like.setMemberId(memberId);
             clubPostLikeService.insertClubPostLike(like);
             clubPostService.incrementLikeCount(body.getPostId(), 1);
-            liked = true;
         }
         Map<String, Object> d = new HashMap<>();
         d.put("liked", liked);
@@ -2025,7 +2103,9 @@ public class ApiClubController extends BaseController {
         if (leaderboardClub == null) return error("俱乐部不存在");
         boolean boardOwner = OwnershipUtils.isOwner(leaderboardClub.getMemberId(), viewerId);
         boolean boardMember = clubMemberService.selectByClubAndMember(clubId, viewerId) != null;
-        if (!boardOwner && !boardMember) return error("加入俱乐部后才能看贡献榜");
+        if (!boardOwner && !boardMember && !canBrowsePublicRoster(leaderboardClub, viewerId)) {
+            return error(isPublicJoinClub(leaderboardClub) ? "加入俱乐部后才能看贡献榜" : "通过审核后可看贡献榜");
+        }
         Object sortBy = body.get("sortBy");
         return AjaxResult.success(
                 clubMemberService.selectClubLeaderboard(clubId, sortBy == null ? null : sortBy.toString()));
