@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
-  "controlCount": 5001,
+  "controlCount": 5009,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -382203,40 +382203,6 @@
               "index": 0
             },
             {
-              "selector": "cy-playkit-blindtaste",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/play/index",
-          "segments": [
-            {
-              "selector": "#playKit",
-              "index": 0
-            },
-            {
-              "selector": "cy-playkit-blindtaste",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/play/index",
-          "segments": [
-            {
-              "selector": "#playKit",
-              "index": 0
-            },
-            {
               "selector": "cy-playkit-diyname",
               "index": 0
             },
@@ -382477,40 +382443,6 @@
           "segments": [
             {
               "selector": "cy-option-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/play/index",
-          "segments": [
-            {
-              "selector": "cy-playkit",
-              "index": 0
-            },
-            {
-              "selector": "cy-playkit-blindtaste",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/play/index",
-          "segments": [
-            {
-              "selector": "cy-playkit",
-              "index": 0
-            },
-            {
-              "selector": "cy-playkit-blindtaste",
               "index": 0
             },
             {
@@ -384577,40 +384509,6 @@
               "index": 0
             },
             {
-              "selector": "cy-playkit-blindtaste",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/temp/index",
-          "segments": [
-            {
-              "selector": "cy-playkit",
-              "index": 0
-            },
-            {
-              "selector": "cy-playkit-blindtaste",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/temp/index",
-          "segments": [
-            {
-              "selector": "cy-playkit",
-              "index": 0
-            },
-            {
               "selector": "cy-playkit-diyname",
               "index": 0
             },
@@ -384825,40 +384723,6 @@
           "segments": [
             {
               "selector": "cy-playkit",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/temp/index",
-          "segments": [
-            {
-              "selector": "cy-playkit",
-              "index": 1
-            },
-            {
-              "selector": "cy-playkit-blindtaste",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/temp/index",
-          "segments": [
-            {
-              "selector": "cy-playkit",
-              "index": 1
-            },
-            {
-              "selector": "cy-playkit-blindtaste",
               "index": 0
             },
             {
@@ -419702,40 +419566,6 @@
               "index": 0
             },
             {
-              "selector": "cy-playkit-blindtaste",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/play/index",
-          "segments": [
-            {
-              "selector": "#playKit",
-              "index": 0
-            },
-            {
-              "selector": "cy-playkit-blindtaste",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/play/index",
-          "segments": [
-            {
-              "selector": "#playKit",
-              "index": 0
-            },
-            {
               "selector": "cy-playkit-diyname",
               "index": 0
             },
@@ -419976,40 +419806,6 @@
           "segments": [
             {
               "selector": "cy-option-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/play/index",
-          "segments": [
-            {
-              "selector": "cy-playkit",
-              "index": 0
-            },
-            {
-              "selector": "cy-playkit-blindtaste",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/play/index",
-          "segments": [
-            {
-              "selector": "cy-playkit",
-              "index": 0
-            },
-            {
-              "selector": "cy-playkit-blindtaste",
               "index": 0
             },
             {
@@ -422076,40 +421872,6 @@
               "index": 0
             },
             {
-              "selector": "cy-playkit-blindtaste",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/temp/index",
-          "segments": [
-            {
-              "selector": "cy-playkit",
-              "index": 0
-            },
-            {
-              "selector": "cy-playkit-blindtaste",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/temp/index",
-          "segments": [
-            {
-              "selector": "cy-playkit",
-              "index": 0
-            },
-            {
               "selector": "cy-playkit-diyname",
               "index": 0
             },
@@ -422324,40 +422086,6 @@
           "segments": [
             {
               "selector": "cy-playkit",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/temp/index",
-          "segments": [
-            {
-              "selector": "cy-playkit",
-              "index": 1
-            },
-            {
-              "selector": "cy-playkit-blindtaste",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/temp/index",
-          "segments": [
-            {
-              "selector": "cy-playkit",
-              "index": 1
-            },
-            {
-              "selector": "cy-playkit-blindtaste",
               "index": 0
             },
             {
@@ -457201,40 +456929,6 @@
               "index": 0
             },
             {
-              "selector": "cy-playkit-blindtaste",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/play/index",
-          "segments": [
-            {
-              "selector": "#playKit",
-              "index": 0
-            },
-            {
-              "selector": "cy-playkit-blindtaste",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/play/index",
-          "segments": [
-            {
-              "selector": "#playKit",
-              "index": 0
-            },
-            {
               "selector": "cy-playkit-diyname",
               "index": 0
             },
@@ -457475,40 +457169,6 @@
           "segments": [
             {
               "selector": "cy-option-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/play/index",
-          "segments": [
-            {
-              "selector": "cy-playkit",
-              "index": 0
-            },
-            {
-              "selector": "cy-playkit-blindtaste",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/play/index",
-          "segments": [
-            {
-              "selector": "cy-playkit",
-              "index": 0
-            },
-            {
-              "selector": "cy-playkit-blindtaste",
               "index": 0
             },
             {
@@ -459575,40 +459235,6 @@
               "index": 0
             },
             {
-              "selector": "cy-playkit-blindtaste",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/temp/index",
-          "segments": [
-            {
-              "selector": "cy-playkit",
-              "index": 0
-            },
-            {
-              "selector": "cy-playkit-blindtaste",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/temp/index",
-          "segments": [
-            {
-              "selector": "cy-playkit",
-              "index": 0
-            },
-            {
               "selector": "cy-playkit-diyname",
               "index": 0
             },
@@ -459823,40 +459449,6 @@
           "segments": [
             {
               "selector": "cy-playkit",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/temp/index",
-          "segments": [
-            {
-              "selector": "cy-playkit",
-              "index": 1
-            },
-            {
-              "selector": "cy-playkit-blindtaste",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/temp/index",
-          "segments": [
-            {
-              "selector": "cy-playkit",
-              "index": 1
-            },
-            {
-              "selector": "cy-playkit-blindtaste",
               "index": 0
             },
             {
@@ -494700,40 +494292,6 @@
               "index": 0
             },
             {
-              "selector": "cy-playkit-blindtaste",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/play/index",
-          "segments": [
-            {
-              "selector": "#playKit",
-              "index": 0
-            },
-            {
-              "selector": "cy-playkit-blindtaste",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/play/index",
-          "segments": [
-            {
-              "selector": "#playKit",
-              "index": 0
-            },
-            {
               "selector": "cy-playkit-diyname",
               "index": 0
             },
@@ -494974,40 +494532,6 @@
           "segments": [
             {
               "selector": "cy-option-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/play/index",
-          "segments": [
-            {
-              "selector": "cy-playkit",
-              "index": 0
-            },
-            {
-              "selector": "cy-playkit-blindtaste",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/play/index",
-          "segments": [
-            {
-              "selector": "cy-playkit",
-              "index": 0
-            },
-            {
-              "selector": "cy-playkit-blindtaste",
               "index": 0
             },
             {
@@ -497074,40 +496598,6 @@
               "index": 0
             },
             {
-              "selector": "cy-playkit-blindtaste",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/temp/index",
-          "segments": [
-            {
-              "selector": "cy-playkit",
-              "index": 0
-            },
-            {
-              "selector": "cy-playkit-blindtaste",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/temp/index",
-          "segments": [
-            {
-              "selector": "cy-playkit",
-              "index": 0
-            },
-            {
               "selector": "cy-playkit-diyname",
               "index": 0
             },
@@ -497322,40 +496812,6 @@
           "segments": [
             {
               "selector": "cy-playkit",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/temp/index",
-          "segments": [
-            {
-              "selector": "cy-playkit",
-              "index": 1
-            },
-            {
-              "selector": "cy-playkit-blindtaste",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/temp/index",
-          "segments": [
-            {
-              "selector": "cy-playkit",
-              "index": 1
-            },
-            {
-              "selector": "cy-playkit-blindtaste",
               "index": 0
             },
             {
@@ -532199,40 +531655,6 @@
               "index": 0
             },
             {
-              "selector": "cy-playkit-blindtaste",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/play/index",
-          "segments": [
-            {
-              "selector": "#playKit",
-              "index": 0
-            },
-            {
-              "selector": "cy-playkit-blindtaste",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/play/index",
-          "segments": [
-            {
-              "selector": "#playKit",
-              "index": 0
-            },
-            {
               "selector": "cy-playkit-diyname",
               "index": 0
             },
@@ -532473,40 +531895,6 @@
           "segments": [
             {
               "selector": "cy-option-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/play/index",
-          "segments": [
-            {
-              "selector": "cy-playkit",
-              "index": 0
-            },
-            {
-              "selector": "cy-playkit-blindtaste",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/play/index",
-          "segments": [
-            {
-              "selector": "cy-playkit",
-              "index": 0
-            },
-            {
-              "selector": "cy-playkit-blindtaste",
               "index": 0
             },
             {
@@ -534573,40 +533961,6 @@
               "index": 0
             },
             {
-              "selector": "cy-playkit-blindtaste",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/temp/index",
-          "segments": [
-            {
-              "selector": "cy-playkit",
-              "index": 0
-            },
-            {
-              "selector": "cy-playkit-blindtaste",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/temp/index",
-          "segments": [
-            {
-              "selector": "cy-playkit",
-              "index": 0
-            },
-            {
               "selector": "cy-playkit-diyname",
               "index": 0
             },
@@ -534821,40 +534175,6 @@
           "segments": [
             {
               "selector": "cy-playkit",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/temp/index",
-          "segments": [
-            {
-              "selector": "cy-playkit",
-              "index": 1
-            },
-            {
-              "selector": "cy-playkit-blindtaste",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/temp/index",
-          "segments": [
-            {
-              "selector": "cy-playkit",
-              "index": 1
-            },
-            {
-              "selector": "cy-playkit-blindtaste",
               "index": 0
             },
             {
@@ -569699,40 +569019,6 @@
               "index": 0
             },
             {
-              "selector": "cy-playkit-blindtaste",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/play/index",
-          "segments": [
-            {
-              "selector": "#playKit",
-              "index": 0
-            },
-            {
-              "selector": "cy-playkit-blindtaste",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/play/index",
-          "segments": [
-            {
-              "selector": "#playKit",
-              "index": 0
-            },
-            {
               "selector": "cy-playkit-diyname",
               "index": 0
             },
@@ -569973,40 +569259,6 @@
           "segments": [
             {
               "selector": "cy-option-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/play/index",
-          "segments": [
-            {
-              "selector": "cy-playkit",
-              "index": 0
-            },
-            {
-              "selector": "cy-playkit-blindtaste",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/play/index",
-          "segments": [
-            {
-              "selector": "cy-playkit",
-              "index": 0
-            },
-            {
-              "selector": "cy-playkit-blindtaste",
               "index": 0
             },
             {
@@ -572073,40 +571325,6 @@
               "index": 0
             },
             {
-              "selector": "cy-playkit-blindtaste",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/temp/index",
-          "segments": [
-            {
-              "selector": "cy-playkit",
-              "index": 0
-            },
-            {
-              "selector": "cy-playkit-blindtaste",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/temp/index",
-          "segments": [
-            {
-              "selector": "cy-playkit",
-              "index": 0
-            },
-            {
               "selector": "cy-playkit-diyname",
               "index": 0
             },
@@ -572321,40 +571539,6 @@
           "segments": [
             {
               "selector": "cy-playkit",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/temp/index",
-          "segments": [
-            {
-              "selector": "cy-playkit",
-              "index": 1
-            },
-            {
-              "selector": "cy-playkit-blindtaste",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/temp/index",
-          "segments": [
-            {
-              "selector": "cy-playkit",
-              "index": 1
-            },
-            {
-              "selector": "cy-playkit-blindtaste",
               "index": 0
             },
             {
@@ -607199,40 +606383,6 @@
               "index": 0
             },
             {
-              "selector": "cy-playkit-blindtaste",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/play/index",
-          "segments": [
-            {
-              "selector": "#playKit",
-              "index": 0
-            },
-            {
-              "selector": "cy-playkit-blindtaste",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/play/index",
-          "segments": [
-            {
-              "selector": "#playKit",
-              "index": 0
-            },
-            {
               "selector": "cy-playkit-diyname",
               "index": 0
             },
@@ -607473,40 +606623,6 @@
           "segments": [
             {
               "selector": "cy-option-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/play/index",
-          "segments": [
-            {
-              "selector": "cy-playkit",
-              "index": 0
-            },
-            {
-              "selector": "cy-playkit-blindtaste",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/play/index",
-          "segments": [
-            {
-              "selector": "cy-playkit",
-              "index": 0
-            },
-            {
-              "selector": "cy-playkit-blindtaste",
               "index": 0
             },
             {
@@ -609573,40 +608689,6 @@
               "index": 0
             },
             {
-              "selector": "cy-playkit-blindtaste",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/temp/index",
-          "segments": [
-            {
-              "selector": "cy-playkit",
-              "index": 0
-            },
-            {
-              "selector": "cy-playkit-blindtaste",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/temp/index",
-          "segments": [
-            {
-              "selector": "cy-playkit",
-              "index": 0
-            },
-            {
               "selector": "cy-playkit-diyname",
               "index": 0
             },
@@ -609821,40 +608903,6 @@
           "segments": [
             {
               "selector": "cy-playkit",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/temp/index",
-          "segments": [
-            {
-              "selector": "cy-playkit",
-              "index": 1
-            },
-            {
-              "selector": "cy-playkit-blindtaste",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/temp/index",
-          "segments": [
-            {
-              "selector": "cy-playkit",
-              "index": 1
-            },
-            {
-              "selector": "cy-playkit-blindtaste",
               "index": 0
             },
             {
@@ -644699,40 +643747,6 @@
               "index": 0
             },
             {
-              "selector": "cy-playkit-blindtaste",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/play/index",
-          "segments": [
-            {
-              "selector": "#playKit",
-              "index": 0
-            },
-            {
-              "selector": "cy-playkit-blindtaste",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/play/index",
-          "segments": [
-            {
-              "selector": "#playKit",
-              "index": 0
-            },
-            {
               "selector": "cy-playkit-diyname",
               "index": 0
             },
@@ -644973,40 +643987,6 @@
           "segments": [
             {
               "selector": "cy-option-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/play/index",
-          "segments": [
-            {
-              "selector": "cy-playkit",
-              "index": 0
-            },
-            {
-              "selector": "cy-playkit-blindtaste",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/play/index",
-          "segments": [
-            {
-              "selector": "cy-playkit",
-              "index": 0
-            },
-            {
-              "selector": "cy-playkit-blindtaste",
               "index": 0
             },
             {
@@ -647073,40 +646053,6 @@
               "index": 0
             },
             {
-              "selector": "cy-playkit-blindtaste",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/temp/index",
-          "segments": [
-            {
-              "selector": "cy-playkit",
-              "index": 0
-            },
-            {
-              "selector": "cy-playkit-blindtaste",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/temp/index",
-          "segments": [
-            {
-              "selector": "cy-playkit",
-              "index": 0
-            },
-            {
               "selector": "cy-playkit-diyname",
               "index": 0
             },
@@ -647321,40 +646267,6 @@
           "segments": [
             {
               "selector": "cy-playkit",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/temp/index",
-          "segments": [
-            {
-              "selector": "cy-playkit",
-              "index": 1
-            },
-            {
-              "selector": "cy-playkit-blindtaste",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/temp/index",
-          "segments": [
-            {
-              "selector": "cy-playkit",
-              "index": 1
-            },
-            {
-              "selector": "cy-playkit-blindtaste",
               "index": 0
             },
             {
@@ -682199,40 +681111,6 @@
               "index": 0
             },
             {
-              "selector": "cy-playkit-blindtaste",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/play/index",
-          "segments": [
-            {
-              "selector": "#playKit",
-              "index": 0
-            },
-            {
-              "selector": "cy-playkit-blindtaste",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/play/index",
-          "segments": [
-            {
-              "selector": "#playKit",
-              "index": 0
-            },
-            {
               "selector": "cy-playkit-diyname",
               "index": 0
             },
@@ -682473,40 +681351,6 @@
           "segments": [
             {
               "selector": "cy-option-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/play/index",
-          "segments": [
-            {
-              "selector": "cy-playkit",
-              "index": 0
-            },
-            {
-              "selector": "cy-playkit-blindtaste",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/play/index",
-          "segments": [
-            {
-              "selector": "cy-playkit",
-              "index": 0
-            },
-            {
-              "selector": "cy-playkit-blindtaste",
               "index": 0
             },
             {
@@ -684573,40 +683417,6 @@
               "index": 0
             },
             {
-              "selector": "cy-playkit-blindtaste",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/temp/index",
-          "segments": [
-            {
-              "selector": "cy-playkit",
-              "index": 0
-            },
-            {
-              "selector": "cy-playkit-blindtaste",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/temp/index",
-          "segments": [
-            {
-              "selector": "cy-playkit",
-              "index": 0
-            },
-            {
               "selector": "cy-playkit-diyname",
               "index": 0
             },
@@ -684821,40 +683631,6 @@
           "segments": [
             {
               "selector": "cy-playkit",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/temp/index",
-          "segments": [
-            {
-              "selector": "cy-playkit",
-              "index": 1
-            },
-            {
-              "selector": "cy-playkit-blindtaste",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/temp/index",
-          "segments": [
-            {
-              "selector": "cy-playkit",
-              "index": 1
-            },
-            {
-              "selector": "cy-playkit-blindtaste",
               "index": 0
             },
             {
@@ -827056,6 +825832,40 @@
               "index": 0
             },
             {
+              "selector": "cy-playkit-blindtaste",
+              "index": 0
+            },
+            {
+              "selector": "#cy-play-stage",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "#playKit",
+              "index": 0
+            },
+            {
+              "selector": "cy-playkit-blindtaste",
+              "index": 0
+            },
+            {
+              "selector": "cy-play-stage",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "#playKit",
+              "index": 0
+            },
+            {
               "selector": "cy-playkit-branch",
               "index": 0
             },
@@ -828060,6 +826870,40 @@
               "index": 0
             },
             {
+              "selector": "cy-playkit-blindtaste",
+              "index": 0
+            },
+            {
+              "selector": "#cy-play-stage",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "cy-playkit",
+              "index": 0
+            },
+            {
+              "selector": "cy-playkit-blindtaste",
+              "index": 0
+            },
+            {
+              "selector": "cy-play-stage",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "cy-playkit",
+              "index": 0
+            },
+            {
               "selector": "cy-playkit-branch",
               "index": 0
             },
@@ -829038,6 +827882,40 @@
               "index": 0
             },
             {
+              "selector": "cy-playkit-blindtaste",
+              "index": 0
+            },
+            {
+              "selector": "#cy-play-stage",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/temp/index",
+          "segments": [
+            {
+              "selector": "cy-playkit",
+              "index": 0
+            },
+            {
+              "selector": "cy-playkit-blindtaste",
+              "index": 0
+            },
+            {
+              "selector": "cy-play-stage",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/temp/index",
+          "segments": [
+            {
+              "selector": "cy-playkit",
+              "index": 0
+            },
+            {
               "selector": "cy-playkit-branch",
               "index": 0
             },
@@ -829974,6 +828852,40 @@
             },
             {
               "selector": "cy-playkit-bingo",
+              "index": 0
+            },
+            {
+              "selector": "cy-play-stage",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/temp/index",
+          "segments": [
+            {
+              "selector": "cy-playkit",
+              "index": 1
+            },
+            {
+              "selector": "cy-playkit-blindtaste",
+              "index": 0
+            },
+            {
+              "selector": "#cy-play-stage",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/temp/index",
+          "segments": [
+            {
+              "selector": "cy-playkit",
+              "index": 1
+            },
+            {
+              "selector": "cy-playkit-blindtaste",
               "index": 0
             },
             {
@@ -831013,6 +829925,40 @@
               "index": 0
             },
             {
+              "selector": "cy-playkit-blindtaste",
+              "index": 0
+            },
+            {
+              "selector": "#cy-play-stage",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "#playKit",
+              "index": 0
+            },
+            {
+              "selector": "cy-playkit-blindtaste",
+              "index": 0
+            },
+            {
+              "selector": "cy-play-stage",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "#playKit",
+              "index": 0
+            },
+            {
               "selector": "cy-playkit-branch",
               "index": 0
             },
@@ -832017,6 +830963,40 @@
               "index": 0
             },
             {
+              "selector": "cy-playkit-blindtaste",
+              "index": 0
+            },
+            {
+              "selector": "#cy-play-stage",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "cy-playkit",
+              "index": 0
+            },
+            {
+              "selector": "cy-playkit-blindtaste",
+              "index": 0
+            },
+            {
+              "selector": "cy-play-stage",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "cy-playkit",
+              "index": 0
+            },
+            {
               "selector": "cy-playkit-branch",
               "index": 0
             },
@@ -832995,6 +831975,40 @@
               "index": 0
             },
             {
+              "selector": "cy-playkit-blindtaste",
+              "index": 0
+            },
+            {
+              "selector": "#cy-play-stage",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/temp/index",
+          "segments": [
+            {
+              "selector": "cy-playkit",
+              "index": 0
+            },
+            {
+              "selector": "cy-playkit-blindtaste",
+              "index": 0
+            },
+            {
+              "selector": "cy-play-stage",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/temp/index",
+          "segments": [
+            {
+              "selector": "cy-playkit",
+              "index": 0
+            },
+            {
               "selector": "cy-playkit-branch",
               "index": 0
             },
@@ -833931,6 +832945,40 @@
             },
             {
               "selector": "cy-playkit-bingo",
+              "index": 0
+            },
+            {
+              "selector": "cy-play-stage",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/temp/index",
+          "segments": [
+            {
+              "selector": "cy-playkit",
+              "index": 1
+            },
+            {
+              "selector": "cy-playkit-blindtaste",
+              "index": 0
+            },
+            {
+              "selector": "#cy-play-stage",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/temp/index",
+          "segments": [
+            {
+              "selector": "cy-playkit",
+              "index": 1
+            },
+            {
+              "selector": "cy-playkit-blindtaste",
               "index": 0
             },
             {
@@ -834970,6 +834018,40 @@
               "index": 0
             },
             {
+              "selector": "cy-playkit-blindtaste",
+              "index": 0
+            },
+            {
+              "selector": "#cy-play-stage",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "#playKit",
+              "index": 0
+            },
+            {
+              "selector": "cy-playkit-blindtaste",
+              "index": 0
+            },
+            {
+              "selector": "cy-play-stage",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "#playKit",
+              "index": 0
+            },
+            {
               "selector": "cy-playkit-branch",
               "index": 0
             },
@@ -835974,6 +835056,40 @@
               "index": 0
             },
             {
+              "selector": "cy-playkit-blindtaste",
+              "index": 0
+            },
+            {
+              "selector": "#cy-play-stage",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "cy-playkit",
+              "index": 0
+            },
+            {
+              "selector": "cy-playkit-blindtaste",
+              "index": 0
+            },
+            {
+              "selector": "cy-play-stage",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "cy-playkit",
+              "index": 0
+            },
+            {
               "selector": "cy-playkit-branch",
               "index": 0
             },
@@ -836952,6 +836068,40 @@
               "index": 0
             },
             {
+              "selector": "cy-playkit-blindtaste",
+              "index": 0
+            },
+            {
+              "selector": "#cy-play-stage",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/temp/index",
+          "segments": [
+            {
+              "selector": "cy-playkit",
+              "index": 0
+            },
+            {
+              "selector": "cy-playkit-blindtaste",
+              "index": 0
+            },
+            {
+              "selector": "cy-play-stage",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/temp/index",
+          "segments": [
+            {
+              "selector": "cy-playkit",
+              "index": 0
+            },
+            {
               "selector": "cy-playkit-branch",
               "index": 0
             },
@@ -837888,6 +837038,40 @@
             },
             {
               "selector": "cy-playkit-bingo",
+              "index": 0
+            },
+            {
+              "selector": "cy-play-stage",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/temp/index",
+          "segments": [
+            {
+              "selector": "cy-playkit",
+              "index": 1
+            },
+            {
+              "selector": "cy-playkit-blindtaste",
+              "index": 0
+            },
+            {
+              "selector": "#cy-play-stage",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/temp/index",
+          "segments": [
+            {
+              "selector": "cy-playkit",
+              "index": 1
+            },
+            {
+              "selector": "cy-playkit-blindtaste",
               "index": 0
             },
             {
@@ -838928,6 +838112,40 @@
               "index": 0
             },
             {
+              "selector": "cy-playkit-blindtaste",
+              "index": 0
+            },
+            {
+              "selector": "#cy-play-stage",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "#playKit",
+              "index": 0
+            },
+            {
+              "selector": "cy-playkit-blindtaste",
+              "index": 0
+            },
+            {
+              "selector": "cy-play-stage",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "#playKit",
+              "index": 0
+            },
+            {
               "selector": "cy-playkit-branch",
               "index": 0
             },
@@ -839932,6 +839150,40 @@
               "index": 0
             },
             {
+              "selector": "cy-playkit-blindtaste",
+              "index": 0
+            },
+            {
+              "selector": "#cy-play-stage",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "cy-playkit",
+              "index": 0
+            },
+            {
+              "selector": "cy-playkit-blindtaste",
+              "index": 0
+            },
+            {
+              "selector": "cy-play-stage",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "cy-playkit",
+              "index": 0
+            },
+            {
               "selector": "cy-playkit-branch",
               "index": 0
             },
@@ -840910,6 +840162,40 @@
               "index": 0
             },
             {
+              "selector": "cy-playkit-blindtaste",
+              "index": 0
+            },
+            {
+              "selector": "#cy-play-stage",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/temp/index",
+          "segments": [
+            {
+              "selector": "cy-playkit",
+              "index": 0
+            },
+            {
+              "selector": "cy-playkit-blindtaste",
+              "index": 0
+            },
+            {
+              "selector": "cy-play-stage",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/temp/index",
+          "segments": [
+            {
+              "selector": "cy-playkit",
+              "index": 0
+            },
+            {
               "selector": "cy-playkit-branch",
               "index": 0
             },
@@ -841846,6 +841132,40 @@
             },
             {
               "selector": "cy-playkit-bingo",
+              "index": 0
+            },
+            {
+              "selector": "cy-play-stage",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/temp/index",
+          "segments": [
+            {
+              "selector": "cy-playkit",
+              "index": 1
+            },
+            {
+              "selector": "cy-playkit-blindtaste",
+              "index": 0
+            },
+            {
+              "selector": "#cy-play-stage",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/temp/index",
+          "segments": [
+            {
+              "selector": "cy-playkit",
+              "index": 1
+            },
+            {
+              "selector": "cy-playkit-blindtaste",
               "index": 0
             },
             {
@@ -842901,6 +842221,48 @@
               "index": 0
             },
             {
+              "selector": "cy-playkit-blindtaste",
+              "index": 0
+            },
+            {
+              "selector": "#cy-play-stage",
+              "index": 0
+            },
+            {
+              "selector": "cy-play-verdict",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "#playKit",
+              "index": 0
+            },
+            {
+              "selector": "cy-playkit-blindtaste",
+              "index": 0
+            },
+            {
+              "selector": "cy-play-stage",
+              "index": 0
+            },
+            {
+              "selector": "cy-play-verdict",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "#playKit",
+              "index": 0
+            },
+            {
               "selector": "cy-playkit-branch",
               "index": 0
             },
@@ -844154,6 +843516,48 @@
               "index": 0
             },
             {
+              "selector": "cy-playkit-blindtaste",
+              "index": 0
+            },
+            {
+              "selector": "#cy-play-stage",
+              "index": 0
+            },
+            {
+              "selector": "cy-play-verdict",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "cy-playkit",
+              "index": 0
+            },
+            {
+              "selector": "cy-playkit-blindtaste",
+              "index": 0
+            },
+            {
+              "selector": "cy-play-stage",
+              "index": 0
+            },
+            {
+              "selector": "cy-play-verdict",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "cy-playkit",
+              "index": 0
+            },
+            {
               "selector": "cy-playkit-branch",
               "index": 0
             },
@@ -845373,6 +844777,48 @@
               "index": 0
             },
             {
+              "selector": "cy-playkit-blindtaste",
+              "index": 0
+            },
+            {
+              "selector": "#cy-play-stage",
+              "index": 0
+            },
+            {
+              "selector": "cy-play-verdict",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/temp/index",
+          "segments": [
+            {
+              "selector": "cy-playkit",
+              "index": 0
+            },
+            {
+              "selector": "cy-playkit-blindtaste",
+              "index": 0
+            },
+            {
+              "selector": "cy-play-stage",
+              "index": 0
+            },
+            {
+              "selector": "cy-play-verdict",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/temp/index",
+          "segments": [
+            {
+              "selector": "cy-playkit",
+              "index": 0
+            },
+            {
               "selector": "cy-playkit-branch",
               "index": 0
             },
@@ -846529,6 +845975,48 @@
             },
             {
               "selector": "cy-playkit-bingo",
+              "index": 0
+            },
+            {
+              "selector": "cy-play-stage",
+              "index": 0
+            },
+            {
+              "selector": "cy-play-verdict",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/temp/index",
+          "segments": [
+            {
+              "selector": "cy-playkit",
+              "index": 1
+            },
+            {
+              "selector": "cy-playkit-blindtaste",
+              "index": 0
+            },
+            {
+              "selector": "#cy-play-stage",
+              "index": 0
+            },
+            {
+              "selector": "cy-play-verdict",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/temp/index",
+          "segments": [
+            {
+              "selector": "cy-playkit",
+              "index": 1
+            },
+            {
+              "selector": "cy-playkit-blindtaste",
               "index": 0
             },
             {
@@ -849366,131 +848854,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit-blindtaste/index.wxml:1:bind:close:onClose:0",
-      "route": "component:pages/play/components/playkit-blindtaste/index",
-      "hostRoutes": [
-        "pages/play/index",
-        "pages/publish/temp/index"
-      ],
-      "hostComponentPaths": [
-        {
-          "route": "pages/play/index",
-          "segments": [
-            {
-              "selector": "#playKit",
-              "index": 0
-            },
-            {
-              "selector": "cy-playkit-blindtaste",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/play/index",
-          "segments": [
-            {
-              "selector": "cy-playkit",
-              "index": 0
-            },
-            {
-              "selector": "cy-playkit-blindtaste",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/temp/index",
-          "segments": [
-            {
-              "selector": "cy-playkit",
-              "index": 0
-            },
-            {
-              "selector": "cy-playkit-blindtaste",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/temp/index",
-          "segments": [
-            {
-              "selector": "cy-playkit",
-              "index": 1
-            },
-            {
-              "selector": "cy-playkit-blindtaste",
-              "index": 0
-            }
-          ]
-        }
-      ],
-      "role": "inherited",
-      "entry": {
-        "wxml": "pages/play/components/playkit-blindtaste/index.wxml",
-        "js": "pages/play/components/playkit-blindtaste/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-sheet",
-        "event": "bind:close",
-        "handler": "onClose",
-        "line": 1,
-        "selectorHint": "cy-sheet[bind:close]",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "other",
-      "interactionMode": "event-contract",
-      "baseActionClass": "other",
-      "effectClasses": [
-        "other"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
-      "requiredBranches": [
-        "success",
-        "error"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/play/components/playkit-blindtaste/index.js:37"
-      }
-    },
-    {
-      "id": "pages/play/components/playkit-blindtaste/index.wxml:26:bindtap:onPick:1",
+      "id": "pages/play/components/playkit-blindtaste/index.wxml:30:bindtap:onPick:1",
       "route": "component:pages/play/components/playkit-blindtaste/index",
       "hostRoutes": [
         "pages/play/index",
@@ -849569,8 +848933,8 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onPick",
-        "line": 26,
-        "selectorHint": ".pk-option",
+        "line": 30,
+        "selectorHint": ".bt__opt",
         "visibleCondition": null,
         "disabledCondition": null,
         "ariaLabel": null,
@@ -849578,7 +848942,7 @@
         "ariaRole": "button",
         "ariaRoleExpression": null,
         "ariaDisabled": null,
-        "ariaDisabledExpression": null,
+        "ariaDisabledExpression": "{{locked || !!selectedKey}}",
         "ariaExpanded": null,
         "ariaExpandedExpression": null,
         "ariaChecked": null,
@@ -849610,7 +848974,746 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-blindtaste/index.js:29"
+        "staticSource": "pages/play/components/playkit-blindtaste/index.js:107"
+      }
+    },
+    {
+      "id": "pages/play/components/playkit-blindtaste/index.wxml:4:bind:back:onClose:0",
+      "route": "component:pages/play/components/playkit-blindtaste/index",
+      "hostRoutes": [
+        "pages/play/index",
+        "pages/publish/temp/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "#playKit",
+              "index": 0
+            },
+            {
+              "selector": "cy-playkit-blindtaste",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "cy-playkit",
+              "index": 0
+            },
+            {
+              "selector": "cy-playkit-blindtaste",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/temp/index",
+          "segments": [
+            {
+              "selector": "cy-playkit",
+              "index": 0
+            },
+            {
+              "selector": "cy-playkit-blindtaste",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/temp/index",
+          "segments": [
+            {
+              "selector": "cy-playkit",
+              "index": 1
+            },
+            {
+              "selector": "cy-playkit-blindtaste",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "pages/play/components/playkit-blindtaste/index.wxml",
+        "js": "pages/play/components/playkit-blindtaste/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-play-stage",
+        "event": "bind:back",
+        "handler": "onClose",
+        "line": 4,
+        "selectorHint": "#cy-play-stage",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "other",
+      "interactionMode": "event-contract",
+      "baseActionClass": "other",
+      "effectClasses": [
+        "other"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/play/components/playkit-blindtaste/index.js:115"
+      }
+    },
+    {
+      "id": "pages/play/components/playkit-blindtaste/index.wxml:49:bindtap:onGot:2",
+      "route": "component:pages/play/components/playkit-blindtaste/index",
+      "hostRoutes": [
+        "pages/play/index",
+        "pages/publish/temp/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "#playKit",
+              "index": 0
+            },
+            {
+              "selector": "cy-playkit-blindtaste",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "cy-playkit",
+              "index": 0
+            },
+            {
+              "selector": "cy-playkit-blindtaste",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/temp/index",
+          "segments": [
+            {
+              "selector": "cy-playkit",
+              "index": 0
+            },
+            {
+              "selector": "cy-playkit-blindtaste",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/temp/index",
+          "segments": [
+            {
+              "selector": "cy-playkit",
+              "index": 1
+            },
+            {
+              "selector": "cy-playkit-blindtaste",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "pages/play/components/playkit-blindtaste/index.wxml",
+        "js": "pages/play/components/playkit-blindtaste/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "onGot",
+        "line": 49,
+        "selectorHint": ".g-btn",
+        "visibleCondition": "{{stage === 0}}",
+        "disabledCondition": null,
+        "ariaLabel": "小样拿到了",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/play/components/playkit-blindtaste/index.js:69"
+      }
+    },
+    {
+      "id": "pages/play/components/playkit-blindtaste/index.wxml:51:bindtap:onEyesTap:6",
+      "route": "component:pages/play/components/playkit-blindtaste/index",
+      "hostRoutes": [
+        "pages/play/index",
+        "pages/publish/temp/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "#playKit",
+              "index": 0
+            },
+            {
+              "selector": "cy-playkit-blindtaste",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "cy-playkit",
+              "index": 0
+            },
+            {
+              "selector": "cy-playkit-blindtaste",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/temp/index",
+          "segments": [
+            {
+              "selector": "cy-playkit",
+              "index": 0
+            },
+            {
+              "selector": "cy-playkit-blindtaste",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/temp/index",
+          "segments": [
+            {
+              "selector": "cy-playkit",
+              "index": 1
+            },
+            {
+              "selector": "cy-playkit-blindtaste",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "pages/play/components/playkit-blindtaste/index.wxml",
+        "js": "pages/play/components/playkit-blindtaste/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "onEyesTap",
+        "line": 51,
+        "selectorHint": ".g-btn",
+        "visibleCondition": "{{stage === 1}}",
+        "disabledCondition": null,
+        "ariaLabel": "按住闭眼，尝完松手",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/play/components/playkit-blindtaste/index.js:103"
+      }
+    },
+    {
+      "id": "pages/play/components/playkit-blindtaste/index.wxml:51:bindtouchcancel:onEyesOpen:5",
+      "route": "component:pages/play/components/playkit-blindtaste/index",
+      "hostRoutes": [
+        "pages/play/index",
+        "pages/publish/temp/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "#playKit",
+              "index": 0
+            },
+            {
+              "selector": "cy-playkit-blindtaste",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "cy-playkit",
+              "index": 0
+            },
+            {
+              "selector": "cy-playkit-blindtaste",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/temp/index",
+          "segments": [
+            {
+              "selector": "cy-playkit",
+              "index": 0
+            },
+            {
+              "selector": "cy-playkit-blindtaste",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/temp/index",
+          "segments": [
+            {
+              "selector": "cy-playkit",
+              "index": 1
+            },
+            {
+              "selector": "cy-playkit-blindtaste",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "pages/play/components/playkit-blindtaste/index.wxml",
+        "js": "pages/play/components/playkit-blindtaste/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtouchcancel",
+        "handler": "onEyesOpen",
+        "line": 51,
+        "selectorHint": ".g-btn",
+        "visibleCondition": "{{stage === 1}}",
+        "disabledCondition": null,
+        "ariaLabel": "按住闭眼，尝完松手",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/play/components/playkit-blindtaste/index.js:87"
+      }
+    },
+    {
+      "id": "pages/play/components/playkit-blindtaste/index.wxml:51:bindtouchend:onEyesOpen:4",
+      "route": "component:pages/play/components/playkit-blindtaste/index",
+      "hostRoutes": [
+        "pages/play/index",
+        "pages/publish/temp/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "#playKit",
+              "index": 0
+            },
+            {
+              "selector": "cy-playkit-blindtaste",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "cy-playkit",
+              "index": 0
+            },
+            {
+              "selector": "cy-playkit-blindtaste",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/temp/index",
+          "segments": [
+            {
+              "selector": "cy-playkit",
+              "index": 0
+            },
+            {
+              "selector": "cy-playkit-blindtaste",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/temp/index",
+          "segments": [
+            {
+              "selector": "cy-playkit",
+              "index": 1
+            },
+            {
+              "selector": "cy-playkit-blindtaste",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "pages/play/components/playkit-blindtaste/index.wxml",
+        "js": "pages/play/components/playkit-blindtaste/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtouchend",
+        "handler": "onEyesOpen",
+        "line": 51,
+        "selectorHint": ".g-btn",
+        "visibleCondition": "{{stage === 1}}",
+        "disabledCondition": null,
+        "ariaLabel": "按住闭眼，尝完松手",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/play/components/playkit-blindtaste/index.js:87"
+      }
+    },
+    {
+      "id": "pages/play/components/playkit-blindtaste/index.wxml:51:bindtouchstart:onEyesClose:3",
+      "route": "component:pages/play/components/playkit-blindtaste/index",
+      "hostRoutes": [
+        "pages/play/index",
+        "pages/publish/temp/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "#playKit",
+              "index": 0
+            },
+            {
+              "selector": "cy-playkit-blindtaste",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "cy-playkit",
+              "index": 0
+            },
+            {
+              "selector": "cy-playkit-blindtaste",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/temp/index",
+          "segments": [
+            {
+              "selector": "cy-playkit",
+              "index": 0
+            },
+            {
+              "selector": "cy-playkit-blindtaste",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/temp/index",
+          "segments": [
+            {
+              "selector": "cy-playkit",
+              "index": 1
+            },
+            {
+              "selector": "cy-playkit-blindtaste",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "pages/play/components/playkit-blindtaste/index.wxml",
+        "js": "pages/play/components/playkit-blindtaste/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtouchstart",
+        "handler": "onEyesClose",
+        "line": 51,
+        "selectorHint": ".g-btn",
+        "visibleCondition": "{{stage === 1}}",
+        "disabledCondition": null,
+        "ariaLabel": "按住闭眼，尝完松手",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/play/components/playkit-blindtaste/index.js:73"
       }
     },
     {
@@ -856356,7 +856459,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit-journey-check/index.wxml:4:bind:back:onClose:0",
+      "id": "pages/play/components/playkit-journey-check/index.wxml:5:bind:back:onClose:0",
       "route": "component:pages/play/components/playkit-journey-check/index",
       "hostRoutes": [
         "pages/play/index",
@@ -856410,7 +856513,7 @@
         "tag": "cy-play-stage",
         "event": "bind:back",
         "handler": "onClose",
-        "line": 4,
+        "line": 5,
         "selectorHint": "#cy-play-stage",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -856451,11 +856554,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-journey-check/index.js:87"
+        "staticSource": "pages/play/components/playkit-journey-check/index.js:204"
       }
     },
     {
-      "id": "pages/play/components/playkit-journey-check/index.wxml:61:bindtap:onRoll:1",
+      "id": "pages/play/components/playkit-journey-check/index.wxml:78:bindtap:onRoll:4",
       "route": "component:pages/play/components/playkit-journey-check/index",
       "hostRoutes": [
         "pages/play/index",
@@ -856509,7 +856612,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onRoll",
-        "line": 61,
+        "line": 78,
         "selectorHint": ".g-btn",
         "visibleCondition": "{{!receipt && (!r5 || rollVisible)}}",
         "disabledCondition": null,
@@ -856550,11 +856653,305 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-journey-check/index.js:70"
+        "staticSource": "pages/play/components/playkit-journey-check/index.js:179"
       }
     },
     {
-      "id": "pages/play/components/playkit-journey-check/index.wxml:64:bindtap:onReroll:2",
+      "id": "pages/play/components/playkit-journey-check/index.wxml:78:bindtouchcancel:onHoldEnd:3",
+      "route": "component:pages/play/components/playkit-journey-check/index",
+      "hostRoutes": [
+        "pages/play/index",
+        "pages/publish/temp/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "cy-playkit-journey-check",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "cy-playkit-journey-check",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/temp/index",
+          "segments": [
+            {
+              "selector": "cy-playkit-journey-check",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "pages/play/components/playkit-journey-check/index.wxml",
+        "js": "pages/play/components/playkit-journey-check/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtouchcancel",
+        "handler": "onHoldEnd",
+        "line": 78,
+        "selectorHint": ".g-btn",
+        "visibleCondition": "{{!receipt && (!r5 || rollVisible)}}",
+        "disabledCondition": null,
+        "ariaLabel": "掷骰",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/play/components/playkit-journey-check/index.js:170"
+      }
+    },
+    {
+      "id": "pages/play/components/playkit-journey-check/index.wxml:78:bindtouchend:onHoldEnd:2",
+      "route": "component:pages/play/components/playkit-journey-check/index",
+      "hostRoutes": [
+        "pages/play/index",
+        "pages/publish/temp/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "cy-playkit-journey-check",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "cy-playkit-journey-check",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/temp/index",
+          "segments": [
+            {
+              "selector": "cy-playkit-journey-check",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "pages/play/components/playkit-journey-check/index.wxml",
+        "js": "pages/play/components/playkit-journey-check/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtouchend",
+        "handler": "onHoldEnd",
+        "line": 78,
+        "selectorHint": ".g-btn",
+        "visibleCondition": "{{!receipt && (!r5 || rollVisible)}}",
+        "disabledCondition": null,
+        "ariaLabel": "掷骰",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/play/components/playkit-journey-check/index.js:170"
+      }
+    },
+    {
+      "id": "pages/play/components/playkit-journey-check/index.wxml:78:bindtouchstart:onHoldStart:1",
+      "route": "component:pages/play/components/playkit-journey-check/index",
+      "hostRoutes": [
+        "pages/play/index",
+        "pages/publish/temp/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "cy-playkit-journey-check",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "cy-playkit-journey-check",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/temp/index",
+          "segments": [
+            {
+              "selector": "cy-playkit-journey-check",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "pages/play/components/playkit-journey-check/index.wxml",
+        "js": "pages/play/components/playkit-journey-check/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtouchstart",
+        "handler": "onHoldStart",
+        "line": 78,
+        "selectorHint": ".g-btn",
+        "visibleCondition": "{{!receipt && (!r5 || rollVisible)}}",
+        "disabledCondition": null,
+        "ariaLabel": "掷骰",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/play/components/playkit-journey-check/index.js:159"
+      }
+    },
+    {
+      "id": "pages/play/components/playkit-journey-check/index.wxml:84:bindtap:onReroll:5",
       "route": "component:pages/play/components/playkit-journey-check/index",
       "hostRoutes": [
         "pages/play/index",
@@ -856608,7 +857005,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onReroll",
-        "line": 64,
+        "line": 84,
         "selectorHint": ".jc__act",
         "visibleCondition": "{{rerollVisible}}",
         "disabledCondition": null,
@@ -856649,11 +857046,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-journey-check/index.js:76"
+        "staticSource": "pages/play/components/playkit-journey-check/index.js:191"
       }
     },
     {
-      "id": "pages/play/components/playkit-journey-check/index.wxml:66:bindtap:onSettle:3",
+      "id": "pages/play/components/playkit-journey-check/index.wxml:86:bindtap:onSettle:6",
       "route": "component:pages/play/components/playkit-journey-check/index",
       "hostRoutes": [
         "pages/play/index",
@@ -856707,8 +857104,8 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onSettle",
-        "line": 66,
-        "selectorHint": ".g-btn",
+        "line": 86,
+        "selectorHint": ".jc__act",
         "visibleCondition": null,
         "disabledCondition": null,
         "ariaLabel": "结算这次检定",
@@ -856748,11 +857145,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-journey-check/index.js:81"
+        "staticSource": "pages/play/components/playkit-journey-check/index.js:198"
       }
     },
     {
-      "id": "pages/play/components/playkit-journey-check/index.wxml:69:bindtap:onClose:4",
+      "id": "pages/play/components/playkit-journey-check/index.wxml:91:bindtap:onClose:7",
       "route": "component:pages/play/components/playkit-journey-check/index",
       "hostRoutes": [
         "pages/play/index",
@@ -856806,7 +857203,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onClose",
-        "line": 69,
+        "line": 91,
         "selectorHint": ".g-btn",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -856847,7 +857244,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-journey-check/index.js:87"
+        "staticSource": "pages/play/components/playkit-journey-check/index.js:204"
       }
     },
     {
@@ -875977,7 +876374,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:157:bind:close:onClose:77",
+      "id": "pages/play/components/playkit/index.wxml:159:bind:close:onClose:77",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -876040,7 +876437,7 @@
         "tag": "cy-playkit-predict",
         "event": "bind:close",
         "handler": "onClose",
-        "line": 157,
+        "line": 159,
         "selectorHint": "cy-playkit-predict[bind:close]",
         "visibleCondition": "{{kit.type === 'predict'}}",
         "disabledCondition": null,
@@ -876085,7 +876482,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:157:bind:submit:onSubmit:76",
+      "id": "pages/play/components/playkit/index.wxml:159:bind:submit:onSubmit:76",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -876148,7 +876545,7 @@
         "tag": "cy-playkit-predict",
         "event": "bind:submit",
         "handler": "onSubmit",
-        "line": 157,
+        "line": 159,
         "selectorHint": "cy-playkit-predict[bind:submit]",
         "visibleCondition": "{{kit.type === 'predict'}}",
         "disabledCondition": null,
@@ -876193,7 +876590,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:162:bind:close:onClose:80",
+      "id": "pages/play/components/playkit/index.wxml:164:bind:close:onClose:80",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -876256,7 +876653,7 @@
         "tag": "cy-playkit-random",
         "event": "bind:close",
         "handler": "onClose",
-        "line": 162,
+        "line": 164,
         "selectorHint": "cy-playkit-random[bind:close]",
         "visibleCondition": "{{kit.type === 'random'}}",
         "disabledCondition": null,
@@ -876301,7 +876698,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:162:bind:draw:onDraw:78",
+      "id": "pages/play/components/playkit/index.wxml:164:bind:draw:onDraw:78",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -876364,7 +876761,7 @@
         "tag": "cy-playkit-random",
         "event": "bind:draw",
         "handler": "onDraw",
-        "line": 162,
+        "line": 164,
         "selectorHint": "cy-playkit-random[bind:draw]",
         "visibleCondition": "{{kit.type === 'random'}}",
         "disabledCondition": null,
@@ -876409,7 +876806,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:162:bind:drawn:onDrawn:79",
+      "id": "pages/play/components/playkit/index.wxml:164:bind:drawn:onDrawn:79",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -876472,7 +876869,7 @@
         "tag": "cy-playkit-random",
         "event": "bind:drawn",
         "handler": "onDrawn",
-        "line": 162,
+        "line": 164,
         "selectorHint": "cy-playkit-random[bind:drawn]",
         "visibleCondition": "{{kit.type === 'random'}}",
         "disabledCondition": null,
@@ -876517,7 +876914,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:168:bind:close:onClose:82",
+      "id": "pages/play/components/playkit/index.wxml:170:bind:close:onClose:82",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -876580,7 +876977,7 @@
         "tag": "cy-playkit-bingo",
         "event": "bind:close",
         "handler": "onClose",
-        "line": 168,
+        "line": 170,
         "selectorHint": "cy-playkit-bingo[bind:close]",
         "visibleCondition": "{{kit.type === 'bingo'}}",
         "disabledCondition": null,
@@ -876625,7 +877022,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:168:bind:verdict:onVerdict:81",
+      "id": "pages/play/components/playkit/index.wxml:170:bind:verdict:onVerdict:81",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -876688,7 +877085,7 @@
         "tag": "cy-playkit-bingo",
         "event": "bind:verdict",
         "handler": "onVerdict",
-        "line": 168,
+        "line": 170,
         "selectorHint": "cy-playkit-bingo[bind:verdict]",
         "visibleCondition": "{{kit.type === 'bingo'}}",
         "disabledCondition": null,
@@ -876733,7 +877130,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:175:bind:audio:onAudio:84",
+      "id": "pages/play/components/playkit/index.wxml:177:bind:audio:onAudio:84",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -876796,7 +877193,7 @@
         "tag": "cy-playkit-scan",
         "event": "bind:audio",
         "handler": "onAudio",
-        "line": 175,
+        "line": 177,
         "selectorHint": "cy-playkit-scan[bind:audio]",
         "visibleCondition": "{{kit.type === 'scan'}}",
         "disabledCondition": null,
@@ -876841,7 +877238,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:175:bind:close:onClose:85",
+      "id": "pages/play/components/playkit/index.wxml:177:bind:close:onClose:85",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -876904,7 +877301,7 @@
         "tag": "cy-playkit-scan",
         "event": "bind:close",
         "handler": "onClose",
-        "line": 175,
+        "line": 177,
         "selectorHint": "cy-playkit-scan[bind:close]",
         "visibleCondition": "{{kit.type === 'scan'}}",
         "disabledCondition": null,
@@ -876949,7 +877346,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:175:bind:scanned:onScanned:83",
+      "id": "pages/play/components/playkit/index.wxml:177:bind:scanned:onScanned:83",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -877012,7 +877409,7 @@
         "tag": "cy-playkit-scan",
         "event": "bind:scanned",
         "handler": "onScanned",
-        "line": 175,
+        "line": 177,
         "selectorHint": "cy-playkit-scan[bind:scanned]",
         "visibleCondition": "{{kit.type === 'scan'}}",
         "disabledCondition": null,
@@ -877057,7 +877454,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:180:bind:claim:onClaim:88",
+      "id": "pages/play/components/playkit/index.wxml:182:bind:claim:onClaim:88",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -877120,7 +877517,7 @@
         "tag": "cy-playkit-walk",
         "event": "bind:claim",
         "handler": "onClaim",
-        "line": 180,
+        "line": 182,
         "selectorHint": "cy-playkit-walk[bind:claim]",
         "visibleCondition": "{{kit.type === 'walk'}}",
         "disabledCondition": null,
@@ -877165,7 +877562,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:180:bind:close:onClose:89",
+      "id": "pages/play/components/playkit/index.wxml:182:bind:close:onClose:89",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -877228,7 +877625,7 @@
         "tag": "cy-playkit-walk",
         "event": "bind:close",
         "handler": "onClose",
-        "line": 180,
+        "line": 182,
         "selectorHint": "cy-playkit-walk[bind:close]",
         "visibleCondition": "{{kit.type === 'walk'}}",
         "disabledCondition": null,
@@ -877273,7 +877670,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:180:bind:goalchange:onGoalChange:86",
+      "id": "pages/play/components/playkit/index.wxml:182:bind:goalchange:onGoalChange:86",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -877336,7 +877733,7 @@
         "tag": "cy-playkit-walk",
         "event": "bind:goalchange",
         "handler": "onGoalChange",
-        "line": 180,
+        "line": 182,
         "selectorHint": "cy-playkit-walk[bind:goalchange]",
         "visibleCondition": "{{kit.type === 'walk'}}",
         "disabledCondition": null,
@@ -877381,7 +877778,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:180:bind:sync:onSync:87",
+      "id": "pages/play/components/playkit/index.wxml:182:bind:sync:onSync:87",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -877444,7 +877841,7 @@
         "tag": "cy-playkit-walk",
         "event": "bind:sync",
         "handler": "onSync",
-        "line": 180,
+        "line": 182,
         "selectorHint": "cy-playkit-walk[bind:sync]",
         "visibleCondition": "{{kit.type === 'walk'}}",
         "disabledCondition": null,
@@ -877489,7 +877886,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:187:bind:avatar:onAvatar:91",
+      "id": "pages/play/components/playkit/index.wxml:189:bind:avatar:onAvatar:91",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -877552,7 +877949,7 @@
         "tag": "cy-playkit-profile",
         "event": "bind:avatar",
         "handler": "onAvatar",
-        "line": 187,
+        "line": 189,
         "selectorHint": "cy-playkit-profile[bind:avatar]",
         "visibleCondition": "{{kit.type === 'profile'}}",
         "disabledCondition": null,
@@ -877597,7 +877994,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:187:bind:close:onClose:92",
+      "id": "pages/play/components/playkit/index.wxml:189:bind:close:onClose:92",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -877660,7 +878057,7 @@
         "tag": "cy-playkit-profile",
         "event": "bind:close",
         "handler": "onClose",
-        "line": 187,
+        "line": 189,
         "selectorHint": "cy-playkit-profile[bind:close]",
         "visibleCondition": "{{kit.type === 'profile'}}",
         "disabledCondition": null,
@@ -877705,7 +878102,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:187:bind:submit:onSubmit:90",
+      "id": "pages/play/components/playkit/index.wxml:189:bind:submit:onSubmit:90",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -877768,7 +878165,7 @@
         "tag": "cy-playkit-profile",
         "event": "bind:submit",
         "handler": "onSubmit",
-        "line": 187,
+        "line": 189,
         "selectorHint": "cy-playkit-profile[bind:submit]",
         "visibleCondition": "{{kit.type === 'profile'}}",
         "disabledCondition": null,
@@ -877813,7 +878210,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:197:bind:close:onClose:94",
+      "id": "pages/play/components/playkit/index.wxml:199:bind:close:onClose:94",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -877876,7 +878273,7 @@
         "tag": "cy-playkit-objectcard",
         "event": "bind:close",
         "handler": "onClose",
-        "line": 197,
+        "line": 199,
         "selectorHint": "#objectCard",
         "visibleCondition": "{{kit.type === 'photocheck' && kit.mode === 'CARD' && !inline}}",
         "disabledCondition": null,
@@ -877921,7 +878318,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:197:bind:shoot:onShoot:93",
+      "id": "pages/play/components/playkit/index.wxml:199:bind:shoot:onShoot:93",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -877984,7 +878381,7 @@
         "tag": "cy-playkit-objectcard",
         "event": "bind:shoot",
         "handler": "onShoot",
-        "line": 197,
+        "line": 199,
         "selectorHint": "#objectCard",
         "visibleCondition": "{{kit.type === 'photocheck' && kit.mode === 'CARD' && !inline}}",
         "disabledCondition": null,
@@ -878353,7 +878750,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:207:bind:close:onClose:96",
+      "id": "pages/play/components/playkit/index.wxml:209:bind:close:onClose:96",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -878416,7 +878813,7 @@
         "tag": "cy-playkit-photocheck",
         "event": "bind:close",
         "handler": "onClose",
-        "line": 207,
+        "line": 209,
         "selectorHint": "cy-playkit-photocheck[bind:close]",
         "visibleCondition": "{{kit.type === 'photocheck'}}",
         "disabledCondition": null,
@@ -878461,7 +878858,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:207:bind:shoot:onShoot:95",
+      "id": "pages/play/components/playkit/index.wxml:209:bind:shoot:onShoot:95",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -878524,7 +878921,7 @@
         "tag": "cy-playkit-photocheck",
         "event": "bind:shoot",
         "handler": "onShoot",
-        "line": 207,
+        "line": 209,
         "selectorHint": "cy-playkit-photocheck[bind:shoot]",
         "visibleCondition": "{{kit.type === 'photocheck'}}",
         "disabledCondition": null,
@@ -878569,7 +878966,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:213:bind:close:onClose:98",
+      "id": "pages/play/components/playkit/index.wxml:215:bind:close:onClose:98",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -878632,7 +879029,7 @@
         "tag": "cy-playkit-note",
         "event": "bind:close",
         "handler": "onClose",
-        "line": 213,
+        "line": 215,
         "selectorHint": "cy-playkit-note[bind:close]",
         "visibleCondition": "{{kit.type === 'note'}}",
         "disabledCondition": null,
@@ -878677,7 +879074,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:213:bind:submit:onSubmit:97",
+      "id": "pages/play/components/playkit/index.wxml:215:bind:submit:onSubmit:97",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -878740,7 +879137,7 @@
         "tag": "cy-playkit-note",
         "event": "bind:submit",
         "handler": "onSubmit",
-        "line": 213,
+        "line": 215,
         "selectorHint": "cy-playkit-note[bind:submit]",
         "visibleCondition": "{{kit.type === 'note'}}",
         "disabledCondition": null,
@@ -878785,7 +879182,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:220:bind:close:onClose:102",
+      "id": "pages/play/components/playkit/index.wxml:222:bind:close:onClose:102",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -878848,7 +879245,7 @@
         "tag": "cy-playkit-typein",
         "event": "bind:close",
         "handler": "onClose",
-        "line": 220,
+        "line": 222,
         "selectorHint": "cy-playkit-typein[bind:close]",
         "visibleCondition": "{{kit.type === 'typein'}}",
         "disabledCondition": null,
@@ -878893,7 +879290,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:220:bind:refresh:onRefresh:101",
+      "id": "pages/play/components/playkit/index.wxml:222:bind:refresh:onRefresh:101",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -878956,7 +879353,7 @@
         "tag": "cy-playkit-typein",
         "event": "bind:refresh",
         "handler": "onRefresh",
-        "line": 220,
+        "line": 222,
         "selectorHint": "cy-playkit-typein[bind:refresh]",
         "visibleCondition": "{{kit.type === 'typein'}}",
         "disabledCondition": null,
@@ -879001,7 +879398,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:220:bind:start:onStart:99",
+      "id": "pages/play/components/playkit/index.wxml:222:bind:start:onStart:99",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -879064,7 +879461,7 @@
         "tag": "cy-playkit-typein",
         "event": "bind:start",
         "handler": "onStart",
-        "line": 220,
+        "line": 222,
         "selectorHint": "cy-playkit-typein[bind:start]",
         "visibleCondition": "{{kit.type === 'typein'}}",
         "disabledCondition": null,
@@ -879109,7 +879506,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:220:bind:submit:onSubmit:100",
+      "id": "pages/play/components/playkit/index.wxml:222:bind:submit:onSubmit:100",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -879172,7 +879569,7 @@
         "tag": "cy-playkit-typein",
         "event": "bind:submit",
         "handler": "onSubmit",
-        "line": 220,
+        "line": 222,
         "selectorHint": "cy-playkit-typein[bind:submit]",
         "visibleCondition": "{{kit.type === 'typein'}}",
         "disabledCondition": null,
@@ -879217,7 +879614,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:228:bind:close:onClose:104",
+      "id": "pages/play/components/playkit/index.wxml:230:bind:close:onClose:104",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -879280,7 +879677,7 @@
         "tag": "cy-playkit-sort",
         "event": "bind:close",
         "handler": "onClose",
-        "line": 228,
+        "line": 230,
         "selectorHint": "cy-playkit-sort[bind:close]",
         "visibleCondition": "{{kit.type === 'sort'}}",
         "disabledCondition": null,
@@ -879325,7 +879722,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:228:bind:submit:onSubmit:103",
+      "id": "pages/play/components/playkit/index.wxml:230:bind:submit:onSubmit:103",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -879388,7 +879785,7 @@
         "tag": "cy-playkit-sort",
         "event": "bind:submit",
         "handler": "onSubmit",
-        "line": 228,
+        "line": 230,
         "selectorHint": "cy-playkit-sort[bind:submit]",
         "visibleCondition": "{{kit.type === 'sort'}}",
         "disabledCondition": null,
@@ -879433,7 +879830,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:233:bind:close:onClose:106",
+      "id": "pages/play/components/playkit/index.wxml:235:bind:close:onClose:106",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -879496,7 +879893,7 @@
         "tag": "cy-playkit-match",
         "event": "bind:close",
         "handler": "onClose",
-        "line": 233,
+        "line": 235,
         "selectorHint": "cy-playkit-match[bind:close]",
         "visibleCondition": "{{kit.type === 'match'}}",
         "disabledCondition": null,
@@ -879541,7 +879938,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:233:bind:submit:onSubmit:105",
+      "id": "pages/play/components/playkit/index.wxml:235:bind:submit:onSubmit:105",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -879604,7 +880001,7 @@
         "tag": "cy-playkit-match",
         "event": "bind:submit",
         "handler": "onSubmit",
-        "line": 233,
+        "line": 235,
         "selectorHint": "cy-playkit-match[bind:submit]",
         "visibleCondition": "{{kit.type === 'match'}}",
         "disabledCondition": null,
@@ -879649,7 +880046,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:238:bind:close:onClose:108",
+      "id": "pages/play/components/playkit/index.wxml:240:bind:close:onClose:108",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -879712,7 +880109,7 @@
         "tag": "cy-playkit-classify",
         "event": "bind:close",
         "handler": "onClose",
-        "line": 238,
+        "line": 240,
         "selectorHint": "cy-playkit-classify[bind:close]",
         "visibleCondition": "{{kit.type === 'classify'}}",
         "disabledCondition": null,
@@ -879757,7 +880154,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:238:bind:submit:onSubmit:107",
+      "id": "pages/play/components/playkit/index.wxml:240:bind:submit:onSubmit:107",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -879820,7 +880217,7 @@
         "tag": "cy-playkit-classify",
         "event": "bind:submit",
         "handler": "onSubmit",
-        "line": 238,
+        "line": 240,
         "selectorHint": "cy-playkit-classify[bind:submit]",
         "visibleCondition": "{{kit.type === 'classify'}}",
         "disabledCondition": null,
@@ -879865,7 +880262,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:242:bind:close:onClose:111",
+      "id": "pages/play/components/playkit/index.wxml:244:bind:close:onClose:111",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -879928,7 +880325,7 @@
         "tag": "cy-playkit-album",
         "event": "bind:close",
         "handler": "onClose",
-        "line": 242,
+        "line": 244,
         "selectorHint": "cy-playkit-album[bind:close]",
         "visibleCondition": "{{kit.type === 'album'}}",
         "disabledCondition": null,
@@ -879973,7 +880370,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:242:bind:shoot:onShoot:109",
+      "id": "pages/play/components/playkit/index.wxml:244:bind:shoot:onShoot:109",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -880036,7 +880433,7 @@
         "tag": "cy-playkit-album",
         "event": "bind:shoot",
         "handler": "onShoot",
-        "line": 242,
+        "line": 244,
         "selectorHint": "cy-playkit-album[bind:shoot]",
         "visibleCondition": "{{kit.type === 'album'}}",
         "disabledCondition": null,
@@ -880081,7 +880478,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit/index.wxml:242:bind:submit:onSubmit:110",
+      "id": "pages/play/components/playkit/index.wxml:244:bind:submit:onSubmit:110",
       "route": "component:pages/play/components/playkit/index",
       "hostRoutes": [
         "pages/play/index",
@@ -880144,7 +880541,7 @@
         "tag": "cy-playkit-album",
         "event": "bind:submit",
         "handler": "onSubmit",
-        "line": 242,
+        "line": 244,
         "selectorHint": "cy-playkit-album[bind:submit]",
         "visibleCondition": "{{kit.type === 'album'}}",
         "disabledCondition": null,

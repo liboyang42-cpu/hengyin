@@ -101,7 +101,7 @@ const methods = {
     if (action === 'roll' && !kit.receipt) {
       const dc = { easy: 10, medium: 13, hard: 16 }[kit.tier] || 13, roll = 1 + Math.floor(Math.random() * 20);
       this.setData({ 'pvKit.receipt': { rolled: true, tier: kit.tier, dc, dice: [roll], kept: roll, total: roll, success: roll >= dc,
-        nat: roll === 20 ? 'crit' : (roll === 1 ? 'fumble' : ''), rerolled: false, settled: false, text: '', failCostLabel: '', hp: null, luck: null, exhausted: false, mods: [] } });
+        nat: roll === 20 ? 'CRIT' : (roll === 1 ? 'FUMBLE' : ''), rerolled: false, settled: false, text: '', failCostLabel: '', hp: null, luck: null, exhausted: false, mods: [] } });
     } else if (action === 'settle' && kit.receipt && !kit.receipt.settled) {
       const receipt = Object.assign({}, kit.receipt, { settled: true, text: kit.receipt.success ? kit.successText : kit.failText });
       this.setData({ 'pvKit.receipt': receipt }, () => this.showPvVerdict(this.data.pvKit, { action: 'settle' }));

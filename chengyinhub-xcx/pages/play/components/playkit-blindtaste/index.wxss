@@ -1,23 +1,94 @@
-@import "/pages/play/style/playkit.wxss";
+@import "/pages/play/style/play-surface.wxss";
 
-/* cy-playkit-blindtaste · 盲品挑战(Figma v5.1,node 46:259)
- * 稿里蒙眼猫压在标题右上角 —— 它是"闭眼"这条规则的唯一图示,不能省。 */
-.bt { padding-top: var(--cy-space-2); }
-.bt__top {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--cy-space-2);
+/* cy-playkit-blindtaste · 闭眼盲品(2026-10-23 主人定稿:城瘾 D20 与盲品试玩原型)
+ * 整屏走玩家暗色台面;眼皮是两片上下合拢的黑,合上后只剩一个呼吸圈。
+ * 动效只用 transition(transform / opacity),不另起关键帧。 */
+.bt { align-items: center; text-align: center; }
+.bt__title {
+  margin-top: var(--cy-space-2);
+  font-size: var(--cy-type-sheet-title);
+  font-weight: 900;
+  line-height: 1.35;
+  color: var(--ink);
 }
-.bt__copy { flex: 1; min-width: 0; }
 
-/* 茶汤绿:选中态与 XP 都走玩法主题色,不再借 status-info(那是"信息"语义) */
-.bt .pk-option--on {
-  border-color: var(--cy-color-playkit-taste);
-  background: rgba(51, 199, 115, .14);   /* ds-ok 主题色软底,与 --cy-color-playkit-taste 同源 */
+/* 三步:走到哪一步亮到哪一步 */
+.bt .pk-steps { margin-top: var(--cy-space-4); display: flex; justify-content: center; gap: var(--cy-space-6); }
+.bt__step { display: flex; flex-direction: column; align-items: center; gap: var(--cy-space-1); color: var(--sub); }
+.bt__step-no {
+  width: 60rpx; height: 60rpx; border-radius: 50%;
+  box-sizing: border-box; border: 3rpx solid var(--soft);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--cy-font-numeric); font-size: var(--cy-type-body); font-style: italic; font-weight: 800;
+  transition: background .3s ease, color .3s ease, border-color .3s ease;
 }
-.bt .pk-option--on .pk-option__key {
-  border-color: var(--cy-color-playkit-taste);
-  color: var(--cy-color-playkit-taste);
+.bt__step-l { font-size: var(--cy-type-caption); }
+.bt__step.is-on { color: var(--ink); }
+.bt__step.is-on .bt__step-no { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+
+/* 小样杯:杯子挨个抬一下,像店员刚摆上桌 */
+.bt__cups { margin-top: 80rpx; display: flex; justify-content: center; align-items: flex-end; gap: var(--cy-space-5); }
+.bt__cup { display: flex; flex-direction: column; align-items: center; gap: var(--cy-space-2); transition: transform .5s cubic-bezier(.3, 1.4, .5, 1); }
+.bt__cup.is-lift { transform: translateY(-28rpx); }
+.bt__glass {
+  position: relative; width: 104rpx; height: 128rpx; overflow: hidden;
+  box-sizing: border-box;
+  border: 3rpx solid rgba(255, 255, 255, .35); border-top: 0;   /* ds-ok 暗台面上的玻璃杯描边 */
+  border-radius: 0 0 28rpx 28rpx;
 }
-.bt .pk-foot__xp { color: var(--cy-color-playkit-taste); }
+.bt__tea { position: absolute; left: 0; right: 0; bottom: 0; height: 62%; background: linear-gradient(#c8a25e, #8a6326); opacity: .9; } /* ds-ok 茶汤色,只用在杯子里 */
+.bt__cup-k { font-family: var(--cy-font-numeric); font-size: var(--cy-type-section-title); font-style: italic; font-weight: 800; color: var(--sub); }
+.bt__cup.is-lift .bt__cup-k { color: var(--ink); }
+.bt__hint { margin-top: var(--cy-space-5); font-size: var(--cy-type-body); color: var(--sub); }
+.bt__hint--q { margin: 0 0 var(--cy-space-3); }
+
+/* 作答:试玩台的 .qaopt 细线行。选中往右让一截(transform,不动版面) */
+.bt__opts { width: 100%; margin-top: auto; margin-bottom: 240rpx; text-align: left; }
+.bt__opt {
+  display: flex; align-items: center; gap: 28rpx;   /* ds-ok 原型 .qaopt gap 14px */
+  padding: 38rpx 4rpx;                               /* ds-ok 原型 .qaopt 19px 2px */
+  border-bottom: 1rpx solid var(--soft);
+  font-size: var(--cy-type-card-title); font-weight: 500; color: var(--sub);
+  opacity: 0; transform: translateY(20rpx);
+  transition: opacity .4s ease, transform .4s ease, color .18s ease;
+}
+.bt__opt--first { border-top: 1rpx solid var(--soft); }
+.bt__opts.is-open .bt__opt { opacity: 1; transform: none; }
+.bt__opt::after { content: ''; flex: none; margin-left: auto; width: 14rpx; height: 14rpx; border-radius: 2rpx; } /* ds-ok 原型 .tail 7px */
+.bt__opt.is-on { color: var(--ink); font-weight: 700; transform: translateX(20rpx); }
+.bt__opt.is-on::after { background: var(--ink); }
+.bt__opt-k { width: 28rpx; font-family: var(--cy-font-numeric); font-size: var(--cy-type-body); font-style: italic; font-weight: 800; }
+.bt__press { opacity: .7; }
+.bt__foot { margin-top: var(--cy-space-3); font-size: var(--cy-type-label); color: var(--ok); }
+
+/* 眼皮:上下两片,弧形边;合上 = 两片都归位 */
+.bt__lid {
+  position: absolute; left: -10%; right: -10%; height: 56%; z-index: 20;
+  background: #000;                                  /* ds-ok 闭眼就是纯黑,不随皮肤 */
+  pointer-events: none;
+  transition: transform .55s cubic-bezier(.6, 0, .3, 1);
+}
+.bt__lid--top { top: 0; border-radius: 0 0 50% 50% / 0 0 34% 34%; transform: translateY(-104%); }
+.bt__lid--bot { bottom: 0; border-radius: 50% 50% 0 0 / 34% 34% 0 0; transform: translateY(104%); }
+.bt--closed ~ .bt__lid--top, .bt--closed ~ .bt__lid--bot { transform: translateY(0); }
+.bt--peek ~ .bt__lid--top { transform: translateY(-22%); }
+.bt--peek ~ .bt__lid--bot { transform: translateY(22%); }
+.bt__dark {
+  position: absolute; left: 0; right: 0; top: 0; bottom: 0; z-index: 21;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--cy-space-5);
+  opacity: 0; pointer-events: none;
+  transition: opacity .4s ease .35s;
+}
+.bt--closed ~ .bt__dark { opacity: 1; }
+.bt__breath {
+  width: 240rpx; height: 240rpx; border-radius: 50%;
+  box-sizing: border-box; border: 3rpx solid rgba(255, 255, 255, .18);   /* ds-ok 黑底上的呼吸圈 */
+  display: flex; align-items: center; justify-content: center;
+  transform: scale(.92);
+  transition: transform 1s ease-in-out, border-color 1s ease-in-out;
+}
+.bt__breath.is-in { transform: scale(1.06); border-color: rgba(255, 255, 255, .35); } /* ds-ok 同上 */
+.bt__count { font-family: var(--cy-font-numeric); font-size: var(--cy-type-display); font-style: italic; font-weight: 800; color: #F6F6F8; } /* ds-ok 闭眼黑底上的字 */
+.bt__dark-t { font-size: var(--cy-type-body); letter-spacing: 4rpx; color: #8A8A92; } /* ds-ok 同上 */
+
+.bt--reduced .bt__cup, .bt--reduced .bt__opt, .bt--reduced ~ .bt__lid, .bt--reduced ~ .bt__dark, .bt--reduced .bt__breath { transition: none; }

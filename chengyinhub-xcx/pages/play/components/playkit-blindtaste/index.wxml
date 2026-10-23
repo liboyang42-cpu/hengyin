@@ -1,38 +1,53 @@
-<cy-sheet show="{{show}}" handle="{{true}}" bind:close="onClose">
-  <view class="bt">
-    <view class="bt__top">
-      <view class="bt__copy">
-        <view class="pk-eyebrow">{{eyebrow}}</view>
-        <view class="pk-title">{{title}}</view>
+<!-- 闭眼盲品 · 2026-10-23 主人定稿(城瘾 D20 与盲品试玩原型):
+     领小样 → 按住闭眼(眼皮上下合拢、屏幕全黑、倒数 3 秒) → 睁眼作答(试玩台的细线行)。
+     中途松手 = 偷看,要重新闭眼。对错由服务端判,这一屏只发 answer。 -->
+<cy-play-stage id="cy-play-stage" skin="qadark" show="{{show}}" back-label="退出" bind:back="onClose">
+  <view class="bt g-col {{reducedMotion ? 'bt--reduced' : ''}} {{eyes === 'closed' ? 'bt--closed' : ''}} {{eyes === 'peek' ? 'bt--peek' : ''}}">
+    <view class="g-kicker">{{eyebrow}}</view>
+    <view class="bt__title">{{title || '闭上眼，尝一口，猜猜是哪一种'}}</view>
+
+    <!-- 三步:走到哪一步就亮到哪一步。整句步骤只给读屏 -->
+    <view class="pk-steps" aria-role="text" aria-label="{{steps}}">
+      <view class="bt__step {{index <= stage ? 'is-on' : ''}}" wx:for="{{stepIcons}}" wx:key="index" aria-hidden="true">
+        <view class="bt__step-no">{{item.index}}</view>
+        <text class="bt__step-l">{{item.label}}</text>
       </view>
-      <cy-mascot mode="blindfold" size="192" />
-    </view>
-    <!-- 图标步骤行(ADA 借鉴卡 E):替代原来那行整句说明;整句降级为本行 aria-label -->
-    <view class="pk-steps" wx:if="{{stepIcons.length}}" aria-role="text" aria-label="{{steps}}">
-      <block wx:for="{{stepIcons}}" wx:key="index">
-        <view wx:if="{{index > 0}}" class="pk-steps__link" aria-hidden="true"></view>
-        <view class="pk-steps__item">
-          <view class="pk-steps__badge">
-            <cy-icon name="{{item.icon}}" size="34" />
-            <view class="pk-steps__no">{{item.index}}</view>
-          </view>
-          <text class="pk-steps__label">{{item.label}}</text>
-        </view>
-      </block>
     </view>
 
-    <view class="pk-option {{selectedKey === item.key ? 'pk-option--on' : ''}}"
-          wx:for="{{options}}" wx:key="key"
-          data-key="{{item.key}}" bindtap="onPick"
-          aria-role="button" aria-label="选择 {{item.key}} {{item.label}}"
-          hover-class="cy-pressed" hover-stay-time="80">
-      <view class="pk-option__key">{{item.key}}</view>
-      <view class="pk-option__label">{{item.label}}</view>
+    <!-- 小样:几个选项就摆几杯,杯上只有字母(盲品不能把名字写在杯子上) -->
+    <view class="bt__cups" wx:if="{{stage < 2}}" aria-hidden="true">
+      <view class="bt__cup {{lifted === index ? 'is-lift' : ''}}" wx:for="{{options}}" wx:key="key">
+        <view class="bt__glass"><view class="bt__tea"></view></view>
+        <text class="bt__cup-k">{{item.key}}</text>
+      </view>
     </view>
+    <view class="bt__hint" wx:if="{{stage < 2}}">{{stage === 0 ? '店员会把小样摆在你面前' : '按住按钮就闭眼，松手就是睁眼'}}</view>
 
-    <view class="pk-foot">
-      <text class="pk-foot__hint">{{hint}}</text>
-      <text class="pk-foot__xp">{{xpLabel}}</text>
+    <!-- 睁眼作答:细线行,点一条就是作答(不可撤销,所以选中后锁住) -->
+    <view class="bt__opts {{opened ? 'is-open' : ''}}" wx:if="{{stage === 2}}">
+      <view class="bt__hint bt__hint--q">刚才那杯是哪一种？</view>
+      <view class="bt__opt {{selectedKey === item.key ? 'is-on' : ''}} {{index === 0 ? 'bt__opt--first' : ''}}"
+            wx:for="{{options}}" wx:key="key" data-key="{{item.key}}" bindtap="onPick"
+            style="transition-delay:{{index * 80}}ms"
+            aria-role="button" aria-label="选择 {{item.key}} {{item.label}}" aria-disabled="{{locked || !!selectedKey}}"
+            hover-class="bt__press" hover-stay-time="80">
+        <text class="bt__opt-k">{{item.key}}</text>
+        <text class="bt__opt-t">{{item.label}}</text>
+      </view>
+      <view class="bt__foot" wx:if="{{xpLabel}}">{{xpLabel}}</view>
     </view>
   </view>
-</cy-sheet>
+
+  <!-- 眼皮:上下两片黑合拢;合上之后中间一个呼吸圈倒数 -->
+  <view class="bt__lid bt__lid--top" aria-hidden="true"></view>
+  <view class="bt__lid bt__lid--bot" aria-hidden="true"></view>
+  <view class="bt__dark" aria-live="polite" aria-hidden="{{eyes !== 'closed'}}">
+    <view class="bt__breath {{breathIn ? 'is-in' : ''}}"><text class="bt__count">{{count > 0 ? count : '好'}}</text></view>
+    <text class="bt__dark-t">{{count > 0 ? '别睁眼，慢慢尝' : '尝好了，松手睁眼'}}</text>
+  </view>
+
+  <view class="g-btn" wx:if="{{stage === 0}}" bindtap="onGot"
+        aria-role="button" aria-label="小样拿到了" hover-class="g-btn--press" hover-stay-time="80">小样拿到了</view>
+  <view class="g-btn" wx:elif="{{stage === 1}}" bindtouchstart="onEyesClose" bindtouchend="onEyesOpen" bindtouchcancel="onEyesOpen" bindtap="onEyesTap"
+        aria-role="button" aria-label="按住闭眼，尝完松手" hover-class="g-btn--press" hover-stay-time="80">按住，闭上眼</view>
+</cy-play-stage>
