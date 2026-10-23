@@ -722861,7 +722861,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/checkin-detail/index.js:175"
+        "staticSource": "pages/club/checkin-detail/index.js:193"
       }
     },
     {
@@ -722973,7 +722973,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/checkin-detail/index.js:172"
+        "staticSource": "pages/club/checkin-detail/index.js:190"
       }
     },
     {
@@ -723093,7 +723093,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/checkin-detail/index.js:114"
+        "staticSource": "pages/club/checkin-detail/index.js:132"
       }
     },
     {
@@ -723214,7 +723214,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/checkin-detail/index.js:114"
+        "staticSource": "pages/club/checkin-detail/index.js:132"
       }
     },
     {
@@ -729336,7 +729336,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1706"
+        "staticSource": "pages/club/detail/index.js:1759"
       }
     },
     {
@@ -729413,7 +729413,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1531"
+        "staticSource": "pages/club/detail/index.js:1547"
       }
     },
     {
@@ -729484,7 +729484,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1538"
+        "staticSource": "pages/club/detail/index.js:1554"
       }
     },
     {
@@ -729551,7 +729551,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1715"
+        "staticSource": "pages/club/detail/index.js:1768"
       }
     },
     {
@@ -729618,7 +729618,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3011"
+        "staticSource": "pages/club/detail/index.js:3064"
       }
     },
     {
@@ -729730,7 +729730,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2939"
+        "staticSource": "pages/club/detail/index.js:2992"
       }
     },
     {
@@ -729797,7 +729797,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2867"
+        "staticSource": "pages/club/detail/index.js:2920"
       }
     },
     {
@@ -729868,7 +729868,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2871"
+        "staticSource": "pages/club/detail/index.js:2924"
       }
     },
     {
@@ -729935,7 +729935,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2848"
+        "staticSource": "pages/club/detail/index.js:2901"
       }
     },
     {
@@ -730002,7 +730002,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2858"
+        "staticSource": "pages/club/detail/index.js:2911"
       }
     },
     {
@@ -730069,7 +730069,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3011"
+        "staticSource": "pages/club/detail/index.js:3064"
       }
     },
     {
@@ -730189,7 +730189,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3006"
+        "staticSource": "pages/club/detail/index.js:3059"
       }
     },
     {
@@ -730256,7 +730256,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:680"
+        "staticSource": "pages/club/detail/index.js:696"
       }
     },
     {
@@ -730324,7 +730324,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:659"
+        "staticSource": "pages/club/detail/index.js:675"
       }
     },
     {
@@ -730391,7 +730391,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:663"
+        "staticSource": "pages/club/detail/index.js:679"
       }
     },
     {
@@ -730458,7 +730458,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:663"
+        "staticSource": "pages/club/detail/index.js:679"
       }
     },
     {
@@ -730525,7 +730525,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:660"
+        "staticSource": "pages/club/detail/index.js:676"
       }
     },
     {
@@ -730592,7 +730592,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:670"
+        "staticSource": "pages/club/detail/index.js:686"
       }
     },
     {
@@ -730663,7 +730663,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:694"
+        "staticSource": "pages/club/detail/index.js:710"
       }
     },
     {
@@ -730804,7 +730804,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:689"
+        "staticSource": "pages/club/detail/index.js:705"
       }
     },
     {
@@ -730875,7 +730875,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2533"
+        "staticSource": "pages/club/detail/index.js:2586"
       }
     },
     {
@@ -730942,7 +730942,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:676"
+        "staticSource": "pages/club/detail/index.js:692"
       }
     },
     {
@@ -731009,7 +731009,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:673"
+        "staticSource": "pages/club/detail/index.js:689"
       }
     },
     {
@@ -731076,7 +731076,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:823"
+        "staticSource": "pages/club/detail/index.js:839"
       }
     },
     {
@@ -731196,7 +731196,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3173"
+        "staticSource": "pages/club/detail/index.js:3227"
       }
     },
     {
@@ -731324,7 +731324,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3174"
+        "staticSource": "pages/club/detail/index.js:3228"
       }
     },
     {
@@ -731392,7 +731392,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3179"
+        "staticSource": "pages/club/detail/index.js:3233"
       }
     },
     {
@@ -731544,7 +731544,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3175"
+        "staticSource": "pages/club/detail/index.js:3229"
       }
     },
     {
@@ -731694,7 +731694,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3176"
+        "staticSource": "pages/club/detail/index.js:3230"
       }
     },
     {
@@ -731772,7 +731772,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1569"
+        "staticSource": "pages/club/detail/index.js:1585"
       }
     },
     {
@@ -731839,7 +731839,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1573"
+        "staticSource": "pages/club/detail/index.js:1589"
       }
     },
     {
@@ -731908,7 +731908,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1574"
+        "staticSource": "pages/club/detail/index.js:1590"
       }
     },
     {
@@ -731975,7 +731975,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1725"
+        "staticSource": "pages/club/detail/index.js:1778"
       }
     },
     {
@@ -732042,7 +732042,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1741"
+        "staticSource": "pages/club/detail/index.js:1794"
       }
     },
     {
@@ -732163,7 +732163,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1732"
+        "staticSource": "pages/club/detail/index.js:1785"
       }
     },
     {
@@ -732230,7 +732230,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1723"
+        "staticSource": "pages/club/detail/index.js:1776"
       }
     },
     {
@@ -732350,7 +732350,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1748"
+        "staticSource": "pages/club/detail/index.js:1801"
       }
     },
     {
@@ -732417,7 +732417,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1797"
+        "staticSource": "pages/club/detail/index.js:1850"
       }
     },
     {
@@ -732526,7 +732526,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1792"
+        "staticSource": "pages/club/detail/index.js:1845"
       }
     },
     {
@@ -732593,7 +732593,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1727"
+        "staticSource": "pages/club/detail/index.js:1780"
       }
     },
     {
@@ -732702,7 +732702,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2700"
+        "staticSource": "pages/club/detail/index.js:2753"
       }
     },
     {
@@ -732779,7 +732779,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2692"
+        "staticSource": "pages/club/detail/index.js:2745"
       }
     },
     {
@@ -732849,7 +732849,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2724"
+        "staticSource": "pages/club/detail/index.js:2777"
       }
     },
     {
@@ -732959,7 +732959,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3090"
+        "staticSource": "pages/club/detail/index.js:3144"
       }
     },
     {
@@ -733078,7 +733078,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3021"
+        "staticSource": "pages/club/detail/index.js:3074"
       }
     },
     {
@@ -733189,7 +733189,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2710"
+        "staticSource": "pages/club/detail/index.js:2763"
       }
     },
     {
@@ -733300,7 +733300,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2717"
+        "staticSource": "pages/club/detail/index.js:2770"
       }
     },
     {
@@ -733367,7 +733367,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1829"
+        "staticSource": "pages/club/detail/index.js:1882"
       }
     },
     {
@@ -733485,7 +733485,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1922"
+        "staticSource": "pages/club/detail/index.js:1975"
       }
     },
     {
@@ -733594,7 +733594,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1961"
+        "staticSource": "pages/club/detail/index.js:2014"
       }
     },
     {
@@ -733663,7 +733663,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1650"
+        "staticSource": "pages/club/detail/index.js:1666"
       }
     },
     {
@@ -733781,7 +733781,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3262"
+        "staticSource": "pages/club/detail/index.js:3316"
       }
     },
     {
@@ -733894,7 +733894,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1668"
+        "staticSource": "pages/club/detail/index.js:1684"
       }
     },
     {
@@ -733963,7 +733963,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2730"
+        "staticSource": "pages/club/detail/index.js:2783"
       }
     },
     {
@@ -734076,7 +734076,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2746"
+        "staticSource": "pages/club/detail/index.js:2799"
       }
     },
     {
@@ -734185,7 +734185,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3118"
+        "staticSource": "pages/club/detail/index.js:3172"
       }
     },
     {
@@ -734313,7 +734313,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3127"
+        "staticSource": "pages/club/detail/index.js:3181"
       }
     },
     {
@@ -734380,7 +734380,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3125"
+        "staticSource": "pages/club/detail/index.js:3179"
       }
     },
     {
@@ -734508,7 +734508,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3127"
+        "staticSource": "pages/club/detail/index.js:3181"
       }
     },
     {
@@ -734617,7 +734617,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2173"
+        "staticSource": "pages/club/detail/index.js:2226"
       }
     },
     {
@@ -734688,7 +734688,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2763"
+        "staticSource": "pages/club/detail/index.js:2816"
       }
     },
     {
@@ -734808,7 +734808,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2884"
+        "staticSource": "pages/club/detail/index.js:2937"
       }
     },
     {
@@ -734920,7 +734920,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2575"
+        "staticSource": "pages/club/detail/index.js:2628"
       }
     },
     {
@@ -734991,7 +734991,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2635"
+        "staticSource": "pages/club/detail/index.js:2688"
       }
     },
     {
@@ -735062,7 +735062,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2635"
+        "staticSource": "pages/club/detail/index.js:2688"
       }
     },
     {
@@ -735171,7 +735171,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2183"
+        "staticSource": "pages/club/detail/index.js:2236"
       }
     },
     {
@@ -735280,7 +735280,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2183"
+        "staticSource": "pages/club/detail/index.js:2236"
       }
     },
     {
@@ -735389,7 +735389,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2192"
+        "staticSource": "pages/club/detail/index.js:2245"
       }
     },
     {
@@ -735612,7 +735612,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:786"
+        "staticSource": "pages/club/detail/index.js:802"
       }
     },
     {
@@ -735683,7 +735683,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2763"
+        "staticSource": "pages/club/detail/index.js:2816"
       }
     },
     {
@@ -735753,7 +735753,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2510"
+        "staticSource": "pages/club/detail/index.js:2563"
       }
     },
     {
@@ -735820,7 +735820,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2406"
+        "staticSource": "pages/club/detail/index.js:2459"
       }
     },
     {
@@ -735892,7 +735892,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2419"
+        "staticSource": "pages/club/detail/index.js:2472"
       }
     },
     {
@@ -735964,7 +735964,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2419"
+        "staticSource": "pages/club/detail/index.js:2472"
       }
     },
     {
@@ -736036,7 +736036,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2419"
+        "staticSource": "pages/club/detail/index.js:2472"
       }
     },
     {
@@ -736106,7 +736106,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2549"
+        "staticSource": "pages/club/detail/index.js:2602"
       }
     },
     {
@@ -736215,7 +736215,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1633"
+        "staticSource": "pages/club/detail/index.js:1649"
       }
     },
     {
@@ -736287,7 +736287,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2419"
+        "staticSource": "pages/club/detail/index.js:2472"
       }
     },
     {
@@ -736357,7 +736357,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2628"
+        "staticSource": "pages/club/detail/index.js:2681"
       }
     },
     {
@@ -736427,7 +736427,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2564"
+        "staticSource": "pages/club/detail/index.js:2617"
       }
     },
     {
@@ -736601,7 +736601,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:916"
+        "staticSource": "pages/club/detail/index.js:932"
       }
     },
     {
@@ -736721,7 +736721,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1000"
+        "staticSource": "pages/club/detail/index.js:1016"
       }
     },
     {
@@ -736791,7 +736791,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:989"
+        "staticSource": "pages/club/detail/index.js:1005"
       }
     },
     {
@@ -736909,7 +736909,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3262"
+        "staticSource": "pages/club/detail/index.js:3316"
       }
     },
     {
@@ -736976,7 +736976,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1426"
+        "staticSource": "pages/club/detail/index.js:1442"
       }
     },
     {
@@ -737120,7 +737120,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1430"
+        "staticSource": "pages/club/detail/index.js:1446"
       }
     },
     {
@@ -737190,7 +737190,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2653"
+        "staticSource": "pages/club/detail/index.js:2706"
       }
     },
     {
@@ -737304,7 +737304,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2782"
+        "staticSource": "pages/club/detail/index.js:2835"
       }
     },
     {
@@ -737415,7 +737415,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2794"
+        "staticSource": "pages/club/detail/index.js:2847"
       }
     },
     {
@@ -737526,7 +737526,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2794"
+        "staticSource": "pages/club/detail/index.js:2847"
       }
     },
     {
@@ -737639,7 +737639,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1032"
+        "staticSource": "pages/club/detail/index.js:1048"
       }
     },
     {
@@ -737710,7 +737710,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2635"
+        "staticSource": "pages/club/detail/index.js:2688"
       }
     },
     {
@@ -737781,7 +737781,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2635"
+        "staticSource": "pages/club/detail/index.js:2688"
       }
     },
     {
@@ -737891,7 +737891,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3408"
+        "staticSource": "pages/club/detail/index.js:3462"
       }
     },
     {
@@ -737959,7 +737959,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3258"
+        "staticSource": "pages/club/detail/index.js:3312"
       }
     },
     {
@@ -738076,7 +738076,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1187"
+        "staticSource": "pages/club/detail/index.js:1203"
       }
     },
     {
@@ -738186,7 +738186,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3408"
+        "staticSource": "pages/club/detail/index.js:3462"
       }
     },
     {
@@ -738256,7 +738256,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:889"
+        "staticSource": "pages/club/detail/index.js:905"
       }
     },
     {
@@ -738323,7 +738323,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:875"
+        "staticSource": "pages/club/detail/index.js:891"
       }
     },
     {
@@ -738393,7 +738393,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1581"
+        "staticSource": "pages/club/detail/index.js:1597"
       }
     },
     {
@@ -738503,7 +738503,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3408"
+        "staticSource": "pages/club/detail/index.js:3462"
       }
     },
     {
@@ -738624,7 +738624,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3449"
+        "staticSource": "pages/club/detail/index.js:3503"
       }
     },
     {
@@ -738694,7 +738694,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3488"
+        "staticSource": "pages/club/detail/index.js:3542"
       }
     },
     {
@@ -738804,7 +738804,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3408"
+        "staticSource": "pages/club/detail/index.js:3462"
       }
     },
     {
@@ -738874,7 +738874,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:889"
+        "staticSource": "pages/club/detail/index.js:905"
       }
     },
     {
@@ -738984,7 +738984,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3408"
+        "staticSource": "pages/club/detail/index.js:3462"
       }
     },
     {
@@ -739054,7 +739054,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:890"
+        "staticSource": "pages/club/detail/index.js:906"
       }
     },
     {
@@ -739121,7 +739121,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1796"
+        "staticSource": "pages/club/detail/index.js:1849"
       }
     },
     {
@@ -739188,7 +739188,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1817"
+        "staticSource": "pages/club/detail/index.js:1870"
       }
     },
     {
@@ -739255,7 +739255,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3307"
+        "staticSource": "pages/club/detail/index.js:3361"
       }
     },
     {
@@ -739325,7 +739325,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:893"
+        "staticSource": "pages/club/detail/index.js:909"
       }
     },
     {
@@ -739477,7 +739477,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2447"
+        "staticSource": "pages/club/detail/index.js:2500"
       }
     },
     {
@@ -739547,7 +739547,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:899"
+        "staticSource": "pages/club/detail/index.js:915"
       }
     },
     {
@@ -739617,7 +739617,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:905"
+        "staticSource": "pages/club/detail/index.js:921"
       }
     },
     {
@@ -739684,7 +739684,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3396"
+        "staticSource": "pages/club/detail/index.js:3450"
       }
     },
     {
@@ -739755,7 +739755,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2635"
+        "staticSource": "pages/club/detail/index.js:2688"
       }
     },
     {
@@ -739825,7 +739825,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2653"
+        "staticSource": "pages/club/detail/index.js:2706"
       }
     },
     {
@@ -739892,7 +739892,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1458"
+        "staticSource": "pages/club/detail/index.js:1474"
       }
     },
     {
@@ -740035,7 +740035,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2496"
+        "staticSource": "pages/club/detail/index.js:2549"
       }
     },
     {
@@ -740105,7 +740105,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3183"
+        "staticSource": "pages/club/detail/index.js:3237"
       }
     },
     {
@@ -740172,7 +740172,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3396"
+        "staticSource": "pages/club/detail/index.js:3450"
       }
     },
     {
@@ -740244,7 +740244,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2419"
+        "staticSource": "pages/club/detail/index.js:2472"
       }
     },
     {
@@ -740316,7 +740316,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2419"
+        "staticSource": "pages/club/detail/index.js:2472"
       }
     },
     {
@@ -740386,7 +740386,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2524"
+        "staticSource": "pages/club/detail/index.js:2577"
       }
     },
     {
@@ -740456,7 +740456,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2540"
+        "staticSource": "pages/club/detail/index.js:2593"
       }
     },
     {
@@ -740525,7 +740525,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3149"
+        "staticSource": "pages/club/detail/index.js:3203"
       }
     },
     {
@@ -740595,7 +740595,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2518"
+        "staticSource": "pages/club/detail/index.js:2571"
       }
     },
     {
@@ -740666,7 +740666,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2533"
+        "staticSource": "pages/club/detail/index.js:2586"
       }
     },
     {
@@ -740736,7 +740736,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1025"
+        "staticSource": "pages/club/detail/index.js:1041"
       }
     },
     {
@@ -740806,7 +740806,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2510"
+        "staticSource": "pages/club/detail/index.js:2563"
       }
     },
     {
@@ -740916,7 +740916,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3316"
+        "staticSource": "pages/club/detail/index.js:3370"
       }
     },
     {
@@ -741026,7 +741026,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3316"
+        "staticSource": "pages/club/detail/index.js:3370"
       }
     },
     {
@@ -741136,7 +741136,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3370"
+        "staticSource": "pages/club/detail/index.js:3424"
       }
     },
     {
@@ -741246,7 +741246,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3370"
+        "staticSource": "pages/club/detail/index.js:3424"
       }
     },
     {
@@ -741315,7 +741315,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:2663"
+        "staticSource": "pages/club/detail/index.js:2716"
       }
     },
     {
@@ -741425,7 +741425,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3343"
+        "staticSource": "pages/club/detail/index.js:3397"
       }
     },
     {
@@ -741535,7 +741535,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3343"
+        "staticSource": "pages/club/detail/index.js:3397"
       }
     },
     {
@@ -741605,7 +741605,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:989"
+        "staticSource": "pages/club/detail/index.js:1005"
       }
     },
     {
@@ -741711,7 +741711,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3401"
+        "staticSource": "pages/club/detail/index.js:3455"
       }
     },
     {
@@ -741782,7 +741782,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:799"
+        "staticSource": "pages/club/detail/index.js:815"
       }
     },
     {
@@ -741995,7 +741995,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:793"
+        "staticSource": "pages/club/detail/index.js:809"
       }
     },
     {
@@ -742062,7 +742062,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1853"
+        "staticSource": "pages/club/detail/index.js:1906"
       }
     },
     {
@@ -742129,7 +742129,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1864"
+        "staticSource": "pages/club/detail/index.js:1917"
       }
     },
     {
@@ -742196,7 +742196,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1847"
+        "staticSource": "pages/club/detail/index.js:1900"
       }
     },
     {
@@ -742316,7 +742316,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1873"
+        "staticSource": "pages/club/detail/index.js:1926"
       }
     },
     {
@@ -742383,7 +742383,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:3205"
+        "staticSource": "pages/club/detail/index.js:3259"
       }
     },
     {
@@ -742450,7 +742450,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1871"
+        "staticSource": "pages/club/detail/index.js:1924"
       }
     },
     {
@@ -742517,7 +742517,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1870"
+        "staticSource": "pages/club/detail/index.js:1923"
       }
     },
     {
@@ -742584,7 +742584,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1987"
+        "staticSource": "pages/club/detail/index.js:2040"
       }
     },
     {
@@ -742651,7 +742651,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1463"
+        "staticSource": "pages/club/detail/index.js:1479"
       }
     },
     {
@@ -742718,7 +742718,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1470"
+        "staticSource": "pages/club/detail/index.js:1486"
       }
     },
     {
@@ -742785,7 +742785,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1467"
+        "staticSource": "pages/club/detail/index.js:1483"
       }
     },
     {
@@ -742852,7 +742852,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1468"
+        "staticSource": "pages/club/detail/index.js:1484"
       }
     },
     {
@@ -742919,7 +742919,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1469"
+        "staticSource": "pages/club/detail/index.js:1485"
       }
     },
     {
@@ -742986,7 +742986,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1526"
+        "staticSource": "pages/club/detail/index.js:1542"
       }
     },
     {
@@ -743098,7 +743098,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1472"
+        "staticSource": "pages/club/detail/index.js:1488"
       }
     },
     {
@@ -743210,7 +743210,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/detail/index.js:1472"
+        "staticSource": "pages/club/detail/index.js:1488"
       }
     },
     {
@@ -744337,7 +744337,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/event-ops/index.js:634"
+        "staticSource": "pages/club/event-ops/index.js:635"
       }
     },
     {
@@ -744447,7 +744447,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/event-ops/index.js:608"
+        "staticSource": "pages/club/event-ops/index.js:609"
       }
     },
     {
@@ -744514,7 +744514,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/event-ops/index.js:692"
+        "staticSource": "pages/club/event-ops/index.js:693"
       }
     },
     {
@@ -744581,7 +744581,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/event-ops/index.js:687"
+        "staticSource": "pages/club/event-ops/index.js:688"
       }
     },
     {
@@ -744648,7 +744648,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/event-ops/index.js:718"
+        "staticSource": "pages/club/event-ops/index.js:719"
       }
     },
     {
@@ -744715,7 +744715,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/event-ops/index.js:713"
+        "staticSource": "pages/club/event-ops/index.js:714"
       }
     },
     {
@@ -744782,7 +744782,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/event-ops/index.js:719"
+        "staticSource": "pages/club/event-ops/index.js:720"
       }
     },
     {
@@ -744849,7 +744849,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/event-ops/index.js:721"
+        "staticSource": "pages/club/event-ops/index.js:722"
       }
     },
     {
@@ -744916,7 +744916,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/event-ops/index.js:734"
+        "staticSource": "pages/club/event-ops/index.js:735"
       }
     },
     {
@@ -744983,7 +744983,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/event-ops/index.js:748"
+        "staticSource": "pages/club/event-ops/index.js:749"
       }
     },
     {
@@ -745050,7 +745050,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/event-ops/index.js:742"
+        "staticSource": "pages/club/event-ops/index.js:743"
       }
     },
     {
@@ -745117,7 +745117,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/event-ops/index.js:720"
+        "staticSource": "pages/club/event-ops/index.js:721"
       }
     },
     {
@@ -745184,7 +745184,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/event-ops/index.js:723"
+        "staticSource": "pages/club/event-ops/index.js:724"
       }
     },
     {
@@ -745251,7 +745251,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/event-ops/index.js:722"
+        "staticSource": "pages/club/event-ops/index.js:723"
       }
     },
     {
@@ -745318,7 +745318,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/event-ops/index.js:733"
+        "staticSource": "pages/club/event-ops/index.js:734"
       }
     },
     {
@@ -745385,7 +745385,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/event-ops/index.js:728"
+        "staticSource": "pages/club/event-ops/index.js:729"
       }
     },
     {
@@ -745521,7 +745521,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/event-ops/index.js:758"
+        "staticSource": "pages/club/event-ops/index.js:759"
       }
     },
     {
@@ -745657,7 +745657,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/event-ops/index.js:758"
+        "staticSource": "pages/club/event-ops/index.js:759"
       }
     },
     {
@@ -745724,7 +745724,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/event-ops/index.js:979"
+        "staticSource": "pages/club/event-ops/index.js:988"
       }
     },
     {
@@ -745860,7 +745860,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/event-ops/index.js:972"
+        "staticSource": "pages/club/event-ops/index.js:981"
       }
     },
     {
@@ -745985,7 +745985,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/event-ops/index.js:882"
+        "staticSource": "pages/club/event-ops/index.js:891"
       }
     },
     {
@@ -746053,7 +746053,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/event-ops/index.js:942"
+        "staticSource": "pages/club/event-ops/index.js:951"
       }
     },
     {
@@ -746121,7 +746121,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/event-ops/index.js:942"
+        "staticSource": "pages/club/event-ops/index.js:951"
       }
     },
     {
@@ -746191,7 +746191,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/event-ops/index.js:438"
+        "staticSource": "pages/club/event-ops/index.js:439"
       }
     },
     {
@@ -746258,7 +746258,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/event-ops/index.js:1077"
+        "staticSource": "pages/club/event-ops/index.js:1086"
       }
     },
     {
@@ -746376,7 +746376,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/event-ops/index.js:1083"
+        "staticSource": "pages/club/event-ops/index.js:1092"
       }
     },
     {
@@ -1060534,7 +1060534,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:512"
+        "staticSource": "pages/square/detail/index.js:513"
       }
     },
     {
@@ -1060601,7 +1060601,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:399"
+        "staticSource": "pages/square/detail/index.js:400"
       }
     },
     {
@@ -1060766,7 +1060766,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:552"
+        "staticSource": "pages/square/detail/index.js:553"
       }
     },
     {
@@ -1061072,7 +1061072,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:587"
+        "staticSource": "pages/square/detail/index.js:588"
       }
     },
     {
@@ -1061237,7 +1061237,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:660"
+        "staticSource": "pages/square/detail/index.js:661"
       }
     },
     {
@@ -1061304,7 +1061304,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:326"
+        "staticSource": "pages/square/detail/index.js:327"
       }
     },
     {
@@ -1061508,7 +1061508,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:854"
+        "staticSource": "pages/square/detail/index.js:855"
       }
     },
     {
@@ -1061744,7 +1061744,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:905"
+        "staticSource": "pages/square/detail/index.js:906"
       }
     },
     {
@@ -1061907,7 +1061907,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:255"
+        "staticSource": "pages/square/detail/index.js:256"
       }
     },
     {
@@ -1062044,7 +1062044,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:110"
+        "staticSource": "pages/square/detail/index.js:111"
       }
     },
     {
@@ -1062207,7 +1062207,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:197"
+        "staticSource": "pages/square/detail/index.js:198"
       }
     },
     {
@@ -1062274,7 +1062274,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:336"
+        "staticSource": "pages/square/detail/index.js:337"
       }
     },
     {
@@ -1062437,7 +1062437,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:321"
+        "staticSource": "pages/square/detail/index.js:322"
       }
     },
     {
@@ -1062504,7 +1062504,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:120"
+        "staticSource": "pages/square/detail/index.js:121"
       }
     },
     {
@@ -1062737,7 +1062737,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:260"
+        "staticSource": "pages/square/detail/index.js:261"
       }
     },
     {
@@ -1062804,7 +1062804,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:756"
+        "staticSource": "pages/square/detail/index.js:757"
       }
     },
     {
@@ -1062957,7 +1062957,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:762"
+        "staticSource": "pages/square/detail/index.js:763"
       }
     },
     {
@@ -1063032,7 +1063032,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:762"
+        "staticSource": "pages/square/detail/index.js:763"
       }
     },
     {
@@ -1063238,7 +1063238,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:762"
+        "staticSource": "pages/square/detail/index.js:763"
       }
     },
     {
@@ -1063305,7 +1063305,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:824"
+        "staticSource": "pages/square/detail/index.js:825"
       }
     },
     {
@@ -1063447,7 +1063447,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:828"
+        "staticSource": "pages/square/detail/index.js:829"
       }
     },
     {
@@ -1063514,7 +1063514,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:156"
+        "staticSource": "pages/square/detail/index.js:157"
       }
     },
     {
@@ -1063627,7 +1063627,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:158"
+        "staticSource": "pages/square/detail/index.js:159"
       }
     },
     {
@@ -1063695,7 +1063695,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:711"
+        "staticSource": "pages/square/detail/index.js:712"
       }
     },
     {
@@ -1063763,7 +1063763,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:710"
+        "staticSource": "pages/square/detail/index.js:711"
       }
     },
     {
@@ -1063834,7 +1063834,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:139"
+        "staticSource": "pages/square/detail/index.js:140"
       }
     },
     {
@@ -1063945,7 +1063945,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:452"
+        "staticSource": "pages/square/detail/index.js:453"
       }
     },
     {
@@ -1064023,7 +1064023,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:751"
+        "staticSource": "pages/square/detail/index.js:752"
       }
     },
     {
@@ -1064163,7 +1064163,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:172"
+        "staticSource": "pages/square/detail/index.js:173"
       }
     },
     {
@@ -1064233,7 +1064233,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:172"
+        "staticSource": "pages/square/detail/index.js:173"
       }
     },
     {
@@ -1064317,7 +1064317,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:177"
+        "staticSource": "pages/square/detail/index.js:178"
       }
     },
     {
@@ -1064387,7 +1064387,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/square/detail/index.js:187"
+        "staticSource": "pages/square/detail/index.js:188"
       }
     },
     {
@@ -1112352,7 +1112352,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:1040"
+        "staticSource": "subpackageB/pages/im/chat/index.js:1061"
       }
     },
     {
@@ -1112474,7 +1112474,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:1040"
+        "staticSource": "subpackageB/pages/im/chat/index.js:1061"
       }
     },
     {
@@ -1112589,7 +1112589,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:1108"
+        "staticSource": "subpackageB/pages/im/chat/index.js:1129"
       }
     },
     {
@@ -1112704,7 +1112704,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:1108"
+        "staticSource": "subpackageB/pages/im/chat/index.js:1129"
       }
     },
     {
@@ -1112826,7 +1112826,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:1040"
+        "staticSource": "subpackageB/pages/im/chat/index.js:1061"
       }
     },
     {
@@ -1112954,7 +1112954,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:562"
+        "staticSource": "subpackageB/pages/im/chat/index.js:583"
       }
     },
     {
@@ -1113082,7 +1113082,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:562"
+        "staticSource": "subpackageB/pages/im/chat/index.js:583"
       }
     },
     {
@@ -1113149,7 +1113149,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:662"
+        "staticSource": "subpackageB/pages/im/chat/index.js:683"
       }
     },
     {
@@ -1113269,7 +1113269,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:482"
+        "staticSource": "subpackageB/pages/im/chat/index.js:503"
       }
     },
     {
@@ -1113336,7 +1113336,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:480"
+        "staticSource": "subpackageB/pages/im/chat/index.js:501"
       }
     },
     {
@@ -1113456,7 +1113456,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:482"
+        "staticSource": "subpackageB/pages/im/chat/index.js:503"
       }
     },
     {
@@ -1113523,7 +1113523,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:1071"
+        "staticSource": "subpackageB/pages/im/chat/index.js:1092"
       }
     },
     {
@@ -1113632,7 +1113632,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:1104"
+        "staticSource": "subpackageB/pages/im/chat/index.js:1125"
       }
     },
     {
@@ -1113699,7 +1113699,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:715"
+        "staticSource": "subpackageB/pages/im/chat/index.js:736"
       }
     },
     {
@@ -1113808,7 +1113808,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:721"
+        "staticSource": "subpackageB/pages/im/chat/index.js:742"
       }
     },
     {
@@ -1113928,7 +1113928,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:773"
+        "staticSource": "subpackageB/pages/im/chat/index.js:794"
       }
     },
     {
@@ -1113995,7 +1113995,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:675"
+        "staticSource": "subpackageB/pages/im/chat/index.js:696"
       }
     },
     {
@@ -1114170,7 +1114170,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:667"
+        "staticSource": "subpackageB/pages/im/chat/index.js:688"
       }
     },
     {
@@ -1114237,7 +1114237,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:836"
+        "staticSource": "subpackageB/pages/im/chat/index.js:857"
       }
     },
     {
@@ -1114329,7 +1114329,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:807"
+        "staticSource": "subpackageB/pages/im/chat/index.js:828"
       }
     },
     {
@@ -1114404,7 +1114404,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:807"
+        "staticSource": "subpackageB/pages/im/chat/index.js:828"
       }
     },
     {
@@ -1114498,7 +1114498,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:807"
+        "staticSource": "subpackageB/pages/im/chat/index.js:828"
       }
     },
     {
@@ -1114645,7 +1114645,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:807"
+        "staticSource": "subpackageB/pages/im/chat/index.js:828"
       }
     },
     {
@@ -1114712,7 +1114712,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:903"
+        "staticSource": "subpackageB/pages/im/chat/index.js:924"
       }
     },
     {
@@ -1114779,7 +1114779,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:106"
+        "staticSource": "subpackageB/pages/im/chat/index.js:108"
       }
     },
     {
@@ -1114847,7 +1114847,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:831"
+        "staticSource": "subpackageB/pages/im/chat/index.js:852"
       }
     },
     {
@@ -1114948,7 +1114948,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:939"
+        "staticSource": "subpackageB/pages/im/chat/index.js:960"
       }
     },
     {
@@ -1115049,7 +1115049,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:939"
+        "staticSource": "subpackageB/pages/im/chat/index.js:960"
       }
     },
     {
@@ -1115117,7 +1115117,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:831"
+        "staticSource": "subpackageB/pages/im/chat/index.js:852"
       }
     },
     {
@@ -1115228,7 +1115228,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:204"
+        "staticSource": "subpackageB/pages/im/chat/index.js:206"
       }
     },
     {
@@ -1115348,7 +1115348,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:347"
+        "staticSource": "subpackageB/pages/im/chat/index.js:349"
       }
     },
     {
@@ -1115418,7 +1115418,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:342"
+        "staticSource": "subpackageB/pages/im/chat/index.js:344"
       }
     },
     {
@@ -1115495,7 +1115495,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:1010"
+        "staticSource": "subpackageB/pages/im/chat/index.js:1031"
       }
     },
     {
@@ -1115565,7 +1115565,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:1022"
+        "staticSource": "subpackageB/pages/im/chat/index.js:1043"
       }
     },
     {
@@ -1115643,7 +1115643,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageB/pages/im/chat/index.js:802"
+        "staticSource": "subpackageB/pages/im/chat/index.js:823"
       }
     },
     {
@@ -1145852,7 +1145852,134 @@
       }
     },
     {
-      "id": "subpackageMember/components/cy/scene-roam-poi-detail/index.wxml:45:bind:retry:recoverInteraction:15",
+      "id": "subpackageMember/components/cy/scene-roam-poi-detail/index.wxml:47:bind:afterleave:onChoiceSheetCancel:14",
+      "route": "component:subpackageMember/components/cy/scene-roam-poi-detail/index",
+      "hostRoutes": [
+        "pages/merchant/index/index",
+        "pages/play/index",
+        "pages/roam/index",
+        "subpackageMember/coupon-wallet/index",
+        "subpackageRoam/poi-detail/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/merchant/index/index",
+          "segments": [
+            {
+              "selector": "cy-scene-roam-poi-detail",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "cy-scene-roam-poi-detail",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/roam/index",
+          "segments": [
+            {
+              "selector": "cy-scene-roam-poi-detail",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/coupon-wallet/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-roam-poi-detail",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/poi-detail/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-roam-poi-detail",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "subpackageMember/components/cy/scene-roam-poi-detail/index.wxml",
+        "js": "subpackageMember/components/cy/scene-roam-poi-detail/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "page-container",
+        "event": "bind:afterleave",
+        "handler": "onChoiceSheetCancel",
+        "line": 47,
+        "selectorHint": "page-container[bind:afterleave]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "subpackageMember/components/cy/scene-roam-poi-detail/index.js:102"
+      }
+    },
+    {
+      "id": "subpackageMember/components/cy/scene-roam-poi-detail/index.wxml:50:bind:retry:recoverInteraction:16",
       "route": "component:subpackageMember/components/cy/scene-roam-poi-detail/index",
       "hostRoutes": [
         "pages/merchant/index/index",
@@ -1145943,7 +1146070,7 @@
         "tag": "cy-error",
         "event": "bind:retry",
         "handler": "recoverInteraction",
-        "line": 45,
+        "line": 50,
         "selectorHint": "cy-error[bind:retry]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1168666,7 +1168793,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/session/index.js:613"
+        "staticSource": "subpackageRoam/session/index.js:616"
       }
     },
     {
@@ -1168736,7 +1168863,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/session/index.js:615"
+        "staticSource": "subpackageRoam/session/index.js:618"
       }
     },
     {
@@ -1168806,7 +1168933,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/session/index.js:615"
+        "staticSource": "subpackageRoam/session/index.js:618"
       }
     },
     {
@@ -1168876,7 +1169003,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/session/index.js:615"
+        "staticSource": "subpackageRoam/session/index.js:618"
       }
     },
     {
@@ -1168946,7 +1169073,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/session/index.js:615"
+        "staticSource": "subpackageRoam/session/index.js:618"
       }
     },
     {
@@ -1169647,7 +1169774,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageRoam/session/index.js:615"
+        "staticSource": "subpackageRoam/session/index.js:618"
       }
     },
     {

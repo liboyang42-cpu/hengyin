@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.DateTimeException;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -34,7 +35,14 @@ public class ClubEventScheduleMaterializer {
             if (requested <= 0 || requested > MAX_OCCURRENCES) {
                 throw badRequest("每周场次数必须为 1 至 64");
             }
-            for (int i = 0; i < requested && !cursor.isAfter(horizon); i++, cursor = cursor.plusWeeks(1)) {
+            // 超出 90 天窗口的期数直接拒绝并说明上限，不静默少排（请求 64 期只落 13 期）。
+            if (!cursor.isBefore(todayShanghai) && !cursor.isAfter(horizon)) {
+                long maxWeekly = ChronoUnit.WEEKS.between(cursor, horizon) + 1;
+                if (requested > maxWeekly) {
+                    throw badRequest("首次日期起未来 90 天内最多可排 " + maxWeekly + " 期，请减少场次数");
+                }
+            }
+            for (int i = 0; i < requested; i++, cursor = cursor.plusWeeks(1)) {
                 dates.add(cursor);
             }
         } else {

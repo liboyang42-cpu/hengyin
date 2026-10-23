@@ -110,6 +110,9 @@ final class GameSessionLedgerMySqlFixture {
         db.execute("drop table cms_registration");
         String base = new String(Files.readAllBytes(Paths.get("../sql/base_schema_20260818.sql")), StandardCharsets.UTF_8);
         for (String table : BASE_TABLES) db.execute(statement(base, "CREATE TABLE `" + table + "` ("));
+        // 快照之后 migration_20261003_merchant_offer_withdrawal_columns.sql 补的退出理由列:
+        // 开局建站(insertStationsFromTopic)要按它排除商家已退出的章节节点。
+        db.execute("ALTER TABLE merchant_chapter_offer ADD COLUMN withdraw_reason VARCHAR(500) NULL DEFAULT NULL");
         for (String migration : List.of("sql/migration_20260820_questo_puzzle_atmosphere.sql",
                 "sql/migration_theme_runtime_20261004.sql")) {
             String script = new String(Files.readAllBytes(Paths.get(migration)), StandardCharsets.UTF_8);

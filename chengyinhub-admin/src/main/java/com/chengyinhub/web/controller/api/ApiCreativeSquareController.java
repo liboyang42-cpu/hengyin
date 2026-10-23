@@ -1296,25 +1296,33 @@ public class ApiCreativeSquareController extends BaseController {
         umsCreativeSquareLike.setMemberId(member_id);
 
 
+        // 同一人对同一帖只保留一行态度:同态度再点=取消;赞↔踩=改写现有行(原来一律删除,
+        // 已赞时点踩会落成「无态度」)。历史重复行一并清掉,回包给权威 isLiked(0/1/2)。
         List<UmsCreativeSquareLike> list = umsCreativeSquareLikeService.selectUmsCreativeSquareLikeList(umsCreativeSquareLike);
-        if (list.size() > 0) {
-            int likeType2 = list.get(0).getLikeType();
-            if (likeType2 == 1) {
-                umsCreativeSquareLikeService.deleteUmsCreativeSquareLikeById(list.get(0).getId());
-                return success("取消点赞成功");
-            } else {
-                umsCreativeSquareLikeService.deleteUmsCreativeSquareLikeById(list.get(0).getId());
-                return success("取消踩成功");
-            }
-        } else {
-            //新增
-            umsCreativeSquareLike.setLikeType(likeType);
-            int rows = umsCreativeSquareLikeService.insertUmsCreativeSquareLike(umsCreativeSquareLike);
-            if (rows > 0) {
-                return success(likeType == 1 ? "点赞成功" : "踩成功");
-            } else {
-                return error("操作失败");
-            }
+        UmsCreativeSquareLike existing = list.isEmpty() ? null : list.get(0);
+        for (int i = 1; i < list.size(); i++) {
+            umsCreativeSquareLikeService.deleteUmsCreativeSquareLikeById(list.get(i).getId());
         }
+        Map<String, Object> state = new HashMap<String, Object>();
+        if (existing != null && likeType.equals(existing.getLikeType())) {
+            umsCreativeSquareLikeService.deleteUmsCreativeSquareLikeById(existing.getId());
+            state.put("isLiked", 0);
+            return AjaxResult.success(likeType == 1 ? "取消点赞成功" : "取消踩成功", state);
+        }
+        int rows;
+        if (existing != null) {
+            UmsCreativeSquareLike change = new UmsCreativeSquareLike();
+            change.setId(existing.getId());
+            change.setLikeType(likeType);
+            rows = umsCreativeSquareLikeService.updateUmsCreativeSquareLike(change);
+        } else {
+            umsCreativeSquareLike.setLikeType(likeType);
+            rows = umsCreativeSquareLikeService.insertUmsCreativeSquareLike(umsCreativeSquareLike);
+        }
+        if (rows <= 0) {
+            throw new ServiceException("操作失败");
+        }
+        state.put("isLiked", likeType);
+        return AjaxResult.success(likeType == 1 ? "点赞成功" : "踩成功", state);
     }
 }

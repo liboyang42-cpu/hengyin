@@ -60,6 +60,32 @@
         order by cp.is_pinned desc, cp.pinned_at desc, cp.id desc
     </select>
 
+    <!-- 俱乐部动态流分页(P0-82):pinned=true 取置顶帖;否则取非置顶帖按 id 倒序,beforeId 为翻页游标。 -->
+    <select id="selectClubPostPage" resultMap="ClubPostResult">
+        select cp.id, cp.club_id, cp.author_member_id, cp.content, cp.images, cp.ref_type, cp.ref_id, cp.type,
+               cp.like_count, cp.comment_count, cp.del_flag, cp.is_pinned, cp.pinned_at,
+               cp.version, cp.create_time, cp.update_time,
+               exists(select 1 from club_post_revision r where r.post_id = cp.id) as edited,
+               m.nickname as nickname, m.avatar as avatar
+        from club_post cp
+        join club c on c.id = cp.club_id and c.del_flag = 0
+        left join ums_member m on m.id = cp.author_member_id
+        where cp.del_flag = 0
+          and cp.club_id = #{clubId}
+        <choose>
+            <when test="pinned">
+          and cp.is_pinned = 1
+        order by cp.pinned_at desc, cp.id desc
+            </when>
+            <otherwise>
+          and cp.is_pinned = 0
+          <if test="beforeId != null"> and cp.id &lt; #{beforeId}</if>
+        order by cp.id desc
+            </otherwise>
+        </choose>
+        limit #{limit}
+    </select>
+
     <!-- 聚合动态流:按俱乐部集合取。clubIds 为空时调用方直接返回空列表,
          不进这里 —— MyBatis 的 foreach 遇到空集合会生成 `in ()` 语法错。 -->
     <select id="selectFeedByClubIds" resultMap="ClubPostResult">

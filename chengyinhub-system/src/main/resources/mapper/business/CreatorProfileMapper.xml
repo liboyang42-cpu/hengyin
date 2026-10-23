@@ -45,4 +45,19 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         where id = #{id}
           and apply_status = 0
     </update>
+
+    <update id="resubmitRejectedCreatorProfile" parameterType="CreatorProfile">
+        update creator_profile
+        set creator_name = #{creatorName},
+            bio = #{bio},
+            avatar_url = #{avatarUrl},
+            apply_status = 0,
+            reviewer_id = null,
+            review_reason = null,
+            reviewed_at = null,
+            update_time = #{updateTime}
+        where id = #{id}
+          and member_id = #{memberId}
+          and apply_status = 2
+    </update>
 </mapper>

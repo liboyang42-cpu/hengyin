@@ -223,6 +223,54 @@ class ClubPostWriteLifecycleTest {
         verify(postService).incrementLikeCount(POST_ID, 1);
     }
 
+    /** P1-023:带目标态的点赞重试不会把已生效的赞再翻掉;重复取消同理。 */
+    @Test
+    void likeWithTargetStateIsIdempotentOnRetry() {
+        when(postService.selectClubPostById(POST_ID)).thenReturn(post());
+        when(postService.selectClubPostByIdForUpdate(POST_ID)).thenReturn(post());
+        when(clubService.selectClubByIdForUpdate(CLUB_ID)).thenReturn(new Club());
+        when(likeService.selectByPostAndMember(POST_ID, MEMBER_ID)).thenReturn(new ClubPostLike());
+        ClubPostLike retry = new ClubPostLike();
+        retry.setPostId(POST_ID);
+        retry.setLiked(true);
+
+        AjaxResult result = controller.postLike(retry);
+
+        assertEquals(200, result.get("code"));
+        assertEquals(true, ((Map<?, ?>) result.get("data")).get("liked"));
+        verify(likeService, never()).insertClubPostLike(any());
+        verify(likeService, never()).deleteByPostAndMember(any(), any());
+        verify(postService, never()).incrementLikeCount(any(), anyInt());
+
+        when(likeService.selectByPostAndMember(POST_ID, MEMBER_ID)).thenReturn(null);
+        ClubPostLike unlikeRetry = new ClubPostLike();
+        unlikeRetry.setPostId(POST_ID);
+        unlikeRetry.setLiked(false);
+
+        AjaxResult unliked = controller.postLike(unlikeRetry);
+
+        assertEquals(false, ((Map<?, ?>) unliked.get("data")).get("liked"));
+        verify(likeService, never()).deleteByPostAndMember(any(), any());
+        verify(postService, never()).incrementLikeCount(any(), anyInt());
+    }
+
+    @Test
+    void likeWithTargetStateWritesOnlyWhenStateDiffers() {
+        when(postService.selectClubPostById(POST_ID)).thenReturn(post());
+        when(postService.selectClubPostByIdForUpdate(POST_ID)).thenReturn(post());
+        when(clubService.selectClubByIdForUpdate(CLUB_ID)).thenReturn(new Club());
+        when(likeService.selectByPostAndMember(POST_ID, MEMBER_ID)).thenReturn(new ClubPostLike());
+        ClubPostLike body = new ClubPostLike();
+        body.setPostId(POST_ID);
+        body.setLiked(false);
+
+        AjaxResult result = controller.postLike(body);
+
+        assertEquals(false, ((Map<?, ?>) result.get("data")).get("liked"));
+        verify(likeService).deleteByPostAndMember(POST_ID, MEMBER_ID);
+        verify(postService).incrementLikeCount(POST_ID, -1);
+    }
+
     @Test
     void activePostStillAcceptsOwnerCommentAfterLockedRead() {
         when(postService.selectClubPostById(POST_ID)).thenReturn(post());

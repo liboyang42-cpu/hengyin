@@ -77,6 +77,8 @@ class CityDirectorConsoleMySqlIT {
             MATE_A = 12L, STRANGER_CLUB = 77L;
     /** 本主题已下线节点、待审商家节点、别的主题节点:PREPARE 一个都不许带进本局。 */
     static final long OFFLINE_NODE = 14L, PENDING_NODE = 15L, FOREIGN_NODE = 21L;
+    /** 已过审、但所属商家已退出本章供给(offer 停用 + 退出理由)的节点:玩家看不到,PREPARE 也不许建站。 */
+    static final long WITHDRAWN_NODE = 16L, WITHDRAWN_CHAPTER = 66L, WITHDRAWN_MERCHANT = 340L;
 
     /** 夹具 CONFIG 是"已开局快照";PREPARE 走发布校验,每站还须带商家操作说明与防剧透提醒。 */
     static final String PUBLISHED_CONFIG = CONFIG.replace("\"verificationRequired\":true}}",
@@ -122,6 +124,10 @@ class CityDirectorConsoleMySqlIT {
                         + "(?,?,'已下线节点',?,1,0),(?,?,'待审节点',?,0,1),(?,?,'别的主题',?,1,1)",
                 ARCHIVE_NODE, TOPIC, ARCHIVE_MERCHANT, CLOCK_NODE, TOPIC, CLOCK_MERCHANT, MARKET_NODE, TOPIC, MARKET_MERCHANT,
                 OFFLINE_NODE, TOPIC, ARCHIVE_MERCHANT, PENDING_NODE, TOPIC, CLOCK_MERCHANT, FOREIGN_NODE, TOPIC + 1, ARCHIVE_MERCHANT);
+        it.db.update("insert into cms_topic_node(id,topic_id,chapter_id,name,merchant_member_id,node_audit_status,status)"
+                + " values(?,?,?,'已退出商家节点',?,1,1)", WITHDRAWN_NODE, TOPIC, WITHDRAWN_CHAPTER, WITHDRAWN_MERCHANT);
+        it.db.update("insert into merchant_chapter_offer(topic_id,chapter_id,merchant_id,terms_mode,quota_total,quota_used,"
+                + "status,withdraw_reason) values(?,?,?,'TRAFFIC',0,0,0,'商家主动退出')", TOPIC, WITHDRAWN_CHAPTER, WITHDRAWN_MERCHANT);
         // 名单负控:A 队未付费队友、B 队已退队成员、别场队伍里已付费的玩家;A 队再加一名已付费队友(账号隔离用)。
         it.db.update("insert into play_team(id,owner_type,owner_id,leader_member_id,status) values(?,2,?,?,2)",
                 OTHER_TEAM, OTHER_ACTIVITY, OTHER_PLAYER);
@@ -211,7 +217,7 @@ class CityDirectorConsoleMySqlIT {
         List<Map<String, Object>> invited = stations();
         assertEquals(List.of(ARCHIVE_NODE, CLOCK_NODE, MARKET_NODE),
                 invited.stream().map(r -> ((Number) r.get("node_id")).longValue()).toList(),
-                "只带本主题上线且审核通过的节点;下线/待审/别的主题节点都不进本局");
+                "只带本主题上线且审核通过的节点;下线/待审/别的主题/商家已退出的节点都不进本局");
         assertEquals(List.of("ARCHIVE", "CLOCK_TOWER", "MARKET"), invited.stream().map(r -> r.get("station_code")).toList());
         assertEquals(List.of(ARCHIVE_MERCHANT, CLOCK_MERCHANT, MARKET_MERCHANT),
                 invited.stream().map(r -> ((Number) r.get("merchant_member_id")).longValue()).toList());

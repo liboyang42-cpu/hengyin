@@ -4592,6 +4592,7 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
                 throw error("GAME_CONFIG_INVALID", "剧情章节编号必须唯一且为正数");
             }
         }
+        validateStoryVariables(config.path("story").path("variables"), "剧情初始变量");
         Set<String> choiceIds = new HashSet<>();
         for (JsonNode choice : config.path("story").path("choices")) {
             String choiceId = choice.path("id").asText();
@@ -4624,9 +4625,14 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
 
     /**
      * 剧情行动效果:数组 = 路线图写法(SET / INC / ADD_TAG),按契约校验 op、整数范围与条数;
-     * 对象 = 旧写法,原样放行。声明不合法时在准备阶段就拒绝,不落任何一局。
+     * 对象 = 旧写法,只要求值为整数(数组写法的条件只认数值变量,非整数会被静默当成缺失)。
+     * 声明不合法时在准备阶段就拒绝,不落任何一局。
      */
     private void validateStoryEffects(JsonNode effects) {
+        if (effects != null && effects.isObject()) {
+            validateStoryVariables(effects, "剧情行动效果");
+            return;
+        }
         if (effects == null || effects.isNull() || !effects.isArray()) return;
         requireStoryRuleCount(effects, "剧情行动效果");
         for (JsonNode effect : effects) {
@@ -4687,6 +4693,21 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
         String tag = value.isTextual() ? value.asText() : "";
         if (StringUtils.isBlank(tag)) {
             throw error("GAME_CONFIG_INVALID", label + "的标签必须是非空文本");
+        }
+    }
+
+    /** 剧情变量(初始值与旧写法效果)只能是整数;标签保留键不允许被当成变量写。 */
+    private void validateStoryVariables(JsonNode variables, String label) {
+        if (variables == null || variables.isMissingNode() || variables.isNull()) return;
+        if (!variables.isObject()) throw error("GAME_CONFIG_INVALID", label + "格式不正确");
+        Iterator<Map.Entry<String, JsonNode>> fields = variables.fields();
+        while (fields.hasNext()) {
+            Map.Entry<String, JsonNode> field = fields.next();
+            JsonNode value = field.getValue();
+            if (StringUtils.isBlank(field.getKey()) || STORY_TAGS_KEY.equals(field.getKey())
+                    || !value.isIntegralNumber() || !value.canConvertToInt()) {
+                throw error("GAME_CONFIG_INVALID", label + "的变量值必须是整数");
+            }
         }
     }
 

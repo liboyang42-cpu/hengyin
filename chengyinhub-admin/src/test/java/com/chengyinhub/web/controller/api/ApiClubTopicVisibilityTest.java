@@ -153,7 +153,7 @@ class ApiClubTopicVisibilityTest {
             ICmsTopicService topics = mock(ICmsTopicService.class);
             when(topics.selectPublicCmsTopicList(any())).thenReturn(Collections.emptyList());
             IClubPostService posts = mock(IClubPostService.class);
-            when(posts.selectClubPostList(any())).thenReturn(Collections.emptyList());
+            when(posts.selectClubPostPage(any(), any(), org.mockito.ArgumentMatchers.anyInt())).thenReturn(Collections.emptyList());
             ReflectionTestUtils.setField(controller, "clubService", clubs);
             ReflectionTestUtils.setField(controller, "clubMemberService", members);
             ReflectionTestUtils.setField(controller, "cmsTopicService", topics);
@@ -164,7 +164,7 @@ class ApiClubTopicVisibilityTest {
             assertEquals(allowed ? 200 : 500, controller.topics(club).get("code"), "topics state " + scenario);
             assertEquals(allowed ? 200 : 500, controller.postList(postQuery).get("code"), "posts state " + scenario);
             verify(topics, org.mockito.Mockito.times(allowed ? 1 : 0)).selectPublicCmsTopicList(any());
-            verify(posts, org.mockito.Mockito.times(allowed ? 1 : 0)).selectClubPostList(any());
+            verify(posts, org.mockito.Mockito.times(allowed ? 1 : 0)).selectClubPostPage(any(), any(), org.mockito.ArgumentMatchers.anyInt());
         }
     }
 

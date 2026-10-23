@@ -19,6 +19,7 @@ const {
 const { remixTopicTemplate } = require('../utils/topic-template-remix.js');
 const { isRecordList } = require('../../../utils/response-shape.js');
 const mediaPreview = require('../../../utils/media-preview.js');
+const { buildSquareShare } = require('../../../utils/square-share.js');
 Page({
   /**
    * 页面的初始数据
@@ -962,13 +963,12 @@ Page({
       bizType: 'square',
       bizId: this.data.id
     });
-    return {
-      title: '城瘾Hub',
-      path: '/pages/square/detail/index?id=' + this.data.id,
+    const info = this.data.info && this.data.info.id != null ? this.data.info : { id: this.data.id, status: -1 };
+    return Object.assign(buildSquareShare(info), {
       success: function (res) {
         toast.success('分享成功');
       }
-    };
+    });
   },
 
   /**

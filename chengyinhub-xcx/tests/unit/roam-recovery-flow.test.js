@@ -743,3 +743,17 @@ test('M0116恢复处理异常也释放本轮promise，保留SID重查', async ()
   assert.equal(values['roam_memory_v1:9:recovery'].sessionId, SID)
   page._applyRoamFinishResult = apply; assert.equal(await page.recoverRoam(), true)
 })
+
+test('P0-102 同会话内连续重拉POI只认最后一次请求，旧回包晚到不得覆盖新结果', async () => {
+  const page = mount(); const pending = []
+  const original = app.sendRequest
+  app.sendRequest = o => { if (o.url === '/api/roam/pois') { pending.push(o); return } return original(o) }
+  page._genIcons = () => Promise.resolve(); page._syncMarkers = () => {}; page._syncSparkCircles = () => {}; page._syncGoal = () => {}
+  page._nearbyReady = Promise.resolve()
+  page._fetchRoamPois({ lat: 31, lng: 121 }); await settle()
+  page._fetchRoamPois({ lat: 31.01, lng: 121.01 }); await settle()
+  assert.equal(pending.length, 2)
+  pending[1].success({ code: 200, data: [{ id: 2, type: 1, name: '新范围地点', lat: 31.01, lng: 121.01, found: false }] }); await settle()
+  pending[0].success({ code: 200, data: [{ id: 1, type: 1, name: '旧范围地点', lat: 31, lng: 121, found: false }] }); await settle()
+  assert.deepEqual(page._pois.filter(p => p._roamId != null).map(p => p._roamId), [2])
+})

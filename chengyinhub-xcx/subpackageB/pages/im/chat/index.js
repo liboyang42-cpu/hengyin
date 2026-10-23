@@ -7,6 +7,8 @@ const { auditDetailUrl, shapeAuditDetail, shouldLoadAuditDetail, isRetryableAudi
 const { reportNoticeRows, makeReadRequestId } = require('../list/report-notices.js');
 const systemCard = require('./system-card-target.js');
 const app = getApp();
+// 距底部不超过这个距离(px)视为「在看最新消息」,轮询到新消息时跟随滚动(U-142)
+const NEAR_BOTTOM_PX = 120;
 
 // 服务端可见顺序含微秒：不要转 JS Date 丢精度，也不要以客户端时钟推测审批时间。
 function messageOrder(message) {
@@ -475,6 +477,25 @@ Page({
         that.setData({ toView: 'bottom-anchor' });
       }
     }, 60);
+  },
+
+  // U-142:轮询到新消息时,只有读者本来就停在底部附近才跟随滚动;往上翻看历史时不强拉到底。
+  // 在轮询这一刻读消息流的位置,不新增滚动事件绑定。
+  followIfNearBottom() {
+    const that = this;
+    const query = typeof wx.createSelectorQuery === 'function' ? wx.createSelectorQuery() : null;
+    const probe = query && query.select('.msgs');
+    if (!probe || typeof probe.scrollOffset !== 'function' || typeof probe.boundingClientRect !== 'function') {
+      this.scrollBottom();
+      return;
+    }
+    query.select('.msgs').boundingClientRect();
+    query.select('.msgs').scrollOffset();
+    query.exec(function (res) {
+      const rect = res && res[0], offset = res && res[1];
+      if (rect && offset && offset.scrollHeight - offset.scrollTop - rect.height > NEAR_BOTTOM_PX) return;
+      that.scrollBottom();
+    });
   },
 
   onInput(e) { this.setData({ text: e.detail.value }); },
@@ -1236,7 +1257,7 @@ Page({
         if (all.length) this._mergeMessages(all);
         this._pollWatermark = context.headId;
         if (all.length) {
-          this.scrollBottom();
+          this.followIfNearBottom();
           this._markReadWhenVisible(context.conversationId, context.memberId);
         }
       },

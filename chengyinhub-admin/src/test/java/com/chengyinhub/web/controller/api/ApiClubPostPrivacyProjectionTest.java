@@ -27,6 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -88,7 +89,7 @@ class ApiClubPostPrivacyProjectionTest {
         ClubPost visible = post(1L, 2, 10L);
         ClubPost hidden = post(2L, 2, 11L);
         ClubPost plain = post(3L, null, null);
-        when(postService.selectClubPostList(any(ClubPost.class)))
+        when(postService.selectClubPostPage(any(), any(), anyInt()))
                 .thenReturn(new ArrayList<>(Arrays.asList(visible, hidden, plain)));
         when(guard.isPubliclyVisible(2, 10L)).thenReturn(true);
         when(guard.isPubliclyVisible(2, 11L)).thenReturn(false);

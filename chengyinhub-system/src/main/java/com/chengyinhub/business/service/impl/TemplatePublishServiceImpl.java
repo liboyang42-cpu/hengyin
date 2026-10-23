@@ -321,6 +321,8 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
         projection.setDelFlag(stored.getDelFlag());
         projection.setCreateBy(stored.getCreateBy());
         projection.setCreateTime(stored.getCreateTime());
+        // 采用数由首次采用自增维护(incrementUseNumOnFirstAdoption)，投影编辑不得用表单旧值覆盖。
+        projection.setUseNum(null);
         projection.setUpdateBy(username);
         projection.setUpdateTime(new Date());
         int rows = templateLibraryService.updateCmsTemplateLibrary(projection);

@@ -27,9 +27,10 @@ public interface RoamMapper {
     /** 经纬度包围盒内的上架 POI(粗筛,精确半径由前端/后端二次判距)。
      *  memberId 用于投影 found(该账号是否已发现过,roam_poi_found / roam_poi_reward_log);
      *  口径与 cityNodeContentApproved 一致 —— 未过审的商家投放不进玩家图层。 */
+    /** 包围盒内在架 POI,按到包围盒中心由近到远排序,最多 limit 条(大半径不再整盒全量返回)。 */
     List<RoamPoi> selectPoisNear(@Param("minLat") double minLat, @Param("maxLat") double maxLat,
                                  @Param("minLng") double minLng, @Param("maxLng") double maxLng,
-                                 @Param("memberId") Long memberId);
+                                 @Param("memberId") Long memberId, @Param("limit") int limit);
 
     List<RoamPoi> selectPoisByIds(@Param("ids") List<Long> ids);
 
