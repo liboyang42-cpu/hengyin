@@ -29,7 +29,6 @@ page { background: var(--cy-color-bg-page); }
   z-index: 0;
   animation: ti-bloom var(--cy-motion-slow) var(--cy-ease-out) both;
 }
-.ti-field--hide { visibility: hidden; }
 
 /* 拿不到精选时的加载 / 失败 / 空态 */
 .ti-stage {
@@ -75,12 +74,9 @@ page { background: var(--cy-color-bg-page); }
   color: var(--cy-color-text-secondary);
 }
 
-/* 主 CTA:通栏,严格走黑白系(--cy-btn-solid-*,暗端=白底黑字);选了玩法时左侧带封面小圆 */
+/* 主 CTA:通栏,严格走黑白系(--cy-btn-solid-*,暗端=白底黑字);圆圈从它后面、屏幕底边外进屏 */
 .ti-cta { position: relative; z-index: 2; padding-top: var(--cy-space-4); animation: ti-rise var(--cy-motion-slow) var(--cy-ease-out) var(--cy-motion-slow) both; }
 .ti-cta > cy-inline-error { display: block; margin-bottom: var(--cy-space-2); }
-.ti-cta-in { display: flex; align-items: center; justify-content: center; gap: var(--cy-space-2); }
-.ti-thumb { width: 60rpx; height: 60rpx; border-radius: 50%; flex: none; margin-left: -12rpx; transition: opacity .2s; }
-.ti-thumb--wait { opacity: 0; }
 
 /* 换页染色 */
 .ti-wash {
@@ -93,71 +89,6 @@ page { background: var(--cy-color-bg-page); }
   transition: opacity .42s;
 }
 .ti-wash--on { opacity: 1; }
-
-/* ===== 玩法预览半屏 ===== */
-.ti-mask {
-  position: fixed;
-  inset: 0;
-  z-index: 60;
-  background: var(--cy-color-overlay);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity .35s var(--cy-ease-out);
-}
-.ti-mask--on { opacity: 1; pointer-events: auto; }
-.ti-sheet {
-  position: fixed;
-  left: 16rpx;
-  right: 16rpx;
-  bottom: calc(16rpx + env(safe-area-inset-bottom));
-  z-index: 61;
-  box-sizing: border-box;
-  padding: 20rpx 40rpx 44rpx;
-  border-radius: 76rpx;           /* ds-ok: 浮起半屏大圆角,跟随设备圆角 */
-  background: var(--cy-color-bg-elevated);
-  transform: translateY(110%);
-  transition: transform .5s cubic-bezier(.22, 1.12, .36, 1);
-}
-.ti-sheet--on { transform: none; }
-.ti-handle { width: 72rpx; height: 10rpx; border-radius: var(--cy-radius-pill); margin: 0 auto 20rpx; background: var(--cy-color-border-strong); }
-.ti-sh-head { text-align: center; font-size: var(--cy-type-body); font-weight: 700; line-height: 56rpx; }
-.ti-big-wrap { height: 472rpx; display: flex; align-items: center; justify-content: center; margin-top: 12rpx; }
-.ti-big {
-  width: 420rpx;
-  height: 420rpx;
-  border-radius: 50%;
-  transition: transform .52s cubic-bezier(.2, 1.25, .4, 1), opacity .3s;
-}
-.ti-big--hidden { opacity: 0; }
-.ti-sh-title { text-align: center; font-size: 40rpx; font-weight: 800; margin-top: 16rpx; min-height: 56rpx; } /* ds-ok: 预览标题 20px */
-.ti-sh-sub { text-align: center; font-size: var(--cy-type-caption); color: var(--cy-color-text-secondary); margin-top: 4rpx; }
-.ti-row { width: 100%; white-space: nowrap; margin-top: 28rpx; }
-.ti-row-in { display: inline-flex; gap: 24rpx; padding: 8rpx 4rpx; }
-.ti-mini { width: 96rpx; height: 96rpx; border-radius: 50%; flex: none; opacity: .62; transition: opacity .2s; }
-.ti-mini--on { opacity: 1; box-shadow: 0 0 0 4rpx var(--cy-color-bg-elevated), 0 0 0 8rpx var(--cy-color-text-primary); }
-.ti-sh-btns { display: flex; gap: 20rpx; margin-top: 32rpx; }
-.ti-sh-btn {
-  flex: 1;
-  height: 100rpx;
-  border-radius: var(--cy-radius-pill);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: var(--cy-type-body);
-  font-weight: 700;
-}
-.ti-sh-btn--ghost { background: var(--cy-color-bg-surface); color: var(--cy-color-text-primary); }
-.ti-sh-btn--solid { background: var(--cy-btn-solid-bg); color: var(--cy-btn-solid-fg); }
-
-/* 飞行中的圆 */
-.ti-fly {
-  position: fixed;
-  z-index: 70;
-  border-radius: 50%;
-  pointer-events: none;
-  transform-origin: 0 0;
-  transition: transform .56s cubic-bezier(.2, .9, .25, 1);
-}
 
 .ti--reduced-motion .ti-field,
 .ti--reduced-motion .ti-copy,

@@ -2,7 +2,7 @@
 // 创建玩法引导页 · 漂浮圆圈(owner 2026-10-22 定稿原型 KGxHWjCsqbYUKt5m8SYJM2 v10)
 //
 // 运动规则(逐帧追踪参考视频后与 owner 逐条确认):
-//   · 一串等距圆圈走一条标准半圆:圆心在屏幕左缘、与左侧文案同高;从左下进屏,沿右侧往上走,从左上出屏。
+//   · 一串等距圆圈走一条标准半圆:圆心在屏幕左缘外、与左侧文案同高;从底部按钮下面进屏,沿右侧往上走,从左上出屏。
 //   · 永不停:慢速匀速漂移;约每 2.65s 快转一次 —— 一下子加速、0.6s 内收住,正好多走一格。
 //   · 大小只在快转时变,慢速漂移时不变;每次快转把大小带到下一档(变小 → 变大 → 再变大 → 不变 → 一下变小),
 //     并且两颗两颗地变,沿行进方向依次传过去(最下面一对先变)。
@@ -25,17 +25,20 @@ const PAIR_STAGGER = 0.17;   // 每一对比前一对晚多少(按快转行程�
 const PAIR_SPAN = 0.49;      // 每一对自己变完要多少快转行程
 const RIM = 46;              // 玻璃边宽度
 
-function createOrbit() {
-  return { P: 0, vel: DRIFT, kick: 0, kick0: 1, kickDist: 1, sinceKick: 1.4, lvl: 0, scFrom: 1, scTo: 1, pairs: null };
+/** n = 圆圈数(偶数,两颗一对),R = 半径;不传就用默认 N / RADIUS。 */
+function createOrbit(n, R) {
+  const count = n || N; const radius = R || RADIUS; const span = count * SLOT / radius;
+  return { n: count, R: radius, a0: -span / 2, a1: span / 2,
+    P: 0, vel: DRIFT, kick: 0, kick0: 1, kickDist: 1, sinceKick: 1.4, lvl: 0, scFrom: 1, scTo: 1, pairs: null };
 }
 
-/** 第 i 颗当前所在的格(0 = 左下入口,N = 左上出口)。 */
-function slotOf(o, i) { return (((o.P + i) % N) + N) % N; }
+/** 第 i 颗当前所在的格(0 = 左下入口,n = 左上出口)。 */
+function slotOf(o, i) { const n = o.n || N; return (((o.P + i) % n) + n) % n; }
 
 /** 发起一次快转(自动或松手甩出);k = 额外速度(格/秒)。 */
 function startSpin(o, k) {
   o.pairs = [];
-  for (let i = 0; i < N; i += 1) o.pairs.push(Math.floor(slotOf(o, i) / 2));
+  for (let i = 0; i < (o.n || N); i += 1) o.pairs.push(Math.floor(slotOf(o, i) / 2));
   o.kick = k; o.kick0 = k; o.kickDist = 0;
   o.scFrom = scaleNow(o); o.lvl = (o.lvl + 1) % LEVELS.length; o.scTo = LEVELS[o.lvl];
 }
@@ -56,16 +59,30 @@ function step(o, dt, dragging) {
 /** 第 i 颗的位置与半径(设计稿坐标,cx/cy = 半圆圆心)。 */
 function place(o, i, cx, cy) {
   const u = slotOf(o, i);
-  const a = A1 - (A1 - A0) * (u / N);   // 从下往上
+  const n = o.n || N; const R = o.R || RADIUS;
+  const a0 = o.a0 == null ? A0 : o.a0; const a1 = o.a1 == null ? A1 : o.a1;
+  const a = a1 - (a1 - a0) * (u / n);   // 从下往上
   const pair = o.pairs ? o.pairs[i] : 0;
   const lp = Math.max(0, Math.min(1, (o.kickDist - pair * PAIR_STAGGER) / PAIR_SPAN));
-  return { u, x: cx + RADIUS * Math.cos(a), y: cy + RADIUS * Math.sin(a), r: RMAX * (o.scFrom + (o.scTo - o.scFrom) * lp) };
+  return { u, x: cx + R * Math.cos(a), y: cy + R * Math.sin(a), r: RMAX * (o.scFrom + (o.scTo - o.scFrom) * lp) };
 }
 
 /** 半圆圆心:x 让最右一颗刚好贴进右侧玻璃边,y 与文案中线对齐。 */
-function center(width, copyMidY) { return { cx: width + 4 - RMAX - RADIUS, cy: copyMidY }; }
+function center(width, copyMidY, R) { return { cx: width + 4 - RMAX - (R || RADIUS), cy: copyMidY }; }
+
+/**
+ * 按屏幕定半圆(owner 2026-10-22:圆圈要从底部按钮下面出来):
+ * 半径至少够到屏幕底边以下一整颗,所以下半段从按钮后面、屏幕底边外进屏;
+ * 圆圈数按半圆周长 / 间距取偶数(两颗一对),间距不变。
+ */
+function layout(width, height, copyMidY) {
+  const R = Math.max(RADIUS, height - copyMidY + RMAX * 2);
+  let n = Math.ceil(Math.PI * R / SLOT);
+  if (n % 2) n += 1;
+  return Object.assign(center(width, copyMidY, R), { R, n });
+}
 
 module.exports = {
   N, SLOT, RADIUS, DRIFT, TAU, EVERY, JUMP, RMAX, LEVELS, RIM,
-  createOrbit, startSpin, step, place, slotOf, center, scaleNow,
+  createOrbit, startSpin, step, place, slotOf, center, layout, scaleNow,
 };

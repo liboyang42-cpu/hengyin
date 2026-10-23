@@ -144,7 +144,8 @@ function surveyAll(overrides = {}) {
    防止点选择器同时打开站点编辑。是挡板不是缺反馈,已登记在下表并由逐文件那条反查必须是 noop。 */
 // 2026-10-20 合并 master 进 #293:上面两条 49 → 50 是不同的两处挡板(漫游点位筛选 / 故事流计入方式),合并后实测 51。
 // 2026-10-22 +1:创建引导页「玩法预览」半屏的防穿透遮罩(已登记进 SWALLOWER_CEILING),51 → 52。
-const RATCHET = 52
+// 2026-10-22 owner 复审:没有「玩法预览」这一页,半屏连同遮罩一起撤掉,52 → 51。
+const RATCHET = 51
 /** 实测剩下的 9 处全部是 bindtap="noop" 的弹窗挡板(吞点击防穿透关闭)。
  *  挡板本身不是动作,给它按压态就是伪造可交互暗示 —— 所以它们**永远**留在这张表上,
  *  作为「已判定为不该有反馈」的登记,而不是被悄悄移出分母。 */
@@ -177,8 +178,6 @@ const SWALLOWER_CEILING = {
   'subpackageRoam/nearby/index.wxml': 4,
   // 2026-10-12 主题编辑页故事流站点块:计入方式选择器的防穿透挡板(点选择器不该打开站点编辑)
   'pages/publish/fabu/index.wxml': 1,
-  // 2026-10-22 owner 定稿:创建引导页「玩法预览」半屏的遮罩锁住下层(关闭走「再看看」)
-  'pages/publish/template-intro/index.wxml': 1,
 }
 
 /** 全屏关闭挡板:透明、覆盖全屏、handler 只做 triggerEvent('close')。

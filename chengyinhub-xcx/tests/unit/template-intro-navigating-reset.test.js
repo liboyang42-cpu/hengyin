@@ -30,20 +30,25 @@ test('开始创建成功后返回,再点开始创建仍能进入创建页', () =
   assert.equal(page.data.navigating, false, '按钮不得停在加载态');
 });
 
-// 预览里选了玩法(用它开始)后,开始创建直接用它开编辑器;没选照旧去命名页新建。
-test('选了玩法直接开编辑器,没选去命名页', () => {
+// owner 2026-10-22 复审:圆圈不能点、没有「玩法预览」;开始创建的下一页就是正常的命名页。
+test('开始创建总是去命名页新建,商家身份带 scope', () => {
   const urls = [];
   const page = loadPage({ navigateTo: (opts) => { urls.push(opts.url); if (opts.success) opts.success(); } });
-  page.goCreate();
-  page.data.pick = { id: 42, title: '街角谜题', imgUrl: '' };
   page.goCreate();
   page.data.operationScope = 'MERCHANT';
   page.goCreate();
   assert.deepEqual(urls, [
     '/pages/publish/templateadd/templateadd',
-    '/pages/publish/temp/index?id=42',
-    '/pages/publish/temp/index?id=42&scope=MERCHANT',
+    '/pages/publish/templateadd/templateadd?scope=MERCHANT',
   ]);
+});
+
+test('圆圈不能点:没有预览半屏,也没有点圆圈的入口', () => {
+  const dir = path.join(__dirname, '../../pages/publish/template-intro');
+  const wxml = fs.readFileSync(path.join(dir, 'index.wxml'), 'utf8');
+  const js = fs.readFileSync(path.join(dir, 'index.js'), 'utf8');
+  assert.doesNotMatch(wxml, /玩法预览|tiSheet|useCurrent/);
+  assert.doesNotMatch(js, /openSheet|useCurrent|temp\/index\?id=/);
 });
 
 test('引导页没有「跳过」入口', () => {

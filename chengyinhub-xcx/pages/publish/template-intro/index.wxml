@@ -6,10 +6,9 @@
 <view class="ti {{reducedMotion ? 'ti--reduced-motion' : ''}} {{morph ? 'ti--morph' : ''}}">
   <!-- 2026-10-22 owner 定稿:漂浮圆圈铺满整屏、在文案后面;运动与玻璃边见 orbit.js / index.js。
        数据是真实精选玩法,拉不到就整块不画(不塞占位模板冒充现网内容) -->
-  <!-- 画布在部分基础库/开发者工具里按原生层渲染,会压过半屏:半屏打开时把它藏起来(下面本来就有遮罩) -->
-  <canvas wx:if="{{cards.length}}" type="2d" id="tiField" class="ti-field {{sheetOpen ? 'ti-field--hide' : ''}}"
+  <canvas wx:if="{{cards.length}}" type="2d" id="tiField" class="ti-field"
           bindtouchstart="onFieldStart" bindtouchmove="onFieldMove" bindtouchend="onFieldEnd" bindtouchcancel="onFieldEnd"
-          aria-role="img" aria-label="精选玩法封面,轻点任意一个预览"></canvas>
+          aria-role="img" aria-label="精选玩法封面"></canvas>
 
   <!-- custom 导航:系统返回钮被关掉,必须自带 cy-nav-bar 才退得出去 -->
   <cy-nav-bar />
@@ -35,41 +34,11 @@
   <view class="ti-cta">
     <cy-inline-error load-failure wx:if="{{navigationError}}" title="创建页面没有打开" sub="{{navigationError}}" action="重试" bind:action="goCreate" />
     <cy-btn variant="primary" style="width:100%" loading="{{navigating}}" disabled="{{navigating}}" bindtap="goCreate">
-      <view class="ti-cta-in">
-        <image wx:if="{{pick}}" id="tiThumb" class="ti-thumb {{ctaThumbShown ? '' : 'ti-thumb--wait'}}" src="{{pick.imgUrl}}" mode="aspectFill" />
-        <text>{{pick ? '用「' + pick.title + '」开始创建' : '开始创建'}}</text>
-      </view>
+      开始创建
     </cy-btn>
   </view>
 </view>
 
   <!-- 换页:整页虚化时叠一层染色 -->
   <view class="ti-wash {{morph ? 'ti-wash--on' : ''}}"></view>
-
-  <!-- 玩法预览半屏:遮罩锁住下层(防穿透,关闭走「再看看」);大圆可左右滑换,下排小圆点选 -->
-  <view class="ti-mask {{sheetOpen ? 'ti-mask--on' : ''}}" catchtap="noop" catchtouchmove="noop"></view>
-  <view id="tiSheet" class="ti-sheet {{sheetOpen ? 'ti-sheet--on' : ''}}" catchtouchmove="noop" aria-role="dialog" aria-label="玩法预览">
-    <view class="ti-handle"></view>
-    <view class="ti-sh-head">玩法预览</view>
-    <view class="ti-big-wrap" bindtouchstart="onBigStart" bindtouchmove="onBigMove" bindtouchend="onBigEnd" bindtouchcancel="onBigEnd">
-      <image wx:if="{{cards.length}}" id="tiBig" class="ti-big {{bigHidden ? 'ti-big--hidden' : ''}}" style="{{bigStyle}}"
-             src="{{cards[cur].imgUrl}}" mode="aspectFill" aria-label="{{cards[cur].title}}" />
-    </view>
-    <view class="ti-sh-title">{{cards[cur].title}}</view>
-    <view class="ti-sh-sub">{{cards[cur].catName}} · 左右滑动换一个</view>
-    <scroll-view scroll-x enhanced show-scrollbar="{{false}}" class="ti-row" scroll-into-view="tiMini{{cur}}" scroll-with-animation>
-      <view class="ti-row-in">
-        <image wx:for="{{cards}}" wx:key="key" id="tiMini{{index}}" class="ti-mini {{index === cur ? 'ti-mini--on' : ''}}"
-               src="{{item.imgUrl}}" mode="aspectFill" data-i="{{index}}" bindtap="pickMini" hover-class="cy-pressed" hover-stay-time="80"
-               aria-role="button" aria-label="{{item.title}}" />
-      </view>
-    </scroll-view>
-    <view class="ti-sh-btns">
-      <view class="ti-sh-btn ti-sh-btn--ghost" hover-class="cy-pressed" hover-stay-time="80" bindtap="closeSheet" aria-role="button">再看看</view>
-      <view class="ti-sh-btn ti-sh-btn--solid" hover-class="cy-pressed" hover-stay-time="80" bindtap="useCurrent" aria-role="button">用它开始</view>
-    </view>
-  </view>
-
-  <!-- 飞行中的圆(圆圈 → 大圆 / 大圆 → 按钮) -->
-  <image wx:if="{{fly}}" class="ti-fly" style="{{fly.style}}" src="{{fly.src}}" mode="aspectFill" />
 </view>

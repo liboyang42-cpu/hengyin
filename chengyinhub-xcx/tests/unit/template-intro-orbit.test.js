@@ -54,6 +54,23 @@ test('快转时两颗两颗地变,最下面一对先变', () => {
   for (let j = 1; j < progress.length; j += 1) assert.ok(progress[j] <= progress[j - 1], '越往上的一对变得越晚');
 });
 
+test('半圆下半段从底部按钮下面进屏(各屏高)', () => {
+  [[667, 330], [845, 412], [926, 460]].forEach(([h, mid]) => {
+    const L = orbit.layout(390, h, mid);
+    assert.equal(L.n % 2, 0, '圆圈数是偶数(两颗一对)');
+    const o = orbit.createOrbit(L.n, L.R);
+    let lowest = -Infinity;
+    for (let P = 0; P < L.n; P += 0.05) {
+      o.P = P;
+      for (let i = 0; i < L.n; i += 1) {
+        const p = orbit.place(o, i, L.cx, L.cy);
+        if (p.x + p.r > 0) lowest = Math.max(lowest, p.y);
+      }
+    }
+    assert.ok(lowest > h, `屏高 ${h}:看得见的圆最低要到屏幕底边以下,实际 ${lowest.toFixed(0)}`);
+  });
+});
+
 test('最大不超过 48(owner:最大那档不能太大)', () => {
   assert.equal(Math.max(...orbit.LEVELS) * orbit.RMAX, 48);
 });
