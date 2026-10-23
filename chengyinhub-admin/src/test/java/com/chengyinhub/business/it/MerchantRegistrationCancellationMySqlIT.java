@@ -47,7 +47,7 @@ class MerchantRegistrationCancellationMySqlIT {
         int start = audit.indexOf("ALTER TABLE `cms_registration_merchant`");
         assertTrue(start >= 0);
         db.execute(ItSchema.splitStatements(audit.substring(start)).get(0));
-        mapper = P0AcceptanceSchema.sql(source, "CmsRegistrationMerchant").getMapper(CmsRegistrationMerchantMapper.class);
+        mapper = P0AcceptanceSchema.sql(source, "CmsRegistrationMerchantMapper").getMapper(CmsRegistrationMerchantMapper.class);
         service = withMapper(mapper);
     }
 
