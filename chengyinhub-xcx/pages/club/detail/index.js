@@ -405,6 +405,22 @@ function buildPostRefOptions(rows) {
   return out;
 }
 
+// P0-82:动态流分页。首页 = 置顶帖 + 最新 N 条非置顶帖;翻页带已加载非置顶帖的最小 id(beforeId)。
+// 发帖/评论/点赞后的回读保留已加载深度(上限与后端单页上限一致),不把用户翻过的帖子收回去。
+const CLUB_POST_PAGE_SIZE = 20;
+const CLUB_POST_PAGE_MAX = 50;
+function unpinnedClubPosts(rows) {
+  return (rows || []).filter(function (p) { return p && !(p.isPinned === true || Number(p.isPinned) === 1); });
+}
+function clubPostReloadLimit(posts) {
+  return Math.min(CLUB_POST_PAGE_MAX, Math.max(CLUB_POST_PAGE_SIZE, unpinnedClubPosts(posts).length));
+}
+function clubPostCursor(posts) {
+  const ids = unpinnedClubPosts(posts).map(function (p) { return Number(p.id); })
+    .filter(function (id) { return Number.isSafeInteger(id) && id > 0; });
+  return ids.length ? Math.min.apply(null, ids) : null;
+}
+
 function normalizeClubPost(p, clubOwnerId) {
   const isPinned = p.isPinned === true || Number(p.isPinned) === 1;
   // 帖子带引用时,variant 由**引用类型**派生,判定复用广场那一份(utils/feed-play-card.js)——
@@ -513,6 +529,7 @@ Page({
     posts: [],
     pinnedNotices: [],
     postsLoaded: false,
+    postsHasMore: false,
     postText: '',
     // 发帖区默认收起,点一下才展开(2026-08-26)
     composerOpen: false,
@@ -1685,9 +1702,12 @@ Page({
       that.setData({ posts: posts, pinnedNotices: clubPinnedNotice.pick(posts, that.data.clubId), postsLoaded: true }, function () { that.scrollToRequestedPost(); });
       return;
     }
+    const limit = clubPostReloadLimit(this.data.posts);
+    const epoch = this._postsEpoch = (this._postsEpoch || 0) + 1;
     app.sendRequest({
-      hideLoading: true, url: '/api/club/post/list', method: 'POST', data: jsonBody({ id: this.data.clubId, clubId: this.data.clubId }), header: jsonHeader(),
+      hideLoading: true, url: '/api/club/post/list', method: 'POST', data: jsonBody({ id: this.data.clubId, clubId: this.data.clubId, limit: limit }), header: jsonHeader(),
       success(res) {
+        if (epoch !== that._postsEpoch) return;
         // E-09(2026-09-16):失败原来是 rows=[] → 渲染成「还没有帖子」(把「不知道」说成「没有」)。
         if (res.code != '200' || !Array.isArray(res.data)) {
           that.setData({ postsLoaded: true, postsError: bizFailureMessage(res, '帖子没能加载出来') });
@@ -1696,10 +1716,43 @@ Page({
         const posts = res.data.map(function (p) {
           return normalizeClubPost(p, that.data.club && that.data.club.memberId);
         });
-        that.setData({ posts: posts, pinnedNotices: clubPinnedNotice.pick(posts, that.data.clubId), postsLoaded: true, postsError: '' }, function () { that.scrollToRequestedPost(); });
+        that.setData({ posts: posts, postsHasMore: unpinnedClubPosts(res.data).length >= limit, pinnedNotices: clubPinnedNotice.pick(posts, that.data.clubId), postsLoaded: true, postsError: '' }, function () { that.scrollToRequestedPost(); });
       },
-      fail() { that.setData({ postsLoaded: true, postsError: '网络不稳定，帖子没能加载出来' }); },
+      fail() { if (epoch === that._postsEpoch) that.setData({ postsLoaded: true, postsError: '网络不稳定，帖子没能加载出来' }); },
     });
+  },
+
+  // P0-82:滚到底续页。只追加更早的非置顶帖;期间若整页回读(loadPosts)则本次结果作废。
+  loadMorePosts() {
+    if (!this.data.postsHasMore || this.data.postsError || this._postsMoreEpoch === this._postsEpoch) return;
+    const beforeId = clubPostCursor(this.data.posts);
+    if (beforeId == null) return;
+    const that = this;
+    const epoch = this._postsEpoch;
+    this._postsMoreEpoch = epoch;
+    app.sendRequest({
+      hideLoading: true, url: '/api/club/post/list', method: 'POST', data: jsonBody({ id: this.data.clubId, clubId: this.data.clubId, limit: CLUB_POST_PAGE_SIZE, beforeId: beforeId }), header: jsonHeader(),
+      success(res) {
+        if (epoch !== that._postsEpoch) return;
+        that._postsMoreEpoch = null;
+        if (res.code != '200' || !Array.isArray(res.data)) { cyToast(bizFailureMessage(res, '更早的帖子没能加载出来')); return; }
+        const seen = {};
+        (that.data.posts || []).forEach(function (p) { seen[String(p.id)] = true; });
+        const more = unpinnedClubPosts(res.data).filter(function (p) { return !seen[String(p.id)]; }).map(function (p) {
+          return normalizeClubPost(p, that.data.club && that.data.club.memberId);
+        });
+        that.setData({ posts: (that.data.posts || []).concat(more), postsHasMore: unpinnedClubPosts(res.data).length >= CLUB_POST_PAGE_SIZE });
+      },
+      fail() {
+        if (epoch !== that._postsEpoch) return;
+        that._postsMoreEpoch = null;
+        cyToast('更早的帖子没能加载出来');
+      },
+    });
+  },
+
+  onReachBottom() {
+    if (this.data.activeTab === 'posts') this.loadMorePosts();
   },
 
   // C10:点置顶公告 → 记本地已读并滚到该帖
@@ -3035,7 +3088,8 @@ Page({
     liking[key] = entry;
     const that = this;
     app.sendRequest({
-      url: '/api/club/post/like', method: 'POST', data: jsonBody({ postId: id }), header: jsonHeader(),
+      // P1-023:带目标态,服务端按目标态幂等,重试不会把已生效的赞翻回去
+      url: '/api/club/post/like', method: 'POST', data: jsonBody({ postId: id, liked: entry.target }), header: jsonHeader(),
       success(res) {
         if (liking[key] !== entry) return;
         delete liking[key];

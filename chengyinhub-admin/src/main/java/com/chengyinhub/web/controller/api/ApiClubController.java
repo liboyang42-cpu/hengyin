@@ -1543,6 +1543,9 @@ public class ApiClubController extends BaseController {
         return local.format(java.time.format.DateTimeFormatter.ofPattern(pattern));
     }
 
+    /** 俱乐部动态流单页非置顶条数上限 */
+    private static final int POST_PAGE_MAX = 50;
+
     @Operation(summary = "俱乐部动态列表(公开)")
     @PostMapping("/post/list")
     public AjaxResult postList(@RequestBody ClubPost body) {
@@ -1550,9 +1553,11 @@ public class ApiClubController extends BaseController {
         Club club = clubService.selectClubById(body.getClubId());
         if (club == null) return error("俱乐部不存在");
         if (!canViewClub(club)) return error("这个俱乐部只对成员开放");
-        ClubPost q = new ClubPost();
-        q.setClubId(body.getClubId());
-        List<ClubPost> posts = clubPostService.selectClubPostList(q);
+        // P0-82:按页取,不再整俱乐部全量拉。首页=置顶帖+最新 limit 条;翻页带 beforeId(上一页最后一条非置顶帖)。
+        // 回包仍是数组,老客户端不传 limit 时按上限取首页。
+        int limit = body.getLimit() == null ? POST_PAGE_MAX : Math.max(1, Math.min(POST_PAGE_MAX, body.getLimit()));
+        Long beforeId = body.getBeforeId() != null && body.getBeforeId() > 0 ? body.getBeforeId() : null;
+        List<ClubPost> posts = clubPostService.selectClubPostPage(body.getClubId(), beforeId, limit);
         projectPostReferences(posts);
         try {
             Long memberId = currentMemberId();
@@ -1698,18 +1703,18 @@ public class ApiClubController extends BaseController {
         if (targetPost == null || Integer.valueOf(2).equals(targetPost.getDelFlag())) {
             return error("动态不存在");
         }
-        boolean liked;
-        if (clubPostLikeService.selectByPostAndMember(body.getPostId(), memberId) != null) {
+        // P1-023:带 liked 时按目标态幂等(重试/重复请求不会来回翻转);不带时保持旧切换语义。
+        boolean current = clubPostLikeService.selectByPostAndMember(body.getPostId(), memberId) != null;
+        boolean liked = body.getLiked() == null ? !current : body.getLiked();
+        if (liked != current && !liked) {
             clubPostLikeService.deleteByPostAndMember(body.getPostId(), memberId);
             clubPostService.incrementLikeCount(body.getPostId(), -1);
-            liked = false;
-        } else {
+        } else if (liked != current) {
             ClubPostLike like = new ClubPostLike();
             like.setPostId(body.getPostId());
             like.setMemberId(memberId);
             clubPostLikeService.insertClubPostLike(like);
             clubPostService.incrementLikeCount(body.getPostId(), 1);
-            liked = true;
         }
         Map<String, Object> d = new HashMap<>();
         d.put("liked", liked);
