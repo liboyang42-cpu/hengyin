@@ -451,10 +451,10 @@ public class ApiClubLeadController extends BaseController {
             doneCount.merge(p.getMemberId(), 1, Integer::sum);
         }
         List<Map<String, Object>> members = new ArrayList<>();
-        List<Long> ordered = new ArrayList<>(memberIds);
-        ordered.sort(Comparator.comparingInt(id -> -doneCount.getOrDefault(id, 0)));
+        List<Long> orderedMembers = new ArrayList<>(memberIds);
+        orderedMembers.sort(Comparator.comparingInt(id -> -doneCount.getOrDefault(id, 0)));
         int cap = 0;
-        for (Long mid : ordered) {
+        for (Long mid : orderedMembers) {
             if (++cap > 20) break; // 轮询接口,人数封顶防大团刷库
             Map<String, Object> m = new LinkedHashMap<>();
             m.put("memberId", mid);
