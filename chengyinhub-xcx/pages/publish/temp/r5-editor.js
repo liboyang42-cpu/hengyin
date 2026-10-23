@@ -35,7 +35,10 @@ function view(config, validationMethod, support, context, category = '全部') {
   const nextStepOptions = [{ key: '', label: '不进入下一段', reason: '' }].concat((config.branch?.steps || []).map((step, index) => ({ key: step.id, label: step.title || '第 ' + (index + 1) + ' 段', reason: typeof step.body === 'string' && step.body.trim() ? '' : '先在反馈分段里配置内容' })));
   const game = catalog.BASE_GAMES.find(item => item.key === selected.baseKey);
   // 选择玩法纵向列表：按分类分组（只含玩法），每项带不可选原因
-  const gameGroups = catalog.CATEGORIES.filter(title => title !== '全部').map(title => ({ title, items: catalog.BASE_GAMES.filter(item => item.category === title).map(item => { const key = item.gameKey || item.forms?.[0].gameKey; return Object.assign({}, item, { pickKey: key, sub: item.sub || '', reason: item.reason || matrix.choice(support, key, config, context) }); }) })).filter(group => group.items.length);
+  // 2026-10-23 主人:选择玩法照原型 —— 每个玩法自己一枚标签(选项问答 / 猜图 / 闭眼盲品 / 竞猜 …),
+  // 不再先选一类再在卡里挑「形式」。有形式的那几类按形式摊开,标签 key 用玩法 key。
+  const flat = item => (item.forms || []).length ? item.forms.map(f => { const g = catalog.findGame(f.gameKey) || {}; return { key: f.gameKey, pickKey: f.gameKey, label: g.label || f.label, icon: g.icon || item.icon, sub: g.sub || '', category: item.category }; }) : [Object.assign({}, item, { pickKey: item.gameKey || '' })];
+  const gameGroups = catalog.CATEGORIES.filter(title => title !== '全部').map(title => ({ title, items: [].concat(...catalog.BASE_GAMES.filter(item => item.category === title).map(flat)).map(item => Object.assign({}, item, { sub: item.sub || '', reason: item.reason || (item.pickKey ? matrix.choice(support, item.pickKey, config, context) : '') })) })).filter(group => group.items.length);
   gameGroups.forEach(group => { group.rows = tagRows(group.items); });
   // 玩法图标按分类上一层浅色(2026-10-22 原型定稿:只有玩法有图标,颜色不用渐变)
   const tint = { 问答: 'qa', 推理: 'logic', 互动: 'play', 挑战: 'challenge' }[(catalog.BASE_GAMES.find(item => item.key === selected.baseKey) || {}).category] || 'plain';
@@ -80,10 +83,28 @@ function feedbackRows(config, rows) {
 // 选择玩法的标签条:每个分类最多四行,标签按顺序轮流落到各行(宽度随字数,不强行对齐)。
 function tagRows(items) { const rows = [[], [], [], []]; items.forEach((item, i) => rows[i % 4].push(item)); return rows.filter(row => row.length); }
 function summary(row) { return !row ? '未配置' : [row.reply, (row.costs || []).length ? '消耗 ' + row.costs.length + ' 项' : '', (row.effects || []).length ? '效果 ' + row.effects.length + ' 项' : '', row.nextStepId ? '进入 ' + row.nextStepId : ''].filter(Boolean).join(' · ') || '无额外处理'; }
-const data = { fbOpenPass: false, fbOpenFail: false, sheetPick: '', sheetPickItem: null, sheetNavAnchor: '', toolPickerOpen: false, toolPickerItems: [], toolPickerHint: '', voiceSheetOpen: false, musicSheetOpen: false, musicDraft: { title: '', audioUrl: '', fileName: '', loop: true }, musicError: '',
+const data = { pvVerdict: { show: false, kind: 'win', text: '', images: [] }, fbOpenPass: false, fbOpenFail: false, sheetPick: '', sheetPickItem: null, sheetNavAnchor: '', toolPickerOpen: false, toolPickerItems: [], toolPickerHint: '', voiceSheetOpen: false, musicSheetOpen: false, musicDraft: { title: '', audioUrl: '', fileName: '', loop: true }, musicError: '',
   scanReplyKinds: [{ key: 'TEXT', label: '文字' }, { key: 'VOICE', label: '语音' }, { key: 'IMAGE', label: '图片' }, { key: 'OVERLAY', label: '显形' }],
   gameConfigOpen: false, scanSheetOpen: false, toolSheetKey: '', afterOpOptions: [{ key: 'INC', label: '增加' }, { key: 'FLOOR', label: '恢复到至少' }], effectScopeOptions: [], r5Editor: view({}, 0), afterEditor: { show: false, path: '', draft: after.empty(), error: '' } };
 const methods = {
+  // 试玩判定屏(照试玩台):判得出对错才弹,返回是否弹了。成功「继续」进下一步;失败回到玩法开头再来。
+  // 按哪份配置判:选择玩法里的「预览」用那份范例(_pvAdvanced),其余用作者正在填的这份
+  showPvVerdict(kit, detail, action) {
+    const pv = require('./preview-verdict.js'), config = this._pvAdvanced || this.data.advanced, kind = pv.judge(config, kit, action || (detail && detail.action), detail && detail.detail);
+    if (!kind) return false;
+    const fb = pv.feedback(config, kind);
+    this.setData({ pvVerdict: { show: true, kind, text: fb.text, images: fb.images } });
+    return true;
+  },
+  closePvVerdict() {
+    const kind = this.data.pvVerdict.kind, kit = this.data.pvKit;
+    this.setData({ pvVerdict: { show: false, kind: 'win', text: '', images: [] } });
+    // 只有玩法这一屏的试玩(选择玩法里的「预览」、「试玩当前玩法」)玩完就回编辑页
+    if (kind === 'win' || !kit) { if (this.data.pvStep >= this.data.pvSteps.length - 1) this.closePreview(); else this.pvNext(); return; }
+    // 玩法组件的「已提交」是它自己的状态,卸掉重挂才回到开局那一屏(判定屏盖着,看不到这一下)
+    this._pvTypeStartedAt = 0;
+    this.setData({ pvKit: null }, () => this.setData({ pvKit: Object.assign({}, kit, { passed: false, attempts: 0, startConfirmed: false, result: null, receipt: null, selectedKey: '' }) }));
+  },
   _takeR5Snapshot(kind) { this['_r5Snapshot_' + kind] = clone({ advanced: this.data.advanced, formData: this.data.formData, dirty: this.data.dirty || false, gameKey: this.data.gameKey, gameCurrent: this.data.gameCurrent, gameSection: this.data.gameSection, timerAvailable: this.data.timerAvailable, presentChoice: this.data.presentChoice, presentInlineLocked: this.data.presentInlineLocked, presentLockReason: this.data.presentLockReason, pvMethodLabel: this.data.pvMethodLabel, pvMethodIconName: this.data.pvMethodIconName, participationChanged: !!this._r5ParticipationChanged }); },
   _restoreR5Snapshot(kind) { const saved = this['_r5Snapshot_' + kind]; if (!saved) return; this._r5ParticipationChanged = saved.participationChanged; delete saved.participationChanged; this._setFormState(saved, null, { pristine: true }); delete this['_r5Snapshot_' + kind]; },
   _validateR5Panel() { return require('../utils/publish/advanced-game-config.js').validate(this.data.advanced, this._advancedValidateOpts()) || matrix.validate(this._supportMatrix, Object.assign({}, this.data.formData, { advancedConfigJson: this.data.advanced }), this._supportContext); },
@@ -115,9 +136,10 @@ const methods = {
   _refreshR5Editor() { const effectScopeOptions = tools.TARGETS.map(item => { const config = clone(this.data.advanced); config.interactionRules = Object.assign({}, config.interactionRules, { targetScope: item.key }); return Object.assign({}, item, { reason: matrix.validate(this._supportMatrix, Object.assign({}, this.data.formData, { advancedConfigJson: config }), this._supportContext) || (item.key !== 'OWNER' && this._supportContext?.runtime?.runtimeScope && !(this._supportContext.runtime.runtimeScope === 'TEAM' && this._supportContext.runtime.worldMode === 'WORLD_SHARED') ? '仅全场共享的组队主题可用' : '') }); }); this.setData({ effectScopeOptions, r5Editor: view(this.data.advanced, this.data.formData.validationMethod, this._supportMatrix, this._supportContext, this.data.r5Editor?.category) }); },
   pickR5Category(e) { const category = e.currentTarget.dataset.category || catalog.CATEGORIES[Number(e.detail.value)]; if (!catalog.CATEGORIES.includes(category)) return; this.setData({ 'r5Editor.category': category }); this._refreshR5Editor(); },
   pickR5Game(e) { const base = e.currentTarget.dataset.key ? catalog.BASE_GAMES.find(row => row.key === e.currentTarget.dataset.key) : this.data.r5Editor.gameItems[Number(e.detail.value)]; if (!base || base.disabled || base.reason) return; this.pickGame({ currentTarget: { dataset: { key: base.gameKey || base.forms[0].gameKey, r5: true } } }); },
+  _currentTagKey() { const key = this.data.gameKey || ''; for (const group of this.data.r5Editor.gameGroups || []) { const item = group.items.find(row => row.pickKey === key); if (item) return item.key; } return ''; },
   _gameTag(key) { for (const group of this.data.r5Editor.gameGroups || []) { const item = group.items.find(row => row.key === key); if (item) return Object.assign({}, item, { reason: item.reason || this.data.lockedGames?.[item.pickKey] || this.data.supportReasons?.[item.pickKey] || '' }); } return null; },
   openR5GameSheet() {
-    const key = this.data.r5Editor.baseKey || '';
+    const key = this._currentTagKey();
     const index = Math.max(0, (this.data.r5Editor.gameGroups || []).findIndex(group => group.items.some(item => item.key === key)));
     this.setData({ gameSheetOpen: true, sheetGroup: index, sheetAnchor: index ? 'gsheet-g' + index : '', sheetNavAnchor: 'gnav-' + index, sheetPick: key, sheetPickItem: key ? this._gameTag(key) : null }, () => this._measureGameStrip());
   },
@@ -128,8 +150,8 @@ const methods = {
     const item = this.data.sheetPickItem;
     if (!item) { this.closeR5GameSheet(); return; }
     if (item.reason) { require('../../../utils/toast.js')(item.reason); return; }
-    if (item.key === this.data.r5Editor.baseKey) { this.closeR5GameSheet(); return; }
-    this.pickR5GameFromSheet({ currentTarget: { dataset: { key: item.key } } });
+    if (!item.pickKey || item.pickKey === this.data.gameKey) { this.closeR5GameSheet(); return; }
+    this.pickGame({ currentTarget: { dataset: { key: item.pickKey, r5: true } } });
     // 新建时名字还空着就先用玩法名,作者随时可改
     if (!String(this.data.formData.title || '').trim() && this.data.gameKey) this._setFormState({ 'formData.title': (this.data.gameCurrent && this.data.gameCurrent.label) || item.label });
     if (this.data.gameSheetOpen) this.closeR5GameSheet();

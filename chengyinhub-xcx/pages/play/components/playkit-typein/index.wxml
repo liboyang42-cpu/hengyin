@@ -4,7 +4,7 @@
                limit-seconds="{{r5 ? 0 : seconds}}" deadline-at="{{r5 ? deadlineAt : 0}}" count-in
                bind:back="onClose" bind:run="onRun" bind:verdict="onVerdict" bind:deadline="onDeadline">
   <view wx:if="{{terminalSkin}}" class="terminal {{off ? 'ti--' + off : ''}} {{reducedMotion ? 'pk--reduced' : ''}}">
-    <view class="terminal__screen">
+    <view class="terminal__screen pe pe--flipx" style="--pe-d:.1s">
       <text class="terminal__log">{{title || 'SYSTEM BIOS v1.0'}}
 内存检测 ............ ok
 感官接口 ............ ok
@@ -13,7 +13,7 @@
       <view class="terminal__input" aria-live="polite"><text class="{{mistyped ? 'terminal__bad' : ''}}" space="nbsp">{{typed}}</text><text class="terminal__cursor"></text><text class="terminal__ghost" space="nbsp">{{ghost}}</text></view>
       <view class="terminal__message">{{passed ? '输入完成 · 正在启动' : phase === 'arming' ? '正在连接…' : submitting ? '正在确认…' : mistyped ? '输入有误，可退格修改' : attempts > 0 ? '重新输入' : '按下第一个字母开始计时'}}</view>
     </view>
-    <view class="terminal__keyboard" aria-label="键盘">
+    <view class="terminal__keyboard pe pe--up" style="--pe-d:.6s" aria-label="键盘">
       <view class="terminal__row" wx:for="{{keyRows}}" wx:for-item="row" wx:for-index="rowIndex" wx:key="index">
         <view wx:if="{{rowIndex === 2}}" class="terminal__key terminal__fn" aria-hidden="true">⇧</view>
         <view class="terminal__key {{nextKey === key ? 'terminal__key--next' : ''}}" wx:for="{{row}}" wx:for-item="key" wx:key="*this" data-key="{{key}}" bindtap="onKey" hover-class="terminal__key--hit" aria-role="button" aria-label="{{key}}">{{key}}</view>
@@ -24,13 +24,13 @@
   </view>
   <block wx:else>
   <view class="ti g-col {{terminalSkin ? 'ti--terminal' : ''}} {{off ? 'ti--' + off : ''}} {{reducedMotion ? 'pk--reduced' : ''}} {{_motionReset ? 'pk--reset' : ''}}">
-    <view class="g-kicker">{{title || '打出这行字'}}</view>
+    <view class="g-kicker pe pe--blur" style="--pe-d:.05s">{{title || '打出这行字'}}</view>
     <view class="ti__attempt" wx:if="{{attemptLabel}}">{{attemptLabel}}</view>
 
     <view class="ti__target pk-in">{{target}}</view>
 
     <block wx:if="{{phase === 'intro'}}">
-      <view class="ti__hint">{{r5 ? (deadlineAt ? '在限时挑战结束前完成输入' : '不限时，一字不差地打完它') : seconds + ' 秒内一字不差地打完它'}}</view>
+      <view class="ti__hint pe pe--up" style="--pe-d:.7s">{{r5 ? (deadlineAt ? '在限时挑战结束前完成输入' : '不限时，一字不差地打完它') : seconds + ' 秒内一字不差地打完它'}}</view>
     </block>
     <block wx:else>
       <input class="ti__input" value="{{typed}}" disabled="{{locked || phase !== 'run'}}"

@@ -1,26 +1,33 @@
+<!-- 分类 · 2026-10-23 主人定稿(城瘾 排序连线分类试玩原型):一次一张卡摞在中间,点下面的分类,
+     卡片飞进去;分类里多一条小标签、数字加一;点小标签拿回来重放。 -->
 <cy-play-stage id="cy-play-stage" skin="qadark" show="{{show}}" back-label="退出"
                bind:back="onClose">
   <view class="g-col cf {{reducedMotion ? 'cf--reduced' : ''}}">
-    <view class="cf__prompt">{{prompt}}</view>
+    <view class="cf__prompt pe pe--blur" style="--pe-d:.05s">{{prompt}}</view>
+    <view class="cf__hint pe pe--blur" style="--pe-d:.15s" wx:if="{{verdict !== 'ok'}}">点下面的分类，把这张卡放进去；点放好的那一条可以拿回来</view>
 
-    <!-- 每条上面是文字、下面一个分段控件:点它属于哪一类 -->
-    <view class="cf__list">
-      <!-- 回执只有整体对错:判错时**不**逐条标红(服务端不给逐张对错,
-           整列红等于假装知道是哪张分错了),只留整体提示条并让人继续分 -->
-      <view class="cf__row {{verdict === 'ok' ? 'is-right' : ''}}"
-            wx:for="{{rows}}" wx:key="id" wx:for-index="ri">
-        <view class="cf__head">
-          <view class="cf__label">{{item.label}}</view>
-          <!-- 整体通过才出对错小圆:那意味着每张都放对了。
-               ⚠️ 用「对」而不是 ✓ —— 全仓图标门禁禁字符伪图标,且读屏器念不出对勾 -->
-          <view class="cf__tail" wx:if="{{item.bin && verdict === 'ok'}}">对</view>
-        </view>
-        <view class="cf__seg">
-          <view class="cf__seg-b {{item.bin === bin.id ? (verdict === 'ok' ? 'is-good' : 'is-on') : ''}}"
-                wx:for="{{bins}}" wx:for-item="bin" wx:for-index="bi" wx:key="id"
-                data-i="{{ri}}" data-b="{{bin.id}}" bindtap="onPickBin"
-                aria-role="button" aria-label="把这一条分到「{{bin.label}}」"
-                hover-class="cf__press" hover-stay-time="80">{{bin.label}}</view>
+    <!-- 牌堆:最上面那张写着第几张;后面两张缩一点、淡一点 -->
+    <view class="cf__stack">
+      <view class="cf__card {{index === 1 ? 'is-back' : (index === 2 ? 'is-back2' : '')}} pe pe--drop"
+            style="--pe-d:.25s;--pe-s:.12s;--pe-i:{{2 - index}};z-index:{{3 - index}}"
+            wx:for="{{stack}}" wx:key="id" aria-hidden="{{index > 0}}">
+        <text class="cf__card-n">{{placed + 1}} / {{total}}</text>
+        <text class="cf__card-t">{{item.label}}</text>
+      </view>
+      <view class="cf__done" wx:if="{{!stack.length}}">都放好了，看看下面对不对</view>
+      <view class="cf__ghost {{ghost.go ? 'is-go' : ''}}" wx:if="{{ghost}}" style="{{ghost.go ? 'transform:translate(' + ghost.dx + 'rpx, 420rpx) scale(.4)' : ''}}" aria-hidden="true">{{ghost.label}}</view>
+    </view>
+
+    <!-- 分类箱:点它把最上面那张放进去;里面是放进来的小标签,点一下拿回来 -->
+    <view class="cf__bins" style="grid-template-columns:repeat({{binRows.length > 3 ? 2 : binRows.length}}, 1fr)">
+      <view class="cf__bin pe pe--up" style="--pe-d:.55s;--pe-i:{{index}}" wx:for="{{binRows}}" wx:key="id" wx:for-item="bin"
+            data-b="{{bin.id}}" data-bi="{{index}}" bindtap="onDropTop"
+            aria-role="button" aria-label="把这一张放进「{{bin.label}}」，里面已有 {{bin.count}} 条" hover-class="cf__press" hover-stay-time="80">
+        <view class="cf__bin-h"><text class="cf__bin-t">{{bin.label}}</text><text class="cf__bin-n">{{bin.count}}</text></view>
+        <view class="cf__chips">
+          <!-- 回执只有整体对错:判错时**不**逐条标红(服务端不给逐张对错),整体通过才全部变绿 -->
+          <view class="cf__chip {{verdict === 'ok' ? 'is-right' : ''}}" wx:for="{{bin.chips}}" wx:key="i" data-i="{{item.i}}" catchtap="onTakeBack" hover-class="cf__press" hover-stay-time="80" hover-stop-propagation
+                aria-role="button" aria-label="把「{{item.label}}」拿回来">{{item.label}}</view>
         </view>
       </view>
     </view>
@@ -28,12 +35,12 @@
     <!-- 还差几条要说出来:按钮灰着却不讲原因,人只会以为坏了 -->
     <view class="cf__foot" wx:if="{{placed < total}}">还有 {{total - placed}} 条没分 · 分完才能提交</view>
     <view class="cf__fb {{verdict === 'ok' ? 'is-ok' : 'is-no'}}" wx:if="{{verdict}}">
-      {{verdict === 'ok' ? '分好了 · 这一题过了' : '还有分错的地方 · 这次不扣生命'}}
+      {{verdict === 'ok' ? '分好了 · 这一题过了' : '还有分错的地方 · 点小标签拿回来重放'}}
     </view>
   </view>
 
-  <view class="g-btn {{placed >= total && total > 0 ? '' : 'g-btn--disabled'}}" bindtap="onSubmit"
+  <view class="g-btn {{placed >= total && total > 0 ? '' : 'g-btn--disabled'}} pe pe--up" style="--pe-d:.8s" bindtap="onSubmit"
         aria-role="button" aria-label="提交分好的结果" hover-class="g-btn--press" hover-stay-time="80">
-    提交
+    分好了
   </view>
 </cy-play-stage>

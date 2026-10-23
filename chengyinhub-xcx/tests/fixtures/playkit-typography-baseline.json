@@ -33,7 +33,7 @@
     ],
     "pages/play/components/playkit-classify/index.wxss": [
       [".cf__prompt", 0, 44.0],
-      [".cf__label", 0, 30.0],
+      [".cf__bin-t", 0, 30.0],
       [".cf__fb", 0, 28.0]
     ],
     "pages/play/components/playkit-coinflip/index.wxss": [
@@ -148,7 +148,7 @@
     "pages/play/components/playkit-sort/index.wxss": [
       [".so__prompt", 0, 44.0],
       [".so__label", 0, 30.0],
-      [".so__grip", 0, 34.0],
+      [".so__no", 0, 34.0],
       [".so__fb", 0, 28.0]
     ],
     "pages/play/components/playkit-stopwatch/index.wxss": [

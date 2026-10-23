@@ -92,7 +92,8 @@ test('negative control:注释里的旧值不算违规 —— 判据看声明不�
 
 test('negative control:老代玩法屏(playkit.wxss)不在本条管辖内,不许被误扫', () => {
   const files = newGenWxss().map((p) => path.basename(path.dirname(p)))
-  for (const old of ['playkit-steps', 'playkit-blindtaste', 'playkit-timewindow']) {
+  // 2026-10-23 闭眼盲品按主人定稿重做,改吃 play-surface 进了新代名单(字号全走 token),从老代里移出
+  for (const old of ['playkit-steps', 'playkit-timewindow']) {
     assert.ok(!files.includes(old),
       `${old} 是老代(吃 playkit.wxss、93% 已走 token),被错误地扫进新代名单了`)
   }

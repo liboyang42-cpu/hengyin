@@ -123,6 +123,8 @@ test('分发器契约:白名单每种玩法都真有组件、真被注册、真�
   /* 同一种玩法按模式分到另一屏的,在这里记账:它们不是新的 kit 类型,wxml 里挂在同一个 type 的分支下。 */
   const VARIANT_SCREENS = {
     '/pages/play/components/playkit-objectcard/index': 'photocheck 的 mode=CARD(拍物成卡):取景 → 点阵消散 → 信息卡',
+    // 2026-10-23:不是新的玩家 kit 类型 —— 玩家页在故事流里直挂检定卡;这一支只给编辑页试玩(journeycheck)
+    '/pages/play/components/playkit-journey-check/index': 'D20 三档检定卡,编辑页试玩专用入口',
   }
   const TERMINAL_UI = ['/components/cy/sheet/index', '/components/cy/btn/index']
   TERMINAL_UI.forEach((rel) => assert.ok(registered.includes(rel), '已结束玩法的共用结果入口缺少组件:' + rel))

@@ -1284,16 +1284,6 @@ page {
 /* 玩法屏自己有安全区,外面那 188rpx 的留白会把它整块往下推 */
 .cg-preview--kit .cg-pv-scroll { padding-top: env(safe-area-inset-top); }
 
-/* 玩法在场时的翻页条:浮在玩法屏上方靠底,别占玩法自己的版面。
-   玩法屏的主按钮在离底 26px 的位置(原型实测),所以这条再往上让一截。 */
-.cg-pv-float {
-  position: absolute; left: 0; right: 0; z-index: 5;
-  bottom: calc(env(safe-area-inset-bottom) + 200rpx);
-  display: flex; align-items: center; justify-content: center; gap: var(--cy-space-3);
-  pointer-events: none;
-}
-.cg-pv-float .cg-pv-arrow, .cg-pv-float .cg-pv-dots { pointer-events: auto; }
-
 /* ===== 找东西:在图上点出目标 ===== */
 .cg-ho-scene {
   position: relative; width: 100%; height: 360rpx; margin-top: var(--cy-space-1);
@@ -1476,9 +1466,12 @@ page {
 .cg-pv-inline-scroll { position:absolute; inset:0; height:100%; padding-top:calc(env(safe-area-inset-top) + 160rpx); box-sizing:border-box;
   background:#000000; color:var(--cy-color-text-inverse); } /* ds-ok 160rpx 让开胶囊与翻页条;#000 = 玩家暗色 --cy-color-bg-page(故事流 .chfull 的底)。本分包是浅色主题,令牌在这里解析成浅灰,只能写死 */
 /* 与玩家故事流 pages/play/index.wxss 的 .chfull__kit 逐条一致(契约测试钉着)。 */
-.cg-pv-inline-kit { margin:0 var(--cy-page-x); --pk-stage-pos:relative; --pk-stage-height:auto; --pk-stage-body-pos:relative; --pk-stage-bg:transparent; --pk-stage-overflow:visible; --pk-back-display:none; --pk-col-pos:relative; --pk-col-pad:0; --pk-col-align:stretch; --pk-col-text:left; --pk-btn-pos:relative; --pk-btn-x:0; --pk-btn-bottom:0; --pk-btn-mt:var(--cy-space-5); --cy-play-question-size:44rpx; --pk-q-weight:600; --pk-row-justify:flex-start; --pk-qt-radius:32rpx; } /* ds-ok 同 .chfull__kit */
+.cg-pv-inline-kit { margin:0 var(--cy-page-x); --pe-unfold:1; --pk-stage-pos:relative; --pk-stage-height:auto; --pk-stage-body-pos:relative; --pk-stage-bg:transparent; --pk-stage-overflow:visible; --pk-back-display:none; --pk-col-pos:relative; --pk-col-pad:0; --pk-col-align:stretch; --pk-col-text:left; --pk-btn-pos:relative; --pk-btn-x:0; --pk-btn-bottom:0; --pk-btn-mt:var(--cy-space-5); --cy-play-question-size:44rpx; --pk-q-weight:600; --pk-row-justify:flex-start; --pk-qt-radius:32rpx; } /* ds-ok 同 .chfull__kit */
 /* 2026-09-23 用户:题目和作答放到页面中间(与玩家故事流内嵌玩法同一口径) */
-.cg-pv-inline-kit { min-height:calc(100vh - env(safe-area-inset-top) - 160rpx - 300rpx); display:flex; flex-direction:column; justify-content:center; }
+.cg-pv-inline-kit { min-height:calc(100vh - env(safe-area-inset-top) - 160rpx - 300rpx); display:flex; flex-direction:column; }
+/* 2026-10-23 复查:用上下 auto 外边距居中,不用 justify-content:center —— 内容比容器高时(D20 掷出后多一条难度线)
+   后者会往上溢出,把标题顶到退出键底下;auto 外边距只在有余量时才居中 */
+.cg-pv-inline-kit > cy-playkit, .cg-pv-inline-kit > cy-playkit-journey-check { margin-top: auto; margin-bottom: auto; }
 .cg-pv-inline-end { padding:var(--cy-space-6) var(--cy-page-x) 300rpx; } /* ds-ok 300rpx 让开底部翻页条 */
 /* 同玩家故事流 .chfull__continue(白底深字全圆角)。预览里只是示意,不可点。 */
 .cg-pv-inline-continue { height:88rpx; border-radius:var(--cy-radius-pill); display:flex; align-items:center; justify-content:center;
@@ -1638,3 +1631,37 @@ page {
   background: linear-gradient(var(--cy-color-bg-surface), transparent); }
 .cg-sheet::after { content: ""; display: block; position: sticky; bottom: calc(-1 * (var(--cy-space-4) + env(safe-area-inset-bottom))); height: 64rpx; margin-top: -64rpx; pointer-events: none;
   background: linear-gradient(transparent, var(--cy-bg-card)); }
+
+/* 试玩的退出键(2026-10-23):照玩法台面 .st__back 的位置与大小;全屏玩法自己那颗在预览里藏掉,只留这一颗 */
+.cg-preview--kit { --pk-back-display: none; }
+.cg-pv-exit {
+  position: fixed; left: var(--cy-page-x); z-index: var(--cy-z-popover);
+  width: 88rpx; height: 88rpx; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(127, 127, 127, .24); color: var(--cy-color-text-inverse);  /* ds-ok 叠在深浅两种玩法皮肤上都看得清的中性半透明 */
+}
+
+/* ============ 2026-10-23 主人走查:间距照原型 gameplay-create-proto-20261022(1px = 2rpx) ============
+   分区标题 22/4/10、卡片内边距 16、圆角 14、页边 13;开关行上分隔线 + 16 间距;字段之间 16。 */
+.cg-sec { margin: 44rpx 26rpx 0; padding: 0 8rpx; }                                 /* ds-ok 原型 .sh 22px 4px 10px */
+.cg-sec + .cg-card, .cg-sec + .cg-gcfg, .cg-sec + .cg-inline-error + .cg-gcfg,
+.cg-inline-cfg > .cg-sec + .cg-gcfg, .cg-inline-cfg > .cg-sec + .cg-inline-error + .cg-gcfg { margin-top: var(--cy-space-2-5); }
+.cg-card { margin-left: 26rpx; margin-right: 26rpx; --cy-comp-card-pad: var(--cy-space-4); --cy-comp-card-radius: 28rpx; } /* ds-ok 原型 .card 16px / 14px,页边 13px */
+.cg-inline-cfg > .cg-gcfg, .cg-inline-cfg > .cg-cfg { margin-left: 26rpx; margin-right: 26rpx; padding: var(--cy-space-4); border-radius: 28rpx; } /* ds-ok 同上 */
+.cg-line { display: flex; align-items: center; min-height: 88rpx; margin-top: var(--cy-space-4); padding-top: var(--cy-space-1-5); } /* ds-ok 原型 .frow.line 44px */
+.cg-scan-reply { padding-top: var(--cy-space-1); }
+.cg-game-opts { margin-top: var(--cy-space-4); }
+.cg-addmod { margin: 44rpx 26rpx 0; }                                                 /* ds-ok 原型 .addmod margin-top 22px */
+
+/* 底部两颗按钮直接浮在页面上(2026-10-23 主人:不要白底栏)。
+   栏本身只留一层页面底色的透明度渐隐,滚到下面的字不会和按钮叠在一起;
+   查看预览是黑色主键,不能点时是半透明黑而不是一行灰字;保存草稿是白色胶囊带投影。 */
+.cg-bottombar {
+  background: linear-gradient(to bottom, rgba(243, 244, 244, 0), var(--cy-color-bg-page) 58%); /* ds-ok 页面底色的透明度渐隐 */
+  backdrop-filter: none; border-top: 0; box-shadow: none;
+  padding-top: var(--cy-space-6);
+  --cy-bg-subtle: rgba(17, 18, 20, .28);              /* ds-ok 不能点的主键:半透明黑 */
+  --cy-text-placeholder: #FFFFFF;                     /* ds-ok 同上,字仍是白 */
+  --cy-comp-btn-secondary-bg: #FFFFFF;                /* ds-ok 保存草稿:白胶囊浮在灰页面上 */
+}
+.cg-bottombar > cy-btn { border-radius: var(--cy-comp-btn-radius); box-shadow: 0 12rpx 32rpx rgba(17, 18, 20, .12); } /* ds-ok 浮起来的投影 */
