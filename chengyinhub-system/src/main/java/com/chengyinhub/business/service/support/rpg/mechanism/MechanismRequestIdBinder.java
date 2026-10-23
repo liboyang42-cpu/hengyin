@@ -158,9 +158,16 @@ public final class MechanismRequestIdBinder {
         return entry;
     }
 
-    /** 效果结果未知:保持原 requestId,不造 retry。 */
+    /** 效果结果未知:保持原 requestId,不造 retry。未见过的 id 不得占用账本。 */
     public LedgerEntry markUnknown(String requestId) {
-        LedgerEntry entry = bind(requestId, null, null);
+        String id = requireRequestId(requestId);
+        LedgerEntry entry = byRequestId.get(id);
+        if (entry == null) {
+            LedgerEntry unseen = new LedgerEntry();
+            unseen.requestId = id;
+            unseen.status = UNKNOWN;
+            return unseen;
+        }
         if (!APPLIED.equals(entry.status)) entry.status = UNKNOWN;
         return entry;
     }

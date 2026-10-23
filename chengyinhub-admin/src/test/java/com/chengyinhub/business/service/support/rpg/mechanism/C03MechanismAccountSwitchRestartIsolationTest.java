@@ -115,6 +115,8 @@ class C03MechanismAccountSwitchRestartIsolationTest {
         MechanismRequestIdBinder.Play unseen = play(binder);
         unseen.setOriginalRequestId("c03-never-seen");
         unseen.setOriginalAction(null);
+        assertEquals(MechanismRequestIdBinder.UNKNOWN, binder.markUnknown("c03-never-seen").getStatus());
+        assertNull(binder.existing("c03-never-seen"));
         Map<String, Object> recovered = binder.recoverUnknown(unseen);
         assertEquals("c03-never-seen", recovered.get("requestId"));
         assertEquals(MechanismRequestIdBinder.UNKNOWN, recovered.get("status"));
