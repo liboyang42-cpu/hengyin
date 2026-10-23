@@ -11,6 +11,7 @@ import com.chengyinhub.business.service.IClubService;
 import com.chengyinhub.common.core.domain.AjaxResult;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
@@ -21,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -45,6 +47,7 @@ class ApiClubSettlementControllerTest {
     private CoopSettlementMapper coopSettlementMapper;
     private IClubService clubService;
     private IClubAccessService clubAccessService;
+    private ICashWithdrawService cashWithdrawService;
     private ApiClubSettlementController controller;
     private long viewer = OWNER;
 
@@ -53,7 +56,7 @@ class ApiClubSettlementControllerTest {
         coopSettlementMapper = mock(CoopSettlementMapper.class);
         clubService = mock(IClubService.class);
         clubAccessService = mock(IClubAccessService.class);
-        ICashWithdrawService cashWithdrawService = mock(ICashWithdrawService.class);
+        cashWithdrawService = mock(ICashWithdrawService.class);
         controller = new ApiClubSettlementController(
                 coopSettlementMapper, clubService, clubAccessService, cashWithdrawService) {
             @Override
@@ -197,6 +200,60 @@ class ApiClubSettlementControllerTest {
 
         assertEquals(500, result.get(AjaxResult.CODE_TAG));
         verify(coopSettlementMapper, never()).selectSummaryByBeneficiary(eq("CLUB"), eq(CLUB));
+    }
+
+    private static ClubSettlementSummaryRow settledRow(long id, String amount, String paid) {
+        ClubSettlementSummaryRow row = new ClubSettlementSummaryRow();
+        row.setId(id);
+        row.setTopicId(9000L + id);
+        row.setAmount(new BigDecimal(amount));
+        row.setExecutedAdjustmentAmount(BigDecimal.ZERO);
+        row.setStatus(1);
+        row.setActualPaidAmount(paid == null ? null : new BigDecimal(paid));
+        return row;
+    }
+
+    /** P0-11:提现与 /summary 同口径 —— 按核验过的实付累加,而不是原始应结 amount。 */
+    @Test
+    void withdrawUsesTheSameVerifiedPaidTotalAsSummary() {
+        ReflectionTestUtils.setField(controller, "fastWithdrawEnabled", true);
+        when(coopSettlementMapper.selectSummaryByBeneficiary(eq("CLUB"), eq(CLUB)))
+                .thenReturn(Arrays.asList(settledRow(1L, "100.00", "98.00"), settledRow(2L, "50.00", "50.00")));
+
+        AjaxResult summary = controller.summary(clubBody());
+        @SuppressWarnings("unchecked")
+        Map<String, Object> data = (Map<String, Object>) summary.get(AjaxResult.DATA_TAG);
+        assertEquals("¥ 148.00", data.get("settledAmountText"));
+
+        AjaxResult result = controller.withdraw(clubBody());
+
+        assertEquals(200, result.get(AjaxResult.CODE_TAG));
+        verify(cashWithdrawService).withdraw(OWNER, new BigDecimal("148.00"));
+    }
+
+    /** P0-11:有一行实付未核验,整笔提现拒绝,不发起会员提现。 */
+    @Test
+    void withdrawFailsClosedWhenAnySettledRowIsUnverified() {
+        ReflectionTestUtils.setField(controller, "fastWithdrawEnabled", true);
+        when(coopSettlementMapper.selectSummaryByBeneficiary(eq("CLUB"), eq(CLUB)))
+                .thenReturn(Arrays.asList(settledRow(1L, "100.00", "100.00"), settledRow(2L, "50.00", null)));
+
+        AjaxResult result = controller.withdraw(clubBody());
+
+        assertEquals(500, result.get(AjaxResult.CODE_TAG));
+        verify(cashWithdrawService, never()).withdraw(any(), any());
+    }
+
+    /** 非核验口径的数据缺失(rows==null)同样 fail closed。 */
+    @Test
+    void withdrawFailsClosedWhenSettlementDataUnavailable() {
+        ReflectionTestUtils.setField(controller, "fastWithdrawEnabled", true);
+        when(coopSettlementMapper.selectSummaryByBeneficiary(eq("CLUB"), eq(CLUB))).thenReturn(null);
+
+        AjaxResult result = controller.withdraw(clubBody());
+
+        assertEquals(500, result.get(AjaxResult.CODE_TAG));
+        verify(cashWithdrawService, never()).withdraw(any(), any());
     }
 
     @SuppressWarnings("unchecked")

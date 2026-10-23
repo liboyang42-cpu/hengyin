@@ -73,6 +73,8 @@ class BizFunnelDailyMapperSqlTest {
         assertTrue(sql.contains("when 'content_like' then case when funnel_code = 'community_post_engagement' then 4 else 2 end"));
         assertTrue(sql.contains("when 'content_favorite' then case when funnel_code = 'community_post_engagement' then 5 else 3 end"));
         assertTrue(sql.contains("when 'content_share' then case when funnel_code = 'community_post_engagement' then 6 else 4 end"));
+        assertTrue(sql.contains("when 'signup_start' then 4 when 'signup_submit' then 5 when 'payment_success' then 6"),
+                "活动转化漏斗起点 signup_start 必须排在提交/支付之前，不能落到 else 99 排最后");
         assertTrue(sql.contains("funnel_code as funnel_name"));
         assertTrue(sql.contains("source as biz_type"));
         assertTrue(sql.contains("user_count as member_count"));

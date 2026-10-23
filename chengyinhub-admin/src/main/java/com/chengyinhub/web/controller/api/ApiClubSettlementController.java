@@ -140,16 +140,12 @@ public class ApiClubSettlementController extends BaseController {
             return error("提现通道暂未开放，请联系平台安排打款");
         }
 
-        List<CoopSettlement> rows = coopSettlementMapper.selectByBeneficiary(ROLE_CLUB, clubId);
-        BigDecimal settled = BigDecimal.ZERO;
-        if (rows != null) {
-            for (CoopSettlement row : rows) {
-                if (row != null && Integer.valueOf(STATUS_SETTLED).equals(row.getStatus())
-                        && row.getAmount() != null) {
-                    settled = settled.add(row.getAmount());
-                }
-            }
-        }
+        // 与 /summary 同一取数：已打款行按核验过的实付金额累加；任何一行缺数据或实付未核验，
+        // 整笔拒绝（fail closed）——不能让页面显示「待核验」的同时按原始应结金额把钱提走。
+        List<ClubSettlementSummaryRow> rows = coopSettlementMapper.selectSummaryByBeneficiary(ROLE_CLUB, clubId);
+        if (rows == null) return error("结算数据暂不可用");
+        BigDecimal settled = verifiedSettledTotal(rows);
+        if (settled == null) return error("存在入账金额未核验的结算，暂不能提现，请联系平台核对");
         if (settled.compareTo(BigDecimal.ZERO) <= 0) return error("暂无可提现的已结算分润");
 
         try {
@@ -158,6 +154,24 @@ public class ApiClubSettlementController extends BaseController {
         } catch (IllegalStateException e) {
             return error(e.getMessage());
         }
+    }
+
+    /**
+     * 已打款行的核验实付合计；有行缺字段/状态越界或实付未核验时返回 null（调用方 fail closed）。
+     * 与 {@link #summary} 的 settledAmountText 同一口径。
+     */
+    static BigDecimal verifiedSettledTotal(List<ClubSettlementSummaryRow> rows) {
+        BigDecimal settled = BigDecimal.ZERO;
+        for (ClubSettlementSummaryRow row : rows) {
+            if (row == null || row.getId() == null || row.getAmount() == null
+                    || row.getExecutedAdjustmentAmount() == null || row.getStatus() == null
+                    || row.getStatus() < 0 || row.getStatus() > 2) return null;
+            if (row.getStatus() != STATUS_SETTLED) continue;
+            BigDecimal paid = row.getActualPaidAmount();
+            if (paid == null || paid.signum() < 0) return null;
+            settled = settled.add(paid);
+        }
+        return settled;
     }
 
     /**
