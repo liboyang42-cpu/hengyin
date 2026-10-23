@@ -6,6 +6,7 @@ const path=require('node:path');
 const vm=require('node:vm');
 const {createRequire}=require('node:module');
 const {createSessionStore}=require('../../utils/session/session-store.js');
+const {createUploadClient}=require('../../utils/transport/upload-client.js');
 const root=path.resolve(__dirname,'../..');
 function mount(){
   let app;const requests=[],modals=[],uploads=[],storage=new Map();
@@ -44,7 +45,7 @@ test('failed consent persistence and obsolete actor/token/page modal callbacks n
     await rejection;assert.equal(called,0);if(change!=='failure')assert.equal(h.requests.length,0);
   }
 });
-function play(h){
+function play(h, options={}){
   let def;global.wx=h.wx;global.getApp=()=>h.app;
   const file=path.join(root,'pages/play/index.js');
   vm.runInNewContext(fs.readFileSync(file,'utf8'),{Page:p=>{def=p;},getApp:()=>h.app,wx:h.wx,
@@ -57,13 +58,33 @@ function play(h){
     selectComponent:()=>advancedGame});
   page.data.playKit={kit:{type:'photocheck',mode:'CARD',sessionId:17,version:3}};
   let aborted=false;h.app.createPageBoundOperation=()=>({onAbort(){},isAborted:()=>aborted,finish(){},attach(){}});
-  h.app.getUploadClient=()=>({uploadAll:(paths,opts)=>{h.uploads.push(paths);opts.onDone({ok:true,results:['/profile/upload/approved.jpg']});return{abort(){}};}});
+  const client=createUploadClient({getBaseUrl:()=>h.app.globalData.siteBaseUrl,getAuthorization:()=>h.app.getAuthorization(),
+    wxUploadFile:opts=>{
+      h.uploads.push(opts);
+      const body={code:200,url:'/profile/upload/approved.jpg'};
+      if(!options.missingAssetId)body.assetId=701;
+      opts.success({data:JSON.stringify(body)});return{abort(){}};
+    }});
+  h.app.getUploadClient=()=>client;
   return {page,state,actions,abort(){aborted=true;}};
 }
 test('actual play photo handler waits for separate consent and genuine readback before upload and runtime action',async()=>{
   const h=mount(),p=play(h);p.page._submitKitPhoto({tempFilePath:'/tmp/photo.jpg'},{name:'SUBMIT_PHOTO_CHECK',payload:url=>({imageUrl:url})});
   assert.equal(h.uploads.length,0);h.modals[0].success({confirm:true});await settle();saved(h.requests[0]);await settle();
   assert.equal(h.uploads.length,1);assert.equal(p.actions[0][0],'SUBMIT_PHOTO_CHECK');
+  assert.deepEqual(p.actions[0][1],{imageUrl:'media-asset:701'});
+});
+test('actual photo upload without an asset identity never reaches the runtime action',async()=>{
+  const h=mount(),p=play(h,{missingAssetId:true});
+  p.page._submitKitPhoto({tempFilePath:'/tmp/photo.jpg'},{name:'SUBMIT_PHOTO_CHECK',payload:url=>({imageUrl:url})});
+  h.modals[0].success({confirm:true});await settle();saved(h.requests[0]);await settle();
+  assert.equal(h.uploads.length,1);assert.equal(p.actions.length,0);assert.equal(p.page._kitPhotoUploading,false);
+});
+test('actual photo consent persistence failure sends neither upload nor runtime action',async()=>{
+  const h=mount(),p=play(h);
+  p.page._submitKitPhoto({tempFilePath:'/tmp/photo.jpg'},{name:'SUBMIT_PHOTO_CHECK'});
+  h.modals[0].success({confirm:true});await settle();reply(h.requests[0],{code:500});await settle();
+  assert.equal(h.uploads.length,0);assert.equal(p.actions.length,0);assert.equal(p.page._kitPhotoUploading,false);
 });
 for(const change of ['refuse','question','leave'])test('actual play '+change+' keeps photo private and sends no runtime action',async()=>{
   const h=mount(),p=play(h);p.page._submitKitPhoto({tempFilePath:'/tmp/photo.jpg'},{name:'SUBMIT_PHOTO_CHECK'});
