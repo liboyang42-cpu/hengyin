@@ -113,4 +113,29 @@ class C08AccountSwitchRestartIsolationTest {
                 assertThrows(ChannelAuthorizationException.class,
                         () -> new ChannelRulesAdmission(original, 3).admit(null, catalog())).code);
     }
+
+    @Test
+    void catalogedGrantDoesNotOccupyThenUniqueAuthorizeIsFirstWrite() {
+        ChannelAccount4Identity identity = new ChannelAccount4Identity(7, 1L);
+        ChannelGovernanceProjection journey = new ChannelGovernanceProjection(catalog(), identity);
+        assertEquals(ChannelGovernancePhase.CATALOGED, journey.phase());
+        assertNull(journey.grant(), "cataloged 观察不得占 grant");
+        journey.requireRulesConsent();
+        assertNull(journey.grant());
+        journey.consentToPublishedRules(new ChannelRulesAdmission(identity, 3));
+        assertNull(journey.grant());
+        journey.submitInviteOrApply();
+        assertNull(journey.grant());
+        journey.assignMemberRole(ChannelRole.MEMBER);
+        assertEquals(ChannelGovernancePhase.MEMBER_ROLE_ASSIGNED, journey.phase());
+        assertNull(journey.grant(), "未授权读写不得占 grant");
+
+        ChannelAuthorizationGrant grant = journey.authorizeReadWrite();
+        assertNotNull(grant);
+        assertEquals(identity, grant.identity);
+        assertEquals(ChannelRole.MEMBER, grant.role);
+        assertEquals(Integer.valueOf(3), grant.consentedRulesVersion);
+        assertEquals(grant.identity, journey.grant().identity);
+        assertEquals(ChannelGovernancePhase.AUTHORIZED_READ_WRITE, journey.phase());
+    }
 }
