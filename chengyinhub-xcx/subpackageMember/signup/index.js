@@ -299,7 +299,7 @@ Page({
       walletErrorMsg: (this._topic || {}).err || (this._activity || {}).err || '',
       topicBg: cur.wImg || this.data.topicBg,
     });
-    this._deckLay(); this._bgTo(cur.wImg);
+    if (!this._entering && (state !== 'ready' || this._entered)) this._deckLay(); this._bgTo(cur.wImg); // 入场 / 新卡落入动画进行中不重排,否则第二路列表回来会把动画打断
     if (this._focusId) this._tryFocusTicket(); if (state === 'ready' && this._arrive) { this._arrive = false; this._entered = true; this._playArrive(); } else if (state === 'ready' && !this._entered) { this._entered = true; this._playEnter(false); }
   },
 
@@ -545,7 +545,7 @@ Page({
       const r = (i - cur + n) % n;
       return (arrive && r === 0 ? 'transform: translate(40px,-720px) rotate(-12deg) scale(1.15);' : 'transform: translate(0px,560px) scale(.9);') + 'z-index: ' + (30 - r) + '; transition: none;';
     });
-    this.setData({ deckPoses: from, deckStill: true });
+    this._entering = true; this.setData({ deckPoses: from, deckStill: true }); __end(this, n, arrive);
     setTimeout(() => {
       if (this._unloaded) return;
       this.setData({ deckStill: false });
@@ -638,3 +638,6 @@ function walletCard(item) {
   }
   return Object.assign(item, { wSub: item.wType + ' · ' + state, wTab: done ? 1 : gone ? 2 : 0 });
 }
+
+/* 入场动画最长时长(最后一张起步 + 过渡 + 余量)后放开重排 */
+function __end(page, n, arrive) { setTimeout(() => { page._entering = false; }, 40 + Math.max(arrive ? 320 : 0, (n - 1) * 90) + 900); }

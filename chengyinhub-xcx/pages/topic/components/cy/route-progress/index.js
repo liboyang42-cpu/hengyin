@@ -53,7 +53,7 @@ Component({
         const t = timeAt((k / n) / target) * DUR;
         this._timers.push(setTimeout(() => {
           const m = this.data.marks[k - 1] || {};
-          this.setData({ lit: k, plus: '+' + (m.label || ''), plusLeft: m.left });
+          this.setData({ lit: k, plus: this.data.tone === 'free' ? '+1 · ' + (m.label || '') : (m.label || '') + ' ✓', plusLeft: m.left }); // 原型:城市定向「第一章 ✓」,自由探索「+1 · 店名」
         }, t));
       }
       this._timers.push(setTimeout(() => {

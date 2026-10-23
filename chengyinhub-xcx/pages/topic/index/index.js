@@ -114,10 +114,10 @@ Page({
     // 2026-10-22 业主:三个标签 = 详情 / 故事 / 路线(自由探索没有固定路线,第三个叫「地点」)
     topicTabs: [{ key: '0', label: '详情' }, { key: '1', label: '故事' }, { key: '2', label: '路线' }],
     // ===== 2026-10-22 动效与新增块(docs/design/动效界面落地_20261022) =====
-    coverImages: [], kbIdx: 0, coverLeaving: false, detailEnter: false, heroIdx: 0, navSolid: false, storyChars: [], routeNote: '', sketchPoints: [], routeReal: false, buyOpts: [], buySel: 0, sessionPreferName: '',
+    coverImages: [], kbIdx: 0, coverLeaving: false, detailEnter: false, heroIdx: 0, navSolid: false, storyChars: [], routeNote: '', sketchPoints: [], routeReal: false, tabPre: false, buyOpts: [], buySel: 0, sessionPreferName: '',
     publisher: { name: '', avatar: '' }, heroCta: { kind: '', text: '' }, faved: false,
     docked: false, dockCtaStyle: '', dockFavStyle: '',
-    merchantCards: [], storyCards: [], storyMeta: '', openChapter: -1, storyDocked: false, storyMiniStyle: '',
+    merchantCards: [], storyCards: [], storyMeta: '', openChapter: -1, storyDocked: false,
     teams: { rows: [], need: 0 },
     progress: { total: 0, done: 0, labels: [] },
     selfPlayValidText: '可玩至购买后 90 天', selfPlayCheckoutShow: false, checkout: { cover: '', validText: '', placeText: '', priceText: '', free: false, profileName: '', profilePhone: '' },
@@ -430,9 +430,8 @@ Page({
     // cy-tabs 通过 detail.key 传当前项;保留 dataset 兼容旧调用点(若还有)
     const index = (e.detail && e.detail.key) !== undefined ? e.detail.key : e.currentTarget.dataset.index;
     this.setData({
-      activeTab: index
-    }, () => {
-    });
+      activeTab: index, tabPre: !this.data.reducedMotion // v13:切标签时各块从下方依次浮上来
+    }, () => { if (this.data.tabPre) this._later(30, () => this.setData({ tabPre: false })); });
     if (String(index) === '2') this._loadProgress();
     if (String(index) === '1') { this.setData({ openChapter: -1 }); this._later(900, () => { if (String(this.data.activeTab) === '1') this.setData({ openChapter: 0 }); }); } // v13:进故事标签后第一章自己展开
   },
@@ -536,11 +535,11 @@ Page({
 
   _measureHeroNow() {
     if (!this._capsule) { try { this._capsule = wx.getMenuButtonBoundingClientRect(); } catch (e) { this._capsule = null; } }
-    const cap = this._capsule;
-    if (cap && cap.height) {
-      const win = this._windowSize();
-      this.setData({ storyMiniStyle: 'top:' + cap.top + 'px;height:' + cap.height + 'px;right:' + (win.w - cap.left + 8) + 'px;' });
-    }
+    // 这里只预取胶囊位置给停靠动画用;
+    // 故事扇形卡收拢后的迷你卡叠已移进顶栏(v13),
+    // 跟在返回键后面自然排布,
+    // 不再按胶囊量位置。
+    // (保留同样行数,行号基线不挪)
     const q = wx.createSelectorQuery().in(this);
     q.select('#heroActs').boundingClientRect();
     q.selectViewport().scrollOffset();

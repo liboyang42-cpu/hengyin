@@ -21,3 +21,7 @@
 .sf__bp { font-size: 15rpx; line-height: 1.5; color: var(--cy-color-text-secondary); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 9; -webkit-box-orient: vertical; }
 .sf__cap { position: absolute; left: 0; right: 0; bottom: 24rpx; text-align: center; font-size: var(--cy-type-caption);
   color: var(--cy-color-text-secondary); opacity: calc(1 - var(--sf-collapse, 0)); }
+/* v13 进标签飞入:内层包一层,不碰外层的位姿 transform */
+.sf__e { position: absolute; top: 0; right: 0; bottom: 0; left: 0; transition: transform .56s cubic-bezier(.2,.82,.2,1), opacity .4s; }
+.sf__e.is-pre { opacity: 0; transform: translateY(115rpx) scale(.6); transition: none; }
+.sf__c--still .sf__e { transition: none; }

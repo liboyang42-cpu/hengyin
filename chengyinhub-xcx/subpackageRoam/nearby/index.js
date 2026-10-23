@@ -60,7 +60,7 @@ Page({
     rangeText: kmText(DEFAULT_RADIUS), pcTop: 200, mddLeft: 16,
     myTeamsText: T.myTeamsText(0),
     viewMode: 'map',        // map | list(2026-10-14 地图优化)
-    listRows: [], layer: 'all', layerSub: '', layerSheet: '', layerItems: [], poiCard: null, poiCardIn: false, poiFlip: false, poiExpand: false, // 2026-10-22 筛选行与地标/商家点位卡
+    listRows: [], layer: 'all', layerSub: '', layerSheet: '', layerItems: [], poiCard: null, poiCardIn: false, poiFlip: false, poiExpand: false, pcClip: '', // 2026-10-22 筛选行与地标/商家点位卡
     myReadAccess: '', myReadError: false, myLoaded: false,
     rangeItems: RANGE_ITEMS,
     rangeIndex: T.RADII.indexOf(DEFAULT_RADIUS),
@@ -272,13 +272,14 @@ Page({
     const items = (this._items || []).filter((it) => L.keepItem(it, f));
     const teams = L.keepTeam(f) ? (this._teams || []) : [];
     const pois = (this._pois || []).filter((p) => L.keepPoi(p, f));
+    const hide = this._openPin; // 点位卡开着时,那颗点位由卡片代替
     const raw = H.buildHangoutMarkers(items, this._icons, this._far)
-      .concat(T.buildTeamMarkers(teams, this._icons, this._far[MAP_AVATAR_COLORS.cream] || fallback))
+      .concat(T.buildTeamMarkers(teams, this._icons, (this._far || {})[MAP_AVATAR_COLORS.cream] || fallback))
       .concat(this._poiMarkers(f)).concat(H.buildSelfMarker(this._me, this._selfIcon));
     const places = (this._items || []).length + (this._pois || []).filter((p) => L.poiKind(p) !== 'shop').length;
     const shops = (this._pois || []).filter((p) => L.poiKind(p) === 'shop').length;
     this.setData({
-      markers: L.edgeLod(P.applyPins(raw, this._pins), this._lodCenter || this.data.center, this._lodRadius || this._radius),
+      markers: L.edgeLod(P.applyPins(raw, this._pins), this._lodCenter || this.data.center, this._lodRadius || this._radius).filter((m) => !hide || m.id !== hide),
       headerText: '附近' + (this._nearbyTeamsLoaded ? ' · ' + (this._teams || []).length + ' 支队伍' : '') + (places ? ' · ' + places + ' 处地点' : '') + (shops ? ' · ' + shops + ' 家商家' : ''), // v13 计数条;队伍没读到不写 0
       listRows: this._listRows(items, teams, pois),
     });
@@ -898,7 +899,7 @@ Page({
     if (this._poiInTimer) clearTimeout(this._poiInTimer);
     let win = { windowHeight: 667 };
     try { win = wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync(); } catch (e) { /* 用默认高度 */ }
-    const h = win.windowHeight || 667, cardH = 316;
+    const h = win.windowHeight || 667, cardH = Math.round(608 * (win.windowWidth || 375) / 750); // 卡高 608rpx 换成 px
     const pcTop = Math.round(h / 2 - cardH / 2);
     const m = (this.data.markers || []).find((x) => x.id === this._lastMarkerId);
     if (m) {
@@ -906,13 +907,14 @@ Page({
       const mpp = 156543.03 * Math.cos(m.latitude * Math.PI / 180) / Math.pow(2, Number(this.data.scale) || 14);
       this.setData({ center: { lat: m.latitude + below * mpp / 111320, lng: m.longitude } });
     }
-    this.setData({ poiCard: card, poiCardIn: false, poiFlip: false, poiExpand: false, sheet: 'poi', pcTop });
+    this._openPin = this._lastMarkerId; this._pcBox = { top: pcTop, h: Math.round(608 * (win.windowWidth || 375) / 750), w: Math.round(558 * (win.windowWidth || 375) / 750), W: win.windowWidth || 375, H: h };
+    this.setData({ poiCard: card, poiCardIn: false, poiFlip: false, poiExpand: false, pcClip: '', sheet: 'poi', pcTop }); this._syncMarkers(); // 点开的那颗点位藏起来:卡片就是它长出来的
     this._poiInTimer = setTimeout(() => { if (!this._unloaded) this.setData({ poiCardIn: true }); }, 30);
   },
   /* 点正面:队伍进原来的队伍半屏;其余翻到背面 */
   onPoiFront() {
     const c = this.data.poiCard;
-    if (c && c.kind === 'team') { const id = c.id; if (this._poiInTimer) { clearTimeout(this._poiInTimer); this._poiInTimer = null; } this.setData({ poiCard: null, poiCardIn: false, poiExpand: false, sheet: '' }); this.openTeam(id); return; }
+    if (c && c.kind === 'team') { const id = c.id; if (this._poiInTimer) { clearTimeout(this._poiInTimer); this._poiInTimer = null; } this._openPin = null; this.setData({ poiCard: null, poiCardIn: false, poiExpand: false, pcClip: '', sheet: '' }); this._syncMarkers(); this.openTeam(id); return; }
     this.onPoiFlip();
   },
   onPcStart(e) { const t = e.touches && e.touches[0]; this._pcY = t ? t.clientY : null; },
@@ -920,8 +922,8 @@ Page({
     const t = e.changedTouches && e.changedTouches[0];
     if (this._pcY == null || !t) return;
     const dy = t.clientY - this._pcY; this._pcY = null;
-    if (dy < -40 && this.data.poiFlip && !this.data.poiExpand) this.setData({ poiExpand: true });
-    else if (dy > 60 && this.data.poiExpand) this.setData({ poiExpand: false });
+    if (dy < -40 && this.data.poiFlip && !this.data.poiExpand) this._expand(true);
+    else if (dy > 60 && this.data.poiExpand) this._expand(false);
   },
   onPoiPrimary() {
     const c = this.data.poiCard;
@@ -936,11 +938,26 @@ Page({
   },
   onPoiSecondary() {},
   onPoiFlip() { this.setData({ poiFlip: !this.data.poiFlip, poiExpand: false }); },
-  onPoiExpand() { this.setData({ poiExpand: !this.data.poiExpand }); },
+  onPoiExpand() { this._expand(!this.data.poiExpand); },
+  /* 展开 / 收起:卡片先按大小切到目标版式,再用裁切从原卡位置放开(或收回到原卡位置),看起来是卡在长大,
+     不去逐帧动 top / width / height(那些属性每帧重排) */
+  _expand(on) {
+    const b = this._pcBox, hud = this.data.hudTop, bottom = this.data.safeBottom + 20;
+    if (!b || this.data.reducedMotion) { this.setData({ poiExpand: on, pcClip: '' }); return; }
+    const inset = 'clip-path: inset(' + Math.max(0, b.top - hud) + 'px ' + Math.round((b.W - b.w) / 2 - 12) + 'px ' + Math.max(0, (b.H - bottom) - (b.top + b.h)) + 'px ' + Math.round((b.W - b.w) / 2 - 12) + 'px round 21px);'
+    clearTimeout(this._pcTimer);
+    if (on) {
+      this.setData({ poiExpand: true, pcClip: inset + 'transition: none;' });
+      this._pcTimer = setTimeout(() => this.setData({ pcClip: 'clip-path: inset(0 round 21px);' }), 30);
+    } else {
+      this.setData({ pcClip: inset });
+      this._pcTimer = setTimeout(() => this.setData({ poiExpand: false, pcClip: '' }), 420);
+    }
+  },
   closePoiCard() {
     if (this._poiInTimer) { clearTimeout(this._poiInTimer); this._poiInTimer = null; }
-    this.setData({ poiCardIn: false, poiExpand: false });
-    this._poiInTimer = setTimeout(() => { if (!this._unloaded) this.setData({ poiCard: null, sheet: this.data.sheet === 'poi' ? '' : this.data.sheet }); }, 260);
+    this.setData({ poiCardIn: false, poiExpand: false, pcClip: '' });
+    this._poiInTimer = setTimeout(() => { if (this._unloaded) return; this._openPin = null; this.setData({ poiCard: null, sheet: this.data.sheet === 'poi' ? '' : this.data.sheet }); this._syncMarkers(); }, 460); // 卡缩回点位后点位再出现
   },
   onPoiNavigate() {
     const c = this.data.poiCard;

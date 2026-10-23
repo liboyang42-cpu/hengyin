@@ -1,7 +1,7 @@
 <!-- 漫游地图 · 附近的队伍(地图组队 P 方案,Figma txQoyVyKb3aQdFCnc8qmhj 590:1014 · P1–P6)
      地图只做展示层:没有开局入口;顶部深色计数条「附近的队伍 · N 支在招募」 + 地图/列表切换;
      底部只剩「范围」「我的队伍」两枚角控件,开任何半屏时收起(9-08 裁决)。 -->
-<view class="nb theme-dark">
+<view class="nb theme-dark {{sheet === 'poi' ? 'map-open' : ''}}">
   <cy-toast id="cy-toast" />
   <cy-modal-host id="cy-modal-host" />
   <cy-nav-bar title="" overlay pill tint="dark" custom-back bind:back="goBack" />
@@ -174,6 +174,8 @@
   <view class="pc {{poiCardIn ? 'is-in' : ''}} {{poiExpand ? 'is-x' : ''}} {{reducedMotion ? 'pc--reduced' : ''}}" style="{{poiExpand ? 'top:' + hudTop + 'px; bottom:' + (safeBottom + 20) + 'px;' : 'top:' + pcTop + 'px;'}}"
         bindtouchstart="onPcStart" bindtouchend="onPcEnd">
     <view class="pc__chip" wx:if="{{!poiExpand}}"><text class="pc__chip-i" style="background:{{poiCard.chipColor}};">{{poiCard.chipLetter}}</text><text>{{poiCard.chipText}}</text></view>
+    <!-- 点位长成卡:先是点位那张圆照片(白圈),一边放大一边从圆变成圆角卡;展开时按原卡位置裁切再放开 -->
+    <view class="pc__clip" style="{{pcClip}}">
     <view class="pc__in {{poiFlip ? 'is-flip' : ''}}">
       <view class="pc__f" bindtap="onPoiFront" aria-role="button" aria-label="{{poiCard.kind === 'team' ? '查看队伍' : '翻面看介绍'}}" hover-class="cy-pressed" hover-stay-time="80">
         <view class="pc__ph">
@@ -205,6 +207,8 @@
         </scroll-view>
         <view class="pb__ft" wx:if="{{!poiExpand}}"><view class="pb__hint" bindtap="onPoiExpand" aria-role="button" aria-label="展开" hover-class="cy-pressed" hover-stay-time="80"><view class="pb__up"></view>上滑展开</view><text>{{poiCard.chipText}}</text></view>
       </view>
+    </view>
+    <image wx:if="{{poiCard.img}}" class="pc__cover" src="{{poiCard.img}}" mode="aspectFill" /><view class="pc__ring"></view>
     </view>
     <view class="pc__tail" wx:if="{{!poiExpand}}"></view>
   </view>

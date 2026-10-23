@@ -1,7 +1,7 @@
 <view class="sf" style="--sf-collapse: {{collapse}};">
   <view class="sf__c {{reducedMotion ? 'sf__c--still' : ''}}" wx:for="{{items}}" wx:key="index" style="{{poses[index]}}"
         data-i="{{index}}" bindtap="onCard" aria-role="button" aria-label="{{item.label}} {{item.title}}，点按翻面" hover-class="sf-pressed" hover-stay-time="80">
-    <view class="sf__in {{focus === index ? 'is-flip' : ''}}">
+    <view class="sf__e {{entering ? 'is-pre' : ''}}" style="transition-delay: {{index * 70}}ms;"><view class="sf__in {{focus === index ? 'is-flip' : ''}}">
       <view class="sf__f">
         <image wx:if="{{item.img}}" class="sf__img" src="{{item.img}}" mode="aspectFill" lazy-load="true" />
         <text class="sf__lb">{{item.label}}</text>
@@ -11,7 +11,7 @@
         <text class="sf__bt">{{item.title}}</text>
         <text class="sf__bp">{{item.excerpt}}</text>
       </view>
-    </view>
+    </view></view>
   </view>
   <text class="sf__cap">{{caption || '点一张卡片，翻到背面看' + noun}}</text>
 </view>

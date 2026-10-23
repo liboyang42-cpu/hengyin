@@ -5,15 +5,19 @@
    收拢进度用 IntersectionObserver 量,不跟 onPageScroll 逐帧 setData。 */
 const STEPS = [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1];
 
+/* 位姿照 v13 原型(px × 1.923 = rpx):展开时每张横移 46px、下沉 10px、转 14°;
+   上滑收拢 c:整体下沉 60px、缩到 55%,收拢到七成以后淡出;
+   点开一张:它居中上提 22px 放大 1.55 倍,其余往两边让开(横移 56px ± 14px、下沉 12px + 18px、转 16°)。 */
 function poseOf(i, n, spread, focus) {
-  const k = i - (n - 1) / 2;
-  let x = k * 92 * spread, y = Math.abs(k) * 20 * spread, a = k * 14 * spread, s = 1, z = 10 - Math.abs(k), dim = 0;
+  const k = i - (n - 1) / 2, c = 1 - spread;
+  let x = k * 88 * spread, y = Math.abs(k) * 19 * spread + c * 115, a = k * 14 * spread, s = 1 - 0.45 * c, z = 10 - Math.abs(k);
+  const fade = c <= 0.7 ? 1 : Math.max(0, 1 - (c - 0.7) / 0.3);
   if (focus >= 0) {
-    if (i === focus) { x = 0; y = -36; a = 0; s = 1.5; z = 40; }
-    else { x = k * 112 + (i < focus ? -28 : 28); y = Math.abs(k) * 24 + 30; a = k * 16; dim = 1; }
+    if (i === focus) { x = 0; y = -42; a = 0; s = 1.55; z = 40; }
+    else { x = k * 108 + (i < focus ? -27 : 27); y = Math.abs(k) * 23 + 35; a = k * 16; }
   }
-  return 'transform: translate(' + x.toFixed(0) + 'rpx,' + y.toFixed(0) + 'rpx) rotate(' + a.toFixed(1) + 'deg) scale(' + s + ');'
-    + 'z-index:' + z + ';' + (dim ? 'opacity:.55;' : '');
+  return 'transform: translate(' + x.toFixed(0) + 'rpx,' + y.toFixed(0) + 'rpx) rotate(' + a.toFixed(1) + 'deg) scale(' + s.toFixed(3) + ');'
+    + 'z-index:' + z + ';' + (fade < 1 ? 'opacity:' + fade.toFixed(2) + ';' : '');
 }
 
 Component({
@@ -24,12 +28,12 @@ Component({
     noun: { type: String, value: '这一章' }, // 自由探索传「这一页」
     reducedMotion: { type: Boolean, value: false },
   },
-  data: { poses: [], focus: -1, caption: '', collapse: 0 },
+  data: { poses: [], focus: -1, caption: '', collapse: 0, entering: false },
   observers: {
-    items() { this._spread = 1; this.setData({ focus: -1, caption: '' }); this._layout(); },
+    items() { this._spread = 1; this.setData({ focus: -1, caption: '' }); this._layout(); this._enter(); },
   },
   lifetimes: {
-    attached() { this._spread = 1; this._layout(); },
+    attached() { this._spread = 1; this._layout(); this._enter(); },
     ready() { this._observe(); },
     detached() { if (this._io) this._io.disconnect(); },
   },
@@ -40,6 +44,13 @@ Component({
       const focus = this.data.focus === i ? -1 : i;
       this.setData({ focus, caption: focus < 0 ? '' : ((it.label ? it.label + ' · ' : '') + (it.title || '')) });
       this._layout();
+    },
+    /* 进标签时扇形卡从下方一张张飞入(原型 stagger 70ms,从 translateY(60px) scale(.6) 起) */
+    _enter() {
+      if (this.data.reducedMotion || !(this.data.items || []).length) return;
+      this.setData({ entering: true });
+      clearTimeout(this._enterTimer);
+      this._enterTimer = setTimeout(() => this.setData({ entering: false }), 30);
     },
     _layout() {
       const n = (this.data.items || []).length;

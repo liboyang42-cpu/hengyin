@@ -15,6 +15,10 @@
           <cy-icon name="back" size="40" />
         </button>
       </view>
+      <!-- v13:故事扇形卡滑出后收成返回键右边的一叠小卡,主题名跟在后面 -->
+      <view wx:if="{{storyCards.length}}" class="story-mini {{storyDocked && activeTab == '1' ? 'on' : ''}}" aria-hidden="true">
+        <image wx:for="{{storyCards}}" wx:key="index" wx:if="{{index < 3}}" class="story-mini__c story-mini__c--{{index}}" src="{{item.img}}" mode="aspectFill" />
+      </view>
       <text class="tnav__t" wx:if="{{currentScreen === 1}}">{{info.name}}</text>
     </view>
   </view>
@@ -164,7 +168,7 @@
     </view>
 
     <view class="tablist">
-      <view class="tabcont" wx:if="{{ activeTab=='0' }}">
+      <view class="{{tabPre ? 'tab-pre ' : ''}}tabcont" wx:if="{{ activeTab=='0' }}">
         <view class="det3" style="padding-top: 0;">
           <view class="wp">
             <view class="det-type">{{info.name}}</view>
@@ -372,14 +376,14 @@
         <view class="topic-audio" wx:if="{{is_join == 0 && info.selfPlay == 1 && info.activityList.length}}" bindtap="bmClick" aria-role="button" aria-label="查看场次" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="calendar" size="36" /><text>查看场次</text><cy-icon name="chevron-right" size="28" /></view>
       </view>
 
-      <view class="tabcont" wx:if="{{ activeTab=='1' }}">
+      <view class="{{tabPre ? 'tab-pre ' : ''}}tabcont" wx:if="{{ activeTab=='1' }}">
         <!-- v13 故事:扇形章节卡 → 标题与一句话 → 章节卡(照片 + 模糊渐变,点开展开)→ 主要角色(圆头像) -->
         <cy-story-fan wx:if="{{storyCards.length}}" noun="{{isExplore ? '这一页' : '这一章'}}" items="{{storyCards}}" nav-height="{{statusBarHeight + navBarHeight + 45}}" reduced-motion="{{reducedMotion}}" bind:dock="onStoryDock" />
         <view class="story-head" wx:if="{{storyCards.length}}"><text class="story-head__t">{{info.name}}</text><text class="story-head__s">{{storyMeta}}</text></view>
         <view class="story-lead" wx:if="{{storyCards.length && info.subtitle}}">{{info.subtitle}}</view>
         <view class="det-type story-sec" wx:if="{{storyCards.length}}">{{isExplore ? '护照' : '章节'}}</view>
         <view class="story-cards" wx:if="{{storyCards.length}}">
-          <view class="story-cc {{openChapter === index ? 'is-open' : ''}}" wx:for="{{storyCards}}" wx:key="index" data-i="{{index}}" bindtap="onChapterCard"
+          <view class="story-cc {{openChapter === index ? 'is-open' : ''}}" style="transition-delay: 0s, {{300 + index * 80}}ms, {{300 + index * 80}}ms;" wx:for="{{storyCards}}" wx:key="index" data-i="{{index}}" bindtap="onChapterCard"
                 aria-role="button" aria-label="{{item.label}} {{item.title}}，{{openChapter === index ? '收起' : '展开'}}" hover-class="cy-pressed" hover-stay-time="80">
             <image wx:if="{{item.img}}" class="story-cc__img" src="{{item.img}}" mode="aspectFill" lazy-load="true" />
             <view class="story-cc__blur"></view><view class="story-cc__sh"></view>
@@ -411,7 +415,7 @@
           </view>
         </view>
       </view>
-      <view class="tabcont topic-list" wx:if="{{ activeTab == '2' }}">
+      <view class="{{tabPre ? 'tab-pre ' : ''}}tabcont topic-list" wx:if="{{ activeTab == '2' }}">
         <view class="wp route-top">
           <cy-route-progress total="{{progress.total}}" done="{{progress.done}}" labels="{{progress.labels}}" tone="{{isExplore ? 'free' : 'city'}}" reduced-motion="{{reducedMotion}}" />
           <view class="route-map-wrap rmap" wx:if="{{routeReady}}">
@@ -546,9 +550,6 @@
   <!-- 2026-10-22 停靠层:价格按钮/收藏滚出顶栏后飞到这里(右下角 / 顶栏胶囊左侧);故事扇收成顶栏小卡堆 -->
   <view wx:if="{{docked && heroCta.text}}" class="dock-cta {{heroCta.kind === 'locked' ? 'is-off' : ''}}" style="{{dockCtaStyle}}" bindtap="onHeroCta" aria-role="button" aria-label="{{heroCta.text}}" hover-class="cy-pressed" hover-stay-time="80">{{heroCta.text}}</view>
   <view wx:if="{{docked}}" class="dock-fav {{faved ? 'is-on' : ''}}" style="{{dockFavStyle}}" bindtap="toggleFav" aria-role="button" aria-label="{{faved ? '取消收藏' : '收藏主题'}}" hover-class="cy-pressed" hover-stay-time="80"><image class="bm-ic" src="{{faved ? '/pages/topic/images/icon_bm_on.svg' : '/pages/topic/images/icon_bm.svg'}}" mode="aspectFit" /></view>
-  <view wx:if="{{storyDocked && activeTab == '1' && storyCards.length}}" class="story-mini" style="{{storyMiniStyle}}" aria-hidden="true">
-    <image wx:for="{{storyCards}}" wx:key="index" wx:if="{{index < 3}}" class="story-mini__c story-mini__c--{{index}}" src="{{item.img}}" mode="aspectFill" />
-  </view>
 </view>
   <cy-option-sheet show="{{clubSheetShow}}" title="选择承接俱乐部" items="{{clubSheetItems}}" confirm-text="下一步"
                    bind:select="onClubSheetSelect" bind:cancel="onClubSheetCancel" />

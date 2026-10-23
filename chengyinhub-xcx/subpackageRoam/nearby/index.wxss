@@ -125,9 +125,9 @@ page { background: var(--cy-comp-sheet-player-page); }
 
 /* 点位卡:290×316,深灰底,上方类型小牌,下方小尾巴;正面照片 + 名字压图;背面介绍,上滑展开 */
 .pdim--clear { background: transparent !important; }
-.pc { position: absolute; left: 50%; z-index: 40; width: 558rpx; height: 608rpx; margin-left: -279rpx; opacity: 0; transform: scale(.4) translateY(200rpx); transform-origin: 50% 100%;
-  transition: transform .5s cubic-bezier(.34,1.32,.64,1), opacity .25s ease; }
-.pc.is-in { opacity: 1; transform: none; }
+.pc { position: absolute; left: 50%; z-index: 40; width: 558rpx; height: 608rpx; margin-left: -279rpx; opacity: 0; transform: translateY(52rpx) scale(.16); transform-origin: 50% calc(100% + 40rpx);
+  transition: transform .42s cubic-bezier(.5,0,.7,.4), opacity .1s ease .36s; } /* 收回:先缩回点位,最后一下才淡掉 */
+.pc.is-in { opacity: 1; transform: none; transition: transform .5s cubic-bezier(.34,1.32,.64,1), opacity .12s ease; }
 .pc.is-x { width: calc(100% - 46rpx); margin-left: calc(-50% + 23rpx); height: auto; }
 .pc--reduced, .pc--reduced .pc__in { transition: none; }
 .pc__chip { position: absolute; left: 50%; top: -31rpx; z-index: 4; transform: translateX(-50%); display: flex; align-items: center; gap: 12rpx; padding: 10rpx 23rpx 10rpx 12rpx; border-radius: 35rpx; white-space: nowrap;
@@ -175,3 +175,16 @@ page { background: var(--cy-comp-sheet-player-page); }
 .pb__ft { display: flex; align-items: center; justify-content: space-between; margin-top: 19rpx; font-size: 23rpx; color: #8E8E93; } /* ds-ok */
 .pb__hint { display: flex; align-items: center; gap: 8rpx; }
 .pb__up { width: 12rpx; height: 12rpx; border-left: 4rpx solid currentColor; border-top: 4rpx solid currentColor; transform: translateY(3rpx) rotate(45deg); }
+/* v13 点位长成卡:裁切从圆(点位照片)过渡成圆角卡;点位照片 + 白圈在前段淡出;类型小牌、小尾巴最后出现 */
+.pc__clip { position: absolute; top: 0; right: 0; bottom: 0; left: 0; clip-path: inset(25rpx 0 25rpx 0 round 279rpx); transition: clip-path .45s cubic-bezier(.2,.82,.2,1); }
+.pc.is-in .pc__clip { clip-path: inset(0 round 42rpx); }
+.pc__cover { position: absolute; left: 0; top: 25rpx; width: 558rpx; height: 558rpx; border-radius: 50%; opacity: 1; transition: opacity .25s ease .1s; pointer-events: none; }
+.pc__ring { position: absolute; left: 0; top: 25rpx; width: 558rpx; height: 558rpx; border-radius: 50%; box-shadow: inset 0 0 0 19rpx #fff; opacity: 1; transition: opacity .25s ease .1s; pointer-events: none; } /* ds-ok 点位白圈(缩到 .16 时约 3px) */
+.pc.is-in .pc__cover, .pc.is-in .pc__ring { opacity: 0; }
+.pc__chip, .pc__tail { opacity: 0; transition: opacity .2s ease .3s; }
+.pc.is-in .pc__chip, .pc.is-in .pc__tail { opacity: 1; }
+.pc.is-x .pc__cover, .pc.is-x .pc__ring { display: none; }
+.pc--reduced .pc__clip, .pc--reduced .pc__cover, .pc--reduced .pc__ring, .pc--reduced .pc__chip, .pc--reduced .pc__tail { transition: none; }
+/* 卡开着时顶部计数条、筛选行淡出(原型 map-open),只留地图和卡 */
+.nb .mt-top, .nb .mt-filter { transition: opacity .25s ease; }
+.nb.map-open .mt-top, .nb.map-open .mt-filter { opacity: 0; pointer-events: none; }

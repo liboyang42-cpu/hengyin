@@ -1871,7 +1871,7 @@ button::after {
 .story-head__s { font-size: var(--cy-type-caption); color: var(--cy-color-text-secondary); }
 .story-cards { padding: 0 var(--cy-space-6) var(--cy-space-6); display: flex; flex-direction: column; gap: 20rpx; }
 .story-cc { position: relative; height: 200rpx; border-radius: var(--cy-radius-xl); overflow: hidden; clip-path: inset(0 round var(--cy-radius-xl));
-  background: var(--cy-color-play-surface-solid); transition: height .45s cubic-bezier(.16,1,.3,1); }
+  background: var(--cy-color-play-surface-solid); transition: height .45s cubic-bezier(.16,1,.3,1), opacity .56s ease, transform .56s cubic-bezier(.2,.82,.2,1); }
 .story-cc.is-open { height: 520rpx; }
 .story-cc__img { position: absolute; inset: 0; width: 100%; height: 100%; }
 .story-cc__blur { position: absolute; left: 0; right: 0; bottom: 0; height: 70%; backdrop-filter: blur(24rpx); -webkit-backdrop-filter: blur(24rpx);
@@ -2148,3 +2148,19 @@ button::after {
 .topic .topic-list .davidxfxi .list .li .xh { position: static; width: 50rpx; height: 50rpx; border: 0; background: #FF8A3D; color: #000; font-size: 25rpx; font-weight: 800; z-index: auto; } /* ds-ok v13 站号橙 */
 .topic .topic-list .davidxfxi .list .li .xh::before { display: none; }
 .topic .topic-list .davidxfxi .item-walk { margin: 0; }
+/* v13 收拢后的迷你卡叠:顶栏里返回键右边(原型 .smini),三张小卡左右各转 9° */
+.topbar .story-mini { position: relative; flex: none; display: none; width: 65rpx; height: 69rpx; margin-left: 19rpx; animation: none; }
+.topbar .story-mini.on { display: block; }
+.topbar .story-mini__c { left: 15rpx; top: 4rpx; width: 42rpx; height: 60rpx; border-radius: 8rpx; box-shadow: 0 0 0 2rpx #fff; } /* ds-ok */
+.topbar .story-mini__c--0 { transform: translateX(-10rpx) rotate(-9deg); z-index: 1; }
+.topbar .story-mini__c--1 { transform: none; z-index: 2; }
+.topbar .story-mini__c--2 { transform: translateX(10rpx) rotate(9deg); z-index: 3; }
+.topbar .story-mini.on ~ .tnav__t { margin-left: 15rpx; }
+/* v13 切标签:每块从下方 16px 依次浮上(原型 stagger 45–60ms);故事里的章节卡带一点 X 轴倾斜飞入 */
+.topic .tabcont > view, .topic .tabcont > text, .topic .tabcont > cy-merchant-cards { transition: opacity .46s ease, transform .46s cubic-bezier(.2,.82,.2,1); }
+.topic .tab-pre.tabcont > view, .topic .tab-pre.tabcont > text, .topic .tab-pre.tabcont > cy-merchant-cards { opacity: 0; transform: translateY(31rpx); transition: none; }
+.topic .tabcont > view:nth-child(2), .topic .tabcont > text:nth-child(2) { transition-delay: .05s; } .topic .tabcont > view:nth-child(3), .topic .tabcont > text:nth-child(3) { transition-delay: .1s; }
+.topic .tabcont > view:nth-child(4), .topic .tabcont > text:nth-child(4) { transition-delay: .15s; } .topic .tabcont > view:nth-child(5), .topic .tabcont > text:nth-child(5) { transition-delay: .2s; }
+.topic .tabcont > view:nth-child(6), .topic .tabcont > text:nth-child(6) { transition-delay: .25s; } .topic .tabcont > view:nth-child(7), .topic .tabcont > text:nth-child(7) { transition-delay: .3s; }
+.topic .tabcont > view:nth-child(n+8), .topic .tabcont > text:nth-child(n+8) { transition-delay: .35s; }
+.topic .tab-pre .story-cc { opacity: 0; transform: translateY(77rpx) rotateX(-25deg) scale(.96); transition: none; }
