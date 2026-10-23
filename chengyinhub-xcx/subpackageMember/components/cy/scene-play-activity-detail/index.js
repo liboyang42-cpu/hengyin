@@ -1,7 +1,7 @@
 'use strict'
 
 const modal = require('../../../../utils/modal.js');
-const toast = require('../../../../utils/toast.js');
+const toast = require('../../../../utils/toast.js'); const PM = require('../../../../utils/page-motion.js');
 const app = getApp()
 const analytics = require('../../../../utils/analytics.js')
 const { chinaDayStart, toTimestamp } = require('../../../../utils/datetime.js')
@@ -273,7 +273,7 @@ Component({
           const latitude = coordinate(info.latitude, 90)
           const longitude = coordinate(info.longitude, 180)
           const averageRating = nonNegativeNumber(info.averageRating)
-          this._loadedId = requestedId
+          this._loadedId = requestedId; PM.enter(this, 'pmPage') // 2026-10-23:详情各块依次浮上来
           this.setData({
             state: 'ready',
             info,

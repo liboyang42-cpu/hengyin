@@ -23,3 +23,6 @@
    只减淡不位移:位移要配 .cy-motion-reduced 兜底,而那个类挂在组件外的祖先上,
    isolated 下同样够不着 —— 与其留个撤不掉的位移,不如按仓库既有组件按压类的做法只减淡。 */
 .cy-pressed { opacity: .88; }
+
+/* 2026-10-23 页面动效(utils/page-motion.js):容器 --pm-* 置 1 时先隐着,再依次浮上来;静止时无过渡,按压反馈不受影响;减少动态效果时从不触发 */
+.wallet-card { filter: opacity(calc(1 - var(--pm-c, 0))); translate: 0 calc(var(--pm-c, 0) * 31rpx); transition: filter var(--pm-c-d, 0s) ease, translate var(--pm-c-d, 0s) cubic-bezier(.2,.82,.2,1), transform var(--cy-motion-press) var(--cy-ease-out), opacity var(--cy-motion-press) var(--cy-ease-out); transition-delay: calc(var(--pm-c-s, 0) * (0ms + min(var(--pmi, 0), 8) * 50ms)), calc(var(--pm-c-s, 0) * (0ms + min(var(--pmi, 0), 8) * 50ms)), 0s, 0s; }

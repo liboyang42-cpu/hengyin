@@ -4,7 +4,7 @@
 const app = getApp()
 const { recoverReadSession } = require('../../../../utils/session/login-reload.js')
 const { buildGrowthOverview } = require('../../../utils/growth-overview.js')
-const { chinaParts } = require('../../../../utils/datetime.js')
+const { chinaParts } = require('../../../../utils/datetime.js'); const PM = require('../../../../utils/page-motion.js')
 
 function fmt(n) {
   // UI-04(2026-09-18):数字统计没取到显示 0,不再显示横杠
@@ -487,6 +487,7 @@ Page({
         overviewError: allSuccess ? '' : (hadOverview ? '足迹更新没有完成，现有数据仍可查看' : '部分成长数据暂时不可用'),
         badgeLoadError: !hasBadgeSource
       })
+      if (!this.data.overviewLoaded) PM.enter(this, 'pmPage') // 2026-10-23:足迹与徽章行依次浮上来
       this.setData({
         overview,
         overviewAvailable: hadOverview && !allSuccess ? this.data.overviewAvailable : {

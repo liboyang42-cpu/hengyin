@@ -37,7 +37,7 @@
     <view wx:if="{{overviewState === 'loading' && !overviewLoaded}}" class="gc-metric-list" aria-label="正在加载足迹">
       <view class="gc-metric-row" wx:for="{{overview.stats}}" wx:key="key"><view class="gc-skeleton-label" /><view class="gc-skeleton-value" /></view>
     </view>
-    <view wx:else class="gc-metric-list" aria-role="list" aria-label="我的城市足迹">
+    <view wx:else class="gc-metric-list" aria-role="list" aria-label="我的城市足迹" style="{{pmPage === 1 ? '--pm-g:1;' : (pmPage === 2 ? '--pm-g-d:.46s;--pm-g-s:1;' : '')}}">
       <view class="gc-metric-row" wx:for="{{overview.stats}}" wx:key="key" aria-role="listitem">
         <text class="gc-metric-label">{{item.label}}</text>
         <view class="gc-metric-value">
@@ -49,7 +49,7 @@
   </view>
   <view class="gc-section gc-badge-sec">
     <view class="gc-section-head"><text class="gc-section-title">我的徽章</text><text wx:if="{{overviewAvailable.center}}" class="gc-section-meta">{{badgeCountText}}</text></view>
-    <view wx:if="{{showBadges}}" class="gc-badge-list" aria-role="list" aria-label="我的徽章">
+    <view wx:if="{{showBadges}}" class="gc-badge-list" aria-role="list" aria-label="我的徽章" style="{{pmPage === 1 ? '--pm-g:1;' : (pmPage === 2 ? '--pm-g-d:.46s;--pm-g-s:1;' : '')}}">
       <view class="gc-badge-row {{expandedBadge === item.code ? 'is-open' : ''}}" wx:for="{{badges}}" wx:key="code" data-code="{{item.code}}" bindtap="onBadgeTap" aria-role="button" aria-label="{{item.name}}，查看获得时刻" hover-class="gc-row--press" hover-stay-time="80">
         <view class="gc-badge-disc"><image wx:if="{{item.iconUrl}}" class="gc-badge-icon" src="{{item.iconUrl}}" mode="aspectFit" /><text wx:else>{{item.initial}}</text></view>
         <view class="gc-badge-copy">

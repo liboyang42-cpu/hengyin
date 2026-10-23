@@ -1,4 +1,4 @@
-const toast = require('../../../utils/toast.js');
+const toast = require('../../../utils/toast.js'); const PM = require('../../../utils/page-motion.js');
 const app = getApp();
 const merchantTheme = require('../../../utils/merchant-theme.js');
 const { normalizeRelationHome } = require('../utils/merchant-aggregate.js');
@@ -155,7 +155,7 @@ Page({
 
   onTabChange(e) {
     const key = e.detail && e.detail.key;
-    if (key === 'merchant' || key === 'club') this.setData({ activeTab: key });
+    if (key === 'merchant' || key === 'club') { PM.enter(this, 'pmList'); this.setData({ activeTab: key }); } // 2026-10-23:切标签卡片依次浮上来
   },
 
   loadRelationHome() {
@@ -186,7 +186,7 @@ Page({
         }
         const merchantResult = normalizeDiscoveryList(home.merchants, '商家');
         const clubResult = normalizeDiscoveryList(home.clubs, '俱乐部');
-        that._hasLoaded = true;
+        that._hasLoaded = true; PM.enter(that, 'pmList');
         that.setData({
           merchants: merchantResult.rows,
           clubs: clubResult.rows,

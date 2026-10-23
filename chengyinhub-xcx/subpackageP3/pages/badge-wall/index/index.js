@@ -8,7 +8,7 @@
 //   未获得的身份卡以锁定态展示可理解的下一步(§8.3,库 unlock_hint 列)。
 const app = getApp();
 const { recoverReadSession } = require('../../../../utils/session/login-reload.js');
-const { resolveMenuChrome } = require('../../../../utils/nav-safe-area.js');
+const { resolveMenuChrome } = require('../../../../utils/nav-safe-area.js'); const PM = require('../../../../utils/page-motion.js');
 const ENGINE = require('./engine.js');
 const { chinaDateKey } = require('../../../../utils/datetime');
 const { isRecord, isRecordList } = require('../../../../utils/response-shape.js');
@@ -371,7 +371,7 @@ Page({
         items: numbered.filter(function (badge) { return badge.family === fam.key; }),
       };
     }).filter(function (group) { return group.items.length; });
-    this._badgeCache = list;
+    if (this.data.viewMode === 'list' && !this.data.badges.length) PM.enter(this, 'pmList'); this._badgeCache = list; // 2026-10-23:列表首次到达时依次浮上来
     this._resolveFocus(list);
     if (!list.length) this.destroyEngine();
     this.setData({
@@ -453,7 +453,7 @@ Page({
     if (this.data.viewMode === 'list') return;
     this.closeSheet();
     this.destroyEngine();
-    this.setData({ viewMode: 'list' });
+    PM.enter(this, 'pmList'); this.setData({ viewMode: 'list' }); // 2026-10-23:切到列表时勋章行依次浮上来
   },
 
   goExplore() {

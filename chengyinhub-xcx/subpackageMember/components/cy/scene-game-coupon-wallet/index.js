@@ -2,7 +2,7 @@
 
 const app = getApp()
 const credential = require('../../../../utils/coupon-credential.js')
-const { isRecordList } = require('../../../../utils/response-shape.js')
+const { isRecordList } = require('../../../../utils/response-shape.js'); const PM = require('../../../../utils/page-motion.js')
 const datetime = require('../../../../utils/datetime.js')
 const { isLoginRequired, failureStatus, retryLogin, waitForInitialSession, recoverReadSession } = require('../../../../utils/session/login-reload.js')
 
@@ -149,7 +149,7 @@ Component({
       })
     },
     filter() {
-      const items = this.data.tab === 0 ? this.data.all : this.data.all.filter((item) => item._statusCode === this.data.tab - 1)
+      const items = this.data.tab === 0 ? this.data.all : this.data.all.filter((item) => item._statusCode === this.data.tab - 1); PM.enter(this, 'pmList') // 2026-10-23:券卡依次浮上来
       this.setData({ items })
     },
     selectTab(event) {

@@ -7,7 +7,7 @@
          nav-page-title-spacing-contract 锁着它 —— 这一页单独走自绘会成孤例。 -->
   <cy-nav-bar title="营销" back="{{false}}" />
 
-  <view class="body">
+  <view class="body" style="{{pmPage === 1 ? '--pm-k:1;' : (pmPage === 2 ? '--pm-k-d:.46s;--pm-k-s:1;' : '')}}">
     <!-- 未登录不再整屏拦:静默登录(见 index.js 的 enterMarketing),登录/身份确认失败
          只在页内挂一条内联错误 + 重试。岗位没有营销权限也从整屏态改成页内说明。 -->
     <cy-inline-error load-failure class="m-inline-error" wx:if="{{entryError}}" kind="data"

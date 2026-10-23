@@ -1,4 +1,4 @@
-const loading = require('../../../utils/loading.js');
+const loading = require('../../../utils/loading.js'); const PM = require('../../../utils/page-motion.js');
 const { chinaParts } = require('../../../utils/datetime');
 const cyToast = require('../../../utils/toast.js');
 const modal = require('../../../utils/modal.js');
@@ -117,7 +117,7 @@ Page({
   },
 
   onLoad(options) {
-    const gd = app.globalData || {};
+    const gd = app.globalData || {}; PM.enter(this, 'pmPage'); // 2026-10-23:工作台各块依次浮上来
     this._gameSessionClient = createGameSessionClient({ sendRequest: app.sendRequest.bind(app) });
     this._gameSummaryGeneration = 0;
     this._upcomingRuns = [];
@@ -364,7 +364,7 @@ Page({
   // 改写俱乐部「谁、哪天几点到店」—— 原先为状态字逐场拉 projection 的请求一并撤掉。
   refreshGameStationSummaries(projectCards) {
     const decorated = attachMerchantGameEntries(projectCards, this._merchantGameEntries, {});
-    this.setData({ projectCards: attachVisitTexts(decorated, this._upcomingRuns) });
+    if (!this.data.projectCards.length) PM.enter(this, 'pmProj'); this.setData({ projectCards: attachVisitTexts(decorated, this._upcomingRuns) });
   },
 
   // 俱乐部/团队即将到店的场次(含俱乐部自己开的场次);接口要 VERIFY_RECORD_READ,没这个岗位权限就不读、卡上不写。

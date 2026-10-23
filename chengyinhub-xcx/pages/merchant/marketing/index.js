@@ -1,5 +1,5 @@
 const app = getApp();
-const merchantTheme = require('../../../utils/merchant-theme.js');
+const merchantTheme = require('../../../utils/merchant-theme.js'); const PM = require('../../../utils/page-motion.js');
 const { ensureSession } = require('../utils/session/ensure-session.js');
 const { normalizeMarketingHome } = require('../utils/merchant-aggregate.js');
 const { isRecord } = require('../../../utils/response-shape.js');
@@ -167,7 +167,7 @@ Page({
   },
 
   onLoad() {
-    this._unloaded = false;
+    this._unloaded = false; PM.enter(this, 'pmPage'); // 2026-10-23:营销各块依次浮上来
     this._skipNextShowReload = true;
     this._scopeMemberId = currentMemberId();
     const gd = app.globalData || {};

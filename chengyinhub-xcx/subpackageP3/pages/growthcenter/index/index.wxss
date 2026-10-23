@@ -53,3 +53,19 @@ page { background: var(--cy-bg-page); }
 .gc-badge-loading { color: var(--cy-color-text-secondary); font-size: var(--cy-font-body); line-height: 22px; }
 .gc-badge-skeleton { height: 44px; border-radius: var(--cy-radius-placeholder); }
 .gc-sr-status { position: fixed; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
+
+/* 2026-10-23 页面动效(utils/page-motion.js):容器 --pm-* 置 1 时先隐着,再依次浮上来;静止时无过渡,按压反馈不受影响;减少动态效果时从不触发 */
+.gc-metric-row { filter: opacity(calc(1 - var(--pm-g, 0))); translate: 0 calc(var(--pm-g, 0) * 31rpx); transition: filter var(--pm-g-d, 0s) ease, translate var(--pm-g-d, 0s) cubic-bezier(.2,.82,.2,1), transform var(--cy-motion-press) var(--cy-ease-out), opacity var(--cy-motion-press) var(--cy-ease-out); transition-delay: calc(var(--pm-g-s, 0) * 0ms), calc(var(--pm-g-s, 0) * 0ms), 0s, 0s; }
+.gc-metric-row:nth-child(2) { transition-delay: calc(var(--pm-g-s, 0) * 60ms), calc(var(--pm-g-s, 0) * 60ms), 0s, 0s; }
+.gc-metric-row:nth-child(3) { transition-delay: calc(var(--pm-g-s, 0) * 120ms), calc(var(--pm-g-s, 0) * 120ms), 0s, 0s; }
+.gc-metric-row:nth-child(4) { transition-delay: calc(var(--pm-g-s, 0) * 180ms), calc(var(--pm-g-s, 0) * 180ms), 0s, 0s; }
+.gc-metric-row:nth-child(n+5) { transition-delay: calc(var(--pm-g-s, 0) * 240ms), calc(var(--pm-g-s, 0) * 240ms), 0s, 0s; }
+.gc-badge-row { filter: opacity(calc(1 - var(--pm-g, 0))); translate: 0 calc(var(--pm-g, 0) * 31rpx); transition: filter var(--pm-g-d, 0s) ease, translate var(--pm-g-d, 0s) cubic-bezier(.2,.82,.2,1), transform var(--cy-motion-press) var(--cy-ease-out), opacity var(--cy-motion-press) var(--cy-ease-out); transition-delay: calc(var(--pm-g-s, 0) * 240ms), calc(var(--pm-g-s, 0) * 240ms), 0s, 0s; }
+.gc-badge-row:nth-child(2) { transition-delay: calc(var(--pm-g-s, 0) * 300ms), calc(var(--pm-g-s, 0) * 300ms), 0s, 0s; }
+.gc-badge-row:nth-child(3) { transition-delay: calc(var(--pm-g-s, 0) * 360ms), calc(var(--pm-g-s, 0) * 360ms), 0s, 0s; }
+.gc-badge-row:nth-child(4) { transition-delay: calc(var(--pm-g-s, 0) * 420ms), calc(var(--pm-g-s, 0) * 420ms), 0s, 0s; }
+.gc-badge-row:nth-child(5) { transition-delay: calc(var(--pm-g-s, 0) * 480ms), calc(var(--pm-g-s, 0) * 480ms), 0s, 0s; }
+.gc-badge-row:nth-child(6) { transition-delay: calc(var(--pm-g-s, 0) * 540ms), calc(var(--pm-g-s, 0) * 540ms), 0s, 0s; }
+.gc-badge-row:nth-child(7) { transition-delay: calc(var(--pm-g-s, 0) * 600ms), calc(var(--pm-g-s, 0) * 600ms), 0s, 0s; }
+.gc-badge-row:nth-child(8) { transition-delay: calc(var(--pm-g-s, 0) * 660ms), calc(var(--pm-g-s, 0) * 660ms), 0s, 0s; }
+.gc-badge-row:nth-child(n+9) { transition-delay: calc(var(--pm-g-s, 0) * 720ms), calc(var(--pm-g-s, 0) * 720ms), 0s, 0s; }

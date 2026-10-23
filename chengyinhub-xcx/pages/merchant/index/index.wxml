@@ -10,7 +10,7 @@
        (2026-09-16 裁决:商家自己的账号被登录闸拦住只是添麻烦)。 -->
   <scroll-view class="rv-scroll" scroll-y enhanced show-scrollbar="{{false}}"
                scroll-into-view="{{scrollIntoView}}"
-               style="height: 100vh; padding-top: {{statusBarHeight + navBarHeight}}px;"
+               style="{{pmPage === 1 ? '--pm-w:1;' : (pmPage === 2 ? '--pm-w-d:.46s;--pm-w-s:1;' : '')}}height: 100vh; padding-top: {{statusBarHeight + navBarHeight}}px;"
                refresher-enabled
                refresher-triggered="{{refreshing}}"
                bindrefresherrefresh="onRefresh">
@@ -147,7 +147,7 @@
            **加载中冒充空态**的假结论;已有项目时刷新保留旧卡,避免整块闪退。 -->
       <cy-skeleton wx:if="{{!projectCards.length && (joinLoading || hostLoading || todoLoading || gameEntryLoading)}}" type="list" count="{{2}}" />
       <view wx:else>
-        <view class="rv-project-cards" wx:if="{{projectCards.length}}">
+        <view class="rv-project-cards" wx:if="{{projectCards.length}}" style="{{pmProj === 1 ? '--pm-j:1;' : (pmProj === 2 ? '--pm-j-d:.46s;--pm-j-s:1;' : '')}}">
           <view class="rv-project-item" wx:for="{{projectCards}}" wx:key="key">
           <view class="rv-project-card" bindtap="openProjectCard"
                 data-role="{{item.role}}" data-id="{{item.id}}" data-topicid="{{item.ownerId}}" data-biztype="{{item.bizType}}" data-source="{{item.projectSource}}"

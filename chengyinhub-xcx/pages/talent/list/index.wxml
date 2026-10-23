@@ -27,7 +27,7 @@
   <cy-tabs class="top-tabs" variant="fill" wide="{{true}}" tabs="{{topTabs}}" active="{{activeTopTab}}" bind:change="onTopTabChange" />
 
   <!-- ===== 帖文 ===== -->
-  <view class="tab-body tab-body--feed" wx:if="{{activeTopTab === 'feed'}}">
+  <view class="tab-body tab-body--feed" wx:if="{{activeTopTab === 'feed'}}" style="{{pmFeed === 1 ? '--pm-p:1;' : (pmFeed === 2 ? '--pm-p-d:.46s;--pm-p-s:1;' : '')}}">
     <cy-skeleton class="feed-state" wx:if="{{feedState === 'loading'}}" type="card" count="{{3}}" />
     <cy-error load-failure class="feed-state cy-fade-in" wx:elif="{{feedState === 'error'}}" title="动态加载失败" sub="{{feedError}}" retry="重试" bind:retry="loadFeed" />
     <block wx:else>
@@ -65,7 +65,7 @@
            顺序:我创建的 → 我加入的 → 同城其他俱乐部(商家视角只有最后一组,仍按店铺城市过滤)。
            2026-08-20 重设计:三份内联拷贝收敛为 cy-club-card;外层保留 club-card 类名给截图矩阵选择器。 -->
       <view class="club-section" wx:if="{{clubsLoaded}}">
-        <view class="club-grid" wx:if="{{myClubs.length || joinedClubs.length || nearbyClubs.length}}">
+        <view class="club-grid" wx:if="{{myClubs.length || joinedClubs.length || nearbyClubs.length}}" style="{{pmClubs === 1 ? '--pm-c:1;' : (pmClubs === 2 ? '--pm-c-d:.46s;--pm-c-s:1;' : '')}}">
           <block wx:if="{{!isMerchantViewer}}">
             <cy-club-card class="club-card" wx:for="{{myClubs}}" wx:key="id" club="{{item}}" interactive="{{true}}"
               data-id="{{item.id}}" bind:tap="goClubDetail" bind:action="onClubCardAction" aria-role="button" aria-label="打开俱乐部主页"  hover-class="cy-pressed" hover-stay-time="80"/>

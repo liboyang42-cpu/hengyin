@@ -356,3 +356,15 @@
   font-size: var(--cy-font-label);
   color: var(--cy-text-secondary);
 }
+
+/* 2026-10-23 页面动效(utils/page-motion.js):容器 --pm-* 置 1 时先隐着,再依次浮上来;静止时无过渡,按压反馈不受影响;减少动态效果时从不触发 */
+.hero { filter: opacity(calc(1 - var(--pm-k, 0))); translate: 0 calc(var(--pm-k, 0) * 31rpx); transition: filter var(--pm-k-d, 0s) ease, translate var(--pm-k-d, 0s) cubic-bezier(.2,.82,.2,1), transform var(--cy-motion-press) var(--cy-ease-out), opacity var(--cy-motion-press) var(--cy-ease-out); transition-delay: calc(var(--pm-k-s, 0) * 0ms), calc(var(--pm-k-s, 0) * 0ms), 0s, 0s; }
+.hero:nth-child(n+2) { transition-delay: calc(var(--pm-k-s, 0) * 45ms), calc(var(--pm-k-s, 0) * 45ms), 0s, 0s; }
+.tiles { filter: opacity(calc(1 - var(--pm-k, 0))); translate: 0 calc(var(--pm-k, 0) * 31rpx); transition: filter var(--pm-k-d, 0s) ease, translate var(--pm-k-d, 0s) cubic-bezier(.2,.82,.2,1), transform var(--cy-motion-press) var(--cy-ease-out), opacity var(--cy-motion-press) var(--cy-ease-out); transition-delay: calc(var(--pm-k-s, 0) * 60ms), calc(var(--pm-k-s, 0) * 60ms), 0s, 0s; }
+.tiles:nth-child(n+2) { transition-delay: calc(var(--pm-k-s, 0) * 105ms), calc(var(--pm-k-s, 0) * 105ms), 0s, 0s; }
+.mine { filter: opacity(calc(1 - var(--pm-k, 0))); translate: 0 calc(var(--pm-k, 0) * 31rpx); transition: filter var(--pm-k-d, 0s) ease, translate var(--pm-k-d, 0s) cubic-bezier(.2,.82,.2,1), transform var(--cy-motion-press) var(--cy-ease-out), opacity var(--cy-motion-press) var(--cy-ease-out); transition-delay: calc(var(--pm-k-s, 0) * 120ms), calc(var(--pm-k-s, 0) * 120ms), 0s, 0s; }
+.mine:nth-child(n+2) { transition-delay: calc(var(--pm-k-s, 0) * 165ms), calc(var(--pm-k-s, 0) * 165ms), 0s, 0s; }
+.deck-slot { filter: opacity(calc(1 - var(--pm-k, 0))); translate: 0 calc(var(--pm-k, 0) * 31rpx); transition: filter var(--pm-k-d, 0s) ease, translate var(--pm-k-d, 0s) cubic-bezier(.2,.82,.2,1), transform var(--cy-motion-press) var(--cy-ease-out), opacity var(--cy-motion-press) var(--cy-ease-out); transition-delay: calc(var(--pm-k-s, 0) * 180ms), calc(var(--pm-k-s, 0) * 180ms), 0s, 0s; }
+.deck-slot:nth-child(n+2) { transition-delay: calc(var(--pm-k-s, 0) * 225ms), calc(var(--pm-k-s, 0) * 225ms), 0s, 0s; }
+.coop { filter: opacity(calc(1 - var(--pm-k, 0))); translate: 0 calc(var(--pm-k, 0) * 31rpx); transition: filter var(--pm-k-d, 0s) ease, translate var(--pm-k-d, 0s) cubic-bezier(.2,.82,.2,1), transform var(--cy-motion-press) var(--cy-ease-out), opacity var(--cy-motion-press) var(--cy-ease-out); transition-delay: calc(var(--pm-k-s, 0) * 240ms), calc(var(--pm-k-s, 0) * 240ms), 0s, 0s; }
+.coop:nth-child(n+2) { transition-delay: calc(var(--pm-k-s, 0) * 285ms), calc(var(--pm-k-s, 0) * 285ms), 0s, 0s; }
