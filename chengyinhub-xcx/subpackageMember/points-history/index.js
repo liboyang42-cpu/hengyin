@@ -1,6 +1,6 @@
 // 积分明细。POST /api/points/list:后端一次返回全部明细,这里按 20 条一页展开。
 const app = getApp()
-const cyToast = require('../../utils/toast.js')
+const cyToast = require('../../utils/toast.js'); const pageMotion = require('../../utils/page-motion.js')
 const { isBizOk } = require('../../utils/response-shape.js')
 const { PAGE_SIZE, FILTERS, normalizeRows, filterRows, groupByMonth } = require('./rows.js')
 
@@ -52,7 +52,7 @@ Page({
   _sync() {
     const all = this._all || []
     const list = this._filtered()
-    this.setData({
+    pageMotion.enter(this, 'pmList'); this.setData({
       groups: groupByMonth(list.slice(0, this._shown)),
       hasMore: this._shown < list.length,
       filterEmpty: !list.length,

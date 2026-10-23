@@ -1,0 +1,22 @@
+// 数字滚动显示(配 utils/page-motion.js countIn):k 为 0→1 的进度,null 时原样显示真实值。
+// 只处理纯数字(可带千分位逗号与小数);其它文字原样返回 —— 滚动是装饰,落点必须是真实值。
+var NUM = getRegExp('^[0-9][0-9,]*(\\.[0-9]+)?$');
+function f(v, k) {
+  if (k === null || k === undefined || k === '') return v;
+  var s = '' + v;
+  if (!NUM.test(s)) return v;
+  var comma = s.indexOf(',') >= 0;
+  var raw = s.split(',').join('');
+  var dot = raw.indexOf('.');
+  var decimals = dot >= 0 ? raw.length - dot - 1 : 0;
+  var out = (parseFloat(raw) * k).toFixed(decimals);
+  if (!comma) return out;
+  var parts = out.split('.');
+  var head = parts[0], res = '';
+  for (var i = 0; i < head.length; i++) {
+    if (i > 0 && (head.length - i) % 3 === 0) res += ',';
+    res += head[i];
+  }
+  return parts.length > 1 ? res + '.' + parts[1] : res;
+}
+module.exports = { f: f };

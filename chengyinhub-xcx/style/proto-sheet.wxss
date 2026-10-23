@@ -133,8 +133,8 @@
 .trow{ display:flex; align-items:center; gap:19rpx; margin-top:35rpx; } /* ds-ok 原型 .row gap 10px / 上 18px */
 .ph1--tight{ margin-top:15rpx; } /* ds-ok 原型 .h1 在这屏是 margin-top:8px */
 .ptag{ display:inline-block; font-size:var(--cy-type-caption); font-weight:700; padding:8rpx 17rpx; border-radius:15rpx; } /* ds-ok 原型 .tag 11px/700 / padding 4px 9px / radius 8 */
-.ptag--city{ background:#132A1C; color:#4ADE80; } /* ds-ok 城市定向绿,与地图点位同一对 */
-.ptag--free{ background:#3467AE; color:#FFFFFF; } /* ds-ok 原型 h-topic 的 tagBg/tagFg */
+.ptag--city{ background:#3467AE; color:#FFFFFF; } /* ds-ok 城市定向蓝(2026-10-22 业主对调),与地图点位同一对 */
+.ptag--free{ background:#132A1C; color:#4ADE80; } /* ds-ok 自由探索绿(2026-10-22 业主对调) */
 .tstats{ display:flex; gap:19rpx; margin-top:31rpx; background:#101418; border-radius:31rpx; padding:27rpx 31rpx; } /* ds-ok 原型 .tstats gap 10 / 上 16 / #101418 / radius 16 / padding 14 16 */
 .tstats__c{ flex:1; text-align:center; }
 .tstats__v{ display:block; font-size:var(--cy-type-section-title); font-weight:800; color:#FFFFFF; } /* ds-ok 原型 .tstats .v 19px/800 */

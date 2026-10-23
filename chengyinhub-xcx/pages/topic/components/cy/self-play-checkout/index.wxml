@@ -1,0 +1,45 @@
+<view class="ck {{show ? 'is-on' : ''}}" aria-hidden="{{!show}}">
+  <view class="ck__nav" style="height: {{topInset}}px;">
+    <view class="ck__back" bindtap="onBack" aria-role="button" aria-label="返回" hover-class="ck-pressed" hover-stay-time="80"><view class="ck__chev"></view></view>
+    <text class="ck__title">确认订单</text>
+  </view>
+  <scroll-view scroll-y enhanced show-scrollbar="{{false}}" class="ck__body" style="top: {{topInset}}px;">
+    <text class="ck__sec">参与人信息</text>
+    <view class="ck__card ck__who" bindtap="onProfile" aria-role="button" aria-label="修改参与人信息" hover-class="ck-pressed" hover-stay-time="80">
+      <view wx:if="{{profileName}}" class="ck__who-main"><text class="ck__who-n">{{profileName}}</text><text class="ck__who-p">{{profilePhone}}</text></view>
+      <text wx:else class="ck__who-miss">补全姓名和手机号</text>
+      <cy-icon class="ck__more" name="chevron-right" size="28" />
+    </view>
+
+    <text class="ck__sec">主题信息</text>
+    <view class="ck__card ck__item">
+      <image wx:if="{{cover}}" class="ck__cover" src="{{cover}}" mode="aspectFill" />
+      <view class="ck__item-tx">
+        <text class="ck__item-n">{{name}}</text>
+        <text class="ck__item-s" wx:if="{{validText}}">时间</text><text class="ck__item-v" wx:if="{{validText}}">{{validText}}</text>
+        <text class="ck__item-s" wx:if="{{placeText}}">地点</text><text class="ck__item-v" wx:if="{{placeText}}">{{placeText}}</text>
+      </view>
+    </view>
+
+    <text class="ck__sec">费用明细</text>
+    <view class="ck__card ck__rows">
+      <view class="ck__row"><text class="ck__k">票种</text><text class="ck__v">自玩通行证</text></view>
+      <view class="ck__row"><text class="ck__k">订单金额</text><text class="ck__v">{{priceText}}</text></view>
+      <view class="ck__row ck__row--sum"><text class="ck__k ck__k--sum">合计</text><text class="ck__v ck__v--sum">{{priceText}}</text></view>
+    </view>
+
+    <view class="ck__consent">
+      <cy-consent-check checked="{{consentChecked}}" text="同意将姓名、手机号提供给主办方，用于报名核验" bind:change="onConsent" />
+      <text class="ck__hint" wx:if="{{consentHint}}">{{consentHint}}</text>
+      <view class="ck__err" wx:if="{{consentError}}" aria-role="alert">
+        <text>{{consentError}}</text>
+        <text class="ck__err-act" bindtap="onPay" aria-role="button" aria-label="重试" hover-class="ck-pressed" hover-stay-time="80">重试</text>
+      </view>
+    </view>
+    <view class="ck__pad"></view>
+  </scroll-view>
+  <view class="ck__bar">
+    <view class="ck__sum"><text class="ck__sum-k">合计</text><text class="ck__sum-v">{{priceText}}</text></view>
+    <view class="ck__pay {{loading ? 'is-busy' : ''}}" bindtap="onPay" aria-role="button" aria-label="{{free ? '免费领取' : '立即支付'}}" hover-class="ck-pressed" hover-stay-time="80">{{loading ? '处理中…' : (free ? '免费领取' : '立即支付')}}</view>
+  </view>
+</view>

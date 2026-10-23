@@ -1,4 +1,4 @@
-const { readReducedMotion } = require('../../../../utils/motion-preference.js');
+const { readReducedMotion } = require('../../../../utils/motion-preference.js'); const pageMotion = require('../../../../utils/page-motion.js');
 // 完整排行榜(从成长中心主页拆出):周/总榜 × 积分/成长榜 切换 + 前三领奖台 + 全量名次
 // 数据:/api/growth/leaderboard。成长中心主页只展示「自己的排名」摘要,点开才到这里看完整榜单。
 const app = getApp()
@@ -196,7 +196,7 @@ Page({
       me.bg = ME_GRAD
       me.name = data.me.nickname || '我'
     }
-    this.setData({ unit, top3, rest: list.slice(3), me })
+    pageMotion.enter(this, 'pmList'); this.setData({ unit, top3, rest: list.slice(3), me })
   },
 
   toRow(it, index) {

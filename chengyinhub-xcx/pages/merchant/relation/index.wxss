@@ -24,3 +24,14 @@
 .rel-list { display: flex; flex-direction: column; gap: var(--cy-space-3); margin-top: var(--cy-space-3); }
 .rel-item { overflow: hidden; border-radius: var(--cy-radius-lg); }
 .fill-slot { display: flex !important; flex-direction: column !important; min-height: 60vh !important; }
+
+/* 2026-10-23 页面动效(utils/page-motion.js):容器 --pm-* 置 1 时先隐着,再依次浮上来;静止时无过渡,按压反馈不受影响;减少动态效果时从不触发 */
+.rel-item { filter: opacity(calc(1 - var(--pm-q, 0))); translate: 0 calc(var(--pm-q, 0) * 31rpx); transition: filter var(--pm-q-d, 0s) ease, translate var(--pm-q-d, 0s) cubic-bezier(.2,.82,.2,1), transform var(--cy-motion-press) var(--cy-ease-out), opacity var(--cy-motion-press) var(--cy-ease-out); transition-delay: calc(var(--pm-q-s, 0) * 0ms), calc(var(--pm-q-s, 0) * 0ms), 0s, 0s; }
+.rel-item:nth-child(2) { transition-delay: calc(var(--pm-q-s, 0) * 30ms), calc(var(--pm-q-s, 0) * 30ms), 0s, 0s; }
+.rel-item:nth-child(3) { transition-delay: calc(var(--pm-q-s, 0) * 60ms), calc(var(--pm-q-s, 0) * 60ms), 0s, 0s; }
+.rel-item:nth-child(4) { transition-delay: calc(var(--pm-q-s, 0) * 90ms), calc(var(--pm-q-s, 0) * 90ms), 0s, 0s; }
+.rel-item:nth-child(5) { transition-delay: calc(var(--pm-q-s, 0) * 120ms), calc(var(--pm-q-s, 0) * 120ms), 0s, 0s; }
+.rel-item:nth-child(6) { transition-delay: calc(var(--pm-q-s, 0) * 150ms), calc(var(--pm-q-s, 0) * 150ms), 0s, 0s; }
+.rel-item:nth-child(7) { transition-delay: calc(var(--pm-q-s, 0) * 180ms), calc(var(--pm-q-s, 0) * 180ms), 0s, 0s; }
+.rel-item:nth-child(8) { transition-delay: calc(var(--pm-q-s, 0) * 210ms), calc(var(--pm-q-s, 0) * 210ms), 0s, 0s; }
+.rel-item:nth-child(n+9) { transition-delay: calc(var(--pm-q-s, 0) * 240ms), calc(var(--pm-q-s, 0) * 240ms), 0s, 0s; }

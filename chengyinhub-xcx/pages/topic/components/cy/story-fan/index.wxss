@@ -1,0 +1,27 @@
+.sf { position: relative; height: 577rpx; overflow: hidden;
+  background: radial-gradient(80% 90% at 50% 20%, #232833, #000 80%); } /* ds-ok v13 扇形卡底 */
+.sf-pressed { opacity: .9; }
+.sf__c { position: absolute; left: 50%; top: 142rpx; width: 200rpx; height: 280rpx; margin-left: -100rpx;
+  perspective: 1200rpx; transition: transform .6s cubic-bezier(.34, 1.32, .64, 1), opacity .3s; }
+.sf__c--still { transition: none; }
+.sf__in { position: absolute; top: 0; right: 0; bottom: 0; left: 0; transform-style: preserve-3d; transition: transform .7s cubic-bezier(.34, 1.32, .64, 1); }
+.sf__in.is-flip { transform: rotateY(180deg); }
+/* 业主:卡片不要描边,只留投影 */
+.sf__f, .sf__b { position: absolute; top: 0; right: 0; bottom: 0; left: 0; border-radius: 20rpx; overflow: hidden; /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
+  backface-visibility: hidden; -webkit-backface-visibility: hidden; box-shadow: 0 24rpx 48rpx rgba(0, 0, 0, .6); } /* ds-ok 卡片投影 */
+.sf__f { background: var(--cy-color-bg-surface-strong); }
+.sf__img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+/* 文字只写在顶部 */
+.sf__lb { position: absolute; left: 0; right: 0; top: 0; padding: 12rpx 14rpx 28rpx; font-size: 20rpx; font-weight: 800; color: var(--cy-color-text-primary); /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
+  background: linear-gradient(180deg, rgba(0, 0, 0, .7), rgba(0, 0, 0, 0)); } /* ds-ok 压图渐变 */
+.sf__b { transform: rotateY(180deg); padding: 18rpx 16rpx; box-sizing: border-box; display: flex; flex-direction: column; gap: 6rpx;
+  background: linear-gradient(160deg, #26282e, #121316); } /* ds-ok v13 卡背 */
+.sf__bk { font-size: 14rpx; letter-spacing: 2rpx; color: var(--cy-color-text-tertiary); } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
+.sf__bt { font-size: 20rpx; font-weight: 700; color: var(--cy-color-text-primary); } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
+.sf__bp { font-size: 15rpx; line-height: 1.5; color: var(--cy-color-text-secondary); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 9; -webkit-box-orient: vertical; } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
+.sf__cap { position: absolute; left: 0; right: 0; bottom: 24rpx; text-align: center; font-size: var(--cy-type-caption);
+  color: var(--cy-color-text-secondary); opacity: calc(1 - var(--sf-collapse, 0)); }
+/* v13 进标签飞入:内层包一层,不碰外层的位姿 transform */
+.sf__e { position: absolute; top: 0; right: 0; bottom: 0; left: 0; transition: transform .56s cubic-bezier(.2,.82,.2,1), opacity .4s; }
+.sf__e.is-pre { opacity: 0; transform: translateY(115rpx) scale(.6); transition: none; }
+.sf__c--still .sf__e { transition: none; }

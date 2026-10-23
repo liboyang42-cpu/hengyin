@@ -1,4 +1,4 @@
-const toast = require('../../../../utils/toast.js');
+const toast = require('../../../../utils/toast.js'); const pageMotion = require('../../../../utils/page-motion.js');
 const { toTimestamp, chinaDateKey, chinaParts } = require('../../../../utils/datetime');
 const { isRecordList, isBizOk } = require('../../../../utils/response-shape.js');
 const { decodeDisplayText } = require('../../../../utils/display-text.js');
@@ -208,7 +208,7 @@ Page({
       }, 0);
     };
     const pendingIn = this.data.invitesIn.filter(function (it) { return it.status === 0; }).length;
-    this.setData({
+    pageMotion.enter(this, 'pmList'); this.setData({
       tabs: [
         { key: 'in', label: '收件箱', badge: count('in') + pendingIn },
         { key: 'out', label: '发件箱', badge: 0 },

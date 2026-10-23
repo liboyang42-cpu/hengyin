@@ -1,0 +1,19 @@
+<!-- 完成页勋章堆:最前一枚正对你,后面的叠在下面;点一下或左右拖,前面那枚落到最后。 -->
+<view class="ms {{reducedMotion ? 'ms--reduced' : ''}}" wx:if="{{items.length}}">
+  <view class="ms__k">本次获得 · {{items.length}} 枚</view>
+  <view class="ms__deck" bindtouchstart="onStart" bindtouchmove="onMove" bindtouchend="onEnd" bindtouchcancel="onEnd">
+    <view wx:for="{{items}}" wx:key="key" class="ms__card" style="{{poses[index]}}"
+          bindtap="onTap" aria-role="button" aria-label="{{item.name}}，{{item.sub}}{{items.length > 1 ? '，点按看下一枚' : ''}}" hover-class="ms-pressed" hover-stay-time="80">
+      <view class="ms__hex">
+        <image wx:if="{{item.img}}" class="ms__img" src="{{item.img}}" mode="aspectFill" />
+        <view wx:else class="ms__glyph"><cy-icon name="{{item.glyph}}" size="96" /></view>
+        <view class="ms__shine"></view>
+      </view>
+      <text class="ms__n">{{item.name}}</text>
+      <text class="ms__s">{{item.sub}}</text>
+    </view>
+  </view>
+  <view class="ms__dots" wx:if="{{items.length > 1}}">
+    <view wx:for="{{items}}" wx:key="key" class="ms__dot {{order[0] === index ? 'is-on' : ''}}"></view>
+  </view>
+</view>

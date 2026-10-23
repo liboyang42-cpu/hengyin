@@ -4,13 +4,14 @@
   <cy-modal-host id="cy-modal-host" />
 <wxs src="../../../utils/wxs/img.wxs" module="img" />
 <wxs src="../../../utils/wxs/money.wxs" module="money" />
+<wxs src="../../../utils/wxs/count.wxs" module="cnt" />
 
   <!-- 身份/加载失败不再整屏拦:静默登录失败或身份没能确认时,只在页内挂一条
        内联错误 + 重试。整屏身份闸(未登录即锁屏、确认中占屏、无身份占屏)已删除
        (2026-09-16 裁决:商家自己的账号被登录闸拦住只是添麻烦)。 -->
   <scroll-view class="rv-scroll" scroll-y enhanced show-scrollbar="{{false}}"
                scroll-into-view="{{scrollIntoView}}"
-               style="height: 100vh; padding-top: {{statusBarHeight + navBarHeight}}px;"
+               style="{{pmPage === 1 ? '--pm-w:1;' : (pmPage === 2 ? '--pm-w-d:.32s;--pm-w-s:1;' : '')}}height: 100vh; padding-top: {{statusBarHeight + navBarHeight}}px;"
                refresher-enabled
                refresher-triggered="{{refreshing}}"
                bindrefresherrefresh="onRefresh">
@@ -68,7 +69,7 @@
         <view class="rv-revenue-label">累计收入</view>
         <view class="rv-revenue-value">
           <cy-skeleton wx:if="{{dashboardLoading && dashboardData.revenue == null}}" type="amount" count="{{1}}" />
-          <view class="rv-revenue-amount" wx:elif="{{dashboardData.revenue != null}}">{{money.amount2(dashboardData.revenue)}}</view>
+          <view class="rv-revenue-amount" wx:elif="{{dashboardData.revenue != null}}">{{money.amount2(cnt.f(dashboardData.revenue, rvK))}}</view>
           <view wx:else class="rv-revenue-unknown">暂未取到</view>
         </view>
         <view class="rv-revenue-feedback">
@@ -147,7 +148,7 @@
            **加载中冒充空态**的假结论;已有项目时刷新保留旧卡,避免整块闪退。 -->
       <cy-skeleton wx:if="{{!projectCards.length && (joinLoading || hostLoading || todoLoading || gameEntryLoading)}}" type="list" count="{{2}}" />
       <view wx:else>
-        <view class="rv-project-cards" wx:if="{{projectCards.length}}">
+        <view class="rv-project-cards" wx:if="{{projectCards.length}}" style="{{pmProj === 1 ? '--pm-j:1;' : (pmProj === 2 ? '--pm-j-d:.32s;--pm-j-s:1;' : '')}}">
           <view class="rv-project-item" wx:for="{{projectCards}}" wx:key="key">
           <view class="rv-project-card" bindtap="openProjectCard"
                 data-role="{{item.role}}" data-id="{{item.id}}" data-topicid="{{item.ownerId}}" data-biztype="{{item.bizType}}" data-source="{{item.projectSource}}"

@@ -312,7 +312,7 @@ function assertTopicErrorStateUsesStandardBack(wxml, json) {
   assert.doesNotMatch(nav[0], /\sp(?:ill|ill-dark)\b/, 'consumer-night 二级错误态不得伪造成圆形 pill 返回钮')
   assert.doesNotMatch(nav[0], /\stitle=/, '错误态正文已提供标题，导航不得制造双标题')
   const normalTopbar = wxml.slice(nav.index + nav[0].length)
-  assert.match(normalTopbar, /^\s*<view wx:else class="topbar \{\{isTabSticky \? 'solid' : ''\}\}">/, '仅 loadError 切换标准导航，正常主题页仍保留原有 hero 顶栏')
+  assert.match(normalTopbar, /^\s*<view wx:else class="topbar \{\{navSolid \|\| isTabSticky \? 'solid' : ''\}\}">/, '仅 loadError 切换标准导航，正常主题页仍保留原有 hero 顶栏')
 }
 
 test('C2:R4 topic/index consumer-night 错误态使用标准 tokenized 返回导航', () => {

@@ -40,7 +40,7 @@
   <text class="oe-sync" wx:if="{{loading && events.length>0}}"
         aria-role="status" aria-live="polite">正在更新活动列表…</text>
   <view wx:if="{{events.length>0}}" class="oe-list">
-    <view wx:for="{{events}}" wx:key="id" class="cy-card oe-card" data-id="{{item.id}}" bindtap="openDetail" aria-role="button" aria-label="查看活动 {{item.title}}" hover-class="cy-pressed" hover-stay-time="80">
+    <view wx:for="{{events}}" wx:key="id" class="cy-card oe-card" data-id="{{item.id}}" bindtap="openDetail" aria-role="button" aria-label="查看活动 {{item.title}}" hover-class="cy-pressed" hover-stay-time="80" style="{{pmList === 1 ? '--pm-l:1;' : (pmList === 2 ? '--pm-l-d:.32s;--pm-l-s:1;' : '')}}">
       <!-- official_event.cover_img 可空(migration_official_event.sql:16 DEFAULT NULL)。
            无封面时这块 75% 高的区域原本只剩一片纯色,与模板页/发布广场既有的
            「封面暂不可用」兜底不一致 ⇒ 复用同一范式。

@@ -75,13 +75,14 @@ test('BL-246 活动点与主题点共用标记,onShow 兜底清锁后可再跳',
   assert.equal(navs[1].url, '/pages/topic/index/index?id=5')
 })
 
-test('BL-246 有本地主题行时开半屏、不跳也不上锁', () => {
+test('BL-246 有本地主题行时开点位卡(v13)、不跳也不上锁', () => {
   const page = loadPage()
   page._items = [{ id: 5, kind: 'topic', productType: 2 }]
   page.onMarkerTap(marker(53))
   assert.equal(navs.length, 0)
   assert.ok(!page._navigating)
-  assert.equal(page.data.topic && page.data.topic.id, 5)
+  assert.equal(page.data.poiCard && page.data.poiCard.id, 5)
+  assert.equal(page.data.sheet, 'poi')
   page.onMarkerTap(marker(112))
   assert.equal(navs.length, 1)
 })

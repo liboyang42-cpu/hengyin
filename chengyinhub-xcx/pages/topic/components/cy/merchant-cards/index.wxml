@@ -1,0 +1,18 @@
+<scroll-view wx:if="{{items.length}}" scroll-x class="mc-row" enhanced show-scrollbar="{{false}}">
+  <view class="mc-track">
+    <view class="mc" wx:for="{{items}}" wx:key="key">
+      <image wx:if="{{item.img}}" class="mc__img" src="{{item.img}}" mode="aspectFill" lazy-load="true" />
+      <text wx:if="{{item.gift}}" class="mc__gift">到店礼 · {{item.gift}}</text>
+      <view class="mc__blur"></view>
+      <view class="mc__shade"></view>
+      <view class="mc__in">
+        <view class="mc__name"><text class="mc__n">{{item.name}}</text><view class="mc__ok"></view></view>
+        <text class="mc__desc" wx:if="{{item.desc}}">{{item.desc}}</text>
+        <view class="mc__row">
+          <text class="mc__place" wx:if="{{item.place}}">{{item.place}}</text>
+          <view class="mc__btn" data-id="{{item.targetId}}" bindtap="onOpen" aria-role="button" aria-label="查看商家 {{item.name}}" hover-class="mc-pressed" hover-stay-time="80">{{owned ? '去核销' : '去看看'}}</view>
+        </view>
+      </view>
+    </view>
+  </view>
+</scroll-view>

@@ -13,7 +13,7 @@ test('漫游 tab 默认进入双菜单首页，地图预览不采集定位', () 
   assert.match(WXML, /class="intro" wx:if="\{\{screen=='entry-map'\|\|screen=='intro'\}\}"/)
   assert.match(WXML, /<free-map[^>]+entryMap/s)
   assert.match(WXML, /interactive="\{\{false\}\}"/)
-  assert.match(WXML, /introTabs[\s\S]*bind:change="switchIntroTab"/)
+  assert.match(WXML, /introTabs[\s\S]*bindtap="switchIntroTab"/) // v13 标签下一根短线,改为自绘标签
 })
 
 test('首页保留章节入口，移除浮动记录、搜索与图层按钮', () => {

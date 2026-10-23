@@ -40,7 +40,7 @@ const infoReq = () => sandbox.requests.filter(r => r.url === '/api/registration/
 
 test('订单详情头部与订单列表使用相同现金实付款，保留零值和应付明细', () => {
   const wxml = fs.readFileSync(WXML, 'utf8')
-  const binding = wxml.match(/class="hero-amt">\{\{money\.amount\(info\.(\w+)\)\}\}/)
+  const binding = wxml.match(/class="hero-amt">\{\{money\.amount\((?:cnt\.f\()?info\.(\w+)(?:, odK\))?\)\}\}/) // 2026-10-23:金额外包一层数字滚动(cnt.f),落点仍是同一字段
   assert.ok(binding, '详情头部金额绑定存在')
   for (const cash of [0.01, 0]) {
     sandbox.requests = []

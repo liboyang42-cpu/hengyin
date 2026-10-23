@@ -1,7 +1,7 @@
 // 搜索结果独立页(2026-07-31):原来搜索输入后结果直接铺在 search2 同页下方,
 // 现改成跳转到这里 —— 逻辑从 pages/search2/index.js 的 runSearch/updateVisibleResults 搬来,
 // 数据源仍是同一个 utils/discover-search.js。
-const toast = require('../../../utils/toast.js');
+const toast = require('../../../utils/toast.js'); const pageMotion = require('../../../utils/page-motion.js');
 const app = getApp();
 const discoverSearch = require('../../../utils/discover-search.js');
 const { openScene } = require('../../../utils/scene-entry.js');
@@ -205,7 +205,7 @@ Page({
     const visibleResults = groups.reduce((all, group) => {
       return type === 'all' || group.type === type ? all.concat(group.items) : all;
     }, []);
-    this.setData({ visibleResults: visibleResults });
+    pageMotion.enter(this, 'pmList'); this.setData({ visibleResults: visibleResults });
   },
 
   onResultTab(e) {

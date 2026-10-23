@@ -10,7 +10,7 @@
   <!-- M1-3 门卡:非俱乐部成员看到的是加入引导,而不是占位标题 + 空票种的假详情 -->
   <cy-empty class="cy-fade-in" wx:elif="{{state === 'gate'}}" fill size="lg" title="{{gateMessage}}" sub="加入俱乐部后即可查看活动详情与票种" cta="{{gateClubId ? '去加入俱乐部' : '返回活动列表'}}" bind:cta="goGateClub" />
 
-  <view class="cy-fade-in" wx:elif="{{state === 'ready'}}">
+  <view class="cy-fade-in" wx:elif="{{state === 'ready'}}" style="{{pmPage === 1 ? '--pm-a:1;' : (pmPage === 2 ? '--pm-a-d:.32s;--pm-a-s:1;' : '')}}">
     <view class="activity-hero">
       <image wx:if="{{info.imgUrl}}" class="activity-hero__image" src="{{info.imgUrl}}" mode="aspectFill" />
       <view wx:else class="activity-hero__fallback"></view>
@@ -55,7 +55,7 @@
     <view wx:if="{{info.registrationList.length}}" class="activity-section">
       <text class="activity-section__title">{{registrationCountText || 0}} 人已报名</text>
       <view class="activity-people">
-        <view class="activity-person" wx:for="{{info.registrationList}}" wx:key="id" bindtap="goUserInfo" hover-class="activity-row--press" hover-stay-time="80" data-id="{{item.memberId}}" aria-role="button" aria-label="查看{{item.nickname || '报名用户'}}主页">
+        <view class="activity-person" wx:for="{{info.registrationList}}" wx:key="id" bindtap="goUserInfo" hover-class="activity-row--press" hover-stay-time="80" data-id="{{item.memberId}}" aria-role="button" aria-label="查看{{item.nickname || '报名用户'}}主页" style="--pmi:{{index}};">
           <cy-avatar size="64" src="{{item.avatar || ''}}" name="{{item.nickname}}" />
         </view>
       </view>
@@ -67,7 +67,7 @@
         <!-- rebase 并集时 master 的旧节点块(缺闭合、写死兜底封面、直接读 item.title)
              与本分支的完整块叠在一起。保留下面这套:无图走占位、_titleText 归一、箭头用图标;
              master 的按压反馈已嫁接过去。 -->
-        <view class="activity-node" wx:for="{{info.memberTemplateList}}" wx:key="id" bindtap="goTemplateDetail" data-id="{{item.id}}" hover-class="activity-row--press" hover-stay-time="80">
+        <view class="activity-node" wx:for="{{info.memberTemplateList}}" wx:key="id" bindtap="goTemplateDetail" data-id="{{item.id}}" hover-class="activity-row--press" hover-stay-time="80" style="--pmi:{{index}};">
           <image wx:if="{{item._imageUrl}}" class="activity-node__image" src="{{item._imageUrl}}" mode="aspectFill" />
           <view wx:else class="activity-node__placeholder"><cy-icon name="image" size="32" /></view>
           <view class="activity-node__copy"><text class="activity-node__name">{{item._titleText}}</text><text class="activity-node__meta">{{item._playersText}} · {{item._durationText}}</text></view>
@@ -79,7 +79,7 @@
     <view class="activity-section">
       <text class="activity-section__title">票种</text>
       <view wx:if="{{tickets.length}}" class="ticket-list">
-        <view wx:for="{{tickets}}" wx:key="id" class="ticket {{item._id === selectedTicketId ? 'ticket--selected' : ''}} {{!item._available || item._windowPassed ? 'ticket--disabled' : ''}}" data-id="{{item._id}}" bindtap="selectTicket" hover-class="cy-pressed" hover-stay-time="80">
+        <view wx:for="{{tickets}}" wx:key="id" class="ticket {{item._id === selectedTicketId ? 'ticket--selected' : ''}} {{!item._available || item._windowPassed ? 'ticket--disabled' : ''}}" data-id="{{item._id}}" bindtap="selectTicket" hover-class="cy-pressed" hover-stay-time="80" style="--pmi:{{index}};">
           <view class="ticket__head"><text class="ticket__name">{{item._nameText}}</text><text class="ticket__price">{{item._priceText}}</text></view>
           <!-- CU-C-32:过期/已开始的场次在卡面上就说清楚(原来只在点下去的那一刻给一句 toast,
                卡面跟可卖的票一模一样)。 -->

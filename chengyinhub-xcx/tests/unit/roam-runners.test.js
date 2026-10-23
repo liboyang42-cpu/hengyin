@@ -7,7 +7,7 @@ const R = require('../../utils/roam-runners.js');
 test('同一个人永远同一个环色;色盘里不许出现自己的蓝或两种玩法色', () => {
   assert.equal(R.runnerColor(1013), R.runnerColor(1013));
   assert.equal(R.runnerColor(1013), R.runnerColor(1013 + R.RUNNER_COLORS.length));
-  // 自己是 #2F7BF6、城市定向 #4ADE80、自由探索 #5A90D6 —— 撞上就分不清谁是谁
+  // 自己是 #2F7BF6、城市定向 #5A90D6、自由探索 #4ADE80 —— 撞上就分不清谁是谁
   ['#2F7BF6', '#4ADE80', '#5A90D6'].forEach((c) => {
     assert.ok(R.RUNNER_COLORS.indexOf(c) < 0, c + ' 不该出现在他人色盘里');
   });

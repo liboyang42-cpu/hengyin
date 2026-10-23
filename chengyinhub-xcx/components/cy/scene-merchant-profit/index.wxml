@@ -18,8 +18,8 @@
 
     <block wx:if="{{topics.length}}">
       <view class="sec-title cy-h2">各主题结算</view>
-      <view class="fc-list">
-        <view class="fc-card" wx:for="{{topics}}" wx:key="topicId" bindtap="goSettlementDetail" data-id="{{item.topicId}}" hover-class="fc-card--tap" aria-role="button" aria-label="查看{{item.topicName}}的结算详情">
+      <view class="fc-list" style="{{pmList === 1 ? '--pm-l:1;' : (pmList === 2 ? '--pm-l-d:.32s;--pm-l-s:1;' : '')}}">
+        <view class="fc-card" wx:for="{{topics}}" wx:key="topicId" bindtap="goSettlementDetail" data-id="{{item.topicId}}" hover-class="fc-card--tap" aria-role="button" aria-label="查看{{item.topicName}}的结算详情" style="--pmi:{{index}};">
           <view class="fc-main">
             <view class="fc-top">
               <text class="fc-name ep1">{{item.topicName}}</text>

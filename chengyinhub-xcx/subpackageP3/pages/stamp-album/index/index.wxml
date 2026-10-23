@@ -12,7 +12,7 @@
     <text class="al-u">枚</text>
   </view>
 
-  <view class="al-stage" style="height:{{stageH}}px;">
+  <view class="al-stage" style="{{pmList === 1 ? '--pm-s:1;' : (pmList === 2 ? '--pm-s-d:.32s;--pm-s-s:1;' : '')}}height:{{stageH}}px;">
     <view class="al-item" wx:for="{{items}}" wx:key="id"
           style="left:{{item.x}}px;top:{{item.y}}px;width:{{cellImgW}}px;height:{{cellImgH}}px;transform:rotate({{item.rot}}deg);z-index:{{item.z}};">
       <image class="al-img" src="{{item.picUrl}}" mode="aspectFill" lazy-load></image>

@@ -1,0 +1,38 @@
+<!-- v13 通关勋章页(业主 2026-10-22「和 HTML 一模一样」):放射光 + 六边形勋章叠放(点或拖动切换)
+     + 勋章名 / 第几枚 + 大标题 + 四格统计(彩色字形图标)+ 新纪录卡(有真数据才出)+ 两颗按钮。 -->
+<view class="md {{on ? 'on' : ''}} {{dropped ? 'dropped' : ''}} {{reducedMotion ? 'md--reduced' : ''}}" wx:if="{{show}}" catchtouchmove="noop">
+  <view class="md__rays"></view>
+  <view class="md__back" style="top: {{backTop}}px;" bindtap="onClose" aria-role="button" aria-label="返回" hover-class="md-pressed" hover-stay-time="80"><view class="md__chev"></view></view>
+  <image wx:for="{{sparks}}" wx:key="index" class="spark" src="./gl_spark.svg" style="{{item}}" />
+  <view class="mstack" bindtouchstart="onStart" bindtouchmove="onMove" bindtouchend="onEnd" bindtouchcancel="onEnd">
+    <view wx:for="{{items}}" wx:key="key" class="hexw" style="{{poses[index]}}" bindtap="onTap" aria-role="button" aria-label="{{item.name}}{{items.length > 1 ? '，点按看下一枚' : ''}}" hover-class="md-pressed" hover-stay-time="80">
+      <view class="hex hex--{{index % 4}}" style="transition-delay: {{(items.length - 1 - index) * 360}}ms;">
+        <view class="hex__in"></view>
+        <image wx:if="{{item.img}}" class="hex__img" src="{{item.img}}" mode="aspectFill" />
+        <image wx:else class="hex__ic" src="./mic_{{item.mic}}.svg" />
+        <view class="hex__shine"></view>
+      </view>
+    </view>
+  </view>
+  <view class="mname fade">
+    <text class="mname__b">{{items[order[0]].name}}</text>
+    <text class="mname__s">{{items[order[0]].sub}}{{items.length > 1 ? ' · ' + (order[0] + 1) + '/' + items.length : ''}}</text>
+    <view class="mdots" wx:if="{{items.length > 1}}"><view wx:for="{{items}}" wx:key="key" class="mdot {{order[0] === index ? 'on' : ''}}"></view></view>
+  </view>
+  <view class="md__txt fade"><text class="md__h">{{title}}</text><text class="md__p">{{sub}}</text></view>
+  <view class="md__body fade">
+    <view class="mg" wx:if="{{stats.length}}">
+      <view class="mg__c" wx:for="{{stats}}" wx:key="k"><image class="mg__ic" src="./gl_{{item.glyph}}.svg" /><view><text class="mg__k">{{item.k}}</text><text class="mg__v">{{shown[index] || item.v}}</text></view></view>
+    </view>
+    <view class="mrec" wx:if="{{record}}">
+      <view class="mrec__h"><image class="mrec__ic" src="./gl_trophy.svg" />新纪录</view>
+      <text class="mrec__s">{{record.label}}</text>
+      <text class="mrec__b">{{record.text}}</text>
+      <view class="mrec__stk"><text class="mrec__stk1">新纪录</text><text class="mrec__stk2">{{record.tag}}</text></view>
+    </view>
+  </view>
+  <view class="md__btns fade">
+    <view class="pill pill--s" bindtap="onSecondary" aria-role="button" aria-label="{{secondaryText}}" hover-class="md-pressed" hover-stay-time="80">{{secondaryText}}</view>
+    <view class="pill pill--w" bindtap="onPrimary" aria-role="button" aria-label="{{primaryText}}" hover-class="md-pressed" hover-stay-time="80">{{primaryText}}</view>
+  </view>
+</view>
