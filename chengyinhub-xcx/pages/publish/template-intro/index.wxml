@@ -33,9 +33,12 @@
 
   <view class="ti-cta">
     <cy-inline-error load-failure wx:if="{{navigationError}}" title="创建页面没有打开" sub="{{navigationError}}" action="重试" bind:action="goCreate" />
-    <cy-btn variant="primary" style="width:100%" loading="{{navigating}}" disabled="{{navigating}}" bindtap="goCreate">
-      开始创建
-    </cy-btn>
+    <!-- 圆圈要从按钮后面过:画布在部分环境按原生层压在最上面,所以按 #tiBtn 的位置在画布上挖掉按钮形状 -->
+    <view id="tiBtn">
+      <cy-btn variant="primary" style="width:100%" loading="{{navigating}}" disabled="{{navigating}}" bindtap="goCreate">
+        开始创建
+      </cy-btn>
+    </view>
   </view>
 </view>
 

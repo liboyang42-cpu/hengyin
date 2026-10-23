@@ -20,6 +20,7 @@ const orbit = require('./orbit.js');
 const POOL_MAX = 14;
 const DESIGN_W = 390;
 const FALLBACK_FILL = '#1C1C1E'; // ds-ok: 无封面时的深底占位圆,canvas 读不到 token
+const BTN_RADIUS = 24 * DESIGN_W / 750; // cy-btn 圆角 --cy-radius-md(24rpx),canvas 读不到 token
 
 function windowInfo() {
   try { return wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync(); } catch (e) { return { windowWidth: 375, windowHeight: 812, pixelRatio: 2 }; }
@@ -137,10 +138,12 @@ Page({
     wx.createSelectorQuery().in(this)
       .select('#tiField').fields({ node: true, size: true })
       .select('#tiCopy').boundingClientRect()
+      .select('#tiBtn').boundingClientRect()
       .exec((res) => {
         const node = res && res[0] && res[0].node;
         if (!node || this._disposed) return;
         const copy = res[1];
+        this._setHole(res[2]);
         node.width = this._W * dpr; node.height = this._H * dpr;
         const ctx = node.getContext('2d');
         ctx.scale(dpr * this._k, dpr * this._k);   // 之后全用 390 宽设计稿坐标
@@ -162,6 +165,15 @@ Page({
         this._draw();
         this._resume();
       });
+  },
+
+  // 按钮在画布上的位置(设计稿坐标);按钮上方出现错误提示时位置会变,重新量
+  _setHole(rect) {
+    this._hole = rect && rect.height ? { x: rect.left / this._k, y: rect.top / this._k, w: rect.width / this._k, h: rect.height / this._k } : null;
+  },
+  _measureHole() {
+    if (!this._canvas || typeof wx === 'undefined' || !wx.createSelectorQuery) return;
+    wx.createSelectorQuery().in(this).select('#tiBtn').boundingClientRect().exec((r) => { this._setHole(r && r[0]); this._draw(); });
   },
 
   _resume() {
@@ -235,6 +247,16 @@ Page({
       ctx.globalCompositeOperation = 'source-atop'; ctx.fillStyle = g; ctx.fillRect(side ? W - B : 0, 0, B, H);
       ctx.restore();
     });
+    // owner:圆圈在底部按钮下面 —— 把按钮的圆角矩形从画布上挖掉,看起来就是从按钮后面滑过
+    const h = this._hole;
+    if (h) {
+      const r = Math.min(BTN_RADIUS, h.h / 2);
+      ctx.save(); ctx.globalCompositeOperation = 'destination-out'; ctx.beginPath();
+      ctx.moveTo(h.x + r, h.y);
+      ctx.arcTo(h.x + h.w, h.y, h.x + h.w, h.y + h.h, r); ctx.arcTo(h.x + h.w, h.y + h.h, h.x, h.y + h.h, r);
+      ctx.arcTo(h.x, h.y + h.h, h.x, h.y, r); ctx.arcTo(h.x, h.y, h.x + h.w, h.y, r);
+      ctx.closePath(); ctx.fill(); ctx.restore();
+    }
   },
 
   // ---------------------------------------------------------------- 手势:上下拖动推转(圆圈不能点)
@@ -263,13 +285,13 @@ Page({
   // ---------------------------------------------------------------- 开始创建(整页虚化后进下一页)
   goCreate() {
     if (this.data.navigating) return;
-    this.setData({ navigating: true, navigationError: '' });
+    this.setData({ navigating: true, navigationError: '' }, () => this._measureHole());
     const merchant = this.data.operationScope === 'MERCHANT';
     // 下一页就是正常的命名页(templateadd),新建玩法模板。
     // navigateTo 而非 redirectTo:引导页必须留在栈里(publish-editor-return-flow 合同)。
     // CU-M-31:成功也要放闸 —— 本页留在栈里,从创建页返回后 navigating 还是 true 会把按钮挡死。
     const success = () => this.setData({ navigating: false });
-    const fail = () => this.setData({ navigating: false, morph: false, navigationError: '创建页面没有打开，请重试' });
+    const fail = () => this.setData({ navigating: false, morph: false, navigationError: '创建页面没有打开，请重试' }, () => this._measureHole());
     const go = () => wx.navigateTo({ url: '/pages/publish/templateadd/templateadd' + (merchant ? '?scope=MERCHANT' : ''), success, fail });
     if (this.data.reducedMotion || typeof setTimeout !== 'function') { go(); return; }
     this.setData({ morph: true });

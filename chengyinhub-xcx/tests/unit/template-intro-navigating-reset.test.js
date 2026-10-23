@@ -51,6 +51,17 @@ test('圆圈不能点:没有预览半屏,也没有点圆圈的入口', () => {
   assert.doesNotMatch(js, /openSheet|useCurrent|temp\/index\?id=/);
 });
 
+// owner:圆圈在底部按钮下面。画布在开发者工具/部分基础库按原生层压在最上面,z-index 管不住,
+// 所以必须在画布上把按钮形状挖掉。
+test('圆圈从开始创建按钮后面过:画布挖掉按钮区域', () => {
+  const dir = path.join(__dirname, '../../pages/publish/template-intro');
+  const wxml = fs.readFileSync(path.join(dir, 'index.wxml'), 'utf8');
+  const js = fs.readFileSync(path.join(dir, 'index.js'), 'utf8');
+  assert.match(wxml, /<view id="tiBtn">\s*<cy-btn[^>]*bindtap="goCreate"/);
+  assert.match(js, /select\('#tiBtn'\)/);
+  assert.match(js, /globalCompositeOperation = 'destination-out'/);
+});
+
 test('引导页没有「跳过」入口', () => {
   const wxml = fs.readFileSync(path.join(__dirname, '../../pages/publish/template-intro/index.wxml'), 'utf8');
   assert.doesNotMatch(wxml, /跳过|onSkip/);
