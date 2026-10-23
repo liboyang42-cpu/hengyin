@@ -6953,12 +6953,26 @@ Page({
     /* ★ 业务身份 + 题目版本隔离:照片是异步上传的,回来时必须仍是**同一 session、同一版本**
        (页面 kit 与 advanced-game 权威 state 都要对得上)。否则玩家在同一页面切到别的节点/会话后,
        旧回包会经 game.action 把上一题的照片提交到下一题/下一个会话。 */
-    const intent = { owner: this._boundPlayOwner(), sessionKey: this._sessionKey(),
+    const nodeIdentity = () => [((game.data || {}).node || {}).nodeId, ((game.data || {}).state || {}).nodeId,
+      (this._kit() || {}).nodeId, ((this.data.advancedPlay || {}).node || {}).nodeId]
+      .map(id => id == null ? '' : String(id)).join(':');
+    const question = { sessionId: state.sessionId, version: state.version, nodeId: nodeIdentity() };
+    const intent = { owner: this._boundPlayOwner(), login: this._capturePlayLoginContext(), sessionKey: this._sessionKey(),
       epoch: this._playLoadEpoch, active: this.data.advancedPlay, game, settled: false, loading: false };
     this._kitPhotoIntent = intent;
-    const contextCurrent = () => this._isPlayAccountCurrent() && intent.owner === this._playOwner
-      && intent.sessionKey === this._sessionKey() && intent.epoch === this._playLoadEpoch
-      && this.data.advancedPlay === intent.active && this._advancedGameComponent() === game;
+    const contextCurrent = () => {
+      const login = this._capturePlayLoginContext();
+      return this._isPlayAccountCurrent() && intent.owner === this._playOwner
+        && intent.login.authorization === login.authorization && intent.login.generation === login.generation
+        && intent.sessionKey === this._sessionKey() && intent.epoch === this._playLoadEpoch
+        && this.data.advancedPlay === intent.active && this._advancedGameComponent() === game;
+    };
+    const sameQuestion = () => {
+      const currentState = (game.data || {}).state, currentKit = this._kit();
+      return currentState && currentState.sessionId === question.sessionId
+        && sameVersion(currentState.version, question.version) && currentKit.sessionId === question.sessionId
+        && sameVersion(currentKit.version, question.version) && nodeIdentity() === question.nodeId;
+    };
     const settle = () => {
       if (intent.settled) return false;
       intent.settled = true;
@@ -6990,13 +7004,7 @@ Page({
         const uploaded = r && r.ok && r.results && r.results[0];
         const url = option.name === 'SUBMIT_PHOTO_CHECK' ? uploaded && uploaded.photoReference : uploaded;
         const currentGame = this.selectComponent('#advancedGame');
-        const currentState = currentGame && currentGame.data && currentGame.data.state;
-        const currentKit = this._kit();
-        const sameQuestion = currentState && currentState.sessionId === state.sessionId
-          && sameVersion(currentState.version, state.version)
-          && currentKit.sessionId === state.sessionId
-          && sameVersion(currentKit.version, state.version);
-        if (!sameQuestion) {
+        if (!sameQuestion()) {
           fail('题目已变化，上一张照片未提交');
           return;
         }
@@ -7018,21 +7026,15 @@ Page({
       },
     }));
     if (option.name === 'SUBMIT_PHOTO_CHECK') {
-      app.requestSeparateConsent('photo', () => !operation.isAborted()).then(() => {
-        const currentGame = this.selectComponent('#advancedGame');
-        const currentState = currentGame && currentGame.data && currentGame.data.state;
-        const currentKit = this._kit();
-        if (operation.isAborted()) return;
-        if (!currentState || currentState.sessionId !== state.sessionId || !sameVersion(currentState.version, state.version)
-            || currentKit.sessionId !== state.sessionId || !sameVersion(currentKit.version, state.version)) {
-          settle(); operation.finish();
-          fail('题目已变化，照片未发送'); return;
-        }
+      const consentCurrent = () => !operation.isAborted() && this._kitPhotoIntent === intent && contextCurrent() && sameQuestion();
+      app.requestSeparateConsent('photo', consentCurrent).then(() => {
+        if (!consentCurrent()) { settle(); operation.finish(); return; }
         upload();
       }).catch(error => {
+        const owned = consentCurrent();
         settle();
         if (operation.isAborted()) return;
-        operation.finish(); fail(error.message);
+        operation.finish(); if (owned) fail(error.message);
       });
     } else upload();
   },

@@ -1,3 +1,4 @@
+// 2026-10-23 C 迟到同意守卫：原里程碑请求完整方法未变，U5 7776→7778；U4 1708 不动。原理由、62/39 数量及上限不变，仅 U5 排序键摘要等量更新。
 // 2026-10-23 C 原动作/Photo 接线：play 两个原方法与公共基线逐字一致，仅 U4 1620→1708、U5 7688→7776；原理由、62/39 数量及上限不变，只重算对应排序键摘要。证据见 docs/delivery/architecture-day/C/evidence/ui-gate-closure/source-proof.json。
 // 2026-10-24 上线合并(#563 + #508 + #554)：fabu 12 条 u4Dynamic 锚点仅行号位移(849→851、1105→1151、2806→2852、3872→3918、4253→4299、5316→5362、5575→5621、6231→6277、6241→6287、6294→6340、6635→6686、8601→8652)、profile 1994→1991，逐条以行及上下各一行与 origin/master 原位置逐字比对一致；u5Silent 新增合作 tab 帖文流与竞猜待答入口两条(37→39)。u4Dynamic/u5Silent digest 按同一算法重算。
 // 2026-10-21 移植分支再并入 master 19408d49：相对 master 仅 W8 已批准的 activity/list(u4Dynamic 3→1、u5 两条)与 complaint(u5 一条)登记项，相对移植分支仅 master 行号位移；条数与上限不变，u4Dynamic/u5Silent digest 按同一算法重算。
@@ -1005,7 +1006,7 @@ module.exports = {
       //   逐条回读仍是「只为读章节 recruitEnabled、失败不弹全局 toast」这一处,静默理由一字未改,条数 27 不变。
 // 2026-10-17 合并 master 进漫游上线分支:roam/index.js 14 条、nearby/index.js 2 条既有调用仅行号位移(按 master 源码逐行回读定位);漫游两栏改版删掉 /api/registration/list 静默读取(749),U5 29→28。digest 按同一算法显式重算。
 // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):锚点位移 + 举报半屏/AI 对话组件下沉会员分包换路径 + 本线 9 处新增登记,digest 按同一算法重算。
-"aa07a5f96af511897ace6d639672b508e19f605a031b6d2d8970801aee3bbd05"
+"7d2c926c169fb5aeed34adfaa213332e9ed31e51acc422ff07c2a7ce0734339d"
 
     }
   },
@@ -1423,7 +1424,7 @@ module.exports = {
       //   loadMilestone 的 /api/play/my-completed 这条 silentError 调用点 5542→5570(门禁实测)。
       //   主包瘦身后 post-compose 已下沉到 pages/square/components/cy/。
       // 2026-09-20 合并后按最终源码重钉，调用与静默降级理由未改。
-      "chengyinhub-xcx/pages/play/index.js:7776": "已完成里程碑为可选增强，请求失败保持 milestone=null 且轴不渲染；owner=小程序，复核=2026-09-15",
+      "chengyinhub-xcx/pages/play/index.js:7778": "已完成里程碑为可选增强，请求失败保持 milestone=null 且轴不渲染；owner=小程序，复核=2026-09-15",
     "chengyinhub-xcx/pages/square/components/cy/post-compose/index.js:470": "广场选活动报名列表读取:失败落组件 activityError,由选活动层呈现并给重试,关掉自动 toast 避免双弹;owner=小程序,复核=2026-12-31",
     "chengyinhub-xcx/pages/square/components/cy/post-compose/index.js:483": "广场选活动「我主办的」列表读取:失败汇总进同一 activityError,同上;owner=小程序,复核=2026-12-31",
     "chengyinhub-xcx/pages/topic/pricing/index.js:184": "合作阵容行补名是 best-effort 装饰读取:拉不到名字就保留「合作俱乐部/承接商家」类型兜底,条款摘要照常、点开合作方页自有错误态;为补名弹全局 toast 会让主办方以为整页定价坏了;owner=小程序,复核=2026-12-31",
