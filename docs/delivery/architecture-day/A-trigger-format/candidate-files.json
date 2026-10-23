@@ -1,0 +1,35 @@
+{
+  "base": "8aaa141c5990b089749d4364fa2472748a69d9ab",
+  "branch": "codex/architecture-day-a-trigger-delimiter",
+  "excluded_self": "docs/delivery/architecture-day/A-trigger-format/candidate-files.json",
+  "files": [
+    {
+      "path": "ci/migration_gates.py",
+      "sha256": "3a9a8c73d583fa9de8df90442d28dab20678bbf48251e1bd134c39caca0dc6ce"
+    },
+    {
+      "path": "ci/sql_splitter.py",
+      "sha256": "a46e731d99c707bd5cd3b769fe8b2225e2b60298696d0de82a29c50bf96e0ce1"
+    },
+    {
+      "path": "ci/test_migration_gates.py",
+      "sha256": "63f68ae4f8848e3a1c94084829b95597b49bceca2510ee4a271dfe739c8787f3"
+    },
+    {
+      "path": "docs/delivery/architecture-day/A-trigger-format/README.md",
+      "sha256": "4538a605919df87611382f6a446ffd4ab8db17efc41ad02741589b007fa66c96"
+    },
+    {
+      "path": "docs/delivery/architecture-day/A-trigger-format/safety-full.txt",
+      "sha256": "ecaa4b2b0a8fd1fa5be876105671039c2862c553c57294ba006811dd4c53c5ab"
+    },
+    {
+      "path": "docs/delivery/architecture-day/A-trigger-format/safety-status.json",
+      "sha256": "e267e64d3b4048b175f448da9ef761e1ec4a6694b3ec875a0150b183c82247cc"
+    },
+    {
+      "path": "docs/delivery/architecture-day/A-trigger-format/verification.txt",
+      "sha256": "e41f0b4c3d06125528476c75bedb315c616d4745981e4656b4bbcb2da9530063"
+    }
+  ]
+}

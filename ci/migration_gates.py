@@ -47,7 +47,8 @@ _AUX_SQL_PREFIXES = ("_precheck_", "_deploy_", "bak_")
 # 实测仓库里有 7 条 DELETE FROM sys_job ... invoke_target='xxxTask.run()'。
 _INSERT_STMT = re.compile(r"^\s*(?:INSERT|REPLACE)\b", re.IGNORECASE)
 
-# PROCEDURE/FUNCTION/TRIGGER 必须由 tokenizer 识别到的自定义 delimiter 完整结束。
+# 复合 routine 必须由 tokenizer 识别到的自定义 delimiter 完整结束。
+# 唯一默认分号形状是下方完整匹配的单条拒绝 SIGNAL trigger，没有内部语句分隔符。
 # 只解析 CREATE 头部：字符串/普通注释正文不会被当成 routine，
 # 而 /*!... DEFINER=...*/ 是 MySQL 可执行注释，其中的 token 仍必须参与判定。
 _ROUTINE_KINDS = {"PROCEDURE", "FUNCTION", "TRIGGER"}
@@ -68,6 +69,16 @@ _LEADING_SQL_COMMENTS_THEN_SELECT = re.compile(
 )
 
 _INVALID_DEFINER = object()
+
+_REJECT_TRIGGER_IDENTIFIER = r"(?:`(?:``|[^`])+`|[A-Za-z_$][A-Za-z0-9_$]*)"
+_SINGLE_REJECT_TRIGGER = re.compile(
+    r"CREATE\s+TRIGGER\s+" + _REJECT_TRIGGER_IDENTIFIER
+    + r"\s+BEFORE\s+(?:UPDATE|DELETE)\s+ON\s+" + _REJECT_TRIGGER_IDENTIFIER
+    + r"(?:\s*\.\s*" + _REJECT_TRIGGER_IDENTIFIER + r")?"
+    + r"\s+FOR\s+EACH\s+ROW\s+SIGNAL\s+SQLSTATE\s+'45000'"
+    + r"\s+SET\s+MESSAGE_TEXT\s*=\s*'(?:''|\\.|[^'\\])*'\s*",
+    re.IGNORECASE | re.DOTALL,
+)
 
 
 def _create_tokens(statement):
@@ -324,7 +335,9 @@ def check_sql_text(path, text):
                 "%s: 第 %d 条语句的 CREATE DEFINER 账号或对象头不完整/非法，\n"
                 "      无法安全判定是否为 routine；必须 fail-closed。" % (path, idx)
             )
-        elif shape and (terminator is None or terminator == ";"):
+        elif shape and (terminator is None or terminator == ";") and not (
+                shape == "TRIGGER" and terminator == ";"
+                and _SINGLE_REJECT_TRIGGER.fullmatch(executable)):
             problems.append(
                 "%s: 第 %d 条语句是 CREATE %s,但没有由自定义 DELIMITER 完整结束,\n"
                 "      BEGIN...END 里的分号会被切错；必须使用受校验的独立行 DELIMITER 指令。"
