@@ -1,0 +1,130 @@
+TAP version 13
+# Subtest: ★配了取景轮廓就透传到玩家端视图，不透明度缺省四成
+ok 1 - ★配了取景轮廓就透传到玩家端视图，不透明度缺省四成
+  ---
+  duration_ms: 6.632225
+  type: 'test'
+  ...
+# Subtest: ★不透明度越界夹回 0 至 100，与后端同一口径
+ok 2 - ★不透明度越界夹回 0 至 100，与后端同一口径
+  ---
+  duration_ms: 0.397995
+  type: 'test'
+  ...
+# Subtest: ★两个键恒产出 —— 分发器绑了 kit.frameUrl，缺一个就是那行绑定静默失效
+ok 3 - ★两个键恒产出 —— 分发器绑了 kit.frameUrl，缺一个就是那行绑定静默失效
+  ---
+  duration_ms: 0.210449
+  type: 'test'
+  ...
+# Subtest: ★没配 frameUrl 时点快门还是走 wx.chooseMedia，一条没变
+ok 4 - ★没配 frameUrl 时点快门还是走 wx.chooseMedia，一条没变
+  ---
+  duration_ms: 4.663105
+  type: 'test'
+  ...
+# Subtest: ★配了 frameUrl 时点快门进取景层，且不去调 chooseMedia
+ok 5 - ★配了 frameUrl 时点快门进取景层，且不去调 chooseMedia
+  ---
+  duration_ms: 0.442801
+  type: 'test'
+  ...
+# Subtest: ★取景层按快门 → takePhoto → 抛给页面的仍是 tempFilePath
+ok 6 - ★取景层按快门 → takePhoto → 抛给页面的仍是 tempFilePath
+  ---
+  duration_ms: 0.422611
+  type: 'test'
+  ...
+# Subtest: ★取景器起不来（相机被拒 / 设备不支持）：立刻回落 chooseMedia，玩法照常能完成
+ok 7 - ★取景器起不来（相机被拒 / 设备不支持）：立刻回落 chooseMedia，玩法照常能完成
+  ---
+  duration_ms: 1.8366
+  type: 'test'
+  ...
+# Subtest: ★轮廓图自己加载失败：只藏掉那条线，取景与快门照常
+ok 8 - ★轮廓图自己加载失败：只藏掉那条线，取景与快门照常
+  ---
+  duration_ms: 0.38794
+  type: 'test'
+  ...
+# Subtest: ★过了 / 定局之后不再进取景层
+ok 9 - ★过了 / 定局之后不再进取景层
+  ---
+  duration_ms: 0.627583
+  type: 'test'
+  ...
+# Subtest: ★取景层与 cy-play-stage 平级，camera 挂 binderror
+ok 10 - ★取景层与 cy-play-stage 平级，camera 挂 binderror
+  ---
+  duration_ms: 0.45602
+  type: 'test'
+  ...
+# Subtest: ★分发器把 frame-url / frame-opacity 喂给组件
+ok 11 - ★分发器把 frame-url / frame-opacity 喂给组件
+  ---
+  duration_ms: 0.290317
+  type: 'test'
+  ...
+# Subtest: ★客户端不算对齐度：取景不引入任何本地图案判定，shoot 也不带分数
+ok 12 - ★客户端不算对齐度：取景不引入任何本地图案判定，shoot 也不带分数
+  ---
+  duration_ms: 0.182378
+  type: 'test'
+  ...
+# Subtest: ★商家端没配轮廓时，编辑页存的配置里不出现空 frameUrl
+ok 13 - ★商家端没配轮廓时，编辑页存的配置里不出现空 frameUrl
+  ---
+  duration_ms: 2.490862
+  type: 'test'
+  ...
+# Subtest: 负控：把 frameUrl 透传那一行删掉，透传断言必须红
+ok 14 - 负控：把 frameUrl 透传那一行删掉，透传断言必须红
+  ---
+  duration_ms: 3.922897
+  type: 'test'
+  ...
+# Subtest: 负控：去掉不透明度的夹紧，越界值必须能原样漏出去
+ok 15 - 负控：去掉不透明度的夹紧，越界值必须能原样漏出去
+  ---
+  duration_ms: 4.279301
+  type: 'test'
+  ...
+# Subtest: 负控：把取景分支的入口条件拆掉，「配了轮廓进取景层」必须红
+ok 16 - 负控：把取景分支的入口条件拆掉，「配了轮廓进取景层」必须红
+  ---
+  duration_ms: 0.532362
+  type: 'test'
+  ...
+# Subtest: ★内嵌呈现下不进取景层 —— 故事流段落会把 fixed 的取景器圈进 190rpx 里
+ok 17 - ★内嵌呈现下不进取景层 —— 故事流段落会把 fixed 的取景器圈进 190rpx 里
+  ---
+  duration_ms: 0.349274
+  type: 'test'
+  ...
+# Subtest: ★分发器把 inline 传给拍照审核 —— 不传的话上面那条判据永远是 false
+ok 18 - ★分发器把 inline 传给拍照审核 —— 不传的话上面那条判据永远是 false
+  ---
+  duration_ms: 0.207185
+  type: 'test'
+  ...
+# Subtest: ★快门在途点「退出取景」不生效 —— 否则照片照样提交、白吃一次机会
+ok 19 - ★快门在途点「退出取景」不生效 —— 否则照片照样提交、白吃一次机会
+  ---
+  duration_ms: 0.569747
+  type: 'test'
+  ...
+# Subtest: ★快门连着失败两次就回落选图 —— binderror 不响的那些机型只能靠这条
+ok 20 - ★快门连着失败两次就回落选图 —— binderror 不响的那些机型只能靠这条
+  ---
+  duration_ms: 0.932702
+  type: 'test'
+  ...
+1..20
+# tests 20
+# suites 0
+# pass 20
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 53.648543

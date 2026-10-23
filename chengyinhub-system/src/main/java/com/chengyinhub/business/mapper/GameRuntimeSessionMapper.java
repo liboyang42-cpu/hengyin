@@ -31,6 +31,9 @@ public interface GameRuntimeSessionMapper {
                                            @Param("nodeId") Long nodeId,
                                            @Param("memberId") Long memberId);
 
+    /** Photo: current authorization read after locking the original session. */
+    GameRuntimeSession selectAccessibleByIdForUpdate(@Param("id") Long id, @Param("memberId") Long memberId);
+
     /** 某玩家在某主题(某场次)下的全部个人玩法会话,按先后。结局页「这一生的档案」用。 */
     List<GameRuntimeSession> selectPlayerSessionsByTopic(@Param("activityId") Long activityId,
                                                          @Param("topicId") Long topicId,

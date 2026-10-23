@@ -1,5 +1,6 @@
 const { applyPreviewAction } = require('../../../../utils/game-preview-action.js');
 const toast = require('../../../../utils/toast.js');
+const photoPending = require('../../utils/advanced-photo-pending.js');
 const app = getApp();
 const { safeUserMessage } = require('../../../../utils/transport/safe-user-message.js');
 const { buildActionKey, buildUnitId } = require('../../utils/play-action-key.js');
@@ -45,7 +46,10 @@ Component({
   pageLifetimes: { hide() { this.stopDrawAudio(); this.stopBackgroundMusic(); } },
   methods: {
     sessionRequestContext() {
+      let issuedAt = '';
+      try { issuedAt = wx.getStorageSync('authorization_issued_at') || ''; } catch (_) {}
       return { memberId: String(app.getUserID() || ''),
+        loginGeneration: String(app._featureFlagsEpoch || 0) + ':' + String(issuedAt),
         sessionId: String((this.data.state || {}).sessionId || ''),
         nodeId: String((this.data.node || {}).nodeId || ''),
         topicId: String(this.data.topicId || ''), activityId: String(this.data.activityId || ''),
@@ -53,7 +57,7 @@ Component({
     },
     currentRequestContext(context, requireSession = true) {
       const current = this.sessionRequestContext();
-      return current.memberId === context.memberId
+      return current.memberId === context.memberId && current.loginGeneration === context.loginGeneration
         && current.epoch === context.epoch && current.nodeId === context.nodeId
         && current.topicId === context.topicId && current.activityId === context.activityId
         && (!requireSession || current.sessionId === context.sessionId);
@@ -104,6 +108,25 @@ Component({
         return;
       }
       this.setData({ loading: true, acting: false, unknown: false, readingBack: false, error: '', state: null });
+      let restored;
+      try { restored = photoPending.read(wx, context); }
+      catch (error) { this.setData({ loading: false, unknown: true, error: error.message }); return; }
+      if (restored) {
+        this._photoPending = restored;
+        this._unknownCommand = restored.value.command;
+        this._unknownAction = 'SUBMIT_PHOTO_CHECK';
+        this._unknownVersion = restored.value.command.version;
+        return this.request('/api/play/advanced/state', 'GET', { sessionId: restored.value.command.sessionId }).then(res => {
+          if (!this.currentRequestContext(context, false)) return;
+          const original = Object.assign({}, context, { sessionId: String(restored.value.command.sessionId) });
+          if (Number(res.code) !== 200 || !this.responseMatchesSession(res.data, original)) throw Error('original photo session unavailable');
+          this.hydrate(res.data);
+          this._unknownRequestContext = this.sessionRequestContext();
+          this.setData({ loading: false, unknown: true, readingBack: false, unknownText: '照片结果待确认，请核对原提交' });
+        }).catch(() => {
+          if (this.currentRequestContext(context, false)) this.setData({ loading: false, unknown: true, error: '照片原局暂时无法读取，请稍后核对' });
+        });
+      }
       this.request('/api/play/advanced/start', 'POST', {
         activityId: Number(this.data.activityId) || 0,
         topicId: Number(this.data.topicId) || 0,
@@ -206,7 +229,7 @@ Component({
       const context = this.sessionRequestContext();
       const sessionId = this.data.state.sessionId;
       const version = this.data.state.version;
-      const body = payload || {};
+      const body = JSON.parse(JSON.stringify(payload || {}));
       // 幂等键由「session + 服务端 version + 动作 + 入参」派生：同一次意图重试复用同一个键，
       // 服务端 selectByIdempotencyKey 才能 replay；写成功后 version 前进，下一动作自动换键。
       const idempotencyKey = buildActionKey(sessionId, version, name, body);
@@ -218,8 +241,20 @@ Component({
       const command = {
         sessionId, version, idempotencyKey, action: name, payload: body
       };
+      const isPhoto = name === 'SUBMIT_PHOTO_CHECK';
+      let capturedPhoto;
+      if (isPhoto) {
+        try { capturedPhoto = this._photoPending = photoPending.save(wx, context, command); }
+        catch (error) { this.setData({ acting: false, error: error.message }); this.emitActionFail(name, sessionId); return Promise.resolve(false); }
+      }
       return this.request('/api/play/advanced/action', 'POST', command).then(res => {
+        if (capturedPhoto && Number(res.code) === 200 && this.responseMatchesSession(res.data, context)) photoPending.clear(wx, capturedPhoto);
         if (!this.currentRequestContext(context)) return;
+        if (isPhoto && Number(res.code) !== 200 && !(res.data && res.data.intentNotExecuted === true)) {
+          this._unknownAction = name; this._unknownRequestContext = context;
+          this._unknownCommand = JSON.parse(JSON.stringify(command));
+          this.enterUnknown(version); return false;
+        }
         if (res.code == 200 || res.code == '200') {
           if (!this.responseMatchesSession(res.data, context, name)) throw new Error('session response mismatch');
           this.hydrate(res.data);
@@ -227,6 +262,7 @@ Component({
           this.setData({ acting: false });
           return true;
         }
+        if (capturedPhoto) photoPending.clear(wx, capturedPhoto);
         if (Number(res.code) === 409 && res.data && this.responseMatchesSession(res.data.view, context)) {
           this.hydrate(res.data.view);
           this.setData({ acting: false, error: safeUserMessage(res, '玩法状态已更新，请确认后再操作') });
@@ -246,6 +282,7 @@ Component({
       }).catch(() => {
         if (!this.currentRequestContext(context)) return;
         this._unknownAction = name;
+        this._unknownRequestContext = context;
         this._unknownChallengeGame = body.game;
         this._unknownCommand = JSON.parse(JSON.stringify(command));
         this.enterUnknown(version);
@@ -261,14 +298,25 @@ Component({
       this.resolveUnknown();
     },
     resolveUnknown() {
+      if (!this.data.state) return Promise.resolve(false);
+      if (this._unknownCommand && (!this._unknownRequestContext
+          || !this.currentRequestContext(this._unknownRequestContext))) return Promise.resolve(false);
       if (this.data.readingBack) return Promise.resolve();
       this.setData({ readingBack: true });
       const context = this.sessionRequestContext();
       const sessionId = this.data.state.sessionId;
       // 共享局的版本可由队友推进；原键重放返回本人回执，不能用版本增长猜成功。
-      if (this._unknownCommand && (this.data.state.ownerType === 2 || this._unknownCommand.action === 'RETRY')) {
-        return this.request('/api/play/advanced/action', 'POST', this._unknownCommand).then(res => {
+      if (this._unknownCommand && (this.data.state.ownerType === 2 || this._unknownCommand.action === 'RETRY' || this._unknownCommand.action === 'SUBMIT_PHOTO_CHECK')) {
+        const originalCommand = this._unknownCommand;
+        const capturedPhoto = originalCommand.action === 'SUBMIT_PHOTO_CHECK' ? this._photoPending : null;
+        return this.request('/api/play/advanced/action', 'POST', originalCommand).then(res => {
+          if (capturedPhoto && Number(res.code) === 200 && this.responseMatchesSession(res.data, context)) photoPending.clear(wx, capturedPhoto);
           if (!this.currentRequestContext(context)) return false;
+          if (originalCommand.action === 'SUBMIT_PHOTO_CHECK' && Number(res.code) !== 200
+              && !(res.data && res.data.intentNotExecuted === true)) {
+            this.setData({ readingBack: false, unknown: true, unknownText: '照片结果仍待确认，请稍后核对' });
+            return false;
+          }
           if (res.code == 200) {
             if (!this.responseMatchesSession(res.data, context, this._unknownCommand.action)) throw new Error('replay session mismatch');
             const replay = res.data;
@@ -285,7 +333,8 @@ Component({
             this.setData({ readingBack: false, unknown: false, unknownText: '', error: '' });
             return true;
           }
-          // 收到明确拒绝才释放；网络未知继续保留原命令和选择。
+          // Only a proven absent original photo command may release its durable identity.
+          if (capturedPhoto) photoPending.clear(wx, capturedPhoto);
           return this.refreshState().then(() => {
             if (!this.currentRequestContext(context)) return false;
             this._unknownCommand = null;

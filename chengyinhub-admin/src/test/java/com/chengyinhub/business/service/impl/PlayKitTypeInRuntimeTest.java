@@ -58,6 +58,7 @@ class PlayKitTypeInRuntimeTest {
         activity.setTopicId(TOPIC_ID);
         when(activityMapper.selectCmsActivityById(ACTIVITY_ID)).thenReturn(activity);
         service = new AdvancedGameRuntimeServiceImpl();
+        com.chengyinhub.business.service.impl.AdvancedActionTestFixtures.transactions(service);
         ReflectionTestUtils.setField(service, "sessionMapper", sessionMapper);
         ReflectionTestUtils.setField(service, "nodeMapper",
                 mock(com.chengyinhub.business.mapper.CmsTopicNodeMapper.class));

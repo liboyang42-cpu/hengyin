@@ -47,6 +47,7 @@ class PlayKitRuntimeBranchRandomPredictTest {
         sessionMapper = mock(GameRuntimeSessionMapper.class);
         predictMapper = mock(PlayPredictMapper.class);
         service = new AdvancedGameRuntimeServiceImpl();
+        com.chengyinhub.business.service.impl.AdvancedActionTestFixtures.transactions(service);
         ReflectionTestUtils.setField(service, "sessionMapper", sessionMapper);
         ReflectionTestUtils.setField(service, "nodeMapper", mock(CmsTopicNodeMapper.class));
         ReflectionTestUtils.setField(service, "templateMapper", mock(CmsMemberTemplateMapper.class));

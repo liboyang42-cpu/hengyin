@@ -22,7 +22,11 @@ import com.chengyinhub.business.mapper.PlayTeamMapper;
 import com.chengyinhub.business.service.IWeChatMiniSessionService;
 import com.chengyinhub.business.service.IWxContentSecurityService;
 import com.chengyinhub.business.service.ai.PhotoCheckVisionResult;
-import com.chengyinhub.business.service.ai.PhotoCheckVisionService;
+import com.chengyinhub.business.service.ai.PhotoCheckIntentCommand;
+import com.chengyinhub.business.service.ai.PhotoCheckIntentService;
+import com.chengyinhub.business.service.ai.PhotoCheckIntentState;
+import com.chengyinhub.business.service.ai.PhotoCheckIntentView;
+import com.chengyinhub.business.service.ai.AiProviderOutcomeUnknownException;
 import com.chengyinhub.business.service.support.WeRunDecryptor;
 import com.chengyinhub.business.service.IAdvancedGameRuntimeService;
 import com.chengyinhub.business.service.IPlayBingoService;
@@ -46,6 +50,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.security.SecureRandom;
 import java.time.Instant;
@@ -173,12 +180,10 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
     @Autowired(required = false)
     private com.chengyinhub.business.service.IPlayEncounterService playEncounterService;
 
-    /**
-     * 预制人生 photoCheck 的服务端视觉判定。测试排空时允许为 null ——
-     * 排空 = 拿不到结论,一律按降级口径走,绝不假装通过。
-     */
-    @Autowired(required = false)
-    private PhotoCheckVisionService photoCheckVisionService;
+    @Autowired
+    private PhotoCheckIntentService photoCheckIntentService;
+    @Autowired
+    private PlatformTransactionManager transactionManager;
 
     /**
      * 拍物成卡:photoCheck 真判过之后铸一张立体藏品卡(契约 §4.2)。
@@ -357,9 +362,23 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public Map<String, Object> act(Long memberId, Long sessionId, Integer expectedVersion,
             String idempotencyKey, String action, Map<String, Object> payload) {
+        // Freeze caller-owned inputs before either short transaction or an external call.
+        Map<String, Object> frozen = objectMapper.convertValue(objectMapper.valueToTree(
+                payload == null ? Collections.emptyMap() : payload), new TypeReference<Map<String, Object>>() {});
+        if ("SUBMIT_PHOTO_CHECK".equals(StringUtils.defaultString(action).trim().toUpperCase(java.util.Locale.ROOT))) {
+            if (TransactionSynchronizationManager.isActualTransactionActive()) {
+                throw new IllegalStateException("照片审核不能在已有业务事务中执行");
+            }
+            return actPhoto(memberId, sessionId, expectedVersion, idempotencyKey, frozen);
+        }
+        return new TransactionTemplate(transactionManager).execute(status ->
+                actInTransaction(memberId, sessionId, expectedVersion, idempotencyKey, action, frozen, null));
+    }
+
+    private Map<String, Object> actInTransaction(Long memberId, Long sessionId, Integer expectedVersion,
+            String idempotencyKey, String action, Map<String, Object> payload, PhotoCheckVisionResult photoResult) {
         if (memberId == null || memberId <= 0 || sessionId == null || sessionId <= 0) {
             throw new IllegalArgumentException("参数有误");
         }
@@ -602,7 +621,7 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
                 submitAlbum(config,state,safePayload,memberId);
                 break;
             case "SUBMIT_PHOTO_CHECK":
-                pendingCardMint = submitPhotoCheck(config, state, safePayload, session, memberId);
+                pendingCardMint = submitPhotoCheck(config, state, safePayload, session, photoResult);
                 break;
             case "SUBMIT_NOTE":
                 submitNote(config, state, safePayload, session, memberId);
@@ -720,6 +739,212 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
             view.put(PENDING_CARD_MINT, pendingCardMint.bind(memberId, session.getNodeId()));
         }
         return view;
+    }
+
+    private record PhotoAdmission(PhotoCheckIntentCommand command, PhotoCheckIntentView intent,
+            Map<String, Object> replay, JsonNode config) { }
+
+    private TransactionTemplate photoTransaction() {
+        TransactionTemplate transaction = new TransactionTemplate(transactionManager);
+        // Qualification reads after a waited session lock must not use an earlier RR snapshot.
+        transaction.setIsolationLevel(org.springframework.transaction.TransactionDefinition.ISOLATION_READ_COMMITTED);
+        transaction.setReadOnly(false);
+        return transaction;
+    }
+
+    private Map<String, Object> actPhoto(Long memberId, Long sessionId, Integer expectedVersion,
+            String clientKey, Map<String, Object> payload) {
+        PhotoAdmission admission;
+        try {
+            admission = photoTransaction().execute(status -> admitPhoto(memberId, sessionId, expectedVersion, clientKey, payload));
+        } catch (ServiceException | IllegalArgumentException refusal) {
+            throw refusal;
+        } catch (RuntimeException uncertainCommit) {
+            throw photoUnknown(uncertainCommit);
+        }
+        if (admission.replay() != null) return admission.replay();
+        PhotoCheckIntentCommand command = admission.command();
+        PhotoCheckIntentView intent = admission.intent();
+        try {
+            if (intent.state() == PhotoCheckIntentState.PREPARED) {
+                // The existing r5 evidence HEAD belongs outside all business transactions/locks.
+                JsonNode config = admission.config();
+                if (config.path("outcomeRules").path("version").asInt() == 1) {
+                    photoEvidenceVerifier.accept(mediaReferences.processingUrl(command.imageReference(), memberId, "IMAGE"), memberId);
+                }
+                intent = photoCheckIntentService.executeOnce(memberId, intent.intentId(), command.requestFingerprint());
+            }
+            if (intent.state() != PhotoCheckIntentState.RESULT_READY || intent.result() == null) {
+                throw photoUnknown(null);
+            }
+            PhotoCheckIntentView ready = intent;
+            return photoTransaction().execute(status -> commitPhoto(command, clientKey, payload, ready));
+        } catch (AiProviderOutcomeUnknownException unknown) {
+            throw unknown;
+        } catch (RuntimeException failure) {
+            // Original intent/result is already committed. Never advertise NOT_EXECUTED here.
+            throw photoUnknown(failure);
+        }
+    }
+
+    private PhotoAdmission admitPhoto(Long memberId, Long sessionId, Integer expectedVersion,
+            String clientKey, Map<String, Object> payload) {
+        if (memberId == null || memberId <= 0 || sessionId == null || sessionId <= 0
+                || expectedVersion == null || expectedVersion < 0 || StringUtils.isBlank(clientKey)
+                || clientKey.length() > 64) throw new IllegalArgumentException("照片动作身份或原期望版本缺失");
+        GameRuntimeSession session = lockPhotoSession(sessionId, memberId);
+        String fingerprint = commandFingerprint(session, memberId, expectedVersion, clientKey, "SUBMIT_PHOTO_CHECK", payload);
+        String key = scopedActionKey(session, memberId, clientKey);
+        PlayAttemptLog terminal = attemptMapper.selectByIdempotencyKeyForUpdate(key);
+        if (terminal != null) return new PhotoAdmission(null, null, replay(terminal, memberId, sessionId, fingerprint), null);
+        ObjectNode original = objectState(session.getStateJson());
+        JsonNode config = readJson(session.getConfigSnapshotJson(), "高级玩法配置不可用");
+        PhotoCheckIntentCommand command = new PhotoCheckIntentCommand(memberId, sessionId, session.getActivityId(),
+                session.getTopicId(), session.getNodeId(), session.getOwnerId(), nullableOriginalId(original, "originalGameSessionId"),
+                nullableOriginalId(original, "originalRouteSessionId"), session.getOwnerType(), expectedVersion,
+                runtimeEpoch(session), session.getPlayInstanceId(), key, fingerprint, text(payload, "imageUrl"),
+                config.path("photoCheck").path("requirement").asText(""), photoConfigHash(config));
+        // A lost prepare response has no intentId at the client: recover by original scoped key.
+        PhotoCheckIntentView existing = photoCheckIntentService.read(memberId, sessionId, key, fingerprint);
+        if (existing == null || existing.state() == PhotoCheckIntentState.PREPARED) {
+            try {
+                requirePhotoEligibility(session, memberId, expectedVersion, payload);
+            } catch (ServiceException | IllegalArgumentException | IllegalStateException refusal) {
+                if (existing != null) throw refusal;
+                // Both current locking reads proved the original identity absent while holding the session lock.
+                Map<String, Object> data = new LinkedHashMap<>();
+                if (refusal instanceof ServiceException conflict && conflict.getData() instanceof Map<?, ?> prior) {
+                    for (Map.Entry<?, ?> field : prior.entrySet()) data.put(String.valueOf(field.getKey()), field.getValue());
+                }
+                data.put("intentNotExecuted", true);
+                Integer code = refusal instanceof ServiceException failure ? failure.getCode() : Integer.valueOf(400);
+                throw new ServiceException(refusal.getMessage(), code == null ? 400 : code).setData(data);
+            }
+        }
+        PhotoCheckIntentView intent = existing == null ? photoCheckIntentService.prepare(command) : existing;
+        requirePhotoBinding(command, intent);
+        return new PhotoAdmission(command, intent, null, config.deepCopy());
+    }
+
+    private Map<String, Object> commitPhoto(PhotoCheckIntentCommand command, String clientKey,
+            Map<String, Object> payload, PhotoCheckIntentView ready) {
+        GameRuntimeSession session = lockPhotoSession(command.sessionId(), command.memberId());
+        String fingerprint = commandFingerprint(session, command.memberId(), command.expectedVersion(),
+                clientKey, "SUBMIT_PHOTO_CHECK", payload);
+        if (!command.requestFingerprint().equals(fingerprint)
+                || !command.actionKey().equals(scopedActionKey(session, command.memberId(), clientKey))) {
+            throw new ServiceException("照片原局身份已改变，请保留原命令核验", 409);
+        }
+        PlayAttemptLog terminal = attemptMapper.selectByIdempotencyKeyForUpdate(command.actionKey());
+        if (terminal != null) return replay(terminal, command.memberId(), command.sessionId(), fingerprint);
+        PhotoCheckIntentView stored = photoCheckIntentService.read(command.memberId(), command.sessionId(),
+                command.actionKey(), fingerprint);
+        requirePhotoBinding(command, stored);
+        if (!Objects.equals(ready.intentId(), stored.intentId()) || stored.state() != PhotoCheckIntentState.RESULT_READY
+                || stored.result() == null) throw photoUnknown(null);
+        requirePhotoEligibility(session, command.memberId(), command.expectedVersion(), payload);
+        Map<String, Object> result = actInTransaction(command.memberId(), command.sessionId(), command.expectedVersion(),
+                clientKey, "SUBMIT_PHOTO_CHECK", payload, stored.result());
+        PlayAttemptLog receipt = attemptMapper.selectByIdempotencyKeyForUpdate(command.actionKey());
+        if (receipt == null || receipt.getId() == null || receipt.getId() <= 0) {
+            throw new IllegalStateException("照片动作终态回执未保存");
+        }
+        Map<String, Object> confirmed = replay(receipt, command.memberId(), command.sessionId(), fingerprint);
+        photoCheckIntentService.markApplied(stored.intentId(), fingerprint, receipt.getId());
+        // First response and later replay use the same persisted JSON number/types.
+        if (result.containsKey(PENDING_CARD_MINT)) confirmed.put(PENDING_CARD_MINT, result.get(PENDING_CARD_MINT));
+        return confirmed;
+    }
+
+    private GameRuntimeSession lockPhotoSession(Long sessionId, Long memberId) {
+        GameRuntimeSession scope = requireAccessible(sessionId, memberId);
+        // Match CurrentPlayRegistration's activity -> registration order before session -> intent.
+        // Locking is not qualification: terminal replay remains readable after eligibility expires.
+        boolean activity = scope.getActivityId() != null && scope.getActivityId() > 0;
+        if (activity) activityMapper.selectCmsActivityByIdForUpdate(scope.getActivityId());
+        CmsRegistration probe = new CmsRegistration(); probe.setMemberId(memberId);
+        probe.setOwnerType(activity ? 2L : 1L); probe.setOwnerId(activity ? scope.getActivityId() : scope.getTopicId());
+        probe.setRegistrationStatus(2);
+        List<CmsRegistration> rows = registrationMapper.selectCmsRegistrationList(probe);
+        if (rows != null) for (CmsRegistration registration : rows) {
+            if (registration != null && registration.getId() != null) registrationMapper.selectCmsRegistrationByIdForUpdate(registration.getId());
+        }
+        if (sessionMapper.selectByIdForUpdate(sessionId) == null) throw new IllegalStateException("原玩法会话不存在");
+        GameRuntimeSession session = sessionMapper.selectAccessibleByIdForUpdate(sessionId, memberId);
+        if (session == null) throw new ServiceException("原玩法会话无权访问", 403);
+        return session;
+    }
+
+    private String scopedActionKey(GameRuntimeSession session, Long memberId, String clientKey) {
+        if (objectState(session.getStateJson()).has("zeroChallengeInstance")) {
+            return themeActionKey(session.getId(), memberId + ":" + clientKey);
+        }
+        return themeScoped(memberId, session) ? themeActionKey(session.getId(), clientKey) : clientKey;
+    }
+
+    private Long nullableOriginalId(ObjectNode state, String field) {
+        JsonNode id = state.get(field);
+        return id != null && id.canConvertToLong() && id.asLong() > 0 ? id.asLong() : null;
+    }
+
+    private String photoConfigHash(JsonNode config) {
+        try {
+            byte[] digest = java.security.MessageDigest.getInstance("SHA-256")
+                    .digest(objectMapper.writeValueAsBytes(canonicalCommandValue(config)));
+            return java.util.HexFormat.of().formatHex(digest);
+        } catch (java.security.NoSuchAlgorithmException | com.fasterxml.jackson.core.JsonProcessingException failure) {
+            throw new IllegalStateException("照片原配置身份无法计算", failure);
+        }
+    }
+
+    private void requirePhotoBinding(PhotoCheckIntentCommand command, PhotoCheckIntentView intent) {
+        if (intent == null || !Objects.equals(command.memberId(), intent.memberId())
+                || !Objects.equals(command.sessionId(), intent.sessionId())
+                || !Objects.equals(command.actionKey(), intent.actionKey())
+                || !Objects.equals(command.requestFingerprint(), intent.requestFingerprint()) || intent.intentId() == null) {
+            throw new ServiceException("照片原意图身份不匹配", 409);
+        }
+    }
+
+    private void requirePhotoEligibility(GameRuntimeSession session, Long memberId, Integer expectedVersion,
+            Map<String, Object> payload) {
+        com.chengyinhub.business.service.support.CurrentPlayRegistration.requireToContinue(activityMapper, registrationMapper,
+                memberId, session.getActivityId() != null && session.getActivityId() > 0 ? 2L : 1L,
+                session.getActivityId() != null && session.getActivityId() > 0 ? session.getActivityId() : session.getTopicId(), null, clock.now());
+        requireActivityWindow(session.getActivityId(), session.getTopicId());
+        if (gameSessionRuntimeService != null) gameSessionRuntimeService.assertRoutePlayable(session.getActivityId(), session.getNodeId());
+        requireRouteNodeAccess(memberId, session.getActivityId(), session.getTopicId(), session.getNodeId());
+        JsonNode shared = gameSessionRuntimeService == null ? null : gameSessionRuntimeService.sharedRouteSnapshot(memberId,
+                session.getTopicId(), session.getActivityId(), session.getNodeId());
+        if (shared != null) {
+            if (!Objects.equals(session.getPlayInstanceId(), sharedInstance(shared))
+                    || !Long.valueOf(shared.path("teamId").asLong()).equals(session.getOwnerId())
+                    || !Integer.valueOf(GameRuntimeSession.OWNER_TEAM).equals(session.getOwnerType()) || runtimeEpoch(session) == null) {
+                throw new ServiceException("照片不属于原共享局", 409);
+            }
+            gameSessionRuntimeService.assertSharedRouteWritable(memberId, session.getTopicId(), session.getActivityId(), session.getNodeId(), runtimeEpoch(session));
+        } else if (topicRouteRuntimeService != null && topicRouteRuntimeService.genericPlayer(memberId, session.getTopicId(), session.getActivityId())
+                && !Objects.equals(session.getPlayInstanceId(), topicRouteRuntimeService.gameplayInstance(memberId, session.getTopicId(), session.getActivityId(), session.getNodeId()))) {
+            throw new ServiceException("照片不属于原任务实例", 409);
+        }
+        if (!Integer.valueOf(GameRuntimeSession.STATUS_RUNNING).equals(session.getStatus())
+                || !expectedVersion.equals(session.getVersion())) throw versionConflict(session, memberId);
+        if (session.getDeadlineAt() != null && clock.now().after(session.getDeadlineAt())) throw new ServiceException("原玩法已超时", 409);
+        if (topicRouteRuntimeService != null) topicRouteRuntimeService.requireOpeningAccess(memberId,
+                session.getTopicId(), session.getActivityId(), session.getNodeId());
+        JsonNode config = readJson(session.getConfigSnapshotJson(), "高级玩法配置不可用");
+        if (!enabled(config.get("photoCheck"))) throw new IllegalArgumentException("该玩法未开启拍照审核");
+        ObjectNode state = objectState(session.getStateJson());
+        if (state.path("photoCheck").path("passed").asBoolean()) throw new IllegalStateException("这一张已经过了");
+        String selected = state.has("zeroChallengeInstance") && state.path("challenge").path("nodeId").asLong() == session.getNodeId()
+                ? state.path("challenge").path("gameplayKey").asText() : "";
+        if (!selected.isEmpty() && !"photoCheck".equals(selected)) throw new IllegalArgumentException("恢复挑战只能提交选定玩法");
+        String image = text(payload, "imageUrl");
+        if (image.isEmpty() || image.length() > 512) throw new IllegalArgumentException("照片地址不能为空且最多 512 字");
+    }
+
+    private AiProviderOutcomeUnknownException photoUnknown(Throwable cause) {
+        return new AiProviderOutcomeUnknownException("照片原命令结果待确认，请保留原动作身份", cause);
     }
 
     /** 回包上的内部键:只在 act 与 finishPendingCardMint 之间存在,收尾时一定被拿走,不会序列化出去。 */
@@ -1632,6 +1857,15 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         command.set("playInstanceId", objectMapper.valueToTree(session.getPlayInstanceId()));
         command.put("expectedVersion", expectedVersion); command.put("clientKey", clientKey);
         command.put("action", StringUtils.defaultString(action).trim().toUpperCase(java.util.Locale.ROOT));
+        if ("SUBMIT_PHOTO_CHECK".equals(StringUtils.defaultString(action).trim().toUpperCase(java.util.Locale.ROOT))) {
+            // These are the original session's frozen authority, never the current shared epoch.
+            command.put("schema", "advanced-photo:v2");
+            ObjectNode original = objectState(session.getStateJson());
+            command.set("authorityEpoch", original.path("runtimeAuthorityEpoch"));
+            command.set("originalGameSessionId", original.path("originalGameSessionId"));
+            command.set("originalRouteSessionId", original.path("originalRouteSessionId"));
+            command.set("config", canonicalCommandValue(readJson(session.getConfigSnapshotJson(), "玩法配置不可用")));
+        }
         command.set("payload", canonicalCommandValue(objectMapper.valueToTree(
                 payload == null ? Collections.emptyMap() : payload)));
         try {
@@ -2908,7 +3142,7 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
     }
 
     private CardMintRequest submitPhotoCheck(JsonNode config, ObjectNode state, Map<String, Object> payload,
-            GameRuntimeSession session, Long memberId) {
+            GameRuntimeSession session, PhotoCheckVisionResult review) {
         JsonNode cfg = config.get("photoCheck");
         if (!enabled(cfg)) throw new IllegalArgumentException("该玩法未开启拍照审核");
         ObjectNode node = state.with("photoCheck");
@@ -2919,14 +3153,11 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         if (imageUrl.length() > 512) throw new IllegalArgumentException("照片地址不能超过 512 字");
 
         boolean r5=config.path("outcomeRules").path("version").asInt()==1;
-        if(r5)photoEvidenceVerifier.accept(imageUrl,memberId);
+        if (review == null) throw new IllegalStateException("照片原结果尚未保存");
         int tries = node.path("tries").asInt(0) + 1;
         node.put("tries", tries);
         node.put("lastUrl", imageUrl);
 
-        PhotoCheckVisionResult review = photoCheckVisionService == null
-                ? PhotoCheckVisionResult.degraded("视觉审核通道未装配")
-                : photoCheckVisionService.review(memberId, imageUrl, cfg.path("requirement").asText(""));
         boolean fallbackPass = !r5 && "pass".equals(cfg.path("fallback").asText("retake"));
 
         if (review.isDegraded()) {

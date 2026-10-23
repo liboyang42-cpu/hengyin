@@ -68,6 +68,7 @@ class TimeWindowSubscribeRuntimeTest {
         sessionMapper = mock(GameRuntimeSessionMapper.class);
         attemptMapper = mock(PlayAttemptLogMapper.class);
         service = new AdvancedGameRuntimeServiceImpl();
+        com.chengyinhub.business.service.impl.AdvancedActionTestFixtures.transactions(service);
         ReflectionTestUtils.setField(service, "sessionMapper", sessionMapper);
         ReflectionTestUtils.setField(service, "attemptMapper", attemptMapper);
         ReflectionTestUtils.setField(service, "nodeMapper", mock(CmsTopicNodeMapper.class));

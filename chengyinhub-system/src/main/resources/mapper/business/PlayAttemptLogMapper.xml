@@ -56,6 +56,14 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
          where idempotency_key = #{idempotencyKey}
          limit 1
     </select>
+    <select id="selectByIdempotencyKeyForUpdate" useCache="false" flushCache="true" resultMap="PlayAttemptLogResult">
+        select id, member_id, topic_id, node_id, activity_id, attempt_type, result, wrong_answer,
+               duration_s, result_json, idempotency_key, request_fingerprint, created_at
+          from play_attempt_log
+         where idempotency_key = #{idempotencyKey}
+         limit 1 for update
+    </select>
+
 
     <select id="selectPreferenceResults" resultMap="PlayAttemptLogResult">
         select id, member_id, topic_id, node_id, activity_id, attempt_type, result, wrong_answer,

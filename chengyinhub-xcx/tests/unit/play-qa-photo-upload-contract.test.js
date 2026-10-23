@@ -309,3 +309,29 @@ test('上传中离页 abort:迟到的成功不得提交', () => {
 
   assert.equal(gameActions.length, 0, '页面已离开，迟到回调不得提交')
 })
+
+test('Photo 上传保留受管 assetId，动作只携带 canonical media 引用', async () => {
+  const oldGetApp = global.getApp;
+  global.getApp = () => Object.assign(makeAppStub(), { requestSeparateConsent: () => Promise.resolve() });
+  const { page } = loadPage();
+  page.data.playKit.kit.type = 'photocheck';
+  page._submitPlayKitAction('shoot', { tempFilePath: '/tmp/owned-photo.jpg' });
+  await new Promise(setImmediate);
+  assert.equal(wxUploads.length, 1);
+  wxUploads[0].success({ statusCode: 200, data: JSON.stringify({ code: 200,
+    url: 'https://base/approved-image.jpg', assetId: 701, reviewState: 'APPROVED' }) });
+  assert.equal(gameActions.length, 1);
+  assert.deepEqual(gameActions[0].payload, { imageUrl: 'media-asset:701' });
+  global.getApp = oldGetApp;
+});
+
+test('Photo 上传缺 assetId 时拒绝动作，不回退为 URL 身份', async () => {
+  global.getApp = () => Object.assign(makeAppStub(), { requestSeparateConsent: () => Promise.resolve() });
+  const { page } = loadPage(); page.data.playKit.kit.type = 'photocheck';
+  page._submitPlayKitAction('shoot', { tempFilePath: '/tmp/owned-photo.jpg' });
+  await new Promise(setImmediate);
+  assert.equal(wxUploads.length, 1);
+  wxUploads[0].success({ statusCode: 200, data: JSON.stringify({ code: 200,
+    url: 'https://base/approved-image.jpg', reviewState: 'APPROVED' }) });
+  assert.equal(gameActions.length, 0);
+});

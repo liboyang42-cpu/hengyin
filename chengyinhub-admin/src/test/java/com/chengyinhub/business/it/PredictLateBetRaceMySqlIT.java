@@ -245,6 +245,8 @@ class PredictLateBetRaceMySqlIT {
 
     private AdvancedGameRuntimeServiceImpl service(SqlSession session, PlayPredictMapper predictMapper) {
         AdvancedGameRuntimeServiceImpl service = new AdvancedGameRuntimeServiceImpl();
+        ReflectionTestUtils.setField(service, "transactionManager", new org.springframework.jdbc.datasource.DataSourceTransactionManager(
+                new org.springframework.jdbc.datasource.SingleConnectionDataSource(session.getConnection(), true)));
         ReflectionTestUtils.setField(service, "sessionMapper", session.getMapper(GameRuntimeSessionMapper.class));
         ReflectionTestUtils.setField(service, "attemptMapper", session.getMapper(PlayAttemptLogMapper.class));
         ReflectionTestUtils.setField(service, "predictMapper", predictMapper);

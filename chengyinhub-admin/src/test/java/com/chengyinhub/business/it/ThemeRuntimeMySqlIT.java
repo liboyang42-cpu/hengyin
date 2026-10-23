@@ -52,7 +52,7 @@ class ThemeRuntimeMySqlIT {
             String advancedMigration=new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get("sql/migration_20260822_advanced_game_runtime.sql")),java.nio.charset.StandardCharsets.UTF_8);int advancedCreate=advancedMigration.indexOf("CREATE TABLE IF NOT EXISTS game_runtime_session");exec(c,ItSchema.splitStatements(advancedMigration.substring(advancedCreate)).get(0));
             ItSchema.applyMigrations(c,"sql/migration_m9_play_attempt_log.sql","sql/migration_20260820_new_city_preference_chain.sql","sql/migration_20260917_play_note.sql");
             exec(c,"CREATE TABLE play_team_member (team_id BIGINT, member_id BIGINT, status INT) ENGINE=InnoDB");
-            ItSchema.applyMigrations(c,"sql/migration_theme_runtime_20261004.sql","sql/migration_play_predict_20260906.sql");
+            ItSchema.applyMigrations(c,"sql/migration_theme_runtime_20261004.sql","sql/migration_play_predict_20260906.sql","sql/migration_photo_check_intent_20261023.sql");
             String medalMigration=new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get("sql/migration_20260902_node_medal_claim.sql")),java.nio.charset.StandardCharsets.UTF_8);
             int start=medalMigration.indexOf("CREATE TABLE IF NOT EXISTS `node_medal_claim`");
             exec(c,"DROP TABLE IF EXISTS node_medal_claim");
@@ -60,7 +60,7 @@ class ThemeRuntimeMySqlIT {
         }
         Configuration cfg=new Configuration();cfg.setEnvironment(new Environment("theme",new SpringManagedTransactionFactory(),ds));
         cfg.getTypeAliasRegistry().registerAliases("com.chengyinhub.business.domain");
-        for(String mapper:Arrays.asList("CmsTopicMapper","CmsTopicNodeMapper","CmsTopicChapterMapper","CmsMemberTemplateMapper","PlayerNodeProgressMapper","CmsRegistrationMapper","GameRuntimeSessionMapper","PlayAttemptLogMapper","TopicRouteSessionMapper","ThemeBroadcastMapper","NodeMedalClaimMapper","PlayNoteMapper","PlayPredictMapper")) {
+        for(String mapper:Arrays.asList("CmsTopicMapper","CmsTopicNodeMapper","CmsTopicChapterMapper","CmsMemberTemplateMapper","PlayerNodeProgressMapper","CmsRegistrationMapper","GameRuntimeSessionMapper","PlayAttemptLogMapper","TopicRouteSessionMapper","ThemeBroadcastMapper","NodeMedalClaimMapper","PlayNoteMapper","PlayPredictMapper","PhotoCheckIntentMapper")) {
             String resource="mapper/business/"+mapper+".xml";
             try(InputStream in=ThemeRuntimeMySqlIT.class.getClassLoader().getResourceAsStream(resource)){new XMLMapperBuilder(in,cfg,resource,cfg.getSqlFragments()).parse();}
         }
@@ -78,7 +78,7 @@ class ThemeRuntimeMySqlIT {
         org.mockito.Mockito.reset(im);
         ReflectionTestUtils.setField(target,"clock",Clock.systemUTC());
         try(Connection c=ds.getConnection()) {
-            for(String table:Arrays.asList("play_predict_bet","play_predict_result","play_attempt_log","game_runtime_session","node_medal_claim","theme_broadcast_delivery","topic_route_action","topic_route_session","player_node_progress","cms_registration","cms_topic_node","cms_member_template","cms_topic_chapter","cms_topic"))exec(c,"DELETE FROM "+table);
+            for(String table:Arrays.asList("photo_check_intent","play_predict_bet","play_predict_result","play_attempt_log","game_runtime_session","node_medal_claim","theme_broadcast_delivery","topic_route_action","topic_route_session","player_node_progress","cms_registration","cms_topic_node","cms_member_template","cms_topic_chapter","cms_topic"))exec(c,"DELETE FROM "+table);
             String config="{\"schemaVersion\":1,\"capacity\":3,\"replayEnabled\":true,\"items\":[{\"id\":\"food\",\"kind\":\"ITEM\",\"name\":\"口粮\",\"image\":\"https://example.test/food.png\",\"stat\":\"HP\",\"delta\":2}],\"endings\":[{\"id\":\"end\",\"title\":\"结束\",\"fallback\":true,\"success\":false}]}";
             try(PreparedStatement st=c.prepareStatement("INSERT INTO cms_topic(id,member_id,name,del_flag,route_mode,published_config_version,journey_rules_json,theme_runtime_config_json,published_theme_runtime_config_json) VALUES(10,7,'测试',0,'LINEAR',1,?,?,?)")) {
                 st.setString(1,"{\"schemaVersion\":1,\"checkEnabled\":true,\"hp\":{\"enabled\":true,\"max\":10,\"init\":6},\"recovery\":{\"stageRestHpFloor\":0,\"stageRestLuckFloor\":0,\"stationEndIfHurt\":0}}");st.setString(2,config);st.setString(3,config);st.executeUpdate();
@@ -220,6 +220,7 @@ class ThemeRuntimeMySqlIT {
     }
     private com.chengyinhub.business.service.IAdvancedGameRuntimeService advancedService() {
         com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl advanced=new com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl();
+        ReflectionTestUtils.setField(advanced, "transactionManager", new org.springframework.jdbc.datasource.DataSourceTransactionManager(ds));
         ReflectionTestUtils.setField(advanced,"predictMapper",sql.getMapper(PlayPredictMapper.class));ReflectionTestUtils.setField(advanced,"sessionMapper",sql.getMapper(com.chengyinhub.business.mapper.GameRuntimeSessionMapper.class));ReflectionTestUtils.setField(advanced,"playNoteMapper",sql.getMapper(com.chengyinhub.business.mapper.PlayNoteMapper.class));ReflectionTestUtils.setField(advanced,"attemptMapper",sql.getMapper(com.chengyinhub.business.mapper.PlayAttemptLogMapper.class));ReflectionTestUtils.setField(advanced,"registrationMapper",sql.getMapper(CmsRegistrationMapper.class));ReflectionTestUtils.setField(advanced,"nodeMapper",sql.getMapper(CmsTopicNodeMapper.class));ReflectionTestUtils.setField(advanced,"templateMapper",sql.getMapper(CmsMemberTemplateMapper.class));ReflectionTestUtils.setField(advanced,"topicRouteRuntimeService",runtime);ReflectionTestUtils.setField(advanced,"clock",(com.chengyinhub.business.service.support.AdvancedGameClock)()->new java.util.Date(advancedNow.get()));
         ProxyFactory proxy=new ProxyFactory(advanced);proxy.setInterfaces(com.chengyinhub.business.service.IAdvancedGameRuntimeService.class);proxy.addAdvice(new TransactionInterceptor(new DataSourceTransactionManager(ds),new AnnotationTransactionAttributeSource()));return (com.chengyinhub.business.service.IAdvancedGameRuntimeService)proxy.getProxy();
     }
@@ -330,7 +331,7 @@ class ThemeRuntimeMySqlIT {
         Map<String,Object> initial=personalTask(false,null,"BLOCK_HP_COST",false,false,false,kit);long id=((Number)initial.get("sessionId")).longValue();runtime.gameplayAction(7L,id,((Number)initial.get("version")).intValue(),"start","QUEST_START","north",null);
         com.chengyinhub.business.service.IAdvancedGameRuntimeService advanced=advancedService();Object advancedTarget=((org.springframework.aop.framework.Advised)advanced).getTargetSource().getTarget();
         ReflectionTestUtils.setField(advancedTarget,"verifiedWeRunService",R5WeRunFixture.service());ReflectionTestUtils.setField(advancedTarget,"photoEvidenceVerifier",(java.util.function.BiConsumer<String,Long>)(url,member)->{if(!url.startsWith("fixture-owned-"+member))throw new IllegalArgumentException("foreign upload");});
-        com.chengyinhub.business.service.ai.PhotoCheckVisionService vision=mock(com.chengyinhub.business.service.ai.PhotoCheckVisionService.class);when(vision.review(any(),any(),any())).thenReturn(com.chengyinhub.business.service.ai.PhotoCheckVisionResult.concluded(true,99,"passed"));ReflectionTestUtils.setField(advancedTarget,"photoCheckVisionService",vision);
+        AdvancedPhotoMySqlFixture.install((com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl)advancedTarget, sql, ds, com.chengyinhub.business.service.ai.PhotoCheckVisionResult.concluded(true,99,"passed"));
         Map<String,Object> opened=advanced.start(7L,0L,10L,11L,null);long advancedId=((Number)opened.get("sessionId")).longValue();Map<String,Object> payload=new java.util.LinkedHashMap<>();String action;
         if("steps".equals(kit)){payload=JSON.convertValue(R5WeRunFixture.today(advancedNow.get(),7,"",100),Map.class);payload.remove("episodeId");action="SUBMIT_STEPS";}
         else if("album".equals(kit)){payload.put("imageUrls",Arrays.asList("fixture-owned-7-a","fixture-owned-7-b"));action="SUBMIT_ALBUM";}
@@ -338,6 +339,88 @@ class ThemeRuntimeMySqlIT {
         assertEquals(true,advanced.act(7L,advancedId,((Number)opened.get("version")).intValue(),"complete",action,payload).get("readyForBase"));assertEquals(6,JSON.readTree(sql.getMapper(TopicRouteSessionMapper.class).selectAccessibleById(id,7L).getStateJson()).path("variables").path("sys.hp").asInt());
         TopicRouteSession row=sql.getMapper(TopicRouteSessionMapper.class).selectAccessibleById(id,7L);runtime.gameplayAction(7L,id,row.getVersion(),"confirm","QUEST_RESOLVE","north",null);assertEquals(5,JSON.readTree(sql.getMapper(TopicRouteSessionMapper.class).selectAccessibleById(id,7L).getStateJson()).path("variables").path("sys.hp").asInt());
     }
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(strings={"CAS","RECEIPT","CONCURRENT"})
+    void photoOriginalResultSurvivesLocalRollbackAndSameCommandAppliesOnce(String fault) throws Exception {
+        Map<String,Object> initial=personalTask(false,null,"BLOCK_HP_COST",false,false,false,"photoCheck");
+        long routeId=((Number)initial.get("sessionId")).longValue();
+        runtime.gameplayAction(7L,routeId,((Number)initial.get("version")).intValue(),"photo-route-start","QUEST_START","north",null);
+        com.chengyinhub.business.service.IAdvancedGameRuntimeService advanced=advancedService();
+        com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl advancedTarget=
+                (com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl)((org.springframework.aop.framework.Advised)advanced).getTargetSource().getTarget();
+        com.chengyinhub.business.service.ai.PhotoCheckVisionService vision=AdvancedPhotoMySqlFixture.install(advancedTarget,sql,ds,
+                com.chengyinhub.business.service.ai.PhotoCheckVisionResult.concluded(true,99,"first saved result"));
+        ReflectionTestUtils.setField(advancedTarget,"photoEvidenceVerifier",(java.util.function.BiConsumer<String,Long>)(url,member)->
+                assertFalse(org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive()));
+        Map<String,Object> opened=advanced.start(7L,0L,10L,11L,null);
+        long sessionId=((Number)opened.get("sessionId")).longValue();int version=((Number)opened.get("version")).intValue();
+        GameRuntimeSessionMapper realSessions=sql.getMapper(GameRuntimeSessionMapper.class);
+        PlayAttemptLogMapper realAttempts=sql.getMapper(PlayAttemptLogMapper.class);
+        GameRuntimeSession before=realSessions.selectAccessibleById(sessionId,7L);
+        String routeBefore=sql.getMapper(TopicRouteSessionMapper.class).selectAccessibleById(routeId,7L).getStateJson();
+        if("CAS".equals(fault)) {
+            GameRuntimeSessionMapper failing=mock(GameRuntimeSessionMapper.class,org.mockito.AdditionalAnswers.delegatesTo(realSessions));
+            doReturn(0).when(failing).updateStateCas(any());ReflectionTestUtils.setField(advancedTarget,"sessionMapper",failing);
+        } else if ("RECEIPT".equals(fault)) {
+            PlayAttemptLogMapper failing=mock(PlayAttemptLogMapper.class,org.mockito.AdditionalAnswers.delegatesTo(realAttempts));
+            doThrow(new IllegalStateException("fixture receipt insert failed")).when(failing).insertPlayAttemptLog(any());
+            ReflectionTestUtils.setField(advancedTarget,"attemptMapper",failing);
+        }
+        Map<String,Object> payload=Collections.singletonMap("imageUrl","media-asset:701");
+        if ("CONCURRENT".equals(fault)) {
+            CountDownLatch entered=new CountDownLatch(1),release=new CountDownLatch(1);
+            com.chengyinhub.business.service.ai.PhotoCheckVisionService raceVision=AdvancedPhotoMySqlFixture.install(advancedTarget,sql,ds,
+                    com.chengyinhub.business.service.ai.PhotoCheckVisionResult.concluded(true,99,"first saved result"),()->{
+                        entered.countDown();try{assertTrue(release.await(10,TimeUnit.SECONDS));}
+                        catch(InterruptedException interrupted){Thread.currentThread().interrupt();throw new IllegalStateException(interrupted);}
+                    });
+            ExecutorService pool=Executors.newFixedThreadPool(2);
+            try {
+                Future<Map<String,Object>> first=pool.submit(()->advanced.act(7L,sessionId,version,"photo-fault","SUBMIT_PHOTO_CHECK",payload));
+                assertTrue(entered.await(5,TimeUnit.SECONDS));
+                Future<Throwable> second=pool.submit(()->{
+                    try{advanced.act(7L,sessionId,version,"photo-fault","SUBMIT_PHOTO_CHECK",payload);return null;}
+                    catch(Throwable outcome){return outcome;}
+                });
+                assertInstanceOf(com.chengyinhub.business.service.ai.AiProviderOutcomeUnknownException.class,second.get(5,TimeUnit.SECONDS),
+                        "loser must read IN_FLIGHT without waiting on provider-held business locks or inventing fallback");
+                sql.clearCache();assertEquals(before.getVersion(),realSessions.selectAccessibleById(sessionId,7L).getVersion());
+                assertEquals(JSON.readTree(routeBefore),JSON.readTree(sql.getMapper(TopicRouteSessionMapper.class).selectAccessibleById(routeId,7L).getStateJson()));
+                String originalKey=ReflectionTestUtils.invokeMethod(advancedTarget,"scopedActionKey",before,7L,"photo-fault");
+                assertNull(realAttempts.selectByIdempotencyKey(originalKey));
+                PhotoCheckIntentRow inFlight=sql.getMapper(PhotoCheckIntentMapper.class).selectByKey(7L,sessionId,originalKey);
+                assertEquals("IN_FLIGHT",inFlight.getState());String originalNonce=inFlight.getNonce();
+                release.countDown();Map<String,Object> applied=first.get(10,TimeUnit.SECONDS);
+                assertEquals(JSON.valueToTree(applied),JSON.valueToTree(advanced.act(7L,sessionId,version,"photo-fault","SUBMIT_PHOTO_CHECK",payload)));
+                sql.clearCache();PhotoCheckIntentRow saved=sql.getMapper(PhotoCheckIntentMapper.class).selectByKey(7L,sessionId,originalKey);
+                assertEquals("APPLIED",saved.getState());assertEquals(originalNonce,saved.getNonce());
+                assertEquals(realAttempts.selectByIdempotencyKey(originalKey).getId(),saved.getAttemptLogId());
+                verify(raceVision,times(1)).reviewPrepared(anyLong(),anyString(),anyString(),anyString(),any());
+            } finally {release.countDown();pool.shutdownNow();assertTrue(pool.awaitTermination(10,TimeUnit.SECONDS));}
+            return;
+        }
+        assertThrows(com.chengyinhub.business.service.ai.AiProviderOutcomeUnknownException.class,
+                ()->advanced.act(7L,sessionId,version,"photo-fault","SUBMIT_PHOTO_CHECK",payload));
+        sql.clearCache();GameRuntimeSession rolledBack=realSessions.selectAccessibleById(sessionId,7L);
+        assertEquals(before.getVersion(),rolledBack.getVersion());assertEquals(before.getScore(),rolledBack.getScore());
+        assertEquals(JSON.readTree(before.getStateJson()),JSON.readTree(rolledBack.getStateJson()));
+        assertEquals(JSON.readTree(routeBefore),JSON.readTree(sql.getMapper(TopicRouteSessionMapper.class).selectAccessibleById(routeId,7L).getStateJson()));
+        String scopedKey=ReflectionTestUtils.invokeMethod(advancedTarget,"scopedActionKey",before,7L,"photo-fault");
+        assertNull(realAttempts.selectByIdempotencyKey(scopedKey));
+        PhotoCheckIntentMapper photoRows=sql.getMapper(PhotoCheckIntentMapper.class);
+        PhotoCheckIntentRow ready=photoRows.selectByKey(7L,sessionId,scopedKey);
+        assertNotNull(ready);assertEquals("RESULT_READY",ready.getState());assertEquals("RECEIVED",ready.getProviderState());
+        String originalNonce=ready.getNonce();assertEquals("first saved result",ready.getResultReason());
+        ReflectionTestUtils.setField(advancedTarget,"sessionMapper",realSessions);ReflectionTestUtils.setField(advancedTarget,"attemptMapper",realAttempts);
+        Map<String,Object> applied=advanced.act(7L,sessionId,version,"photo-fault","SUBMIT_PHOTO_CHECK",payload);
+        Map<String,Object> replay=advanced.act(7L,sessionId,version,"photo-fault","SUBMIT_PHOTO_CHECK",payload);
+        assertEquals(JSON.valueToTree(applied),JSON.valueToTree(replay));sql.clearCache();
+        PhotoCheckIntentRow saved=photoRows.selectByKey(7L,sessionId,scopedKey);
+        assertEquals("APPLIED",saved.getState());assertEquals(originalNonce,saved.getNonce());
+        assertEquals(realAttempts.selectByIdempotencyKey(scopedKey).getId(),saved.getAttemptLogId());
+        verify(vision,times(1)).reviewPrepared(anyLong(),anyString(),anyString(),anyString(),any());
+    }
+
     @org.junit.jupiter.params.ParameterizedTest @org.junit.jupiter.params.provider.ValueSource(strings={"PASS","FAIL","ENDED"})
     void r5FeedbackStartsOnlyAfterSettlementAndNeverResettlesTheMainResult(String outcome) throws Exception {
         Map<String,Object> initial=personalTask(false,null,"BLOCK_HP_COST",false,false,false,"qaFeedback");long id=((Number)initial.get("sessionId")).longValue();runtime.gameplayAction(7L,id,((Number)initial.get("version")).intValue(),"start","QUEST_START","north",null);
