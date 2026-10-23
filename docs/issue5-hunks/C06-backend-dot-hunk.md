@@ -75,6 +75,14 @@ Tests run: 16, Failures: 0, Errors: 0, Skipped: 0
 BUILD SUCCESS
 ```
 
+未见 requestId 回读不占账（不发明 recoverOriginal）。`reviewStatusForRequest` of null/blank/never-seen stays Java null without occupying; later unique `rememberReview(PENDING)` is the first write. WAITING_SOURCE first-write occupancy remains unique original. 2026-10-23T23:18:07Z HEAD `8f6c8d663`：
+
+```
+Tests run: 4 -- C06AccountSwitchRestartIsolationTest
+Tests run: 17, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS
+```
+
 App / 真库 / CI = NOT_RUN。
 
 SHA256（生产 4 类）：
