@@ -402,18 +402,18 @@ class CashWithdrawFundEvidenceMySqlIT {
     @Test void manualCreditThenExceptionRollsBackWholeFinancialTransaction() {
         MemberCashWithdraw w = original(); admission.debitCash(w.getId(), memberId, w.getAmount()); state(w.getId(), 3);
         assertTrue(service.manualRefund(w.getId(), "maker", "未提交", 3));
-        when(members.addBalance(anyLong(), any())).thenAnswer(i -> {
+        doAnswer(i -> {
             memberMapper.addBalance(i.getArgument(0), i.getArgument(1)); throw new IllegalStateException("failure after SQL write");
-        });
+        }).when(members).addBalance(anyLong(), any());
         assertThrows(IllegalStateException.class, () -> service.manualRefund(w.getId(), "checker", "复核", 4));
         assertEquals(4, cash.selectById(w.getId()).getStatus()); assertNull(cash.selectById(w.getId()).getBalanceRefundId());
         assertEquals(0, count(w.getId(), "REFUND")); money("70");
     }
     @Test void automaticCreditThenExceptionRollsBackWholeFinancialTransaction() {
         MemberCashWithdraw w = accepted();
-        when(members.addBalance(anyLong(), any())).thenAnswer(i -> {
+        doAnswer(i -> {
             memberMapper.addBalance(i.getArgument(0), i.getArgument(1)); throw new IllegalStateException("failure after SQL write");
-        });
+        }).when(members).addBalance(anyLong(), any());
         when(channel.queryTransferResult(w.getOutBatchNo(), w.getOutDetailNo())).thenReturn(Map.of("result", "FAIL", "detailStatus", "FAIL"));
         service.requery(w.getId());
         assertEquals(3, cash.selectById(w.getId()).getStatus()); assertNull(cash.selectById(w.getId()).getBalanceRefundId());
