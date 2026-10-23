@@ -4,7 +4,7 @@ Issue：https://github.com/liboyang42-cpu/chengyin-remote-ops/issues/5 领取组
 仓库：`github.com/liboyang42-cpu/hengyin` 仅写本仓（不写 `chengyin`）  
 Base：`origin/master` `2ec68899099a1e250df0949a8383bf85b5d3ffe0`  
 分支：`cursor/c09-notify-webhook-producers-266c`  
-Head：见本分支最新 commit。本文件不替代生产凭据、真实外发 Webhook 或公共 IM 协议。
+Head：`cf81c5a9ec774e870c7fceeb094e1b24c6fd0407`（本文件若再提交会前进）。本文件不替代生产凭据、真实外发 Webhook 或公共 IM 协议。
 
 ## 1. 白名单（实际写入）
 
@@ -59,13 +59,36 @@ mvn -pl chengyinhub-admin -am test \
   -Dsurefire.failIfNoSpecifiedTests=false
 ```
 
-环境与真实结果、SHA256 在本文件测试通过后回填。
+环境：OpenJDK 21.0.12.1 · Maven 3.8.7 · 隔离内存夹具 · 无 MySQL / HTTP / 生产库。  
+真实结果（2026-10-23T20:11:18Z，`BUILD SUCCESS`）：
+
+```
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0 -- C09FirstJourneyIsolationTest
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0 -- DevicePushRegistrationLifecycleTest
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0 -- AttachmentReviewProducerTest
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0 -- WebhookSameEventRetryTest
+Tests run: 5, Failures: 0, Errors: 0, Skipped: 0 -- WebhookSsrfHopGuardTest
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0 -- ImmutableReceiptProducerTest
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0 -- WebhookDeliveryLogProducerTest
+Tests run: 11, Failures: 0, Errors: 0, Skipped: 0
+chengyinhub-admin .................................. SUCCESS
+BUILD SUCCESS
+```
+
+SHA256（生产 6 类）：
+
+- `ImmutableReceiptProducer.java` `d30f6adf07bd21a817a4ba2666e8f09b45f81d241da56dc9dec62d6b16a14471`
+- `AttachmentReviewProducer.java` `b105176804dd3654631b97ddf4b0200840b8cfa34f14fe8f380ea8f762552838`
+- `DevicePushRegistrationLifecycle.java` `f46a22c9cbb3e643f94df62e3e87f32994933e389eb4d21b69eb2f83ca1100ef`
+- `WebhookDeliveryLogProducer.java` `f48e7da1b77fab22a93f9e4d8f422943f0c0518b6921642977a41518875bad95`
+- `WebhookSameEventRetry.java` `3378e3db7fee28932a3620dd01767781bfbaf8aca7f7fefd741d63dc0916b06b`
+- `WebhookSsrfHopGuard.java` `da151c7857fb7f15f92b6aed16be8a051be7d28b6468d061dc08a37a75b4aa30`
 
 ## 4. 门禁分栏（文档不得冒充通过）
 
 | 门禁 | 状态 | 说明 |
 |---|---|---|
-| 静态检查 / 本组单测 | 见后续测试输出 | 仅 `service.notify` 隔离测试 |
+| 静态检查 / 本组单测 | 11 通过 | 仅 `service.notify` 隔离测试 |
 | 全模块回归 / 真库 MySQL / HTTP | NOT_RUN | 本组无授权跑生产式环境 |
 | 真实外发 Webhook | NOT_RUN | 硬边界，未做 |
 | CI（dot 21/22 专线） | NOT_RUN | 不重复触发 |
