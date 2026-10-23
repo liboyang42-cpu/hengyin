@@ -114,7 +114,7 @@ Page({
     // 2026-10-22 业主:三个标签 = 详情 / 故事 / 路线(自由探索没有固定路线,第三个叫「地点」)
     topicTabs: [{ key: '0', label: '详情' }, { key: '1', label: '故事' }, { key: '2', label: '路线' }],
     // ===== 2026-10-22 动效与新增块(docs/design/动效界面落地_20261022) =====
-    coverImages: [], kbIdx: 0, coverLeaving: false, detailEnter: false, heroIdx: 0, navSolid: false, storyChars: [], routeNote: '', sketchPoints: [], routeReal: false,
+    coverImages: [], kbIdx: 0, coverLeaving: false, detailEnter: false, heroIdx: 0, navSolid: false, storyChars: [], routeNote: '', sketchPoints: [], routeReal: false, buyOpts: [], buySel: 0, sessionPreferName: '',
     publisher: { name: '', avatar: '' }, heroCta: { kind: '', text: '' }, faved: false,
     docked: false, dockCtaStyle: '', dockFavStyle: '',
     merchantCards: [], storyCards: [], storyMeta: '', openChapter: -1, storyDocked: false, storyMiniStyle: '',
@@ -599,6 +599,14 @@ Page({
   onHeroSwipe(e) { this.setData({ heroIdx: (e && e.detail && e.detail.current) || 0 }); },
   noop() {},
   onRouteReal() { this.setData({ routeReal: true }); },
+  onBuyPick(e) { this.setData({ buySel: Number(e.currentTarget.dataset.i) || 0 }); },
+  /* 去结算:自玩通行证进确认订单;发布者的票种绑在场次上,进选场次弹层并预选同名票种 */
+  onBuyGo() {
+    const opt = (this.data.buyOpts || [])[this.data.buySel];
+    if (!opt || opt.kind === 'pass') return this.onSelfPlayGoCheckout();
+    this.setData({ selfPlayConfirmShow: false, buyIn: false, sessionPreferName: opt.name });
+    this.bmClick({ currentTarget: { dataset: {} } });
+  },
 
   /* v13 顶栏:详情顶部照片滚过一半后,顶栏压黑并写主题名 */
   _checkNav(scrollTop) {
@@ -1176,7 +1184,7 @@ Page({
     this.setData({ sessionPicker: { show: true } });
   },
 
-  closeSessionPicker() { this.setData({ 'sessionPicker.show': false }); },
+  closeSessionPicker() { this.setData({ 'sessionPicker.show': false, sessionPreferName: '' }); },
 
   // 选完场次与票种 → 结算。参数形状与活动详情页那条入口一致,后端一处都不用改。
   onSessionPicked(e) {
@@ -1412,7 +1420,7 @@ Page({
     if (that.lockedTip()) return;
     that._selfPlayTopicId = topicId;
     that.setData({
-      selfPlayConfirmShow: true, buyIn: false,
+      selfPlayConfirmShow: true, buyIn: false, buyOpts: motion.buyOptions(info), buySel: 0,
       buyChips: motion.buyChips(info, that.data.storyMeta),
       selfPlayValidText: motion.passWindow({ topicEnd: info.endDate }).line.split(' · ')[0],
       selfPlayConsentChecked: !!that._hostShareConsentReady,
@@ -2199,7 +2207,7 @@ Page({
    */
   processChaptersList(chaptersList) {
     if (!chaptersList || !Array.isArray(chaptersList)) return chaptersList;
-    let seq = 0; // v13 路线:站号全主题连续编号(第一章 1、2,第二章接着 3…)
+    let seq = 0, prevNode = null; // v13 路线:站号全主题连续编号;站间步行线跨章接上(原型每章标题下也有一段)
 
     for (let j = 0; j < chaptersList.length; j++) {
       const chapter = chaptersList[j];
@@ -2230,8 +2238,8 @@ Page({
         if (firstMerchant && firstMerchant.mmsMerchant) {
           firstMerchant.mmsMerchant.name = nodeText(firstMerchant.mmsMerchant.name);
         }
-        ns[n].walkText = n === 0 ? '' : walkText(ns[n - 1], ns[n]);
-        seq += 1; ns[n].seq = seq;
+        ns[n].walkText = prevNode ? walkText(prevNode, ns[n]) : '';
+        seq += 1; ns[n].seq = seq; prevNode = ns[n];
         ns[n].giftText = firstMerchant && firstMerchant.mmsMerchant ? nodeText(firstMerchant.mmsMerchant.derivativeBenefits) : '';
       }
     }

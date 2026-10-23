@@ -149,6 +149,34 @@ function buyChips(info, meta) {
   return out;
 }
 
+/* 购买半屏的票种(v13 原型的「单人 / 双人 / 四人队」那一排):名字一律取发布者填的票种名称,不自拟。
+   - 自玩通行证(selfPlay=1):随时开玩、不选场次,单价 selfPlayPrice;
+   - 发布者配置的票种(omsTicketList):绑在场次上,同名合并,价格取最低并标「起」;人数取 teamSize / maxPeople。
+   没有可买的场次时票种不列(买不了的不摆出来)。 */
+function buyOptions(info) {
+  const d = info || {};
+  const out = [];
+  const price = (v) => (v === undefined || v === null || v === '' || !Number.isFinite(Number(v)) ? null : Number(v));
+  if (Number(d.selfPlay) === 1 && price(d.selfPlayPrice) !== null) out.push({ key: 'pass', kind: 'pass', name: '自玩通行证', price: price(d.selfPlayPrice), people: 1 });
+  if ((d.activityList || []).length) {
+    const byName = {};
+    (d.omsTicketList || []).forEach((t) => {
+      const name = text(t && t.name);
+      if (!name) return;
+      const p = price(t.price);
+      const people = Math.max(1, Number(t.teamSize) || Number(t.maxPeople) || 1);
+      const hit = byName[name];
+      if (hit) { if (p !== null && (hit.price === null || p !== hit.price)) { hit.from = true; if (hit.price === null || p < hit.price) hit.price = p; } return; }
+      byName[name] = { key: 't-' + name, kind: 'ticket', name, price: p, people, from: false };
+      out.push(byName[name]);
+    });
+  }
+  return out.map((o) => Object.assign(o, {
+    icon: o.people >= 3 ? 'team' : o.people === 2 ? 'two' : 'one',
+    priceText: o.price === null ? '' : '¥' + o.price + (o.from ? ' 起' : ''),
+  }));
+}
+
 /* 主要角色:各商家站点的出场 NPC(/api/ai/npc/profile scope=node 只回已过审的),圆头像 + 名字 + 所在站点 */
 function buildChars(list) {
   const out = [];
@@ -212,4 +240,4 @@ function buildTeams(rows, topicId) {
   return { rows: out, need };
 }
 
-module.exports = { buyChips, routeNote, buildChars, chapterLabel, buildCoverImages, buildPublisher, buildHeroCta, buildStoryCards, storyMeta, buildMerchantCards, passWindow, buildTeams };
+module.exports = { buyOptions, buyChips, routeNote, buildChars, chapterLabel, buildCoverImages, buildPublisher, buildHeroCta, buildStoryCards, storyMeta, buildMerchantCards, passWindow, buildTeams };

@@ -518,15 +518,18 @@
     <view class="hticket">
       <image class="hticket__im" src="{{(coverImages && coverImages[0]) || info.imgUrl}}" mode="aspectFill" />
       <view class="hticket__perf"></view>
-      <view class="hticket__in"><text class="hticket__k">城瘾 · 主题通行证</text><text class="hticket__b">{{info.name}}</text><text class="hticket__p">{{money.amount(info.selfPlayPrice)}}</text><text class="hticket__u">单人</text></view>
+      <view class="hticket__in"><text class="hticket__k">城瘾 · 主题通行证</text><text class="hticket__b">{{info.name}}</text><text class="hticket__p">{{buyOpts[buySel].priceText}}</text><text class="hticket__u">{{buyOpts[buySel].name}}</text></view>
       <view class="hticket__holo"></view><view class="hticket__glare"></view>
       <view class="hticket__n hticket__n--t"></view><view class="hticket__n hticket__n--b"></view>
     </view>
-    <view class="bseg"><view class="bseg__b on"><image class="bseg__ic" src="/pages/topic/images/icon_one.svg" /><text class="bseg__t">单人</text><text class="bseg__s">{{money.amount(info.selfPlayPrice)}}</text></view><view class="bseg__u"></view></view>
+    <view class="bseg" aria-role="tablist">
+      <view wx:for="{{buyOpts}}" wx:key="key" class="bseg__b {{index === buySel ? 'on' : ''}}" style="flex-basis: {{100 / (buyOpts.length < 3 ? 3 : buyOpts.length)}}%;" data-i="{{index}}" bindtap="onBuyPick" aria-role="tab" aria-selected="{{index === buySel}}" aria-label="{{item.name}} {{item.priceText}}" hover-class="cy-pressed" hover-stay-time="80"><image class="bseg__ic" src="/pages/topic/images/icon_{{item.icon}}.svg" /><text class="bseg__t">{{item.name}}</text><text class="bseg__s">{{item.priceText}}</text></view>
+      <view class="bseg__u" style="width: {{100 / (buyOpts.length < 3 ? 3 : buyOpts.length)}}%; transform: translateX({{buySel * 100}}%);"></view>
+    </view>
     <view class="bchips"><text class="bchip" wx:for="{{buyChips}}" wx:key="*this">{{item}}</text></view>
     <text class="bsheet__note">期间可随时开玩本{{info.productType == 2 ? '主题' : '路线'}}。请遵守安全须知，注意交通与人身安全。</text>
-    <view class="btotal"><text class="btotal__k">合计</text><text class="btotal__v">{{money.amount(info.selfPlayPrice)}}</text></view>
-    <view class="bsheet__go" bindtap="onSelfPlayGoCheckout" aria-role="button" aria-label="去结算" hover-class="cy-pressed" hover-stay-time="80">去结算</view>
+    <view class="btotal"><text class="btotal__k">合计</text><text class="btotal__v">{{buyOpts[buySel].priceText}}</text></view>
+    <view class="bsheet__go" bindtap="onBuyGo" aria-role="button" aria-label="{{buyOpts[buySel].kind === 'ticket' ? '选场次' : '去结算'}}" hover-class="cy-pressed" hover-stay-time="80">{{buyOpts[buySel].kind === 'ticket' ? '选场次' : '去结算'}}</view>
   </view>
 
   <cy-self-play-checkout show="{{selfPlayCheckoutShow}}" top-inset="{{statusBarHeight + navBarHeight}}"
@@ -556,6 +559,7 @@
      不再把人踢去活动详情页重选一遍 -->
 <cy-session-picker
   show="{{sessionPicker.show}}"
+  prefer-name="{{sessionPreferName}}"
   activities="{{info.activityList}}"
   bind:close="closeSessionPicker"
   bind:confirm="onSessionPicked" />

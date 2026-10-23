@@ -55,3 +55,13 @@ test('自由探索数据条:有效期 / 参与商家 / 路线不限 / 已参加,
   const city = buildTopicStatBar({ productType: 1, totalTime: 7200 })
   assert.equal(city[0].key, 'hour', '城市定向数据条不变')
 })
+
+test('购买半屏票种:名字取发布者填的票种名称,同名合并取最低价标「起」,没有场次不列票种', () => {
+  const tk = (name, price, teamSize) => ({ name, price, teamSize })
+  const info = { selfPlay: 1, selfPlayPrice: 39, activityList: [{ id: 1 }], omsTicketList: [tk('单人', 68, 1), tk('双人', 128, 2), tk('四人队', 208, 4), tk('双人', 118, 2), tk('  ', 1, 1)] }
+  const opts = m.buyOptions(info)
+  assert.deepEqual(opts.map((o) => [o.kind, o.name, o.priceText, o.icon]), [
+    ['pass', '自玩通行证', '¥39', 'one'], ['ticket', '单人', '¥68', 'one'], ['ticket', '双人', '¥118 起', 'two'], ['ticket', '四人队', '¥208', 'team']])
+  assert.ok(opts.every((o) => o.name), '票种名称不能为空')
+  assert.deepEqual(m.buyOptions(Object.assign({}, info, { activityList: [] })).map((o) => o.name), ['自玩通行证'], '没有可买的场次时票种不摆出来')
+})

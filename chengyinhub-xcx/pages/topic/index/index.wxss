@@ -2126,11 +2126,13 @@ button::after {
 @keyframes holo-pan { from { background-position: 20% 30%; } to { background-position: 80% 70%; } }
 .hticket__glare { position: absolute; top: 0; right: 0; bottom: 0; left: 0; z-index: 2; pointer-events: none; mix-blend-mode: overlay; background: radial-gradient(circle at 50% 30%, rgba(255,255,255,.75), rgba(255,255,255,0) 55%); } /* ds-ok */
 .bseg { position: relative; display: flex; margin-top: 35rpx; border-bottom: 1rpx solid rgba(255,255,255,.1); } /* ds-ok */
-.bseg__b { flex: 0 0 33.33%; display: flex; flex-direction: column; align-items: center; gap: 8rpx; padding: 12rpx 0 19rpx; color: #fff; } /* ds-ok */
+.bseg__b { flex: 0 0 33.33%; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 8rpx; padding: 12rpx 0 19rpx; color: #8E8E93; } /* ds-ok */
+.bseg__b.on { color: #fff; } /* ds-ok */
+.bseg__t { max-width: 96%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .bseg__ic { width: 50rpx; height: 50rpx; }
 .bseg__t { font-size: 25rpx; font-weight: 700; }
 .bseg__s { font-size: 21rpx; }
-.bseg__u { position: absolute; left: 0; bottom: -1rpx; width: 33.33%; height: 5rpx; border-radius: 4rpx; background: #fff; } /* ds-ok */
+.bseg__u { position: absolute; left: 0; bottom: -1rpx; width: 33.33%; height: 5rpx; border-radius: 4rpx; background: #fff; transition: transform .4s cubic-bezier(.34,1.32,.64,1); } /* ds-ok */
 .bchips { display: flex; flex-wrap: wrap; gap: 15rpx; margin-top: 27rpx; }
 .bchip { height: 62rpx; padding: 0 23rpx; border-radius: 31rpx; display: flex; align-items: center; font-size: 25rpx; background: #2C2C2E; } /* ds-ok */
 .bsheet__note { display: block; margin-top: 19rpx; font-size: 21rpx; color: #8E8E93; } /* ds-ok */
@@ -2139,3 +2141,10 @@ button::after {
 .btotal__v { font-size: 54rpx; font-weight: 800; font-style: italic; }
 .bsheet__go { height: 96rpx; border-radius: 48rpx; display: flex; align-items: center; justify-content: center; background: #fff; color: #000; font-size: 31rpx; font-weight: 600; } /* ds-ok */
 .det6-link { margin-top: 8rpx; font-size: 23rpx; color: #0A84FF; } /* ds-ok v13 链接蓝 */
+/* v13 路线站点:全局 style/common.wxss 里旧时间轴(竖线 / 灰圈编号 / 左缩进)选择器更具体,这里按同级再压一层 */
+.topic .topic-list .davidxfxi .list { margin-top: 0; overflow: visible; }
+.topic .topic-list .davidxfxi .list::before, .topic .topic-list .davidxfxi .list::after { display: none; }
+.topic .topic-list .davidxfxi .list .li { padding-left: 19rpx; margin-bottom: 0; }
+.topic .topic-list .davidxfxi .list .li .xh { position: static; width: 50rpx; height: 50rpx; border: 0; background: #FF8A3D; color: #000; font-size: 25rpx; font-weight: 800; z-index: auto; } /* ds-ok v13 站号橙 */
+.topic .topic-list .davidxfxi .list .li .xh::before { display: none; }
+.topic .topic-list .davidxfxi .item-walk { margin: 0; }

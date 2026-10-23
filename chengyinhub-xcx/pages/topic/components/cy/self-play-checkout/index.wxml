@@ -23,7 +23,7 @@
 
     <text class="ck__sec">费用明细</text>
     <view class="ck__card ck__rows">
-      <view class="ck__row"><text class="ck__k">票种</text><text class="ck__v">自玩通行证 · 单人</text></view>
+      <view class="ck__row"><text class="ck__k">票种</text><text class="ck__v">自玩通行证</text></view>
       <view class="ck__row"><text class="ck__k">订单金额</text><text class="ck__v">{{priceText}}</text></view>
       <view class="ck__row ck__row--sum"><text class="ck__k ck__k--sum">合计</text><text class="ck__v ck__v--sum">{{priceText}}</text></view>
     </view>

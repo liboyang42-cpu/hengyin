@@ -19,7 +19,7 @@ Component({
     kindText: { type: String, value: '' },
     untilText: { type: String, value: '' },
     daysText: { type: String, value: '' },
-    skuText: { type: String, value: '单人' },
+    skuText: { type: String, value: '自玩通行证' }, // 自玩通行证不分人数,不写「单人」
     durationLine: { type: String, value: '' },
     reducedMotion: { type: Boolean, value: false },
   },
