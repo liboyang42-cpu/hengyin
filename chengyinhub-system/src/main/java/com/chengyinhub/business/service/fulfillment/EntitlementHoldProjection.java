@@ -41,7 +41,7 @@ public final class EntitlementHoldProjection {
             String invalidReason) {
 
         public HoldFact {
-            originalRequestId = originalRequestId == null ? "" : originalRequestId;
+            originalRequestId = FulfillmentEvidence.blankToNull(originalRequestId);
             invalidReason = invalidReason == null ? "" : invalidReason;
         }
     }
@@ -55,7 +55,7 @@ public final class EntitlementHoldProjection {
             boolean executedAward) {
 
         public HoldView {
-            originalRequestId = originalRequestId == null ? "" : originalRequestId;
+            originalRequestId = FulfillmentEvidence.blankToNull(originalRequestId);
             outcome = outcome == null ? Outcome.UNKNOWN : outcome;
         }
     }
@@ -67,10 +67,10 @@ public final class EntitlementHoldProjection {
     public HoldView project(HoldFact fact, Instant serverNow) {
         Objects.requireNonNull(serverNow, "serverNow");
         if (fact == null) {
-            return unknown("");
+            return unknown(null);
         }
         String requestId = fact.originalRequestId();
-        if (requestId.isBlank() || fact.registrationId() == null || fact.registrationId() <= 0L
+        if (requestId == null || fact.registrationId() == null || fact.registrationId() <= 0L
                 || fact.chapterId() == null || fact.chapterId() <= 0L
                 || fact.merchantId() == null || fact.merchantId() <= 0L) {
             return unknown(requestId);

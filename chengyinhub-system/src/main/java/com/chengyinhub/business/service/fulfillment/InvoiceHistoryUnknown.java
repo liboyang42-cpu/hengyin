@@ -28,7 +28,7 @@ public final class InvoiceHistoryUnknown {
             String provider) {
 
         public ApplicationFact {
-            originalRequestId = originalRequestId == null ? "" : originalRequestId;
+            originalRequestId = FulfillmentEvidence.blankToNull(originalRequestId);
             status = status == null ? "" : status;
             invoiceNo = invoiceNo == null ? "" : invoiceNo;
             fileLocator = fileLocator == null ? "" : fileLocator;
@@ -44,7 +44,7 @@ public final class InvoiceHistoryUnknown {
             boolean historyIsNotAFile) {
 
         public View {
-            originalRequestId = originalRequestId == null ? "" : originalRequestId;
+            originalRequestId = FulfillmentEvidence.blankToNull(originalRequestId);
             fileStatus = fileStatus == null ? FileStatus.UNKNOWN : fileStatus;
             applicationStatus = applicationStatus == null ? "" : applicationStatus;
         }
@@ -56,11 +56,11 @@ public final class InvoiceHistoryUnknown {
      */
     public View reread(ApplicationFact fact) {
         if (fact == null) {
-            return unknown("", "");
+            return unknown(null, "");
         }
         String requestId = fact.originalRequestId();
-        if (requestId.isBlank()) {
-            return unknown("", fact.status());
+        if (requestId == null) {
+            return unknown(null, fact.status());
         }
         if (ManualInvoiceIssuer.NAME.equals(fact.provider()) || fact.fileLocator().isBlank()) {
             return new View(requestId, FileStatus.UNKNOWN, false, fact.status(), true);

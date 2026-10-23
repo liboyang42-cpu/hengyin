@@ -47,7 +47,7 @@ public final class FourLedgerBillReread {
             String sourceHash) {
 
         public BillFact {
-            originalRequestId = originalRequestId == null ? "" : originalRequestId;
+            originalRequestId = FulfillmentEvidence.blankToNull(originalRequestId);
             expectedAmount = expectedAmount == null ? BigDecimal.ZERO : expectedAmount;
             actualAmount = actualAmount == null ? BigDecimal.ZERO : actualAmount;
             sourceHash = sourceHash == null ? "" : sourceHash;
@@ -61,7 +61,7 @@ public final class FourLedgerBillReread {
             boolean currentProjectionReplacesOriginal) {
 
         public View {
-            originalRequestId = originalRequestId == null ? "" : originalRequestId;
+            originalRequestId = FulfillmentEvidence.blankToNull(originalRequestId);
             outcomes = outcomes == null
                     ? Collections.unmodifiableMap(emptyUnknown())
                     : Collections.unmodifiableMap(new EnumMap<Dimension, Outcome>(outcomes));

@@ -43,7 +43,7 @@ public final class FulfillmentEvidence {
             String detail) {
 
         public ChainStep {
-            originalRequestId = originalRequestId == null ? "" : originalRequestId;
+            originalRequestId = blankToNull(originalRequestId);
             outcome = outcome == null ? Outcome.UNKNOWN : outcome;
             detail = detail == null ? "" : detail;
         }
@@ -160,9 +160,18 @@ public final class FulfillmentEvidence {
     }
 
     static String requireRequestId(String requestId) {
-        if (requestId == null || requestId.isBlank()) {
+        String id = blankToNull(requestId);
+        if (id == null) {
             throw new IllegalArgumentException("originalRequestId 不能为空");
         }
-        return requestId;
+        return id;
+    }
+
+    /** Missing requestId stays Java null, never {@code ""}. */
+    static String blankToNull(String value) {
+        if (value == null) {
+            return null;
+        }
+        return value.isBlank() ? null : value;
     }
 }

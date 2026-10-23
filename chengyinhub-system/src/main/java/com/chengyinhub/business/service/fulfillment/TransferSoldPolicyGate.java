@@ -40,7 +40,7 @@ public final class TransferSoldPolicyGate {
             boolean smsIdentityVerified) {
 
         public TransferFact {
-            originalRequestId = originalRequestId == null ? "" : originalRequestId;
+            originalRequestId = FulfillmentEvidence.blankToNull(originalRequestId);
             soldPolicySourceHash = soldPolicySourceHash == null ? "" : soldPolicySourceHash;
         }
     }
@@ -53,7 +53,7 @@ public final class TransferSoldPolicyGate {
 
         public Decision {
             outcome = outcome == null ? Outcome.WAITING_SOURCE : outcome;
-            originalRequestId = originalRequestId == null ? "" : originalRequestId;
+            originalRequestId = FulfillmentEvidence.blankToNull(originalRequestId);
             reason = reason == null ? "" : reason;
         }
 
@@ -68,11 +68,11 @@ public final class TransferSoldPolicyGate {
      */
     public Decision evaluate(TransferFact fact) {
         if (fact == null) {
-            return waiting("", false, "transfer fact missing");
+            return waiting(null, false, "transfer fact missing");
         }
         String requestId = fact.originalRequestId();
-        if (requestId.isBlank()) {
-            return deny("", false, "originalRequestId missing");
+        if (requestId == null) {
+            return waiting(null, false, "originalRequestId missing");
         }
         if (fact.smsIdentityVerified()) {
             // Explicitly consume the bit so callers cannot skip it; it still

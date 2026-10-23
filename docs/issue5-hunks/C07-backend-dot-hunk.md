@@ -26,6 +26,7 @@ Head：见本文件 SHA256 提交。隔离测试，不真实支付 / 退款 / �
 - `InvoiceHistoryUnknownTest.java`
 - `FourLedgerBillRereadTest.java`
 - `C07FirstJourneyIsolationTest.java`
+- `C07AccountSwitchRestartIsolationTest.java`（商家切换不改写原 requestId；进程内重启 requery 保持 UNKNOWN；缺 requestId 保持 Java null）
 
 未改：`TopicRouteRuntimeServiceImpl`、`CmsTopicServiceImpl`、13 Authority、17 phoneidentity、`BundleBookingService` / Mapper、36/37/38 既有原生生产候选、商业 Core、资金原 writer、公共 Controller / Mapper / migration、小程序、旧 `chengyin` 仓。无生产 DDL。无共享文件 hunk（dot 接线见 §7）。
 

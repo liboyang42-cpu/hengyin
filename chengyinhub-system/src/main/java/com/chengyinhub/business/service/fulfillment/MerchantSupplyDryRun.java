@@ -45,7 +45,7 @@ public final class MerchantSupplyDryRun {
             String originalRequestId) {
 
         public SkuSupplyFact {
-            originalRequestId = originalRequestId == null ? "" : originalRequestId;
+            originalRequestId = FulfillmentEvidence.blankToNull(originalRequestId);
         }
     }
 
@@ -59,7 +59,7 @@ public final class MerchantSupplyDryRun {
 
         public Decision {
             outcome = outcome == null ? Outcome.UNKNOWN : outcome;
-            originalRequestId = originalRequestId == null ? "" : originalRequestId;
+            originalRequestId = FulfillmentEvidence.blankToNull(originalRequestId);
             reason = reason == null ? "" : reason;
         }
 
@@ -75,10 +75,10 @@ public final class MerchantSupplyDryRun {
     public Decision evaluate(SkuSupplyFact fact, Instant serverNow, int requestedQty) {
         Objects.requireNonNull(serverNow, "serverNow");
         if (fact == null) {
-            return unknown("", "supply fact missing");
+            return unknown(null, "supply fact missing");
         }
         String requestId = fact.originalRequestId();
-        if (requestId.isBlank() || fact.skuId() == null || fact.skuId() <= 0L
+        if (requestId == null || fact.skuId() == null || fact.skuId() <= 0L
                 || fact.merchantId() == null || fact.merchantId() <= 0L) {
             return unknown(requestId, "sku or originalRequestId missing");
         }
