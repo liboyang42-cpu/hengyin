@@ -4,8 +4,9 @@
 - 授权范围(负责人 2026-10-23 批准):**只做设计和对账报告**。不打款、不动钱,生产代码的写路径一行不改。
 - 本批改动:
   - 本文档。
-  - 只读对账 SQL:`FXE-reconciliation.sql`。
+  - 只读对账 SQL:`FXE-reconciliation.sql.txt`。
   - 两份 DDL 草案,放在 `drafts/` 下。它们**不在** `sql/` 或 `chengyinhub-admin/sql/` 里,也没有登记依赖图。
+  - 三份 SQL 文本都用 `.sql.txt` 后缀:`ci/migration_ledger.py` 的 SQL 清单闸要求仓内每个 `.sql` 都有分类,而这些文件按设计**不得**被任何执行器识别为可执行 SQL。
   - 一套只钉现状的真库 IT:`FundsChainO07PinMySqlIT`,已登记进 `ci/backend-test.sh` 的 MYBATIS_ITS。
 - **产品代码 0 行改动。**
 - 前置文档:
@@ -76,7 +77,7 @@
 
 ## 2. 断点与不一致(每条附具体场景)
 
-「钉桩」列指 `FundsChainO07PinMySqlIT` 中把该现状在真 MySQL 上复现的用例;「对账」列指 `FXE-reconciliation.sql` 中能检出它的查询。
+「钉桩」列指 `FundsChainO07PinMySqlIT` 中把该现状在真 MySQL 上复现的用例;「对账」列指 `FXE-reconciliation.sql.txt` 中能检出它的查询。
 
 | # | 级别 | 断点 | 具体场景 | 钉桩 / 对账 |
 |---|---|---|---|---|
@@ -106,7 +107,7 @@
 
 ## 3. 只读对账查询与只读报表端点设计
 
-### 3.1 查询清单(`FXE-reconciliation.sql`,全部是单条 SELECT/WITH)
+### 3.1 查询清单(`FXE-reconciliation.sql.txt`,全部是单条 SELECT/WITH)
 
 | ID | 检出 | 对应断点 |
 |---|---|---|
@@ -167,7 +168,7 @@
 
 ### 4.1 Phase A —— O-07 计提链修复(不动钱)
 
-**DDL 草案**:`drafts/draft_migration_fxe_o07_payable_links.sql`。本地 MySQL 8.0.46 上已实测:
+**DDL 草案**:`drafts/draft_migration_fxe_o07_payable_links.sql.txt`。本地 MySQL 8.0.46 上已实测:
 
 - 连跑两次,末尾断言都返回 1;
 - 列形态被改动后重跑,fail closed(`JSON_EXTRACT` 报错);
@@ -210,7 +211,7 @@
 
 - **单位维度**(B11/K7)。**不改** `settlement_claim` 的 7 列唯一键,改用 `fulfillment_type='BUNDLE_UNIT'`、`fulfillment_id=explore_bundle_unit.id`。
   - 单位 id 全局唯一,所以同一章的 N 个单位天然是 N 条 claim,不会放宽唯一闸。这回应了 RV3 B-527-1 对「DROP+ADD 唯一键」的担忧。
-  - 草案 `drafts/draft_migration_fxe_f3p2_payout.sql` 只给 claim 加一个枚举 CHECK,把三种值钉死;末尾断言唯一键仍是 7 列。
+  - 草案 `drafts/draft_migration_fxe_f3p2_payout.sql.txt` 只给 claim 加一个枚举 CHECK,把三种值钉死;末尾断言唯一键仍是 7 列。
   - 只要每章一次的约束还在(K1 = A),核销仍以 REDEMPTION 计提,BUNDLE_UNIT 只用于不经核销的单位事件。
 - **罚没 / 爽约**(D-4):
   - 若决定商家有补偿:单位变为 FORFEITED 的同一事务内,`claim(BUNDLE_UNIT, unitId, route=CHAPTER_OFFER)` 加一行 ACCRUAL(`source_event_type=BUNDLE_UNIT`、`source_event_id=unitId`、`idempotency_key=unit-forfeit:{unitId}`),金额 = 预约门店 offer 的人头费 × 补偿比例。

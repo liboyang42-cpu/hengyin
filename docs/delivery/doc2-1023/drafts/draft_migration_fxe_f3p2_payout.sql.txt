@@ -1,5 +1,5 @@
 -- 【草案 · 未批准 · 不得执行】DOC2 FXE Phase B/C(F3 Phase 2 分账打款)DDL 草案。
--- 前置:draft_migration_fxe_o07_payable_links.sql 已按正式迁移落地(本草案引用其 merchant_payable.source_event_*)。
+-- 前置:draft_migration_fxe_o07_payable_links.sql.txt 已按正式迁移落地(本草案引用其 merchant_payable.source_event_*)。
 -- 位置刻意在 docs/ 下;批准前不进迁移目录。落地方式同 Phase A 草案(改名、登记依赖图、chengyin-db-migrate 预检 + 用户确认)。
 --
 -- 设计要点(详见 FXE.md §4):

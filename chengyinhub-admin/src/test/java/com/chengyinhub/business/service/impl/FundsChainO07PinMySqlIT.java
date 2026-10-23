@@ -55,7 +55,7 @@ import static org.mockito.Mockito.when;
  *
  * <p>用真 DDL(base_schema + 两条既有迁移)、真 MerchantPayableMapper / MerchantPayableBatchMapper /
  * SettlementClaimMapper 与真 MerchantPayableServiceImpl,把 FXE.md §2 列出的资金链断点在 MySQL 上复现,
- * 并逐条执行 {@code docs/delivery/doc2-1023/FXE-reconciliation.sql}:每条必须是只读 SELECT、必须在真表上跑通、
+ * 并逐条执行 {@code docs/delivery/doc2-1023/FXE-reconciliation.sql.txt}:每条必须是只读 SELECT、必须在真表上跑通、
  * 关键条目必须命中这里造出的现状不一致。
  *
  * <p>⚠️ 这些断言描述的是「今天的行为」。Phase 2 修复落地时,对应用例应当**按设计翻转**(而不是删除),
@@ -64,7 +64,7 @@ import static org.mockito.Mockito.when;
 @EnabledIfEnvironmentVariable(named = "CHENGYIN_FUNDS_MYSQL_IT", matches = "1")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class FundsChainO07PinMySqlIT {
-    private static final String RECON = "../docs/delivery/doc2-1023/FXE-reconciliation.sql";
+    private static final String RECON = "../docs/delivery/doc2-1023/FXE-reconciliation.sql.txt";
     private static final String CLUB_DIRECT = "sql/migration_club_direct_merchant_receivable_20261004.sql";
     private static final String BUNDLE = "sql/migration_doc2_f3_bundle_ledger_20261022.sql";
     private static final String[] BASE_TABLES = {
@@ -145,7 +145,7 @@ class FundsChainO07PinMySqlIT {
     /** 对账文件:每条都只读,且在真表上跑得通(列名写错、表名写错会在这里红)。 */
     @Test
     void everyReconciliationQueryIsReadOnlyAndRunsOnRealSchema() {
-        assertEquals(18, queries.size(), "FXE-reconciliation.sql 条目数与 FXE.md §3 不一致");
+        assertEquals(18, queries.size(), "FXE-reconciliation.sql.txt 条目数与 FXE.md §3 不一致");
         Pattern forbidden = Pattern.compile(
                 "\\b(INSERT|UPDATE|DELETE|REPLACE|MERGE|ALTER|DROP|CREATE|TRUNCATE|GRANT|LOCK|CALL|SET)\\b|FOR\\s+UPDATE"
                         + "|FOR\\s+SHARE|INTO\\s+OUTFILE",
