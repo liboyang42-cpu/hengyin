@@ -4,7 +4,7 @@ Issue：https://github.com/liboyang42-cpu/chengyin-remote-ops/issues/5 领取组
 仓库：`github.com/liboyang42-cpu/hengyin` 仅写本仓（不写旧 `chengyin`、不改小程序）  
 Base：`origin/master` `2ec68899099a1e250df0949a8383bf85b5d3ffe0`  
 分支：`cursor/c07-merchant-fulfillment-d1ab`  
-Head：本文件随后一次提交会前进。隔离测试，不真实支付 / 退款 / 核销 / 发奖。
+Head：见本文件 SHA256 提交。隔离测试，不真实支付 / 退款 / 核销 / 发奖。
 
 ## 1. 白名单（实际写入）
 
@@ -61,7 +61,30 @@ mvn -pl chengyinhub-admin -am test \
   -Dsurefire.failIfNoSpecifiedTests=false
 ```
 
-环境：隔离内存夹具 · 无 MySQL / HTTP / 生产库。真实输出见随后 docs 提交。
+环境：OpenJDK 21.0.12.1 · Maven 3.8.7 · 隔离内存夹具 · 无 MySQL / HTTP / 生产库。  
+真实结果（2026-10-23T20:10:38Z，`BUILD SUCCESS`）：
+
+```
+Tests run: 5, Failures: 0, Errors: 0, Skipped: 0 -- MerchantSupplyDryRunTest
+Tests run: 3, Failures: 0, Errors: 0, Skipped: 0 -- FourLedgerBillRereadTest
+Tests run: 3, Failures: 0, Errors: 0, Skipped: 0 -- EntitlementHoldProjectionTest
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0 -- C07FirstJourneyIsolationTest
+Tests run: 2, Failures: 0, Errors: 0, Skipped: 0 -- FulfillmentEvidenceTest
+Tests run: 2, Failures: 0, Errors: 0, Skipped: 0 -- InvoiceHistoryUnknownTest
+Tests run: 3, Failures: 0, Errors: 0, Skipped: 0 -- TransferSoldPolicyGateTest
+Tests run: 19, Failures: 0, Errors: 0, Skipped: 0
+chengyinhub-admin .................................. SUCCESS
+BUILD SUCCESS
+```
+
+SHA256（生产 6 类）：
+
+- `MerchantSupplyDryRun.java` `f8dc71a96507bce5bdc532c5d769f9be178557a016518dd30f56c8356e41aa27`
+- `FulfillmentEvidence.java` `475c06750338d38ac6312d50264d65e7d4306a03192f72546ca1ed5183cab793`
+- `EntitlementHoldProjection.java` `720204f8a3d354b487ba0e1a3f6473a0a4b8fc77996ca2d74350b969e7221ab0`
+- `TransferSoldPolicyGate.java` `f794145a34c3a63f07bee744606f4ec9f093e4d9470a90d84eaaa82f59f1e2cc`
+- `InvoiceHistoryUnknown.java` `03cd23c8c72c8dd3b0c1f63b37d287e9251a250bf6716701fb428052e1580738`
+- `FourLedgerBillReread.java` `be22e2d2a0e8ea287355d83099263bcc080904082839d82a8441571794885ecf`
 
 ## 4. WAITING_SOURCE / 未宣称完成
 
@@ -74,7 +97,7 @@ mvn -pl chengyinhub-admin -am test \
 
 | 门禁 | 状态 | 说明 |
 |---|---|---|
-| 静态检查 / 本组单测 | 见随后测试输出 | 仅 `service.fulfillment` 隔离测试 |
+| 静态检查 / 本组单测 | 19 tests, BUILD SUCCESS | 仅 `service.fulfillment` 隔离测试 |
 | 全模块回归 / 真库 MySQL / HTTP | NOT_RUN | 本组无授权跑生产式环境 |
 | CI（dot 21/22 专线） | NOT_RUN | 不重复触发 |
 | 真实支付 / 退款 / 核销 / 发奖 | NOT_RUN | 硬边界，未做 |
