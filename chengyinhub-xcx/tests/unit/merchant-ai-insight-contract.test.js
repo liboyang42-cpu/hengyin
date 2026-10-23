@@ -45,9 +45,11 @@ test('页面调用 /api/ai/merchant/insight 且不携带任何商家 id 参数',
     '接口按登录态取商家身份,前端传 id = 给越权留口子');
 });
 
-test('AI 降级不连坐:ai 为空时数据区照常、降级卡有说明文案', () => {
-  assert.match(PAGE_WXML, /wx:else class="ai-card ai-card--down"/);
-  assert.match(PAGE_WXML, /数据不受影响/);
+// 2026-10-23 业主:「没有就不显示」—— ai 为空时经营解读整段(含标题)不画,不再出降级卡;数据区照常
+test('AI 降级不连坐:ai 为空时数据区照常、经营解读整段不显示', () => {
+  assert.doesNotMatch(PAGE_WXML, /class="ai-card ai-card--down"/);
+  assert.doesNotMatch(PAGE_WXML, /基础数据可用/);
+  assert.match(PAGE_WXML, /<view class="sec-head" wx:if="\{\{ai\}\}"><text class="sec-title">经营解读<\/text><\/view>/);
 });
 
 test('数字位一律是数:null 指标写 0,不放横杠(2026-09-19 用户裁决,与营销页同口径)', () => {

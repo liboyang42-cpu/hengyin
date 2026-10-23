@@ -928,9 +928,9 @@
   "_why": "店铺参谋正常态必须同时呈现基础经营事实与 AI 解读。"
  },
  "C12c": {
-  "selector": ".value-card, .ai-card--down",
-  "min": 2,
-  "_why": "AI 降级态仍必须保留基础经营事实，并显示可恢复的降级区。"
+  "selector": ".value-card",
+  "min": 1,
+  "_why": "AI 降级态仍必须保留基础经营事实；2026-10-23 业主：没有解读就整段不显示，降级卡已删。"
  },
  "C14": {
   "selector": ".rel-item",

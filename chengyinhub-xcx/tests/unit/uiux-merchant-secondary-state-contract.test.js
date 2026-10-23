@@ -88,9 +88,9 @@ function assertSecondaryStateMarkup(aiWxml, customerWxml, ledgerWxml) {
   assert.match(aiWxml, /error\s*&&\s*!facts/, '店铺参谋只有无旧 facts 时才用整页错误')
   assert.doesNotMatch(aiWxml, /<cy-inline-error\b[^>]*wx:if="\{\{error && facts\}\}"/,
     '店铺参谋刷新失败要保留事实层并局部提示')
-  assert.match(aiWxml, /基础数据可用/, 'AI 降级必须明确基础数据仍可用')
+  // 2026-10-23 业主:明确为零时照常显示 0,不出「还没有到店数据」引导;AI 没有就整段不显示
+  assert.doesNotMatch(aiWxml, /基础数据可用|还没有到店数据|去合作中心看看/, '零数据/AI 缺席不再出引导或降级卡')
   assert.match(aiWxml, /factState\s*===\s*'unknown'/, '店铺参谋必须区分事实未知与明确为零')
-  assert.match(aiWxml, /factState\s*===\s*'empty'/, '店铺参谋只有明确零值才进入业务空态')
 
   assert.match(customerWxml, /<cy-error\b[^>]*wx:elif="\{\{error && !rows\.length\}\}"/,
     '客户页只有首载失败才显示整页错误')
