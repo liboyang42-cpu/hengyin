@@ -41,4 +41,12 @@ public interface PlayerNodeProgressMapper
     /** 活动/主题排行榜:完成数(status=1)降序,同数先完成者靠前;score=完成节点数。 */
     List<com.chengyinhub.business.domain.vo.LeaderboardItemVO> selectActivityLeaderboard(
             @Param("activityId") Long activityId, @Param("topicId") Long topicId, @Param("limit") int limit);
+
+    /** D-13 分支主题排行榜:到达结局优先,再按结局用时;activityId=0 为自玩榜。 */
+    List<com.chengyinhub.business.domain.vo.LeaderboardItemVO> selectRouteLeaderboard(
+            @Param("activityId") Long activityId, @Param("topicId") Long topicId, @Param("limit") int limit);
+
+    /** 分支主题榜外的「我」:本人最新一局;没开过局返回 null。 */
+    com.chengyinhub.business.domain.vo.LeaderboardItemVO selectRouteLeaderboardRow(
+            @Param("activityId") Long activityId, @Param("topicId") Long topicId, @Param("memberId") Long memberId);
 }

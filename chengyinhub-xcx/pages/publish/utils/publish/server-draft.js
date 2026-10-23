@@ -9,9 +9,11 @@
 //  save(payload, cb)      cb({ ok, data?, msg?, networkError? }),data 为 topicId 或 { topicId, recovered?, ... }
 //  readback(topicId, cb)  cb({ ok, data?, msg?, networkError? }),data 为 edit-detail 的回包
 //  publish(topicId, cb)   cb({ ok, data?, msg?, networkError? })
+//  publishCheck(topicId, cb)(可选) 发布前试检查,cb({ ok, msg? });ok=false 时不发布,按「已存未发布」报 onFail
 //
 // handlers:onSaved(topicId) 服务端已接受(拿到主题号,后续保存走 update,避免重复建题);
 //           onSuccess({ topicId, detail, published? }) / onFail({ stage, topicId?, detail?, msg?, networkError?, unknown? })。
+//           hasChanges()(可选,仅保存草稿):回读确认后若返回 true,改报 onFail({ stage: 'readback', localChanges: true, detail })。
 //
 // 结果不确定(网络中断/回包丢失)与确定失败要分开:
 //  - 首次建草稿丢回包:页面用同一个意图键重试,服务端认出已建的那份并回 recovered;这里随即用最新内容再存一次;
@@ -331,23 +333,40 @@ function createServerDraftSaver(deps) {
           return;
         }
         if (!publish) {
+          // 保存在途时本机又改过:云端存的是上一版,不能拿回读版本覆盖编辑器,也不能报「已保存」
+          if (typeof handlers.hasChanges === 'function' && handlers.hasChanges()) {
+            finish(handlers.onFail, { stage: 'readback', topicId, detail: back.data, localChanges: true, unknown: false });
+            return;
+          }
           finish(handlers.onSuccess, { topicId, detail: back.data });
           return;
         }
-        // 写请求发出前落盘；杀进程或丢回包后仍先核对同一主题。
-        if (deps.beforePublish && deps.beforePublish(topicId) === false) {
-          finish(handlers.onFail, { stage: 'persist', topicId, msg: '本地草稿保存失败，尚未发起发布，请检查存储空间' });
-          return;
-        }
-        request('publish', topicId, (pub) => {
-          if (!current()) return;
-          if (pub && pub.ok && confirmedPublication(pub.data, topicId)) {
-            published = true;
-            finish(handlers.onSuccess, { topicId, detail: back.data, published: pub.data || {} });
+        const publishNow = () => {
+          // 写请求发出前落盘；杀进程或丢回包后仍先核对同一主题。
+          if (deps.beforePublish && deps.beforePublish(topicId) === false) {
+            finish(handlers.onFail, { stage: 'persist', topicId, msg: '本地草稿保存失败，尚未发起发布，请检查存储空间' });
             return;
           }
-          if (!pub || pub.ok || pub.networkError || /不是草稿/.test(String(pub.msg || ''))) { reconcilePublish(topicId, back.data, pub); return; }
-          finish(handlers.onFail, Object.assign({ stage: 'publish', topicId, detail: back.data }, pub, { unknown: false }));
+          request('publish', topicId, (pub) => {
+            if (!current()) return;
+            if (pub && pub.ok && confirmedPublication(pub.data, topicId)) {
+              published = true;
+              finish(handlers.onSuccess, { topicId, detail: back.data, published: pub.data || {} });
+              return;
+            }
+            if (!pub || pub.ok || pub.networkError || /不是草稿/.test(String(pub.msg || ''))) { reconcilePublish(topicId, back.data, pub); return; }
+            finish(handlers.onFail, Object.assign({ stage: 'publish', topicId, detail: back.data }, pub, { unknown: false }));
+          });
+        };
+        // BL-185:发布前试检查(已存的这一版)。error 不发,只有 warn 由页面提示后决定;未注入就直接发布
+        if (typeof deps.publishCheck !== 'function') { publishNow(); return; }
+        deps.publishCheck(topicId, (check) => {
+          if (!current()) return;
+          if (check && check.ok === false) {
+            finish(handlers.onFail, { stage: 'publish', topicId, detail: back.data, msg: check.msg, unknown: false });
+            return;
+          }
+          publishNow();
         });
       });
     };

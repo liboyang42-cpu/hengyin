@@ -100,7 +100,7 @@ test('负控:摘掉 in-flight 锁,连点必然发出两个 toggle 请求 ⇒ 用
   const source = read();
   const broken = source
     // E05-07 起锁是按请求身份的对象(stale complete 不能释放新锁),并加了同 id 确认框去重;负控把三处闸一起摘掉。
-    .replace("    if (that._unlikeRequests[requestKey]) return;\n    const prompts", '    const prompts')
+    .replace("    if (pendingUnlike) {\n", '    if (false) {\n')
     .replace("    if (prompts[requestKey]) return;\n", '')
     .replace("          if (that._unlikeRequests[requestKey]) return;\n          const request = {};\n", '          const request = {};\n');
   assert.notEqual(broken, source, '负控锚点失效:锁未命中');

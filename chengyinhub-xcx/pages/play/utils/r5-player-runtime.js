@@ -16,6 +16,7 @@ function outcomeReply(view) {
   const settled = receipt.settled === true && receipt.status === 'SETTLED';
   return { id: String(receipt.attemptId || receipt.receiptId), settled,
     outcome: settled ? receipt.outcome : '', reply: settled ? receipt.reply || '' : '',
+    images: settled && Array.isArray(receipt.images) ? receipt.images.filter(url => typeof url === 'string' && url).slice(0, 3) : [],
     statusText: settled ? receipt.outcome === 'PASS' ? '通过' : '未通过'
       : receipt.status === 'BLOCKED_COST' ? '费用不足，待结算' : '待结算' };
 }

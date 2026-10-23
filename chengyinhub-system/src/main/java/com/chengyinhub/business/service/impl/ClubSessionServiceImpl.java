@@ -35,6 +35,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.time.format.ResolverStyle;
 import java.util.Calendar;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -245,7 +246,7 @@ public class ClubSessionServiceImpl implements IClubSessionService {
         }
         LocalTime time;
         try {
-            time = LocalTime.parse(raw, DateTimeFormatter.ofPattern("HH:mm"));
+            time = LocalTime.parse(raw, DateTimeFormatter.ofPattern("HH:mm").withResolverStyle(ResolverStyle.STRICT));
         } catch (DateTimeException malformed) {
             throw new IllegalArgumentException("集合时刻格式应为 HH:mm,实际:" + raw);
         }

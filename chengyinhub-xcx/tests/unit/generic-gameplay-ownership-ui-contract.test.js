@@ -54,9 +54,9 @@ test('R3 原有效果三处支持数值选择/INC FLOOR/内联新建/逐行错�
   }
 });
 
-test('R5 效果作用于在玩法卡内设置「结果之后」里，终局表决不在编辑页选结局', () => {
+test('R5 效果作用于在玩法设置「结果反馈」里，终局表决不在编辑页选结局', () => {
   const sheet = template.slice(template.indexOf('id="game-cfg"'), template.indexOf('wx:if="{{ gameSheetOpen }}"'));
-  assert.ok(sheet.indexOf('结果之后') >= 0 && sheet.indexOf('效果作用于') > sheet.indexOf('结果之后'));
+  assert.ok(sheet.indexOf('结果反馈') >= 0 && sheet.indexOf('效果作用于') > sheet.indexOf('结果反馈'));
   assert.equal((template.match(/bind:change="pickEffectScope"/g) || []).length, 1);
   assert.match(sheet, /range="\{\{effectScopeOptions\}\}"/);
   assert.doesNotMatch(template, /bind:change="changeTargetScope"|range="\{\{effectTargets\}\}"/);

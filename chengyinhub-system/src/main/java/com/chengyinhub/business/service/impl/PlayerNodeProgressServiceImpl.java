@@ -75,4 +75,16 @@ public class PlayerNodeProgressServiceImpl implements IPlayerNodeProgressService
     {
         return playerNodeProgressMapper.selectActivityLeaderboard(activityId, topicId, limit);
     }
+
+    @Override
+    public List<LeaderboardItemVO> selectRouteLeaderboard(Long activityId, Long topicId, int limit)
+    {
+        return playerNodeProgressMapper.selectRouteLeaderboard(activityId, topicId, limit);
+    }
+
+    @Override
+    public LeaderboardItemVO selectRouteLeaderboardRow(Long activityId, Long topicId, Long memberId)
+    {
+        return playerNodeProgressMapper.selectRouteLeaderboardRow(activityId, topicId, memberId);
+    }
 }

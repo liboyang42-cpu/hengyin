@@ -28,7 +28,8 @@ const ROOT = path.resolve(__dirname, '../..');
 const PAGE = path.resolve(__dirname, '../../pages/club/topic-detail/index.js');
 const WXML = path.resolve(__dirname, '../../pages/club/topic-detail/index.wxml');
 const PAGE_SRC = fs.readFileSync(PAGE, 'utf8');
-const SOLD_LOCK = /if \(touchesTimeOrPlace && cmsActivityService\.countOpenSaleRegistrations\(actId\) > 0\) \{\s*\n\s*return error\("该场次已售出，集合时间与地点不能修改；当日备注仍可改"\);/;
+// 2026-10-22 W3(#334 F7):已售锁从「先数后写」改为一条条件 UPDATE(零行 = 已售锁定),原文案不变。
+const SOLD_LOCK = /int rows = cmsActivityService\.updateLeadOpsUnlessSold\(upd, touchesTimeOrPlace\);\s*\n\s*if \(rows == 0 && touchesTimeOrPlace\) \{\s*\n\s*return error\("该场次已售出，集合时间与地点不能修改；当日备注仍可改"\)/;
 const JAVA = path.resolve(ROOT, '../chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubLeadController.java');
 
 // 集合时间这一格只有在「带 activityId 的导演台态」才成立;测试统一从 topicId/clubId +

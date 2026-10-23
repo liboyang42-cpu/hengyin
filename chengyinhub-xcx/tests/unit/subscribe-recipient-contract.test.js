@@ -86,6 +86,8 @@ function walkJs(directory, prefix = '') {
   const files = [];
   fs.readdirSync(directory, { withFileTypes: true }).forEach((entry) => {
     if (entry.name === 'tests' || entry.name === 'node_modules' || entry.name.startsWith('.')) return;
+    // roam-comment-scan.test.js 在 subpackageRoam 下临时建再删的夹具目录;同分片并发时列出后即消失(ENOENT)。
+    if (entry.name.startsWith('scan-comment-test-')) return;
     const relative = prefix ? path.join(prefix, entry.name) : entry.name;
     const absolute = path.join(directory, entry.name);
     if (entry.isDirectory()) files.push(...walkJs(absolute, relative));

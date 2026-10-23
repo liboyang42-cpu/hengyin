@@ -72,7 +72,7 @@ public interface IWxContentSecurityService
     int BIZ_TYPE_ACTIVITY = 2;
     /** 业务类型：俱乐部动态 */
     int BIZ_TYPE_CLUB_POST = 3;
-    /** 业务类型：用户资料(头像/案例图) */
+    /** 业务类型：用户资料(头像/作品图/联系二维码) */
     int BIZ_TYPE_MEMBER_PROFILE = 4;
     /** 业务类型：俱乐部资料(logo/封面/案例图) */
     int BIZ_TYPE_CLUB_PROFILE = 5;
@@ -113,6 +113,18 @@ public interface IWxContentSecurityService
     int BIZ_TYPE_COMMUNITY_POST = 17;
 
     /**
+     * 门店分身 NPC 头像(npc_profile scope_type=2)。bizId = npc_profile.id。
+     *
+     * <p>此前门店头像借 {@link #BIZ_TYPE_MERCHANT_PROFILE}(bizId=merchantId)送检,回调核对的是商家
+     * logo/封面/相册,头像哈希永远对不上 ⇒ 违规头像被当「旧媒体」忽略。命中只把这一行打回驳回态
+     * (audit_status=2),玩家读闸 audit_status=1 立即失效。
+     *
+     * <p>⚠️ 取 18 而不是 17:旧携带分支(#334/#336)把门店分身记作 17,与上面的社区帖文撞号。
+     * 已有类型号一律不重排;新增类型取下一个未用号。
+     */
+    int BIZ_TYPE_MERCHANT_NPC = 18;
+
+    /**
      * 批量送检某条内容的图片（异步）。会拆分 imgArr（逗号/分号分隔），逐张调用 checkMediaAsync，
      * 并把 trace_id 与业务目标登记进 MySQL inbox；Redis 映射仅保留作迁移兼容与辅助清理。
      * best-effort：未启用 / 无图 / 送检失败均静默跳过，不阻断主流程。
@@ -132,6 +144,16 @@ public interface IWxContentSecurityService
      * @return trace_id；未启用 / 送检失败 / inbox 登记失败 / 异常均返回 null，由调用方按发布语义决定是否阻断
      */
     String submitMediaCheckOne(int bizType, Long bizId, String imgUrl, String openid);
+
+    /**
+     * 同 {@link #submitMediaCheckOne(int, Long, String, String)},但送检地址与 inbox 媒体身份分开:
+     * 私有桶媒体送的是短时预签名 URL(每次签名都不同),inbox 必须按稳定的对象 key 登记,
+     * 回调时才能核对「仍是当初送检的那张」。
+     *
+     * @param fetchUrl 微信拉取用的地址
+     * @param identity 登记进 inbox 的稳定媒体身份(如 OSS 对象 key)
+     */
+    String submitMediaCheckOne(int bizType, Long bizId, String fetchUrl, String identity, String openid);
 
     /**
      * 处理微信「消息推送」回调的图片检测结果：按 trace_id 找回内容，命中违规则自动下架。

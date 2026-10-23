@@ -10,6 +10,14 @@ page { background: var(--cy-bg-page); }
   color: var(--cy-text-secondary);
   font-size: var(--cy-font-label);
 }
+/* W10b #25 头像审核回执:状态说明,不是按钮 */
+.profile-avatar-review {
+  display: block;
+  margin-top: 16rpx;
+  text-align: center;
+  color: var(--cy-text-secondary);
+  font-size: var(--cy-font-label);
+}
 .shzlskip image{ width: 48rpx; height: 48rpx; vertical-align: top;}
 /* 8pt 网格对齐(WT1 已处理过被导航盖住的旧标题,这里只补剩下的游离间距):
    页边距统一 --cy-page-x,30/40/50rpx 落回 32/48 档 */

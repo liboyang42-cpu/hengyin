@@ -77,6 +77,7 @@ Page({
     // 评价:先选星级(cy-option-sheet)再写评语(可输入 modal)
     reviewSheetShow: false,
     myReviewStars: '',
+    reviewVerifying: false,
     reviewSheetItems: ['★★★★★ 非常好', '★★★★ 好', '★★★ 一般', '★★ 较差', '★ 差'],
   },
 
@@ -146,7 +147,7 @@ Page({
     this.setData({ state: 'loading', invite: null, errorText: '', submitting: false,
       draft: sameIdentity ? this.data.draft : '', draftError: '',
       showPerkPick: false, perkSaving: false, perkState: 'idle', perkErrorText: '',
-      reviewSheetShow: false, myReviewStars: '', actionReceipt: '', actionError: '' });
+      reviewSheetShow: false, myReviewStars: '', reviewVerifying: false, actionReceipt: '', actionError: '' });
     const that = this;
     const ctx = this._captureContext();
     const done = () => { if (fromPull && typeof wx.stopPullDownRefresh === 'function') wx.stopPullDownRefresh(); };
@@ -216,6 +217,7 @@ Page({
       showPerkPick: false, perkTemplates: [], perkSaving: false, perkState: 'idle', perkErrorText: '',
       reviewSheetShow: false,
       myReviewStars: '',
+      reviewVerifying: false,
       partnerCredit: null,
     });
     if (status === 1 && !inv.legacyReadonly) this.loadMyReview(inv);
@@ -243,9 +245,11 @@ Page({
 
   // 被评对象与 reviewCoop 同一口径;回读「我对这次合作打过的分」。读不到就照常给「评价」入口,
   // 真重复提交由后端「已评价过该合作」兜底。
-  loadMyReview(inv) {
+  // done(found):评价结果不明时用来回读核对;found=true 读到已评分,false 读到但没有,null 回读失败。
+  loadMyReview(inv, done) {
+    const finish = typeof done === 'function' ? done : function () {};
     const toId = this.data.box === 'received' ? inv.fromId : inv.toId;
-    if (!toId || !inv.topicId) return;
+    if (!toId || !inv.topicId) { finish(null); return; }
     const me = String(app.getUserID() || '');
     const that = this;
     const ctx = this._captureContext();
@@ -255,7 +259,8 @@ Page({
       data: JSON.stringify({ toId: toId }), header: jsonHeader(),
       success(res) {
         if (!that._isCurrent(ctx)) return;
-        const rows = res && String(res.code) === '200' && res.data && Array.isArray(res.data.reviews) ? res.data.reviews : [];
+        const readable = !!(res && String(res.code) === '200' && res.data && Array.isArray(res.data.reviews));
+        const rows = readable ? res.data.reviews : [];
         const mine = rows.filter(function (r) {
           return r && String(r.fromId) === me && String(r.topicId) === String(inv.topicId);
         })[0];
@@ -263,8 +268,12 @@ Page({
         // setData 会拷贝对象,不能用引用相等判断「还是同一条邀约」
         if (rating >= 1 && rating <= 5 && that.data.invite && String(that.data.invite.inviteId) === String(inv.inviteId)) {
           that.setData({ myReviewStars: '★★★★★'.slice(0, rating) });
+          finish(true);
+          return;
         }
+        finish(readable ? false : null);
       },
+      fail() { if (that._isCurrent(ctx)) finish(null); },
     });
   },
 
@@ -570,10 +579,30 @@ Page({
             if (res.code == '200') that.setData({ actionReceipt: '评价已提交', myReviewStars: '★★★★★'.slice(0, rating) });
             else toast((res && res.msg) || '评价失败');
           },
-          fail() { if (that._isCurrent(ctx.context)) toast('网络开小差了，评价没提交'); },
+          // 断网/网关超时可能已落库:不断言「没提交」,先回读本次评分,核对完才放开重试。
+          fail(_data, status) {
+            if (!that._isCurrent(ctx.context)) return;
+            const code = Number(status);
+            if (code >= 400 && code < 500 && code !== 408) { toast((_data && _data.msg) || '评价失败'); return; }
+            that._verifyReviewAfterUnknown(ctx.context);
+          },
         });
       },
       fail() { if (!that._isCurrent(ctx.context)) return; that._reviewing = false; toast('评价确认没有打开，请重试'); },
+    });
+  },
+
+  _verifyReviewAfterUnknown(context) {
+    const inv = this.data.invite;
+    if (!inv) return;
+    this._reviewing = true;
+    this.setData({ reviewVerifying: true, actionReceipt: '', actionError: '' });
+    this.loadMyReview(inv, (found) => {
+      if (!this._isCurrent(context)) return;
+      this._reviewing = false;
+      if (found === true) { this.setData({ reviewVerifying: false, actionReceipt: '评价已提交' }); return; }
+      this.setData({ reviewVerifying: false,
+        actionError: found === false ? '没有查到这次评价，可以重新评价' : '评价结果暂未确认，请稍后刷新核对后再评价' });
     });
   },
 

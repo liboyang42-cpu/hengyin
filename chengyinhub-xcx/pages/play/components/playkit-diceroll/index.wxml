@@ -15,13 +15,17 @@
         <text>DC {{dc}}</text>
         <text>加值 {{modifier >= 0 ? '+' : ''}}{{modifier}}</text>
       </view>
+      <view class="d20__meta" wx:if="{{preview}}" aria-label="沙盒预览，结果不计入正式判定；加值为作者在模板中设定的固定值">
+        <text>沙盒预览 · 不计入正式判定</text>
+        <text>加值为作者在模板中设定的固定值</text>
+      </view>
       <view class="d20__stage" aria-label="{{d20Rolling ? '二十面骰旋转中' : (result ? '本次骰点：' + result.values : '立体二十面骰')}}">
         <canvas type="2d" id="d20Canvas" class="d20__canvas" binderror="onD20CanvasError" />
       </view>
       <view class="d20__error" wx:if="{{d20Error}}">骰子暂时无法显示。
         <text class="d20__retry" bindtap="onRetryD20" aria-role="button" aria-label="重试显示 3D 骰子" hover-class="g-btn--press" hover-stay-time="80">重试显示</text>
       </view>
-      <view class="d20__outcome {{!result || d20Rolling ? 'd20__outcome--pending' : ''}}" aria-hidden="{{!result || d20Rolling}}" aria-label="{{'总分 ' + result.total + '，' + (result.success ? '检定成功' : '检定失败')}}">
+      <view class="d20__outcome {{!result || d20Rolling ? 'd20__outcome--pending' : ''}}" aria-hidden="{{!result || d20Rolling}}" aria-label="{{(preview ? '沙盒预览：' : '') + '总分 ' + result.total + '，' + (result.success ? '检定成功' : '检定失败')}}">
         <view class="d20__total">{{result.total}}</view>
         <view class="d20__result">{{result.text}}</view>
       </view>

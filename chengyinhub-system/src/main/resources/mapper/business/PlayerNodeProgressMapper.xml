@@ -165,7 +165,7 @@
          昵称/头像是公开展示资料,不含手机号等 PII。 -->
     <select id="selectActivityLeaderboard" resultType="com.chengyinhub.business.domain.vo.LeaderboardItemVO">
         select p.member_id as memberId, m.nickname as nickname, m.avatar as avatar,
-               count(*) as score
+               count(*) as score, max(p.checkin_time) as finishedAt
           from player_node_progress p
           left join ums_member m on m.id = p.member_id
          where p.del_flag = 0 and p.status = 1
@@ -175,6 +175,45 @@
          group by p.member_id, m.nickname, m.avatar
          order by score desc, max(p.checkin_time) asc, p.member_id asc
          limit #{limit}
+    </select>
+
+    <!-- D-13 分支主题排行榜(N-02):一主题一榜,读每位玩家本场最新一局 topic_route_session
+         (与 /my-completed、play_instance 口径同源:max(id))。
+         排序:到达结局(status=1 COMPLETED)者在前 → 结局用时(completed_at - create_time)短者在前
+         → 未到结局者按本局完成节点数降序 → member_id 稳定排。status=2(ENDED,失败收场)不算到达结局。
+         score 仍是本局 status=1 完成节点数,保持返回结构向后兼容。 -->
+    <sql id="routeLeaderboardColumns">
+        select r.member_id as memberId, m.nickname as nickname, m.avatar as avatar,
+               (select count(*) from player_node_progress p
+                 where p.member_id = r.member_id and p.activity_id = r.activity_id
+                   and p.topic_id = r.topic_id and p.play_instance_id = r.play_instance_id
+                   and p.status = 1 and p.del_flag = 0) as score,
+               case when r.status = 1 then 1 else 0 end as reachedEnding,
+               case when r.status = 1 and r.completed_at is not null
+                    then timestampdiff(SECOND, r.create_time, r.completed_at) end as elapsedSeconds,
+               case when r.status = 1 then r.completed_at end as finishedAt
+          from topic_route_session r
+          left join ums_member m on m.id = r.member_id
+         where r.topic_id = #{topicId} and r.activity_id = #{activityId}
+           and r.id = (select max(x.id) from topic_route_session x
+                        where x.member_id = r.member_id and x.topic_id = r.topic_id
+                          and x.activity_id = r.activity_id)
+    </sql>
+
+    <select id="selectRouteLeaderboard" resultType="com.chengyinhub.business.domain.vo.LeaderboardItemVO">
+        <include refid="routeLeaderboardColumns"/>
+         order by case when r.status = 1 then 0 else 1 end asc,
+                  case when r.status = 1 and r.completed_at is not null
+                       then timestampdiff(SECOND, r.create_time, r.completed_at) else 2147483647 end asc,
+                  score desc, r.member_id asc
+         limit #{limit}
+    </select>
+
+    <!-- 榜外的「我」:同一口径取本人最新一局;没开过局返回 null。 -->
+    <select id="selectRouteLeaderboardRow" resultType="com.chengyinhub.business.domain.vo.LeaderboardItemVO">
+        <include refid="routeLeaderboardColumns"/>
+           and r.member_id = #{memberId}
+         limit 1
     </select>
 
 </mapper>

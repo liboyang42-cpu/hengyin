@@ -480,6 +480,8 @@ Component({
         },
         success: (res) => {
           if (!finishCancelPrompt() || !isCurrent() || !res.confirm) return;
+          // B9:退款结果(到账/被拒)订阅只在用户确认退款这一下申请;零元单没有钱可退,不弹
+          if (paid && !isFreeOrder(this.data.info)) require('../../../utils/subscribe.js').request(['refund', 'refundRejected']);
           this.cancelRequest(paid, id);
         },
         fail: finishCancelPrompt,

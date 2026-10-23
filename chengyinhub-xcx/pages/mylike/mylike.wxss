@@ -18,6 +18,7 @@
 .c1-page-title { display: block; }
 .favorite-tabs { display: block; margin: 0 var(--cy-page-x) var(--cy-space-3); }
 .favorite-list { gap: var(--cy-space-3); }
+.favorite-recommend-note { margin: 0 var(--cy-page-x) var(--cy-space-3); color: var(--cy-color-text-tertiary); font-size: var(--cy-font-label); }
 .favorite-refreshing { min-height: var(--cy-btn-h); display: flex; align-items: center; color: var(--cy-text-secondary); font-size: var(--cy-font-label); }
 .favorite-end { padding: var(--cy-space-3) 0; text-align: center; color: var(--cy-color-text-tertiary); font-size: var(--cy-font-label); }
 .favorite-list cy-inline-error { display: block; }

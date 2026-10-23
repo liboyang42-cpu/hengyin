@@ -136,6 +136,13 @@ public interface ClubEditionCompensationMapper {
      */
     List<java.util.Map<String, Object>> selectEditionsForExecutingClub(@Param("clubId") Long clubId);
 
+    /**
+     * 本俱乐部作为 ORGANIZER(执行俱乐部)的有效合作单条数。只用来解释「期次为空」的原因:
+     * 0 ⇒ 还没承接;&gt;0 但没有冻结条款 ⇒ 已承接、尚未开售。口径与开售时
+     * {@code resolveExecutingClub} 读的阵容一致(status=0、未删、排除旧 invite_type=2)。
+     */
+    int countEffectiveOrganizerOrdersForClub(@Param("clubId") Long clubId);
+
     int insertQualityDecision(ClubQualityDecision decision);
 
     int supersedeCurrentQuality(@Param("topicId") Long topicId, @Param("clubId") Long clubId,

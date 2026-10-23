@@ -185,7 +185,10 @@ function clearStoragePreservingPlayerRoamMemory(storage) {
   for (let index = 0; index < keys.length; index += 1) {
     const storageKey = keys[index]
     // 核销 UNKNOWN 按原账号摘要隔离；退出账号不能变成再次 POST 的入口。
-    if (isPlayerMemoryKey(storageKey) || /^verification_unknown_v1:[a-f0-9]{64}$/.test(storageKey)) continue
+    // 同意补传台账只保留严格 cy_usage_pending_v1:<正整数账号> 键，重登沿用原请求 ID。
+    const consentLedger = typeof storageKey === 'string' && storageKey.match(/^cy_usage_pending_v1:[1-9][0-9]*$/)
+    if (isPlayerMemoryKey(storageKey) || /^verification_unknown_v1:[a-f0-9]{64}$/.test(storageKey) ||
+      (consentLedger && consentLedger[0] === storageKey)) continue
     try {
       target.removeStorageSync(storageKey)
     } catch (_) {

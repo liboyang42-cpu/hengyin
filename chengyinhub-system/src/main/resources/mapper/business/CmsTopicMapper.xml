@@ -1106,6 +1106,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         update cms_topic set review_flag = #{reviewFlag} where id = #{id}
     </update>
 
+    <select id="selectReviewFlag" resultType="Integer">
+        select review_flag from cms_topic where id = #{id}
+    </select>
+
     <update id="transitionLifecycle">
         update cms_topic
         set lifecycle = #{target}, update_time = #{updateTime}

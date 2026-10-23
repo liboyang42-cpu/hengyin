@@ -1,9 +1,11 @@
 package com.chengyinhub.web.controller.api;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.chengyinhub.business.access.merchant.IMerchantAccessService;
@@ -17,7 +19,9 @@ import com.chengyinhub.business.domain.dto.ai.AiTemplateFillReq;
 import com.chengyinhub.business.domain.dto.ai.AiSafetyPrecheckReq;
 import com.chengyinhub.business.domain.dto.ai.AiThemeDraftReq;
 import com.chengyinhub.business.domain.dto.ai.AiChapterOverviewReq;
+import com.chengyinhub.business.domain.vo.ai.AiThemeDraftRequestState;
 import com.chengyinhub.business.service.IAiCreatorService;
+import com.chengyinhub.business.service.impl.AiThemeDraftRequestService;
 import com.chengyinhub.business.service.ai.AiServiceException;
 import com.chengyinhub.common.core.controller.BaseController;
 import com.chengyinhub.common.core.domain.AjaxResult;
@@ -50,6 +54,9 @@ public class ApiAiController extends BaseController
 
     @Autowired
     private IAiCreatorService aiCreatorService;
+
+    @Autowired
+    private AiThemeDraftRequestService themeDraftRequests;
 
 
     @Autowired
@@ -153,6 +160,10 @@ public class ApiAiController extends BaseController
         if (memberId == null) return error("请先登录");
         String gate = gateThemeDraftRole(memberId);
         if (gate != null) return error(gate);
+        if (req != null && req.getRequestId() != null && !req.getRequestId().trim().isEmpty())
+        {
+            return themeDraftWithRequestId(req, memberId);
+        }
 
         try
         {
@@ -161,6 +172,87 @@ public class ApiAiController extends BaseController
         catch (AiServiceException e)
         {
             return error(e.getMessage());
+        }
+    }
+
+    /** 带 requestId 的草稿:同一 requestId 只生成一次,重复提交回放原结果或原状态。 */
+    private AjaxResult themeDraftWithRequestId(AiThemeDraftReq req, Long memberId)
+    {
+        if (!AiThemeDraftRequestService.isValidRequestId(req.getRequestId()))
+        {
+            return draftError(com.chengyinhub.common.constant.HttpStatus.BAD_REQUEST, "请求编号无效,请重新发起",
+                    "AI_DRAFT_INVALID_REQUEST", null);
+        }
+        AiThemeDraftRequestState state;
+        try
+        {
+            state = themeDraftRequests.submit(req, memberId);
+        }
+        catch (AiThemeDraftRequestService.StateUnavailableException e)
+        {
+            logger.error("[AiThemeDraft] request state unavailable memberId={}", memberId, e);
+            return draftError(com.chengyinhub.common.constant.HttpStatus.ERROR, "AI 起草暂时不可用,请稍后重试",
+                    "AI_DRAFT_STATE_UNAVAILABLE", null);
+        }
+        if (AiThemeDraftRequestState.SUCCEEDED.equals(state.getState()))
+        {
+            AjaxResult ok = success(state.getResult());
+            ok.put("requestId", state.getRequestId());
+            ok.put("requestState", state.getState());
+            ok.put("replayed", state.isReplayed());
+            return ok;
+        }
+        if (AiThemeDraftRequestState.FAILED.equals(state.getState()))
+        {
+            return draftError(com.chengyinhub.common.constant.HttpStatus.ERROR, state.getMessage(),
+                    "AI_DRAFT_FAILED", state);
+        }
+        if (AiThemeDraftRequestState.PROCESSING.equals(state.getState()))
+        {
+            return draftError(com.chengyinhub.common.constant.HttpStatus.CONFLICT, "上一次起草还在进行中,请稍后查看结果",
+                    "AI_DRAFT_IN_PROGRESS", state);
+        }
+        return draftError(com.chengyinhub.common.constant.HttpStatus.CONFLICT, "上一次起草的结果暂时无法确认,请稍后查看",
+                "AI_DRAFT_OUTCOME_UNKNOWN", state);
+    }
+
+    private static AjaxResult draftError(int code, String msg, String errorCode, AiThemeDraftRequestState state)
+    {
+        AjaxResult result = new AjaxResult(code, msg);
+        result.put("errorCode", errorCode);
+        if (state != null)
+        {
+            result.put("requestId", state.getRequestId());
+            result.put("requestState", state.getState());
+        }
+        return result;
+    }
+
+    /**
+     * 按 requestId 回读本人的 AI 主题草稿请求(状态 + 结果)。只读:不调模型、不动额度。
+     * 键按登录会员隔离,别人的 requestId 在这里恒为 NOT_FOUND。
+     */
+    @Operation(summary = "AI主题草稿请求回读")
+    @RateLimiter(time = 60, count = 60, limitType = LimitType.MEMBER)
+    @GetMapping("/theme/draft/request")
+    public AjaxResult themeDraftRequest(@RequestParam(required = false) String requestId)
+    {
+        Long memberId = resolveMemberId();
+        if (memberId == null) return error("请先登录");
+        if (!AiThemeDraftRequestService.isValidRequestId(requestId))
+        {
+            return draftError(com.chengyinhub.common.constant.HttpStatus.BAD_REQUEST, "请求编号无效",
+                    "AI_DRAFT_INVALID_REQUEST", null);
+        }
+        try
+        {
+            return success(themeDraftRequests.read(memberId, requestId));
+        }
+        catch (AiThemeDraftRequestService.StateUnavailableException e)
+        {
+            logger.error("[AiThemeDraft] readback unavailable memberId={}", memberId, e);
+            return draftError(com.chengyinhub.common.constant.HttpStatus.ERROR, "暂时查不到上一次起草的结果,请稍后再试",
+                    "AI_DRAFT_STATE_UNAVAILABLE", null);
         }
     }
 

@@ -324,3 +324,46 @@ for (const outcome of ['PASS', 'FAIL', 'CLOSED']) {
     if (outcome !== 'CLOSED') assert.equal(JSON.parse(requests[1].data).action, 'CHOOSE');
   });
 }
+
+test('相册 X019：网络失败保留同一张图重传，上传成功后只提交一次', async () => {
+  const { page, album } = setup(albumView());
+  choose(album);
+  uploads[0].fail({ errMsg: 'uploadFile:fail timeout' });
+  assert.equal(requests.length, 0);
+  assert.equal(page._kit().uploadFailure, 'retry');
+  album.data.uploadFailure = page._kit().uploadFailure;
+  album.onCta();
+  assert.equal(media.count, 1, '重试不重新打开选图');
+  assert.equal(uploads.length, 2);
+  assert.equal(uploads[1].filePath, '/tmp/player-evidence.jpg');
+  uploads[1].success({ data: JSON.stringify({ code: 200, url: PLAYER_PHOTO }) });
+  assert.equal(requests.length, 1);
+  assert.equal(JSON.parse(requests[0].data).action, 'SUBMIT_ALBUM');
+  assert.equal(page._kit().uploadFailure, '');
+  assert.equal(page._albumRetry, null);
+});
+
+test('相册 X019：HTTP 5xx 可重传同一张，业务拒绝请玩家重新选图且不能重传', () => {
+  let ctx = setup(albumView()); choose(ctx.album);
+  uploads[0].success({ statusCode: 502, data: '<html>bad gateway</html>' });
+  assert.equal(ctx.page._kit().uploadFailure, 'retry');
+  assert.equal(requests.length, 0);
+  uploads = []; requests = [];
+  ctx = setup(albumView()); choose(ctx.album);
+  uploads[0].success({ statusCode: 200, data: JSON.stringify({ code: 500, msg: '图片格式不支持' }) });
+  assert.equal(ctx.page._kit().uploadFailure, 'reselect');
+  ctx.page.onPlayKitAction({ detail: { type: 'album', action: 'submit', detail: {} } });
+  assert.equal(uploads.length, 1, '非网络失败不得自动重传旧图');
+  assert.equal(requests.length, 0);
+});
+
+test('相册 X019：已提交后组件显示只读说明，不再提供拍照入口', () => {
+  const fs = require('node:fs'); const path = require('node:path');
+  const wxml = fs.readFileSync(path.join(__dirname, '../../pages/play/components/playkit-album/index.wxml'), 'utf8');
+  assert.match(wxml, /wx:if="\{\{completionEnabled && done\}\}"[^>]*>照片已提交，相册仅供查看，不能再更换</);
+  assert.match(fs.readFileSync(path.join(__dirname, '../../pages/play/components/playkit/index.wxml'), 'utf8'), /upload-failure="\{\{kit\.uploadFailure\}\}"/);
+  const done = component(albumDef, { completionEnabled: true, done: true, uploaded: true, uploadFailure: 'retry' });
+  let closed = false; done.triggerEvent = name => { if (name === 'close') closed = true; };
+  done.onCta(); done.choosePhoto();
+  assert.equal(closed, true); assert.equal(media, null);
+});

@@ -31,6 +31,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.Connection;
+import java.sql.Timestamp;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -89,6 +90,8 @@ final class GameSessionLedgerMySqlFixture {
     SqlSessionTemplate sql;
     GameSessionRuntimeMapper mapper;
     IGameSessionRuntimeService runtime;
+    /** 代理背后的真实现:导演台 IT 在它上面补装 topicMapper / imService(本夹具其余用法不需要)。 */
+    GameSessionRuntimeServiceImpl impl;
 
     void open(String suite) throws Exception {
         MysqlIntegrationTestConfig config = MysqlIntegrationTestConfig.fromEnvironment(suite);
@@ -128,7 +131,7 @@ final class GameSessionLedgerMySqlFixture {
         if (admin != null && database != null) admin.execute("drop database " + database);
     }
 
-    private static String statement(String script, String head) {
+    static String statement(String script, String head) {
         int start = script.indexOf(head);
         assertTrue(start >= 0, "真 DDL 里找不到:" + head);
         // 列注释里有分号(如 coop_order.invite_id),所以从表尾 ") ENGINE=" 之后找行末分号。
@@ -166,11 +169,15 @@ final class GameSessionLedgerMySqlFixture {
                 SESSION, TEAM_A, PLAYER_A, DIRECTOR, SESSION, TEAM_B, PLAYER_B, DIRECTOR);
     }
 
+    // 服务窗口按 JVM 时钟写:被测代码用 clock(Date::new)比 service_start_at/end_at,驱动按 JVM 时区
+    // (connectionTimeZone=LOCAL)读写 DATETIME。用 MySQL now() 写,JVM 与 MySQL 时区不同时会误判窗口外。
     private void station(long id, long node, String name, String code, long merchant, String status) {
+        long now = System.currentTimeMillis();
         db.update("insert into game_station_run(id,game_session_id,activity_id,node_id,node_name,station_code,"
                 + "merchant_member_id,source_type,source_id,status,revision,service_start_at,service_end_at,create_time,update_time)"
-                + " values(?,?,?,?,?,?,?,'CHAPTER_NODE',?,?,0,date_sub(now(),interval 1 hour),date_add(now(),interval 1 hour),now(),now())",
-                id, SESSION, ACTIVITY, node, name, code, merchant, node, status);
+                + " values(?,?,?,?,?,?,?,'CHAPTER_NODE',?,?,0,?,?,now(),now())",
+                id, SESSION, ACTIVITY, node, name, code, merchant, node, status,
+                new Timestamp(now - 3600000), new Timestamp(now + 3600000));
     }
 
     /** 到店签到行:游戏局唯一读 player_node_progress 的地方就是"是否已到店"。 */
@@ -181,6 +188,7 @@ final class GameSessionLedgerMySqlFixture {
 
     IGameSessionRuntimeService service() {
         GameSessionRuntimeServiceImpl target = new GameSessionRuntimeServiceImpl();
+        impl = target;
         ReflectionTestUtils.setField(target, "runtimeMapper", mapper);
         ReflectionTestUtils.setField(target, "playTeamMapper", sql.getMapper(PlayTeamMapper.class));
         CmsActivityMapper activities = mock(CmsActivityMapper.class);

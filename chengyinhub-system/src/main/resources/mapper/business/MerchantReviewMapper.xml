@@ -27,6 +27,7 @@
         <result property="updateTime" column="update_time"/>
         <result property="authorNickname" column="author_nickname"/>
         <result property="authorAvatar" column="author_avatar"/>
+        <result property="underPlatformReview" column="under_platform_review"/>
     </resultMap>
 
     <resultMap id="EligibilityResult" type="com.chengyinhub.business.domain.MerchantReviewEligibility">
@@ -219,20 +220,63 @@
         where mr.merchant_row_id = #{merchantRowId}
     </select>
 
+    <!--
+      商家管理列表的服务端筛选(W10a #20)。四个筛选与 filterCounts 共用这里的谓词,
+      列表、total 与计数不会各说各话:
+        pending  = 公开且未回复(与 selectReviewStats.pendingReplyCount 同口径)
+        low      = 评分 ≤ 3
+        photo    = 至少一张图(创建时空图存成 "[]")
+        platform = 平台复审中:新评价待复核,或有举报对应的平台审核任务仍未结案(0 待审 / 3 升级)
+      门店隔离仍只靠 mr.merchant_row_id = access.merchantId,筛选只能在本店范围内收窄。
+    -->
+    <sql id="manageUnderPlatformReview">
+        (mr.status = 'PENDING_REVIEW' or exists (
+            select 1 from merchant_review_report rr
+            join audit_task pr_task on pr_task.id = rr.audit_task_id
+            where rr.review_id = mr.id
+              and rr.merchant_row_id = mr.merchant_row_id
+              and pr_task.status in (0, 3)
+        ))
+    </sql>
+
+    <sql id="manageFilterPredicate">
+        <choose>
+            <when test="filter == 'pending'"> and mr.status = 'VISIBLE' and mr.reply_content is null</when>
+            <when test="filter == 'low'"> and mr.rating &lt;= 3</when>
+            <when test="filter == 'photo'"> and mr.images_json is not null and mr.images_json not in ('', '[]')</when>
+            <when test="filter == 'platform'"> and <include refid="manageUnderPlatformReview"/></when>
+        </choose>
+    </sql>
+
     <select id="countManageReviews" resultType="long">
         select count(1)
         from merchant_review mr
         where mr.merchant_row_id = #{merchantRowId}
+        <include refid="manageFilterPredicate"/>
     </select>
 
     <select id="selectManageReviews" resultMap="MerchantReviewResult">
         select <include refid="reviewColumns"/>,
-               u.nickname as author_nickname, u.avatar as author_avatar
+               u.nickname as author_nickname, u.avatar as author_avatar,
+               case when <include refid="manageUnderPlatformReview"/> then 1 else 0 end as under_platform_review
         from merchant_review mr
         left join ums_member u on u.id = mr.author_member_id
         where mr.merchant_row_id = #{merchantRowId}
+        <include refid="manageFilterPredicate"/>
         order by mr.create_time desc, mr.id desc
         limit #{offset}, #{limit}
+    </select>
+
+    <!-- 全量筛选计数:不随当前页、当前筛选变化;别名全小写,H2(DATABASE_TO_LOWER)与 MySQL 取键一致。 -->
+    <select id="selectManageFilterCounts" resultType="java.util.HashMap">
+        select
+          count(1) as all_count,
+          coalesce(sum(case when mr.status = 'VISIBLE' and mr.reply_content is null then 1 else 0 end), 0) as pending_count,
+          coalesce(sum(case when mr.rating &lt;= 3 then 1 else 0 end), 0) as low_count,
+          coalesce(sum(case when mr.images_json is not null and mr.images_json not in ('', '[]') then 1 else 0 end), 0) as photo_count,
+          coalesce(sum(case when <include refid="manageUnderPlatformReview"/> then 1 else 0 end), 0) as platform_count
+        from merchant_review mr
+        where mr.merchant_row_id = #{merchantRowId}
     </select>
 
     <update id="replyCas">

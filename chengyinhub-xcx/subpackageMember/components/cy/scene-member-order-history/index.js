@@ -5,6 +5,7 @@ const cyLoading = require('../../../../utils/loading.js');
 const toast = require('../../../../utils/toast.js');
 const { recoverReadSession } = require('../../../../utils/session/login-reload.js');
 const cancellationFeedback = require('../../../../utils/cancellation-feedback.js');
+const subscribe = require('../../../../utils/subscribe.js');
 const { isUnknownHttpStatus } = require('../../../../utils/transport/failure-envelope.js');
 // H09 我的订单(方案 §5.2)。行卡沿用 D04 既有范式(订单号 + 状态 chip + 时间 + 地点 + 实付款 + 双动作)。
 //
@@ -322,6 +323,8 @@ Component({
         success(res) {
           if (!finishCancelPrompt() || !isCurrent()) return
           if (res.confirm) {
+            // B9:退款结果(到账/被拒)订阅只在用户确认退款这一下申请;零元单没有钱可退,不弹
+            if (status === 2 && !isFreeOrder(that.data.list[index])) subscribe.request(['refund', 'refundRejected'])
             that.cancelOrderRequest(id, index, status)
           }
         },

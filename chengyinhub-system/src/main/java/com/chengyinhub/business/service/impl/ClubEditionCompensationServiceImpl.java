@@ -614,6 +614,16 @@ public class ClubEditionCompensationServiceImpl implements IClubEditionCompensat
 
     @Override
     @Transactional(readOnly = true)
+    public String editionsEmptyReason(Long clubId) {
+        if (clubId == null) throw new IllegalArgumentException("EDITION_HOURS_ARGUMENT_REQUIRED");
+        // 复用带逐行回读的列表方法:范围泄漏照样抛,不会因为「只是解释原因」而放过。
+        if (!editionsForExecutingClub(clubId).isEmpty()) return EDITIONS_REASON_HAS_EDITIONS;
+        return mapper.countEffectiveOrganizerOrdersForClub(clubId) > 0
+                ? EDITIONS_REASON_UNDERTAKEN_NOT_ON_SALE : EDITIONS_REASON_NOT_UNDERTAKEN;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Map<String, Object> compensationView(Long topicId) {
         if (topicId == null) throw new IllegalArgumentException("EDITION_TERMS_ARGUMENT_REQUIRED");
         Map<String, Object> view = new LinkedHashMap<String, Object>();

@@ -36,3 +36,18 @@ test('未知methods可能覆盖公共函数时保守判红',t=>{
 test('条件return不是受支持静态合并形态，不假定实际走末尾分支',t=>{
   const root=fixture(t,`function page(config){if(config.disabled)return {};return Object.assign({onTap(){}},config.methods)}module.exports={page};`, `const {page}=require('./factory');Page(page({disabled:true,methods:{}}));`, '<view bindtap="onTap"/>');assert.deepEqual(lintRepo(root).violations.map(x=>x.handler),['onTap']);
 });
+
+test('U3同文件不同factory的同名handler不得互相豁免',t=>{
+  const {scanU3}=require('../lint/ui-integrity');
+  const root=fixture(t,`function one(config){return Object.assign({onField(){}},config.methods)} function two(config){return Object.assign({onField(){}},config.methods)} module.exports={one,two};`,
+    `const {one}=require('./factory');Page(one({methods:{}}));`, '<view bind:input="onField"/>');
+  const second=path.join(root,'second.js');fs.writeFileSync(second,`const {two}=require('./factory');Page(two({methods:{}}));`);fs.writeFileSync(path.join(root,'second.wxml'),'<view/>');
+  assert.equal(scanU3([path.join(root,'index.js'),second],new Map()).violations.filter(x=>x.message.startsWith('onField ')).length,1);
+});
+test('U3不同factory返回同一实际定义时仍可共享真实绑定',t=>{
+  const {scanU3}=require('../lint/ui-integrity');
+  const root=fixture(t,`const common={onField(){}};function one(config){return Object.assign(common,config.methods)}function two(config){return Object.assign(common,config.methods)}module.exports={one,two};`,
+    `const {one}=require('./factory');Page(one({methods:{}}));`, '<view bind:input="onField"/>');
+  const second=path.join(root,'second.js');fs.writeFileSync(second,`const {two}=require('./factory');Page(two({methods:{}}));`);fs.writeFileSync(path.join(root,'second.wxml'),'<view/>');
+  assert.equal(scanU3([path.join(root,'index.js'),second],new Map()).violations.length,0);
+});

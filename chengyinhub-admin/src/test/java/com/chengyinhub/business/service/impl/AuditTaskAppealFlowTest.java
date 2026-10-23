@@ -67,6 +67,13 @@ class AuditTaskAppealFlowTest {
         return d;
     }
 
+    /** #334 F10:裁决升级单须带升级后的版本(夹具 version=0)。 */
+    private AuditReviewDTO escalatedDecision(Integer status) {
+        AuditReviewDTO d = decision(status);
+        d.setExpectedVersion(0);
+        return d;
+    }
+
     private void stubUpdateRows(int rows) {
         when(auditTaskMapper.updateAuditTaskReviewCas(anyLong(), any(), any(), any(), any(), any())).thenReturn(rows);
     }
@@ -96,7 +103,7 @@ class AuditTaskAppealFlowTest {
         when(auditTaskMapper.selectAuditTaskById(2L)).thenReturn(task(2L, AuditTask.STATUS_ESCALATED));
         stubUpdateRows(1);
 
-        int rows = svc.review(2L, 66L, decision(AuditTask.STATUS_APPROVED));
+        int rows = svc.review(2L, 66L, escalatedDecision(AuditTask.STATUS_APPROVED));
 
         assertEquals(1, rows);
         ArgumentCaptor<AuditRecord> rec = ArgumentCaptor.forClass(AuditRecord.class);
@@ -115,7 +122,7 @@ class AuditTaskAppealFlowTest {
         when(auditTaskMapper.selectAuditTaskById(3L)).thenReturn(task(3L, AuditTask.STATUS_ESCALATED));
         stubUpdateRows(1);
 
-        int rows = svc.review(3L, 66L, decision(AuditTask.STATUS_REJECTED));
+        int rows = svc.review(3L, 66L, escalatedDecision(AuditTask.STATUS_REJECTED));
 
         assertEquals(1, rows);
         ArgumentCaptor<AuditRecord> rec = ArgumentCaptor.forClass(AuditRecord.class);
@@ -162,7 +169,7 @@ class AuditTaskAppealFlowTest {
         when(auditTaskMapper.selectAuditTaskById(7L)).thenReturn(task(7L, AuditTask.STATUS_ESCALATED));
         stubUpdateRows(0); // version 不匹配,别的复核已先落锤
 
-        int rows = svc.review(7L, 66L, decision(AuditTask.STATUS_APPROVED));
+        int rows = svc.review(7L, 66L, escalatedDecision(AuditTask.STATUS_APPROVED));
 
         assertEquals(0, rows, "乐观锁失败应返回 0");
         verify(auditRecordMapper, never()).insertAuditRecord(any());

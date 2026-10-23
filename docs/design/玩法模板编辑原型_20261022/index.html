@@ -1,0 +1,999 @@
+<title>城瘾玩法模板编辑</title>
+<style>
+/* Layout: phone mock of pages/publish/temp (template editor) left, change list right; phone goes full screen under 760px.
+   Deliberately single light theme for the editor; the player preview runs the original dark/colored play screens (play.html). */
+:root{
+  color-scheme:light;
+  --stage:#E3E5E9; --page:#F6F6F8; --card:#FFFFFF; --field:#F4F5F7; --line:#EEEFF2; --press:#ECEDF0;
+  --ink:#111214; --ink2:#6B6F76; --ink3:#A3A7AE; --danger:#E5484D; --ok:#12A06F;
+  --pv:#0D0D10; --pv2:#1B1B20; --pv3:#26262C; --pvline:#33333A; --pvink:#F6F6F8; --pvink2:#9A9AA2;
+  --font:-apple-system,"PingFang SC","Helvetica Neue","Microsoft YaHei",sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:var(--font);background:var(--stage);color:var(--ink);-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+input,textarea{font:inherit;color:inherit;border:0;outline:0}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid #3B82F6;outline-offset:1px}
+.stage{display:flex;gap:28px;align-items:flex-start;justify-content:center;padding:24px 16px}
+.phone{flex:none;border-radius:46px;background:#111;padding:12px;box-shadow:0 20px 60px rgba(0,0,0,.22)}
+.screen{position:relative;overflow:hidden;border-radius:36px;background:var(--page)}
+.zoom{position:absolute;left:0;top:0;transform-origin:0 0}
+.app{position:relative;width:390px;overflow:hidden;background:var(--page)}
+.side{width:310px;flex:none;background:var(--card);border-radius:14px;padding:18px;font-size:13px;line-height:1.6;color:#333;position:sticky;top:24px}
+.side h1{font-size:16px;margin-bottom:4px}
+.side p{color:var(--ink2)}
+.side ol{padding-left:18px;margin:10px 0 14px;display:flex;flex-direction:column;gap:6px}
+.side li b{color:var(--ink)}
+.side .acts{display:flex;flex-wrap:wrap;gap:6px}
+.side .acts button{border:1px solid #D5D7DB;border-radius:8px;padding:6px 10px;font-size:12.5px;background:#FAFAFB}
+@media (max-width:760px){
+  .stage{flex-direction:column;align-items:stretch;padding:0;gap:0}
+  .phone{border-radius:0;padding:0;box-shadow:none;background:var(--page)}
+  .screen{border-radius:0}
+  .side{width:auto;position:static;border-radius:0;padding:18px 16px 28px}
+}
+/* status + WeChat nav */
+.status{position:absolute;left:0;right:0;top:0;height:47px;display:flex;align-items:center;justify-content:space-between;padding:6px 30px 0;font-size:15px;font-weight:600;z-index:30}
+.status.dark{color:var(--pvink)}
+.nav{position:absolute;left:0;right:0;top:47px;height:44px;display:flex;align-items:center;padding:0 12px;z-index:30;background:var(--page)}
+.nav.dark{background:var(--pv);color:var(--pvink)}
+.nav .back{width:36px;height:36px;display:flex;align-items:center;justify-content:center;margin-left:-6px}
+.nav .t{font-size:17px;font-weight:600;flex:1}
+.capsule{width:87px;height:32px;border-radius:16px;border:1px solid rgba(0,0,0,.1);background:rgba(255,255,255,.8);display:flex;align-items:center;justify-content:space-around;color:#111}
+.capsule i{width:1px;height:18px;background:rgba(0,0,0,.14)}
+.topdark{position:absolute;left:0;right:0;top:0;height:47px;background:var(--pv);z-index:29}
+.scroll{position:absolute;left:0;right:0;top:91px;bottom:0;overflow-y:auto;padding:12px 13px 0;scrollbar-width:none}
+.scroll::-webkit-scrollbar{display:none}
+.pad{height:120px}
+/* page structure of pages/publish/temp. One level only: white card -> light field. */
+.hero{background:var(--card);border-radius:14px;overflow:hidden}
+.hero-cover{position:relative;aspect-ratio:1/1;max-width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;width:100%;background:var(--field);color:var(--ink2)}
+.hero-cover img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.hero-plus{width:36px;height:36px;border-radius:50%;background:var(--card);display:flex;align-items:center;justify-content:center;color:var(--ink)}
+.cover-del{position:absolute;right:10px;top:10px;width:30px;height:30px;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;display:flex;align-items:center;justify-content:center;z-index:2}
+.hero-body{padding:14px 13px}
+.title-input{width:100%;font-size:19px;font-weight:700;background:transparent;height:32px}
+.title-input::placeholder{color:var(--ink3)}
+.card{background:var(--card);border-radius:14px;padding:16px 13px;margin-bottom:12px}
+.card-tit{font-size:16px;font-weight:700}
+.label{font-size:14px;font-weight:600;margin-bottom:8px;display:flex;justify-content:space-between;align-items:baseline}
+.label .cnt{font-size:12px;color:var(--ink3);font-weight:400;font-variant-numeric:tabular-nums}
+.field{padding:12px 0}
+.field:first-of-type{padding-top:0}
+.divider{border-top:1px solid var(--line)}
+.inp,.ta,.pick{width:100%;background:var(--field);border-radius:10px;font-size:15px;border:1px solid transparent}
+.inp{height:44px;padding:0 12px}
+.ta{min-height:48px;padding:11px 12px;resize:none;line-height:1.5;display:block}
+.inp::placeholder,.ta::placeholder{color:var(--ink3)}
+.inp.err,.ta.err,.pick.err{border-color:var(--danger)}
+.pick{height:44px;padding:0 10px 0 12px;display:flex;align-items:center;justify-content:space-between;gap:6px;text-align:left}
+.pick>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.pick.empty{color:var(--ink3)}
+.pick svg{color:var(--ink2);flex:none}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}.two>*{min-width:0}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:flex;align-items:center;gap:2px;background:var(--field);border-radius:16px;padding:6px 6px 6px 12px;font-size:14px}
+.chip button{width:20px;height:20px;display:flex;align-items:center;justify-content:center;color:var(--ink2)}
+.chip-add{display:flex;align-items:center;gap:4px;border:1px dashed #C9CCD1;border-radius:16px;padding:6px 12px;font-size:14px}
+.err-text{font-size:13px;color:var(--danger);margin-top:6px}
+.steps-ed{display:flex;flex-direction:column;gap:10px}
+.step-ed{display:flex;gap:10px;align-items:flex-start}
+.step-no{flex:none;width:22px;height:22px;border-radius:50%;background:var(--ink);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;margin-top:11px}
+.step-f{flex:1;position:relative;min-width:0}
+.step-f .ta{padding-right:38px;min-height:44px}
+.step-del{position:absolute;right:6px;top:8px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:var(--ink2)}
+.dashed{width:100%;margin-top:12px;min-height:44px;border:1px dashed #C9CCD1;border-radius:10px;display:flex;align-items:center;justify-content:center;gap:4px;font-size:14px;font-weight:600}
+.modsec{font-size:16px;font-weight:800;margin:8px 2px 12px}
+.mod{background:var(--card);border-radius:14px;margin-bottom:12px;overflow:hidden}
+.mod-head{display:flex;align-items:center;gap:12px;padding:14px 13px 10px}
+.gtile{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#fff;flex:none}
+.gtile.sm{width:38px;height:38px;border-radius:11px}
+.mod-name{flex:1;font-size:17px;font-weight:700;display:flex;align-items:center;gap:6px;min-width:0}
+.mod-sub{font-size:13px;color:var(--ink2);font-weight:400;margin-top:2px}
+.tag{font-size:11px;font-weight:600;color:#fff;background:var(--ink);border-radius:5px;padding:2px 6px}
+.mod-del{width:32px;height:32px;display:flex;align-items:center;justify-content:center;color:var(--ink3)}
+.mod-body{padding:4px 13px 16px}
+/* rows inside a card */
+.r{display:flex;align-items:center;gap:12px;min-height:56px;width:100%;text-align:left}
+.r+.r,.r+.sub,.sub+.r{border-top:1px solid var(--line)}
+.r .rm{flex:1;min-width:0}
+.r .rt{font-size:15px;font-weight:600}
+.r .rs{font-size:13px;color:var(--ink2);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sub{padding:0 0 14px 50px}
+.pill{height:30px;padding:0 14px;border-radius:15px;font-size:14px;font-weight:500;display:inline-flex;align-items:center;justify-content:center;flex:none;background:var(--field)}
+.pill.solid{background:var(--ink);color:#fff}
+.pill.cur{color:var(--ink3)}
+.sec{border-top:1px solid var(--line);margin-top:14px;padding-top:14px}
+.sec-t{font-size:15px;font-weight:700;margin-bottom:10px}
+.flabel{font-size:13px;font-weight:600;color:#333;margin:12px 0 7px}
+.sec-t+.flabel,.sec-t+.two .flabel{margin-top:0}
+.frow{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px}
+.frow .n{font-size:15px;font-weight:600}
+.opt{display:flex;flex-direction:column;gap:8px;padding:12px 0}
+.opt+.opt{border-top:1px solid var(--line)}
+.opt:first-of-type{padding-top:0}
+.opt-line{display:flex;align-items:center;gap:8px}
+.opt-line .inp{flex:1;min-width:0}
+.letter{width:24px;height:24px;border-radius:50%;background:var(--ink);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:none}
+.iconbtn{width:32px;height:32px;display:flex;align-items:center;justify-content:center;color:var(--ink3);flex:none;border-radius:8px}
+.iconbtn.on{color:var(--ok)}
+.fbsteps{display:flex;flex-direction:column;gap:8px;margin-bottom:6px}
+.fbstep{display:flex;gap:10px;font-size:14.5px;line-height:1.5}
+.fbstep b{flex:none;width:16px;color:var(--ink2);font-weight:600;font-variant-numeric:tabular-nums}
+.res{padding:14px 0 2px;border-top:1px solid var(--line);margin-top:10px}
+.res-h{font-size:15px;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.dot{width:8px;height:8px;border-radius:50%;flex:none}
+.res-sub{font-size:13px;font-weight:600;color:var(--ink2);margin:10px 0 6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.imgs{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.slot,.slot-add{position:relative;width:72px;height:72px;border-radius:10px;flex:none}
+.slot img{width:100%;height:100%;object-fit:cover;border-radius:10px;display:block}
+.slot-add{background:var(--field);color:var(--ink2);display:flex;align-items:center;justify-content:center}
+.slot-x{position:absolute;right:-6px;top:-6px;width:22px;height:22px;border-radius:50%;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center}
+.switch{flex:none;width:51px;height:31px;border-radius:16px;background:#E3E4E7;position:relative;transition:background .15s}
+.switch::after{content:"";position:absolute;left:2px;top:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:left .15s}
+.switch.on{background:#07C160}.switch.on::after{left:22px}
+.rw{padding:12px 0}.rw+.rw{border-top:1px solid var(--line)}
+.rw-line{display:flex;align-items:center;gap:12px}
+.rw-name{flex:1;font-size:15px;font-weight:600}
+.rw-cfg{margin-top:10px}
+.medal{display:flex;gap:10px;align-items:center}
+.medal-up{width:56px;height:56px;border-radius:10px;background:var(--field);display:flex;align-items:center;justify-content:center;overflow:hidden;flex:none}
+.medal-up img{width:100%;height:100%;object-fit:cover}
+.addmod{background:var(--card);border-radius:14px;min-height:52px;display:flex;align-items:center;justify-content:center;gap:4px;font-weight:600;font-size:15px;width:100%;margin-bottom:12px}
+.bottombar,.pv-bar{position:absolute;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);padding:10px 13px 30px;display:flex;gap:10px;z-index:20}
+.btn{flex:1;height:48px;border-radius:12px;font-size:16px;font-weight:600;display:flex;align-items:center;justify-content:center}
+.btn.primary{background:var(--ink);color:#fff}
+.btn.secondary{background:var(--field);color:var(--ink)}
+/* sheets: symmetric head (退出 left / 完成 right, same size and weight); list content fades to transparent under the head/tabs and at the bottom */
+.mask{position:absolute;inset:0;background:rgba(0,0,0,.4);z-index:40}
+.mask.l2{z-index:44}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:var(--card);border-radius:18px 18px 0 0;z-index:41;display:flex;flex-direction:column;max-height:calc(100% - 96px);overflow:hidden}
+.sheet.tall{height:calc(100% - 96px)}
+.sheet.l2{z-index:45;height:calc(100% - 120px)}
+.shtop{position:relative;flex:none;background:var(--card)}
+.grab{width:36px;height:5px;border-radius:3px;background:#CDD0D6;margin:0 auto;position:relative;top:8px}
+.shead{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;height:56px;padding:8px 16px 0}
+.shead button{font-size:16px;font-weight:500;color:var(--ink);height:44px}
+.shead .l{justify-self:start}.shead .rr{justify-self:end}
+.shead .tt{font-size:17px;font-weight:600;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sscroll{flex:1;min-height:0;overflow-y:auto;scrollbar-width:none;padding-bottom:40px;padding-top:6px;-webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 22px,#000 calc(100% - 48px),transparent 100%);mask-image:linear-gradient(to bottom,transparent 0,#000 22px,#000 calc(100% - 48px),transparent 100%)}
+.sscroll::-webkit-scrollbar{display:none}
+.tabs{display:flex;gap:8px;overflow-x:auto;padding:6px 16px 4px;scrollbar-width:none;flex:none}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{flex:none;border-radius:16px;background:var(--field);padding:7px 14px;font-size:14px;color:var(--ink2);display:flex;align-items:center;gap:6px}
+.tabs button i{width:8px;height:8px;border-radius:50%}
+.tabs button.on{background:var(--ink);color:#fff}
+.ggroup{font-size:13px;color:var(--ink2);padding:16px 16px 4px}
+.gitem{display:flex;align-items:center;gap:12px;padding:10px 16px}
+.gitem .gm{flex:1;min-width:0}
+.gitem .gn{font-size:16px;font-weight:600}
+.gitem .gs{font-size:13px;color:var(--ink2);margin-top:2px;line-height:1.45}
+.gitem .gb{display:flex;gap:8px;flex:none}
+.gitem .pill{width:58px;padding:0}
+.li{display:flex;align-items:center;gap:12px;width:100%;min-height:56px;padding:0 16px;font-size:16px;text-align:left}
+.li .lm{flex:1;min-width:0}
+.li .rs{font-size:13px;color:var(--ink2);margin-top:2px}
+.sbody{padding:4px 16px 16px}
+.stage-pv{display:flex;justify-content:center;padding:4px 16px 24px}
+.frame-box{position:relative;overflow:hidden;border-radius:18px;background:#000;flex:none}
+.frame-box iframe{position:absolute;left:0;top:0;width:375px;height:812px;border:0;transform-origin:0 0}
+/* anchored single-column menu */
+.menu-mask{position:absolute;inset:0;z-index:50}
+.menu{position:absolute;z-index:51;background:var(--card);border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.16),0 0 0 1px rgba(0,0,0,.04);overflow:hidden;animation:pop .14s ease-out}
+.menu button{display:flex;align-items:center;justify-content:space-between;gap:16px;width:100%;height:46px;padding:0 16px;font-size:16px;text-align:left}
+.menu button.on{font-weight:600}
+@keyframes pop{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.menu{animation:none}.switch,.switch::after{transition:none}}
+/* action sheet */
+.act-mask{position:absolute;inset:0;background:rgba(0,0,0,.4);z-index:60}
+.act{position:absolute;left:8px;right:8px;bottom:30px;z-index:61;display:flex;flex-direction:column;gap:8px}
+.act .grp{background:var(--card);border-radius:14px;overflow:hidden}
+.act .tt{font-size:13px;color:var(--ink2);text-align:center;padding:14px 16px 12px}
+.act button{display:block;width:100%;height:54px;font-size:17px;border-top:1px solid var(--line)}
+.act .grp>button:first-child{border-top:0}
+.act button.warn{color:var(--danger)}
+.act button.bold{font-weight:600}
+/* my templates list */
+.list{padding:4px 13px 120px}
+.big-t{font-size:28px;font-weight:800;padding:6px 3px 14px}
+.tcard{display:flex;gap:12px;align-items:center;background:var(--card);border-radius:14px;padding:12px;width:100%;text-align:left}
+.tcard+.tcard{margin-top:10px}
+.tcard .cv{width:64px;height:64px;border-radius:10px;background:var(--field);overflow:hidden;flex:none;display:flex;align-items:center;justify-content:center;color:var(--ink3)}
+.tcard .cv img{width:100%;height:100%;object-fit:cover}
+.tcard .mt{flex:1;min-width:0}
+.tcard .nm{font-size:16px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tcard .sb{font-size:13px;color:var(--ink2);margin-top:4px}
+.st{font-size:12px;border-radius:6px;padding:2px 8px;background:var(--field);color:var(--ink2);flex:none}
+.st.pub{background:var(--ink);color:#fff}
+.empty{text-align:center;color:var(--ink2);padding:80px 0;font-size:15px}
+/* player preview */
+.pv{position:absolute;left:0;right:0;top:91px;bottom:0;background:var(--pv);color:var(--pvink);display:flex;flex-direction:column}
+.pv-tabs{display:flex;gap:6px;overflow-x:auto;padding:6px 16px 10px;scrollbar-width:none;flex:none}
+.pv-tabs::-webkit-scrollbar{display:none}
+.pv-tabs button{flex:none;font-size:13px;border-radius:14px;padding:5px 12px;background:var(--pv3);color:var(--pvink2)}
+.pv-tabs button.on{background:var(--pvink);color:#111;font-weight:600}
+.pv-body{flex:1;min-height:0;overflow-y:auto;padding:4px 16px 120px;scrollbar-width:none}
+.pv-body::-webkit-scrollbar{display:none}
+.pv-body.flush{padding:0 0 88px;display:flex;justify-content:center;overflow:hidden}
+.pv-h{font-size:22px;font-weight:800;margin:10px 0 8px}
+.pv-p{font-size:15px;color:#C9C9CC;line-height:1.75}
+.pv-meta{font-size:13px;color:var(--pvink2);margin-top:8px;line-height:1.6}
+.pv-fb{margin-top:14px;border-radius:14px;padding:16px;background:var(--pv2);border:1px solid var(--pvline);font-size:15px;line-height:1.65}
+.pv-fb.ok{border-color:#1E6B4E;background:#122A20}
+.pv-fb.bad{border-color:#6B2A2E;background:#2C1517}
+.pv-fb .k{font-size:13px;font-weight:700;margin-bottom:6px}
+.pv-fb.ok .k{color:#3ECF8E}.pv-fb.bad .k{color:#FF6B6B}
+.pv-fb .imgs img{width:calc(50% - 4px);aspect-ratio:1/1;object-fit:cover;border-radius:10px}
+.pv-fb .imgs img:only-child{width:100%;aspect-ratio:4/3}
+.seg{display:flex;background:var(--pv3);border-radius:10px;padding:3px;margin-top:6px}
+.seg button{flex:1;height:34px;border-radius:8px;font-size:14px;color:var(--pvink2)}
+.seg button.on{background:var(--pvink);color:#111;font-weight:600}
+.pv-btn{width:100%;height:48px;border-radius:12px;background:var(--pvink);color:#111;font-weight:600;font-size:16px;margin-top:18px}
+.pv-next{position:absolute;right:16px;bottom:100px;z-index:21;height:40px;padding:0 16px;border-radius:20px;background:var(--pvink);color:#111;font-weight:600;font-size:15px;box-shadow:0 6px 20px rgba(0,0,0,.4)}
+.pv-reward{display:flex;gap:12px;align-items:center;background:var(--pv2);border:1px solid var(--pvline);border-radius:14px;padding:14px;margin-top:12px}
+.pv-reward .ri{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex:none;overflow:hidden;color:#fff}
+.pv-reward .ri img{width:100%;height:100%;object-fit:cover}
+.pv-done{text-align:center;padding:40px 0 6px}
+.pv-done .big{width:72px;height:72px;border-radius:50%;background:#07C160;color:#fff;display:flex;align-items:center;justify-content:center;margin:0 auto 14px}
+.mock{background:var(--pv);color:var(--pvink);border-radius:18px;padding:20px 16px;width:100%}
+.d20{width:120px;height:120px;margin:22px auto 0;display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:900;color:#fff;background:#7C5CFF;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%)}
+.done-page{position:absolute;left:0;right:0;top:91px;bottom:0;padding:70px 24px;text-align:center}
+.done-page .big{width:64px;height:64px;border-radius:50%;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
+.done-page h2{font-size:21px}
+.done-page p{color:var(--ink2);margin-top:8px;font-size:15px}
+.toast{position:absolute;left:50%;top:46%;transform:translateX(-50%);z-index:70;background:rgba(17,17,17,.88);color:#fff;font-size:14px;border-radius:10px;padding:10px 14px;max-width:80%;text-align:center;pointer-events:none}
+/* section titles outside cards */
+.sh{display:flex;align-items:center;gap:8px;padding:22px 4px 10px}
+.hero+.sh{padding-top:10px}
+.sh-t{font-size:17px;font-weight:700;display:flex;align-items:center;gap:8px}
+.sh .tag{font-size:11px}
+.sh-act{margin-left:auto;font-size:14px;color:var(--ink2);height:28px}
+.card{background:var(--card);border-radius:14px;padding:16px;margin-bottom:0}
+.card.rows{padding-top:4px;padding-bottom:4px}
+.card.rows .dashed{margin-bottom:12px}
+.gap{margin-top:16px}
+.label.gap{margin-top:16px}
+.dashed.first{margin-top:0}
+.frow.line{border-top:1px solid var(--line);margin-top:16px;padding-top:6px}
+.game-row{display:flex;align-items:center;gap:12px}
+.game-row .rm{flex:1;min-width:0}
+.game-row .gname{font-size:17px;font-weight:700}
+.game-row .rs{font-size:13px;color:var(--ink2);margin-top:2px}
+.fbsteps{margin-bottom:0}
+.addmod{margin-top:22px}
+.req{color:var(--danger);font-weight:600;margin-left:3px}
+.label{justify-content:flex-start}
+.label .cnt{margin-left:auto}
+.title-row{display:flex;align-items:center}
+.title-row .req{margin:0 4px 0 0;font-size:19px}
+.fbsw .n{display:flex;align-items:center;gap:8px}
+/* half-screen sheet + Figma tag pills (node 1:18929) */
+.sheet.half{height:auto;max-height:60%}
+.sheet.pick{height:72%}
+.sheet.pick{height:auto}
+.pstrip{display:flex;gap:28px;overflow-x:auto;overflow-y:hidden;padding:14px 20px 6px;scrollbar-width:none;flex:none;scroll-padding-left:20px;-webkit-mask-image:linear-gradient(to right,transparent 0,#000 14px,#000 calc(100% - 28px),transparent 100%);mask-image:linear-gradient(to right,transparent 0,#000 14px,#000 calc(100% - 28px),transparent 100%)}
+.pstrip::-webkit-scrollbar{display:none}
+.pblock{flex:none;display:flex;flex-direction:column;gap:10px}
+.pblock-t{font-size:13px;color:var(--ink2);height:18px}
+.prow{display:flex;gap:12px}
+.tags{display:flex;flex-wrap:wrap;gap:10px 12px;align-content:flex-start}
+.tags.pad{padding:12px 20px 4px;min-height:0}
+.tag{position:relative;flex:none;display:flex;align-items:center;gap:8px;height:47px;padding:0 26px 0 20px;border:1px solid #EBEBEB;border-radius:30px;background:#FFFFFF;color:#777777;font-size:14px;text-align:left;min-width:0}
+.tag.on{background:#D9D9D9;color:#131313;padding-right:42px}
+.tag-ic{flex:none;display:flex;width:20px;justify-content:center}
+.tag-t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.tag-ck{position:absolute;right:16px;top:50%;margin-top:-3.9px}
+.pk-foot{display:flex;align-items:center;gap:12px;padding:12px 20px 34px;flex:none;min-height:46px}
+.pk-sub{flex:1;min-width:0;font-size:13px;color:var(--ink2);line-height:1.5}
+.pk-sub b{color:var(--ink);font-weight:600;margin-right:6px}
+</style>
+
+<div class="stage">
+  <div class="phone" id="phone"><div class="screen" id="screen"><div class="zoom" id="zoom"><div class="app" id="app"></div></div></div></div>
+  <aside class="side">
+    <h1>玩法模板编辑 · 修订稿 12</h1>
+    <p>结构照小程序 pages/publish/temp。玩家预览和选择玩法里的预览，跑的是原来的玩法屏设计（节点玩法模板_十九个玩法屏），并带上模板里填的内容。本页只是原型，不连接服务器。</p>
+    <ol>
+      <li><b>分区标题放到卡片外</b>，去掉标题前的竖线；玩法设置拆成题目 / 作答规则 / 选项 / 结果反馈几张卡，卡里不再套分区。</li>
+      <li><b>参与方式</b>（原「玩家怎么参与」）：恢复原来的下拉（扫码参与 / 直接参与 / 定位参与）；扫码下面单独一个「扫完回复」开关，打开才填回复。</li>
+      <li><b>互动工具</b>放到页面最下面，添加从底部弹出；语音讲解、背景音乐在里面。</li>
+      <li><b>开关</b>打开是绿色。</li>
+      <li><b>颜色</b>：不用渐变；只有玩法有图标，参与方式、互动工具、完成奖励都是纯文字。</li>
+      <li><b>弹层</b>：分类标签下面和底部，列表内容按透明度渐隐。</li>
+      <li><b>选择玩法</b>：半屏弹层，所有分类排成一条，只能左右滑；每类四行胶囊标签（宽度跟字数走、带图标），分类标签跟着滑动高亮，点分类跳过去；选中灰底 + 对勾，底部是说明和预览。下拉菜单和列表去掉分隔线。</li>
+      <li><b>防误操作</b>：更换已填过内容的玩法、移除玩法或完成奖励，都先确认；互动工具的添加也改成同样的标签。</li>
+      <li><b>必填项</b>标红色 *；互动工具一开始就在页面最下面，没选玩法也在。</li>
+      <li><b>结果反馈</b>：成功反馈、失败反馈各一个开关，打开才出现编辑；完成奖励只留优惠券和勋章；技能检定叫 D20。</li>
+    </ol>
+    <div class="acts">
+      <button data-side="list">我的节点玩法</button>
+      <button data-side="new">新建玩法模板</button>
+      <button data-side="example">打开示例模板</button>
+      <button data-side="preview">玩家预览</button>
+    </div>
+  </aside>
+</div>
+
+<script>
+'use strict';
+/* ---------- catalog. color = the gameplay's own accent (from the original play screens) ---------- */
+const GROUPS = [
+  { title: '问答类', color: '#FC3F3F', items: [
+    { key: 'qaPick', label: '选项问答', sub: '2 至 4 个选项里选一个', icon: 'check-circle', color: '#FC3F3F', play: 'qa', mode: 'pick' },
+    { key: 'qaText', label: '文字问答', sub: '出一道题，玩家打字作答', icon: 'pencil', color: '#FF7A45', play: 'qa', mode: 'type' },
+    { key: 'quick', label: '计时快答', sub: '五道常识题，答错就结束', icon: 'clock', color: '#3FA9D2' },
+    { key: 'branch', label: '分支剧情', sub: '选项决定下一段剧情', icon: 'swap', color: '#D8A05A', play: 'branch' },
+    { key: 'taste', label: '闭眼味觉师', sub: '闭上眼尝一口，猜是什么', icon: 'eye', color: '#E8590C' },
+    { key: 'qaShot', label: '拍照打卡', sub: '给一句提示词，玩家拍一张交上来', icon: 'camera', color: '#F06292', play: 'qa', mode: 'shot' } ] },
+  { title: '内容展示', color: '#12B886', items: [
+    { key: 'album', label: '相册', sub: '上传照片，翻阅一段回忆', icon: 'image', color: '#12B886' },
+    { key: 'sticker', label: '城市贴纸', sub: '在照片上贴一张城市贴纸', icon: 'card', color: '#F06292' } ] },
+  { title: '互动类', color: '#12B886', items: [
+    { key: 'estimate', label: '猜数字', sub: '猜一个数，按接近程度给分', icon: 'hash', color: '#F5A200', play: 'estimate' },
+    { key: 'guess', label: '猜图', sub: '几张图里挑出正确的那张', icon: 'image', color: '#E8590C', play: 'guess' },
+    { key: 'hidden', label: '找东西', sub: '在图上点中藏起来的目标', icon: 'search', color: '#12B886', play: 'hidden' },
+    { key: 'draw', label: '盲盒抽卡', sub: '一副卡池抽一张，翻开就是任务', icon: 'card', color: '#00BDFC', play: 'draw' },
+    { key: 'predict', label: '竞猜', sub: '今天押一个，到期商家给答案', icon: 'clock', color: '#5B8CFF', play: 'predict' },
+    { key: 'bingo', label: '九宫格', sub: '连成一条线就算完成', icon: 'grid', color: '#3FD2D2', play: 'bingo' },
+    { key: 'note', label: '留言', sub: '写一句话，留给下一个来这里的人', icon: 'pencil', color: '#A78BFA' } ] },
+  { title: '推理类', color: '#5B8CFF', items: [
+    { key: 'sort', label: '排序', sub: '把几条按正确顺序排好', icon: 'sort', color: '#5B8CFF' },
+    { key: 'match', label: '连线', sub: '两列里一一配对', icon: 'link', color: '#3FA9D2' },
+    { key: 'classify', label: '分类', sub: '每条归到对的那一类', icon: 'grid', color: '#4C6EF5' } ] },
+  { title: '挑战类', color: '#7C5CFF', items: [
+    { key: 'stop', label: '精准停表', sub: '看准秒数按停，越准越好', icon: 'clock', color: '#22C55E' },
+    { key: 'green', label: '低碳行动', sub: '步行或骑行完成一段路', icon: 'walk', color: '#12A06F' },
+    { key: 'd20', label: 'D20', sub: '掷一个二十面骰，点数够难度就成功', icon: 'd20', color: '#7C5CFF' },
+    { key: 'react', label: '变色就点', sub: '屏幕变色立刻点，比反应', icon: 'zap', color: '#22C55E', play: 'react' },
+    { key: 'shake', label: '摇够数', sub: '规定时间里摇够次数', icon: 'wave', color: '#A78BFA', play: 'shake' },
+    { key: 'countdown', label: '倒计时', sub: '在倒计时结束前完成', icon: 'clock', color: '#4BC48A', play: 'countdown' },
+    { key: 'quiet', label: '安静挑战', sub: '保持安静够久就算成功', icon: 'mute', color: '#2F6B4F', play: 'quiet' },
+    { key: 'steps', label: '计步挑战', sub: '以微信运动同步的步数为准', icon: 'walk', color: '#F5A200' },
+    { key: 'typeIn', label: '输入挑战', sub: '照着一行字打，打错不算', icon: 'pencil', color: '#00BDFC' } ] },
+  { title: '决定类', color: '#D8A05A', items: [
+    { key: 'sign', label: '今日城市签', sub: '抽一支签，照签上说的去做', icon: 'card', color: '#F2C744' },
+    { key: 'coin', label: '抛硬币', sub: '正反面各配一句，抛完照做', icon: 'coin', color: '#D8A05A', play: 'coin' },
+    { key: 'dice', label: '掷骰子', sub: '掷到几就做第几件事', icon: 'dots', color: '#8B5CF6', play: 'dice' } ] },
+];
+const ALL = GROUPS.flatMap(g => g.items);
+const meta = k => ALL.find(g => g.key === k);
+const L = 'ABCD';
+const PARTICIPATE = [{ key: 'scan', label: '扫码参与' }, { key: 'direct', label: '直接参与' }, { key: 'gps', label: '定位参与' }];
+const TOOLS = [
+  { key: 'uses', label: '成功使用次数', sub: '限制成功次数及归属', icon: 'check-circle', color: '#12A06F' },
+  { key: 'limit', label: '限时挑战', sub: '倒计时内完成才算成功', icon: 'clock', color: '#F5A200' },
+  { key: 'voice', label: '语音讲解', sub: '开始前播放一段讲解', icon: 'mic', color: '#5B8CFF' },
+  { key: 'music', label: '背景音乐', sub: '玩的时候播放的音乐', icon: 'music', color: '#F06292' },
+];
+const tool = k => TOOLS.find(t => t.key === k);
+const PRESENT = [{ key: 'inline', label: '嵌在剧情里' }, { key: 'full', label: '整屏打开' }];
+const MODES = [{ key: 'single', label: '单选' }, { key: 'multi', label: '多选' }];
+const TRIES = [{ key: 0, label: '不限次数' }, { key: 1, label: '1 次' }, { key: 2, label: '2 次' }, { key: 3, label: '3 次' }, { key: 5, label: '5 次' }];
+const AFTER = [{ key: false, label: '不亮答案' }, { key: true, label: '亮出正确答案' }];
+const TIERS = [{ key: 6, label: '简单 · 6 点以上' }, { key: 11, label: '中等 · 11 点以上' }, { key: 16, label: '困难 · 16 点以上' }];
+const SECONDS = [{ key: 30, label: '30 秒' }, { key: 60, label: '1 分钟' }, { key: 180, label: '3 分钟' }, { key: 300, label: '5 分钟' }];
+const TRACKS = [{ key: 'tea', label: '老城茶馆' }, { key: 'rain', label: '雨夜街巷' }, { key: 'march', label: '轻快探险' }];
+const SCOPES = [{ key: 'OWNER', label: '本人或本队' }, { key: 'WORLD', label: '全场共享' }];
+const VENUES = ['咖啡馆', '书店', '餐厅', '公园', '博物馆', '其他'].map(v => ({ key: v, label: v }));
+const CATEGORIES = ['问答', '推理', '互动', '挑战', '决定'];
+const CAT_ICONS = { 问答: 'pencil', 推理: 'search', 互动: 'card', 挑战: 'zap', 决定: 'coin' };
+const COUPONS = [{ key: 'c1', label: '满 50 减 10' }, { key: 'c2', label: '饮品第二杯半价' }];
+const IMG_MAX = 3;
+
+/* ---------- icons ---------- */
+const P = {
+  plus: '<path d="M12 5v14M5 12h14"/>', close: '<path d="M6 6l12 12M18 6L6 18"/>', back: '<path d="M15 5l-7 7 7 7"/>',
+  down: '<path d="M8 10l4 4 4-4"/>', check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>', 'check-circle': '<circle cx="12" cy="12" r="8.5"/><path d="M8.5 12.2l2.4 2.4 4.8-4.8"/>',
+  image: '<rect x="4" y="5" width="16" height="14" rx="2.5"/><circle cx="9" cy="10" r="1.6"/><path d="M5 17l4.5-4.5 3.5 3.5 2.5-2.5L19 17"/>',
+  pencil: '<path d="M5 19l1-4L16 5l3 3L9 18z"/>', camera: '<rect x="4" y="7" width="16" height="12" rx="2.5"/><circle cx="12" cy="13" r="3.2"/><path d="M9 7l1.5-2h3L15 7"/>',
+  hash: '<path d="M9 4L7 20M17 4l-2 16M4 9h16M3 15h16"/>', search: '<circle cx="11" cy="11" r="6"/><path d="M16 16l4 4"/>',
+  card: '<rect x="5" y="3.5" width="14" height="17" rx="2.5"/><path d="M9 9h6M9 13h4"/>', zap: '<path d="M13 3L5 13.5h6L10 21l8-10.5h-6z"/>',
+  wave: '<path d="M3 12c2-4 4-4 6 0s4 4 6 0 4-4 6 0"/>', d20: '<path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 3l-4 7.5h8zM8 10.5L4 16.5M16 10.5l4 6M8 10.5L12 21l4-10.5"/>',
+  coin: '<circle cx="12" cy="12" r="8"/><path d="M9.5 9.5h4a1.5 1.5 0 010 3h-3a1.5 1.5 0 000 3h4M12 7.5v1.8M12 15.2V17"/>',
+  dots: '<rect x="4.5" y="4.5" width="15" height="15" rx="3"/><circle cx="9" cy="9" r="1.1" fill="currentColor"/><circle cx="15" cy="15" r="1.1" fill="currentColor"/><circle cx="12" cy="12" r="1.1" fill="currentColor"/>',
+  clock: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>', mic: '<rect x="9" y="3.5" width="6" height="11" rx="3"/><path d="M6 11a6 6 0 0012 0M12 17v3.5"/>',
+  music: '<path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/>',
+  gift: '<rect x="4" y="9" width="16" height="11" rx="1.5"/><path d="M3.5 9h17M12 9v11M12 9c-1.5-3-5-3.5-5-1.5S10 9 12 9c2 0 5 0 5-1.5S13.5 6 12 9"/>',
+  coupon: '<path d="M4 7h16v3a2 2 0 000 4v3H4v-3a2 2 0 000-4z"/>', medal: '<circle cx="12" cy="14" r="5"/><path d="M9 9.5L6.5 4h3.5L12 8l2-4h3.5L15 9.5"/>',
+  qr: '<rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><path d="M14 14h2v2M18 14h2M14 18h2v2M18 18v2h2"/>',
+  shuffle: '<path d="M4 7h3l10 10h3M4 17h3l3-3M14 10l3-3h3M18 4l3 3-3 3M18 14l3 3-3 3"/>', tools: '<path d="M14.5 6.5a4 4 0 00-5.4 5.2L4 16.8V20h3.2l5.1-5.1a4 4 0 005.2-5.4l-2.4 2.4-2.6-.6-.6-2.6z"/>',
+  sort: '<path d="M6 6v12M3.5 15.5L6 18l2.5-2.5M11 7h9M11 12h7M11 17h5"/>', link: '<path d="M10 14a4 4 0 005.7 0l2.5-2.5a4 4 0 00-5.7-5.7L11 7.3M14 10a4 4 0 00-5.7 0l-2.5 2.5a4 4 0 005.7 5.7l1.5-1.5"/>',
+  grid: '<rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/>',
+  walk: '<circle cx="13" cy="4.5" r="1.8"/><path d="M11 21l2-6-2.5-3 1-4.5 3.5 3.5 3 1M9.5 12L7 14"/>', mute: '<path d="M4 9.5h3.5L12 6v12l-4.5-3.5H4z"/><path d="M16 9.5l5 5M21 9.5l-5 5"/>',
+  swap: '<path d="M8 5v14M5 8l3-3 3 3M16 19V5M13 16l3 3 3-3"/>', eye: '<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/>',
+  more: '<circle cx="5.5" cy="12" r="1.6" fill="currentColor"/><circle cx="12" cy="12" r="2.2" fill="currentColor"/><circle cx="18.5" cy="12" r="1.6" fill="currentColor"/>',
+  target: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.2" fill="currentColor"/>', play: '<path d="M8 5.5v13l10.5-6.5z"/>',
+};
+const ic = (n, s = 18, w = 1.8) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[n] || ''}</svg>`;
+const tile = (icon, color, sm) => `<div class="gtile${sm ? ' sm' : ''}" style="background:${color}1A;color:${color}">${ic(icon, sm ? 19 : 22, 2)}</div>`;
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const uid = () => Math.random().toString(36).slice(2, 8);
+const clone = o => JSON.parse(JSON.stringify(o));
+
+function sampleImg(text, a, b) {
+  const c = document.createElement('canvas'); c.width = 320; c.height = 320;
+  const x = c.getContext('2d'); const g = x.createLinearGradient(0, 0, 320, 320);
+  g.addColorStop(0, a); g.addColorStop(1, b); x.fillStyle = g; x.fillRect(0, 0, 320, 320);
+  x.fillStyle = 'rgba(255,255,255,.92)'; x.font = '600 30px -apple-system,PingFang SC,sans-serif'; x.textAlign = 'center'; x.fillText(text, 160, 170);
+  return c.toDataURL('image/jpeg', .8);
+}
+const SAMPLES = [['灯又亮了', '#7A4A22', '#D9A35A'], ['新书架', '#2E4A3A', '#8DB596'], ['小册子', '#3A3550', '#9C91C9'], ['再来一次', '#5A1F22', '#C9666B']];
+let sampleIdx = 0;
+const nextSample = () => { const s = SAMPLES[sampleIdx++ % SAMPLES.length]; return sampleImg(s[0], s[1], s[2]); };
+
+/* ---------- model ---------- */
+function defaultCfg(k) {
+  const opt = () => ({ id: uid(), label: '', correct: false });
+  switch (k) {
+    case 'qaPick': return { title: '', lead: '', judge: false, multi: false, tries: 0, reveal: false, xp: '', options: [opt(), opt()] };
+    case 'qaText': return { title: '', answer: '', tries: 0, xp: '' };
+    case 'estimate': return { title: '', answer: '', tolerance: '' };
+    case 'coin': return { heads: '', tails: '' };
+    case 'dice': return { faces: ['', ''] };
+    case 'd20': return { title: '', need: 11 };
+    default: return { title: '' };
+  }
+}
+function blank() {
+  return { cover: '', title: '', titleEdited: false, desc: '', materials: '', venue: '', cats: [], rules: [''],
+    join: 'direct', scan: { replyOn: false, reply: '' }, tools: [],
+    cfgTool: { uses: { limit: '3', scope: 'OWNER' }, limit: { sec: 60 }, voice: { title: '' }, music: { track: 'tea', loop: true } },
+    present: 'inline', modules: ['finish', 'reward'], game: null,
+    fb: { ok: { on: false, text: '', imgs: [] }, bad: { on: false, text: '', imgs: [] } },
+    reward: { coupon: { on: false, id: '' }, medal: { on: false, name: '', img: '' } } };
+}
+function example() {
+  const d = blank();
+  d.cover = sampleImg('老城茶馆', '#4A3626', '#B08A5E');
+  d.title = '老城茶馆的最后一道题'; d.titleEdited = true;
+  d.desc = '听掌柜讲完故事，答出这家茶馆的来历'; d.materials = '手机'; d.venue = '咖啡馆'; d.cats = ['问答'];
+  d.rules = ['到茶馆找掌柜，听他讲完老城的故事', '回答掌柜的问题'];
+  d.join = 'scan'; d.scan = { replyOn: true, reply: '欢迎来到老城茶馆' };
+  d.tools = ['uses', 'music'];
+  d.game = { key: 'qaPick', cfg: { title: '这家茶馆是哪一年开张的？', lead: '掌柜把茶杯推到你面前', judge: true, multi: false, tries: 2, reveal: true, xp: '10', options: [
+    { id: 'oa', label: '1912 年', correct: false }, { id: 'ob', label: '1937 年', correct: true }, { id: 'oc', label: '1958 年', correct: false } ] } };
+  d.fb = { ok: { on: true, text: '掌柜笑了：“记性不错。”他给你续上了一杯。', imgs: [sampleImg('灯又亮了', '#7A4A22', '#D9A35A')] },
+           bad: { on: true, text: '掌柜摇摇头：“再看看门口那块牌匾。”', imgs: [] } };
+  d.reward.coupon = { on: true, id: 'c2' };
+  return d;
+}
+function steps(g) {
+  const k = g.key, c = g.cfg;
+  const first = {
+    qaPick: '玩家' + (c.judge ? '作答' : '选一个选项'), qaText: '玩家打字作答', qaShot: '玩家拍一张照片交上来', estimate: '玩家猜一个数',
+    coin: '玩家抛硬币', dice: '玩家掷骰子', d20: '玩家掷 D20', guess: '玩家挑一张图', hidden: '玩家在图上找目标', draw: '玩家抽一张卡',
+    react: '玩家等屏幕变色再点', shake: '玩家摇手机',
+  }[k] || '玩家开始这一关';
+  const judge = {
+    qaPick: c.judge ? '答对是成功，次数用完还没答对是失败' : '选了就是成功，中途退出是失败',
+    qaText: '答对是成功，次数用完还没答对是失败', estimate: '在误差范围内是成功，超出是失败',
+    d20: '点数够难度是成功，不够是失败', coin: '照做是成功，放弃是失败', dice: '照做是成功，放弃是失败',
+  }[k] || '完成是成功，没完成是失败';
+  return [first, judge, '玩家看到成功或失败的反馈，然后继续'];
+}
+
+/* ---------- state ---------- */
+const S = { screen: 'list', list: [], editId: null, base: '', d: blank(), errors: {}, showErr: false,
+  sheet: null, peek: null, menu: null, act: null, toast: null, pv: null, k: 1, h: 844 };
+function getPath(p) { return p.split('.').reduce((o, k) => (o == null ? o : o[k]), S); }
+function setPath(p, v) { const ks = p.split('.'); let o = S; for (let i = 0; i < ks.length - 1; i++) o = o[ks[i]]; o[ks[ks.length - 1]] = v; }
+const dirty = () => JSON.stringify(S.d) !== S.base;
+
+/* ---------- validation ---------- */
+function validateGame() {
+  const d = S.d, e = {};
+  if (!d.modules.includes('finish')) { e.finish = '先添加玩法模块'; return e; }
+  if (!d.game) { e.finish = '先选择玩法'; return e; }
+  const g = d.game, c = g.cfg, b = 'd.game.cfg.';
+  if (g.key === 'qaPick') {
+    if (!c.title.trim()) e[b + 'title'] = '请填写题干';
+    c.options.forEach((o, i) => { if (!o.label.trim()) e[b + 'options.' + i + '.label'] = '请填写选项 ' + L[i]; });
+    if (c.judge && !c.options.some(o => o.correct)) e.correct = '请设置正确答案';
+  } else if (g.key === 'qaText') { if (!c.title.trim()) e[b + 'title'] = '请填写问题'; if (!c.answer.trim()) e[b + 'answer'] = '请填写正确答案'; }
+  else if (g.key === 'estimate') { if (!c.title.trim()) e[b + 'title'] = '请填写要猜的问题'; if (!String(c.answer).trim()) e[b + 'answer'] = '请填写正确数字'; }
+  else if (g.key === 'coin') { if (!c.heads.trim()) e[b + 'heads'] = '请填写正面要做的事'; if (!c.tails.trim()) e[b + 'tails'] = '请填写反面要做的事'; }
+  else if (g.key === 'dice') c.faces.forEach((f, i) => { if (!f.trim()) e[b + 'faces.' + i] = '请填写第 ' + (i + 1) + ' 面'; });
+  else if (!c.title.trim()) e[b + 'title'] = '请填写' + (g.key === 'd20' ? '这次要掷什么' : g.key === 'qaShot' ? '提示词' : '标题');
+  if (d.modules.includes('reward')) {
+    if (d.reward.coupon.on && !d.reward.coupon.id) e.coupon = '请选择优惠券';
+    if (d.reward.medal.on && !d.reward.medal.name.trim()) e.medal = '请填写勋章名称';
+  }
+  return e;
+}
+function validateAll() {
+  const d = S.d, e = {};
+  if (!d.title.trim()) e['d.title'] = '请给这个玩法起个名字';
+  if (!d.desc.trim()) e['d.desc'] = '请写一句玩法看点';
+  if (!d.cats.length) e.cats = '请选择至少一个玩法类别';
+  if (!d.rules.some(x => x.trim())) e.rules = '至少写一步玩法规则';
+  return Object.assign(e, validateGame());
+}
+const err = k => (S.showErr && S.errors[k]) ? `<div class="err-text">${esc(S.errors[k])}</div>` : '';
+const ec = k => (S.showErr && S.errors[k]) ? ' err' : '';
+
+/* ---------- original play screens (play.html), driven with the template's own content ---------- */
+let PLAY_SRC = null, PLAY_FAIL = false;
+fetch('play.html').then(r => r.ok ? r.text() : Promise.reject()).then(t => { PLAY_SRC = t; refreshFrames(); }).catch(() => { PLAY_FAIL = true; refreshFrames(); });
+const PLAY_CSS = `html{visibility:hidden}
+html,body{background:#000!important;margin:0!important;padding:0!important;overflow:hidden!important;min-height:0!important}
+.masthead,.picker,.notes,#cfg{display:none!important}
+#kit .rail,#kit2 .rail,#kit .hint,#kit2 .hint,#kit .tally,#kit2 .tally,#kit .reset,#kit2 .reset{display:none!important}
+.stage{padding:0!important;margin:0!important;gap:0!important;justify-content:flex-start!important;align-items:flex-start!important}
+#kit>.wrap,#kit2>.wrap{display:block!important;padding:0!important;margin:0!important;background:none!important;gap:0!important;min-height:0!important}
+.deck{padding:0!important;margin:0!important;display:block!important}
+.phone{margin:0!important;border-radius:0!important;box-shadow:none!important}`;
+/* the template's fields in the shape play.html's applyUserCfg() reads */
+function playCfg(d, key) {
+  const g = d && d.game && d.game.key === key ? d.game : null;
+  if (!g) return {};
+  const c = g.cfg, o = {};
+  if (key === 'qaPick') {
+    if (c.title) o.title = c.title;
+    if (c.options.some(x => x.label)) o.options = c.options.map(x => ({ t: x.label, fb: (x.correct || !c.judge) ? (d.fb.ok.on ? d.fb.ok.text : '') : (d.fb.bad.on ? d.fb.bad.text : ''), __right: c.judge ? x.correct : undefined }));
+  } else if (key === 'qaText') { if (c.title) o.title = c.title; if (c.answer) o.answer = c.answer; }
+  else if (key === 'qaShot') { if (c.title) { o.title = c.title; o.shotLead = c.title; } }
+  else if (key === 'estimate') { if (c.title) o.question = c.title; if (c.answer !== '') o.answer = c.answer; if (c.tolerance !== '') o.tolerance = c.tolerance; }
+  else if (key === 'coin') { if (c.heads) o.headsDo = c.heads; if (c.tails) o.tailsDo = c.tails; }
+  else if (key === 'dice') { if (c.faces.some(Boolean)) o.faces = c.faces.map(v => ({ v })); }
+  else if (c.title) o.title = c.title;
+  return o;
+}
+function playDoc(key) {
+  const m = meta(key), d = S.d;
+  const tries = key === 'qaPick' && d.game && d.game.key === 'qaPick' && d.game.cfg.judge ? Number(d.game.cfg.tries) || 0 : 0;
+  const lim = d.tools.includes('limit') && d.game && d.game.key === key ? d.cfgTool.limit.sec : 0;
+  const boot = `<style>${PLAY_CSS}</style><script>
+    window.__qaMode=${JSON.stringify(m.mode || 'type')};window.__limitSec=${lim};window.__maxTries=${tries};window.__qaTheme='dark';
+    window.__reveal=${!!(d.game && d.game.cfg && d.game.cfg.reveal)};window.__CFGKEY=${JSON.stringify(m.play)};window.__CFG=${JSON.stringify(playCfg(d, key))};
+    (function(){var go=function(){var b=document.querySelector('[data-game="${m.play}"]');if(b)b.click();document.documentElement.style.visibility='visible';};
+    if(document.readyState==='complete')setTimeout(go,60);else addEventListener('load',function(){setTimeout(go,60);});})();<\/script>`;
+  return PLAY_SRC + boot;
+}
+/* fills every [data-frame] holder after a render with the original play screen */
+function refreshFrames(force) {
+  app.querySelectorAll('[data-frame]').forEach(box => {
+    const key = box.dataset.frame, w = +box.dataset.w, h = +box.dataset.h, k = Math.min(w / 375, h / 812);
+    box.style.width = Math.round(375 * k) + 'px'; box.style.height = Math.round(812 * k) + 'px';
+    const sig = key + '|' + JSON.stringify(playCfg(S.d, key));
+    let f = box.querySelector('iframe');
+    if (f && f.dataset.sig === sig && !force) { f.style.transform = `scale(${k})`; return; }
+    if (!PLAY_SRC) { box.innerHTML = PLAY_FAIL ? `<div class="mock" style="height:100%">${mockBody(key)}</div>` : ''; return; }
+    box.innerHTML = '<iframe title="玩法屏"></iframe>'; f = box.querySelector('iframe');
+    f.dataset.sig = sig; f.style.transform = `scale(${k})`; f.srcdoc = playDoc(key);
+  });
+}
+/* games without an original screen (D20, 打卡类) get a dark screen in the same language */
+function mockBody(key) {
+  const m = meta(key), c = S.d.game && S.d.game.key === key ? S.d.game.cfg : {};
+  if (key === 'd20') { const r = S.d20; return `<div style="font-size:13px;color:var(--pvink2)">D20 · 需要 ${c.need || 11} 点以上</div><div class="pv-h">${esc(c.title || '你能说服掌柜吗？')}</div><div class="d20" aria-live="polite">${r || '?'}</div><button class="pv-btn" data-act="rollD20">掷 D20</button>`; }
+  return `<div class="pv-h">${esc(c.title || m.label)}</div><div class="pv-meta">${esc(m.sub)}</div>`;
+}
+
+/* ---------- render ---------- */
+const app = document.getElementById('app');
+function render(keep = true) {
+  const sc = app.querySelector('.scroll,.pv-body'); const top = keep && sc ? sc.scrollTop : 0;
+  const ss = app.querySelector('.sheet:not(.l2) .sscroll'); const stop = ss ? ss.scrollTop : 0;
+  const dark = S.screen === 'preview';
+  const title = { list: '', edit: '编辑玩法模板', preview: '玩家视角预览', done: '' }[S.screen];
+  let h = (dark ? '<div class="topdark"></div>' : '') + `<div class="status${dark ? ' dark' : ''}"><span>9:41</span><span>5G ▮▮▮</span></div>
+    <div class="nav${dark ? ' dark' : ''}"><button class="back" data-act="navBack" aria-label="返回">${ic('back', 22, 2)}</button><div class="t">${title}</div><div class="capsule">${ic('more', 18)}<i></i>${ic('target', 16)}</div></div>`;
+  h += S.screen === 'list' ? renderList() : S.screen === 'edit' ? renderEdit() : S.screen === 'preview' ? renderPreview() : renderDone();
+  h += renderSheet() + renderPeek() + renderMenu() + renderAct();
+  if (S.toast) h += `<div class="toast" role="status">${esc(S.toast)}</div>`;
+  app.innerHTML = h;
+  refreshFrames();
+  const sc2 = app.querySelector('.scroll,.pv-body'); if (sc2) sc2.scrollTop = top;
+  const ss2 = app.querySelector('.sheet:not(.l2) .sscroll'); if (ss2 && stop) ss2.scrollTop = stop;
+  const pg = document.getElementById('pager'); if (pg && S.sheet) pg.scrollLeft = S.sheet.sl != null ? S.sheet.sl : Math.max(0, (document.getElementById('pb-' + (S.sheet.tab || 0)) || {}).offsetLeft - 20 || 0);
+  app.querySelectorAll('textarea[data-autoh]').forEach(autoH);
+}
+function autoH(t) { t.style.height = 'auto'; t.style.height = Math.max(44, t.scrollHeight) + 'px'; }
+function scrollTo(id) { const sc = app.querySelector('.scroll'), t = document.getElementById(id); if (sc && t) sc.scrollTop = t.offsetTop - 12; }
+
+function renderList() {
+  return `<div class="scroll list"><div class="big-t">我的节点玩法</div>
+    ${S.list.length ? S.list.map(t => `<button class="tcard" data-act="openTpl" data-id="${t.id}">
+      <div class="cv">${t.d.cover ? `<img src="${t.d.cover}" alt="">` : t.d.game ? tile(meta(t.d.game.key).icon, meta(t.d.game.key).color) : ic('image', 22)}</div>
+      <div class="mt"><div class="nm">${esc(t.d.title || '未命名玩法')}</div><div class="sb">${esc(t.d.game ? meta(t.d.game.key).label : '未选玩法')} · ${t.time}</div></div>
+      <span class="st${t.status === '已发布' ? ' pub' : ''}">${t.status}</span></button>`).join('') : `<div class="empty">还没有节点玩法</div>`}
+  </div><div class="bottombar"><button class="btn primary" data-act="newTpl">新建玩法模板</button></div>`;
+}
+function dd(id, list, value, extra = '') {
+  const o = list.find(x => x.key === value);
+  return `<button class="pick${o ? '' : ' empty'}${extra}" data-act="menu" data-menu="${id}" aria-haspopup="listbox"><span>${esc(o ? o.label : '请选择')}</span>${ic('down', 16, 2)}</button>`;
+}
+const inp = (path, ph, extra = '') => `<input class="inp${ec(path)}" data-path="${path}" placeholder="${esc(ph)}" value="${esc(getPath(path))}" ${extra}>${err(path)}`;
+const sw = (on, act, label, attrs = '') => `<button class="switch${on ? ' on' : ''}" role="switch" aria-checked="${on}" aria-label="${label}" data-act="${act}" ${attrs}></button>`;
+
+/* Section titles sit above their cards (no leading bar); every card is one flat level. */
+const sh = (title, opts = {}) => `<div class="sh"${opts.id ? ` id="${opts.id}"` : ''}><span class="sh-t">${title}${opts.req ? '<span class="req">*</span>' : ''}</span>${opts.tag ? `<span class="tag">${opts.tag}</span>` : ''}${opts.right || ''}</div>`;
+const rmBtn = (key, label) => `<button class="sh-act" data-act="rmMod" data-key="${key}" aria-label="移除${label}">移除</button>`;
+
+function renderEdit() {
+  const d = S.d;
+  let h = `<div class="scroll" id="scroll">
+    <div class="hero" id="sec-top">
+      <button class="hero-cover" data-act="cover" aria-label="${d.cover ? '更换玩法封面' : '上传玩法封面'}">
+        ${d.cover ? `<img src="${d.cover}" alt=""><span class="cover-del" data-act="clearCover" role="button" aria-label="删除玩法封面">${ic('close', 16, 2.2)}</span>` : `<span class="hero-plus">${ic('plus', 18, 2)}</span><span>上传玩法封面</span>`}
+      </button>
+      <div class="hero-body"><div class="title-row"><span class="req">*</span><input class="title-input" data-path="d.title" data-title="1" maxlength="20" placeholder="给这个玩法起个名字" value="${esc(d.title)}"></div>${err('d.title')}</div>
+    </div>
+    ${sh('模板信息', { id: 'sec-basic' })}
+    <div class="card">
+      <div class="label"><span>玩法看点<span class="req">*</span></span><span class="cnt" id="cnt">${d.desc.length}/30</span></div>
+      <textarea class="ta${ec('d.desc')}" rows="1" data-autoh="1" data-path="d.desc" data-count="cnt" maxlength="30" placeholder="一句话介绍这个玩法的看点">${esc(d.desc)}</textarea>${err('d.desc')}
+      <div class="two gap">
+        <div><div class="label">所需材料</div><input class="inp" data-path="d.materials" placeholder="如：手机、笔" value="${esc(d.materials)}"></div>
+        <div><div class="label">商铺类型</div>${dd('venue', VENUES, d.venue)}</div></div>
+      <div class="label gap">玩法类别<span class="req">*</span></div>
+      <div class="chips">${d.cats.map((c, i) => `<span class="chip">${esc(c)}<button data-act="rmCat" data-i="${i}" aria-label="删除类别 ${esc(c)}">${ic('close', 12, 2.2)}</button></span>`).join('')}
+        <button class="chip-add" data-act="openCats">${ic('plus', 13, 2.2)}添加类别</button></div>${err('cats')}
+    </div>
+    ${sh('玩法规则', { id: 'sec-rule', req: 1 })}
+    <div class="card">
+      <div class="steps-ed">${d.rules.map((r, i) => `<div class="step-ed"><div class="step-no">${i + 1}</div><div class="step-f">
+        <textarea class="ta" rows="1" data-autoh="1" data-path="d.rules.${i}" maxlength="60" placeholder="第 ${i + 1} 步要玩家做什么">${esc(r)}</textarea>
+        ${d.rules.length > 1 ? `<button class="step-del" data-act="rmRule" data-i="${i}" aria-label="删除第 ${i + 1} 步">${ic('close', 14, 2.2)}</button>` : ''}</div></div>`).join('')}</div>
+      ${err('rules')}<button class="dashed" data-act="addRule">${ic('plus', 14, 2.2)}添加一步</button>
+    </div>`;
+  if (d.modules.includes('finish')) h += renderJoin() + renderCore();
+  else h += `<span id="sec-module"></span>${err('finish')}`;
+  if (d.modules.includes('reward')) h += renderReward();
+  h += renderTools();
+  const av = ['finish', 'reward'].filter(k => !d.modules.includes(k));
+  if (av.length) h += `<button class="addmod" data-act="openMods">${ic('plus', 15, 2.2)}添加模块</button>`;
+  return h + `<div class="pad"></div></div><div class="bottombar"><button class="btn primary" data-act="openPreview">查看预览</button></div>`;
+}
+
+/* 参与方式: the original single choice; 扫码 can carry a reply behind its own switch */
+function renderJoin() {
+  const d = S.d;
+  return `${sh('参与方式', { id: 'sec-join' })}<div class="card">
+    ${dd('join', PARTICIPATE, d.join)}
+    ${d.join === 'scan' ? `<div class="frow line"><span class="n">扫完回复</span>${sw(d.scan.replyOn, 'toggleReply', '扫完回复')}</div>
+      ${d.scan.replyOn ? `<input class="inp" data-path="d.scan.reply" placeholder="例如 欢迎来到老城茶馆" value="${esc(d.scan.reply)}">` : ''}` : ''}
+  </div>`;
+}
+/* 互动工具: last section on the page; tools are added from a bottom sheet */
+function renderTools() {
+  const d = S.d;
+  return `${sh('互动工具', { id: 'sec-tools' })}<div class="card${d.tools.length ? ' rows' : ''}">
+    ${d.tools.map(k => `<button class="r" data-act="openTool" data-key="${k}"><div class="rm"><div class="rt">${tool(k).label}</div><div class="rs">${esc(toolSummary(k))}</div></div><span class="pill">配置</span></button>`).join('')}
+    <button class="dashed${d.tools.length ? '' : ' first'}" data-act="openTools">${ic('plus', 14, 2.2)}添加互动工具</button></div>`;
+}
+function toolSummary(k) {
+  const c = S.d.cfgTool;
+  if (k === 'uses') return `成功上限 ${c.uses.limit || 0} 次 · ${SCOPES.find(x => x.key === c.uses.scope).label}`;
+  if (k === 'limit') return SECONDS.find(x => x.key === c.limit.sec).label + '内完成';
+  if (k === 'voice') return c.voice.title || '还没有选音频';
+  return TRACKS.find(x => x.key === c.music.track).label + (c.music.loop ? ' · 循环' : '');
+}
+
+function renderCore() {
+  const d = S.d, g = d.game;
+  let h = `${sh('<span id="sec-module"></span>玩法', { id: 'mod-finish', right: rmBtn('finish', '玩法') })}${err('finish')}`;
+  if (!g) return h + `<div class="card"><button class="dashed first" data-act="openPicker">${ic('plus', 14, 2.2)}选择玩法</button></div>`;
+  const m = meta(g.key);
+  h += `<div class="card"><div class="game-row">${tile(m.icon, m.color)}<div class="rm"><div class="gname">${m.label}</div><div class="rs">${m.sub}</div></div><button class="pill" data-act="openPicker">更换</button></div>
+    ${['qaPick', 'qaText', 'qaShot', 'd20'].includes(g.key) ? `<div class="label gap">呈现方式</div>${dd('present', PRESENT, d.present)}` : ''}</div>`;
+  return h + renderCfg(g) + renderFeedback(g);
+}
+function renderCfg(g) {
+  const c = g.cfg, k = g.key, b = 'd.game.cfg.';
+  const card = (title, body, req) => `${sh(title, { req })}<div class="card">${body}</div>`;
+  if (k === 'qaPick') {
+    let opts = c.options.map((o, i) => `<div class="opt"><div class="opt-line"><span class="letter">${L[i]}</span><input class="inp${ec(b + 'options.' + i + '.label')}" data-path="${b}options.${i}.label" placeholder="选项 ${L[i]}" value="${esc(o.label)}">
+        ${c.judge ? `<button class="iconbtn${o.correct ? ' on' : ''}" data-act="pickCorrect" data-i="${i}" role="${c.multi ? 'checkbox' : 'radio'}" aria-checked="${o.correct}" aria-label="设为正确答案">${ic('check-circle', 22, 2)}</button>` : ''}
+        ${c.options.length > 2 ? `<button class="iconbtn" data-act="rmOption" data-i="${i}" aria-label="删除选项 ${L[i]}">${ic('close', 16, 2.2)}</button>` : ''}</div>${err(b + 'options.' + i + '.label')}</div>`).join('');
+    opts += err('correct') + (c.options.length < 4 ? `<button class="dashed" data-act="addOption">${ic('plus', 14, 2.2)}添加选项</button>` : '');
+    return card('题目', `<div class="label">题干<span class="req">*</span></div>${inp(b + 'title', '例如 这座桥建于哪一年？')}<div class="label gap">前置说明</div>${inp(b + 'lead', '例如 先闭上眼睛尝一口')}`)
+      + card('作答规则', `<div class="frow"><span class="n">判断答案对错</span>${sw(c.judge, 'toggleJudge', '判断答案对错')}</div>
+        ${c.judge ? `<div class="two gap"><div><div class="label">选择方式</div>${dd('mode', MODES, c.multi ? 'multi' : 'single')}</div><div><div class="label">可以答几次</div>${dd('tries', TRIES, Number(c.tries) || 0)}</div></div>
+          <div class="two gap"><div><div class="label">次数用完后</div>${dd('reveal', AFTER, !!c.reveal)}</div><div><div class="label">答对奖励分</div><input class="inp" type="number" min="0" max="200" data-path="${b}xp" placeholder="0" value="${esc(c.xp)}"></div></div>`
+          : `<div class="label gap">完成奖励分</div><input class="inp" type="number" min="0" max="200" data-path="${b}xp" placeholder="0" value="${esc(c.xp)}">`}`)
+      + card('选项', opts, 1);
+  }
+  if (k === 'qaText') return card('题目', `<div class="label">问题<span class="req">*</span></div>${inp(b + 'title', '例如 这座桥建于哪一年？')}<div class="label gap">正确答案<span class="req">*</span></div>${inp(b + 'answer', '多个答案用顿号分隔')}`)
+    + card('作答规则', `<div class="two"><div><div class="label">可以答几次</div>${dd('tries', TRIES, Number(c.tries) || 0)}</div><div><div class="label">答对奖励分</div><input class="inp" type="number" min="0" data-path="${b}xp" placeholder="0" value="${esc(c.xp)}"></div></div>`);
+  if (k === 'estimate') return card('题目', `<div class="label">要猜的问题<span class="req">*</span></div>${inp(b + 'title', '例如 这条街有几棵梧桐？')}<div class="two gap"><div><div class="label">正确数字<span class="req">*</span></div>${inp(b + 'answer', '例如 48', 'type="number"')}</div><div><div class="label">误差范围</div>${inp(b + 'tolerance', '例如 5', 'type="number"')}</div></div>`);
+  if (k === 'coin') return card('两面', `<div class="label">正面要做的事<span class="req">*</span></div>${inp(b + 'heads', '例如 点一杯招牌茶')}<div class="label gap">反面要做的事<span class="req">*</span></div>${inp(b + 'tails', '例如 和掌柜聊三分钟')}`);
+  if (k === 'dice') return card('每一面', c.faces.map((f, i) => `<div class="opt"><div class="opt-line"><span class="letter">${i + 1}</span><input class="inp${ec(b + 'faces.' + i)}" data-path="${b}faces.${i}" placeholder="掷到 ${i + 1} 要做的事" value="${esc(f)}">${c.faces.length > 2 ? `<button class="iconbtn" data-act="rmFace" data-i="${i}" aria-label="删除第 ${i + 1} 面">${ic('close', 16, 2.2)}</button>` : ''}</div>${err(b + 'faces.' + i)}</div>`).join('')
+    + (c.faces.length < 6 ? `<button class="dashed" data-act="addFace">${ic('plus', 14, 2.2)}添加一面</button>` : ''), 1);
+  if (k === 'd20') return card('D20', `<div class="label">这次要掷什么<span class="req">*</span></div>${inp(b + 'title', '例如 你能说服掌柜吗？')}<div class="label gap">难度</div>${dd('need', TIERS, c.need)}`);
+  if (k === 'qaShot') return card('拍照要求', `<div class="label">提示词<span class="req">*</span></div>${inp(b + 'title', '例如 和门口的石狮子合个影')}`);
+  return card('内容', `<div class="label">标题<span class="req">*</span></div>${inp(b + 'title', '这一关叫什么')}`);
+}
+function fbCard(key, label, color) {
+  const f = S.d.fb[key];
+  return `${sh(`<span class="dot" style="background:${color}"></span>${label}`)}<div class="card">
+    <textarea class="ta" rows="2" data-autoh="1" data-path="d.fb.${key}.text" placeholder="${label}后玩家看到的话">${esc(f.text)}</textarea>
+    <div class="imgs">${f.imgs.map((src, j) => `<div class="slot"><img src="${src}" alt="${label}图片 ${j + 1}"><button class="slot-x" data-act="imgDel" data-r="${key}" data-j="${j}" aria-label="删除图片 ${j + 1}">${ic('close', 12, 2.6)}</button></div>`).join('')}
+    ${f.imgs.length < IMG_MAX ? `<button class="slot-add" data-act="imgAdd" data-r="${key}" aria-label="添加${label}图片">${ic('plus', 22, 2)}</button>` : ''}</div></div>`;
+}
+function renderFeedback(g) {
+  let h = `${sh('结果反馈', { id: 'sec-fb' })}<div class="card">
+    <div class="fbsteps">${steps(g).map((s, i) => `<div class="fbstep"><b>${i + 1}</b><span>${esc(s)}</span></div>`).join('')}</div>
+    <div class="frow line fbsw"><span class="n"><span class="dot" style="background:#07C160"></span>成功反馈</span>${sw(S.d.fb.ok.on, 'toggleFb', '成功反馈', 'data-k="ok"')}</div>
+    <div class="frow line fbsw" style="margin-top:0"><span class="n"><span class="dot" style="background:#E5484D"></span>失败反馈</span>${sw(S.d.fb.bad.on, 'toggleFb', '失败反馈', 'data-k="bad"')}</div></div>`;
+  if (S.d.fb.ok.on) h += fbCard('ok', '成功反馈', '#07C160');
+  if (S.d.fb.bad.on) h += fbCard('bad', '失败反馈', '#E5484D');
+  return h;
+}
+function renderReward() {
+  const r = S.d.reward;
+  return `${sh('完成奖励', { id: 'mod-reward', right: rmBtn('reward', '完成奖励') })}<div class="card rows">
+    <div class="rw"><div class="rw-line"><div class="rw-name">优惠券</div>${sw(r.coupon.on, 'toggleRw', '优惠券', 'data-k="coupon"')}</div>
+      ${r.coupon.on ? `<div class="rw-cfg">${dd('coupon', COUPONS, r.coupon.id, ec('coupon'))}${err('coupon')}</div>` : ''}</div>
+    <div class="rw"><div class="rw-line"><div class="rw-name">勋章</div>${sw(r.medal.on, 'toggleRw', '勋章', 'data-k="medal"')}</div>
+      ${r.medal.on ? `<div class="rw-cfg"><div class="medal"><button class="medal-up" data-act="medalImg" aria-label="上传勋章图片">${r.medal.img ? `<img src="${r.medal.img}" alt="">` : ic('plus', 18, 2)}</button><input class="inp${ec('medal')}" data-path="d.reward.medal.name" placeholder="勋章名称，如 老城探秘者" value="${esc(r.medal.name)}"></div>${err('medal')}</div>` : ''}</div>
+  </div>`;
+}
+
+/* ---------- sheets ---------- */
+const head = (title, la, ra, rl = '完成') => `<div class="shtop"><div class="grab"></div><div class="shead"><button class="l" data-act="${la}">退出</button><div class="tt">${esc(title)}</div><button class="rr" data-act="${ra}">${rl}</button></div></div>`;
+/* tag pill from Figma node 1:18929: 47px tall, fully rounded, 1px #EBEBEB border; selected = #D9D9D9 fill + check */
+function tagBtn(label, on, act, v, icon, role) {
+  return `<button class="tag${on ? ' on' : ''}" data-act="${act}" data-v="${esc(v)}" role="${role}" aria-checked="${on}">${icon ? `<span class="tag-ic">${ic(icon, 20, 1.6)}</span>` : ''}<span class="tag-t">${esc(label)}</span>${on ? '<img class="tag-ck" src="tag-check.svg" width="10.1588" height="7.8" alt="">' : ''}</button>`;
+}
+function renderSheet() {
+  const sh = S.sheet; if (!sh) return '';
+  let body = '', exit = 'closeSheet', cls = '';
+  if (sh.type === 'picker') {
+    /* half-screen sheet; all categories in one strip that only scrolls sideways (4 rows); tags follow the Figma "Edit Interests" pills */
+    exit = 'pickerExit'; cls = ' pick';
+    const sel = sh.sel && meta(sh.sel);
+    body = `${head('选择玩法', 'pickerExit', 'pickerDone')}
+      <div class="tabs" id="ptabs">${GROUPS.map((g, i) => `<button class="${(sh.tab || 0) === i ? 'on' : ''}" data-act="jumpGroup" data-i="${i}">${g.title}</button>`).join('')}</div>
+      <div class="pstrip" id="pager">${GROUPS.map((g, gi) => { const rows = [[], [], [], []]; g.items.forEach((it, i) => rows[i % 4].push(it));
+        return `<div class="pblock" id="pb-${gi}"><div class="pblock-t">${g.title}</div>${rows.filter(r => r.length).map(r => `<div class="prow">${r.map(it => tagBtn(it.label, sh.sel === it.key, 'pickTag', it.key, it.icon, 'radio')).join('')}</div>`).join('')}</div>`; }).join('')}</div>
+      <div class="pk-foot"><div class="pk-sub">${sel ? `<b>${sel.label}</b>${esc(sel.sub)}` : '选一个玩法'}</div>${sel ? `<button class="pill" data-act="peek" data-key="${sel.key}">预览</button>` : ''}</div>`;
+  } else if (sh.type === 'tools') {
+    cls = ' half';
+    const focus = TOOLS.find(t => t.key === sh.last);
+    body = `${head('互动工具', 'closeSheet', 'toolsDone')}<div class="tags pad">${TOOLS.map(t => tagBtn(t.label, sh.sel.includes(t.key), 'toggleTool', t.key, t.icon, 'checkbox')).join('')}</div>
+      <div class="pk-foot"><div class="pk-sub">${focus ? `<b>${focus.label}</b>${esc(focus.sub)}` : '可以选多个'}</div></div>`;
+  } else if (sh.type === 'tool') {
+    const t = tool(sh.key), dr = sh.draft;
+    let b = '';
+    if (sh.key === 'uses') b = `<div class="two"><div><div class="flabel" style="margin-top:0">成功上限</div><input class="inp" type="number" min="1" max="99" data-tool="limit" value="${esc(dr.limit)}" placeholder="1 至 99"></div><div><div class="flabel" style="margin-top:0">次数归属</div>${dd('scope', SCOPES, dr.scope)}</div></div>`;
+    else if (sh.key === 'limit') b = `<div class="flabel" style="margin-top:0">限时</div>${dd('sec', SECONDS, dr.sec)}`;
+    else if (sh.key === 'voice') b = `<div class="flabel" style="margin-top:0">讲解标题</div><input class="inp" data-tool="title" value="${esc(dr.title)}" placeholder="例如 掌柜的开场白"><div class="flabel">讲解音频</div><button class="pick empty" data-act="noop"><span>选择音频文件</span>${ic('plus', 16, 2)}</button>`;
+    else b = `<div class="flabel" style="margin-top:0">曲目</div>${dd('track', TRACKS, dr.track)}<div class="frow" style="margin-top:8px"><span class="n">循环播放</span>${sw(dr.loop, 'toggleLoop', '循环播放')}</div>`;
+    body = `${head(t.label, 'closeSheet', 'toolDone')}<div class="sscroll"><div class="sbody">${b}<button class="btn secondary" style="width:100%;margin-top:24px;color:var(--danger)" data-act="rmTool" data-key="${sh.key}">移除这个工具</button></div></div>`;
+  } else if (sh.type === 'cats') {
+    cls = ' half';
+    body = `${head('玩法类别', 'closeSheet', 'catsDone')}<div class="tags pad">${CATEGORIES.map(c => tagBtn(c, sh.sel.includes(c), 'toggleCat', c, CAT_ICONS[c], 'checkbox')).join('')}</div><div class="pk-foot"></div>`;
+  } else if (sh.type === 'mods') {
+    const items = [{ k: 'finish', name: '玩法', icon: 'play', color: '#111214' }, { k: 'reward', name: '完成奖励', icon: 'gift', color: '#E8590C' }].filter(x => !S.d.modules.includes(x.k));
+    body = `${head('添加模块', 'closeSheet', 'closeSheet')}<div class="sscroll">${items.map(x => `<button class="li" data-act="addMod" data-key="${x.k}"><span class="lm">${x.name}</span>${ic('plus', 18, 2)}</button>`).join('')}</div>`;
+  }
+  return `<div class="mask" data-act="${exit}"></div><div class="sheet${cls}" role="dialog">${body}</div>`;
+}
+function renderPeek() {
+  if (!S.peek) return '';
+  const m = meta(S.peek), avail = S.h - 120 - 64 - 40;
+  return `<div class="mask l2" data-act="peekExit"></div><div class="sheet l2" role="dialog" aria-label="预览${m.label}">
+    ${head(m.label, 'peekExit', 'peekPick', '选择')}
+    <div class="sscroll"><div class="stage-pv">${m.play ? `<div class="frame-box" data-frame="${m.key}" data-slot="peek" data-w="358" data-h="${avail}"></div>` : `<div class="mock" style="max-width:358px">${mockBody(m.key)}</div>`}</div></div></div>`;
+}
+function renderMenu() {
+  const m = S.menu; if (!m) return '';
+  return `<div class="menu-mask" data-act="menuClose"></div><div class="menu" role="listbox" style="left:${m.x}px;top:${m.y}px;width:${m.w}px">${m.list.map((o, i) => `<button class="${o.key === m.value ? 'on' : ''}" role="option" aria-selected="${o.key === m.value}" data-act="menuPick" data-i="${i}"><span>${esc(o.label)}</span>${o.key === m.value ? ic('check', 18, 2.4) : ''}</button>`).join('')}</div>`;
+}
+const MENUS = {
+  venue: () => ({ list: VENUES, value: S.d.venue, set: v => { S.d.venue = v; } }),
+  join: () => ({ list: PARTICIPATE, value: S.d.join, set: v => { S.d.join = v; } }),
+  present: () => ({ list: PRESENT, value: S.d.present, set: v => { S.d.present = v; } }),
+  mode: () => ({ list: MODES, value: S.d.game.cfg.multi ? 'multi' : 'single', set: v => { const c = S.d.game.cfg; c.multi = v === 'multi'; if (!c.multi) { let f = false; c.options.forEach(o => { if (o.correct && f) o.correct = false; if (o.correct) f = true; }); } } }),
+  tries: () => ({ list: TRIES, value: Number(S.d.game.cfg.tries) || 0, set: v => { S.d.game.cfg.tries = v; } }),
+  reveal: () => ({ list: AFTER, value: !!S.d.game.cfg.reveal, set: v => { S.d.game.cfg.reveal = v; } }),
+  need: () => ({ list: TIERS, value: S.d.game.cfg.need, set: v => { S.d.game.cfg.need = v; } }),
+  coupon: () => ({ list: COUPONS, value: S.d.reward.coupon.id, set: v => { S.d.reward.coupon.id = v; } }),
+  scope: () => ({ list: SCOPES, value: S.sheet.draft.scope, set: v => { S.sheet.draft.scope = v; } }),
+  sec: () => ({ list: SECONDS, value: S.sheet.draft.sec, set: v => { S.sheet.draft.sec = v; } }),
+  track: () => ({ list: TRACKS, value: S.sheet.draft.track, set: v => { S.sheet.draft.track = v; } }),
+};
+function renderAct() {
+  const a = S.act; if (!a) return '';
+  return `<div class="act-mask" data-act="actCancel"></div><div class="act" role="dialog"><div class="grp"><div class="tt">${esc(a.title)}</div>${a.items.map((it, i) => `<button class="${it.cls || ''}" data-act="actPick" data-i="${i}">${esc(it.label)}</button>`).join('')}</div><div class="grp"><button class="bold" data-act="actCancel">继续编辑</button></div></div>`;
+}
+
+/* ---------- player preview: 到达 → 玩法（原设计的玩法屏）→ 结果反馈 → 奖励 → 完成 ---------- */
+function pvSteps() {
+  const d = S.d, s = [{ key: 'arrive', label: { scan: '扫码', gps: '到达定位点', direct: '开始' }[d.join] }, { key: 'task', label: '玩法' }];
+  if (d.fb.ok.on || d.fb.bad.on) s.push({ key: 'fb', label: '结果反馈' });
+  if (d.modules.includes('reward') && (d.reward.coupon.on || d.reward.medal.on)) s.push({ key: 'reward', label: '获得奖励' });
+  s.push({ key: 'end', label: '完成' });
+  return s;
+}
+function renderPreview() {
+  const p = S.pv, d = S.d, st = pvSteps(), step = st[p.i].key, m = meta(d.game.key);
+  let h = `<div class="pv"><div class="pv-tabs">${st.map((s, i) => `<button class="${i === p.i ? 'on' : ''}" data-act="pvGo" data-i="${i}">${s.label}</button>`).join('')}</div>`;
+  if (step === 'task') {
+    const avail = S.h - 91 - 48 - 88;
+    h += `<div class="pv-body flush">${m.play ? `<div class="frame-box" style="border-radius:0" data-frame="${m.key}" data-slot="pv" data-w="390" data-h="${avail}"></div>` : `<div class="mock" style="border-radius:0">${mockBody(m.key)}</div>`}</div>
+      <button class="pv-next" data-act="pvNext">下一步</button>`;
+  } else {
+    h += `<div class="pv-body">`;
+    if (step === 'arrive') {
+      h += `<div class="pv-h">${esc(d.title || '未命名玩法')}</div><div class="pv-p">${esc(d.desc)}</div>${d.rules.filter(r => r.trim()).map((r, i) => `<div class="pv-meta">${i + 1}. ${esc(r)}</div>`).join('')}`;
+      if (d.join === 'scan' && d.scan.replyOn && d.scan.reply) h += `<div class="pv-fb"><div class="k" style="color:var(--pvink2)">扫码后</div>${esc(d.scan.reply)}</div>`;
+      if (d.join === 'gps') h += `<div class="pv-meta">走到这一站的定位点就能开始。</div>`;
+      if (d.tools.includes('voice')) h += `<div class="pv-meta">语音讲解：${esc(d.cfgTool.voice.title || '未命名讲解')}</div>`;
+      if (d.tools.includes('music')) h += `<div class="pv-meta">♪ ${esc(toolSummary('music'))}</div>`;
+      h += `<button class="pv-btn" data-act="pvNext">${{ scan: '扫码开始', gps: '我到了', direct: '开始' }[d.join]}</button>`;
+    } else if (step === 'fb') {
+      if (!d.fb[p.fbKey].on) p.fbKey = d.fb.ok.on ? 'ok' : 'bad';
+      const f = d.fb[p.fbKey];
+      h += `<div class="seg" role="tablist">${['ok', 'bad'].filter(k => d.fb[k].on).map(k => `<button class="${p.fbKey === k ? 'on' : ''}" data-act="pvFb" data-k="${k}">${k === 'ok' ? '成功时' : '失败时'}</button>`).join('')}</div>
+        <div class="pv-fb ${p.fbKey}"><div class="k">${p.fbKey === 'ok' ? '成功' : '失败'}</div>${f.text ? `<div>${esc(f.text)}</div>` : ''}${f.imgs.length ? `<div class="imgs">${f.imgs.map(s => `<img src="${s}" alt="">`).join('')}</div>` : ''}${!f.text && !f.imgs.length ? '<div style="color:var(--pvink2)">这个结果还没写反馈</div>' : ''}</div>
+        <button class="pv-btn" data-act="pvNext">继续</button>`;
+    } else if (step === 'reward') {
+      const r = d.reward;
+      if (r.coupon.on) h += `<div class="pv-reward"><div><div style="font-weight:700">${esc((COUPONS.find(c => c.key === r.coupon.id) || {}).label || '')}</div><div class="pv-meta" style="margin-top:2px">优惠券已放进卡包</div></div></div>`;
+      if (r.medal.on) h += `<div class="pv-reward">${r.medal.img ? `<div class="ri"><img src="${r.medal.img}" alt=""></div>` : ''}<div style="font-weight:700">${esc(r.medal.name)}</div></div>`;
+      h += `<button class="pv-btn" data-act="pvNext">收下</button>`;
+    } else h += `<div class="pv-done"><div class="big">${ic('check', 32, 2.6)}</div><div class="pv-h">这一关完成了</div><div class="pv-meta">接下来进入下一站</div></div><button class="pv-btn" data-act="pvAgain">从头再试</button>`;
+    h += `</div>`;
+  }
+  return h + `</div><div class="pv-bar"><button class="btn secondary" data-act="saveDraft">保存草稿</button><button class="btn primary" style="flex:1.4" data-act="publish">发布玩法</button></div>`;
+}
+function renderDone() {
+  return `<div class="done-page"><div class="big">${ic('check', 30, 2.4)}</div><h2>${esc(S.doneTitle)}</h2><p>${esc(S.doneSub)}</p>
+    <button class="btn primary" style="width:100%;margin-top:28px" data-act="toList">回到我的节点玩法</button></div>`;
+}
+
+/* ---------- actions ---------- */
+let toastT;
+function toast(t) { S.toast = t; render(); clearTimeout(toastT); toastT = setTimeout(() => { S.toast = null; render(); }, 1600); }
+function now() { const d = new Date(); return `${d.getMonth() + 1}月${d.getDate()}日 ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; }
+function openEditor(d, id) { S.d = d; S.editId = id; S.base = JSON.stringify(d); S.errors = {}; S.showErr = false; S.screen = 'edit'; }
+function store(status) {
+  const rec = { id: S.editId || uid(), d: clone(S.d), status, time: now() };
+  const i = S.list.findIndex(t => t.id === rec.id); if (i >= 0) S.list[i] = rec; else S.list.unshift(rec);
+  S.editId = rec.id; S.base = JSON.stringify(S.d);
+}
+/* has the author typed anything into this gameplay? (ids and untouched defaults don't count) */
+function touched(o) { return Object.keys(o).some(k => { const v = o[k]; if (k === 'id' || k === 'judge' || k === 'multi' || k === 'reveal' || k === 'tries' || k === 'need' || k === 'correct') return false; return typeof v === 'string' ? v.trim() !== '' : v && typeof v === 'object' ? touched(v) : false; }); }
+function chooseGame(key) {
+  const d = S.d;
+  const apply = () => { d.game = { key, cfg: defaultCfg(key) }; if (!d.titleEdited) d.title = meta(key).label; };
+  S.sheet = null; S.peek = null;
+  if (d.game && d.game.key !== key && touched(d.game.cfg)) {
+    S.act = { title: `换成「${meta(key).label}」后，「${meta(d.game.key).label}」已填的内容会清空`, items: [{ label: '更换玩法', cls: 'warn', fn: () => { apply(); setTimeout(() => scrollTo('mod-finish')); } }] };
+    render(); return;
+  }
+  if (!d.game || d.game.key !== key) apply();
+  render(); scrollTo('mod-finish');
+}
+function goErrors(e) {
+  S.errors = e; S.showErr = true; S.screen = 'edit'; render();
+  const k = Object.keys(e)[0];
+  const id = k === 'coupon' || k === 'medal' ? 'mod-reward' : k.startsWith('d.game') || k === 'finish' || k === 'correct' ? 'sec-module' : k === 'rules' ? 'sec-rule' : k === 'd.title' ? 'sec-top' : 'sec-basic';
+  scrollTo(id); toast(e[k]);
+}
+const A = {
+  noop() {},
+  newTpl() { openEditor(blank(), null); S.sheet = { type: 'picker', tab: 0, sel: null }; render(false); scrollTo('sec-module'); },
+  openTpl(el) { const t = S.list.find(x => x.id === el.dataset.id); openEditor(clone(t.d), t.id); render(false); },
+  toList() { S.screen = 'list'; render(false); },
+  navBack() {
+    if (S.screen === 'preview') { S.screen = 'edit'; render(); return; }
+    if (S.screen === 'edit') {
+      if (!dirty()) { S.screen = 'list'; render(false); return; }
+      S.act = { title: '还没保存的修改', items: [{ label: '保存草稿并退出', cls: 'bold', fn: () => { store('草稿'); S.screen = 'list'; toast('已保存草稿'); } }, { label: '放弃修改并退出', cls: 'warn', fn: () => { S.screen = 'list'; } }] };
+      render(); return;
+    }
+    if (S.screen === 'done') { S.screen = 'list'; render(false); }
+  },
+  actPick(el) { const it = S.act.items[+el.dataset.i], before = S.screen; S.act = null; it.fn(); render(S.screen === before); },
+  actCancel() { S.act = null; render(); },
+  cover() { if (!S.d.cover) { S.d.cover = sampleImg('老城茶馆', '#4A3626', '#B08A5E'); render(); } },
+  clearCover() { S.d.cover = ''; render(); },
+  rmCat(el) { S.d.cats.splice(+el.dataset.i, 1); render(); },
+  openCats() { S.sheet = { type: 'cats', sel: S.d.cats.slice() }; render(); },
+  toggleCat(el) { const s = S.sheet.sel, v = el.dataset.v, i = s.indexOf(v); if (i >= 0) s.splice(i, 1); else s.push(v); render(); },
+  catsDone() { S.d.cats = S.sheet.sel; S.sheet = null; render(); },
+  addRule() { S.d.rules.push(''); render(); },
+  rmRule(el) { S.d.rules.splice(+el.dataset.i, 1); render(); },
+  openMods() { S.sheet = { type: 'mods' }; render(); },
+  addMod(el) { S.d.modules.push(el.dataset.key); S.d.modules.sort((a, b) => a === 'finish' ? -1 : 1); S.sheet = null; render(); scrollTo(el.dataset.key === 'finish' ? 'sec-join' : 'mod-reward'); },
+  rmMod(el) {
+    const k = el.dataset.key, doIt = () => { S.d.modules = S.d.modules.filter(x => x !== k); if (k === 'finish') S.d.game = null; };
+    S.act = { title: k === 'finish' ? '移除玩法后，题目、选项和反馈都会清空' : '移除完成奖励后，优惠券和勋章设置会清空', items: [{ label: '移除', cls: 'warn', fn: doIt }] }; render();
+  },
+  toggleReply() { S.d.scan.replyOn = !S.d.scan.replyOn; render(); },
+  openTools() { S.sheet = { type: 'tools', sel: S.d.tools.slice() }; render(); },
+  toggleTool(el) { const s = S.sheet.sel, k = el.dataset.v; S.sheet.last = k; const i = s.indexOf(k); if (i >= 0) s.splice(i, 1); else s.push(k); render(); },
+  toolsDone() { S.d.tools = TOOLS.map(t => t.key).filter(k => S.sheet.sel.includes(k)); S.sheet = null; render(); },
+  openTool(el) { const k = el.dataset.key; S.sheet = { type: 'tool', key: k, draft: clone(S.d.cfgTool[k]) }; render(); },
+  toggleLoop() { S.sheet.draft.loop = !S.sheet.draft.loop; render(); },
+  toolDone() { const sh = S.sheet; if (sh.key === 'uses') { const n = +sh.draft.limit; if (!(n >= 1 && n <= 99)) { toast('成功上限填 1 至 99'); return; } } S.d.cfgTool[sh.key] = sh.draft; S.sheet = null; render(); },
+  rmTool(el) { S.d.tools = S.d.tools.filter(k => k !== el.dataset.key); S.sheet = null; render(); },
+  openPicker() { const k = S.d.game && S.d.game.key; S.sheet = { type: 'picker', sel: k, tab: k ? GROUPS.findIndex(g => g.items.some(i => i.key === k)) : 0 }; render(); },
+  pickerExit() { S.sheet = null; render(); },
+  pickerDone() { if (!S.sheet.sel) { toast('先选择一个玩法'); return; } chooseGame(S.sheet.sel); },
+  pickTag(el) { S.sheet.sel = el.dataset.v; render(); },
+  pick(el) { chooseGame(el.dataset.key); },
+  peek(el) { S.peek = el.dataset.key; S.d20 = null; render(); },
+  peekExit() { S.peek = null; render(); },
+  peekPick() { chooseGame(S.peek); },
+  rollD20() { S.d20 = 1 + Math.floor(Math.random() * 20); render(); },
+  jumpGroup(el) { const pg = document.getElementById('pager'), blk = document.getElementById('pb-' + el.dataset.i); S.sheet.tab = +el.dataset.i; syncTabs(); if (pg && blk) pg.scrollTo({ left: blk.offsetLeft - 20, behavior: 'smooth' }); },
+  closeSheet() { S.sheet = null; render(); },
+  menu(el) {
+    const def = MENUS[el.dataset.menu](); const ar = app.getBoundingClientRect(), r = el.getBoundingClientRect(), k = S.k;
+    const w = Math.max(170, Math.min(240, r.width / k)), hgt = def.list.length * 46;
+    const x = Math.min((r.left - ar.left) / k, 390 - 13 - w);
+    let y = (r.bottom - ar.top) / k + 4; if (y + hgt > S.h - 24) y = (r.top - ar.top) / k - hgt - 4;
+    S.menu = Object.assign(def, { x, y, w }); render();
+  },
+  menuClose() { S.menu = null; render(); },
+  menuPick(el) { const m = S.menu; m.set(m.list[+el.dataset.i].key); S.menu = null; delete S.errors.coupon; render(); },
+  toggleJudge() { S.d.game.cfg.judge = !S.d.game.cfg.judge; render(); },
+  toggleFb(el) { const f = S.d.fb[el.dataset.k]; f.on = !f.on; render(); },
+  toggleRw(el) { const r = S.d.reward[el.dataset.k]; r.on = !r.on; render(); },
+  medalImg() { S.d.reward.medal.img = sampleImg('勋章', '#8A6A1E', '#E2C46A'); render(); },
+  pickCorrect(el) { const c = S.d.game.cfg, i = +el.dataset.i; if (c.multi) c.options[i].correct = !c.options[i].correct; else c.options.forEach((o, j) => { o.correct = j === i; }); delete S.errors.correct; render(); },
+  addOption() { S.d.game.cfg.options.push({ id: uid(), label: '', correct: false }); render(); },
+  rmOption(el) { S.d.game.cfg.options.splice(+el.dataset.i, 1); render(); },
+  addFace() { S.d.game.cfg.faces.push(''); render(); },
+  rmFace(el) { S.d.game.cfg.faces.splice(+el.dataset.i, 1); render(); },
+  imgAdd(el) { const f = S.d.fb[el.dataset.r]; if (f.imgs.length < IMG_MAX) f.imgs.push(nextSample()); render(); },
+  imgDel(el) { S.d.fb[el.dataset.r].imgs.splice(+el.dataset.j, 1); render(); },
+  openPreview() { const e = validateGame(); if (Object.keys(e).length) { goErrors(e); return; } S.showErr = false; S.d20 = null; S.pv = { i: 0, fbKey: 'ok' }; S.screen = 'preview'; render(false); },
+  saveDraft() { store('草稿'); toast('已保存草稿'); },
+  publish() { const e = validateAll(); if (Object.keys(e).length) { goErrors(e); return; } store('已发布'); S.doneTitle = '玩法已发布'; S.doneSub = '可以在主题的站点里选用这个玩法'; S.screen = 'done'; render(false); },
+  pvGo(el) { S.pv.i = +el.dataset.i; render(false); },
+  pvNext() { S.pv.i = Math.min(S.pv.i + 1, pvSteps().length - 1); render(false); },
+  pvFb(el) { S.pv.fbKey = el.dataset.k; render(); },
+  pvAgain() { S.pv = { i: 0, fbKey: 'ok' }; S.d20 = null; render(false); refreshFrames(true); },
+};
+
+/* pager <-> tabs: swiping a page lights its tab */
+function syncTabs() { const t = document.getElementById('ptabs'); if (!t || !S.sheet) return; [...t.children].forEach((b, i) => b.classList.toggle('on', i === S.sheet.tab)); const on = t.children[S.sheet.tab]; if (on) t.scrollTo({ left: on.offsetLeft - 16, behavior: 'smooth' }); }
+app.addEventListener('scroll', e => {
+  if (e.target.id !== 'pager' || !S.sheet) return;
+  const pg = e.target; S.sheet.sl = pg.scrollLeft;
+  let i = 0; GROUPS.forEach((g, gi) => { const b = document.getElementById('pb-' + gi); if (b && b.offsetLeft - 20 <= pg.scrollLeft + 60) i = gi; });
+  if (pg.scrollLeft + pg.clientWidth >= pg.scrollWidth - 4) i = GROUPS.length - 1;
+  if (i !== S.sheet.tab) { S.sheet.tab = i; syncTabs(); }
+}, true);
+app.addEventListener('click', e => {
+  const el = e.target.closest('[data-act]'); if (!el || !app.contains(el)) return;
+  const f = A[el.dataset.act]; if (f) { e.preventDefault(); e.stopPropagation(); f(el, e); }
+});
+app.addEventListener('input', e => {
+  const t = e.target;
+  if (t.dataset.tool) { S.sheet.draft[t.dataset.tool] = t.value; return; }
+  if (!t.dataset.path) return;
+  setPath(t.dataset.path, t.value);
+  if (t.dataset.title) S.d.titleEdited = true;
+  if (t.dataset.count) { const c = document.getElementById(t.dataset.count); if (c) c.textContent = t.value.length + '/30'; }
+  if (S.errors[t.dataset.path] && t.value.trim()) { delete S.errors[t.dataset.path]; t.classList.remove('err'); const n = t.nextElementSibling; if (n && n.classList.contains('err-text')) n.remove(); }
+  if (t.dataset.autoh) autoH(t);
+});
+document.querySelector('.side').addEventListener('click', e => {
+  const b = e.target.closest('[data-side]'); if (!b) return;
+  S.menu = null; S.peek = null; S.sheet = null; S.act = null;
+  if (b.dataset.side === 'list') { S.screen = 'list'; render(false); }
+  else if (b.dataset.side === 'new') A.newTpl();
+  else if (b.dataset.side === 'example') { openEditor(example(), null); render(false); scrollTo('sec-join'); }
+  else { if (!S.d.game) openEditor(example(), null); A.openPreview(); }
+});
+
+function fit() {
+  const screen = document.getElementById('screen'), zoom = document.getElementById('zoom');
+  if (innerWidth <= 760) { const k = innerWidth / 390; S.k = k; S.h = Math.round(Math.max(640, innerHeight) / k); screen.style.width = innerWidth + 'px'; screen.style.height = Math.round(S.h * k) + 'px'; }
+  else { const k = Math.min(1, (innerHeight - 72) / 844); S.k = k; S.h = 844; screen.style.width = Math.round(390 * k) + 'px'; screen.style.height = Math.round(844 * k) + 'px'; }
+  app.style.height = S.h + 'px'; zoom.style.transform = `scale(${S.k})`;
+  S.menu = null; render();
+}
+addEventListener('resize', fit);
+S.list = [{ id: 'seed', d: example(), status: '已发布', time: '10月20日 18:30' }];
+openEditor(clone(S.list[0].d), 'seed');
+fit();
+scrollTo('sec-join');
+</script>

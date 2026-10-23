@@ -25,6 +25,8 @@ public class MerchantReviewVO {
     private boolean canReply;
     private boolean canEditReply;
     private boolean canReport;
+    /** 仅管理态有意义:平台复审中(待复核或有未结案举报)。公开态恒 false。 */
+    private boolean underPlatformReview;
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -56,4 +58,6 @@ public class MerchantReviewVO {
     public void setCanEditReply(boolean canEditReply) { this.canEditReply = canEditReply; }
     public boolean isCanReport() { return canReport; }
     public void setCanReport(boolean canReport) { this.canReport = canReport; }
+    public boolean isUnderPlatformReview() { return underPlatformReview; }
+    public void setUnderPlatformReview(boolean underPlatformReview) { this.underPlatformReview = underPlatformReview; }
 }
