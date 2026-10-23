@@ -58,6 +58,7 @@ import static org.mockito.Mockito.when;
 /**
  * coop 分项分账单测(平台/发起人保底/承接带队/商家核销/发起人毛利 五分项 + 守恒 + T+7 打款)。
  * 发起人保底/毛利改为 T+7 结算行(不再即时 payPublisher)。
+ * WP04：显式计划替身下的五分项组合测试；不证明模拟的 CLUB/团路径已开放现金结算。
  */
 class CoopSettlementTest {
 
@@ -110,6 +111,7 @@ class CoopSettlementTest {
         ReflectionTestUtils.setField(svc, "cmsTopicMapper", cmsTopicMapper);
         ReflectionTestUtils.setField(svc, "coopOrderMapper", coopOrderMapper);
         ReflectionTestUtils.setField(svc, "coopSettlementMapper", coopSettlementMapper);
+        PreparedCoopPlanFixture.install(svc, cmsRegistrationMapper, coopOrderMapper, null, coopSettlementMapper);
         ReflectionTestUtils.setField(svc, "pricingService", pricingService);
         ReflectionTestUtils.setField(svc, "umsMemberService", umsMemberService);
         ReflectionTestUtils.setField(svc, "umsMemberMapper", umsMemberMapper);
@@ -145,6 +147,7 @@ class CoopSettlementTest {
      * 商家各自核销数不同的场景由 CoopSettlementPerMerchantTest 覆盖。
      */
     private void everyMerchantServedEveryone(Long topicId, int heads, String sales, Long... merchantIds) {
+        PreparedCoopPlanFixture.topic(topicId);
         for (Long m : merchantIds) {
             when(cmsRegistrationMapper.selectVerifiedHeadsByTopicAndMerchant(topicId, m)).thenReturn(heads);
             when(cmsRegistrationMapper.selectVerifiedSalesByTopicAndMerchant(topicId, m))
@@ -178,6 +181,8 @@ class CoopSettlementTest {
         when(coopOrderMapper.selectEffectiveOrdersByTopicId(700L))
                 .thenReturn(Collections.singletonList(order(1L, 900002L, 1, "30", null)));
         when(coopSettlementMapper.countByOrderId(any())).thenReturn(0);
+
+        PreparedCoopPlanFixture.topic(topic.getId());
 
         svc.settleCoopTopic(topic, new BigDecimal("100"));
 
@@ -313,6 +318,8 @@ class CoopSettlementTest {
         Club club = new Club(); club.setId(5000L); club.setMemberId(900009L);
         when(clubService.selectClubById(5000L)).thenReturn(club);
 
+        PreparedCoopPlanFixture.topic(topic.getId());
+
         svc.settleCoopTopic(topic, new BigDecimal("100"));
 
         Map<String, List<CoopSettlement>> lines = capturedLines();
@@ -337,6 +344,8 @@ class CoopSettlementTest {
                 order(2L, 900003L, 1, "20", null)));
         when(coopSettlementMapper.countByOrderId(any())).thenReturn(0);
 
+        PreparedCoopPlanFixture.topic(topic.getId());
+
         svc.settleCoopTopic(topic, new BigDecimal("100"));
 
         Map<String, List<CoopSettlement>> lines = capturedLines();
@@ -350,7 +359,7 @@ class CoopSettlementTest {
     }
 
     @Test
-    void settleCoopTopic_deductsUnpaidDepositFromActualPayersReceivable() {
+    void settleCoopTopic_preservesClaimOriginUntilDepositAdjustmentExists() {
         CmsTopic topic = new CmsTopic();
         topic.setId(706L); topic.setMemberId(900001L);
         when(cmsRegistrationMapper.selectVerifiedSalesByTopicId(706L)).thenReturn(new BigDecimal("100"));
@@ -370,17 +379,15 @@ class CoopSettlementTest {
         when(coopInviteMapper.updateDepositIfCurrent(88L, 5, new BigDecimal("50.00"), 3, new BigDecimal("50.00")))
                 .thenReturn(1);
 
-        svc.settleCoopTopic(topic, new BigDecimal("100"));
-
-        Map<String, List<CoopSettlement>> lines = capturedLines();
-        assertAmount("0.00", lines.get("MERCHANT_VERIFY").get(0), "仅从应缴商家自己的应收抵扣");
-        assertAmount("50.00", lines.get("DEPOSIT_DEDUCTION").get(0), "抵扣额单列平台入账以便对账");
-        assertAmount("33.00", lines.get("INITIATOR_MARGIN").get(0), "非应缴方发起人收益不得被错扣");
-        verify(coopInviteMapper).updateDepositIfCurrent(eq(88L), eq(5), eq(new BigDecimal("50.00")), eq(3), any());
+        IllegalStateException failure = assertThrows(IllegalStateException.class,
+                () -> svc.settleCoopTopic(topic, new BigDecimal("100")));
+        assertTrue(failure.getMessage().contains("CLAIM_DEPOSIT_ADJUSTMENT_REQUIRED"));
+        verify(coopSettlementMapper, never()).insertCoopSettlement(any());
+        verify(coopInviteMapper, never()).updateDepositIfCurrent(any(), any(), any(), any(), any());
     }
 
     @Test
-    void settleCoopTopic_resolvesPaymentInProgressBeforeDeducting() {
+    void settleCoopTopic_pendingPaymentRequiresReconciliationOutsideSettlement() {
         CmsTopic topic = new CmsTopic();
         topic.setId(707L); topic.setMemberId(900001L);
         when(cmsRegistrationMapper.selectVerifiedSalesByTopicId(707L)).thenReturn(new BigDecimal("100"));
@@ -397,23 +404,13 @@ class CoopSettlementTest {
         when(coopInviteMapper.selectCoopInviteList(any())).thenReturn(Collections.singletonList(pendingPayment));
         when(coopInviteMapper.selectCoopInviteByIdForUpdate(89L)).thenReturn(pendingPayment);
         when(coopInviteService.depositOwedParty(pendingPayment)).thenReturn(900002L);
-        Map<String, String> notPaid = new HashMap<>();
-        notPaid.put("trade_state", "NOTPAY");
-        notPaid.put("out_trade_no", "DEP89T100"); // 查单回包必须回显原支付单号,否则按归属不匹配拒绝
-        when(coopInviteMapper.updateDepositIfCurrent(89L, 1, new BigDecimal("50.00"), 5, new BigDecimal("50.00")))
-                .thenReturn(1);
-        when(coopInviteMapper.updateDepositIfCurrent(89L, 5, new BigDecimal("50.00"), 3, new BigDecimal("50.00")))
-                .thenReturn(1);
-        when(wechatPayService.queryOrderStatus("DEP89T100")).thenReturn(notPaid);
-        when(wechatPayService.closeOrder("DEP89T100")).thenReturn(true);
-
-        svc.settleCoopTopic(topic, new BigDecimal("100"));
-
-        Map<String, List<CoopSettlement>> lines = capturedLines();
-        assertAmount("50.00", lines.get("DEPOSIT_DEDUCTION").get(0), "未支付订单关闭后才抵扣");
-        verify(wechatPayService).closeOrder("DEP89T100");
-        verify(coopInviteMapper).updateDepositIfCurrent(eq(89L), eq(1), any(), eq(5), any());
-        verify(coopInviteMapper).updateDepositIfCurrent(eq(89L), eq(5), any(), eq(3), any());
+        IllegalStateException failure = assertThrows(IllegalStateException.class,
+                () -> svc.settleCoopTopic(topic, new BigDecimal("100")));
+        assertTrue(failure.getMessage().contains("DEPOSIT_PAYMENT_RECONCILIATION_REQUIRED"));
+        verify(wechatPayService, never()).queryOrderStatus(any());
+        verify(wechatPayService, never()).closeOrder(any());
+        verify(coopSettlementMapper, never()).insertCoopSettlement(any());
+        verify(coopInviteMapper, never()).updateDepositIfCurrent(any(), any(), any(), any(), any());
     }
 
     /**
@@ -497,6 +494,8 @@ class CoopSettlementTest {
                 Collections.singletonList(order(1L, 900002L, 1, "30", null)));
         when(coopSettlementMapper.countByOrderId(any())).thenReturn(0);
 
+        PreparedCoopPlanFixture.topic(topic.getId());
+
         svc.settleCoopTopic(topic, new BigDecimal("100"));
 
         Map<String, List<CoopSettlement>> lines = capturedLines();
@@ -512,6 +511,8 @@ class CoopSettlementTest {
         when(coopOrderMapper.selectEffectiveOrdersByTopicId(704L)).thenReturn(
                 Collections.singletonList(order(1L, 900002L, 1, "30", null)));
         when(coopSettlementMapper.countByOrderId(1L)).thenReturn(1); // 已挂单,商家行跳过
+
+        PreparedCoopPlanFixture.topic(topic.getId());
 
         svc.settleCoopTopic(topic, new BigDecimal("100"));
 

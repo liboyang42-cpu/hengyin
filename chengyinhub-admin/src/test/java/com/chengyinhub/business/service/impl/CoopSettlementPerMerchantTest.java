@@ -49,6 +49,7 @@ import static org.mockito.Mockito.when;
  *
  * 数据本来就有,只是没人读:CmsRegistrationScan 里 registration_type=1 的那批
  * 记的就是真正扫码的商家(:1119-1130)。
+ * WP04：显式计划替身下的五分项组合测试；不证明模拟的 CLUB/团路径已开放现金结算。
  */
 class CoopSettlementPerMerchantTest {
 
@@ -87,6 +88,7 @@ class CoopSettlementPerMerchantTest {
         ReflectionTestUtils.setField(svc, "cmsRegistrationMapper", cmsRegistrationMapper);
         ReflectionTestUtils.setField(svc, "coopOrderMapper", coopOrderMapper);
         ReflectionTestUtils.setField(svc, "coopSettlementMapper", coopSettlementMapper);
+        PreparedCoopPlanFixture.install(svc, cmsRegistrationMapper, coopOrderMapper, null, coopSettlementMapper);
         ReflectionTestUtils.setField(svc, "pricingService", pricingService);
         ReflectionTestUtils.setField(svc, "umsMemberService", mock(IUmsMemberService.class));
         ReflectionTestUtils.setField(svc, "umsMemberBalanceDetailService", mock(IUmsMemberBalanceDetailService.class));
@@ -166,6 +168,8 @@ class CoopSettlementPerMerchantTest {
                 merchantOrder(2L, MERCHANT_B, 2, null, "20"),
                 merchantOrder(3L, MERCHANT_C, 2, null, "20")));
 
+        PreparedCoopPlanFixture.topic(TOPIC);
+
         svc.settleCoopTopic(topic(), new BigDecimal("5000"));
 
         Map<String, List<CoopSettlement>> lines = capturedLines();
@@ -198,6 +202,8 @@ class CoopSettlementPerMerchantTest {
                 merchantOrder(1L, MERCHANT_A, 1, "30", null),
                 merchantOrder(2L, MERCHANT_B, 1, "30", null)));
 
+        PreparedCoopPlanFixture.topic(TOPIC);
+
         svc.settleCoopTopic(topic(), new BigDecimal("5000"));
 
         Map<String, List<CoopSettlement>> lines = capturedLines();
@@ -220,6 +226,8 @@ class CoopSettlementPerMerchantTest {
         when(coopOrderMapper.selectEffectiveOrdersByTopicId(TOPIC)).thenReturn(Arrays.asList(
                 merchantOrder(1L, MERCHANT_A, 2, null, "5"),
                 merchantOrder(2L, MERCHANT_B, 2, null, "5")));
+
+        PreparedCoopPlanFixture.topic(TOPIC);
 
         svc.settleCoopTopic(topic(), new BigDecimal("50"));
 
@@ -249,6 +257,8 @@ class CoopSettlementPerMerchantTest {
         when(coopOrderMapper.selectEffectiveOrdersByTopicId(TOPIC))
                 .thenReturn(Collections.singletonList(clubOrder));
 
+        PreparedCoopPlanFixture.topic(TOPIC);
+
         svc.settleCoopTopic(topic(), new BigDecimal("5000"));
 
         Map<String, List<CoopSettlement>> lines = capturedLines();
@@ -267,6 +277,8 @@ class CoopSettlementPerMerchantTest {
         when(coopOrderMapper.selectEffectiveOrdersByTopicId(TOPIC)).thenReturn(Arrays.asList(
                 merchantOrder(1L, MERCHANT_A, 2, null, "20"),
                 merchantOrder(2L, MERCHANT_B, 2, null, "20")));
+
+        PreparedCoopPlanFixture.topic(TOPIC);
 
         svc.settleCoopTopic(topic(), new BigDecimal("5000"));
 

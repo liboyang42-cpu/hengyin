@@ -69,13 +69,21 @@ public class TopicSettlementEvidenceService {
 
     @Transactional(rollbackFor = Exception.class)
     public List<CoopSettlementCandidate> lockCandidates(CoopSettlementSnapshot snapshot, Date settlementCutoff) {
-        if (snapshot == null || snapshot.getCommercialContextId() == null) {
-            throw new IllegalArgumentException("snapshot.commercialContextId 不能为空");
+        if (snapshot == null || snapshot.getTopicId() == null) {
+            throw new IllegalArgumentException("snapshot.topicId 不能为空，不能将 economic context id 当 topic id");
         }
         List<Long> activityIds = activityMapper
-                .selectActiveActivityIdsByTopicId(snapshot.getCommercialContextId());
+                .selectActiveActivityIdsByTopicId(snapshot.getTopicId());
         return evidenceMapper.selectTopicEvidenceCandidatesForUpdate(snapshot,
                 activityIds == null ? Collections.<Long>emptyList() : activityIds, settlementCutoff);
+    }
+
+    /** 在报名锁之后当前读退款事实；已批准退款的净额/调整链尚未接通，也须拒结。 */
+    public void requireUnrefundedCashBasis(Long topicId) {
+        List<Long> pending = evidenceMapper.selectCashBasisBlockingRefundIdsForUpdate(topicId);
+        if (pending == null || !pending.isEmpty()) {
+            throw new IllegalStateException("MANUAL_REPAIR:REFUND_NET_BASIS_UNPROVEN");
+        }
     }
 
     public static class Summary {

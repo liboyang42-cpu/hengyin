@@ -1,0 +1,56 @@
+{
+  "kind": "synthetic-contract-specification-not-production-test",
+  "baseline": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+  "facts": [
+    {"id":"a1","type":"ARRIVAL","source":"PROGRESS","actorType":"MEMBER","actor":1,"scope":"topic:10/activity:20","instance":"default","version":3,"object":"node:101","receipt":"progress:1","current":true},
+    {"id":"a1","type":"ARRIVAL","source":"PROGRESS","actorType":"MEMBER","actor":1,"scope":"topic:10/activity:20","instance":"default","version":3,"object":"node:101","receipt":"progress:1","current":true},
+    {"id":"v1","type":"TASK_VERIFIED","source":"ROUTE","actorType":"MEMBER","actor":1,"scope":"topic:10/activity:20/session:30","instance":"default","version":3,"object":"quest:q1/attempt:1","receipt":"action:2","current":true},
+    {"id":"n1","type":"NODE_COMPLETED","source":"PROGRESS","actorType":"MEMBER","actor":2,"scope":"topic:10/activity:20","instance":"default","version":3,"object":"node:101","receipt":"progress:2","current":true,"mode":"NORMAL","reward":"FULL","firstDefault":true},
+    {"id":"old","type":"NODE_COMPLETED","source":"PROGRESS","actorType":"MEMBER","actor":3,"scope":"topic:10/activity:20","instance":"default","version":3,"object":"node:101","receipt":"progress:3","current":false,"mode":"NORMAL","reward":"FULL","firstDefault":false},
+    {"id":"replay","type":"NODE_COMPLETED","source":"PROGRESS","actorType":"MEMBER","actor":3,"scope":"topic:10/activity:20","instance":"replay:30","version":3,"object":"node:101","receipt":"progress:4","current":true,"mode":"NORMAL","reward":"FULL","firstDefault":false},
+    {"id":"g1","type":"NODE_COMPLETED","source":"GAME","actorType":"MEMBER","actor":4,"scope":"topic:10/activity:20/game:40","instance":"game:40","version":5,"object":"node:101","receipt":"command:5","current":true,"mode":"NORMAL","completionSource":"EVIDENCE_ONLY"},
+    {"id":"g2","type":"NODE_COMPLETED","source":"GAME","actorType":"MEMBER","actor":4,"scope":"topic:10/activity:20/game:40","instance":"game:40","version":5,"object":"node:102","receipt":"command:6","current":true,"mode":"FALLBACK","completionSource":"FALLBACK_PLAN","planVersion":2},
+    {"id":"cap","type":"NODE_COMPLETED","source":"PROGRESS","actorType":"MEMBER","actor":5,"scope":"topic:11/activity:0","instance":"default","version":2,"object":"node:103","receipt":"progress:7","current":true,"mode":"NORMAL","reward":"XP_BADGE_ONLY","firstDefault":true},
+    {"id":"t1","type":"THEME_COMPLETED","source":"ROUTE","actorType":"MEMBER","actor":1,"scope":"topic:10/activity:20/session:30","instance":"default","version":3,"object":"theme:10","receipt":"action:8","current":true,"terminal":"COMPLETED"},
+    {"id":"told","type":"THEME_COMPLETED","source":"ROUTE","actorType":"MEMBER","actor":3,"scope":"topic:10/activity:20/session:31","instance":"default","version":3,"object":"theme:10","receipt":"action:9","current":false,"terminal":"COMPLETED"},
+    {"id":"ended","type":"THEME_ENDED","source":"ROUTE","actorType":"MEMBER","actor":6,"scope":"topic:10/activity:20/session:32","instance":"default","version":3,"object":"theme:10","receipt":"action:10","current":true,"terminal":"ENDED"},
+    {"id":"team","type":"ENDING_RESOLVED","source":"STORY","actorType":"TEAM","actor":7,"scope":"topic:10/activity:20/game:40","instance":"game:40","version":5,"object":"ending:e1","receipt":"command:11","current":true},
+    {"id":"world","type":"CONTROL_STATE","source":"STORY","actorType":"WORLD","actor":7,"scope":"topic:10/activity:20/game:40","instance":"game:40","version":5,"object":"control","receipt":"command:12","current":true},
+    {"id":"r1","type":"ENTITLEMENT_REDEEMED","source":"ENTITLEMENT","actorType":"MEMBER","actor":8,"scope":"registration:80","instance":"ticket:80","version":1,"object":"chapter:1","receipt":"redemption:13","current":true},
+    {"id":"r2","type":"ENTITLEMENT_REDEEMED","source":"ENTITLEMENT","actorType":"MEMBER","actor":8,"scope":"registration:81","instance":"ticket:81","version":1,"object":"chapter:2","receipt":"redemption:14","current":true},
+    {"id":"bad","type":"REJECTED","source":"PROGRESS","actorType":"MEMBER","actor":9,"scope":"topic:10/activity:20","instance":"default","version":3,"object":"node:101","receipt":"audit:15","current":true}
+  ],
+  "expected": {
+    "arrival_current":["a1"],
+    "verified_current":["v1"],
+    "nodes_current":["n1","replay","g1","g2","cap"],
+    "game_normal":["g1"],
+    "game_fallback":["g2"],
+    "theme_current":["t1"],
+    "theme_history":["t1","told"],
+    "team_endings":["team"],
+    "redeemed":["r1","r2"],
+    "full_node_reward_candidates":["n1"],
+    "capped_node_reward_candidates":["cap"]
+  },
+  "tickets":[
+    {"id":80,"required":[1,2],"redeemed":[1]},
+    {"id":81,"required":[1,2],"redeemed":[2]},
+    {"id":82,"required":[1,2],"redeemed":[1,2]},
+    {"id":83,"required":[],"redeemed":[]}
+  ],
+  "expected_complete_tickets":[82],
+  "money": {
+    "sales_percent":{"sales":{"103":"0.01","101":"0.01","102":"0.01"},"rate_percent":"50","expected_header":"0.02","expected_lines":{"101":"0.01","102":"0.01","103":"0.00"}},
+    "fixed":{"registration_ids":[1,1,2],"fee":"2.50","expected_header":"5.00"},
+    "direct":{"gross":"100.00","platform_rate":"0.12345","expected_platform":"12.35","expected_merchant":"87.65"}
+  },
+  "economic_claims":[
+    {"key":["ACTIVITY",20,"REGISTRATION",90,"MERCHANT",8,"MERCHANT_PARTICIPATION"],"route":"REGISTRATION_SPLIT","source":["DIRECT_REGISTRATION",90],"request":"http-1"},
+    {"key":["ACTIVITY",20,"REGISTRATION",90,"MERCHANT",8,"MERCHANT_PARTICIPATION"],"route":"REGISTRATION_SPLIT","source":["DIRECT_REGISTRATION",90],"request":"http-after-body-ttl"},
+    {"key":["ACTIVITY",20,"REGISTRATION",90,"MERCHANT",8,"MERCHANT_PARTICIPATION"],"route":"COOP_ORDER","source":["COOP_ORDER",99],"request":"http-other"}
+  ],
+  "expected_claims":1,
+  "expected_claim_replays":1,
+  "expected_claim_conflicts":1
+}

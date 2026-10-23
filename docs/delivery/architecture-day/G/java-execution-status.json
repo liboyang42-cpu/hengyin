@@ -1,0 +1,92 @@
+{
+  "baseline": "2ec68899099a1e250df0949a8383bf85b5d3ffe0",
+  "java_compiled": false,
+  "java_tests_executed": 0,
+  "mysql_tests_executed": 0,
+  "cases": [
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CompletedRouteFactMapperMySqlIT.java",
+      "method": "currentCompletedSetExcludesOldSuccessRunningEndedAndOtherMembers",
+      "execution": "NOT_RUN",
+      "baseline_expected_failure_by_source_review": false
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CompletedRouteFactMapperMySqlIT.java",
+      "method": "zeroNodeRowsStillDiscoverRouteCompletionAndPreserveFrozenVersion",
+      "execution": "NOT_RUN",
+      "baseline_expected_failure_by_source_review": false
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CompletedRouteFactMapperMySqlIT.java",
+      "method": "missingMemberNeverFallsBackToAllOwners",
+      "execution": "NOT_RUN",
+      "baseline_expected_failure_by_source_review": false
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/CompletedRouteFactMapperMySqlIT.java",
+      "method": "repeatedReadLeavesSessionsAndSourceReceiptsUnchanged",
+      "execution": "NOT_RUN",
+      "baseline_expected_failure_by_source_review": false
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ArchitectureDayGSettlementGuardsTest.java",
+      "method": "positiveNonCoopSalesRemainRetryableAndNeverReachCashOrPublisherAwards",
+      "execution": "NOT_RUN",
+      "baseline_expected_failure_by_source_review": false
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ArchitectureDayGSettlementGuardsTest.java",
+      "method": "unavailableSnapshotDoesNotLockEvidenceOrCreateAZeroCashTerminal",
+      "execution": "NOT_RUN",
+      "baseline_expected_failure_by_source_review": false
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ArchitectureDayGSettlementGuardsTest.java",
+      "method": "exploreOrderCannotAccrueAsWholeTicketEvenFromADirectServiceCaller",
+      "execution": "NOT_RUN",
+      "baseline_expected_failure_by_source_review": false
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ArchitectureDayGSettlementGuardsTest.java",
+      "method": "directActivityClaimUsesItsOwnerNotItsLinkedTopicAsEconomicContext",
+      "execution": "NOT_RUN",
+      "baseline_expected_failure_by_source_review": false
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ArchitectureDayGSettlementGuardsTest.java",
+      "method": "existingEconomicClaimSurvivesAResponseRetryButRejectsAnotherContract",
+      "execution": "NOT_RUN",
+      "baseline_expected_failure_by_source_review": false
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CompletedRouteFactReaderTest.java",
+      "method": "missingOrAnonymousMemberDoesNotBecomeAnUnscopedQuery",
+      "execution": "NOT_RUN",
+      "baseline_expected_failure_by_source_review": false
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CompletedRouteFactReaderTest.java",
+      "method": "routeOnlyFactsAreDiscoveredInOneQueryWithFrozenIdentityIntact",
+      "execution": "NOT_RUN",
+      "baseline_expected_failure_by_source_review": false
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CompletedRouteFactReaderTest.java",
+      "method": "sourceDifferencePreservesActivityAndTopicInsteadOfFlatteningByTopic",
+      "execution": "NOT_RUN",
+      "baseline_expected_failure_by_source_review": false
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ArchitectureDayGCompletionFallbackTest.java",
+      "method": "completedGameNodeWithoutExploreTicketDoesNotBecomeACompletedExploreProduct",
+      "execution": "NOT_RUN",
+      "baseline_expected_failure_by_source_review": true
+    },
+    {
+      "file": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ArchitectureDayGCompletionFallbackTest.java",
+      "method": "arrivalOnlyRowDoesNotBecomeNodeOrThemeCompletion",
+      "execution": "NOT_RUN",
+      "baseline_expected_failure_by_source_review": false
+    }
+  ]
+}

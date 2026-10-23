@@ -251,9 +251,12 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
     @Autowired
     private CoopSettlementMapper coopSettlementMapper;
 
-    /** 合同四写侧；手工 new 的旧单测不注入时仍走旧夹具，Spring 运行态必注入并 fail-closed。 */
-    @Autowired(required = false)
+    /** 合同四写侧必须存在；缺失时不得退回 live 字段和主题级聚合。 */
+    @Autowired
     private ICoopSettlementClaimService coopSettlementClaimService;
+
+    @Autowired
+    private CoopSettlementEvidenceMapper coopSettlementEvidenceMapper;
 
     @Autowired(required = false)
     private CoopSettlementAdjustmentMapper coopSettlementAdjustmentMapper;
@@ -1233,17 +1236,18 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         }
         // 1. 计算主题总销售额（已支付且未退款的报名记录）
         BigDecimal totalSales = cmsRegistrationMapper.selectTotalSalesByTopicId(topic.getId());
+        if (topic.getProductType() == null && totalSales != null && totalSales.signum() > 0) {
+            throw new ServiceException("NULL_PRODUCT_TYPE_WITH_SALES_FORBIDDEN: topicId="
+                    + topic.getId() + ", totalSales=" + totalSales);
+        }
+        List<CoopOrder> effectiveOrders = coopOrderMapper.selectEffectiveOrdersByTopicId(topic.getId());
+        if (!effectiveOrders.isEmpty()) requireClassicTopicCashBasis(topic.getId());
         if (totalSales == null || totalSales.compareTo(BigDecimal.ZERO) <= 0) {
+            requireClassicTopicCashBasis(topic.getId());
             logger.info("主题 {} 没有销售额，跳过结算", topic.getId());
             refundTopicDeposits(topic.getId());
             // is_settlement 已由入口 claimTopicForSettlement 置 1,无需再标记
             return true;
-        }
-        if (topic.getProductType() == null) {
-            // 0-5:NULL 无销售时可一次性收口；一旦有销售仍必须 fail-closed。
-            // 异常会回滚同一独立事务内的 claim，使主题保持可重试且持续告警。
-            throw new ServiceException("NULL_PRODUCT_TYPE_WITH_SALES_FORBIDDEN: topicId="
-                    + topic.getId() + ", totalSales=" + totalSales);
         }
         // 2/3/4/5. 现金结算:coop 主题走分项应付；无 coop 时现码没有可回读的 merchant 收款人/出款写侧。
         //
@@ -1261,7 +1265,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         //   ⇒ 这条路径从没给任何人发过一分钱 ⇒ 拆除无存量影响。
         //
         //   H8 已删除 distributePublisherCommission；发布资格改由下方 event 15 积分承接。
-        if (coopOrderMapper.selectEffectiveOrdersByTopicId(topic.getId()).isEmpty()) {
+        if (effectiveOrders.isEmpty()) {
             // H8 不允许把“纯计算 DTO”冒充现金成功。未拍板 merchant 归属前持续回滚 CAS，
             // 不恢复 publisher 现金，也不偷发积分。
             throw new ServiceException("NON_COOP_TOPIC_CASH_SETTLEMENT_UNPROVEN: topicId=" + topic.getId());
@@ -1346,6 +1350,10 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         for (CoopSettlement ex : coopSettlementMapper.selectByTopicId(topic.getId())) {
             if ("PLATFORM".equals(ex.getLineType())) return;
         }
+        requireClassicTopicCashBasis(topic.getId());
+        if (coopSettlementClaimService == null) {
+            throw new IllegalStateException("MANUAL_REPAIR:COOP_CLAIM_SERVICE_REQUIRED");
+        }
         // [P0-28 批1] 读**主题锁价时冻的快照**,不是 live 值 —— 用 live 值 = 调一次费率
         // 追溯改写所有已售未结订单,平台多抽 → 发起人 margin<0 → 守恒断言拒结 → 款项悬空。
         BigDecimal platformRate = pricingService.platformRateOf(topic);
@@ -1369,16 +1377,8 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         List<CoopSettlement> pending = new ArrayList<>();
         List<CoopSettlementPlan> noneClaimPlans = new ArrayList<>();
         Map<CoopSettlement, CoopSettlementPlan> claimedOriginPlans = new IdentityHashMap<>();
-        // [D22] 组织槽有没有人 —— 决定商家的分账基数走哪种拓扑。真源 = 生效的 to_type='club' 合作单,
-        // 不用 cms_topic.club_id(移交承接先挂 club_id 再邀约,窗口期内 club_id 已为真但俱乐部还没接受,
-        // 按它判会把商家基数切到团口径 → 团还没有 → 商家零付)。与 settleTopic:551 的路由同源。
-        // 阵容只取一次:分流谓词与分账循环必须看到**同一份**阵容,分两次查等于给自己开一个
-        // 「谓词说没俱乐部、循环里却有」的窗口。
+        // 固定本轮有效合作单列表，逐单按冻结合同准备履约计划。
         List<CoopOrder> effectiveOrders = coopOrderMapper.selectEffectiveOrdersByTopicId(topic.getId());
-        boolean hasOrganizer = false;
-        for (CoopOrder o : effectiveOrders) {
-            if ("club".equals(o.getToType())) { hasOrganizer = true; break; }
-        }
         // [资损·重复计数] 同一受款方本轮只结一次。
         //
         // 循环是按**每张 coop_order** 走的,而商家基数
@@ -1402,51 +1402,20 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
                 continue;
             }
             boolean isClub = "club".equals(o.getToType());
-            CoopSettlementPlan claimPlan = coopSettlementClaimService == null
-                    ? null : coopSettlementClaimService.prepare(o, now);
-            if (claimPlan != null && "NONE".equals(claimPlan.getRoute())) {
+            CoopSettlementPlan claimPlan = coopSettlementClaimService.prepare(o, now);
+            if (claimPlan == null) throw new IllegalStateException("MANUAL_REPAIR:COOP_CLAIM_PLAN_REQUIRED");
+            if (!topic.getId().equals(claimPlan.getSnapshot().getTopicId()) || topic.getMemberId() == null
+                    || !topic.getMemberId().equals(claimPlan.getSnapshot().getInitiatorMemberId())) {
+                throw new IllegalStateException("MANUAL_REPAIR:TOPIC_INITIATOR_SNAPSHOT_CONFLICT");
+            }
+            if ("NONE".equals(claimPlan.getRoute())) {
                 noneClaimPlans.add(claimPlan);
                 continue;
             }
-            // [资损⑨] 商家按【自己实际接待的量】分账,不能共用全主题数:verification_status 是报名级布尔
-            // (任一中标商家扫一次码即置 1),照全主题分会让没接待过玩家的商家满额拿钱 → 顶穿发起人毛利 → 拒结悬空。
-            // 俱乐部带队(LEAD_FEE)不扫码核销,带的是整趟,故保持全主题口径——换成扫码数会恒得 0。
-            //
-            // [D22] 「自己实际接待的量」按组织槽分两种口径,别当成一种(#58 的错就是把 T1 当唯一口径):
-            //  · 组织槽为空 = 玩家散着来,商家自己扫玩家票 ⇒ 基数 = 他扫过的玩家(#58 原样保留);
-            //  · 组织槽有人 = 有领队产品,团整体走完全程,扫玩家的是俱乐部、商家扫的是团码
-            //    ⇒ 基数 = 他接待过的那些团各自核销了多少人。
-            // ⑨ 的防线没取消,只是换人:从「扫过每个玩家」换成「扫过团码」—— 没扫团码 = 没接待 = 0。
-            int orderHeads;
-            BigDecimal orderSales;
-            if (claimPlan != null) {
-                orderHeads = claimPlan.getVerifiedHeads();
-                orderSales = claimPlan.getEligibleSales();
-            } else if (isClub) {
-                orderHeads = verifiedHeads;
-                orderSales = verifiedSales;
-            } else if (hasOrganizer) {
-                CoopGroupSettlementBasis groupBasis = coopGroupVerifyMapper
-                        .selectSettlementBasisByTopicAndMerchant(topic.getId(), o.getToId());
-                orderHeads = groupBasis == null || groupBasis.getVerifiedHeads() == null
-                        ? 0 : groupBasis.getVerifiedHeads();
-                orderSales = groupBasis == null || groupBasis.getVerifiedSales() == null
-                        ? BigDecimal.ZERO : groupBasis.getVerifiedSales();
-            } else {
-                orderHeads = cmsRegistrationMapper
-                        .selectVerifiedHeadsByTopicAndMerchant(topic.getId(), o.getToId());
-                orderSales = merchantVerifiedSales(topic.getId(), o.getToId());
-            }
-            BigDecimal amount;
-            if (claimPlan != null) {
-                amount = claimPlan.getOriginAmount();
-            } else if (o.getShareMode() != null && o.getShareMode() == 1 && o.getShareRate() != null) {
-                amount = orderSales.multiply(o.getShareRate()).divide(new BigDecimal("100"), 2, java.math.RoundingMode.HALF_UP);
-            } else if (o.getShareMode() != null && o.getShareMode() == 2 && o.getFixedFee() != null) {
-                amount = o.getFixedFee().multiply(new BigDecimal(orderHeads)).setScale(2, java.math.RoundingMode.HALF_UP);
-            } else {
-                amount = BigDecimal.ZERO; // 引流型
-            }
+            // 金额、履约选集和原始明细来自同一个冻结合同计划，不再回退到 live 聚合。
+            int orderHeads = claimPlan.getVerifiedHeads();
+            BigDecimal orderSales = claimPlan.getEligibleSales();
+            BigDecimal amount = claimPlan.getOriginAmount();
             Long payee = resolveOrderPayee(o);
             if (payee == null) {
                 logger.error("【结算越界告警】coop受款人解析为空(俱乐部可能已删) topicId={} coopOrderId={} toType={} toId={},拒绝结算交人工",
@@ -1457,11 +1426,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
             CoopSettlement s = newSettlementLine(topic, payee, amount, isClub ? "LEAD_FEE" : "MERCHANT_VERIFY",
                     isClub ? "club" : "merchant", 0, payable, now, orderHeads, orderSales, verifiedRegIds);
             s.setCoopOrderId(o.getId());
-            if (claimPlan == null) {
-                s.setShareMode(o.getShareMode());
-                s.setShareRate(o.getShareRate());
-                s.setFixedFee(o.getFixedFee());
-            } else if ("SALES_PERCENT".equals(claimPlan.getSnapshot().getCompensationMode())) {
+            if ("SALES_PERCENT".equals(claimPlan.getSnapshot().getCompensationMode())) {
                 s.setShareMode(1);
                 s.setShareRate(claimPlan.getSnapshot().getShareRate());
             } else {
@@ -1469,7 +1434,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
                 s.setFixedFee(claimPlan.getSnapshot().getFixedFee());
             }
             pending.add(s);
-            if (claimPlan != null) claimedOriginPlans.put(s, claimPlan);
+            claimedOriginPlans.put(s, claimPlan);
             merchantTotal = merchantTotal.add(amount);
             if (!isClub && amount.compareTo(BigDecimal.ZERO) > 0) verifiedMerchantCount++; // 有真实核销的被邀商家(+2% 激活)
         }
@@ -1526,6 +1491,16 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         refundTopicDeposits(topic.getId());
     }
 
+    /** 旧主题票现金总额不覆盖活动壳；不得把活动履约归入 TOPIC_EDITION 或按零元关账。 */
+    private void requireClassicTopicCashBasis(Long topicId) {
+        if (coopSettlementEvidenceMapper == null) {
+            throw new IllegalStateException("MANUAL_REPAIR:COOP_EVIDENCE_MAPPER_REQUIRED");
+        }
+        if (coopSettlementEvidenceMapper.countPaidActivityRegistrations(topicId) > 0) {
+            throw new IllegalStateException("MANUAL_REPAIR:ACTIVITY_CASH_BASIS_UNSUPPORTED topicId=" + topicId);
+        }
+    }
+
     /**
      * 锁价后仍未缴的保证金,从实际应缴方本主题的应收中抵扣。
      *
@@ -1545,12 +1520,21 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
             if (Integer.valueOf(CoopInvite.TYPE_LEGACY_MERCHANT_NODE).equals(snapshot.getInviteType())) continue;
             CoopInvite invite = coopInviteMapper.selectCoopInviteByIdForUpdate(snapshot.getId());
             if (invite == null || invite.getDepositStatus() == null) continue;
-            if (invite.getDepositStatus() == 1 && !resolvePendingDepositPaymentForSettlement(invite)) continue;
+            if (invite.getDepositStatus() == 1) {
+                // B 的查单补记须在事务外完成；租约/本地支付中均不能证明外部未执行。
+                throw new IllegalStateException("MANUAL_REPAIR:DEPOSIT_PAYMENT_RECONCILIATION_REQUIRED inviteId=" + invite.getId());
+            }
             if (invite.getDepositStatus() != 5) continue;
 
             Long payerMemberId = coopInviteService.depositOwedParty(invite);
             if (payerMemberId == null) {
                 throw new IllegalStateException("保证金应缴方无法解析 inviteId=" + invite.getId());
+            }
+            for (CoopSettlement line : pending) {
+                if (line.getCoopOrderId() != null && payerMemberId.equals(line.getMerchantId())
+                        && line.getAmount() != null && line.getAmount().signum() > 0) {
+                    throw new IllegalStateException("MANUAL_REPAIR:CLAIM_DEPOSIT_ADJUSTMENT_REQUIRED inviteId=" + invite.getId());
+                }
             }
             BigDecimal remaining = invite.getDepositAmount() == null
                     ? ICoopInviteService.DEPOSIT_AMOUNT : invite.getDepositAmount();
