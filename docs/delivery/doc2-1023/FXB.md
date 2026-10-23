@@ -43,9 +43,10 @@
 | 同类其余坐标用例 | `arrive(lng,lat)` 帮助方法改为带合法精度 `15`，原断言不变 |
 | `ArriveLocationGuardTest` | 删除 `requireAccuracy` 相关断言与 `requireAccuracyOnlyWhenStrictlyTrue`；enforce 申诉引用、throttle 不可申诉等用例保留 |
 | `ApiPlayProgressCompletionTruthTest` | 6 处带坐标的 `arrive` 调用补合法精度（原断言不变） |
+| `tests/unit/v4-scan-cancel.test.js` | 定位回调夹具补 `accuracy: 15`（原夹具不带精度，依赖空精度放行）；新增 vm0/vm5 缺失/NaN/-1/81 精度不自动发 `/arrive` |
 | `tests/unit/play-mechanisms-contract.test.js` | 新增 `canAutoArrive` 边界 + 自动到达行用 `canAutoArrive` + `_loc` 两个写入点都带 accuracy |
 
-本地结果见 PR 正文（`mvn -pl chengyinhub-admin test`、`node --test`、`ui-integrity --warn-as-error`）。
+本地结果（Draft PR #545）：`mvn -pl chengyinhub-admin test` 13705 用例 0 失败（29 个 error 全为本地无 MySQL 的 `*MyBatisTest`，与本改动无关）；xcx `node --test "tests/unit/**/*.test.js"` 13738/13738；`ui-integrity --warn-as-error` UI-GATE-0 PASS；`roam-redline-gate` 通过。CI 以 PR 检查为准。
 
 ## 留给 owner
 - `chengyinhub-admin/sql/migration_20261022_location_guard_switch_seed.sql` 种的 `play.arrive.require_accuracy='false'` 现为**死键**（代码不再读）。按规矩不改既有 migration，也没另写删除 migration；要清理可在后台参数页手动删，留着无副作用。
