@@ -124,6 +124,9 @@ MYBATIS_ITS=(
   # 2026-10-22 DOC2 F3 Phase 1:套票账本迁移可重跑 + 形状负控、Phase 1 不动 settlement_claim(7 列唯一键原样)、
   #   A/B 同买一套票余额互不影响、快照冻结、同单位唯一在约、月度豁免唯一 —— 真 DDL + 真 mapper 才验得动。
   FreeExploreBundleLedgerMySqlIT
+  # 2026-10-23 DOC2 FXE(O-07/F3 Phase 2 只设计):只钉 master 资金链现状 —— claim 先于自营闸、应付表写不进非核销事件、
+  #   撤销后 claim 仍 ACTIVE、退款不触达应付、负额批次卡死不结转、倒扣改冻结额;并逐条在真 DDL 上执行只读对账 SQL。
+  FundsChainO07PinMySqlIT
   # 2026-10-22 O-14 city_code 回填(RV3 B-519-1):南京西路(上海)/北京路(广州)反例、人工值不覆盖、重跑零变更、
   #   修正重跑只改本回填写过的行、只读预览与真实执行逐行一致 —— 真迁移 + 真 MySQL 才验得动。
   O14CityCodeBackfillMySqlIT
