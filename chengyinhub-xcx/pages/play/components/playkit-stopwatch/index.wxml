@@ -12,12 +12,12 @@
     <!-- 01 准备 · 开局不套白框:这一屏只有两个数,框住反而像一段说明文字 -->
     <block wx:if="{{phase === 'intro'}}">
       <view class="sw__mid sw__mid--intro">
-        <view class="sw__eyebrow">{{eyebrow}}</view>
+        <view class="sw__eyebrow pe pe--blur" style="--pe-d:.05s">{{eyebrow}}</view>
         <view class="sw__lbl sw__lbl--target">目标</view>
-        <view class="sw__target">{{targetText}}<text class="sw__unit">秒</text></view>
+        <view class="sw__target pe pe--roll" style="--pe-d:.2s">{{targetText}}<text class="sw__unit">秒</text></view>
         <view class="sw__lbl sw__lbl--tol">误差</view>
-        <view class="sw__tol">±{{tolText}}<text class="sw__unit2">秒</text></view>
-        <view class="sw__tip">
+        <view class="sw__tol pe pe--roll" style="--pe-d:.35s">±{{tolText}}<text class="sw__unit2">秒</text></view>
+        <view class="sw__tip pe pe--up" style="--pe-d:.7s">
           <view>开跑 1 秒后数字会消失</view>
           <view>点屏幕任意处停</view>
           <view>本机测量读数，仅供娱乐参考。</view>
@@ -27,7 +27,7 @@
         </view>
       </view>
       <view class="sw__foot">
-        <view class="sw__btn" bindtap="onStart" aria-role="button" aria-label="开始"
+        <view class="sw__btn pe pe--up" style="--pe-d:.85s" bindtap="onStart" aria-role="button" aria-label="开始"
               hover-class="sw__btn--press" hover-stay-time="80">开始</view>
       </view>
     </block>

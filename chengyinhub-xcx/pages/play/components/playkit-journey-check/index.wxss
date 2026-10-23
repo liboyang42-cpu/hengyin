@@ -1,20 +1,22 @@
 @import "/pages/play/style/play-surface.wxss";
 
 /* cy-playkit-journey-check · R14 旅程检定(题面/结果/结算三态共用一屏)。
+   2026-10-23 主人定稿(城瘾 D20 与盲品试玩原型):三维二十面骰、按住摇骰、难度线。
    皮肤与台面语言都来自 play-surface(--ink/--sub/--soft 由 stage 的 skin 传下来),
    这里只画检定自己那几块。 */
-.jc { overflow-y: auto; }
+.jc { overflow-y: auto; align-items: center; text-align: center; }   /* 内嵌档默认靠左;检定卡的眉标、档位、骰子统一居中 */
+
+.jc__tiers { margin-top: var(--cy-space-3); display: flex; justify-content: center; gap: var(--cy-space-2); }
 .jc__tier {
-  margin-top: var(--cy-space-2);
-  font-size: var(--cy-type-body);
+  display: inline-block;                      /* text 默认 inline,入场的 transform 不生效 */
+  padding: 10rpx 22rpx;                       /* ds-ok 原型 .tiers span 5px 11px */
+  border-radius: var(--cy-radius-pill);
+  background: var(--soft);
   color: var(--sub);
+  font-size: var(--cy-type-label);
 }
-.jc__tags {
-  margin-top: var(--cy-space-3);
-  display: flex;
-  justify-content: center;
-  gap: var(--cy-space-2);
-}
+.jc__tier.is-on { color: var(--ink); font-weight: 700; box-shadow: inset 0 0 0 2rpx var(--ink); }
+.jc__tags { margin-top: var(--cy-space-3); display: flex; justify-content: center; gap: var(--cy-space-2); }
 .jc__tag {
   padding: var(--cy-space-1) var(--cy-space-3);
   box-sizing: border-box;
@@ -25,7 +27,33 @@
 .jc__tag--good { background: rgba(62, 207, 142, .18); color: var(--ok); } /* ds-ok 优势:成功色的软底,与 skin 的 --ok 同源 */
 .jc__tag--bad { background: var(--cy-color-status-danger-soft); color: var(--accent); }
 
-.jc__mods { margin-top: var(--cy-space-5); width: 100%; text-align: left; }
+/* 难度线:1–20 一条,竖线是这一档的线,白条涨到点数那里;过线绿、差一点红 */
+.jc__track { width: 100%; margin-top: var(--cy-space-6); }
+.jc__bar { position: relative; height: 20rpx; border-radius: 10rpx; background: var(--soft); }   /* ds-ok 玩法屏装饰细节圆角,照原型 */
+.jc__fill {
+  position: absolute; left: 0; top: 0; bottom: 0; width: 100%;
+  border-radius: 10rpx;   /* ds-ok 玩法屏装饰细节圆角,照原型 */
+  background: var(--ink);
+  transform-origin: 0 50%;
+  transition: transform .9s cubic-bezier(.2, .8, .2, 1), background .3s ease;
+}
+.jc__fill.is-ok { background: var(--ok); }
+.jc__fill.is-no { background: var(--accent); }
+.jc__dc { position: absolute; top: -16rpx; bottom: -16rpx; width: 4rpx; margin-left: -2rpx; background: var(--ink); transition: background .3s ease; }
+.jc__dc.is-ok { background: var(--ok); }
+.jc__dc.is-no { background: var(--accent); }
+.jc__dc-n {
+  position: absolute; top: -48rpx; left: 50%; transform: translateX(-50%);
+  font-family: var(--cy-font-numeric); font-size: var(--cy-type-body); font-weight: 800; color: var(--ink);
+}
+.jc__ticks { display: flex; justify-content: space-between; margin-top: var(--cy-space-2); font-family: var(--cy-font-numeric); font-size: var(--cy-type-caption); color: var(--sub); }
+
+/* 骰子台:与「D20 加值」同一颗三维骰,画布由 d20-renderer 画;按住时骰子自己越转越快、发颤 */
+.jc__stage { position: relative; width: 100%; height: 440rpx; flex: none; }
+.jc__canvas { width: 100%; height: 100%; }
+.jc__error { position: absolute; left: 0; right: 0; bottom: 0; font-size: var(--cy-type-caption); color: var(--sub); }
+
+.jc__mods { margin-top: var(--cy-space-3); width: 100%; text-align: left; }
 .jc__mods-k {
   font-size: var(--cy-type-caption);
   color: var(--sub);
@@ -44,62 +72,34 @@
 .jc__mod.is-held .jc__mod-l { color: var(--ink); }
 .jc__mod.is-held .jc__mod-v { color: var(--ok); font-weight: 700; }
 
-.jc__idle {
-  margin-top: var(--cy-space-6);
-  font-size: var(--cy-type-body);
-  line-height: 1.7;
-  color: var(--sub);
-}
-.jc__dice {
-  margin-top: var(--cy-space-6);
-  display: flex;
-  justify-content: center;
-  gap: var(--cy-space-3);
-}
-.jc__die {
-  width: 120rpx;
-  height: 120rpx;
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--cy-radius-md);
-  background: var(--ink);
-  color: var(--bg);
+.jc__total { min-height: 200rpx; display: flex; flex-direction: column; align-items: center; gap: var(--cy-space-1); }
+.jc__total-n {
   font-family: var(--cy-font-numeric);
-  font-size: var(--cy-type-data-xl);
+  font-size: var(--cy-type-display);
+  font-style: italic;
   font-weight: 900;
-  /* 骰子落定。这一条是五个新屏里唯一的专属动效 —— D20 的张力全在「掷→停→读数」,
-     共用的 pk-in 表达不出「一颗一颗停下」。时长与缓动逐值取原型的
-     popcard(.5s cubic-bezier(.2,1.2,.3,1)):带回弹的落定,不自创曲线。 */
-  animation: jc-die .5s cubic-bezier(.2, 1.2, .3, 1) both;       /* ds-ok 逐值照原型 popcard */
+  line-height: 1;
+  color: var(--ink);
 }
-.jc__die:nth-child(2) { animation-delay: .09s; }                /* ds-ok */
-.jc__die:nth-child(3) { animation-delay: .18s; }                /* ds-ok */
+/* 点数落地。这一条是检定屏的专属动效 —— D20 的张力全在「掷→停→读数」,
+   共用的 pk-in 表达不出「停下」。时长与缓动逐值取原型的
+   popcard(.5s cubic-bezier(.2,1.2,.3,1)):带回弹的落定,不自创曲线。 */
+.jc__die { animation: jc-die .5s cubic-bezier(.2, 1.2, .3, 1) both; }       /* ds-ok 逐值照原型 popcard */
 .pk--reduced .jc__die { animation: none; }
 .pk--reset .jc__die { animation: none; }
-/* 三颗骰子最晚在 .68s 落定(.5s + .18s 错峰)。达成值与成败必须等骰子停了再读出来 ——
- * 共用的 pk-in--2/--3 只延 .08/.16s,那会让判定抢在骰子前面,整个「掷→停→读数」就没了。
- * 所以这一屏自己覆盖延时;指定性 0,2,0 压得过共用类的 0,1,0。 */
-.jc__total.pk-in { animation-delay: .72s; }                     /* ds-ok */
-.jc__verdict.pk-in { animation-delay: .82s; }                   /* ds-ok */
 @keyframes jc-die {
   from { transform: translateY(-40rpx) scale(1.18); opacity: 0; }  /* ds-ok */
   to { transform: none; opacity: 1; }
 }
-.jc__total { margin-top: var(--cy-space-3); display: flex; flex-direction: column; gap: var(--cy-space-1); }
-.jc__total-n {
-  font-family: var(--cy-font-numeric);
-  font-size: var(--cy-type-display);
-  font-weight: 900;
-  color: var(--ink);
-}
+.jc__nat { font-size: var(--cy-type-label); font-weight: 700; color: var(--sub); }
+.jc__nat.is-gold { color: #F2C14E; }          /* ds-ok 天然 20 的金,与骰子镀金同色 */
 .jc__total-s { font-size: var(--cy-type-label); color: var(--sub); }
 .jc__verdict {
-  margin-top: var(--cy-space-4);
+  margin-top: var(--cy-space-2);
   font-size: var(--cy-type-section-title);
   font-weight: 700;
 }
+.jc__verdict--big { margin-top: var(--cy-space-4); font-size: var(--cy-type-sheet-title); font-weight: 900; }
 .jc__verdict--ok { color: var(--ok); }
 .jc__verdict--no { color: var(--accent); }
 .jc__applied { margin-top: var(--cy-space-4); width: 100%; text-align: left; }
@@ -121,11 +121,25 @@
 }
 .jc__exhaust { margin-top: var(--cy-space-2); font-size: var(--cy-type-caption); color: var(--accent); }
 
-/* 结果屏的底部两条:重掷是次级(靠左),结算贴底(与其它玩法同一颗白胶囊) */
+/* 按住摇骰:按钮里一条蓄力条从左往右填 */
+.jc__roll { overflow: hidden; }
+.jc__charge { position: absolute; left: 0; top: 0; bottom: 0; width: 100%; background: rgba(0, 0, 0, .14); transform-origin: 0 50%; } /* ds-ok 白按钮上的蓄力条 */
+.jc__roll-t { position: relative; }
+
+/* 结果屏底部两条:重掷是次级,结算是主键。整排跟 g-btn 同一套定位变量 ——
+   整屏贴底、故事流里跟在内容后面(之前各自绝对定位,内嵌时结算被挤出屏幕) */
+.jc__acts {
+  position: var(--pk-btn-pos, absolute);
+  left: var(--pk-btn-x, var(--cy-page-x));
+  right: var(--pk-btn-x, var(--cy-page-x));
+  bottom: var(--pk-btn-bottom, calc(env(safe-area-inset-bottom) + 60rpx));
+  margin-top: var(--pk-btn-mt, 0);
+  z-index: 5;
+  display: flex;
+  gap: var(--cy-space-3);
+}
 .jc__act {
-  position: absolute;
-  left: var(--cy-page-x);
-  bottom: calc(env(safe-area-inset-bottom) + 60rpx);
+  flex: 1;
   height: 112rpx;
   display: flex;
   align-items: center;
@@ -134,10 +148,5 @@
   font-size: var(--cy-type-button);
   font-weight: 800;
 }
-.jc__act--ghost {
-  right: auto;
-  width: 260rpx;
-  background: var(--soft);
-  color: var(--ink);
-}
-.jc__act-main { left: auto; right: var(--cy-page-x); width: 340rpx; }
+.jc__act--ghost { flex: none; width: 240rpx; background: var(--soft); color: var(--ink); }
+.jc__act-main { background: #FFF; color: #111114; }   /* ds-ok 与 g-btn 同一颗白胶囊 */

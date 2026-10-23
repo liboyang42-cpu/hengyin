@@ -62,6 +62,3 @@
 .tb-plan-lines{padding:0 var(--cy-space-4) var(--cy-space-4);overflow-wrap:anywhere}
 .tb-status{display:flex;flex-wrap:wrap;align-items:center;gap:var(--cy-space-2);margin-top:var(--cy-space-2);color:var(--cy-comp-sheet-player-muted);font-size:var(--cy-type-label)}
 .tb-pass{display:flex;align-items:center;gap:var(--cy-space-1);padding:var(--cy-space-1) var(--cy-space-2);border-radius:var(--cy-radius-pill);background:var(--cy-comp-sheet-player-elevated);color:var(--cy-comp-sheet-player-text-secondary)}
-/* 结果反馈配图(2026-10-22):最多 3 张,一行排开 */
-.tb-outcome-imgs { display: flex; gap: var(--cy-space-2); margin-top: var(--cy-space-2); }
-.tb-outcome-img { width: 180rpx; height: 180rpx; border-radius: var(--cy-radius-md); background: var(--cy-color-bg-raised); }

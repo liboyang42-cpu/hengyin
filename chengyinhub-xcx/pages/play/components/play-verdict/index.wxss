@@ -140,3 +140,15 @@
 .pv--reduced .pv__body { transition: none; opacity: 1; }
 .pv--reduced .pv__tick-short { transform: scaleY(1); transition: none; }
 .pv--reduced .pv__tick-long  { transform: scaleX(1); transition: none; }
+
+/* 结果反馈配图与「继续」(2026-10-22):图最多 3 张一行排开;独立弹出时整屏可点 */
+/* 压过玩法台面(台面走 --cy-z-sheet);判定屏是全屏结果,与居中弹窗同档 */
+.pv--closable { pointer-events: auto; position: fixed; z-index: var(--cy-z-modal); }
+.pv__imgs { display: flex; gap: var(--cy-space-2); justify-content: center; flex-wrap: wrap; }
+.pv__img { width: 180rpx; height: 180rpx; border-radius: var(--cy-radius-md); background: rgba(255, 255, 255, .18); } /* ds-ok 整屏色块上的图片占位 */
+.pv__cta {
+  margin-top: var(--cy-space-4); min-width: 280rpx; height: 96rpx; padding: 0 var(--cy-space-6);
+  display: flex; align-items: center; justify-content: center; border-radius: var(--cy-radius-pill);
+  background: #fff; color: #111; font-size: var(--cy-font-body); font-weight: 700;  /* ds-ok 整屏色块上的白色按钮,不随主题翻转 */
+}
+.pv__cta--press { opacity: .85; }

@@ -102,12 +102,14 @@ test('★硬币是银的、绕横轴翻、边上有滚花', () => {
   assert.ok(s.includes('2.2s'), 'CSS 那条过渡也必须是 2.2s')
 })
 
-test('★问答的选项是一整块分组卡(2026-09-23 用户改口):竖排、行不各自成卡、答案框仍不是灰盒子', () => {
+test('★问答的选项照试玩台 .qaopt(2026-10-23 用户:「回到试玩台的样子」,取代 09-23 的整卡):细线文字行、选中只染字和尾巴方块', () => {
   const s = wxss('playkit-qa')
-  assert.ok(/\.qa__opts \{[\s\S]{0,300}?background: var\(--ink\)/.test(s), '选项外面是一整块反色卡')
-  assert.ok(/\.qa__opt \+ \.qa__opt \{[^}]*border-top/.test(s), '行与行之间是发丝分隔')
-  assert.equal(/\.qa__opt \{[\s\S]{0,400}?border-radius/.test(s), false,
-    '单行不许有圆角 —— 圆角在外面那块卡上,每行各自圆就又变回一颗颗按钮')
+  assert.ok(/\.qa__opts \{[^}]*background: transparent/.test(s), '选项外面没有卡')
+  assert.ok(/\.qa__opt \{[^}]*border-bottom: 1rpx solid var\(--soft\)/.test(s), '行与行之间是细线')
+  assert.ok(/\.qa__opt--first \{[^}]*border-top: 1rpx solid var\(--soft\)/.test(s), '第一行上面也有一道线')
+  assert.equal(/\.qa__opt \{[^}]*border-radius/.test(s), false, '单行不许有圆角 —— 那又变回一颗颗按钮')
+  assert.equal(/\.qa__opt\.is-(right|wrong) \{[^}]*background/.test(s), false, '对错只染字,不铺整行色块')
+  assert.ok(/\.qa__opt\.is-right::after \{ background: var\(--ok\)/.test(s), '尾巴方块跟着对错变色')
   assert.ok(/\.qa__input \{[\s\S]{0,400}?background: transparent/.test(s),
     '答案框不能是灰盒子 —— 盒子把「写答案」变成「填表格」')
 })

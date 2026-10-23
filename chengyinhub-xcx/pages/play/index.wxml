@@ -1569,6 +1569,7 @@
 <!-- v5.1/v5.2 新玩法分发器:kit 由 cy-advanced-game 抛上来的权威会话视图派生
      (见 utils/playkit-view.js)。这些壳是独立 sheet,套不进面板自己那层 sheet,所以渲染在这里。 -->
 <cy-playkit id="playKit" kit="{{playKit.kit}}" show="{{playKit.show}}" bind:kitaction="onPlayKitAction" />
+<cy-play-verdict show="{{r5Verdict.show}}" kind="{{r5Verdict.kind}}" text="{{r5Verdict.text}}" images="{{r5Verdict.images}}" closable="{{true}}" bind:close="closeR5Verdict" />
 
 <!-- R14 旅程检定(入口在 encounter.allowedActions,与 playKit 是两套;
      失败也推进:结算前后都能退出,不拦节点完成) -->

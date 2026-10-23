@@ -7,7 +7,7 @@
   <view class="g-col qa {{intro ? 'qa--intro' : ''}} {{burning ? 'qa--burning' : ''}} {{reducedMotion ? 'qa--reduced' : ''}}">
     <!-- 拍照那一档的大字默认回落成题干(见 advanced-game-preview 的 shotLead)。
          两处印同一句话时,只留中间那一句 —— 上面再来一遍是重复,不是强调。 -->
-    <view class="qa__q" wx:if="{{!(mode === 'shot' && shotLead === title)}}">{{title}}</view>
+    <view class="qa__q pe pe--blur" style="--pe-d:.05s;--pe-dur:.7s" wx:if="{{!(mode === 'shot' && shotLead === title)}}">{{title}}</view>
 
     <!-- 一进来题目在屏幕正中,一秒后选项才出现 —— 一屏一件事:
          先让人把题读完,再给他可以按的东西。同时出现的话,人只会扫按钮。 -->
@@ -38,7 +38,7 @@
               data-i="{{index}}" bindtap="onPick"
               aria-disabled="{{finished || passed || submitted}}" aria-role="button" aria-label="选项 {{item.key}}:{{item.t}}"
               hover-class="qa__press" hover-stay-time="80">
-          <view class="qa__opt-main">
+          <view class="qa__opt-main pe pe--left" style="--pe-d:1.05s;--pe-i:{{index}}">
             <view class="qa__opt-k">{{item.key}}</view>
             <!-- 这儿原先还有「选项配图」和「选项配音」两个角标。删掉的理由:**商家配不了** ——
                  选项配置只有 {id, label, fb, correct},pickPlayKit 也只过桥 {id, t},
@@ -53,7 +53,7 @@
 
       <!-- ③ 拍照打卡:提示词大字摆在正中,那句话就是这一屏 -->
       <block wx:else>
-        <view class="qa__shot-lead">{{shotLead}}</view>
+        <view class="qa__shot-lead pe pe--blur" style="--pe-d:.3s">{{shotLead}}</view>
         <view class="qa__shot-note" wx:if="{{shotNote}}">{{shotNote}}</view>
       </block>
 

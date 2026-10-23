@@ -189,12 +189,10 @@
         </cy-dropdown>
         <block wx:if="{{r5Editor.participation === 'scan'}}">
           <view class="cg-rw-line cg-line"><view class="cg-rw-name">扫完回复</view><cy-switch checked="{{advanced.scan.kind !== 'NONE'}}" bindchange="toggleScanReply" accessibility-label="扫完回复" /></view>
+          <!-- 照原型:开关打开就是一行回复,不再先选「回复方式」;老模板里的语音 / 图片回复照旧点进去配 -->
           <view class="cg-scan-reply" wx:if="{{advanced.scan.kind !== 'NONE'}}">
-            <view class="cg-cfg-label">回复方式</view>
-            <cy-dropdown portal="{{false}}" range="{{scanReplyKinds}}" range-key="label" value="{{opt.idx(scanReplyKinds, advanced.scan.kind)}}" bind:change="pickScanReplyKind"><view class="cg-pick">{{opt.label(scanReplyKinds, advanced.scan.kind)}}<view class="cg-caret"><cy-icon name="back" size="28" /></view></view></cy-dropdown>
             <block wx:if="{{advanced.scan.kind === 'TEXT'}}">
-              <view class="cg-cfg-label">回复内容 <text class="req" aria-hidden="true">*</text></view>
-              <textarea class="cg-cfg-textarea" value="{{advanced.scan.reply}}" maxlength="200" placeholder="例如 欢迎来到这家店，今天的手冲是耶加雪菲。" placeholder-class="cg-ph" data-section="scan" data-field="reply" bindinput="onAdvancedField" />
+              <textarea class="cg-cfg-textarea" value="{{advanced.scan.reply}}" maxlength="200" auto-height placeholder="例如 欢迎来到老城茶馆" placeholder-class="cg-ph" data-section="scan" data-field="reply" bindinput="onAdvancedField" aria-label="扫完回复的内容" />
             </block>
             <view class="cg-r5-row" wx:else bindtap="openScanSheet" aria-role="button" aria-label="配置扫完回复" hover-class="cy-pressed" hover-stay-time="80">
               <view class="cg-r5-row__main"><text class="cg-r5-row__title cg-r5-row__title--plain">{{opt.label(scanReplyKinds, advanced.scan.kind)}}回复</text><text class="cg-r5-row__sub">{{r5Editor.scanSummary}}</text></view>
@@ -204,7 +202,7 @@
         </block>
       </cy-card>
       <!-- 玩法:标题在卡外(不标星、不挂「核心」),卡里只放所选玩法与形式/怎么出现;玩法自己的设置拆成下面几张卡 -->
-      <view class="cg-sec" id="sec-game" wx:if="{{ mod.key === 'finish' }}"><text class="cg-sec__t">玩法</text><view class="cg-sec__act" bindtap="removeModule" data-key="finish" aria-role="button" aria-label="移除玩法模块" hover-class="cy-pressed" hover-stay-time="80">移除</view></view>
+      <view class="cg-sec" id="sec-game" wx:if="{{ mod.key === 'finish' }}"><text class="cg-sec__t">玩法</text><view class="cg-sec__act" bindtap="confirmRemoveModule" data-key="finish" aria-role="button" aria-label="移除玩法模块" hover-class="cy-pressed" hover-stay-time="80">移除</view></view>
       <cy-card class="cg-card" wx:if="{{ mod.key === 'finish' }}">
           <!-- 2026-10-22 主人定稿 HTML 原型：选择玩法改为半屏标签弹层，左右滑动 -->
           <view wx:if="{{!gameKey}}" class="cg-r5-row" bindtap="openR5GameSheet" aria-role="button" aria-label="选择玩法" hover-class="cy-pressed" hover-stay-time="80"><view class="cg-r5-row__main"><text class="cg-r5-row__title">选择玩法</text><cy-inline-error wx:if="{{errors.finish}}" class="cg-r5-row__sub is-err" kind="error" title="{{errors.finish}}" /></view><view class="cg-r5-pill">选择<cy-icon name="chevron-right" size="24" /></view></view>
@@ -214,11 +212,9 @@
               <view class="cg-r5-row__main"><text class="cg-r5-row__title">{{gameCurrent.label}}</text><text class="cg-r5-row__sub" wx:if="{{gameCurrent.sub}}">{{gameCurrent.sub}}</text></view>
               <view class="cg-r5-pill" bindtap="openR5GameSheet" aria-role="button" aria-label="更换玩法" hover-class="cy-pressed" hover-stay-time="80">更换</view>
             </view>
-            <view class="cg-two cg-game-opts" wx:if="{{r5Editor.forms.length > 1 || (gameKey !== 'bingo' && gameKey !== 'album')}}">
-              <view class="cg-col" wx:if="{{r5Editor.forms.length > 1}}"><view class="cg-cfg-label">形式</view>
-                <cy-dropdown topic-editor columns="{{2}}" range="{{r5Editor.forms}}" range-key="label" reason-key="reason" value="{{opt.idx(r5Editor.forms, r5Editor.formKey)}}" bind:change="pickR5Form"><view class="cg-pick">{{opt.label(r5Editor.forms, r5Editor.formKey)}}<view class="cg-caret"><cy-icon name="back" size="28" /></view></view></cy-dropdown>
-              </view>
-              <view class="cg-col" wx:if="{{gameKey !== 'bingo' && gameKey !== 'album'}}"><view class="cg-cfg-label">怎么出现</view>
+            <!-- 2026-10-23 主人:「形式」不在卡里选了(每种形式在选择玩法里各是一枚标签),卡里只留呈现方式 -->
+            <view class="cg-game-opts" wx:if="{{gameKey !== 'bingo' && gameKey !== 'album'}}">
+              <view><view class="cg-cfg-label">呈现方式</view>
                 <cy-dropdown portal="{{false}}" range="{{presentOptions}}" range-key="label" value="{{opt.idx(presentOptions, presentChoice)}}" disabled="{{presentInlineLocked}}" bind:change="onPickPresent"><view class="cg-pick {{opt.idx(presentOptions, presentChoice) < 0 ? 'empty' : ''}}">{{opt.label(presentOptions, presentChoice)}}<view class="cg-caret"><cy-icon name="back" size="28" /></view></view></cy-dropdown>
               </view>
             </view>
@@ -1178,7 +1174,7 @@
 
 
       <!-- ======= 完成奖励 ======= -->
-      <view class="cg-sec" id="sec-reward" wx:if="{{ mod.key === 'reward' && gameKey !== 'album' }}"><text class="cg-sec__t">完成奖励</text><view class="cg-sec__act" bindtap="removeModule" data-key="reward" aria-role="button" aria-label="移除完成奖励" hover-class="cy-pressed" hover-stay-time="80">移除</view></view>
+      <view class="cg-sec" id="sec-reward" wx:if="{{ mod.key === 'reward' && gameKey !== 'album' }}"><text class="cg-sec__t">完成奖励</text><view class="cg-sec__act" bindtap="confirmRemoveModule" data-key="reward" aria-role="button" aria-label="移除完成奖励" hover-class="cy-pressed" hover-stay-time="80">移除</view></view>
       <cy-card class="cg-card" wx:if="{{ mod.key === 'reward' && gameKey !== 'album' }}">
           <!-- 优惠券:从我已发布的券里选 -->
           <view class="cg-rw-row">
@@ -1331,20 +1327,23 @@
     <!-- ★ 玩法壳挂在预览层根部,不进滚动流:玩家侧(pages/play)也是这么挂的,
          它自己就是一整屏。塞进滚动流里会被上面的翻页条和内边距顶下去 ——
          题面该在离顶 84px 的位置,实测被推到了 340px,和原型对不上就是这么来的。 -->
-    <scroll-view wx:if="{{pvStepKey === 'challenge' && pvKit && pvKit.present === 'inline'}}" class="cg-pv-inline-scroll" scroll-y>
+    <scroll-view wx:if="{{pvStepKey === 'challenge' && pvKit && (pvKit.present === 'inline' || pvKit.type === 'journeycheck')}}" class="cg-pv-inline-scroll" scroll-y>
       <!-- 照玩家故事流的样子排:故事底色 → 流里这张玩法卡 → 「继续故事」。
            不再在外面另印一行标题 —— 作者没起名时它回落成题目,和玩法自己的题目印两遍。 -->
-      <view class="cg-pv-inline-kit"><cy-playkit class="{{ pvKit.mode === 'CARD' ? 'theme-dark' : '' }}" kit="{{pvKit}}" show="{{true}}" inline="{{true}}" bind:kitaction="onPvKitAction" /></view>
+      <view class="cg-pv-inline-kit">
+        <cy-playkit class="{{ pvKit.mode === 'CARD' ? 'theme-dark' : '' }}" kit="{{pvKit}}" show="{{true}}" inline="{{true}}" bind:kitaction="onPvKitAction" />
+      </view>
       <view class="cg-pv-inline-end"><view class="cg-pv-inline-continue">继续故事</view></view>
     </scroll-view>
     <cy-playkit class="{{ pvKit.mode === 'CARD' ? 'theme-dark' : '' }}" wx:elif="{{pvStepKey === 'challenge' && pvKit}}" kit="{{pvKit}}" show="{{true}}" bind:kitaction="onPvKitAction" />
-    <view class="cg-pv-float" wx:if="{{ pvStepKey === 'challenge' && pvKit }}">
-      <view class="cg-pv-arrow {{ pvStep <= 0 ? 'disabled' : '' }}" bindtap="pvPrev" aria-role="button" aria-label="上一步预览" aria-disabled="{{pvStep <= 0}}" hover-class="{{pvStep <= 0 ? 'none' : 'cy-pressed'}}" hover-stay-time="80"><cy-icon name="back" size="36" /></view>
-      <view class="cg-pv-dots">
-        <view class="cg-pv-dot {{ pvStep === idx ? 'on' : '' }}" wx:for="{{ pvSteps }}" wx:key="*this" wx:for-index="idx"></view>
-      </view>
-      <view class="cg-pv-arrow {{ pvStep >= pvSteps.length - 1 ? 'disabled' : '' }}" bindtap="pvNext" aria-role="button" aria-label="下一步预览" aria-disabled="{{pvStep >= pvSteps.length - 1}}" hover-class="{{pvStep >= pvSteps.length - 1 ? 'none' : 'cy-pressed'}}" hover-stay-time="80"><cy-icon name="arrow-right" size="36" /></view>
-    </view>
+    <!-- 左上角一颗「退出」,玩到一半也能走。内嵌的玩法没有自己的退出键,全屏的那颗在预览里藏掉(--pk-back-display),
+         两种玩法都只认这一颗,位置和样子照玩法台面的 .st__back -->
+    <view class="cg-pv-exit" wx:if="{{ pvStepKey === 'challenge' && pvKit }}" style="top:{{statusBarHeight + 12}}px" bindtap="closePreview"
+          aria-role="button" aria-label="退出试玩" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="back" size="40" /></view>
+    <!-- 照「城瘾玩法试玩台」:玩法铺满整屏,不压翻页点和箭头;
+         玩完由判定屏整屏涌上来,作者配的成功 / 失败反馈就写在这一屏。 -->
+    <cy-play-verdict wx:if="{{ pvStepKey === 'challenge' && pvKit }}" show="{{ pvVerdict.show }}" kind="{{ pvVerdict.kind }}"
+                     text="{{ pvVerdict.text }}" images="{{ pvVerdict.images }}" closable="{{ true }}" bind:close="closePvVerdict" />
     <!-- 2026-09-18 UI-22:翻页条 + 步骤标签固定在滚动区之上(不再 sticky 在滚动流里),
          步骤标签紧贴翻页点,滚到哪一步都和下面的内容对得上,也不会被滚过去的卡片压住。 -->
     <view class="cg-pv-head" wx:if="{{ !(pvStepKey === 'challenge' && pvKit) }}">
@@ -1460,7 +1459,8 @@
     </scroll-view>
 
     <!-- 预览态底部栏(FE-04:previewMode 时隐藏发布/草稿控件,temp 收窄为纯预览) -->
-    <view class="cg-pv-submit" wx:if="{{!previewMode}}">
+    <!-- 玩法那一屏只有玩法本身(照试玩台);保存 / 发布留在玩完之后的几步 -->
+    <view class="cg-pv-submit" wx:if="{{!previewMode && !(pvStepKey === 'challenge' && pvKit)}}">
       <!-- 2026-09-23 用户:底部「保存前摘要」删掉;只在保存失败时出失败说明 -->
       <cy-inline-error wx:if="{{submitError}}" kind="network"
         title="{{from === 'citynode' ? '玩法没有保存成功' : (lastSubmitAction === 'draft' ? '草稿没有保存成功' : '玩法没有发布成功')}}"
@@ -1481,7 +1481,6 @@
     <view class="cg-edit-head"><view class="cg-edit-head__exit" bindtap="closeAddSheet" aria-role="button" aria-label="退出添加模块" hover-class="cy-pressed" hover-stay-time="80">退出</view><view class="cg-edit-head__title">添加模块</view><view class="cg-edit-head__done" bindtap="closeAddSheet" aria-role="button" aria-label="完成添加模块" hover-class="cy-pressed" hover-stay-time="80">完成</view></view>
     <view class="cg-sheet-list">
       <view class="cg-sheet-card" wx:for="{{ availableModules }}" wx:key="key" hover-class="cg-sheet-card--pressed" hover-stay-time="80" bindtap="addModule" data-key="{{ item.key }}">
-        <view class="cg-sheet-ico"><cy-icon name="{{item.iconName}}" size="40" /></view>
         <view class="cg-sheet-meta">
           <view class="cg-sheet-name">{{ item.name }}<text class="cg-tag {{ item.tagClass }}" wx:if="{{ item.tag }}">{{ item.tag }}</text></view>
           <view class="cg-sheet-desc">{{ item.desc }}</view>
@@ -1495,7 +1494,7 @@
   <!-- ============ 选择玩法 sheet(2026-10-22 主人定稿,Figma 标签样式):半屏弹层;所有分类排成一条只左右滑,
        每类最多四行胶囊标签(宽度随字数、带图标),点分类跳过去;点标签先选中,底部看说明 / 预览,「完成」才换玩法。 ============ -->
   <view class="cg-mask" wx:if="{{ gameSheetOpen }}" bindtap="closeR5GameSheet" aria-role="button" aria-label="退出选择玩法" hover-class="cy-pressed" hover-stay-time="80"></view>
-  <view class="cg-sheet cg-tsheet" wx:if="{{ gameSheetOpen }}">
+  <view class="cg-sheet cg-tsheet cg-tsheet--auto" wx:if="{{ gameSheetOpen }}">
     <view class="cg-sheet-bar"></view>
     <view class="cg-edit-head"><view class="cg-edit-head__exit" bindtap="closeR5GameSheet" aria-role="button" aria-label="退出选择玩法" hover-class="cy-pressed" hover-stay-time="80">退出</view><view class="cg-edit-head__title">选择玩法</view><view class="cg-edit-head__done" bindtap="confirmR5GameSheet" aria-role="button" aria-label="完成选择玩法" hover-class="cy-pressed" hover-stay-time="80">完成</view></view>
     <scroll-view scroll-x class="cg-gsheet-nav" enhanced show-scrollbar="{{false}}" scroll-into-view="{{ sheetNavAnchor }}" scroll-with-animation>
@@ -1694,7 +1693,7 @@
   <!-- ============ R5 结果之后（回复 / 消耗 / 效果 / 反馈下一段） ============ -->
   <view class="cg-mask cg-mask--top" wx:if="{{afterEditor.show}}" bindtap="closeAfterSheet" aria-role="button" aria-label="退出结果之后" hover-class="cy-pressed" hover-stay-time="80"></view>
   <view class="cg-sheet cg-edit-sheet cg-edit-sheet--top" style="--cy-comp-sheet-max-h:calc(100vh - {{sheetTop}}px);" wx:if="{{afterEditor.show}}">
-    <view class="cg-edit-head"><view class="cg-edit-head__exit" bindtap="closeAfterSheet" aria-role="button" aria-label="退出结果之后" hover-class="cy-pressed" hover-stay-time="80">退出</view><view class="cg-edit-head__title">{{afterEditor.inline ? '消耗与效果' : opt.label(r5Editor.afterRows, afterEditor.path, 'path')}}</view><view class="cg-edit-head__done" bindtap="saveAfterSheet" aria-role="button" aria-label="完成结果之后" hover-class="cy-pressed" hover-stay-time="80">完成</view></view>
+    <view class="cg-edit-head"><view class="cg-edit-head__exit" bindtap="closeAfterSheet" aria-role="button" aria-label="退出结果之后" hover-class="cy-pressed" hover-stay-time="80">退出</view><view class="cg-edit-head__title">{{afterEditor.inline ? '消耗与效果' : opt.label(r5Editor.optionAfterRows, afterEditor.path, 'path')}}</view><view class="cg-edit-head__done" bindtap="saveAfterSheet" aria-role="button" aria-label="完成结果之后" hover-class="cy-pressed" hover-stay-time="80">完成</view></view>
     <view class="cg-gcfg" wx:if="{{!afterEditor.inline}}">
       <view class="cg-cfg-label">回复一句</view>
       <input class="cg-cfg-input" value="{{afterEditor.draft.reply}}" maxlength="2000" placeholder="例如 你稳住了呼吸" placeholder-class="cg-ph" bindinput="inputAfterReply" />
@@ -1729,7 +1728,7 @@
       <input class="cg-cfg-input" placeholder="输入名称后确认，例如 体温" placeholder-class="cg-ph" confirm-type="done" bindconfirm="declareAfterValueSlot" />
 
     </view>
-    <view class="cg-gcfg"><view class="cg-cfg-label">进入下一段</view><cy-dropdown topic-editor columns="{{2}}" range="{{r5Editor.nextStepOptions}}" range-key="label" reason-key="reason" value="{{opt.idx(r5Editor.nextStepOptions, afterEditor.draft.next)}}" disabled="{{!!r5Editor.nextDisabledReason}}" bind:change="pickAfterNextStep"><view class="cg-pick">{{opt.label(r5Editor.nextStepOptions, afterEditor.draft.next)}}<cy-icon name="back" size="28" /></view></cy-dropdown><view wx:if="{{r5Editor.nextDisabledReason}}" class="cg-cfg-hint">{{r5Editor.nextDisabledReason}}</view></view>
+    <view class="cg-gcfg"><view class="cg-cfg-label">进入下一段</view><cy-dropdown topic-editor columns="{{2}}" range="{{r5Editor.nextStepOptions}}" range-key="label" reason-key="reason" value="{{opt.idx(r5Editor.nextStepOptions, afterEditor.draft.next)}}" disabled="{{!!r5Editor.nextDisabledReason}}" bind:change="pickAfterNextStep"><view class="cg-pick">{{opt.label(r5Editor.nextStepOptions, afterEditor.draft.next)}}<view class="cg-caret"><cy-icon name="back" size="28" /></view></view></cy-dropdown><view wx:if="{{r5Editor.nextDisabledReason}}" class="cg-cfg-hint">{{r5Editor.nextDisabledReason}}</view></view>
     <cy-inline-error class="cg-inline-error" wx:if="{{afterEditor.error}}" title="{{afterEditor.error}}" />
   </view>
 

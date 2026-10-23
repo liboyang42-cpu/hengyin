@@ -135,3 +135,10 @@
   40%, 60% { transform: translateX(14rpx); }
 }
 .st--reduced .st--shake, .st--reduced.st--shake { animation: none; }
+
+/* 内嵌在故事里时,入场先把整张台面从上往下展开(--pe-unfold 由故事流那一层给 1)。
+   展开完把下边界推到 -100vh:内嵌态 overflow:visible,收着的话会把溢出的部分裁掉。 */
+.st {
+  clip-path: inset(-100vh -100vw calc((1 - var(--pe-go, 1)) * var(--pe-unfold, 0) * 100% - (1 - (1 - var(--pe-go, 1)) * var(--pe-unfold, 0)) * 100vh) -100vw);
+  transition: clip-path .7s cubic-bezier(.2, .9, .25, 1);
+}

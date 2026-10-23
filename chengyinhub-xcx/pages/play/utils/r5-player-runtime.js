@@ -46,9 +46,18 @@ function checkView(view, theme) {
 function methods() {
   return {
     _applyR5OutcomeView(view) {
-      const reply = outcomeReply(view);
+      const reply = outcomeReply(view), prev = this.data.r5OutcomeReply;
       // 单一结果位按回执 ID 替换，轮询与重进不追加消息或重播弹窗。
-      if (JSON.stringify(reply) !== JSON.stringify(this.data.r5OutcomeReply)) this.setData({ r5OutcomeReply: reply });
+      if (JSON.stringify(reply) !== JSON.stringify(prev)) this.setData({ r5OutcomeReply: reply });
+      // 成功 / 失败反馈不进背包:本页亲眼等到结算的那一次,整屏判定(照试玩台)把反馈文字和配图摆出来。
+      // 进页时已经结过的不补弹 —— 第一份视图只记下来;同一张回执也只弹一次。
+      const fresh = this._r5OutcomeSeeded && reply && reply.settled && (reply.reply || reply.images.length)
+        && !(prev && prev.id === reply.id && prev.settled) && this._r5VerdictShownId !== reply.id;
+      this._r5OutcomeSeeded = true;
+      if (fresh) {
+        this._r5VerdictShownId = reply.id;
+        this.setData({ r5Verdict: { show: true, kind: reply.outcome === 'PASS' ? 'win' : 'fail', text: reply.reply, images: reply.images } });
+      }
       if (this._r5CheckView && this.data.journeyCheck.r5) {
         const receipt = checkView(this._r5CheckView, view).receipt;
         if (JSON.stringify(receipt) !== JSON.stringify(this.data.journeyCheck.receipt)) this.setData({ 'journeyCheck.receipt': receipt });
@@ -90,4 +99,4 @@ function methods() {
     },
   };
 }
-module.exports = { isR5, outcomeReply, checkView, methods, data: { r5OutcomeReply: null } };
+module.exports = { isR5, outcomeReply, checkView, methods, data: { r5OutcomeReply: null, r5Verdict: { show: false, kind: 'win', text: '', images: [] } } };

@@ -2,9 +2,9 @@
      押完不当场出结果 —— 到点由商家公布,所以这一屏没有判定屏。 -->
 <cy-play-stage id="cy-play-stage" skin="predict" show="{{show}}" back-label="退出" bind:back="onClose">
   <view class="pd {{reducedMotion ? 'pd--reduced' : ''}}">
-    <view class="pd__q">{{question}}</view>
+    <view class="pd__q pe pe--blur" style="--pe-d:.05s">{{question}}</view>
 
-    <view class="pd__ring">
+    <view class="pd__ring pe pe--up" style="--pe-d:.3s;--pe-dur:.9s">
       <view class="pd__inner">
         <!-- 一张卡 = 一个 0×0 的支架 + 若干竖条。支架只管「转到哪个角度、放多大」,
              竖条各自贴在圆柱面上拼出弯曲的卡面。

@@ -1,6 +1,6 @@
 <!-- 判定屏只有两张:猜中了走 win,其余走 fail。凡是「猜中了」都走这一个,
      每个玩法自己发明一套的话,玩家会以为自己在玩不同的产品。 -->
-<view class="pv pv--{{kind}} {{rising ? 'pv--on' : ''}} {{reducedMotion ? 'pv--reduced' : ''}}" wx:if="{{show}}"
+<view class="pv pv--{{kind}} {{rising ? 'pv--on' : ''}} {{reducedMotion ? 'pv--reduced' : ''}} {{closable ? 'pv--closable' : ''}}" wx:if="{{show}}"
       aria-role="alert" aria-label="{{kind === 'win' ? ('通过。' + (text || '')) : word}}">
   <view class="pv__fill">
     <view class="pv__wave pv__wave--a"></view>
@@ -17,6 +17,12 @@
     </view>
     <!-- 输:整屏就两个字。规则说明是写给刚失败的人看的,那个时候没人读 -->
     <view class="pv__word" wx:else>{{word}}</view>
-    <view class="pv__text" wx:if="{{kind === 'win' && text}}">{{text}}</view>
+    <!-- 2026-10-22 玩法模板「结果反馈」:成功 / 失败反馈的文字与配图就落在这一屏(照试玩台 liquidWin 的 txt)。
+         没配反馈时和原来一样:赢只有对勾,输只有两个字。 -->
+    <view class="pv__text" wx:if="{{text}}">{{text}}</view>
+    <view class="pv__imgs" wx:if="{{images.length}}">
+      <image class="pv__img" wx:for="{{images}}" wx:key="*this" src="{{item}}" mode="aspectFill" aria-label="结果配图 {{index + 1}}" />
+    </view>
+    <view class="pv__cta" wx:if="{{closable}}" bindtap="onClose" aria-role="button" aria-label="继续" hover-class="pv__cta--press" hover-stay-time="80">继续</view>
   </view>
 </view>

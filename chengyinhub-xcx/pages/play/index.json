@@ -32,6 +32,7 @@
     "cy-advanced-game": "/pages/play/components/advanced-game/index",
     "cy-play-roadmap": "/pages/play/components/roadmap/index",
     "cy-playkit": "/pages/play/components/playkit/index",
+    "cy-play-verdict": "/pages/play/components/play-verdict/index",
     "cy-ai-score-card": "/pages/play/components/ai-score-card/index",
     "cy-toast": "/components/cy/toast/index",
     "cy-loading-mask": "/components/cy/loading-mask/index",
