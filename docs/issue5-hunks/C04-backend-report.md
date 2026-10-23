@@ -113,3 +113,23 @@ mvn -pl chengyinhub-admin -am -Dtest=com.chengyinhub.business.service.orienteeri
 | e2e873d98c1da74d9047d7b925818c917c2e8ec7a3879da491ffec105d19e2a5 | 9078 | EventResultDispute.java |
 
 Runtime / TopicRouteSession / 公共 Controller 仍未接线。App / XCTest / MySQL / HTTP / CI = NOT_RUN。不声称 100%。
+
+## 7. Addendum 2026-10-23 16:12 America/Los_Angeles — recoverOriginal isolation
+
+HEAD `516f59977`（`test(c04): recoverOriginal 未见 id 不占账再唯一写入 [skip ci]`）。生产 `recoverOriginal` 仍 alias `recoverUnknown`，SHA256 与 `eb95ffb50` 相同。
+
+`C04AccountSwitchRestartIsolationTest.recoverOriginalOfNeverSeenIdDoesNotOccupyLedgerThenUniqueWriteApplies`：
+
+- 缺 requestId `recoverOriginal(null)` → typed `NOT_FOUND`，`originalRequestId` 保持 Java null，不占账
+- 从未见过的 `fin-orig-unk` / `reg-orig-unk` / `dsp-orig-unk` → `NOT_FOUND`，`readback` 仍 throw，不写入 ledger
+- 之后对该 id 的 finish / register / open 仍是唯一原文写入；`recoverOriginal` 再读到 `FINISHED` / `REGISTERED` / `PENDING`
+
+命令：
+
+```
+mvn -pl chengyinhub-admin -am -Dtest=com.chengyinhub.business.service.orienteering.*Test -Dsurefire.failIfNoSpecifiedTests=false test
+```
+
+结果：`BUILD SUCCESS`。chengyinhub-admin 隔离单测 **20 run, 0 fail, 0 error, 0 skip**（2026-10-23T23:12:25Z）。`C04AccountSwitchRestartIsolationTest` 5/0。
+
+Runtime / TopicRouteSession / 公共 Controller 仍未接线。App / XCTest / MySQL / HTTP / CI = NOT_RUN。不声称 100%。
