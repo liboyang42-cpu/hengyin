@@ -1,0 +1,142 @@
+TAP version 13
+# Subtest: 队间交换真实方法进入台账，预览与核对不写入，发起确认只写一条命令
+ok 1 - 队间交换真实方法进入台账，预览与核对不写入，发起确认只写一条命令
+  ---
+  duration_ms: 52523.870067
+  type: 'test'
+  ...
+# Subtest: 台账按混入方法真实文件提取，保留剪贴板能力与状态选择
+ok 2 - 台账按混入方法真实文件提取，保留剪贴板能力与状态选择
+  ---
+  duration_ms: 1.164377
+  type: 'test'
+  ...
+# Subtest: 草稿重试保留真实写入合同，不因 draft 命名降成读取
+ok 3 - 草稿重试保留真实写入合同，不因 draft 命名降成读取
+  ---
+  duration_ms: 0.542961
+  type: 'test'
+  ...
+# Subtest: 导演台重试追踪 command 写入，核对只读取 receipt 与刷新 view
+ok 4 - 导演台重试追踪 command 写入，核对只读取 receipt 与刷新 view
+  ---
+  duration_ms: 0.634877
+  type: 'test'
+  ...
+# Subtest: 导演台离线记录独立登记原有 anchor 写接口，普通表单仍只读
+ok 5 - 导演台离线记录独立登记原有 anchor 写接口，普通表单仍只读
+  ---
+  duration_ms: 1.307498
+  type: 'test'
+  ...
+# Subtest: 真实反引号模板 URL 动作保留读写分类与分支，不因去污降成 state
+ok 6 - 真实反引号模板 URL 动作保留读写分类与分支，不因去污降成 state
+  ---
+  duration_ms: 2.715155
+  type: 'test'
+  ...
+# Subtest: 四条商家写端点精确落入 writeApis，详情查询保留在 primaryApis 但不被当写
+ok 7 - 四条商家写端点精确落入 writeApis，详情查询保留在 primaryApis 但不被当写
+  ---
+  duration_ms: 1.357913
+  type: 'test'
+  ...
+# Subtest: 权威回读负控：绑定详情读端点冒充写被拒，绑定真实写端点被接受（实际 validator）
+ok 8 - 权威回读负控：绑定详情读端点冒充写被拒，绑定真实写端点被接受（实际 validator）
+  ---
+  duration_ms: 1.889718
+  type: 'test'
+  ...
+# Subtest: 聊天拉黑选项读取会话对象，清空只打开确认，两者都不直接写入
+ok 9 - 聊天拉黑选项读取会话对象，清空只打开确认，两者都不直接写入
+  ---
+  duration_ms: 1.037861
+  type: 'test'
+  ...
+# Subtest: 解除本人拉黑真实读取对象、解除、回读消息与标读，不能登记成只读
+ok 10 - 解除本人拉黑真实读取对象、解除、回读消息与标读，不能登记成只读
+  ---
+  duration_ms: 0.71161
+  type: 'test'
+  ...
+# Subtest: 聊天拉黑和清空确认落库记为真实写入，不因 confirm 被 Danger 隔断降成读取
+ok 11 - 聊天拉黑和清空确认落库记为真实写入，不因 confirm 被 Danger 隔断降成读取
+  ---
+  duration_ms: 0.807401
+  type: 'test'
+  ...
+# Subtest: 导演台对账能力是保守传递闭包：loadProjection 合法可达 receipt，retryUnknownWrite 为 over-approx 候选
+ok 12 - 导演台对账能力是保守传递闭包：loadProjection 合法可达 receipt，retryUnknownWrite 为 over-approx 候选
+  ---
+  duration_ms: 98.958415
+  type: 'test'
+  ...
+# Subtest: 基础玩法后的投影只增加真实可达归零恢复写入，不混入其他指令端点
+ok 13 - 基础玩法后的投影只增加真实可达归零恢复写入，不混入其他指令端点
+  ---
+  duration_ms: 2.666974
+  type: 'test'
+  ...
+# Subtest: 保存草稿按普通草稿与据点拒绝两条真实分支登记
+ok 14 - 保存草稿按普通草稿与据点拒绝两条真实分支登记
+  ---
+  duration_ms: 2.154157
+  type: 'test'
+  ...
+# Subtest: 同一行的独立方法不互相截断或串入后续函数
+ok 15 - 同一行的独立方法不互相截断或串入后续函数
+  ---
+  duration_ms: 0.622028
+  type: 'test'
+  ...
+# Subtest: 本文件覆盖混入方法后仍只提取获胜方法自身
+ok 16 - 本文件覆盖混入方法后仍只提取获胜方法自身
+  ---
+  duration_ms: 0.478856
+  type: 'test'
+  ...
+# Subtest: 收益场景的身份拒绝状态不得删掉原成功与错误验收分支
+ok 17 - 收益场景的身份拒绝状态不得删掉原成功与错误验收分支
+  ---
+  duration_ms: 1.013696
+  type: 'test'
+  ...
+# Subtest: 负控：任一收益场景入口删去错误验收分支必须判红
+ok 18 - 负控：任一收益场景入口删去错误验收分支必须判红
+  ---
+  duration_ms: 3.596305
+  type: 'test'
+  ...
+# Subtest: session renewal does not invoke deferred usage consent records; explicit agree still does
+ok 19 - session renewal does not invoke deferred usage consent records; explicit agree still does
+  ---
+  duration_ms: 821.297861
+  type: 'test'
+  ...
+# Subtest: author older-media button retains its real authenticated GET and paging visibility
+ok 20 - author older-media button retains its real authenticated GET and paging visibility
+  ---
+  duration_ms: 2.449073
+  type: 'test'
+  ...
+# Subtest: PlayKit parent delegates real advanced retry and scopes photo consent to its true conditional request plans
+ok 21 - PlayKit parent delegates real advanced retry and scopes photo consent to its true conditional request plans
+  ---
+  duration_ms: 5.177507
+  type: 'test'
+  ...
+# Subtest: 真实 roleGuard.clear 只清缓存；load 仍保留 Controller POST，未知别名不裁剪
+ok 22 - 真实 roleGuard.clear 只清缓存；load 仍保留 Controller POST，未知别名不裁剪
+  ---
+  duration_ms: 3.415788
+  type: 'test'
+  ...
+1..22
+# tests 22
+# suites 0
+# pass 22
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 53510.934715

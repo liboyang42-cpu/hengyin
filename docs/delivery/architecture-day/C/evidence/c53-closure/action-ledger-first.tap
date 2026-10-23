@@ -1,0 +1,316 @@
+TAP version 13
+# Subtest: 动态事件绑定保留同一入口的全部字面分支，不以别处同名入口去重
+ok 1 - 动态事件绑定保留同一入口的全部字面分支，不以别处同名入口去重
+  ---
+  duration_ms: 50032.340844
+  type: 'test'
+  ...
+# Subtest: 同进程重复掩码按源码内容区分真实请求与注释，源码改动不能复用旧分类
+ok 2 - 同进程重复掩码按源码内容区分真实请求与注释，源码改动不能复用旧分类
+  ---
+  duration_ms: 0.401388
+  type: 'test'
+  ...
+# Subtest: 动态事件绑定未知取值路径显式失败，不能静默漏记
+ok 3 - 动态事件绑定未知取值路径显式失败，不能静默漏记
+  ---
+  duration_ms: 0.854951
+  type: 'test'
+  ...
+# Subtest: 分类只看代码:注释与字符串里的 wx.* 不算能力(A)
+ok 4 - 分类只看代码:注释与字符串里的 wx.* 不算能力(A)
+  ---
+  duration_ms: 0.569784
+  type: 'test'
+  ...
+# Subtest: 分类跟得进 require 来的模块级 helper(B)
+ok 5 - 分类跟得进 require 来的模块级 helper(B)
+  ---
+  duration_ms: 1.843108
+  type: 'test'
+  ...
+# Subtest: action ledger 区分导航、写操作、读操作、页内状态与外部能力
+ok 6 - action ledger 区分导航、写操作、读操作、页内状态与外部能力
+  ---
+  duration_ms: 0.343933
+  type: 'test'
+  ...
+# Subtest: 同页 scene 或 sheet 入口不得因 go/open 命名误判为页面跳转
+ok 7 - 同页 scene 或 sheet 入口不得因 go/open 命名误判为页面跳转
+  ---
+  duration_ms: 0.986474
+  type: 'test'
+  ...
+# Subtest: 导航失败回调的 toast 不得污染 success 为 state 复合效果
+ok 8 - 导航失败回调的 toast 不得污染 success 为 state 复合效果
+  ---
+  duration_ms: 6.518132
+  type: 'test'
+  ...
+# Subtest: 每类动作都有对端回读，不把 success/toast 当作完成
+ok 9 - 每类动作都有对端回读，不把 success/toast 当作完成
+  ---
+  duration_ms: 2.520198
+  type: 'test'
+  ...
+# Subtest: 必跑分支按动作副作用生成，不强迫纯页内状态伪造 timeout
+ok 10 - 必跑分支按动作副作用生成，不强迫纯页内状态伪造 timeout
+  ---
+  duration_ms: 0.36238
+  type: 'test'
+  ...
+# Subtest: 只有当前 tap handler 直接出现可取消确认框才生成 modal 分支
+ok 11 - 只有当前 tap handler 直接出现可取消确认框才生成 modal 分支
+  ---
+  duration_ms: 0.381809
+  type: 'test'
+  ...
+# Subtest: 确认框合同沿同步 helper 展开，但截断异步回调与互斥 variant
+ok 12 - 确认框合同沿同步 helper 展开，但截断异步回调与互斥 variant
+  ---
+  duration_ms: 6.220283
+  type: 'test'
+  ...
+# Subtest: 确认框深度判定先屏蔽字符串/注释/正则，不得记下假事实
+ok 13 - 确认框深度判定先屏蔽字符串/注释/正则，不得记下假事实
+  ---
+  duration_ms: 0.355109
+  type: 'test'
+  ...
+# Subtest: 真实点击与组件事件合同分母分开，非 tap 不得伪装按钮点击
+ok 14 - 真实点击与组件事件合同分母分开，非 tap 不得伪装按钮点击
+  ---
+  duration_ms: 2.381605
+  type: 'test'
+  ...
+# Subtest: external 分支按微信能力定义，振动不伪造取消/拒权，选择器必须覆盖取消/拒权
+ok 15 - external 分支按微信能力定义，振动不伪造取消/拒权，选择器必须覆盖取消/拒权
+  ---
+  duration_ms: 0.151021
+  type: 'test'
+  ...
+# Subtest: 持久化 authority/requestTrace 必须与控制面签名 facts 等值
+ok 16 - 持久化 authority/requestTrace 必须与控制面签名 facts 等值
+  ---
+  duration_ms: 0.66304
+  type: 'test'
+  ...
+# Subtest: 真机签名必须覆盖逐分支 readback，人工篡改 pending URL 必须变红
+ok 17 - 真机签名必须覆盖逐分支 readback，人工篡改 pending URL 必须变红
+  ---
+  duration_ms: 0.782776
+  type: 'test'
+  ...
+# Subtest: 真机 capture 的签名起点也必须在 freshness 窗内，不能只刷新 unsigned 结束时间
+ok 18 - 真机 capture 的签名起点也必须在 freshness 窗内，不能只刷新 unsigned 结束时间
+  ---
+  duration_ms: 0.683791
+  type: 'test'
+  ...
+# Subtest: external success 只要求主能力，不把拒权恢复 openSetting 合并成同一路径
+ok 19 - external success 只要求主能力，不把拒权恢复 openSetting 合并成同一路径
+  ---
+  duration_ms: 0.476567
+  type: 'test'
+  ...
+# Subtest: 互斥 CTA 路径拆成独立 variant，不用一次扫码冒充关注与漫游
+ok 20 - 互斥 CTA 路径拆成独立 variant，不用一次扫码冒充关注与漫游
+  ---
+  duration_ms: 1.641492
+  type: 'test'
+  ...
+# Subtest: 动作分类追踪本文件调用闭包，不能漏掉间接微信外部能力
+ok 21 - 动作分类追踪本文件调用闭包，不能漏掉间接微信外部能力
+  ---
+  duration_ms: 0.147676
+  type: 'test'
+  ...
+# Subtest: 动作分类追踪 app 全局 helper，图片选择不能落回本地 state
+ok 22 - 动作分类追踪 app 全局 helper，图片选择不能落回本地 state
+  ---
+  duration_ms: 78.380304
+  type: 'test'
+  ...
+# Subtest: 用户授权与系统能力必须进入真机门，不能伪装成本地 state/write
+ok 23 - 用户授权与系统能力必须进入真机门，不能伪装成本地 state/write
+  ---
+  duration_ms: 0.150029
+  type: 'test'
+  ...
+# Subtest: 传感器、相机与微信身份能力必须进入真机门
+ok 24 - 传感器、相机与微信身份能力必须进入真机门
+  ---
+  duration_ms: 0.182848
+  type: 'test'
+  ...
+# Subtest: App 登录续期不能把全部 sendRequest 读写动作污染成真机能力
+ok 25 - App 登录续期不能把全部 sendRequest 读写动作污染成真机能力
+  ---
+  duration_ms: 43.495026
+  type: 'test'
+  ...
+# Subtest: 写操作与动态 URL 合同不能降级成普通读取
+ok 26 - 写操作与动态 URL 合同不能降级成普通读取
+  ---
+  duration_ms: 261.202192
+  type: 'test'
+  ...
+# Subtest: 本地 growth wrapper 的错误 method 或缺调用不能伪装成正常 POST 合同
+ok 27 - 本地 growth wrapper 的错误 method 或缺调用不能伪装成正常 POST 合同
+  ---
+  duration_ms: 119.082283
+  type: 'test'
+  ...
+# Subtest: 批准稿控件差分保留草稿双分支与成长中心真实绑定及身份恢复
+ok 28 - 批准稿控件差分保留草稿双分支与成长中心真实绑定及身份恢复
+  ---
+  duration_ms: 2.117723
+  type: 'test'
+  ...
+# Subtest: 前端 API method 必须与后端 Controller annotation 真源一致
+ok 29 - 前端 API method 必须与后端 Controller annotation 真源一致
+  ---
+  duration_ms: 7.704713
+  type: 'test'
+  ...
+# Subtest: 结算 CTA 按同意与报价就绪态穷尽真实请求链，报价失败不能伪装成直接建单
+ok 30 - 结算 CTA 按同意与报价就绪态穷尽真实请求链，报价失败不能伪装成直接建单
+  ---
+  duration_ms: 1.883418
+  type: 'test'
+  ...
+# Subtest: 章节危险确认按实际互斥分支登记单次写入
+ok 31 - 章节危险确认按实际互斥分支登记单次写入
+  ---
+  duration_ms: 1.796439
+  type: 'test'
+  ...
+# Subtest: 按钮台账不把定位回调的 reveal 或 GET ending 冒充当前点击的第二次写入
+ok 32 - 按钮台账不把定位回调的 reveal 或 GET ending 冒充当前点击的第二次写入
+  ---
+  duration_ms: 6.645681
+  type: 'test'
+  ...
+# Subtest: 评价举报与团队危险操作按页面状态拆成互斥单写 variant
+ok 33 - 评价举报与团队危险操作按页面状态拆成互斥单写 variant
+  ---
+  duration_ms: 1.242151
+  type: 'test'
+  ...
+# Subtest: 当前用户关系写不伪造 forbidden-owner，组件动作必须声明真实宿主页
+ok 34 - 当前用户关系写不伪造 forbidden-owner，组件动作必须声明真实宿主页
+  ---
+  duration_ms: 1.717453
+  type: 'test'
+  ...
+# Subtest: 服务端写入叠加设备能力时同时保留两类验收事实
+ok 35 - 服务端写入叠加设备能力时同时保留两类验收事实
+  ---
+  duration_ms: 2.044315
+  type: 'test'
+  ...
+# Subtest: Beta 转正式按作者归属写操作验收，不能误归只读
+ok 36 - Beta 转正式按作者归属写操作验收，不能误归只读
+  ---
+  duration_ms: 0.577041
+  type: 'test'
+  ...
+# Subtest: 合并后可达动作 variant 全部进入台账且 handler 真源可定位
+ok 37 - 合并后可达动作 variant 全部进入台账且 handler 真源可定位
+  ---
+  duration_ms: 11.355757
+  type: 'test'
+  ...
+# Subtest: 动作角色必须来自当前 route-matrix，俱乐部与商家页不得默认成 player
+ok 38 - 动作角色必须来自当前 route-matrix，俱乐部与商家页不得默认成 player
+  ---
+  duration_ms: 1.1865
+  type: 'test'
+  ...
+# Subtest: guarded 商家音频资源前缀不算路由，动态导航和未知路由仍保留
+ok 39 - guarded 商家音频资源前缀不算路由，动态导航和未知路由仍保留
+  ---
+  duration_ms: 0.398598
+  type: 'test'
+  ...
+# Subtest: release 前重建 inventory，漏掉新增/修改控件必须变红
+ok 40 - release 前重建 inventory，漏掉新增/修改控件必须变红
+  ---
+  duration_ms: 109623.681233
+  type: 'test'
+  ...
+# Subtest: 动态证据 digest 同时绑定 WXML/JS/WXSS/JSON，样式漂移不能继续假绿
+ok 41 - 动态证据 digest 同时绑定 WXML/JS/WXSS/JSON，样式漂移不能继续假绿
+  ---
+  duration_ms: 21.732349
+  type: 'test'
+  ...
+# Subtest: 动态证据只绑定真实全局运行时依赖，新增无关路由不得批量判旧
+ok 42 - 动态证据只绑定真实全局运行时依赖，新增无关路由不得批量判旧
+  ---
+  duration_ms: 13.370731
+  type: 'test'
+  ...
+# Subtest: inventory 与可持久化动态证据分离，freshness 不会抹掉执行结果
+not ok 43 - inventory 与可持久化动态证据分离，freshness 不会抹掉执行结果
+  ---
+  duration_ms: 9.460413
+  type: 'test'
+  location: '/workspace/hengyin-c/chengyinhub-xcx/tests/unit/action-ledger.test.js:1746:1'
+  failureType: 'testCodeFailure'
+  error: 'spawnSync git EPERM'
+  code: 'EPERM'
+  stack: |-
+    Object.spawnSync (node:internal/child_process:1160:20)
+    spawnSync (node:child_process:928:24)
+    execFileSync (node:child_process:971:15)
+    TestContext.<anonymous> (/workspace/hengyin-c/chengyinhub-xcx/tests/unit/action-ledger.test.js:1754:19)
+    Test.runInAsyncScope (node:async_hooks:227:14)
+    Test.run (node:internal/test_runner/test:1382:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+    Test.postRun (node:internal/test_runner/test:1522:19)
+    Test.run (node:internal/test_runner/test:1447:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+# Subtest: external passed 证据必须逐平台逐分支绑定受控真机环境与媒体，不接受任意仓库文件
+not ok 44 - external passed 证据必须逐平台逐分支绑定受控真机环境与媒体，不接受任意仓库文件
+  ---
+  duration_ms: 5.987201
+  type: 'test'
+  location: '/workspace/hengyin-c/chengyinhub-xcx/tests/unit/action-ledger.test.js:1841:1'
+  failureType: 'testCodeFailure'
+  error: 'spawnSync git EPERM'
+  code: 'EPERM'
+  stack: |-
+    Object.spawnSync (node:internal/child_process:1160:20)
+    spawnSync (node:child_process:928:24)
+    execFileSync (node:child_process:971:15)
+    TestContext.<anonymous> (/workspace/hengyin-c/chengyinhub-xcx/tests/unit/action-ledger.test.js:1846:19)
+    Test.runInAsyncScope (node:async_hooks:227:14)
+    Test.run (node:internal/test_runner/test:1382:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+    Test.postRun (node:internal/test_runner/test:1522:19)
+    Test.run (node:internal/test_runner/test:1447:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+# Subtest: 截图录屏证据必须有真实媒体签名，文本改后缀不能通过
+ok 45 - 截图录屏证据必须有真实媒体签名，文本改后缀不能通过
+  ---
+  duration_ms: 2.197541
+  type: 'test'
+  ...
+# Subtest: GET /api/publish/home 是读;真实发布写端点仍是写
+ok 46 - GET /api/publish/home 是读;真实发布写端点仍是写
+  ---
+  duration_ms: 2.923222
+  type: 'test'
+  ...
+1..46
+# tests 46
+# suites 0
+# pass 44
+# fail 2
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 160549.003926
