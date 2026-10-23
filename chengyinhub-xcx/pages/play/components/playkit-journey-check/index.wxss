@@ -8,6 +8,7 @@
 
 .jc__tiers { margin-top: var(--cy-space-3); display: flex; justify-content: center; gap: var(--cy-space-2); }
 .jc__tier {
+  display: inline-block;                      /* text 默认 inline,入场的 transform 不生效 */
   padding: 10rpx 22rpx;                       /* ds-ok 原型 .tiers span 5px 11px */
   border-radius: var(--cy-radius-pill);
   background: var(--soft);

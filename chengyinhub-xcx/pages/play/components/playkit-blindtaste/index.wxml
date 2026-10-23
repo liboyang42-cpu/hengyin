@@ -3,12 +3,12 @@
      中途松手 = 偷看,要重新闭眼。对错由服务端判,这一屏只发 answer。 -->
 <cy-play-stage id="cy-play-stage" skin="qadark" show="{{show}}" back-label="退出" bind:back="onClose">
   <view class="bt g-col {{reducedMotion ? 'bt--reduced' : ''}} {{eyes === 'closed' ? 'bt--closed' : ''}} {{eyes === 'peek' ? 'bt--peek' : ''}}">
-    <view class="g-kicker">{{eyebrow}}</view>
-    <view class="bt__title">{{title || '闭上眼，尝一口，猜猜是哪一种'}}</view>
+    <view class="g-kicker pe pe--blur" style="--pe-d:.05s">{{eyebrow}}</view>
+    <view class="bt__title pe pe--blur" style="--pe-d:.15s">{{title || '闭上眼，尝一口，猜猜是哪一种'}}</view>
 
     <!-- 三步:走到哪一步就亮到哪一步。整句步骤只给读屏 -->
     <view class="pk-steps" aria-role="text" aria-label="{{steps}}">
-      <view class="bt__step {{index <= stage ? 'is-on' : ''}}" wx:for="{{stepIcons}}" wx:key="index" aria-hidden="true">
+      <view class="bt__step {{index <= stage ? 'is-on' : ''}} pe pe--pop" style="--pe-d:.4s;--pe-i:{{index}}" wx:for="{{stepIcons}}" wx:key="index" aria-hidden="true">
         <view class="bt__step-no">{{item.index}}</view>
         <text class="bt__step-l">{{item.label}}</text>
       </view>
@@ -16,7 +16,7 @@
 
     <!-- 小样:几个选项就摆几杯,杯上只有字母(盲品不能把名字写在杯子上) -->
     <view class="bt__cups" wx:if="{{stage < 2}}" aria-hidden="true">
-      <view class="bt__cup {{lifted === index ? 'is-lift' : ''}}" wx:for="{{options}}" wx:key="key">
+      <view class="bt__cup {{lifted === index ? 'is-lift' : ''}} pe pe--right" style="--pe-d:.7s;--pe-s:.14s;--pe-i:{{index}}" wx:for="{{options}}" wx:key="key">
         <view class="bt__glass"><view class="bt__tea"></view></view>
         <text class="bt__cup-k">{{item.key}}</text>
       </view>
@@ -46,7 +46,7 @@
     <text class="bt__dark-t">{{count > 0 ? '别睁眼，慢慢尝' : '尝好了，松手睁眼'}}</text>
   </view>
 
-  <view class="g-btn" wx:if="{{stage === 0}}" bindtap="onGot"
+  <view class="g-btn pe pe--up" style="--pe-d:1.2s" wx:if="{{stage === 0}}" bindtap="onGot"
         aria-role="button" aria-label="小样拿到了" hover-class="g-btn--press" hover-stay-time="80">小样拿到了</view>
   <view class="g-btn" wx:elif="{{stage === 1}}" bindtouchstart="onEyesClose" bindtouchend="onEyesOpen" bindtouchcancel="onEyesOpen" bindtap="onEyesTap"
         aria-role="button" aria-label="按住闭眼，尝完松手" hover-class="g-btn--press" hover-stay-time="80">按住，闭上眼</view>

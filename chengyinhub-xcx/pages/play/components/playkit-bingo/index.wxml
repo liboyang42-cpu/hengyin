@@ -5,15 +5,15 @@
     <!-- ⚠️ 原型里 header(title, sub) 的第二个参数**不显示**:.hdr .s{display:none}。
          那是「删除提示语」那条拍板的结果 —— 屏幕上已经摆着能点的东西了,
          再写一句怎么点,等于承认那个东西自己说不清楚。副标题只留给读屏器。 -->
-    <view class="bg__q" aria-label="{{title}}，本周任务">{{title}}</view>
+    <view class="bg__q pe pe--blur" style="--pe-d:.05s" aria-label="{{title}}，本周任务">{{title}}</view>
 
     <!-- 领到奖才出横幅。默认摆一条灰的等于提前把奖亮出来,
          而这个玩法的全部张力就在「还没连上」那一段 -->
-    <view class="bg__ribbon" wx:if="{{ribbon}}">{{ribbon}}</view>
+    <view class="bg__ribbon pe pe--pop" style="--pe-d:.3s" wx:if="{{ribbon}}">{{ribbon}}</view>
 
     <!-- 每一格自己是一块有厚度的棋子:黑白相间,点亮的按下去 -->
     <view class="bg__board">
-      <view class="bg__cell {{item.shade}} {{item.filled ? 'done' : ''}} {{item.inLine ? 'line' : ''}}"
+      <view class="bg__cell {{item.shade}} {{item.filled ? 'done' : ''}} {{item.inLine ? 'line' : ''}} pe pe--pop" style="--pe-d:.35s;--pe-s:.09s;--pe-i:{{index % 3 + (index - index % 3) / 3}}"
             wx:for="{{cells}}" wx:key="i" data-i="{{index}}" bindtap="onCell"
             aria-role="button" aria-label="{{item.t}}，{{item.how}}{{item.filled ? '，已点亮' : ''}}"
             hover-class="cy-pressed" hover-stay-time="80">
@@ -24,8 +24,8 @@
       </view>
     </view>
 
-    <view class="bg__tally">已完成 {{filledCount}} / 9</view>
-    <view class="bg__foot">每一格都要到店扫码或把那个游戏玩完才会亮。</view>
+    <view class="bg__tally pe pe--up" style="--pe-d:.95s">已完成 {{filledCount}} / 9</view>
+    <view class="bg__foot pe pe--up" style="--pe-d:1.05s">每一格都要到店扫码或把那个游戏玩完才会亮。</view>
 
     <!-- 点一格看它要怎么亮。扫码格说清楚为什么只认扫码 -->
     <view class="bg__panel" wx:if="{{panel}}">

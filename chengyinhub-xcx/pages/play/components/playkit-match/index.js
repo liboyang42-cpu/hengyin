@@ -23,6 +23,26 @@ function paintSide(list, side, pairs) {
   });
 }
 
+/* 2026-10-23 主人定稿(城瘾 排序连线分类试玩原型):连好的两项之间画一条线,每一对一个颜色。
+   行高与列缝是定值(rpx),线的长短和角度直接算,不用量 DOM、不用画布。 */
+const ROW_H = 112, ROW_GAP = 24, GUTTER = 96, PALETTE = 6;
+/** pairs → 中缝里的连线:左右各在第几行,算出起点高度、长度与角度。fresh 的那条从左往右画出来 */
+function pairLines(pairs, leftRows, rightRows, freshKey) {
+  const step = ROW_H + ROW_GAP;
+  return (pairs || []).map((p, n) => {
+    const li = (leftRows || []).findIndex((r) => r.id === p[0]);
+    const ri = (rightRows || []).findIndex((r) => r.id === p[1]);
+    if (li < 0 || ri < 0) return null;
+    const y1 = li * step + ROW_H / 2, dy = (ri - li) * step;
+    return {
+      key: p[0] + '-' + p[1], y: y1, c: n % PALETTE,
+      len: Math.round(Math.sqrt(GUTTER * GUTTER + dy * dy)),
+      deg: Math.round(Math.atan2(dy, GUTTER) * 1800 / Math.PI) / 10,
+      fresh: freshKey === p[0] + '-' + p[1],
+    };
+  }).filter(Boolean);
+}
+
 /** 连满才让提交:左右一一对应,少一条服务端不收,按钮亮着也没意义。 */
 function canSubmit(pairedCount, total) {
   return total > 0 && pairedCount >= total;
@@ -47,6 +67,8 @@ Component({
     pairedCount: 0,
     total: 0,
     verdict: '',          // '' 未判 / 'ok' 通过 / 'no' 判错
+    lines: [],
+    gutterH: 0,
   },
   observers: {
     'show, left, right': function (show, left, right) {
@@ -59,26 +81,37 @@ Component({
       if (!(attempts > 0)) return;
       const verdict = passed ? 'ok' : 'no';
       if (verdict !== this.data.verdict) this.setData({ verdict });
+      // 判错整块抖一下(原型 .phone.shake);不逐条标红 —— 服务端只给整体对错
+      if (!passed) { const stage = this.selectComponent('#cy-play-stage'); if (stage && stage.nudge) stage.nudge(); }
     },
   },
   methods: {
     _paintSide: paintSide,      // 纯算法出口,供单测
+    _pairLines: pairLines,
     _canSubmit: canSubmit,
 
     /** 重画两列与角标。任何改动都要把上一次的判定撤掉 —— 红角标跟着新连线走是误导。 */
-    _paintPairs(pairs, selected, left, right) {
+    _paintPairs(pairs, selected, left, right, freshKey) {
       const l = left || this.data.left || [];
       const r = right || this.data.right || [];
       // ⚠️ pairs 只喂逻辑(拆线 / 提交)不渲染:进 data 就是死数据字段,放实例字段
       this._pairs = pairs;
+      const leftRows = paintSide(l, 'l', pairs), rightRows = paintSide(r, 'r', pairs);
+      const fresh = this.data.reducedMotion ? '' : (freshKey || '');
       this.setData({
         selected: selected,
-        leftRows: paintSide(l, 'l', pairs),
-        rightRows: paintSide(r, 'r', pairs),
+        leftRows, rightRows,
+        lines: pairLines(pairs, leftRows, rightRows, fresh),
+        gutterH: Math.max(l.length, r.length) * (ROW_H + ROW_GAP) - ROW_GAP,
         pairedCount: pairs.length,
         total: l.length,
         verdict: '',
       });
+      // 新连的那条先以 scaleX(0) 落地,下一拍再放开,线就从左往右画出来
+      if (fresh) {
+        clearTimeout(this._drawT);
+        this._drawT = setTimeout(() => this.setData({ lines: pairLines(this._pairs, this.data.leftRows, this.data.rightRows, '') }), 40);
+      }
     },
 
     onTapLeft(e) {
@@ -103,7 +136,7 @@ Component({
       const next = this._pairs
         .filter((p) => p[0] !== leftId && p[1] !== id)
         .concat([[leftId, id]]);
-      this._paintPairs(next, '');
+      this._paintPairs(next, '', null, null, leftId + '-' + id);
     },
     _unpair(keep, selected) {
       motion.haptic({ reducedMotion: this.data.reducedMotion, type: 'light' });

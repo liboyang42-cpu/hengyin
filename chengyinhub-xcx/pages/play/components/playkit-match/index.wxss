@@ -1,75 +1,78 @@
 @import "/pages/play/style/play-surface.wxss";
 
-/* cy-playkit-match · 连线题(设计规格:Figma 04 Blocks · 连线) */
-.ma { color: var(--ink); }
-.ma__prompt {
-  font-size: var(--cy-type-sheet-title);
-  font-weight: 800;
-  line-height: 1.4;
-}
-/* 两列等宽卡片:一列一个问题,一列一份材料 —— 谁连谁靠角标认,不靠线 */
-.ma__cols {
-  display: flex;
-  gap: 24rpx;
-  width: 100%;
-}
-.ma__col {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 18rpx;
-}
+/* cy-playkit-match · 连线(2026-10-23 主人定稿:城瘾 排序连线分类试玩原型)
+   两列深色卡、中间一道缝画线;每一对一个颜色,圆点与线同色。
+   ⚠️ 卡片高、行缝、中缝宽是定值 —— index.js 的 ROW_H / ROW_GAP / GUTTER 按它们算线,改一边要改另一边。 */
+.ma { color: var(--ink); text-align: left; align-items: stretch; }
+.ma__prompt { font-size: var(--cy-type-sheet-title); font-weight: 800; line-height: 1.4; }
+.ma__hint { margin-top: var(--cy-space-2); font-size: var(--cy-type-label); color: var(--sub); }
+.ma__cols { margin-top: var(--cy-space-5); display: flex; align-items: flex-start; }
+.ma__col { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 24rpx; }
+.ma__gutter { position: relative; flex: none; width: 96rpx; }
 .ma__card {
-  position: relative;
+  height: 112rpx;
   display: flex;
   align-items: center;
-  gap: 12rpx;
-  min-height: 112rpx;
-  padding: 20rpx 22rpx;
+  gap: 16rpx;
+  padding: 0 20rpx 0 24rpx;
   box-sizing: border-box;
-  border-radius: var(--cy-radius-md);     /* 圆角 12 = 24rpx */
+  border-radius: 28rpx;                       /* ds-ok 原型 .mi 14px */
   background: var(--soft);
-  text-align: left;
 }
-/* 选中:白色 1.5px 描边。用 inset 投影而不是 border —— border 会把卡片撑大 3rpx,点一下跳一下 */
-.ma__card.is-sel { box-shadow: inset 0 0 0 3rpx var(--ink); }
+.ma__card--r { padding: 0 24rpx 0 20rpx; }
 .ma__t {
   flex: 1;
   min-width: 0;
   font-size: var(--cy-type-body);
   font-weight: 600;
-  line-height: 1.4;
+  line-height: 1.3;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
-/* 配对角标:白底黑字,同一个序号出现在左右两张卡上 */
-.ma__badge {
+.ma__card.is-sel { box-shadow: inset 0 0 0 4rpx var(--ink); }
+/* 圆点:没连是空心圈,连上了就是这一对的颜色,里面写第几条 */
+.ma__dot {
   flex: none;
-  width: 44rpx;
-  height: 44rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  width: 36rpx; height: 36rpx;
   border-radius: 50%;
-  background: var(--cy-color-action-primary-bg);
-  color: var(--cy-color-action-primary-fg);
+  box-sizing: border-box;
+  border: 3rpx solid var(--sub);
+  display: flex; align-items: center; justify-content: center;
   font-family: var(--cy-font-numeric);
-  font-size: var(--cy-type-micro);
+  font-size: var(--cy-type-caption);
   font-weight: 800;
+  color: #0b0b0d;                             /* ds-ok 彩色圆点上的深色序号 */
+  transition: background .2s ease, border-color .2s ease;
 }
-/* 只有整体通过才变绿:那意味着每条连线都在答案里。判错不逐条标红(服务端不给逐条对错) */
-.ma__badge.is-right { background: var(--ok); color: var(--cy-color-text-inverse); }
+.ma__line {
+  position: absolute;
+  left: 0;
+  height: 6rpx;
+  border-radius: 3rpx;
+  transform-origin: 0 50%;
+  transition: transform .45s cubic-bezier(.2, .8, .2, 1), background .3s ease;
+}
+.ma__line.is-new { transition: none; }
+/* 每一对一个颜色(原型 --p1..--p4 再补两色),线和两边圆点同色 */
+.ma__c0 { background: #7C9CFF; border-color: transparent; }   /* ds-ok 连线配对色,玩法专用 */
+.ma__c1 { background: #F2A65A; border-color: transparent; }   /* ds-ok 同上 */
+.ma__c2 { background: #5BD1B0; border-color: transparent; }   /* ds-ok 同上 */
+.ma__c3 { background: #E58BD7; border-color: transparent; }   /* ds-ok 同上 */
+.ma__c4 { background: #F2C14E; border-color: transparent; }   /* ds-ok 同上 */
+.ma__c5 { background: #9AA0A6; border-color: transparent; }   /* ds-ok 同上 */
+/* 只有整体通过才全部变绿 */
+.ma__dot.is-right, .ma__line.is-right { background: var(--ok); border-color: transparent; }
 .ma__press { opacity: .88; }
 .g-btn--press { opacity: .88; }
-.ma--reduced .ma__card { transition: none; }
 .ma__fb {
-  flex: none;
-  width: 100%;
-  box-sizing: border-box;
-  padding: 26rpx 30rpx;
+  margin-top: var(--cy-space-4);
+  padding: var(--cy-space-3) var(--cy-space-4);
   border-radius: var(--cy-radius-md);
   font-size: var(--cy-type-body);
-  line-height: 1.6;
-  text-align: left;
+  font-weight: 700;
 }
-.ma__fb.is-ok { background: var(--cy-color-status-success-soft); color: var(--cy-color-status-success); }
-.ma__fb.is-no { background: var(--cy-color-status-danger-soft); color: var(--cy-color-status-danger); }
+.ma__fb.is-ok { background: rgba(18, 160, 111, .16); color: var(--ok); }   /* ds-ok 成功色软底,与 --ok 同源 */
+.ma__fb.is-no { background: var(--cy-color-status-danger-soft); color: var(--accent); }
+.ma--reduced .ma__line, .ma--reduced .ma__dot { transition: none; }

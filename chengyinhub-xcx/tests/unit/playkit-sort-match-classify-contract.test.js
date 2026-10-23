@@ -131,7 +131,9 @@ test('排序:题面照服务端顺序铺开,提交报的是一整列 order', () 
   def.observers['show, items'].call(inst, true, items)
   assert.deepEqual(plain(inst.data.rows.map((r) => r.id)), ['s2', 's1', 's3'], '题面顺序照服务端给,不许客户端再排')
 
-  inst.onDown({ currentTarget: { dataset: { i: 0 } } })
+  // 2026-10-23 排序重做:上移/下移按钮换成点选对调(先点一行再点另一行),读屏同样走得通
+  inst.onTapRow({ currentTarget: { dataset: { i: 0 } } })
+  inst.onTapRow({ currentTarget: { dataset: { i: 1 } } })
   assert.deepEqual(plain(inst.data.rows.map((r) => r.id)), ['s1', 's2', 's3'], '下移一位')
   inst.onSubmit()
   assert.deepEqual(plain(events[0]), { name: 'submit', detail: { order: ['s1', 's2', 's3'] } })

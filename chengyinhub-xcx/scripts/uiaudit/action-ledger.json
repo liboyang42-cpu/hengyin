@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
-  "controlCount": 5007,
+  "controlCount": 5008,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -829658,7 +829658,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/play-stage/index.js:171"
+        "staticSource": "pages/play/components/play-stage/index.js:184"
       }
     },
     {
@@ -833751,7 +833751,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/play-stage/index.js:161"
+        "staticSource": "pages/play/components/play-stage/index.js:174"
       }
     },
     {
@@ -837845,7 +837845,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/play-stage/index.js:160"
+        "staticSource": "pages/play/components/play-stage/index.js:173"
       }
     },
     {
@@ -841938,7 +841938,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/play-stage/index.js:239"
+        "staticSource": "pages/play/components/play-stage/index.js:252"
       }
     },
     {
@@ -849908,7 +849908,253 @@
       }
     },
     {
-      "id": "pages/play/components/playkit-classify/index.wxml:2:bind:back:onClose:0",
+      "id": "pages/play/components/playkit-classify/index.wxml:24:bindtap:onDropTop:1",
+      "route": "component:pages/play/components/playkit-classify/index",
+      "hostRoutes": [
+        "pages/play/index",
+        "pages/publish/temp/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "#playKit",
+              "index": 0
+            },
+            {
+              "selector": "cy-playkit-classify",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "cy-playkit",
+              "index": 0
+            },
+            {
+              "selector": "cy-playkit-classify",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/temp/index",
+          "segments": [
+            {
+              "selector": "cy-playkit",
+              "index": 0
+            },
+            {
+              "selector": "cy-playkit-classify",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/temp/index",
+          "segments": [
+            {
+              "selector": "cy-playkit",
+              "index": 1
+            },
+            {
+              "selector": "cy-playkit-classify",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "pages/play/components/playkit-classify/index.wxml",
+        "js": "pages/play/components/playkit-classify/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "onDropTop",
+        "line": 24,
+        "selectorHint": ".cf__bin",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "把这一张放进「{{bin.label}}」，里面已有 {{bin.count}} 条",
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/play/components/playkit-classify/index.js:91"
+      }
+    },
+    {
+      "id": "pages/play/components/playkit-classify/index.wxml:29:catchtap:onTakeBack:2",
+      "route": "component:pages/play/components/playkit-classify/index",
+      "hostRoutes": [
+        "pages/play/index",
+        "pages/publish/temp/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "#playKit",
+              "index": 0
+            },
+            {
+              "selector": "cy-playkit-classify",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "cy-playkit",
+              "index": 0
+            },
+            {
+              "selector": "cy-playkit-classify",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/temp/index",
+          "segments": [
+            {
+              "selector": "cy-playkit",
+              "index": 0
+            },
+            {
+              "selector": "cy-playkit-classify",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/temp/index",
+          "segments": [
+            {
+              "selector": "cy-playkit",
+              "index": 1
+            },
+            {
+              "selector": "cy-playkit-classify",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "pages/play/components/playkit-classify/index.wxml",
+        "js": "pages/play/components/playkit-classify/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "catchtap",
+        "handler": "onTakeBack",
+        "line": 29,
+        "selectorHint": ".cf__chip",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "把「{{item.label}}」拿回来",
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/play/components/playkit-classify/index.js:107"
+      }
+    },
+    {
+      "id": "pages/play/components/playkit-classify/index.wxml:4:bind:back:onClose:0",
       "route": "component:pages/play/components/playkit-classify/index",
       "hostRoutes": [
         "pages/play/index",
@@ -849987,7 +850233,7 @@
         "tag": "cy-play-stage",
         "event": "bind:back",
         "handler": "onClose",
-        "line": 2,
+        "line": 4,
         "selectorHint": "#cy-play-stage",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -850028,134 +850274,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-classify/index.js:86"
+        "staticSource": "pages/play/components/playkit-classify/index.js:133"
       }
     },
     {
-      "id": "pages/play/components/playkit-classify/index.wxml:21:bindtap:onPickBin:1",
-      "route": "component:pages/play/components/playkit-classify/index",
-      "hostRoutes": [
-        "pages/play/index",
-        "pages/publish/temp/index"
-      ],
-      "hostComponentPaths": [
-        {
-          "route": "pages/play/index",
-          "segments": [
-            {
-              "selector": "#playKit",
-              "index": 0
-            },
-            {
-              "selector": "cy-playkit-classify",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/play/index",
-          "segments": [
-            {
-              "selector": "cy-playkit",
-              "index": 0
-            },
-            {
-              "selector": "cy-playkit-classify",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/temp/index",
-          "segments": [
-            {
-              "selector": "cy-playkit",
-              "index": 0
-            },
-            {
-              "selector": "cy-playkit-classify",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/temp/index",
-          "segments": [
-            {
-              "selector": "cy-playkit",
-              "index": 1
-            },
-            {
-              "selector": "cy-playkit-classify",
-              "index": 0
-            }
-          ]
-        }
-      ],
-      "role": "inherited",
-      "entry": {
-        "wxml": "pages/play/components/playkit-classify/index.wxml",
-        "js": "pages/play/components/playkit-classify/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "onPickBin",
-        "line": 21,
-        "selectorHint": ".cf__seg-b",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": "把这一条分到「{{bin.label}}」",
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/play/components/playkit-classify/index.js:68"
-      }
-    },
-    {
-      "id": "pages/play/components/playkit-classify/index.wxml:35:bindtap:onSubmit:2",
+      "id": "pages/play/components/playkit-classify/index.wxml:42:bindtap:onSubmit:3",
       "route": "component:pages/play/components/playkit-classify/index",
       "hostRoutes": [
         "pages/play/index",
@@ -850234,7 +850357,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onSubmit",
-        "line": 35,
+        "line": 42,
         "selectorHint": ".g-btn",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -850275,7 +850398,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-classify/index.js:78"
+        "staticSource": "pages/play/components/playkit-classify/index.js:125"
       }
     },
     {
@@ -857068,7 +857191,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit-match/index.wxml:10:bindtap:onTapLeft:1",
+      "id": "pages/play/components/playkit-match/index.wxml:13:bindtap:onTapLeft:1",
       "route": "component:pages/play/components/playkit-match/index",
       "hostRoutes": [
         "pages/play/index",
@@ -857147,12 +857270,12 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onTapLeft",
-        "line": 10,
+        "line": 13,
         "selectorHint": ".ma__card",
         "visibleCondition": null,
         "disabledCondition": null,
         "ariaLabel": null,
-        "ariaLabelExpression": "左侧条目:{{item.label}}",
+        "ariaLabelExpression": "左侧条目:{{item.label}}{{item.badge ? '，已连第 ' + item.badge + ' 条，点一下解开' : ''}}",
         "ariaRole": "button",
         "ariaRoleExpression": null,
         "ariaDisabled": null,
@@ -857187,135 +857310,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-match/index.js:84"
+        "staticSource": "pages/play/components/playkit-match/index.js:117"
       }
     },
     {
-      "id": "pages/play/components/playkit-match/index.wxml:2:bind:back:onClose:0",
-      "route": "component:pages/play/components/playkit-match/index",
-      "hostRoutes": [
-        "pages/play/index",
-        "pages/publish/temp/index"
-      ],
-      "hostComponentPaths": [
-        {
-          "route": "pages/play/index",
-          "segments": [
-            {
-              "selector": "#playKit",
-              "index": 0
-            },
-            {
-              "selector": "cy-playkit-match",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/play/index",
-          "segments": [
-            {
-              "selector": "cy-playkit",
-              "index": 0
-            },
-            {
-              "selector": "cy-playkit-match",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/temp/index",
-          "segments": [
-            {
-              "selector": "cy-playkit",
-              "index": 0
-            },
-            {
-              "selector": "cy-playkit-match",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/temp/index",
-          "segments": [
-            {
-              "selector": "cy-playkit",
-              "index": 1
-            },
-            {
-              "selector": "cy-playkit-match",
-              "index": 0
-            }
-          ]
-        }
-      ],
-      "role": "inherited",
-      "entry": {
-        "wxml": "pages/play/components/playkit-match/index.wxml",
-        "js": "pages/play/components/playkit-match/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-play-stage",
-        "event": "bind:back",
-        "handler": "onClose",
-        "line": 2,
-        "selectorHint": "#cy-play-stage",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "other",
-      "interactionMode": "event-contract",
-      "baseActionClass": "other",
-      "effectClasses": [
-        "other"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
-      "requiredBranches": [
-        "success",
-        "error"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/play/components/playkit-match/index.js:119"
-      }
-    },
-    {
-      "id": "pages/play/components/playkit-match/index.wxml:20:bindtap:onTapRight:2",
+      "id": "pages/play/components/playkit-match/index.wxml:30:bindtap:onTapRight:2",
       "route": "component:pages/play/components/playkit-match/index",
       "hostRoutes": [
         "pages/play/index",
@@ -857394,12 +857393,12 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onTapRight",
-        "line": 20,
+        "line": 30,
         "selectorHint": ".ma__card",
         "visibleCondition": null,
         "disabledCondition": null,
         "ariaLabel": null,
-        "ariaLabelExpression": "右侧条目:{{item.label}}",
+        "ariaLabelExpression": "右侧条目:{{item.label}}{{item.badge ? '，已连第 ' + item.badge + ' 条，点一下解开' : ''}}",
         "ariaRole": "button",
         "ariaRoleExpression": null,
         "ariaDisabled": null,
@@ -857434,11 +857433,135 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-match/index.js:95"
+        "staticSource": "pages/play/components/playkit-match/index.js:128"
       }
     },
     {
-      "id": "pages/play/components/playkit-match/index.wxml:35:bindtap:onSubmit:3",
+      "id": "pages/play/components/playkit-match/index.wxml:4:bind:back:onClose:0",
+      "route": "component:pages/play/components/playkit-match/index",
+      "hostRoutes": [
+        "pages/play/index",
+        "pages/publish/temp/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "#playKit",
+              "index": 0
+            },
+            {
+              "selector": "cy-playkit-match",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "cy-playkit",
+              "index": 0
+            },
+            {
+              "selector": "cy-playkit-match",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/temp/index",
+          "segments": [
+            {
+              "selector": "cy-playkit",
+              "index": 0
+            },
+            {
+              "selector": "cy-playkit-match",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/temp/index",
+          "segments": [
+            {
+              "selector": "cy-playkit",
+              "index": 1
+            },
+            {
+              "selector": "cy-playkit-match",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "pages/play/components/playkit-match/index.wxml",
+        "js": "pages/play/components/playkit-match/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-play-stage",
+        "event": "bind:back",
+        "handler": "onClose",
+        "line": 4,
+        "selectorHint": "#cy-play-stage",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "other",
+      "interactionMode": "event-contract",
+      "baseActionClass": "other",
+      "effectClasses": [
+        "other"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/play/components/playkit-match/index.js:152"
+      }
+    },
+    {
+      "id": "pages/play/components/playkit-match/index.wxml:45:bindtap:onSubmit:3",
       "route": "component:pages/play/components/playkit-match/index",
       "hostRoutes": [
         "pages/play/index",
@@ -857517,7 +857640,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onSubmit",
-        "line": 35,
+        "line": 45,
         "selectorHint": ".g-btn",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -857558,7 +857681,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-match/index.js:113"
+        "staticSource": "pages/play/components/playkit-match/index.js:146"
       }
     },
     {
@@ -868774,7 +868897,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit-sort/index.wxml:17:bindtap:onUp:1",
+      "id": "pages/play/components/playkit-sort/index.wxml:15:bindtap:onTapRow:5",
       "route": "component:pages/play/components/playkit-sort/index",
       "hostRoutes": [
         "pages/play/index",
@@ -868852,137 +868975,14 @@
       "control": {
         "tag": "view",
         "event": "bindtap",
-        "handler": "onUp",
-        "line": 17,
-        "selectorHint": ".so__nudge",
-        "visibleCondition": "{{verdict !== 'ok'}}",
-        "disabledCondition": null,
-        "ariaLabel": "把这一条上移一位",
-        "ariaLabelExpression": null,
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/play/components/playkit-sort/index.js:114"
-      }
-    },
-    {
-      "id": "pages/play/components/playkit-sort/index.wxml:2:bind:back:onClose:0",
-      "route": "component:pages/play/components/playkit-sort/index",
-      "hostRoutes": [
-        "pages/play/index",
-        "pages/publish/temp/index"
-      ],
-      "hostComponentPaths": [
-        {
-          "route": "pages/play/index",
-          "segments": [
-            {
-              "selector": "#playKit",
-              "index": 0
-            },
-            {
-              "selector": "cy-playkit-sort",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/play/index",
-          "segments": [
-            {
-              "selector": "cy-playkit",
-              "index": 0
-            },
-            {
-              "selector": "cy-playkit-sort",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/temp/index",
-          "segments": [
-            {
-              "selector": "cy-playkit",
-              "index": 0
-            },
-            {
-              "selector": "cy-playkit-sort",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/temp/index",
-          "segments": [
-            {
-              "selector": "cy-playkit",
-              "index": 1
-            },
-            {
-              "selector": "cy-playkit-sort",
-              "index": 0
-            }
-          ]
-        }
-      ],
-      "role": "inherited",
-      "entry": {
-        "wxml": "pages/play/components/playkit-sort/index.wxml",
-        "js": "pages/play/components/playkit-sort/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-play-stage",
-        "event": "bind:back",
-        "handler": "onClose",
-        "line": 2,
-        "selectorHint": "#cy-play-stage",
+        "handler": "onTapRow",
+        "line": 15,
+        "selectorHint": ".so__row",
         "visibleCondition": null,
         "disabledCondition": null,
         "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
+        "ariaLabelExpression": "第 {{index + 1}} 位：{{item.label}}。点一下选中，再点另一条对调",
+        "ariaRole": "button",
         "ariaRoleExpression": null,
         "ariaDisabled": null,
         "ariaDisabledExpression": null,
@@ -868991,11 +868991,11 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "other",
-      "interactionMode": "event-contract",
-      "baseActionClass": "other",
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
       "effectClasses": [
-        "other"
+        "state"
       ],
       "accessBoundary": null,
       "externalCapabilities": [],
@@ -869008,20 +869008,19 @@
         "apiContracts": [],
         "writeApis": []
       },
-      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
-        "success",
-        "error"
+        "success"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-sort/index.js:137"
+        "staticSource": "pages/play/components/playkit-sort/index.js:125"
       }
     },
     {
-      "id": "pages/play/components/playkit-sort/index.wxml:20:bindtap:onDown:2",
+      "id": "pages/play/components/playkit-sort/index.wxml:15:bindtouchcancel:onDragEnd:4",
       "route": "component:pages/play/components/playkit-sort/index",
       "hostRoutes": [
         "pages/play/index",
@@ -869098,14 +869097,14 @@
       "confirmationMode": null,
       "control": {
         "tag": "view",
-        "event": "bindtap",
-        "handler": "onDown",
-        "line": 20,
-        "selectorHint": ".so__nudge",
-        "visibleCondition": "{{verdict !== 'ok'}}",
+        "event": "bindtouchcancel",
+        "handler": "onDragEnd",
+        "line": 15,
+        "selectorHint": ".so__row",
+        "visibleCondition": null,
         "disabledCondition": null,
-        "ariaLabel": "把这一条下移一位",
-        "ariaLabelExpression": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "第 {{index + 1}} 位：{{item.label}}。点一下选中，再点另一条对调",
         "ariaRole": "button",
         "ariaRoleExpression": null,
         "ariaDisabled": null,
@@ -869116,7 +869115,7 @@
         "ariaCheckedExpression": null
       },
       "actionClass": "state",
-      "interactionMode": "tap",
+      "interactionMode": "event-contract",
       "baseActionClass": "state",
       "effectClasses": [
         "state"
@@ -869140,11 +869139,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-sort/index.js:115"
+        "staticSource": "pages/play/components/playkit-sort/index.js:116"
       }
     },
     {
-      "id": "pages/play/components/playkit-sort/index.wxml:24:bindtouchend:onDragEnd:5",
+      "id": "pages/play/components/playkit-sort/index.wxml:15:bindtouchend:onDragEnd:3",
       "route": "component:pages/play/components/playkit-sort/index",
       "hostRoutes": [
         "pages/play/index",
@@ -869223,12 +869222,12 @@
         "tag": "view",
         "event": "bindtouchend",
         "handler": "onDragEnd",
-        "line": 24,
-        "selectorHint": ".so__grip",
-        "visibleCondition": "{{verdict !== 'ok'}}",
+        "line": 15,
+        "selectorHint": ".so__row",
+        "visibleCondition": null,
         "disabledCondition": null,
-        "ariaLabel": "按住拖动这一条",
-        "ariaLabelExpression": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "第 {{index + 1}} 位：{{item.label}}。点一下选中，再点另一条对调",
         "ariaRole": "button",
         "ariaRoleExpression": null,
         "ariaDisabled": null,
@@ -869263,11 +869262,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-sort/index.js:100"
+        "staticSource": "pages/play/components/playkit-sort/index.js:116"
       }
     },
     {
-      "id": "pages/play/components/playkit-sort/index.wxml:24:bindtouchmove:onDragMove:4",
+      "id": "pages/play/components/playkit-sort/index.wxml:15:bindtouchmove:onDragMove:2",
       "route": "component:pages/play/components/playkit-sort/index",
       "hostRoutes": [
         "pages/play/index",
@@ -869346,12 +869345,12 @@
         "tag": "view",
         "event": "bindtouchmove",
         "handler": "onDragMove",
-        "line": 24,
-        "selectorHint": ".so__grip",
-        "visibleCondition": "{{verdict !== 'ok'}}",
+        "line": 15,
+        "selectorHint": ".so__row",
+        "visibleCondition": null,
         "disabledCondition": null,
-        "ariaLabel": "按住拖动这一条",
-        "ariaLabelExpression": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "第 {{index + 1}} 位：{{item.label}}。点一下选中，再点另一条对调",
         "ariaRole": "button",
         "ariaRoleExpression": null,
         "ariaDisabled": null,
@@ -869361,11 +869360,11 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "other",
+      "actionClass": "state",
       "interactionMode": "event-contract",
-      "baseActionClass": "other",
+      "baseActionClass": "state",
       "effectClasses": [
-        "other"
+        "state"
       ],
       "accessBoundary": null,
       "externalCapabilities": [],
@@ -869378,20 +869377,19 @@
         "apiContracts": [],
         "writeApis": []
       },
-      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
-        "success",
-        "error"
+        "success"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-sort/index.js:93"
+        "staticSource": "pages/play/components/playkit-sort/index.js:97"
       }
     },
     {
-      "id": "pages/play/components/playkit-sort/index.wxml:24:bindtouchstart:onDragStart:3",
+      "id": "pages/play/components/playkit-sort/index.wxml:15:bindtouchstart:onDragStart:1",
       "route": "component:pages/play/components/playkit-sort/index",
       "hostRoutes": [
         "pages/play/index",
@@ -869470,12 +869468,12 @@
         "tag": "view",
         "event": "bindtouchstart",
         "handler": "onDragStart",
-        "line": 24,
-        "selectorHint": ".so__grip",
-        "visibleCondition": "{{verdict !== 'ok'}}",
+        "line": 15,
+        "selectorHint": ".so__row",
+        "visibleCondition": null,
         "disabledCondition": null,
-        "ariaLabel": "按住拖动这一条",
-        "ariaLabelExpression": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "第 {{index + 1}} 位：{{item.label}}。点一下选中，再点另一条对调",
         "ariaRole": "button",
         "ariaRoleExpression": null,
         "ariaDisabled": null,
@@ -869485,11 +869483,11 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "state",
+      "actionClass": "other",
       "interactionMode": "event-contract",
-      "baseActionClass": "state",
+      "baseActionClass": "other",
       "effectClasses": [
-        "state"
+        "other"
       ],
       "accessBoundary": null,
       "externalCapabilities": [],
@@ -869502,19 +869500,20 @@
         "apiContracts": [],
         "writeApis": []
       },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
       "requiredBranches": [
-        "success"
+        "success",
+        "error"
       ],
       "requiredPlatforms": [],
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-sort/index.js:80"
+        "staticSource": "pages/play/components/playkit-sort/index.js:84"
       }
     },
     {
-      "id": "pages/play/components/playkit-sort/index.wxml:35:bindtap:onSubmit:6",
+      "id": "pages/play/components/playkit-sort/index.wxml:31:bindtap:onSubmit:6",
       "route": "component:pages/play/components/playkit-sort/index",
       "hostRoutes": [
         "pages/play/index",
@@ -869593,7 +869592,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onSubmit",
-        "line": 35,
+        "line": 31,
         "selectorHint": ".g-btn",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -869634,7 +869633,131 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-sort/index.js:131"
+        "staticSource": "pages/play/components/playkit-sort/index.js:146"
+      }
+    },
+    {
+      "id": "pages/play/components/playkit-sort/index.wxml:4:bind:back:onClose:0",
+      "route": "component:pages/play/components/playkit-sort/index",
+      "hostRoutes": [
+        "pages/play/index",
+        "pages/publish/temp/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "#playKit",
+              "index": 0
+            },
+            {
+              "selector": "cy-playkit-sort",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "cy-playkit",
+              "index": 0
+            },
+            {
+              "selector": "cy-playkit-sort",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/temp/index",
+          "segments": [
+            {
+              "selector": "cy-playkit",
+              "index": 0
+            },
+            {
+              "selector": "cy-playkit-sort",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/temp/index",
+          "segments": [
+            {
+              "selector": "cy-playkit",
+              "index": 1
+            },
+            {
+              "selector": "cy-playkit-sort",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "pages/play/components/playkit-sort/index.wxml",
+        "js": "pages/play/components/playkit-sort/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-play-stage",
+        "event": "bind:back",
+        "handler": "onClose",
+        "line": 4,
+        "selectorHint": "#cy-play-stage",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "other",
+      "interactionMode": "event-contract",
+      "baseActionClass": "other",
+      "effectClasses": [
+        "other"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/play/components/playkit-sort/index.js:152"
       }
     },
     {

@@ -4,13 +4,13 @@
 <view class="pf-shell {{inline ? 'pf-shell--inline' : ''}}">
 <cy-play-stage id="cy-play-stage" skin="qadark" show="{{show}}" back-label="退出" bind:back="onClose">
   <view class="pf g-col {{inline ? 'pf--inline' : ''}} {{reducedMotion ? 'pk--reduced' : ''}}">
-    <view class="g-kicker">{{title || '出生登记'}}</view>
+    <view class="g-kicker pe pe--blur" style="--pe-d:.05s">{{title || '出生登记'}}</view>
     <view class="pf__lead pk-in" wx:if="{{lead}}">{{lead}}</view>
 
     <!-- 2026-09-24 按原型:刚交上去时答案一行行像墨迹写进档案(pf--inked),写完盖章 -->
-    <view class="pf__summary {{inked ? 'pf--inked' : ''}}">
+    <view class="pf__summary {{inked ? 'pf--inked' : ''}} pe pe--flipx" style="--pe-d:.2s">
       <view class="pf__form-title">{{title || '登记表'}}</view>
-      <view class="pf__row" wx:for="{{summary}}" wx:key="key">
+      <view class="pf__row pe pe--up" style="--pe-d:.7s;--pe-s:.1s;--pe-i:{{index}}" wx:for="{{summary}}" wx:key="key">
         <text class="pf__row-label">{{item.label}}</text>
         <text class="pf__row-answer {{item.answer ? 'is-filled' : ''}}" style="transition-delay:{{index * 0.25}}s">{{item.answer}}</text>
       </view>

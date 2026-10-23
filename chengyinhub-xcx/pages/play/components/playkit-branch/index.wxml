@@ -5,8 +5,8 @@
                limit-seconds="{{limitSeconds}}"
                bind:back="onClose" bind:verdict="onVerdict">
   <view class="g-col br">
-    <view class="br__q">{{title}}</view>
-    <view class="br__story">{{body}}</view>
+    <view class="br__q pe pe--blur" style="--pe-d:.05s">{{title}}</view>
+    <view class="br__story pe pe--blur" style="--pe-d:.25s;--pe-dur:.9s">{{body}}</view>
 
     <!-- 选了之后接着发生什么,就是它的反馈 —— 不判对错,所以没有对错色 -->
     <view class="br__fb" wx:if="{{feedback}}">
@@ -15,7 +15,7 @@
     </view>
 
     <view class="br__opts" wx:if="{{!isEnd}}">
-      <view class="br__opt {{index === 0 ? 'br__opt--first' : ''}} {{picked === index ? 'is-on' : (picked >= 0 || !writable ? 'is-off' : '')}}"
+      <view class="br__opt {{index === 0 ? 'br__opt--first' : ''}} {{picked === index ? 'is-on' : (picked >= 0 || !writable ? 'is-off' : '')}} pe pe--right" style="--pe-d:.75s;--pe-s:.12s;--pe-i:{{index}}"
             wx:for="{{options}}" wx:key="k" data-i="{{index}}" bindtap="onPick"
             aria-role="button" aria-label="{{item.t}}" aria-disabled="{{!writable || picked >= 0}}"
             hover-class="br__press" hover-stay-time="80">

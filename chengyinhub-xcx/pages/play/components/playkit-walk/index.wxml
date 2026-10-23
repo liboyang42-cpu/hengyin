@@ -2,10 +2,10 @@
      ★ 步数**只能同步不能填**:填的话这个玩法当场作废,而它的全部价值就在于那个数是真的。 -->
 <cy-play-stage id="cy-play-stage" show="{{show}}" back-label="退出" bind:back="onClose">
   <view class="wk">
-    <view class="wk__h">{{mode === 'goal' ? '今天想走多少' : (done ? '走到了' : '还差多少')}}</view>
+    <view class="wk__h pe pe--blur" style="--pe-d:.05s">{{mode === 'goal' ? '今天想走多少' : (done ? '走到了' : '还差多少')}}</view>
 
     <!-- 琥珀点阵 LCD:面板上的字全是中文,不发光 -->
-    <view class="wk__lcd">
+    <view class="wk__lcd pe pe--flipx" style="--pe-d:.15s">
       <view class="wk__k">{{mode === 'goal' ? '今日目标' : '还差'}}</view>
       <view class="wk__row">
         <view class="wk__pm" wx:if="{{mode === 'goal'}}" data-d="-1" bindtap="onStep"
@@ -26,7 +26,7 @@
       </block>
     </view>
 
-    <view class="wk__stats">
+    <view class="wk__stats pe pe--up" style="--pe-d:.75s">
       <view class="wk__stat"><view class="wk__dt">目标</view><view class="wk__dd">{{goalText}}</view></view>
       <view class="wk__stat"><view class="wk__dt">已走</view><view class="wk__dd">{{stepsText}}</view></view>
       <view class="wk__stat"><view class="wk__dt">少排</view><view class="wk__dd">{{co2}} kg</view></view>

@@ -23,6 +23,21 @@ function placedCount(rows) {
   return (rows || []).filter((r) => !!r.bin).length;
 }
 
+/* 2026-10-23 主人定稿(城瘾 排序连线分类试玩原型):一次一张卡摞在中间,点下面的分类卡片飞进去,
+   分类里多一条小标签、数字加一;点小标签拿回来重放。 */
+/** 牌堆:还没分的按原顺序,最上面那张在前;最多摞三张 */
+function stackOf(rows) {
+  return (rows || []).map((r, i) => Object.assign({ i }, r)).filter((r) => !r.bin).slice(0, 3);
+}
+/** 分类箱:每箱放进了哪几条 */
+function binView(bins, rows) {
+  return (bins || []).map((b, bi) => {
+    const id = b.id || ('b' + bi);
+    const chips = (rows || []).map((r, i) => ({ i, label: r.label, bin: r.bin })).filter((r) => r.bin === id);
+    return { id, label: b.label || '', count: chips.length, chips };
+  });
+}
+
 /** 全部分完才让提交:少一张服务端会整条打回「每张卡片都要放进一个分类」。 */
 function canSubmit(placed, total) {
   return total > 0 && placed >= total;
@@ -45,12 +60,15 @@ Component({
     total: 0,
     placed: 0,
     verdict: '',          // '' 未判 / 'ok' 通过 / 'no' 判错
+    stack: [],
+    binRows: [],
+    ghost: null,          // 飞进分类箱的那张(只是演出,数据已经落定)
   },
   observers: {
     'show, items, bins': function (show, items) {
       if (!show) return;
       const rows = paint(items);
-      this.setData({ rows: rows, total: rows.length, placed: 0, verdict: '' });
+      this.setData({ rows: rows, total: rows.length, placed: 0, verdict: '', ghost: null, stack: stackOf(rows), binRows: binView(this.data.bins, rows) });
       const stage = this.selectComponent('#cy-play-stage');
       if (stage) stage.begin();
     },
@@ -58,12 +76,41 @@ Component({
       if (!(attempts > 0)) return;
       const verdict = passed ? 'ok' : 'no';
       if (verdict !== this.data.verdict) this.setData({ verdict });
+      // 判错整块抖一下(原型 .phone.shake);不逐条标红 —— 服务端只给整体对错
+      if (!passed) { const stage = this.selectComponent('#cy-play-stage'); if (stage && stage.nudge) stage.nudge(); }
     },
   },
   methods: {
     _paint: paint,              // 纯算法出口,供单测
     _placedCount: placedCount,
     _canSubmit: canSubmit,
+    _stackOf: stackOf,
+    _binView: binView,
+
+    /** 点分类箱:把牌堆最上面那张放进去(data-i 缺省时取最上面那张) */
+    onDropTop(e) {
+      const top = this.data.stack[0];
+      if (!top) return;
+      const b = e.currentTarget.dataset.b, bi = Number(e.currentTarget.dataset.bi) || 0;
+      // 飞的方向:按分类箱在第几列算,左边的往左下、右边的往右下
+      const n = Math.max(1, this.data.binRows.length);
+      const dx = Math.round(((bi + .5) / n - .5) * 520);
+      if (!this.data.reducedMotion) {
+        this.setData({ ghost: { label: top.label, dx, go: false } });
+        clearTimeout(this._ghostT); clearTimeout(this._ghostT2);
+        this._ghostT = setTimeout(() => this.setData({ 'ghost.go': true }), 30);
+        this._ghostT2 = setTimeout(() => this.setData({ ghost: null }), 480);
+      }
+      this.onPickBin({ currentTarget: { dataset: { i: top.i, b } } });
+    },
+    /** 点分类箱里的小标签:拿回牌堆 */
+    onTakeBack(e) {
+      const i = Number(e.currentTarget.dataset.i);
+      if (!(i >= 0) || i >= this.data.rows.length) return;
+      motion.haptic({ reducedMotion: this.data.reducedMotion, type: 'light' });
+      const rows = this.data.rows.map((r, at) => (at === i ? Object.assign({}, r, { bin: '' }) : r));
+      this.setData({ rows, placed: placedCount(rows), verdict: '', stack: stackOf(rows), binRows: binView(this.data.bins, rows) });
+    },
 
     onPickBin(e) {
       const i = Number(e.currentTarget.dataset.i);
@@ -72,7 +119,7 @@ Component({
       motion.haptic({ reducedMotion: this.data.reducedMotion, type: 'light' });
       const rows = this.data.rows.map((r, at) => (at === i ? Object.assign({}, r, { bin: bin }) : r));
       // 改过了就是新的一版:上一次的判定标记撤掉
-      this.setData({ rows: rows, placed: placedCount(rows), verdict: '' });
+      this.setData({ rows: rows, placed: placedCount(rows), verdict: '', stack: stackOf(rows), binRows: binView(this.data.bins, rows) });
     },
 
     onSubmit() {

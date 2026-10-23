@@ -4,12 +4,12 @@
      ★ 失败也推进:结算前后都能退出,这一屏不拦节点完成。 -->
 <cy-play-stage id="cy-play-stage" skin="qadark" show="{{show}}" back-label="退出" bind:back="onClose">
   <view class="jc g-col {{reducedMotion ? 'pk--reduced' : ''}} {{_motionReset ? 'pk--reset' : ''}}">
-    <view class="g-kicker">{{skill ? '检定 · ' + skill : '检定'}}</view>
+    <view class="g-kicker pe pe--blur" style="--pe-d:.05s">{{skill ? '检定 · ' + skill : '检定'}}</view>
     <!-- 难度三档:作者选的那一档亮着。具体难度线主题可改,掷出来以回执的 dc 为准 -->
     <view class="jc__tiers" aria-label="难度 {{tierLabel || '标准'}}">
-      <text class="jc__tier {{tier === 'easy' ? 'is-on' : ''}}">简单</text>
-      <text class="jc__tier {{tier === 'medium' || !tier ? 'is-on' : ''}}">标准</text>
-      <text class="jc__tier {{tier === 'hard' ? 'is-on' : ''}}">困难</text>
+      <text class="jc__tier {{tier === 'easy' ? 'is-on' : ''}} pe pe--pop" style="--pe-d:.2s;--pe-i:0">简单</text>
+      <text class="jc__tier {{tier === 'medium' || !tier ? 'is-on' : ''}} pe pe--pop" style="--pe-d:.2s;--pe-i:1">标准</text>
+      <text class="jc__tier {{tier === 'hard' ? 'is-on' : ''}} pe pe--pop" style="--pe-d:.2s;--pe-i:2">困难</text>
     </view>
     <view class="jc__tags" wx:if="{{advantage || disadvantage}}">
       <view class="jc__tag jc__tag--good" wx:if="{{advantage}}">优势</view>
@@ -27,7 +27,7 @@
 
     <!-- 结算后不再画骰子:点数已经读过,整屏判定 / 结算文案接管这一屏;
          三维骰是原生画布,留着会压在整屏判定上面 -->
-    <view class="jc__stage" wx:if="{{!receipt || !receipt.settled}}" aria-label="{{receipt ? '骰点 ' + receipt.dice : '二十面骰'}}">
+    <view class="jc__stage pe pe--drop" style="--pe-d:.35s" wx:if="{{!receipt || !receipt.settled}}" aria-label="{{receipt ? '骰点 ' + receipt.dice : '二十面骰'}}">
       <canvas type="2d" id="jcCanvas" class="jc__canvas" />
       <view class="jc__error" wx:if="{{dieError}}">骰子暂时显示不出来，不影响掷骰</view>
     </view>
@@ -76,7 +76,7 @@
 
   <!-- 底部动作:题面「按住摇骰」;结果屏「重掷 + 结算」;结算屏「继续」。失败也推进,没有锁死的态 -->
   <view class="jc__hint jc__hint--foot" wx:if="{{r5 && disabledReason}}">{{disabledReason}}</view>
-  <view class="g-btn jc__roll {{loading ? 'g-btn--disabled' : ''}}" wx:if="{{!receipt && (!r5 || rollVisible)}}"
+  <view class="g-btn jc__roll {{loading ? 'g-btn--disabled' : ''}} pe pe--up" style="--pe-d:1s" wx:if="{{!receipt && (!r5 || rollVisible)}}"
         bindtouchstart="onHoldStart" bindtouchend="onHoldEnd" bindtouchcancel="onHoldEnd" bindtap="onRoll"
         aria-role="button" aria-label="掷骰" hover-class="g-btn--press" hover-stay-time="80">
     <view class="jc__charge" style="transform:scaleX({{charge}})"></view>
