@@ -121,6 +121,22 @@ public class PhotoCheckIntentService {
         return view(owned(memberId, intentId, requestFingerprint));
     }
 
+    /**
+     * Recover a lost prepare response using the original command identity. Exact absence is
+     * null; a bound key with a different hash is a conflict. In C's short transaction the
+     * caller locks the original session first; this method only locks the intent, never a session.
+     */
+    public PhotoCheckIntentView read(Long memberId, Long sessionId, String actionKey, String requestFingerprint) {
+        if (memberId == null || memberId <= 0 || sessionId == null || sessionId <= 0
+                || actionKey == null || actionKey.isBlank() || actionKey.length() > 128
+                || !hash(requestFingerprint)) throw conflict();
+        PhotoCheckIntentRow row = mapper.selectByKeyForUpdate(memberId, sessionId, actionKey);
+        if (row == null) return null;
+        if (!Objects.equals(memberId, row.getMemberId()) || !Objects.equals(sessionId, row.getSessionId())
+                || !Objects.equals(actionKey, row.getActionKey())) throw conflict();
+        return sameOriginal(row, requestFingerprint);
+    }
+
     @Transactional(propagation = Propagation.MANDATORY, rollbackFor = Exception.class)
     public void markApplied(Long intentId, String requestFingerprint, Long attemptLogId) {
         requireTransaction();

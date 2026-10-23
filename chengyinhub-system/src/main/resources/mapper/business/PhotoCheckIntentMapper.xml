@@ -37,9 +37,10 @@
         SELECT * FROM photo_check_intent
         WHERE member_id=#{memberId} AND session_id=#{sessionId} AND action_key=#{actionKey}
     </select>
-    <!-- Current locking read after upsert: under MySQL REPEATABLE READ a concurrent committed
-         original must be visible even when this transaction already established a snapshot. -->
-    <select id="selectByKeyForUpdate" resultMap="Intent">
+    <!-- Current locking recovery read, also used after upsert. flushCache clears the
+         SqlSession first-level cached null; useCache=false alone only bypasses second-level cache.
+         FOR UPDATE sees the committed original even under an older RR read view. -->
+    <select id="selectByKeyForUpdate" resultMap="Intent" useCache="false" flushCache="true">
         SELECT * FROM photo_check_intent
         WHERE member_id=#{memberId} AND session_id=#{sessionId} AND action_key=#{actionKey}
         FOR UPDATE
