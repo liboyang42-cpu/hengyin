@@ -76,5 +76,5 @@ test('C-04 角色建档 / 拍照审核 / 限时打字 / 留言能试玩,且喂�
 
 test('C-04 检定在编辑页演不了时说实话,不再说「还要再填一点」', () => {
   const js = fs.readFileSync(path.join(ROOT, 'pages/publish/temp/index.js'), 'utf8')
-  assert.match(js, /section === 'check' \? '技能检定在旅程里掷骰，编辑页演不了'/)
+  assert.match(js, /section === 'check' \? 'D20 在旅程里掷骰，编辑页演不了'/)
 })
