@@ -765,7 +765,7 @@ public class ApiRoamController extends BaseController {
         // ③ 先用 status=0→1 的 CAS 抢结算权。先读后判挡不住两个并发请求同时读到 status=0;
         //    CAS 失败的请求必须在任何 XP/勋章写入前退出。
         session.setFinishedAt(new Date());
-        session.setDistanceM(distanceM != null && distanceM > 0 ? distanceM : 0);
+        session.setDistanceM(clampDistanceM(distanceM, session.getStartedAt(), session.getFinishedAt().getTime()));
         session.setTilesRevealed(sessionTiles);
         session.setPoisFound(newPois);
         session.setXpAwarded(totalXp);
@@ -903,6 +903,17 @@ public class ApiRoamController extends BaseController {
         int cappedNow = Math.min(today, dailyLimit);
         int cappedPrior = Math.min(prior, dailyLimit);
         return Math.max(0, cappedNow - cappedPrior);
+    }
+
+    /**
+     * 结算里程:客户端上报的 distanceM 只在「会话开始至今 × MAX_MOVE_SPEED_MPS」之内采信,
+     * 超出按上限记;缺开始时间则不采信(记 0)。里程会进广场分享卡副标题,不能任由客户端填。
+     */
+    static int clampDistanceM(Integer distanceM, Date startedAt, long nowMs) {
+        if (distanceM == null || distanceM <= 0 || startedAt == null) return 0;
+        long elapsedSec = Math.max(0L, (nowMs - startedAt.getTime()) / 1000L);
+        long cap = (long) Math.floor(elapsedSec * MAX_MOVE_SPEED_MPS);
+        return (int) Math.min(distanceM.longValue(), cap);
     }
 
     /** 从 priorEver 到 nowEver 跨过的最高里程碑阈值;没跨返回 0。 */

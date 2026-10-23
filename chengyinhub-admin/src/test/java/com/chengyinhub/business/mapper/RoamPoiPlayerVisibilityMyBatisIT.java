@@ -160,6 +160,31 @@ class RoamPoiPlayerVisibilityMyBatisIT {
         }
     }
 
+    /** /api/roam/pois 不再整盒无序全量下发:按离玩家(盒心)由近到远取前 200 个。 */
+    @Test
+    void nearPoisAreOrderedByDistanceAndCapped() throws Exception {
+        SqlSessionFactory factory = factory();
+        try (SqlSession session = factory.openSession(true);
+             Statement statement = session.getConnection().createStatement()) {
+            try {
+                for (String ddl : FIXTURE_DDL) statement.execute(ddl);
+                // 210 个在架地标沿纬度排开,id 越大离盒心(31.23,121.475)越远;插入顺序故意倒序
+                for (int i = 209; i >= 0; i--) {
+                    statement.execute("INSERT INTO roam_poi(id,name,type,lat,lng,status,application_type,audit_status)"
+                            + " VALUES (" + (101 + i) + ",'地标" + i + "',1," + (31.23 + i * 0.00005) + ",121.4750000,1,NULL,NULL)");
+                }
+                List<RoamPoi> rows = session.getMapper(RoamMapper.class)
+                        .selectPoisNear(31.22, 31.24, 121.46, 121.49, PLAYER);
+                assertEquals(200, rows.size(), "一次最多下发 200 个");
+                assertEquals(Long.valueOf(101L), rows.get(0).getId(), "最近的排第一");
+                assertEquals(Long.valueOf(300L), rows.get(199).getId(), "截断丢掉的是最远的那些");
+                assertFalse(ids(rows).contains(301L));
+            } finally {
+                for (int i = 3; i >= 0; i--) statement.execute(FIXTURE_DDL[i]);
+            }
+        }
+    }
+
     private static Map<Long, Boolean> foundFlags(List<RoamPoi> rows) {
         Map<Long, Boolean> flags = new HashMap<>();
         for (RoamPoi row : rows) flags.put(row.getId(), row.getFound());
