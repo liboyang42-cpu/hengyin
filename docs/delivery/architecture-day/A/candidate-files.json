@@ -7,7 +7,7 @@
     },
     {
       "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_21MySqlIT.java",
-      "sha256": "21b879f4536fb621a6efbc9dac484fb42758221120aeefe53b98919dabd36bdb"
+      "sha256": "daf45b56607aed641a672213cb90c1c47a205b601b9afe031ac5107c308de5ce"
     },
     {
       "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_21Test.java",
@@ -39,7 +39,7 @@
     },
     {
       "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CashWithdrawFundEvidenceMySqlIT.java",
-      "sha256": "956edd6cf5b79627bae14d5c7b285e1ac03f3ffd04edd719e808630d6c0eb75f"
+      "sha256": "0002caf8aeae7e1bbb8fca30443daf97d27f0d156efc7dba2a9b3fbb5ed56e4a"
     },
     {
       "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CashWithdrawFundEvidenceTest.java",
@@ -86,7 +86,7 @@
       "sha256": "80be999bd007b4b933d944ec8bb7fabc00fd9da74954eee7d034262c926770a3"
     },
     {
-      "path": "sql/migration_20261023_cash_withdraw_fund_fact.sql",
+      "path": "chengyinhub-admin/sql/migration_20261023_cash_withdraw_fund_fact.sql",
       "sha256": "cf981d89214b219c41639537f301f2b55b2b568f2d310c06621e6df473b3f4ba"
     }
   ]

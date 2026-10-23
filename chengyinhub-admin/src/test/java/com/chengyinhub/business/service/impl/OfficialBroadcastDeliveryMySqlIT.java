@@ -83,7 +83,7 @@ class OfficialBroadcastDeliveryMySqlIT {
         db.update("insert into official_broadcast_log(broadcast_id,member_id,channel,reached) values(900,1,'inapp',1),(900,1,'subscribe',1),(900,2,'inapp',0)");
         Path root = Paths.get("").toAbsolutePath();
         if (!Files.isDirectory(root.resolve("chengyinhub-admin"))) root = root.getParent();
-        Path migration = root.resolve("docs/delivery/architecture-day/D/sql/migration_20261023_d_official_broadcast_delivery.sql");
+        Path migration = root.resolve("chengyinhub-admin/sql/migration_20261023_d_official_broadcast_delivery.sql");
         new ResourceDatabasePopulator(new FileSystemResource(migration.toFile())).execute(source);
         assertEquals(1, db.queryForObject("select count(*) from official_broadcast_log where delivery_state='SUCCESS'", Integer.class));
         assertEquals(2, db.queryForObject("select count(*) from official_broadcast_log where delivery_state='UNKNOWN'", Integer.class));

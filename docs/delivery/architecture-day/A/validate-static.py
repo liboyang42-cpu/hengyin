@@ -33,8 +33,8 @@ protected = ["pom.xml", ".github", "chengyinhub-system/src/main/java/com/chengyi
              "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsMemberServiceImpl.java",
              "chengyinhub-system/src/main/java/com/chengyinhub/business/service/IWechatPayService.java", "sql"]
 protected_changes = subprocess.check_output(["git", "diff", "--name-only", base, "--", *protected], cwd=root, text=True).splitlines()
-assert set(protected_changes) <= {"sql/migration_20261023_cash_withdraw_fund_fact.sql"}, protected_changes
-assert not subprocess.check_output(["git", "ls-tree", base, "--", "sql/migration_20261023_cash_withdraw_fund_fact.sql"], cwd=root)
+assert set(protected_changes) <= {"chengyinhub-admin/sql/migration_20261023_cash_withdraw_fund_fact.sql"}, protected_changes
+assert not subprocess.check_output(["git", "ls-tree", base, "--", "chengyinhub-admin/sql/migration_20261023_cash_withdraw_fund_fact.sql"], cwd=root)
 subprocess.run(["git", "diff", "--check", base], cwd=root, check=True, capture_output=True)
 print("PASS: B/shared production/CI and existing migrations unchanged; only the new authorized schema candidate allowed")
 

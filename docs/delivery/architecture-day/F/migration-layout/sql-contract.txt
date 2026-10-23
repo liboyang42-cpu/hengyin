@@ -1,0 +1,9 @@
+::error::迁移 SQL 无法被真执行器正确分句 —— 落库时会 1064 或跑错
+  ✗ chengyinhub-admin/sql/migration_20261023_cash_withdraw_fund_fact.sql: 第 2 条语句是 CREATE TRIGGER,但没有由自定义 DELIMITER 完整结束,
+      BEGIN...END 里的分号会被切错；必须使用受校验的独立行 DELIMITER 指令。
+  ✗ chengyinhub-admin/sql/migration_20261023_cash_withdraw_fund_fact.sql: 第 3 条语句是 CREATE TRIGGER,但没有由自定义 DELIMITER 完整结束,
+      BEGIN...END 里的分号会被切错；必须使用受校验的独立行 DELIMITER 指令。
+  ✗ chengyinhub-admin/sql/migration_20261023_d_official_broadcast_delivery.sql: 第 2 条 UPDATE 没有 WHERE（TRUNCATE 等同全表无 WHERE 写），可能扩大到全表；必须改为窄范围写入或用可执行 guard 明确证明范围
+  ✗ chengyinhub-admin/sql/migration_20261023_d_official_broadcast_delivery.sql: 第 3 条 UPDATE 没有 WHERE（TRUNCATE 等同全表无 WHERE 写），可能扩大到全表；必须改为窄范围写入或用可执行 guard 明确证明范围
+  为什么:CI 与 run_migration.py 共用 ci/sql_splitter.py 分句。这里切不对,
+          落库时就切不对 —— 实证:autoRefundTask 因此 8 天零告警地从没跑过。

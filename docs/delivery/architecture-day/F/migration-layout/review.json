@@ -1,0 +1,31 @@
+{
+  "custody_entries_match_current_files": true,
+  "doc_schema_candidate_matches_canonical": true,
+  "migration_moves": {
+    "docs/delivery/architecture-day/D/sql/migration_20261023_d_official_broadcast_delivery.sql": {
+      "bytes_identical": true,
+      "path": "chengyinhub-admin/sql/migration_20261023_d_official_broadcast_delivery.sql",
+      "sha256": "83c7fc4aa90a68a782b931c0736f43db90aaca3bed9c75c4b9f09222b474554c"
+    },
+    "sql/migration_20261023_cash_withdraw_fund_fact.sql": {
+      "bytes_identical": true,
+      "path": "chengyinhub-admin/sql/migration_20261023_cash_withdraw_fund_fact.sql",
+      "sha256": "cf981d89214b219c41639537f301f2b55b2b568f2d310c06621e6df473b3f4ba"
+    }
+  },
+  "old_dependency_entries_unchanged": true,
+  "parent_sha": "089790aaf3254f62ebbc79394b8aaf5fa66cb2b5",
+  "remaining_inventory_problems": [
+    {
+      "code": "UNSUPPORTED_SQL_SHAPE",
+      "message": "migration cannot be safely split by ci/sql_splitter.py",
+      "path": "chengyinhub-admin/sql/migration_20261023_cash_withdraw_fund_fact.sql"
+    },
+    {
+      "code": "UNSUPPORTED_SQL_SHAPE",
+      "message": "migration cannot be safely split by ci/sql_splitter.py",
+      "path": "chengyinhub-admin/sql/migration_20261023_d_official_broadcast_delivery.sql"
+    }
+  ],
+  "shared_workflow_architecture_harness_registry_pom_unchanged": true
+}
