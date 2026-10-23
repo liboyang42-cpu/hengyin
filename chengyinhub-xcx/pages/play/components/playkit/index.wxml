@@ -78,13 +78,13 @@
   bind:roll="onRoll" bind:count="onCount" bind:settled="onSettled" bind:close="onClose" />
 
 <cy-playkit-reaction wx:elif="{{kit.type === 'reaction'}}"
-  show="{{show}}" kicker="{{kit.kicker}}" rounds="{{kit.rounds}}" goal-ms="{{kit.goalMs}}"
+  show="{{show}}" kicker="{{kit.kicker}}" rounds="{{kit.rounds}}" goal-ms="{{kit.goalMs}}" attempt-id="{{kit.attemptId}}"
   bind:start="onStart" bind:submit="onSubmit" bind:verdict="onVerdict" bind:close="onClose" />
 
 <cy-playkit-ballshake wx:elif="{{kit.type === 'ballshake'}}"
   show="{{show}}" kicker="{{kit.kicker}}" goal="{{kit.goal}}"
   challenge="{{kit.challenge}}" shared-challenge="{{kit.challengeShared}}"
-  timed="{{kit.timed}}" seconds="{{kit.seconds}}"
+  timed="{{kit.timed}}" seconds="{{kit.seconds}}" attempt-id="{{kit.attemptId}}"
   bind:start="onStart" bind:submit="onSubmit" bind:verdict="onVerdict" bind:close="onClose" />
 
 <cy-playkit-quiethold wx:elif="{{kit.type === 'quiethold'}}"
@@ -96,7 +96,7 @@
   show="{{show}}" kicker="{{kit.kicker}}" target="{{kit.bearing}}" tolerance="{{kit.tolerance}}"
   hold-seconds="{{kit.holdSeconds}}" hint="{{kit.hint}}" done="{{kit.done}}"
   attempt-id="{{kit.attemptId}}" reward-ceiling="{{kit.rewardCeiling}}"
-  bind:submit="onSubmit" bind:verdict="onVerdict" bind:close="onClose" />
+  bind:start="onStart" bind:submit="onSubmit" bind:verdict="onVerdict" bind:close="onClose" />
 
 <cy-playkit-shout wx:elif="{{kit.type === 'shout'}}"
   show="{{show}}" kicker="{{kit.kicker}}" seconds="{{kit.seconds}}"

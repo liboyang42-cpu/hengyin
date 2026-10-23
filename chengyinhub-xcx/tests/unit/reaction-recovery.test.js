@@ -14,7 +14,7 @@ function host(props = {}) {
   function load(file) {
     let def;
     vm.runInNewContext(fs.readFileSync(path.join(ROOT, file + '.js'), 'utf8'), {
-      Component(value) { def = value; }, require: () => ({haptic() {}}), Math: math,
+      Component(value) { def = value; }, require: name => name.endsWith('/sensor-contract.js') ? require('../../pages/play/utils/sensor-contract.js') : ({haptic() {}}), Math: math,
       Date: {now: () => now}, Number,
       setTimeout(fn, ms) { const t = {id:++nextId, fn, due:now + ms}; tasks.set(t.id,t); history.push(t); return t.id; },
       clearTimeout(id) { tasks.delete(id); }, clearInterval(id) { tasks.delete(id); },
@@ -143,4 +143,22 @@ test('reentrant hide from start cannot schedule a green timer',()=>{
   const h=host();const trigger=h.component.triggerEvent;
   h.component.triggerEvent=(name,detail)=>{trigger(name,detail);if(name==='start')h.interrupt('hide');};
   h.tap();assert.equal(h.tasks.size,0);assert.equal(h.component.data.phase,'idle');h.tick(10000);assert.equal(count(h,'submit'),0);
+});
+
+// DOC2 FXA(#478-3 后续):服务端在这一局开表后新发的挑战身份随成绩交,诚实玩家不被封顶;
+// 开表那一刻手里的旧号不算(拿它去交只会被判作废),新号没回来就不带,走存量复核口径。
+const plain=x=>JSON.parse(JSON.stringify(x)); // vm 里造的对象跨 realm,按值比
+test('attemptId issued after this run starts is submitted; the stale one is not',()=>{
+  const h=host({rounds:1,goalMs:400,attemptId:11});
+  h.tap();assert.equal(count(h,'start'),1);
+  h.component.data.attemptId=22;                 // START_CHALLENGE 回包刷新 kit.attemptId
+  h.tick(1400);h.tick(250);h.tap();
+  const detail=h.events.find(e=>e.name==='submit').detail;
+  assert.equal(detail.attemptId,22);
+  assert.deepEqual(plain(serverPayload('reaction','submit',detail)),{roundsMs:[250],attemptId:22});
+  const stale=host({rounds:1,goalMs:400,attemptId:11});
+  stale.tap();stale.tick(1400);stale.tick(250);stale.tap();
+  const legacy=stale.events.find(e=>e.name==='submit').detail;
+  assert.equal('attemptId' in legacy,false,'开表时手里的旧号不随成绩交');
+  assert.deepEqual(plain(serverPayload('reaction','submit',legacy)),{roundsMs:[250]});
 });

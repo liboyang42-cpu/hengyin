@@ -42,7 +42,7 @@ class E04_09Test {
         ds.setPassword("");
         jdbc = new JdbcTemplate(ds);
         jdbc.execute("DROP ALL OBJECTS");
-        jdbc.execute("CREATE TABLE sms_coupon(id BIGINT PRIMARY KEY,status INT,receive_count BIGINT,update_time TIMESTAMP)");
+        jdbc.execute("CREATE TABLE sms_coupon(id BIGINT PRIMARY KEY,status INT,publish_count BIGINT,receive_count BIGINT,update_time TIMESTAMP)");
         jdbc.execute("CREATE TABLE sms_coupon_history(id BIGINT AUTO_INCREMENT PRIMARY KEY,coupon_id BIGINT,member_id BIGINT,"
                 + "coupon_code VARCHAR(100),use_status INT,create_time TIMESTAMP)");
         jdbc.update("INSERT INTO sms_coupon(id,status,receive_count) VALUES (30,4,0)");
@@ -63,17 +63,19 @@ class E04_09Test {
         service = (ISmsCouponHistoryService) proxy.getProxy();
     }
 
+    // O-06:补录改为「先条件占库存、再写记录」,原先那条「先插记录、计数失败回滚记录」的边界换成下面两条:
+    // 记录写失败必须连带回滚已占的库存;计数被拒时根本不写记录。
     @Test
-    void statisticalUpdateConstraintFailureRollsBackPreviouslyInsertedAdministrativeHistory() {
-        jdbc.execute("ALTER TABLE sms_coupon ADD CONSTRAINT reject_stat_increment CHECK (receive_count=0)");
-        SmsCouponMapper real = (SmsCouponMapper)ReflectionTestUtils.getField(target,"smsCouponMapper");
-        java.util.concurrent.atomic.AtomicInteger statisticAttempts = new java.util.concurrent.atomic.AtomicInteger();
-        SmsCouponMapper observed = (SmsCouponMapper)java.lang.reflect.Proxy.newProxyInstance(
-                SmsCouponMapper.class.getClassLoader(),new Class<?>[]{SmsCouponMapper.class},(proxy,method,args) -> {
-                    if ("incrementReceiveCount".equals(method.getName())) {
-                        // Observe our own preceding write inside the same transaction before the real failing UPDATE.
-                        assertEquals(1,jdbc.queryForObject("SELECT COUNT(*) FROM sms_coupon_history",Integer.class));
-                        statisticAttempts.incrementAndGet();
+    void historyConstraintFailureRollsBackPreviouslyClaimedStock() {
+        jdbc.execute("ALTER TABLE sms_coupon_history ADD CONSTRAINT reject_history CHECK (coupon_code<>'e04-administrative-history')");
+        SmsCouponHistoryMapper real = (SmsCouponHistoryMapper)ReflectionTestUtils.getField(target,"smsCouponHistoryMapper");
+        java.util.concurrent.atomic.AtomicInteger historyAttempts = new java.util.concurrent.atomic.AtomicInteger();
+        SmsCouponHistoryMapper observed = (SmsCouponHistoryMapper)java.lang.reflect.Proxy.newProxyInstance(
+                SmsCouponHistoryMapper.class.getClassLoader(),new Class<?>[]{SmsCouponHistoryMapper.class},(proxy,method,args) -> {
+                    if ("insertSmsCouponHistory".equals(method.getName())) {
+                        // Observe our own preceding stock claim inside the same transaction before the real failing INSERT.
+                        assertEquals(1L,jdbc.queryForObject("SELECT receive_count FROM sms_coupon WHERE id=30",Long.class));
+                        historyAttempts.incrementAndGet();
                     }
                     try {
                         return method.invoke(real,args);
@@ -81,13 +83,30 @@ class E04_09Test {
                         throw failure.getCause();
                     }
                 });
-        ReflectionTestUtils.setField(target,"smsCouponMapper",observed);
+        ReflectionTestUtils.setField(target,"smsCouponHistoryMapper",observed);
         RuntimeException failure = assertThrows(RuntimeException.class,() -> service.insertSmsCouponHistory(history()));
-        assertEquals(1,statisticAttempts.get());
+        assertEquals(1,historyAttempts.get());
         org.junit.jupiter.api.Assertions.assertTrue(hasSqlState(failure,"23513"),"Must fail on the real H2 CHECK constraint");
         assertEquals(0,jdbc.queryForObject("SELECT COUNT(*) FROM sms_coupon_history",Integer.class));
         assertEquals(0L,jdbc.queryForObject("SELECT receive_count FROM sms_coupon WHERE id=30",Long.class));
         assertEquals(4,jdbc.queryForObject("SELECT status FROM sms_coupon WHERE id=30",Integer.class));
+    }
+
+    @Test
+    void statisticalUpdateConstraintFailureWritesNoAdministrativeHistory() {
+        jdbc.execute("ALTER TABLE sms_coupon ADD CONSTRAINT reject_stat_increment CHECK (receive_count=0)");
+        RuntimeException failure = assertThrows(RuntimeException.class,() -> service.insertSmsCouponHistory(history()));
+        org.junit.jupiter.api.Assertions.assertTrue(hasSqlState(failure,"23513"),"Must fail on the real H2 CHECK constraint");
+        assertEquals(0,jdbc.queryForObject("SELECT COUNT(*) FROM sms_coupon_history",Integer.class));
+        assertEquals(0L,jdbc.queryForObject("SELECT receive_count FROM sms_coupon WHERE id=30",Long.class));
+    }
+
+    @Test
+    void exhaustedLimitedTemplateRejectsAdministrativeHistory() {
+        jdbc.update("UPDATE sms_coupon SET publish_count=1,receive_count=1 WHERE id=30");
+        assertThrows(com.chengyinhub.common.exception.ServiceException.class,() -> service.insertSmsCouponHistory(history()));
+        assertEquals(0,jdbc.queryForObject("SELECT COUNT(*) FROM sms_coupon_history",Integer.class));
+        assertEquals(1L,jdbc.queryForObject("SELECT receive_count FROM sms_coupon WHERE id=30",Long.class));
     }
 
     @Test
