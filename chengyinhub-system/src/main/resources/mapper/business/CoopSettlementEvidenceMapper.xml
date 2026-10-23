@@ -65,14 +65,14 @@
               or (r.purchase_kind = 2 and ticket.mode = 1 and ticket.sub_type = 'self')
               or (r.purchase_kind = 3 and ticket.mode = 2))
     </sql>
-    <select id="selectCandidatesForUpdate" resultType="com.chengyinhub.business.domain.dto.CoopSettlementCandidate">
+    <select id="selectCandidatesForUpdate" useCache="false" flushCache="true" resultType="com.chengyinhub.business.domain.dto.CoopSettlementCandidate">
         <bind name="activityIds" value="null"/>
         select <include refid="candidateColumns"/>
         from cms_registration r <include refid="ticketJoin"/>
         where r.owner_type = 1 and r.owner_id = #{snapshot.topicId}
         for update
     </select>
-    <select id="selectTopicEvidenceCandidatesForUpdate" resultType="com.chengyinhub.business.domain.dto.CoopSettlementCandidate">
+    <select id="selectTopicEvidenceCandidatesForUpdate" useCache="false" flushCache="true" resultType="com.chengyinhub.business.domain.dto.CoopSettlementCandidate">
         select <include refid="candidateColumns"/>
         from cms_registration r <include refid="ticketJoin"/>
         where (r.owner_type = 1 and r.owner_id = #{snapshot.topicId})
@@ -86,12 +86,33 @@
              </choose>)
         for update
     </select>
+    <select id="selectTopicCashRowsForUpdate" useCache="false" flushCache="true" resultType="com.chengyinhub.business.domain.CmsRegistration">
+        select r.id, r.owner_type as ownerType, r.owner_id as ownerId, r.member_id as memberId,
+               r.payment_status as paymentStatus, r.registration_status as registrationStatus,
+               r.verification_status as verificationStatus, r.payable_amount as payableAmount,
+               r.owner_id as topicId
+        from cms_registration r
+        where r.owner_type = 1 and r.owner_id = #{topicId}
+        order by r.id
+        for update
+    </select>
+    <!-- 含已删壳，锁真实活动父关系与报名；与上面的主题报名锁持有到同一事务结束。 -->
+    <select id="selectTopicActivityCashRowsForUpdate" useCache="false" flushCache="true" resultType="com.chengyinhub.business.domain.CmsRegistration">
+        select r.id, r.owner_type as ownerType, r.owner_id as ownerId, r.member_id as memberId,
+               r.payment_status as paymentStatus, r.registration_status as registrationStatus,
+               r.verification_status as verificationStatus, r.payable_amount as payableAmount,
+               a.topic_id as topicId
+        from cms_activity a join cms_registration r on r.owner_type = 2 and r.owner_id = a.id
+        where a.topic_id = #{topicId}
+        order by r.id
+        for update
+    </select>
     <select id="countPaidActivityRegistrations" resultType="int">
         select count(*) from cms_registration r
         join cms_activity a on a.id = r.owner_id and a.topic_id = #{topicId}
         where r.owner_type = 2 and r.payment_status = 2
     </select>
-    <select id="selectCashBasisBlockingRefundIdsForUpdate" resultType="long">
+    <select id="selectCashBasisBlockingRefundIdsForUpdate" useCache="false" flushCache="true" resultType="long">
         select refund.id from refund_application refund
         join cms_registration r on refund.source_type = 'registration' and refund.source_id = r.id
         where refund.del_flag = 0 and r.owner_type = 1 and r.owner_id = #{topicId}

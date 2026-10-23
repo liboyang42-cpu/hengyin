@@ -1,0 +1,19 @@
+{
+  "parent": "a42172dc6e1565fa06b81c294de137c74f5fd979",
+  "aggregate_sha256": "1a5ef51192cf530bc142eb764d021ad5eb5d1a3e08855338999641d226900cab",
+  "files": {
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/Wp04CurrentCashBasisMySqlIT.java": "dd4cd049302e01a1dcac9b85455ef6127a4856be3250db075087b528e47a5409",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/SettlementRateConvergenceTest.java": "3635b1684f6b4835514baa9a9dcb55e1c7bdbcf889c92937971acc473f426c3d",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicSettlementCashBasisTest.java": "77fe0e7c141775310b397535f0bb08b0c8426362aef00b03b27554bacfe42a6d",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementGroupBasisTest.java": "f6e07bd04b2d7934c0956ad69b1e3161c4206c2346abb85465a636ebf9ccba54",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementPerMerchantTest.java": "fcf28e6a9cab40b2a258cf838e9881f41b0306a2517c5eca658c93263ff0ed17",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CoopSettlementTest.java": "f6cb50e3c1b1ae7b432edc8f7c63449214ddb8b2ef7472a4ca5f4acb8bcdf8c4",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PreparedCoopPlanFixture.java": "69261428ac52aac6b2a93dfe999aaef033680b072ed5dbbef25f4a0f4b66a20a",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/Wp04TopicSettlementEntryGuardsTest.java": "fcbf0f464626e18982366ee40b71055f0fe2b765b592d51e3e292e0791c3224b",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/DoublePaymentReproductionTest.java": "957e27f4ea1efeb21cc6e6e5108d0c63bed49b5eabb2b4546b0407cbf06d06bc",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/dto/TopicSettlementCashBasis.java": "5adb5b6253d7bb5c3ffa185db2a1962f9e793cdea0e1ddde5e69282c79f56ec5",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CoopSettlementEvidenceMapper.java": "596cfc91e6aa9f8cadeb02cc9704e24fdb6053a93c477c0b2371292fe1eb0ed7",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java": "7b679dd00e49742be729d09660084a040ca3b12ab6f41e35349bb00e23865aeb",
+    "chengyinhub-system/src/main/resources/mapper/business/CoopSettlementEvidenceMapper.xml": "d1432987226913c7eafa4505cdc2803ebd4a58369b36788fbfdd2584ab09cb65"
+  }
+}

@@ -137,7 +137,7 @@ class CoopSettlementGroupBasisTest {
     @Test
     void merchantWhoServedGroup_paidByGroupHeads() {
         PreparedCoopPlanFixture.topic(TOPIC);
-        svc.settleCoopTopic(topic(), new BigDecimal("5000"));
+        PreparedCoopPlanFixture.settle(svc, topic(), new BigDecimal("5000"));
 
         Map<String, List<CoopSettlement>> lines = capturedLines();
         assertAmount("2000.00", lineOf(lines, "MERCHANT_VERIFY", MERCHANT_A), "A 接待了 100 人的团 → 20×100");
@@ -149,7 +149,7 @@ class CoopSettlementGroupBasisTest {
     @Test
     void merchantWhoNeverScannedGroupCode_getsZero() {
         PreparedCoopPlanFixture.topic(TOPIC);
-        svc.settleCoopTopic(topic(), new BigDecimal("5000"));
+        PreparedCoopPlanFixture.settle(svc, topic(), new BigDecimal("5000"));
 
         Map<String, List<CoopSettlement>> lines = capturedLines();
         assertAmount("0.00", lineOf(lines, "MERCHANT_VERIFY", MERCHANT_B),
@@ -166,7 +166,7 @@ class CoopSettlementGroupBasisTest {
 
         PreparedCoopPlanFixture.topic(TOPIC);
 
-        svc.settleCoopTopic(topic(), new BigDecimal("5000"));
+        PreparedCoopPlanFixture.settle(svc, topic(), new BigDecimal("5000"));
 
         Map<String, List<CoopSettlement>> lines = capturedLines();
         assertAmount("1500.00", lineOf(lines, "MERCHANT_VERIFY", MERCHANT_A), "团的 5000×30%");
@@ -176,7 +176,7 @@ class CoopSettlementGroupBasisTest {
     @Test
     void clubLeadFee_unchangedByD22() {
         PreparedCoopPlanFixture.topic(TOPIC);
-        svc.settleCoopTopic(topic(), new BigDecimal("5000"));
+        PreparedCoopPlanFixture.settle(svc, topic(), new BigDecimal("5000"));
 
         Map<String, List<CoopSettlement>> lines = capturedLines();
         assertAmount("1000.00", lineOf(lines, "LEAD_FEE", LEADER), "俱乐部按全主题 100 人头 × ¥10");
@@ -187,7 +187,7 @@ class CoopSettlementGroupBasisTest {
     @Test
     void groupBasis_snapshotMatchesAmount() {
         PreparedCoopPlanFixture.topic(TOPIC);
-        svc.settleCoopTopic(topic(), new BigDecimal("5000"));
+        PreparedCoopPlanFixture.settle(svc, topic(), new BigDecimal("5000"));
 
         Map<String, List<CoopSettlement>> lines = capturedLines();
         assertEquals(Integer.valueOf(100), lineOf(lines, "MERCHANT_VERIFY", MERCHANT_A).getVerifiedHeads(),
@@ -200,7 +200,7 @@ class CoopSettlementGroupBasisTest {
     @Test
     void conservationStillHolds() {
         PreparedCoopPlanFixture.topic(TOPIC);
-        svc.settleCoopTopic(topic(), new BigDecimal("5000"));
+        PreparedCoopPlanFixture.settle(svc, topic(), new BigDecimal("5000"));
 
         Map<String, List<CoopSettlement>> lines = capturedLines();
         BigDecimal sum = lines.get("PLATFORM").get(0).getAmount()

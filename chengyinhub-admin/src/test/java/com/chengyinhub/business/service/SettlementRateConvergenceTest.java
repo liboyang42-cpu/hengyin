@@ -404,14 +404,14 @@ class SettlementRateConvergenceTest {
         verify(pointsAwardService, never()).awardPublisherSettlement(77L, 200L);
         verify(pointsAwardService, never()).awardPublisherSettlement(77L, 100L);
         verify(cmsRegistrationMapper).selectTotalSalesByActivityId(100L);
-        verify(topicEvidenceMapper).countPaidActivityRegistrations(200L);
+        verify(topicEvidenceMapper).selectTopicCashRowsForUpdate(200L);
         assertEquals(0, activitySvc.executeActivitySettlement(), "活动重复 CAS 未领取，票款和积分均零新增");
         assertEquals(0, topicSvc.executeTopicSettlement(), "零销售主题重复 CAS 未领取，不能补发结算积分");
         BigDecimal afterReplay = capturePayouts().values().stream().reduce(BigDecimal.ZERO, BigDecimal::add);
         assertEquals(0, activityPayout.compareTo(afterReplay), "重跑后全部实际出票款仍恰好 ¥1000");
         verify(pointsAwardService, times(1)).awardPublisherSettlement(77L, 50L);
         verify(topicRegMapper, times(1)).selectTotalSalesByTopicId(200L);
-        verify(topicEvidenceMapper, times(1)).countPaidActivityRegistrations(200L);
+        verify(topicEvidenceMapper, times(1)).selectTopicCashRowsForUpdate(200L);
         verify(topicMember, never()).addBalance(anyLong(), any());
     }
 

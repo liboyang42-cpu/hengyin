@@ -334,7 +334,8 @@ class DoublePaymentReproductionTest {
         verify(claimMapper, times(1)).insertClaim(any());
         verify(topicMemberService, never()).addBalance(any(), any());
         assertEquals(Collections.<SettlementDetail>emptyList(), capturedSettlementDetails());
-        verify(evidenceMapper).selectCashBasisBlockingRefundIdsForUpdate(TOPIC);
+        verify(evidenceMapper, times(2)).selectCashBasisBlockingRefundIdsForUpdate(TOPIC);
+        verify(evidenceMapper).selectTopicCashRowsForUpdate(TOPIC);
         verify(topicPointsAwardService, times(1)).awardPublisherSettlement(PUBLISHER, TOPIC);
     }
 
@@ -395,6 +396,7 @@ class DoublePaymentReproductionTest {
             CmsTopicMapper topics, CoopOrderMapper orders, CoopInviteMapper invites) {
         evidenceMapper = mock(CoopSettlementEvidenceMapper.class);
         when(evidenceMapper.countPaidActivityRegistrations(TOPIC)).thenReturn(0);
+        when(evidenceMapper.selectTopicCashRowsForUpdate(TOPIC)).thenReturn(List.of(registration));
         when(evidenceMapper.selectCashBasisBlockingRefundIdsForUpdate(TOPIC)).thenReturn(Collections.emptyList());
         CmsActivityMapper activities = mock(CmsActivityMapper.class);
         when(activities.selectActiveActivityIdsByTopicId(TOPIC)).thenReturn(Collections.emptyList());
