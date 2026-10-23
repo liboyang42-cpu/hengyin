@@ -14,9 +14,43 @@
 //   - reLogin(cb):           单航班静默重登,cb(ok)。
 //   - showToast(msg)/hideToast()
 //   - getErrorMessage(res, fallback) / shouldAutoToast(param, body):沿用 app.js 既有纯函数。
+//   - newRequestId():         同意接口 requestId 冲突时换的新号(默认 consent-时间-随机)。
 
 var sanitizeResponseMessage = require('./safe-user-message.js').sanitizeResponseMessage;
 var normalizeClientVersion = require('../client-version.js').normalizeClientVersion;
+
+// #472-2(owner 2026-10-23 批准改动本 C00 文件):同意留痕接口回 409 + CONSENT_REQUEST_CONFLICT
+// = 这个 requestId 已属于另一条同意事件(例如协议重新发布后客户端重放了旧号)。这时换一个新号重发
+// **恰好一次**;第二次仍冲突就如实交给调用方,不循环。只认这一个端点 + 服务端显式错误码:
+// 别的 409(如定位同意的状态已变)换号也解决不了,照旧原样返回。
+// 按路径比对(不是发起调用):写成正则,query 不影响判定。
+var CONSENT_ENDPOINT = /^\/api\/agreement\/consent(?:\?|$)/;
+var CONSENT_REQUEST_CONFLICT = 'CONSENT_REQUEST_CONFLICT';
+
+function defaultConsentRequestId() {
+  return 'consent-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
+}
+
+function isConsentRequestConflict(param, res, bodyCode) {
+  var body = res && res.data;
+  return CONSENT_ENDPOINT.test(String(param.url || '')) && !!body && typeof body === 'object'
+    && body.errorCode === CONSENT_REQUEST_CONFLICT && (res.statusCode == 409 || bodyCode == 409);
+}
+
+/** 换上新 requestId 的请求参数;原请求没带 requestId(或读不出来)就返回 null,不重发。 */
+function withFreshConsentRequestId(param, newRequestId) {
+  var raw = param.data;
+  var asString = typeof raw === 'string';
+  var data = raw;
+  if (asString) {
+    try { data = JSON.parse(raw); } catch (notJson) { return null; }
+  }
+  if (!data || typeof data !== 'object' || !data.requestId) return null;
+  var fresh = String(newRequestId() || '');
+  if (!fresh || fresh === String(data.requestId) || fresh.length > 64) return null;
+  var next = Object.assign({}, data, { requestId: fresh });
+  return Object.assign({}, param, { data: asString ? JSON.stringify(next) : next });
+}
 
 function createRequestClient(deps) {
   deps = deps || {};
@@ -32,6 +66,7 @@ function createRequestClient(deps) {
   var getErrorMessage = deps.getErrorMessage || function (res, fb) { return fb; };
   var shouldAutoToast = deps.shouldAutoToast || function () { return false; };
   var scheduleRetry = deps.scheduleRetry || function (fn, ms) { setTimeout(fn, ms); };
+  var newRequestId = deps.newRequestId || defaultConsentRequestId;
   var defaultTimeoutMs = Math.max(1000, Number(deps.defaultTimeoutMs) || 12000);
 
   if (!wxRequest || !getBaseUrl) {
@@ -150,6 +185,16 @@ function createRequestClient(deps) {
             }
           });
           return;
+        }
+        // #472-2:同意接口 requestId 冲突 → 换新号重发恰好一次(共享 state.consentRetried,第二次冲突不再重发)。
+        if (!state.consentRetried && isConsentRequestConflict(param, res, bodyCode)) {
+          var freshParam = withFreshConsentRequestId(param, newRequestId);
+          if (freshParam) {
+            state.consentRetried = true;
+            suppressComplete = true; // 本次交给重发那一跳收尾,complete 只触发一次
+            send(freshParam, customSiteUrl, state);
+            return;
+          }
         }
         // HTTP 状态码异常(非可重试 401)。
         if (res.statusCode && res.statusCode != 200) {

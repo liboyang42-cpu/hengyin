@@ -15,6 +15,8 @@ const MIN_HUMAN_MS = 120;      // 与后端 AdvancedGameRuntimeServiceImpl 同�
 
 const reducedMotionBehavior = require('../../../../behaviors/reduced-motion.js');
 const motion = require('../../../../utils/motion.js');
+// C1:有服务端为这一局新发的挑战身份就随成绩交(与 stopwatch/shout 同一口径)
+const { withAttempt, freshAttempt } = require('../../utils/sensor-contract.js');
 
 /** 随机等待时长。固定间隔的话第二轮就能背下来,测的就不是反应了。 */
 function pickWait(rand) {
@@ -41,6 +43,8 @@ Component({
     kicker: { type: String, value: '变绿就点' },
     rounds: { type: Number, value: 3 },
     goalMs: { type: Number, value: 320 },
+    // C1:服务端发的挑战身份(0 = 没有,照旧只交成绩)
+    attemptId: { type: Number, value: 0 },
   },
   data: {
     phase: 'idle',        // idle | wait | go | early | done
@@ -95,7 +99,8 @@ Component({
       this.setData({ phase: 'wait', big: '等', unit: '', sub: '变绿再点 —— 早点了算抢跑' });
       /* 开表要报给服务端:成绩按服务器时间复核,不先开表提交会被判成「还没开始」。
          第一轮报一次就够,服务端记的是这一局的起点。 */
-      if (!this._armed) { this._armed = true; this.triggerEvent('start'); }
+      // 开表那一刻手里的号是上一局的;只有这次开表后服务端新发的号才随成绩交
+      if (!this._armed) { this._armed = true; this._attemptAtRun = this.data.attemptId; this.triggerEvent('start'); }
       if (!this._active(epoch)) return;
       this._stop();
       this._timer = setTimeout(() => {
@@ -154,7 +159,8 @@ Component({
       if (stage) { if (ok) stage.win('最快 ' + best + ' 毫秒（本机测量）'); else stage.fail(false); }
       this._reporting = false;
       // 成绩报服务端,由它拿真实墙钟复核 —— 本地这几个数只是显示
-      if (this._active(epoch)) this.triggerEvent('submit', { times: times, bestMs: best, passed: ok });
+      if (this._active(epoch)) this.triggerEvent('submit', withAttempt({ times: times, bestMs: best, passed: ok },
+        { attemptId: freshAttempt(this.data.attemptId, this._attemptAtRun) }));
     },
 
     onVerdict(e) { if (this._active() && this._reporting) this.triggerEvent('verdict', e.detail); },

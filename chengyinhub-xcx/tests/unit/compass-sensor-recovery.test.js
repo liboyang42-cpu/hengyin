@@ -48,8 +48,9 @@ test('single direction sample cannot complete a hold, and stale _finish cannot b
 test('late direction after a missed watchdog gap cannot revive hold',()=>{
   const h=host();h.kit.onStart();h.sample(0);h.jump(500);h.sample(0);assert.equal(h.handlers.size,0);assert.equal(results(h).length,0);
 });
-test('continuous valid zero samples submit actual zero with nonzero target and no start event',()=>{
-  const h=host({props:{target:10,tolerance:15}});h.kit.onStart();h.continuous(15,0);const submit=h.events.filter(e=>e.name==='submit');assert.equal(submit.length,1);assert.equal(submit[0].detail.bearing,0);assert.deepEqual(Object.keys(submit[0].detail),['bearing']);assert.equal(h.events.filter(e=>e.name==='start').length,0);assert.equal(h.handlers.size,0);assert.equal(h.tasks.size,0);h.kit._finish();assert.equal(h.events.filter(e=>e.name==='submit').length,1);
+// FXA:罗盘开表只为领 C1 挑战身份 —— 每次真正开跑报一次 start;服务端没新发号时提交仍只带 bearing
+test('continuous valid zero samples submit actual zero with nonzero target and exactly one start event',()=>{
+  const h=host({props:{target:10,tolerance:15}});h.kit.onStart();h.continuous(15,0);const submit=h.events.filter(e=>e.name==='submit');assert.equal(submit.length,1);assert.equal(submit[0].detail.bearing,0);assert.deepEqual(Object.keys(submit[0].detail),['bearing']);assert.equal(h.events.filter(e=>e.name==='start').length,1);assert.equal(h.handlers.size,0);assert.equal(h.tasks.size,0);h.kit._finish();assert.equal(h.events.filter(e=>e.name==='submit').length,1);
 });
 test('old fail/change/timer/stage callbacks cannot corrupt a fresh run',()=>{
   const h=host();h.kit.onStart();const old=h.stage,fail=h.starts[0].fail,cb=[...h.handlers][0],timers=h.history.map(t=>t.fn);h.interrupt('hide');h.resume('hide');h.kit.onStart();fail();cb({direction:120,accuracy:'low'});for(const fn of timers)fn();old.onCountedIn();old.fail(true);old.onBack();h.continuous();assert.equal(h.events.filter(e=>e.name==='submit').length,1);
@@ -68,3 +69,20 @@ test('authoritative done readback stops a live run without another submission',(
   const h=host();h.kit.onStart();h.sample(0);h.kit.data.done=true;h.def.observers.done.call(h.kit,true);h.tick(5000);h.kit.onStart();assert.equal(h.handlers.size,0);assert.equal(h.tasks.size,0);assert.equal(results(h).length,0);assert.equal(h.starts.length,1);
 });
 test('invalid direction inside otherwise aligned samples breaks measured hold continuity',()=>{const h=host();h.kit.onStart();h.sample(0);h.tick(100);h.sample(0);assert.ok(h.kit._held>0);h.tick(100);h.sample(null);h.tick(100);h.sample(0);assert.equal(h.kit._held,0);assert.equal(results(h).length,0);});
+
+// DOC2 FXA:罗盘开跑时报一次 start(服务端 START_CHALLENGE 发号),之后新发的号随方位交;旧号不交。
+test('compass submits the attemptId issued after this run started, never the stale one',()=>{
+  const { serverPayload, serverAction } = require('../../pages/play/utils/playkit-view.js');
+  const plain=x=>JSON.parse(JSON.stringify(x)); // vm 里造的对象跨 realm,按值比
+  assert.equal(serverAction('compass','start'),'START_CHALLENGE');
+  assert.deepEqual(serverPayload('compass','start',{}),{game:'compass'});
+  const h=host({props:{target:10,tolerance:15,attemptId:11}});h.kit.onStart();h.continuous(1,10);
+  assert.equal(h.events.filter(e=>e.name==='start').length,1);
+  h.kit.data.attemptId=44;                       // START_CHALLENGE 回包刷新 kit.attemptId
+  h.continuous(15,10);
+  const detail=h.events.find(e=>e.name==='submit').detail;
+  assert.deepEqual(plain(detail),{bearing:10,attemptId:44});
+  assert.deepEqual(plain(serverPayload('compass','submit',detail)),{bearing:10,attemptId:44});
+  const stale=host({props:{target:10,tolerance:15,attemptId:11}});stale.kit.onStart();stale.continuous(16,10);
+  assert.deepEqual(plain(stale.events.find(e=>e.name==='submit').detail),{bearing:10},'开跑时手里的旧号不随方位交');
+});
