@@ -23,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -88,6 +89,8 @@ class ApiPlayLeadSpectatorGateTest {
         topic.setProductType(2);
         topic.setRouteMode(TopicRouteState.LINEAR);
         when(topicService.selectCmsTopicById(TOPIC)).thenReturn(topic);
+        // O-08:未报名者看节点要求主题对其公开可见;本夹具的主题是公开在架主题。
+        when(topicService.selectCmsTopicDetailById(eq(TOPIC), any())).thenReturn(topic);
 
         CmsTopicNode node = new CmsTopicNode();
         node.setId(101L);

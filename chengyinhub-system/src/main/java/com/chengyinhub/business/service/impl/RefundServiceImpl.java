@@ -1,5 +1,7 @@
 package com.chengyinhub.business.service.impl;
 
+import com.chengyinhub.common.annotation.CriticalPath;
+import com.chengyinhub.common.observability.CriticalPathCode;
 import com.chengyinhub.business.domain.CmsRegistration;
 import com.chengyinhub.business.domain.CmsActivity;
 import com.chengyinhub.business.domain.CmsTopic;
@@ -169,6 +171,7 @@ public class RefundServiceImpl implements IRefundService {
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
+    @CriticalPath(value = CriticalPathCode.CP_REFUND_FAILED, op = "payout_result")
     public void markPayoutResult(Long refundId, String leaseToken, boolean wxAccepted, String remark) {
         if (refundId == null || leaseToken == null || leaseToken.trim().isEmpty()) {
             throw new IllegalArgumentException("退款派发结果缺少 lease fence");
@@ -370,6 +373,7 @@ public class RefundServiceImpl implements IRefundService {
     }
 
     @Override
+    @CriticalPath(value = CriticalPathCode.CP_REFUND_FAILED, op = "notify")
     public boolean handleRefundNotify(Map<String, String> facts) {
         if (facts == null) {
             return false;
@@ -574,6 +578,7 @@ public class RefundServiceImpl implements IRefundService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CriticalPath(value = CriticalPathCode.CP_REFUND_FAILED, op = "review")
     public int reviewRefund(RefundReviewDTO request, Long operatorId) {
         if (request == null || request.getId() == null) {
             throw new IllegalArgumentException("refund id is required");

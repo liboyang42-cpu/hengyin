@@ -1,5 +1,8 @@
 package com.chengyinhub.business.service.impl;
 
+import com.chengyinhub.common.annotation.CriticalPath;
+import com.chengyinhub.common.observability.CriticalPathCode;
+import com.chengyinhub.common.observability.CriticalPathEvents;
 import com.chengyinhub.business.domain.AccountDeregistration;
 import com.chengyinhub.business.domain.CmsRegistration;
 import com.chengyinhub.business.domain.ImMessage;
@@ -130,6 +133,7 @@ public class AccountDeregistrationServiceImpl implements IAccountDeregistrationS
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CriticalPath(value = CriticalPathCode.CP_DEREGISTRATION_FAILED, op = "apply")
     public DeregistrationStatusVO apply(Long memberId) {
         DeregistrationStatusVO precheck = precheck(memberId);
         if (!"ELIGIBLE".equals(precheck.getStatus())) {
@@ -162,6 +166,7 @@ public class AccountDeregistrationServiceImpl implements IAccountDeregistrationS
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CriticalPath(value = CriticalPathCode.CP_DEREGISTRATION_FAILED, op = "cancel")
     public DeregistrationStatusVO cancel(Long memberId) {
         AccountDeregistration latest = deregistrationMapper.selectLatestByMemberId(memberId);
         if (latest == null || !"PENDING".equals(latest.getStatus())) {
@@ -208,6 +213,7 @@ public class AccountDeregistrationServiceImpl implements IAccountDeregistrationS
                     completed++;
                 }
             } catch (Exception e) {
+                CriticalPathEvents.failure(CriticalPathCode.CP_DEREGISTRATION_FAILED, "execute", e);
                 failedMembers.clear();
                 boolean failed;
                 try {

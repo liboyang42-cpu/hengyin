@@ -31,6 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doReturn;
@@ -111,8 +112,11 @@ class ApiPlayHintUnlockTest {
         ReflectionTestUtils.setField(controller, "xpBudgetService", xpBudgetService);
         ReflectionTestUtils.setField(controller, "playerNodeProgressService",
                 mock(com.chengyinhub.business.service.IPlayerNodeProgressService.class));
-        ReflectionTestUtils.setField(controller, "cmsTopicService",
-                mock(com.chengyinhub.business.service.ICmsTopicService.class));
+        com.chengyinhub.business.service.ICmsTopicService topicSvc =
+                mock(com.chengyinhub.business.service.ICmsTopicService.class);
+        // O-08:未报名者看节点要求主题对其公开可见;本夹具的主题是公开在架主题。
+        when(topicSvc.selectCmsTopicDetailById(eq(TOPIC), any())).thenReturn(new com.chengyinhub.business.domain.CmsTopic());
+        ReflectionTestUtils.setField(controller, "cmsTopicService", topicSvc);
         ReflectionTestUtils.setField(controller, "omsTicketService",
                 mock(com.chengyinhub.business.service.IOmsTicketService.class));
         ReflectionTestUtils.setField(controller, "cmsTopicChapterService",

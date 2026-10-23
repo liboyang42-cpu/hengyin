@@ -169,4 +169,99 @@ class ThemeStateKeyServiceTest {
         key.setScope(scope);
         return key;
     }
+
+    /** F2 T01:改 label 不改键名;类型 / 作用域取库里的,body 覆盖不了。 */
+    @Test
+    void updateDefinitionKeepsTheStateKeyAndWritesTheNewMetadata() {
+        ThemeStateKey existing = key("counter.str", "counter", "run");
+        existing.setId(5L);
+        when(mapper.selectByTopicIdAndStateKey(7L, "counter.str")).thenReturn(existing);
+        ThemeStateKey patch = new ThemeStateKey();
+        patch.setLabel("膂力");
+        patch.setInitialValue(8);
+        patch.setMinValue(0);
+        patch.setMaxValue(20);
+        patch.setDisplayType("bar");
+        patch.setColor("#AA3300");
+        patch.setIcon("muscle");
+        patch.setSortOrder(1);
+        patch.setVisible(Boolean.TRUE);
+        patch.setPersistScope("topic");
+        patch.setRulesJson("{\"levels\":[{\"at\":5,\"label\":\"壮\"}]}");
+
+        ThemeStateKey saved = service.updateDefinition(7L, "counter.str", patch);
+
+        ArgumentCaptor<ThemeStateKey> captured = ArgumentCaptor.forClass(ThemeStateKey.class);
+        verify(mapper).updateDefinition(captured.capture());
+        assertEquals("counter.str", captured.getValue().getStateKey());
+        assertEquals("counter", captured.getValue().getKeyType());
+        assertEquals("膂力", captured.getValue().getLabel());
+        assertEquals("topic", captured.getValue().getPersistScope());
+        assertEquals(Integer.valueOf(20), captured.getValue().getMaxValue());
+        assertEquals(Long.valueOf(5L), saved.getId());
+    }
+
+    @Test
+    void updateDefinitionRejectsRenameAndUnknownKey() {
+        ThemeStateKey renamed = new ThemeStateKey();
+        renamed.setStateKey("counter.power");
+        ServiceException rename = assertThrows(ServiceException.class,
+                () -> service.updateDefinition(7L, "counter.str", renamed));
+        assertEquals(ThemeStateKeyService.ERR_RENAME, rename.getDetailMessage());
+        assertEquals(Integer.valueOf(400), rename.getCode());
+
+        ServiceException missing = assertThrows(ServiceException.class,
+                () -> service.updateDefinition(7L, "counter.ghost", new ThemeStateKey()));
+        assertEquals(Integer.valueOf(404), missing.getCode());
+        verify(mapper, never()).updateDefinition(any(ThemeStateKey.class));
+    }
+
+    /** 老数据没有范围 = 0..100;定义接口里越界初值 → 400 STATE_KEY_RANGE。 */
+    @Test
+    void updateDefinitionRejectsInitialOutsideDefaultRange() {
+        when(mapper.selectByTopicIdAndStateKey(7L, "counter.str")).thenReturn(key("counter.str", "counter", "run"));
+        ThemeStateKey patch = new ThemeStateKey();
+        patch.setInitialValue(120);
+
+        ServiceException error = assertThrows(ServiceException.class,
+                () -> service.updateDefinition(7L, "counter.str", patch));
+
+        assertEquals(ThemeStateKeyService.ERR_RANGE, error.getDetailMessage());
+        assertTrue(error.getMessage().contains("0..100"), error.getMessage());
+    }
+
+    /** 老注册路径(发布期同步 journeyRules 属性)不带范围,不因 0..100 默认被拦。 */
+    @Test
+    void legacyRegistrationWithoutRangeKeepsAcceptingAnyInitialValue() {
+        ThemeStateKey legacy = key("counter.gold", "counter", "run");
+        legacy.setInitialValue(500);
+
+        service.register(7L, Arrays.asList(legacy));
+
+        verify(mapper).upsertThemeStateKey(legacy);
+        ThemeStateKey ranged = key("counter.hp", "counter", "run");
+        ranged.setInitialValue(30);
+        ranged.setMaxValue(20);
+        ServiceException error = assertThrows(ServiceException.class,
+                () -> service.register(7L, Arrays.asList(ranged)));
+        assertEquals(ThemeStateKeyService.ERR_RANGE, error.getDetailMessage());
+    }
+
+    @Test
+    void checkListsEveryProblemWithoutWriting() {
+        ThemeStateKey badColor = key("counter.a", "counter", "run");
+        badColor.setColor("red");
+        ThemeStateKey topicTag = key("tag.b", "tag", "run");
+        topicTag.setPersistScope("topic");
+        ThemeStateKey badRules = key("counter.c", "counter", "run");
+        badRules.setRulesJson("{\"formula\":\"x*2\"}");
+        ThemeStateKey fine = key("counter.d", "counter", "run");
+        fine.setInitialValue(100);
+
+        java.util.List<String> problems = service.check(Arrays.asList(badColor, topicTag, badRules, fine));
+
+        assertEquals(3, problems.size(), problems.toString());
+        verify(mapper, never()).upsertThemeStateKey(any(ThemeStateKey.class));
+        verify(mapper, never()).updateDefinition(any(ThemeStateKey.class));
+    }
 }

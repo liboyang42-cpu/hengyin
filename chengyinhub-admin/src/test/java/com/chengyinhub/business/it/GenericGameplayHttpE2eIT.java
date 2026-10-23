@@ -643,6 +643,65 @@ class GenericGameplayHttpE2eIT {
         assertEquals(frozen.path("story").path("ending").path("endings").path(0).path("chapterId"),plan.path("endingChapterId"));
         assertFreshTemplateCopyIsGated(topicId,headers);
     }
+    /**
+     * F2 RPG P0(T01/T02):属性定义 PUT / validate 与角色卡 GET 走真实 HTTP。
+     * 越界初值 400 + errorCode、改 label 不改键名、同一 PUT 重放幂等、非作者被拒、匿名被拒;
+     * 未建角色时角色卡返回模板(初值),定义改动即时反映到模板。
+     */
+    @Test void f2HttpAttributeDefinitionAndCharacterCardStayOwnerScoped() throws Exception {
+        org.springframework.http.HttpHeaders author=loginHeaders("13600000201","F2属性作者");
+        org.springframework.http.HttpHeaders stranger=loginHeaders("13600000202","F2旁观者");
+        long topicId=success(post("/api/topic/v2/create",topicRequest("F2属性卡"),author)).path("topicId").asLong();
+        ObjectNode reg=json.createObjectNode().put("topicId",topicId);
+        reg.putArray("keys").addObject().put("stateKey","counter.str").put("keyType","counter").put("scope","run").put("label","力量").put("initialValue",3);
+        success(post("/api/topic/state-keys",reg,author));
+
+        ResponseEntity<JsonNode> anonymous=http.getForEntity("/api/play/character?topicId="+topicId,JsonNode.class);
+        record("GET","/api/play/character?topicId="+topicId,null,anonymous);
+        assertNotEquals(200,anonymous.getBody().path("code").asInt());
+        JsonNode template=success(get("/api/play/character?topicId="+topicId,author));
+        assertFalse(template.path("created").asBoolean(true),template.toString());
+        assertEquals("counter.str",template.path("attributes").path(0).path("stateKey").asText());
+        assertEquals(3,template.path("attributes").path(0).path("value").asInt());
+        assertEquals(100,template.path("attributes").path(0).path("max").asInt(),"老数据无范围 = 0..100");
+        assertEquals("run",template.path("attributes").path(0).path("persistScope").asText());
+        JsonNode foreignCard=get("/api/play/character?topicId="+topicId,stranger);
+        assertEquals(404,foreignCard.path("code").asInt(),"未发布主题对非作者不可见:"+foreignCard);
+
+        ObjectNode outOfRange=json.createObjectNode().put("topicId",topicId);outOfRange.putObject("key").put("label","力量").put("initialValue",120);
+        JsonNode range=put("/api/topic/state-keys/counter.str",outOfRange,author);
+        assertEquals(400,range.path("code").asInt(),range.toString());assertEquals("STATE_KEY_RANGE",range.path("errorCode").asText());
+        ObjectNode rename=json.createObjectNode().put("topicId",topicId);rename.putObject("key").put("stateKey","counter.power").put("label","力量");
+        JsonNode renamed=put("/api/topic/state-keys/counter.str",rename,author);
+        assertEquals(400,renamed.path("code").asInt());assertEquals("STATE_KEY_RENAME_FORBIDDEN",renamed.path("errorCode").asText());
+        ObjectNode definition=json.createObjectNode().put("topicId",topicId);
+        definition.putObject("key").put("label","膂力").put("initialValue",8).put("minValue",0).put("maxValue",20).put("displayType","bar")
+                .put("color","#AA3300").put("icon","muscle").put("sortOrder",1).put("visible",true).put("persistScope","topic");
+        rejected(put("/api/topic/state-keys/counter.str",definition,stranger));
+        assertEquals("力量",database.queryForObject("SELECT label FROM theme_state_key WHERE topic_id=? AND state_key='counter.str'",String.class,topicId));
+        success(put("/api/topic/state-keys/counter.str",definition,author));
+        success(put("/api/topic/state-keys/counter.str",definition,author));
+        assertEquals(1,database.queryForObject("SELECT COUNT(*) FROM theme_state_key WHERE topic_id=?",Integer.class,topicId),"同一 PUT 重放不新增行");
+        assertEquals(1,database.queryForObject("SELECT COUNT(*) FROM theme_state_key WHERE topic_id=? AND state_key='counter.str' AND label='膂力'"
+                + " AND max_value=20 AND persist_scope='topic' AND display_type='bar'",Integer.class,topicId),"改 label 不改键名");
+
+        ObjectNode check=json.createObjectNode().put("topicId",topicId);
+        check.putArray("keys").addObject().put("stateKey","counter.dex").put("keyType","counter").put("scope","run").put("color","red").put("initialValue",101);
+        JsonNode problems=post("/api/topic/state-keys/validate",check,author);
+        assertEquals(400,problems.path("code").asInt(),problems.toString());assertTrue(problems.path("problems").size()>=1);
+        ((ObjectNode)check.path("keys").path(0)).put("color","#00AA00").put("initialValue",50);
+        assertTrue(success(post("/api/topic/state-keys/validate",check,author)).path("valid").asBoolean());
+        assertEquals(0,database.queryForObject("SELECT COUNT(*) FROM theme_state_key WHERE topic_id=? AND state_key='counter.dex'",Integer.class,topicId),"试校验不写库");
+
+        JsonNode card=success(get("/api/play/character?topicId="+topicId,author)).path("attributes").path(0);
+        assertEquals("膂力",card.path("label").asText());assertEquals(8,card.path("value").asInt());assertEquals(20,card.path("max").asInt());
+        assertEquals("bar",card.path("displayType").asText());assertEquals("topic",card.path("persistScope").asText());
+        assertEquals(0,database.queryForObject("SELECT COUNT(*) FROM theme_character WHERE topic_id=?",Integer.class,topicId),"读角色卡不写台账");
+    }
+    private JsonNode put(String path,JsonNode body,org.springframework.http.HttpHeaders headers) {
+        ResponseEntity<JsonNode> response=http.exchange(path,org.springframework.http.HttpMethod.PUT,new org.springframework.http.HttpEntity<>(body,headers),JsonNode.class);
+        record("PUT",path,body,response);return response.getBody();
+    }
     private static class Lifecycle {
         org.springframework.http.HttpHeaders headers;
         long memberId, templateId, topicId, nodeId, routeId, advancedId, activityId, teamId;

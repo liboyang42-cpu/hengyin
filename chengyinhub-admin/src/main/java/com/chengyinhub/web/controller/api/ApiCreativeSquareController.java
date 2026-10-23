@@ -150,9 +150,24 @@ public class ApiCreativeSquareController extends BaseController {
      */
     private void enrichCreativeSquareList(List<ViewCreativeSquare> list, Long memberId) {
         if (list == null || list.isEmpty()) return;
+        stripForeignLocation(list, memberId);
         enrichPersonalStateBatch(list, memberId);
         enrichSportFeedBatch(list);
         enrichGrowthLevels(list);
+    }
+
+    /**
+     * O-08:旧广场读面只把精确位置(地址/经纬度)给作者本人。社区帖文平台对他人只投影城市,
+     * 且作者撤回位置、改私密不会回写 ums_creative_square —— 旧 list/info 若照旧下发,撤回过的坐标仍能被任何人读到。
+     */
+    private void stripForeignLocation(List<ViewCreativeSquare> list, Long viewerMemberId) {
+        for (ViewCreativeSquare square : list) {
+            if (square == null) continue;
+            if (viewerMemberId != null && viewerMemberId > 0 && viewerMemberId.equals(square.getMemberId())) continue;
+            square.setAddress(null);
+            square.setLongitude(null);
+            square.setLatitude(null);
+        }
     }
 
     /**

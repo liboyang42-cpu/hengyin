@@ -43,6 +43,10 @@ public interface CmsTopicMapper
             @Param("minLng") double minLng, @Param("maxLng") double maxLng,
             @Param("radius") int radius, @Param("limit") int limit, @Param("viewerId") Long viewerId);
 
+    /** O-08:返回 topicIds 中对 viewer 不可见的「仅俱乐部成员可见」主题 id(判据 = clubMemberOnlyGate)。 */
+    List<Long> selectClubMemberOnlyHiddenTopicIds(@Param("topicIds") List<Long> topicIds,
+            @Param("viewerMemberId") Long viewerMemberId);
+
     /** 地图附近可申请的公开队伍(play_team);放在本 mapper 以复用主题可见性闸片段。 */
     List<com.chengyinhub.business.domain.vo.PlayTeamNearbyVO> selectNearbyPublicTeams(
             @Param("viewerMemberId") Long viewerMemberId, @Param("lat") double lat, @Param("lng") double lng,

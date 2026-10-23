@@ -1,5 +1,6 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.utils.GeoDistanceUtils;
 import com.chengyinhub.business.badge.RuleEvaluator;
 import com.chengyinhub.business.domain.CmsRegistrationMerchant;
 import com.chengyinhub.business.domain.GrowthBadge;
@@ -83,6 +84,9 @@ public class ApiRoamController extends BaseController {
     private PlayerBadgeMapper playerBadgeMapper;
     @Autowired
     private MemberVisitedPoiMapper memberVisitedPoiMapper;
+    /** O-02 点到店稳定身份;开关默认关,未注入时同样走旧 geo_key 路径 */
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.support.VisitedPoiIdentityResolver visitedPoiIdentity;
     @Autowired
     private GrowthBadgeMapper growthBadgeMapper;
     @Autowired
@@ -174,7 +178,7 @@ public class ApiRoamController extends BaseController {
         RoamPoi poi = pois.get(0);
         if (poi.getLat() == null || poi.getLng() == null) return error("地点未设坐标");
         // R6:服务端 haversine 校验到点。伪造 poiId 但人不在附近 → 拒,不记录 → finish 不发该 POI XP
-        double dist = haversineM(lat, lng, poi.getLat().doubleValue(), poi.getLng().doubleValue());
+        double dist = GeoDistanceUtils.haversineMeters(lat, lng, poi.getLat().doubleValue(), poi.getLng().doubleValue());
         int radius = (poi.getRadiusM() != null && poi.getRadiusM() > 0) ? poi.getRadiusM() : POI_DISCOVER_RADIUS_M;
         if (dist > radius + ROAM_GPS_TOLERANCE_M) return error("还没到该地点附近");
         // R6 反作弊:与上一次到点做瞬移速度校验,挡"读 /pois 拿坐标秒发全城 POI"的伪造定位刷取
@@ -182,7 +186,7 @@ public class ApiRoamController extends BaseController {
         if (last != null && last.get("foundAt") instanceof java.util.Date
                 && last.get("lat") instanceof Number && last.get("lng") instanceof Number) {
             long dtSec = Math.max(1L, (System.currentTimeMillis() - ((java.util.Date) last.get("foundAt")).getTime()) / 1000L);
-            double prevDist = haversineM(((Number) last.get("lat")).doubleValue(), ((Number) last.get("lng")).doubleValue(),
+            double prevDist = GeoDistanceUtils.haversineMeters(((Number) last.get("lat")).doubleValue(), ((Number) last.get("lng")).doubleValue(),
                     poi.getLat().doubleValue(), poi.getLng().doubleValue());
             if (prevDist > MIN_MOVE_DIST_M && prevDist / dtSec > MAX_MOVE_SPEED_MPS) {
                 return error("移动过快,疑似伪造定位");
@@ -301,7 +305,7 @@ public class ApiRoamController extends BaseController {
         // 落库一个空名会把所有无名店在 count(distinct) 里塌成一家。
         if (name == null || name.trim().isEmpty()) return error("该商家未设名称,无法计入");
 
-        if (haversineM(lat, lng, shopLat, shopLng) > SHOP_VISIT_RADIUS_M + ROAM_GPS_TOLERANCE_M) {
+        if (GeoDistanceUtils.haversineMeters(lat, lng, shopLat, shopLng) > SHOP_VISIT_RADIUS_M + ROAM_GPS_TOLERANCE_M) {
             return error("还没到该店附近");
         }
 
@@ -430,17 +434,6 @@ public class ApiRoamController extends BaseController {
         data.put("iconUrl", def.getIconUrl());
         data.put("threshold", ruleEvaluator.parse(def.getUnlockRuleJson()).getThreshold());
         return success(data);
-    }
-
-    /** 两经纬度间距离(米,haversine);POI 到点服务端校验用 */
-    private static double haversineM(double lat1, double lng1, double lat2, double lng2) {
-        double radiusEarth = 6371000d;
-        double dLat = Math.toRadians(lat2 - lat1);
-        double dLng = Math.toRadians(lng2 - lng1);
-        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
-                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
-                * Math.sin(dLng / 2) * Math.sin(dLng / 2);
-        return 2 * radiusEarth * Math.asin(Math.sqrt(a));
     }
 
     @Operation(summary = "历史点亮迷雾格(恢复版图)")
@@ -596,7 +589,7 @@ public class ApiRoamController extends BaseController {
         if (lastFix != null && lastFix.getLastReportAt() != null
                 && lastFix.getLastLat() != null && lastFix.getLastLng() != null) {
             long dtSec = Math.max(1L, (reportAt.getTime() - lastFix.getLastReportAt().getTime()) / 1000L);
-            double moved = haversineM(lat, lng, lastFix.getLastLat().doubleValue(), lastFix.getLastLng().doubleValue());
+            double moved = GeoDistanceUtils.haversineMeters(lat, lng, lastFix.getLastLat().doubleValue(), lastFix.getLastLng().doubleValue());
             if (moved > MIN_MOVE_DIST_M && moved / dtSec > MAX_MOVE_SPEED_MPS) return error("移动过快,疑似伪造定位");
         }
         BigDecimal blat = BigDecimal.valueOf(lat).setScale(PRESENCE_SCALE, RoundingMode.HALF_UP);
@@ -860,7 +853,7 @@ public class ApiRoamController extends BaseController {
         locationConsent.requireCurrentAgreement(memberId);
         Map<String, Object> data = new LinkedHashMap<>();
         // ① 宽松 geo:玩家离被点 POI 太远则拒
-        if (haversineM(curLat, curLng, poiLat, poiLng) > CHECKIN_LOOSE_RADIUS_M) {
+        if (GeoDistanceUtils.haversineMeters(curLat, curLng, poiLat, poiLng) > CHECKIN_LOOSE_RADIUS_M) {
             data.put("tooFar", true);
             return AjaxResult.success("离得有点远,走近点", data);
         }
@@ -879,9 +872,15 @@ public class ApiRoamController extends BaseController {
         // ③ 非参与:通用点亮,首次到点发探索值(每点终身一次)
         String poiName = (name != null && !name.trim().isEmpty())
                 ? (name.length() > 120 ? name.substring(0, 120) : name) : "未知地点";
-        int inserted = memberVisitedPoiMapper.insertVisitedPoiIgnore(memberId, geoKey(poiLat, poiLng), poiName,
-                java.math.BigDecimal.valueOf(poiLat), java.math.BigDecimal.valueOf(poiLng), new Date());
-        boolean firstVisit = inserted > 0;
+        boolean firstVisit;
+        if (visitedPoiIdentity != null && visitedPoiIdentity.enabled()) {
+            // O-02:身份 = 地标 id 或首访锚点,同一点不同精度只算一次(见 VisitedPoiIdentityResolver)
+            firstVisit = visitedPoiIdentity.recordVisit(memberId, poiLat, poiLng, poiName, new Date());
+        } else {
+            int inserted = memberVisitedPoiMapper.insertVisitedPoiIgnore(memberId, geoKey(poiLat, poiLng), poiName,
+                    java.math.BigDecimal.valueOf(poiLat), java.math.BigDecimal.valueOf(poiLng), new Date());
+            firstVisit = inserted > 0;
+        }
         int xp = 0;
         if (firstVisit) { xp = VISIT_XP; growthService.addExp(memberId, xp, "点亮地点"); }
         data.put("participating", false);
@@ -927,7 +926,7 @@ public class ApiRoamController extends BaseController {
         double bestD = Double.MAX_VALUE;
         for (CityNodeVO n : nodes) {
             if (n.getLat() == null || n.getLng() == null || n.getPoiId() == null) continue;
-            double d = haversineM(lat, lng, n.getLat().doubleValue(), n.getLng().doubleValue());
+            double d = GeoDistanceUtils.haversineMeters(lat, lng, n.getLat().doubleValue(), n.getLng().doubleValue());
             if (d <= maxM && d < bestD) { bestD = d; best = n.getPoiId(); }
         }
         return best;

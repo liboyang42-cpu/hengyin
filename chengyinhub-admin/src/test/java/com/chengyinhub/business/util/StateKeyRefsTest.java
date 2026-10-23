@@ -168,4 +168,12 @@ class StateKeyRefsTest {
     private static Set<String> set(String... values) {
         return new LinkedHashSet<String>(Arrays.asList(values));
     }
+
+    /** F2 T03:mods[].var 与绑定属性的 check.skill 是状态键引用;自由文本技能名不是。 */
+    @Test
+    void collectsModVarAndBoundSkillButNotFreeTextSkill() {
+        assertEquals(set("counter.str", "counter.focus", "tag.ready"), StateKeyRefs.collect(
+                "{\"check\":{\"enabled\":true,\"skill\":\"counter.str\",\"mods\":[{\"when\":{\"op\":\"HAS_TAG\",\"value\":\"tag.ready\"},\"var\":\"counter.focus\"}]}}"));
+        assertTrue(StateKeyRefs.collect("{\"check\":{\"enabled\":true,\"skill\":\"观察\"}}").isEmpty());
+    }
 }

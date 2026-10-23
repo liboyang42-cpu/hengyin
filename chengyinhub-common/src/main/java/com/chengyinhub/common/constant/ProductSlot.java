@@ -47,4 +47,22 @@ public final class ProductSlot {
         return CONTENT.equals(slot) || ORGANIZER.equals(slot)
                 || SUPPLY.equals(slot) || DISTRIBUTION.equals(slot);
     }
+
+    /** O-15 写入闸的机器错误码:槽不在上面四个封闭取值内。 */
+    public static final String ERR_SLOT_INVALID = "PRODUCT_ROLE_SLOT_INVALID";
+
+    /**
+     * O-15 写入闸:槽是封闭取值,只认上面四个,大小写/空白都不容错。
+     *
+     * <p>只在**写**之前调用;读路径不校验 —— 存量里即便有越界行,也不能因此把读炸掉
+     * (库里另有 {@code ck_role_slot} CHECK 兜底)。
+     *
+     * @throws IllegalArgumentException 消息为 {@link #ERR_SLOT_INVALID}
+     */
+    public static String requireValid(String slot) {
+        if (!isValid(slot)) {
+            throw new IllegalArgumentException(ERR_SLOT_INVALID);
+        }
+        return slot;
+    }
 }

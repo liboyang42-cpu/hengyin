@@ -224,6 +224,31 @@ class ApiRoamCoordinateBoundaryTest
         verify(visitedPoiMapper).insertVisitedPoiIgnore(anyLong(), any(), any(), any(), any(), any());
     }
 
+    @SuppressWarnings("unchecked")
+    @Test
+    void checkinUsesStableIdentityOnlyWhenSwitchOn()
+    {
+        com.chengyinhub.business.service.support.VisitedPoiIdentityResolver identity =
+                mock(com.chengyinhub.business.service.support.VisitedPoiIdentityResolver.class);
+        ReflectionTestUtils.setField(controller, "visitedPoiIdentity", identity);
+        when(visitedPoiMapper.insertVisitedPoiIgnore(anyLong(), any(), any(), any(), any(), any())).thenReturn(1);
+
+        // 开关关(默认):旧 geo_key 路径一字不变
+        assertEquals(200, controller.checkin("测试点", NEAR_LAT, NEAR_LNG, NEAR_LAT, NEAR_LNG).get("code"));
+        verify(visitedPoiMapper).insertVisitedPoiIgnore(org.mockito.ArgumentMatchers.eq(PLAYER),
+                org.mockito.ArgumentMatchers.eq("31.230,121.474"), any(), any(), any(), any());
+        verify(identity, never()).recordVisit(anyLong(), anyDouble(), anyDouble(), any(), any());
+
+        // 开关开:走稳定身份,已点亮过则不再发探索值
+        when(identity.enabled()).thenReturn(true);
+        when(identity.recordVisit(anyLong(), anyDouble(), anyDouble(), any(), any())).thenReturn(false);
+        AjaxResult again = controller.checkin("测试点", NEAR_LAT, NEAR_LNG, NEAR_LAT, NEAR_LNG);
+        assertEquals(Boolean.FALSE, ((Map<String, Object>) again.get("data")).get("firstVisit"));
+        verify(identity).recordVisit(org.mockito.ArgumentMatchers.eq(PLAYER), org.mockito.ArgumentMatchers.eq(NEAR_LAT),
+                org.mockito.ArgumentMatchers.eq(NEAR_LNG), org.mockito.ArgumentMatchers.eq("测试点"), any());
+        verify(growthService).addExp(PLAYER, 20, "点亮地点");
+    }
+
     // ---------- 心跳/查询 ----------
 
     @Test

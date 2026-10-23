@@ -117,6 +117,16 @@ MYBATIS_ITS=(
   #   导出不跨账号且外人游标被拒、注销申请幂等与仅本人可撤)。
   JourneyThoughtProgressMySqlIT
   PrivacyVisibilityExportMySqlIT
+  # Lane DL1:赏金 NESTED savepoint 内真 1213 死锁必须抛给外层 @DeadlockRetry 整笔重试;两笔并发核销赏金只入账一次。
+  MerchantReferralBountyDeadlockRetryMySqlIT
+  # 2026-10-22 F2 RPG P0:属性定义老注册 upsert 保留扩展列、改 label 不改键名;角色卡台账只随更新的来源前移。
+  ThemeCharacterMapperMyBatisIT
+  # 2026-10-22 DOC2 F3 Phase 1:套票账本迁移可重跑 + 形状负控、Phase 1 不动 settlement_claim(7 列唯一键原样)、
+  #   A/B 同买一套票余额互不影响、快照冻结、同单位唯一在约、月度豁免唯一 —— 真 DDL + 真 mapper 才验得动。
+  FreeExploreBundleLedgerMySqlIT
+  # 2026-10-22 O-14 city_code 回填(RV3 B-519-1):南京西路(上海)/北京路(广州)反例、人工值不覆盖、重跑零变更、
+  #   修正重跑只改本回填写过的行、只读预览与真实执行逐行一致 —— 真迁移 + 真 MySQL 才验得动。
+  O14CityCodeBackfillMySqlIT
   # DOC2 O5c-(a):统一留痕只读投影(五张留痕表分查 + 合并)。
   AuditTrailProjectionMySqlIT
 )

@@ -1,5 +1,6 @@
 package com.chengyinhub.business.service.support;
 
+import com.chengyinhub.common.utils.GeoDistanceUtils;
 import com.chengyinhub.business.domain.CmsTopicNode;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -26,7 +27,6 @@ public class TopicRouteCandidatePolicy {
             "^(.*?)\\s*(\\d{1,2}):(\\d{2})\\s*[-~—至]\\s*(次日)?\\s*(\\d{1,2}):(\\d{2})$");
     private static final Pattern WEEK_RANGE = Pattern.compile("^周([一二三四五六日天])至周?([一二三四五六日天])$");
     private static final Pattern WEEK_LIST = Pattern.compile("^周([一二三四五六日天](?:[、,，]周?[一二三四五六日天])*)$");
-    private static final double EARTH_RADIUS_METERS = 6371008.8D;
 
     private final Clock clock;
     private final RouteReachabilityProvider reachabilityProvider;
@@ -192,12 +192,7 @@ public class TopicRouteCandidatePolicy {
         Double toLng = coordinate(to.getLongitude(), -180D, 180D);
         Double toLat = coordinate(to.getLatitude(), -90D, 90D);
         if (fromLng == null || fromLat == null || toLng == null || toLat == null) return null;
-        double lat1 = Math.toRadians(fromLat); double lat2 = Math.toRadians(toLat);
-        double deltaLat = lat2 - lat1; double deltaLng = Math.toRadians(toLng - fromLng);
-        double a = Math.sin(deltaLat / 2D) * Math.sin(deltaLat / 2D)
-                + Math.cos(lat1) * Math.cos(lat2)
-                * Math.sin(deltaLng / 2D) * Math.sin(deltaLng / 2D);
-        return EARTH_RADIUS_METERS * 2D * Math.atan2(Math.sqrt(a), Math.sqrt(1D - a));
+        return GeoDistanceUtils.haversineMeters(fromLat, fromLng, toLat, toLng);
     }
 
     private Double coordinate(String raw, double min, double max) {

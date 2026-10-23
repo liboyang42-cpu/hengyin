@@ -1375,6 +1375,7 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
                             post.getId(), com.chengyinhub.business.service.support.SystemNoticeCard.item(
                                     "帖文", blank(post.getTitle()) ? post.getBody() : post.getTitle())));
         } catch (RuntimeException e) {
+            com.chengyinhub.business.service.support.SavepointLockFailures.rethrowIfLockFailure(e);
             // 通知失败不挡下架：违规图先收起，通知缺失只告警。
             log.error("[社区帖文] 图片违规下架通知发送失败: postId={}, exceptionType={}",
                     post.getId(), e.getClass().getSimpleName());

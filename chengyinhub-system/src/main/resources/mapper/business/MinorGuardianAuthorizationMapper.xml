@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.MinorGuardianAuthorizationMapper">
+
+    <resultMap id="AuthorizationResult" type="com.chengyinhub.business.domain.MinorGuardianAuthorization">
+        <id property="id" column="id"/>
+        <result property="guardianMemberId" column="guardian_member_id"/>
+        <result property="wardMemberId" column="ward_member_id"/>
+        <result property="purpose" column="purpose"/>
+        <result property="policyVersion" column="policy_version"/>
+        <result property="relation" column="relation"/>
+        <result property="evidenceMethod" column="evidence_method"/>
+        <result property="status" column="status"/>
+        <result property="requestId" column="request_id"/>
+        <result property="inviteTokenHash" column="invite_token_hash"/>
+        <result property="inviteExpiresAt" column="invite_expires_at"/>
+        <result property="validDays" column="valid_days"/>
+        <result property="validFrom" column="valid_from"/>
+        <result property="validUntil" column="valid_until"/>
+        <result property="wardConfirmedAt" column="ward_confirmed_at"/>
+        <result property="revokedAt" column="revoked_at"/>
+        <result property="revokedBy" column="revoked_by"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <sql id="columns">
+        id, guardian_member_id, ward_member_id, purpose, policy_version, relation, evidence_method, status,
+        request_id, invite_token_hash, invite_expires_at, valid_days, valid_from, valid_until, ward_confirmed_at,
+        revoked_at, revoked_by, create_time, update_time
+    </sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into minor_guardian_authorization
+        (guardian_member_id, purpose, policy_version, relation, evidence_method, status, request_id,
+         invite_token_hash, invite_expires_at, valid_days, create_time)
+        values (#{guardianMemberId}, #{purpose}, #{policyVersion}, #{relation}, #{evidenceMethod}, #{status},
+                #{requestId}, #{inviteTokenHash}, #{inviteExpiresAt}, #{validDays}, #{createTime})
+    </insert>
+
+    <select id="selectByRequest" resultMap="AuthorizationResult">
+        select <include refid="columns"/> from minor_guardian_authorization
+        where guardian_member_id = #{guardianMemberId} and request_id = #{requestId}
+    </select>
+
+    <select id="selectByInviteHashForUpdate" resultMap="AuthorizationResult">
+        select <include refid="columns"/> from minor_guardian_authorization
+        where invite_token_hash = #{inviteTokenHash}
+        for update
+    </select>
+
+    <update id="rotateInvite">
+        update minor_guardian_authorization
+        set invite_token_hash = #{inviteTokenHash}, invite_expires_at = #{inviteExpiresAt}, update_time = #{now}
+        where id = #{id} and guardian_member_id = #{guardianMemberId} and status = 'PENDING'
+    </update>
+
+    <update id="activate">
+        update minor_guardian_authorization
+        set status = 'ACTIVE', ward_member_id = #{wardMemberId}, valid_from = #{validFrom}, valid_until = #{validUntil},
+            ward_confirmed_at = #{now}, invite_token_hash = null, invite_expires_at = null, update_time = #{now}
+        where id = #{id} and status = 'PENDING' and invite_token_hash = #{inviteTokenHash}
+          and guardian_member_id != #{wardMemberId}
+    </update>
+
+    <update id="supersedeActive">
+        update minor_guardian_authorization
+        set status = 'SUPERSEDED', update_time = #{now}
+        where ward_member_id = #{wardMemberId} and guardian_member_id = #{guardianMemberId}
+          and purpose = #{purpose} and status = 'ACTIVE' and id != #{exceptId}
+    </update>
+
+    <update id="revoke">
+        update minor_guardian_authorization
+        set status = 'REVOKED', revoked_at = #{now}, revoked_by = #{memberId},
+            invite_token_hash = null, invite_expires_at = null, update_time = #{now}
+        where id = #{id} and status in ('PENDING', 'ACTIVE')
+          and (guardian_member_id = #{memberId} or ward_member_id = #{memberId})
+    </update>
+
+    <select id="selectById" resultMap="AuthorizationResult">
+        select <include refid="columns"/> from minor_guardian_authorization where id = #{id}
+    </select>
+
+    <select id="selectByMember" resultMap="AuthorizationResult">
+        select <include refid="columns"/> from minor_guardian_authorization
+        where guardian_member_id = #{memberId} or ward_member_id = #{memberId}
+        order by id desc
+        limit 200
+    </select>
+
+    <select id="countActive" resultType="int">
+        select count(*) from minor_guardian_authorization
+        where ward_member_id = #{wardMemberId} and purpose = #{purpose} and status = 'ACTIVE'
+          and policy_version = #{policyVersion}
+          and valid_from &lt;= #{now} and valid_until &gt; #{now}
+    </select>
+
+    <select id="countActiveBetween" resultType="int">
+        select count(*) from minor_guardian_authorization
+        where guardian_member_id = #{guardianMemberId} and ward_member_id = #{wardMemberId} and status = 'ACTIVE'
+          and policy_version = #{policyVersion}
+          and valid_from &lt;= #{now} and valid_until &gt; #{now}
+    </select>
+</mapper>

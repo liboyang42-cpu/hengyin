@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.UserInvoiceMapper">
+
+    <!-- 抬头名称与税号一律绑 PiiCryptoTypeHandler（库里只落 v1: 密文）；缺 chengyin.pii.key 时 handler 自己 fail-closed 拒写。 -->
+    <resultMap id="TitleResult" type="com.chengyinhub.business.domain.UserInvoiceTitle">
+        <id property="id" column="id"/>
+        <result property="memberId" column="member_id"/>
+        <result property="titleType" column="title_type"/>
+        <result property="titleName" column="title_name"
+                typeHandler="com.chengyinhub.business.security.PiiCryptoTypeHandler"/>
+        <result property="taxNo" column="tax_no"
+                typeHandler="com.chengyinhub.business.security.PiiCryptoTypeHandler"/>
+        <result property="isDefault" column="is_default"/>
+        <result property="delFlag" column="del_flag"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <resultMap id="ApplicationResult" type="com.chengyinhub.business.domain.UserInvoiceApplication">
+        <id property="id" column="id"/>
+        <result property="applicationNo" column="application_no"/>
+        <result property="memberId" column="member_id"/>
+        <result property="requestId" column="request_id"/>
+        <result property="titleId" column="title_id"/>
+        <result property="titleType" column="title_type"/>
+        <result property="titleName" column="title_name"
+                typeHandler="com.chengyinhub.business.security.PiiCryptoTypeHandler"/>
+        <result property="taxNo" column="tax_no"
+                typeHandler="com.chengyinhub.business.security.PiiCryptoTypeHandler"/>
+        <result property="totalAmount" column="total_amount"/>
+        <result property="orderCount" column="order_count"/>
+        <result property="status" column="status"/>
+        <result property="provider" column="provider"/>
+        <result property="invoiceNo" column="invoice_no"/>
+        <result property="rejectReason" column="reject_reason"/>
+        <result property="issuedAt" column="issued_at"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <resultMap id="OrderLineResult" type="com.chengyinhub.business.domain.UserInvoiceOrderLine">
+        <id property="id" column="id"/>
+        <result property="applicationId" column="application_id"/>
+        <result property="memberId" column="member_id"/>
+        <result property="orderSource" column="order_source"/>
+        <result property="orderId" column="order_id"/>
+        <result property="amount" column="amount"/>
+        <result property="activeKey" column="active_key"/>
+        <result property="createTime" column="create_time"/>
+        <result property="orderTitle" column="order_title"/>
+        <result property="ticketName" column="ticket_name"/>
+        <result property="paymentTime" column="payment_time"/>
+    </resultMap>
+
+    <sql id="titleColumns">
+        id, member_id, title_type, title_name, tax_no, is_default, del_flag, create_time, update_time
+    </sql>
+
+    <sql id="applicationColumns">
+        id, application_no, member_id, request_id, title_id, title_type, title_name, tax_no, total_amount,
+        order_count, status, provider, invoice_no, reject_reason, issued_at, create_time, update_time
+    </sql>
+
+    <select id="selectTitlesByMember" resultMap="TitleResult">
+        select <include refid="titleColumns"/> from user_invoice_title
+        where member_id = #{memberId} and del_flag = 0
+        order by is_default desc, id desc
+    </select>
+
+    <select id="selectTitle" resultMap="TitleResult">
+        select <include refid="titleColumns"/> from user_invoice_title
+        where id = #{id} and member_id = #{memberId} and del_flag = 0
+    </select>
+
+    <select id="countTitles" resultType="int">
+        select count(*) from user_invoice_title where member_id = #{memberId} and del_flag = 0
+    </select>
+
+    <insert id="insertTitle" useGeneratedKeys="true" keyProperty="id">
+        insert into user_invoice_title (member_id, title_type, title_name, tax_no, is_default, del_flag, create_time)
+        values (#{memberId}, #{titleType},
+                #{titleName,typeHandler=com.chengyinhub.business.security.PiiCryptoTypeHandler},
+                #{taxNo,typeHandler=com.chengyinhub.business.security.PiiCryptoTypeHandler},
+                #{isDefault}, 0, #{createTime})
+    </insert>
+
+    <update id="updateTitle">
+        update user_invoice_title
+        set title_type = #{titleType},
+            title_name = #{titleName,typeHandler=com.chengyinhub.business.security.PiiCryptoTypeHandler},
+            tax_no = #{taxNo,typeHandler=com.chengyinhub.business.security.PiiCryptoTypeHandler},
+            is_default = #{isDefault},
+            update_time = #{updateTime}
+        where id = #{id} and member_id = #{memberId} and del_flag = 0
+    </update>
+
+    <update id="deleteTitle">
+        update user_invoice_title set del_flag = 2, is_default = 0, update_time = now()
+        where id = #{id} and member_id = #{memberId} and del_flag = 0
+    </update>
+
+    <update id="clearDefaultTitles">
+        update user_invoice_title set is_default = 0
+        where member_id = #{memberId} and del_flag = 0 and is_default = 1
+        <if test="exceptId != null">and id != #{exceptId}</if>
+    </update>
+
+    <sql id="invoiceableRegistrationWhere">
+        where r.member_id = #{memberId}
+          and r.payment_status = 2
+          and r.registration_status = 2
+          and r.wechat_payment_amount &gt; 0
+          <if test="orderIds != null and orderIds.size() > 0">
+          and r.id in
+          <foreach collection="orderIds" item="oid" open="(" separator="," close=")">#{oid}</foreach>
+          </if>
+          and not exists (
+              select 1 from refund_application ra
+              where ra.source_type = 'registration' and ra.source_id = r.id
+                and ra.del_flag = 0 and ra.status in (0, 1))
+          and not exists (
+              select 1 from user_invoice_application_order o
+              where o.order_source = 'registration' and o.order_id = r.id and o.active_key = 1)
+    </sql>
+
+    <select id="selectInvoiceableRegistrations" resultMap="OrderLineResult">
+        select r.id as order_id, 'registration' as order_source, r.member_id,
+               r.wechat_payment_amount as amount, r.activity_title as order_title, r.ticket_name, r.payment_time
+        from cms_registration r
+        <include refid="invoiceableRegistrationWhere"/>
+        order by r.payment_time desc, r.id desc
+        limit #{limit}
+    </select>
+
+    <select id="selectInvoiceableRegistrationsForUpdate" resultMap="OrderLineResult">
+        select r.id as order_id, 'registration' as order_source, r.member_id,
+               r.wechat_payment_amount as amount, r.activity_title as order_title, r.ticket_name, r.payment_time
+        from cms_registration r
+        <include refid="invoiceableRegistrationWhere"/>
+        order by r.id
+        for update
+    </select>
+
+    <select id="selectOccupiedOrderIds" resultType="java.lang.Long">
+        select order_id from user_invoice_application_order
+        where member_id = #{memberId} and order_source = #{orderSource} and active_key = 1
+          and order_id in
+          <foreach collection="orderIds" item="oid" open="(" separator="," close=")">#{oid}</foreach>
+    </select>
+
+    <select id="selectApplicationByRequest" resultMap="ApplicationResult">
+        select <include refid="applicationColumns"/> from user_invoice_application
+        where member_id = #{memberId} and request_id = #{requestId}
+    </select>
+
+    <select id="selectApplication" resultMap="ApplicationResult">
+        select <include refid="applicationColumns"/> from user_invoice_application
+        where id = #{id} and member_id = #{memberId}
+    </select>
+
+    <select id="selectApplicationById" resultMap="ApplicationResult">
+        select <include refid="applicationColumns"/> from user_invoice_application where id = #{id}
+    </select>
+
+    <select id="selectApplicationsByMember" resultMap="ApplicationResult">
+        select <include refid="applicationColumns"/> from user_invoice_application
+        where member_id = #{memberId}
+        order by id desc
+        limit 200
+    </select>
+
+    <select id="selectOrderLines" resultMap="OrderLineResult">
+        select o.id, o.application_id, o.member_id, o.order_source, o.order_id, o.amount, o.active_key, o.create_time,
+               r.activity_title as order_title, r.ticket_name, r.payment_time
+        from user_invoice_application_order o
+        left join cms_registration r on o.order_source = 'registration' and r.id = o.order_id and r.member_id = o.member_id
+        where o.application_id = #{applicationId}
+        order by o.id
+    </select>
+
+    <insert id="insertApplication" useGeneratedKeys="true" keyProperty="id">
+        insert into user_invoice_application
+        (application_no, member_id, request_id, title_id, title_type, title_name, tax_no, total_amount,
+         order_count, status, provider, create_time)
+        values (#{applicationNo}, #{memberId}, #{requestId}, #{titleId}, #{titleType},
+                #{titleName,typeHandler=com.chengyinhub.business.security.PiiCryptoTypeHandler},
+                #{taxNo,typeHandler=com.chengyinhub.business.security.PiiCryptoTypeHandler},
+                #{totalAmount}, #{orderCount}, #{status}, #{provider}, #{createTime})
+    </insert>
+
+    <insert id="insertOrderLines">
+        insert into user_invoice_application_order
+        (application_id, member_id, order_source, order_id, amount, active_key, create_time)
+        values
+        <foreach collection="lines" item="l" separator=",">
+            (#{l.applicationId}, #{l.memberId}, #{l.orderSource}, #{l.orderId}, #{l.amount}, 1, #{l.createTime})
+        </foreach>
+    </insert>
+
+    <update id="cancelApplication">
+        update user_invoice_application set status = 'CANCELLED', update_time = #{now}
+        where id = #{id} and member_id = #{memberId} and status = 'SUBMITTED'
+    </update>
+
+    <update id="markIssued">
+        update user_invoice_application set status = 'ISSUED', invoice_no = #{invoiceNo}, issued_at = #{now}, update_time = #{now}
+        where id = #{id} and status = 'SUBMITTED'
+    </update>
+
+    <update id="markRejected">
+        update user_invoice_application set status = 'REJECTED', reject_reason = #{reason}, update_time = #{now}
+        where id = #{id} and status = 'SUBMITTED'
+    </update>
+
+    <update id="releaseOrderLines">
+        update user_invoice_application_order set active_key = null
+        where application_id = #{applicationId} and active_key = 1
+    </update>
+</mapper>
