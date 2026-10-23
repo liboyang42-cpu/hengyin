@@ -9,6 +9,13 @@ import java.util.List;
 
 /** 选集事实窄 seam；查询必须与 claim/detail 写入同事务并锁 registration。 */
 public interface CoopSettlementEvidenceMapper {
+    /** 旧主题报名，按 id 当前锁读；销售额与审计投影必须使用同一批返回行。 */
+    List<com.chengyinhub.business.domain.CmsRegistration> selectTopicCashRowsForUpdate(@Param("topicId") Long topicId);
+
+    /** 包括已删活动壳；当前锁读真实父关系及报名，不复用普通 COUNT 的 RR/缓存结果。 */
+    List<com.chengyinhub.business.domain.CmsRegistration> selectTopicActivityCashRowsForUpdate(@Param("topicId") Long topicId);
+
+    /** 旧只读证据计数；不能用作结算现金准入。 */
     int countPaidActivityRegistrations(@Param("topicId") Long topicId);
     List<Long> selectCashBasisBlockingRefundIdsForUpdate(@Param("topicId") Long topicId);
 

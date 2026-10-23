@@ -3,7 +3,7 @@ package com.chengyinhub.business.service.impl;
 import com.chengyinhub.business.domain.GameRuntimeSession;
 import com.chengyinhub.business.domain.PlayAttemptLog;
 import com.chengyinhub.business.mapper.*;
-import com.chengyinhub.business.service.ai.PhotoCheckVisionService;
+import com.chengyinhub.business.service.ai.PhotoCheckIntentService;
 import com.chengyinhub.business.service.support.AdvancedGameClock;
 import com.chengyinhub.common.exception.ServiceException;
 import org.junit.jupiter.api.BeforeEach;
@@ -23,18 +23,23 @@ class AdvancedCommandFingerprintTest {
     private AdvancedGameRuntimeServiceImpl service;
     private GameRuntimeSessionMapper sessions;
     private PlayAttemptLogMapper attempts;
-    private PhotoCheckVisionService photos;
+    private PhotoCheckIntentService photos;
     private GameRuntimeSession session;
     private final AtomicReference<PlayAttemptLog> receipt = new AtomicReference<>();
 
     @BeforeEach void fixture() {
         receipt.set(null);
         service = new AdvancedGameRuntimeServiceImpl();
+        com.chengyinhub.business.service.impl.AdvancedActionTestFixtures.transactions(service);
+        com.chengyinhub.business.service.support.CurrentPlayTestFixtures.installOn(service);
         sessions = mock(GameRuntimeSessionMapper.class); attempts = mock(PlayAttemptLogMapper.class);
-        photos = mock(PhotoCheckVisionService.class);
+        photos = mock(PhotoCheckIntentService.class);
+        ReflectionTestUtils.setField(service, "photoCheckIntentService", photos);
         ReflectionTestUtils.setField(service, "sessionMapper", sessions);
         ReflectionTestUtils.setField(service, "attemptMapper", attempts);
-        ReflectionTestUtils.setField(service, "photoCheckVisionService", photos);
+        when(sessions.selectByIdForUpdate(51L)).thenAnswer(i -> session);
+        when(sessions.selectAccessibleByIdForUpdate(51L, 7L)).thenAnswer(i -> session);
+        when(attempts.selectByIdempotencyKeyForUpdate(anyString())).thenAnswer(i -> receipt.get());
         ReflectionTestUtils.setField(service, "clock", (AdvancedGameClock) () -> new Date(1_775_000_000_000L));
         session = new GameRuntimeSession();
         session.setId(51L); session.setActivityId(0L); session.setTopicId(19L); session.setNodeId(29L);

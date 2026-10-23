@@ -184,7 +184,7 @@ class CoopSettlementTest {
 
         PreparedCoopPlanFixture.topic(topic.getId());
 
-        svc.settleCoopTopic(topic, new BigDecimal("100"));
+        PreparedCoopPlanFixture.settle(svc, topic, new BigDecimal("100"));
 
         Map<String, List<CoopSettlement>> lines = capturedLines();
         assertAmount("10.00", lines.get("PLATFORM").get(0), "平台 100×10%=10");
@@ -320,7 +320,7 @@ class CoopSettlementTest {
 
         PreparedCoopPlanFixture.topic(topic.getId());
 
-        svc.settleCoopTopic(topic, new BigDecimal("100"));
+        PreparedCoopPlanFixture.settle(svc, topic, new BigDecimal("100"));
 
         Map<String, List<CoopSettlement>> lines = capturedLines();
         // 俱乐部承接 → LEAD_FEE 行,受款人=俱乐部主理人 member_id(非裸 club_id);修复前 club_id 打不出(资损)
@@ -346,7 +346,7 @@ class CoopSettlementTest {
 
         PreparedCoopPlanFixture.topic(topic.getId());
 
-        svc.settleCoopTopic(topic, new BigDecimal("100"));
+        PreparedCoopPlanFixture.settle(svc, topic, new BigDecimal("100"));
 
         Map<String, List<CoopSettlement>> lines = capturedLines();
         assertEquals(2, lines.get("MERCHANT_VERIFY").size(), "两商家各一行");
@@ -380,7 +380,7 @@ class CoopSettlementTest {
                 .thenReturn(1);
 
         IllegalStateException failure = assertThrows(IllegalStateException.class,
-                () -> svc.settleCoopTopic(topic, new BigDecimal("100")));
+                () -> PreparedCoopPlanFixture.settle(svc, topic, new BigDecimal("100")));
         assertTrue(failure.getMessage().contains("CLAIM_DEPOSIT_ADJUSTMENT_REQUIRED"));
         verify(coopSettlementMapper, never()).insertCoopSettlement(any());
         verify(coopInviteMapper, never()).updateDepositIfCurrent(any(), any(), any(), any(), any());
@@ -405,7 +405,7 @@ class CoopSettlementTest {
         when(coopInviteMapper.selectCoopInviteByIdForUpdate(89L)).thenReturn(pendingPayment);
         when(coopInviteService.depositOwedParty(pendingPayment)).thenReturn(900002L);
         IllegalStateException failure = assertThrows(IllegalStateException.class,
-                () -> svc.settleCoopTopic(topic, new BigDecimal("100")));
+                () -> PreparedCoopPlanFixture.settle(svc, topic, new BigDecimal("100")));
         assertTrue(failure.getMessage().contains("DEPOSIT_PAYMENT_RECONCILIATION_REQUIRED"));
         verify(wechatPayService, never()).queryOrderStatus(any());
         verify(wechatPayService, never()).closeOrder(any());
@@ -476,7 +476,7 @@ class CoopSettlementTest {
         when(coopSettlementMapper.countByOrderId(any())).thenReturn(0);
 
         IllegalStateException ex = assertThrows(IllegalStateException.class,
-                () -> svc.settleCoopTopic(topic, new BigDecimal("100")));
+                () -> PreparedCoopPlanFixture.settle(svc, topic, new BigDecimal("100")));
         assertTrue(ex.getMessage().contains("超拆"), "越界应报超拆");
         // 守恒在动钱之前 → 一行没插
         verify(coopSettlementMapper, times(0)).insertCoopSettlement(any());
@@ -496,7 +496,7 @@ class CoopSettlementTest {
 
         PreparedCoopPlanFixture.topic(topic.getId());
 
-        svc.settleCoopTopic(topic, new BigDecimal("100"));
+        PreparedCoopPlanFixture.settle(svc, topic, new BigDecimal("100"));
 
         Map<String, List<CoopSettlement>> lines = capturedLines();
         assertEquals("10,11,12", lines.get("MERCHANT_VERIFY").get(0).getVerifiedRegIds(), "商家核销行附核销报名id快照");
@@ -514,7 +514,7 @@ class CoopSettlementTest {
 
         PreparedCoopPlanFixture.topic(topic.getId());
 
-        svc.settleCoopTopic(topic, new BigDecimal("100"));
+        PreparedCoopPlanFixture.settle(svc, topic, new BigDecimal("100"));
 
         Map<String, List<CoopSettlement>> lines = capturedLines();
         // 商家行跳过(0),但平台/保底/毛利照挂;merchantTotal=0 → 保底5%、毛利=100-10-5-0=85

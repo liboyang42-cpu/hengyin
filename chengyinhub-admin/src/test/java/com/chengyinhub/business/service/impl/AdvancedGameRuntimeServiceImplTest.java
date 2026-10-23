@@ -74,6 +74,7 @@ class AdvancedGameRuntimeServiceImplTest {
         teamMapper = mock(PlayTeamMapper.class);
         attemptMapper = mock(PlayAttemptLogMapper.class);
         service = new AdvancedGameRuntimeServiceImpl();
+        com.chengyinhub.business.service.impl.AdvancedActionTestFixtures.transactions(service);
         ReflectionTestUtils.setField(service,"verifiedWeRunService",com.chengyinhub.business.it.R5WeRunFixture.service());
         ReflectionTestUtils.setField(service, "sessionMapper", sessionMapper);
         ReflectionTestUtils.setField(service, "nodeMapper", nodeMapper);
@@ -1753,16 +1754,19 @@ class AdvancedGameRuntimeServiceImplTest {
         config.putObject("outcomeRules").put("version",1).putObject("pass");if(!"ALBUM".equals(mode))config.with("outcomeRules").putObject("fail");
         ITopicRouteRuntimeService route=mock(ITopicRouteRuntimeService.class);ReflectionTestUtils.setField(service,"topicRouteRuntimeService",route);when(route.genericPlayer(any(),any(),any())).thenReturn(true);when(route.canPlay(any(),any(),any(),any())).thenReturn(true);when(route.gameplayInstance(any(),any(),any(),any())).thenReturn("quest:r5");when(route.nodeRuntimeConfig(any(),any(),any(),any())).thenReturn(config);
         GameRuntimeSession session=runningSession(config.toString(),"{\"attemptOrdinal\":1}");session.setPlayInstanceId("quest:r5");when(sessionMapper.selectAccessibleById(51L,MEMBER_ID)).thenReturn(session);when(sessionMapper.updateStateCas(any())).thenReturn(1);
-        ReflectionTestUtils.setField(service,"photoEvidenceVerifier",(java.util.function.BiConsumer<String,Long>)(url,member)->{throw new IllegalArgumentException("照片不属于当前会员");});
+        if ("SUBMIT_PHOTO_CHECK".equals(action)) AdvancedActionTestFixtures.photos(service,
+                () -> { throw new AssertionError("Rejected evidence must not call provider"); });
+        java.util.concurrent.atomic.AtomicInteger evidenceChecks = new java.util.concurrent.atomic.AtomicInteger();
+        ReflectionTestUtils.setField(service,"photoEvidenceVerifier",(java.util.function.BiConsumer<String,Long>)(url,member)->{evidenceChecks.incrementAndGet();throw new IllegalArgumentException("照片不属于当前会员");});
         Map<String,Object> evidence = "ALBUM".equals(mode) ? Collections.singletonMap("imageUrls",Collections.singletonList("http://127.0.0.1/profile/unowned.jpg")) : Collections.singletonMap("imageUrl","http://127.0.0.1/profile/unowned.jpg");
-        assertThrows(RuntimeException.class,()->service.act(MEMBER_ID,51L,0,"foreign-photo",action,evidence));verify(sessionMapper,never()).updateStateCas(any());
+        assertThrows(RuntimeException.class,()->service.act(MEMBER_ID,51L,0,"foreign-photo",action,evidence));assertEquals(1, evidenceChecks.get());verify(sessionMapper,never()).updateStateCas(any());
     }
     @org.junit.jupiter.params.ParameterizedTest @org.junit.jupiter.params.provider.ValueSource(strings={"SHOT","REVIEW","CARD","REJECT","DEGRADED","ALBUM"})
     void r5PhotoAndAlbumUseVerifiedServerEvidence(String mode) throws Exception {
         com.fasterxml.jackson.databind.ObjectMapper json=new com.fasterxml.jackson.databind.ObjectMapper();com.fasterxml.jackson.databind.node.ObjectNode config=json.createObjectNode().put("schemaVersion",1);Map<String,Object> payload=new LinkedHashMap<>();String action;
         if("SHOT".equals(mode)){config.putObject("qa").put("enabled",true).put("mode","SHOT");action="SUBMIT_QA";}
         else if("ALBUM".equals(mode)){config.putObject("album").put("enabled",true);action="SUBMIT_ALBUM";payload.put("imageUrls",Arrays.asList("first","second"));}
-        else{config.putObject("photoCheck").put("enabled",true).put("mode","CARD".equals(mode)?"CARD":"").put("fallback","pass").put("maxTries",1).put("minConfidence",60);action="SUBMIT_PHOTO_CHECK";com.chengyinhub.business.service.ai.PhotoCheckVisionService vision=mock(com.chengyinhub.business.service.ai.PhotoCheckVisionService.class);when(vision.review(any(),any(),any())).thenReturn("DEGRADED".equals(mode)?com.chengyinhub.business.service.ai.PhotoCheckVisionResult.degraded("unavailable"):com.chengyinhub.business.service.ai.PhotoCheckVisionResult.concluded(!"REJECT".equals(mode),90,"review"));ReflectionTestUtils.setField(service,"photoCheckVisionService",vision);}
+        else{config.putObject("photoCheck").put("enabled",true).put("mode","CARD".equals(mode)?"CARD":"").put("fallback","pass").put("maxTries",1).put("minConfidence",60);action="SUBMIT_PHOTO_CHECK";com.chengyinhub.business.service.ai.PhotoCheckVisionService vision=mock(com.chengyinhub.business.service.ai.PhotoCheckVisionService.class);when(vision.review(any(),any(),any())).thenReturn("DEGRADED".equals(mode)?com.chengyinhub.business.service.ai.PhotoCheckVisionResult.degraded("unavailable"):com.chengyinhub.business.service.ai.PhotoCheckVisionResult.concluded(!"REJECT".equals(mode),90,"review"));AdvancedActionTestFixtures.photos(service, () -> vision.review(MEMBER_ID, "unit-photo", "unit-requirement"));}
         config.putObject("outcomeRules").put("version",1).putObject("pass");if(!"ALBUM".equals(mode))config.with("outcomeRules").putObject("fail");if(!"ALBUM".equals(mode))payload.put("imageUrl","first");
         java.util.List<String> checked=new ArrayList<>();ReflectionTestUtils.setField(service,"photoEvidenceVerifier",(java.util.function.BiConsumer<String,Long>)(url,member)->{assertEquals(MEMBER_ID,member);checked.add(url);});
         ITopicRouteRuntimeService route=mock(ITopicRouteRuntimeService.class);ReflectionTestUtils.setField(service,"topicRouteRuntimeService",route);when(route.genericPlayer(any(),any(),any())).thenReturn(true);when(route.canPlay(any(),any(),any(),any())).thenReturn(true);when(route.gameplayInstance(any(),any(),any(),any())).thenReturn("quest:r5");when(route.nodeRuntimeConfig(any(),any(),any(),any())).thenReturn(config);

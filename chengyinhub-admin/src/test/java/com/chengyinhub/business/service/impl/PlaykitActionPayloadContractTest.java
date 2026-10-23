@@ -61,6 +61,7 @@ class PlaykitActionPayloadContractTest {
         attemptMapper = mock(PlayAttemptLogMapper.class);
         predictMapper = mock(PlayPredictMapper.class);
         service = new AdvancedGameRuntimeServiceImpl();
+        com.chengyinhub.business.service.impl.AdvancedActionTestFixtures.transactions(service);
         ReflectionTestUtils.setField(service, "sessionMapper", sessionMapper);
         ReflectionTestUtils.setField(service, "attemptMapper", attemptMapper);
         ReflectionTestUtils.setField(service, "predictMapper", predictMapper);

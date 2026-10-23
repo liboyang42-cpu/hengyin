@@ -192,6 +192,7 @@ class AdvancedGameRuntimeMySqlIT {
             }
             SqlSessionTemplate sql = new SqlSessionTemplate(new SqlSessionFactoryBuilder().build(config));
             AdvancedGameRuntimeServiceImpl target = new AdvancedGameRuntimeServiceImpl();
+        ReflectionTestUtils.setField(target, "transactionManager", new org.springframework.jdbc.datasource.DataSourceTransactionManager(source));
             ReflectionTestUtils.setField(target, "sessionMapper", sql.getMapper(GameRuntimeSessionMapper.class));
             ReflectionTestUtils.setField(target, "attemptMapper", sql.getMapper(PlayAttemptLogMapper.class));
             // 只验证冻结会话的持久化；报名、节点与活动入口使用夹具，不冒充真实业务验收。
@@ -319,6 +320,7 @@ class AdvancedGameRuntimeMySqlIT {
             }
             SqlSessionTemplate sql = new SqlSessionTemplate(new SqlSessionFactoryBuilder().build(config));
             AdvancedGameRuntimeServiceImpl target = new AdvancedGameRuntimeServiceImpl();
+        ReflectionTestUtils.setField(target, "transactionManager", new org.springframework.jdbc.datasource.DataSourceTransactionManager(source));
             ReflectionTestUtils.setField(target, "sessionMapper", sql.getMapper(GameRuntimeSessionMapper.class));
             ReflectionTestUtils.setField(target, "attemptMapper", sql.getMapper(PlayAttemptLogMapper.class));
             ReflectionTestUtils.setField(target, "teamMapper", sql.getMapper(PlayTeamMapper.class));

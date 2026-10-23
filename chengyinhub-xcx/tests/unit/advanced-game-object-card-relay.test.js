@@ -32,9 +32,11 @@ const STATE = {
 
 function createGame(queue) {
   const events = []
+  const disk = new Map()
+  global.wx = { getStorageSync: key => disk.get(key), setStorageSync: (key, value) => disk.set(key, JSON.parse(JSON.stringify(value))), removeStorageSync: key => disk.delete(key) }
   const instance = {
     properties: {},
-    data: Object.assign(JSON.parse(JSON.stringify(definition.data)), { state: JSON.parse(JSON.stringify(STATE)) }),
+    data: Object.assign(JSON.parse(JSON.stringify(definition.data)), { node: { nodeId: 7 }, state: JSON.parse(JSON.stringify(STATE)) }),
     setData(update, cb) { Object.assign(this.data, update); if (cb) cb() },
     triggerEvent(name, detail) { events.push({ name, detail }) },
     syncTimer() {}, stopTimer() {}, loadLeaderboard() {},
@@ -55,7 +57,7 @@ const flush = () => new Promise(setImmediate)
 
 test('★判过的回包带着卡:session 事件把 objectCard 原样抛给页面', async () => {
   const game = createGame([{ res: { code: 200, data: view(4, { objectCard: CARD }) } }])
-  await game.action('SUBMIT_PHOTO_CHECK', { imageUrl: 'https://x/p.jpg' })
+  await game.action('SUBMIT_PHOTO_CHECK', { imageUrl: 'media-asset:701' })
   const session = game.events.filter((e) => e.name === 'session').pop()
   assert.ok(session, '没有抛 session 事件')
   assert.deepEqual(session.detail.objectCard, CARD, 'objectCard 在 emitSession 这一层被丢了:当场那一屏永远出不了卡')
@@ -63,38 +65,40 @@ test('★判过的回包带着卡:session 事件把 objectCard 原样抛给页�
 
 test('回包没带卡(老模板 / 没判过 / 回读):objectCard 为 null,不是 undefined', async () => {
   const game = createGame([{ res: { code: 200, data: view(4) } }])
-  await game.action('SUBMIT_PHOTO_CHECK', {})
+  await game.action('SUBMIT_PHOTO_CHECK', { imageUrl: 'media-asset:701' })
   assert.equal(game.events.filter((e) => e.name === 'session').pop().detail.objectCard, null)
 })
 
 test('★提交被服务端拒(非 200):抛 actionfail,带上动作名', async () => {
-  const game = createGame([{ res: { code: 500, msg: '服务繁忙' } }])
-  await game.action('SUBMIT_PHOTO_CHECK', {})
+  const game = createGame([{ res: { code: 409, msg: '原版本已过期', data: { intentNotExecuted: true } } }])
+  await game.action('SUBMIT_PHOTO_CHECK', { imageUrl: 'media-asset:701' })
   assert.deepEqual(game.events.filter((e) => e.name === 'actionfail').map((e) => e.detail), [{ action: 'SUBMIT_PHOTO_CHECK', sessionId: 42 }])
 })
 
 test('状态已更新:回读完也抛 actionfail(这一步没提交)', async () => {
-  const game = createGame([{ res: { code: 500, msg: '状态已更新，请刷新' } }, { res: { code: 200, data: view(5) } }])
-  await game.action('SUBMIT_PHOTO_CHECK', {})
+  const game = createGame([{ res: { code: 409, msg: '状态已更新，请刷新', data: { intentNotExecuted: true } } }, { res: { code: 200, data: view(5) } }])
+  await game.action('SUBMIT_PHOTO_CHECK', { imageUrl: 'media-asset:701' })
   await flush()
   assert.equal(game.events.filter((e) => e.name === 'actionfail').length, 1)
 })
 
-test('响应丢失后回读:没写进去 → actionfail;回读也失败 → actionfail', async () => {
-  const notLanded = createGame([{ err: new Error('timeout') }, { res: { code: 200, data: view(3) } }])
-  await notLanded.action('SUBMIT_PHOTO_CHECK', {})
+test('响应丢失后回读:明确未执行才 actionfail；回读失败继续保留原照片命令', async () => {
+  const notLanded = createGame([{ err: new Error('timeout') }, { res: { code: 409, data: { intentNotExecuted: true } } }, { res: { code: 200, data: view(3) } }])
+  await notLanded.action('SUBMIT_PHOTO_CHECK', { imageUrl: 'media-asset:701' })
   await flush(); await flush()
   assert.equal(notLanded.events.filter((e) => e.name === 'actionfail').length, 1, '刷新说没写进去，却没通知页面')
 
   const readbackDown = createGame([{ err: new Error('timeout') }, { err: new Error('timeout') }])
-  await readbackDown.action('SUBMIT_PHOTO_CHECK', {})
+  await readbackDown.action('SUBMIT_PHOTO_CHECK', { imageUrl: 'media-asset:701' })
   await flush(); await flush()
-  assert.equal(readbackDown.events.filter((e) => e.name === 'actionfail').length, 1, '刷新也失败，那一屏还在转圈')
+  assert.equal(readbackDown.events.filter((e) => e.name === 'actionfail').length, 0, '未知不能回到取景制造新意图')
+  assert.equal(readbackDown.data.unknown, true)
+  assert.equal(readbackDown._unknownCommand.version, 3)
 })
 
 test('负控:响应丢失但回读证明已写进去 → 不抛 actionfail(那是成功)', async () => {
   const game = createGame([{ err: new Error('timeout') }, { res: { code: 200, data: view(4) } }])
-  await game.action('SUBMIT_PHOTO_CHECK', {})
+  await game.action('SUBMIT_PHOTO_CHECK', { imageUrl: 'media-asset:701' })
   await flush(); await flush()
   assert.equal(game.events.filter((e) => e.name === 'actionfail').length, 0)
 })
@@ -104,7 +108,7 @@ for (const withCard of [true, false]) {
     const game = createGame([]);
     let finish;
     game.request = () => new Promise(resolve => { finish = resolve; });
-    const old = game.action('SUBMIT_PHOTO_CHECK', {});
+    const old = game.action('SUBMIT_PHOTO_CHECK', { imageUrl: 'media-asset:701' });
     game.hydrate(view(5, { vars: { stage: 'latest' }, readyForBase: true,
       playKit: { photoCheck: { title: '原玩法', passed: true } } }));
     const current = game.data.state;

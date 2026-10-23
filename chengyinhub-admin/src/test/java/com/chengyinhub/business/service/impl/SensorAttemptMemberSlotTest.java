@@ -72,6 +72,7 @@ class SensorAttemptMemberSlotTest {
         PlayTeamMapper teamMapper = mock(PlayTeamMapper.class);
         route = mock(ITopicRouteRuntimeService.class);
         service = new AdvancedGameRuntimeServiceImpl();
+        com.chengyinhub.business.service.impl.AdvancedActionTestFixtures.transactions(service);
         ReflectionTestUtils.setField(service, "sessionMapper", sessionMapper);
         ReflectionTestUtils.setField(service, "nodeMapper", nodeMapper);
         ReflectionTestUtils.setField(service, "templateMapper", mock(CmsMemberTemplateMapper.class));

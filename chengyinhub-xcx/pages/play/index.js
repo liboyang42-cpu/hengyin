@@ -6978,13 +6978,17 @@ Page({
       // 组件拍照回调带了真实 size 就交给共享入口按生产 10MB 预检:超限不发起 wxUploadFile,
       // 直接给「压缩/换文件」可操作文案;size 未知(旧组件/拿不到)按 undefined 放行,由服务端拦截。
       fileSizes: [detail && detail.size],
+      mapResult: option.name === 'SUBMIT_PHOTO_CHECK' ? data => ({ url: data.url,
+        photoReference: (typeof data.assetId !== 'number' || Number.isSafeInteger(data.assetId))
+          && /^[1-9][0-9]{0,18}$/.test(String(data.assetId || '')) ? 'media-asset:' + data.assetId : '' }) : undefined,
       onDone: (r) => {
         const owned = this._kitPhotoIntent === intent && contextCurrent();
         if (!settle()) return;
         if (operation.isAborted()) return;
         operation.finish();
         if (!owned) return;
-        const url = r && r.ok && r.results && r.results[0];
+        const uploaded = r && r.ok && r.results && r.results[0];
+        const url = option.name === 'SUBMIT_PHOTO_CHECK' ? uploaded && uploaded.photoReference : uploaded;
         const currentGame = this.selectComponent('#advancedGame');
         const currentState = currentGame && currentGame.data && currentGame.data.state;
         const currentKit = this._kit();

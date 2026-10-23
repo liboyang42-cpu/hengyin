@@ -170,7 +170,7 @@ class CoopSettlementPerMerchantTest {
 
         PreparedCoopPlanFixture.topic(TOPIC);
 
-        svc.settleCoopTopic(topic(), new BigDecimal("5000"));
+        PreparedCoopPlanFixture.settle(svc, topic(), new BigDecimal("5000"));
 
         Map<String, List<CoopSettlement>> lines = capturedLines();
         assertAmount("2000.00", lineOf(lines, "MERCHANT_VERIFY", MERCHANT_A), "A 接待 100 人 → 20×100");
@@ -204,7 +204,7 @@ class CoopSettlementPerMerchantTest {
 
         PreparedCoopPlanFixture.topic(TOPIC);
 
-        svc.settleCoopTopic(topic(), new BigDecimal("5000"));
+        PreparedCoopPlanFixture.settle(svc, topic(), new BigDecimal("5000"));
 
         Map<String, List<CoopSettlement>> lines = capturedLines();
         assertAmount("1200.00", lineOf(lines, "MERCHANT_VERIFY", MERCHANT_A), "A:自己的 4000×30%,不是全主题 5000×30%");
@@ -229,7 +229,7 @@ class CoopSettlementPerMerchantTest {
 
         PreparedCoopPlanFixture.topic(TOPIC);
 
-        svc.settleCoopTopic(topic(), new BigDecimal("50"));
+        PreparedCoopPlanFixture.settle(svc, topic(), new BigDecimal("50"));
 
         Map<String, List<CoopSettlement>> lines = capturedLines();
         assertAmount("5.00", lineOf(lines, "MERCHANT_VERIFY", MERCHANT_A), "玩家只到过 A");
@@ -259,7 +259,7 @@ class CoopSettlementPerMerchantTest {
 
         PreparedCoopPlanFixture.topic(TOPIC);
 
-        svc.settleCoopTopic(topic(), new BigDecimal("5000"));
+        PreparedCoopPlanFixture.settle(svc, topic(), new BigDecimal("5000"));
 
         Map<String, List<CoopSettlement>> lines = capturedLines();
         assertAmount("1000.00", lineOf(lines, "LEAD_FEE", 900009L), "俱乐部带队按全主题 100 人头 × ¥10");
@@ -280,7 +280,7 @@ class CoopSettlementPerMerchantTest {
 
         PreparedCoopPlanFixture.topic(TOPIC);
 
-        svc.settleCoopTopic(topic(), new BigDecimal("5000"));
+        PreparedCoopPlanFixture.settle(svc, topic(), new BigDecimal("5000"));
 
         Map<String, List<CoopSettlement>> lines = capturedLines();
         assertEquals(Integer.valueOf(100), lineOf(lines, "MERCHANT_VERIFY", MERCHANT_A).getVerifiedHeads(),

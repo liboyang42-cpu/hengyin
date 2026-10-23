@@ -54,6 +54,7 @@ class ZeroChallengeReentryTimeoutV2Test {
         teamMapper = mock(PlayTeamMapper.class);
         route = mock(ITopicRouteRuntimeService.class);
         service = new AdvancedGameRuntimeServiceImpl();
+        com.chengyinhub.business.service.impl.AdvancedActionTestFixtures.transactions(service);
         ReflectionTestUtils.setField(service, "verifiedWeRunService", com.chengyinhub.business.it.R5WeRunFixture.service());
         ReflectionTestUtils.setField(service, "sessionMapper", sessionMapper);
         ReflectionTestUtils.setField(service, "nodeMapper", nodeMapper);

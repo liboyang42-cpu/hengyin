@@ -1,6 +1,9 @@
 package com.chengyinhub.business.service.impl;
 
 import com.chengyinhub.business.domain.CoopOrder;
+import com.chengyinhub.business.domain.CmsTopic;
+import com.chengyinhub.business.domain.CmsRegistration;
+import java.util.*;
 import com.chengyinhub.business.domain.CoopSettlement;
 import com.chengyinhub.business.domain.dto.CoopGroupSettlementBasis;
 import com.chengyinhub.business.domain.dto.CoopSettlementPlan;
@@ -69,8 +72,44 @@ final class PreparedCoopPlanFixture {
             return null;
         }).when(claims).persist(any(), any());
         ReflectionTestUtils.setField(service, "coopSettlementClaimService", claims);
-        ReflectionTestUtils.setField(service, "coopSettlementEvidenceMapper", mock(CoopSettlementEvidenceMapper.class));
+        CoopSettlementEvidenceMapper evidence = mock(CoopSettlementEvidenceMapper.class);
+        when(evidence.selectTopicCashRowsForUpdate(any())).thenAnswer(call -> {
+            Long topicId = call.getArgument(0);
+            BigDecimal total = currentSales.get();
+            if (total == null) total = registrations.selectTotalSalesByTopicId(topicId);
+            if (total == null) total = BigDecimal.ZERO;
+            List<CmsRegistration> rows = new ArrayList<>();
+            CmsRegistration cash = cashRow(900000L, topicId, total, 2, false, null);
+            rows.add(cash);
+            // 显式组合夹具仍消费旧 stub 输入；生产代码不再读取这些普通聚合。
+            // status=3 核销行只重建旧审计 SUM/COUNT；现金仍仅由上面的 status=2 行决定。
+            BigDecimal verified = registrations.selectVerifiedSalesByTopicId(topicId);
+            if (verified == null) verified = BigDecimal.ZERO;
+            int members = registrations.selectVerifiedHeadsByTopicId(topicId);
+            List<Long> ids = registrations.selectVerifiedRegistrationIdsByTopicId(topicId);
+            if (ids == null || ids.isEmpty()) {
+                ids = new ArrayList<>();
+                for (int i=0; i<Math.max(members,verified.signum()==0?0:1); i++) ids.add(10000L+i);
+            }
+            for (int i=0; i<ids.size(); i++) {
+                rows.add(cashRow(ids.get(i),topicId,i==0?verified:BigDecimal.ZERO,3,true,
+                        members==0?null:100L+(i%members)));
+            }
+            return rows;
+        });
+        ReflectionTestUtils.setField(service, "coopSettlementEvidenceMapper", evidence);
     }
+    static void settle(CmsTopicServiceImpl service, CmsTopic topic, BigDecimal total) {
+        currentSales.set(total);
+        try { service.settleCoopTopic(topic,total); } finally { currentSales.remove(); }
+    }
+    private static CmsRegistration cashRow(Long id, Long topic, BigDecimal amount, int status,
+            boolean verified, Long member) {
+        CmsRegistration row = new CmsRegistration(); row.setId(id); row.setOwnerType(1L); row.setOwnerId(topic);
+        row.setPaymentStatus(2); row.setRegistrationStatus(status); row.setVerificationStatus(verified?1:0);
+        row.setPayableAmount(amount); row.setMemberId(member); return row;
+    }
+    private static final ThreadLocal<BigDecimal> currentSales = new ThreadLocal<>();
     private static final ThreadLocal<Long> currentTopic = new ThreadLocal<>();
     static void topic(Long topicId) { currentTopic.set(topicId); }
 }

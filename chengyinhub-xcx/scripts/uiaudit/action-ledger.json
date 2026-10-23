@@ -912595,7 +912595,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/advanced-game/index.js:85"
+        "staticSource": "pages/play/components/advanced-game/index.js:89"
       }
     },
     {
@@ -912675,7 +912675,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/advanced-game/index.js:517"
+        "staticSource": "pages/play/components/advanced-game/index.js:566"
       }
     },
     {
@@ -912755,7 +912755,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/advanced-game/index.js:519"
+        "staticSource": "pages/play/components/advanced-game/index.js:568"
       }
     },
     {
@@ -912844,7 +912844,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/advanced-game/index.js:396"
+        "staticSource": "pages/play/components/advanced-game/index.js:445"
       }
     },
     {
@@ -912983,7 +912983,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/advanced-game/index.js:380"
+        "staticSource": "pages/play/components/advanced-game/index.js:429"
       }
     },
     {
@@ -913122,7 +913122,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/advanced-game/index.js:449"
+        "staticSource": "pages/play/components/advanced-game/index.js:498"
       }
     },
     {
@@ -913261,7 +913261,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/advanced-game/index.js:456"
+        "staticSource": "pages/play/components/advanced-game/index.js:505"
       }
     },
     {
@@ -913400,7 +913400,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/advanced-game/index.js:450"
+        "staticSource": "pages/play/components/advanced-game/index.js:499"
       }
     },
     {
@@ -913480,7 +913480,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/advanced-game/index.js:517"
+        "staticSource": "pages/play/components/advanced-game/index.js:566"
       }
     },
     {
@@ -913593,7 +913593,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/advanced-game/index.js:461"
+        "staticSource": "pages/play/components/advanced-game/index.js:510"
       }
     },
     {
@@ -913732,7 +913732,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/advanced-game/index.js:195"
+        "staticSource": "pages/play/components/advanced-game/index.js:218"
       }
     },
     {
@@ -913812,7 +913812,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/advanced-game/index.js:513"
+        "staticSource": "pages/play/components/advanced-game/index.js:562"
       }
     },
     {
@@ -913951,7 +913951,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/advanced-game/index.js:263"
+        "staticSource": "pages/play/components/advanced-game/index.js:300"
       }
     },
     {
@@ -978286,7 +978286,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8073"
+        "staticSource": "pages/play/index.js:8077"
       }
     },
     {
@@ -978363,7 +978363,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8126"
+        "staticSource": "pages/play/index.js:8130"
       }
     },
     {
@@ -978440,7 +978440,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8116"
+        "staticSource": "pages/play/index.js:8120"
       }
     },
     {
@@ -978584,7 +978584,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8126"
+        "staticSource": "pages/play/index.js:8130"
       }
     },
     {
@@ -978661,7 +978661,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8116"
+        "staticSource": "pages/play/index.js:8120"
       }
     },
     {
@@ -978805,7 +978805,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8120"
+        "staticSource": "pages/play/index.js:8124"
       }
     },
     {
@@ -983068,7 +983068,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7492"
+        "staticSource": "pages/play/index.js:7496"
       }
     },
     {
@@ -983819,7 +983819,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7923"
+        "staticSource": "pages/play/index.js:7927"
       }
     },
     {
@@ -984212,7 +984212,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7544"
+        "staticSource": "pages/play/index.js:7548"
       }
     },
     {
@@ -984279,7 +984279,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7508"
+        "staticSource": "pages/play/index.js:7512"
       }
     },
     {
@@ -984362,7 +984362,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7378"
+        "staticSource": "pages/play/index.js:7382"
       }
     },
     {
@@ -984468,7 +984468,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7756"
+        "staticSource": "pages/play/index.js:7760"
       }
     },
     {
@@ -984539,7 +984539,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7492"
+        "staticSource": "pages/play/index.js:7496"
       }
     },
     {
@@ -984610,7 +984610,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7492"
+        "staticSource": "pages/play/index.js:7496"
       }
     },
     {
@@ -984697,7 +984697,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7999"
+        "staticSource": "pages/play/index.js:8003"
       }
     },
     {
@@ -984764,7 +984764,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8181"
+        "staticSource": "pages/play/index.js:8185"
       }
     },
     {
@@ -984918,7 +984918,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7999"
+        "staticSource": "pages/play/index.js:8003"
       }
     },
     {
@@ -984988,7 +984988,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8029"
+        "staticSource": "pages/play/index.js:8033"
       }
     },
     {
@@ -985055,7 +985055,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7276"
+        "staticSource": "pages/play/index.js:7280"
       }
     },
     {
@@ -987130,7 +987130,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7275"
+        "staticSource": "pages/play/index.js:7279"
       }
     },
     {
@@ -994632,7 +994632,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7106"
+        "staticSource": "pages/play/index.js:7110"
       }
     },
     {
@@ -994724,7 +994724,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7150"
+        "staticSource": "pages/play/index.js:7154"
       }
     },
     {
@@ -1001505,7 +1001505,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7274"
+        "staticSource": "pages/play/index.js:7278"
       }
     },
     {
@@ -1002764,7 +1002764,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7274"
+        "staticSource": "pages/play/index.js:7278"
       }
     },
     {
@@ -1004153,7 +1004153,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7106"
+        "staticSource": "pages/play/index.js:7110"
       }
     },
     {
@@ -1004245,7 +1004245,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7150"
+        "staticSource": "pages/play/index.js:7154"
       }
     },
     {
@@ -1005184,7 +1005184,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7418"
+        "staticSource": "pages/play/index.js:7422"
       }
     },
     {
@@ -1011292,7 +1011292,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7437"
+        "staticSource": "pages/play/index.js:7441"
       }
     },
     {

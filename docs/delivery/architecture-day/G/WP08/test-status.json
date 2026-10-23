@@ -1,0 +1,22 @@
+{
+  "source_sha256": "a7b0d882e8331fed8ac963caea2ad3933ec2fe59341086f58387b0e4388e7536",
+  "java_compile": "NOT_RUN",
+  "unit_tests": "NOT_RUN",
+  "mysql_it": "NOT_RUN",
+  "migration_applied": false,
+  "ci_dispatched": false,
+  "production_permissions": "NOT_VERIFIED",
+  "operational_activation": false,
+  "new_test_classes": {
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/Wp08DeliveryJobsMySqlIT.java": {
+      "test_methods": 7,
+      "status": "NOT_RUN"
+    },
+    "chengyinhub-admin/src/test/java/com/chengyinhub/quartz/service/Wp08DeliveryJobInvocationTest.java": {
+      "test_methods": 7,
+      "status": "NOT_RUN"
+    }
+  },
+  "existing_parameterized_admission_cases_added": 6,
+  "reason": "Java/MySQL仅在批准CI/VPS由root统一执行；本VM仅静态核对。"
+}

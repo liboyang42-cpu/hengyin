@@ -90,6 +90,7 @@ class PlayKitPhotoCheckRuntimeTest {
         PlayTeamMapper teamMapper = mock(PlayTeamMapper.class);
 
         service = new AdvancedGameRuntimeServiceImpl();
+        AdvancedActionTestFixtures.transactions(service);
         ReflectionTestUtils.setField(service, "sessionMapper", sessionMapper);
         ReflectionTestUtils.setField(service, "nodeMapper", nodeMapper);
         ReflectionTestUtils.setField(service, "templateMapper", mock(CmsMemberTemplateMapper.class));
@@ -116,7 +117,8 @@ class PlayKitPhotoCheckRuntimeTest {
         com.chengyinhub.business.service.support.AppMediaReferenceGuard reviewedMedia = new com.chengyinhub.business.service.support.AppMediaReferenceGuard();
         ReflectionTestUtils.setField(reviewedMedia, "mapper", reviewedImages);
         ReflectionTestUtils.setField(visionService, "mediaReferences", reviewedMedia);
-        ReflectionTestUtils.setField(service, "photoCheckVisionService", visionService);
+        AdvancedActionTestFixtures.photos(service, command -> visionService.review(
+                command.memberId(), command.imageReference(), command.requirement()));
 
         CmsTopicNode node = new CmsTopicNode();
         node.setId(NODE_ID);

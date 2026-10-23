@@ -1,0 +1,49 @@
+[
+  {
+    "file": "after.txt",
+    "command": [
+      "node",
+      "tests/lint/ui-integrity.js",
+      "--warn-as-error"
+    ],
+    "exitCode": 0
+  },
+  {
+    "file": "selftest.txt",
+    "command": [
+      "node",
+      "tests/lint/ui-integrity.js",
+      "--selftest",
+      "--warn-as-error"
+    ],
+    "exitCode": 0
+  },
+  {
+    "file": "cli-negative-sandbox.tap",
+    "command": [
+      "node",
+      "--test",
+      "--test-isolation=none",
+      "--test-reporter=tap",
+      "tests/unit/ui-integrity-selftest-cli.test.js"
+    ],
+    "exitCode": 1,
+    "note": "Initial sandbox execution: empty stdout from positive child processes; kept for audit."
+  },
+  {
+    "file": "cli-negative.tap",
+    "command": [
+      "node",
+      "--test",
+      "--test-isolation=none",
+      "--test-reporter=tap",
+      "tests/unit/ui-integrity-selftest-cli.test.js"
+    ],
+    "exitCode": 0,
+    "permission": "approved local Node child-process execution",
+    "tests": 3,
+    "pass": 3,
+    "fail": 0,
+    "skip": 0
+  }
+]

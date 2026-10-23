@@ -105,6 +105,7 @@ class PlayKitBingoRuntimeTest {
         when(templateMapper.selectCmsMemberTemplateById(TEMPLATE_ID)).thenReturn(template);
 
         service = new AdvancedGameRuntimeServiceImpl();
+        com.chengyinhub.business.service.impl.AdvancedActionTestFixtures.transactions(service);
         ReflectionTestUtils.setField(service, "sessionMapper", sessionMapper);
         ReflectionTestUtils.setField(service, "nodeMapper", nodeMapper);
         ReflectionTestUtils.setField(service, "templateMapper", templateMapper);

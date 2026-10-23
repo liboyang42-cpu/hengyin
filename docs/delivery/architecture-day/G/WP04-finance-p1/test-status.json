@@ -1,0 +1,25 @@
+{
+  "parent": "a42172dc6e1565fa06b81c294de137c74f5fd979",
+  "aggregate_sha256": "1a5ef51192cf530bc142eb764d021ad5eb5d1a3e08855338999641d226900cab",
+  "actual_checks": [
+    "Python source scope/frozen files/XML/cache flag/test-shape/hash checks",
+    "git diff --check",
+    "ci/secret-file-gate.py"
+  ],
+  "java_compile": "NOT_RUN",
+  "new_unit_methods": {
+    "count": 10,
+    "status": "NOT_RUN"
+  },
+  "new_mysql_methods": {
+    "count": 4,
+    "class": "Wp04CurrentCashBasisMySqlIT",
+    "status": "NOT_RUN"
+  },
+  "old_regressions": "NOT_RUN on this delta",
+  "full_financial_service_chain": "NOT_RUN; H-G01/G03/G04 blocked",
+  "production_ddl": "NOT_EXECUTED",
+  "dispatch": "NOT_EXECUTED",
+  "root_ci_7_sql": "previous identity only, not evidence for this delta",
+  "source_review": "H9de37f77 actual full report read"
+}

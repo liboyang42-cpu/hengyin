@@ -115,6 +115,7 @@ class ObjectCardMintHookTest {
         CmsActivityMapper activityMapper = mock(CmsActivityMapper.class);
 
         service = new AdvancedGameRuntimeServiceImpl();
+        AdvancedActionTestFixtures.transactions(service);
         ReflectionTestUtils.setField(service, "sessionMapper", sessionMapper);
         ReflectionTestUtils.setField(service, "nodeMapper", nodeMapper);
         ReflectionTestUtils.setField(service, "templateMapper", mock(CmsMemberTemplateMapper.class));
@@ -137,7 +138,8 @@ class ObjectCardMintHookTest {
         com.chengyinhub.business.service.support.AppMediaReferenceGuard reviewedMedia = new com.chengyinhub.business.service.support.AppMediaReferenceGuard();
         ReflectionTestUtils.setField(reviewedMedia, "mapper", reviewedImages);
         ReflectionTestUtils.setField(visionService, "mediaReferences", reviewedMedia);
-        ReflectionTestUtils.setField(service, "photoCheckVisionService", visionService);
+        AdvancedActionTestFixtures.photos(service, command -> visionService.review(
+                command.memberId(), command.imageReference(), command.requirement()));
         objectCardService = mock(ObjectCardService.class);
         ReflectionTestUtils.setField(service, "objectCardService", objectCardService);
         com.chengyinhub.business.service.support.AppMediaReferenceGuard media = mock(com.chengyinhub.business.service.support.AppMediaReferenceGuard.class);

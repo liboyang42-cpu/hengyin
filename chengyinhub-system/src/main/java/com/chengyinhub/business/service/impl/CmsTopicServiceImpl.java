@@ -16,6 +16,7 @@ import com.chengyinhub.business.domain.dto.NodeDTO;
 import com.chengyinhub.business.domain.dto.TopicCreateDTO;
 import com.chengyinhub.business.domain.dto.TopicProductTypeResolver;
 import com.chengyinhub.business.domain.dto.TopicSettlementDTO;
+import com.chengyinhub.business.domain.dto.TopicSettlementCashBasis;
 import com.chengyinhub.business.domain.enums.TopicLifecycleState;
 import com.chengyinhub.business.domain.vo.TopicBundleSubmitResultVO;
 import com.chengyinhub.business.exception.ChapterFlowClientUpgradeRequiredException;
@@ -1234,16 +1235,26 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
             logger.info("主题 {} 已结算或正被并发结算,跳过(CAS 未领取)", topic.getId());
             return false;
         }
-        // 1. 计算主题总销售额（已支付且未退款的报名记录）
+        // 这里只用于缺产品类型/非 coop 的早拒绝；普通 RR 聚合绝不用于应付计算或零销售终态。
+        // 正式现金基数在下方按报名当前锁读重建。
         BigDecimal totalSales = cmsRegistrationMapper.selectTotalSalesByTopicId(topic.getId());
         if (topic.getProductType() == null && totalSales != null && totalSales.signum() > 0) {
             throw new ServiceException("NULL_PRODUCT_TYPE_WITH_SALES_FORBIDDEN: topicId="
                     + topic.getId() + ", totalSales=" + totalSales);
         }
         List<CoopOrder> effectiveOrders = coopOrderMapper.selectEffectiveOrdersByTopicId(topic.getId());
-        if (!effectiveOrders.isEmpty()) requireClassicTopicCashBasis(topic.getId());
-        if (totalSales == null || totalSales.compareTo(BigDecimal.ZERO) <= 0) {
-            requireClassicTopicCashBasis(topic.getId());
+        if (effectiveOrders.isEmpty() && totalSales != null && totalSales.signum() > 0) {
+            throw new ServiceException("NON_COOP_TOPIC_CASH_SETTLEMENT_UNPROVEN: topicId=" + topic.getId());
+        }
+        requireClassicTopicCashBasis(topic.getId());
+        TopicSettlementCashBasis cashBasis = lockTopicCashBasis(topic.getId());
+        totalSales = cashBasis.getTotalSales();
+        if (topic.getProductType() == null && totalSales.signum() > 0) {
+            throw new ServiceException("NULL_PRODUCT_TYPE_WITH_SALES_FORBIDDEN: topicId="
+                    + topic.getId() + ", totalSales=" + totalSales);
+        }
+        if (totalSales.signum() == 0) {
+            validateZeroCashCoopContracts(topic, effectiveOrders);
             logger.info("主题 {} 没有销售额，跳过结算", topic.getId());
             refundTopicDeposits(topic.getId());
             // is_settlement 已由入口 claimTopicForSettlement 置 1,无需再标记
@@ -1270,7 +1281,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
             // 不恢复 publisher 现金，也不偷发积分。
             throw new ServiceException("NON_COOP_TOPIC_CASH_SETTLEMENT_UNPROVEN: topicId=" + topic.getId());
         }
-        settleCoopTopic(topic, totalSales);
+        settleCoopTopicFromCashBasis(topic, cashBasis);
 
 
         // H8:现金/应付台账写完后才发作品结算积分；失败向外抛，回滚本主题 CAS 与全部结算写入。
@@ -1343,7 +1354,12 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
      * 发起人保底/毛利同样挂 T+7 应付。分成型=share_rate×核销销售额,固定型=¥F×核销人头,引流型=0。
      * 只在 settleTopic 里对"有生效 coop_order 的主题"调用,存量主题不受影响。
      */
-    void settleCoopTopic(CmsTopic topic, BigDecimal totalSales) {
+    // 保留包内组合测试调用形状；传入的旧聚合只作调用兼容，绝不决定任何现金金额。
+    void settleCoopTopic(CmsTopic topic, BigDecimal ignoredLegacySales) {
+        settleCoopTopicFromCashBasis(topic, null);
+    }
+
+    private void settleCoopTopicFromCashBasis(CmsTopic topic, TopicSettlementCashBasis cashBasis) {
         // 幂等:该主题已分项结算过(存在 PLATFORM 行)→ 跳过。平台/发起人行无 coop_order_id,不受 countByOrderId 防重覆盖,
         // 若外层重跑(如结算后标记失败被 per-topic catch 吞掉)会双挂平台/保底/毛利行,此处 topic 级去重兜住。
         // ⚠️ 这条语义覆盖①经典定向/②漫游全部 coop 主题,不是 H8 的裁决范围,不得为 H8 改成硬失败。
@@ -1354,14 +1370,19 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         if (coopSettlementClaimService == null) {
             throw new IllegalStateException("MANUAL_REPAIR:COOP_CLAIM_SERVICE_REQUIRED");
         }
+        if (cashBasis == null) cashBasis = lockTopicCashBasis(topic.getId());
+        BigDecimal totalSales = cashBasis.getTotalSales();
+        if (totalSales.signum() <= 0) {
+            throw new IllegalStateException("MANUAL_REPAIR:POSITIVE_COOP_CASH_BASIS_REQUIRED");
+        }
         // [P0-28 批1] 读**主题锁价时冻的快照**,不是 live 值 —— 用 live 值 = 调一次费率
         // 追溯改写所有已售未结订单,平台多抽 → 发起人 margin<0 → 守恒断言拒结 → 款项悬空。
         BigDecimal platformRate = pricingService.platformRateOf(topic);
         BigDecimal platformAmount = totalSales.multiply(platformRate).setScale(2, java.math.RoundingMode.HALF_UP);
-        BigDecimal verifiedSales = coopVerifiedSales(topic.getId());
-        int verifiedHeads = cmsRegistrationMapper.selectVerifiedHeadsByTopicId(topic.getId());
-        // T9:结算审计快照——本次计入结算的已核销报名 id,落到每张结算单供对账/纠纷回溯
-        String verifiedRegIds = joinVerifiedRegIds(cmsRegistrationMapper.selectVerifiedRegistrationIdsByTopicId(topic.getId()));
+        BigDecimal verifiedSales = cashBasis.getVerifiedSales();
+        int verifiedHeads = cashBasis.getVerifiedHeads();
+        // T9 审计与现金使用同一批锁读行，避免 RR 旧视图与商家当前履约选集混用。
+        String verifiedRegIds = joinVerifiedRegIds(cashBasis.getVerifiedRegistrationIds());
 
         Date now = new Date();
         Date payable = topic.getEndDate() != null
@@ -1491,13 +1512,50 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         refundTopicDeposits(topic.getId());
     }
 
+    /** 注册锁先于退款事实锁；已批准退款仍不猜净额，更不以零元跳过退款证据。 */
+    private TopicSettlementCashBasis lockTopicCashBasis(Long topicId) {
+        List<CmsRegistration> topicRows = coopSettlementEvidenceMapper.selectTopicCashRowsForUpdate(topicId);
+        List<CmsRegistration> activityRows = coopSettlementEvidenceMapper.selectTopicActivityCashRowsForUpdate(topicId);
+        if (topicRows == null || activityRows == null) {
+            throw new IllegalStateException("MANUAL_REPAIR:CURRENT_CASH_ROWS_REQUIRED");
+        }
+        List<CmsRegistration> locked = new ArrayList<>(topicRows);
+        locked.addAll(activityRows);
+        TopicSettlementCashBasis basis = TopicSettlementCashBasis.fromLockedRows(topicId, locked);
+        List<Long> refunds = coopSettlementEvidenceMapper.selectCashBasisBlockingRefundIdsForUpdate(topicId);
+        if (refunds == null || !refunds.isEmpty()) {
+            throw new IllegalStateException("MANUAL_REPAIR:REFUND_NET_BASIS_UNPROVEN");
+        }
+        return basis;
+    }
+
+    /** 零现金也必须校验冻结来源、合法路径与封窗；未证正报酬不以零终态消耗合同。 */
+    private void validateZeroCashCoopContracts(CmsTopic topic, List<CoopOrder> orders) {
+        if (orders.isEmpty()) return;
+        if (coopSettlementClaimService == null) {
+            throw new IllegalStateException("MANUAL_REPAIR:COOP_CLAIM_SERVICE_REQUIRED");
+        }
+        List<CoopSettlementPlan> plans = new ArrayList<>();
+        Date now = new Date();
+        for (CoopOrder order : orders) {
+            CoopSettlementPlan plan = coopSettlementClaimService.prepare(order, now);
+            if (plan == null) throw new IllegalStateException("MANUAL_REPAIR:COOP_CLAIM_PLAN_REQUIRED");
+            if (!topic.getId().equals(plan.getSnapshot().getTopicId()) || topic.getMemberId() == null
+                    || !topic.getMemberId().equals(plan.getSnapshot().getInitiatorMemberId())) {
+                throw new IllegalStateException("MANUAL_REPAIR:TOPIC_INITIATOR_SNAPSHOT_CONFLICT");
+            }
+            if (!"NONE".equals(plan.getRoute())) {
+                throw new IllegalStateException("MANUAL_REPAIR:ZERO_CASH_COMPENSATION_UNPROVEN");
+            }
+            plans.add(plan);
+        }
+        for (CoopSettlementPlan plan : plans) coopSettlementClaimService.persist(plan, null);
+    }
+
     /** 旧主题票现金总额不覆盖活动壳；不得把活动履约归入 TOPIC_EDITION 或按零元关账。 */
     private void requireClassicTopicCashBasis(Long topicId) {
         if (coopSettlementEvidenceMapper == null) {
             throw new IllegalStateException("MANUAL_REPAIR:COOP_EVIDENCE_MAPPER_REQUIRED");
-        }
-        if (coopSettlementEvidenceMapper.countPaidActivityRegistrations(topicId) > 0) {
-            throw new IllegalStateException("MANUAL_REPAIR:ACTIVITY_CASH_BASIS_UNSUPPORTED topicId=" + topicId);
         }
     }
 

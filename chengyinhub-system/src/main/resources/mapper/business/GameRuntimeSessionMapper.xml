@@ -87,7 +87,7 @@
         limit 1
     </select>
 
-    <select id="selectByIdForUpdate" resultMap="GameRuntimeSessionResult">
+    <select id="selectByIdForUpdate" resultMap="GameRuntimeSessionResult" useCache="false" flushCache="true">
         select <include refid="columns"/> from game_runtime_session s where s.id=#{id} for update
     </select>
     <select id="selectAccessibleById" resultMap="GameRuntimeSessionResult">
@@ -101,6 +101,18 @@
         )
         limit 1
     </select>
+    <select id="selectAccessibleByIdForUpdate" useCache="false" flushCache="true" resultMap="GameRuntimeSessionResult">
+        select <include refid="columns"/> from game_runtime_session s
+        where s.id=#{id} and (
+          (s.owner_type=1 and s.owner_id=#{memberId})
+          or (s.owner_type=2 and exists (
+              select 1 from play_team_member m
+              where m.team_id=s.owner_id and m.member_id=#{memberId} and m.status=1 for update
+          ))
+        )
+        limit 1 for update
+    </select>
+
 
     <select id="selectStateJsonsByTopic" resultType="java.lang.String">
         select s.state_json from game_runtime_session s

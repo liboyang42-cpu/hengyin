@@ -53,7 +53,7 @@
         WHERE id=#{id} AND member_id=#{memberId} AND request_fingerprint=#{fingerprint}
         FOR UPDATE
     </select>
-    <select id="selectForUpdate" resultMap="Intent">
+    <select id="selectForUpdate" resultMap="Intent" useCache="false" flushCache="true">
         SELECT * FROM photo_check_intent WHERE id=#{id} AND request_fingerprint=#{fingerprint} FOR UPDATE
     </select>
     <update id="claim">
