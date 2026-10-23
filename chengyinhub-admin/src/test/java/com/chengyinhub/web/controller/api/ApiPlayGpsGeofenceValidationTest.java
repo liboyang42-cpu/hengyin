@@ -65,6 +65,7 @@ class ApiPlayGpsGeofenceValidationTest
     private static final String CODE = "STORE-CODE";
     private static final String NODE_LNG = "121.4737";
     private static final String NODE_LAT = "31.2304";
+    private static final String VALID_ACCURACY = "15";
 
     private IPlayerNodeProgressService progressService;
     private IPointsAwardService pointsAwardService;
@@ -173,10 +174,11 @@ class ApiPlayGpsGeofenceValidationTest
         CurrentPlayControllerFixtures.install(controller);
     }
 
+    /** 坐标判定路径必须带精度(O-01 已删空精度放行);本组用例只验坐标,精度给合法值 */
     private AjaxResult arrive(String longitude, String latitude)
     {
         return controller.arrive(String.valueOf(ACTIVITY), String.valueOf(NODE),
-                longitude, latitude, null, null, null);
+                longitude, latitude, null, null, null, VALID_ACCURACY);
     }
 
     private void verifyNoProgressAndNoReward()
@@ -283,44 +285,51 @@ class ApiPlayGpsGeofenceValidationTest
                 NODE_LNG, NODE_LAT, null, null, null, accuracy);
     }
 
+    /** O-01 终态:空精度不再放行,无论守卫是否装配、开关如何;拒绝在守卫之前,不落守卫表、不可申诉。 */
     @Test
-    void blankAccuracyIsAllowedForLegacyClients()
+    void blankAccuracyIsRejectedWithMachineCodeWithoutProgressOrReward()
     {
-        assertEquals(200, arriveWithAccuracy(null).get("code"));
-        assertEquals(200, arriveWithAccuracy("  ").get("code"));
+        for (String blank : new String[] { null, "", "  " }) {
+            AjaxResult result = arriveWithAccuracy(blank);
+            assertNotEquals(200, result.get("code"), "空精度不得放行:[" + blank + "]");
+            assertEquals("ARRIVE_ACCURACY_MISSING", result.get("errorCode"));
+            assertEquals(Boolean.FALSE, result.get("appealable"));
+        }
+        // 7 参重载(不带精度)同样被拒
+        AjaxResult legacy = controller.arrive(String.valueOf(ACTIVITY), String.valueOf(NODE),
+                NODE_LNG, NODE_LAT, null, null, null);
+        assertEquals("ARRIVE_ACCURACY_MISSING", legacy.get("errorCode"));
+        verifyNoProgressAndNoReward();
     }
 
     @Test
-    void blankAccuracyStillAllowedWhenGuardInstalledWithDefaultSwitches()
+    void blankAccuracyIsRejectedBeforeGuardEvenWhenGuardInstalled()
     {
         com.chengyinhub.business.service.support.ArriveLocationGuard guard =
                 mock(com.chengyinhub.business.service.support.ArriveLocationGuard.class);
-        when(guard.check(any(), any(), any(), any(), org.mockito.ArgumentMatchers.anyDouble(),
-                org.mockito.ArgumentMatchers.anyDouble(), any()))
-                .thenReturn(new com.chengyinhub.business.service.support.ArriveLocationGuard.Result(null, null, null, false));
-        ReflectionTestUtils.setField(controller, "arriveLocationGuard", guard);
-
-        assertEquals(200, arriveWithAccuracy(null).get("code"), "require_accuracy 默认 false:旧版小程序照常放行");
-        verify(progressionService).onNodeDone(PLAYER);
-    }
-
-    @Test
-    void blankAccuracyRejectedOnlyWhenRequireAccuracySwitchOn()
-    {
-        com.chengyinhub.business.service.support.ArriveLocationGuard guard =
-                mock(com.chengyinhub.business.service.support.ArriveLocationGuard.class);
-        when(guard.requireAccuracy()).thenReturn(true);
         ReflectionTestUtils.setField(controller, "arriveLocationGuard", guard);
 
         AjaxResult result = arriveWithAccuracy(null);
         assertNotEquals(200, result.get("code"));
         assertEquals("ARRIVE_ACCURACY_MISSING", result.get("errorCode"));
+        verify(guard, never()).check(any(), any(), any(), any(), org.mockito.ArgumentMatchers.anyDouble(),
+                org.mockito.ArgumentMatchers.anyDouble(), any());
         verifyNoProgressAndNoReward();
-        // 报了精度的新版不受该开关影响
+    }
+
+    @Test
+    void validAccuracyBehaviourIsUnchangedWithGuardInstalled()
+    {
+        com.chengyinhub.business.service.support.ArriveLocationGuard guard =
+                mock(com.chengyinhub.business.service.support.ArriveLocationGuard.class);
         when(guard.check(any(), any(), any(), any(), org.mockito.ArgumentMatchers.anyDouble(),
                 org.mockito.ArgumentMatchers.anyDouble(), any()))
                 .thenReturn(new com.chengyinhub.business.service.support.ArriveLocationGuard.Result(null, null, null, false));
+        ReflectionTestUtils.setField(controller, "arriveLocationGuard", guard);
+
         assertEquals(200, arriveWithAccuracy("30").get("code"));
+        verify(guard).check(PLAYER, ACTIVITY, TOPIC, NODE, Double.parseDouble(NODE_LAT), Double.parseDouble(NODE_LNG), 30d);
+        verify(progressionService).onNodeDone(PLAYER);
     }
 
     @Test
@@ -381,6 +390,8 @@ class ApiPlayGpsGeofenceValidationTest
             AjaxResult result = arriveWithAccuracy(bad);
             assertNotEquals(200, result.get("code"), "非法精度不得通过:" + bad);
             assertEquals("定位无效", result.get("msg"));
+            assertEquals("ARRIVE_ACCURACY_INVALID", result.get("errorCode"));
+            assertEquals(Boolean.FALSE, result.get("appealable"));
         }
         verifyNoProgressAndNoReward();
     }

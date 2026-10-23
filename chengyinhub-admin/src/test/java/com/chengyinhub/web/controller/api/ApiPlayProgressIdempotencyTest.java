@@ -394,6 +394,129 @@ class ApiPlayProgressIdempotencyTest {
         verify(rewardDropService).rollDrop(anyLong(), anyLong(), anyLong(), anyLong(), anyLong());
     }
 
+    // ==================== #478-3:主题通关奖与节点同口径封顶 ====================
+
+    private static final Long EARLIER_NODE = 402L;
+
+    /** 通关链:两站都已完成(本站 + 先前一站),主题配了通关券与通关 XP 预算。 */
+    private com.chengyinhub.business.service.IAdvancedGameRuntimeService completionWithTwoDoneNodes(
+            boolean currentCapped, boolean earlierCapped) {
+        List<PlayerNodeProgress> doneRows = new ArrayList<>();
+        for (Long nodeId : new Long[]{EARLIER_NODE, NODE}) {
+            PlayerNodeProgress r = new PlayerNodeProgress();
+            r.setMemberId(MEMBER);
+            r.setNodeId(nodeId);
+            r.setStatus(1);
+            doneRows.add(r);
+        }
+        List<PlayerNodeProgress> existing = Collections.singletonList(existingProgressRow());
+        doAnswer(inv -> {
+            PlayerNodeProgress arg = inv.getArgument(0);
+            return arg != null && arg.getNodeId() != null ? existing : doneRows;
+        }).when(progressService).selectPlayerNodeProgressList(any(PlayerNodeProgress.class));
+        when(nodeService.selectCmsTopicNodeList(any())).thenReturn(java.util.Arrays.asList(node(), node()));
+        CmsTopic topic = topicForCompletion();
+        topic.setCompleteRewardCouponId(919L);
+        when(cmsTopicService.selectCmsTopicById(TOPIC)).thenReturn(topic);
+        when(badgeMapper.insertPlayerBadge(any(PlayerBadge.class))).thenReturn(1);
+        when(xpBudgetService.computeBudget(TOPIC)).thenReturn(Collections.singletonMap("remain", 30));
+        when(growthService.addCompletionExp(MEMBER, 30, TOPIC)).thenReturn(77L);
+        com.chengyinhub.business.mapper.TopicCompletionXpAwardMapper xpAwards =
+                mock(com.chengyinhub.business.mapper.TopicCompletionXpAwardMapper.class);
+        when(xpAwards.insert(eq(MEMBER), eq(TOPIC), eq(30), any())).thenReturn(1);
+        when(xpAwards.linkEarnedExp(MEMBER, TOPIC, 77L)).thenReturn(1);
+        ReflectionTestUtils.setField(ReflectionTestUtils.getField(controller, "topicCompletionAwardService"),
+                "xpAwardMapper", xpAwards);
+        com.chengyinhub.business.service.IAdvancedGameRuntimeService advanced =
+                mock(com.chengyinhub.business.service.IAdvancedGameRuntimeService.class);
+        when(advanced.rewardCappedToXpBadge(MEMBER, ACTIVITY, TOPIC, NODE)).thenReturn(currentCapped);
+        when(advanced.rewardCappedToXpBadge(MEMBER, ACTIVITY, TOPIC, EARLIER_NODE)).thenReturn(earlierCapped);
+        when(advanced.anyNodeRewardCappedToXpBadge(anyLong(), anyLong(), anyLong(), any())).thenCallRealMethod();
+        ReflectionTestUtils.setField(controller, "advancedGameRuntimeService", advanced);
+        return advanced;
+    }
+
+    private void assertThemeBonusCappedToXpBadgeMedal(Map<String, Object> result) {
+        assertEquals(true, result.get("completed"));
+        assertEquals("XP_BADGE_ONLY", result.get("topicRewardCeiling"));
+        verify(pointsAwardService, never()).award(eq(MEMBER), eq(13L), anyLong(), anyString());
+        verify(topicCompletionCouponRewardService, never()).grantOnce(anyLong(), anyLong(), anyLong());
+        // 仍发:通关勋章、通关成长徽章、通关探索值
+        verify(badgeMapper).insertPlayerBadge(argThat(b -> ("TOPIC_FINISH_" + TOPIC).equals(b.getBadgeCode())));
+        verify(playerProgressionService).onTopicComplete(MEMBER, TOPIC);
+        verify(growthService).addCompletionExp(MEMBER, 30, TOPIC);
+    }
+
+    /** 先前一站靠自报完成(本站可信):本站照发全套,但整部主题的通关积分与通关券不发。 */
+    @Test
+    void earlierSelfReportedNodeCapsTheThemeCompletionBonus() {
+        completionWithTwoDoneNodes(false, true);
+
+        Map<String, Object> result = invokeAdvance(MEMBER, node(), ACTIVITY, null);
+
+        assertFalse(result.containsKey("rewardCeiling"), "本站可信,节点奖不封顶");
+        verify(pointsAwardService).award(eq(MEMBER), eq(12L), eq(NODE), eq("节点打卡"));
+        assertThemeBonusCappedToXpBadgeMedal(result);
+    }
+
+    /** 最后一站本身靠自报完成:节点奖与通关奖一起封顶。 */
+    @Test
+    void currentSelfReportedNodeCapsBothNodeAndThemeBonus() {
+        completionWithTwoDoneNodes(true, false);
+
+        Map<String, Object> result = invokeAdvance(MEMBER, node(), ACTIVITY, null);
+
+        assertEquals("XP_BADGE_ONLY", result.get("rewardCeiling"));
+        verify(pointsAwardService, never()).award(eq(MEMBER), eq(12L), anyLong(), anyString());
+        assertThemeBonusCappedToXpBadgeMedal(result);
+    }
+
+    /** 负控:所有已完成节点都可信 ⇒ 通关积分、通关券照发,回包不带 topicRewardCeiling。 */
+    @Test
+    void allTrustedNodesKeepTheFullThemeCompletionBonus() {
+        com.chengyinhub.business.service.IAdvancedGameRuntimeService advanced = completionWithTwoDoneNodes(false, false);
+
+        Map<String, Object> result = invokeAdvance(MEMBER, node(), ACTIVITY, null);
+
+        assertEquals(true, result.get("completed"));
+        assertFalse(result.containsKey("topicRewardCeiling"));
+        verify(pointsAwardService).award(eq(MEMBER), eq(13L), eq(ACTIVITY), eq("通关主题"));
+        verify(topicCompletionCouponRewardService).grantOnce(TOPIC, MEMBER, 919L);
+        verify(growthService).addCompletionExp(MEMBER, 30, TOPIC);
+        // 两站都被问过 —— 判据覆盖全部已完成节点,不是只看本站
+        verify(advanced).rewardCappedToXpBadge(MEMBER, ACTIVITY, TOPIC, EARLIER_NODE);
+    }
+
+    /** ③ 自由收集的通关认商家核销(服务端可证),不因节点自报封顶 —— 与核销侧发奖同口径。 */
+    @Test
+    void freeCollectThemeCompletionStaysOnRedemptionEvidence() {
+        when(progressService.insertPlayerNodeProgress(any())).thenThrow(
+                new DuplicateKeyException("Duplicate entry for uk_progress"));
+        when(cmsTopicService.selectCmsTopicById(TOPIC)).thenReturn(topicForExploreCompletion());
+        CmsRegistration exploreReg = new CmsRegistration();
+        exploreReg.setId(777L);
+        exploreReg.setMemberId(MEMBER);
+        exploreReg.setOwnerType(2L);
+        exploreReg.setOwnerId(ACTIVITY);
+        exploreReg.setPurchaseKind(3);
+        exploreReg.setRegistrationStatus(2);
+        when(cmsRegistrationService.selectCmsRegistrationList(any()))
+                .thenReturn(Collections.singletonList(exploreReg));
+        when(perkLedgerService.isExploreCompleted(eq(777L), eq(TOPIC))).thenReturn(true);
+        when(badgeMapper.insertPlayerBadge(any(PlayerBadge.class))).thenReturn(1);
+        com.chengyinhub.business.service.IAdvancedGameRuntimeService advanced =
+                mock(com.chengyinhub.business.service.IAdvancedGameRuntimeService.class);
+        when(advanced.rewardCappedToXpBadge(anyLong(), anyLong(), anyLong(), anyLong())).thenReturn(true);
+        when(advanced.anyNodeRewardCappedToXpBadge(anyLong(), anyLong(), anyLong(), any())).thenReturn(true);
+        ReflectionTestUtils.setField(controller, "advancedGameRuntimeService", advanced);
+
+        Map<String, Object> result = invokeAdvance(MEMBER, node(), ACTIVITY, null);
+
+        assertEquals(true, result.get("completed"));
+        assertFalse(result.containsKey("topicRewardCeiling"));
+        verify(pointsAwardService).award(eq(MEMBER), eq(13L), eq(ACTIVITY), eq("通关主题"));
+    }
+
     private CmsTopicNode gameNodeWithCouponAndFragment() {
         CmsTopicNode n = node();
         n.setTemplateId(707L);

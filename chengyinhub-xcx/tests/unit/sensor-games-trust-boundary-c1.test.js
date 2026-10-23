@@ -171,3 +171,28 @@ test('安静挑战显示校准状态与相对阈值,不是分贝', () => {
   assert.equal(contract.relativeThresholdText(0), '')
   assert.equal(contract.relativeThresholdText(NaN), '')
 })
+
+// DOC2 FXA(#478-3 后续):BF4/W48R 点名的三个还没传号的组件 —— reaction / ballshake 接上 attemptId,
+// compass 开跑时报 START_CHALLENGE 领号。诚实玩家带上号,不会因为「没号」被一并封顶。
+test('reaction / ballShake 的 kit 原样搬服务端 attemptId,分发器绑到组件上;罗盘开表走 START_CHALLENGE', () => {
+  const now = new Date(2026, 9, 23, 12)
+  const view = (seg) => ({ sessionId: 's1', version: 1, playKit: seg })
+  assert.equal(pickPlayKit(view({ reaction: { rounds: 3, goalMs: 300, attemptId: 41 } }), now).attemptId, 41)
+  assert.equal(pickPlayKit(view({ ballShake: { goal: 20, attemptId: 42 } }), now).attemptId, 42)
+  assert.equal(pickPlayKit(view({ reaction: { rounds: 3, goalMs: 300 } }), now).attemptId, 0)
+  assert.equal(pickPlayKit(view({ ballShake: { goal: 20, attemptId: 'forged' } }), now).attemptId, 0)
+  const wxml = read('pages/play/components/playkit/index.wxml')
+  for (const tag of ['reaction', 'ballshake', 'compass']) {
+    const block = wxml.split('<cy-playkit-' + tag + ' ')[1].split('/>')[0]
+    assert.match(block, /attempt-id="\{\{kit\.attemptId\}\}"/, tag)
+    assert.match(block, /bind:start="onStart"/, tag + ' 开表才有服务端新发的号')
+  }
+  const { serverAction } = require('../../pages/play/utils/playkit-view.js')
+  assert.equal(serverAction('compass', 'start'), 'START_CHALLENGE')
+  assert.deepEqual(serverPayload('compass', 'start', {}), { game: 'compass' })
+  for (const [type, detail, expected] of [['reaction', { times: [210] }, { roundsMs: [210] }], ['ballshake', { hits: 9 }, { hits: 9 }]]) {
+    assert.deepEqual(serverPayload(type, 'submit', detail), expected, type + ' 存量口径不变')
+    assert.deepEqual(serverPayload(type, 'submit', Object.assign({ attemptId: 77 }, detail)), Object.assign({}, expected, { attemptId: 77 }))
+    assert.equal('attemptId' in serverPayload(type, 'submit', Object.assign({ attemptId: 'forged' }, detail)), false)
+  }
+})

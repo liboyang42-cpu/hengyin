@@ -125,13 +125,13 @@ public class AiGatewayServiceImpl implements AiGatewayService
     public AiGatewayResult generate(Long memberId, String role, String bizType,
                                      String systemPrompt, String userPrompt)
     {
-        // 0. 全链路 traceId:必须先于任何 saveLog 生成,否则 input-blocked / cache-only
-        //    两条分支落库的 trace_id 与返给前端的对不上(审计无法 join)。
-        String traceId = IdUtils.simpleUUID();
-
         // 玩家草稿由 Creator 的三次独立池计费；其他场景绑定本次原日预占。
         boolean playerThemeDraft = "player".equals(role) && "theme_draft".equals(bizType);
         String reservation = playerThemeDraft ? null : consumeQuota(memberId, bizType);
+        // 0. 全链路 traceId:必须先于任何 saveLog 生成,否则 input-blocked / cache-only
+        //    两条分支落库的 trace_id 与返给前端的对不上(审计无法 join)。
+        //    D-08:traceId 即本次预占 nonce,原日收据/台账 nonce 唯一键保证每个 traceId 至多退一次。
+        String traceId = traceIdOf(reservation);
         String openid;
         String secIn;
         try {
@@ -386,6 +386,14 @@ public class AiGatewayServiceImpl implements AiGatewayService
                     AiServiceException.Reason.UPSTREAM_UNAVAILABLE,
                     "AI 服务暂时不可用，请稍后重试", persistenceFailure);
         }
+    }
+
+    private static String traceIdOf(String reservation) {
+        if (reservation != null) {
+            String nonce = reservation.substring(reservation.lastIndexOf('|') + 1);
+            if (nonce.matches("[a-f0-9]{32}")) return nonce;
+        }
+        return IdUtils.simpleUUID();
     }
 
     private String receiptOf(Long memberId,String bizType,String token) {
