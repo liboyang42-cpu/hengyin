@@ -128,7 +128,7 @@ function assertLegacyMerchantHero(wxml, wxss) {
   //   任何兜底都判绿(本文件下方 box-shadow 那条注释记的是同一个坑)。把 \s* 挪进断言里面。
   assert.doesNotMatch(wxml, /merchantInfo\.logo\s*\|\|(?!\s*'')/,
     '商家没配 logo 时是空位，不能保底到个人头像或玩家默认头像');
-  assert.match(wxml, /class="rv-revenue-amount"[^>]*>[\s\S]*dashboardData\.revenue/);
+  assert.match(wxml, /class="rv-revenue-amount"[^>]*dashboardData\.revenue/);  // 读屏文本绑真值;反馈副文案已按文案精简清空(上线合并 2026-10-24)
   // 2026-10-22 owner 裁决推翻「首载 amount 骨架」:金额永远在位(首帧 ¥0.00),真值到了滚过去。
   const revenueZone = wxml.slice(wxml.indexOf('class="rv-revenue-zone"'), wxml.indexOf('<!-- 快捷操作 -->'));
   assert.match(revenueZone, /class="rv-revenue-amount"[^>]*>\{\{money\.amount2\(revenueShown\)\}\}</, '金额永远渲染屏上当前显示值');

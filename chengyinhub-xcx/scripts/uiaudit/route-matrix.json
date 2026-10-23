@@ -508,7 +508,7 @@
       "pagePath": "pages/publish/template-intro/index",
       "pkg": "pages/publish",
       "tabBar": false,
-      "role": "player",
+      "role": "merchant",
       "needsLogin": true,
       "needsData": false,
       "dataKeys": [],
@@ -589,8 +589,7 @@
       "dataKeys": [
         "id",
         "postId",
-        "topicId",
-        "chapterId"
+        "topicId"
       ],
       "hasJs": true,
       "hasWxml": true

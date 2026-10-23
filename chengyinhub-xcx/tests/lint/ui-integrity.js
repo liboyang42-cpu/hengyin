@@ -69,7 +69,8 @@ const NON_INCREASING_CEILING = Object.freeze({
   // 2026-10-12 主控批准新增本人投诉进展辅助读：仅500/网络留白，401/403/参数错误可见。
   // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新) 30 → 37:本线 9 处静默调用逐项写明理由(举报/纠错半屏失败落结果半屏、
   //   安全感受换取商家 ID 失败落半屏错误位、通知复盘写触达行、漫游头像堆/可参与官方活动与券统计为附属只读信息)。
-  u5Silent: 37,
+  // 2026-10-24 上线合并 37 → 39:业主 UI(#508)合作 tab 帖文流与竞猜待答入口两处静默读取,逐项理由见 baseline。
+  u5Silent: 39,
 });
 const EXCLUDED_DIRS = new Set([
   '.git', 'node_modules', 'miniprogram_npm', 'tests', 'scripts', 'coverage', 'dist',

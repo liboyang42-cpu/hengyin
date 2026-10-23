@@ -144,7 +144,7 @@
           <text class="post-card__comment-nick" wx:if="{{post.commentNick}}">{{post.commentNick}}</text>
           <text class="post-card__comment-text">{{post.commentText}}</text>
         </view>
-        <text class="post-card__comment-more" wx:if="{{post.commentCount > 0}}">查看全部 {{post.commentCount}} 条评论</text>
+        <text class="post-card__comment-more" wx:if="{{post.commentCount > 0}}">查看全部 {{post.commentCount || 0}} 条评论</text>
       </view>
     </block>
     <slot name="moderation" />
