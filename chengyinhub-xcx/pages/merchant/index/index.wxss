@@ -664,6 +664,40 @@ page {
 .rv-msg-sub { font-size: var(--cy-font-caption); color: var(--cy-color-text-tertiary); }
 .rv-msg-time { flex-shrink: 0; font-size: var(--cy-font-caption); color: var(--cy-color-text-tertiary); }
 
+/* 2026-10-23 业主:我的消息像券包/票夹一样分层叠放、点开展开、按类型分色。
+   色:会话蓝 / 系统通知灰 / 合作邀请琥珀 / 收入绿 / 核销青(沿用路线色 token,不新造色值)。
+   叠放:首张完整,后两张缩小上移只露上沿;点首张展开成独立卡片列(cy-fly-in 逐张飞入),回到页面重新叠起。 */
+.rv-msg-item { --msg-tone: var(--cy-color-text-tertiary); }
+.rv-msg-item--conversation { --msg-tone: var(--cy-route-2); }
+.rv-msg-item--conversation-2 { --msg-tone: var(--cy-color-text-tertiary); }
+.rv-msg-item--invite { --msg-tone: var(--cy-route-5); }
+.rv-msg-item--event-income { --msg-tone: var(--cy-route-3); }
+.rv-msg-item--event-verify { --msg-tone: var(--cy-route-4); }
+.rv-msg-card .rv-msg-ico { position: relative; overflow: hidden; background: transparent; color: var(--msg-tone); }
+.rv-msg-card .rv-msg-ico::before { content: ''; position: absolute; left: 0; top: 0; right: 0; bottom: 0; background: currentColor; opacity: .12; }
+
+.rv-msg-card.rv-msg-stack { position: relative; padding-top: 40rpx; background: transparent; box-shadow: none; overflow: visible; }
+.rv-msg-stack .rv-msg-item {
+  position: relative;
+  background: var(--cy-bg-card);
+  border-radius: var(--cy-radius-lg);
+  box-shadow: inset 8rpx 0 0 var(--msg-tone), 0 4rpx 10rpx rgba(0, 0, 0, 0.06); /* ds-ok: 左缘色条 + 同页卡片投影 */
+}
+.rv-msg-stack .rv-msg-item + .rv-msg-item { border-top: 0; }
+.rv-msg-stack:not(.rv-msg-stack--open) .rv-msg-item:first-child { z-index: 3; }
+.rv-msg-stack:not(.rv-msg-stack--open) .rv-msg-item:nth-child(n+2) {
+  position: absolute; left: 0; right: 0; top: 40rpx; bottom: 0;
+  transition: transform var(--cy-motion-standard) var(--cy-ease-standard);
+}
+.rv-msg-stack:not(.rv-msg-stack--open) .rv-msg-item:nth-child(n+2) > view,
+.rv-msg-stack:not(.rv-msg-stack--open) .rv-msg-item:nth-child(n+2) > text { visibility: hidden; }
+/* 叠在后面的两张整张染成自己的类型色,露出的上沿就是一条条色签(券包叠放的读法) */
+.rv-msg-stack:not(.rv-msg-stack--open) .rv-msg-item:nth-child(n+2) { background: var(--msg-tone); box-shadow: 0 4rpx 10rpx rgba(0, 0, 0, 0.06); } /* ds-ok: 同页卡片投影 */
+.rv-msg-stack:not(.rv-msg-stack--open) .rv-msg-item:nth-child(2) { z-index: 2; transform: translateY(-20rpx) scale(.95); opacity: .9; }
+.rv-msg-stack:not(.rv-msg-stack--open) .rv-msg-item:nth-child(3) { z-index: 1; transform: translateY(-40rpx) scale(.9); opacity: .7; }
+.rv-msg-stack--open { padding-top: 0; }
+.rv-msg-stack--open .rv-msg-item + .rv-msg-item { margin-top: var(--cy-space-2); }
+
 
 /* 稿 134:201 卡底行:左「承接方 · 幸会咖啡」,右一颗动作。稿上 12px 文字、行高 28。 */
 .rv-project-foot {

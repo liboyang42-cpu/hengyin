@@ -98,7 +98,7 @@ Page({
     joinTotal: 0,
     // 「我的消息」:站内会话 + 收到的协作邀请 + 经营动态合并后的前 3 条(utils/inbox-preview.js)。
     // inboxLoaded=false 时只占一行高度不画内容,避免加载中冒充「还没有消息」。
-    inboxItems: [],
+    inboxItems: [], msgOpen: false,
     inboxLoaded: false,
     inboxError: false,
     // BL-85 开通前置检查未完成项(只读;全部完成/无数据/失败时为空,不展示)
@@ -691,7 +691,7 @@ Page({
   },
 
   onShow(options) {
-    merchantTheme.merchantPageShow(); this._navigating = false;
+    merchantTheme.merchantPageShow(); this._navigating = false; if (this.data && this.data.msgOpen) this.setData({ msgOpen: false });
     // 回到页面不剥掉已确认的游戏入口卡(否则项目列先缩后涨);换主体时 clearMerchantScopedData 才清。
     this.resetGameStationSummaries();
     this._businessActionEpoch = (this._businessActionEpoch || 0) + 1;
@@ -1217,7 +1217,7 @@ Page({
   openInboxItem(e) {
     const key = String(((e && e.currentTarget && e.currentTarget.dataset) || {}).key || '');
     const item = (this.data.inboxItems || []).find((row) => row.key === key);
-    if (!item) return;
+    if (!item) return; if (!this.data.msgOpen && this.data.inboxItems.length > 1) { this.setData({ msgOpen: true }); return; } // 叠着时先展开(业主 10-23:像券包一样分层叠放、点开展开)
     if (item.kind === 'event') { this.goEvent({ currentTarget: { dataset: { type: item.type } } }); return; }
     if (this._navigating) return;
     let url = '';

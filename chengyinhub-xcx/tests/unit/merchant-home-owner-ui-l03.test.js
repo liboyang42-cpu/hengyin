@@ -216,6 +216,11 @@ test('(c) 我的消息:三路落定后一次合并,新的在前取 3 条;落定�
   assert.equal(page.data.inboxItems[2].title, '城瘾小助手')
   assert.equal(page.data.inboxItems.some((i) => i.conversationId === 12), false, '群聊不露出')
 
+  // 2026-10-23 业主:多条消息先叠放,第一次点只展开、不跳转;展开后再点才进详情
+  assert.equal(page.data.msgOpen, false)
+  page.openInboxItem({ currentTarget: { dataset: { key: page.data.inboxItems[0].key } } })
+  assert.equal(page.data.msgOpen, true, '叠放时点首张 = 展开')
+  assert.deepEqual(navigated, [], '展开这一下不能跳走')
   page.openInboxItem({ currentTarget: { dataset: { key: page.data.inboxItems[0].key } } })
   page.openInboxItem({ currentTarget: { dataset: { key: page.data.inboxItems[1].key } } })
   page.goInbox()

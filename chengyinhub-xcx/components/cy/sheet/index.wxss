@@ -177,6 +177,11 @@
   min-height: 0;
   box-sizing: border-box;
   overscroll-behavior: contain;
+  /* scroll-view 自带 width:100%:配上负的 body-margin-x 时整块只是左移、宽度不跟着加,
+     右侧被裁掉一截(发送邀约实测 body 334 而面板 374,主题横滑和输入框右缘都缺 20px)。
+     auto + stretch 才是「负边距向两侧撑满」。 */
+  width: auto;
+  align-self: stretch;
 }
 /* 抓手 / 头部 / 底部按钮:固定,不随正文滚,也不被压缩 */
 .sh__grip, .sh__head, .sh__footer { flex: none; }

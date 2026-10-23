@@ -246,10 +246,10 @@
         <text class="rv-section-title">我的消息</text>
         <view class="rv-section-more" bindtap="goInbox" aria-role="button" aria-label="查看全部消息" hover-class="cy-pressed" hover-stay-time="80"><text>全部</text><cy-icon name="arrow-right" size="24" /></view>
       </view>
-      <view class="rv-msg-card">
+      <view class="rv-msg-card {{inboxItems.length > 1 ? (msgOpen ? 'rv-msg-stack rv-msg-stack--open' : 'rv-msg-stack') : ''}}">
         <block wx:if="{{inboxItems.length}}">
-          <view class="rv-msg-item" wx:for="{{inboxItems}}" wx:key="key"
-                bindtap="openInboxItem" data-key="{{item.key}}" hover-class="rv-tap" aria-role="button" aria-label="查看消息：{{item.title}}">
+          <view class="rv-msg-item rv-msg-item--{{item.kind}} rv-msg-item--{{item.kind}}-{{item.type}} {{msgOpen ? 'cy-fly-in' : ''}}" style="{{msgOpen ? 'animation-delay:' + index * 50 + 'ms' : ''}}" wx:for="{{inboxItems}}" wx:key="key"
+                bindtap="openInboxItem" data-key="{{item.key}}" hover-class="rv-tap" aria-role="button" aria-label="{{(inboxItems.length > 1 && !msgOpen) ? '展开 ' + inboxItems.length + ' 条消息' : '查看消息：' + item.title}}">
             <view class="rv-msg-ico">
               <cy-icon name="{{item.icon}}" size="34" />
             </view>

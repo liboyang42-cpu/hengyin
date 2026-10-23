@@ -67,7 +67,7 @@
           <view class="pc-gamer-meta">
             <text class="pc-gamer-slogan" wx:if="{{subjectIsMerchant && subjectMerchant.slogan}}">{{subjectMerchant.slogan}}</text>
             <block wx:if="{{!subjectIsMerchant}}">
-              <view class="pc-gamer-loc"><cy-icon name="gps" size="24" />{{cityName}}</view>
+              <view class="pc-gamer-loc" wx:if="{{cityName && cityName !== '—'}}"><cy-icon name="gps" size="24" />{{cityName}}</view>
               <text class="pc-gamer-streak" wx:if="{{isSelf && profileMetricState === 'ready'}}">连续探索：{{streakDays || 0}}天</text>
             </block>
           </view>
