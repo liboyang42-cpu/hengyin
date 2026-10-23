@@ -40,7 +40,7 @@ Head：见本文件 SHA256 提交。隔离测试，不真实支付 / 退款 / �
 | `RefundPolicy#evaluate`（纯函数） | `FulfillmentEvidence` 退款试算，不调 `IRefundService` |
 | `IMerchantAftercareService` | 售后只投影开案，不调 `respond` |
 | `UserInvoiceServiceImpl` + `ManualInvoiceIssuer` | `InvoiceHistoryUnknown`：申请历史 ≠ 发票文件；MANUAL 永不 PRESENT |
-| `IFourLedgerReconcileService` / P1-5 四账 | `FourLedgerBillReread` 按原 requestId 回读；缺账单 UNKNOWN，不新开 reconcile |
+| `IFourLedgerReconcileService` / P1-5 四账 | `FourLedgerBillReread` 按原 requestId 回读；缺账单 / 缺金额 UNKNOWN，不把 null 金额写成 0，不新开 reconcile |
 | `SmsVerificationService`（D4 17） | **明确不是**转赠已售 policy / 指定接收者授权 / 原 receipt |
 
 ## 3. 首个可跑旅程（隔离测试）
@@ -80,12 +80,12 @@ BUILD SUCCESS
 
 SHA256（生产 6 类）：
 
-- `MerchantSupplyDryRun.java` `f8dc71a96507bce5bdc532c5d769f9be178557a016518dd30f56c8356e41aa27`
-- `FulfillmentEvidence.java` `475c06750338d38ac6312d50264d65e7d4306a03192f72546ca1ed5183cab793`
-- `EntitlementHoldProjection.java` `720204f8a3d354b487ba0e1a3f6473a0a4b8fc77996ca2d74350b969e7221ab0`
-- `TransferSoldPolicyGate.java` `f794145a34c3a63f07bee744606f4ec9f093e4d9470a90d84eaaa82f59f1e2cc`
-- `InvoiceHistoryUnknown.java` `03cd23c8c72c8dd3b0c1f63b37d287e9251a250bf6716701fb428052e1580738`
-- `FourLedgerBillReread.java` `be22e2d2a0e8ea287355d83099263bcc080904082839d82a8441571794885ecf`
+- `MerchantSupplyDryRun.java` `27134fa2adad6c3d7d8ba8e995ce55bdd612eee6bf49ac732fb8ec898dfa5a7a`
+- `FulfillmentEvidence.java` `ee84e6f46cf7bee0a88b2f47000479f027578162c94747b41f771e5bd6da1714`
+- `EntitlementHoldProjection.java` `34c12ec3703541a4d17f82c4088f2e88bf4d7c90e6d47cd1745101ca110622d4`
+- `TransferSoldPolicyGate.java` `b258252b200a09be7d31cfdb0aca99ea7f01a2216aa130db68f04029c709b5a2`
+- `InvoiceHistoryUnknown.java` `e04506004ec02599cc87d8f4dd2ef30ea52157042b615c0640b26dbc235d8df5`
+- `FourLedgerBillReread.java` `98f027fa691896b2fe43d43d5fc3d8ec565dcff8b5ebf386e9fee1ac84410f38`
 
 ## 4. WAITING_SOURCE / 未宣称完成
 

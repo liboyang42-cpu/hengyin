@@ -16,6 +16,8 @@ import com.chengyinhub.business.domain.LedgerDiscrepancy;
  * shaped facts. Does not call {@code FourLedgerReconcileServiceImpl} (no new
  * reconcile request, no auto-compensation). Missing bill / source hash is
  * UNKNOWN, same fail-closed as the writer's "账单尚未完整导入，待核实".
+ * Missing expected/actual amount stays {@code null} and is UNKNOWN, never a
+ * {@link BigDecimal#ZERO} coercion.
  *
  * <p>Amount tolerance copies the writer's {@code 0.01} constant; this adapter
  * must not reach into that class.
@@ -48,8 +50,6 @@ public final class FourLedgerBillReread {
 
         public BillFact {
             originalRequestId = FulfillmentEvidence.blankToNull(originalRequestId);
-            expectedAmount = expectedAmount == null ? BigDecimal.ZERO : expectedAmount;
-            actualAmount = actualAmount == null ? BigDecimal.ZERO : actualAmount;
             sourceHash = sourceHash == null ? "" : sourceHash;
         }
     }
@@ -117,6 +117,9 @@ public final class FourLedgerBillReread {
 
     private static Outcome outcomeOf(BillFact fact) {
         if (!fact.billPresent() || fact.sourceHash().isBlank()) {
+            return Outcome.UNKNOWN;
+        }
+        if (fact.expectedAmount() == null || fact.actualAmount() == null) {
             return Outcome.UNKNOWN;
         }
         BigDecimal delta = fact.actualAmount().subtract(fact.expectedAmount()).abs();

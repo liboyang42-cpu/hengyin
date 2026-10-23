@@ -2,6 +2,7 @@ package com.chengyinhub.business.service.fulfillment;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.math.BigDecimal;
@@ -48,5 +49,17 @@ class FourLedgerBillRereadTest {
         View view = reread.reread("c07-bill-3", List.of(gap));
         assertEquals(Outcome.DIVERGED, view.outcome(Dimension.MERCHANT_PAYABLE));
         assertFalse(view.startedNewReconcile());
+    }
+
+    @Test
+    void nullAmountIsUnknownNotZeroCoercion() {
+        BillFact fact = new BillFact("c07-bill-4", Dimension.WECHAT_TRADE,
+                null, null, true, "hash");
+        View view = reread.reread("c07-bill-4", List.of(fact));
+        assertEquals(Outcome.UNKNOWN, view.outcome(Dimension.WECHAT_TRADE));
+        assertNull(fact.expectedAmount());
+        assertNull(fact.actualAmount());
+        assertFalse(view.startedNewReconcile());
+        assertFalse(view.currentProjectionReplacesOriginal());
     }
 }
