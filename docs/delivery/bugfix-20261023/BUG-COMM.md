@@ -52,4 +52,9 @@ C00：请在合并后重建 `scripts/uiaudit/action-ledger.json`（`npm run audi
 
 ## CI
 
-- 运行 ID：见 PR 检查（下文补充）。
+PR #559，head `b36f9b88`：
+- GitHub CI `39962187478`：后端测试与其余小程序分片 / 门禁全绿。只有动作台账一项（「release 前重建 inventory」，以及静态门禁里的「全量可点击控件动作台账」）是红的，原因见上文：源码 digest 变了，台账需要 C00 重建，本 lane 不能提交台账。
+- Funds MySQL IT `39962187490`：success
+- Mini followup focused regression `39962187483`：success
+- Isolated authenticated Redis recovery `39962187508`：success
+- 上一个 head `a7cba7d1` 的运行 `39960517859`：静态门禁另外查出 `postsHasMore` 是死 setData 字段，已在 `b36f9b88` 中改为实例字段修复
