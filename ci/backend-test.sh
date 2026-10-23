@@ -129,6 +129,9 @@ MYBATIS_ITS=(
   O14CityCodeBackfillMySqlIT
   # DOC2 O5c-(a):统一留痕只读投影(五张留痕表分查 + 合并)。
   AuditTrailProjectionMySqlIT
+  # DOC2 FXA(#478-3):主题通关奖封顶判据读真 game_runtime_session JSON 快照 —— 任一已完成站自报/兜底 ⇒ 封顶,
+  #   别人的局、别的场次不算,视觉复核改判 PASS 后解除。
+  ThemeCompletionRewardCapMySqlIT
   # Lane BF4(W48R SHOULD-FIX 1):同意记录 requestId 去重 —— 并发同号重放只落一行、不一致重放 409、
   #   RR 旧快照下必须当前读到原记录。类上门控 CHENGYIN_CONSENT_IDEMPOTENCY_MYSQL_IT=1,下面 mvn 行显式打开。
   ConsentRecordIdempotencyMySqlIT

@@ -712,6 +712,43 @@ class TopicRouteRuntimeServiceImplTest {
         verify(awards).grantOnce(7L, 10L, 0L, null);
     }
 
+    /** #478-3:序章玩法靠设备自报完成 ⇒ 出发时发的整部通关奖同样封顶为探索值与徽章,不发通关积分与券。 */
+    @Test
+    void openingThemeAwardIsCappedWhenACompletedNodeReliedOnSelfReport() throws Exception {
+        ITopicCompletionAwardService awards = mock(ITopicCompletionAwardService.class);
+        ReflectionTestUtils.setField(runtime, "topicCompletionAwardService", awards);
+        com.chengyinhub.business.service.IAdvancedGameRuntimeService advanced =
+                mock(com.chengyinhub.business.service.IAdvancedGameRuntimeService.class);
+        when(advanced.rewardCappedToXpBadge(7L, 0L, 10L, 1L)).thenReturn(true);
+        when(advanced.anyNodeRewardCappedToXpBadge(anyLong(), anyLong(), anyLong(), any())).thenCallRealMethod();
+        ReflectionTestUtils.setField(runtime, "advancedGameRuntimeService", advanced);
+        CmsTopic topic = topicMapper.selectCmsTopicById(10L);
+        topic.setRouteMode("LINEAR");
+        topic.setPublishedRouteGraphJson(null);
+        topic.setJourneyStoryJson("{\"schemaVersion\":1,\"openingChapterId\":90}");
+        when(nodeMapper.selectCmsTopicNodeList(any(CmsTopicNode.class)))
+                .thenReturn(Collections.singletonList(node(1L, 1L)));
+        CmsTopicChapter opening = new CmsTopicChapter();
+        opening.setId(90L); opening.setTopicId(10L);
+        opening.setBlocksJson("[{\"type\":\"node\",\"id\":\"n1\",\"nodeId\":1}]");
+        when(cmsTopicChapterMapper.selectCmsTopicChapterList(any(CmsTopicChapter.class)))
+                .thenReturn(Collections.singletonList(opening));
+        when(routeMapper.updateStateCas(any(TopicRouteSession.class))).thenReturn(1);
+
+        runtime.state(7L, 10L, 0L);
+        com.fasterxml.jackson.databind.node.ObjectNode state =
+                (com.fasterxml.jackson.databind.node.ObjectNode) json.readTree(stored[0].getStateJson());
+        state.putArray("completedNodeIds").add(1L);
+        state.put("status", TopicRouteState.COMPLETED);
+        stored[0].setStateJson(state.toString());
+
+        TopicRouteState done = runtime.completeOpening(7L, 10L, 0L, 90L, stored[0].getVersion());
+
+        assertTrue(json.valueToTree(done).path("opening").path("themeComplete").asBoolean());
+        verify(awards).grantOnce(7L, 10L, 0L, null, com.chengyinhub.common.constant.RewardPolicy.XP_BADGE_ONLY);
+        verify(awards, never()).grantOnce(anyLong(), anyLong(), anyLong(), any());
+    }
+
     @Test
     void genericAttributesInitializeOnceAndOnlyVisibleFrozenAttributesAreReturned() throws Exception {
         CmsTopic topic = topicMapper.selectCmsTopicById(10L);

@@ -23,6 +23,8 @@ const EDGES = ['top', 'bottom', 'left', 'right'];
 const reducedMotionBehavior = require('../../../../behaviors/reduced-motion.js');
 const motion = require('../../../../utils/motion.js');
 const cyToast = require('../../../../utils/toast.js');
+// C1:有服务端为这一局新发的挑战身份就随撞击数交(与 stopwatch/shout 同一口径)
+const { withAttempt, freshAttempt } = require('../../utils/sensor-contract.js');
 
 /** 反弹:反向 + 一点随机。不加随机的话球会卡进一条来回直线,
  *  分照涨但人已经不用操作了 —— 那是动画不是游戏。 */
@@ -55,6 +57,8 @@ Component({
     seconds: { type: Number, value: 12 },
     challenge: { type: Object, value: null },
     sharedChallenge: { type: Boolean, value: false },
+    // C1:服务端发的挑战身份(0 = 没有,照旧只交撞击数)
+    attemptId: { type: Number, value: 0 },
   },
   data: {
     stageKeys: [0],
@@ -204,6 +208,8 @@ Component({
       } catch (error) { this._sensorFailed(attempt, '动作读取未能开始，重新开始会重新校准。'); return; }
       if (!this._current(attempt)) return;
       /* Preserve the existing server start/submit protocol. No result is sent on interruption. */
+      // 开表那一刻手里的号是上一局的;只有这次开表后服务端新发的号才随成绩交
+      attempt.attemptAtRun = this.data.attemptId;
       this.triggerEvent('start');
       if (!this._current(attempt)) return;
       this._armWatchdog(attempt);
@@ -264,7 +270,8 @@ Component({
         else if (won) stage.win('撞满了'); else stage.fail(true);
       }
       attempt.phase = 'finished';
-      this.triggerEvent('submit', { hits: this._hits || 0, passed: !!won });
+      this.triggerEvent('submit', withAttempt({ hits: this._hits || 0, passed: !!won },
+        { attemptId: freshAttempt(this.data.attemptId, attempt.attemptAtRun) }));
     },
     onSubmitHits() { if (this.data.running && this.data.sharedChallenge) this._finish(false); },
 
