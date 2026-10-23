@@ -1,0 +1,23 @@
+{
+  "source_assembly": "33ffb50086e85fca2238d9ca75df585a46226835",
+  "base": "765ea0366f43029b6fbd33df777e3f86e19c74e7",
+  "status": "ISOLATED_NOT_ACCEPTED",
+  "components": [
+    "F8aaa canonical layout/dependencies/custody",
+    "A2f legal single SIGNAL trigger parsing with exact negative controls; SQL bytes unchanged",
+    "D75 restricted historical backfill/preflight/postflight+2MySQL tests",
+    "D928 operator/Node fixture corrections"
+  ],
+  "verified": [
+    "Committed HEAD layout passed",
+    "Committed HEAD safety passed; both exact new migrations actually scanned and topology checked",
+    "Source gitleaks0; six Node contract cases pass"
+  ],
+  "known_open": [
+    "PR migration description policy not checked by manual local run",
+    "D2 new migration MySQL cases await test",
+    "C first candidate cached-empty P1 and fixture rollout pending",
+    "B payment and G settlement independently unaccepted",
+    "All WP/Q/G acceptance incomplete"
+  ]
+}

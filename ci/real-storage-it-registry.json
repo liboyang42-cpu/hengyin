@@ -277,6 +277,14 @@
         "com.chengyinhub.business.service.impl.ImConversationBatchReadMySqlIT",
         "com.chengyinhub.business.service.impl.ImConversationQueryScopeMySqlIT"
       ]
+    },
+    "architecture-day-broadcast-migration": {
+      "lineage": "A/F migration parser/layout and D historical scope/backfill integrated verification",
+      "registered_source": "33ffb50086e85fca2238d9ca75df585a46226835",
+      "note": "D original7+frequency1+canonical migration2. Immutable prior765 run remains42; this current source declares44 in wave2. No persistent/production DDL.",
+      "classes": [
+        "com.chengyinhub.business.service.impl.OfficialBroadcastDeliveryMySqlIT"
+      ]
     }
   },
   "classes": {
@@ -634,7 +642,7 @@
       "note": "Architecture day A: source now declares23 tests including four never-submitted recovery/race regressions. Original debit/submit intent/refund evidence and transaction races; provider is a stub."
     },
     "com.chengyinhub.business.service.impl.OfficialBroadcastDeliveryMySqlIT": {
-      "tests": 8,
+      "tests": 10,
       "storage": [
         "mysql"
       ],
