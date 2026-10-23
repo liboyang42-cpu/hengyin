@@ -860,6 +860,7 @@ Page({
             date: d.date, amount: d.amount,
             pct: max > 0 ? Math.max(4, Math.round((parseFloat(d.amount) || 0) / max * 100)) : 0,
           }));
+          if (expectsRevenue && !that._revCounted) { that._revCounted = true; PM.countIn(that, 'rvK'); } // 2026-10-23:累计收入第一次到达时从 0 数上去
           that.setData({
             dashboardData: {
               revenue: expectsRevenue ? revenue.toFixed(2) : null,

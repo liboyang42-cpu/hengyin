@@ -56,7 +56,7 @@
       </view>
 
       <!-- 编辑精选：紧跟 Banner，作为首页首个内容区块 -->
-      <view id="sec-reco" class="v3-sec v3-sec-reco" style="{{pm_recommendedTopicList === 1 ? '--pm-r:1;' : (pm_recommendedTopicList === 2 ? '--pm-r-d:.46s;--pm-r-s:1;' : '')}}">
+      <view id="sec-reco" class="v3-sec v3-sec-reco" style="{{pm_recommendedTopicList === 1 ? '--pm-r:1;' : (pm_recommendedTopicList === 2 ? '--pm-r-d:.32s;--pm-r-s:1;' : '')}}">
         <view class="v3-sec-head">
           <text class="v3-sec-title">编辑精选</text>
           <cy-btn variant="ghost" size="sm" bindtap="showRecommendationSource">为什么看到</cy-btn>
@@ -125,7 +125,7 @@
       </view>
 
       <!-- 附近活动：Figma 双列竖卡 -->
-      <view id="sec-nearby" class="v3-sec" style="{{pm_nearbyActivityList === 1 ? '--pm-n:1;' : (pm_nearbyActivityList === 2 ? '--pm-n-d:.46s;--pm-n-s:1;' : '')}}">
+      <view id="sec-nearby" class="v3-sec" style="{{pm_nearbyActivityList === 1 ? '--pm-n:1;' : (pm_nearbyActivityList === 2 ? '--pm-n-d:.32s;--pm-n-s:1;' : '')}}">
         <view class="v3-sec-head">
           <text class="v3-sec-title">附近活动</text>
         </view>
@@ -165,7 +165,7 @@
       </view>
 
       <!-- 即将上线：Figma 紧凑评论卡横滑 -->
-      <view id="sec-upcoming" class="v3-sec" wx:if="{{listLoading.upcomingActivityList || listErr.upcomingActivityList || upcomingActivityList.length}}" style="{{pm_upcomingActivityList === 1 ? '--pm-u:1;' : (pm_upcomingActivityList === 2 ? '--pm-u-d:.46s;--pm-u-s:1;' : '')}}">
+      <view id="sec-upcoming" class="v3-sec" wx:if="{{listLoading.upcomingActivityList || listErr.upcomingActivityList || upcomingActivityList.length}}" style="{{pm_upcomingActivityList === 1 ? '--pm-u:1;' : (pm_upcomingActivityList === 2 ? '--pm-u-d:.32s;--pm-u-s:1;' : '')}}">
         <view class="v3-sec-head">
           <text class="v3-sec-title">即将上线</text>
         </view>
@@ -208,7 +208,7 @@
                    active="{{activeTab}}" style="--cy-tabs-accent: var(--cy-text-title)" bind:change="switchTab" />
         </view>
 
-        <view class="v2-feed" wx:if="{{activeTab === '0'}}" style="{{pmFeed === 1 ? '--pm-f:1;' : (pmFeed === 2 ? '--pm-f-d:.46s;--pm-f-s:1;' : '')}}">
+        <view class="v2-feed" wx:if="{{activeTab === '0'}}" style="{{pmFeed === 1 ? '--pm-f:1;' : (pmFeed === 2 ? '--pm-f-d:.32s;--pm-f-s:1;' : '')}}">
           <view class="v2-fitem" wx:for="{{bottomTopicList}}" wx:key="id">
             <view class="v2-fcard" bindtap="goTopic" data-index="{{index}}" data-id="{{item.id}}" hover-class="cy-pressed" hover-stay-time="80">
               <view class="v2-fcard-l">
@@ -251,7 +251,7 @@
           <view class="no-more" wx:if="{{!hasMoreBottomTopic && bottomTopicList.length > 0}}"><text>· 没有更多了 ·</text></view>
         </view>
 
-        <view class="v2-feed" wx:if="{{activeTab === '1'}}" style="{{pmFeed === 1 ? '--pm-f:1;' : (pmFeed === 2 ? '--pm-f-d:.46s;--pm-f-s:1;' : '')}}">
+        <view class="v2-feed" wx:if="{{activeTab === '1'}}" style="{{pmFeed === 1 ? '--pm-f:1;' : (pmFeed === 2 ? '--pm-f-d:.32s;--pm-f-s:1;' : '')}}">
           <view class="v2-fitem" wx:for="{{bottomActivityList}}" wx:key="id">
             <view class="v2-fcard" bindtap="goActivity" data-index="{{index}}" data-id="{{item.id}}" hover-class="cy-pressed" hover-stay-time="80">
               <view class="v2-fcard-l">

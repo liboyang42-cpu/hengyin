@@ -10,7 +10,7 @@
   <!-- M1-3 门卡:非俱乐部成员看到的是加入引导,而不是占位标题 + 空票种的假详情 -->
   <cy-empty class="cy-fade-in" wx:elif="{{state === 'gate'}}" fill size="lg" title="{{gateMessage}}" sub="加入俱乐部后即可查看活动详情与票种" cta="{{gateClubId ? '去加入俱乐部' : '返回活动列表'}}" bind:cta="goGateClub" />
 
-  <view class="cy-fade-in" wx:elif="{{state === 'ready'}}" style="{{pmPage === 1 ? '--pm-a:1;' : (pmPage === 2 ? '--pm-a-d:.46s;--pm-a-s:1;' : '')}}">
+  <view class="cy-fade-in" wx:elif="{{state === 'ready'}}" style="{{pmPage === 1 ? '--pm-a:1;' : (pmPage === 2 ? '--pm-a-d:.32s;--pm-a-s:1;' : '')}}">
     <view class="activity-hero">
       <image wx:if="{{info.imgUrl}}" class="activity-hero__image" src="{{info.imgUrl}}" mode="aspectFill" />
       <view wx:else class="activity-hero__fallback"></view>

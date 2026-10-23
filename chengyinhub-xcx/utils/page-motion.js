@@ -23,23 +23,26 @@ function enter(page, key) {
   page['_' + k + 'Timer'] = setTimeout(() => {
     if (!alive()) return;
     page.setData({ [k]: 2 });
-    page['_' + k + 'Timer'] = setTimeout(() => { if (alive()) page.setData({ [k]: 0 }); }, 1200);
+    page['_' + k + 'Timer'] = setTimeout(() => { if (alive()) page.setData({ [k]: 0 }); }, 900);
   }, 34);
 }
 
-/* value 是数字或可解析成数字的字符串;小数位数跟随原值。拿不到数(null / 非数)就不数 */
-function countTo(page, key, value, options) {
-  if (!page || typeof page.setData !== 'function') return;
-  const n = Number(value);
-  if (value === null || value === undefined || value === '' || !Number.isFinite(n) || reduced(page) || n === 0) { page.setData({ [key]: null }); return; }
-  const s = String(value);
-  const decimals = s.indexOf('.') >= 0 ? s.length - s.indexOf('.') - 1 : 0;
+/* 数字从 0 数上去:page.data[key] 从 0 走到 1(先于真实数据落地置 0,数完置 null)。
+ * 模板用 utils/wxs/count.wxs 的 f(真实值, key) 显示 —— 真实值不动,只是显示按比例缩放;拿不到数就原样显示。
+ * 只在页面第一次拿到数据时调用,刷新不再重数。 */
+function countIn(page, key, options) {
+  if (!page || typeof page.setData !== 'function' || reduced(page)) return;
   const stops = page._pmCounters || (page._pmCounters = {});
   if (stops[key]) stops[key]();
-  stops[key] = countUp(0, n, (v) => {
-    if (page._unloaded || page._detached) return;
-    page.setData({ [key]: Number(v).toFixed(decimals) });
-  }, Object.assign({ duration: 900, decimals, onDone: () => { if (!page._unloaded && !page._detached) page.setData({ [key]: null }); } }, options || {}));
+  const alive = () => !page._unloaded && !page._detached;
+  page.setData({ [key]: 0 });
+  // 先停在 0 让卡片浮上来(约 150ms),再开始数 —— 否则数字大半在隐身时就数完了
+  let stopCount = null;
+  const hold = setTimeout(() => {
+    stopCount = countUp(0, 1, (v) => { if (alive()) page.setData({ [key]: v }); },
+      Object.assign({ duration: 600, decimals: 3, onDone: () => { if (alive()) page.setData({ [key]: null }); } }, options || {}));
+  }, 150);
+  stops[key] = () => { clearTimeout(hold); if (stopCount) stopCount(); };
 }
 
-module.exports = { enter, countTo };
+module.exports = { enter, countIn };

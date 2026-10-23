@@ -301,6 +301,7 @@ Page({
           return;
         }
         const couponView = buildCouponCard(home.coupons);
+        if (!that._heroCounted) { that._heroCounted = true; PM.countIn(that, 'mkK'); } // 2026-10-23:数字第一次到达时从 0 数上去
         that.setData({
           hero: that._buildHero(rows, 30),
           couponCard: couponView.couponCard,
