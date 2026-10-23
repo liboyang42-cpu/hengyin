@@ -1,0 +1,18 @@
+{
+  "inheritedCandidate": "9da43f76ddd54bfdf0b24a538a1b80d47c5384bd",
+  "checks": [
+    {
+      "statement": "selectByActivityForUpdate",
+      "useCache": false,
+      "flushCache": true,
+      "sqlSuffix": "for update"
+    },
+    {
+      "statement": "lockClubOwner",
+      "useCache": false,
+      "flushCache": true,
+      "sqlSuffix": "for update"
+    }
+  ],
+  "javaMapperTests": "authored, not run"
+}

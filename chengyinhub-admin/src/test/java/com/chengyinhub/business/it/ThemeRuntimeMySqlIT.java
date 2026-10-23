@@ -428,7 +428,35 @@ class ThemeRuntimeMySqlIT {
         Map<String,Object> judged=advanced.act(7L,advancedId,0,"judge","SUBMIT_QA",Collections.singletonMap("input","FAIL".equals(outcome)?"wrong":"correct"));if(!"FAIL".equals(outcome)){assertEquals("",JSON.valueToTree(judged).path("branch").path("currentStepId").asText());TopicRouteSession row=sql.getMapper(TopicRouteSessionMapper.class).selectAccessibleById(id,7L);runtime.gameplayAction(7L,id,row.getVersion(),"confirm","QUEST_RESOLVE","north",null);}
         TopicRouteSession row=sql.getMapper(TopicRouteSessionMapper.class).selectAccessibleById(id,7L);String receipt=JSON.readTree(row.getStateJson()).path("themeRuntime").path("lastOutcome").toString();int hp=JSON.readTree(row.getStateJson()).path("variables").path("sys.hp").asInt();
         if("ENDED".equals(outcome)){row.setStatus(TopicRouteSession.STATUS_COMPLETED);sql.getMapper(TopicRouteSessionMapper.class).updateStateCas(row);assertFalse(JSON.valueToTree(advanced.state(7L,advancedId)).path("branch").path("writable").asBoolean());assertThrows(RuntimeException.class,()->advanced.act(7L,advancedId,1,"ended-choice","CHOOSE",Collections.singletonMap("optionId","continue")));}
-        else{Map<String,Object> done=advanced.act(7L,advancedId,1,"feedback-choice","CHOOSE",Collections.singletonMap("optionId","continue"));assertTrue(JSON.valueToTree(done).path("branch").path("ended").asBoolean());advanced.act(7L,advancedId,0,"feedback-choice","CHOOSE",Collections.singletonMap("optionId","continue"));assertEquals(hp+1,JSON.readTree(sql.getMapper(TopicRouteSessionMapper.class).selectAccessibleById(id,7L).getStateJson()).path("variables").path("sys.hp").asInt());assertThrows(IllegalStateException.class,()->advanced.act(7L,advancedId,2,"new-key-terminal","CHOOSE",Collections.singletonMap("optionId","continue")));}
+        else {
+            int choiceExpected=((Number)judged.get("version")).intValue();
+            Map<String,Object> choicePayload=Collections.singletonMap("optionId","continue");
+            GameRuntimeSession originalChoice=sql.getMapper(GameRuntimeSessionMapper.class).selectAccessibleById(advancedId,7L);
+            Object advancedTarget=((org.springframework.aop.framework.Advised)advanced).getTargetSource().getTarget();
+            String choiceKey=ReflectionTestUtils.invokeMethod(advancedTarget,"scopedActionKey",originalChoice,7L,"feedback-choice");
+            String choiceFingerprint=ReflectionTestUtils.invokeMethod(advancedTarget,"commandFingerprint",originalChoice,7L,choiceExpected,"feedback-choice","CHOOSE",choicePayload);
+            Map<String,Object> done=advanced.act(7L,advancedId,choiceExpected,"feedback-choice","CHOOSE",choicePayload);
+            assertTrue(JSON.valueToTree(done).path("branch").path("ended").asBoolean());
+            PlayAttemptLog choiceReceipt=sql.getMapper(PlayAttemptLogMapper.class).selectByIdempotencyKey(choiceKey);
+            assertNotNull(choiceReceipt);assertEquals(Integer.valueOf(8),choiceReceipt.getAttemptType());
+            assertEquals(choiceFingerprint,choiceReceipt.getRequestFingerprint(),"receipt must bind original CHOOSE, not its feedback effects");
+            Map<String,Object> replay=advanced.act(7L,advancedId,choiceExpected,"feedback-choice","CHOOSE",choicePayload);
+            assertEquals(JSON.readTree(JSON.writeValueAsString(done)),JSON.readTree(JSON.writeValueAsString(replay)));
+            GameRuntimeSession afterChoice=sql.getMapper(GameRuntimeSessionMapper.class).selectAccessibleById(advancedId,7L);
+            TopicRouteSession afterFeedback=sql.getMapper(TopicRouteSessionMapper.class).selectAccessibleById(id,7L);
+            assertConflict409(()->advanced.act(7L,advancedId,choiceExpected+1,"feedback-choice","CHOOSE",choicePayload));
+            assertConflict409(()->advanced.act(7L,advancedId,choiceExpected,"feedback-choice","CHOOSE",Collections.singletonMap("optionId","different")));
+            assertConflict409(()->advanced.act(7L,advancedId,choiceExpected,"feedback-choice","SUBMIT_QA",choicePayload));
+            GameRuntimeSession afterRefusals=sql.getMapper(GameRuntimeSessionMapper.class).selectAccessibleById(advancedId,7L);
+            assertEquals(afterChoice.getVersion(),afterRefusals.getVersion());assertEquals(afterChoice.getStateJson(),afterRefusals.getStateJson());
+            assertEquals(afterChoice.getScore(),afterRefusals.getScore());assertEquals(afterChoice.getStatus(),afterRefusals.getStatus());
+            TopicRouteSession routeAfterRefusals=sql.getMapper(TopicRouteSessionMapper.class).selectAccessibleById(id,7L);
+            assertEquals(afterFeedback.getVersion(),routeAfterRefusals.getVersion());assertEquals(afterFeedback.getStateJson(),routeAfterRefusals.getStateJson());
+            PlayAttemptLog unchangedReceipt=sql.getMapper(PlayAttemptLogMapper.class).selectByIdempotencyKey(choiceKey);
+            assertEquals(choiceReceipt.getId(),unchangedReceipt.getId());assertEquals(choiceReceipt.getRequestFingerprint(),unchangedReceipt.getRequestFingerprint());assertEquals(choiceReceipt.getResultJson(),unchangedReceipt.getResultJson());
+            assertEquals(hp+1,JSON.readTree(routeAfterRefusals.getStateJson()).path("variables").path("sys.hp").asInt());
+            assertThrows(IllegalStateException.class,()->advanced.act(7L,advancedId,((Number)done.get("version")).intValue(),"new-key-terminal","CHOOSE",choicePayload));
+        }
         assertEquals(receipt,JSON.readTree(sql.getMapper(TopicRouteSessionMapper.class).selectAccessibleById(id,7L).getStateJson()).path("themeRuntime").path("lastOutcome").toString());
     }
     @Test void r5TamperedAuthorHpWriteCannotAcquirePublishedValidationMarker() throws Exception {
@@ -453,13 +481,29 @@ class ThemeRuntimeMySqlIT {
         Map<String,Object> initial=personalTask(false,null,"STEPS");long id=((Number)initial.get("sessionId")).longValue();runtime.gameplayAction(7L,id,((Number)initial.get("version")).intValue(),"start","QUEST_START","north",null);
         runtime.recordGameplayOutcome(7L,10L,0L,11L,runtime.gameplayInstance(7L,10L,0L,11L),"advanced:1:1",JSON.createObjectNode().put("nodeId",11).put("outcome","FAIL"),Collections.emptyList());
         TopicRouteSession row=sql.getMapper(TopicRouteSessionMapper.class).selectAccessibleById(id,7L);String episode=JSON.readTree(row.getStateJson()).path("themeRuntime").path("zeroHp").path("episodeId").asText();assertFalse(episode.isEmpty());
-        com.fasterxml.jackson.databind.node.ObjectNode base=R5WeRunFixture.today(now,7,episode,1000);Map<String,Object> first=runtime.syncZeroHpSteps(7L,id,row.getVersion(),"steps-base",base);assertEquals(0,JSON.valueToTree(first).path("zeroHp").path("progress").asInt());assertEquals(JSON.readTree(JSON.writeValueAsString(first)),JSON.readTree(JSON.writeValueAsString(runtime.syncZeroHpSteps(7L,id,0,"steps-base",base))));
+        int baselineExpected=row.getVersion();
+        com.fasterxml.jackson.databind.node.ObjectNode base=R5WeRunFixture.today(now,7,episode,1000);
+        Map<String,Object> first=runtime.syncZeroHpSteps(7L,id,baselineExpected,"steps-base",base);
+        assertEquals(0,JSON.valueToTree(first).path("zeroHp").path("progress").asInt());
+        assertEquals(JSON.readTree(JSON.writeValueAsString(first)),JSON.readTree(JSON.writeValueAsString(runtime.syncZeroHpSteps(7L,id,baselineExpected,"steps-base",base))));
+        TopicRouteSession afterBaseline=sql.getMapper(TopicRouteSessionMapper.class).selectAccessibleById(id,7L);
+        TopicRouteAction baselineReceipt=sql.getMapper(TopicRouteSessionMapper.class).selectActionByAction(id,7L,"gameplay:steps-base");
+        assertNotNull(baselineReceipt);assertEquals("ZERO_HP_STEPS",baselineReceipt.getOutcomeCode());
+        assertConflict409(()->runtime.syncZeroHpSteps(7L,id,baselineExpected+1,"steps-base",base));
+        JsonNode changedReading=R5WeRunFixture.today(now,7,episode,1050);
+        assertConflict409(()->runtime.syncZeroHpSteps(7L,id,baselineExpected,"steps-base",changedReading));
+        assertConflict409(()->runtime.gameplayAction(7L,id,baselineExpected,"steps-base","ZERO_HP_SYNC",episode,null));
+        TopicRouteSession afterRefusals=sql.getMapper(TopicRouteSessionMapper.class).selectAccessibleById(id,7L);
+        assertEquals(afterBaseline.getVersion(),afterRefusals.getVersion());assertEquals(afterBaseline.getStateJson(),afterRefusals.getStateJson());
+        TopicRouteAction unchangedBaseline=sql.getMapper(TopicRouteSessionMapper.class).selectActionByAction(id,7L,"gameplay:steps-base");
+        assertEquals(baselineReceipt.getId(),unchangedBaseline.getId());assertEquals(baselineReceipt.getReceiptId(),unchangedBaseline.getReceiptId());assertEquals(baselineReceipt.getResponseJson(),unchangedBaseline.getResponseJson());
         row=sql.getMapper(TopicRouteSessionMapper.class).selectAccessibleById(id,7L);int version=row.getVersion();assertThrows(IllegalArgumentException.class,()->runtime.syncZeroHpSteps(7L,id,version,"other-identity",R5WeRunFixture.today(now,8,episode,10000)));
         runtime.syncZeroHpSteps(7L,id,row.getVersion(),"steps-progress",R5WeRunFixture.today(now,7,episode,1050));row=sql.getMapper(TopicRouteSessionMapper.class).selectAccessibleById(id,7L);String before=row.getStateJson();int expected=row.getVersion();
+        JsonNode completeReading=R5WeRunFixture.today(now,7,episode,1100);
         try(Connection c=ds.getConnection()){exec(c,"CREATE TRIGGER fail_steps_restore BEFORE UPDATE ON topic_route_session FOR EACH ROW SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='local restore rollback'");}
-        try{assertThrows(RuntimeException.class,()->runtime.syncZeroHpSteps(7L,id,expected,"steps-complete",R5WeRunFixture.today(now,7,episode,1100)));assertEquals(before,sql.getMapper(TopicRouteSessionMapper.class).selectAccessibleById(id,7L).getStateJson());}
+        try{assertThrows(RuntimeException.class,()->runtime.syncZeroHpSteps(7L,id,expected,"steps-complete",completeReading));assertEquals(before,sql.getMapper(TopicRouteSessionMapper.class).selectAccessibleById(id,7L).getStateJson());}
         finally{try(Connection c=ds.getConnection()){exec(c,"DROP TRIGGER fail_steps_restore");}}
-        runtime.syncZeroHpSteps(7L,id,expected,"steps-complete",R5WeRunFixture.today(now,7,episode,1100));String restored=sql.getMapper(TopicRouteSessionMapper.class).selectAccessibleById(id,7L).getStateJson();assertEquals(4,JSON.readTree(restored).path("variables").path("sys.hp").asInt());assertEquals(1,JSON.readTree(restored).path("themeRuntime").path("zeroHp").path("used").asInt());assertFalse(restored.contains("fixture-code"));assertFalse(restored.contains("encryptedData"));assertFalse(restored.contains("fixture-player"));
+        runtime.syncZeroHpSteps(7L,id,expected,"steps-complete",completeReading);String restored=sql.getMapper(TopicRouteSessionMapper.class).selectAccessibleById(id,7L).getStateJson();assertEquals(4,JSON.readTree(restored).path("variables").path("sys.hp").asInt());assertEquals(1,JSON.readTree(restored).path("themeRuntime").path("zeroHp").path("used").asInt());assertFalse(restored.contains("fixture-code"));assertFalse(restored.contains("encryptedData"));assertFalse(restored.contains("fixture-player"));
     }
 
     @Test void r5TimeoutCompletedUsesPassPendingAndRetainsFixedProofWhenBalanceFalls() throws Exception {
@@ -752,6 +796,9 @@ class ThemeRuntimeMySqlIT {
         runtime.advance(7L,10L,0L,0,"rank_again","CHOICE",new com.chengyinhub.business.domain.route.NodeOutcome(11L,"COMPLETED","freshproof"));
         assertEquals(0,((List)runtime.themeView(7L,10L,0L,((Number)fresh.get("sessionId")).longValue()).get("contents")).size());
         assertEquals(2,((List)runtime.themeCard(7L,id).get("medals")).size());
+    }
+    private static void assertConflict409(org.junit.jupiter.api.function.Executable action) {
+        assertEquals(Integer.valueOf(409),assertThrows(com.chengyinhub.common.exception.ServiceException.class,action).getCode());
     }
     private static void exec(Connection c,String text)throws SQLException{try(Statement st=c.createStatement()){st.execute(text);}}
 }
