@@ -77,6 +77,9 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     private com.chengyinhub.business.service.IImService imService;
 
     @Autowired
+    private com.chengyinhub.business.service.ISystemNotificationIntentService systemNotificationIntents;
+
+    @Autowired
     private com.chengyinhub.business.service.support.CommittedBusinessNotice committedBusinessNotice;
 
     @Autowired
@@ -2304,6 +2307,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         Date paidAt = new Date();
         boolean paymentTransitioned = cmsRegistrationMapper.claimPaymentSuccess(
                 registration.getId(), transactionId, paidAt) == 1;
+        final boolean freshPaymentClaimed = paymentTransitioned;
         if (!paymentTransitioned) {
             CmsRegistration current = cmsRegistrationMapper.selectCmsRegistrationByIdForUpdate(registration.getId());
             boolean historicalHalfState = current != null && Integer.valueOf(2).equals(current.getPaymentStatus())
@@ -2371,7 +2375,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         ensureRegistrationScans(registration);
         if (paymentTransitioned) {
             registerPaymentAfterCommit(paidRegistrationIds, registration.getMemberId(),
-                    registration.getActivityTitle());
+                    registration.getActivityTitle(), freshPaymentClaimed);
         }
         return "SUCCESS";
     }
@@ -2571,7 +2575,32 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
      * 二维码与订阅消息不参与数据库事务；提交成功后再执行。二维码失败由 paid-missing-qrcode
      * 补偿任务重试，不能让外部/文件副作用先于资金事实提交。
      */
-    private void registerPaymentAfterCommit(List<Long> registrationIds, Long memberId, String activityTitle) {
+    private void registerPaymentAfterCommit(List<Long> registrationIds, Long memberId, String activityTitle,
+                                            boolean freshPaymentClaimed) {
+        if (!TransactionSynchronizationManager.isActualTransactionActive()
+                || !TransactionSynchronizationManager.isSynchronizationActive()) {
+            throw new ServiceException("报名通知原意图必须与付款同事务登记");
+        }
+        if (registrationIds == null || registrationIds.isEmpty() || registrationIds.get(0) == null
+                || registrationIds.get(0) <= 0 || memberId == null || memberId <= 0) {
+            throw new ServiceException("报名通知原事件身份不完整");
+        }
+        final Long originalRegistrationId = registrationIds.get(0);
+        final String eventKey = "registration-signup:" + originalRegistrationId;
+        Long intentId = systemNotificationIntents.findIntentId(eventKey);
+        if (intentId == null && freshPaymentClaimed) {
+            CmsRegistration paid = cmsRegistrationMapper.selectCmsRegistrationById(originalRegistrationId);
+            if (paid == null || !originalRegistrationId.equals(paid.getId())
+                    || !memberId.equals(paid.getMemberId()) || !Integer.valueOf(2).equals(paid.getPaymentStatus())) {
+                throw new ServiceException("报名通知原付款事实不一致");
+            }
+            CmsTopic topic = resolveSellerTopic(paid);
+            intentId = systemNotificationIntents.enqueue(memberId, ImMessage.MSG_CARD, "报名成功",
+                    RegistrationCheckoutServiceImpl.signupNoticeExtra(topic == null ? null : topic.getId()), eventKey);
+            if (intentId == null) throw new ServiceException("报名通知原意图未保存");
+        }
+        if (intentId != null && intentId <= 0) throw new ServiceException("报名通知原意图身份无效");
+        final Long signupIntentId = intentId;
         Runnable effects = () -> {
             for (Long registrationId : registrationIds) {
                 committedBusinessNotice.dispatchInNewTransaction("registration-qrcode", registrationId, () -> {
@@ -2580,12 +2609,9 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
                 });
             }
             try {
-                if (imService != null && !registrationIds.isEmpty()) {
-                    CmsRegistration paid = cmsRegistrationMapper.selectCmsRegistrationById(registrationIds.get(0));
-                    CmsTopic topic = paid == null ? null : resolveSellerTopic(paid);
-                    committedBusinessNotice.dispatchInNewTransaction("registration-signup", paid == null ? null : paid.getId(), () -> {
-                        Long messageId = imService.sendSystem(memberId, ImMessage.MSG_CARD, "报名成功",
-                                RegistrationCheckoutServiceImpl.signupNoticeExtra(topic == null ? null : topic.getId()));
+                if (signupIntentId != null) {
+                    committedBusinessNotice.dispatchInNewTransaction("registration-signup", originalRegistrationId, () -> {
+                        Long messageId = imService.deliverSystemNotification(signupIntentId);
                         return messageId != null && messageId > 0L;
                     });
                 }
