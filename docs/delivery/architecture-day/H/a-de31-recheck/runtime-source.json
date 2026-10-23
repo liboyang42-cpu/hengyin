@@ -1,0 +1,55 @@
+{
+  "source": "66e9e1798bf0b3e1c2b7e6cb2b6ab13a3b3e1329",
+  "recursive_tree_truncated": false,
+  "reviewed_de31_blobs_identical": [
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsRegistrationController.java",
+      "sha": "29806316c297d6f74766788173adb9b16d0ae26d"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsRegistrationMerchantController.java",
+      "sha": "9c63eef0757b7754d3dd2d6a2715258188507cb6"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationFundsMybatisIntegrationTest.java",
+      "sha": "deafd09fb0ecb612b050893a9549502c99445c5f"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CmsRegistrationMerchantMapper.java",
+      "sha": "bcd0002d75206e443dc68713fb8cd8ad69d7c436"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ICmsRegistrationMerchantService.java",
+      "sha": "e9c32970c6ea29beb5f8bac15c505f888d517899"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationMerchantServiceImpl.java",
+      "sha": "2b7789bf33a34fcb0484f67cb8679a9a8b369cb8"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java",
+      "sha": "4d89d66ddc5838ba38b335a7cf797592782653f5"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMapper.xml",
+      "sha": "294c21f6c141975126d1197bd44f711d7e8e7db1"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/CmsRegistrationMerchantMapper.xml",
+      "sha": "4d821845d16abe00aaa835cc6134bab8ee9cc1da"
+    }
+  ],
+  "next_source": "9b92fb5738244c677fea7470232f67d3b97b7a98",
+  "next_parent": "66e9e1798bf0b3e1c2b7e6cb2b6ab13a3b3e1329",
+  "next_files": [
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/MerchantRegistrationCancellationMySqlIT.java",
+      "patch": "@@ -216,7 +216,7 @@ private void await(CountDownLatch start) {\n                 return null;\n             });\n         } finally { worker.shutdownNow(); assertTrue(worker.awaitTermination(10, TimeUnit.SECONDS)); }\n-        assertEquals(1L, row(id).get(\"audit_status\"));\n+        assertEquals(1, row(id).get(\"audit_status\"));\n         assertEquals(0, row(id).get(\"del_flag\"));\n     }\n "
+    },
+    {
+      "path": "docs/delivery/architecture-day/COORDINATOR/merchant-delete-first-run.json",
+      "patch": "@@ -0,0 +1,15 @@\n+{\n+  \"source_sha\": \"66e9e1798bf0b3e1c2b7e6cb2b6ab13a3b3e1329\",\n+  \"run\": 40036839154,\n+  \"class\": \"com.chengyinhub.business.it.MerchantRegistrationCancellationMySqlIT\",\n+  \"tests\": 15,\n+  \"passed\": 14,\n+  \"failures\": 1,\n+  \"errors\": 0,\n+  \"skipped\": 0,\n+  \"cleanup\": \"CLEAN\",\n+  \"raw_xml_sha256\": \"a1cb63816c68768f270c87a24fc0f15bb03d34c828941ccaa4925731a460ff90\",\n+  \"cause\": \"Added test219 expected Long1 but JDBC integer column returned Integer1; no numeric-state mismatch. Original8 passed; all14 others passed. Root changes only expected literal1L to1 and reruns exact15; no SQL/production change.\",\n+  \"full_109_batch\": \"NOT_YET_TERMINAL\",\n+  \"accepted\": false\n+}"
+    }
+  ],
+  "finding": "H-ADE31-01 raw POST remains reachable through same controller/service/XML; H new test not in executed Funds94."
+}

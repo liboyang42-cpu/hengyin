@@ -1,0 +1,625 @@
+{
+  "repository": "liboyang42-cpu/hengyin",
+  "method": "H downloaded GitHub Actions ZIP; Python zipfile and ElementTree parsed original XML and matched receipt counts/source/cleanup; no JVM or DB on H VM",
+  "runs": [
+    {
+      "run_id": "40036839154",
+      "attempt": "1",
+      "source_sha": "66e9e1798bf0b3e1c2b7e6cb2b6ab13a3b3e1329",
+      "artifact_id": 12537905942,
+      "zip_sha256": "e1854929f01067c56ba341933d6bfd759feece827ef860ccf9adffedd930bba3",
+      "xml": {
+        "path": "surefire-reports/TEST-com.chengyinhub.business.service.RegistrationFundsMybatisIntegrationTest.xml",
+        "sha256": "640b07fcc3383bca6f8a1237d32c21da61cd7dcd760ee645da613e18e741bf68",
+        "suite": {
+          "name": "com.chengyinhub.business.service.RegistrationFundsMybatisIntegrationTest",
+          "tests": "94",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        "case_count": 94,
+        "nonpasses": []
+      },
+      "receipt_sha256": "2362a5cc30f4d7007c96fecc5d2e924806f0cf3cf13e59db3acebcc1b5960cc9",
+      "verdict": "PASS",
+      "cleanup": "CLEAN",
+      "mysql_leftover_schemas": [],
+      "mysql_version": "8.0.45",
+      "isolation": "REPEATABLE-READ",
+      "maven_exit": 0,
+      "executed": {
+        "tests": 94,
+        "passed": 94,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "testcases": [
+        {
+          "name": "forgedClubMarkerFromPublicCreateCannotSurviveIntoPaymentFreeze",
+          "status": "passed"
+        },
+        {
+          "name": "sameRequestIdWithDifferentOwnerTicketOrAmountFingerprintIsRejected",
+          "status": "passed"
+        },
+        {
+          "name": "activityCancelWithPayingOrderQueryFailureRejectsCancellation",
+          "status": "passed"
+        },
+        {
+          "name": "zeroCashCompletionFailureIsRecoveredBySameRequestIdReplay",
+          "status": "passed"
+        },
+        {
+          "name": "expiredShopDayClubMarkerFreezesAsPlatform",
+          "status": "passed"
+        },
+        {
+          "name": "migrationAllowsMultipleNullRequestIds",
+          "status": "passed"
+        },
+        {
+          "name": "activityCancelWechatCloseFailureAlarmsOperations",
+          "status": "passed"
+        },
+        {
+          "name": "cashCallbackRepairsOnlyMatchingHistoricalPaidHalfState",
+          "status": "passed"
+        },
+        {
+          "name": "checkoutReplayBypassesLiveQuoteAndWechatReadinessWithoutRepeatingDeductions",
+          "status": "passed"
+        },
+        {
+          "name": "manualRefundCreationAndRedemptionGateSerializeOnRegistrationRow",
+          "status": "passed"
+        },
+        {
+          "name": "expiredPayingOrderQueryFailureLeavesOrderUntouchedAndAlarms",
+          "status": "passed"
+        },
+        {
+          "name": "activityCancelWithPayingOrderUnpaidOnWechatClosesItFirst",
+          "status": "passed"
+        },
+        {
+          "name": "missingTicketFactNeverFabricatesClubAttribution",
+          "status": "passed"
+        },
+        {
+          "name": "migrationFailsClosedWhenHistoricalInviteRewardCannotResolveInvitee",
+          "status": "passed"
+        },
+        {
+          "name": "migrationFailsClosedOnRequestIdLongerThanSchemaContract",
+          "status": "passed"
+        },
+        {
+          "name": "expiredPayingOrderWechatCloseFailureMustNotCloseLocally",
+          "status": "passed"
+        },
+        {
+          "name": "retryPaymentKeepsBusinessNumberAndRejectsExpiredOrder",
+          "status": "passed"
+        },
+        {
+          "name": "restartResetsCursorButNeverDoubleClosesOrDoubleReleases",
+          "status": "passed"
+        },
+        {
+          "name": "migrationBackfillsHistoricalRewardsWithStableMemberAndInviteeSemantics",
+          "status": "passed"
+        },
+        {
+          "name": "requestReplayFailsClosedWhenLegacyDataContainsMultipleMatches",
+          "status": "passed"
+        },
+        {
+          "name": "durablePayingClaimBlocksCancellationAndLateSuccessRecoversAutomatically",
+          "status": "passed"
+        },
+        {
+          "name": "adminEditOfZeroPointOrderCannotMintPointsOrMoveInventoryOnMemberCancellation",
+          "status": "passed"
+        },
+        {
+          "name": "downstreamDatabaseFailureRollsBackClaimAndRewards",
+          "status": "passed"
+        },
+        {
+          "name": "platformShopDayPaymentKeepsSourceFromFrozenExecutingClub",
+          "status": "passed"
+        },
+        {
+          "name": "migrationFailsClosedWhenHistoricalInviteeBelongsToAnotherInviter",
+          "status": "passed"
+        },
+        {
+          "name": "activityCancelRejectsBeforeClosingAnyWechatOrderWhenAnotherQueryFails",
+          "status": "passed"
+        },
+        {
+          "name": "duplicateShopDayPaymentKeepsOriginalFrozenSource",
+          "status": "passed"
+        },
+        {
+          "name": "stuckPayingOrdersDoNotStarveLaterExpiredOrders",
+          "status": "passed"
+        },
+        {
+          "name": "reconcileStopsAtScanLimitAndResumesFromCursorNextRound",
+          "status": "passed"
+        },
+        {
+          "name": "concurrentCancellationReturnsPointsAndInventoryExactlyOnce",
+          "status": "passed"
+        },
+        {
+          "name": "activityCancelStampsCancelSourceEvenWhenNoPointsWereUsed",
+          "status": "passed"
+        },
+        {
+          "name": "expiredPayingOrderPayErrorClosesWechatOrderBeforeLocalClose",
+          "status": "passed"
+        },
+        {
+          "name": "migrationFailsClosedOnFingerprintWithoutRequestId",
+          "status": "passed"
+        },
+        {
+          "name": "migrationRepairsWrongIndexesThatAlreadyUseTheRequiredNames",
+          "status": "passed"
+        },
+        {
+          "name": "validRetryReturnsSameBusinessNumberEvenWhenReservedInventoryIsZero",
+          "status": "passed"
+        },
+        {
+          "name": "concurrentRefundCallbacksReturnDeductedPointsExactlyOnce",
+          "status": "passed"
+        },
+        {
+          "name": "activityCancelWithOrderNotExistWithinGraceTellsOrganizerWhenToRetry",
+          "status": "passed"
+        },
+        {
+          "name": "payParamsAreReturnedOnlyAfterPayingIsDurableSoConcurrentCancelCannotWin",
+          "status": "passed"
+        },
+        {
+          "name": "migrationResumesAfterUniqueKeyWasBuiltButOldIndexStillExists",
+          "status": "passed"
+        },
+        {
+          "name": "zeroCashCompletionUsesDedicatedEntryAndExternalSuccessCannotForgeIt",
+          "status": "passed"
+        },
+        {
+          "name": "migrationFailsBeforeBackfillingProjectedDuplicateHistoricalRewards",
+          "status": "passed"
+        },
+        {
+          "name": "independentActivityOrderFreezesPlatformFeeAtCreation",
+          "status": "passed"
+        },
+        {
+          "name": "expiredOrderRejectionClosesTheOrderAndReleasesHeldResources",
+          "status": "passed"
+        },
+        {
+          "name": "migrationCanRunTwiceWithoutChangingTheBusinessKeyContract",
+          "status": "passed"
+        },
+        {
+          "name": "uncertainWechatPreorderFailureKeepsPayingForLateSuccessRecovery",
+          "status": "passed"
+        },
+        {
+          "name": "ambiguousShopDayClubMarkerNeverFabricatesClubAttribution",
+          "status": "passed"
+        },
+        {
+          "name": "concurrentSuccessCallbacksAwardAndTransitionOnlyOnce",
+          "status": "passed"
+        },
+        {
+          "name": "requestReplayReturnsTheOnlyMatchingWinner",
+          "status": "passed"
+        },
+        {
+          "name": "conflictingDuplicateRewardKeyFailsClosedAndRollsBackAllRewards",
+          "status": "passed"
+        },
+        {
+          "name": "migrationFailsClosedOnRequestIdWithOuterWhitespace",
+          "status": "passed"
+        },
+        {
+          "name": "activityCancelAppliesPaymentsBeforeAnyIrreversibleWechatClose",
+          "status": "passed"
+        },
+        {
+          "name": "cashSuccessRejectsAnyCentMismatchAgainstFrozenWechatAmount",
+          "status": "passed"
+        },
+        {
+          "name": "duplicateSuccessRepairsHistoricalUnpaidSibling",
+          "status": "passed"
+        },
+        {
+          "name": "expiredMultiTicketPayingOrderIsNotSplitByUnpaidCloseTask",
+          "status": "passed"
+        },
+        {
+          "name": "duplicateSuccessRepairsHistoricalPaidOrderMissingRewards",
+          "status": "passed"
+        },
+        {
+          "name": "pendingManualRefundCaseFreezesVerificationUntilNoRefundDecision",
+          "status": "passed"
+        },
+        {
+          "name": "paidOrderReplayCannotChangeOriginalTicketSourceMarker",
+          "status": "passed"
+        },
+        {
+          "name": "applicationServiceOwnsQuoteCreateReplayPreorderAndResponseMapping",
+          "status": "passed"
+        },
+        {
+          "name": "expiredCloseRollsBackWhenPointReturnUpdatesNoMember",
+          "status": "passed"
+        },
+        {
+          "name": "overlongRequestIdFailsBeforeAnyOrderIsInserted",
+          "status": "passed"
+        },
+        {
+          "name": "activityCancelWithMultiTicketPayingOrderUnpaidEndsCancelledNotExpired",
+          "status": "passed"
+        },
+        {
+          "name": "expiredPayingOrderNotExistOnWechatBeyondGraceIsClosedAndReleased",
+          "status": "passed"
+        },
+        {
+          "name": "migrationCreatesBothBusinessKeysWithoutAssumingLegacyIndexExists",
+          "status": "passed"
+        },
+        {
+          "name": "concurrentCreateOrReplayReturnsOneWinnerForTheSameRequestId",
+          "status": "passed"
+        },
+        {
+          "name": "shopDayPaymentFreezesValidClubSourceAtSuccess",
+          "status": "passed"
+        },
+        {
+          "name": "legacyNullFingerprintBindsOnlyAfterPersistentOrderProof",
+          "status": "passed"
+        },
+        {
+          "name": "blankAndNullRequestIdsAreRejectedBeforeAnyOrderIsInserted",
+          "status": "passed"
+        },
+        {
+          "name": "definiteLocalPreorderFailureReleasesPayingForSafeRetry",
+          "status": "passed"
+        },
+        {
+          "name": "unexpiredOrderKeepsPayingWindowAndIsNotClosed",
+          "status": "passed"
+        },
+        {
+          "name": "successAndFailureCallbacksNeverOverwriteOneAnotherWithStaleRows",
+          "status": "passed"
+        },
+        {
+          "name": "autoVerifyExpiredSessions_scansOnlyEligibleAndCasGuardsRace",
+          "status": "passed"
+        },
+        {
+          "name": "requestIdUniqueKeyAllowsOnlyOneConcurrentMainOrder",
+          "status": "passed"
+        },
+        {
+          "name": "publicOrderCreationRefusesClientClaimedTicketSourceClubAndKeepsOnlyTheAuditCode",
+          "status": "passed"
+        },
+        {
+          "name": "closedCallbackCannotOverwriteCompletedPaymentOrReturnItsPoints",
+          "status": "passed"
+        },
+        {
+          "name": "expiredMultiTicketPayingOrderNotPayClosesWholeParentOrder",
+          "status": "passed"
+        },
+        {
+          "name": "expiredPayingOrderQueryNotPayClosesOrderAndReleasesHeldResources",
+          "status": "passed"
+        },
+        {
+          "name": "paymentCreatesScansOnlyFromActivityAuthoritativeTopic",
+          "status": "passed"
+        },
+        {
+          "name": "crossDomainEventTupleDoesNotSuppressRegistrationReward",
+          "status": "passed"
+        },
+        {
+          "name": "expiredPayingOrderNotExistWithinGraceIsLeftUntouched",
+          "status": "passed"
+        },
+        {
+          "name": "activityCancelWithOrderNotExistAndNoExpireTimeIsRejected",
+          "status": "passed"
+        },
+        {
+          "name": "activityCancelWithPayingOrderPaidOnWechatAppliesPaymentThenRefunds",
+          "status": "passed"
+        },
+        {
+          "name": "shopDayPaymentWithoutClubMarkerFreezesPlatformAttribution",
+          "status": "passed"
+        },
+        {
+          "name": "activityCancelWithOrderNotExistBeyondGraceClosesLocallyAndCancels",
+          "status": "passed"
+        },
+        {
+          "name": "concurrentRefundClawbacksSerializeBalanceAndFlowsWithoutGoingNegative",
+          "status": "passed"
+        },
+        {
+          "name": "expiredPayingOrderPayErrorWithCloseFailureMustNotCloseLocally",
+          "status": "passed"
+        },
+        {
+          "name": "adminEditOfPrepaidPointOrderReturnsOnlyTheOriginalDeductionOnMemberCancellation",
+          "status": "passed"
+        },
+        {
+          "name": "migrationFailsClosedOnBlankRequestId",
+          "status": "passed"
+        },
+        {
+          "name": "migrationKeepsLegacyEventUniquenessForWritersWithoutBusinessKeys",
+          "status": "passed"
+        },
+        {
+          "name": "mysqlServerVersionMustBeOracle8045",
+          "status": "passed"
+        },
+        {
+          "name": "migrationFailsClosedOnDuplicateNamespacedRewardKey",
+          "status": "passed"
+        },
+        {
+          "name": "expiredPayingOrderNotExistIsLeftUntouchedWhilePrepayIdCanStillBeUsed",
+          "status": "passed"
+        },
+        {
+          "name": "firstRegistrationRewardUsesStableMemberBusinessKey",
+          "status": "passed"
+        },
+        {
+          "name": "expiredPayingOrderQuerySuccessIsAppliedAsPaymentCallback",
+          "status": "passed"
+        },
+        {
+          "name": "activityCancelQueryFailureAlarmsOperations",
+          "status": "passed"
+        }
+      ],
+      "registered_source": "0de20ce8398a00b9bca6b83ccaccea270da66de7",
+      "registered_source_match": false,
+      "scope_limit": "No HTTP identity/device/supplier/global funds fence/B attempt CAS acceptance"
+    },
+    {
+      "run_id": "40036839154",
+      "attempt": "1",
+      "source_sha": "66e9e1798bf0b3e1c2b7e6cb2b6ab13a3b3e1329",
+      "artifact_id": 12537876135,
+      "zip_sha256": "f653996533f6cf24fd0256082bc091c7748468e049cc242cac97bee1e332e00a",
+      "xml": {
+        "path": "surefire-reports/TEST-com.chengyinhub.business.it.MerchantRegistrationCancellationMySqlIT.xml",
+        "sha256": "a1cb63816c68768f270c87a24fc0f15bb03d34c828941ccaa4925731a460ff90",
+        "suite": {
+          "name": "com.chengyinhub.business.it.MerchantRegistrationCancellationMySqlIT",
+          "tests": "15",
+          "failures": "1",
+          "errors": "0",
+          "skipped": "0"
+        },
+        "case_count": 15,
+        "nonpasses": [
+          {
+            "test": "currentLockReadSeesWinnerCommittedAfterAnOlderRepeatableReadSnapshot",
+            "type": "failure",
+            "message": "expected: java.lang.Long@5c8b10b4<1> but was: java.lang.Integer@1410d645<1>"
+          }
+        ]
+      },
+      "receipt_sha256": "42ad12f8e473e3c7425885226955d82ceaa0d5bb29c0e2320d9f56df2a87e0d8",
+      "verdict": "FAIL",
+      "cleanup": "CLEAN",
+      "mysql_leftover_schemas": [],
+      "mysql_version": "8.0.45",
+      "isolation": "REPEATABLE-READ",
+      "maven_exit": 1,
+      "executed": {
+        "tests": 15,
+        "passed": 14,
+        "failures": 1,
+        "errors": 0,
+        "skipped": 0
+      },
+      "testcases": [
+        {
+          "name": "currentLockReadSeesWinnerCommittedAfterAnOlderRepeatableReadSnapshot",
+          "status": "failure"
+        },
+        {
+          "name": "knownPendingRejectedAndNullAuditStillAllowFirstCancellationOnly",
+          "status": "passed"
+        },
+        {
+          "name": "deletedOrUnknownDeletionStateCannotBeSelectedOrCancelledAgain",
+          "status": "passed"
+        },
+        {
+          "name": "sameOriginalConcurrentCancelAndSelectionHaveExactlyOneWinner",
+          "status": "passed"
+        },
+        {
+          "name": "winnerCommittedBetweenBatchPrecheckAndLocksPreservesEveryOriginalRow",
+          "status": "passed"
+        },
+        {
+          "name": "ownerChangedAfterReadCannotBeCancelledOrReassignedBackByOldOwner",
+          "status": "passed"
+        },
+        {
+          "name": "selectedWinnerCannotBeCancelledAndRejectionChangesNoPersistedField",
+          "status": "passed"
+        },
+        {
+          "name": "missingTargetAndDirectSingleWinnerDeletionBothRejectWithoutChanges",
+          "status": "passed"
+        },
+        {
+          "name": "currentTopicScopeIsRecheckedAfterControllerSnapshot",
+          "status": "passed"
+        },
+        {
+          "name": "adminDeleteCannotEraseWinnerCommittedAfterItsPrecheck",
+          "status": "passed"
+        },
+        {
+          "name": "winnerCommittedAfterCancelReadIsNotOverwrittenByStaleSnapshot",
+          "status": "passed"
+        },
+        {
+          "name": "cancelledCandidateCannotBeSelectedEvenWhenDispatcherReadItEarlier",
+          "status": "passed"
+        },
+        {
+          "name": "allowedCancellationPreservesConcurrentRejectionAndEditedFields",
+          "status": "passed"
+        },
+        {
+          "name": "partialSqlDeleteThenCountMismatchRollsBackTheWholeBatch",
+          "status": "passed"
+        },
+        {
+          "name": "legitimateBatchLocksUniqueIdsInAscendingOrderAndDeletesOnlyThoseRows",
+          "status": "passed"
+        }
+      ],
+      "registered_source": "0de20ce8398a00b9bca6b83ccaccea270da66de7",
+      "registered_source_match": false,
+      "scope_limit": "No HTTP identity/device/supplier/global funds fence/B attempt CAS acceptance"
+    },
+    {
+      "run_id": "40037252877",
+      "attempt": "1",
+      "source_sha": "9b92fb5738244c677fea7470232f67d3b97b7a98",
+      "artifact_id": 12538230253,
+      "zip_sha256": "89c50d46fedb605a1b7579e90a0716a9f8502042baf1237d7a8d4821a10eb882",
+      "xml": {
+        "path": "surefire-reports/TEST-com.chengyinhub.business.it.MerchantRegistrationCancellationMySqlIT.xml",
+        "sha256": "33c4bc9956a0027dc4b164879e26958fc2f4aad068a24932db99b5ecfece6c76",
+        "suite": {
+          "name": "com.chengyinhub.business.it.MerchantRegistrationCancellationMySqlIT",
+          "tests": "15",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        "case_count": 15,
+        "nonpasses": []
+      },
+      "receipt_sha256": "032b646fc1658a74eae6816a13659cd63316d155b532dde55e9c92304d743976",
+      "verdict": "PASS",
+      "cleanup": "CLEAN",
+      "mysql_leftover_schemas": [],
+      "mysql_version": "8.0.45",
+      "isolation": "REPEATABLE-READ",
+      "maven_exit": 0,
+      "executed": {
+        "tests": 15,
+        "passed": 15,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "testcases": [
+        {
+          "name": "currentLockReadSeesWinnerCommittedAfterAnOlderRepeatableReadSnapshot",
+          "status": "passed"
+        },
+        {
+          "name": "knownPendingRejectedAndNullAuditStillAllowFirstCancellationOnly",
+          "status": "passed"
+        },
+        {
+          "name": "deletedOrUnknownDeletionStateCannotBeSelectedOrCancelledAgain",
+          "status": "passed"
+        },
+        {
+          "name": "sameOriginalConcurrentCancelAndSelectionHaveExactlyOneWinner",
+          "status": "passed"
+        },
+        {
+          "name": "winnerCommittedBetweenBatchPrecheckAndLocksPreservesEveryOriginalRow",
+          "status": "passed"
+        },
+        {
+          "name": "ownerChangedAfterReadCannotBeCancelledOrReassignedBackByOldOwner",
+          "status": "passed"
+        },
+        {
+          "name": "selectedWinnerCannotBeCancelledAndRejectionChangesNoPersistedField",
+          "status": "passed"
+        },
+        {
+          "name": "missingTargetAndDirectSingleWinnerDeletionBothRejectWithoutChanges",
+          "status": "passed"
+        },
+        {
+          "name": "currentTopicScopeIsRecheckedAfterControllerSnapshot",
+          "status": "passed"
+        },
+        {
+          "name": "adminDeleteCannotEraseWinnerCommittedAfterItsPrecheck",
+          "status": "passed"
+        },
+        {
+          "name": "winnerCommittedAfterCancelReadIsNotOverwrittenByStaleSnapshot",
+          "status": "passed"
+        },
+        {
+          "name": "cancelledCandidateCannotBeSelectedEvenWhenDispatcherReadItEarlier",
+          "status": "passed"
+        },
+        {
+          "name": "allowedCancellationPreservesConcurrentRejectionAndEditedFields",
+          "status": "passed"
+        },
+        {
+          "name": "partialSqlDeleteThenCountMismatchRollsBackTheWholeBatch",
+          "status": "passed"
+        },
+        {
+          "name": "legitimateBatchLocksUniqueIdsInAscendingOrderAndDeletesOnlyThoseRows",
+          "status": "passed"
+        }
+      ],
+      "registered_source": "0de20ce8398a00b9bca6b83ccaccea270da66de7",
+      "registered_source_match": false,
+      "scope_limit": "No HTTP identity/device/supplier/global funds fence/B attempt CAS acceptance"
+    }
+  ]
+}
