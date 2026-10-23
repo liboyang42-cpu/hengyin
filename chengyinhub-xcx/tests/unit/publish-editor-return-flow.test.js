@@ -196,33 +196,13 @@ test('负控：清栈页丢失主页兜底时必须判红', () => {
   assert.notDeepEqual(events, [{ type: 'switchTab', options: { url: '/pages/template/index' } }])
 })
 
-test('命名页进入编辑器后返回可再次确认，在途连点仍只导航一次', () => {
-  const navigations = []
-  const page = loadPage('pages/publish/templateadd/templateadd.js', {
-    navigateTo(options) { navigations.push(options) },
-  })
-  page.onInputChange({ detail: { value: '返回后继续创建' } })
-  page.onCreateTemplate()
-  page.onCreateTemplate()
-  assert.equal(navigations.length, 1)
-  assert.equal(page.data.navigating, true)
-  navigations[0].success()
-  page.onShow()
-  assert.equal(page.data.navigating, false, '返回命名页不能一直转圈')
-  assert.equal(page.data.templateName, '返回后继续创建')
-  page.onCreateTemplate()
-  assert.equal(navigations.length, 2)
-})
-
-
+// 2026-10-23 起名页 templateadd 退役删除,它的两条用例(返回再确认 / dirty 保留)随页删除。
 test('创建流程原生状态栏跟随浅色编辑与深色玩法预览，关闭后恢复', () => {
   const themes = []
   const wx = { onTheme(theme) { themes.push(theme) } }
-  // 2026-10-22 owner 定稿:引导页改深底(漂浮圆圈),命名页仍浅色
+  // 2026-10-22 owner 定稿:引导页改深底(漂浮圆圈);2026-10-23 起名页 templateadd 退役删除,引导页直接进编辑器
   loadPage('pages/publish/template-intro/index.js', wx).onShow()
   assert.equal(themes.at(-1), 'dark')
-  loadPage('pages/publish/templateadd/templateadd.js', wx).onShow()
-  assert.equal(themes.at(-1), 'light')
   const page = loadPage('pages/publish/temp/index.js', wx)
   page.onShow()
   assert.equal(themes.at(-1), 'light')
@@ -237,18 +217,3 @@ test('创建流程原生状态栏跟随浅色编辑与深色玩法预览，关�
   assert.equal(themes.at(-1), 'light')
 })
 
-test('命名成功dirty只更新内部状态，失败仍保留未保存输入', () => {
-  const nav = []
-  const page = loadPage('pages/publish/templateadd/templateadd.js', {navigateTo(o){nav.push(o)}})
-  const patches = [], original = page.setData
-  page.setData = function(p) { patches.push(p); return original.call(this,p) }
-  page.onInputChange({detail:{value:'新玩法'}})
-  page.onCreateTemplate()
-  nav[0].fail()
-  assert.equal(page.data.dirty,true)
-  page.onCreateTemplate()
-  nav[1].success()
-  assert.equal(page.data.dirty,false)
-  assert.equal(page.data.navigating,false)
-  assert.equal(patches.some(p => Object.hasOwn(p,'dirty')),false)
-})

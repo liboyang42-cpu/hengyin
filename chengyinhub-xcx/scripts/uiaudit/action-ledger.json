@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
-  "controlCount": 5109,
+  "controlCount": 5105,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -2177,7 +2177,6 @@
         "pages/publish/simple/index",
         "pages/publish/temp/index",
         "pages/publish/template-intro/index",
-        "pages/publish/templateadd/templateadd",
         "pages/roam/index",
         "pages/search2/index",
         "pages/search2/result/index",
@@ -43622,108 +43621,6 @@
           ]
         },
         {
-          "route": "pages/publish/templateadd/templateadd",
-          "segments": [
-            {
-              "selector": "#cy-modal-host",
-              "index": 0
-            },
-            {
-              "selector": "#dc",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn.rs__act",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/templateadd/templateadd",
-          "segments": [
-            {
-              "selector": "#cy-modal-host",
-              "index": 0
-            },
-            {
-              "selector": "#dc",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn.rs__act",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/templateadd/templateadd",
-          "segments": [
-            {
-              "selector": "#cy-modal-host",
-              "index": 0
-            },
-            {
-              "selector": "#dc",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/templateadd/templateadd",
-          "segments": [
-            {
-              "selector": "#cy-modal-host",
-              "index": 0
-            },
-            {
-              "selector": "#dc",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/templateadd/templateadd",
-          "segments": [
-            {
-              "selector": "cy-btn.ta-cta",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/templateadd/templateadd",
-          "segments": [
-            {
-              "selector": "cy-btn",
-              "index": 0
-            }
-          ]
-        },
-        {
           "route": "pages/roam/index",
           "segments": [
             {
@@ -83713,7 +83610,6 @@
         "pages/publish/simple/index",
         "pages/publish/temp/index",
         "pages/publish/template-intro/index",
-        "pages/publish/templateadd/templateadd",
         "pages/roam/index",
         "pages/search2/index",
         "pages/search2/result/index",
@@ -91831,27 +91727,6 @@
         },
         {
           "route": "pages/publish/template-intro/index",
-          "segments": [
-            {
-              "selector": "#cy-modal-host",
-              "index": 0
-            },
-            {
-              "selector": "#dc",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-consent-check",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/templateadd/templateadd",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -100862,7 +100737,6 @@
         "pages/publish/simple/index",
         "pages/publish/temp/index",
         "pages/publish/template-intro/index",
-        "pages/publish/templateadd/templateadd",
         "pages/roam/index",
         "pages/search2/index",
         "pages/search2/result/index",
@@ -102127,19 +102001,6 @@
         },
         {
           "route": "pages/publish/template-intro/index",
-          "segments": [
-            {
-              "selector": "#cy-modal-host",
-              "index": 0
-            },
-            {
-              "selector": "#dc",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/templateadd/templateadd",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -103364,7 +103225,6 @@
         "pages/publish/simple/index",
         "pages/publish/temp/index",
         "pages/publish/template-intro/index",
-        "pages/publish/templateadd/templateadd",
         "pages/roam/index",
         "pages/search2/index",
         "pages/search2/result/index",
@@ -104629,19 +104489,6 @@
         },
         {
           "route": "pages/publish/template-intro/index",
-          "segments": [
-            {
-              "selector": "#cy-modal-host",
-              "index": 0
-            },
-            {
-              "selector": "#dc",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/templateadd/templateadd",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -105865,7 +105712,6 @@
         "pages/publish/simple/index",
         "pages/publish/temp/index",
         "pages/publish/template-intro/index",
-        "pages/publish/templateadd/templateadd",
         "pages/roam/index",
         "pages/search2/index",
         "pages/search2/result/index",
@@ -107130,19 +106976,6 @@
         },
         {
           "route": "pages/publish/template-intro/index",
-          "segments": [
-            {
-              "selector": "#cy-modal-host",
-              "index": 0
-            },
-            {
-              "selector": "#dc",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/templateadd/templateadd",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -108366,7 +108199,6 @@
         "pages/publish/simple/index",
         "pages/publish/temp/index",
         "pages/publish/template-intro/index",
-        "pages/publish/templateadd/templateadd",
         "pages/roam/index",
         "pages/search2/index",
         "pages/search2/result/index",
@@ -109631,19 +109463,6 @@
         },
         {
           "route": "pages/publish/template-intro/index",
-          "segments": [
-            {
-              "selector": "#cy-modal-host",
-              "index": 0
-            },
-            {
-              "selector": "#dc",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/templateadd/templateadd",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -110867,7 +110686,6 @@
         "pages/publish/simple/index",
         "pages/publish/temp/index",
         "pages/publish/template-intro/index",
-        "pages/publish/templateadd/templateadd",
         "pages/roam/index",
         "pages/search2/index",
         "pages/search2/result/index",
@@ -112132,19 +111950,6 @@
         },
         {
           "route": "pages/publish/template-intro/index",
-          "segments": [
-            {
-              "selector": "#cy-modal-host",
-              "index": 0
-            },
-            {
-              "selector": "#dc",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/templateadd/templateadd",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -113368,7 +113173,6 @@
         "pages/publish/simple/index",
         "pages/publish/temp/index",
         "pages/publish/template-intro/index",
-        "pages/publish/templateadd/templateadd",
         "pages/roam/index",
         "pages/search2/index",
         "pages/search2/result/index",
@@ -114633,19 +114437,6 @@
         },
         {
           "route": "pages/publish/template-intro/index",
-          "segments": [
-            {
-              "selector": "#cy-modal-host",
-              "index": 0
-            },
-            {
-              "selector": "#dc",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/templateadd/templateadd",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -174025,7 +173816,6 @@
         "pages/publish/simple/index",
         "pages/publish/temp/index",
         "pages/publish/template-intro/index",
-        "pages/publish/templateadd/templateadd",
         "pages/roam/index",
         "pages/search2/index",
         "pages/search2/result/index",
@@ -176835,37 +176625,6 @@
           ]
         },
         {
-          "route": "pages/publish/templateadd/templateadd",
-          "segments": [
-            {
-              "selector": "#cy-modal-host",
-              "index": 0
-            },
-            {
-              "selector": "cy-inline-error.mh__error",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/templateadd/templateadd",
-          "segments": [
-            {
-              "selector": "cy-inline-error",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/templateadd/templateadd",
-          "segments": [
-            {
-              "selector": "cy-inline-error",
-              "index": 1
-            }
-          ]
-        },
-        {
           "route": "pages/roam/index",
           "segments": [
             {
@@ -178333,7 +178092,6 @@
         "pages/publish/simple/index",
         "pages/publish/temp/index",
         "pages/publish/template-intro/index",
-        "pages/publish/templateadd/templateadd",
         "pages/roam/index",
         "pages/search2/index",
         "pages/search2/result/index",
@@ -179086,15 +178844,6 @@
         },
         {
           "route": "pages/publish/template-intro/index",
-          "segments": [
-            {
-              "selector": "#cy-loading",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/templateadd/templateadd",
           "segments": [
             {
               "selector": "#cy-loading",
@@ -181115,7 +180864,6 @@
         "pages/publish/simple/index",
         "pages/publish/temp/index",
         "pages/publish/template-intro/index",
-        "pages/publish/templateadd/templateadd",
         "pages/roam/index",
         "pages/search2/index",
         "pages/search2/result/index",
@@ -181874,15 +181622,6 @@
         },
         {
           "route": "pages/publish/template-intro/index",
-          "segments": [
-            {
-              "selector": "#cy-modal-host",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/templateadd/templateadd",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -182585,7 +182324,6 @@
         "pages/publish/simple/index",
         "pages/publish/temp/index",
         "pages/publish/template-intro/index",
-        "pages/publish/templateadd/templateadd",
         "pages/roam/index",
         "pages/search2/index",
         "pages/search2/result/index",
@@ -183344,15 +183082,6 @@
         },
         {
           "route": "pages/publish/template-intro/index",
-          "segments": [
-            {
-              "selector": "#cy-modal-host",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/templateadd/templateadd",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -184055,7 +183784,6 @@
         "pages/publish/simple/index",
         "pages/publish/temp/index",
         "pages/publish/template-intro/index",
-        "pages/publish/templateadd/templateadd",
         "pages/roam/index",
         "pages/search2/index",
         "pages/search2/result/index",
@@ -184814,15 +184542,6 @@
         },
         {
           "route": "pages/publish/template-intro/index",
-          "segments": [
-            {
-              "selector": "#cy-modal-host",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/templateadd/templateadd",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -185524,7 +185243,6 @@
         "pages/publish/simple/index",
         "pages/publish/temp/index",
         "pages/publish/template-intro/index",
-        "pages/publish/templateadd/templateadd",
         "pages/roam/index",
         "pages/search2/index",
         "pages/search2/result/index",
@@ -186283,15 +186001,6 @@
         },
         {
           "route": "pages/publish/template-intro/index",
-          "segments": [
-            {
-              "selector": "#cy-modal-host",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/templateadd/templateadd",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -186993,7 +186702,6 @@
         "pages/publish/simple/index",
         "pages/publish/temp/index",
         "pages/publish/template-intro/index",
-        "pages/publish/templateadd/templateadd",
         "pages/roam/index",
         "pages/search2/index",
         "pages/search2/result/index",
@@ -187752,15 +187460,6 @@
         },
         {
           "route": "pages/publish/template-intro/index",
-          "segments": [
-            {
-              "selector": "#cy-modal-host",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/templateadd/templateadd",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -188462,7 +188161,6 @@
         "pages/publish/simple/index",
         "pages/publish/temp/index",
         "pages/publish/template-intro/index",
-        "pages/publish/templateadd/templateadd",
         "pages/roam/index",
         "pages/search2/index",
         "pages/search2/result/index",
@@ -189229,15 +188927,6 @@
           ]
         },
         {
-          "route": "pages/publish/templateadd/templateadd",
-          "segments": [
-            {
-              "selector": "#cy-modal-host",
-              "index": 0
-            }
-          ]
-        },
-        {
           "route": "pages/roam/index",
           "segments": [
             {
@@ -189931,7 +189620,6 @@
         "pages/publish/simple/index",
         "pages/publish/temp/index",
         "pages/publish/template-intro/index",
-        "pages/publish/templateadd/templateadd",
         "pages/roam/index",
         "pages/search2/index",
         "pages/search2/result/index",
@@ -195341,66 +195029,6 @@
         },
         {
           "route": "pages/publish/template-intro/index",
-          "segments": [
-            {
-              "selector": "#cy-modal-host",
-              "index": 0
-            },
-            {
-              "selector": "cy-modal",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/templateadd/templateadd",
-          "segments": [
-            {
-              "selector": "#cy-modal-host",
-              "index": 0
-            },
-            {
-              "selector": "#dc",
-              "index": 0
-            },
-            {
-              "selector": "cy-modal",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/templateadd/templateadd",
-          "segments": [
-            {
-              "selector": "#cy-modal-host",
-              "index": 0
-            },
-            {
-              "selector": "#dc",
-              "index": 0
-            },
-            {
-              "selector": "cy-modal",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/templateadd/templateadd",
-          "segments": [
-            {
-              "selector": "#cy-modal-host",
-              "index": 0
-            },
-            {
-              "selector": "cy-modal",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/templateadd/templateadd",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -199999,7 +199627,6 @@
         "pages/publish/simple/index",
         "pages/publish/temp/index",
         "pages/publish/template-intro/index",
-        "pages/publish/templateadd/templateadd",
         "pages/roam/index",
         "pages/search2/index",
         "pages/search2/result/index",
@@ -205409,66 +205036,6 @@
         },
         {
           "route": "pages/publish/template-intro/index",
-          "segments": [
-            {
-              "selector": "#cy-modal-host",
-              "index": 0
-            },
-            {
-              "selector": "cy-modal",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/templateadd/templateadd",
-          "segments": [
-            {
-              "selector": "#cy-modal-host",
-              "index": 0
-            },
-            {
-              "selector": "#dc",
-              "index": 0
-            },
-            {
-              "selector": "cy-modal",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/templateadd/templateadd",
-          "segments": [
-            {
-              "selector": "#cy-modal-host",
-              "index": 0
-            },
-            {
-              "selector": "#dc",
-              "index": 0
-            },
-            {
-              "selector": "cy-modal",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/templateadd/templateadd",
-          "segments": [
-            {
-              "selector": "#cy-modal-host",
-              "index": 0
-            },
-            {
-              "selector": "cy-modal",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/templateadd/templateadd",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -210067,7 +209634,6 @@
         "pages/publish/simple/index",
         "pages/publish/temp/index",
         "pages/publish/template-intro/index",
-        "pages/publish/templateadd/templateadd",
         "pages/roam/index",
         "pages/search2/index",
         "pages/search2/result/index",
@@ -215477,66 +215043,6 @@
         },
         {
           "route": "pages/publish/template-intro/index",
-          "segments": [
-            {
-              "selector": "#cy-modal-host",
-              "index": 0
-            },
-            {
-              "selector": "cy-modal",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/templateadd/templateadd",
-          "segments": [
-            {
-              "selector": "#cy-modal-host",
-              "index": 0
-            },
-            {
-              "selector": "#dc",
-              "index": 0
-            },
-            {
-              "selector": "cy-modal",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/templateadd/templateadd",
-          "segments": [
-            {
-              "selector": "#cy-modal-host",
-              "index": 0
-            },
-            {
-              "selector": "#dc",
-              "index": 0
-            },
-            {
-              "selector": "cy-modal",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/templateadd/templateadd",
-          "segments": [
-            {
-              "selector": "#cy-modal-host",
-              "index": 0
-            },
-            {
-              "selector": "cy-modal",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/templateadd/templateadd",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -220135,7 +219641,6 @@
         "pages/publish/simple/index",
         "pages/publish/temp/index",
         "pages/publish/template-intro/index",
-        "pages/publish/templateadd/templateadd",
         "pages/roam/index",
         "pages/search2/index",
         "pages/search2/result/index",
@@ -225545,66 +225050,6 @@
         },
         {
           "route": "pages/publish/template-intro/index",
-          "segments": [
-            {
-              "selector": "#cy-modal-host",
-              "index": 0
-            },
-            {
-              "selector": "cy-modal",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/templateadd/templateadd",
-          "segments": [
-            {
-              "selector": "#cy-modal-host",
-              "index": 0
-            },
-            {
-              "selector": "#dc",
-              "index": 0
-            },
-            {
-              "selector": "cy-modal",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/templateadd/templateadd",
-          "segments": [
-            {
-              "selector": "#cy-modal-host",
-              "index": 0
-            },
-            {
-              "selector": "#dc",
-              "index": 0
-            },
-            {
-              "selector": "cy-modal",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/templateadd/templateadd",
-          "segments": [
-            {
-              "selector": "#cy-modal-host",
-              "index": 0
-            },
-            {
-              "selector": "cy-modal",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/templateadd/templateadd",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -230203,7 +229648,6 @@
         "pages/publish/simple/index",
         "pages/publish/temp/index",
         "pages/publish/template-intro/index",
-        "pages/publish/templateadd/templateadd",
         "pages/roam/index",
         "pages/search2/index",
         "pages/search2/result/index",
@@ -235613,66 +235057,6 @@
         },
         {
           "route": "pages/publish/template-intro/index",
-          "segments": [
-            {
-              "selector": "#cy-modal-host",
-              "index": 0
-            },
-            {
-              "selector": "cy-modal",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/templateadd/templateadd",
-          "segments": [
-            {
-              "selector": "#cy-modal-host",
-              "index": 0
-            },
-            {
-              "selector": "#dc",
-              "index": 0
-            },
-            {
-              "selector": "cy-modal",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/templateadd/templateadd",
-          "segments": [
-            {
-              "selector": "#cy-modal-host",
-              "index": 0
-            },
-            {
-              "selector": "#dc",
-              "index": 0
-            },
-            {
-              "selector": "cy-modal",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/templateadd/templateadd",
-          "segments": [
-            {
-              "selector": "#cy-modal-host",
-              "index": 0
-            },
-            {
-              "selector": "cy-modal",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/templateadd/templateadd",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -240271,7 +239655,6 @@
         "pages/publish/simple/index",
         "pages/publish/temp/index",
         "pages/publish/template-intro/index",
-        "pages/publish/templateadd/templateadd",
         "pages/roam/index",
         "pages/search2/index",
         "pages/search2/result/index",
@@ -245693,66 +245076,6 @@
           ]
         },
         {
-          "route": "pages/publish/templateadd/templateadd",
-          "segments": [
-            {
-              "selector": "#cy-modal-host",
-              "index": 0
-            },
-            {
-              "selector": "#dc",
-              "index": 0
-            },
-            {
-              "selector": "cy-modal",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/templateadd/templateadd",
-          "segments": [
-            {
-              "selector": "#cy-modal-host",
-              "index": 0
-            },
-            {
-              "selector": "#dc",
-              "index": 0
-            },
-            {
-              "selector": "cy-modal",
-              "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/templateadd/templateadd",
-          "segments": [
-            {
-              "selector": "#cy-modal-host",
-              "index": 0
-            },
-            {
-              "selector": "cy-modal",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/templateadd/templateadd",
-          "segments": [
-            {
-              "selector": "#cy-modal-host",
-              "index": 0
-            },
-            {
-              "selector": "cy-modal",
-              "index": 1
-            }
-          ]
-        },
-        {
           "route": "pages/roam/index",
           "segments": [
             {
@@ -250333,7 +249656,6 @@
         "pages/publish/simple/index",
         "pages/publish/temp/index",
         "pages/publish/template-intro/index",
-        "pages/publish/templateadd/templateadd",
         "pages/search2/index",
         "pages/search2/result/index",
         "pages/shezhi/about/index",
@@ -251070,15 +250392,6 @@
         },
         {
           "route": "pages/publish/template-intro/index",
-          "segments": [
-            {
-              "selector": "cy-nav-bar",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/templateadd/templateadd",
           "segments": [
             {
               "selector": "cy-nav-bar",
@@ -251920,7 +251233,6 @@
         "pages/publish/simple/index",
         "pages/publish/temp/index",
         "pages/publish/template-intro/index",
-        "pages/publish/templateadd/templateadd",
         "pages/search2/index",
         "pages/search2/result/index",
         "pages/searchmap/index",
@@ -252958,19 +252270,6 @@
         },
         {
           "route": "pages/publish/template-intro/index",
-          "segments": [
-            {
-              "selector": "cy-nav-bar",
-              "index": 0
-            },
-            {
-              "selector": "cy-offline-banner",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/templateadd/templateadd",
           "segments": [
             {
               "selector": "cy-nav-bar",
@@ -265190,7 +264489,6 @@
         "pages/publish/simple/index",
         "pages/publish/temp/index",
         "pages/publish/template-intro/index",
-        "pages/publish/templateadd/templateadd",
         "pages/roam/index",
         "pages/search2/index",
         "pages/search2/result/index",
@@ -271584,23 +270882,6 @@
         },
         {
           "route": "pages/publish/template-intro/index",
-          "segments": [
-            {
-              "selector": "#cy-modal-host",
-              "index": 0
-            },
-            {
-              "selector": "#dc",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/templateadd/templateadd",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -278106,7 +277387,6 @@
         "pages/publish/simple/index",
         "pages/publish/temp/index",
         "pages/publish/template-intro/index",
-        "pages/publish/templateadd/templateadd",
         "pages/roam/index",
         "pages/search2/index",
         "pages/search2/result/index",
@@ -284500,23 +283780,6 @@
         },
         {
           "route": "pages/publish/template-intro/index",
-          "segments": [
-            {
-              "selector": "#cy-modal-host",
-              "index": 0
-            },
-            {
-              "selector": "#dc",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/templateadd/templateadd",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -291022,7 +290285,6 @@
         "pages/publish/simple/index",
         "pages/publish/temp/index",
         "pages/publish/template-intro/index",
-        "pages/publish/templateadd/templateadd",
         "pages/roam/index",
         "pages/search2/index",
         "pages/search2/result/index",
@@ -297416,23 +296678,6 @@
         },
         {
           "route": "pages/publish/template-intro/index",
-          "segments": [
-            {
-              "selector": "#cy-modal-host",
-              "index": 0
-            },
-            {
-              "selector": "#dc",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/templateadd/templateadd",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -303938,7 +303183,6 @@
         "pages/publish/simple/index",
         "pages/publish/temp/index",
         "pages/publish/template-intro/index",
-        "pages/publish/templateadd/templateadd",
         "pages/roam/index",
         "pages/search2/index",
         "pages/search2/result/index",
@@ -310332,23 +309576,6 @@
         },
         {
           "route": "pages/publish/template-intro/index",
-          "segments": [
-            {
-              "selector": "#cy-modal-host",
-              "index": 0
-            },
-            {
-              "selector": "#dc",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/templateadd/templateadd",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -316854,7 +316081,6 @@
         "pages/publish/simple/index",
         "pages/publish/temp/index",
         "pages/publish/template-intro/index",
-        "pages/publish/templateadd/templateadd",
         "pages/roam/index",
         "pages/search2/index",
         "pages/search2/result/index",
@@ -323248,23 +322474,6 @@
         },
         {
           "route": "pages/publish/template-intro/index",
-          "segments": [
-            {
-              "selector": "#cy-modal-host",
-              "index": 0
-            },
-            {
-              "selector": "#dc",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/templateadd/templateadd",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -383279,7 +382488,6 @@
         "pages/publish/simple/index",
         "pages/publish/temp/index",
         "pages/publish/template-intro/index",
-        "pages/publish/templateadd/templateadd",
         "pages/roam/index",
         "pages/search2/index",
         "pages/search2/result/index",
@@ -402481,48 +401689,6 @@
         },
         {
           "route": "pages/publish/template-intro/index",
-          "segments": [
-            {
-              "selector": "#cy-modal-host",
-              "index": 0
-            },
-            {
-              "selector": "#dc",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/templateadd/templateadd",
-          "segments": [
-            {
-              "selector": "#cy-modal-host",
-              "index": 0
-            },
-            {
-              "selector": "#dc",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/templateadd/templateadd",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -420721,7 +419887,6 @@
         "pages/publish/simple/index",
         "pages/publish/temp/index",
         "pages/publish/template-intro/index",
-        "pages/publish/templateadd/templateadd",
         "pages/roam/index",
         "pages/search2/index",
         "pages/search2/result/index",
@@ -439923,48 +439088,6 @@
         },
         {
           "route": "pages/publish/template-intro/index",
-          "segments": [
-            {
-              "selector": "#cy-modal-host",
-              "index": 0
-            },
-            {
-              "selector": "#dc",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/templateadd/templateadd",
-          "segments": [
-            {
-              "selector": "#cy-modal-host",
-              "index": 0
-            },
-            {
-              "selector": "#dc",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/templateadd/templateadd",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -458162,7 +457285,6 @@
         "pages/publish/simple/index",
         "pages/publish/temp/index",
         "pages/publish/template-intro/index",
-        "pages/publish/templateadd/templateadd",
         "pages/roam/index",
         "pages/search2/index",
         "pages/search2/result/index",
@@ -477364,48 +476486,6 @@
         },
         {
           "route": "pages/publish/template-intro/index",
-          "segments": [
-            {
-              "selector": "#cy-modal-host",
-              "index": 0
-            },
-            {
-              "selector": "#dc",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/templateadd/templateadd",
-          "segments": [
-            {
-              "selector": "#cy-modal-host",
-              "index": 0
-            },
-            {
-              "selector": "#dc",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/templateadd/templateadd",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -495603,7 +494683,6 @@
         "pages/publish/simple/index",
         "pages/publish/temp/index",
         "pages/publish/template-intro/index",
-        "pages/publish/templateadd/templateadd",
         "pages/roam/index",
         "pages/search2/index",
         "pages/search2/result/index",
@@ -514805,48 +513884,6 @@
         },
         {
           "route": "pages/publish/template-intro/index",
-          "segments": [
-            {
-              "selector": "#cy-modal-host",
-              "index": 0
-            },
-            {
-              "selector": "#dc",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/templateadd/templateadd",
-          "segments": [
-            {
-              "selector": "#cy-modal-host",
-              "index": 0
-            },
-            {
-              "selector": "#dc",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/templateadd/templateadd",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -533044,7 +532081,6 @@
         "pages/publish/simple/index",
         "pages/publish/temp/index",
         "pages/publish/template-intro/index",
-        "pages/publish/templateadd/templateadd",
         "pages/roam/index",
         "pages/search2/index",
         "pages/search2/result/index",
@@ -552246,48 +551282,6 @@
         },
         {
           "route": "pages/publish/template-intro/index",
-          "segments": [
-            {
-              "selector": "#cy-modal-host",
-              "index": 0
-            },
-            {
-              "selector": "#dc",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/templateadd/templateadd",
-          "segments": [
-            {
-              "selector": "#cy-modal-host",
-              "index": 0
-            },
-            {
-              "selector": "#dc",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/templateadd/templateadd",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -570485,7 +569479,6 @@
         "pages/publish/simple/index",
         "pages/publish/temp/index",
         "pages/publish/template-intro/index",
-        "pages/publish/templateadd/templateadd",
         "pages/roam/index",
         "pages/search2/index",
         "pages/search2/result/index",
@@ -589687,48 +588680,6 @@
         },
         {
           "route": "pages/publish/template-intro/index",
-          "segments": [
-            {
-              "selector": "#cy-modal-host",
-              "index": 0
-            },
-            {
-              "selector": "#dc",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/templateadd/templateadd",
-          "segments": [
-            {
-              "selector": "#cy-modal-host",
-              "index": 0
-            },
-            {
-              "selector": "#dc",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/templateadd/templateadd",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -607927,7 +606878,6 @@
         "pages/publish/simple/index",
         "pages/publish/temp/index",
         "pages/publish/template-intro/index",
-        "pages/publish/templateadd/templateadd",
         "pages/roam/index",
         "pages/search2/index",
         "pages/search2/result/index",
@@ -627129,48 +626079,6 @@
         },
         {
           "route": "pages/publish/template-intro/index",
-          "segments": [
-            {
-              "selector": "#cy-modal-host",
-              "index": 0
-            },
-            {
-              "selector": "#dc",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/templateadd/templateadd",
-          "segments": [
-            {
-              "selector": "#cy-modal-host",
-              "index": 0
-            },
-            {
-              "selector": "#dc",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/templateadd/templateadd",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -645369,7 +644277,6 @@
         "pages/publish/simple/index",
         "pages/publish/temp/index",
         "pages/publish/template-intro/index",
-        "pages/publish/templateadd/templateadd",
         "pages/roam/index",
         "pages/search2/index",
         "pages/search2/result/index",
@@ -664571,48 +663478,6 @@
         },
         {
           "route": "pages/publish/template-intro/index",
-          "segments": [
-            {
-              "selector": "#cy-modal-host",
-              "index": 0
-            },
-            {
-              "selector": "#dc",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/templateadd/templateadd",
-          "segments": [
-            {
-              "selector": "#cy-modal-host",
-              "index": 0
-            },
-            {
-              "selector": "#dc",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/templateadd/templateadd",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -682811,7 +681676,6 @@
         "pages/publish/simple/index",
         "pages/publish/temp/index",
         "pages/publish/template-intro/index",
-        "pages/publish/templateadd/templateadd",
         "pages/roam/index",
         "pages/search2/index",
         "pages/search2/result/index",
@@ -702013,48 +700877,6 @@
         },
         {
           "route": "pages/publish/template-intro/index",
-          "segments": [
-            {
-              "selector": "#cy-modal-host",
-              "index": 0
-            },
-            {
-              "selector": "#dc",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/templateadd/templateadd",
-          "segments": [
-            {
-              "selector": "#cy-modal-host",
-              "index": 0
-            },
-            {
-              "selector": "#dc",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/templateadd/templateadd",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -720253,7 +719075,6 @@
         "pages/publish/simple/index",
         "pages/publish/temp/index",
         "pages/publish/template-intro/index",
-        "pages/publish/templateadd/templateadd",
         "pages/roam/index",
         "pages/search2/index",
         "pages/search2/result/index",
@@ -739455,48 +738276,6 @@
         },
         {
           "route": "pages/publish/template-intro/index",
-          "segments": [
-            {
-              "selector": "#cy-modal-host",
-              "index": 0
-            },
-            {
-              "selector": "#dc",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/templateadd/templateadd",
-          "segments": [
-            {
-              "selector": "#cy-modal-host",
-              "index": 0
-            },
-            {
-              "selector": "#dc",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/templateadd/templateadd",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -757695,7 +756474,6 @@
         "pages/publish/simple/index",
         "pages/publish/temp/index",
         "pages/publish/template-intro/index",
-        "pages/publish/templateadd/templateadd",
         "pages/roam/index",
         "pages/search2/index",
         "pages/search2/result/index",
@@ -776897,48 +775675,6 @@
         },
         {
           "route": "pages/publish/template-intro/index",
-          "segments": [
-            {
-              "selector": "#cy-modal-host",
-              "index": 0
-            },
-            {
-              "selector": "#dc",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/templateadd/templateadd",
-          "segments": [
-            {
-              "selector": "#cy-modal-host",
-              "index": 0
-            },
-            {
-              "selector": "#dc",
-              "index": 0
-            },
-            {
-              "selector": "cy-result-sheet",
-              "index": 0
-            },
-            {
-              "selector": "cy-sheet.rs-shell",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/templateadd/templateadd",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -1115933,282 +1114669,6 @@
       "evidence": {
         "status": "pending",
         "staticSource": "pages/publish/template-intro/index.js:287"
-      }
-    },
-    {
-      "id": "pages/publish/templateadd/templateadd.wxml:11:bindinput:onInputChange:1",
-      "route": "pages/publish/templateadd/templateadd",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "pages/publish/templateadd/templateadd.wxml",
-        "js": "pages/publish/templateadd/templateadd.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "input",
-        "event": "bindinput",
-        "handler": "onInputChange",
-        "line": 11,
-        "selectorHint": "input[bindinput]",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": "节点玩法名称",
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "event-contract",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/publish/templateadd/templateadd.js:37"
-      }
-    },
-    {
-      "id": "pages/publish/templateadd/templateadd.wxml:18:bind:disabledtap:onCreateTemplate:4",
-      "route": "pages/publish/templateadd/templateadd",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "pages/publish/templateadd/templateadd.wxml",
-        "js": "pages/publish/templateadd/templateadd.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-btn",
-        "event": "bind:disabledtap",
-        "handler": "onCreateTemplate",
-        "line": 18,
-        "selectorHint": ".ta-cta",
-        "visibleCondition": null,
-        "disabledCondition": "{{!canSubmit}}",
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": "{{!canSubmit || navigating}}",
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "navigation",
-      "interactionMode": "event-contract",
-      "baseActionClass": "navigation",
-      "effectClasses": [
-        "navigation",
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success",
-        "error"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/publish/templateadd/templateadd.js:51"
-      }
-    },
-    {
-      "id": "pages/publish/templateadd/templateadd.wxml:18:bindtap:onCreateTemplate:3",
-      "route": "pages/publish/templateadd/templateadd",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "pages/publish/templateadd/templateadd.wxml",
-        "js": "pages/publish/templateadd/templateadd.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-btn",
-        "event": "bindtap",
-        "handler": "onCreateTemplate",
-        "line": 18,
-        "selectorHint": ".ta-cta",
-        "visibleCondition": null,
-        "disabledCondition": "{{!canSubmit}}",
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": "{{!canSubmit || navigating}}",
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "navigation",
-      "interactionMode": "tap",
-      "baseActionClass": "navigation",
-      "effectClasses": [
-        "navigation",
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success",
-        "error"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/publish/templateadd/templateadd.js:51"
-      }
-    },
-    {
-      "id": "pages/publish/templateadd/templateadd.wxml:7:bind:back:onNavBack:0",
-      "route": "pages/publish/templateadd/templateadd",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "pages/publish/templateadd/templateadd.wxml",
-        "js": "pages/publish/templateadd/templateadd.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-nav-bar",
-        "event": "bind:back",
-        "handler": "onNavBack",
-        "line": 7,
-        "selectorHint": "cy-nav-bar[bind:back]",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "navigation",
-      "interactionMode": "event-contract",
-      "baseActionClass": "navigation",
-      "effectClasses": [
-        "navigation",
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/template/index"
-        ],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success",
-        "error"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/publish/templateadd/templateadd.js:76"
       }
     },
     {

@@ -569,10 +569,6 @@
     "selector": ".ti-field",
     "min": 1
   },
-  "B46": {
-    "selector": ".fbox_sr",
-    "min": 1
-  },
   "B48": {
     "selector": ".pd-ai-topic__plan, .pd-field",
     "min": 1
@@ -713,8 +709,8 @@
     "selector": ".gc-empty-board",
     "min": 1
   },
- "B75": {
-  "selector": ".gc-error-board",
+  "B75": {
+    "selector": ".gc-error-board",
     "min": 1
   },
   "C01": {

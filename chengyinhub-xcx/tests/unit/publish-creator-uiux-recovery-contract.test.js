@@ -88,23 +88,7 @@ test('模板引导示例失败可重试、畸形 payload 不冒充空态，创�
   assert.equal(h.page.data.cardsError, '')
 })
 
-test('玩法命名页保护未保存名称，跳转失败保留输入并原位重试', () => {
-  const h = harness('pages/publish/templateadd/templateadd.js')
-  h.page.onInputChange({ detail: { value: ' 老城暗号 ' } })
-  h.page.onNavBack()
-  assert.equal(h.modals.length, 1)
-  assert.match(h.modals[0].title, /放弃/)
-
-  h.page.onCreateTemplate()
-  assert.equal(h.page.data.navigating, true)
-  const nav = h.navigations.at(-1).options
-  assert.match(nav.url, /templateName=%E8%80%81%E5%9F%8E%E6%9A%97%E5%8F%B7$/)
-  nav.fail()
-  assert.equal(h.page.data.templateName, ' 老城暗号 ')
-  assert.equal(h.page.data.navigating, false)
-  assert.match(h.page.data.navigationError, /跳转失败/)
-  assert.deepEqual(h.toasts, [])
-})
+// 2026-10-23 起名页 templateadd 退役删除(业主第四轮去掉起名一步),它的未保存名称保护用例随页删除。
 
 test('活动与两类大型编辑器把首载/提交失败做成可见可重试状态', () => {
   const activityJs = read('pages/publish/activity/index.js')
@@ -168,13 +152,9 @@ test('发布编辑页销毁时让新增身份、模板与编辑回调全部失�
 })
 
 function assertVisibleRecoveryMarkup(overrides = {}) {
-  const templateadd = overrides.templateadd || read('pages/publish/templateadd/templateadd.wxml')
   const intro = overrides.intro || read('pages/publish/template-intro/index.wxml')
   const topicaddJs = overrides.topicaddJs || read('pages/publish/topicadd/topicadd.js')
 
-  assert.match(templateadd, /custom-back bind:back="onNavBack"/)
-  assert.match(templateadd, /class="templateadd-footer"/)
-  assert.match(templateadd, /navigationError/)
   assert.match(intro, /cardsLoading/)
   assert.match(intro, /cardsError/)
   assert.doesNotMatch(intro, /class="ti-dots"/, '静态圆点会伪装成不存在的轮播交互')
@@ -186,11 +166,7 @@ test('创建链路每页都有可见恢复路径、离页保护和可访问操�
   assertVisibleRecoveryMarkup()
 })
 
-test('负控：摘掉模板命名页返回保护或模板引导重试任一项都会判红', () => {
-  const templateadd = read('pages/publish/templateadd/templateadd.wxml')
-    .replace(' custom-back bind:back="onNavBack"', '')
-  assert.throws(() => assertVisibleRecoveryMarkup({ templateadd }), /custom-back/)
-
+test('负控：摘掉模板引导重试会判红', () => {
   const intro = read('pages/publish/template-intro/index.wxml')
     .replaceAll('cardsError', 'cardsFailureHidden')
   assert.throws(() => assertVisibleRecoveryMarkup({ intro }), /cardsError/)

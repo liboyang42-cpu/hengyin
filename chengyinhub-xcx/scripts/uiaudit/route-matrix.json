@@ -3,7 +3,7 @@
   "generatedFrom": "app.json + scene-* 组件扫描",
   "previousBatch": null,
   "counts": {
-    "routes": 145,
+    "routes": 144,
     "scenes": 27,
     "added": 0,
     "removed": 0
@@ -488,19 +488,6 @@
       "needsLogin": false,
       "needsData": false,
       "dataKeys": [],
-      "hasJs": true,
-      "hasWxml": true
-    },
-    {
-      "pagePath": "pages/publish/templateadd/templateadd",
-      "pkg": "pages/publish",
-      "tabBar": false,
-      "role": "player",
-      "needsLogin": false,
-      "needsData": true,
-      "dataKeys": [
-        "id"
-      ],
       "hasJs": true,
       "hasWxml": true
     },
