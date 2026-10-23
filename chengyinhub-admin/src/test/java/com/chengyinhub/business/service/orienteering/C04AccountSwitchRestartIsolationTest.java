@@ -291,4 +291,55 @@ class C04AccountSwitchRestartIsolationTest {
         assertEquals(false, disputes.recoverUnknown("dsp-unknow").mintedNewRequest);
         assertSame(firstDispute, disputes.recoverUnknown("dsp-unknow").dispute);
     }
+
+    @Test
+    void recoverOriginalOfNeverSeenIdDoesNotOccupyLedgerThenUniqueWriteApplies() {
+        Registration original = authority.register(course, TeamClubEligibilityAuthority.EntryMode.TEAM,
+                List.of(501L, 502L), List.of(CLUB_A), REG_ORIGINAL);
+        EventScoreVersioning.EventRun run = scores.start(original, frozen, safety, 7L, START_ORIGINAL);
+        scores.appendScore(run.id, 5000, "TASK", "TASK_DONE", "scr-orig01");
+
+        EventScoreVersioning.OriginalReceipt blankScore = scores.recoverOriginal(null);
+        assertNull(blankScore.originalRequestId);
+        assertEquals(EventScoreVersioning.OUTCOME_NOT_FOUND, blankScore.outcome);
+        assertEquals(false, blankScore.mintedNewRequest);
+        EventScoreVersioning.OriginalReceipt neverFinish = scores.recoverOriginal("fin-orig-unk");
+        assertEquals("fin-orig-unk", neverFinish.originalRequestId);
+        assertEquals(EventScoreVersioning.OUTCOME_NOT_FOUND, neverFinish.outcome);
+        assertEquals(false, neverFinish.mintedNewRequest);
+        assertNull(neverFinish.result);
+        assertEquals(OrienteeringEventException.NOT_FOUND,
+                assertThrows(OrienteeringEventException.class, () -> scores.readback("fin-orig-unk")).getErrorCode());
+
+        ResultVersion firstFinish = scores.finish(run.id, "fin-orig-unk");
+        assertEquals("fin-orig-unk", firstFinish.requestId);
+        assertEquals(EventScoreVersioning.OUTCOME_FINISHED, firstFinish.outcome);
+        assertSame(firstFinish, scores.readback("fin-orig-unk"));
+        EventScoreVersioning.OriginalReceipt recoveredFinish = scores.recoverOriginal("fin-orig-unk");
+        assertEquals("fin-orig-unk", recoveredFinish.originalRequestId);
+        assertEquals(EventScoreVersioning.OUTCOME_FINISHED, recoveredFinish.outcome);
+        assertEquals(false, recoveredFinish.mintedNewRequest);
+        assertSame(firstFinish, recoveredFinish.result);
+
+        TeamClubEligibilityAuthority.OriginalReceipt neverReg = authority.recoverOriginal("reg-orig-unk");
+        assertEquals("reg-orig-unk", neverReg.originalRequestId);
+        assertEquals(TeamClubEligibilityAuthority.OUTCOME_NOT_FOUND, neverReg.outcome);
+        assertNull(neverReg.registration);
+        assertEquals(OrienteeringEventException.NOT_FOUND,
+                assertThrows(OrienteeringEventException.class, () -> authority.readback("reg-orig-unk")).getErrorCode());
+        Registration firstUnknownReg = authority.register(course, TeamClubEligibilityAuthority.EntryMode.TEAM,
+                List.of(501L, 502L), List.of(CLUB_A), "reg-orig-unk");
+        assertEquals("reg-orig-unk", firstUnknownReg.requestId);
+        assertEquals(TeamClubEligibilityAuthority.OUTCOME_REGISTERED,
+                authority.recoverOriginal("reg-orig-unk").outcome);
+
+        EventResultDispute.OriginalReceipt neverDispute = disputes.recoverOriginal("dsp-orig-unk");
+        assertEquals("dsp-orig-unk", neverDispute.originalRequestId);
+        assertEquals(EventResultDispute.OUTCOME_NOT_FOUND, neverDispute.outcome);
+        assertNull(neverDispute.dispute);
+        EventResultDispute.Dispute firstDispute = disputes.open("fin-orig-unk", "原争议键首次写入", "dsp-orig-unk");
+        assertEquals("dsp-orig-unk", firstDispute.requestId);
+        assertEquals(EventResultDispute.OUTCOME_PENDING, disputes.recoverOriginal("dsp-orig-unk").outcome);
+        assertSame(firstDispute, disputes.recoverOriginal("dsp-orig-unk").dispute);
+    }
 }
