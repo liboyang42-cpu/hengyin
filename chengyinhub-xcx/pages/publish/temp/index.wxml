@@ -1331,14 +1331,24 @@
     <!-- ★ 玩法壳挂在预览层根部,不进滚动流:玩家侧(pages/play)也是这么挂的,
          它自己就是一整屏。塞进滚动流里会被上面的翻页条和内边距顶下去 ——
          题面该在离顶 84px 的位置,实测被推到了 340px,和原型对不上就是这么来的。 -->
-    <scroll-view wx:if="{{pvStepKey === 'challenge' && pvKit && pvKit.present === 'inline'}}" class="cg-pv-inline-scroll" scroll-y>
+    <scroll-view wx:if="{{pvStepKey === 'challenge' && pvKit && (pvKit.present === 'inline' || pvKit.type === 'journeycheck')}}" class="cg-pv-inline-scroll" scroll-y>
       <!-- 照玩家故事流的样子排:故事底色 → 流里这张玩法卡 → 「继续故事」。
            不再在外面另印一行标题 —— 作者没起名时它回落成题目,和玩法自己的题目印两遍。 -->
-      <view class="cg-pv-inline-kit"><cy-playkit class="{{ pvKit.mode === 'CARD' ? 'theme-dark' : '' }}" kit="{{pvKit}}" show="{{true}}" inline="{{true}}" bind:kitaction="onPvKitAction" /></view>
+      <view class="cg-pv-inline-kit">
+        <!-- D20 三档在玩家页是故事流里那张检定卡(不走 cy-playkit),试玩照挂同一个组件 -->
+        <cy-playkit-journey-check wx:if="{{pvKit.type === 'journeycheck'}}" show="{{true}}" loading="{{false}}"
+          skill="{{pvKit.skill}}" tier="{{pvKit.tier}}" mods="{{pvKit.mods}}" advantage="{{pvKit.advantage}}" disadvantage="{{pvKit.disadvantage}}"
+          receipt="{{pvKit.receipt}}" r5="{{false}}" allowed-actions="{{[]}}" bind:action="onPvCheckAction" bind:close="closePreview" />
+        <cy-playkit wx:else class="{{ pvKit.mode === 'CARD' ? 'theme-dark' : '' }}" kit="{{pvKit}}" show="{{true}}" inline="{{true}}" bind:kitaction="onPvKitAction" />
+      </view>
       <view class="cg-pv-inline-end"><view class="cg-pv-inline-continue">继续故事</view></view>
     </scroll-view>
     <cy-playkit class="{{ pvKit.mode === 'CARD' ? 'theme-dark' : '' }}" wx:elif="{{pvStepKey === 'challenge' && pvKit}}" kit="{{pvKit}}" show="{{true}}" bind:kitaction="onPvKitAction" />
-    <!-- 照「城瘾玩法试玩台」:玩法铺满整屏,不压翻页点和箭头(退出在玩法自己的左上角);
+    <!-- 左上角一颗「退出」,玩到一半也能走。内嵌的玩法没有自己的退出键,全屏的那颗在预览里藏掉(--pk-back-display),
+         两种玩法都只认这一颗,位置和样子照玩法台面的 .st__back -->
+    <view class="cg-pv-exit" wx:if="{{ pvStepKey === 'challenge' && pvKit }}" style="top:{{statusBarHeight + 12}}px" bindtap="closePreview"
+          aria-role="button" aria-label="退出试玩" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="back" size="40" /></view>
+    <!-- 照「城瘾玩法试玩台」:玩法铺满整屏,不压翻页点和箭头;
          玩完由判定屏整屏涌上来,作者配的成功 / 失败反馈就写在这一屏。 -->
     <cy-play-verdict wx:if="{{ pvStepKey === 'challenge' && pvKit }}" show="{{ pvVerdict.show }}" kind="{{ pvVerdict.kind }}"
                      text="{{ pvVerdict.text }}" images="{{ pvVerdict.images }}" closable="{{ true }}" bind:close="closePvVerdict" />

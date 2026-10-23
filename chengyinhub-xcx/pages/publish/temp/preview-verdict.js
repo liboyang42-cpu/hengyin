@@ -11,6 +11,11 @@ function judge(advanced, kit, action, detail) {
   if (action === 'verdict') return d.kind === 'fail' ? 'fail' : 'win';
   if (action === 'drawn' || action === 'scanned') return 'win';
   if (kit.type === 'typein') return kit.passed ? 'win' : 'fail';
+  if (kit.type === 'journeycheck') return kit.receipt && kit.receipt.settled ? (kit.receipt.success ? 'win' : 'fail') : '';
+  if (kit.type === 'blindtaste') {
+    const answer = advanced && advanced.blindTaste && advanced.blindTaste.answerKey;
+    return d.key && answer ? (d.key === answer ? 'win' : 'fail') : '';
+  }
   const qa = advanced && advanced.qa;
   if (kit.type !== 'qa' || !qa) return '';
   if (action === 'shoot') return 'win';

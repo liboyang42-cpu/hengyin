@@ -1628,3 +1628,12 @@ page {
   background: linear-gradient(var(--cy-color-bg-surface), transparent); }
 .cg-sheet::after { content: ""; display: block; position: sticky; bottom: calc(-1 * (var(--cy-space-4) + env(safe-area-inset-bottom))); height: 64rpx; margin-top: -64rpx; pointer-events: none;
   background: linear-gradient(transparent, var(--cy-bg-card)); }
+
+/* 试玩的退出键(2026-10-23):照玩法台面 .st__back 的位置与大小;全屏玩法自己那颗在预览里藏掉,只留这一颗 */
+.cg-preview--kit { --pk-back-display: none; }
+.cg-pv-exit {
+  position: fixed; left: var(--cy-page-x); z-index: var(--cy-z-popover);
+  width: 88rpx; height: 88rpx; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(127, 127, 127, .24); color: var(--cy-color-text-inverse);  /* ds-ok 叠在深浅两种玩法皮肤上都看得清的中性半透明 */
+}

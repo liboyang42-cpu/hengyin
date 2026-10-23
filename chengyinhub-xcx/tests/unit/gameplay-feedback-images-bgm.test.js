@@ -132,3 +132,28 @@ test('背景音乐:没配或玩法没打开时不播', () => {
   instance.syncBackgroundMusic({ audioUrl: 'https://cdn.example.com/tea.mp3' });
   assert.equal(audios.length, 0);
 });
+
+test('试玩台里原来没法试玩的三屏(闭眼盲品 / 今日城市签 / D20 三档)现在都能试玩,并照样判定', () => {
+  const pv = require('../../pages/publish/temp/preview-verdict.js');
+  const preview = require('../../pages/publish/utils/publish/advanced-game-preview.js');
+  ['blindTaste', 'dailySign', 'check'].forEach(key => assert.ok(preview.buildSampleKit(key), key + ' 要有试玩屏'));
+  const taste = preview.buildSampleKit('blindTaste');
+  assert.equal(taste.type, 'blindtaste'); assert.ok(taste.options.length >= 2);
+  const advanced = { blindTaste: { answerKey: 'B' } };
+  assert.equal(pv.judge(advanced, taste, 'answer', { key: 'B' }), 'win');
+  assert.equal(pv.judge(advanced, taste, 'answer', { key: 'A' }), 'fail');
+  const check = preview.buildSampleKit('check');
+  assert.equal(check.type, 'journeycheck');
+  assert.equal(pv.judge({}, check, 'settle', {}), '', '没掷没结算不判');
+  assert.equal(pv.judge({}, Object.assign({}, check, { receipt: { settled: true, success: true } }), 'settle', {}), 'win');
+  const { applyPreviewAction } = require('../../utils/game-preview-action.js');
+  const sign = applyPreviewAction(preview.buildSampleKit('dailySign'), { action: 'accept', detail: { text: '来过' } }, 0);
+  assert.equal(sign.kit.revealed && sign.kit.claimed, true); assert.equal(sign.kit.myText, '来过');
+});
+
+test('试玩左上角有一颗退出,全屏玩法自己那颗在试玩里藏掉', () => {
+  const wxml = fs.readFileSync(path.join(ROOT, 'pages/publish/temp/index.wxml'), 'utf8');
+  assert.match(wxml, /class="cg-pv-exit" wx:if="\{\{ pvStepKey === 'challenge' && pvKit \}\}"[^>]*bindtap="closePreview"/);
+  const wxss = fs.readFileSync(path.join(ROOT, 'pages/publish/temp/index.wxss'), 'utf8');
+  assert.match(wxss, /\.cg-preview--kit \{ --pk-back-display: none; \}/);
+});

@@ -46,6 +46,10 @@ function applyPreviewAction(source, event, startedAt, now = Date.now()) {
   } else if (kit.type === 'photocheck' && action === 'shoot') {
     kit.lastUrl = detail.tempFilePath || '';
     result.message = '照片仅供预览，未上传或识别';
+  } else if (kit.type === 'dailysign' && action === 'accept') {
+    // 试玩:按作者写的第一条签文揭开,留言与照片只在本机
+    kit.myText = String(detail.text || ''); kit.myPhotoUrl = detail.photoUrl || '';
+    kit.claimed = true; kit.revealed = true;
   } else if (kit.type === 'typein' && action === 'start') {
     if (kit.passed || (kit.tries > 0 && kit.attempts >= kit.tries)) return null;
     result.startedAt = now;
