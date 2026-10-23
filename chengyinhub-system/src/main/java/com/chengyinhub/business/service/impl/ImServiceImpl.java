@@ -37,6 +37,7 @@ import com.chengyinhub.business.mapper.CmsTopicMapper;
 import com.chengyinhub.business.mapper.ImBlockMapper;
 import com.chengyinhub.business.mapper.ImConversationMapper;
 import com.chengyinhub.business.mapper.ImConversationMemberMapper;
+import com.chengyinhub.business.mapper.ImConversationMemberMapper.ConversationSummary;
 import com.chengyinhub.business.mapper.ImMessageMapper;
 import com.chengyinhub.business.mapper.ImNotificationIntentMapper;
 import com.chengyinhub.business.mapper.ImPollMapper;
@@ -115,16 +116,16 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
     @Override
     public List<Map<String, Object>> listConversations(Long memberId)
     {
-        List<ImConversationMember> mine = memberMapper.selectMyConversations(memberId);
+        List<ConversationSummary> mine = memberMapper.selectMyConversationSummaries(memberId);
         List<Map<String, Object>> out = new ArrayList<>();
         Map<Long, ImMessage> latestVisible = new HashMap<>();
         if (mine == null)
         {
             return out;
         }
-        for (ImConversationMember m : mine)
+        for (ConversationSummary m : mine)
         {
-            ImConversation c = conversationMapper.selectImConversationById(m.getConversationId());
+            ImConversation c = m.getConversation();
             if (c == null)
             {
                 continue;
@@ -136,8 +137,7 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
             Map<String, Object> row = new HashMap<>();
             row.put("conversationId", c.getId());
             row.put("type", c.getType());
-            List<ImMessage> visible = messageMapper.selectVisiblePage(c.getId(), memberId, null, 1);
-            ImMessage latest = visible == null || visible.isEmpty() ? null : visible.get(0);
+            ImMessage latest = m.getLatest();
             if (latest != null)
             {
                 latestVisible.put(c.getId(), latest);
@@ -149,7 +149,7 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
             row.put("lastMsgAt", latest == null ? null : latest.getCreateTime());
             row.put("unread", m.getUnreadCount());
             row.put("muted", m.getMuted() == null ? 0 : m.getMuted());
-            row.put("counterparty", counterpartyOf(c, memberId));
+            row.put("counterparty", summaryCounterparty(m, memberId));
             out.add(row);
         }
         out.sort((left, right) -> {
@@ -167,6 +167,32 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
             return Long.compare(bId, aId);
         });
         return out;
+    }
+
+    private Map<String, Object> summaryCounterparty(ConversationSummary summary, Long memberId)
+    {
+        Integer type = summary.getConversation().getType();
+        if (Integer.valueOf(ImConversation.TYPE_SYSTEM).equals(type)
+                || Integer.valueOf(ImConversation.TYPE_MERCHANT).equals(type)
+                || Integer.valueOf(ImConversation.TYPE_GROUP).equals(type))
+        {
+            return counterpartyOf(summary.getConversation(), memberId);
+        }
+        Map<String, Object> cp = new HashMap<>();
+        Long otherId = summary.getCounterpartyId();
+        UmsMember profile = summary.getCounterpartyProfile();
+        if (otherId == null)
+        {
+            cp.put("id", 0);
+        }
+        else
+        {
+            cp.put("id", otherId);
+        }
+        cp.put("nickname", profile == null ? "" : profile.getNickname() != null
+                ? profile.getNickname() : profile.getName());
+        cp.put("avatar", profile == null ? "" : profile.getAvatar());
+        return cp;
     }
 
     /** 只投影当前读者所见卡片；历史原文、请求摘要与数据库行保持原值。 */
@@ -1228,26 +1254,9 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
     @Override
     public int unreadTotal(Long memberId)
     {
-        int total = 0;
-        for (Map<String, Object> row : listConversations(memberId))
-        {
-            if (Integer.valueOf(1).equals(row.get("muted")))
-            {
-                continue;
-            }
-            // A-06:群聊(type=4)在小程序不露出(im/list 显式过滤),总红点必须与列表同口径排除 ——
-            // 否则用户会看到一个点进去也清不掉的角标(未读在被隐藏的群会话里)。
-            if (Integer.valueOf(ImConversation.TYPE_GROUP).equals(row.get("type")))
-            {
-                continue;
-            }
-            Object unread = row.get("unread");
-            if (unread instanceof Number)
-            {
-                total += ((Number) unread).intValue();
-            }
-        }
-        return total;
+        // 与原列表累加同口径；隐藏群聊在 SQL 中排除，不做消息/资料投影。
+        Long total = memberMapper.sumInboxUnread(memberId);
+        return total == null ? 0 : total.intValue();
     }
 
     @Override
