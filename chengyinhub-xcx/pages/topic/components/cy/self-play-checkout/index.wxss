@@ -39,3 +39,22 @@
 .ck__pay { margin-left: auto; height: var(--cy-btn-h); padding: 0 64rpx; border-radius: 999rpx; display: flex; align-items: center;
   background: var(--cy-color-action-primary-bg); color: var(--cy-color-action-primary-fg); font-size: 30rpx; font-weight: 700; }
 .ck__pay.is-busy { opacity: .6; }
+/* v13 原型对齐:深灰卡 16px 圆角;主题信息「时间 / 地点」小字在上、值在下;合计斜体粗数字 */
+/* ds-ok: 本段颜色照 v13 原型取值 */
+.ck { background: #000; } /* ds-ok */
+.ck__nav { background: #000; } /* ds-ok */
+.ck__back { background: rgba(28,28,30,.72); } /* ds-ok */
+.ck__sec { margin: 35rpx 4rpx 15rpx; font-size: 27rpx; color: #ddd; } /* ds-ok */
+.ck__card { background: #1C1C1E; border-radius: 31rpx; } /* ds-ok */
+.ck__item { gap: 23rpx; padding: 23rpx; }
+.ck__cover { width: 138rpx; height: 138rpx; border-radius: 23rpx; }
+.ck__item-tx { gap: 2rpx; }
+.ck__item-n { font-size: 31rpx; margin-bottom: 4rpx; }
+.ck__item-s { font-size: 23rpx; color: #8E8E93; } /* ds-ok */
+.ck__item-v { font-size: 29rpx; font-weight: 500; color: #fff; margin-bottom: 4rpx; } /* ds-ok */
+.ck__row { padding: 27rpx; border-top-color: rgba(255,255,255,.08); } /* ds-ok */
+.ck__v { font-weight: 500; }
+.ck__v--sum, .ck__sum-v { font-style: italic; font-weight: 800; }
+.ck__sum-v { font-size: 50rpx; }
+.ck__bar { background: #000; border-top-color: rgba(255,255,255,.08); } /* ds-ok */
+.ck__pay { height: 96rpx; padding: 0 58rpx; background: #fff; color: #000; font-size: 31rpx; font-weight: 600; } /* ds-ok */

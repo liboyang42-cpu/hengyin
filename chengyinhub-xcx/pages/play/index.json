@@ -11,6 +11,7 @@
     "cy-slide-confirm": "/components/cy/slide-confirm/index",
     "cy-fragment": "/pages/play/components/fragment/index",
     "cy-finish-medals": "/pages/play/components/finish-medals/index",
+    "cy-medal-screen": "/pages/play/components/medal-screen/index",
     "cy-modal": "/components/cy/modal/index",
     "cy-scene-play-activity-detail": "/subpackageMember/components/cy/scene-play-activity-detail/index",
     "cy-scene-roam-task-list": "/components/cy/scene-roam-task-list/index",

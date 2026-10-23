@@ -1308,6 +1308,11 @@
   <view class="finsheet__cta" bindtap="closeFinish" aria-role="button" aria-label="继续" hover-class="cy-pressed" hover-stay-time="80">继续</view>
 </view>
 
+<!-- v13 通关勋章页(业主 2026-10-22):整个主题走完时盖在完成面板上面;「查看记录」露出下面的完成面板 -->
+<cy-medal-screen show="{{showFinish && medalScreen.show}}" items="{{medalScreen.items}}" title="{{medalScreen.title}}" sub="{{medalScreen.sub}}"
+  stats="{{medalScreen.stats}}" record="{{medalScreen.record}}" back-top="{{chrome.contentTop}}" reduced-motion="{{reducedMotion}}"
+  bind:close="closeFinish" bind:primary="saveFinishCard" bind:secondary="onMedalRecords" />
+
 <!-- 终章结局信(mode2,弧形叙事布局) -->
 <view class="ending" wx:if="{{ending.show}}">
   <view class="ending__close" style="top:{{chrome.contentTop}}px;" bindtap="closeEnding" aria-role="button" aria-label="关闭城市故事" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="44" /></view>

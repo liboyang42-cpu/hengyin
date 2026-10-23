@@ -24,7 +24,7 @@ test('顶部条「附近的队伍 · N 支在招募」+ 底部只剩「范围」
   assert.equal(corners.length, 2, '底部角控件必须恰好两枚')
   const wrap = WXML.match(/<view class="mt-corners"[^>]*>/)
   assert.ok(wrap, '角控件要包在 mt-corners 里')
-  assert.match(wrap[0], /wx:if="\{\{!sheet\}\}"/, '开任何半屏时角控件收起')
+  assert.match(wrap[0], /wx:if="\{\{!sheet( && viewMode === 'map')?\}\}"/, '开任何半屏时角控件收起(v13:列表模式也收起)')
   assert.match(WXML, /\{\{rangeText\}\}/)
   assert.match(WXML, /\{\{myTeamsText\}\}/)
   assert.doesNotMatch(WXML, /openTools|openStampCamera|pgrabhit/, '旧抽屉/拍照入口不再留在地图上')
@@ -108,12 +108,13 @@ function feedTeams(page, rows) {
   req.success({ code: 200, data: rows })
 }
 
-function tapTeam(page, id) { page.onMarkerTap({ detail: { markerId: id * 10 + 4 } }) }
+// 2026-10-22 v13:点队伍点位先长出点位卡,点卡片再进队伍半屏
+function tapTeam(page, id) { page.onMarkerTap({ detail: { markerId: id * 10 + 4 } }); page.onPoiFront() }
 
 test('nearby 回来:顶部条计数 + 点位;点开卡片 → 角控件收起(sheet 非空)', () => {
   const page = load()
   feedTeams(page, [team(), team({ teamId: 8, latitude: 31.21 })]) // 2026-10-22:远于范围 1.2 倍的点不画(业主口述),第二支放进范围内
-  assert.equal(page.data.headerText, '附近的队伍 · 2 支在招募')
+  assert.equal(page.data.headerText, '附近 · 2 支队伍')
   assert.equal(page.data.markers.filter((m) => m.id % 10 === 4).length, 2)
   assert.equal(page.data.sheet, '')
   tapTeam(page, 7)
@@ -239,7 +240,7 @@ test('刷新后卡片那支队伍不在了(满员/开场) → 队伍卡收掉,�
   assert.equal(page.data.sheet, 'team')
   feedTeams(page, [])
   assert.equal(page.data.sheet, '')
-  assert.equal(page.data.headerText, '附近的队伍 · 0 支在招募')
+  assert.equal(page.data.headerText, '附近 · 0 支队伍')
 })
 
 test('申请列表迟到的旧响应不串到别的队伍;非队长读列表失败标题是「申请列表没读到」', () => {

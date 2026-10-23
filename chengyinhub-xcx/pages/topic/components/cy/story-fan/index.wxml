@@ -13,5 +13,5 @@
       </view>
     </view>
   </view>
-  <text class="sf__cap">{{caption || '点一张卡片，翻到背面看这一章'}}</text>
+  <text class="sf__cap">{{caption || '点一张卡片，翻到背面看' + noun}}</text>
 </view>

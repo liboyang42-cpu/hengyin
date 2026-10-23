@@ -45,7 +45,7 @@ Page({
        ⚠️ 不要为了「合并」去动后端:两类票的字段和落点本来就不同,合到一个接口只会把
           差异塞进 if,还丢掉各自的分页。 */
     ticketList: [],
-    currentSwiperTicket: 0, deckStyle: '', liftImg: '', liftBox: '', liftStyle: '', // 2026-10-22 当前卡拖动/新卡落入:deckStyle 藏原卡,lift* 是浮在 swiper 上面的那张
+    currentSwiperTicket: 0, deckPoses: [], deckStill: false, wbg: ['', ''], wbgOn: 0, walletTab: 0, tabCount: [0, 0, 0], navH: appGlobal.navBarHeight || 44, // v13 卡堆 / 两层模糊背景 / 可用·已用·已过期
     walletState: 'loading', // loading | ready | error | login | empty —— 由两条支线的状态合成
     walletErrorMsg: '',
     focusState: '',
@@ -245,12 +245,6 @@ Page({
        合起来有票        → ready;
        否则              → empty。
      这样「场次接口挂了但路线票还在」不会变成一片空白 —— 那是最容易被读成「我的票没了」的假象。 */
-  /* 合并后的 swiper 只有一个，背景跟着当前那张票走。 */
-  onTicketSwiperChange(e) {
-    const i = e.detail.current;
-    const item = (this.data.ticketList || [])[i] || {};
-    this.setData({ currentSwiperTicket: i, topicBg: item.wImg || this.data.topicBg });
-  },
 
   rebuildTicketList() {
     const topics = ((this._topic && this._topic.list) || []).map(function (item) {
@@ -259,7 +253,7 @@ Page({
         kind: 'topic',
         wKey: 'topic-' + item.id,
         wTitle: t.name || '路线信息待同步',
-        wImg: t.imgUrl || '/images/route_city_cover.png',
+        wImg: t.imgUrl || '/images/route_city_cover.png', wType: Number(t.productType) === 2 ? '自由探索' : '城市定向', wColor: Number(t.productType) === 2 ? '#7CF0A0' : '#5AA9FF', wUntil: item.expiresAt || t.endDate || '', // ds-ok v13 类型色
       });
     });
     const activities = ((this._activity && this._activity.list) || []).map(function (item) {
@@ -269,21 +263,26 @@ Page({
         wKey: 'activity-' + item.id,
         wTitle: a.name || '活动信息待同步',
         wImg: a.imgUrl || '/images/route_city_cover.png',
+        wType: '场次', wColor: '#E8B86B', wUntil: a.endTime || a.endDate || '', // ds-ok v13 卡角色
       });
     });
     const seen = new Set();
-    const list = topics.concat(activities).filter(item => {
+    const all = topics.concat(activities).filter(item => {
       const id = exactRegistrationId(item.id);
       if (!id) return true;
       if (seen.has(id)) return false;
       seen.add(id); return true;
-    });
+    }).map(walletCard);
+    // v13 底部「可用 / 已用 / 已过期」:可用 = 待使用 + 待支付,已用 = 已核验,已过期 = 过期或取消
+    const tabCount = [0, 0, 0];
+    all.forEach((item) => { tabCount[item.wTab] += 1; });
+    const list = all.filter((item) => item.wTab === this.data.walletTab);
     const ts = (this._topic || {}).state;
     const as = (this._activity || {}).state;
     let state;
     if (ts === 'loading' && as === 'loading') state = 'loading';
     else if (ts === 'error' && as === 'error') state = 'error';
-    else if (list.length > 0) state = 'ready';
+    else if (all.length > 0) state = 'ready';
     else if (ts === 'loading' || as === 'loading') state = 'loading';
     else if (ts === 'error' || as === 'error') state = 'error';
     else state = 'empty';
@@ -296,11 +295,12 @@ Page({
     this.setData({
       ticketList: list,
       currentSwiperTicket: currentIndex,
-      walletState: state,
+      walletState: state, tabCount,
       walletErrorMsg: (this._topic || {}).err || (this._activity || {}).err || '',
       topicBg: cur.wImg || this.data.topicBg,
     });
-    if (this._focusId) this._tryFocusTicket(); if (state === 'ready' && this._arrive) { this._arrive = false; this._playArrive(); }
+    this._deckLay(); this._bgTo(cur.wImg);
+    if (this._focusId) this._tryFocusTicket(); if (state === 'ready' && this._arrive) { this._arrive = false; this._entered = true; this._playArrive(); } else if (state === 'ready' && !this._entered) { this._entered = true; this._playEnter(false); }
   },
 
   /* 点开一张票。两种票的落点不同,由 kind 分流 —— 这就是合并列表之后
@@ -510,71 +510,108 @@ Page({
     })
   },
 
-  /* ===== 2026-10-22 业主:票夹卡堆 =====
-     swiper 会把卡裁在自己的槽位里,拖出去或从上方落下都会被切成直角。所以动的时候把当前卡
-     「拎」到 swiper 上面一层(同图同位置的浮卡),原卡先藏起来;动完再放回去。 */
-  _lift(done) {
-    if (typeof wx.createSelectorQuery !== 'function') return;
-    const list = this.data.ticketList || [], cur = list[this.data.currentSwiperTicket];
-    if (!cur) return;
-    try {
-      wx.createSelectorQuery().in(this).select('.swiper-item-content.active .tk').boundingClientRect((r) => {
-        if (!r || this._unloaded) return;
-        this.setData({ liftImg: cur.wImg, liftBox: 'left:' + r.left + 'px;top:' + r.top + 'px;width:' + r.width + 'px;height:' + r.height + 'px;', deckStyle: 'opacity: 0;' }, done);
-      }).exec();
-    } catch (e) { /* 量不到就不浮起,卡留在原位 */ }
-  },
-  _drop(ms) {
-    clearTimeout(this._dropTimer);
-    this._dropTimer = setTimeout(() => { if (!this._unloaded && !this._drag) this.setData({ liftImg: '', liftStyle: '', deckStyle: '' }); }, ms);
-  },
-
-  /* 新卡落进票夹:浮卡先放到屏幕上方(无过渡),下一帧带回弹过渡落回原位 */
-  _playArrive() {
-    this._lift(() => {
-      this.setData({ liftStyle: 'transform: translateY(-120vh) rotate(-6deg) scale(1.04); transition: none;' });
-      setTimeout(() => {
-        if (this._unloaded) return;
-        this.setData({ liftStyle: 'transform: none; transition: transform .75s cubic-bezier(.2, .9, .25, 1.12);' });
-        this._drop(800);
-      }, 60);
+  /* ===== v13 票夹卡堆(业主 2026-10-22「和 HTML 一模一样」) =====
+     卡片叠放:后面的卡往上错开、缩小、变暗;最前一张跟手拖(任意方向,带一点倾斜),
+     后面的卡跟着往前挪;松手越过阈值或甩得够快就按手指方向飞出去,下一张上来;点卡进入。 */
+  _deckPose(r) { return DECK_POSE[Math.min(r, DECK_POSE.length - 1)]; },
+  _deckLay(front) {
+    const list = this.data.ticketList || [], n = list.length, cur = this.data.currentSwiperTicket;
+    const poses = list.map((_, i) => {
+      const r = (i - cur + n) % n;
+      if (r === 0 && front) return front;
+      const p = this._deckPose(r);
+      return 'transform: translate(0px,' + p.y + 'px) scale(' + p.s + '); filter: brightness(' + p.b + '); opacity: ' + p.o + '; z-index: ' + (30 - r) + ';';
     });
+    this.setData({ deckPoses: poses });
+  },
+  _bgTo(src) {
+    if (!src || src === this.data.wbg[this.data.wbgOn]) return;
+    const on = 1 - this.data.wbgOn;
+    this.setData({ ['wbg[' + on + ']']: src, wbgOn: on, topicBg: src });
+  },
+  onWalletTab(e) {
+    const i = Number(e.currentTarget.dataset.i) || 0;
+    if (i === this.data.walletTab) return;
+    this.setData({ walletTab: i, currentSwiperTicket: 0 });
+    this.rebuildTicketList();
+    this._playEnter(false);
   },
 
-  /* 手指拖当前卡:任意方向跟手(带一点倾斜);松手横向/纵向越过阈值就按方向甩走换卡,否则回弹。
-     原生 swiper 的横滑交给这里统一处理(disable-touch),点按仍由 swiper-item 的 goTicket 接。 */
+  /* 进页 / 新卡到账:其余卡从下面依次升上来;新到的那张从右上方斜着落到最前 */
+  _playEnter(arrive) {
+    const list = this.data.ticketList || [], n = list.length, cur = this.data.currentSwiperTicket;
+    if (!n || reducedMotionOn()) return this._deckLay();
+    const from = list.map((_, i) => {
+      const r = (i - cur + n) % n;
+      return (arrive && r === 0 ? 'transform: translate(40px,-720px) rotate(-12deg) scale(1.15);' : 'transform: translate(0px,560px) scale(.9);') + 'z-index: ' + (30 - r) + '; transition: none;';
+    });
+    this.setData({ deckPoses: from, deckStill: true });
+    setTimeout(() => {
+      if (this._unloaded) return;
+      this.setData({ deckStill: false });
+      const order = list.map((_, i) => (i - cur + n) % n);
+      order.forEach((r, i) => {
+        const delay = arrive && r === 0 ? 320 : (n - 1 - r) * 90;
+        setTimeout(() => {
+          if (this._unloaded) return;
+          const p = this._deckPose(r);
+          const ease = arrive && r === 0 ? 'transition: transform .78s cubic-bezier(.2,.9,.25,1.08);' : 'transition: transform .7s cubic-bezier(.2,.9,.25,1.08);';
+          this.setData({ ['deckPoses[' + i + ']']: 'transform: translate(0px,' + p.y + 'px) scale(' + p.s + '); filter: brightness(' + p.b + '); opacity: ' + p.o + '; z-index: ' + (30 - r) + ';' + ease });
+        }, delay);
+      });
+    }, 40);
+  },
+  _playArrive() { this._playEnter(true); },
+
   onDeckStart(e) {
     const t = e.touches && e.touches[0];
-    if (!t || (this.data.ticketList || []).length === 0) return;
-    clearTimeout(this._dropTimer);
-    this._drag = { x: t.clientX, y: t.clientY, dx: 0, dy: 0, at: 0 };
-    if (!this.data.liftImg) this._lift();
+    if (!t || this._throwing || (this.data.ticketList || []).length === 0) return;
+    this._drag = { x: t.clientX, y: t.clientY, lx: t.clientX, ly: t.clientY, t: Date.now(), vx: 0, vy: 0, dx: 0, dy: 0, at: 0 };
+    this.setData({ deckStill: true });
   },
   onDeckMove(e) {
     const d = this._drag, t = e.touches && e.touches[0];
     if (!d || !t) return;
+    const now = Date.now(), dt = Math.max(1, now - d.t);
+    d.vx = (t.clientX - d.lx) / dt; d.vy = (t.clientY - d.ly) / dt; d.lx = t.clientX; d.ly = t.clientY; d.t = now;
     d.dx = t.clientX - d.x; d.dy = t.clientY - d.y;
-    const now = Date.now();
     if (now - d.at < 16) return;
     d.at = now;
-    this.setData({ liftStyle: 'transform: translate(' + d.dx + 'px,' + d.dy + 'px) rotate(' + (d.dx * 0.04).toFixed(2) + 'deg); transition: none;' });
+    const list = this.data.ticketList || [], n = list.length, cur = this.data.currentSwiperTicket;
+    const pr = Math.min(1, Math.hypot(d.dx, d.dy) / 220);
+    const lerp = (a, b) => a + (b - a) * pr;
+    const poses = list.map((_, i) => {
+      const r = (i - cur + n) % n;
+      if (r === 0) return 'transform: translate(' + d.dx + 'px,' + d.dy + 'px) rotate(' + (d.dx * 0.06).toFixed(2) + 'deg); z-index: 30;';
+      const a = this._deckPose(r), b = this._deckPose(r - 1);
+      return 'transform: translate(0px,' + lerp(a.y, b.y) + 'px) scale(' + lerp(a.s, b.s) + '); filter: brightness(' + lerp(a.b, b.b) + '); opacity: ' + lerp(a.o, b.o) + '; z-index: ' + (30 - r) + ';';
+    });
+    this.setData({ deckPoses: poses });
   },
   onDeckEnd() {
     const d = this._drag;
     this._drag = null;
     if (!d) return;
-    const list = this.data.ticketList || [];
-    const far = Math.abs(d.dx) > 70 || Math.abs(d.dy) > 110;
-    if (!far || list.length < 2) {
-      this.setData({ liftStyle: 'transform: none; transition: transform .45s cubic-bezier(.2, .9, .3, 1.1);' });
-      this._drop(460);
-      return;
-    }
-    const forward = Math.abs(d.dx) >= Math.abs(d.dy) ? d.dx < 0 : d.dy < 0;
-    const i = (this.data.currentSwiperTicket + (forward ? 1 : -1) + list.length) % list.length;
-    this.setData({ liftStyle: 'transform: translate(' + (d.dx * 4) + 'px,' + (d.dy * 4) + 'px) rotate(' + (d.dx * 0.12).toFixed(2) + 'deg); opacity: 0; transition: transform .35s ease-in, opacity .35s ease-in;',
-      deckStyle: '', currentSwiperTicket: i, topicBg: (list[i] && list[i].wImg) || this.data.topicBg });
-    this._drop(360);
+    this.setData({ deckStill: false });
+    const list = this.data.ticketList || [], n = list.length;
+    const dist = Math.hypot(d.dx, d.dy), sp = Math.hypot(d.vx, d.vy);
+    if (dist < 8 || n < 2 || !(dist > 90 || sp > 0.6)) return this._deckLay();
+    const fx = d.dx + d.vx * 80, fy = d.dy + d.vy * 80, L = Math.hypot(fx, fy) || 1;
+    const out = 'transform: translate(' + (fx / L * 620) + 'px,' + (fy / L * 620) + 'px) rotate(' + (fx / L * 20) + 'deg); opacity: 0; z-index: 40; transition: transform .5s cubic-bezier(.2,.7,.3,1), opacity .3s .18s;';
+    const thrown = this.data.currentSwiperTicket;
+    const next = (thrown + 1) % n;
+    this._throwing = true;
+    this.setData({ currentSwiperTicket: next });
+    this._deckLay();
+    this.setData({ ['deckPoses[' + thrown + ']']: out });
+    this._bgTo(list[next] && list[next].wImg);
+    this.syncCurrentTeam && this.syncCurrentTeam();
+    setTimeout(() => {
+      if (this._unloaded) return;
+      this.setData({ deckStill: true });
+      this._deckLay();
+      setTimeout(() => { if (!this._unloaded) this.setData({ deckStill: false }); this._throwing = false; }, 50);
+    }, 520);
   },
 })
 
@@ -585,4 +622,19 @@ function reducedMotionOn() {
     const v = wx.getStorageSync('play_reduced_motion');
     return v === true || (v !== false && wx.getStorageSync('roam_reduced_motion') === true);
   } catch (e) { return false; }
+}
+
+// v13 卡堆每一层的位置:往上错开 / 缩小 / 变暗,第 4 张以后藏在最后
+const DECK_POSE = [{ y: 0, s: 1, b: 1, o: 1 }, { y: -26, s: 0.93, b: 0.5, o: 1 }, { y: -48, s: 0.86, b: 0.32, o: 1 }, { y: -62, s: 0.8, b: 0.2, o: 1 }, { y: -62, s: 0.8, b: 0.2, o: 0 }];
+/* 卡面文字:类型 · 剩几天(有到期日才写),状态不是待使用时写状态;tab 归类 */
+function walletCard(item) {
+  const done = item.verificationStatus == 1, gone = item.registrationStatus == 3 || item.registrationStatus == 4;
+  const ready = !done && !gone && item.registrationStatus == 2;
+  let state = done ? '已核验' : gone ? (item.registrationStatus == 4 ? '已过期' : '已取消') : ready ? '' : '待支付';
+  if (ready) {
+    const until = item.wUntil ? new Date(String(item.wUntil).replace(/-/g, '/')) : null;
+    const days = until && !isNaN(until.getTime()) ? Math.ceil((until.getTime() - Date.now()) / 86400000) : null;
+    state = days !== null && days >= 0 ? '剩 ' + days + ' 天' : '待使用';
+  }
+  return Object.assign(item, { wSub: item.wType + ' · ' + state, wTab: done ? 1 : gone ? 2 : 0 });
 }

@@ -114,7 +114,7 @@ Page({
     // 2026-10-22 业主:三个标签 = 详情 / 故事 / 路线(自由探索没有固定路线,第三个叫「地点」)
     topicTabs: [{ key: '0', label: '详情' }, { key: '1', label: '故事' }, { key: '2', label: '路线' }],
     // ===== 2026-10-22 动效与新增块(docs/design/动效界面落地_20261022) =====
-    coverImages: [], kbIdx: 0, coverLeaving: false, detailEnter: false,
+    coverImages: [], kbIdx: 0, coverLeaving: false, detailEnter: false, heroIdx: 0, navSolid: false, storyChars: [], routeNote: '', sketchPoints: [], routeReal: false,
     publisher: { name: '', avatar: '' }, heroCta: { kind: '', text: '' }, faved: false,
     docked: false, dockCtaStyle: '', dockFavStyle: '',
     merchantCards: [], storyCards: [], storyMeta: '', openChapter: -1, storyDocked: false, storyMiniStyle: '',
@@ -308,7 +308,7 @@ Page({
       }
     }
 
-    this._checkDock(scrollTop);
+    this._checkDock(scrollTop); this._checkNav(scrollTop);
 
     // 吸顶逻辑
     const { tabSectionTop, topBarHeight, tabHeight } = this.data;
@@ -434,6 +434,7 @@ Page({
     }, () => {
     });
     if (String(index) === '2') this._loadProgress();
+    if (String(index) === '1') { this.setData({ openChapter: -1 }); this._later(900, () => { if (String(this.data.activeTab) === '1') this.setData({ openChapter: 0 }); }); } // v13:进故事标签后第一章自己展开
   },
 
   /* 2026-10-22 业主:点「查看详情与报名」是点按转场,不是往下滑 ——
@@ -502,11 +503,14 @@ Page({
       storyCards: motion.buildStoryCards(data, merchantCards),
       storyMeta: motion.storyMeta(data),
       'topicTabs[2].label': Number(data.productType) === 2 ? '地点' : '路线',
+      routeNote: motion.routeNote(data, merchantCards.length), heroIdx: 0, routeReal: false,
+      sketchPoints: [].concat(...(data.chaptersList || []).map((c) => (c && c.nodes) || [])).map(routePoint).filter(Boolean).map((p) => ({ lat: p.latitude, lng: p.longitude })),
     });
     this._progressLoaded = false;
     this._startKenBurns();
     this._loadTeams(data);
     this._loadFav(data.id);
+    this._loadChars(data);
   },
 
   // 封面轮换:只在停留第一屏时换图,离屏/隐藏/减少动效时不跑
@@ -566,34 +570,66 @@ Page({
     q.select('.hero-cta').boundingClientRect();
     q.select('.hero-fav').boundingClientRect(); q.select('.bm-main').boundingClientRect();
     q.exec((r) => {
-      const cta = r && r[0], fav = r && r[1], bar = String(this.data.activeTab) === '0' && r && r[2];
+      const cta = r && r[0], fav = r && r[1], bar = null; // v13 没有底栏:价格按钮一律停到右下角
       const win = this._windowSize(), cap = this._capsule || { top: 48, left: win.w - 95, height: 32 };
       const box = (x, y, w, h) => 'left:' + x + 'px;top:' + y + 'px;width:' + w + 'px;height:' + h + 'px;';
       const ctaW = cta ? Math.max(cta.width, 150) : 150;
       const ctaAt = cta ? box(cta.left, cta.top, cta.width, cta.height) : '';
-      const ctaDock = bar ? box(bar.left, bar.top, bar.width, bar.height) : box(win.w - 16 - ctaW, win.h - 34 - 48 - win.safeBottom, ctaW, 48); // 详情页有底栏:落进底栏主按钮并合为一颗
+      const ctaDock = bar ? box(bar.left, bar.top, bar.width, bar.height) : box(win.w - 16 - ctaW, win.h - 16 - 50 - win.safeBottom, ctaW, 50);
       const favAt = fav ? box(fav.left, fav.top, fav.width, fav.height) : '';
       const favDock = box(cap.left - 8 - cap.height, cap.top, cap.height, cap.height);
       const ease = 'transition:left ' + DOCK_MS + 'ms cubic-bezier(.65,0,.35,1),top ' + DOCK_MS + 'ms cubic-bezier(.65,0,.35,1),width ' + DOCK_MS + 'ms cubic-bezier(.65,0,.35,1),height ' + DOCK_MS + 'ms cubic-bezier(.65,0,.35,1);';
       const still = 'transition:none;';
       if (this.data.reducedMotion) {
-        this.setData({ docked: on, dockMerged: on, dockCtaStyle: ctaDock + still, dockFavStyle: favDock + still });
+        this.setData({ docked: on, dockCtaStyle: ctaDock + still, dockFavStyle: favDock + still });
         this._docking = false;
         return;
       }
       if (on) {
         this.setData({ docked: true, dockCtaStyle: ctaAt + still, dockFavStyle: favAt + still });
         this._later(30, () => this.setData({ dockCtaStyle: ctaDock + ease, dockFavStyle: favDock + ease }));
-        this._later(DOCK_MS + 40, () => { this._docking = false; this.setData({ dockMerged: true }); });
+        this._later(DOCK_MS + 40, () => { this._docking = false; });
       } else {
-        this.setData({ dockMerged: false, dockCtaStyle: ctaAt + ease, dockFavStyle: favAt + ease });
+        this.setData({ dockCtaStyle: ctaAt + ease, dockFavStyle: favAt + ease });
         this._later(DOCK_MS, () => { this.setData({ docked: false }); this._docking = false; });
       }
     });
   },
 
+  onHeroSwipe(e) { this.setData({ heroIdx: (e && e.detail && e.detail.current) || 0 }); },
+  noop() {},
+  onRouteReal() { this.setData({ routeReal: true }); },
+
+  /* v13 顶栏:详情顶部照片滚过一半后,顶栏压黑并写主题名 */
+  _checkNav(scrollTop) {
+    const top = this.data.screen2Top || 0;
+    const want = top > 0 && scrollTop > top + this._windowSize().h * 0.5;
+    if (want !== this.data.navSolid) this.setData({ navSolid: want });
+  },
+
+  /* 主要角色:商家站点的出场 NPC,最多问 4 个站点;没有就整块不出 */
+  _loadChars(data) {
+    if (!this._loggedIn()) return;
+    const asks = [];
+    for (const c of (data && data.chaptersList) || []) {
+      for (const n of (c && c.nodes) || []) {
+        if (n && n.id && (n.registrationMerchantList || []).length && asks.length < 4) asks.push({ nodeId: n.id, place: nodeText(n.name) });
+      }
+    }
+    if (!asks.length) return;
+    const rows = [];
+    let left = asks.length;
+    const done = () => { left -= 1; if (!left && !this._unloaded) this.setData({ storyChars: motion.buildChars(rows) }); };
+    asks.forEach((a) => app.sendRequest({ url: '/api/ai/npc/profile', method: 'GET', hideLoading: true, autoErrorToast: false,
+      data: { scope: 'node', nodeId: a.nodeId },
+      success: (res) => { const list = res && String(res.code) === '200' && res.data && res.data.npcs; if (Array.isArray(list)) list.forEach((npc) => rows.push({ npc, place: a.place })); done(); },
+      fail: done,
+    }));
+  },
+
   onHeroCta() {
     const kind = this.data.heroCta && this.data.heroCta.kind;
+    if (kind === 'locked') return this.lockedTip();
     if (kind === 'joined') return this.goJoinedPlay();
     if (kind === 'selfplay') return this.selfPlayBuy();
     if (kind === 'signup') return this.bmClick({ currentTarget: { dataset: {} } });
@@ -672,7 +708,7 @@ Page({
     const info = this.data.info || {};
     const nodes = [];
     (info.chaptersList || []).forEach((c) => (c.nodes || []).forEach((n) => nodes.push(n)));
-    const labels = (n) => Array.from({ length: n }, (_, i) => '第' + (i + 1) + '站');
+    const labels = (n) => Array.from({ length: n }, (_, i) => (Number(info.productType) === 2 ? '第 ' + (i + 1) + ' 家' : '第' + (i + 1) + '站')); // v13:自由探索按「家」数
     const fallback = () => { if (!this._unloaded) this.setData({ progress: { total: nodes.length, done: 0, labels: labels(nodes.length) } }); };
     if (Number(this.data.is_join) !== 1 || !this._loggedIn()) return fallback();
     app.sendRequest({ url: '/api/play/nodes', method: 'GET', hideLoading: true, autoErrorToast: false,
@@ -1376,13 +1412,15 @@ Page({
     if (that.lockedTip()) return;
     that._selfPlayTopicId = topicId;
     that.setData({
-      selfPlayConfirmShow: true,
+      selfPlayConfirmShow: true, buyIn: false,
+      buyChips: motion.buyChips(info, that.data.storyMeta),
       selfPlayValidText: motion.passWindow({ topicEnd: info.endDate }).line.split(' · ')[0],
       selfPlayConsentChecked: !!that._hostShareConsentReady,
       selfPlayConsentError: '',
       selfPlayConsentHint: '',
       selfPlayConfirmLoading: false
     });
+    that._later(30, () => { if (that.data.selfPlayConfirmShow) that.setData({ buyIn: true }); });
   },
 
   onSelfPlayConsentChange(e) {
@@ -1392,8 +1430,10 @@ Page({
   },
 
   onSelfPlayCancel() {
-    if (this.data.selfPlayConfirmLoading) return;
-    this.setData({ selfPlayConfirmShow: false });
+    if (this.data.selfPlayConfirmLoading || !this.data.selfPlayConfirmShow) return;
+    if (this.data.reducedMotion) { this.setData({ selfPlayConfirmShow: false, buyIn: false }); return; }
+    this.setData({ buyIn: false });
+    this._later(320, () => { if (!this.data.buyIn) this.setData({ selfPlayConfirmShow: false }); });
   },
 
   // 后端 /api/registration/create 与 /pay 硬校验「报名信息单独同意」已落库(activity_host_data_sharing /
@@ -2159,6 +2199,7 @@ Page({
    */
   processChaptersList(chaptersList) {
     if (!chaptersList || !Array.isArray(chaptersList)) return chaptersList;
+    let seq = 0; // v13 路线:站号全主题连续编号(第一章 1、2,第二章接着 3…)
 
     for (let j = 0; j < chaptersList.length; j++) {
       const chapter = chaptersList[j];
@@ -2176,6 +2217,7 @@ Page({
       chaptersList[j].metaPlace = nodeCount > 0 ? nodeCount + ' 个节点' : '';
       chaptersList[j].metaPlay = Number(chapter.templateCount) > 0 ? chapter.templateCount + ' 个玩法' : '';
       chaptersList[j].hasMeta = !!(chaptersList[j].metaTime || chaptersList[j].metaPlace || chaptersList[j].metaPlay);
+      chaptersList[j].chapLabel = motion.chapterLabel(j, chaptersList.length) + (chapter.name ? ' · ' + chapter.name : '');
       // 站间只写坐标直线距离；第一站没有上一站，不跨章计算。
       const ns = chapter.nodes || [];
       for (let n = 0; n < ns.length; n++) {
@@ -2189,6 +2231,8 @@ Page({
           firstMerchant.mmsMerchant.name = nodeText(firstMerchant.mmsMerchant.name);
         }
         ns[n].walkText = n === 0 ? '' : walkText(ns[n - 1], ns[n]);
+        seq += 1; ns[n].seq = seq;
+        ns[n].giftText = firstMerchant && firstMerchant.mmsMerchant ? nodeText(firstMerchant.mmsMerchant.derivativeBenefits) : '';
       }
     }
     for (let j = 0; j < chaptersList.length; j++) {

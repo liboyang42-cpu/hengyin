@@ -147,6 +147,7 @@ test('待审主题所有购票入口均停在未开售提示，开售及普通�
     assert.equal(vm.data.sessionPicker.show, true)
     vm.closeSessionPicker()
   }
-  assert.match(read('pages/topic/index/index.wxml'), /info\.lifecycle==7/)
-  assert.match(read('pages/topic/index/index.wxml'), /立项待审 · 未开售/)
+  // 2026-10-22 v13:详情页没有底栏,未开售的说明写在头图那颗按钮上(topic-motion.buildHeroCta)
+  assert.match(read('pages/topic/utils/topic-motion.js'), /lc === 7 \? '立项待审 · 未开售'/)
+  assert.match(read('pages/topic/index/index.js'), /if \(kind === 'locked'\) return this\.lockedTip\(\)/)
 })

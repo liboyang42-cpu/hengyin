@@ -21,6 +21,7 @@ Component({
   properties: {
     items: { type: Array, value: [] },
     navHeight: { type: Number, value: 88 },
+    noun: { type: String, value: '这一章' }, // 自由探索传「这一页」
     reducedMotion: { type: Boolean, value: false },
   },
   data: { poses: [], focus: -1, caption: '', collapse: 0 },

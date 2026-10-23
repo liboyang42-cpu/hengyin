@@ -25,7 +25,8 @@ function balancedBlock(source, opener) {
 }
 
 const BETA_OPENER = '<view class="topic-beta"'
-const HERO_OVERLAY_OPENER = '<view class="cont topic-hero-meta"'
+// 2026-10-22 v13:头图上的覆盖行改为压在照片上的标题区 .hero-info(发布者 / 标题 / 介绍 / 按钮)
+const HERO_OVERLAY_OPENER = '<view class="hero-info dt__txt"'
 
 // Beta 试玩区:后端 betaFlag 是唯一真源,前端只渲染不推断。
 // 这批断言盯的是「渲染到没到」和「谁能看到转正入口」,不是像素。

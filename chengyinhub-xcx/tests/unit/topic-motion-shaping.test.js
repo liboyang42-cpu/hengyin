@@ -17,9 +17,10 @@ test('发布者:公开主体名优先,个人发布才用头像;都没有就不�
   assert.deepEqual(m.buildPublisher({}), { name: '', avatar: '' })
 })
 
-test('顶部主按钮与底栏同口径:已购去票夹、未开售/打烊不出、自玩写价格', () => {
+test('头图主按钮:已购去票夹、未开售写原因(点了讲为什么)、打烊不出、自玩写价格', () => {
   assert.equal(m.buildHeroCta({ selfPlay: 1 }, { isJoin: 1 }).kind, 'joined')
-  assert.equal(m.buildHeroCta({ lifecycle: 1, selfPlay: 1 }, {}).text, '')
+  assert.deepEqual(m.buildHeroCta({ lifecycle: 1, selfPlay: 1 }, {}), { kind: 'locked', text: '招募中 · 未开售' })
+  assert.equal(m.buildHeroCta({ lifecycle: 7 }, {}).text, '立项待审 · 未开售')
   assert.equal(m.buildHeroCta({ selfPlay: 1 }, { merchantClosed: true }).text, '')
   assert.deepEqual(m.buildHeroCta({ selfPlay: 1 }, { priceText: '¥68' }), { kind: 'selfplay', text: '¥68 随时开玩' })
   assert.equal(m.buildHeroCta({}, {}).kind, 'signup')

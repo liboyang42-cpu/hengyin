@@ -969,7 +969,7 @@
   "_why": "店铺装修 normal 态必须进入 loadState=ok && m 的 M2 行式正文；只锚页面根会把尚未入驻兜底误判成通过。"
  },
  "C23": {
-  "selector": ".slide1, .topic-hero-meta",
+  "selector": ".slide1, .hero-info",
   "min": 2,
   "forbid": [
    "cy-empty",

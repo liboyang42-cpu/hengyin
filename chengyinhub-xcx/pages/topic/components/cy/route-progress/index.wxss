@@ -1,7 +1,7 @@
-/* 城市定向蓝、自由探索绿(业主 2026-10-22 定的类型色);填充色在走的过程中由浅变深。 */
-.rp { --rp-light: #BFE0FF; --rp-deep: #1F6FD1; /* ds-ok 城市定向类型色 */
-  background: var(--cy-bg-card); border-radius: var(--cy-radius-xl); padding: 28rpx 28rpx 24rpx; margin-bottom: var(--cy-space-4); position: relative; overflow: hidden; }
-.rp--free { --rp-light: #C8F7D5; --rp-deep: #14864A; } /* ds-ok 自由探索类型色 */
+/* v13 原型:城市定向橙(#FFE1C2 → #A8360A),自由探索绿(#D9FBE3 → #0F6B39);填充色在走的过程中由浅变深。 */
+.rp { --rp-light: #FFE1C2; --rp-deep: #A8360A; /* ds-ok v13 城市定向进度橙 */
+  background: #1C1C1E; border-radius: 35rpx; padding: 31rpx 31rpx 27rpx; margin-bottom: 0; position: relative; overflow: hidden; } /* ds-ok */
+.rp--free { --rp-light: #D9FBE3; --rp-deep: #0F6B39; } /* ds-ok v13 自由探索进度绿 */
 .rp__hd { display: flex; justify-content: space-between; align-items: baseline; }
 .rp__t { font-size: var(--cy-font-body); font-weight: 600; color: var(--cy-color-text-primary); }
 .rp__n { font-size: var(--cy-font-body); font-weight: 700; font-variant-numeric: tabular-nums; color: var(--cy-color-text-primary); }

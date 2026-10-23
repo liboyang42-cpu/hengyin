@@ -89,7 +89,7 @@ test('CU-C-65:字符串 "null" 也按缺值处理(历史数据里真有这种值
 test('CU-C-65:站点卡片那几格挂 wx:if,缺值整行不出', () => {
   const wxml = stripWxmlComments(read('pages/topic/index/index.wxml'));
   assert.match(wxml, /<view class="david_hp_con_time" wx:if="\{\{ node\.businessTime \}\}">/, '营业时间缺值整行不出');
-  assert.match(wxml, /<view class="item-add flex-ac" wx:if="\{\{ node\.address \}\}">/, '地址缺值时图标+地址一起收起');
+  assert.match(wxml, /<view class="dz" wx:if="\{\{ node\.address \}\}">/, '地址缺值时整行收起(v13 站点行)');
   assert.match(wxml, /<text class="node-card-name" wx:if="\{\{node\.registrationMerchantList\[0\]\.mmsMerchant\.name\}\}">/,
     '商家名缺值不印空名');
 });

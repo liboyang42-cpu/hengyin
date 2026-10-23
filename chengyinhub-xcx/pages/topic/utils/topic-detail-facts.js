@@ -9,6 +9,16 @@ function positiveNumber(value) {
    ⚠️ 2026-09-10 之前玩家页走的是另一套格子(章节 / 预计用时 / 总里程 / 参与玩家),
       与稿和商家页都对不上:同一条路线,两个身份看到的关键数字不是同一套。
    每格「有就出、没有就整格不出」——「—」占位会让一条真空数据条看着像有内容。 */
+/* 有效期天数:购买后 90 天(后端 CmsRegistrationServiceImpl 规则)与主题结束日取较早者 */
+function validDays(data, now) {
+  const t = now || Date.now()
+  const end = data && data.endDate ? new Date(String(data.endDate).replace(/-/g, '/')).getTime() : NaN
+  const ninety = 90
+  if (!Number.isFinite(end)) return ninety
+  const left = Math.ceil((end - t) / 86400000)
+  return left > 0 ? Math.min(ninety, left) : 0
+}
+
 function buildTopicStatBar(info) {
   const data = info || {}
   const cells = []
@@ -22,6 +32,18 @@ function buildTopicStatBar(info) {
       // 数组不是数字:wx:for 只遍历数组,给个 count 会静默什么都不渲染
       starList: Array.from({ length: Math.max(0, Math.min(5, Math.round(rating))) }, (v, i) => i),
     })
+  }
+
+  /* v13(业主 2026-10-22):自由探索没有路线与时长,数据条讲有效期 / 参与商家 / 路线不限 / 已参加 */
+  if (Number(data.productType) === 2) {
+    const days = validDays(data)
+    if (days) cells.push({ key: 'valid', label: '有效期', value: String(days), sub: '天' })
+    const shops = Math.floor(positiveNumber(data.registrationMerchantCount))
+    if (shops) cells.push({ key: 'merchant', label: '参与商家', value: String(shops), sub: '家' })
+    cells.push({ key: 'route', label: '路线', value: '不限', sub: '任意顺序' })
+    const players = Math.floor(positiveNumber(data.playerCount))
+    if (players) cells.push({ key: 'players', label: '已参加', value: players.toLocaleString('en-US'), sub: '人' })
+    return cells
   }
 
   const hours = positiveNumber(data.totalTime) / 3600

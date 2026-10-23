@@ -1,6 +1,6 @@
 <view class="rp rp--{{tone}} {{reducedMotion ? 'rp--reduced' : ''}} {{win ? 'is-win' : ''}} {{running ? 'is-run' : ''}}" wx:if="{{total > 0}}">
   <view class="rp__hd">
-    <text class="rp__t">{{tone === 'free' ? '探店进度' : '通关进度'}}</text>
+    <text class="rp__t">{{tone === 'free' ? '护照进度' : '通关进度'}}</text>
     <text class="rp__n">{{lit + (win ? 1 : 0)}}/{{total}}</text>
   </view>
   <text class="rp__msg">{{msg}}</text>

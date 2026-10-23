@@ -39,7 +39,7 @@ const LAYOUT_PROPS = new Set([
    整套退场 —— 它是本仓布局属性动画最大的一处。 */
 /* 2026-10-22 12 → 13:主题详情「故事」标签的章节卡点开展开(业主口述 A10)。展开要把下面的卡往下推,
    只能过渡 height —— transform 不占位,会叠到下一张卡上。同批的进度条宽度、卡内标题上移已改成 transform。 */
-const LAYOUT_ANIMATION_CEILING = 13
+const LAYOUT_ANIMATION_CEILING = 12 // 2026-10-22 v13 票夹换成卡堆,旧 swiper 的 height 过渡随死样式一起删,13 → 12
 // 2026-09-06 原生弹层全删:新组件 cy-loading-mask 的转圈是唯一新增的一组 @keyframes(替代 39 处 wx.showLoading);
 // cy-toast 进出场按棘轮要求改用 transition,不占 keyframes。129→130。
 /* 2026-09-10 130 → 129:同上,集邮册的 album-page-in 那一组随「收藏夹」退场。
@@ -78,6 +78,11 @@ const KEYFRAMES_CEILING = 148
    任何人只要写段理由就能加,门禁再也拦不住下一次回退。
    key = @keyframes 的名字,value = 豁免理由。 */
 const KEYFRAMES_EXEMPT = new Map([
+  /* 2026-10-22 业主「和 HTML 一模一样」(v13):以下四组都是长驻元素上的无限循环,从不被快速重触发 */
+  ['md-rot', '通关勋章页背后的放射光常驻慢转(40s 一圈),页面在就一直转,没有重触发;减少动态效果时整组停掉。'],
+  ['md-tw', '通关勋章页的闪点常驻明灭,无限循环,没有重触发;减少动态效果时整组停掉。'],
+  ['md-shine', '六边形勋章表面的高光常驻扫过,无限循环,没有重触发;减少动态效果时整组停掉。'],
+  ['holo-pan', '购买半屏票面的镭射彩光常驻缓慢平移(alternate 无限循环),半屏开着就一直动,没有重触发;减少动态效果时停掉。'],
   ['fxCardFloat',
     '自由探索卡片详情的 3D 卡盒常驻呼吸浮动。本门禁防的是「会被快速重触发的元素」' +
     '(toast/toggle/chip/tab)从 0 重启导致的抖;这是长驻元素上的无限循环,没有重触发。' +

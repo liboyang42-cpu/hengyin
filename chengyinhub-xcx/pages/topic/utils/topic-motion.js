@@ -36,7 +36,7 @@ function buildHeroCta(info, opts) {
   const o = opts || {};
   if (Number(o.isJoin) === 1) return { kind: 'joined', text: '去票夹' };
   const lc = Number(d.lifecycle);
-  if (lc === 1 || lc === 2 || lc === 7) return { kind: '', text: '' };
+  if (lc === 1 || lc === 2 || lc === 7) return { kind: 'locked', text: lc === 7 ? '立项待审 · 未开售' : (lc === 1 ? '招募中 · 未开售' : '定价中 · 未开售') };
   if (o.merchantClosed) return { kind: '', text: '' };
   if (Number(d.selfPlay) === 1) return { kind: 'selfplay', text: (o.priceText || '') + ' 随时开玩' };
   return { kind: 'signup', text: '立即报名' };
@@ -121,6 +121,48 @@ function buildMerchantCards(chapters) {
   return out;
 }
 
+/* 路线说明(v13 rnote):城市定向写全程几站、步行多远、几站有到店礼;自由探索写任意顺序去完几家。只用已下发的数。 */
+function routeNote(info, merchantCount) {
+  const d = info || {};
+  const nodes = [];
+  (d.chaptersList || []).forEach((c) => ((c && c.nodes) || []).forEach((n) => nodes.push(n)));
+  if (Number(d.productType) === 2) {
+    const shops = Number(merchantCount) || Number(d.registrationMerchantCount) || 0;
+    return '有效期内按任意顺序去完' + (shops ? ' ' + shops + ' 家' : '') + '，每家核销一次。';
+  }
+  const parts = ['按顺序到站，到一站解锁下一站'];
+  if (nodes.length) parts.push('全程 ' + nodes.length + ' 站');
+  const km = Number(d.totalMileage);
+  if (km > 0) parts.push('步行约 ' + km + ' 公里');
+  const gifts = nodes.filter((n) => { const m = ((n && n.registrationMerchantList) || [])[0]; return m && m.mmsMerchant && text(m.mmsMerchant.derivativeBenefits); }).length;
+  if (gifts) parts.push('其中 ' + gifts + ' 站有到店礼');
+  return parts.join('，') + '。';
+}
+
+/* 购买半屏的三颗小牌(v13):可玩至几号 / 章节与时长(或商家数)/ 玩法说明。只用已下发的数。 */
+function buyChips(info, meta) {
+  const d = info || {};
+  const win = passWindow({ topicEnd: d.endDate });
+  const out = ['可玩至 ' + win.untilText];
+  if (text(meta)) out.push(text(meta).split(' · ').slice(0, 2).join(' · '));
+  out.push(Number(d.productType) === 2 ? '任意顺序' : '可分几天玩完');
+  return out;
+}
+
+/* 主要角色:各商家站点的出场 NPC(/api/ai/npc/profile scope=node 只回已过审的),圆头像 + 名字 + 所在站点 */
+function buildChars(list) {
+  const out = [];
+  const seen = {};
+  (list || []).forEach((row) => {
+    const npc = row && row.npc;
+    const name = text(npc && npc.name);
+    if (!name || seen[name]) return;
+    seen[name] = 1;
+    out.push({ key: 'c-' + (npc.profileId || name), name, avatar: text(npc.avatar), sub: text(row.place) });
+  });
+  return out.slice(0, 8);
+}
+
 function pad2(n) { return (n < 10 ? '0' : '') + n; }
 function toDate(value) {
   if (!value) return null;
@@ -170,4 +212,4 @@ function buildTeams(rows, topicId) {
   return { rows: out, need };
 }
 
-module.exports = { buildCoverImages, buildPublisher, buildHeroCta, buildStoryCards, storyMeta, buildMerchantCards, passWindow, buildTeams };
+module.exports = { buyChips, routeNote, buildChars, chapterLabel, buildCoverImages, buildPublisher, buildHeroCta, buildStoryCards, storyMeta, buildMerchantCards, passWindow, buildTeams };

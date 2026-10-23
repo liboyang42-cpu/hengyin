@@ -16,14 +16,14 @@
       <image wx:if="{{cover}}" class="ck__cover" src="{{cover}}" mode="aspectFill" />
       <view class="ck__item-tx">
         <text class="ck__item-n">{{name}}</text>
-        <text class="ck__item-s" wx:if="{{validText}}">时间 {{validText}}</text>
-        <text class="ck__item-s" wx:if="{{placeText}}">地点 {{placeText}}</text>
+        <text class="ck__item-s" wx:if="{{validText}}">时间</text><text class="ck__item-v" wx:if="{{validText}}">{{validText}}</text>
+        <text class="ck__item-s" wx:if="{{placeText}}">地点</text><text class="ck__item-v" wx:if="{{placeText}}">{{placeText}}</text>
       </view>
     </view>
 
     <text class="ck__sec">费用明细</text>
     <view class="ck__card ck__rows">
-      <view class="ck__row"><text class="ck__k">票种</text><text class="ck__v">自玩通行证</text></view>
+      <view class="ck__row"><text class="ck__k">票种</text><text class="ck__v">自玩通行证 · 单人</text></view>
       <view class="ck__row"><text class="ck__k">订单金额</text><text class="ck__v">{{priceText}}</text></view>
       <view class="ck__row ck__row--sum"><text class="ck__k ck__k--sum">合计</text><text class="ck__v ck__v--sum">{{priceText}}</text></view>
     </view>

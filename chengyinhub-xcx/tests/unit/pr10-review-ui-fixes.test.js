@@ -96,7 +96,7 @@ test('F-W5-10 吸顶后最上层的 topbar 返回键取主文字色(cy-icon 吃 
   assert.match(rule(css, '.topbar'), /z-index:\s*100/)
   assert.match(rule(css, '.sticky-tab-wrapper.sticky'), /z-index:\s*var\(--cy-z-sticky\)/)
   assert.match(read('style/tokens.wxss'), /--cy-z-sticky:\s*85;/)
-  assert.match(read('pages/topic/index/index.wxml'), /<view wx:else class="topbar \{\{isTabSticky \? 'solid' : ''\}\}">/)
+  assert.match(read('pages/topic/index/index.wxml'), /<view wx:else class="topbar \{\{navSolid \|\| isTabSticky \? 'solid' : ''\}\}">/)
   assert.match(read('components/cy/icon/index.wxss'), /background-color:\s*currentColor/)
   // 负控:去掉前景色 → 判红
   const reverted = mutated(css, '  background: var(--cy-bg-page);\n  color: var(--cy-color-text-primary);\n}', '  background: var(--cy-bg-page);\n}')

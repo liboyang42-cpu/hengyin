@@ -491,7 +491,7 @@ Page({
     nightHint: false,
     // 通关
     showFinish: false, celebrationEvent: '', finishScore: 0, finishPuzzleScore: 0, finishPuzzleCount: 0, finishPuzzleBest: 0,
-    finishMedals: 0, finishMedalList: [], finishSnap: '', finishSnapError: false, finishPhotos: [], canReplayJournal: false,
+    finishMedals: 0, finishMedalList: [], medalScreen: { show: false, items: [], title: '', sub: '', stats: [], record: null }, finishSnap: '', finishSnapError: false, finishPhotos: [], canReplayJournal: false,
     branchPath: [],
     finishRouteRecommendation: null,
     voucher: { show: false },
@@ -7400,7 +7400,7 @@ Page({
       if (!this._isFinishViewCurrent(finishView) || !this.data.showFinish) return;
       this._triggerCelebration(this.data.mode === 2 ? 'free-finish' : 'classic-finish');
       this.paintRouteThumb();   // finish-map 盒内=路线缩略图(全卡仅保存时生成,避免和 HTML 数字行重复)
-      this.buildReview();       // B:轨迹回顾层(渐进描线 + 成就气泡 + 用时/距离)
+      this.buildReview(); this._openMedalScreen(); // B:轨迹回顾层(渐进描线 + 成就气泡 + 用时/距离);v13 整个主题走完时盖上通关勋章页
     });
     this.loadMilestone();
     this.loadFinishRouteRecommendation();
@@ -8043,5 +8043,28 @@ Page({
       || { title: '来城瘾,走一段城市探索', path: '/pages/play/index?activityId=' + this.data.activityId };
   },
   // FE-17 朋友圈分享(游玩页高传播)
-  onShareTimeline() { return { title: '来城瘾,走一段城市探索', query: 'activityId=' + this.data.activityId }; }
+  onShareTimeline() { return { title: '来城瘾,走一段城市探索', query: 'activityId=' + this.data.activityId }; },
+
+  /* v13 通关勋章页:只在整个主题走完时出。勋章取本次真拿到的;一枚没有就用这个主题本身(通关是真的)。
+     四格统计只写拿得到的数(用时 / 步行 / 站点或商家 / 邮票或解谜分);新纪录只在解谜分超过个人最好时出。 */
+  _openMedalScreen() {
+    if (!this.data.allDone) return;
+    const shop = this.data.mode === 2;
+    const mics = ['env', 'leaf', 'moon', 'key'];
+    let items = (this.data.finishMedalList || []).map((m, i) => ({ key: m.key || 'm' + i, name: m.name, sub: m.sub, img: m.img || '', mic: mics[i % 4] }));
+    if (!items.length) items = [{ key: 'theme', name: this.data.topicName || '主题通关', sub: shop ? '全部去完' : '主题通关', img: '', mic: shop ? 'stamp' : 'env' }];
+    const sec = this._sessionClock ? this._sessionClock.elapsedSeconds() : 0;
+    const hms = sec > 0 ? Math.floor(sec / 3600) + ':' + String(Math.floor(sec / 60) % 60).padStart(2, '0') + ':' + String(Math.floor(sec) % 60).padStart(2, '0') : '';
+    const km = this._reviewDistanceKm(this._reviewOrderedNodes());
+    const stats = [];
+    if (hms) stats.push({ k: '用时', v: hms, glyph: 'clock' });
+    if (km) stats.push({ k: '步行 · 公里', v: km, glyph: 'walk' });
+    if (this.data.total) stats.push({ k: shop ? '去过 · 家' : '站点', v: this.data.doneCount + '/' + this.data.total, glyph: shop ? 'shop' : 'book' });
+    if (shop && this.data.finishStamps.length) stats.push({ k: '邮票 · 枚', v: String(this.data.finishStamps.length), glyph: 'stamp' });
+    else if (!shop && this.data.finishPuzzleCount) stats.push({ k: '解谜分', v: String(this.data.finishPuzzleScore), glyph: 'stamp' });
+    const best = Number(this.data.finishPuzzleBest) || 0, score = Number(this.data.finishPuzzleScore) || 0;
+    const record = !shop && best > 0 && score > best ? { label: '解谜分 · 个人最好', text: '比上次最好多 ' + (score - best) + ' 分', tag: 'BEST' } : null;
+    this.setData({ medalScreen: { show: true, items, title: shop ? '探店完成' : '主题通关', sub: (this.data.topicName ? this.data.topicName + ' · ' : '') + '获得 ' + items.length + ' 枚勋章' + (items.length > 1 ? '，点或拖动切换' : ''), stats: stats.slice(0, 4), record } });
+  },
+  onMedalRecords() { this.setData({ 'medalScreen.show': false }); },
 });
