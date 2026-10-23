@@ -1,0 +1,45 @@
+--- a/.github/workflows/ci.yml
++++ b/.github/workflows/ci.yml
+@@ -26,2 +26,42 @@
+ jobs:
++  architecture_guardrails:
++    name: Architecture source gate (trusted verifier)
++    runs-on: ubuntu-latest
++    timeout-minutes: 10
++    permissions:
++      contents: read
++    steps:
++      - name: Checkout reviewed gate revision
++        uses: actions/checkout@v4
++        with:
++          repository: liboyang42-cpu/hengyin
++          ref: 941612b0ee71a536168a9b103878d834019ae632
++          path: gate
++          fetch-depth: 0
++          persist-credentials: false
++      - name: Checkout exact integrated candidate
++        uses: actions/checkout@v4
++        with:
++          repository: liboyang42-cpu/hengyin
++          ref: ${{ github.sha }}
++          path: candidate
++          fetch-depth: 0
++          persist-credentials: false
++      - name: Verifier positive and negative controls
++        run: python3 -m unittest discover -s gate/ci/architecture -p 'test_*.py' -v
++      - name: Check source and frozen baseline
++        env:
++          SOURCE_SHA: ${{ github.sha }}
++        run: >-
++          python3 gate/ci/architecture/gate.py source
++          --source candidate --candidate "$SOURCE_SHA"
++          > architecture-findings.json
++      - name: Preserve findings even on failure
++        if: always()
++        uses: actions/upload-artifact@v4
++        with:
++          name: architecture-findings-${{ github.run_id }}-${{ github.run_attempt }}
++          path: architecture-findings.json
++          if-no-files-found: error
++
+   changes:
