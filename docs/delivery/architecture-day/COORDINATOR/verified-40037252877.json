@@ -1,0 +1,13 @@
+{
+  "source_sha": "9b92fb5738244c677fea7470232f67d3b97b7a98",
+  "run": 40037252877,
+  "class": "com.chengyinhub.business.it.MerchantRegistrationCancellationMySqlIT",
+  "tests": 15,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "cleanup": "CLEAN",
+  "xml_sha256": "33c4bc9956a0027dc4b164879e26958fc2f4aad068a24932db99b5ecfece6c76",
+  "receipt_sha256": "032b646fc1658a74eae6816a13659cd63316d155b532dde55e9c92304d743976",
+  "scope": "Only15 merchant service delete/cancel real DB cases on test-literal-only child of66e9; do not add94 fromparent to claim same-source109."
+}

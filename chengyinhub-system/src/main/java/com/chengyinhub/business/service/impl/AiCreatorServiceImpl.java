@@ -47,6 +47,7 @@ import com.chengyinhub.business.service.IUmsMemberService;
 import com.chengyinhub.business.service.IWxContentSecurityService;
 import com.chengyinhub.business.service.ai.AiGatewayResult;
 import com.chengyinhub.business.service.ai.AiGatewayService;
+import com.chengyinhub.business.service.ai.AiProviderOutcomeUnknownException;
 import com.chengyinhub.business.service.ai.AiServiceException;
 
 /**
@@ -104,6 +105,7 @@ public class AiCreatorServiceImpl implements IAiCreatorService
         PlayerThemeDraftQuotaReservation reservation = null;
         boolean accepted = false;
         boolean inputBlocked = false;
+        boolean providerOutcomeUnknown = false;
         JSONObject user = new JSONObject();
         user.put("idea", req.getIdea());
         user.put("productType", req.getProductType());
@@ -144,6 +146,7 @@ public class AiCreatorServiceImpl implements IAiCreatorService
         catch (AiServiceException failure)
         {
             inputBlocked = failure.getReason() == AiServiceException.Reason.INPUT_BLOCKED;
+            providerOutcomeUnknown = failure instanceof AiProviderOutcomeUnknownException;
             throw failure;
         }
         catch (com.alibaba.fastjson2.JSONException je)
@@ -153,7 +156,8 @@ public class AiCreatorServiceImpl implements IAiCreatorService
         }
         finally
         {
-            if (reservation != null) {
+            // Provider UNKNOWN keeps its original receipt for recovery; input-only failures retain their refund policy.
+            if (reservation != null && !providerOutcomeUnknown) {
                 if (!accepted && !inputBlocked) releasePlayerThemeDraftQuota(reservation);
                 else if(quotaRecovery!=null) quotaRecovery.retain(reservation.receipt,inputBlocked ? "INPUT_BLOCKED" : "VALID_PLAYER_DRAFT");
             }
