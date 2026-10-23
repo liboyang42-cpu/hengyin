@@ -72,4 +72,11 @@
 
 ## CI
 
-见 PR 检查;run id 在下面补充。
+PR #560,head `78aed085`,全部通过:
+
+- GitHub CI:39962589433(Backend tests 含 `RoamPoiPlayerVisibilityMyBatisIT` 2/2 真库通过;小程序 20 个单测分片、静态检查与静态门全部通过)
+- Mini followup focused regression:39962589270
+- Isolated authenticated Redis recovery:39962589282
+- Funds MySQL IT:39962589249
+
+本提交只改本文档,之后的 CI 运行见 PR 检查。
