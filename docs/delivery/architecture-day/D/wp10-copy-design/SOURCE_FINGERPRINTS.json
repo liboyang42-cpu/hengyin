@@ -1,0 +1,540 @@
+{
+  "base_sha": "ad7e59fbf6a20e85e741318afe654c5411bf1101",
+  "files": [
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiChapterMerchantNodeController.java",
+      "git_blob": "d39654db9fc89a41266f2d8bc8f59cc5e2b2b1eb",
+      "sha256": "53b327960a4b8505f599e78dac25d1a1b82d4636ce59da64524447a1850efcfc"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCircleThemeController.java",
+      "git_blob": "6952a43f015f8a0fbdbc6923f4f62f5ae0287f4d",
+      "sha256": "fc538a3c686a0360fc1f99b250278ae9af62ac7346a8fb61e2da9d945059191b"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiClubController.java",
+      "git_blob": "ade983f11bca3810fab7d410a918030bd10b68a2",
+      "sha256": "311dfc4b76708accf6ecf7848e50c8ccdc200347517e287eac4840297940ed02"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCoopController.java",
+      "git_blob": "ebc8185c0c42f41a3f158d95a020ebae51f84693",
+      "sha256": "c4b118f8107459749161f09c55ebf179819a2b8d1f63601b4b23d6dd33329887"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCoopPoolController.java",
+      "git_blob": "eedbf0f045bf3c35ea9418f528008284567f8029",
+      "sha256": "90cf37632c0819d92a101e62d3b370750e665c37c0234b0d28a30d06e312c046"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCreativeSquareController.java",
+      "git_blob": "116d3a232afe74551dfbfdbbf3cb22191b4f306c",
+      "sha256": "293e56991e759657297897940b2928cb849714aa636313d335b5c283b5543136"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiMerchantController.java",
+      "git_blob": "05a83b7f6dc55df549fb3bfe67db96fd872ab5b8",
+      "sha256": "61d830384e48eadec6c0d709f412b7aad9fbf48081a8d5e4c6092be9eaeed559"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPlayProgressController.java",
+      "git_blob": "ad6a86d75fc1f2e056810c245ea1dd605f75e371",
+      "sha256": "6026eba65b2c117a27cc535cb916031543fdfd194c8dc179d0d5792782cfa125"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPricingController.java",
+      "git_blob": "afa3707f7f8e28eee76520c762cffa79d7de20a9",
+      "sha256": "2d66b7e1dd77678fea97c4aec030550c0941cca3943ed7b05a45e622b62cc154"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiProjectController.java",
+      "git_blob": "9658d624a743100ae0e03c377adfdc4897002504",
+      "sha256": "587b7048a718e66f53f761269c546ec5febc242abe958f38809b556b327d6e32"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiPublishController.java",
+      "git_blob": "08df0378fc25c37b74458345f7cb0ece817b2506",
+      "sha256": "4755ba8dc2cb39849f9dd104b0daacf8b24366a857d4256f7b1d743a1d7e1994"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationController.java",
+      "git_blob": "a25ee280489895a706bea4916bc6a43b67288e46",
+      "sha256": "1380e374dbec71f28b4dc9fab5cfded3fb3165b966024dc493b1185171b6e5d9"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRegistrationMerchantController.java",
+      "git_blob": "c61ed01d8322e8d98f862c926c03edfff618b84a",
+      "sha256": "c62f3e00e46c86554f2e53384aba01dd261a05188c60eef70a2e78cdcb8bfb52"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiRoleController.java",
+      "git_blob": "0e4cae77904ffc797d246c99e01aa69f9b96ca2e",
+      "sha256": "85cc0bd396f86f7ef577495185cde949b275d0e5fc1d91498e405ee4f07786b2"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiStatsController.java",
+      "git_blob": "3d933133aaec01497247e1f35dd419aac9070ce7",
+      "sha256": "5a849bd73b281b6bb16b47a773ba7d7a871fa0c828ce68152f487a7f4e336e59"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicController.java",
+      "git_blob": "fe2d26e7220104a01f9927cd7d384741d0111ff0",
+      "sha256": "7d93a2829f7a37159bf1130ccbecc7422044ab4f8045c339a2e027df7177c406"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicStateKeyController.java",
+      "git_blob": "3c0d24bbadf913d888129c4279387e875ae5083f",
+      "sha256": "4defc7035f6bac6ad241c9c5224494f7f87e5e0e02627dc598d12b83fe0fa756"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiTopicTemplateController.java",
+      "git_blob": "9633de1ccce2affd53d8595278f5659dd5d94d55",
+      "sha256": "2639c5c81f5879bf422a756971896e305a9477e861c0e7996387945a348a4d8c"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiUmsMemberController.java",
+      "git_blob": "b15f16ff358298d9cb15942e4f0897716c6dfbb7",
+      "sha256": "8d8f1f260fc8ff0e2dd13cc65a40bea5ee5b8f05eb13a8e2a2022f0d5e17d789"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/AuditWorkbenchController.java",
+      "git_blob": "96c1a95839d7b2fd43d06f43f255a8e7a6a24ecd",
+      "sha256": "0bde502101d3ad58a071514f192db6fe58c58a06a88c08772a76865c91e20069"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsRegistrationMerchantController.java",
+      "git_blob": "9c63eef0757b7754d3dd2d6a2715258188507cb6",
+      "sha256": "7e3997f7a17c50a759cf87a7488d411379a640fac15deb9c09fddfb922a5739e"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsTopicController.java",
+      "git_blob": "cc6749d812aa3f3cbe920b804ddef70ec405c009",
+      "sha256": "3afd3f0c70c4dc7fe639906caa32c0eaa0cb608a580853829cee1c2b20b64217"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/TopicOnsiteMetricsController.java",
+      "git_blob": "8aa3a387e53780228b14e9aa375ca82b413a7bd5",
+      "sha256": "9e251f8408570201931bbad28bb2d19f0a8fe466f09bca360fad1823aa12f775"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/service/PreferencePlayService.java",
+      "git_blob": "698897438fac8293cd0c4d2c9ca3217e138af573",
+      "sha256": "b16dd810449dba7dc3a7a12d7320541fb2acff96d2791809311ae47776a39566"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/task/CoopSettlementPayoutTask.java",
+      "git_blob": "5f8dc34eaa625ef59ac2b0d3f8913f397366be4c",
+      "sha256": "f91b9220438acc82ee3901352390a8432b8e90d980ce9ae79bcd317742933923"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/task/SettlementTask.java",
+      "git_blob": "9ae70befcc26a00a626cc01481887e29bd0c7564",
+      "sha256": "9584b7f5c685e31e93eda6943967f75016075ab1178fa569d3ce38386bf35a2b"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/task/TopicRecruitDeadlineTask.java",
+      "git_blob": "02306644d27dcaaff9b1a972a056214804231692",
+      "sha256": "8124a59e2008323c998c02078f7788515ffe552b5f3a8cd0f05a106db70ee47f"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/controller/CmsTopicControllerScopeTest.java",
+      "git_blob": "29b3e9e0718066fa7acad1424ba10b4a8134b19d",
+      "sha256": "c1d89ab41fddc623089ad28767ca6fa969bbaa4d7d9ea8d49b1120c521e932bb"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/controller/CmsTopicCreatePublisherBoundaryTest.java",
+      "git_blob": "af380b8bbb3fe7aaf1c2b30546fb80701a751543",
+      "sha256": "91e895a7cf7ce00426771dac073ca00e29137a3e42cace6d5752ecfd0c03259d"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/TopicInsertColumnCoverageMyBatisIT.java",
+      "git_blob": "35faf5aaa01018b83ca3fedd72b10a4a138c5412",
+      "sha256": "fb14b0a0d78e3c9e1e22d378dba43b9d2f5f2ac4b2b45d97be50023a3337bf6e"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_05Test.java",
+      "git_blob": "33c089cae1e570f2a1cd10a6efa943b918dc5c37",
+      "sha256": "8607d606fd69faf52b6dbc170c4a4cc324934fb25ca36bcbfc27239cd2139e07"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_19Test.java",
+      "git_blob": "a28cef96c430efb452db78e115ecf1167e8b983c",
+      "sha256": "0081d7fb401545e6943738278a751781c4bacb848011638897e359490903e7bc"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_20Test.java",
+      "git_blob": "a94ef368044145fdcf63416cbee66ed293091e5a",
+      "sha256": "58b387f4336845258c10a55b24597aca453f07a4ee19d3d10d755fb26002acef"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_22Test.java",
+      "git_blob": "253df1d889eb533f0ea89df1b5914fa983b4bee8",
+      "sha256": "7ce67277d73a9b4ad0f13ee7caba8cd3346701fcf5e29306f98c621281775ffb"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_23Test.java",
+      "git_blob": "e504340c39a5199d9a36ce4652116d74f0203012",
+      "sha256": "ce3686ade0130c999f0f2cfedd5098eb9a829b270f86946201430ea1f8858c7e"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_25Test.java",
+      "git_blob": "854a65a9fc960f26724d7a4e01b2c809bc1b99fc",
+      "sha256": "4682041205cef90d28902ca205585050f645ec34414420f79e8a153947d2008a"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ProductSourceWiringTest.java",
+      "git_blob": "3ec665607dda6eb35bd6e19a7a7f946903c0f94d",
+      "sha256": "68f9fa702eeb3365403885d5504f96ec8c2d639fc6d997c8ce80cad568c02ed6"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RevshareGateWiringTest.java",
+      "git_blob": "e813cb64d3b8c17983aec6190778488913430170",
+      "sha256": "e36e1c54d28a82980345325529e8b5ddd6999e171eea7631b6f5770b941aef18"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TemplateEditOwnershipTest.java",
+      "git_blob": "affbacc314170713ba375593a248d3f23e2b8645",
+      "sha256": "24b08fd0190b112135f82911a904487472b0e2251b7f150821f74a7adb475056"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicCopyJourneyRulesTest.java",
+      "git_blob": "765b2926b999ac5c460df1d8412e69de3484278d",
+      "sha256": "1b859a4e942cf162e069805058f948f0d3111e3960f3e9b98874e4226a7890a5"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicCopyNpcRemapTest.java",
+      "git_blob": "562ec6415987df2b5219d1e7c45d89125a996d3f",
+      "sha256": "f89d74cebbc6c340e5b5f8d3f943f82f4f19849ac6eb8072c07d0ec30eb21719"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicCopyRecruitmentGuardTest.java",
+      "git_blob": "72227db66d260e9a03e83224ba4ce259383e2717",
+      "sha256": "2907796362153f8194a7461f589d2b5cae33f97bd82febd45f6581c3dee92495"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicCopyTemplateOwnershipTest.java",
+      "git_blob": "22a14f7470f4d9e90d97ee9418876c96f499e051",
+      "sha256": "5092d50f8cbdeadf2b7031a3d0b0bb671cde5793edf6c5e5936615b888d87544"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicJourneyStoryCarryTest.java",
+      "git_blob": "01b45aae1d82314854d9663b2c0003812b46f909",
+      "sha256": "a9ddee69c681252be4e46ecfbf31195085b9f0d64632e47aa5f5908c46516da7"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicLifecycleWiringTest.java",
+      "git_blob": "4235a54fadc05d66062e02d53bb025c785af55a3",
+      "sha256": "287183d68be6f1869deeafa827d4895e18c2ac5165fb4a76b11064cdab515795"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicUpdateByOwnerTest.java",
+      "git_blob": "9f1c74dc25c56d0fcd85f5148cadcc91127b4693",
+      "sha256": "63579dbf8741d91205c9c03fb17f1dce856cc52d50f9cea0ab8cf43a5c567696"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowCopyTest.java",
+      "git_blob": "efd568aa96026626a2c239702c137841b1671707",
+      "sha256": "3214983e471e76c5d2601be2b5ca5229f35d42dae85a4529053cdb116f41473c"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CopyTopicCopyTypeNpeTest.java",
+      "git_blob": "7840fc477bd70ad7c016fae351bf8d45a09f7127",
+      "sha256": "f256b510168db88402895da5951c68cd91973e569d637cfa5abc94e92c02bfdb"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicOfficialCopyBoundaryTest.java",
+      "git_blob": "6a3a4ab09c683cc71a9e20222fe48c0b49a7929c",
+      "sha256": "76d10c13c887be443365b5e5b510600bc03cca164def3d9047f33576c19481e4"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiTopicTemplateMerchantOperatorScopeTest.java",
+      "git_blob": "849f34e6812f181095890e4867bb437eb684f8db",
+      "sha256": "3a19cc265e49bcf96cde8f03fb3c1c966db8d7d53edc1072ece8f21ddfc2b283"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/TopicTransferToClubTest.java",
+      "git_blob": "84e34d80c59aeae417d59818351eb48e2ecde6aa",
+      "sha256": "af3cf9d877847fdc2a6485fffdc40ca38f1fed18dbb8e26426171f8f34076d8d"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/resources/it-schema/cms-topic-it-schema.sql",
+      "git_blob": "ca55bf011cc9a3002d6d28a3d1a6359f78b04f41",
+      "sha256": "2be3b3a5b241ec8bba9f688eb12a4f1775de6e18ca6a90654f2d6ea132089a0b"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/CmsTopic.java",
+      "git_blob": "e5fc1afcc5ce1e0dfd583eccc8bf6dc35fa3f5a5",
+      "sha256": "798e02fcd4266e61340e8dd4ceda43d6368bfe406b02d10630c78eea9bc0d579"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ICmsMemberTemplateService.java",
+      "git_blob": "df25e709a2fd09bb052360a57d6b943b7668eaf2",
+      "sha256": "aeba831f603ce8cd83b84f715664e6841abd7ba664a676c522d22220ccbd99ea"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/ICmsTopicService.java",
+      "git_blob": "dc8518034b80e71118e751aacf48bf312dc021c4",
+      "sha256": "4cc6dce4a5ad6cf6b5d5ab916733e08c2fbf3f5acd81532634ff9a73c1c1cdd5"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AuditTaskServiceImpl.java",
+      "git_blob": "4b92015e2157ef07807ccbf02c88cf89d8196a3d",
+      "sha256": "b770ae9450ca9bec2848c65588ea04f810ae620f8effbac29190370d59227420"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ChapterMerchantNodeServiceImpl.java",
+      "git_blob": "c0675aaa3ef31f272883e7f775d9776a184ef0e5",
+      "sha256": "ebf6facc82a946998f82c98fe20aa695abfee4c2cf6049635e9f22d47065e291"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubChapterRecruitServiceImpl.java",
+      "git_blob": "9404a9b8ca559cf93ff1f54c76988324145e1bd0",
+      "sha256": "dbe1d7c1e9fbaef384faf576c6f9f43b81d6d90c9ae927370df5a577a8bc5553"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubSessionServiceImpl.java",
+      "git_blob": "a3233861379a1f9f7ee36215063e8e9485467e66",
+      "sha256": "66bbeaee677fd0602948c76ca13949e97b055590a2e1c0547f445d72dd0e3ae0"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ClubTopicSettingServiceImpl.java",
+      "git_blob": "af272af30f64da5ae6693049f670ca48a151667f",
+      "sha256": "cb2f087c678d05c4a9e9a92eabe05b44891557f893abe4e5ed7c1c42a0075062"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsMemberTemplateServiceImpl.java",
+      "git_blob": "c2df7cbc7b9d3e795a2741622536dfc1a6050593",
+      "sha256": "ef0e252642d284103b0120a1506c9a7ec179d04493a9161e30edb6e14c563d34"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsTopicServiceImpl.java",
+      "git_blob": "9686e2e983ce139c6593cfe9692b42bcdbfdc4de",
+      "sha256": "7b679dd00e49742be729d09660084a040ca3b12ab6f41e35349bb00e23865aeb"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/DispatchServiceImpl.java",
+      "git_blob": "85da4c4ee880e2efbc9dbabb7b4fd2fd28db276a",
+      "sha256": "bdb484c3a7e1a30a9fe185e72a2e3a7a64496902e0750a2a936c172e027af996"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ExploreCompletionReadServiceImpl.java",
+      "git_blob": "12f718318d7ff8e76e2e387ba45875fa63dbf6c2",
+      "sha256": "faee4b17a7db916bb9746c4aee74d35d36dad107a6cf348421f115108449eea9"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantAggregateReadServiceImpl.java",
+      "git_blob": "576c80221ec37ece48ae4d242c67fc4dc2f7d155",
+      "sha256": "a1cb51c856d7912594d9a3db6c3a765a1b01083c11eca4e24d0ee8aad6a19ec5"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantBusinessStatusServiceImpl.java",
+      "git_blob": "be12cd905562a6cb0b09cc8f9376362090fb7e22",
+      "sha256": "33bfa85d48b962192ab922f73da466b9b9e99cadb9432edab10cfe4c952d49e2"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantFulfillmentReadServiceImpl.java",
+      "git_blob": "64ecef94de3717655268ad921d41295f257a094c",
+      "sha256": "3eb7e7d25caf8ff2f5bfeb204671fe1152c3599d3c3f24250f7d9d5faecd80d5"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantInsightServiceImpl.java",
+      "git_blob": "28261fd4c73a94fc6f8b0f0dd18395d2ccc825a3",
+      "sha256": "59707a87140c58a7fb6471e5847024134b6629deffd5a8ad2721e6014450ee03"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantOfferServiceImpl.java",
+      "git_blob": "caf0ac05ac8ef129711df70ea5d6eff1a30ffab3",
+      "sha256": "31e479d0ab69e0c9ce38bbbd53b3552507ea968d869b2ce6845305cda9366f54"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantRegistrationEditServiceImpl.java",
+      "git_blob": "94d499c5d58d4b5765a17365dfb79de46c016ceb",
+      "sha256": "d7229f346dc020b49725edc9f519a50739239a80be629d3741f239350bb524d7"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OrientGeoServiceImpl.java",
+      "git_blob": "4063dd3bb80623913414c2bc4746931bb8ac7def",
+      "sha256": "07018d05ce452e859ba724a9455cdb29e197a33a9b8995736b544c57c2f22a40"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OrientOwnership.java",
+      "git_blob": "ebcf91a1254b32e7bbeafa3cac90412b6a37ebe1",
+      "sha256": "3e43b141dec7c0eee129b5b359c63b70cd6dc323f9a88f2cac8e722b9662935a"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OrientSafetyServiceImpl.java",
+      "git_blob": "bff7baefdb60449e525c3844aaeb44929ea637d0",
+      "sha256": "701df7417d2de7ada70a0e0f658f5b166865fb98c633dccd5baf0ff655324330"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OrientScoringServiceImpl.java",
+      "git_blob": "b7d008c2fe28c20c08e2e0e7145ffec8aafd8362",
+      "sha256": "0625d227f01d074cb695d5493e3da0977384a6d564347ad27fc023e63fd295aa"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OrientTaskServiceImpl.java",
+      "git_blob": "7534f2bac05736d59455929db210740d8ef53150",
+      "sha256": "ba8ca2802951b5237d834f389efae3bd9c725d6abb49eed06986ca5bede281ac"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/OrientTeamBoardServiceImpl.java",
+      "git_blob": "18bca3055f4a9f4ee914e023a96c6d170de3bd14",
+      "sha256": "64175195cc7f2d16e0cf2d8a45e8bdb200d385e83aaffed6d3d64dd3602c78e1"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ProductRoleServiceImpl.java",
+      "git_blob": "38c77cf7be9522163d1f06d697a5bf4289dc5c7d",
+      "sha256": "94227de66ca352f433bd17a724696051d9cda066649e6895d178fdd745e7af2d"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ProjectHomeReadServiceImpl.java",
+      "git_blob": "09830bf19d2dd641511257a3d658b30eb6e8ca84",
+      "sha256": "a1c0de29b532375fb09704de4a278f0d7f3e86cad34c4d1a5a4c9cb4c3c6cb47"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ProjectPlayerReadServiceImpl.java",
+      "git_blob": "29207e8c81e92922e838bdf147da08878e244380",
+      "sha256": "023bda283273197ae1463ddfc3cab8c80fac54e9df704bd28612b762293ece42"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/PublicMemberServiceImpl.java",
+      "git_blob": "f8bd1a9962d7c91ce27b745ad985451e229fa505",
+      "sha256": "a76b1739fe94b344c9a5245ffb19bd7ab442ed6ce0f300f18b7334bfa7f5a53e"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/QuotaServiceImpl.java",
+      "git_blob": "997d055a8b32965f3a455f809fd99040efc7139c",
+      "sha256": "576f94a29af7523d97bfcd47c22f21ece9c43e10865e4e2a93ae9869eb6c46dd"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RegistrationOrderCreateGateImpl.java",
+      "git_blob": "4565771f4f40fbcbd55ec14f15323dc4f3d25783",
+      "sha256": "63aa56e79261eb57e3974b578c3026433cdfee7885ea6d59bcc0755faef2f94c"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TeamGroupServiceImpl.java",
+      "git_blob": "f873632d2946552d9fc6d10f2fe50e687ff654b5",
+      "sha256": "4b10e279bee96375bd6d46765247f08f692e89aae38faf5fc03224740d292643"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TemplatePublishServiceImpl.java",
+      "git_blob": "6c39e9a1f0339d21d4b2567bdc1f6c1e487c58fb",
+      "sha256": "35c2d2e1af45a92650b6dfc5f8081517053604c78f5e82d44e1746b9144f87a3"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicAdminCommandServiceImpl.java",
+      "git_blob": "7c753cb5c5424423ace2812eb43c2bb8373b6720",
+      "sha256": "ffda1c3b123bfb657cca7273f8dbc5d1ac749fa9825b9d2bfd3174ace5669523"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicCompletionAwardServiceImpl.java",
+      "git_blob": "20018a7dbf72ac44fce2d15b115fd52cf93f3c29",
+      "sha256": "32ac9398456da157b4b08407a8179d07db77ac9d3c5621239be7b1e373b6cb1b"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicContentOwnershipServiceImpl.java",
+      "git_blob": "45167cfc18c90521bafb5c05801990805d2d128f",
+      "sha256": "68718ee9fc30950e6c6ed1e0a32980e95b5fd3b88d5784df3d618c70c760eb49"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicOperationsScopeAuthorizer.java",
+      "git_blob": "002c50d18f82c7cbb9f2c5b6d526a2c31b1f4279",
+      "sha256": "7c118644363dfc1088dd1fac09cb224ea7dfbb7fc6a099202b3c48b143a68ae6"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicOperationsSnapshotServiceImpl.java",
+      "git_blob": "0c446890f4db3ac683877defa67354ac08dde1d0",
+      "sha256": "147850264191939bb330d9f30ae995eb9be754659ae7096e6d81925434a72282"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicSaleFinalizationServiceImpl.java",
+      "git_blob": "84bff6f4d4c87c16e1e9590d406a858f537fd069",
+      "sha256": "ed05edd0260b1b26a86d9b8a9b622a0cbcfc5b121dabf91a49365294bbf4025e"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicSaleLifecycleAdvancer.java",
+      "git_blob": "d8f6d4d3672559393179e2d99b7f9dd20e40d9c0",
+      "sha256": "1280b3ec32b8efee632258b2985f09bae4e300080bccba6acb6159493bf8b7f4"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicWorkspaceServiceImpl.java",
+      "git_blob": "293a079fe1d2e78ad42c0b185c18a484e45aaba6",
+      "sha256": "f25afe609dc55bc6542080164f3a1cb923c0aafc0f751b74f6df347b77ca0460"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/UmsMemberBalanceDetailServiceImpl.java",
+      "git_blob": "0c94be0b78cbbc6ad94dd4726e7314b44c390810",
+      "sha256": "1e73d06e2466759df074803bb0b1e172e045abf5f75f03450afc01c036e9dea9"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxContentSecurityServiceImpl.java",
+      "git_blob": "66774b996763d66654446faa5d9869e26ec93a82",
+      "sha256": "776c08c778403605f7df3a52d18621fb0bd2715e9d65d02263a0304329ca027c"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/CmsCollaboratorsMapper.xml",
+      "git_blob": "6d227edfb6e1a29884e17e37cc736c05d930c547",
+      "sha256": "b74b48ce6a6a369905f694f0d90438337241756af7026311de612138178cdd1b"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/CmsMemberTemplateMapper.xml",
+      "git_blob": "391278a0abf849598e5b31d3c2a2a4c980772e60",
+      "sha256": "6e5ae9557418a55fbed3e39c54ef8ff979913fc1dfd8904e56edfb78431142fa"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/CmsTopicChapterMapper.xml",
+      "git_blob": "5d1ee10df165944b413d7d7fc4b11cca928384e3",
+      "sha256": "9a7d7c7a9f180e63c4179eeb337c84139b13fc976ee6cc1e6b9084a0d550c580"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/CmsTopicMapper.xml",
+      "git_blob": "d5e6c24888ed7f28a1412c99d7d96cb6518e6c77",
+      "sha256": "d0b4bbdafb1ca6aa32a8bd6c71d5f1a740f3708d099e95e27e5cccfa363295b0"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/CmsTopicNodeMapper.xml",
+      "git_blob": "96aae455e5c7386540321d67c3400cd9ded93f39",
+      "sha256": "b3f3c92e7d679c3dd180fde5fcf6d154338e67e76372f5c11cc646882e391db8"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/NpcProfileMapper.xml",
+      "git_blob": "7f8cf0793120de8a3ef913597daf1bdce0d033f7",
+      "sha256": "653db250e72323013ffa065d287feea48186119f194d1ad5e38197deb28b4cab"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/ProductRoleMapper.xml",
+      "git_blob": "eb9db229843b1aa90c9e4779305ef66a1bef0a13",
+      "sha256": "69d8cf1d0ead78bbdb98ab4bb1f015eded32a7393dd30c53d81f12d9f33b9af7"
+    },
+    {
+      "path": "chengyinhub-ui/src/api/business/topic.js",
+      "git_blob": "10066832b3898f670f255708d2b4ddc4d82508f8",
+      "sha256": "3abf0919e2819737da51adbbf2fc045b067c9823528b67101981a81ea59e673d"
+    },
+    {
+      "path": "chengyinhub-ui/src/views/business/topic/index.vue",
+      "git_blob": "5a9ac463e3ca34c2dea0f05bd9d1f71b6f5ff0ab",
+      "sha256": "d06b3158555b60b5e1a66899fc5a25bfa1150f9f20e3f18fe6448f99cb7cf096"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/square/utils/topic-template-remix.js",
+      "git_blob": "5a17344b01190a68f76ad5e1a3007804bef6c7dd",
+      "sha256": "bd61f135aee8fcf18d7c63dd8eadf38db127df929b33c32370bd0abd4aa68975"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/template/index.js",
+      "git_blob": "49deb063c0bc5e14d0f6283462d3f566ada82ecc",
+      "sha256": "0f8b72a60f9533207782364a8186f263e4567e8bfa65eef7d27e6d0ee9b46647"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/topic/index/index.js",
+      "git_blob": "cfa52e0b8c2f23d16cc41bd23979a2e4bfdae754",
+      "sha256": "d2be67a0bbe23d9b0fedfc4bec8bf7073b552cae76c6cc6b50f543369ad99471"
+    },
+    {
+      "path": "docs/delivery/architecture-day/COORDINATOR/governance-scope.md",
+      "git_blob": "083ffae0db6c6c02d019de1b1766e786a2a9af4a",
+      "sha256": "aa0469b16953b604639305f1db13400e16545519d9c386a4f6a5c2ab8da24043"
+    }
+  ]
+}

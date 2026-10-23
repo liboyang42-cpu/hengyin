@@ -1,0 +1,408 @@
+[
+  {
+    "method": "copyCmsTopic",
+    "line": 27,
+    "signature": "Long copyCmsTopic(Long id, Map<String, Object> params);",
+    "caller_sites": 1,
+    "proposed_owner": "catalog-copy（本轮候选）"
+  },
+  {
+    "method": "transferToClub",
+    "line": 37,
+    "signature": "Long transferToClub(Long id, Long memberId, Long clubId);",
+    "caller_sites": 1,
+    "proposed_owner": "catalog移交编排（保留外层事务，不迁）"
+  },
+  {
+    "method": "copyOfficialCmsTopic",
+    "line": 47,
+    "signature": "Long copyOfficialCmsTopic(Long id, Map<String, Object> params);",
+    "caller_sites": 1,
+    "proposed_owner": "catalog-copy（本轮候选）"
+  },
+  {
+    "method": "selectTopicsForSettlement",
+    "line": 49,
+    "signature": "List<CmsTopic> selectTopicsForSettlement();",
+    "caller_sites": 0,
+    "proposed_owner": "funds/G（本轮只读）"
+  },
+  {
+    "method": "executeTopicSettlement",
+    "line": 55,
+    "signature": "int executeTopicSettlement();",
+    "caller_sites": 1,
+    "proposed_owner": "funds/G（本轮只读）"
+  },
+  {
+    "method": "processRecruitDeadlines",
+    "line": 63,
+    "signature": "int processRecruitDeadlines();",
+    "caller_sites": 1,
+    "proposed_owner": "sales/跨域编排（root/G保留）"
+  },
+  {
+    "method": "advanceSaleLifecycle",
+    "line": 66,
+    "signature": "int advanceSaleLifecycle();",
+    "caller_sites": 1,
+    "proposed_owner": "sales/跨域编排（root/G保留）"
+  },
+  {
+    "method": "payoutDueCoopSettlements",
+    "line": 73,
+    "signature": "int payoutDueCoopSettlements();",
+    "caller_sites": 1,
+    "proposed_owner": "funds/G（本轮只读）"
+  },
+  {
+    "method": "selectCmsTopicById",
+    "line": 81,
+    "signature": "public CmsTopic selectCmsTopicById(Long id);",
+    "caller_sites": 98,
+    "proposed_owner": "catalog查询/视图（合同保持）"
+  },
+  {
+    "method": "selectRoamReferralEnabledById",
+    "line": 84,
+    "signature": "Integer selectRoamReferralEnabledById(Long id);",
+    "caller_sites": 1,
+    "proposed_owner": "catalog查询/视图（合同保持）"
+  },
+  {
+    "method": "selectPublicCmsTopicById",
+    "line": 87,
+    "signature": "CmsTopic selectPublicCmsTopicById(Long id);",
+    "caller_sites": 0,
+    "proposed_owner": "catalog查询/视图（合同保持）"
+  },
+  {
+    "method": "selectCmsTopicDetailById",
+    "line": 90,
+    "signature": "CmsTopic selectCmsTopicDetailById(Long id, Long viewerMemberId);",
+    "caller_sites": 2,
+    "proposed_owner": "catalog查询/视图（合同保持）"
+  },
+  {
+    "method": "selectMerchantVisibleCmsTopicById",
+    "line": 93,
+    "signature": "CmsTopic selectMerchantVisibleCmsTopicById(Long id);",
+    "caller_sites": 1,
+    "proposed_owner": "catalog查询/视图（合同保持）"
+  },
+  {
+    "method": "selectMerchantManagedCmsTopicById",
+    "line": 96,
+    "signature": "CmsTopic selectMerchantManagedCmsTopicById(Long id, Long merchantId);",
+    "caller_sites": 1,
+    "proposed_owner": "catalog查询/视图（合同保持）"
+  },
+  {
+    "method": "selectCmsTopicList",
+    "line": 104,
+    "signature": "public List<CmsTopic> selectCmsTopicList(CmsTopic cmsTopic);",
+    "caller_sites": 18,
+    "proposed_owner": "catalog查询/视图（合同保持）"
+  },
+  {
+    "method": "selectUpcomingTopicCounts",
+    "line": 107,
+    "signature": "Map<Long, Integer> selectUpcomingTopicCounts(List<Long> clubIds);",
+    "caller_sites": 1,
+    "proposed_owner": "catalog查询/视图（合同保持）"
+  },
+  {
+    "method": "selectPublicCmsTopicList",
+    "line": 110,
+    "signature": "List<CmsTopic> selectPublicCmsTopicList(CmsTopic cmsTopic);",
+    "caller_sites": 4,
+    "proposed_owner": "catalog查询/视图（合同保持）"
+  },
+  {
+    "method": "casUserStatus",
+    "line": 124,
+    "signature": "public int casUserStatus(Long topicId, Integer expected, Integer target);",
+    "caller_sites": 5,
+    "proposed_owner": "发布/审核/上架编排（后续单独定owner）"
+  },
+  {
+    "method": "topicSupplyAutoOnlineBlockReason",
+    "line": 127,
+    "signature": "String topicSupplyAutoOnlineBlockReason(Long topicId);",
+    "caller_sites": 1,
+    "proposed_owner": "sales/跨域编排（root/G保留）"
+  },
+  {
+    "method": "syncCreativeSquarePostVisibility",
+    "line": 135,
+    "signature": "void syncCreativeSquarePostVisibility(Long topicId, boolean visible);",
+    "caller_sites": 5,
+    "proposed_owner": "发布/审核/上架编排（后续单独定owner）"
+  },
+  {
+    "method": "requestContentSafetyRelistReview",
+    "line": 143,
+    "signature": "Long requestContentSafetyRelistReview(Long topicId, Long submitterId);",
+    "caller_sites": 1,
+    "proposed_owner": "发布/审核/上架编排（后续单独定owner）"
+  },
+  {
+    "method": "insertCmsTopic",
+    "line": 145,
+    "signature": "public int insertCmsTopic(CmsTopic cmsTopic);",
+    "caller_sites": 0,
+    "proposed_owner": "catalog编写/创建/编辑（本轮保留）"
+  },
+  {
+    "method": "createTopicByPublisher",
+    "line": 159,
+    "signature": "public Long createTopicByPublisher(com.chengyinhub.business.domain.dto.CmsTopicCreateDTO req, String operator);",
+    "caller_sites": 1,
+    "proposed_owner": "catalog编写/创建/编辑（本轮保留）"
+  },
+  {
+    "method": "updateCmsTopic",
+    "line": 167,
+    "signature": "public int updateCmsTopic(CmsTopic cmsTopic);",
+    "caller_sites": 4,
+    "proposed_owner": "catalog编写/创建/编辑（本轮保留）"
+  },
+  {
+    "method": "deleteCmsTopicByIds",
+    "line": 175,
+    "signature": "public int deleteCmsTopicByIds(Long[] ids);",
+    "caller_sites": 0,
+    "proposed_owner": "catalog编写/创建/编辑（本轮保留）"
+  },
+  {
+    "method": "deleteCmsTopicById",
+    "line": 183,
+    "signature": "public int deleteCmsTopicById(Long id);",
+    "caller_sites": 0,
+    "proposed_owner": "catalog编写/创建/编辑（本轮保留）"
+  },
+  {
+    "method": "createTopic",
+    "line": 192,
+    "signature": "public Long createTopic(TopicCreateDTO dto, Long memberId, String username);",
+    "caller_sites": 2,
+    "proposed_owner": "catalog编写/创建/编辑（本轮保留）"
+  },
+  {
+    "method": "createTopicV2",
+    "line": 197,
+    "signature": "public Long createTopicV2(TopicCreateDTO dto, Long memberId, String username);",
+    "caller_sites": 0,
+    "proposed_owner": "catalog编写/创建/编辑（本轮保留）"
+  },
+  {
+    "method": "createTopicV2WithReview",
+    "line": 200,
+    "signature": "TopicBundleSubmitResultVO createTopicV2WithReview(TopicCreateDTO dto, Long memberId, String username);",
+    "caller_sites": 2,
+    "proposed_owner": "catalog编写/创建/编辑（本轮保留）"
+  },
+  {
+    "method": "updateTopicByOwner",
+    "line": 218,
+    "signature": "public Long updateTopicByOwner(com.chengyinhub.business.domain.dto.TopicUpdateDTO dto, Long memberId, String username);",
+    "caller_sites": 1,
+    "proposed_owner": "catalog编写/创建/编辑（本轮保留）"
+  },
+  {
+    "method": "updateTopicByOwnerV2",
+    "line": 224,
+    "signature": "public Long updateTopicByOwnerV2(com.chengyinhub.business.domain.dto.TopicUpdateDTO dto, Long memberId, String username);",
+    "caller_sites": 0,
+    "proposed_owner": "catalog编写/创建/编辑（本轮保留）"
+  },
+  {
+    "method": "updateTopicByOwnerV2WithReview",
+    "line": 228,
+    "signature": "TopicBundleSubmitResultVO updateTopicByOwnerV2WithReview( com.chengyinhub.business.domain.dto.TopicUpdateDTO dto, Long memberId, String username);",
+    "caller_sites": 1,
+    "proposed_owner": "catalog编写/创建/编辑（本轮保留）"
+  },
+  {
+    "method": "selectCmsTopicNumByMemberId",
+    "line": 238,
+    "signature": "public int selectCmsTopicNumByMemberId(Long member_id);",
+    "caller_sites": 5,
+    "proposed_owner": "catalog查询/视图（合同保持）"
+  },
+  {
+    "method": "selectOnlineThemeNumByMemberId",
+    "line": 247,
+    "signature": "public int selectOnlineThemeNumByMemberId(Long memberId, Long excludeId);",
+    "caller_sites": 3,
+    "proposed_owner": "catalog查询/视图（合同保持）"
+  },
+  {
+    "method": "selectTopicTemplateList",
+    "line": 250,
+    "signature": "public java.util.List<CmsTopic> selectTopicTemplateList();",
+    "caller_sites": 0,
+    "proposed_owner": "catalog查询/视图（合同保持）"
+  },
+  {
+    "method": "buildTopicTemplateListVO",
+    "line": 256,
+    "signature": "public java.util.List<com.chengyinhub.business.domain.vo.TopicTemplateListItemVO> buildTopicTemplateListVO();",
+    "caller_sites": 1,
+    "proposed_owner": "catalog查询/视图（合同保持）"
+  },
+  {
+    "method": "buildTopicTemplateListVO",
+    "line": 263,
+    "signature": "public java.util.List<com.chengyinhub.business.domain.vo.TopicTemplateListItemVO> buildTopicTemplateListVO(boolean recommendedOnly);",
+    "caller_sites": 1,
+    "proposed_owner": "catalog查询/视图（合同保持）"
+  },
+  {
+    "method": "buildTopicTemplateDetail",
+    "line": 272,
+    "signature": "public com.chengyinhub.business.domain.vo.TopicTemplateDetailVO buildTopicTemplateDetail(Long id, boolean viewerIsMerchant);",
+    "caller_sites": 1,
+    "proposed_owner": "catalog查询/视图（合同保持）"
+  },
+  {
+    "method": "buildTopicTemplateDetail",
+    "line": 281,
+    "signature": "public com.chengyinhub.business.domain.vo.TopicTemplateDetailVO buildTopicTemplateDetail( Long id, boolean viewerCanViewRecruitment, Integer merchantCategoryId);",
+    "caller_sites": 1,
+    "proposed_owner": "catalog查询/视图（合同保持）"
+  },
+  {
+    "method": "buildPublicTopicTemplateDetail",
+    "line": 288,
+    "signature": "public com.chengyinhub.business.domain.vo.TopicTemplateDetailVO buildPublicTopicTemplateDetail( Long id, Long viewerMemberId, boolean viewerIsMerchant, Integer merchantCategoryId);",
+    "caller_sites": 1,
+    "proposed_owner": "catalog查询/视图（合同保持）"
+  },
+  {
+    "method": "selectTopicIsTemplate",
+    "line": 292,
+    "signature": "public Integer selectTopicIsTemplate(Long id);",
+    "caller_sites": 2,
+    "proposed_owner": "catalog查询/视图（合同保持）"
+  },
+  {
+    "method": "saveAsTemplate",
+    "line": 295,
+    "signature": "public int saveAsTemplate(Long id, Long memberId, Integer flag);",
+    "caller_sites": 1,
+    "proposed_owner": "catalog编写/创建/编辑（本轮保留）"
+  },
+  {
+    "method": "updateTopicDraftState",
+    "line": 298,
+    "signature": "public int updateTopicDraftState(Long id, Integer flag);",
+    "caller_sites": 0,
+    "proposed_owner": "catalog编写/创建/编辑（本轮保留）"
+  },
+  {
+    "method": "selectDraftTopicIds",
+    "line": 301,
+    "signature": "public java.util.List<Long> selectDraftTopicIds(Long memberId);",
+    "caller_sites": 2,
+    "proposed_owner": "catalog查询/视图（合同保持）"
+  },
+  {
+    "method": "selectTopicIsDraft",
+    "line": 304,
+    "signature": "public Integer selectTopicIsDraft(Long id);",
+    "caller_sites": 7,
+    "proposed_owner": "catalog查询/视图（合同保持）"
+  },
+  {
+    "method": "markReviewFlag",
+    "line": 307,
+    "signature": "public void markReviewFlag(Long topicId, boolean flagged);",
+    "caller_sites": 1,
+    "proposed_owner": "发布/审核/上架编排（后续单独定owner）"
+  },
+  {
+    "method": "markContentSafetyHold",
+    "line": 310,
+    "signature": "public void markContentSafetyHold(Long topicId);",
+    "caller_sites": 1,
+    "proposed_owner": "发布/审核/上架编排（后续单独定owner）"
+  },
+  {
+    "method": "publishDraft",
+    "line": 313,
+    "signature": "public boolean publishDraft(Long id);",
+    "caller_sites": 1,
+    "proposed_owner": "发布/审核/上架编排（后续单独定owner）"
+  },
+  {
+    "method": "publishDraft",
+    "line": 314,
+    "signature": "boolean publishDraft(Long id, Long expectedOwnerId);",
+    "caller_sites": 1,
+    "proposed_owner": "发布/审核/上架编排（后续单独定owner）"
+  },
+  {
+    "method": "canResubmitSupplyReview",
+    "line": 315,
+    "signature": "boolean canResubmitSupplyReview(Long id, Long ownerId);",
+    "caller_sites": 3,
+    "proposed_owner": "发布/审核/上架编排（后续单独定owner）"
+  },
+  {
+    "method": "publishDraftWithReview",
+    "line": 318,
+    "signature": "TopicBundleSubmitResultVO publishDraftWithReview(Long id);",
+    "caller_sites": 1,
+    "proposed_owner": "发布/审核/上架编排（后续单独定owner）"
+  },
+  {
+    "method": "publishDraftWithReview",
+    "line": 319,
+    "signature": "TopicBundleSubmitResultVO publishDraftWithReview(Long id, Long expectedOwnerId);",
+    "caller_sites": 1,
+    "proposed_owner": "发布/审核/上架编排（后续单独定owner）"
+  },
+  {
+    "method": "publishApprovedRouteSnapshot",
+    "line": 322,
+    "signature": "void publishApprovedRouteSnapshot(Long topicId);",
+    "caller_sites": 1,
+    "proposed_owner": "发布/审核/上架编排（后续单独定owner）"
+  },
+  {
+    "method": "ensureSelfHostActivityShell",
+    "line": 330,
+    "signature": "void ensureSelfHostActivityShell(Long topicId);",
+    "caller_sites": 1,
+    "proposed_owner": "sales/跨域编排（root/G保留）"
+  },
+  {
+    "method": "configureCircleCandidates",
+    "line": 333,
+    "signature": "public int configureCircleCandidates(Long topicId, Long memberId, java.util.List<String> candidateCodes);",
+    "caller_sites": 1,
+    "proposed_owner": "catalog编写/创建/编辑（本轮保留）"
+  },
+  {
+    "method": "reviewCircleSupplies",
+    "line": 336,
+    "signature": "public java.util.Date reviewCircleSupplies(Long topicId, Long memberId);",
+    "caller_sites": 1,
+    "proposed_owner": "发布/审核/上架编排（后续单独定owner）"
+  },
+  {
+    "method": "graduateBeta",
+    "line": 339,
+    "signature": "public int graduateBeta(Long topicId);",
+    "caller_sites": 1,
+    "proposed_owner": "发布/审核/上架编排（后续单独定owner）"
+  },
+  {
+    "method": "deleteTopicByOwner",
+    "line": 350,
+    "signature": "boolean deleteTopicByOwner(Long topicId, Long memberId);",
+    "caller_sites": 1,
+    "proposed_owner": "catalog编写/创建/编辑（本轮保留）"
+  }
+]

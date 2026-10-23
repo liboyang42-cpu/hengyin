@@ -1,0 +1,396 @@
+[
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/controller/CmsTopicControllerScopeTest.java",
+    "tests": [
+      "getInfoRejectsOutOfScopeBeforeAnyDetailRead",
+      "leadFulfillmentRejectsOutOfScopeBeforeReadingLeaderData",
+      "copyRejectsOutOfScopeBeforeCopyService",
+      "addRejectsNonGlobalScopeBeforeCreatingAnOfficialTopic",
+      "roamRewardsRejectsNonGlobalScopeBeforeReadingLocationEvidence",
+      "exportFiltersOutOfScopeTopics",
+      "listRejectsNonGlobalScopeBeforeQuery",
+      "removeDelegatesToTheScopedOfficialDeleteCommand"
+    ],
+    "mock": true,
+    "sql": false,
+    "reflection": true,
+    "evidence_kind": "Mockito/普通JUnit表征",
+    "executed_this_task": false
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/controller/CmsTopicCreatePublisherBoundaryTest.java",
+    "tests": [
+      "cmsCreate_rejectsClubPublisherBeforeServiceCall",
+      "cmsCopyDelegatesToOfficialCopyCommandInsteadOfGenericCopy"
+    ],
+    "mock": true,
+    "sql": false,
+    "reflection": true,
+    "evidence_kind": "Mockito/普通JUnit表征",
+    "executed_this_task": false
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/TopicInsertColumnCoverageMyBatisIT.java",
+    "tests": [
+      "insertCmsTopic_persistsRecruitDeadline_notJustReturnsOk",
+      "insertCmsTopic_persistsLifecycle_notTheDbDefault",
+      "unsetColumns_stillFallBackToDbDefaults",
+      "insertCmsTopic_persistsJourneyRulesJson_andUpdateWithoutItKeepsValue",
+      "insertCmsTopic_persistsJourneyStoryJson_andUpdateWithoutItKeepsValue",
+      "casUserStatus_flipsWhenExpectationMatches",
+      "casUserStatus_writesNothingWhenExpectationIsStale",
+      "casUserStatus_treatsNullUserStatusAsOffline",
+      "casUserStatus_refusesSoftDeletedTopic",
+      "casOnlineRequiresPublishedNonDraftButPendingAuditMayBePublic",
+      "updateCmsTopic_persistsPublishMode_soReviewGateIsNotBypassed"
+    ],
+    "mock": false,
+    "sql": true,
+    "reflection": false,
+    "evidence_kind": "MySQL mapper IT（非完整copy用例）",
+    "executed_this_task": false
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_19Test.java",
+    "tests": [
+      "sameOwnerFullCopyPreservesCountRuleAndUnknownMetadata",
+      "crossOwnerFullCopyKeepsExistingRewardBoundary",
+      "basicCopyDoesNotCopyOldNodeThresholds",
+      "incompleteNodeCopyCannotReportPreservedRule",
+      "failedCompletionRuleWriteIsNotSuccessfulCopy"
+    ],
+    "mock": true,
+    "sql": false,
+    "reflection": true,
+    "evidence_kind": "Mockito/普通JUnit表征",
+    "executed_this_task": false
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_20Test.java",
+    "tests": [
+      "fullCopyUsesGeneratedIdentityDespiteTiedSortOrder"
+    ],
+    "mock": true,
+    "sql": false,
+    "reflection": true,
+    "evidence_kind": "Mockito/普通JUnit表征",
+    "executed_this_task": false
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_22Test.java",
+    "tests": [
+      "topicInsertMustSucceedAndGeneratePositiveIdentityBeforeChildren",
+      "chapterInsertMustSucceedAndGenerateIdentityBeforeNodes",
+      "nodeInsertMustSucceedAndGenerateIdentityBeforeNpcOrRuleWrite",
+      "successfulCopyStillReturnsGeneratedIdentity"
+    ],
+    "mock": true,
+    "sql": false,
+    "reflection": true,
+    "evidence_kind": "Mockito/普通JUnit表征",
+    "executed_this_task": false
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_23Test.java",
+    "tests": [
+      "fullCopyRewritesPlainStoryToActualCopiedNodes",
+      "missingReferencedNodeCannotWriteCopiedStory",
+      "basicCopyDoesNotStartFullContentRemapping"
+    ],
+    "mock": true,
+    "sql": false,
+    "reflection": true,
+    "evidence_kind": "Mockito/普通JUnit表征",
+    "executed_this_task": false
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ProductSourceWiringTest.java",
+    "tests": [
+      "topicCreateWritesProductType",
+      "topicCreateValidatesNonPositivePerkThresholdAtTheSharedRule",
+      "registrationWritesPurchaseKind",
+      "purchaseKindDerivesFromProductTypeNotTicketMode",
+      "pricingServiceTicketModeFollowsProductType",
+      "clubLeadSettleGoesThroughVerifyAndSettle",
+      "copyTopicCarriesProductType",
+      "copyChaptersCarryConfigFields",
+      "ticketModeOverrideComesAfterCopyProperties",
+      "confirmPriceFreezesFeeSnapshot",
+      "settlementReadsFeeSnapshotNotLive",
+      "platformRateConstantRetired",
+      "clubFinanceReadsSnapshot",
+      "derive_noTicket_isSelfPlayPass",
+      "derive_ticketOnOrienteering_isGuidedTicket",
+      "derive_ticketOnFreeExplore_isExplorePass",
+      "derive_ticketWithUnknownProductType_fallsBackToGuided",
+      "productTypeToTicketMode_isIdentity",
+      "productTypeIsValid_rejectsNullAndGarbage"
+    ],
+    "mock": false,
+    "sql": false,
+    "reflection": false,
+    "evidence_kind": "源码字符串断言",
+    "executed_this_task": false
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RevshareGateWiringTest.java",
+    "tests": [
+      "gateIsInvokedAtConfirmPrice",
+      "explorePurchaseRequiresLockedPrice",
+      "purchaseGateOnlyTightensExplore",
+      "copyDeclaresContentSlot",
+      "exploreTopicsMustEnterRecruit",
+      "recruitGateOnlyForExplore",
+      "gateRejectsEqualCost",
+      "bothPricesCheckedIndependently",
+      "noRevshareSupply_passes"
+    ],
+    "mock": false,
+    "sql": false,
+    "reflection": false,
+    "evidence_kind": "源码字符串断言",
+    "executed_this_task": false
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TemplateEditOwnershipTest.java",
+    "tests": [
+      "merchantEndpointCannotReviveDeletedOrApproveOrdinaryTemplate",
+      "merchantEditWithdrawsMarketProjectionAndIgnoresClientLifecycleFields",
+      "editingTemplateWithdrawsOpenAppealsBeforeCancellingTasks",
+      "clearFieldsAreValidatedAndCopiedForDraftAndPublish",
+      "missingClearFieldsDoNotSetTheInternalUpdateMarker",
+      "unknownClearFieldsAreRejectedBeforeWrites",
+      "clearingRequiredSensorFieldsUsesStoredValidationMethodAndRejectsBeforeWrites",
+      "switchingAwayFromSensorAllowsExplicitClearButNeverBypassesOwnership",
+      "onlyRequestDtoAcceptsClearFieldsAndEntityJsonCannotInjectThem",
+      "merchantNodeDurationSurvivesDtoCopy",
+      "merchantNodeDurationOverflowIsRejectedNotTruncated",
+      "savingDeletedTemplateAsDraftCannotReviveIt",
+      "editDraftAndDeleteWithdrawExistingMarketProjectionRegardlessOfLegacySyncFlag",
+      "editingOwnTemplateUpdatesInPlaceInsteadOfCreatingACopy",
+      "editingKeepsOriginalAuthorshipAndReSubmitsForReview",
+      "editingSomeoneElsesTemplateIsRejected",
+      "editingDeletedTemplateIsRejected",
+      "editingMissingTemplateIsRejectedWithTheSameMessageAsForeignOnes",
+      "editingDoesNotInflateSourceTemplatePopularity",
+      "creatingStillInsertsAndCountsPopularity",
+      "editingPersonalTemplateDoesNotTakeMarketProjectionDown",
+      "editingPersonalTemplateWithLegacySyncFlagDoesNotOverwriteMarketProjection"
+    ],
+    "mock": true,
+    "sql": false,
+    "reflection": true,
+    "evidence_kind": "Mockito/普通JUnit表征",
+    "executed_this_task": false
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicCopyJourneyRulesTest.java",
+    "tests": [
+      "copyTemplate_carriesJourneyRulesJson_andKeepsOtherFieldCopyBehavior",
+      "copyTemplate_withoutJourneyRules_leavesTargetNull",
+      "copyOfficial_carriesJourneyRulesJson"
+    ],
+    "mock": true,
+    "sql": false,
+    "reflection": true,
+    "evidence_kind": "Mockito/普通JUnit表征",
+    "executed_this_task": false
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicCopyNpcRemapTest.java",
+    "tests": [
+      "copyRemapsNpcRefsToCopiedNpcsAndNullsMerchantAvatar",
+      "copyCarriesReadyVoiceAndDropsPendingVoice",
+      "copyDropsFailedVoice",
+      "copySameOwnerTemplateWithOnlySysNodeConditionsGetsIndependentRemappedRow",
+      "copyGeneratedVoteToolRemapsItsActualPlanAndProvenanceIdentity"
+    ],
+    "mock": true,
+    "sql": false,
+    "reflection": true,
+    "evidence_kind": "Mockito/普通JUnit表征",
+    "executed_this_task": false
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicCopyRecruitmentGuardTest.java",
+    "tests": [
+      "copy_rejectsSecondLegacyInvalidCapacityInsideTransactionalCopy",
+      "copy_downgradesRevshareToPerkWithoutFee",
+      "copy_rejectsIncompleteRevshareSupplyTerms",
+      "copy_rejectsNonPositivePerkThreshold"
+    ],
+    "mock": true,
+    "sql": false,
+    "reflection": true,
+    "evidence_kind": "Mockito/普通JUnit表征",
+    "executed_this_task": false
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicCopyTemplateOwnershipTest.java",
+    "tests": [
+      "copiedResourceBindingsFollowNewTemplateIdentityAndKeepDigest",
+      "sameOwnerForcedTemplateCopyAlsoUpdatesResourceBindings",
+      "sameOwnerSharedTemplateKeepsBindingIdentity",
+      "copyCannotRepairAForgedBindingTemplateIdentity",
+      "copy_deepCopiesForeignTemplateToNewOwner_onceForSharedTemplate",
+      "copy_keepsTemplateId_whenOwnerUnchanged",
+      "copy_writesZeroLineage_whenSourceHasNoLibraryLineage",
+      "copy_remapsUnlockAfterNodeId_toCopiedNodes",
+      "copy_failsClosed_whenUnlockPatchUpdatesNoRow",
+      "copy_withoutMemberId_keepsLegacyBehavior",
+      "copyFailsClosedWhenRouteUsesSourceTopicTicketIds"
+    ],
+    "mock": true,
+    "sql": false,
+    "reflection": true,
+    "evidence_kind": "Mockito/普通JUnit表征",
+    "executed_this_task": false
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicJourneyStoryCarryTest.java",
+    "tests": [
+      "templateCopyCarriesStoryAndRemapsChapterIds",
+      "copyWithoutStoryLeavesTargetNullAndSkipsRemap",
+      "reopenCarriesStoryAndRemapsChapterIds"
+    ],
+    "mock": true,
+    "sql": false,
+    "reflection": true,
+    "evidence_kind": "Mockito/普通JUnit表征",
+    "executed_this_task": false
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicLifecycleWiringTest.java",
+    "tests": [
+      "recruitDeadlineUsesCentralTransitionAndNormalizedLineupInsteadOfEntityPatch",
+      "recruitDeadlineLocksAndTerminatesPendingBeforeReadingLineup",
+      "confirmPriceStopsAtPricingForExplicitCanonicalSubmission",
+      "topicCreationCannotWriteRecruitingOrdinalAroundCommercialProjectReview",
+      "removingPublishedReviewCallerOrHelperSubmissionFailsTheContract"
+    ],
+    "mock": false,
+    "sql": false,
+    "reflection": false,
+    "evidence_kind": "Mockito/普通JUnit表征",
+    "executed_this_task": false
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicUpdateByOwnerTest.java",
+    "tests": [
+      "draftOwner_updatesInPlace_neverInsertsANewTopic",
+      "publishedFreeTopic_editThatMakesItCommercial_isRejected",
+      "publishedFreeTopic_addingRecruitDeadlineOnly_isRejected",
+      "clubBoundTopic_editCannotOpenPublicClubPool",
+      "independentTopic_editHonorsExplicitOpenClubPool",
+      "draftEdit_doesNotFlipAuditOrOnlineState",
+      "draftSave_neverSubmitsCommercialReview",
+      "pendingReviewSave_stillSubmitsCommercialReview",
+      "draftSave_neverBuildsSelfHostActivityShell",
+      "pendingSave_publishesSelfHostActivityShell",
+      "rejectedSave_republishesSelfHostActivityShell",
+      "rejectedTopic_republishesAndResubmitsAudit",
+      "draftEdit_persistsNormalizedJourneyRules",
+      "draftEdit_withoutJourneyRules_leavesColumnUntouched",
+      "draftEdit_illegalJourneyRules_rejectedBeforeAnyWrite",
+      "otherMember_cannotEdit",
+      "draftWithPastStartDate_isStillFullyEditable",
+      "startedTopic_isReadOnly",
+      "paidRegistration_blocksStructuralRebuild",
+      "approvedWhitelistRejectsUnknownOrOwnHeldMediaBeforeAnyWrite",
+      "foreignWhitelistOwnerIsRejectedBeforeMediaLookupOrWrite",
+      "approvedTopic_appliesWhitelistTextAndImagesOnly",
+      "approvedTopic_nullRecruitDeadline_rejectsNewDeadlineAndChangesNothing",
+      "approvedTopic_rejectsChangedRecruitDeadlineAndChangesNothing",
+      "approvedTopic_sameRecruitDeadline_allowsWhitelistTextUpdate",
+      "approvedTopic_omittedRecruitDeadline_keepsPatchSemantics",
+      "approvedTopic_rejectsDateChange_andChangesNothing",
+      "approvedTopic_rejectsChapterStructureChange_andChangesNothing",
+      "approvedTopic_rejectsTicketPriceChange_andLeavesTicketsUntouched",
+      "approvedTopic_listsEveryLockedFieldItRejects",
+      "missingId_rejected",
+      "deletedTopic_rejected",
+      "fullRebuild_clearsOldChildrenFirst",
+      "legacyEditWithoutRouteFieldsRemapsExistingBranchGraphToRebuiltNodeIds",
+      "fullRebuild_keepsBackOfficeHiddenNodeHidden_andLeavesVisibleAndNewNodesVisible",
+      "partialBody_doesNotSilentlyWipeChapters",
+      "partialBody_alsoProtectsTicketsCollaboratorsAndEggs",
+      "explicitEmptyArray_isHonoredAsDeliberateClear"
+    ],
+    "mock": true,
+    "sql": false,
+    "reflection": true,
+    "evidence_kind": "Mockito/普通JUnit表征",
+    "executed_this_task": false
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowCopyTest.java",
+    "tests": [
+      "materializedBlocksAreCopiedWithNewNodeIds",
+      "beatBlockNpcIdIsRemappedToCopiedNpc"
+    ],
+    "mock": true,
+    "sql": false,
+    "reflection": true,
+    "evidence_kind": "Mockito/普通JUnit表征",
+    "executed_this_task": false
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CopyTopicCopyTypeNpeTest.java",
+    "tests": [
+      "copyWithParamsLackingCopyType_doesNotThrow_andDefaultsToBasicInfoOnly",
+      "copyWithNullParams_stillDefaultsToOne",
+      "copyWithExplicitCopyTypeOne_isHonoured",
+      "copyWithNonIntegerCopyType_fallsBackToDefault_neverThrows",
+      "copyTypeTwo_copiesChaptersAndNodes_carryingGameTemplateAndXp"
+    ],
+    "mock": true,
+    "sql": false,
+    "reflection": true,
+    "evidence_kind": "Mockito/普通JUnit表征",
+    "executed_this_task": false
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicOfficialCopyBoundaryTest.java",
+    "tests": [
+      "officialCopyForcesConfiguredPlatformPayeeAndContentSlot",
+      "officialCopyRejectsNonPlatformSourceBeforeInsert",
+      "officialCopyRejectsDeletedPlatformSourceBeforeInsert",
+      "officialCopyFailsClosedWhenPlatformContentSlotDoesNotPersist"
+    ],
+    "mock": true,
+    "sql": false,
+    "reflection": true,
+    "evidence_kind": "Mockito/普通JUnit表征",
+    "executed_this_task": false
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiTopicTemplateMerchantOperatorScopeTest.java",
+    "tests": [
+      "managerTemplateDraftBelongsToMerchantOwner",
+      "checkinOperatorCannotUseTemplate",
+      "ordinaryPublisherTemplateDraftStillBelongsToThem",
+      "managerCanSaveMerchantOwnedPublishedTopicAsTemplate",
+      "blankScopeSaveAsStillChecksPrincipalOwnership"
+    ],
+    "mock": true,
+    "sql": false,
+    "reflection": true,
+    "evidence_kind": "Mockito/普通JUnit表征",
+    "executed_this_task": false
+  },
+  {
+    "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/TopicTransferToClubTest.java",
+    "tests": [
+      "owner_startsAtomicTransfer",
+      "transfer_persistsClubAndOfflinesOriginal",
+      "offlineFailure_rollsBackEntireTransfer",
+      "nonOwner_rejected_noCopy",
+      "owner_butClubNotPartner_rejected_noCopy"
+    ],
+    "mock": true,
+    "sql": false,
+    "reflection": true,
+    "evidence_kind": "H2+spy复制替身，不能证明真复制MySQL事务",
+    "executed_this_task": false
+  }
+]
