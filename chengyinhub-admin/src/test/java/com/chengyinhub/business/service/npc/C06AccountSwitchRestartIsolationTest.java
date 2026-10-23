@@ -87,4 +87,23 @@ class C06AccountSwitchRestartIsolationTest {
         assertNull(gate.requeryPublished(timeoutId));
         assertNull(gate.inspectRequestId(null).requestId());
     }
+
+    @Test
+    void reviewStatusOfNeverSeenIdDoesNotOccupyLedgerThenRememberReviewIsFirstWrite() {
+        InMemoryNpcFixtures fx = InMemoryNpcFixtures.synthetic();
+        MerchantNpcPublicPrivateIsolation isolation = fx.isolation();
+        assertNull(isolation.reviewStatusForRequest(null, true));
+        assertNull(isolation.reviewStatusForRequest("", true));
+        assertNull(isolation.reviewStatusForRequest("   ", true));
+        assertNull(isolation.reviewStatusForRequest("c06-review-never-seen", true));
+        isolation.rememberReview(null, ReviewStatus.PENDING);
+        isolation.rememberReview("", ReviewStatus.PENDING);
+        assertNull(isolation.reviewStatusForRequest(null, true));
+        assertNull(isolation.reviewStatusForRequest("c06-review-never-seen", true));
+        isolation.rememberReview("c06-review-never-seen", ReviewStatus.PENDING);
+        assertEquals(ReviewStatus.PENDING, isolation.reviewStatusForRequest("c06-review-never-seen", true));
+        isolation.rememberReview("c06-review-never-seen", ReviewStatus.REJECTED);
+        assertEquals(ReviewStatus.REJECTED, isolation.reviewStatusForRequest("c06-review-never-seen", true));
+        assertEquals(ReviewStatus.REJECTED, isolation.reviewStatusForRequest("c06-review-never-seen", true));
+    }
 }
