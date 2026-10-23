@@ -934,6 +934,7 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
         }
         catch (RuntimeException e)
         {
+            com.chengyinhub.business.service.support.SavepointLockFailures.rethrowIfLockFailure(e);
             log.error("[内容安全] 图片违规下架通知发送失败: bizType={}, bizId={}, exceptionType={}",
                     bizType, bizId, e.getClass().getSimpleName());
         }

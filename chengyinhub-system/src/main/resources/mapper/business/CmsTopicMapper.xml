@@ -596,7 +596,9 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 
     <!-- 公开查询不复用调用方可写的 status/userStatus/delFlag 条件；三道 Gate 写死在 SQL。 -->
     <!-- 漫游·附近的局 只读叠加:已发布主题(城市定向 / 自由探索)按第一个有坐标的节点落点;口径与 selectPublicCmsTopicList 一致 -->
+    <!-- O-08:仅俱乐部成员可见的主题不能把首个节点坐标落到非成员的地图上(与 selectPublicCmsTopicList 共用 clubMemberOnlyGate)。 -->
     <select id="selectNearbyTopics" resultType="java.util.HashMap">
+        <bind name="viewerMemberId" value="viewerId"/>
         select * from (
             select t.id as id, t.name as name, t.img_url as picUrl, t.product_type as productType,
                    (select count(1) from cms_registration r
@@ -625,12 +627,23 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             where t.status = 1 and t.user_status = 1 and t.del_flag = 0 and t.is_template = 0
               and (t.club_id is null or t.club_id = 0 or exists (
                   select 1 from club active_club where active_club.id = t.club_id and active_club.del_flag = 0))
+              and exists (select 1 from cms_topic cms_topic
+                  where cms_topic.id = t.id and <include refid="clubMemberOnlyGate"/>)
               and n.lat between #{minLat} and #{maxLat}
               and n.lng between #{minLng} and #{maxLng}
         ) q
         where distance &lt;= #{radius}
         order by distance asc
         limit #{limit}
+    </select>
+
+    <!-- O-08:只拿得到 topicId 的读路径(活动详情、地图附近场次)复用同一道仅成员可见闸,返回对 viewer 隐藏的主题。
+         放在本 namespace,调用方不必跨文件 include(单独加载 CmsActivityMapper/RoamHangoutMapper 的测试不受影响)。 -->
+    <select id="selectClubMemberOnlyHiddenTopicIds" resultType="java.lang.Long">
+        select cms_topic.id from cms_topic
+        where cms_topic.id in
+          <foreach collection="topicIds" item="tid" open="(" separator="," close=")">#{tid}</foreach>
+          and not <include refid="clubMemberOnlyGate"/>
     </select>
 
     <!--

@@ -2,6 +2,7 @@ package com.chengyinhub.business.util;
 
 import com.chengyinhub.business.domain.JourneyRules;
 import com.chengyinhub.common.utils.StringUtils;
+import com.chengyinhub.business.service.support.StoryVocabulary;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -63,7 +64,9 @@ public final class StateKeyRefs {
                     ((ObjectNode) node).put("var", match.group(1) + mappedNode(oldId, nodeMap) + (match.group(3) == null ? "" : match.group(3)));
                 }
             }
-            if ("NODE_COMPLETED".equals(node.path("op").asText())) {
+            String nodeOp = node.path("op").asText();
+            if ("NODE_COMPLETED".equals(nodeOp) || StoryVocabulary.VISIT_COUNT.equals(nodeOp)
+                    || StoryVocabulary.CHECK_RESULT.equals(nodeOp)) {
                 JsonNode id = node.get("nodeId");
                 if (id == null || !id.isIntegralNumber() || !id.canConvertToLong() || id.asLong() <= 0) throw new IllegalArgumentException("复制模板节点完成条件标识不合法");
                 ((ObjectNode) node).put("nodeId", mappedNode(id.asLong(), nodeMap));
@@ -111,7 +114,15 @@ public final class StateKeyRefs {
         if (check != null && check.isObject()) {
             JsonNode mods = check.get("mods");
             if (mods != null && mods.isArray()) {
-                for (JsonNode mod : mods) collectCondition(mod == null ? null : mod.get("when"), keys);
+                for (JsonNode mod : mods) {
+                    collectCondition(mod == null ? null : mod.get("when"), keys);
+                    // F2 T03:mods[].var 与绑定属性的 check.skill 同样是状态键引用,必须已注册。
+                    if (mod != null && mod.path("var").isTextual()) add(keys, mod.path("var").asText());
+                }
+            }
+            JsonNode skill = check.get("skill");
+            if (skill != null && skill.isTextual() && skill.asText().trim().startsWith("counter.")) {
+                add(keys, skill.asText().trim());
             }
             collectConditions(check.get("advantageIf"), keys);
             collectConditions(check.get("disadvantageIf"), keys);
@@ -381,6 +392,18 @@ public final class StateKeyRefs {
         }
         String op = item.path("op").asText("");
         if ("NODE_COMPLETED".equals(op)) {
+            return;
+        }
+        // F5 组合条件:内层叶子照样要进键注册表核对;其余新叶子(到访次数 / 角色 / 状态 / 装备 / 检定)不读具名状态键。
+        if (StoryVocabulary.AND.equals(op) || StoryVocabulary.OR.equals(op)) {
+            collectConditions(item.get("conditions"), keys);
+            return;
+        }
+        if (StoryVocabulary.NOT.equals(op)) {
+            collectCondition(item.get("condition"), keys);
+            return;
+        }
+        if (StoryVocabulary.isCondition(op)) {
             return;
         }
         if ("HAS_TAG".equals(op)) {

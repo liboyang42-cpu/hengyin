@@ -50,6 +50,9 @@ public interface UmsMemberPointsDetailMapper
      */
     public int insertUmsMemberPointsDetailWithBusinessKey(UmsMemberPointsDetail umsMemberPointsDetail);
 
+    /** F1b 城市定向局终结算专用:只由 OrientScoringServiceImpl 调用。 */
+    public int insertOrientSettlementPointsDetail(UmsMemberPointsDetail umsMemberPointsDetail);
+
     /**
      * H8 专用写入口：作品结算积分流水，无条件写四个快照列与全局 topic 幂等键。
      *

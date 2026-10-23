@@ -44,6 +44,7 @@ import com.chengyinhub.business.service.support.JourneyInitialState;
 import com.chengyinhub.business.service.support.TopicCompletionPolicy;
 import com.chengyinhub.business.service.support.TopicCompletionRulePolicy;
 import com.chengyinhub.business.service.support.SensorChallengePolicy;
+import com.chengyinhub.business.service.support.StoryVocabulary;
 import com.chengyinhub.common.constant.RewardPolicy;
 import com.chengyinhub.business.service.support.TopicRouteCandidatePolicy;
 import com.chengyinhub.business.service.support.TopicRouteConfigValidator;
@@ -171,6 +172,10 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
 
     @Autowired(required = false)
     private ITopicCompletionAwardService topicCompletionAwardService;
+
+    /** F2 T02 跨局角色属性;手工 new 的单测不注入 = 不结转(与老行为一致)。 */
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.support.ThemeCharacterService themeCharacterService;
 
     /**
      * R18:故事流章节读侧。节点叙事段已迁往章节 blocks,建局冻结从这里按站点取。
@@ -670,6 +675,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         // 且在 action 行插入**之前** —— 拒绝不能留下任何可重放的回执。
         JsonNode blockConfig = nodeBlockConfig(session, completedNode);
         TopicRouteEngine.State state = readEngineState(session.getStateJson());
+        bindStoryContext(session, scope, blockConfig, outcome.getNodeId(), state);
         JsonNode requires = blockConfig == null ? null : blockConfig.get("requires");
         if (requires != null && requires.isArray() && requires.size() > 0
                 && !engine.conditionsPass(requires, state)) {
@@ -1166,7 +1172,9 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
                         ? scope.topic.getPublishedRouteGraphJson() : validator.validateAndNormalize(scope.topic.getPublishedRouteGraphJson(), nodeIds),
                 scope.topic, nodes);
         TopicRouteEngine.State initial = engine.initial(snapshot);
-        applyJourneyInitials(JourneyRules.parse(validator.readTree(snapshot).path(NodeJourneySnapshot.JOURNEY_RULES_KEY).toString()), initial);
+        JourneyRules branchRules = JourneyRules.parse(validator.readTree(snapshot).path(NodeJourneySnapshot.JOURNEY_RULES_KEY).toString());
+        applyJourneyInitials(branchRules, initial);
+        seedCharacter(scope.memberId, scope.topic.getId(), branchRules, initial);
         // 进入第一个节点 = 进入首个章节:阶段休整同样适用;action 行等 session 落库后再登记。
         CmsTopicNode firstNode = findNode(nodes, initial.getCurrentNodeId());
         Map<String, Object> stageRest = genericConfig(validator.readTree(snapshot).path("themeConfig")) ? null : applyStageRest(null, scope.memberId, initial,
@@ -2049,6 +2057,15 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         applyJourneyInitials(journeyRules(topic), state);
     }
 
+    /**
+     * F2 T02:persist_scope=topic 的属性跨局保留 —— 建新一局时先结转上一局、再灌回新局。
+     * 只动已由 journeyRules 初始化的变量;主题没有 topic 作用域键时什么都不改(老主题行为不变)。
+     */
+    private void seedCharacter(Long memberId, Long topicId, JourneyRules rules, TopicRouteEngine.State state) {
+        if (themeCharacterService == null || !rules.hasRuntimeState()) return;
+        themeCharacterService.seedRun(memberId, topicId, rules, state);
+    }
+
     private void applyJourneyInitials(JourneyRules rules, TopicRouteEngine.State state) {
         if (!rules.hasRuntimeState()) return;
         JourneyInitialState.initialize(rules, state);
@@ -2105,6 +2122,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         initial.setStatus(current == null ? TopicRouteState.COMPLETED : "ACTIVE");
         JourneyRules initialRules = JourneyRules.parse(validator.readTree(frozenSnapshot).path(NodeJourneySnapshot.JOURNEY_RULES_KEY).toString());
         applyJourneyInitials(initialRules, initial);
+        seedCharacter(scope.memberId, scope.topic.getId(), initialRules, initial);
         // 建局时所在节点也可能是某章节的第一个节点:同样适用阶段休整。
         CmsTopicNode firstNode = findNode(liveNodes, current);
         Map<String, Object> stageRest = genericConfig(validator.readTree(frozenSnapshot).path("themeConfig")) ? null : applyStageRest(null, scope.memberId, initial,
@@ -2487,6 +2505,37 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
             throw new IllegalStateException("路线尚未发布");
         }
         return new Scope(memberId, actId, topic, currentRegistrations);
+    }
+
+    /**
+     * F5:把只在内存里成立的两条本局上下文挂到 state 上(不落库,JsonIgnore):
+     * ROLE_IN 读的本场角色 —— 配置里没写 ROLE_IN 就不查角色表,存量主题零额外查询;
+     * 奖励上限 —— 本站是自报传感 / 滤镜完成时,故事效果只放行 XP 与徽章(与开局通关发奖同一口径)。
+     */
+    private void bindStoryContext(TopicRouteSession session, Scope scope, JsonNode blockConfig, Long nodeId,
+                                  TopicRouteEngine.State state) {
+        String snapshot = session.getConfigSnapshotJson();
+        String block = blockConfig == null ? "" : blockConfig.toString();
+        if (usesOp(snapshot, block, StoryVocabulary.ROLE_IN) && scope.activityId > 0L && playerRoleMapper != null) {
+            try {
+                PlayerActivityRole role = playerRoleMapper.selectByActivityAndMember(scope.activityId, scope.memberId);
+                state.setActorRoleCode(role == null ? null : role.getRoleCode());
+            } catch (RuntimeException unavailableRoleSource) {
+                state.setActorRoleCode(null);   // 角色源不可用 = ROLE_IN 不成立(fail-closed)
+            }
+        }
+        // 只有会发物资的配置才需要上限;不写 ADD_ITEM 的主题不多解析一次快照。
+        JsonNode answer = usesOp(snapshot, block, StoryVocabulary.ADD_ITEM) ? NodeJourneySnapshot.answer(snapshot, nodeId) : null;
+        if (answer != null) {
+            int method = answer.path("validationMethod").asInt();
+            state.setRewardCeilingXpBadgeOnly(SensorChallengePolicy.isAppSensor(method)
+                    || SensorChallengePolicy.isPhotoFilter(method, answer.path("sensorType").asText()));
+        }
+    }
+
+    private static boolean usesOp(String snapshot, String block, String op) {
+        String marker = "\"" + op + "\"";
+        return (snapshot != null && snapshot.contains(marker)) || block.contains(marker);
     }
 
     private TopicRouteCandidatePolicy.Facts policyFacts(Scope scope) {
@@ -4378,7 +4427,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         TopicRouteEngine.State initial=branch ? engine.initial(write(root)) : new TopicRouteEngine.State();initial.setStatus("ACTIVE");
         if(!branch){initial.setCurrentNodeId(liveNodes.get(0).getId());initial.setRecommendedNodeId(liveNodes.get(0).getId());}
         if(!branch)for(CmsTopicNode node:liveNodes)initial.getNodeStates().put(node.getId(),node.getId().equals(initial.getCurrentNodeId())?TopicRouteState.PLAYABLE:TopicRouteState.DISCOVERED_LOCKED);
-        initial.getVisitedNodeIds().add(initial.getCurrentNodeId());JourneyRules replayRules = JourneyRules.parse(root.path(NodeJourneySnapshot.JOURNEY_RULES_KEY).toString());applyJourneyInitials(replayRules,initial);themeEngine.initialize(frozen,initial);
+        initial.getVisitedNodeIds().add(initial.getCurrentNodeId());JourneyRules replayRules = JourneyRules.parse(root.path(NodeJourneySnapshot.JOURNEY_RULES_KEY).toString());applyJourneyInitials(replayRules,initial);seedCharacter(memberId,previous.getTopicId(),replayRules,initial);themeEngine.initialize(frozen,initial);
         CmsTopicNode firstNode=findNode(liveNodes,initial.getCurrentNodeId());
         Map<String,Object> stageRest=genericConfig(frozen)?null:applyStageRest(null,memberId,initial,replayRules,firstNode,false);
         child=new TopicRouteSession();child.setMemberId(memberId);child.setTopicId(previous.getTopicId());child.setActivityId(previous.getActivityId());child.setPlayInstanceId(instance);

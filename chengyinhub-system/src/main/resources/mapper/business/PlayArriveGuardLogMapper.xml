@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.PlayArriveGuardLogMapper">
+
+    <resultMap id="PlayArriveGuardLogResult" type="com.chengyinhub.business.domain.PlayArriveGuardLog">
+        <id property="id" column="id"/>
+        <result property="memberId" column="member_id"/>
+        <result property="activityId" column="activity_id"/>
+        <result property="topicId" column="topic_id"/>
+        <result property="nodeId" column="node_id"/>
+        <result property="nodeLat" column="node_lat"/>
+        <result property="nodeLng" column="node_lng"/>
+        <result property="accuracyM" column="accuracy_m"/>
+        <result property="verdict" column="verdict"/>
+        <result property="reasonCode" column="reason_code"/>
+        <result property="detail" column="detail"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <sql id="guardColumns">
+        id, member_id, activity_id, topic_id, node_id, node_lat, node_lng, accuracy_m,
+        verdict, reason_code, detail, created_at
+    </sql>
+
+    <insert id="insertGuardLog" parameterType="com.chengyinhub.business.domain.PlayArriveGuardLog"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into play_arrive_guard_log
+        (member_id, activity_id, topic_id, node_id, node_lat, node_lng, accuracy_m,
+         verdict, reason_code, detail, created_at)
+        values
+        (#{memberId}, #{activityId}, #{topicId}, #{nodeId}, #{nodeLat}, #{nodeLng}, #{accuracyM},
+         #{verdict}, #{reasonCode}, #{detail}, #{createdAt})
+    </insert>
+
+    <select id="selectLastEvaluated" resultMap="PlayArriveGuardLogResult">
+        select <include refid="guardColumns"/>
+        from play_arrive_guard_log
+        where member_id = #{memberId}
+          and (reason_code is null or reason_code &lt;&gt; 'ARRIVE_GUARD_THROTTLE')
+        order by created_at desc, id desc
+        limit 1
+    </select>
+
+    <select id="selectLastAccepted" resultMap="PlayArriveGuardLogResult">
+        select <include refid="guardColumns"/>
+        from play_arrive_guard_log
+        where member_id = #{memberId}
+          and verdict in ('PASS', 'SHADOW')
+        order by created_at desc, id desc
+        limit 1
+    </select>
+
+    <select id="selectAcceptedSince" resultMap="PlayArriveGuardLogResult">
+        select <include refid="guardColumns"/>
+        from play_arrive_guard_log
+        where member_id = #{memberId}
+          and verdict in ('PASS', 'SHADOW')
+          and created_at &gt;= #{since}
+        order by created_at desc, id desc
+        limit #{limit}
+    </select>
+</mapper>

@@ -1,0 +1,287 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.OrientMapper">
+
+    <resultMap id="OrientNodeGeoResult" type="com.chengyinhub.business.domain.OrientNodeGeo">
+        <id property="nodeId" column="node_id"/>
+        <result property="topicId" column="topic_id"/>
+        <result property="sourceCoordSys" column="source_coord_sys"/>
+        <result property="sourceLng" column="source_lng"/>
+        <result property="sourceLat" column="source_lat"/>
+        <result property="sourceFingerprint" column="source_fingerprint"/>
+        <result property="wgs84Lng" column="wgs84_lng"/>
+        <result property="wgs84Lat" column="wgs84_lat"/>
+        <result property="geoStatus" column="geo_status"/>
+        <result property="dirtyReason" column="dirty_reason"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <resultMap id="OrientTaskAlternativeResult" type="com.chengyinhub.business.domain.OrientTaskAlternative">
+        <id property="id" column="id"/>
+        <result property="topicId" column="topic_id"/>
+        <result property="taskId" column="task_id"/>
+        <result property="alternativeTaskType" column="alternative_task_type"/>
+        <result property="promptText" column="prompt_text"/>
+        <result property="answerHash" column="answer_hash"/>
+        <result property="enabled" column="enabled"/>
+        <result property="createBy" column="create_by"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <resultMap id="OrientTaskAttemptResult" type="com.chengyinhub.business.domain.OrientTaskAttempt">
+        <id property="id" column="id"/>
+        <result property="memberId" column="member_id"/>
+        <result property="activityId" column="activity_id"/>
+        <result property="topicId" column="topic_id"/>
+        <result property="playInstanceId" column="play_instance_id"/>
+        <result property="taskId" column="task_id"/>
+        <result property="alternativeTaskType" column="alternative_task_type"/>
+        <result property="idempotencyKey" column="idempotency_key"/>
+        <result property="requestFingerprint" column="request_fingerprint"/>
+        <result property="picUrl" column="pic_url"/>
+        <result property="reportCoordSys" column="report_coord_sys"/>
+        <result property="wgs84Lng" column="wgs84_lng"/>
+        <result property="wgs84Lat" column="wgs84_lat"/>
+        <result property="distanceM" column="distance_m"/>
+        <result property="nodeGeoDirty" column="node_geo_dirty"/>
+        <result property="status" column="status"/>
+        <result property="reviewBy" column="review_by"/>
+        <result property="reviewTime" column="review_time"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <resultMap id="OrientTaskCompletionResult" type="com.chengyinhub.business.domain.OrientTaskCompletion">
+        <id property="id" column="id"/>
+        <result property="memberId" column="member_id"/>
+        <result property="activityId" column="activity_id"/>
+        <result property="topicId" column="topic_id"/>
+        <result property="playInstanceId" column="play_instance_id"/>
+        <result property="taskId" column="task_id"/>
+        <result property="completedVia" column="completed_via"/>
+        <result property="sourceAttemptId" column="source_attempt_id"/>
+        <result property="completedTime" column="completed_time"/>
+    </resultMap>
+
+    <resultMap id="OrientSafetyRuleResult" type="com.chengyinhub.business.domain.OrientSafetyRule">
+        <id property="topicId" column="topic_id"/>
+        <result property="insuranceRequired" column="insurance_required"/>
+        <result property="nightStartMinute" column="night_start_minute"/>
+        <result property="nightEndMinute" column="night_end_minute"/>
+        <result property="weatherBlock" column="weather_block"/>
+        <result property="weatherReason" column="weather_reason"/>
+        <result property="weatherBlockUntil" column="weather_block_until"/>
+        <result property="updateBy" column="update_by"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <resultMap id="BoardTeamResult" type="com.chengyinhub.business.domain.PlayTeam">
+        <id property="id" column="id"/>
+        <result property="ownerType" column="owner_type"/>
+        <result property="ownerId" column="owner_id"/>
+        <result property="leaderMemberId" column="leader_member_id"/>
+        <result property="title" column="title"/>
+        <result property="joinMode" column="join_mode"/>
+        <result property="maxMembers" column="max_members"/>
+        <result property="joinedCount" column="joined_count"/>
+        <result property="status" column="status"/>
+        <result property="expireTime" column="expire_time"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <!-- ================= 坐标 ================= -->
+    <select id="selectNodeGeo" resultMap="OrientNodeGeoResult">
+        select node_id, topic_id, source_coord_sys, source_lng, source_lat, source_fingerprint,
+               wgs84_lng, wgs84_lat, geo_status, dirty_reason, create_time, update_time
+        from orient_node_geo where node_id = #{nodeId}
+    </select>
+
+    <insert id="insertNodeGeo" parameterType="com.chengyinhub.business.domain.OrientNodeGeo">
+        insert into orient_node_geo (node_id, topic_id, source_coord_sys, source_lng, source_lat, source_fingerprint,
+                                     wgs84_lng, wgs84_lat, geo_status, dirty_reason, create_time, update_time)
+        values (#{nodeId}, #{topicId}, #{sourceCoordSys}, #{sourceLng}, #{sourceLat}, #{sourceFingerprint},
+                #{wgs84Lng}, #{wgs84Lat}, #{geoStatus}, #{dirtyReason}, #{createTime}, #{updateTime})
+    </insert>
+
+    <update id="updateNodeGeo" parameterType="com.chengyinhub.business.domain.OrientNodeGeo">
+        update orient_node_geo
+        set topic_id = #{topicId}, source_coord_sys = #{sourceCoordSys}, source_lng = #{sourceLng},
+            source_lat = #{sourceLat}, source_fingerprint = #{sourceFingerprint}, wgs84_lng = #{wgs84Lng},
+            wgs84_lat = #{wgs84Lat}, geo_status = #{geoStatus}, dirty_reason = #{dirtyReason},
+            update_time = #{updateTime}
+        where node_id = #{nodeId}
+    </update>
+
+    <!-- ================= 替代任务配置 ================= -->
+    <sql id="alternativeColumns">
+        id, topic_id, task_id, alternative_task_type, prompt_text, answer_hash, enabled, create_by, create_time, update_time
+    </sql>
+
+    <select id="selectAlternative" resultMap="OrientTaskAlternativeResult">
+        select <include refid="alternativeColumns"/> from orient_task_alternative
+        where task_id = #{taskId} and alternative_task_type = #{type}
+    </select>
+
+    <select id="selectAlternativesByTask" resultMap="OrientTaskAlternativeResult">
+        select <include refid="alternativeColumns"/> from orient_task_alternative
+        where task_id = #{taskId} order by alternative_task_type
+    </select>
+
+    <insert id="insertAlternative" parameterType="com.chengyinhub.business.domain.OrientTaskAlternative"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into orient_task_alternative (topic_id, task_id, alternative_task_type, prompt_text, answer_hash,
+                                             enabled, create_by, create_time, update_time)
+        values (#{topicId}, #{taskId}, #{alternativeTaskType}, #{promptText}, #{answerHash},
+                #{enabled}, #{createBy}, #{createTime}, #{updateTime})
+    </insert>
+
+    <update id="updateAlternative" parameterType="com.chengyinhub.business.domain.OrientTaskAlternative">
+        update orient_task_alternative
+        set prompt_text = #{promptText}, answer_hash = #{answerHash}, enabled = #{enabled}, update_time = #{updateTime}
+        where id = #{id}
+    </update>
+
+    <!-- ================= 提交 ================= -->
+    <sql id="attemptColumns">
+        id, member_id, activity_id, topic_id, play_instance_id, task_id, alternative_task_type, idempotency_key,
+        request_fingerprint, pic_url, report_coord_sys, wgs84_lng, wgs84_lat, distance_m, node_geo_dirty, status,
+        review_by, review_time, create_time, update_time
+    </sql>
+
+    <select id="selectAttemptByIdempotencyKey" resultMap="OrientTaskAttemptResult">
+        select <include refid="attemptColumns"/> from orient_task_attempt
+        where member_id = #{memberId} and idempotency_key = #{idempotencyKey}
+    </select>
+
+    <select id="selectAttemptByIdForUpdate" resultMap="OrientTaskAttemptResult">
+        select <include refid="attemptColumns"/> from orient_task_attempt where id = #{id} for update
+    </select>
+
+    <insert id="insertAttempt" parameterType="com.chengyinhub.business.domain.OrientTaskAttempt"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into orient_task_attempt (member_id, activity_id, topic_id, play_instance_id, task_id,
+                                         alternative_task_type, idempotency_key, request_fingerprint, pic_url,
+                                         report_coord_sys, wgs84_lng, wgs84_lat, distance_m, node_geo_dirty, status,
+                                         create_time, update_time)
+        values (#{memberId}, #{activityId}, #{topicId}, #{playInstanceId}, #{taskId},
+                #{alternativeTaskType}, #{idempotencyKey}, #{requestFingerprint}, #{picUrl},
+                #{reportCoordSys}, #{wgs84Lng}, #{wgs84Lat}, #{distanceM}, #{nodeGeoDirty}, #{status},
+                #{createTime}, #{updateTime})
+    </insert>
+
+    <select id="countPendingPhoto" resultType="int">
+        select count(1) from orient_task_attempt
+        where member_id = #{memberId} and activity_id = #{activityId} and topic_id = #{topicId}
+          and play_instance_id = #{playInstanceId} and task_id = #{taskId}
+          and alternative_task_type = 'PHOTO' and status = 0
+    </select>
+
+    <update id="updateAttemptStatus">
+        update orient_task_attempt
+        set status = #{toStatus}, review_by = #{reviewBy}, review_time = #{now}, update_time = #{now}
+        where id = #{id} and status = #{fromStatus}
+    </update>
+
+    <!-- ================= 完成事实 ================= -->
+    <select id="selectCompletion" resultMap="OrientTaskCompletionResult">
+        select id, member_id, activity_id, topic_id, play_instance_id, task_id, completed_via, source_attempt_id,
+               completed_time
+        from orient_task_completion
+        where member_id = #{memberId} and activity_id = #{activityId} and topic_id = #{topicId}
+          and play_instance_id = #{playInstanceId} and task_id = #{taskId}
+    </select>
+
+    <insert id="insertCompletion" parameterType="com.chengyinhub.business.domain.OrientTaskCompletion"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into orient_task_completion (member_id, activity_id, topic_id, play_instance_id, task_id,
+                                            completed_via, source_attempt_id, completed_time)
+        values (#{memberId}, #{activityId}, #{topicId}, #{playInstanceId}, #{taskId},
+                #{completedVia}, #{sourceAttemptId}, #{completedTime})
+    </insert>
+
+    <!-- 自玩(activity_id=0)按 topic+node 收窄,活动行由 activity_id 绑定主题(同 findNodeProgressRow 口径)。 -->
+    <select id="countLegacyNodeDone" resultType="int">
+        select count(1) from player_node_progress
+        where member_id = #{memberId} and activity_id = #{activityId} and node_id = #{nodeId}
+          and play_instance_id = #{playInstanceId}
+          and status = 1 and del_flag = 0
+          <if test="activityId == 0">and topic_id = #{topicId}</if>
+    </select>
+
+    <!-- ================= 队伍看板 ================= -->
+    <select id="selectLobbyTeams" resultType="java.util.LinkedHashMap">
+        select t.id as team_id, t.title as title, t.max_members as max_members, t.joined_count as joined_count,
+               t.status as status, t.expire_time as expire_time, t.leader_member_id as leader_member_id,
+               u.nickname as leader_name, u.avatar as leader_avatar
+        from play_team t
+        left join ums_member u on u.id = t.leader_member_id
+        where t.owner_type = #{ownerType} and t.owner_id = #{ownerId}
+          and t.join_mode = 2 and t.status = 0
+        order by t.create_time desc, t.id desc
+        limit #{limit}
+    </select>
+
+    <select id="selectBoardTeams" resultMap="BoardTeamResult">
+        select id, owner_type, owner_id, leader_member_id, title, join_mode, max_members, joined_count, status,
+               expire_time, create_time
+        from play_team
+        where owner_type = #{ownerType} and owner_id = #{ownerId} and status in (0, 1, 2, 3)
+        order by id asc
+        limit #{limit}
+    </select>
+
+    <select id="selectActiveMembersOfTeams" resultType="java.util.LinkedHashMap">
+        select m.team_id as team_id, m.member_id as member_id, m.role as role,
+               u.nickname as member_name, u.avatar as member_avatar
+        from play_team_member m
+        left join ums_member u on u.id = m.member_id
+        where m.status = 1 and m.team_id in
+        <foreach collection="teamIds" item="tid" open="(" separator="," close=")">#{tid}</foreach>
+        order by m.team_id asc, m.role desc, m.create_time asc, m.id asc
+    </select>
+
+    <select id="selectCompletionFacts" resultType="java.util.LinkedHashMap">
+        select f.member_id as member_id, f.task_id as task_id, min(f.done_time) as done_time
+        from (
+            select c.member_id, c.task_id, c.completed_time as done_time
+            from orient_task_completion c
+            where c.activity_id = #{activityId} and c.topic_id = #{topicId}
+              and c.member_id in
+              <foreach collection="memberIds" item="mid" open="(" separator="," close=")">#{mid}</foreach>
+            union all
+            select p.member_id, p.node_id as task_id, p.checkin_time as done_time
+            from player_node_progress p
+            where p.activity_id = #{activityId} and p.status = 1 and p.del_flag = 0
+              <if test="activityId == 0">and p.topic_id = #{topicId}</if>
+              and p.member_id in
+              <foreach collection="memberIds" item="mid" open="(" separator="," close=")">#{mid}</foreach>
+        ) f
+        group by f.member_id, f.task_id
+    </select>
+
+    <!-- ================= 安全规则 ================= -->
+    <select id="selectSafetyRule" resultMap="OrientSafetyRuleResult">
+        select topic_id, insurance_required, night_start_minute, night_end_minute, weather_block, weather_reason,
+               weather_block_until, update_by, create_time, update_time
+        from orient_safety_rule where topic_id = #{topicId}
+    </select>
+
+    <insert id="insertSafetyRule" parameterType="com.chengyinhub.business.domain.OrientSafetyRule">
+        insert into orient_safety_rule (topic_id, insurance_required, night_start_minute, night_end_minute,
+                                        weather_block, weather_reason, weather_block_until, update_by,
+                                        create_time, update_time)
+        values (#{topicId}, 0, #{nightStartMinute}, #{nightEndMinute}, #{weatherBlock}, #{weatherReason},
+                #{weatherBlockUntil}, #{updateBy}, #{createTime}, #{updateTime})
+    </insert>
+
+    <update id="updateSafetyRule" parameterType="com.chengyinhub.business.domain.OrientSafetyRule">
+        update orient_safety_rule
+        set insurance_required = 0, night_start_minute = #{nightStartMinute}, night_end_minute = #{nightEndMinute},
+            weather_block = #{weatherBlock}, weather_reason = #{weatherReason},
+            weather_block_until = #{weatherBlockUntil}, update_by = #{updateBy}, update_time = #{updateTime}
+        where topic_id = #{topicId}
+    </update>
+</mapper>

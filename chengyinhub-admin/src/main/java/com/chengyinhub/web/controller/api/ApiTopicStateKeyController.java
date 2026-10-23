@@ -6,6 +6,7 @@ import com.chengyinhub.business.access.merchant.MerchantPermission;
 import com.chengyinhub.business.domain.CmsTopic;
 import com.chengyinhub.business.domain.UmsMember;
 import com.chengyinhub.business.domain.dto.TopicStateKeyRegisterDTO;
+import com.chengyinhub.business.domain.dto.TopicStateKeyUpdateDTO;
 import com.chengyinhub.business.service.ICmsTopicService;
 import com.chengyinhub.business.service.IUmsMemberService;
 import com.chengyinhub.business.service.IWxContentSecurityService;
@@ -15,6 +16,7 @@ import com.chengyinhub.business.service.support.TopicStateKeyRefService;
 import com.chengyinhub.business.util.JourneyReviewTexts;
 import com.chengyinhub.business.util.TopicEditWindow;
 import com.chengyinhub.common.core.controller.BaseController;
+import com.chengyinhub.common.constant.HttpStatus;
 import com.chengyinhub.common.core.domain.AjaxResult;
 import com.chengyinhub.common.exception.ServiceException;
 import com.chengyinhub.common.utils.OwnershipUtils;
@@ -24,11 +26,14 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -103,9 +108,83 @@ public class ApiTopicStateKeyController extends BaseController {
             }
             themeStateKeyService.register(topic.getId(), dto.getKeys());
         } catch (ServiceException e) {
-            return error(e.getMessage());
+            return coded(e);
         }
         return success("注册成功");
+    }
+
+    /**
+     * F2 T01:覆盖一个已注册键的定义(范围 / 展示 / 颜色 / 图标 / 排序 / 可见 / 持久化 / 规则)。
+     * 归属闸与编辑窗口闸同批量注册;label 同走内容安全闸。改 label 永不改键名。
+     * 初值越界 / 字段非法 → code=400 + errorCode;键不存在 → 404。
+     */
+    @Operation(summary = "修改主题状态键定义(仅创作者本人;键名不可改)")
+    @PutMapping("/state-keys/{key}")
+    public AjaxResult updateStateKey(@PathVariable("key") String key, @RequestBody TopicStateKeyUpdateDTO dto) {
+        if (dto == null || invalidTopicId(dto.getTopicId()) || dto.getKey() == null) {
+            return badRequest(ThemeStateKeyService.ERR_INVALID, "参数不合规");
+        }
+        CmsTopic topic = cmsTopicService.selectCmsTopicById(dto.getTopicId());
+        String denial = editableDenial(topic, dto.getScope());
+        if (denial != null) {
+            return error(denial);
+        }
+        String windowDenial = editWindowDenial(topic);
+        if (windowDenial != null) {
+            return error(windowDenial);
+        }
+        try {
+            String secMsg = JourneyReviewTexts.check(wxContentSecurityService, resolveOpenid(),
+                    JourneyReviewTexts.collectLabels(Collections.singletonList(dto.getKey())));
+            if (secMsg != null) {
+                return error(secMsg);
+            }
+            return success(themeStateKeyService.updateDefinition(topic.getId(), key, dto.getKey()));
+        } catch (ServiceException e) {
+            return coded(e);
+        }
+    }
+
+    /**
+     * F2 T01:按定义接口的严格口径试校验一批键(初值必须在范围内,缺省 0..100),不写库。
+     * 全部通过返回 {valid:true};否则 code=400 + errorCode + problems 列出每条问题。
+     */
+    @Operation(summary = "试校验主题状态键定义(只读;仅创作者本人)")
+    @PostMapping("/state-keys/validate")
+    public AjaxResult validateStateKeys(@RequestBody TopicStateKeyRegisterDTO dto) {
+        if (dto == null || invalidTopicId(dto.getTopicId())) {
+            return badRequest(ThemeStateKeyService.ERR_INVALID, "参数不合规");
+        }
+        CmsTopic topic = cmsTopicService.selectCmsTopicById(dto.getTopicId());
+        String denial = editableDenial(topic, dto.getScope());
+        if (denial != null) {
+            return error(denial);
+        }
+        List<String> problems = themeStateKeyService.check(dto.getKeys());
+        if (!problems.isEmpty()) {
+            AjaxResult result = badRequest(ThemeStateKeyService.ERR_INVALID, problems.get(0));
+            result.put("problems", problems);
+            return result;
+        }
+        return success(Collections.singletonMap("valid", Boolean.TRUE));
+    }
+
+    private static AjaxResult badRequest(String errorCode, String message) {
+        AjaxResult result = new AjaxResult(HttpStatus.BAD_REQUEST, message);
+        result.put("errorCode", errorCode);
+        return result;
+    }
+
+    /** 服务层带码异常 → 同码 AjaxResult;不带码的维持老口径 error(msg)。 */
+    private AjaxResult coded(ServiceException e) {
+        if (e.getCode() == null) {
+            return error(e.getMessage());
+        }
+        AjaxResult result = new AjaxResult(e.getCode(), e.getMessage());
+        if (e.getDetailMessage() != null) {
+            result.put("errorCode", e.getDetailMessage());
+        }
+        return result;
     }
 
     /** 内容安全送检的 openid:取实际操作者;查不到返回 null(降级 scene 检测)。 */

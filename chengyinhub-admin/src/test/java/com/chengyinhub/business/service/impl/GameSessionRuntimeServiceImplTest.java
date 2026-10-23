@@ -647,6 +647,90 @@ class GameSessionRuntimeServiceImplTest {
         verify(activityMapper, never()).selectCmsActivityById(anyLong());
     }
 
+    /**
+     * O-03 跨设备续玩:设备 A 发出的命令结果未知(UNKNOWN),同一会员在设备 B(另一个登录 token,
+     * 服务端解析到同一 memberId)上核对回执、原样重发,都只能读到同一份服务端回执,不产生第二次效果。
+     */
+    @Test
+    void crossDeviceSameMemberResolvesUnknownCommandThroughOneServerReceipt() {
+        GameActorContext deviceA = GameActorContext.player(PLAYER);
+        GameActorContext deviceB = GameActorContext.player(PLAYER);
+        GameSessionCommand fromA = command("pg-cross-device", 5, "PLAYER_CHOICE", mapOf("choiceId", "FOLLOW_NOTE"));
+
+        // A 的请求还没落回执:B 核对只得到 PENDING,不会被当成失败或成功。
+        assertEquals("PENDING", service.receipt(deviceB, ACTIVITY, "pg-cross-device").getOutcome());
+
+        GameCommandReceipt persisted = new GameCommandReceipt();
+        persisted.setId(9911L);
+        persisted.setActivityId(ACTIVITY);
+        persisted.setActorMemberId(PLAYER);
+        persisted.setActorPerspective("PLAYER");
+        persisted.setRequestId("pg-cross-device");
+        persisted.setAction("PLAYER_CHOICE");
+        persisted.setRequestHash("hash-from-device-a");
+        persisted.setOutcome("APPLIED");
+        persisted.setRevision(6);
+        persisted.setResultJson("{}");
+        when(runtimeMapper.selectReceipt(ACTIVITY, PLAYER, "pg-cross-device")).thenReturn(persisted);
+
+        // B 拿同一请求编号发不同内容:冲突,不能借 A 的回执落另一份效果。
+        GameSessionException conflict = assertThrows(GameSessionException.class,
+                () -> service.command(deviceB, fromA));
+        assertEquals("GAME_IDEMPOTENCY_CONFLICT", conflict.getErrorCode());
+
+        persisted.setRequestHash(fromA.getRequestHash());
+        com.chengyinhub.business.domain.dto.GameCommandReceiptView readOnB =
+                service.receipt(deviceB, ACTIVITY, "pg-cross-device");
+        com.chengyinhub.business.domain.dto.GameCommandReceiptView resentOnB = service.command(deviceB,
+                command("pg-cross-device", 5, "PLAYER_CHOICE", mapOf("choiceId", "FOLLOW_NOTE")));
+        com.chengyinhub.business.domain.dto.GameCommandReceiptView readOnA =
+                service.receipt(deviceA, ACTIVITY, "pg-cross-device");
+
+        for (com.chengyinhub.business.domain.dto.GameCommandReceiptView seen : Arrays.asList(readOnB, resentOnB, readOnA)) {
+            assertEquals("APPLIED", seen.getOutcome());
+            assertEquals(9911L, seen.getReceiptId());
+            assertEquals(6, seen.getRevision());
+            assertTrue(seen.isReplayed());
+        }
+        // 另一个会员拿到同一请求编号也读不到这份私有回执。
+        assertEquals("PENDING", service.receipt(GameActorContext.player(TARGET_PLAYER), ACTIVITY, "pg-cross-device").getOutcome());
+        verify(runtimeMapper, never()).insertReceiptClaim(any(GameCommandReceipt.class));
+        verify(runtimeMapper, never()).updateStoryStateCas(any());
+        verify(runtimeMapper, never()).completeReceipt(any(GameCommandReceipt.class));
+    }
+
+    /** O-03/O-09:两台设备读同一局,状态与时刻只来自服务端时钟;视图接口不接受任何客户端时间。 */
+    @Test
+    void crossDeviceViewsShareServerClockSnapshotAndState() {
+        GameSession session = runningSession(3);
+        session.setModuleConfigSnapshotJson(configJson());
+        when(runtimeMapper.selectSessionByActivity(ACTIVITY)).thenReturn(session);
+        when(playTeamMapper.hasPaidRegistration(PLAYER, 2, ACTIVITY)).thenReturn(1);
+        when(runtimeMapper.selectActiveTeamId(ACTIVITY, PLAYER)).thenReturn(TEAM);
+        when(runtimeMapper.selectStations(SESSION)).thenReturn(Collections.singletonList(station(MERCHANT, "ACTIVE")));
+        stubArrived();
+        ReflectionTestUtils.setField(service, "clock",
+                (com.chengyinhub.business.service.support.AdvancedGameClock)
+                        () -> DateUtils.parseDate("2026-08-23 12:10:00"));
+
+        GameSessionView onA = service.view(GameActorContext.player(PLAYER), ACTIVITY);
+        GameSessionView onB = service.view(GameActorContext.player(PLAYER), ACTIVITY);
+
+        assertEquals("2026-08-23 12:10:00", onA.getSnapshotAt());
+        assertEquals(onA.getSnapshotAt(), onB.getSnapshotAt());
+        assertEquals(onA.getRevision(), onB.getRevision());
+        assertEquals(onA.getStatus(), onB.getStatus());
+        assertEquals(String.valueOf(onA.getPlayer()), String.valueOf(onB.getPlayer()));
+
+        // 服务端时间前进后再续:两台设备看到的是新的服务端时刻,与各自手机时钟无关。
+        ReflectionTestUtils.setField(service, "clock",
+                (com.chengyinhub.business.service.support.AdvancedGameClock)
+                        () -> DateUtils.parseDate("2026-08-23 12:25:00"));
+        GameSessionView resumedOnB = service.view(GameActorContext.player(PLAYER), ACTIVITY);
+        assertEquals("2026-08-23 12:25:00", resumedOnB.getSnapshotAt());
+        assertEquals(onA.getRevision(), resumedOnB.getRevision());
+    }
+
     @Test
     void failedCommandCanBeRecordedWithStructuredReasonAfterRollback() {
         GameSessionCommand failedCommand = command("pause-failed-audit", 4, "STATION_PAUSE",

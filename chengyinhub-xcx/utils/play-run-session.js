@@ -60,10 +60,15 @@ function readPausedRun(wx, scope) {
   return normalizePausedRun(raw)
 }
 
+/** O-09:本机后写的快照不能比本机先写的旧 —— 已采纳的服务端时刻可能比手机时钟快(手机被拨慢),
+ *  断网暂停若按手机时钟落盘,重进时会被服务端那份旧用时盖掉。 */
 function writePausedRun(wx, scope, elapsedSeconds, now) {
   const key = pausedRunStorageKey(scope)
   if (!key || !wx || typeof wx.setStorageSync !== 'function') return false
-  const record = normalizePausedRun({ state: 'paused', elapsedSeconds, savedAt: now })
+  let previous = null
+  try { previous = normalizePausedRun(wx.getStorageSync(key)) } catch (error) { previous = null }
+  const savedAt = previous && previous.savedAt >= now ? previous.savedAt + 1 : now
+  const record = normalizePausedRun({ state: 'paused', elapsedSeconds, savedAt })
   if (!record) return false
   try { wx.setStorageSync(key, record); return true } catch (error) { return false }
 }
@@ -92,13 +97,31 @@ function isOk(res) {
   return !!res && (res.code === 200 || res.code === '200')
 }
 
-function saveServerPausedRun(request, scope, elapsedSeconds, now) {
+/** O-09:服务端按自己的时钟给这次落盘定先后(data.savedAt)。本机那份若仍是这次写的,改记服务端时刻,
+ *  之后与另一台设备的暂停/结束墓碑比新旧就同在服务端时钟上,手机时钟被拨快/拨慢都不影响。 */
+function adoptServerSavedAt(wx, scope, elapsedSeconds, now, res) {
+  const serverSavedAt = res && res.data && Number(res.data.savedAt)
+  if (!wx || !Number.isSafeInteger(serverSavedAt) || serverSavedAt <= 0) return
+  const key = pausedRunStorageKey(scope)
+  if (!key || typeof wx.getStorageSync !== 'function' || typeof wx.setStorageSync !== 'function') return
+  try {
+    const local = normalizePausedRun(wx.getStorageSync(key))
+    if (!local || local.elapsedSeconds !== elapsedSeconds || local.savedAt < now) return
+    wx.setStorageSync(key, { state: 'paused', elapsedSeconds, savedAt: serverSavedAt })
+  } catch (error) {}
+}
+
+function saveServerPausedRun(request, scope, elapsedSeconds, now, wx) {
   const params = runSessionRequestScope(scope)
   const record = normalizePausedRun({ state: 'paused', elapsedSeconds, savedAt: now })
   if (!params || !record || typeof request !== 'function') return Promise.resolve(false)
   return request('/api/play/run-session/save', 'POST', Object.assign({
     elapsedSeconds: record.elapsedSeconds, savedAt: record.savedAt,
-  }, params)).then(isOk, () => false)
+  }, params)).then((res) => {
+    if (!isOk(res)) return false
+    adoptServerSavedAt(wx, scope, record.elapsedSeconds, record.savedAt, res)
+    return true
+  }, () => false)
 }
 
 function clearServerRunSession(request, scope, now) {

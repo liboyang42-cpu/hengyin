@@ -1,5 +1,6 @@
 package com.chengyinhub.business.service.impl;
 
+import com.chengyinhub.common.utils.GeoDistanceUtils;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -872,7 +873,7 @@ public class OfficialEventV2ServiceImpl implements IOfficialEventV2Service {
             return persistRejectedArrival(result, event, mission, binding, memberId, requestId, "MISSION_TYPE_INVALID");
         }
 
-        int distance = (int) Math.round(haversineM(request.getLatitude(), request.getLongitude(), targetLat, targetLng));
+        int distance = (int) Math.round(GeoDistanceUtils.haversineMeters(request.getLatitude(), request.getLongitude(), targetLat, targetLng));
         if (distance > radius + GPS_TOLERANCE_M) {
             return persistRejectedArrival(result, event, mission, binding, memberId, requestId, "DISTANCE_TOO_FAR", distance, accuracyBucket(request.getAccuracyM()));
         }
@@ -1315,6 +1316,8 @@ public class OfficialEventV2ServiceImpl implements IOfficialEventV2Service {
             try {
                 if (settlementHelper.issue(issuance, couponId, xp, badge, collectiveCouponId, collectiveReached)) issued++;
             } catch (Exception ex) {
+                // 锁冲突时 savepoint 已随整笔事务回滚，不能在隐式新事务里接着落 FAILED。
+                com.chengyinhub.business.service.support.SavepointLockFailures.rethrowIfLockFailure(ex);
                 // Helper 的独立事务已回滚 ISSUED → PENDING；这里落可读失败态，下次结算会重新置 PENDING 重试。
                 v2Mapper.updateRewardIssuanceStatus(issuance.getId(), OfficialEventRewardIssuance.FAILED, safeMessage(ex));
             }
@@ -2077,7 +2080,7 @@ public class OfficialEventV2ServiceImpl implements IOfficialEventV2Service {
     private boolean anchorTooFast(Map<String, Object> anchor, double targetLat, double targetLng) {
         if (anchor == null || !(anchor.get("foundAt") instanceof Date) || !(anchor.get("lat") instanceof Number) || !(anchor.get("lng") instanceof Number)) return false;
         long elapsed = Math.max(1L, (System.currentTimeMillis() - ((Date) anchor.get("foundAt")).getTime()) / 1000L);
-        double distance = haversineM(((Number) anchor.get("lat")).doubleValue(), ((Number) anchor.get("lng")).doubleValue(), targetLat, targetLng);
+        double distance = GeoDistanceUtils.haversineMeters(((Number) anchor.get("lat")).doubleValue(), ((Number) anchor.get("lng")).doubleValue(), targetLat, targetLng);
         return distance > MIN_SPEED_DISTANCE_M && distance / elapsed > MAX_MOVE_SPEED_MPS;
     }
 
@@ -2280,14 +2283,4 @@ public class OfficialEventV2ServiceImpl implements IOfficialEventV2Service {
     private boolean equalsLong(Long a, Long b) { return a == null ? b == null : a.equals(b); }
     private Long asLong(Object value) { return value instanceof Number ? ((Number) value).longValue() : null; }
     private String join(List<String> values) { return String.join("；", values); }
-
-    private double haversineM(double lat1, double lng1, double lat2, double lng2) {
-        double r = 6371000D;
-        double dLat = Math.toRadians(lat2 - lat1);
-        double dLng = Math.toRadians(lng2 - lng1);
-        double a = Math.sin(dLat / 2D) * Math.sin(dLat / 2D)
-                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
-                * Math.sin(dLng / 2D) * Math.sin(dLng / 2D);
-        return 2D * r * Math.atan2(Math.sqrt(a), Math.sqrt(1D - a));
-    }
 }
