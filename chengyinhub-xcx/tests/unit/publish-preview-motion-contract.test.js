@@ -25,8 +25,9 @@ function hasPreviewMotionContract(wxml, wxss) {
     && panels >= 5
     && /class="cg-pv-medal-ico"/.test(wxml)
     && !/cg-pv-roadmap|cg-pv-medal-coin|cg-pv-medal-face--back/.test(wxml)
-    && /class="cg-gsheet-card[^"]*"/.test(wxml)
-    && /bindtap="pickR5GameFromSheet"[^>]*hover-class="cy-pressed"/.test(wxml)
+    // 2026-10-22 选择玩法改成半屏标签条(Figma 胶囊):按压反馈的承载换成玩法标签
+    && /class="cg-tag-pill[^"]*"/.test(wxml)
+    && /bindtap="pickR5GameTag"[^>]*hover-class="cy-pressed"/.test(wxml)
     && /\.cg-pv-dot\s*\{[^}]*transition:[^;}]*var\(--cy-motion-/s.test(wxss)
     && /\.cg--reduced-motion[^}]*animation:\s*none\s*!important/s.test(wxss)
     && oneShotRules
